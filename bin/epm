@@ -49,9 +49,12 @@ phelp()
 	echo "$Descr
 $Usage
 
-   -i|install    install package(s)
-   -e|remove     remove package(s)
-   -s|search     search in remote and local package base
+   -i|install    	install package(s)
+   -e|remove     	remove package(s)
+   -s|search     	search in remote and local package base
+   -qa|list|packages	list of installed package(s)
+   -qf			query package(s) owning file
+   -q			check presence of package(s)
  Options:
    -v|--verbose  verbose mode
    --auto        non interactive mode
@@ -59,9 +62,8 @@ $Usage
 "
 }
 
-name=${0##*/}
-Usage="Usage: $name [-i|install] [package name(s), package files]..."
-Descr="$name - EPM package manager"
+Usage="Usage: epm [options] <command> [package name(s), package files]..."
+Descr="epm - EPM package manager"
 
 verbose=
 non_interactive=
@@ -120,7 +122,6 @@ for opt in "$@" ; do
         epm_cmd=query_file
         ;;
     -qa|list|packages)
-    #TODO file packages
         epm_cmd=packages
         ;;
     *)
