@@ -1,0 +1,100 @@
+#!/bin/sh
+#
+# Copyright (C) 2009, 2012  Etersoft
+# Copyright (C) 2009, 2012  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This file is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+
+
+check_rpm_integrity()
+{
+	rpm --checksig $@ >/dev/null
+}
+
+check_deb_integrity()
+{
+	a= dpkg --contents $@ >/dev/null
+}
+
+check_bz2_integrity()
+{
+	bunzip -t $1 >/dev/null
+}
+
+check_gz_integrity()
+{
+	gunzip -t $1 >/dev/null
+}
+
+check_zip_integrity()
+{
+	a= unzip -t $1 >/dev/null
+}
+
+check_xz_integrity()
+{
+	xz -t $1 >/dev/null
+}
+
+check_pkg_integrity()
+{
+	local EXT=`echo "$1" | sed -e "s|.*\.\([a-z0-9]*\)\$|\1|g"`
+	local PKG="$1"
+	local RET
+	case $EXT in
+		deb)
+			check_deb_integrity "$PKG"
+			RET=$?
+			;;
+		rpm)
+			check_rpm_integrity "$PKG"
+			RET=$?
+			;;
+		gz|tgz)
+			check_gz_integrity "$PKG"
+			RET=$?
+			;;
+		bz2|tbz)
+			check_bz2_integrity "$PKG"
+			RET=$?
+			;;
+		zip)
+			check_zip_integrity "$PKG"
+			RET=$?
+			;;
+		xz)
+			check_xz_integrity "$PKG"
+			RET=$?
+			;;
+		exe|ebuild)
+			# Skip checking
+			RET=0
+			;;
+		*)
+			fatal "Unknown package extension '$EXT' in $PKG package"
+			;;
+	esac
+	return $RET
+}
+
+check_files_integrity()
+{
+	local DIR="$1" EXT
+	for EXT in deb rpm tgz tar.gz tar.bz2 tbz zip ; do
+		for i in $(find "$DIR" -maxdepth 1 -name "*.$EXT") ; do
+			check_pkg_integrity $i && echo "Package $i is OK" || echo "Package $i is broken"
+		done
+	done
+}

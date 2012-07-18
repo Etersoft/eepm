@@ -69,6 +69,8 @@ done
 pkg_files=$(strip_spaces "$pkg_files")
 pkg_names=$(strip_spaces "$pkg_names")
 
+pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
+
 echover "pkg_files=$pkg_files"
 echover "pkg_names=$pkg_names"
 

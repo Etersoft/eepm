@@ -18,6 +18,33 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
+# TODO
+epm_install_sim()
+{
+case $DISTRNAME in
+	"ALTLinux"|"PCLinux")
+		CMD="apt-get --simulate install"
+		;;
+	"Ubuntu"|"Debian")
+		CMD="apt-get --simulate install"
+		;;
+	"LinuxXP"|"Fedora"|"ASPLinux"|"CentOS"|"RHEL"|"Scientific")
+		CMD="yum provides"
+		;;
+	"Mandriva")
+		CMD="urpmi --test --auto"
+		;;
+	"SUSE")
+		CMD="zypper --non-interactive install --dry-run"
+		;;
+	*)
+ 		echo "Do not known install command for DISTRNAME $DISTRNAME"
+ 		exit 2
+		;;
+esac
+}
+
+
 # copied from etersoft-build-utils/share/eterbuild/functions/rpmpkg
 get_install_package_command()
 {
