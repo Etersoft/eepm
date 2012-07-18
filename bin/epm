@@ -1,0 +1,87 @@
+#!/bin/sh
+#
+# Copyright (C) 2012  Etersoft
+# Copyright (C) 2012  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This file is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+#
+
+# HACK
+#ETERBUILDBIN=/usr/bin
+# FIXME
+#. /usr/share/eterbuild/eterbuild
+#load_mod rpm git buildsrpm
+
+. $(dirname $0)/epm-sh-functions
+
+#############################
+
+phelp()
+{
+	echo "$Descr
+$Usage
+
+   -i|install  install packages
+"
+}
+
+name=${0##*/}
+Usage="Usage: $name [-i|install] [package name(s), package files]..."
+Descr="$name - etersoft package manager"
+
+verbose=1
+epm_cmd=
+pkg_files=
+pkg_names=
+for opt in "$@" ; do
+    case $opt in
+    -h|--help|help)
+        phelp; exit 0
+        ;;
+    -v|--verbose)
+        verbose=1
+        ;;
+    -i|install)
+        epm_cmd=install
+        ;;
+    *)
+        if [ -f "$opt" ] ; then
+            pkg_files="$pkgfiles $opt"
+        else
+            pkg_names="$pkgnames $opt"
+        fi
+        ;;
+    esac
+done
+
+pkg_files=$(strip_spaces "$pkg_files")
+pkg_names=$(strip_spaces "$pkg_names")
+
+echover "pkg_files=$pkg_files"
+echover "pkg_names=$pkg_names"
+
+DISTRVENDOR=distr_vendor
+[ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d)
+[ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
+set_target_pkg_env
+
+[ -n "$epm_cmd" ] || fatal "Run without command"
+
+epm_cmd_file=$(dirname $0)/epm-$epm_cmd
+[ -r "$epm_cmd_file" ] || fatal "Have no $epm_cmd_file command file"
+. $epm_cmd_file
+
+eval epm_$epm_cmd
+

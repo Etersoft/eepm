@@ -1,0 +1,60 @@
+#!/bin/sh
+#
+# Copyright (C) 2012  Etersoft
+# Copyright (C) 2012  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This file is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+#
+
+# copied from etersoft-build-utils/share/eterbuild/functions/rpmpkg
+get_install_package_command()
+{
+	local DISTRNAME=$1
+	local INAC=$2
+	local CMD
+	local RET=0
+	case $DISTRNAME in
+		"ALTLinux"|"Ubuntu"|"Debian"|"PCLinux")
+			[ -n "$INAC" ] && CMD="apt-get install" || CMD="apt-get -y --force-yes install"
+			;;
+		"LinuxXP"|"Fedora"|"ASPLinux"|"CentOS"|"RHEL"|"Scientific")
+			[ -n "$INAC" ] && CMD="yum install" || CMD="yum -y install"
+			;;
+		"Mandriva")
+			[ -n "$INAC" ] && CMD="urpmi --no-verify-rpm" || CMD="urpmi --auto --no-verify-rpm"
+			;;
+		"ROSA")
+			[ -n "$INAC" ] && CMD="urpmi --no-verify-rpm" || CMD="urpmi --auto --no-verify-rpm"
+			;;
+		"SUSE|SLED|SLES")
+			[ -n "$INAC" ] && CMD="zypper --non-interactive install" || CMD="yes | zypper --non-interactive install"
+			;;
+		*)
+			RET=1
+			CMD="echo \"Do not known install command for DISTRNAME $DISTRNAME\""
+			;;
+	esac
+	echo $CMD
+	return $RET
+}
+
+
+epm_install()
+{
+    [ -n "$pkg_files$pkg_names" ] || fatal "Run install without packages"
+
+    CMD=$(get_install_package_command $DISTRNAME interactive)
+    docmd $CMD $pkg_files $pkg_names
+}
