@@ -67,3 +67,33 @@ fatal()
 	fi
 	exit 1
 }
+
+# FIXME: detect if not recognized
+set_pm_type()
+{
+	local CMD
+case $DISTRNAME in
+	"ALTLinux"|"PCLinux")
+		CMD="apt-rpm"
+		;;
+	"FreeBSD")
+		CMD="pkg_add"
+		;;
+	"Ubuntu"|"Debian")
+		CMD="apt-dpkg"
+		;;
+	"LinuxXP"|"Fedora"|"ASPLinux"|"CentOS"|"RHEL"|"Scientific")
+		CMD="yum-rpm"
+		;;
+	"Mandriva")
+		CMD="urpm-rpm"
+		;;
+	"SUSE")
+		CMD="zypper-rpm"
+		;;
+	*)
+		fatal "Do not known command for DISTRNAME $DISTRNAME"
+		;;
+esac
+PMTYPE=$CMD
+}

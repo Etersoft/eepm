@@ -18,31 +18,29 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
-# copied from korinf/tools/run-script/scripts/search
-
-epm_search()
+epm_upgrade()
 {
-    [ -n "$pkg_filenames" ] || fatal "Run search without names"
+    [ -n "$pkg_filenames" ] && fatal "No need any args for upgrade command"
 
-case $DISTRNAME in
-	"ALTLinux"|"Ubuntu"|"Debian"|"PCLinux")
+    echo "Run command for upgrade packages"
+    case $PMTYPE in
+	apt-rpm|apt-dpkg)
+		# FIXME: apt-get update before
 		CMD="apt-get dist-upgrade"
 		;;
-	"LinuxXP"|"Fedora"|"ASPLinux"|"CentOS"|"RHEL"|"Scientific")
+	yum-rpm)
 		CMD="yum update"
 		;;
-#	"Mandriva")
-#		CMD="urpmf"
-#		;;
-	"SUSE")
+	urpm-rpm)
+		CMD="urpmi --auto-update"
+		;;
+	zypper-rpm)
 		CMD="zypper update"
 		;;
 	*)
-		RET=1
-		CMD="echo \"Do not known install command for DISTRNAME $DISTRNAME\""
+		fatal "Do not known command for $PMTYPE"
 		;;
-esac
+    esac
 
-docmd $CMD $pkg_filenames
-
+    docmd $CMD
 }

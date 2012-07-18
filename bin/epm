@@ -81,6 +81,9 @@ for opt in "$@" ; do
     -e|remove)
         epm_cmd=remove
         ;;
+    dist-upgrade|upgrade)
+        epm_cmd=upgrade
+        ;;
     -s|search)
         epm_cmd=search
         ;;
@@ -116,6 +119,8 @@ DISTRVENDOR=distr_vendor
 [ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d)
 [ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
 set_target_pkg_env
+
+set_pm_type
 
 [ -n "$epm_cmd" ] || fatal "Run without command"
 
