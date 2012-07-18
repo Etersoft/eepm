@@ -2,7 +2,7 @@ Name: epm
 Version: 0.1
 Release: alt1
 
-Summary: EPM — Etersoft package manager
+Summary: EPM package manager
 
 License: GPLv2
 Group: Development/Other
@@ -16,7 +16,8 @@ Source: ftp://updates.etersoft.ru/pub/Etersoft/Sisyphus/sources/tarball/%name-%v
 BuildArchitectures: noarch
 
 %description
-Etersoft package manager for any platform.
+Etersoft package manager for any platform. It provides universal interface
+to any package manager.
 
 %prep
 %setup
