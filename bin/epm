@@ -45,6 +45,17 @@ verbose=1
 epm_cmd=
 pkg_files=
 pkg_names=
+
+progname="${0##*/}"
+case $progname in
+    epmi)
+        epm_cmd=install
+        ;;
+    *)
+        fatal "Unknown command: $progname"
+        ;;
+esac
+
 for opt in "$@" ; do
     case $opt in
     -h|--help|help)
