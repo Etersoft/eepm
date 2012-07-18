@@ -62,8 +62,8 @@ fatal()
 {
 	if [ -z "$TEXTDOMAIN" ] ; then
 		echo "Error in $0: $@" >&2
-	else
-		echog "Error in $0: $@" >&2
+#	else
+#		echog "Error in $0: $@" >&2
 	fi
 	exit 1
 }
