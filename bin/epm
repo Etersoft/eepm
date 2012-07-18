@@ -51,6 +51,17 @@ case $progname in
     epmi)
         epm_cmd=install
         ;;
+    epme)
+        epm_cmd=remove
+        ;;
+    epms)
+        epm_cmd=search
+        ;;
+    epmqf)
+        epm_cmd=query_file
+        ;;
+    epm)
+        ;;
     *)
         fatal "Unknown command: $progname"
         ;;
@@ -66,6 +77,22 @@ for opt in "$@" ; do
         ;;
     -i|install)
         epm_cmd=install
+        ;;
+    -e|remove)
+        epm_cmd=remove
+        ;;
+    -s|search)
+        epm_cmd=search
+        ;;
+    -q)
+        epm_cmd=checkpkg
+        ;;
+    -qf)
+        epm_cmd=query_file
+        ;;
+    -qa|list|packages)
+    #TODO file packages
+        epm_cmd=packages
         ;;
     *)
         if [ -f "$opt" ] ; then
@@ -96,5 +123,5 @@ epm_cmd_file=$(dirname $0)/epm-$epm_cmd
 [ -r "$epm_cmd_file" ] || fatal "Have no $epm_cmd_file command file"
 . $epm_cmd_file
 
-eval epm_$epm_cmd
+epm_$epm_cmd
 
