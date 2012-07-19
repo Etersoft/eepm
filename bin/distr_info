@@ -1,0 +1,295 @@
+#!/bin/sh
+# Author: Vitaly Lipatov <lav@etersoft.ru>
+# 2007, 2009, 2010, 2012 (c) Etersoft
+# 2007 Public domain
+
+# Detect the distro and version
+# Welcome to send updates!
+
+# You can set ROOTDIR to root system dir
+#ROOTDIR=
+
+# Check for DISTRO specific file in /etc
+distro()
+{
+	#[ -n "$ROOTDIR" ] || return
+	# fill global DISTROFILE
+	DISTROFILE="$ROOTDIR/etc/$1"
+	[ -f "$DISTROFILE" ]
+}
+
+# Has a distro file the specified word?
+has()
+{
+	[ -n "$DISTROFILE" ] || exit 1
+	grep "$1" "$DISTROFILE" >/dev/null 2>&1
+}
+
+# Translate DISTRIB_ID to vendor name (like %_vendor does)
+rpmvendor()
+{
+	[ "$DISTRIB_ID" = "ALTLinux" ] && echo "alt" && return
+	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
+	echo "$DISTRIB_ID" | tr "[A-Z]" "[a-z]"
+}
+
+# Translate DISTRIB_ID name to package manner (like in the package release name)
+pkgvendor()
+{
+	[ "$DISTRIB_ID" = "Mandriva" ] && echo "mdv" && return
+	rpmvendor
+}
+
+# Print pkgtype (need DISTRIB_ID var)
+pkgtype()
+{
+    case `pkgvendor` in
+		freebsd) echo "tbz" ;;
+		sunos) echo "pkg.gz" ;;
+		slackware|mopslinux) echo "tgz" ;;
+		archlinux) echo "tar.xz" ;;
+		gentoo) echo "tbz2" ;;
+		windows) echo "exe" ;;
+		debian|ubuntu|mint|runtu) echo "deb" ;;
+		alt|asplinux|suse|mandriva|mandrake|pclinux|sled|sles)
+			echo "rpm" ;;
+		fedora|redhat|scientific|centos|rhel)
+			echo "rpm" ;;
+		*)  echo "rpm" ;;
+	esac
+}
+
+get_var()
+{
+	grep -i "^$1 *=" | head -n 1 | sed -e "s/^[^=]*[ \t]*=[ \t]*//"
+
+}
+
+# 2010.1 -> 2010
+get_major_version()
+{
+	echo "$1" | sed -e "s/\..*//g"
+}
+
+# Default values
+DISTRIB_ID="Generic"
+DISTRIB_RELEASE=""
+
+# Default with LSB
+if distro lsb-release ; then
+	DISTRIB_ID=`cat $DISTROFILE | get_var DISTRIB_ID`
+	DISTRIB_RELEASE=`cat $DISTROFILE | get_var DISTRIB_RELEASE`
+fi
+
+# ALT Linux based
+if distro altlinux-release ; then
+	DISTRIB_ID="ALTLinux"
+	if has Strawberry ; then DISTRIB_RELEASE="2.3"
+	elif has Citron   ; then DISTRIB_RELEASE="2.4"
+	elif has 20050723 ; then DISTRIB_RELEASE="3.0"
+	elif has Ajuga    ; then DISTRIB_RELEASE="4.0"
+	elif has 20070810 ; then DISTRIB_RELEASE="4.0"
+	elif has "ALT Linux 4.0" ; then DISTRIB_RELEASE="4.0"
+	elif has "ALT Linux 4.1" ; then DISTRIB_RELEASE="4.1"
+	elif has Walnut   ; then DISTRIB_RELEASE="4.0"
+	elif has 5.0      ; then DISTRIB_RELEASE="5.0"
+	elif has Desktop  ; then DISTRIB_RELEASE="4.0"
+	elif has 5.1      ; then DISTRIB_RELEASE="5.1"
+	elif has Ziziphora ; then DISTRIB_RELEASE="5.1"
+	elif has "ALT Linux p5" ; then DISTRIB_RELEASE="p5"
+	elif has "ALT Linux p6" ; then DISTRIB_RELEASE="p6"
+	elif has "ALT Linux p7" ; then DISTRIB_RELEASE="p7"
+	elif has 6.0      ; then DISTRIB_RELEASE="p6"
+	elif has Centaurea ; then DISTRIB_RELEASE="p6"
+	elif has Sisyphus ; then DISTRIB_RELEASE="Sisyphus"
+	fi
+
+elif distro gentoo-release ; then
+	DISTRIB_ID="Gentoo"
+	DISTRIB_RELEASE=`basename $(readlink $ROOTDIR/etc/make.profile)`
+
+# Slackware based
+elif distro mopslinux-version ; then
+	DISTRIB_ID="MOPSLinux"
+	if   has 4.0 ; then DISTRIB_RELEASE="4.0"
+	elif has 5.0 ; then DISTRIB_RELEASE="5.0"
+	elif has 5.1 ; then DISTRIB_RELEASE="5.1"
+	elif has 6.0 ; then DISTRIB_RELEASE="6.0"
+	elif has 6.1 ; then DISTRIB_RELEASE="6.1"
+	fi
+elif distro slackware-version ; then
+	DISTRIB_ID="Slackware"
+	if   has 10.2 ; then DISTRIB_RELEASE="10.2"
+	elif has 11 ; then DISTRIB_RELEASE="11"
+	elif has 11.1 ; then DISTRIB_RELEASE="11.1"
+	elif has 12 ; then DISTRIB_RELEASE="12"
+	fi
+
+elif distro arch-release ; then
+	DISTRIB_ID="ArchLinux"
+	DISTRIB_RELEASE="2010"
+	if grep 2011 -q $ROOTDIR/etc/pacman.d/mirrorlist ; then
+		DISTRIB_RELEASE="2011"
+	fi
+
+# for Ubuntu use standard LSB info
+elif [ "$DISTRIB_ID" = "Ubuntu" ] && [ -n "$DISTRIB_RELEASE" ]; then
+	# use LSB version
+	true
+
+# Debian based
+elif distro debian_version ; then
+	DISTRIB_ID="Debian"
+	DISTRIB_RELEASE=`cat $DISTROFILE`
+
+
+# Mandriva based
+elif distro pclinuxos-release ; then
+	DISTRIB_ID="PCLinux"
+	if   has "2007" ; then DISTRIB_RELEASE="2007"
+	elif has "2008" ; then DISTRIB_RELEASE="2008"
+	elif has "2010" ; then DISTRIB_RELEASE="2010"
+	fi
+
+elif distro mandriva-release || distro mandrake-release ; then
+	DISTRIB_ID="Mandriva"
+	if   has 2005 ; then DISTRIB_RELEASE="2005"
+	elif has 2006 ; then DISTRIB_RELEASE="2006"
+	elif has 2007 ; then DISTRIB_RELEASE="2007"
+	elif has 2008 ; then DISTRIB_RELEASE="2008"
+	elif has 2009.0 ; then DISTRIB_RELEASE="2009.0"
+	elif has 2009.1 ; then DISTRIB_RELEASE="2009.1"
+	else
+		# use /etc/lsb-release info by default
+		true
+	fi
+
+# Fedora based
+elif distro linux-xp-release || distro lxp-release; then
+	DISTRIB_ID="LinuxXP"
+	if has "Attack of the Clones" ; then DISTRIB_RELEASE="2006"
+	elif has "2007" ; then DISTRIB_RELEASE="2007"
+	elif has "2008" ; then DISTRIB_RELEASE="2008"
+	elif has "2009" ; then DISTRIB_RELEASE="2009"
+	fi
+
+elif distro asplinux-release ; then
+	DISTRIB_ID="ASPLinux"
+	if   has Karelia ; then DISTRIB_RELEASE="10"
+	elif has Seliger ; then DISTRIB_RELEASE="11"
+	elif has "11.1" ; then DISTRIB_RELEASE="11.1"
+	elif has Ladoga ; then DISTRIB_RELEASE="11.2"
+	elif has "11.2" ; then DISTRIB_RELEASE="11.2"
+	elif has "12" ; then DISTRIB_RELEASE="12"
+	elif has "13" ; then DISTRIB_RELEASE="13"
+	elif has "14" ; then DISTRIB_RELEASE="14"
+	elif has "15" ; then DISTRIB_RELEASE="15"
+	fi
+
+elif distro MCBC-release ; then
+	DISTRIB_ID="MCBC"
+	if   has 3.0 ; then DISTRIB_RELEASE="3.0"
+	elif has 3.1 ; then DISTRIB_RELEASE="3.1"
+	fi
+
+elif distro fedora-release ; then
+	DISTRIB_ID="Fedora"
+	DISTRIB_RELEASE=$(cat "$DISTROFILE" | grep "release" | sed -e "s|.*release \([0-9]*\).*|\1|g")
+
+elif distro redhat-release ; then
+	# FIXME if need
+	# actually in the original RHEL: Red Hat Enterprise Linux .. release N
+	DISTRIB_ID="RHEL"
+	if has CentOS ; then
+		DISTRIB_ID="CentOS"
+	elif has Scientific ; then
+		DISTRIB_ID="Scientific"
+	fi
+	if has Beryllium ; then
+		DISTRIB_ID="Scientific"
+		DISTRIB_RELEASE="4.1"
+	elif has Shrike ; then
+		DISTRIB_ID="RedHat"
+		DISTRIB_RELEASE="9"
+	elif has Taroon ; then 	DISTRIB_RELEASE="3"
+	elif has "release 4" ; then DISTRIB_RELEASE="4"
+	elif has "release 5" ; then DISTRIB_RELEASE="5"
+	elif has "release 6" ; then DISTRIB_RELEASE="6"
+	elif has "release 7" ; then DISTRIB_RELEASE="7"
+	fi
+
+# SUSE based
+elif distro SuSe-release || distro SuSE-release ; then
+	DISTRIB_ID="SUSE"
+	DISTRIB_RELEASE=$(cat "$DISTROFILE" | grep "VERSION" | sed -e "s|^VERSION = ||g")
+	if   has "SUSE Linux Enterprise Desktop" ; then
+		DISTRIB_ID="SLED"
+	elif has "SUSE Linux Enterprise Server" ; then
+		DISTRIB_ID="SLES"
+	fi
+
+# fixme: can we detect by some file?
+elif [ `uname` = "FreeBSD" ] ; then
+	DISTRIB_ID="FreeBSD"
+	UNAME=$(uname -r)
+	DISTRIB_RELEASE=$(echo "$UNAME" | grep RELEASE | sed -e "s|\([0-9]\.[0-9]\)-RELEASE|\1|g")
+
+# fixme: can we detect by some file?
+elif [ `uname` = "SunOS" ] ; then
+	DISTRIB_ID="SunOS"
+	DISTRIB_RELEASE=$(uname -r)
+
+# try use standart LSB info by default
+elif distro lsb-release && [ -n "$DISTRIB_RELEASE" ]; then
+	# use LSB
+	true
+fi
+
+case $1 in
+	-p)
+		# override DISTRIB_ID
+		test -n "$2" && DISTRIB_ID="$2"
+		pkgtype
+		exit 0
+		;;
+	-h)
+		echo "distr_vendor - system name and version detection"
+		echo "Usage: distr_vendor [options] [args]"
+		echo "-p [SystemName] - print type of packaging system"
+		echo "-d - print distro name"
+		echo "-v - print version of distro"
+		echo "-e - print full name of distro with version (by default)"
+		echo "-s [SystemName] - print name of distro for build system (like in the package release name)"
+		echo "-n [SystemName] - print vendor name (as _vendor macros in rpm)"
+		echo "-V - print the version of $0"
+		echo "-h - this help"
+		exit 0
+		;;
+	-d)
+		echo $DISTRIB_ID
+		;;
+	-v)
+		echo $DISTRIB_RELEASE
+		;;
+	-s)
+		# override DISTRIB_ID
+		test -n "$2" && DISTRIB_ID="$2"
+		pkgvendor
+		exit 0
+		;;
+	-n)
+		# override DISTRIB_ID
+		test -n "$2" && DISTRIB_ID="$2"
+		rpmvendor
+		exit 0
+		;;
+	-V)
+		echo "20120519"
+		exit 0
+		;;
+	*)
+		# if run without args, just printout Name/Version of the current system
+		[ -n "$DISTRIB_RELEASE" ] && echo $DISTRIB_ID/$DISTRIB_RELEASE || echo $DISTRIB_ID
+		;;
+esac
+

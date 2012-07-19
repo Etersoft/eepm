@@ -115,7 +115,8 @@ pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
 echover "pkg_files=$pkg_files"
 echover "pkg_names=$pkg_names"
 
-DISTRVENDOR=distr_vendor
+# Fill for use: PMTYPE, DISTRNAME, DISTRVERSION, PKGFORMAT, PKGVENDOR, RPMVENDOR
+DISTRVENDOR=$PROGDIR/distr_info
 [ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d)
 [ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
 set_target_pkg_env

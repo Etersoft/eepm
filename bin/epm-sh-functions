@@ -27,7 +27,6 @@ echover()
 # Used DISTRNAME
 set_target_pkg_env()
 {
-	[ "$($DISTRVENDOR -V)" -ge "20120519" ] || fatal "update rpm-build-altlinux-compat package to get new $DISTRVENDOR command"
 	[ -n "$DISTRNAME" ] || fatal "Run set_target_pkg_env without DISTRNAME"
 	PKGFORMAT=$($DISTRVENDOR -p "$DISTRNAME")
 	PKGVENDOR=$($DISTRVENDOR -s "$DISTRNAME")
