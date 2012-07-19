@@ -72,26 +72,26 @@ set_pm_type()
 {
 	local CMD
 case $DISTRNAME in
-	"ALTLinux"|"PCLinux")
+	ALTLinux|PCLinux)
 		CMD="apt-rpm"
 		;;
-	"FreeBSD")
+	FreeBSD)
 		CMD="pkg_add"
 		;;
-	"Ubuntu"|"Debian")
+	Ubuntu|Debian)
 		CMD="apt-dpkg"
 		;;
-	"LinuxXP"|"Fedora"|"ASPLinux"|"CentOS"|"RHEL"|"Scientific")
+	LinuxXP|Fedora|ASPLinux|CentOS|RHEL|Scientific)
 		CMD="yum-rpm"
 		;;
-	"Mandriva")
+	Mandriva|ROSA)
 		CMD="urpm-rpm"
 		;;
-	"SUSE")
+	SUSE)
 		CMD="zypper-rpm"
 		;;
 	*)
-		fatal "Do not known command for DISTRNAME $DISTRNAME"
+		fatal "Do not known DISTRNAME $DISTRNAME"
 		;;
 esac
 PMTYPE=$CMD

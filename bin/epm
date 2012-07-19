@@ -109,8 +109,17 @@ for opt in "$@" ; do
     -e|remove)
         epm_cmd=remove
         ;;
+    -qi|info)
+        epm_cmd=info
+        ;;
+    clean)
+        epm_cmd=clean
+        ;;
     -qa|list|packages)
         epm_cmd=packages
+        ;;
+    update)
+        epm_cmd=update
         ;;
     dist-upgrade|upgrade)
         epm_cmd=upgrade
