@@ -124,8 +124,8 @@ for opt in "$@" ; do
     -qf)
         epm_cmd=query_file
         ;;
-    -ql)
-        epm_cmd=queryl
+    -ql|filelist)
+        epm_cmd=filelist
         ;;
     *)
         if [ -f "$opt" ] ; then
