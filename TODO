@@ -1,0 +1,3 @@
+Отказаться от distr_vendor в rpm-build-altlinux-compat и использовать distr_info отсюда.
+
+Replace rpmU with epmi

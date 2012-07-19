@@ -27,7 +27,7 @@ to any package manager.
 %makeinstall
 
 %files
-%doc README
+%doc README TODO
 %_bindir/epm*
 
 %changelog

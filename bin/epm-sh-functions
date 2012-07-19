@@ -60,7 +60,7 @@ strip_spaces()
 fatal()
 {
 	if [ -z "$TEXTDOMAIN" ] ; then
-		echo "Error in $0: $@" >&2
+		echo "Error: $@" >&2
 #	else
 #		echog "Error in $0: $@" >&2
 	fi
