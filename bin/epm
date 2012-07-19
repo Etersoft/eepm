@@ -62,6 +62,13 @@ $Usage
 "
 }
 
+print_version()
+{
+        echo "EPM package manager version @VERSION@"
+        echo "Copyright (c) Etersoft 2012"
+        echo "This program may be freely redistributed under the terms of the GNU GPL"
+}
+
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
@@ -97,7 +104,11 @@ for opt in "$@" ; do
     -h|--help|help)
         phelp; exit 0
         ;;
-    -v|--verbose)
+    -v|--version)
+        print_version
+        exit
+        ;;
+    --verbose)
         verbose=1
         ;;
     --auto)
@@ -162,6 +173,11 @@ set_target_pkg_env
 set_pm_type
 
 # Run helper for command
-[ -n "$epm_cmd" ] || fatal "Run without any command"
+if [ -z "$epm_cmd" ] ; then
+    print_version
+    echo
+    fatal "Run $ epm --help for get help"
+fi
+
 load_helper epm-$epm_cmd
 epm_$epm_cmd || fatal ""

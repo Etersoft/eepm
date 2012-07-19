@@ -23,6 +23,9 @@ universal interface to any package manager.
 %prep
 %setup
 
+%build
+%__subst "s|@VERSION@|%version-%release|g" bin/epm
+
 %install
 # install to datadir and so on
 %makeinstall
