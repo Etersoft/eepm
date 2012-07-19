@@ -33,9 +33,19 @@ check_bz2_integrity()
 	bunzip -t $1 >/dev/null
 }
 
+check_tbz_integrity()
+{
+	check_bz2_integrity $@
+}
+
 check_gz_integrity()
 {
 	gunzip -t $1 >/dev/null
+}
+
+check_tgz_integrity()
+{
+	check_gz_integrity $@
 }
 
 check_zip_integrity()
@@ -48,53 +58,30 @@ check_xz_integrity()
 	xz -t $1 >/dev/null
 }
 
+check_exe_integrity()
+{
+	# skip
+	true
+}
+
+check_ebuild_integrity()
+{
+	# skip
+	true
+}
+
 check_pkg_integrity()
 {
 	local EXT=`echo "$1" | sed -e "s|.*\.\([a-z0-9]*\)\$|\1|g"`
 	local PKG="$1"
 	local RET
-	case $EXT in
-		deb)
-			check_deb_integrity "$PKG"
-			RET=$?
-			;;
-		rpm)
-			check_rpm_integrity "$PKG"
-			RET=$?
-			;;
-		gz|tgz)
-			check_gz_integrity "$PKG"
-			RET=$?
-			;;
-		bz2|tbz)
-			check_bz2_integrity "$PKG"
-			RET=$?
-			;;
-		zip)
-			check_zip_integrity "$PKG"
-			RET=$?
-			;;
-		xz)
-			check_xz_integrity "$PKG"
-			RET=$?
-			;;
-		exe|ebuild)
-			# Skip checking
-			RET=0
-			;;
-		*)
-			fatal "Unknown package extension '$EXT' in $PKG package"
-			;;
-	esac
-	return $RET
+	check_${EXT}_integrity "$PKG" || fatal "Unknown package extension '$EXT' in $PKG package"
 }
 
-check_files_integrity()
+
+epm_checkpkg()
 {
-	local DIR="$1" EXT
-	for EXT in deb rpm tgz tar.gz tar.bz2 tbz zip ; do
-		for i in $(find "$DIR" -maxdepth 1 -name "*.$EXT") ; do
-			check_pkg_integrity $i && echo "Package $i is OK" || echo "Package $i is broken"
-		done
+	for i in $pkg_files ; do
+		check_pkg_integrity $i || fatal "Broken package $i"
 	done
 }
