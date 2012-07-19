@@ -115,8 +115,8 @@ for opt in "$@" ; do
     -s|search)
         epm_cmd=search
         ;;
-    -q)
-        epm_cmd=checkpkg
+    -q|installed)
+        epm_cmd=query
         ;;
     -qf)
         epm_cmd=query_file
