@@ -49,7 +49,13 @@ phelp()
 	echo "$Descr
 $Usage
 
-   -i|install  install packages
+   -i|install    install package(s)
+   -e|remove     remove package(s)
+   -s|search     search in remote and local package base
+ Options:
+   -v|--verbose  verbose mode
+   --auto        non interactive mode
+   -h|--help     this help
 "
 }
 
@@ -58,6 +64,7 @@ Usage="Usage: $name [-i|install] [package name(s), package files]..."
 Descr="$name - EPM package manager"
 
 verbose=
+non_interactive=
 epm_cmd=
 pkg_files=
 pkg_names=
@@ -90,6 +97,9 @@ for opt in "$@" ; do
         ;;
     -v|--verbose)
         verbose=1
+        ;;
+    --auto)
+        non_interactive=1
         ;;
     -i|install)
         epm_cmd=install
