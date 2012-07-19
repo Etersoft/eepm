@@ -109,6 +109,9 @@ for opt in "$@" ; do
     -e|remove)
         epm_cmd=remove
         ;;
+    -qa|list|packages)
+        epm_cmd=packages
+        ;;
     dist-upgrade|upgrade)
         epm_cmd=upgrade
         ;;
@@ -121,8 +124,8 @@ for opt in "$@" ; do
     -qf)
         epm_cmd=query_file
         ;;
-    -qa|list|packages)
-        epm_cmd=packages
+    -ql)
+        epm_cmd=queryl
         ;;
     *)
         if [ -f "$opt" ] ; then
