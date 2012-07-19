@@ -141,4 +141,4 @@ set_pm_type
 # Run helper for command
 [ -n "$epm_cmd" ] || fatal "Run without any command"
 load_helper epm-$epm_cmd
-epm_$epm_cmd
+epm_$epm_cmd || fatal ""

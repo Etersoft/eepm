@@ -24,13 +24,13 @@ epm_update()
 {
 case $PMTYPE in
 	"apt-rpm")
-		apt-get update || exit
-		apt-get -f install || exit
+		docmd $SUDO apt-get update || exit
+		docmd $SUDO apt-get -f install || exit
 		;;
 	"apt-dpkg")
-		apt-get update || exit
-		apt-get -f install || exit
-		apt-get autoremove
+		docmd $SUDO apt-get update || exit
+		docmd $SUDO apt-get -f install || exit
+		docmd $SUDO apt-get autoremove
 		;;
 # skip, will do it automagically
 #	"LinuxXP"|"Fedora"|"ASPLinux"|"CentOS"|"RHEL"|"Scientific")

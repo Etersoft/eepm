@@ -20,7 +20,7 @@
 
 check_rpm_integrity()
 {
-	rpm --checksig $@ >/dev/null
+	a= rpm --checksig $@ >/dev/null
 }
 
 check_deb_integrity()
@@ -30,7 +30,7 @@ check_deb_integrity()
 
 check_bz2_integrity()
 {
-	bunzip -t $1 >/dev/null
+	a= bunzip -t $1 >/dev/null
 }
 
 check_tbz_integrity()
@@ -40,7 +40,7 @@ check_tbz_integrity()
 
 check_gz_integrity()
 {
-	gunzip -t $1 >/dev/null
+	a= gunzip -t $1 >/dev/null
 }
 
 check_tgz_integrity()
@@ -55,7 +55,7 @@ check_zip_integrity()
 
 check_xz_integrity()
 {
-	xz -t $1 >/dev/null
+	a= xz -t $1 >/dev/null
 }
 
 check_exe_integrity()
