@@ -20,7 +20,7 @@
 
 # copied from korinf/tools/run-script/scripts/search
 
-epm_query_file()
+epm_packages()
 {
 
 case $DISTRNAME in

@@ -33,7 +33,7 @@ epm_install_names()
 			docmd $SUDO urpmi $@
 			return ;;
 		zypper-rpm)
-			docmd $SUDO zypper install
+			docmd $SUDO zypper install $@
 			return ;;
 		*)
 			fatal "Do not known install command for $PMTYPE"
@@ -43,7 +43,7 @@ epm_install_names()
 
 epm_ni_install_names()
 {
-	[ -n "$1" ] || return
+	[ -z "$1" ] && return
 	case $PMTYPE in
 		apt-rpm)
 			docmd $SUDO apt-get -y --force-yes install $@
@@ -69,7 +69,7 @@ epm_ni_install_names()
 
 epm_install_files()
 {
-    [ -n "$1" ] || return
+    [ -z "$1" ] && return
 
     case $DISTRNAME in
         ALTLinux|PCLinux)
