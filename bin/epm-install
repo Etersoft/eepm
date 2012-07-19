@@ -18,33 +18,6 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
-# TODO
-epm_install_sim()
-{
-case $DISTRNAME in
-	"ALTLinux"|"PCLinux")
-		CMD="apt-get --simulate install"
-		;;
-	"Ubuntu"|"Debian")
-		CMD="apt-get --simulate install"
-		;;
-	"LinuxXP"|"Fedora"|"ASPLinux"|"CentOS"|"RHEL"|"Scientific")
-		CMD="yum provides"
-		;;
-	"Mandriva")
-		CMD="urpmi --test --auto"
-		;;
-	"SUSE")
-		CMD="zypper --non-interactive install --dry-run"
-		;;
-	*)
- 		echo "Do not known install command for DISTRNAME $DISTRNAME"
- 		exit 2
-		;;
-esac
-}
-
-
 # copied from etersoft-build-utils/share/eterbuild/functions/rpmpkg
 get_install_package_command()
 {
@@ -77,11 +50,43 @@ get_install_package_command()
 	return $RET
 }
 
+#is_alt && FANCYPERCENT=--fancypercent
+#docmd $SUDO rpm -Uvh $FANCYPERCENT "$@"
+
 
 epm_install()
 {
     [ -n "$pkg_files$pkg_names" ] || fatal "Run install without packages"
 
-    CMD=$(get_install_package_command $DISTRNAME interactive)
-    docmd $CMD $pkg_files $pkg_names
+    if [ -n "$pkg_names" ] ; then
+        CMD=$(get_install_package_command $DISTRNAME interactive)
+        docmd $SUDO $CMD $pkg_names
+    fi
+
+    [ -n "$pkg_files" ] || return
+
+    case $DISTRNAME in
+        ALTLinux|PCLinux)
+            docmd $SUDO apt-get install $pkg_files
+            return ;;
+        Ubuntu|Debian|Mint)
+            docmd $SUDO dpkg -i $pkg_files
+            docmd $SUDO apt-get -f install
+            return ;;
+    esac
+
+    case $PMTYPE in
+        urpm-rpm)
+            docmd $SUDO urpmi --no-verify-rpm $pkg_files
+            return ;;
+        yum-rpm)
+            docmd $SUDO yum install $pkg_files
+            return ;;
+        zypper-rpm)
+            docmd $SUDO zypper install $pkg_files
+            return ;;
+        *)
+            fatal "DO not know appropriate install command for $PMTYPE"
+    esac
 }
+
