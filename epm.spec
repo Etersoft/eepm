@@ -1,5 +1,5 @@
 Name: epm
-Version: 0.2
+Version: 0.3
 Release: alt1
 
 Summary: EPM package manager
@@ -33,6 +33,13 @@ universal interface to any package manager.
 %_bindir/distr_info
 
 %changelog
+* Thu Jul 19 2012 Vitaly Lipatov <lav@altlinux.ru> 0.3-alt1
+- add 'epm -ql, epm dist-upgrade'
+- fix epm -qa, epm -qf, epm -s, epm -q
+- add epm-packages
+- epm-install full rewrite
+- epm: improve help and add non interactive mode support
+
 * Thu Jul 19 2012 Vitaly Lipatov <lav@altlinux.ru> 0.2-alt1
 - cleanup spec, fix autorequires
 - add distr_info (renamed distr_vendor)
