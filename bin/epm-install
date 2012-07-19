@@ -19,74 +19,84 @@
 #
 
 # copied from etersoft-build-utils/share/eterbuild/functions/rpmpkg
-get_install_package_command()
+epm_install_names()
 {
-	local DISTRNAME=$1
-	local INAC=$2
-	local CMD
-	local RET=0
-	case $DISTRNAME in
-		"ALTLinux"|"Ubuntu"|"Debian"|"PCLinux")
-			[ -n "$INAC" ] && CMD="apt-get install" || CMD="apt-get -y --force-yes install"
-			;;
-		"LinuxXP"|"Fedora"|"ASPLinux"|"CentOS"|"RHEL"|"Scientific")
-			[ -n "$INAC" ] && CMD="yum install" || CMD="yum -y install"
-			;;
-		"Mandriva")
-			[ -n "$INAC" ] && CMD="urpmi --no-verify-rpm" || CMD="urpmi --auto --no-verify-rpm"
-			;;
-		"ROSA")
-			[ -n "$INAC" ] && CMD="urpmi --no-verify-rpm" || CMD="urpmi --auto --no-verify-rpm"
-			;;
-		"SUSE|SLED|SLES")
-			[ -n "$INAC" ] && CMD="zypper --non-interactive install" || CMD="yes | zypper --non-interactive install"
-			;;
+	[ -n "$1" ] || return
+	case $PMTYPE in
+		apt-rpm)
+			docmd $SUDO apt-get install $@
+			return ;;
+		yum-rpm)
+			docmd $SUDO yum install $@
+			return ;;
+		urpm-rpm)
+			docmd $SUDO urpmi $@
+			return ;;
+		zypper-rpm)
+			docmd $SUDO zypper install
+			return ;;
 		*)
-			RET=1
-			CMD="echo \"Do not known install command for DISTRNAME $DISTRNAME\""
+			fatal "Do not known install command for $PMTYPE"
 			;;
 	esac
-	echo $CMD
-	return $RET
 }
 
+epm_ni_install_names()
+{
+	[ -n "$1" ] || return
+	case $PMTYPE in
+		apt-rpm)
+			docmd $SUDO apt-get -y --force-yes install $@
+			return ;;
+		yum-rpm)
+			docmd $SUDO yum -y install $@
+			return ;;
+		urpm-rpm)
+			docmd $SUDO urpmi --auto --no-verify-rpm $@
+			return ;;
+		zypper-rpm)
+			yes | docmd $SUDO zypper --non-interactive install $@
+			return ;;
+		*)
+			fatal "Do not known appropriate install command for $PMTYPE"
+			;;
+	esac
+}
+
+# for low level install
 #is_alt && FANCYPERCENT=--fancypercent
 #docmd $SUDO rpm -Uvh $FANCYPERCENT "$@"
+
+epm_install_files()
+{
+    [ -n "$1" ] || return
+
+    case $DISTRNAME in
+        ALTLinux|PCLinux)
+            docmd $SUDO apt-get install $@
+            return ;;
+        Ubuntu|Debian|Mint)
+            docmd $SUDO dpkg -i $@
+            docmd $SUDO apt-get -f install
+            return ;;
+    esac
+
+    # other systems can install file package via ordinary command
+    epm_install_names $@
+}
 
 
 epm_install()
 {
     [ -n "$pkg_files$pkg_names" ] || fatal "Run install without packages"
 
-    if [ -n "$pkg_names" ] ; then
-        CMD=$(get_install_package_command $DISTRNAME interactive)
-        docmd $SUDO $CMD $pkg_names
+    if [ -n "$non_interactive" ] ; then
+        epm_ni_install_names $pkg_names
+    else
+        epm_install_names $pkg_names
     fi
 
-    [ -n "$pkg_files" ] || return
+    epm_install_files $pkg_files
 
-    case $DISTRNAME in
-        ALTLinux|PCLinux)
-            docmd $SUDO apt-get install $pkg_files
-            return ;;
-        Ubuntu|Debian|Mint)
-            docmd $SUDO dpkg -i $pkg_files
-            docmd $SUDO apt-get -f install
-            return ;;
-    esac
-
-    case $PMTYPE in
-        urpm-rpm)
-            docmd $SUDO urpmi --no-verify-rpm $pkg_files
-            return ;;
-        yum-rpm)
-            docmd $SUDO yum install $pkg_files
-            return ;;
-        zypper-rpm)
-            docmd $SUDO zypper install $pkg_files
-            return ;;
-        *)
-            fatal "DO not know appropriate install command for $PMTYPE"
-    esac
 }
 
