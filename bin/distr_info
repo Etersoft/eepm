@@ -51,7 +51,7 @@ pkgtype()
 		gentoo) echo "tbz2" ;;
 		windows) echo "exe" ;;
 		debian|ubuntu|mint|runtu) echo "deb" ;;
-		alt|asplinux|suse|mandriva|mandrake|pclinux|sled|sles)
+		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
 			echo "rpm" ;;
 		fedora|redhat|scientific|centos|rhel)
 			echo "rpm" ;;
@@ -161,7 +161,9 @@ elif distro mandriva-release || distro mandrake-release ; then
 	elif has 2009.1 ; then DISTRIB_RELEASE="2009.1"
 	else
 		# use /etc/lsb-release info by default
-		true
+		if has ROSA ; then
+			DISTRIB_ID="ROSA"
+		fi
 	fi
 
 # Fedora based

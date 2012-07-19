@@ -5,7 +5,7 @@ Release: alt1
 Summary: EPM package manager
 
 License: GPLv2
-Group: Development/Other
+Group: System/Configuration/Packaging
 Url: http://wiki.etersoft.ru/EPM
 
 Packager: Vitaly Lipatov <lav@altlinux.ru>
@@ -16,8 +16,9 @@ Source: ftp://updates.etersoft.ru/pub/Etersoft/Sisyphus/sources/tarball/%name-%v
 BuildArchitectures: noarch
 
 %description
-EPM is the package manager for any platform and any distro. It provides universal interface
-to any package manager.
+EPM is the package manager for any platform
+and any platform version. It provides
+universal interface to any package manager.
 
 %prep
 %setup
@@ -33,7 +34,7 @@ to any package manager.
 
 %changelog
 * Thu Jul 19 2012 Vitaly Lipatov <lav@altlinux.ru> 0.2-alt1
-- fix autorequires
+- cleanup spec, fix autorequires
 - add distr_info (renamed distr_vendor)
 - rewrite install, simulate, checkpkg
 
