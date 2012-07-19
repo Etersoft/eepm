@@ -23,7 +23,7 @@ epm_install_names()
 {
 	[ -n "$1" ] || return
 	case $PMTYPE in
-		apt-rpm)
+		apt-rpm|apt-dpkg)
 			docmd $SUDO apt-get install $@
 			return ;;
 		yum-rpm)
@@ -45,7 +45,7 @@ epm_ni_install_names()
 {
 	[ -z "$1" ] && return
 	case $PMTYPE in
-		apt-rpm)
+		apt-rpm|apt-dpkg)
 			docmd $SUDO apt-get -y --force-yes install $@
 			return ;;
 		yum-rpm)
