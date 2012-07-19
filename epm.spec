@@ -1,5 +1,5 @@
 Name: epm
-Version: 0.1
+Version: 0.2
 Release: alt1
 
 Summary: EPM package manager
@@ -16,7 +16,7 @@ Source: ftp://updates.etersoft.ru/pub/Etersoft/Sisyphus/sources/tarball/%name-%v
 BuildArchitectures: noarch
 
 %description
-Etersoft package manager for any platform. It provides universal interface
+EPM is the package manager for any platform and any distro. It provides universal interface
 to any package manager.
 
 %prep
@@ -29,7 +29,13 @@ to any package manager.
 %files
 %doc README TODO
 %_bindir/epm*
+%_bindir/distr_info
 
 %changelog
+* Thu Jul 19 2012 Vitaly Lipatov <lav@altlinux.ru> 0.2-alt1
+- fix autorequires
+- add distr_info (renamed distr_vendor)
+- rewrite install, simulate, checkpkg
+
 * Wed Jul 18 2012 Vitaly Lipatov <lav@altlinux.ru> 0.1-alt1
 - initial build for ALT Linux Sisyphus

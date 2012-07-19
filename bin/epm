@@ -55,7 +55,7 @@ $Usage
 
 name=${0##*/}
 Usage="Usage: $name [-i|install] [package name(s), package files]..."
-Descr="$name - etersoft package manager"
+Descr="$name - EPM package manager"
 
 verbose=
 epm_cmd=
