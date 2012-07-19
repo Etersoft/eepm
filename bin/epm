@@ -24,7 +24,23 @@
 #. /usr/share/eterbuild/eterbuild
 #load_mod rpm git buildsrpm
 
-. $(dirname $0)/epm-sh-functions
+PROGDIR=$(dirname $0)
+
+load_helper()
+{
+    [ -r "$PROGDIR/$1" ] || fatal "Have no $PROGDIR/$1 helper file"
+    . $PROGDIR/$1
+}
+
+load_helper epm-sh-functions
+
+# set SUDO not for root user
+SUDO="sudo"
+[ -n "$UID" ] || UID=`id -u`
+if [ $UID = "0" ]; then
+    SUDO=""
+fi
+
 
 #############################
 
@@ -41,7 +57,7 @@ name=${0##*/}
 Usage="Usage: $name [-i|install] [package name(s), package files]..."
 Descr="$name - etersoft package manager"
 
-verbose=1
+verbose=
 epm_cmd=
 pkg_files=
 pkg_names=
@@ -120,14 +136,9 @@ DISTRVENDOR=$PROGDIR/distr_info
 [ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d)
 [ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
 set_target_pkg_env
-
 set_pm_type
 
-[ -n "$epm_cmd" ] || fatal "Run without command"
-
-epm_cmd_file=$(dirname $0)/epm-$epm_cmd
-[ -r "$epm_cmd_file" ] || fatal "Have no $epm_cmd_file command file"
-. $epm_cmd_file
-
+# Run helper for command
+[ -n "$epm_cmd" ] || fatal "Run without any command"
+load_helper epm-$epm_cmd
 epm_$epm_cmd
-
