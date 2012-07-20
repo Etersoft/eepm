@@ -47,7 +47,7 @@ echo $CMD
 
 epm_simulate()
 {
-    [ -n "$pkg_names" ] || fatal "Run install without packages"
+    [ -n "$pkg_names" ] || fatal "Run $epm_cmd without packages"
 
     CMD=$(epm_install_sim $DISTRNAME)
     docmd $SUDO $CMD $pkg_names

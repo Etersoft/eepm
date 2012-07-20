@@ -48,17 +48,21 @@ phelp()
 {
 	echo "$Descr
 $Usage
+ Commands:
+   -i|install         install package(s) from remote repositories or from local file
+   -e|remove          remove (delete) package(s) from the database and the system
+   -s|search          search in remote package repositories
+   -qa|list|packages  list of installed package(s)
+   -qf|which          query package(s) owning file
+   -q                 check presence of package(s)
+   update             update remote package repository databases
+   upgrade            performs upgrades of package software distributions
 
-   -i|install    	install package(s)
-   -e|remove     	remove package(s)
-   -s|search     	search in remote and local package base
-   -qa|list|packages	list of installed package(s)
-   -qf			query package(s) owning file
-   -q			check presence of package(s)
  Options:
-   -v|--verbose  verbose mode
-   --auto        non interactive mode
-   -h|--help     this help
+   -v|--version
+   --verbose          verbose mode
+   --auto             non interactive mode
+   -h|--help          this help
 "
 }
 
@@ -114,10 +118,10 @@ for opt in "$@" ; do
     --auto)
         non_interactive=1
         ;;
-    -i|install)
+    -i|install|add)
         epm_cmd=install
         ;;
-    -e|remove)
+    -e|-P|remove|delete)
         epm_cmd=remove
         ;;
     -qi|info)
@@ -141,11 +145,14 @@ for opt in "$@" ; do
     -q|installed)
         epm_cmd=query
         ;;
-    -qf)
+    -qf|which)
         epm_cmd=query_file
         ;;
     -ql|filelist)
         epm_cmd=filelist
+        ;;
+    check|simulate)
+        epm_cmd=$opt
         ;;
     *)
         if [ -f "$opt" ] ; then

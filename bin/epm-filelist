@@ -41,8 +41,7 @@ case $DISTRNAME in
 		CMD="rpm -ql"
 		;;
 	*)
-		RET=1
-		CMD="echo \"Do not known query command for DISTRNAME $DISTRNAME\""
+		fatal "Do not known query command for $PMTYPE"
 		;;
 esac
 
