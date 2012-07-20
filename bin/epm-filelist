@@ -22,7 +22,7 @@
 
 epm_filelist()
 {
-    [ -n "$pkg_files" ] || fatal "Run query without names"
+    [ -n "$pkg_filenames" ] || fatal "Run query without names"
 
 case $DISTRNAME in
 	"ALTLinux"|"PCLinux")
@@ -45,6 +45,6 @@ case $DISTRNAME in
 		;;
 esac
 
-docmd $CMD $pkg_files
+docmd $CMD $pkg_filenames
 
 }
