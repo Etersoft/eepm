@@ -30,7 +30,10 @@ case $PMTYPE in
 	"apt-dpkg")
 		docmd $SUDO apt-get update || exit
 		docmd $SUDO apt-get -f install || exit
-		docmd $SUDO apt-get autoremove
+		#docmd $SUDO apt-get autoremove
+		;;
+	urpm-rpm)
+		docmd $SUDO urpmi.update -a
 		;;
 # skip, will do it automagically
 #	"LinuxXP"|"Fedora"|"ASPLinux"|"CentOS"|"RHEL"|"Scientific")

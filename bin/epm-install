@@ -35,6 +35,9 @@ epm_install_names()
 		zypper-rpm)
 			docmd $SUDO zypper install $@
 			return ;;
+		pkg_add)
+			docmd $SUDO pkg_add -r $@
+			return ;;
 		*)
 			fatal "Do not known install command for $PMTYPE"
 			;;
@@ -57,6 +60,9 @@ epm_ni_install_names()
 		zypper-rpm)
 			yes | docmd $SUDO zypper --non-interactive install $@
 			return ;;
+		pkg_add)
+			docmd $SUDO pkg_add -r $@
+			return ;;
 		*)
 			fatal "Do not known appropriate install command for $PMTYPE"
 			;;
@@ -75,6 +81,8 @@ epm_install_files()
         ALTLinux|PCLinux)
             docmd $SUDO apt-get install $@
             return ;;
+        FreeBSD)
+            docmd $SUDO pkg_add $@
         Ubuntu|Debian|Mint)
             docmd $SUDO dpkg -i $@
             docmd $SUDO apt-get -f install

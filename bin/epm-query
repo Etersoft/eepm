@@ -26,23 +26,22 @@ epm_query()
 
 case $DISTRNAME in
 	"ALTLinux"|"PCLinux")
-		CMD="rpm -qa"
+		CMD="rpm -q"
 		;;
 	"Ubuntu"|"Debian")
 		CMD="dpkg -l"
 		;;
 	"LinuxXP"|"Fedora"|"ASPLinux"|"CentOS"|"RHEL"|"Scientific")
-		CMD="rpm -qa"
+		CMD="rpm -q"
 		;;
 	"Mandriva")
-		CMD="rpm -qa"
+		CMD="rpm -q"
 		;;
 	"SUSE")
-		CMD="rpm -qa"
+		CMD="rpm -q"
 		;;
 	*)
-		RET=1
-		CMD="echo \"Do not known query command for DISTRNAME $DISTRNAME\""
+		fatal "Do not known command for $PMTYPE"
 		;;
 esac
 
