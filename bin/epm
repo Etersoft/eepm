@@ -34,12 +34,7 @@ load_helper()
 
 load_helper epm-sh-functions
 
-# set SUDO not for root user
-SUDO="sudo"
-[ -n "$UID" ] || UID=`id -u`
-if [ $UID = "0" ]; then
-    SUDO=""
-fi
+set_sudo
 
 
 #############################
