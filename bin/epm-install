@@ -83,6 +83,7 @@ epm_install_files()
             return ;;
         FreeBSD)
             docmd $SUDO pkg_add $@
+            return ;;
         Ubuntu|Debian|Mint)
             docmd $SUDO dpkg -i $@
             docmd $SUDO apt-get -f install

@@ -187,4 +187,5 @@ if [ -z "$epm_cmd" ] ; then
 fi
 
 load_helper epm-$epm_cmd
-epm_$epm_cmd || fatal ""
+epm_$epm_cmd
+# return last error code
