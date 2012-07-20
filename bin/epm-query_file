@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012  Etersoft
-# Copyright (C) 2012  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2009, 2012  Etersoft
+# Copyright (C) 2009, 2012  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This file is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,34 +18,66 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
+# etersoft-build-utils/bin/rpmqf
+
+# use and modify TOFILE recursively
+real_file()
+{
+	local LINKTO1 LINKTO
+	local TOFILE
+	
+	# get canonical path
+	if [ -e "$1" ] ; then
+		TOFILE=$1
+	else
+		TOFILE=`which $1 2>/dev/null || echo $1`
+		if [ "$TOFILE" != "$1" ] ; then
+		echo "Note: $1 is placed as $TOFILE"
+		fi
+	fi
+	
+	# get value of symbolic link
+	if [ -L "$TOFILE" ] ; then
+		LINKTO=`readlink "$TOFILE"`
+		echo "Note: $TOFILE is link to $LINKTO"
+		real_file "$LINKTO"
+	fi
+	FULLFILEPATH=`readlink -f $TOFILE`
+}
+
 # copied from korinf/tools/run-script/scripts/search
+__do_query()
+{
+    case $PMTYPE in
+        apt-rpm)
+            CMD="rpm -qf"
+            ;;
+        apt-dpkg)
+            CMD="dpkg -S"
+            ;;
+        yum-rpm|urpm-rpm)
+            CMD="rpm -qf"
+            ;;
+        zypper-rpm)
+            CMD="rpm -qf"
+            ;;
+        *)
+            fatal "Do not known query command for $PMTYPE"
+            ;;
+    esac
+ 
+    docmd $CMD $@
+}
 
 epm_query_file()
 {
-    [ -n "$pkg_filenames" ] || fatal "Run query without names"
+    # file can exists or not
+    [ -n "$pkg_filenames" ] || fatal "Run query without file names"
 
-case $DISTRNAME in
-	"ALTLinux"|"PCLinux")
-		CMD="rpm -qf"
-		;;
-	"Ubuntu"|"Debian")
-		CMD="dpkg -S"
-		;;
-	"LinuxXP"|"Fedora"|"ASPLinux"|"CentOS"|"RHEL"|"Scientific")
-		CMD="rpm -qf"
-		;;
-	"Mandriva")
-		CMD="rpm -qf"
-		;;
-	"SUSE")
-		CMD="rpm -qf"
-		;;
-	*)
-		RET=1
-		CMD="echo \"Do not known query command for DISTRNAME $DISTRNAME\""
-		;;
-esac
 
-docmd $CMD $pkg_filenames
+for i in $pkg_filenames ; do
+    real_file "$i"
+    __do_query $FULLFILEPATH
+done
 
 }

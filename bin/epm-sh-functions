@@ -33,6 +33,12 @@ set_target_pkg_env()
 	RPMVENDOR=$($DISTRVENDOR -n "$DISTRNAME")
 }
 
+# for systems without realpath command
+realpath()
+{
+        readlink -f "$@"
+}
+
 # Print command line and run command line
 docmd()
 {
