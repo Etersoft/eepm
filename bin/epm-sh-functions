@@ -85,6 +85,16 @@ set_sudo()
 	fi
 }
 
+# print options description from HELPCMD/HELPOPT lines in the code
+get_help()
+{
+    grep "# $1" $PROGDIR/epm | while read n ; do
+        opt=$(echo $n | sed -e "s|) # $1:.*||g")
+        desc=$(echo $n | sed -e "s|.*) # $1:||g")
+        printf "    %-20s %s\n" $opt "$desc"
+    done
+}
+
 
 # FIXME: detect if not recognized
 set_pm_type()

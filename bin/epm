@@ -18,12 +18,6 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
-# HACK
-#ETERBUILDBIN=/usr/bin
-# FIXME
-#. /usr/share/eterbuild/eterbuild
-#load_mod rpm git buildsrpm
-
 PROGDIR=$(dirname $0)
 
 load_helper()
@@ -44,20 +38,10 @@ phelp()
 	echo "$Descr
 $Usage
  Commands:
-   -i|install         install package(s) from remote repositories or from local file
-   -e|remove          remove (delete) package(s) from the database and the system
-   -s|search          search in remote package repositories
-   -qa|list|packages  list of installed package(s)
-   -qf|which          query package(s) owning file
-   -q                 check presence of package(s)
-   update             update remote package repository databases
-   upgrade            performs upgrades of package software distributions
+$(get_help HELPCMD)
 
  Options:
-   -v|--version
-   --verbose          verbose mode
-   --auto             non interactive mode
-   -h|--help          this help
+$(get_help HELPOPT)
 "
 }
 
@@ -100,53 +84,52 @@ esac
 
 for opt in "$@" ; do
     case $opt in
-    -h|--help|help)
+    -h|--help|help)       # HELPOPT: this help
         phelp; exit 0
         ;;
-    -v|--version)
-        print_version
-        exit
+    -v|--version)         # HELPOPT: print version
+        print_version; exit 0
         ;;
-    --verbose)
+    --verbose)            # HELPOPT: verbose mode
         verbose=1
         ;;
-    --auto)
+    --auto)               # HELPOPT: non interactive mode
         non_interactive=1
         ;;
-    -i|install|add)
+    -i|install|add)       # HELPCMD: install package(s) from remote repositories or from local file
         epm_cmd=install
         ;;
-    -e|-P|remove|delete)
+    -e|-P|remove|delete)  # HELPCMD: remove (delete) package(s) from the database and the system
         epm_cmd=remove
         ;;
-    -qi|info)
+    -qi|info)             # HELPCMD: print package detail info
         epm_cmd=info
         ;;
-    clean)
+    clean)                # HELPCMD: clean local package cache
         epm_cmd=clean
         ;;
-    -qa|list|packages)
+    -qa|list|packages)    # HELPCMD: list of installed package(s)
         epm_cmd=packages
         ;;
-    update)
+    update)               # HELPCMD: update remote package repository databases
         epm_cmd=update
         ;;
-    dist-upgrade|upgrade)
+    dist-upgrade|upgrade) # HELPCMD: performs upgrades of package software distributions
         epm_cmd=upgrade
         ;;
-    -s|search)
+    -s|search)            # HELPCMD: search in remote package repositories
         epm_cmd=search
         ;;
-    -q|installed)
+    -q|installed)         # HELPCMD: check presence of package(s)
         epm_cmd=query
         ;;
-    -qf|which)
+    -qf|which)            # HELPCMD: query package(s) owning file
         epm_cmd=query_file
         ;;
-    -ql|filelist)
+    -ql|filelist)         # HELPCMD: print package file list
         epm_cmd=filelist
         ;;
-    check|simulate)
+    check|simulate)       # HELPCMD: simulate install (check requires)
         epm_cmd=$opt
         ;;
     *)
