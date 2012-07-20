@@ -37,7 +37,9 @@ set_target_pkg_env()
 docmd()
 {
 	#SETCOLOR_SUCCESS
-	echo " \$ $@"
+	local PROMTSIG="\$"
+	[ "$UID" = 0 ] && PROMTSIG="#"
+	echo " $PROMTSIG $@"
 	#SETCOLOR_NORMAL
 	"$@"
 }
