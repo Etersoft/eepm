@@ -1,5 +1,5 @@
 Name: epm
-Version: 0.4
+Version: 0.5
 Release: alt1
 
 Summary: EPM package manager
@@ -36,6 +36,11 @@ universal interface to any package manager.
 %_bindir/distr_info
 
 %changelog
+* Sat Jul 21 2012 Vitaly Lipatov <lav@altlinux.ru> 0.5-alt1
+- add reinstall, fix epm -ql
+- epm: get commands and options description from the code
+- rewrite query_file, port rpmqf
+
 * Fri Jul 20 2012 Vitaly Lipatov <lav@altlinux.ru> 0.4-alt1
 - update TODO
 - add check and repolist commands
