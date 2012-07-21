@@ -99,6 +99,9 @@ for opt in "$@" ; do
     -i|install|add)       # HELPCMD: install package(s) from remote repositories or from local file
         epm_cmd=install
         ;;
+    reinstall)            # HELPCMD: reinstall package(s) from remote repositories or from local file
+        epm_cmd=reinstall
+        ;;
     -e|-P|remove|delete)  # HELPCMD: remove (delete) package(s) from the database and the system
         epm_cmd=remove
         ;;
