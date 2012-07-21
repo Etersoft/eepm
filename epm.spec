@@ -19,6 +19,8 @@ BuildArchitectures: noarch
 EPM is the package manager for any platform
 and any platform version. It provides
 universal interface to any package manager.
+Can be useful for system administrators working
+with various distros.
 
 %prep
 %setup
@@ -37,6 +39,8 @@ universal interface to any package manager.
 
 %changelog
 * Sat Jul 21 2012 Vitaly Lipatov <lav@altlinux.ru> 0.5-alt1
+- add quiet mode (no print commands before run)
+- add color support for output
 - add reinstall, fix epm -ql
 - epm: get commands and options description from the code
 - rewrite query_file, port rpmqf
