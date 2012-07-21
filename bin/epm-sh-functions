@@ -18,6 +18,35 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
+# copied from /etc/init.d/outformat (ALT Linux)
+isatty()
+{
+	# Set a sane TERM required for tput
+	[ -n "$TERM" ] || TERM=dumb
+	export TERM
+	test -t 1
+}
+
+: ${BLACK:=0} ${RED:=1} ${GREEN:=2} ${YELLOW:=3} ${BLUE:=4} ${MAGENTA:=5} ${CYAN:=6} ${WHITE:=7}
+
+set_boldcolor()
+{
+	isatty || return
+	{
+		echo bold
+		echo setaf $1
+	} |tput -S
+}
+
+restore_color()
+{
+	isatty || return
+	{
+		echo op; # set Original color Pair.
+		echo sgr0; # turn off all special graphics mode (bold in our case).
+	} |tput -S
+}
+
 echover()
 {
     [ -n "$verbose" ] || return
@@ -42,11 +71,13 @@ realpath()
 # Print command line and run command line
 docmd()
 {
-	#SETCOLOR_SUCCESS
-	local PROMTSIG="\$"
-	[ "$UID" = 0 ] && PROMTSIG="#"
-	echo " $PROMTSIG $@"
-	#SETCOLOR_NORMAL
+	if [ -z "$quiet" ] ; then
+		set_boldcolor $GREEN
+		local PROMTSIG="\$"
+		[ "$UID" = 0 ] && PROMTSIG="#"
+		echo " $PROMTSIG $@"
+		restore_color
+	fi
 	"$@"
 }
 
@@ -125,3 +156,4 @@ case $DISTRNAME in
 esac
 PMTYPE=$CMD
 }
+

@@ -56,6 +56,7 @@ Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
 verbose=
+quiet=
 non_interactive=
 epm_cmd=
 pkg_files=
@@ -92,6 +93,9 @@ for opt in "$@" ; do
         ;;
     --verbose)            # HELPOPT: verbose mode
         verbose=1
+        ;;
+    --quiet)              # HELPOPT: quiet mode (do not print commands before exec)
+        quiet=1
         ;;
     --auto)               # HELPOPT: non interactive mode
         non_interactive=1
