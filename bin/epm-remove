@@ -73,11 +73,11 @@ esac
 
 epm_remove()
 {
-    [ -n "$pkg_files$pkg_names" ] || fatal "Run remove without names"
+    [ -n "$pkg_filenames" ] || fatal "Run remove without names"
 
 case $DISTRNAME in
 	"ALTLinux"|"Ubuntu"|"Debian"|"PCLinux")
-		CMD="apt-get remove"
+		CMD="apt-get remove --purge"
 		;;
 	"LinuxXP"|"Fedora"|"ASPLinux"|"CentOS"|"RHEL"|"Scientific")
 		CMD="yum remove"
@@ -89,8 +89,7 @@ case $DISTRNAME in
 		CMD="zypper remove"
 		;;
 	*)
-		RET=1
-		CMD="echo \"Do not known install command for DISTRNAME $DISTRNAME\""
+		fatal "Do not known command for $PMTYPE"
 		;;
 esac
 
