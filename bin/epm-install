@@ -69,17 +69,17 @@ epm_ni_install_names()
 	esac
 }
 
-# for low level install
-#is_alt && FANCYPERCENT=--fancypercent
-#docmd $SUDO rpm -Uvh $FANCYPERCENT "$@"
-
 epm_install_files()
 {
     [ -z "$1" ] && return
 
     case $DISTRNAME in
-        ALTLinux|PCLinux)
+        ALTLinux)
+            docmd $SUDO rpm -Uvh --force $@ && return
             docmd $SUDO apt-get install $@
+            return ;;
+        PCLinux)
+            docmd $SUDO rpm -Uvh --force $@
             return ;;
         FreeBSD)
             docmd $SUDO pkg_add $@

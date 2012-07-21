@@ -54,7 +54,8 @@ epm_reinstall_files()
 
     case $DISTRNAME in
         ALTLinux|PCLinux)
-            docmd $SUDO rpm -Uvh --force $@
+            docmd $SUDO rpm -Uvh --force $@ && return
+            docmd $SUDO apt-get --reinstall install $@
             return ;;
         Ubuntu|Debian|Mint)
             docmd $SUDO dpkg -i $@
