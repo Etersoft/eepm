@@ -18,38 +18,30 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
-# TODO
-epm_install_sim()
-{
-case $DISTRNAME in
-	"ALTLinux"|"PCLinux")
-		CMD="apt-get --simulate install"
-		;;
-	"Ubuntu"|"Debian")
-		CMD="apt-get --simulate install"
-		;;
-	"LinuxXP"|"Fedora"|"ASPLinux"|"CentOS"|"RHEL"|"Scientific")
-		CMD="yum provides"
-		;;
-	"Mandriva")
-		CMD="urpmi --test --auto"
-		;;
-	"SUSE")
-		CMD="zypper --non-interactive install --dry-run"
-		;;
-	*)
- 		fatal "Do not known install command for DISTRNAME $DISTRNAME"
-		;;
-esac
-echo $CMD
-}
-
 
 epm_simulate()
 {
+    local CMD
     [ -n "$pkg_names" ] || fatal "Run $epm_cmd without packages"
 
-    CMD=$(epm_install_sim $DISTRNAME)
+    case $PMTYPE in
+    	apt-rpm|apt-dpkg)
+    		CMD="apt-get --simulate install"
+    		;;
+    	yum-rpm)
+    		CMD="yum provides"
+    		;;
+    	urpm-rpm)
+    		CMD="urpmi --test --auto"
+    		;;
+    	zypper-rpm)
+    		CMD="zypper --non-interactive install --dry-run"
+    		;;
+    	*)
+    		fatal "Do not known install command for $PMTYPE"
+    		;;
+    esac
+
     docmd $SUDO $CMD $pkg_names
 }
 

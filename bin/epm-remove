@@ -75,17 +75,17 @@ epm_remove()
 {
     [ -n "$pkg_filenames" ] || fatal "Run remove without names"
 
-case $DISTRNAME in
-	"ALTLinux"|"Ubuntu"|"Debian"|"PCLinux")
+case $PMTYPE in
+	apt-rpm|apt-dpkg)
 		CMD="apt-get remove --purge"
 		;;
-	"LinuxXP"|"Fedora"|"ASPLinux"|"CentOS"|"RHEL"|"Scientific")
+	yum-rpm)
 		CMD="yum remove"
 		;;
-	"Mandriva")
+	urpm-rpm)
 		CMD="urpme"
 		;;
-	"SUSE")
+	zypper-rpm)
 		CMD="zypper remove"
 		;;
 	*)
@@ -93,6 +93,6 @@ case $DISTRNAME in
 		;;
 esac
 
-docmd $CMD $pkg_names $pkg_files
+docmd $SUDO $CMD $pkg_names $pkg_files
 
 }

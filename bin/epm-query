@@ -24,21 +24,12 @@ epm_query()
 {
     [ -n "$pkg_filenames" ] || fatal "Run query without names"
 
-case $DISTRNAME in
-	"ALTLinux"|"PCLinux")
+case $PMTYPE in
+	apt-rpm|yum-rpm|urpm-rpm|zypper-rpm)
 		CMD="rpm -q"
 		;;
-	"Ubuntu"|"Debian")
+	apt-dpkg)
 		CMD="dpkg -l"
-		;;
-	"LinuxXP"|"Fedora"|"ASPLinux"|"CentOS"|"RHEL"|"Scientific")
-		CMD="rpm -q"
-		;;
-	"Mandriva")
-		CMD="rpm -q"
-		;;
-	"SUSE")
-		CMD="rpm -q"
 		;;
 	*)
 		fatal "Do not known command for $PMTYPE"
