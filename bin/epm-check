@@ -24,7 +24,9 @@ epm_check()
 {
 case $PMTYPE in
 	apt-rpm|apt-dpkg)
-		docmd $SUDO apt-get check || exit
+		#docmd $SUDO apt-get check || exit
+		docmd $SUDO apt-get update || exit
+		docmd $SUDO apt-get -f install || exit
 		;;
 	apt-dpkg)
 		docmd $SUDO apt-get update || exit

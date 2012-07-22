@@ -25,11 +25,11 @@ epm_update()
 case $PMTYPE in
 	"apt-rpm")
 		docmd $SUDO apt-get update || exit
-		docmd $SUDO apt-get -f install || exit
+		#docmd $SUDO apt-get -f install || exit
 		;;
 	"apt-dpkg")
 		docmd $SUDO apt-get update || exit
-		docmd $SUDO apt-get -f install || exit
+		#docmd $SUDO apt-get -f install || exit
 		#docmd $SUDO apt-get autoremove
 		;;
 	urpm-rpm)
