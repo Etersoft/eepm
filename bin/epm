@@ -58,6 +58,7 @@ Descr="epm - EPM package manager"
 verbose=
 quiet=
 non_interactive=
+skip_installed=
 epm_cmd=
 pkg_files=
 pkg_names=
@@ -93,6 +94,9 @@ for opt in "$@" ; do
         ;;
     --verbose)            # HELPOPT: verbose mode
         verbose=1
+        ;;
+    --skip-installed)     # HELPOPT: skip already install during install
+        skip_installed=1
         ;;
     --quiet)              # HELPOPT: quiet mode (do not print commands before exec)
         quiet=1

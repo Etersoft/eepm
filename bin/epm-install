@@ -18,6 +18,32 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
+# TODO: use when run install with epm --skip-installed install
+filter_out_installed_packages()
+{
+	[ -z "$skip_installed" ] && cat && return
+
+	# TODO: use this more effectively way
+	#for i in $(cat) ; do
+	#	rpm -q $i >/dev/null && continue
+	#	echo $i
+	#done | 
+	case $PKGFORMAT in
+		"rpm")
+			LANG=C LC_ALL=C xargs -n1 rpm -q 2>&1 | grep 'is not installed' |
+				sed -e 's|^.*package \(.*\) is not installed.*|\1|g'
+			;;
+		"deb")
+			LANG=C LC_ALL=C xargs -n1 dpkg -L 2>&1 | grep 'is not installed.' |
+				sed -e 's|^Package .\(.*\). is not installed.*|\1|g'
+			;;
+		*)
+			cat
+			;;
+	esac | sed -e "s|rpm-build-altlinux-compat||g" | filter_strip_spaces
+}
+
+
 # copied from etersoft-build-utils/share/eterbuild/functions/rpmpkg
 epm_install_names()
 {
@@ -99,13 +125,16 @@ epm_install()
 {
     [ -n "$pkg_files$pkg_names" ] || fatal "Run install without packages"
 
+    local names=$(echo $pkg_names | filter_out_installed_packages)
+    local files=$(echo $pkg_files | filter_out_installed_packages)
+
+    [ -z "$files$names" ] && echo "Skip empty install list" && return 2
+
     if [ -n "$non_interactive" ] ; then
-        epm_ni_install_names $pkg_names || return
+        epm_ni_install_names $names || return
     else
-        epm_install_names $pkg_names || return
+        epm_install_names $names || return
     fi
 
-    epm_install_files $pkg_files
-
+    epm_install_files $files
 }
-
