@@ -23,25 +23,24 @@
 epm_packages()
 {
 
-case $DISTRNAME in
-	"ALTLinux"|"PCLinux")
+case $PMTYPE in
+	apt-rpm)
 		CMD="rpm -qa"
 		;;
-	"Ubuntu"|"Debian")
+	apt-dpkg)
 		CMD="dpkg -l"
 		;;
-	"LinuxXP"|"Fedora"|"ASPLinux"|"CentOS"|"RHEL"|"Scientific")
+	yum-rpm)
 		CMD="rpm -qa"
 		;;
-	"Mandriva")
+	urpm-rpm)
 		CMD="rpm -qa"
 		;;
-	"SUSE")
+	zypper-rpm)
 		CMD="rpm -qa"
 		;;
 	*)
-		RET=1
-		CMD="echo \"Do not known query command for DISTRNAME $DISTRNAME\""
+		fatal "Do not known query command for $PMTYPE"
 		;;
 esac
 

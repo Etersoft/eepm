@@ -24,20 +24,20 @@ epm_filelist()
 {
     [ -n "$pkg_filenames" ] || fatal "Run query without names"
 
-case $DISTRNAME in
-	"ALTLinux"|"PCLinux")
+case $PMTYPE in
+	apt-rpm)
 		CMD="rpm -ql"
 		;;
-	"Ubuntu"|"Debian")
+	apt-dpkg)
 		CMD="dpkg -L"
 		;;
-	"LinuxXP"|"Fedora"|"ASPLinux"|"CentOS"|"RHEL"|"Scientific")
+	yum-rpm)
 		CMD="rpm -ql"
 		;;
-	"Mandriva")
+	urpm-rpm)
 		CMD="rpm -ql"
 		;;
-	"SUSE")
+	zypper-rpm)
 		CMD="rpm -ql"
 		;;
 	*)

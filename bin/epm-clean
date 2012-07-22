@@ -20,18 +20,18 @@
 
 epm_clean()
 {
-case $DISTRNAME in
-	"ALTLinux"|"Ubuntu"|"Debian"|"PCLinux")
+case $PMTYPE in
+	apt-rpm|apt-dpkg)
 		docmd $SUDO apt-get clean
 		;;
-	"LinuxXP"|"Fedora"|"ASPLinux"|"CentOS"|"RHEL"|"Scientific")
+	yum-rpm)
 		docmd $SUDO yum clean all
 		docmd $SUDO yum makecache
 		;;
-	"Mandriva")
+	urpm-rpm)
 		docmd $SUDO urpmi --clean
 		;;
-	"SUSE")
+	zypper-rpm)
 		docmd $SUDO zypper clean
 		;;
 	*)

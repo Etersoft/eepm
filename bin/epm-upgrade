@@ -43,5 +43,5 @@ epm_upgrade()
 		;;
     esac
 
-    docmd $CMD
+    docmd $SUDO $CMD
 }
