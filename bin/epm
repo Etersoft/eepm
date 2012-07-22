@@ -136,8 +136,14 @@ for opt in "$@" ; do
     -ql|filelist)         # HELPCMD: print package file list
         epm_cmd=filelist
         ;;
-    check|simulate)       # HELPCMD: simulate install (check requires)
-        epm_cmd=$opt
+    check)                # HELPCMD: check local package base integrity
+        epm_cmd=check
+        ;;
+    checkpkg|integrity)   # HELPCMD: check package integrity
+        epm_cmd=checkpkg
+        ;;
+    simulate)             # HELPCMD: simulate install (check requires)
+        epm_cmd=simulate
         ;;
     *)
         if [ -f "$opt" ] ; then
