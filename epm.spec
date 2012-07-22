@@ -1,5 +1,5 @@
 Name: epm
-Version: 0.5
+Version: 0.6
 Release: alt1
 
 Summary: EPM package manager
@@ -38,6 +38,12 @@ with various distros.
 %_bindir/distr_info
 
 %changelog
+* Sun Jul 22 2012 Vitaly Lipatov <lav@altlinux.ru> 0.6-alt1
+- add --skip-installed for skip aready installed packages
+- epm-install: fix return status
+- epm: fix commands, add missed checkpkg
+- install/reinstall: try use rpm for files
+
 * Sat Jul 21 2012 Vitaly Lipatov <lav@altlinux.ru> 0.5-alt1
 - add quiet mode (no print commands before run)
 - add color support for output
