@@ -100,9 +100,9 @@ epm_install()
     [ -n "$pkg_files$pkg_names" ] || fatal "Run install without packages"
 
     if [ -n "$non_interactive" ] ; then
-        epm_ni_install_names $pkg_names
+        epm_ni_install_names $pkg_names || return
     else
-        epm_install_names $pkg_names
+        epm_install_names $pkg_names || return
     fi
 
     epm_install_files $pkg_files
