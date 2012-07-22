@@ -24,23 +24,21 @@ epm_search()
 {
     [ -n "$pkg_filenames" ] || fatal "Run search without names"
 
-    #CMD=$(get_install_package_command $DISTRNAME interactive)
-case $DISTRNAME in
-	"ALTLinux"|"Ubuntu"|"Debian"|"PCLinux")
+case $PMTYPE in
+	apt-rpm|apt-dpkg)
 		CMD="apt-cache search"
 		;;
-	"LinuxXP"|"Fedora"|"ASPLinux"|"CentOS"|"RHEL"|"Scientific")
+	yum-rpm)
 		CMD="yum search"
 		;;
-	"Mandriva")
+	urpm-rpm)
 		CMD="urpmf"
 		;;
-	"SUSE")
+	zupper-rpm)
 		CMD="zypper search"
 		;;
 	*)
-		RET=1
-		CMD="echo \"Do not known install command for DISTRNAME $DISTRNAME\""
+		fatal "Do not known search command for $PMTYPE"
 		;;
 esac
 
