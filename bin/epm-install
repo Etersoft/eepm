@@ -47,7 +47,7 @@ filter_out_installed_packages()
 # copied from etersoft-build-utils/share/eterbuild/functions/rpmpkg
 epm_install_names()
 {
-	[ -n "$1" ] || return
+	[ -z "$1" ] && return
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
 			docmd $SUDO apt-get install $@
