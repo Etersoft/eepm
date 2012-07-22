@@ -43,6 +43,7 @@ with various distros.
 - epm-install: fix return status
 - epm: fix commands, add missed checkpkg
 - install/reinstall: try use rpm for files
+- use PMTYPE and SUDO
 
 * Sat Jul 21 2012 Vitaly Lipatov <lav@altlinux.ru> 0.5-alt1
 - add quiet mode (no print commands before run)
