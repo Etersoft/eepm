@@ -140,7 +140,7 @@ for opt in "$@" ; do
     -ql|filelist)         # HELPCMD: print package file list
         epm_cmd=filelist
         ;;
-    check)                # HELPCMD: check local package base integrity
+    check|fix)            # HELPCMD: check local package base integrity and fix it
         epm_cmd=check
         ;;
     checkpkg|integrity)   # HELPCMD: check package integrity
