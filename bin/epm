@@ -84,26 +84,12 @@ case $progname in
         ;;
 esac
 
-for opt in "$@" ; do
-    case $opt in
-    -h|--help|help)       # HELPOPT: this help
-        phelp; exit 0
-        ;;
-    -v|--version)         # HELPOPT: print version
-        print_version; exit 0
-        ;;
-    --verbose)            # HELPOPT: verbose mode
-        verbose=1
-        ;;
-    --skip-installed)     # HELPOPT: skip already install during install
-        skip_installed=1
-        ;;
-    --quiet)              # HELPOPT: quiet mode (do not print commands before exec)
-        quiet=1
-        ;;
-    --auto)               # HELPOPT: non interactive mode
-        non_interactive=1
-        ;;
+check_command()
+{
+    # do not override command
+    [ -z "$epm_cmd" ] || return
+
+    case $1 in
     -i|install|add)       # HELPCMD: install package(s) from remote repositories or from local file
         epm_cmd=install
         ;;
@@ -148,6 +134,33 @@ for opt in "$@" ; do
         ;;
     simulate)             # HELPCMD: simulate install (check requires)
         epm_cmd=simulate
+        ;;
+    *)
+        return 1
+    esac
+    return 0
+}
+
+for opt in "$@" ; do
+    check_command $opt && continue
+    case $opt in
+    -h|--help|help)       # HELPOPT: this help
+        phelp; exit 0
+        ;;
+    -v|--version)         # HELPOPT: print version
+        print_version; exit 0
+        ;;
+    --verbose)            # HELPOPT: verbose mode
+        verbose=1
+        ;;
+    --skip-installed)     # HELPOPT: skip already install during install
+        skip_installed=1
+        ;;
+    --quiet)              # HELPOPT: quiet mode (do not print commands before exec)
+        quiet=1
+        ;;
+    --auto)               # HELPOPT: non interactive mode
+        non_interactive=1
         ;;
     *)
         if [ -f "$opt" ] ; then
