@@ -151,9 +151,9 @@ for opt in "$@" ; do
         ;;
     *)
         if [ -f "$opt" ] ; then
-            pkg_files="$pkgfiles $opt"
+            pkg_files="$pkg_files $opt"
         else
-            pkg_names="$pkgnames $opt"
+            pkg_names="$pkg_names $opt"
         fi
         ;;
     esac
