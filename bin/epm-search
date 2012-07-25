@@ -32,7 +32,7 @@ case $PMTYPE in
 		CMD="yum search"
 		;;
 	urpm-rpm)
-		CMD="urpmf"
+		CMD="urpmq -y"
 		;;
 	zupper-rpm)
 		CMD="zypper search"
