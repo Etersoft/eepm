@@ -1,5 +1,5 @@
 Name: epm
-Version: 0.6
+Version: 0.7
 Release: alt1
 
 Summary: EPM package manager
@@ -38,6 +38,14 @@ with various distros.
 %_bindir/distr_info
 
 %changelog
+* Thu Jul 26 2012 Vitaly Lipatov <lav@altlinux.ru> 0.7-alt1
+- add commands: addrepo, removerepo, search_file, info, update some other
+- epm: fill epm_cmd only one time
+- epm: fix pkg_files, pkg_names fills
+- epm-search: fix search on Mandriva
+- search: rewrite with PMTYPE using
+- add fix behaviour to check command
+
 * Sun Jul 22 2012 Vitaly Lipatov <lav@altlinux.ru> 0.6-alt1
 - add --skip-installed for skip aready installed packages
 - epm-install: fix return status
