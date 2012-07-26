@@ -35,18 +35,9 @@ case $PMTYPE in
 	urpm-rpm)
 		docmd $SUDO urpmi.update -a
 		;;
-# skip, will do it automagically
-#	"LinuxXP"|"Fedora"|"ASPLinux"|"CentOS"|"RHEL"|"Scientific")
-#		CMD="yum update"
-#		;;
-#	"Mandriva")
-#		CMD="urpmf"
-#		;;
-
-# skip, will do it automagically
-#	"SUSE")
-#		CMD="zypper update"
-#		;;
+	zypper-rpm)
+		docmd $SUDO zypper refresh
+		;;
 	*)
 		RET=1
 		echo \"Do not known install command for DISTRNAME $DISTRNAME\"

@@ -123,10 +123,13 @@ check_command()
     -qf|which)            # HELPCMD: query package(s) owning file
         epm_cmd=query_file
         ;;
+    filesearch)           # HELPCMD: search in which package a file is included
+        epm_cmd=search_file
+        ;;
     -ql|filelist)         # HELPCMD: print package file list
         epm_cmd=filelist
         ;;
-    check|fix)            # HELPCMD: check local package base integrity and fix it
+    check|fix|verify)     # HELPCMD: check local package base integrity and fix it
         epm_cmd=check
         ;;
     checkpkg|integrity)   # HELPCMD: check package integrity
@@ -134,6 +137,9 @@ check_command()
         ;;
     simulate)             # HELPCMD: simulate install (check requires)
         epm_cmd=simulate
+        ;;
+    addrepo)              # HELPCMD: add package repo
+        epm_cmd=addrepo
         ;;
     *)
         return 1
