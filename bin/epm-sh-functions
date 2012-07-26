@@ -135,23 +135,26 @@ case $DISTRNAME in
 	ALTLinux|PCLinux)
 		CMD="apt-rpm"
 		;;
-	FreeBSD)
-		CMD="pkg_add"
-		;;
 	Ubuntu|Debian|Mint)
 		CMD="apt-dpkg"
-		;;
-	LinuxXP|Fedora|ASPLinux|CentOS|RHEL|Scientific)
-		CMD="yum-rpm"
 		;;
 	Mandriva|ROSA)
 		CMD="urpm-rpm"
 		;;
-	SUSE|SLED|SLES)
-		CMD="zypper-rpm"
+	FreeBSD)
+		CMD="pkg_add"
 		;;
 	Gentoo)
 		CMD="emerge"
+		;;
+	ArchLinux)
+		CMD="pacman"
+		;;
+	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific)
+		CMD="yum-rpm"
+		;;
+	SUSE|SLED|SLES)
+		CMD="zypper-rpm"
 		;;
 	*)
 		fatal "Do not known DISTRNAME $DISTRNAME"
