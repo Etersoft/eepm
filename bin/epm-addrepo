@@ -18,27 +18,20 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
-# copied from korinf/tools/run-script/scripts/update
-
-epm_check()
+epm_addrepo()
 {
 case $PMTYPE in
-	apt-rpm|apt-dpkg)
-		#docmd $SUDO apt-get check || exit
-		docmd $SUDO apt-get update || exit
-		docmd $SUDO apt-get -f install || exit
-		;;
-	apt-dpkg)
-		docmd $SUDO apt-get update || exit
-		docmd $SUDO apt-get -f install || exit
-		docmd $SUDO apt-get autoremove
-		;;
-	yum-rpm)
-		docmd package-cleanup --leaves
-		package-cleanup --leaves | xargs yum remove
+	#apt-rpm|apt-dpkg)
+	#	docmd $SUDO apt-get check || exit
+	#	;;
+	#yum-rpm)
+	#	docmd $SUDO yum repolist || exit
+	#	;;
+	urpm-rpm)
+		docmd $SUDO urpmi.addmedia --distrib $pkg_filenames
 		;;
 	zypper-rpm)
-		docmd $SUDO zypper verify || exit
+		docmd $SUDO zypper ar $pkg_filenames || exit
 		;;
 	*)
 		fatal "Do not known command for $PMTYPE"

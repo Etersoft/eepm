@@ -18,31 +18,30 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
-# copied from korinf/tools/run-script/scripts/update
-
-epm_check()
+epm_search_file()
 {
+    [ -n "$pkg_filenames" ] || fatal "Run search without names"
+
 case $PMTYPE in
 	apt-rpm|apt-dpkg)
-		#docmd $SUDO apt-get check || exit
-		docmd $SUDO apt-get update || exit
-		docmd $SUDO apt-get -f install || exit
-		;;
-	apt-dpkg)
-		docmd $SUDO apt-get update || exit
-		docmd $SUDO apt-get -f install || exit
-		docmd $SUDO apt-get autoremove
-		;;
+		docmd $SUDO apt-file update
+		docmd apt-file search $pkg_filenames
+		return ;;
 	yum-rpm)
-		docmd package-cleanup --leaves
-		package-cleanup --leaves | xargs yum remove
+		fatal "TODO"
+		CMD="yum search"
 		;;
-	zypper-rpm)
-		docmd $SUDO zypper verify || exit
+	urpm-rpm)
+		CMD="urpmf"
+		;;
+	zupper-rpm)
+		CMD="zypper wp vi"
 		;;
 	*)
-		fatal "Do not known command for $PMTYPE"
+		fatal "Do not known search file command for $PMTYPE"
 		;;
 esac
+
+docmd $CMD $pkg_filenames
 
 }

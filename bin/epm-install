@@ -110,9 +110,16 @@ epm_install_files()
         FreeBSD)
             docmd $SUDO pkg_add $@
             return ;;
-        Ubuntu|Debian|Mint)
+    esac
+
+    case $PMTYPE in
+        apt-dpkg)
             docmd $SUDO dpkg -i $@
             docmd $SUDO apt-get -f install
+            return ;;
+        yum-rpm)
+            docmd $SUDO rpm -Uvh --force $@ && return
+            docmd $SUDO yum --nogpgcheck local install $@
             return ;;
     esac
 

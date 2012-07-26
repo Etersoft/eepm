@@ -32,11 +32,11 @@ epm_upgrade()
 		CMD="yum update"
 		;;
 	urpm-rpm)
-		# or --auto-update
-		CMD="urpmi --auto-select"
+		# or --auto-select
+		CMD="urpmi --auto-update --replace-files"
 		;;
 	zypper-rpm)
-		CMD="zypper update"
+		CMD="zypper dist-upgrade"
 		;;
 	*)
 		fatal "Do not known command for $PMTYPE"
