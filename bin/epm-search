@@ -34,7 +34,7 @@ case $PMTYPE in
 	urpm-rpm)
 		CMD="urpmq -y"
 		;;
-	zupper-rpm)
+	zypper-rpm)
 		CMD="zypper search"
 		;;
 	*)

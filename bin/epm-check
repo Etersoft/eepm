@@ -37,6 +37,9 @@ case $PMTYPE in
 		docmd package-cleanup --leaves
 		package-cleanup --leaves | xargs yum remove
 		;;
+	urpm-rpm)
+		docmd $SUDO urpme --auto-orphans
+		;;
 	zypper-rpm)
 		docmd $SUDO zypper verify || exit
 		;;

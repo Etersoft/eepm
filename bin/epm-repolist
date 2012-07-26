@@ -27,6 +27,9 @@ case $PMTYPE in
 	yum-rpm)
 		docmd $SUDO yum repolist || exit
 		;;
+	zypper-rpm)
+		docmd $USDO zypper sl
+		;;
 	*)
 		fatal "Do not known command for $PMTYPE"
 		;;

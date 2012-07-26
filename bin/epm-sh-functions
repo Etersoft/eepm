@@ -138,7 +138,7 @@ case $DISTRNAME in
 	FreeBSD)
 		CMD="pkg_add"
 		;;
-	Ubuntu|Debian)
+	Ubuntu|Debian|Mint)
 		CMD="apt-dpkg"
 		;;
 	LinuxXP|Fedora|ASPLinux|CentOS|RHEL|Scientific)
@@ -147,8 +147,11 @@ case $DISTRNAME in
 	Mandriva|ROSA)
 		CMD="urpm-rpm"
 		;;
-	SUSE)
+	SUSE|SLED|SLES)
 		CMD="zypper-rpm"
+		;;
+	Gentoo)
+		CMD="emerge"
 		;;
 	*)
 		fatal "Do not known DISTRNAME $DISTRNAME"

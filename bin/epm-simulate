@@ -37,6 +37,9 @@ epm_simulate()
     	zypper-rpm)
     		CMD="zypper --non-interactive install --dry-run"
     		;;
+    	emerge)
+    		echo "FIXME: Skip with emerge"
+    		return ;;
     	*)
     		fatal "Do not known install command for $PMTYPE"
     		;;
