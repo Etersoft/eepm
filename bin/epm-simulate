@@ -22,7 +22,7 @@
 epm_simulate()
 {
     local CMD
-    [ -n "$pkg_names" ] || fatal "Run $epm_cmd without packages"
+    [ -n "$pkg_filenames" ] || fatal "Run $epm_cmd without packages"
 
     case $PMTYPE in
     	apt-rpm|apt-dpkg)
@@ -40,11 +40,15 @@ epm_simulate()
     	emerge)
     		echo "FIXME: Skip with emerge"
     		return ;;
+    	pacman)
+    		showcmd $SUDO pacman -v -S $pkg_filenames
+    		echo no | $SUDO pacman -v -S $pkg_filenames
+    		return ;;
     	*)
-    		fatal "Do not known install command for $PMTYPE"
+    		fatal "Do not known simulate command for $PMTYPE"
     		;;
     esac
 
-    docmd $SUDO $CMD $pkg_names
+    docmd $SUDO $CMD $pkg_filenames
 }
 

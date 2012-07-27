@@ -64,6 +64,9 @@ epm_install_names()
 		pkg_add)
 			docmd $SUDO pkg_add -r $@
 			return ;;
+		pacman)
+			docmd $SUDO pacman -S $@
+			return ;;
 		*)
 			fatal "Do not known install command for $PMTYPE"
 			;;
@@ -88,6 +91,9 @@ epm_ni_install_names()
 			return ;;
 		pkg_add)
 			docmd $SUDO pkg_add -r $@
+			return ;;
+		pacman)
+			docmd $SUDO pacman -S --noconfirm $@
 			return ;;
 		*)
 			fatal "Do not known appropriate install command for $PMTYPE"
@@ -120,6 +126,9 @@ epm_install_files()
         yum-rpm)
             docmd $SUDO rpm -Uvh --force $@ && return
             docmd $SUDO yum --nogpgcheck local install $@
+            return ;;
+        pacman)
+            docmd $SUDO pacman -U $@
             return ;;
     esac
 

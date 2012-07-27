@@ -38,6 +38,9 @@ epm_reinstall_names()
 		pkg_add)
 			docmd $SUDO pkg_add -r $@
 			return ;;
+		pacman)
+			docmd $SUDO pacman -U $@
+			return ;;
 		*)
 			fatal "Do not known install command for $PMTYPE"
 			;;

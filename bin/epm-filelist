@@ -40,6 +40,9 @@ case $PMTYPE in
 	zypper-rpm)
 		CMD="rpm -ql"
 		;;
+	pacman)
+		CMD="pacman -Ql"
+		;;
 	*)
 		fatal "Do not known query command for $PMTYPE"
 		;;

@@ -22,13 +22,16 @@ epm_info()
 {
 case $PMTYPE in
 	apt-rpm|apt-dpkg)
-		docmd apt-cache show $pkg_names || exit
+		docmd apt-cache show $pkg_names
 		;;
 	yum-rpm)
-		docmd $SUDO yum info $pkg_names || exit
+		docmd yum info $pkg_names
 		;;
 	zypper-rpm)
-		docmd zypper info $pkg_names || exit
+		docmd zypper info $pkg_names
+		;;
+	pacman)
+		docmd pacman -Si $pkg_names
 		;;
 	*)
 		fatal "Do not known command for $PMTYPE"

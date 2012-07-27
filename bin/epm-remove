@@ -88,6 +88,12 @@ case $PMTYPE in
 	zypper-rpm)
 		CMD="zypper remove"
 		;;
+	emerge)
+		CMD="emerge --unmerge"
+		;;
+	pacman)
+		CMD="pacman -R --noconfirm"
+		;;
 	*)
 		fatal "Do not known command for $PMTYPE"
 		;;

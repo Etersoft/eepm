@@ -37,6 +37,9 @@ case $PMTYPE in
 	zypper-rpm)
 		CMD="zypper search"
 		;;
+	pacman)
+		CMD="pacman -Ss"
+		;;
 	*)
 		fatal "Do not known search command for $PMTYPE"
 		;;
