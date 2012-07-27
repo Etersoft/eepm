@@ -69,7 +69,7 @@ realpath()
 }
 
 # Print command line and run command line
-docmd()
+showcmd()
 {
 	if [ -z "$quiet" ] ; then
 		set_boldcolor $GREEN
@@ -78,6 +78,12 @@ docmd()
 		echo " $PROMTSIG $@"
 		restore_color
 	fi
+}
+
+# Print command line and run command line
+docmd()
+{
+	showcmd "$@"
 	"$@"
 }
 
