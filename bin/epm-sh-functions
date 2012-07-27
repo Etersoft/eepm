@@ -87,6 +87,13 @@ docmd()
 	"$@"
 }
 
+# Print command line and run command line with SUDO
+docmds()
+{
+	showcmd "$@"
+	"$SUDO $@"
+}
+
 filter_strip_spaces()
 {
         # possible use just

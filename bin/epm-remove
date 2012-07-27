@@ -23,27 +23,81 @@
 # TODO
 epm_remove_low()
 {
-case $DISTRNAME in
-	"Ubuntu"|"Debian")
-		CMD="dpkg -P"
-		;;
-	"ALTLinux"|"LinuxXP"|"Fedora"|"ASPLinux"|"CentOS"|"RHEL"|"Scientific"|"PCLinux"|"Mandriva"|"SUSE")
-		CMD="rpm -e"
-		;;
-	"ArchLinux")
-		CMD="pacman -R"
-		;;
-	"MOPSLinux")
-		CMD="mpkg remove"
-		;;
-	"Gentoo")
-		CMD="emerge --unmerge"
-		;;
+	[ -z "$1" ] && return
+	case $PMTYPE in
+		apt-rpm|yum-rpm|zypper-rpm|urpm-rpm)
+			docmd $SUDO rpm -e  $@
+			return ;;
+		apt-dpkg)
+			docmd $SUDO dpkg -P $@
+			return ;;
+		pkg_add)
+			docmd $SUDO pkg_delete -r $@
+			return ;;
+		emerge)
+			docmd $SUDO emerge -unmerge $@
+			return ;;
+		pacman)
+			docmd $SUDO pacman -R $@
+			return ;;
+		mpkg)
+			docmd $SUDO mpkg remove $@
+			return ;;
+		pkgtool)
+			docmd $SUDO removepkg $@
+			return ;;
 	*)
 		RET=1
-		CMD="echo \"Do not known install command for DISTRNAME $DISTRNAME\""
+		fatal "Do not known command for $PMTYPE"
 		;;
 esac
+
+}
+
+epm_remove()
+{
+	[ -n "$pkg_file$pkg_names" ] || fatal "Run remove without names"
+	epm_remove_names $pkg_names || return
+}
+
+epm_remove_names()
+{
+	[ -z "$1" ] && return
+#	[ -n "$pkg_filenames" ] || fatal "Run remove without names"
+	case $PMTYPE in
+		apt-rpm|apt-dpkg)
+			docmd apt-get remove --purge $@
+			return ;;
+		urpm-rpm)
+			docmd $SUDO urpme $@
+			return ;;
+		pkg_add) #without dependense
+			docmd $SUDO pkg_delete $@
+			return ;;
+		emerge)
+			docmd $SUDO emerge --unmerge $@
+			return ;;
+		pacman)
+			docmd $SUDO pacman -R --noconfirm $@
+			return ;;
+		yum-rpm)
+			docmd $SUDO yum remove $@
+			return ;;
+		zypper-rpm)
+			docmd $SUDO zypper remove $@
+			return ;;
+		mpkg)
+			docmd $SUDO mpkg remove $@
+			return ;;
+		pkgtool)
+			docmd $SUDO removepkg $@
+			return ;;
+		*)
+			fatal "Do not known command for $PMTYPE"
+			;;
+esac
+
+#docmd $SUDO $CMD $pkg_names $pkg_files
 
 }
 
@@ -71,37 +125,3 @@ esac
 
 }
 
-epm_remove()
-{
-    [ -n "$pkg_filenames" ] || fatal "Run remove without names"
-
-case $PMTYPE in
-	apt-rpm|apt-dpkg)
-		CMD="apt-get remove --purge"
-		;;
-	yum-rpm)
-		CMD="yum remove"
-		;;
-	urpm-rpm)
-		CMD="urpme"
-		;;
-	zypper-rpm)
-		CMD="zypper remove"
-		;;
-	emerge)
-		CMD="emerge --unmerge"
-		;;
-	pacman)
-		CMD="pacman -R --noconfirm"
-		;;
-	pkgtool)
-		CMD="removepkg"
-		;;
-	*)
-		fatal "Do not known command for $PMTYPE"
-		;;
-esac
-
-docmd $SUDO $CMD $pkg_names $pkg_files
-
-}

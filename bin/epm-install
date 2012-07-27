@@ -52,20 +52,26 @@ epm_install_names()
 		apt-rpm|apt-dpkg)
 			docmd $SUDO apt-get install $@
 			return ;;
-		yum-rpm)
-			docmd $SUDO yum install $@
-			return ;;
 		urpm-rpm)
 			docmd $SUDO urpmi $@
-			return ;;
-		zypper-rpm)
-			docmd $SUDO zypper install $@
 			return ;;
 		pkg_add)
 			docmd $SUDO pkg_add -r $@
 			return ;;
+		emerge)
+			docmd $SUDO emerge -uD $@
+			return ;;
 		pacman)
 			docmd $SUDO pacman -S $@
+			return ;;
+		yum-rpm)
+			docmd $SUDO yum install $@
+			return ;;
+		zypper-rpm)
+			docmd $SUDO zypper install $@
+			return ;;
+		mpkg)
+			docmd $SUDO mpkg install $@
 			return ;;
 		pkgtool)
 			docmd $SUDO installpkg $@
