@@ -63,15 +63,15 @@ epm_remove()
 epm_remove_names()
 {
 	[ -z "$1" ] && return
-#	[ -n "$pkg_filenames" ] || fatal "Run remove without names"
+
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
-			docmd apt-get remove --purge $@
+			docmd $SUDO apt-get remove --purge $@
 			return ;;
 		urpm-rpm)
 			docmd $SUDO urpme $@
 			return ;;
-		pkg_add) #without dependense
+		pkg_add) # without dependencies
 			docmd $SUDO pkg_delete $@
 			return ;;
 		emerge)
@@ -95,7 +95,7 @@ epm_remove_names()
 		*)
 			fatal "Do not known command for $PMTYPE"
 			;;
-esac
+	esac
 
 #docmd $SUDO $CMD $pkg_names $pkg_files
 
