@@ -1,8 +1,8 @@
 Name: eepm
-Version: 0.7
+Version: 0.8
 Release: alt1
 
-Summary: EPM package manager
+Summary: Etersoft EPM package manager
 
 License: GPLv2
 Group: System/Configuration/Packaging
@@ -16,7 +16,7 @@ Source: ftp://updates.etersoft.ru/pub/Etersoft/Sisyphus/sources/tarball/%name-%v
 BuildArchitectures: noarch
 
 %description
-EPM is the package manager for any platform
+Etersoft EPM is the package manager for any platform
 and any platform version. It provides
 universal interface to any package manager.
 Can be useful for system administrators working
@@ -39,6 +39,12 @@ with various distros.
 %_bindir/distr_info
 
 %changelog
+* Fri Jul 27 2012 Vitaly Lipatov <lav@altlinux.ru> 0.8-alt1
+- rename package to eepm
+- add upm alias
+- epm info fix: on apt, add: on yum
+- add some Gentoo support, add some commands
+
 * Thu Jul 26 2012 Vitaly Lipatov <lav@altlinux.ru> 0.7-alt1
 - add commands: addrepo, removerepo, search_file, info, update some other
 - epm: fill epm_cmd only one time
