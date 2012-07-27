@@ -1,5 +1,5 @@
 Name: eepm
-Version: 0.8
+Version: 0.9
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -39,6 +39,11 @@ with various distros.
 %_bindir/distr_info
 
 %changelog
+* Fri Jul 27 2012 Vitaly Lipatov <lav@altlinux.ru> 0.9-alt1
+- epm: add --nodeps options recognize
+- add showcmd in addition to docmd
+- add ArchLinux support (pacman) to all commands
+
 * Fri Jul 27 2012 Vitaly Lipatov <lav@altlinux.ru> 0.8-alt1
 - rename package to eepm
 - add upm alias
