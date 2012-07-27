@@ -1,4 +1,4 @@
-Name: epm
+Name: eepm
 Version: 0.7
 Release: alt1
 
@@ -35,6 +35,7 @@ with various distros.
 %files
 %doc README TODO
 %_bindir/epm*
+%_bindir/upm
 %_bindir/distr_info
 
 %changelog
