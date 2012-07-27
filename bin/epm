@@ -48,12 +48,15 @@ $(get_help HELPOPT)
 print_version()
 {
         echo "EPM package manager version @VERSION@"
+        echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012"
-        echo "This program may be freely redistributed under the terms of the GNU GPL"
+        echo "This program may be freely redistributed under the terms of the GNU GPL."
 }
 
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
+
+set_pm_type
 
 verbose=
 quiet=
@@ -185,13 +188,6 @@ pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
 
 echover "pkg_files=$pkg_files"
 echover "pkg_names=$pkg_names"
-
-# Fill for use: PMTYPE, DISTRNAME, DISTRVERSION, PKGFORMAT, PKGVENDOR, RPMVENDOR
-DISTRVENDOR=$PROGDIR/distr_info
-[ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d)
-[ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
-set_target_pkg_env
-set_pm_type
 
 # Run helper for command
 if [ -z "$epm_cmd" ] ; then

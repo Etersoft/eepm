@@ -131,6 +131,13 @@ get_help()
 set_pm_type()
 {
 	local CMD
+
+	# Fill for use: PMTYPE, DISTRNAME, DISTRVERSION, PKGFORMAT, PKGVENDOR, RPMVENDOR
+	DISTRVENDOR=$PROGDIR/distr_info
+	[ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d)
+	[ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
+	set_target_pkg_env
+
 case $DISTRNAME in
 	ALTLinux|PCLinux)
 		CMD="apt-rpm"
