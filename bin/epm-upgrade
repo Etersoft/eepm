@@ -38,6 +38,9 @@ epm_upgrade()
 	zypper-rpm)
 		CMD="zypper dist-upgrade"
 		;;
+	pacman)
+		CMD="zypper -S -u"
+		;;
 	*)
 		fatal "Do not known command for $PMTYPE"
 		;;

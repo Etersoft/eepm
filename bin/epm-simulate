@@ -44,6 +44,8 @@ epm_simulate()
     		showcmd $SUDO pacman -v -S $pkg_filenames
     		echo no | $SUDO pacman -v -S $pkg_filenames
     		return ;;
+    	pkgtool)
+    		return 0 ;;
     	*)
     		fatal "Do not known simulate command for $PMTYPE"
     		;;

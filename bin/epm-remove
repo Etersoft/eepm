@@ -94,6 +94,9 @@ case $PMTYPE in
 	pacman)
 		CMD="pacman -R --noconfirm"
 		;;
+	pkgtool)
+		CMD="removepkg"
+		;;
 	*)
 		fatal "Do not known command for $PMTYPE"
 		;;

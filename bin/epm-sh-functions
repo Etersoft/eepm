@@ -166,6 +166,9 @@ case $DISTRNAME in
 	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific)
 		CMD="yum-rpm"
 		;;
+	Slackware)
+		CMD="pkgtool"
+		;;
 	SUSE|SLED|SLES)
 		CMD="zypper-rpm"
 		;;

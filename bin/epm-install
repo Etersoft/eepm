@@ -67,6 +67,9 @@ epm_install_names()
 		pacman)
 			docmd $SUDO pacman -S $@
 			return ;;
+		pkgtool)
+			docmd $SUDO installpkg $@
+			return ;;
 		*)
 			fatal "Do not known install command for $PMTYPE"
 			;;
@@ -94,6 +97,9 @@ epm_ni_install_names()
 			return ;;
 		pacman)
 			docmd $SUDO pacman -S --noconfirm $@
+			return ;;
+		pkgtool)
+			docmd $SUDO installpkg $@
 			return ;;
 		*)
 			fatal "Do not known appropriate install command for $PMTYPE"
