@@ -25,10 +25,10 @@ case $PMTYPE in
 	#	docmd $SUDO apt-get check || exit
 	#	;;
 	yum-rpm)
-		docmd $SUDO yum repolist || exit
+		docmd $SUDO yum repolist
 		;;
 	zypper-rpm)
-		docmd $USDO zypper sl
+		docmd $USDO zypper sl -d
 		;;
 	*)
 		fatal "Do not known command for $PMTYPE"
