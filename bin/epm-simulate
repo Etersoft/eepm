@@ -26,7 +26,8 @@ epm_simulate()
     [ -n "$pkg_filenames" ] || fatal "Run $epm_cmd without packages"
 
     local filenames=$(echo $pkg_filenames | filter_out_installed_packages)
-    [ -z "$filenames" ] && echo "Skip empty simulate list" && return 2
+    # FIXME: can't correct receive status 2 in mandriva?
+    [ -z "$filenames" ] && echo "Skip empty simulate list" && return 0 #&& return 2
 
     case $PMTYPE in
     	apt-rpm|apt-dpkg)
