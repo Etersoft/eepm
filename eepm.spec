@@ -1,5 +1,5 @@
 Name: eepm
-Version: 0.9
+Version: 0.9.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -39,6 +39,11 @@ with various distros.
 %_bindir/distr_info
 
 %changelog
+* Sat Jul 28 2012 Vitaly Lipatov <lav@altlinux.ru> 0.9.1-alt1
+- epm-simulate: add support for --skip-installed
+- add more distr in epm -i, epm -e and add some bugs in epm -e
+- add initial Slackware support (pkgtool)
+
 * Fri Jul 27 2012 Vitaly Lipatov <lav@altlinux.ru> 0.9-alt1
 - epm: add --nodeps options recognize
 - add showcmd in addition to docmd
