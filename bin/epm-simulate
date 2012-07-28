@@ -18,11 +18,15 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
+load_helper epm-install
 
 epm_simulate()
 {
     local CMD
     [ -n "$pkg_filenames" ] || fatal "Run $epm_cmd without packages"
+
+    local filenames=$(echo $pkg_filenames | filter_out_installed_packages)
+    [ -z "$filenames" ] && echo "Skip empty simulate list" && return 2
 
     case $PMTYPE in
     	apt-rpm|apt-dpkg)
@@ -41,8 +45,8 @@ epm_simulate()
     		echo "FIXME: Skip with emerge"
     		return ;;
     	pacman)
-    		showcmd $SUDO pacman -v -S $pkg_filenames
-    		echo no | $SUDO pacman -v -S $pkg_filenames
+    		showcmd $SUDO pacman -v -S $filenames
+    		echo no | $SUDO pacman -v -S $filenames
     		return ;;
     	pkgtool)
     		return 0 ;;
@@ -51,6 +55,6 @@ epm_simulate()
     		;;
     esac
 
-    docmd $SUDO $CMD $pkg_filenames
+    docmd $SUDO $CMD $filenames
 }
 
