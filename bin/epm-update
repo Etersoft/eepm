@@ -35,6 +35,9 @@ case $PMTYPE in
 	urpm-rpm)
 		docmd $SUDO urpmi.update -a
 		;;
+	pacman)
+		docmd $SUDO pacman -S -y
+		;;
 	zypper-rpm)
 		docmd $SUDO zypper refresh
 		;;

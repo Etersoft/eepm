@@ -145,6 +145,12 @@ check_command()
     addrepo)              # HELPCMD: add package repo
         epm_cmd=addrepo
         ;;
+    repolist|sl)          # HELPCMD: print repo list
+        epm_cmd=repolist
+        ;;
+    removerepo|rr)        # HELPCMD: remove package repo
+        epm_cmd=removerepo
+        ;;
     *)
         return 1
     esac
