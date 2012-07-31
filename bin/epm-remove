@@ -90,7 +90,7 @@ epm_remove_names()
 			docmd $SUDO mpkg remove $@
 			return ;;
 		pkgtool)
-			docmd $SUDO removepkg $@
+			docmd $SUDO slackpkg remove $@
 			return ;;
 		*)
 			fatal "Do not known command for $PMTYPE"

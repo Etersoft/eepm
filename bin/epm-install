@@ -105,7 +105,7 @@ epm_ni_install_names()
 			docmd $SUDO pacman -S --noconfirm $@
 			return ;;
 		pkgtool)
-			docmd $SUDO installpkg $@
+			docmd $SUDO slackpkg install $@
 			return ;;
 		*)
 			fatal "Do not known appropriate install command for $PMTYPE"
@@ -142,6 +142,12 @@ epm_install_files()
         pacman)
             docmd $SUDO pacman -U $@
             return ;;
+	pkgtool)
+            docmd $SUDO installpkg $@
+            return ;;
+	*)
+	    fatal "Do not known appropriate install command for $PMTYPE"
+	    ;;
     esac
 
     # other systems can install file package via ordinary command

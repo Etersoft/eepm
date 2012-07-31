@@ -28,17 +28,29 @@ case $PMTYPE in
 	apt-rpm|apt-dpkg)
 		CMD="apt-cache search"
 		;;
-	yum-rpm)
-		CMD="yum search"
-		;;
 	urpm-rpm)
 		CMD="urpmq -y"
+		;;
+	pkg_add)
+		CMD="pkg_info -x"
+		;;
+	emerge)
+		CMD="emerge --search"
+		;;
+	pacman)
+		CMD="pacman -Ss"
+		;;
+	yum-rpm)
+		CMD="yum search"
 		;;
 	zypper-rpm)
 		CMD="zypper search"
 		;;
-	pacman)
-		CMD="pacman -Ss"
+	mpkg)
+		CMD="mpkg search"
+		;;
+	pkgtool)
+		CMD="slackpkg search"
 		;;
 	*)
 		fatal "Do not known search command for $PMTYPE"
