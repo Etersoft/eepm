@@ -18,15 +18,13 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
-# copied from korinf/tools/run-script/scripts/search
-
-# TODO
+# Try remove with low level removing
 epm_remove_low()
 {
 	[ -z "$1" ] && return
 	case $PMTYPE in
 		apt-rpm|yum-rpm|zypper-rpm|urpm-rpm)
-			docmd $SUDO rpm -e  $@
+			docmd $SUDO rpm -ev $@
 			return ;;
 		apt-dpkg)
 			docmd $SUDO dpkg -P $@
@@ -37,27 +35,30 @@ epm_remove_low()
 		emerge)
 			docmd $SUDO emerge -unmerge $@
 			return ;;
-		pacman)
-			docmd $SUDO pacman -R $@
-			return ;;
-		mpkg)
-			docmd $SUDO mpkg remove $@
-			return ;;
 		pkgtool)
 			docmd $SUDO removepkg $@
 			return ;;
-	*)
-		RET=1
-		fatal "Do not known command for $PMTYPE"
-		;;
-esac
+		*)
+			fatal "Do not known command for $PMTYPE"
+			;;
+	esac
+	return 1
 
 }
 
 epm_remove()
 {
-	[ -n "$pkg_file$pkg_names" ] || fatal "Run remove without names"
-	epm_remove_names $pkg_names || return
+	[ -n "$pkg_filenames" ] || fatal "Run remove without args"
+	epm_remove_low $pkg_filenames && return
+
+	if [ -n "$non_interactive" ] ; then
+		epm_remove_nonint $pkg_filenames
+		local RET=$?
+		# if not separate command, use usual command
+		[ "$RET" = "5" ] || return $RET
+	fi
+
+	epm_remove_names $pkg_filenames
 }
 
 epm_remove_names()
@@ -78,7 +79,7 @@ epm_remove_names()
 			docmd $SUDO emerge --unmerge $@
 			return ;;
 		pacman)
-			docmd $SUDO pacman -R --noconfirm $@
+			docmd $SUDO pacman -R $@
 			return ;;
 		yum-rpm)
 			docmd $SUDO yum remove $@
@@ -96,32 +97,31 @@ epm_remove_names()
 			fatal "Do not known command for $PMTYPE"
 			;;
 	esac
-
-#docmd $SUDO $CMD $pkg_names $pkg_files
-
 }
 
 # TODO
 epm_remove_nonint()
 {
-case $DISTRNAME in
-	"ALTLinux"|"Ubuntu"|"Debian"|"PCLinux")
-		CMD="apt-get -y --force-yes remove"
-		;;
-	"LinuxXP"|"Fedora"|"ASPLinux"|"CentOS"|"RHEL"|"Scientific")
-		CMD="yum -y remove"
-		;;
-	"Mandriva")
-		CMD="urpme --auto"
-		;;
-	"SUSE")
-		CMD="zypper --non-interactive remove"
-		;;
-	*)
-		RET=1
-		CMD="echo \"Do not known install command for DISTRNAME $DISTRNAME\""
-		;;
-esac
-
+	case $PMTYPE in
+		apt-rpm|apt-dpkg)
+			docmd $SUDO apt-get -y --force-yes remove --purge $@
+			return ;;
+		urpm-rpm)
+			docmd $SUDO urpme --auto $@
+			return ;;
+		pacman)
+			docmd $SUDO pacman -R --noconfirm $@
+			return ;;
+		yum-rpm)
+			docmd $SUDO yum -y remove $@
+			return ;;
+		zypper-rpm)
+			docmd $SUDO zypper --non-interactive remove $@
+			return ;;
+		*)
+			fatal "Do not known command for $PMTYPE"
+			;;
+	esac
+	return 5
 }
 
