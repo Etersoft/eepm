@@ -120,7 +120,7 @@ epm_install_files()
 
     case $PMTYPE in
         apt-rpm)
-            docmd $SUDO rpm -Uvh --force $@ && return
+            docmd $SUDO rpm -Uvh --force $nodeps $@ && return
             docmd $SUDO apt-get install $@
             return ;;
         apt-dpkg)

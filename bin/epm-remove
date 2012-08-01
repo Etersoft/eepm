@@ -24,7 +24,7 @@ epm_remove_low()
 	[ -z "$1" ] && return
 	case $PMTYPE in
 		apt-rpm|yum-rpm|zypper-rpm|urpm-rpm)
-			docmd $SUDO rpm -ev $@
+			docmd $SUDO rpm -ev $nodeps $@
 			return ;;
 		apt-dpkg)
 			docmd $SUDO dpkg -P $@
