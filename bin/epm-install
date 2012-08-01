@@ -74,7 +74,7 @@ epm_install_names()
 			docmd $SUDO mpkg install $@
 			return ;;
 		pkgtool)
-			docmd $SUDO installpkg $@
+			docmd $SUDO slackpkg install $@
 			return ;;
 		*)
 			fatal "Do not known install command for $PMTYPE"
@@ -82,6 +82,7 @@ epm_install_names()
 	esac
 }
 
+# Non interactive install
 epm_ni_install_names()
 {
 	[ -z "$1" ] && return
@@ -117,20 +118,11 @@ epm_install_files()
 {
     [ -z "$1" ] && return
 
-    case $DISTRNAME in
-        ALTLinux)
+    case $PMTYPE in
+        apt-rpm)
             docmd $SUDO rpm -Uvh --force $@ && return
             docmd $SUDO apt-get install $@
             return ;;
-        PCLinux)
-            docmd $SUDO rpm -Uvh --force $@
-            return ;;
-        FreeBSD)
-            docmd $SUDO pkg_add $@
-            return ;;
-    esac
-
-    case $PMTYPE in
         apt-dpkg)
             docmd $SUDO dpkg -i $@
             docmd $SUDO apt-get -f install
@@ -139,15 +131,18 @@ epm_install_files()
             docmd $SUDO rpm -Uvh --force $@ && return
             docmd $SUDO yum --nogpgcheck local install $@
             return ;;
+        pkg_add)
+            docmd $SUDO pkg_add $@
+            return ;;
         pacman)
             docmd $SUDO pacman -U $@
             return ;;
-	pkgtool)
+        pkgtool)
             docmd $SUDO installpkg $@
             return ;;
-	*)
-	    fatal "Do not known appropriate install command for $PMTYPE"
-	    ;;
+        *)
+            fatal "Do not known appropriate install command for $PMTYPE"
+            ;;
     esac
 
     # other systems can install file package via ordinary command
