@@ -74,6 +74,7 @@ epm_install_names()
 			docmd $SUDO mpkg install $@
 			return ;;
 		slackpkg)
+			# TODO: use upgrade if package is already installed
 			docmd $SUDO slackpkg install $@
 			return ;;
 		*)
@@ -106,7 +107,8 @@ epm_ni_install_names()
 			docmd $SUDO pacman -S --noconfirm $@
 			return ;;
 		slackpkg)
-			docmd $SUDO slackpkg install $@
+			# TODO: use upgrade if package is already installed
+			docmd $SUDO slackpkg -batch=on -default_answer=yes install $@
 			return ;;
 		*)
 			fatal "Do not known appropriate install command for $PMTYPE"

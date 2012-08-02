@@ -62,6 +62,9 @@ epm_reinstall_files()
         apt-pkg)
             docmd $SUDO dpkg -i $@
             return ;;
+        slackpkg)
+            docmd $SUDO installpkg $@
+            return ;;
     esac
 
     # other systems can install file package via ordinary command

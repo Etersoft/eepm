@@ -39,6 +39,9 @@ case $PMTYPE in
 	pacman)
 		CMD="pacman -Qo"
 		;;
+	slackpkg)
+		CMD="slackpkg file-search"
+		;;
 	*)
 		fatal "Do not known search file command for $PMTYPE"
 		;;

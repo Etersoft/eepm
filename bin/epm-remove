@@ -119,6 +119,9 @@ epm_remove_nonint()
 		zypper-rpm)
 			docmd $SUDO zypper --non-interactive remove $@
 			return ;;
+		slackpkg)
+			docmd $SUDO slackpkg -batch=on -default_answer=yes remove $@
+			return ;;
 		*)
 			fatal "Do not known command for $PMTYPE"
 			;;
