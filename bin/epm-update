@@ -23,14 +23,17 @@
 epm_update()
 {
 case $PMTYPE in
-	"apt-rpm")
+	apt-rpm)
 		docmd $SUDO apt-get update || exit
 		#docmd $SUDO apt-get -f install || exit
 		;;
-	"apt-dpkg")
+	apt-dpkg)
 		docmd $SUDO apt-get update || exit
 		#docmd $SUDO apt-get -f install || exit
 		#docmd $SUDO apt-get autoremove
+		;;
+	yum-rpm)
+		docmd $SUDO yum check-update
 		;;
 	urpm-rpm)
 		docmd $SUDO urpmi.update -a
@@ -41,10 +44,14 @@ case $PMTYPE in
 	zypper-rpm)
 		docmd $SUDO zypper refresh
 		;;
+	emerge)
+		docmd $SUDO emerge --sync
+		;;
+	pkgtool)
+		docmd $SUDO slackpkg update
+		;;
 	*)
-		RET=1
-		echo \"Do not known install command for DISTRNAME $DISTRNAME\"
-		exit 1
+		fatal "Do not known update command for $PMTYPE"
 		;;
 esac
 

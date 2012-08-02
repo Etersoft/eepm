@@ -41,26 +41,25 @@ epm_reinstall_names()
 		pacman)
 			docmd $SUDO pacman -U $@
 			return ;;
+		pkgtool)
+			docmd $SUDO slackpkg reinstall $@
+			return ;;
 		*)
 			fatal "Do not known install command for $PMTYPE"
 			;;
 	esac
 }
 
-# for low level install
-#is_alt && FANCYPERCENT=--fancypercent
-#docmd $SUDO rpm -Uvh $FANCYPERCENT "$@"
-
 epm_reinstall_files()
 {
     [ -z "$1" ] && return
 
-    case $DISTRNAME in
-        ALTLinux|PCLinux)
+    case $PMTYPE in
+        apt-rpm)
             docmd $SUDO rpm -Uvh --force $@ && return
             docmd $SUDO apt-get --reinstall install $@
             return ;;
-        Ubuntu|Debian|Mint)
+        apt-pkg)
             docmd $SUDO dpkg -i $@
             return ;;
     esac

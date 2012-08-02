@@ -18,17 +18,39 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
+print_apt_sources_list()
+{
+    for i in $@ ; do
+        test -r "$i" || continue
+        #echo
+        #echo "$i:"
+        grep -v "^#" $i
+    done | grep -v "^$"
+}
+
 epm_repolist()
 {
 case $PMTYPE in
-	#apt-rpm|apt-dpkg)
-	#	docmd $SUDO apt-get check || exit
-	#	;;
+	apt-rpm|apt-dpkg)
+		docmd print_apt_sources_list /etc/apt/sources.list /etc/apt/sources.list.d/*
+		;;
 	yum-rpm)
-		docmd $SUDO yum repolist
+		docmd yum repolist
+		;;
+	urpm-rpm)
+		docmd urpmq --list-media
 		;;
 	zypper-rpm)
-		docmd $USDO zypper sl -d
+		docmd zypper sl -d
+		;;
+	emerge)
+		docmd layman -L 
+		;;
+	pacman)
+		docmd cat /etc/pacman.conf
+		;;
+	pkgtool)
+		docmd cat /etc/slackpkg/mirrors
 		;;
 	*)
 		fatal "Do not known command for $PMTYPE"

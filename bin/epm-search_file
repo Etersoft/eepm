@@ -28,14 +28,16 @@ case $PMTYPE in
 		docmd apt-file search $pkg_filenames
 		return ;;
 	yum-rpm)
-		fatal "TODO"
-		CMD="yum search"
+		CMD="yum provides"
 		;;
 	urpm-rpm)
 		CMD="urpmf"
 		;;
-	zupper-rpm)
+	zypper-rpm)
 		CMD="zypper wp vi"
+		;;
+	pacman)
+		CMD="pacman -Qo"
 		;;
 	*)
 		fatal "Do not known search file command for $PMTYPE"

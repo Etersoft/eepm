@@ -39,7 +39,16 @@ epm_upgrade()
 		CMD="zypper dist-upgrade"
 		;;
 	pacman)
-		CMD="zypper -S -u"
+		CMD="pacman -S -u"
+		;;
+	emerge)
+		CMD="emerge -NuDa world"
+		;;
+	pkg_add)
+		CMD="freebsd-update fetch install"
+		;;
+	pkgtool)
+		CMD="slackpkg upgrade-all"
 		;;
 	*)
 		fatal "Do not known command for $PMTYPE"

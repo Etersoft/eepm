@@ -21,14 +21,26 @@
 epm_removerepo()
 {
 case $PMTYPE in
-	#apt-rpm|apt-dpkg)
-	#	docmd $SUDO apt-get check || exit
-	#	;;
-	#yum-rpm)
-	#	docmd $SUDO yum repolist || exit
-	#	;;
+	apt-rpm|apt-dpkg)
+		echo "You need remove repo from /etc/apt/sources.list"
+		;;
+	yum-rpm)
+		echo "You need remove repo from /etc/yum.repos.d/"
+		;;
+	urpm-rpm)
+		docmd $SUDO urpmi.removemedia $pkg_names
+		;;
 	zypper-rpm)
-		docmd $SUDO zypper removerepo $pkg_names || exit
+		docmd $SUDO zypper removerepo $pkg_names
+		;;
+	emerge)
+		docmd $SUDO layman -d$pkg_names
+		;;
+	pacman)
+		echo "You need remove repo from /etc/pacman.conf"
+		;;
+	pkgtool)
+		echo "You need remove repo from /etc/slackpkg/mirrors"
 		;;
 	*)
 		fatal "Do not known command for $PMTYPE"

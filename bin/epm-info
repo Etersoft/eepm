@@ -33,6 +33,9 @@ case $PMTYPE in
 	pacman)
 		docmd pacman -Si $pkg_names
 		;;
+	pkgtool)
+		docmd slackpkg info $pkg_names
+		;;
 	*)
 		fatal "Do not known command for $PMTYPE"
 		;;

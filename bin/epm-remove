@@ -76,7 +76,8 @@ epm_remove_names()
 			docmd $SUDO pkg_delete $@
 			return ;;
 		emerge)
-			docmd $SUDO emerge --unmerge $@
+			#docmd $SUDO emerge --unmerge $@
+			docmd $SUDO emerge -aC $@
 			return ;;
 		pacman)
 			docmd $SUDO pacman -R $@

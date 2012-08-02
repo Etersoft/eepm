@@ -21,17 +21,26 @@
 epm_addrepo()
 {
 case $PMTYPE in
-	#apt-rpm|apt-dpkg)
-	#	docmd $SUDO apt-get check || exit
-	#	;;
-	#yum-rpm)
-	#	docmd $SUDO yum repolist || exit
-	#	;;
+	apt-rpm|apt-dpkg)
+		echo "You need manually add repo to /etc/apt/sources.list"
+		;;
+	yum-rpm)
+		echo "You need manually add repo to /etc/yum.repos.d/"
+		;;
 	urpm-rpm)
-		docmd $SUDO urpmi.addmedia --distrib $pkg_filenames
+		docmd $SUDO urpmi.addmedia $pkg_filenames
 		;;
 	zypper-rpm)
-		docmd $SUDO zypper ar $pkg_filenames || exit
+		docmd $SUDO zypper ar $pkg_filenames
+		;;
+	emerge)
+		docmd $SUDO layman -a $pkg_filenames
+		;;
+	pacman)
+		echo "You need manually add repo to /etc/pacman.conf"
+		;;
+	pkgtool)
+		echo "You need manually add repo to /etc/slackpkg/mirrors"
 		;;
 	*)
 		fatal "Do not known command for $PMTYPE"
