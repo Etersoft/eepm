@@ -47,7 +47,7 @@ case $PMTYPE in
 	emerge)
 		docmd $SUDO emerge --sync
 		;;
-	pkgtool)
+	slackpkg)
 		docmd $SUDO slackpkg update
 		;;
 	*)

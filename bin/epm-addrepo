@@ -39,7 +39,7 @@ case $PMTYPE in
 	pacman)
 		echo "You need manually add repo to /etc/pacman.conf"
 		;;
-	pkgtool)
+	slackpkg)
 		echo "You need manually add repo to /etc/slackpkg/mirrors"
 		;;
 	*)

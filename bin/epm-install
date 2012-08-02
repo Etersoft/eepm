@@ -73,7 +73,7 @@ epm_install_names()
 		mpkg)
 			docmd $SUDO mpkg install $@
 			return ;;
-		pkgtool)
+		slackpkg)
 			docmd $SUDO slackpkg install $@
 			return ;;
 		*)
@@ -105,7 +105,7 @@ epm_ni_install_names()
 		pacman)
 			docmd $SUDO pacman -S --noconfirm $@
 			return ;;
-		pkgtool)
+		slackpkg)
 			docmd $SUDO slackpkg install $@
 			return ;;
 		*)
@@ -137,7 +137,7 @@ epm_install_files()
         pacman)
             docmd $SUDO pacman -U $@
             return ;;
-        pkgtool)
+        slackpkg)
             docmd $SUDO installpkg $@
             return ;;
         *)

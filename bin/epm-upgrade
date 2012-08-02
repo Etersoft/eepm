@@ -47,7 +47,7 @@ epm_upgrade()
 	pkg_add)
 		CMD="freebsd-update fetch install"
 		;;
-	pkgtool)
+	slackpkg)
 		CMD="slackpkg upgrade-all"
 		;;
 	*)

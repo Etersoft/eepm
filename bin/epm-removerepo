@@ -39,7 +39,7 @@ case $PMTYPE in
 	pacman)
 		echo "You need remove repo from /etc/pacman.conf"
 		;;
-	pkgtool)
+	slackpkg)
 		echo "You need remove repo from /etc/slackpkg/mirrors"
 		;;
 	*)

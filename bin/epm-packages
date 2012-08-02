@@ -48,7 +48,7 @@ case $PMTYPE in
 	pacman)
 		CMD="pacman -Qs"
 		;;
-	pkgtool)
+	slackpkg)
 		CMD="ls -1 /var/log/packages/"
 		;;
 	*)

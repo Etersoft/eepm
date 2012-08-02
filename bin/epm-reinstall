@@ -41,7 +41,7 @@ epm_reinstall_names()
 		pacman)
 			docmd $SUDO pacman -U $@
 			return ;;
-		pkgtool)
+		slackpkg)
 			docmd $SUDO slackpkg reinstall $@
 			return ;;
 		*)

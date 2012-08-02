@@ -33,7 +33,7 @@ case $PMTYPE in
 	pacman)
 		docmd pacman -Si $pkg_names
 		;;
-	pkgtool)
+	slackpkg)
 		docmd slackpkg info $pkg_names
 		;;
 	*)

@@ -49,7 +49,7 @@ case $PMTYPE in
 	mpkg)
 		CMD="mpkg search"
 		;;
-	pkgtool)
+	slackpkg)
 		CMD="slackpkg search"
 		;;
 	*)

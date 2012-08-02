@@ -49,7 +49,7 @@ epm_simulate()
     		showcmd $SUDO pacman -v -S $filenames
     		echo no | $SUDO pacman -v -S $filenames
     		return ;;
-    	pkgtool)
+    	slackpkg)
     		return 0 ;;
     	*)
     		fatal "Do not known simulate command for $PMTYPE"

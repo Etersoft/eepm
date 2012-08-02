@@ -35,7 +35,7 @@ epm_remove_low()
 		emerge)
 			docmd $SUDO emerge -unmerge $@
 			return ;;
-		pkgtool)
+		slackpkg)
 			docmd $SUDO removepkg $@
 			return ;;
 		*)
@@ -91,7 +91,7 @@ epm_remove_names()
 		mpkg)
 			docmd $SUDO mpkg remove $@
 			return ;;
-		pkgtool)
+		slackpkg)
 			docmd $SUDO slackpkg remove $@
 			return ;;
 		*)

@@ -49,7 +49,7 @@ case $PMTYPE in
 	pacman)
 		docmd cat /etc/pacman.conf
 		;;
-	pkgtool)
+	slackpkg)
 		docmd cat /etc/slackpkg/mirrors
 		;;
 	*)
