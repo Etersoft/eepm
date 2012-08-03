@@ -1,5 +1,5 @@
 Name: eepm
-Version: 0.9.3
+Version: 0.9.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -14,6 +14,11 @@ Packager: Vitaly Lipatov <lav@altlinux.ru>
 Source: ftp://updates.etersoft.ru/pub/Etersoft/Sisyphus/sources/tarball/%name-%version.tar
 
 BuildArchitectures: noarch
+
+# Contains the same command epm
+Conflicts: epm
+
+Provides: upm
 
 %description
 Etersoft EPM is the package manager for any platform
@@ -35,10 +40,18 @@ with various distros.
 %files
 %doc README TODO
 %_bindir/epm*
+%_bindir/eepm
 %_bindir/upm
 %_bindir/distr_info
 
 %changelog
+* Fri Aug 03 2012 Vitaly Lipatov <lav@altlinux.ru> 0.9.4-alt1
+- add query package (-qp) support
+- print command example in stderr
+- add eepm link
+- epm-info: try print info for installed package
+- fix slackpkg install/reinstall/remove/simulate
+
 * Thu Aug 02 2012 Vitaly Lipatov <lav@altlinux.ru> 0.9.3-alt1
 - use slackpkg instead pkgtool for Slackware package manager name
 - add missed command for Gentoo, Slackware, FreeBSD improve repo management commands
