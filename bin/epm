@@ -81,7 +81,7 @@ case $progname in
     epmqf)
         epm_cmd=query_file
         ;;
-    epm|upm)
+    epm|upm|eepm)
         ;;
     *)
         fatal "Unknown command: $progname"
