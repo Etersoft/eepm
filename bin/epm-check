@@ -18,8 +18,6 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
-# copied from korinf/tools/run-script/scripts/update
-
 epm_check()
 {
 case $PMTYPE in

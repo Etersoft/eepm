@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
-# etersoft-build-utils/bin/rpmqf
+# copied from etersoft-build-utils/bin/rpmqf
 
 # use and modify TOFILE recursively
 real_file()
@@ -45,7 +45,6 @@ real_file()
 	FULLFILEPATH=`readlink -f $TOFILE`
 }
 
-# copied from korinf/tools/run-script/scripts/search
 __do_query()
 {
     case $PMTYPE in
