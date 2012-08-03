@@ -27,11 +27,17 @@ isatty()
 	test -t 1
 }
 
+check_tty()
+{
+	isatty || return
+	export USETTY=1
+}
+
 : ${BLACK:=0} ${RED:=1} ${GREEN:=2} ${YELLOW:=3} ${BLUE:=4} ${MAGENTA:=5} ${CYAN:=6} ${WHITE:=7}
 
 set_boldcolor()
 {
-	isatty || return
+	[ -n "$USETTY" ] || return
 	{
 		echo bold
 		echo setaf $1
@@ -40,7 +46,7 @@ set_boldcolor()
 
 restore_color()
 {
-	isatty || return
+	[ -n "$USETTY" ] || return
 	{
 		echo op; # set Original color Pair.
 		echo sgr0; # turn off all special graphics mode (bold in our case).
@@ -77,7 +83,7 @@ showcmd()
 		[ "$UID" = 0 ] && PROMTSIG="#"
 		echo " $PROMTSIG $@"
 		restore_color
-	fi
+	fi >&2
 }
 
 # Print command line and run command line

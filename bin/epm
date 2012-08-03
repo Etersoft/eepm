@@ -30,6 +30,7 @@ load_helper epm-sh-functions
 
 set_sudo
 
+check_tty
 
 #############################
 
