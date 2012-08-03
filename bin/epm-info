@@ -18,10 +18,22 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
+load_helper epm-query
+
 epm_info()
 {
 case $PMTYPE in
-	apt-rpm|apt-dpkg)
+	apt-rpm)
+		if [ -n "$pkg_files" ] ; then
+			docmd rpm -qip $pkg_files
+		fi
+		[ -z "$pkg_names" ] && return
+		pkg_filenames=$pkg_names epm_query >/dev/null && docmd rpm -qi $pkg_names && return
+		docmd apt-cache show $pkg_names
+		;;
+	apt-dpkg)
+		[ -z "$pkg_names" ] && return
+		pkg_filenames=$pkg_names epm_query >/dev/null && docmd dpkg -I $pkg_names && return
 		docmd apt-cache show $pkg_names
 		;;
 	yum-rpm)
