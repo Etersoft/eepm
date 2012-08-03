@@ -82,6 +82,12 @@ case $progname in
     epmqf)
         epm_cmd=query_file
         ;;
+    epmqa)
+        epm_cmd=packages
+        ;;
+    epmqp)
+        epm_cmd=query_package
+        ;;
     epm|upm|eepm)
         ;;
     *)
@@ -112,6 +118,9 @@ check_command()
         ;;
     -qa|list|packages)    # HELPCMD: list of installed package(s)
         epm_cmd=packages
+        ;;
+    -qp|query_package)    # HELPCMD: search in the list of installed packages
+        epm_cmd=query_package
         ;;
     update)               # HELPCMD: update remote package repository databases
         epm_cmd=update
