@@ -151,9 +151,38 @@ epm_install_files()
     epm_install_names $@
 }
 
+epm_print_install_command()
+{
+    case $PMTYPE in
+        apt-rpm|yum-rpm|urpm-rpm|zypper-rpm)
+            echo "rpm -Uvh --force $nodeps $@"
+            ;;
+        apt-dpkg)
+            echo "dpkg -i $@"
+            ;;
+        pkg_add)
+            echo "pkg_add $@"
+            ;;
+        pacman)
+            echo "pacman -U --noconfirm $@"
+            ;;
+        slackpkg)
+            echo "installpkg $@"
+            ;;
+        *)
+            fatal "Do not known appropriate install command for $PMTYPE"
+            ;;
+    esac
+}
+
 
 epm_install()
 {
+    if [ -n "$show_command_only" ] ; then
+        epm_print_install_command $names
+        return
+    fi
+
     [ -n "$pkg_files$pkg_names" ] || fatal "Run install without packages"
 
     local names="$(echo $pkg_names | filter_out_installed_packages)"

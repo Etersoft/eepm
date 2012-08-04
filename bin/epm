@@ -64,6 +64,7 @@ quiet=
 nodeps=
 non_interactive=
 skip_installed=
+show_command_only=
 epm_cmd=
 pkg_files=
 pkg_names=
@@ -181,6 +182,9 @@ for opt in "$@" ; do
         ;;
     --skip-installed)     # HELPOPT: skip already install during install
         skip_installed=1
+        ;;
+    --show-command-only)  # HELPOPT: show command only, do not any action
+        show_command_only=1
         ;;
     --quiet)              # HELPOPT: quiet mode (do not print commands before exec)
         quiet=1
