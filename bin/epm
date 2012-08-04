@@ -110,13 +110,13 @@ check_command()
     -e|-P|remove|delete)  # HELPCMD: remove (delete) package(s) from the database and the system
         epm_cmd=remove
         ;;
-    -qi|info)             # HELPCMD: print package detail info
+    -qi|info|show)        # HELPCMD: print package detail info
         epm_cmd=info
         ;;
     clean)                # HELPCMD: clean local package cache
         epm_cmd=clean
         ;;
-    -qa|list|packages)    # HELPCMD: list of installed package(s)
+    -qa|list|packages|-l) # HELPCMD: list of installed package(s)
         epm_cmd=packages
         ;;
     -qp|query_package)    # HELPCMD: search in the list of installed packages
@@ -134,7 +134,7 @@ check_command()
     -q|installed)         # HELPCMD: check presence of package(s)
         epm_cmd=query
         ;;
-    -qf|which)            # HELPCMD: query package(s) owning file
+    -qf|which|belongs)    # HELPCMD: query package(s) owning file
         epm_cmd=query_file
         ;;
     filesearch)           # HELPCMD: search in which package a file is included
@@ -152,7 +152,7 @@ check_command()
     simulate)             # HELPCMD: simulate install (check requires)
         epm_cmd=simulate
         ;;
-    addrepo)              # HELPCMD: add package repo
+    addrepo|ar)           # HELPCMD: add package repo
         epm_cmd=addrepo
         ;;
     repolist|sl)          # HELPCMD: print repo list
