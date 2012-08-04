@@ -23,19 +23,13 @@ epm_packages()
 
 case $PMTYPE in
 	apt-rpm)
-		CMD="rpm -qa"
+		CMD="rpm -qa $pkg_filenames"
 		;;
 	apt-dpkg)
-		CMD="dpkg -l"
+		CMD="dpkg -l $pkg_filenames"
 		;;
-	yum-rpm)
-		CMD="rpm -qa"
-		;;
-	urpm-rpm)
-		CMD="rpm -qa"
-		;;
-	zypper-rpm)
-		CMD="rpm -qa"
+	yum-rpm|urpm-rpm|zypper-rpm)
+		CMD="rpm -qa $pkg_filenames"
 		;;
 	emerge)
 		CMD="qlist -I"
