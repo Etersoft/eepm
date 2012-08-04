@@ -45,6 +45,20 @@ real_file()
 	FULLFILEPATH=`readlink -f $TOFILE`
 }
 
+dpkg_print_name_version()
+{
+	local ver
+	for i in $* ; do
+		ver=$(dpkg -s $i 2>/dev/null | grep "Version:" | sed -e "s|Version: ||g")
+		if [ -z "$ver" ] ; then
+			echo "$i"
+		else
+			echo "$i-$ver"
+		fi
+	done
+}
+
+
 __do_query()
 {
     case $PMTYPE in
@@ -52,8 +66,9 @@ __do_query()
             CMD="rpm -qf"
             ;;
         apt-dpkg)
-            CMD="dpkg -S"
-            ;;
+            showcmd dpkg -S $1
+            dpkg_print_name_version $(dpkg -S $1 | sed -e "s|:.*||")
+            return ;;
         yum-rpm|urpm-rpm)
             CMD="rpm -qf"
             ;;
