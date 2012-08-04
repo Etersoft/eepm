@@ -18,6 +18,8 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
+# TODO: combine with -qa (the difference only in return status now)
+
 epm_query()
 {
     [ -n "$pkg_filenames" ] || fatal "Run query without names"
@@ -28,6 +30,10 @@ case $PMTYPE in
 		;;
 	apt-dpkg)
 		CMD="dpkg -l"
+		# TODO: make rpm-like output
+		#showcmd dpkg -l $pkg_filenames
+		#dpkg -l $pkg_filenames | grep "^ii"
+		#return
 		;;
 	*)
 		fatal "Do not known command for $PMTYPE"
