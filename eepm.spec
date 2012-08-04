@@ -1,5 +1,5 @@
 Name: eepm
-Version: 0.9.4
+Version: 0.9.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -45,6 +45,12 @@ with various distros.
 %_bindir/distr_info
 
 %changelog
+* Sat Aug 04 2012 Vitaly Lipatov <lav@altlinux.ru> 0.9.5-alt1
+- epm-install: add show-command-only support
+- epm: update commands variations
+- query_file: make output from dpkg like rpm -q
+- epm-packages: allow filter list packages by one name
+
 * Fri Aug 03 2012 Vitaly Lipatov <lav@altlinux.ru> 0.9.4-alt1
 - add query package (-qp) support
 - print command example in stderr
