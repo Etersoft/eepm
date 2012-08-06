@@ -22,7 +22,7 @@ distro()
 has()
 {
 	[ -n "$DISTROFILE" ] || exit 1
-	grep "$1" "$DISTROFILE" >/dev/null 2>&1
+	grep "$*" "$DISTROFILE" >/dev/null 2>&1
 }
 
 # Translate DISTRIB_ID to vendor name (like %_vendor does)
@@ -93,7 +93,6 @@ if distro altlinux-release ; then
 	elif has "ALT Linux 4.1" ; then DISTRIB_RELEASE="4.1"
 	elif has Walnut   ; then DISTRIB_RELEASE="4.0"
 	elif has 5.0      ; then DISTRIB_RELEASE="5.0"
-	elif has Desktop  ; then DISTRIB_RELEASE="4.0"
 	elif has 5.1      ; then DISTRIB_RELEASE="5.1"
 	elif has Ziziphora ; then DISTRIB_RELEASE="5.1"
 	elif has "ALT Linux p5" ; then DISTRIB_RELEASE="p5"
