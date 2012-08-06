@@ -42,21 +42,6 @@ epm_remove_low()
 	return 1
 }
 
-epm_remove()
-{
-	[ -n "$pkg_filenames" ] || fatal "Run remove without args"
-	epm_remove_low $pkg_filenames && return
-
-	if [ -n "$non_interactive" ] ; then
-		epm_remove_nonint $pkg_filenames
-		local RET=$?
-		# if not separate command, use usual command
-		[ "$RET" = "5" ] || return $RET
-	fi
-
-	epm_remove_names $pkg_filenames
-}
-
 epm_remove_names()
 {
 	[ -z "$1" ] && return
@@ -120,5 +105,21 @@ epm_remove_nonint()
 			return ;;
 	esac
 	return 5
+}
+
+
+epm_remove()
+{
+	[ -n "$pkg_filenames" ] || fatal "Run remove without args"
+	epm_remove_low $pkg_filenames && return
+
+	if [ -n "$non_interactive" ] ; then
+		epm_remove_nonint $pkg_filenames
+		local RET=$?
+		# if not separate command, use usual command
+		[ "$RET" = "5" ] || return $RET
+	fi
+
+	epm_remove_names $pkg_filenames
 }
 
