@@ -121,10 +121,10 @@ epm_install_files()
     [ -z "$1" ] && return
 
     case $PMTYPE in
-        apt-rpm)
+        apt-rpm|urpm-rpm)
             docmd $SUDO rpm -Uvh --force $nodeps $@ && return
-            docmd $SUDO apt-get install $@
-            return ;;
+            # use install_names
+            ;;
         apt-dpkg)
             docmd $SUDO dpkg -i $@
             docmd $SUDO apt-get -f install
@@ -142,9 +142,6 @@ epm_install_files()
         slackpkg)
             docmd $SUDO installpkg $@
             return ;;
-        *)
-            fatal "Do not known appropriate install command for $PMTYPE"
-            ;;
     esac
 
     # other systems can install file package via ordinary command
