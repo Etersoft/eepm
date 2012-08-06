@@ -18,12 +18,36 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
+# https://bugzilla.altlinux.org/show_bug.cgi?id=14449
+local_content_search()
+{
+    local SYSARCH
+    SYSARCH=$(uname -m)
+    [ "$SYSARCH" = "x86_64" ] || SYSARCH=i586
+
+    local REPODIR=/var/ftp/pub/ALTLinux/Sisyphus
+    local CI=$REPODIR/$SYSARCH/base/contents_index
+    local CINOA=$REPODIR/noarch/base/contents_index
+    local OUTCMD="less"
+    [ -n "$USETTY" ] || OUTCMD="cat"
+
+    test -r $CI && test -r $CINOA || fatal "Can't locate $CI or $CINOA"
+
+    {
+        [ -n "$USETTY" ] && echo "Search in $CI and $CINOA for $1..."
+        grep -h ".*$1.*\t" $CI $CINOA | sed -e "s|\(.*\)\t\(.*\)|\2: \1|g"
+    } | $OUTCMD
+}
+
 epm_search_file()
 {
     [ -n "$pkg_filenames" ] || fatal "Run search without names"
 
 case $PMTYPE in
-	apt-rpm|apt-dpkg)
+	apt-rpm)
+		local_content_search $pkg_filenames
+		return ;;
+	apt-dpkg)
 		docmd $SUDO apt-file update
 		docmd apt-file search $pkg_filenames
 		return ;;
