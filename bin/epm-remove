@@ -38,12 +38,8 @@ epm_remove_low()
 		slackpkg)
 			docmd $SUDO removepkg $@
 			return ;;
-		*)
-			fatal "Do not known command for $PMTYPE"
-			;;
 	esac
 	return 1
-
 }
 
 epm_remove()
@@ -122,9 +118,6 @@ epm_remove_nonint()
 		slackpkg)
 			docmd $SUDO slackpkg -batch=on -default_answer=yes remove $@
 			return ;;
-		*)
-			fatal "Do not known command for $PMTYPE"
-			;;
 	esac
 	return 5
 }
