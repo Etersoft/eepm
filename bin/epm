@@ -138,7 +138,7 @@ check_command()
     -qf|which|belongs)    # HELPCMD: query package(s) owning file
         epm_cmd=query_file
         ;;
-    filesearch)           # HELPCMD: search in which package a file is included
+    -sf|filesearch|search_file) # HELPCMD: search in which package a file is included
         epm_cmd=search_file
         ;;
     -ql|filelist)         # HELPCMD: print package file list
