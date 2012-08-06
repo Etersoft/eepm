@@ -18,6 +18,8 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
+load_helper epm-search_file
+
 # copied from etersoft-build-utils/bin/rpmqf
 
 # use and modify TOFILE recursively
@@ -85,7 +87,7 @@ __do_query()
             fatal "Do not known query command for $PMTYPE"
             ;;
     esac
- 
+
     docmd $CMD $@
 }
 
@@ -97,7 +99,7 @@ epm_query_file()
 
 for i in $pkg_filenames ; do
     real_file "$i"
-    __do_query $FULLFILEPATH
+    __do_query $FULLFILEPATH || pkg_filenames=$i epm_search_file
 done
 
 }
