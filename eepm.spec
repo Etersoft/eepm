@@ -1,5 +1,5 @@
 Name: eepm
-Version: 0.9.5
+Version: 0.9.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -45,6 +45,14 @@ with various distros.
 %_bindir/distr_info
 
 %changelog
+* Mon Aug 06 2012 Vitaly Lipatov <lav@altlinux.ru> 0.9.6-alt1
+- query: default realization via epm package list
+- simulate: it is ok to run with empty list
+- query_file: try search in global base if failed in installed
+- search_file: realize search_file on ALT Linux via grep local contents_index
+- remove: allow fallback to next level if target does not supported
+- install files: allow fallback to hilevel install, add urpm support
+
 * Sat Aug 04 2012 Vitaly Lipatov <lav@altlinux.ru> 0.9.5-alt1
 - epm-install: add show-command-only support
 - epm: update commands variations
