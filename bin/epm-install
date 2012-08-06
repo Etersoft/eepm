@@ -137,7 +137,7 @@ epm_install_files()
             docmd $SUDO pkg_add $@
             return ;;
         pacman)
-            docmd $SUDO pacman -U $@
+            docmd $SUDO pacman -U --noconfirm $@
             return ;;
         slackpkg)
             docmd $SUDO installpkg $@
