@@ -18,6 +18,8 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
+load_helper epm-packages
+
 # TODO: combine with -qa (the difference only in return status now)
 
 epm_query()
@@ -36,7 +38,7 @@ case $PMTYPE in
 		#return
 		;;
 	*)
-		fatal "Do not known command for $PMTYPE"
+		epm_packages $pkg_filenames | grep "$pkg_filenames"
 		;;
 esac
 
