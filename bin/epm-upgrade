@@ -32,8 +32,8 @@ epm_upgrade()
 		CMD="yum update"
 		;;
 	urpm-rpm)
-		# or --auto-select
-		CMD="urpmi --auto-update --replace-files"
+		# or --auto-select --replace-files
+		CMD="urpmi --auto-update"
 		;;
 	zypper-rpm)
 		CMD="zypper dist-upgrade"
