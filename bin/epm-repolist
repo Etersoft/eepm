@@ -25,7 +25,7 @@ print_apt_sources_list()
         #echo
         #echo "$i:"
         grep -v "^#" $i
-    done | grep -v "^$"
+    done | grep -v "^ *\$"
 }
 
 epm_repolist()
