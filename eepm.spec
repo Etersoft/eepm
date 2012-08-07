@@ -1,5 +1,5 @@
 Name: eepm
-Version: 0.9.6
+Version: 0.9.7
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -45,6 +45,12 @@ with various distros.
 %_bindir/distr_info
 
 %changelog
+* Tue Aug 07 2012 Vitaly Lipatov <lav@altlinux.ru> 0.9.7-alt1
+- epm: fix use epm_packages
+- simulate: return 2 if have no work
+- install: support --auto for install files too
+- install: run pacman for files with --noconfirm
+
 * Mon Aug 06 2012 Vitaly Lipatov <lav@altlinux.ru> 0.9.6-alt1
 - query: default realization via epm package list
 - simulate: it is ok to run with empty list
