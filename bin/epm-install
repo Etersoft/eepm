@@ -47,6 +47,11 @@ filter_out_installed_packages()
 # copied from etersoft-build-utils/share/eterbuild/functions/rpmpkg
 epm_install_names()
 {
+	if [ -n "$non_interactive" ] ; then
+		epm_ni_install_names "$@"
+		return
+	fi
+
 	[ -z "$1" ] && return
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
@@ -145,7 +150,7 @@ epm_install_files()
     esac
 
     # other systems can install file package via ordinary command
-    epm_install_names $@
+    epm_install_names "$@"
 }
 
 epm_print_install_command()
@@ -187,11 +192,6 @@ epm_install()
 
     [ -z "$files$names" ] && echo "Skip empty install list" && return 2
 
-    if [ -n "$non_interactive" ] ; then
-        epm_ni_install_names $names || return
-    else
-        epm_install_names $names || return
-    fi
-
+    epm_install_names $names || return
     epm_install_files $files
 }
