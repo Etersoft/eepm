@@ -38,13 +38,13 @@ case $PMTYPE in
 		docmd yum repolist
 		;;
 	urpm-rpm)
-		docmd urpmq --list-media
+		docmd urpmq --list-url
 		;;
 	zypper-rpm)
 		docmd zypper sl -d
 		;;
 	emerge)
-		docmd layman -L 
+		docmd layman -L
 		;;
 	pacman)
 		docmd cat /etc/pacman.conf
