@@ -38,7 +38,7 @@ case $PMTYPE in
 		#return
 		;;
 	*)
-		epm_packages $pkg_filenames | grep "$pkg_filenames"
+		epm_packages | grep "$pkg_filenames"
 		;;
 esac
 
