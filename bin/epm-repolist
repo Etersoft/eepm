@@ -31,8 +31,12 @@ print_apt_sources_list()
 epm_repolist()
 {
 case $PMTYPE in
-	apt-rpm|apt-dpkg)
-		docmd print_apt_sources_list /etc/apt/sources.list /etc/apt/sources.list.d/*
+	apt-rpm)
+		docmd apt-repo list
+		;;
+	apt-dpkg)
+		showcmd cat /etc/apt/sources.list*
+		print_apt_sources_list /etc/apt/sources.list /etc/apt/sources.list.d/*.list
 		;;
 	yum-rpm)
 		docmd yum repolist

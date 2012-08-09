@@ -21,20 +21,23 @@
 epm_removerepo()
 {
 case $PMTYPE in
-	apt-rpm|apt-dpkg)
+	apt-rpm)
+		docmd $SUDO apt-repo rm $pkg_filenames
+		;;
+	apt-dpkg)
 		echo "You need remove repo from /etc/apt/sources.list"
 		;;
 	yum-rpm)
 		echo "You need remove repo from /etc/yum.repos.d/"
 		;;
 	urpm-rpm)
-		docmd $SUDO urpmi.removemedia $pkg_names
+		docmd $SUDO urpmi.removemedia $pkg_filenames
 		;;
 	zypper-rpm)
-		docmd $SUDO zypper removerepo $pkg_names
+		docmd $SUDO zypper removerepo $pkg_filenames
 		;;
 	emerge)
-		docmd $SUDO layman -d$pkg_names
+		docmd $SUDO layman -d$pkg_filenames
 		;;
 	pacman)
 		echo "You need remove repo from /etc/pacman.conf"

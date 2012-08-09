@@ -20,6 +20,10 @@ Conflicts: epm
 
 Provides: upm
 
+%if %_vendor == "alt"
+Requires: apt rpm apt-repo
+%endif
+
 %description
 Etersoft EPM is the package manager for any platform
 and any platform version. It provides
