@@ -18,6 +18,8 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
+load_helper epm-query
+
 epm_filelist()
 {
     [ -n "$pkg_filenames" ] || fatal "Run query without names"
@@ -46,6 +48,8 @@ case $PMTYPE in
 		;;
 esac
 
-docmd $CMD $pkg_filenames
+docmd $CMD $pkg_filenames && return
+
+epm_query >/dev/null || fatal "Query filelist for non installed packages does not realized"
 
 }
