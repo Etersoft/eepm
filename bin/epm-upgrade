@@ -20,8 +20,6 @@
 
 epm_upgrade()
 {
-    [ -n "$pkg_filenames" ] && fatal "No need any args for upgrade command"
-
     echo "Run command for upgrade packages"
     case $PMTYPE in
 	apt-rpm|apt-dpkg)
@@ -55,5 +53,5 @@ epm_upgrade()
 		;;
     esac
 
-    docmd $SUDO $CMD
+    docmd $SUDO $CMD $pkg_filenames
 }
