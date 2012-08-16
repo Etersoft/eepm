@@ -1,5 +1,5 @@
 Name: eepm
-Version: 0.9.7
+Version: 1.0.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -49,6 +49,13 @@ with various distros.
 %_bindir/distr_info
 
 %changelog
+* Fri Aug 17 2012 Vitaly Lipatov <lav@altlinux.ru> 1.0.0-alt1
+- release 1.0
+- upgrade: add support for additional options
+- filelist: add error for non installed packages
+- use apt-repo on ALT Linux for repo manipulation
+- repolist: print url on mandriva
+
 * Tue Aug 07 2012 Vitaly Lipatov <lav@altlinux.ru> 0.9.7-alt1
 - epm: fix use epm_packages
 - simulate: return 2 if have no work
