@@ -114,6 +114,9 @@ check_command()
     -qi|info|show)        # HELPCMD: print package detail info
         epm_cmd=info
         ;;
+    requires|deplist)     # HELPCMD: print package requires
+        epm_cmd=requires
+        ;;
     clean)                # HELPCMD: clean local package cache
         epm_cmd=clean
         ;;

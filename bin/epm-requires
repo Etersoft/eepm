@@ -1,0 +1,66 @@
+#!/bin/sh
+#
+# Copyright (C) 2012  Etersoft
+# Copyright (C) 2012  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This file is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+#
+
+load_helper epm-packages
+
+# TODO: combine with -qa (the difference only in return status now)
+
+epm_requires()
+{
+    [ -n "$pkg_filenames" ] || fatal "Run query without names"
+
+# by file package
+case $PMTYPE in
+	apt-rpm|urpm-rpm|zypper-rpm|yum-rpm)
+		CMD="rpm -q --requires -p"
+		;;
+	apt-dpkg)
+		showcmd dpkg -s $pkg_files
+		dpkg -s $pkg_names | grep "^Depends:" | sed "s|^Depends:||g"
+		return
+		;;
+	*)
+		fatal "Do not known command for $PMTYPE"
+		;;
+esac
+
+[ -n "$pkg_files" ] && docmd $CMD $pkg_files
+
+# by file name
+case $PMTYPE in
+	apt-rpm|urpm-rpm|zypper-rpm)
+		# FIXME: use hi level commands
+		CMD="rpm -q --requires"
+		;;
+	yum-rpm)
+		CMD="yum deplist"
+		;;
+	apt-dpkg)
+		CMD="apt-cache depends"
+		;;
+	*)
+		fatal "Do not known command for $PMTYPE"
+		;;
+esac
+
+
+[ -n "$pkg_names" ] && docmd $CMD $pkg_names
+
+}
