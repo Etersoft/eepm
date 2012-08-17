@@ -136,7 +136,7 @@ epm_install_files()
             return ;;
         yum-rpm)
             docmd $SUDO rpm -Uvh --force $@ && return
-            docmd $SUDO yum --nogpgcheck local install $@
+            docmd $SUDO yum --nogpgcheck install $@
             return ;;
         pkg_add)
             docmd $SUDO pkg_add $@
