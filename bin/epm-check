@@ -33,7 +33,7 @@ case $PMTYPE in
 		;;
 	yum-rpm)
 		docmd package-cleanup --leaves
-		package-cleanup --leaves | xargs yum remove
+		a= package-cleanup --leaves | xargs yum remove
 		;;
 	urpm-rpm)
 		docmd $SUDO urpme --auto-orphans

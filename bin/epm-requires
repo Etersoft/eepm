@@ -33,7 +33,7 @@ case $PMTYPE in
 		;;
 	apt-dpkg)
 		showcmd dpkg -s $pkg_files
-		dpkg -s $pkg_names | grep "^Depends:" | sed "s|^Depends:||g"
+		a= dpkg -s $pkg_names | grep "^Depends:" | sed "s|^Depends:||g"
 		return
 		;;
 	*)
