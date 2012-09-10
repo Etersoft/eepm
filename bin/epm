@@ -62,6 +62,7 @@ set_pm_type
 verbose=
 quiet=
 nodeps=
+force=
 non_interactive=
 skip_installed=
 show_command_only=
@@ -194,6 +195,9 @@ for opt in "$@" ; do
         ;;
     --nodeps)             # HELPOPT: skip dependency check (during install/simulate and so on)
         nodeps="--nodeps"
+        ;;
+    --force)              # HELPOPT: force install/remove package (f.i., override)
+        force="--force"
         ;;
     --auto)               # HELPOPT: non interactive mode
         non_interactive=1

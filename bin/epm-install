@@ -127,7 +127,7 @@ epm_install_files()
 
     case $PMTYPE in
         apt-rpm|urpm-rpm)
-            docmd $SUDO rpm -Uvh --force $nodeps $@ && return
+            docmd $SUDO rpm -Uvh $force $nodeps $@ && return
             # use install_names
             ;;
         apt-dpkg)
@@ -135,7 +135,7 @@ epm_install_files()
             docmd $SUDO apt-get -f install
             return ;;
         yum-rpm)
-            docmd $SUDO rpm -Uvh --force $@ && return
+            docmd $SUDO rpm -Uvh $force $@ && return
             docmd $SUDO yum --nogpgcheck install $@
             return ;;
         pkg_add)
