@@ -40,7 +40,7 @@ filter_out_installed_packages()
 		*)
 			cat
 			;;
-	esac | sed -e "s|rpm-build-altlinux-compat||g" | filter_strip_spaces
+	esac | sed -e "s|rpm-build-altlinux-compat[^ ]||g" | filter_strip_spaces
 }
 
 
