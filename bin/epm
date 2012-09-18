@@ -176,10 +176,12 @@ for opt in "$@" ; do
     check_command $opt && continue
     case $opt in
     -h|--help|help)       # HELPOPT: this help
-        phelp; exit 0
+        phelp
+        exit 0
         ;;
     -v|--version)         # HELPOPT: print version
-        print_version; exit 0
+        print_version
+        exit 0
         ;;
     --verbose)            # HELPOPT: verbose mode
         verbose=1
@@ -220,13 +222,14 @@ pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
 echover "pkg_files=$pkg_files"
 echover "pkg_names=$pkg_names"
 
-# Run helper for command
+# Just printout help if run without args
 if [ -z "$epm_cmd" ] ; then
     print_version
     echo
     fatal "Run $ epm --help for get help"
 fi
 
+# Run helper for command
 load_helper epm-$epm_cmd
 epm_$epm_cmd
-# return last error code
+# return last error code (from subroutine)
