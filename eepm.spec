@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.0.1
+Version: 1.0.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -49,6 +49,10 @@ with various distros.
 %_bindir/distr_info
 
 %changelog
+* Tue Sep 18 2012 Vitaly Lipatov <lav@altlinux.ru> 1.0.2-alt1
+- replace all docmd $SUDO with sudocmd call
+- fix install package rpm-build-altlinux-compat via package fullname
+
 * Tue Sep 18 2012 Vitaly Lipatov <lav@altlinux.ru> 1.0.1-alt1
 - epm: add --force support for install
 - drop extra dependencies
