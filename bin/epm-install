@@ -55,32 +55,32 @@ epm_install_names()
 	[ -z "$1" ] && return
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
-			docmd $SUDO apt-get install $@
+			sudocmd apt-get install $@
 			return ;;
 		urpm-rpm)
-			docmd $SUDO urpmi $@
+			sudocmd urpmi $@
 			return ;;
 		pkg_add)
-			docmd $SUDO pkg_add -r $@
+			sudocmd pkg_add -r $@
 			return ;;
 		emerge)
-			docmd $SUDO emerge -uD $@
+			sudocmd emerge -uD $@
 			return ;;
 		pacman)
-			docmd $SUDO pacman -S $@
+			sudocmd pacman -S $@
 			return ;;
 		yum-rpm)
-			docmd $SUDO yum install $@
+			sudocmd yum install $@
 			return ;;
 		zypper-rpm)
-			docmd $SUDO zypper install $@
+			sudocmd zypper install $@
 			return ;;
 		mpkg)
-			docmd $SUDO mpkg install $@
+			sudocmd mpkg install $@
 			return ;;
 		slackpkg)
 			# TODO: use upgrade if package is already installed
-			docmd $SUDO slackpkg install $@
+			sudocmd slackpkg install $@
 			return ;;
 		*)
 			fatal "Do not known install command for $PMTYPE"
@@ -94,26 +94,26 @@ epm_ni_install_names()
 	[ -z "$1" ] && return
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
-			docmd $SUDO apt-get -y --force-yes install $@
+			sudocmd apt-get -y --force-yes install $@
 			return ;;
 		yum-rpm)
-			docmd $SUDO yum -y install $@
+			sudocmd yum -y install $@
 			return ;;
 		urpm-rpm)
-			docmd $SUDO urpmi --auto --no-verify-rpm $@
+			sudocmd urpmi --auto --no-verify-rpm $@
 			return ;;
 		zypper-rpm)
-			yes | docmd $SUDO zypper --non-interactive install $@
+			yes | sudocmd zypper --non-interactive install $@
 			return ;;
 		pkg_add)
-			docmd $SUDO pkg_add -r $@
+			sudocmd pkg_add -r $@
 			return ;;
 		pacman)
-			docmd $SUDO pacman -S --noconfirm $@
+			sudocmd pacman -S --noconfirm $@
 			return ;;
 		slackpkg)
 			# TODO: use upgrade if package is already installed
-			docmd $SUDO slackpkg -batch=on -default_answer=yes install $@
+			sudocmd slackpkg -batch=on -default_answer=yes install $@
 			return ;;
 		*)
 			fatal "Do not known appropriate install command for $PMTYPE"
@@ -127,25 +127,25 @@ epm_install_files()
 
     case $PMTYPE in
         apt-rpm|urpm-rpm)
-            docmd $SUDO rpm -Uvh $force $nodeps $@ && return
+            sudocmd rpm -Uvh $force $nodeps $@ && return
             # use install_names
             ;;
         apt-dpkg)
-            docmd $SUDO dpkg -i $@
-            docmd $SUDO apt-get -f install
+            sudocmd dpkg -i $@
+            sudocmd apt-get -f install
             return ;;
         yum-rpm)
-            docmd $SUDO rpm -Uvh $force $@ && return
-            docmd $SUDO yum --nogpgcheck install $@
+            sudocmd rpm -Uvh $force $@ && return
+            sudocmd yum --nogpgcheck install $@
             return ;;
         pkg_add)
-            docmd $SUDO pkg_add $@
+            sudocmd pkg_add $@
             return ;;
         pacman)
-            docmd $SUDO pacman -U --noconfirm $@
+            sudocmd pacman -U --noconfirm $@
             return ;;
         slackpkg)
-            docmd $SUDO installpkg $@
+            sudocmd installpkg $@
             return ;;
     esac
 

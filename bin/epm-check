@@ -22,24 +22,24 @@ epm_check()
 {
 case $PMTYPE in
 	apt-rpm|apt-dpkg)
-		#docmd $SUDO apt-get check || exit
-		docmd $SUDO apt-get update || exit
-		docmd $SUDO apt-get -f install || exit
+		#sudocmd apt-get check || exit
+		sudocmd apt-get update || exit
+		sudocmd apt-get -f install || exit
 		;;
 	apt-dpkg)
-		docmd $SUDO apt-get update || exit
-		docmd $SUDO apt-get -f install || exit
-		docmd $SUDO apt-get autoremove
+		sudocmd apt-get update || exit
+		sudocmd apt-get -f install || exit
+		sudocmd apt-get autoremove
 		;;
 	yum-rpm)
 		docmd package-cleanup --leaves
 		a= package-cleanup --leaves | xargs yum remove
 		;;
 	urpm-rpm)
-		docmd $SUDO urpme --auto-orphans
+		sudocmd urpme --auto-orphans
 		;;
 	zypper-rpm)
-		docmd $SUDO zypper verify || exit
+		sudocmd zypper verify || exit
 		;;
 	*)
 		fatal "Do not known command for $PMTYPE"

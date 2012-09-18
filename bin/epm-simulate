@@ -57,6 +57,6 @@ epm_simulate()
     		;;
     esac
 
-    docmd $SUDO $CMD $filenames
+    sudocmd $CMD $filenames
 }
 

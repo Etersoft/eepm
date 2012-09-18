@@ -24,25 +24,25 @@ epm_reinstall_names()
 	[ -n "$1" ] || return
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
-			docmd $SUDO apt-get --reinstall install $@
+			sudocmd apt-get --reinstall install $@
 			return ;;
 		yum-rpm)
-			docmd $SUDO yum install $@
+			sudocmd yum install $@
 			return ;;
 		urpm-rpm)
-			docmd $SUDO urpmi $@
+			sudocmd urpmi $@
 			return ;;
 		zypper-rpm)
-			docmd $SUDO zypper install $@
+			sudocmd zypper install $@
 			return ;;
 		pkg_add)
-			docmd $SUDO pkg_add -r $@
+			sudocmd pkg_add -r $@
 			return ;;
 		pacman)
-			docmd $SUDO pacman -U $@
+			sudocmd pacman -U $@
 			return ;;
 		slackpkg)
-			docmd $SUDO slackpkg reinstall $@
+			sudocmd slackpkg reinstall $@
 			return ;;
 		*)
 			fatal "Do not known install command for $PMTYPE"
@@ -56,14 +56,14 @@ epm_reinstall_files()
 
     case $PMTYPE in
         apt-rpm)
-            docmd $SUDO rpm -Uvh --force $@ && return
-            docmd $SUDO apt-get --reinstall install $@
+            sudocmd rpm -Uvh --force $@ && return
+            sudocmd apt-get --reinstall install $@
             return ;;
         apt-pkg)
-            docmd $SUDO dpkg -i $@
+            sudocmd dpkg -i $@
             return ;;
         slackpkg)
-            docmd $SUDO installpkg $@
+            sudocmd installpkg $@
             return ;;
     esac
 

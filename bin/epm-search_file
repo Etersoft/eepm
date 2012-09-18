@@ -49,7 +49,7 @@ case $PMTYPE in
 		local_content_search $pkg_filenames
 		return ;;
 	apt-dpkg)
-		docmd $SUDO apt-file update
+		sudocmd apt-file update
 		docmd apt-file search $pkg_filenames
 		return ;;
 	yum-rpm)

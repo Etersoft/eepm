@@ -24,31 +24,31 @@ epm_update()
 {
 case $PMTYPE in
 	apt-rpm)
-		docmd $SUDO apt-get update || exit
-		#docmd $SUDO apt-get -f install || exit
+		sudocmd apt-get update || exit
+		#sudocmd apt-get -f install || exit
 		;;
 	apt-dpkg)
-		docmd $SUDO apt-get update || exit
-		#docmd $SUDO apt-get -f install || exit
-		#docmd $SUDO apt-get autoremove
+		sudocmd apt-get update || exit
+		#sudocmd apt-get -f install || exit
+		#sudocmd apt-get autoremove
 		;;
 	yum-rpm)
-		docmd $SUDO yum check-update
+		sudocmd yum check-update
 		;;
 	urpm-rpm)
-		docmd $SUDO urpmi.update -a
+		sudocmd urpmi.update -a
 		;;
 	pacman)
-		docmd $SUDO pacman -S -y
+		sudocmd pacman -S -y
 		;;
 	zypper-rpm)
-		docmd $SUDO zypper refresh
+		sudocmd zypper refresh
 		;;
 	emerge)
-		docmd $SUDO emerge --sync
+		sudocmd emerge --sync
 		;;
 	slackpkg)
-		docmd $SUDO slackpkg update
+		sudocmd slackpkg update
 		;;
 	*)
 		fatal "Do not known update command for $PMTYPE"

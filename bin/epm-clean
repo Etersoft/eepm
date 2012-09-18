@@ -22,17 +22,17 @@ epm_clean()
 {
 case $PMTYPE in
 	apt-rpm|apt-dpkg)
-		docmd $SUDO apt-get clean
+		sudocmd apt-get clean
 		;;
 	yum-rpm)
-		docmd $SUDO yum clean all
-		docmd $SUDO yum makecache
+		sudocmd yum clean all
+		sudocmd yum makecache
 		;;
 	urpm-rpm)
-		docmd $SUDO urpmi --clean
+		sudocmd urpmi --clean
 		;;
 	zypper-rpm)
-		docmd $SUDO zypper clean
+		sudocmd zypper clean
 		;;
 	*)
 		fatal "Do not known command for $PMTYPE"

@@ -53,5 +53,5 @@ epm_upgrade()
 		;;
     esac
 
-    docmd $SUDO $CMD $pkg_filenames
+    sudocmd $CMD $pkg_filenames
 }

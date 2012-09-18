@@ -24,19 +24,19 @@ epm_remove_low()
 	[ -z "$1" ] && return
 	case $PMTYPE in
 		apt-rpm|yum-rpm|zypper-rpm|urpm-rpm)
-			docmd $SUDO rpm -ev $nodeps $@
+			sudocmd rpm -ev $nodeps $@
 			return ;;
 		apt-dpkg)
-			docmd $SUDO dpkg -P $@
+			sudocmd dpkg -P $@
 			return ;;
 		pkg_add)
-			docmd $SUDO pkg_delete -r $@
+			sudocmd pkg_delete -r $@
 			return ;;
 		emerge)
-			docmd $SUDO emerge -unmerge $@
+			sudocmd emerge -unmerge $@
 			return ;;
 		slackpkg)
-			docmd $SUDO removepkg $@
+			sudocmd removepkg $@
 			return ;;
 	esac
 	return 1
@@ -48,32 +48,32 @@ epm_remove_names()
 
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
-			docmd $SUDO apt-get remove --purge $@
+			sudocmd apt-get remove --purge $@
 			return ;;
 		urpm-rpm)
-			docmd $SUDO urpme $@
+			sudocmd urpme $@
 			return ;;
 		pkg_add) # without dependencies
-			docmd $SUDO pkg_delete $@
+			sudocmd pkg_delete $@
 			return ;;
 		emerge)
-			#docmd $SUDO emerge --unmerge $@
-			docmd $SUDO emerge -aC $@
+			#sudocmd emerge --unmerge $@
+			sudocmd emerge -aC $@
 			return ;;
 		pacman)
-			docmd $SUDO pacman -R $@
+			sudocmd pacman -R $@
 			return ;;
 		yum-rpm)
-			docmd $SUDO yum remove $@
+			sudocmd yum remove $@
 			return ;;
 		zypper-rpm)
-			docmd $SUDO zypper remove $@
+			sudocmd zypper remove $@
 			return ;;
 		mpkg)
-			docmd $SUDO mpkg remove $@
+			sudocmd mpkg remove $@
 			return ;;
 		slackpkg)
-			docmd $SUDO slackpkg remove $@
+			sudocmd slackpkg remove $@
 			return ;;
 		*)
 			fatal "Do not known command for $PMTYPE"
@@ -86,22 +86,22 @@ epm_remove_nonint()
 {
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
-			docmd $SUDO apt-get -y --force-yes remove --purge $@
+			sudocmd apt-get -y --force-yes remove --purge $@
 			return ;;
 		urpm-rpm)
-			docmd $SUDO urpme --auto $@
+			sudocmd urpme --auto $@
 			return ;;
 		pacman)
-			docmd $SUDO pacman -R --noconfirm $@
+			sudocmd pacman -R --noconfirm $@
 			return ;;
 		yum-rpm)
-			docmd $SUDO yum -y remove $@
+			sudocmd yum -y remove $@
 			return ;;
 		zypper-rpm)
-			docmd $SUDO zypper --non-interactive remove $@
+			sudocmd zypper --non-interactive remove $@
 			return ;;
 		slackpkg)
-			docmd $SUDO slackpkg -batch=on -default_answer=yes remove $@
+			sudocmd slackpkg -batch=on -default_answer=yes remove $@
 			return ;;
 	esac
 	return 5
