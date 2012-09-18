@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.0.0
+Version: 1.0.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -49,6 +49,12 @@ with various distros.
 %_bindir/distr_info
 
 %changelog
+* Tue Sep 18 2012 Vitaly Lipatov <lav@altlinux.ru> 1.0.1-alt1
+- epm: add --force support for install
+- drop extra dependencies
+- introduce epm requires|deplist
+- install: yum local install is obsoleted, use just yum install
+
 * Fri Aug 17 2012 Vitaly Lipatov <lav@altlinux.ru> 1.0.0-alt1
 - release 1.0
 - upgrade: add support for additional options
