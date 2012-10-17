@@ -43,6 +43,11 @@ case $PMTYPE in
 	pacman)
 		CMD="pacman -Ql"
 		;;
+	slackpkg)
+		epm_query >/dev/null || fatal "Query filelist for non installed packages does not realized"
+		docmd awk 'BEGIN{desk=1}{if(/^FILE LIST:$/){desk=0} else if (desk==0) {print}}' /var/log/packages/${pkg_filenames}*
+		return
+		;;
 	*)
 		fatal "Do not known query command for $PMTYPE"
 		;;
