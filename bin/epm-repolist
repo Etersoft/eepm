@@ -51,10 +51,10 @@ case $PMTYPE in
 		docmd layman -L
 		;;
 	pacman)
-		docmd cat /etc/pacman.conf
+		docmd grep -v "^#\|^$" /etc/pacman.conf
 		;;
 	slackpkg)
-		docmd cat /etc/slackpkg/mirrors
+		docmd grep -v "^#\|^$" /etc/slackpkg/mirrors
 		;;
 	*)
 		fatal "Do not known command for $PMTYPE"
