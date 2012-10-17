@@ -44,7 +44,7 @@ real_file()
 		echo "Note: $TOFILE is link to $LINKTO"
 		real_file "$LINKTO"
 	fi
-	FULLFILEPATH=`readlink -f $TOFILE`
+	FULLFILEPATH=`realpath $TOFILE`
 }
 
 dpkg_print_name_version()

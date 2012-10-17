@@ -28,6 +28,8 @@ load_helper()
 
 load_helper epm-sh-functions
 
+#PATH=$PATH:/sbin:/usr/sbin
+
 set_sudo
 
 check_tty
@@ -189,7 +191,7 @@ for opt in "$@" ; do
     --skip-installed)     # HELPOPT: skip already install during install
         skip_installed=1
         ;;
-    --show-command-only)  # HELPOPT: show command only, do not any action
+    --show-command-only)  # HELPOPT: show command only, do not any action (supports install and remove ONLY)
         show_command_only=1
         ;;
     --quiet)              # HELPOPT: quiet mode (do not print commands before exec)

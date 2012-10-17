@@ -33,7 +33,7 @@ epm_remove_low()
 			sudocmd pkg_delete -r $@
 			return ;;
 		emerge)
-			sudocmd emerge -unmerge $@
+			sudocmd emerge --unmerge $@
 			return ;;
 		slackpkg)
 			sudocmd /sbin/removepkg $@
