@@ -118,11 +118,7 @@ elif distro mopslinux-version ; then
 	fi
 elif distro slackware-version ; then
 	DISTRIB_ID="Slackware"
-	if   has 10.2 ; then DISTRIB_RELEASE="10.2"
-	elif has 11 ; then DISTRIB_RELEASE="11"
-	elif has 11.1 ; then DISTRIB_RELEASE="11.1"
-	elif has 12 ; then DISTRIB_RELEASE="12"
-	fi
+	DISTRIB_RELEASE="$(grep -Eo [0-9]+\.[0-9]+ $DISTROFILE)"
 
 elif distro arch-release ; then
 	DISTRIB_ID="ArchLinux"
