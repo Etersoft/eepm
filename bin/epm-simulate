@@ -50,7 +50,7 @@ epm_simulate()
     		echo no | $SUDO pacman -v -S $filenames
     		return ;;
     	slackpkg)
-    		docmd slackpkg -batch=on -default_answer=yes download
+    		docmd /usr/sbin/slackpkg -batch=on -default_answer=yes download
     		;;
     	*)
     		fatal "Do not known simulate command for $PMTYPE"

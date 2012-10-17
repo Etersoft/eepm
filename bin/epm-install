@@ -80,7 +80,7 @@ epm_install_names()
 			return ;;
 		slackpkg)
 			# TODO: use upgrade if package is already installed
-			sudocmd slackpkg install $@
+			sudocmd /usr/sbin/slackpkg install $@
 			return ;;
 		*)
 			fatal "Do not known install command for $PMTYPE"
@@ -113,7 +113,7 @@ epm_ni_install_names()
 			return ;;
 		slackpkg)
 			# TODO: use upgrade if package is already installed
-			sudocmd slackpkg -batch=on -default_answer=yes install $@
+			sudocmd /usr/sbin/slackpkg -batch=on -default_answer=yes install $@
 			return ;;
 		*)
 			fatal "Do not known appropriate install command for $PMTYPE"
@@ -145,7 +145,7 @@ epm_install_files()
             sudocmd pacman -U --noconfirm $@
             return ;;
         slackpkg)
-            sudocmd installpkg $@
+            sudocmd /sbin/installpkg $@
             return ;;
     esac
 
@@ -169,7 +169,7 @@ epm_print_install_command()
             echo "pacman -U --noconfirm $@"
             ;;
         slackpkg)
-            echo "installpkg $@"
+            echo "/sbin/installpkg $@"
             ;;
         *)
             fatal "Do not known appropriate install command for $PMTYPE"
@@ -181,7 +181,7 @@ epm_print_install_command()
 epm_install()
 {
     if [ -n "$show_command_only" ] ; then
-        epm_print_install_command $names
+        epm_print_install_command $pkg_filenames
         return
     fi
 

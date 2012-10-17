@@ -65,7 +65,7 @@ case $PMTYPE in
 		CMD="pacman -Qo"
 		;;
 	slackpkg)
-		CMD="slackpkg file-search"
+		CMD="/usr/sbin/slackpkg file-search"
 		;;
 	*)
 		fatal "Do not known search file command for $PMTYPE"

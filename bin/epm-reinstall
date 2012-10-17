@@ -42,7 +42,7 @@ epm_reinstall_names()
 			sudocmd pacman -U $@
 			return ;;
 		slackpkg)
-			sudocmd slackpkg reinstall $@
+			sudocmd /usr/sbin/slackpkg reinstall $@
 			return ;;
 		*)
 			fatal "Do not known install command for $PMTYPE"
@@ -63,7 +63,7 @@ epm_reinstall_files()
             sudocmd dpkg -i $@
             return ;;
         slackpkg)
-            sudocmd installpkg $@
+            sudocmd /sbin/installpkg $@
             return ;;
     esac
 

@@ -46,7 +46,7 @@ epm_upgrade()
 		CMD="freebsd-update fetch install"
 		;;
 	slackpkg)
-		CMD="slackpkg upgrade-all"
+		CMD="/usr/sbin/slackpkg upgrade-all"
 		;;
 	*)
 		fatal "Do not known command for $PMTYPE"

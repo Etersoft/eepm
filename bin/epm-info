@@ -46,7 +46,7 @@ case $PMTYPE in
 		docmd pacman -Si $pkg_names
 		;;
 	slackpkg)
-		docmd slackpkg info $pkg_names
+		docmd /usr/sbin/slackpkg info $pkg_names
 		;;
 	*)
 		fatal "Do not known command for $PMTYPE"

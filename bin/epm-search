@@ -50,7 +50,7 @@ case $PMTYPE in
 		CMD="mpkg search"
 		;;
 	slackpkg)
-		CMD="slackpkg search"
+		CMD="/usr/sbin/slackpkg search"
 		;;
 	*)
 		fatal "Do not known search command for $PMTYPE"

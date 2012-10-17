@@ -48,7 +48,7 @@ case $PMTYPE in
 		sudocmd emerge --sync
 		;;
 	slackpkg)
-		sudocmd slackpkg update
+		sudocmd /usr/sbin/slackpkg update
 		;;
 	*)
 		fatal "Do not known update command for $PMTYPE"
