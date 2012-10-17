@@ -107,9 +107,38 @@ epm_remove_nonint()
 	return 5
 }
 
+epm_print_remove_command()
+{
+	case $PMTYPE in
+		apt-rpm|yum-rpm|zypper-rpm|urpm-rpm)
+			echo "rpm -ev $nodeps $@"
+			;;
+		apt-dpkg)
+			echo "dpkg -P $@"
+			;;
+		pkg_add)
+			echo "pkg_delete -r $@"
+			;;
+		emerge)
+			echo "emerge --unmerge $@"
+			;;
+		slackpkg)
+			echo "removepkg $@"
+			;;
+		*)
+			fatal "Do not known appropriate remove command for $PMTYPE"
+			;;
+	esac
+}
+
 
 epm_remove()
 {
+	if [ -n "$show_command_only" ] ; then
+		epm_print_remove_command $pkg_filenames
+		return
+	fi
+
 	[ -n "$pkg_filenames" ] || fatal "Run remove without args"
 	epm_remove_low $pkg_filenames && return
 
