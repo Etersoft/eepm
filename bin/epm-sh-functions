@@ -128,10 +128,12 @@ fatal()
 set_sudo()
 {
 	# set SUDO not for root user
-	SUDO="sudo"
 	[ -n "$UID" ] || UID=`id -u`
 	if [ $UID = "0" ]; then
 		SUDO=""
+	else
+		SUDO="fatal 'Can't find sudo. Please install sudo or run epm under root.'"
+		which sudo >/dev/null 2>/dev/null && SUDO="sudo"
 	fi
 }
 
