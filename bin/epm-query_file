@@ -83,6 +83,11 @@ __do_query()
         pacman)
             CMD="pacman -Qo"
             ;;
+        slackpkg)
+            # note: need remove leading slash for grep
+            docmd grep -R "$(echo $@ | sed -e 's|^/\+||g')" /var/log/packages
+            return
+            ;;
         *)
             fatal "Do not known query command for $PMTYPE"
             ;;
