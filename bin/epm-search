@@ -52,6 +52,9 @@ case $PMTYPE in
 	npackd)
 		fatal "FIXME: Have not idea for search with npackdcl list"
 		;;
+	chocolatey)
+		CMD="chocolatey list"
+		;;
 	slackpkg)
 		CMD="/usr/sbin/slackpkg search"
 		;;

@@ -75,6 +75,9 @@ epm_remove_names()
 		npackd)
 			docmd npackdcl remove --package=$@
 			return ;;
+		chocolatey)
+			docmd chocolatey uninstall $@
+			return ;;
 		slackpkg)
 			sudocmd /usr/sbin/slackpkg remove $@
 			return ;;

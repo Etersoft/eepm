@@ -188,7 +188,7 @@ case $DISTRNAME in
 		CMD="zypper-rpm"
 		;;
 	Windows)
-		CMD="npackd"
+		CMD="chocolatey"
 		;;
 	*)
 		fatal "Do not known DISTRNAME $DISTRNAME"

@@ -115,6 +115,9 @@ epm_ni_install_names()
 			#  npackdcl update --package=<package> (remove old and install new)
 			docmd npackdcl add --package=$@
 			return ;;
+		chocolatey)
+			docmd chocolatey install $@
+			return ;;
 		slackpkg)
 			# TODO: use upgrade if package is already installed
 			sudocmd /usr/sbin/slackpkg -batch=on -default_answer=yes install $@

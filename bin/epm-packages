@@ -43,6 +43,9 @@ case $PMTYPE in
 	npackd)
 		CMD="npackdcl list"
 		;;
+#	chocolatey)
+#		CMD="chocolatey list"
+#		;;
 	slackpkg)
 		CMD="ls -1 /var/log/packages/"
 		;;
