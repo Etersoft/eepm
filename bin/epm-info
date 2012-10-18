@@ -45,6 +45,10 @@ case $PMTYPE in
 	pacman)
 		docmd pacman -Si $pkg_names
 		;;
+	npackd)
+		# FIXME: --version=
+		docmd npackdcl info --package=$pkg_names
+		;;
 	slackpkg)
 		docmd /usr/sbin/slackpkg info $pkg_names
 		;;

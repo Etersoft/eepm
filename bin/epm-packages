@@ -40,6 +40,9 @@ case $PMTYPE in
 	pacman)
 		CMD="pacman -Qs"
 		;;
+	npackd)
+		CMD="npackdcl list"
+		;;
 	slackpkg)
 		CMD="ls -1 /var/log/packages/"
 		;;

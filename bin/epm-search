@@ -49,6 +49,9 @@ case $PMTYPE in
 	mpkg)
 		CMD="mpkg search"
 		;;
+	npackd)
+		fatal "FIXME: Have not idea for search with npackdcl list"
+		;;
 	slackpkg)
 		CMD="/usr/sbin/slackpkg search"
 		;;

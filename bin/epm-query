@@ -37,6 +37,9 @@ case $PMTYPE in
 		#dpkg -l $pkg_filenames | grep "^ii"
 		#return
 		;;
+	npackd)
+		CMD="npackdcl path --package=$pkg_filenames"
+		;;
 	*)
 		epm_packages | grep "$pkg_filenames"
 		return

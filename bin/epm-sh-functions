@@ -187,6 +187,9 @@ case $DISTRNAME in
 	SUSE|SLED|SLES)
 		CMD="zypper-rpm"
 		;;
+	Windows)
+		CMD="npackd"
+		;;
 	*)
 		fatal "Do not known DISTRNAME $DISTRNAME"
 		;;

@@ -42,6 +42,9 @@ case $PMTYPE in
 	pacman)
 		echo "You need remove repo from /etc/pacman.conf"
 		;;
+	npackd)
+		docmd npackdcl remove-repo --url=$pkg_filenames
+		;;
 	slackpkg)
 		echo "You need remove repo from /etc/slackpkg/mirrors"
 		;;
