@@ -127,14 +127,20 @@ fatal()
 
 set_sudo()
 {
+	SUDO=""
+	# skip SUDO if disabled
+	[ -n "$EPMNOSUDO" ] && return
+
 	# set SUDO not for root user
 	[ -n "$UID" ] || UID=`id -u`
-	if [ $UID = "0" ]; then
-		SUDO=""
-	else
-		SUDO="fatal 'Can't find sudo. Please install sudo or run epm under root.'"
-		which sudo >/dev/null 2>/dev/null && SUDO="sudo"
-	fi
+
+	# do not need sudo
+	[ $UID = "0" ] && return
+
+	# use sudo if possible
+	which sudo >/dev/null 2>/dev/null && SUDO="sudo" && return
+
+	SUDO="fatal 'Can't find sudo. Please install sudo or run epm under root.'"
 }
 
 # print options description from HELPCMD/HELPOPT lines in the code
