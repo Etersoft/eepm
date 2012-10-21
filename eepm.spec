@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.0.2
+Version: 1.0.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -49,6 +49,18 @@ with various distros.
 %_bindir/distr_info
 
 %changelog
+* Mon Oct 22 2012 Vitaly Lipatov <lav@altlinux.ru> 1.0.3-alt1
+- rewrite set_sudo, skip SUDO if env. var EPMNOSUDO is not empty
+- add initial support for window package manager Chocolatey
+- add initial support for windows package manager Npackd
+- epm-filelist: print package file list for slackware
+- epm-query_file: add slackware support (thanks, bormant)
+- distr_info: grep version from /etc/slackware-version  (thanks, bormant)
+- set_sudo: print fatal error if needed absent sudo
+- use full path to slackpkg/installpkg/removepkg on Slackware (thanks, bormant)
+- epm-remove: add support for --show-command-only (thanks, bormant)
+- epm-repolist: fix grep source list (thanks, bormant)
+
 * Tue Sep 18 2012 Vitaly Lipatov <lav@altlinux.ru> 1.0.2-alt1
 - replace all docmd $SUDO with sudocmd call
 - fix install package rpm-build-altlinux-compat via package fullname
