@@ -22,6 +22,18 @@ load_helper epm-packages
 
 # TODO: combine with -qa (the difference only in return status now)
 
+_query_via_packages_list()
+{
+	local res=0
+	local firstpkg=$1
+	shift
+	epm_packages | grep "$firstpkg-" || res=1
+	for pkg in "$@" ; do
+		epm_packages 2>/dev/null | grep "$pkg-" || res=1
+	done
+	return $res
+}
+
 epm_query()
 {
     [ -n "$pkg_filenames" ] || fatal "Run query without names"
@@ -41,7 +53,7 @@ case $PMTYPE in
 		CMD="npackdcl path --package=$pkg_filenames"
 		;;
 	*)
-		epm_packages | grep "$pkg_filenames"
+		_query_via_packages_list $pkg_filenames
 		return
 		;;
 esac
