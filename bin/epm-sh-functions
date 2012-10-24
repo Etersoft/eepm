@@ -93,6 +93,18 @@ docmd()
 	"$@"
 }
 
+# Print command line and run command line
+docmd_foreach()
+{
+	local cmd
+	cmd="$1"
+	#showcmd "$@"
+	shift
+	for pkg in "$@" ; do
+		docmd $cmd $pkg
+	done
+}
+
 # Print command line and run command line with SUDO
 sudocmd()
 {
