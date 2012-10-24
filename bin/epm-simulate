@@ -19,6 +19,7 @@
 #
 
 load_helper epm-install
+load_helper epm-search
 
 epm_simulate()
 {
@@ -50,8 +51,12 @@ epm_simulate()
     		echo no | $SUDO pacman -v -S $filenames
     		return ;;
     	slackpkg)
-    		docmd /usr/sbin/slackpkg -batch=on -default_answer=yes download
-    		;;
+    		#docmd /usr/sbin/slackpkg -batch=on -default_answer=yes download
+    		# just try search every package
+    		for i in $pkg_filenames ; do
+    			pkg_filenames="$i-" epm_search | grep installed || return
+    		done
+    		return 0;;
     	*)
     		fatal "Do not known simulate command for $PMTYPE"
     		;;
