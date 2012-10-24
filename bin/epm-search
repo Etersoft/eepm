@@ -56,7 +56,8 @@ case $PMTYPE in
 		CMD="chocolatey list"
 		;;
 	slackpkg)
-		CMD="/usr/sbin/slackpkg search"
+		docmd_foreach "/usr/sbin/slackpkg search" $pkg_filenames
+		return
 		;;
 	*)
 		fatal "Do not known search command for $PMTYPE"
