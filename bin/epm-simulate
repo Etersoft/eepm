@@ -35,8 +35,10 @@ epm_simulate()
     		CMD="apt-get --simulate install"
     		;;
     	yum-rpm)
-    		CMD="yum provides"
-    		;;
+    		LC_ALL=C sudocmd yum --assumeno install $filenames
+    		# FIXME: check only error output
+    		LC_ALL=C sudocmd yum --assumeno install $filenames 2>&1 | grep "^No package" && return 1
+    		return 0 ;;
     	urpm-rpm)
     		CMD="urpmi --test --auto"
     		;;
