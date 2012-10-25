@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.0.3
+Version: 1.0.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -49,6 +49,14 @@ with various distros.
 %_bindir/distr_info
 
 %changelog
+* Fri Oct 26 2012 Vitaly Lipatov <lav@altlinux.ru> 1.0.4-alt1
+- epm-simulate: fix simulate for yum
+- epm-simulate: realize simulate for slackware
+- epm-search: fix search for multiple packages in slackware
+- epm-query: fix query for multiple names
+- epm-query_file: more clean output on Slackware
+- epm-simulate: print out result of the check
+
 * Mon Oct 22 2012 Vitaly Lipatov <lav@altlinux.ru> 1.0.3-alt1
 - rewrite set_sudo, skip SUDO if env. var EPMNOSUDO is not empty
 - add initial support for window package manager Chocolatey
