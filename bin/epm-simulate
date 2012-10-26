@@ -55,10 +55,13 @@ epm_simulate()
     	slackpkg)
     		#docmd /usr/sbin/slackpkg -batch=on -default_answer=yes download
     		# just try search every package
-    		for i in $pkg_filenames ; do
-    			pkg_filenames="$i-" epm_search | grep installed || return
+    		# FIXME: epm_search have to return false status code if the package does not found
+    		local pkg res
+    		res=0
+    		for pkg in $filenames ; do
+    			pkg_filenames="$pkg-[0-9]" epm_search | grep -E "(installed|upgrade)" || { res=1; echo "Does not found in repository." ; }
     		done
-    		return 0;;
+    		return $res ;;
     	*)
     		fatal "Do not known simulate command for $PMTYPE"
     		;;
