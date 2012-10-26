@@ -21,15 +21,10 @@
 load_helper epm-install
 load_helper epm-search
 
-epm_simulate()
+_epm_do_simulate()
 {
     local CMD
-    [ -z "$pkg_filenames" ] && echo "Skip empty list" && return 2
-
-    local filenames="$(echo $pkg_filenames | filter_out_installed_packages)"
-
-    [ -z "$filenames" ] && echo "All packages are already installed" && return 2
-
+    local filenames=$@
     case $PMTYPE in
     	apt-rpm|apt-dpkg)
     		CMD="apt-get --simulate install"
@@ -68,5 +63,21 @@ epm_simulate()
     esac
 
     sudocmd $CMD $filenames
+}
+
+epm_simulate()
+{
+    [ -z "$pkg_filenames" ] && echo "Skip empty list" && return 2
+
+    local filenames="$(echo $pkg_filenames | filter_out_installed_packages)"
+
+    [ -z "$filenames" ] && echo "All packages are already installed" && return 2
+
+    _epm_do_simulate $filenames
+    local RES=$?
+    if [ -z "$quiet" ] ; then
+        [ "$RES" = 0 ] && echo "Result: $filenames package(s) CAN BE installed" || echo "Result: There are PROBLEMS with install some package(s)"
+    fi
+    return $RES
 }
 
