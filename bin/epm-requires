@@ -18,10 +18,6 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
-load_helper epm-packages
-
-# TODO: combine with -qa (the difference only in return status now)
-
 epm_requires()
 {
     [ -n "$pkg_filenames" ] || fatal "Run query without names"

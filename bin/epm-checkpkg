@@ -82,8 +82,8 @@ check_pkg_integrity()
 epm_checkpkg()
 {
 	[ -n "$pkg_files" ] || fatal "Run without names"
-
-	for i in $pkg_files ; do
-		check_pkg_integrity $i || fatal "Broken package $i"
+	local pkg
+	for pkg in $pkg_files ; do
+		check_pkg_integrity $pkg || fatal "Broken package $pkg"
 	done
 }

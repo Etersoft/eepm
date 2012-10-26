@@ -49,7 +49,7 @@ real_file()
 
 dpkg_print_name_version()
 {
-	local ver
+	local ver i
 	for i in $* ; do
 		ver=$(dpkg -s $i 2>/dev/null | grep "Version:" | sed -e "s|Version: ||g")
 		if [ -z "$ver" ] ; then
@@ -101,10 +101,9 @@ epm_query_file()
     # file can exists or not
     [ -n "$pkg_filenames" ] || fatal "Run query without file names"
 
-
-for i in $pkg_filenames ; do
-    real_file "$i"
-    __do_query $FULLFILEPATH || pkg_filenames=$i epm_search_file
-done
+    for pkg in $pkg_filenames ; do
+        real_file "$pkg"
+        __do_query $FULLFILEPATH || pkg_filenames=$pkg epm_search_file
+    done
 
 }

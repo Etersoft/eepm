@@ -23,6 +23,7 @@ filter_out_installed_packages()
 {
 	[ -z "$skip_installed" ] && cat && return
 
+	# TODO: rewrite with use epm_query
 	# TODO: use this more effectively way
 	#for i in $(cat) ; do
 	#	rpm -q $i >/dev/null && continue

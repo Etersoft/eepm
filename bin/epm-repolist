@@ -20,6 +20,7 @@
 
 print_apt_sources_list()
 {
+    local i
     for i in $@ ; do
         test -r "$i" || continue
         #echo
