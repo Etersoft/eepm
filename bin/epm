@@ -114,6 +114,9 @@ check_command()
     -e|-P|remove|delete)  # HELPCMD: remove (delete) package(s) from the database and the system
         epm_cmd=remove
         ;;
+    autoremove)           # HELPCMD: auto remove unneeded package(s)
+        epm_cmd=autoremove
+        ;;
     -qi|info|show)        # HELPCMD: print package detail info
         epm_cmd=info
         ;;
