@@ -29,8 +29,9 @@ local_content_search()
     local REPODIR=/var/ftp/pub/ALTLinux/Sisyphus
     local CI=$REPODIR/$SYSARCH/base/contents_index
     local CINOA=$REPODIR/noarch/base/contents_index
-    local OUTCMD="less"
-    [ -n "$USETTY" ] || OUTCMD="cat"
+    #local OUTCMD="less"
+    #[ -n "$USETTY" ] || OUTCMD="cat"
+    OUTCMD="cat"
 
     test -r $CI && test -r $CINOA || fatal "Can't locate $CI or $CINOA"
 
