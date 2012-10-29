@@ -54,7 +54,10 @@ _epm_do_simulate()
     		local pkg res
     		res=0
     		for pkg in $filenames ; do
-    			pkg_filenames="$pkg-[0-9]" epm_search | grep -E "(installed|upgrade)" || { res=1; echo "Does not found in repository." ; }
+    			pkg_filenames="$pkg-[0-9]" epm_search | grep -E "(installed|upgrade)" && continue
+    			pkg_filenames="$pkg" epm_search | grep -E "(installed|upgrade)" && continue
+    			res=1
+    			echo "Does not found in repository."
     		done
     		return $res ;;
     	*)
