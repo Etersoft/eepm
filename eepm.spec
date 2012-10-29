@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.0.4
+Version: 1.0.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -49,6 +49,12 @@ with various distros.
 %_bindir/distr_info
 
 %changelog
+* Mon Oct 29 2012 Vitaly Lipatov <lav@altlinux.ru> 1.0.5-alt1
+- epm-simulate: fix for non numeric version on Slackware (libjpeg-v8a)
+- epm: intoduce autoremove command
+- epm-search_file: do not use less
+- epm-query_file: query package for every full path, not only last
+
 * Fri Oct 26 2012 Vitaly Lipatov <lav@altlinux.ru> 1.0.4-alt1
 - epm-simulate: fix simulate for yum
 - epm-simulate: realize simulate for slackware
