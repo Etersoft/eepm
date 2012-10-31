@@ -74,7 +74,7 @@ epm_simulate()
 
     local filenames="$(echo $pkg_filenames | filter_out_installed_packages)"
 
-    [ -z "$filenames" ] && echo "All packages are already installed" && return 2
+    [ -z "$filenames" ] && echo "All packages are already installed" && return 0
 
     _epm_do_simulate $filenames
     local RES=$?
