@@ -165,7 +165,7 @@ check_command()
     addrepo|ar)           # HELPCMD: add package repo
         epm_cmd=addrepo
         ;;
-    repolist|sl|listrepo) # HELPCMD: print repo list
+    repolist|sl|rl|listrepo) # HELPCMD: print repo list
         epm_cmd=repolist
         ;;
     removerepo|rr)        # HELPCMD: remove package repo

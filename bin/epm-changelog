@@ -1,0 +1,108 @@
+#!/bin/sh
+#
+# Copyright (C) 2012  Etersoft
+# Copyright (C) 2012  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This file is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+#
+
+load_helper epm-query
+
+__epm_changelog_files()
+{
+	[ -z "$@" ] && return
+
+	case $PMTYPE in
+		apt-rpm|yum-rpm|zypper-rpm|urpm-rpm)
+			docmd_foreach "rpm -p --changelog" $@ | less
+			;;
+#		apt-dpkg)
+#			
+#			;;
+		*)
+			fatal "Do not known command for $PMTYPE"
+			;;
+	esac
+
+}
+
+__epm_changelog_local_names()
+{
+	[ -z "$@" ] && return
+
+	case $PMTYPE in
+		apt-rpm|yum-rpm|urpm-rpm|zypper-rpm)
+			docmd_foreach "rpm --changelog" $@ | less
+			;;
+		apt-dpkg)
+			# FIXME: only first pkg
+			docmd zcat /usr/share/doc/$1/changelog.Debian.gz | less
+			;;
+		emerge)
+			docmd view /usr/portage/category/$1/ChangeLog | less
+			;;
+		pacman)
+			docmd pacman -Qc package | less
+			;;
+		*)
+			fatal "Do not known command for $PMTYPE"
+			;;
+	esac
+}
+
+__epm_changelog_unlocal_names()
+{
+	[ -z "$@" ] && return
+
+	case $PMTYPE in
+		#apt-rpm)
+		#	docmd_foreach "rpm --changelog" $@ | less
+		#	;;
+		#apt-dpkg)
+		#	# FIXME: only first pkg
+		#	docmd zcat /usr/share/doc/$1/changelog.Debian.gz | less
+		#	;;
+		#yum-rpm)
+		#	sudocmd yum clean all
+		#	;;
+		#urpm-rpm)
+		#	sudocmd urpmi --clean
+		#	;;
+		#zypper-rpm)
+		#	sudocmd zypper clean
+		#	;;
+		*)
+			fatal "Do not known command for $PMTYPE"
+			;;
+	esac
+
+}
+
+
+epm_changelog()
+{
+	[ -n "$pkg_filenames" ] || fatal "Run changelog without params"
+
+	__epm_changelog_files $pkg_files
+
+	local pkg
+	for pkg in $pkg_names ; do
+		if pkg_names=$pkg epm_query ; then
+			__epm_changelog_local_names $pkg
+		else
+			__epm_changelog_unlocal_names $pkg
+		fi
+	done
+}
