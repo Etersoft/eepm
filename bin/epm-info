@@ -20,26 +20,36 @@
 
 load_helper epm-query
 
+__epm_info_rpm_low()
+{
+	if [ -n "$pkg_files" ] ; then
+		docmd rpm -qip $pkg_files
+	fi
+	[ -z "$pkg_names" ] && return
+	pkg_filenames=$pkg_names epm_query >/dev/null && docmd rpm -qi $pkg_names && return
+}
+
 epm_info()
 {
 case $PMTYPE in
 	apt-rpm)
-		if [ -n "$pkg_files" ] ; then
-			docmd rpm -qip $pkg_files
-		fi
-		[ -z "$pkg_names" ] && return
-		pkg_filenames=$pkg_names epm_query >/dev/null && docmd rpm -qi $pkg_names && return
+		__epm_info_rpm_low && return
 		docmd apt-cache show $pkg_names
 		;;
 	apt-dpkg)
+		if [ -n "$pkg_files" ] ; then
+			docmd dpkg -I $pkg_files
+		fi
 		[ -z "$pkg_names" ] && return
-		pkg_filenames=$pkg_names epm_query >/dev/null && docmd dpkg -I $pkg_names && return
+		pkg_filenames=$pkg_names epm_query >/dev/null && docmd dpkg -p $pkg_names && return
 		docmd apt-cache show $pkg_names
 		;;
 	yum-rpm)
+		__epm_info_rpm_low && return
 		docmd yum info $pkg_names
 		;;
 	zypper-rpm)
+		__epm_info_rpm_low && return
 		docmd zypper info $pkg_names
 		;;
 	pacman)
