@@ -20,41 +20,73 @@
 
 load_helper epm-query
 
+__epm_filelist_file()
+{
+	local CMD
+
+	[ -z "$@" ] && return
+
+	case $PMTYPE in
+		apt-rpm|yum-rpm|urpm-rpm|zypper-rpm)
+			CMD="rpm -qlp"
+			;;
+		apt-dpkg)
+			CMD="dpkg --contents"
+			;;
+		*)
+			fatal "Do not known query command for $PMTYPE"
+			;;
+	esac
+
+	docmd $CMD $@
+}
+
+__epm_filelist_name()
+{
+	local CMD
+
+	[ -z "$@" ] && return
+
+	case $PMTYPE in
+		apt-rpm)
+			CMD="rpm -ql"
+			;;
+		apt-dpkg)
+			CMD="dpkg -L"
+			;;
+		yum-rpm)
+			CMD="rpm -ql"
+			;;
+		urpm-rpm)
+			CMD="rpm -ql"
+			;;
+		zypper-rpm)
+			CMD="rpm -ql"
+			;;
+		pacman)
+			CMD="pacman -Ql"
+			;;
+		slackpkg)
+			epm_query >/dev/null || fatal "Query filelist for non installed packages does not realized"
+			docmd awk 'BEGIN{desk=1}{if(/^FILE LIST:$/){desk=0} else if (desk==0) {print}}' /var/log/packages/${pkg_filenames}*
+			return
+			;;
+		*)
+			fatal "Do not known query command for $PMTYPE"
+			;;
+	esac
+
+	docmd $CMD $pkg_names && return
+	epm_query >/dev/null || fatal "Query filelist for non installed packages does not realized"
+}
+
+
 epm_filelist()
 {
-    [ -n "$pkg_filenames" ] || fatal "Run query without names"
+	[ -n "$pkg_filenames" ] || fatal "Run query without names"
 
-case $PMTYPE in
-	apt-rpm)
-		CMD="rpm -ql"
-		;;
-	apt-dpkg)
-		CMD="dpkg -L"
-		;;
-	yum-rpm)
-		CMD="rpm -ql"
-		;;
-	urpm-rpm)
-		CMD="rpm -ql"
-		;;
-	zypper-rpm)
-		CMD="rpm -ql"
-		;;
-	pacman)
-		CMD="pacman -Ql"
-		;;
-	slackpkg)
-		epm_query >/dev/null || fatal "Query filelist for non installed packages does not realized"
-		docmd awk 'BEGIN{desk=1}{if(/^FILE LIST:$/){desk=0} else if (desk==0) {print}}' /var/log/packages/${pkg_filenames}*
-		return
-		;;
-	*)
-		fatal "Do not known query command for $PMTYPE"
-		;;
-esac
 
-docmd $CMD $pkg_filenames && return
-
-epm_query >/dev/null || fatal "Query filelist for non installed packages does not realized"
+	__epm_filelist_file $pkg_files || return
+	__epm_filelist_name $pkg_names || return
 
 }
