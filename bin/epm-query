@@ -34,30 +34,66 @@ _query_via_packages_list()
 	return $res
 }
 
+__epm_query_file()
+{
+	local CMD
+
+	[ -z "$@" ] && return
+
+	case $PMTYPE in
+		apt-rpm|yum-rpm|urpm-rpm|zypper-rpm)
+			CMD="rpm -qp"
+			;;
+		apt-dpkg)
+			CMD="dpkg-deb --show"
+			# TODO: make rpm-like output
+			#showcmd dpkg -l $pkg_filenames
+			#dpkg -l $pkg_filenames | grep "^ii"
+			#return
+			;;
+		*)
+			fatal "Do not know command for query file package"
+			;;
+	esac
+
+	docmd $CMD $pkg_files
+}
+
+__epm_query_name()
+{
+	local CMD
+
+	[ -z "$@" ] && return
+
+	case $PMTYPE in
+		apt-rpm|yum-rpm|urpm-rpm|zypper-rpm)
+			CMD="rpm -q"
+			;;
+		apt-dpkg)
+			CMD="dpkg -l"
+			# TODO: make rpm-like output
+			#showcmd dpkg -l $pkg_filenames
+			#dpkg -l $pkg_filenames | grep "^ii"
+			#return
+			;;
+		npackd)
+			CMD="npackdcl path --package=$pkg_names"
+			;;
+		*)
+			_query_via_packages_list $pkg_names
+			return
+			;;
+	esac
+
+	docmd $CMD $pkg_names
+}
+
+
 epm_query()
 {
-    [ -n "$pkg_filenames" ] || fatal "Run query without names"
+	[ -n "$pkg_filenames" ] || fatal "Run query without names"
 
-case $PMTYPE in
-	apt-rpm|yum-rpm|urpm-rpm|zypper-rpm)
-		CMD="rpm -q"
-		;;
-	apt-dpkg)
-		CMD="dpkg -l"
-		# TODO: make rpm-like output
-		#showcmd dpkg -l $pkg_filenames
-		#dpkg -l $pkg_filenames | grep "^ii"
-		#return
-		;;
-	npackd)
-		CMD="npackdcl path --package=$pkg_filenames"
-		;;
-	*)
-		_query_via_packages_list $pkg_filenames
-		return
-		;;
-esac
+	__epm_query_file $pkg_files || return
 
-docmd $CMD $pkg_filenames
-
+	__epm_query_name $pkg_names || return
 }
