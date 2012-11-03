@@ -22,7 +22,8 @@
 
 epm_search()
 {
-    [ -n "$pkg_filenames" ] || fatal "Run search without names"
+	local CMD
+	[ -n "$pkg_filenames" ] || fatal "Run search without names"
 
 case $PMTYPE in
 	apt-rpm|apt-dpkg)
@@ -56,6 +57,8 @@ case $PMTYPE in
 		CMD="chocolatey list"
 		;;
 	slackpkg)
+		# FIXME
+		echo "FIXME: need case insensitive search"
 		docmd_foreach "/usr/sbin/slackpkg search" $pkg_filenames
 		return
 		;;

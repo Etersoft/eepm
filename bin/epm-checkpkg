@@ -25,6 +25,7 @@ check_rpm_integrity()
 
 check_deb_integrity()
 {
+	# FIXME: debsums -ca package ?
 	a= dpkg --contents $@ >/dev/null
 }
 

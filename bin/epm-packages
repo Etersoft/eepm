@@ -20,6 +20,7 @@
 
 epm_packages()
 {
+	local CMD
 
 case $PMTYPE in
 	apt-rpm)

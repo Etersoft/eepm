@@ -23,8 +23,9 @@ load_helper epm-search
 
 _epm_do_simulate()
 {
-    local CMD
-    local filenames=$@
+	local CMD
+	local filenames=$@
+
     case $PMTYPE in
     	apt-rpm|apt-dpkg)
     		CMD="apt-get --simulate install"

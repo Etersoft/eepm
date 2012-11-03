@@ -20,7 +20,8 @@
 
 epm_requires()
 {
-    [ -n "$pkg_filenames" ] || fatal "Run query without names"
+	local CMD
+	[ -n "$pkg_filenames" ] || fatal "Run query without names"
 
 # by file package
 case $PMTYPE in

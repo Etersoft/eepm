@@ -43,7 +43,8 @@ local_content_search()
 
 epm_search_file()
 {
-    [ -n "$pkg_filenames" ] || fatal "Run search without names"
+	local CMD
+	[ -n "$pkg_filenames" ] || fatal "Run search without names"
 
 case $PMTYPE in
 	apt-rpm)
