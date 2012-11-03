@@ -56,7 +56,7 @@ restore_color()
 echover()
 {
     [ -n "$verbose" ] || return
-    echo "$*"
+    echo "$*" >&2
 }
 
 # Used DISTRNAME
