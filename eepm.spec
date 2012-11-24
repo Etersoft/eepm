@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.0.5
+Version: 1.0.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -49,6 +49,15 @@ with various distros.
 %_bindir/distr_info
 
 %changelog
+* Sat Nov 24 2012 Vitaly Lipatov <lav@altlinux.ru> 1.0.6-alt1
+- epm: add changelog (cl) command
+- add support for work without tput, with uncompat tput, allow USETTY=0 for disable tput use
+- epm: write verbose output to stderr
+- epm-filelist: add support for filelist of file package
+- epm-query: add support for query file package
+- epm-info: rewrite for support low level and hi level package info
+- epm-simulate: return 0 if all needed packages are already installed
+
 * Mon Oct 29 2012 Vitaly Lipatov <lav@altlinux.ru> 1.0.5-alt1
 - epm-simulate: fix for non numeric version on Slackware (libjpeg-v8a)
 - epm: intoduce autoremove command
