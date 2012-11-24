@@ -94,7 +94,6 @@ if distro altlinux-release ; then
 	elif has Walnut   ; then DISTRIB_RELEASE="4.0"
 	elif has 5.0      ; then DISTRIB_RELEASE="5.0"
 	elif has 5.1      ; then DISTRIB_RELEASE="5.1"
-	elif has Ziziphora ; then DISTRIB_RELEASE="5.1"
 	elif has "ALT Linux p5" ; then DISTRIB_RELEASE="p5"
 	elif has "ALT Linux p6" ; then DISTRIB_RELEASE="p6"
 	elif has "ALT Linux p7" ; then DISTRIB_RELEASE="p7"
