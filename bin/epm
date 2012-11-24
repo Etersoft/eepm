@@ -176,13 +176,14 @@ check_command()
         ;;
     *)
         return 1
+        ;;
     esac
     return 0
 }
 
-for opt in "$@" ; do
-    check_command $opt && continue
-    case $opt in
+check_option()
+{
+    case $1 in
     -h|--help|help)       # HELPOPT: this help
         phelp
         exit 0
@@ -213,13 +214,21 @@ for opt in "$@" ; do
         non_interactive=1
         ;;
     *)
-        if [ -f "$opt" ] ; then
-            pkg_files="$pkg_files $opt"
-        else
-            pkg_names="$pkg_names $opt"
-        fi
+        return 1
         ;;
     esac
+    return 0
+}
+
+for opt in "$@" ; do
+    check_command $opt && continue
+    check_option $opt && continue
+
+    if [ -f "$opt" ] ; then
+        pkg_files="$pkg_files $opt"
+    else
+        pkg_names="$pkg_names $opt"
+    fi
 done
 
 pkg_files=$(strip_spaces "$pkg_files")
