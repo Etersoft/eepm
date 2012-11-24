@@ -30,6 +30,10 @@ isatty()
 check_tty()
 {
 	isatty || return
+	which tput >/dev/null 2>/dev/null || return
+	# FreeBSD does not support tput -S
+	echo | tput -S >/dev/null 2>/dev/null || return
+	[ -z "$USETTY" ] || return
 	export USETTY=1
 }
 
@@ -37,7 +41,7 @@ check_tty()
 
 set_boldcolor()
 {
-	[ -n "$USETTY" ] || return
+	[ "$USETTY" = "1" ] || return
 	{
 		echo bold
 		echo setaf $1
@@ -46,7 +50,7 @@ set_boldcolor()
 
 restore_color()
 {
-	[ -n "$USETTY" ] || return
+	[ "$USETTY" = "1" ] || return
 	{
 		echo op; # set Original color Pair.
 		echo sgr0; # turn off all special graphics mode (bold in our case).
