@@ -26,7 +26,7 @@ __epm_info_rpm_low()
 		docmd rpm -qip $pkg_files
 	fi
 	[ -z "$pkg_names" ] && return
-	pkg_filenames=$pkg_names epm_query >/dev/null && docmd rpm -qi $pkg_names && return
+	is_installed $pkg_names && docmd rpm -qi $pkg_names && return
 }
 
 epm_info()
@@ -41,7 +41,7 @@ case $PMTYPE in
 			docmd dpkg -I $pkg_files
 		fi
 		[ -z "$pkg_names" ] && return
-		pkg_filenames=$pkg_names epm_query >/dev/null && docmd dpkg -p $pkg_names && return
+		is_installed $pkg_names && docmd dpkg -p $pkg_names && return
 		docmd apt-cache show $pkg_names
 		;;
 	yum-rpm)

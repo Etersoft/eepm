@@ -67,7 +67,7 @@ __epm_filelist_name()
 			CMD="pacman -Ql"
 			;;
 		slackpkg)
-			epm_query >/dev/null || fatal "Query filelist for non installed packages does not realized"
+			is_installed $pkg_names || fatal "Query filelist for non installed packages does not realized"
 			docmd awk 'BEGIN{desk=1}{if(/^FILE LIST:$/){desk=0} else if (desk==0) {print}}' /var/log/packages/${pkg_filenames}*
 			return
 			;;
@@ -77,7 +77,7 @@ __epm_filelist_name()
 	esac
 
 	docmd $CMD $pkg_names && return
-	epm_query >/dev/null || fatal "Query filelist for non installed packages does not realized"
+	is_installed $pkg_names || fatal "Query filelist for non installed packages does not realized"
 }
 
 

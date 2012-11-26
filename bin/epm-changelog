@@ -99,7 +99,7 @@ epm_changelog()
 
 	local pkg
 	for pkg in $pkg_names ; do
-		if pkg_names=$pkg epm_query ; then
+		if is_installed $pkg ; then
 			__epm_changelog_local_names $pkg
 		else
 			__epm_changelog_unlocal_names $pkg
