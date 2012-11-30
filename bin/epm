@@ -111,46 +111,26 @@ check_command()
     -i|install|add)       # HELPCMD: install package(s) from remote repositories or from local file
         epm_cmd=install
         ;;
-    reinstall)            # HELPCMD: reinstall package(s) from remote repositories or from local file
-        epm_cmd=reinstall
-        ;;
     -e|-P|remove|delete)  # HELPCMD: remove (delete) package(s) from the database and the system
         epm_cmd=remove
-        ;;
-    autoremove)           # HELPCMD: auto remove unneeded package(s)
-        epm_cmd=autoremove
-        ;;
-    -qi|info|show)        # HELPCMD: print package detail info
-        epm_cmd=info
-        ;;
-    requires|deplist)     # HELPCMD: print package requires
-        epm_cmd=requires
-        ;;
-    clean)                # HELPCMD: clean local package cache
-        epm_cmd=clean
-        ;;
-    -qa|list|packages|-l) # HELPCMD: list of installed package(s)
-        epm_cmd=packages
-        ;;
-    -qp|query_package)    # HELPCMD: search in the list of installed packages
-        epm_cmd=query_package
-        ;;
-    update)               # HELPCMD: update remote package repository databases
-        epm_cmd=update
-        ;;
-    dist-upgrade|upgrade) # HELPCMD: performs upgrades of package software distributions
-        epm_cmd=upgrade
         ;;
     -s|search)            # HELPCMD: search in remote package repositories
         epm_cmd=search
         ;;
-    -q|installed)         # HELPCMD: check presence of package(s)
-        epm_cmd=query
+    -qp|query_package)    # HELPCMD: search in the list of installed packages
+        epm_cmd=query_package
         ;;
     -qf|which|belongs)    # HELPCMD: query package(s) owning file
         epm_cmd=query_file
         ;;
-    -sf|sf|filesearch|search_file) # HELPCMD: search in which package a file is included
+
+    reinstall)            # HELPCMD: reinstall package(s) from remote repositories or from local file
+        epm_cmd=reinstall
+        ;;
+    -q|installed)         # HELPCMD: check presence of package(s)
+        epm_cmd=query
+        ;;
+    -sf|sf|filesearch)    # HELPCMD: search in which package a file is included
         epm_cmd=search_file
         ;;
     -ql|filelist)         # HELPCMD: print package file list
@@ -159,14 +139,21 @@ check_command()
     check|fix|verify)     # HELPCMD: check local package base integrity and fix it
         epm_cmd=check
         ;;
-    checkpkg|integrity)   # HELPCMD: check package integrity
-        epm_cmd=checkpkg
-        ;;
     changelog|cl)         # HELPCMD: show changelog for package
         epm_cmd=changelog
         ;;
-    simulate)             # HELPCMD: simulate install (check requires)
-        epm_cmd=simulate
+    -qi|info|show)        # HELPCMD: print package detail info
+        epm_cmd=info
+        ;;
+    requires|deplist)     # HELPCMD: print package requires
+        epm_cmd=requires
+        ;;
+    -qa|list|packages|-l) # HELPCMD: list of installed package(s)
+        epm_cmd=packages
+        ;;
+
+    update)               # HELPCMD: update remote package repository databases
+        epm_cmd=update
         ;;
     addrepo|ar)           # HELPCMD: add package repo
         epm_cmd=addrepo
@@ -177,6 +164,23 @@ check_command()
     removerepo|rr)        # HELPCMD: remove package repo
         epm_cmd=removerepo
         ;;
+
+    clean)                # HELPCMD: clean local package cache
+        epm_cmd=clean
+        ;;
+    autoremove)           # HELPCMD: auto remove unneeded package(s)
+        epm_cmd=autoremove
+        ;;
+    upgrade|dist-upgrade) # HELPCMD: performs upgrades of package software distributions
+        epm_cmd=upgrade
+        ;;
+    simulate)             # HELPCMD: simulate install (it does check requires, minimally)
+        epm_cmd=simulate
+        ;;
+    checkpkg|integrity)   # HELPCMD: check package integrity
+        epm_cmd=checkpkg
+        ;;
+
     *)
         return 1
         ;;
