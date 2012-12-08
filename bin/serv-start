@@ -22,10 +22,10 @@
 serv_start()
 {
 	case $SERVICETYPE in
-		service-chkconfig)
+		service-chkconfig|service-upstart)
 			sudocmd service $1 start
 			;;
-		service-update)
+		service-initd|service-update)
 			sudocmd /etc/init.d/$1 start
 			;;
 		systemd)

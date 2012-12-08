@@ -24,11 +24,11 @@ load_helper serv-status
 serv_try_restart()
 {
 	case $SERVICETYPE in
-		service-chkconfig)
+		service-chkconfig|service-upstart)
 			is_service_running $1 || return 0
 			sudocmd service $1 restart
 			;;
-		service-update)
+		service-initd|service-update)
 			is_service_running $1 || return 0
 			sudocmd /etc/init.d/$1 restart
 			;;

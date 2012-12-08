@@ -22,12 +22,15 @@
 serv_list()
 {
 	case $SERVICETYPE in
-#		service-chkconfig)
-#			sudocmd service $1 stop
-#			;;
-#		service-update)
-#			sudocmd /etc/init.d/$1 stop
-#			;;
+		service-chkconfig|service-upstart)
+			sudocmd service --status-all
+			;;
+		service-upstart)
+			sudocmd initctl list
+			;;
+		service-update)
+			sudocmd service --status-all
+			;;
 		systemd)
 			sudocmd systemctl list-units
 			;;

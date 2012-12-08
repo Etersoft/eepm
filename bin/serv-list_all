@@ -22,7 +22,7 @@
 serv_list_all()
 {
 	case $SERVICETYPE in
-		service-chkconfig)
+		service-chkconfig|service-upstart)
 			# service --status-all for Ubuntu/Fedora
 			sudocmd chkconfig --list | cut -f1
 			;;

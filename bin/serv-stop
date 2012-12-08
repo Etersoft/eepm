@@ -22,10 +22,10 @@
 serv_stop()
 {
 	case $SERVICETYPE in
-		service-chkconfig)
+		service-chkconfig|service-upstart)
 			sudocmd service $1 stop
 			;;
-		service-update)
+		service-initd|service-update)
 			sudocmd /etc/init.d/$1 stop
 			;;
 		systemd)

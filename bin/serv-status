@@ -21,10 +21,10 @@
 is_service_running()
 {
 	case $SERVICETYPE in
-		service-chkconfig)
+		service-chkconfig|service-upstart)
 			$SUDO service $1 status >/dev/null
 			;;
-		service-update)
+		service-initd|service-update)
 			$SUDO /etc/init.d/$1 status >/dev/null
 			;;
 		systemd)
@@ -40,10 +40,10 @@ is_service_running()
 is_service_autostart()
 {
 	case $SERVICETYPE in
-		service-chkconfig)
+		service-chkconfig|service-upstart)
 			LANG=C $SUDO chkconfig $1 --list | grep -q "5:on"
 			;;
-		service-update)
+		service-initd|service-update)
 			fatal "FIXME: don't know how detect current startup state"
 			;;
 		systemd)
@@ -60,7 +60,7 @@ serv_status()
 	is_service_autostart $1 && echo "Service $1 is sheduled to run on startup" || echo "Service $1 will NOT run on startup"
 
 	case $SERVICETYPE in
-		service-chkconfig)
+		service-chkconfig|service-upstart)
 			sudocmd service $1 status
 			;;
 		service-update)

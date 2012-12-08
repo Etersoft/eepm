@@ -24,10 +24,10 @@ serv_common()
 	local SERVICE="$1"
 	shift
 	case $SERVICETYPE in
-		service-chkconfig)
+		service-chkconfig|service-upstart)
 			sudocmd service $SERVICE "$@"
 			;;
-		service-update)
+		service-initd|service-update)
 			sudocmd /etc/init.d/$SERVICE "$@"
 			;;
 		systemd)

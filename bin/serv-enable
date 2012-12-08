@@ -28,10 +28,10 @@ serv_enable()
 	is_service_autostart $1 && echo "Service $1 already enabled for startup" && return
 
 	case $SERVICETYPE in
-		service-chkconfig)
+		service-chkconfig|service-upstart)
 			sudocmd chkconfig $1 on
 			;;
-		service-update)
+		service-initd|service-update)
 			sudocmd update-rc.d $1 defaults
 			;;
 		systemd)

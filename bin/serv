@@ -36,7 +36,8 @@ check_tty
 
 #############################
 
-# FIXME: detect if not recognized
+# FIXME: detect by real init system
+# FIXME: add upstart support (Ubuntu?)
 set_service_type()
 {
 	local CMD
@@ -69,9 +70,9 @@ case $DISTRNAME in
 	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific)
 		CMD="service-chkconfig"
 		;;
-#	Slackware)
-#		CMD="slackpkg"
-#		;;
+	Slackware)
+		CMD="service-initd"
+		;;
 	SUSE|SLED|SLES)
 		CMD="service-chkconfig"
 		;;
