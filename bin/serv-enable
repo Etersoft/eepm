@@ -22,7 +22,7 @@ load_helper serv-start
 load_helper serv-status
 
 # Enable service by default
-serv_on()
+serv_enable()
 {
 	is_service_running $1 || serv_start $1 || return
 	is_service_autostart $1 && echo "Service $1 already enabled for startup" && return

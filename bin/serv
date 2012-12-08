@@ -135,11 +135,11 @@ check_command()
     stop)                     # HELPCMD: stop service
         serv_cmd=stop
         ;;
-    on)                       # HELPCMD: add service to run on startup and start it now
-        serv_cmd=on
+    on|enable)                # HELPCMD: add service to run on startup and start it now
+        serv_cmd=enable
         ;;
-    off)                      # HELPCMD: remove service to run on startup and stop it now
-        serv_cmd=off
+    off|disable)              # HELPCMD: remove service to run on startup and stop it now
+        serv_cmd=disable
         ;;
     *)
         return 1
