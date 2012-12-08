@@ -1,0 +1,205 @@
+#!/bin/sh
+#
+# Copyright (C) 2012  Etersoft
+# Copyright (C) 2012  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This file is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+#
+
+PROGDIR=$(dirname $0)
+
+load_helper()
+{
+    [ -r "$PROGDIR/$1" ] || fatal "Have no $PROGDIR/$1 helper file"
+    . $PROGDIR/$1
+}
+
+load_helper epm-sh-functions
+
+PATH=$PATH:/sbin:/usr/sbin
+
+set_sudo
+
+check_tty
+
+#############################
+
+# FIXME: detect if not recognized
+set_service_type()
+{
+	local CMD
+
+	# Fill for use: PMTYPE, DISTRNAME, DISTRVERSION, PKGFORMAT, PKGVENDOR, RPMVENDOR
+	DISTRVENDOR=$PROGDIR/distr_info
+	[ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d)
+	[ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
+	set_target_pkg_env
+
+case $DISTRNAME in
+	ALTLinux)
+		CMD="service-chkconfig"
+		;;
+	Ubuntu|Debian|Mint)
+		CMD="service-update"
+		;;
+	Mandriva|ROSA)
+		CMD="service-chkconfig"
+		;;
+#	FreeBSD)
+#		CMD="pkg_add"
+#		;;
+#	Gentoo)
+#		CMD="emerge"
+#		;;
+#	ArchLinux)
+#		CMD="pacman"
+#		;;
+	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific)
+		CMD="service-chkconfig"
+		;;
+#	Slackware)
+#		CMD="slackpkg"
+#		;;
+	SUSE|SLED|SLES)
+		CMD="service-chkconfig"
+		;;
+#	Windows)
+#		CMD="chocolatey"
+#		;;
+	*)
+		fatal "Do not known DISTRNAME $DISTRNAME yet"
+		;;
+esac
+SERVICETYPE=$CMD
+}
+
+
+
+phelp()
+{
+	echo "$Descr
+$Usage
+ Commands:
+$(get_help HELPCMD)
+
+ Options:
+$(get_help HELPOPT)
+"
+}
+
+print_version()
+{
+        echo "Service manager version @VERSION@"
+        echo "Running on $($DISTRVENDOR)"
+        echo "Copyright (c) Etersoft 2012, 2013"
+        echo "This program may be freely redistributed under the terms of the GNU GPL."
+}
+
+Usage="Usage: serv [options] <service> [<command>] [params]..."
+Descr="serv - Service manager"
+
+set_service_type
+
+verbose=
+quiet=
+non_interactive=
+show_command_only=
+serv_cmd=
+service_name=
+params=
+
+check_command()
+{
+    # do not override command
+    [ -z "$serv_cmd" ] || return
+
+    case $1 in
+    status)                   # HELPCMD: show service status
+        serv_cmd=status
+        ;;
+    start)                    # HELPCMD: start service
+        serv_cmd=start
+        ;;
+    stop)                     # HELPCMD: stop service
+        serv_cmd=stop
+        ;;
+    on)                       # HELPCMD: add service to run on startup and start it now
+        serv_cmd=on
+        ;;
+    off)                      # HELPCMD: remove service to run on startup and stop it now
+        serv_cmd=off
+        ;;
+    *)
+        return 1
+        ;;
+    esac
+    return 0
+}
+
+check_option()
+{
+    case $1 in
+    -h|--help|help)       # HELPOPT: this help
+        phelp
+        exit 0
+        ;;
+    -v|--version)         # HELPOPT: print version
+        print_version
+        exit 0
+        ;;
+    --verbose)            # HELPOPT: verbose mode
+        verbose=1
+        ;;
+    --show-command-only)  # HELPOPT: show command only, do not any action
+        show_command_only=1
+        ;;
+    --quiet)              # HELPOPT: quiet mode (do not print commands before exec)
+        quiet=1
+        ;;
+    --auto)               # HELPOPT: non interactive mode
+        non_interactive=1
+        ;;
+    *)
+        return 1
+        ;;
+    esac
+    return 0
+}
+
+for opt in "$@" ; do
+    check_command $opt && continue
+    check_option $opt && continue
+    [ -z "$service_name" ] && service_name=$opt && continue
+    params="$params $opt"
+done
+
+echover "service: $service_name"
+echover "command: $serv_cmd"
+
+# Just printout help if run without args
+if [ -z "$service_name" ] ; then
+    print_version
+    echo
+    fatal "Run $ serv --help for get help"
+fi
+
+if [ -z "$serv_cmd" ] ; then
+    serv_cmd=common
+fi
+
+# Run helper for command
+load_helper serv-$serv_cmd
+serv_$serv_cmd $service_name $params
+# return last error code (from subroutine)
