@@ -40,13 +40,17 @@ with various distros.
 %install
 # install to datadir and so on
 %makeinstall
+./pack_in_onefile.sh
+install -m 0755 *packed.sh %buildroot/%_datadir/%name/
 
 %files
 %doc README TODO
 %_bindir/epm*
 %_bindir/eepm
 %_bindir/upm
+%_bindir/serv
 %_bindir/distr_info
+%_datadir/%name/
 
 %changelog
 * Sat Dec 08 2012 Vitaly Lipatov <lav@altlinux.ru> 1.0.7-alt1

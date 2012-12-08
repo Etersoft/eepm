@@ -19,12 +19,16 @@
 #
 
 PROGDIR=$(dirname $0)
+# will replaced to /usr/share/eepm during install
+SHAREDIR=$(dirname $0)
 
 load_helper()
 {
-    [ -r "$PROGDIR/$1" ] || fatal "Have no $PROGDIR/$1 helper file"
-    . $PROGDIR/$1
+    local CMD="$SHAREDIR/$1"
+    [ -r "$CMD" ] || fatal "Have no $CMD helper file"
+    . $CMD
 }
+
 
 load_helper epm-sh-functions
 
