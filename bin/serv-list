@@ -22,9 +22,8 @@
 serv_list()
 {
 	case $SERVICETYPE in
-		service-chkconfig|service-upstart)
-			sudocmd service --status-all
-			;;
+#		service-chkconfig)
+#			;;
 		service-upstart)
 			sudocmd initctl list
 			;;
@@ -35,7 +34,11 @@ serv_list()
 			sudocmd systemctl list-units
 			;;
 		*)
-			fatal "Do not known command for $SERVICETYPE"
+			load_helper serv-list_all
+			load_helper serv-status
+			for i in $(serv_list_all) ; do
+				is_service_running $i && echo $i
+			done
 			;;
 	esac
 }
