@@ -145,6 +145,8 @@ epm_remove()
 		return
 	fi
 
+	[ -n "$pkg_files" ] && fatal "FIXME: remove by package file is not supported yet"
+
 	[ -n "$pkg_filenames" ] || fatal "Run remove without args"
 	epm_remove_low $pkg_filenames && return
 
