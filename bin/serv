@@ -129,8 +129,13 @@ check_command()
     status)                   # HELPCMD: show service status
         serv_cmd=status
         ;;
+    #restart)                 # HELPCMD: restart service
+    #reload)                  # HELPCMD: reload service
     start)                    # HELPCMD: start service
         serv_cmd=start
+        ;;
+    try-restart|condrestart)  # HELPCMD: Restart service if running
+        serv_cmd=try_restart
         ;;
     stop)                     # HELPCMD: stop service
         serv_cmd=stop
