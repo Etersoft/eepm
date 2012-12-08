@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.0.7
+Version: 1.1.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -31,6 +31,8 @@ universal interface to any package manager.
 Can be useful for system administrators working
 with various distros.
 
+See detailed description here: http://wiki.etersoft.ru/EPM
+
 %prep
 %setup
 
@@ -53,6 +55,11 @@ install -m 0755 *packed.sh %buildroot/%_datadir/%name/
 %_datadir/%name/
 
 %changelog
+* Sat Dec 08 2012 Vitaly Lipatov <lav@altlinux.ru> 1.1.0-alt1
+- move included script to /usr/share/eepm
+- introduce serv command for system services management
+- add pack_in_onefile.sh: pack scripts on one file
+
 * Sat Dec 08 2012 Vitaly Lipatov <lav@altlinux.ru> 1.0.7-alt1
 - add epmq command as alias to epm -q (epm query)
 - epm: rearrange command help
