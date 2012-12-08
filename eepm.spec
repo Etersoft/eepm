@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.0.6
+Version: 1.0.7
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -49,6 +49,11 @@ with various distros.
 %_bindir/distr_info
 
 %changelog
+* Sat Dec 08 2012 Vitaly Lipatov <lav@altlinux.ru> 1.0.7-alt1
+- add epmq command as alias to epm -q (epm query)
+- epm: rearrange command help
+- epm-remove: warning about no support remove by package file
+
 * Sat Nov 24 2012 Vitaly Lipatov <lav@altlinux.ru> 1.0.6-alt1
 - epm: add changelog (cl) command
 - add support for work without tput, with uncompat tput, allow USETTY=0 for disable tput use
