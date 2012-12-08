@@ -21,5 +21,18 @@
 # Start service
 serv_start()
 {
-	sudocmd service $1 start
+	case $SERVICETYPE in
+		service-chkconfig)
+			sudocmd service $1 start
+			;;
+		service-update)
+			sudocmd /etc/init.d/$1 start
+			;;
+		systemd)
+			sudocmd systemctl start $1
+			;;
+		*)
+			fatal "Do not known command for $SERVICETYPE"
+			;;
+	esac
 }

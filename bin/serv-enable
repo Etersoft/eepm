@@ -34,6 +34,9 @@ serv_enable()
 		service-update)
 			sudocmd update-rc.d $1 defaults
 			;;
+		systemd)
+			sudocmd systemctl enable $1
+			;;
 		*)
 			fatal "Do not known command for $SERVICETYPE"
 			;;

@@ -21,5 +21,18 @@
 # Stop service
 serv_stop()
 {
-	sudocmd service $1 stop
+	case $SERVICETYPE in
+		service-chkconfig)
+			sudocmd service $1 stop
+			;;
+		service-update)
+			sudocmd /etc/init.d/$1 stop
+			;;
+		systemd)
+			sudocmd systemctl stop $1
+			;;
+		*)
+			fatal "Do not known command for $SERVICETYPE"
+			;;
+	esac
 }

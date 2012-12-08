@@ -21,5 +21,21 @@
 # Common call service
 serv_common()
 {
-	sudocmd service "$@"
+	local SERVICE="$1"
+	shift
+	case $SERVICETYPE in
+		service-chkconfig)
+			sudocmd service $SERVICE "$@"
+			;;
+		service-update)
+			sudocmd /etc/init.d/$SERVICE "$@"
+			;;
+		systemd)
+			sudocmd systemctl "$@" $SERVICE
+			;;
+		*)
+			fatal "Do not known command for $SERVICETYPE"
+			;;
+	esac
+
 }

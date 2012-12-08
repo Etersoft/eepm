@@ -20,16 +20,57 @@
 
 is_service_running()
 {
-	$SUDO service $1 status >/dev/null
+	case $SERVICETYPE in
+		service-chkconfig)
+			$SUDO service $1 status >/dev/null
+			;;
+		service-update)
+			$SUDO /etc/init.d/$1 status >/dev/null
+			;;
+		systemd)
+			#sudocmd systemctl is-enabled $1
+			fatal "FIXME: don't know how detect current startup state"
+			;;
+		*)
+			fatal "Do not known command for $SERVICETYPE"
+			;;
+	esac
 }
 
 is_service_autostart()
 {
-	LANG=C $SUDO chkconfig $1 --list | grep -q "5:on"
+	case $SERVICETYPE in
+		service-chkconfig)
+			LANG=C $SUDO chkconfig $1 --list | grep -q "5:on"
+			;;
+		service-update)
+			fatal "FIXME: don't know how detect current startup state"
+			;;
+		systemd)
+			sudocmd systemctl is-enabled $1
+			;;
+		*)
+			fatal "Do not known command for $SERVICETYPE"
+			;;
+	esac
 }
 
 serv_status()
 {
 	is_service_autostart $1 && echo "Service $1 is sheduled to run on startup" || echo "Service $1 will NOT run on startup"
-	sudocmd service $1 status
+
+	case $SERVICETYPE in
+		service-chkconfig)
+			sudocmd service $1 status
+			;;
+		service-update)
+			sudocmd /etc/init.d/$1 statuss
+			;;
+		systemd)
+			sudocmd systemctl status $1
+			;;
+		*)
+			fatal "Do not known command for $SERVICETYPE"
+			;;
+	esac
 }
