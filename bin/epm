@@ -98,7 +98,8 @@ case $progname in
     epm|upm|eepm)
         ;;
     *)
-        fatal "Unknown command: $progname"
+        # epm by default
+        # fatal "Unknown command: $progname"
         ;;
 esac
 
