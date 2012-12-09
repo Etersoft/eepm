@@ -1,6 +1,6 @@
 Name: eepm
 Version: 1.1.0
-Release: alt1
+Release: alt2
 
 Summary: Etersoft EPM package manager
 
@@ -55,6 +55,9 @@ install -m 0755 *packed.sh %buildroot/%_datadir/%name/
 %_datadir/%name/
 
 %changelog
+* Sun Dec 09 2012 Vitaly Lipatov <lav@altlinux.ru> 1.1.0-alt2
+- fix install links
+
 * Sat Dec 08 2012 Vitaly Lipatov <lav@altlinux.ru> 1.1.0-alt1
 - move included script to /usr/share/eepm
 - introduce serv command for system services management
