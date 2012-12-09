@@ -25,7 +25,8 @@ SHAREDIR=$(dirname $0)
 load_helper()
 {
     local CMD="$SHAREDIR/$1"
-    [ -r "$CMD" ] || fatal "Have no $CMD helper file"
+    # do not use fatal() here, it can be initial state
+    [ -r "$CMD" ] || { echo "FATAL: Have no $CMD helper file" ; exit 1; }
     . $CMD
 }
 
