@@ -1,10 +1,10 @@
 Name: eepm
 Version: 1.1.0
-Release: alt2
+Release: alt3
 
 Summary: Etersoft EPM package manager
 
-License: GPLv2
+License: AFGPLv3
 Group: System/Configuration/Packaging
 Url: http://wiki.etersoft.ru/EPM
 
@@ -46,7 +46,7 @@ See detailed description here: http://wiki.etersoft.ru/EPM
 install -m 0755 *packed.sh %buildroot/%_datadir/%name/
 
 %files
-%doc README TODO
+%doc README TODO LICENSE
 %_bindir/epm*
 %_bindir/eepm
 %_bindir/upm
