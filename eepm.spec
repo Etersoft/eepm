@@ -55,6 +55,9 @@ install -m 0755 *packed.sh %buildroot/%_datadir/%name/
 %_datadir/%name/
 
 %changelog
+* Mon Dec 10 2012 Vitaly Lipatov <lav@altlinux.ru> 1.1.0-alt3
+- change license to AFGPLv3
+
 * Sun Dec 09 2012 Vitaly Lipatov <lav@altlinux.ru> 1.1.0-alt2
 - fix install links
 
