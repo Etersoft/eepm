@@ -1,2 +1,46 @@
+Etersoft EPM package manager README
+
+Really, EPM is a wrapper for any package manager used in your operating system.
+
+Run $ epm --help for check all support commands.
+
+The main goal of the project — provide the same package management interface
+on any platform.
+
+You can use
+# epmi NAME
+or
+# epm -i NAME
+or
+# epm install NAME
+for install package. It is just aliases for one command: install of the package.
+EEPM will run urpmi on Mandriva, apt-get install on Ubuntu, yum install on Fedora.
+And it have a little intelligence, so EEPM will try install file with package via
+low level commands (rpm or dpkg) before use hi level commands (yum, apt).
+
+Just try your comfort style for package management and save your experience the same
+on any platform. EEPM will print out any real command it uses so you can learn from it.
+
+Also EEPM has initial support for control repositories: list, add, remove, update
+
+Pay attention to follow useful commands:
+epmqf - query package(s) owning file
+epmqp - search in the list of installed packages
+
+epmqf helps get package name for any file or command in the system:
+$ epmqf epmqf
+Note: epmqf is placed as /usr/bin/epmqf
+ $ rpm -qf /usr/bin/epmqf
+eepm-1.1.0-alt2
+Note: /usr/bin/epmqf is link to epm
+Note: epm is placed as /usr/bin/epm
+ $ rpm -qf /usr/bin/epm
+eepm-1.1.0-alt2
+
+
+
 See detailed description in russian at
 http://wiki.etersoft.ru/Epm
+
+Please e-mail me:
+lav@etersoft.ru
