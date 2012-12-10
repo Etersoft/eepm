@@ -1,0 +1,40 @@
+# serv(8) completion
+
+# This completes on a list of all available services for the
+# 'serv' command, followed by that script's available commands
+#
+_service_list()
+{
+    COMPREPLY=( $( serv list-all 2>/dev/null ) )
+    COMPREPLY=( $( compgen -W '${COMPREPLY[@]}' -- "$cur" ) )
+}
+
+_service_usage_list()
+{
+    COMPREPLY=( $( compgen -W '`serv ${prev##*/} 2>/dev/null | sed -e "y/|/ /" -ne "s/^.*\(U\|msg_u\)sage.*{\(.*\)}.*$/\2/p" `' -- "$cur" ) )
+}
+
+
+_serv()
+{
+    local cur prev
+
+    COMPREPLY=()
+    _get_comp_words_by_ref cur prev
+
+    # don't complete for things like killall, ssh and mysql if it's
+    # the standalone command, rather than the init script
+    [[ ${COMP_WORDS[0]} != "serv" ]] && return 0
+
+    # don't complete past 2nd token
+    [ $COMP_CWORD -gt 2 ] && return 0
+
+    if [[ $COMP_CWORD -eq 1 && $prev == "serv" ]]; then
+        _service_list
+    else
+        _service_usage_list
+    fi
+
+    return 0
+} &&
+complete -F _serv serv
