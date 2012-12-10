@@ -1,6 +1,6 @@
 Name: eepm
-Version: 1.1.0
-Release: alt3
+Version: 1.1.1
+Release: alt1
 
 Summary: Etersoft EPM package manager
 
@@ -44,6 +44,8 @@ See detailed description here: http://wiki.etersoft.ru/EPM
 %makeinstall
 ./pack_in_onefile.sh
 install -m 0755 *packed.sh %buildroot/%_datadir/%name/
+mkdir -p %buildroot%_sysconfdir/bash_completion.d/
+install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/serv
 
 %files
 %doc README TODO LICENSE
@@ -53,8 +55,14 @@ install -m 0755 *packed.sh %buildroot/%_datadir/%name/
 %_bindir/serv
 %_bindir/distr_info
 %_datadir/%name/
+%_sysconfdir/bash_completion.d/serv
 
 %changelog
+* Mon Dec 10 2012 Vitaly Lipatov <lav@altlinux.ru> 1.1.1-alt1
+- serv: add usage command
+- add README
+- add initial bash_completion
+
 * Mon Dec 10 2012 Vitaly Lipatov <lav@altlinux.ru> 1.1.0-alt3
 - change license to AFGPLv3
 
