@@ -58,15 +58,18 @@ serv_status()
 {
 	is_service_autostart $1 && echo "Service $1 is sheduled to run on startup" || echo "Service $1 will NOT run on startup"
 
+	local SERVICE="$1"
+	shift
+
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)
-			sudocmd service $1 status
+			sudocmd service $SERVICE status "$@"
 			;;
 		service-update)
-			sudocmd /etc/init.d/$1 statuss
+			sudocmd /etc/init.d/$SERVICE status "$@"
 			;;
 		systemd)
-			sudocmd systemctl status $1
+			sudocmd systemctl status $service "$@"
 			;;
 		*)
 			fatal "Do not known command for $SERVICETYPE"
