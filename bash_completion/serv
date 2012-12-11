@@ -5,13 +5,14 @@
 #
 _service_list()
 {
-    COMPREPLY=( $( serv list-all 2>/dev/null ) )
+    COMPREPLY=( $( serv list-all 2>/dev/null ; echo "list list-all list-startup" ) )
     COMPREPLY=( $( compgen -W '${COMPREPLY[@]}' -- "$cur" ) )
 }
 
 _service_usage_list()
 {
-    COMPREPLY=( $( compgen -W '`serv ${prev##*/} 2>/dev/null | sed -e "y/|/ /" -ne "s/^.*\(U\|msg_u\)sage.*{\(.*\)}.*$/\2/p" `' -- "$cur" ) )
+    local USLIST=$(serv ${prev##*/} usage 2>/dev/null | sed -e "y/|/ /" -ne "s/^.*\(u\|U\|msg_u\)sage.*{\(.*\)}.*$/\2/p")
+    COMPREPLY=( $( compgen -W '$USLIST' -- "$cur" ) )
 }
 
 

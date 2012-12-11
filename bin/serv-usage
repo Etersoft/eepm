@@ -17,6 +17,11 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+_print_additional_usage()
+{
+	echo "serv addition usage: {on|off|try-restart|usage}"
+}
+
 # Print usage of the service
 serv_usage()
 {
@@ -39,5 +44,7 @@ serv_usage()
 			fatal "Do not known command for $SERVICETYPE"
 			;;
 	esac
+
+_print_additional_usage
 
 }
