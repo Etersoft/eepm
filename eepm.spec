@@ -37,7 +37,7 @@ See detailed description here: http://wiki.etersoft.ru/EPM
 %setup
 
 %build
-%__subst "s|@VERSION@|%version-%release|g" bin/epm
+%__subst "s|@VERSION@|%version-%release|g" bin/epm bin/serv
 
 %install
 # install to datadir and so on
