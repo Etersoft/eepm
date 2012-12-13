@@ -22,17 +22,20 @@ load_helper serv-status
 # Try restart service (if it is running)
 serv_try_restart()
 {
+	local SERVICE="$1"
+	shift
+
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)
-			is_service_running $1 || return 0
-			sudocmd service $1 restart
+			is_service_running $SERVICE || return 0
+			sudocmd service $SERVICE restart "$@"
 			;;
 		service-initd|service-update)
-			is_service_running $1 || return 0
-			sudocmd /etc/init.d/$1 restart
+			is_service_running $SERVICE || return 0
+			sudocmd /etc/init.d/$SERVICE restart "$@"
 			;;
 		systemd)
-			sudocmd systemctl try-restart $1
+			sudocmd systemctl try-restart $SERVICE "$@"
 			;;
 		*)
 			fatal "Do not known command for $SERVICETYPE"
