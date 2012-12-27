@@ -57,6 +57,9 @@ epm_install_names()
 		apt-rpm|apt-dpkg)
 			sudocmd apt-get install $@
 			return ;;
+		deepsolver-rpm)
+			sudocmd ds-install $@
+			return ;;
 		urpm-rpm)
 			sudocmd urpmi $@
 			return ;;

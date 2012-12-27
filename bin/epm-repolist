@@ -34,6 +34,9 @@ case $PMTYPE in
 	apt-rpm)
 		docmd apt-repo list
 		;;
+	deepsolver-rpm)
+		docmd ds-conf
+		;;
 	apt-dpkg)
 		showcmd cat /etc/apt/sources.list*
 		print_apt_sources_list /etc/apt/sources.list /etc/apt/sources.list.d/*.list

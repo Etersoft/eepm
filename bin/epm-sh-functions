@@ -180,8 +180,18 @@ set_pm_type()
 	[ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
 	set_target_pkg_env
 
+# override package manager detection result
+if [ -n "$FORCEPM" ] ; then
+	PMTYPE=$FORCEPM
+	return
+fi
+
 case $DISTRNAME in
 	ALTLinux|PCLinux)
+		CMD="apt-rpm"
+		#which deepsolver 2>/dev/null >/dev/null && CMD=deepsolver-rpm
+		;;
+	PCLinux)
 		CMD="apt-rpm"
 		;;
 	Ubuntu|Debian|Mint)

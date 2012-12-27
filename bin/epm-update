@@ -49,6 +49,9 @@ case $PMTYPE in
 	slackpkg)
 		sudocmd /usr/sbin/slackpkg update
 		;;
+	deepsolver-rpm)
+		sudocmd ds-update
+		;;
 	*)
 		fatal "Do not known update command for $PMTYPE"
 		;;
