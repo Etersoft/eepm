@@ -19,18 +19,18 @@
 
 check_rpm_integrity()
 {
-	a= rpm --checksig $@ >/dev/null
+	docmd rpm --checksig $@
 }
 
 check_deb_integrity()
 {
 	# FIXME: debsums -ca package ?
-	a= dpkg --contents $@ >/dev/null
+	docmd dpkg --contents $@
 }
 
 check_bz2_integrity()
 {
-	a= bunzip -t $1 >/dev/null
+	docmd bunzip -t $1
 }
 
 check_tbz_integrity()
@@ -40,7 +40,7 @@ check_tbz_integrity()
 
 check_gz_integrity()
 {
-	a= gunzip -t $1 >/dev/null
+	docmd gunzip -t $1
 }
 
 check_tgz_integrity()
@@ -50,12 +50,22 @@ check_tgz_integrity()
 
 check_zip_integrity()
 {
-	a= unzip -t $1 >/dev/null
+	docmd unzip -t $@
+}
+
+check_rar_integrity()
+{
+	docmd unrar t $@
 }
 
 check_xz_integrity()
 {
-	a= xz -t $1 >/dev/null
+	docmd xz -t $1
+}
+
+check_7z_integrity()
+{
+	docmd 7z t $1
 }
 
 check_exe_integrity()
