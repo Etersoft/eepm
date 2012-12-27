@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.1.2
+Version: 1.1.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -58,6 +58,10 @@ install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/se
 %_sysconfdir/bash_completion.d/serv
 
 %changelog
+* Thu Dec 27 2012 Vitaly Lipatov <lav@altlinux.ru> 1.1.3-alt1
+- add initial deepsolver support
+- checkpkg: print checking details, add 7z and rar support
+
 * Thu Dec 13 2012 Vitaly Lipatov <lav@altlinux.ru> 1.1.2-alt1
 - serv: allow additional params for start, stop and try_restart
 - spec: replace @VERSION@ in serv too
