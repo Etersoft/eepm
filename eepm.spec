@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.1.3
+Version: 1.1.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -58,6 +58,9 @@ install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/se
 %_sysconfdir/bash_completion.d/serv
 
 %changelog
+* Tue Jan 01 2013 Vitaly Lipatov <lav@altlinux.ru> 1.1.4-alt1
+- fix broken autoremove: rename epm-autoclean to epm-autoremove
+
 * Thu Dec 27 2012 Vitaly Lipatov <lav@altlinux.ru> 1.1.3-alt1
 - add initial deepsolver support
 - checkpkg: print checking details, add 7z and rar support
