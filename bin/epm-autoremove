@@ -17,7 +17,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-epm_autoclean()
+epm_autoremove()
 {
 case $PMTYPE in
 	#apt-rpm)
