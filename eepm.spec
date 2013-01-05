@@ -36,14 +36,12 @@ See detailed description here: http://wiki.etersoft.ru/EPM
 %prep
 %setup
 
-%build
-%__subst "s|@VERSION@|%version-%release|g" bin/epm bin/serv
-
 %install
 # install to datadir and so on
-%makeinstall
+%makeinstall version=%version-%release
 ./pack_in_onefile.sh
 install -m 0755 *packed.sh %buildroot/%_datadir/%name/
+
 mkdir -p %buildroot%_sysconfdir/bash_completion.d/
 install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/serv
 
