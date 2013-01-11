@@ -136,8 +136,10 @@ epm_install_files()
     [ -z "$1" ] && return
 
     case $PMTYPE in
-        apt-rpm|urpm-rpm)
+        apt-rpm)
             sudocmd rpm -Uvh $force $nodeps $@ && return
+            # if run with --nodeps, do not fallback on hi level
+            [ -n "$nodeps" ] && return
             # use install_names
             ;;
         apt-dpkg)
@@ -148,6 +150,10 @@ epm_install_files()
             sudocmd rpm -Uvh $force $@ && return
             sudocmd yum --nogpgcheck install $@
             return ;;
+        urpm-rpm)
+            sudocmd rpm -Uvh $force $nodeps $@ && return
+            # use install_names
+            ;;
         pkg_add)
             sudocmd pkg_add $@
             return ;;
