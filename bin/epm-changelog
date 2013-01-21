@@ -21,7 +21,7 @@ load_helper epm-query
 
 __epm_changelog_files()
 {
-	[ -z "$@" ] && return
+	[ -z "$*" ] && return
 
 	case $PMTYPE in
 		apt-rpm|yum-rpm|zypper-rpm|urpm-rpm)
@@ -39,7 +39,7 @@ __epm_changelog_files()
 
 __epm_changelog_local_names()
 {
-	[ -z "$@" ] && return
+	[ -z "$*" ] && return
 
 	case $PMTYPE in
 		apt-rpm|yum-rpm|urpm-rpm|zypper-rpm)
@@ -63,7 +63,7 @@ __epm_changelog_local_names()
 
 __epm_changelog_unlocal_names()
 {
-	[ -z "$@" ] && return
+	[ -z "$*" ] && return
 
 	case $PMTYPE in
 		#apt-rpm)

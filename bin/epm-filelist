@@ -23,7 +23,7 @@ __epm_filelist_file()
 {
 	local CMD
 
-	[ -z "$@" ] && return
+	[ -z "$*" ] && return
 
 	case $PMTYPE in
 		apt-rpm|yum-rpm|urpm-rpm|zypper-rpm)
@@ -44,7 +44,7 @@ __epm_filelist_name()
 {
 	local CMD
 
-	[ -z "$@" ] && return
+	[ -z "$*" ] && return
 
 	case $PMTYPE in
 		apt-rpm)
