@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.1.4
+Version: 1.1.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -10,7 +10,7 @@ Url: http://wiki.etersoft.ru/EPM
 
 Packager: Vitaly Lipatov <lav@altlinux.ru>
 
-# git-clone http://git.altlinux.org/people/lav/packages/epm.git
+# git-clone http://git.etersoft.ru/projects/korinf/eepm.git
 Source: ftp://updates.etersoft.ru/pub/Etersoft/Sisyphus/sources/tarball/%name-%version.tar
 
 BuildArchitectures: noarch
@@ -56,6 +56,11 @@ install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/se
 %_sysconfdir/bash_completion.d/serv
 
 %changelog
+* Tue Jan 29 2013 Vitaly Lipatov <lav@altlinux.ru> 1.1.5-alt1
+- serv: add systemd detect
+- fix check for empty args
+- epm-install: with --nodeps do not fallback on apt-get during install from file
+
 * Tue Jan 01 2013 Vitaly Lipatov <lav@altlinux.ru> 1.1.4-alt1
 - fix broken autoremove: rename epm-autoclean to epm-autoremove
 
