@@ -21,6 +21,8 @@
 
 epm_update()
 {
+	echo "Run command for update remote package repository database"
+
 case $PMTYPE in
 	apt-rpm)
 		sudocmd apt-get update || exit
