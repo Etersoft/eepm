@@ -47,6 +47,10 @@ case $PMTYPE in
 		__epm_info_rpm_low && return
 		docmd yum info $pkg_names
 		;;
+	dnf-rpm)
+		__epm_info_rpm_low && return
+		docmd dnf info $pkg_names
+		;;
 	zypper-rpm)
 		__epm_info_rpm_low && return
 		docmd zypper info $pkg_names

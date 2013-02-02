@@ -56,6 +56,9 @@ case $PMTYPE in
 	yum-rpm)
 		CMD="yum provides"
 		;;
+	dnf-rpm)
+		CMD="dnf provides"
+		;;
 	urpm-rpm)
 		CMD="urpmf"
 		;;

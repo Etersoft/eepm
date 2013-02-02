@@ -22,7 +22,7 @@ epm_remove_low()
 {
 	[ -z "$1" ] && return
 	case $PMTYPE in
-		apt-rpm|yum-rpm|zypper-rpm|urpm-rpm)
+		apt-rpm|yum-rpm|zypper-rpm|urpm-rpm|dnf-rpm)
 			sudocmd rpm -ev $nodeps $@
 			return ;;
 		apt-dpkg)
@@ -67,6 +67,9 @@ epm_remove_names()
 			return ;;
 		yum-rpm)
 			sudocmd yum remove $@
+			return ;;
+		dnf-rpm)
+			sudocmd dnf remove $@
 			return ;;
 		zypper-rpm)
 			sudocmd zypper remove $@
@@ -118,7 +121,7 @@ epm_remove_nonint()
 epm_print_remove_command()
 {
 	case $PMTYPE in
-		apt-rpm|yum-rpm|zypper-rpm|urpm-rpm)
+		apt-rpm|yum-rpm|zypper-rpm|urpm-rpm|dnf-rpm)
 			echo "rpm -ev $nodeps $@"
 			;;
 		apt-dpkg)

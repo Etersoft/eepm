@@ -43,6 +43,9 @@ case $PMTYPE in
 	yum-rpm)
 		CMD="yum search"
 		;;
+	dnf-rpm)
+		CMD="dnf search"
+		;;
 	zypper-rpm)
 		CMD="zypper search"
 		;;

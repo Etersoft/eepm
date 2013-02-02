@@ -28,9 +28,10 @@ case $PMTYPE in
 	apt-dpkg)
 		CMD="dpkg -l $pkg_filenames"
 		;;
-	yum-rpm|urpm-rpm|zypper-rpm)
+	yum-rpm|urpm-rpm|zypper-rpm|dnf-rpm)
 		CMD="rpm -qa $pkg_filenames"
 		;;
+# Note: dnf has dnf list command
 	emerge)
 		CMD="qlist -I"
 		;;

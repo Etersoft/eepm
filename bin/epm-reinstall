@@ -28,6 +28,9 @@ epm_reinstall_names()
 		yum-rpm)
 			sudocmd yum install $@
 			return ;;
+		dnf-rpm)
+			sudocmd dnf reinstall $@
+			return ;;
 		urpm-rpm)
 			sudocmd urpmi $@
 			return ;;

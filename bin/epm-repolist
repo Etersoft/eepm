@@ -44,6 +44,9 @@ case $PMTYPE in
 	yum-rpm)
 		docmd yum repolist
 		;;
+	dnf-rpm)
+		docmd dnf repolist -v
+		;;
 	urpm-rpm)
 		docmd urpmq --list-url
 		;;

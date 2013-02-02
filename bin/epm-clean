@@ -27,6 +27,9 @@ case $PMTYPE in
 		sudocmd yum clean all
 		sudocmd yum makecache
 		;;
+	dnf-rpm)
+		sudocmd dnf clean all
+		;;
 	urpm-rpm)
 		sudocmd urpmi --clean
 		;;

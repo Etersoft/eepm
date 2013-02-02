@@ -30,6 +30,9 @@ epm_upgrade()
 	yum-rpm)
 		CMD="yum update"
 		;;
+	dnf-rpm)
+		CMD="dnf update"
+		;;
 	urpm-rpm)
 		# or --auto-select --replace-files
 		CMD="urpmi --auto-update"

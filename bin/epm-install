@@ -75,6 +75,9 @@ epm_install_names()
 		yum-rpm)
 			sudocmd yum install $@
 			return ;;
+		dnf-rpm)
+			sudocmd dnf install $@
+			return ;;
 		zypper-rpm)
 			sudocmd zypper install $@
 			return ;;
@@ -150,6 +153,10 @@ epm_install_files()
             sudocmd rpm -Uvh $force $@ && return
             sudocmd yum --nogpgcheck install $@
             return ;;
+        dnf-rpm)
+            sudocmd rpm -Uvh $force $@ && return
+            sudocmd dnf install $@
+            return ;;
         urpm-rpm)
             sudocmd rpm -Uvh $force $nodeps $@ && return
             # use install_names
@@ -172,7 +179,7 @@ epm_install_files()
 epm_print_install_command()
 {
     case $PMTYPE in
-        apt-rpm|yum-rpm|urpm-rpm|zypper-rpm)
+        apt-rpm|yum-rpm|urpm-rpm|zypper-rpm|dnf-rpm)
             echo "rpm -Uvh --force $nodeps $@"
             ;;
         apt-dpkg)
