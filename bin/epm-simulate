@@ -70,7 +70,7 @@ _epm_do_simulate()
 
 epm_simulate()
 {
-    [ -z "$pkg_filenames" ] && echo "Skip empty list" && return 2
+    [ -z "$pkg_filenames" ] && echo "Skip empty list" && return 22
 
     local filenames="$(echo $pkg_filenames | filter_out_installed_packages)"
 
