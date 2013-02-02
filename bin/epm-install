@@ -73,7 +73,7 @@ epm_install_names()
 			sudocmd pacman -S $@
 			return ;;
 		yum-rpm)
-			sudocmd yum install $@
+			sudocmd yum $YUMOPTIONS install $@
 			return ;;
 		dnf-rpm)
 			sudocmd dnf install $@
@@ -103,10 +103,10 @@ epm_ni_install_names()
 			sudocmd apt-get -y --force-yes install $@
 			return ;;
 		yum-rpm)
-			sudocmd yum -y install $@
+			sudocmd yum -y $YUMOPTIONS install $@
 			return ;;
 		urpm-rpm)
-			sudocmd urpmi --auto --no-verify-rpm $@
+			sudocmd urpmi --auto $URPMOPTIONS $@
 			return ;;
 		zypper-rpm)
 			yes | sudocmd zypper --non-interactive install $@
@@ -143,22 +143,27 @@ epm_install_files()
             sudocmd rpm -Uvh $force $nodeps $@ && return
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return
+
             # use install_names
             ;;
         apt-dpkg)
             sudocmd dpkg -i $@
             sudocmd apt-get -f install
             return ;;
-        yum-rpm)
-            sudocmd rpm -Uvh $force $@ && return
-            sudocmd yum --nogpgcheck install $@
-            return ;;
-        dnf-rpm)
-            sudocmd rpm -Uvh $force $@ && return
-            sudocmd dnf install $@
-            return ;;
+        yum-rpm|dnf-rpm)
+            sudocmd rpm -Uvh $force $nodeps $@ && return
+            # if run with --nodeps, do not fallback on hi level
+
+            [ -n "$nodeps" ] && return
+            YUMOPTIONS=--nogpgcheck
+            # use install_names
+            ;;
         urpm-rpm)
             sudocmd rpm -Uvh $force $nodeps $@ && return
+            # if run with --nodeps, do not fallback on hi level
+            [ -n "$nodeps" ] && return
+
+            URPMOPTIONS=--no-verify-rpm
             # use install_names
             ;;
         pkg_add)
