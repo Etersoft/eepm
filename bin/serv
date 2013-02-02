@@ -96,7 +96,11 @@ esac
 # Note: force systemd using if active
 is_active_systemd && CMD="systemd"
 
+# override system control detection result
+[ -n "$FORCESERVICE" ] && CMD=$FORCESERVICE
+
 SERVICETYPE=$CMD
+
 }
 
 

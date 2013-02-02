@@ -17,6 +17,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+# FIXME: sudo ask password, but we do not print command before
 is_service_running()
 {
 	case $SERVICETYPE in
@@ -36,6 +37,7 @@ is_service_running()
 	esac
 }
 
+# FIXME: sudo ask password, but we do not print command before
 is_service_autostart()
 {
 	case $SERVICETYPE in
