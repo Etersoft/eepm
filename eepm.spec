@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.1.5
+Version: 1.1.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -56,6 +56,12 @@ install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/se
 %_sysconfdir/bash_completion.d/serv
 
 %changelog
+* Sat Feb 02 2013 Vitaly Lipatov <lav@altlinux.ru> 1.1.6-alt1
+- epm-install: fix fallback from low level to hi level install
+- serv: add support for FORCESERVICE
+- add initial support for DNF package manager
+- add epm Upgrade command (epm update && upgrade)
+
 * Tue Jan 29 2013 Vitaly Lipatov <lav@altlinux.ru> 1.1.5-alt1
 - serv: add systemd detect
 - fix check for empty args
