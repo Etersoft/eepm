@@ -48,7 +48,7 @@ is_service_autostart()
 			fatal "FIXME: don't know how detect current startup state"
 			;;
 		systemd)
-			sudocmd systemctl is-enabled $1
+			sudocmd systemctl is-enabled $1.service
 			;;
 		*)
 			fatal "Do not known command for $SERVICETYPE"
@@ -71,7 +71,7 @@ serv_status()
 			sudocmd /etc/init.d/$SERVICE status "$@"
 			;;
 		systemd)
-			sudocmd systemctl status $service "$@"
+			sudocmd systemctl status $SERVICE.service "$@"
 			;;
 		*)
 			fatal "Do not known command for $SERVICETYPE"
