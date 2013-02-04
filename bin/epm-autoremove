@@ -24,7 +24,7 @@ case $PMTYPE in
 	#	sudocmd apt-get autoclean
 	#	;;
 	apt-dpkg)
-		sudocmd apt-get autoclean
+		sudocmd apt-get autoremove
 		;;
 	#yum-rpm)
 	#	sudocmd yum clean all
