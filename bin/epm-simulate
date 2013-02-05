@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012  Etersoft
-# Copyright (C) 2012  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2013  Etersoft
+# Copyright (C) 2012-2013  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -19,6 +19,12 @@
 
 load_helper epm-install
 load_helper epm-search
+
+# for zypper before SUSE/11.0
+__use_zypper_dry_run()
+{
+    a= zypper install --help 2>&1 | grep -q -- "--dry-run" && echo "--dry-run"
+}
 
 _epm_do_simulate()
 {
@@ -38,7 +44,11 @@ _epm_do_simulate()
     		CMD="urpmi --test --auto"
     		;;
     	zypper-rpm)
-    		CMD="zypper --non-interactive install --dry-run"
+    		if ! __use_zypper_dry_run >/dev/null ; then
+    			echo "zypper is too old: does not support --dry-run"
+    			return
+    		fi
+    		CMD="zypper --non-interactive install"
     		;;
     	emerge)
     		echo "FIXME: Skip with emerge"

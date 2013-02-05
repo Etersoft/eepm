@@ -109,6 +109,7 @@ epm_ni_install_names()
 			sudocmd urpmi --auto $URPMOPTIONS $@
 			return ;;
 		zypper-rpm)
+			# FIXME: returns true ever no package found, need check for "no found", "Nothing to do."
 			yes | sudocmd zypper --non-interactive $ZYPPEROPTIONS install $@
 			return ;;
 		pkg_add)
@@ -141,6 +142,7 @@ epm_install_files()
     case $PMTYPE in
         apt-rpm)
             sudocmd rpm -Uvh $force $nodeps $@ && return
+            # TODO: check for "is already installed"
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return
 
