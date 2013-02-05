@@ -55,13 +55,13 @@ epm_install_names()
 	[ -z "$1" ] && return
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
-			sudocmd apt-get install $@
+			sudocmd apt-get $APTOPTIONS install $@
 			return ;;
 		deepsolver-rpm)
 			sudocmd ds-install $@
 			return ;;
 		urpm-rpm)
-			sudocmd urpmi $@
+			sudocmd urpmi $URPMOPTIONS $@
 			return ;;
 		pkg_add)
 			sudocmd pkg_add -r $@
@@ -79,7 +79,7 @@ epm_install_names()
 			sudocmd dnf install $@
 			return ;;
 		zypper-rpm)
-			sudocmd zypper install $@
+			sudocmd zypper install $ZYPPEROPTIONS $@
 			return ;;
 		mpkg)
 			sudocmd mpkg install $@
@@ -100,7 +100,7 @@ epm_ni_install_names()
 	[ -z "$1" ] && return
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
-			sudocmd apt-get -y --force-yes -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install $@
+			sudocmd apt-get -y --force-yes -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
 			return ;;
 		yum-rpm)
 			sudocmd yum -y $YUMOPTIONS install $@
@@ -154,8 +154,12 @@ epm_install_files()
                 DPKGOPTIONS="--force-confdef --force-confold"
             fi
             sudocmd dpkg $DPKGOPTIONS -i $@
-            sudocmd apt-get -f install
-            return ;;
+            # if run with --nodeps, do not fallback on hi level
+
+            [ -n "$nodeps" ] && return
+            # fall to apt-get -f install for fix deps
+            APTOPTIONS="-f"
+            ;;
         yum-rpm|dnf-rpm)
             sudocmd rpm -Uvh $force $nodeps $@ && return
             # if run with --nodeps, do not fallback on hi level
