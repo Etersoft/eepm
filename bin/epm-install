@@ -100,7 +100,7 @@ epm_ni_install_names()
 	[ -z "$1" ] && return
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
-			sudocmd apt-get -y --force-yes install $@
+			sudocmd apt-get -y --force-yes -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install $@
 			return ;;
 		yum-rpm)
 			sudocmd yum -y $YUMOPTIONS install $@
@@ -147,7 +147,11 @@ epm_install_files()
             # use install_names
             ;;
         apt-dpkg)
-            sudocmd dpkg -i $@
+            # the new version of the conf. file is installed with a .dpkg-dist suffix
+            if [ -n "$non_interactive" ] ; then
+                DPKGOPTIONS="--force-confdef --force-confold"
+            fi
+            sudocmd dpkg $DPKGOPTIONS -i $@
             sudocmd apt-get -f install
             return ;;
         yum-rpm|dnf-rpm)
