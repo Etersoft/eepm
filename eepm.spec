@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.1.6
+Version: 1.1.7
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -56,6 +56,14 @@ install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/se
 %_sysconfdir/bash_completion.d/serv
 
 %changelog
+* Tue Feb 05 2013 Vitaly Lipatov <lav@altlinux.ru> 1.1.7-alt1
+- epm-install: user --force-confold for dpkg/apt on Debian/Ubunti in auto mode
+- epm-autoremove: use apt-get autoremove
+- serv-status: fix systemd support
+- epm-simulate: skip simulate if zypper does not have --dry-run
+- epm-install: try install with rpm before zypper use
+- epm-install: fall to standalone apt install for fix deps
+
 * Sat Feb 02 2013 Vitaly Lipatov <lav@altlinux.ru> 1.1.6-alt1
 - epm-install: fix fallback from low level to hi level install
 - serv: add support for FORCESERVICE
