@@ -109,7 +109,7 @@ epm_ni_install_names()
 			sudocmd urpmi --auto $URPMOPTIONS $@
 			return ;;
 		zypper-rpm)
-			yes | sudocmd zypper --non-interactive install $@
+			yes | sudocmd zypper --non-interactive $ZYPPEROPTIONS install $@
 			return ;;
 		pkg_add)
 			sudocmd pkg_add -r $@
@@ -160,6 +160,14 @@ epm_install_files()
 
             [ -n "$nodeps" ] && return
             YUMOPTIONS=--nogpgcheck
+            # use install_names
+            ;;
+        zypper-rpm)
+            sudocmd rpm -Uvh $force $nodeps $@ && return
+            # if run with --nodeps, do not fallback on hi level
+
+            [ -n "$nodeps" ] && return
+            ZYPPEROPTIONS=--no-gpg-checks
             # use install_names
             ;;
         urpm-rpm)
