@@ -122,7 +122,7 @@ print_version()
         echo "Service manager version @VERSION@"
         echo "Running on $($DISTRVENDOR)"
         echo "Copyright (c) Etersoft 2012, 2013"
-        echo "This program may be freely redistributed under the terms of the GNU GPL."
+        echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 
 Usage="Usage: serv [options] [<service>] [<command>] [params]..."
