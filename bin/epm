@@ -251,9 +251,10 @@ pkg_names=$(strip_spaces "$pkg_names")
 
 pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
 
-echover "command: $epm_cmd"
-echover "pkg_files=$pkg_files"
-echover "pkg_names=$pkg_names"
+# Just debug
+#echover "command: $epm_cmd"
+#echover "pkg_files=$pkg_files"
+#echover "pkg_names=$pkg_names"
 
 # Just printout help if run without args
 if [ -z "$epm_cmd" ] ; then
