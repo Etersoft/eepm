@@ -22,17 +22,21 @@ epm_check()
 case $PMTYPE in
 	apt-rpm|apt-dpkg)
 		#sudocmd apt-get check || exit
-		sudocmd apt-get update || exit
+		#sudocmd apt-get update || exit
 		sudocmd apt-get -f install || exit
 		;;
 	apt-dpkg)
-		sudocmd apt-get update || exit
+		#sudocmd apt-get update || exit
+		#sudocmd apt-get check || exit
 		sudocmd apt-get -f install || exit
 		sudocmd apt-get autoremove
 		;;
 	yum-rpm)
+		docmd yum check
 		docmd package-cleanup --leaves
-		a= package-cleanup --leaves | xargs yum remove
+		sudocmd yum remove $(package-cleanup --leaves)
+		#docmd package-cleanup --dupes
+		sudocmd package-cleanup --cleandupes
 		;;
 	urpm-rpm)
 		sudocmd urpme --auto-orphans
