@@ -34,14 +34,22 @@ cat <<EOF >>$OUTPUT
 EOF
 }
 
+get_version()
+{
+	grep "^Version:" eepm.spec | head -n1 | sed "s|Version: *||g"
+}
+
 filter_out()
 {
-	grep -v "^load_helper " | sed -e 's|DISTRVENDOR=$PROGDIR/distr_info|DISTRVENDOR=internal_distr_info|g'
+	grep -v "^load_helper " | sed -e 's|DISTRVENDOR=$PROGDIR/distr_info|DISTRVENDOR=internal_distr_info|g' | \
+		sed -e "s|@VERSION@|$(get_version)|g"
+
 }
 
 incorporate_all()
 {
-OUTPUT=$PACKCOMMAND-packed.sh
+mkdir -p packed
+OUTPUT=packed/$PACKCOMMAND.sh
 echo -n >$OUTPUT
 awk 'BEGIN{desk=0}{if(/^load_helper epm-sh-functions/){desk++};if(desk==0) {print}}' <bin/$PACKCOMMAND | filter_out >>$OUTPUT
 
@@ -54,6 +62,7 @@ done | filter_out >>$OUTPUT
 incorporate_distr_info
 
 awk 'BEGIN{desk=0}{if(desk>0) {print} ; if(/^load_helper epm-sh-functions/){desk++}}' <bin/$PACKCOMMAND | filter_out >>$OUTPUT
+chmod 0755 $OUTPUT
 }
 
 ###############

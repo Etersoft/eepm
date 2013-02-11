@@ -39,8 +39,8 @@ See detailed description here: http://wiki.etersoft.ru/EPM
 %install
 # install to datadir and so on
 %makeinstall version=%version-%release
-./pack_in_onefile.sh
-install -m 0755 *packed.sh %buildroot/%_datadir/%name/
+install -m 0755 packed/epm.sh %buildroot/%_datadir/%name/epm-packed.sh
+install -m 0755 packed/serv.sh %buildroot/%_datadir/%name/serv-packed.sh
 
 mkdir -p %buildroot%_sysconfdir/bash_completion.d/
 install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/serv
