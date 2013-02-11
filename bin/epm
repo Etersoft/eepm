@@ -69,6 +69,7 @@ verbose=
 quiet=
 nodeps=
 force=
+short=
 non_interactive=
 skip_installed=
 show_command_only=
@@ -230,6 +231,9 @@ check_option()
         ;;
     --force)              # HELPOPT: force install/remove package (f.i., override)
         force="--force"
+        ;;
+    --short)              # HELPOPT: short output (package instead package-version-release)
+        short="--short"
         ;;
     --auto)               # HELPOPT: non interactive mode
         non_interactive=1

@@ -24,6 +24,7 @@ epm_packages()
 case $PMTYPE in
 	apt-rpm)
 		CMD="rpm -qa $pkg_filenames"
+		[ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n $pkg_filenames"
 		;;
 	apt-dpkg)
 		CMD="dpkg -l $pkg_filenames"

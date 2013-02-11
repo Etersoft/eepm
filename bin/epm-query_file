@@ -63,6 +63,7 @@ dpkg_print_name_version()
 
 __do_query()
 {
+    local CMD
     case $PMTYPE in
         apt-rpm)
             CMD="rpm -qf"
@@ -96,8 +97,48 @@ __do_query()
     docmd $CMD $@
 }
 
+
+__do_short_query()
+{
+    local CMD
+    case $PMTYPE in
+        *-rpm)
+            CMD="rpm -qf --queryformat %{NAME}\n"
+            ;;
+        NOapt-dpkg)
+            showcmd dpkg -S $1
+            dpkg_print_name_version $(dpkg -S $1 | sed -e "s|:.*||")
+            return ;;
+        NOemerge)
+            CMD="equery belongs"
+            ;;
+        NOpacman)
+            CMD="pacman -Qo"
+            ;;
+        NOslackpkg)
+            # note: need remove leading slash for grep
+            docmd grep -R "$(echo $@ | sed -e 's|^/\+||g')" /var/log/packages | sed -e "s|/var/log/packages/||g"
+            return
+            ;;
+        *)
+            fatal "Do not known query command for $PMTYPE"
+            ;;
+    esac
+
+    docmd $CMD $@
+}
+
+
 epm_query_file()
 {
+    # in short mode print handle only real names and do short output
+    # TODO: move to separate command?
+    if [ -n "$short" ] ; then
+        [ -n "$pkg_files" ] || fatal "Run query without file names (needed path to files)"
+        __do_short_query $pkg_files
+         return
+    fi
+
     # file can exists or not
     [ -n "$pkg_filenames" ] || fatal "Run query without file names"
 
