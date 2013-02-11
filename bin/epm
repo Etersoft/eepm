@@ -165,6 +165,9 @@ check_command()
     -qa|list|packages|-l) # HELPCMD: list of installed package(s)
         epm_cmd=packages
         ;;
+    programs)             # HELPCMD: list of installed program(s)
+        epm_cmd=programs
+        ;;
 
 # Repository control
     update)               # HELPCMD: update remote package repository databases
