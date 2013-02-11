@@ -28,7 +28,7 @@ epm_remove_low()
 		apt-dpkg)
 			sudocmd dpkg -P $@
 			return ;;
-		pkg_add)
+		pkgsrc)
 			sudocmd pkg_delete -r $@
 			return ;;
 		emerge)
@@ -55,7 +55,7 @@ epm_remove_names()
 		urpm-rpm)
 			sudocmd urpme $@
 			return ;;
-		pkg_add) # without dependencies
+		pkgsrc) # without dependencies
 			sudocmd pkg_delete $@
 			return ;;
 		emerge)
@@ -127,7 +127,7 @@ epm_print_remove_command()
 		apt-dpkg)
 			echo "dpkg -P $@"
 			;;
-		pkg_add)
+		pkgsrc)
 			echo "pkg_delete -r $@"
 			;;
 		emerge)

@@ -200,8 +200,8 @@ case $DISTRNAME in
 	Mandriva|ROSA)
 		CMD="urpm-rpm"
 		;;
-	FreeBSD)
-		CMD="pkg_add"
+	FreeBSD|NetBSD|OpenBSD|Solaris)
+		CMD="pkgsrc"
 		;;
 	Gentoo)
 		CMD="emerge"

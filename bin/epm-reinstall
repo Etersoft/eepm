@@ -37,7 +37,7 @@ epm_reinstall_names()
 		zypper-rpm)
 			sudocmd zypper install $@
 			return ;;
-		pkg_add)
+		pkgsrc)
 			sudocmd pkg_add -r $@
 			return ;;
 		pacman)

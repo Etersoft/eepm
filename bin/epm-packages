@@ -35,7 +35,7 @@ case $PMTYPE in
 	emerge)
 		CMD="qlist -I"
 		;;
-	pkg_add)
+	pkgsrc)
 		CMD="pkg_info"
 		;;
 	pacman)

@@ -63,7 +63,7 @@ epm_install_names()
 		urpm-rpm)
 			sudocmd urpmi $URPMOPTIONS $@
 			return ;;
-		pkg_add)
+		pkgsrc)
 			sudocmd pkg_add -r $@
 			return ;;
 		emerge)
@@ -112,7 +112,7 @@ epm_ni_install_names()
 			# FIXME: returns true ever no package found, need check for "no found", "Nothing to do."
 			yes | sudocmd zypper --non-interactive $ZYPPEROPTIONS install $@
 			return ;;
-		pkg_add)
+		pkgsrc)
 			sudocmd pkg_add -r $@
 			return ;;
 		pacman)
@@ -184,7 +184,7 @@ epm_install_files()
             URPMOPTIONS=--no-verify-rpm
             # use install_names
             ;;
-        pkg_add)
+        pkgsrc)
             sudocmd pkg_add $@
             return ;;
         pacman)
@@ -208,7 +208,7 @@ epm_print_install_command()
         apt-dpkg)
             echo "dpkg -i $@"
             ;;
-        pkg_add)
+        pkgsrc)
             echo "pkg_add $@"
             ;;
         pacman)

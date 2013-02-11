@@ -46,7 +46,7 @@ epm_upgrade()
 	emerge)
 		CMD="emerge -NuDa world"
 		;;
-	pkg_add)
+	pkgsrc)
 		CMD="freebsd-update fetch install"
 		;;
 	chocolatey)

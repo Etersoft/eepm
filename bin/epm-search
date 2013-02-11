@@ -31,7 +31,7 @@ case $PMTYPE in
 	urpm-rpm)
 		CMD="urpmq -y"
 		;;
-	pkg_add)
+	pkgsrc)
 		CMD="pkg_info -x"
 		;;
 	emerge)
