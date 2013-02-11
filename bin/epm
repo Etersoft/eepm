@@ -84,11 +84,17 @@ case $progname in
     epme)
         epm_cmd=remove
         ;;
+    epmcl)
+        epm_cmd=changelog
+        ;;
     epms)
         epm_cmd=search
         ;;
     epmq)
         epm_cmd=query
+        ;;
+    epmqi)
+        epm_cmd=info
         ;;
     epmqf)
         epm_cmd=query_file
