@@ -26,9 +26,9 @@ _query_via_packages_list()
 	local res=0
 	local firstpkg=$1
 	shift
-	epm_packages | grep "$firstpkg-" || res=1
+	epm_packages | grep -- "$firstpkg-" || res=1
 	for pkg in "$@" ; do
-		epm_packages 2>/dev/null | grep "$pkg-" || res=1
+		epm_packages 2>/dev/null | grep -- "$pkg-" || res=1
 	done
 	return $res
 }

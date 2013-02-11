@@ -24,8 +24,8 @@ print_apt_sources_list()
         test -r "$i" || continue
         #echo
         #echo "$i:"
-        grep -v "^#" $i
-    done | grep -v "^ *\$"
+        grep -v -- "^#" $i
+    done | grep -v -- "^ *\$"
 }
 
 epm_repolist()
@@ -57,10 +57,10 @@ case $PMTYPE in
 		docmd layman -L
 		;;
 	pacman)
-		docmd grep -v "^#\|^$" /etc/pacman.conf
+		docmd grep -v -- "^#\|^$" /etc/pacman.conf
 		;;
 	slackpkg)
-		docmd grep -v "^#\|^$" /etc/slackpkg/mirrors
+		docmd grep -v -- "^#\|^$" /etc/slackpkg/mirrors
 		;;
 	*)
 		fatal "Do not known command for $PMTYPE"

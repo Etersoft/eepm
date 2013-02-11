@@ -46,6 +46,8 @@ case $PMTYPE in
 			[ -n "$PKGLIST" ] || break
 			sudocmd yum remove $PKGLIST
 		done
+
+		docmd rpm -Va --nofiles --nodigest
 		;;
 	urpm-rpm)
 		sudocmd urpme --auto-orphans

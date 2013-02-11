@@ -86,7 +86,7 @@ __do_query()
             ;;
         slackpkg)
             # note: need remove leading slash for grep
-            docmd grep -R "$(echo $@ | sed -e 's|^/\+||g')" /var/log/packages | sed -e "s|/var/log/packages/||g"
+            docmd grep -R -- "$(echo $@ | sed -e 's|^/\+||g')" /var/log/packages | sed -e "s|/var/log/packages/||g"
             return
             ;;
         *)

@@ -36,7 +36,7 @@ local_content_search()
 
     {
         [ -n "$USETTY" ] && echo "Search in $CI and $CINOA for $1..."
-        grep -h ".*$1.*\t" $CI $CINOA | sed -e "s|\(.*\)\t\(.*\)|\2: \1|g"
+        grep -h -- ".*$1.*\t" $CI $CINOA | sed -e "s|\(.*\)\t\(.*\)|\2: \1|g"
     } | $OUTCMD
 }
 
