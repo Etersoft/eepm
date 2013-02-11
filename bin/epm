@@ -60,6 +60,7 @@ print_version()
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 
+
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
@@ -78,6 +79,7 @@ pkg_files=
 pkg_names=
 
 progname="${0##*/}"
+
 case $progname in
     epmi)
         epm_cmd=install
@@ -277,7 +279,7 @@ pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
 if [ -z "$epm_cmd" ] ; then
     print_version
     echo
-    fatal "Run $ epm --help for get help"
+    fatal "Run $ $progname --help for get help"
 fi
 
 # Run helper for command

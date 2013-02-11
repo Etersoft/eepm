@@ -51,6 +51,7 @@ install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/se
 %_bindir/eepm
 %_bindir/upm
 %_bindir/serv
+%_bindir/cerv
 %_bindir/distr_info
 %_datadir/%name/
 %_sysconfdir/bash_completion.d/serv
