@@ -186,6 +186,9 @@ check_command()
     removerepo|rr)        # HELPCMD: remove package repo
         epm_cmd=removerepo
         ;;
+    release-upgrade)      # HELPCMD: update whole system to the next release
+        epm_cmd=release_upgrade
+        ;;
 
 # Other commands
     clean)                # HELPCMD: clean local package cache

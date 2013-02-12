@@ -1,0 +1,68 @@
+#!/bin/sh
+#
+# Copyright (C) 2013  Etersoft
+# Copyright (C) 2013  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+epm_release_upgrade()
+{
+	echo "Start upgrade whole system to the next release"
+	echo "Check also http://wiki.etersoft.ru/Admin/UpdateLinux"
+
+	case $PMTYPE in
+	apt-rpm)
+		docmd epm update
+		docmd epm install apt rpm
+		showcmd "TODO: change repo"
+		docmd epm Upgrade
+		;;
+	apt-dpkg)
+		sudocmd do-release-upgrade -d
+		;;
+	yum-rpm)
+		docmd epm install rpm yum
+		sudocmd yum clean all
+		# TODO
+		showcmd rpm -Uvh http://mirror.yandex.ru/fedora/linux/releases/16/Fedora/x86_64/os/Packages/fedora-release-16-1.noarch.rpm
+		docmd epm Upgrade
+		;;
+	urpm-rpm)
+		sudocmd urpmi.removemedia -av
+		# TODO
+		showcmd urpmi.addmedia --distrib http://mirror.yandex.ru/mandriva/devel/2010.2/i586/
+		sudocmd urpmi --auto-update --replacefiles
+		;;
+	zypper-rpm)
+		docmd epm repolist
+		# TODO
+		# sudocmd zypper rr <номер_репозитория>
+		showcmd rr N
+		showcmd epm ar http://mirror.yandex.ru/opensuse/distribution/11.1/repo/oss 11.1oss
+		showcmd zypper ref
+		docmd epm update
+		docmd epm install rpm zypper
+		docmd epm upgrade
+		;;
+	pacman)
+		#epm upgrade
+		;;
+	*)
+		fatal "Do not known command for $PMTYPE"
+		;;
+	esac
+
+	sudocmd $CMD $pkg_filenames
+}
