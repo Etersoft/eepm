@@ -28,9 +28,11 @@ case $PMTYPE in
 		;;
 	apt-dpkg)
 		CMD="dpkg -l $pkg_filenames"
+		[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${Package}\n $pkg_filenames"
 		;;
 	yum-rpm|urpm-rpm|zypper-rpm|dnf-rpm)
 		CMD="rpm -qa $pkg_filenames"
+		[ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n $pkg_filenames"
 		;;
 # Note: dnf has dnf list command
 	emerge)
