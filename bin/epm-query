@@ -26,9 +26,10 @@ _query_via_packages_list()
 	local res=0
 	local firstpkg=$1
 	shift
-	epm_packages | grep -- "$firstpkg-" || res=1
+	# separate first line for print out command
+	short=1 pkg_filenames=$firstpkg epm_packages | grep -- "^$firstpkg$" || res=1
 	for pkg in "$@" ; do
-		epm_packages 2>/dev/null | grep -- "$pkg-" || res=1
+		short=1 pkg_filenames=$pkg epm_packages 2>/dev/null | grep -- "^$pkg$" || res=1
 	done
 	return $res
 }
@@ -40,7 +41,7 @@ __epm_query_file()
 	[ -z "$*" ] && return
 
 	case $PMTYPE in
-		apt-rpm|yum-rpm|urpm-rpm|zypper-rpm)
+		*-rpm)
 			CMD="rpm -qp"
 			;;
 		apt-dpkg)
@@ -65,7 +66,7 @@ __epm_query_name()
 	[ -z "$*" ] && return
 
 	case $PMTYPE in
-		apt-rpm|yum-rpm|urpm-rpm|zypper-rpm)
+		*-rpm)
 			CMD="rpm -q"
 			;;
 		apt-dpkg)
