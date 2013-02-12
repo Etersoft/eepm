@@ -26,6 +26,11 @@ __use_zypper_dry_run()
     a= zypper install --help 2>&1 | grep -q -- "--dry-run" && echo "--dry-run"
 }
 
+__use_yum_assumeno()
+{
+    a= yum --help 2>&1 | grep -q -- "--assumeno"
+}
+
 _epm_do_simulate()
 {
 	local CMD
@@ -36,9 +41,19 @@ _epm_do_simulate()
     		CMD="apt-get --simulate install"
     		;;
     	yum-rpm)
-    		LC_ALL=C sudocmd yum --assumeno install $filenames
-    		# FIXME: check only error output
-    		LC_ALL=C sudocmd yum --assumeno install $filenames 2>&1 | grep "^No package" && return 1
+    		if __use_yum_assumeno ; then
+    			LC_ALL=C sudocmd yum --assumeno install $filenames
+    			# FIXME: check only error output
+    			LC_ALL=C sudocmd yum --assumeno install $filenames 2>&1 | grep "^No package" && return 1
+    			LC_ALL=C sudocmd yum --assumeno install $filenames 2>&1 | grep "^Complete!" && return 0
+    			LC_ALL=C sudocmd yum --assumeno install $filenames >/dev/null 2>&1 || return
+    		else
+    			LC_ALL=C echo n | sudocmd yum install $filenames
+    			# FIXME: check only error output
+    			LC_ALL=C echo n | sudocmd yum install $filenames 2>&1 | grep "^No package" && return 1
+    			LC_ALL=C echo n | sudocmd yum install $filenames 2>&1 | grep "^Complete!" && return 0
+    			LC_ALL=C echo n | sudocmd yum install $filenames >/dev/null 2>&1 || return
+    		fi
     		return 0 ;;
     	urpm-rpm)
     		CMD="urpmi --test --auto"
