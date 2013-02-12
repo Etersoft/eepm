@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.1.8
+Version: 1.1.9
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -57,6 +57,13 @@ install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/se
 %_sysconfdir/bash_completion.d/serv
 
 %changelog
+* Tue Feb 12 2013 Vitaly Lipatov <lav@altlinux.ru> 1.1.9-alt1
+- fix install with dpkg
+- add initial release-upgrade command
+- add more pacman commands
+- epm-packages: add --short support for dpkg and rpm
+- add cerv alias for serv support
+
 * Mon Feb 11 2013 Vitaly Lipatov <lav@altlinux.ru> 1.1.8-alt1
 - add epm programs command (lists installed programs, detected by desktop files)
 - add initial support for short output (just package name, without version-release)
