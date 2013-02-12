@@ -18,8 +18,10 @@
 #
 
 PROGDIR=$(dirname $0)
+[ "$PROGDIR" = "." ] && PROGDIR=$(pwd)
+
 # will replaced to /usr/share/eepm during install
-SHAREDIR=$(dirname $0)
+SHAREDIR=$PROGDIR
 
 load_helper()
 {
@@ -146,6 +148,10 @@ strip_spaces()
         echo "$*" | filter_strip_spaces
 }
 
+epm()
+{
+	$PROGDIR/epm $@
+}
 
 fatal()
 {
@@ -266,6 +272,8 @@ case $PMTYPE in
 		;;
 	pacman)
 		echo "You need manually add repo to /etc/pacman.conf"
+		# Only for alone packages:
+		#sudocmd repo-add $pkg_filenames
 		;;
 	npackd)
 		docmd npackdcl add-repo --url=$pkg_filenames
@@ -339,9 +347,10 @@ __epm_changelog_local_names()
 			;;
 		emerge)
 			docmd view /usr/portage/category/$1/ChangeLog | less
+			# docmd equery changes -f $1 | less
 			;;
 		pacman)
-			docmd pacman -Qc package | less
+			docmd pacman -Qc $1 | less
 			;;
 		*)
 			fatal "Do not known command for $PMTYPE"
@@ -427,6 +436,9 @@ case $PMTYPE in
 		done
 
 		docmd rpm -Va --nofiles --nodigest
+		;;
+	pacman)
+		sudocmd revdep-rebuild
 		;;
 	urpm-rpm)
 		sudocmd urpme --auto-orphans
@@ -542,6 +554,9 @@ case $PMTYPE in
 	urpm-rpm)
 		sudocmd urpmi --clean
 		;;
+	pacman)
+		sudocmd pacman -Sc
+		;;
 	zypper-rpm)
 		sudocmd zypper clean
 		;;
@@ -599,7 +614,8 @@ __epm_filelist_name()
 			CMD="rpm -ql"
 			;;
 		pacman)
-			CMD="pacman -Ql"
+			docmd pacman -Ql $pkg_names | sed -e "s|.* ||g"
+			return
 			;;
 		slackpkg)
 			is_installed $pkg_names || fatal "Query filelist for non installed packages does not realized"
@@ -666,6 +682,7 @@ case $PMTYPE in
 		docmd zypper info $pkg_names
 		;;
 	pacman)
+		is_installed $pkg_names && docmd pacman -Qi $pkg_names && return
 		docmd pacman -Si $pkg_names
 		;;
 	npackd)
@@ -822,7 +839,9 @@ epm_install_files()
 
             [ -n "$nodeps" ] && return
             # fall to apt-get -f install for fix deps
-            APTOPTIONS="-f"
+            # can't use APTOPTIONS with empty install args
+            epm_install_names -f
+            return
             ;;
         yum-rpm|dnf-rpm)
             sudocmd rpm -Uvh $force $nodeps $@ && return
@@ -922,9 +941,11 @@ case $PMTYPE in
 		;;
 	apt-dpkg)
 		CMD="dpkg -l $pkg_filenames"
+		[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${Package}\n $pkg_filenames"
 		;;
 	yum-rpm|urpm-rpm|zypper-rpm|dnf-rpm)
 		CMD="rpm -qa $pkg_filenames"
+		[ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n $pkg_filenames"
 		;;
 	emerge)
 		CMD="qlist -I"
@@ -1253,6 +1274,58 @@ epm_reinstall()
 }
 
 
+# File bin/epm-release-upgrade:
+
+epm_release_upgrade()
+{
+	echo "Start upgrade whole system to the next release"
+	echo "Check also http://wiki.etersoft.ru/Admin/UpdateLinux"
+
+	case $PMTYPE in
+	apt-rpm)
+		docmd epm update
+		docmd epm install apt rpm
+		showcmd "TODO: change repo"
+		docmd epm Upgrade
+		;;
+	apt-dpkg)
+		sudocmd do-release-upgrade -d
+		;;
+	yum-rpm)
+		docmd epm install rpm yum
+		sudocmd yum clean all
+		# TODO
+		showcmd rpm -Uvh http://mirror.yandex.ru/fedora/linux/releases/16/Fedora/x86_64/os/Packages/fedora-release-16-1.noarch.rpm
+		docmd epm Upgrade
+		;;
+	urpm-rpm)
+		sudocmd urpmi.removemedia -av
+		# TODO
+		showcmd urpmi.addmedia --distrib http://mirror.yandex.ru/mandriva/devel/2010.2/i586/
+		sudocmd urpmi --auto-update --replacefiles
+		;;
+	zypper-rpm)
+		docmd epm repolist
+		# TODO
+		# sudocmd zypper rr <номер_репозитория>
+		showcmd rr N
+		showcmd epm ar http://mirror.yandex.ru/opensuse/distribution/11.1/repo/oss 11.1oss
+		showcmd zypper ref
+		docmd epm update
+		docmd epm install rpm zypper
+		docmd epm upgrade
+		;;
+	pacman)
+		#epm upgrade
+		;;
+	*)
+		fatal "Do not known command for $PMTYPE"
+		;;
+	esac
+
+	sudocmd $CMD $pkg_filenames
+}
+
 # File bin/epm-remove:
 
 epm_remove_low()
@@ -1270,6 +1343,9 @@ epm_remove_low()
 			return ;;
 		emerge)
 			sudocmd emerge --unmerge $@
+			return ;;
+		pacman)
+			sudocmd pacman -R $@
 			return ;;
 		slackpkg)
 			sudocmd /sbin/removepkg $@
@@ -1300,7 +1376,7 @@ epm_remove_names()
 			sudocmd emerge -aC $@
 			return ;;
 		pacman)
-			sudocmd pacman -R $@
+			sudocmd pacman -Rs $@
 			return ;;
 		yum-rpm)
 			sudocmd yum remove $@
@@ -1339,7 +1415,7 @@ epm_remove_nonint()
 			sudocmd urpme --auto $@
 			return ;;
 		pacman)
-			sudocmd pacman -R --noconfirm $@
+			sudocmd pacman -Rs --noconfirm $@
 			return ;;
 		yum-rpm)
 			sudocmd yum -y remove $@
@@ -1365,6 +1441,9 @@ epm_print_remove_command()
 			;;
 		pkgsrc)
 			echo "pkg_delete -r $@"
+			;;
+		pacman)
+			echo "pacman -R $@"
 			;;
 		emerge)
 			echo "emerge --unmerge $@"
@@ -1528,6 +1607,9 @@ case $PMTYPE in
 		;;
 	yum-rpm)
 		CMD="yum deplist"
+		;;
+	pacman)
+		CMD="pactree"
 		;;
 	apt-dpkg)
 		CMD="apt-cache depends"
@@ -2164,11 +2246,12 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.1.8"
+        echo "EPM package manager version 1.1.9"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
+
 
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
@@ -2188,6 +2271,7 @@ pkg_files=
 pkg_names=
 
 progname="${0##*/}"
+
 case $progname in
     epmi)
         epm_cmd=install
@@ -2292,6 +2376,9 @@ check_command()
     removerepo|rr)        # HELPCMD: remove package repo
         epm_cmd=removerepo
         ;;
+    release-upgrade)      # HELPCMD: update whole system to the next release
+        epm_cmd=release_upgrade
+        ;;
 
 # Other commands
     clean)                # HELPCMD: clean local package cache
@@ -2387,7 +2474,7 @@ pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
 if [ -z "$epm_cmd" ] ; then
     print_version
     echo
-    fatal "Run $ epm --help for get help"
+    fatal "Run $ $progname --help for get help"
 fi
 
 # Run helper for command

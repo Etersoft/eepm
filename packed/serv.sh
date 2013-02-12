@@ -144,6 +144,10 @@ strip_spaces()
         echo "$*" | filter_strip_spaces
 }
 
+epm()
+{
+	$PROGDIR/epm $@
+}
 
 fatal()
 {
@@ -917,13 +921,15 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.1.8"
+        echo "Service manager version 1.1.9"
         echo "Running on $($DISTRVENDOR)"
         echo "Copyright (c) Etersoft 2012, 2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 
-Usage="Usage: serv [options] [<service>] [<command>] [params]..."
+progname="${0##*/}"
+
+Usage="Usage: $progname [options] [<service>] [<command>] [params]..."
 Descr="serv - Service manager"
 
 set_service_type
@@ -935,6 +941,7 @@ show_command_only=
 serv_cmd=
 service_name=
 params=
+
 
 check_command()
 {
@@ -1025,7 +1032,7 @@ echover "command: $serv_cmd"
 if [ "$serv_cmd" != "list" ] && [ "$serv_cmd" != "list_all" ] && [ -z "$service_name" ] ; then
     print_version
     echo
-    fatal "Run $ serv --help for get help"
+    fatal "Run $ $progname --help for get help"
 fi
 
 if [ -z "$serv_cmd" ] ; then
