@@ -26,7 +26,8 @@ epm_remove_low()
 			sudocmd rpm -ev $nodeps $@
 			return ;;
 		apt-dpkg)
-			sudocmd dpkg -P $@
+			[ -n "$nodeps" ] && nodeps="--force-all"
+			sudocmd dpkg -P $nodeps $@
 			return ;;
 		pkgsrc)
 			sudocmd pkg_delete -r $@
