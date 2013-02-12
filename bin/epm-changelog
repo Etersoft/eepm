@@ -51,9 +51,10 @@ __epm_changelog_local_names()
 			;;
 		emerge)
 			docmd view /usr/portage/category/$1/ChangeLog | less
+			# docmd equery changes -f $1 | less
 			;;
 		pacman)
-			docmd pacman -Qc package | less
+			docmd pacman -Qc $1 | less
 			;;
 		*)
 			fatal "Do not known command for $PMTYPE"

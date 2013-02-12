@@ -33,6 +33,9 @@ case $PMTYPE in
 	urpm-rpm)
 		sudocmd urpmi --clean
 		;;
+	pacman)
+		sudocmd pacman -Sc
+		;;
 	zypper-rpm)
 		sudocmd zypper clean
 		;;

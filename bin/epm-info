@@ -56,6 +56,7 @@ case $PMTYPE in
 		docmd zypper info $pkg_names
 		;;
 	pacman)
+		is_installed $pkg_names && docmd pacman -Qi $pkg_names && return
 		docmd pacman -Si $pkg_names
 		;;
 	npackd)

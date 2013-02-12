@@ -49,6 +49,9 @@ case $PMTYPE in
 
 		docmd rpm -Va --nofiles --nodigest
 		;;
+	pacman)
+		sudocmd revdep-rebuild
+		;;
 	urpm-rpm)
 		sudocmd urpme --auto-orphans
 		;;

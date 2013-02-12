@@ -22,7 +22,7 @@ epm_requires()
 	local CMD
 	[ -n "$pkg_filenames" ] || fatal "Run query without names"
 
-# by file package
+# by package file
 case $PMTYPE in
 	apt-rpm|urpm-rpm|zypper-rpm|yum-rpm)
 		CMD="rpm -q --requires -p"
@@ -39,7 +39,7 @@ esac
 
 [ -n "$pkg_files" ] && docmd $CMD $pkg_files
 
-# by file name
+# by package name
 case $PMTYPE in
 	apt-rpm|urpm-rpm|zypper-rpm)
 		# FIXME: use hi level commands
@@ -47,6 +47,9 @@ case $PMTYPE in
 		;;
 	yum-rpm)
 		CMD="yum deplist"
+		;;
+	pacman)
+		CMD="pactree"
 		;;
 	apt-dpkg)
 		CMD="apt-cache depends"

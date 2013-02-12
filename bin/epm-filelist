@@ -63,7 +63,8 @@ __epm_filelist_name()
 			CMD="rpm -ql"
 			;;
 		pacman)
-			CMD="pacman -Ql"
+			docmd pacman -Ql $pkg_names | sed -e "s|.* ||g"
+			return
 			;;
 		slackpkg)
 			is_installed $pkg_names || fatal "Query filelist for non installed packages does not realized"

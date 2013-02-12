@@ -40,6 +40,8 @@ case $PMTYPE in
 		;;
 	pacman)
 		echo "You need manually add repo to /etc/pacman.conf"
+		# Only for alone packages:
+		#sudocmd repo-add $pkg_filenames
 		;;
 	npackd)
 		docmd npackdcl add-repo --url=$pkg_filenames
