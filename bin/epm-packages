@@ -42,7 +42,11 @@ case $PMTYPE in
 		CMD="pkg_info"
 		;;
 	pacman)
-		CMD="pacman -Qs"
+		CMD="pacman -Qs $pkg_filenames"
+		if [ -n "$short" ] ; then
+			docmd $CMD | sed -e "s| .*||g" -e "s|.*/||g" | grep -v "^$"
+			return
+		fi
 		;;
 	npackd)
 		CMD="npackdcl list"
