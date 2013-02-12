@@ -158,7 +158,9 @@ epm_install_files()
 
             [ -n "$nodeps" ] && return
             # fall to apt-get -f install for fix deps
-            APTOPTIONS="-f"
+            # can't use APTOPTIONS with empty install args
+            epm_install_names -f
+            return
             ;;
         yum-rpm|dnf-rpm)
             sudocmd rpm -Uvh $force $nodeps $@ && return
