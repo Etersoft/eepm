@@ -1,0 +1,2 @@
+#!/bin/sh
+swine autotest/$1
