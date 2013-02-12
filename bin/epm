@@ -18,8 +18,10 @@
 #
 
 PROGDIR=$(dirname $0)
+[ "$PROGDIR" = "." ] && PROGDIR=$(pwd)
+
 # will replaced to /usr/share/eepm during install
-SHAREDIR=$(dirname $0)
+SHAREDIR=$PROGDIR
 
 load_helper()
 {
