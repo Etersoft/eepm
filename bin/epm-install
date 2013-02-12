@@ -70,7 +70,7 @@ epm_install_names()
 			sudocmd emerge -uD $@
 			return ;;
 		pacman)
-			sudocmd pacman -S $@
+			sudocmd pacman -S $force $nodeps $@
 			return ;;
 		yum-rpm)
 			sudocmd yum $YUMOPTIONS install $@
@@ -116,7 +116,7 @@ epm_ni_install_names()
 			sudocmd pkg_add -r $@
 			return ;;
 		pacman)
-			sudocmd pacman -S --noconfirm $@
+			sudocmd pacman -S --noconfirm $force $nodeps $@
 			return ;;
 		npackd)
 			#  npackdcl update --package=<package> (remove old and install new)
@@ -190,7 +190,7 @@ epm_install_files()
             sudocmd pkg_add $@
             return ;;
         pacman)
-            sudocmd pacman -U --noconfirm $@
+            sudocmd pacman -U --noconfirm $force $nodeps $@
             return ;;
         slackpkg)
             sudocmd /sbin/installpkg $@
@@ -214,7 +214,7 @@ epm_print_install_command()
             echo "pkg_add $@"
             ;;
         pacman)
-            echo "pacman -U --noconfirm $@"
+            echo "pacman -U --noconfirm --force $nodeps $@"
             ;;
         slackpkg)
             echo "/sbin/installpkg $@"
