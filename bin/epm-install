@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012  Etersoft
-# Copyright (C) 2012  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-13  Etersoft
+# Copyright (C) 2012-13  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -17,17 +17,13 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+load_helper epm-query
+
 # TODO: use when run install with epm --skip-installed install
 filter_out_installed_packages()
 {
 	[ -z "$skip_installed" ] && cat && return
 
-	# TODO: rewrite with use is_installed
-	# TODO: use this more effectively way
-	#for i in $(cat) ; do
-	#	rpm -q $i >/dev/null && continue
-	#	echo $i
-	#done | 
 	case $PKGFORMAT in
 		"rpm")
 			LANG=C LC_ALL=C xargs -n1 rpm -q 2>&1 | grep 'is not installed' |
@@ -38,7 +34,9 @@ filter_out_installed_packages()
 				sed -e 's|^.*no packages found matching \(.*\)|\1|g'
 			;;
 		*)
-			cat
+			for i in $(cat) ; do
+				is_installed $i || echo $i
+			done
 			;;
 	esac | sed -e "s|rpm-build-altlinux-compat[^ ]*||g" | filter_strip_spaces
 }
