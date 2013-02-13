@@ -47,7 +47,7 @@ pkgtype()
 		freebsd) echo "tbz" ;;
 		sunos) echo "pkg.gz" ;;
 		slackware|mopslinux) echo "tgz" ;;
-		archlinux) echo "tar.xz" ;;
+		archlinux) echo "pkg.tar.xz" ;;
 		gentoo) echo "tbz2" ;;
 		windows) echo "exe" ;;
 		debian|ubuntu|mint|runtu) echo "deb" ;;
