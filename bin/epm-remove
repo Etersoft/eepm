@@ -67,7 +67,7 @@ epm_remove_names()
 			sudocmd emerge -aC $@
 			return ;;
 		pacman)
-			sudocmd pacman -Rs $@
+			sudocmd pacman -Rc $@
 			return ;;
 		yum-rpm)
 			sudocmd yum remove $@
@@ -107,7 +107,7 @@ epm_remove_nonint()
 			sudocmd urpme --auto $@
 			return ;;
 		pacman)
-			sudocmd pacman -Rs --noconfirm $@
+			sudocmd pacman -Rc --noconfirm $@
 			return ;;
 		yum-rpm)
 			sudocmd yum -y remove $@

@@ -190,7 +190,9 @@ epm_install_files()
             sudocmd pkg_add $@
             return ;;
         pacman)
-            sudocmd pacman -U --noconfirm $force $nodeps $@
+            sudocmd pacman -U --noconfirm $force $nodeps $@ && return
+            [ -n "$nodeps" ] && return
+            sudocmd pacman -U $force $@
             return ;;
         slackpkg)
             sudocmd /sbin/installpkg $@

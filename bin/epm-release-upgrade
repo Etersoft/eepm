@@ -57,7 +57,7 @@ epm_release_upgrade()
 		docmd epm upgrade
 		;;
 	pacman)
-		#epm upgrade
+		epm Upgrade
 		;;
 	*)
 		fatal "Do not known command for $PMTYPE"
