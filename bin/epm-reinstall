@@ -17,6 +17,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+load_helper epm-install
+
 # copied from etersoft-build-utils/share/eterbuild/functions/rpmpkg
 epm_reinstall_names()
 {
@@ -25,31 +27,16 @@ epm_reinstall_names()
 		apt-rpm|apt-dpkg)
 			sudocmd apt-get --reinstall install $@
 			return ;;
-		yum-rpm)
-			sudocmd yum install $@
-			return ;;
 		dnf-rpm)
 			sudocmd dnf reinstall $@
-			return ;;
-		urpm-rpm)
-			sudocmd urpmi $@
-			return ;;
-		zypper-rpm)
-			sudocmd zypper install $@
-			return ;;
-		pkgsrc)
-			sudocmd pkg_add -r $@
-			return ;;
-		pacman)
-			sudocmd pacman -U $@
 			return ;;
 		slackpkg)
 			sudocmd /usr/sbin/slackpkg reinstall $@
 			return ;;
-		*)
-			fatal "Do not known install command for $PMTYPE"
-			;;
 	esac
+
+	# fallback to generic install
+	epm_install_names
 }
 
 epm_reinstall_files()
