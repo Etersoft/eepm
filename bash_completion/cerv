@@ -1,0 +1,41 @@
+# cerv(8) completion
+
+# This completes on a list of all available services for the
+# 'cerv' command, followed by that script's available commands
+#
+_service_list()
+{
+    COMPREPLY=( $( cerv list-all 2>/dev/null ; echo "list list-all list-startup" ) )
+    COMPREPLY=( $( compgen -W '${COMPREPLY[@]}' -- "$cur" ) )
+}
+
+_service_usage_list()
+{
+    local USLIST=$(cerv ${prev##*/} usage 2>/dev/null | sed -e "y/|/ /" -ne "s/^.*\(u\|U\|msg_u\)sage.*{\(.*\)}.*$/\2/p")
+    COMPREPLY=( $( compgen -W '$USLIST' -- "$cur" ) )
+}
+
+
+_cerv()
+{
+    local cur prev
+
+    COMPREPLY=()
+    _get_comp_words_by_ref cur prev
+
+    # don't complete for things like killall, ssh and mysql if it's
+    # the standalone command, rather than the init script
+    [[ ${COMP_WORDS[0]} != "cerv" ]] && return 0
+
+    # don't complete past 2nd token
+    [ $COMP_CWORD -gt 2 ] && return 0
+
+    if [[ $COMP_CWORD -eq 1 && $prev == "cerv" ]]; then
+        _service_list
+    else
+        _service_usage_list
+    fi
+
+    return 0
+} &&
+complete -F _cerv cerv
