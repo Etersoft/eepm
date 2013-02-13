@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.1.9
+Version: 1.2.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -57,6 +57,15 @@ install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/se
 %_sysconfdir/bash_completion.d/serv
 
 %changelog
+* Thu Feb 14 2013 Vitaly Lipatov <lav@altlinux.ru> 1.2.0-alt1
+- epm-reinstall: fallback to install if the command is the same
+- epm-install: realize already installed with is_installed for any distro
+- epm-install: allow nodeps and force to pacman commands
+- epm-query: optimize, use --short
+- epm-simulate: fix for yum without --assumeno
+- epm-packages: add short support for pacman
+- epm-remove: add --nodeps support for dpkg
+
 * Tue Feb 12 2013 Vitaly Lipatov <lav@altlinux.ru> 1.1.9-alt1
 - fix install with dpkg
 - add initial release-upgrade command
