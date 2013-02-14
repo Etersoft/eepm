@@ -91,7 +91,8 @@ __epm_query_name()
 # check if pkg is installed
 is_installed()
 {
-	pkg_filenames="$@" epm_query >/dev/null
+	#pkg_filenames="$@" epm_query >/dev/null
+	epm installed $@ >/dev/null
 }
 
 epm_query()
