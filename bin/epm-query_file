@@ -89,6 +89,9 @@ __do_query()
             docmd grep -R -- "$(echo $@ | sed -e 's|^/\+||g')" /var/log/packages | sed -e "s|/var/log/packages/||g"
             return
             ;;
+        ipkg)
+            CMD="ipkg files"
+            ;;
         *)
             fatal "Do not known query command for $PMTYPE"
             ;;

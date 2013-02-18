@@ -66,6 +66,9 @@ case $PMTYPE in
 	slackpkg)
 		docmd /usr/sbin/slackpkg info $pkg_names
 		;;
+	ipkg)
+		docmd ipkg info $pkg_names
+		;;
 	*)
 		fatal "Do not known command for $PMTYPE"
 		;;

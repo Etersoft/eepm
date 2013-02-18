@@ -71,6 +71,9 @@ case $PMTYPE in
 	slackpkg)
 		CMD="/usr/sbin/slackpkg file-search"
 		;;
+	ipkg)
+		CMD="ipkg search"
+		;;
 	*)
 		fatal "Do not known search file command for $PMTYPE"
 		;;

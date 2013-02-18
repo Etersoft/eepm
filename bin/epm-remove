@@ -125,6 +125,9 @@ epm_remove_nonint()
 		slackpkg)
 			sudocmd /usr/sbin/slackpkg -batch=on -default_answer=yes remove $@
 			return ;;
+		ipkg)
+			sudocmd ipkg -force-defaults remove $@
+			return ;;
 	esac
 	return 5
 }
@@ -149,6 +152,9 @@ epm_print_remove_command()
 			;;
 		slackpkg)
 			echo "/sbin/removepkg $@"
+			;;
+		ipkg)
+			echo "ipkg remove $@"
 			;;
 		*)
 			fatal "Do not known appropriate remove command for $PMTYPE"

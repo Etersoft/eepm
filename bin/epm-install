@@ -134,6 +134,9 @@ epm_ni_install_names()
 		chocolatey)
 			docmd chocolatey install $@
 			return ;;
+		ipkg)
+			sudocmd ipkg -force-defaults install $@
+			return ;;
 		slackpkg)
 			# TODO: use upgrade if package is already installed
 			sudocmd /usr/sbin/slackpkg -batch=on -default_answer=yes install $@
@@ -232,6 +235,9 @@ epm_print_install_command()
             ;;
         npackd)
             echo "npackdcl add --package=$@"
+            ;;
+        ipkg)
+            echo "ipkg install $@"
             ;;
         *)
             fatal "Do not known appropriate install command for $PMTYPE"
