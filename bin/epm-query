@@ -95,6 +95,16 @@ is_installed()
 	epm installed $@ >/dev/null
 }
 
+# fill pkg_installed and pkg_noninstalled
+separate_installed()
+{
+	pkg_installed=
+	pkg_noninstalled=
+	for i $* ; do
+		is_installed $i && pkg_installed="$pkg_installed $i" || pkg_noninstalled="$pkg_noninstalled $i"
+	done
+}
+
 epm_query()
 {
 	[ -n "$pkg_filenames" ] || fatal "Run query without names"
