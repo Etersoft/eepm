@@ -225,6 +225,12 @@ case $DISTRNAME in
 	Windows)
 		CMD="chocolatey"
 		;;
+	MacOS)
+		CMD="homebrew"
+		;;
+	OpenWRT)
+		CMD="ipkg"
+		;;
 	*)
 		fatal "Do not known DISTRNAME $DISTRNAME"
 		;;

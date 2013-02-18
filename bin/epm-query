@@ -79,6 +79,10 @@ __epm_query_name()
 		npackd)
 			CMD="npackdcl path --package=$@"
 			;;
+		brew)
+			warning "fix query"
+			return 1
+			;;
 		*)
 			_query_via_packages_list $@
 			return

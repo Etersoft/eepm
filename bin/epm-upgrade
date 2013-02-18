@@ -52,6 +52,12 @@ epm_upgrade()
 	chocolatey)
 		CMD="chocolatey update all"
 		;;
+	homebrew)
+		CMD="brew upgrade"
+		;;
+	ipkg)
+		CMD="ipkg upgrade"
+		;;
 	slackpkg)
 		CMD="/usr/sbin/slackpkg upgrade-all"
 		;;

@@ -64,6 +64,9 @@ case $PMTYPE in
 		docmd_foreach "/usr/sbin/slackpkg search" $pkg_filenames
 		return
 		;;
+	homebrew)
+		CMD="brew search"
+		;;
 	*)
 		fatal "Do not known search command for $PMTYPE"
 		;;

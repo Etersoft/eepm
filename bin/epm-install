@@ -83,8 +83,19 @@ epm_install_names()
 			sudocmd mpkg install $@
 			return ;;
 		slackpkg)
+			separate_installed $@
 			# TODO: use upgrade if package is already installed
-			sudocmd /usr/sbin/slackpkg install $@
+			[ -n "$pkg_noninstalled" ] && sudocmd /usr/sbin/slackpkg install $pkg_noninstalled
+			[ -n "$pkg_installed" ] && sudocmd /usr/sbin/slackpkg upgrade $pkg_installed
+			return ;;
+		homebrew)
+			separate_installed $@
+			[ -n "$pkg_noninstalled" ] && sudocmd brew install $pkg_noninstalled
+			[ -n "$pkg_installed" ] && sudocmd brew upgrade $pkg_installed
+			return ;;
+		ipkg)
+			[ -n "$force" ] && force=-force-depends
+			sudocmd ipkg $force install $@
 			return ;;
 		*)
 			fatal "Do not known install command for $PMTYPE"

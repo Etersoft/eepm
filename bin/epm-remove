@@ -90,6 +90,13 @@ epm_remove_names()
 		slackpkg)
 			sudocmd /usr/sbin/slackpkg remove $@
 			return ;;
+		homebrew)
+			sudocmd brew remove $@
+			return ;;
+		ipkg)
+			[ -n "$force" ] && force=-force-depends
+			sudocmd ipkg $force remove $@
+			return ;;
 		*)
 			fatal "Do not known command for $PMTYPE"
 			;;

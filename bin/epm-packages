@@ -57,6 +57,12 @@ case $PMTYPE in
 	slackpkg)
 		CMD="ls -1 /var/log/packages/"
 		;;
+	homebrew)
+		CMD="brew $pkg_filenames"
+		;;
+	ipkg)
+		CMD="ipkg list"
+		;;
 	*)
 		fatal "Do not known query command for $PMTYPE"
 		;;

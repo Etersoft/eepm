@@ -54,6 +54,12 @@ case $PMTYPE in
 	deepsolver-rpm)
 		sudocmd ds-update
 		;;
+	homebrew)
+		sudocmd brew update
+		;;
+	ipkg)
+		sudocmd ipkg update
+		;;
 	*)
 		fatal "Do not known update command for $PMTYPE"
 		;;
