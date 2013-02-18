@@ -189,6 +189,9 @@ check_command()
     release-upgrade)      # HELPCMD: update whole system to the next release
         epm_cmd=release_upgrade
         ;;
+    kernel-update|kernel-upgrade|update-kernel)      # HELPCMD: update system kernel to the last repo version
+        epm_cmd=kernel_update
+        ;;
 
 # Other commands
     clean)                # HELPCMD: clean local package cache
