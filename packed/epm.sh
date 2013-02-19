@@ -134,15 +134,6 @@ filter_strip_spaces()
                 sed -e "s|^ ||" | sed -e "s| \$||"
 }
 
-filter_pkg_verel()
-{
-	case $PKGFORMAT in
-		*)
-			cat
-			;;
-	esac
-}
-
 strip_spaces()
 {
         echo "$*" | filter_strip_spaces
@@ -195,7 +186,7 @@ set_pm_type()
 
 	# Fill for use: PMTYPE, DISTRNAME, DISTRVERSION, PKGFORMAT, PKGVENDOR, RPMVENDOR
 	DISTRVENDOR=internal_distr_info
-	[ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d)
+	[ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d) || fatal "Can't get distro name."
 	[ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
 	set_target_pkg_env
 
@@ -238,6 +229,12 @@ case $DISTRNAME in
 		;;
 	Windows)
 		CMD="chocolatey"
+		;;
+	MacOS)
+		CMD="homebrew"
+		;;
+	OpenWRT)
+		CMD="ipkg"
 		;;
 	*)
 		fatal "Do not known DISTRNAME $DISTRNAME"
@@ -692,6 +689,9 @@ case $PMTYPE in
 	slackpkg)
 		docmd /usr/sbin/slackpkg info $pkg_names
 		;;
+	ipkg)
+		docmd ipkg info $pkg_names
+		;;
 	*)
 		fatal "Do not known command for $PMTYPE"
 		;;
@@ -701,16 +701,11 @@ esac
 
 # File bin/epm-install:
 
+
 filter_out_installed_packages()
 {
 	[ -z "$skip_installed" ] && cat && return
 
-	# TODO: rewrite with use is_installed
-	# TODO: use this more effectively way
-	#for i in $(cat) ; do
-	#	rpm -q $i >/dev/null && continue
-	#	echo $i
-	#done | 
 	case $PKGFORMAT in
 		"rpm")
 			LANG=C LC_ALL=C xargs -n1 rpm -q 2>&1 | grep 'is not installed' |
@@ -721,7 +716,9 @@ filter_out_installed_packages()
 				sed -e 's|^.*no packages found matching \(.*\)|\1|g'
 			;;
 		*)
-			cat
+			for i in $(cat) ; do
+				is_installed $i || echo $i
+			done
 			;;
 	esac | sed -e "s|rpm-build-altlinux-compat[^ ]*||g" | filter_strip_spaces
 }
@@ -752,7 +749,7 @@ epm_install_names()
 			sudocmd emerge -uD $@
 			return ;;
 		pacman)
-			sudocmd pacman -S $@
+			sudocmd pacman -S $force $nodeps $@
 			return ;;
 		yum-rpm)
 			sudocmd yum $YUMOPTIONS install $@
@@ -767,8 +764,19 @@ epm_install_names()
 			sudocmd mpkg install $@
 			return ;;
 		slackpkg)
+			separate_installed $@
 			# TODO: use upgrade if package is already installed
-			sudocmd /usr/sbin/slackpkg install $@
+			[ -n "$pkg_noninstalled" ] && sudocmd /usr/sbin/slackpkg install $pkg_noninstalled
+			[ -n "$pkg_installed" ] && sudocmd /usr/sbin/slackpkg upgrade $pkg_installed
+			return ;;
+		homebrew)
+			separate_installed $@
+			[ -n "$pkg_noninstalled" ] && sudocmd brew install $pkg_noninstalled
+			[ -n "$pkg_installed" ] && sudocmd brew upgrade $pkg_installed
+			return ;;
+		ipkg)
+			[ -n "$force" ] && force=-force-depends
+			sudocmd ipkg $force install $@
 			return ;;
 		*)
 			fatal "Do not known install command for $PMTYPE"
@@ -797,7 +805,7 @@ epm_ni_install_names()
 			sudocmd pkg_add -r $@
 			return ;;
 		pacman)
-			sudocmd pacman -S --noconfirm $@
+			sudocmd pacman -S --noconfirm $force $nodeps $@
 			return ;;
 		npackd)
 			#  npackdcl update --package=<package> (remove old and install new)
@@ -805,6 +813,9 @@ epm_ni_install_names()
 			return ;;
 		chocolatey)
 			docmd chocolatey install $@
+			return ;;
+		ipkg)
+			sudocmd ipkg -force-defaults install $@
 			return ;;
 		slackpkg)
 			# TODO: use upgrade if package is already installed
@@ -871,7 +882,9 @@ epm_install_files()
             sudocmd pkg_add $@
             return ;;
         pacman)
-            sudocmd pacman -U --noconfirm $@
+            sudocmd pacman -U --noconfirm $force $nodeps $@ && return
+            [ -n "$nodeps" ] && return
+            sudocmd pacman -U $force $@
             return ;;
         slackpkg)
             sudocmd /sbin/installpkg $@
@@ -895,13 +908,16 @@ epm_print_install_command()
             echo "pkg_add $@"
             ;;
         pacman)
-            echo "pacman -U --noconfirm $@"
+            echo "pacman -U --noconfirm --force $nodeps $@"
             ;;
         slackpkg)
             echo "/sbin/installpkg $@"
             ;;
         npackd)
             echo "npackdcl add --package=$@"
+            ;;
+        ipkg)
+            echo "ipkg install $@"
             ;;
         *)
             fatal "Do not known appropriate install command for $PMTYPE"
@@ -926,6 +942,25 @@ epm_install()
 
     epm_install_names $names || return
     epm_install_files $files
+}
+
+# File bin/epm-kernel_update:
+
+epm_kernel_update()
+{
+	echo "Start update system kernel to the latest version"
+
+	case $DISTRNAME in
+	ALTLinux)
+		sudocmd update-kernel
+		return ;;
+	esac
+
+	case $PMTYPE in
+	*)
+		fatal "Do not known command for $PMTYPE"
+		;;
+	esac
 }
 
 # File bin/epm-packages:
@@ -954,13 +989,23 @@ case $PMTYPE in
 		CMD="pkg_info"
 		;;
 	pacman)
-		CMD="pacman -Qs"
+		CMD="pacman -Qs $pkg_filenames"
+		if [ -n "$short" ] ; then
+			docmd $CMD | sed -e "s| .*||g" -e "s|.*/||g" | grep -v "^$"
+			return
+		fi
 		;;
 	npackd)
 		CMD="npackdcl list"
 		;;
 	slackpkg)
 		CMD="ls -1 /var/log/packages/"
+		;;
+	homebrew)
+		CMD="brew $pkg_filenames"
+		;;
+	ipkg)
+		CMD="ipkg list"
 		;;
 	*)
 		fatal "Do not known query command for $PMTYPE"
@@ -979,6 +1024,7 @@ epm_programs()
 	local DESKTOPDIR=/usr/share/applications
 	[ -d "$DESKTOPDIR" ] || fatal "There is no $DESKTOPDIR dir on the system."
 	#find /usr/share/applications -type f -name "*.desktop" | while read f; do pkg_files="$f" quiet=1 short=1 epm_query_file ; done | sort -u
+	showcmd "find /usr/share/applications -type f -name "*.desktop" | xargs $0 -qf --quiet --short | sort -u"
 	find /usr/share/applications -type f -name "*.desktop" | \
 		xargs $0 -qf --quiet --short | sort -u
 }
@@ -992,9 +1038,10 @@ _query_via_packages_list()
 	local res=0
 	local firstpkg=$1
 	shift
-	epm_packages | grep -- "$firstpkg-" || res=1
+	# separate first line for print out command
+	short=1 pkg_filenames=$firstpkg epm_packages | grep -- "^$firstpkg$" || res=1
 	for pkg in "$@" ; do
-		epm_packages 2>/dev/null | grep -- "$pkg-" || res=1
+		short=1 pkg_filenames=$pkg epm_packages 2>/dev/null | grep -- "^$pkg$" || res=1
 	done
 	return $res
 }
@@ -1006,7 +1053,7 @@ __epm_query_file()
 	[ -z "$*" ] && return
 
 	case $PMTYPE in
-		apt-rpm|yum-rpm|urpm-rpm|zypper-rpm)
+		*-rpm)
 			CMD="rpm -qp"
 			;;
 		apt-dpkg)
@@ -1031,7 +1078,7 @@ __epm_query_name()
 	[ -z "$*" ] && return
 
 	case $PMTYPE in
-		apt-rpm|yum-rpm|urpm-rpm|zypper-rpm)
+		*-rpm)
 			CMD="rpm -q"
 			;;
 		apt-dpkg)
@@ -1044,6 +1091,10 @@ __epm_query_name()
 		npackd)
 			CMD="npackdcl path --package=$@"
 			;;
+		brew)
+			warning "fix query"
+			return 1
+			;;
 		*)
 			_query_via_packages_list $@
 			return
@@ -1055,7 +1106,17 @@ __epm_query_name()
 
 is_installed()
 {
-	pkg_filenames="$@" epm_query >/dev/null
+	#pkg_filenames="$@" epm_query >/dev/null
+	epm installed $@ >/dev/null
+}
+
+separate_installed()
+{
+	pkg_installed=
+	pkg_noninstalled=
+	for i in $* ; do
+		is_installed $i && pkg_installed="$pkg_installed $i" || pkg_noninstalled="$pkg_noninstalled $i"
+	done
 }
 
 epm_query()
@@ -1119,7 +1180,7 @@ __do_query()
             ;;
         apt-dpkg)
             showcmd dpkg -S $1
-            dpkg_print_name_version $(dpkg -S $1 | sed -e "s|:.*||")
+            dpkg_print_name_version $(dpkg -S $1 | grep -v "^diversion by" | sed -e "s|:.*||")
             return ;;
         yum-rpm|urpm-rpm)
             CMD="rpm -qf"
@@ -1137,6 +1198,9 @@ __do_query()
             # note: need remove leading slash for grep
             docmd grep -R -- "$(echo $@ | sed -e 's|^/\+||g')" /var/log/packages | sed -e "s|/var/log/packages/||g"
             return
+            ;;
+        ipkg)
+            CMD="ipkg files"
             ;;
         *)
             fatal "Do not known query command for $PMTYPE"
@@ -1156,7 +1220,7 @@ __do_short_query()
             ;;
         NOapt-dpkg)
             showcmd dpkg -S $1
-            dpkg_print_name_version $(dpkg -S $1 | sed -e "s|:.*||")
+            dpkg_print_name_version $(dpkg -S $1 | sed -e "s|:.*||" | grep -v "^diversion by")
             return ;;
         NOemerge)
             CMD="equery belongs"
@@ -1209,6 +1273,7 @@ epm_query_package()
 
 # File bin/epm-reinstall:
 
+
 epm_reinstall_names()
 {
 	[ -n "$1" ] || return
@@ -1216,31 +1281,16 @@ epm_reinstall_names()
 		apt-rpm|apt-dpkg)
 			sudocmd apt-get --reinstall install $@
 			return ;;
-		yum-rpm)
-			sudocmd yum install $@
-			return ;;
 		dnf-rpm)
 			sudocmd dnf reinstall $@
-			return ;;
-		urpm-rpm)
-			sudocmd urpmi $@
-			return ;;
-		zypper-rpm)
-			sudocmd zypper install $@
-			return ;;
-		pkgsrc)
-			sudocmd pkg_add -r $@
-			return ;;
-		pacman)
-			sudocmd pacman -U $@
 			return ;;
 		slackpkg)
 			sudocmd /usr/sbin/slackpkg reinstall $@
 			return ;;
-		*)
-			fatal "Do not known install command for $PMTYPE"
-			;;
 	esac
+
+	# fallback to generic install
+	epm_install_names
 }
 
 epm_reinstall_files()
@@ -1316,7 +1366,7 @@ epm_release_upgrade()
 		docmd epm upgrade
 		;;
 	pacman)
-		#epm upgrade
+		epm Upgrade
 		;;
 	*)
 		fatal "Do not known command for $PMTYPE"
@@ -1336,7 +1386,8 @@ epm_remove_low()
 			sudocmd rpm -ev $nodeps $@
 			return ;;
 		apt-dpkg)
-			sudocmd dpkg -P $@
+			[ -n "$nodeps" ] && nodeps="--force-all"
+			sudocmd dpkg -P $nodeps $@
 			return ;;
 		pkgsrc)
 			sudocmd pkg_delete -r $@
@@ -1376,7 +1427,7 @@ epm_remove_names()
 			sudocmd emerge -aC $@
 			return ;;
 		pacman)
-			sudocmd pacman -Rs $@
+			sudocmd pacman -Rc $@
 			return ;;
 		yum-rpm)
 			sudocmd yum remove $@
@@ -1399,6 +1450,13 @@ epm_remove_names()
 		slackpkg)
 			sudocmd /usr/sbin/slackpkg remove $@
 			return ;;
+		homebrew)
+			sudocmd brew remove $@
+			return ;;
+		ipkg)
+			[ -n "$force" ] && force=-force-depends
+			sudocmd ipkg $force remove $@
+			return ;;
 		*)
 			fatal "Do not known command for $PMTYPE"
 			;;
@@ -1415,7 +1473,7 @@ epm_remove_nonint()
 			sudocmd urpme --auto $@
 			return ;;
 		pacman)
-			sudocmd pacman -Rs --noconfirm $@
+			sudocmd pacman -Rc --noconfirm $@
 			return ;;
 		yum-rpm)
 			sudocmd yum -y remove $@
@@ -1425,6 +1483,9 @@ epm_remove_nonint()
 			return ;;
 		slackpkg)
 			sudocmd /usr/sbin/slackpkg -batch=on -default_answer=yes remove $@
+			return ;;
+		ipkg)
+			sudocmd ipkg -force-defaults remove $@
 			return ;;
 	esac
 	return 5
@@ -1451,6 +1512,9 @@ epm_print_remove_command()
 		slackpkg)
 			echo "/sbin/removepkg $@"
 			;;
+		ipkg)
+			echo "ipkg remove $@"
+			;;
 		*)
 			fatal "Do not known appropriate remove command for $PMTYPE"
 			;;
@@ -1469,9 +1533,6 @@ epm_remove()
 
 	[ -n "$pkg_filenames" ] || fatal "Run remove without args"
 	epm_remove_low $pkg_filenames && return
-
-	# FIXME: needs only for apt
-	pkg_filenames=$(echo $pkg_filenames | filter_pkg_verel)
 
 	if [ -n "$non_interactive" ] ; then
 		epm_remove_nonint $pkg_filenames
@@ -1672,6 +1733,9 @@ case $PMTYPE in
 		docmd_foreach "/usr/sbin/slackpkg search" $pkg_filenames
 		return
 		;;
+	homebrew)
+		CMD="brew search"
+		;;
 	*)
 		fatal "Do not known search command for $PMTYPE"
 		;;
@@ -1735,6 +1799,9 @@ case $PMTYPE in
 	slackpkg)
 		CMD="/usr/sbin/slackpkg file-search"
 		;;
+	ipkg)
+		CMD="ipkg search"
+		;;
 	*)
 		fatal "Do not known search file command for $PMTYPE"
 		;;
@@ -1752,19 +1819,34 @@ __use_zypper_dry_run()
     a= zypper install --help 2>&1 | grep -q -- "--dry-run" && echo "--dry-run"
 }
 
+__use_yum_assumeno()
+{
+    a= yum --help 2>&1 | grep -q -- "--assumeno"
+}
+
 _epm_do_simulate()
 {
-	local CMD
-	local filenames=$@
+    local CMD
+    local filenames="$*"
 
     case $PMTYPE in
     	apt-rpm|apt-dpkg)
     		CMD="apt-get --simulate install"
     		;;
     	yum-rpm)
-    		LC_ALL=C sudocmd yum --assumeno install $filenames
-    		# FIXME: check only error output
-    		LC_ALL=C sudocmd yum --assumeno install $filenames 2>&1 | grep "^No package" && return 1
+    		if __use_yum_assumeno ; then
+    			LC_ALL=C sudocmd yum --assumeno install $filenames
+    			# FIXME: check only error output
+    			LC_ALL=C sudocmd yum --assumeno install $filenames 2>&1 | grep "^No package" && return 1
+    			LC_ALL=C sudocmd yum --assumeno install $filenames 2>&1 | grep "^Complete!" && return 0
+    			LC_ALL=C sudocmd yum --assumeno install $filenames >/dev/null 2>&1 || return
+    		else
+    			LC_ALL=C echo n | sudocmd yum install $filenames
+    			# FIXME: check only error output
+    			LC_ALL=C echo n | sudocmd yum install $filenames 2>&1 | grep "^No package" && return 1
+    			LC_ALL=C echo n | sudocmd yum install $filenames 2>&1 | grep "^Complete!" && return 0
+    			LC_ALL=C echo n | sudocmd yum install $filenames >/dev/null 2>&1 || return
+    		fi
     		return 0 ;;
     	urpm-rpm)
     		CMD="urpmi --test --auto"
@@ -1859,6 +1941,12 @@ case $PMTYPE in
 	deepsolver-rpm)
 		sudocmd ds-update
 		;;
+	homebrew)
+		sudocmd brew update
+		;;
+	ipkg)
+		sudocmd ipkg update
+		;;
 	*)
 		fatal "Do not known update command for $PMTYPE"
 		;;
@@ -1902,6 +1990,12 @@ epm_upgrade()
 		;;
 	chocolatey)
 		CMD="chocolatey update all"
+		;;
+	homebrew)
+		CMD="brew upgrade"
+		;;
+	ipkg)
+		CMD="ipkg upgrade"
 		;;
 	slackpkg)
 		CMD="/usr/sbin/slackpkg upgrade-all"
@@ -1980,7 +2074,7 @@ pkgtype()
 		freebsd) echo "tbz" ;;
 		sunos) echo "pkg.gz" ;;
 		slackware|mopslinux) echo "tgz" ;;
-		archlinux) echo "tar.xz" ;;
+		archlinux) echo "pkg.tar.xz" ;;
 		gentoo) echo "tbz2" ;;
 		windows) echo "exe" ;;
 		debian|ubuntu|mint|runtu) echo "deb" ;;
@@ -2246,7 +2340,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.1.9"
+        echo "EPM package manager version 1.2.1"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -2378,6 +2472,9 @@ check_command()
         ;;
     release-upgrade)      # HELPCMD: update whole system to the next release
         epm_cmd=release_upgrade
+        ;;
+    kernel-update|kernel-upgrade|update-kernel)      # HELPCMD: update system kernel to the last repo version
+        epm_cmd=kernel_update
         ;;
 
 # Other commands

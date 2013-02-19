@@ -18,6 +18,8 @@
 #
 
 PROGDIR=$(dirname $0)
+[ "$PROGDIR" = "." ] && PROGDIR=$(pwd)
+
 # will replaced to /usr/share/eepm during install
 SHAREDIR=$(dirname $0)
 
@@ -130,15 +132,6 @@ filter_strip_spaces()
                 sed -e "s|^ ||" | sed -e "s| \$||"
 }
 
-filter_pkg_verel()
-{
-	case $PKGFORMAT in
-		*)
-			cat
-			;;
-	esac
-}
-
 strip_spaces()
 {
         echo "$*" | filter_strip_spaces
@@ -191,7 +184,7 @@ set_pm_type()
 
 	# Fill for use: PMTYPE, DISTRNAME, DISTRVERSION, PKGFORMAT, PKGVENDOR, RPMVENDOR
 	DISTRVENDOR=internal_distr_info
-	[ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d)
+	[ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d) || fatal "Can't get distro name."
 	[ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
 	set_target_pkg_env
 
@@ -234,6 +227,12 @@ case $DISTRNAME in
 		;;
 	Windows)
 		CMD="chocolatey"
+		;;
+	MacOS)
+		CMD="homebrew"
+		;;
+	OpenWRT)
+		CMD="ipkg"
 		;;
 	*)
 		fatal "Do not known DISTRNAME $DISTRNAME"
@@ -588,7 +587,7 @@ pkgtype()
 		freebsd) echo "tbz" ;;
 		sunos) echo "pkg.gz" ;;
 		slackware|mopslinux) echo "tgz" ;;
-		archlinux) echo "tar.xz" ;;
+		archlinux) echo "pkg.tar.xz" ;;
 		gentoo) echo "tbz2" ;;
 		windows) echo "exe" ;;
 		debian|ubuntu|mint|runtu) echo "deb" ;;
@@ -848,7 +847,7 @@ set_service_type()
 
 	# Fill for use: PMTYPE, DISTRNAME, DISTRVERSION, PKGFORMAT, PKGVENDOR, RPMVENDOR
 	DISTRVENDOR=internal_distr_info
-	[ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d)
+	[ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d) || fatal "Can't get distro name."
 	[ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
 	set_target_pkg_env
 
@@ -921,7 +920,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.1.9"
+        echo "Service manager version 1.2.1"
         echo "Running on $($DISTRVENDOR)"
         echo "Copyright (c) Etersoft 2012, 2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
