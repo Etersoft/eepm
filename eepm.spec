@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.2.0
+Version: 1.2.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -57,6 +57,13 @@ install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/se
 %_sysconfdir/bash_completion.d/serv
 
 %changelog
+* Tue Feb 19 2013 Vitaly Lipatov <lav@altlinux.ru> 1.2.1-alt1
+- initial support for kernel-update
+- add support ipkg on OpenWRT
+- add support homebrew on MacOS
+- add check for separate_installed
+- small fixes
+
 * Thu Feb 14 2013 Vitaly Lipatov <lav@altlinux.ru> 1.2.0-alt1
 - epm-reinstall: fallback to install if the command is the same
 - epm-install: realize already installed with is_installed for any distro
