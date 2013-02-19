@@ -88,9 +88,30 @@ check_pkg_integrity()
 	check_${EXT}_integrity "$PKG" || fatal "Unknown package extension '$EXT' in $PKG package"
 }
 
+__epm_check_installed_pkg()
+{
+case $PMTYPE in
+	*-rpm)
+		docmd rpm -V $@
+		;;
+	*-dpkg)
+		docmd debsums $@
+		;;
+	*)
+		fatal "Do not known command for $PMTYPE"
+		;;
+esac
+
+}
+
 
 epm_checkpkg()
 {
+	if [ -n "$pkg_names" ] ; then
+		__epm_check_installed_pkg $pkg_names
+		return
+	fi
+
 	[ -n "$pkg_files" ] || fatal "Run without names"
 	local pkg
 	for pkg in $pkg_files ; do
