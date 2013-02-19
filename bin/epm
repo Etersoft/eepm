@@ -266,7 +266,7 @@ for opt in "$@" ; do
     check_command $opt && continue
     check_option $opt && continue
 
-    if [ -f "$opt" ] ; then
+    if [ -f "$opt" ] && echo $opt | grep -q "\." ; then
         pkg_files="$pkg_files $opt"
     else
         pkg_names="$pkg_names $opt"
