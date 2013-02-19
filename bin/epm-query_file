@@ -70,7 +70,7 @@ __do_query()
             ;;
         apt-dpkg)
             showcmd dpkg -S $1
-            dpkg_print_name_version $(dpkg -S $1 | sed -e "s|:.*||")
+            dpkg_print_name_version $(dpkg -S $1 | grep -v "^diversion by" | sed -e "s|:.*||")
             return ;;
         yum-rpm|urpm-rpm)
             CMD="rpm -qf"
@@ -110,7 +110,7 @@ __do_short_query()
             ;;
         NOapt-dpkg)
             showcmd dpkg -S $1
-            dpkg_print_name_version $(dpkg -S $1 | sed -e "s|:.*||")
+            dpkg_print_name_version $(dpkg -S $1 | sed -e "s|:.*||" | grep -v "^diversion by")
             return ;;
         NOemerge)
             CMD="equery belongs"

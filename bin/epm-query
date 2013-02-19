@@ -104,7 +104,7 @@ separate_installed()
 {
 	pkg_installed=
 	pkg_noninstalled=
-	for i $* ; do
+	for i in $* ; do
 		is_installed $i && pkg_installed="$pkg_installed $i" || pkg_noninstalled="$pkg_noninstalled $i"
 	done
 }
