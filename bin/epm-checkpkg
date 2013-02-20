@@ -85,6 +85,22 @@ check_pkg_integrity()
 	local EXT=`echo "$1" | sed -e "s|.*\.\([a-z0-9]*\)\$|\1|g"`
 	local PKG="$1"
 	local RET
+	# TODO: Попробовать здесь оставить возможность перегрузки функций
+	case $EXT in
+	rpm)
+		docmd rpm --checksig $@
+		;;
+	deb)
+		# FIXME: debsums -ca package ?
+		docmd dpkg --contents $@
+		;;
+	bz2)
+		docmd bunzip -t $1
+		;;
+	#*)
+	#	fatal "Unknown package extension '$EXT' in $PKG package"
+	#	;;
+	esac
 	check_${EXT}_integrity "$PKG" || fatal "Unknown package extension '$EXT' in $PKG package"
 }
 
