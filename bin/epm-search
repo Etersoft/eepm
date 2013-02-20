@@ -40,6 +40,9 @@ case $PMTYPE in
 	pacman)
 		CMD="pacman -Ss"
 		;;
+	aura)
+		CMD="aura -As"
+		;;
 	yum-rpm)
 		CMD="yum search"
 		;;

@@ -43,6 +43,9 @@ epm_upgrade()
 	pacman)
 		CMD="pacman -S -u"
 		;;
+	aura)
+		CMD="aura -A -u"
+		;;
 	emerge)
 		CMD="emerge -NuDa world"
 		;;

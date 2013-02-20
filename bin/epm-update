@@ -42,6 +42,9 @@ case $PMTYPE in
 	pacman)
 		sudocmd pacman -S -y
 		;;
+	aura)
+		sudocmd aura -A -y
+		;;
 	zypper-rpm)
 		sudocmd zypper refresh
 		;;

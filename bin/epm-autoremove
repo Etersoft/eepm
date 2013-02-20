@@ -26,6 +26,9 @@ case $PMTYPE in
 	apt-dpkg)
 		sudocmd apt-get autoremove
 		;;
+	aura)
+		sudocmd aura -Oj
+		;;
 	#yum-rpm)
 	#	sudocmd yum clean all
 	#	;;

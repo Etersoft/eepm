@@ -70,6 +70,9 @@ epm_install_names()
 		pacman)
 			sudocmd pacman -S $force $nodeps $@
 			return ;;
+		aura)
+			sudocmd aura -A $force $nodeps $@
+			return ;;
 		yum-rpm)
 			sudocmd yum $YUMOPTIONS install $@
 			return ;;
@@ -126,6 +129,9 @@ epm_ni_install_names()
 			return ;;
 		pacman)
 			sudocmd pacman -S --noconfirm $force $nodeps $@
+			return ;;
+		aura)
+			sudocmd aura -A $force $nodeps $@
 			return ;;
 		npackd)
 			#  npackdcl update --package=<package> (remove old and install new)
