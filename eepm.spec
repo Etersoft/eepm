@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.2.1
+Version: 1.2.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -57,6 +57,12 @@ install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/se
 %_sysconfdir/bash_completion.d/serv
 
 %changelog
+* Wed Feb 20 2013 Vitaly Lipatov <lav@altlinux.ru> 1.2.2-alt1
+- epm-checkpkg: add experimental case instead function call
+- epm-simulate: accept Exiting on user Command (Fedora 17)
+- epm-checkpkg: add support for check installed package integrity
+- epm: do not add to pkg_files if filename has not dot (it is not package file)
+
 * Tue Feb 19 2013 Vitaly Lipatov <lav@altlinux.ru> 1.2.1-alt1
 - initial support for kernel-update
 - add support ipkg on OpenWRT
