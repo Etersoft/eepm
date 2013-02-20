@@ -920,7 +920,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.2.1"
+        echo "Service manager version 1.2.2"
         echo "Running on $($DISTRVENDOR)"
         echo "Copyright (c) Etersoft 2012, 2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

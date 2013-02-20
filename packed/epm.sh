@@ -520,12 +520,49 @@ check_pkg_integrity()
 	local EXT=`echo "$1" | sed -e "s|.*\.\([a-z0-9]*\)\$|\1|g"`
 	local PKG="$1"
 	local RET
+	# TODO: Попробовать здесь оставить возможность перегрузки функций
+	case $EXT in
+	rpm)
+		docmd rpm --checksig $@
+		;;
+	deb)
+		# FIXME: debsums -ca package ?
+		docmd dpkg --contents $@
+		;;
+	bz2)
+		docmd bunzip -t $1
+		;;
+	#*)
+	#	fatal "Unknown package extension '$EXT' in $PKG package"
+	#	;;
+	esac
 	check_${EXT}_integrity "$PKG" || fatal "Unknown package extension '$EXT' in $PKG package"
+}
+
+__epm_check_installed_pkg()
+{
+case $PMTYPE in
+	*-rpm)
+		docmd rpm -V $@
+		;;
+	*-dpkg)
+		docmd debsums $@
+		;;
+	*)
+		fatal "Do not known command for $PMTYPE"
+		;;
+esac
+
 }
 
 
 epm_checkpkg()
 {
+	if [ -n "$pkg_names" ] ; then
+		__epm_check_installed_pkg $pkg_names
+		return
+	fi
+
 	[ -n "$pkg_files" ] || fatal "Run without names"
 	local pkg
 	for pkg in $pkg_files ; do
@@ -1839,6 +1876,7 @@ _epm_do_simulate()
     			# FIXME: check only error output
     			LC_ALL=C sudocmd yum --assumeno install $filenames 2>&1 | grep "^No package" && return 1
     			LC_ALL=C sudocmd yum --assumeno install $filenames 2>&1 | grep "^Complete!" && return 0
+    			LC_ALL=C sudocmd yum --assumeno install $filenames 2>&1 | grep "^Exiting on user Command" && return 0
     			LC_ALL=C sudocmd yum --assumeno install $filenames >/dev/null 2>&1 || return
     		else
     			LC_ALL=C echo n | sudocmd yum install $filenames
@@ -2340,7 +2378,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.2.1"
+        echo "EPM package manager version 1.2.2"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -2550,7 +2588,7 @@ for opt in "$@" ; do
     check_command $opt && continue
     check_option $opt && continue
 
-    if [ -f "$opt" ] ; then
+    if [ -f "$opt" ] && echo $opt | grep -q "\." ; then
         pkg_files="$pkg_files $opt"
     else
         pkg_names="$pkg_names $opt"
