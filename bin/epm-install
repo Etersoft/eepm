@@ -30,8 +30,8 @@ filter_out_installed_packages()
 				sed -e 's|^.*package \(.*\) is not installed.*|\1|g'
 			;;
 		"deb")
-			LANG=C LC_ALL=C xargs -n1 dpkg -l 2>&1 | grep 'no packages found matching' |
-				sed -e 's|^.*no packages found matching \(.*\)|\1|g'
+			LANG=C LC_ALL=C xargs -n1 dpkg -l 2>&1 | grep -i 'no packages found matching' |
+				sed -e 's|\.\+$||g' -e 's|^.*[Nn]o packages found matching \(.*\)|\1|g'
 			;;
 		*)
 			for i in $(cat) ; do
