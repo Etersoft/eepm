@@ -1,2 +1,0 @@
-#!/bin/sh
-swine -h eter-2.0 $@
