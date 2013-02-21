@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.2.2
+Version: 1.2.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -57,6 +57,10 @@ install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/se
 %_sysconfdir/bash_completion.d/serv
 
 %changelog
+* Fri Feb 22 2013 Vitaly Lipatov <lav@altlinux.ru> 1.2.3-alt1
+- add initial aura support
+- epm-install: fix skip-installed for old Debian
+
 * Wed Feb 20 2013 Vitaly Lipatov <lav@altlinux.ru> 1.2.2-alt1
 - epm-checkpkg: add experimental case instead function call
 - epm-simulate: accept Exiting on user Command (Fedora 17)
