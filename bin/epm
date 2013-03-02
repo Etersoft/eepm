@@ -169,6 +169,9 @@ check_command()
     provides)             # HELPCMD: print package provides
         epm_cmd=provides
         ;;
+    whatdepends)          # HELPCMD: print packages dependences on that
+        epm_cmd=whatdepends
+        ;;
     -qa|list|packages|-l) # HELPCMD: list of installed package(s)
         epm_cmd=packages
         ;;
