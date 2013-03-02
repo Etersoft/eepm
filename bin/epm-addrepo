@@ -44,7 +44,7 @@ case $PMTYPE in
 		#sudocmd repo-add $pkg_filenames
 		;;
 	npackd)
-		docmd npackdcl add-repo --url=$pkg_filenames
+		sudocmd npackdcl add-repo --url=$pkg_filenames
 		;;
 	slackpkg)
 		echo "You need manually add repo to /etc/slackpkg/mirrors"

@@ -82,10 +82,10 @@ epm_remove_names()
 			sudocmd mpkg remove $@
 			return ;;
 		npackd)
-			docmd npackdcl remove --package=$@
+			sudocmd npackdcl remove --package=$@
 			return ;;
 		chocolatey)
-			docmd chocolatey uninstall $@
+			sudocmd chocolatey uninstall $@
 			return ;;
 		slackpkg)
 			sudocmd /usr/sbin/slackpkg remove $@

@@ -85,6 +85,12 @@ epm_install_names()
 		mpkg)
 			sudocmd mpkg install $@
 			return ;;
+		npackd)
+			separate_installed $@
+			# TODO: use upgrade if package is already installed
+			[ -n "$pkg_noninstalled" ] && sudocmd npackdcl add --package=$@ $pkg_noninstalled
+			[ -n "$pkg_installed" ] && sudocmd npackdcl update --package=$@ $pkg_installed
+			return ;;
 		slackpkg)
 			separate_installed $@
 			# TODO: use upgrade if package is already installed
@@ -135,7 +141,7 @@ epm_ni_install_names()
 			return ;;
 		npackd)
 			#  npackdcl update --package=<package> (remove old and install new)
-			docmd npackdcl add --package=$@
+			sudocmd npackdcl add --package=$@
 			return ;;
 		chocolatey)
 			docmd chocolatey install $@

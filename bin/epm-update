@@ -57,6 +57,9 @@ case $PMTYPE in
 	deepsolver-rpm)
 		sudocmd ds-update
 		;;
+	npackd)
+		sudocmd packdcl detect # get packages from MSI database
+		;;
 	homebrew)
 		sudocmd brew update
 		;;

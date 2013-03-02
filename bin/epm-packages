@@ -49,7 +49,8 @@ case $PMTYPE in
 		fi
 		;;
 	npackd)
-		CMD="npackdcl list"
+		CMD="npackdcl list --status=installed"
+		# TODO: use search if pkg_filenames is not empty
 		;;
 #	chocolatey)
 #		CMD="chocolatey list"

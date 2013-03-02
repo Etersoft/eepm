@@ -56,7 +56,8 @@ case $PMTYPE in
 		CMD="mpkg search"
 		;;
 	npackd)
-		fatal "FIXME: Have not idea for search with npackdcl list"
+		docmd npackdcl search --query="$pkg_filenames" --status=all
+		return
 		;;
 	chocolatey)
 		CMD="chocolatey list"
