@@ -166,6 +166,9 @@ check_command()
     requires|deplist)     # HELPCMD: print package requires
         epm_cmd=requires
         ;;
+    provides)             # HELPCMD: print package provides
+        epm_cmd=provides
+        ;;
     -qa|list|packages|-l) # HELPCMD: list of installed package(s)
         epm_cmd=packages
         ;;
