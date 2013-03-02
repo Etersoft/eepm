@@ -32,9 +32,9 @@ case $PMTYPE in
 	#yum-rpm)
 	#	sudocmd yum clean all
 	#	;;
-	#urpm-rpm)
-	#	sudocmd urpmi --clean
-	#	;;
+	urpm-rpm)
+		sudocmd urpme --auto-orphans
+		;;
 	#zypper-rpm)
 	#	sudocmd zypper clean
 	#	;;
