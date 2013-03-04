@@ -67,8 +67,14 @@ _epm_do_simulate()
     		CMD="zypper --non-interactive install"
     		;;
     	emerge)
-    		echo "FIXME: Skip with emerge"
-    		return ;;
+    		local res=0
+    		for pkg in $filenames ; do
+			is_installed $pkg && continue
+			docmd emerge --pretend $pkg && continue
+			pkg=1
+			break
+    		done
+    		return $res ;;
     	pacman)
     		showcmd $SUDO pacman -v -S $filenames
     		echo no | $SUDO pacman -v -S $filenames
