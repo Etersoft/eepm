@@ -57,6 +57,10 @@ case $PMTYPE in
 #		;;
 	slackpkg)
 		CMD="ls -1 /var/log/packages/"
+		if [ -n "$short" ] ; then
+			docmd ls -1 /var/log/packages/ | sed -e "s|-[0-9].*||g"
+			return
+		fi
 		;;
 	homebrew)
 		CMD="brew $pkg_filenames"

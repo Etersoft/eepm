@@ -87,6 +87,7 @@ epm_install_names()
 			return ;;
 		npackd)
 			separate_installed $@
+			# FIXME: fix return status
 			# TODO: use upgrade if package is already installed
 			[ -n "$pkg_noninstalled" ] && sudocmd npackdcl add --package=$@ $pkg_noninstalled
 			[ -n "$pkg_installed" ] && sudocmd npackdcl update --package=$@ $pkg_installed
@@ -105,6 +106,11 @@ epm_install_names()
 		ipkg)
 			[ -n "$force" ] && force=-force-depends
 			sudocmd ipkg $force install $@
+			return ;;
+		nix)
+			separate_installed $@
+			[ -n "$pkg_noninstalled" ] && sudocmd nix-env --install $pkg_noninstalled
+			[ -n "$pkg_installed" ] && sudocmd nix-env --upgrade $pkg_installed
 			return ;;
 		*)
 			fatal "Do not known install command for $PMTYPE"
@@ -133,6 +139,9 @@ epm_ni_install_names()
 		pkgsrc)
 			sudocmd pkg_add -r $@
 			return ;;
+		emerge)
+			sudocmd emerge -uD $@
+			return ;;
 		pacman)
 			sudocmd pacman -S --noconfirm $force $nodeps $@
 			return ;;
@@ -149,9 +158,14 @@ epm_ni_install_names()
 		ipkg)
 			sudocmd ipkg -force-defaults install $@
 			return ;;
+		nix)
+			sudocmd nix-env --install $@
+			return ;;
 		slackpkg)
-			# TODO: use upgrade if package is already installed
-			sudocmd /usr/sbin/slackpkg -batch=on -default_answer=yes install $@
+			separate_installed $@
+			# FIXME: broken status when use batch and default answrt
+			[ -n "$pkg_noninstalled" ] && sudocmd /usr/sbin/slackpkg -batch=on -default_answer=yes install $pkg_noninstalled
+			[ -n "$pkg_installed" ] && sudocmd /usr/sbin/slackpkg -batch=on -default_answer=yes upgrade $pkg_installed
 			return ;;
 		*)
 			fatal "Do not known appropriate install command for $PMTYPE"
@@ -239,6 +253,10 @@ epm_print_install_command()
         pkgsrc)
             echo "pkg_add $@"
             ;;
+        #emerge)
+        #    # it is better to use epm
+        #    echo "tar xvfj $@ -C /"
+        #    ;;
         pacman)
             echo "pacman -U --noconfirm --force $nodeps $@"
             ;;
@@ -265,7 +283,7 @@ epm_install()
         return
     fi
 
-    [ -n "$pkg_files$pkg_names" ] || fatal "Run install without packages"
+    [ -n "$pkg_files$pkg_names" ] || { echo "Skip empty install list" ; return 22 ; }
 
     local names="$(echo $pkg_names | filter_out_installed_packages)"
     local files="$(echo $pkg_files | filter_out_installed_packages)"

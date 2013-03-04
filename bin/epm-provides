@@ -55,6 +55,9 @@ case $PMTYPE in
 			# FIXME: use hi level commands
 		fi
 		;;
+	emerge)
+		CMD="equery files"
+		;;
 #	yum-rpm)
 #		CMD="yum deplist"
 #		;;

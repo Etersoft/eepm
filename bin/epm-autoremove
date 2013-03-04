@@ -44,6 +44,8 @@ case $PMTYPE in
 		;;
 	emerge)
 		sudocmd emerge --depclean
+		docmd epm --skip-installed install gentoolkit
+		sudocmd revdep-rebuild
 		;;
 	pacman)
 		sudocmd pacman -Qdtq | pacman -Rs -

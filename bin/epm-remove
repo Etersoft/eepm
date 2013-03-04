@@ -84,6 +84,9 @@ epm_remove_names()
 		npackd)
 			sudocmd npackdcl remove --package=$@
 			return ;;
+		nix)
+			sudocmd nix-env --uninstall $@
+			return ;;
 		chocolatey)
 			sudocmd chocolatey uninstall $@
 			return ;;

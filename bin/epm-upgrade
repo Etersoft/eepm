@@ -28,6 +28,7 @@ epm_upgrade()
 		CMD="apt-get dist-upgrade"
 		;;
 	yum-rpm)
+		# can do update repobase automagically
 		CMD="yum update"
 		;;
 	dnf-rpm)
@@ -41,7 +42,7 @@ epm_upgrade()
 		CMD="zypper dist-upgrade"
 		;;
 	pacman)
-		CMD="pacman -S -u"
+		CMD="pacman -S -u $force"
 		;;
 	aura)
 		CMD="aura -A -u"

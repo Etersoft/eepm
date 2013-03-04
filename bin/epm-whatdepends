@@ -27,6 +27,12 @@ case $PMTYPE in
 	apt-rpm|apt-dpkg)
 		CMD="apt-cache whatdepends"
 		;;
+	yum-rpm)
+		CMD="repoquery --whatrequires"
+		;;
+	emerge)
+		CMD="equery depends -a"
+		;;
 	*)
 		fatal "Do not known command for $PMTYPE"
 		;;

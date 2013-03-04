@@ -70,11 +70,12 @@ __epm_query_name()
 			CMD="rpm -q"
 			;;
 		apt-dpkg)
-			CMD="dpkg -l"
+			#docmd dpkg -l $@
+			docmd dpkg -l $@ | grep "^ii"
 			# TODO: make rpm-like output
 			#showcmd dpkg -l $pkg_filenames
 			#dpkg -l $pkg_filenames | grep "^ii"
-			#return
+			return
 			;;
 		npackd)
 			CMD="npackdcl path --package=$@"
@@ -96,7 +97,7 @@ __epm_query_name()
 is_installed()
 {
 	#pkg_filenames="$@" epm_query >/dev/null
-	epm installed $@ >/dev/null
+	epm installed $@ >/dev/null 2>/dev/null
 }
 
 # fill pkg_installed and pkg_noninstalled
