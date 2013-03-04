@@ -29,11 +29,28 @@ case $PMTYPE in
 	aura)
 		sudocmd aura -Oj
 		;;
-	#yum-rpm)
-	#	sudocmd yum clean all
-	#	;;
+	yum-rpm)
+		# cleanup orphanes?
+		while true ; do
+			docmd package-cleanup --leaves
+			# FIXME: package-cleanup have to use stderr for errors
+			local PKGLIST=$(package-cleanup --leaves | grep -v "Loaded plugins" | grep -v "Unable to")
+			[ -n "$PKGLIST" ] || break
+			sudocmd yum remove $PKGLIST
+		done
+		;;
 	urpm-rpm)
 		sudocmd urpme --auto-orphans
+		;;
+	emerge)
+		sudocmd emerge --depclean
+		;;
+	pacman)
+		sudocmd pacman -Qdtq | pacman -Rs -
+		;;
+	slackpkg)
+		# clean-system removes non official packages
+		#sudocmd slackpkg clean-system
 		;;
 	#zypper-rpm)
 	#	sudocmd zypper clean

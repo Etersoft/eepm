@@ -25,7 +25,7 @@ case $PMTYPE in
 		;;
 	yum-rpm)
 		sudocmd yum clean all
-		sudocmd yum makecache
+		#sudocmd yum makecache
 		;;
 	dnf-rpm)
 		sudocmd dnf clean all
@@ -38,6 +38,11 @@ case $PMTYPE in
 		;;
 	zypper-rpm)
 		sudocmd zypper clean
+		;;
+	nix)
+		sudocmd nix-collect-garbage
+		;;
+	slackpkg)
 		;;
 	*)
 		fatal "Do not known command for $PMTYPE"
