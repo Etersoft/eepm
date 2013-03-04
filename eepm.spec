@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.2.3
+Version: 1.2.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -57,6 +57,13 @@ install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/se
 %_sysconfdir/bash_completion.d/serv
 
 %changelog
+* Mon Mar 04 2013 Vitaly Lipatov <lav@altlinux.ru> 1.2.4-alt1
+- epm-install: add support for direct install ebuild
+- realize epm simulate for emerge
+- fix autoremove, check, clean, etc.
+- many fixes for npackd
+- add epm whatdepends, provides commands
+
 * Fri Feb 22 2013 Vitaly Lipatov <lav@altlinux.ru> 1.2.3-alt1
 - add initial aura support
 - epm-install: fix skip-installed for old Debian
