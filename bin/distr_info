@@ -104,7 +104,9 @@ if distro altlinux-release ; then
 
 elif distro gentoo-release ; then
 	DISTRIB_ID="Gentoo"
-	DISTRIB_RELEASE=`basename $(readlink $ROOTDIR/etc/make.profile)`
+	MAKEPROFILE=$(readlink $ROOTDIR/etc/portage/make.profile 2>/dev/null) || MAKEPROFILE=$(readlink $ROOTDIR/etc/make.profile)
+	DISTRIB_RELEASE=`basename $MAKEPROFILE`
+	echo $DISTRIB_RELEASE | grep -q "[0-9]" || DISTRIB_RELEASE=`basename $(dirname $MAKEPROFILE)`
 
 # Slackware based
 elif distro mopslinux-version ; then
