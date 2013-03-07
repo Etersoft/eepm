@@ -41,7 +41,11 @@ filter_out_installed_packages()
 	esac | sed -e "s|rpm-build-altlinux-compat[^ ]*||g" | filter_strip_spaces
 }
 
-
+# for zypper before SUSE/11.0
+__use_zypper_no_gpg_checks()
+{
+    a= zypper install --help 2>&1 | grep -q -- "--no-gpg-checks" && echo "--no-gpg-checks"
+}
 
 # copied from etersoft-build-utils/share/eterbuild/functions/rpmpkg
 epm_install_names()
