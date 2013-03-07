@@ -97,11 +97,10 @@ check_pkg_integrity()
 	bz2)
 		docmd bunzip -t $1
 		;;
-	#*)
-	#	fatal "Unknown package extension '$EXT' in $PKG package"
-	#	;;
+	*)
+		check_${EXT}_integrity "$PKG" || fatal "Unknown package extension '$EXT' in $PKG package"
+		;;
 	esac
-	check_${EXT}_integrity "$PKG" || fatal "Unknown package extension '$EXT' in $PKG package"
 }
 
 __epm_check_installed_pkg()
