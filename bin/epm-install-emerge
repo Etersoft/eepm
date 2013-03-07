@@ -1,0 +1,97 @@
+#!/bin/sh
+#
+# Copyright (C) 2012-2013  Etersoft
+# Copyright (C) 2012-2013  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+# This functions already run as root
+
+# http://ru.gentoo-wiki.com/wiki/Portage_Overlay
+# http://kb.etersoft.ru/Gentoo:_Установка_продуктов_Etersoft
+# http://linuxreviews.org/gentoo/ebuilds/
+
+# install one ebuild
+__emerge_install_ebuild()
+{
+	local EBUILD="$1"
+	[ -s "$EBUILD" ] || fatal ".ebuild file '$EBUILD' is missing"
+
+	# load ebuild and get vars
+	. $(pwd)/$EBUILD
+	[ -n "$SRC_URI" ] || fatal "Can't load SRC_URI from $EBUILD"
+
+	# try to detect tarballs
+	local TARBALLS=
+	local BASEDIR=$(dirname $EBUILD)
+	for i in $SRC_URI ; do
+		[ -s "$BASEDIR/$(basename $i)" ] || continue
+		TARBALLS="$TARBALLS $BASEDIR/$(basename $i)"
+	done
+
+	local PORTAGENAME=epm
+	local LP=/usr/local/portage/$PORTAGENAME
+	docmd mkdir -p $LP/
+	MAKECONF=/etc/portage/make.conf
+	[ -r "$MAKECONF" ] || MAKECONF=/etc/make.conf
+	if ! grep -v "^#" $MAKECONF | grep -q $LP ; then
+		echo "PORTDIR_OVERLAY=\"$LP \${PORTDIR_OVERLAY}\"" >>$MAKECONF
+		# Overlay name
+		mkdir -p $LP/profiles/
+		echo "$PORTAGENAME" > $LP/profiles/repo_name
+	fi
+
+	# copy tarballs
+	local DDIR=/usr/portage/distfiles
+	[ -d /var/calculate/remote/distfiles ] && DDIR=/var/calculate/remote/distfiles
+	docmd cp -f $TARBALLS $DDIR/ || return
+
+	# copy ebuild
+	docmd cp -f $EBUILD $LP/ || return
+	cd $LP
+	docmd ebuild $(basename $EBUILD) digest
+	cd -
+	# FIXME: more correcty get name
+	local PKGNAME=$(echo $EBUILD | sed -e "s|-[0-9].*||g")
+	docmd emerge -av $PKGNAME || return
+}
+
+# install one ebuild
+__emerge_install_tbgz2()
+{
+	local TGDIR=/usr/portage/packages/app-arch
+	mkdir -p $TGDIR
+	cp $i $TGDIR || return
+	docmd emerge --usepkg $TGDIR/$(basename $i) || return
+}
+
+# install ebuild list
+epm_install_emerge()
+{
+	local EBUILD=
+	#local TARBALLS=
+	local i
+
+	# search ebuild in the args
+	for i in $* ; do
+		if echo $i | grep -q ebuild ; then
+			__emerge_install_ebuild $i || return
+		elif echo $i | grep -q "\.tbz2$" ; then
+			__emerge_install_tbz2 $i || return
+	#	else
+	#		TARBALLS="$TARBALLS $i"
+		fi
+	done
+}

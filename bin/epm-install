@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012-13  Etersoft
-# Copyright (C) 2012-13  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2013  Etersoft
+# Copyright (C) 2012-2013  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -41,72 +41,7 @@ filter_out_installed_packages()
 	esac | sed -e "s|rpm-build-altlinux-compat[^ ]*||g" | filter_strip_spaces
 }
 
-# http://ru.gentoo-wiki.com/wiki/Portage_Overlay
-# http://kb.etersoft.ru/Gentoo:_Установка_продуктов_Etersoft
-# http://linuxreviews.org/gentoo/ebuilds/
-# 
-# install one ebuild
-__emerge_install_ebuild()
-{
-	local EBUILD="$1"
-	[ -s "$EBUILD" ] || fatal ".ebuild file '$EBUILD' is missing"
 
-	# load ebuild and get vars
-	. $EBUILD
-	[ -n "$SRC_URI" ] || fatal "Can't load SRC_URI from $EBUILD"
-
-	# try to detect tarballs
-	local TARBALLS=
-	local BASEDIR=$(dirname $EBUILD)
-	for i in $SRC_URI ; do
-		[ -s "$BASEDIR/$(basename $i)" ] || continue
-		TARBALLS="$TARBALLS $BASEDIR/$(basename $i)"
-	done
-
-	local PORTAGENAME=epm
-	local LP=/usr/local/portage/$PORTAGENAME
-	sudocmd mkdir -p $LP/
-	if ! grep -v "^#" /etc/make.conf | grep -q $LP ; then
-		sudocmd echo 'PORTDIR_OVERLAY="$LP \${PORTDIR_OVERLAY}"' >>/etc/make.conf
-		# Overlay name
-		sudocmd mkdir -p $LP/profiles/
-		sudocmd echo "$PORTAGENAME" > $LP/profiles/repo_name
-	fi
-
-	# copy tarballs
-	local DDIR=/usr/portage/distfiles
-	[ -d /var/calculate/remote/distfiles ] && DDIR=/var/calculate/remote/distfiles
-	sudocmd cp -f $TARBALLS $DDIR/ || return
-
-	# copy ebuild
-	sudocmd cp -f $EBUILD $LP/ || return
-	cd $LP
-	sudocmd ebuild $(basename $EBUILD) digest
-	cd -
-	# FIXME: more correcty get name
-	local PKGNAME=$(echo $EBUILD | sed -e "s|-[0-9].*||g")
-	sudocmd emerge -av $PKGNAME || return
-}
-
-# install ebuild list
-__emerge_install()
-{
-	local EBUILD=
-	#local TARBALLS=
-	local i
-
-	# search ebuild in the args
-	for i in $* ; do
-		if echo $i | grep -q ebuild ; then
-	[ -s "$EBUILD" ] || fatal "Can't find .ebuild file in $*"
-			__emerge_install_ebuild $i
-			continue
-	#	else
-	#		TARBALLS="$TARBALLS $i"
-		fi
-	done
-
-}
 
 # copied from etersoft-build-utils/share/eterbuild/functions/rpmpkg
 epm_install_names()
@@ -279,7 +214,7 @@ epm_install_files()
             # if run with --nodeps, do not fallback on hi level
 
             [ -n "$nodeps" ] && return
-            ZYPPEROPTIONS=--no-gpg-checks
+            ZYPPEROPTIONS=$(__use_zypper_no_gpg_checks)
             # use install_names
             ;;
         urpm-rpm)
@@ -294,7 +229,8 @@ epm_install_files()
             sudocmd pkg_add $@
             return ;;
         emerge)
-            __emerge_install $@
+            load_helper epm-install-emerge
+            sudocmd epm_install_emerge $@
             return ;;
         pacman)
             sudocmd pacman -U --noconfirm $force $nodeps $@ && return
@@ -322,10 +258,10 @@ epm_print_install_command()
         pkgsrc)
             echo "pkg_add $@"
             ;;
-        #emerge)
-        #    # it is better to use epm
-        #    echo "tar xvfj $@ -C /"
-        #    ;;
+        emerge)
+            # need be placed in /usr/portage/packages/somewhere
+            echo "emerge --usepkg $@"
+            ;;
         pacman)
             echo "pacman -U --noconfirm --force $nodeps $@"
             ;;
