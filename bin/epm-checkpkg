@@ -88,11 +88,11 @@ check_pkg_integrity()
 	# TODO: Попробовать здесь оставить возможность перегрузки функций
 	case $EXT in
 	rpm)
-		docmd rpm --checksig $@
+		docmd rpm --checksig $1
 		;;
 	deb)
 		# FIXME: debsums -ca package ?
-		docmd dpkg --contents $@
+		docmd dpkg --contents $1 >/dev/null && echo "Package $1 is correct."
 		;;
 	bz2)
 		docmd bunzip -t $1
