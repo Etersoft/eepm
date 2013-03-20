@@ -50,7 +50,7 @@ case $PMTYPE in
 		sudocmd zypper verify || exit
 		;;
 	*)
-		fatal "Do not known command for $PMTYPE"
+		fatal "Have no suitable command for $PMTYPE"
 		;;
 esac
 

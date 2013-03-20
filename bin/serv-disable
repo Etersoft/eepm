@@ -37,7 +37,7 @@ serv_disable()
 			sudocmd systemctl disable $1
 			;;
 		*)
-			fatal "Do not known command for $SERVICETYPE"
+			fatal "Have no suitable command for $SERVICETYPE"
 			;;
 	esac
 }

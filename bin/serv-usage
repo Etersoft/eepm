@@ -41,7 +41,7 @@ serv_usage()
 			sudocmd systemctl $SERVICE 2>&1
 			;;
 		*)
-			fatal "Do not known command for $SERVICETYPE"
+			fatal "Have no suitable command for $SERVICETYPE"
 			;;
 	esac
 

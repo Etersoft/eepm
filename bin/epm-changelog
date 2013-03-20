@@ -31,7 +31,7 @@ __epm_changelog_files()
 #			
 #			;;
 		*)
-			fatal "Do not known command for $PMTYPE"
+			fatal "Have no suitable command for $PMTYPE"
 			;;
 	esac
 
@@ -57,7 +57,7 @@ __epm_changelog_local_names()
 			docmd pacman -Qc $1 | less
 			;;
 		*)
-			fatal "Do not known command for $PMTYPE"
+			fatal "Have no suitable command for $PMTYPE"
 			;;
 	esac
 }
@@ -84,7 +84,7 @@ __epm_changelog_unlocal_names()
 		#	sudocmd zypper clean
 		#	;;
 		*)
-			fatal "Do not known command for $PMTYPE"
+			fatal "Have no suitable command for $PMTYPE"
 			;;
 	esac
 

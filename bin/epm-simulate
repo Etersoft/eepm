@@ -93,7 +93,7 @@ _epm_do_simulate()
     		done
     		return $res ;;
     	*)
-    		fatal "Do not known simulate command for $PMTYPE"
+    		fatal "Have no suitable simulate command for $PMTYPE"
     		;;
     esac
 

@@ -45,7 +45,7 @@ case $PMTYPE in
 	slackpkg)
 		;;
 	*)
-		fatal "Do not known command for $PMTYPE"
+		fatal "Have no suitable command for $PMTYPE"
 		;;
 esac
 	echo "It is recommend to run 'epm autoremove' also"

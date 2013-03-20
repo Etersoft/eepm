@@ -50,7 +50,7 @@ case $PMTYPE in
 		echo "You need manually add repo to /etc/slackpkg/mirrors"
 		;;
 	*)
-		fatal "Do not known command for $PMTYPE"
+		fatal "Have no suitable command for $PMTYPE"
 		;;
 esac
 

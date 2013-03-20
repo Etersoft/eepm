@@ -32,7 +32,7 @@ serv_list_all()
 			sudocmd systemctl list-unit-files
 			;;
 		*)
-			fatal "Do not known command for $SERVICETYPE"
+			fatal "Have no suitable command for $SERVICETYPE"
 			;;
 	esac
 }

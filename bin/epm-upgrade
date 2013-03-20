@@ -66,7 +66,7 @@ epm_upgrade()
 		CMD="/usr/sbin/slackpkg upgrade-all"
 		;;
 	*)
-		fatal "Do not known command for $PMTYPE"
+		fatal "Have no suitable command for $PMTYPE"
 		;;
 	esac
 

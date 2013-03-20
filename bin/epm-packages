@@ -69,7 +69,7 @@ case $PMTYPE in
 		CMD="ipkg list"
 		;;
 	*)
-		fatal "Do not known query command for $PMTYPE"
+		fatal "Have no suitable query command for $PMTYPE"
 		;;
 esac
 

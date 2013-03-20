@@ -75,7 +75,7 @@ case $PMTYPE in
 		CMD="ipkg search"
 		;;
 	*)
-		fatal "Do not known search file command for $PMTYPE"
+		fatal "Have no suitable search file command for $PMTYPE"
 		;;
 esac
 

@@ -32,7 +32,7 @@ is_service_running()
 			fatal "FIXME: don't know how detect current startup state"
 			;;
 		*)
-			fatal "Do not known command for $SERVICETYPE"
+			fatal "Have no suitable command for $SERVICETYPE"
 			;;
 	esac
 }
@@ -51,7 +51,7 @@ is_service_autostart()
 			sudocmd systemctl is-enabled $1.service
 			;;
 		*)
-			fatal "Do not known command for $SERVICETYPE"
+			fatal "Have no suitable command for $SERVICETYPE"
 			;;
 	esac
 }
@@ -74,7 +74,7 @@ serv_status()
 			sudocmd systemctl status $SERVICE.service "$@"
 			;;
 		*)
-			fatal "Do not known command for $SERVICETYPE"
+			fatal "Have no suitable command for $SERVICETYPE"
 			;;
 	esac
 }

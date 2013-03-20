@@ -91,7 +91,7 @@ case $DISTRNAME in
 #		CMD="chocolatey"
 #		;;
 	*)
-		fatal "Do not known DISTRNAME $DISTRNAME yet"
+		fatal "Have no suitable DISTRNAME $DISTRNAME yet"
 		;;
 esac
 

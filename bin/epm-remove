@@ -101,7 +101,7 @@ epm_remove_names()
 			sudocmd ipkg $force remove $@
 			return ;;
 		*)
-			fatal "Do not known command for $PMTYPE"
+			fatal "Have no suitable command for $PMTYPE"
 			;;
 	esac
 }
@@ -160,7 +160,7 @@ epm_print_remove_command()
 			echo "ipkg remove $@"
 			;;
 		*)
-			fatal "Do not known appropriate remove command for $PMTYPE"
+			fatal "Have no suitable appropriate remove command for $PMTYPE"
 			;;
 	esac
 }

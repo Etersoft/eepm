@@ -33,7 +33,7 @@ __epm_filelist_file()
 			CMD="dpkg --contents"
 			;;
 		*)
-			fatal "Do not known query command for $PMTYPE"
+			fatal "Have no suitable query command for $PMTYPE"
 			;;
 	esac
 
@@ -72,7 +72,7 @@ __epm_filelist_name()
 			return
 			;;
 		*)
-			fatal "Do not known query command for $PMTYPE"
+			fatal "Have no suitable query command for $PMTYPE"
 			;;
 	esac
 

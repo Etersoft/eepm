@@ -232,7 +232,7 @@ case $DISTRNAME in
 		CMD="ipkg"
 		;;
 	*)
-		fatal "Do not known DISTRNAME $DISTRNAME"
+		fatal "Have no suitable DISTRNAME $DISTRNAME"
 		;;
 esac
 PMTYPE=$CMD

@@ -72,7 +72,7 @@ case $PMTYPE in
 		CMD="brew search"
 		;;
 	*)
-		fatal "Do not known search command for $PMTYPE"
+		fatal "Have no suitable search command for $PMTYPE"
 		;;
 esac
 

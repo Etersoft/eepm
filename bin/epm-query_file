@@ -93,7 +93,7 @@ __do_query()
             CMD="ipkg files"
             ;;
         *)
-            fatal "Do not known query command for $PMTYPE"
+            fatal "Have no suitable query command for $PMTYPE"
             ;;
     esac
 
@@ -124,7 +124,7 @@ __do_short_query()
             return
             ;;
         *)
-            fatal "Do not known query command for $PMTYPE"
+            fatal "Have no suitable query command for $PMTYPE"
             ;;
     esac
 

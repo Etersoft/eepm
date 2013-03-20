@@ -67,7 +67,7 @@ case $PMTYPE in
 		sudocmd ipkg update
 		;;
 	*)
-		fatal "Do not known update command for $PMTYPE"
+		fatal "Have no suitable update command for $PMTYPE"
 		;;
 esac
 

@@ -33,7 +33,7 @@ case $PMTYPE in
 		return
 		;;
 	*)
-		fatal "Do not known command for $PMTYPE"
+		fatal "Have no suitable command for $PMTYPE"
 		;;
 esac
 
@@ -55,7 +55,7 @@ case $PMTYPE in
 		CMD="apt-cache depends"
 		;;
 	*)
-		fatal "Do not known command for $PMTYPE"
+		fatal "Have no suitable command for $PMTYPE"
 		;;
 esac
 

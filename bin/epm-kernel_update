@@ -29,7 +29,7 @@ epm_kernel_update()
 
 	case $PMTYPE in
 	*)
-		fatal "Do not known command for $PMTYPE"
+		fatal "Have no suitable command for $PMTYPE"
 		;;
 	esac
 }

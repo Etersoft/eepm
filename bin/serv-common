@@ -33,7 +33,7 @@ serv_common()
 			sudocmd systemctl "$@" $SERVICE
 			;;
 		*)
-			fatal "Do not known command for $SERVICETYPE"
+			fatal "Have no suitable command for $SERVICETYPE"
 			;;
 	esac
 

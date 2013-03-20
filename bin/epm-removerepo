@@ -48,7 +48,7 @@ case $PMTYPE in
 		echo "You need remove repo from /etc/slackpkg/mirrors"
 		;;
 	*)
-		fatal "Do not known command for $PMTYPE"
+		fatal "Have no suitable command for $PMTYPE"
 		;;
 esac
 

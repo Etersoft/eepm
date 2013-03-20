@@ -74,7 +74,7 @@ case $PMTYPE in
 		docmd ipkg info $pkg_names
 		;;
 	*)
-		fatal "Do not known command for $PMTYPE"
+		fatal "Have no suitable command for $PMTYPE"
 		;;
 esac
 

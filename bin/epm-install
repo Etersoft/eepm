@@ -119,7 +119,7 @@ epm_install_names()
 			[ -n "$pkg_installed" ] && sudocmd nix-env --upgrade $pkg_installed
 			return ;;
 		*)
-			fatal "Do not known install command for $PMTYPE"
+			fatal "Have no suitable install command for $PMTYPE"
 			;;
 	esac
 }
@@ -174,7 +174,7 @@ epm_ni_install_names()
 			[ -n "$pkg_installed" ] && sudocmd /usr/sbin/slackpkg -batch=on -default_answer=yes upgrade $pkg_installed
 			return ;;
 		*)
-			fatal "Do not known appropriate install command for $PMTYPE"
+			fatal "Have no suitable appropriate install command for $PMTYPE"
 			;;
 	esac
 }
@@ -280,7 +280,7 @@ epm_print_install_command()
             echo "ipkg install $@"
             ;;
         *)
-            fatal "Do not known appropriate install command for $PMTYPE"
+            fatal "Have no suitable appropriate install command for $PMTYPE"
             ;;
     esac
 }
