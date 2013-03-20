@@ -18,9 +18,9 @@
 #
 
 load_helper epm-update
-load_helper epm-upgrade
+load_helper epm-install
 
-epm_Upgrade()
+epm_Install()
 {
 	case $PMTYPE in
 		yum-rpm)
@@ -30,5 +30,5 @@ epm_Upgrade()
 			;;
 	esac
 
-	epm_upgrade
+	epm_install
 }

@@ -145,6 +145,9 @@ check_command()
     reinstall)            # HELPCMD: reinstall package(s) from remote repositories or from local file
         epm_cmd=reinstall
         ;;
+    Install)              # HELPCMD: perform update package repo info and install package(s) via install command
+        epm_cmd=Install
+        ;;
     -q|installed)         # HELPCMD: check presence of package(s)
         epm_cmd=query
         ;;
