@@ -52,7 +52,7 @@ case $PMTYPE in
 		if is_installed $pkg_names ; then
 			CMD="rpm -q --provides"
 		else
-			# FIXME: use hi level commands
+			fatal "FIXME: use hi level commands"
 		fi
 		;;
 	emerge)
