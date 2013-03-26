@@ -22,6 +22,13 @@ load_helper epm-install
 
 epm_Install()
 {
+    # copied from epm_install
+    local names="$(echo $pkg_names | filter_out_installed_packages)"
+    local files="$(echo $pkg_files | filter_out_installed_packages)"
+
+    [ -z "$files$names" ] && echo "Skip empty install list" && return 22
+
+	# do update only if really need install something
 	case $PMTYPE in
 		yum-rpm)
 			;;
@@ -30,5 +37,7 @@ epm_Install()
 			;;
 	esac
 
-	epm_install
+    epm_install_names $names || return
+    epm_install_files $files
+
 }
