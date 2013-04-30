@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.2.5
+Version: 1.2.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -57,6 +57,9 @@ install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/se
 %_sysconfdir/bash_completion.d/serv
 
 %changelog
+* Tue Apr 30 2013 Vitaly Lipatov <lav@altlinux.ru> 1.2.6-alt1
+- epm Install: do package base update only if really need install something
+
 * Thu Mar 21 2013 Vitaly Lipatov <lav@altlinux.ru> 1.2.5-alt1
 - distr_info: add more correct support for Gentoo
 - epm-install: add check for zypper's --no-gpg-checks
