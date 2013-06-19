@@ -24,7 +24,8 @@ epm_upgrade()
 
 	case $PMTYPE in
 	apt-rpm|apt-dpkg)
-		# FIXME: apt-get update before
+		# non_interactive
+		# Функцию добавления параметра при условии
 		CMD="apt-get dist-upgrade"
 		;;
 	yum-rpm)

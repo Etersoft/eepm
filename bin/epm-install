@@ -94,7 +94,6 @@ epm_install_names()
 		npackd)
 			separate_installed $@
 			# FIXME: fix return status
-			# TODO: use upgrade if package is already installed
 			[ -n "$pkg_noninstalled" ] && sudocmd npackdcl add --package=$@ $pkg_noninstalled
 			[ -n "$pkg_installed" ] && sudocmd npackdcl update --package=$@ $pkg_installed
 			return ;;

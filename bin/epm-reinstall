@@ -36,7 +36,7 @@ epm_reinstall_names()
 	esac
 
 	# fallback to generic install
-	epm_install_names
+	epm_install_names $@
 }
 
 epm_reinstall_files()

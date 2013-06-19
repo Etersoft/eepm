@@ -20,9 +20,10 @@
 epm_autoremove()
 {
 case $PMTYPE in
-	#apt-rpm)
-	#	sudocmd apt-get autoclean
-	#	;;
+	apt-rpm)
+		# ALT Linux only
+		sudocmd remove-old-kernels
+		;;
 	apt-dpkg)
 		sudocmd apt-get autoremove
 		;;
