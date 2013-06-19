@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.2.6
+Version: 1.2.7
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -60,6 +60,13 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/serv
 
 %changelog
+* Wed Jun 19 2013 Vitaly Lipatov <lav@altlinux.ru> 1.2.7-alt1
+- add epmu == epm update command
+- serv: fix without param checking
+- serv: fixes for systemd after real use
+- epm-install: fix Slackware install with sudocmd_foreach
+- epm-install: do not fall to hi level if rpm is already installed
+
 * Tue Apr 30 2013 Vitaly Lipatov <lav@altlinux.ru> 1.2.6-alt1
 - epm Install: do package base update only if really need install something
 
