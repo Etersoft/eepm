@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012  Etersoft
-# Copyright (C) 2012  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2013  Etersoft
+# Copyright (C) 2012, 2013  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -28,8 +28,7 @@ is_service_running()
 			$SUDO /etc/init.d/$1 status >/dev/null
 			;;
 		systemd)
-			#sudocmd systemctl is-enabled $1
-			fatal "FIXME: don't know how detect current startup state"
+			$SUDO systemctl status $1 >/dev/null
 			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
@@ -48,7 +47,7 @@ is_service_autostart()
 			fatal "FIXME: don't know how detect current startup state"
 			;;
 		systemd)
-			sudocmd systemctl is-enabled $1.service
+			$SUDO systemctl is-enabled $1
 			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
@@ -58,7 +57,7 @@ is_service_autostart()
 
 serv_status()
 {
-	is_service_autostart $1 && echo "Service $1 is sheduled to run on startup" || echo "Service $1 will NOT run on startup"
+	is_service_autostart $1 && echo "Service $1 is scheduled to run on startup" || echo "Service $1 will NOT run on startup"
 
 	local SERVICE="$1"
 	shift
@@ -71,7 +70,7 @@ serv_status()
 			sudocmd /etc/init.d/$SERVICE status "$@"
 			;;
 		systemd)
-			sudocmd systemctl status $SERVICE.service "$@"
+			sudocmd systemctl status $SERVICE "$@"
 			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"

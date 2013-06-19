@@ -29,7 +29,7 @@ serv_list_all()
 			sudocmd ls -1 /etc/init.d/* | sed -e "s|/etc/init.d/||g" | grep -v README
 			;;
 		systemd)
-			sudocmd systemctl list-unit-files
+			sudocmd systemctl list-unit-files $@
 			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"

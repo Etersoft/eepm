@@ -30,13 +30,13 @@ serv_list()
 			sudocmd service --status-all
 			;;
 		systemd)
-			sudocmd systemctl list-units
+			sudocmd systemctl list-units $@
 			;;
 		*)
 			load_helper serv-list_all
 			load_helper serv-status
 			for i in $(serv_list_all) ; do
-				is_service_running $i && echo $i
+				is_service_running $i >/dev/null && echo $i
 			done
 			;;
 	esac

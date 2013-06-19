@@ -31,7 +31,12 @@ serv_list_startup()
 #			sudocmd systemctl list-unit-files
 #			;;
 		*)
-			fatal "Have no suitable command for $SERVICETYPE"
+			load_helper serv-list_all
+			load_helper serv-status
+			for i in $(serv_list_all | cut -f 1 -d" " | grep "\.service$") ; do
+				is_service_autostart >/dev/null $i && echo $i
+			done
 			;;
+
 	esac
 }
