@@ -185,9 +185,10 @@ epm_install_files()
     case $PMTYPE in
         apt-rpm)
             sudocmd rpm -Uvh $force $nodeps $@ && return
+            local RES=$?
             # TODO: check for "is already installed"
             # if run with --nodeps, do not fallback on hi level
-            [ -n "$nodeps" ] && return
+            [ -n "$nodeps" ] && return $RES
 
             # use install_names
             ;;
@@ -196,13 +197,18 @@ epm_install_files()
             if [ -n "$non_interactive" ] ; then
                 DPKGOPTIONS="--force-confdef --force-confold"
             fi
+            # FIXME: return false in case no install and in case install with broken deps
             sudocmd dpkg $DPKGOPTIONS -i $@
+            local RES=$?
             # if run with --nodeps, do not fallback on hi level
 
-            [ -n "$nodeps" ] && return
+            [ -n "$nodeps" ] && return $RES
             # fall to apt-get -f install for fix deps
             # can't use APTOPTIONS with empty install args
             epm_install_names -f
+
+            # repeat install for get correct status
+            sudocmd dpkg $DPKGOPTIONS -i $@
             return
             ;;
         yum-rpm|dnf-rpm)
@@ -215,16 +221,20 @@ epm_install_files()
             ;;
         zypper-rpm)
             sudocmd rpm -Uvh $force $nodeps $@ && return
+            local RES=$?
+
             # if run with --nodeps, do not fallback on hi level
 
-            [ -n "$nodeps" ] && return
+            [ -n "$nodeps" ] && return $RES
             ZYPPEROPTIONS=$(__use_zypper_no_gpg_checks)
             # use install_names
             ;;
         urpm-rpm)
             sudocmd rpm -Uvh $force $nodeps $@ && return
+            local RES=$?
+
             # if run with --nodeps, do not fallback on hi level
-            [ -n "$nodeps" ] && return
+            [ -n "$nodeps" ] && return $RES
 
             URPMOPTIONS=--no-verify-rpm
             # use install_names
@@ -238,7 +248,9 @@ epm_install_files()
             return ;;
         pacman)
             sudocmd pacman -U --noconfirm $force $nodeps $@ && return
-            [ -n "$nodeps" ] && return
+            local RES=$?
+
+            [ -n "$nodeps" ] && return $RES
             sudocmd pacman -U $force $@
             return ;;
         slackpkg)
