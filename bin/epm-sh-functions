@@ -157,6 +157,16 @@ fatal()
 	exit 1
 }
 
+# Print warning message
+warning()
+{
+	if [ -z "$TEXTDOMAIN" ] ; then
+		echo "Warning: $@" >&2
+#	else
+#		echog "Error in $0: $@" >&2
+	fi
+}
+
 set_sudo()
 {
 	SUDO=""

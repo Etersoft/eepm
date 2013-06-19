@@ -49,7 +49,7 @@ case $PMTYPE in
 		sudocmd revdep-rebuild
 		;;
 	pacman)
-		sudocmd pacman -Qdtq | pacman -Rs -
+		sudocmd pacman -Qdtq | sudocmd pacman -Rs -
 		;;
 	slackpkg)
 		# clean-system removes non official packages

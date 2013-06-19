@@ -45,6 +45,9 @@ install -m 0755 packed/serv.sh %buildroot/%_datadir/%name/serv-packed.sh
 mkdir -p %buildroot%_sysconfdir/bash_completion.d/
 install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/serv
 
+# shebang.req.files
+chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
+
 %files
 %doc README TODO LICENSE
 %_bindir/epm*

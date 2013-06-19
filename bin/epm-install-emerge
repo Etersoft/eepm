@@ -69,7 +69,7 @@ __emerge_install_ebuild()
 }
 
 # install one ebuild
-__emerge_install_tbgz2()
+__emerge_install_tbz2()
 {
 	local TGDIR=/usr/portage/packages/app-arch
 	mkdir -p $TGDIR
