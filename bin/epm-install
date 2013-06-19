@@ -100,9 +100,8 @@ epm_install_names()
 			return ;;
 		slackpkg)
 			separate_installed $@
-			# TODO: use upgrade if package is already installed
-			[ -n "$pkg_noninstalled" ] && sudocmd /usr/sbin/slackpkg install $pkg_noninstalled
-			[ -n "$pkg_installed" ] && sudocmd /usr/sbin/slackpkg upgrade $pkg_installed
+			[ -n "$pkg_noninstalled" ] && sudocmd_foreach "/usr/sbin/slackpkg install" $pkg_noninstalled
+			[ -n "$pkg_installed" ] && sudocmd_foreach "/usr/sbin/slackpkg upgrade" $pkg_installed
 			return ;;
 		homebrew)
 			separate_installed $@
@@ -169,9 +168,9 @@ epm_ni_install_names()
 			return ;;
 		slackpkg)
 			separate_installed $@
-			# FIXME: broken status when use batch and default answrt
-			[ -n "$pkg_noninstalled" ] && sudocmd /usr/sbin/slackpkg -batch=on -default_answer=yes install $pkg_noninstalled
-			[ -n "$pkg_installed" ] && sudocmd /usr/sbin/slackpkg -batch=on -default_answer=yes upgrade $pkg_installed
+			# FIXME: broken status when use batch and default answer
+			[ -n "$pkg_noninstalled" ] && sudocmd_foreach "/usr/sbin/slackpkg -batch=on -default_answer=yes install" $pkg_noninstalled
+			[ -n "$pkg_installed" ] && sudocmd_foreach "/usr/sbin/slackpkg -batch=on -default_answer=yes upgrade" $pkg_installed
 			return ;;
 		*)
 			fatal "Have no suitable appropriate install command for $PMTYPE"

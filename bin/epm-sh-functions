@@ -96,7 +96,7 @@ docmd()
 	"$@"
 }
 
-# Print command line and run command line
+# Run every arg with docmd
 docmd_foreach()
 {
 	local cmd
@@ -114,6 +114,19 @@ sudocmd()
 	showcmd "$SUDO $@"
 	$SUDO "$@"
 }
+
+# Run every arg with sudocmd
+sudocmd_foreach()
+{
+	local cmd
+	cmd="$1"
+	#showcmd "$@"
+	shift
+	for pkg in "$@" ; do
+		sudocmd $cmd $pkg
+	done
+}
+
 
 filter_strip_spaces()
 {
