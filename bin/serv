@@ -141,7 +141,7 @@ show_command_only=
 serv_cmd=
 service_name=
 params=
-
+withoutservicename=
 
 check_command()
 {
@@ -154,6 +154,7 @@ check_command()
         ;;
     usage)                    # HELPCMD: print out usage of the service
         serv_cmd=usage
+        withoutservicename=1
         ;;
     #restart)                 # HELPCMD: restart service
     #reload)                  # HELPCMD: reload service
@@ -168,12 +169,15 @@ check_command()
         ;;
     list)                     # HELPCMD: list running services
         serv_cmd=list
+        withoutservicename=1
         ;;
     list-all)                 # HELPCMD: list all available services
         serv_cmd=list_all
+        withoutservicename=1
         ;;
     list-startup)             # HELPCMD: list all services to run on startup
         serv_cmd=list_startup
+        withoutservicename=1
         ;;
     on|enable)                # HELPCMD: add service to run on startup and start it now
         serv_cmd=enable
@@ -229,7 +233,7 @@ echover "service: $service_name"
 echover "command: $serv_cmd"
 
 # Just printout help if run without args
-if [ "$serv_cmd" != "list" ] && [ "$serv_cmd" != "list_all" ] && [ -z "$service_name" ] ; then
+if [ -z "$withoutservicename" ] && [ -z "$service_name" ] ; then
     print_version
     echo
     fatal "Run $ $progname --help for get help"
