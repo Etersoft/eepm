@@ -126,6 +126,18 @@ sudocmd()
 	$SUDO "$@"
 }
 
+sudocmd_foreach()
+{
+	local cmd
+	cmd="$1"
+	#showcmd "$@"
+	shift
+	for pkg in "$@" ; do
+		sudocmd $cmd $pkg
+	done
+}
+
+
 filter_strip_spaces()
 {
         # possible use just
@@ -150,6 +162,13 @@ fatal()
 		echo "Error: $@" >&2
 	fi
 	exit 1
+}
+
+warning()
+{
+	if [ -z "$TEXTDOMAIN" ] ; then
+		echo "Warning: $@" >&2
+	fi
 }
 
 set_sudo()
@@ -237,7 +256,7 @@ case $DISTRNAME in
 		CMD="ipkg"
 		;;
 	*)
-		fatal "Do not known DISTRNAME $DISTRNAME"
+		fatal "Have no suitable DISTRNAME $DISTRNAME"
 		;;
 esac
 PMTYPE=$CMD
@@ -273,13 +292,13 @@ case $PMTYPE in
 		#sudocmd repo-add $pkg_filenames
 		;;
 	npackd)
-		docmd npackdcl add-repo --url=$pkg_filenames
+		sudocmd npackdcl add-repo --url=$pkg_filenames
 		;;
 	slackpkg)
 		echo "You need manually add repo to /etc/slackpkg/mirrors"
 		;;
 	*)
-		fatal "Do not known command for $PMTYPE"
+		fatal "Have no suitable command for $PMTYPE"
 		;;
 esac
 
@@ -290,23 +309,46 @@ esac
 epm_autoremove()
 {
 case $PMTYPE in
-	#apt-rpm)
-	#	sudocmd apt-get autoclean
-	#	;;
+	apt-rpm)
+		# ALT Linux only
+		sudocmd remove-old-kernels
+		;;
 	apt-dpkg)
 		sudocmd apt-get autoremove
 		;;
-	#yum-rpm)
-	#	sudocmd yum clean all
-	#	;;
-	#urpm-rpm)
-	#	sudocmd urpmi --clean
-	#	;;
+	aura)
+		sudocmd aura -Oj
+		;;
+	yum-rpm)
+		# cleanup orphanes?
+		while true ; do
+			docmd package-cleanup --leaves
+			# FIXME: package-cleanup have to use stderr for errors
+			local PKGLIST=$(package-cleanup --leaves | grep -v "Loaded plugins" | grep -v "Unable to")
+			[ -n "$PKGLIST" ] || break
+			sudocmd yum remove $PKGLIST
+		done
+		;;
+	urpm-rpm)
+		sudocmd urpme --auto-orphans
+		;;
+	emerge)
+		sudocmd emerge --depclean
+		docmd epm --skip-installed install gentoolkit
+		sudocmd revdep-rebuild
+		;;
+	pacman)
+		sudocmd pacman -Qdtq | sudocmd pacman -Rs -
+		;;
+	slackpkg)
+		# clean-system removes non official packages
+		#sudocmd slackpkg clean-system
+		;;
 	#zypper-rpm)
 	#	sudocmd zypper clean
 	#	;;
 	*)
-		fatal "Do not known command for $PMTYPE"
+		fatal "Have no suitable command for $PMTYPE"
 		;;
 esac
 
@@ -324,7 +366,7 @@ __epm_changelog_files()
 			docmd_foreach "rpm -p --changelog" $@ | less
 			;;
 		*)
-			fatal "Do not known command for $PMTYPE"
+			fatal "Have no suitable command for $PMTYPE"
 			;;
 	esac
 
@@ -350,7 +392,7 @@ __epm_changelog_local_names()
 			docmd pacman -Qc $1 | less
 			;;
 		*)
-			fatal "Do not known command for $PMTYPE"
+			fatal "Have no suitable command for $PMTYPE"
 			;;
 	esac
 }
@@ -377,7 +419,7 @@ __epm_changelog_unlocal_names()
 		#	sudocmd zypper clean
 		#	;;
 		*)
-			fatal "Do not known command for $PMTYPE"
+			fatal "Have no suitable command for $PMTYPE"
 			;;
 	esac
 
@@ -423,28 +465,19 @@ case $PMTYPE in
 		#docmd package-cleanup --dupes
 		sudocmd package-cleanup --cleandupes
 
-		# cleanup orphanes?
-		while true ; do
-			docmd package-cleanup --leaves
-			# FIXME: package-cleanup have to use stderr for errors
-			local PKGLIST=$(package-cleanup --leaves | grep -v "Loaded plugins" | grep -v "Unable to")
-			[ -n "$PKGLIST" ] || break
-			sudocmd yum remove $PKGLIST
-		done
-
 		docmd rpm -Va --nofiles --nodigest
 		;;
-	pacman)
+	emerge)
 		sudocmd revdep-rebuild
 		;;
 	urpm-rpm)
-		sudocmd urpme --auto-orphans
+		#sudocmd urpme --auto-orphans
 		;;
 	zypper-rpm)
 		sudocmd zypper verify || exit
 		;;
 	*)
-		fatal "Do not known command for $PMTYPE"
+		fatal "Have no suitable command for $PMTYPE"
 		;;
 esac
 
@@ -523,20 +556,19 @@ check_pkg_integrity()
 	# TODO: Попробовать здесь оставить возможность перегрузки функций
 	case $EXT in
 	rpm)
-		docmd rpm --checksig $@
+		docmd rpm --checksig $1
 		;;
 	deb)
 		# FIXME: debsums -ca package ?
-		docmd dpkg --contents $@
+		docmd dpkg --contents $1 >/dev/null && echo "Package $1 is correct."
 		;;
 	bz2)
 		docmd bunzip -t $1
 		;;
-	#*)
-	#	fatal "Unknown package extension '$EXT' in $PKG package"
-	#	;;
+	*)
+		check_${EXT}_integrity "$PKG" || fatal "Unknown package extension '$EXT' in $PKG package"
+		;;
 	esac
-	check_${EXT}_integrity "$PKG" || fatal "Unknown package extension '$EXT' in $PKG package"
 }
 
 __epm_check_installed_pkg()
@@ -549,7 +581,7 @@ case $PMTYPE in
 		docmd debsums $@
 		;;
 	*)
-		fatal "Do not known command for $PMTYPE"
+		fatal "Have no suitable command for $PMTYPE"
 		;;
 esac
 
@@ -580,7 +612,7 @@ case $PMTYPE in
 		;;
 	yum-rpm)
 		sudocmd yum clean all
-		sudocmd yum makecache
+		#sudocmd yum makecache
 		;;
 	dnf-rpm)
 		sudocmd dnf clean all
@@ -594,10 +626,16 @@ case $PMTYPE in
 	zypper-rpm)
 		sudocmd zypper clean
 		;;
+	nix)
+		sudocmd nix-collect-garbage
+		;;
+	slackpkg)
+		;;
 	*)
-		fatal "Do not known command for $PMTYPE"
+		fatal "Have no suitable command for $PMTYPE"
 		;;
 esac
+	echo "It is recommend to run 'epm autoremove' also"
 
 }
 
@@ -618,7 +656,7 @@ __epm_filelist_file()
 			CMD="dpkg --contents"
 			;;
 		*)
-			fatal "Do not known query command for $PMTYPE"
+			fatal "Have no suitable query command for $PMTYPE"
 			;;
 	esac
 
@@ -657,7 +695,7 @@ __epm_filelist_name()
 			return
 			;;
 		*)
-			fatal "Do not known query command for $PMTYPE"
+			fatal "Have no suitable query command for $PMTYPE"
 			;;
 	esac
 
@@ -719,6 +757,10 @@ case $PMTYPE in
 		is_installed $pkg_names && docmd pacman -Qi $pkg_names && return
 		docmd pacman -Si $pkg_names
 		;;
+	aura)
+		is_installed $pkg_names && docmd pacman -Qi $pkg_names && return
+		docmd aura -Ai $pkg_names
+		;;
 	npackd)
 		# FIXME: --version=
 		docmd npackdcl info --package=$pkg_names
@@ -730,7 +772,7 @@ case $PMTYPE in
 		docmd ipkg info $pkg_names
 		;;
 	*)
-		fatal "Do not known command for $PMTYPE"
+		fatal "Have no suitable command for $PMTYPE"
 		;;
 esac
 
@@ -748,10 +790,11 @@ filter_out_installed_packages()
 			LANG=C LC_ALL=C xargs -n1 rpm -q 2>&1 | grep 'is not installed' |
 				sed -e 's|^.*package \(.*\) is not installed.*|\1|g'
 			;;
-		"deb")
-			LANG=C LC_ALL=C xargs -n1 dpkg -l 2>&1 | grep 'no packages found matching' |
-				sed -e 's|^.*no packages found matching \(.*\)|\1|g'
-			;;
+		# dpkg -l lists some non ii status (un, etc)
+		#"deb")
+		#	LANG=C LC_ALL=C xargs -n1 dpkg -l 2>&1 | grep -i 'no packages found matching' |
+		#		sed -e 's|\.\+$||g' -e 's|^.*[Nn]o packages found matching \(.*\)|\1|g'
+		#	;;
 		*)
 			for i in $(cat) ; do
 				is_installed $i || echo $i
@@ -760,6 +803,10 @@ filter_out_installed_packages()
 	esac | sed -e "s|rpm-build-altlinux-compat[^ ]*||g" | filter_strip_spaces
 }
 
+__use_zypper_no_gpg_checks()
+{
+    a= zypper install --help 2>&1 | grep -q -- "--no-gpg-checks" && echo "--no-gpg-checks"
+}
 
 epm_install_names()
 {
@@ -788,6 +835,9 @@ epm_install_names()
 		pacman)
 			sudocmd pacman -S $force $nodeps $@
 			return ;;
+		aura)
+			sudocmd aura -A $force $nodeps $@
+			return ;;
 		yum-rpm)
 			sudocmd yum $YUMOPTIONS install $@
 			return ;;
@@ -800,11 +850,16 @@ epm_install_names()
 		mpkg)
 			sudocmd mpkg install $@
 			return ;;
+		npackd)
+			separate_installed $@
+			# FIXME: fix return status
+			[ -n "$pkg_noninstalled" ] && sudocmd npackdcl add --package=$@ $pkg_noninstalled
+			[ -n "$pkg_installed" ] && sudocmd npackdcl update --package=$@ $pkg_installed
+			return ;;
 		slackpkg)
 			separate_installed $@
-			# TODO: use upgrade if package is already installed
-			[ -n "$pkg_noninstalled" ] && sudocmd /usr/sbin/slackpkg install $pkg_noninstalled
-			[ -n "$pkg_installed" ] && sudocmd /usr/sbin/slackpkg upgrade $pkg_installed
+			[ -n "$pkg_noninstalled" ] && sudocmd_foreach "/usr/sbin/slackpkg install" $pkg_noninstalled
+			[ -n "$pkg_installed" ] && sudocmd_foreach "/usr/sbin/slackpkg upgrade" $pkg_installed
 			return ;;
 		homebrew)
 			separate_installed $@
@@ -815,8 +870,13 @@ epm_install_names()
 			[ -n "$force" ] && force=-force-depends
 			sudocmd ipkg $force install $@
 			return ;;
+		nix)
+			separate_installed $@
+			[ -n "$pkg_noninstalled" ] && sudocmd nix-env --install $pkg_noninstalled
+			[ -n "$pkg_installed" ] && sudocmd nix-env --upgrade $pkg_installed
+			return ;;
 		*)
-			fatal "Do not known install command for $PMTYPE"
+			fatal "Have no suitable install command for $PMTYPE"
 			;;
 	esac
 }
@@ -841,12 +901,18 @@ epm_ni_install_names()
 		pkgsrc)
 			sudocmd pkg_add -r $@
 			return ;;
+		emerge)
+			sudocmd emerge -uD $@
+			return ;;
 		pacman)
 			sudocmd pacman -S --noconfirm $force $nodeps $@
 			return ;;
+		aura)
+			sudocmd aura -A $force $nodeps $@
+			return ;;
 		npackd)
 			#  npackdcl update --package=<package> (remove old and install new)
-			docmd npackdcl add --package=$@
+			sudocmd npackdcl add --package=$@
 			return ;;
 		chocolatey)
 			docmd chocolatey install $@
@@ -854,15 +920,27 @@ epm_ni_install_names()
 		ipkg)
 			sudocmd ipkg -force-defaults install $@
 			return ;;
+		nix)
+			sudocmd nix-env --install $@
+			return ;;
 		slackpkg)
-			# TODO: use upgrade if package is already installed
-			sudocmd /usr/sbin/slackpkg -batch=on -default_answer=yes install $@
+			separate_installed $@
+			# FIXME: broken status when use batch and default answer
+			[ -n "$pkg_noninstalled" ] && sudocmd_foreach "/usr/sbin/slackpkg -batch=on -default_answer=yes install" $pkg_noninstalled
+			[ -n "$pkg_installed" ] && sudocmd_foreach "/usr/sbin/slackpkg -batch=on -default_answer=yes upgrade" $pkg_installed
 			return ;;
 		*)
-			fatal "Do not known appropriate install command for $PMTYPE"
+			fatal "Have no suitable appropriate install command for $PMTYPE"
 			;;
 	esac
 }
+
+__epm_check_if_rpm_already_installed()
+{
+	# Not: we can make optimize if just check version?
+	LANG=C $SUDO rpm -Uvh $force $nodeps $@ 2>&1 | grep -q "is already installed"
+}
+
 
 epm_install_files()
 {
@@ -871,9 +949,12 @@ epm_install_files()
     case $PMTYPE in
         apt-rpm)
             sudocmd rpm -Uvh $force $nodeps $@ && return
-            # TODO: check for "is already installed"
+            local RES=$?
+
+            __epm_check_if_rpm_already_installed $@ && return
+
             # if run with --nodeps, do not fallback on hi level
-            [ -n "$nodeps" ] && return
+            [ -n "$nodeps" ] && return $RES
 
             # use install_names
             ;;
@@ -882,18 +963,25 @@ epm_install_files()
             if [ -n "$non_interactive" ] ; then
                 DPKGOPTIONS="--force-confdef --force-confold"
             fi
+            # FIXME: return false in case no install and in case install with broken deps
             sudocmd dpkg $DPKGOPTIONS -i $@
+            local RES=$?
             # if run with --nodeps, do not fallback on hi level
 
-            [ -n "$nodeps" ] && return
+            [ -n "$nodeps" ] && return $RES
             # fall to apt-get -f install for fix deps
             # can't use APTOPTIONS with empty install args
             epm_install_names -f
+
+            # repeat install for get correct status
+            sudocmd dpkg $DPKGOPTIONS -i $@
             return
             ;;
         yum-rpm|dnf-rpm)
             sudocmd rpm -Uvh $force $nodeps $@ && return
             # if run with --nodeps, do not fallback on hi level
+
+            __epm_check_if_rpm_already_installed $@ && return
 
             [ -n "$nodeps" ] && return
             YUMOPTIONS=--nogpgcheck
@@ -901,16 +989,24 @@ epm_install_files()
             ;;
         zypper-rpm)
             sudocmd rpm -Uvh $force $nodeps $@ && return
+            local RES=$?
+
+            __epm_check_if_rpm_already_installed $@ && return
+
             # if run with --nodeps, do not fallback on hi level
 
-            [ -n "$nodeps" ] && return
-            ZYPPEROPTIONS=--no-gpg-checks
+            [ -n "$nodeps" ] && return $RES
+            ZYPPEROPTIONS=$(__use_zypper_no_gpg_checks)
             # use install_names
             ;;
         urpm-rpm)
             sudocmd rpm -Uvh $force $nodeps $@ && return
+            local RES=$?
+
+            __epm_check_if_rpm_already_installed $@ && return
+
             # if run with --nodeps, do not fallback on hi level
-            [ -n "$nodeps" ] && return
+            [ -n "$nodeps" ] && return $RES
 
             URPMOPTIONS=--no-verify-rpm
             # use install_names
@@ -918,9 +1014,15 @@ epm_install_files()
         pkgsrc)
             sudocmd pkg_add $@
             return ;;
+        emerge)
+            load_helper epm-install-emerge
+            sudocmd epm_install_emerge $@
+            return ;;
         pacman)
             sudocmd pacman -U --noconfirm $force $nodeps $@ && return
-            [ -n "$nodeps" ] && return
+            local RES=$?
+
+            [ -n "$nodeps" ] && return $RES
             sudocmd pacman -U $force $@
             return ;;
         slackpkg)
@@ -944,6 +1046,10 @@ epm_print_install_command()
         pkgsrc)
             echo "pkg_add $@"
             ;;
+        emerge)
+            # need be placed in /usr/portage/packages/somewhere
+            echo "emerge --usepkg $@"
+            ;;
         pacman)
             echo "pacman -U --noconfirm --force $nodeps $@"
             ;;
@@ -957,7 +1063,7 @@ epm_print_install_command()
             echo "ipkg install $@"
             ;;
         *)
-            fatal "Do not known appropriate install command for $PMTYPE"
+            fatal "Have no suitable appropriate install command for $PMTYPE"
             ;;
     esac
 }
@@ -970,7 +1076,7 @@ epm_install()
         return
     fi
 
-    [ -n "$pkg_files$pkg_names" ] || fatal "Run install without packages"
+    [ -n "$pkg_files$pkg_names" ] || { echo "Skip empty install list" ; return 22 ; }
 
     local names="$(echo $pkg_names | filter_out_installed_packages)"
     local files="$(echo $pkg_files | filter_out_installed_packages)"
@@ -979,6 +1085,105 @@ epm_install()
 
     epm_install_names $names || return
     epm_install_files $files
+}
+
+# File bin/epm-Install:
+
+
+epm_Install()
+{
+    # copied from epm_install
+    local names="$(echo $pkg_names | filter_out_installed_packages)"
+    local files="$(echo $pkg_files | filter_out_installed_packages)"
+
+    [ -z "$files$names" ] && echo "Skip empty install list" && return 22
+
+	# do update only if really need install something
+	case $PMTYPE in
+		yum-rpm)
+			;;
+		*)
+			epm_update || return
+			;;
+	esac
+
+    epm_install_names $names || return
+    epm_install_files $files
+
+}
+
+# File bin/epm-install-emerge:
+
+
+
+__emerge_install_ebuild()
+{
+	local EBUILD="$1"
+	[ -s "$EBUILD" ] || fatal ".ebuild file '$EBUILD' is missing"
+
+	# load ebuild and get vars
+	. $(pwd)/$EBUILD
+	[ -n "$SRC_URI" ] || fatal "Can't load SRC_URI from $EBUILD"
+
+	# try to detect tarballs
+	local TARBALLS=
+	local BASEDIR=$(dirname $EBUILD)
+	for i in $SRC_URI ; do
+		[ -s "$BASEDIR/$(basename $i)" ] || continue
+		TARBALLS="$TARBALLS $BASEDIR/$(basename $i)"
+	done
+
+	local PORTAGENAME=epm
+	local LP=/usr/local/portage/$PORTAGENAME
+	docmd mkdir -p $LP/
+	MAKECONF=/etc/portage/make.conf
+	[ -r "$MAKECONF" ] || MAKECONF=/etc/make.conf
+	if ! grep -v "^#" $MAKECONF | grep -q $LP ; then
+		echo "PORTDIR_OVERLAY=\"$LP \${PORTDIR_OVERLAY}\"" >>$MAKECONF
+		# Overlay name
+		mkdir -p $LP/profiles/
+		echo "$PORTAGENAME" > $LP/profiles/repo_name
+	fi
+
+	# copy tarballs
+	local DDIR=/usr/portage/distfiles
+	[ -d /var/calculate/remote/distfiles ] && DDIR=/var/calculate/remote/distfiles
+	docmd cp -f $TARBALLS $DDIR/ || return
+
+	# copy ebuild
+	docmd cp -f $EBUILD $LP/ || return
+	cd $LP
+	docmd ebuild $(basename $EBUILD) digest
+	cd -
+	# FIXME: more correcty get name
+	local PKGNAME=$(echo $EBUILD | sed -e "s|-[0-9].*||g")
+	docmd emerge -av $PKGNAME || return
+}
+
+__emerge_install_tbz2()
+{
+	local TGDIR=/usr/portage/packages/app-arch
+	mkdir -p $TGDIR
+	cp $i $TGDIR || return
+	docmd emerge --usepkg $TGDIR/$(basename $i) || return
+}
+
+epm_install_emerge()
+{
+	local EBUILD=
+	#local TARBALLS=
+	local i
+
+	# search ebuild in the args
+	for i in $* ; do
+		if echo $i | grep -q ebuild ; then
+			__emerge_install_ebuild $i || return
+		elif echo $i | grep -q "\.tbz2$" ; then
+			__emerge_install_tbz2 $i || return
+	#	else
+	#		TARBALLS="$TARBALLS $i"
+		fi
+	done
 }
 
 # File bin/epm-kernel_update:
@@ -995,7 +1200,7 @@ epm_kernel_update()
 
 	case $PMTYPE in
 	*)
-		fatal "Do not known command for $PMTYPE"
+		fatal "Have no suitable command for $PMTYPE"
 		;;
 	esac
 }
@@ -1033,10 +1238,15 @@ case $PMTYPE in
 		fi
 		;;
 	npackd)
-		CMD="npackdcl list"
+		CMD="npackdcl list --status=installed"
+		# TODO: use search if pkg_filenames is not empty
 		;;
 	slackpkg)
 		CMD="ls -1 /var/log/packages/"
+		if [ -n "$short" ] ; then
+			docmd ls -1 /var/log/packages/ | sed -e "s|-[0-9].*||g"
+			return
+		fi
 		;;
 	homebrew)
 		CMD="brew $pkg_filenames"
@@ -1045,7 +1255,7 @@ case $PMTYPE in
 		CMD="ipkg list"
 		;;
 	*)
-		fatal "Do not known query command for $PMTYPE"
+		fatal "Have no suitable query command for $PMTYPE"
 		;;
 esac
 
@@ -1064,6 +1274,51 @@ epm_programs()
 	showcmd "find /usr/share/applications -type f -name "*.desktop" | xargs $0 -qf --quiet --short | sort -u"
 	find /usr/share/applications -type f -name "*.desktop" | \
 		xargs $0 -qf --quiet --short | sort -u
+}
+
+# File bin/epm-provides:
+
+epm_provides()
+{
+	local CMD
+	[ -n "$pkg_filenames" ] || fatal "Run query without names"
+
+case $PMTYPE in
+	*-rpm)
+		CMD="rpm -q --provides -p"
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+[ -n "$pkg_files" ] && docmd $CMD $pkg_files
+
+case $PMTYPE in
+	apt-rpm)
+		if is_installed $pkg_names ; then
+			CMD="rpm -q --provides"
+		else
+			CMD="apt-cache depends"
+		fi
+		;;
+	urpm-rpm|zypper-rpm)
+		if is_installed $pkg_names ; then
+			CMD="rpm -q --provides"
+		else
+			fatal "FIXME: use hi level commands"
+		fi
+		;;
+	emerge)
+		CMD="equery files"
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+[ -n "$pkg_names" ] && docmd $CMD $pkg_names
+
 }
 
 # File bin/epm-query:
@@ -1119,11 +1374,12 @@ __epm_query_name()
 			CMD="rpm -q"
 			;;
 		apt-dpkg)
-			CMD="dpkg -l"
+			#docmd dpkg -l $@
+			docmd dpkg -l $@ | grep "^ii"
 			# TODO: make rpm-like output
 			#showcmd dpkg -l $pkg_filenames
 			#dpkg -l $pkg_filenames | grep "^ii"
-			#return
+			return
 			;;
 		npackd)
 			CMD="npackdcl path --package=$@"
@@ -1144,7 +1400,7 @@ __epm_query_name()
 is_installed()
 {
 	#pkg_filenames="$@" epm_query >/dev/null
-	epm installed $@ >/dev/null
+	epm installed $@ >/dev/null 2>/dev/null
 }
 
 separate_installed()
@@ -1240,7 +1496,7 @@ __do_query()
             CMD="ipkg files"
             ;;
         *)
-            fatal "Do not known query command for $PMTYPE"
+            fatal "Have no suitable query command for $PMTYPE"
             ;;
     esac
 
@@ -1271,7 +1527,7 @@ __do_short_query()
             return
             ;;
         *)
-            fatal "Do not known query command for $PMTYPE"
+            fatal "Have no suitable query command for $PMTYPE"
             ;;
     esac
 
@@ -1327,7 +1583,7 @@ epm_reinstall_names()
 	esac
 
 	# fallback to generic install
-	epm_install_names
+	epm_install_names $@
 }
 
 epm_reinstall_files()
@@ -1406,7 +1662,7 @@ epm_release_upgrade()
 		epm Upgrade
 		;;
 	*)
-		fatal "Do not known command for $PMTYPE"
+		fatal "Have no suitable command for $PMTYPE"
 		;;
 	esac
 
@@ -1479,10 +1735,13 @@ epm_remove_names()
 			sudocmd mpkg remove $@
 			return ;;
 		npackd)
-			docmd npackdcl remove --package=$@
+			sudocmd npackdcl remove --package=$@
+			return ;;
+		nix)
+			sudocmd nix-env --uninstall $@
 			return ;;
 		chocolatey)
-			docmd chocolatey uninstall $@
+			sudocmd chocolatey uninstall $@
 			return ;;
 		slackpkg)
 			sudocmd /usr/sbin/slackpkg remove $@
@@ -1495,7 +1754,7 @@ epm_remove_names()
 			sudocmd ipkg $force remove $@
 			return ;;
 		*)
-			fatal "Do not known command for $PMTYPE"
+			fatal "Have no suitable command for $PMTYPE"
 			;;
 	esac
 }
@@ -1553,7 +1812,7 @@ epm_print_remove_command()
 			echo "ipkg remove $@"
 			;;
 		*)
-			fatal "Do not known appropriate remove command for $PMTYPE"
+			fatal "Have no suitable appropriate remove command for $PMTYPE"
 			;;
 	esac
 }
@@ -1609,13 +1868,13 @@ case $PMTYPE in
 		echo "You need remove repo from /etc/pacman.conf"
 		;;
 	npackd)
-		docmd npackdcl remove-repo --url=$pkg_filenames
+		sudocmd npackdcl remove-repo --url=$pkg_filenames
 		;;
 	slackpkg)
 		echo "You need remove repo from /etc/slackpkg/mirrors"
 		;;
 	*)
-		fatal "Do not known command for $PMTYPE"
+		fatal "Have no suitable command for $PMTYPE"
 		;;
 esac
 
@@ -1669,7 +1928,7 @@ case $PMTYPE in
 		docmd grep -v -- "^#\|^$" /etc/slackpkg/mirrors
 		;;
 	*)
-		fatal "Do not known command for $PMTYPE"
+		fatal "Have no suitable command for $PMTYPE"
 		;;
 esac
 
@@ -1692,7 +1951,7 @@ case $PMTYPE in
 		return
 		;;
 	*)
-		fatal "Do not known command for $PMTYPE"
+		fatal "Have no suitable command for $PMTYPE"
 		;;
 esac
 
@@ -1713,7 +1972,7 @@ case $PMTYPE in
 		CMD="apt-cache depends"
 		;;
 	*)
-		fatal "Do not known command for $PMTYPE"
+		fatal "Have no suitable command for $PMTYPE"
 		;;
 esac
 
@@ -1746,6 +2005,9 @@ case $PMTYPE in
 	pacman)
 		CMD="pacman -Ss"
 		;;
+	aura)
+		CMD="aura -As"
+		;;
 	yum-rpm)
 		CMD="yum search"
 		;;
@@ -1759,7 +2021,8 @@ case $PMTYPE in
 		CMD="mpkg search"
 		;;
 	npackd)
-		fatal "FIXME: Have not idea for search with npackdcl list"
+		docmd npackdcl search --query="$pkg_filenames" --status=all
+		return
 		;;
 	chocolatey)
 		CMD="chocolatey list"
@@ -1774,7 +2037,7 @@ case $PMTYPE in
 		CMD="brew search"
 		;;
 	*)
-		fatal "Do not known search command for $PMTYPE"
+		fatal "Have no suitable search command for $PMTYPE"
 		;;
 esac
 
@@ -1840,7 +2103,7 @@ case $PMTYPE in
 		CMD="ipkg search"
 		;;
 	*)
-		fatal "Do not known search file command for $PMTYPE"
+		fatal "Have no suitable search file command for $PMTYPE"
 		;;
 esac
 
@@ -1897,8 +2160,14 @@ _epm_do_simulate()
     		CMD="zypper --non-interactive install"
     		;;
     	emerge)
-    		echo "FIXME: Skip with emerge"
-    		return ;;
+    		local res=0
+    		for pkg in $filenames ; do
+			is_installed $pkg && continue
+			docmd emerge --pretend $pkg && continue
+			pkg=1
+			break
+    		done
+    		return $res ;;
     	pacman)
     		showcmd $SUDO pacman -v -S $filenames
     		echo no | $SUDO pacman -v -S $filenames
@@ -1917,7 +2186,7 @@ _epm_do_simulate()
     		done
     		return $res ;;
     	*)
-    		fatal "Do not known simulate command for $PMTYPE"
+    		fatal "Have no suitable simulate command for $PMTYPE"
     		;;
     esac
 
@@ -1967,6 +2236,9 @@ case $PMTYPE in
 	pacman)
 		sudocmd pacman -S -y
 		;;
+	aura)
+		sudocmd aura -A -y
+		;;
 	zypper-rpm)
 		sudocmd zypper refresh
 		;;
@@ -1979,6 +2251,9 @@ case $PMTYPE in
 	deepsolver-rpm)
 		sudocmd ds-update
 		;;
+	npackd)
+		sudocmd packdcl detect # get packages from MSI database
+		;;
 	homebrew)
 		sudocmd brew update
 		;;
@@ -1986,7 +2261,7 @@ case $PMTYPE in
 		sudocmd ipkg update
 		;;
 	*)
-		fatal "Do not known update command for $PMTYPE"
+		fatal "Have no suitable update command for $PMTYPE"
 		;;
 esac
 
@@ -2001,10 +2276,12 @@ epm_upgrade()
 
 	case $PMTYPE in
 	apt-rpm|apt-dpkg)
-		# FIXME: apt-get update before
+		# non_interactive
+		# Функцию добавления параметра при условии
 		CMD="apt-get dist-upgrade"
 		;;
 	yum-rpm)
+		# can do update repobase automagically
 		CMD="yum update"
 		;;
 	dnf-rpm)
@@ -2018,7 +2295,10 @@ epm_upgrade()
 		CMD="zypper dist-upgrade"
 		;;
 	pacman)
-		CMD="pacman -S -u"
+		CMD="pacman -S -u $force"
+		;;
+	aura)
+		CMD="aura -A -u"
 		;;
 	emerge)
 		CMD="emerge -NuDa world"
@@ -2039,7 +2319,7 @@ epm_upgrade()
 		CMD="/usr/sbin/slackpkg upgrade-all"
 		;;
 	*)
-		fatal "Do not known command for $PMTYPE"
+		fatal "Have no suitable command for $PMTYPE"
 		;;
 	esac
 
@@ -2059,7 +2339,33 @@ epm_Upgrade()
 			;;
 	esac
 
-	epm_upgrade $pkg_filenames
+	epm_upgrade
+}
+
+# File bin/epm-whatdepends:
+
+epm_whatdepends()
+{
+	local CMD
+	[ -n "$pkg_names" ] || fatal "Run query without names"
+
+case $PMTYPE in
+	apt-rpm|apt-dpkg)
+		CMD="apt-cache whatdepends"
+		;;
+	yum-rpm)
+		CMD="repoquery --whatrequires"
+		;;
+	emerge)
+		CMD="equery depends -a"
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+[ -n "$pkg_names" ] && docmd $CMD $pkg_names
+
 }
 internal_distr_info()
 {
@@ -2169,7 +2475,9 @@ if distro altlinux-release ; then
 
 elif distro gentoo-release ; then
 	DISTRIB_ID="Gentoo"
-	DISTRIB_RELEASE=`basename $(readlink $ROOTDIR/etc/make.profile)`
+	MAKEPROFILE=$(readlink $ROOTDIR/etc/portage/make.profile 2>/dev/null) || MAKEPROFILE=$(readlink $ROOTDIR/etc/make.profile)
+	DISTRIB_RELEASE=`basename $MAKEPROFILE`
+	echo $DISTRIB_RELEASE | grep -q "[0-9]" || DISTRIB_RELEASE=`basename $(dirname $MAKEPROFILE)`
 
 # Slackware based
 elif distro mopslinux-version ; then
@@ -2378,7 +2686,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.2.2"
+        echo "EPM package manager version 1.2.7"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -2432,6 +2740,9 @@ case $progname in
     epmqp)
         epm_cmd=query_package
         ;;
+    epmu)
+        epm_cmd=update
+        ;;
     epm|upm|eepm)
         ;;
     *)
@@ -2450,7 +2761,7 @@ check_command()
     -i|install|add)       # HELPCMD: install package(s) from remote repositories or from local file
         epm_cmd=install
         ;;
-    -e|-P|remove|delete)  # HELPCMD: remove (delete) package(s) from the database and the system
+    -e|-P|remove|delete|uninstall)  # HELPCMD: remove (delete) package(s) from the database and the system
         epm_cmd=remove
         ;;
     -s|search)            # HELPCMD: search in remote package repositories
@@ -2466,6 +2777,9 @@ check_command()
 # Useful commands
     reinstall)            # HELPCMD: reinstall package(s) from remote repositories or from local file
         epm_cmd=reinstall
+        ;;
+    Install)              # HELPCMD: perform update package repo info and install package(s) via install command
+        epm_cmd=Install
         ;;
     -q|installed)         # HELPCMD: check presence of package(s)
         epm_cmd=query
@@ -2487,6 +2801,12 @@ check_command()
         ;;
     requires|deplist)     # HELPCMD: print package requires
         epm_cmd=requires
+        ;;
+    provides)             # HELPCMD: print package provides
+        epm_cmd=provides
+        ;;
+    whatdepends)          # HELPCMD: print packages dependences on that
+        epm_cmd=whatdepends
         ;;
     -qa|list|packages|-l) # HELPCMD: list of installed package(s)
         epm_cmd=packages

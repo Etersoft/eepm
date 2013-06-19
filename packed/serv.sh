@@ -124,6 +124,18 @@ sudocmd()
 	$SUDO "$@"
 }
 
+sudocmd_foreach()
+{
+	local cmd
+	cmd="$1"
+	#showcmd "$@"
+	shift
+	for pkg in "$@" ; do
+		sudocmd $cmd $pkg
+	done
+}
+
+
 filter_strip_spaces()
 {
         # possible use just
@@ -148,6 +160,13 @@ fatal()
 		echo "Error: $@" >&2
 	fi
 	exit 1
+}
+
+warning()
+{
+	if [ -z "$TEXTDOMAIN" ] ; then
+		echo "Warning: $@" >&2
+	fi
 }
 
 set_sudo()
@@ -235,7 +254,7 @@ case $DISTRNAME in
 		CMD="ipkg"
 		;;
 	*)
-		fatal "Do not known DISTRNAME $DISTRNAME"
+		fatal "Have no suitable DISTRNAME $DISTRNAME"
 		;;
 esac
 PMTYPE=$CMD
@@ -259,7 +278,7 @@ serv_common()
 			sudocmd systemctl "$@" $SERVICE
 			;;
 		*)
-			fatal "Do not known command for $SERVICETYPE"
+			fatal "Have no suitable command for $SERVICETYPE"
 			;;
 	esac
 
@@ -284,7 +303,7 @@ serv_disable()
 			sudocmd systemctl disable $1
 			;;
 		*)
-			fatal "Do not known command for $SERVICETYPE"
+			fatal "Have no suitable command for $SERVICETYPE"
 			;;
 	esac
 }
@@ -308,7 +327,7 @@ serv_enable()
 			sudocmd systemctl enable $1
 			;;
 		*)
-			fatal "Do not known command for $SERVICETYPE"
+			fatal "Have no suitable command for $SERVICETYPE"
 			;;
 	esac
 
@@ -326,13 +345,13 @@ serv_list()
 			sudocmd service --status-all
 			;;
 		systemd)
-			sudocmd systemctl list-units
+			sudocmd systemctl list-units $@
 			;;
 		*)
 			load_helper serv-list_all
 			load_helper serv-status
 			for i in $(serv_list_all) ; do
-				is_service_running $i && echo $i
+				is_service_running $i >/dev/null && echo $i
 			done
 			;;
 	esac
@@ -351,10 +370,10 @@ serv_list_all()
 			sudocmd ls -1 /etc/init.d/* | sed -e "s|/etc/init.d/||g" | grep -v README
 			;;
 		systemd)
-			sudocmd systemctl list-unit-files
+			sudocmd systemctl list-unit-files $@
 			;;
 		*)
-			fatal "Do not known command for $SERVICETYPE"
+			fatal "Have no suitable command for $SERVICETYPE"
 			;;
 	esac
 }
@@ -365,8 +384,13 @@ serv_list_startup()
 {
 	case $SERVICETYPE in
 		*)
-			fatal "Do not known command for $SERVICETYPE"
+			load_helper serv-list_all
+			load_helper serv-status
+			for i in $(serv_list_all | cut -f 1 -d" " | grep "\.service$") ; do
+				is_service_autostart >/dev/null $i && echo $i
+			done
 			;;
+
 	esac
 }
 
@@ -388,7 +412,7 @@ serv_start()
 			sudocmd systemctl start "$SERVICE" "$@"
 			;;
 		*)
-			fatal "Do not known command for $SERVICETYPE"
+			fatal "Have no suitable command for $SERVICETYPE"
 			;;
 	esac
 }
@@ -405,11 +429,10 @@ is_service_running()
 			$SUDO /etc/init.d/$1 status >/dev/null
 			;;
 		systemd)
-			#sudocmd systemctl is-enabled $1
-			fatal "FIXME: don't know how detect current startup state"
+			$SUDO systemctl status $1 >/dev/null
 			;;
 		*)
-			fatal "Do not known command for $SERVICETYPE"
+			fatal "Have no suitable command for $SERVICETYPE"
 			;;
 	esac
 }
@@ -424,17 +447,17 @@ is_service_autostart()
 			fatal "FIXME: don't know how detect current startup state"
 			;;
 		systemd)
-			sudocmd systemctl is-enabled $1.service
+			$SUDO systemctl is-enabled $1
 			;;
 		*)
-			fatal "Do not known command for $SERVICETYPE"
+			fatal "Have no suitable command for $SERVICETYPE"
 			;;
 	esac
 }
 
 serv_status()
 {
-	is_service_autostart $1 && echo "Service $1 is sheduled to run on startup" || echo "Service $1 will NOT run on startup"
+	is_service_autostart $1 && echo "Service $1 is scheduled to run on startup" || echo "Service $1 will NOT run on startup"
 
 	local SERVICE="$1"
 	shift
@@ -447,10 +470,10 @@ serv_status()
 			sudocmd /etc/init.d/$SERVICE status "$@"
 			;;
 		systemd)
-			sudocmd systemctl status $SERVICE.service "$@"
+			sudocmd systemctl status $SERVICE "$@"
 			;;
 		*)
-			fatal "Do not known command for $SERVICETYPE"
+			fatal "Have no suitable command for $SERVICETYPE"
 			;;
 	esac
 }
@@ -473,7 +496,7 @@ serv_stop()
 			sudocmd systemctl stop $SERVICE "$@"
 			;;
 		*)
-			fatal "Do not known command for $SERVICETYPE"
+			fatal "Have no suitable command for $SERVICETYPE"
 			;;
 	esac
 }
@@ -499,7 +522,7 @@ serv_try_restart()
 			sudocmd systemctl try-restart $SERVICE "$@"
 			;;
 		*)
-			fatal "Do not known command for $SERVICETYPE"
+			fatal "Have no suitable command for $SERVICETYPE"
 			;;
 	esac
 }
@@ -529,7 +552,7 @@ serv_usage()
 			sudocmd systemctl $SERVICE 2>&1
 			;;
 		*)
-			fatal "Do not known command for $SERVICETYPE"
+			fatal "Have no suitable command for $SERVICETYPE"
 			;;
 	esac
 
@@ -644,7 +667,9 @@ if distro altlinux-release ; then
 
 elif distro gentoo-release ; then
 	DISTRIB_ID="Gentoo"
-	DISTRIB_RELEASE=`basename $(readlink $ROOTDIR/etc/make.profile)`
+	MAKEPROFILE=$(readlink $ROOTDIR/etc/portage/make.profile 2>/dev/null) || MAKEPROFILE=$(readlink $ROOTDIR/etc/make.profile)
+	DISTRIB_RELEASE=`basename $MAKEPROFILE`
+	echo $DISTRIB_RELEASE | grep -q "[0-9]" || DISTRIB_RELEASE=`basename $(dirname $MAKEPROFILE)`
 
 # Slackware based
 elif distro mopslinux-version ; then
@@ -890,7 +915,7 @@ case $DISTRNAME in
 #		CMD="chocolatey"
 #		;;
 	*)
-		fatal "Do not known DISTRNAME $DISTRNAME yet"
+		fatal "Have no suitable DISTRNAME $DISTRNAME yet"
 		;;
 esac
 
@@ -920,7 +945,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.2.2"
+        echo "Service manager version 1.2.7"
         echo "Running on $($DISTRVENDOR)"
         echo "Copyright (c) Etersoft 2012, 2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -940,7 +965,7 @@ show_command_only=
 serv_cmd=
 service_name=
 params=
-
+withoutservicename=
 
 check_command()
 {
@@ -953,6 +978,7 @@ check_command()
         ;;
     usage)                    # HELPCMD: print out usage of the service
         serv_cmd=usage
+        withoutservicename=1
         ;;
     #restart)                 # HELPCMD: restart service
     #reload)                  # HELPCMD: reload service
@@ -967,12 +993,15 @@ check_command()
         ;;
     list)                     # HELPCMD: list running services
         serv_cmd=list
+        withoutservicename=1
         ;;
     list-all)                 # HELPCMD: list all available services
         serv_cmd=list_all
+        withoutservicename=1
         ;;
     list-startup)             # HELPCMD: list all services to run on startup
         serv_cmd=list_startup
+        withoutservicename=1
         ;;
     on|enable)                # HELPCMD: add service to run on startup and start it now
         serv_cmd=enable
@@ -1028,7 +1057,7 @@ echover "service: $service_name"
 echover "command: $serv_cmd"
 
 # Just printout help if run without args
-if [ "$serv_cmd" != "list" ] && [ "$serv_cmd" != "list_all" ] && [ -z "$service_name" ] ; then
+if [ -z "$withoutservicename" ] && [ -z "$service_name" ] ; then
     print_version
     echo
     fatal "Run $ $progname --help for get help"
