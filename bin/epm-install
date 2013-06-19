@@ -177,6 +177,13 @@ epm_ni_install_names()
 	esac
 }
 
+__epm_check_if_rpm_already_installed()
+{
+	# Not: we can make optimize if just check version?
+	LANG=C $SUDO rpm -Uvh $force $nodeps $@ 2>&1 | grep -q "is already installed"
+}
+
+
 epm_install_files()
 {
     [ -z "$1" ] && return
@@ -185,7 +192,9 @@ epm_install_files()
         apt-rpm)
             sudocmd rpm -Uvh $force $nodeps $@ && return
             local RES=$?
-            # TODO: check for "is already installed"
+
+            __epm_check_if_rpm_already_installed $@ && return
+
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return $RES
 
@@ -214,6 +223,8 @@ epm_install_files()
             sudocmd rpm -Uvh $force $nodeps $@ && return
             # if run with --nodeps, do not fallback on hi level
 
+            __epm_check_if_rpm_already_installed $@ && return
+
             [ -n "$nodeps" ] && return
             YUMOPTIONS=--nogpgcheck
             # use install_names
@@ -221,6 +232,8 @@ epm_install_files()
         zypper-rpm)
             sudocmd rpm -Uvh $force $nodeps $@ && return
             local RES=$?
+
+            __epm_check_if_rpm_already_installed $@ && return
 
             # if run with --nodeps, do not fallback on hi level
 
@@ -231,6 +244,8 @@ epm_install_files()
         urpm-rpm)
             sudocmd rpm -Uvh $force $nodeps $@ && return
             local RES=$?
+
+            __epm_check_if_rpm_already_installed $@ && return
 
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return $RES
