@@ -110,6 +110,9 @@ case $progname in
     epmqp)
         epm_cmd=query_package
         ;;
+    epmql)
+        epm_cmd=filelist
+        ;;
     epmu)
         epm_cmd=update
         ;;
