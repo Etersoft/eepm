@@ -141,6 +141,13 @@ strip_spaces()
         echo "$*" | filter_strip_spaces
 }
 
+# param true false
+subst_option()
+{
+	eval "[ -n \"\$$1\" ]" && echo "$2" || echo "$3"
+}
+
+
 epm()
 {
 	$PROGDIR/epm $@
