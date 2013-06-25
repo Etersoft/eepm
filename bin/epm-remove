@@ -26,8 +26,7 @@ epm_remove_low()
 			sudocmd rpm -ev $nodeps $@
 			return ;;
 		apt-dpkg)
-			[ -n "$nodeps" ] && nodeps="--force-all"
-			sudocmd dpkg -P $nodeps $@
+			sudocmd dpkg -P $(subst_option nodeps --force-all) $@
 			return ;;
 		pkgsrc)
 			sudocmd pkg_delete -r $@
@@ -97,8 +96,7 @@ epm_remove_names()
 			sudocmd brew remove $@
 			return ;;
 		ipkg)
-			[ -n "$force" ] && force=-force-depends
-			sudocmd ipkg $force remove $@
+			sudocmd ipkg $(subst_option force -force-depends) remove $@
 			return ;;
 		*)
 			fatal "Have no suitable command for $PMTYPE"
