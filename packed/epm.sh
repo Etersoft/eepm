@@ -151,6 +151,27 @@ strip_spaces()
         echo "$*" | filter_strip_spaces
 }
 
+subst_option()
+{
+	eval "[ -n \"\$$1\" ]" && echo "$2" || echo "$3"
+}
+
+store_output()
+{
+    # use make_temp_file from etersoft-build-utils
+    RC_STDOUT=$(mktemp)
+    #RC_STDERR=$(mktemp)
+    "$@" 2>&1 | tee $RC_STDOUT
+    # http://tldp.org/LDP/abs/html/bashver3.html#PIPEFAILREF
+    return $PIPESTATUS
+}
+
+clean_store_output()
+{
+    rm -f $RC_STDOUT
+}
+
+
 epm()
 {
 	$PROGDIR/epm $@
@@ -322,7 +343,7 @@ case $PMTYPE in
 	yum-rpm)
 		# cleanup orphanes?
 		while true ; do
-			docmd package-cleanup --leaves
+			docmd package-cleanup --leaves $(subst_option non_interactive --assumeyes)
 			# FIXME: package-cleanup have to use stderr for errors
 			local PKGLIST=$(package-cleanup --leaves | grep -v "Loaded plugins" | grep -v "Unable to")
 			[ -n "$PKGLIST" ] || break
@@ -1679,8 +1700,7 @@ epm_remove_low()
 			sudocmd rpm -ev $nodeps $@
 			return ;;
 		apt-dpkg)
-			[ -n "$nodeps" ] && nodeps="--force-all"
-			sudocmd dpkg -P $nodeps $@
+			sudocmd dpkg -P $(subst_option nodeps --force-all) $@
 			return ;;
 		pkgsrc)
 			sudocmd pkg_delete -r $@
@@ -1750,8 +1770,7 @@ epm_remove_names()
 			sudocmd brew remove $@
 			return ;;
 		ipkg)
-			[ -n "$force" ] && force=-force-depends
-			sudocmd ipkg $force remove $@
+			sudocmd ipkg $(subst_option force -force-depends) remove $@
 			return ;;
 		*)
 			fatal "Have no suitable command for $PMTYPE"
@@ -2124,9 +2143,22 @@ __use_yum_assumeno()
     a= yum --help 2>&1 | grep -q -- "--assumeno"
 }
 
+
+__check_yum_result()
+{
+    grep "^No package" $1 && return 1
+    grep "^Complete!" $1 && return 0
+    grep "^Exiting on user Command" $1 && return 0
+    grep "^Exiting on user command" $1 && return 0
+    # return default result by default
+    return $2
+}
+
+
 _epm_do_simulate()
 {
     local CMD
+    local RES=0
     local filenames="$*"
 
     case $PMTYPE in
@@ -2135,20 +2167,15 @@ _epm_do_simulate()
     		;;
     	yum-rpm)
     		if __use_yum_assumeno ; then
-    			LC_ALL=C sudocmd yum --assumeno install $filenames
-    			# FIXME: check only error output
-    			LC_ALL=C sudocmd yum --assumeno install $filenames 2>&1 | grep "^No package" && return 1
-    			LC_ALL=C sudocmd yum --assumeno install $filenames 2>&1 | grep "^Complete!" && return 0
-    			LC_ALL=C sudocmd yum --assumeno install $filenames 2>&1 | grep "^Exiting on user Command" && return 0
-    			LC_ALL=C sudocmd yum --assumeno install $filenames >/dev/null 2>&1 || return
+    			LC_ALL=C store_output sudocmd yum --assumeno install $filenames
+    			__check_yum_result $RC_STDOUT $?
     		else
-    			LC_ALL=C echo n | sudocmd yum install $filenames
-    			# FIXME: check only error output
-    			LC_ALL=C echo n | sudocmd yum install $filenames 2>&1 | grep "^No package" && return 1
-    			LC_ALL=C echo n | sudocmd yum install $filenames 2>&1 | grep "^Complete!" && return 0
-    			LC_ALL=C echo n | sudocmd yum install $filenames >/dev/null 2>&1 || return
+    			LC_ALL=C echo n | store_output sudocmd yum install $filenames
+    			__check_yum_result $RC_STDOUT $?
     		fi
-    		return 0 ;;
+    		RES=$?
+    		clean_store_output
+    		return $RES ;;
     	urpm-rpm)
     		CMD="urpmi --test --auto"
     		;;
@@ -2686,7 +2713,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.2.7"
+        echo "EPM package manager version 1.2.8"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -2739,6 +2766,9 @@ case $progname in
         ;;
     epmqp)
         epm_cmd=query_package
+        ;;
+    epmql)
+        epm_cmd=filelist
         ;;
     epmu)
         epm_cmd=update

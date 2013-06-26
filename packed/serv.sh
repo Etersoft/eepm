@@ -149,6 +149,27 @@ strip_spaces()
         echo "$*" | filter_strip_spaces
 }
 
+subst_option()
+{
+	eval "[ -n \"\$$1\" ]" && echo "$2" || echo "$3"
+}
+
+store_output()
+{
+    # use make_temp_file from etersoft-build-utils
+    RC_STDOUT=$(mktemp)
+    #RC_STDERR=$(mktemp)
+    "$@" 2>&1 | tee $RC_STDOUT
+    # http://tldp.org/LDP/abs/html/bashver3.html#PIPEFAILREF
+    return $PIPESTATUS
+}
+
+clean_store_output()
+{
+    rm -f $RC_STDOUT
+}
+
+
 epm()
 {
 	$PROGDIR/epm $@
@@ -945,7 +966,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.2.7"
+        echo "Service manager version 1.2.8"
         echo "Running on $($DISTRVENDOR)"
         echo "Copyright (c) Etersoft 2012, 2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
