@@ -22,14 +22,19 @@ epm_requires()
 	local CMD
 	[ -n "$pkg_filenames" ] || fatal "Run query without names"
 
+# TODO: Здесь выбирать команду по расширению, а не по системному менеджеру
+# В других таких случаях тоже
+# В списке пакетов на установку проверять, что пакеты имеют соответствующее расширение
 # by package file
 case $PMTYPE in
 	apt-rpm|urpm-rpm|zypper-rpm|yum-rpm)
 		CMD="rpm -q --requires -p"
 		;;
 	apt-dpkg)
+		# FIXME: need package base
 		showcmd dpkg -s $pkg_files
 		a= dpkg -s $pkg_names | grep "^Depends:" | sed "s|^Depends:||g"
+		# FIXME: we need execute package name section too
 		return
 		;;
 	*)
