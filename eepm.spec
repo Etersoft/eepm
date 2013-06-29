@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.2.8
+Version: 1.2.9
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -60,6 +60,10 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/serv
 
 %changelog
+* Sat Jun 29 2013 Vitaly Lipatov <lav@altlinux.ru> 1.2.9-alt1
+- fix simulate for ArchLinux and old yum
+- small fixes
+
 * Wed Jun 26 2013 Vitaly Lipatov <lav@altlinux.ru> 1.2.8-alt1
 - add epmql short command for epm -ql
 - autoremove: add --auto support for yum
