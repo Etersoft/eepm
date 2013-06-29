@@ -42,6 +42,15 @@ __check_yum_result()
     return $2
 }
 
+__check_pacman_result()
+{
+    grep "^error: target not found:" $1 && return 1
+    grep "^Total Installed Size:" $1 && return 0
+    grep "^Total Download Size:" $1 && return 0
+    # return default result by default
+    return $2
+}
+
 
 _epm_do_simulate()
 {
@@ -84,8 +93,8 @@ _epm_do_simulate()
     		done
     		return $res ;;
     	pacman)
-    		showcmd $SUDO pacman -v -S $filenames
-    		echo no | $SUDO pacman -v -S $filenames
+    		LC_ALL=C echo no | store_output sudocmd pacman -v -S $filenames
+    		__check_pacman_result $RC_STDOUT $?
     		return ;;
     	slackpkg)
     		#docmd /usr/sbin/slackpkg -batch=on -default_answer=yes download
