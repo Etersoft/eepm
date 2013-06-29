@@ -67,7 +67,9 @@ _epm_do_simulate()
     			LC_ALL=C store_output sudocmd yum --assumeno install $filenames
     			__check_yum_result $RC_STDOUT $?
     		else
-    			LC_ALL=C echo n | store_output sudocmd yum install $filenames
+    			LC_ALL=C store_output sudocmd yum install $filenames <<EOF
+n
+EOF
     			__check_yum_result $RC_STDOUT $?
     		fi
     		RES=$?
@@ -93,9 +95,13 @@ _epm_do_simulate()
     		done
     		return $res ;;
     	pacman)
-    		LC_ALL=C echo no | store_output sudocmd pacman -v -S $filenames
+    		LC_ALL=C store_output sudocmd pacman -v -S $filenames <<EOF
+no
+EOF
     		__check_pacman_result $RC_STDOUT $?
-    		return ;;
+    		RES=$?
+    		clean_store_output
+    		return $RES ;;
     	slackpkg)
     		#docmd /usr/sbin/slackpkg -batch=on -default_answer=yes download
     		# just try search every package
