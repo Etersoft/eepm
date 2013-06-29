@@ -52,7 +52,7 @@ case $PMTYPE in
 		sudocmd emerge --sync
 		;;
 	slackpkg)
-		sudocmd /usr/sbin/slackpkg update
+		sudocmd /usr/sbin/slackpkg -batch=on update
 		;;
 	deepsolver-rpm)
 		sudocmd ds-update
