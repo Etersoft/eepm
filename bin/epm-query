@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012  Etersoft
-# Copyright (C) 2012  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2013  Etersoft
+# Copyright (C) 2012, 2013  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -35,6 +35,52 @@ _query_via_packages_list()
 	done
 
 	return $res
+}
+
+# internal use only
+__epm_get_hilevel_nameform()
+{
+	[ -n "$*" ] || return
+
+	case $PMTYPE in
+		apt-rpm)
+			# use # as delimeter for apt
+			local pkg
+			pkg=$(rpm -q --queryformat "%{NAME}#%{SERIAL}:%{VERSION}-%{RELEASE}\n" $1)
+			echo $pkg | grep -q "(none)" && pkg=$(rpm -q --queryformat "%{NAME}#%{VERSION}-%{RELEASE}\n" $1)
+			# HACK: can use only for multiple install packages like kernel
+			echo $pkg | grep -q kernel || return 1
+			echo $pkg
+			return
+			;;
+		yum-rpm)
+			# just use strict version with Epoch and Serial
+			local pkg
+			pkg=$(rpm -q --queryformat "%{EPOCH}:%{NAME}%{VERSION}-%{RELEASE}.${ARCH}\n" $1)
+			echo $pkg | grep -q "(none)" && pkg=$(rpm -q --queryformat "%{NAME}-%{VERSION}-%{RELEASE}.${ARCH}\n" $1)
+			echo $pkg
+			return
+			;;
+		*)
+			return 1
+			;;
+	esac
+}
+
+# for local installed packages only
+# used from epm remove
+__epm_get_hilevel_name()
+{
+	local i
+	for i in $@ ; do
+		local pkg
+		# get short form in pkg
+		quiet=1 short=1 pkg=$(__epm_query_name $i)
+		# if already short form, skipped
+		[ "$pkg" = "$i" ] && echo "$i" && continue
+		# try get long form or use short form
+		__epm_get_hilevel_nameform $i || echo $pkg
+	done
 }
 
 __epm_query_file()
