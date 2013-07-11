@@ -212,7 +212,7 @@ set_sudo()
 
 get_help()
 {
-    grep -- "# $1" $0 | while read n ; do
+    grep -v -- "^#" $0 | grep -- "# $1" | while read n ; do
         opt=$(echo $n | sed -e "s|) # $1:.*||g")
         desc=$(echo $n | sed -e "s|.*) # $1:||g")
         printf "    %-20s %s\n" $opt "$desc"
@@ -491,9 +491,9 @@ case $PMTYPE in
 	emerge)
 		sudocmd revdep-rebuild
 		;;
-	urpm-rpm)
-		#sudocmd urpme --auto-orphans
-		;;
+	#urpm-rpm)
+	#	sudocmd urpme --auto-orphans
+	#	;;
 	zypper-rpm)
 		sudocmd zypper verify || exit
 		;;
@@ -1047,7 +1047,11 @@ epm_install_files()
             sudocmd pacman -U $force $@
             return ;;
         slackpkg)
-            sudocmd /sbin/installpkg $@
+            # FIXME: check for full package name
+            separate_installed $@
+            # FIXME: broken status when use batch and default answer
+            [ -n "$pkg_noninstalled" ] && sudocmd_foreach "/sbin/installpkg" $pkg_noninstalled
+            [ -n "$pkg_installed" ] && sudocmd_foreach "/sbin/upgradepkg" $pkg_installed
             return ;;
     esac
 
@@ -1238,7 +1242,8 @@ case $PMTYPE in
 		[ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n $pkg_filenames"
 		;;
 	apt-dpkg)
-		CMD="dpkg -l $pkg_filenames"
+		#CMD="dpkg -l $pkg_filenames"
+		CMD="dpkg-query -W --showformat=\${Package}-\${Version}\n $pkg_filenames"
 		[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${Package}\n $pkg_filenames"
 		;;
 	yum-rpm|urpm-rpm|zypper-rpm|dnf-rpm)
@@ -1299,6 +1304,7 @@ epm_programs()
 
 # File bin/epm-provides:
 
+
 epm_provides()
 {
 	local CMD
@@ -1351,12 +1357,58 @@ _query_via_packages_list()
 	local res=0
 	local firstpkg=$1
 	shift
+
 	# separate first line for print out command
-	short=1 pkg_filenames=$firstpkg epm_packages | grep -- "^$firstpkg$" || res=1
+	pkg_filenames=$firstpkg epm_packages | grep -- "^$firstpkg$" || res=1
+
 	for pkg in "$@" ; do
-		short=1 pkg_filenames=$pkg epm_packages 2>/dev/null | grep -- "^$pkg$" || res=1
+		pkg_filenames=$pkg epm_packages 2>/dev/null | grep -- "^$pkg$" || res=1
 	done
+
 	return $res
+}
+
+__epm_get_hilevel_nameform()
+{
+	[ -n "$*" ] || return
+
+	case $PMTYPE in
+		apt-rpm)
+			# use # as delimeter for apt
+			local pkg
+			pkg=$(rpm -q --queryformat "%{NAME}#%{SERIAL}:%{VERSION}-%{RELEASE}\n" $1)
+			echo $pkg | grep -q "(none)" && pkg=$(rpm -q --queryformat "%{NAME}#%{VERSION}-%{RELEASE}\n" $1)
+			# HACK: can use only for multiple install packages like kernel
+			echo $pkg | grep -q kernel || return 1
+			echo $pkg
+			return
+			;;
+		yum-rpm)
+			# just use strict version with Epoch and Serial
+			local pkg
+			pkg=$(rpm -q --queryformat "%{EPOCH}:%{NAME}%{VERSION}-%{RELEASE}.${ARCH}\n" $1)
+			echo $pkg | grep -q "(none)" && pkg=$(rpm -q --queryformat "%{NAME}-%{VERSION}-%{RELEASE}.${ARCH}\n" $1)
+			echo $pkg
+			return
+			;;
+		*)
+			return 1
+			;;
+	esac
+}
+
+__epm_get_hilevel_name()
+{
+	local i
+	for i in $@ ; do
+		local pkg
+		# get short form in pkg
+		quiet=1 short=1 pkg=$(__epm_query_name $i)
+		# if already short form, skipped
+		[ "$pkg" = "$i" ] && echo "$i" && continue
+		# try get long form or use short form
+		__epm_get_hilevel_nameform $i || echo $pkg
+	done
 }
 
 __epm_query_file()
@@ -1368,13 +1420,11 @@ __epm_query_file()
 	case $PMTYPE in
 		*-rpm)
 			CMD="rpm -qp"
+			[ -n "$short" ] && CMD="rpm -qp --queryformat %{name}\n"
 			;;
 		apt-dpkg)
-			CMD="dpkg-deb --show"
-			# TODO: make rpm-like output
-			#showcmd dpkg -l $pkg_filenames
-			#dpkg -l $pkg_filenames | grep "^ii"
-			#return
+			CMD="dpkg-deb --show --showformat=\${Package}-\${Version}\n"
+			[ -n "$short" ] && CMD="dpkg-query --show --showformat=\${Package}\n"
 			;;
 		*)
 			fatal "Do not know command for query file package"
@@ -1393,14 +1443,12 @@ __epm_query_name()
 	case $PMTYPE in
 		*-rpm)
 			CMD="rpm -q"
+			[ -n "$short" ] && CMD="rpm -q --queryformat %{name}\n"
 			;;
 		apt-dpkg)
-			#docmd dpkg -l $@
-			docmd dpkg -l $@ | grep "^ii"
-			# TODO: make rpm-like output
-			#showcmd dpkg -l $pkg_filenames
-			#dpkg -l $pkg_filenames | grep "^ii"
-			return
+			#docmd dpkg -l $@ | grep "^ii"
+			CMD="dpkg-query -W --showformat=\${Package}-\${Version}\n"
+			[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${Package}\n"
 			;;
 		npackd)
 			CMD="npackdcl path --package=$@"
@@ -1692,6 +1740,7 @@ epm_release_upgrade()
 
 # File bin/epm-remove:
 
+
 epm_remove_low()
 {
 	[ -z "$1" ] && return
@@ -1844,19 +1893,23 @@ epm_remove()
 		return
 	fi
 
-	[ -n "$pkg_files" ] && fatal "FIXME: remove by package file is not supported yet"
+	# get full package name(s) from the package file(s)
+	[ -n "$pkg_files" ] && pkg_names="$pkg_names $(epm query $pkg_files)"
 
-	[ -n "$pkg_filenames" ] || fatal "Run remove without args"
-	epm_remove_low $pkg_filenames && return
+	[ -n "$pkg_names" ] || fatal "Run remove without args"
+	epm_remove_low $pkg_names && return
+
+	# get package name for hi level package management command (with version if supported and if possible)
+	pkg_names=$(__epm_get_hilevel_name $pkg_names)
 
 	if [ -n "$non_interactive" ] ; then
-		epm_remove_nonint $pkg_filenames
+		epm_remove_nonint $pkg_names
 		local RET=$?
 		# if not separate command, use usual command
 		[ "$RET" = "5" ] || return $RET
 	fi
 
-	epm_remove_names $pkg_filenames
+	epm_remove_names $pkg_names
 }
 
 
@@ -1965,8 +2018,10 @@ case $PMTYPE in
 		CMD="rpm -q --requires -p"
 		;;
 	apt-dpkg)
+		# FIXME: need package base
 		showcmd dpkg -s $pkg_files
 		a= dpkg -s $pkg_names | grep "^Depends:" | sed "s|^Depends:||g"
+		# FIXME: we need execute package name section too
 		return
 		;;
 	*)
@@ -2154,6 +2209,15 @@ __check_yum_result()
     return $2
 }
 
+__check_pacman_result()
+{
+    grep "^error: target not found:" $1 && return 1
+    grep "^Total Installed Size:" $1 && return 0
+    grep "^Total Download Size:" $1 && return 0
+    # return default result by default
+    return $2
+}
+
 
 _epm_do_simulate()
 {
@@ -2170,7 +2234,9 @@ _epm_do_simulate()
     			LC_ALL=C store_output sudocmd yum --assumeno install $filenames
     			__check_yum_result $RC_STDOUT $?
     		else
-    			LC_ALL=C echo n | store_output sudocmd yum install $filenames
+    			LC_ALL=C store_output sudocmd yum install $filenames <<EOF
+n
+EOF
     			__check_yum_result $RC_STDOUT $?
     		fi
     		RES=$?
@@ -2196,9 +2262,13 @@ _epm_do_simulate()
     		done
     		return $res ;;
     	pacman)
-    		showcmd $SUDO pacman -v -S $filenames
-    		echo no | $SUDO pacman -v -S $filenames
-    		return ;;
+    		LC_ALL=C store_output sudocmd pacman -v -S $filenames <<EOF
+no
+EOF
+    		__check_pacman_result $RC_STDOUT $?
+    		RES=$?
+    		clean_store_output
+    		return $RES ;;
     	slackpkg)
     		#docmd /usr/sbin/slackpkg -batch=on -default_answer=yes download
     		# just try search every package
@@ -2273,7 +2343,7 @@ case $PMTYPE in
 		sudocmd emerge --sync
 		;;
 	slackpkg)
-		sudocmd /usr/sbin/slackpkg update
+		sudocmd /usr/sbin/slackpkg -batch=on update
 		;;
 	deepsolver-rpm)
 		sudocmd ds-update
@@ -2713,7 +2783,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.2.8"
+        echo "EPM package manager version 1.3.0"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -2811,7 +2881,7 @@ check_command()
     Install)              # HELPCMD: perform update package repo info and install package(s) via install command
         epm_cmd=Install
         ;;
-    -q|installed)         # HELPCMD: check presence of package(s)
+    -q|installed|query)   # HELPCMD: check presence of package(s) and print this name (also --short is supported)
         epm_cmd=query
         ;;
     -sf|sf|filesearch)    # HELPCMD: search in which package a file is included
@@ -2861,7 +2931,7 @@ check_command()
     release-upgrade)      # HELPCMD: update whole system to the next release
         epm_cmd=release_upgrade
         ;;
-    kernel-update|kernel-upgrade|update-kernel)      # HELPCMD: update system kernel to the last repo version
+    kernel-update|kernel-upgrade|update-kernel|upgrade-kernel)      # HELPCMD: update system kernel to the last repo version
         epm_cmd=kernel_update
         ;;
 
@@ -2921,7 +2991,7 @@ check_option()
     --force)              # HELPOPT: force install/remove package (f.i., override)
         force="--force"
         ;;
-    --short)              # HELPOPT: short output (package instead package-version-release)
+    --short)              # HELPOPT: short output (just 'package' instead 'package-version-release')
         short="--short"
         ;;
     --auto)               # HELPOPT: non interactive mode

@@ -210,7 +210,7 @@ set_sudo()
 
 get_help()
 {
-    grep -- "# $1" $0 | while read n ; do
+    grep -v -- "^#" $0 | grep -- "# $1" | while read n ; do
         opt=$(echo $n | sed -e "s|) # $1:.*||g")
         desc=$(echo $n | sed -e "s|.*) # $1:||g")
         printf "    %-20s %s\n" $opt "$desc"
@@ -966,7 +966,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.2.8"
+        echo "Service manager version 1.3.0"
         echo "Running on $($DISTRVENDOR)"
         echo "Copyright (c) Etersoft 2012, 2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
