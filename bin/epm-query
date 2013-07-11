@@ -26,11 +26,14 @@ _query_via_packages_list()
 	local res=0
 	local firstpkg=$1
 	shift
+
 	# separate first line for print out command
-	short=1 pkg_filenames=$firstpkg epm_packages | grep -- "^$firstpkg$" || res=1
+	pkg_filenames=$firstpkg epm_packages | grep -- "^$firstpkg$" || res=1
+
 	for pkg in "$@" ; do
-		short=1 pkg_filenames=$pkg epm_packages 2>/dev/null | grep -- "^$pkg$" || res=1
+		pkg_filenames=$pkg epm_packages 2>/dev/null | grep -- "^$pkg$" || res=1
 	done
+
 	return $res
 }
 
@@ -43,13 +46,11 @@ __epm_query_file()
 	case $PMTYPE in
 		*-rpm)
 			CMD="rpm -qp"
+			[ -n "$short" ] && CMD="rpm -qp --queryformat %{name}\n"
 			;;
 		apt-dpkg)
-			CMD="dpkg-deb --show"
-			# TODO: make rpm-like output
-			#showcmd dpkg -l $pkg_filenames
-			#dpkg -l $pkg_filenames | grep "^ii"
-			#return
+			CMD="dpkg-deb --show --showformat=\${Package}-\${Version}\n"
+			[ -n "$short" ] && CMD="dpkg-query --show --showformat=\${Package}\n"
 			;;
 		*)
 			fatal "Do not know command for query file package"
@@ -68,14 +69,12 @@ __epm_query_name()
 	case $PMTYPE in
 		*-rpm)
 			CMD="rpm -q"
+			[ -n "$short" ] && CMD="rpm -q --queryformat %{name}\n"
 			;;
 		apt-dpkg)
-			#docmd dpkg -l $@
-			docmd dpkg -l $@ | grep "^ii"
-			# TODO: make rpm-like output
-			#showcmd dpkg -l $pkg_filenames
-			#dpkg -l $pkg_filenames | grep "^ii"
-			return
+			#docmd dpkg -l $@ | grep "^ii"
+			CMD="dpkg-query -W --showformat=\${Package}-\${Version}\n"
+			[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${Package}\n"
 			;;
 		npackd)
 			CMD="npackdcl path --package=$@"
