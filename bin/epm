@@ -154,7 +154,7 @@ check_command()
     Install)              # HELPCMD: perform update package repo info and install package(s) via install command
         epm_cmd=Install
         ;;
-    -q|installed)         # HELPCMD: check presence of package(s)
+    -q|installed|query)   # HELPCMD: check presence of package(s) and print this name (also --short is supported)
         epm_cmd=query
         ;;
     -sf|sf|filesearch)    # HELPCMD: search in which package a file is included
@@ -264,7 +264,7 @@ check_option()
     --force)              # HELPOPT: force install/remove package (f.i., override)
         force="--force"
         ;;
-    --short)              # HELPOPT: short output (package instead package-version-release)
+    --short)              # HELPOPT: short output (just 'package' instead 'package-version-release')
         short="--short"
         ;;
     --auto)               # HELPOPT: non interactive mode
