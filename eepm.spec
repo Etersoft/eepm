@@ -1,10 +1,10 @@
 Name: eepm
-Version: 1.2.9
+Version: 1.3.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
 
-License: AFGPLv3
+License: AGPLv3
 Group: System/Configuration/Packaging
 Url: http://wiki.etersoft.ru/EPM
 
@@ -44,6 +44,7 @@ install -m 0755 packed/serv.sh %buildroot/%_datadir/%name/serv-packed.sh
 
 mkdir -p %buildroot%_sysconfdir/bash_completion.d/
 install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/serv
+ln -s serv %buildroot%_sysconfdir/bash_completion.d/cerv
 
 # shebang.req.files
 chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
@@ -58,8 +59,15 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_bindir/distr_info
 %_datadir/%name/
 %_sysconfdir/bash_completion.d/serv
+%_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Thu Jul 11 2013 Vitaly Lipatov <lav@altlinux.ru> 1.3.0-alt1
+- slackware: fix repo update, fix install pkg from file
+- query, packages: print out in name-version format
+- remove: add support for remove by package file
+- remove: improve remove versioned packages via apt and yum
+
 * Sat Jun 29 2013 Vitaly Lipatov <lav@altlinux.ru> 1.2.9-alt1
 - fix simulate for ArchLinux and old yum
 - small fixes
