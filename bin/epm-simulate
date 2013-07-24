@@ -109,6 +109,8 @@ EOF
     		local pkg res
     		res=0
     		for pkg in $filenames ; do
+    			# FIXME: -[0-0] does not work in search!
+    			# FIXME: we need strict search here (not find gst-plugins-base if search for gst-plugins
     			pkg_filenames="$pkg-[0-9]" epm_search | grep -E "(installed|upgrade)" && continue
     			pkg_filenames="$pkg" epm_search | grep -E "(installed|upgrade)" && continue
     			res=1

@@ -17,6 +17,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+# TODO: move zip,rar,7z to arc project, and pack all to check_pkg_integrity
+# also use arc project if installed
 check_rpm_integrity()
 {
 	docmd rpm --checksig $@

@@ -43,9 +43,9 @@ case $PMTYPE in
 	emerge)
 		sudocmd revdep-rebuild
 		;;
-	urpm-rpm)
-		#sudocmd urpme --auto-orphans
-		;;
+	#urpm-rpm)
+	#	sudocmd urpme --auto-orphans
+	#	;;
 	zypper-rpm)
 		sudocmd zypper verify || exit
 		;;

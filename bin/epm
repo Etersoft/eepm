@@ -73,6 +73,7 @@ quiet=
 nodeps=
 force=
 short=
+sort=
 non_interactive=
 skip_installed=
 show_command_only=
@@ -184,7 +185,7 @@ check_command()
     -qa|list|packages|-l) # HELPCMD: list of installed package(s)
         epm_cmd=packages
         ;;
-    programs)             # HELPCMD: list of installed program(s)
+    programs)             # HELPCMD: list of installed GUI program(s)
         epm_cmd=programs
         ;;
 
