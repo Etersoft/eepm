@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.3.0
+Version: 1.3.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -62,6 +62,11 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Wed Jul 24 2013 Vitaly Lipatov <lav@altlinux.ru> 1.3.1-alt1
+- epm-packages: add size sort support for rpm and dpkg
+- fix epm query for non rpm/deb systems
+- epm-install: rewrite pkg_(non)installed for get correct return status
+
 * Thu Jul 11 2013 Vitaly Lipatov <lav@altlinux.ru> 1.3.0-alt1
 - slackware: fix repo update, fix install pkg from file
 - query, packages: print out in name-version format
