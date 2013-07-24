@@ -829,6 +829,36 @@ __use_zypper_no_gpg_checks()
     a= zypper install --help 2>&1 | grep -q -- "--no-gpg-checks" && echo "--no-gpg-checks"
 }
 
+__separate_sudocmd_foreach()
+{
+    local cmd_re=$1
+    local cmd_in=$2
+    shift 2
+    separate_installed $@
+    if [ -n "$pkg_noninstalled" ] ; then
+        sudocmd_foreach "$cmd_re" $pkg_noninstalled || return
+    fi
+    if [ -n "$pkg_installed" ] ; then
+        sudocmd_foreach "$cmd_in" $pkg_installed || return
+    fi
+    return 0
+}
+
+__separate_sudocmd()
+{
+    local cmd_re=$1
+    local cmd_in=$2
+    shift 2
+    separate_installed $@
+    if [ -n "$pkg_noninstalled" ] ; then
+        sudocmd "$cmd_re" $pkg_noninstalled || return
+    fi
+    if [ -n "$pkg_installed" ] ; then
+        sudocmd "$cmd_in" $pkg_installed || return
+    fi
+    return 0
+}
+
 epm_install_names()
 {
 	if [ -n "$non_interactive" ] ; then
@@ -872,29 +902,21 @@ epm_install_names()
 			sudocmd mpkg install $@
 			return ;;
 		npackd)
-			separate_installed $@
-			# FIXME: fix return status
-			[ -n "$pkg_noninstalled" ] && sudocmd npackdcl add --package=$@ $pkg_noninstalled
-			[ -n "$pkg_installed" ] && sudocmd npackdcl update --package=$@ $pkg_installed
+			# FIXME: correct arg
+			__separate_sudocmd_foreach "npackdcl add --package=" "npackdcl update --package=" $@
 			return ;;
 		slackpkg)
-			separate_installed $@
-			[ -n "$pkg_noninstalled" ] && sudocmd_foreach "/usr/sbin/slackpkg install" $pkg_noninstalled
-			[ -n "$pkg_installed" ] && sudocmd_foreach "/usr/sbin/slackpkg upgrade" $pkg_installed
+			__separate_sudocmd_foreach "/usr/sbin/slackpkg install" "/usr/sbin/slackpkg upgrade" $@
 			return ;;
 		homebrew)
-			separate_installed $@
-			[ -n "$pkg_noninstalled" ] && sudocmd brew install $pkg_noninstalled
-			[ -n "$pkg_installed" ] && sudocmd brew upgrade $pkg_installed
+			__separate_sudocmd "brew install" "brew upgrade" $@
 			return ;;
 		ipkg)
 			[ -n "$force" ] && force=-force-depends
 			sudocmd ipkg $force install $@
 			return ;;
 		nix)
-			separate_installed $@
-			[ -n "$pkg_noninstalled" ] && sudocmd nix-env --install $pkg_noninstalled
-			[ -n "$pkg_installed" ] && sudocmd nix-env --upgrade $pkg_installed
+			__separate_sudocmd "nix-env --install" "nix-env --upgrade" $@
 			return ;;
 		*)
 			fatal "Have no suitable install command for $PMTYPE"
@@ -945,10 +967,8 @@ epm_ni_install_names()
 			sudocmd nix-env --install $@
 			return ;;
 		slackpkg)
-			separate_installed $@
 			# FIXME: broken status when use batch and default answer
-			[ -n "$pkg_noninstalled" ] && sudocmd_foreach "/usr/sbin/slackpkg -batch=on -default_answer=yes install" $pkg_noninstalled
-			[ -n "$pkg_installed" ] && sudocmd_foreach "/usr/sbin/slackpkg -batch=on -default_answer=yes upgrade" $pkg_installed
+			__separate_sudocmd_foreach "/usr/sbin/slackpkg -batch=on -default_answer=yes install" "/usr/sbin/slackpkg -batch=on -default_answer=yes upgrade" $@
 			return ;;
 		*)
 			fatal "Have no suitable appropriate install command for $PMTYPE"
@@ -1048,10 +1068,8 @@ epm_install_files()
             return ;;
         slackpkg)
             # FIXME: check for full package name
-            separate_installed $@
-            # FIXME: broken status when use batch and default answer
-            [ -n "$pkg_noninstalled" ] && sudocmd_foreach "/sbin/installpkg" $pkg_noninstalled
-            [ -n "$pkg_installed" ] && sudocmd_foreach "/sbin/upgradepkg" $pkg_installed
+            # FIXME: broken status when use batch and default answer 
+            __separate_sudocmd_foreach "/sbin/installpkg" "/sbin/upgradepkg" $@
             return ;;
     esac
 
@@ -1232,9 +1250,25 @@ epm_kernel_update()
 
 # File bin/epm-packages:
 
+__epm_packages_sort()
+{
+case $PMTYPE in
+	apt-rpm|yum-rpm|urpm-rpm|zypper-rpm|dnf-rpm)
+		docmd rpm -qa --queryformat "%{size} %{name}-%{version}-%{release}\n" $pkg_filenames | sort -n
+		;;
+	apt-dpkg)
+		docmd dpkg-query -W --showformat="\${Size} \${Package}-\${Version}\n" $pkg_filenames | sort -n
+		;;
+	*)
+		fatal "Sorted package list are not realized for $PMTYPE"
+		;;
+esac
+}
+
 epm_packages()
 {
 	local CMD
+	[ -n "$sort" ] && __epm_packages_sort && return
 
 case $PMTYPE in
 	apt-rpm)
@@ -1270,7 +1304,10 @@ case $PMTYPE in
 	slackpkg)
 		CMD="ls -1 /var/log/packages/"
 		if [ -n "$short" ] ; then
-			docmd ls -1 /var/log/packages/ | sed -e "s|-[0-9].*||g"
+			# FIXME: does not work for libjpeg-v8a
+			# TODO: remove last 3 elements (if arch is second from the last?)
+			# FIXME this hack
+			docmd ls -1 /var/log/packages/ | sed -e "s|-[0-9].*||g" | sed -e "s|libjpeg-v8a.*|libjpeg|g"
 			return
 		fi
 		;;
@@ -1359,10 +1396,10 @@ _query_via_packages_list()
 	shift
 
 	# separate first line for print out command
-	pkg_filenames=$firstpkg epm_packages | grep -- "^$firstpkg$" || res=1
+	short=1 pkg_filenames=$firstpkg epm_packages | grep -- "^$firstpkg$" || res=1
 
 	for pkg in "$@" ; do
-		pkg_filenames=$pkg epm_packages 2>/dev/null | grep -- "^$pkg$" || res=1
+		short=1 pkg_filenames=$pkg epm_packages 2>/dev/null | grep -- "^$pkg$" || res=1
 	done
 
 	return $res
@@ -1457,6 +1494,7 @@ __epm_query_name()
 			warning "fix query"
 			return 1
 			;;
+		# Note: slackpkg info pkgname
 		*)
 			_query_via_packages_list $@
 			return
@@ -2276,6 +2314,8 @@ EOF
     		local pkg res
     		res=0
     		for pkg in $filenames ; do
+    			# FIXME: -[0-0] does not work in search!
+    			# FIXME: we need strict search here (not find gst-plugins-base if search for gst-plugins
     			pkg_filenames="$pkg-[0-9]" epm_search | grep -E "(installed|upgrade)" && continue
     			pkg_filenames="$pkg" epm_search | grep -E "(installed|upgrade)" && continue
     			res=1
@@ -2800,6 +2840,7 @@ quiet=
 nodeps=
 force=
 short=
+sort=
 non_interactive=
 skip_installed=
 show_command_only=
@@ -2911,7 +2952,7 @@ check_command()
     -qa|list|packages|-l) # HELPCMD: list of installed package(s)
         epm_cmd=packages
         ;;
-    programs)             # HELPCMD: list of installed program(s)
+    programs)             # HELPCMD: list of installed GUI program(s)
         epm_cmd=programs
         ;;
 
@@ -2993,6 +3034,9 @@ check_option()
         ;;
     --short)              # HELPOPT: short output (just 'package' instead 'package-version-release')
         short="--short"
+        ;;
+    --sort)               # HELPOPT: sort output, f.i. --sort=size (supported only for packages command)
+        sort="$1"
         ;;
     --auto)               # HELPOPT: non interactive mode
         non_interactive=1
