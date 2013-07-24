@@ -267,6 +267,9 @@ check_option()
     --short)              # HELPOPT: short output (just 'package' instead 'package-version-release')
         short="--short"
         ;;
+    --sort)               # HELPOPT: sort output, f.i. --sort=size (supported only for packages command)
+        sort="$1"
+        ;;
     --auto)               # HELPOPT: non interactive mode
         non_interactive=1
         ;;
