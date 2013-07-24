@@ -28,10 +28,10 @@ _query_via_packages_list()
 	shift
 
 	# separate first line for print out command
-	pkg_filenames=$firstpkg epm_packages | grep -- "^$firstpkg$" || res=1
+	short=1 pkg_filenames=$firstpkg epm_packages | grep -- "^$firstpkg$" || res=1
 
 	for pkg in "$@" ; do
-		pkg_filenames=$pkg epm_packages 2>/dev/null | grep -- "^$pkg$" || res=1
+		short=1 pkg_filenames=$pkg epm_packages 2>/dev/null | grep -- "^$pkg$" || res=1
 	done
 
 	return $res
