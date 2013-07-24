@@ -48,6 +48,38 @@ __use_zypper_no_gpg_checks()
     a= zypper install --help 2>&1 | grep -q -- "--no-gpg-checks" && echo "--no-gpg-checks"
 }
 
+# args: cmd_reinstall, cmd_install, packages
+__separate_sudocmd_foreach()
+{
+    local cmd_re=$1
+    local cmd_in=$2
+    shift 2
+    separate_installed $@
+    if [ -n "$pkg_noninstalled" ] ; then
+        sudocmd_foreach "$cmd_re" $pkg_noninstalled || return
+    fi
+    if [ -n "$pkg_installed" ] ; then
+        sudocmd_foreach "$cmd_in" $pkg_installed || return
+    fi
+    return 0
+}
+
+# args: cmd_reinstall, cmd_install, packages
+__separate_sudocmd()
+{
+    local cmd_re=$1
+    local cmd_in=$2
+    shift 2
+    separate_installed $@
+    if [ -n "$pkg_noninstalled" ] ; then
+        sudocmd "$cmd_re" $pkg_noninstalled || return
+    fi
+    if [ -n "$pkg_installed" ] ; then
+        sudocmd "$cmd_in" $pkg_installed || return
+    fi
+    return 0
+}
+
 # copied from etersoft-build-utils/share/eterbuild/functions/rpmpkg
 epm_install_names()
 {
@@ -92,29 +124,21 @@ epm_install_names()
 			sudocmd mpkg install $@
 			return ;;
 		npackd)
-			separate_installed $@
-			# FIXME: fix return status
-			[ -n "$pkg_noninstalled" ] && sudocmd npackdcl add --package=$@ $pkg_noninstalled
-			[ -n "$pkg_installed" ] && sudocmd npackdcl update --package=$@ $pkg_installed
+			# FIXME: correct arg
+			__separate_sudocmd_foreach "npackdcl add --package=" "npackdcl update --package=" $@
 			return ;;
 		slackpkg)
-			separate_installed $@
-			[ -n "$pkg_noninstalled" ] && sudocmd_foreach "/usr/sbin/slackpkg install" $pkg_noninstalled
-			[ -n "$pkg_installed" ] && sudocmd_foreach "/usr/sbin/slackpkg upgrade" $pkg_installed
+			__separate_sudocmd_foreach "/usr/sbin/slackpkg install" "/usr/sbin/slackpkg upgrade" $@
 			return ;;
 		homebrew)
-			separate_installed $@
-			[ -n "$pkg_noninstalled" ] && sudocmd brew install $pkg_noninstalled
-			[ -n "$pkg_installed" ] && sudocmd brew upgrade $pkg_installed
+			__separate_sudocmd "brew install" "brew upgrade" $@
 			return ;;
 		ipkg)
 			[ -n "$force" ] && force=-force-depends
 			sudocmd ipkg $force install $@
 			return ;;
 		nix)
-			separate_installed $@
-			[ -n "$pkg_noninstalled" ] && sudocmd nix-env --install $pkg_noninstalled
-			[ -n "$pkg_installed" ] && sudocmd nix-env --upgrade $pkg_installed
+			__separate_sudocmd "nix-env --install" "nix-env --upgrade" $@
 			return ;;
 		*)
 			fatal "Have no suitable install command for $PMTYPE"
@@ -166,10 +190,8 @@ epm_ni_install_names()
 			sudocmd nix-env --install $@
 			return ;;
 		slackpkg)
-			separate_installed $@
 			# FIXME: broken status when use batch and default answer
-			[ -n "$pkg_noninstalled" ] && sudocmd_foreach "/usr/sbin/slackpkg -batch=on -default_answer=yes install" $pkg_noninstalled
-			[ -n "$pkg_installed" ] && sudocmd_foreach "/usr/sbin/slackpkg -batch=on -default_answer=yes upgrade" $pkg_installed
+			__separate_sudocmd_foreach "/usr/sbin/slackpkg -batch=on -default_answer=yes install" "/usr/sbin/slackpkg -batch=on -default_answer=yes upgrade" $@
 			return ;;
 		*)
 			fatal "Have no suitable appropriate install command for $PMTYPE"
@@ -269,10 +291,8 @@ epm_install_files()
             return ;;
         slackpkg)
             # FIXME: check for full package name
-            separate_installed $@
-            # FIXME: broken status when use batch and default answer
-            [ -n "$pkg_noninstalled" ] && sudocmd_foreach "/sbin/installpkg" $pkg_noninstalled
-            [ -n "$pkg_installed" ] && sudocmd_foreach "/sbin/upgradepkg" $pkg_installed
+            # FIXME: broken status when use batch and default answer 
+            __separate_sudocmd_foreach "/sbin/installpkg" "/sbin/upgradepkg" $@
             return ;;
     esac
 
