@@ -76,7 +76,10 @@ case $PMTYPE in
 	slackpkg)
 		CMD="ls -1 /var/log/packages/"
 		if [ -n "$short" ] ; then
-			docmd ls -1 /var/log/packages/ | sed -e "s|-[0-9].*||g"
+			# FIXME: does not work for libjpeg-v8a
+			# TODO: remove last 3 elements (if arch is second from the last?)
+			# FIXME this hack
+			docmd ls -1 /var/log/packages/ | sed -e "s|-[0-9].*||g" | sed -e "s|libjpeg-v8a.*|libjpeg|g"
 			return
 		fi
 		;;

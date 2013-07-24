@@ -129,6 +129,7 @@ __epm_query_name()
 			warning "fix query"
 			return 1
 			;;
+		# Note: slackpkg info pkgname
 		*)
 			_query_via_packages_list $@
 			return
