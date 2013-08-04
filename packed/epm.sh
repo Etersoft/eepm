@@ -105,7 +105,7 @@ showcmd()
 
 docmd()
 {
-	showcmd "$@"
+	showcmd "$@$EXTRA_SHOWDOCMD"
 	"$@"
 }
 
@@ -135,6 +135,18 @@ sudocmd_foreach()
 	for pkg in "$@" ; do
 		sudocmd $cmd $pkg
 	done
+}
+
+get_firstarg()
+{
+	echo -n "$1"
+}
+
+get_lastarg()
+{
+	local lastarg
+	eval lastarg=\${$#}
+	echo -n "$lastarg"
 }
 
 
@@ -266,6 +278,9 @@ case $DISTRNAME in
 		;;
 	SUSE|SLED|SLES)
 		CMD="zypper-rpm"
+		;;
+	ForesightLinux|rPathLinux)
+		CMD="conary"
 		;;
 	Windows)
 		CMD="chocolatey"
@@ -495,7 +510,10 @@ case $PMTYPE in
 	#	sudocmd urpme --auto-orphans
 	#	;;
 	zypper-rpm)
-		sudocmd zypper verify || exit
+		sudocmd zypper verify
+		;;
+	conary)
+		sudocmd conary verify
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -506,88 +524,30 @@ esac
 
 # File bin/epm-checkpkg:
 
-check_rpm_integrity()
-{
-	docmd rpm --checksig $@
-}
-
-check_deb_integrity()
-{
-	# FIXME: debsums -ca package ?
-	docmd dpkg --contents $@
-}
-
-check_bz2_integrity()
-{
-	docmd bunzip -t $1
-}
-
-check_tbz_integrity()
-{
-	check_bz2_integrity $@
-}
-
-check_gz_integrity()
-{
-	docmd gunzip -t $1
-}
-
-check_tgz_integrity()
-{
-	check_gz_integrity $@
-}
-
-check_zip_integrity()
-{
-	docmd unzip -t $@
-}
-
-check_rar_integrity()
-{
-	docmd unrar t $@
-}
-
-check_xz_integrity()
-{
-	docmd xz -t $1
-}
-
-check_7z_integrity()
-{
-	docmd 7z t $1
-}
-
-check_exe_integrity()
-{
-	# skip
-	true
-}
-
-check_ebuild_integrity()
-{
-	# skip
-	true
-}
-
 check_pkg_integrity()
 {
 	local EXT=`echo "$1" | sed -e "s|.*\.\([a-z0-9]*\)\$|\1|g"`
 	local PKG="$1"
 	local RET
-	# TODO: Попробовать здесь оставить возможность перегрузки функций
+
 	case $EXT in
 	rpm)
-		docmd rpm --checksig $1
+		docmd rpm --checksig $PKG
 		;;
 	deb)
 		# FIXME: debsums -ca package ?
-		docmd dpkg --contents $1 >/dev/null && echo "Package $1 is correct."
+		docmd dpkg --contents $PKG >/dev/null && echo "Package $PKG is correct."
 		;;
-	bz2)
-		docmd bunzip -t $1
+	exe)
+		true
+		;;
+	ebuild)
+		true
 		;;
 	*)
-		check_${EXT}_integrity "$PKG" || fatal "Unknown package extension '$EXT' in $PKG package"
+		docmd erc test "$PKG" && return
+		which erc >/dev/null 2>/dev/null && fatal "Check failed"
+		fatal "Install erc package."
 		;;
 	esac
 }
@@ -612,6 +572,7 @@ esac
 epm_checkpkg()
 {
 	if [ -n "$pkg_names" ] ; then
+		echo "Suggest $pkg_names are names of installed packages"
 		__epm_check_installed_pkg $pkg_names
 		return
 	fi
@@ -706,6 +667,9 @@ __epm_filelist_name()
 		zypper-rpm)
 			CMD="rpm -ql"
 			;;
+		conary)
+			CMD="conary query --ls"
+			;;
 		pacman)
 			docmd pacman -Ql $pkg_names | sed -e "s|.* ||g"
 			return
@@ -785,6 +749,10 @@ case $PMTYPE in
 	npackd)
 		# FIXME: --version=
 		docmd npackdcl info --package=$pkg_names
+		;;
+	conary)
+		is_installed $pkg_names && docmd conary query $pkg_names --info && return
+		docmd conary repquery $pkg_names --info
 		;;
 	slackpkg)
 		docmd /usr/sbin/slackpkg info $pkg_names
@@ -900,6 +868,9 @@ epm_install_names()
 			return ;;
 		mpkg)
 			sudocmd mpkg install $@
+			return ;;
+		conary)
+			sudocmd conary update $@
 			return ;;
 		npackd)
 			# FIXME: correct arg
@@ -1301,6 +1272,9 @@ case $PMTYPE in
 		CMD="npackdcl list --status=installed"
 		# TODO: use search if pkg_filenames is not empty
 		;;
+	conary)
+		CMD="conary query"
+		;;
 	slackpkg)
 		CMD="ls -1 /var/log/packages/"
 		if [ -n "$short" ] ; then
@@ -1366,7 +1340,7 @@ case $PMTYPE in
 			CMD="apt-cache depends"
 		fi
 		;;
-	urpm-rpm|zypper-rpm)
+	urpm-rpm|zypper-rpm|yum-rpm)
 		if is_installed $pkg_names ; then
 			CMD="rpm -q --provides"
 		else
@@ -1488,7 +1462,11 @@ __epm_query_name()
 			[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${Package}\n"
 			;;
 		npackd)
-			CMD="npackdcl path --package=$@"
+			docmd "npackdcl path --package=$@"
+			return
+			;;
+		conary)
+			CMD="conary query"
 			;;
 		brew)
 			warning "fix query"
@@ -1594,6 +1572,9 @@ __do_query()
         pacman)
             CMD="pacman -Qo"
             ;;
+        conary)
+            CMD="conary query --path"
+            ;;
         slackpkg)
             # note: need remove leading slash for grep
             docmd grep -R -- "$(echo $@ | sed -e 's|^/\+||g')" /var/log/packages | sed -e "s|/var/log/packages/||g"
@@ -1667,8 +1648,11 @@ epm_query_file()
 
 epm_query_package()
 {
-	#showcmd grep --color "$pkg_filenames"
-	pkg_filenames= epm_packages | grep --color -- "$pkg_filenames"
+	[ -n "$pkg_filenames" ] || fatal "Please, use search with some argument"
+	# FIXME: do it better
+	local MGS=$(eval __epm_search_make_grep $quoted_args)
+	EXTRA_SHOWDOCMD=$MGS
+	eval "pkg_filenames= epm_packages \"$(eval get_firstarg $quoted_args)\" $MGS"
 }
 
 # File bin/epm-reinstall:
@@ -1685,7 +1669,7 @@ epm_reinstall_names()
 			sudocmd dnf reinstall $@
 			return ;;
 		slackpkg)
-			sudocmd /usr/sbin/slackpkg reinstall $@
+			sudocmd_foreach "/usr/sbin/slackpkg reinstall" $@
 			return ;;
 	esac
 
@@ -1706,7 +1690,7 @@ epm_reinstall_files()
             sudocmd dpkg -i $@
             return ;;
         slackpkg)
-            sudocmd /sbin/installpkg $@
+            sudocmd_foreach "/sbin/installpkg" $@
             return ;;
     esac
 
@@ -1737,6 +1721,7 @@ epm_release_upgrade()
 		docmd epm install apt rpm
 		showcmd "TODO: change repo"
 		docmd epm Upgrade
+		docmd epm update-kernel
 		;;
 	apt-dpkg)
 		sudocmd do-release-upgrade -d
@@ -1766,6 +1751,9 @@ epm_release_upgrade()
 		docmd epm upgrade
 		;;
 	pacman)
+		epm Upgrade
+		;;
+	conary)
 		epm Upgrade
 		;;
 	*)
@@ -1840,6 +1828,9 @@ epm_remove_names()
 			return ;;
 		mpkg)
 			sudocmd mpkg remove $@
+			return ;;
+		conary)
+			sudocmd conary erase $@
 			return ;;
 		npackd)
 			sudocmd npackdcl remove --package=$@
@@ -2095,12 +2086,10 @@ esac
 
 # File bin/epm-search:
 
-
-epm_search()
+__epm_search_output()
 {
-	local CMD
-	[ -n "$pkg_filenames" ] || fatal "Run search without names"
-
+local CMD
+local string="$1"
 case $PMTYPE in
 	apt-rpm|apt-dpkg)
 		CMD="apt-cache search"
@@ -2132,8 +2121,11 @@ case $PMTYPE in
 	mpkg)
 		CMD="mpkg search"
 		;;
+	conary)
+		CMD="conary repquery"
+		;;
 	npackd)
-		docmd npackdcl search --query="$pkg_filenames" --status=all
+		docmd npackdcl search --query="$string" --status=all
 		return
 		;;
 	chocolatey)
@@ -2141,9 +2133,8 @@ case $PMTYPE in
 		;;
 	slackpkg)
 		# FIXME
-		echo "FIXME: need case insensitive search"
-		docmd_foreach "/usr/sbin/slackpkg search" $pkg_filenames
-		return
+		echo "Note: case sensitive search"
+		CMD="/usr/sbin/slackpkg search"
 		;;
 	homebrew)
 		CMD="brew search"
@@ -2153,8 +2144,41 @@ case $PMTYPE in
 		;;
 esac
 
-docmd $CMD $pkg_filenames
+docmd $CMD $string
+}
 
+__epm_search_make_grep()
+{
+	local i
+	[ -z "$*" ] && return
+
+	local list=
+	local listN=
+	for i in $@ ; do
+		local NOR="${i/^/}"
+		[ "$NOR" = "$i" ] && list="$list $NOR" || listN="$listN $NOR"
+	done
+
+	#list=$(strip_spaces $list | sed -e "s/ /|/g")
+	listN=$(strip_spaces $listN | sed -e "s/ /|/g")
+
+	[ -n "$listN" ] && echo -n " | egrep -i -v -- \"$listN\""
+
+	# FIXME: The World has not idea how to do grep both string
+	# http://stackoverflow.com/questions/10110051/grep-with-two-strings-logical-and-in-regex?rq=1
+	for i in $list ; do
+		echo -n " | egrep -i --color -- \"$i\""
+	done
+}
+
+
+epm_search()
+{
+	[ -n "$pkg_filenames" ] || fatal "Please, use search with some argument"
+	# FIXME: do it better
+	local MGS=$(eval __epm_search_make_grep $quoted_args)
+	EXTRA_SHOWDOCMD="$MGS"
+	eval "__epm_search_output \"$(eval get_firstarg $quoted_args)\" $MGS"
 }
 
 # File bin/epm-search_file:
@@ -2440,6 +2464,9 @@ epm_upgrade()
 	emerge)
 		CMD="emerge -NuDa world"
 		;;
+	conary)
+		CMD="conary updateall"
+		;;
 	pkgsrc)
 		CMD="freebsd-update fetch install"
 		;;
@@ -2501,7 +2528,27 @@ case $PMTYPE in
 		;;
 esac
 
-[ -n "$pkg_names" ] && docmd $CMD $pkg_names
+docmd $CMD $pkg_names
+
+}
+
+# File bin/epm-whatprovides:
+
+epm_whatprovides()
+{
+	local CMD
+	[ -n "$pkg_names" ] || fatal "Run query without names"
+
+case $PMTYPE in
+	conary)
+		CMD="conary repquery --what-provides"
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+docmd $CMD $pkg_names
 
 }
 internal_distr_info()
@@ -2823,7 +2870,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.3.0"
+        echo "EPM package manager version 1.3.1"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -2847,6 +2894,7 @@ show_command_only=
 epm_cmd=
 pkg_files=
 pkg_names=
+quoted_args=
 
 progname="${0##*/}"
 
@@ -2902,7 +2950,7 @@ check_command()
     -i|install|add)       # HELPCMD: install package(s) from remote repositories or from local file
         epm_cmd=install
         ;;
-    -e|-P|remove|delete|uninstall)  # HELPCMD: remove (delete) package(s) from the database and the system
+    -e|-P|remove|delete|uninstall|erase)  # HELPCMD: remove (delete) package(s) from the database and the system
         epm_cmd=remove
         ;;
     -s|search)            # HELPCMD: search in remote package repositories
@@ -2948,6 +2996,9 @@ check_command()
         ;;
     whatdepends)          # HELPCMD: print packages dependences on that
         epm_cmd=whatdepends
+        ;;
+    whatprovides)          # HELPCMD: print packages provides that target
+        epm_cmd=whatprovides
         ;;
     -qa|list|packages|-l) # HELPCMD: list of installed package(s)
         epm_cmd=packages
@@ -3057,6 +3108,7 @@ for opt in "$@" ; do
     else
         pkg_names="$pkg_names $opt"
     fi
+    quoted_args="$quoted_args \"$opt\""
 done
 
 pkg_files=$(strip_spaces "$pkg_files")

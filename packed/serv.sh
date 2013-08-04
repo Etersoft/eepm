@@ -103,7 +103,7 @@ showcmd()
 
 docmd()
 {
-	showcmd "$@"
+	showcmd "$@$EXTRA_SHOWDOCMD"
 	"$@"
 }
 
@@ -133,6 +133,18 @@ sudocmd_foreach()
 	for pkg in "$@" ; do
 		sudocmd $cmd $pkg
 	done
+}
+
+get_firstarg()
+{
+	echo -n "$1"
+}
+
+get_lastarg()
+{
+	local lastarg
+	eval lastarg=\${$#}
+	echo -n "$lastarg"
 }
 
 
@@ -264,6 +276,9 @@ case $DISTRNAME in
 		;;
 	SUSE|SLED|SLES)
 		CMD="zypper-rpm"
+		;;
+	ForesightLinux|rPathLinux)
+		CMD="conary"
 		;;
 	Windows)
 		CMD="chocolatey"
@@ -966,7 +981,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.3.0"
+        echo "Service manager version 1.3.1"
         echo "Running on $($DISTRVENDOR)"
         echo "Copyright (c) Etersoft 2012, 2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
