@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2009, 2012  Etersoft
-# Copyright (C) 2009, 2012  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2009, 2012, 2013  Etersoft
+# Copyright (C) 2009, 2012, 2013  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -17,90 +17,30 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-# TODO: move zip,rar,7z to arc project, and pack all to check_pkg_integrity
-# also use arc project if installed
-check_rpm_integrity()
-{
-	docmd rpm --checksig $@
-}
-
-check_deb_integrity()
-{
-	# FIXME: debsums -ca package ?
-	docmd dpkg --contents $@
-}
-
-check_bz2_integrity()
-{
-	docmd bunzip -t $1
-}
-
-check_tbz_integrity()
-{
-	check_bz2_integrity $@
-}
-
-check_gz_integrity()
-{
-	docmd gunzip -t $1
-}
-
-check_tgz_integrity()
-{
-	check_gz_integrity $@
-}
-
-check_zip_integrity()
-{
-	docmd unzip -t $@
-}
-
-check_rar_integrity()
-{
-	docmd unrar t $@
-}
-
-check_xz_integrity()
-{
-	docmd xz -t $1
-}
-
-check_7z_integrity()
-{
-	docmd 7z t $1
-}
-
-check_exe_integrity()
-{
-	# skip
-	true
-}
-
-check_ebuild_integrity()
-{
-	# skip
-	true
-}
-
 check_pkg_integrity()
 {
 	local EXT=`echo "$1" | sed -e "s|.*\.\([a-z0-9]*\)\$|\1|g"`
 	local PKG="$1"
 	local RET
-	# TODO: Попробовать здесь оставить возможность перегрузки функций
+
 	case $EXT in
 	rpm)
-		docmd rpm --checksig $1
+		docmd rpm --checksig $PKG
 		;;
 	deb)
 		# FIXME: debsums -ca package ?
-		docmd dpkg --contents $1 >/dev/null && echo "Package $1 is correct."
+		docmd dpkg --contents $PKG >/dev/null && echo "Package $PKG is correct."
 		;;
-	bz2)
-		docmd bunzip -t $1
+	exe)
+		true
+		;;
+	ebuild)
+		true
 		;;
 	*)
-		check_${EXT}_integrity "$PKG" || fatal "Unknown package extension '$EXT' in $PKG package"
+		docmd erc test "$PKG" && return
+		which erc >/dev/null 2>/dev/null && fatal "Check failed"
+		fatal "Install erc package."
 		;;
 	esac
 }
@@ -125,6 +65,7 @@ esac
 epm_checkpkg()
 {
 	if [ -n "$pkg_names" ] ; then
+		echo "Suggest $pkg_names are names of installed packages"
 		__epm_check_installed_pkg $pkg_names
 		return
 	fi
