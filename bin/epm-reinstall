@@ -31,7 +31,7 @@ epm_reinstall_names()
 			sudocmd dnf reinstall $@
 			return ;;
 		slackpkg)
-			sudocmd /usr/sbin/slackpkg reinstall $@
+			sudocmd_foreach "/usr/sbin/slackpkg reinstall" $@
 			return ;;
 	esac
 
@@ -52,7 +52,7 @@ epm_reinstall_files()
             sudocmd dpkg -i $@
             return ;;
         slackpkg)
-            sudocmd /sbin/installpkg $@
+            sudocmd_foreach "/sbin/installpkg" $@
             return ;;
     esac
 

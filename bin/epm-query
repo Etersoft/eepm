@@ -37,7 +37,7 @@ _query_via_packages_list()
 	return $res
 }
 
-# internal use only
+# internal use only, for installed package
 __epm_get_hilevel_nameform()
 {
 	[ -n "$*" ] || return

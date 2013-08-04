@@ -21,6 +21,6 @@ load_helper epm-packages
 
 epm_query_package()
 {
-	#showcmd grep --color "$pkg_filenames"
+	EXTRA_SHOWDOCMD=" | grep --color \"$pkg_filenames\""
 	pkg_filenames= epm_packages | grep -i --color -- "$pkg_filenames"
 }

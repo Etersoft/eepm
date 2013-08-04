@@ -28,6 +28,7 @@ epm_release_upgrade()
 		docmd epm install apt rpm
 		showcmd "TODO: change repo"
 		docmd epm Upgrade
+		docmd epm update-kernel
 		;;
 	apt-dpkg)
 		sudocmd do-release-upgrade -d
