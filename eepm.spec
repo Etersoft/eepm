@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.3.1
+Version: 1.4.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -62,6 +62,16 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Sun Aug 04 2013 Vitaly Lipatov <lav@altlinux.ru> 1.4.0-alt1
+- query-package: make epmqp case insensitive
+- epm-search: introduce grep extra args in search
+- epm-search: output used grep command too
+- epm-checkpkg: use erc when possible
+- epm-query_package: allow grep sequence
+- epm-search: try to colorize output
+- add conary package manager support
+- introduce epm-whatprovides
+
 * Wed Jul 24 2013 Vitaly Lipatov <lav@altlinux.ru> 1.3.1-alt1
 - epm-packages: add size sort support for rpm and dpkg
 - fix epm query for non rpm/deb systems
