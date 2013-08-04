@@ -92,7 +92,7 @@ showcmd()
 # Print command line and run command line
 docmd()
 {
-	showcmd "$@"
+	showcmd "$@$EXTRA_SHOWDOCMD"
 	"$@"
 }
 
@@ -125,6 +125,18 @@ sudocmd_foreach()
 	for pkg in "$@" ; do
 		sudocmd $cmd $pkg
 	done
+}
+
+get_firstarg()
+{
+	echo -n "$1"
+}
+
+get_lastarg()
+{
+	local lastarg
+	eval lastarg=\${$#}
+	echo -n "$lastarg"
 }
 
 
