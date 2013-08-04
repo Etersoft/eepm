@@ -79,14 +79,24 @@ docmd $CMD $string
 __epm_search_make_grep()
 {
 	local i
-	shift
+	[ -z "$*" ] && return
+
+	local list=
+	local listN=
 	for i in $@ ; do
-		local NOR=${i/^/}
-		if [ "$NOR" = "$i" ] ; then
-			echo -n " | grep -- \"$i\""
-		else
-			echo -n " | grep -v -- \"$NOR\""
-		fi
+		local NOR="${i/^/}"
+		[ "$NOR" = "$i" ] && list="$list $NOR" || listN="$listN $NOR"
+	done
+
+	#list=$(strip_spaces $list | sed -e "s/ /|/g")
+	listN=$(strip_spaces $listN | sed -e "s/ /|/g")
+
+	[ -n "$listN" ] && echo -n " | egrep -i -v -- \"$listN\""
+
+	# FIXME: The World has not idea how to do grep both string
+	# http://stackoverflow.com/questions/10110051/grep-with-two-strings-logical-and-in-regex?rq=1
+	for i in $list ; do
+		echo -n " | egrep -i --color -- \"$i\""
 	done
 }
 
@@ -94,9 +104,9 @@ __epm_search_make_grep()
 
 epm_search()
 {
-	[ -n "$pkg_filenames" ] || fatal "Run search without any string"
+	[ -n "$pkg_filenames" ] || fatal "Please, use search with some argument"
 	# FIXME: do it better
 	local MGS=$(eval __epm_search_make_grep $quoted_args)
-	EXTRA_SHOWDOCMD=$MGS
+	EXTRA_SHOWDOCMD="$MGS"
 	eval "__epm_search_output \"$(eval get_firstarg $quoted_args)\" $MGS"
 }
