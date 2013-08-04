@@ -50,7 +50,7 @@ case $PMTYPE in
 			CMD="apt-cache depends"
 		fi
 		;;
-	urpm-rpm|zypper-rpm)
+	urpm-rpm|zypper-rpm|yum-rpm)
 		if is_installed $pkg_names ; then
 			CMD="rpm -q --provides"
 		else
