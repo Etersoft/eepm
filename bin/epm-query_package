@@ -18,9 +18,13 @@
 #
 
 load_helper epm-packages
+load_helper epm-search
 
 epm_query_package()
 {
-	EXTRA_SHOWDOCMD=" | grep --color \"$pkg_filenames\""
-	pkg_filenames= epm_packages | grep -i --color -- "$pkg_filenames"
+	[ -n "$pkg_filenames" ] || fatal "Please, use search with some argument"
+	# FIXME: do it better
+	local MGS=$(eval __epm_search_make_grep $quoted_args)
+	EXTRA_SHOWDOCMD=$MGS
+	eval "pkg_filenames= epm_packages \"$(eval get_firstarg $quoted_args)\" $MGS"
 }
