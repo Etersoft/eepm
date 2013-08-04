@@ -17,21 +17,15 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-epm_whatdepends()
+epm_whatprovides()
 {
 	local CMD
 	[ -n "$pkg_names" ] || fatal "Run query without names"
 
 # by package name
 case $PMTYPE in
-	apt-rpm|apt-dpkg)
-		CMD="apt-cache whatdepends"
-		;;
-	yum-rpm)
-		CMD="repoquery --whatrequires"
-		;;
-	emerge)
-		CMD="equery depends -a"
+	conary)
+		CMD="conary repquery --what-provides"
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
