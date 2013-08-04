@@ -62,6 +62,9 @@ __epm_filelist_name()
 		zypper-rpm)
 			CMD="rpm -ql"
 			;;
+		conary)
+			CMD="conary query --ls"
+			;;
 		pacman)
 			docmd pacman -Ql $pkg_names | sed -e "s|.* ||g"
 			return

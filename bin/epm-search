@@ -52,6 +52,9 @@ case $PMTYPE in
 	mpkg)
 		CMD="mpkg search"
 		;;
+	conary)
+		CMD="conary repquery"
+		;;
 	npackd)
 		docmd npackdcl search --query="$string" --status=all
 		return

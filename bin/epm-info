@@ -67,6 +67,10 @@ case $PMTYPE in
 		# FIXME: --version=
 		docmd npackdcl info --package=$pkg_names
 		;;
+	conary)
+		is_installed $pkg_names && docmd conary query $pkg_names --info && return
+		docmd conary repquery $pkg_names --info
+		;;
 	slackpkg)
 		docmd /usr/sbin/slackpkg info $pkg_names
 		;;

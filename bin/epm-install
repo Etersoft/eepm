@@ -123,6 +123,9 @@ epm_install_names()
 		mpkg)
 			sudocmd mpkg install $@
 			return ;;
+		conary)
+			sudocmd conary update $@
+			return ;;
 		npackd)
 			# FIXME: correct arg
 			__separate_sudocmd_foreach "npackdcl add --package=" "npackdcl update --package=" $@

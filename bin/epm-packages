@@ -70,6 +70,9 @@ case $PMTYPE in
 		CMD="npackdcl list --status=installed"
 		# TODO: use search if pkg_filenames is not empty
 		;;
+	conary)
+		CMD="conary query"
+		;;
 #	chocolatey)
 #		CMD="chocolatey list"
 #		;;

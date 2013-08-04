@@ -279,6 +279,9 @@ case $DISTRNAME in
 	SUSE|SLED|SLES)
 		CMD="zypper-rpm"
 		;;
+	ForesightLinux|rPathLinux)
+		CMD="conary"
+		;;
 	Windows)
 		CMD="chocolatey"
 		;;

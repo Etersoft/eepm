@@ -82,6 +82,9 @@ epm_remove_names()
 		mpkg)
 			sudocmd mpkg remove $@
 			return ;;
+		conary)
+			sudocmd conary erase $@
+			return ;;
 		npackd)
 			sudocmd npackdcl remove --package=$@
 			return ;;

@@ -123,7 +123,11 @@ __epm_query_name()
 			[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${Package}\n"
 			;;
 		npackd)
-			CMD="npackdcl path --package=$@"
+			docmd "npackdcl path --package=$@"
+			return
+			;;
+		conary)
+			CMD="conary query"
 			;;
 		brew)
 			warning "fix query"

@@ -60,6 +60,9 @@ epm_release_upgrade()
 	pacman)
 		epm Upgrade
 		;;
+	conary)
+		epm Upgrade
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;

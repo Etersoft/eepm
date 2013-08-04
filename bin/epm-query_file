@@ -84,6 +84,9 @@ __do_query()
         pacman)
             CMD="pacman -Qo"
             ;;
+        conary)
+            CMD="conary query --path"
+            ;;
         slackpkg)
             # note: need remove leading slash for grep
             docmd grep -R -- "$(echo $@ | sed -e 's|^/\+||g')" /var/log/packages | sed -e "s|/var/log/packages/||g"

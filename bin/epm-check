@@ -47,7 +47,10 @@ case $PMTYPE in
 	#	sudocmd urpme --auto-orphans
 	#	;;
 	zypper-rpm)
-		sudocmd zypper verify || exit
+		sudocmd zypper verify
+		;;
+	conary)
+		sudocmd conary verify
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
