@@ -17,13 +17,10 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-# copied from korinf/tools/run-script/scripts/search
-
-epm_search()
+__epm_search_output()
 {
-	local CMD
-	[ -n "$pkg_filenames" ] || fatal "Run search without names"
-
+local CMD
+local string="$1"
 case $PMTYPE in
 	apt-rpm|apt-dpkg)
 		CMD="apt-cache search"
@@ -56,7 +53,7 @@ case $PMTYPE in
 		CMD="mpkg search"
 		;;
 	npackd)
-		docmd npackdcl search --query="$pkg_filenames" --status=all
+		docmd npackdcl search --query="$string" --status=all
 		return
 		;;
 	chocolatey)
@@ -65,7 +62,7 @@ case $PMTYPE in
 	slackpkg)
 		# FIXME
 		echo "FIXME: need case insensitive search"
-		docmd_foreach "/usr/sbin/slackpkg search" $pkg_filenames
+		docmd_foreach "/usr/sbin/slackpkg search" $string
 		return
 		;;
 	homebrew)
@@ -76,6 +73,31 @@ case $PMTYPE in
 		;;
 esac
 
-docmd $CMD $pkg_filenames
+docmd $CMD $string
+}
 
+# produce grep sequence
+__epm_search_make_grep()
+{
+	local i
+	local string="$1"
+	shift
+	echo -n "\"$string\""
+	for i in $@ ; do
+		local NOR=${i/^/}
+		if [ "$NOR" = "$i" ] ; then
+			echo -n " | grep -- \"$i\""
+		else
+			echo -n " | grep -v -- \"$NOR\""
+		fi
+	done
+}
+
+# copied from korinf/tools/run-script/scripts/search
+
+epm_search()
+{
+	[ -n "$pkg_filenames" ] || fatal "Run search without any string"
+	# FIXME: do it better
+	eval "__epm_search_output $(eval __epm_search_make_grep $quoted_args)"
 }
