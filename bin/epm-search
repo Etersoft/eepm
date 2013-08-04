@@ -61,9 +61,8 @@ case $PMTYPE in
 		;;
 	slackpkg)
 		# FIXME
-		echo "FIXME: need case insensitive search"
-		docmd_foreach "/usr/sbin/slackpkg search" $string
-		return
+		echo "Note: case sensitive search"
+		CMD="/usr/sbin/slackpkg search"
 		;;
 	homebrew)
 		CMD="brew search"
@@ -80,9 +79,7 @@ docmd $CMD $string
 __epm_search_make_grep()
 {
 	local i
-	local string="$1"
 	shift
-	echo -n "\"$string\""
 	for i in $@ ; do
 		local NOR=${i/^/}
 		if [ "$NOR" = "$i" ] ; then
@@ -99,5 +96,7 @@ epm_search()
 {
 	[ -n "$pkg_filenames" ] || fatal "Run search without any string"
 	# FIXME: do it better
-	eval "__epm_search_output $(eval __epm_search_make_grep $quoted_args)"
+	local MGS=$(eval __epm_search_make_grep $quoted_args)
+	EXTRA_SHOWDOCMD=$MGS
+	eval "__epm_search_output \"$(eval get_firstarg $quoted_args)\" $MGS"
 }
