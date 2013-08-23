@@ -57,6 +57,7 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_bindir/serv
 %_bindir/cerv
 %_bindir/distr_info
+%_man1dir/*
 %_datadir/%name/
 %_sysconfdir/bash_completion.d/serv
 %_sysconfdir/bash_completion.d/cerv

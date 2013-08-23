@@ -1,0 +1,95 @@
+'\" t
+.\"
+.\" Author: Vitaly Lipatov
+.\"
+.\" This file has been put into the public domain.
+.\" You can do whatever you want with this file.
+.\"
+.TH EEPM 1 "August 2013" "Version 1.4"
+
+.SH NAME
+epm, epmi, epme, epms, epmq, epmcl, epmqa, epmqp, epmqf, epmqi, epmql, epmu \- wrapper for distro related package management system
+.SH SYNOPSIS
+.B eepm
+.RI [ options ]...
+.RI <command>...
+.RI [package name(s), package file(s)]
+.PP
+.B eepm, upm
+are equivalents to
+.BR "epm" .
+.br
+.B epmi
+is equivalent to
+.BR "epm install" .
+.br
+.B epme
+is equivalent to
+.BR "epm remove" .
+.br
+.B epms
+is equivalent to
+.BR "epm search" .
+.br
+.B epmq
+is equivalent to
+.BR "epm query" .
+.br
+.B epmcl
+is equivalent to
+.BR "epm changelog" .
+.br
+.B epmqa
+is equivalent to
+.BR "epm packages" .
+.br
+.B epmqp
+is equivalent to
+.BR "epm query package" .
+.br
+.B epmqf
+is equivalent to
+.BR "epm query file" .
+.br
+.B epmqi
+is equivalent to
+.BR "epm info" .
+.br
+.B epmql
+is equivalent to
+.BR "epm filelist" .
+.br
+.B epmu
+is equivalent to
+.BR "epm update" .
+.br
+.SH DESCRIPTION
+.BI
+With eepm you can do all package management jobs with the same set of commands on any operation system or distributive.
+.BI
+Eepm can be used manually, in shell scripts or other programs.
+
+Please use epm --help to get detail command explain.
+.SH OPTIONS
+.TP
+.I -h 
+Display help
+.TP
+.I -V
+Show version and exit
+.TP
+.I -v
+activate verbose output, mainly useful for debugging.
+.TP
+.I --force
+force operation
+.SH BUGS
+Please report any bugs to lav@etersoft.ru
+.SH EXIT STATUS
+.B any epm command
+will return zero on success and non zero on operation failure.
+.SH SEE ALSO
+.BR cerv (1), erc (1)
+.TP
+.B http://wiki.etersoft.ru/eepm
+EEPM wiki page

@@ -1,0 +1,44 @@
+'\" t
+.\"
+.\" Author: Vitaly Lipatov
+.\"
+.\" This file has been put into the public domain.
+.\" You can do whatever you want with this file.
+.\"
+.TH EEPM 1 "August 2013" "Version 1.4"
+
+.SH NAME
+cerv \- wrapper for system service control command
+.SH SYNOPSIS
+.B cerv
+.RI name
+.RI <command>
+.RI [parameters]
+.PP
+.B serv
+is equivalent to
+.BR "cerv" .
+.br
+.br
+.SH DESCRIPTION
+.BI
+Cerv realized service(8) command behavior. It supports sysvinit, systemd, upstart and other service controls.
+
+Please use cerv --help to get detail command explain.
+.SH OPTIONS
+.TP
+.I -h
+Display help
+.TP
+.I -V
+Show version and exit
+.SH BUGS
+Please report any bugs to lav@etersoft.ru
+.SH EXIT STATUS
+.B cerv
+will return zero on success and non zero on operation failure.
+.SH SEE ALSO
+.BR eepm (1), erc (1)
+.TP
+.B http://wiki.etersoft.ru/eepm
+EEPM wiki page

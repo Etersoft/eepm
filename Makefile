@@ -14,3 +14,6 @@ install:
 
 	mkdir -p $(DESTDIR)$(pkgdatadir)/
 	install -m 644 `ls -1 bin/* | grep "-"` $(DESTDIR)$(pkgdatadir)/
+
+	mkdir -p $(DESTDIR)$(mandir)/man1
+	cp -a `ls -1 man/*` $(DESTDIR)$(mandir)/man1/
