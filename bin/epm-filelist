@@ -37,6 +37,7 @@ __epm_filelist_file()
 			;;
 	esac
 
+	# TODO: add less
 	docmd $CMD $@
 }
 
@@ -79,6 +80,7 @@ __epm_filelist_name()
 			;;
 	esac
 
+	# TODO: add less
 	docmd $CMD $pkg_names && return
 	is_installed $pkg_names || fatal "Query filelist for non installed packages does not realized"
 }
