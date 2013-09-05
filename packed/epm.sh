@@ -642,6 +642,7 @@ __epm_filelist_file()
 			;;
 	esac
 
+	# TODO: add less
 	docmd $CMD $@
 }
 
@@ -684,6 +685,7 @@ __epm_filelist_name()
 			;;
 	esac
 
+	# TODO: add less
 	docmd $CMD $pkg_names && return
 	is_installed $pkg_names || fatal "Query filelist for non installed packages does not realized"
 }
@@ -2092,31 +2094,31 @@ local CMD
 local string="$1"
 case $PMTYPE in
 	apt-rpm|apt-dpkg)
-		CMD="apt-cache search"
+		CMD="apt-cache search --"
 		;;
 	urpm-rpm)
-		CMD="urpmq -y"
+		CMD="urpmq -y --"
 		;;
 	pkgsrc)
-		CMD="pkg_info -x"
+		CMD="pkg_info -x --"
 		;;
 	emerge)
-		CMD="emerge --search"
+		CMD="emerge --search --"
 		;;
 	pacman)
-		CMD="pacman -Ss"
+		CMD="pacman -Ss --"
 		;;
 	aura)
-		CMD="aura -As"
+		CMD="aura -As --"
 		;;
 	yum-rpm)
-		CMD="yum search"
+		CMD="yum search --"
 		;;
 	dnf-rpm)
-		CMD="dnf search"
+		CMD="dnf search --"
 		;;
 	zypper-rpm)
-		CMD="zypper search"
+		CMD="zypper search --"
 		;;
 	mpkg)
 		CMD="mpkg search"
@@ -2134,7 +2136,7 @@ case $PMTYPE in
 	slackpkg)
 		# FIXME
 		echo "Note: case sensitive search"
-		CMD="/usr/sbin/slackpkg search"
+		CMD="/usr/sbin/slackpkg search --"
 		;;
 	homebrew)
 		CMD="brew search"
@@ -2514,8 +2516,11 @@ epm_whatdepends()
 	[ -n "$pkg_names" ] || fatal "Run query without names"
 
 case $PMTYPE in
-	apt-rpm|apt-dpkg)
+	apt-rpm)
 		CMD="apt-cache whatdepends"
+		;;
+	apt-dpkg)
+		CMD="apt-cache rdepends"
 		;;
 	yum-rpm)
 		CMD="repoquery --whatrequires"
@@ -2542,6 +2547,16 @@ epm_whatprovides()
 case $PMTYPE in
 	conary)
 		CMD="conary repquery --what-provides"
+		;;
+	apt-rpm|apt-dpkg)
+		LANG=C docmd apt-get install --print-uris $pkg_filenames | grep "^Selecting" | cut -f2 -d" "
+		return
+		;;
+	yum-rpm)
+		CMD="yum whatprovides"
+		;;
+	zypper-rpm)
+		CMD="zypper what-provides"
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -2870,7 +2885,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.3.1"
+        echo "EPM package manager version 1.4.1"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
