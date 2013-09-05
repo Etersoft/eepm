@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.4.0
+Version: 1.4.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -63,6 +63,12 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Thu Sep 05 2013 Vitaly Lipatov <lav@altlinux.ru> 1.4.1-alt1
+- add initial man page file
+- epm-filelist: add todo for less
+- epm-search: add -- before search arg for support search "-some"
+- improve whatprovides and whatdepends support
+
 * Sun Aug 04 2013 Vitaly Lipatov <lav@altlinux.ru> 1.4.0-alt1
 - query-package: make epmqp case insensitive
 - epm-search: introduce grep extra args in search
