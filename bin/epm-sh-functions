@@ -224,7 +224,7 @@ assure_exists()
 	PATH=$PATH:/sbin:/usr/sbin which $1 2>/dev/null >/dev/null && return
 	echo "Install appropriate package for $1 command..."
 	case $1 in
-		equery)
+		equery|revdep-rebuild)
 			epm install gentoolkit
 			;;
 		apt-repo)

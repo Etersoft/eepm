@@ -39,8 +39,10 @@ check_pkg_integrity()
 		;;
 	*)
 		docmd erc test "$PKG" && return
-		which erc >/dev/null 2>/dev/null && fatal "Check failed"
-		fatal "Install erc package."
+		which erc >/dev/null 2>/dev/null && fatal "Check failed."
+		fatal "Install erc package for file package."
+		# TODO
+		epm install erc
 		;;
 	esac
 }
@@ -53,6 +55,10 @@ case $PMTYPE in
 		;;
 	*-dpkg)
 		docmd debsums $@
+		;;
+	emerge)
+		assure_exists equery
+		docmd equery check $@
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"

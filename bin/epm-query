@@ -142,7 +142,7 @@ __epm_query_name()
 		conary)
 			CMD="conary query"
 			;;
-		brew)
+		homebrew)
 			warning "fix query"
 			return 1
 			;;

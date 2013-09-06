@@ -46,12 +46,11 @@ __epm_changelog_local_names()
 			docmd_foreach "rpm --changelog" $@ | less
 			;;
 		apt-dpkg)
-			# FIXME: only first pkg
 			docmd zcat /usr/share/doc/$1/changelog.Debian.gz | less
 			;;
 		emerge)
-			docmd view /usr/portage/category/$1/ChangeLog | less
-			# docmd equery changes -f $1 | less
+			assure_exists equery
+			docmd equery changes -f $1 | less
 			;;
 		pacman)
 			docmd pacman -Qc $1 | less
@@ -83,6 +82,10 @@ __epm_changelog_unlocal_names()
 		#zypper-rpm)
 		#	sudocmd zypper clean
 		#	;;
+		emerge)
+			assure_exists equery
+			docmd equery changes -f $1 | less
+			;;
 		*)
 			fatal "Have no suitable command for $PMTYPE"
 			;;

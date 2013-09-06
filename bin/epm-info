@@ -71,6 +71,13 @@ case $PMTYPE in
 		is_installed $pkg_names && docmd conary query $pkg_names --info && return
 		docmd conary repquery $pkg_names --info
 		;;
+	emerge)
+		assure_exists equery
+		docmd equery meta $pkg_names
+		docmd equery which $pkg_names
+		docmd equery uses $pkg_names
+		docmd equery size $pkg_names
+		;;
 	slackpkg)
 		docmd /usr/sbin/slackpkg info $pkg_names
 		;;

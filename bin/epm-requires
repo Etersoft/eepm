@@ -59,6 +59,10 @@ case $PMTYPE in
 	apt-dpkg)
 		CMD="apt-cache depends"
 		;;
+	emerge)
+		assure_exists equery
+		CMD="equery depgraph"
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;

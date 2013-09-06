@@ -46,7 +46,7 @@ case $PMTYPE in
 		;;
 	emerge)
 		sudocmd emerge --depclean
-		docmd epm --skip-installed install gentoolkit
+		assure_exists revdep-rebuild
 		sudocmd revdep-rebuild
 		;;
 	pacman)
