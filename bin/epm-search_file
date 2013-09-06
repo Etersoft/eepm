@@ -50,6 +50,7 @@ case $PMTYPE in
 		local_content_search $pkg_filenames
 		return ;;
 	apt-dpkg)
+		assure_exists apt-file
 		sudocmd apt-file update
 		docmd apt-file search $pkg_filenames
 		return ;;

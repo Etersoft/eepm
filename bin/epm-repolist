@@ -32,6 +32,7 @@ epm_repolist()
 {
 case $PMTYPE in
 	apt-rpm)
+		assure_exists apt-repo
 		docmd apt-repo list
 		;;
 	deepsolver-rpm)

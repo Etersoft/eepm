@@ -219,6 +219,29 @@ set_sudo()
 	SUDO="fatal 'Can't find sudo. Please install sudo or run epm under root.'"
 }
 
+assure_exists()
+{
+	PATH=$PATH:/sbin:/usr/sbin which $1 2>/dev/null >/dev/null && return
+	echo "Install appropriate package for $1 command..."
+	case $1 in
+		equery)
+			epm install gentoolkit
+			;;
+		apt-repo)
+			epm install apt-repo
+			;;
+		apt-file)
+			epm install apt-file
+			;;
+		update-kernel|remove-old-kernels)
+			epm install update-kernel
+			;;
+		*)
+			fatal "Internal error: Unknown binary $1 to check if exists"
+			;;
+	esac
+}
+
 # print options description from HELPCMD/HELPOPT lines in the code
 get_help()
 {

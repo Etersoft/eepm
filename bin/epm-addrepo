@@ -21,6 +21,7 @@ epm_addrepo()
 {
 case $PMTYPE in
 	apt-rpm)
+		assure_exists apt-repo
 		sudocmd apt-repo add $pkg_filenames
 		;;
 	apt-dpkg)

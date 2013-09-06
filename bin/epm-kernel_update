@@ -23,6 +23,7 @@ epm_kernel_update()
 
 	case $DISTRNAME in
 	ALTLinux)
+		assure_exists update-kernel
 		sudocmd update-kernel
 		return ;;
 	esac

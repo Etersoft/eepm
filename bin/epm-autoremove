@@ -21,6 +21,7 @@ epm_autoremove()
 {
 case $PMTYPE in
 	apt-rpm)
+		assure_exists remove-old-kernels
 		# ALT Linux only
 		sudocmd remove-old-kernels
 		;;

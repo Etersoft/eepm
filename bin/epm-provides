@@ -58,6 +58,7 @@ case $PMTYPE in
 		fi
 		;;
 	emerge)
+		assure_exists equery
 		CMD="equery files"
 		;;
 #	yum-rpm)
