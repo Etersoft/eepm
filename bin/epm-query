@@ -19,19 +19,32 @@
 
 load_helper epm-packages
 
-# TODO: combine with -qa (the difference only in return status now)
 
+_get_grep_exp()
+{
+	local def="^$1$"
+	[ "$PMTYPE" != "emerge" ] && echo "$def" && return
+	# Gentoo hack: support for short package form
+	echo "$1" | grep -q "/" && echo "$def" && return
+	echo "/$1$"
+}
+
+# TODO: combine with -qa (the difference only in return status now)
 _query_via_packages_list()
 {
 	local res=0
+	local grepexp
 	local firstpkg=$1
 	shift
 
+	grepexp=$(_get_grep_exp $firstpkg)
+
 	# separate first line for print out command
-	short=1 pkg_filenames=$firstpkg epm_packages | grep -- "^$firstpkg$" || res=1
+	short=1 pkg_filenames=$firstpkg epm_packages | grep -- "$grepexp" || res=1
 
 	for pkg in "$@" ; do
-		short=1 pkg_filenames=$pkg epm_packages 2>/dev/null | grep -- "^$pkg$" || res=1
+		grepexp=$(_get_grep_exp $pkg)
+		short=1 pkg_filenames=$pkg epm_packages 2>/dev/null | grep -- "$grepexp" || res=1
 	done
 
 	return $res
