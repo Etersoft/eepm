@@ -52,9 +52,10 @@ case $PMTYPE in
 		CMD="rpm -qa $pkg_filenames"
 		[ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n $pkg_filenames"
 		;;
-# Note: dnf has dnf list command
 	emerge)
-		CMD="qlist -I"
+		CMD="qlist -I -C"
+		# print with colors for console output
+		isatty && CMD="qlist -I"
 		;;
 	pkgsrc)
 		CMD="pkg_info"

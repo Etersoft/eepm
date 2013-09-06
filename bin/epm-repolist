@@ -55,6 +55,7 @@ case $PMTYPE in
 		docmd zypper sl -d
 		;;
 	emerge)
+		docmd eselect profile list
 		docmd layman -L
 		;;
 	pacman)
