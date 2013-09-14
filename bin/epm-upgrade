@@ -61,7 +61,9 @@ epm_upgrade()
 		CMD="chocolatey update all"
 		;;
 	homebrew)
-		CMD="brew upgrade"
+		#CMD="brew upgrade"
+		sudocmd "brew upgrade `brew outdated`"
+		return
 		;;
 	ipkg)
 		CMD="ipkg upgrade"

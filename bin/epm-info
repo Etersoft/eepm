@@ -84,6 +84,9 @@ case $PMTYPE in
 	ipkg)
 		docmd ipkg info $pkg_names
 		;;
+	homebrew)
+		docmd brew info $pkg_names
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;

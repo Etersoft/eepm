@@ -237,6 +237,11 @@ elif [ `uname` = "SunOS" ] ; then
 	DISTRIB_ID="SunOS"
 	DISTRIB_RELEASE=$(uname -r)
 
+# fixme: can we detect by some file?
+elif [ `uname` = "Darwin" ] ; then
+	DISTRIB_ID="MacOS"
+	DISTRIB_RELEASE=$(uname -r)
+
 # try use standart LSB info by default
 elif distro lsb-release && [ -n "$DISTRIB_RELEASE" ]; then
 	# use LSB

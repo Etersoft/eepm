@@ -88,7 +88,7 @@ case $PMTYPE in
 		fi
 		;;
 	homebrew)
-		CMD="brew $pkg_filenames"
+		CMD="brew list $pkg_filenames"
 		;;
 	ipkg)
 		CMD="ipkg list"
