@@ -44,10 +44,14 @@ esac
 # by package name
 case $PMTYPE in
 	apt-rpm)
+		# FIXME: need fix for a few names case
+		# TODO: separate this function to two section
 		if is_installed $pkg_names ; then
 			CMD="rpm -q --provides"
 		else
-			CMD="apt-cache depends"
+			EXTRA_SHOWDOCMD=' | grep "Provides:"'
+			docmd apt-cache show $pkg_names | grep "Provides:"
+			return
 		fi
 		;;
 	urpm-rpm|zypper-rpm|yum-rpm)
@@ -64,9 +68,16 @@ case $PMTYPE in
 #	yum-rpm)
 #		CMD="yum deplist"
 #		;;
-#	apt-dpkg)
-#		CMD="apt-cache depends"
-#		;;
+	apt-dpkg)
+		# FIXME: need fix for a few names case
+		if is_installed $pkg_names ; then
+			CMD="rpm -q --provides"
+		else
+			EXTRA_SHOWDOCMD=' | grep "Provides:"'
+			docmd apt-cache show $pkg_names | grep "Provides:"
+			return
+		fi
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;

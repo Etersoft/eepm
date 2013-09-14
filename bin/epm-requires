@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012  Etersoft
-# Copyright (C) 2012  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2013  Etersoft
+# Copyright (C) 2012-2013  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -17,6 +17,9 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+load_helper epm-query
+
+
 epm_requires()
 {
 	local CMD
@@ -31,11 +34,14 @@ case $PMTYPE in
 		CMD="rpm -q --requires -p"
 		;;
 	apt-dpkg)
-		# FIXME: need package base
-		showcmd dpkg -s $pkg_files
-		a= dpkg -s $pkg_names | grep "^Depends:" | sed "s|^Depends:||g"
-		# FIXME: we need execute package name section too
-		return
+		if [ -n "$pkg_files" ] ; then
+			# FIXME: need package base
+			showcmd dpkg -s $pkg_files
+			a= dpkg -s $pkg_files | grep "^Depends:" | sed "s|^Depends:||g"
+			# FIXME: we need execute package name section too
+			# TODO: separate to two section
+			return
+		fi
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -46,7 +52,20 @@ esac
 
 # by package name
 case $PMTYPE in
-	apt-rpm|urpm-rpm|zypper-rpm)
+	apt-rpm)
+		# FIXME: need fix for a few names case
+		# FIXME: too low level of requires name (libSOME.so)
+		if is_installed $pkg_names ; then
+			CMD="rpm -q --requires"
+		else
+			#EXTRA_SHOWDOCMD=' | grep "Depends:"'
+			#docmd apt-cache show $pkg_names | grep "Depends:"
+			#return
+			CMD="apt-cache depends"
+		fi
+
+		;;
+	urpm-rpm|zypper-rpm)
 		# FIXME: use hi level commands
 		CMD="rpm -q --requires"
 		;;
@@ -57,7 +76,14 @@ case $PMTYPE in
 		CMD="pactree"
 		;;
 	apt-dpkg)
-		CMD="apt-cache depends"
+		# FIXME: need fix for a few names case
+		if is_installed $pkg_names ; then
+			showcmd dpkg -s $pkg_names
+			a= dpkg -s $pkg_names | grep "^Depends:" | sed "s|^Depends:||g"
+			return
+		else
+			CMD="apt-cache depends"
+		fi
 		;;
 	emerge)
 		assure_exists equery
