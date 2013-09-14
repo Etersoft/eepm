@@ -88,7 +88,7 @@ __epm_get_hilevel_name()
 	for i in $@ ; do
 		local pkg
 		# get short form in pkg
-		quiet=1 short=1 pkg=$(__epm_query_name $i)
+		quiet=1 short=1 pkg=$(__epm_query_name $i) || continue # drop not installed packages
 		# if already short form, skipped
 		[ "$pkg" = "$i" ] && echo "$i" && continue
 		# try get long form or use short form
