@@ -19,27 +19,29 @@
 
 load_helper epm-query
 
-epm_provides()
+epm_provides_files()
+{
+	[ -n "$pkg_files" ] || return
+
+	case $(get_package_type $pkg_files) in
+		rpm)
+			docmd "rpm -q --provides -p"
+			;;
+	#	deb)
+	#		a= docmd dpkg -s $pkg_names | grep "^Depends:" | sed "s|^Depends:||g"
+	#		return
+	#		;;
+		*)
+			fatal "Have no suitable command for $PMTYPE"
+			;;
+	esac
+}
+
+
+epm_provides_names()
 {
 	local CMD
-	[ -n "$pkg_filenames" ] || fatal "Run query without names"
-
-# by package file
-case $PMTYPE in
-	*-rpm)
-		CMD="rpm -q --provides -p"
-		;;
-#	apt-dpkg)
-#		showcmd dpkg -s $pkg_files
-#		a= dpkg -s $pkg_names | grep "^Depends:" | sed "s|^Depends:||g"
-#		return
-#		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
-esac
-
-[ -n "$pkg_files" ] && docmd $CMD $pkg_files
+	[ -n "$pkg_names" ] || return
 
 # by package name
 case $PMTYPE in
@@ -83,6 +85,13 @@ case $PMTYPE in
 		;;
 esac
 
-[ -n "$pkg_names" ] && docmd $CMD $pkg_names
+docmd $CMD $pkg_names
 
+}
+
+epm_provides()
+{
+	[ -n "$pkg_filenames" ] || fatal "Run query without names"
+	epm_provides_files
+	epm_provides_names
 }

@@ -19,36 +19,33 @@
 
 load_helper epm-query
 
-
-epm_requires()
+epm_requires_files()
 {
-	local CMD
-	[ -n "$pkg_filenames" ] || fatal "Run query without names"
+	[ -n "$pkg_files" ] || return
 
-# TODO: Здесь выбирать команду по расширению, а не по системному менеджеру
-# В других таких случаях тоже
-# В списке пакетов на установку проверять, что пакеты имеют соответствующее расширение
-# by package file
-case $PMTYPE in
-	apt-rpm|urpm-rpm|zypper-rpm|yum-rpm)
-		CMD="rpm -q --requires -p"
-		;;
-	apt-dpkg)
-		if [ -n "$pkg_files" ] ; then
+	case $(get_package_type $pkg_files) in
+		rpm)
+			docmd "rpm -q --requires -p"
+			;;
+		deb)
+			if [ -n "$pkg_files" ] ; then
 			# FIXME: need package base
-			showcmd dpkg -s $pkg_files
-			a= dpkg -s $pkg_files | grep "^Depends:" | sed "s|^Depends:||g"
+			# FIXME: need dpkg base. some other method?
+			a= docmd dpkg -s $pkg_files | grep "^Depends:" | sed "s|^Depends:||g"
 			# FIXME: we need execute package name section too
 			# TODO: separate to two section
-			return
-		fi
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
-esac
+			fi
+			;;
+		*)
+			fatal "Have no suitable command for $PMTYPE"
+			;;
+	esac
+}
 
-[ -n "$pkg_files" ] && docmd $CMD $pkg_files
+epm_requires_names()
+{
+	local CMD
+	[ -n "$pkg_names" ] || return
 
 # by package name
 case $PMTYPE in
@@ -95,6 +92,13 @@ case $PMTYPE in
 esac
 
 
-[ -n "$pkg_names" ] && docmd $CMD $pkg_names
+docmd $CMD $pkg_names
 
+}
+
+epm_requires()
+{
+	[ -n "$pkg_filenames" ] || fatal "Run query without names"
+	epm_requires_files
+	epm_requires_names
 }
