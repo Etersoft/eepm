@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012  Etersoft
-# Copyright (C) 2012  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2013  Etersoft
+# Copyright (C) 2012-2013  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -19,17 +19,28 @@
 
 load_helper epm-query
 
+# TODO: move to appropriate place
+_get_package_type()
+{
+	local i
+	for i in deb rpm ; do
+		[ "${1/.$i/}" != "$1" ] && echo $i && return
+	done
+	return 0
+}
+
 __epm_filelist_file()
 {
 	local CMD
 
 	[ -z "$*" ] && return
 
-	case $PMTYPE in
-		apt-rpm|yum-rpm|urpm-rpm|zypper-rpm)
+	# TODO: allow a new packages
+	case $(_get_package_type $1) in
+		rpm)
 			CMD="rpm -qlp"
 			;;
-		apt-dpkg)
+		deb)
 			CMD="dpkg --contents"
 			;;
 		*)
