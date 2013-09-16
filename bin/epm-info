@@ -28,6 +28,7 @@ __epm_info_rpm_low()
 	is_installed $pkg_names && docmd rpm -qi $pkg_names && return
 }
 
+# TODO: separate to _files and _names parts
 epm_info()
 {
 case $PMTYPE in

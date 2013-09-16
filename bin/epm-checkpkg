@@ -19,11 +19,10 @@
 
 check_pkg_integrity()
 {
-	local EXT=`echo "$1" | sed -e "s|.*\.\([a-z0-9]*\)\$|\1|g"`
 	local PKG="$1"
 	local RET
 
-	case $EXT in
+	case $(get_package_type $PKG) in
 	rpm)
 		docmd rpm --checksig $PKG
 		;;

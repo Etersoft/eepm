@@ -19,19 +19,21 @@
 
 load_helper epm-query
 
+# TODO: use 
 __epm_changelog_files()
 {
 	[ -z "$*" ] && return
 
-	case $PMTYPE in
-		apt-rpm|yum-rpm|zypper-rpm|urpm-rpm)
+	# TODO: detect every file
+	case $(get_package_type $1) in
+		rpm)
 			docmd_foreach "rpm -p --changelog" $@ | less
 			;;
 #		apt-dpkg)
 #			
 #			;;
 		*)
-			fatal "Have no suitable command for $PMTYPE"
+			fatal "Have no suitable command for $1"
 			;;
 	esac
 

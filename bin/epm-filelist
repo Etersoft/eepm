@@ -19,16 +19,6 @@
 
 load_helper epm-query
 
-# TODO: move to appropriate place
-_get_package_type()
-{
-	local i
-	for i in deb rpm ; do
-		[ "${1/.$i/}" != "$1" ] && echo $i && return
-	done
-	return 0
-}
-
 __epm_filelist_file()
 {
 	local CMD
@@ -36,7 +26,7 @@ __epm_filelist_file()
 	[ -z "$*" ] && return
 
 	# TODO: allow a new packages
-	case $(_get_package_type $1) in
+	case $(get_package_type $1) in
 		rpm)
 			CMD="rpm -qlp"
 			;;

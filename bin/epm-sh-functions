@@ -242,6 +242,18 @@ assure_exists()
 	esac
 }
 
+# improve
+get_package_type()
+{
+	local i
+	for i in deb rpm ; do
+		[ "${1/.$i/}" != "$1" ] && echo $i && return
+	done
+	echo "$1"
+	return 0
+}
+
+
 # print options description from HELPCMD/HELPOPT lines in the code
 get_help()
 {
