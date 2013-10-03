@@ -19,7 +19,14 @@
 
 load_helper epm-query
 
-# TODO: use 
+__epm_changelog_apt()
+{
+	local i
+	for i in $@ ; do
+		docmd apt-cache show $i | grep -A 1000 "^Changelog:"
+	done
+}
+
 __epm_changelog_files()
 {
 	[ -z "$*" ] && return
@@ -29,14 +36,13 @@ __epm_changelog_files()
 		rpm)
 			docmd_foreach "rpm -p --changelog" $@ | less
 			;;
-#		apt-dpkg)
+#		deb)
 #			
 #			;;
 		*)
 			fatal "Have no suitable command for $1"
 			;;
 	esac
-
 }
 
 __epm_changelog_local_names()
@@ -68,9 +74,9 @@ __epm_changelog_unlocal_names()
 	[ -z "$*" ] && return
 
 	case $PMTYPE in
-		#apt-rpm)
-		#	docmd_foreach "rpm --changelog" $@ | less
-		#	;;
+		apt-rpm)
+			__epm_changelog_apt $@ | less
+			;;
 		#apt-dpkg)
 		#	# FIXME: only first pkg
 		#	docmd zcat /usr/share/doc/$1/changelog.Debian.gz | less
