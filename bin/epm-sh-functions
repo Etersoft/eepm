@@ -326,6 +326,9 @@ case $DISTRNAME in
 	OpenWRT)
 		CMD="ipkg"
 		;;
+	GNU/Linux/Guix)
+		CMD="guix"
+		;;
 	*)
 		fatal "Have no suitable DISTRNAME $DISTRNAME"
 		;;

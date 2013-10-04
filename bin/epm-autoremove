@@ -56,6 +56,9 @@ case $PMTYPE in
 		# clean-system removes non official packages
 		#sudocmd slackpkg clean-system
 		;;
+	guix)
+		sudocmd guix gc
+		;;
 	#zypper-rpm)
 	#	sudocmd zypper clean
 	#	;;

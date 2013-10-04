@@ -71,6 +71,9 @@ epm_upgrade()
 	slackpkg)
 		CMD="/usr/sbin/slackpkg upgrade-all"
 		;;
+	guix)
+		CMD="guix package -u"
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;

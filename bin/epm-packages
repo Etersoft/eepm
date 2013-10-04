@@ -93,6 +93,9 @@ case $PMTYPE in
 	ipkg)
 		CMD="ipkg list"
 		;;
+	guix)
+		CMD="guix package -I"
+		;;
 	*)
 		fatal "Have no suitable query command for $PMTYPE"
 		;;

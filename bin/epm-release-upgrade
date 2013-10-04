@@ -63,6 +63,12 @@ epm_release_upgrade()
 	conary)
 		epm Upgrade
 		;;
+	emerge)
+		epm Upgrade
+		;;
+	guix)
+		sudocmd guix pull --verbose
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;

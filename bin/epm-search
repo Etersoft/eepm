@@ -70,6 +70,9 @@ case $PMTYPE in
 	homebrew)
 		CMD="brew search"
 		;;
+	guix)
+		CMD="guix package -A"
+		;;
 	*)
 		fatal "Have no suitable search command for $PMTYPE"
 		;;

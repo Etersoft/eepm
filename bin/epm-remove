@@ -94,6 +94,9 @@ epm_remove_names()
 		nix)
 			sudocmd nix-env --uninstall $@
 			return ;;
+		guix)
+			sudocmd guix package -r $@
+			return ;;
 		chocolatey)
 			sudocmd chocolatey uninstall $@
 			return ;;
