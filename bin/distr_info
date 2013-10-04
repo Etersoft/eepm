@@ -242,6 +242,11 @@ elif [ `uname` = "Darwin" ] ; then
 	DISTRIB_ID="MacOS"
 	DISTRIB_RELEASE=$(uname -r)
 
+# fixme: move to up
+elif [ `uname` = "Linux" ] && which guix 2>/dev/null >/dev/null ; then
+	DISTRIB_ID="GNU/Linux/Guix"
+	DISTRIB_RELEASE=$(uname -r)
+
 # try use standart LSB info by default
 elif distro lsb-release && [ -n "$DISTRIB_RELEASE" ]; then
 	# use LSB
