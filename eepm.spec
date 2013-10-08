@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.4.1
+Version: 1.4.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -61,6 +61,21 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Tue Oct 08 2013 Vitaly Lipatov <lav@altlinux.ru> 1.4.2-alt1
+- add initial support for guix
+- rewrite epm_requires and epm_provides
+- remove mandatory requires to apt-repo
+- fix epm query on Gentoo (disable colorifing for grep)
+- epm-query: support for short form of package name on Gentoo
+- epm-query: realize is_installed via internal function (for pkg names only), speed optimize
+- improve MacOS support
+- epm-query: fix for query non installed packages
+- epm-filelist: allow list of foreign packages
+- introduce get_package_type and use it
+- epm-remove: do not use --purge on apt-rpm
+- epm-changelog: add support for noninstalled packages on ALT
+- install: do non interactive really non interactive
+
 * Thu Sep 05 2013 Vitaly Lipatov <lav@altlinux.ru> 1.4.1-alt1
 - add initial man page file
 - epm-filelist: add todo for less
