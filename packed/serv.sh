@@ -220,6 +220,40 @@ set_sudo()
 	SUDO="fatal 'Can't find sudo. Please install sudo or run epm under root.'"
 }
 
+assure_exists()
+{
+	PATH=$PATH:/sbin:/usr/sbin which $1 2>/dev/null >/dev/null && return
+	echo "Install appropriate package for $1 command..."
+	case $1 in
+		equery|revdep-rebuild)
+			epm install gentoolkit
+			;;
+		apt-repo)
+			epm install apt-repo
+			;;
+		apt-file)
+			epm install apt-file
+			;;
+		update-kernel|remove-old-kernels)
+			epm install update-kernel
+			;;
+		*)
+			fatal "Internal error: Unknown binary $1 to check if exists"
+			;;
+	esac
+}
+
+get_package_type()
+{
+	local i
+	for i in deb rpm ; do
+		[ "${1/.$i/}" != "$1" ] && echo $i && return
+	done
+	echo "$1"
+	return 0
+}
+
+
 get_help()
 {
     grep -v -- "^#" $0 | grep -- "# $1" | while read n ; do
@@ -288,6 +322,9 @@ case $DISTRNAME in
 		;;
 	OpenWRT)
 		CMD="ipkg"
+		;;
+	GNU/Linux/Guix)
+		CMD="guix"
 		;;
 	*)
 		fatal "Have no suitable DISTRNAME $DISTRNAME"
@@ -836,6 +873,16 @@ elif [ `uname` = "SunOS" ] ; then
 	DISTRIB_ID="SunOS"
 	DISTRIB_RELEASE=$(uname -r)
 
+# fixme: can we detect by some file?
+elif [ `uname` = "Darwin" ] ; then
+	DISTRIB_ID="MacOS"
+	DISTRIB_RELEASE=$(uname -r)
+
+# fixme: move to up
+elif [ `uname` = "Linux" ] && which guix 2>/dev/null >/dev/null ; then
+	DISTRIB_ID="GNU/Linux/Guix"
+	DISTRIB_RELEASE=$(uname -r)
+
 # try use standart LSB info by default
 elif distro lsb-release && [ -n "$DISTRIB_RELEASE" ]; then
 	# use LSB
@@ -981,7 +1028,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.4.1"
+        echo "Service manager version 1.4.2"
         echo "Running on $($DISTRVENDOR)"
         echo "Copyright (c) Etersoft 2012, 2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

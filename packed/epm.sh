@@ -222,6 +222,40 @@ set_sudo()
 	SUDO="fatal 'Can't find sudo. Please install sudo or run epm under root.'"
 }
 
+assure_exists()
+{
+	PATH=$PATH:/sbin:/usr/sbin which $1 2>/dev/null >/dev/null && return
+	echo "Install appropriate package for $1 command..."
+	case $1 in
+		equery|revdep-rebuild)
+			epm install gentoolkit
+			;;
+		apt-repo)
+			epm install apt-repo
+			;;
+		apt-file)
+			epm install apt-file
+			;;
+		update-kernel|remove-old-kernels)
+			epm install update-kernel
+			;;
+		*)
+			fatal "Internal error: Unknown binary $1 to check if exists"
+			;;
+	esac
+}
+
+get_package_type()
+{
+	local i
+	for i in deb rpm ; do
+		[ "${1/.$i/}" != "$1" ] && echo $i && return
+	done
+	echo "$1"
+	return 0
+}
+
+
 get_help()
 {
     grep -v -- "^#" $0 | grep -- "# $1" | while read n ; do
@@ -291,6 +325,9 @@ case $DISTRNAME in
 	OpenWRT)
 		CMD="ipkg"
 		;;
+	GNU/Linux/Guix)
+		CMD="guix"
+		;;
 	*)
 		fatal "Have no suitable DISTRNAME $DISTRNAME"
 		;;
@@ -305,6 +342,7 @@ epm_addrepo()
 {
 case $PMTYPE in
 	apt-rpm)
+		assure_exists apt-repo
 		sudocmd apt-repo add $pkg_filenames
 		;;
 	apt-dpkg)
@@ -346,6 +384,7 @@ epm_autoremove()
 {
 case $PMTYPE in
 	apt-rpm)
+		assure_exists remove-old-kernels
 		# ALT Linux only
 		sudocmd remove-old-kernels
 		;;
@@ -370,7 +409,7 @@ case $PMTYPE in
 		;;
 	emerge)
 		sudocmd emerge --depclean
-		docmd epm --skip-installed install gentoolkit
+		assure_exists revdep-rebuild
 		sudocmd revdep-rebuild
 		;;
 	pacman)
@@ -379,6 +418,9 @@ case $PMTYPE in
 	slackpkg)
 		# clean-system removes non official packages
 		#sudocmd slackpkg clean-system
+		;;
+	guix)
+		sudocmd guix gc
 		;;
 	#zypper-rpm)
 	#	sudocmd zypper clean
@@ -393,19 +435,27 @@ esac
 # File bin/epm-changelog:
 
 
+__epm_changelog_apt()
+{
+	local i
+	for i in $@ ; do
+		docmd apt-cache show $i | grep -A 1000 "^Changelog:"
+	done
+}
+
 __epm_changelog_files()
 {
 	[ -z "$*" ] && return
 
-	case $PMTYPE in
-		apt-rpm|yum-rpm|zypper-rpm|urpm-rpm)
+	# TODO: detect every file
+	case $(get_package_type $1) in
+		rpm)
 			docmd_foreach "rpm -p --changelog" $@ | less
 			;;
 		*)
-			fatal "Have no suitable command for $PMTYPE"
+			fatal "Have no suitable command for $1"
 			;;
 	esac
-
 }
 
 __epm_changelog_local_names()
@@ -417,12 +467,11 @@ __epm_changelog_local_names()
 			docmd_foreach "rpm --changelog" $@ | less
 			;;
 		apt-dpkg)
-			# FIXME: only first pkg
 			docmd zcat /usr/share/doc/$1/changelog.Debian.gz | less
 			;;
 		emerge)
-			docmd view /usr/portage/category/$1/ChangeLog | less
-			# docmd equery changes -f $1 | less
+			assure_exists equery
+			docmd equery changes -f $1 | less
 			;;
 		pacman)
 			docmd pacman -Qc $1 | less
@@ -438,9 +487,9 @@ __epm_changelog_unlocal_names()
 	[ -z "$*" ] && return
 
 	case $PMTYPE in
-		#apt-rpm)
-		#	docmd_foreach "rpm --changelog" $@ | less
-		#	;;
+		apt-rpm)
+			__epm_changelog_apt $@ | less
+			;;
 		#apt-dpkg)
 		#	# FIXME: only first pkg
 		#	docmd zcat /usr/share/doc/$1/changelog.Debian.gz | less
@@ -454,6 +503,10 @@ __epm_changelog_unlocal_names()
 		#zypper-rpm)
 		#	sudocmd zypper clean
 		#	;;
+		emerge)
+			assure_exists equery
+			docmd equery changes -f $1 | less
+			;;
 		*)
 			fatal "Have no suitable command for $PMTYPE"
 			;;
@@ -526,11 +579,10 @@ esac
 
 check_pkg_integrity()
 {
-	local EXT=`echo "$1" | sed -e "s|.*\.\([a-z0-9]*\)\$|\1|g"`
 	local PKG="$1"
 	local RET
 
-	case $EXT in
+	case $(get_package_type $PKG) in
 	rpm)
 		docmd rpm --checksig $PKG
 		;;
@@ -546,8 +598,10 @@ check_pkg_integrity()
 		;;
 	*)
 		docmd erc test "$PKG" && return
-		which erc >/dev/null 2>/dev/null && fatal "Check failed"
-		fatal "Install erc package."
+		which erc >/dev/null 2>/dev/null && fatal "Check failed."
+		fatal "Install erc package for file package."
+		# TODO
+		epm install erc
 		;;
 	esac
 }
@@ -560,6 +614,10 @@ case $PMTYPE in
 		;;
 	*-dpkg)
 		docmd debsums $@
+		;;
+	emerge)
+		assure_exists equery
+		docmd equery check $@
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -630,11 +688,12 @@ __epm_filelist_file()
 
 	[ -z "$*" ] && return
 
-	case $PMTYPE in
-		apt-rpm|yum-rpm|urpm-rpm|zypper-rpm)
+	# TODO: allow a new packages
+	case $(get_package_type $1) in
+		rpm)
 			CMD="rpm -qlp"
 			;;
-		apt-dpkg)
+		deb)
 			CMD="dpkg --contents"
 			;;
 		*)
@@ -674,6 +733,10 @@ __epm_filelist_name()
 		pacman)
 			docmd pacman -Ql $pkg_names | sed -e "s|.* ||g"
 			return
+			;;
+		emerge)
+			assure_exists equery
+			CMD="equery files"
 			;;
 		slackpkg)
 			is_installed $pkg_names || fatal "Query filelist for non installed packages does not realized"
@@ -756,11 +819,21 @@ case $PMTYPE in
 		is_installed $pkg_names && docmd conary query $pkg_names --info && return
 		docmd conary repquery $pkg_names --info
 		;;
+	emerge)
+		assure_exists equery
+		docmd equery meta $pkg_names
+		docmd equery which $pkg_names
+		docmd equery uses $pkg_names
+		docmd equery size $pkg_names
+		;;
 	slackpkg)
 		docmd /usr/sbin/slackpkg info $pkg_names
 		;;
 	ipkg)
 		docmd ipkg info $pkg_names
+		;;
+	homebrew)
+		docmd brew info $pkg_names
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -891,6 +964,9 @@ epm_install_names()
 		nix)
 			__separate_sudocmd "nix-env --install" "nix-env --upgrade" $@
 			return ;;
+		guix)
+			__separate_sudocmd "guix package -i" "guix package -i" $@
+			return ;;
 		*)
 			fatal "Have no suitable install command for $PMTYPE"
 			;;
@@ -902,6 +978,7 @@ epm_ni_install_names()
 	[ -z "$1" ] && return
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
+			export DEBIAN_FRONTEND=noninteractive
 			sudocmd apt-get -y --force-yes -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
 			return ;;
 		yum-rpm)
@@ -1210,6 +1287,7 @@ epm_kernel_update()
 
 	case $DISTRNAME in
 	ALTLinux)
+		assure_exists update-kernel
 		sudocmd update-kernel
 		return ;;
 	esac
@@ -1258,7 +1336,9 @@ case $PMTYPE in
 		[ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n $pkg_filenames"
 		;;
 	emerge)
-		CMD="qlist -I"
+		CMD="qlist -I -C"
+		# print with colors for console output
+		isatty && CMD="qlist -I"
 		;;
 	pkgsrc)
 		CMD="pkg_info"
@@ -1288,10 +1368,13 @@ case $PMTYPE in
 		fi
 		;;
 	homebrew)
-		CMD="brew $pkg_filenames"
+		CMD="brew list $pkg_filenames"
 		;;
 	ipkg)
 		CMD="ipkg list"
+		;;
+	guix)
+		CMD="guix package -I"
 		;;
 	*)
 		fatal "Have no suitable query command for $PMTYPE"
@@ -1318,28 +1401,40 @@ epm_programs()
 # File bin/epm-provides:
 
 
-epm_provides()
+epm_provides_files()
+{
+	[ -n "$pkg_files" ] || return
+
+	case $(get_package_type $pkg_files) in
+		rpm)
+			docmd "rpm -q --provides -p"
+			;;
+		deb)
+			# FIXME: will we provide ourself?
+			docmd dpkg -I $pkg_files | grep "^ *Provides:" | sed "s|^ *Provides:||g"
+			;;
+		*)
+			fatal "Have no suitable command for $PMTYPE"
+			;;
+	esac
+}
+
+
+epm_provides_names()
 {
 	local CMD
-	[ -n "$pkg_filenames" ] || fatal "Run query without names"
-
-case $PMTYPE in
-	*-rpm)
-		CMD="rpm -q --provides -p"
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
-esac
-
-[ -n "$pkg_files" ] && docmd $CMD $pkg_files
+	[ -n "$pkg_names" ] || return
 
 case $PMTYPE in
 	apt-rpm)
+		# FIXME: need fix for a few names case
+		# TODO: separate this function to two section
 		if is_installed $pkg_names ; then
 			CMD="rpm -q --provides"
 		else
-			CMD="apt-cache depends"
+			EXTRA_SHOWDOCMD=' | grep "Provides:"'
+			docmd apt-cache show $pkg_names | grep "Provides:"
+			return
 		fi
 		;;
 	urpm-rpm|zypper-rpm|yum-rpm)
@@ -1350,32 +1445,63 @@ case $PMTYPE in
 		fi
 		;;
 	emerge)
+		assure_exists equery
 		CMD="equery files"
+		;;
+	apt-dpkg)
+		# FIXME: need fix for a few names case
+		if is_installed $pkg_names ; then
+			CMD="rpm -q --provides"
+		else
+			EXTRA_SHOWDOCMD=' | grep "Provides:"'
+			docmd apt-cache show $pkg_names | grep "Provides:"
+			return
+		fi
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
 esac
 
-[ -n "$pkg_names" ] && docmd $CMD $pkg_names
+docmd $CMD $pkg_names
 
+}
+
+epm_provides()
+{
+	[ -n "$pkg_filenames" ] || fatal "Run query without names"
+	epm_provides_files
+	epm_provides_names
 }
 
 # File bin/epm-query:
 
 
 
+_get_grep_exp()
+{
+	local def="^$1$"
+	[ "$PMTYPE" != "emerge" ] && echo "$def" && return
+	# Gentoo hack: support for short package form
+	echo "$1" | grep -q "/" && echo "$def" && return
+	echo "/$1$"
+}
+
 _query_via_packages_list()
 {
 	local res=0
+	local grepexp
 	local firstpkg=$1
 	shift
 
+	grepexp=$(_get_grep_exp $firstpkg)
+
 	# separate first line for print out command
-	short=1 pkg_filenames=$firstpkg epm_packages | grep -- "^$firstpkg$" || res=1
+	short=1 pkg_filenames=$firstpkg epm_packages | grep -- "$grepexp" || res=1
 
 	for pkg in "$@" ; do
-		short=1 pkg_filenames=$pkg epm_packages 2>/dev/null | grep -- "^$pkg$" || res=1
+		grepexp=$(_get_grep_exp $pkg)
+		short=1 pkg_filenames=$pkg epm_packages 2>/dev/null | grep -- "$grepexp" || res=1
 	done
 
 	return $res
@@ -1416,7 +1542,7 @@ __epm_get_hilevel_name()
 	for i in $@ ; do
 		local pkg
 		# get short form in pkg
-		quiet=1 short=1 pkg=$(__epm_query_name $i)
+		quiet=1 short=1 pkg=$(__epm_query_name $i) || continue # drop not installed packages
 		# if already short form, skipped
 		[ "$pkg" = "$i" ] && echo "$i" && continue
 		# try get long form or use short form
@@ -1470,7 +1596,7 @@ __epm_query_name()
 		conary)
 			CMD="conary query"
 			;;
-		brew)
+		homebrew)
 			warning "fix query"
 			return 1
 			;;
@@ -1486,8 +1612,9 @@ __epm_query_name()
 
 is_installed()
 {
-	#pkg_filenames="$@" epm_query >/dev/null
-	epm installed $@ >/dev/null 2>/dev/null
+	pkg_filenames="$@" pkg_names="$@" epm_query >/dev/null 2>/dev/null
+	# broken way to recursive call here (overhead!)
+	#epm installed $@ >/dev/null 2>/dev/null
 }
 
 separate_installed()
@@ -1569,6 +1696,7 @@ __do_query()
             CMD="rpm -qf"
             ;;
         emerge)
+            assure_exists equery
             CMD="equery belongs"
             ;;
         pacman)
@@ -1606,6 +1734,7 @@ __do_short_query()
             dpkg_print_name_version $(dpkg -S $1 | sed -e "s|:.*||" | grep -v "^diversion by")
             return ;;
         NOemerge)
+            assure_exists equery
             CMD="equery belongs"
             ;;
         NOpacman)
@@ -1758,6 +1887,12 @@ epm_release_upgrade()
 	conary)
 		epm Upgrade
 		;;
+	emerge)
+		epm Upgrade
+		;;
+	guix)
+		sudocmd guix pull --verbose
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
@@ -1800,8 +1935,11 @@ epm_remove_names()
 	[ -z "$1" ] && return
 
 	case $PMTYPE in
-		apt-rpm|apt-dpkg)
+		apt-dpkg)
 			sudocmd apt-get remove --purge $@
+			return ;;
+		apt-rpm)
+			sudocmd apt-get remove $@
 			return ;;
 		deepsolver-rpm)
 			sudocmd ds-remove $@
@@ -1840,6 +1978,9 @@ epm_remove_names()
 		nix)
 			sudocmd nix-env --uninstall $@
 			return ;;
+		guix)
+			sudocmd guix package -r $@
+			return ;;
 		chocolatey)
 			sudocmd chocolatey uninstall $@
 			return ;;
@@ -1861,8 +2002,11 @@ epm_remove_names()
 epm_remove_nonint()
 {
 	case $PMTYPE in
-		apt-rpm|apt-dpkg)
+		apt-dpkg)
 			sudocmd apt-get -y --force-yes remove --purge $@
+			return ;;
+		apt-rpm)
+			sudocmd apt-get -y --force-yes remove $@
 			return ;;
 		urpm-rpm)
 			sudocmd urpme --auto $@
@@ -1950,6 +2094,7 @@ epm_removerepo()
 {
 case $PMTYPE in
 	apt-rpm)
+		assure_exists apt-repo
 		sudocmd apt-repo rm $pkg_filenames
 		;;
 	apt-dpkg)
@@ -2000,6 +2145,7 @@ epm_repolist()
 {
 case $PMTYPE in
 	apt-rpm)
+		assure_exists apt-repo
 		docmd apt-repo list
 		;;
 	deepsolver-rpm)
@@ -2022,6 +2168,7 @@ case $PMTYPE in
 		docmd zypper sl -d
 		;;
 	emerge)
+		docmd eselect profile list
 		docmd layman -L
 		;;
 	pacman)
@@ -2039,31 +2186,44 @@ esac
 
 # File bin/epm-requires:
 
-epm_requires()
+
+epm_requires_files()
+{
+	[ -n "$pkg_files" ] || return
+
+	case $(get_package_type $pkg_files) in
+		rpm)
+			docmd "rpm -q --requires -p"
+			;;
+		deb)
+			a= docmd dpkg -I $pkg_files | grep "^ *Depends:" | sed "s|^ *Depends:||g"
+			;;
+		*)
+			fatal "Have no suitable command for $PMTYPE"
+			;;
+	esac
+}
+
+epm_requires_names()
 {
 	local CMD
-	[ -n "$pkg_filenames" ] || fatal "Run query without names"
+	[ -n "$pkg_names" ] || return
 
 case $PMTYPE in
-	apt-rpm|urpm-rpm|zypper-rpm|yum-rpm)
-		CMD="rpm -q --requires -p"
-		;;
-	apt-dpkg)
-		# FIXME: need package base
-		showcmd dpkg -s $pkg_files
-		a= dpkg -s $pkg_names | grep "^Depends:" | sed "s|^Depends:||g"
-		# FIXME: we need execute package name section too
-		return
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
-esac
+	apt-rpm)
+		# FIXME: need fix for a few names case
+		# FIXME: too low level of requires name (libSOME.so)
+		if is_installed $pkg_names ; then
+			CMD="rpm -q --requires"
+		else
+			#EXTRA_SHOWDOCMD=' | grep "Depends:"'
+			#docmd apt-cache show $pkg_names | grep "Depends:"
+			#return
+			CMD="apt-cache depends"
+		fi
 
-[ -n "$pkg_files" ] && docmd $CMD $pkg_files
-
-case $PMTYPE in
-	apt-rpm|urpm-rpm|zypper-rpm)
+		;;
+	urpm-rpm|zypper-rpm)
 		# FIXME: use hi level commands
 		CMD="rpm -q --requires"
 		;;
@@ -2074,7 +2234,18 @@ case $PMTYPE in
 		CMD="pactree"
 		;;
 	apt-dpkg)
-		CMD="apt-cache depends"
+		# FIXME: need fix for a few names case
+		if is_installed $pkg_names ; then
+			showcmd dpkg -s $pkg_names
+			a= dpkg -s $pkg_names | grep "^Depends:" | sed "s|^Depends:||g"
+			return
+		else
+			CMD="apt-cache depends"
+		fi
+		;;
+	emerge)
+		assure_exists equery
+		CMD="equery depgraph"
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -2082,8 +2253,15 @@ case $PMTYPE in
 esac
 
 
-[ -n "$pkg_names" ] && docmd $CMD $pkg_names
+docmd $CMD $pkg_names
 
+}
+
+epm_requires()
+{
+	[ -n "$pkg_filenames" ] || fatal "Run query without names"
+	epm_requires_files
+	epm_requires_names
 }
 
 # File bin/epm-search:
@@ -2141,6 +2319,9 @@ case $PMTYPE in
 	homebrew)
 		CMD="brew search"
 		;;
+	guix)
+		CMD="guix package -A"
+		;;
 	*)
 		fatal "Have no suitable search command for $PMTYPE"
 		;;
@@ -2169,6 +2350,7 @@ __epm_search_make_grep()
 	# FIXME: The World has not idea how to do grep both string
 	# http://stackoverflow.com/questions/10110051/grep-with-two-strings-logical-and-in-regex?rq=1
 	for i in $list ; do
+		# FIXME -n on MacOS?
 		echo -n " | egrep -i --color -- \"$i\""
 	done
 }
@@ -2216,6 +2398,7 @@ case $PMTYPE in
 		local_content_search $pkg_filenames
 		return ;;
 	apt-dpkg)
+		assure_exists apt-file
 		sudocmd apt-file update
 		docmd apt-file search $pkg_filenames
 		return ;;
@@ -2476,13 +2659,18 @@ epm_upgrade()
 		CMD="chocolatey update all"
 		;;
 	homebrew)
-		CMD="brew upgrade"
+		#CMD="brew upgrade"
+		sudocmd "brew upgrade `brew outdated`"
+		return
 		;;
 	ipkg)
 		CMD="ipkg upgrade"
 		;;
 	slackpkg)
 		CMD="/usr/sbin/slackpkg upgrade-all"
+		;;
+	guix)
+		CMD="guix package -u"
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -2526,6 +2714,7 @@ case $PMTYPE in
 		CMD="repoquery --whatrequires"
 		;;
 	emerge)
+		assure_exists equery
 		CMD="equery depends -a"
 		;;
 	*)
@@ -2807,6 +2996,16 @@ elif [ `uname` = "SunOS" ] ; then
 	DISTRIB_ID="SunOS"
 	DISTRIB_RELEASE=$(uname -r)
 
+# fixme: can we detect by some file?
+elif [ `uname` = "Darwin" ] ; then
+	DISTRIB_ID="MacOS"
+	DISTRIB_RELEASE=$(uname -r)
+
+# fixme: move to up
+elif [ `uname` = "Linux" ] && which guix 2>/dev/null >/dev/null ; then
+	DISTRIB_ID="GNU/Linux/Guix"
+	DISTRIB_RELEASE=$(uname -r)
+
 # try use standart LSB info by default
 elif distro lsb-release && [ -n "$DISTRIB_RELEASE" ]; then
 	# use LSB
@@ -2885,7 +3084,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.4.1"
+        echo "EPM package manager version 1.4.2"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
