@@ -27,10 +27,10 @@ epm_provides_files()
 		rpm)
 			docmd "rpm -q --provides -p"
 			;;
-	#	deb)
-	#		a= docmd dpkg -s $pkg_names | grep "^Depends:" | sed "s|^Depends:||g"
-	#		return
-	#		;;
+		deb)
+			# FIXME: will we provide ourself?
+			docmd dpkg -I $pkg_files | grep "^ *Provides:" | sed "s|^ *Provides:||g"
+			;;
 		*)
 			fatal "Have no suitable command for $PMTYPE"
 			;;

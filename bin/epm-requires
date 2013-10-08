@@ -28,13 +28,7 @@ epm_requires_files()
 			docmd "rpm -q --requires -p"
 			;;
 		deb)
-			if [ -n "$pkg_files" ] ; then
-			# FIXME: need package base
-			# FIXME: need dpkg base. some other method?
-			a= docmd dpkg -s $pkg_files | grep "^Depends:" | sed "s|^Depends:||g"
-			# FIXME: we need execute package name section too
-			# TODO: separate to two section
-			fi
+			a= docmd dpkg -I $pkg_files | grep "^ *Depends:" | sed "s|^ *Depends:||g"
 			;;
 		*)
 			fatal "Have no suitable command for $PMTYPE"
