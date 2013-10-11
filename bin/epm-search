@@ -103,8 +103,19 @@ __epm_search_make_grep()
 	# http://stackoverflow.com/questions/10110051/grep-with-two-strings-logical-and-in-regex?rq=1
 	for i in $list ; do
 		# FIXME -n on MacOS?
-		echo -n " | egrep -i --color -- \"$i\""
+		echo -n " | egrep -i -- \"$i\""
 	done
+
+	local COLO=""
+	# rule for colorife
+	for i in $list ; do
+		[ -n "$COLO" ] && COLO="$COLO|"
+		COLO="$COLO$i"
+	done
+	# FIXME -n on MacOS?
+	if [ -n "$list" ] ; then
+		echo -n " | egrep -i --color -- \"($COLO)\""
+	fi
 }
 
 # copied from korinf/tools/run-script/scripts/search
