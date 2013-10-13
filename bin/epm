@@ -37,6 +37,7 @@ load_helper epm-sh-functions
 #PATH=$PATH:/sbin:/usr/sbin
 
 set_sudo
+set_eatmydata
 
 check_tty
 

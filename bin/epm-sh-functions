@@ -219,6 +219,16 @@ set_sudo()
 	SUDO="fatal 'Can't find sudo. Please install sudo or run epm under root.'"
 }
 
+set_eatmydata()
+{
+	# skip if disabled
+	[ -n "$EPMNOEATMYDATA" ] && return
+	# use if possible
+	which eatmydata >/dev/null 2>/dev/null || return
+	SUDO="$SUDO eatmydata"
+	echo "Uwaga! eatmydata is installed, we will use it for disable all sync operations."
+}
+
 assure_exists()
 {
 	PATH=$PATH:/sbin:/usr/sbin which $1 2>/dev/null >/dev/null && return
