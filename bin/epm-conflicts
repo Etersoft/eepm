@@ -1,0 +1,99 @@
+#!/bin/sh
+#
+# Copyright (C) 2013  Etersoft
+# Copyright (C) 2013  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+load_helper epm-query
+
+epm_conflicts_files()
+{
+	[ -n "$pkg_files" ] || return
+
+	case $(get_package_type $pkg_files) in
+		rpm)
+			docmd "rpm -q --conflicts -p"
+			;;
+		#deb)
+		#	a= docmd dpkg -I $pkg_files | grep "^ *Depends:" | sed "s|^ *Depends:||g"
+		#	;;
+		*)
+			fatal "Have no suitable command for $PMTYPE"
+			;;
+	esac
+}
+
+epm_conflicts_names()
+{
+	local CMD
+	[ -n "$pkg_names" ] || return
+
+# by package name
+case $PMTYPE in
+	apt-rpm)
+		# FIXME: need fix for a few names case
+		# FIXME: too low level of requires name (libSOME.so)
+		if is_installed $pkg_names ; then
+			CMD="rpm -q --conflicts"
+		else
+			EXTRA_SHOWDOCMD=' | grep "Conflicts:"'
+			docmd apt-cache show $pkg_names | grep "Conflicts:"
+			return
+		fi
+
+		;;
+	urpm-rpm|zypper-rpm)
+		# FIXME: use hi level commands
+		CMD="rpm -q --conflicts"
+		;;
+	#yum-rpm)
+	#	CMD="yum deplist"
+	#	;;
+	#pacman)
+	#	CMD="pactree"
+	#	;;
+	apt-dpkg)
+		# FIXME: need fix for a few names case
+		if is_installed $pkg_names ; then
+			showcmd dpkg -s $pkg_names
+			a= dpkg -s $pkg_names | grep "^Conflicts:" | sed "s|^Conflicts:||g"
+			return
+		else
+			EXTRA_SHOWDOCMD=' | grep "Conflicts:"'
+			docmd apt-cache show $pkg_names | grep "Conflicts:"
+			return
+		fi
+		;;
+	#emerge)
+	#	assure_exists equery
+	#	CMD="equery depgraph"
+	#	;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+
+docmd $CMD $pkg_names
+
+}
+
+epm_conflicts()
+{
+	[ -n "$pkg_filenames" ] || fatal "Run query without names"
+	epm_conflicts_files
+	epm_conflicts_names
+}

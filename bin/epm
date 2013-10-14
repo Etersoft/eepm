@@ -187,6 +187,9 @@ check_command()
     whatprovides)          # HELPCMD: print packages provides that target
         epm_cmd=whatprovides
         ;;
+    conflicts)             # HELPCMD: print package conflicts
+        epm_cmd=conflicts
+        ;;
     -qa|list|packages|-l) # HELPCMD: list of installed package(s)
         epm_cmd=packages
         ;;
