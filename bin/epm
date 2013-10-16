@@ -98,6 +98,9 @@ case $progname in
     epms)
         epm_cmd=search
         ;;
+    epmsf)
+        epm_cmd=search_file
+        ;;
     epmq)
         epm_cmd=query
         ;;
