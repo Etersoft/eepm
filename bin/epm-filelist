@@ -19,6 +19,45 @@
 
 load_helper epm-query
 
+# TODO: port or rewrite apt-file
+# https://bugzilla.altlinux.org/show_bug.cgi?id=14449
+# see also epm-search-file
+local_content_filelist()
+{
+    local SYSARCH
+    SYSARCH=$(uname -m)
+    [ "$SYSARCH" = "x86_64" ] || SYSARCH=i586
+
+    local REPODIR=/var/ftp/pub/ALTLinux/Sisyphus
+    local CI=$REPODIR/$SYSARCH/base/contents_index
+    local CINOA=$REPODIR/noarch/base/contents_index
+    #local OUTCMD="less"
+    #[ -n "$USETTY" ] || OUTCMD="cat"
+    OUTCMD="cat"
+
+    test -r $CI && test -r $CINOA || fatal "Can't locate $CI or $CINOA"
+
+    {
+        [ -n "$USETTY" ] && echo "Search in $CI and $CINOA for $1..."
+        grep -h -- ".*$1$" $CI $CINOA | sed -e "s|\(.*\)\t\(.*\)|\1|g"
+    } | $OUTCMD
+}
+
+
+__epm_filelist_remote()
+{
+	[ -z "$*" ] && return
+
+	case $PMTYPE in
+		apt-rpm)
+			docmd_foreach local_content_filelist $@
+			;;
+		*)
+			fatal "Query filelist for non installed packages does not realized"
+			;;
+	esac
+}
+
 __epm_filelist_file()
 {
 	local CMD
@@ -87,7 +126,7 @@ __epm_filelist_name()
 
 	# TODO: add less
 	docmd $CMD $pkg_names && return
-	is_installed $pkg_names || fatal "Query filelist for non installed packages does not realized"
+	is_installed $pkg_names || __epm_filelist_remote $pkg_names
 }
 
 
