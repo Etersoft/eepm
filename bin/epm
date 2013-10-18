@@ -1,7 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 #
-# Copyright (C) 2012  Etersoft
-# Copyright (C) 2012  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2013  Etersoft
+# Copyright (C) 2012, 2013  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -137,83 +137,83 @@ check_command()
 
 # Base commands
     case $1 in
-    -i|install|add)       # HELPCMD: install package(s) from remote repositories or from local file
+    -i|install|add|i)         # HELPCMD: install package(s) from remote repositories or from local file
         epm_cmd=install
         ;;
-    -e|-P|remove|delete|uninstall|erase)  # HELPCMD: remove (delete) package(s) from the database and the system
+    -e|-P|remove|delete|uninstall|erase|e)  # HELPCMD: remove (delete) package(s) from the database and the system
         epm_cmd=remove
         ;;
-    -s|search)            # HELPCMD: search in remote package repositories
+    -s|search)                # HELPCMD: search in remote package repositories
         epm_cmd=search
         ;;
-    -qp|query_package)    # HELPCMD: search in the list of installed packages
+    -qp|qp|query_package)     # HELPCMD: search in the list of installed packages
         epm_cmd=query_package
         ;;
-    -qf|which|belongs)    # HELPCMD: query package(s) owning file
+    -qf|qf|which|belongs)     # HELPCMD: query package(s) owning file
         epm_cmd=query_file
         ;;
 
 # Useful commands
-    reinstall)            # HELPCMD: reinstall package(s) from remote repositories or from local file
+    reinstall)                # HELPCMD: reinstall package(s) from remote repositories or from local file
         epm_cmd=reinstall
         ;;
-    Install)              # HELPCMD: perform update package repo info and install package(s) via install command
+    Install)                  # HELPCMD: perform update package repo info and install package(s) via install command
         epm_cmd=Install
         ;;
-    -q|installed|query)   # HELPCMD: check presence of package(s) and print this name (also --short is supported)
+    -q|q|installed|query)     # HELPCMD: check presence of package(s) and print this name (also --short is supported)
         epm_cmd=query
         ;;
-    -sf|sf|filesearch)    # HELPCMD: search in which package a file is included
+    -sf|sf|filesearch)        # HELPCMD: search in which package a file is included
         epm_cmd=search_file
         ;;
-    -ql|filelist)         # HELPCMD: print package file list
+    -ql|ql|filelist)          # HELPCMD: print package file list
         epm_cmd=filelist
         ;;
-    check|fix|verify)     # HELPCMD: check local package base integrity and fix it
+    check|fix|verify)         # HELPCMD: check local package base integrity and fix it
         epm_cmd=check
         ;;
-    changelog|cl)         # HELPCMD: show changelog for package
+    changelog|cl|-cl)         # HELPCMD: show changelog for package
         epm_cmd=changelog
         ;;
-    -qi|info|show)        # HELPCMD: print package detail info
+    -qi|qi|info|show)         # HELPCMD: print package detail info
         epm_cmd=info
         ;;
-    requires|deplist)     # HELPCMD: print package requires
+    requires|deplist)         # HELPCMD: print package requires
         epm_cmd=requires
         ;;
-    provides)             # HELPCMD: print package provides
+    provides)                 # HELPCMD: print package provides
         epm_cmd=provides
         ;;
-    whatdepends)          # HELPCMD: print packages dependences on that
+    whatdepends)              # HELPCMD: print packages dependences on that
         epm_cmd=whatdepends
         ;;
-    whatprovides)          # HELPCMD: print packages provides that target
+    whatprovides)             # HELPCMD: print packages provides that target
         epm_cmd=whatprovides
         ;;
-    conflicts)             # HELPCMD: print package conflicts
+    conflicts)                # HELPCMD: print package conflicts
         epm_cmd=conflicts
         ;;
-    -qa|list|packages|-l) # HELPCMD: list of installed package(s)
+    -qa|list|packages|-l|qa)  # HELPCMD: list of installed package(s)
         epm_cmd=packages
         ;;
-    programs)             # HELPCMD: list of installed GUI program(s)
+    programs)                 # HELPCMD: list of installed GUI program(s)
         epm_cmd=programs
         ;;
 
 # Repository control
-    update)               # HELPCMD: update remote package repository databases
+    update)                   # HELPCMD: update remote package repository databases
         epm_cmd=update
         ;;
-    addrepo|ar)           # HELPCMD: add package repo
+    addrepo|ar)               # HELPCMD: add package repo
         epm_cmd=addrepo
         ;;
-    repolist|sl|rl|listrepo) # HELPCMD: print repo list
+    repolist|sl|rl|listrepo)  # HELPCMD: print repo list
         epm_cmd=repolist
         ;;
-    removerepo|rr)        # HELPCMD: remove package repo
+    removerepo|rr)            # HELPCMD: remove package repo
         epm_cmd=removerepo
         ;;
-    release-upgrade)      # HELPCMD: update whole system to the next release
+    release-upgrade)          # HELPCMD: update whole system to the next release
         epm_cmd=release_upgrade
         ;;
     kernel-update|kernel-upgrade|update-kernel|upgrade-kernel)      # HELPCMD: update system kernel to the last repo version
@@ -221,22 +221,22 @@ check_command()
         ;;
 
 # Other commands
-    clean)                # HELPCMD: clean local package cache
+    clean)                    # HELPCMD: clean local package cache
         epm_cmd=clean
         ;;
-    autoremove)           # HELPCMD: auto remove unneeded package(s)
+    autoremove)               # HELPCMD: auto remove unneeded package(s)
         epm_cmd=autoremove
         ;;
-    upgrade|dist-upgrade) # HELPCMD: performs upgrades of package software distributions
+    upgrade|dist-upgrade)     # HELPCMD: performs upgrades of package software distributions
         epm_cmd=upgrade
         ;;
-    Upgrade)              # HELPCMD: performs update && upgrade command
+    Upgrade)                  # HELPCMD: performs update && upgrade command
         epm_cmd=Upgrade
         ;;
-    simulate)             # HELPCMD: simulate install (it does check requires, minimally)
+    simulate)                 # HELPCMD: simulate install (it does check requires, minimally)
         epm_cmd=simulate
         ;;
-    checkpkg|integrity)   # HELPCMD: check package integrity
+    checkpkg|integrity)       # HELPCMD: check package integrity
         epm_cmd=checkpkg
         ;;
 
