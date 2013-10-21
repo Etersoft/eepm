@@ -83,7 +83,7 @@ showcmd()
 	if [ -z "$quiet" ] ; then
 		set_boldcolor $GREEN
 		local PROMTSIG="\$"
-		[ "$UID" = 0 ] && PROMTSIG="#"
+		[ "$EFFUID" = 0 ] && PROMTSIG="#"
 		echo " $PROMTSIG $@"
 		restore_color
 	fi >&2
@@ -207,11 +207,10 @@ set_sudo()
 	# skip SUDO if disabled
 	[ -n "$EPMNOSUDO" ] && return
 
-	# set SUDO not for root user
-	[ -n "$UID" ] || UID=`id -u`
+	EFFUID=`id -u`
 
 	# do not need sudo
-	[ $UID = "0" ] && return
+	[ $EFFUID = "0" ] && return
 
 	# use sudo if possible
 	which sudo >/dev/null 2>/dev/null && SUDO="sudo" && return
