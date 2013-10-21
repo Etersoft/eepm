@@ -163,15 +163,19 @@ store_output()
 {
     # use make_temp_file from etersoft-build-utils
     RC_STDOUT=$(mktemp)
+    local CMDSTATUS=$RC_STDOUT.pipestatus
+    echo 1 >$CMDSTATUS
     #RC_STDERR=$(mktemp)
-    "$@" 2>&1 | tee $RC_STDOUT
+    ( "$@" 2>&1 ; echo $? >$CMDSTATUS ) | tee $RC_STDOUT
+    return $(cat $CMDSTATUS)
+    # bashism
     # http://tldp.org/LDP/abs/html/bashver3.html#PIPEFAILREF
-    return $PIPESTATUS
+    #return $PIPESTATUS
 }
 
 clean_store_output()
 {
-    rm -f $RC_STDOUT
+    rm -f $RC_STDOUT $RC_STDOUT.pipestatus
 }
 
 
