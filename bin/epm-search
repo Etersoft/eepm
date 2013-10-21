@@ -90,12 +90,19 @@ __epm_search_make_grep()
 	local list=
 	local listN=
 	for i in $@ ; do
-		local NOR="${i/^/}"
-		[ "$NOR" = "$i" ] && list="$list $NOR" || listN="$listN $NOR"
+		case "$i" in
+			^*)
+				# will clean from ^ later (and have the bug here with empty arg if run with one ^ only)
+				listN="$listN $i"
+				;;
+			*)
+				list="$list $i"
+				;;
+		esac
 	done
 
 	#list=$(strip_spaces $list | sed -e "s/ /|/g")
-	listN=$(strip_spaces $listN | sed -e "s/ /|/g")
+	listN=$(strip_spaces $listN | sed -e "s/ /|/g" | sed -e "s/\^//g")
 
 	[ -n "$listN" ] && echo -n " | egrep -i -v -- \"$listN\""
 
@@ -108,7 +115,7 @@ __epm_search_make_grep()
 
 	local COLO=""
 	# rule for colorife
-	for i in $list ; do
+	for i in $list $listN; do
 		[ -n "$COLO" ] && COLO="$COLO|"
 		COLO="$COLO$i"
 	done
