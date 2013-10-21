@@ -50,6 +50,7 @@ __epm_filelist_remote()
 
 	case $PMTYPE in
 		apt-rpm)
+			# TODO: use RESTful interface to prometeus? See ALT bug #29496
 			docmd_foreach local_content_filelist $@
 			;;
 		*)
