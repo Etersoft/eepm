@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.4.2
+Version: 1.4.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -61,6 +61,16 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Mon Oct 21 2013 Vitaly Lipatov <lav@altlinux.ru> 1.4.3-alt1
+- rewrite code without bashisms
+- search colorifer: fix colorifing all args
+- epm: use eatmydata if installed (set EPMNOEATMYDATA for skip)
+- add initial support for epm conflicts
+- whatdepends/whatprovides: all use exists files as goals
+- add epmsf as link to epm sf command
+- epm: normalize options
+- epmql (epm-filelist): add support for list files of the remote packages
+
 * Tue Oct 08 2013 Vitaly Lipatov <lav@altlinux.ru> 1.4.2-alt1
 - add initial support for guix
 - rewrite epm_requires and epm_provides
