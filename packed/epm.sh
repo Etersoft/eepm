@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012  Etersoft
-# Copyright (C) 2012  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2013  Etersoft
+# Copyright (C) 2012, 2013  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -97,7 +97,7 @@ showcmd()
 	if [ -z "$quiet" ] ; then
 		set_boldcolor $GREEN
 		local PROMTSIG="\$"
-		[ "$UID" = 0 ] && PROMTSIG="#"
+		[ "$EFFUID" = 0 ] && PROMTSIG="#"
 		echo " $PROMTSIG $@"
 		restore_color
 	fi >&2
@@ -172,15 +172,19 @@ store_output()
 {
     # use make_temp_file from etersoft-build-utils
     RC_STDOUT=$(mktemp)
+    local CMDSTATUS=$RC_STDOUT.pipestatus
+    echo 1 >$CMDSTATUS
     #RC_STDERR=$(mktemp)
-    "$@" 2>&1 | tee $RC_STDOUT
+    ( "$@" 2>&1 ; echo $? >$CMDSTATUS ) | tee $RC_STDOUT
+    return $(cat $CMDSTATUS)
+    # bashism
     # http://tldp.org/LDP/abs/html/bashver3.html#PIPEFAILREF
-    return $PIPESTATUS
+    #return $PIPESTATUS
 }
 
 clean_store_output()
 {
-    rm -f $RC_STDOUT
+    rm -f $RC_STDOUT $RC_STDOUT.pipestatus
 }
 
 
@@ -210,16 +214,25 @@ set_sudo()
 	# skip SUDO if disabled
 	[ -n "$EPMNOSUDO" ] && return
 
-	# set SUDO not for root user
-	[ -n "$UID" ] || UID=`id -u`
+	EFFUID=`id -u`
 
 	# do not need sudo
-	[ $UID = "0" ] && return
+	[ $EFFUID = "0" ] && return
 
 	# use sudo if possible
 	which sudo >/dev/null 2>/dev/null && SUDO="sudo" && return
 
 	SUDO="fatal 'Can't find sudo. Please install sudo or run epm under root.'"
+}
+
+set_eatmydata()
+{
+	# skip if disabled
+	[ -n "$EPMNOEATMYDATA" ] && return
+	# use if possible
+	which eatmydata >/dev/null 2>/dev/null || return
+	SUDO="$SUDO eatmydata"
+	echo "Uwaga! eatmydata is installed, we will use it for disable all sync operations."
 }
 
 assure_exists()
@@ -248,11 +261,22 @@ assure_exists()
 get_package_type()
 {
 	local i
-	for i in deb rpm ; do
-		[ "${1/.$i/}" != "$1" ] && echo $i && return
-	done
-	echo "$1"
-	return 0
+	case $1 in
+		*.deb)
+			echo "deb"
+			return
+			;;
+		*.rpm)
+			echo "rpm"
+			return
+			;;
+		*)
+			#fatal "Don't know type of $1"
+			# return package name for info
+			echo "$1"
+			return 1
+			;;
+	esac
 }
 
 
@@ -679,8 +703,126 @@ esac
 
 }
 
+# File bin/epm-conflicts:
+
+
+epm_conflicts_files()
+{
+	[ -n "$pkg_files" ] || return
+
+	case $(get_package_type $pkg_files) in
+		rpm)
+			docmd "rpm -q --conflicts -p"
+			;;
+		#deb)
+		#	a= docmd dpkg -I $pkg_files | grep "^ *Depends:" | sed "s|^ *Depends:||g"
+		#	;;
+		*)
+			fatal "Have no suitable command for $PMTYPE"
+			;;
+	esac
+}
+
+epm_conflicts_names()
+{
+	local CMD
+	[ -n "$pkg_names" ] || return
+
+case $PMTYPE in
+	apt-rpm)
+		# FIXME: need fix for a few names case
+		# FIXME: too low level of requires name (libSOME.so)
+		if is_installed $pkg_names ; then
+			CMD="rpm -q --conflicts"
+		else
+			EXTRA_SHOWDOCMD=' | grep "Conflicts:"'
+			docmd apt-cache show $pkg_names | grep "Conflicts:"
+			return
+		fi
+
+		;;
+	urpm-rpm|zypper-rpm)
+		# FIXME: use hi level commands
+		CMD="rpm -q --conflicts"
+		;;
+	#yum-rpm)
+	#	CMD="yum deplist"
+	#	;;
+	#pacman)
+	#	CMD="pactree"
+	#	;;
+	apt-dpkg)
+		# FIXME: need fix for a few names case
+		if is_installed $pkg_names ; then
+			showcmd dpkg -s $pkg_names
+			a= dpkg -s $pkg_names | grep "^Conflicts:" | sed "s|^Conflicts:||g"
+			return
+		else
+			EXTRA_SHOWDOCMD=' | grep "Conflicts:"'
+			docmd apt-cache show $pkg_names | grep "Conflicts:"
+			return
+		fi
+		;;
+	#emerge)
+	#	assure_exists equery
+	#	CMD="equery depgraph"
+	#	;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+
+docmd $CMD $pkg_names
+
+}
+
+epm_conflicts()
+{
+	[ -n "$pkg_filenames" ] || fatal "Run query without names"
+	epm_conflicts_files
+	epm_conflicts_names
+}
+
 # File bin/epm-filelist:
 
+
+local_content_filelist()
+{
+    local SYSARCH
+    SYSARCH=$(uname -m)
+    [ "$SYSARCH" = "x86_64" ] || SYSARCH=i586
+
+    local REPODIR=/var/ftp/pub/ALTLinux/Sisyphus
+    local CI=$REPODIR/$SYSARCH/base/contents_index
+    local CINOA=$REPODIR/noarch/base/contents_index
+    #local OUTCMD="less"
+    #[ -n "$USETTY" ] || OUTCMD="cat"
+    OUTCMD="cat"
+
+    test -r $CI && test -r $CINOA || fatal "Can't locate $CI or $CINOA"
+
+    {
+        [ -n "$USETTY" ] && echo "Search in $CI and $CINOA for $1..."
+        grep -h -- ".*$1$" $CI $CINOA | sed -e "s|\(.*\)\t\(.*\)|\1|g"
+    } | $OUTCMD
+}
+
+
+__epm_filelist_remote()
+{
+	[ -z "$*" ] && return
+
+	case $PMTYPE in
+		apt-rpm)
+			# TODO: use RESTful interface to prometeus? See ALT bug #29496
+			docmd_foreach local_content_filelist $@
+			;;
+		*)
+			fatal "Query filelist for non installed packages does not realized"
+			;;
+	esac
+}
 
 __epm_filelist_file()
 {
@@ -750,7 +892,7 @@ __epm_filelist_name()
 
 	# TODO: add less
 	docmd $CMD $pkg_names && return
-	is_installed $pkg_names || fatal "Query filelist for non installed packages does not realized"
+	is_installed $pkg_names || __epm_filelist_remote $pkg_names
 }
 
 
@@ -1779,7 +1921,7 @@ epm_query_file()
 
 epm_query_package()
 {
-	[ -n "$pkg_filenames" ] || fatal "Please, use search with some argument"
+	[ -n "$pkg_filenames" ] || fatal "Please, use search with some argument or run epmqa for get all packages."
 	# FIXME: do it better
 	local MGS=$(eval __epm_search_make_grep $quoted_args)
 	EXTRA_SHOWDOCMD=$MGS
@@ -2338,12 +2480,19 @@ __epm_search_make_grep()
 	local list=
 	local listN=
 	for i in $@ ; do
-		local NOR="${i/^/}"
-		[ "$NOR" = "$i" ] && list="$list $NOR" || listN="$listN $NOR"
+		case "$i" in
+			^*)
+				# will clean from ^ later (and have the bug here with empty arg if run with one ^ only)
+				listN="$listN $i"
+				;;
+			*)
+				list="$list $i"
+				;;
+		esac
 	done
 
 	#list=$(strip_spaces $list | sed -e "s/ /|/g")
-	listN=$(strip_spaces $listN | sed -e "s/ /|/g")
+	listN=$(strip_spaces $listN | sed -e "s/ /|/g" | sed -e "s/\^//g")
 
 	[ -n "$listN" ] && echo -n " | egrep -i -v -- \"$listN\""
 
@@ -2351,8 +2500,19 @@ __epm_search_make_grep()
 	# http://stackoverflow.com/questions/10110051/grep-with-two-strings-logical-and-in-regex?rq=1
 	for i in $list ; do
 		# FIXME -n on MacOS?
-		echo -n " | egrep -i --color -- \"$i\""
+		echo -n " | egrep -i -- \"$i\""
 	done
+
+	local COLO=""
+	# rule for colorife
+	for i in $list $listN; do
+		[ -n "$COLO" ] && COLO="$COLO|"
+		COLO="$COLO$i"
+	done
+	# FIXME -n on MacOS?
+	if [ -n "$list" ] ; then
+		echo -n " | egrep -i --color -- \"($COLO)\""
+	fi
 }
 
 
@@ -2701,7 +2861,7 @@ epm_Upgrade()
 epm_whatdepends()
 {
 	local CMD
-	[ -n "$pkg_names" ] || fatal "Run query without names"
+	[ -n "$pkg_filenames" ] || fatal "Run query without names"
 
 case $PMTYPE in
 	apt-rpm)
@@ -2722,7 +2882,7 @@ case $PMTYPE in
 		;;
 esac
 
-docmd $CMD $pkg_names
+docmd $CMD $pkg_filenames
 
 }
 
@@ -2731,7 +2891,7 @@ docmd $CMD $pkg_names
 epm_whatprovides()
 {
 	local CMD
-	[ -n "$pkg_names" ] || fatal "Run query without names"
+	[ -n "$pkg_filenames" ] || fatal "Run query without names"
 
 case $PMTYPE in
 	conary)
@@ -2752,7 +2912,7 @@ case $PMTYPE in
 		;;
 esac
 
-docmd $CMD $pkg_names
+docmd $CMD $pkg_filenames
 
 }
 internal_distr_info()
@@ -3065,6 +3225,7 @@ esac
 #PATH=$PATH:/sbin:/usr/sbin
 
 set_sudo
+set_eatmydata
 
 check_tty
 
@@ -3125,6 +3286,9 @@ case $progname in
     epms)
         epm_cmd=search
         ;;
+    epmsf)
+        epm_cmd=search_file
+        ;;
     epmq)
         epm_cmd=query
         ;;
@@ -3161,80 +3325,83 @@ check_command()
 
 # Base commands
     case $1 in
-    -i|install|add)       # HELPCMD: install package(s) from remote repositories or from local file
+    -i|install|add|i)         # HELPCMD: install package(s) from remote repositories or from local file
         epm_cmd=install
         ;;
-    -e|-P|remove|delete|uninstall|erase)  # HELPCMD: remove (delete) package(s) from the database and the system
+    -e|-P|remove|delete|uninstall|erase|e)  # HELPCMD: remove (delete) package(s) from the database and the system
         epm_cmd=remove
         ;;
-    -s|search)            # HELPCMD: search in remote package repositories
+    -s|search)                # HELPCMD: search in remote package repositories
         epm_cmd=search
         ;;
-    -qp|query_package)    # HELPCMD: search in the list of installed packages
+    -qp|qp|query_package)     # HELPCMD: search in the list of installed packages
         epm_cmd=query_package
         ;;
-    -qf|which|belongs)    # HELPCMD: query package(s) owning file
+    -qf|qf|which|belongs)     # HELPCMD: query package(s) owning file
         epm_cmd=query_file
         ;;
 
 # Useful commands
-    reinstall)            # HELPCMD: reinstall package(s) from remote repositories or from local file
+    reinstall)                # HELPCMD: reinstall package(s) from remote repositories or from local file
         epm_cmd=reinstall
         ;;
-    Install)              # HELPCMD: perform update package repo info and install package(s) via install command
+    Install)                  # HELPCMD: perform update package repo info and install package(s) via install command
         epm_cmd=Install
         ;;
-    -q|installed|query)   # HELPCMD: check presence of package(s) and print this name (also --short is supported)
+    -q|q|installed|query)     # HELPCMD: check presence of package(s) and print this name (also --short is supported)
         epm_cmd=query
         ;;
-    -sf|sf|filesearch)    # HELPCMD: search in which package a file is included
+    -sf|sf|filesearch)        # HELPCMD: search in which package a file is included
         epm_cmd=search_file
         ;;
-    -ql|filelist)         # HELPCMD: print package file list
+    -ql|ql|filelist)          # HELPCMD: print package file list
         epm_cmd=filelist
         ;;
-    check|fix|verify)     # HELPCMD: check local package base integrity and fix it
+    check|fix|verify)         # HELPCMD: check local package base integrity and fix it
         epm_cmd=check
         ;;
-    changelog|cl)         # HELPCMD: show changelog for package
+    changelog|cl|-cl)         # HELPCMD: show changelog for package
         epm_cmd=changelog
         ;;
-    -qi|info|show)        # HELPCMD: print package detail info
+    -qi|qi|info|show)         # HELPCMD: print package detail info
         epm_cmd=info
         ;;
-    requires|deplist)     # HELPCMD: print package requires
+    requires|deplist)         # HELPCMD: print package requires
         epm_cmd=requires
         ;;
-    provides)             # HELPCMD: print package provides
+    provides)                 # HELPCMD: print package provides
         epm_cmd=provides
         ;;
-    whatdepends)          # HELPCMD: print packages dependences on that
+    whatdepends)              # HELPCMD: print packages dependences on that
         epm_cmd=whatdepends
         ;;
-    whatprovides)          # HELPCMD: print packages provides that target
+    whatprovides)             # HELPCMD: print packages provides that target
         epm_cmd=whatprovides
         ;;
-    -qa|list|packages|-l) # HELPCMD: list of installed package(s)
+    conflicts)                # HELPCMD: print package conflicts
+        epm_cmd=conflicts
+        ;;
+    -qa|list|packages|-l|qa)  # HELPCMD: list of installed package(s)
         epm_cmd=packages
         ;;
-    programs)             # HELPCMD: list of installed GUI program(s)
+    programs)                 # HELPCMD: list of installed GUI program(s)
         epm_cmd=programs
         ;;
 
 # Repository control
-    update)               # HELPCMD: update remote package repository databases
+    update)                   # HELPCMD: update remote package repository databases
         epm_cmd=update
         ;;
-    addrepo|ar)           # HELPCMD: add package repo
+    addrepo|ar)               # HELPCMD: add package repo
         epm_cmd=addrepo
         ;;
-    repolist|sl|rl|listrepo) # HELPCMD: print repo list
+    repolist|sl|rl|listrepo)  # HELPCMD: print repo list
         epm_cmd=repolist
         ;;
-    removerepo|rr)        # HELPCMD: remove package repo
+    removerepo|rr)            # HELPCMD: remove package repo
         epm_cmd=removerepo
         ;;
-    release-upgrade)      # HELPCMD: update whole system to the next release
+    release-upgrade)          # HELPCMD: update whole system to the next release
         epm_cmd=release_upgrade
         ;;
     kernel-update|kernel-upgrade|update-kernel|upgrade-kernel)      # HELPCMD: update system kernel to the last repo version
@@ -3242,22 +3409,22 @@ check_command()
         ;;
 
 # Other commands
-    clean)                # HELPCMD: clean local package cache
+    clean)                    # HELPCMD: clean local package cache
         epm_cmd=clean
         ;;
-    autoremove)           # HELPCMD: auto remove unneeded package(s)
+    autoremove)               # HELPCMD: auto remove unneeded package(s)
         epm_cmd=autoremove
         ;;
-    upgrade|dist-upgrade) # HELPCMD: performs upgrades of package software distributions
+    upgrade|dist-upgrade)     # HELPCMD: performs upgrades of package software distributions
         epm_cmd=upgrade
         ;;
-    Upgrade)              # HELPCMD: performs update && upgrade command
+    Upgrade)                  # HELPCMD: performs update && upgrade command
         epm_cmd=Upgrade
         ;;
-    simulate)             # HELPCMD: simulate install (it does check requires, minimally)
+    simulate)                 # HELPCMD: simulate install (it does check requires, minimally)
         epm_cmd=simulate
         ;;
-    checkpkg|integrity)   # HELPCMD: check package integrity
+    checkpkg|integrity)       # HELPCMD: check package integrity
         epm_cmd=checkpkg
         ;;
 

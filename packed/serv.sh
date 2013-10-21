@@ -95,7 +95,7 @@ showcmd()
 	if [ -z "$quiet" ] ; then
 		set_boldcolor $GREEN
 		local PROMTSIG="\$"
-		[ "$UID" = 0 ] && PROMTSIG="#"
+		[ "$EFFUID" = 0 ] && PROMTSIG="#"
 		echo " $PROMTSIG $@"
 		restore_color
 	fi >&2
@@ -170,15 +170,19 @@ store_output()
 {
     # use make_temp_file from etersoft-build-utils
     RC_STDOUT=$(mktemp)
+    local CMDSTATUS=$RC_STDOUT.pipestatus
+    echo 1 >$CMDSTATUS
     #RC_STDERR=$(mktemp)
-    "$@" 2>&1 | tee $RC_STDOUT
+    ( "$@" 2>&1 ; echo $? >$CMDSTATUS ) | tee $RC_STDOUT
+    return $(cat $CMDSTATUS)
+    # bashism
     # http://tldp.org/LDP/abs/html/bashver3.html#PIPEFAILREF
-    return $PIPESTATUS
+    #return $PIPESTATUS
 }
 
 clean_store_output()
 {
-    rm -f $RC_STDOUT
+    rm -f $RC_STDOUT $RC_STDOUT.pipestatus
 }
 
 
@@ -208,16 +212,25 @@ set_sudo()
 	# skip SUDO if disabled
 	[ -n "$EPMNOSUDO" ] && return
 
-	# set SUDO not for root user
-	[ -n "$UID" ] || UID=`id -u`
+	EFFUID=`id -u`
 
 	# do not need sudo
-	[ $UID = "0" ] && return
+	[ $EFFUID = "0" ] && return
 
 	# use sudo if possible
 	which sudo >/dev/null 2>/dev/null && SUDO="sudo" && return
 
 	SUDO="fatal 'Can't find sudo. Please install sudo or run epm under root.'"
+}
+
+set_eatmydata()
+{
+	# skip if disabled
+	[ -n "$EPMNOEATMYDATA" ] && return
+	# use if possible
+	which eatmydata >/dev/null 2>/dev/null || return
+	SUDO="$SUDO eatmydata"
+	echo "Uwaga! eatmydata is installed, we will use it for disable all sync operations."
 }
 
 assure_exists()
@@ -246,11 +259,22 @@ assure_exists()
 get_package_type()
 {
 	local i
-	for i in deb rpm ; do
-		[ "${1/.$i/}" != "$1" ] && echo $i && return
-	done
-	echo "$1"
-	return 0
+	case $1 in
+		*.deb)
+			echo "deb"
+			return
+			;;
+		*.rpm)
+			echo "rpm"
+			return
+			;;
+		*)
+			#fatal "Don't know type of $1"
+			# return package name for info
+			echo "$1"
+			return 1
+			;;
+	esac
 }
 
 
