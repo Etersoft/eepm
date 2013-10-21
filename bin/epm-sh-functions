@@ -256,11 +256,22 @@ assure_exists()
 get_package_type()
 {
 	local i
-	for i in deb rpm ; do
-		[ "${1/.$i/}" != "$1" ] && echo $i && return
-	done
-	echo "$1"
-	return 0
+	case $1 in
+		*.deb)
+			echo "deb"
+			return
+			;;
+		*.rpm)
+			echo "rpm"
+			return
+			;;
+		*)
+			#fatal "Don't know type of $1"
+			# return package name for info
+			echo "$1"
+			return 1
+			;;
+	esac
 }
 
 
