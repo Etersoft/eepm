@@ -23,7 +23,8 @@ isatty()
 	# Set a sane TERM required for tput
 	[ -n "$TERM" ] || TERM=dumb
 	export TERM
-	test -t 1
+	# check stderr
+	test -t 2
 }
 
 check_tty()
@@ -229,7 +230,8 @@ set_eatmydata()
 	# use if possible
 	which eatmydata >/dev/null 2>/dev/null || return
 	SUDO="$SUDO eatmydata"
-	echo "Uwaga! eatmydata is installed, we will use it for disable all sync operations."
+	tty -s && echo "Uwaga! eatmydata is installed, we will use it for disable all sync operations." >&2
+	return 0
 }
 
 assure_exists()
