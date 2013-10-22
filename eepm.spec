@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.4.3
+Version: 1.4.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -61,6 +61,10 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Tue Oct 22 2013 Vitaly Lipatov <lav@altlinux.ru> 1.4.4-alt1
+- epm: get package names from stdin if it is pipe
+- fix stderr issues
+
 * Mon Oct 21 2013 Vitaly Lipatov <lav@altlinux.ru> 1.4.3-alt1
 - rewrite code without bashisms
 - search colorifer: fix colorifing all args
