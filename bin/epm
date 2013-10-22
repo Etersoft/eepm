@@ -292,17 +292,29 @@ check_option()
     return 0
 }
 
-for opt in "$@" ; do
-    check_command $opt && continue
-    check_option $opt && continue
-
+check_filenames()
+{
+    local opt="$1"
     if [ -f "$opt" ] && echo $opt | grep -q "\." ; then
         pkg_files="$pkg_files $opt"
     else
         pkg_names="$pkg_names $opt"
     fi
     quoted_args="$quoted_args \"$opt\""
+}
+
+for opt in "$@" ; do
+    check_command $opt && continue
+    check_option $opt && continue
+    check_filenames $opt
 done
+
+# if input is not console, get pkg from it too
+if ! tty -s ; then
+    for opt in $(cat) ; do
+        check_filenames $opt
+    done
+fi
 
 pkg_files=$(strip_spaces "$pkg_files")
 pkg_names=$(strip_spaces "$pkg_names")
