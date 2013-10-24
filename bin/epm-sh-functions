@@ -18,18 +18,28 @@
 #
 
 # copied from /etc/init.d/outformat (ALT Linux)
+
 isatty()
 {
-	# Set a sane TERM required for tput
-	[ -n "$TERM" ] || TERM=dumb
-	export TERM
+	# check stdout
+	# CHECKME: use tty -s?
+	test -t 1
+}
+
+isatty2()
+{
 	# check stderr
 	test -t 2
 }
 
 check_tty()
 {
-	isatty || return
+	isatty2 || return
+
+	# Set a sane TERM required for tput
+	[ -n "$TERM" ] || TERM=dumb
+	export TERM
+
 	which tput >/dev/null 2>/dev/null || return
 	# FreeBSD does not support tput -S
 	echo | tput -S >/dev/null 2>/dev/null || return
@@ -230,7 +240,7 @@ set_eatmydata()
 	# use if possible
 	which eatmydata >/dev/null 2>/dev/null || return
 	SUDO="$SUDO eatmydata"
-	tty -s && echo "Uwaga! eatmydata is installed, we will use it for disable all sync operations." >&2
+	isatty && echo "Uwaga! eatmydata is installed, we will use it for disable all sync operations." >&2
 	return 0
 }
 

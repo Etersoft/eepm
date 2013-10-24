@@ -314,7 +314,7 @@ for opt in "$@" ; do
 done
 
 # if input is not console, get pkg from it too
-if ! tty -s ; then
+if ! isatty ; then
     for opt in $(cat) ; do
         check_filenames $opt
     done
