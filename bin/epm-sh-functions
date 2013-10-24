@@ -19,10 +19,15 @@
 
 # copied from /etc/init.d/outformat (ALT Linux)
 
+inputisatty()
+{
+	# check stdin
+	tty -s
+}
+
 isatty()
 {
 	# check stdout
-	# CHECKME: use tty -s?
 	test -t 1
 }
 
