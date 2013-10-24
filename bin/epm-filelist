@@ -78,8 +78,7 @@ __epm_filelist_file()
 			;;
 	esac
 
-	# TODO: add less
-	docmd $CMD $@
+	docmd $CMD $@ | less
 }
 
 __epm_filelist_name()
@@ -108,7 +107,7 @@ __epm_filelist_name()
 			CMD="conary query --ls"
 			;;
 		pacman)
-			docmd pacman -Ql $pkg_names | sed -e "s|.* ||g"
+			docmd pacman -Ql $pkg_names | sed -e "s|.* ||g" | less
 			return
 			;;
 		emerge)
@@ -117,7 +116,7 @@ __epm_filelist_name()
 			;;
 		slackpkg)
 			is_installed $pkg_names || fatal "Query filelist for non installed packages does not realized"
-			docmd awk 'BEGIN{desk=1}{if(/^FILE LIST:$/){desk=0} else if (desk==0) {print}}' /var/log/packages/${pkg_filenames}*
+			docmd awk 'BEGIN{desk=1}{if(/^FILE LIST:$/){desk=0} else if (desk==0) {print}}' /var/log/packages/${pkg_filenames}* | less
 			return
 			;;
 		*)
