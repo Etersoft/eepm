@@ -131,7 +131,8 @@ epm_search()
 {
 	[ -n "$pkg_filenames" ] || fatal "Please, use search with some argument"
 	# FIXME: do it better
-	local MGS=$(eval __epm_search_make_grep $quoted_args)
+	local MGS
+	MGS=$(eval __epm_search_make_grep $quoted_args)
 	EXTRA_SHOWDOCMD="$MGS"
 	eval "__epm_search_output \"$(eval get_firstarg $quoted_args)\" $MGS"
 }
