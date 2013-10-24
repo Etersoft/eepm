@@ -303,9 +303,13 @@ check_filenames()
     quoted_args="$quoted_args \"$opt\""
 }
 
+FLAGENDOPTS=
 for opt in "$@" ; do
-    check_command $opt && continue
-    check_option $opt && continue
+    [ "$opt" = "--" ] && FLAGENDOPTS=1 && continue
+    if [ -z "$FLAGENDOPTS" ] ; then
+        check_command $opt && continue
+        check_option $opt && continue
+    fi
     check_filenames $opt
 done
 
