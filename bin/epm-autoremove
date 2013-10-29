@@ -17,11 +17,31 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+__epm_autoremove_altrpm()
+{
+	local pkg
+	local flag=
+	load_helper epm-packages
+	echo
+	echo "Just remove all non -devel libs packages not need by anything"
+	for pkg in $(short=1 pkg_filenames= epm_packages | grep -- "^lib" | grep -v -- "-devel$" | grep -v -- ^libreoffice ) ; do
+		sudocmd rpm -v -e $pkg && flag=1
+	done
+
+	# call again for next cycle until all libs will removed
+	[ -n "$flag" ] && __epm_autoremove_altrpm
+
+	return 0
+}
+
+
 epm_autoremove()
 {
 case $PMTYPE in
 	apt-rpm)
 		assure_exists remove-old-kernels
+		# ALT Linux only
+		__epm_autoremove_altrpm
 		# ALT Linux only
 		sudocmd remove-old-kernels
 		;;
