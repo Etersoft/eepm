@@ -152,7 +152,7 @@ epm_query_file()
 
     for pkg in $pkg_filenames ; do
         __do_query_real_file "$pkg"
-        __do_query $FULLFILEPATH || pkg_filenames=$pkg epm_search_file
+        __do_query $FULLFILEPATH || pkg_filenames=$FULLFILEPATH epm_search_file
     done
 
 }
