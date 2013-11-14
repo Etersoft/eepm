@@ -113,6 +113,13 @@ __epm_search_make_grep()
 		echo -n " | egrep -i -- \"$i\""
 	done
 
+	if [ "$short" ] ; then
+		echo -n " | sed -e \"s| .*||g\""
+	fi
+
+	# FIXME: move from it
+	#isatty || return
+
 	local COLO=""
 	# rule for colorife
 	for i in $list $listN; do
@@ -130,6 +137,7 @@ __epm_search_make_grep()
 epm_search()
 {
 	[ -n "$pkg_filenames" ] || fatal "Please, use search with some argument"
+
 	# FIXME: do it better
 	local MGS
 	MGS=$(eval __epm_search_make_grep $quoted_args)
