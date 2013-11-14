@@ -37,7 +37,6 @@ load_helper epm-sh-functions
 #PATH=$PATH:/sbin:/usr/sbin
 
 set_sudo
-set_eatmydata
 
 check_tty
 
@@ -336,6 +335,13 @@ if [ -z "$epm_cmd" ] ; then
     echo
     fatal "Run $ $progname --help for get help"
 fi
+
+# Use eatmydata for write specific operations
+case $epm_cmd in
+    update|upgrade|Upgrade|install|reinstall|Install|remove)
+        set_eatmydata
+        break;
+esac
 
 # Run helper for command
 load_helper epm-$epm_cmd
