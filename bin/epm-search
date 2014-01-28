@@ -26,7 +26,8 @@ case $PMTYPE in
 		CMD="apt-cache search --"
 		;;
 	urpm-rpm)
-		CMD="urpmq -y --"
+		# urpmq does not support --
+		CMD="urpmq -y"
 		;;
 	pkgsrc)
 		CMD="pkg_info -x --"
@@ -65,7 +66,7 @@ case $PMTYPE in
 	slackpkg)
 		# FIXME
 		echo "Note: case sensitive search"
-		CMD="/usr/sbin/slackpkg search --"
+		CMD="/usr/sbin/slackpkg search"
 		;;
 	homebrew)
 		CMD="brew search"
