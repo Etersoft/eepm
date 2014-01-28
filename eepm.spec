@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.4.5
+Version: 1.4.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -20,7 +20,10 @@ Conflicts: epm
 
 Provides: upm
 
+%if %_vendor == "alt"
+# FIXHERE: Replace with target platform package manager
 Requires: apt rpm
+%endif
 
 %description
 Etersoft EPM is the package manager for any platform
@@ -61,6 +64,13 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Tue Jan 28 2014 Vitaly Lipatov <lav@altlinux.ru> 1.4.6-alt1
+- drop apt/rpm requires for non ALT distro
+- epm-query_file: do search_file with full path if exists
+- print about eatmydata only for u/i/r
+- epm-search: add support --short option
+- epm-search: remove unsupported --
+
 * Tue Oct 29 2013 Vitaly Lipatov <lav@altlinux.ru> 1.4.5-alt1
 - epm: check for -- after options
 - fix bashisms
