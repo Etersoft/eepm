@@ -97,6 +97,9 @@ epm_remove_names()
 		guix)
 			sudocmd guix package -r $@
 			return ;;
+		android)
+			sudocmd pm uninstall $@
+			return ;;
 		chocolatey)
 			sudocmd chocolatey uninstall $@
 			return ;;

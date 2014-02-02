@@ -370,6 +370,9 @@ case $DISTRNAME in
 	GNU/Linux/Guix)
 		CMD="guix"
 		;;
+	Android)
+		CMD="android"
+		;;
 	*)
 		fatal "Have no suitable DISTRNAME $DISTRNAME"
 		;;

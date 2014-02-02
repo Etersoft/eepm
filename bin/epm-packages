@@ -96,6 +96,11 @@ case $PMTYPE in
 	guix)
 		CMD="guix package -I"
 		;;
+	android)
+		CMD="pm list packages"
+		docmd $CMD | sed -e "s|^package:||g"
+		return
+		;;
 	*)
 		fatal "Have no suitable query command for $PMTYPE"
 		;;

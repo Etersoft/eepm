@@ -146,6 +146,9 @@ epm_install_names()
 		guix)
 			__separate_sudocmd "guix package -i" "guix package -i" $@
 			return ;;
+		guix)
+			__separate_sudocmd "guix package -i" "guix package -i" $@
+			return ;;
 		*)
 			fatal "Have no suitable install command for $PMTYPE"
 			;;
@@ -195,6 +198,9 @@ epm_ni_install_names()
 			return ;;
 		nix)
 			sudocmd nix-env --install $@
+			return ;;
+		android
+			sudocmd pm install $@
 			return ;;
 		slackpkg)
 			# FIXME: broken status when use batch and default answer
@@ -285,6 +291,9 @@ epm_install_files()
         pkgsrc)
             sudocmd pkg_add $@
             return ;;
+        android)
+            sudocmd pm install $@
+            return ;;
         emerge)
             load_helper epm-install-emerge
             sudocmd epm_install_emerge $@
@@ -334,6 +343,9 @@ epm_print_install_command()
             ;;
         ipkg)
             echo "ipkg install $@"
+            ;;
+        android)
+            echo "pm install $@"
             ;;
         *)
             fatal "Have no suitable appropriate install command for $PMTYPE"

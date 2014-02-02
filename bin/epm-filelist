@@ -103,6 +103,9 @@ __epm_filelist_name()
 		zypper-rpm)
 			CMD="rpm -ql"
 			;;
+		android)
+			CMD="pm list packages -f"
+			;;
 		conary)
 			CMD="conary query --ls"
 			;;

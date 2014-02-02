@@ -74,6 +74,9 @@ case $PMTYPE in
 	guix)
 		CMD="guix package -A"
 		;;
+	android)
+		CMD="pm list packages"
+		;;
 	*)
 		fatal "Have no suitable search command for $PMTYPE"
 		;;
