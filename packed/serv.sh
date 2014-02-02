@@ -33,17 +33,33 @@ load_helper()
 
 # File bin/epm-sh-functions:
 
+
+inputisatty()
+{
+	# check stdin
+	tty -s
+}
+
 isatty()
 {
-	# Set a sane TERM required for tput
-	[ -n "$TERM" ] || TERM=dumb
-	export TERM
+	# check stdout
 	test -t 1
+}
+
+isatty2()
+{
+	# check stderr
+	test -t 2
 }
 
 check_tty()
 {
-	isatty || return
+	isatty2 || return
+
+	# Set a sane TERM required for tput
+	[ -n "$TERM" ] || TERM=dumb
+	export TERM
+
 	which tput >/dev/null 2>/dev/null || return
 	# FreeBSD does not support tput -S
 	echo | tput -S >/dev/null 2>/dev/null || return
@@ -230,7 +246,8 @@ set_eatmydata()
 	# use if possible
 	which eatmydata >/dev/null 2>/dev/null || return
 	SUDO="$SUDO eatmydata"
-	echo "Uwaga! eatmydata is installed, we will use it for disable all sync operations."
+	isatty && echo "Uwaga! eatmydata is installed, we will use it for disable all sync operations." >&2
+	return 0
 }
 
 assure_exists()
@@ -349,6 +366,9 @@ case $DISTRNAME in
 		;;
 	GNU/Linux/Guix)
 		CMD="guix"
+		;;
+	Android)
+		CMD="android"
 		;;
 	*)
 		fatal "Have no suitable DISTRNAME $DISTRNAME"
@@ -710,6 +730,7 @@ pkgtype()
 		archlinux) echo "pkg.tar.xz" ;;
 		gentoo) echo "tbz2" ;;
 		windows) echo "exe" ;;
+		android) echo "apk" ;;
 		debian|ubuntu|mint|runtu) echo "deb" ;;
 		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
 			echo "rpm" ;;
@@ -907,6 +928,11 @@ elif [ `uname` = "Linux" ] && which guix 2>/dev/null >/dev/null ; then
 	DISTRIB_ID="GNU/Linux/Guix"
 	DISTRIB_RELEASE=$(uname -r)
 
+# fixme: move to up
+elif [ `uname` = "Linux" ] && [ -x $ROOTDIR/system/bin/getprop ] ; then
+	DISTRIB_ID="Android"
+	DISTRIB_RELEASE=$(getprop | awk -F": " '/build.version.release/ { print $2 }' | tr -d '[]')
+
 # try use standart LSB info by default
 elif distro lsb-release && [ -n "$DISTRIB_RELEASE" ]; then
 	# use LSB
@@ -1052,7 +1078,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.4.2"
+        echo "Service manager version 1.4.6"
         echo "Running on $($DISTRVENDOR)"
         echo "Copyright (c) Etersoft 2012, 2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

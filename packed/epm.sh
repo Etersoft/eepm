@@ -35,17 +35,33 @@ load_helper()
 
 # File bin/epm-sh-functions:
 
+
+inputisatty()
+{
+	# check stdin
+	tty -s
+}
+
 isatty()
 {
-	# Set a sane TERM required for tput
-	[ -n "$TERM" ] || TERM=dumb
-	export TERM
+	# check stdout
 	test -t 1
+}
+
+isatty2()
+{
+	# check stderr
+	test -t 2
 }
 
 check_tty()
 {
-	isatty || return
+	isatty2 || return
+
+	# Set a sane TERM required for tput
+	[ -n "$TERM" ] || TERM=dumb
+	export TERM
+
 	which tput >/dev/null 2>/dev/null || return
 	# FreeBSD does not support tput -S
 	echo | tput -S >/dev/null 2>/dev/null || return
@@ -232,7 +248,8 @@ set_eatmydata()
 	# use if possible
 	which eatmydata >/dev/null 2>/dev/null || return
 	SUDO="$SUDO eatmydata"
-	echo "Uwaga! eatmydata is installed, we will use it for disable all sync operations."
+	isatty && echo "Uwaga! eatmydata is installed, we will use it for disable all sync operations." >&2
+	return 0
 }
 
 assure_exists()
@@ -352,6 +369,9 @@ case $DISTRNAME in
 	GNU/Linux/Guix)
 		CMD="guix"
 		;;
+	Android)
+		CMD="android"
+		;;
 	*)
 		fatal "Have no suitable DISTRNAME $DISTRNAME"
 		;;
@@ -404,11 +424,31 @@ esac
 
 # File bin/epm-autoremove:
 
+__epm_autoremove_altrpm()
+{
+	local pkg
+	local flag=
+	load_helper epm-packages
+	echo
+	echo "Just remove all non -devel libs packages not need by anything"
+	for pkg in $(short=1 pkg_filenames= epm_packages | grep -- "^lib" | grep -v -- "-devel$" | grep -v -- ^libreoffice ) ; do
+		sudocmd rpm -v -e $pkg && flag=1
+	done
+
+	# call again for next cycle until all libs will removed
+	[ -n "$flag" ] && __epm_autoremove_altrpm
+
+	return 0
+}
+
+
 epm_autoremove()
 {
 case $PMTYPE in
 	apt-rpm)
 		assure_exists remove-old-kernels
+		# ALT Linux only
+		__epm_autoremove_altrpm
 		# ALT Linux only
 		sudocmd remove-old-kernels
 		;;
@@ -843,8 +883,7 @@ __epm_filelist_file()
 			;;
 	esac
 
-	# TODO: add less
-	docmd $CMD $@
+	docmd $CMD $@ | less
 }
 
 __epm_filelist_name()
@@ -869,11 +908,14 @@ __epm_filelist_name()
 		zypper-rpm)
 			CMD="rpm -ql"
 			;;
+		android)
+			CMD="pm list packages -f"
+			;;
 		conary)
 			CMD="conary query --ls"
 			;;
 		pacman)
-			docmd pacman -Ql $pkg_names | sed -e "s|.* ||g"
+			docmd pacman -Ql $pkg_names | sed -e "s|.* ||g" | less
 			return
 			;;
 		emerge)
@@ -882,7 +924,7 @@ __epm_filelist_name()
 			;;
 		slackpkg)
 			is_installed $pkg_names || fatal "Query filelist for non installed packages does not realized"
-			docmd awk 'BEGIN{desk=1}{if(/^FILE LIST:$/){desk=0} else if (desk==0) {print}}' /var/log/packages/${pkg_filenames}*
+			docmd awk 'BEGIN{desk=1}{if(/^FILE LIST:$/){desk=0} else if (desk==0) {print}}' /var/log/packages/${pkg_filenames}* | less
 			return
 			;;
 		*)
@@ -1109,6 +1151,9 @@ epm_install_names()
 		guix)
 			__separate_sudocmd "guix package -i" "guix package -i" $@
 			return ;;
+		guix)
+			__separate_sudocmd "guix package -i" "guix package -i" $@
+			return ;;
 		*)
 			fatal "Have no suitable install command for $PMTYPE"
 			;;
@@ -1157,6 +1202,9 @@ epm_ni_install_names()
 			return ;;
 		nix)
 			sudocmd nix-env --install $@
+			return ;;
+		android
+			sudocmd pm install $@
 			return ;;
 		slackpkg)
 			# FIXME: broken status when use batch and default answer
@@ -1247,6 +1295,9 @@ epm_install_files()
         pkgsrc)
             sudocmd pkg_add $@
             return ;;
+        android)
+            sudocmd pm install $@
+            return ;;
         emerge)
             load_helper epm-install-emerge
             sudocmd epm_install_emerge $@
@@ -1296,6 +1347,9 @@ epm_print_install_command()
             ;;
         ipkg)
             echo "ipkg install $@"
+            ;;
+        android)
+            echo "pm install $@"
             ;;
         *)
             fatal "Have no suitable appropriate install command for $PMTYPE"
@@ -1518,6 +1572,11 @@ case $PMTYPE in
 	guix)
 		CMD="guix package -I"
 		;;
+	android)
+		CMD="pm list packages"
+		docmd $CMD | sed -e "s|^package:||g"
+		return
+		;;
 	*)
 		fatal "Have no suitable query command for $PMTYPE"
 		;;
@@ -1549,7 +1608,7 @@ epm_provides_files()
 
 	case $(get_package_type $pkg_files) in
 		rpm)
-			docmd "rpm -q --provides -p"
+			docmd rpm -q --provides -p $pkg_files
 			;;
 		deb)
 			# FIXME: will we provide ourself?
@@ -1911,7 +1970,7 @@ epm_query_file()
 
     for pkg in $pkg_filenames ; do
         __do_query_real_file "$pkg"
-        __do_query $FULLFILEPATH || pkg_filenames=$pkg epm_search_file
+        __do_query $FULLFILEPATH || pkg_filenames=$FULLFILEPATH epm_search_file
     done
 
 }
@@ -1923,7 +1982,8 @@ epm_query_package()
 {
 	[ -n "$pkg_filenames" ] || fatal "Please, use search with some argument or run epmqa for get all packages."
 	# FIXME: do it better
-	local MGS=$(eval __epm_search_make_grep $quoted_args)
+	local MGS
+	MGS=$(eval __epm_search_make_grep $quoted_args)
 	EXTRA_SHOWDOCMD=$MGS
 	eval "pkg_filenames= epm_packages \"$(eval get_firstarg $quoted_args)\" $MGS"
 }
@@ -2122,6 +2182,9 @@ epm_remove_names()
 			return ;;
 		guix)
 			sudocmd guix package -r $@
+			return ;;
+		android)
+			sudocmd pm uninstall $@
 			return ;;
 		chocolatey)
 			sudocmd chocolatey uninstall $@
@@ -2335,7 +2398,7 @@ epm_requires_files()
 
 	case $(get_package_type $pkg_files) in
 		rpm)
-			docmd "rpm -q --requires -p"
+			docmd rpm -q --requires -p $pkg_files
 			;;
 		deb)
 			a= docmd dpkg -I $pkg_files | grep "^ *Depends:" | sed "s|^ *Depends:||g"
@@ -2417,7 +2480,8 @@ case $PMTYPE in
 		CMD="apt-cache search --"
 		;;
 	urpm-rpm)
-		CMD="urpmq -y --"
+		# urpmq does not support --
+		CMD="urpmq -y"
 		;;
 	pkgsrc)
 		CMD="pkg_info -x --"
@@ -2456,13 +2520,16 @@ case $PMTYPE in
 	slackpkg)
 		# FIXME
 		echo "Note: case sensitive search"
-		CMD="/usr/sbin/slackpkg search --"
+		CMD="/usr/sbin/slackpkg search"
 		;;
 	homebrew)
 		CMD="brew search"
 		;;
 	guix)
 		CMD="guix package -A"
+		;;
+	android)
+		CMD="pm list packages"
 		;;
 	*)
 		fatal "Have no suitable search command for $PMTYPE"
@@ -2503,6 +2570,13 @@ __epm_search_make_grep()
 		echo -n " | egrep -i -- \"$i\""
 	done
 
+	if [ "$short" ] ; then
+		echo -n " | sed -e \"s| .*||g\""
+	fi
+
+	# FIXME: move from it
+	#isatty || return
+
 	local COLO=""
 	# rule for colorife
 	for i in $list $listN; do
@@ -2519,8 +2593,10 @@ __epm_search_make_grep()
 epm_search()
 {
 	[ -n "$pkg_filenames" ] || fatal "Please, use search with some argument"
+
 	# FIXME: do it better
-	local MGS=$(eval __epm_search_make_grep $quoted_args)
+	local MGS
+	MGS=$(eval __epm_search_make_grep $quoted_args)
 	EXTRA_SHOWDOCMD="$MGS"
 	eval "__epm_search_output \"$(eval get_firstarg $quoted_args)\" $MGS"
 }
@@ -2969,6 +3045,7 @@ pkgtype()
 		archlinux) echo "pkg.tar.xz" ;;
 		gentoo) echo "tbz2" ;;
 		windows) echo "exe" ;;
+		android) echo "apk" ;;
 		debian|ubuntu|mint|runtu) echo "deb" ;;
 		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
 			echo "rpm" ;;
@@ -3166,6 +3243,11 @@ elif [ `uname` = "Linux" ] && which guix 2>/dev/null >/dev/null ; then
 	DISTRIB_ID="GNU/Linux/Guix"
 	DISTRIB_RELEASE=$(uname -r)
 
+# fixme: move to up
+elif [ `uname` = "Linux" ] && [ -x $ROOTDIR/system/bin/getprop ] ; then
+	DISTRIB_ID="Android"
+	DISTRIB_RELEASE=$(getprop | awk -F": " '/build.version.release/ { print $2 }' | tr -d '[]')
+
 # try use standart LSB info by default
 elif distro lsb-release && [ -n "$DISTRIB_RELEASE" ]; then
 	# use LSB
@@ -3225,7 +3307,6 @@ esac
 #PATH=$PATH:/sbin:/usr/sbin
 
 set_sudo
-set_eatmydata
 
 check_tty
 
@@ -3245,7 +3326,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.4.2"
+        echo "EPM package manager version 1.4.6"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -3480,17 +3561,33 @@ check_option()
     return 0
 }
 
-for opt in "$@" ; do
-    check_command $opt && continue
-    check_option $opt && continue
-
+check_filenames()
+{
+    local opt="$1"
     if [ -f "$opt" ] && echo $opt | grep -q "\." ; then
         pkg_files="$pkg_files $opt"
     else
         pkg_names="$pkg_names $opt"
     fi
     quoted_args="$quoted_args \"$opt\""
+}
+
+FLAGENDOPTS=
+for opt in "$@" ; do
+    [ "$opt" = "--" ] && FLAGENDOPTS=1 && continue
+    if [ -z "$FLAGENDOPTS" ] ; then
+        check_command $opt && continue
+        check_option $opt && continue
+    fi
+    check_filenames $opt
 done
+
+# if input is not console, get pkg from it too
+if ! inputisatty ; then
+    for opt in $(cat) ; do
+        check_filenames $opt
+    done
+fi
 
 pkg_files=$(strip_spaces "$pkg_files")
 pkg_names=$(strip_spaces "$pkg_names")
@@ -3508,6 +3605,13 @@ if [ -z "$epm_cmd" ] ; then
     echo
     fatal "Run $ $progname --help for get help"
 fi
+
+# Use eatmydata for write specific operations
+case $epm_cmd in
+    update|upgrade|Upgrade|install|reinstall|Install|remove|kernel_update|release_upgrade|)
+        set_eatmydata
+        break;
+esac
 
 # Run helper for command
 epm_$epm_cmd
