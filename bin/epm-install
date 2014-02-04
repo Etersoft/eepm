@@ -146,8 +146,8 @@ epm_install_names()
 		guix)
 			__separate_sudocmd "guix package -i" "guix package -i" $@
 			return ;;
-		guix)
-			__separate_sudocmd "guix package -i" "guix package -i" $@
+		android)
+			warning "We have no idea how to use package repository, ever if it is F-Droid."
 			return ;;
 		*)
 			fatal "Have no suitable install command for $PMTYPE"
@@ -199,9 +199,9 @@ epm_ni_install_names()
 		nix)
 			sudocmd nix-env --install $@
 			return ;;
-		android)
-			sudocmd pm install $@
-			return ;;
+		#android)
+		#	sudocmd pm install $@
+		#	return ;;
 		slackpkg)
 			# FIXME: broken status when use batch and default answer
 			__separate_sudocmd_foreach "/usr/sbin/slackpkg -batch=on -default_answer=yes install" "/usr/sbin/slackpkg -batch=on -default_answer=yes upgrade" $@

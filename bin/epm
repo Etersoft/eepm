@@ -338,7 +338,7 @@ fi
 
 # Use eatmydata for write specific operations
 case $epm_cmd in
-    update|upgrade|Upgrade|install|reinstall|Install|remove|kernel_update|release_upgrade|)
+    update|upgrade|Upgrade|install|reinstall|Install|remove|kernel_update|release_upgrade)
         set_eatmydata
         break;
 esac
