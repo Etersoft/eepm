@@ -83,6 +83,14 @@ echover()
     echo "$*" >&2
 }
 
+# echo string without EOL
+# FIXME: -n on MacOS?
+echon()
+{
+	echo -n "$@"
+}
+
+
 # Used DISTRNAME
 set_target_pkg_env()
 {
@@ -150,14 +158,14 @@ sudocmd_foreach()
 
 get_firstarg()
 {
-	echo -n "$1"
+	echon "$1"
 }
 
 get_lastarg()
 {
 	local lastarg
 	eval lastarg=\${$#}
-	echo -n "$lastarg"
+	echon "$lastarg"
 }
 
 

@@ -108,17 +108,17 @@ __epm_search_make_grep()
 	#list=$(strip_spaces $list | sed -e "s/ /|/g")
 	listN=$(strip_spaces $listN | sed -e "s/ /|/g" | sed -e "s/\^//g")
 
-	[ -n "$listN" ] && echo -n " | egrep -i -v -- \"$listN\""
+	[ -n "$listN" ] && echon " | egrep -i -v -- \"$listN\""
 
 	# FIXME: The World has not idea how to do grep both string
 	# http://stackoverflow.com/questions/10110051/grep-with-two-strings-logical-and-in-regex?rq=1
 	for i in $list ; do
 		# FIXME -n on MacOS?
-		echo -n " | egrep -i -- \"$i\""
+		echon " | egrep -i -- \"$i\""
 	done
 
 	if [ "$short" ] ; then
-		echo -n " | sed -e \"s| .*||g\""
+		echon " | sed -e \"s| .*||g\""
 	fi
 
 	# FIXME: move from it
