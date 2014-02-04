@@ -130,9 +130,9 @@ __epm_search_make_grep()
 		[ -n "$COLO" ] && COLO="$COLO|"
 		COLO="$COLO$i"
 	done
-	# FIXME -n on MacOS?
+
 	if [ -n "$list" ] ; then
-		echo -n " | egrep -i --color -- \"($COLO)\""
+		echon " | egrep -i $EGREPCOLOR -- \"($COLO)\""
 	fi
 }
 

@@ -45,6 +45,11 @@ check_tty()
 	[ -n "$TERM" ] || TERM=dumb
 	export TERM
 
+	# egrep from busybox may not --color
+	if egrep --help | grep -q -- "--color" ; then
+		EGREPCOLOR="--color"
+	fi
+
 	which tput >/dev/null 2>/dev/null || return
 	# FreeBSD does not support tput -S
 	echo | tput -S >/dev/null 2>/dev/null || return
