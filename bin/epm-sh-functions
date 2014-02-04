@@ -19,6 +19,7 @@
 
 # copied from /etc/init.d/outformat (ALT Linux)
 
+# FIXME on Android: FIX ME! implement ttyname_r() bionic/libc/bionic/stubs.c:366
 inputisatty()
 {
 	# check stdin
