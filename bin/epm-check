@@ -31,6 +31,10 @@ case $PMTYPE in
 		sudocmd apt-get -f install || exit
 		sudocmd apt-get autoremove
 		;;
+	aptitude-dpkg)
+		sudocmd aptitude -f install || exit
+		#sudocmd apt-get autoremove
+		;;
 	yum-rpm)
 		docmd yum check
 		docmd package-cleanup --problems

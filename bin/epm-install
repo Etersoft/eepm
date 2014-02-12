@@ -93,6 +93,9 @@ epm_install_names()
 		apt-rpm|apt-dpkg)
 			sudocmd apt-get $APTOPTIONS install $@
 			return ;;
+		aptitude-dpkg)
+			sudocmd aptitude install $@
+			return ;;
 		deepsolver-rpm)
 			sudocmd ds-install $@
 			return ;;
@@ -134,6 +137,7 @@ epm_install_names()
 			__separate_sudocmd_foreach "/usr/sbin/slackpkg install" "/usr/sbin/slackpkg upgrade" $@
 			return ;;
 		homebrew)
+			# FIXME: sudo and quote
 			__separate_sudocmd "brew install" "brew upgrade" $@
 			return ;;
 		ipkg)
@@ -163,6 +167,9 @@ epm_ni_install_names()
 		apt-rpm|apt-dpkg)
 			export DEBIAN_FRONTEND=noninteractive
 			sudocmd apt-get -y --force-yes -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
+			return ;;
+		aptitude-dpkg)
+			sudocmd aptitde -y install $@
 			return ;;
 		yum-rpm)
 			sudocmd yum -y $YUMOPTIONS install $@
@@ -235,7 +242,7 @@ epm_install_files()
 
             # use install_names
             ;;
-        apt-dpkg)
+        apt-dpkg|aptitude-dpkg)
             # the new version of the conf. file is installed with a .dpkg-dist suffix
             if [ -n "$non_interactive" ] ; then
                 DPKGOPTIONS="--force-confdef --force-confold"
@@ -322,7 +329,7 @@ epm_print_install_command()
         apt-rpm|yum-rpm|urpm-rpm|zypper-rpm|dnf-rpm)
             echo "rpm -Uvh --force $nodeps $@"
             ;;
-        apt-dpkg)
+        apt-dpkg|aptitude-dpkg)
             echo "dpkg -i $@"
             ;;
         pkgsrc)

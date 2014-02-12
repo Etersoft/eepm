@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012  Etersoft
-# Copyright (C) 2012  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012,2014  Etersoft
+# Copyright (C) 2012,2014  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -27,6 +27,9 @@ epm_reinstall_names()
 		apt-rpm|apt-dpkg)
 			sudocmd apt-get --reinstall install $@
 			return ;;
+		aptitude-dpkg)
+			sudocmd aptitude reinstall $@
+			return ;;
 		dnf-rpm)
 			sudocmd dnf reinstall $@
 			return ;;
@@ -48,7 +51,7 @@ epm_reinstall_files()
             sudocmd rpm -Uvh --force $@ && return
             sudocmd apt-get --reinstall install $@
             return ;;
-        apt-pkg)
+        apt-dpkg|aptitude-dpkg)
             sudocmd dpkg -i $@
             return ;;
         slackpkg)

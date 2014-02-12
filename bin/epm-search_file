@@ -49,7 +49,7 @@ case $PMTYPE in
 	apt-rpm)
 		local_content_search $pkg_filenames
 		return ;;
-	apt-dpkg)
+	apt-dpkg|aptitude-dpkg)
 		assure_exists apt-file
 		sudocmd apt-file update
 		docmd apt-file search $pkg_filenames

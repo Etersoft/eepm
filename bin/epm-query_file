@@ -68,7 +68,7 @@ __do_query()
         apt-rpm)
             CMD="rpm -qf"
             ;;
-        apt-dpkg)
+        *-dpkg)
             showcmd dpkg -S $1
             dpkg_print_name_version $(dpkg -S $1 | grep -v "^diversion by" | sed -e "s|:.*||")
             return ;;

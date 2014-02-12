@@ -45,7 +45,7 @@ case $PMTYPE in
 		# ALT Linux only
 		sudocmd remove-old-kernels
 		;;
-	apt-dpkg)
+	apt-dpkg|aptitude-dpkg)
 		sudocmd apt-get autoremove
 		;;
 	aura)

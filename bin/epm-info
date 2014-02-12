@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012  Etersoft
-# Copyright (C) 2012  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012,2014  Etersoft
+# Copyright (C) 2012,2014  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -44,6 +44,13 @@ case $PMTYPE in
 		[ -z "$pkg_names" ] && return
 		is_installed $pkg_names && docmd dpkg -p $pkg_names && return
 		docmd apt-cache show $pkg_names
+		;;
+	aptitude-dpkg)
+		if [ -n "$pkg_files" ] ; then
+			docmd dpkg -I $pkg_files
+		fi
+		[ -z "$pkg_names" ] && return
+		docmd aptitude show $pkg_names
 		;;
 	yum-rpm)
 		__epm_info_rpm_low && return

@@ -30,7 +30,7 @@ epm_release_upgrade()
 		docmd epm Upgrade
 		docmd epm update-kernel
 		;;
-	apt-dpkg)
+	*-dpkg)
 		sudocmd do-release-upgrade -d
 		;;
 	yum-rpm)

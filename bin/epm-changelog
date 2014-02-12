@@ -53,7 +53,7 @@ __epm_changelog_local_names()
 		apt-rpm|yum-rpm|urpm-rpm|zypper-rpm)
 			docmd_foreach "rpm --changelog" $@ | less
 			;;
-		apt-dpkg)
+		apt-dpkg|aptitude-dpkg)
 			docmd zcat /usr/share/doc/$1/changelog.Debian.gz | less
 			;;
 		emerge)

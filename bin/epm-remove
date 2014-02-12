@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012, 2013  Etersoft
-# Copyright (C) 2012, 2013  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2014  Etersoft
+# Copyright (C) 2012-2014  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -27,7 +27,7 @@ epm_remove_low()
 		apt-rpm|yum-rpm|zypper-rpm|urpm-rpm|dnf-rpm)
 			sudocmd rpm -ev $nodeps $@
 			return ;;
-		apt-dpkg)
+		apt-dpkg|aptitude-dpkg)
 			sudocmd dpkg -P $(subst_option nodeps --force-all) $@
 			return ;;
 		pkgsrc)
@@ -53,6 +53,9 @@ epm_remove_names()
 	case $PMTYPE in
 		apt-dpkg)
 			sudocmd apt-get remove --purge $@
+			return ;;
+		aptitude-dpkg)
+			sudocmd aptitude purge $@
 			return ;;
 		apt-rpm)
 			sudocmd apt-get remove $@
@@ -125,6 +128,9 @@ epm_remove_nonint()
 		apt-dpkg)
 			sudocmd apt-get -y --force-yes remove --purge $@
 			return ;;
+		aptitude-dpkg)
+			sudocmd aptitude -y purge $@
+			return ;;
 		apt-rpm)
 			sudocmd apt-get -y --force-yes remove $@
 			return ;;
@@ -156,7 +162,7 @@ epm_print_remove_command()
 		apt-rpm|yum-rpm|zypper-rpm|urpm-rpm|dnf-rpm)
 			echo "rpm -ev $nodeps $@"
 			;;
-		apt-dpkg)
+		apt-dpkg|aptitude-dpkg)
 			echo "dpkg -P $@"
 			;;
 		pkgsrc)

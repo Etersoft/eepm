@@ -66,7 +66,7 @@ case $PMTYPE in
 	pacman)
 		CMD="pactree"
 		;;
-	apt-dpkg)
+	apt-dpkg|aptitude-dpkg)
 		# FIXME: need fix for a few names case
 		if is_installed $pkg_names ; then
 			showcmd dpkg -s $pkg_names

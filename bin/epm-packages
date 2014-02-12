@@ -43,7 +43,7 @@ case $PMTYPE in
 		CMD="rpm -qa $pkg_filenames"
 		[ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n $pkg_filenames"
 		;;
-	apt-dpkg)
+	*-dpkg)
 		#CMD="dpkg -l $pkg_filenames"
 		CMD="dpkg-query -W --showformat=\${Package}-\${Version}\n $pkg_filenames"
 		[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${Package}\n $pkg_filenames"

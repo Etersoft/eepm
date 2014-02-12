@@ -107,7 +107,7 @@ __epm_query_file()
 			CMD="rpm -qp"
 			[ -n "$short" ] && CMD="rpm -qp --queryformat %{name}\n"
 			;;
-		apt-dpkg)
+		*-dpkg)
 			CMD="dpkg-deb --show --showformat=\${Package}-\${Version}\n"
 			[ -n "$short" ] && CMD="dpkg-query --show --showformat=\${Package}\n"
 			;;
@@ -130,7 +130,7 @@ __epm_query_name()
 			CMD="rpm -q"
 			[ -n "$short" ] && CMD="rpm -q --queryformat %{name}\n"
 			;;
-		apt-dpkg)
+		*-dpkg)
 			#docmd dpkg -l $@ | grep "^ii"
 			CMD="dpkg-query -W --showformat=\${Package}-\${Version}\n"
 			[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${Package}\n"

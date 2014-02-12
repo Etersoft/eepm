@@ -27,8 +27,11 @@ case $PMTYPE in
 	apt-rpm)
 		CMD="apt-cache whatdepends"
 		;;
-	apt-dpkg)
+	apt-dpkg|aptitude-dpkg)
 		CMD="apt-cache rdepends"
+		;;
+	aptitude-dpkg)
+		CMD="aptitude why"
 		;;
 	yum-rpm)
 		CMD="repoquery --whatrequires"

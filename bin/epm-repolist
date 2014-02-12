@@ -38,7 +38,7 @@ case $PMTYPE in
 	deepsolver-rpm)
 		docmd ds-conf
 		;;
-	apt-dpkg)
+	apt-dpkg|aptitude-dpkg)
 		showcmd cat /etc/apt/sources.list*
 		print_apt_sources_list /etc/apt/sources.list /etc/apt/sources.list.d/*.list
 		;;

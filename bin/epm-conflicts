@@ -77,6 +77,11 @@ case $PMTYPE in
 			return
 		fi
 		;;
+	# TODO: why-not show who conflicts with us
+	#aptitude-dpkg)
+	#	docmd aptitude why-not $pkg_names
+	#	;;
+
 	#emerge)
 	#	assure_exists equery
 	#	CMD="equery depgraph"
