@@ -17,9 +17,15 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+load_helper epm-check_updated_repo
+
 epm_upgrade()
 {
 	local CMD
+
+	# it is useful for first time running
+	update_repo_if_needed
+
 	echo "Run command for upgrade packages"
 
 	case $PMTYPE in
