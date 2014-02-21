@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012, 2013  Etersoft
-# Copyright (C) 2012, 2013  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2014  Etersoft
+# Copyright (C) 2012-2014  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -58,7 +58,7 @@ print_version()
 {
         echo "EPM package manager version @VERSION@"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
-        echo "Copyright (c) Etersoft 2012-2013"
+        echo "Copyright (c) Etersoft 2012-2014"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 
@@ -148,7 +148,7 @@ check_command()
     -qp|qp|query_package)     # HELPCMD: search in the list of installed packages
         epm_cmd=query_package
         ;;
-    -qf|qf|which|belongs)     # HELPCMD: query package(s) owning file
+    -qf|qf|-S|which|belongs)     # HELPCMD: query package(s) owning file
         epm_cmd=query_file
         ;;
 
@@ -177,10 +177,10 @@ check_command()
     -qi|qi|info|show)         # HELPCMD: print package detail info
         epm_cmd=info
         ;;
-    requires|deplist)         # HELPCMD: print package requires
+    requires|deplist|req)     # HELPCMD: print package requires
         epm_cmd=requires
         ;;
-    provides)                 # HELPCMD: print package provides
+    provides|prov)            # HELPCMD: print package provides
         epm_cmd=provides
         ;;
     whatdepends)              # HELPCMD: print packages dependences on that
@@ -192,10 +192,10 @@ check_command()
     conflicts)                # HELPCMD: print package conflicts
         epm_cmd=conflicts
         ;;
-    -qa|list|packages|-l|qa)  # HELPCMD: list of installed package(s)
+    -qa|list|packages|-l|qa)  # HELPCMD: print list of installed package(s)
         epm_cmd=packages
         ;;
-    programs)                 # HELPCMD: list of installed GUI program(s)
+    programs)                 # HELPCMD: print list of installed GUI program(s)
         epm_cmd=programs
         ;;
     assure)                   # HELPCMD: <command> <package>: install package if command does not exists
@@ -232,13 +232,13 @@ check_command()
     upgrade|dist-upgrade)     # HELPCMD: performs upgrades of package software distributions
         epm_cmd=upgrade
         ;;
-    Upgrade)                  # HELPCMD: performs update && upgrade command
+    Upgrade)                  # HELPCMD: force update package base, then run upgrade
         epm_cmd=Upgrade
         ;;
-    simulate)                 # HELPCMD: simulate install (it does check requires, minimally)
+    simulate)                 # HELPCMD: simulate install with check requires
         epm_cmd=simulate
         ;;
-    checkpkg|integrity)       # HELPCMD: check package integrity
+    checkpkg|integrity)       # HELPCMD: check package file integrity (checksum)
         epm_cmd=checkpkg
         ;;
 
@@ -263,7 +263,7 @@ check_option()
     --verbose)            # HELPOPT: verbose mode
         verbose=1
         ;;
-    --skip-installed)     # HELPOPT: skip already install during install
+    --skip-installed)     # HELPOPT: skip already installed packages during install
         skip_installed=1
         ;;
     --show-command-only)  # HELPOPT: show command only, do not any action (supports install and remove ONLY)
@@ -341,9 +341,9 @@ fi
 
 # Use eatmydata for write specific operations
 case $epm_cmd in
-    update|upgrade|Upgrade|install|reinstall|Install|remove|kernel_update|release_upgrade)
+    update|upgrade|Upgrade|install|reinstall|Install|remove|autoremove|kernel_update|release_upgrade|check)
         set_eatmydata
-        break;
+        ;;
 esac
 
 # Run helper for command
