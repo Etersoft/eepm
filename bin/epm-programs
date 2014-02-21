@@ -25,7 +25,7 @@ epm_programs()
 	local DESKTOPDIR=/usr/share/applications
 	[ -d "$DESKTOPDIR" ] || fatal "There is no $DESKTOPDIR dir on the system."
 	#find /usr/share/applications -type f -name "*.desktop" | while read f; do pkg_files="$f" quiet=1 short=1 epm_query_file ; done | sort -u
-	showcmd "find /usr/share/applications -type f -name "*.desktop" | xargs $0 -qf --quiet --short | sort -u"
+	showcmd "find $DESKTOPDIR -type f -name "*.desktop" | xargs $0 -qf --quiet --short | sort -u"
 	find /usr/share/applications -type f -name "*.desktop" | \
 		xargs $0 -qf --quiet --short | sort -u
 }

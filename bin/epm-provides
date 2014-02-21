@@ -73,12 +73,14 @@ case $PMTYPE in
 	apt-dpkg)
 		# FIXME: need fix for a few names case
 		if is_installed $pkg_names ; then
-			CMD="rpm -q --provides"
-		else
+			echo "Please inform the author how to get provides from dpkg"
+		fi
+		#	CMD="rpm -q --provides"
+		#else
 			EXTRA_SHOWDOCMD=' | grep "Provides:"'
 			docmd apt-cache show $pkg_names | grep "Provides:"
 			return
-		fi
+		#fi
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"

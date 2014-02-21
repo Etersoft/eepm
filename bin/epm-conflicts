@@ -25,7 +25,7 @@ epm_conflicts_files()
 
 	case $(get_package_type $pkg_files) in
 		rpm)
-			docmd "rpm -q --conflicts -p"
+			docmd "rpm -q --conflicts -p" $pkg_files
 			;;
 		#deb)
 		#	a= docmd dpkg -I $pkg_files | grep "^ *Depends:" | sed "s|^ *Depends:||g"

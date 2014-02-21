@@ -23,7 +23,7 @@
 inputisatty()
 {
 	# check stdin
-	tty -s
+	tty -s 2>/dev/null
 }
 
 isatty()
@@ -47,7 +47,8 @@ check_tty()
 	export TERM
 
 	# egrep from busybox may not --color
-	if egrep --help | grep -q -- "--color" ; then
+	# egrep from MacOS print help to stderr
+	if egrep --help 2>&1 | grep -q -- "--color" ; then
 		EGREPCOLOR="--color"
 	fi
 
@@ -80,15 +81,15 @@ restore_color()
 
 echover()
 {
-    [ -n "$verbose" ] || return
+    [ -z "$verbose" ] && return
     echo "$*" >&2
 }
 
 # echo string without EOL
-# FIXME: -n on MacOS?
 echon()
 {
-	echo -n "$@"
+	# default /bin/sh on MacOS does not recognize -n
+	/bin/echo -n "$@"
 }
 
 

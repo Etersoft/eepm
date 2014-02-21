@@ -56,6 +56,9 @@ case $PMTYPE in
 	conary)
 		sudocmd conary verify
 		;;
+	homebrew)
+		sudocmd brew doctor
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
