@@ -339,9 +339,9 @@ if [ -n "$FORCEPM" ] ; then
 fi
 
 case $DISTRNAME in
-	ALTLinux|PCLinux)
+	ALTLinux)
 		CMD="apt-rpm"
-		#which deepsolver 2>/dev/null >/dev/null && CMD=deepsolver-rpm
+		#which ds-install 2>/dev/null >/dev/null && CMD=deepsolver-rpm
 		;;
 	PCLinux)
 		CMD="apt-rpm"
@@ -364,6 +364,7 @@ case $DISTRNAME in
 		;;
 	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific)
 		CMD="yum-rpm"
+		#which dnf 2>/dev/null >/dev/null && CMD=dnf-rpm
 		;;
 	Slackware)
 		CMD="slackpkg"
