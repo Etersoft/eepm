@@ -1,0 +1,62 @@
+#!/bin/sh
+#
+# Copyright (C) 2013, 2014  Etersoft
+# Copyright (C) 2013, 2014  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+load_helper epm-install
+
+
+__check_command_in_path()
+{
+    PATH=$PATH:/sbin:/usr/sbin which "$1" 2>/dev/null
+}
+
+
+# Do fast checking for command and install package if the command does not exist
+
+# $1 - command name
+# $2 - package name
+
+__epm_assure()
+{
+    if __check_command_in_path "$1" >/dev/null ; then
+        if [ -n "$verbose" ] ; then
+            local compath="$(__check_command_in_path "$1")"
+            echo "Command $1 is exists: $compath"
+            epm qf "$compath"
+        fi
+        return
+    fi
+
+    # TODO: use package name normalization
+    echo "Install appropriate package for $1 command..."
+    #epm install $2
+
+    # copied from epm_install
+    local names="$(echo $2 | filter_out_installed_packages)"
+
+    non_interactive=1 epm_install_names $names
+}
+
+
+epm_assure()
+{
+    [ -n "$pkg_filenames" ] || fatal "Run assure without params"
+
+    # use helper func for extract separate params
+    __epm_assure $pkg_filenames
+}

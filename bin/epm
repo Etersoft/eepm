@@ -198,6 +198,9 @@ check_command()
     programs)                 # HELPCMD: list of installed GUI program(s)
         epm_cmd=programs
         ;;
+    assure)                   # HELPCMD: <command> <package>: install package if command does not exists
+        epm_cmd=assure
+        ;;
 
 # Repository control
     update)                   # HELPCMD: update remote package repository databases
