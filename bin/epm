@@ -198,7 +198,7 @@ check_command()
     programs)                 # HELPCMD: print list of installed GUI program(s)
         epm_cmd=programs
         ;;
-    assure)                   # HELPCMD: <command> <package>: install package if command does not exists
+    assure)                   # HELPCMD: <command> [package]: install package if command does not exists
         epm_cmd=assure
         ;;
 

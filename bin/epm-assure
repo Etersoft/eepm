@@ -44,10 +44,13 @@ __epm_assure()
 
     # TODO: use package name normalization
     echo "Install appropriate package for $1 command..."
+
+    local PACKAGE="$2"
+    [ -n "$PACKAGE" ] || PACKAGE="$1"
     #epm install $2
 
     # copied from epm_install
-    local names="$(echo $2 | filter_out_installed_packages)"
+    local names="$(echo "$PACKAGE" | filter_out_installed_packages)"
 
     non_interactive=1 epm_install_names $names
 }
