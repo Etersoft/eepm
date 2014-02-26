@@ -37,7 +37,7 @@ load_helper()
 inputisatty()
 {
 	# check stdin
-	tty -s
+	tty -s 2>/dev/null
 }
 
 isatty()
@@ -59,6 +59,12 @@ check_tty()
 	# Set a sane TERM required for tput
 	[ -n "$TERM" ] || TERM=dumb
 	export TERM
+
+	# egrep from busybox may not --color
+	# egrep from MacOS print help to stderr
+	if egrep --help 2>&1 | grep -q -- "--color" ; then
+		EGREPCOLOR="--color"
+	fi
 
 	which tput >/dev/null 2>/dev/null || return
 	# FreeBSD does not support tput -S
@@ -89,9 +95,16 @@ restore_color()
 
 echover()
 {
-    [ -n "$verbose" ] || return
+    [ -z "$verbose" ] && return
     echo "$*" >&2
 }
+
+echon()
+{
+	# default /bin/sh on MacOS does not recognize -n
+	/bin/echo -n "$@"
+}
+
 
 set_target_pkg_env()
 {
@@ -120,47 +133,47 @@ showcmd()
 docmd()
 {
 	showcmd "$@$EXTRA_SHOWDOCMD"
-	"$@"
+	$@
 }
 
 docmd_foreach()
 {
-	local cmd
+	local cmd pkg
 	cmd="$1"
 	#showcmd "$@"
 	shift
 	for pkg in "$@" ; do
-		docmd $cmd $pkg
+		docmd "$cmd" $pkg
 	done
 }
 
 sudocmd()
 {
 	showcmd "$SUDO $@"
-	$SUDO "$@"
+	$SUDO $@
 }
 
 sudocmd_foreach()
 {
-	local cmd
+	local cmd pkg
 	cmd="$1"
 	#showcmd "$@"
 	shift
 	for pkg in "$@" ; do
-		sudocmd $cmd $pkg
+		sudocmd "$cmd" $pkg
 	done
 }
 
 get_firstarg()
 {
-	echo -n "$1"
+	echon "$1"
 }
 
 get_lastarg()
 {
 	local lastarg
 	eval lastarg=\${$#}
-	echo -n "$lastarg"
+	echon "$lastarg"
 }
 
 
@@ -189,7 +202,7 @@ store_output()
     local CMDSTATUS=$RC_STDOUT.pipestatus
     echo 1 >$CMDSTATUS
     #RC_STDERR=$(mktemp)
-    ( "$@" 2>&1 ; echo $? >$CMDSTATUS ) | tee $RC_STDOUT
+    ( $@ 2>&1 ; echo $? >$CMDSTATUS ) | tee $RC_STDOUT
     return $(cat $CMDSTATUS)
     # bashism
     # http://tldp.org/LDP/abs/html/bashver3.html#PIPEFAILREF
@@ -200,7 +213,6 @@ clean_store_output()
 {
     rm -f $RC_STDOUT $RC_STDOUT.pipestatus
 }
-
 
 epm()
 {
@@ -321,15 +333,16 @@ if [ -n "$FORCEPM" ] ; then
 fi
 
 case $DISTRNAME in
-	ALTLinux|PCLinux)
+	ALTLinux)
 		CMD="apt-rpm"
-		#which deepsolver 2>/dev/null >/dev/null && CMD=deepsolver-rpm
+		#which ds-install 2>/dev/null >/dev/null && CMD=deepsolver-rpm
 		;;
 	PCLinux)
 		CMD="apt-rpm"
 		;;
 	Ubuntu|Debian|Mint)
 		CMD="apt-dpkg"
+		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
 		;;
 	Mandriva|ROSA)
 		CMD="urpm-rpm"
@@ -345,6 +358,7 @@ case $DISTRNAME in
 		;;
 	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific)
 		CMD="yum-rpm"
+		#which dnf 2>/dev/null >/dev/null && CMD=dnf-rpm
 		;;
 	Slackware)
 		CMD="slackpkg"
@@ -1078,7 +1092,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.4.6"
+        echo "Service manager version 1.5.0"
         echo "Running on $($DISTRVENDOR)"
         echo "Copyright (c) Etersoft 2012, 2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

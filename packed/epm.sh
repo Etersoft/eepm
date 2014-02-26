@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012, 2013  Etersoft
-# Copyright (C) 2012, 2013  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2014  Etersoft
+# Copyright (C) 2012-2014  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -39,7 +39,7 @@ load_helper()
 inputisatty()
 {
 	# check stdin
-	tty -s
+	tty -s 2>/dev/null
 }
 
 isatty()
@@ -61,6 +61,12 @@ check_tty()
 	# Set a sane TERM required for tput
 	[ -n "$TERM" ] || TERM=dumb
 	export TERM
+
+	# egrep from busybox may not --color
+	# egrep from MacOS print help to stderr
+	if egrep --help 2>&1 | grep -q -- "--color" ; then
+		EGREPCOLOR="--color"
+	fi
 
 	which tput >/dev/null 2>/dev/null || return
 	# FreeBSD does not support tput -S
@@ -91,9 +97,16 @@ restore_color()
 
 echover()
 {
-    [ -n "$verbose" ] || return
+    [ -z "$verbose" ] && return
     echo "$*" >&2
 }
+
+echon()
+{
+	# default /bin/sh on MacOS does not recognize -n
+	/bin/echo -n "$@"
+}
+
 
 set_target_pkg_env()
 {
@@ -122,47 +135,47 @@ showcmd()
 docmd()
 {
 	showcmd "$@$EXTRA_SHOWDOCMD"
-	"$@"
+	$@
 }
 
 docmd_foreach()
 {
-	local cmd
+	local cmd pkg
 	cmd="$1"
 	#showcmd "$@"
 	shift
 	for pkg in "$@" ; do
-		docmd $cmd $pkg
+		docmd "$cmd" $pkg
 	done
 }
 
 sudocmd()
 {
 	showcmd "$SUDO $@"
-	$SUDO "$@"
+	$SUDO $@
 }
 
 sudocmd_foreach()
 {
-	local cmd
+	local cmd pkg
 	cmd="$1"
 	#showcmd "$@"
 	shift
 	for pkg in "$@" ; do
-		sudocmd $cmd $pkg
+		sudocmd "$cmd" $pkg
 	done
 }
 
 get_firstarg()
 {
-	echo -n "$1"
+	echon "$1"
 }
 
 get_lastarg()
 {
 	local lastarg
 	eval lastarg=\${$#}
-	echo -n "$lastarg"
+	echon "$lastarg"
 }
 
 
@@ -191,7 +204,7 @@ store_output()
     local CMDSTATUS=$RC_STDOUT.pipestatus
     echo 1 >$CMDSTATUS
     #RC_STDERR=$(mktemp)
-    ( "$@" 2>&1 ; echo $? >$CMDSTATUS ) | tee $RC_STDOUT
+    ( $@ 2>&1 ; echo $? >$CMDSTATUS ) | tee $RC_STDOUT
     return $(cat $CMDSTATUS)
     # bashism
     # http://tldp.org/LDP/abs/html/bashver3.html#PIPEFAILREF
@@ -202,7 +215,6 @@ clean_store_output()
 {
     rm -f $RC_STDOUT $RC_STDOUT.pipestatus
 }
-
 
 epm()
 {
@@ -323,15 +335,16 @@ if [ -n "$FORCEPM" ] ; then
 fi
 
 case $DISTRNAME in
-	ALTLinux|PCLinux)
+	ALTLinux)
 		CMD="apt-rpm"
-		#which deepsolver 2>/dev/null >/dev/null && CMD=deepsolver-rpm
+		#which ds-install 2>/dev/null >/dev/null && CMD=deepsolver-rpm
 		;;
 	PCLinux)
 		CMD="apt-rpm"
 		;;
 	Ubuntu|Debian|Mint)
 		CMD="apt-dpkg"
+		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
 		;;
 	Mandriva|ROSA)
 		CMD="urpm-rpm"
@@ -347,6 +360,7 @@ case $DISTRNAME in
 		;;
 	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific)
 		CMD="yum-rpm"
+		#which dnf 2>/dev/null >/dev/null && CMD=dnf-rpm
 		;;
 	Slackware)
 		CMD="slackpkg"
@@ -389,7 +403,7 @@ case $PMTYPE in
 		assure_exists apt-repo
 		sudocmd apt-repo add $pkg_filenames
 		;;
-	apt-dpkg)
+	apt-dpkg|aptitude-dpkg)
 		echo "You need manually add repo to /etc/apt/sources.list"
 		;;
 	yum-rpm)
@@ -422,6 +436,51 @@ esac
 
 }
 
+# File bin/epm-assure:
+
+
+
+__check_command_in_path()
+{
+    PATH=$PATH:/sbin:/usr/sbin which "$1" 2>/dev/null
+}
+
+
+
+
+__epm_assure()
+{
+    if __check_command_in_path "$1" >/dev/null ; then
+        if [ -n "$verbose" ] ; then
+            local compath="$(__check_command_in_path "$1")"
+            echo "Command $1 is exists: $compath"
+            epm qf "$compath"
+        fi
+        return
+    fi
+
+    # TODO: use package name normalization
+    echo "Install appropriate package for $1 command..."
+
+    local PACKAGE="$2"
+    [ -n "$PACKAGE" ] || PACKAGE="$1"
+    #epm install $2
+
+    # copied from epm_install
+    local names="$(echo "$PACKAGE" | filter_out_installed_packages)"
+
+    non_interactive=1 epm_install_names $names
+}
+
+
+epm_assure()
+{
+    [ -n "$pkg_filenames" ] || fatal "Run assure without params"
+
+    # use helper func for extract separate params
+    __epm_assure $pkg_filenames
+}
+
 # File bin/epm-autoremove:
 
 __epm_autoremove_altrpm()
@@ -452,7 +511,7 @@ case $PMTYPE in
 		# ALT Linux only
 		sudocmd remove-old-kernels
 		;;
-	apt-dpkg)
+	apt-dpkg|aptitude-dpkg)
 		sudocmd apt-get autoremove
 		;;
 	aura)
@@ -530,7 +589,7 @@ __epm_changelog_local_names()
 		apt-rpm|yum-rpm|urpm-rpm|zypper-rpm)
 			docmd_foreach "rpm --changelog" $@ | less
 			;;
-		apt-dpkg)
+		apt-dpkg|aptitude-dpkg)
 			docmd zcat /usr/share/doc/$1/changelog.Debian.gz | less
 			;;
 		emerge)
@@ -611,6 +670,10 @@ case $PMTYPE in
 		sudocmd apt-get -f install || exit
 		sudocmd apt-get autoremove
 		;;
+	aptitude-dpkg)
+		sudocmd aptitude -f install || exit
+		#sudocmd apt-get autoremove
+		;;
 	yum-rpm)
 		docmd yum check
 		docmd package-cleanup --problems
@@ -631,6 +694,9 @@ case $PMTYPE in
 		;;
 	conary)
 		sudocmd conary verify
+		;;
+	homebrew)
+		sudocmd brew doctor
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -706,6 +772,32 @@ epm_checkpkg()
 	done
 }
 
+# File bin/epm-check_updated_repo:
+
+__is_repo_info_download()
+{
+    case $PMTYPE in
+        apt-*)
+            test -r /var/cache/apt/pkgcache.bin || return
+            ;;
+        *)
+            ;;
+    esac
+    return 0
+}
+
+update_repo_if_needed()
+{
+    if ! __is_repo_info_download ; then
+        load_helper epm-update
+        epm_update
+        return
+    fi
+
+    # TODO: if repo info is very obsoleted (a few days?), we need run update
+
+}
+
 # File bin/epm-clean:
 
 epm_clean()
@@ -713,6 +805,9 @@ epm_clean()
 case $PMTYPE in
 	apt-rpm|apt-dpkg)
 		sudocmd apt-get clean
+		;;
+	aptitude-dpkg)
+		sudocmd aptitude clean
 		;;
 	yum-rpm)
 		sudocmd yum clean all
@@ -752,7 +847,7 @@ epm_conflicts_files()
 
 	case $(get_package_type $pkg_files) in
 		rpm)
-			docmd "rpm -q --conflicts -p"
+			docmd "rpm -q --conflicts -p" $pkg_files
 			;;
 		#deb)
 		#	a= docmd dpkg -I $pkg_files | grep "^ *Depends:" | sed "s|^ *Depends:||g"
@@ -803,6 +898,11 @@ case $PMTYPE in
 			return
 		fi
 		;;
+	# TODO: why-not show who conflicts with us
+	#aptitude-dpkg)
+	#	docmd aptitude why-not $pkg_names
+	#	;;
+
 	#emerge)
 	#	assure_exists equery
 	#	CMD="equery depgraph"
@@ -896,7 +996,7 @@ __epm_filelist_name()
 		apt-rpm)
 			CMD="rpm -ql"
 			;;
-		apt-dpkg)
+		*-dpkg)
 			CMD="dpkg -L"
 			;;
 		yum-rpm)
@@ -962,6 +1062,9 @@ __epm_info_rpm_low()
 
 epm_info()
 {
+
+[ -n "$pkg_filenames" ] || fatal "Run info without names"
+
 case $PMTYPE in
 	apt-rpm)
 		__epm_info_rpm_low && return
@@ -974,6 +1077,13 @@ case $PMTYPE in
 		[ -z "$pkg_names" ] && return
 		is_installed $pkg_names && docmd dpkg -p $pkg_names && return
 		docmd apt-cache show $pkg_names
+		;;
+	aptitude-dpkg)
+		if [ -n "$pkg_files" ] ; then
+			docmd dpkg -I $pkg_files
+		fi
+		[ -z "$pkg_names" ] && return
+		docmd aptitude show $pkg_names
 		;;
 	yum-rpm)
 		__epm_info_rpm_low && return
@@ -1098,6 +1208,9 @@ epm_install_names()
 		apt-rpm|apt-dpkg)
 			sudocmd apt-get $APTOPTIONS install $@
 			return ;;
+		aptitude-dpkg)
+			sudocmd aptitude install $@
+			return ;;
 		deepsolver-rpm)
 			sudocmd ds-install $@
 			return ;;
@@ -1139,6 +1252,7 @@ epm_install_names()
 			__separate_sudocmd_foreach "/usr/sbin/slackpkg install" "/usr/sbin/slackpkg upgrade" $@
 			return ;;
 		homebrew)
+			# FIXME: sudo and quote
 			__separate_sudocmd "brew install" "brew upgrade" $@
 			return ;;
 		ipkg)
@@ -1151,8 +1265,8 @@ epm_install_names()
 		guix)
 			__separate_sudocmd "guix package -i" "guix package -i" $@
 			return ;;
-		guix)
-			__separate_sudocmd "guix package -i" "guix package -i" $@
+		android)
+			warning "We have no idea how to use package repository, ever if it is F-Droid."
 			return ;;
 		*)
 			fatal "Have no suitable install command for $PMTYPE"
@@ -1167,6 +1281,9 @@ epm_ni_install_names()
 		apt-rpm|apt-dpkg)
 			export DEBIAN_FRONTEND=noninteractive
 			sudocmd apt-get -y --force-yes -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
+			return ;;
+		aptitude-dpkg)
+			sudocmd aptitde -y install $@
 			return ;;
 		yum-rpm)
 			sudocmd yum -y $YUMOPTIONS install $@
@@ -1203,9 +1320,9 @@ epm_ni_install_names()
 		nix)
 			sudocmd nix-env --install $@
 			return ;;
-		android
-			sudocmd pm install $@
-			return ;;
+		#android)
+		#	sudocmd pm install $@
+		#	return ;;
 		slackpkg)
 			# FIXME: broken status when use batch and default answer
 			__separate_sudocmd_foreach "/usr/sbin/slackpkg -batch=on -default_answer=yes install" "/usr/sbin/slackpkg -batch=on -default_answer=yes upgrade" $@
@@ -1239,7 +1356,7 @@ epm_install_files()
 
             # use install_names
             ;;
-        apt-dpkg)
+        apt-dpkg|aptitude-dpkg)
             # the new version of the conf. file is installed with a .dpkg-dist suffix
             if [ -n "$non_interactive" ] ; then
                 DPKGOPTIONS="--force-confdef --force-confold"
@@ -1326,7 +1443,7 @@ epm_print_install_command()
         apt-rpm|yum-rpm|urpm-rpm|zypper-rpm|dnf-rpm)
             echo "rpm -Uvh --force $nodeps $@"
             ;;
-        apt-dpkg)
+        apt-dpkg|aptitude-dpkg)
             echo "dpkg -i $@"
             ;;
         pkgsrc)
@@ -1371,6 +1488,9 @@ epm_install()
     local files="$(echo $pkg_files | filter_out_installed_packages)"
 
     [ -z "$files$names" ] && echo "Skip empty install list" && return 22
+
+    # it is useful for first time running
+    update_repo_if_needed
 
     epm_install_names $names || return
     epm_install_files $files
@@ -1522,7 +1642,7 @@ case $PMTYPE in
 		CMD="rpm -qa $pkg_filenames"
 		[ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n $pkg_filenames"
 		;;
-	apt-dpkg)
+	*-dpkg)
 		#CMD="dpkg -l $pkg_filenames"
 		CMD="dpkg-query -W --showformat=\${Package}-\${Version}\n $pkg_filenames"
 		[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${Package}\n $pkg_filenames"
@@ -1594,7 +1714,7 @@ epm_programs()
 	local DESKTOPDIR=/usr/share/applications
 	[ -d "$DESKTOPDIR" ] || fatal "There is no $DESKTOPDIR dir on the system."
 	#find /usr/share/applications -type f -name "*.desktop" | while read f; do pkg_files="$f" quiet=1 short=1 epm_query_file ; done | sort -u
-	showcmd "find /usr/share/applications -type f -name "*.desktop" | xargs $0 -qf --quiet --short | sort -u"
+	showcmd "find $DESKTOPDIR -type f -name "*.desktop" | xargs $0 -qf --quiet --short | sort -u"
 	find /usr/share/applications -type f -name "*.desktop" | \
 		xargs $0 -qf --quiet --short | sort -u
 }
@@ -1652,12 +1772,14 @@ case $PMTYPE in
 	apt-dpkg)
 		# FIXME: need fix for a few names case
 		if is_installed $pkg_names ; then
-			CMD="rpm -q --provides"
-		else
+			echo "Please inform the author how to get provides from dpkg"
+		fi
+		#	CMD="rpm -q --provides"
+		#else
 			EXTRA_SHOWDOCMD=' | grep "Provides:"'
 			docmd apt-cache show $pkg_names | grep "Provides:"
 			return
-		fi
+		#fi
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -1762,7 +1884,7 @@ __epm_query_file()
 			CMD="rpm -qp"
 			[ -n "$short" ] && CMD="rpm -qp --queryformat %{name}\n"
 			;;
-		apt-dpkg)
+		*-dpkg)
 			CMD="dpkg-deb --show --showformat=\${Package}-\${Version}\n"
 			[ -n "$short" ] && CMD="dpkg-query --show --showformat=\${Package}\n"
 			;;
@@ -1785,7 +1907,7 @@ __epm_query_name()
 			CMD="rpm -q"
 			[ -n "$short" ] && CMD="rpm -q --queryformat %{name}\n"
 			;;
-		apt-dpkg)
+		*-dpkg)
 			#docmd dpkg -l $@ | grep "^ii"
 			CMD="dpkg-query -W --showformat=\${Package}-\${Version}\n"
 			[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${Package}\n"
@@ -1886,7 +2008,7 @@ __do_query()
         apt-rpm)
             CMD="rpm -qf"
             ;;
-        apt-dpkg)
+        *-dpkg)
             showcmd dpkg -S $1
             dpkg_print_name_version $(dpkg -S $1 | grep -v "^diversion by" | sed -e "s|:.*||")
             return ;;
@@ -1998,6 +2120,9 @@ epm_reinstall_names()
 		apt-rpm|apt-dpkg)
 			sudocmd apt-get --reinstall install $@
 			return ;;
+		aptitude-dpkg)
+			sudocmd aptitude reinstall $@
+			return ;;
 		dnf-rpm)
 			sudocmd dnf reinstall $@
 			return ;;
@@ -2019,7 +2144,7 @@ epm_reinstall_files()
             sudocmd rpm -Uvh --force $@ && return
             sudocmd apt-get --reinstall install $@
             return ;;
-        apt-pkg)
+        apt-dpkg|aptitude-dpkg)
             sudocmd dpkg -i $@
             return ;;
         slackpkg)
@@ -2056,7 +2181,7 @@ epm_release_upgrade()
 		docmd epm Upgrade
 		docmd epm update-kernel
 		;;
-	apt-dpkg)
+	*-dpkg)
 		sudocmd do-release-upgrade -d
 		;;
 	yum-rpm)
@@ -2113,7 +2238,7 @@ epm_remove_low()
 		apt-rpm|yum-rpm|zypper-rpm|urpm-rpm|dnf-rpm)
 			sudocmd rpm -ev $nodeps $@
 			return ;;
-		apt-dpkg)
+		apt-dpkg|aptitude-dpkg)
 			sudocmd dpkg -P $(subst_option nodeps --force-all) $@
 			return ;;
 		pkgsrc)
@@ -2139,6 +2264,9 @@ epm_remove_names()
 	case $PMTYPE in
 		apt-dpkg)
 			sudocmd apt-get remove --purge $@
+			return ;;
+		aptitude-dpkg)
+			sudocmd aptitude purge $@
 			return ;;
 		apt-rpm)
 			sudocmd apt-get remove $@
@@ -2210,6 +2338,9 @@ epm_remove_nonint()
 		apt-dpkg)
 			sudocmd apt-get -y --force-yes remove --purge $@
 			return ;;
+		aptitude-dpkg)
+			sudocmd aptitude -y purge $@
+			return ;;
 		apt-rpm)
 			sudocmd apt-get -y --force-yes remove $@
 			return ;;
@@ -2241,7 +2372,7 @@ epm_print_remove_command()
 		apt-rpm|yum-rpm|zypper-rpm|urpm-rpm|dnf-rpm)
 			echo "rpm -ev $nodeps $@"
 			;;
-		apt-dpkg)
+		apt-dpkg|aptitude-dpkg)
 			echo "dpkg -P $@"
 			;;
 		pkgsrc)
@@ -2302,7 +2433,7 @@ case $PMTYPE in
 		assure_exists apt-repo
 		sudocmd apt-repo rm $pkg_filenames
 		;;
-	apt-dpkg)
+	apt-dpkg|aptitude-dpkg)
 		echo "You need remove repo from /etc/apt/sources.list"
 		;;
 	yum-rpm)
@@ -2356,7 +2487,7 @@ case $PMTYPE in
 	deepsolver-rpm)
 		docmd ds-conf
 		;;
-	apt-dpkg)
+	apt-dpkg|aptitude-dpkg)
 		showcmd cat /etc/apt/sources.list*
 		print_apt_sources_list /etc/apt/sources.list /etc/apt/sources.list.d/*.list
 		;;
@@ -2438,7 +2569,7 @@ case $PMTYPE in
 	pacman)
 		CMD="pactree"
 		;;
-	apt-dpkg)
+	apt-dpkg|aptitude-dpkg)
 		# FIXME: need fix for a few names case
 		if is_installed $pkg_names ; then
 			showcmd dpkg -s $pkg_names
@@ -2471,6 +2602,7 @@ epm_requires()
 
 # File bin/epm-search:
 
+
 __epm_search_output()
 {
 local CMD
@@ -2478,6 +2610,12 @@ local string="$1"
 case $PMTYPE in
 	apt-rpm|apt-dpkg)
 		CMD="apt-cache search --"
+		;;
+	aptitude-dpkg)
+		CMD="aptitude search --"
+		;;
+	deepsolver-rpm)
+		CMD="ds-require --"
 		;;
 	urpm-rpm)
 		# urpmq does not support --
@@ -2561,17 +2699,17 @@ __epm_search_make_grep()
 	#list=$(strip_spaces $list | sed -e "s/ /|/g")
 	listN=$(strip_spaces $listN | sed -e "s/ /|/g" | sed -e "s/\^//g")
 
-	[ -n "$listN" ] && echo -n " | egrep -i -v -- \"$listN\""
+	[ -n "$listN" ] && echon " | egrep -i -v -- \"$listN\""
 
 	# FIXME: The World has not idea how to do grep both string
 	# http://stackoverflow.com/questions/10110051/grep-with-two-strings-logical-and-in-regex?rq=1
 	for i in $list ; do
 		# FIXME -n on MacOS?
-		echo -n " | egrep -i -- \"$i\""
+		echon " | egrep -i -- \"$i\""
 	done
 
 	if [ "$short" ] ; then
-		echo -n " | sed -e \"s| .*||g\""
+		echon " | sed -e \"s| .*||g\""
 	fi
 
 	# FIXME: move from it
@@ -2583,9 +2721,9 @@ __epm_search_make_grep()
 		[ -n "$COLO" ] && COLO="$COLO|"
 		COLO="$COLO$i"
 	done
-	# FIXME -n on MacOS?
+
 	if [ -n "$list" ] ; then
-		echo -n " | egrep -i --color -- \"($COLO)\""
+		echon " | egrep -i $EGREPCOLOR -- \"($COLO)\""
 	fi
 }
 
@@ -2593,6 +2731,9 @@ __epm_search_make_grep()
 epm_search()
 {
 	[ -n "$pkg_filenames" ] || fatal "Please, use search with some argument"
+
+	# it is useful for first time running
+	update_repo_if_needed
 
 	# FIXME: do it better
 	local MGS
@@ -2633,7 +2774,7 @@ case $PMTYPE in
 	apt-rpm)
 		local_content_search $pkg_filenames
 		return ;;
-	apt-dpkg)
+	apt-dpkg|aptitude-dpkg)
 		assure_exists apt-file
 		sudocmd apt-file update
 		docmd apt-file search $pkg_filenames
@@ -2711,6 +2852,9 @@ _epm_do_simulate()
     case $PMTYPE in
     	apt-rpm|apt-dpkg)
     		CMD="apt-get --simulate install"
+    		;;
+    	aptitude-dpkg)
+    		CMD="aptitude -s install"
     		;;
     	yum-rpm)
     		if __use_yum_assumeno ; then
@@ -2809,6 +2953,9 @@ case $PMTYPE in
 		#sudocmd apt-get -f install || exit
 		#sudocmd apt-get autoremove
 		;;
+	aptitude-dpkg)
+		sudocmd aptitude update || exit
+		;;
 	yum-rpm)
 		sudocmd yum check-update
 		;;
@@ -2851,9 +2998,14 @@ esac
 
 # File bin/epm-upgrade:
 
+
 epm_upgrade()
 {
 	local CMD
+
+	# it is useful for first time running
+	update_repo_if_needed
+
 	echo "Run command for upgrade packages"
 
 	case $PMTYPE in
@@ -2861,6 +3013,9 @@ epm_upgrade()
 		# non_interactive
 		# Функцию добавления параметра при условии
 		CMD="apt-get dist-upgrade"
+		;;
+	aptitude-dpkg)
+		CMD="aptitude dist-upgrade"
 		;;
 	yum-rpm)
 		# can do update repobase automagically
@@ -2943,8 +3098,11 @@ case $PMTYPE in
 	apt-rpm)
 		CMD="apt-cache whatdepends"
 		;;
-	apt-dpkg)
+	apt-dpkg|aptitude-dpkg)
 		CMD="apt-cache rdepends"
+		;;
+	aptitude-dpkg)
+		CMD="aptitude why"
 		;;
 	yum-rpm)
 		CMD="repoquery --whatrequires"
@@ -2973,7 +3131,7 @@ case $PMTYPE in
 	conary)
 		CMD="conary repquery --what-provides"
 		;;
-	apt-rpm|apt-dpkg)
+	apt-rpm|apt-dpkg|aptitude-dpkg)
 		LANG=C docmd apt-get install --print-uris $pkg_filenames | grep "^Selecting" | cut -f2 -d" "
 		return
 		;;
@@ -3326,9 +3484,9 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.4.6"
+        echo "EPM package manager version 1.5.0"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
-        echo "Copyright (c) Etersoft 2012-2013"
+        echo "Copyright (c) Etersoft 2012-2014"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 
@@ -3418,7 +3576,7 @@ check_command()
     -qp|qp|query_package)     # HELPCMD: search in the list of installed packages
         epm_cmd=query_package
         ;;
-    -qf|qf|which|belongs)     # HELPCMD: query package(s) owning file
+    -qf|qf|-S|which|belongs)     # HELPCMD: query package(s) owning file
         epm_cmd=query_file
         ;;
 
@@ -3447,10 +3605,10 @@ check_command()
     -qi|qi|info|show)         # HELPCMD: print package detail info
         epm_cmd=info
         ;;
-    requires|deplist)         # HELPCMD: print package requires
+    requires|deplist|req)     # HELPCMD: print package requires
         epm_cmd=requires
         ;;
-    provides)                 # HELPCMD: print package provides
+    provides|prov)            # HELPCMD: print package provides
         epm_cmd=provides
         ;;
     whatdepends)              # HELPCMD: print packages dependences on that
@@ -3462,11 +3620,14 @@ check_command()
     conflicts)                # HELPCMD: print package conflicts
         epm_cmd=conflicts
         ;;
-    -qa|list|packages|-l|qa)  # HELPCMD: list of installed package(s)
+    -qa|list|packages|-l|qa)  # HELPCMD: print list of installed package(s)
         epm_cmd=packages
         ;;
-    programs)                 # HELPCMD: list of installed GUI program(s)
+    programs)                 # HELPCMD: print list of installed GUI program(s)
         epm_cmd=programs
+        ;;
+    assure)                   # HELPCMD: <command> [package]: install package if command does not exists
+        epm_cmd=assure
         ;;
 
 # Repository control
@@ -3499,13 +3660,13 @@ check_command()
     upgrade|dist-upgrade)     # HELPCMD: performs upgrades of package software distributions
         epm_cmd=upgrade
         ;;
-    Upgrade)                  # HELPCMD: performs update && upgrade command
+    Upgrade)                  # HELPCMD: force update package base, then run upgrade
         epm_cmd=Upgrade
         ;;
-    simulate)                 # HELPCMD: simulate install (it does check requires, minimally)
+    simulate)                 # HELPCMD: simulate install with check requires
         epm_cmd=simulate
         ;;
-    checkpkg|integrity)       # HELPCMD: check package integrity
+    checkpkg|integrity)       # HELPCMD: check package file integrity (checksum)
         epm_cmd=checkpkg
         ;;
 
@@ -3530,7 +3691,7 @@ check_option()
     --verbose)            # HELPOPT: verbose mode
         verbose=1
         ;;
-    --skip-installed)     # HELPOPT: skip already install during install
+    --skip-installed)     # HELPOPT: skip already installed packages during install
         skip_installed=1
         ;;
     --show-command-only)  # HELPOPT: show command only, do not any action (supports install and remove ONLY)
@@ -3584,7 +3745,7 @@ done
 
 # if input is not console, get pkg from it too
 if ! inputisatty ; then
-    for opt in $(cat) ; do
+    for opt in $(timeout 1 cat) ; do
         check_filenames $opt
     done
 fi
@@ -3608,9 +3769,9 @@ fi
 
 # Use eatmydata for write specific operations
 case $epm_cmd in
-    update|upgrade|Upgrade|install|reinstall|Install|remove|kernel_update|release_upgrade|)
+    update|upgrade|Upgrade|install|reinstall|Install|remove|autoremove|kernel_update|release_upgrade|check)
         set_eatmydata
-        break;
+        ;;
 esac
 
 # Run helper for command
