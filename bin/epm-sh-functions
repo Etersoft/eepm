@@ -233,10 +233,15 @@ warning()
 
 info()
 {
-	isatty || return 0
 	[ -n "$quiet" ] && return
 
-	echo "$@"
+	# print message to stderr if stderr forwarded to (a file)
+	if isatty2 ; then
+		isatty || return 0
+		echo "$@"
+	else
+		echo "$@" >&2
+	fi
 }
 
 set_sudo()
