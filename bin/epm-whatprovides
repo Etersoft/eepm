@@ -20,7 +20,7 @@
 epm_whatprovides()
 {
 	local CMD
-	[ -n "$pkg_filenames" ] || fatal "Run query without names"
+	[ -n "$pkg_filenames" ] || fatal "Whatprovides: missing package(s) name"
 
 # by package name
 case $PMTYPE in

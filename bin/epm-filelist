@@ -135,7 +135,7 @@ __epm_filelist_name()
 
 epm_filelist()
 {
-	[ -n "$pkg_filenames" ] || fatal "Run query without names"
+	[ -n "$pkg_filenames" ] || fatal "Filelist: missing package(s) name"
 
 
 	__epm_filelist_file $pkg_files || return

@@ -23,7 +23,9 @@ epm_requires_files()
 {
 	[ -n "$pkg_files" ] || return
 
-	case $(get_package_type $pkg_files) in
+	local PKGTYPE="$(case $(get_package_type $pkg_files))"
+
+	case "$PKGTYPE" in
 		rpm)
 			docmd rpm -q --requires -p $pkg_files
 			;;
@@ -31,7 +33,7 @@ epm_requires_files()
 			a= docmd dpkg -I $pkg_files | grep "^ *Depends:" | sed "s|^ *Depends:||g"
 			;;
 		*)
-			fatal "Have no suitable command for $PMTYPE"
+			fatal "Have no suitable command for $PKGTYPE"
 			;;
 	esac
 }
@@ -92,7 +94,7 @@ docmd $CMD $pkg_names
 
 epm_requires()
 {
-	[ -n "$pkg_filenames" ] || fatal "Run query without names"
+	[ -n "$pkg_filenames" ] || fatal "Requires: missing package(s) name"
 	epm_requires_files
 	epm_requires_names
 }

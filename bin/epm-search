@@ -148,7 +148,7 @@ __epm_search_make_grep()
 
 epm_search()
 {
-	[ -n "$pkg_filenames" ] || fatal "Please, use search with some argument"
+	[ -n "$pkg_filenames" ] || fatal "Search: missing search argument(s)"
 
 	# it is useful for first time running
 	update_repo_if_needed

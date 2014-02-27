@@ -98,7 +98,7 @@ docmd $CMD $pkg_names
 
 epm_conflicts()
 {
-	[ -n "$pkg_filenames" ] || fatal "Run query without names"
+	[ -n "$pkg_filenames" ] || fatal "Conflicts: Missing package(s) name"
 	epm_conflicts_files
 	epm_conflicts_names
 }

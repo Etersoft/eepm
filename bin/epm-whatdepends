@@ -20,7 +20,7 @@
 epm_whatdepends()
 {
 	local CMD
-	[ -n "$pkg_filenames" ] || fatal "Run query without names"
+	[ -n "$pkg_filenames" ] || fatal "Whatdepends: missing package(s) name"
 
 # by package name
 case $PMTYPE in

@@ -72,7 +72,7 @@ epm_checkpkg()
 		return
 	fi
 
-	[ -n "$pkg_files" ] || fatal "Run without names"
+	[ -n "$pkg_files" ] || fatal "Checkpkg: missing file or package name(s)"
 	local pkg
 	for pkg in $pkg_files ; do
 		check_pkg_integrity $pkg || fatal "Broken package $pkg"

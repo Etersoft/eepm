@@ -197,7 +197,7 @@ epm_remove()
 	# get full package name(s) from the package file(s)
 	[ -n "$pkg_files" ] && pkg_names="$pkg_names $(epm query $pkg_files)"
 
-	[ -n "$pkg_names" ] || fatal "Run remove without args"
+	[ -n "$pkg_names" ] || fatal "Remove: missing package(s) name."
 	epm_remove_low $pkg_names && return
 
 	# get package name for hi level package management command (with version if supported and if possible)

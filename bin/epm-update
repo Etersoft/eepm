@@ -21,7 +21,7 @@
 
 epm_update()
 {
-	info "Run command for update remote package repository database"
+	info "Running command for update remote package repository database"
 
 case $PMTYPE in
 	apt-rpm)

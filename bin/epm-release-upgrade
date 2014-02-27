@@ -19,7 +19,7 @@
 
 epm_release_upgrade()
 {
-	info "Start upgrade whole system to the next release"
+	info "Starting upgrade whole system to the next release"
 	info "Check also http://wiki.etersoft.ru/Admin/UpdateLinux"
 
 	case $PMTYPE in

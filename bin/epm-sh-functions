@@ -96,7 +96,7 @@ echon()
 # Used DISTRNAME
 set_target_pkg_env()
 {
-	[ -n "$DISTRNAME" ] || fatal "Run set_target_pkg_env without DISTRNAME"
+	[ -n "$DISTRNAME" ] || fatal "Missing DISTRNAME in set_target_pkg_env."
 	PKGFORMAT=$($DISTRVENDOR -p "$DISTRNAME")
 	PKGVENDOR=$($DISTRVENDOR -s "$DISTRNAME")
 	RPMVENDOR=$($DISTRVENDOR -n "$DISTRNAME")

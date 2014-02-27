@@ -26,7 +26,7 @@ epm_upgrade()
 	# it is useful for first time running
 	update_repo_if_needed
 
-	info "Run command for upgrade packages"
+	info "Running command for upgrade packages"
 
 	case $PMTYPE in
 	apt-rpm|apt-dpkg)

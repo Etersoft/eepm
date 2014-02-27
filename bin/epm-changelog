@@ -104,7 +104,7 @@ __epm_changelog_unlocal_names()
 
 epm_changelog()
 {
-	[ -n "$pkg_filenames" ] || fatal "Run changelog without params"
+	[ -n "$pkg_filenames" ] || fatal "Changelog: Missing package(s) name"
 
 	__epm_changelog_files $pkg_files
 

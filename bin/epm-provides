@@ -93,7 +93,8 @@ docmd $CMD $pkg_names
 
 epm_provides()
 {
-	[ -n "$pkg_filenames" ] || fatal "Run query without names"
+	[ -n "$pkg_filenames" ] || fatal "Provides: missing package(s) name"
+
 	epm_provides_files
 	epm_provides_names
 }

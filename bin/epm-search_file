@@ -21,10 +21,12 @@
 # https://bugzilla.altlinux.org/show_bug.cgi?id=14449
 local_content_search()
 {
+    # TODO: use global get_sysarch function
     local SYSARCH
     SYSARCH=$(uname -m)
     [ "$SYSARCH" = "x86_64" ] || SYSARCH=i586
 
+    # FIXME: use config or/and web url
     local REPODIR=/var/ftp/pub/ALTLinux/Sisyphus
     local CI=$REPODIR/$SYSARCH/base/contents_index
     local CINOA=$REPODIR/noarch/base/contents_index
@@ -43,7 +45,7 @@ local_content_search()
 epm_search_file()
 {
 	local CMD
-	[ -n "$pkg_filenames" ] || fatal "Run search without names"
+	[ -n "$pkg_filenames" ] || fatal "Search file: missing file name(s)"
 
 case $PMTYPE in
 	apt-rpm)

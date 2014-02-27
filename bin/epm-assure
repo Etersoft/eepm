@@ -43,7 +43,7 @@ __epm_assure()
     fi
 
     # TODO: use package name normalization
-    info "Install appropriate package for $1 command..."
+    info "Installing appropriate package for $1 command..."
 
     local PACKAGE="$2"
     [ -n "$PACKAGE" ] || PACKAGE="$1"
@@ -58,7 +58,7 @@ __epm_assure()
 
 epm_assure()
 {
-    [ -n "$pkg_filenames" ] || fatal "Run assure without params"
+    [ -n "$pkg_filenames" ] || fatal "Assure: Missing params. Check $0 --help for info."
 
     # use helper func for extract separate params
     __epm_assure $pkg_filenames

@@ -66,7 +66,7 @@ epm_reinstall_files()
 
 epm_reinstall()
 {
-    [ -n "$pkg_filenames" ] || fatal "Run install without packages"
+    [ -n "$pkg_filenames" ] || fatal "Reinstall: missing package(s) name."
 
     epm_reinstall_names $pkg_names
     epm_reinstall_files $pkg_files
