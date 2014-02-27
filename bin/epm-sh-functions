@@ -281,6 +281,9 @@ assure_exists()
 		apt-file)
 			epm install apt-file
 			;;
+		erc)
+			epm install erc
+			;;
 		update-kernel|remove-old-kernels)
 			epm install update-kernel
 			;;

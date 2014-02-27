@@ -37,11 +37,8 @@ check_pkg_integrity()
 		true
 		;;
 	*)
+		assure_exists erc
 		docmd erc test "$PKG" && return
-		which erc >/dev/null 2>/dev/null && fatal "Check failed."
-		fatal "Install erc package for file package."
-		# TODO
-		epm install erc
 		;;
 	esac
 }
