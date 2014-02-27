@@ -83,10 +83,9 @@ EOF
     		;;
     	zypper-rpm)
     		if ! __use_zypper_dry_run >/dev/null ; then
-    			echo "zypper is too old: does not support --dry-run"
-    			return
+    			fatal "zypper is too old: does not support --dry-run"
     		fi
-    		CMD="zypper --non-interactive install"
+    		CMD="zypper --non-interactive install --dry-run"
     		;;
     	emerge)
     		local res=0
