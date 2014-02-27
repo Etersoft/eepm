@@ -102,12 +102,6 @@ set_target_pkg_env()
 	RPMVENDOR=$($DISTRVENDOR -n "$DISTRNAME")
 }
 
-# for systems without realpath command
-realpath()
-{
-        readlink -f "$@"
-}
-
 # Print command line and run command line
 showcmd()
 {
@@ -237,6 +231,14 @@ warning()
 	fi
 }
 
+info()
+{
+	isatty || return 0
+	[ -n "$quiet" ] && return
+
+	echo "$@"
+}
+
 set_sudo()
 {
 	SUDO=""
@@ -261,7 +263,7 @@ set_eatmydata()
 	# use if possible
 	which eatmydata >/dev/null 2>/dev/null || return
 	SUDO="$SUDO eatmydata"
-	isatty && echo "Uwaga! eatmydata is installed, we will use it for disable all sync operations." >&2
+	info "Uwaga! eatmydata is installed, we will use it for disable all sync operations."
 	return 0
 }
 

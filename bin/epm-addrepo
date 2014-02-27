@@ -25,10 +25,10 @@ case $PMTYPE in
 		sudocmd apt-repo add $pkg_filenames
 		;;
 	apt-dpkg|aptitude-dpkg)
-		echo "You need manually add repo to /etc/apt/sources.list"
+		info "You need manually add repo to /etc/apt/sources.list"
 		;;
 	yum-rpm)
-		echo "You need manually add repo to /etc/yum.repos.d/"
+		info "You need manually add repo to /etc/yum.repos.d/"
 		;;
 	urpm-rpm)
 		sudocmd urpmi.addmedia $pkg_filenames
@@ -40,7 +40,7 @@ case $PMTYPE in
 		sudocmd layman -a $pkg_filenames
 		;;
 	pacman)
-		echo "You need manually add repo to /etc/pacman.conf"
+		info "You need manually add repo to /etc/pacman.conf"
 		# Only for alone packages:
 		#sudocmd repo-add $pkg_filenames
 		;;
@@ -48,7 +48,7 @@ case $PMTYPE in
 		sudocmd npackdcl add-repo --url=$pkg_filenames
 		;;
 	slackpkg)
-		echo "You need manually add repo to /etc/slackpkg/mirrors"
+		info "You need manually add repo to /etc/slackpkg/mirrors"
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"

@@ -36,14 +36,14 @@ __epm_assure()
     if __check_command_in_path "$1" >/dev/null ; then
         if [ -n "$verbose" ] ; then
             local compath="$(__check_command_in_path "$1")"
-            echo "Command $1 is exists: $compath"
+            info "Command $1 is exists: $compath"
             epm qf "$compath"
         fi
         return
     fi
 
     # TODO: use package name normalization
-    echo "Install appropriate package for $1 command..."
+    info "Install appropriate package for $1 command..."
 
     local PACKAGE="$2"
     [ -n "$PACKAGE" ] || PACKAGE="$1"

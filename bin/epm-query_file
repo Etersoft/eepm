@@ -33,7 +33,7 @@ __do_query_real_file()
 	else
 		TOFILE=`which $1 2>/dev/null || echo $1`
 		if [ "$TOFILE" != "$1" ] ; then
-		echo "Note: $1 is placed as $TOFILE"
+			info "Note: $1 is placed as $TOFILE"
 		fi
 	fi
 	
@@ -41,10 +41,11 @@ __do_query_real_file()
 	if [ -L "$TOFILE" ] ; then
 		__do_query $TOFILE
 		LINKTO=`readlink "$TOFILE"`
-		echo "Note: $TOFILE is link to $LINKTO"
+		info "Note: $TOFILE is link to $LINKTO"
 		__do_query_real_file "$LINKTO"
 	fi
-	FULLFILEPATH=`realpath $TOFILE`
+
+	FULLFILEPATH="$TOFILE"
 }
 
 dpkg_print_name_version()
@@ -141,6 +142,7 @@ epm_query_file()
 {
     # in short mode print handle only real names and do short output
     # TODO: move to separate command?
+    # FIXME: it is possible use query
     if [ -n "$short" ] ; then
         [ -n "$pkg_files" ] || fatal "Run query without file names (needed path to files)"
         __do_short_query $pkg_files

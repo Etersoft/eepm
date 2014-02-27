@@ -73,7 +73,7 @@ case $PMTYPE in
 	apt-dpkg)
 		# FIXME: need fix for a few names case
 		if is_installed $pkg_names ; then
-			echo "Please inform the author how to get provides from dpkg"
+			info "Please inform the author how to get provides from dpkg"
 		fi
 		#	CMD="rpm -q --provides"
 		#else

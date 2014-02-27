@@ -19,7 +19,7 @@
 
 epm_kernel_update()
 {
-	echo "Start update system kernel to the latest version"
+	info "Start update system kernel to the latest version"
 
 	case $DISTRNAME in
 	ALTLinux)

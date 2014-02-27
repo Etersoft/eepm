@@ -51,6 +51,6 @@ case $PMTYPE in
 		fatal "Have no suitable command for $PMTYPE"
 		;;
 esac
-	echo "It is recommend to run 'epm autoremove' also"
+	info "It is recommend to run 'epm autoremove' also"
 
 }

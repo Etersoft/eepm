@@ -117,7 +117,7 @@ EOF
     			pkg_filenames="$pkg-[0-9]" epm_search | grep -E "(installed|upgrade)" && continue
     			pkg_filenames="$pkg" epm_search | grep -E "(installed|upgrade)" && continue
     			res=1
-    			echo "Does not found in repository."
+    			info "Does not found in repository."
     		done
     		return $res ;;
     	*)
@@ -130,16 +130,16 @@ EOF
 
 epm_simulate()
 {
-    [ -z "$pkg_filenames" ] && echo "Skip empty list" && return 22
+    [ -z "$pkg_filenames" ] && info "Skip empty list" && return 22
 
     local filenames="$(echo $pkg_filenames | filter_out_installed_packages)"
 
-    [ -z "$filenames" ] && echo "All packages are already installed" && return 0
+    [ -z "$filenames" ] && info "All packages are already installed" && return 0
 
     _epm_do_simulate $filenames
     local RES=$?
     if [ -z "$quiet" ] ; then
-        [ "$RES" = 0 ] && echo "Result: $filenames package(s) CAN BE installed" || echo "Result: There are PROBLEMS with install some package(s)"
+        [ "$RES" = 0 ] && info "Result: $filenames package(s) CAN BE installed" || info "Result: There are PROBLEMS with install some package(s)"
     fi
     return $RES
 }

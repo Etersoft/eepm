@@ -369,12 +369,12 @@ epm_install()
         return
     fi
 
-    [ -n "$pkg_files$pkg_names" ] || { echo "Skip empty install list" ; return 22 ; }
+    [ -z "$pkg_files$pkg_names" ] && info "Skip empty install list" && return 22
 
     local names="$(echo $pkg_names | filter_out_installed_packages)"
     local files="$(echo $pkg_files | filter_out_installed_packages)"
 
-    [ -z "$files$names" ] && echo "Skip empty install list" && return 22
+    [ -z "$files$names" ] && info "Skip empty install list" && return 22
 
     # it is useful for first time running
     update_repo_if_needed

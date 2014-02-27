@@ -25,10 +25,10 @@ case $PMTYPE in
 		sudocmd apt-repo rm $pkg_filenames
 		;;
 	apt-dpkg|aptitude-dpkg)
-		echo "You need remove repo from /etc/apt/sources.list"
+		info "You need remove repo from /etc/apt/sources.list"
 		;;
 	yum-rpm)
-		echo "You need remove repo from /etc/yum.repos.d/"
+		info "You need remove repo from /etc/yum.repos.d/"
 		;;
 	urpm-rpm)
 		sudocmd urpmi.removemedia $pkg_filenames
@@ -40,13 +40,13 @@ case $PMTYPE in
 		sudocmd layman -d$pkg_filenames
 		;;
 	pacman)
-		echo "You need remove repo from /etc/pacman.conf"
+		info "You need remove repo from /etc/pacman.conf"
 		;;
 	npackd)
 		sudocmd npackdcl remove-repo --url=$pkg_filenames
 		;;
 	slackpkg)
-		echo "You need remove repo from /etc/slackpkg/mirrors"
+		info "You need remove repo from /etc/slackpkg/mirrors"
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"

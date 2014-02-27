@@ -19,8 +19,8 @@
 
 epm_release_upgrade()
 {
-	echo "Start upgrade whole system to the next release"
-	echo "Check also http://wiki.etersoft.ru/Admin/UpdateLinux"
+	info "Start upgrade whole system to the next release"
+	info "Check also http://wiki.etersoft.ru/Admin/UpdateLinux"
 
 	case $PMTYPE in
 	apt-rpm)

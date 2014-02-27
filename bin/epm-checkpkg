@@ -70,7 +70,7 @@ esac
 epm_checkpkg()
 {
 	if [ -n "$pkg_names" ] ; then
-		echo "Suggest $pkg_names are names of installed packages"
+		info "Suggest $pkg_names are name(s) of installed packages"
 		__epm_check_installed_pkg $pkg_names
 		return
 	fi

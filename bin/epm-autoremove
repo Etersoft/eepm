@@ -22,8 +22,8 @@ __epm_autoremove_altrpm()
 	local pkg
 	local flag=
 	load_helper epm-packages
-	echo
-	echo "Just remove all non -devel libs packages not need by anything"
+	info
+	info "Just remove all non -devel libs packages not need by anything"
 	for pkg in $(short=1 pkg_filenames= epm_packages | grep -- "^lib" | grep -v -- "-devel$" | grep -v -- ^libreoffice ) ; do
 		sudocmd rpm -v -e $pkg && flag=1
 	done
