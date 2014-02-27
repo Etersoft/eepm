@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012  Etersoft
-# Copyright (C) 2012  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2014  Etersoft
+# Copyright (C) 2012, 2014  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -267,30 +267,23 @@ set_eatmydata()
 	return 0
 }
 
-assure_exists()
+# 
+__get_package_for_command()
 {
-	PATH=$PATH:/sbin:/usr/sbin which $1 2>/dev/null >/dev/null && return
-	echo "Install appropriate package for $1 command..."
-	case $1 in
+	case "$1" in
 		equery|revdep-rebuild)
-			epm install gentoolkit
-			;;
-		apt-repo)
-			epm install apt-repo
-			;;
-		apt-file)
-			epm install apt-file
-			;;
-		erc)
-			epm install erc
+			echo 'gentoolkit'
 			;;
 		update-kernel|remove-old-kernels)
-			epm install update-kernel
-			;;
-		*)
-			fatal "Internal error: Unknown binary $1 to check if exists"
+			echo 'update-kernel'
 			;;
 	esac
+}
+
+assure_exists()
+{
+	load_helper epm-assure
+	__epm_assure "$1" $(__get_package_for_command "$1")
 }
 
 # improve
