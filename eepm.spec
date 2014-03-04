@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.5.0
+Version: 1.5.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -64,6 +64,12 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Wed Mar 05 2014 Vitaly Lipatov <lav@altlinux.ru> 1.5.1-alt1
+- epm: check real file detection
+- checkpkg: use assure for erc
+- simulate: add missed --dry-run for zypper
+- epm-check_updated: fix if perms is unsufficient
+
 * Wed Feb 26 2014 Vitaly Lipatov <lav@altlinux.ru> 1.5.0-alt1
 - distr_info: add Android detection
 - add initial android support
