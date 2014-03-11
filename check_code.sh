@@ -4,4 +4,4 @@
 # https://wiki.ubuntu.com/DashAsBinSh
 
 checkbashisms -f bin/*
-checkbashisms -f Makefile eepm.spec
+checkbashisms -f Makefile
