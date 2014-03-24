@@ -25,7 +25,8 @@ epm_reinstall_names()
 	[ -n "$1" ] || return
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
-			sudocmd apt-get --reinstall install $@
+			local APTOPTIONS="$(subst_option non_interactive -y)"
+			sudocmd apt-get --reinstall $APTOPTIONS install $@
 			return ;;
 		aptitude-dpkg)
 			sudocmd aptitude reinstall $@
