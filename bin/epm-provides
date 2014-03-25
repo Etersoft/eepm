@@ -23,7 +23,9 @@ epm_provides_files()
 {
 	[ -n "$pkg_files" ] || return
 
-	case $(get_package_type $pkg_files) in
+	local PKGTYPE="$(get_package_type $pkg_files)"
+
+	case $PKGTYPE in
 		rpm)
 			docmd rpm -q --provides -p $pkg_files
 			;;
