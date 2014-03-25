@@ -23,7 +23,7 @@ epm_requires_files()
 {
 	[ -n "$pkg_files" ] || return
 
-	local PKGTYPE="$(case $(get_package_type $pkg_files))"
+	local PKGTYPE="$(get_package_type $pkg_files)"
 
 	case "$PKGTYPE" in
 		rpm)
