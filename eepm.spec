@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.5.1
+Version: 1.5.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -64,6 +64,11 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Tue Mar 25 2014 Vitaly Lipatov <lav@altlinux.ru> 1.5.2-alt1
+- use repolist for get local repo path
+- support --auto for reinstall
+- epm-requires: fix typo
+
 * Wed Mar 05 2014 Vitaly Lipatov <lav@altlinux.ru> 1.5.1-alt1
 - epm: check real file detection
 - checkpkg: use assure for erc
