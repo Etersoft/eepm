@@ -30,7 +30,12 @@ serv_common()
 			sudocmd /etc/init.d/$SERVICE "$@"
 			;;
 		systemd)
-			sudocmd systemctl "$@" $SERVICE
+			# run init script directly (for nonstandart commands)
+			if [ -x /etc/init.d/$SERVICE ] ; then
+				sudocmd /etc/init.d/$SERVICE "$@"
+			else
+				sudocmd systemctl "$@" $SERVICE
+			fi
 			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
