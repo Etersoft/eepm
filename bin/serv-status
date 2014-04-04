@@ -25,7 +25,7 @@ is_service_running()
 			$SUDO service $1 status >/dev/null
 			;;
 		service-initd|service-update)
-			$SUDO /etc/init.d/$1 status >/dev/null
+			$SUDO $INITDIR/$1 status >/dev/null
 			;;
 		systemd)
 			$SUDO systemctl status $1 >/dev/null
@@ -67,7 +67,7 @@ serv_status()
 			sudocmd service $SERVICE status "$@"
 			;;
 		service-update)
-			sudocmd /etc/init.d/$SERVICE status "$@"
+			sudocmd $INITDIR/$SERVICE status "$@"
 			;;
 		systemd)
 			sudocmd systemctl status $SERVICE "$@"

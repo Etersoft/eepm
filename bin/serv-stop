@@ -28,7 +28,7 @@ serv_stop()
 			sudocmd service $SERVICE stop "$@"
 			;;
 		service-initd|service-update)
-			sudocmd /etc/init.d/$SERVICE stop "$@"
+			sudocmd $INITDIR/$SERVICE stop "$@"
 			;;
 		systemd)
 			sudocmd systemctl stop $SERVICE "$@"

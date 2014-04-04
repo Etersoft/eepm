@@ -32,6 +32,8 @@ load_helper()
 
 load_helper epm-sh-functions
 
+INITDIR=/etc/init.d
+
 PATH=$PATH:/sbin:/usr/sbin
 
 set_sudo

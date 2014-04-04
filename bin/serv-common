@@ -27,12 +27,12 @@ serv_common()
 			sudocmd service $SERVICE "$@"
 			;;
 		service-initd|service-update)
-			sudocmd /etc/init.d/$SERVICE "$@"
+			sudocmd $INITDIR/$SERVICE "$@"
 			;;
 		systemd)
 			# run init script directly (for nonstandart commands)
-			if [ -x /etc/init.d/$SERVICE ] ; then
-				sudocmd /etc/init.d/$SERVICE "$@"
+			if [ -x $INITDIR/$SERVICE ] ; then
+				sudocmd $INITDIR/$SERVICE "$@"
 			else
 				sudocmd systemctl "$@" $SERVICE
 			fi
@@ -41,5 +41,4 @@ serv_common()
 			fatal "Have no suitable command for $SERVICETYPE"
 			;;
 	esac
-
 }

@@ -32,7 +32,7 @@ serv_try_restart()
 			;;
 		service-initd|service-update)
 			is_service_running $SERVICE || return 0
-			sudocmd /etc/init.d/$SERVICE restart "$@"
+			sudocmd $INITDIR/$SERVICE restart "$@"
 			;;
 		systemd)
 			sudocmd systemctl try-restart $SERVICE "$@"
