@@ -288,7 +288,9 @@ __get_package_for_command()
 assure_exists()
 {
 	load_helper epm-assure
-	__epm_assure "$1" $(__get_package_for_command "$1")
+	local package="$2"
+	[ -n "$package" ] || package="$(__get_package_for_command "$1")"
+	__epm_assure "$1" $package
 }
 
 # improve

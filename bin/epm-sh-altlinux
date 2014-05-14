@@ -23,7 +23,7 @@ get_local_alt_contents_index()
 {
     load_helper epm-repolist
 
-    epm_repolist | grep "rpm file:/" | sed -e "s|^rpm file:||g" | while read URL ARCH other ; do
+    epm_repolist | grep "rpm.*file:/" | sed -e "s|^rpm.*file:||g" | while read URL ARCH other ; do
         test -d "$URL/$ARCH" || continue # fatal "Local mirror is not accessible via $URL/$ARCH"
         FILE="$URL/$ARCH/base/contents_index"
         if [ -r "$FILE" ] ; then

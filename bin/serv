@@ -241,6 +241,7 @@ if [ -z "$withoutservicename" ] && [ -z "$service_name" ] ; then
     fatal "Run $ $progname --help for get help"
 fi
 
+# use common way if the command is unknown
 if [ -z "$serv_cmd" ] ; then
     serv_cmd=common
 fi

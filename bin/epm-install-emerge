@@ -55,6 +55,7 @@ __emerge_install_ebuild()
 
 	# copy tarballs
 	local DDIR=/usr/portage/distfiles
+	# FIXME: use independent dir
 	[ -d /var/calculate/remote/distfiles ] && DDIR=/var/calculate/remote/distfiles
 	docmd cp -f $TARBALLS $DDIR/ || return
 
