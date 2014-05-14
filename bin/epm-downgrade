@@ -1,0 +1,69 @@
+#!/bin/sh
+#
+# Copyright (C) 2012,2014  Etersoft
+# Copyright (C) 2012,2014  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+load_helper epm-check_updated_repo
+
+__epm_add_apt_downgrade_preferences()
+{
+	[ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists"
+	cat <<EOF | $SUDO tee /etc/apt/preferences
+Package: *
+Pin: release c=$1
+Pin-Priority: 1001
+EOF
+}
+
+__epm_remove_apt_downgrade_preferences()
+{
+	sudocmd rm -f /etc/apt/preferences
+}
+
+epm_downgrade()
+{
+	local CMD
+
+	# it is useful for first time running
+	update_repo_if_needed
+
+	info "Running command for downgrade packages"
+
+	case $PMTYPE in
+	apt-rpm)
+		__epm_add_apt_downgrade_preferences classic || return
+		sudocmd apt-get dist-upgrade
+		__epm_remove_apt_downgrade_preferences
+		;;
+	apt-dpkg)
+		__epm_add_apt_downgrade_preferences testing || return
+		sudocmd apt-get dist-upgrade
+		__epm_remove_apt_downgrade_preferences
+		;;
+	yum-rpm)
+		# can do update repobase automagically
+		sudocmd yum downgrade $pkg_filename
+		;;
+	urpm-rpm)
+		assure_exists urpm-reposync urpm-tools
+		sudocmd urpm-reposync -v
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+	esac
+}

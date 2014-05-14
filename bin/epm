@@ -235,6 +235,9 @@ check_command()
     Upgrade)                  # HELPCMD: force update package base, then run upgrade
         epm_cmd=Upgrade
         ;;
+    downgrade)                # HELPCMD: downgrade [all] packages to the repo state
+        epm_cmd=downgrade
+        ;;
     simulate)                 # HELPCMD: simulate install with check requires
         epm_cmd=simulate
         ;;
