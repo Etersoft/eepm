@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.5.2
+Version: 1.5.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -64,6 +64,11 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Wed May 28 2014 Vitaly Lipatov <lav@altlinux.ru> 1.5.3-alt1
+- prefer to use init script directly
+- introduce downgrade command
+- use correct datadir
+
 * Tue Mar 25 2014 Vitaly Lipatov <lav@altlinux.ru> 1.5.2-alt1
 - use repolist for get local repo path
 - support --auto for reinstall
