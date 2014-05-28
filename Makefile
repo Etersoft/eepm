@@ -1,7 +1,7 @@
 
 pkgdatadir=$(datadir)/eepm
 # due using %makeinstallstd in spec
-instpkgdatadir=/usr/share/eepm
+instpkgdatadir=$(pkgdatadir)
 
 install:
 	mkdir -p $(DESTDIR)$(bindir)/

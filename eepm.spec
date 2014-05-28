@@ -39,7 +39,7 @@ See detailed description here: http://wiki.etersoft.ru/EPM
 
 %install
 # install to datadir and so on
-%makeinstall version=%version-%release
+%makeinstall_std datadir=%_datadir bindir=%_bindir mandir=%_mandir version=%version-%release
 install -m 0755 packed/epm.sh %buildroot/%_datadir/%name/epm-packed.sh
 install -m 0755 packed/serv.sh %buildroot/%_datadir/%name/serv-packed.sh
 
