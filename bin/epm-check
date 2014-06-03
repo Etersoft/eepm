@@ -23,7 +23,7 @@ case $PMTYPE in
 	apt-rpm|apt-dpkg)
 		#sudocmd apt-get check || exit
 		#sudocmd apt-get update || exit
-		sudocmd apt-get -f install || exit
+		sudocmd apt-get -f install
 		;;
 	apt-dpkg)
 		#sudocmd apt-get update || exit
