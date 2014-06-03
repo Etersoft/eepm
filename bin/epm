@@ -241,6 +241,9 @@ check_command()
     simulate)                 # HELPCMD: simulate install with check requires
         epm_cmd=simulate
         ;;
+    audit)                    # HELPCMD: audits installed packages against known vulnerabilities
+        epm_cmd=audit
+        ;;
     -V|checkpkg|integrity)    # HELPCMD: check package file integrity (checksum)
         epm_cmd=checkpkg
         ;;
