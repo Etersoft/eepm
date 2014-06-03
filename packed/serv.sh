@@ -108,15 +108,10 @@ echon()
 
 set_target_pkg_env()
 {
-	[ -n "$DISTRNAME" ] || fatal "Run set_target_pkg_env without DISTRNAME"
+	[ -n "$DISTRNAME" ] || fatal "Missing DISTRNAME in set_target_pkg_env."
 	PKGFORMAT=$($DISTRVENDOR -p "$DISTRNAME")
 	PKGVENDOR=$($DISTRVENDOR -s "$DISTRNAME")
 	RPMVENDOR=$($DISTRVENDOR -n "$DISTRNAME")
-}
-
-realpath()
-{
-        readlink -f "$@"
 }
 
 showcmd()
@@ -234,6 +229,19 @@ warning()
 	fi
 }
 
+info()
+{
+	[ -n "$quiet" ] && return
+
+	# print message to stderr if stderr forwarded to (a file)
+	if isatty2 ; then
+		isatty || return 0
+		echo "$@"
+	else
+		echo "$@" >&2
+	fi
+}
+
 set_sudo()
 {
 	SUDO=""
@@ -258,31 +266,28 @@ set_eatmydata()
 	# use if possible
 	which eatmydata >/dev/null 2>/dev/null || return
 	SUDO="$SUDO eatmydata"
-	isatty && echo "Uwaga! eatmydata is installed, we will use it for disable all sync operations." >&2
+	info "Uwaga! eatmydata is installed, we will use it for disable all sync operations."
 	return 0
+}
+
+__get_package_for_command()
+{
+	case "$1" in
+		equery|revdep-rebuild)
+			echo 'gentoolkit'
+			;;
+		update-kernel|remove-old-kernels)
+			echo 'update-kernel'
+			;;
+	esac
 }
 
 assure_exists()
 {
-	PATH=$PATH:/sbin:/usr/sbin which $1 2>/dev/null >/dev/null && return
-	echo "Install appropriate package for $1 command..."
-	case $1 in
-		equery|revdep-rebuild)
-			epm install gentoolkit
-			;;
-		apt-repo)
-			epm install apt-repo
-			;;
-		apt-file)
-			epm install apt-file
-			;;
-		update-kernel|remove-old-kernels)
-			epm install update-kernel
-			;;
-		*)
-			fatal "Internal error: Unknown binary $1 to check if exists"
-			;;
-	esac
+	load_helper epm-assure
+	local package="$2"
+	[ -n "$package" ] || package="$(__get_package_for_command "$1")"
+	__epm_assure "$1" $package
 }
 
 get_package_type()
@@ -295,6 +300,14 @@ get_package_type()
 			;;
 		*.rpm)
 			echo "rpm"
+			return
+			;;
+		*.txz)
+			echo "txz"
+			return
+			;;
+		*.tbz)
+			echo "tbz"
 			return
 			;;
 		*)
@@ -349,6 +362,7 @@ case $DISTRNAME in
 		;;
 	FreeBSD|NetBSD|OpenBSD|Solaris)
 		CMD="pkgsrc"
+		which pkg 2>/dev/null >/dev/null && CMD=pkgng
 		;;
 	Gentoo)
 		CMD="emerge"
@@ -403,16 +417,20 @@ serv_common()
 			sudocmd service $SERVICE "$@"
 			;;
 		service-initd|service-update)
-			sudocmd /etc/init.d/$SERVICE "$@"
+			sudocmd $INITDIR/$SERVICE "$@"
 			;;
 		systemd)
-			sudocmd systemctl "$@" $SERVICE
+			# run init script directly (for nonstandart commands)
+			if [ -x $INITDIR/$SERVICE ] ; then
+				sudocmd $INITDIR/$SERVICE "$@"
+			else
+				sudocmd systemctl "$@" $SERVICE
+			fi
 			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
 			;;
 	esac
-
 }
 
 # File bin/serv-disable:
@@ -498,7 +516,7 @@ serv_list_all()
 			sudocmd chkconfig --list | cut -f1
 			;;
 		service-initd|service-update)
-			sudocmd ls -1 /etc/init.d/* | sed -e "s|/etc/init.d/||g" | grep -v README
+			sudocmd ls $INITDIR/ | grep -v README
 			;;
 		systemd)
 			sudocmd systemctl list-unit-files $@
@@ -537,7 +555,7 @@ serv_start()
 			sudocmd service $SERVICE start "$@"
 			;;
 		service-initd|service-update)
-			sudocmd /etc/init.d/$SERVICE start "$@"
+			sudocmd $INITDIR/$SERVICE start "$@"
 			;;
 		systemd)
 			sudocmd systemctl start "$SERVICE" "$@"
@@ -557,7 +575,7 @@ is_service_running()
 			$SUDO service $1 status >/dev/null
 			;;
 		service-initd|service-update)
-			$SUDO /etc/init.d/$1 status >/dev/null
+			$SUDO $INITDIR/$1 status >/dev/null
 			;;
 		systemd)
 			$SUDO systemctl status $1 >/dev/null
@@ -598,7 +616,7 @@ serv_status()
 			sudocmd service $SERVICE status "$@"
 			;;
 		service-update)
-			sudocmd /etc/init.d/$SERVICE status "$@"
+			sudocmd $INITDIR/$SERVICE status "$@"
 			;;
 		systemd)
 			sudocmd systemctl status $SERVICE "$@"
@@ -621,7 +639,7 @@ serv_stop()
 			sudocmd service $SERVICE stop "$@"
 			;;
 		service-initd|service-update)
-			sudocmd /etc/init.d/$SERVICE stop "$@"
+			sudocmd $INITDIR/$SERVICE stop "$@"
 			;;
 		systemd)
 			sudocmd systemctl stop $SERVICE "$@"
@@ -647,7 +665,7 @@ serv_try_restart()
 			;;
 		service-initd|service-update)
 			is_service_running $SERVICE || return 0
-			sudocmd /etc/init.d/$SERVICE restart "$@"
+			sudocmd $INITDIR/$SERVICE restart "$@"
 			;;
 		systemd)
 			sudocmd systemctl try-restart $SERVICE "$@"
@@ -1003,6 +1021,8 @@ esac
 
 }
 
+INITDIR=/etc/init.d
+
 PATH=$PATH:/sbin:/usr/sbin
 
 set_sudo
@@ -1092,7 +1112,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.5.0"
+        echo "Service manager version 1.5.4"
         echo "Running on $($DISTRVENDOR)"
         echo "Copyright (c) Etersoft 2012, 2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -1210,6 +1230,7 @@ if [ -z "$withoutservicename" ] && [ -z "$service_name" ] ; then
     fatal "Run $ $progname --help for get help"
 fi
 
+# use common way if the command is unknown
 if [ -z "$serv_cmd" ] ; then
     serv_cmd=common
 fi
