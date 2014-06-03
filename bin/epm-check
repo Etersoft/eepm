@@ -56,6 +56,9 @@ case $PMTYPE in
 	conary)
 		sudocmd conary verify
 		;;
+	pkgng)
+		sudocmd pkg check -d -a
+		;;
 	homebrew)
 		sudocmd brew doctor
 		;;

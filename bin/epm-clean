@@ -47,6 +47,9 @@ case $PMTYPE in
 		;;
 	slackpkg)
 		;;
+	pkgng)
+		sudo pkg clean
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;

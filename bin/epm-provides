@@ -72,6 +72,9 @@ case $PMTYPE in
 #	yum-rpm)
 #		CMD="yum deplist"
 #		;;
+	pkgng)
+		CMD="pkg info -b"
+		;;
 	apt-dpkg)
 		# FIXME: need fix for a few names case
 		if is_installed $pkg_names ; then

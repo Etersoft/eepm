@@ -306,6 +306,14 @@ get_package_type()
 			echo "rpm"
 			return
 			;;
+		*.txz)
+			echo "txz"
+			return
+			;;
+		*.tbz)
+			echo "tbz"
+			return
+			;;
 		*)
 			#fatal "Don't know type of $1"
 			# return package name for info
@@ -361,6 +369,7 @@ case $DISTRNAME in
 		;;
 	FreeBSD|NetBSD|OpenBSD|Solaris)
 		CMD="pkgsrc"
+		which pkg 2>/dev/null >/dev/null && CMD=pkgng
 		;;
 	Gentoo)
 		CMD="emerge"

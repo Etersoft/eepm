@@ -146,8 +146,13 @@ __epm_query_name()
 			warning "fix query"
 			return 1
 			;;
+		# TODO: need to print name if exists
+		#pkgng)
+		#	CMD="pkg info -e"
+		#	;;
 		# Note: slackpkg info pkgname
 		*)
+			# default slow workaround
 			_query_via_packages_list $@
 			return
 			;;

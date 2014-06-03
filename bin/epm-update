@@ -69,6 +69,10 @@ case $PMTYPE in
 	ipkg)
 		sudocmd ipkg update
 		;;
+	pkgsrc)
+		# portsnap extract for the first time?
+		sudocmd portsnap fetch update
+		;;
 	*)
 		fatal "Have no suitable update command for $PMTYPE"
 		;;

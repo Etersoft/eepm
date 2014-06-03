@@ -86,6 +86,9 @@ __do_query()
         pacman)
             CMD="pacman -Qo"
             ;;
+        pkgng)
+            CMD="pkg which"
+            ;;
         conary)
             CMD="conary query --path"
             ;;

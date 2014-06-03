@@ -59,6 +59,17 @@ case $PMTYPE in
 		;;
 	pkgsrc)
 		CMD="pkg_info"
+		docmd $CMD | sed -e "s| .*||g"
+		return
+		;;
+	pkgng)
+		CMD="pkg info -E $pkg_filenames"
+		if [ -n "$short" ] ; then
+		    docmd $CMD | sed -e "s| .*||g" | sed -e "s|-[0-9].*||g"
+		else
+		    docmd $CMD | sed -e "s| .*||g"
+		fi
+		return
 		;;
 	pacman)
 		CMD="pacman -Qs $pkg_filenames"

@@ -40,6 +40,9 @@ case $PMTYPE in
 		assure_exists equery
 		CMD="equery depends -a"
 		;;
+	pkgng)
+		CMD="pkg info -r"
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;

@@ -106,6 +106,9 @@ epm_install_names()
 		pkgsrc)
 			sudocmd pkg_add -r $@
 			return ;;
+		pkgng)
+			sudocmd pkg install $@
+			return ;;
 		emerge)
 			sudocmd emerge -uD $@
 			return ;;
@@ -184,6 +187,9 @@ epm_ni_install_names()
 			return ;;
 		pkgsrc)
 			sudocmd pkg_add -r $@
+			return ;;
+		pkgng)
+			sudocmd pkg install -y $@
 			return ;;
 		emerge)
 			sudocmd emerge -uD $@
@@ -299,6 +305,17 @@ epm_install_files()
         pkgsrc)
             sudocmd pkg_add $@
             return ;;
+        pkgng)
+            local PKGTYPE="$(get_package_type $@)"
+            case "$PKGTYPE" in
+                tbz)
+                    sudocmd pkg_add $@
+                    ;;
+                *)
+                    sudocmd pkg add $@
+                    ;;
+            esac
+            return ;;
         android)
             sudocmd pm install $@
             return ;;
@@ -335,6 +352,9 @@ epm_print_install_command()
             ;;
         pkgsrc)
             echo "pkg_add $@"
+            ;;
+        pkgng)
+            echo "pkg add $@"
             ;;
         emerge)
             # need be placed in /usr/portage/packages/somewhere

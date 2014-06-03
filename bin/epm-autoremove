@@ -79,6 +79,9 @@ case $PMTYPE in
 	guix)
 		sudocmd guix gc
 		;;
+	pkgng)
+		sudocmd pkg autoremove
+		;;
 	#zypper-rpm)
 	#	sudocmd zypper clean
 	#	;;

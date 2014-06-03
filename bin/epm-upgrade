@@ -66,6 +66,9 @@ epm_upgrade()
 	pkgsrc)
 		CMD="freebsd-update fetch install"
 		;;
+	pkgng)
+		CMD="pkg upgrade"
+		;;
 	chocolatey)
 		CMD="chocolatey update all"
 		;;

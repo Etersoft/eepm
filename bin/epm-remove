@@ -33,6 +33,9 @@ epm_remove_low()
 		pkgsrc)
 			sudocmd pkg_delete -r $@
 			return ;;
+		pkgng)
+			sudocmd pkg delete -R $@
+			return ;;
 		emerge)
 			sudocmd emerge --unmerge $@
 			return ;;
@@ -68,6 +71,9 @@ epm_remove_names()
 			return ;;
 		pkgsrc) # without dependencies
 			sudocmd pkg_delete $@
+			return ;;
+		pkgng)
+			sudocmd pkg delete -R $@
 			return ;;
 		emerge)
 			#sudocmd emerge --unmerge $@
@@ -149,6 +155,9 @@ epm_remove_nonint()
 		slackpkg)
 			sudocmd /usr/sbin/slackpkg -batch=on -default_answer=yes remove $@
 			return ;;
+		pkgng)
+			sudocmd pkg delete -y -R $@
+			return ;;
 		ipkg)
 			sudocmd ipkg -force-defaults remove $@
 			return ;;
@@ -167,6 +176,9 @@ epm_print_remove_command()
 			;;
 		pkgsrc)
 			echo "pkg_delete -r $@"
+			;;
+		pkgng)
+			echo "pkg delete -R $@"
 			;;
 		pacman)
 			echo "pacman -R $@"

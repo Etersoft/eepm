@@ -82,6 +82,10 @@ case $PMTYPE in
 		assure_exists equery
 		CMD="equery depgraph"
 		;;
+	pkgng)
+		#CMD="pkg rquery '%dn-%dv'"
+		CMD="pkg info -d"
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;

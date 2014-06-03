@@ -40,6 +40,9 @@ case $PMTYPE in
 	pkgsrc)
 		CMD="pkg_info -x --"
 		;;
+	pkgng)
+		CMD="pkg search -i --"
+		;;
 	emerge)
 		CMD="emerge --search --"
 		;;

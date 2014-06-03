@@ -113,6 +113,9 @@ __epm_filelist_name()
 			assure_exists equery
 			CMD="equery files"
 			;;
+		pkgng)
+			CMD="pkg info -l"
+			;;
 		slackpkg)
 			is_installed $pkg_names || fatal "Query filelist for non installed packages does not realized"
 			docmd awk 'BEGIN{desk=1}{if(/^FILE LIST:$/){desk=0} else if (desk==0) {print}}' /var/log/packages/${pkg_filenames}* | less
