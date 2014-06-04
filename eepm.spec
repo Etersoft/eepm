@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.5.3
+Version: 1.5.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -64,6 +64,10 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Wed Jun 04 2014 Vitaly Lipatov <lav@altlinux.ru> 1.5.4-alt1
+- add initial support for FreeBSD's pkgng
+- add audit command for check installed packages against known vulnerabilities
+
 * Wed May 28 2014 Vitaly Lipatov <lav@altlinux.ru> 1.5.3-alt1
 - prefer to use init script directly
 - introduce downgrade command
