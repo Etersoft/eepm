@@ -63,7 +63,11 @@ case $PMTYPE in
 		return
 		;;
 	pkgng)
-		CMD="pkg info -E $pkg_filenames"
+		if [ -n "$pkg_filenames" ] ; then
+			CMD="pkg info -E $pkg_filenames"
+		else
+			CMD="pkg info"
+		fi
 		if [ -n "$short" ] ; then
 		    docmd $CMD | sed -e "s| .*||g" | sed -e "s|-[0-9].*||g"
 		else
