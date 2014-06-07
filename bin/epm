@@ -324,7 +324,7 @@ done
 
 # if input is not console, get pkg from it too
 if ! inputisatty ; then
-    for opt in $(timeout 1 cat 2>/dev/null) ; do
+    for opt in $(withtimeout 1 cat) ; do
         check_filenames $opt
     done
 fi
