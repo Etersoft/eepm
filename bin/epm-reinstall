@@ -34,6 +34,9 @@ epm_reinstall_names()
 		dnf-rpm)
 			sudocmd dnf reinstall $@
 			return ;;
+		pkgng)
+			sudocmf pkg install -f $@
+			return ;;
 		slackpkg)
 			sudocmd_foreach "/usr/sbin/slackpkg reinstall" $@
 			return ;;
