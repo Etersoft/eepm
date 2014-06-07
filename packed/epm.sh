@@ -261,6 +261,12 @@ set_sudo()
 	SUDO="fatal 'Can't find sudo. Please install sudo or run epm under root.'"
 }
 
+withtimeout()
+{
+	local TO=$(which timeout 2>/dev/null || which gtimeout 2>/dev/null)
+	[ -n "$TO" ] && $TO $@ || $@
+}
+
 set_eatmydata()
 {
 	# skip if disabled
@@ -866,7 +872,7 @@ case $PMTYPE in
 	slackpkg)
 		;;
 	pkgng)
-		sudo pkg clean
+		sudocmd pkg clean -a
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -1775,7 +1781,11 @@ case $PMTYPE in
 		return
 		;;
 	pkgng)
-		CMD="pkg info -E $pkg_filenames"
+		if [ -n "$pkg_filenames" ] ; then
+			CMD="pkg info -E $pkg_filenames"
+		else
+			CMD="pkg info"
+		fi
 		if [ -n "$short" ] ; then
 		    docmd $CMD | sed -e "s| .*||g" | sed -e "s|-[0-9].*||g"
 		else
@@ -1835,11 +1845,19 @@ docmd $CMD
 
 epm_programs()
 {
-	local DESKTOPDIR=/usr/share/applications
+	case $DISTRNAME in
+		FreeBSD|NetBSD|OpenBSD|Solaris)
+			local DESKTOPDIR=/usr/local/share/applications
+			;;
+		*)
+			local DESKTOPDIR=/usr/share/applications
+			;;
+	esac
+
 	[ -d "$DESKTOPDIR" ] || fatal "There is no $DESKTOPDIR dir on the system."
 	#find /usr/share/applications -type f -name "*.desktop" | while read f; do pkg_files="$f" quiet=1 short=1 epm_query_file ; done | sort -u
 	showcmd "find $DESKTOPDIR -type f -name "*.desktop" | xargs $0 -qf --quiet --short | sort -u"
-	find /usr/share/applications -type f -name "*.desktop" | \
+	find $DESKTOPDIR -type f -name "*.desktop" | \
 		xargs $0 -qf --quiet --short | sort -u
 }
 
@@ -2266,6 +2284,9 @@ epm_reinstall_names()
 			return ;;
 		dnf-rpm)
 			sudocmd dnf reinstall $@
+			return ;;
+		pkgng)
+			sudocmf pkg install -f $@
 			return ;;
 		slackpkg)
 			sudocmd_foreach "/usr/sbin/slackpkg reinstall" $@
@@ -3667,7 +3688,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.5.4"
+        echo "EPM package manager version 1.5.5"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2014"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -3935,7 +3956,7 @@ done
 
 # if input is not console, get pkg from it too
 if ! inputisatty ; then
-    for opt in $(timeout 1 cat 2>/dev/null) ; do
+    for opt in $(withtimeout 1 cat) ; do
         check_filenames $opt
     done
 fi

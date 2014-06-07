@@ -259,6 +259,12 @@ set_sudo()
 	SUDO="fatal 'Can't find sudo. Please install sudo or run epm under root.'"
 }
 
+withtimeout()
+{
+	local TO=$(which timeout 2>/dev/null || which gtimeout 2>/dev/null)
+	[ -n "$TO" ] && $TO $@ || $@
+}
+
 set_eatmydata()
 {
 	# skip if disabled
@@ -1112,7 +1118,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.5.4"
+        echo "Service manager version 1.5.5"
         echo "Running on $($DISTRVENDOR)"
         echo "Copyright (c) Etersoft 2012, 2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
