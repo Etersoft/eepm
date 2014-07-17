@@ -34,6 +34,7 @@ __epm_changelog_files()
 	# TODO: detect every file
 	case $(get_package_type $1) in
 		rpm)
+			assure_exists rpm
 			docmd_foreach "rpm -p --changelog" $@ | less
 			;;
 #		deb)

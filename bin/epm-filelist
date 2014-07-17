@@ -64,9 +64,11 @@ __epm_filelist_file()
 	# TODO: allow a new packages
 	case $(get_package_type $1) in
 		rpm)
+			assure_exists rpm
 			CMD="rpm -qlp"
 			;;
 		deb)
+			assure_exists dpkg
 			CMD="dpkg --contents"
 			;;
 		*)

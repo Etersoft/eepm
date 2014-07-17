@@ -27,9 +27,11 @@ epm_requires_files()
 
 	case "$PKGTYPE" in
 		rpm)
+			assure_exists rpm
 			docmd rpm -q --requires -p $pkg_files
 			;;
 		deb)
+			assure_exists dpkg
 			a= docmd dpkg -I $pkg_files | grep "^ *Depends:" | sed "s|^ *Depends:||g"
 			;;
 		*)

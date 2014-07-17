@@ -27,9 +27,11 @@ epm_provides_files()
 
 	case $PKGTYPE in
 		rpm)
+			assure_exists rpm
 			docmd rpm -q --provides -p $pkg_files
 			;;
 		deb)
+			assure_exists dpkg
 			# FIXME: will we provide ourself?
 			docmd dpkg -I $pkg_files | grep "^ *Provides:" | sed "s|^ *Provides:||g"
 			;;

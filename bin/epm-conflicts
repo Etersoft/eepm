@@ -25,6 +25,7 @@ epm_conflicts_files()
 
 	case $(get_package_type $pkg_files) in
 		rpm)
+			assure_exists rpm
 			docmd "rpm -q --conflicts -p" $pkg_files
 			;;
 		#deb)
