@@ -611,6 +611,7 @@ __epm_changelog_files()
 	# TODO: detect every file
 	case $(get_package_type $1) in
 		rpm)
+			assure_exists rpm
 			docmd_foreach "rpm -p --changelog" $@ | less
 			;;
 		*)
@@ -755,9 +756,11 @@ check_pkg_integrity()
 
 	case $(get_package_type $PKG) in
 	rpm)
+		assure_exists rpm
 		docmd rpm --checksig $PKG
 		;;
 	deb)
+		assure_exists dpkg
 		# FIXME: debsums -ca package ?
 		docmd dpkg --contents $PKG >/dev/null && echo "Package $PKG is correct."
 		;;
@@ -891,6 +894,7 @@ epm_conflicts_files()
 
 	case $(get_package_type $pkg_files) in
 		rpm)
+			assure_exists rpm
 			docmd "rpm -q --conflicts -p" $pkg_files
 			;;
 		#deb)
@@ -1065,9 +1069,11 @@ __epm_filelist_file()
 	# TODO: allow a new packages
 	case $(get_package_type $1) in
 		rpm)
+			assure_exists rpm
 			CMD="rpm -qlp"
 			;;
 		deb)
+			assure_exists dpkg
 			CMD="dpkg --contents"
 			;;
 		*)
@@ -1872,9 +1878,11 @@ epm_provides_files()
 
 	case $PKGTYPE in
 		rpm)
+			assure_exists rpm
 			docmd rpm -q --provides -p $pkg_files
 			;;
 		deb)
+			assure_exists dpkg
 			# FIXME: will we provide ourself?
 			docmd dpkg -I $pkg_files | grep "^ *Provides:" | sed "s|^ *Provides:||g"
 			;;
@@ -2705,9 +2713,11 @@ epm_requires_files()
 
 	case "$PKGTYPE" in
 		rpm)
+			assure_exists rpm
 			docmd rpm -q --requires -p $pkg_files
 			;;
 		deb)
+			assure_exists dpkg
 			a= docmd dpkg -I $pkg_files | grep "^ *Depends:" | sed "s|^ *Depends:||g"
 			;;
 		*)
@@ -3688,7 +3698,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.5.5"
+        echo "EPM package manager version 1.5.6"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2014"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -3920,6 +3930,7 @@ check_option()
         short="--short"
         ;;
     --sort)               # HELPOPT: sort output, f.i. --sort=size (supported only for packages command)
+        # TODO: how to read arg?
         sort="$1"
         ;;
     --auto)               # HELPOPT: non interactive mode
@@ -3934,14 +3945,16 @@ check_option()
 
 check_filenames()
 {
-    local opt="$1"
-    # files can be with full path or have extension via .
-    if [ -f "$opt" ] && echo "$opt" | grep -q "[/\.]" ; then
-        pkg_files="$pkg_files $opt"
-    else
-        pkg_names="$pkg_names $opt"
-    fi
-    quoted_args="$quoted_args \"$opt\""
+    local opt
+    for opt in $* ; do
+        # files can be with full path or have extension via .
+        if [ -f "$opt" ] && echo "$opt" | grep -q "[/\.]" ; then
+            pkg_files="$pkg_files $opt"
+        else
+            pkg_names="$pkg_names $opt"
+        fi
+        quoted_args="$quoted_args \"$opt\""
+    done
 }
 
 FLAGENDOPTS=
@@ -3951,6 +3964,7 @@ for opt in "$@" ; do
         check_command $opt && continue
         check_option $opt && continue
     fi
+    # Note: will parse all params separately (no package names with spaces!)
     check_filenames $opt
 done
 
