@@ -324,6 +324,10 @@ get_package_type()
 			echo "exe"
 			return
 			;;
+		*.msi)
+			echo "msi"
+			return
+			;;
 		*)
 			#fatal "Don't know type of $1"
 			# return package name for info
