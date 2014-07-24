@@ -33,7 +33,7 @@ check_pkg_integrity()
 		docmd dpkg --contents $PKG >/dev/null && echo "Package $PKG is correct."
 		;;
 	exe)
-		true
+		file $PKG | grep -q "executable for MS Windows"
 		;;
 	ebuild)
 		true

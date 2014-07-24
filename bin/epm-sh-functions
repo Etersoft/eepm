@@ -299,7 +299,7 @@ assure_exists()
 	__epm_assure "$1" $package
 }
 
-# improve
+# TODO: improve and drop!
 get_package_type()
 {
 	local i
@@ -318,6 +318,10 @@ get_package_type()
 			;;
 		*.tbz)
 			echo "tbz"
+			return
+			;;
+		*.exe)
+			echo "exe"
 			return
 			;;
 		*)
