@@ -22,7 +22,7 @@ epm_addrepo()
 case $PMTYPE in
 	apt-rpm)
 		assure_exists apt-repo
-		sudocmd apt-repo add $pkg_filenames
+		sudocmd apt-repo add "$pkg_filenames"
 		;;
 	apt-dpkg|aptitude-dpkg)
 		info "You need manually add repo to /etc/apt/sources.list"
@@ -31,13 +31,13 @@ case $PMTYPE in
 		info "You need manually add repo to /etc/yum.repos.d/"
 		;;
 	urpm-rpm)
-		sudocmd urpmi.addmedia $pkg_filenames
+		sudocmd urpmi.addmedia "$pkg_filenames"
 		;;
 	zypper-rpm)
-		sudocmd zypper ar $pkg_filenames
+		sudocmd zypper ar "$pkg_filenames"
 		;;
 	emerge)
-		sudocmd layman -a $pkg_filenames
+		sudocmd layman -a $"pkg_filenames"
 		;;
 	pacman)
 		info "You need manually add repo to /etc/pacman.conf"
@@ -45,7 +45,7 @@ case $PMTYPE in
 		#sudocmd repo-add $pkg_filenames
 		;;
 	npackd)
-		sudocmd npackdcl add-repo --url=$pkg_filenames
+		sudocmd npackdcl add-repo --url="$pkg_filenames"
 		;;
 	slackpkg)
 		info "You need manually add repo to /etc/slackpkg/mirrors"

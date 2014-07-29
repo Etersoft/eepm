@@ -22,7 +22,7 @@ epm_removerepo()
 case $PMTYPE in
 	apt-rpm)
 		assure_exists apt-repo
-		sudocmd apt-repo rm $pkg_filenames
+		sudocmd apt-repo rm "$pkg_filenames"
 		;;
 	apt-dpkg|aptitude-dpkg)
 		info "You need remove repo from /etc/apt/sources.list"
@@ -31,19 +31,19 @@ case $PMTYPE in
 		info "You need remove repo from /etc/yum.repos.d/"
 		;;
 	urpm-rpm)
-		sudocmd urpmi.removemedia $pkg_filenames
+		sudocmd urpmi.removemedia "$pkg_filenames"
 		;;
 	zypper-rpm)
-		sudocmd zypper removerepo $pkg_filenames
+		sudocmd zypper removerepo "$pkg_filenames"
 		;;
 	emerge)
-		sudocmd layman -d$pkg_filenames
+		sudocmd layman "-d$pkg_filenames"
 		;;
 	pacman)
 		info "You need remove repo from /etc/pacman.conf"
 		;;
 	npackd)
-		sudocmd npackdcl remove-repo --url=$pkg_filenames
+		sudocmd npackdcl remove-repo --url="$pkg_filenames"
 		;;
 	slackpkg)
 		info "You need remove repo from /etc/slackpkg/mirrors"
