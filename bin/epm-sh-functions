@@ -142,6 +142,7 @@ sudocmd()
 }
 
 # Run every arg with sudocmd
+# Returns on any error
 sudocmd_foreach()
 {
 	local cmd pkg
@@ -149,7 +150,7 @@ sudocmd_foreach()
 	#showcmd "$@"
 	shift
 	for pkg in "$@" ; do
-		sudocmd "$cmd" $pkg
+		sudocmd "$cmd" $pkg || return
 	done
 }
 
