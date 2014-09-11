@@ -27,7 +27,10 @@ serv_enable()
 	is_service_autostart $1 && echo "Service $1 already enabled for startup" && return
 
 	case $SERVICETYPE in
-		service-chkconfig|service-upstart)
+		service-chkconfig)
+			sudocmd chkconfig --add $1
+			;;
+		service-upstart)
 			sudocmd chkconfig $1 on
 			;;
 		service-initd|service-update)
