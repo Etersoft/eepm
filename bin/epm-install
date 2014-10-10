@@ -81,6 +81,15 @@ __separate_sudocmd()
     return 0
 }
 
+download_pkg_urls()
+{
+	local url
+	[ -z "$1" ] && return
+	for url in $* ; do
+	    eget $url || warning "Skipped"
+	done
+}
+
 # copied from etersoft-build-utils/share/eterbuild/functions/rpmpkg
 epm_install_names()
 {
@@ -388,6 +397,10 @@ epm_install()
         epm_print_install_command $pkg_filenames
         return
     fi
+
+    # Download urls via eget pkg_urls and use eget
+    # TODO: use optimization (rpm can download packages by url, yum too?)
+    download_pkg_urls "$pkg_urls"
 
     [ -z "$pkg_files$pkg_names" ] && info "Skip empty install list" && return 22
 
