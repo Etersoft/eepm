@@ -90,9 +90,9 @@ case $PMTYPE in
 	conary)
 		CMD="conary query"
 		;;
-#	chocolatey)
-#		CMD="chocolatey list"
-#		;;
+	chocolatey)
+		CMD="chocolatey list"
+		;;
 	slackpkg)
 		CMD="ls -1 /var/log/packages/"
 		if [ -n "$short" ] ; then

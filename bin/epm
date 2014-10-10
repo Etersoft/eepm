@@ -289,6 +289,7 @@ check_option()
         short="--short"
         ;;
     --sort)               # HELPOPT: sort output, f.i. --sort=size (supported only for packages command)
+        # TODO: how to read arg?
         sort="$1"
         ;;
     --auto)               # HELPOPT: non interactive mode

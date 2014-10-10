@@ -246,6 +246,10 @@ epm_install_files()
 {
     [ -z "$1" ] && return
 
+    # TODO: check read permissions
+    # sudo test -r FILE
+    # do not fallback to install_names if we have no permissions
+
     case $PMTYPE in
         apt-rpm)
             sudocmd rpm -Uvh $force $nodeps $@ && return
@@ -341,7 +345,7 @@ epm_install_files()
             return ;;
         slackpkg)
             # FIXME: check for full package name
-            # FIXME: broken status when use batch and default answer 
+            # FIXME: broken status when use batch and default answer
             __separate_sudocmd_foreach "/sbin/installpkg" "/sbin/upgradepkg" $@
             return ;;
     esac
