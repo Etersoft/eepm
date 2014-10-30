@@ -39,7 +39,7 @@ __epm_assure()
             info "Command $1 is exists: $compath"
             epm qf "$compath"
         fi
-        return
+        return 0
     fi
 
     # TODO: use package name normalization

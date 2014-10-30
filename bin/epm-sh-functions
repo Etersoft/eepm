@@ -297,7 +297,7 @@ assure_exists()
 	load_helper epm-assure
 	local package="$2"
 	[ -n "$package" ] || package="$(__get_package_for_command "$1")"
-	__epm_assure "$1" $package
+	__epm_assure "$1" $package || fatal "Can't assure in '$1' command"
 }
 
 # TODO: improve and drop!
