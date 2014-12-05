@@ -24,7 +24,7 @@ __epm_autoremove_altrpm()
 	load_helper epm-packages
 	info
 	info "Just removing all non -devel libs packages not need by anything"
-	for pkg in $(short=1 pkg_filenames= epm_packages | grep -- "^lib" | grep -v -- "-devel$" | grep -v -- ^libreoffice | grep -v -- libnss- ) ; do
+	for pkg in $(short=1 pkg_filenames= epm_packages | grep -- "^lib" | grep -v -- "-devel$" | grep -v -- "-debuginfo$" | grep -v -- ^libreoffice | grep -v -- libnss- ) ; do
 		sudocmd rpm -v -e $pkg && flag=1
 	done
 
