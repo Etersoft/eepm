@@ -29,7 +29,8 @@ __alt_local_content_search()
 
     {
         [ -n "$USETTY" ] && echo "Search in $CI for $1..."
-        grep -h -- ".*$1.*\t" $CI | sed -e "s|\(.*\)\t\(.*\)|\2: \1|g"
+        # note! tabulation below!
+        grep -h -- ".*$1.*	" $CI | sed -e "s|\(.*\)\t\(.*\)|\2: \1|g"
     } | $OUTCMD
 }
 
