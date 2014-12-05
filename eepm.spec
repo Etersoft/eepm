@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.5.6
+Version: 1.5.7
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,16 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Fri Dec 05 2014 Vitaly Lipatov <lav@altlinux.ru> 1.5.7-alt1
+- checkpkg: add msi checking
+- epm-packages: fix --sort
+- serv-enable: assure chkconfig add
+- autoremove: do not remove libnss-*, *debuginfo
+- fatal exit if assure_exists is failed
+- epm: fix search file in ALT Linux repo
+- epm: add 'epm s' like epms
+- initial eget commit
+
 * Thu Jul 17 2014 Vitaly Lipatov <lav@altlinux.ru> 1.5.6-alt1
 - assure we have a command rpm/dpkg when work with a package file
 - fix for use package name list in quotes
