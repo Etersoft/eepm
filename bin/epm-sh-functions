@@ -300,6 +300,11 @@ assure_exists()
 	__epm_assure "$1" $package || fatal "Can't assure in '$1' command"
 }
 
+eget()
+{
+	$PROGDIR/epm-eget "$@"
+}
+
 # TODO: improve and drop!
 get_package_type()
 {
