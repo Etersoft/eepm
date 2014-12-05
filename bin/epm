@@ -143,7 +143,7 @@ check_command()
     -e|-P|remove|delete|uninstall|erase|e)  # HELPCMD: remove (delete) package(s) from the database and the system
         epm_cmd=remove
         ;;
-    -s|search)                # HELPCMD: search in remote package repositories
+    -s|search|s)                # HELPCMD: search in remote package repositories
         epm_cmd=search
         ;;
     -qp|qp|query_package)     # HELPCMD: search in the list of installed packages
