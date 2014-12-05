@@ -155,7 +155,7 @@ sudocmd_foreach()
 	#showcmd "$@"
 	shift
 	for pkg in "$@" ; do
-		sudocmd "$cmd" $pkg
+		sudocmd "$cmd" $pkg || return
 	done
 }
 
@@ -293,7 +293,12 @@ assure_exists()
 	load_helper epm-assure
 	local package="$2"
 	[ -n "$package" ] || package="$(__get_package_for_command "$1")"
-	__epm_assure "$1" $package
+	__epm_assure "$1" $package || fatal "Can't assure in '$1' command"
+}
+
+eget()
+{
+	$PROGDIR/epm-eget "$@"
 }
 
 get_package_type()
@@ -314,6 +319,14 @@ get_package_type()
 			;;
 		*.tbz)
 			echo "tbz"
+			return
+			;;
+		*.exe)
+			echo "exe"
+			return
+			;;
+		*.msi)
+			echo "msi"
 			return
 			;;
 		*)
@@ -472,7 +485,10 @@ serv_enable()
 	is_service_autostart $1 && echo "Service $1 already enabled for startup" && return
 
 	case $SERVICETYPE in
-		service-chkconfig|service-upstart)
+		service-chkconfig)
+			sudocmd chkconfig --add $1
+			;;
+		service-upstart)
 			sudocmd chkconfig $1 on
 			;;
 		service-initd|service-update)
@@ -1118,7 +1134,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.5.6"
+        echo "Service manager version 1.5.7"
         echo "Running on $($DISTRVENDOR)"
         echo "Copyright (c) Etersoft 2012, 2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

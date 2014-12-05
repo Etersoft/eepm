@@ -157,7 +157,7 @@ sudocmd_foreach()
 	#showcmd "$@"
 	shift
 	for pkg in "$@" ; do
-		sudocmd "$cmd" $pkg
+		sudocmd "$cmd" $pkg || return
 	done
 }
 
@@ -295,7 +295,12 @@ assure_exists()
 	load_helper epm-assure
 	local package="$2"
 	[ -n "$package" ] || package="$(__get_package_for_command "$1")"
-	__epm_assure "$1" $package
+	__epm_assure "$1" $package || fatal "Can't assure in '$1' command"
+}
+
+eget()
+{
+	$PROGDIR/epm-eget "$@"
 }
 
 get_package_type()
@@ -316,6 +321,14 @@ get_package_type()
 			;;
 		*.tbz)
 			echo "tbz"
+			return
+			;;
+		*.exe)
+			echo "exe"
+			return
+			;;
+		*.msi)
+			echo "msi"
 			return
 			;;
 		*)
@@ -421,7 +434,7 @@ epm_addrepo()
 case $PMTYPE in
 	apt-rpm)
 		assure_exists apt-repo
-		sudocmd apt-repo add $pkg_filenames
+		sudocmd apt-repo add "$pkg_filenames"
 		;;
 	apt-dpkg|aptitude-dpkg)
 		info "You need manually add repo to /etc/apt/sources.list"
@@ -430,13 +443,13 @@ case $PMTYPE in
 		info "You need manually add repo to /etc/yum.repos.d/"
 		;;
 	urpm-rpm)
-		sudocmd urpmi.addmedia $pkg_filenames
+		sudocmd urpmi.addmedia "$pkg_filenames"
 		;;
 	zypper-rpm)
-		sudocmd zypper ar $pkg_filenames
+		sudocmd zypper ar "$pkg_filenames"
 		;;
 	emerge)
-		sudocmd layman -a $pkg_filenames
+		sudocmd layman -a $"pkg_filenames"
 		;;
 	pacman)
 		info "You need manually add repo to /etc/pacman.conf"
@@ -444,7 +457,7 @@ case $PMTYPE in
 		#sudocmd repo-add $pkg_filenames
 		;;
 	npackd)
-		sudocmd npackdcl add-repo --url=$pkg_filenames
+		sudocmd npackdcl add-repo --url="$pkg_filenames"
 		;;
 	slackpkg)
 		info "You need manually add repo to /etc/slackpkg/mirrors"
@@ -476,7 +489,7 @@ __epm_assure()
             info "Command $1 is exists: $compath"
             epm qf "$compath"
         fi
-        return
+        return 0
     fi
 
     # TODO: use package name normalization
@@ -525,7 +538,7 @@ __epm_autoremove_altrpm()
 	load_helper epm-packages
 	info
 	info "Just removing all non -devel libs packages not need by anything"
-	for pkg in $(short=1 pkg_filenames= epm_packages | grep -- "^lib" | grep -v -- "-devel$" | grep -v -- ^libreoffice ) ; do
+	for pkg in $(short=1 pkg_filenames= epm_packages | grep -- "^lib" | grep -v -- "-devel$" | grep -v -- "-debuginfo$" | grep -v -- ^libreoffice | grep -v -- libnss- ) ; do
 		sudocmd rpm -v -e $pkg && flag=1
 	done
 
@@ -765,7 +778,13 @@ check_pkg_integrity()
 		docmd dpkg --contents $PKG >/dev/null && echo "Package $PKG is correct."
 		;;
 	exe)
-		true
+		file $PKG | grep -q "executable for MS Windows"
+		;;
+	msi)
+		# TODO: add to patool via cabextract
+		assure_exists cabextract
+		#file $PKG | grep -q "Microsoft Office Document"
+		cabextract -t $PKG
 		;;
 	ebuild)
 		true
@@ -1023,6 +1042,43 @@ epm_downgrade()
 		;;
 	esac
 }
+
+# File bin/epm-eget:
+
+
+WGET="wget -q"
+
+if echo "$1" | grep -q "\(^ftp://\|[^*]$\)" ; then
+    $WGET $1 && exit 0
+fi
+URL=$(echo $1 | grep /$ || dirname $1)
+MASK=$(basename $1)
+MYTMPDIR="$(mktemp -d)"
+DIRALLFILES="$MYTMPDIR/files/"
+
+get_index(){
+    INDEX=$MYTMPDIR/index
+    $WGET $URL -O $INDEX
+}
+
+save_temp_files(){
+    mkdir -p $DIRALLFILES
+    ALLFILES="$MYTMPDIR/allfiles"
+    cat $INDEX | grep -o -E 'href="([^\*/"#]+)"' | cut -d'"' -f2 > $ALLFILES 
+    while read line ; do
+	touch $DIRALLFILES/$line
+    done <$ALLFILES
+}
+
+sort_files(){
+    for line in $DIRALLFILES/$MASK ; do
+	$WGET $URL/`basename "$line"` -P $CURRENTDIR/
+    done
+}
+
+get_index
+save_temp_files
+sort_files
 
 # File bin/epm-filelist:
 
@@ -1300,6 +1356,15 @@ __separate_sudocmd()
     return 0
 }
 
+download_pkg_urls()
+{
+	local url
+	[ -z "$1" ] && return
+	for url in $* ; do
+	    eget $url || warning "Skipped"
+	done
+}
+
 epm_install_names()
 {
 	if [ -n "$non_interactive" ] ; then
@@ -1454,6 +1519,10 @@ epm_install_files()
 {
     [ -z "$1" ] && return
 
+    # TODO: check read permissions
+    # sudo test -r FILE
+    # do not fallback to install_names if we have no permissions
+
     case $PMTYPE in
         apt-rpm)
             sudocmd rpm -Uvh $force $nodeps $@ && return
@@ -1549,7 +1618,7 @@ epm_install_files()
             return ;;
         slackpkg)
             # FIXME: check for full package name
-            # FIXME: broken status when use batch and default answer 
+            # FIXME: broken status when use batch and default answer
             __separate_sudocmd_foreach "/sbin/installpkg" "/sbin/upgradepkg" $@
             return ;;
     esac
@@ -1605,6 +1674,10 @@ epm_install()
         epm_print_install_command $pkg_filenames
         return
     fi
+
+    # Download urls via eget pkg_urls and use eget
+    # TODO: use optimization (rpm can download packages by url, yum too?)
+    download_pkg_urls "$pkg_urls"
 
     [ -z "$pkg_files$pkg_names" ] && info "Skip empty install list" && return 22
 
@@ -1746,10 +1819,11 @@ __epm_packages_sort()
 {
 case $PMTYPE in
 	apt-rpm|yum-rpm|urpm-rpm|zypper-rpm|dnf-rpm)
-		docmd rpm -qa --queryformat "%{size} %{name}-%{version}-%{release}\n" $pkg_filenames | sort -n
+		# FIXME: space with quotes problems, use point instead
+		docmd rpm -qa --queryformat "%{size}.%{name}-%{version}-%{release}\n" $pkg_filenames | sort -n
 		;;
 	apt-dpkg)
-		docmd dpkg-query -W --showformat="\${Size} \${Package}-\${Version}\n" $pkg_filenames | sort -n
+		docmd dpkg-query -W --showformat="\${Size}.\${Package}-\${Version}\n" $pkg_filenames | sort -n
 		;;
 	*)
 		fatal "Sorted package list are not realized for $PMTYPE"
@@ -1812,6 +1886,9 @@ case $PMTYPE in
 		;;
 	conary)
 		CMD="conary query"
+		;;
+	chocolatey)
+		CMD="chocolatey list"
 		;;
 	slackpkg)
 		CMD="ls -1 /var/log/packages/"
@@ -2613,7 +2690,7 @@ epm_removerepo()
 case $PMTYPE in
 	apt-rpm)
 		assure_exists apt-repo
-		sudocmd apt-repo rm $pkg_filenames
+		sudocmd apt-repo rm "$pkg_filenames"
 		;;
 	apt-dpkg|aptitude-dpkg)
 		info "You need remove repo from /etc/apt/sources.list"
@@ -2622,19 +2699,19 @@ case $PMTYPE in
 		info "You need remove repo from /etc/yum.repos.d/"
 		;;
 	urpm-rpm)
-		sudocmd urpmi.removemedia $pkg_filenames
+		sudocmd urpmi.removemedia "$pkg_filenames"
 		;;
 	zypper-rpm)
-		sudocmd zypper removerepo $pkg_filenames
+		sudocmd zypper removerepo "$pkg_filenames"
 		;;
 	emerge)
-		sudocmd layman -d$pkg_filenames
+		sudocmd layman "-d$pkg_filenames"
 		;;
 	pacman)
 		info "You need remove repo from /etc/pacman.conf"
 		;;
 	npackd)
-		sudocmd npackdcl remove-repo --url=$pkg_filenames
+		sudocmd npackdcl remove-repo --url="$pkg_filenames"
 		;;
 	slackpkg)
 		info "You need remove repo from /etc/slackpkg/mirrors"
@@ -2949,7 +3026,8 @@ __alt_local_content_search()
 
     {
         [ -n "$USETTY" ] && echo "Search in $CI for $1..."
-        grep -h -- ".*$1.*\t" $CI | sed -e "s|\(.*\)\t\(.*\)|\2: \1|g"
+        # note! tabulation below!
+        grep -h -- ".*$1.*	" $CI | sed -e "s|\(.*\)\t\(.*\)|\2: \1|g"
     } | $OUTCMD
 }
 
@@ -3698,7 +3776,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.5.6"
+        echo "EPM package manager version 1.5.7"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2014"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -3722,6 +3800,7 @@ show_command_only=
 epm_cmd=
 pkg_files=
 pkg_names=
+pkg_urls=
 quoted_args=
 
 progname="${0##*/}"
@@ -3784,7 +3863,7 @@ check_command()
     -e|-P|remove|delete|uninstall|erase|e)  # HELPCMD: remove (delete) package(s) from the database and the system
         epm_cmd=remove
         ;;
-    -s|search)                # HELPCMD: search in remote package repositories
+    -s|search|s)                # HELPCMD: search in remote package repositories
         epm_cmd=search
         ;;
     -qp|qp|query_package)     # HELPCMD: search in the list of installed packages
@@ -3950,6 +4029,8 @@ check_filenames()
         # files can be with full path or have extension via .
         if [ -f "$opt" ] && echo "$opt" | grep -q "[/\.]" ; then
             pkg_files="$pkg_files $opt"
+        elif echo "$opt" | grep -q "://" ; then
+            pkg_urls="$pkg_names $opt"
         else
             pkg_names="$pkg_names $opt"
         fi
@@ -3977,6 +4058,7 @@ fi
 
 pkg_files=$(strip_spaces "$pkg_files")
 pkg_names=$(strip_spaces "$pkg_names")
+pkg_urls=$(strip_spaces "$pkg_urls")
 
 pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
 
