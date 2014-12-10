@@ -49,6 +49,9 @@ case $PMTYPE in
 		CMD="dpkg-query -W --showformat=\${Package}-\${Version}\n $pkg_filenames"
 		[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${Package}\n $pkg_filenames"
 		;;
+	snappy)
+		CMD="snappy info"
+		;;
 	yum-rpm|urpm-rpm|zypper-rpm|dnf-rpm)
 		CMD="rpm -qa $pkg_filenames"
 		[ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n $pkg_filenames"

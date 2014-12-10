@@ -133,6 +133,9 @@ epm_install_names()
 		dnf-rpm)
 			sudocmd dnf install $@
 			return ;;
+		snappy)
+			sudocmd snappy install $@
+			return ;;
 		zypper-rpm)
 			sudocmd zypper install $ZYPPEROPTIONS $@
 			return ;;

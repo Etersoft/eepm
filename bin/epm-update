@@ -33,6 +33,9 @@ case $PMTYPE in
 		#sudocmd apt-get -f install || exit
 		#sudocmd apt-get autoremove
 		;;
+	#snappy)
+	#	sudocmd snappy
+	#	;;
 	aptitude-dpkg)
 		sudocmd aptitude update || exit
 		;;

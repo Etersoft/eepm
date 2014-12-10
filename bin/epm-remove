@@ -88,6 +88,9 @@ epm_remove_names()
 		dnf-rpm)
 			sudocmd dnf remove $@
 			return ;;
+		snappy)
+			sudocmd snappy uninstall $@
+			return ;;
 		zypper-rpm)
 			sudocmd zypper remove $@
 			return ;;

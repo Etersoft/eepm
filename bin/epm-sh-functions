@@ -383,6 +383,7 @@ case $DISTRNAME in
 	Ubuntu|Debian|Mint)
 		CMD="apt-dpkg"
 		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
+		which snappy 2>/dev/null >/dev/null && CMD=snappy
 		;;
 	Mandriva|ROSA)
 		CMD="urpm-rpm"
