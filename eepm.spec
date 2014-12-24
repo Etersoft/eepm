@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.5.7
+Version: 1.5.8
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,10 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Wed Dec 24 2014 Vitaly Lipatov <lav@altlinux.ru> 1.5.8-alt1
+- add initial snappy support
+- remove extra deps
+
 * Fri Dec 05 2014 Vitaly Lipatov <lav@altlinux.ru> 1.5.7-alt1
 - checkpkg: add msi checking
 - epm-packages: fix --sort
