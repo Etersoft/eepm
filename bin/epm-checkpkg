@@ -39,7 +39,7 @@ check_pkg_integrity()
 		# TODO: add to patool via cabextract
 		assure_exists cabextract
 		#file $PKG | grep -q "Microsoft Office Document"
-		cabextract -t $PKG
+		docmd cabextract -t $PKG
 		;;
 	ebuild)
 		true

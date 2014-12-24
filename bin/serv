@@ -56,9 +56,12 @@ set_service_type()
 
 is_active_systemd()
 {
+	local a
 	SYSTEMCTL=/bin/systemctl
 	SYSTEMD_CGROUP_DIR=/sys/fs/cgroup/systemd
-	[ -x "$SYSTEMCTL" ] && [ -d "$SYSTEMD_CGROUP_DIR" ] && mountpoint -q "$SYSTEMD_CGROUP_DIR"
+	[ -x "$SYSTEMCTL" ] || return
+	[ -d "$SYSTEMD_CGROUP_DIR" ] || return
+	a= mountpoint -q "$SYSTEMD_CGROUP_DIR"
 }
 
 case $DISTRNAME in
