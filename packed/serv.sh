@@ -375,6 +375,7 @@ case $DISTRNAME in
 	Ubuntu|Debian|Mint)
 		CMD="apt-dpkg"
 		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
+		which snappy 2>/dev/null >/dev/null && CMD=snappy
 		;;
 	Mandriva|ROSA)
 		CMD="urpm-rpm"
@@ -1067,9 +1068,12 @@ set_service_type()
 
 is_active_systemd()
 {
+	local a
 	SYSTEMCTL=/bin/systemctl
 	SYSTEMD_CGROUP_DIR=/sys/fs/cgroup/systemd
-	[ -x "$SYSTEMCTL" ] && [ -d "$SYSTEMD_CGROUP_DIR" ] && mountpoint -q "$SYSTEMD_CGROUP_DIR"
+	[ -x "$SYSTEMCTL" ] || return
+	[ -d "$SYSTEMD_CGROUP_DIR" ] || return
+	a= mountpoint -q "$SYSTEMD_CGROUP_DIR"
 }
 
 case $DISTRNAME in
@@ -1134,7 +1138,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.5.7"
+        echo "Service manager version 1.5.8"
         echo "Running on $($DISTRVENDOR)"
         echo "Copyright (c) Etersoft 2012, 2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

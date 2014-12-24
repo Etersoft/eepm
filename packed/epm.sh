@@ -377,6 +377,7 @@ case $DISTRNAME in
 	Ubuntu|Debian|Mint)
 		CMD="apt-dpkg"
 		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
+		which snappy 2>/dev/null >/dev/null && CMD=snappy
 		;;
 	Mandriva|ROSA)
 		CMD="urpm-rpm"
@@ -784,7 +785,7 @@ check_pkg_integrity()
 		# TODO: add to patool via cabextract
 		assure_exists cabextract
 		#file $PKG | grep -q "Microsoft Office Document"
-		cabextract -t $PKG
+		docmd cabextract -t $PKG
 		;;
 	ebuild)
 		true
@@ -1407,6 +1408,9 @@ epm_install_names()
 		dnf-rpm)
 			sudocmd dnf install $@
 			return ;;
+		snappy)
+			sudocmd snappy install $@
+			return ;;
 		zypper-rpm)
 			sudocmd zypper install $ZYPPEROPTIONS $@
 			return ;;
@@ -1845,6 +1849,9 @@ case $PMTYPE in
 		#CMD="dpkg -l $pkg_filenames"
 		CMD="dpkg-query -W --showformat=\${Package}-\${Version}\n $pkg_filenames"
 		[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${Package}\n $pkg_filenames"
+		;;
+	snappy)
+		CMD="snappy info"
 		;;
 	yum-rpm|urpm-rpm|zypper-rpm|dnf-rpm)
 		CMD="rpm -qa $pkg_filenames"
@@ -2546,6 +2553,9 @@ epm_remove_names()
 		dnf-rpm)
 			sudocmd dnf remove $@
 			return ;;
+		snappy)
+			sudocmd snappy uninstall $@
+			return ;;
 		zypper-rpm)
 			sudocmd zypper remove $@
 			return ;;
@@ -3235,6 +3245,9 @@ case $PMTYPE in
 		#sudocmd apt-get -f install || exit
 		#sudocmd apt-get autoremove
 		;;
+	#snappy)
+	#	sudocmd snappy
+	#	;;
 	aptitude-dpkg)
 		sudocmd aptitude update || exit
 		;;
@@ -3309,6 +3322,9 @@ epm_upgrade()
 		;;
 	dnf-rpm)
 		CMD="dnf update"
+		;;
+	snappy)
+		CMD="snappy update"
 		;;
 	urpm-rpm)
 		# or --auto-select --replace-files
@@ -3776,7 +3792,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.5.7"
+        echo "EPM package manager version 1.5.8"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2014"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
