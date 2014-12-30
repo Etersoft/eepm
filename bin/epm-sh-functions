@@ -262,10 +262,15 @@ set_sudo()
 	SUDO="fatal 'Can't find sudo. Please install sudo or run epm under root.'"
 }
 
+# wait for n seconds (if possible) during executing command
+# args: seconds command
 withtimeout()
 {
 	local TO=$(which timeout 2>/dev/null || which gtimeout 2>/dev/null)
-	[ -n "$TO" ] && $TO $@ || $@
+	[ -n "$TO" ] && $TO $@ && return
+	# drop time arg
+	shift
+	$@
 }
 
 set_eatmydata()
