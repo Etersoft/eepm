@@ -307,7 +307,7 @@ assure_exists()
 
 eget()
 {
-	$PROGDIR/epm-eget "$@"
+	$PROGDIR/tools-eget "$@"
 }
 
 # TODO: improve and drop!
