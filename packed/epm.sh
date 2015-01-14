@@ -264,7 +264,10 @@ set_sudo()
 withtimeout()
 {
 	local TO=$(which timeout 2>/dev/null || which gtimeout 2>/dev/null)
-	[ -n "$TO" ] && $TO $@ || $@
+	[ -n "$TO" ] && $TO $@ && return
+	# drop time arg
+	shift
+	$@
 }
 
 set_eatmydata()
@@ -300,7 +303,7 @@ assure_exists()
 
 eget()
 {
-	$PROGDIR/epm-eget "$@"
+	$PROGDIR/tools-eget "$@"
 }
 
 get_package_type()
@@ -1043,43 +1046,6 @@ epm_downgrade()
 		;;
 	esac
 }
-
-# File bin/epm-eget:
-
-
-WGET="wget -q"
-
-if echo "$1" | grep -q "\(^ftp://\|[^*]$\)" ; then
-    $WGET $1 && exit 0
-fi
-URL=$(echo $1 | grep /$ || dirname $1)
-MASK=$(basename $1)
-MYTMPDIR="$(mktemp -d)"
-DIRALLFILES="$MYTMPDIR/files/"
-
-get_index(){
-    INDEX=$MYTMPDIR/index
-    $WGET $URL -O $INDEX
-}
-
-save_temp_files(){
-    mkdir -p $DIRALLFILES
-    ALLFILES="$MYTMPDIR/allfiles"
-    cat $INDEX | grep -o -E 'href="([^\*/"#]+)"' | cut -d'"' -f2 > $ALLFILES 
-    while read line ; do
-	touch $DIRALLFILES/$line
-    done <$ALLFILES
-}
-
-sort_files(){
-    for line in $DIRALLFILES/$MASK ; do
-	$WGET $URL/`basename "$line"` -P $CURRENTDIR/
-    done
-}
-
-get_index
-save_temp_files
-sort_files
 
 # File bin/epm-filelist:
 

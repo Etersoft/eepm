@@ -262,7 +262,10 @@ set_sudo()
 withtimeout()
 {
 	local TO=$(which timeout 2>/dev/null || which gtimeout 2>/dev/null)
-	[ -n "$TO" ] && $TO $@ || $@
+	[ -n "$TO" ] && $TO $@ && return
+	# drop time arg
+	shift
+	$@
 }
 
 set_eatmydata()
@@ -298,7 +301,7 @@ assure_exists()
 
 eget()
 {
-	$PROGDIR/epm-eget "$@"
+	$PROGDIR/tools-eget "$@"
 }
 
 get_package_type()
