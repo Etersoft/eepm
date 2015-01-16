@@ -89,6 +89,9 @@ case $progname in
     epmi)
         epm_cmd=install
         ;;
+    epmI)
+        epm_cmd=Install
+        ;;
     epme)
         epm_cmd=remove
         ;;
