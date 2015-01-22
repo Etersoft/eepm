@@ -28,9 +28,11 @@ serv_enable()
 
 	case $SERVICETYPE in
 		service-chkconfig)
-			sudocmd chkconfig --add $1
+			sudocmd chkconfig --add $1 || return
+			sudocmd chkconfig $1 on
 			;;
 		service-upstart)
+			sudocmd chkconfig --add $1 || return
 			sudocmd chkconfig $1 on
 			;;
 		service-initd|service-update)
