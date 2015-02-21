@@ -79,6 +79,7 @@ skip_installed=
 show_command_only=
 epm_cmd=
 pkg_files=
+pkg_dirs=
 pkg_names=
 pkg_urls=
 quoted_args=
@@ -312,6 +313,8 @@ check_filenames()
         # files can be with full path or have extension via .
         if [ -f "$opt" ] && echo "$opt" | grep -q "[/\.]" ; then
             pkg_files="$pkg_files $opt"
+        elif [ -d "$opt" ] ; then
+            pkg_dirs="$pkg_dirs $opt"
         elif echo "$opt" | grep -q "://" ; then
             pkg_urls="$pkg_names $opt"
         else
@@ -340,10 +343,11 @@ if ! inputisatty ; then
 fi
 
 pkg_files=$(strip_spaces "$pkg_files")
+pkg_dirs=$(strip_spaces "$pkg_dirs")
 pkg_names=$(strip_spaces "$pkg_names")
 pkg_urls=$(strip_spaces "$pkg_urls")
 
-pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
+pkg_filenames=$(strip_spaces "$pkg_files $pkg_dirs $pkg_names")
 
 # Just debug
 #echover "command: $epm_cmd"
