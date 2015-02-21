@@ -17,9 +17,6 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-load_helper epm-install
-
-
 __check_command_in_path()
 {
     PATH=$PATH:/sbin:/usr/sbin which "$1" 2>/dev/null
@@ -44,6 +41,8 @@ __epm_assure()
 
     # TODO: use package name normalization
     info "Installing appropriate package for $1 command..."
+
+    load_helper epm-install
 
     local PACKAGE="$2"
     [ -n "$PACKAGE" ] || PACKAGE="$1"
