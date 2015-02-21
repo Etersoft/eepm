@@ -17,8 +17,6 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-load_helper epm-search_file
-
 # copied from etersoft-build-utils/bin/rpmqf
 
 # use and modify TOFILE recursively
@@ -154,6 +152,9 @@ epm_query_file()
 
     # file can exists or not
     [ -n "$pkg_filenames" ] || fatal "Run query without file names"
+
+
+    load_helper epm-search_file
 
     for pkg in $pkg_filenames ; do
         __do_query_real_file "$pkg"
