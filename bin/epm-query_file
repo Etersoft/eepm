@@ -145,8 +145,8 @@ epm_query_file()
     # TODO: move to separate command?
     # FIXME: it is possible use query
     if [ -n "$short" ] ; then
-        [ -n "$pkg_files" ] || fatal "Run query without file names (needed path to files)"
-        __do_short_query $pkg_files
+        [ -n "$pkg_files$pkg_dirs" ] || fatal "Run query without file names (needed path to files)"
+        __do_short_query $pkg_files $pkg_dirs
          return
     fi
 
