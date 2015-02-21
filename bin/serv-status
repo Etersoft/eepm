@@ -41,10 +41,11 @@ is_service_autostart()
 {
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)
-			LANG=C $SUDO chkconfig $1 --list | grep -q "5:on"
+                        # FIXME: check for current runlevel
+			LANG=C $SUDO chkconfig $1 --list | grep -q "[35]:on"
 			;;
 		service-initd|service-update)
-			fatal "FIXME: don't know how detect current startup state"
+                        test -L $(echo /etc/rc5.d/S??$1)
 			;;
 		systemd)
 			$SUDO systemctl is-enabled $1
