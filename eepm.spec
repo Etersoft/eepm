@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.5.9
+Version: 1.5.10
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,10 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Wed Feb 25 2015 Vitaly Lipatov <lav@altlinux.ru> 1.5.10-alt1
+- serv-status: realize detection scheduled status for Ubuntu
+- epm-sh: fix withtimeout
+
 * Sat Feb 21 2015 Vitaly Lipatov <lav@altlinux.ru> 1.5.9-alt1
 - fix withtimeout (was incorrect workaround)
 - remove epm-eget -> tools-eget for exclude from one pack file
