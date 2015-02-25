@@ -267,8 +267,11 @@ set_sudo()
 withtimeout()
 {
 	local TO=$(which timeout 2>/dev/null || which gtimeout 2>/dev/null)
-	[ -n "$TO" ] && $TO $@ && return
-	# drop time arg
+	if [ -x "$TO" ] ; then
+		$TO $@
+		return
+	fi
+	# fallback: drop time arg and run without timeout
 	shift
 	$@
 }
