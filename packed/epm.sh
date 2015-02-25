@@ -65,7 +65,7 @@ check_tty()
 	# egrep from busybox may not --color
 	# egrep from MacOS print help to stderr
 	if egrep --help 2>&1 | grep -q -- "--color" ; then
-		EGREPCOLOR="--color"
+		export EGREPCOLOR="--color"
 	fi
 
 	which tput >/dev/null 2>/dev/null || return
@@ -264,8 +264,11 @@ set_sudo()
 withtimeout()
 {
 	local TO=$(which timeout 2>/dev/null || which gtimeout 2>/dev/null)
-	[ -n "$TO" ] && $TO $@ && return
-	# drop time arg
+	if [ -x "$TO" ] ; then
+		$TO $@
+		return
+	fi
+	# fallback: drop time arg and run without timeout
 	shift
 	$@
 }
@@ -475,8 +478,6 @@ esac
 
 # File bin/epm-assure:
 
-
-
 __check_command_in_path()
 {
     PATH=$PATH:/sbin:/usr/sbin which "$1" 2>/dev/null
@@ -498,6 +499,8 @@ __epm_assure()
 
     # TODO: use package name normalization
     info "Installing appropriate package for $1 command..."
+
+    load_helper epm-install
 
     local PACKAGE="$2"
     [ -n "$PACKAGE" ] || PACKAGE="$1"
@@ -2172,7 +2175,6 @@ epm_query()
 # File bin/epm-query_file:
 
 
-
 __do_query_real_file()
 {
 	local LINKTO1 LINKTO
@@ -2298,13 +2300,16 @@ epm_query_file()
     # TODO: move to separate command?
     # FIXME: it is possible use query
     if [ -n "$short" ] ; then
-        [ -n "$pkg_files" ] || fatal "Run query without file names (needed path to files)"
-        __do_short_query $pkg_files
+        [ -n "$pkg_files$pkg_dirs" ] || fatal "Run query without file names (needed path to files)"
+        __do_short_query $pkg_files $pkg_dirs
          return
     fi
 
     # file can exists or not
     [ -n "$pkg_filenames" ] || fatal "Run query without file names"
+
+
+    load_helper epm-search_file
 
     for pkg in $pkg_filenames ; do
         __do_query_real_file "$pkg"
@@ -2666,7 +2671,7 @@ epm_removerepo()
 case $PMTYPE in
 	apt-rpm)
 		assure_exists apt-repo
-		sudocmd apt-repo rm "$pkg_filenames"
+		sudocmd apt-repo rm "$quoted_args"
 		;;
 	apt-dpkg|aptitude-dpkg)
 		info "You need remove repo from /etc/apt/sources.list"
@@ -3758,7 +3763,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.5.8"
+        echo "EPM package manager version 1.5.10"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2014"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -3781,6 +3786,7 @@ skip_installed=
 show_command_only=
 epm_cmd=
 pkg_files=
+pkg_dirs=
 pkg_names=
 pkg_urls=
 quoted_args=
@@ -3790,6 +3796,9 @@ progname="${0##*/}"
 case $progname in
     epmi)
         epm_cmd=install
+        ;;
+    epmI)
+        epm_cmd=Install
         ;;
     epme)
         epm_cmd=remove
@@ -4011,6 +4020,8 @@ check_filenames()
         # files can be with full path or have extension via .
         if [ -f "$opt" ] && echo "$opt" | grep -q "[/\.]" ; then
             pkg_files="$pkg_files $opt"
+        elif [ -d "$opt" ] ; then
+            pkg_dirs="$pkg_dirs $opt"
         elif echo "$opt" | grep -q "://" ; then
             pkg_urls="$pkg_names $opt"
         else
@@ -4039,10 +4050,11 @@ if ! inputisatty ; then
 fi
 
 pkg_files=$(strip_spaces "$pkg_files")
+pkg_dirs=$(strip_spaces "$pkg_dirs")
 pkg_names=$(strip_spaces "$pkg_names")
 pkg_urls=$(strip_spaces "$pkg_urls")
 
-pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
+pkg_filenames=$(strip_spaces "$pkg_files $pkg_dirs $pkg_names")
 
 # Just debug
 #echover "command: $epm_cmd"

@@ -63,7 +63,7 @@ check_tty()
 	# egrep from busybox may not --color
 	# egrep from MacOS print help to stderr
 	if egrep --help 2>&1 | grep -q -- "--color" ; then
-		EGREPCOLOR="--color"
+		export EGREPCOLOR="--color"
 	fi
 
 	which tput >/dev/null 2>/dev/null || return
@@ -262,8 +262,11 @@ set_sudo()
 withtimeout()
 {
 	local TO=$(which timeout 2>/dev/null || which gtimeout 2>/dev/null)
-	[ -n "$TO" ] && $TO $@ && return
-	# drop time arg
+	if [ -x "$TO" ] ; then
+		$TO $@
+		return
+	fi
+	# fallback: drop time arg and run without timeout
 	shift
 	$@
 }
@@ -490,9 +493,11 @@ serv_enable()
 
 	case $SERVICETYPE in
 		service-chkconfig)
-			sudocmd chkconfig --add $1
+			sudocmd chkconfig --add $1 || return
+			sudocmd chkconfig $1 on
 			;;
 		service-upstart)
+			sudocmd chkconfig --add $1 || return
 			sudocmd chkconfig $1 on
 			;;
 		service-initd|service-update)
@@ -616,10 +621,11 @@ is_service_autostart()
 {
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)
-			LANG=C $SUDO chkconfig $1 --list | grep -q "5:on"
+                        # FIXME: check for current runlevel
+			LANG=C $SUDO chkconfig $1 --list | grep -q "[35]:on"
 			;;
 		service-initd|service-update)
-			fatal "FIXME: don't know how detect current startup state"
+                        test -L $(echo /etc/rc5.d/S??$1)
 			;;
 		systemd)
 			$SUDO systemctl is-enabled $1
@@ -1141,7 +1147,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.5.8"
+        echo "Service manager version 1.5.10"
         echo "Running on $($DISTRVENDOR)"
         echo "Copyright (c) Etersoft 2012, 2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
