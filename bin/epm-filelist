@@ -49,6 +49,11 @@ __epm_filelist_remote()
 			# TODO: use RESTful interface to prometeus? See ALT bug #29496
 			docmd_foreach __alt_local_content_filelist $@
 			;;
+		apt-dpkg)
+			assure_exists apt-file
+			sudocmd apt-file update
+			docmd apt-file list $@
+			;;
 		*)
 			fatal "Query filelist for non installed packages does not realized"
 			;;
@@ -130,6 +135,7 @@ __epm_filelist_name()
 
 	# TODO: add less
 	docmd $CMD $pkg_names && return
+	# TODO: may be we need check is installed before prev. line?
 	is_installed $pkg_names || __epm_filelist_remote $pkg_names
 }
 
