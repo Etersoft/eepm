@@ -39,10 +39,11 @@ epm_autoremove()
 {
 case $PMTYPE in
 	apt-rpm)
-		assure_exists remove-old-kernels
 		# ALT Linux only
 		__epm_autoremove_altrpm
+
 		# ALT Linux only
+		assure_exists remove-old-kernels
 		sudocmd remove-old-kernels
 		;;
 	apt-dpkg|aptitude-dpkg)
@@ -61,17 +62,19 @@ case $PMTYPE in
 			sudocmd yum remove $PKGLIST
 		done
 		;;
-	urpm-rpm)
-		sudocmd urpme --auto-orphans
-		;;
+	# see autoorhans
+	#urpm-rpm)
+	#	sudocmd urpme --auto-orphans
+	#	;;
 	emerge)
 		sudocmd emerge --depclean
 		assure_exists revdep-rebuild
 		sudocmd revdep-rebuild
 		;;
-	pacman)
-		sudocmd pacman -Qdtq | sudocmd pacman -Rs -
-		;;
+	# see autoorhans
+	#pacman)
+	#	sudocmd pacman -Qdtq | sudocmd pacman -Rs -
+	#	;;
 	slackpkg)
 		# clean-system removes non official packages
 		#sudocmd slackpkg clean-system

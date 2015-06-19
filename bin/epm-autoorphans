@@ -1,0 +1,73 @@
+#!/bin/sh
+#
+# Copyright (C) 2015  Etersoft
+# Copyright (C) 2015  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+epm_autoorphans()
+{
+case $PMTYPE in
+	#apt-rpm)
+		# ALT Linux only
+		#__epm_autoremove_altrpm
+
+		# ALT Linux only
+		#assure_exists remove-old-kernels
+		#sudocmd remove-old-kernels
+	#	;;
+	apt-dpkg|aptitude-dpkg)
+		assure_exists deborphan
+		showcmd deborphan
+		deborphan | sudocmd epm remove
+		;;
+	#aura)
+	#	sudocmd aura -Oj
+	#	;;
+	yum-rpm)
+		showcmd package-cleanup --orphans
+		local PKGLIST=$(package-cleanup --orphans)
+		sudocmd epm remove $PKGLIST
+		;;
+	urpm-rpm)
+		sudocmd urpme --auto-orphans
+		;;
+	#emerge)
+	#	sudocmd emerge --depclean
+	#	assure_exists revdep-rebuild
+	#	sudocmd revdep-rebuild
+	#	;;
+	pacman)
+		sudocmd pacman -Qdtq | sudocmd pacman -Rs -
+		;;
+	#slackpkg)
+		# clean-system removes non official packages
+		#sudocmd slackpkg clean-system
+	#	;;
+	#guix)
+	#	sudocmd guix gc
+	#	;;
+	#pkgng)
+	#	sudocmd pkg autoremove
+	#	;;
+	#zypper-rpm)
+	#	sudocmd zypper clean
+	#	;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+}

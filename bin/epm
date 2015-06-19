@@ -234,6 +234,9 @@ check_command()
     autoremove)               # HELPCMD: auto remove unneeded package(s)
         epm_cmd=autoremove
         ;;
+    autoorphans|--orphans)    # HELPCMD: remove all packages not from the repository
+        epm_cmd=autoorphans
+        ;;
     upgrade|dist-upgrade)     # HELPCMD: performs upgrades of package software distributions
         epm_cmd=upgrade
         ;;
