@@ -21,6 +21,7 @@ load_helper epm-query
 
 epm_provides_files()
 {
+	local pkg_files="$@"
 	[ -n "$pkg_files" ] || return
 
 	local PKGTYPE="$(get_package_type $pkg_files)"
@@ -44,6 +45,7 @@ epm_provides_files()
 
 epm_provides_names()
 {
+	local pkg_names="$@"
 	local CMD
 	[ -n "$pkg_names" ] || return
 
@@ -102,6 +104,6 @@ epm_provides()
 {
 	[ -n "$pkg_filenames" ] || fatal "Provides: missing package(s) name"
 
-	epm_provides_files
-	epm_provides_names
+	epm_provides_files $pkg_files
+	epm_provides_names $pkg_names $pkg_dirs
 }

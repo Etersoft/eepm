@@ -21,6 +21,7 @@ load_helper epm-query
 
 epm_requires_files()
 {
+	local pkg_files="$@"
 	[ -n "$pkg_files" ] || return
 
 	local PKGTYPE="$(get_package_type $pkg_files)"
@@ -42,6 +43,7 @@ epm_requires_files()
 
 epm_requires_names()
 {
+	local pkg_names="$@"
 	local CMD
 	[ -n "$pkg_names" ] || return
 
@@ -101,6 +103,6 @@ docmd $CMD $pkg_names
 epm_requires()
 {
 	[ -n "$pkg_filenames" ] || fatal "Requires: missing package(s) name"
-	epm_requires_files
-	epm_requires_names
+	epm_requires_files $pkg_files
+	epm_requires_names $pkg_names $pkg_dirs
 }
