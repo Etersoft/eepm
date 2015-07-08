@@ -408,7 +408,7 @@ case $DISTRNAME in
 		;;
 	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific)
 		CMD="yum-rpm"
-		#which dnf 2>/dev/null >/dev/null && CMD=dnf-rpm
+		which dnf 2>/dev/null >/dev/null && CMD=dnf-rpm
 		;;
 	Slackware)
 		CMD="slackpkg"
