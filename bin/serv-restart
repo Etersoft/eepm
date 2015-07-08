@@ -1,0 +1,42 @@
+#!/bin/sh
+#
+# Copyright (C) 2012  Etersoft
+# Copyright (C) 2012  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+load_helper serv-status
+
+# Restart service (start if it was not running)
+serv_restart()
+{
+	local SERVICE="$1"
+	shift
+
+	case $SERVICETYPE in
+		service-chkconfig|service-upstart)
+			sudocmd service $SERVICE restart "$@"
+			;;
+		service-initd|service-update)
+			sudocmd $INITDIR/$SERVICE restart "$@"
+			;;
+		systemd)
+			sudocmd systemctl restart $SERVICE "$@"
+			;;
+		*)
+			fatal "Have no suitable command for $SERVICETYPE"
+			;;
+	esac
+}

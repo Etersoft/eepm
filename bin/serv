@@ -161,7 +161,9 @@ check_command()
         serv_cmd=usage
         withoutservicename=1
         ;;
-    #restart)                 # HELPCMD: restart service
+    restart)                 # HELPCMD: restart service
+        serv_cmd=restart
+        ;;
     #reload)                  # HELPCMD: reload service
     start)                    # HELPCMD: start service
         serv_cmd=start
