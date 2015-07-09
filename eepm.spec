@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.5.10
+Version: 1.5.11
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,14 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Thu Jul 09 2015 Vitaly Lipatov <lav@altlinux.ru> 1.5.11-alt1
+- epm-filelist: add support file list for noninstalled packages on deb
+- introduce autoorphans command
+- epm-install: add workaround to fix urls works
+- fix behaviour when has dir with the same name like package
+- serv: implement native restart
+- use dnf on Fedora if exists
+
 * Wed Feb 25 2015 Vitaly Lipatov <lav@altlinux.ru> 1.5.10-alt1
 - serv-status: realize detection scheduled status for Ubuntu
 - epm-sh: fix withtimeout
