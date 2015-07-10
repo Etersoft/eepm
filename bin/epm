@@ -246,6 +246,9 @@ check_command()
     downgrade)                # HELPCMD: downgrade [all] packages to the repo state
         epm_cmd=downgrade
         ;;
+    download)                # HELPCMD: download package(s) file to the current dir
+        epm_cmd=download
+        ;;
     simulate)                 # HELPCMD: simulate install with check requires
         epm_cmd=simulate
         ;;
