@@ -58,6 +58,9 @@ epm_downgrade()
 		# can do update repobase automagically
 		sudocmd yum downgrade $pkg_filename
 		;;
+	dnf-rpm)
+		sudocmd dnf downgrade $pkg_filename
+		;;
 	urpm-rpm)
 		assure_exists urpm-reposync urpm-tools
 		sudocmd urpm-reposync -v

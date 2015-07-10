@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012-2014  Etersoft
-# Copyright (C) 2012-2014  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2015  Etersoft
+# Copyright (C) 2012-2015  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -38,6 +38,8 @@ __check_yum_result()
     grep "^Complete!" $1 && return 0
     grep "^Exiting on user Command" $1 && return 0
     grep "^Exiting on user command" $1 && return 0
+    # dnf issue
+    grep "^Operation aborted." $1 && return 0
     # return default result by default
     return $2
 }
@@ -75,6 +77,12 @@ n
 EOF
     			__check_yum_result $RC_STDOUT $?
     		fi
+    		RES=$?
+    		clean_store_output
+    		return $RES ;;
+    	dnf-rpm)
+    		LC_ALL=C store_output sudocmd dnf --assumeno install $filenames
+    		__check_yum_result $RC_STDOUT $?
     		RES=$?
     		clean_store_output
     		return $RES ;;

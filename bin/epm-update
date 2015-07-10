@@ -40,7 +40,12 @@ case $PMTYPE in
 		sudocmd aptitude update || exit
 		;;
 	yum-rpm)
-		sudocmd yum check-update
+		info "update command is stubbed for yum"
+		#sudocmd yum check-update
+		;;
+	dnf-rpm)
+		info "update command is stubbed for dnf"
+		#sudocmd dnf check-update
 		;;
 	urpm-rpm)
 		sudocmd urpmi.update -a
