@@ -71,7 +71,7 @@ __do_query()
             showcmd dpkg -S $1
             dpkg_print_name_version $(dpkg -S $1 | grep -v "^diversion by" | sed -e "s|:.*||")
             return ;;
-        yum-rpm|urpm-rpm)
+        yum-rpm|dnf-rpm|urpm-rpm)
             CMD="rpm -qf"
             ;;
         zypper-rpm)
