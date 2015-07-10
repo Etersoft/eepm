@@ -190,6 +190,9 @@ epm_ni_install_names()
 		yum-rpm)
 			sudocmd yum -y $YUMOPTIONS install $@
 			return ;;
+		dnf-rpm)
+			sudocmd dnf -y $YUMOPTIONS install $@
+			return ;;
 		urpm-rpm)
 			sudocmd urpmi --auto $URPMOPTIONS $@
 			return ;;
