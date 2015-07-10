@@ -96,6 +96,7 @@ esac
 docmd $CMD $string
 }
 
+# TODO: use ^ as first word, use ~ for negate, for epmqp too
 # produce grep sequence
 __epm_search_make_grep()
 {

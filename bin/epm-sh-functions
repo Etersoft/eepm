@@ -49,7 +49,7 @@ check_tty()
 	# egrep from busybox may not --color
 	# egrep from MacOS print help to stderr
 	if egrep --help 2>&1 | grep -q -- "--color" ; then
-		EGREPCOLOR="--color"
+		export EGREPCOLOR="--color"
 	fi
 
 	which tput >/dev/null 2>/dev/null || return
@@ -310,7 +310,7 @@ assure_exists()
 
 eget()
 {
-	$PROGDIR/tools-eget "$@"
+	$SHAREDIR/tools-eget "$@"
 }
 
 # TODO: improve and drop!

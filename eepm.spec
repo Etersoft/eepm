@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.5.11
+Version: 1.5.12
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,13 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Fri Jul 10 2015 Vitaly Lipatov <lav@altlinux.ru> 1.5.12-alt1
+- epm: initial download package support
+- fix update and simulate for dnf
+- allow changelog and query file for dnf
+- install: allow return command for dnf
+- use dnf only if /var/lib/dnf/yumdb is exists
+
 * Thu Jul 09 2015 Vitaly Lipatov <lav@altlinux.ru> 1.5.11-alt1
 - epm-filelist: add support file list for noninstalled packages on deb
 - introduce autoorphans command

@@ -22,7 +22,7 @@ epm_removerepo()
 case $PMTYPE in
 	apt-rpm)
 		assure_exists apt-repo
-		sudocmd apt-repo rm "$pkg_filenames"
+		sudocmd apt-repo rm "$quoted_args"
 		;;
 	apt-dpkg|aptitude-dpkg)
 		info "You need remove repo from /etc/apt/sources.list"
