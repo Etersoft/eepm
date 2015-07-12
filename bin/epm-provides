@@ -105,5 +105,5 @@ epm_provides()
 	[ -n "$pkg_filenames" ] || fatal "Provides: missing package(s) name"
 
 	epm_provides_files $pkg_files
-	epm_provides_names $pkg_names $pkg_dirs
+	epm_provides_names $pkg_names
 }

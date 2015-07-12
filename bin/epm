@@ -350,10 +350,11 @@ fi
 
 pkg_files=$(strip_spaces "$pkg_files")
 pkg_dirs=$(strip_spaces "$pkg_dirs")
-pkg_names=$(strip_spaces "$pkg_names")
+# in common case dirs equals to names only suddenly
+pkg_names=$(strip_spaces "$pkg_names $pkg_dirs")
 pkg_urls=$(strip_spaces "$pkg_urls")
 
-pkg_filenames=$(strip_spaces "$pkg_files $pkg_dirs $pkg_names")
+pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
 
 # Just debug
 #echover "command: $epm_cmd"

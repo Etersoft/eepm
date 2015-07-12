@@ -104,5 +104,5 @@ epm_requires()
 {
 	[ -n "$pkg_filenames" ] || fatal "Requires: missing package(s) name"
 	epm_requires_files $pkg_files
-	epm_requires_names $pkg_names $pkg_dirs
+	epm_requires_names $pkg_names
 }
