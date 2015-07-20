@@ -300,6 +300,7 @@ __get_package_for_command()
 	esac
 }
 
+# TODO: we we can't use epm directly?
 assure_exists()
 {
 	load_helper epm-assure
