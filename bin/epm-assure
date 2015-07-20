@@ -23,6 +23,21 @@ __check_command_in_path()
 }
 
 
+# copied from strings
+# CHECKME: the same like estrlist has ?
+# Note: used egrep! write '[0-9]+(first|two)', not '[0-9]\+...'
+rhas()
+{
+	echo "$1" | egrep -q -- "$2"
+}
+
+# copied from strings
+is_dirpath()
+{
+    [ "$1" = "." ] && return $?
+    rhas "$1" "/"
+}
+
 # Do fast checking for command and install package if the command does not exist
 
 # $1 - command name
@@ -30,6 +45,23 @@ __check_command_in_path()
 
 __epm_assure()
 {
+
+    if is_dirpath "$1" ; then
+        if [ -r "$1" ] ; then
+            if [ -n "$verbose" ] ; then
+                info "File $1 is exists."
+                epm qf "$1"
+            fi
+        return 0
+        fi
+
+        [ -n "$2" ] || fatal "You need run with package name param when use with absolute path"
+
+        # TODO: below we install in some semimanual way
+        docmd epm --auto --skip-installed install "$2"
+        return
+    fi
+
     if __check_command_in_path "$1" >/dev/null ; then
         if [ -n "$verbose" ] ; then
             local compath="$(__check_command_in_path "$1")"
