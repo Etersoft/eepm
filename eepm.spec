@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.5.13
+Version: 1.5.14
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,9 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Fri Jul 24 2015 Vitaly Lipatov <lav@altlinux.ru> 1.5.14-alt1
+- simulate: allow Exiting on user Command in any place of the line
+
 * Tue Jul 21 2015 Vitaly Lipatov <lav@altlinux.ru> 1.5.13-alt1
 - epm-assure: add support for checking any path on a file system
 - small fixes
