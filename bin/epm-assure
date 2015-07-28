@@ -57,7 +57,6 @@ __epm_assure()
 
         [ -n "$2" ] || fatal "You need run with package name param when use with absolute path"
 
-        # TODO: below we install in some semimanual way
         docmd epm --auto --skip-installed install "$2"
         return
     fi
@@ -74,18 +73,13 @@ __epm_assure()
     # TODO: use package name normalization
     info "Installing appropriate package for $1 command..."
 
-    # TODO: why we can't use epm install here? it can be non interactive and skip-installed
-    # QUESTION: how we can this package is installed if its not?
-    load_helper epm-install
-
     local PACKAGE="$2"
     [ -n "$PACKAGE" ] || PACKAGE="$1"
-    #epm install $2
 
-    # copied from epm_install
-    local names="$(echo "$PACKAGE" | filter_out_installed_packages)"
+    local PACKAGEVERSION="$3"
+    warning "TODO: check for PACKAGEVERSION is missed"
 
-    non_interactive=1 epm_install_names $names
+    docmd epm --auto --skip-installed install "$PACKAGE"
 }
 
 
