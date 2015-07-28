@@ -47,9 +47,9 @@ __epm_assure()
 {
 
     if is_dirpath "$1" ; then
-        if [ -r "$1" ] ; then
+        if [ -e "$1" ] ; then
             if [ -n "$verbose" ] ; then
-                info "File $1 is exists."
+                info "File or directory $1 is already exists."
                 epm qf "$1"
             fi
         return 0
@@ -94,5 +94,5 @@ epm_assure()
     [ -n "$pkg_filenames" ] || fatal "Assure: Missing params. Check $0 --help for info."
 
     # use helper func for extract separate params
-    __epm_assure $pkg_filenames
+    __epm_assure $(eval echo $quoted_args)
 }
