@@ -19,17 +19,15 @@
 
 # copied from etersoft-build-utils/bin/rpmqf
 
-# use and modify TOFILE recursively
 __do_query_real_file()
 {
-	local LINKTO1 LINKTO
 	local TOFILE
 	
 	# get canonical path
 	if [ -e "$1" ] ; then
-		TOFILE=$1
+		TOFILE="$1"
 	else
-		TOFILE=`which $1 2>/dev/null || echo $1`
+		TOFILE=$(which "$1" 2>/dev/null || echo "$1")
 		if [ "$TOFILE" != "$1" ] ; then
 			info "Note: $1 is placed as $TOFILE"
 		fi
@@ -37,10 +35,12 @@ __do_query_real_file()
 	
 	# get value of symbolic link
 	if [ -L "$TOFILE" ] ; then
-		__do_query $TOFILE
-		LINKTO=`readlink "$TOFILE"`
+		local LINKTO
+		__do_query "$TOFILE"
+		LINKTO=$(readlink "$TOFILE")
 		info "Note: $TOFILE is link to $LINKTO"
 		__do_query_real_file "$LINKTO"
+		return
 	fi
 
 	FULLFILEPATH="$TOFILE"
@@ -158,7 +158,7 @@ epm_query_file()
 
     for pkg in $pkg_filenames ; do
         __do_query_real_file "$pkg"
-        __do_query $FULLFILEPATH || pkg_filenames=$FULLFILEPATH epm_search_file
+        __do_query "$FULLFILEPATH" || pkg_filenames="$FULLFILEPATH" epm_search_file
     done
 
 }
