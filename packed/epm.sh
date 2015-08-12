@@ -306,7 +306,7 @@ assure_exists()
 
 eget()
 {
-	$PROGDIR/tools-eget "$@"
+	$SHAREDIR/tools-eget "$@"
 }
 
 get_package_type()
@@ -400,7 +400,7 @@ case $DISTRNAME in
 		;;
 	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific)
 		CMD="yum-rpm"
-		#which dnf 2>/dev/null >/dev/null && CMD=dnf-rpm
+		which dnf 2>/dev/null >/dev/null && test -d /var/lib/dnf/yumdb && CMD=dnf-rpm
 		;;
 	Slackware)
 		CMD="slackpkg"
@@ -484,10 +484,37 @@ __check_command_in_path()
 }
 
 
+rhas()
+{
+	echo "$1" | egrep -q -- "$2"
+}
+
+is_dirpath()
+{
+    [ "$1" = "." ] && return $?
+    rhas "$1" "/"
+}
+
 
 
 __epm_assure()
 {
+
+    if is_dirpath "$1" ; then
+        if [ -e "$1" ] ; then
+            if [ -n "$verbose" ] ; then
+                info "File or directory $1 is already exists."
+                epm qf "$1"
+            fi
+        return 0
+        fi
+
+        [ -n "$2" ] || fatal "You need run with package name param when use with absolute path"
+
+        docmd epm --auto --skip-installed install "$2"
+        return
+    fi
+
     if __check_command_in_path "$1" >/dev/null ; then
         if [ -n "$verbose" ] ; then
             local compath="$(__check_command_in_path "$1")"
@@ -500,16 +527,13 @@ __epm_assure()
     # TODO: use package name normalization
     info "Installing appropriate package for $1 command..."
 
-    load_helper epm-install
-
     local PACKAGE="$2"
     [ -n "$PACKAGE" ] || PACKAGE="$1"
-    #epm install $2
 
-    # copied from epm_install
-    local names="$(echo "$PACKAGE" | filter_out_installed_packages)"
+    local PACKAGEVERSION="$3"
+    warning "TODO: check for PACKAGEVERSION is missed"
 
-    non_interactive=1 epm_install_names $names
+    docmd epm --auto --skip-installed install "$PACKAGE"
 }
 
 
@@ -518,7 +542,7 @@ epm_assure()
     [ -n "$pkg_filenames" ] || fatal "Assure: Missing params. Check $0 --help for info."
 
     # use helper func for extract separate params
-    __epm_assure $pkg_filenames
+    __epm_assure $(eval echo $quoted_args)
 }
 
 # File bin/epm-audit:
@@ -529,6 +553,64 @@ case $PMTYPE in
 	pkgng)
 		sudocmd pkg audit -F
 		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+}
+
+# File bin/epm-autoorphans:
+
+epm_autoorphans()
+{
+case $PMTYPE in
+	#apt-rpm)
+		# ALT Linux only
+		#__epm_autoremove_altrpm
+
+		# ALT Linux only
+		#assure_exists remove-old-kernels
+		#sudocmd remove-old-kernels
+	#	;;
+	apt-dpkg|aptitude-dpkg)
+		assure_exists deborphan
+		showcmd deborphan
+		deborphan | sudocmd epm remove
+		;;
+	#aura)
+	#	sudocmd aura -Oj
+	#	;;
+	yum-rpm)
+		showcmd package-cleanup --orphans
+		local PKGLIST=$(package-cleanup --orphans)
+		sudocmd epm remove $PKGLIST
+		;;
+	urpm-rpm)
+		showcmd urpmq --auto-orphans
+		sudocmd urpme --auto-orphans
+		;;
+	#emerge)
+	#	sudocmd emerge --depclean
+	#	assure_exists revdep-rebuild
+	#	sudocmd revdep-rebuild
+	#	;;
+	pacman)
+		sudocmd pacman -Qdtq | sudocmd pacman -Rs -
+		;;
+	#slackpkg)
+		# clean-system removes non official packages
+		#sudocmd slackpkg clean-system
+	#	;;
+	#guix)
+	#	sudocmd guix gc
+	#	;;
+	#pkgng)
+	#	sudocmd pkg autoremove
+	#	;;
+	#zypper-rpm)
+	#	sudocmd zypper clean
+	#	;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
@@ -560,10 +642,11 @@ epm_autoremove()
 {
 case $PMTYPE in
 	apt-rpm)
-		assure_exists remove-old-kernels
 		# ALT Linux only
 		__epm_autoremove_altrpm
+
 		# ALT Linux only
+		assure_exists remove-old-kernels
 		sudocmd remove-old-kernels
 		;;
 	apt-dpkg|aptitude-dpkg)
@@ -582,17 +665,19 @@ case $PMTYPE in
 			sudocmd yum remove $PKGLIST
 		done
 		;;
-	urpm-rpm)
-		sudocmd urpme --auto-orphans
-		;;
+	# see autoorhans
+	#urpm-rpm)
+	#	sudocmd urpme --auto-orphans
+	#	;;
 	emerge)
 		sudocmd emerge --depclean
 		assure_exists revdep-rebuild
 		sudocmd revdep-rebuild
 		;;
-	pacman)
-		sudocmd pacman -Qdtq | sudocmd pacman -Rs -
-		;;
+	# see autoorhans
+	#pacman)
+	#	sudocmd pacman -Qdtq | sudocmd pacman -Rs -
+	#	;;
 	slackpkg)
 		# clean-system removes non official packages
 		#sudocmd slackpkg clean-system
@@ -645,7 +730,7 @@ __epm_changelog_local_names()
 	[ -z "$*" ] && return
 
 	case $PMTYPE in
-		apt-rpm|yum-rpm|urpm-rpm|zypper-rpm)
+		apt-rpm|yum-rpm|dnf-rpm|urpm-rpm|zypper-rpm)
 			docmd_foreach "rpm --changelog" $@ | less
 			;;
 		apt-dpkg|aptitude-dpkg)
@@ -1040,9 +1125,28 @@ epm_downgrade()
 		# can do update repobase automagically
 		sudocmd yum downgrade $pkg_filename
 		;;
+	dnf-rpm)
+		sudocmd dnf downgrade $pkg_filename
+		;;
 	urpm-rpm)
 		assure_exists urpm-reposync urpm-tools
 		sudocmd urpm-reposync -v
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+	esac
+}
+
+# File bin/epm-download:
+
+epm_download()
+{
+	local CMD
+
+	case $PMTYPE in
+	dnf-rpm)
+		sudocmd dnf download $pkg_filename
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -1079,6 +1183,11 @@ __epm_filelist_remote()
 		apt-rpm)
 			# TODO: use RESTful interface to prometeus? See ALT bug #29496
 			docmd_foreach __alt_local_content_filelist $@
+			;;
+		apt-dpkg)
+			assure_exists apt-file
+			sudocmd apt-file update
+			docmd apt-file list $@
 			;;
 		*)
 			fatal "Query filelist for non installed packages does not realized"
@@ -1161,6 +1270,7 @@ __epm_filelist_name()
 
 	# TODO: add less
 	docmd $CMD $pkg_names && return
+	# TODO: may be we need check is installed before prev. line?
 	is_installed $pkg_names || __epm_filelist_remote $pkg_names
 }
 
@@ -1433,6 +1543,9 @@ epm_ni_install_names()
 		yum-rpm)
 			sudocmd yum -y $YUMOPTIONS install $@
 			return ;;
+		dnf-rpm)
+			sudocmd dnf -y $YUMOPTIONS install $@
+			return ;;
 		urpm-rpm)
 			sudocmd urpmi --auto $URPMOPTIONS $@
 			return ;;
@@ -1650,12 +1763,17 @@ epm_install()
 
     # Download urls via eget pkg_urls and use eget
     # TODO: use optimization (rpm can download packages by url, yum too?)
-    download_pkg_urls "$pkg_urls"
+    #[ -n "$pkg_urls" ] && warning "URL using does not realize yet"
+    #download_pkg_urls "$pkg_urls"
+    # temp. hack
+    pkg_files="$pkg_files $pkg_urls"
+    # TODO: add downloaded files to $pkg_files
 
-    [ -z "$pkg_files$pkg_names" ] && info "Skip empty install list" && return 22
+    [ -z "$pkg_files$pkg_names$pkg_urls" ] && info "Skip empty install list" && return 22
 
     local names="$(echo $pkg_names | filter_out_installed_packages)"
     local files="$(echo $pkg_files | filter_out_installed_packages)"
+    local urls="$(echo $pkg_urls | filter_out_installed_packages)"
 
     [ -z "$files$names" ] && info "Skip empty install list" && return 22
 
@@ -1925,6 +2043,7 @@ epm_programs()
 
 epm_provides_files()
 {
+	local pkg_files="$@"
 	[ -n "$pkg_files" ] || return
 
 	local PKGTYPE="$(get_package_type $pkg_files)"
@@ -1948,6 +2067,7 @@ epm_provides_files()
 
 epm_provides_names()
 {
+	local pkg_names="$@"
 	local CMD
 	[ -n "$pkg_names" ] || return
 
@@ -2002,8 +2122,8 @@ epm_provides()
 {
 	[ -n "$pkg_filenames" ] || fatal "Provides: missing package(s) name"
 
-	epm_provides_files
-	epm_provides_names
+	epm_provides_files $pkg_files
+	epm_provides_names $pkg_names
 }
 
 # File bin/epm-query:
@@ -2177,14 +2297,13 @@ epm_query()
 
 __do_query_real_file()
 {
-	local LINKTO1 LINKTO
 	local TOFILE
 	
 	# get canonical path
 	if [ -e "$1" ] ; then
-		TOFILE=$1
+		TOFILE="$1"
 	else
-		TOFILE=`which $1 2>/dev/null || echo $1`
+		TOFILE=$(which "$1" 2>/dev/null || echo "$1")
 		if [ "$TOFILE" != "$1" ] ; then
 			info "Note: $1 is placed as $TOFILE"
 		fi
@@ -2192,10 +2311,12 @@ __do_query_real_file()
 	
 	# get value of symbolic link
 	if [ -L "$TOFILE" ] ; then
-		__do_query $TOFILE
-		LINKTO=`readlink "$TOFILE"`
+		local LINKTO
+		__do_query "$TOFILE"
+		LINKTO=$(readlink "$TOFILE")
 		info "Note: $TOFILE is link to $LINKTO"
 		__do_query_real_file "$LINKTO"
+		return
 	fi
 
 	FULLFILEPATH="$TOFILE"
@@ -2226,7 +2347,7 @@ __do_query()
             showcmd dpkg -S $1
             dpkg_print_name_version $(dpkg -S $1 | grep -v "^diversion by" | sed -e "s|:.*||")
             return ;;
-        yum-rpm|urpm-rpm)
+        yum-rpm|dnf-rpm|urpm-rpm)
             CMD="rpm -qf"
             ;;
         zypper-rpm)
@@ -2313,7 +2434,7 @@ epm_query_file()
 
     for pkg in $pkg_filenames ; do
         __do_query_real_file "$pkg"
-        __do_query $FULLFILEPATH || pkg_filenames=$FULLFILEPATH epm_search_file
+        __do_query "$FULLFILEPATH" || pkg_filenames="$FULLFILEPATH" epm_search_file
     done
 
 }
@@ -2765,6 +2886,7 @@ esac
 
 epm_requires_files()
 {
+	local pkg_files="$@"
 	[ -n "$pkg_files" ] || return
 
 	local PKGTYPE="$(get_package_type $pkg_files)"
@@ -2786,6 +2908,7 @@ epm_requires_files()
 
 epm_requires_names()
 {
+	local pkg_names="$@"
 	local CMD
 	[ -n "$pkg_names" ] || return
 
@@ -2844,8 +2967,8 @@ docmd $CMD $pkg_names
 epm_requires()
 {
 	[ -n "$pkg_filenames" ] || fatal "Requires: missing package(s) name"
-	epm_requires_files
-	epm_requires_names
+	epm_requires_files $pkg_files
+	epm_requires_names $pkg_names
 }
 
 # File bin/epm-search:
@@ -3091,8 +3214,9 @@ __check_yum_result()
 {
     grep "^No package" $1 && return 1
     grep "^Complete!" $1 && return 0
-    grep "^Exiting on user Command" $1 && return 0
-    grep "^Exiting on user command" $1 && return 0
+    grep "Exiting on user [Cc]ommand" $1 && return 0
+    # dnf issue
+    grep "^Operation aborted." $1 && return 0
     # return default result by default
     return $2
 }
@@ -3130,6 +3254,12 @@ n
 EOF
     			__check_yum_result $RC_STDOUT $?
     		fi
+    		RES=$?
+    		clean_store_output
+    		return $RES ;;
+    	dnf-rpm)
+    		LC_ALL=C store_output sudocmd dnf --assumeno install $filenames
+    		__check_yum_result $RC_STDOUT $?
     		RES=$?
     		clean_store_output
     		return $RES ;;
@@ -3223,7 +3353,12 @@ case $PMTYPE in
 		sudocmd aptitude update || exit
 		;;
 	yum-rpm)
-		sudocmd yum check-update
+		info "update command is stubbed for yum"
+		#sudocmd yum check-update
+		;;
+	dnf-rpm)
+		info "update command is stubbed for dnf"
+		#sudocmd dnf check-update
 		;;
 	urpm-rpm)
 		sudocmd urpmi.update -a
@@ -3763,9 +3898,9 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.5.10"
+        echo "EPM package manager version 1.5.15"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
-        echo "Copyright (c) Etersoft 2012-2014"
+        echo "Copyright (c) Etersoft 2012-2015"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 
@@ -3941,6 +4076,9 @@ check_command()
     autoremove)               # HELPCMD: auto remove unneeded package(s)
         epm_cmd=autoremove
         ;;
+    autoorphans|--orphans)    # HELPCMD: remove all packages not from the repository
+        epm_cmd=autoorphans
+        ;;
     upgrade|dist-upgrade)     # HELPCMD: performs upgrades of package software distributions
         epm_cmd=upgrade
         ;;
@@ -3949,6 +4087,9 @@ check_command()
         ;;
     downgrade)                # HELPCMD: downgrade [all] packages to the repo state
         epm_cmd=downgrade
+        ;;
+    download)                # HELPCMD: download package(s) file to the current dir
+        epm_cmd=download
         ;;
     simulate)                 # HELPCMD: simulate install with check requires
         epm_cmd=simulate
@@ -4023,7 +4164,7 @@ check_filenames()
         elif [ -d "$opt" ] ; then
             pkg_dirs="$pkg_dirs $opt"
         elif echo "$opt" | grep -q "://" ; then
-            pkg_urls="$pkg_names $opt"
+            pkg_urls="$pkg_urls $opt"
         else
             pkg_names="$pkg_names $opt"
         fi
@@ -4051,10 +4192,11 @@ fi
 
 pkg_files=$(strip_spaces "$pkg_files")
 pkg_dirs=$(strip_spaces "$pkg_dirs")
-pkg_names=$(strip_spaces "$pkg_names")
+# in common case dirs equals to names only suddenly
+pkg_names=$(strip_spaces "$pkg_names $pkg_dirs")
 pkg_urls=$(strip_spaces "$pkg_urls")
 
-pkg_filenames=$(strip_spaces "$pkg_files $pkg_dirs $pkg_names")
+pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
 
 # Just debug
 #echover "command: $epm_cmd"

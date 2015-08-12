@@ -304,7 +304,7 @@ assure_exists()
 
 eget()
 {
-	$PROGDIR/tools-eget "$@"
+	$SHAREDIR/tools-eget "$@"
 }
 
 get_package_type()
@@ -398,7 +398,7 @@ case $DISTRNAME in
 		;;
 	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific)
 		CMD="yum-rpm"
-		#which dnf 2>/dev/null >/dev/null && CMD=dnf-rpm
+		which dnf 2>/dev/null >/dev/null && test -d /var/lib/dnf/yumdb && CMD=dnf-rpm
 		;;
 	Slackware)
 		CMD="slackpkg"
@@ -571,6 +571,30 @@ serv_list_startup()
 			done
 			;;
 
+	esac
+}
+
+# File bin/serv-restart:
+
+
+serv_restart()
+{
+	local SERVICE="$1"
+	shift
+
+	case $SERVICETYPE in
+		service-chkconfig|service-upstart)
+			sudocmd service $SERVICE restart "$@"
+			;;
+		service-initd|service-update)
+			sudocmd $INITDIR/$SERVICE restart "$@"
+			;;
+		systemd)
+			sudocmd systemctl restart $SERVICE "$@"
+			;;
+		*)
+			fatal "Have no suitable command for $SERVICETYPE"
+			;;
 	esac
 }
 
@@ -1147,7 +1171,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.5.10"
+        echo "Service manager version 1.5.15"
         echo "Running on $($DISTRVENDOR)"
         echo "Copyright (c) Etersoft 2012, 2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -1182,7 +1206,9 @@ check_command()
         serv_cmd=usage
         withoutservicename=1
         ;;
-    #restart)                 # HELPCMD: restart service
+    restart)                 # HELPCMD: restart service
+        serv_cmd=restart
+        ;;
     #reload)                  # HELPCMD: reload service
     start)                    # HELPCMD: start service
         serv_cmd=start
