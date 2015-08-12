@@ -58,7 +58,7 @@ print_version()
 {
         echo "EPM package manager version @VERSION@"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
-        echo "Copyright (c) Etersoft 2012-2014"
+        echo "Copyright (c) Etersoft 2012-2015"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 

@@ -1,3 +1,5 @@
+--dump-options for write simple bash completition
+
 add epm site / epmurl in replace to rpmurl
 
 yum remove $(package-cleanup --orphans
