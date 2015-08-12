@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2014  Etersoft
-# Copyright (C) 2014  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2014, 2015  Etersoft
+# Copyright (C) 2014, 2015  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -24,6 +24,8 @@ __is_repo_info_download()
             if [ -r /var/cache/apt ] ; then
                 # FIXME: only if root permissions
                 test -r /var/cache/apt/pkgcache.bin || return
+                # if repo older than 1 day, return false
+                test -n "$(find /var/cache/apt/pkgcache.bin -ctime +1)" || return
             fi
             ;;
         *)
