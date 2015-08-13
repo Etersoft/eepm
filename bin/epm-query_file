@@ -37,7 +37,7 @@ __do_query_real_file()
 	if [ -L "$TOFILE" ] ; then
 		local LINKTO
 		__do_query "$TOFILE"
-		LINKTO=$(readlink "$TOFILE")
+		LINKTO=$(readlink -f "$TOFILE")
 		info "Note: $TOFILE is link to $LINKTO"
 		__do_query_real_file "$LINKTO"
 		return
