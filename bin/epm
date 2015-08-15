@@ -246,7 +246,7 @@ check_command()
     downgrade)                # HELPCMD: downgrade [all] packages to the repo state
         epm_cmd=downgrade
         ;;
-    download)                # HELPCMD: download package(s) file to the current dir
+    download)                 # HELPCMD: download package(s) file to the current dir
         epm_cmd=download
         ;;
     simulate)                 # HELPCMD: simulate install with check requires
@@ -254,6 +254,9 @@ check_command()
         ;;
     audit)                    # HELPCMD: audits installed packages against known vulnerabilities
         epm_cmd=audit
+        ;;
+    site|url)                 # HELPCMD: open package's site in a browser (use -p for open packages.altlinux.org site)
+        epm_cmd=site
         ;;
     -V|checkpkg|integrity)    # HELPCMD: check package file integrity (checksum)
         epm_cmd=checkpkg

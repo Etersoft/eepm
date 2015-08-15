@@ -1,0 +1,135 @@
+#!/bin/sh
+#
+# Copyright (C) 2015  Etersoft
+# Copyright (C) 2015  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+load_helper epm-query
+
+run_command_if_exists()
+{
+	local CMD="$1"
+	shift
+	if which "$CMD" 2>/dev/null >/dev/null ; then
+		docmd "$CMD" "$@"
+		return 0
+	fi
+	return 1
+}
+
+open_browser()
+{
+	local i
+	for i in xdg-open firefox chromium links ; do
+		run_command_if_exists $i "$@" && return
+	done
+}
+
+# FIXME: Copied from etersoft-build-utils
+# Query variables from rpm package
+querypackage()
+{
+	local FORMAT="%{$2}"
+	local INSTALLED="-p"
+	# if name empty, use third param as format string
+	[ -n "$2" ] || FORMAT="$3"
+	# if not file, drop -p for get from rpm base
+	[ -e "$1" ] || INSTALLED=""
+	rpmquery $INSTALLED --queryformat "$FORMAT" $1
+}
+
+# FIXME: Copied from etersoft-build-utils
+# return source package name by binary rpm package file
+get_sourcepkg_name()
+{
+	local FILE="$1"
+	local PKGVERSION=$(querypackage "$FILE" VERSION)
+	querypackage "$FILE" sourcerpm | sed -e "s|-$PKGVERSION.*||g"
+}
+
+query_package_url()
+{
+	local URL
+	case $PMTYPE in
+		*-rpm)
+			querypackage "$1" URL
+			#LANG=C epm info "$1"
+			return
+			;;
+	esac
+	fatal "rpm based distro supported only. TODO: Realize via web service?"
+}
+
+get_locale()
+{
+	local loc
+	loc=$(a= natspec --locale 2>/dev/null)
+	[ -n "$loc" ] || loc=$LANG
+	echo $loc
+}
+
+get_pao_url()
+{
+	local loc
+	loc=$(get_locale | cut -c1-2)
+	case $loc in
+		en|ru|uk|br)
+			loc=$loc
+			;;
+		*)
+			loc=en
+	esac
+	echo "http://packages.altlinux.org/$loc/Sisyphus/srpms"
+}
+
+query_altlinux_url()
+{
+	local URL
+	case $PMTYPE in
+		*-rpm)
+			local srpm=$(get_sourcepkg_name "$1")
+			[ -n "$srpm" ] || fatal "Can't get source name for $1"
+			echo "$(get_pao_url)/$srpm"
+			return
+			;;
+	esac
+	fatal "rpm based distro supported only. TODO: Realize via web service?"
+}
+
+epm_site()
+{
+
+[ -n "$pkg_filenames" ] || fatal "Info: missing package(s) name"
+
+PAO=
+for f in $pkg_names $pkg_files ; do
+	[ "$f" = "-p" ] && PAO="$f" && continue
+	if [ -n "$PAO" ] ; then
+		pkg_url=$(query_altlinux_url $f)
+	else
+		pkg_url=$(query_package_url $f)
+	fi
+	[ -n "$pkg_url" ] && open_browser "$pkg_url" && continue
+	warning "Can't get URL for $f package"
+done
+
+#for f in $pkg_names ; do
+#	LANG=C epm info $f
+#done
+
+# TODO: -p for p.a.o (see rpmurl)
+
+}
