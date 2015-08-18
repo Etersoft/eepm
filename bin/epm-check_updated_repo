@@ -17,15 +17,31 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-__is_repo_info_download()
+__is_repo_info_downloaded()
 {
     case $PMTYPE in
         apt-*)
             if [ -r /var/cache/apt ] ; then
-                # FIXME: only if root permissions
+                # FIXME: only if root permissions, now skip for user
+                test -r /var/cache/apt/pkgcache.bin || return
+            fi
+            ;;
+        *)
+            ;;
+    esac
+    return 0
+}
+
+__is_repo_info_uptodate()
+{
+    case $PMTYPE in
+        apt-*)
+            if [ -r /var/cache/apt ] ; then
+                # FIXME: only if root permissions, now skip for user
                 test -r /var/cache/apt/pkgcache.bin || return
                 # if repo older than 1 day, return false
-                test -n "$(find /var/cache/apt/pkgcache.bin -ctime +1)" || return
+                # find print string if file is obsoleted
+                test -z "$(find /var/cache/apt/pkgcache.bin -mtime +1)" || return
             fi
             ;;
         *)
@@ -36,12 +52,10 @@ __is_repo_info_download()
 
 update_repo_if_needed()
 {
-    if ! __is_repo_info_download ; then
+    if ! __is_repo_info_downloaded || ! __is_repo_info_uptodate ; then
         load_helper epm-update
         epm_update
         return
     fi
-
-    # TODO: if repo info is very obsoleted (a few days?), we need run update
 
 }
