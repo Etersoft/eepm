@@ -283,7 +283,7 @@ set_eatmydata()
 	# use if possible
 	which eatmydata >/dev/null 2>/dev/null || return
 	SUDO="$SUDO eatmydata"
-	info "Uwaga! eatmydata is installed, we will use it for disable all sync operations."
+	[ -n "$verbose" ] && info "Uwaga! eatmydata is installed, we will use it for disable all sync operations."
 	return 0
 }
 
