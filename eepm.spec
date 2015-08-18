@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.5.16
+Version: 1.5.17
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,11 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Wed Aug 19 2015 Vitaly Lipatov <lav@altlinux.ru> 1.5.17-alt1
+- fix update repo checking
+- print Uwaga about eatmydata only if verbose mode
+- changelog: use query rpm mode for --changelog
+
 * Sun Aug 16 2015 Vitaly Lipatov <lav@altlinux.ru> 1.5.16-alt1
 - run update if repo info older than 1 day
 - epm-query_file: fix read link
