@@ -35,7 +35,7 @@ __epm_changelog_files()
 	case $(get_package_type $1) in
 		rpm)
 			assure_exists rpm
-			docmd_foreach "rpm -p --changelog" $@ | less
+			docmd_foreach "rpm -q -p --changelog" $@ | less
 			;;
 #		deb)
 #			
@@ -52,7 +52,7 @@ __epm_changelog_local_names()
 
 	case $PMTYPE in
 		apt-rpm|yum-rpm|dnf-rpm|urpm-rpm|zypper-rpm)
-			docmd_foreach "rpm --changelog" $@ | less
+			docmd_foreach "rpm -q --changelog" $@ | less
 			;;
 		apt-dpkg|aptitude-dpkg)
 			docmd zcat /usr/share/doc/$1/changelog.Debian.gz | less
