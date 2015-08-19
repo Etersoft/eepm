@@ -1,0 +1,45 @@
+#!/bin/sh
+#
+# Copyright (C) 2015  Etersoft
+# Copyright (C) 2015  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+
+SUBST_ALT_RULE="s![/ ](ALTLinux|LINUX@Etersoft)[/ ](Sisyphus|p7[/ ]branch|p6[/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch) ! \1/\2/\3 !gi"
+
+__fix_apt_sources_list()
+{
+	for i in "$@" ; do
+		[ -s "$i" ] || continue
+		sudocmd perl -i.bak -pe "$SUBST_ALT_RULE" $i
+	done
+}
+
+epm_repolist()
+{
+case $PMTYPE in
+	apt-rpm)
+		assure_exists apt-repo
+		docmd apt-repo list
+		__fix_apt_sources_list /etc/apt/sources.list
+		__fix_apt_sources_list /etc/apt/sources.list.d/*.list
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+}

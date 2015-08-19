@@ -1,0 +1,55 @@
+# Local package resource list for APT goes here.
+# To inspect package defined part, see /etc/apt/sources.list.d/*.list
+#rpm ftp://server/pub/ALTLinux/Sisyphus x86_64 classic games media
+#rpm ftp://server/pub/ALTLinux/Sisyphus x86_32 classic
+#rpm ftp://server/pub/ALTLinux/Sisyphus noarch classic games media
+#rpm file:/var/ftp/pub/ALTLinux i586 bonus
+
+rpm file:/var/ftp/pub ALTLinux/Sisyphus/x86_64 classic debuginfo
+rpm file:/var/ftp/pub ALTLinux/Sisyphus/x86_64-i586 classic
+rpm file:/var/ftp/pub ALTLinux/Sisyphus/noarch classic
+
+rpm file:/var/ftp/pub/Etersoft LINUX@Etersoft/Sisyphus/x86_64 addon nonfree
+rpm file:/var/ftp/pub/Etersoft LINUX@Etersoft/Sisyphus/x86_64-i586 addon
+rpm file:/var/ftp/pub/Etersoft LINUX@Etersoft/Sisyphus/noarch addon nonfree
+
+rpm file:/var/ftp/pub/Etersoft WINE@Etersoft/2.1-testing/WINE/ALTLinux/Sisyphus main
+rpm file:/var/ftp/pub/Etersoft WINE@Etersoft/2.1-testing/WINE/ALTLinux/Sisyphus/extra main
+
+#rpm file:/var/ftp/pub/Etersoft LINUX@Etersoft/Sisyphus/i586 addon nonfree
+#rpm file:/var/ftp/pub/Etersoft LINUX@Etersoft/Sisyphus/x86_64 nonfree
+#rpm file:/var/ftp/pub/Etersoft LINUX@Etersoft/Sisyphus/noarch nonfree
+#rpm http://git.altlinux.org/repo/81290/ x86_64 task
+
+rpm http://download.etersoft.ru/pub/Etersoft RX@Etersoft/testing/x86_64/ALTLinux/Sisyphus main
+rpm http://download.etersoft.ru/pub/Etersoft RX@Etersoft/unstable/x86_64/ALTLinux/Sisyphus main
+#rpm http://git.altlinux.org/repo/125605/ x86_64-i586 task
+
+# ftp.altlinux.org (ALT Linux, Moscow)
+
+# ALT Linux Sisyphus
+rpm [alt] ftp://ftp.altlinux.org/pub/distributions ALTLinux/Sisyphus/x86_64 classic
+rpm [alt] ftp://ftp.altlinux.org/pub/distributions ALTLinux/Sisyphus/noarch classic
+
+rpm [alt] http://ftp.altlinux.org/pub/distributions ALTLinux/Sisyphus/x86_64 classic
+rpm [alt] http://ftp.altlinux.org/pub/distributions ALTLinux/Sisyphus/noarch classic
+
+rpm [alt] rsync://ftp.altlinux.org ALTLinux/Sisyphus/x86_64 classic
+rpm [alt] rsync://ftp.altlinux.org ALTLinux/Sisyphus/noarch classic
+
+# possible it will be in apt-conf-etersoft?
+rpm file:/var/ftp/pub/Etersoft LINUX@Etersoft/Sisyphus/i586 addon nonfree
+rpm file:/var/ftp/pub/Etersoft LINUX@Etersoft/Sisyphus/noarch addon nonfree
+
+# mirror.yandex.ru (Yandex, Moscow)
+
+# ALT Linux Sisyphus
+rpm [alt] ftp://mirror.yandex.ru altlinux/Sisyphus/x86_64 classic
+rpm [alt] ftp://mirror.yandex.ru altlinux/Sisyphus/noarch classic
+
+rpm [alt] http://mirror.yandex.ru altlinux/Sisyphus/x86_64 classic
+rpm [alt] http://mirror.yandex.ru altlinux/Sisyphus/noarch classic
+
+rpm [alt] rsync://mirror.yandex.ru altlinux/Sisyphus/x86_64 classic
+rpm [alt] rsync://mirror.yandex.ru altlinux/Sisyphus/noarch classic
+

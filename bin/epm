@@ -220,6 +220,9 @@ check_command()
     repolist|sl|rl|listrepo)  # HELPCMD: print repo list
         epm_cmd=repolist
         ;;
+    repofix)                  # HELPCMD: fix paths in sources lists (ALT Linux only)
+        epm_cmd=repofix
+        ;;
     removerepo|rr)            # HELPCMD: remove package repo
         epm_cmd=removerepo
         ;;
