@@ -206,6 +206,9 @@ check_command()
     assure)                   # HELPCMD: <command> [package]: install package if command does not exists
         epm_cmd=assure
         ;;
+    policy)                   # HELPCMD: print detailed information about the priority selection of package
+        epm_cmd=policy
+        ;;
 
 # Repository control
     update)                   # HELPCMD: update remote package repository databases
