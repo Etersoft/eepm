@@ -31,8 +31,9 @@ rpm http://download.etersoft.ru/pub/Etersoft RX@Etersoft/unstable/x86_64/ALTLinu
 rpm [alt] ftp://ftp.altlinux.org/pub/distributions ALTLinux/Sisyphus/x86_64 classic
 rpm [alt] ftp://ftp.altlinux.org/pub/distributions ALTLinux/Sisyphus/noarch classic
 
-rpm [alt] http://ftp.altlinux.org/pub/distributions ALTLinux/Sisyphus/x86_64 classic
-rpm [alt] http://ftp.altlinux.org/pub/distributions ALTLinux/Sisyphus/noarch classic
+rpm [alt] http://ftp.altlinux.org/pub/distributions ALTLinux/p7/branch/x86_64 classic
+rpm [alt] http://ftp.altlinux.org/pub/distributions ALTLinux/p7/branch/noarch classic
+
 
 rpm [alt] rsync://ftp.altlinux.org ALTLinux/Sisyphus/x86_64 classic
 rpm [alt] rsync://ftp.altlinux.org ALTLinux/Sisyphus/noarch classic

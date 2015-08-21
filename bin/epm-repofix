@@ -17,8 +17,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-
-SUBST_ALT_RULE="s![/ ](ALTLinux|LINUX@Etersoft)[/ ](Sisyphus|p7[/ ]branch|p6[/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch) ! \1/\2/\3 !gi"
+# FIXME
+SUBST_ALT_RULE="s!^([^#].*)[/ ](ALTLinux|LINUX@Etersoft)[/ ](Sisyphus|p7[/ ]branch|p6[/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch) !\1 \2/\3/\4 !gi"
 
 __fix_apt_sources_list()
 {
