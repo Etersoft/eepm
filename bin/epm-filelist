@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012-2014  Etersoft
-# Copyright (C) 2012-2014  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2015  Etersoft
+# Copyright (C) 2012-2015  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -91,20 +91,11 @@ __epm_filelist_name()
 	[ -z "$*" ] && return
 
 	case $PMTYPE in
-		apt-rpm)
+		*-rpm)
 			CMD="rpm -ql"
 			;;
 		*-dpkg)
 			CMD="dpkg -L"
-			;;
-		yum-rpm)
-			CMD="rpm -ql"
-			;;
-		urpm-rpm)
-			CMD="rpm -ql"
-			;;
-		zypper-rpm)
-			CMD="rpm -ql"
 			;;
 		android)
 			CMD="pm list packages -f"
