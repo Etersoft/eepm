@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.5.17
+Version: 1.5.18
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,13 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Tue Aug 25 2015 Vitaly Lipatov <lav@altlinux.ru> 1.5.18-alt1
+- epm: add policy (like apt-cache policy) command
+- initial repofix code, need fix regexp and test
+- epm-filelist: realize low level file list for rpm in the same code
+- fix checking update files
+- epm clean: clean all cached files on ALT
+
 * Wed Aug 19 2015 Vitaly Lipatov <lav@altlinux.ru> 1.5.17-alt1
 - fix update repo checking
 - print Uwaga about eatmydata only if verbose mode
