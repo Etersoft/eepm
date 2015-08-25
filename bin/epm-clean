@@ -17,11 +17,19 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+__remove_alt_apt_cache_file()
+{
+	sudocmd rm -vf /var/cache/apt/*.bin
+	sudocmd rm -vf /var/lib/apt/lists/*pkglist*
+	sudocmd rm -vf /var/lib/apt/lists/*release*
+}
+
 epm_clean()
 {
 case $PMTYPE in
 	apt-rpm|apt-dpkg)
 		sudocmd apt-get clean
+		__remove_alt_apt_cache_file
 		;;
 	aptitude-dpkg)
 		sudocmd aptitude clean
