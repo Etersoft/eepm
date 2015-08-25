@@ -36,12 +36,13 @@ __is_repo_info_uptodate()
 {
     case $PMTYPE in
         apt-*)
-            if [ -r /var/cache/apt ] ; then
+            if [ -r /var/lib/apt/lists ] ; then
+                local LOCKFILE=/var/lib/apt/lists/lock
                 # FIXME: only if root permissions, now skip for user
-                test -r /var/cache/apt/pkgcache.bin || return
+                test -r $LOCKFILE || return
                 # if repo older than 1 day, return false
                 # find print string if file is obsoleted
-                test -z "$(find /var/cache/apt/pkgcache.bin -mtime +1)" || return
+                test -z "$(find $LOCKFILE -mtime +1)" || return
             fi
             ;;
         *)
