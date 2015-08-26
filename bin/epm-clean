@@ -24,15 +24,28 @@ __remove_alt_apt_cache_file()
 	sudocmd rm -vf /var/lib/apt/lists/*release*
 }
 
+__remove_deb_apt_cache_file()
+{
+	sudocmd rm -vf /var/cache/apt/*.bin
+	sudocmd rm -vf /var/lib/apt/lists/*Packages*
+	sudocmd rm -vf /var/lib/apt/lists/*Release*
+	sudocmd rm -vf /var/lib/apt/lists/*Translation*
+}
+
 epm_clean()
 {
 case $PMTYPE in
-	apt-rpm|apt-dpkg)
+	apt-rpm)
 		sudocmd apt-get clean
 		__remove_alt_apt_cache_file
 		;;
+	apt-dpkg)
+		sudocmd apt-get clean
+		__remove_deb_apt_cache_file
+		;;
 	aptitude-dpkg)
 		sudocmd aptitude clean
+		__remove_deb_apt_cache_file
 		;;
 	yum-rpm)
 		sudocmd yum clean all
