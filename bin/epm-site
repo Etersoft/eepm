@@ -60,12 +60,26 @@ get_sourcepkg_name()
 	querypackage "$FILE" sourcerpm | sed -e "s|-$PKGVERSION.*||g"
 }
 
+__query_package_hl_url()
+{
+	case $DISTRNAME in
+		ALTLinux)
+			# http://petstore.swagger.io/?url=http://packages.altlinux.org/api/docs
+			epm assure curl || return 1
+			curl --header "Accept: application/json" "http://packages.altlinux.org/api/srpms/$1" | grep '"url"' | sed -e 's|.*"url":"||g' | sed -e 's|".*||g'
+			return 0
+			;;
+	esac
+	return 1
+}
+
 query_package_url()
 {
 	local URL
+
 	case $PMTYPE in
 		*-rpm)
-			querypackage "$1" URL
+			querypackage "$1" URL || __query_package_hl_url "$1"
 			#LANG=C epm info "$1"
 			return
 			;;
