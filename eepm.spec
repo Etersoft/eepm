@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.5.18
+Version: 1.5.19
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,11 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Wed Aug 26 2015 Vitaly Lipatov <lav@altlinux.ru> 1.5.19-alt1
+- epm-clean: add deb-based support
+- check_updated_repo: use $SUDO for check if updated
+- epm-site: get url for noninstalled packages from packages.altlinux.org on ALT Linux
+
 * Tue Aug 25 2015 Vitaly Lipatov <lav@altlinux.ru> 1.5.18-alt1
 - epm: add policy (like apt-cache policy) command
 - initial repofix code, need fix regexp and test
