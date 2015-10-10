@@ -51,7 +51,7 @@ pkgtype()
 		gentoo) echo "tbz2" ;;
 		windows) echo "exe" ;;
 		android) echo "apk" ;;
-		debian|ubuntu|mint|runtu) echo "deb" ;;
+		debian|ubuntu|mint|runtu|mcst) echo "deb" ;;
 		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
 			echo "rpm" ;;
 		fedora|redhat|scientific|centos|rhel)
@@ -128,6 +128,10 @@ elif distro arch-release ; then
 	if grep 2011 -q $ROOTDIR/etc/pacman.d/mirrorlist ; then
 		DISTRIB_RELEASE="2011"
 	fi
+
+elif distro mcst_version ; then
+	DISTRIB_ID="MCST"
+	DISTRIB_RELEASE=$(cat "$DISTROFILE" | grep "release" | sed -e "s|.*release \([0-9]*\).*|\1|g")
 
 # for Ubuntu use standard LSB info
 elif [ "$DISTRIB_ID" = "Ubuntu" ] && [ -n "$DISTRIB_RELEASE" ]; then
