@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.5.19
+Version: 1.5.20
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,11 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Mon Oct 12 2015 Vitaly Lipatov <lav@altlinux.ru> 1.5.20-alt1
+- distr_info: add mcst support
+- skip update checking for non root users have no nopassword sudo
+- epm_checksystem: add initial file for check system health
+
 * Wed Aug 26 2015 Vitaly Lipatov <lav@altlinux.ru> 1.5.19-alt1
 - epm-clean: add deb-based support
 - check_updated_repo: use $SUDO for check if updated
