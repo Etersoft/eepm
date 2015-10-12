@@ -155,7 +155,7 @@ epm_search()
 	[ -n "$pkg_filenames" ] || fatal "Search: missing search argument(s)"
 
 	# it is useful for first time running
-	update_repo_if_needed
+	update_repo_if_needed soft
 
 	# FIXME: do it better
 	local MGS

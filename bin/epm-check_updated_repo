@@ -22,8 +22,7 @@ __is_repo_info_downloaded()
     case $PMTYPE in
         apt-*)
             if [ -r /var/cache/apt ] ; then
-                # FIXME: only if root permissions, now skip for user
-                test -r /var/cache/apt/pkgcache.bin || return
+                $SUDO test -r /var/cache/apt/pkgcache.bin || return
             fi
             ;;
         *)
@@ -38,7 +37,6 @@ __is_repo_info_uptodate()
         apt-*)
             if $SUDO [ -r /var/lib/apt/lists ] ; then
                 local LOCKFILE=/var/lib/apt/lists/lock
-                # FIXME: only if root permissions, now skip for user
                 $SUDO test -r $LOCKFILE || return
                 # if repo older than 1 day, return false
                 # find print string if file is obsoleted
@@ -53,6 +51,12 @@ __is_repo_info_uptodate()
 
 update_repo_if_needed()
 {
+    # check if we need skip update checking
+    if [ "$1" = "soft" ] && [ -n "$SUDO" ] ; then
+        # if sudo requires a password, skip autoupdate
+        sudo -n true 2>/dev/null || { info "sudo requires a password, skip repo status checking" ; return 0 ; }
+    fi
+
     if ! __is_repo_info_downloaded || ! __is_repo_info_uptodate ; then
         load_helper epm-update
         epm_update
