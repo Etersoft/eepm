@@ -18,6 +18,7 @@
 #
 
 load_helper epm-query
+load_helper epm-print
 
 # Try remove with low level removing
 epm_remove_low()
@@ -28,7 +29,7 @@ epm_remove_low()
 			sudocmd rpm -ev $nodeps $@
 			return ;;
 		apt-dpkg|aptitude-dpkg)
-			sudocmd dpkg -P $(subst_option nodeps --force-all) $@
+			sudocmd dpkg -P $(subst_option nodeps --force-all) $(print_name "$@")
 			return ;;
 		pkgsrc)
 			sudocmd pkg_delete -r $@
