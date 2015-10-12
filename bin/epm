@@ -261,6 +261,9 @@ check_command()
     audit)                    # HELPCMD: audits installed packages against known vulnerabilities
         epm_cmd=audit
         ;;
+    #checksystem)              # HELPCMD: check system for known errors (package management related)
+    #    epm_cmd=checksystem
+    #    ;;
     site|url)                 # HELPCMD: open package's site in a browser (use -p for open packages.altlinux.org site)
         epm_cmd=site
         ;;
