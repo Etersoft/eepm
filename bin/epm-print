@@ -83,11 +83,17 @@ __epm_print()
     local WHAT="$1"
     shift
     local FNFLAG=
+    local PKFLAG=
     [ "$1" = "from" ] && shift
     [ "$1" = "for" ] && shift
     [ "$1" = "in" ] && shift
     if [ "$1" = "filename" ] ; then
         FNFLAG="$1"
+        shift
+    fi
+
+    if [ "$1" = "package" ] ; then
+        PKFLAG="$1"
         shift
     fi
 
@@ -97,13 +103,14 @@ __epm_print()
             ;;
         "-h"|"--help"|"help")
 cat <<EOF
-    epm print name [from filename] NN        print only name of package name or package file
-    epm print version [from filename] NN     print only version of package name or package file
-    epm print release [from filename] NN     print only release of package name or package file
+  Examples:
+    epm print name [from filename|for package] NN        print only name of package name or package file
+    epm print version [from filename|for package] NN     print only version of package name or package file
+    epm print release [from filename|for package] NN     print only release of package name or package file
     epm print field FF for package NN        print field of the package
     epm print pkgname from filename NN       print package name for package file
     epm print srcname from filename NN       print source name for package file
-    epm print srcpkgname from filename NN    print source package name for the binary package file
+    epm print srcpkgname from [filename|package] NN    print source package name for the binary package file
     epm print binpkgfilelist in DIR for NN   list binary package(s) filename(s) from DIR for the source package file
 EOF
             ;;
@@ -111,6 +118,8 @@ EOF
             [ -n "$1" ] || fatal "Arg is missed"
             if [ -n "$FNFLAG" ] ; then
                 print_name $(print_pkgname "$@")
+            elif [ -n "$PKFLAG" ] ; then
+                query_package_field "name" "$@"
             else
                 print_name "$@"
             fi
@@ -119,6 +128,8 @@ EOF
             [ -n "$1" ] || fatal "Arg is missed"
             if [ -n "$FNFLAG" ] ; then
                 print_version $(print_pkgname "$@")
+            elif [ -n "$PKFLAG" ] ; then
+                query_package_field "version" "$@"
             else
                 print_version "$@"
             fi
@@ -127,6 +138,8 @@ EOF
             [ -n "$1" ] || fatal "Arg is missed"
             if [ -n "$FNFLAG" ] ; then
                 print_release $(print_pkgname "$@")
+            elif [ -n "$PKFLAG" ] ; then
+                query_package_field "release" "$@"
             else
                 print_release "$@"
             fi
@@ -136,7 +149,7 @@ EOF
             local FIELD="$1"
             shift
             [ "$1" = "for" ] && shift
-            query_package_field $FIELD "$@"
+            query_package_field "$FIELD" "$@"
             ;;
         "pkgname")
             [ -n "$FNFLAG" ] || fatal "print $WHAT works only for filename(s)"
@@ -150,7 +163,7 @@ EOF
             print_srcname "$@"
             ;;
         "srcpkgname")
-            [ -n "$FNFLAG" ] || fatal "print $WHAT works only for filename(s)"
+            [ -n "$FNFLAG" ] || [ -n "$PKFLAG" ] || fatal "print $WHAT works only for filename(s)"
             [ -n "$1" ] || fatal "Arg is missed"
             print_srcpkgname "$@"
             ;;
