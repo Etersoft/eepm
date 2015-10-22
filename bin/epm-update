@@ -41,10 +41,12 @@ case $PMTYPE in
 		;;
 	yum-rpm)
 		info "update command is stubbed for yum"
+		# yum makecache
 		#sudocmd yum check-update
 		;;
 	dnf-rpm)
 		info "update command is stubbed for dnf"
+		# dnf makecache
 		#sudocmd dnf check-update
 		;;
 	urpm-rpm)
