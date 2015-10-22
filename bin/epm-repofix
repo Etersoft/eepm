@@ -18,17 +18,18 @@
 #
 
 # FIXME
-SUBST_ALT_RULE="s!^([^#].*)[/ ](ALTLinux|LINUX@Etersoft)[/ ](Sisyphus|p7[/ ]branch|p6[/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch) !\1 \2/\3/\4 !gi"
+SUBST_ALT_RULE='s!^([^#].*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ](Sisyphus|p7[/ ]branch|p6[/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch) !\1 \2/\3/\4 !gi'
 
 __fix_apt_sources_list()
 {
+	[ -n "$SUDO" ] && fatal "run only under root"
 	for i in "$@" ; do
 		[ -s "$i" ] || continue
-		sudocmd perl -i.bak -pe "$SUBST_ALT_RULE" $i
+		perl -i.bak -pe "$SUBST_ALT_RULE" $i
 	done
 }
 
-epm_repolist()
+epm_repofix()
 {
 case $PMTYPE in
 	apt-rpm)
@@ -36,6 +37,7 @@ case $PMTYPE in
 		docmd apt-repo list
 		__fix_apt_sources_list /etc/apt/sources.list
 		__fix_apt_sources_list /etc/apt/sources.list.d/*.list
+		docmd apt-repo list
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
