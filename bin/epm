@@ -273,7 +273,11 @@ check_command()
     -V|checkpkg|integrity)    # HELPCMD: check package file integrity (checksum)
         epm_cmd=checkpkg
         ;;
-
+    -h|--help|help)           # HELPOPT: print this help
+        help=1
+        phelp
+        exit 0
+        ;;
     *)
         return 1
         ;;
@@ -284,10 +288,6 @@ check_command()
 check_option()
 {
     case $1 in
-    -h|--help|help)       # HELPOPT: this help
-        phelp
-        exit 0
-        ;;
     -v|--version)         # HELPOPT: print version
         print_version
         exit 0
