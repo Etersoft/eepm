@@ -38,6 +38,14 @@ case $PMTYPE in
 		__fix_apt_sources_list /etc/apt/sources.list
 		__fix_apt_sources_list /etc/apt/sources.list.d/*.list
 		docmd apt-repo list
+
+		# rebuild rpm database
+		#sudocmd rm -fv /var/lib/rpm/__db*
+		#sudocmd rpm --rebuilddb
+		;;
+	yum-rpm|dnf-rpm)
+		sudocmd rm -fv /var/lib/rpm/__db*
+		sudocmd rpm --rebuilddb
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
