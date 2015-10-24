@@ -39,6 +39,12 @@ __alt_local_content_filelist()
     } | $OUTCMD
 }
 
+__deb_local_content_filelist()
+{
+    showcmd "apt-file list $1 | grep '^$1: ' | sed -e 's|$1: ||g'"
+    apt-file list "$1" | grep "^$1: " | sed -e "s|$1: ||g"
+}
+
 
 __epm_filelist_remote()
 {
@@ -52,7 +58,7 @@ __epm_filelist_remote()
 		apt-dpkg)
 			assure_exists apt-file
 			sudocmd apt-file update
-			docmd apt-file list $@
+			docmd_foreach __deb_local_content_filelist $@
 			;;
 		*)
 			fatal "Query filelist for non installed packages does not realized"
