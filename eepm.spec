@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.5.21
+Version: 1.5.22
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,13 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Sun Oct 25 2015 Vitaly Lipatov <lav@altlinux.ru> 1.5.22-alt1
+- distr_info: fix ALT Linux version detection
+- epm: fix print help command
+- fix epm repofix
+- improve epm-filelist
+- use short names when possible
+
 * Tue Oct 13 2015 Vitaly Lipatov <lav@altlinux.ru> 1.5.21-alt1
 - introduce epm print for print out package names and fields
 - epm-site: use functions from epm-print
