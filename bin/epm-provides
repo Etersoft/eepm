@@ -18,6 +18,7 @@
 #
 
 load_helper epm-query
+load_helper epm-print
 
 epm_provides_files()
 {
@@ -105,5 +106,5 @@ epm_provides()
 	[ -n "$pkg_filenames" ] || fatal "Provides: missing package(s) name"
 
 	epm_provides_files $pkg_files
-	epm_provides_names $pkg_names
+	epm_provides_names $(print_name $pkg_names)
 }

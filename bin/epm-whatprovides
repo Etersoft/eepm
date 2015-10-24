@@ -17,10 +17,14 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+load_helper epm-print
+
 epm_whatprovides()
 {
 	local CMD
-	[ -n "$pkg_filenames" ] || fatal "Whatprovides: missing package(s) name"
+	[ -n "$pkg_files" ] && fatal "whatprovides does not handle files"
+	[ -n "$pkg_names" ] || fatal "whatprovides: missing package(s) name"
+	local pkg=$(print_name $pkg_names)
 
 # by package name
 case $PMTYPE in
@@ -28,7 +32,7 @@ case $PMTYPE in
 		CMD="conary repquery --what-provides"
 		;;
 	apt-rpm|apt-dpkg|aptitude-dpkg)
-		LANG=C docmd apt-get install --print-uris $pkg_filenames | grep "^Selecting" | cut -f2 -d" "
+		LANG=C docmd apt-get install --print-uris $pkg | grep "^Selecting" | cut -f2 -d" "
 		return
 		;;
 	yum-rpm)
@@ -42,6 +46,6 @@ case $PMTYPE in
 		;;
 esac
 
-docmd $CMD $pkg_filenames
+docmd $CMD $pkg
 
 }

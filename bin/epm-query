@@ -18,6 +18,7 @@
 #
 
 load_helper epm-packages
+load_helper epm-print
 
 
 _get_grep_exp()
@@ -185,5 +186,5 @@ epm_query()
 
 	__epm_query_file $pkg_files || return
 
-	__epm_query_name $pkg_names || return
+	__epm_query_name $(print_name $pkg_names) || return
 }

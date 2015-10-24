@@ -18,6 +18,7 @@
 #
 
 load_helper epm-query
+load_helper epm-print
 
 # TODO: port or rewrite apt-file
 # https://bugzilla.altlinux.org/show_bug.cgi?id=14449
@@ -53,13 +54,13 @@ __epm_filelist_remote()
 	case $PMTYPE in
 		apt-rpm)
 			# TODO: use RESTful interface to prometeus? See ALT bug #29496
-			docmd_foreach __alt_local_content_filelist $@
+			docmd_foreach __alt_local_content_filelist $(print_name $@)
 			;;
 		apt-dpkg)
 			assure_exists apt-file || return
 			# if sudo requires a password, skip autoupdate
 			sudo -n true 2>/dev/null && sudocmd apt-file update || info "sudo requires a password, skip apt-file update"
-			docmd_foreach __deb_local_content_filelist $@
+			docmd_foreach __deb_local_content_filelist $(print_name $@)
 			;;
 		*)
 			fatal "Query filelist for non installed packages does not realized"
