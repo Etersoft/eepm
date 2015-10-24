@@ -56,8 +56,9 @@ __epm_filelist_remote()
 			docmd_foreach __alt_local_content_filelist $@
 			;;
 		apt-dpkg)
-			assure_exists apt-file
-			sudocmd apt-file update
+			assure_exists apt-file || return
+			# if sudo requires a password, skip autoupdate
+			sudo -n true 2>/dev/null && sudocmd apt-file update || info "sudo requires a password, skip apt-file update"
 			docmd_foreach __deb_local_content_filelist $@
 			;;
 		*)
