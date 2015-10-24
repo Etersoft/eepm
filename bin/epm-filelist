@@ -54,13 +54,13 @@ __epm_filelist_remote()
 	case $PMTYPE in
 		apt-rpm)
 			# TODO: use RESTful interface to prometeus? See ALT bug #29496
-			docmd_foreach __alt_local_content_filelist $(print_name $@)
+			docmd_foreach __alt_local_content_filelist $@
 			;;
 		apt-dpkg)
 			assure_exists apt-file || return
 			# if sudo requires a password, skip autoupdate
 			sudo -n true 2>/dev/null && sudocmd apt-file update || info "sudo requires a password, skip apt-file update"
-			docmd_foreach __deb_local_content_filelist $(print_name $@)
+			docmd_foreach __deb_local_content_filelist $@
 			;;
 		*)
 			fatal "Query filelist for non installed packages does not realized"
@@ -112,7 +112,7 @@ __epm_filelist_name()
 			CMD="conary query --ls"
 			;;
 		pacman)
-			docmd pacman -Ql $pkg_names | sed -e "s|.* ||g" | less
+			docmd pacman -Ql $@ | sed -e "s|.* ||g" | less
 			return
 			;;
 		emerge)
@@ -123,7 +123,7 @@ __epm_filelist_name()
 			CMD="pkg info -l"
 			;;
 		slackpkg)
-			is_installed $pkg_names || fatal "Query filelist for non installed packages does not realized"
+			is_installed $@ || fatal "Query filelist for non installed packages does not realized"
 			docmd awk 'BEGIN{desk=1}{if(/^FILE LIST:$/){desk=0} else if (desk==0) {print}}' /var/log/packages/${pkg_filenames}* | less
 			return
 			;;
@@ -133,9 +133,9 @@ __epm_filelist_name()
 	esac
 
 	# TODO: add less
-	docmd $CMD $pkg_names && return
+	docmd $CMD $@ && return
 	# TODO: may be we need check is installed before prev. line?
-	is_installed $pkg_names || __epm_filelist_remote $pkg_names
+	is_installed $@ || __epm_filelist_remote $@
 }
 
 
@@ -145,6 +145,6 @@ epm_filelist()
 
 
 	__epm_filelist_file $pkg_files || return
-	__epm_filelist_name $pkg_names || return
+	__epm_filelist_name $(print_name $pkg_names) || return
 
 }
