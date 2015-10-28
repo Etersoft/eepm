@@ -424,8 +424,10 @@ epm_install()
 
     [ -z "$files$names" ] && info "Skip empty install list" && return 22
 
-    # it is useful for first time running
-    update_repo_if_needed
+    if [ -z "$files" ] ; then
+        # it is useful for first time running
+        update_repo_if_needed
+    fi
 
     epm_install_names $names || return
     epm_install_files $files
