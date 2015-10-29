@@ -20,6 +20,7 @@
 __remove_alt_apt_cache_file()
 {
 	sudocmd rm -vf /var/cache/apt/*.bin
+	sudocmd rm -vf /var/cache/apt/partial/*
 	sudocmd rm -vf /var/lib/apt/lists/*pkglist*
 	sudocmd rm -vf /var/lib/apt/lists/*release*
 }
@@ -27,6 +28,7 @@ __remove_alt_apt_cache_file()
 __remove_deb_apt_cache_file()
 {
 	sudocmd rm -vf /var/cache/apt/*.bin
+	sudocmd rm -vf /var/cache/apt/archives/partial/*
 	sudocmd rm -vf /var/lib/apt/lists/*Packages*
 	sudocmd rm -vf /var/lib/apt/lists/*Release*
 	sudocmd rm -vf /var/lib/apt/lists/*Translation*
