@@ -59,6 +59,7 @@ query_package_url()
 
 	case $PMTYPE in
 		*-rpm)
+			# TODO: for binary packages?
 			query_package_field URL "$1" || __query_package_hl_url "$1"
 			#LANG=C epm info "$1"
 			return

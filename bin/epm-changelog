@@ -96,7 +96,7 @@ __epm_changelog_unlocal_names()
 			docmd equery changes -f $1 | less
 			;;
 		*)
-			fatal "Have no suitable command for $PMTYPE"
+			fatal "Have no suitable command for $PMTYPE. Try install the package firstly."
 			;;
 	esac
 
