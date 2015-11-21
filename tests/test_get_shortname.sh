@@ -1,5 +1,10 @@
 #!/bin/sh
 
+get_numdelim()
+{
+	echo -n "$@" | sed -e "s|[^-]||g" | wc -c
+}
+
 check()
 {
 	[ "$2" != "$3" ] && echo "FATAL with '$1': result '$3' do not match with '$2'" || echo "OK for '$1' with '$2'"
@@ -18,6 +23,7 @@ check_pkgfile()
 
 check_pkg()
 {
+	get_numdelim "$1"
 	check "$1" "$2" $(../bin/epm print name "$1")
 }
 
@@ -65,3 +71,10 @@ check_pkg pkg-source-less-1.0.spec pkg-source-less
 check_pkg pkg123-1.0.spec pkg123
 check_pkg pkg123[_-]1.0.spec pkg123
 check_pkg pkg*.spec pkg
+check_pkg qt5-webkit-doc qt5-webkit-doc
+check_pkg geronimo-j2ee-management-1.1-api geronimo-j2ee-management-1.1-api
+check_pkg i586-libgphoto2_port-12 i586-libgphoto2_port-12
+check_pkg python-module-qscintilla2-qt4 python-module-qscintilla2-qt4
+check_pkg python-module-qscintilla2-qt4-2.9-alt4 python-module-qscintilla2-qt4
+check_pkg libqscintilla2-6-qt4 libqscintilla2-6-qt4
+check_pkg libqscintilla2-6-qt4-2.5.1-alt4 libqscintilla2-6-qt4

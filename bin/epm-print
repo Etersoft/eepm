@@ -42,20 +42,25 @@ print_binpkgfilelist()
 		| grep "^$PKGNAME[[:space:]].*" | cut -f2 | xargs -n1 -I "{}" echo -n "$PKGDIR/{} "
 }
 
-PKGNAMEMASK="\(.*\)-\(.*\)-\(.*\)"
+# TODO: need try detect more strict
+# TODO: package name mask for every system
+#PKGNAMEMASK1="\(.*\)-\([^0-9].*[^0-9]\)-\(.*[0-9].*\)"
+# mask to parse package name
+PKGNAMEMASK="\(.*\)-\([0-9].*\)-\(.*[0-9].*\)"
+
 print_name()
 {
-    echo "$@" | xargs -n1000 echo | sed -e "s|$PKGNAMEMASK|\1|g"
+    echo "$@" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK|\1|g"
 }
 
 print_version()
 {
-    echo "$1" | xargs -n1000 echo | sed -e "s|$PKGNAMEMASK|\2|g"
+    echo "$1" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK|\2|g"
 }
 
 print_release()
 {
-    echo "$1" | xargs -n1000 echo | sed -e "s|$PKGNAMEMASK|\3|g"
+    echo "$1" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK|\3|g"
 }
 
 print_pkgname()
