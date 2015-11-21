@@ -34,6 +34,7 @@ case $PMTYPE in
 esac
 }
 
+# TODO: we have a problem with error status here
 epm_packages()
 {
 	local CMD
@@ -46,8 +47,10 @@ case $PMTYPE in
 		;;
 	*-dpkg)
 		#CMD="dpkg -l $pkg_filenames"
-		CMD="dpkg-query -W --showformat=\${Package}-\${Version}\n $pkg_filenames"
-		[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${Package}\n $pkg_filenames"
+		CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}-\${Version}\n $pkg_filenames"
+		[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}\n $pkg_filenames"
+		docmd $CMD | grep "^i" | sed -e "s|.* ||g"
+		return
 		;;
 	snappy)
 		CMD="snappy info"
