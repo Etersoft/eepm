@@ -45,7 +45,8 @@ __query_package_hl_url()
 		ALTLinux)
 			# http://petstore.swagger.io/?url=http://packages.altlinux.org/api/docs
 			epm assure curl || return 1
-			curl --header "Accept: application/json" "http://packages.altlinux.org/api/srpms/$1" | grep '"url"' | sed -e 's|.*"url":"||g' | sed -e 's|".*||g'
+			showcmd curl "http://packages.altlinux.org/api/srpms/$1"
+			curl -s --header "Accept: application/json" "http://packages.altlinux.org/api/srpms/$1" | grep '"url"' | sed -e 's|.*"url":"||g' | sed -e 's|".*||g'
 			return 0
 			;;
 	esac
