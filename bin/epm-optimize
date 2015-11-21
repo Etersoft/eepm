@@ -1,0 +1,45 @@
+#!/bin/sh
+#
+# Copyright (C) 2015  Etersoft
+# Copyright (C) 2015  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+# TODO: is it different from rpm --rebuilddb?
+__repack_rpm_base()
+{
+    assure_exists db_dump || fatal
+    assure_exists db_load || fatal
+	cd /var/lib/rpm || fatal
+	mv Packages Packages.BACKUP || fatal
+	db_dump Packages.BACKUP | db_load Packages || fatal
+	rm Packages.BACKUP
+}
+
+epm_optimize()
+{
+
+case $PMTYPE in
+	*-rpm)
+		#__repack_rpm_base
+		#rm -f /var/lib/rpm/__db*
+		rpm --rebuilddb
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+}
