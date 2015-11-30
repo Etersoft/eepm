@@ -34,6 +34,13 @@ case $PMTYPE in
 esac
 }
 
+__aptcyg_print_full()
+{
+	#showcmd apt-cyg show
+	local VERSION=$(apt-cyg show "$1" | grep -m1 "^version: " | sed -e "s|^version: ||g")
+	echo "$1-$VERSION"
+}
+
 # TODO: we have a problem with error status here
 epm_packages()
 {
@@ -124,7 +131,14 @@ case $PMTYPE in
 		return
 		;;
 	aptcyg)
-		CMD="apt-cyg list"
+		CMD="apt-cyg list $pkg_filenames"
+		if [ -z "$short" ] ; then
+			showcmd $CMD
+			for i in $($CMD) ; do
+				__aptcyg_print_full $i
+			done
+			return
+		fi
 		;;
 	*)
 		fatal "Have no suitable query command for $PMTYPE"
