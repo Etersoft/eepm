@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012, 2013  Etersoft
-# Copyright (C) 2012, 2013  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2013, 2015  Etersoft
+# Copyright (C) 2012, 2013, 2015  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -31,6 +31,30 @@ _get_grep_exp()
 }
 
 # TODO: combine with -qa (the difference only in return status now)
+_shortquery_via_packages_list()
+{
+	local res=0
+	local grepexp
+	local firstpkg=$1
+	shift
+
+	grepexp=$(_get_grep_exp $firstpkg)
+
+	# Note: we use short=1 here due grep by ^name$
+	# separate first line for print out command
+	short=1 pkg_filenames=$firstpkg epm_packages | grep -- "$grepexp" || res=1
+
+	local pkg
+	for pkg in "$@" ; do
+		grepexp=$(_get_grep_exp $pkg)
+		short=1 pkg_filenames=$pkg epm_packages 2>/dev/null | grep -- "$grepexp" || res=1
+	done
+
+	return $res
+}
+
+# Note: modified from _shortquery_via_packages_list
+# TODO: non optimal double epm packages call
 _query_via_packages_list()
 {
 	local res=0
@@ -40,12 +64,14 @@ _query_via_packages_list()
 
 	grepexp=$(_get_grep_exp $firstpkg)
 
+	# Note: we use short=1 here due grep by ^name$
 	# separate first line for print out command
-	short=1 pkg_filenames=$firstpkg epm_packages | grep -- "$grepexp" || res=1
+	short=1 pkg_filenames=$firstpkg epm_packages | grep -q -- "$grepexp" && quiet=1 pkg_filenames=$firstpkg epm_packages $firstpkg || res=1
 
+	local pkg
 	for pkg in "$@" ; do
 		grepexp=$(_get_grep_exp $pkg)
-		short=1 pkg_filenames=$pkg epm_packages 2>/dev/null | grep -- "$grepexp" || res=1
+		short=1 pkg_filenames=$pkg epm_packages 2>/dev/null | grep -q -- "$grepexp" && quiet=1 pkg_filenames=$pkg epm_packages $pkg || res=1
 	done
 
 	return $res
@@ -89,7 +115,7 @@ __epm_get_hilevel_name()
 	for i in $@ ; do
 		local pkg
 		# get short form in pkg
-		quiet=1 short=1 pkg=$(__epm_query_name $i) || continue # drop not installed packages
+		quiet=1 pkg=$(__epm_query_shortname $i) || continue # drop not installed packages
 		# if already short form, skipped
 		[ "$pkg" = "$i" ] && echo "$i" && continue
 		# try get long form or use short form
@@ -129,12 +155,10 @@ __epm_query_name()
 	case $PMTYPE in
 		*-rpm)
 			CMD="rpm -q"
-			[ -n "$short" ] && CMD="rpm -q --queryformat %{name}\n"
 			;;
 		*-dpkg)
 			#docmd dpkg -l $@ | grep "^ii"
 			CMD="dpkg-query -W --showformat=\${Package}-\${Version}\n"
-			[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${Package}\n"
 			;;
 		npackd)
 			docmd "npackdcl path --package=$@"
@@ -162,10 +186,49 @@ __epm_query_name()
 	docmd $CMD $@
 }
 
+__epm_query_shortname()
+{
+	local CMD
+
+	[ -z "$*" ] && return
+
+	case $PMTYPE in
+		*-rpm)
+			CMD="rpm -q --queryformat %{name}\n"
+			;;
+		*-dpkg)
+			CMD="dpkg-query -W --showformat=\${Package}\n"
+			;;
+		npackd)
+			docmd "npackdcl path --package=$@"
+			return
+			;;
+		conary)
+			CMD="conary query"
+			;;
+		homebrew)
+			warning "fix query"
+			return 1
+			;;
+		# TODO: need to print name if exists
+		#pkgng)
+		#	CMD="pkg info -e"
+		#	;;
+		# Note: slackpkg info pkgname
+		*)
+			# default slow workaround
+			_shortquery_via_packages_list $@
+			return
+			;;
+	esac
+
+	docmd $CMD $@
+}
+
 # check if pkg is installed
 is_installed()
 {
-	pkg_filenames="$@" pkg_names="$@" epm_query >/dev/null 2>/dev/null
+	short=1 pkg_filenames="$@" pkg_names="$@" epm_query >/dev/null 2>/dev/null
 	# broken way to recursive call here (overhead!)
 	#epm installed $@ >/dev/null 2>/dev/null
 }
@@ -186,5 +249,9 @@ epm_query()
 
 	__epm_query_file $pkg_files || return
 
-	__epm_query_name $(print_name $pkg_names) || return
+	if [ -n "$short" ] ; then
+		__epm_query_shortname $(print_name $pkg_names) || return
+	else
+		__epm_query_name $(print_name $pkg_names) || return
+	fi
 }
