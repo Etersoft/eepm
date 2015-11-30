@@ -34,7 +34,8 @@ __is_repo_info_downloaded()
 __is_repo_info_uptodate()
 {
     case $PMTYPE in
-        apt-*)
+        apt-rpm)
+            # apt-deb do not update lock file date
             if $SUDO [ -r /var/lib/apt/lists ] ; then
                 local LOCKFILE=/var/lib/apt/lists/lock
                 $SUDO test -r $LOCKFILE || return
