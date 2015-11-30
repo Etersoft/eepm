@@ -146,5 +146,7 @@ case $PMTYPE in
 esac
 
 docmd $CMD
+# FIXME: do not print empty lines, but we will lost error status definitely
+# | grep -v "^$"
 
 }
