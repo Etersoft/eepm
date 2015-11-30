@@ -91,6 +91,12 @@ case $PMTYPE in
 		#CMD="pkg rquery '%dn-%dv'"
 		CMD="pkg info -d"
 		;;
+	aptcyg)
+		#CMD="apt-cyg depends"
+		# print show version
+		docmd apt-cyg show $pkg_names | grep "^requires: " | sed "s|^requires: ||g"
+		return
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;

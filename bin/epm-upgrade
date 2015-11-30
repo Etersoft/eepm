@@ -89,6 +89,11 @@ epm_upgrade()
 	guix)
 		CMD="guix package -u"
 		;;
+	# install does not update
+	#aptcyg)
+	#	docmd_foreach "epm install" $(epm packages)
+	#	return
+	#	;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;

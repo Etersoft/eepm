@@ -122,6 +122,10 @@ __epm_filelist_name()
 		pkgng)
 			CMD="pkg info -l"
 			;;
+		aptcyg)
+			docmd apt-cyg listfiles $@ | sed -e "s|^|/|g"
+			return
+			;;
 		slackpkg)
 			is_installed $@ || fatal "Query filelist for non installed packages does not realized"
 			docmd awk 'BEGIN{desk=1}{if(/^FILE LIST:$/){desk=0} else if (desk==0) {print}}' /var/log/packages/${pkg_filenames}* | less

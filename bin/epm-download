@@ -23,7 +23,10 @@ epm_download()
 
 	case $PMTYPE in
 	dnf-rpm)
-		sudocmd dnf download $pkg_filename
+		sudocmd dnf download $pkg_filenames
+		;;
+	aptcyg)
+		sudocmd apt-cyg download $pkg_filenames
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"

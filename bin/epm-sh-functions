@@ -250,6 +250,10 @@ set_sudo()
 	SUDO=""
 	# skip SUDO if disabled
 	[ -n "$EPMNOSUDO" ] && return
+	if [ "$DISTRNAME" = "Cygwin" ] || [ "$DISTRNAME" = "Windows" ] ; then
+		# skip sudo using on Windows
+		return
+	fi
 
 	EFFUID=`id -u`
 
@@ -434,6 +438,9 @@ case $DISTRNAME in
 		;;
 	Android)
 		CMD="android"
+		;;
+	Cygwin)
+		CMD="aptcyg"
 		;;
 	*)
 		fatal "Have no suitable DISTRNAME $DISTRNAME"

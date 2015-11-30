@@ -69,6 +69,10 @@ case $PMTYPE in
 	ipkg)
 		CMD="ipkg search"
 		;;
+	aptcyg)
+		docmd apt-cyg searchall $(echo " $pkg_filenames" | sed -e "s| /| |g")
+		return
+		;;
 	*)
 		fatal "Have no suitable search file command for $PMTYPE"
 		;;

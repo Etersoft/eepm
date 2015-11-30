@@ -98,6 +98,11 @@ __do_query()
         ipkg)
             CMD="ipkg files"
             ;;
+        aptcyg)
+            #CMD="apt-cyg packageof"
+            # do not realized locally
+            return 1
+            ;;
         *)
             fatal "Have no suitable query command for $PMTYPE"
             ;;

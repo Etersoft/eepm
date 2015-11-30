@@ -102,6 +102,9 @@ case $PMTYPE in
 	homebrew)
 		docmd brew info $pkg_names
 		;;
+	aptcyg)
+		docmd apt-cyg show $pkg_names
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;

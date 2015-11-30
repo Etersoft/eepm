@@ -51,6 +51,7 @@ pkgtype()
 		gentoo) echo "tbz2" ;;
 		windows) echo "exe" ;;
 		android) echo "apk" ;;
+		cygwin) echo "tar.xz" ;;
 		debian|ubuntu|mint|runtu|mcst) echo "deb" ;;
 		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
 			echo "rpm" ;;
@@ -101,6 +102,10 @@ if distro altlinux-release ; then
 	elif has 20050723 ; then DISTRIB_RELEASE="3.0"
 	elif has Citron   ; then DISTRIB_RELEASE="2.4"
 	fi
+
+elif [ `uname -o` = "Cygwin" ] ; then
+        DISTRIB_ID="Cygwin"
+        DISTRIB_RELEASE="all"
 
 elif distro gentoo-release ; then
 	DISTRIB_ID="Gentoo"

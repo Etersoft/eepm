@@ -36,6 +36,8 @@ load_helper epm-sh-functions
 
 #PATH=$PATH:/sbin:/usr/sbin
 
+set_pm_type
+
 set_sudo
 
 check_tty
@@ -66,7 +68,6 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-set_pm_type
 
 verbose=
 quiet=

@@ -169,6 +169,9 @@ epm_install_names()
 		android)
 			fatal "We still have no idea how to use package repository, ever if it is F-Droid."
 			return ;;
+		aptcyg)
+			sudocmd apt-cyg install $@
+			return ;;
 		*)
 			fatal "Have no suitable install command for $PMTYPE"
 			;;
@@ -393,6 +396,9 @@ epm_print_install_command()
             ;;
         android)
             echo "pm install $@"
+            ;;
+        aptcyg)
+            echo "apt-cyg install $@"
             ;;
         *)
             fatal "Have no suitable appropriate install command for $PMTYPE"

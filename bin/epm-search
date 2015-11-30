@@ -88,6 +88,9 @@ case $PMTYPE in
 	android)
 		CMD="pm list packages"
 		;;
+	aptcyg)
+		CMD="apt-cyg searchall"
+		;;
 	*)
 		fatal "Have no suitable search command for $PMTYPE"
 		;;

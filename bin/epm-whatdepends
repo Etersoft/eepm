@@ -47,6 +47,9 @@ case $PMTYPE in
 	pkgng)
 		CMD="pkg info -r"
 		;;
+	aptcyg)
+		CMD="apt-cyg rdepends"
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;

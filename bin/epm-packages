@@ -123,6 +123,9 @@ case $PMTYPE in
 		docmd $CMD | sed -e "s|^package:||g"
 		return
 		;;
+	aptcyg)
+		CMD="apt-cyg list"
+		;;
 	*)
 		fatal "Have no suitable query command for $PMTYPE"
 		;;
