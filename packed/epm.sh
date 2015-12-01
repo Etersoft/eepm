@@ -965,9 +965,12 @@ esac
 
 }
 
-SUDO=sudo
-DISTRNAME=ALTLinux
-epm_checksystem
+if [ "$1" = "--debug" ] ; then
+	shift
+	SUDO=sudo
+	DISTRNAME=ALTLinux
+	epm_checksystem
+fi
 
 # File bin/epm-check_updated_repo:
 
