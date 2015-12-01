@@ -50,6 +50,10 @@ esac
 
 }
 
-SUDO=sudo
-DISTRNAME=ALTLinux
-epm_checksystem
+# direct debug run
+if [ "$1" = "--debug" ] ; then
+	shift
+	SUDO=sudo
+	DISTRNAME=ALTLinux
+	epm_checksystem
+fi
