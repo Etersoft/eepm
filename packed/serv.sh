@@ -247,6 +247,10 @@ set_sudo()
 	SUDO=""
 	# skip SUDO if disabled
 	[ -n "$EPMNOSUDO" ] && return
+	if [ "$DISTRNAME" = "Cygwin" ] || [ "$DISTRNAME" = "Windows" ] ; then
+		# skip sudo using on Windows
+		return
+	fi
 
 	EFFUID=`id -u`
 
@@ -278,7 +282,7 @@ set_eatmydata()
 	# use if possible
 	which eatmydata >/dev/null 2>/dev/null || return
 	SUDO="$SUDO eatmydata"
-	info "Uwaga! eatmydata is installed, we will use it for disable all sync operations."
+	[ -n "$verbose" ] && info "Uwaga! eatmydata is installed, we will use it for disable all sync operations."
 	return 0
 }
 
@@ -423,6 +427,9 @@ case $DISTRNAME in
 		;;
 	Android)
 		CMD="android"
+		;;
+	Cygwin)
+		CMD="aptcyg"
 		;;
 	*)
 		fatal "Have no suitable DISTRNAME $DISTRNAME"
@@ -819,7 +826,8 @@ pkgtype()
 		gentoo) echo "tbz2" ;;
 		windows) echo "exe" ;;
 		android) echo "apk" ;;
-		debian|ubuntu|mint|runtu) echo "deb" ;;
+		cygwin) echo "tar.xz" ;;
+		debian|ubuntu|mint|runtu|mcst) echo "deb" ;;
 		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
 			echo "rpm" ;;
 		fedora|redhat|scientific|centos|rhel)
@@ -853,23 +861,26 @@ fi
 # ALT Linux based
 if distro altlinux-release ; then
 	DISTRIB_ID="ALTLinux"
-	if has Strawberry ; then DISTRIB_RELEASE="2.3"
-	elif has Citron   ; then DISTRIB_RELEASE="2.4"
-	elif has 20050723 ; then DISTRIB_RELEASE="3.0"
-	elif has Ajuga    ; then DISTRIB_RELEASE="4.0"
-	elif has 20070810 ; then DISTRIB_RELEASE="4.0"
-	elif has "ALT Linux 4.0" ; then DISTRIB_RELEASE="4.0"
+	if has Sisyphus ; then DISTRIB_RELEASE="Sisyphus"
+	elif has "ALT Linux 7.0" ; then DISTRIB_RELEASE="p7"
+	elif has "ALT Linux 6.0" ; then DISTRIB_RELEASE="p6"
+	elif has "ALT Linux p7"  ; then DISTRIB_RELEASE="p7"
+	elif has "ALT Linux p6"  ; then DISTRIB_RELEASE="p6"
+	elif has "ALT Linux p5"  ; then DISTRIB_RELEASE="p5"
+	elif has "ALT Linux 5.1" ; then DISTRIB_RELEASE="5.1"
+	elif has "ALT Linux 5.0" ; then DISTRIB_RELEASE="5.0"
 	elif has "ALT Linux 4.1" ; then DISTRIB_RELEASE="4.1"
-	elif has Walnut   ; then DISTRIB_RELEASE="4.0"
-	elif has 5.0      ; then DISTRIB_RELEASE="5.0"
-	elif has 5.1      ; then DISTRIB_RELEASE="5.1"
-	elif has "ALT Linux p5" ; then DISTRIB_RELEASE="p5"
-	elif has "ALT Linux p6" ; then DISTRIB_RELEASE="p6"
-	elif has "ALT Linux p7" ; then DISTRIB_RELEASE="p7"
-	elif has 6.0      ; then DISTRIB_RELEASE="p6"
-	elif has Centaurea ; then DISTRIB_RELEASE="p6"
-	elif has Sisyphus ; then DISTRIB_RELEASE="Sisyphus"
+	elif has "ALT Linux 4.0" ; then DISTRIB_RELEASE="4.0"
+	elif has Walnut          ; then DISTRIB_RELEASE="4.0"
+	elif has 20070810 ; then DISTRIB_RELEASE="4.0"
+	elif has Ajuga    ; then DISTRIB_RELEASE="4.0"
+	elif has 20050723 ; then DISTRIB_RELEASE="3.0"
+	elif has Citron   ; then DISTRIB_RELEASE="2.4"
 	fi
+
+elif [ `uname -o` = "Cygwin" ] ; then
+        DISTRIB_ID="Cygwin"
+        DISTRIB_RELEASE="all"
 
 elif distro gentoo-release ; then
 	DISTRIB_ID="Gentoo"
@@ -896,6 +907,10 @@ elif distro arch-release ; then
 	if grep 2011 -q $ROOTDIR/etc/pacman.d/mirrorlist ; then
 		DISTRIB_RELEASE="2011"
 	fi
+
+elif distro mcst_version ; then
+	DISTRIB_ID="MCST"
+	DISTRIB_RELEASE=$(cat "$DISTROFILE" | grep "release" | sed -e "s|.*release \([0-9]*\).*|\1|g")
 
 # for Ubuntu use standard LSB info
 elif [ "$DISTRIB_ID" = "Ubuntu" ] && [ -n "$DISTRIB_RELEASE" ]; then
@@ -1171,7 +1186,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.5.15"
+        echo "Service manager version 1.5.24"
         echo "Running on $($DISTRVENDOR)"
         echo "Copyright (c) Etersoft 2012, 2013"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

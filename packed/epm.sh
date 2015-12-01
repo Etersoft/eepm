@@ -249,6 +249,10 @@ set_sudo()
 	SUDO=""
 	# skip SUDO if disabled
 	[ -n "$EPMNOSUDO" ] && return
+	if [ "$DISTRNAME" = "Cygwin" ] || [ "$DISTRNAME" = "Windows" ] ; then
+		# skip sudo using on Windows
+		return
+	fi
 
 	EFFUID=`id -u`
 
@@ -280,7 +284,7 @@ set_eatmydata()
 	# use if possible
 	which eatmydata >/dev/null 2>/dev/null || return
 	SUDO="$SUDO eatmydata"
-	info "Uwaga! eatmydata is installed, we will use it for disable all sync operations."
+	[ -n "$verbose" ] && info "Uwaga! eatmydata is installed, we will use it for disable all sync operations."
 	return 0
 }
 
@@ -425,6 +429,9 @@ case $DISTRNAME in
 		;;
 	Android)
 		CMD="android"
+		;;
+	Cygwin)
+		CMD="aptcyg"
 		;;
 	*)
 		fatal "Have no suitable DISTRNAME $DISTRNAME"
@@ -717,7 +724,7 @@ __epm_changelog_files()
 	case $(get_package_type $1) in
 		rpm)
 			assure_exists rpm
-			docmd_foreach "rpm -p --changelog" $@ | less
+			docmd_foreach "rpm -q -p --changelog" $@ | less
 			;;
 		*)
 			fatal "Have no suitable command for $1"
@@ -731,7 +738,7 @@ __epm_changelog_local_names()
 
 	case $PMTYPE in
 		apt-rpm|yum-rpm|dnf-rpm|urpm-rpm|zypper-rpm)
-			docmd_foreach "rpm --changelog" $@ | less
+			docmd_foreach "rpm -q --changelog" $@ | less
 			;;
 		apt-dpkg|aptitude-dpkg)
 			docmd zcat /usr/share/doc/$1/changelog.Debian.gz | less
@@ -775,7 +782,7 @@ __epm_changelog_unlocal_names()
 			docmd equery changes -f $1 | less
 			;;
 		*)
-			fatal "Have no suitable command for $PMTYPE"
+			fatal "Have no suitable command for $PMTYPE. Try install the package firstly."
 			;;
 	esac
 
@@ -924,15 +931,71 @@ epm_checkpkg()
 	done
 }
 
+# File bin/epm-checksystem:
+
+
+epm_checksystem_ALTLinux()
+{
+	local TDIR=$(mktemp -d)
+	touch $TDIR/added
+	for ft in $(ls /usr/lib/rpm/*.filetrigger | sort) ; do
+		echo "Try run $ft ..."
+		echo $TDIR/added $TDIR/removed | time $ft
+	done
+	rm -f $TDIR/added fatal
+	rmdir $TDIR || fatal
+	echo "Count lines:"
+	wc -l /var/lib/rpm/files-awaiting-filetriggers
+}
+
+
+epm_checksystem()
+{
+
+[ -n "$SUDO" ] || fatal "Do not use checksystem under root"
+
+case $DISTRNAME in
+	ALTLinux)
+		epm_checksystem_$DISTRNAME
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+}
+
+SUDO=sudo
+DISTRNAME=ALTLinux
+epm_checksystem
+
 # File bin/epm-check_updated_repo:
 
-__is_repo_info_download()
+__is_repo_info_downloaded()
 {
     case $PMTYPE in
         apt-*)
             if [ -r /var/cache/apt ] ; then
-                # FIXME: only if root permissions
-                test -r /var/cache/apt/pkgcache.bin || return
+                $SUDO test -r /var/cache/apt/pkgcache.bin || return
+            fi
+            ;;
+        *)
+            ;;
+    esac
+    return 0
+}
+
+__is_repo_info_uptodate()
+{
+    case $PMTYPE in
+        apt-rpm)
+            # apt-deb do not update lock file date
+            if $SUDO [ -r /var/lib/apt/lists ] ; then
+                local LOCKFILE=/var/lib/apt/lists/lock
+                $SUDO test -r $LOCKFILE || return
+                # if repo older than 1 day, return false
+                # find print string if file is obsoleted
+                test -z "$($SUDO find $LOCKFILE -mtime +1)" || return
             fi
             ;;
         *)
@@ -943,26 +1006,53 @@ __is_repo_info_download()
 
 update_repo_if_needed()
 {
-    if ! __is_repo_info_download ; then
+    # check if we need skip update checking
+    if [ "$1" = "soft" ] && [ -n "$SUDO" ] ; then
+        # if sudo requires a password, skip autoupdate
+        sudo -n true 2>/dev/null || { info "sudo requires a password, skip repo status checking" ; return 0 ; }
+    fi
+
+    if ! __is_repo_info_downloaded || ! __is_repo_info_uptodate ; then
         load_helper epm-update
         epm_update
         return
     fi
 
-    # TODO: if repo info is very obsoleted (a few days?), we need run update
-
 }
 
 # File bin/epm-clean:
 
+__remove_alt_apt_cache_file()
+{
+	sudocmd rm -vf /var/cache/apt/*.bin
+	sudocmd rm -vf /var/cache/apt/partial/*
+	sudocmd rm -vf /var/lib/apt/lists/*pkglist*
+	sudocmd rm -vf /var/lib/apt/lists/*release*
+}
+
+__remove_deb_apt_cache_file()
+{
+	sudocmd rm -vf /var/cache/apt/*.bin
+	sudocmd rm -vf /var/cache/apt/archives/partial/*
+	sudocmd rm -vf /var/lib/apt/lists/*Packages*
+	sudocmd rm -vf /var/lib/apt/lists/*Release*
+	sudocmd rm -vf /var/lib/apt/lists/*Translation*
+}
+
 epm_clean()
 {
 case $PMTYPE in
-	apt-rpm|apt-dpkg)
+	apt-rpm)
 		sudocmd apt-get clean
+		__remove_alt_apt_cache_file
+		;;
+	apt-dpkg)
+		sudocmd apt-get clean
+		__remove_deb_apt_cache_file
 		;;
 	aptitude-dpkg)
 		sudocmd aptitude clean
+		__remove_deb_apt_cache_file
 		;;
 	yum-rpm)
 		sudocmd yum clean all
@@ -1146,7 +1236,10 @@ epm_download()
 
 	case $PMTYPE in
 	dnf-rpm)
-		sudocmd dnf download $pkg_filename
+		sudocmd dnf download $pkg_filenames
+		;;
+	aptcyg)
+		sudocmd apt-cyg download $pkg_filenames
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -1174,6 +1267,12 @@ __alt_local_content_filelist()
     } | $OUTCMD
 }
 
+__deb_local_content_filelist()
+{
+    showcmd "apt-file list $1 | grep '^$1: ' | sed -e 's|$1: ||g'"
+    apt-file list "$1" | grep "^$1: " | sed -e "s|$1: ||g"
+}
+
 
 __epm_filelist_remote()
 {
@@ -1185,9 +1284,10 @@ __epm_filelist_remote()
 			docmd_foreach __alt_local_content_filelist $@
 			;;
 		apt-dpkg)
-			assure_exists apt-file
-			sudocmd apt-file update
-			docmd apt-file list $@
+			assure_exists apt-file || return
+			# if sudo requires a password, skip autoupdate
+			sudo -n true 2>/dev/null && sudocmd apt-file update || info "sudo requires a password, skip apt-file update"
+			docmd_foreach __deb_local_content_filelist $@
 			;;
 		*)
 			fatal "Query filelist for non installed packages does not realized"
@@ -1226,20 +1326,11 @@ __epm_filelist_name()
 	[ -z "$*" ] && return
 
 	case $PMTYPE in
-		apt-rpm)
+		*-rpm)
 			CMD="rpm -ql"
 			;;
 		*-dpkg)
 			CMD="dpkg -L"
-			;;
-		yum-rpm)
-			CMD="rpm -ql"
-			;;
-		urpm-rpm)
-			CMD="rpm -ql"
-			;;
-		zypper-rpm)
-			CMD="rpm -ql"
 			;;
 		android)
 			CMD="pm list packages -f"
@@ -1248,7 +1339,7 @@ __epm_filelist_name()
 			CMD="conary query --ls"
 			;;
 		pacman)
-			docmd pacman -Ql $pkg_names | sed -e "s|.* ||g" | less
+			docmd pacman -Ql $@ | sed -e "s|.* ||g" | less
 			return
 			;;
 		emerge)
@@ -1258,8 +1349,12 @@ __epm_filelist_name()
 		pkgng)
 			CMD="pkg info -l"
 			;;
+		aptcyg)
+			docmd apt-cyg listfiles $@ | sed -e "s|^|/|g"
+			return
+			;;
 		slackpkg)
-			is_installed $pkg_names || fatal "Query filelist for non installed packages does not realized"
+			is_installed $@ || fatal "Query filelist for non installed packages does not realized"
 			docmd awk 'BEGIN{desk=1}{if(/^FILE LIST:$/){desk=0} else if (desk==0) {print}}' /var/log/packages/${pkg_filenames}* | less
 			return
 			;;
@@ -1269,9 +1364,9 @@ __epm_filelist_name()
 	esac
 
 	# TODO: add less
-	docmd $CMD $pkg_names && return
+	docmd $CMD $@ && return
 	# TODO: may be we need check is installed before prev. line?
-	is_installed $pkg_names || __epm_filelist_remote $pkg_names
+	is_installed $@ || __epm_filelist_remote $@
 }
 
 
@@ -1281,7 +1376,7 @@ epm_filelist()
 
 
 	__epm_filelist_file $pkg_files || return
-	__epm_filelist_name $pkg_names || return
+	__epm_filelist_name $(print_name $pkg_names) || return
 
 }
 
@@ -1368,6 +1463,9 @@ case $PMTYPE in
 		;;
 	homebrew)
 		docmd brew info $pkg_names
+		;;
+	aptcyg)
+		docmd apt-cyg show $pkg_names
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -1522,6 +1620,9 @@ epm_install_names()
 			return ;;
 		android)
 			fatal "We still have no idea how to use package repository, ever if it is F-Droid."
+			return ;;
+		aptcyg)
+			sudocmd apt-cyg install $@
 			return ;;
 		*)
 			fatal "Have no suitable install command for $PMTYPE"
@@ -1747,6 +1848,9 @@ epm_print_install_command()
         android)
             echo "pm install $@"
             ;;
+        aptcyg)
+            echo "apt-cyg install $@"
+            ;;
         *)
             fatal "Have no suitable appropriate install command for $PMTYPE"
             ;;
@@ -1777,8 +1881,10 @@ epm_install()
 
     [ -z "$files$names" ] && info "Skip empty install list" && return 22
 
-    # it is useful for first time running
-    update_repo_if_needed
+    if [ -z "$files" ] ; then
+        # it is useful for first time running
+        update_repo_if_needed
+    fi
 
     epm_install_names $names || return
     epm_install_files $files
@@ -1904,6 +2010,35 @@ epm_kernel_update()
 	esac
 }
 
+# File bin/epm-optimize:
+
+__repack_rpm_base()
+{
+	assure_exists db_dump || fatal
+	assure_exists db_load || fatal
+	cd /var/lib/rpm || fatal
+	mv Packages Packages.BACKUP || fatal
+	# mask dependencies with a=
+	a= db_dump Packages.BACKUP | a= db_load Packages || fatal
+	rm Packages.BACKUP
+}
+
+epm_optimize()
+{
+
+case $PMTYPE in
+	*-rpm)
+		#__repack_rpm_base
+		#rm -f /var/lib/rpm/__db*
+		rpm --rebuilddb
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+}
+
 # File bin/epm-packages:
 
 __epm_packages_sort()
@@ -1922,6 +2057,13 @@ case $PMTYPE in
 esac
 }
 
+__aptcyg_print_full()
+{
+	#showcmd apt-cyg show
+	local VERSION=$(apt-cyg show "$1" | grep -m1 "^version: " | sed -e "s|^version: ||g")
+	echo "$1-$VERSION"
+}
+
 epm_packages()
 {
 	local CMD
@@ -1934,8 +2076,10 @@ case $PMTYPE in
 		;;
 	*-dpkg)
 		#CMD="dpkg -l $pkg_filenames"
-		CMD="dpkg-query -W --showformat=\${Package}-\${Version}\n $pkg_filenames"
-		[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${Package}\n $pkg_filenames"
+		CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}-\${Version}\n $pkg_filenames"
+		[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}\n $pkg_filenames"
+		docmd $CMD | grep "^i" | sed -e "s|.* ||g"
+		return
 		;;
 	snappy)
 		CMD="snappy info"
@@ -2008,6 +2152,16 @@ case $PMTYPE in
 		docmd $CMD | sed -e "s|^package:||g"
 		return
 		;;
+	aptcyg)
+		CMD="apt-cyg list $pkg_filenames"
+		if [ -z "$short" ] ; then
+			showcmd $CMD
+			for i in $($CMD) ; do
+				__aptcyg_print_full $i
+			done
+			return
+		fi
+		;;
 	*)
 		fatal "Have no suitable query command for $PMTYPE"
 		;;
@@ -2016,6 +2170,201 @@ esac
 docmd $CMD
 
 }
+
+# File bin/epm-policy:
+
+epm_policy()
+{
+
+[ -n "$pkg_names" ] || fatal "Info: missing package(s) name"
+
+case $PMTYPE in
+	apt-rpm)
+		docmd apt-cache policy $pkg_names
+		;;
+	apt-dpkg)
+		docmd apt-cache policy $pkg_names
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+}
+
+# File bin/epm-print:
+
+
+query_package_field()
+{
+	local FORMAT="%{$1}\n"
+	shift
+	local INSTALLED="-p"
+	# if not file, drop -p for get from rpm base
+	[ -e "$1" ] || INSTALLED=""
+	rpmquery $INSTALLED --queryformat "$FORMAT" "$@"
+}
+
+
+print_binpkgfilelist()
+{
+	local PKGDIR=$1
+	local PKGNAME=$(basename $2)
+	find "$PKGDIR" ! -name '*\.src\.rpm' -name '*\.rpm' -execdir \
+		rpmquery -p --qf='%{sourcerpm}\t%{name}-%{version}-%{release}.%{arch}.rpm\n' "{}" \; \
+		| grep "^$PKGNAME[[:space:]].*" | cut -f2 | xargs -n1 -I "{}" echo -n "$PKGDIR/{} "
+}
+
+PKGNAMEMASK="\(.*\)-\([0-9].*\)-\(.*[0-9].*\)"
+
+print_name()
+{
+    echo "$@" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK|\1|g"
+}
+
+print_version()
+{
+    echo "$1" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK|\2|g"
+}
+
+print_release()
+{
+    echo "$1" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK|\3|g"
+}
+
+print_pkgname()
+{
+    local i
+    for i in $@ ; do
+        # TODO: deb and other, arch string
+        echo "$(basename "$i") " | sed -e "s|\.[a-z_0-9]*\.rpm||g" -e "s|\(.*\)_\(.*\)_[a-z_0-9]*\.deb|\1-\2|g"
+    done
+}
+
+print_srcname()
+{
+    print_name $(print_srcpkgname "$@")
+}
+
+print_srcpkgname()
+{
+    query_package_field sourcerpm "$@"
+}
+
+
+__epm_print()
+{
+    local WHAT="$1"
+    shift
+    local FNFLAG=
+    local PKFLAG=
+    [ "$1" = "from" ] && shift
+    [ "$1" = "for" ] && shift
+    [ "$1" = "in" ] && shift
+    if [ "$1" = "filename" ] ; then
+        FNFLAG="$1"
+        shift
+    fi
+
+    if [ "$1" = "package" ] ; then
+        PKFLAG="$1"
+        shift
+    fi
+
+    case "$WHAT" in
+        "")
+            fatal "Use epm print help for get help."
+            ;;
+        "-h"|"--help"|"help")
+cat <<EOF
+  Examples:
+    epm print name [from filename|for package] NN        print only name of package name or package file
+    epm print version [from filename|for package] NN     print only version of package name or package file
+    epm print release [from filename|for package] NN     print only release of package name or package file
+    epm print field FF for package NN        print field of the package
+    epm print pkgname from filename NN       print package name for package file
+    epm print srcname from filename NN       print source name for package file
+    epm print srcpkgname from [filename|package] NN    print source package name for the binary package file
+    epm print binpkgfilelist in DIR for NN   list binary package(s) filename(s) from DIR for the source package file
+EOF
+            ;;
+        "name")
+            [ -n "$1" ] || fatal "Arg is missed"
+            if [ -n "$FNFLAG" ] ; then
+                print_name $(print_pkgname "$@")
+            elif [ -n "$PKFLAG" ] ; then
+                query_package_field "name" "$@"
+            else
+                print_name "$@"
+            fi
+            ;;
+        "version")
+            [ -n "$1" ] || fatal "Arg is missed"
+            if [ -n "$FNFLAG" ] ; then
+                print_version $(print_pkgname "$@")
+            elif [ -n "$PKFLAG" ] ; then
+                query_package_field "version" "$@"
+            else
+                print_version "$@"
+            fi
+            ;;
+        "release")
+            [ -n "$1" ] || fatal "Arg is missed"
+            if [ -n "$FNFLAG" ] ; then
+                print_release $(print_pkgname "$@")
+            elif [ -n "$PKFLAG" ] ; then
+                query_package_field "release" "$@"
+            else
+                print_release "$@"
+            fi
+            ;;
+        "field")
+            [ -n "$1" ] || fatal "Arg is missed"
+            local FIELD="$1"
+            shift
+            [ "$1" = "for" ] && shift
+            query_package_field "$FIELD" "$@"
+            ;;
+        "pkgname")
+            [ -n "$FNFLAG" ] || fatal "print $WHAT works only for filename(s)"
+            [ -n "$1" ] || fatal "Arg is missed"
+            # TODO: drop_pkg_extensions
+            print_pkgname "$@"
+            ;;
+        "srcname")
+            [ -n "$FNFLAG" ] || fatal "print $WHAT works only for filename(s)"
+            [ -n "$1" ] || fatal "Arg is missed"
+            print_srcname "$@"
+            ;;
+        "srcpkgname")
+            [ -n "$FNFLAG" ] || [ -n "$PKFLAG" ] || fatal "print $WHAT works only for filename(s)"
+            [ -n "$1" ] || fatal "Arg is missed"
+            print_srcpkgname "$@"
+            ;;
+        "binpkgfilelist")
+            # TODO: rpm only
+            # TODO: replace get_binpkg_list
+            local DIR="$1"
+            shift
+            [ "$1" = "for" ] && shift
+            [ -n "$DIR" ] || fatal "DIR arg is missed"
+            [ -n "$1" ] || fatal "source package filename is missed"
+            print_binpkgfilelist "$DIR" "$1"
+            ;;
+        *)
+            fatal "Unknown command $ epm print $WHAT. Use epm print help for get help."
+            ;;
+    esac
+}
+
+
+epm_print()
+{
+
+    [ -n "$pkg_filenames" ] || fatal "Missed args. Use epm print help for get help."
+    __epm_print $(eval echo $quoted_args)
+}
+
 
 # File bin/epm-programs:
 
@@ -2123,7 +2472,7 @@ epm_provides()
 	[ -n "$pkg_filenames" ] || fatal "Provides: missing package(s) name"
 
 	epm_provides_files $pkg_files
-	epm_provides_names $pkg_names
+	epm_provides_names $(print_name $pkg_names)
 }
 
 # File bin/epm-query:
@@ -2139,6 +2488,28 @@ _get_grep_exp()
 	echo "/$1$"
 }
 
+_shortquery_via_packages_list()
+{
+	local res=0
+	local grepexp
+	local firstpkg=$1
+	shift
+
+	grepexp=$(_get_grep_exp $firstpkg)
+
+	# Note: we use short=1 here due grep by ^name$
+	# separate first line for print out command
+	short=1 pkg_filenames=$firstpkg epm_packages | grep -- "$grepexp" || res=1
+
+	local pkg
+	for pkg in "$@" ; do
+		grepexp=$(_get_grep_exp $pkg)
+		short=1 pkg_filenames=$pkg epm_packages 2>/dev/null | grep -- "$grepexp" || res=1
+	done
+
+	return $res
+}
+
 _query_via_packages_list()
 {
 	local res=0
@@ -2148,12 +2519,14 @@ _query_via_packages_list()
 
 	grepexp=$(_get_grep_exp $firstpkg)
 
+	# Note: we use short=1 here due grep by ^name$
 	# separate first line for print out command
-	short=1 pkg_filenames=$firstpkg epm_packages | grep -- "$grepexp" || res=1
+	short=1 pkg_filenames=$firstpkg epm_packages | grep -q -- "$grepexp" && quiet=1 pkg_filenames=$firstpkg epm_packages $firstpkg || res=1
 
+	local pkg
 	for pkg in "$@" ; do
 		grepexp=$(_get_grep_exp $pkg)
-		short=1 pkg_filenames=$pkg epm_packages 2>/dev/null | grep -- "$grepexp" || res=1
+		short=1 pkg_filenames=$pkg epm_packages 2>/dev/null | grep -q -- "$grepexp" && quiet=1 pkg_filenames=$pkg epm_packages $pkg || res=1
 	done
 
 	return $res
@@ -2194,7 +2567,7 @@ __epm_get_hilevel_name()
 	for i in $@ ; do
 		local pkg
 		# get short form in pkg
-		quiet=1 short=1 pkg=$(__epm_query_name $i) || continue # drop not installed packages
+		quiet=1 pkg=$(__epm_query_shortname $i) || continue # drop not installed packages
 		# if already short form, skipped
 		[ "$pkg" = "$i" ] && echo "$i" && continue
 		# try get long form or use short form
@@ -2234,12 +2607,10 @@ __epm_query_name()
 	case $PMTYPE in
 		*-rpm)
 			CMD="rpm -q"
-			[ -n "$short" ] && CMD="rpm -q --queryformat %{name}\n"
 			;;
 		*-dpkg)
 			#docmd dpkg -l $@ | grep "^ii"
 			CMD="dpkg-query -W --showformat=\${Package}-\${Version}\n"
-			[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${Package}\n"
 			;;
 		npackd)
 			docmd "npackdcl path --package=$@"
@@ -2267,9 +2638,48 @@ __epm_query_name()
 	docmd $CMD $@
 }
 
+__epm_query_shortname()
+{
+	local CMD
+
+	[ -z "$*" ] && return
+
+	case $PMTYPE in
+		*-rpm)
+			CMD="rpm -q --queryformat %{name}\n"
+			;;
+		*-dpkg)
+			CMD="dpkg-query -W --showformat=\${Package}\n"
+			;;
+		npackd)
+			docmd "npackdcl path --package=$@"
+			return
+			;;
+		conary)
+			CMD="conary query"
+			;;
+		homebrew)
+			warning "fix query"
+			return 1
+			;;
+		# TODO: need to print name if exists
+		#pkgng)
+		#	CMD="pkg info -e"
+		#	;;
+		# Note: slackpkg info pkgname
+		*)
+			# default slow workaround
+			_shortquery_via_packages_list $@
+			return
+			;;
+	esac
+
+	docmd $CMD $@
+}
+
 is_installed()
 {
-	pkg_filenames="$@" pkg_names="$@" epm_query >/dev/null 2>/dev/null
+	short=1 pkg_filenames="$@" pkg_names="$@" epm_query >/dev/null 2>/dev/null
 	# broken way to recursive call here (overhead!)
 	#epm installed $@ >/dev/null 2>/dev/null
 }
@@ -2289,7 +2699,11 @@ epm_query()
 
 	__epm_query_file $pkg_files || return
 
-	__epm_query_name $pkg_names || return
+	if [ -n "$short" ] ; then
+		__epm_query_shortname $(print_name $pkg_names) || return
+	else
+		__epm_query_name $(print_name $pkg_names) || return
+	fi
 }
 
 # File bin/epm-query_file:
@@ -2313,7 +2727,7 @@ __do_query_real_file()
 	if [ -L "$TOFILE" ] ; then
 		local LINKTO
 		__do_query "$TOFILE"
-		LINKTO=$(readlink "$TOFILE")
+		LINKTO=$(readlink -f "$TOFILE")
 		info "Note: $TOFILE is link to $LINKTO"
 		__do_query_real_file "$LINKTO"
 		return
@@ -2373,6 +2787,11 @@ __do_query()
             ;;
         ipkg)
             CMD="ipkg files"
+            ;;
+        aptcyg)
+            #CMD="apt-cyg packageof"
+            # do not realized locally
+            return 1
             ;;
         *)
             fatal "Have no suitable query command for $PMTYPE"
@@ -2585,7 +3004,7 @@ epm_remove_low()
 			sudocmd rpm -ev $nodeps $@
 			return ;;
 		apt-dpkg|aptitude-dpkg)
-			sudocmd dpkg -P $(subst_option nodeps --force-all) $@
+			sudocmd dpkg -P $(subst_option nodeps --force-all) $(print_name "$@")
 			return ;;
 		pkgsrc)
 			sudocmd pkg_delete -r $@
@@ -2678,6 +3097,9 @@ epm_remove_names()
 		homebrew)
 			sudocmd brew remove $@
 			return ;;
+		aptcyg)
+			sudocmd apt-cyg remove $@
+			return ;;
 		ipkg)
 			sudocmd ipkg $(subst_option force -force-depends) remove $@
 			return ;;
@@ -2751,6 +3173,9 @@ epm_print_remove_command()
 		ipkg)
 			echo "ipkg remove $@"
 			;;
+		aptcyg)
+			echo "apt-cyg remove $@"
+			;;
 		*)
 			fatal "Have no suitable appropriate remove command for $PMTYPE"
 			;;
@@ -2817,6 +3242,44 @@ case $PMTYPE in
 		;;
 	slackpkg)
 		info "You need remove repo from /etc/slackpkg/mirrors"
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+}
+
+# File bin/epm-repofix:
+
+SUBST_ALT_RULE='s!^([^#].*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ](Sisyphus|p7[/ ]branch|p6[/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch) !\1 \2/\3/\4 !gi'
+
+__fix_apt_sources_list()
+{
+	[ -n "$SUDO" ] && fatal "run only under root"
+	for i in "$@" ; do
+		[ -s "$i" ] || continue
+		perl -i.bak -pe "$SUBST_ALT_RULE" $i
+	done
+}
+
+epm_repofix()
+{
+case $PMTYPE in
+	apt-rpm)
+		assure_exists apt-repo
+		docmd apt-repo list
+		__fix_apt_sources_list /etc/apt/sources.list
+		__fix_apt_sources_list /etc/apt/sources.list.d/*.list
+		docmd apt-repo list
+
+		# rebuild rpm database
+		#sudocmd rm -fv /var/lib/rpm/__db*
+		#sudocmd rpm --rebuilddb
+		;;
+	yum-rpm|dnf-rpm)
+		sudocmd rm -fv /var/lib/rpm/__db*
+		sudocmd rpm --rebuilddb
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -2954,6 +3417,12 @@ case $PMTYPE in
 		#CMD="pkg rquery '%dn-%dv'"
 		CMD="pkg info -d"
 		;;
+	aptcyg)
+		#CMD="apt-cyg depends"
+		# print show version
+		docmd apt-cyg show $pkg_names | grep "^requires: " | sed "s|^requires: ||g"
+		return
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
@@ -2968,7 +3437,7 @@ epm_requires()
 {
 	[ -n "$pkg_filenames" ] || fatal "Requires: missing package(s) name"
 	epm_requires_files $pkg_files
-	epm_requires_names $pkg_names
+	epm_requires_names $(print_name $pkg_names)
 }
 
 # File bin/epm-search:
@@ -3043,6 +3512,9 @@ case $PMTYPE in
 	android)
 		CMD="pm list packages"
 		;;
+	aptcyg)
+		CMD="apt-cyg searchall"
+		;;
 	*)
 		fatal "Have no suitable search command for $PMTYPE"
 		;;
@@ -3107,7 +3579,7 @@ epm_search()
 	[ -n "$pkg_filenames" ] || fatal "Search: missing search argument(s)"
 
 	# it is useful for first time running
-	update_repo_if_needed
+	update_repo_if_needed soft
 
 	# FIXME: do it better
 	local MGS
@@ -3169,6 +3641,10 @@ case $PMTYPE in
 		;;
 	ipkg)
 		CMD="ipkg search"
+		;;
+	aptcyg)
+		docmd apt-cyg searchall $(echo " $pkg_filenames" | sed -e "s| /| |g")
+		return
 		;;
 	*)
 		fatal "Have no suitable search file command for $PMTYPE"
@@ -3329,6 +3805,114 @@ epm_simulate()
 }
 
 
+# File bin/epm-site:
+
+
+run_command_if_exists()
+{
+	local CMD="$1"
+	shift
+	if which "$CMD" 2>/dev/null >/dev/null ; then
+		docmd "$CMD" "$@"
+		return 0
+	fi
+	return 1
+}
+
+open_browser()
+{
+	local i
+	for i in xdg-open firefox chromium links ; do
+		run_command_if_exists $i "$@" && return
+	done
+}
+
+__query_package_hl_url()
+{
+	case $DISTRNAME in
+		ALTLinux)
+			# http://petstore.swagger.io/?url=http://packages.altlinux.org/api/docs
+			epm assure curl || return 1
+			showcmd curl "http://packages.altlinux.org/api/srpms/$1"
+			curl -s --header "Accept: application/json" "http://packages.altlinux.org/api/srpms/$1" | grep '"url"' | sed -e 's|.*"url":"||g' | sed -e 's|".*||g'
+			return 0
+			;;
+	esac
+	return 1
+}
+
+query_package_url()
+{
+	local URL
+
+	case $PMTYPE in
+		*-rpm)
+			# TODO: for binary packages?
+			query_package_field URL "$1" || __query_package_hl_url "$1"
+			#LANG=C epm info "$1"
+			return
+			;;
+	esac
+	fatal "rpm based distro supported only. TODO: Realize via web service?"
+}
+
+get_locale()
+{
+	local loc
+	loc=$(a= natspec --locale 2>/dev/null)
+	[ -n "$loc" ] || loc=$LANG
+	echo $loc
+}
+
+get_pao_url()
+{
+	local loc
+	loc=$(get_locale | cut -c1-2)
+	case $loc in
+		en|ru|uk|br)
+			loc=$loc
+			;;
+		*)
+			loc=en
+	esac
+	echo "http://packages.altlinux.org/$loc/Sisyphus/srpms"
+}
+
+query_altlinux_url()
+{
+	local URL
+	case $PMTYPE in
+		*-rpm)
+			local srpm=$(print_srcname "$1")
+			[ -n "$srpm" ] || fatal "Can't get source name for $1"
+			echo "$(get_pao_url)/$srpm"
+			return
+			;;
+	esac
+	fatal "rpm based distro supported only. TODO: Realize via web service?"
+}
+
+epm_site()
+{
+
+[ -n "$pkg_filenames" ] || fatal "Info: missing package(s) name"
+
+PAO=
+for f in $pkg_names $pkg_files ; do
+	[ "$f" = "-p" ] && PAO="$f" && continue
+	if [ -n "$PAO" ] ; then
+		pkg_url=$(query_altlinux_url $f)
+	else
+		pkg_url=$(query_package_url $f)
+	fi
+	[ -n "$pkg_url" ] && open_browser "$pkg_url" && continue
+	warning "Can't get URL for $f package"
+done
+
+
+
+}
+
 # File bin/epm-update:
 
 
@@ -3354,10 +3938,12 @@ case $PMTYPE in
 		;;
 	yum-rpm)
 		info "update command is stubbed for yum"
+		# yum makecache
 		#sudocmd yum check-update
 		;;
 	dnf-rpm)
 		info "update command is stubbed for dnf"
+		# dnf makecache
 		#sudocmd dnf check-update
 		;;
 	urpm-rpm)
@@ -3393,6 +3979,9 @@ case $PMTYPE in
 	pkgsrc)
 		# portsnap extract for the first time?
 		sudocmd portsnap fetch update
+		;;
+	aptcyg)
+		sudocmd apt-cyg update
 		;;
 	*)
 		fatal "Have no suitable update command for $PMTYPE"
@@ -3474,6 +4063,10 @@ epm_upgrade()
 	guix)
 		CMD="guix package -u"
 		;;
+	aptcyg)
+		docmd_foreach "epm install" $(short=1 epm packages)
+		return
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
@@ -3500,10 +4093,13 @@ epm_Upgrade()
 
 # File bin/epm-whatdepends:
 
+
 epm_whatdepends()
 {
 	local CMD
-	[ -n "$pkg_filenames" ] || fatal "Whatdepends: missing package(s) name"
+	[ -n "$pkg_files" ] && fatal "whatdepends do not handle files"
+	[ -n "$pkg_names" ] || fatal "whatdepends: missing package(s) name"
+	local pkg=$(print_name $pkg_names)
 
 case $PMTYPE in
 	apt-rpm)
@@ -3525,28 +4121,34 @@ case $PMTYPE in
 	pkgng)
 		CMD="pkg info -r"
 		;;
+	aptcyg)
+		CMD="apt-cyg rdepends"
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
 esac
 
-docmd $CMD $pkg_filenames
+docmd $CMD $pkg
 
 }
 
 # File bin/epm-whatprovides:
 
+
 epm_whatprovides()
 {
 	local CMD
-	[ -n "$pkg_filenames" ] || fatal "Whatprovides: missing package(s) name"
+	[ -n "$pkg_files" ] && fatal "whatprovides does not handle files"
+	[ -n "$pkg_names" ] || fatal "whatprovides: missing package(s) name"
+	local pkg=$(print_name $pkg_names)
 
 case $PMTYPE in
 	conary)
 		CMD="conary repquery --what-provides"
 		;;
 	apt-rpm|apt-dpkg|aptitude-dpkg)
-		LANG=C docmd apt-get install --print-uris $pkg_filenames | grep "^Selecting" | cut -f2 -d" "
+		LANG=C docmd apt-get install --print-uris $pkg | grep "^Selecting" | cut -f2 -d" "
 		return
 		;;
 	yum-rpm)
@@ -3560,7 +4162,7 @@ case $PMTYPE in
 		;;
 esac
 
-docmd $CMD $pkg_filenames
+docmd $CMD $pkg
 
 }
 internal_distr_info()
@@ -3618,7 +4220,8 @@ pkgtype()
 		gentoo) echo "tbz2" ;;
 		windows) echo "exe" ;;
 		android) echo "apk" ;;
-		debian|ubuntu|mint|runtu) echo "deb" ;;
+		cygwin) echo "tar.xz" ;;
+		debian|ubuntu|mint|runtu|mcst) echo "deb" ;;
 		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
 			echo "rpm" ;;
 		fedora|redhat|scientific|centos|rhel)
@@ -3652,23 +4255,26 @@ fi
 # ALT Linux based
 if distro altlinux-release ; then
 	DISTRIB_ID="ALTLinux"
-	if has Strawberry ; then DISTRIB_RELEASE="2.3"
-	elif has Citron   ; then DISTRIB_RELEASE="2.4"
-	elif has 20050723 ; then DISTRIB_RELEASE="3.0"
-	elif has Ajuga    ; then DISTRIB_RELEASE="4.0"
-	elif has 20070810 ; then DISTRIB_RELEASE="4.0"
-	elif has "ALT Linux 4.0" ; then DISTRIB_RELEASE="4.0"
+	if has Sisyphus ; then DISTRIB_RELEASE="Sisyphus"
+	elif has "ALT Linux 7.0" ; then DISTRIB_RELEASE="p7"
+	elif has "ALT Linux 6.0" ; then DISTRIB_RELEASE="p6"
+	elif has "ALT Linux p7"  ; then DISTRIB_RELEASE="p7"
+	elif has "ALT Linux p6"  ; then DISTRIB_RELEASE="p6"
+	elif has "ALT Linux p5"  ; then DISTRIB_RELEASE="p5"
+	elif has "ALT Linux 5.1" ; then DISTRIB_RELEASE="5.1"
+	elif has "ALT Linux 5.0" ; then DISTRIB_RELEASE="5.0"
 	elif has "ALT Linux 4.1" ; then DISTRIB_RELEASE="4.1"
-	elif has Walnut   ; then DISTRIB_RELEASE="4.0"
-	elif has 5.0      ; then DISTRIB_RELEASE="5.0"
-	elif has 5.1      ; then DISTRIB_RELEASE="5.1"
-	elif has "ALT Linux p5" ; then DISTRIB_RELEASE="p5"
-	elif has "ALT Linux p6" ; then DISTRIB_RELEASE="p6"
-	elif has "ALT Linux p7" ; then DISTRIB_RELEASE="p7"
-	elif has 6.0      ; then DISTRIB_RELEASE="p6"
-	elif has Centaurea ; then DISTRIB_RELEASE="p6"
-	elif has Sisyphus ; then DISTRIB_RELEASE="Sisyphus"
+	elif has "ALT Linux 4.0" ; then DISTRIB_RELEASE="4.0"
+	elif has Walnut          ; then DISTRIB_RELEASE="4.0"
+	elif has 20070810 ; then DISTRIB_RELEASE="4.0"
+	elif has Ajuga    ; then DISTRIB_RELEASE="4.0"
+	elif has 20050723 ; then DISTRIB_RELEASE="3.0"
+	elif has Citron   ; then DISTRIB_RELEASE="2.4"
 	fi
+
+elif [ `uname -o` = "Cygwin" ] ; then
+        DISTRIB_ID="Cygwin"
+        DISTRIB_RELEASE="all"
 
 elif distro gentoo-release ; then
 	DISTRIB_ID="Gentoo"
@@ -3695,6 +4301,10 @@ elif distro arch-release ; then
 	if grep 2011 -q $ROOTDIR/etc/pacman.d/mirrorlist ; then
 		DISTRIB_RELEASE="2011"
 	fi
+
+elif distro mcst_version ; then
+	DISTRIB_ID="MCST"
+	DISTRIB_RELEASE=$(cat "$DISTROFILE" | grep "release" | sed -e "s|.*release \([0-9]*\).*|\1|g")
 
 # for Ubuntu use standard LSB info
 elif [ "$DISTRIB_ID" = "Ubuntu" ] && [ -n "$DISTRIB_RELEASE" ]; then
@@ -3878,6 +4488,8 @@ esac
 
 #PATH=$PATH:/sbin:/usr/sbin
 
+set_pm_type
+
 set_sudo
 
 check_tty
@@ -3898,7 +4510,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.5.15"
+        echo "EPM package manager version 1.5.24"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2015"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -3908,7 +4520,6 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-set_pm_type
 
 verbose=
 quiet=
@@ -4048,6 +4659,9 @@ check_command()
     assure)                   # HELPCMD: <command> [package]: install package if command does not exists
         epm_cmd=assure
         ;;
+    policy)                   # HELPCMD: print detailed information about the priority selection of package
+        epm_cmd=policy
+        ;;
 
 # Repository control
     update)                   # HELPCMD: update remote package repository databases
@@ -4058,6 +4672,9 @@ check_command()
         ;;
     repolist|sl|rl|listrepo)  # HELPCMD: print repo list
         epm_cmd=repolist
+        ;;
+    repofix)                  # HELPCMD: fix paths in sources lists (ALT Linux only)
+        epm_cmd=repofix
         ;;
     removerepo|rr)            # HELPCMD: remove package repo
         epm_cmd=removerepo
@@ -4088,7 +4705,7 @@ check_command()
     downgrade)                # HELPCMD: downgrade [all] packages to the repo state
         epm_cmd=downgrade
         ;;
-    download)                # HELPCMD: download package(s) file to the current dir
+    download)                 # HELPCMD: download package(s) file to the current dir
         epm_cmd=download
         ;;
     simulate)                 # HELPCMD: simulate install with check requires
@@ -4097,10 +4714,23 @@ check_command()
     audit)                    # HELPCMD: audits installed packages against known vulnerabilities
         epm_cmd=audit
         ;;
+    #checksystem)              # HELPCMD: check system for known errors (package management related)
+    #    epm_cmd=checksystem
+    #    ;;
+    site|url)                 # HELPCMD: open package's site in a browser (use -p for open packages.altlinux.org site)
+        epm_cmd=site
+        ;;
+    print)                    # HELPCMD: print various info, run epm print help for details
+        epm_cmd=print
+        ;;
     -V|checkpkg|integrity)    # HELPCMD: check package file integrity (checksum)
         epm_cmd=checkpkg
         ;;
-
+    -h|--help|help)           # HELPOPT: print this help
+        help=1
+        phelp
+        exit 0
+        ;;
     *)
         return 1
         ;;
@@ -4111,10 +4741,6 @@ check_command()
 check_option()
 {
     case $1 in
-    -h|--help|help)       # HELPOPT: this help
-        phelp
-        exit 0
-        ;;
     -v|--version)         # HELPOPT: print version
         print_version
         exit 0
