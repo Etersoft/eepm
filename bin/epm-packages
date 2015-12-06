@@ -134,6 +134,7 @@ case $PMTYPE in
 		CMD="apt-cyg list $pkg_filenames"
 		if [ -z "$short" ] ; then
 			showcmd $CMD
+			# TODO: fix this slow way
 			for i in $($CMD) ; do
 				__aptcyg_print_full $i
 			done
