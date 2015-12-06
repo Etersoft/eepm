@@ -40,6 +40,9 @@ case $PMTYPE in
 	yum-rpm)
 		CMD="repoquery --whatrequires"
 		;;
+	dnf-rpm)
+		CMD="repoquery --whatrequires"
+		;;
 	emerge)
 		assure_exists equery
 		CMD="equery depends -a"

@@ -68,7 +68,18 @@ case $PMTYPE in
 		CMD="rpm -q --requires"
 		;;
 	yum-rpm)
-		CMD="yum deplist"
+		if is_installed $pkg_names ; then
+			CMD="rpm -q --requires"
+		else
+			CMD="yum deplist"
+		fi
+		;;
+	dnf-rpm)
+		if is_installed $pkg_names ; then
+			CMD="rpm -q --requires"
+		else
+			CMD="dnf repoquery --requires"
+		fi
 		;;
 	pacman)
 		CMD="pactree"

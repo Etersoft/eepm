@@ -38,6 +38,9 @@ case $PMTYPE in
 	yum-rpm)
 		CMD="yum whatprovides"
 		;;
+	dnf-rpm)
+		CMD="yum provides"
+		;;
 	zypper-rpm)
 		CMD="zypper what-provides"
 		;;

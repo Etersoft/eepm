@@ -62,6 +62,9 @@ case $PMTYPE in
 			sudocmd yum remove $PKGLIST
 		done
 		;;
+	dnf-rpm)
+		sudocmd dnf autoremove
+		;;
 	# see autoorhans
 	#urpm-rpm)
 	#	sudocmd urpme --auto-orphans

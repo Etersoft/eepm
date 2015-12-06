@@ -49,9 +49,13 @@ case $PMTYPE in
 		docmd apt-file search $pkg_filenames
 		return ;;
 	yum-rpm)
+		# TODO
+		info "Search by full packages list does not realized"
 		CMD="yum provides"
 		;;
 	dnf-rpm)
+		# TODO
+		info "Search by full packages list does not realized"
 		CMD="dnf provides"
 		;;
 	urpm-rpm)
