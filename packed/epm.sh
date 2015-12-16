@@ -672,6 +672,9 @@ case $PMTYPE in
 			sudocmd yum remove $PKGLIST
 		done
 		;;
+	dnf-rpm)
+		sudocmd dnf autoremove
+		;;
 	# see autoorhans
 	#urpm-rpm)
 	#	sudocmd urpme --auto-orphans
@@ -2159,6 +2162,7 @@ case $PMTYPE in
 		CMD="apt-cyg list $pkg_filenames"
 		if [ -z "$short" ] ; then
 			showcmd $CMD
+			# TODO: fix this slow way
 			for i in $($CMD) ; do
 				__aptcyg_print_full $i
 			done
@@ -2435,7 +2439,7 @@ case $PMTYPE in
 			return
 		fi
 		;;
-	urpm-rpm|zypper-rpm|yum-rpm)
+	urpm-rpm|zypper-rpm|yum-rpm|dnf-rpm)
 		if is_installed $pkg_names ; then
 			CMD="rpm -q --provides"
 		else
@@ -2524,12 +2528,12 @@ _query_via_packages_list()
 
 	# Note: we use short=1 here due grep by ^name$
 	# separate first line for print out command
-	short=1 pkg_filenames=$firstpkg epm_packages | grep -q -- "$grepexp" && quiet=1 pkg_filenames=$firstpkg epm_packages $firstpkg || res=1
+	short=1 pkg_filenames=$firstpkg epm_packages | grep -q -- "$grepexp" && quiet=1 pkg_filenames=$firstpkg epm_packages || res=1
 
 	local pkg
 	for pkg in "$@" ; do
 		grepexp=$(_get_grep_exp $pkg)
-		short=1 pkg_filenames=$pkg epm_packages 2>/dev/null | grep -q -- "$grepexp" && quiet=1 pkg_filenames=$pkg epm_packages $pkg || res=1
+		short=1 pkg_filenames=$pkg epm_packages 2>/dev/null | grep -q -- "$grepexp" && quiet=1 pkg_filenames=$pkg epm_packages || res=1
 	done
 
 	return $res
@@ -2871,6 +2875,7 @@ epm_query_package()
 	local MGS
 	MGS=$(eval __epm_search_make_grep $quoted_args)
 	EXTRA_SHOWDOCMD=$MGS
+	# Note: get all packages list and do grep
 	eval "pkg_filenames= epm_packages \"$(eval get_firstarg $quoted_args)\" $MGS"
 }
 
@@ -3397,7 +3402,18 @@ case $PMTYPE in
 		CMD="rpm -q --requires"
 		;;
 	yum-rpm)
-		CMD="yum deplist"
+		if is_installed $pkg_names ; then
+			CMD="rpm -q --requires"
+		else
+			CMD="yum deplist"
+		fi
+		;;
+	dnf-rpm)
+		if is_installed $pkg_names ; then
+			CMD="rpm -q --requires"
+		else
+			CMD="dnf repoquery --requires"
+		fi
 		;;
 	pacman)
 		CMD="pactree"
@@ -3625,9 +3641,13 @@ case $PMTYPE in
 		docmd apt-file search $pkg_filenames
 		return ;;
 	yum-rpm)
+		# TODO
+		info "Search by full packages list does not realized"
 		CMD="yum provides"
 		;;
 	dnf-rpm)
+		# TODO
+		info "Search by full packages list does not realized"
 		CMD="dnf provides"
 		;;
 	urpm-rpm)
@@ -4117,6 +4137,9 @@ case $PMTYPE in
 	yum-rpm)
 		CMD="repoquery --whatrequires"
 		;;
+	dnf-rpm)
+		CMD="repoquery --whatrequires"
+		;;
 	emerge)
 		assure_exists equery
 		CMD="equery depends -a"
@@ -4156,6 +4179,9 @@ case $PMTYPE in
 		;;
 	yum-rpm)
 		CMD="yum whatprovides"
+		;;
+	dnf-rpm)
+		CMD="yum provides"
 		;;
 	zypper-rpm)
 		CMD="zypper what-provides"
@@ -4513,7 +4539,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.5.24"
+        echo "EPM package manager version 1.5.25"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2015"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
