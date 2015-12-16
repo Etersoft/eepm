@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.5.24
+Version: 1.5.25
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,12 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Wed Dec 16 2015 Vitaly Lipatov <lav@altlinux.ru> 1.5.25-alt1
+- epm-checksystem: fix working in packed
+- fix packed version
+- improve dnf support
+- small fixes
+
 * Tue Dec 01 2015 Vitaly Lipatov <lav@altlinux.ru> 1.5.24-alt1
 - add support apt-cyg on Cygwin
 - drop pks-db requires
