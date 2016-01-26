@@ -2253,6 +2253,12 @@ print_srcname()
     print_name $(print_srcpkgname "$@")
 }
 
+print_specname()
+{
+    # CHECKME: it is possible to have two or more specs in one package?
+    rpm -qlp "$@" | grep "\.spec\$"
+}
+
 print_srcpkgname()
 {
     query_package_field sourcerpm "$@"
@@ -2289,9 +2295,10 @@ cat <<EOF
     epm print version [from filename|for package] NN     print only version of package name or package file
     epm print release [from filename|for package] NN     print only release of package name or package file
     epm print field FF for package NN        print field of the package
-    epm print pkgname from filename NN       print package name for package file
-    epm print srcname from filename NN       print source name for package file
+    epm print pkgname from filename NN       print package name for the package file
+    epm print srcname from filename NN       print source name for the package file
     epm print srcpkgname from [filename|package] NN    print source package name for the binary package file
+    epm print specname from filename NN      print spec filename for the source package file
     epm print binpkgfilelist in DIR for NN   list binary package(s) filename(s) from DIR for the source package file
 EOF
             ;;
@@ -2347,6 +2354,11 @@ EOF
             [ -n "$FNFLAG" ] || [ -n "$PKFLAG" ] || fatal "print $WHAT works only for filename(s)"
             [ -n "$1" ] || fatal "Arg is missed"
             print_srcpkgname "$@"
+            ;;
+        "specname")
+            [ -n "$FNFLAG" ] || [ -n "$PKFLAG" ] || fatal "print $WHAT works only for filename(s)"
+            [ -n "$1" ] || fatal "Arg is missed"
+            print_specname "$@"
             ;;
         "binpkgfilelist")
             # TODO: rpm only
@@ -4539,7 +4551,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.5.25"
+        echo "EPM package manager version 1.6.0"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2015"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
