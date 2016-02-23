@@ -28,7 +28,8 @@ case $PMTYPE in
 		info "You need remove repo from /etc/apt/sources.list"
 		;;
 	yum-rpm)
-		info "You need remove repo from /etc/yum.repos.d/"
+		assure_exists yum-utils
+		sudocmd yum-config-manager --disable "$pkg_filenames"
 		;;
 	urpm-rpm)
 		sudocmd urpmi.removemedia "$pkg_filenames"
