@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012,2014  Etersoft
-# Copyright (C) 2012,2014  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012,2014,2016  Etersoft
+# Copyright (C) 2012,2014,2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -19,13 +19,39 @@
 
 load_helper epm-check_updated_repo
 
-__epm_add_apt_downgrade_preferences()
+__epm_add_alt_apt_downgrade_preferences()
 {
 	[ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists"
 	cat <<EOF | $SUDO tee /etc/apt/preferences
+# main repo
 Package: *
-Pin: release c=$1
+Pin: release c=classic
 Pin-Priority: 1001
+
+# overload with addon repo
+Package: *
+Pin: release c=addon
+Pin-Priority: 1101
+EOF
+}
+
+# See https://wiki.debian.org/ru/AptPreferences
+__epm_add_deb_apt_downgrade_preferences()
+{
+	[ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists"
+	info "Running with /etc/apt/preferences:"
+	cat <<EOF | $SUDO tee /etc/apt/preferences
+Package: *
+Pin: release a=stable
+Pin-Priority: 1001
+
+Package: *
+Pin: release a=testing
+Pin-Priority: 900
+
+Package: *
+Pin: release a=unstable
+Pin-Priority: 800
 EOF
 }
 
@@ -45,21 +71,29 @@ epm_downgrade()
 
 	case $PMTYPE in
 	apt-rpm)
-		__epm_add_apt_downgrade_preferences classic || return
-		sudocmd apt-get dist-upgrade
+		__epm_add_alt_apt_downgrade_preferences || return
+		if [ -n "$pkg_filenames" ] ; then
+			sudocmd apt-get install $pkg_filenames
+		else
+			sudocmd apt-get dist-upgrade
+		fi
 		__epm_remove_apt_downgrade_preferences
 		;;
 	apt-dpkg)
-		__epm_add_apt_downgrade_preferences testing || return
-		sudocmd apt-get dist-upgrade
+		__epm_add_deb_apt_downgrade_preferences || return
+		if [ -n "$pkg_filenames" ] ; then
+			sudocmd apt-get install $pkg_filenames
+		else
+			sudocmd apt-get dist-upgrade
+		fi
 		__epm_remove_apt_downgrade_preferences
 		;;
 	yum-rpm)
 		# can do update repobase automagically
-		sudocmd yum downgrade $pkg_filename
+		sudocmd yum downgrade $pkg_filenames
 		;;
 	dnf-rpm)
-		sudocmd dnf downgrade $pkg_filename
+		sudocmd dnf downgrade $pkg_filenames
 		;;
 	urpm-rpm)
 		assure_exists urpm-reposync urpm-tools
