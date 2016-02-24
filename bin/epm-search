@@ -96,7 +96,7 @@ case $PMTYPE in
 		;;
 esac
 
-docmd $CMD $string
+LANG=C docmd $CMD $string
 }
 
 # TODO: use ^ as first word, use ~ for negate, for epmqp too
@@ -123,21 +123,27 @@ __epm_search_make_grep()
 	#list=$(strip_spaces $list | sed -e "s/ /|/g")
 	listN=$(strip_spaces $listN | sed -e "s/ /|/g" | sed -e "s/\^//g")
 
-	[ -n "$listN" ] && echon " | egrep -i -v -- \"$listN\""
-
-	# FIXME: The World has not idea how to do grep both string
-	# http://stackoverflow.com/questions/10110051/grep-with-two-strings-logical-and-in-regex?rq=1
-	for i in $list ; do
-		# FIXME -n on MacOS?
-		echon " | egrep -i -- \"$i\""
-	done
-
 	if [ "$short" ] ; then
 		echon " | sed -e \"s| .*||g\""
 	fi
 
+	[ -n "$listN" ] && echon " | egrep -i -v -- \"$listN\""
+
+	# FIXME: The World has not idea how to do grep both string
+	# http://stackoverflow.com/questions/10110051/grep-with-two-strings-logical-and-in-regex?rq=1
+
+	# Need only if we have more than one word (with one word we will grep for colorify)
+	if [ "$(echo "$list" | wc -w)" -gt 1 ] ; then
+		for i in $list ; do
+			# FIXME -n on MacOS?
+			echon " | egrep -i -- \"$i\""
+		done
+	fi
+
 	# FIXME: move from it
 	#isatty || return
+
+	# TODO: sorts word by length from large to short
 
 	local COLO=""
 	# rule for colorife
@@ -146,6 +152,7 @@ __epm_search_make_grep()
 		COLO="$COLO$i"
 	done
 
+	# TODO: use some colorifer instead grep (check grep adove too)
 	if [ -n "$list" ] ; then
 		echon " | egrep -i $EGREPCOLOR -- \"($COLO)\""
 	fi
