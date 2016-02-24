@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2015  Etersoft
-# Copyright (C) 2015  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2015,2016  Etersoft
+# Copyright (C) 2015,2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -19,6 +19,8 @@
 
 load_helper epm-query
 load_helper epm-print
+
+PAOURL="https://packages.altlinux.org"
 
 run_command_if_exists()
 {
@@ -41,12 +43,13 @@ open_browser()
 
 __query_package_hl_url()
 {
+	local PAOAPI="$PAOURL/api"
 	case $DISTRNAME in
 		ALTLinux)
 			# http://petstore.swagger.io/?url=http://packages.altlinux.org/api/docs
 			epm assure curl || return 1
-			showcmd curl "http://packages.altlinux.org/api/srpms/$1"
-			curl -s --header "Accept: application/json" "http://packages.altlinux.org/api/srpms/$1" | grep '"url"' | sed -e 's|.*"url":"||g' | sed -e 's|".*||g'
+			showcmd curl "$PAOAPI/srpms/$1"
+			curl -s --header "Accept: application/json" "$PAOAPI/srpms/$1" | grep '"url"' | sed -e 's|.*"url":"||g' | sed -e 's|".*||g'
 			return 0
 			;;
 	esac
@@ -87,7 +90,7 @@ get_pao_url()
 		*)
 			loc=en
 	esac
-	echo "http://packages.altlinux.org/$loc/Sisyphus/srpms"
+	echo "$PAOURL/$loc/Sisyphus/srpms"
 }
 
 query_altlinux_url()
@@ -109,7 +112,7 @@ epm_site()
 
 [ -n "$pkg_filenames" ] || fatal "Info: missing package(s) name"
 
-PAO=
+local PAO=""
 for f in $pkg_names $pkg_files ; do
 	[ "$f" = "-p" ] && PAO="$f" && continue
 	if [ -n "$PAO" ] ; then
