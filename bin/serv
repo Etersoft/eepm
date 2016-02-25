@@ -128,7 +128,7 @@ print_version()
 {
         echo "Service manager version @VERSION@"
         echo "Running on $($DISTRVENDOR)"
-        echo "Copyright (c) Etersoft 2012, 2013"
+        echo "Copyright (c) Etersoft 2012, 2013, 2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 
@@ -191,6 +191,10 @@ check_command()
         ;;
     off|disable)              # HELPCMD: remove service to run on startup and stop it now
         serv_cmd=disable
+        ;;
+    print)                    # HELPCMD: print some info
+        serv_cmd=print
+        withoutservicename=1
         ;;
     *)
         return 1
