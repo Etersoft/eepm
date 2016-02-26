@@ -37,6 +37,10 @@ __epm_autoremove_altrpm()
 
 epm_autoremove()
 {
+
+[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
+
+
 case $PMTYPE in
 	apt-rpm)
 		# ALT Linux only

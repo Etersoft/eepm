@@ -23,6 +23,8 @@ epm_upgrade()
 {
 	local CMD
 
+	[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
+
 	# it is useful for first time running
 	update_repo_if_needed
 

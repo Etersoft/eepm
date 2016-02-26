@@ -21,6 +21,7 @@
 
 epm_update()
 {
+	[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
 	info "Running command for update remote package repository database"
 
 case $PMTYPE in
