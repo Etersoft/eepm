@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.6.0
+Version: 1.6.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,15 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Fri Feb 26 2016 Vitaly Lipatov <lav@altlinux.ru> 1.6.1-alt1
+- distr_info: add Simply Linux detection
+- epm: use yum-config-manager for managing repo in yum based distros
+- fix downgrade for LINUX@Etersoft, Debian, Ubuntu, add support for downgrade one or a few packages
+- epm search: optimize grep when search for one word, apply short option before all, disable localized description
+- epm-site: use https for packages.altlinux.org
+- add serv print command
+- serv: fix systemd detection
+
 * Wed Jan 27 2016 Vitaly Lipatov <lav@altlinux.ru> 1.6.0-alt1
 - release long term support version 1.6
 - epm-print: add print specname
