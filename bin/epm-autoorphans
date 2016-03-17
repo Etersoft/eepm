@@ -35,7 +35,7 @@ case $PMTYPE in
 	apt-dpkg|aptitude-dpkg)
 		assure_exists deborphan
 		showcmd deborphan
-		deborphan | sudocmd epm remove
+		a= deborphan | sudocmd epm remove
 		;;
 	#aura)
 	#	sudocmd aura -Oj
