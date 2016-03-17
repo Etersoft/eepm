@@ -146,6 +146,7 @@ __do_short_query()
 
 epm_query_file()
 {
+    # И где это используется?
     # in short mode print handle only real names and do short output
     # TODO: move to separate command?
     # FIXME: it is possible use query
