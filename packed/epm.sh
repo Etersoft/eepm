@@ -454,7 +454,8 @@ case $PMTYPE in
 		info "You need manually add repo to /etc/apt/sources.list"
 		;;
 	yum-rpm)
-		info "You need manually add repo to /etc/yum.repos.d/"
+		assure_exists yum-utils
+		sudocmd yum-config-manager --add-repo "$pkg_filenames"
 		;;
 	urpm-rpm)
 		sudocmd urpmi.addmedia "$pkg_filenames"
@@ -556,6 +557,9 @@ epm_assure()
 
 epm_audit()
 {
+
+[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
+
 case $PMTYPE in
 	pkgng)
 		sudocmd pkg audit -F
@@ -571,6 +575,10 @@ esac
 
 epm_autoorphans()
 {
+
+[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
+
+
 case $PMTYPE in
 	#apt-rpm)
 		# ALT Linux only
@@ -583,7 +591,7 @@ case $PMTYPE in
 	apt-dpkg|aptitude-dpkg)
 		assure_exists deborphan
 		showcmd deborphan
-		deborphan | sudocmd epm remove
+		a= deborphan | sudocmd epm remove
 		;;
 	#aura)
 	#	sudocmd aura -Oj
@@ -647,6 +655,10 @@ __epm_autoremove_altrpm()
 
 epm_autoremove()
 {
+
+[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
+
+
 case $PMTYPE in
 	apt-rpm)
 		# ALT Linux only
@@ -943,7 +955,7 @@ epm_checksystem_ALTLinux()
 	touch $TDIR/added
 	for ft in $(ls /usr/lib/rpm/*.filetrigger | sort) ; do
 		echo "Try run $ft ..."
-		echo $TDIR/added $TDIR/removed | time $ft
+		echo $TDIR/added $TDIR/removed | a= time $ft
 	done
 	rm -f $TDIR/added fatal
 	rmdir $TDIR || fatal
@@ -1047,6 +1059,10 @@ __remove_deb_apt_cache_file()
 
 epm_clean()
 {
+
+[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
+
+
 case $PMTYPE in
 	apt-rpm)
 		sudocmd apt-get clean
@@ -1182,13 +1198,36 @@ epm_conflicts()
 # File bin/epm-downgrade:
 
 
-__epm_add_apt_downgrade_preferences()
+__epm_add_alt_apt_downgrade_preferences()
 {
 	[ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists"
 	cat <<EOF | $SUDO tee /etc/apt/preferences
 Package: *
-Pin: release c=$1
+Pin: release c=classic
 Pin-Priority: 1001
+
+Package: *
+Pin: release c=addon
+Pin-Priority: 1101
+EOF
+}
+
+__epm_add_deb_apt_downgrade_preferences()
+{
+	[ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists"
+	info "Running with /etc/apt/preferences:"
+	cat <<EOF | $SUDO tee /etc/apt/preferences
+Package: *
+Pin: release a=stable
+Pin-Priority: 1001
+
+Package: *
+Pin: release a=testing
+Pin-Priority: 900
+
+Package: *
+Pin: release a=unstable
+Pin-Priority: 800
 EOF
 }
 
@@ -1208,21 +1247,29 @@ epm_downgrade()
 
 	case $PMTYPE in
 	apt-rpm)
-		__epm_add_apt_downgrade_preferences classic || return
-		sudocmd apt-get dist-upgrade
+		__epm_add_alt_apt_downgrade_preferences || return
+		if [ -n "$pkg_filenames" ] ; then
+			sudocmd apt-get install $pkg_filenames
+		else
+			sudocmd apt-get dist-upgrade
+		fi
 		__epm_remove_apt_downgrade_preferences
 		;;
 	apt-dpkg)
-		__epm_add_apt_downgrade_preferences testing || return
-		sudocmd apt-get dist-upgrade
+		__epm_add_deb_apt_downgrade_preferences || return
+		if [ -n "$pkg_filenames" ] ; then
+			sudocmd apt-get install $pkg_filenames
+		else
+			sudocmd apt-get dist-upgrade
+		fi
 		__epm_remove_apt_downgrade_preferences
 		;;
 	yum-rpm)
 		# can do update repobase automagically
-		sudocmd yum downgrade $pkg_filename
+		sudocmd yum downgrade $pkg_filenames
 		;;
 	dnf-rpm)
-		sudocmd dnf downgrade $pkg_filename
+		sudocmd dnf downgrade $pkg_filenames
 		;;
 	urpm-rpm)
 		assure_exists urpm-reposync urpm-tools
@@ -1276,7 +1323,7 @@ __alt_local_content_filelist()
 __deb_local_content_filelist()
 {
     showcmd "apt-file list $1 | grep '^$1: ' | sed -e 's|$1: ||g'"
-    apt-file list "$1" | grep "^$1: " | sed -e "s|$1: ||g"
+    a= apt-file list "$1" | grep "^$1: " | sed -e "s|$1: ||g"
 }
 
 
@@ -2005,7 +2052,7 @@ epm_kernel_update()
 	case $DISTRNAME in
 	ALTLinux)
 		assure_exists update-kernel
-		sudocmd update-kernel
+		sudocmd update-kernel $pkg_filenames
 		return ;;
 	esac
 
@@ -2031,6 +2078,8 @@ __repack_rpm_base()
 
 epm_optimize()
 {
+
+[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
 
 case $PMTYPE in
 	*-rpm)
@@ -2855,6 +2904,7 @@ __do_short_query()
 
 epm_query_file()
 {
+    # И где это используется?
     # in short mode print handle only real names and do short output
     # TODO: move to separate command?
     # FIXME: it is possible use query
@@ -2909,7 +2959,7 @@ epm_reinstall_names()
 			sudocmd dnf reinstall $@
 			return ;;
 		pkgng)
-			sudocmf pkg install -f $@
+			sudocmd pkg install -f $@
 			return ;;
 		slackpkg)
 			sudocmd_foreach "/usr/sbin/slackpkg reinstall" $@
@@ -3243,7 +3293,8 @@ case $PMTYPE in
 		info "You need remove repo from /etc/apt/sources.list"
 		;;
 	yum-rpm)
-		info "You need remove repo from /etc/yum.repos.d/"
+		assure_exists yum-utils
+		sudocmd yum-config-manager --disable "$pkg_filenames"
 		;;
 	urpm-rpm)
 		sudocmd urpmi.removemedia "$pkg_filenames"
@@ -3285,6 +3336,9 @@ __fix_apt_sources_list()
 
 epm_repofix()
 {
+
+[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
+
 case $PMTYPE in
 	apt-rpm)
 		assure_exists apt-repo
@@ -3551,7 +3605,7 @@ case $PMTYPE in
 		;;
 esac
 
-docmd $CMD $string
+LANG=C docmd $CMD $string
 }
 
 __epm_search_make_grep()
@@ -3576,21 +3630,27 @@ __epm_search_make_grep()
 	#list=$(strip_spaces $list | sed -e "s/ /|/g")
 	listN=$(strip_spaces $listN | sed -e "s/ /|/g" | sed -e "s/\^//g")
 
-	[ -n "$listN" ] && echon " | egrep -i -v -- \"$listN\""
-
-	# FIXME: The World has not idea how to do grep both string
-	# http://stackoverflow.com/questions/10110051/grep-with-two-strings-logical-and-in-regex?rq=1
-	for i in $list ; do
-		# FIXME -n on MacOS?
-		echon " | egrep -i -- \"$i\""
-	done
-
 	if [ "$short" ] ; then
 		echon " | sed -e \"s| .*||g\""
 	fi
 
+	[ -n "$listN" ] && echon " | egrep -i -v -- \"$listN\""
+
+	# FIXME: The World has not idea how to do grep both string
+	# http://stackoverflow.com/questions/10110051/grep-with-two-strings-logical-and-in-regex?rq=1
+
+	# Need only if we have more than one word (with one word we will grep for colorify)
+	if [ "$(echo "$list" | wc -w)" -gt 1 ] ; then
+		for i in $list ; do
+			# FIXME -n on MacOS?
+			echon " | egrep -i -- \"$i\""
+		done
+	fi
+
 	# FIXME: move from it
 	#isatty || return
+
+	# TODO: sorts word by length from large to short
 
 	local COLO=""
 	# rule for colorife
@@ -3599,6 +3659,7 @@ __epm_search_make_grep()
 		COLO="$COLO$i"
 	done
 
+	# TODO: use some colorifer instead grep (check grep adove too)
 	if [ -n "$list" ] ; then
 		echon " | egrep -i $EGREPCOLOR -- \"($COLO)\""
 	fi
@@ -3843,6 +3904,8 @@ epm_simulate()
 # File bin/epm-site:
 
 
+PAOURL="https://packages.altlinux.org"
+
 run_command_if_exists()
 {
 	local CMD="$1"
@@ -3864,12 +3927,13 @@ open_browser()
 
 __query_package_hl_url()
 {
+	local PAOAPI="$PAOURL/api"
 	case $DISTRNAME in
 		ALTLinux)
 			# http://petstore.swagger.io/?url=http://packages.altlinux.org/api/docs
 			epm assure curl || return 1
-			showcmd curl "http://packages.altlinux.org/api/srpms/$1"
-			curl -s --header "Accept: application/json" "http://packages.altlinux.org/api/srpms/$1" | grep '"url"' | sed -e 's|.*"url":"||g' | sed -e 's|".*||g'
+			showcmd curl "$PAOAPI/srpms/$1"
+			curl -s --header "Accept: application/json" "$PAOAPI/srpms/$1" | grep '"url"' | sed -e 's|.*"url":"||g' | sed -e 's|".*||g'
 			return 0
 			;;
 	esac
@@ -3910,7 +3974,7 @@ get_pao_url()
 		*)
 			loc=en
 	esac
-	echo "http://packages.altlinux.org/$loc/Sisyphus/srpms"
+	echo "$PAOURL/$loc/Sisyphus/srpms"
 }
 
 query_altlinux_url()
@@ -3932,7 +3996,7 @@ epm_site()
 
 [ -n "$pkg_filenames" ] || fatal "Info: missing package(s) name"
 
-PAO=
+local PAO=""
 for f in $pkg_names $pkg_files ; do
 	[ "$f" = "-p" ] && PAO="$f" && continue
 	if [ -n "$PAO" ] ; then
@@ -3953,6 +4017,7 @@ done
 
 epm_update()
 {
+	[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
 	info "Running command for update remote package repository database"
 
 case $PMTYPE in
@@ -4031,6 +4096,8 @@ esac
 epm_upgrade()
 {
 	local CMD
+
+	[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
 
 	# it is useful for first time running
 	update_repo_if_needed
@@ -4297,8 +4364,12 @@ fi
 if distro altlinux-release ; then
 	DISTRIB_ID="ALTLinux"
 	if has Sisyphus ; then DISTRIB_RELEASE="Sisyphus"
-	elif has "ALT Linux 7.0" ; then DISTRIB_RELEASE="p7"
+	elif has "ALT Linux 7." ; then DISTRIB_RELEASE="p7"
+	elif has "ALT Linux 8." ; then DISTRIB_RELEASE="p8"
+	elif has "Simply Linux 7." ; then DISTRIB_RELEASE="p7"
+	elif has "Simply Linux 8." ; then DISTRIB_RELEASE="p8"
 	elif has "ALT Linux 6.0" ; then DISTRIB_RELEASE="p6"
+	elif has "ALT Linux p8"  ; then DISTRIB_RELEASE="p8"
 	elif has "ALT Linux p7"  ; then DISTRIB_RELEASE="p7"
 	elif has "ALT Linux p6"  ; then DISTRIB_RELEASE="p6"
 	elif has "ALT Linux p5"  ; then DISTRIB_RELEASE="p5"
@@ -4551,7 +4622,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.6.0"
+        echo "EPM package manager version 1.6.2"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2015"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

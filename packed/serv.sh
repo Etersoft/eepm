@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012-2013  Etersoft
-# Copyright (C) 2012-2013  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2013, 2016  Etersoft
+# Copyright (C) 2012-2013, 2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -581,6 +581,13 @@ serv_list_startup()
 	esac
 }
 
+# File bin/serv-print:
+
+serv_print()
+{
+	echo "Detected init system: $SERVICETYPE"
+}
+
 # File bin/serv-restart:
 
 
@@ -862,8 +869,12 @@ fi
 if distro altlinux-release ; then
 	DISTRIB_ID="ALTLinux"
 	if has Sisyphus ; then DISTRIB_RELEASE="Sisyphus"
-	elif has "ALT Linux 7.0" ; then DISTRIB_RELEASE="p7"
+	elif has "ALT Linux 7." ; then DISTRIB_RELEASE="p7"
+	elif has "ALT Linux 8." ; then DISTRIB_RELEASE="p8"
+	elif has "Simply Linux 7." ; then DISTRIB_RELEASE="p7"
+	elif has "Simply Linux 8." ; then DISTRIB_RELEASE="p8"
 	elif has "ALT Linux 6.0" ; then DISTRIB_RELEASE="p6"
+	elif has "ALT Linux p8"  ; then DISTRIB_RELEASE="p8"
 	elif has "ALT Linux p7"  ; then DISTRIB_RELEASE="p7"
 	elif has "ALT Linux p6"  ; then DISTRIB_RELEASE="p6"
 	elif has "ALT Linux p5"  ; then DISTRIB_RELEASE="p5"
@@ -1121,7 +1132,9 @@ is_active_systemd()
 	SYSTEMD_CGROUP_DIR=/sys/fs/cgroup/systemd
 	[ -x "$SYSTEMCTL" ] || return
 	[ -d "$SYSTEMD_CGROUP_DIR" ] || return
-	a= mountpoint -q "$SYSTEMD_CGROUP_DIR"
+	a= mountpoint -q "$SYSTEMD_CGROUP_DIR" || return
+	# some hack
+	pidof systemd >/dev/null
 }
 
 case $DISTRNAME in
@@ -1186,9 +1199,9 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.6.0"
+        echo "Service manager version 1.6.2"
         echo "Running on $($DISTRVENDOR)"
-        echo "Copyright (c) Etersoft 2012, 2013"
+        echo "Copyright (c) Etersoft 2012, 2013, 2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 
@@ -1251,6 +1264,10 @@ check_command()
         ;;
     off|disable)              # HELPCMD: remove service to run on startup and stop it now
         serv_cmd=disable
+        ;;
+    print)                    # HELPCMD: print some info
+        serv_cmd=print
+        withoutservicename=1
         ;;
     *)
         return 1
