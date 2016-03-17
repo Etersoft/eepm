@@ -25,7 +25,7 @@ epm_checksystem_ALTLinux()
 	touch $TDIR/added
 	for ft in $(ls /usr/lib/rpm/*.filetrigger | sort) ; do
 		echo "Try run $ft ..."
-		echo $TDIR/added $TDIR/removed | time $ft
+		echo $TDIR/added $TDIR/removed | a= time $ft
 	done
 	rm -f $TDIR/added fatal
 	rmdir $TDIR || fatal
