@@ -22,6 +22,7 @@
 epm_checksystem_ALTLinux()
 {
 	local TDIR=$(mktemp -d)
+	assure_exists time
 	touch $TDIR/added
 	for ft in $(ls /usr/lib/rpm/*.filetrigger | sort) ; do
 		echo "Try run $ft ..."
