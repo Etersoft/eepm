@@ -1,6 +1,6 @@
 Name: eepm
 Version: 1.6.2
-Release: alt1
+Release: alt2
 
 Summary: Etersoft EPM package manager
 
@@ -65,6 +65,9 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Thu Mar 17 2016 Vitaly Lipatov <lav@altlinux.ru> 1.6.2-alt2
+- add check_reqs script and cleanup all reqs
+
 * Thu Mar 17 2016 Vitaly Lipatov <lav@altlinux.ru> 1.6.2-alt1
 - epm: print error for extra unallowed args
 - drop time requires
