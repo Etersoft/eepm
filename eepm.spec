@@ -1,6 +1,6 @@
 Name: eepm
-Version: 1.6.2
-Release: alt2
+Version: 1.6.3
+Release: alt1
 
 Summary: Etersoft EPM package manager
 
@@ -65,6 +65,10 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Tue Apr 05 2016 Vitaly Lipatov <lav@altlinux.ru> 1.6.3-alt1
+- epm-checksystem: add assure_exists time
+- check_updated_repo fix epm update
+
 * Thu Mar 17 2016 Vitaly Lipatov <lav@altlinux.ru> 1.6.2-alt2
 - add check_reqs script and cleanup all reqs
 
