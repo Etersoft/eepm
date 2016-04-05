@@ -952,6 +952,7 @@ epm_checkpkg()
 epm_checksystem_ALTLinux()
 {
 	local TDIR=$(mktemp -d)
+	assure_exists time
 	touch $TDIR/added
 	for ft in $(ls /usr/lib/rpm/*.filetrigger | sort) ; do
 		echo "Try run $ft ..."
@@ -1030,11 +1031,12 @@ update_repo_if_needed()
         sudo -n true 2>/dev/null || { info "sudo requires a password, skip repo status checking" ; return 0 ; }
     fi
 
+    cd /
     if ! __is_repo_info_downloaded || ! __is_repo_info_uptodate ; then
         load_helper epm-update
-        epm_update
-        return
+        pkg_filenames= epm_update
     fi
+    cd - >/dev/null
 
 }
 
@@ -4622,7 +4624,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.6.2"
+        echo "EPM package manager version 1.6.3"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2015"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
