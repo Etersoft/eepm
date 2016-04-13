@@ -25,7 +25,8 @@ __fix_apt_sources_list()
 	[ -n "$SUDO" ] && fatal "run only under root"
 	for i in "$@" ; do
 		[ -s "$i" ] || continue
-		perl -i.bak -pe "$SUBST_ALT_RULE" $i
+		#perl -i.bak -pe "$SUBST_ALT_RULE" $i
+		sed -i -e -r "$SUBST_ALT_RULE" $i
 	done
 }
 
