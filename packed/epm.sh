@@ -260,7 +260,7 @@ set_sudo()
 	[ $EFFUID = "0" ] && return
 
 	# use sudo if possible
-	which sudo >/dev/null 2>/dev/null && SUDO="sudo" && return
+	which sudo >/dev/null 2>/dev/null && SUDO="sudo --" && return
 
 	SUDO="fatal 'Can't find sudo. Please install sudo or run epm under root.'"
 }
@@ -298,6 +298,32 @@ __get_package_for_command()
 			echo 'update-kernel'
 			;;
 	esac
+}
+
+confirm() {
+    local response
+    # call with a prompt string or use a default
+    read -r -p "${1:-Are you sure? [y/N]} " response
+    case $response in
+        [yY][eE][sS]|[yY])
+            true
+            ;;
+        *)
+            false
+            ;;
+    esac
+}
+
+assure_root()
+{
+	[ "$EFFUID" = 0 ] || fatal "run me only under root"
+}
+
+regexp_subst()
+{
+	local expression="$1"
+	shift
+	sed -i -r -e "$expression" "$@"
 }
 
 assure_exists()
@@ -968,7 +994,7 @@ epm_checksystem_ALTLinux()
 epm_checksystem()
 {
 
-[ -n "$SUDO" ] || fatal "Do not use checksystem under root"
+[ $EFFUID = "0" ] && fatal "Do not use checksystem under root"
 
 case $DISTRNAME in
 	ALTLinux)
@@ -1009,7 +1035,7 @@ __is_repo_info_uptodate()
     case $PMTYPE in
         apt-rpm)
             # apt-deb do not update lock file date
-            if $SUDO [ -r /var/lib/apt/lists ] ; then
+            if $SUDO test -r /var/lib/apt/lists ; then
                 local LOCKFILE=/var/lib/apt/lists/lock
                 $SUDO test -r $LOCKFILE || return
                 # if repo older than 1 day, return false
@@ -2999,20 +3025,67 @@ epm_reinstall()
 }
 
 
-# File bin/epm-release-upgrade:
+# File bin/epm-release_upgrade:
+
+__replace_alt_version_in_repo()
+{
+	local i
+	assure_exists apt-repo
+	echo "Upgrading $DISTRNAME from $1 to $2 ..."
+	docmd apt-repo list | sed -e "s|\($1/branch\)|{\1}->$2/branch<|g" | egrep --color -- "$1/branch"
+	confirm "Are these correct changes?" || fatal "Exiting"
+	for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
+		[ -s "$i" ] || continue
+		# TODO: only for uncommended strings
+		#sed -i -r -e "s!$1/branch!$2/branch!g" $i
+		regexp_subst "/^ *#/! s!$1/branch!$2/branch!g" $i
+		
+		# TODO: start with improve to [p8] - install some package firstly?
+		regexp_subst "/^ *#/! s s!\[$1\]![alt]/branch!g" $i
+	done
+	docmd apt-repo list
+}
+
+__update_alt_repo_to_next_distro()
+{
+	case "$DISTRVERSION" in
+		p6)
+			__replace_alt_version_in_repo p6 p7
+			info "Run epm release-upgrade again for update to p8"
+			;;
+		p7)
+			__replace_alt_version_in_repo p7 p8
+			;;
+		*)
+			info "Have no idea how to update from $DISTRNAME $DISTRVERSION"
+			return 1
+	esac
+}
 
 epm_release_upgrade()
 {
+	assure_root
 	info "Starting upgrade whole system to the next release"
 	info "Check also http://wiki.etersoft.ru/Admin/UpdateLinux"
+
+	case $DISTRNAME in
+	ALTLinux)
+		docmd epm update
+		docmd epm install apt rpm
+		pkg_filenames= epm_repofix
+		__update_alt_repo_to_next_distro || exit
+		docmd epm Upgrade
+		docmd epm update-kernel
+		return
+		;;
+	*)
+		;;
+	esac
 
 	case $PMTYPE in
 	apt-rpm)
 		docmd epm update
-		docmd epm install apt rpm
-		showcmd "TODO: change repo"
-		docmd epm Upgrade
-		docmd epm update-kernel
+		info "Have no idea how to upgrade $DISTRNAME"
 		;;
 	*-dpkg)
 		sudocmd do-release-upgrade -d
@@ -3058,7 +3131,6 @@ epm_release_upgrade()
 		;;
 	esac
 
-	sudocmd $CMD $pkg_filenames
 }
 
 # File bin/epm-remove:
@@ -3321,15 +3393,18 @@ esac
 
 # File bin/epm-repofix:
 
-SUBST_ALT_RULE='s!^([^#].*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ](Sisyphus|p7[/ ]branch|p6[/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch) !\1 \2/\3/\4 !gi'
+SUBST_ALT_RULE='s!^([^#].*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ](Sisyphus|p8[/ ]branch|p7[/ ]branch|p6[/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch) !\1 \2/\3/\4 !gi'
 
 __fix_apt_sources_list()
 {
-	[ -n "$SUDO" ] && fatal "run only under root"
+	local i
+	assure_root
 	for i in "$@" ; do
 		[ -s "$i" ] || continue
 		#perl -i.bak -pe "$SUBST_ALT_RULE" $i
-		sed -i -e -r "$SUBST_ALT_RULE" $i
+		# TODO: only for uncommented strings
+		#sed -i -r -e "$SUBST_ALT_RULE" $i
+		regexp_subst "/^ *#/! $SUBST_ALT_RULE" $i
 	done
 }
 
@@ -4619,7 +4694,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.6.3"
+        echo "EPM package manager version 1.6.4"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2015"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

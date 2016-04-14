@@ -258,7 +258,7 @@ set_sudo()
 	[ $EFFUID = "0" ] && return
 
 	# use sudo if possible
-	which sudo >/dev/null 2>/dev/null && SUDO="sudo" && return
+	which sudo >/dev/null 2>/dev/null && SUDO="sudo --" && return
 
 	SUDO="fatal 'Can't find sudo. Please install sudo or run epm under root.'"
 }
@@ -296,6 +296,32 @@ __get_package_for_command()
 			echo 'update-kernel'
 			;;
 	esac
+}
+
+confirm() {
+    local response
+    # call with a prompt string or use a default
+    read -r -p "${1:-Are you sure? [y/N]} " response
+    case $response in
+        [yY][eE][sS]|[yY])
+            true
+            ;;
+        *)
+            false
+            ;;
+    esac
+}
+
+assure_root()
+{
+	[ "$EFFUID" = 0 ] || fatal "run me only under root"
+}
+
+regexp_subst()
+{
+	local expression="$1"
+	shift
+	sed -i -r -e "$expression" "$@"
 }
 
 assure_exists()
@@ -1199,7 +1225,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.6.3"
+        echo "Service manager version 1.6.4"
         echo "Running on $($DISTRVENDOR)"
         echo "Copyright (c) Etersoft 2012, 2013, 2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
