@@ -304,6 +304,33 @@ __get_package_for_command()
 	esac
 }
 
+# TODO:
+confirm() {
+    local response
+    # call with a prompt string or use a default
+    read -r -p "${1:-Are you sure? [y/N]} " response
+    case $response in
+        [yY][eE][sS]|[yY])
+            true
+            ;;
+        *)
+            false
+            ;;
+    esac
+}
+
+assure_root()
+{
+	[ "$EFFUID" = 0 ] || fatal "run me only under root"
+}
+
+regexp_subst()
+{
+	local expression="$1"
+	shift
+	sed -i -r -e "$expression" "$@"
+}
+
 # TODO: we we can't use epm directly?
 assure_exists()
 {

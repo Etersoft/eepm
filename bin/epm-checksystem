@@ -38,7 +38,7 @@ epm_checksystem_ALTLinux()
 epm_checksystem()
 {
 
-[ -n "$SUDO" ] || fatal "Do not use checksystem under root"
+[ $EFFUID = "0" ] && fatal "Do not use checksystem under root"
 
 case $DISTRNAME in
 	ALTLinux)
