@@ -36,7 +36,7 @@ __is_repo_info_uptodate()
     case $PMTYPE in
         apt-rpm)
             # apt-deb do not update lock file date
-            if $SUDO [ -r /var/lib/apt/lists ] ; then
+            if $SUDO test -r /var/lib/apt/lists ; then
                 local LOCKFILE=/var/lib/apt/lists/lock
                 $SUDO test -r $LOCKFILE || return
                 # if repo older than 1 day, return false
