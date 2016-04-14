@@ -1033,7 +1033,6 @@ update_repo_if_needed()
 
     cd /
     if ! __is_repo_info_downloaded || ! __is_repo_info_uptodate ; then
-        load_helper epm-update
         pkg_filenames= epm_update
     fi
     cd - >/dev/null
@@ -1307,7 +1306,6 @@ epm_download()
 
 __alt_local_content_filelist()
 {
-    load_helper epm-sh-altlinux
 
     local CI="$(get_local_alt_contents_index)"
 
@@ -1848,7 +1846,6 @@ epm_install_files()
             sudocmd pm install $@
             return ;;
         emerge)
-            load_helper epm-install-emerge
             sudocmd epm_install_emerge $@
             return ;;
         pacman)
@@ -2920,7 +2917,6 @@ epm_query_file()
     [ -n "$pkg_filenames" ] || fatal "Run query without file names"
 
 
-    load_helper epm-search_file
 
     for pkg in $pkg_filenames ; do
         __do_query_real_file "$pkg"
@@ -3332,7 +3328,8 @@ __fix_apt_sources_list()
 	[ -n "$SUDO" ] && fatal "run only under root"
 	for i in "$@" ; do
 		[ -s "$i" ] || continue
-		perl -i.bak -pe "$SUBST_ALT_RULE" $i
+		#perl -i.bak -pe "$SUBST_ALT_RULE" $i
+		sed -i -e -r "$SUBST_ALT_RULE" $i
 	done
 }
 
@@ -3686,7 +3683,6 @@ epm_search()
 
 __alt_local_content_search()
 {
-    load_helper epm-sh-altlinux
 
     local CI="$(get_local_alt_contents_index)"
 
@@ -3757,7 +3753,6 @@ docmd $CMD $pkg_filenames
 
 get_local_alt_contents_index()
 {
-    load_helper epm-repolist
 
     epm_repolist | grep "rpm.*file:/" | sed -e "s|^rpm.*file:||g" | while read URL ARCH other ; do
         test -d "$URL/$ARCH" || continue # fatal "Local mirror is not accessible via $URL/$ARCH"
