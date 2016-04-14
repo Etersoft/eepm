@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2013  Etersoft
-# Copyright (C) 2013  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2013, 2016  Etersoft
+# Copyright (C) 2013, 2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -17,6 +17,17 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+__update_alt_repo_to_next_distro()
+{
+	case "$DISTRVERSION" in
+#		p7)
+#			;;
+		*)
+			info "Have no idea how to update from $DISTRVERSION"
+			return 1
+	esac
+}
+
 epm_release_upgrade()
 {
 	info "Starting upgrade whole system to the next release"
@@ -26,7 +37,7 @@ epm_release_upgrade()
 	apt-rpm)
 		docmd epm update
 		docmd epm install apt rpm
-		showcmd "TODO: change repo"
+		__update_alt_repo_to_next_distro || exit
 		docmd epm Upgrade
 		docmd epm update-kernel
 		;;
