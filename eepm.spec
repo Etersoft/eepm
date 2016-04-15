@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.6.4
+Version: 1.6.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,10 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Fri Apr 15 2016 Vitaly Lipatov <lav@altlinux.ru> 1.6.5-alt1
+- restrict sudo args
+- small fixes
+
 * Fri Apr 15 2016 Vitaly Lipatov <lav@altlinux.ru> 1.6.4-alt1
 - epm-repofix: use sed -r instead perl -pi
 - pack_in_onefile: fix run positional load_helper
