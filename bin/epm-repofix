@@ -20,7 +20,7 @@
 
 __fix_apt_sources_list()
 {
-	local SUBST_ALT_RULE='s!^([^#].*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ](Sisyphus|p8[/ ]branch|p7[/ ]branch|p6[/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch) !\1 \2/\3/\4 !gi'
+	local SUBST_ALT_RULE='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ](Sisyphus|p8[/ ]branch|p7[/ ]branch|p6[/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch) !\1 \2/\3/\4 !gi'
 	local i
 	assure_root
 	for i in "$@" ; do
@@ -29,6 +29,12 @@ __fix_apt_sources_list()
 		# TODO: only for uncommented strings
 		#sed -i -r -e "$SUBST_ALT_RULE" $i
 		regexp_subst "/^ *#/! $SUBST_ALT_RULE" $i
+		local br
+		for br in p6 p7 p8 ; do
+			# sed -r -e "/ALTLinux\/p8\/branch/s/rpm *([fhr])/rpm [p8] \1/"
+			regexp_subst "/ALTLinux\/$br\/branch/s/^rpm *([fhr])/rpm [$br] \1/" $i
+			regexp_subst "/Etersoft\/$br\/branch/s/^rpm *([fhr])/rpm [etersoft] \1/" $i
+		done
 	done
 }
 
