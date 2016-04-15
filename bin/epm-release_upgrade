@@ -33,7 +33,7 @@ __replace_alt_version_in_repo()
 		regexp_subst "/^ *#/! s!$1/branch!$2/branch!g" $i
 		
 		# TODO: start with improve to [p8] - install some package firstly?
-		regexp_subst "/^ *#/! s!\[$1\]![alt]/branch!g" $i
+		regexp_subst "/^ *#/! s!\[$1\]![alt]!g" $i
 	done
 	docmd apt-repo list
 }
