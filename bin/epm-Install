@@ -33,7 +33,7 @@ epm_Install()
 		yum-rpm)
 			;;
 		*)
-			epm_update || return
+			pkg_filenames= epm_update || return
 			;;
 	esac
 
