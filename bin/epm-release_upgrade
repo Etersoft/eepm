@@ -33,7 +33,7 @@ __replace_alt_version_in_repo()
 		regexp_subst "/^ *#/! s!$1/branch!$2/branch!g" $i
 		
 		# TODO: start with improve to [p8] - install some package firstly?
-		regexp_subst "/^ *#/! s!\[$1\]![alt]!g" $i
+		regexp_subst "/^ *#/! s!\[$1\]![\$2]!g" $i
 	done
 	docmd apt-repo list
 }
@@ -42,6 +42,7 @@ __update_alt_repo_to_next_distro()
 {
 	case "$DISTRVERSION" in
 		p6)
+			docmd epm install apt-conf-branch || fatal
 			__replace_alt_version_in_repo p6 p7
 			docmd epm update
 			docmd epm install apt rpm || fatal
@@ -50,6 +51,7 @@ __update_alt_repo_to_next_distro()
 			info "Run epm release-upgrade again for update to p8"
 			;;
 		p7)
+			docmd epm install apt-conf-branch || fatal
 			__replace_alt_version_in_repo p7 p8
 			docmd epm update
 			docmd epm install apt rpm || fatal
