@@ -17,6 +17,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+load_helper epm-query
+
 __replace_alt_version_in_repo()
 {
 	local i
@@ -41,10 +43,22 @@ __update_alt_repo_to_next_distro()
 	case "$DISTRVERSION" in
 		p6)
 			__replace_alt_version_in_repo p6 p7
+			docmd epm update
+			docmd epm install apt rpm || fatal
+			docmd epm upgrade
+			docmd epm update-kernel
 			info "Run epm release-upgrade again for update to p8"
 			;;
 		p7)
 			__replace_alt_version_in_repo p7 p8
+			docmd epm update
+			docmd epm install apt rpm || fatal
+			if is_installed systemd ; then
+				docmd epm install systemd || fatal
+			fi
+			docmd epm upgrade || fatal
+			#info " # epmi branding-simply-linux-release branding-simply-linux-graphics"
+			docmd epm update-kernel
 			;;
 		*)
 			info "Have no idea how to update from $DISTRNAME $DISTRVERSION"
@@ -64,9 +78,7 @@ epm_release_upgrade()
 		docmd epm install apt rpm
 		load_helper epm-repofix
 		pkg_filenames= epm_repofix
-		__update_alt_repo_to_next_distro || exit
-		docmd epm Upgrade
-		docmd epm update-kernel
+		__update_alt_repo_to_next_distro
 		return
 		;;
 	*)
