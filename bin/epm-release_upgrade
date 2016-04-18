@@ -19,6 +19,15 @@
 
 load_helper epm-query
 
+__replace_text_in_alt_repo()
+{
+	local i
+	for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
+		[ -s "$i" ] || continue
+		regexp_subst "$1" "$i"
+	done
+}
+
 __replace_alt_version_in_repo()
 {
 	local i
@@ -26,15 +35,7 @@ __replace_alt_version_in_repo()
 	echo "Upgrading $DISTRNAME from $1 to $2 ..."
 	docmd apt-repo list | sed -e "s|\($1/branch\)|{\1}->{$2/branch}|g" | egrep --color -- "$1/branch"
 	confirm "Are these correct changes?" || fatal "Exiting"
-	for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
-		[ -s "$i" ] || continue
-		# TODO: only for uncommended strings
-		#sed -i -r -e "s!$1/branch!$2/branch!g" $i
-		regexp_subst "/^ *#/! s!$1/branch!$2/branch!g" $i
-		
-		# TODO: start with improve to [p8] - install some package firstly?
-		regexp_subst "/^ *#/! s!\[$1\]![\$2]!g" $i
-	done
+	__replace_text_in_alt_repo "/^ *#/! s!$1/branch!$2/branch!g"
 	docmd apt-repo list
 }
 
@@ -43,27 +44,37 @@ __update_alt_repo_to_next_distro()
 	case "$DISTRVERSION" in
 		p6)
 			docmd epm install apt-conf-branch || fatal
+			load_helper epm-repofix
+			pkg_filenames= epm_repofix
 			__replace_alt_version_in_repo p6 p7
-			docmd epm update
-			docmd epm install apt rpm || fatal
+			__replace_text_in_alt_repo "/^ *#/! s!\[p6\]![updates]!g"
+			docmd epm update || fatal
+			docmd epm install apt rpm apt-conf-branch || fatal
+			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![p7]!g"
+			docmd epm update || fatal
 			docmd epm upgrade
 			docmd epm update-kernel
 			info "Run epm release-upgrade again for update to p8"
 			;;
 		p7)
 			docmd epm install apt-conf-branch || fatal
+			load_helper epm-repofix
+			pkg_filenames= epm_repofix
 			__replace_alt_version_in_repo p7 p8
-			docmd epm update
-			docmd epm install apt rpm || fatal
+			__replace_text_in_alt_repo "/^ *#/! s!\[p7\]![updates]!g"
+			docmd epm update || fatal
+			docmd epm install apt rpm apt-conf-branch || fatal
+			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![p7]!g"
+			docmd epm update || fatal
 			if is_installed systemd ; then
 				docmd epm install systemd || fatal
 			fi
 			docmd epm upgrade || fatal
 			#info " # epmi branding-simply-linux-release branding-simply-linux-graphics"
-			docmd epm update-kernel
+			docmd epm update-kernel || fatal
 			;;
 		*)
-			info "Have no idea how to update from $DISTRNAME $DISTRVERSION"
+			info "Have no idea how to update from $DISTRNAME $DISTRVERSION. Try install branding-simply-linux-release package before."
 			return 1
 	esac
 }
@@ -78,8 +89,6 @@ epm_release_upgrade()
 	ALTLinux)
 		docmd epm update
 		docmd epm install apt rpm
-		load_helper epm-repofix
-		pkg_filenames= epm_repofix
 		__update_alt_repo_to_next_distro
 		return
 		;;
