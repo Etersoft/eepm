@@ -64,7 +64,7 @@ __update_alt_repo_to_next_distro()
 			__replace_text_in_alt_repo "/^ *#/! s!\[p7\]![updates]!g"
 			docmd epm update || fatal
 			docmd epm install apt rpm apt-conf-branch || fatal
-			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![p7]!g"
+			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![p8]!g"
 			docmd epm update || fatal
 			if is_installed systemd && is_active_systemd systemd ; then
 				docmd epm install systemd || fatal
