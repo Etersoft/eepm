@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.6.7
+Version: 1.6.8
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,10 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Mon Apr 18 2016 Vitaly Lipatov <lav@altlinux.ru> 1.6.8-alt1
+- small output fix
+- rewrite release-upgrade
+
 * Fri Apr 15 2016 Vitaly Lipatov <lav@altlinux.ru> 1.6.7-alt1
 - release_upgrade: fix sign replacement
 - fix epm_update
