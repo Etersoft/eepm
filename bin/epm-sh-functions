@@ -469,6 +469,9 @@ case $DISTRNAME in
 	Cygwin)
 		CMD="aptcyg"
 		;;
+	alpine)
+		CMD="apk"
+		;;
 	*)
 		fatal "Have no suitable DISTRNAME $DISTRNAME"
 		;;

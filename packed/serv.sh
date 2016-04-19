@@ -457,6 +457,9 @@ case $DISTRNAME in
 	Cygwin)
 		CMD="aptcyg"
 		;;
+	alpine)
+		CMD="apk"
+		;;
 	*)
 		fatal "Have no suitable DISTRNAME $DISTRNAME"
 		;;
@@ -871,6 +874,7 @@ pkgtype()
 		gentoo) echo "tbz2" ;;
 		windows) echo "exe" ;;
 		android) echo "apk" ;;
+		alpine) echo "apk" ;;
 		cygwin) echo "tar.xz" ;;
 		debian|ubuntu|mint|runtu|mcst) echo "deb" ;;
 		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
@@ -949,6 +953,11 @@ elif distro mopslinux-version ; then
 elif distro slackware-version ; then
 	DISTRIB_ID="Slackware"
 	DISTRIB_RELEASE="$(grep -Eo [0-9]+\.[0-9]+ $DISTROFILE)"
+
+elif distro os-release ; then
+	. /etc/os-release
+	DISTRIB_ID="$ID"
+	DISTRIB_RELEASE="$VERSION_ID"
 
 elif distro arch-release ; then
 	DISTRIB_ID="ArchLinux"

@@ -80,6 +80,9 @@ case $PMTYPE in
 	ipkg)
 		sudocmd ipkg update
 		;;
+	apk)
+		sudocmd apk update
+		;;
 	pkgsrc)
 		# portsnap extract for the first time?
 		sudocmd portsnap fetch update

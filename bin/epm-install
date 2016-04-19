@@ -163,6 +163,9 @@ epm_install_names()
 		nix)
 			__separate_sudocmd "nix-env --install" "nix-env --upgrade" $@
 			return ;;
+		apk)
+			sudocmd apk add $@
+			return ;;
 		guix)
 			__separate_sudocmd "guix package -i" "guix package -i" $@
 			return ;;
@@ -230,6 +233,9 @@ epm_ni_install_names()
 			return ;;
 		nix)
 			sudocmd nix-env --install $@
+			return ;;
+		apk)
+			sudocmd apk add $@
 			return ;;
 		#android)
 		#	sudocmd pm install $@

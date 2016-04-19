@@ -122,6 +122,9 @@ case $PMTYPE in
 	ipkg)
 		CMD="ipkg list"
 		;;
+	apk)
+		CMD="apk info"
+		;;
 	guix)
 		CMD="guix package -I"
 		;;

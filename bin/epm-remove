@@ -107,6 +107,9 @@ epm_remove_names()
 		nix)
 			sudocmd nix-env --uninstall $@
 			return ;;
+		apk)
+			sudocmd apk del $@
+			return ;;
 		guix)
 			sudocmd guix package -r $@
 			return ;;

@@ -64,6 +64,9 @@ case $PMTYPE in
 	mpkg)
 		CMD="mpkg search"
 		;;
+	apk)
+		CMD="apk search"
+		;;
 	conary)
 		CMD="conary repquery"
 		;;

@@ -459,6 +459,9 @@ case $DISTRNAME in
 	Cygwin)
 		CMD="aptcyg"
 		;;
+	alpine)
+		CMD="apk"
+		;;
 	*)
 		fatal "Have no suitable DISTRNAME $DISTRNAME"
 		;;
@@ -1706,6 +1709,9 @@ epm_install_names()
 		nix)
 			__separate_sudocmd "nix-env --install" "nix-env --upgrade" $@
 			return ;;
+		apk)
+			sudocmd apk add $@
+			return ;;
 		guix)
 			__separate_sudocmd "guix package -i" "guix package -i" $@
 			return ;;
@@ -1772,6 +1778,9 @@ epm_ni_install_names()
 			return ;;
 		nix)
 			sudocmd nix-env --install $@
+			return ;;
+		apk)
+			sudocmd apk add $@
 			return ;;
 		#android)
 		#	sudocmd pm install $@
@@ -2235,6 +2244,9 @@ case $PMTYPE in
 		;;
 	ipkg)
 		CMD="ipkg list"
+		;;
+	apk)
+		CMD="apk info"
 		;;
 	guix)
 		CMD="guix package -I"
@@ -3262,6 +3274,9 @@ epm_remove_names()
 		nix)
 			sudocmd nix-env --uninstall $@
 			return ;;
+		apk)
+			sudocmd apk del $@
+			return ;;
 		guix)
 			sudocmd guix package -r $@
 			return ;;
@@ -3692,6 +3707,9 @@ case $PMTYPE in
 		;;
 	mpkg)
 		CMD="mpkg search"
+		;;
+	apk)
+		CMD="apk search"
 		;;
 	conary)
 		CMD="conary repquery"
@@ -4194,6 +4212,9 @@ case $PMTYPE in
 	ipkg)
 		sudocmd ipkg update
 		;;
+	apk)
+		sudocmd apk update
+		;;
 	pkgsrc)
 		# portsnap extract for the first time?
 		sudocmd portsnap fetch update
@@ -4446,6 +4467,7 @@ pkgtype()
 		gentoo) echo "tbz2" ;;
 		windows) echo "exe" ;;
 		android) echo "apk" ;;
+		alpine) echo "apk" ;;
 		cygwin) echo "tar.xz" ;;
 		debian|ubuntu|mint|runtu|mcst) echo "deb" ;;
 		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
@@ -4524,6 +4546,11 @@ elif distro mopslinux-version ; then
 elif distro slackware-version ; then
 	DISTRIB_ID="Slackware"
 	DISTRIB_RELEASE="$(grep -Eo [0-9]+\.[0-9]+ $DISTROFILE)"
+
+elif distro os-release ; then
+	. /etc/os-release
+	DISTRIB_ID="$ID"
+	DISTRIB_RELEASE="$VERSION_ID"
 
 elif distro arch-release ; then
 	DISTRIB_ID="ArchLinux"
