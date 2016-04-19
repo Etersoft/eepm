@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.7.0
+Version: 1.7.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,11 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Wed Apr 20 2016 Vitaly Lipatov <lav@altlinux.ru> 1.7.1-alt1
+- epm: added alpine apk package manager install, update, remove, qa, search commands
+- fix Simply Linux 6.0 detection
+- kernel_update: do not install kernel if it is not installed (for ovz containers)
+
 * Tue Apr 19 2016 Vitaly Lipatov <lav@altlinux.ru> 1.7.0-alt1
 - epm release-upgrade with ALT Linux p8 support
 - epm-reinstall: add names filtering (to support epmqp some | epm reinstall)
