@@ -49,11 +49,12 @@ __update_alt_repo_to_next_distro()
 			__replace_alt_version_in_repo p6 p7
 			__replace_text_in_alt_repo "/^ *#/! s!\[p6\]![updates]!g"
 			docmd epm update || fatal
-			docmd epm install apt rpm apt-conf-branch || fatal
+			docmd epm install apt rpm apt-conf-branch || fatal "Check an error and run epm release-upgrade again"
 			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![p7]!g"
 			docmd epm update || fatal
-			docmd epm upgrade
+			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
 			docmd epm update-kernel
+			info "Done."
 			info "Run epm release-upgrade again for update to p8"
 			;;
 		p7)
@@ -63,15 +64,16 @@ __update_alt_repo_to_next_distro()
 			__replace_alt_version_in_repo p7 p8
 			__replace_text_in_alt_repo "/^ *#/! s!\[p7\]![updates]!g"
 			docmd epm update || fatal
-			docmd epm install apt rpm apt-conf-branch || fatal
+			docmd epm install apt rpm apt-conf-branch || fatal "Check an error and run epm release-upgrade again"
 			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![p8]!g"
 			docmd epm update || fatal
 			if is_installed systemd && is_active_systemd systemd ; then
 				docmd epm install systemd || fatal
 			fi
-			docmd epm upgrade || fatal
+			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
 			#info " # epmi branding-simply-linux-release branding-simply-linux-graphics"
 			docmd epm update-kernel || fatal
+			info "Done."
 			;;
 		*)
 			info "Have no idea how to update from $DISTRNAME $DISTRVERSION. Try install branding-simply-linux-release package before."
