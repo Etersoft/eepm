@@ -72,6 +72,9 @@ epm_reinstall()
 {
     [ -n "$pkg_filenames" ] || fatal "Reinstall: missing package(s) name."
 
+    # get package name for hi level package management command (with version if supported and if possible)
+    pkg_names=$(__epm_get_hilevel_name $pkg_names)
+
     epm_reinstall_names $pkg_names
     epm_reinstall_files $pkg_files
 }
