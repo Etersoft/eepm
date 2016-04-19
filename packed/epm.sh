@@ -467,6 +467,18 @@ PMTYPE=$CMD
 }
 
 
+is_active_systemd()
+{
+	local a
+	SYSTEMCTL=/bin/systemctl
+	SYSTEMD_CGROUP_DIR=/sys/fs/cgroup/systemd
+	[ -x "$SYSTEMCTL" ] || return
+	[ -d "$SYSTEMD_CGROUP_DIR" ] || return
+	a= mountpoint -q "$SYSTEMD_CGROUP_DIR" || return
+	# some hack
+	pidof systemd >/dev/null
+}
+
 # File bin/epm-addrepo:
 
 epm_addrepo()
@@ -1984,7 +1996,7 @@ epm_Install()
 		yum-rpm)
 			;;
 		*)
-			epm_update || return
+			pkg_filenames= epm_update || return
 			;;
 	esac
 
@@ -3020,6 +3032,9 @@ epm_reinstall()
 {
     [ -n "$pkg_filenames" ] || fatal "Reinstall: missing package(s) name."
 
+    # get package name for hi level package management command (with version if supported and if possible)
+    pkg_names=$(__epm_get_hilevel_name $pkg_names)
+
     epm_reinstall_names $pkg_names
     epm_reinstall_files $pkg_files
 }
@@ -3027,22 +3042,24 @@ epm_reinstall()
 
 # File bin/epm-release_upgrade:
 
+
+__replace_text_in_alt_repo()
+{
+	local i
+	for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
+		[ -s "$i" ] || continue
+		regexp_subst "$1" "$i"
+	done
+}
+
 __replace_alt_version_in_repo()
 {
 	local i
 	assure_exists apt-repo
 	echo "Upgrading $DISTRNAME from $1 to $2 ..."
-	docmd apt-repo list | sed -e "s|\($1/branch\)|{\1}->$2/branch<|g" | egrep --color -- "$1/branch"
+	docmd apt-repo list | sed -e "s|\($1/branch\)|{\1}->{$2/branch}|g" | egrep --color -- "$1/branch"
 	confirm "Are these correct changes?" || fatal "Exiting"
-	for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
-		[ -s "$i" ] || continue
-		# TODO: only for uncommended strings
-		#sed -i -r -e "s!$1/branch!$2/branch!g" $i
-		regexp_subst "/^ *#/! s!$1/branch!$2/branch!g" $i
-		
-		# TODO: start with improve to [p8] - install some package firstly?
-		regexp_subst "/^ *#/! s s!\[$1\]![alt]/branch!g" $i
-	done
+	__replace_text_in_alt_repo "/^ *#/! s!$1/branch!$2/branch!g"
 	docmd apt-repo list
 }
 
@@ -3050,14 +3067,40 @@ __update_alt_repo_to_next_distro()
 {
 	case "$DISTRVERSION" in
 		p6)
+			docmd epm install apt-conf-branch || fatal
+			load_helper epm-repofix
+			pkg_filenames= epm_repofix
 			__replace_alt_version_in_repo p6 p7
+			__replace_text_in_alt_repo "/^ *#/! s!\[p6\]![updates]!g"
+			docmd epm update || fatal
+			docmd epm install apt rpm apt-conf-branch || fatal "Check an error and run epm release-upgrade again"
+			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![p7]!g"
+			docmd epm update || fatal
+			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
+			docmd epm update-kernel
+			info "Done."
 			info "Run epm release-upgrade again for update to p8"
 			;;
 		p7)
+			docmd epm install apt-conf-branch || fatal
+			load_helper epm-repofix
+			pkg_filenames= epm_repofix
 			__replace_alt_version_in_repo p7 p8
+			__replace_text_in_alt_repo "/^ *#/! s!\[p7\]![updates]!g"
+			docmd epm update || fatal
+			docmd epm install apt rpm apt-conf-branch || fatal "Check an error and run epm release-upgrade again"
+			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![p8]!g"
+			docmd epm update || fatal
+			if is_installed systemd && is_active_systemd systemd ; then
+				docmd epm install systemd || fatal
+			fi
+			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
+			#info " # epmi branding-simply-linux-release branding-simply-linux-graphics"
+			docmd epm update-kernel || fatal
+			info "Done."
 			;;
 		*)
-			info "Have no idea how to update from $DISTRNAME $DISTRVERSION"
+			info "Have no idea how to update from $DISTRNAME $DISTRVERSION. Try install branding-simply-linux-release package before."
 			return 1
 	esac
 }
@@ -3072,10 +3115,7 @@ epm_release_upgrade()
 	ALTLinux)
 		docmd epm update
 		docmd epm install apt rpm
-		pkg_filenames= epm_repofix
-		__update_alt_repo_to_next_distro || exit
-		docmd epm Upgrade
-		docmd epm update-kernel
+		__update_alt_repo_to_next_distro
 		return
 		;;
 	*)
@@ -3393,10 +3433,10 @@ esac
 
 # File bin/epm-repofix:
 
-SUBST_ALT_RULE='s!^([^#].*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ](Sisyphus|p8[/ ]branch|p7[/ ]branch|p6[/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch) !\1 \2/\3/\4 !gi'
 
 __fix_apt_sources_list()
 {
+	local SUBST_ALT_RULE='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ](Sisyphus|p8[/ ]branch|p7[/ ]branch|p6[/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch) !\1 \2/\3/\4 !gi'
 	local i
 	assure_root
 	for i in "$@" ; do
@@ -3405,6 +3445,12 @@ __fix_apt_sources_list()
 		# TODO: only for uncommented strings
 		#sed -i -r -e "$SUBST_ALT_RULE" $i
 		regexp_subst "/^ *#/! $SUBST_ALT_RULE" $i
+		local br
+		for br in p6 p7 p8 ; do
+			# sed -r -e "/ALTLinux\/p8\/branch/s/rpm *([fhr])/rpm [p8] \1/"
+			regexp_subst "/ALTLinux\/$br\/branch/s/^rpm *([fhr])/rpm [$br] \1/" $i
+			regexp_subst "/Etersoft\/$br\/branch/s/^rpm *([fhr])/rpm [etersoft] \1/" $i
+		done
 	done
 }
 
@@ -4258,7 +4304,7 @@ epm_Upgrade()
 		yum-rpm)
 			;;
 		*)
-			epm_update || return
+			pkg_filenames= epm_update || return
 			;;
 	esac
 
@@ -4694,9 +4740,9 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.6.4"
+        echo "EPM package manager version 1.7.0"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
-        echo "Copyright (c) Etersoft 2012-2015"
+        echo "Copyright (c) Etersoft 2012-2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 

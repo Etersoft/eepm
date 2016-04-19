@@ -465,6 +465,18 @@ PMTYPE=$CMD
 }
 
 
+is_active_systemd()
+{
+	local a
+	SYSTEMCTL=/bin/systemctl
+	SYSTEMD_CGROUP_DIR=/sys/fs/cgroup/systemd
+	[ -x "$SYSTEMCTL" ] || return
+	[ -d "$SYSTEMD_CGROUP_DIR" ] || return
+	a= mountpoint -q "$SYSTEMD_CGROUP_DIR" || return
+	# some hack
+	pidof systemd >/dev/null
+}
+
 # File bin/serv-common:
 
 serv_common()
@@ -1151,18 +1163,6 @@ set_service_type()
 	[ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
 	set_target_pkg_env
 
-is_active_systemd()
-{
-	local a
-	SYSTEMCTL=/bin/systemctl
-	SYSTEMD_CGROUP_DIR=/sys/fs/cgroup/systemd
-	[ -x "$SYSTEMCTL" ] || return
-	[ -d "$SYSTEMD_CGROUP_DIR" ] || return
-	a= mountpoint -q "$SYSTEMD_CGROUP_DIR" || return
-	# some hack
-	pidof systemd >/dev/null
-}
-
 case $DISTRNAME in
 	ALTLinux)
 		CMD="service-chkconfig"
@@ -1225,7 +1225,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.6.4"
+        echo "Service manager version 1.7.0"
         echo "Running on $($DISTRVENDOR)"
         echo "Copyright (c) Etersoft 2012, 2013, 2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
