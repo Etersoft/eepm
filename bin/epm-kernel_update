@@ -23,6 +23,11 @@ epm_kernel_update()
 
 	case $DISTRNAME in
 	ALTLinux)
+		load_helper epm-query_package
+		if ! __epm_query_package kernel-image >/dev/null ; then
+			info "No installed kernel packages, skipping update"
+			return
+		fi
 		assure_exists update-kernel
 		sudocmd update-kernel $pkg_filenames
 		return ;;

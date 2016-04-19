@@ -20,6 +20,11 @@
 load_helper epm-packages
 load_helper epm-search
 
+__epm_query_package()
+{
+	pkg_filenames="$@" quoted_args="$@" quiet=1 epm_query_package
+}
+
 epm_query_package()
 {
 	[ -n "$pkg_filenames" ] || fatal "Please, use search with some argument or run epmqa for get all packages."
