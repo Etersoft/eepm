@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.7.1
+Version: 1.7.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,9 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Wed Apr 20 2016 Vitaly Lipatov <lav@altlinux.ru> 1.7.2-alt1
+- distr_info: fix os-release detection
+
 * Wed Apr 20 2016 Vitaly Lipatov <lav@altlinux.ru> 1.7.1-alt1
 - epm: added alpine apk package manager install, update, remove, qa, search commands
 - fix Simply Linux 6.0 detection
