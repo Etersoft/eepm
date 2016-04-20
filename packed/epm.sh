@@ -2097,6 +2097,11 @@ epm_kernel_update()
 
 	case $DISTRNAME in
 	ALTLinux)
+		load_helper epm-query_package
+		if ! __epm_query_package kernel-image >/dev/null ; then
+			info "No installed kernel packages, skipping update"
+			return
+		fi
 		assure_exists update-kernel
 		sudocmd update-kernel $pkg_filenames
 		return ;;
@@ -2977,6 +2982,11 @@ epm_query_file()
 
 # File bin/epm-query_package:
 
+
+__epm_query_package()
+{
+	pkg_filenames="$@" quoted_args="$@" quiet=1 epm_query_package
+}
 
 epm_query_package()
 {
@@ -4506,9 +4516,10 @@ if distro altlinux-release ; then
 	if has Sisyphus ; then DISTRIB_RELEASE="Sisyphus"
 	elif has "ALT Linux 7." ; then DISTRIB_RELEASE="p7"
 	elif has "ALT Linux 8." ; then DISTRIB_RELEASE="p8"
+	elif has "Simply Linux 6." ; then DISTRIB_RELEASE="p6"
 	elif has "Simply Linux 7." ; then DISTRIB_RELEASE="p7"
 	elif has "Simply Linux 8." ; then DISTRIB_RELEASE="p8"
-	elif has "ALT Linux 6.0" ; then DISTRIB_RELEASE="p6"
+	elif has "ALT Linux 6." ; then DISTRIB_RELEASE="p6"
 	elif has "ALT Linux p8"  ; then DISTRIB_RELEASE="p8"
 	elif has "ALT Linux p7"  ; then DISTRIB_RELEASE="p7"
 	elif has "ALT Linux p6"  ; then DISTRIB_RELEASE="p6"
@@ -4547,8 +4558,8 @@ elif distro slackware-version ; then
 	DISTRIB_ID="Slackware"
 	DISTRIB_RELEASE="$(grep -Eo [0-9]+\.[0-9]+ $DISTROFILE)"
 
-elif distro os-release ; then
-	. /etc/os-release
+elif distro os-release && which apk 2>/dev/null >/dev/null ; then
+	. $ROOTDIR/etc/os-release
 	DISTRIB_ID="$ID"
 	DISTRIB_RELEASE="$VERSION_ID"
 
@@ -4767,7 +4778,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.7.0"
+        echo "EPM package manager version 1.7.2"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
