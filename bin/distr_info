@@ -132,8 +132,8 @@ elif distro slackware-version ; then
 	DISTRIB_ID="Slackware"
 	DISTRIB_RELEASE="$(grep -Eo [0-9]+\.[0-9]+ $DISTROFILE)"
 
-elif distro os-release ; then
-	. /etc/os-release
+elif distro os-release && which apk 2>/dev/null >/dev/null ; then
+	. $ROOTDIR/etc/os-release
 	DISTRIB_ID="$ID"
 	DISTRIB_RELEASE="$VERSION_ID"
 
