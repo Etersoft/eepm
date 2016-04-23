@@ -36,7 +36,7 @@ __fix_apt_sources_list()
 			regexp_subst "/ALTLinux\/$br\/branch/s/^rpm *([fhr])/rpm [$br] \1/" $i
 			regexp_subst "/Etersoft\/$br\/branch/s/^rpm *([fhr])/rpm [etersoft] \1/" $i
 		done
-		regexp_subst "/ALTLinux\/Sisyphus/s/^rpm *([fhr])/rpm [alt] \1/" $i
+		regexp_subst "/ALTLinux\/Sisyphus\//s/^rpm *([fhr])/rpm [alt] \1/" $i
 	done
 }
 
