@@ -58,7 +58,7 @@ __replace_alt_version_in_repo()
 	assure_exists apt-repo
 	#echo "Upgrading $DISTRNAME from $1 to $2 ..."
 	docmd apt-repo list | sed -e "s|\($1\)|{\1}->{$2}|g" | egrep --color -- "$1"
-	confirm "Are these correct changes?" || fatal "Exiting"
+	confirm "Are these correct changes? [y/N]" || fatal "Exiting"
 	__replace_text_in_alt_repo "/^ *#/! s!$1!$2!g"
 	docmd apt-repo list
 }
@@ -66,7 +66,8 @@ __replace_alt_version_in_repo()
 __alt_repofix()
 {
 	load_helper epm-repofix
-	pkg_filenames= epm_repofix
+	showcmd epm repofix
+	quiet=1 pkg_filenames= epm_repofix >/dev/null
 	__replace_text_in_alt_repo "/^ *#/! s!\[p[6-9]\]![updates]!g"
 }
 
@@ -106,9 +107,6 @@ __update_to_the_distro()
 		Sisyphus)
 			docmd epm update || fatal
 			docmd epm install apt rpm apt-conf-sisyphus altlinux-release-sisyphus || fatal "Check an error and run again"
-			#__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![alt]!g"
-			__alt_repofix
-			docmd epm update || fatal
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
 			docmd epm update-kernel || fatal
 			info "Done."
@@ -138,19 +136,21 @@ __update_alt_to_next_distro()
 			info "Downgrade $DISTRNAME from Sisyphus to p8 ..."
 			docmd epm install apt-conf-branch || fatal
 			__replace_alt_version_in_repo Sisyphus/ p8/branch/
+			__replace_text_in_alt_repo "/^ *#/! s!\[alt\]![p8]!g"
 			__update_to_the_distro p8
 			;;
 		"p8 Sisyphus")
 			info "Upgrade $DISTRNAME from p8 to Sisyphus ..."
 			docmd epm install apt-conf-branch || fatal
 			docmd epm upgrade || fatal
-			__alt_repofix
 			__replace_alt_version_in_repo p8/branch/ Sisyphus/
+			__alt_repofix
+			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![alt]!g"
 			__update_to_the_distro Sisyphus
 			;;
 		*)
 			warning "Have no idea how to update from $DISTRNAME $DISTRVERSION."
-			info "Try run f.i. # epm release-upgrade p8"
+			info "Try run f.i. # epm release-upgrade p8 or # epm release-upgrade Sisyphus"
 			return 1
 	esac
 }
@@ -163,7 +163,6 @@ epm_release_upgrade()
 
 	case $DISTRNAME in
 	ALTLinux)
-		__alt_repofix
 		docmd epm update
 		docmd epm install apt rpm
 
@@ -172,6 +171,8 @@ epm_release_upgrade()
 			DISTRVERSION="$(__detect_alt_release_by_repo)"
 			[ "$DISTRVERSION" != "Sisyphus" ] && info "Detected running $DISTRNAME $DISTRVERSION (according to using repos)"
 		fi
+
+		__alt_repofix
 
 		# check forced target
 		if [ -n "$pkg_filenames" ] ; then
