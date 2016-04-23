@@ -88,6 +88,11 @@ print_srcpkgname()
     query_package_field sourcerpm "$@"
 }
 
+compare_version()
+{
+    which rpmevrcmp 2>/dev/null >/dev/null || fatal "rpmevrcmp exists in ALT Linux only"
+    rpmevrcmp "$@"
+}
 
 __epm_print()
 {
@@ -124,6 +129,7 @@ cat <<EOF
     epm print srcpkgname from [filename|package] NN    print source package name for the binary package file
     epm print specname from filename NN      print spec filename for the source package file
     epm print binpkgfilelist in DIR for NN   list binary package(s) filename(s) from DIR for the source package file
+    epm print compare [package] version N1 N2          compare (package) versions and print -1, 0, 1
 EOF
             ;;
         "name")
@@ -193,6 +199,15 @@ EOF
             [ -n "$DIR" ] || fatal "DIR arg is missed"
             [ -n "$1" ] || fatal "source package filename is missed"
             print_binpkgfilelist "$DIR" "$1"
+            ;;
+        "compare")
+            [ "$1" = "version" ] && shift
+            [ -n "$1" ] || fatal "Arg is missed"
+            #if [ -n "$PKFLAG" ] ; then
+            #    query_package_field "name" "$@"
+            #else
+                 compare_version "$1" "$2"
+            #fi
             ;;
         *)
             fatal "Unknown command $ epm print $WHAT. Use epm print help for get help."
