@@ -227,7 +227,7 @@ check_command()
     removerepo|rr)            # HELPCMD: remove package repo
         epm_cmd=removerepo
         ;;
-    release-upgrade)          # HELPCMD: update whole system to the next release
+    release-upgrade|upgrade-release)          # HELPCMD: update whole system to the next release
         epm_cmd=release_upgrade
         ;;
     kernel-update|kernel-upgrade|update-kernel|upgrade-kernel)      # HELPCMD: update system kernel to the last repo version

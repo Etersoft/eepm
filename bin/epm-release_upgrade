@@ -28,6 +28,25 @@ __replace_text_in_alt_repo()
 	done
 }
 
+__detect_alt_release_by_repo()
+{
+	local BRD=$(cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list | \
+		grep -v "^#" | grep "p[5-9]/branch" | sed -e "s|.*\(p[5-9]\)/branch.*|\1|g" | sort -u )
+	if [ $(estrlist count $BRD) = "1" ] ; then
+		echo "$BRD"
+		return
+	fi
+
+	local BRD=$(cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list | \
+		grep -v "^#" | grep "Sisyphus" | sed -e "s|.*\(Sisyphus\).*|\1|g" | sort -u )
+	if [ $(estrlist count $BRD) = "1" ] ; then
+		echo "$BRD"
+		return
+	fi
+
+	return 1
+}
+
 __replace_alt_version_in_repo()
 {
 	local i
@@ -43,7 +62,7 @@ __update_alt_repo_to_next_distro()
 {
 	case "$DISTRVERSION" in
 		p6)
-			docmd epm install apt-conf-branch || fatal
+			docmd epm install apt-conf-branch altlinux-release-p6 || fatal
 			load_helper epm-repofix
 			pkg_filenames= epm_repofix
 			__replace_alt_version_in_repo p6 p7
@@ -58,7 +77,7 @@ __update_alt_repo_to_next_distro()
 			info "Run epm release-upgrade again for update to p8"
 			;;
 		p7)
-			docmd epm install apt-conf-branch || fatal
+			docmd epm install apt-conf-branch altlinux-release-p7 || fatal
 			load_helper epm-repofix
 			pkg_filenames= epm_repofix
 			__replace_alt_version_in_repo p7 p8
@@ -80,7 +99,8 @@ __update_alt_repo_to_next_distro()
 			info "Done."
 			;;
 		*)
-			info "Have no idea how to update from $DISTRNAME $DISTRVERSION. Try install branding-simply-linux-release package before."
+			info "Have no idea how to update from $DISTRNAME $DISTRVERSION."
+			info "Try run f.i. # epm release-upgrade p8"
 			return 1
 	esac
 }
@@ -95,7 +115,25 @@ epm_release_upgrade()
 	ALTLinux)
 		docmd epm update
 		docmd epm install apt rpm
-		__update_alt_repo_to_next_distro
+		case "$pkg_filenames" in
+		"p7")
+			DISTRVERSION=p6 __update_alt_repo_to_next_distro
+			;;
+		"p8")
+			DISTRVERSION=p7 __update_alt_repo_to_next_distro
+			;;
+		"Sisyphus")
+			fatal "Does not realized yet"
+			;;
+		*)
+			if [ "$DISTRVERSION" = "Sisyphus" ] || [ -z "$DISTRVERSION" ] ; then
+				# try to detect current release by repo
+				DISTRVERSION=$(__detect_alt_release_by_repo) __update_alt_repo_to_next_distro
+			else
+				__update_alt_repo_to_next_distro
+			fi
+			;;
+		esac
 		return
 		;;
 	*)
