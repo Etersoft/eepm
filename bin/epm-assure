@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2013, 2014, 2015  Etersoft
-# Copyright (C) 2013, 2014, 2015  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2013-2016  Etersoft
+# Copyright (C) 2013-2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -38,48 +38,74 @@ is_dirpath()
     rhas "$1" "/"
 }
 
+__epm_need_update()
+{
+    local PACKAGE="$1"
+    local PACKAGEVERSION="$2"
+
+    [ -n "$PACKAGEVERSION" ] || return 1
+
+    load_helper epm-query
+    is_installed "$PACKAGE" || return 0
+
+    load_helper epm-print
+    # epm print version for package N
+    local INSTALLEDVERSION=$(query_package_field "version" "$PACKAGE")
+    # if needed <= installed, return
+    [ "$(compare_version "$PACKAGEVERSION" "$INSTALLEDVERSION")" -lt 0 ] && return 0
+
+    return 1
+}
+
+__epm_assure_install()
+{
+    local PACKAGE="$1"
+    #docmd epm --auto --skip-installed install "$PACKAGE"
+    docmd epm --auto install "$PACKAGE"
+}
+
 # Do fast checking for command and install package if the command does not exist
 
 # $1 - command name
-# $2 - package name
+# $2 - [package name]
+# $3 - [needed package version]
 
 __epm_assure()
 {
+    local CMD="$1"
+    local PACKAGE="$2"
+    local PACKAGEVERSION="$3"
+    [ -n "$PACKAGE" ] || PACKAGE="$1"
 
-    if is_dirpath "$1" ; then
-        if [ -e "$1" ] ; then
+    if is_dirpath "$CMD" ; then
+        if [ -e "$CMD" ] ; then
             if [ -n "$verbose" ] ; then
-                info "File or directory $1 is already exists."
-                epm qf "$1"
+                info "File or directory $CMD is already exists."
+                epm qf "$CMD"
             fi
-        return 0
+            __epm_need_update "$PACKAGE" "$PACKAGEVERSION" && __epm_assure_install "$PACKAGE"
+            return 0
         fi
 
         [ -n "$2" ] || fatal "You need run with package name param when use with absolute path"
 
-        docmd epm --auto --skip-installed install "$2"
+        __epm_need_update "$PACKAGE" "$PACKAGEVERSION" && __epm_assure_install "$PACKAGE"
         return
     fi
 
-    if __check_command_in_path "$1" >/dev/null ; then
+    if __check_command_in_path "$CMD" >/dev/null ; then
         if [ -n "$verbose" ] ; then
             local compath="$(__check_command_in_path "$1")"
-            info "Command $1 is exists: $compath"
+            info "Command $CMD is exists: $compath"
             epm qf "$compath"
         fi
+        __epm_need_update "$PACKAGE" "$PACKAGEVERSION" && __epm_assure_install "$PACKAGE"
         return 0
     fi
 
     # TODO: use package name normalization
-    info "Installing appropriate package for $1 command..."
-
-    local PACKAGE="$2"
-    [ -n "$PACKAGE" ] || PACKAGE="$1"
-
-    local PACKAGEVERSION="$3"
-    warning "TODO: check for PACKAGEVERSION is missed"
-
-    docmd epm --auto --skip-installed install "$PACKAGE"
+    info "Installing appropriate package for $CMD command..."
+    __epm_need_update "$PACKAGE" "$PACKAGEVERSION" && __epm_assure_install "$PACKAGE"
 }
 
 
