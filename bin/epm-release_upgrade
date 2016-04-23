@@ -82,9 +82,6 @@ __update_to_the_distro()
 			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![p7]!g"
 			docmd epm update || fatal
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
-			docmd epm update-kernel
-			info "Done."
-			info "Run epm release-upgrade again for update to p8"
 			;;
 		p8)
 			docmd epm update || fatal
@@ -100,16 +97,11 @@ __update_to_the_distro()
 				docmd epm install systemd || fatal
 			fi
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
-			#info " # epmi branding-simply-linux-release branding-simply-linux-graphics"
-			docmd epm update-kernel || fatal
-			info "Done."
 			;;
 		Sisyphus)
 			docmd epm update || fatal
 			docmd epm install apt rpm apt-conf-sisyphus altlinux-release-sisyphus || fatal "Check an error and run again"
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
-			docmd epm update-kernel || fatal
-			info "Done."
 			;;
 		*)
 	esac
@@ -125,12 +117,17 @@ __update_alt_to_next_distro()
 			docmd epm install apt-conf-branch || fatal
 			__replace_alt_version_in_repo p6/branch/ p7/branch/
 			__update_to_the_distro p7
+			docmd epm update-kernel
+			info "Done."
+			info "Run epm release-upgrade again for update to p8"
 			;;
 		"p7"|"p7 p8")
 			info "Upgrade $DISTRNAME from p7 to p8 ..."
 			docmd epm install apt-conf-branch altlinux-release-p7 || fatal
 			__replace_alt_version_in_repo p7/branch/ p8/branch/
 			__update_to_the_distro p8
+			docmd epm update-kernel || fatal
+			info "Done."
 			;;
 		"Sisyphus p8")
 			info "Downgrade $DISTRNAME from Sisyphus to p8 ..."
@@ -138,6 +135,8 @@ __update_alt_to_next_distro()
 			__replace_alt_version_in_repo Sisyphus/ p8/branch/
 			__replace_text_in_alt_repo "/^ *#/! s!\[alt\]![p8]!g"
 			__update_to_the_distro p8
+			docmd epm downgrade || fatal
+			info "Done."
 			;;
 		"p8 Sisyphus")
 			info "Upgrade $DISTRNAME from p8 to Sisyphus ..."
@@ -147,6 +146,8 @@ __update_alt_to_next_distro()
 			__alt_repofix
 			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![alt]!g"
 			__update_to_the_distro Sisyphus
+			docmd epm update-kernel || fatal
+			info "Done."
 			;;
 		*)
 			warning "Have no idea how to update from $DISTRNAME $DISTRVERSION."
