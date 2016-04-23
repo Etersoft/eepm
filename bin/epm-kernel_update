@@ -28,8 +28,11 @@ epm_kernel_update()
 			info "No installed kernel packages, skipping update"
 			return
 		fi
-		assure_exists update-kernel
-		sudocmd update-kernel $pkg_filenames
+		#assure_exists update-kernel update-kernel 0.9.9
+		assure_exists update-kernel update-kernel
+		sudocmd update-kernel $pkg_filenames || return
+		# TODO: need update-kernel >= 0.9.9 with correct remove-old-kernels
+		#sudocmd remove-old-kernels $pkg_filenames
 		return ;;
 	esac
 
