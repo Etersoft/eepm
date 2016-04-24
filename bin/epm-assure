@@ -43,7 +43,7 @@ __epm_need_update()
     local PACKAGE="$1"
     local PACKAGEVERSION="$2"
 
-    [ -n "$PACKAGEVERSION" ] || return 1
+    [ -n "$PACKAGEVERSION" ] || return 0
 
     load_helper epm-query
     is_installed "$PACKAGE" || return 0
@@ -51,17 +51,43 @@ __epm_need_update()
     load_helper epm-print
     # epm print version for package N
     local INSTALLEDVERSION=$(query_package_field "version" "$PACKAGE")
-    # if needed <= installed, return
-    [ "$(compare_version "$PACKAGEVERSION" "$INSTALLEDVERSION")" -lt 0 ] && return 0
+    # if needed >= installed, return 0
+    [ "$(compare_version "$PACKAGEVERSION" "$INSTALLEDVERSION")" -gt 0 ] && return 0
 
     return 1
 }
 
-__epm_assure_install()
+__epm_assure_checking()
 {
-    local PACKAGE="$1"
-    #docmd epm --auto --skip-installed install "$PACKAGE"
-    docmd epm --auto install "$PACKAGE"
+    local CMD="$1"
+    local PACKAGE="$2"
+    local PACKAGEVERSION="$3"
+
+    [ -n "$PACKAGEVERSION" ] && return 1
+
+    if is_dirpath "$CMD" ; then
+        if [ -e "$CMD" ] ; then
+            if [ -n "$verbose" ] ; then
+                info "File or directory $CMD is already exists."
+                epm qf "$CMD"
+            fi
+            return 0
+        fi
+
+        [ -n "$PACKAGE" ] || fatal "You need run with package name param when use with absolute path"
+        return 0
+    fi
+
+    if __check_command_in_path "$CMD" >/dev/null ; then
+        if [ -n "$verbose" ] ; then
+            local compath="$(__check_command_in_path "$1")"
+            info "Command $CMD is exists: $compath"
+            epm qf "$compath"
+        fi
+        return 0
+    fi
+
+    return 1
 }
 
 # Do fast checking for command and install package if the command does not exist
@@ -77,35 +103,12 @@ __epm_assure()
     local PACKAGEVERSION="$3"
     [ -n "$PACKAGE" ] || PACKAGE="$1"
 
-    if is_dirpath "$CMD" ; then
-        if [ -e "$CMD" ] ; then
-            if [ -n "$verbose" ] ; then
-                info "File or directory $CMD is already exists."
-                epm qf "$CMD"
-            fi
-            __epm_need_update "$PACKAGE" "$PACKAGEVERSION" && __epm_assure_install "$PACKAGE"
-            return 0
-        fi
+    __epm_assure_checking $CMD $PACKAGE $PACKAGEVERSION && return 0
 
-        [ -n "$2" ] || fatal "You need run with package name param when use with absolute path"
-
-        __epm_need_update "$PACKAGE" "$PACKAGEVERSION" && __epm_assure_install "$PACKAGE"
-        return
-    fi
-
-    if __check_command_in_path "$CMD" >/dev/null ; then
-        if [ -n "$verbose" ] ; then
-            local compath="$(__check_command_in_path "$1")"
-            info "Command $CMD is exists: $compath"
-            epm qf "$compath"
-        fi
-        __epm_need_update "$PACKAGE" "$PACKAGEVERSION" && __epm_assure_install "$PACKAGE"
-        return 0
-    fi
-
-    # TODO: use package name normalization
     info "Installing appropriate package for $CMD command..."
-    __epm_need_update "$PACKAGE" "$PACKAGEVERSION" && __epm_assure_install "$PACKAGE"
+    __epm_need_update $PACKAGE $PACKAGEVERSION || return 0
+
+    docmd epm --auto install $PACKAGE
 }
 
 
