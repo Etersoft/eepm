@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2013  Etersoft
-# Copyright (C) 2013  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2013, 2016  Etersoft
+# Copyright (C) 2013, 2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -28,11 +28,9 @@ epm_kernel_update()
 			info "No installed kernel packages, skipping update"
 			return
 		fi
-		#assure_exists update-kernel update-kernel 0.9.9
-		assure_exists update-kernel update-kernel
+		assure_exists update-kernel update-kernel 0.9.9
 		sudocmd update-kernel $pkg_filenames || return
-		# TODO: need update-kernel >= 0.9.9 with correct remove-old-kernels
-		#sudocmd remove-old-kernels $pkg_filenames
+		sudocmd remove-old-kernels $pkg_filenames
 		return ;;
 	esac
 
