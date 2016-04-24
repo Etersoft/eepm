@@ -15,8 +15,6 @@ yum list extras – имена тех пакетов, которые налич�
 
 --dump-options for write simple bash completition
 
-add epm site / epmurl in replace to rpmurl
-
 yum remove $(package-cleanup --orphans
 
 https://github.com/biow0lf/prometheus-cli
@@ -55,7 +53,5 @@ docmdmore
 Не case по каждой системе, а в каталоге по каждой системе разместить файлы, выполняющие нужные действия.
 apt-rpm/install
 apt-rpm/remove
-
-при упаковке лучше собирать в один файл.
 
 serv должен уметь показывать порядок загрузки?
