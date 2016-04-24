@@ -108,7 +108,12 @@ __epm_assure()
     info "Installing appropriate package for $CMD command..."
     __epm_need_update $PACKAGE $PACKAGEVERSION || return 0
 
-    docmd epm --auto install $PACKAGE
+    docmd epm --auto install $PACKAGE || return
+
+    [ -n "$PACKAGEVERSION" ] || return 0
+    # check if we couldn't update and still need update
+    __epm_need_update $PACKAGE $PACKAGEVERSION && return 1
+    return 0
 }
 
 
