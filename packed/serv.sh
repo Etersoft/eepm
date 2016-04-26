@@ -328,8 +328,10 @@ assure_exists()
 {
 	load_helper epm-assure
 	local package="$2"
+	local textpackage=
 	[ -n "$package" ] || package="$(__get_package_for_command "$1")"
-	__epm_assure "$1" $package || fatal "Can't assure in '$1' command"
+	[ -n "$3" ] && textpackage=" >= $3"
+	__epm_assure "$1" $package $3 || fatal "Can't assure in '$1' command from $package$textpackage package"
 }
 
 eget()
@@ -1235,7 +1237,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.7.2"
+        echo "Service manager version 1.7.6"
         echo "Running on $($DISTRVENDOR)"
         echo "Copyright (c) Etersoft 2012, 2013, 2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

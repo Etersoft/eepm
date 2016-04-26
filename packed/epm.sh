@@ -330,8 +330,10 @@ assure_exists()
 {
 	load_helper epm-assure
 	local package="$2"
+	local textpackage=
 	[ -n "$package" ] || package="$(__get_package_for_command "$1")"
-	__epm_assure "$1" $package || fatal "Can't assure in '$1' command"
+	[ -n "$3" ] && textpackage=" >= $3"
+	__epm_assure "$1" $package $3 || fatal "Can't assure in '$1' command from $package$textpackage package"
 }
 
 eget()
@@ -544,45 +546,76 @@ is_dirpath()
     rhas "$1" "/"
 }
 
-
-
-__epm_assure()
+__epm_need_update()
 {
+    local PACKAGE="$1"
+    local PACKAGEVERSION="$2"
 
-    if is_dirpath "$1" ; then
-        if [ -e "$1" ] ; then
+    [ -n "$PACKAGEVERSION" ] || return 0
+
+    is_installed "$PACKAGE" || return 0
+
+    # epm print version for package N
+    local INSTALLEDVERSION=$(query_package_field "version" "$PACKAGE")
+    # if needed >= installed, return 0
+    [ "$(compare_version "$PACKAGEVERSION" "$INSTALLEDVERSION")" -gt 0 ] && return 0
+
+    return 1
+}
+
+__epm_assure_checking()
+{
+    local CMD="$1"
+    local PACKAGE="$2"
+    local PACKAGEVERSION="$3"
+
+    [ -n "$PACKAGEVERSION" ] && return 1
+
+    if is_dirpath "$CMD" ; then
+        if [ -e "$CMD" ] ; then
             if [ -n "$verbose" ] ; then
-                info "File or directory $1 is already exists."
-                epm qf "$1"
+                info "File or directory $CMD is already exists."
+                epm qf "$CMD"
             fi
-        return 0
+            return 0
         fi
 
-        [ -n "$2" ] || fatal "You need run with package name param when use with absolute path"
-
-        docmd epm --auto --skip-installed install "$2"
-        return
+        [ -n "$PACKAGE" ] || fatal "You need run with package name param when use with absolute path"
+        return 0
     fi
 
-    if __check_command_in_path "$1" >/dev/null ; then
+    if __check_command_in_path "$CMD" >/dev/null ; then
         if [ -n "$verbose" ] ; then
             local compath="$(__check_command_in_path "$1")"
-            info "Command $1 is exists: $compath"
+            info "Command $CMD is exists: $compath"
             epm qf "$compath"
         fi
         return 0
     fi
 
-    # TODO: use package name normalization
-    info "Installing appropriate package for $1 command..."
+    return 1
+}
 
+
+
+__epm_assure()
+{
+    local CMD="$1"
     local PACKAGE="$2"
+    local PACKAGEVERSION="$3"
     [ -n "$PACKAGE" ] || PACKAGE="$1"
 
-    local PACKAGEVERSION="$3"
-    warning "TODO: check for PACKAGEVERSION is missed"
+    __epm_assure_checking $CMD $PACKAGE $PACKAGEVERSION && return 0
 
-    docmd epm --auto --skip-installed install "$PACKAGE"
+    info "Installing appropriate package for $CMD command..."
+    __epm_need_update $PACKAGE $PACKAGEVERSION || return 0
+
+    docmd epm --auto install $PACKAGE || return
+
+    [ -n "$PACKAGEVERSION" ] || return 0
+    # check if we couldn't update and still need update
+    __epm_need_update $PACKAGE $PACKAGEVERSION && return 1
+    return 0
 }
 
 
@@ -2102,8 +2135,9 @@ epm_kernel_update()
 			info "No installed kernel packages, skipping update"
 			return
 		fi
-		assure_exists update-kernel
-		sudocmd update-kernel $pkg_filenames
+		assure_exists update-kernel update-kernel 0.9.9
+		sudocmd update-kernel $pkg_filenames || return
+		sudocmd remove-old-kernels $pkg_filenames
 		return ;;
 	esac
 
@@ -2367,6 +2401,11 @@ print_srcpkgname()
     query_package_field sourcerpm "$@"
 }
 
+compare_version()
+{
+    which rpmevrcmp 2>/dev/null >/dev/null || fatal "rpmevrcmp exists in ALT Linux only"
+    rpmevrcmp "$@"
+}
 
 __epm_print()
 {
@@ -2403,6 +2442,7 @@ cat <<EOF
     epm print srcpkgname from [filename|package] NN    print source package name for the binary package file
     epm print specname from filename NN      print spec filename for the source package file
     epm print binpkgfilelist in DIR for NN   list binary package(s) filename(s) from DIR for the source package file
+    epm print compare [package] version N1 N2          compare (package) versions and print -1, 0, 1
 EOF
             ;;
         "name")
@@ -2472,6 +2512,15 @@ EOF
             [ -n "$DIR" ] || fatal "DIR arg is missed"
             [ -n "$1" ] || fatal "source package filename is missed"
             print_binpkgfilelist "$DIR" "$1"
+            ;;
+        "compare")
+            [ "$1" = "version" ] && shift
+            [ -n "$1" ] || fatal "Arg is missed"
+            #if [ -n "$PKFLAG" ] ; then
+            #    query_package_field "name" "$@"
+            #else
+                 compare_version "$1" "$2"
+            #fi
             ;;
         *)
             fatal "Unknown command $ epm print $WHAT. Use epm print help for get help."
@@ -3074,55 +3123,130 @@ __replace_text_in_alt_repo()
 	done
 }
 
+__wcount()
+{
+	echo "$*" | wc -w
+}
+
+__detect_alt_release_by_repo()
+{
+	local BRD=$(cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list | \
+		grep -v "^#" | grep "p[5-9]/branch/" | sed -e "s|.*\(p[5-9]\)/branch.*|\1|g" | sort -u )
+	if [ $(__wcount $BRD) = "1" ] ; then
+		echo "$BRD"
+		return
+	fi
+
+	local BRD=$(cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list | \
+		grep -v "^#" | grep "Sisyphus/" | sed -e "s|.*\(Sisyphus\).*|\1|g" | sort -u )
+	if [ $(__wcount $BRD) = "1" ] ; then
+		echo "$BRD"
+		return
+	fi
+
+	return 1
+}
+
 __replace_alt_version_in_repo()
 {
 	local i
 	assure_exists apt-repo
-	echo "Upgrading $DISTRNAME from $1 to $2 ..."
-	docmd apt-repo list | sed -e "s|\($1/branch\)|{\1}->{$2/branch}|g" | egrep --color -- "$1/branch"
-	confirm "Are these correct changes?" || fatal "Exiting"
-	__replace_text_in_alt_repo "/^ *#/! s!$1/branch!$2/branch!g"
+	#echo "Upgrading $DISTRNAME from $1 to $2 ..."
+	docmd apt-repo list | sed -e "s|\($1\)|{\1}->{$2}|g" | egrep --color -- "$1"
+	confirm "Are these correct changes? [y/N]" || fatal "Exiting"
+	__replace_text_in_alt_repo "/^ *#/! s!$1!$2!g"
 	docmd apt-repo list
 }
 
-__update_alt_repo_to_next_distro()
+__alt_repofix()
 {
-	case "$DISTRVERSION" in
-		p6)
-			docmd epm install apt-conf-branch || fatal
-			load_helper epm-repofix
-			pkg_filenames= epm_repofix
-			__replace_alt_version_in_repo p6 p7
-			__replace_text_in_alt_repo "/^ *#/! s!\[p6\]![updates]!g"
+	load_helper epm-repofix
+	showcmd epm repofix
+	quiet=1 pkg_filenames= epm_repofix >/dev/null
+	__replace_text_in_alt_repo "/^ *#/! s!\[p[6-9]\]![updates]!g"
+}
+
+__update_to_the_distro()
+{
+	__alt_repofix
+	case "$1" in
+		p7)
 			docmd epm update || fatal
-			docmd epm install apt rpm apt-conf-branch || fatal "Check an error and run epm release-upgrade again"
+			docmd epm install apt rpm apt-conf-branch altlinux-release-p7 || fatal "Check an error and run epm release-upgrade again"
+			__alt_repofix
 			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![p7]!g"
 			docmd epm update || fatal
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
-			docmd epm update-kernel
-			info "Done."
-			info "Run epm release-upgrade again for update to p8"
 			;;
-		p7)
-			docmd epm install apt-conf-branch || fatal
-			load_helper epm-repofix
-			pkg_filenames= epm_repofix
-			__replace_alt_version_in_repo p7 p8
-			__replace_text_in_alt_repo "/^ *#/! s!\[p7\]![updates]!g"
+		p8)
 			docmd epm update || fatal
-			docmd epm install apt rpm apt-conf-branch || fatal "Check an error and run epm release-upgrade again"
+			if ! docmd epm install apt rpm apt-conf-branch altlinux-release-p8 ; then
+				# error: execution of %post scriptlet from glibc-core-2.23-alt1.eter1
+				docmd epm erase glibc-core-2.17 || fatal "Check an error and run epm release-upgrade again"
+				docmd epm install apt rpm apt-conf-branch altlinux-release-p8 || fatal "Check an error and run epm release-upgrade again"
+			fi
+			__alt_repofix
 			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![p8]!g"
 			docmd epm update || fatal
 			if is_installed systemd && is_active_systemd systemd ; then
 				docmd epm install systemd || fatal
 			fi
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
-			#info " # epmi branding-simply-linux-release branding-simply-linux-graphics"
+			;;
+		Sisyphus)
+			docmd epm update || fatal
+			docmd epm install apt rpm apt-conf-sisyphus altlinux-release-sisyphus || fatal "Check an error and run again"
+			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
+			;;
+		*)
+	esac
+}
+
+__update_alt_to_next_distro()
+{
+	local FROMTO=$(echo "$*" | sed -e "s| | to |")
+	info
+ 	case "$*" in
+		"p6"|"p6 p7")
+			info "Upgrade $DISTRNAME from p6 to p7 ..."
+			docmd epm install apt-conf-branch || fatal
+			__replace_alt_version_in_repo p6/branch/ p7/branch/
+			__update_to_the_distro p7
+			docmd epm update-kernel
+			info "Done."
+			info "Run epm release-upgrade again for update to p8"
+			;;
+		"p7"|"p7 p8")
+			info "Upgrade $DISTRNAME from p7 to p8 ..."
+			docmd epm install apt-conf-branch altlinux-release-p7 || fatal
+			__replace_alt_version_in_repo p7/branch/ p8/branch/
+			__update_to_the_distro p8
+			docmd epm update-kernel || fatal
+			info "Done."
+			;;
+		"Sisyphus p8")
+			info "Downgrade $DISTRNAME from Sisyphus to p8 ..."
+			docmd epm install apt-conf-branch || fatal
+			__replace_alt_version_in_repo Sisyphus/ p8/branch/
+			__replace_text_in_alt_repo "/^ *#/! s!\[alt\]![p8]!g"
+			__update_to_the_distro p8
+			docmd epm downgrade || fatal
+			info "Done."
+			;;
+		"p8 Sisyphus")
+			info "Upgrade $DISTRNAME from p8 to Sisyphus ..."
+			docmd epm install apt-conf-branch || fatal
+			docmd epm upgrade || fatal
+			__replace_alt_version_in_repo p8/branch/ Sisyphus/
+			__alt_repofix
+			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![alt]!g"
+			__update_to_the_distro Sisyphus
 			docmd epm update-kernel || fatal
 			info "Done."
 			;;
 		*)
-			info "Have no idea how to update from $DISTRNAME $DISTRVERSION. Try install branding-simply-linux-release package before."
+			warning "Have no idea how to update from $DISTRNAME $DISTRVERSION."
+			info "Try run f.i. # epm release-upgrade p8 or # epm release-upgrade Sisyphus"
 			return 1
 	esac
 }
@@ -3137,7 +3261,21 @@ epm_release_upgrade()
 	ALTLinux)
 		docmd epm update
 		docmd epm install apt rpm
-		__update_alt_repo_to_next_distro
+
+		# try to detect current release by repo
+		if [ "$DISTRVERSION" = "Sisyphus" ] || [ -z "$DISTRVERSION" ] ; then
+			DISTRVERSION="$(__detect_alt_release_by_repo)"
+			[ "$DISTRVERSION" != "Sisyphus" ] && info "Detected running $DISTRNAME $DISTRVERSION (according to using repos)"
+		fi
+
+		__alt_repofix
+
+		# check forced target
+		if [ -n "$pkg_filenames" ] ; then
+			[ "$(__wcount $pkg_filenames)" = "1" ] || fatal "Too many args: $pkg_filenames"
+		fi
+
+		__update_alt_to_next_distro $DISTRVERSION $pkg_filenames
 		return
 		;;
 	*)
@@ -3470,12 +3608,14 @@ __fix_apt_sources_list()
 		# TODO: only for uncommented strings
 		#sed -i -r -e "$SUBST_ALT_RULE" $i
 		regexp_subst "/^ *#/! $SUBST_ALT_RULE" $i
+
+		# add signs
 		local br
-		for br in p6 p7 p8 ; do
-			# sed -r -e "/ALTLinux\/p8\/branch/s/rpm *([fhr])/rpm [p8] \1/"
+		for br in $DISTRVERSION ; do
 			regexp_subst "/ALTLinux\/$br\/branch/s/^rpm *([fhr])/rpm [$br] \1/" $i
 			regexp_subst "/Etersoft\/$br\/branch/s/^rpm *([fhr])/rpm [etersoft] \1/" $i
 		done
+		regexp_subst "/ALTLinux\/Sisyphus\//s/^rpm *([fhr])/rpm [alt] \1/" $i
 	done
 }
 
@@ -3487,7 +3627,7 @@ epm_repofix()
 case $PMTYPE in
 	apt-rpm)
 		assure_exists apt-repo
-		docmd apt-repo list
+		[ -n "$quiet" ] || docmd apt-repo list
 		__fix_apt_sources_list /etc/apt/sources.list
 		__fix_apt_sources_list /etc/apt/sources.list.d/*.list
 		docmd apt-repo list
@@ -4778,7 +4918,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.7.2"
+        echo "EPM package manager version 1.7.6"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -4947,7 +5087,7 @@ check_command()
     removerepo|rr)            # HELPCMD: remove package repo
         epm_cmd=removerepo
         ;;
-    release-upgrade)          # HELPCMD: update whole system to the next release
+    release-upgrade|upgrade-release)          # HELPCMD: update whole system to the next release
         epm_cmd=release_upgrade
         ;;
     kernel-update|kernel-upgrade|update-kernel|upgrade-kernel)      # HELPCMD: update system kernel to the last repo version
