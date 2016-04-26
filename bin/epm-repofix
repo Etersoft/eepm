@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2015  Etersoft
-# Copyright (C) 2015  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2015-2016  Etersoft
+# Copyright (C) 2015-2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -17,6 +17,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+load_helper epm-query
 
 __fix_apt_sources_list()
 {
@@ -34,7 +35,9 @@ __fix_apt_sources_list()
 		local br
 		for br in $DISTRVERSION ; do
 			regexp_subst "/ALTLinux\/$br\/branch/s/^rpm *([fhr])/rpm [$br] \1/" $i
-			regexp_subst "/Etersoft\/$br\/branch/s/^rpm *([fhr])/rpm [etersoft] \1/" $i
+			if is_installed apt-conf-etersoft-common ; then
+				regexp_subst "/Etersoft\/$br\/branch/s/^rpm *([fhr])/rpm [etersoft] \1/" $i
+			fi
 		done
 		regexp_subst "/ALTLinux\/Sisyphus\//s/^rpm *([fhr])/rpm [alt] \1/" $i
 	done
