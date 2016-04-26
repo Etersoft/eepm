@@ -193,6 +193,7 @@ epm_release_upgrade()
 		info "Have no idea how to upgrade $DISTRNAME"
 		;;
 	*-dpkg)
+		assure_exists do-release-upgrade update-manager-core
 		sudocmd do-release-upgrade -d
 		;;
 	yum-rpm)
