@@ -3288,6 +3288,7 @@ epm_release_upgrade()
 		info "Have no idea how to upgrade $DISTRNAME"
 		;;
 	*-dpkg)
+		assure_exists do-release-upgrade update-manager-core
 		sudocmd do-release-upgrade -d
 		;;
 	yum-rpm)
@@ -3613,7 +3614,9 @@ __fix_apt_sources_list()
 		local br
 		for br in $DISTRVERSION ; do
 			regexp_subst "/ALTLinux\/$br\/branch/s/^rpm *([fhr])/rpm [$br] \1/" $i
-			regexp_subst "/Etersoft\/$br\/branch/s/^rpm *([fhr])/rpm [etersoft] \1/" $i
+			if is_installed apt-conf-etersoft-common ; then
+				regexp_subst "/Etersoft\/$br\/branch/s/^rpm *([fhr])/rpm [etersoft] \1/" $i
+			fi
 		done
 		regexp_subst "/ALTLinux\/Sisyphus\//s/^rpm *([fhr])/rpm [alt] \1/" $i
 	done
@@ -4918,7 +4921,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.7.6"
+        echo "EPM package manager version 1.8.0"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
