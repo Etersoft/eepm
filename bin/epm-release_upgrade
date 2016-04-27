@@ -123,7 +123,11 @@ __update_alt_to_next_distro()
 			;;
 		"p7"|"p7 p8")
 			info "Upgrade $DISTRNAME from p7 to p8 ..."
-			docmd epm install apt-conf-branch altlinux-release-p7 || fatal
+			local FIXRELEASEPKG=
+			if epmqf /etc/altlinux-release | grep -q sisyphus ; then
+				FIXRELEASEPKG=altlinux-release-p7
+			fi
+			docmd epm install apt-conf-branch $FIXRELEASEPKG || fatal
 			__replace_alt_version_in_repo p7/branch/ p8/branch/
 			__update_to_the_distro p8
 			docmd epm update-kernel || fatal
