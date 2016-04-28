@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.8.0
+Version: 1.8.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,9 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Thu Apr 28 2016 Vitaly Lipatov <lav@altlinux.ru> 1.8.1-alt1
+- release-upgrade: install altlinux-release-p? only if /etc/altlinux-release belongs to sisyphus
+
 * Wed Apr 27 2016 Vitaly Lipatov <lav@altlinux.ru> 1.8.0-alt1
 - commit packed files
 - repofix: replace Etersoft branches only if have Etersoft key
