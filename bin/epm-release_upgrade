@@ -71,13 +71,21 @@ __alt_repofix()
 	__replace_text_in_alt_repo "/^ *#/! s!\[p[6-9]\]![updates]!g"
 }
 
+get_fix_release_pkg()
+{
+	# TODO: check for version incompatibilities
+	if epmqf /etc/altlinux-release | grep -q sisyphus ; then
+		echo altlinux-release-$1
+	fi
+}
+
 __update_to_the_distro()
 {
 	__alt_repofix
 	case "$1" in
 		p7)
 			docmd epm update || fatal
-			docmd epm install apt rpm apt-conf-branch altlinux-release-p7 || fatal "Check an error and run epm release-upgrade again"
+			docmd epm install apt rpm apt-conf-branch $(get_fix_release_pkg p7) || fatal "Check an error and run epm release-upgrade again"
 			__alt_repofix
 			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![p7]!g"
 			docmd epm update || fatal
@@ -85,10 +93,10 @@ __update_to_the_distro()
 			;;
 		p8)
 			docmd epm update || fatal
-			if ! docmd epm install apt rpm apt-conf-branch altlinux-release-p8 ; then
+			if ! docmd epm install apt rpm apt-conf-branch $(get_fix_release_pkg p8) ; then
 				# error: execution of %post scriptlet from glibc-core-2.23-alt1.eter1
 				docmd epm erase glibc-core-2.17 || fatal "Check an error and run epm release-upgrade again"
-				docmd epm install apt rpm apt-conf-branch altlinux-release-p8 || fatal "Check an error and run epm release-upgrade again"
+				docmd epm install apt rpm apt-conf-branch $(get_fix_release_pkg p8) || fatal "Check an error and run epm release-upgrade again"
 			fi
 			__alt_repofix
 			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![p8]!g"
@@ -123,11 +131,7 @@ __update_alt_to_next_distro()
 			;;
 		"p7"|"p7 p8")
 			info "Upgrade $DISTRNAME from p7 to p8 ..."
-			local FIXRELEASEPKG=
-			if epmqf /etc/altlinux-release | grep -q sisyphus ; then
-				FIXRELEASEPKG=altlinux-release-p7
-			fi
-			docmd epm install apt-conf-branch $FIXRELEASEPKG || fatal
+			docmd epm install apt-conf-branch $(get_fix_release_pkg p7) || fatal
 			__replace_alt_version_in_repo p7/branch/ p8/branch/
 			__update_to_the_distro p8
 			docmd epm update-kernel || fatal
