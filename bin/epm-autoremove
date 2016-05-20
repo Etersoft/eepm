@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012  Etersoft
-# Copyright (C) 2012  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2016  Etersoft
+# Copyright (C) 2012, 2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -20,16 +20,33 @@
 __epm_autoremove_altrpm()
 {
 	local pkg
-	local flag=
 	load_helper epm-packages
+	assure_exists /etc/buildreqs/files/ignore.d/apt-scripts apt-scripts
 	info
-	info "Just removing all non -devel libs packages not need by anything"
-	for pkg in $(short=1 pkg_filenames= epm_packages | grep -- "^lib" | grep -v -- "-devel$" | grep -v -- "-debuginfo$" | grep -v -- ^libreoffice | grep -v -- libnss- ) ; do
-		sudocmd rpm -v -e $pkg && flag=1
-	done
+	info "Just removing all non -devel libs packages not need by anything..."
 
-	# call again for next cycle until all libs will removed
-	[ -n "$flag" ] && __epm_autoremove_altrpm
+	local flag=
+	local libexclude='^lib'
+	[ -n "$force" ] || libexclude=$libexclude'[^-]*$'
+
+	# https://www.altlinux.org/APT_в_ALT_Linux/Советы_по_использованию#apt-cache_list-nodeps
+	showcmd "apt-cache list-nodeps | grep -- \"$libexclude\""
+	pkgs=$(apt-cache list-nodeps | grep -- "$libexclude" | \
+		grep -v -- "-devel$" | grep -v -- "-debuginfo$" | \
+		grep -v -- "-util" | grep -v -- "-tool" | grep -v -- "-plugin" | \
+		grep -v -- ^libreoffice | grep -v -- libnss- )
+	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
+
+	libexclude='^(python-module-|python3-module-|python-modules-|python3-modules|perl-)'
+	[ -n "$force" ] || libexclude=$libexclude'[^-]*$'
+	showcmd "apt-cache list-nodeps | grep -E -- \"$libexclude\""
+	pkgs=$(apt-cache list-nodeps | grep -E -- "$libexclude" )
+	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
+
+	if [ -n "$flag" ] ; then
+		info "call again for next cycle until all libs will removed"
+		__epm_autoremove_altrpm
+	fi
 
 	return 0
 }
