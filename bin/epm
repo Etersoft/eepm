@@ -72,6 +72,7 @@ Descr="epm - EPM package manager"
 verbose=
 quiet=
 nodeps=
+noremove=
 force=
 short=
 sort=
@@ -313,6 +314,9 @@ check_option()
         ;;
     --force)              # HELPOPT: force install/remove package (f.i., override)
         force="--force"
+        ;;
+    --noremove|--no-remove)  # HELPOPT: exit if any packages are to be removed during upgrade
+        noremove="--no-remove"
         ;;
     --short)              # HELPOPT: short output (just 'package' instead 'package-version-release')
         short="--short"

@@ -34,7 +34,7 @@ epm_upgrade()
 	apt-rpm|apt-dpkg)
 		# non_interactive
 		# Функцию добавления параметра при условии
-		CMD="apt-get dist-upgrade"
+		CMD="apt-get dist-upgrade $noremove"
 		;;
 	aptitude-dpkg)
 		CMD="aptitude dist-upgrade"
