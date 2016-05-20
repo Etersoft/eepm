@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.8.1
+Version: 1.8.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,15 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Fri May 20 2016 Vitaly Lipatov <lav@altlinux.ru> 1.8.2-alt1
+- epm_install: added command for install or update eepm package from all in one script
+- add --no-remove support during upgrade
+- epm-download: add yumdownloader support
+- epm-autoorphans: realize print list
+- epm-autoremove: realize with apt-cache list-nodeps from apt-scripts
+- epm-assure: fix for existing path checking
+- distr_info: drop subversion from Debian distro version
+
 * Thu Apr 28 2016 Vitaly Lipatov <lav@altlinux.ru> 1.8.1-alt1
 - release-upgrade: install altlinux-release-p? only if /etc/altlinux-release belongs to sisyphus
 
