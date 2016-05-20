@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2015  Etersoft
-# Copyright (C) 2015  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2015, 2016  Etersoft
+# Copyright (C) 2015, 2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -17,6 +17,11 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+__epm_orphan_altrpm()
+{
+	docmd "apt-cache list-extras"
+}
+
 epm_autoorphans()
 {
 
@@ -24,14 +29,13 @@ epm_autoorphans()
 
 
 case $PMTYPE in
-	#apt-rpm)
+	apt-rpm)
 		# ALT Linux only
-		#__epm_autoremove_altrpm
-
-		# ALT Linux only
-		#assure_exists remove-old-kernels
-		#sudocmd remove-old-kernels
-	#	;;
+		assure_exists /etc/buildreqs/files/ignore.d/apt-scripts apt-scripts
+		__epm_orphan_altrpm
+		info "TODO: this was just a list of orphans"
+		# | sudocmd epm remove
+		;;
 	apt-dpkg|aptitude-dpkg)
 		assure_exists deborphan
 		showcmd deborphan
