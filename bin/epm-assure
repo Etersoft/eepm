@@ -75,7 +75,7 @@ __epm_assure_checking()
         fi
 
         [ -n "$PACKAGE" ] || fatal "You need run with package name param when use with absolute path"
-        return 0
+        return 1
     fi
 
     if __check_command_in_path "$CMD" >/dev/null ; then
