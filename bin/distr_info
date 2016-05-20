@@ -156,7 +156,7 @@ elif [ "$DISTRIB_ID" = "Ubuntu" ] && [ -n "$DISTRIB_RELEASE" ]; then
 # Debian based
 elif distro debian_version ; then
 	DISTRIB_ID="Debian"
-	DISTRIB_RELEASE=`cat $DISTROFILE`
+	DISTRIB_RELEASE=$(cat $DISTROFILE | sed -e "s/\..*//g")
 
 
 # Mandriva based
