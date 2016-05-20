@@ -981,7 +981,7 @@ elif [ "$DISTRIB_ID" = "Ubuntu" ] && [ -n "$DISTRIB_RELEASE" ]; then
 # Debian based
 elif distro debian_version ; then
 	DISTRIB_ID="Debian"
-	DISTRIB_RELEASE=`cat $DISTROFILE`
+	DISTRIB_RELEASE=$(cat $DISTROFILE | sed -e "s/\..*//g")
 
 
 # Mandriva based
@@ -1237,7 +1237,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.8.0"
+        echo "Service manager version 1.8.2"
         echo "Running on $($DISTRVENDOR)"
         echo "Copyright (c) Etersoft 2012, 2013, 2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

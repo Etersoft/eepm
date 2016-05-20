@@ -581,7 +581,7 @@ __epm_assure_checking()
         fi
 
         [ -n "$PACKAGE" ] || fatal "You need run with package name param when use with absolute path"
-        return 0
+        return 1
     fi
 
     if __check_command_in_path "$CMD" >/dev/null ; then
@@ -647,6 +647,11 @@ esac
 
 # File bin/epm-autoorphans:
 
+__epm_orphan_altrpm()
+{
+	docmd "apt-cache list-extras"
+}
+
 epm_autoorphans()
 {
 
@@ -654,14 +659,13 @@ epm_autoorphans()
 
 
 case $PMTYPE in
-	#apt-rpm)
+	apt-rpm)
 		# ALT Linux only
-		#__epm_autoremove_altrpm
-
-		# ALT Linux only
-		#assure_exists remove-old-kernels
-		#sudocmd remove-old-kernels
-	#	;;
+		assure_exists /etc/buildreqs/files/ignore.d/apt-scripts apt-scripts
+		__epm_orphan_altrpm
+		info "TODO: this was just a list of orphans"
+		# | sudocmd epm remove
+		;;
 	apt-dpkg|aptitude-dpkg)
 		assure_exists deborphan
 		showcmd deborphan
@@ -712,16 +716,33 @@ esac
 __epm_autoremove_altrpm()
 {
 	local pkg
-	local flag=
 	load_helper epm-packages
+	assure_exists /etc/buildreqs/files/ignore.d/apt-scripts apt-scripts
 	info
-	info "Just removing all non -devel libs packages not need by anything"
-	for pkg in $(short=1 pkg_filenames= epm_packages | grep -- "^lib" | grep -v -- "-devel$" | grep -v -- "-debuginfo$" | grep -v -- ^libreoffice | grep -v -- libnss- ) ; do
-		sudocmd rpm -v -e $pkg && flag=1
-	done
+	info "Just removing all non -devel libs packages not need by anything..."
 
-	# call again for next cycle until all libs will removed
-	[ -n "$flag" ] && __epm_autoremove_altrpm
+	local flag=
+	local libexclude='^lib'
+	[ -n "$force" ] || libexclude=$libexclude'[^-]*$'
+
+	# https://www.altlinux.org/APT_в_ALT_Linux/Советы_по_использованию#apt-cache_list-nodeps
+	showcmd "apt-cache list-nodeps | grep -- \"$libexclude\""
+	pkgs=$(apt-cache list-nodeps | grep -- "$libexclude" | \
+		grep -v -- "-devel$" | grep -v -- "-debuginfo$" | \
+		grep -v -- "-util" | grep -v -- "-tool" | grep -v -- "-plugin" | \
+		grep -v -- ^libreoffice | grep -v -- libnss- )
+	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
+
+	libexclude='^(python-module-|python3-module-|python-modules-|python3-modules|perl-)'
+	[ -n "$force" ] || libexclude=$libexclude'[^-]*$'
+	showcmd "apt-cache list-nodeps | grep -E -- \"$libexclude\""
+	pkgs=$(apt-cache list-nodeps | grep -E -- "$libexclude" )
+	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
+
+	if [ -n "$flag" ] ; then
+		info "call again for next cycle until all libs will removed"
+		__epm_autoremove_altrpm
+	fi
 
 	return 0
 }
@@ -1369,10 +1390,33 @@ epm_download()
 	aptcyg)
 		sudocmd apt-cyg download $pkg_filenames
 		;;
+	yum-rpm)
+		# TODO: check yum install --downloadonly --downloaddir=/tmp <package-name>
+		assure_exists yumdownloader yum-utils
+		sudo yumdownloader $pkg_filenames
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
 	esac
+}
+
+# File bin/epm-epm_install:
+
+
+etersoft_updates_site="http://updates.etersoft.ru/pub/Etersoft/Sisyphus/$($DISTRVENDOR -e)/"
+download_dir="/tmp"
+
+download_epm(){
+    download_link=$etersoft_updates_site$(wget -qO- $etersoft_updates_site/ | grep -m1 -Eo "eepm[^\"]+\.$($DISTRVENDOR -p)" | tail -n1) #"
+    eepm_package="$download_dir/$(basename $download_link)"
+    wget -O $eepm_package $download_link
+}
+
+epm_epm_install(){
+    download_epm || fatal "Error. Check download link: $download_link"
+    epm i $eepm_package || fatal
+    rm -fv $eepm_package
 }
 
 # File bin/epm-filelist:
@@ -3166,13 +3210,21 @@ __alt_repofix()
 	__replace_text_in_alt_repo "/^ *#/! s!\[p[6-9]\]![updates]!g"
 }
 
+get_fix_release_pkg()
+{
+	# TODO: check for version incompatibilities
+	if epmqf /etc/altlinux-release | grep -q sisyphus ; then
+		echo altlinux-release-$1
+	fi
+}
+
 __update_to_the_distro()
 {
 	__alt_repofix
 	case "$1" in
 		p7)
 			docmd epm update || fatal
-			docmd epm install apt rpm apt-conf-branch altlinux-release-p7 || fatal "Check an error and run epm release-upgrade again"
+			docmd epm install apt rpm apt-conf-branch $(get_fix_release_pkg p7) || fatal "Check an error and run epm release-upgrade again"
 			__alt_repofix
 			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![p7]!g"
 			docmd epm update || fatal
@@ -3180,10 +3232,10 @@ __update_to_the_distro()
 			;;
 		p8)
 			docmd epm update || fatal
-			if ! docmd epm install apt rpm apt-conf-branch altlinux-release-p8 ; then
+			if ! docmd epm install apt rpm apt-conf-branch $(get_fix_release_pkg p8) ; then
 				# error: execution of %post scriptlet from glibc-core-2.23-alt1.eter1
 				docmd epm erase glibc-core-2.17 || fatal "Check an error and run epm release-upgrade again"
-				docmd epm install apt rpm apt-conf-branch altlinux-release-p8 || fatal "Check an error and run epm release-upgrade again"
+				docmd epm install apt rpm apt-conf-branch $(get_fix_release_pkg p8) || fatal "Check an error and run epm release-upgrade again"
 			fi
 			__alt_repofix
 			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![p8]!g"
@@ -3218,7 +3270,7 @@ __update_alt_to_next_distro()
 			;;
 		"p7"|"p7 p8")
 			info "Upgrade $DISTRNAME from p7 to p8 ..."
-			docmd epm install apt-conf-branch altlinux-release-p7 || fatal
+			docmd epm install apt-conf-branch $(get_fix_release_pkg p7) || fatal
 			__replace_alt_version_in_repo p7/branch/ p8/branch/
 			__update_to_the_distro p8
 			docmd epm update-kernel || fatal
@@ -4400,7 +4452,7 @@ epm_upgrade()
 	apt-rpm|apt-dpkg)
 		# non_interactive
 		# Функцию добавления параметра при условии
-		CMD="apt-get dist-upgrade"
+		CMD="apt-get dist-upgrade $noremove"
 		;;
 	aptitude-dpkg)
 		CMD="aptitude dist-upgrade"
@@ -4725,7 +4777,7 @@ elif [ "$DISTRIB_ID" = "Ubuntu" ] && [ -n "$DISTRIB_RELEASE" ]; then
 # Debian based
 elif distro debian_version ; then
 	DISTRIB_ID="Debian"
-	DISTRIB_RELEASE=`cat $DISTROFILE`
+	DISTRIB_RELEASE=$(cat $DISTROFILE | sed -e "s/\..*//g")
 
 
 # Mandriva based
@@ -4921,7 +4973,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.8.0"
+        echo "EPM package manager version 1.8.2"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -4935,6 +4987,7 @@ Descr="epm - EPM package manager"
 verbose=
 quiet=
 nodeps=
+noremove=
 force=
 short=
 sort=
@@ -5131,6 +5184,9 @@ check_command()
     site|url)                 # HELPCMD: open package's site in a browser (use -p for open packages.altlinux.org site)
         epm_cmd=site
         ;;
+    ei|epminstall|selfinstall) # HELPCMD: install or update eepm from all in one script
+        epm_cmd=epm_install
+        ;;
     print)                    # HELPCMD: print various info, run epm print help for details
         epm_cmd=print
         ;;
@@ -5173,6 +5229,9 @@ check_option()
         ;;
     --force)              # HELPOPT: force install/remove package (f.i., override)
         force="--force"
+        ;;
+    --noremove|--no-remove)  # HELPOPT: exit if any packages are to be removed during upgrade
+        noremove="--no-remove"
         ;;
     --short)              # HELPOPT: short output (just 'package' instead 'package-version-release')
         short="--short"
