@@ -28,5 +28,6 @@ download_epm(){
 
 epm_epm_install(){
     download_epm || fatal "Error. Check download link: $download_link"
-    epm i $eepm_package || fatal "Check package: $(ls eepm*)"
+    epm i $eepm_package || fatal
+    rm -fv $eepm_package
 }
