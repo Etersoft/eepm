@@ -32,9 +32,10 @@ case $PMTYPE in
 	apt-rpm)
 		# ALT Linux only
 		assure_exists /etc/buildreqs/files/ignore.d/apt-scripts apt-scripts
-		__epm_orphan_altrpm
-		info "TODO: this was just a list of orphans"
-		# | sudocmd epm remove
+		echo "We will try remove all installed packages which are missed in repositories"
+		warning "Use with caution!"
+		local PKGLIST=$(__epm_orphan_altrpm | sed -e "s/\.32bit//g")
+		docmd epm remove $PKGLIST
 		;;
 	apt-dpkg|aptitude-dpkg)
 		assure_exists deborphan
@@ -47,7 +48,7 @@ case $PMTYPE in
 	yum-rpm)
 		showcmd package-cleanup --orphans
 		local PKGLIST=$(package-cleanup --orphans)
-		sudocmd epm remove $PKGLIST
+		docmd epm remove $PKGLIST
 		;;
 	urpm-rpm)
 		showcmd urpmq --auto-orphans
