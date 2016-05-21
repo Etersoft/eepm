@@ -35,7 +35,7 @@ __epm_autoremove_altrpm()
 	pkgs=$(apt-cache list-nodeps | grep -- "$libexclude" | \
 		grep -v -- "-devel$" | grep -v -- "-debuginfo$" | \
 		grep -v -- "-util" | grep -v -- "-tool" | grep -v -- "-plugin" | \
-		grep -v -- ^libreoffice | grep -v -- libnss- )
+		grep -v -- ^libreoffice | grep -v -- libnss- | grep -v -- libvirt-daemon )
 	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
 
 	info "Removing unused python/perl modules..."
