@@ -35,6 +35,7 @@ __epm_autoremove_altrpm()
 	pkgs=$(apt-cache list-nodeps | grep -- "$libexclude" | \
 		grep -v -- "-devel$" | grep -v -- "-debuginfo$" | \
 		grep -v -- "-util" | grep -v -- "-tool" | grep -v -- "-plugin" | \
+		sed -e "s/\.32bit$//g" | \
 		grep -v -- ^libreoffice | grep -v -- libnss- | grep -v -- libvirt-daemon )
 	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
 
