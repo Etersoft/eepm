@@ -23,7 +23,8 @@ __epm_autoremove_altrpm()
 	load_helper epm-packages
 	assure_exists /etc/buildreqs/files/ignore.d/apt-scripts apt-scripts
 	info
-	info "Just removing all non -devel libs packages not need by anything..."
+	info "Removing all non -devel/-debuginfo libs packages not need by anything..."
+	[ -n "$force" ] || info "You can run with --force for more deep removing"
 
 	local flag=
 	local libexclude='^lib'
@@ -37,6 +38,7 @@ __epm_autoremove_altrpm()
 		grep -v -- ^libreoffice | grep -v -- libnss- )
 	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
 
+	info "Removing unused python/perl modules..."
 	libexclude='^(python-module-|python3-module-|python-modules-|python3-modules|perl-)'
 	[ -n "$force" ] || libexclude=$libexclude'[^-]*$'
 	showcmd "apt-cache list-nodeps | grep -E -- \"$libexclude\""
@@ -44,7 +46,8 @@ __epm_autoremove_altrpm()
 	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
 
 	if [ -n "$flag" ] ; then
-		info "call again for next cycle until all libs will removed"
+		info ""
+		info "call again for next cycle until all libs will be removed"
 		__epm_autoremove_altrpm
 	fi
 
