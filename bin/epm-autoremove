@@ -68,7 +68,7 @@ case $PMTYPE in
 		__epm_autoremove_altrpm
 
 		# ALT Linux only
-		assure_exists remove-old-kernels
+		assure_exists remove-old-kernels update-kernel 0.9.9
 		sudocmd remove-old-kernels
 		;;
 	apt-dpkg|aptitude-dpkg)
