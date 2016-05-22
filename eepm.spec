@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.8.2
+Version: 1.8.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,11 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Mon May 23 2016 Vitaly Lipatov <lav@altlinux.ru> 1.8.3-alt1
+- autoorphans: do real removing
+- autoremove: add update-kernel version 0.9.9 checking
+- autoorphans/autoremove: improve excludes
+
 * Fri May 20 2016 Vitaly Lipatov <lav@altlinux.ru> 1.8.2-alt1
 - epm_install: added command for install or update eepm package from all in one script
 - add --no-remove support during upgrade
