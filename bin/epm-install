@@ -256,6 +256,32 @@ __epm_check_if_rpm_already_installed()
 	LANG=C $SUDO rpm -Uvh $force $nodeps $@ 2>&1 | grep -q "is already installed"
 }
 
+# TODO: rewrite to convert (get some code from Korinf?)
+__epm_check_if_try_install_deb()
+{
+	local pkg
+	local debpkgs=""
+	for pkg in $@ ; do
+		[ "$(get_package_type "$pkg")" = "deb" ] || return 1
+		[ -e "$pkg" ] || fatal "Can't read $pkg"
+		debpkgs="$debpkgs $(realpath $pkg)"
+	done
+	[ -n "$debpkgs" ] || return 1
+
+	assure_exists alien
+
+	local TDIR=$(mktemp -d)
+	cd $TDIR
+	for pkg in $debpkgs ; do
+		showcmd alien -r -k scripts "$pkg"
+		# TODO: need check for return status
+	done
+	rm -f $TDIR/*
+	rmdir $TDIR/
+
+	return 0
+}
+
 
 epm_install_files()
 {
@@ -267,6 +293,8 @@ epm_install_files()
 
     case $PMTYPE in
         apt-rpm)
+            __epm_check_if_try_install_deb $@ && return
+
             sudocmd rpm -Uvh $force $nodeps $@ && return
             local RES=$?
 
@@ -277,6 +305,7 @@ epm_install_files()
 
             # use install_names
             ;;
+
         apt-dpkg|aptitude-dpkg)
             # the new version of the conf. file is installed with a .dpkg-dist suffix
             if [ -n "$non_interactive" ] ; then
@@ -296,7 +325,10 @@ epm_install_files()
             sudocmd dpkg $DPKGOPTIONS -i $@
             return
             ;;
+
         yum-rpm|dnf-rpm)
+            __epm_check_if_try_install_deb $@ && return
+
             sudocmd rpm -Uvh $force $nodeps $@ && return
             # if run with --nodeps, do not fallback on hi level
 
@@ -306,7 +338,9 @@ epm_install_files()
             YUMOPTIONS=--nogpgcheck
             # use install_names
             ;;
+
         zypper-rpm)
+            __epm_check_if_try_install_deb $@ && return
             sudocmd rpm -Uvh $force $nodeps $@ && return
             local RES=$?
 
@@ -318,7 +352,9 @@ epm_install_files()
             ZYPPEROPTIONS=$(__use_zypper_no_gpg_checks)
             # use install_names
             ;;
+
         urpm-rpm)
+            __epm_check_if_try_install_deb $@ && return
             sudocmd rpm -Uvh $force $nodeps $@ && return
             local RES=$?
 
