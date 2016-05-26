@@ -39,7 +39,9 @@ print_binpkgfilelist()
 	local PKGNAME=$(basename $2)
 	find "$PKGDIR" ! -name '*\.src\.rpm' -name '*\.rpm' -execdir \
 		rpmquery -p --qf='%{sourcerpm}\t%{name}-%{version}-%{release}.%{arch}.rpm\n' "{}" \; \
-		| grep "^$PKGNAME[[:space:]].*" | cut -f2 | xargs -n1 -I "{}" echo -n "$PKGDIR/{} "
+		| grep "^$PKGNAME[[:space:]].*" \
+		| cut -f2 \
+		| xargs -n1 -I "{}" echo -n "$PKGDIR/{} "
 }
 
 # TODO: need try detect more strict

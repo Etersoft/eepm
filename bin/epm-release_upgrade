@@ -35,15 +35,21 @@ __wcount()
 
 __detect_alt_release_by_repo()
 {
-	local BRD=$(cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list | \
-		grep -v "^#" | grep "p[5-9]/branch/" | sed -e "s|.*\(p[5-9]\)/branch.*|\1|g" | sort -u )
+	local BRD=$(cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list \
+		| grep -v "^#" \
+		| grep "p[5-9]/branch/" \
+		| sed -e "s|.*\(p[5-9]\)/branch.*|\1|g" \
+		| sort -u )
 	if [ $(__wcount $BRD) = "1" ] ; then
 		echo "$BRD"
 		return
 	fi
 
-	local BRD=$(cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list | \
-		grep -v "^#" | grep "Sisyphus/" | sed -e "s|.*\(Sisyphus\).*|\1|g" | sort -u )
+	local BRD=$(cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list \
+		| grep -v "^#" \
+		| grep "Sisyphus/" \
+		| sed -e "s|.*\(Sisyphus\).*|\1|g" \
+		| sort -u )
 	if [ $(__wcount $BRD) = "1" ] ; then
 		echo "$BRD"
 		return
