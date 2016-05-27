@@ -273,7 +273,33 @@ __epm_check_if_try_install_deb()
 	local TDIR=$(mktemp -d)
 	cd $TDIR
 	for pkg in $debpkgs ; do
-		showcmd alien -r -k scripts "$pkg"
+		showcmd alien -r -k --scripts "$pkg"
+		# TODO: need check for return status
+	done
+	rm -f $TDIR/*
+	rmdir $TDIR/
+
+	return 0
+}
+
+# TODO: rewrite to convert (get some code from Korinf?)
+__epm_check_if_try_install_rpm()
+{
+	local pkg
+	local rpmpkgs=""
+	for pkg in $@ ; do
+		[ "$(get_package_type "$pkg")" = "rpm" ] || return 1
+		[ -e "$pkg" ] || fatal "Can't read $pkg"
+		rpmpkgs="$rpmpkgs $(realpath $pkg)"
+	done
+	[ -n "$rpmpkgs" ] || return 1
+
+	assure_exists alien
+
+	local TDIR=$(mktemp -d)
+	cd $TDIR
+	for pkg in $rpmpkgs ; do
+		showcmd alien -d -k --scripts "$pkg"
 		# TODO: need check for return status
 	done
 	rm -f $TDIR/*
@@ -311,6 +337,9 @@ epm_install_files()
             if [ -n "$non_interactive" ] ; then
                 DPKGOPTIONS="--force-confdef --force-confold"
             fi
+
+            __epm_check_if_try_install_rpm $@ && return
+
             # FIXME: return false in case no install and in case install with broken deps
             sudocmd dpkg $DPKGOPTIONS -i $@
             local RES=$?
