@@ -19,6 +19,16 @@
 
 load_helper epm-query
 
+__repofix_check_vendor()
+{
+	local i
+	for i in /etc/apt/vendors.list.d/*.list; do
+		[ -e "$i" ] || continue
+		grep -q "^simple-key \"$1\"" $i && return
+	done
+	return 1
+}
+
 __fix_apt_sources_list()
 {
 	local SUBST_ALT_RULE='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ](Sisyphus|p8[/ ]branch|p7[/ ]branch|p6[/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch) !\1 \2/\3/\4 !gi'
@@ -31,15 +41,31 @@ __fix_apt_sources_list()
 		#sed -i -r -e "$SUBST_ALT_RULE" $i
 		regexp_subst "/^ *#/! $SUBST_ALT_RULE" $i
 
-		# add signs
+		# add signs for branches
 		local br
 		for br in $DISTRVERSION ; do
-			regexp_subst "/ALTLinux\/$br\/branch/s/^rpm *([fhr])/rpm [$br] \1/" $i
-			if is_installed apt-conf-etersoft-common ; then
-				regexp_subst "/Etersoft\/$br\/branch/s/^rpm *([fhr])/rpm [etersoft] \1/" $i
+			if ! __repofix_check_vendor $br ; then
+				warning "Skip set $br vendor key (it misssed)"
+				continue
 			fi
+			regexp_subst "/ALTLinux\/$br\/branch/s/^rpm *([fhr])/rpm [$br] \1/" $i
 		done
-		regexp_subst "/ALTLinux\/Sisyphus\//s/^rpm *([fhr])/rpm [alt] \1/" $i
+
+		for br in $DISTRVERSION ; do
+			#if is_installed apt-conf-etersoft-common ; then
+			if ! __repofix_check_vendor etersoft ; then
+				warning "Skip set etersoft vendor key (it misssed)"
+				continue
+			fi
+			regexp_subst "/Etersoft\/$br\/branch/s/^rpm *([fhr])/rpm [etersoft] \1/" $i
+		done
+
+		# Sisyphus uses 'alt' vendor key
+		if __repofix_check_vendor alt ; then
+			regexp_subst "/ALTLinux\/Sisyphus\//s/^rpm *([fhr])/rpm [alt] \1/" $i
+		else
+			warning "Skip set alt vendor key (it misssed)"
+		fi
 	done
 }
 
