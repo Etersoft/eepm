@@ -101,7 +101,7 @@ epm_install_names()
 	[ -z "$1" ] && return
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
-			sudocmd apt-get $APTOPTIONS install $@
+			sudocmd apt-get $APTOPTIONS $noremove install $@
 			return ;;
 		aptitude-dpkg)
 			sudocmd aptitude install $@
@@ -188,7 +188,7 @@ epm_ni_install_names()
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
 			export DEBIAN_FRONTEND=noninteractive
-			sudocmd apt-get -y --force-yes -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
+			sudocmd apt-get -y $noremove --force-yes -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
 			return ;;
 		aptitude-dpkg)
 			sudocmd aptitde -y install $@
