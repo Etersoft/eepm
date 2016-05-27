@@ -261,7 +261,12 @@ set_sudo()
 	[ $EFFUID = "0" ] && return
 
 	# use sudo if possible
-	which sudo >/dev/null 2>/dev/null && SUDO="sudo --" && return
+	if which sudo >/dev/null 2>/dev/null ; then
+		SUDO="sudo --"
+		# check for < 1.7 version which do not support --
+		sudo --help | grep -q "  --" || SUDO="sudo"
+		return
+	fi
 
 	SUDO="fatal 'Can't find sudo. Please install sudo or run epm under root.'"
 }
