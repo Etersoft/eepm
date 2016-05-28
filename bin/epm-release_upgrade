@@ -64,8 +64,11 @@ __replace_alt_version_in_repo()
 	assure_exists apt-repo
 	#echo "Upgrading $DISTRNAME from $1 to $2 ..."
 	docmd apt-repo list | sed -e "s|\($1\)|{\1}->{$2}|g" | egrep --color -- "$1"
-	confirm "Are these correct changes? [y/N]" || fatal "Exiting"
-	__replace_text_in_alt_repo "/^ *#/! s!$1!$2!g"
+	# ask and replace only we will have changes
+	if apt-repo list | egrep -q -- "$1" ; then
+		confirm "Are these correct changes? [y/N]" || fatal "Exiting"
+		__replace_text_in_alt_repo "/^ *#/! s!$1!$2!g"
+	fi
 	docmd apt-repo list
 }
 
@@ -166,6 +169,7 @@ __update_alt_to_next_distro()
 		*)
 			warning "Have no idea how to update from $DISTRNAME $DISTRVERSION."
 			info "Try run f.i. # epm release-upgrade p8 or # epm release-upgrade Sisyphus"
+			info "Also possible you need install altlinux-release-p? package for correct distro version detecting"
 			return 1
 	esac
 }
