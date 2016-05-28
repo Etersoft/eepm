@@ -41,6 +41,16 @@ __fix_apt_sources_list()
 		#sed -i -r -e "$SUBST_ALT_RULE" $i
 		regexp_subst "/^ *#/! $SUBST_ALT_RULE" $i
 
+		# Sisyphus uses 'alt' vendor key
+		if __repofix_check_vendor alt ; then
+			regexp_subst "/ALTLinux\/Sisyphus\//s/^rpm *([fhr])/rpm [alt] \1/" $i
+		else
+			warning "Skip set alt vendor key (it misssed)"
+		fi
+
+		# skip branch replacement for ALT Linux Sisyphus
+		[ "$DISTRVERSION" = "Sisyphus" ] && continue
+
 		# add signs for branches
 		local br
 		for br in $DISTRVERSION ; do
@@ -59,13 +69,6 @@ __fix_apt_sources_list()
 			fi
 			regexp_subst "/Etersoft\/$br\/branch/s/^rpm *([fhr])/rpm [etersoft] \1/" $i
 		done
-
-		# Sisyphus uses 'alt' vendor key
-		if __repofix_check_vendor alt ; then
-			regexp_subst "/ALTLinux\/Sisyphus\//s/^rpm *([fhr])/rpm [alt] \1/" $i
-		else
-			warning "Skip set alt vendor key (it misssed)"
-		fi
 	done
 }
 
