@@ -146,6 +146,16 @@ __epm_query_file()
 	docmd $CMD $@
 }
 
+# hack: dpkg -W will print names for removed packages too (until newest Ubuntu)
+__epm_query_dpkg_check()
+{
+	local i
+	for i in $@ ; do
+		a= dpkg -s $i >/dev/null 2>/dev/null || return
+	done
+	return 0
+}
+
 __epm_query_name()
 {
 	local CMD
@@ -158,7 +168,10 @@ __epm_query_name()
 			;;
 		*-dpkg)
 			#docmd dpkg -l $@ | grep "^ii"
-			CMD="dpkg-query -W --showformat=\${Package}-\${Version}\n"
+			#CMD="dpkg-query -W --showformat=\${Package}-\${Version}\n"
+			docmd dpkg-query -W "--showformat=\${Package}-\${Version}\n" $@ || return
+			__epm_query_dpkg_check $@ || return
+			return
 			;;
 		npackd)
 			docmd "npackdcl path --package=$@"
@@ -197,7 +210,10 @@ __epm_query_shortname()
 			CMD="rpm -q --queryformat %{name}\n"
 			;;
 		*-dpkg)
-			CMD="dpkg-query -W --showformat=\${Package}\n"
+			#CMD="dpkg-query -W --showformat=\${Package}\n"
+			docmd dpkg-query -W "--showformat=\${Package}\n" $@ || return
+			__epm_query_dpkg_check $@ || return
+			return
 			;;
 		npackd)
 			docmd "npackdcl path --package=$@"
@@ -228,7 +244,7 @@ __epm_query_shortname()
 # check if pkg is installed
 is_installed()
 {
-	short=1 pkg_filenames="$@" pkg_names="$@" epm_query >/dev/null 2>/dev/null
+	__epm_query_shortname $pkg_names >/dev/null 2>/dev/null
 	# broken way to recursive call here (overhead!)
 	#epm installed $@ >/dev/null 2>/dev/null
 }
