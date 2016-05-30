@@ -17,8 +17,10 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-etersoft_updates_site="http://updates.etersoft.ru/pub/Etersoft/Sisyphus/$($DISTRVENDOR -e)/"
-download_dir="/tmp"
+myinit(){
+    etersoft_updates_site="http://updates.etersoft.ru/pub/Etersoft/Sisyphus/$($DISTRVENDOR -e)/"
+    download_dir="/tmp"
+}
 
 download_epm(){
     download_link=$etersoft_updates_site$(wget -qO- $etersoft_updates_site/ | grep -m1 -Eo "eepm[^\"]+\.$($DISTRVENDOR -p)" | tail -n1) #"
@@ -27,6 +29,7 @@ download_epm(){
 }
 
 epm_epm_install(){
+    myinit
     download_epm || fatal "Error. Check download link: $download_link"
     epm i $eepm_package || fatal
     rm -fv $eepm_package
