@@ -19,6 +19,9 @@
 
 PROGDIR=$(dirname $0)
 [ "$PROGDIR" = "." ] && PROGDIR=$(pwd)
+if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
+    PROGDIR=""
+fi
 
 # will replaced to /usr/share/eepm during install
 SHAREDIR=$PROGDIR
@@ -260,7 +263,12 @@ set_sudo()
 	[ $EFFUID = "0" ] && return
 
 	# use sudo if possible
-	which sudo >/dev/null 2>/dev/null && SUDO="sudo --" && return
+	if which sudo >/dev/null 2>/dev/null ; then
+		SUDO="sudo --"
+		# check for < 1.7 version which do not support --
+		sudo --help | grep -q "  --" || SUDO="sudo"
+		return
+	fi
 
 	SUDO="fatal 'Can't find sudo. Please install sudo or run epm under root.'"
 }
@@ -328,7 +336,6 @@ regexp_subst()
 
 assure_exists()
 {
-	load_helper epm-assure
 	local package="$2"
 	local textpackage=
 	[ -n "$package" ] || package="$(__get_package_for_command "$1")"
@@ -381,6 +388,10 @@ get_package_type()
 
 get_help()
 {
+    if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
+        return
+    fi
+
     grep -v -- "^#" $0 | grep -- "# $1" | while read n ; do
         opt=$(echo $n | sed -e "s|) # $1:.*||g")
         desc=$(echo $n | sed -e "s|.*) # $1:||g")
@@ -662,9 +673,12 @@ case $PMTYPE in
 	apt-rpm)
 		# ALT Linux only
 		assure_exists /etc/buildreqs/files/ignore.d/apt-scripts apt-scripts
-		__epm_orphan_altrpm
-		info "TODO: this was just a list of orphans"
-		# | sudocmd epm remove
+		echo "We will try remove all installed packages which are missed in repositories"
+		warning "Use with caution!"
+		local PKGLIST=$(__epm_orphan_altrpm \
+			| sed -e "s/\.32bit//g" \
+			| grep -v -- "^kernel")
+		docmd epm remove $PKGLIST
 		;;
 	apt-dpkg|aptitude-dpkg)
 		assure_exists deborphan
@@ -677,7 +691,7 @@ case $PMTYPE in
 	yum-rpm)
 		showcmd package-cleanup --orphans
 		local PKGLIST=$(package-cleanup --orphans)
-		sudocmd epm remove $PKGLIST
+		docmd epm remove $PKGLIST
 		;;
 	urpm-rpm)
 		showcmd urpmq --auto-orphans
@@ -716,10 +730,10 @@ esac
 __epm_autoremove_altrpm()
 {
 	local pkg
-	load_helper epm-packages
 	assure_exists /etc/buildreqs/files/ignore.d/apt-scripts apt-scripts
 	info
-	info "Just removing all non -devel libs packages not need by anything..."
+	info "Removing all non -devel/-debuginfo libs packages not need by anything..."
+	[ -n "$force" ] || info "You can run with --force for more deep removing"
 
 	local flag=
 	local libexclude='^lib'
@@ -727,12 +741,14 @@ __epm_autoremove_altrpm()
 
 	# https://www.altlinux.org/APT_в_ALT_Linux/Советы_по_использованию#apt-cache_list-nodeps
 	showcmd "apt-cache list-nodeps | grep -- \"$libexclude\""
-	pkgs=$(apt-cache list-nodeps | grep -- "$libexclude" | \
-		grep -v -- "-devel$" | grep -v -- "-debuginfo$" | \
-		grep -v -- "-util" | grep -v -- "-tool" | grep -v -- "-plugin" | \
-		grep -v -- ^libreoffice | grep -v -- libnss- )
+	pkgs=$(apt-cache list-nodeps | grep -- "$libexclude" \
+		| grep -E -v -- "-(devel|debuginfo)$" \
+		| grep -E -v -- "-(util|tool|plugin|daemon)" \
+		| sed -e "s/\.32bit$//g" \
+		| grep -E -v -- "^(libsystemd|libreoffice|libnss)" )
 	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
 
+	info "Removing unused python/perl modules..."
 	libexclude='^(python-module-|python3-module-|python-modules-|python3-modules|perl-)'
 	[ -n "$force" ] || libexclude=$libexclude'[^-]*$'
 	showcmd "apt-cache list-nodeps | grep -E -- \"$libexclude\""
@@ -740,7 +756,8 @@ __epm_autoremove_altrpm()
 	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
 
 	if [ -n "$flag" ] ; then
-		info "call again for next cycle until all libs will removed"
+		info ""
+		info "call again for next cycle until all libs will be removed"
 		__epm_autoremove_altrpm
 	fi
 
@@ -760,7 +777,7 @@ case $PMTYPE in
 		__epm_autoremove_altrpm
 
 		# ALT Linux only
-		assure_exists remove-old-kernels
+		assure_exists remove-old-kernels update-kernel 0.9.9
 		sudocmd remove-old-kernels
 		;;
 	apt-dpkg|aptitude-dpkg)
@@ -1404,8 +1421,10 @@ epm_download()
 # File bin/epm-epm_install:
 
 
-etersoft_updates_site="http://updates.etersoft.ru/pub/Etersoft/Sisyphus/$($DISTRVENDOR -e)/"
-download_dir="/tmp"
+myinit(){
+    etersoft_updates_site="http://updates.etersoft.ru/pub/Etersoft/Sisyphus/$($DISTRVENDOR -e)/"
+    download_dir="/tmp"
+}
 
 download_epm(){
     download_link=$etersoft_updates_site$(wget -qO- $etersoft_updates_site/ | grep -m1 -Eo "eepm[^\"]+\.$($DISTRVENDOR -p)" | tail -n1) #"
@@ -1414,6 +1433,7 @@ download_epm(){
 }
 
 epm_epm_install(){
+    myinit
     download_epm || fatal "Error. Check download link: $download_link"
     epm i $eepm_package || fatal
     rm -fv $eepm_package
@@ -1724,7 +1744,7 @@ epm_install_names()
 	[ -z "$1" ] && return
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
-			sudocmd apt-get $APTOPTIONS install $@
+			sudocmd apt-get $APTOPTIONS $noremove install $@
 			return ;;
 		aptitude-dpkg)
 			sudocmd aptitude install $@
@@ -1810,7 +1830,7 @@ epm_ni_install_names()
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
 			export DEBIAN_FRONTEND=noninteractive
-			sudocmd apt-get -y --force-yes -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
+			sudocmd apt-get -y $noremove --force-yes -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
 			return ;;
 		aptitude-dpkg)
 			sudocmd aptitde -y install $@
@@ -1878,6 +1898,56 @@ __epm_check_if_rpm_already_installed()
 	LANG=C $SUDO rpm -Uvh $force $nodeps $@ 2>&1 | grep -q "is already installed"
 }
 
+__epm_check_if_try_install_deb()
+{
+	local pkg
+	local debpkgs=""
+	for pkg in $@ ; do
+		[ "$(get_package_type "$pkg")" = "deb" ] || return 1
+		[ -e "$pkg" ] || fatal "Can't read $pkg"
+		debpkgs="$debpkgs $(realpath $pkg)"
+	done
+	[ -n "$debpkgs" ] || return 1
+
+	assure_exists alien
+
+	local TDIR=$(mktemp -d)
+	cd $TDIR
+	for pkg in $debpkgs ; do
+		showcmd alien -r -k --scripts "$pkg"
+		# TODO: need check for return status
+	done
+	rm -f $TDIR/*
+	rmdir $TDIR/
+
+	return 0
+}
+
+__epm_check_if_try_install_rpm()
+{
+	local pkg
+	local rpmpkgs=""
+	for pkg in $@ ; do
+		[ "$(get_package_type "$pkg")" = "rpm" ] || return 1
+		[ -e "$pkg" ] || fatal "Can't read $pkg"
+		rpmpkgs="$rpmpkgs $(realpath $pkg)"
+	done
+	[ -n "$rpmpkgs" ] || return 1
+
+	assure_exists alien
+
+	local TDIR=$(mktemp -d)
+	cd $TDIR
+	for pkg in $rpmpkgs ; do
+		showcmd alien -d -k --scripts "$pkg"
+		# TODO: need check for return status
+	done
+	rm -f $TDIR/*
+	rmdir $TDIR/
+
+	return 0
+}
+
 
 epm_install_files()
 {
@@ -1889,6 +1959,8 @@ epm_install_files()
 
     case $PMTYPE in
         apt-rpm)
+            __epm_check_if_try_install_deb $@ && return
+
             sudocmd rpm -Uvh $force $nodeps $@ && return
             local RES=$?
 
@@ -1899,11 +1971,15 @@ epm_install_files()
 
             # use install_names
             ;;
+
         apt-dpkg|aptitude-dpkg)
             # the new version of the conf. file is installed with a .dpkg-dist suffix
             if [ -n "$non_interactive" ] ; then
                 DPKGOPTIONS="--force-confdef --force-confold"
             fi
+
+            __epm_check_if_try_install_rpm $@ && return
+
             # FIXME: return false in case no install and in case install with broken deps
             sudocmd dpkg $DPKGOPTIONS -i $@
             local RES=$?
@@ -1918,7 +1994,10 @@ epm_install_files()
             sudocmd dpkg $DPKGOPTIONS -i $@
             return
             ;;
+
         yum-rpm|dnf-rpm)
+            __epm_check_if_try_install_deb $@ && return
+
             sudocmd rpm -Uvh $force $nodeps $@ && return
             # if run with --nodeps, do not fallback on hi level
 
@@ -1928,7 +2007,9 @@ epm_install_files()
             YUMOPTIONS=--nogpgcheck
             # use install_names
             ;;
+
         zypper-rpm)
+            __epm_check_if_try_install_deb $@ && return
             sudocmd rpm -Uvh $force $nodeps $@ && return
             local RES=$?
 
@@ -1940,7 +2021,9 @@ epm_install_files()
             ZYPPEROPTIONS=$(__use_zypper_no_gpg_checks)
             # use install_names
             ;;
+
         urpm-rpm)
+            __epm_check_if_try_install_deb $@ && return
             sudocmd rpm -Uvh $force $nodeps $@ && return
             local RES=$?
 
@@ -2174,7 +2257,6 @@ epm_kernel_update()
 
 	case $DISTRNAME in
 	ALTLinux)
-		load_helper epm-query_package
 		if ! __epm_query_package kernel-image >/dev/null ; then
 			info "No installed kernel packages, skipping update"
 			return
@@ -2400,7 +2482,9 @@ print_binpkgfilelist()
 	local PKGNAME=$(basename $2)
 	find "$PKGDIR" ! -name '*\.src\.rpm' -name '*\.rpm' -execdir \
 		rpmquery -p --qf='%{sourcerpm}\t%{name}-%{version}-%{release}.%{arch}.rpm\n' "{}" \; \
-		| grep "^$PKGNAME[[:space:]].*" | cut -f2 | xargs -n1 -I "{}" echo -n "$PKGDIR/{} "
+		| grep "^$PKGNAME[[:space:]].*" \
+		| cut -f2 \
+		| xargs -n1 -I "{}" echo -n "$PKGDIR/{} "
 }
 
 PKGNAMEMASK="\(.*\)-\([0-9].*\)-\(.*[0-9].*\)"
@@ -2813,6 +2897,15 @@ __epm_query_file()
 	docmd $CMD $@
 }
 
+__epm_query_dpkg_check()
+{
+	local i
+	for i in $@ ; do
+		a= dpkg -s $i >/dev/null 2>/dev/null || return
+	done
+	return 0
+}
+
 __epm_query_name()
 {
 	local CMD
@@ -2825,7 +2918,10 @@ __epm_query_name()
 			;;
 		*-dpkg)
 			#docmd dpkg -l $@ | grep "^ii"
-			CMD="dpkg-query -W --showformat=\${Package}-\${Version}\n"
+			#CMD="dpkg-query -W --showformat=\${Package}-\${Version}\n"
+			docmd dpkg-query -W "--showformat=\${Package}-\${Version}\n" $@ || return
+			__epm_query_dpkg_check $@ || return
+			return
 			;;
 		npackd)
 			docmd "npackdcl path --package=$@"
@@ -2864,7 +2960,10 @@ __epm_query_shortname()
 			CMD="rpm -q --queryformat %{name}\n"
 			;;
 		*-dpkg)
-			CMD="dpkg-query -W --showformat=\${Package}\n"
+			#CMD="dpkg-query -W --showformat=\${Package}\n"
+			docmd dpkg-query -W "--showformat=\${Package}\n" $@ || return
+			__epm_query_dpkg_check $@ || return
+			return
 			;;
 		npackd)
 			docmd "npackdcl path --package=$@"
@@ -2894,7 +2993,7 @@ __epm_query_shortname()
 
 is_installed()
 {
-	short=1 pkg_filenames="$@" pkg_names="$@" epm_query >/dev/null 2>/dev/null
+	__epm_query_shortname $pkg_names >/dev/null 2>/dev/null
 	# broken way to recursive call here (overhead!)
 	#epm installed $@ >/dev/null 2>/dev/null
 }
@@ -3174,15 +3273,21 @@ __wcount()
 
 __detect_alt_release_by_repo()
 {
-	local BRD=$(cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list | \
-		grep -v "^#" | grep "p[5-9]/branch/" | sed -e "s|.*\(p[5-9]\)/branch.*|\1|g" | sort -u )
+	local BRD=$(cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list \
+		| grep -v "^#" \
+		| grep "p[5-9]/branch/" \
+		| sed -e "s|.*\(p[5-9]\)/branch.*|\1|g" \
+		| sort -u )
 	if [ $(__wcount $BRD) = "1" ] ; then
 		echo "$BRD"
 		return
 	fi
 
-	local BRD=$(cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list | \
-		grep -v "^#" | grep "Sisyphus/" | sed -e "s|.*\(Sisyphus\).*|\1|g" | sort -u )
+	local BRD=$(cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list \
+		| grep -v "^#" \
+		| grep "Sisyphus/" \
+		| sed -e "s|.*\(Sisyphus\).*|\1|g" \
+		| sort -u )
 	if [ $(__wcount $BRD) = "1" ] ; then
 		echo "$BRD"
 		return
@@ -3197,14 +3302,16 @@ __replace_alt_version_in_repo()
 	assure_exists apt-repo
 	#echo "Upgrading $DISTRNAME from $1 to $2 ..."
 	docmd apt-repo list | sed -e "s|\($1\)|{\1}->{$2}|g" | egrep --color -- "$1"
-	confirm "Are these correct changes? [y/N]" || fatal "Exiting"
-	__replace_text_in_alt_repo "/^ *#/! s!$1!$2!g"
+	# ask and replace only we will have changes
+	if apt-repo list | egrep -q -- "$1" ; then
+		confirm "Are these correct changes? [y/N]" || fatal "Exiting"
+		__replace_text_in_alt_repo "/^ *#/! s!$1!$2!g"
+	fi
 	docmd apt-repo list
 }
 
 __alt_repofix()
 {
-	load_helper epm-repofix
 	showcmd epm repofix
 	quiet=1 pkg_filenames= epm_repofix >/dev/null
 	__replace_text_in_alt_repo "/^ *#/! s!\[p[6-9]\]![updates]!g"
@@ -3299,6 +3406,7 @@ __update_alt_to_next_distro()
 		*)
 			warning "Have no idea how to update from $DISTRNAME $DISTRVERSION."
 			info "Try run f.i. # epm release-upgrade p8 or # epm release-upgrade Sisyphus"
+			info "Also possible you need install altlinux-release-p? package for correct distro version detecting"
 			return 1
 	esac
 }
@@ -3650,6 +3758,16 @@ esac
 # File bin/epm-repofix:
 
 
+__repofix_check_vendor()
+{
+	local i
+	for i in /etc/apt/vendors.list.d/*.list; do
+		[ -e "$i" ] || continue
+		grep -q "^simple-key \"$1\"" $i && return
+	done
+	return 1
+}
+
 __fix_apt_sources_list()
 {
 	local SUBST_ALT_RULE='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ](Sisyphus|p8[/ ]branch|p7[/ ]branch|p6[/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch) !\1 \2/\3/\4 !gi'
@@ -3662,15 +3780,34 @@ __fix_apt_sources_list()
 		#sed -i -r -e "$SUBST_ALT_RULE" $i
 		regexp_subst "/^ *#/! $SUBST_ALT_RULE" $i
 
-		# add signs
+		# Sisyphus uses 'alt' vendor key
+		if __repofix_check_vendor alt ; then
+			regexp_subst "/ALTLinux\/Sisyphus\//s/^rpm *([fhr])/rpm [alt] \1/" $i
+		else
+			warning "Skip set alt vendor key (it misssed)"
+		fi
+
+		# skip branch replacement for ALT Linux Sisyphus
+		[ "$DISTRVERSION" = "Sisyphus" ] && continue
+
+		# add signs for branches
 		local br
 		for br in $DISTRVERSION ; do
-			regexp_subst "/ALTLinux\/$br\/branch/s/^rpm *([fhr])/rpm [$br] \1/" $i
-			if is_installed apt-conf-etersoft-common ; then
-				regexp_subst "/Etersoft\/$br\/branch/s/^rpm *([fhr])/rpm [etersoft] \1/" $i
+			if ! __repofix_check_vendor $br ; then
+				warning "Skip set $br vendor key (it misssed)"
+				continue
 			fi
+			regexp_subst "/ALTLinux\/$br\/branch/s/^rpm *([fhr])/rpm [$br] \1/" $i
 		done
-		regexp_subst "/ALTLinux\/Sisyphus\//s/^rpm *([fhr])/rpm [alt] \1/" $i
+
+		for br in $DISTRVERSION ; do
+			#if is_installed apt-conf-etersoft-common ; then
+			if ! __repofix_check_vendor etersoft ; then
+				warning "Skip set etersoft vendor key (it misssed)"
+				continue
+			fi
+			regexp_subst "/Etersoft\/$br\/branch/s/^rpm *([fhr])/rpm [etersoft] \1/" $i
+		done
 	done
 }
 
@@ -4973,7 +5110,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.8.2"
+        echo "EPM package manager version 1.8.4"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -5279,8 +5416,8 @@ for opt in "$@" ; do
     check_filenames $opt
 done
 
-# if input is not console, get pkg from it too
-if ! inputisatty ; then
+# if input is not console and run script from file, get pkgs from stdin too
+if ! inputisatty && [ -n "$PROGDIR" ] ; then
     for opt in $(withtimeout 1 cat) ; do
         check_filenames $opt
     done

@@ -258,7 +258,12 @@ set_sudo()
 	[ $EFFUID = "0" ] && return
 
 	# use sudo if possible
-	which sudo >/dev/null 2>/dev/null && SUDO="sudo --" && return
+	if which sudo >/dev/null 2>/dev/null ; then
+		SUDO="sudo --"
+		# check for < 1.7 version which do not support --
+		sudo --help | grep -q "  --" || SUDO="sudo"
+		return
+	fi
 
 	SUDO="fatal 'Can't find sudo. Please install sudo or run epm under root.'"
 }
@@ -326,7 +331,6 @@ regexp_subst()
 
 assure_exists()
 {
-	load_helper epm-assure
 	local package="$2"
 	local textpackage=
 	[ -n "$package" ] || package="$(__get_package_for_command "$1")"
@@ -379,6 +383,10 @@ get_package_type()
 
 get_help()
 {
+    if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
+        return
+    fi
+
     grep -v -- "^#" $0 | grep -- "# $1" | while read n ; do
         opt=$(echo $n | sed -e "s|) # $1:.*||g")
         desc=$(echo $n | sed -e "s|.*) # $1:||g")
@@ -578,8 +586,6 @@ serv_list()
 			sudocmd systemctl list-units $@
 			;;
 		*)
-			load_helper serv-list_all
-			load_helper serv-status
 			for i in $(serv_list_all) ; do
 				is_service_running $i >/dev/null && echo $i
 			done
@@ -614,8 +620,6 @@ serv_list_startup()
 {
 	case $SERVICETYPE in
 		*)
-			load_helper serv-list_all
-			load_helper serv-status
 			for i in $(serv_list_all | cut -f 1 -d" " | grep "\.service$") ; do
 				is_service_autostart >/dev/null $i && echo $i
 			done
@@ -1237,7 +1241,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.8.2"
+        echo "Service manager version 1.8.4"
         echo "Running on $($DISTRVENDOR)"
         echo "Copyright (c) Etersoft 2012, 2013, 2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
