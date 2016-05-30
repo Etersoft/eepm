@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.8.3
+Version: 1.8.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,16 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Mon May 30 2016 Vitaly Lipatov <lav@altlinux.ru> 1.8.4-alt1
+- epm install: add initial support for cross install packages (deb/rpm packages on rpm/deb-based hosts)
+- install: add --noremove support for apt
+- repofix: add check for vendor key if set it
+- add check if sudo supports --
+- repofix: skip useless Sisyphus replacements
+- release_upgrade: skip confirm if there are no changes
+- epm-query: add semihack for check removed packages
+- epm: add support for run script from stdin
+
 * Mon May 23 2016 Vitaly Lipatov <lav@altlinux.ru> 1.8.3-alt1
 - autoorphans: do real removing
 - autoremove: add update-kernel version 0.9.9 checking
