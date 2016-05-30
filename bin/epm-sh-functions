@@ -394,6 +394,10 @@ get_package_type()
 # print options description from HELPCMD/HELPOPT lines in the code
 get_help()
 {
+    if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
+        return
+    fi
+
     grep -v -- "^#" $0 | grep -- "# $1" | while read n ; do
         opt=$(echo $n | sed -e "s|) # $1:.*||g")
         desc=$(echo $n | sed -e "s|.*) # $1:||g")

@@ -41,7 +41,7 @@ get_version()
 
 filter_out()
 {
-	grep -v "^ *load_helper " | sed -e 's|DISTRVENDOR=$PROGDIR/distr_info|DISTRVENDOR=internal_distr_info|g' | \
+	grep -v "^[ 	]*load_helper " | sed -e 's|DISTRVENDOR=$PROGDIR/distr_info|DISTRVENDOR=internal_distr_info|g' | \
 		sed -e "s|@VERSION@|$(get_version)|g"
 
 }
