@@ -103,8 +103,8 @@ __update_to_the_distro()
 		p8)
 			docmd epm update || fatal
 			if ! docmd epm install apt rpm apt-conf-branch $(get_fix_release_pkg p8) ; then
-				# error: execution of %post scriptlet from glibc-core-2.23-alt1.eter1
-				docmd epm erase glibc-core-2.17 || fatal "Check an error and run epm release-upgrade again"
+				# Hack for error: execution of %post scriptlet from glibc-core-2.23-alt1.eter1
+				docmd rpm -ev glibc-core-2.17 || fatal "Check an error and run epm release-upgrade again"
 				docmd epm install apt rpm apt-conf-branch $(get_fix_release_pkg p8) || fatal "Check an error and run epm release-upgrade again"
 			fi
 			__alt_repofix
@@ -187,8 +187,12 @@ epm_release_upgrade()
 
 		# try to detect current release by repo
 		if [ "$DISTRVERSION" = "Sisyphus" ] || [ -z "$DISTRVERSION" ] ; then
-			DISTRVERSION="$(__detect_alt_release_by_repo)"
-			[ "$DISTRVERSION" != "Sisyphus" ] && info "Detected running $DISTRNAME $DISTRVERSION (according to using repos)"
+			local dv
+			dv="$(__detect_alt_release_by_repo)"
+			if [ -n "$dv" ] && [ "$dv" != "$DISTRVERSION" ] ; then
+				DISTRVERSION="$dv"
+				info "Detected running $DISTRNAME $DISTRVERSION (according to using repos)"
+			fi
 		fi
 
 		__alt_repofix
@@ -207,7 +211,7 @@ epm_release_upgrade()
 
 	case $PMTYPE in
 	apt-rpm)
-		docmd epm update
+		#docmd epm update
 		info "Have no idea how to upgrade $DISTRNAME"
 		;;
 	*-dpkg)
