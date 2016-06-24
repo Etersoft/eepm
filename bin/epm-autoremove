@@ -36,7 +36,7 @@ __epm_autoremove_altrpm()
 		| grep -E -v -- "-(devel|debuginfo)$" \
 		| grep -E -v -- "-(util|tool|plugin|daemon)" \
 		| sed -e "s/\.32bit$//g" \
-		| grep -E -v -- "^(libsystemd|libreoffice|libnss)" )
+		| grep -E -v -- "^(libsystemd|libreoffice|libnss|eepm)" )
 	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
 
 	info "Removing unused python/perl modules..."
@@ -55,7 +55,7 @@ __epm_autoremove_altrpm()
 	return 0
 }
 
-
+# TODO: keep our eepm package
 epm_autoremove()
 {
 
@@ -82,7 +82,7 @@ case $PMTYPE in
 		while true ; do
 			docmd package-cleanup --leaves $(subst_option non_interactive --assumeyes)
 			# FIXME: package-cleanup have to use stderr for errors
-			local PKGLIST=$(package-cleanup --leaves | grep -v "Loaded plugins" | grep -v "Unable to")
+			local PKGLIST=$(package-cleanup --leaves | grep -v "Loaded plugins" | grep -v "Unable to" | grep -v "^eepm$")
 			[ -n "$PKGLIST" ] || break
 			sudocmd yum remove $PKGLIST
 		done

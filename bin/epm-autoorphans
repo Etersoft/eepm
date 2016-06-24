@@ -36,6 +36,7 @@ case $PMTYPE in
 		warning "Use with caution!"
 		local PKGLIST=$(__epm_orphan_altrpm \
 			| sed -e "s/\.32bit//g" \
+			| grep -v -- "^eepm$" \
 			| grep -v -- "^kernel")
 		docmd epm remove $PKGLIST
 		;;
@@ -49,7 +50,13 @@ case $PMTYPE in
 	#	;;
 	yum-rpm)
 		showcmd package-cleanup --orphans
-		local PKGLIST=$(package-cleanup --orphans)
+		local PKGLIST=$(package-cleanup --orphans | grep -v "^eepm$")
+		docmd epm remove $PKGLIST
+		;;
+	dnf-rpm)
+		# TODO: dnf list extras
+		showcmd package-cleanup --orphans
+		local PKGLIST=$(package-cleanup --orphans | grep -v "^eepm$")
 		docmd epm remove $PKGLIST
 		;;
 	urpm-rpm)

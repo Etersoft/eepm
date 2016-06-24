@@ -31,7 +31,11 @@ epm_download()
 	yum-rpm)
 		# TODO: check yum install --downloadonly --downloaddir=/tmp <package-name>
 		assure_exists yumdownloader yum-utils
-		sudo yumdownloader $pkg_filenames
+		sudocmd yumdownloader $pkg_filenames
+		;;
+	dnf-rpm)
+		sudocmd dnf download $pkg_filenames
+		;;
 	tce)
 		sudocmd tce-load -w $pkg_filenames
 		;;

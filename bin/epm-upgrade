@@ -44,7 +44,7 @@ epm_upgrade()
 		CMD="yum update"
 		;;
 	dnf-rpm)
-		CMD="dnf update"
+		CMD="dnf distro-sync"
 		;;
 	snappy)
 		CMD="snappy update"

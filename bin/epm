@@ -242,7 +242,7 @@ check_command()
     clean)                    # HELPCMD: clean local package cache
         epm_cmd=clean
         ;;
-    autoremove)               # HELPCMD: auto remove unneeded package(s)
+    autoremove|package-cleanup)   # HELPCMD: auto remove unneeded package(s)
         epm_cmd=autoremove
         ;;
     autoorphans|--orphans)    # HELPCMD: remove all packages not from the repository
