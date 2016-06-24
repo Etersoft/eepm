@@ -32,6 +32,8 @@ epm_download()
 		# TODO: check yum install --downloadonly --downloaddir=/tmp <package-name>
 		assure_exists yumdownloader yum-utils
 		sudo yumdownloader $pkg_filenames
+	tce)
+		sudocmd tce-load -w $pkg_filenames
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"

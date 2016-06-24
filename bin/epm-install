@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012-2013  Etersoft
-# Copyright (C) 2012-2013  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2016  Etersoft
+# Copyright (C) 2012-2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -166,6 +166,9 @@ epm_install_names()
 		apk)
 			sudocmd apk add $@
 			return ;;
+		tce)
+			sudocmd tce-load -wi $@
+			return ;;
 		guix)
 			__separate_sudocmd "guix package -i" "guix package -i" $@
 			return ;;
@@ -236,6 +239,9 @@ epm_ni_install_names()
 			return ;;
 		apk)
 			sudocmd apk add $@
+			return ;;
+		tce)
+			sudocmd tce-load -wi $@
 			return ;;
 		#android)
 		#	sudocmd pm install $@
@@ -470,6 +476,9 @@ epm_print_install_command()
             ;;
         aptcyg)
             echo "apt-cyg install $@"
+            ;;
+        tce)
+            echo "tce-load -wi $@"
             ;;
         *)
             fatal "Have no suitable appropriate install command for $PMTYPE"

@@ -483,6 +483,9 @@ case $DISTRNAME in
 	alpine)
 		CMD="apk"
 		;;
+	TinyCoreLinux)
+		CMD="tce"
+		;;
 	*)
 		fatal "Have no suitable DISTRNAME $DISTRNAME"
 		;;

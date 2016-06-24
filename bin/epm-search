@@ -67,6 +67,9 @@ case $PMTYPE in
 	apk)
 		CMD="apk search"
 		;;
+	tce)
+		CMD="tce-ab"
+		;;
 	conary)
 		CMD="conary repquery"
 		;;

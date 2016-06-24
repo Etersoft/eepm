@@ -30,6 +30,7 @@ rpmvendor()
 {
 	[ "$DISTRIB_ID" = "ALTLinux" ] && echo "alt" && return
 	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
+	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
 	echo "$DISTRIB_ID" | tr "[A-Z]" "[a-z]"
 }
 
@@ -52,6 +53,7 @@ pkgtype()
 		windows) echo "exe" ;;
 		android) echo "apk" ;;
 		alpine) echo "apk" ;;
+		tinycorelinux) echo "tcz" ;;
 		cygwin) echo "tar.xz" ;;
 		debian|ubuntu|mint|runtu|mcst) echo "deb" ;;
 		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
@@ -135,6 +137,11 @@ elif distro slackware-version ; then
 elif distro os-release && which apk 2>/dev/null >/dev/null ; then
 	. $ROOTDIR/etc/os-release
 	DISTRIB_ID="$ID"
+	DISTRIB_RELEASE="$VERSION_ID"
+
+elif distro os-release && which tce-ab 2>/dev/null >/dev/null ; then
+	. $ROOTDIR/etc/os-release
+	DISTRIB_ID="TinyCoreLinux"
 	DISTRIB_RELEASE="$VERSION_ID"
 
 elif distro arch-release ; then

@@ -125,6 +125,9 @@ case $PMTYPE in
 	apk)
 		CMD="apk info"
 		;;
+	tce)
+		CMD="ls -1 /usr/local/tce.installed"
+		;;
 	guix)
 		CMD="guix package -I"
 		;;
