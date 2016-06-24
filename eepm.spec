@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.8.4
+Version: 1.8.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,11 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Sat Jun 25 2016 Vitaly Lipatov <lav@altlinux.ru> 1.8.5-alt1
+- add Tiny Core Linux support (tcl, tce)
+- improve dnf support: add release-upgrade
+- improve ALT Linux release upgrade
+
 * Mon May 30 2016 Vitaly Lipatov <lav@altlinux.ru> 1.8.4-alt1
 - epm install: add initial support for cross install packages (deb/rpm packages on rpm/deb-based hosts)
 - install: add --noremove support for apt
