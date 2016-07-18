@@ -431,7 +431,7 @@ case $DISTRNAME in
 	PCLinux)
 		CMD="apt-rpm"
 		;;
-	Ubuntu|Debian|Mint)
+	Ubuntu|Debian|Mint|AstraLinux|Elbrus)
 		CMD="apt-dpkg"
 		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
 		which snappy 2>/dev/null >/dev/null && CMD=snappy
