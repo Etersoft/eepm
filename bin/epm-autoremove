@@ -70,6 +70,11 @@ case $PMTYPE in
 		# ALT Linux only
 		assure_exists remove-old-kernels update-kernel 0.9.9
 		sudocmd remove-old-kernels
+		
+		# ALT Linux only
+		if which nvidia-clean-driver 2>/dev/null ; then
+			sudocmd nvidia-clean-driver
+		fi
 		;;
 	apt-dpkg|aptitude-dpkg)
 		sudocmd apt-get autoremove
