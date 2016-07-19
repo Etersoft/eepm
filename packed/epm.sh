@@ -265,8 +265,8 @@ set_sudo()
 	# use sudo if possible
 	if which sudo >/dev/null 2>/dev/null ; then
 		SUDO="sudo --"
-		# check for < 1.7 version which do not support --
-		sudo --help | grep -q "  --" || SUDO="sudo"
+		# check for < 1.7 version which do not support -- (and --help possible too)
+		sudo -h | grep -q "  --" || SUDO="sudo"
 		return
 	fi
 
@@ -423,7 +423,7 @@ case $DISTRNAME in
 	PCLinux)
 		CMD="apt-rpm"
 		;;
-	Ubuntu|Debian|Mint)
+	Ubuntu|Debian|Mint|AstraLinux|Elbrus)
 		CMD="apt-dpkg"
 		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
 		which snappy 2>/dev/null >/dev/null && CMD=snappy
@@ -474,6 +474,9 @@ case $DISTRNAME in
 		;;
 	alpine)
 		CMD="apk"
+		;;
+	TinyCoreLinux)
+		CMD="tce"
 		;;
 	*)
 		fatal "Have no suitable DISTRNAME $DISTRNAME"
@@ -677,6 +680,7 @@ case $PMTYPE in
 		warning "Use with caution!"
 		local PKGLIST=$(__epm_orphan_altrpm \
 			| sed -e "s/\.32bit//g" \
+			| grep -v -- "^eepm$" \
 			| grep -v -- "^kernel")
 		docmd epm remove $PKGLIST
 		;;
@@ -690,7 +694,13 @@ case $PMTYPE in
 	#	;;
 	yum-rpm)
 		showcmd package-cleanup --orphans
-		local PKGLIST=$(package-cleanup --orphans)
+		local PKGLIST=$(package-cleanup --orphans | grep -v "^eepm$")
+		docmd epm remove $PKGLIST
+		;;
+	dnf-rpm)
+		# TODO: dnf list extras
+		showcmd package-cleanup --orphans
+		local PKGLIST=$(package-cleanup --orphans | grep -v "^eepm$")
 		docmd epm remove $PKGLIST
 		;;
 	urpm-rpm)
@@ -745,7 +755,7 @@ __epm_autoremove_altrpm()
 		| grep -E -v -- "-(devel|debuginfo)$" \
 		| grep -E -v -- "-(util|tool|plugin|daemon)" \
 		| sed -e "s/\.32bit$//g" \
-		| grep -E -v -- "^(libsystemd|libreoffice|libnss)" )
+		| grep -E -v -- "^(libsystemd|libreoffice|libnss|eepm)" )
 	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
 
 	info "Removing unused python/perl modules..."
@@ -764,22 +774,28 @@ __epm_autoremove_altrpm()
 	return 0
 }
 
-
 epm_autoremove()
 {
 
 [ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
 
-
-case $PMTYPE in
-	apt-rpm)
-		# ALT Linux only
+case $DISTRNAME in
+	ALTLinux)
 		__epm_autoremove_altrpm
 
-		# ALT Linux only
 		assure_exists remove-old-kernels update-kernel 0.9.9
 		sudocmd remove-old-kernels
+		
+		if which nvidia-clean-driver 2>/dev/null ; then
+			sudocmd nvidia-clean-driver
+		fi
+		return
 		;;
+	*)
+		;;
+esac
+
+case $PMTYPE in
 	apt-dpkg|aptitude-dpkg)
 		sudocmd apt-get autoremove
 		;;
@@ -791,7 +807,7 @@ case $PMTYPE in
 		while true ; do
 			docmd package-cleanup --leaves $(subst_option non_interactive --assumeyes)
 			# FIXME: package-cleanup have to use stderr for errors
-			local PKGLIST=$(package-cleanup --leaves | grep -v "Loaded plugins" | grep -v "Unable to")
+			local PKGLIST=$(package-cleanup --leaves | grep -v "Loaded plugins" | grep -v "Unable to" | grep -v "^eepm$")
 			[ -n "$PKGLIST" ] || break
 			sudocmd yum remove $PKGLIST
 		done
@@ -1410,7 +1426,13 @@ epm_download()
 	yum-rpm)
 		# TODO: check yum install --downloadonly --downloaddir=/tmp <package-name>
 		assure_exists yumdownloader yum-utils
-		sudo yumdownloader $pkg_filenames
+		sudocmd yumdownloader $pkg_filenames
+		;;
+	dnf-rpm)
+		sudocmd dnf download $pkg_filenames
+		;;
+	tce)
+		sudocmd tce-load -w $pkg_filenames
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -1809,6 +1831,9 @@ epm_install_names()
 		apk)
 			sudocmd apk add $@
 			return ;;
+		tce)
+			sudocmd tce-load -wi $@
+			return ;;
 		guix)
 			__separate_sudocmd "guix package -i" "guix package -i" $@
 			return ;;
@@ -1878,6 +1903,9 @@ epm_ni_install_names()
 			return ;;
 		apk)
 			sudocmd apk add $@
+			return ;;
+		tce)
+			sudocmd tce-load -wi $@
 			return ;;
 		#android)
 		#	sudocmd pm install $@
@@ -2109,6 +2137,9 @@ epm_print_install_command()
             ;;
         aptcyg)
             echo "apt-cyg install $@"
+            ;;
+        tce)
+            echo "tce-load -wi $@"
             ;;
         *)
             fatal "Have no suitable appropriate install command for $PMTYPE"
@@ -2412,6 +2443,9 @@ case $PMTYPE in
 		;;
 	apk)
 		CMD="apk info"
+		;;
+	tce)
+		CMD="ls -1 /usr/local/tce.installed"
 		;;
 	guix)
 		CMD="guix package -I"
@@ -3340,8 +3374,8 @@ __update_to_the_distro()
 		p8)
 			docmd epm update || fatal
 			if ! docmd epm install apt rpm apt-conf-branch $(get_fix_release_pkg p8) ; then
-				# error: execution of %post scriptlet from glibc-core-2.23-alt1.eter1
-				docmd epm erase glibc-core-2.17 || fatal "Check an error and run epm release-upgrade again"
+				# Hack for error: execution of %post scriptlet from glibc-core-2.23-alt1.eter1
+				docmd rpm -ev glibc-core-2.17 || fatal "Check an error and run epm release-upgrade again"
 				docmd epm install apt rpm apt-conf-branch $(get_fix_release_pkg p8) || fatal "Check an error and run epm release-upgrade again"
 			fi
 			__alt_repofix
@@ -3424,8 +3458,12 @@ epm_release_upgrade()
 
 		# try to detect current release by repo
 		if [ "$DISTRVERSION" = "Sisyphus" ] || [ -z "$DISTRVERSION" ] ; then
-			DISTRVERSION="$(__detect_alt_release_by_repo)"
-			[ "$DISTRVERSION" != "Sisyphus" ] && info "Detected running $DISTRNAME $DISTRVERSION (according to using repos)"
+			local dv
+			dv="$(__detect_alt_release_by_repo)"
+			if [ -n "$dv" ] && [ "$dv" != "$DISTRVERSION" ] ; then
+				DISTRVERSION="$dv"
+				info "Detected running $DISTRNAME $DISTRVERSION (according to using repos)"
+			fi
 		fi
 
 		__alt_repofix
@@ -3444,7 +3482,7 @@ epm_release_upgrade()
 
 	case $PMTYPE in
 	apt-rpm)
-		docmd epm update
+		#docmd epm update
 		info "Have no idea how to upgrade $DISTRNAME"
 		;;
 	*-dpkg)
@@ -3457,6 +3495,18 @@ epm_release_upgrade()
 		# TODO
 		showcmd rpm -Uvh http://mirror.yandex.ru/fedora/linux/releases/16/Fedora/x86_64/os/Packages/fedora-release-16-1.noarch.rpm
 		docmd epm Upgrade
+		;;
+	dnf-rpm)
+		info "Check https://fedoraproject.org/wiki/DNF_system_upgrade for an additional info"
+		docmd epm install dnf
+		sudocmd dnf clean all
+		assure_exists dnf-plugin-system-upgrade
+		sudocmd dnf system-upgrade
+		local RELEASEVER="$pkg_filenames"
+		[ -n "$RELEASEVER" ] || fatal "Run me with new version"
+		sudocmd dnf system-upgrade download --refresh --releasever=$RELEASEVER
+		sudocmd dnf system-upgrade
+		info "Run epm autoorphans to remove orphaned packages"
 		;;
 	urpm-rpm)
 		sudocmd urpmi.removemedia -av
@@ -4053,6 +4103,9 @@ case $PMTYPE in
 	apk)
 		CMD="apk search"
 		;;
+	tce)
+		CMD="tce-ab"
+		;;
 	conary)
 		CMD="conary repquery"
 		;;
@@ -4599,7 +4652,7 @@ epm_upgrade()
 		CMD="yum update"
 		;;
 	dnf-rpm)
-		CMD="dnf update"
+		CMD="dnf distro-sync"
 		;;
 	snappy)
 		CMD="snappy update"
@@ -4787,7 +4840,9 @@ has()
 rpmvendor()
 {
 	[ "$DISTRIB_ID" = "ALTLinux" ] && echo "alt" && return
+	[ "$DISTRIB_ID" = "AstraLinux" ] && echo "astra" && return
 	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
+	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
 	echo "$DISTRIB_ID" | tr "[A-Z]" "[a-z]"
 }
 
@@ -4810,8 +4865,9 @@ pkgtype()
 		windows) echo "exe" ;;
 		android) echo "apk" ;;
 		alpine) echo "apk" ;;
+		tinycorelinux) echo "tcz" ;;
 		cygwin) echo "tar.xz" ;;
-		debian|ubuntu|mint|runtu|mcst) echo "deb" ;;
+		debian|ubuntu|mint|runtu|mcst|astra) echo "deb" ;;
 		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
 			echo "rpm" ;;
 		fedora|redhat|scientific|centos|rhel)
@@ -4835,11 +4891,13 @@ get_major_version()
 # Default values
 DISTRIB_ID="Generic"
 DISTRIB_RELEASE=""
+DISTRIB_CODENAME=""
 
 # Default with LSB
 if distro lsb-release ; then
 	DISTRIB_ID=`cat $DISTROFILE | get_var DISTRIB_ID`
 	DISTRIB_RELEASE=`cat $DISTROFILE | get_var DISTRIB_RELEASE`
+	DISTRIB_CODENAME=`cat $DISTROFILE | get_var DISTRIB_CODENAME`
 fi
 
 # ALT Linux based
@@ -4895,6 +4953,11 @@ elif distro os-release && which apk 2>/dev/null >/dev/null ; then
 	DISTRIB_ID="$ID"
 	DISTRIB_RELEASE="$VERSION_ID"
 
+elif distro os-release && which tce-ab 2>/dev/null >/dev/null ; then
+	. $ROOTDIR/etc/os-release
+	DISTRIB_ID="TinyCoreLinux"
+	DISTRIB_RELEASE="$VERSION_ID"
+
 elif distro arch-release ; then
 	DISTRIB_ID="ArchLinux"
 	DISTRIB_RELEASE="2010"
@@ -4905,6 +4968,12 @@ elif distro arch-release ; then
 elif distro mcst_version ; then
 	DISTRIB_ID="MCST"
 	DISTRIB_RELEASE=$(cat "$DISTROFILE" | grep "release" | sed -e "s|.*release \([0-9]*\).*|\1|g")
+
+elif distro astra_version ; then
+	#DISTRIB_ID=`cat $DISTROFILE | get_var DISTRIB_ID`
+	DISTRIB_ID="AstraLinux"
+	#DISTRIB_RELEASE=$(cat "$DISTROFILE" | head -n1 | sed -e "s|.* \([a-z]*\).*|\1|g")
+	DISTRIB_RELEASE=$DISTRIB_CODENAME
 
 # for Ubuntu use standard LSB info
 elif [ "$DISTRIB_ID" = "Ubuntu" ] && [ -n "$DISTRIB_RELEASE" ]; then
@@ -5110,7 +5179,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.8.4"
+        echo "EPM package manager version 1.8.6"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -5176,6 +5245,9 @@ case $progname in
         ;;
     epmql)
         epm_cmd=filelist
+        ;;
+    epmrl)
+        epm_cmd=repolist
         ;;
     epmu)
         epm_cmd=update
@@ -5291,7 +5363,7 @@ check_command()
     clean)                    # HELPCMD: clean local package cache
         epm_cmd=clean
         ;;
-    autoremove)               # HELPCMD: auto remove unneeded package(s)
+    autoremove|package-cleanup)   # HELPCMD: auto remove unneeded package(s)
         epm_cmd=autoremove
         ;;
     autoorphans|--orphans)    # HELPCMD: remove all packages not from the repository

@@ -260,8 +260,8 @@ set_sudo()
 	# use sudo if possible
 	if which sudo >/dev/null 2>/dev/null ; then
 		SUDO="sudo --"
-		# check for < 1.7 version which do not support --
-		sudo --help | grep -q "  --" || SUDO="sudo"
+		# check for < 1.7 version which do not support -- (and --help possible too)
+		sudo -h | grep -q "  --" || SUDO="sudo"
 		return
 	fi
 
@@ -418,7 +418,7 @@ case $DISTRNAME in
 	PCLinux)
 		CMD="apt-rpm"
 		;;
-	Ubuntu|Debian|Mint)
+	Ubuntu|Debian|Mint|AstraLinux|Elbrus)
 		CMD="apt-dpkg"
 		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
 		which snappy 2>/dev/null >/dev/null && CMD=snappy
@@ -469,6 +469,9 @@ case $DISTRNAME in
 		;;
 	alpine)
 		CMD="apk"
+		;;
+	TinyCoreLinux)
+		CMD="tce"
 		;;
 	*)
 		fatal "Have no suitable DISTRNAME $DISTRNAME"
@@ -858,7 +861,9 @@ has()
 rpmvendor()
 {
 	[ "$DISTRIB_ID" = "ALTLinux" ] && echo "alt" && return
+	[ "$DISTRIB_ID" = "AstraLinux" ] && echo "astra" && return
 	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
+	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
 	echo "$DISTRIB_ID" | tr "[A-Z]" "[a-z]"
 }
 
@@ -881,8 +886,9 @@ pkgtype()
 		windows) echo "exe" ;;
 		android) echo "apk" ;;
 		alpine) echo "apk" ;;
+		tinycorelinux) echo "tcz" ;;
 		cygwin) echo "tar.xz" ;;
-		debian|ubuntu|mint|runtu|mcst) echo "deb" ;;
+		debian|ubuntu|mint|runtu|mcst|astra) echo "deb" ;;
 		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
 			echo "rpm" ;;
 		fedora|redhat|scientific|centos|rhel)
@@ -906,11 +912,13 @@ get_major_version()
 # Default values
 DISTRIB_ID="Generic"
 DISTRIB_RELEASE=""
+DISTRIB_CODENAME=""
 
 # Default with LSB
 if distro lsb-release ; then
 	DISTRIB_ID=`cat $DISTROFILE | get_var DISTRIB_ID`
 	DISTRIB_RELEASE=`cat $DISTROFILE | get_var DISTRIB_RELEASE`
+	DISTRIB_CODENAME=`cat $DISTROFILE | get_var DISTRIB_CODENAME`
 fi
 
 # ALT Linux based
@@ -966,6 +974,11 @@ elif distro os-release && which apk 2>/dev/null >/dev/null ; then
 	DISTRIB_ID="$ID"
 	DISTRIB_RELEASE="$VERSION_ID"
 
+elif distro os-release && which tce-ab 2>/dev/null >/dev/null ; then
+	. $ROOTDIR/etc/os-release
+	DISTRIB_ID="TinyCoreLinux"
+	DISTRIB_RELEASE="$VERSION_ID"
+
 elif distro arch-release ; then
 	DISTRIB_ID="ArchLinux"
 	DISTRIB_RELEASE="2010"
@@ -976,6 +989,12 @@ elif distro arch-release ; then
 elif distro mcst_version ; then
 	DISTRIB_ID="MCST"
 	DISTRIB_RELEASE=$(cat "$DISTROFILE" | grep "release" | sed -e "s|.*release \([0-9]*\).*|\1|g")
+
+elif distro astra_version ; then
+	#DISTRIB_ID=`cat $DISTROFILE | get_var DISTRIB_ID`
+	DISTRIB_ID="AstraLinux"
+	#DISTRIB_RELEASE=$(cat "$DISTROFILE" | head -n1 | sed -e "s|.* \([a-z]*\).*|\1|g")
+	DISTRIB_RELEASE=$DISTRIB_CODENAME
 
 # for Ubuntu use standard LSB info
 elif [ "$DISTRIB_ID" = "Ubuntu" ] && [ -n "$DISTRIB_RELEASE" ]; then
@@ -1241,7 +1260,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.8.4"
+        echo "Service manager version 1.8.6"
         echo "Running on $($DISTRVENDOR)"
         echo "Copyright (c) Etersoft 2012, 2013, 2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
