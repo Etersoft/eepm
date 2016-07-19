@@ -81,9 +81,15 @@ case $PMTYPE in
 	#pkgng)
 	#	sudocmd pkg autoremove
 	#	;;
-	#zypper-rpm)
-	#	sudocmd zypper clean
-	#	;;
+	zypper-rpm)
+		# https://www.linux.org.ru/forum/desktop/11931830
+		assure_exists zypper zypper 1.9.2
+		# For zypper < 1.9.2: zypper se -si | grep 'System Packages'
+		sudocmd zypper packages --orphaned
+		# FIXME: x86_64/i586 are duplicated
+		local PKGLIST=$(zypper packages --orphaned | tail -n +5 | cut -d \| -f 3 | sort -u)
+		sudocmd zypper remove --clean-deps $PKGLIST
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;

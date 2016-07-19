@@ -93,7 +93,7 @@ epm_remove_names()
 			sudocmd snappy uninstall $@
 			return ;;
 		zypper-rpm)
-			sudocmd zypper remove $@
+			sudocmd zypper remove --clean-deps $@
 			return ;;
 		mpkg)
 			sudocmd mpkg remove $@
@@ -160,7 +160,7 @@ epm_remove_nonint()
 			sudocmd yum -y remove $@
 			return ;;
 		zypper-rpm)
-			sudocmd zypper --non-interactive remove $@
+			sudocmd zypper --non-interactive remove --clean-deps $@
 			return ;;
 		slackpkg)
 			sudocmd /usr/sbin/slackpkg -batch=on -default_answer=yes remove $@
