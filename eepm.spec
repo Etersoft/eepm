@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.8.5
+Version: 1.8.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,14 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Tue Jul 19 2016 Vitaly Lipatov <lav@altlinux.ru> 1.8.6-alt1
+- epm-sh-functions: fix sudo -- detection
+- distr_info: add AstraLinux support
+- epm-sh: add AstraLinux and Elbrus support
+- add epmrl alias for epm rl
+- epm-autoremove: add nvidia-clean-driver
+- epm-autoremove: use ALTLinux case instead apt-rpm
+
 * Sat Jun 25 2016 Vitaly Lipatov <lav@altlinux.ru> 1.8.5-alt1
 - add Tiny Core Linux support (tcl, tce)
 - improve dnf support: add release-upgrade
