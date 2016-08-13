@@ -98,8 +98,22 @@ is_active_systemd && CMD="systemd"
 
 SERVICETYPE=$CMD
 
+ANYSERVICE=$(which anyservice 2>/dev/null >/dev/null)
+ANYSERVDIR="/etc/systemd-lite"
+ANYSYSDDIR="/lib/systemd/system"
+
 }
 
+is_anyservice()
+{
+	local SERVICE="$1"
+	# not, if we have no anyservice at all
+	[ -n "$ANYSERVICE" ] || return 1
+	# not, if there is regular service with the name
+	[ -d "$INITDIR/$SERVICE" ] && return 1
+	# yes, if the service is anyservice driven
+	[ -r "$ANYSERVDIR/$SERVICE.service" ]
+}
 
 
 phelp()

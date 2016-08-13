@@ -24,6 +24,9 @@ serv_common()
 	shift
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)
+			if is_anyservice $SERVICE ; then
+				fatal "Have no idea how to call anyservice service with args"
+			fi
 			sudocmd service $SERVICE "$@"
 			;;
 		service-initd|service-update)

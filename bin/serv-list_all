@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012  Etersoft
-# Copyright (C) 2012  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012,2016  Etersoft
+# Copyright (C) 2012,2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -24,6 +24,11 @@ serv_list_all()
 		service-chkconfig|service-upstart)
 			# service --status-all for Ubuntu/Fedora
 			sudocmd chkconfig --list | cut -f1
+
+			if [ -n "$ANYSERVICE" ] ; then
+				sudocmd anyservice list
+				return
+			fi
 			;;
 		service-initd|service-update)
 			sudocmd ls $INITDIR/ | grep -v README

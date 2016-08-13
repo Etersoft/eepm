@@ -28,7 +28,7 @@ serv_try_restart()
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)
 			is_service_running $SERVICE || return 0
-			sudocmd service $SERVICE restart "$@"
+			docmd serv $SERVICE restart "$@"
 			;;
 		service-initd|service-update)
 			is_service_running $SERVICE || return 0

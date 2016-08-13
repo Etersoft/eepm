@@ -20,4 +20,5 @@
 serv_print()
 {
 	echo "Detected init system: $SERVICETYPE"
+	[ -n "$ANYSERVICE" ] && echo "anyservice is detected too"
 }

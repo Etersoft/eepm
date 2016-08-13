@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012  Etersoft
-# Copyright (C) 2012  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2016  Etersoft
+# Copyright (C) 2012, 2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -38,6 +38,11 @@ serv_list()
 			for i in $(serv_list_all) ; do
 				is_service_running $i >/dev/null && echo $i
 			done
+			# TODO: только запущенные
+			if [ -n "$ANYSERVICE" ] ; then
+				sudocmd anyservice list
+				return
+			fi
 			;;
 	esac
 }
