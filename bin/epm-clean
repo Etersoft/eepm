@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012,2014  Etersoft
-# Copyright (C) 2012,2014  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012,2014,2016  Etersoft
+# Copyright (C) 2012,2014,2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -43,15 +43,15 @@ epm_clean()
 case $PMTYPE in
 	apt-rpm)
 		sudocmd apt-get clean
-		__remove_alt_apt_cache_file
+		[ -n "$force" ] && __remove_alt_apt_cache_file
 		;;
 	apt-dpkg)
 		sudocmd apt-get clean
-		__remove_deb_apt_cache_file
+		[ -n "$force" ] && __remove_deb_apt_cache_file
 		;;
 	aptitude-dpkg)
 		sudocmd aptitude clean
-		__remove_deb_apt_cache_file
+		[ -n "$force" ] && __remove_deb_apt_cache_file
 		;;
 	yum-rpm)
 		sudocmd yum clean all
