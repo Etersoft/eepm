@@ -22,13 +22,13 @@ __alt_local_content_search()
     load_helper epm-sh-altlinux
 
     local CI="$(get_local_alt_contents_index)"
-
+    [ -n "$CI" ] || fatal "Have no local contents index"
     #local OUTCMD="less"
     #[ -n "$USETTY" ] || OUTCMD="cat"
     OUTCMD="cat"
 
     {
-        [ -n "$USETTY" ] && echo "Search in $CI for $1..."
+        [ -n "$USETTY" ] && info "Search in $CI for $1..."
         # note! tabulation below!
         grep -h -- ".*$1.*	" $CI | sed -e "s|\(.*\)\t\(.*\)|\2: \1|g"
     } | $OUTCMD

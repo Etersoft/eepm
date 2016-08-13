@@ -194,7 +194,7 @@ epm_ni_install_names()
 			sudocmd apt-get -y $noremove --force-yes -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
 			return ;;
 		aptitude-dpkg)
-			sudocmd aptitde -y install $@
+			sudocmd aptitude -y install $@
 			return ;;
 		yum-rpm)
 			sudocmd yum -y $YUMOPTIONS install $@
