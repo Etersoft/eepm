@@ -64,13 +64,12 @@ epm_autoremove()
 case $DISTRNAME in
 	ALTLinux)
 		__epm_autoremove_altrpm
-
-		assure_exists remove-old-kernels update-kernel 0.9.9
-		sudocmd remove-old-kernels
+		docmd epm remove-old-kernels
 		
 		if which nvidia-clean-driver 2>/dev/null ; then
 			sudocmd nvidia-clean-driver
 		fi
+
 		return
 		;;
 	*)

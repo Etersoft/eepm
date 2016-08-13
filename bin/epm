@@ -239,6 +239,8 @@ check_command()
         ;;
     kernel-update|kernel-upgrade|update-kernel|upgrade-kernel)      # HELPCMD: update system kernel to the last repo version
         epm_cmd=kernel_update
+    remove-old-kernels|remove-old-kernel)      # HELPCMD: remove old system kernels (exclude current or last two kernels)
+        epm_cmd=remove_old_kernels
         ;;
 
 # Other commands
