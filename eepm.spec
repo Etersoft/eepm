@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.8.6
+Version: 1.8.7
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,13 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Sun Aug 14 2016 Vitaly Lipatov <lav@altlinux.ru> 1.8.7-alt1
+- realize autoorphans/autoremove for zypper >= 1.9.2 in SUSE
+- introduce epm remove-old-kernels command
+- epm clean: clean local repo cache only with --force
+- serv: add anyservice support
+- small fixes
+
 * Tue Jul 19 2016 Vitaly Lipatov <lav@altlinux.ru> 1.8.6-alt1
 - epm-sh-functions: fix sudo -- detection
 - distr_info: add AstraLinux support
