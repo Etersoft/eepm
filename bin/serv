@@ -98,7 +98,7 @@ is_active_systemd && CMD="systemd"
 
 SERVICETYPE=$CMD
 
-ANYSERVICE=$(which anyservice 2>/dev/null >/dev/null)
+ANYSERVICE=$(which anyservice 2>/dev/null)
 ANYSERVDIR="/etc/systemd-lite"
 ANYSYSDDIR="/lib/systemd/system"
 

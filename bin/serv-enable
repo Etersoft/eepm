@@ -21,9 +21,10 @@ load_helper serv-start
 load_helper serv-status
 
 # Enable service by default
-serv_enable()
+__serv_enable()
 {
-	is_service_running $1 || serv_start $1 || return
+	local SERVICE="$1"
+
 	is_service_autostart $1 && echo "Service $1 already enabled for startup" && return
 
 	case $SERVICETYPE in
@@ -51,4 +52,11 @@ serv_enable()
 			;;
 	esac
 
+}
+
+serv_enable()
+{
+	__serv_enable "$1" || return
+	# start if need
+	is_service_running $1 || serv_start $1 || return
 }

@@ -20,9 +20,11 @@
 # FIXME: sudo ask password, but we do not print command before
 is_service_running()
 {
+	local SERVICE="$1"
+
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)
-			if is_anyservice $SERVICE ; then
+			if is_anyservice $1 ; then
 				$SUDO anyservice $1 status >/dev/null
 				return
 			fi
@@ -43,9 +45,11 @@ is_service_running()
 # FIXME: sudo ask password, but we do not print command before
 is_service_autostart()
 {
+	local SERVICE="$1"
+
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)
-			if is_anyservice $SERVICE ; then
+			if is_anyservice $1 ; then
 				# if is registered, assume it is autostarted
 				return 0
 			fi

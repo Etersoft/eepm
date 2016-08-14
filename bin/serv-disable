@@ -23,6 +23,8 @@ load_helper serv-status
 # Enable service by default
 serv_disable()
 {
+	local SERVICE="$1"
+
 	is_service_running $1 && { serv_stop $1 || return ; }
 	is_service_autostart $1 || { echo "Service $1 already disabled for startup" && return ; }
 
