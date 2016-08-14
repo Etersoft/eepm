@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.8.7
+Version: 1.8.8
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,11 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Mon Aug 15 2016 Vitaly Lipatov <lav@altlinux.ru> 1.8.8-alt1
+- epm-install: skip low-level when install by path
+- anyservice support fixes
+- serv: some anyssh fixes
+
 * Sun Aug 14 2016 Vitaly Lipatov <lav@altlinux.ru> 1.8.7-alt1
 - realize autoorphans/autoremove for zypper >= 1.9.2 in SUSE
 - introduce epm remove-old-kernels command
