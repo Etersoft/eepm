@@ -18,6 +18,7 @@
 #
 
 load_helper epm-query
+load_helper epm-assure
 load_helper epm-check_updated_repo
 
 # TODO: use when run install with epm --skip-installed install
@@ -327,13 +328,16 @@ epm_install_files()
         apt-rpm)
             __epm_check_if_try_install_deb $@ && return
 
-            sudocmd rpm -Uvh $force $nodeps $@ && return
-            local RES=$?
+            # do not use low-level for install by file path
+            if ! is_dirpath "$@" || [ "$(get_package_type "$@")" = "rpm" ] ; then
+                sudocmd rpm -Uvh $force $nodeps $@ && return
+                local RES=$?
 
-            __epm_check_if_rpm_already_installed $@ && return
+                __epm_check_if_rpm_already_installed $@ && return
 
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return $RES
+            fi
 
             # use install_names
             ;;
