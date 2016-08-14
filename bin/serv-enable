@@ -29,8 +29,7 @@ __serv_enable()
 
 	case $SERVICETYPE in
 		service-chkconfig)
-			# can't use is_anyservice here
-			if [ ! -d "$INITDIR/$SERVICE" ] && [ -n "$ANYSERVICE" ] && [ -r "$ANYSYSDDIR/$SERVICE.service" ] ; then
+			if is_anyservice $SERVICE ; then
 				sudocmd anyservice $SERVICE on
 				return
 			fi

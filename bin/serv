@@ -104,6 +104,7 @@ ANYSYSDDIR="/lib/systemd/system"
 
 }
 
+# TODO: done it on anyservice part
 is_anyservice()
 {
 	local SERVICE="$1"
@@ -111,8 +112,11 @@ is_anyservice()
 	[ -n "$ANYSERVICE" ] || return 1
 	# not, if there is regular service with the name
 	[ -d "$INITDIR/$SERVICE" ] && return 1
-	# yes, if the service is anyservice driven
-	[ -r "$ANYSERVDIR/$SERVICE.service" ]
+	# yes, the service is anyservice driven
+	[ -r "$ANYSERVDIR/$SERVICE.service" ] && return 0
+	# yes, the service can be anyservice driven
+	[ -r "$ANYSYSDDIR/$SERVICE.service" ] && return 0
+	return 1
 }
 
 
