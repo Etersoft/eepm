@@ -49,9 +49,8 @@ is_service_autostart()
 
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)
-			if is_anyservice $1; then
-				# HACK: if is registered, assume it is autostarted
-				[ -r "$ANYSERVDIR/$SERVICE.service" ]
+			if is_anyservice $SERVICE; then
+				$ANYSERVICE $SERVICE isautostarted
 				return
 			fi
 

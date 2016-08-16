@@ -40,7 +40,7 @@ serv_list()
 			done
 			# TODO: только запущенные
 			if [ -n "$ANYSERVICE" ] ; then
-				sudocmd anyservice list
+				sudocmd $ANYSERVICE list
 				return
 			fi
 			;;

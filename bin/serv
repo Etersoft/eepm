@@ -99,24 +99,15 @@ is_active_systemd && CMD="systemd"
 SERVICETYPE=$CMD
 
 ANYSERVICE=$(which anyservice 2>/dev/null)
-ANYSERVDIR="/etc/systemd-lite"
-ANYSYSDDIR="/lib/systemd/system"
 
 }
 
 # TODO: done it on anyservice part
 is_anyservice()
 {
-	local SERVICE="$1"
-	# not, if we have no anyservice at all
-	[ -n "$ANYSERVICE" ] || return 1
-	# not, if there is regular service with the name
-	[ -d "$INITDIR/$SERVICE" ] && return 1
-	# yes, the service is anyservice driven
-	[ -r "$ANYSERVDIR/$SERVICE.service" ] && return 0
-	# yes, the service can be anyservice driven
-	[ -r "$ANYSYSDDIR/$SERVICE.service" ] && return 0
-	return 1
+	[ -n "$ANYSERVICE" ] || return
+	# check if anyservice is exists and checkd returns true
+	$ANYSERVICE "$1" checkd 2>/dev/null
 }
 
 
