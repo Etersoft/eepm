@@ -59,6 +59,10 @@ case $PMTYPE in
 		__epm_info_rpm_low && return
 		docmd yum info $pkg_names
 		;;
+	urpmi-rpm)
+		__epm_info_rpm_low && return
+		docmd urpmq -i $pkg_names
+		;;
 	dnf-rpm)
 		__epm_info_rpm_low && return
 		docmd dnf info $pkg_names
