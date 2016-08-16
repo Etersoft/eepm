@@ -36,7 +36,7 @@ __epm_autoremove_altrpm()
 		| grep -E -v -- "-(devel|debuginfo)$" \
 		| grep -E -v -- "-(util|tool|plugin|daemon)" \
 		| sed -e "s/\.32bit$//g" \
-		| grep -E -v -- "^(libsystemd|libreoffice|libnss|eepm)" )
+		| grep -E -v -- "^(libsystemd|libreoffice|libnss|libvirt-client|libvirt-daemon|eepm)" )
 	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
 
 	info "Removing unused python/perl modules..."
