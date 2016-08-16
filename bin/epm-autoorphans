@@ -60,7 +60,7 @@ case $PMTYPE in
 		docmd epm remove $PKGLIST
 		;;
 	urpm-rpm)
-		showcmd urpmq --auto-orphans
+		showcmd urpme --report-orphans
 		sudocmd urpme --auto-orphans
 		;;
 	#emerge)

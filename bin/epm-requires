@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012-2013  Etersoft
-# Copyright (C) 2012-2013  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2013, 2016  Etersoft
+# Copyright (C) 2012-2013, 2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -63,9 +63,12 @@ case $PMTYPE in
 		fi
 
 		;;
-	urpm-rpm|zypper-rpm)
-		# FIXME: use hi level commands
-		CMD="rpm -q --requires"
+	#zypper-rpm)
+	#	# FIXME: use hi level commands
+	#	CMD="rpm -q --requires"
+	#	;;
+	urpm-rpm)
+		CMD="urpmq --requires"
 		;;
 	yum-rpm)
 		if is_installed $pkg_names ; then

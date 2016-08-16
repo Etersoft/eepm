@@ -51,7 +51,7 @@ epm_upgrade()
 		;;
 	urpm-rpm)
 		# or --auto-select --replace-files
-		CMD="urpmi --auto-update"
+		CMD="urpmi --update --auto-select"
 		;;
 	zypper-rpm)
 		CMD="zypper dist-upgrade"
