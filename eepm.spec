@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.8.8
+Version: 1.9.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,11 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Wed Aug 17 2016 Vitaly Lipatov <lav@altlinux.ru> 1.9.0-alt1
+- improve urpmi support
+- serv: check anyservice support against anyservice version 0.3
+- autoremove: ignore libvirt
+
 * Mon Aug 15 2016 Vitaly Lipatov <lav@altlinux.ru> 1.8.8-alt1
 - epm-install: skip low-level when install by path
 - anyservice support fixes
