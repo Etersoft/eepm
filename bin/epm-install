@@ -82,15 +82,6 @@ __separate_sudocmd()
     return 0
 }
 
-download_pkg_urls()
-{
-	local url
-	[ -z "$1" ] && return
-	for url in $* ; do
-	    eget $url || warning "Skipped"
-	done
-}
-
 # copied from etersoft-build-utils/share/eterbuild/functions/rpmpkg
 epm_install_names()
 {
@@ -490,6 +481,57 @@ epm_print_install_command()
     esac
 }
 
+download_pkg_urls()
+{
+	local url
+	[ -z "$pkg_urls" ] && return
+	for url in $pkg_urls ; do
+		# TODO: use some individual tmp dir
+		local new_file=/tmp/$(basename "$url")
+		if eget -O $new_file $url && [ -s "$new_file" ] ; then
+			pkg_files="$pkg_files $new_file"
+			to_remove_pkg_files="$to_remove_pkg_files $new_file"
+		else
+			warning "Failed to download $url, ignoring"
+		fi
+	done
+}
+
+
+
+__handle_pkg_urls()
+{
+	[ -n "$pkg_urls" ] || return
+
+	# TODO: do it correcly
+	to_remove_pkg_files=
+	case $PMTYPE in
+		apt-rpm)
+			# ALT Linux really?
+			pkg_names="$pkg_names $pkg_urls"
+			;;
+		#deepsolver-rpm)
+		#	pkg_names="$pkg_names $pkg_urls"
+		#	;;
+		#urpm-rpm)
+		#	pkg_names="$pkg_names $pkg_urls"
+		#	;;
+		pacman)
+			pkg_names="$pkg_names $pkg_urls"
+			;;
+		yum-rpm|dnf-rpm)
+			pkg_names="$pkg_names $pkg_urls"
+			;;
+		#zypper-rpm)
+		#	pkg_names="$pkg_names $pkg_urls"
+		#	;;
+		*)
+			# use workaround with eget: download and put in pkg_files
+			download_pkg_urls
+			;;
+	esac
+	pkg_urls=
+}
 
 epm_install()
 {
@@ -498,19 +540,13 @@ epm_install()
         return
     fi
 
-    # Download urls via eget pkg_urls and use eget
-    # TODO: use optimization (rpm can download packages by url, yum too?)
-    #[ -n "$pkg_urls" ] && warning "URL using does not realize yet"
-    #download_pkg_urls "$pkg_urls"
-    # temp. hack
-    pkg_files="$pkg_files $pkg_urls"
-    # TODO: add downloaded files to $pkg_files
+    # in any case it will put pkg_urls into pkg_files or pkg_names
+    __handle_pkg_urls
 
-    [ -z "$pkg_files$pkg_names$pkg_urls" ] && info "Skip empty install list" && return 22
+    [ -z "$pkg_files$pkg_names" ] && info "Skip empty install list" && return 22
 
     local names="$(echo $pkg_names | filter_out_installed_packages)"
     local files="$(echo $pkg_files | filter_out_installed_packages)"
-    local urls="$(echo $pkg_urls | filter_out_installed_packages)"
 
     [ -z "$files$names" ] && info "Skip empty install list" && return 22
 
@@ -521,4 +557,9 @@ epm_install()
 
     epm_install_names $names || return
     epm_install_files $files
+
+    # TODO: reinvent
+    local RETVAL=$?
+    [ -n "$to_remove_pkg_files" ] && rm -fv $to_remove_pkg_files
+    return $RETVAL
 }
