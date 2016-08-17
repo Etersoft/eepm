@@ -3,8 +3,9 @@
 # Example use:
 # eget ftp://ftp.altlinux.ru/pub/security/ssl/*
 #
-# Copyright (C) 2014-2014  Etersoft
-# Copyright (C) 2014-2014  Daniil Mikhailov <danil@etersoft.ru>
+# Copyright (C) 2014-2014, 2016  Etersoft
+# Copyright (C) 2014 Daniil Mikhailov <danil@etersoft.ru>
+# Copyright (C) 2016 Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -28,12 +29,21 @@ if [ "$1" = "-q" ] ; then
 fi
 
 # TODO:
+# download to this file
+WGET_OPTION_TARGET=
+if [ "$1" = "-O" ] ; then
+    TARGETFILE="$2"
+    WGET_OPTION_TARGET="-O $2"
+    shift 2
+fi
+
+# TODO:
 # -P support
 
-# If ftp protocol or have no asterisk, jus download
+# If ftp protocol or have no asterisk, just download
 # TODO: use has()
 if echo "$1" | grep -q "\(^ftp://\|[^*]$\)" ; then
-    $WGET "$1"
+    $WGET $WGET_OPTION_TARGET "$1"
     exit
 fi
 
