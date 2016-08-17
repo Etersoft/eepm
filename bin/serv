@@ -163,7 +163,9 @@ check_command()
     restart)                 # HELPCMD: restart service
         serv_cmd=restart
         ;;
-    #reload)                  # HELPCMD: reload service
+    reload)                  # HELPCMD: reload service
+        serv_cmd=reload
+        ;;
     start)                    # HELPCMD: start service
         serv_cmd=start
         ;;
