@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012,2014  Etersoft
-# Copyright (C) 2012,2014  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2014, 2016  Etersoft
+# Copyright (C) 2012, 2014, 2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -32,19 +32,21 @@ epm_upgrade()
 
 	case $PMTYPE in
 	apt-rpm|apt-dpkg)
-		# non_interactive
+		local APTOPTIONS="$(subst_option non_interactive -y)"
 		# Функцию добавления параметра при условии
-		CMD="apt-get dist-upgrade $noremove"
+		CMD="apt-get $APTOPTIONS dist-upgrade $noremove"
 		;;
 	aptitude-dpkg)
 		CMD="aptitude dist-upgrade"
 		;;
 	yum-rpm)
+		local OPTIONS="$(subst_option non_interactive -y)"
 		# can do update repobase automagically
-		CMD="yum update"
+		CMD="yum $OPTIONS update"
 		;;
 	dnf-rpm)
-		CMD="dnf distro-sync"
+		local OPTIONS="$(subst_option non_interactive -y)"
+		CMD="dnf $OPTIONS distro-sync"
 		;;
 	snappy)
 		CMD="snappy update"
