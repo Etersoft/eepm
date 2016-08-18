@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.9.0
+Version: 1.9.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,14 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Thu Aug 18 2016 Vitaly Lipatov <lav@altlinux.ru> 1.9.1-alt1
+- upgrade: add --auto support for apt and yum/dnf
+- serv: add reload command support
+- improve eget to support -O file
+- epm-install: add real support install by url
+- epm_install: rewrite, use direct install via epm_install
+- epm_install: rewrite with pkg_urls support using
+
 * Wed Aug 17 2016 Vitaly Lipatov <lav@altlinux.ru> 1.9.0-alt1
 - improve urpmi support
 - serv: check anyservice support against anyservice version 0.3
