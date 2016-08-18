@@ -26,11 +26,11 @@ epm_update()
 
 case $PMTYPE in
 	apt-rpm)
-		sudocmd apt-get update || exit
+		sudocmd apt-get update || return
 		#sudocmd apt-get -f install || exit
 		;;
 	apt-dpkg)
-		sudocmd apt-get update || exit
+		sudocmd apt-get update || return
 		#sudocmd apt-get -f install || exit
 		#sudocmd apt-get autoremove
 		;;
@@ -38,7 +38,7 @@ case $PMTYPE in
 	#	sudocmd snappy
 	#	;;
 	aptitude-dpkg)
-		sudocmd aptitude update || exit
+		sudocmd aptitude update || return
 		;;
 	yum-rpm)
 		info "update command is stubbed for yum"

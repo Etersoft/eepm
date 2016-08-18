@@ -28,11 +28,11 @@ case $PMTYPE in
 	apt-dpkg)
 		#sudocmd apt-get update || exit
 		#sudocmd apt-get check || exit
-		sudocmd apt-get -f install || exit
+		sudocmd apt-get -f install || return
 		sudocmd apt-get autoremove
 		;;
 	aptitude-dpkg)
-		sudocmd aptitude -f install || exit
+		sudocmd aptitude -f install || return
 		#sudocmd apt-get autoremove
 		;;
 	yum-rpm)
