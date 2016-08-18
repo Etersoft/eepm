@@ -2,8 +2,8 @@
 #
 # Run for create one-file-scripts
 #
-# Copyright (C) 2012  Etersoft
-# Copyright (C) 2012  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2016  Etersoft
+# Copyright (C) 2012, 2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -20,14 +20,15 @@
 #
 
 
-incorporate_distr_info()
+incorporate_subfile()
 {
 cat <<EOF >>$OUTPUT
-internal_distr_info()
+
+internal_$1()
 {
 EOF
 
-cat bin/distr_info >>$OUTPUT
+cat bin/$1 | grep -v "^#!/bin/sh" | sed -e "s| exit$| return|g" >>$OUTPUT
 
 cat <<EOF >>$OUTPUT
 }
@@ -41,7 +42,9 @@ get_version()
 
 filter_out()
 {
-	grep -v "^[ 	]*load_helper " | sed -e 's|DISTRVENDOR=$PROGDIR/distr_info|DISTRVENDOR=internal_distr_info|g' | \
+	grep -v "^[ 	]*load_helper " | \
+		sed -e 's|$SHAREDIR/tools_eget|internal_tools_eget|g' | \
+		sed -e 's|DISTRVENDOR=$PROGDIR/distr_info|DISTRVENDOR=internal_distr_info|g' | \
 		sed -e "s|@VERSION@|$(get_version)|g"
 
 }
@@ -59,7 +62,8 @@ for i in bin/epm-sh-functions $(ls -1 bin/$PACKCOMMAND-* | grep -v epm-sh-functi
 	cat $i | grep -v "^#"
 done | filter_out >>$OUTPUT
 
-incorporate_distr_info
+incorporate_subfile distr_info
+incorporate_subfile tools_eget
 
 awk 'BEGIN{desk=0}{if(desk>0) {print} ; if(/^load_helper epm-sh-functions/){desk++}}' <bin/$PACKCOMMAND | filter_out >>$OUTPUT
 chmod 0755 $OUTPUT
