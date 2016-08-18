@@ -340,7 +340,8 @@ assure_exists()
 
 eget()
 {
-	$SHAREDIR/tools-eget "$@"
+	assure_exists wget
+	internal_tools_eget "$@"
 }
 
 get_package_type()
@@ -501,6 +502,9 @@ serv_common()
 	shift
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)
+			if is_anyservice $SERVICE ; then
+				fatal "Have no idea how to call anyservice service with args"
+			fi
 			sudocmd service $SERVICE "$@"
 			;;
 		service-initd|service-update)
@@ -525,11 +529,17 @@ serv_common()
 
 serv_disable()
 {
+	local SERVICE="$1"
+
 	is_service_running $1 && { serv_stop $1 || return ; }
 	is_service_autostart $1 || { echo "Service $1 already disabled for startup" && return ; }
 
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)
+			if is_anyservice $SERVICE ; then
+				sudocmd anyservice $SERVICE off
+				return
+			fi
 			sudocmd chkconfig $1 off
 			;;
 		service-initd|service-update)
@@ -547,13 +557,18 @@ serv_disable()
 # File bin/serv-enable:
 
 
-serv_enable()
+__serv_enable()
 {
-	is_service_running $1 || serv_start $1 || return
+	local SERVICE="$1"
+
 	is_service_autostart $1 && echo "Service $1 already enabled for startup" && return
 
 	case $SERVICETYPE in
 		service-chkconfig)
+			if is_anyservice $SERVICE ; then
+				sudocmd anyservice $SERVICE on
+				return
+			fi
 			sudocmd chkconfig --add $1 || return
 			sudocmd chkconfig $1 on
 			;;
@@ -574,6 +589,13 @@ serv_enable()
 
 }
 
+serv_enable()
+{
+	__serv_enable "$1" || return
+	# start if need
+	is_service_running $1 || serv_start $1 || return
+}
+
 # File bin/serv-list:
 
 serv_list()
@@ -592,6 +614,11 @@ serv_list()
 			for i in $(serv_list_all) ; do
 				is_service_running $i >/dev/null && echo $i
 			done
+			# TODO: только запущенные
+			if [ -n "$ANYSERVICE" ] ; then
+				sudocmd $ANYSERVICE list
+				return
+			fi
 			;;
 	esac
 }
@@ -604,6 +631,11 @@ serv_list_all()
 		service-chkconfig|service-upstart)
 			# service --status-all for Ubuntu/Fedora
 			sudocmd chkconfig --list | cut -f1
+
+			if [ -n "$ANYSERVICE" ] ; then
+				sudocmd anyservice list
+				return
+			fi
 			;;
 		service-initd|service-update)
 			sudocmd ls $INITDIR/ | grep -v README
@@ -636,6 +668,35 @@ serv_list_startup()
 serv_print()
 {
 	echo "Detected init system: $SERVICETYPE"
+	[ -n "$ANYSERVICE" ] && echo "anyservice is detected too"
+}
+
+# File bin/serv-reload:
+
+
+serv_reload()
+{
+	local SERVICE="$1"
+	shift
+
+	case $SERVICETYPE in
+		service-chkconfig|service-upstart)
+			if is_anyservice $SERVICE ; then
+				sudocmd anyservice $SERVICE reload
+				return
+			fi
+			sudocmd service $SERVICE reload "$@"
+			;;
+		service-initd|service-update)
+			sudocmd $INITDIR/$SERVICE reload "$@"
+			;;
+		systemd)
+			sudocmd systemctl reload $SERVICE "$@"
+			;;
+		*)
+			fatal "Have no suitable command for $SERVICETYPE"
+			;;
+	esac
 }
 
 # File bin/serv-restart:
@@ -648,6 +709,10 @@ serv_restart()
 
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)
+			if is_anyservice $SERVICE ; then
+				sudocmd anyservice $SERVICE restart
+				return
+			fi
 			sudocmd service $SERVICE restart "$@"
 			;;
 		service-initd|service-update)
@@ -671,6 +736,10 @@ serv_start()
 
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)
+			if is_anyservice $SERVICE ; then
+				sudocmd anyservice $SERVICE start
+				return
+			fi
 			sudocmd service $SERVICE start "$@"
 			;;
 		service-initd|service-update)
@@ -689,8 +758,14 @@ serv_start()
 
 is_service_running()
 {
+	local SERVICE="$1"
+
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)
+			if is_anyservice $1 ; then
+				$SUDO anyservice $1 status >/dev/null
+				return
+			fi
 			$SUDO service $1 status >/dev/null
 			;;
 		service-initd|service-update)
@@ -707,9 +782,16 @@ is_service_running()
 
 is_service_autostart()
 {
+	local SERVICE="$1"
+
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)
-                        # FIXME: check for current runlevel
+			if is_anyservice $SERVICE; then
+				$ANYSERVICE $SERVICE isautostarted
+				return
+			fi
+
+			# FIXME: check for current runlevel
 			LANG=C $SUDO chkconfig $1 --list | grep -q "[35]:on"
 			;;
 		service-initd|service-update)
@@ -733,6 +815,10 @@ serv_status()
 
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)
+			if is_anyservice $SERVICE ; then
+				sudocmd anyservice $SERVICE status
+				return
+			fi
 			sudocmd service $SERVICE status "$@"
 			;;
 		service-update)
@@ -756,6 +842,10 @@ serv_stop()
 
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)
+			if is_anyservice $SERVICE ; then
+				sudocmd anyservice $SERVICE stop
+				return
+			fi
 			sudocmd service $SERVICE stop "$@"
 			;;
 		service-initd|service-update)
@@ -781,7 +871,7 @@ serv_try_restart()
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)
 			is_service_running $SERVICE || return 0
-			sudocmd service $SERVICE restart "$@"
+			docmd serv $SERVICE restart "$@"
 			;;
 		service-initd|service-update)
 			is_service_running $SERVICE || return 0
@@ -828,9 +918,9 @@ serv_usage()
 _print_additional_usage
 
 }
+
 internal_distr_info()
 {
-#!/bin/sh
 # Author: Vitaly Lipatov <lav@etersoft.ru>
 # 2007, 2009, 2010, 2012 (c) Etersoft
 # 2007 Public domain
@@ -1176,6 +1266,99 @@ esac
 
 }
 
+internal_tools_eget()
+{
+# eget - simply shell on wget for loading directories over http
+# Example use:
+# eget ftp://ftp.altlinux.ru/pub/security/ssl/*
+#
+# Copyright (C) 2014-2014, 2016  Etersoft
+# Copyright (C) 2014 Daniil Mikhailov <danil@etersoft.ru>
+# Copyright (C) 2016 Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+WGET="wget"
+
+if [ "$1" = "-q" ] ; then
+    WGET="wget -q"
+    shift
+fi
+
+# TODO:
+# download to this file
+WGET_OPTION_TARGET=
+if [ "$1" = "-O" ] ; then
+    TARGETFILE="$2"
+    WGET_OPTION_TARGET="-O $2"
+    shift 2
+fi
+
+# TODO:
+# -P support
+
+# If ftp protocol or have no asterisk, just download
+# TODO: use has()
+if echo "$1" | grep -q "\(^ftp://\|[^*]$\)" ; then
+    $WGET $WGET_OPTION_TARGET "$1"
+    return
+fi
+
+echo "Fall to http workaround"
+
+URL=$(echo "$1" | grep "/$" || dirname "$1")
+# mask allowed only in last part of path
+MASK=$(basename "$1")
+
+get_index()
+{
+    MYTMPDIR="$(mktemp -d)"
+    INDEX=$MYTMPDIR/index
+    $WGET $URL -O $INDEX
+}
+
+print_files()
+{
+    cat $INDEX | grep -o -E 'href="([^\*/"#]+)"' | cut -d'"' -f2
+}
+
+create_fake_files()
+{
+    DIRALLFILES="$MYTMPDIR/files/"
+    mkdir -p "$DIRALLFILES"
+
+    print_files | while read line ; do
+        touch $DIRALLFILES/$(basename "$line")
+    done
+}
+
+download_files()
+{
+    ERROR=0
+    for line in $DIRALLFILES/$MASK ; do
+        $WGET $URL/$(basename "$line") || ERROR=1
+    done
+    return $ERROR
+}
+
+get_index || return
+create_fake_files
+download_files || echo "There was some download errors" >&2
+rm -rf "$MYTMPDIR"
+}
+
 INITDIR=/etc/init.d
 
 PATH=$PATH:/sbin:/usr/sbin
@@ -1242,8 +1425,17 @@ is_active_systemd && CMD="systemd"
 
 SERVICETYPE=$CMD
 
+ANYSERVICE=$(which anyservice 2>/dev/null)
+
 }
 
+# TODO: done it on anyservice part
+is_anyservice()
+{
+	[ -n "$ANYSERVICE" ] || return
+	# check if anyservice is exists and checkd returns true
+	$ANYSERVICE "$1" checkd 2>/dev/null
+}
 
 
 phelp()
@@ -1260,7 +1452,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.8.6"
+        echo "Service manager version 1.9.1"
         echo "Running on $($DISTRVENDOR)"
         echo "Copyright (c) Etersoft 2012, 2013, 2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -1298,7 +1490,9 @@ check_command()
     restart)                 # HELPCMD: restart service
         serv_cmd=restart
         ;;
-    #reload)                  # HELPCMD: reload service
+    reload)                  # HELPCMD: reload service
+        serv_cmd=reload
+        ;;
     start)                    # HELPCMD: start service
         serv_cmd=start
         ;;

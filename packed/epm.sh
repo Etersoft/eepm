@@ -345,7 +345,8 @@ assure_exists()
 
 eget()
 {
-	$SHAREDIR/tools-eget "$@"
+	assure_exists wget
+	internal_tools_eget "$@"
 }
 
 get_package_type()
@@ -687,7 +688,7 @@ case $PMTYPE in
 	apt-dpkg|aptitude-dpkg)
 		assure_exists deborphan
 		showcmd deborphan
-		a= deborphan | sudocmd epm remove
+		a= deborphan | docmd epm remove
 		;;
 	#aura)
 	#	sudocmd aura -Oj
@@ -704,7 +705,7 @@ case $PMTYPE in
 		docmd epm remove $PKGLIST
 		;;
 	urpm-rpm)
-		showcmd urpmq --auto-orphans
+		showcmd urpme --report-orphans
 		sudocmd urpme --auto-orphans
 		;;
 	#emerge)
@@ -725,9 +726,15 @@ case $PMTYPE in
 	#pkgng)
 	#	sudocmd pkg autoremove
 	#	;;
-	#zypper-rpm)
-	#	sudocmd zypper clean
-	#	;;
+	zypper-rpm)
+		# https://www.linux.org.ru/forum/desktop/11931830
+		assure_exists zypper zypper 1.9.2
+		# For zypper < 1.9.2: zypper se -si | grep 'System Packages'
+		sudocmd zypper packages --orphaned
+		# FIXME: x86_64/i586 are duplicated
+		local PKGLIST=$(zypper packages --orphaned | tail -n +5 | cut -d \| -f 3 | sort -u)
+		sudocmd zypper remove --clean-deps $PKGLIST
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
@@ -755,7 +762,7 @@ __epm_autoremove_altrpm()
 		| grep -E -v -- "-(devel|debuginfo)$" \
 		| grep -E -v -- "-(util|tool|plugin|daemon)" \
 		| sed -e "s/\.32bit$//g" \
-		| grep -E -v -- "^(libsystemd|libreoffice|libnss|eepm)" )
+		| grep -E -v -- "^(libsystemd|libreoffice|libnss|libvirt-client|libvirt-daemon|eepm)" )
 	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
 
 	info "Removing unused python/perl modules..."
@@ -782,13 +789,12 @@ epm_autoremove()
 case $DISTRNAME in
 	ALTLinux)
 		__epm_autoremove_altrpm
-
-		assure_exists remove-old-kernels update-kernel 0.9.9
-		sudocmd remove-old-kernels
+		docmd epm remove-old-kernels
 		
 		if which nvidia-clean-driver 2>/dev/null ; then
 			sudocmd nvidia-clean-driver
 		fi
+
 		return
 		;;
 	*)
@@ -838,9 +844,14 @@ case $PMTYPE in
 	pkgng)
 		sudocmd pkg autoremove
 		;;
-	#zypper-rpm)
-	#	sudocmd zypper clean
-	#	;;
+	zypper-rpm)
+		# https://www.linux.org.ru/forum/desktop/11931830
+		assure_exists zypper zypper 1.9.3
+		sudocmd zypper packages --unneeded
+		# FIXME: x86_64/i586 are duplicated
+		local PKGLIST=$(zypper packages --unneeded | tail -n +5 | cut -d \| -f 3 | sort -u)
+		sudocmd zypper remove --clean-deps $PKGLIST
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
@@ -914,9 +925,9 @@ __epm_changelog_unlocal_names()
 		#yum-rpm)
 		#	sudocmd yum clean all
 		#	;;
-		#urpm-rpm)
-		#	sudocmd urpmi --clean
-		#	;;
+		urpm-rpm)
+			docmd urpmq --changelog $@ | less
+			;;
 		#zypper-rpm)
 		#	sudocmd zypper clean
 		#	;;
@@ -961,11 +972,11 @@ case $PMTYPE in
 	apt-dpkg)
 		#sudocmd apt-get update || exit
 		#sudocmd apt-get check || exit
-		sudocmd apt-get -f install || exit
+		sudocmd apt-get -f install || return
 		sudocmd apt-get autoremove
 		;;
 	aptitude-dpkg)
-		sudocmd aptitude -f install || exit
+		sudocmd aptitude -f install || return
 		#sudocmd apt-get autoremove
 		;;
 	yum-rpm)
@@ -1195,15 +1206,15 @@ epm_clean()
 case $PMTYPE in
 	apt-rpm)
 		sudocmd apt-get clean
-		__remove_alt_apt_cache_file
+		[ -n "$force" ] && __remove_alt_apt_cache_file
 		;;
 	apt-dpkg)
 		sudocmd apt-get clean
-		__remove_deb_apt_cache_file
+		[ -n "$force" ] && __remove_deb_apt_cache_file
 		;;
 	aptitude-dpkg)
 		sudocmd aptitude clean
-		__remove_deb_apt_cache_file
+		[ -n "$force" ] && __remove_deb_apt_cache_file
 		;;
 	yum-rpm)
 		sudocmd yum clean all
@@ -1443,22 +1454,14 @@ epm_download()
 # File bin/epm-epm_install:
 
 
-myinit(){
-    etersoft_updates_site="http://updates.etersoft.ru/pub/Etersoft/Sisyphus/$($DISTRVENDOR -e)/"
-    download_dir="/tmp"
-}
-
-download_epm(){
-    download_link=$etersoft_updates_site$(wget -qO- $etersoft_updates_site/ | grep -m1 -Eo "eepm[^\"]+\.$($DISTRVENDOR -p)" | tail -n1) #"
-    eepm_package="$download_dir/$(basename $download_link)"
-    wget -O $eepm_package $download_link
-}
 
 epm_epm_install(){
-    myinit
-    download_epm || fatal "Error. Check download link: $download_link"
-    epm i $eepm_package || fatal
-    rm -fv $eepm_package
+    assure_exists wget
+    local etersoft_updates_site="http://updates.etersoft.ru/pub/Korinf/$($DISTRVENDOR -e)"
+    # FIXME: some way to get latest package
+    local download_link=$etersoft_updates_site/$(wget -qO- $etersoft_updates_site/ | grep -m1 -Eo "eepm[^\"]+\.$($DISTRVENDOR -p)" | tail -n1) #"
+
+    pkg_names= pkg_files= pkg_urls=$download_link epm_install
 }
 
 # File bin/epm-filelist:
@@ -1468,6 +1471,7 @@ __alt_local_content_filelist()
 {
 
     local CI="$(get_local_alt_contents_index)"
+    [ -n "$CI" ] || fatal "Have no local contents index"
 
     # TODO: safe way to use less
     #local OUTCMD="less"
@@ -1475,7 +1479,7 @@ __alt_local_content_filelist()
     OUTCMD="cat"
 
     {
-        [ -n "$USETTY" ] && echo "Search in $CI for $1..."
+        [ -n "$USETTY" ] && info "Search in $CI for $1..."
         grep -h -- ".*$1$" $CI | sed -e "s|\(.*\)\t\(.*\)|\1|g"
     } | $OUTCMD
 }
@@ -1634,6 +1638,10 @@ case $PMTYPE in
 		__epm_info_rpm_low && return
 		docmd yum info $pkg_names
 		;;
+	urpmi-rpm)
+		__epm_info_rpm_low && return
+		docmd urpmq -i $pkg_names
+		;;
 	dnf-rpm)
 		__epm_info_rpm_low && return
 		docmd dnf info $pkg_names
@@ -1747,15 +1755,6 @@ __separate_sudocmd()
     return 0
 }
 
-download_pkg_urls()
-{
-	local url
-	[ -z "$1" ] && return
-	for url in $* ; do
-	    eget $url || warning "Skipped"
-	done
-}
-
 epm_install_names()
 {
 	if [ -n "$non_interactive" ] ; then
@@ -1858,7 +1857,7 @@ epm_ni_install_names()
 			sudocmd apt-get -y $noremove --force-yes -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
 			return ;;
 		aptitude-dpkg)
-			sudocmd aptitde -y install $@
+			sudocmd aptitude -y install $@
 			return ;;
 		yum-rpm)
 			sudocmd yum -y $YUMOPTIONS install $@
@@ -1989,13 +1988,16 @@ epm_install_files()
         apt-rpm)
             __epm_check_if_try_install_deb $@ && return
 
-            sudocmd rpm -Uvh $force $nodeps $@ && return
-            local RES=$?
+            # do not use low-level for install by file path
+            if ! is_dirpath "$@" || [ "$(get_package_type "$@")" = "rpm" ] ; then
+                sudocmd rpm -Uvh $force $nodeps $@ && return
+                local RES=$?
 
-            __epm_check_if_rpm_already_installed $@ && return
+                __epm_check_if_rpm_already_installed $@ && return
 
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return $RES
+            fi
 
             # use install_names
             ;;
@@ -2147,6 +2149,57 @@ epm_print_install_command()
     esac
 }
 
+download_pkg_urls()
+{
+	local url
+	[ -z "$pkg_urls" ] && return
+	for url in $pkg_urls ; do
+		# TODO: use some individual tmp dir
+		local new_file=/tmp/$(basename "$url")
+		if eget -O $new_file $url && [ -s "$new_file" ] ; then
+			pkg_files="$pkg_files $new_file"
+			to_remove_pkg_files="$to_remove_pkg_files $new_file"
+		else
+			warning "Failed to download $url, ignoring"
+		fi
+	done
+}
+
+
+
+__handle_pkg_urls()
+{
+	[ -n "$pkg_urls" ] || return
+
+	# TODO: do it correcly
+	to_remove_pkg_files=
+	case $PMTYPE in
+		apt-rpm)
+			# ALT Linux really?
+			pkg_names="$pkg_names $pkg_urls"
+			;;
+		#deepsolver-rpm)
+		#	pkg_names="$pkg_names $pkg_urls"
+		#	;;
+		#urpm-rpm)
+		#	pkg_names="$pkg_names $pkg_urls"
+		#	;;
+		pacman)
+			pkg_names="$pkg_names $pkg_urls"
+			;;
+		yum-rpm|dnf-rpm)
+			pkg_names="$pkg_names $pkg_urls"
+			;;
+		#zypper-rpm)
+		#	pkg_names="$pkg_names $pkg_urls"
+		#	;;
+		*)
+			# use workaround with eget: download and put in pkg_files
+			download_pkg_urls
+			;;
+	esac
+	pkg_urls=
+}
 
 epm_install()
 {
@@ -2155,19 +2208,13 @@ epm_install()
         return
     fi
 
-    # Download urls via eget pkg_urls and use eget
-    # TODO: use optimization (rpm can download packages by url, yum too?)
-    #[ -n "$pkg_urls" ] && warning "URL using does not realize yet"
-    #download_pkg_urls "$pkg_urls"
-    # temp. hack
-    pkg_files="$pkg_files $pkg_urls"
-    # TODO: add downloaded files to $pkg_files
+    # in any case it will put pkg_urls into pkg_files or pkg_names
+    __handle_pkg_urls
 
-    [ -z "$pkg_files$pkg_names$pkg_urls" ] && info "Skip empty install list" && return 22
+    [ -z "$pkg_files$pkg_names" ] && info "Skip empty install list" && return 22
 
     local names="$(echo $pkg_names | filter_out_installed_packages)"
     local files="$(echo $pkg_files | filter_out_installed_packages)"
-    local urls="$(echo $pkg_urls | filter_out_installed_packages)"
 
     [ -z "$files$names" ] && info "Skip empty install list" && return 22
 
@@ -2178,6 +2225,11 @@ epm_install()
 
     epm_install_names $names || return
     epm_install_files $files
+
+    # TODO: reinvent
+    local RETVAL=$?
+    [ -n "$to_remove_pkg_files" ] && rm -fv $to_remove_pkg_files
+    return $RETVAL
 }
 
 # File bin/epm-Install:
@@ -2294,7 +2346,7 @@ epm_kernel_update()
 		fi
 		assure_exists update-kernel update-kernel 0.9.9
 		sudocmd update-kernel $pkg_filenames || return
-		sudocmd remove-old-kernels $pkg_filenames
+		docmd epm remove-old-kernels $pkg_filenames || fatal
 		return ;;
 	esac
 
@@ -3619,7 +3671,7 @@ epm_remove_names()
 			sudocmd snappy uninstall $@
 			return ;;
 		zypper-rpm)
-			sudocmd zypper remove $@
+			sudocmd zypper remove --clean-deps $@
 			return ;;
 		mpkg)
 			sudocmd mpkg remove $@
@@ -3685,7 +3737,7 @@ epm_remove_nonint()
 			sudocmd yum -y remove $@
 			return ;;
 		zypper-rpm)
-			sudocmd zypper --non-interactive remove $@
+			sudocmd zypper --non-interactive remove --clean-deps $@
 			return ;;
 		slackpkg)
 			sudocmd /usr/sbin/slackpkg -batch=on -default_answer=yes remove $@
@@ -3763,6 +3815,50 @@ epm_remove()
 	epm_remove_names $pkg_names
 }
 
+
+# File bin/epm-remove_old_kernels:
+
+epm_remove_old_kernels()
+{
+	case $DISTRNAME in
+	ALTLinux)
+		if ! __epm_query_package kernel-image >/dev/null ; then
+			info "No installed kernel packages, skipping cleaning"
+			return
+		fi
+		assure_exists update-kernel update-kernel 0.9.9
+		sudocmd remove-old-kernels $pkg_filenames
+		return ;;
+	Ubuntu)
+		if ! __epm_query_package linux-image >/dev/null ; then
+			info "No installed kernel packages, skipping cleaning"
+			return
+		fi
+		info "Note: it is enough to use eepm autoremove for old kernel removing..."
+		info "Check also http://ubuntuhandbook.org/index.php/2016/05/remove-old-kernels-ubuntu-16-04/"
+		# http://www.opennet.ru/tips/2980_ubuntu_apt_clean_kernel_packet.shtml
+		case $DISTRVERSION in
+		10.04|12.04|14.04|15.04|15.10)
+			assure_exists purge-old-kernels bikeshed
+			;;
+		*)
+			# since Ubuntu 16.04
+			assure_exists purge-old-kernels byobu
+			;;
+		esac
+		sudocmd purge-old-kernels $pkg_filenames
+		return ;;
+	Gentoo)
+		sudocmd emerge -P gentoo-sources
+		return ;;
+	esac
+
+	case $PMTYPE in
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+	esac
+}
 
 # File bin/epm-removerepo:
 
@@ -3990,9 +4086,12 @@ case $PMTYPE in
 		fi
 
 		;;
-	urpm-rpm|zypper-rpm)
-		# FIXME: use hi level commands
-		CMD="rpm -q --requires"
+	#zypper-rpm)
+	#	# FIXME: use hi level commands
+	#	CMD="rpm -q --requires"
+	#	;;
+	urpm-rpm)
+		CMD="urpmq --requires"
 		;;
 	yum-rpm)
 		if is_installed $pkg_names ; then
@@ -4219,13 +4318,13 @@ __alt_local_content_search()
 {
 
     local CI="$(get_local_alt_contents_index)"
-
+    [ -n "$CI" ] || fatal "Have no local contents index"
     #local OUTCMD="less"
     #[ -n "$USETTY" ] || OUTCMD="cat"
     OUTCMD="cat"
 
     {
-        [ -n "$USETTY" ] && echo "Search in $CI for $1..."
+        [ -n "$USETTY" ] && info "Search in $CI for $1..."
         # note! tabulation below!
         grep -h -- ".*$1.*	" $CI | sed -e "s|\(.*\)\t\(.*\)|\2: \1|g"
     } | $OUTCMD
@@ -4553,11 +4652,11 @@ epm_update()
 
 case $PMTYPE in
 	apt-rpm)
-		sudocmd apt-get update || exit
+		sudocmd apt-get update || return
 		#sudocmd apt-get -f install || exit
 		;;
 	apt-dpkg)
-		sudocmd apt-get update || exit
+		sudocmd apt-get update || return
 		#sudocmd apt-get -f install || exit
 		#sudocmd apt-get autoremove
 		;;
@@ -4565,7 +4664,7 @@ case $PMTYPE in
 	#	sudocmd snappy
 	#	;;
 	aptitude-dpkg)
-		sudocmd aptitude update || exit
+		sudocmd aptitude update || return
 		;;
 	yum-rpm)
 		info "update command is stubbed for yum"
@@ -4640,26 +4739,28 @@ epm_upgrade()
 
 	case $PMTYPE in
 	apt-rpm|apt-dpkg)
-		# non_interactive
+		local APTOPTIONS="$(subst_option non_interactive -y)"
 		# Функцию добавления параметра при условии
-		CMD="apt-get dist-upgrade $noremove"
+		CMD="apt-get $APTOPTIONS dist-upgrade $noremove"
 		;;
 	aptitude-dpkg)
 		CMD="aptitude dist-upgrade"
 		;;
 	yum-rpm)
+		local OPTIONS="$(subst_option non_interactive -y)"
 		# can do update repobase automagically
-		CMD="yum update"
+		CMD="yum $OPTIONS update"
 		;;
 	dnf-rpm)
-		CMD="dnf distro-sync"
+		local OPTIONS="$(subst_option non_interactive -y)"
+		CMD="dnf $OPTIONS distro-sync"
 		;;
 	snappy)
 		CMD="snappy update"
 		;;
 	urpm-rpm)
 		# or --auto-select --replace-files
-		CMD="urpmi --auto-update"
+		CMD="urpmi --update --auto-select"
 		;;
 	zypper-rpm)
 		CMD="zypper dist-upgrade"
@@ -4750,6 +4851,9 @@ case $PMTYPE in
 	yum-rpm)
 		CMD="repoquery --whatrequires"
 		;;
+	urpm-rpm)
+		CMD="urpmq --whatrequires"
+		;;
 	dnf-rpm)
 		CMD="repoquery --whatrequires"
 		;;
@@ -4793,6 +4897,9 @@ case $PMTYPE in
 	yum-rpm)
 		CMD="yum whatprovides"
 		;;
+	urpm-rpm)
+		CMD="urpmq --whatprovides"
+		;;
 	dnf-rpm)
 		CMD="yum provides"
 		;;
@@ -4807,9 +4914,9 @@ esac
 docmd $CMD $pkg
 
 }
+
 internal_distr_info()
 {
-#!/bin/sh
 # Author: Vitaly Lipatov <lav@etersoft.ru>
 # 2007, 2009, 2010, 2012 (c) Etersoft
 # 2007 Public domain
@@ -5155,6 +5262,99 @@ esac
 
 }
 
+internal_tools_eget()
+{
+# eget - simply shell on wget for loading directories over http
+# Example use:
+# eget ftp://ftp.altlinux.ru/pub/security/ssl/*
+#
+# Copyright (C) 2014-2014, 2016  Etersoft
+# Copyright (C) 2014 Daniil Mikhailov <danil@etersoft.ru>
+# Copyright (C) 2016 Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+WGET="wget"
+
+if [ "$1" = "-q" ] ; then
+    WGET="wget -q"
+    shift
+fi
+
+# TODO:
+# download to this file
+WGET_OPTION_TARGET=
+if [ "$1" = "-O" ] ; then
+    TARGETFILE="$2"
+    WGET_OPTION_TARGET="-O $2"
+    shift 2
+fi
+
+# TODO:
+# -P support
+
+# If ftp protocol or have no asterisk, just download
+# TODO: use has()
+if echo "$1" | grep -q "\(^ftp://\|[^*]$\)" ; then
+    $WGET $WGET_OPTION_TARGET "$1"
+    return
+fi
+
+echo "Fall to http workaround"
+
+URL=$(echo "$1" | grep "/$" || dirname "$1")
+# mask allowed only in last part of path
+MASK=$(basename "$1")
+
+get_index()
+{
+    MYTMPDIR="$(mktemp -d)"
+    INDEX=$MYTMPDIR/index
+    $WGET $URL -O $INDEX
+}
+
+print_files()
+{
+    cat $INDEX | grep -o -E 'href="([^\*/"#]+)"' | cut -d'"' -f2
+}
+
+create_fake_files()
+{
+    DIRALLFILES="$MYTMPDIR/files/"
+    mkdir -p "$DIRALLFILES"
+
+    print_files | while read line ; do
+        touch $DIRALLFILES/$(basename "$line")
+    done
+}
+
+download_files()
+{
+    ERROR=0
+    for line in $DIRALLFILES/$MASK ; do
+        $WGET $URL/$(basename "$line") || ERROR=1
+    done
+    return $ERROR
+}
+
+get_index || return
+create_fake_files
+download_files || echo "There was some download errors" >&2
+rm -rf "$MYTMPDIR"
+}
+
 #PATH=$PATH:/sbin:/usr/sbin
 
 set_pm_type
@@ -5179,7 +5379,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.8.6"
+        echo "EPM package manager version 1.9.1"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -5358,6 +5558,9 @@ check_command()
     kernel-update|kernel-upgrade|update-kernel|upgrade-kernel)      # HELPCMD: update system kernel to the last repo version
         epm_cmd=kernel_update
         ;;
+    remove-old-kernels|remove-old-kernel)      # HELPCMD: remove old system kernels (exclude current or last two kernels)
+        epm_cmd=remove_old_kernels
+        ;;
 
 # Other commands
     clean)                    # HELPCMD: clean local package cache
@@ -5393,7 +5596,7 @@ check_command()
     site|url)                 # HELPCMD: open package's site in a browser (use -p for open packages.altlinux.org site)
         epm_cmd=site
         ;;
-    ei|epminstall|selfinstall) # HELPCMD: install or update eepm from all in one script
+    ei|epminstall|epm-install|selfinstall) # HELPCMD: install or update eepm from all in one script
         epm_cmd=epm_install
         ;;
     print)                    # HELPCMD: print various info, run epm print help for details
