@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012  Etersoft
-# Copyright (C) 2012  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2016  Etersoft
+# Copyright (C) 2012, 2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -19,32 +19,33 @@
 
 epm_removerepo()
 {
+local repo="$(eval echo $quoted_args)"
 case $PMTYPE in
 	apt-rpm)
 		assure_exists apt-repo
-		sudocmd apt-repo rm "$quoted_args"
+		sudocmd apt-repo rm "$repo"
 		;;
 	apt-dpkg|aptitude-dpkg)
 		info "You need remove repo from /etc/apt/sources.list"
 		;;
 	yum-rpm)
 		assure_exists yum-utils
-		sudocmd yum-config-manager --disable "$pkg_filenames"
+		sudocmd yum-config-manager --disable "$repo"
 		;;
 	urpm-rpm)
-		sudocmd urpmi.removemedia "$pkg_filenames"
+		sudocmd urpmi.removemedia "$repo"
 		;;
 	zypper-rpm)
-		sudocmd zypper removerepo "$pkg_filenames"
+		sudocmd zypper removerepo "$repo"
 		;;
 	emerge)
-		sudocmd layman "-d$pkg_filenames"
+		sudocmd layman "-d$repo"
 		;;
 	pacman)
 		info "You need remove repo from /etc/pacman.conf"
 		;;
 	npackd)
-		sudocmd npackdcl remove-repo --url="$pkg_filenames"
+		sudocmd npackdcl remove-repo --url="$repo"
 		;;
 	slackpkg)
 		info "You need remove repo from /etc/slackpkg/mirrors"

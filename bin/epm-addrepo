@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012  Etersoft
-# Copyright (C) 2012  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2016  Etersoft
+# Copyright (C) 2012, 2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -19,26 +19,27 @@
 
 epm_addrepo()
 {
+local repo="$(eval echo $quoted_args)"
 case $PMTYPE in
 	apt-rpm)
 		assure_exists apt-repo
-		sudocmd apt-repo add "$pkg_filenames"
+		sudocmd apt-repo add "$repo"
 		;;
 	apt-dpkg|aptitude-dpkg)
 		info "You need manually add repo to /etc/apt/sources.list"
 		;;
 	yum-rpm)
 		assure_exists yum-utils
-		sudocmd yum-config-manager --add-repo "$pkg_filenames"
+		sudocmd yum-config-manager --add-repo "$repo"
 		;;
 	urpm-rpm)
-		sudocmd urpmi.addmedia "$pkg_filenames"
+		sudocmd urpmi.addmedia "$repo"
 		;;
 	zypper-rpm)
-		sudocmd zypper ar "$pkg_filenames"
+		sudocmd zypper ar "$repo"
 		;;
 	emerge)
-		sudocmd layman -a $"pkg_filenames"
+		sudocmd layman -a "$repo"
 		;;
 	pacman)
 		info "You need manually add repo to /etc/pacman.conf"
@@ -46,7 +47,7 @@ case $PMTYPE in
 		#sudocmd repo-add $pkg_filenames
 		;;
 	npackd)
-		sudocmd npackdcl add-repo --url="$pkg_filenames"
+		sudocmd npackdcl add-repo --url="$repo"
 		;;
 	slackpkg)
 		info "You need manually add repo to /etc/slackpkg/mirrors"
