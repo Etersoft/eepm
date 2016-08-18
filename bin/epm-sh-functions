@@ -349,7 +349,8 @@ assure_exists()
 
 eget()
 {
-	$SHAREDIR/tools-eget "$@"
+	assure_exists wget
+	$SHAREDIR/tools_eget "$@"
 }
 
 # TODO: improve and drop!
