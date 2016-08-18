@@ -2,6 +2,7 @@
 
 # Copyright (C) 2016  Etersoft
 # Copyright (C) 2016  Danil Mikhailov <danil@etersoft.ru>
+# Copyright (C) 2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -19,18 +20,11 @@
 
 load_helper epm-install
 
-# TODO: use pkg_urls related install feature (pkg_urls=URL epm_install)
-__download_epm(){
-    download_dir="/tmp"
-    download_link=$etersoft_updates_site$(wget -qO- $etersoft_updates_site/ | grep -m1 -Eo "eepm[^\"]+\.$($DISTRVENDOR -p)" | tail -n1) #"
-    eepm_package="$download_dir/$(basename $download_link)"
-    wget -O $eepm_package $download_link
-}
-
 epm_epm_install(){
-    etersoft_updates_site="http://updates.etersoft.ru/pub/Etersoft/Sisyphus/$($DISTRVENDOR -e)/"
+    assure_exists wget
+    local etersoft_updates_site="http://updates.etersoft.ru/pub/Korinf/$($DISTRVENDOR -e)"
+    # FIXME: some way to get latest package
+    local download_link=$etersoft_updates_site/$(wget -qO- $etersoft_updates_site/ | grep -m1 -Eo "eepm[^\"]+\.$($DISTRVENDOR -p)" | tail -n1) #"
 
-    __download_epm || fatal "Error. Check download link: $download_link"
-    pkg_names= pkg_files=$eepm_package epm_install || fatal
-    rm -fv $eepm_package
+    pkg_names= pkg_files= pkg_urls=$download_link epm_install
 }
