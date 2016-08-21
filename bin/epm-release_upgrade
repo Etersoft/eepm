@@ -65,7 +65,7 @@ __replace_alt_version_in_repo()
 	#echo "Upgrading $DISTRNAME from $1 to $2 ..."
 	docmd apt-repo list | sed -e "s|\($1\)|{\1}->{$2}|g" | egrep --color -- "$1"
 	# ask and replace only we will have changes
-	if apt-repo list | egrep -q -- "$1" ; then
+	if a= apt-repo list | egrep -q -- "$1" ; then
 		confirm "Are these correct changes? [y/N]" || fatal "Exiting"
 		__replace_text_in_alt_repo "/^ *#/! s!$1!$2!g"
 	fi
