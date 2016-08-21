@@ -497,14 +497,8 @@ download_pkg_urls()
 	done
 }
 
-
-
-__handle_pkg_urls()
+__use_url_install()
 {
-	[ -n "$pkg_urls" ] || return
-
-	# TODO: do it correcly
-	to_remove_pkg_files=
 	case $PMTYPE in
 		apt-rpm)
 			# ALT Linux really?
@@ -526,10 +520,23 @@ __handle_pkg_urls()
 		#	pkg_names="$pkg_names $pkg_urls"
 		#	;;
 		*)
-			# use workaround with eget: download and put in pkg_files
-			download_pkg_urls
+			return 1
 			;;
 	esac
+	return 0
+}
+
+__handle_pkg_urls()
+{
+	[ -n "$pkg_urls" ] || return
+
+	# TODO: do it correctly
+	to_remove_pkg_files=
+	
+	if [ "$(get_package_type "$pkg")" != $PKGFORMAT ] || ! __use_url_install ; then
+		# use workaround with eget: download and put in pkg_files
+		download_pkg_urls
+	fi
 	pkg_urls=
 }
 
