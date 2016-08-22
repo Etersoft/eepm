@@ -13,7 +13,7 @@ install:
 	sed -e "s|SHAREDIR=.*|SHAREDIR=$(instpkgdatadir)|g" -e "s|@VERSION@|$(version)|g" <bin/serv >$(DESTDIR)$(bindir)/serv
 
 	mkdir -p $(DESTDIR)$(pkgdatadir)/
-	install -m 644 `ls -1 bin/* | grep "-"` $(DESTDIR)$(pkgdatadir)/
+	install -m 644 `ls -1 bin/* | grep "[-_]"` $(DESTDIR)$(pkgdatadir)/
 
 	mkdir -p $(DESTDIR)$(mandir)/man1
 	cp -a `ls -1 man/*` $(DESTDIR)$(mandir)/man1/
