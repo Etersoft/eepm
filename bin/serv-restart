@@ -39,6 +39,9 @@ serv_restart()
 		systemd)
 			sudocmd systemctl restart $SERVICE "$@"
 			;;
+		runit)
+			sudocmd sv restart "$SERVICE"
+			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
 			;;

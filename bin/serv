@@ -76,6 +76,9 @@ case $DISTRNAME in
 	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific)
 		CMD="service-chkconfig"
 		;;
+	VoidLinux)
+		CMD="runit"
+		;;
 	Slackware)
 		CMD="service-initd"
 		;;

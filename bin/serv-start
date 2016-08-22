@@ -37,6 +37,9 @@ serv_start()
 		systemd)
 			sudocmd systemctl start "$SERVICE" "$@"
 			;;
+		runit)
+			sudocmd sv up "$SERVICE"
+			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
 			;;

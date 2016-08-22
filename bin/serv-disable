@@ -42,6 +42,9 @@ serv_disable()
 		systemd)
 			sudocmd systemctl disable $1
 			;;
+		runit)
+			sudocmd rm -fv /var/service/$SERVICE
+			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
 			;;

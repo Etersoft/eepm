@@ -46,6 +46,11 @@ __serv_enable()
 		systemd)
 			sudocmd systemctl enable $1
 			;;
+		runit)
+			assure_exists $SERVICE
+			[ -r "/etc/sv/$SERVICE" ] || fatal "Can't find /etc/sv/$SERVICE"
+			sudocmd ln -s /etc/sv/$SERVICE /var/service/
+			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
 			;;

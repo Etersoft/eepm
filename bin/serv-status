@@ -36,6 +36,9 @@ is_service_running()
 		systemd)
 			$SUDO systemctl status $1 >/dev/null
 			;;
+		runit)
+			$SUDO sv status "$SERVICE" >/dev/null
+			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
 			;;
@@ -63,6 +66,9 @@ is_service_autostart()
 		systemd)
 			$SUDO systemctl is-enabled $1
 			;;
+		runit)
+			test -L /var/service/$SERVICE
+			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
 			;;
@@ -89,6 +95,9 @@ serv_status()
 			;;
 		systemd)
 			sudocmd systemctl status $SERVICE "$@"
+			;;
+		runit)
+			sudocmd sv status "$SERVICE"
 			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"

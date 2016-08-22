@@ -37,6 +37,9 @@ serv_stop()
 		systemd)
 			sudocmd systemctl stop $SERVICE "$@"
 			;;
+		runit)
+			sudocmd sv down "$SERVICE"
+			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
 			;;
