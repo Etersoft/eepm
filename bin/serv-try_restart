@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012  Etersoft
-# Copyright (C) 2012  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2016  Etersoft
+# Copyright (C) 2012, 2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -26,19 +26,14 @@ serv_try_restart()
 	shift
 
 	case $SERVICETYPE in
-		service-chkconfig|service-upstart)
-			is_service_running $SERVICE || return 0
-			docmd serv $SERVICE restart "$@"
-			;;
-		service-initd|service-update)
-			is_service_running $SERVICE || return 0
-			sudocmd $INITDIR/$SERVICE restart "$@"
-			;;
 		systemd)
 			sudocmd systemctl try-restart $SERVICE "$@"
 			;;
 		*)
-			fatal "Have no suitable command for $SERVICETYPE"
+			info "Fallback to restart..."
+			is_service_running $SERVICE || { info "Service $SERVICE is not running, restart skipping…" ; return 0 ; }
+			load_helper serv-restart
+			serv_restart "$SERVICE" "$@"
 			;;
 	esac
 }
