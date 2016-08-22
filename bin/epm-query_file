@@ -100,7 +100,7 @@ __do_query()
             ;;
         xbps)
             # FIXME: maybe it is search file?
-            CMD="xbps-query -Ro"
+            CMD="xbps-query -o"
             ;;
         aptcyg)
             #CMD="apt-cyg packageof"
