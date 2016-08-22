@@ -329,7 +329,7 @@ epm_install_files()
             if ! is_dirpath "$@" || [ "$(get_package_type "$@")" = "rpm" ] ; then
                 sudocmd rpm -Uvh $force $nodeps $@ && return
                 local RES=$?
-
+                # TODO: check rpm result code and convert it to compatible format if possible
                 __epm_check_if_rpm_already_installed $@ && return
 
             # if run with --nodeps, do not fallback on hi level
