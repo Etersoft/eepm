@@ -109,6 +109,7 @@ ANYSERVICE=$(which anyservice 2>/dev/null)
 is_anyservice()
 {
 	[ -n "$ANYSERVICE" ] || return
+	[ -n "$1" ] || return
 	# check if anyservice is exists and checkd returns true
 	$ANYSERVICE "$1" checkd 2>/dev/null
 }
