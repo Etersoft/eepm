@@ -41,6 +41,11 @@ __aptcyg_print_full()
 	echo "$1-$VERSION"
 }
 
+__fo_pfn()
+{
+	grep -v "^$" | grep -- "$pkg_filenames"
+}
+
 # TODO: we have a problem with error status here
 epm_packages()
 {
@@ -49,23 +54,28 @@ epm_packages()
 
 case $PMTYPE in
 	apt-rpm)
+		# FIXME: strong equal
 		CMD="rpm -qa $pkg_filenames"
 		[ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n $pkg_filenames"
-		;;
+		docmd $CMD
+		return ;;
 	*-dpkg)
+		# FIXME: strong equal
 		#CMD="dpkg -l $pkg_filenames"
 		CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}-\${Version}\n $pkg_filenames"
 		[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}\n $pkg_filenames"
-		docmd $CMD | grep "^i" | sed -e "s|.* ||g"
-		return
-		;;
+		showcmd $CMD
+		$CMD | grep "^i" | sed -e "s|.* ||g" | __fo_pfn
+		return ;;
 	snappy)
 		CMD="snappy info"
 		;;
 	yum-rpm|urpm-rpm|zypper-rpm|dnf-rpm)
+		# FIXME: strong equal
 		CMD="rpm -qa $pkg_filenames"
 		[ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n $pkg_filenames"
-		;;
+		docmd $CMD
+		return ;;
 	emerge)
 		CMD="qlist -I -C"
 		# print with colors for console output
@@ -73,26 +83,27 @@ case $PMTYPE in
 		;;
 	pkgsrc)
 		CMD="pkg_info"
-		docmd $CMD | sed -e "s| .*||g"
-		return
-		;;
+		showcmd $CMD
+		$CMD | sed -e "s| .*||g" | __fo_pfn
+		return ;;
 	pkgng)
 		if [ -n "$pkg_filenames" ] ; then
 			CMD="pkg info -E $pkg_filenames"
 		else
 			CMD="pkg info"
 		fi
+		showcmd $CMD
 		if [ -n "$short" ] ; then
-		    docmd $CMD | sed -e "s| .*||g" | sed -e "s|-[0-9].*||g"
+		    $CMD | sed -e "s| .*||g" | sed -e "s|-[0-9].*||g" | __fo_pfn
 		else
-		    docmd $CMD | sed -e "s| .*||g"
+		    $CMD | sed -e "s| .*||g" | __fo_pfn
 		fi
-		return
-		;;
+		return ;;
 	pacman)
 		CMD="pacman -Qs $pkg_filenames"
+		showcmd $CMD
 		if [ -n "$short" ] ; then
-			docmd $CMD | sed -e "s| .*||g" -e "s|.*/||g" | grep -v "^$"
+			$CMD | sed -e "s| .*||g" -e "s|.*/||g" | __fo_pfn
 			return
 		fi
 		;;
@@ -112,7 +123,7 @@ case $PMTYPE in
 			# FIXME: does not work for libjpeg-v8a
 			# TODO: remove last 3 elements (if arch is second from the last?)
 			# FIXME this hack
-			docmd ls -1 /var/log/packages/ | sed -e "s|-[0-9].*||g" | sed -e "s|libjpeg-v8a.*|libjpeg|g"
+			docmd ls -1 /var/log/packages/ | sed -e "s|-[0-9].*||g" | sed -e "s|libjpeg-v8a.*|libjpeg|g" | __fo_pfn
 			return
 		fi
 		;;
@@ -133,10 +144,18 @@ case $PMTYPE in
 		;;
 	xbps)
 		CMD="xbps-query -l"
+		showcmd $CMD
+		if [ -n "$short" ] ; then
+			$CMD | sed -e "s|^ii ||g" -e "s| .*||g" -e "s|\(.*\)-.*|\1|g" | __fo_pfn
+		else
+			$CMD | sed -e "s|^ii ||g" -e "s| .*||g" | __fo_pfn
+		fi
+		return 0
 		;;
 	android)
 		CMD="pm list packages"
-		docmd $CMD | sed -e "s|^package:||g"
+		showcmd $CMD
+		$CMD | sed -e "s|^package:||g" | __fo_pfn
 		return
 		;;
 	aptcyg)
@@ -155,8 +174,7 @@ case $PMTYPE in
 		;;
 esac
 
-docmd $CMD
-# FIXME: do not print empty lines, but we will lost error status definitely
-# | grep -v "^$"
+docmd $CMD | __fopfn
+# FIXME: we print empty lines, but will lost error status
 
 }

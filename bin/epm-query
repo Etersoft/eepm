@@ -33,16 +33,18 @@ _get_grep_exp()
 # TODO: combine with -qa (the difference only in return status now)
 _shortquery_via_packages_list()
 {
-	local res=0
+	local res=1
 	local grepexp
 	local firstpkg=$1
 	shift
 
 	grepexp=$(_get_grep_exp $firstpkg)
 
+	# TODO: we miss status due grep
+	# Note: double call due stderr redirect
 	# Note: we use short=1 here due grep by ^name$
 	# separate first line for print out command
-	short=1 pkg_filenames=$firstpkg epm_packages | grep -- "$grepexp" || res=1
+	short=1 pkg_filenames=$firstpkg epm_packages | grep -- "$grepexp" && res=0 || res=1
 
 	local pkg
 	for pkg in "$@" ; do
@@ -57,16 +59,19 @@ _shortquery_via_packages_list()
 # TODO: non optimal double epm packages call
 _query_via_packages_list()
 {
-	local res=0
+	local res=1
 	local grepexp
 	local firstpkg=$1
 	shift
 
 	grepexp=$(_get_grep_exp $firstpkg)
 
+	# TODO: we miss status due grep
+	# TODO: grep correctly
+	# Note: double call due stderr redirect
 	# Note: we use short=1 here due grep by ^name$
 	# separate first line for print out command
-	short=1 pkg_filenames=$firstpkg epm_packages | grep -q -- "$grepexp" && quiet=1 pkg_filenames=$firstpkg epm_packages || res=1
+	short=1 pkg_filenames=$firstpkg epm_packages | grep -q -- "$grepexp" && quiet=1 pkg_filenames=$firstpkg epm_packages && res=0 || res=1
 
 	local pkg
 	for pkg in "$@" ; do
