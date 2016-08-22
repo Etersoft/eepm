@@ -97,6 +97,9 @@ epm_upgrade()
 		docmd_foreach "epm install" $(short=1 epm packages)
 		return
 		;;
+	xbps)
+		CMD="xbps-install -Su"
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;

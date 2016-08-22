@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2009, 2012  Etersoft
-# Copyright (C) 2009, 2012  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2009, 2012, 2016  Etersoft
+# Copyright (C) 2009, 2012, 2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -97,6 +97,10 @@ __do_query()
             ;;
         ipkg)
             CMD="ipkg files"
+            ;;
+        xbps)
+            # FIXME: maybe it is search file?
+            CMD="xbps-query -Ro"
             ;;
         aptcyg)
             #CMD="apt-cyg packageof"

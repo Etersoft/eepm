@@ -170,6 +170,9 @@ epm_install_names()
 		aptcyg)
 			sudocmd apt-cyg install $@
 			return ;;
+		xbps)
+			sudocmd xbps-install $@
+			return ;;
 		*)
 			fatal "Have no suitable install command for $PMTYPE"
 			;;
@@ -234,6 +237,9 @@ epm_ni_install_names()
 			return ;;
 		tce)
 			sudocmd tce-load -wi $@
+			return ;;
+		xbps)
+			sudocmd xbps-install -y $@
 			return ;;
 		#android)
 		#	sudocmd pm install $@
@@ -475,6 +481,10 @@ epm_print_install_command()
         tce)
             echo "tce-load -wi $@"
             ;;
+        xbps)
+            echo "xbps-install -y $@"
+            ;;
+
         *)
             fatal "Have no suitable appropriate install command for $PMTYPE"
             ;;

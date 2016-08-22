@@ -424,6 +424,8 @@ if [ -n "$FORCEPM" ] ; then
 	return
 fi
 
+# TODO: move it in distr_vendor?
+# FIXME: some problems with multibased distros (Server Edition on CentOS and Desktop Edition on Ubuntu)
 case $DISTRNAME in
 	ALTLinux)
 		CMD="apt-rpm"
@@ -486,6 +488,9 @@ case $DISTRNAME in
 		;;
 	TinyCoreLinux)
 		CMD="tce"
+		;;
+	VoidLinux)
+		CMD="xbps"
 		;;
 	*)
 		fatal "Have no suitable DISTRNAME $DISTRNAME"

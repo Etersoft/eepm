@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012,2013  Etersoft
-# Copyright (C) 2012,2013  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2013, 2016  Etersoft
+# Copyright (C) 2012, 2013, 2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -96,6 +96,9 @@ case $PMTYPE in
 		;;
 	aptcyg)
 		CMD="apt-cyg searchall"
+		;;
+	xbps)
+		CMD="xbps-query -s"
 		;;
 	*)
 		fatal "Have no suitable search command for $PMTYPE"

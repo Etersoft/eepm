@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012,2014  Etersoft
-# Copyright (C) 2012,2014  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2014, 2016  Etersoft
+# Copyright (C) 2012, 2014, 2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -102,6 +102,9 @@ case $PMTYPE in
 		;;
 	pkgng)
 		docmd pkg info $pkg_names
+		;;
+	xbps)
+		docmd xbps-query --show $pkg_names
 		;;
 	homebrew)
 		docmd brew info $pkg_names

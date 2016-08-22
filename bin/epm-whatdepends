@@ -56,6 +56,9 @@ case $PMTYPE in
 	aptcyg)
 		CMD="apt-cyg rdepends"
 		;;
+	xbps)
+		CMD="xbps-query -X"
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;

@@ -1,7 +1,7 @@
 #!/bin/sh
 # Author: Vitaly Lipatov <lav@etersoft.ru>
-# 2007, 2009, 2010, 2012 (c) Etersoft
-# 2007 Public domain
+# 2007, 2009, 2010, 2012, 2016 (c) Etersoft
+# 2007-2016 Public domain
 
 # Detect the distro and version
 # Welcome to send updates!
@@ -32,6 +32,7 @@ rpmvendor()
 	[ "$DISTRIB_ID" = "AstraLinux" ] && echo "astra" && return
 	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
 	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
+	[ "$DISTRIB_ID" = "VoidLinux" ] && echo "void" && return
 	echo "$DISTRIB_ID" | tr "[A-Z]" "[a-z]"
 }
 
@@ -55,6 +56,7 @@ pkgtype()
 		android) echo "apk" ;;
 		alpine) echo "apk" ;;
 		tinycorelinux) echo "tcz" ;;
+		voidlinux) echo "xbps" ;;
 		cygwin) echo "tar.xz" ;;
 		debian|ubuntu|mint|runtu|mcst|astra) echo "deb" ;;
 		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
@@ -146,6 +148,11 @@ elif distro os-release && which tce-ab 2>/dev/null >/dev/null ; then
 	. $ROOTDIR/etc/os-release
 	DISTRIB_ID="TinyCoreLinux"
 	DISTRIB_RELEASE="$VERSION_ID"
+
+elif distro os-release && which xbps-query 2>/dev/null >/dev/null ; then
+	. $ROOTDIR/etc/os-release
+	DISTRIB_ID="VoidLinux"
+	DISTRIB_RELEASE="Live"
 
 elif distro arch-release ; then
 	DISTRIB_ID="ArchLinux"
@@ -333,7 +340,7 @@ case $1 in
 		exit 0
 		;;
 	-V)
-		echo "20120519"
+		echo "20160822"
 		exit 0
 		;;
 	*)

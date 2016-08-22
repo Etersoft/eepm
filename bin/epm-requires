@@ -105,6 +105,9 @@ case $PMTYPE in
 		#CMD="pkg rquery '%dn-%dv'"
 		CMD="pkg info -d"
 		;;
+	xbps)
+		CMD="xbps-query -x"
+		;;
 	aptcyg)
 		#CMD="apt-cyg depends"
 		# print show version

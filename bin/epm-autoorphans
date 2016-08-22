@@ -90,6 +90,9 @@ case $PMTYPE in
 		local PKGLIST=$(zypper packages --orphaned | tail -n +5 | cut -d \| -f 3 | sort -u)
 		sudocmd zypper remove --clean-deps $PKGLIST
 		;;
+	xbps)
+		CMD="xbps-remove -o"
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
