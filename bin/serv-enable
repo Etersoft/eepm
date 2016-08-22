@@ -25,7 +25,7 @@ __serv_enable()
 {
 	local SERVICE="$1"
 
-	is_service_autostart $1 && info "Service $1 already enabled for startup" && return
+	is_service_autostart $1 && info "Service $1 is already enabled for startup" && return
 
 	case $SERVICETYPE in
 		service-chkconfig)
@@ -47,7 +47,7 @@ __serv_enable()
 			sudocmd systemctl enable $1
 			;;
 		runit)
-			assure_exists $SERVICE
+			epm assure $SERVICE
 			[ -r "/etc/sv/$SERVICE" ] || fatal "Can't find /etc/sv/$SERVICE"
 			sudocmd ln -s /etc/sv/$SERVICE /var/service/
 			;;
