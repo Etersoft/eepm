@@ -26,7 +26,7 @@ serv_disable()
 	local SERVICE="$1"
 
 	is_service_running $1 && { serv_stop $1 || return ; }
-	is_service_autostart $1 || { echo "Service $1 already disabled for startup" && return ; }
+	is_service_autostart $1 || { info "Service $1 already disabled for startup" && return ; }
 
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)

@@ -25,7 +25,7 @@ __serv_enable()
 {
 	local SERVICE="$1"
 
-	is_service_autostart $1 && echo "Service $1 already enabled for startup" && return
+	is_service_autostart $1 && info "Service $1 already enabled for startup" && return
 
 	case $SERVICETYPE in
 		service-chkconfig)
@@ -57,5 +57,6 @@ serv_enable()
 {
 	__serv_enable "$1" || return
 	# start if need
-	is_service_running $1 || serv_start $1 || return
+	is_service_running $1 && info "Service $1 is already running" && return
+	serv_start $1
 }
