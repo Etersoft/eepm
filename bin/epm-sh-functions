@@ -208,7 +208,8 @@ clean_store_output()
 # run epm, possible from side repo
 epm()
 {
-	$PROGDIR/epm $@
+	[ -n "$PROGNAME" ] || fatal "Can't use epm call from the piped script"
+	$PROGDIR/$PROGNAME $@
 }
 
 # Print error message and stop the program

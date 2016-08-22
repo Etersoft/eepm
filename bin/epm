@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012-2014  Etersoft
-# Copyright (C) 2012-2014  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2016  Etersoft
+# Copyright (C) 2012-2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -17,10 +17,12 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-PROGDIR=$(dirname $0)
+PROGDIR=$(dirname "$0")
+PROGNAME=$(basename "$0")
 [ "$PROGDIR" = "." ] && PROGDIR=$(pwd)
 if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
     PROGDIR=""
+    PROGNAME=""
 fi
 
 # will replaced to /usr/share/eepm during install
@@ -89,9 +91,7 @@ pkg_names=
 pkg_urls=
 quoted_args=
 
-progname="${0##*/}"
-
-case $progname in
+case $PROGNAME in
     epmi)
         epm_cmd=install
         ;;
@@ -136,11 +136,16 @@ case $progname in
         ;;
     epm|upm|eepm)
         ;;
+    epm.sh)
+        ;;
     *)
         # epm by default
         # fatal "Unknown command: $progname"
         ;;
 esac
+
+# was called with alias name
+[ -n "$epm_cmd" ] && PROGNAME="epm"
 
 check_command()
 {
@@ -397,7 +402,7 @@ pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
 if [ -z "$epm_cmd" ] ; then
     print_version
     echo
-    fatal "Run $ $progname --help for get help"
+    fatal "Run $ $PROGNAME --help for get help"
 fi
 
 # Use eatmydata for write specific operations
