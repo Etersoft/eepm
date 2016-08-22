@@ -40,7 +40,9 @@ serv_reload()
 			sudocmd systemctl reload $SERVICE "$@"
 			;;
 		*)
-			fatal "Have no suitable command for $SERVICETYPE"
+			info "Fallback to restart..."
+			load_helper serv-restart
+			serv_restart "$SERVICE" "$@"
 			;;
 	esac
 }
