@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012-2014  Etersoft
-# Copyright (C) 2012-2014  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2016  Etersoft
+# Copyright (C) 2012-2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -17,10 +17,12 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-PROGDIR=$(dirname $0)
+PROGDIR=$(dirname "$0")
+PROGNAME=$(basename "$0")
 [ "$PROGDIR" = "." ] && PROGDIR=$(pwd)
 if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
     PROGDIR=""
+    PROGNAME=""
 fi
 
 # will replaced to /usr/share/eepm during install
@@ -209,6 +211,12 @@ store_output()
     #return $PIPESTATUS
 }
 
+showcmd_store_output()
+{
+    showcmd "$@"
+    store_output "$@"
+}
+
 clean_store_output()
 {
     rm -f $RC_STDOUT $RC_STDOUT.pipestatus
@@ -216,7 +224,8 @@ clean_store_output()
 
 epm()
 {
-	$PROGDIR/epm $@
+	[ -n "$PROGNAME" ] || fatal "Can't use epm call from the piped script"
+	$PROGDIR/$PROGNAME $@
 }
 
 fatal()
@@ -479,6 +488,9 @@ case $DISTRNAME in
 	TinyCoreLinux)
 		CMD="tce"
 		;;
+	VoidLinux)
+		CMD="xbps"
+		;;
 	*)
 		fatal "Have no suitable DISTRNAME $DISTRNAME"
 		;;
@@ -503,26 +515,27 @@ is_active_systemd()
 
 epm_addrepo()
 {
+local repo="$(eval echo $quoted_args)"
 case $PMTYPE in
 	apt-rpm)
 		assure_exists apt-repo
-		sudocmd apt-repo add "$pkg_filenames"
+		sudocmd apt-repo add "$repo"
 		;;
 	apt-dpkg|aptitude-dpkg)
 		info "You need manually add repo to /etc/apt/sources.list"
 		;;
 	yum-rpm)
 		assure_exists yum-utils
-		sudocmd yum-config-manager --add-repo "$pkg_filenames"
+		sudocmd yum-config-manager --add-repo "$repo"
 		;;
 	urpm-rpm)
-		sudocmd urpmi.addmedia "$pkg_filenames"
+		sudocmd urpmi.addmedia "$repo"
 		;;
 	zypper-rpm)
-		sudocmd zypper ar "$pkg_filenames"
+		sudocmd zypper ar "$repo"
 		;;
 	emerge)
-		sudocmd layman -a $"pkg_filenames"
+		sudocmd layman -a "$repo"
 		;;
 	pacman)
 		info "You need manually add repo to /etc/pacman.conf"
@@ -530,7 +543,7 @@ case $PMTYPE in
 		#sudocmd repo-add $pkg_filenames
 		;;
 	npackd)
-		sudocmd npackdcl add-repo --url="$pkg_filenames"
+		sudocmd npackdcl add-repo --url="$repo"
 		;;
 	slackpkg)
 		info "You need manually add repo to /etc/slackpkg/mirrors"
@@ -735,6 +748,9 @@ case $PMTYPE in
 		local PKGLIST=$(zypper packages --orphaned | tail -n +5 | cut -d \| -f 3 | sort -u)
 		sudocmd zypper remove --clean-deps $PKGLIST
 		;;
+	xbps)
+		CMD="xbps-remove -o"
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
@@ -851,6 +867,9 @@ case $PMTYPE in
 		# FIXME: x86_64/i586 are duplicated
 		local PKGLIST=$(zypper packages --unneeded | tail -n +5 | cut -d \| -f 3 | sort -u)
 		sudocmd zypper remove --clean-deps $PKGLIST
+		;;
+	xbps)
+		CMD="xbps-remove -O"
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -1240,6 +1259,9 @@ case $PMTYPE in
 	pkgng)
 		sudocmd pkg clean -a
 		;;
+	xbps)
+		sudocmd xbps-remove -O
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
@@ -1566,6 +1588,9 @@ __epm_filelist_name()
 		pkgng)
 			CMD="pkg info -l"
 			;;
+		xbps)
+			CMD="xbps-query -f"
+			;;
 		aptcyg)
 			docmd apt-cyg listfiles $@ | sed -e "s|^|/|g"
 			return
@@ -1681,6 +1706,9 @@ case $PMTYPE in
 		;;
 	pkgng)
 		docmd pkg info $pkg_names
+		;;
+	xbps)
+		docmd xbps-query --show $pkg_names
 		;;
 	homebrew)
 		docmd brew info $pkg_names
@@ -1842,6 +1870,9 @@ epm_install_names()
 		aptcyg)
 			sudocmd apt-cyg install $@
 			return ;;
+		xbps)
+			sudocmd xbps-install $@
+			return ;;
 		*)
 			fatal "Have no suitable install command for $PMTYPE"
 			;;
@@ -1906,6 +1937,9 @@ epm_ni_install_names()
 		tce)
 			sudocmd tce-load -wi $@
 			return ;;
+		xbps)
+			sudocmd xbps-install -y $@
+			return ;;
 		#android)
 		#	sudocmd pm install $@
 		#	return ;;
@@ -1941,8 +1975,11 @@ __epm_check_if_try_install_deb()
 	local TDIR=$(mktemp -d)
 	cd $TDIR
 	for pkg in $debpkgs ; do
-		showcmd alien -r -k --scripts "$pkg"
-		# TODO: need check for return status
+		# TODO: fakeroot for non ALT?
+		showcmd_store_output alien -r -k --scripts "$pkg" || fatal
+		local RPMCONVERTED=$(grep "rpm generated" $RC_STDOUT | sed -e "s| generated||g")
+		clean_store_output
+		epm install $RPMCONVERTED
 	done
 	rm -f $TDIR/*
 	rmdir $TDIR/
@@ -1962,12 +1999,16 @@ __epm_check_if_try_install_rpm()
 	[ -n "$rpmpkgs" ] || return 1
 
 	assure_exists alien
+	assure_exists fakeroot
 
 	local TDIR=$(mktemp -d)
 	cd $TDIR
 	for pkg in $rpmpkgs ; do
-		showcmd alien -d -k --scripts "$pkg"
-		# TODO: need check for return status
+		showcmd_store_output fakeroot alien -d -k --scripts "$pkg"
+		clean_store_output
+		local DEBCONVERTED=$(grep "deb generated" $RC_STDOUT | sed -e "s| generated||g")
+		clean_store_output
+		epm install $DEBCONVERTED
 	done
 	rm -f $TDIR/*
 	rmdir $TDIR/
@@ -1992,7 +2033,7 @@ epm_install_files()
             if ! is_dirpath "$@" || [ "$(get_package_type "$@")" = "rpm" ] ; then
                 sudocmd rpm -Uvh $force $nodeps $@ && return
                 local RES=$?
-
+                # TODO: check rpm result code and convert it to compatible format if possible
                 __epm_check_if_rpm_already_installed $@ && return
 
             # if run with --nodeps, do not fallback on hi level
@@ -2143,6 +2184,10 @@ epm_print_install_command()
         tce)
             echo "tce-load -wi $@"
             ;;
+        xbps)
+            echo "xbps-install -y $@"
+            ;;
+
         *)
             fatal "Have no suitable appropriate install command for $PMTYPE"
             ;;
@@ -2165,14 +2210,8 @@ download_pkg_urls()
 	done
 }
 
-
-
-__handle_pkg_urls()
+__use_url_install()
 {
-	[ -n "$pkg_urls" ] || return
-
-	# TODO: do it correcly
-	to_remove_pkg_files=
 	case $PMTYPE in
 		apt-rpm)
 			# ALT Linux really?
@@ -2194,10 +2233,23 @@ __handle_pkg_urls()
 		#	pkg_names="$pkg_names $pkg_urls"
 		#	;;
 		*)
-			# use workaround with eget: download and put in pkg_files
-			download_pkg_urls
+			return 1
 			;;
 	esac
+	return 0
+}
+
+__handle_pkg_urls()
+{
+	[ -n "$pkg_urls" ] || return
+
+	# TODO: do it correctly
+	to_remove_pkg_files=
+	
+	if [ "$(get_package_type "$pkg")" != $PKGFORMAT ] || ! __use_url_install ; then
+		# use workaround with eget: download and put in pkg_files
+		download_pkg_urls
+	fi
 	pkg_urls=
 }
 
@@ -2413,6 +2465,11 @@ __aptcyg_print_full()
 	echo "$1-$VERSION"
 }
 
+__fo_pfn()
+{
+	grep -v "^$" | grep -- "$pkg_filenames"
+}
+
 epm_packages()
 {
 	local CMD
@@ -2420,23 +2477,28 @@ epm_packages()
 
 case $PMTYPE in
 	apt-rpm)
+		# FIXME: strong equal
 		CMD="rpm -qa $pkg_filenames"
 		[ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n $pkg_filenames"
-		;;
+		docmd $CMD
+		return ;;
 	*-dpkg)
+		# FIXME: strong equal
 		#CMD="dpkg -l $pkg_filenames"
 		CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}-\${Version}\n $pkg_filenames"
 		[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}\n $pkg_filenames"
-		docmd $CMD | grep "^i" | sed -e "s|.* ||g"
-		return
-		;;
+		showcmd $CMD
+		$CMD | grep "^i" | sed -e "s|.* ||g" | __fo_pfn
+		return ;;
 	snappy)
 		CMD="snappy info"
 		;;
 	yum-rpm|urpm-rpm|zypper-rpm|dnf-rpm)
+		# FIXME: strong equal
 		CMD="rpm -qa $pkg_filenames"
 		[ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n $pkg_filenames"
-		;;
+		docmd $CMD
+		return ;;
 	emerge)
 		CMD="qlist -I -C"
 		# print with colors for console output
@@ -2444,26 +2506,27 @@ case $PMTYPE in
 		;;
 	pkgsrc)
 		CMD="pkg_info"
-		docmd $CMD | sed -e "s| .*||g"
-		return
-		;;
+		showcmd $CMD
+		$CMD | sed -e "s| .*||g" | __fo_pfn
+		return ;;
 	pkgng)
 		if [ -n "$pkg_filenames" ] ; then
 			CMD="pkg info -E $pkg_filenames"
 		else
 			CMD="pkg info"
 		fi
+		showcmd $CMD
 		if [ -n "$short" ] ; then
-		    docmd $CMD | sed -e "s| .*||g" | sed -e "s|-[0-9].*||g"
+		    $CMD | sed -e "s| .*||g" | sed -e "s|-[0-9].*||g" | __fo_pfn
 		else
-		    docmd $CMD | sed -e "s| .*||g"
+		    $CMD | sed -e "s| .*||g" | __fo_pfn
 		fi
-		return
-		;;
+		return ;;
 	pacman)
 		CMD="pacman -Qs $pkg_filenames"
+		showcmd $CMD
 		if [ -n "$short" ] ; then
-			docmd $CMD | sed -e "s| .*||g" -e "s|.*/||g" | grep -v "^$"
+			$CMD | sed -e "s| .*||g" -e "s|.*/||g" | __fo_pfn
 			return
 		fi
 		;;
@@ -2483,7 +2546,7 @@ case $PMTYPE in
 			# FIXME: does not work for libjpeg-v8a
 			# TODO: remove last 3 elements (if arch is second from the last?)
 			# FIXME this hack
-			docmd ls -1 /var/log/packages/ | sed -e "s|-[0-9].*||g" | sed -e "s|libjpeg-v8a.*|libjpeg|g"
+			docmd ls -1 /var/log/packages/ | sed -e "s|-[0-9].*||g" | sed -e "s|libjpeg-v8a.*|libjpeg|g" | __fo_pfn
 			return
 		fi
 		;;
@@ -2502,9 +2565,20 @@ case $PMTYPE in
 	guix)
 		CMD="guix package -I"
 		;;
+	xbps)
+		CMD="xbps-query -l"
+		showcmd $CMD
+		if [ -n "$short" ] ; then
+			$CMD | sed -e "s|^ii ||g" -e "s| .*||g" -e "s|\(.*\)-.*|\1|g" | __fo_pfn
+		else
+			$CMD | sed -e "s|^ii ||g" -e "s| .*||g" | __fo_pfn
+		fi
+		return 0
+		;;
 	android)
 		CMD="pm list packages"
-		docmd $CMD | sed -e "s|^package:||g"
+		showcmd $CMD
+		$CMD | sed -e "s|^package:||g" | __fo_pfn
 		return
 		;;
 	aptcyg)
@@ -2523,7 +2597,7 @@ case $PMTYPE in
 		;;
 esac
 
-docmd $CMD
+docmd $CMD | __fopfn
 
 }
 
@@ -2875,16 +2949,18 @@ _get_grep_exp()
 
 _shortquery_via_packages_list()
 {
-	local res=0
+	local res=1
 	local grepexp
 	local firstpkg=$1
 	shift
 
 	grepexp=$(_get_grep_exp $firstpkg)
 
+	# TODO: we miss status due grep
+	# Note: double call due stderr redirect
 	# Note: we use short=1 here due grep by ^name$
 	# separate first line for print out command
-	short=1 pkg_filenames=$firstpkg epm_packages | grep -- "$grepexp" || res=1
+	short=1 pkg_filenames=$firstpkg epm_packages | grep -- "$grepexp" && res=0 || res=1
 
 	local pkg
 	for pkg in "$@" ; do
@@ -2897,16 +2973,19 @@ _shortquery_via_packages_list()
 
 _query_via_packages_list()
 {
-	local res=0
+	local res=1
 	local grepexp
 	local firstpkg=$1
 	shift
 
 	grepexp=$(_get_grep_exp $firstpkg)
 
+	# TODO: we miss status due grep
+	# TODO: grep correctly
+	# Note: double call due stderr redirect
 	# Note: we use short=1 here due grep by ^name$
 	# separate first line for print out command
-	short=1 pkg_filenames=$firstpkg epm_packages | grep -q -- "$grepexp" && quiet=1 pkg_filenames=$firstpkg epm_packages || res=1
+	short=1 pkg_filenames=$firstpkg epm_packages | grep -q -- "$grepexp" && quiet=1 pkg_filenames=$firstpkg epm_packages && res=0 || res=1
 
 	local pkg
 	for pkg in "$@" ; do
@@ -3188,6 +3267,10 @@ __do_query()
         ipkg)
             CMD="ipkg files"
             ;;
+        xbps)
+            # FIXME: maybe it is search file?
+            CMD="xbps-query -o"
+            ;;
         aptcyg)
             #CMD="apt-cyg packageof"
             # do not realized locally
@@ -3389,7 +3472,7 @@ __replace_alt_version_in_repo()
 	#echo "Upgrading $DISTRNAME from $1 to $2 ..."
 	docmd apt-repo list | sed -e "s|\($1\)|{\1}->{$2}|g" | egrep --color -- "$1"
 	# ask and replace only we will have changes
-	if apt-repo list | egrep -q -- "$1" ; then
+	if a= apt-repo list | egrep -q -- "$1" ; then
 		confirm "Are these correct changes? [y/N]" || fatal "Exiting"
 		__replace_text_in_alt_repo "/^ *#/! s!$1!$2!g"
 	fi
@@ -3706,6 +3789,9 @@ epm_remove_names()
 		aptcyg)
 			sudocmd apt-cyg remove $@
 			return ;;
+		xbps)
+			sudocmd xbps remove -R $@
+			return ;;
 		ipkg)
 			sudocmd ipkg $(subst_option force -force-depends) remove $@
 			return ;;
@@ -3748,6 +3834,9 @@ epm_remove_nonint()
 		ipkg)
 			sudocmd ipkg -force-defaults remove $@
 			return ;;
+		xbps)
+			sudocmd xbps remove -y $@
+			return ;;
 	esac
 	return 5
 }
@@ -3781,6 +3870,9 @@ epm_print_remove_command()
 			;;
 		aptcyg)
 			echo "apt-cyg remove $@"
+			;;
+		xbps)
+			echo "xbps remove -y $@"
 			;;
 		*)
 			fatal "Have no suitable appropriate remove command for $PMTYPE"
@@ -3851,6 +3943,9 @@ epm_remove_old_kernels()
 	Gentoo)
 		sudocmd emerge -P gentoo-sources
 		return ;;
+	VoidLinux)
+		sudocmd vkpurge rm all
+		return ;;
 	esac
 
 	case $PMTYPE in
@@ -3864,32 +3959,33 @@ epm_remove_old_kernels()
 
 epm_removerepo()
 {
+local repo="$(eval echo $quoted_args)"
 case $PMTYPE in
 	apt-rpm)
 		assure_exists apt-repo
-		sudocmd apt-repo rm "$quoted_args"
+		sudocmd apt-repo rm "$repo"
 		;;
 	apt-dpkg|aptitude-dpkg)
 		info "You need remove repo from /etc/apt/sources.list"
 		;;
 	yum-rpm)
 		assure_exists yum-utils
-		sudocmd yum-config-manager --disable "$pkg_filenames"
+		sudocmd yum-config-manager --disable "$repo"
 		;;
 	urpm-rpm)
-		sudocmd urpmi.removemedia "$pkg_filenames"
+		sudocmd urpmi.removemedia "$repo"
 		;;
 	zypper-rpm)
-		sudocmd zypper removerepo "$pkg_filenames"
+		sudocmd zypper removerepo "$repo"
 		;;
 	emerge)
-		sudocmd layman "-d$pkg_filenames"
+		sudocmd layman "-d$repo"
 		;;
 	pacman)
 		info "You need remove repo from /etc/pacman.conf"
 		;;
 	npackd)
-		sudocmd npackdcl remove-repo --url="$pkg_filenames"
+		sudocmd npackdcl remove-repo --url="$repo"
 		;;
 	slackpkg)
 		info "You need remove repo from /etc/slackpkg/mirrors"
@@ -3969,14 +4065,18 @@ case $PMTYPE in
 		__fix_apt_sources_list /etc/apt/sources.list
 		__fix_apt_sources_list /etc/apt/sources.list.d/*.list
 		docmd apt-repo list
-
+		# FIXME: what the best place?
 		# rebuild rpm database
 		#sudocmd rm -fv /var/lib/rpm/__db*
 		#sudocmd rpm --rebuilddb
 		;;
 	yum-rpm|dnf-rpm)
-		sudocmd rm -fv /var/lib/rpm/__db*
-		sudocmd rpm --rebuilddb
+		# FIXME: what the best place?
+		#sudocmd rm -fv /var/lib/rpm/__db*
+		#sudocmd rpm --rebuilddb
+		;;
+	xbps)
+		sudocmd xbps-pkgdb -a
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -4027,6 +4127,9 @@ case $PMTYPE in
 	emerge)
 		docmd eselect profile list
 		docmd layman -L
+		;;
+	xbps)
+		docmd xbps-query -L
 		;;
 	pacman)
 		docmd grep -v -- "^#\|^$" /etc/pacman.conf
@@ -4127,6 +4230,9 @@ case $PMTYPE in
 	pkgng)
 		#CMD="pkg rquery '%dn-%dv'"
 		CMD="pkg info -d"
+		;;
+	xbps)
+		CMD="xbps-query -x"
 		;;
 	aptcyg)
 		#CMD="apt-cyg depends"
@@ -4231,6 +4337,9 @@ case $PMTYPE in
 		;;
 	aptcyg)
 		CMD="apt-cyg searchall"
+		;;
+	xbps)
+		CMD="xbps-query -s"
 		;;
 	*)
 		fatal "Have no suitable search command for $PMTYPE"
@@ -4368,6 +4477,9 @@ case $PMTYPE in
 		;;
 	ipkg)
 		CMD="ipkg search"
+		;;
+	xbps)
+		CMD="xbps-query -Ro"
 		;;
 	aptcyg)
 		docmd apt-cyg searchall $(echo " $pkg_filenames" | sed -e "s| /| |g")
@@ -4716,6 +4828,9 @@ case $PMTYPE in
 	aptcyg)
 		sudocmd apt-cyg update
 		;;
+	xbps)
+		sudocmd xbps-install -S
+		;;
 	*)
 		fatal "Have no suitable update command for $PMTYPE"
 		;;
@@ -4804,6 +4919,9 @@ epm_upgrade()
 		docmd_foreach "epm install" $(short=1 epm packages)
 		return
 		;;
+	xbps)
+		CMD="xbps-install -Su"
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
@@ -4867,6 +4985,9 @@ case $PMTYPE in
 	aptcyg)
 		CMD="apt-cyg rdepends"
 		;;
+	xbps)
+		CMD="xbps-query -X"
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
@@ -4918,8 +5039,8 @@ docmd $CMD $pkg
 internal_distr_info()
 {
 # Author: Vitaly Lipatov <lav@etersoft.ru>
-# 2007, 2009, 2010, 2012 (c) Etersoft
-# 2007 Public domain
+# 2007, 2009, 2010, 2012, 2016 (c) Etersoft
+# 2007-2016 Public domain
 
 # Detect the distro and version
 # Welcome to send updates!
@@ -4950,6 +5071,7 @@ rpmvendor()
 	[ "$DISTRIB_ID" = "AstraLinux" ] && echo "astra" && return
 	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
 	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
+	[ "$DISTRIB_ID" = "VoidLinux" ] && echo "void" && return
 	echo "$DISTRIB_ID" | tr "[A-Z]" "[a-z]"
 }
 
@@ -4973,6 +5095,7 @@ pkgtype()
 		android) echo "apk" ;;
 		alpine) echo "apk" ;;
 		tinycorelinux) echo "tcz" ;;
+		voidlinux) echo "xbps" ;;
 		cygwin) echo "tar.xz" ;;
 		debian|ubuntu|mint|runtu|mcst|astra) echo "deb" ;;
 		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
@@ -5064,6 +5187,11 @@ elif distro os-release && which tce-ab 2>/dev/null >/dev/null ; then
 	. $ROOTDIR/etc/os-release
 	DISTRIB_ID="TinyCoreLinux"
 	DISTRIB_RELEASE="$VERSION_ID"
+
+elif distro os-release && which xbps-query 2>/dev/null >/dev/null ; then
+	. $ROOTDIR/etc/os-release
+	DISTRIB_ID="VoidLinux"
+	DISTRIB_RELEASE="Live"
 
 elif distro arch-release ; then
 	DISTRIB_ID="ArchLinux"
@@ -5251,7 +5379,7 @@ case $1 in
 		exit 0
 		;;
 	-V)
-		echo "20120519"
+		echo "20160822"
 		exit 0
 		;;
 	*)
@@ -5379,7 +5507,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.9.1"
+        echo "EPM package manager version 1.9.3"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -5407,9 +5535,7 @@ pkg_names=
 pkg_urls=
 quoted_args=
 
-progname="${0##*/}"
-
-case $progname in
+case $PROGNAME in
     epmi)
         epm_cmd=install
         ;;
@@ -5454,11 +5580,16 @@ case $progname in
         ;;
     epm|upm|eepm)
         ;;
+    epm.sh)
+        ;;
     *)
         # epm by default
         # fatal "Unknown command: $progname"
         ;;
 esac
+
+# was called with alias name
+[ -n "$epm_cmd" ] && PROGNAME="epm"
 
 check_command()
 {
@@ -5715,7 +5846,7 @@ pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
 if [ -z "$epm_cmd" ] ; then
     print_version
     echo
-    fatal "Run $ $progname --help for get help"
+    fatal "Run $ $PROGNAME --help for get help"
 fi
 
 # Use eatmydata for write specific operations

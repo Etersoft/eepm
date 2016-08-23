@@ -204,6 +204,12 @@ store_output()
     #return $PIPESTATUS
 }
 
+showcmd_store_output()
+{
+    showcmd "$@"
+    store_output "$@"
+}
+
 clean_store_output()
 {
     rm -f $RC_STDOUT $RC_STDOUT.pipestatus
@@ -211,7 +217,8 @@ clean_store_output()
 
 epm()
 {
-	$PROGDIR/epm $@
+	[ -n "$PROGNAME" ] || fatal "Can't use epm call from the piped script"
+	$PROGDIR/$PROGNAME $@
 }
 
 fatal()
@@ -474,6 +481,9 @@ case $DISTRNAME in
 	TinyCoreLinux)
 		CMD="tce"
 		;;
+	VoidLinux)
+		CMD="xbps"
+		;;
 	*)
 		fatal "Have no suitable DISTRNAME $DISTRNAME"
 		;;
@@ -518,6 +528,9 @@ serv_common()
 				sudocmd systemctl "$@" $SERVICE
 			fi
 			;;
+		runit)
+			sudocmd sv $SERVICE "$@"
+			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
 			;;
@@ -532,7 +545,7 @@ serv_disable()
 	local SERVICE="$1"
 
 	is_service_running $1 && { serv_stop $1 || return ; }
-	is_service_autostart $1 || { echo "Service $1 already disabled for startup" && return ; }
+	is_service_autostart $1 || { info "Service $1 already disabled for startup" && return ; }
 
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)
@@ -548,6 +561,9 @@ serv_disable()
 		systemd)
 			sudocmd systemctl disable $1
 			;;
+		runit)
+			sudocmd rm -fv /var/service/$SERVICE
+			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
 			;;
@@ -561,7 +577,7 @@ __serv_enable()
 {
 	local SERVICE="$1"
 
-	is_service_autostart $1 && echo "Service $1 already enabled for startup" && return
+	is_service_autostart $1 && info "Service $1 is already enabled for startup" && return
 
 	case $SERVICETYPE in
 		service-chkconfig)
@@ -582,6 +598,11 @@ __serv_enable()
 		systemd)
 			sudocmd systemctl enable $1
 			;;
+		runit)
+			epm assure $SERVICE
+			[ -r "/etc/sv/$SERVICE" ] || fatal "Can't find /etc/sv/$SERVICE"
+			sudocmd ln -s /etc/sv/$SERVICE /var/service/
+			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
 			;;
@@ -593,7 +614,8 @@ serv_enable()
 {
 	__serv_enable "$1" || return
 	# start if need
-	is_service_running $1 || serv_start $1 || return
+	is_service_running $1 && info "Service $1 is already running" && return
+	serv_start $1
 }
 
 # File bin/serv-list:
@@ -694,7 +716,8 @@ serv_reload()
 			sudocmd systemctl reload $SERVICE "$@"
 			;;
 		*)
-			fatal "Have no suitable command for $SERVICETYPE"
+			info "Fallback to restart..."
+			serv_restart "$SERVICE" "$@"
 			;;
 	esac
 }
@@ -720,6 +743,9 @@ serv_restart()
 			;;
 		systemd)
 			sudocmd systemctl restart $SERVICE "$@"
+			;;
+		runit)
+			sudocmd sv restart "$SERVICE"
 			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
@@ -748,6 +774,9 @@ serv_start()
 		systemd)
 			sudocmd systemctl start "$SERVICE" "$@"
 			;;
+		runit)
+			sudocmd sv up "$SERVICE"
+			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
 			;;
@@ -774,6 +803,9 @@ is_service_running()
 		systemd)
 			$SUDO systemctl status $1 >/dev/null
 			;;
+		runit)
+			$SUDO sv status "$SERVICE" >/dev/null
+			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
 			;;
@@ -799,6 +831,9 @@ is_service_autostart()
 			;;
 		systemd)
 			$SUDO systemctl is-enabled $1
+			;;
+		runit)
+			test -L /var/service/$SERVICE
 			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
@@ -827,6 +862,9 @@ serv_status()
 		systemd)
 			sudocmd systemctl status $SERVICE "$@"
 			;;
+		runit)
+			sudocmd sv status "$SERVICE"
+			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
 			;;
@@ -854,6 +892,9 @@ serv_stop()
 		systemd)
 			sudocmd systemctl stop $SERVICE "$@"
 			;;
+		runit)
+			sudocmd sv down "$SERVICE"
+			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
 			;;
@@ -869,19 +910,13 @@ serv_try_restart()
 	shift
 
 	case $SERVICETYPE in
-		service-chkconfig|service-upstart)
-			is_service_running $SERVICE || return 0
-			docmd serv $SERVICE restart "$@"
-			;;
-		service-initd|service-update)
-			is_service_running $SERVICE || return 0
-			sudocmd $INITDIR/$SERVICE restart "$@"
-			;;
 		systemd)
 			sudocmd systemctl try-restart $SERVICE "$@"
 			;;
 		*)
-			fatal "Have no suitable command for $SERVICETYPE"
+			info "Fallback to restart..."
+			is_service_running $SERVICE || { info "Service $SERVICE is not running, restart skipping…" ; return 0 ; }
+			serv_restart "$SERVICE" "$@"
 			;;
 	esac
 }
@@ -922,8 +957,8 @@ _print_additional_usage
 internal_distr_info()
 {
 # Author: Vitaly Lipatov <lav@etersoft.ru>
-# 2007, 2009, 2010, 2012 (c) Etersoft
-# 2007 Public domain
+# 2007, 2009, 2010, 2012, 2016 (c) Etersoft
+# 2007-2016 Public domain
 
 # Detect the distro and version
 # Welcome to send updates!
@@ -954,6 +989,7 @@ rpmvendor()
 	[ "$DISTRIB_ID" = "AstraLinux" ] && echo "astra" && return
 	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
 	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
+	[ "$DISTRIB_ID" = "VoidLinux" ] && echo "void" && return
 	echo "$DISTRIB_ID" | tr "[A-Z]" "[a-z]"
 }
 
@@ -977,6 +1013,7 @@ pkgtype()
 		android) echo "apk" ;;
 		alpine) echo "apk" ;;
 		tinycorelinux) echo "tcz" ;;
+		voidlinux) echo "xbps" ;;
 		cygwin) echo "tar.xz" ;;
 		debian|ubuntu|mint|runtu|mcst|astra) echo "deb" ;;
 		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
@@ -1068,6 +1105,11 @@ elif distro os-release && which tce-ab 2>/dev/null >/dev/null ; then
 	. $ROOTDIR/etc/os-release
 	DISTRIB_ID="TinyCoreLinux"
 	DISTRIB_RELEASE="$VERSION_ID"
+
+elif distro os-release && which xbps-query 2>/dev/null >/dev/null ; then
+	. $ROOTDIR/etc/os-release
+	DISTRIB_ID="VoidLinux"
+	DISTRIB_RELEASE="Live"
 
 elif distro arch-release ; then
 	DISTRIB_ID="ArchLinux"
@@ -1255,7 +1297,7 @@ case $1 in
 		exit 0
 		;;
 	-V)
-		echo "20120519"
+		echo "20160822"
 		exit 0
 		;;
 	*)
@@ -1403,6 +1445,9 @@ case $DISTRNAME in
 	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific)
 		CMD="service-chkconfig"
 		;;
+	VoidLinux)
+		CMD="runit"
+		;;
 	Slackware)
 		CMD="service-initd"
 		;;
@@ -1433,6 +1478,7 @@ ANYSERVICE=$(which anyservice 2>/dev/null)
 is_anyservice()
 {
 	[ -n "$ANYSERVICE" ] || return
+	[ -n "$1" ] || return
 	# check if anyservice is exists and checkd returns true
 	$ANYSERVICE "$1" checkd 2>/dev/null
 }
@@ -1452,7 +1498,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.9.1"
+        echo "Service manager version 1.9.3"
         echo "Running on $($DISTRVENDOR)"
         echo "Copyright (c) Etersoft 2012, 2013, 2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
