@@ -200,6 +200,12 @@ store_output()
     #return $PIPESTATUS
 }
 
+showcmd_store_output()
+{
+    showcmd "$@"
+    store_output "$@"
+}
+
 clean_store_output()
 {
     rm -f $RC_STDOUT $RC_STDOUT.pipestatus

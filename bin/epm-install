@@ -277,8 +277,11 @@ __epm_check_if_try_install_deb()
 	local TDIR=$(mktemp -d)
 	cd $TDIR
 	for pkg in $debpkgs ; do
-		showcmd alien -r -k --scripts "$pkg"
-		# TODO: need check for return status
+		# TODO: fakeroot for non ALT?
+		showcmd_store_output alien -r -k --scripts "$pkg" || fatal
+		local RPMCONVERTED=$(grep "rpm generated" $RC_STDOUT | sed -e "s| generated||g")
+		clean_store_output
+		epm install $RPMCONVERTED
 	done
 	rm -f $TDIR/*
 	rmdir $TDIR/
@@ -299,12 +302,16 @@ __epm_check_if_try_install_rpm()
 	[ -n "$rpmpkgs" ] || return 1
 
 	assure_exists alien
+	assure_exists fakeroot
 
 	local TDIR=$(mktemp -d)
 	cd $TDIR
 	for pkg in $rpmpkgs ; do
-		showcmd alien -d -k --scripts "$pkg"
-		# TODO: need check for return status
+		showcmd_store_output fakeroot alien -d -k --scripts "$pkg"
+		clean_store_output
+		local DEBCONVERTED=$(grep "deb generated" $RC_STDOUT | sed -e "s| generated||g")
+		clean_store_output
+		epm install $DEBCONVERTED
 	done
 	rm -f $TDIR/*
 	rmdir $TDIR/
