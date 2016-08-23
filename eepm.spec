@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.9.2
+Version: 1.9.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -65,6 +65,13 @@ chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Wed Aug 24 2016 Vitaly Lipatov <lav@altlinux.ru> 1.9.3-alt1
+- implement cross install for rpm and deb packages
+- serv: add runit support (Void Linux)
+- serv-reload: add fallback via restart
+- serv-try_restart: add fallback via restart
+- small fixes
+
 * Tue Aug 23 2016 Vitaly Lipatov <lav@altlinux.ru> 1.9.2-alt1
 - add Void Linux initial support
 - addrepo/removerepo: fix used repo id string
