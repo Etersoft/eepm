@@ -52,6 +52,9 @@ epm_remove_old_kernels()
 	Gentoo)
 		sudocmd emerge -P gentoo-sources
 		return ;;
+	VoidLinux)
+		sudocmd vkpurge rm all
+		return ;;
 	esac
 
 	case $PMTYPE in
