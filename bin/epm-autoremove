@@ -24,7 +24,8 @@ __epm_autoremove_altrpm()
 	assure_exists /etc/buildreqs/files/ignore.d/apt-scripts apt-scripts
 	info
 	info "Removing all non -devel/-debuginfo libs packages not need by anything..."
-	[ -n "$force" ] || info "You can run with --force for more deep removing"
+	#[ -n "$force" ] || info "You can run with --force for more deep removing"
+	local force=force
 
 	local flag=
 	local libexclude='^lib'
@@ -34,7 +35,7 @@ __epm_autoremove_altrpm()
 	showcmd "apt-cache list-nodeps | grep -- \"$libexclude\""
 	pkgs=$(apt-cache list-nodeps | grep -- "$libexclude" \
 		| grep -E -v -- "-(devel|debuginfo)$" \
-		| grep -E -v -- "-(util|tool|plugin|daemon)" \
+		| grep -E -v -- "-(util|utils|tool|tools|plugin|daemon|help)$" \
 		| sed -e "s/\.32bit$//g" \
 		| grep -E -v -- "^(libsystemd|libreoffice|libnss|libvirt-client|libvirt-daemon|eepm)" )
 	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
