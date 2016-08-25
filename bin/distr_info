@@ -116,10 +116,6 @@ if distro altlinux-release ; then
 	elif has Citron   ; then DISTRIB_RELEASE="2.4"
 	fi
 
-elif [ `uname -o` = "Cygwin" ] ; then
-        DISTRIB_ID="Cygwin"
-        DISTRIB_RELEASE="all"
-
 elif distro gentoo-release ; then
 	DISTRIB_ID="Gentoo"
 	MAKEPROFILE=$(readlink $ROOTDIR/etc/portage/make.profile 2>/dev/null) || MAKEPROFILE=$(readlink $ROOTDIR/etc/make.profile)
@@ -281,7 +277,7 @@ elif [ `uname` = "SunOS" ] ; then
 	DISTRIB_RELEASE=$(uname -r)
 
 # fixme: can we detect by some file?
-elif [ `uname` = "Darwin" ] ; then
+elif [ `uname -s 2>/dev/null` = "Darwin" ] ; then
 	DISTRIB_ID="MacOS"
 	DISTRIB_RELEASE=$(uname -r)
 
@@ -294,6 +290,10 @@ elif [ `uname` = "Linux" ] && which guix 2>/dev/null >/dev/null ; then
 elif [ `uname` = "Linux" ] && [ -x $ROOTDIR/system/bin/getprop ] ; then
 	DISTRIB_ID="Android"
 	DISTRIB_RELEASE=$(getprop | awk -F": " '/build.version.release/ { print $2 }' | tr -d '[]')
+
+elif [ `uname -o 2>/dev/null` = "Cygwin" ] ; then
+        DISTRIB_ID="Cygwin"
+        DISTRIB_RELEASE="all"
 
 # try use standart LSB info by default
 elif distro lsb-release && [ -n "$DISTRIB_RELEASE" ]; then
