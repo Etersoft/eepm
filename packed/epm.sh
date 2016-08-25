@@ -766,7 +766,8 @@ __epm_autoremove_altrpm()
 	assure_exists /etc/buildreqs/files/ignore.d/apt-scripts apt-scripts
 	info
 	info "Removing all non -devel/-debuginfo libs packages not need by anything..."
-	[ -n "$force" ] || info "You can run with --force for more deep removing"
+	#[ -n "$force" ] || info "You can run with --force for more deep removing"
+	local force=force
 
 	local flag=
 	local libexclude='^lib'
@@ -776,7 +777,7 @@ __epm_autoremove_altrpm()
 	showcmd "apt-cache list-nodeps | grep -- \"$libexclude\""
 	pkgs=$(apt-cache list-nodeps | grep -- "$libexclude" \
 		| grep -E -v -- "-(devel|debuginfo)$" \
-		| grep -E -v -- "-(util|tool|plugin|daemon)" \
+		| grep -E -v -- "-(util|utils|tool|tools|plugin|daemon|help)$" \
 		| sed -e "s/\.32bit$//g" \
 		| grep -E -v -- "^(libsystemd|libreoffice|libnss|libvirt-client|libvirt-daemon|eepm)" )
 	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
@@ -1023,7 +1024,7 @@ case $PMTYPE in
 		sudocmd pkg check -d -a
 		;;
 	homebrew)
-		sudocmd brew doctor
+		docmd brew doctor
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -1846,7 +1847,7 @@ epm_install_names()
 			return ;;
 		homebrew)
 			# FIXME: sudo and quote
-			__separate_sudocmd "brew install" "brew upgrade" $@
+			SUDO= __separate_sudocmd "brew install" "brew upgrade" $@
 			return ;;
 		ipkg)
 			[ -n "$force" ] && force=-force-depends
@@ -1939,6 +1940,10 @@ epm_ni_install_names()
 			return ;;
 		xbps)
 			sudocmd xbps-install -y $@
+			return ;;
+		homebrew)
+			# FIXME: sudo and quote
+			SUDO= __separate_sudocmd "brew install" "brew upgrade" $@
 			return ;;
 		#android)
 		#	sudocmd pm install $@
@@ -2186,6 +2191,10 @@ epm_print_install_command()
             ;;
         xbps)
             echo "xbps-install -y $@"
+            ;;
+        homebrew)
+            # FIXME: sudo and quote
+            echo "brew install $@"
             ;;
 
         *)
@@ -3784,7 +3793,7 @@ epm_remove_names()
 			sudocmd /usr/sbin/slackpkg remove $@
 			return ;;
 		homebrew)
-			sudocmd brew remove $@
+			docmd brew remove $@
 			return ;;
 		aptcyg)
 			sudocmd apt-cyg remove $@
@@ -4813,7 +4822,7 @@ case $PMTYPE in
 		sudocmd packdcl detect # get packages from MSI database
 		;;
 	homebrew)
-		sudocmd brew update
+		docmd brew update
 		;;
 	ipkg)
 		sudocmd ipkg update
@@ -4903,7 +4912,7 @@ epm_upgrade()
 		;;
 	homebrew)
 		#CMD="brew upgrade"
-		sudocmd "brew upgrade `brew outdated`"
+		docmd "brew upgrade `brew outdated`"
 		return
 		;;
 	ipkg)
@@ -5155,10 +5164,6 @@ if distro altlinux-release ; then
 	elif has Citron   ; then DISTRIB_RELEASE="2.4"
 	fi
 
-elif [ `uname -o` = "Cygwin" ] ; then
-        DISTRIB_ID="Cygwin"
-        DISTRIB_RELEASE="all"
-
 elif distro gentoo-release ; then
 	DISTRIB_ID="Gentoo"
 	MAKEPROFILE=$(readlink $ROOTDIR/etc/portage/make.profile 2>/dev/null) || MAKEPROFILE=$(readlink $ROOTDIR/etc/make.profile)
@@ -5320,7 +5325,7 @@ elif [ `uname` = "SunOS" ] ; then
 	DISTRIB_RELEASE=$(uname -r)
 
 # fixme: can we detect by some file?
-elif [ `uname` = "Darwin" ] ; then
+elif [ `uname -s 2>/dev/null` = "Darwin" ] ; then
 	DISTRIB_ID="MacOS"
 	DISTRIB_RELEASE=$(uname -r)
 
@@ -5333,6 +5338,10 @@ elif [ `uname` = "Linux" ] && which guix 2>/dev/null >/dev/null ; then
 elif [ `uname` = "Linux" ] && [ -x $ROOTDIR/system/bin/getprop ] ; then
 	DISTRIB_ID="Android"
 	DISTRIB_RELEASE=$(getprop | awk -F": " '/build.version.release/ { print $2 }' | tr -d '[]')
+
+elif [ `uname -o 2>/dev/null` = "Cygwin" ] ; then
+        DISTRIB_ID="Cygwin"
+        DISTRIB_RELEASE="all"
 
 # try use standart LSB info by default
 elif distro lsb-release && [ -n "$DISTRIB_RELEASE" ]; then
