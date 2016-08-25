@@ -146,7 +146,7 @@ epm_install_names()
 			return ;;
 		homebrew)
 			# FIXME: sudo and quote
-			__separate_sudocmd "brew install" "brew upgrade" $@
+			SUDO= __separate_sudocmd "brew install" "brew upgrade" $@
 			return ;;
 		ipkg)
 			[ -n "$force" ] && force=-force-depends
@@ -240,6 +240,10 @@ epm_ni_install_names()
 			return ;;
 		xbps)
 			sudocmd xbps-install -y $@
+			return ;;
+		homebrew)
+			# FIXME: sudo and quote
+			SUDO= __separate_sudocmd "brew install" "brew upgrade" $@
 			return ;;
 		#android)
 		#	sudocmd pm install $@
@@ -490,6 +494,10 @@ epm_print_install_command()
             ;;
         xbps)
             echo "xbps-install -y $@"
+            ;;
+        homebrew)
+            # FIXME: sudo and quote
+            echo "brew install $@"
             ;;
 
         *)

@@ -60,7 +60,7 @@ case $PMTYPE in
 		sudocmd pkg check -d -a
 		;;
 	homebrew)
-		sudocmd brew doctor
+		docmd brew doctor
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"

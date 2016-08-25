@@ -75,7 +75,7 @@ case $PMTYPE in
 		sudocmd packdcl detect # get packages from MSI database
 		;;
 	homebrew)
-		sudocmd brew update
+		docmd brew update
 		;;
 	ipkg)
 		sudocmd ipkg update

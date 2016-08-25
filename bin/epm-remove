@@ -123,7 +123,7 @@ epm_remove_names()
 			sudocmd /usr/sbin/slackpkg remove $@
 			return ;;
 		homebrew)
-			sudocmd brew remove $@
+			docmd brew remove $@
 			return ;;
 		aptcyg)
 			sudocmd apt-cyg remove $@
