@@ -2563,7 +2563,7 @@ case $PMTYPE in
 		fi
 		;;
 	homebrew)
-		CMD="brew list"
+		docmd brew list | xargs -n1 echo
 		;;
 	ipkg)
 		CMD="ipkg list"
@@ -3150,8 +3150,8 @@ __epm_query_shortname()
 			CMD="conary query"
 			;;
 		homebrew)
-			docmd brew info "$1" >/dev/null 2>/dev/null
-			return
+			docmd brew info "$1" >/dev/null 2>/dev/null && echo "$1" && return
+			return 1
 			;;
 		# TODO: need to print name if exists
 		#pkgng)
