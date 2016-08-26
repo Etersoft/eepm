@@ -1586,6 +1586,9 @@ __epm_filelist_name()
 			assure_exists equery
 			CMD="equery files"
 			;;
+		homebrew)
+			CMD="brew list"
+			;;
 		pkgng)
 			CMD="pkg info -l"
 			;;
@@ -2560,7 +2563,7 @@ case $PMTYPE in
 		fi
 		;;
 	homebrew)
-		CMD="brew list $pkg_filenames"
+		CMD="brew list"
 		;;
 	ipkg)
 		CMD="ipkg list"
@@ -2606,7 +2609,7 @@ case $PMTYPE in
 		;;
 esac
 
-docmd $CMD | __fopfn
+docmd $CMD | __fo_pfn
 
 }
 
@@ -3147,8 +3150,8 @@ __epm_query_shortname()
 			CMD="conary query"
 			;;
 		homebrew)
-			warning "fix query"
-			return 1
+			docmd brew info "$1" >/dev/null 2>/dev/null
+			return
 			;;
 		# TODO: need to print name if exists
 		#pkgng)
