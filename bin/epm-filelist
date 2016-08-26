@@ -120,6 +120,9 @@ __epm_filelist_name()
 			assure_exists equery
 			CMD="equery files"
 			;;
+		homebrew)
+			CMD="brew list"
+			;;
 		pkgng)
 			CMD="pkg info -l"
 			;;

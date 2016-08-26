@@ -128,7 +128,7 @@ case $PMTYPE in
 		fi
 		;;
 	homebrew)
-		CMD="brew list $pkg_filenames"
+		CMD="brew list"
 		;;
 	ipkg)
 		CMD="ipkg list"
@@ -174,7 +174,7 @@ case $PMTYPE in
 		;;
 esac
 
-docmd $CMD | __fopfn
+docmd $CMD | __fo_pfn
 # FIXME: we print empty lines, but will lost error status
 
 }
