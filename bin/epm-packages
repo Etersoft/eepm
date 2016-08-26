@@ -128,7 +128,7 @@ case $PMTYPE in
 		fi
 		;;
 	homebrew)
-		CMD="brew list"
+		docmd brew list | xargs -n1 echo
 		;;
 	ipkg)
 		CMD="ipkg list"
