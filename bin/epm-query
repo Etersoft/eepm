@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012, 2013, 2015  Etersoft
-# Copyright (C) 2012, 2013, 2015  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2013, 2015, 2016  Etersoft
+# Copyright (C) 2012, 2013, 2015, 2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -186,7 +186,7 @@ __epm_query_name()
 			CMD="conary query"
 			;;
 		homebrew)
-			warning "fix query"
+			docmd brew info "$1" >/dev/null 2>/dev/null && echo "$1" && return
 			return 1
 			;;
 		# TODO: need to print name if exists

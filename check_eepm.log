@@ -1,0 +1,13 @@
+/bin/echo
+coreutils
+eepm
+file
+findutils
+grep
+less
+procps
+rpm
+sed
+sudo
+termutils
+which
