@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.9.3
+Version: 1.9.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -66,6 +66,12 @@ chmod a+x %buildroot%_datadir/%name/tools_*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Fri Sep 23 2016 Vitaly Lipatov <lav@altlinux.ru> 1.9.4-alt1
+- distr_info: fix checking on MacOS
+- brew fixes
+- autoremove: enable deep remove by default
+- small fixes
+
 * Wed Aug 24 2016 Vitaly Lipatov <lav@altlinux.ru> 1.9.3-alt1
 - implement cross install for rpm and deb packages
 - serv: add runit support (Void Linux)
