@@ -201,6 +201,9 @@ check_command()
         serv_cmd=print
         withoutservicename=1
         ;;
+    log|journal)              # HELPCMD: print log for the service
+        serv_cmd=log
+        ;;
     *)
         return 1
         ;;
