@@ -50,6 +50,7 @@ ln -s serv %buildroot%_sysconfdir/bash_completion.d/cerv
 
 # shebang.req.files
 chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
+chmod a+x %buildroot%_datadir/%name/tools_*
 
 %files
 %doc README TODO LICENSE
