@@ -26,7 +26,7 @@ serv_list_all()
 			sudocmd chkconfig --list | cut -f1
 
 			if [ -n "$ANYSERVICE" ] ; then
-				sudocmd anyservice list
+				sudocmd anyservice --quiet list
 				return
 			fi
 			;;

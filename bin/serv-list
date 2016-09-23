@@ -38,11 +38,6 @@ serv_list()
 			for i in $(serv_list_all) ; do
 				is_service_running $i >/dev/null && echo $i
 			done
-			# TODO: только запущенные
-			if [ -n "$ANYSERVICE" ] ; then
-				sudocmd $ANYSERVICE list
-				return
-			fi
 			;;
 	esac
 }
