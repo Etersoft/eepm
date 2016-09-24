@@ -402,7 +402,7 @@ pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
 if [ -z "$epm_cmd" ] ; then
     print_version
     echo
-    fatal "Run $ $PROGNAME --help for get help"
+    fatal "Unknown command $@. Run $ $PROGNAME --help for get help"
 fi
 
 # Use eatmydata for write specific operations
