@@ -271,7 +271,7 @@ set_sudo()
 	if which sudo >/dev/null 2>/dev/null ; then
 		SUDO="sudo --"
 		# check for < 1.7 version which do not support -- (and --help possible too)
-		sudo -h | grep -q "  --" || SUDO="sudo"
+		sudo -h 2>/dev/null | grep -q "  --" || SUDO="sudo"
 		return
 	fi
 
