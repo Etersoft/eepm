@@ -17,6 +17,26 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+__serv_log_altlinux()
+{
+	local SERVICE="$1"
+
+	case "$SERVICE" in
+		postfix)
+			sudocmd tail -f /var/log/mail/all /var/log/mail/errors
+			;;
+		cups)
+			sudocmd tail -f /var/log/cups/access_log /var/log/cups/error_log
+			;;
+		fail2ban)
+			sudocmd tail -f /var/log/$SERVICE.log
+			;;
+		*)
+			fatal "Have no suitable for $SERVICE service"
+			;;
+	esac
+}
+
 serv_log()
 {
 	local SERVICE="$1"
@@ -27,7 +47,13 @@ serv_log()
 			sudocmd journalctl -f -b -u "$SERVICE" "$@"
 			;;
 		*)
-			fatal "Have no suitable command for $SERVICETYPE"
-			;;
+			case $DISTRNAME in
+			ALTLinux)
+				__serv_log_altlinux "$SERVICE"
+				return ;;
+			*)
+				fatal "Have no suitable for $DISTRNAME command for $SERVICETYPE"
+				;;
+			esac
 	esac
 }
