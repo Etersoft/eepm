@@ -275,7 +275,7 @@ set_sudo()
 	if which sudo >/dev/null 2>/dev/null ; then
 		SUDO="sudo --"
 		# check for < 1.7 version which do not support -- (and --help possible too)
-		sudo -h | grep -q "  --" || SUDO="sudo"
+		sudo -h 2>/dev/null | grep -q "  --" || SUDO="sudo"
 		return
 	fi
 
@@ -508,7 +508,7 @@ is_active_systemd()
 	[ -d "$SYSTEMD_CGROUP_DIR" ] || return
 	a= mountpoint -q "$SYSTEMD_CGROUP_DIR" || return
 	# some hack
-	pidof systemd >/dev/null
+	ps ax | grep -q '[s]ystemd' >/dev/null
 }
 
 # File bin/epm-addrepo:
@@ -3108,7 +3108,7 @@ __epm_query_name()
 			CMD="conary query"
 			;;
 		homebrew)
-			warning "fix query"
+			docmd brew info "$1" >/dev/null 2>/dev/null && echo "$1" && return
 			return 1
 			;;
 		# TODO: need to print name if exists
@@ -4687,7 +4687,7 @@ __query_package_hl_url()
 			# http://petstore.swagger.io/?url=http://packages.altlinux.org/api/docs
 			epm assure curl || return 1
 			showcmd curl "$PAOAPI/srpms/$1"
-			curl -s --header "Accept: application/json" "$PAOAPI/srpms/$1" | grep '"url"' | sed -e 's|.*"url":"||g' | sed -e 's|".*||g'
+			a= curl -s --header "Accept: application/json" "$PAOAPI/srpms/$1" | grep '"url"' | sed -e 's|.*"url":"||g' | sed -e 's|".*||g'
 			return 0
 			;;
 	esac
@@ -5519,7 +5519,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.9.3"
+        echo "EPM package manager version 1.9.6"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -5858,7 +5858,7 @@ pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
 if [ -z "$epm_cmd" ] ; then
     print_version
     echo
-    fatal "Run $ $PROGNAME --help for get help"
+    fatal "Unknown command $@. Run $ $PROGNAME --help for get help"
 fi
 
 # Use eatmydata for write specific operations

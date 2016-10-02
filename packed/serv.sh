@@ -268,7 +268,7 @@ set_sudo()
 	if which sudo >/dev/null 2>/dev/null ; then
 		SUDO="sudo --"
 		# check for < 1.7 version which do not support -- (and --help possible too)
-		sudo -h | grep -q "  --" || SUDO="sudo"
+		sudo -h 2>/dev/null | grep -q "  --" || SUDO="sudo"
 		return
 	fi
 
@@ -501,7 +501,7 @@ is_active_systemd()
 	[ -d "$SYSTEMD_CGROUP_DIR" ] || return
 	a= mountpoint -q "$SYSTEMD_CGROUP_DIR" || return
 	# some hack
-	pidof systemd >/dev/null
+	ps ax | grep -q '[s]ystemd' >/dev/null
 }
 
 # File bin/serv-common:
@@ -636,11 +636,6 @@ serv_list()
 			for i in $(serv_list_all) ; do
 				is_service_running $i >/dev/null && echo $i
 			done
-			# TODO: только запущенные
-			if [ -n "$ANYSERVICE" ] ; then
-				sudocmd $ANYSERVICE list
-				return
-			fi
 			;;
 	esac
 }
@@ -655,7 +650,7 @@ serv_list_all()
 			sudocmd chkconfig --list | cut -f1
 
 			if [ -n "$ANYSERVICE" ] ; then
-				sudocmd anyservice list
+				sudocmd anyservice --quiet list
 				return
 			fi
 			;;
@@ -682,6 +677,49 @@ serv_list_startup()
 			done
 			;;
 
+	esac
+}
+
+# File bin/serv-log:
+
+__serv_log_altlinux()
+{
+	local SERVICE="$1"
+
+	case "$SERVICE" in
+		postfix)
+			sudocmd tail -f /var/log/mail/all /var/log/mail/errors
+			;;
+		cups)
+			sudocmd tail -f /var/log/cups/access_log /var/log/cups/error_log
+			;;
+		fail2ban)
+			sudocmd tail -f /var/log/$SERVICE.log
+			;;
+		*)
+			fatal "Have no suitable for $SERVICE service"
+			;;
+	esac
+}
+
+serv_log()
+{
+	local SERVICE="$1"
+	shift
+
+	case $SERVICETYPE in
+		systemd)
+			sudocmd journalctl -f -b -u "$SERVICE" "$@"
+			;;
+		*)
+			case $DISTRNAME in
+			ALTLinux)
+				__serv_log_altlinux "$SERVICE"
+				return ;;
+			*)
+				fatal "Have no suitable for $DISTRNAME command for $SERVICETYPE"
+				;;
+			esac
 	esac
 }
 
@@ -1498,8 +1536,8 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.9.3"
-        echo "Running on $($DISTRVENDOR)"
+        echo "Service manager version 1.9.6"
+        echo "Running on $($DISTRVENDOR) with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012, 2013, 2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
@@ -1569,6 +1607,9 @@ check_command()
     print)                    # HELPCMD: print some info
         serv_cmd=print
         withoutservicename=1
+        ;;
+    log|journal)              # HELPCMD: print log for the service
+        serv_cmd=log
         ;;
     *)
         return 1
