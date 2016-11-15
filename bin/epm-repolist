@@ -43,7 +43,7 @@ case $PMTYPE in
 		print_apt_sources_list /etc/apt/sources.list /etc/apt/sources.list.d/*.list
 		;;
 	yum-rpm)
-		docmd yum repolist
+		docmd yum repolist -v
 		;;
 	dnf-rpm)
 		docmd dnf repolist -v

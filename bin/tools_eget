@@ -42,7 +42,7 @@ fi
 
 # If ftp protocol or have no asterisk, just download
 # TODO: use has()
-if echo "$1" | grep -q "\(^ftp://\|[^*]$\)" ; then
+if echo "$1" | grep -q "\(^ftp://\|[^*]\)" ; then
     $WGET $WGET_OPTION_TARGET "$1"
     exit
 fi
