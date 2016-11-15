@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.9.6
+Version: 1.9.7
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -66,6 +66,10 @@ chmod a+x %buildroot%_datadir/%name/tools_*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Tue Nov 15 2016 Vitaly Lipatov <lav@altlinux.ru> 1.9.7-alt1
+- fix build install
+- small fixes
+
 * Sun Oct 02 2016 Vitaly Lipatov <lav@altlinux.ru> 1.9.6-alt1
 - epm: improve message about incorrect command
 - workaround for sudo -h prints first line in stderr
