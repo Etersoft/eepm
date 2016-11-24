@@ -17,6 +17,75 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+__use_url_install()
+{
+	case $PMTYPE in
+		apt-rpm)
+			# ALT Linux really?
+			pkg_names="$pkg_names $pkg_urls"
+			;;
+		#deepsolver-rpm)
+		#	pkg_names="$pkg_names $pkg_urls"
+		#	;;
+		#urpm-rpm)
+		#	pkg_names="$pkg_names $pkg_urls"
+		#	;;
+		pacman)
+			pkg_names="$pkg_names $pkg_urls"
+			;;
+		yum-rpm|dnf-rpm)
+			pkg_names="$pkg_names $pkg_urls"
+			;;
+		#zypper-rpm)
+		#	pkg_names="$pkg_names $pkg_urls"
+		#	;;
+		*)
+			return 1
+			;;
+	esac
+	return 0
+}
+
+# for download before install / checking
+__download_pkg_urls()
+{
+	local url
+	[ -z "$pkg_urls" ] && return
+	for url in $pkg_urls ; do
+		# TODO: use some individual tmp dir
+		local new_file=/tmp/$(basename "$url")
+		if eget -O $new_file $url && [ -s "$new_file" ] ; then
+			pkg_files="$pkg_files $new_file"
+			to_remove_pkg_files="$to_remove_pkg_files $new_file"
+		else
+			warning "Failed to download $url, ignoring"
+		fi
+	done
+}
+
+# NOTE: call __clean_downloaded_pkg_files after
+__handle_pkg_urls_to_install()
+{
+	#[ -n "$pkg_urls" ] || return
+
+	# TODO: do it correctly
+	to_remove_pkg_files=
+	
+	if [ "$(get_package_type "$pkg")" != $PKGFORMAT ] || ! __use_url_install ; then
+		# use workaround with eget: download and put in pkg_files
+		__download_pkg_urls
+	fi
+
+	pkg_urls=
+}
+
+#__clean_downloaded_pkg_files()
+#{
+#	[ -z "$to_remove_pkg_files" ] && return
+#	rm -fv $to_remove_pkg_files
+#}
+
+
 epm_download()
 {
 	local CMD
