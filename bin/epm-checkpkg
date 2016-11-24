@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2009, 2012, 2013, 2014  Etersoft
-# Copyright (C) 2009, 2012, 2013, 2014  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2009, 2012, 2013, 2014, 2016  Etersoft
+# Copyright (C) 2009, 2012, 2013, 2014, 2016  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -75,14 +75,30 @@ esac
 epm_checkpkg()
 {
 	if [ -n "$pkg_names" ] ; then
+		# TODO: если есть / или расширение, это отсутствующий файл
 		info "Suggest $pkg_names are name(s) of installed packages"
 		__epm_check_installed_pkg $pkg_names
 		return
 	fi
 
+	# if possible, it will put pkg_urls into pkg_files or pkg_names
+	if [ -n "$pkg_urls" ] ; then
+		load_helper epm-download
+		__handle_pkg_urls_to_checking
+	fi
+
 	[ -n "$pkg_files" ] || fatal "Checkpkg: missing file or package name(s)"
+
+	local RETVAL=0
+
 	local pkg
 	for pkg in $pkg_files ; do
-		check_pkg_integrity $pkg || fatal "Broken package $pkg"
+		check_pkg_integrity $pkg || RETVAL=1
 	done
+
+	# TODO: reinvent
+	[ -n "$to_remove_pkg_files" ] && rm -fv $to_remove_pkg_files
+
+	#fatal "Broken package $pkg"
+	return $RETVAL
 }

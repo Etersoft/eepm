@@ -79,6 +79,19 @@ __handle_pkg_urls_to_install()
 	pkg_urls=
 }
 
+__handle_pkg_urls_to_checking()
+{
+	#[ -n "$pkg_urls" ] || return
+
+	# TODO: do it correctly
+	to_remove_pkg_files=
+	
+	# use workaround with eget: download and put in pkg_files
+	__download_pkg_urls
+
+	pkg_urls=
+}
+
 #__clean_downloaded_pkg_files()
 #{
 #	[ -z "$to_remove_pkg_files" ] && return
