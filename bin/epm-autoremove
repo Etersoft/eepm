@@ -89,7 +89,7 @@ case $PMTYPE in
 		while true ; do
 			docmd package-cleanup --leaves $(subst_option non_interactive --assumeyes)
 			# FIXME: package-cleanup have to use stderr for errors
-			local PKGLIST=$(package-cleanup --leaves | grep -v "Loaded plugins" | grep -v "Unable to" | grep -v "^eepm$")
+			local PKGLIST=$(package-cleanup -q --leaves | grep -v "^eepm-")
 			[ -n "$PKGLIST" ] || break
 			sudocmd yum remove $PKGLIST
 		done

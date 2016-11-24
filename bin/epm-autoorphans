@@ -50,13 +50,14 @@ case $PMTYPE in
 	#	;;
 	yum-rpm)
 		showcmd package-cleanup --orphans
-		local PKGLIST=$(package-cleanup --orphans | grep -v "^eepm$")
+		local PKGLIST=$(package-cleanup -q --orphans | grep -v "^eepm-")
 		docmd epm remove $PKGLIST
 		;;
 	dnf-rpm)
 		# TODO: dnf list extras
+		# TODO: Yum-utils package has been deprecated, use dnf instead.
 		showcmd package-cleanup --orphans
-		local PKGLIST=$(package-cleanup --orphans | grep -v "^eepm$")
+		local PKGLIST=$(package-cleanup -q --orphans | grep -v "^eepm-")
 		docmd epm remove $PKGLIST
 		;;
 	urpm-rpm)
