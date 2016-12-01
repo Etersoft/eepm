@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.9.7
+Version: 1.9.8
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -66,6 +66,14 @@ chmod a+x %buildroot%_datadir/%name/tools_*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Thu Dec 01 2016 Vitaly Lipatov <lav@altlinux.ru> 1.9.8-alt1
+- epm-install: move download code to epm-download
+- epm-checkpkg: add support for checking package by url
+- downgrade: use distro-sync for downgrade with yum/dnf
+- autoorphans/autoremove: fix uses package-cleanup with yum/dnf
+- epmqf: use realpath for exists files by default
+- improve systemd detection
+
 * Tue Nov 15 2016 Vitaly Lipatov <lav@altlinux.ru> 1.9.7-alt1
 - fix build install
 - small fixes
