@@ -25,7 +25,7 @@ __do_query_real_file()
 	
 	# get canonical path
 	if [ -e "$1" ] ; then
-		TOFILE="$1"
+		TOFILE=$(realpath "$1")
 	else
 		TOFILE=$(which "$1" 2>/dev/null || echo "$1")
 		if [ "$TOFILE" != "$1" ] ; then
