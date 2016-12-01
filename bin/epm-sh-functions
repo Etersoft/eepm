@@ -516,5 +516,5 @@ is_active_systemd()
 	[ -d "$SYSTEMD_CGROUP_DIR" ] || return
 	a= mountpoint -q "$SYSTEMD_CGROUP_DIR" || return
 	# some hack
-	ps ax | grep -q '[s]ystemd' >/dev/null
+	ps ax | grep -q '[s]ystemd' | grep -v 'systemd-udev' >/dev/null
 }
