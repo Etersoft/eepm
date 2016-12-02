@@ -154,6 +154,14 @@ sudocmd_foreach()
 	done
 }
 
+# add realpath if missed
+if ! which realpath 2>/dev/null >/dev/null ; then
+realpath()
+{
+	readlink -f "$@"
+}
+fi
+
 get_firstarg()
 {
 	echon "$1"
