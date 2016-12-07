@@ -323,6 +323,23 @@ __epm_check_if_try_install_rpm()
 	return 0
 }
 
+__handle_direct_install()
+{
+    case "$DISTRNAME" in
+        "ALTLinux")
+            load_helper epm-download
+            local pkg url
+            for pkg in $pkg_names ; do
+                url=$(__epm_get_altpkg_url $pkg)
+                [ -n "$url" ] || continue
+                # TODO: use estrlist
+                pkg_urls="$pkg_urls $url"
+            done
+            # FIXME: need remove
+            pkg_names=""
+            ;;
+    esac
+}
 
 epm_install_files()
 {
@@ -514,6 +531,10 @@ epm_install()
         return
     fi
 
+    if [ -n "$direct" ] ; then
+        __handle_direct_install
+    fi
+
     # if possible, it will put pkg_urls into pkg_files or pkg_names
     if [ -n "$pkg_urls" ] ; then
         load_helper epm-download
@@ -527,7 +548,7 @@ epm_install()
 
     [ -z "$files$names" ] && info "Skip empty install list" && return 22
 
-    if [ -z "$files" ] ; then
+    if [ -z "$files" ] && [ -z "$direct" ] ; then
         # it is useful for first time running
         update_repo_if_needed
     fi

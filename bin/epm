@@ -80,6 +80,7 @@ nodeps=
 noremove=
 force=
 short=
+direct=
 sort=
 non_interactive=
 skip_installed=
@@ -334,6 +335,9 @@ check_option()
         ;;
     --short)              # HELPOPT: short output (just 'package' instead 'package-version-release')
         short="--short"
+        ;;
+    --direct)              # HELPOPT: direct install package file from ftp (not via hilevel repository manager)
+        direct="--direct"
         ;;
     --sort)               # HELPOPT: sort output, f.i. --sort=size (supported only for packages command)
         # TODO: how to read arg?
