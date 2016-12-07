@@ -22,6 +22,7 @@ __alt_local_content_search()
     load_helper epm-sh-altlinux
 
     local CI="$(get_local_alt_contents_index)"
+    # TODO use something like
     [ -n "$CI" ] || fatal "Have no local contents index"
     #local OUTCMD="less"
     #[ -n "$USETTY" ] || OUTCMD="cat"
