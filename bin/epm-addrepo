@@ -19,12 +19,41 @@
 
 epm_addrepo()
 {
-local repo="$(eval echo $quoted_args)"
-case $PMTYPE in
-	apt-rpm)
+local repo="$(eval echo "$quoted_args")"
+
+case $DISTRNAME in
+	ALTLinux)
+		case "$repo" in
+			etersoft)
+				info "add etersoft repo"
+				load_helper epm-query
+				epm install --skip-installed apt-conf-etersoft-common apt-conf-etersoft-hold || fatal
+				local branch="$DISTRVERSION/branch"
+				[ "$DISTRVERSION" = "Sisyphus" ] && branch="$DISTRVERSION"
+				# FIXME
+				[ -n "$DISTRVERSION" ] || fatal "Empty $DISTRVERSION"
+				local arch=$(uname -m)
+				[ "$arch" = "i686" ] && arch="i586"
+				echo "" | sudocmd tee -a /etc/apt/sources.list
+				echo "# added with eepm addrepo etersoft" | sudocmd tee -a /etc/apt/sources.list
+				echo "rpm [etersoft] http://download.etersoft.ru/pub/Etersoft LINUX@Etersoft/$branch/$arch addon" | sudocmd tee -a /etc/apt/sources.list
+				if [ "$arch" = "x86_64" ] ; then
+					echo "rpm [etersoft] http://download.etersoft.ru/pub/Etersoft LINUX@Etersoft/$branch/$arch-i586 addon" | sudocmd tee -a /etc/apt/sources.list
+				fi
+				echo "rpm [etersoft] http://download.etersoft.ru/pub/Etersoft LINUX@Etersoft/$branch/noarch addon" | sudocmd tee -a /etc/apt/sources.list
+				repo="$DISTRVERSION"
+				return 0
+				;;
+		esac
+
 		assure_exists apt-repo
 		sudocmd apt-repo add "$repo"
+		return
 		;;
+esac
+
+
+case $PMTYPE in
 	apt-dpkg|aptitude-dpkg)
 		info "You need manually add repo to /etc/apt/sources.list"
 		;;
