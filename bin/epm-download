@@ -98,10 +98,36 @@ __handle_pkg_urls_to_checking()
 #	rm -fv $to_remove_pkg_files
 #}
 
+__epm_get_altpkg_url()
+{
+	info "TODO: https://packages.altlinux.org/api/branches"
+	load_helper epm-site
+	local arch=$(paoapi packages/$1 | get_pao_var arch)
+	# FIXME: arch can be list
+	[ "$arch" = "noarch" ] || arch=$(arch)
+	# HACK: filename can be list
+	local filename=$(paoapi packages/$1 | get_pao_var filename | grep $arch)
+	# fixme: get from /branches
+	local dv=$DISTRNAME/$DISTRVERSION/branch
+	[ "$DISTRVERSION" = "Sisyphus" ] && dv=$DISTRNAME/$DISTRVERSION
+	echo "http://ftp.basealt.ru/pub/distributions/$dv/$arch/RPMS.classic/$filename"
+}
 
 epm_download()
 {
 	local CMD
+
+	case $DISTRNAME in
+		ALTLinux)
+			local pkg
+			for pkg in $pkg_filenames ; do
+				local url=$(__epm_get_altpkg_url $pkg)
+				[ -n "$url" ] || warning "Can't get url for $pkg"
+				docmd eget $url
+			done
+			return
+			;;
+	esac
 
 	case $PMTYPE in
 	dnf-rpm)
