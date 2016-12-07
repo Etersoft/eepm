@@ -166,6 +166,13 @@ sudocmd_foreach()
 	done
 }
 
+if ! which realpath 2>/dev/null >/dev/null ; then
+realpath()
+{
+	readlink -f "$@"
+}
+fi
+
 get_firstarg()
 {
 	echon "$1"
@@ -458,7 +465,7 @@ case $DISTRNAME in
 	Slackware)
 		CMD="slackpkg"
 		;;
-	SUSE|SLED|SLES)
+	SUSE|SLED|SLES|Tumbleweed)
 		CMD="zypper-rpm"
 		;;
 	ForesightLinux|rPathLinux)
@@ -508,19 +515,47 @@ is_active_systemd()
 	[ -d "$SYSTEMD_CGROUP_DIR" ] || return
 	a= mountpoint -q "$SYSTEMD_CGROUP_DIR" || return
 	# some hack
-	ps ax | grep -q '[s]ystemd' >/dev/null
+	ps ax | grep -q '[s]ystemd' | grep -v 'systemd-udev' >/dev/null
 }
 
 # File bin/epm-addrepo:
 
 epm_addrepo()
 {
-local repo="$(eval echo $quoted_args)"
-case $PMTYPE in
-	apt-rpm)
+local repo="$(eval echo "$quoted_args")"
+
+case $DISTRNAME in
+	ALTLinux)
+		case "$repo" in
+			etersoft)
+				info "add etersoft repo"
+				epm install --skip-installed apt-conf-etersoft-common apt-conf-etersoft-hold || fatal
+				local branch="$DISTRVERSION/branch"
+				[ "$DISTRVERSION" = "Sisyphus" ] && branch="$DISTRVERSION"
+				# FIXME
+				[ -n "$DISTRVERSION" ] || fatal "Empty $DISTRVERSION"
+				local arch=$(uname -m)
+				[ "$arch" = "i686" ] && arch="i586"
+				echo "" | sudocmd tee -a /etc/apt/sources.list
+				echo "# added with eepm addrepo etersoft" | sudocmd tee -a /etc/apt/sources.list
+				echo "rpm [etersoft] http://download.etersoft.ru/pub/Etersoft LINUX@Etersoft/$branch/$arch addon" | sudocmd tee -a /etc/apt/sources.list
+				if [ "$arch" = "x86_64" ] ; then
+					echo "rpm [etersoft] http://download.etersoft.ru/pub/Etersoft LINUX@Etersoft/$branch/$arch-i586 addon" | sudocmd tee -a /etc/apt/sources.list
+				fi
+				echo "rpm [etersoft] http://download.etersoft.ru/pub/Etersoft LINUX@Etersoft/$branch/noarch addon" | sudocmd tee -a /etc/apt/sources.list
+				repo="$DISTRVERSION"
+				return 0
+				;;
+		esac
+
 		assure_exists apt-repo
 		sudocmd apt-repo add "$repo"
+		return
 		;;
+esac
+
+
+case $PMTYPE in
 	apt-dpkg|aptitude-dpkg)
 		info "You need manually add repo to /etc/apt/sources.list"
 		;;
@@ -708,13 +743,14 @@ case $PMTYPE in
 	#	;;
 	yum-rpm)
 		showcmd package-cleanup --orphans
-		local PKGLIST=$(package-cleanup --orphans | grep -v "^eepm$")
+		local PKGLIST=$(package-cleanup -q --orphans | grep -v "^eepm-")
 		docmd epm remove $PKGLIST
 		;;
 	dnf-rpm)
 		# TODO: dnf list extras
+		# TODO: Yum-utils package has been deprecated, use dnf instead.
 		showcmd package-cleanup --orphans
-		local PKGLIST=$(package-cleanup --orphans | grep -v "^eepm$")
+		local PKGLIST=$(package-cleanup -q --orphans | grep -v "^eepm-")
 		docmd epm remove $PKGLIST
 		;;
 	urpm-rpm)
@@ -760,10 +796,36 @@ esac
 
 # File bin/epm-autoremove:
 
-__epm_autoremove_altrpm()
+__epm_autoremove_altrpm_pp()
 {
-	local pkg
-	assure_exists /etc/buildreqs/files/ignore.d/apt-scripts apt-scripts
+	local pkgs
+
+	info "Removing unused python/perl modules..."
+	#[ -n "$force" ] || info "You can run with --force for more deep removing"
+	local force=force
+
+	local flag=
+	[ -n "$force" ] || libexclude=$libexclude'[^-]*$'
+
+	libexclude='^(python-module-|python3-module-|python-modules-|python3-modules|perl-)'
+	[ -n "$force" ] || libexclude=$libexclude'[^-]*$'
+	showcmd "apt-cache list-nodeps | grep -E -- \"$libexclude\""
+	pkgs=$(apt-cache list-nodeps | grep -E -- "$libexclude" )
+	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
+
+	if [ -n "$flag" ] ; then
+		info ""
+		info "call again for next cycle until all modules will be removed"
+		__epm_autoremove_altrpm_pp
+	fi
+
+	return 0
+}
+
+__epm_autoremove_altrpm_lib()
+{
+	local pkgs
+
 	info
 	info "Removing all non -devel/-debuginfo libs packages not need by anything..."
 	#[ -n "$force" ] || info "You can run with --force for more deep removing"
@@ -776,24 +838,29 @@ __epm_autoremove_altrpm()
 	# https://www.altlinux.org/APT_в_ALT_Linux/Советы_по_использованию#apt-cache_list-nodeps
 	showcmd "apt-cache list-nodeps | grep -- \"$libexclude\""
 	pkgs=$(apt-cache list-nodeps | grep -- "$libexclude" \
-		| grep -E -v -- "-(devel|debuginfo)$" \
+		| grep -E -v -- "-(devel|devel-static|debuginfo)$" \
 		| grep -E -v -- "-(util|utils|tool|tools|plugin|daemon|help)$" \
 		| sed -e "s/\.32bit$//g" \
-		| grep -E -v -- "^(libsystemd|libreoffice|libnss|libvirt-client|libvirt-daemon|eepm)" )
-	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
-
-	info "Removing unused python/perl modules..."
-	libexclude='^(python-module-|python3-module-|python-modules-|python3-modules|perl-)'
-	[ -n "$force" ] || libexclude=$libexclude'[^-]*$'
-	showcmd "apt-cache list-nodeps | grep -E -- \"$libexclude\""
-	pkgs=$(apt-cache list-nodeps | grep -E -- "$libexclude" )
+		| grep -E -v -- "^(libsystemd|libreoffice|libnss|libvirt-client|libvirt-daemon|libsasl2-plugin|eepm)" )
 	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
 
 	if [ -n "$flag" ] ; then
 		info ""
 		info "call again for next cycle until all libs will be removed"
-		__epm_autoremove_altrpm
+		__epm_autoremove_altrpm_lib
 	fi
+
+	return 0
+}
+
+
+__epm_autoremove_altrpm()
+{
+	local pkg
+	assure_exists /etc/buildreqs/files/ignore.d/apt-scripts apt-scripts
+
+	__epm_autoremove_altrpm_pp
+	__epm_autoremove_altrpm_lib
 
 	return 0
 }
@@ -830,7 +897,7 @@ case $PMTYPE in
 		while true ; do
 			docmd package-cleanup --leaves $(subst_option non_interactive --assumeyes)
 			# FIXME: package-cleanup have to use stderr for errors
-			local PKGLIST=$(package-cleanup --leaves | grep -v "Loaded plugins" | grep -v "Unable to" | grep -v "^eepm$")
+			local PKGLIST=$(package-cleanup -q --leaves | grep -v "^eepm-")
 			[ -n "$PKGLIST" ] || break
 			sudocmd yum remove $PKGLIST
 		done
@@ -1093,16 +1160,31 @@ esac
 epm_checkpkg()
 {
 	if [ -n "$pkg_names" ] ; then
+		# TODO: если есть / или расширение, это отсутствующий файл
 		info "Suggest $pkg_names are name(s) of installed packages"
 		__epm_check_installed_pkg $pkg_names
 		return
 	fi
 
+	# if possible, it will put pkg_urls into pkg_files or pkg_names
+	if [ -n "$pkg_urls" ] ; then
+		__handle_pkg_urls_to_checking
+	fi
+
 	[ -n "$pkg_files" ] || fatal "Checkpkg: missing file or package name(s)"
+
+	local RETVAL=0
+
 	local pkg
 	for pkg in $pkg_files ; do
-		check_pkg_integrity $pkg || fatal "Broken package $pkg"
+		check_pkg_integrity $pkg || RETVAL=1
 	done
+
+	# TODO: reinvent
+	[ -n "$to_remove_pkg_files" ] && rm -fv $to_remove_pkg_files
+
+	#fatal "Broken package $pkg"
+	return $RETVAL
 }
 
 # File bin/epm-checksystem:
@@ -1429,10 +1511,18 @@ epm_downgrade()
 		;;
 	yum-rpm)
 		# can do update repobase automagically
-		sudocmd yum downgrade $pkg_filenames
+		if [ -n "$pkg_filenames" ] ; then
+			sudocmd yum downgrade $pkg_filenames
+		else
+			sudocmd yum distro-sync
+		fi
 		;;
 	dnf-rpm)
-		sudocmd dnf downgrade $pkg_filenames
+		if [ -n "$pkg_filenames" ] ; then
+			sudocmd dnf downgrade $pkg_filenames
+		else
+			sudocmd dnf distro-sync
+		fi
 		;;
 	urpm-rpm)
 		assure_exists urpm-reposync urpm-tools
@@ -1446,9 +1536,115 @@ epm_downgrade()
 
 # File bin/epm-download:
 
+__use_url_install()
+{
+	case $DISTRNAME in
+		"ALTLinux")
+			pkg_names="$pkg_names $pkg_urls"
+			return 0
+			;;
+	esac
+
+	case $PMTYPE in
+		#apt-rpm)
+		#	pkg_names="$pkg_names $pkg_urls"
+		#	;;
+		#deepsolver-rpm)
+		#	pkg_names="$pkg_names $pkg_urls"
+		#	;;
+		#urpm-rpm)
+		#	pkg_names="$pkg_names $pkg_urls"
+		#	;;
+		pacman)
+			pkg_names="$pkg_names $pkg_urls"
+			;;
+		yum-rpm|dnf-rpm)
+			pkg_names="$pkg_names $pkg_urls"
+			;;
+		#zypper-rpm)
+		#	pkg_names="$pkg_names $pkg_urls"
+		#	;;
+		*)
+			return 1
+			;;
+	esac
+	return 0
+}
+
+__download_pkg_urls()
+{
+	local url
+	[ -z "$pkg_urls" ] && return
+	for url in $pkg_urls ; do
+		# TODO: use some individual tmp dir
+		local new_file=/tmp/$(basename "$url")
+		if docmd eget -O $new_file $url && [ -s "$new_file" ] ; then
+			pkg_files="$pkg_files $new_file"
+			to_remove_pkg_files="$to_remove_pkg_files $new_file"
+		else
+			warning "Failed to download $url, ignoring"
+		fi
+	done
+}
+
+__handle_pkg_urls_to_install()
+{
+	#[ -n "$pkg_urls" ] || return
+
+	# TODO: do it correctly
+	to_remove_pkg_files=
+	# FIXME: check type of pkg_urls separately?
+	if [ "$(get_package_type "$pkg_urls")" != $PKGFORMAT ] || ! __use_url_install ; then
+		# use workaround with eget: download and put in pkg_files
+		__download_pkg_urls
+	fi
+
+	pkg_urls=
+}
+
+__handle_pkg_urls_to_checking()
+{
+	#[ -n "$pkg_urls" ] || return
+
+	# TODO: do it correctly
+	to_remove_pkg_files=
+	
+	# use workaround with eget: download and put in pkg_files
+	__download_pkg_urls
+
+	pkg_urls=
+}
+
+
+__epm_get_altpkg_url()
+{
+	info "TODO: https://packages.altlinux.org/api/branches"
+	local arch=$(paoapi packages/$1 | get_pao_var arch)
+	# FIXME: arch can be list
+	[ "$arch" = "noarch" ] || arch=$(arch)
+	# HACK: filename can be list
+	local filename=$(paoapi packages/$1 | get_pao_var filename | grep $arch)
+	# fixme: get from /branches
+	local dv=$DISTRNAME/$DISTRVERSION/branch
+	[ "$DISTRVERSION" = "Sisyphus" ] && dv=$DISTRNAME/$DISTRVERSION
+	echo "http://ftp.basealt.ru/pub/distributions/$dv/$arch/RPMS.classic/$filename"
+}
+
 epm_download()
 {
 	local CMD
+
+	case $DISTRNAME in
+		ALTLinux)
+			local pkg
+			for pkg in $pkg_filenames ; do
+				local url=$(__epm_get_altpkg_url $pkg)
+				[ -n "$url" ] || warning "Can't get url for $pkg"
+				docmd eget $url
+			done
+			return
+			;;
+	esac
 
 	case $PMTYPE in
 	dnf-rpm)
@@ -2024,6 +2220,22 @@ __epm_check_if_try_install_rpm()
 	return 0
 }
 
+__handle_direct_install()
+{
+    case "$DISTRNAME" in
+        "ALTLinux")
+            local pkg url
+            for pkg in $pkg_names ; do
+                url=$(__epm_get_altpkg_url $pkg)
+                [ -n "$url" ] || continue
+                # TODO: use estrlist
+                pkg_urls="$pkg_urls $url"
+            done
+            # FIXME: need remove
+            pkg_names=""
+            ;;
+    esac
+}
 
 epm_install_files()
 {
@@ -2206,64 +2418,6 @@ epm_print_install_command()
     esac
 }
 
-download_pkg_urls()
-{
-	local url
-	[ -z "$pkg_urls" ] && return
-	for url in $pkg_urls ; do
-		# TODO: use some individual tmp dir
-		local new_file=/tmp/$(basename "$url")
-		if eget -O $new_file $url && [ -s "$new_file" ] ; then
-			pkg_files="$pkg_files $new_file"
-			to_remove_pkg_files="$to_remove_pkg_files $new_file"
-		else
-			warning "Failed to download $url, ignoring"
-		fi
-	done
-}
-
-__use_url_install()
-{
-	case $PMTYPE in
-		apt-rpm)
-			# ALT Linux really?
-			pkg_names="$pkg_names $pkg_urls"
-			;;
-		#deepsolver-rpm)
-		#	pkg_names="$pkg_names $pkg_urls"
-		#	;;
-		#urpm-rpm)
-		#	pkg_names="$pkg_names $pkg_urls"
-		#	;;
-		pacman)
-			pkg_names="$pkg_names $pkg_urls"
-			;;
-		yum-rpm|dnf-rpm)
-			pkg_names="$pkg_names $pkg_urls"
-			;;
-		#zypper-rpm)
-		#	pkg_names="$pkg_names $pkg_urls"
-		#	;;
-		*)
-			return 1
-			;;
-	esac
-	return 0
-}
-
-__handle_pkg_urls()
-{
-	[ -n "$pkg_urls" ] || return
-
-	# TODO: do it correctly
-	to_remove_pkg_files=
-	
-	if [ "$(get_package_type "$pkg")" != $PKGFORMAT ] || ! __use_url_install ; then
-		# use workaround with eget: download and put in pkg_files
-		download_pkg_urls
-	fi
-	pkg_urls=
-}
 
 epm_install()
 {
@@ -2272,8 +2426,14 @@ epm_install()
         return
     fi
 
-    # in any case it will put pkg_urls into pkg_files or pkg_names
-    __handle_pkg_urls
+    if [ -n "$direct" ] ; then
+        __handle_direct_install
+    fi
+
+    # if possible, it will put pkg_urls into pkg_files or pkg_names
+    if [ -n "$pkg_urls" ] ; then
+        __handle_pkg_urls_to_install
+    fi
 
     [ -z "$pkg_files$pkg_names" ] && info "Skip empty install list" && return 22
 
@@ -2282,17 +2442,18 @@ epm_install()
 
     [ -z "$files$names" ] && info "Skip empty install list" && return 22
 
-    if [ -z "$files" ] ; then
+    if [ -z "$files" ] && [ -z "$direct" ] ; then
         # it is useful for first time running
         update_repo_if_needed
     fi
 
     epm_install_names $names || return
     epm_install_files $files
+    local RETVAL=$?
 
     # TODO: reinvent
-    local RETVAL=$?
     [ -n "$to_remove_pkg_files" ] && rm -fv $to_remove_pkg_files
+
     return $RETVAL
 }
 
@@ -3206,7 +3367,7 @@ __do_query_real_file()
 	
 	# get canonical path
 	if [ -e "$1" ] ; then
-		TOFILE="$1"
+		TOFILE=$(realpath "$1")
 	else
 		TOFILE=$(which "$1" 2>/dev/null || echo "$1")
 		if [ "$TOFILE" != "$1" ] ; then
@@ -3385,6 +3546,9 @@ epm_reinstall_names()
 			return ;;
 		aptitude-dpkg)
 			sudocmd aptitude reinstall $@
+			return ;;
+		yum-rpm)
+			sudocmd yum reinstall $@
 			return ;;
 		dnf-rpm)
 			sudocmd dnf reinstall $@
@@ -4125,7 +4289,7 @@ case $PMTYPE in
 		print_apt_sources_list /etc/apt/sources.list /etc/apt/sources.list.d/*.list
 		;;
 	yum-rpm)
-		docmd yum repolist
+		docmd yum repolist -v
 		;;
 	dnf-rpm)
 		docmd dnf repolist -v
@@ -4439,6 +4603,7 @@ __alt_local_content_search()
 {
 
     local CI="$(get_local_alt_contents_index)"
+    # TODO use something like
     [ -n "$CI" ] || fatal "Have no local contents index"
     #local OUTCMD="less"
     #[ -n "$USETTY" ] || OUTCMD="cat"
@@ -4660,6 +4825,23 @@ epm_simulate()
 
 PAOURL="https://packages.altlinux.org"
 
+paoapi()
+{
+	# http://petstore.swagger.io/?url=http://packages.altlinux.org/api/docs
+	epm assure curl || return 1
+	showcmd curl "$PAOURL/api/$1"
+	a= curl -s --header "Accept: application/json" "$PAOURL/api/$1"
+}
+
+get_pao_var()
+{
+	local FIELD="$1"
+	#grep '"$FIELD"' | sed -e 's|.*"$FIELD":"||g' | sed -e 's|".*||g'
+	internal_tools_json -b | egrep "\[.*\"$FIELD\"\]" | sed -e 's|.*[[:space:]]"\(.*\)"|\1|g'
+	return 0
+}
+
+
 run_command_if_exists()
 {
 	local CMD="$1"
@@ -4681,14 +4863,9 @@ open_browser()
 
 __query_package_hl_url()
 {
-	local PAOAPI="$PAOURL/api"
 	case $DISTRNAME in
 		ALTLinux)
-			# http://petstore.swagger.io/?url=http://packages.altlinux.org/api/docs
-			epm assure curl || return 1
-			showcmd curl "$PAOAPI/srpms/$1"
-			a= curl -s --header "Accept: application/json" "$PAOAPI/srpms/$1" | grep '"url"' | sed -e 's|.*"url":"||g' | sed -e 's|".*||g'
-			return 0
+			paoapi srpms/$1 | get_pao_var url
 			;;
 	esac
 	return 1
@@ -5349,7 +5526,11 @@ elif [ `uname -o 2>/dev/null` = "Cygwin" ] ; then
 # try use standart LSB info by default
 elif distro lsb-release && [ -n "$DISTRIB_RELEASE" ]; then
 	# use LSB
-	true
+	case "$DISTRIB_ID" in
+		"openSUSE Tumbleweed")
+			DISTRIB_ID="Tumbleweed"
+			;;
+	esac
 fi
 
 case $1 in
@@ -5447,7 +5628,7 @@ fi
 
 # If ftp protocol or have no asterisk, just download
 # TODO: use has()
-if echo "$1" | grep -q "\(^ftp://\|[^*]$\)" ; then
+if echo "$1" | grep -q "\(^ftp://\|[^*]\)" ; then
     $WGET $WGET_OPTION_TARGET "$1"
     return
 fi
@@ -5495,6 +5676,220 @@ download_files || echo "There was some download errors" >&2
 rm -rf "$MYTMPDIR"
 }
 
+internal_tools_json()
+{
+
+# License: MIT or Apache
+# Homepage: http://github.com/dominictarr/JSON.sh
+
+throw() {
+  echo "$*" >&2
+  exit 1
+}
+
+BRIEF=0
+LEAFONLY=0
+PRUNE=0
+NO_HEAD=0
+NORMALIZE_SOLIDUS=0
+
+usage() {
+  echo
+  echo "Usage: JSON.sh [-b] [-l] [-p] [-s] [-h]"
+  echo
+  echo "-p - Prune empty. Exclude fields with empty values."
+  echo "-l - Leaf only. Only show leaf nodes, which stops data duplication."
+  echo "-b - Brief. Combines 'Leaf only' and 'Prune empty' options."
+  echo "-n - No-head. Do not show nodes that have no path (lines that start with [])."
+  echo "-s - Remove escaping of the solidus symbol (straight slash)."
+  echo "-h - This help text."
+  echo
+}
+
+parse_options() {
+  set -- "$@"
+  local ARGN=$#
+  while [ "$ARGN" -ne 0 ]
+  do
+    case $1 in
+      -h) usage
+          exit 0
+      ;;
+      -b) BRIEF=1
+          LEAFONLY=1
+          PRUNE=1
+      ;;
+      -l) LEAFONLY=1
+      ;;
+      -p) PRUNE=1
+      ;;
+      -n) NO_HEAD=1
+      ;;
+      -s) NORMALIZE_SOLIDUS=1
+      ;;
+      ?*) echo "ERROR: Unknown option."
+          usage
+          exit 0
+      ;;
+    esac
+    shift 1
+    ARGN=$((ARGN-1))
+  done
+}
+
+awk_egrep () {
+  local pattern_string=$1
+
+  gawk '{
+    while ($0) {
+      start=match($0, pattern);
+      token=substr($0, start, RLENGTH);
+      print token;
+      $0=substr($0, start+RLENGTH);
+    }
+  }' pattern="$pattern_string"
+}
+
+tokenize () {
+  local GREP
+  local ESCAPE
+  local CHAR
+
+  if echo "test string" | egrep -ao --color=never "test" >/dev/null 2>&1
+  then
+    GREP='egrep -ao --color=never'
+  else
+    GREP='egrep -ao'
+  fi
+
+  if echo "test string" | egrep -o "test" >/dev/null 2>&1
+  then
+    ESCAPE='(\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
+    CHAR='[^[:cntrl:]"\\]'
+  else
+    GREP=awk_egrep
+    ESCAPE='(\\\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
+    CHAR='[^[:cntrl:]"\\\\]'
+  fi
+
+  local STRING="\"$CHAR*($ESCAPE$CHAR*)*\""
+  local NUMBER='-?(0|[1-9][0-9]*)([.][0-9]*)?([eE][+-]?[0-9]*)?'
+  local KEYWORD='null|false|true'
+  local SPACE='[[:space:]]+'
+
+  # Force zsh to expand $A into multiple words
+  local is_wordsplit_disabled=$(unsetopt 2>/dev/null | grep -c '^shwordsplit$')
+  if [ $is_wordsplit_disabled != 0 ]; then setopt shwordsplit; fi
+  $GREP "$STRING|$NUMBER|$KEYWORD|$SPACE|." | egrep -v "^$SPACE$"
+  if [ $is_wordsplit_disabled != 0 ]; then unsetopt shwordsplit; fi
+}
+
+parse_array () {
+  local index=0
+  local ary=''
+  read -r token
+  case "$token" in
+    ']') ;;
+    *)
+      while :
+      do
+        parse_value "$1" "$index"
+        index=$((index+1))
+        ary="$ary""$value" 
+        read -r token
+        case "$token" in
+          ']') break ;;
+          ',') ary="$ary," ;;
+          *) throw "EXPECTED , or ] GOT ${token:-EOF}" ;;
+        esac
+        read -r token
+      done
+      ;;
+  esac
+  [ "$BRIEF" -eq 0 ] && value=$(printf '[%s]' "$ary") || value=
+  :
+}
+
+parse_object () {
+  local key
+  local obj=''
+  read -r token
+  case "$token" in
+    '}') ;;
+    *)
+      while :
+      do
+        case "$token" in
+          '"'*'"') key=$token ;;
+          *) throw "EXPECTED string GOT ${token:-EOF}" ;;
+        esac
+        read -r token
+        case "$token" in
+          ':') ;;
+          *) throw "EXPECTED : GOT ${token:-EOF}" ;;
+        esac
+        read -r token
+        parse_value "$1" "$key"
+        obj="$obj$key:$value"        
+        read -r token
+        case "$token" in
+          '}') break ;;
+          ',') obj="$obj," ;;
+          *) throw "EXPECTED , or } GOT ${token:-EOF}" ;;
+        esac
+        read -r token
+      done
+    ;;
+  esac
+  [ "$BRIEF" -eq 0 ] && value=$(printf '{%s}' "$obj") || value=
+  :
+}
+
+parse_value () {
+  local jpath="${1:+$1,}$2" isleaf=0 isempty=0 print=0
+  case "$token" in
+    '{') parse_object "$jpath" ;;
+    '[') parse_array  "$jpath" ;;
+    # At this point, the only valid single-character tokens are digits.
+    ''|[!0-9]) throw "EXPECTED value GOT ${token:-EOF}" ;;
+    *) value=$token
+       # if asked, replace solidus ("\/") in json strings with normalized value: "/"
+       [ "$NORMALIZE_SOLIDUS" -eq 1 ] && value=$(echo "$value" | sed 's#\\/#/#g')
+       isleaf=1
+       [ "$value" = '""' ] && isempty=1
+       ;;
+  esac
+  [ "$value" = '' ] && return
+  [ "$NO_HEAD" -eq 1 ] && [ -z "$jpath" ] && return
+
+  [ "$LEAFONLY" -eq 0 ] && [ "$PRUNE" -eq 0 ] && print=1
+  [ "$LEAFONLY" -eq 1 ] && [ "$isleaf" -eq 1 ] && [ $PRUNE -eq 0 ] && print=1
+  [ "$LEAFONLY" -eq 0 ] && [ "$PRUNE" -eq 1 ] && [ "$isempty" -eq 0 ] && print=1
+  [ "$LEAFONLY" -eq 1 ] && [ "$isleaf" -eq 1 ] && \
+    [ $PRUNE -eq 1 ] && [ $isempty -eq 0 ] && print=1
+  [ "$print" -eq 1 ] && printf "[%s]\t%s\n" "$jpath" "$value"
+  :
+}
+
+parse () {
+  read -r token
+  parse_value
+  read -r token
+  case "$token" in
+    '') ;;
+    *) throw "EXPECTED EOF GOT $token" ;;
+  esac
+}
+
+if ([ "$0" = "$BASH_SOURCE" ] || ! [ -n "$BASH_SOURCE" ]);
+then
+  parse_options "$@"
+  tokenize | parse
+fi
+
+# vi: expandtab sw=2 ts=2
+}
+
 #PATH=$PATH:/sbin:/usr/sbin
 
 set_pm_type
@@ -5519,7 +5914,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.9.6"
+        echo "EPM package manager version 1.9.9"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -5536,6 +5931,7 @@ nodeps=
 noremove=
 force=
 short=
+direct=
 sort=
 non_interactive=
 skip_installed=
@@ -5790,6 +6186,9 @@ check_option()
         ;;
     --short)              # HELPOPT: short output (just 'package' instead 'package-version-release')
         short="--short"
+        ;;
+    --direct)              # HELPOPT: direct install package file from ftp (not via hilevel repository manager)
+        direct="--direct"
         ;;
     --sort)               # HELPOPT: sort output, f.i. --sort=size (supported only for packages command)
         # TODO: how to read arg?
