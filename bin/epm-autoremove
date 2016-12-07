@@ -17,11 +17,36 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-__epm_autoremove_altrpm()
+__epm_autoremove_altrpm_pp()
 {
-	local pkg
-	load_helper epm-packages
-	assure_exists /etc/buildreqs/files/ignore.d/apt-scripts apt-scripts
+	local pkgs
+
+	info "Removing unused python/perl modules..."
+	#[ -n "$force" ] || info "You can run with --force for more deep removing"
+	local force=force
+
+	local flag=
+	[ -n "$force" ] || libexclude=$libexclude'[^-]*$'
+
+	libexclude='^(python-module-|python3-module-|python-modules-|python3-modules|perl-)'
+	[ -n "$force" ] || libexclude=$libexclude'[^-]*$'
+	showcmd "apt-cache list-nodeps | grep -E -- \"$libexclude\""
+	pkgs=$(apt-cache list-nodeps | grep -E -- "$libexclude" )
+	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
+
+	if [ -n "$flag" ] ; then
+		info ""
+		info "call again for next cycle until all modules will be removed"
+		__epm_autoremove_altrpm_pp
+	fi
+
+	return 0
+}
+
+__epm_autoremove_altrpm_lib()
+{
+	local pkgs
+
 	info
 	info "Removing all non -devel/-debuginfo libs packages not need by anything..."
 	#[ -n "$force" ] || info "You can run with --force for more deep removing"
@@ -34,24 +59,30 @@ __epm_autoremove_altrpm()
 	# https://www.altlinux.org/APT_в_ALT_Linux/Советы_по_использованию#apt-cache_list-nodeps
 	showcmd "apt-cache list-nodeps | grep -- \"$libexclude\""
 	pkgs=$(apt-cache list-nodeps | grep -- "$libexclude" \
-		| grep -E -v -- "-(devel|debuginfo)$" \
+		| grep -E -v -- "-(devel|devel-static|debuginfo)$" \
 		| grep -E -v -- "-(util|utils|tool|tools|plugin|daemon|help)$" \
 		| sed -e "s/\.32bit$//g" \
-		| grep -E -v -- "^(libsystemd|libreoffice|libnss|libvirt-client|libvirt-daemon|eepm)" )
-	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
-
-	info "Removing unused python/perl modules..."
-	libexclude='^(python-module-|python3-module-|python-modules-|python3-modules|perl-)'
-	[ -n "$force" ] || libexclude=$libexclude'[^-]*$'
-	showcmd "apt-cache list-nodeps | grep -E -- \"$libexclude\""
-	pkgs=$(apt-cache list-nodeps | grep -E -- "$libexclude" )
+		| grep -E -v -- "^(libsystemd|libreoffice|libnss|libvirt-client|libvirt-daemon|libsasl2-plugin|eepm)" )
 	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
 
 	if [ -n "$flag" ] ; then
 		info ""
 		info "call again for next cycle until all libs will be removed"
-		__epm_autoremove_altrpm
+		__epm_autoremove_altrpm_lib
 	fi
+
+	return 0
+}
+
+
+__epm_autoremove_altrpm()
+{
+	local pkg
+	load_helper epm-packages
+	assure_exists /etc/buildreqs/files/ignore.d/apt-scripts apt-scripts
+
+	__epm_autoremove_altrpm_pp
+	__epm_autoremove_altrpm_lib
 
 	return 0
 }
