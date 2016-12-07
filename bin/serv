@@ -82,7 +82,7 @@ case $DISTRNAME in
 	Slackware)
 		CMD="service-initd"
 		;;
-	SUSE|SLED|SLES)
+	SUSE|SLED|SLES|Tumbleweed)
 		CMD="service-chkconfig"
 		;;
 #	Windows)

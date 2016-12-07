@@ -298,7 +298,11 @@ elif [ `uname -o 2>/dev/null` = "Cygwin" ] ; then
 # try use standart LSB info by default
 elif distro lsb-release && [ -n "$DISTRIB_RELEASE" ]; then
 	# use LSB
-	true
+	case "$DISTRIB_ID" in
+		"openSUSE Tumbleweed")
+			DISTRIB_ID="Tumbleweed"
+			;;
+	esac
 fi
 
 case $1 in
