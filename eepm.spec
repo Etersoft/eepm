@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.9.8
+Version: 1.9.9
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -66,6 +66,15 @@ chmod a+x %buildroot%_datadir/%name/tools_*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Wed Dec 07 2016 Vitaly Lipatov <lav@altlinux.ru> 1.9.9-alt1
+- add realpath realization if missed
+- add openSUSE Tumbleweed support
+- autoremove: do separate removing cycles for python/perl and libs
+- epm-site: fix json parsing
+- epm-download: realize download via info from packages.altlinux.org
+- epm-install: add direct install (not via apt) support for ALT Linux
+- addrepo: implement support for epm addrepo etersoft
+
 * Thu Dec 01 2016 Vitaly Lipatov <lav@altlinux.ru> 1.9.8-alt1
 - epm-install: move download code to epm-download
 - epm-checkpkg: add support for checking package by url
