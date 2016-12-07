@@ -22,6 +22,24 @@ load_helper epm-print
 
 PAOURL="https://packages.altlinux.org"
 
+paoapi()
+{
+	# http://petstore.swagger.io/?url=http://packages.altlinux.org/api/docs
+	epm assure curl || return 1
+	showcmd curl "$PAOURL/api/$1"
+	a= curl -s --header "Accept: application/json" "$PAOURL/api/$1"
+}
+
+# TODO: use /home/lav/Projects/git/JSON.sh
+get_pao_var()
+{
+	local FIELD="$1"
+	#grep '"$FIELD"' | sed -e 's|.*"$FIELD":"||g' | sed -e 's|".*||g'
+	$SHAREDIR/tools_json -b | egrep "\[.*\"$FIELD\"\]" | sed -e 's|.*[[:space:]]"\(.*\)"|\1|g'
+	return 0
+}
+
+
 run_command_if_exists()
 {
 	local CMD="$1"
@@ -43,14 +61,9 @@ open_browser()
 
 __query_package_hl_url()
 {
-	local PAOAPI="$PAOURL/api"
 	case $DISTRNAME in
 		ALTLinux)
-			# http://petstore.swagger.io/?url=http://packages.altlinux.org/api/docs
-			epm assure curl || return 1
-			showcmd curl "$PAOAPI/srpms/$1"
-			a= curl -s --header "Accept: application/json" "$PAOAPI/srpms/$1" | grep '"url"' | sed -e 's|.*"url":"||g' | sed -e 's|".*||g'
-			return 0
+			paoapi srpms/$1 | get_pao_var url
 			;;
 	esac
 	return 1

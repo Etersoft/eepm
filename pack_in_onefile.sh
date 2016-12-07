@@ -44,6 +44,7 @@ filter_out()
 {
 	grep -v "^[ 	]*load_helper " | \
 		sed -e 's|$SHAREDIR/tools_eget|internal_tools_eget|g' | \
+		sed -e 's|$SHAREDIR/tools_json|internal_tools_json|g' | \
 		sed -e 's|DISTRVENDOR=$PROGDIR/distr_info|DISTRVENDOR=internal_distr_info|g' | \
 		sed -e "s|@VERSION@|$(get_version)|g"
 
@@ -64,6 +65,7 @@ done | filter_out >>$OUTPUT
 
 incorporate_subfile distr_info
 incorporate_subfile tools_eget
+incorporate_subfile tools_json
 
 awk 'BEGIN{desk=0}{if(desk>0) {print} ; if(/^load_helper epm-sh-functions/){desk++}}' <bin/$PACKCOMMAND | filter_out >>$OUTPUT
 chmod 0755 $OUTPUT
