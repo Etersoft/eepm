@@ -69,8 +69,8 @@ pkgtype()
 
 get_var()
 {
-	grep -i "^$1 *=" | head -n 1 | sed -e "s/^[^=]*[ \t]*=[ \t]*//"
-
+	# get first variable and print it out, drop quotes if exists
+	grep -i "^$1 *=" | head -n 1 | sed -e "s/^[^=]*[ \t]*=[ \t]*//" | sed -e "s/^[\'\"]\(.*\)[\'\"]/\1/"
 }
 
 # 2010.1 -> 2010
@@ -298,6 +298,8 @@ elif [ `uname -o 2>/dev/null` = "Cygwin" ] ; then
 # try use standart LSB info by default
 elif distro lsb-release && [ -n "$DISTRIB_RELEASE" ]; then
 	# use LSB
+
+	# fix distro name
 	case "$DISTRIB_ID" in
 		"openSUSE Tumbleweed")
 			DISTRIB_ID="Tumbleweed"
