@@ -113,6 +113,7 @@ __epm_get_altpkg_url()
 	[ "$arch" = "noarch" ] || arch=$(arch)
 	# HACK: filename can be list
 	local filename=$(paoapi packages/$1 | get_pao_var filename | grep $arch)
+	[ -n "$filename" ] || fatal "Can't get filename"
 	# fixme: get from /branches
 	local dv=$DISTRNAME/$DISTRVERSION/branch
 	[ "$DISTRVERSION" = "Sisyphus" ] && dv=$DISTRNAME/$DISTRVERSION
