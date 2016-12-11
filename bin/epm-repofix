@@ -29,8 +29,26 @@ __repofix_check_vendor()
 	return 1
 }
 
+# source-list vendor path
+# example: /etc/apt/source.list p7 ALTLinux\/Sisyphus
+__try_fix_apt_source_list()
+{
+	local list="$1"
+	local br="$2"
+	local path="$3"
+	if grep -q -e "^[^#].*$path" $list ; then
+		if __repofix_check_vendor $br ; then
+			regexp_subst "/$path/s/^rpm[[:space:]]*([fhr])/rpm [$br] \1/" $list
+		else
+			warning "Skip set $br vendor key (it misssed) for $list"
+			regexp_subst "/$path/s/^rpm[[:space:]]*\[$br\][[:space:]]*([fhr])/rpm \1/" $list
+		fi
+	fi
+}
+
 __fix_apt_sources_list()
 {
+	# for beauty spaces
 	local SUBST_ALT_RULE='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ](Sisyphus|p8[/ ]branch|p7[/ ]branch|p6[/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch) !\1 \2/\3/\4 !gi'
 	local i
 	assure_root
@@ -42,33 +60,14 @@ __fix_apt_sources_list()
 		regexp_subst "/^ *#/! $SUBST_ALT_RULE" $i
 
 		# Sisyphus uses 'alt' vendor key
-		if __repofix_check_vendor alt ; then
-			regexp_subst "/ALTLinux\/Sisyphus\//s/^rpm *([fhr])/rpm [alt] \1/" $i
-		else
-			warning "Skip set alt vendor key (it misssed)"
-		fi
+		__try_fix_apt_source_list $i alt "ALTLinux\/Sisyphus"
 
 		# skip branch replacement for ALT Linux Sisyphus
 		[ "$DISTRVERSION" = "Sisyphus" ] && continue
 
 		# add signs for branches
-		local br
-		for br in $DISTRVERSION ; do
-			if ! __repofix_check_vendor $br ; then
-				warning "Skip set $br vendor key (it misssed)"
-				continue
-			fi
-			regexp_subst "/ALTLinux\/$br\/branch/s/^rpm *([fhr])/rpm [$br] \1/" $i
-		done
-
-		for br in $DISTRVERSION ; do
-			#if is_installed apt-conf-etersoft-common ; then
-			if ! __repofix_check_vendor etersoft ; then
-				warning "Skip set etersoft vendor key (it misssed)"
-				continue
-			fi
-			regexp_subst "/Etersoft\/$br\/branch/s/^rpm *([fhr])/rpm [etersoft] \1/" $i
-		done
+		__try_fix_apt_source_list $i $DISTRVERSION "ALTLinux\/$DISTRVERSION\/branch"
+		__try_fix_apt_source_list $i etersoft "Etersoft\/$DISTRVERSION\/branch"
 	done
 }
 
