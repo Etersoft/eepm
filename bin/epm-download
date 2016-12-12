@@ -67,6 +67,8 @@ __download_pkg_urls()
 			warning "Failed to download $url, ignoring"
 		fi
 	done
+	# restore
+	pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
 }
 
 # NOTE: call __clean_downloaded_pkg_files after
