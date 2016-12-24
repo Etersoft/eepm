@@ -153,6 +153,9 @@ epm_download()
 	dnf-rpm)
 		sudocmd dnf download $pkg_filenames
 		;;
+	urpm-rpm)
+		sudocmd urpmi --no-install $URPMOPTIONS $@
+		;;
 	tce)
 		sudocmd tce-load -w $pkg_filenames
 		;;
