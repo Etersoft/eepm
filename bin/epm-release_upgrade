@@ -232,9 +232,11 @@ epm_release_upgrade()
 		assure_exists dnf-plugin-system-upgrade
 		sudocmd dnf system-upgrade
 		local RELEASEVER="$pkg_filenames"
-		[ -n "$RELEASEVER" ] || fatal "Run me with new version"
+		[ -n "$RELEASEVER" ] || RELEASEVER=$(($DISTRVERSION + 1))
+		#[ -n "$RELEASEVER" ] || fatal "Run me with new version"
+		info "Upgrate to $DISTRNAME/$RELEASEVER"
 		sudocmd dnf system-upgrade download --refresh --releasever=$RELEASEVER
-		sudocmd dnf system-upgrade
+		sudocmd dnf distro-sync --releasever=$RELEASEVER
 		info "Run epm autoorphans to remove orphaned packages"
 		;;
 	urpm-rpm)
