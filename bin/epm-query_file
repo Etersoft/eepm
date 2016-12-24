@@ -19,13 +19,27 @@
 
 # copied from etersoft-build-utils/bin/rpmqf
 
+# TODO: check for lib64/name situations
+__abs_filename()
+{
+	if echo "$1" | grep -q "/" ; then
+		echo "$1"
+		return
+	fi
+	if [ -e "$1" ] ; then
+		echo "$(pwd)/$1"
+		return
+	fi
+	echo "$1"
+}
+
 __do_query_real_file()
 {
 	local TOFILE
 	
 	# get canonical path
 	if [ -e "$1" ] ; then
-		TOFILE="$1"
+		TOFILE="$(__abs_filename "$1")"
 	else
 		TOFILE=$(which "$1" 2>/dev/null || echo "$1")
 		if [ "$TOFILE" != "$1" ] ; then
