@@ -53,15 +53,15 @@ __epm_autoremove_altrpm_lib()
 	local force=force
 
 	local flag=
-	local libexclude='^lib'
+	local libexclude='^(lib|i586-lib)'
 	[ -n "$force" ] || libexclude=$libexclude'[^-]*$'
 
 	# https://www.altlinux.org/APT_в_ALT_Linux/Советы_по_использованию#apt-cache_list-nodeps
 	showcmd "apt-cache list-nodeps | grep -- \"$libexclude\""
-	pkgs=$(apt-cache list-nodeps | grep -- "$libexclude" \
+	pkgs=$(apt-cache list-nodeps | grep -E -- "$libexclude" \
+		| sed -e "s/\.32bit$//g" \
 		| grep -E -v -- "-(devel|devel-static|debuginfo)$" \
 		| grep -E -v -- "-(util|utils|tool|tools|plugin|daemon|help)$" \
-		| sed -e "s/\.32bit$//g" \
 		| grep -E -v -- "^(libsystemd|libreoffice|libnss|libvirt-client|libvirt-daemon|libsasl2-plugin|eepm)" )
 	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
 
