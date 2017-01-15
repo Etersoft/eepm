@@ -1,5 +1,7 @@
 /etc/eepm.conf конфиг
 
+implement distr_info as inside tool and do access via epm command
+
 [18:21:12] <danil> Вот так можно:
 RED='\033[0;31m' ; NC='\033[0m' b="b" ; echo -e "aba" | sed -e "s|${b}|\\${RED}${b}\\${NC}|g" | xargs -0 printf
 [18:23:40] <danil> > Ты знаешь способы?

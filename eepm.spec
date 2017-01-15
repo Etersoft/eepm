@@ -67,7 +67,7 @@ chmod a+x %buildroot%_datadir/%name/tools_*
 
 %changelog
 * Wed Dec 07 2016 Vitaly Lipatov <lav@altlinux.ru> 1.9.9-alt1
-- add realpath realization if missed
+- add own realpath implementation if missed
 - add openSUSE Tumbleweed support
 - autoremove: do separate removing cycles for python/perl and libs
 - epm-site: fix json parsing
