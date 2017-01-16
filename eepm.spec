@@ -1,5 +1,5 @@
 Name: eepm
-Version: 1.9.9
+Version: 2.0.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -66,6 +66,19 @@ chmod a+x %buildroot%_datadir/%name/tools_*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Mon Jan 16 2017 Vitaly Lipatov <lav@altlinux.ru> 2.0.0-alt1
+- distr_info: fix get lsb-release file with quoted fields
+- epm-download: add filename empty checking
+- epm info: add URL support
+- epm upgrade: allow extra args
+- release_upgrade: improve for Fedora
+- epm-download: add support for urpm
+- check_update_repo: check for /var/lib/apt/lists date
+- query_file: improve check for relative path
+- epm-automove: fix i586-lib issue
+- fix systemd detection
+- epm: add/remove autoimports
+
 * Wed Dec 07 2016 Vitaly Lipatov <lav@altlinux.ru> 1.9.9-alt1
 - add own realpath implementation if missed
 - add openSUSE Tumbleweed support
