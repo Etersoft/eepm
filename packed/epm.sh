@@ -515,7 +515,7 @@ is_active_systemd()
 	[ -d "$SYSTEMD_CGROUP_DIR" ] || return
 	a= mountpoint -q "$SYSTEMD_CGROUP_DIR" || return
 	# some hack
-	ps ax | grep -q '[s]ystemd' | grep -v 'systemd-udev' >/dev/null
+	ps ax | grep '[s]ystemd' | grep -v 'systemd-udev' >/dev/null
 }
 
 # File bin/epm-addrepo:
@@ -533,7 +533,7 @@ case $DISTRNAME in
 				local branch="$DISTRVERSION/branch"
 				[ "$DISTRVERSION" = "Sisyphus" ] && branch="$DISTRVERSION"
 				# FIXME
-				[ -n "$DISTRVERSION" ] || fatal "Empty $DISTRVERSION"
+				[ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
 				local arch=$(uname -m)
 				[ "$arch" = "i686" ] && arch="i586"
 				echo "" | sudocmd tee -a /etc/apt/sources.list
@@ -546,9 +546,17 @@ case $DISTRNAME in
 				repo="$DISTRVERSION"
 				return 0
 				;;
+			autoimports)
+				[ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
+				repo="$repo.$(echo "$DISTRVERSION" | tr "[A-Z]" "[a-z]")"
 		esac
 
 		assure_exists apt-repo
+		if [ -z "$repo" ] ; then
+			docmd apt-repo add branch
+			echo "etersoft"
+			return
+		fi
 		sudocmd apt-repo add "$repo"
 		return
 		;;
@@ -832,15 +840,15 @@ __epm_autoremove_altrpm_lib()
 	local force=force
 
 	local flag=
-	local libexclude='^lib'
+	local libexclude='^(lib|i586-lib)'
 	[ -n "$force" ] || libexclude=$libexclude'[^-]*$'
 
 	# https://www.altlinux.org/APT_в_ALT_Linux/Советы_по_использованию#apt-cache_list-nodeps
 	showcmd "apt-cache list-nodeps | grep -- \"$libexclude\""
-	pkgs=$(apt-cache list-nodeps | grep -- "$libexclude" \
+	pkgs=$(apt-cache list-nodeps | grep -E -- "$libexclude" \
+		| sed -e "s/\.32bit$//g" \
 		| grep -E -v -- "-(devel|devel-static|debuginfo)$" \
 		| grep -E -v -- "-(util|utils|tool|tools|plugin|daemon|help)$" \
-		| sed -e "s/\.32bit$//g" \
 		| grep -E -v -- "^(libsystemd|libreoffice|libnss|libvirt-client|libvirt-daemon|libsasl2-plugin|eepm)" )
 	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
 
@@ -1248,15 +1256,15 @@ __is_repo_info_downloaded()
 __is_repo_info_uptodate()
 {
     case $PMTYPE in
-        apt-rpm)
+        apt-*)
             # apt-deb do not update lock file date
-            if $SUDO test -r /var/lib/apt/lists ; then
-                local LOCKFILE=/var/lib/apt/lists/lock
+            #if $SUDO test -r /var/lib/apt/lists ; then
+                local LOCKFILE=/var/lib/apt/lists
                 $SUDO test -r $LOCKFILE || return
                 # if repo older than 1 day, return false
                 # find print string if file is obsoleted
-                test -z "$($SUDO find $LOCKFILE -mtime +1)" || return
-            fi
+                test -z "$(find $LOCKFILE -maxdepth 0 -mtime +1)" || return
+            #fi
             ;;
         *)
             ;;
@@ -1585,6 +1593,8 @@ __download_pkg_urls()
 			warning "Failed to download $url, ignoring"
 		fi
 	done
+	# restore
+	pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
 }
 
 __handle_pkg_urls_to_install()
@@ -1661,6 +1671,9 @@ epm_download()
 		;;
 	dnf-rpm)
 		sudocmd dnf download $pkg_filenames
+		;;
+	urpm-rpm)
+		sudocmd urpmi --no-install $URPMOPTIONS $@
 		;;
 	tce)
 		sudocmd tce-load -w $pkg_filenames
@@ -1838,6 +1851,10 @@ __epm_info_rpm_low()
 epm_info()
 {
 
+if [ -n "$pkg_urls" ] ; then
+    __handle_pkg_urls_to_checking
+fi
+
 [ -n "$pkg_filenames" ] || fatal "Info: missing package(s) name"
 
 case $PMTYPE in
@@ -1922,6 +1939,11 @@ case $PMTYPE in
 		;;
 esac
 
+local RETVAL=$?
+
+[ -n "$to_remove_pkg_files" ] && rm -fv $to_remove_pkg_files
+
+return $RETVAL
 }
 
 # File bin/epm-install:
@@ -3362,13 +3384,26 @@ epm_query()
 # File bin/epm-query_file:
 
 
+__abs_filename()
+{
+	if echo "$1" | grep -q "/" ; then
+		echo "$1"
+		return
+	fi
+	if [ -e "$1" ] ; then
+		echo "$(pwd)/$1"
+		return
+	fi
+	echo "$1"
+}
+
 __do_query_real_file()
 {
 	local TOFILE
 	
 	# get canonical path
 	if [ -e "$1" ] ; then
-		TOFILE=$(realpath "$1")
+		TOFILE="$(__abs_filename "$1")"
 	else
 		TOFILE=$(which "$1" 2>/dev/null || echo "$1")
 		if [ "$TOFILE" != "$1" ] ; then
@@ -3815,9 +3850,11 @@ epm_release_upgrade()
 		assure_exists dnf-plugin-system-upgrade
 		sudocmd dnf system-upgrade
 		local RELEASEVER="$pkg_filenames"
-		[ -n "$RELEASEVER" ] || fatal "Run me with new version"
+		[ -n "$RELEASEVER" ] || RELEASEVER=$(($DISTRVERSION + 1))
+		#[ -n "$RELEASEVER" ] || fatal "Run me with new version"
+		info "Upgrate to $DISTRNAME/$RELEASEVER"
 		sudocmd dnf system-upgrade download --refresh --releasever=$RELEASEVER
-		sudocmd dnf system-upgrade
+		sudocmd dnf distro-sync --releasever=$RELEASEVER
 		info "Run epm autoorphans to remove orphaned packages"
 		;;
 	urpm-rpm)
@@ -4137,11 +4174,24 @@ epm_remove_old_kernels()
 epm_removerepo()
 {
 local repo="$(eval echo $quoted_args)"
-case $PMTYPE in
-	apt-rpm)
+
+case $DISTRNAME in
+	ALTLinux)
+		case "$repo" in
+			autoimports)
+				info "remove autoimports repo"
+				[ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
+				repo="$repo.$(echo "$DISTRVERSION" | tr "[A-Z]" "[a-z]")"
+				;;
+		esac
+
 		assure_exists apt-repo
 		sudocmd apt-repo rm "$repo"
+		return
 		;;
+esac;
+
+case $PMTYPE in
 	apt-dpkg|aptitude-dpkg)
 		info "You need remove repo from /etc/apt/sources.list"
 		;;
@@ -4187,8 +4237,24 @@ __repofix_check_vendor()
 	return 1
 }
 
+__try_fix_apt_source_list()
+{
+	local list="$1"
+	local br="$2"
+	local path="$3"
+	if grep -q -e "^[^#].*$path" $list ; then
+		if __repofix_check_vendor $br ; then
+			regexp_subst "/$path/s/^rpm[[:space:]]*([fhr])/rpm [$br] \1/" $list
+		else
+			warning "Skip set $br vendor key (it misssed) for $list"
+			regexp_subst "/$path/s/^rpm[[:space:]]*\[$br\][[:space:]]*([fhr])/rpm \1/" $list
+		fi
+	fi
+}
+
 __fix_apt_sources_list()
 {
+	# for beauty spaces
 	local SUBST_ALT_RULE='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ](Sisyphus|p8[/ ]branch|p7[/ ]branch|p6[/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch) !\1 \2/\3/\4 !gi'
 	local i
 	assure_root
@@ -4200,33 +4266,14 @@ __fix_apt_sources_list()
 		regexp_subst "/^ *#/! $SUBST_ALT_RULE" $i
 
 		# Sisyphus uses 'alt' vendor key
-		if __repofix_check_vendor alt ; then
-			regexp_subst "/ALTLinux\/Sisyphus\//s/^rpm *([fhr])/rpm [alt] \1/" $i
-		else
-			warning "Skip set alt vendor key (it misssed)"
-		fi
+		__try_fix_apt_source_list $i alt "ALTLinux\/Sisyphus"
 
 		# skip branch replacement for ALT Linux Sisyphus
 		[ "$DISTRVERSION" = "Sisyphus" ] && continue
 
 		# add signs for branches
-		local br
-		for br in $DISTRVERSION ; do
-			if ! __repofix_check_vendor $br ; then
-				warning "Skip set $br vendor key (it misssed)"
-				continue
-			fi
-			regexp_subst "/ALTLinux\/$br\/branch/s/^rpm *([fhr])/rpm [$br] \1/" $i
-		done
-
-		for br in $DISTRVERSION ; do
-			#if is_installed apt-conf-etersoft-common ; then
-			if ! __repofix_check_vendor etersoft ; then
-				warning "Skip set etersoft vendor key (it misssed)"
-				continue
-			fi
-			regexp_subst "/Etersoft\/$br\/branch/s/^rpm *([fhr])/rpm [etersoft] \1/" $i
-		done
+		__try_fix_apt_source_list $i $DISTRVERSION "ALTLinux\/$DISTRVERSION\/branch"
+		__try_fix_apt_source_list $i etersoft "Etersoft\/$DISTRVERSION\/branch"
 	done
 }
 
@@ -5035,7 +5082,7 @@ epm_upgrade()
 {
 	local CMD
 
-	[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
+	#[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
 
 	# it is useful for first time running
 	update_repo_if_needed
@@ -5054,18 +5101,18 @@ epm_upgrade()
 	yum-rpm)
 		local OPTIONS="$(subst_option non_interactive -y)"
 		# can do update repobase automagically
-		CMD="yum $OPTIONS update"
+		CMD="yum $OPTIONS update $pkg_filenames"
 		;;
 	dnf-rpm)
 		local OPTIONS="$(subst_option non_interactive -y)"
-		CMD="dnf $OPTIONS distro-sync"
+		CMD="dnf $OPTIONS distro-sync $pkg_filenames"
 		;;
 	snappy)
 		CMD="snappy update"
 		;;
 	urpm-rpm)
 		# or --auto-select --replace-files
-		CMD="urpmi --update --auto-select"
+		CMD="urpmi --update --auto-select $pkg_filenames"
 		;;
 	zypper-rpm)
 		CMD="zypper dist-upgrade"
@@ -5290,7 +5337,7 @@ pkgtype()
 		debian|ubuntu|mint|runtu|mcst|astra) echo "deb" ;;
 		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
 			echo "rpm" ;;
-		fedora|redhat|scientific|centos|rhel)
+		fedora|redhat|scientific|centos|rhel|goslinux)
 			echo "rpm" ;;
 		*)  echo "rpm" ;;
 	esac
@@ -5326,6 +5373,7 @@ if distro altlinux-release ; then
 	if has Sisyphus ; then DISTRIB_RELEASE="Sisyphus"
 	elif has "ALT Linux 7." ; then DISTRIB_RELEASE="p7"
 	elif has "ALT Linux 8." ; then DISTRIB_RELEASE="p8"
+	elif has "ALT Workstation K 8." ; then DISTRIB_RELEASE="p8"
 	elif has "Simply Linux 6." ; then DISTRIB_RELEASE="p6"
 	elif has "Simply Linux 7." ; then DISTRIB_RELEASE="p7"
 	elif has "Simply Linux 8." ; then DISTRIB_RELEASE="p8"
@@ -5470,6 +5518,8 @@ elif distro redhat-release ; then
 		DISTRIB_ID="CentOS"
 	elif has Scientific ; then
 		DISTRIB_ID="Scientific"
+	elif has GosLinux ; then
+		DISTRIB_ID="GosLinux"
 	fi
 	if has Beryllium ; then
 		DISTRIB_ID="Scientific"
@@ -5575,7 +5625,7 @@ case $1 in
 		exit 0
 		;;
 	-V)
-		echo "20160822"
+		echo "20161212"
 		exit 0
 		;;
 	*)
@@ -5917,9 +5967,9 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 1.9.9"
+        echo "EPM package manager version 2.0.0"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
-        echo "Copyright (c) Etersoft 2012-2016"
+        echo "Copyright (c) Etersoft 2012-2017"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 

@@ -508,7 +508,7 @@ is_active_systemd()
 	[ -d "$SYSTEMD_CGROUP_DIR" ] || return
 	a= mountpoint -q "$SYSTEMD_CGROUP_DIR" || return
 	# some hack
-	ps ax | grep -q '[s]ystemd' | grep -v 'systemd-udev' >/dev/null
+	ps ax | grep '[s]ystemd' | grep -v 'systemd-udev' >/dev/null
 }
 
 # File bin/serv-common:
@@ -1063,7 +1063,7 @@ pkgtype()
 		debian|ubuntu|mint|runtu|mcst|astra) echo "deb" ;;
 		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
 			echo "rpm" ;;
-		fedora|redhat|scientific|centos|rhel)
+		fedora|redhat|scientific|centos|rhel|goslinux)
 			echo "rpm" ;;
 		*)  echo "rpm" ;;
 	esac
@@ -1099,6 +1099,7 @@ if distro altlinux-release ; then
 	if has Sisyphus ; then DISTRIB_RELEASE="Sisyphus"
 	elif has "ALT Linux 7." ; then DISTRIB_RELEASE="p7"
 	elif has "ALT Linux 8." ; then DISTRIB_RELEASE="p8"
+	elif has "ALT Workstation K 8." ; then DISTRIB_RELEASE="p8"
 	elif has "Simply Linux 6." ; then DISTRIB_RELEASE="p6"
 	elif has "Simply Linux 7." ; then DISTRIB_RELEASE="p7"
 	elif has "Simply Linux 8." ; then DISTRIB_RELEASE="p8"
@@ -1243,6 +1244,8 @@ elif distro redhat-release ; then
 		DISTRIB_ID="CentOS"
 	elif has Scientific ; then
 		DISTRIB_ID="Scientific"
+	elif has GosLinux ; then
+		DISTRIB_ID="GosLinux"
 	fi
 	if has Beryllium ; then
 		DISTRIB_ID="Scientific"
@@ -1348,7 +1351,7 @@ case $1 in
 		exit 0
 		;;
 	-V)
-		echo "20160822"
+		echo "20161212"
 		exit 0
 		;;
 	*)
@@ -1763,7 +1766,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 1.9.9"
+        echo "Service manager version 2.0.0"
         echo "Running on $($DISTRVENDOR) with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012, 2013, 2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
