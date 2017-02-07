@@ -97,7 +97,7 @@ if distro altlinux-release ; then
 	if has Sisyphus ; then DISTRIB_RELEASE="Sisyphus"
 	elif has "ALT Linux 7." ; then DISTRIB_RELEASE="p7"
 	elif has "ALT Linux 8." ; then DISTRIB_RELEASE="p8"
-	elif has "ALT Workstation K 8." ; then DISTRIB_RELEASE="p8"
+	elif has "ALT .*8.[0-9]" ; then DISTRIB_RELEASE="p8"
 	elif has "Simply Linux 6." ; then DISTRIB_RELEASE="p6"
 	elif has "Simply Linux 7." ; then DISTRIB_RELEASE="p7"
 	elif has "Simply Linux 8." ; then DISTRIB_RELEASE="p8"
