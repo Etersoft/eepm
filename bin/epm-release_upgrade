@@ -117,7 +117,7 @@ __update_to_the_distro()
 			;;
 		Sisyphus)
 			docmd epm update || fatal
-			docmd epm install apt rpm apt-conf-sisyphus altlinux-release-sisyphus || fatal "Check an error and run again"
+			docmd epm install apt rpm librpm7 librpm apt-conf-sisyphus altlinux-release-sisyphus || fatal "Check an error and run again"
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
 			;;
 		*)
