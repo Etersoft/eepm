@@ -523,6 +523,7 @@ is_active_systemd()
 	[ -x "$SYSTEMCTL" ] || return
 	[ -d "$SYSTEMD_CGROUP_DIR" ] || return
 	a= mountpoint -q "$SYSTEMD_CGROUP_DIR" || return
+	readlink /sbin/init | grep -q 'systemd' || return
 	# some hack
-	ps ax | grep '[s]ystemd' | grep -v 'systemd-udev' >/dev/null
+	ps ax | grep '[s]ystemd' | grep -q -v 'systemd-udev'
 }
