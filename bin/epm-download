@@ -21,6 +21,8 @@ __use_url_install()
 {
 	case $DISTRNAME in
 		"ALTLinux")
+			# not for https
+			echo "$pkg_urls" | grep -q "https://" && return 1
 			pkg_names="$pkg_names $pkg_urls"
 			return 0
 			;;
