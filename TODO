@@ -1,3 +1,6 @@
+TODO: yaourt (pacman frontend), need we?
+https://archlinux.fr/man/yaourt.8.html
+
 /etc/eepm.conf конфиг
 
 implement distr_info as inside tool and do access via epm command
