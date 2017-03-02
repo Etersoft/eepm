@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.0.1
+Version: 2.0.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -66,6 +66,12 @@ chmod a+x %buildroot%_datadir/%name/tools_*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Thu Mar 02 2017 Vitaly Lipatov <lav@altlinux.ru> 2.0.2-alt1
+- distr_info: fix version detection for all ALT p8 distros
+- add workaround for ALT rpm missed https support
+- install librpm7 during upgrade to Sisyphus
+- improve systemd checking
+
 * Tue Feb 07 2017 Vitaly Lipatov <lav@altlinux.ru> 2.0.1-alt1
 - autoremove: skip -32bit suffix
 
