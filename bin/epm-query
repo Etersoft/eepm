@@ -98,11 +98,11 @@ __epm_get_hilevel_nameform()
 			echo $pkg
 			return
 			;;
-		yum-rpm)
+		yum-rpm|dnf-rpm)
 			# just use strict version with Epoch and Serial
 			local pkg
-			pkg=$(rpm -q --queryformat "%{EPOCH}:%{NAME}%{VERSION}-%{RELEASE}.${ARCH}\n" $1)
-			echo $pkg | grep -q "(none)" && pkg=$(rpm -q --queryformat "%{NAME}-%{VERSION}-%{RELEASE}.${ARCH}\n" $1)
+			pkg=$(rpm -q --queryformat "%{EPOCH}:%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" $1)
+			echo $pkg | grep -q "(none)" && pkg=$(rpm -q --queryformat "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" $1)
 			echo $pkg
 			return
 			;;
