@@ -58,7 +58,7 @@ case $DISTRNAME in
 	ALTLinux)
 		CMD="service-chkconfig"
 		;;
-	Ubuntu|Debian|Mint)
+	Ubuntu|Debian|Mint|AstraLinux)
 		CMD="service-update"
 		;;
 	Mandriva|ROSA)
@@ -73,7 +73,7 @@ case $DISTRNAME in
 #	ArchLinux)
 #		CMD="pacman"
 #		;;
-	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific)
+	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific|GosLinux)
 		CMD="service-chkconfig"
 		;;
 	VoidLinux)
