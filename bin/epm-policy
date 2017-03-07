@@ -22,6 +22,9 @@ epm_policy()
 
 [ -n "$pkg_names" ] || fatal "Info: missing package(s) name"
 
+# get package name for hi level package management command (with version if supported and if possible)
+pkg_names=$(__epm_get_hilevel_name $pkg_names)
+
 case $PMTYPE in
 	apt-rpm)
 		docmd apt-cache policy $pkg_names
