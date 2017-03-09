@@ -23,10 +23,10 @@ __local_ercat()
    for i in $* ; do
        case "$i" in
            *.xz)
-               xzcat $i
+               a= xzcat $i
                ;;
            *.lz4)
-               lz4cat $i
+               a= lz4cat $i
                ;;
            *)
                cat $i
