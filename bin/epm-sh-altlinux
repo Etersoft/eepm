@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2014  Etersoft
-# Copyright (C) 2014  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2014, 2017  Etersoft
+# Copyright (C) 2014, 2017  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -17,19 +17,71 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-# TODO: port or rewrite apt-file
+# apt-file like. See also
 # https://bugzilla.altlinux.org/show_bug.cgi?id=14449
+
+# convert "http://download.etersoft.ru/pub/ALTLinux/p8/branch x86_64" to /tmp/epm/ALTLinux/p8/branch/x86_64
+get_local_alt_mirror_path()
+{
+    local DN1=$(dirname "$1")
+    local DN2=$(dirname $DN1)
+
+    local BN0=$(basename "$1") # arch
+    local BN1=$(basename $DN1) # branch/Sisyphus
+    local BN2=$(basename $DN2)
+
+    [ "$BN1" = "branch" ] && echo "/tmp/eepm/$BN2/$BN1/$BN0" || echo "/tmp/eepm/$BN1/$BN0"
+}
+
+# args: url target_file
+# result: will set FILE
+download_alt_contents_index()
+{
+    local TD="$2"
+    local OFILE="$TD/$(basename "$1")"
+    local DONE="$TD/done.$(basename "$1")"
+    # TODO: check if too old
+    if [ -r "$DONE" ] ; then
+        return
+    fi
+
+    mkdir -p "$TD"
+
+    docmd eget -O "$OFILE" "$1" || return
+    # plain file by default
+    echo "" >$DONE
+
+    # try compress
+    if epm assure lz4 ; then
+        docmd lz4 --rm "$OFILE" "$OFILE.lz4" || return
+        echo "lz4" >$DONE
+    else
+        epm assure xz || return
+        docmd xz "$ofile" || return
+        echo "xz" >$DONE
+    fi
+}
+
 get_local_alt_contents_index()
 {
     load_helper epm-repolist
 
-    epm_repolist | grep "rpm.*file:/" | sed -e "s|^rpm.*file:||g" | while read URL ARCH other ; do
-        test -d "$URL/$ARCH" || continue # fatal "Local mirror is not accessible via $URL/$ARCH"
-        FILE="$URL/$ARCH/base/contents_index"
+    # print out from local mirror
+    epm_repolist | grep "rpm.*file:/" | sed -e "s|^rpm.*file:||g" | while read LOCALPATH ARCH other ; do
+        test -d "$LOCALPATH/$ARCH" || continue
+        FILE="$LOCALPATH/$ARCH/base/contents_index"
         if [ -r "$FILE" ] ; then
             echo "$FILE"
         else
             info "TODO for girar server: There is no $(basename $FILE) file in $(dirname $FILE)"
         fi
     done
+
+    # print out from mirrored contents_index
+    epm_repolist | grep -E "rpm[[:space:]]*(ftp|http|https)://" | sed -e "s@^rpm.*\(ftp\|http\|https://\)@\1@g" | while read URL ARCH other ; do
+        LOCALPATH=$(get_local_alt_mirror_path "$URL/$ARCH")
+        download_alt_contents_index $URL/$ARCH/base/contents_index $LOCALPATH
+        echo "$LOCALPATH/contents_index*"
+    done
+
 }

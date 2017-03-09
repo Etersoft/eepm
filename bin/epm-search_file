@@ -17,22 +17,43 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+__local_ercat()
+{
+   local i
+   for i in $* ; do
+       case "$i" in
+           *.xz)
+               xzcat $i
+               ;;
+           *.lz4)
+               lz4cat $i
+               ;;
+           *)
+               cat $i
+               ;;
+       esac
+   done
+}
+
 __alt_local_content_search()
 {
     load_helper epm-sh-altlinux
 
+    info "Locate contents index file(s) ..."
     local CI="$(get_local_alt_contents_index)"
     # TODO use something like
     [ -n "$CI" ] || fatal "Have no local contents index"
-    #local OUTCMD="less"
-    #[ -n "$USETTY" ] || OUTCMD="cat"
-    OUTCMD="cat"
 
-    {
-        [ -n "$USETTY" ] && info "Search in $CI for $1..."
+    info "Searching in"
+    echo "$CI"
+    echo "for $1... "
+    #[ -n "$USETTY" ] || OUTCMD="cat"
+#    OUTCMD="cat"
+
+#    {
         # note! tabulation below!
-        grep -h -- ".*$1.*	" $CI | sed -e "s|\(.*\)\t\(.*\)|\2: \1|g"
-    } | $OUTCMD
+        __local_ercat $CI | grep -h -- ".*$1.*	" | sed -e "s|\(.*\)\t\(.*\)|\2: \1|g"
+#    } | $OUTCMD
 }
 
 epm_search_file()
