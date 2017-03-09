@@ -458,7 +458,7 @@ case $DISTRNAME in
 	ArchLinux)
 		CMD="pacman"
 		;;
-	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific)
+	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific|GosLinux)
 		CMD="yum-rpm"
 		which dnf 2>/dev/null >/dev/null && test -d /var/lib/dnf/yumdb && CMD=dnf-rpm
 		;;
@@ -514,8 +514,9 @@ is_active_systemd()
 	[ -x "$SYSTEMCTL" ] || return
 	[ -d "$SYSTEMD_CGROUP_DIR" ] || return
 	a= mountpoint -q "$SYSTEMD_CGROUP_DIR" || return
+	readlink /sbin/init | grep -q 'systemd' || return
 	# some hack
-	ps ax | grep '[s]ystemd' | grep -v 'systemd-udev' >/dev/null
+	ps ax | grep '[s]ystemd' | grep -q -v 'systemd-udev'
 }
 
 # File bin/epm-addrepo:
@@ -846,7 +847,7 @@ __epm_autoremove_altrpm_lib()
 	# https://www.altlinux.org/APT_в_ALT_Linux/Советы_по_использованию#apt-cache_list-nodeps
 	showcmd "apt-cache list-nodeps | grep -- \"$libexclude\""
 	pkgs=$(apt-cache list-nodeps | grep -E -- "$libexclude" \
-		| sed -e "s/\.32bit$//g" \
+		| sed -e "s/[-\.]32bit$//g" \
 		| grep -E -v -- "-(devel|devel-static|debuginfo)$" \
 		| grep -E -v -- "-(util|utils|tool|tools|plugin|daemon|help)$" \
 		| grep -E -v -- "^(libsystemd|libreoffice|libnss|libvirt-client|libvirt-daemon|libsasl2-plugin|eepm)" )
@@ -1548,6 +1549,8 @@ __use_url_install()
 {
 	case $DISTRNAME in
 		"ALTLinux")
+			# not for https
+			echo "$pkg_urls" | grep -q "https://" && return 1
 			pkg_names="$pkg_names $pkg_urls"
 			return 0
 			;;
@@ -2232,7 +2235,6 @@ __epm_check_if_try_install_rpm()
 	cd $TDIR
 	for pkg in $rpmpkgs ; do
 		showcmd_store_output fakeroot alien -d -k --scripts "$pkg"
-		clean_store_output
 		local DEBCONVERTED=$(grep "deb generated" $RC_STDOUT | sed -e "s| generated||g")
 		clean_store_output
 		epm install $DEBCONVERTED
@@ -2804,6 +2806,8 @@ epm_policy()
 
 [ -n "$pkg_names" ] || fatal "Info: missing package(s) name"
 
+pkg_names=$(__epm_get_hilevel_name $pkg_names)
+
 case $PMTYPE in
 	apt-rpm)
 		docmd apt-cache policy $pkg_names
@@ -3207,11 +3211,11 @@ __epm_get_hilevel_nameform()
 			echo $pkg
 			return
 			;;
-		yum-rpm)
+		yum-rpm|dnf-rpm)
 			# just use strict version with Epoch and Serial
 			local pkg
-			pkg=$(rpm -q --queryformat "%{EPOCH}:%{NAME}%{VERSION}-%{RELEASE}.${ARCH}\n" $1)
-			echo $pkg | grep -q "(none)" && pkg=$(rpm -q --queryformat "%{NAME}-%{VERSION}-%{RELEASE}.${ARCH}\n" $1)
+			pkg=$(rpm -q --queryformat "%{EPOCH}:%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" $1)
+			echo $pkg | grep -q "(none)" && pkg=$(rpm -q --queryformat "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" $1)
 			echo $pkg
 			return
 			;;
@@ -3735,7 +3739,7 @@ __update_to_the_distro()
 			;;
 		Sisyphus)
 			docmd epm update || fatal
-			docmd epm install apt rpm apt-conf-sisyphus altlinux-release-sisyphus || fatal "Check an error and run again"
+			docmd epm install apt rpm librpm7 librpm apt-conf-sisyphus altlinux-release-sisyphus || fatal "Check an error and run again"
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
 			;;
 		*)
@@ -4647,21 +4651,39 @@ epm_search()
 
 # File bin/epm-search_file:
 
+__local_ercat()
+{
+   local i
+   for i in $* ; do
+       case "$i" in
+           *.xz)
+               xzcat $i
+               ;;
+           *.lz4)
+               lz4cat $i
+               ;;
+           *)
+               cat $i
+               ;;
+       esac
+   done
+}
+
 __alt_local_content_search()
 {
 
+    info "Locate contents index file(s) ..."
     local CI="$(get_local_alt_contents_index)"
     # TODO use something like
     [ -n "$CI" ] || fatal "Have no local contents index"
-    #local OUTCMD="less"
-    #[ -n "$USETTY" ] || OUTCMD="cat"
-    OUTCMD="cat"
 
-    {
-        [ -n "$USETTY" ] && info "Search in $CI for $1..."
+    info "Searching in"
+    echo "$CI"
+    echo "for $1... "
+    #[ -n "$USETTY" ] || OUTCMD="cat"
+
         # note! tabulation below!
-        grep -h -- ".*$1.*	" $CI | sed -e "s|\(.*\)\t\(.*\)|\2: \1|g"
-    } | $OUTCMD
+        __local_ercat $CI | grep -h -- ".*$1.*	" | sed -e "s|\(.*\)\t\(.*\)|\2: \1|g"
 }
 
 epm_search_file()
@@ -4721,18 +4743,67 @@ docmd $CMD $pkg_filenames
 
 # File bin/epm-sh-altlinux:
 
+
+get_local_alt_mirror_path()
+{
+    local DN1=$(dirname "$1")
+    local DN2=$(dirname $DN1)
+
+    local BN0=$(basename "$1") # arch
+    local BN1=$(basename $DN1) # branch/Sisyphus
+    local BN2=$(basename $DN2)
+
+    [ "$BN1" = "branch" ] && echo "/tmp/eepm/$BN2/$BN1/$BN0" || echo "/tmp/eepm/$BN1/$BN0"
+}
+
+download_alt_contents_index()
+{
+    local TD="$2"
+    local OFILE="$TD/$(basename "$1")"
+    local DONE="$TD/done.$(basename "$1")"
+    # TODO: check if too old
+    if [ -r "$DONE" ] ; then
+        return
+    fi
+
+    mkdir -p "$TD"
+
+    docmd eget -O "$OFILE" "$1" || return
+    # plain file by default
+    echo "" >$DONE
+
+    # try compress
+    if epm assure lz4 ; then
+        docmd lz4 --rm "$OFILE" "$OFILE.lz4" || return
+        echo "lz4" >$DONE
+    else
+        epm assure xz || return
+        docmd xz "$ofile" || return
+        echo "xz" >$DONE
+    fi
+}
+
 get_local_alt_contents_index()
 {
 
-    epm_repolist | grep "rpm.*file:/" | sed -e "s|^rpm.*file:||g" | while read URL ARCH other ; do
-        test -d "$URL/$ARCH" || continue # fatal "Local mirror is not accessible via $URL/$ARCH"
-        FILE="$URL/$ARCH/base/contents_index"
+    # print out from local mirror
+    epm_repolist | grep "rpm.*file:/" | sed -e "s|^rpm.*file:||g" | while read LOCALPATH ARCH other ; do
+        test -d "$LOCALPATH/$ARCH" || continue
+        FILE="$LOCALPATH/$ARCH/base/contents_index"
         if [ -r "$FILE" ] ; then
             echo "$FILE"
         else
             info "TODO for girar server: There is no $(basename $FILE) file in $(dirname $FILE)"
         fi
     done
+
+    # print out from mirrored contents_index
+    epm_repolist | grep -E "rpm[[:space:]]*(ftp|http|https)://" | sed -e "s@^rpm.*\(ftp\|http\|https://\)@\1@g" | while read URL ARCH other ; do
+        LOCALPATH=$(get_local_alt_mirror_path "$URL/$ARCH")
+        download_alt_contents_index $URL/$ARCH/base/contents_index $LOCALPATH
+        echo "$LOCALPATH/contents_index*"
+    done
+
 }
 
 # File bin/epm-simulate:
@@ -5373,7 +5444,7 @@ if distro altlinux-release ; then
 	if has Sisyphus ; then DISTRIB_RELEASE="Sisyphus"
 	elif has "ALT Linux 7." ; then DISTRIB_RELEASE="p7"
 	elif has "ALT Linux 8." ; then DISTRIB_RELEASE="p8"
-	elif has "ALT Workstation K 8." ; then DISTRIB_RELEASE="p8"
+	elif has "ALT .*8.[0-9]" ; then DISTRIB_RELEASE="p8"
 	elif has "Simply Linux 6." ; then DISTRIB_RELEASE="p6"
 	elif has "Simply Linux 7." ; then DISTRIB_RELEASE="p7"
 	elif has "Simply Linux 8." ; then DISTRIB_RELEASE="p8"
@@ -5967,7 +6038,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 2.0.0"
+        echo "EPM package manager version 2.0.4"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2017"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

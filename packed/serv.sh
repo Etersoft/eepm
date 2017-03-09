@@ -451,7 +451,7 @@ case $DISTRNAME in
 	ArchLinux)
 		CMD="pacman"
 		;;
-	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific)
+	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific|GosLinux)
 		CMD="yum-rpm"
 		which dnf 2>/dev/null >/dev/null && test -d /var/lib/dnf/yumdb && CMD=dnf-rpm
 		;;
@@ -507,8 +507,9 @@ is_active_systemd()
 	[ -x "$SYSTEMCTL" ] || return
 	[ -d "$SYSTEMD_CGROUP_DIR" ] || return
 	a= mountpoint -q "$SYSTEMD_CGROUP_DIR" || return
+	readlink /sbin/init | grep -q 'systemd' || return
 	# some hack
-	ps ax | grep '[s]ystemd' | grep -v 'systemd-udev' >/dev/null
+	ps ax | grep '[s]ystemd' | grep -q -v 'systemd-udev'
 }
 
 # File bin/serv-common:
@@ -1099,7 +1100,7 @@ if distro altlinux-release ; then
 	if has Sisyphus ; then DISTRIB_RELEASE="Sisyphus"
 	elif has "ALT Linux 7." ; then DISTRIB_RELEASE="p7"
 	elif has "ALT Linux 8." ; then DISTRIB_RELEASE="p8"
-	elif has "ALT Workstation K 8." ; then DISTRIB_RELEASE="p8"
+	elif has "ALT .*8.[0-9]" ; then DISTRIB_RELEASE="p8"
 	elif has "Simply Linux 6." ; then DISTRIB_RELEASE="p6"
 	elif has "Simply Linux 7." ; then DISTRIB_RELEASE="p7"
 	elif has "Simply Linux 8." ; then DISTRIB_RELEASE="p8"
@@ -1695,7 +1696,7 @@ case $DISTRNAME in
 	ALTLinux)
 		CMD="service-chkconfig"
 		;;
-	Ubuntu|Debian|Mint)
+	Ubuntu|Debian|Mint|AstraLinux)
 		CMD="service-update"
 		;;
 	Mandriva|ROSA)
@@ -1710,7 +1711,7 @@ case $DISTRNAME in
 #	ArchLinux)
 #		CMD="pacman"
 #		;;
-	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific)
+	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific|GosLinux)
 		CMD="service-chkconfig"
 		;;
 	VoidLinux)
@@ -1766,7 +1767,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 2.0.0"
+        echo "Service manager version 2.0.4"
         echo "Running on $($DISTRVENDOR) with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012, 2013, 2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
