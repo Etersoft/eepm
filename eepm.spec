@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.0.3
+Version: 2.0.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -66,6 +66,10 @@ chmod a+x %buildroot%_datadir/%name/tools_*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Thu Mar 09 2017 Vitaly Lipatov <lav@altlinux.ru> 2.0.4-alt1
+- epm-policy: move to hilevel package name
+- implement local cache for contents index for ALT repos
+
 * Tue Mar 07 2017 Vitaly Lipatov <lav@altlinux.ru> 2.0.3-alt1
 - fix query hilevel name for yum/dnf
 - epm install: fix install rpm on deb
