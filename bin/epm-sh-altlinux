@@ -33,7 +33,7 @@ get_local_alt_mirror_path()
     [ "$BN1" = "branch" ] && echo "/tmp/eepm/$BN2/$BN1/$BN0" || echo "/tmp/eepm/$BN1/$BN0"
 }
 
-# args: url target_file
+# args: url/path target_file
 # result: will set FILE
 download_alt_contents_index()
 {
@@ -47,16 +47,21 @@ download_alt_contents_index()
 
     mkdir -p "$TD"
 
-    docmd eget -O "$OFILE" "$1" || return
+    if echo "$1" | grep -q "/" ; then
+        # TODO: separate
+        cp -fv "$1" "$OFILE" || return
+    else
+        docmd eget -O "$OFILE" "$1" || return
+    fi
     # plain file by default
     echo "" >$DONE
 
     # try compress
-    if epm assure lz4 ; then
+    if epm assure lz4 </dev/null ; then
         docmd lz4 --rm "$OFILE" "$OFILE.lz4" || return
         echo "lz4" >$DONE
     else
-        epm assure xz || return
+        epm assure xz </dev/null || return
         docmd xz "$ofile" || return
         echo "xz" >$DONE
     fi
@@ -66,21 +71,19 @@ get_local_alt_contents_index()
 {
     load_helper epm-repolist
 
+    local LOCALPATH
+
     # print out from local mirror
-    epm_repolist | grep "rpm.*file:/" | sed -e "s|^rpm.*file:||g" | while read LOCALPATH ARCH other ; do
-        test -d "$LOCALPATH/$ARCH" || continue
-        FILE="$LOCALPATH/$ARCH/base/contents_index"
-        if [ -r "$FILE" ] ; then
-            echo "$FILE"
-        else
-            info "TODO for girar server: There is no $(basename $FILE) file in $(dirname $FILE)"
-        fi
+    epm_repolist | grep "rpm.*file:/" | sed -e "s|^rpm.*file:||g" | while read URL ARCH other ; do
+        LOCALPATH=$(get_local_alt_mirror_path "$URL/$ARCH")
+        download_alt_contents_index $URL/$ARCH/base/contents_index $LOCALPATH || continue
+        echo "$LOCALPATH/contents_index*"
     done
 
     # print out from mirrored contents_index
-    epm_repolist | grep -E "rpm[[:space:]]*(ftp|http|https)://" | sed -e "s@^rpm.*\(ftp\|http\|https://\)@\1@g" | while read URL ARCH other ; do
+    epm_repolist | grep -E "rpm[[:space:]]*(ftp|http|https)://" | sed -e "s@^rpm.*\(ftp\|http\|https\)://@\1://@g" | while read URL ARCH other ; do
         LOCALPATH=$(get_local_alt_mirror_path "$URL/$ARCH")
-        download_alt_contents_index $URL/$ARCH/base/contents_index $LOCALPATH
+        download_alt_contents_index $URL/$ARCH/base/contents_index $LOCALPATH || continue
         echo "$LOCALPATH/contents_index*"
     done
 
