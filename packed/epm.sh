@@ -1716,7 +1716,7 @@ __alt_local_content_filelist()
 
     {
         [ -n "$USETTY" ] && info "Search in $CI for $1..."
-        grep -h -- ".*$1$" $CI | sed -e "s|\(.*\)\t\(.*\)|\1|g"
+        __local_ercat $CI | grep -h -- ".*$1$" | sed -e "s|\(.*\)\t\(.*\)|\1|g"
     } | $OUTCMD
 }
 
@@ -1743,7 +1743,7 @@ __epm_filelist_remote()
 			docmd_foreach __deb_local_content_filelist $@
 			;;
 		*)
-			fatal "Query filelist for non installed packages does not realized"
+			fatal "Query filelist for non installed packages is not implemented yet."
 			;;
 	esac
 }
@@ -1813,7 +1813,7 @@ __epm_filelist_name()
 			return
 			;;
 		slackpkg)
-			is_installed $@ || fatal "Query filelist for non installed packages does not realized"
+			is_installed $@ || fatal "Query filelist for non installed packages is not implemented yet"
 			docmd awk 'BEGIN{desk=1}{if(/^FILE LIST:$/){desk=0} else if (desk==0) {print}}' /var/log/packages/${pkg_filenames}* | less
 			return
 			;;
@@ -2651,7 +2651,7 @@ case $PMTYPE in
 		docmd dpkg-query -W --showformat="\${Size}.\${Package}-\${Version}\n" $pkg_filenames | sort -n
 		;;
 	*)
-		fatal "Sorted package list are not realized for $PMTYPE"
+		fatal "Sorted package list function is not implemented for $PMTYPE"
 		;;
 esac
 }
@@ -3486,7 +3486,7 @@ __do_query()
             ;;
         aptcyg)
             #CMD="apt-cyg packageof"
-            # do not realized locally
+            # is not implemented locally
             return 1
             ;;
         *)
@@ -4651,22 +4651,11 @@ epm_search()
 
 # File bin/epm-search_file:
 
-__local_ercat()
+
+__alt_search_file_output()
 {
-   local i
-   for i in $* ; do
-       case "$i" in
-           *.xz)
-               xzcat $i
-               ;;
-           *.lz4)
-               lz4cat $i
-               ;;
-           *)
-               cat $i
-               ;;
-       esac
-   done
+    # grep only on left part (filename), then revert order and grep with color
+    __local_ercat $1 | grep -h -- ".*$2.*[[:space:]]" | sed -e "s|\(.*\)\t\(.*\)|\2: \1|g" $3
 }
 
 __alt_local_content_search()
@@ -4680,10 +4669,12 @@ __alt_local_content_search()
     info "Searching in"
     echo "$CI"
     echo "for $1... "
-    #[ -n "$USETTY" ] || OUTCMD="cat"
 
-        # note! tabulation below!
-        __local_ercat $CI | grep -h -- ".*$1.*	" | sed -e "s|\(.*\)\t\(.*\)|\2: \1|g"
+    # FIXME: do it better
+    local MGS
+    MGS=$(eval __epm_search_make_grep $quoted_args)
+    showcmd "$ cat contents_index $MGS"
+    eval "__alt_search_file_output \"$CI\" \"$(eval get_firstarg $quoted_args)\" $MGS"
 }
 
 epm_search_file()
@@ -4702,12 +4693,12 @@ case $PMTYPE in
 		return ;;
 	yum-rpm)
 		# TODO
-		info "Search by full packages list does not realized"
+		info "Search by full packages list is not implemented yet"
 		CMD="yum provides"
 		;;
 	dnf-rpm)
 		# TODO
-		info "Search by full packages list does not realized"
+		info "Search by full packages list is not implemented yet"
 		CMD="dnf provides"
 		;;
 	urpm-rpm)
@@ -4748,19 +4739,56 @@ get_local_alt_mirror_path()
 {
     local DN1=$(dirname "$1")
     local DN2=$(dirname $DN1)
+    local DN3=$(dirname $DN2)
 
     local BN0=$(basename "$1") # arch
     local BN1=$(basename $DN1) # branch/Sisyphus
-    local BN2=$(basename $DN2)
+    local BN2=$(basename $DN2) # p8/ALTLinux
+    local BN3=$(basename $DN3) # ALTLinux/
 
-    [ "$BN1" = "branch" ] && echo "/tmp/eepm/$BN2/$BN1/$BN0" || echo "/tmp/eepm/$BN1/$BN0"
+    [ "$BN1" = "branch" ] && echo "/tmp/eepm/$BN3/$BN2/$BN1/$BN0" || echo "/tmp/eepm/$BN2/$BN1/$BN0"
+}
+
+__local_ercat()
+{
+   local i
+   for i in $* ; do
+       case "$i" in
+           *.xz)
+               a= xzcat $i
+               ;;
+           *.lz4)
+               a= lz4cat $i
+               ;;
+           *.failed)
+               # just ignore
+               ;;
+           *)
+               cat $i
+               ;;
+       esac
+   done
+}
+
+compress_file_inplace()
+{
+    local OFILE="$1"
+    if epm assure lz4 </dev/null ; then
+        docmd lz4 --rm "$OFILE" "$OFILE.lz4" || return
+    else
+        epm assure xz </dev/null || return
+        docmd xz "$OFILE" || return
+    fi
+    return 0
 }
 
 download_alt_contents_index()
 {
+    local URL="$1"
     local TD="$2"
-    local OFILE="$TD/$(basename "$1")"
-    local DONE="$TD/done.$(basename "$1")"
+    local OFILE="$TD/$(basename "$URL")"
+
+    local DONE=$(echo $OFILE*)
     # TODO: check if too old
     if [ -r "$DONE" ] ; then
         return
@@ -4768,39 +4796,25 @@ download_alt_contents_index()
 
     mkdir -p "$TD"
 
-    docmd eget -O "$OFILE" "$1" || return
-    # plain file by default
-    echo "" >$DONE
-
-    # try compress
-    if epm assure lz4 ; then
-        docmd lz4 --rm "$OFILE" "$OFILE.lz4" || return
-        echo "lz4" >$DONE
+    if echo "$URL" | grep -q "^file:/" ; then
+        URL=$(echo "$URL" | sed -e "s|^file:||")
+        [ -s "$URL" ] || { touch $OFILE.failed ; return 1; }
+        ln -s "$URL" "$OFILE" || { touch $OFILE.failed ; return 1; }
     else
-        epm assure xz || return
-        docmd xz "$ofile" || return
-        echo "xz" >$DONE
+        docmd eget -O "$OFILE" "$URL" || { rm -fv $OFILE ; touch $OFILE.failed ; return 1; }
     fi
+
+    compress_file_inplace "$OFILE"
 }
 
 get_local_alt_contents_index()
 {
 
-    # print out from local mirror
-    epm_repolist | grep "rpm.*file:/" | sed -e "s|^rpm.*file:||g" | while read LOCALPATH ARCH other ; do
-        test -d "$LOCALPATH/$ARCH" || continue
-        FILE="$LOCALPATH/$ARCH/base/contents_index"
-        if [ -r "$FILE" ] ; then
-            echo "$FILE"
-        else
-            info "TODO for girar server: There is no $(basename $FILE) file in $(dirname $FILE)"
-        fi
-    done
+    local LOCALPATH
 
-    # print out from mirrored contents_index
-    epm_repolist | grep -E "rpm[[:space:]]*(ftp|http|https)://" | sed -e "s@^rpm.*\(ftp\|http\|https://\)@\1@g" | while read URL ARCH other ; do
+    epm_repolist | grep -E "rpm.*(ftp://|http://|https://|file:/)" | sed -e "s@^rpm.*\(ftp://\|http://\|https://\|file:\)@\1@g" | while read URL ARCH other ; do
         LOCALPATH=$(get_local_alt_mirror_path "$URL/$ARCH")
-        download_alt_contents_index $URL/$ARCH/base/contents_index $LOCALPATH
+        download_alt_contents_index $URL/$ARCH/base/contents_index $LOCALPATH || continue
         echo "$LOCALPATH/contents_index*"
     done
 
@@ -5257,6 +5271,7 @@ epm_Upgrade()
 # File bin/epm-whatdepends:
 
 
+
 epm_whatdepends()
 {
 	local CMD
@@ -5281,6 +5296,7 @@ case $PMTYPE in
 		CMD="urpmq --whatrequires"
 		;;
 	dnf-rpm)
+		# check command: dnf repoquery --whatrequires
 		CMD="repoquery --whatrequires"
 		;;
 	emerge)
@@ -6038,7 +6054,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 2.0.4"
+        echo "EPM package manager version 2.0.5"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2017"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -6381,7 +6397,9 @@ pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
 if [ -z "$epm_cmd" ] ; then
     print_version
     echo
-    fatal "Unknown command $@. Run $ $PROGNAME --help for get help"
+    fatstr="Unknown command in $@ arg(s)"
+    [ -n "$*" ] || fatstr="That program needs be running with some command"
+    fatal "$fatstr. Run $ $PROGNAME --help to get help."
 fi
 
 # Use eatmydata for write specific operations
