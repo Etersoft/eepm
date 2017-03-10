@@ -56,6 +56,19 @@ __local_ercat()
    done
 }
 
+# something like gzip
+compress_file_inplace()
+{
+    local OFILE="$1"
+    if epm assure lz4 </dev/null ; then
+        docmd lz4 --rm "$OFILE" "$OFILE.lz4" || return
+    else
+        epm assure xz </dev/null || return
+        docmd xz "$OFILE" || return
+    fi
+    return 0
+}
+
 # args: url/path target_file
 # result: will set FILE
 download_alt_contents_index()
@@ -77,14 +90,7 @@ download_alt_contents_index()
         docmd eget -O "$OFILE" "$1" || { touch $OFILE.failed ; return 1; }
     fi
 
-    # try compress
-    if epm assure lz4 </dev/null ; then
-        docmd lz4 --rm "$OFILE" "$OFILE.lz4" || return
-    else
-        epm assure xz </dev/null || return
-        docmd xz "$ofile" || return
-    fi
-    return 0
+    compress_file_inplace "$OFILE"
 }
 
 get_local_alt_contents_index()
@@ -93,15 +99,7 @@ get_local_alt_contents_index()
 
     local LOCALPATH
 
-    # print out from local mirror
-    epm_repolist | grep "rpm.*file:/" | sed -e "s|^rpm.*file:||g" | while read URL ARCH other ; do
-        LOCALPATH=$(get_local_alt_mirror_path "$URL/$ARCH")
-        download_alt_contents_index $URL/$ARCH/base/contents_index $LOCALPATH || continue
-        echo "$LOCALPATH/contents_index*"
-    done
-
-    # print out from mirrored contents_index
-    epm_repolist | grep -E "rpm[[:space:]]*(ftp|http|https)://" | sed -e "s@^rpm.*\(ftp\|http\|https\)://@\1://@g" | while read URL ARCH other ; do
+    epm_repolist | grep -E "rpm.*(ftp://|http://|https://|file:/)" | sed -e "s@^rpm.*\(ftp://\|http://\|https://\|file:\)@\1@g" | while read URL ARCH other ; do
         LOCALPATH=$(get_local_alt_mirror_path "$URL/$ARCH")
         download_alt_contents_index $URL/$ARCH/base/contents_index $LOCALPATH || continue
         echo "$LOCALPATH/contents_index*"
