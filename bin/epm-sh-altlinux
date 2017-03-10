@@ -73,8 +73,10 @@ compress_file_inplace()
 # result: will set FILE
 download_alt_contents_index()
 {
+    local URL="$1"
     local TD="$2"
-    local OFILE="$TD/$(basename "$1")"
+    local OFILE="$TD/$(basename "$URL")"
+
     local DONE=$(echo $OFILE*)
     # TODO: check if too old
     if [ -r "$DONE" ] ; then
@@ -83,11 +85,12 @@ download_alt_contents_index()
 
     mkdir -p "$TD"
 
-    if echo "$1" | grep -q "/" ; then
-        # TODO: separate
-        cp -fv "$1" "$OFILE" || { touch $OFILE.failed ; return 1; }
+    if echo "$URL" | grep -q "^file:/" ; then
+        URL=$(echo "$URL" | sed -e "s|^file:||")
+        [ -s "$URL" ] || { touch $OFILE.failed ; return 1; }
+        ln -s "$URL" "$OFILE" || { touch $OFILE.failed ; return 1; }
     else
-        docmd eget -O "$OFILE" "$1" || { touch $OFILE.failed ; return 1; }
+        docmd eget -O "$OFILE" "$URL" || { rm -fv $OFILE ; touch $OFILE.failed ; return 1; }
     fi
 
     compress_file_inplace "$OFILE"
