@@ -72,12 +72,12 @@ case $PMTYPE in
 		return ;;
 	yum-rpm)
 		# TODO
-		info "Search by full packages list does not realized"
+		info "Search by full packages list is not implemented yet"
 		CMD="yum provides"
 		;;
 	dnf-rpm)
 		# TODO
-		info "Search by full packages list does not realized"
+		info "Search by full packages list i snot implemented yet"
 		CMD="dnf provides"
 		;;
 	urpm-rpm)

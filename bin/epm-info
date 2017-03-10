@@ -29,7 +29,7 @@ __epm_info_rpm_low()
 }
 
 # TODO: separate to _files and _names parts
-# realize _files part per package, not by PMTYPE (see filelist)
+# implement _files part per package, not by PMTYPE (see filelist)
 epm_info()
 {
 

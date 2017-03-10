@@ -64,7 +64,7 @@ __epm_filelist_remote()
 			docmd_foreach __deb_local_content_filelist $@
 			;;
 		*)
-			fatal "Query filelist for non installed packages does not realized"
+			fatal "Query filelist for non installed packages is not implemented yet."
 			;;
 	esac
 }
@@ -134,7 +134,7 @@ __epm_filelist_name()
 			return
 			;;
 		slackpkg)
-			is_installed $@ || fatal "Query filelist for non installed packages does not realized"
+			is_installed $@ || fatal "Query filelist for non installed packages is not implemented yet"
 			docmd awk 'BEGIN{desk=1}{if(/^FILE LIST:$/){desk=0} else if (desk==0) {print}}' /var/log/packages/${pkg_filenames}* | less
 			return
 			;;

@@ -118,7 +118,7 @@ __do_query()
             ;;
         aptcyg)
             #CMD="apt-cyg packageof"
-            # do not realized locally
+            # is not implemented locally
             return 1
             ;;
         *)

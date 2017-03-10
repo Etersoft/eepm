@@ -17,6 +17,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+# TODO: will it has local only mode?
+
 load_helper epm-print
 
 epm_whatdepends()
@@ -44,6 +46,7 @@ case $PMTYPE in
 		CMD="urpmq --whatrequires"
 		;;
 	dnf-rpm)
+		# check command: dnf repoquery --whatrequires
 		CMD="repoquery --whatrequires"
 		;;
 	emerge)

@@ -29,7 +29,7 @@ case $PMTYPE in
 		docmd dpkg-query -W --showformat="\${Size}.\${Package}-\${Version}\n" $pkg_filenames | sort -n
 		;;
 	*)
-		fatal "Sorted package list are not realized for $PMTYPE"
+		fatal "Sorted package list function is not implemented for $PMTYPE"
 		;;
 esac
 }
