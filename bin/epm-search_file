@@ -17,23 +17,6 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-__local_ercat()
-{
-   local i
-   for i in $* ; do
-       case "$i" in
-           *.xz)
-               a= xzcat $i
-               ;;
-           *.lz4)
-               a= lz4cat $i
-               ;;
-           *)
-               cat $i
-               ;;
-       esac
-   done
-}
 
 __alt_local_content_search()
 {

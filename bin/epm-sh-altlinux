@@ -25,12 +25,35 @@ get_local_alt_mirror_path()
 {
     local DN1=$(dirname "$1")
     local DN2=$(dirname $DN1)
+    local DN3=$(dirname $DN2)
 
     local BN0=$(basename "$1") # arch
     local BN1=$(basename $DN1) # branch/Sisyphus
-    local BN2=$(basename $DN2)
+    local BN2=$(basename $DN2) # p8/ALTLinux
+    local BN3=$(basename $DN3) # ALTLinux/
 
-    [ "$BN1" = "branch" ] && echo "/tmp/eepm/$BN2/$BN1/$BN0" || echo "/tmp/eepm/$BN1/$BN0"
+    [ "$BN1" = "branch" ] && echo "/tmp/eepm/$BN3/$BN2/$BN1/$BN0" || echo "/tmp/eepm/$BN2/$BN1/$BN0"
+}
+
+__local_ercat()
+{
+   local i
+   for i in $* ; do
+       case "$i" in
+           *.xz)
+               a= xzcat $i
+               ;;
+           *.lz4)
+               a= lz4cat $i
+               ;;
+           *.failed)
+               # just ignore
+               ;;
+           *)
+               cat $i
+               ;;
+       esac
+   done
 }
 
 # args: url/path target_file
@@ -39,7 +62,7 @@ download_alt_contents_index()
 {
     local TD="$2"
     local OFILE="$TD/$(basename "$1")"
-    local DONE="$TD/done.$(basename "$1")"
+    local DONE=$(echo $OFILE*)
     # TODO: check if too old
     if [ -r "$DONE" ] ; then
         return
@@ -49,22 +72,19 @@ download_alt_contents_index()
 
     if echo "$1" | grep -q "/" ; then
         # TODO: separate
-        cp -fv "$1" "$OFILE" || return
+        cp -fv "$1" "$OFILE" || { touch $OFILE.failed ; return 1; }
     else
-        docmd eget -O "$OFILE" "$1" || return
+        docmd eget -O "$OFILE" "$1" || { touch $OFILE.failed ; return 1; }
     fi
-    # plain file by default
-    echo "" >$DONE
 
     # try compress
     if epm assure lz4 </dev/null ; then
         docmd lz4 --rm "$OFILE" "$OFILE.lz4" || return
-        echo "lz4" >$DONE
     else
         epm assure xz </dev/null || return
         docmd xz "$ofile" || return
-        echo "xz" >$DONE
     fi
+    return 0
 }
 
 get_local_alt_contents_index()
