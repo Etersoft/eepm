@@ -158,7 +158,7 @@ check_command()
     -i|install|add|i)         # HELPCMD: install package(s) from remote repositories or from local file
         epm_cmd=install
         ;;
-    -e|-P|remove|delete|uninstall|erase|e)  # HELPCMD: remove (delete) package(s) from the database and the system
+    -e|-P|rm|del|remove|delete|uninstall|erase|e)  # HELPCMD: remove (delete) package(s) from the database and the system
         epm_cmd=remove
         ;;
     -s|search|s)                # HELPCMD: search in remote package repositories
@@ -190,7 +190,7 @@ check_command()
     check|fix|verify)         # HELPCMD: check local package base integrity and fix it
         epm_cmd=check
         ;;
-    changelog|cl|-cl)         # HELPCMD: show changelog for package
+    -cl|cl|changelog)         # HELPCMD: show changelog for package
         epm_cmd=changelog
         ;;
     -qi|qi|info|show)         # HELPCMD: print package detail info
@@ -211,13 +211,13 @@ check_command()
     conflicts)                # HELPCMD: print package conflicts
         epm_cmd=conflicts
         ;;
-    -qa|list|packages|-l|qa)  # HELPCMD: print list of installed package(s)
+    -qa|qa|-l|list|packages)  # HELPCMD: print list of installed package(s)
         epm_cmd=packages
         ;;
-    programs)                 # HELPCMD: print list of installed GUI program(s)
+    programs)                 # HELPCMD: print list of installed GUI program(s) (they have .desktop files)
         epm_cmd=programs
         ;;
-    assure)                   # HELPCMD: <command> [package]: install package if command does not exists
+    assure)                   # HELPCMD: <command> [package]: install package if command does not exist
         epm_cmd=assure
         ;;
     policy)                   # HELPCMD: print detailed information about the priority selection of package
@@ -284,7 +284,7 @@ check_command()
     site|url)                 # HELPCMD: open package's site in a browser (use -p for open packages.altlinux.org site)
         epm_cmd=site
         ;;
-    ei|epminstall|epm-install|selfinstall) # HELPCMD: install or update eepm from all in one script
+    ei|epminstall|epm-install|selfinstall) # HELPCMD: install or update eepm package from all in one script
         epm_cmd=epm_install
         ;;
     print)                    # HELPCMD: print various info, run epm print help for details
