@@ -23,10 +23,10 @@ __epm_packages_sort()
 case $PMTYPE in
 	apt-rpm|yum-rpm|urpm-rpm|zypper-rpm|dnf-rpm)
 		# FIXME: space with quotes problems, use point instead
-		docmd rpm -qa --queryformat "%{size}.%{name}-%{version}-%{release}\n" $pkg_filenames | sort -n
+		docmd rpm -qa --queryformat "%{size}@%{name}-%{version}-%{release}\n" $pkg_filenames | sed -e "s|@| |g" | sort -n -k1
 		;;
 	apt-dpkg)
-		docmd dpkg-query -W --showformat="\${Size}.\${Package}-\${Version}\n" $pkg_filenames | sort -n
+		docmd dpkg-query -W --showformat="\${Installed-Size}@\${Package}-\${Version}\n" $pkg_filenames | sed -e "s|@| |g" | sort -n -k1
 		;;
 	*)
 		fatal "Sorted package list function is not implemented for $PMTYPE"
