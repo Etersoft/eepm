@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.0.5
+Version: 2.0.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -66,6 +66,10 @@ chmod a+x %buildroot%_datadir/%name/tools_*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Mon Mar 13 2017 Vitaly Lipatov <lav@altlinux.ru> 2.0.6-alt1
+- epm-packages: improve sort output
+- hack to support old lz4
+
 * Fri Mar 10 2017 Vitaly Lipatov <lav@altlinux.ru> 2.0.5-alt1
 - epm sf: make compressed cache for local file too
 - rewrite epm sf, colorify it
