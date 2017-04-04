@@ -1,3 +1,15 @@
+list перехватывается:
+
+# serv openvpn
+ #  service openvpn
+Usage: openvpn {start|stop|reload|restart|reopen|condstop|condrestart|condreload|status|list|help}
+[root@priv etc]# serv openvpn list
+ #  chkconfig --list
+ #  anyservice --quiet list
+ 
+
+epmqf - если каталог есть, искать полный /usr/share/node
+
 TODO: yaourt (pacman frontend), need we?
 https://archlinux.fr/man/yaourt.8.html
 
