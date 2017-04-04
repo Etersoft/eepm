@@ -189,6 +189,10 @@ __epm_query_name()
 			docmd brew info "$1" >/dev/null 2>/dev/null && echo "$1" && return
 			return 1
 			;;
+		pacman)
+			docmd pacman -Q $@
+			return
+			;;
 		# TODO: need to print name if exists
 		#pkgng)
 		#	CMD="pkg info -e"
@@ -231,6 +235,12 @@ __epm_query_shortname()
 			docmd brew info "$1" >/dev/null 2>/dev/null && echo "$1" && return
 			return 1
 			;;
+		# TODO: check status
+		#pacman)
+		#	docmd pacman -Q $@ | sed -e "s| .*||g"
+		#	return
+		#	;;
+
 		# TODO: need to print name if exists
 		#pkgng)
 		#	CMD="pkg info -e"
