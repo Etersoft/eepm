@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.0.6
+Version: 2.0.7
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -66,6 +66,11 @@ chmod a+x %buildroot%_datadir/%name/tools_*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Wed Apr 05 2017 Vitaly Lipatov <lav@altlinux.ru> 2.0.7-alt1
+- serv-status: use -l for systemd status
+- emp-query: improve for pacman
+- epm-query: fix is_installed
+
 * Mon Mar 13 2017 Vitaly Lipatov <lav@altlinux.ru> 2.0.6-alt1
 - epm-packages: improve sort output
 - hack to support old lz4
