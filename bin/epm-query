@@ -259,7 +259,7 @@ __epm_query_shortname()
 # check if pkg is installed
 is_installed()
 {
-	__epm_query_shortname $pkg_names >/dev/null 2>/dev/null
+	__epm_query_shortname "$@" >/dev/null 2>/dev/null
 	# broken way to recursive call here (overhead!)
 	#epm installed $@ >/dev/null 2>/dev/null
 }
