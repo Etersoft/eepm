@@ -27,7 +27,7 @@ paoapi()
 	# http://petstore.swagger.io/?url=http://packages.altlinux.org/api/docs
 	epm assure curl || return 1
 	showcmd curl "$PAOURL/api/$1"
-	a= curl -s --header "Accept: application/json" "$PAOURL/api/$1"
+	a='' curl -s --header "Accept: application/json" "$PAOURL/api/$1"
 }
 
 # TODO: use /home/lav/Projects/git/JSON.sh
@@ -87,7 +87,7 @@ query_package_url()
 get_locale()
 {
 	local loc
-	loc=$(a= natspec --locale 2>/dev/null)
+	loc=$(a='' natspec --locale 2>/dev/null)
 	[ -n "$loc" ] || loc=$LANG
 	echo $loc
 }

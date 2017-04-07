@@ -61,7 +61,7 @@ update_repo_if_needed()
     cd /
     if ! __is_repo_info_downloaded || ! __is_repo_info_uptodate ; then
         load_helper epm-update
-        pkg_filenames= epm_update
+        pkg_filenames='' epm_update
     fi
     cd - >/dev/null
 

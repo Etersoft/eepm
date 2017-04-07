@@ -23,12 +23,12 @@ load_helper epm-search
 # for zypper before SUSE/11.0
 __use_zypper_dry_run()
 {
-    a= zypper install --help 2>&1 | grep -q -- "--dry-run" && echo "--dry-run"
+    a='' zypper install --help 2>&1 | grep -q -- "--dry-run" && echo "--dry-run"
 }
 
 __use_yum_assumeno()
 {
-    a= yum --help 2>&1 | grep -q -- "--assumeno"
+    a='' yum --help 2>&1 | grep -q -- "--assumeno"
 }
 
 

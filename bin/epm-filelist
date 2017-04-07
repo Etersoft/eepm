@@ -44,7 +44,7 @@ __alt_local_content_filelist()
 __deb_local_content_filelist()
 {
     showcmd "apt-file list $1 | grep '^$1: ' | sed -e 's|$1: ||g'"
-    a= apt-file list "$1" | grep "^$1: " | sed -e "s|$1: ||g"
+    a='' apt-file list "$1" | grep "^$1: " | sed -e "s|$1: ||g"
 }
 
 

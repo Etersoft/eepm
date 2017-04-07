@@ -26,7 +26,7 @@ epm_Upgrade()
 		yum-rpm)
 			;;
 		*)
-			pkg_filenames= epm_update || return
+			pkg_filenames='' epm_update || return
 			;;
 	esac
 

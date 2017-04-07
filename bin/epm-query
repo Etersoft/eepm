@@ -156,7 +156,7 @@ __epm_query_dpkg_check()
 {
 	local i
 	for i in $@ ; do
-		a= dpkg -s $i >/dev/null 2>/dev/null || return
+		a='' dpkg -s $i >/dev/null 2>/dev/null || return
 	done
 	return 0
 }

@@ -33,5 +33,5 @@ epm_query_package()
 	MGS=$(eval __epm_search_make_grep $quoted_args)
 	EXTRA_SHOWDOCMD=$MGS
 	# Note: get all packages list and do grep
-	eval "pkg_filenames= epm_packages \"$(eval get_firstarg $quoted_args)\" $MGS"
+	eval "pkg_filenames='' epm_packages \"$(eval get_firstarg $quoted_args)\" $MGS"
 }

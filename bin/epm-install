@@ -47,7 +47,7 @@ filter_out_installed_packages()
 # for zypper before SUSE/11.0
 __use_zypper_no_gpg_checks()
 {
-    a= zypper install --help 2>&1 | grep -q -- "--no-gpg-checks" && echo "--no-gpg-checks"
+    a='' zypper install --help 2>&1 | grep -q -- "--no-gpg-checks" && echo "--no-gpg-checks"
 }
 
 # args: cmd_reinstall, cmd_install, packages

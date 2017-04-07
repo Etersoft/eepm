@@ -34,7 +34,7 @@ epm_requires_files()
 			;;
 		deb)
 			assure_exists dpkg
-			a= docmd dpkg -I $pkg_files | grep "^ *Depends:" | sed "s|^ *Depends:||g"
+			a='' docmd dpkg -I $pkg_files | grep "^ *Depends:" | sed "s|^ *Depends:||g"
 			;;
 		*)
 			fatal "Have no suitable command for $PKGTYPE"
@@ -91,7 +91,7 @@ case $PMTYPE in
 		# FIXME: need fix for a few names case
 		if is_installed $pkg_names ; then
 			showcmd dpkg -s $pkg_names
-			a= dpkg -s $pkg_names | grep "^Depends:" | sed "s|^Depends:||g"
+			a='' dpkg -s $pkg_names | grep "^Depends:" | sed "s|^Depends:||g"
 			return
 		else
 			CMD="apt-cache depends"
