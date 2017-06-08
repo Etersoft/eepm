@@ -120,11 +120,12 @@ __epm_get_hilevel_name()
 	for i in $@ ; do
 		local pkg
 		# get short form in pkg
-		quiet=1 pkg=$(__epm_query_shortname $i) || continue # drop not installed packages
+		# FIXME: where we use it? continue or pkg=$i?
+		quiet=1 pkg=$(__epm_query_shortname "$i") || pkg="$i" #continue # drop not installed packages
 		# if already short form, skipped
 		[ "$pkg" = "$i" ] && echo "$i" && continue
 		# try get long form or use short form
-		__epm_get_hilevel_nameform $i || echo $pkg
+		__epm_get_hilevel_nameform "$i" || echo $pkg
 	done
 }
 
