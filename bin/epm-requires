@@ -44,7 +44,7 @@ epm_requires_files()
 
 epm_requires_names()
 {
-	local pkg_names="$@"
+	local pkg_names="$*"
 	local CMD
 	[ -n "$pkg_names" ] || return
 

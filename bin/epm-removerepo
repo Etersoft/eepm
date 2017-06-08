@@ -27,7 +27,7 @@ case $DISTRNAME in
 			autoimports)
 				info "remove autoimports repo"
 				[ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
-				repo="$repo.$(echo "$DISTRVERSION" | tr "[A-Z]" "[a-z]")"
+				repo="$repo.$(echo "$DISTRVERSION" | tr "A-Z" "a-z")"
 				;;
 		esac
 

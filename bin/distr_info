@@ -33,7 +33,7 @@ rpmvendor()
 	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
 	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
 	[ "$DISTRIB_ID" = "VoidLinux" ] && echo "void" && return
-	echo "$DISTRIB_ID" | tr "[A-Z]" "[a-z]"
+	echo "$DISTRIB_ID" | tr "A-Z" "a-z"
 }
 
 # Translate DISTRIB_ID name to package manner (like in the package release name)

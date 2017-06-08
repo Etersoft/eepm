@@ -76,7 +76,7 @@ print_pkgname()
 
 print_srcname()
 {
-    print_name $(print_srcpkgname "$@")
+    print_name "$(print_srcpkgname "$@")"
 }
 
 print_specname()
@@ -137,7 +137,7 @@ EOF
         "name")
             [ -n "$1" ] || fatal "Arg is missed"
             if [ -n "$FNFLAG" ] ; then
-                print_name $(print_pkgname "$@")
+                print_name "$(print_pkgname "$@")"
             elif [ -n "$PKFLAG" ] ; then
                 query_package_field "name" "$@"
             else
@@ -147,7 +147,7 @@ EOF
         "version")
             [ -n "$1" ] || fatal "Arg is missed"
             if [ -n "$FNFLAG" ] ; then
-                print_version $(print_pkgname "$@")
+                print_version "$(print_pkgname "$@")"
             elif [ -n "$PKFLAG" ] ; then
                 query_package_field "version" "$@"
             else
@@ -157,7 +157,7 @@ EOF
         "release")
             [ -n "$1" ] || fatal "Arg is missed"
             if [ -n "$FNFLAG" ] ; then
-                print_release $(print_pkgname "$@")
+                print_release "$(print_pkgname "$@")"
             elif [ -n "$PKFLAG" ] ; then
                 query_package_field "release" "$@"
             else
@@ -222,6 +222,6 @@ epm_print()
 {
 
     [ -n "$pkg_filenames" ] || fatal "Missed args. Use epm print help for get help."
-    __epm_print $(eval echo $quoted_args)
+    __epm_print "$(eval echo $quoted_args)"
 }
 

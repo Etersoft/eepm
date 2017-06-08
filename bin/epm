@@ -356,7 +356,7 @@ check_option()
 check_filenames()
 {
     local opt
-    for opt in $* ; do
+    for opt in "$@" ; do
         # files can be with full path or have extension via .
         if [ -f "$opt" ] && echo "$opt" | grep -q "[/\.]" ; then
             pkg_files="$pkg_files $opt"
@@ -406,7 +406,7 @@ pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
 if [ -z "$epm_cmd" ] ; then
     print_version
     echo
-    fatstr="Unknown command in $@ arg(s)"
+    fatstr="Unknown command in $* arg(s)"
     [ -n "$*" ] || fatstr="That program needs be running with some command"
     fatal "$fatstr. Run $ $PROGNAME --help to get help."
 fi

@@ -61,13 +61,13 @@ is_service_autostart()
 			LANG=C $SUDO chkconfig $1 --list | grep -q "[35]:on"
 			;;
 		service-initd|service-update)
-                        test -L $(echo /etc/rc5.d/S??$1)
+                        test -L "$(echo /etc/rc5.d/S??$1)"
 			;;
 		systemd)
 			$SUDO systemctl is-enabled $1
 			;;
 		runit)
-			test -L /var/service/$SERVICE
+			test -L "/var/service/$SERVICE"
 			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"

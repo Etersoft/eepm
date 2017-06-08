@@ -132,7 +132,7 @@ __epm_search_make_grep()
 	#list=$(strip_spaces $list | sed -e "s/ /|/g")
 	listN=$(strip_spaces $listN | sed -e "s/ /|/g" | sed -e "s/\^//g")
 
-	if [ "$short" ] ; then
+	if [ -n "$short" ] ; then
 		echon " | sed -e \"s| .*||g\""
 	fi
 

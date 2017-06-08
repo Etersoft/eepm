@@ -81,7 +81,7 @@ epm_upgrade()
 		;;
 	homebrew)
 		#CMD="brew upgrade"
-		docmd "brew upgrade `brew outdated`"
+		docmd "brew upgrade $(brew outdated)"
 		return
 		;;
 	ipkg)
