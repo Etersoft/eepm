@@ -63,11 +63,11 @@ compress_file_inplace()
     if epm assure lz4 </dev/null ; then
         #docmd lz4 --rm "$OFILE" "$OFILE.lz4" || return
         # due old lz4
-        docmd lz4 "$OFILE" "$OFILE.lz4" || return
+        docmd lz4 -f "$OFILE" "$OFILE.lz4" || return
         rm -fv "$OFILE"
     else
         epm assure xz </dev/null || return
-        docmd xz "$OFILE" || return
+        docmd xz -f "$OFILE" || return
     fi
     return 0
 }
@@ -91,11 +91,12 @@ download_alt_contents_index()
     if echo "$URL" | grep -q "^file:/" ; then
         URL=$(echo "$URL" | sed -e "s|^file:||")
         [ -s "$URL" ] || { touch $OFILE.failed ; return 1; }
-        ln -s "$URL" "$OFILE" || { touch $OFILE.failed ; return 1; }
+        ln -sf "$URL" "$OFILE" || { touch $OFILE.failed ; return 1; }
     else
         docmd eget -O "$OFILE" "$URL" || { rm -fv $OFILE ; touch $OFILE.failed ; return 1; }
     fi
 
+    rm -f $OFILE.failed
     compress_file_inplace "$OFILE"
 }
 
