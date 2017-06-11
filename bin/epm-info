@@ -28,19 +28,25 @@ __epm_info_rpm_low()
 	is_installed $pkg_names && docmd rpm -qi $pkg_names && return
 }
 
-# TODO: separate to _files and _names parts
-# implement _files part per package, not by PMTYPE (see filelist)
-epm_info()
+__epm_info_by_pkgtype()
 {
+	[ -n "$pkg_files" ] || return 1
 
-# if possible, it will put pkg_urls into pkg_files or pkg_names
-if [ -n "$pkg_urls" ] ; then
-    load_helper epm-download
-    __handle_pkg_urls_to_checking
-fi
+	case $(get_package_type $pkg_files) in
+		rpm)
+			__epm_info_rpm_low && return
+			;;
+		deb)
+			docmd dpkg -I $pkg_files
+			;;
+		*)
+			return 1
+			;;
+	esac
+}
 
-[ -n "$pkg_filenames" ] || fatal "Info: missing package(s) name"
-
+__epm_info_by_pmtype()
+{
 case $PMTYPE in
 	apt-rpm)
 		__epm_info_rpm_low && return
@@ -122,6 +128,23 @@ case $PMTYPE in
 		fatal "Have no suitable command for $PMTYPE"
 		;;
 esac
+}
+
+
+# TODO: separate to _files and _names parts
+# implement _files part per package, not by PMTYPE (see filelist)
+epm_info()
+{
+
+# if possible, it will put pkg_urls into pkg_files or pkg_names
+if [ -n "$pkg_urls" ] ; then
+    load_helper epm-download
+    __handle_pkg_urls_to_checking
+fi
+
+[ -n "$pkg_filenames" ] || fatal "Info: missing package(s) name"
+
+__epm_info_by_pkgtype || __epm_info_by_pmtype
 
 local RETVAL=$?
 
