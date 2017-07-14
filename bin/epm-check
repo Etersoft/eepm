@@ -44,6 +44,9 @@ case $PMTYPE in
 
 		docmd rpm -Va --nofiles --nodigest
 		;;
+	dnf-rpm)
+		sudocmd dnf check
+		;;
 	emerge)
 		sudocmd revdep-rebuild
 		;;

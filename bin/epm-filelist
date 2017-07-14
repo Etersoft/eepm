@@ -65,11 +65,12 @@ __epm_filelist_remote()
 			;;
 		yum-rpm)
 			assure_exists yum-utils || return
-			repoquery -q -l "$@"
+			docmd repoquery -q -l "$@"
 			;;
 		dnf-rpm)
 			assure_exists dnf-plugins-core || return
-			dnf repoquery -l "$@"
+			docmd dnf repoquery -l "$@"
+			;;
 		*)
 			fatal "Query filelist for non installed packages is not implemented yet."
 			;;
