@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2013, 2016  Etersoft
-# Copyright (C) 2013, 2016  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2013, 2016, 2017  Etersoft
+# Copyright (C) 2013, 2016, 2017  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -37,8 +37,8 @@ __detect_alt_release_by_repo()
 {
 	local BRD=$(cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list \
 		| grep -v "^#" \
-		| grep "p[5-9]/branch/" \
-		| sed -e "s|.*\(p[5-9]\)/branch.*|\1|g" \
+		| grep "[tp][5-9]/branch/" \
+		| sed -e "s|.*\([tp][5-9]\)/branch.*|\1|g" \
 		| sort -u )
 	if [ $(__wcount $BRD) = "1" ] ; then
 		echo "$BRD"
@@ -77,7 +77,7 @@ __alt_repofix()
 	load_helper epm-repofix
 	showcmd epm repofix
 	quiet=1 pkg_filenames='' epm_repofix >/dev/null
-	__replace_text_in_alt_repo "/^ *#/! s!\[p[6-9]\]![updates]!g"
+	__replace_text_in_alt_repo "/^ *#/! s!\[[tp][6-9]\]![updates]!g"
 }
 
 get_fix_release_pkg()
@@ -90,25 +90,26 @@ get_fix_release_pkg()
 
 __update_to_the_distro()
 {
+	local TO="$1"
 	__alt_repofix
-	case "$1" in
+	case "$TO" in
 		p7)
 			docmd epm update || fatal
-			docmd epm install apt rpm apt-conf-branch $(get_fix_release_pkg p7) || fatal "Check an error and run epm release-upgrade again"
+			docmd epm install apt rpm apt-conf-branch $(get_fix_release_pkg $TO) || fatal "Check an error and run epm release-upgrade again"
 			__alt_repofix
-			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![p7]!g"
+			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![$TO]!g"
 			docmd epm update || fatal
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
 			;;
 		p8)
 			docmd epm update || fatal
-			if ! docmd epm install apt rpm apt-conf-branch $(get_fix_release_pkg p8) ; then
+			if ! docmd epm install apt rpm apt-conf-branch $(get_fix_release_pkg $TO) ; then
 				# Hack for error: execution of %post scriptlet from glibc-core-2.23-alt1.eter1
 				docmd rpm -ev glibc-core-2.17 || fatal "Check an error and run epm release-upgrade again"
-				docmd epm install apt rpm apt-conf-branch $(get_fix_release_pkg p8) || fatal "Check an error and run epm release-upgrade again"
+				docmd epm install apt rpm apt-conf-branch $(get_fix_release_pkg $TO) || fatal "Check an error and run epm release-upgrade again"
 			fi
 			__alt_repofix
-			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![p8]!g"
+			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![$TO]!g"
 			docmd epm update || fatal
 			if is_installed systemd && is_active_systemd systemd ; then
 				docmd epm install systemd || fatal
@@ -126,48 +127,53 @@ __update_to_the_distro()
 
 __update_alt_to_next_distro()
 {
-	local FROMTO=$(echo "$*" | sed -e "s| | to |")
+	local TO=""
+	local FROM="$1"
 	info
  	case "$*" in
-		"p6"|"p6 p7")
-			info "Upgrade $DISTRNAME from p6 to p7 ..."
+		"p6"|"p6 p7"|"t6 p7")
+			TO="p7"
+			info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install apt-conf-branch || fatal
-			__replace_alt_version_in_repo p6/branch/ p7/branch/
-			__update_to_the_distro p7
+			__replace_alt_version_in_repo "$FROM/branch/" "$TO/branch/"
+			__update_to_the_distro "$TO"
 			docmd epm update-kernel
 			info "Done."
 			info "Run epm release-upgrade again for update to p8"
 			;;
-		"p7"|"p7 p8")
-			info "Upgrade $DISTRNAME from p7 to p8 ..."
-			docmd epm install apt-conf-branch $(get_fix_release_pkg p7) || fatal
-			__replace_alt_version_in_repo p7/branch/ p8/branch/
-			__update_to_the_distro p8
+		"p7"|"p7 p8"|"t7 p8")
+			TO="p8"
+			info "Upgrade $DISTRNAME from $FROM to $TO ..."
+			docmd epm install apt-conf-branch $(get_fix_release_pkg $FROM) || fatal
+			__replace_alt_version_in_repo $FROM/branch/ $TO/branch/
+			__update_to_the_distro $TO
 			docmd epm update-kernel || fatal
 			info "Done."
 			;;
 		"Sisyphus p8")
-			info "Downgrade $DISTRNAME from Sisyphus to p8 ..."
+			TO="p8"
+			info "Downgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install apt-conf-branch || fatal
-			__replace_alt_version_in_repo Sisyphus/ p8/branch/
-			__replace_text_in_alt_repo "/^ *#/! s!\[alt\]![p8]!g"
-			__update_to_the_distro p8
+			__replace_alt_version_in_repo "$FROM/" "$FROM/branch/"
+			__replace_text_in_alt_repo "/^ *#/! s!\[alt\]![$TO]!g"
+			__update_to_the_distro $TO
 			docmd epm downgrade || fatal
 			info "Done."
 			;;
 		"p8 Sisyphus")
-			info "Upgrade $DISTRNAME from p8 to Sisyphus ..."
+			TO="Sisyphus"
+			info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install apt-conf-branch || fatal
 			docmd epm upgrade || fatal
-			__replace_alt_version_in_repo p8/branch/ Sisyphus/
+			__replace_alt_version_in_repo "$FROM/branch/" "$TO/"
 			__alt_repofix
 			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![alt]!g"
-			__update_to_the_distro Sisyphus
+			__update_to_the_distro $TO
 			docmd epm update-kernel || fatal
 			info "Done."
 			;;
 		*)
-			warning "Have no idea how to update from $DISTRNAME $DISTRVERSION."
+			warning "Have no idea how to update from $DISTRNAME $FROM to $DISTRNAME $TO."
 			info "Try run f.i. # epm release-upgrade p8 or # epm release-upgrade Sisyphus"
 			info "Also possible you need install altlinux-release-p? package for correct distro version detecting"
 			return 1
