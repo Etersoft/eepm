@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.0.8
+Version: 2.0.9
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -66,6 +66,11 @@ chmod a+x %buildroot%_datadir/%name/tools_*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Fri Jul 21 2017 Vitaly Lipatov <lav@altlinux.ru> 2.0.9-alt1
+- epm-filelist: add support with yum and dnf
+- imlrement check for dnf via dnf check
+- add support for ALT Linux t7
+
 * Thu Jun 15 2017 Vitaly Lipatov <lav@altlinux.ru> 2.0.8-alt1
 - make shellcheck more happy
 - improve epm query
