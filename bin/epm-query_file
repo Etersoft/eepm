@@ -63,7 +63,7 @@ __do_query_real_file()
 dpkg_print_name_version()
 {
 	local ver i
-	for i in $* ; do
+	for i in "$@" ; do
 		ver=$(dpkg -s $i 2>/dev/null | grep "Version:" | sed -e "s|Version: ||g")
 		if [ -z "$ver" ] ; then
 			echo "$i"
@@ -82,8 +82,8 @@ __do_query()
             CMD="rpm -qf"
             ;;
         *-dpkg)
-            showcmd dpkg -S $1
-            dpkg_print_name_version $(dpkg -S $1 | grep -v "^diversion by" | sed -e "s|:.*||")
+            showcmd dpkg -S "$1"
+            dpkg_print_name_version "$(dpkg -S $1 | grep -v "^diversion by" | sed -e "s|:.*||")"
             return ;;
         yum-rpm|dnf-rpm|urpm-rpm)
             CMD="rpm -qf"
@@ -138,8 +138,8 @@ __do_short_query()
             CMD="rpm -qf --queryformat %{NAME}\n"
             ;;
         NOapt-dpkg)
-            showcmd dpkg -S $1
-            dpkg_print_name_version $(dpkg -S $1 | sed -e "s|:.*||" | grep -v "^diversion by")
+            showcmd dpkg -S "$1"
+            dpkg_print_name_version "$(dpkg -S $1 | sed -e "s|:.*||" | grep -v "^diversion by")"
             return ;;
         NOemerge)
             assure_exists equery

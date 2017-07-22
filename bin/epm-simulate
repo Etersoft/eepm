@@ -145,7 +145,11 @@ epm_simulate()
     _epm_do_simulate $filenames
     local RES=$?
     if [ -z "$quiet" ] ; then
-        [ "$RES" = 0 ] && info "Simulate result: $filenames package(s) CAN BE installed" || info "Simulate result: There are PROBLEMS with install some package(s)"
+        if [ "$RES" = 0 ] ; then
+            info "Simulate result: $filenames package(s) CAN BE installed"
+        else
+            info "Simulate result: There are PROBLEMS with install some package(s)"
+        fi
     fi
     return $RES
 }

@@ -118,6 +118,7 @@ case $PMTYPE in
 	yum-rpm)
 		# cleanup orphanes?
 		while true ; do
+			# shellcheck disable=SC2046
 			docmd package-cleanup --leaves $(subst_option non_interactive --assumeyes)
 			# FIXME: package-cleanup have to use stderr for errors
 			local PKGLIST=$(package-cleanup -q --leaves | grep -v "^eepm-")

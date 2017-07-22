@@ -38,7 +38,7 @@ get_local_alt_mirror_path()
 __local_ercat()
 {
    local i
-   for i in $* ; do
+   for i in "$@" ; do
        case "$i" in
            *.xz)
                a='' xzcat $i
@@ -106,7 +106,7 @@ get_local_alt_contents_index()
 
     local LOCALPATH
 
-    epm_repolist | grep -E "rpm.*(ftp://|http://|https://|file:/)" | sed -e "s@^rpm.*\(ftp://\|http://\|https://\|file:\)@\1@g" | while read URL ARCH other ; do
+    epm_repolist | grep -E "rpm.*(ftp://|http://|https://|file:/)" | sed -e "s@^rpm.*\(ftp://\|http://\|https://\|file:\)@\1@g" | while read -r URL ARCH other ; do
         LOCALPATH=$(get_local_alt_mirror_path "$URL/$ARCH")
         download_alt_contents_index $URL/$ARCH/base/contents_index $LOCALPATH >&2 || continue
         echo "$LOCALPATH/contents_index*"

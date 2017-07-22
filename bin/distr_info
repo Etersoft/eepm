@@ -33,7 +33,7 @@ rpmvendor()
 	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
 	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
 	[ "$DISTRIB_ID" = "VoidLinux" ] && echo "void" && return
-	echo "$DISTRIB_ID" | tr "A-Z" "a-z"
+	echo "$DISTRIB_ID" | tr "[:lower:]"
 }
 
 # Translate DISTRIB_ID name to package manner (like in the package release name)
@@ -46,7 +46,7 @@ pkgvendor()
 # Print pkgtype (need DISTRIB_ID var)
 pkgtype()
 {
-    case `pkgvendor` in
+    case $(pkgvendor) in
 		freebsd) echo "tbz" ;;
 		sunos) echo "pkg.gz" ;;
 		slackware|mopslinux) echo "tgz" ;;
@@ -86,9 +86,9 @@ DISTRIB_CODENAME=""
 
 # Default with LSB
 if distro lsb-release ; then
-	DISTRIB_ID=`cat $DISTROFILE | get_var DISTRIB_ID`
-	DISTRIB_RELEASE=`cat $DISTROFILE | get_var DISTRIB_RELEASE`
-	DISTRIB_CODENAME=`cat $DISTROFILE | get_var DISTRIB_CODENAME`
+	DISTRIB_ID=$(cat $DISTROFILE | get_var DISTRIB_ID)
+	DISTRIB_RELEASE=$(cat $DISTROFILE | get_var DISTRIB_RELEASE)
+	DISTRIB_CODENAME=$(cat $DISTROFILE | get_var DISTRIB_CODENAME)
 fi
 
 # ALT Linux based
@@ -121,8 +121,8 @@ if distro altlinux-release ; then
 elif distro gentoo-release ; then
 	DISTRIB_ID="Gentoo"
 	MAKEPROFILE=$(readlink $ROOTDIR/etc/portage/make.profile 2>/dev/null) || MAKEPROFILE=$(readlink $ROOTDIR/etc/make.profile)
-	DISTRIB_RELEASE=`basename $MAKEPROFILE`
-	echo $DISTRIB_RELEASE | grep -q "[0-9]" || DISTRIB_RELEASE=`basename $(dirname $MAKEPROFILE)`
+	DISTRIB_RELEASE=$(basename $MAKEPROFILE)
+	echo $DISTRIB_RELEASE | grep -q "[0-9]" || DISTRIB_RELEASE=$(basename "$(dirname $MAKEPROFILE)")
 
 # Slackware based
 elif distro mopslinux-version ; then
@@ -135,19 +135,22 @@ elif distro mopslinux-version ; then
 	fi
 elif distro slackware-version ; then
 	DISTRIB_ID="Slackware"
-	DISTRIB_RELEASE="$(grep -Eo [0-9]+\.[0-9]+ $DISTROFILE)"
+	DISTRIB_RELEASE="$(grep -Eo '[0-9]+\.[0-9]+' $DISTROFILE)"
 
 elif distro os-release && which apk 2>/dev/null >/dev/null ; then
+	# shellcheck disable=SC1090
 	. $ROOTDIR/etc/os-release
 	DISTRIB_ID="$ID"
 	DISTRIB_RELEASE="$VERSION_ID"
 
 elif distro os-release && which tce-ab 2>/dev/null >/dev/null ; then
+	# shellcheck disable=SC1090
 	. $ROOTDIR/etc/os-release
 	DISTRIB_ID="TinyCoreLinux"
 	DISTRIB_RELEASE="$VERSION_ID"
 
 elif distro os-release && which xbps-query 2>/dev/null >/dev/null ; then
+	# shellcheck disable=SC1090
 	. $ROOTDIR/etc/os-release
 	DISTRIB_ID="VoidLinux"
 	DISTRIB_RELEASE="Live"
@@ -270,32 +273,32 @@ elif distro SuSe-release || distro SuSE-release ; then
 	fi
 
 # fixme: can we detect by some file?
-elif [ `uname` = "FreeBSD" ] ; then
+elif [ "$(uname)" = "FreeBSD" ] ; then
 	DISTRIB_ID="FreeBSD"
 	UNAME=$(uname -r)
 	DISTRIB_RELEASE=$(echo "$UNAME" | grep RELEASE | sed -e "s|\([0-9]\.[0-9]\)-RELEASE|\1|g")
 
 # fixme: can we detect by some file?
-elif [ `uname` = "SunOS" ] ; then
+elif [ "$(uname)" = "SunOS" ] ; then
 	DISTRIB_ID="SunOS"
 	DISTRIB_RELEASE=$(uname -r)
 
 # fixme: can we detect by some file?
-elif [ `uname -s 2>/dev/null` = "Darwin" ] ; then
+elif [ "$(uname -s 2>/dev/null)" = "Darwin" ] ; then
 	DISTRIB_ID="MacOS"
 	DISTRIB_RELEASE=$(uname -r)
 
 # fixme: move to up
-elif [ `uname` = "Linux" ] && which guix 2>/dev/null >/dev/null ; then
+elif [ "$(uname)" = "Linux" ] && which guix 2>/dev/null >/dev/null ; then
 	DISTRIB_ID="GNU/Linux/Guix"
 	DISTRIB_RELEASE=$(uname -r)
 
 # fixme: move to up
-elif [ `uname` = "Linux" ] && [ -x $ROOTDIR/system/bin/getprop ] ; then
+elif [ "$(uname)" = "Linux" ] && [ -x $ROOTDIR/system/bin/getprop ] ; then
 	DISTRIB_ID="Android"
 	DISTRIB_RELEASE=$(getprop | awk -F": " '/build.version.release/ { print $2 }' | tr -d '[]')
 
-elif [ `uname -o 2>/dev/null` = "Cygwin" ] ; then
+elif [ "$(uname -o 2>/dev/null)" = "Cygwin" ] ; then
         DISTRIB_ID="Cygwin"
         DISTRIB_RELEASE="all"
 

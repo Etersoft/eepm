@@ -37,6 +37,7 @@ filter_out_installed_packages()
 		#		sed -e 's|\.\+$||g' -e 's|^.*[Nn]o packages found matching \(.*\)|\1|g'
 		#	;;
 		*)
+			# shellcheck disable=SC2013
 			for i in $(cat) ; do
 				is_installed $i || echo $i
 			done
@@ -146,14 +147,14 @@ epm_install_names()
 			return ;;
 		homebrew)
 			# FIXME: sudo and quote
-			SUDO= __separate_sudocmd "brew install" "brew upgrade" $@
+			SUDO='' __separate_sudocmd "brew install" "brew upgrade" "$@"
 			return ;;
 		ipkg)
 			[ -n "$force" ] && force=-force-depends
 			sudocmd ipkg $force install $@
 			return ;;
 		nix)
-			__separate_sudocmd "nix-env --install" "nix-env --upgrade" $@
+			__separate_sudocmd "nix-env --install" "nix-env --upgrade" "$@"
 			return ;;
 		apk)
 			sudocmd apk add $@
@@ -221,7 +222,7 @@ epm_ni_install_names()
 			return ;;
 		npackd)
 			#  npackdcl update --package=<package> (remove old and install new)
-			sudocmd npackdcl add --package=$@
+			sudocmd npackdcl add --package="$*"
 			return ;;
 		chocolatey)
 			docmd chocolatey install $@
@@ -243,7 +244,7 @@ epm_ni_install_names()
 			return ;;
 		homebrew)
 			# FIXME: sudo and quote
-			SUDO= __separate_sudocmd "brew install" "brew upgrade" $@
+			SUDO='' __separate_sudocmd "brew install" "brew upgrade" $@
 			return ;;
 		#android)
 		#	sudocmd pm install $@
@@ -279,7 +280,7 @@ __epm_check_if_try_install_deb()
 	assure_exists alien
 
 	local TDIR=$(mktemp -d)
-	cd $TDIR
+	cd $TDIR || fatal
 	for pkg in $debpkgs ; do
 		# TODO: fakeroot for non ALT?
 		showcmd_store_output alien -r -k --scripts "$pkg" || fatal
@@ -309,7 +310,7 @@ __epm_check_if_try_install_rpm()
 	assure_exists fakeroot
 
 	local TDIR=$(mktemp -d)
-	cd $TDIR
+	cd $TDIR || fatal
 	for pkg in $rpmpkgs ; do
 		showcmd_store_output fakeroot alien -d -k --scripts "$pkg"
 		local DEBCONVERTED=$(grep "deb generated" $RC_STDOUT | sed -e "s| generated||g")
@@ -472,48 +473,48 @@ epm_print_install_command()
 {
     case $PMTYPE in
         apt-rpm|yum-rpm|urpm-rpm|zypper-rpm|dnf-rpm)
-            echo "rpm -Uvh --force $nodeps $@"
+            echo "rpm -Uvh --force $nodeps $*"
             ;;
         apt-dpkg|aptitude-dpkg)
-            echo "dpkg -i $@"
+            echo "dpkg -i $*"
             ;;
         pkgsrc)
-            echo "pkg_add $@"
+            echo "pkg_add $*"
             ;;
         pkgng)
-            echo "pkg add $@"
+            echo "pkg add $*"
             ;;
         emerge)
             # need be placed in /usr/portage/packages/somewhere
-            echo "emerge --usepkg $@"
+            echo "emerge --usepkg $*"
             ;;
         pacman)
-            echo "pacman -U --noconfirm --force $nodeps $@"
+            echo "pacman -U --noconfirm --force $nodeps $*"
             ;;
         slackpkg)
-            echo "/sbin/installpkg $@"
+            echo "/sbin/installpkg $*"
             ;;
         npackd)
-            echo "npackdcl add --package=$@"
+            echo "npackdcl add --package=$*"
             ;;
         ipkg)
-            echo "ipkg install $@"
+            echo "ipkg install $*"
             ;;
         android)
-            echo "pm install $@"
+            echo "pm install $*"
             ;;
         aptcyg)
-            echo "apt-cyg install $@"
+            echo "apt-cyg install $*"
             ;;
         tce)
-            echo "tce-load -wi $@"
+            echo "tce-load -wi $*"
             ;;
         xbps)
-            echo "xbps-install -y $@"
+            echo "xbps-install -y $*"
             ;;
         homebrew)
             # FIXME: sudo and quote
-            echo "brew install $@"
+            echo "brew install $*"
             ;;
 
         *)

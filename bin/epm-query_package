@@ -22,7 +22,7 @@ load_helper epm-search
 
 __epm_query_package()
 {
-	pkg_filenames="$@" quoted_args="$@" quiet=1 epm_query_package
+	pkg_filenames="$*" quoted_args="$*" quiet=1 epm_query_package
 }
 
 epm_query_package()

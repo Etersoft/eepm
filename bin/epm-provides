@@ -22,7 +22,7 @@ load_helper epm-print
 
 epm_provides_files()
 {
-	local pkg_files="$@"
+	local pkg_files="$*"
 	[ -n "$pkg_files" ] || return
 
 	local PKGTYPE="$(get_package_type $pkg_files)"
@@ -46,7 +46,7 @@ epm_provides_files()
 
 epm_provides_names()
 {
-	local pkg_names="$@"
+	local pkg_names="$*"
 	local CMD
 	[ -n "$pkg_names" ] || return
 
@@ -106,5 +106,6 @@ epm_provides()
 	[ -n "$pkg_filenames" ] || fatal "Provides: missing package(s) name"
 
 	epm_provides_files $pkg_files
+	# shellcheck disable=SC2046
 	epm_provides_names $(print_name $pkg_names)
 }

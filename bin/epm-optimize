@@ -25,7 +25,7 @@ __repack_rpm_base()
 	cd /var/lib/rpm || fatal
 	mv Packages Packages.BACKUP || fatal
 	# mask dependencies with a=
-	a='' db_dump Packages.BACKUP | a= db_load Packages || fatal
+	a='' db_dump Packages.BACKUP | a='' db_load Packages || fatal
 	rm Packages.BACKUP
 }
 

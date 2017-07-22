@@ -29,6 +29,7 @@ epm_remove_low()
 			sudocmd rpm -ev $nodeps $@
 			return ;;
 		apt-dpkg|aptitude-dpkg)
+			# shellcheck disable=SC2046
 			sudocmd dpkg -P $(subst_option nodeps --force-all) $(print_name "$@")
 			return ;;
 		pkgsrc)
@@ -102,7 +103,7 @@ epm_remove_names()
 			sudocmd conary erase $@
 			return ;;
 		npackd)
-			sudocmd npackdcl remove --package=$@
+			sudocmd npackdcl remove --package=$1
 			return ;;
 		nix)
 			sudocmd nix-env --uninstall $@
@@ -132,6 +133,7 @@ epm_remove_names()
 			sudocmd xbps remove -R $@
 			return ;;
 		ipkg)
+			# shellcheck disable=SC2046
 			sudocmd ipkg $(subst_option force -force-depends) remove $@
 			return ;;
 		*)
@@ -185,34 +187,34 @@ epm_print_remove_command()
 {
 	case $PMTYPE in
 		apt-rpm|yum-rpm|zypper-rpm|urpm-rpm|dnf-rpm)
-			echo "rpm -ev $nodeps $@"
+			echo "rpm -ev $nodeps $*"
 			;;
 		apt-dpkg|aptitude-dpkg)
-			echo "dpkg -P $@"
+			echo "dpkg -P $*"
 			;;
 		pkgsrc)
-			echo "pkg_delete -r $@"
+			echo "pkg_delete -r $*"
 			;;
 		pkgng)
-			echo "pkg delete -R $@"
+			echo "pkg delete -R $*"
 			;;
 		pacman)
-			echo "pacman -R $@"
+			echo "pacman -R $*"
 			;;
 		emerge)
-			echo "emerge --unmerge $@"
+			echo "emerge --unmerge $*"
 			;;
 		slackpkg)
-			echo "/sbin/removepkg $@"
+			echo "/sbin/removepkg $*"
 			;;
 		ipkg)
-			echo "ipkg remove $@"
+			echo "ipkg remove $*"
 			;;
 		aptcyg)
-			echo "apt-cyg remove $@"
+			echo "apt-cyg remove $*"
 			;;
 		xbps)
-			echo "xbps remove -y $@"
+			echo "xbps remove -y $*"
 			;;
 		*)
 			fatal "Have no suitable appropriate remove command for $PMTYPE"

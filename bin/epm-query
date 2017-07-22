@@ -180,7 +180,7 @@ __epm_query_name()
 			return
 			;;
 		npackd)
-			docmd "npackdcl path --package=$@"
+			docmd "npackdcl path --package=$1"
 			return
 			;;
 		conary)
@@ -226,7 +226,7 @@ __epm_query_shortname()
 			return
 			;;
 		npackd)
-			docmd "npackdcl path --package=$@"
+			docmd "npackdcl path --package=$1"
 			return
 			;;
 		conary)
@@ -270,7 +270,7 @@ separate_installed()
 {
 	pkg_installed=
 	pkg_noninstalled=
-	for i in $* ; do
+	for i in "$@" ; do
 		is_installed $i && pkg_installed="$pkg_installed $i" || pkg_noninstalled="$pkg_noninstalled $i"
 	done
 }
@@ -282,8 +282,10 @@ epm_query()
 	__epm_query_file $pkg_files || return
 
 	if [ -n "$short" ] ; then
+		# shellcheck disable=SC2046
 		__epm_query_shortname $(print_name $pkg_names) || return
 	else
+		# shellcheck disable=SC2046
 		__epm_query_name $(print_name $pkg_names) || return
 	fi
 }

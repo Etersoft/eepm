@@ -46,7 +46,7 @@ case $DISTRNAME in
 				;;
 			autoimports)
 				[ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
-				repo="$repo.$(echo "$DISTRVERSION" | tr "A-Z" "a-z")"
+				repo="$repo.$(echo "$DISTRVERSION" | tr "[:upper:]" "[:lower:]")"
 		esac
 
 		assure_exists apt-repo

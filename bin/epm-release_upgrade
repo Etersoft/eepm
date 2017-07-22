@@ -40,7 +40,7 @@ __detect_alt_release_by_repo()
 		| grep "[tp][5-9]/branch/" \
 		| sed -e "s|.*\([tp][5-9]\)/branch.*|\1|g" \
 		| sort -u )
-	if [ $(__wcount $BRD) = "1" ] ; then
+	if [ "$(__wcount $BRD)" = "1" ] ; then
 		echo "$BRD"
 		return
 	fi
@@ -50,7 +50,7 @@ __detect_alt_release_by_repo()
 		| grep "Sisyphus/" \
 		| sed -e "s|.*\(Sisyphus\).*|\1|g" \
 		| sort -u )
-	if [ $(__wcount $BRD) = "1" ] ; then
+	if [ "$(__wcount $BRD)" = "1" ] ; then
 		echo "$BRD"
 		return
 	fi
@@ -63,9 +63,9 @@ __replace_alt_version_in_repo()
 	local i
 	assure_exists apt-repo
 	#echo "Upgrading $DISTRNAME from $1 to $2 ..."
-	docmd apt-repo list | sed -e "s|\($1\)|{\1}->{$2}|g" | egrep --color -- "$1"
+	docmd apt-repo list | sed -e "s|\($1\)|{\1}->{$2}|g" | grep -E --color -- "$1"
 	# ask and replace only we will have changes
-	if a='' apt-repo list | egrep -q -- "$1" ; then
+	if a='' apt-repo list | grep -E -q -- "$1" ; then
 		confirm "Are these correct changes? [y/N]" || fatal "Exiting"
 		__replace_text_in_alt_repo "/^ *#/! s!$1!$2!g"
 	fi
@@ -95,7 +95,7 @@ __update_to_the_distro()
 	case "$TO" in
 		p7)
 			docmd epm update || fatal
-			docmd epm install apt rpm apt-conf-branch $(get_fix_release_pkg $TO) || fatal "Check an error and run epm release-upgrade again"
+			docmd epm install apt rpm apt-conf-branch "$(get_fix_release_pkg "$TO")" || fatal "Check an error and run epm release-upgrade again"
 			__alt_repofix
 			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![$TO]!g"
 			docmd epm update || fatal
@@ -103,10 +103,10 @@ __update_to_the_distro()
 			;;
 		p8)
 			docmd epm update || fatal
-			if ! docmd epm install apt rpm apt-conf-branch $(get_fix_release_pkg $TO) ; then
+			if ! docmd epm install apt rpm apt-conf-branch "$(get_fix_release_pkg "$TO")" ; then
 				# Hack for error: execution of %post scriptlet from glibc-core-2.23-alt1.eter1
 				docmd rpm -ev glibc-core-2.17 || fatal "Check an error and run epm release-upgrade again"
-				docmd epm install apt rpm apt-conf-branch $(get_fix_release_pkg $TO) || fatal "Check an error and run epm release-upgrade again"
+				docmd epm install apt rpm apt-conf-branch "$(get_fix_release_pkg "$TO")" || fatal "Check an error and run epm release-upgrade again"
 			fi
 			__alt_repofix
 			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![$TO]!g"
@@ -144,7 +144,7 @@ __update_alt_to_next_distro()
 		"p7"|"p7 p8"|"t7 p8")
 			TO="p8"
 			info "Upgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install apt-conf-branch $(get_fix_release_pkg $FROM) || fatal
+			docmd epm install apt-conf-branch "$(get_fix_release_pkg "$FROM")" || fatal
 			__replace_alt_version_in_repo $FROM/branch/ $TO/branch/
 			__update_to_the_distro $TO
 			docmd epm update-kernel || fatal

@@ -26,5 +26,5 @@ epm_epm_install(){
     # FIXME: some way to get latest package
     local download_link=$etersoft_updates_site/$(wget -qO- $etersoft_updates_site/ | grep -m1 -Eo "eepm[^\"]+\.$($DISTRVENDOR -p)" | tail -n1) #"
 
-    pkg_names= pkg_files= pkg_urls=$download_link epm_install
+    pkg_names='' pkg_files='' pkg_urls="$download_link" epm_install
 }

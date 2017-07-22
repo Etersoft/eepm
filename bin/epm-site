@@ -35,7 +35,7 @@ get_pao_var()
 {
 	local FIELD="$1"
 	#grep '"$FIELD"' | sed -e 's|.*"$FIELD":"||g' | sed -e 's|".*||g'
-	$SHAREDIR/tools_json -b | egrep "\[.*\"$FIELD\"\]" | sed -e 's|.*[[:space:]]"\(.*\)"|\1|g'
+	$SHAREDIR/tools_json -b | grep -E "\[.*\"$FIELD\"\]" | sed -e 's|.*[[:space:]]"\(.*\)"|\1|g'
 	return 0
 }
 

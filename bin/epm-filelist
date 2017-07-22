@@ -59,8 +59,11 @@ __epm_filelist_remote()
 			;;
 		apt-dpkg)
 			assure_exists apt-file || return
-			# if sudo requires a password, skip autoupdate
-			sudo -n true 2>/dev/null && sudocmd apt-file update || info "sudo requires a password, skip apt-file update"
+			if sudo -n true 2>/dev/null ; then
+				sudocmd apt-file update
+			else
+				info "sudo requires a password, skip apt-file update"
+			fi
 			docmd_foreach __deb_local_content_filelist "$@"
 			;;
 		yum-rpm)
@@ -164,6 +167,7 @@ epm_filelist()
 
 
 	__epm_filelist_file $pkg_files || return
+	# shellcheck disable=SC2046
 	__epm_filelist_name $(print_name $pkg_names) || return
 
 }

@@ -94,6 +94,7 @@ epm_upgrade()
 		CMD="guix package -u"
 		;;
 	aptcyg)
+		# shellcheck disable=SC2046
 		docmd_foreach "epm install" $(short=1 epm packages)
 		return
 		;;

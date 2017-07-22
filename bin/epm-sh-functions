@@ -48,7 +48,7 @@ check_tty()
 
 	# egrep from busybox may not --color
 	# egrep from MacOS print help to stderr
-	if egrep --help 2>&1 | grep -q -- "--color" ; then
+	if grep -E --help 2>&1 | grep -q -- "--color" ; then
 		export EGREPCOLOR="--color"
 	fi
 
@@ -89,7 +89,7 @@ echover()
 echon()
 {
 	# default /bin/sh on MacOS does not recognize -n
-	/bin/echo -n "$@"
+	/bin/echo -n "$*"
 }
 
 
@@ -109,7 +109,7 @@ showcmd()
 		set_boldcolor $GREEN
 		local PROMTSIG="\$"
 		[ "$EFFUID" = 0 ] && PROMTSIG="#"
-		echo " $PROMTSIG $@"
+		echo " $PROMTSIG $*"
 		restore_color
 	fi >&2
 }
@@ -117,7 +117,7 @@ showcmd()
 # Print command line and run command line
 docmd()
 {
-	showcmd "$@$EXTRA_SHOWDOCMD"
+	showcmd "$*$EXTRA_SHOWDOCMD"
 #FIXME
 	$@
 }
@@ -137,7 +137,7 @@ docmd_foreach()
 # Print command line and run command line with SUDO
 sudocmd()
 {
-	showcmd "$SUDO $@"
+	showcmd "$SUDO $*"
 	$SUDO $@
 }
 
@@ -170,10 +170,9 @@ get_firstarg()
 get_lastarg()
 {
 	local lastarg
-	eval lastarg=\${$#}
+	eval "lastarg=\${$#}"
 	echon "$lastarg"
 }
-
 
 filter_strip_spaces()
 {
@@ -202,7 +201,7 @@ store_output()
     echo 1 >$CMDSTATUS
     #RC_STDERR=$(mktemp)
     ( $@ 2>&1 ; echo $? >$CMDSTATUS ) | tee $RC_STDOUT
-    return $(cat $CMDSTATUS)
+    return "$(cat $CMDSTATUS)"
     # bashism
     # http://tldp.org/LDP/abs/html/bashver3.html#PIPEFAILREF
     #return $PIPESTATUS
@@ -230,7 +229,7 @@ epm()
 fatal()
 {
 	if [ -z "$TEXTDOMAIN" ] ; then
-		echo "Error: $@" >&2
+		echo "Error: $*" >&2
 #	else
 #		echog "Error in $0: $@" >&2
 	fi
@@ -241,7 +240,7 @@ fatal()
 warning()
 {
 	if [ -z "$TEXTDOMAIN" ] ; then
-		echo "Warning: $@" >&2
+		echo "Warning: $*" >&2
 #	else
 #		echog "Error in $0: $@" >&2
 	fi
@@ -254,9 +253,9 @@ info()
 	# print message to stderr if stderr forwarded to (a file)
 	if isatty2 ; then
 		isatty || return 0
-		echo "$@"
+		echo "$*"
 	else
-		echo "$@" >&2
+		echo "$*" >&2
 	fi
 }
 
@@ -270,7 +269,7 @@ set_sudo()
 		return
 	fi
 
-	EFFUID=`id -u`
+	EFFUID=$(id -u)
 
 	# do not need sudo
 	[ $EFFUID = "0" ] && return
@@ -414,7 +413,7 @@ get_help()
         return
     fi
 
-    grep -v -- "^#" $0 | grep -- "# $1" | while read n ; do
+    grep -v -- "^#" $0 | grep -- "# $1" | while read -r n ; do
         opt=$(echo $n | sed -e "s|) # $1:.*||g")
         desc=$(echo $n | sed -e "s|.*) # $1:||g")
         printf "    %-20s %s\n" $opt "$desc"
@@ -525,5 +524,6 @@ is_active_systemd()
 	a='' mountpoint -q "$SYSTEMD_CGROUP_DIR" || return
 	readlink /sbin/init | grep -q 'systemd' || return
 	# some hack
+	# shellcheck disable=SC2009
 	ps ax | grep '[s]ystemd' | grep -q -v 'systemd-udev'
 }
