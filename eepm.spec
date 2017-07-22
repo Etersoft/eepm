@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.0.9
+Version: 2.1.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -66,6 +66,11 @@ chmod a+x %buildroot%_datadir/%name/tools_*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Sat Jul 22 2017 Vitaly Lipatov <lav@altlinux.ru> 2.1.0-alt1
+- fix quotes (eterbug #11863)
+- make shellcheck happy
+- check_code.sh: skip global vars
+
 * Fri Jul 21 2017 Vitaly Lipatov <lav@altlinux.ru> 2.0.9-alt1
 - epm-filelist: add support with yum and dnf
 - imlrement check for dnf via dnf check
