@@ -222,6 +222,8 @@ epm_print()
 {
 
     [ -n "$pkg_filenames" ] || fatal "Missed args. Use epm print help for get help."
-    __epm_print "$(eval echo $quoted_args)"
+    # Note! do not quote args below (see eterbug #11863)
+    # shellcheck disable=SC2046
+    __epm_print $(eval echo $quoted_args)
 }
 
