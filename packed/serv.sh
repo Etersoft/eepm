@@ -62,7 +62,7 @@ check_tty()
 
 	# egrep from busybox may not --color
 	# egrep from MacOS print help to stderr
-	if egrep --help 2>&1 | grep -q -- "--color" ; then
+	if grep -E --help 2>&1 | grep -q -- "--color" ; then
 		export EGREPCOLOR="--color"
 	fi
 
@@ -102,7 +102,7 @@ echover()
 echon()
 {
 	# default /bin/sh on MacOS does not recognize -n
-	/bin/echo -n "$@"
+	/bin/echo -n "$*"
 }
 
 
@@ -120,14 +120,14 @@ showcmd()
 		set_boldcolor $GREEN
 		local PROMTSIG="\$"
 		[ "$EFFUID" = 0 ] && PROMTSIG="#"
-		echo " $PROMTSIG $@"
+		echo " $PROMTSIG $*"
 		restore_color
 	fi >&2
 }
 
 docmd()
 {
-	showcmd "$@$EXTRA_SHOWDOCMD"
+	showcmd "$*$EXTRA_SHOWDOCMD"
 	$@
 }
 
@@ -144,7 +144,7 @@ docmd_foreach()
 
 sudocmd()
 {
-	showcmd "$SUDO $@"
+	showcmd "$SUDO $*"
 	$SUDO $@
 }
 
@@ -174,10 +174,9 @@ get_firstarg()
 get_lastarg()
 {
 	local lastarg
-	eval lastarg=\${$#}
+	eval "lastarg=\${$#}"
 	echon "$lastarg"
 }
-
 
 filter_strip_spaces()
 {
@@ -205,7 +204,7 @@ store_output()
     echo 1 >$CMDSTATUS
     #RC_STDERR=$(mktemp)
     ( $@ 2>&1 ; echo $? >$CMDSTATUS ) | tee $RC_STDOUT
-    return $(cat $CMDSTATUS)
+    return "$(cat $CMDSTATUS)"
     # bashism
     # http://tldp.org/LDP/abs/html/bashver3.html#PIPEFAILREF
     #return $PIPESTATUS
@@ -231,7 +230,7 @@ epm()
 fatal()
 {
 	if [ -z "$TEXTDOMAIN" ] ; then
-		echo "Error: $@" >&2
+		echo "Error: $*" >&2
 	fi
 	exit 1
 }
@@ -239,7 +238,7 @@ fatal()
 warning()
 {
 	if [ -z "$TEXTDOMAIN" ] ; then
-		echo "Warning: $@" >&2
+		echo "Warning: $*" >&2
 	fi
 }
 
@@ -250,9 +249,9 @@ info()
 	# print message to stderr if stderr forwarded to (a file)
 	if isatty2 ; then
 		isatty || return 0
-		echo "$@"
+		echo "$*"
 	else
-		echo "$@" >&2
+		echo "$*" >&2
 	fi
 }
 
@@ -266,7 +265,7 @@ set_sudo()
 		return
 	fi
 
-	EFFUID=`id -u`
+	EFFUID=$(id -u)
 
 	# do not need sudo
 	[ $EFFUID = "0" ] && return
@@ -402,7 +401,7 @@ get_help()
         return
     fi
 
-    grep -v -- "^#" $0 | grep -- "# $1" | while read n ; do
+    grep -v -- "^#" $0 | grep -- "# $1" | while read -r n ; do
         opt=$(echo $n | sed -e "s|) # $1:.*||g")
         desc=$(echo $n | sed -e "s|.*) # $1:||g")
         printf "    %-20s %s\n" $opt "$desc"
@@ -506,9 +505,10 @@ is_active_systemd()
 	SYSTEMD_CGROUP_DIR=/sys/fs/cgroup/systemd
 	[ -x "$SYSTEMCTL" ] || return
 	[ -d "$SYSTEMD_CGROUP_DIR" ] || return
-	a= mountpoint -q "$SYSTEMD_CGROUP_DIR" || return
+	a='' mountpoint -q "$SYSTEMD_CGROUP_DIR" || return
 	readlink /sbin/init | grep -q 'systemd' || return
 	# some hack
+	# shellcheck disable=SC2009
 	ps ax | grep '[s]ystemd' | grep -q -v 'systemd-udev'
 }
 
@@ -873,13 +873,13 @@ is_service_autostart()
 			LANG=C $SUDO chkconfig $1 --list | grep -q "[35]:on"
 			;;
 		service-initd|service-update)
-                        test -L $(echo /etc/rc5.d/S??$1)
+                        test -L "$(echo /etc/rc5.d/S??$1)"
 			;;
 		systemd)
 			$SUDO systemctl is-enabled $1
 			;;
 		runit)
-			test -L /var/service/$SERVICE
+			test -L "/var/service/$SERVICE"
 			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
@@ -906,7 +906,7 @@ serv_status()
 			sudocmd $INITDIR/$SERVICE status "$@"
 			;;
 		systemd)
-			sudocmd systemctl status $SERVICE "$@"
+			sudocmd systemctl -l status $SERVICE "$@"
 			;;
 		runit)
 			sudocmd sv status "$SERVICE"
@@ -1036,7 +1036,7 @@ rpmvendor()
 	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
 	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
 	[ "$DISTRIB_ID" = "VoidLinux" ] && echo "void" && return
-	echo "$DISTRIB_ID" | tr "[A-Z]" "[a-z]"
+	echo "$DISTRIB_ID" | tr "[:lower:]"
 }
 
 # Translate DISTRIB_ID name to package manner (like in the package release name)
@@ -1049,7 +1049,7 @@ pkgvendor()
 # Print pkgtype (need DISTRIB_ID var)
 pkgtype()
 {
-    case `pkgvendor` in
+    case $(pkgvendor) in
 		freebsd) echo "tbz" ;;
 		sunos) echo "pkg.gz" ;;
 		slackware|mopslinux) echo "tgz" ;;
@@ -1089,9 +1089,9 @@ DISTRIB_CODENAME=""
 
 # Default with LSB
 if distro lsb-release ; then
-	DISTRIB_ID=`cat $DISTROFILE | get_var DISTRIB_ID`
-	DISTRIB_RELEASE=`cat $DISTROFILE | get_var DISTRIB_RELEASE`
-	DISTRIB_CODENAME=`cat $DISTROFILE | get_var DISTRIB_CODENAME`
+	DISTRIB_ID=$(cat $DISTROFILE | get_var DISTRIB_ID)
+	DISTRIB_RELEASE=$(cat $DISTROFILE | get_var DISTRIB_RELEASE)
+	DISTRIB_CODENAME=$(cat $DISTROFILE | get_var DISTRIB_CODENAME)
 fi
 
 # ALT Linux based
@@ -1099,6 +1099,7 @@ if distro altlinux-release ; then
 	DISTRIB_ID="ALTLinux"
 	if has Sisyphus ; then DISTRIB_RELEASE="Sisyphus"
 	elif has "ALT Linux 7." ; then DISTRIB_RELEASE="p7"
+	elif has "ALT Linux t7." ; then DISTRIB_RELEASE="t7"
 	elif has "ALT Linux 8." ; then DISTRIB_RELEASE="p8"
 	elif has "ALT .*8.[0-9]" ; then DISTRIB_RELEASE="p8"
 	elif has "Simply Linux 6." ; then DISTRIB_RELEASE="p6"
@@ -1123,8 +1124,8 @@ if distro altlinux-release ; then
 elif distro gentoo-release ; then
 	DISTRIB_ID="Gentoo"
 	MAKEPROFILE=$(readlink $ROOTDIR/etc/portage/make.profile 2>/dev/null) || MAKEPROFILE=$(readlink $ROOTDIR/etc/make.profile)
-	DISTRIB_RELEASE=`basename $MAKEPROFILE`
-	echo $DISTRIB_RELEASE | grep -q "[0-9]" || DISTRIB_RELEASE=`basename $(dirname $MAKEPROFILE)`
+	DISTRIB_RELEASE=$(basename $MAKEPROFILE)
+	echo $DISTRIB_RELEASE | grep -q "[0-9]" || DISTRIB_RELEASE=$(basename "$(dirname $MAKEPROFILE)")
 
 # Slackware based
 elif distro mopslinux-version ; then
@@ -1137,19 +1138,22 @@ elif distro mopslinux-version ; then
 	fi
 elif distro slackware-version ; then
 	DISTRIB_ID="Slackware"
-	DISTRIB_RELEASE="$(grep -Eo [0-9]+\.[0-9]+ $DISTROFILE)"
+	DISTRIB_RELEASE="$(grep -Eo '[0-9]+\.[0-9]+' $DISTROFILE)"
 
 elif distro os-release && which apk 2>/dev/null >/dev/null ; then
+	# shellcheck disable=SC1090
 	. $ROOTDIR/etc/os-release
 	DISTRIB_ID="$ID"
 	DISTRIB_RELEASE="$VERSION_ID"
 
 elif distro os-release && which tce-ab 2>/dev/null >/dev/null ; then
+	# shellcheck disable=SC1090
 	. $ROOTDIR/etc/os-release
 	DISTRIB_ID="TinyCoreLinux"
 	DISTRIB_RELEASE="$VERSION_ID"
 
 elif distro os-release && which xbps-query 2>/dev/null >/dev/null ; then
+	# shellcheck disable=SC1090
 	. $ROOTDIR/etc/os-release
 	DISTRIB_ID="VoidLinux"
 	DISTRIB_RELEASE="Live"
@@ -1272,32 +1276,32 @@ elif distro SuSe-release || distro SuSE-release ; then
 	fi
 
 # fixme: can we detect by some file?
-elif [ `uname` = "FreeBSD" ] ; then
+elif [ "$(uname)" = "FreeBSD" ] ; then
 	DISTRIB_ID="FreeBSD"
 	UNAME=$(uname -r)
 	DISTRIB_RELEASE=$(echo "$UNAME" | grep RELEASE | sed -e "s|\([0-9]\.[0-9]\)-RELEASE|\1|g")
 
 # fixme: can we detect by some file?
-elif [ `uname` = "SunOS" ] ; then
+elif [ "$(uname)" = "SunOS" ] ; then
 	DISTRIB_ID="SunOS"
 	DISTRIB_RELEASE=$(uname -r)
 
 # fixme: can we detect by some file?
-elif [ `uname -s 2>/dev/null` = "Darwin" ] ; then
+elif [ "$(uname -s 2>/dev/null)" = "Darwin" ] ; then
 	DISTRIB_ID="MacOS"
 	DISTRIB_RELEASE=$(uname -r)
 
 # fixme: move to up
-elif [ `uname` = "Linux" ] && which guix 2>/dev/null >/dev/null ; then
+elif [ "$(uname)" = "Linux" ] && which guix 2>/dev/null >/dev/null ; then
 	DISTRIB_ID="GNU/Linux/Guix"
 	DISTRIB_RELEASE=$(uname -r)
 
 # fixme: move to up
-elif [ `uname` = "Linux" ] && [ -x $ROOTDIR/system/bin/getprop ] ; then
+elif [ "$(uname)" = "Linux" ] && [ -x $ROOTDIR/system/bin/getprop ] ; then
 	DISTRIB_ID="Android"
 	DISTRIB_RELEASE=$(getprop | awk -F": " '/build.version.release/ { print $2 }' | tr -d '[]')
 
-elif [ `uname -o 2>/dev/null` = "Cygwin" ] ; then
+elif [ "$(uname -o 2>/dev/null)" = "Cygwin" ] ; then
         DISTRIB_ID="Cygwin"
         DISTRIB_RELEASE="all"
 
@@ -1436,7 +1440,7 @@ create_fake_files()
     DIRALLFILES="$MYTMPDIR/files/"
     mkdir -p "$DIRALLFILES"
 
-    print_files | while read line ; do
+    print_files | while read -r line ; do
         touch $DIRALLFILES/$(basename "$line")
     done
 }
@@ -1767,7 +1771,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 2.0.5"
+        echo "Service manager version 2.1.0"
         echo "Running on $($DISTRVENDOR) with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012, 2013, 2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
