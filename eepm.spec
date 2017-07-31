@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.1.0
+Version: 2.1.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -66,6 +66,10 @@ chmod a+x %buildroot%_datadir/%name/tools_*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Mon Jul 31 2017 Vitaly Lipatov <lav@altlinux.ru> 2.1.1-alt1
+- distr_info: fix tr using
+- install --show-command-only supports hi level names now
+
 * Sat Jul 22 2017 Vitaly Lipatov <lav@altlinux.ru> 2.1.0-alt1
 - fix quotes (eterbug #11863)
 - make shellcheck happy
