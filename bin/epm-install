@@ -471,6 +471,7 @@ epm_install_files()
 
 epm_print_install_command()
 {
+    [ -z "$1" ] && return
     case $PMTYPE in
         apt-rpm|yum-rpm|urpm-rpm|zypper-rpm|dnf-rpm)
             echo "rpm -Uvh --force $nodeps $*"
@@ -523,11 +524,49 @@ epm_print_install_command()
     esac
 }
 
+epm_print_install_names_command()
+{
+	[ -z "$1" ] && return
+	case $PMTYPE in
+		apt-rpm|apt-dpkg)
+			echo "apt-get -y $APTOPTIONS install $*"
+			return ;;
+		aptitude-dpkg)
+			echo "aptitude -y install $*"
+			return ;;
+		yum-rpm)
+			echo "yum -y $YUMOPTIONS install $*"
+			return ;;
+		dnf-rpm)
+			echo "dnf -y $YUMOPTIONS install $*"
+			return ;;
+		urpm-rpm)
+			echo "urpmi --auto $URPMOPTIONS $*"
+			return ;;
+		zypper-rpm)
+			echo "zypper --non-interactive $ZYPPEROPTIONS install $*"
+			return ;;
+		pacman)
+			echo "pacman -S --noconfirm $force $*"
+			return ;;
+		chocolatey)
+			echo "chocolatey install $*"
+			return ;;
+		nix)
+			echo "nix-env --install $*"
+			return ;;
+		*)
+			fatal "Have no suitable appropriate install command for $PMTYPE"
+			;;
+	esac
+}
+
 
 epm_install()
 {
     if [ -n "$show_command_only" ] ; then
-        epm_print_install_command $pkg_filenames
+        epm_print_install_command $pkg_files
+        epm_print_install_names_command $pkg_names
         return
     fi
 
