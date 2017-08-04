@@ -94,7 +94,7 @@ epm_install_names()
 	[ -z "$1" ] && return
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
-			sudocmd apt-get -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true $APTOPTIONS $noremove install $@
+			sudocmd apt-get $APTOPTIONS $noremove install $@
 			return ;;
 		aptitude-dpkg)
 			sudocmd aptitude install $@
