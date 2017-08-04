@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.1.1
+Version: 2.1.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -66,6 +66,9 @@ chmod a+x %buildroot%_datadir/%name/tools_*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Fri Aug 04 2017 Vitaly Lipatov <lav@altlinux.ru> 2.1.2-alt1
+- apt install: add force package selection (see ALT bug #22572)
+
 * Mon Jul 31 2017 Vitaly Lipatov <lav@altlinux.ru> 2.1.1-alt1
 - distr_info: fix tr using
 - install --show-command-only supports hi level names now
