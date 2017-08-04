@@ -94,7 +94,7 @@ epm_install_names()
 	[ -z "$1" ] && return
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
-			sudocmd apt-get $APTOPTIONS $noremove install $@
+			sudocmd apt-get -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true $APTOPTIONS $noremove install $@
 			return ;;
 		aptitude-dpkg)
 			sudocmd aptitude install $@
@@ -187,7 +187,7 @@ epm_ni_install_names()
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
 			export DEBIAN_FRONTEND=noninteractive
-			sudocmd apt-get -y $noremove --force-yes -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
+			sudocmd apt-get -y $noremove --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
 			return ;;
 		aptitude-dpkg)
 			sudocmd aptitude -y install $@
@@ -529,7 +529,7 @@ epm_print_install_names_command()
 	[ -z "$1" ] && return
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
-			echo "apt-get -y $APTOPTIONS install $*"
+			echo "apt-get -y --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true $APTOPTIONS install $*"
 			return ;;
 		aptitude-dpkg)
 			echo "aptitude -y install $*"
