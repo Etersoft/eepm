@@ -1036,7 +1036,7 @@ rpmvendor()
 	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
 	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
 	[ "$DISTRIB_ID" = "VoidLinux" ] && echo "void" && return
-	echo "$DISTRIB_ID" | tr "[:lower:]"
+	echo "$DISTRIB_ID" | tr "[:upper:]" "[:lower:]"
 }
 
 # Translate DISTRIB_ID name to package manner (like in the package release name)
@@ -1771,7 +1771,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 2.1.0"
+        echo "Service manager version 2.1.1"
         echo "Running on $($DISTRVENDOR) with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012, 2013, 2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

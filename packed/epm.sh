@@ -2061,7 +2061,7 @@ epm_install_names()
 	[ -z "$1" ] && return
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
-			sudocmd apt-get $APTOPTIONS $noremove install $@
+			sudocmd apt-get -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true $APTOPTIONS $noremove install $@
 			return ;;
 		aptitude-dpkg)
 			sudocmd aptitude install $@
@@ -2153,7 +2153,7 @@ epm_ni_install_names()
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
 			export DEBIAN_FRONTEND=noninteractive
-			sudocmd apt-get -y $noremove --force-yes -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
+			sudocmd apt-get -y $noremove --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
 			return ;;
 		aptitude-dpkg)
 			sudocmd aptitude -y install $@
@@ -2433,6 +2433,7 @@ epm_install_files()
 
 epm_print_install_command()
 {
+    [ -z "$1" ] && return
     case $PMTYPE in
         apt-rpm|yum-rpm|urpm-rpm|zypper-rpm|dnf-rpm)
             echo "rpm -Uvh --force $nodeps $*"
@@ -2485,11 +2486,49 @@ epm_print_install_command()
     esac
 }
 
+epm_print_install_names_command()
+{
+	[ -z "$1" ] && return
+	case $PMTYPE in
+		apt-rpm|apt-dpkg)
+			echo "apt-get -y --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true $APTOPTIONS install $*"
+			return ;;
+		aptitude-dpkg)
+			echo "aptitude -y install $*"
+			return ;;
+		yum-rpm)
+			echo "yum -y $YUMOPTIONS install $*"
+			return ;;
+		dnf-rpm)
+			echo "dnf -y $YUMOPTIONS install $*"
+			return ;;
+		urpm-rpm)
+			echo "urpmi --auto $URPMOPTIONS $*"
+			return ;;
+		zypper-rpm)
+			echo "zypper --non-interactive $ZYPPEROPTIONS install $*"
+			return ;;
+		pacman)
+			echo "pacman -S --noconfirm $force $*"
+			return ;;
+		chocolatey)
+			echo "chocolatey install $*"
+			return ;;
+		nix)
+			echo "nix-env --install $*"
+			return ;;
+		*)
+			fatal "Have no suitable appropriate install command for $PMTYPE"
+			;;
+	esac
+}
+
 
 epm_install()
 {
     if [ -n "$show_command_only" ] ; then
-        epm_print_install_command $pkg_filenames
+        epm_print_install_command $pkg_files
+        epm_print_install_names_command $pkg_names
         return
     fi
 
@@ -5473,7 +5512,7 @@ rpmvendor()
 	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
 	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
 	[ "$DISTRIB_ID" = "VoidLinux" ] && echo "void" && return
-	echo "$DISTRIB_ID" | tr "[:lower:]"
+	echo "$DISTRIB_ID" | tr "[:upper:]" "[:lower:]"
 }
 
 # Translate DISTRIB_ID name to package manner (like in the package release name)
@@ -6135,7 +6174,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 2.1.0"
+        echo "EPM package manager version 2.1.1"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2017"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
