@@ -32,7 +32,7 @@ epm_upgrade()
 
 	case $PMTYPE in
 	apt-rpm|apt-dpkg)
-		local APTOPTIONS="$(subst_option non_interactive -y)"
+		local APTOPTIONS="$(subst_option non_interactive -y) $(subst_option verbose "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
 		# Функцию добавления параметра при условии
 		CMD="apt-get $APTOPTIONS dist-upgrade $noremove"
 		;;

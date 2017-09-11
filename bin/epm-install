@@ -94,6 +94,7 @@ epm_install_names()
 	[ -z "$1" ] && return
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
+			APTOPTIONS="$APTOPTIONS $(subst_option verbose "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
 			sudocmd apt-get $APTOPTIONS $noremove install $@
 			return ;;
 		aptitude-dpkg)
