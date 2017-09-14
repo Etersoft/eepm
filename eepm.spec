@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.1.2
+Version: 2.1.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -66,6 +66,11 @@ chmod a+x %buildroot%_datadir/%name/tools_*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Thu Sep 14 2017 Vitaly Lipatov <lav@altlinux.ru> 2.1.3-alt1
+- use force package selection only in non interactive install
+- kernel_update: add update repo if needed
+- install/upgrade: add debug output for apt when --verbose
+
 * Fri Aug 04 2017 Vitaly Lipatov <lav@altlinux.ru> 2.1.2-alt1
 - apt install: add force package selection (see ALT bug #22572)
 
