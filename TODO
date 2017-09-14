@@ -1,3 +1,7 @@
+rsync -av --inplace --progress --compress
+
+epmqp uuid на x86_64/Ubuntu не различает архитектуру
+
 eon sf - скачивание через rsync -z для компактности?
 
 get system checking

@@ -92,6 +92,8 @@ download_alt_contents_index()
         URL=$(echo "$URL" | sed -e "s|^file:||")
         [ -s "$URL" ] || { touch $OFILE.failed ; return 1; }
         ln -sf "$URL" "$OFILE" || { touch $OFILE.failed ; return 1; }
+# TODO rsync
+# https://bugzilla.altlinux.org/show_bug.cgi?id=14449#c22
     else
         docmd eget -O "$OFILE" "$URL" || { rm -fv $OFILE ; touch $OFILE.failed ; return 1; }
     fi
