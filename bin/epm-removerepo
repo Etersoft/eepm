@@ -31,6 +31,10 @@ case $DISTRNAME in
 				;;
 		esac
 
+		if ! echo "$repo" | grep -q -v "[0-9]*" ; then
+			repo="$(epm repolist | grep "repo/$repo" | line)"
+		fi
+
 		assure_exists apt-repo
 		sudocmd apt-repo rm "$repo"
 		return
