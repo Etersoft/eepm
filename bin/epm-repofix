@@ -61,6 +61,7 @@ __fix_apt_sources_list()
 
 		# Sisyphus uses 'alt' vendor key
 		__try_fix_apt_source_list $i alt "ALTLinux\/Sisyphus"
+		__try_fix_apt_source_list $i etersoft "Etersoft\/Sisyphus"
 
 		# skip branch replacement for ALT Linux Sisyphus
 		[ "$DISTRVERSION" = "Sisyphus" ] && continue
