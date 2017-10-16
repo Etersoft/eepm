@@ -55,7 +55,8 @@ case $DISTRNAME in
 			echo "etersoft"
 			return
 		fi
-		sudocmd apt-repo add "$repo"
+		# note: drop #
+		sudocmd apt-repo add "${repo/\#/}"
 		return
 		;;
 esac
