@@ -25,6 +25,11 @@ has()
 	grep "$*" "$DISTROFILE" >/dev/null 2>&1
 }
 
+firstupper()
+{
+	echo "$*" | sed 's/.*/\u&/'
+}
+
 # Translate DISTRIB_ID to vendor name (like %_vendor does)
 rpmvendor()
 {
@@ -46,11 +51,12 @@ pkgvendor()
 # Print pkgtype (need DISTRIB_ID var)
 pkgtype()
 {
+# TODO: try use generic names
     case $(pkgvendor) in
 		freebsd) echo "tbz" ;;
 		sunos) echo "pkg.gz" ;;
 		slackware|mopslinux) echo "tgz" ;;
-		archlinux) echo "pkg.tar.xz" ;;
+		archlinux|manjaro) echo "pkg.tar.xz" ;;
 		gentoo) echo "tbz2" ;;
 		windows) echo "exe" ;;
 		android) echo "apk" ;;
@@ -140,7 +146,7 @@ elif distro slackware-version ; then
 elif distro os-release && which apk 2>/dev/null >/dev/null ; then
 	# shellcheck disable=SC1090
 	. $ROOTDIR/etc/os-release
-	DISTRIB_ID="$ID"
+	DISTRIB_ID="$(firstupper "$ID")"
 	DISTRIB_RELEASE="$VERSION_ID"
 
 elif distro os-release && which tce-ab 2>/dev/null >/dev/null ; then
@@ -162,6 +168,7 @@ elif distro arch-release ; then
 		DISTRIB_RELEASE="2011"
 	fi
 
+# Elbrus
 elif distro mcst_version ; then
 	DISTRIB_ID="MCST"
 	DISTRIB_RELEASE=$(cat "$DISTROFILE" | grep "release" | sed -e "s|.*release \([0-9]*\).*|\1|g")
@@ -271,6 +278,14 @@ elif distro SuSe-release || distro SuSE-release ; then
 	elif has "SUSE Linux Enterprise Server" ; then
 		DISTRIB_ID="SLES"
 	fi
+
+# https://www.freedesktop.org/software/systemd/man/os-release.html
+elif distro os-release ; then
+	# shellcheck disable=SC1090
+	. $ROOTDIR/etc/os-release
+	DISTRIB_ID="$(firstupper "$ID")"
+	DISTRIB_RELEASE="$VERSION_ID"
+	[ -n "$DISTRIB_RELEASE" ] || DISTRIB_RELEASE="CUR"
 
 # fixme: can we detect by some file?
 elif [ "$(uname)" = "FreeBSD" ] ; then
