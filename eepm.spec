@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.1.4
+Version: 2.1.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -66,6 +66,11 @@ chmod a+x %buildroot%_datadir/%name/tools_*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Wed Oct 18 2017 Vitaly Lipatov <lav@altlinux.ru> 2.1.5-alt1
+- distr_info: add firstupper function, implement full /etc/os-release checking
+- add --dry-run support to remove, autoorphans, autoremove
+- autoremove: add support for autoremove [libs|python|perl|libs-devel]
+
 * Mon Oct 16 2017 Vitaly Lipatov <lav@altlinux.ru> 2.1.4-alt1
 - add skip # in task number
 - add support for just task number in removerepo
