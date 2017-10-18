@@ -25,11 +25,12 @@ __epm_autoremove_altrpm_pp()
 	#[ -n "$force" ] || info "You can run with --force for more deep removing"
 	local force=force
 
+	local libexclude="$1"
+
 	local flag=
+
 	[ -n "$force" ] || libexclude=$libexclude'[^-]*$'
 
-	libexclude='^(python-module-|python3-module-|python-modules-|python3-modules|perl-)'
-	[ -n "$force" ] || libexclude=$libexclude'[^-]*$'
 	showcmd "apt-cache list-nodeps | grep -E -- \"$libexclude\""
 	pkgs=$(apt-cache list-nodeps | grep -E -- "$libexclude" )
 
@@ -44,7 +45,7 @@ __epm_autoremove_altrpm_pp()
 	if [ -n "$flag" ] ; then
 		info ""
 		info "call again for next cycle until all modules will be removed"
-		__epm_autoremove_altrpm_pp
+		__epm_autoremove_altrpm_pp "$libexclude"
 	fi
 
 	return 0
@@ -54,8 +55,16 @@ __epm_autoremove_altrpm_lib()
 {
 	local pkgs
 
+	local nodevel="$1"
+
 	info
-	info "Removing all non -devel/-debuginfo libs packages not need by anything..."
+	if [ "$nodevel" = "nodevel" ] ; then
+		info "Removing all non -devel/-debuginfo libs packages not need by anything..."
+		local develrule='-(devel|devel-static)$'
+	else
+		info "Removing all non -debuginfo libs packages (-devel too) not need by anything..."
+		local develrule='-(NONONO)$'
+	fi
 	#[ -n "$force" ] || info "You can run with --force for more deep removing"
 	local force=force
 
@@ -67,7 +76,8 @@ __epm_autoremove_altrpm_lib()
 	showcmd "apt-cache list-nodeps | grep -- \"$libexclude\""
 	pkgs=$(apt-cache list-nodeps | grep -E -- "$libexclude" \
 		| sed -e "s/[-\.]32bit$//g" \
-		| grep -E -v -- "-(devel|devel-static|debuginfo)$" \
+		| grep -E -v -- "$develrule" \
+		| grep -E -v -- "-(debuginfo)$" \
 		| grep -E -v -- "-(util|utils|tool|tools|plugin|daemon|help)$" \
 		| grep -E -v -- "^(libsystemd|libreoffice|libnss|libvirt-client|libvirt-daemon|libsasl2-plugin|eepm)" )
 
@@ -82,7 +92,7 @@ __epm_autoremove_altrpm_lib()
 	if [ -n "$flag" ] ; then
 		info ""
 		info "call again for next cycle until all libs will be removed"
-		__epm_autoremove_altrpm_lib
+		__epm_autoremove_altrpm_lib $nodevel
 	fi
 
 	return 0
@@ -91,12 +101,35 @@ __epm_autoremove_altrpm_lib()
 
 __epm_autoremove_altrpm()
 {
-	local pkg
+	local i
 	load_helper epm-packages
 	assure_exists /etc/buildreqs/files/ignore.d/apt-scripts apt-scripts
 
-	__epm_autoremove_altrpm_pp
-	__epm_autoremove_altrpm_lib
+	if [ -z "$pkg_names" ] ; then
+		__epm_autoremove_altrpm_pp '^(python-module-|python3-module-|python-modules-|python3-modules|perl-)'
+		__epm_autoremove_altrpm_lib nodevel
+		return 0
+	fi
+
+	for i in $pkg_names ; do
+		case $i in
+		libs)
+			__epm_autoremove_altrpm_lib nodevel
+			;;
+		python)
+			__epm_autoremove_altrpm_pp '^(python-module-|python3-module-|python-modules-|python3-modules)'
+			;;
+		perl)
+			__epm_autoremove_altrpm_pp '^(perl-)'
+			;;
+		libs-devel)
+			__epm_autoremove_altrpm_lib
+			;;
+		*)
+			fatal "autoremove: unsupported '$i'. Use libs, python, perl, libs-devel."
+			;;
+		esac
+	done
 
 	return 0
 }
@@ -104,8 +137,6 @@ __epm_autoremove_altrpm()
 # TODO: keep our eepm package
 epm_autoremove()
 {
-
-[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
 
 case $DISTRNAME in
 	ALTLinux)
@@ -124,6 +155,8 @@ case $DISTRNAME in
 	*)
 		;;
 esac
+
+[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
 
 case $PMTYPE in
 	apt-dpkg|aptitude-dpkg)

@@ -256,7 +256,7 @@ check_command()
     clean)                    # HELPCMD: clean local package cache
         epm_cmd=clean
         ;;
-    autoremove|package-cleanup)   # HELPCMD: auto remove unneeded package(s)
+    autoremove|package-cleanup)   # HELPCMD: auto remove unneeded package(s) Supports args for ALT: [libs|python|perl|libs-devel]
         epm_cmd=autoremove
         ;;
     autoorphans|--orphans)    # HELPCMD: remove all packages not from the repository
