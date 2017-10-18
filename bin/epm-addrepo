@@ -17,6 +17,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+load_helper epm-sh-altlinux
+
 epm_addrepo()
 {
 local repo="$(eval echo "$quoted_args")"
@@ -25,7 +27,7 @@ case $DISTRNAME in
 	ALTLinux)
 		case "$repo" in
 			etersoft)
-				info "add etersoft repo"
+				info "add Etersoft's addon repo"
 				load_helper epm-query
 				epm install --skip-installed apt-conf-etersoft-common apt-conf-etersoft-hold || fatal
 				local branch="$DISTRVERSION/branch"
@@ -34,6 +36,7 @@ case $DISTRNAME in
 				[ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
 				local arch=$(uname -m)
 				[ "$arch" = "i686" ] && arch="i586"
+				# TODO: use apt-repo add ?
 				echo "" | sudocmd tee -a /etc/apt/sources.list
 				echo "# added with eepm addrepo etersoft" | sudocmd tee -a /etc/apt/sources.list
 				echo "rpm [etersoft] http://download.etersoft.ru/pub/Etersoft LINUX@Etersoft/$branch/$arch addon" | sudocmd tee -a /etc/apt/sources.list
@@ -50,13 +53,18 @@ case $DISTRNAME in
 		esac
 
 		assure_exists apt-repo
-		if [ -z "$repo" ] ; then
-			docmd apt-repo add branch
-			echo "etersoft"
+		
+		if tasknumber "$repo" >/dev/null ; then
+			sudocmd apt-repo add $(tasknumber "$repo")
 			return
 		fi
-		# note: drop #
-		sudocmd apt-repo add "${repo/\#/}"
+
+		if [ -z "$repo" ] ; then
+			info "Add branch repo. TODO?"
+			docmd apt-repo add branch
+			return
+		fi
+
 		return
 		;;
 esac

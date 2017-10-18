@@ -1,7 +1,3 @@
-epm install таск
-epm remove таск (и reporepo)
-packages list таск
-
 аналог epm purge: запоминаем список файлов, удаляем пакеты и по возможности всё, от чего зависит (рекурсивно).
 
 --interactive

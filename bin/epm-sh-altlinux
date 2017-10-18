@@ -115,3 +115,9 @@ get_local_alt_contents_index()
     done
 
 }
+
+tasknumber()
+{
+    local num="${*/\#/}"
+    isnumber "$num" && echo "$num"
+}
