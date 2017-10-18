@@ -4,8 +4,6 @@ packages list таск
 
 аналог epm purge: запоминаем список файлов, удаляем пакеты и по возможности всё, от чего зависит (рекурсивно).
 
---dry-run при удалении (--print)
-
 epm autoremove [libs|python|perl|libs-devel]
 
 --interactive

@@ -234,7 +234,19 @@ epm_remove()
 	[ -n "$pkg_files" ] && pkg_names="$pkg_names $(epm query $pkg_files)"
 
 	[ -n "$pkg_names" ] || fatal "Remove: missing package(s) name."
+
+	if [ -n "$dryrun" ] ; then
+		info "Packages for removing:"
+		echo "$pkg_names"
+		return
+	fi
+
 	epm_remove_low $pkg_names && return
+	local STATUS=$?
+
+	if [ -n "$direct" ] ; then
+		return $STATUS
+	fi
 
 	# get package name for hi level package management command (with version if supported and if possible)
 	pkg_names=$(__epm_get_hilevel_name $pkg_names)

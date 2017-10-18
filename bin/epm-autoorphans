@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2015, 2016  Etersoft
-# Copyright (C) 2015, 2016  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2015, 2017  Etersoft
+# Copyright (C) 2015, 2017  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -32,18 +32,25 @@ case $PMTYPE in
 	apt-rpm)
 		# ALT Linux only
 		assure_exists /etc/buildreqs/files/ignore.d/apt-scripts apt-scripts
-		echo "We will try remove all installed packages which are missed in repositories"
-		warning "Use with caution!"
+		if [ -z "$dryrun" ] ; then
+			echo "We will try remove all installed packages which are missed in repositories"
+			warning "Use with caution!"
+		fi
 		local PKGLIST=$(__epm_orphan_altrpm \
 			| sed -e "s/\.32bit//g" \
 			| grep -v -- "^eepm$" \
 			| grep -v -- "^kernel")
-		docmd epm remove $PKGLIST
+
+		if [ -n "$quiet" ] ; then
+			echo "$PKGLIST"
+		else
+			docmd epm remove $dryrun $PKGLIST
+		fi
 		;;
 	apt-dpkg|aptitude-dpkg)
 		assure_exists deborphan
 		showcmd deborphan
-		a='' deborphan | docmd epm remove
+		a='' deborphan | docmd epm remove $dryrun
 		;;
 	#aura)
 	#	sudocmd aura -Oj
@@ -51,18 +58,22 @@ case $PMTYPE in
 	yum-rpm)
 		showcmd package-cleanup --orphans
 		local PKGLIST=$(package-cleanup -q --orphans | grep -v "^eepm-")
-		docmd epm remove $PKGLIST
+		docmd epm remove $dryrun $PKGLIST
 		;;
 	dnf-rpm)
 		# TODO: dnf list extras
 		# TODO: Yum-utils package has been deprecated, use dnf instead.
 		showcmd package-cleanup --orphans
 		local PKGLIST=$(package-cleanup -q --orphans | grep -v "^eepm-")
-		docmd epm remove $PKGLIST
+		docmd epm remove $dryrun $PKGLIST
 		;;
 	urpm-rpm)
-		showcmd urpme --report-orphans
-		sudocmd urpme --auto-orphans
+		if [ -n "$dryrun" ] ; then
+			fatal "--dry-run is not supported yet"
+		else
+			showcmd urpme --report-orphans
+			sudocmd urpme --auto-orphans
+		fi
 		;;
 	#emerge)
 	#	sudocmd emerge --depclean
@@ -70,7 +81,12 @@ case $PMTYPE in
 	#	sudocmd revdep-rebuild
 	#	;;
 	pacman)
-		sudocmd pacman -Qdtq | sudocmd pacman -Rs -
+		if [ -n "$dryrun" ] ; then
+			info "Autoorphans packages list:"
+			sudocmd pacman -Qdtq
+		else
+			sudocmd pacman -Qdtq | sudocmd pacman -Rs -
+		fi
 		;;
 	#slackpkg)
 		# clean-system removes non official packages
@@ -89,10 +105,14 @@ case $PMTYPE in
 		sudocmd zypper packages --orphaned
 		# FIXME: x86_64/i586 are duplicated
 		local PKGLIST=$(zypper packages --orphaned | tail -n +5 | cut -d \| -f 3 | sort -u)
-		sudocmd zypper remove --clean-deps $PKGLIST
+		docmd epm remove $dryrun --clean-deps $PKGLIST
 		;;
 	xbps)
-		CMD="xbps-remove -o"
+		if [ -n "$dryrun" ] ; then
+			fatal "--dry-run is not supported yet"
+		else
+			sudocmd xbps-remove -o
+		fi
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"

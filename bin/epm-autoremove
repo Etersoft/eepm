@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012, 2016  Etersoft
-# Copyright (C) 2012, 2016  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2017  Etersoft
+# Copyright (C) 2012, 2017  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -32,6 +32,13 @@ __epm_autoremove_altrpm_pp()
 	[ -n "$force" ] || libexclude=$libexclude'[^-]*$'
 	showcmd "apt-cache list-nodeps | grep -E -- \"$libexclude\""
 	pkgs=$(apt-cache list-nodeps | grep -E -- "$libexclude" )
+
+	if [ -n "$dryrun" ] ; then
+		info "Packages for autoremoving:"
+		echo "$pkgs"
+		return 0
+	fi
+	
 	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
 
 	if [ -n "$flag" ] ; then
@@ -63,6 +70,13 @@ __epm_autoremove_altrpm_lib()
 		| grep -E -v -- "-(devel|devel-static|debuginfo)$" \
 		| grep -E -v -- "-(util|utils|tool|tools|plugin|daemon|help)$" \
 		| grep -E -v -- "^(libsystemd|libreoffice|libnss|libvirt-client|libvirt-daemon|libsasl2-plugin|eepm)" )
+
+	if [ -n "$dryrun" ] ; then
+		info "Packages for autoremoving:"
+		echo "$pkgs"
+		return 0
+	fi
+
 	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
 
 	if [ -n "$flag" ] ; then
@@ -96,6 +110,9 @@ epm_autoremove()
 case $DISTRNAME in
 	ALTLinux)
 		__epm_autoremove_altrpm
+
+		[ -n "$dryrun" ] && return
+
 		docmd epm remove-old-kernels
 		
 		if which nvidia-clean-driver 2>/dev/null ; then
@@ -110,9 +127,12 @@ esac
 
 case $PMTYPE in
 	apt-dpkg|aptitude-dpkg)
-		sudocmd apt-get autoremove
+		sudocmd apt-get autoremove $dryrun
 		;;
 	aura)
+		if [ -n "$dryrun" ] ; then
+			fatal "--dry-run is not supported yet"
+		fi
 		sudocmd aura -Oj
 		;;
 	yum-rpm)
@@ -123,10 +143,13 @@ case $PMTYPE in
 			# FIXME: package-cleanup have to use stderr for errors
 			local PKGLIST=$(package-cleanup -q --leaves | grep -v "^eepm-")
 			[ -n "$PKGLIST" ] || break
-			sudocmd yum remove $PKGLIST
+			showcmd epm remove $PKGLIST
 		done
 		;;
 	dnf-rpm)
+		if [ -n "$dryrun" ] ; then
+			fatal "--dry-run is not supported yet"
+		fi
 		sudocmd dnf autoremove
 		;;
 	# see autoorhans
@@ -134,6 +157,9 @@ case $PMTYPE in
 	#	sudocmd urpme --auto-orphans
 	#	;;
 	emerge)
+		if [ -n "$dryrun" ] ; then
+			fatal "--dry-run is not supported yet"
+		fi
 		sudocmd emerge --depclean
 		assure_exists revdep-rebuild
 		sudocmd revdep-rebuild
@@ -158,10 +184,13 @@ case $PMTYPE in
 		sudocmd zypper packages --unneeded
 		# FIXME: x86_64/i586 are duplicated
 		local PKGLIST=$(zypper packages --unneeded | tail -n +5 | cut -d \| -f 3 | sort -u)
-		sudocmd zypper remove --clean-deps $PKGLIST
+		showcmd epm remove --clean-deps $PKGLIST
 		;;
 	xbps)
-		CMD="xbps-remove -O"
+		if [ -n "$dryrun" ] ; then
+			fatal "--dry-run is not supported yet"
+		fi
+		sudocmd xbps-remove -O
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"

@@ -79,6 +79,7 @@ verbose=
 quiet=
 nodeps=
 noremove=
+dryrun=
 force=
 short=
 direct=
@@ -333,6 +334,9 @@ check_option()
         ;;
     --noremove|--no-remove)  # HELPOPT: exit if any packages are to be removed during upgrade
         noremove="--no-remove"
+        ;;
+    --dry-run|--simulate|--just-print|-recon--no-act) # HELPOPT: print only (autoremove/autoorphans only)
+        dryrun="--dry-run"
         ;;
     --short)              # HELPOPT: short output (just 'package' instead 'package-version-release')
         short="--short"
