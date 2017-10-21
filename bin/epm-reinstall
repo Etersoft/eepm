@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012,2014,2016  Etersoft
-# Copyright (C) 2012,2014,2016  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012,2014,2016,2017  Etersoft
+# Copyright (C) 2012,2014,2016,2017  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -18,11 +18,13 @@
 #
 
 load_helper epm-install
+load_helper epm-sh-warmup
 
 # copied from etersoft-build-utils/share/eterbuild/functions/rpmpkg
 epm_reinstall_names()
 {
 	[ -n "$1" ] || return
+
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
 			local APTOPTIONS="$(subst_option non_interactive -y)"
@@ -75,8 +77,12 @@ epm_reinstall()
 {
     [ -n "$pkg_filenames" ] || fatal "Reinstall: missing package(s) name."
 
+    warmup_lowbase
+
     # get package name for hi level package management command (with version if supported and if possible)
     pkg_names=$(__epm_get_hilevel_name $pkg_names)
+
+    warmup_hibase
 
     epm_reinstall_names $pkg_names
     epm_reinstall_files $pkg_files

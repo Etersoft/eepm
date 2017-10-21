@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012, 2013, 2016  Etersoft
-# Copyright (C) 2012, 2013, 2016  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2013, 2016-2017  Etersoft
+# Copyright (C) 2012, 2013, 2016-2017  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -18,6 +18,7 @@
 #
 
 load_helper epm-check_updated_repo
+load_helper epm-sh-warmup
 
 __epm_search_output()
 {
@@ -175,6 +176,8 @@ epm_search()
 
 	# it is useful for first time running
 	update_repo_if_needed soft
+
+	warmup_bases
 
 	# FIXME: do it better
 	local MGS

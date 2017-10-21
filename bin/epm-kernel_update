@@ -18,9 +18,12 @@
 #
 
 load_helper epm-check_updated_repo
+load_helper epm-sh-warmup
 
 epm_kernel_update()
 {
+	warmup_bases
+
 	info "Updating system kernel to the latest version..."
 
 	case $DISTRNAME in

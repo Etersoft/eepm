@@ -18,6 +18,7 @@
 #
 
 load_helper epm-check_updated_repo
+load_helper epm-sh-warmup
 
 epm_upgrade()
 {
@@ -28,6 +29,7 @@ epm_upgrade()
 	# it is useful for first time running
 	update_repo_if_needed
 
+	warmup_bases
 	info "Running command for upgrade packages"
 
 	case $PMTYPE in

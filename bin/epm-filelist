@@ -19,6 +19,7 @@
 
 load_helper epm-query
 load_helper epm-print
+load_helper epm-sh-warmup
 
 # TODO: port or rewrite apt-file
 # https://bugzilla.altlinux.org/show_bug.cgi?id=14449
@@ -109,6 +110,8 @@ __epm_filelist_name()
 	local CMD
 
 	[ -z "$*" ] && return
+
+	warmup_lowbase
 
 	case $PMTYPE in
 		*-rpm)

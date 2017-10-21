@@ -21,6 +21,7 @@ load_helper epm-sh-altlinux
 load_helper epm-query
 load_helper epm-assure
 load_helper epm-check_updated_repo
+load_helper epm-sh-warmup
 
 # TODO: use when run install with epm --skip-installed install
 filter_out_installed_packages()
@@ -93,6 +94,7 @@ epm_install_names()
 	fi
 
 	[ -z "$1" ] && return
+
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
 			APTOPTIONS="$APTOPTIONS $(subst_option verbose "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
@@ -186,6 +188,7 @@ epm_install_names()
 epm_ni_install_names()
 {
 	[ -z "$1" ] && return
+
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
 			export DEBIAN_FRONTEND=noninteractive
@@ -590,6 +593,9 @@ epm_install()
 
     [ -z "$pkg_files$pkg_names" ] && info "Skip empty install list" && return 22
 
+    # to be filter happy
+    warmup_lowbase
+
     local names="$(echo $pkg_names | filter_out_installed_packages)"
     local files="$(echo $pkg_files | filter_out_installed_packages)"
 
@@ -599,6 +605,8 @@ epm_install()
         # it is useful for first time running
         update_repo_if_needed
     fi
+
+    warmup_hibase
 
     epm_install_names $names || return
     epm_install_files $files
