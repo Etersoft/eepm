@@ -36,7 +36,7 @@ case $DISTRNAME in
 		if tasknumber "$repo" >/dev/null ; then
 			repo="$(epm repolist | grep "repo/$(tasknumber $repo)" | line)"
 		fi
-
+		[ -n "$repo" ] || fatal "No such repo or task"
 		assure_exists apt-repo
 		sudocmd apt-repo rm "$repo"
 		return
