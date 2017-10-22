@@ -88,12 +88,14 @@ __separate_sudocmd()
 # copied from etersoft-build-utils/share/eterbuild/functions/rpmpkg
 epm_install_names()
 {
+	[ -z "$1" ] && return
+
+	warmup_hibase
+
 	if [ -n "$non_interactive" ] ; then
 		epm_ni_install_names "$@"
 		return
 	fi
-
-	[ -z "$1" ] && return
 
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
@@ -605,8 +607,6 @@ epm_install()
         # it is useful for first time running
         update_repo_if_needed
     fi
-
-    warmup_hibase
 
     epm_install_names $names || return
     epm_install_files $files
