@@ -31,12 +31,31 @@ case $DISTRNAME in
 				[ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
 				repo="$repo.$(echo "$DISTRVERSION" | tr "[:upper:]" "[:lower:]")"
 				;;
+			archive)
+				info "remove archive repos"
+				assure_exists apt-repo
+				epm repolist | grep "archive/" | while read repo ; do
+					sudocmd apt-repo rm "$repo"
+				done
+				return 0
+				;;
+			tasks)
+				info "remove task repos"
+				assure_exists apt-repo
+				epm repolist | grep "/repo/" | while read repo ; do
+					sudocmd apt-repo rm "$repo"
+				done
+				return 0
+				;;
+			*)
+				if tasknumber "$repo" >/dev/null ; then
+					repo="$(epm repolist | grep "repo/$(tasknumber "$repo")" | line)"
+					# "
+				fi
+				;;
 		esac
 
-		if tasknumber "$repo" >/dev/null ; then
-			repo="$(epm repolist | grep "repo/$(tasknumber "$repo")" | line)"
-		fi
-		[ -n "$repo" ] || fatal "No such repo or task"
+		[ -n "$repo" ] || fatal "No such repo or task. Use epm remove repo [autoimports|archive|TASK]"
 		assure_exists apt-repo
 		sudocmd apt-repo rm "$repo"
 		return
