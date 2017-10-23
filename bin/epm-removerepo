@@ -34,7 +34,7 @@ case $DISTRNAME in
 		esac
 
 		if tasknumber "$repo" >/dev/null ; then
-			repo="$(epm repolist | grep "repo/$(tasknumber $repo)" | line)"
+			repo="$(epm repolist | grep "repo/$(tasknumber "$repo")" | line)"
 		fi
 		[ -n "$repo" ] || fatal "No such repo or task"
 		assure_exists apt-repo
