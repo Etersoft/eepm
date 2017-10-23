@@ -32,6 +32,7 @@ __epm_addrepo_altlinux()
 			[ "$DISTRVERSION" = "Sisyphus" ] && branch="$DISTRVERSION"
 			# FIXME
 			[ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
+			# TODO: func?
 			local arch=$(uname -m)
 			[ "$arch" = "i686" ] && arch="i586"
 			# TODO: use apt-repo add ?
@@ -50,6 +51,18 @@ __epm_addrepo_altlinux()
 			repo="$repo.$(echo "$DISTRVERSION" | tr "[:upper:]" "[:lower:]")"
 			;;
 		archive)
+			datestr="$2"
+			# 2017/12/31
+			# TODO: func?
+			local arch=$(uname -m)
+			[ "$arch" = "i686" ] && arch="i586"
+			echo "" | sudocmd tee -a /etc/apt/sources.list
+			echo "rpm [alt] ftp://ftp.altlinux.org/pub/distributions archive/sisyphus/date/$datestr/$arch classic" | sudocmd tee -a /etc/apt/sources.list
+			if [ "$arch" = "x86_64" ] ; then
+				echo "rpm [alt] ftp://ftp.altlinux.org/pub/distributions archive/sisyphus/date/$datestr/$arch-i586 classic" | sudocmd tee -a /etc/apt/sources.list
+			fi
+			echo "rpm [alt] ftp://ftp.altlinux.org/pub/distributions archive/sisyphus/date/$datestr/noarch classic" | sudocmd tee -a /etc/apt/sources.list
+			return 0
 			;;
 	esac
 
