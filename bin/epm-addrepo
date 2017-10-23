@@ -61,9 +61,11 @@ case $DISTRNAME in
 
 		if [ -z "$repo" ] ; then
 			info "Add branch repo. TODO?"
-			docmd apt-repo add branch
+			sudodocmd apt-repo add branch
 			return
 		fi
+
+		sudocmd apt-repo add "$repo"
 
 		return
 		;;
