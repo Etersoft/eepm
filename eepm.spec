@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.1.6
+Version: 2.1.7
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -66,6 +66,9 @@ chmod a+x %buildroot%_datadir/%name/tools_*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Mon Oct 23 2017 Vitaly Lipatov <lav@altlinux.ru> 2.1.7-alt1
+- improve addrepo (add archive DATE support) and removerepo (archive, tasks)
+
 * Sun Oct 22 2017 Vitaly Lipatov <lav@altlinux.ru> 2.1.6-alt1
 - add support for ALT girar task number to install/remove, improve addrepo/removerepo
 - distr_info: add support for get info about arch, bus size, memory size, base os name
