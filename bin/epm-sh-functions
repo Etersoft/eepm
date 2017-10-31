@@ -297,12 +297,12 @@ withtimeout()
 {
 	local TO=$(which timeout 2>/dev/null || which gtimeout 2>/dev/null)
 	if [ -x "$TO" ] ; then
-		$TO $@
+		$TO "$@"
 		return
 	fi
 	# fallback: drop time arg and run without timeout
 	shift
-	$@
+	"$@"
 }
 
 set_eatmydata()
