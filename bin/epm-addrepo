@@ -52,16 +52,16 @@ __epm_addrepo_altlinux()
 			;;
 		archive)
 			datestr="$2"
-			# 2017/12/31
+			echo "$datestr" | grep -Eq "^20[0-2][0-9]/[01][0-9]/[0-3][0-9]$" || fatal "use follow date format: 2017/12/31"
 			# TODO: func?
 			local arch=$(uname -m)
 			[ "$arch" = "i686" ] && arch="i586"
 			echo "" | sudocmd tee -a /etc/apt/sources.list
-			echo "rpm [alt] ftp://ftp.altlinux.org/pub/distributions archive/sisyphus/date/$datestr/$arch classic" | sudocmd tee -a /etc/apt/sources.list
+			echo "rpm [alt] http://ftp.altlinux.org/pub/distributions archive/sisyphus/date/$datestr/$arch classic" | sudocmd tee -a /etc/apt/sources.list
 			if [ "$arch" = "x86_64" ] ; then
-				echo "rpm [alt] ftp://ftp.altlinux.org/pub/distributions archive/sisyphus/date/$datestr/$arch-i586 classic" | sudocmd tee -a /etc/apt/sources.list
+				echo "rpm [alt] http://ftp.altlinux.org/pub/distributions archive/sisyphus/date/$datestr/$arch-i586 classic" | sudocmd tee -a /etc/apt/sources.list
 			fi
-			echo "rpm [alt] ftp://ftp.altlinux.org/pub/distributions archive/sisyphus/date/$datestr/noarch classic" | sudocmd tee -a /etc/apt/sources.list
+			echo "rpm [alt] http://ftp.altlinux.org/pub/distributions archive/sisyphus/date/$datestr/noarch classic" | sudocmd tee -a /etc/apt/sources.list
 			return 0
 			;;
 	esac
@@ -75,7 +75,7 @@ __epm_addrepo_altlinux()
 
 	if [ -z "$repo" ] ; then
 		info "Add branch repo. TODO?"
-		sudodocmd apt-repo add branch
+		sudocmd apt-repo add branch
 		return
 	fi
 
