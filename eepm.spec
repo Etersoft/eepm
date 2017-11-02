@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.1.7
+Version: 2.1.8
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -66,6 +66,10 @@ chmod a+x %buildroot%_datadir/%name/tools_*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Thu Nov 02 2017 Vitaly Lipatov <lav@altlinux.ru> 2.1.8-alt1
+- epm addrepo: use http for ALT archive, add date format checking
+- ep-seach: use ~ for negate and ^ for a begin of line in __epm_search_make_grep
+
 * Mon Oct 23 2017 Vitaly Lipatov <lav@altlinux.ru> 2.1.7-alt1
 - improve addrepo (add archive DATE support) and removerepo (archive, tasks)
 
