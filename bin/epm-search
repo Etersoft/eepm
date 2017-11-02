@@ -109,7 +109,6 @@ esac
 LANG=C docmd $CMD $string
 }
 
-# TODO: use ^ as first word, use ~ for negate, for epmqp too
 # produce grep sequence
 __epm_search_make_grep()
 {
@@ -120,8 +119,8 @@ __epm_search_make_grep()
 	local listN=
 	for i in $@ ; do
 		case "$i" in
-			^*)
-				# will clean from ^ later (and have the bug here with empty arg if run with one ^ only)
+			~*)
+				# will clean from ~ later (and have the bug here with empty arg if run with one ~ only)
 				listN="$listN $i"
 				;;
 			*)
@@ -131,7 +130,7 @@ __epm_search_make_grep()
 	done
 
 	#list=$(strip_spaces $list | sed -e "s/ /|/g")
-	listN=$(strip_spaces $listN | sed -e "s/ /|/g" | sed -e "s/\^//g")
+	listN=$(strip_spaces $listN | sed -e "s/ /|/g" | sed -e "s/~//g")
 
 	if [ -n "$short" ] ; then
 		echon " | sed -e \"s| .*||g\""
