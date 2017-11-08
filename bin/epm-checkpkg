@@ -58,6 +58,7 @@ case $PMTYPE in
 		docmd rpm -V $@
 		;;
 	*-dpkg)
+		assure_exists debsums
 		docmd debsums $@
 		;;
 	emerge)
