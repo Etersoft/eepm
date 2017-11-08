@@ -533,7 +533,8 @@ epm_print_install_command()
 
 epm_print_install_names_command()
 {
-	[ -z "$1" ] && return
+	# check for pkg_files to support print out command without pkg names in args
+	[ -z "$1" ] && [ -n "$pkg_files" ] && return
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
 			echo "apt-get -y --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true $APTOPTIONS install $*"
