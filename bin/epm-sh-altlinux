@@ -118,6 +118,7 @@ get_local_alt_contents_index()
 
 tasknumber()
 {
-    local num="${*/\#/}"
+    local num="$(echo "$*" | sed -e "s| *#*||g")"
     isnumber "$num" && echo "$num"
 }
+
