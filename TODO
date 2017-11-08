@@ -9,11 +9,12 @@ systemctl edit юнит
 хочется видеть прямые зависимости, обратные, и рекурсивно.
 выводить в цивилизованном виде (в прямом только с --direct)
 
+Синхронизация списков файлов по пакетам:
 rsync -av --inplace --progress --compress
+Но лучше получать с сервиса
+epm sf - скачивание через rsync -z для компактности?
 
 epmqp uuid на x86_64/Ubuntu не различает архитектуру
-
-eon sf - скачивание через rsync -z для компактности?
 
 get system checking
 https://github.com/gwicke/mediawiki-containers

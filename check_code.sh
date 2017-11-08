@@ -12,6 +12,7 @@ EXCL="$EXCL,SC2154,SC2002"
 
 if [ -n "$1" ] ; then
     shellcheck $EXCL "$1"
+    checkbashisms -f "$1"
     exit
 fi
 
