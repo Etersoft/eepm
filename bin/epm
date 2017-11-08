@@ -204,7 +204,7 @@ check_command()
     provides|prov)            # HELPCMD: print package provides
         epm_cmd=provides
         ;;
-    whatdepends)              # HELPCMD: print packages dependences on that
+    whatdepends|wd)           # HELPCMD: print packages dependences on that
         epm_cmd=whatdepends
         ;;
     whatprovides)             # HELPCMD: print packages provides that target
