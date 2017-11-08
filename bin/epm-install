@@ -478,7 +478,9 @@ epm_install_files()
 
 epm_print_install_command()
 {
-    [ -z "$1" ] && return
+    # print out low level command by default (wait --low-level for control it)
+    #[ -z "$1" ] && return
+    [ -z "$1" ] && [ -n "$pkg_names" ] && return
     case $PMTYPE in
         apt-rpm|yum-rpm|urpm-rpm|zypper-rpm|dnf-rpm)
             echo "rpm -Uvh --force $nodeps $*"
@@ -534,7 +536,8 @@ epm_print_install_command()
 epm_print_install_names_command()
 {
 	# check for pkg_files to support print out command without pkg names in args
-	[ -z "$1" ] && [ -n "$pkg_files" ] && return
+	#[ -z "$1" ] && [ -n "$pkg_files" ] && return
+	[ -z "$1" ] && return
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
 			echo "apt-get -y --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true $APTOPTIONS install $*"
