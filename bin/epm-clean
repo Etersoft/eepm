@@ -64,7 +64,7 @@ case $PMTYPE in
 		sudocmd urpmi --clean
 		;;
 	pacman)
-		sudocmd pacman -Sc
+		sudocmd pacman -Sc --noconfirm
 		;;
 	zypper-rpm)
 		sudocmd zypper clean
