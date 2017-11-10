@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.1.9
+Version: 2.1.10
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -66,6 +66,12 @@ chmod a+x %buildroot%_datadir/%name/tools_*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Fri Nov 10 2017 Vitaly Lipatov <lav@altlinux.ru> 2.1.10-alt1
+- install: print low level install command if args is empty
+- epm: add wd alias for whatdepends
+- epm-clean: add --noconfirm for pacman
+- fix and text install via url with wildcard
+
 * Wed Nov 08 2017 Vitaly Lipatov <lav@altlinux.ru> 2.1.9-alt1
 - tasknumber: fix bashism
 
