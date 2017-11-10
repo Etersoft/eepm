@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2016  Etersoft
-# Copyright (C) 2016  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2016-2017  Etersoft
+# Copyright (C) 2016-2017  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
+
+alt_base_dist_url="http://ftp.basealt.ru/pub/distributions"
 
 __use_url_install()
 {
@@ -128,7 +130,54 @@ __epm_get_altpkg_url()
 	# fixme: get from /branches
 	local dv=$DISTRNAME/$DISTRVERSION/branch
 	[ "$DISTRVERSION" = "Sisyphus" ] && dv=$DISTRNAME/$DISTRVERSION
-	echo "http://ftp.basealt.ru/pub/distributions/$dv/$arch/RPMS.classic/$filename"
+	echo "$alt_base_dist_url/$dv/$arch/RPMS.classic/$filename"
+}
+
+__epm_print_url_alt()
+{
+	local url="$1"
+	echo "$url"
+	echo "$url" | sed -e "s|$alt_base_dist_url/$DISTRNAME|http://mirror.yandex.ru/altlinux|g"
+	echo "$url" | sed -e "s|$alt_base_dist_url/$DISTRNAME|http://download.etersoft.ru/pub/ALTLinux|g"
+}
+
+__epm_print_url_alt_check()
+{
+	local pkg=$1
+	shift
+	local tm=$(mktemp)
+	epm assure curl
+	load_helper epm-site
+	quiet=1
+	local buildtime=$(paoapi packages/$pkg | get_pao_var buildtime)
+	echo
+	echo "Latest release: $(paoapi packages/$pkg | get_pao_var sourcepackage) $buildtime"
+	__epm_print_url_alt "$1" | while read url ; do
+		curl -s --head $url >$tm || { echo "$url: missed" ; continue ; }
+		local http=$(cat $tm | grep "^HTTP" | sed -e "s|\r||g")
+		local lastdate=$(cat $tm | grep "^Last-Modified:" | sed -e "s|\r||g")
+		local size=$(cat $tm | grep "^Content-Length:" | sed -e "s|^Content-Length: ||g"  | sed -e "s|\r||g")
+		echo "$url ($http $lastdate) Size: $size"
+	done
+	rm -f $tm
+}
+
+__epm_download_alt()
+{
+	local pkg
+	if [ "$1" = "--check" ] ; then
+		local checkflag="$1"
+		shift
+	fi
+	for pkg in "$@" ; do
+		local url=$(__epm_get_altpkg_url $pkg)
+		[ -n "$url" ] || warning "Can't get URL for $pkg"
+		if [ -n "$checkflag" ] ; then
+			__epm_print_url_alt_check "$pkg" "$url"
+		else
+			docmd eget $url || return
+		fi
+	done
 }
 
 epm_download()
@@ -137,12 +186,7 @@ epm_download()
 
 	case $DISTRNAME in
 		ALTLinux)
-			local pkg
-			for pkg in $pkg_filenames ; do
-				local url=$(__epm_get_altpkg_url $pkg)
-				[ -n "$url" ] || warning "Can't get url for $pkg"
-				docmd eget $url
-			done
+			__epm_download_alt $pkg_filenames
 			return
 			;;
 	esac
