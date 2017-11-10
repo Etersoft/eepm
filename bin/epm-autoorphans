@@ -88,10 +88,10 @@ case $PMTYPE in
 			sudocmd pacman -Qdtq | sudocmd pacman -Rs -
 		fi
 		;;
-	#slackpkg)
+	slackpkg)
 		# clean-system removes non official packages
-		#sudocmd slackpkg clean-system
-	#	;;
+		sudocmd slackpkg clean-system
+		;;
 	#guix)
 	#	sudocmd guix gc
 	#	;;
