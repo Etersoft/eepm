@@ -42,7 +42,7 @@ fi
 
 # If ftp protocol or have no asterisk, just download
 # TODO: use has()
-if echo "$1" | grep -q "\(^ftp://\|[^*]\)" ; then
+if echo "$1" | grep -q "^ftp://" || echo "$1" | grep -qv "[*?]" ; then
     $WGET $WGET_OPTION_TARGET "$1"
     exit
 fi
@@ -73,6 +73,7 @@ create_fake_files()
     print_files | while read -r line ; do
         touch $DIRALLFILES/$(basename "$line")
     done
+    rm -f $INDEX
 }
 
 download_files()
@@ -84,7 +85,7 @@ download_files()
     return $ERROR
 }
 
-get_index || exit
+get_index || { rm -rf "$MYTMPDIR" ; exit ; }
 create_fake_files
 download_files || echo "There was some download errors" >&2
 rm -rf "$MYTMPDIR"

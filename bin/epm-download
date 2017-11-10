@@ -21,8 +21,10 @@ __use_url_install()
 {
 	case $DISTRNAME in
 		"ALTLinux")
-			# not for https
+			# do not support https yet
 			echo "$pkg_urls" | grep -q "https://" && return 1
+			# force download if wildcard is used
+			echo "$pkg_urls" | grep -q "[?*]" && return 1
 			pkg_names="$pkg_names $pkg_urls"
 			return 0
 			;;
@@ -60,16 +62,21 @@ __download_pkg_urls()
 	local url
 	[ -z "$pkg_urls" ] && return
 	for url in $pkg_urls ; do
-		# TODO: use some individual tmp dir
-		local new_file=/tmp/$(basename "$url")
-		if docmd eget -O $new_file $url && [ -s "$new_file" ] ; then
-			pkg_files="$pkg_files $new_file"
-			to_remove_pkg_files="$to_remove_pkg_files $new_file"
+		local tmppkg=$(mktemp -d) || fatal "failed mktemp -d"
+		cd $tmppkg || fatal
+		if docmd eget "$url" ; then
+			local i
+			for i in $(basename $url) ; do
+				[ -s "$tmppkg/$i" ] || continue
+				pkg_files="$pkg_files $tmppkg/$i"
+				to_remove_pkg_files="$to_remove_pkg_files $tmppkg/$i"
+			done
 		else
 			warning "Failed to download $url, ignoring"
 		fi
+		cd - >/dev/null
 	done
-	# restore
+	# reconstruct
 	pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
 }
 

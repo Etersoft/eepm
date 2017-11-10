@@ -150,6 +150,7 @@ local RETVAL=$?
 
 # TODO: reinvent
 [ -n "$to_remove_pkg_files" ] && rm -fv $to_remove_pkg_files
+[ -n "$to_remove_pkg_files" ] && rmdir -v $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
 
 return $RETVAL
 }
