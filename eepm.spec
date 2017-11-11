@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.2.0
+Version: 2.3.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -71,6 +71,11 @@ rm -f %buildroot%_datadir/%name/tools_eget
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Sun Nov 12 2017 Vitaly Lipatov <lav@altlinux.ru> 2.3.0-alt1
+- epm: rewrite release_upgrade for ALT
+- autoremove: small improvement
+- remove: add support dry mode for rpm/apt
+
 * Sat Nov 11 2017 Vitaly Lipatov <lav@altlinux.ru> 2.2.0-alt1
 - use external eget on ALT
 - disable one file version packing
