@@ -64,13 +64,13 @@ epm_remove_names()
 
 	case $PMTYPE in
 		apt-dpkg)
-			sudocmd apt-get remove --purge $@
+			sudocmd apt-get remove --purge $APTOPTIONS $@
 			return ;;
 		aptitude-dpkg)
 			sudocmd aptitude purge $@
 			return ;;
 		apt-rpm)
-			sudocmd apt-get remove $@
+			sudocmd apt-get remove $APTOPTIONS $@
 			return ;;
 		deepsolver-rpm)
 			sudocmd ds-remove $@
@@ -255,7 +255,15 @@ epm_remove()
 	if [ -n "$dryrun" ] ; then
 		info "Packages for removing:"
 		echo "$pkg_names"
-		return
+		case $PMTYPE in
+			apt-rpm)
+				nodeps="--test"
+				APTOPTIONS="--simulate"
+				;;
+			*
+				return
+				;;
+		esac
 	fi
 
 	epm_remove_low $pkg_names && return
