@@ -144,7 +144,7 @@ docmd_foreach()
 
 sudocmd()
 {
-	showcmd "$SUDO $*"
+	[ -n "$SUDO" ] && showcmd "$SUDO $*" || showcmd "$*"
 	$SUDO $@
 }
 
@@ -176,6 +176,11 @@ get_lastarg()
 	local lastarg
 	eval "lastarg=\${$#}"
 	echon "$lastarg"
+}
+
+isnumber()
+{
+	echo "$*" | filter_strip_spaces | grep -q "^[0-9]\+$"
 }
 
 filter_strip_spaces()
@@ -285,12 +290,12 @@ withtimeout()
 {
 	local TO=$(which timeout 2>/dev/null || which gtimeout 2>/dev/null)
 	if [ -x "$TO" ] ; then
-		$TO $@
+		$TO "$@"
 		return
 	fi
 	# fallback: drop time arg and run without timeout
 	shift
-	$@
+	"$@"
 }
 
 set_eatmydata()
@@ -299,7 +304,7 @@ set_eatmydata()
 	[ -n "$EPMNOEATMYDATA" ] && return
 	# use if possible
 	which eatmydata >/dev/null 2>/dev/null || return
-	SUDO="$SUDO eatmydata"
+	[ -n "$SUDO" ] && SUDO="$SUDO eatmydata" || SUDO="eatmydata"
 	[ -n "$verbose" ] && info "Uwaga! eatmydata is installed, we will use it for disable all sync operations."
 	return 0
 }
@@ -349,6 +354,20 @@ assure_exists()
 	[ -n "$package" ] || package="$(__get_package_for_command "$1")"
 	[ -n "$3" ] && textpackage=" >= $3"
 	__epm_assure "$1" $package $3 || fatal "Can't assure in '$1' command from $package$textpackage package"
+}
+
+disabled_eget()
+{
+	# use internal eget only if exists
+	if [ -s $SHAREDIR/tools_eget ] ; then
+		$SHAREDIR/tools_eget "$@"
+		return
+	fi
+
+	assure_exists eget
+	# run external command, not the function
+	EGET=$(which eget) || fatal "Missed command eget from installed package eget"
+	$EGET "$@"
 }
 
 eget()
@@ -1000,6 +1019,7 @@ _print_additional_usage
 
 }
 
+################# incorporate bin/distr_info #################
 internal_distr_info()
 {
 # Author: Vitaly Lipatov <lav@etersoft.ru>
@@ -1028,6 +1048,11 @@ has()
 	grep "$*" "$DISTROFILE" >/dev/null 2>&1
 }
 
+firstupper()
+{
+	echo "$*" | sed 's/.*/\u&/'
+}
+
 # Translate DISTRIB_ID to vendor name (like %_vendor does)
 rpmvendor()
 {
@@ -1049,11 +1074,12 @@ pkgvendor()
 # Print pkgtype (need DISTRIB_ID var)
 pkgtype()
 {
+# TODO: try use generic names
     case $(pkgvendor) in
 		freebsd) echo "tbz" ;;
 		sunos) echo "pkg.gz" ;;
 		slackware|mopslinux) echo "tgz" ;;
-		archlinux) echo "pkg.tar.xz" ;;
+		archlinux|manjaro) echo "pkg.tar.xz" ;;
 		gentoo) echo "tbz2" ;;
 		windows) echo "exe" ;;
 		android) echo "apk" ;;
@@ -1143,7 +1169,7 @@ elif distro slackware-version ; then
 elif distro os-release && which apk 2>/dev/null >/dev/null ; then
 	# shellcheck disable=SC1090
 	. $ROOTDIR/etc/os-release
-	DISTRIB_ID="$ID"
+	DISTRIB_ID="$(firstupper "$ID")"
 	DISTRIB_RELEASE="$VERSION_ID"
 
 elif distro os-release && which tce-ab 2>/dev/null >/dev/null ; then
@@ -1165,6 +1191,7 @@ elif distro arch-release ; then
 		DISTRIB_RELEASE="2011"
 	fi
 
+# Elbrus
 elif distro mcst_version ; then
 	DISTRIB_ID="MCST"
 	DISTRIB_RELEASE=$(cat "$DISTROFILE" | grep "release" | sed -e "s|.*release \([0-9]*\).*|\1|g")
@@ -1275,6 +1302,14 @@ elif distro SuSe-release || distro SuSE-release ; then
 		DISTRIB_ID="SLES"
 	fi
 
+# https://www.freedesktop.org/software/systemd/man/os-release.html
+elif distro os-release ; then
+	# shellcheck disable=SC1090
+	. $ROOTDIR/etc/os-release
+	DISTRIB_ID="$(firstupper "$ID")"
+	DISTRIB_RELEASE="$VERSION_ID"
+	[ -n "$DISTRIB_RELEASE" ] || DISTRIB_RELEASE="CUR"
+
 # fixme: can we detect by some file?
 elif [ "$(uname)" = "FreeBSD" ] ; then
 	DISTRIB_ID="FreeBSD"
@@ -1317,6 +1352,112 @@ elif distro lsb-release && [ -n "$DISTRIB_RELEASE" ]; then
 	esac
 fi
 
+get_base_os_name()
+{
+local DIST_OS
+# Resolve the os
+DIST_OS=`uname -s | tr [:upper:] [:lower:] | tr -d " \t\r\n"`
+case "$DIST_OS" in
+    'sunos')
+        DIST_OS="solaris"
+        ;;
+    'hp-ux' | 'hp-ux64')
+        DIST_OS="hpux"
+        ;;
+    'darwin' | 'oarwin')
+        DIST_OS="macosx"
+        ;;
+    'unix_sv')
+        DIST_OS="unixware"
+        ;;
+    'freebsd' | 'openbsd' | 'netbsd')
+        DIST_OS="freebsd"
+        ;;
+esac
+echo "$DIST_OS"
+}
+
+get_arch()
+{
+local DIST_ARCH
+# Resolve the architecture
+DIST_ARCH=`uname -m | tr [:upper:] [:lower:] | tr -d " \t\r\n"`
+case "$DIST_ARCH" in
+    'amd64' | 'ia32' | 'i386' | 'i486' | 'i586' | 'i686' | 'x86_64')
+        DIST_ARCH="x86"
+        ;;
+    'ia64' | 'ia-64')
+        DIST_ARCH="ia64"
+        ;;
+    'ip27' | 'mips')
+        DIST_ARCH="mips"
+        ;;
+    'powermacintosh' | 'power' | 'powerpc' | 'power_pc' | 'ppc64')
+        DIST_ARCH="ppc"
+        ;;
+    'pa_risc' | 'pa-risc')
+        DIST_ARCH="parisc"
+        ;;
+    'sun4u' | 'sparcv9')
+        DIST_ARCH="sparc"
+        ;;
+    '9000/800')
+        DIST_ARCH="parisc"
+        ;;
+    armv*)
+        if [ -z "`readelf -A /proc/self/exe | grep Tag_ABI_VFP_args`" ] ; then
+            DIST_ARCH="armel"
+        else
+            DIST_ARCH="armhf"
+        fi
+        ;;
+esac
+echo "$DIST_ARCH"
+}
+
+get_bit_size()
+{
+local DIST_BIT
+# Check if we are running on 64bit platform, seems like a workaround for now...
+DIST_BIT=`uname -m | tr [:upper:] [:lower:] | tr -d " \t\r\n"`
+case "$DIST_BIT" in
+    'amd64' | 'ia64' | 'x86_64' | 'ppc64')
+        DIST_BIT="64"
+        ;;
+#    'pa_risc' | 'pa-risc') # Are some of these 64bit? Least not all...
+#       BIT="64"
+#        ;;
+    'sun4u' | 'sparcv9') # Are all sparcs 64?
+        DIST_BIT="64"
+        ;;
+#    '9000/800')
+#       DIST_BIT="64"
+#        ;;
+    *) # In any other case default to 32
+        DIST_BIT="32"
+        ;;
+esac
+echo "$DIST_BIT"
+}
+
+get_memory_size() {
+    local detected=0
+    local DIST_OS=$(get_base_os_name)
+    if [ $DIST_OS = "macosx" ]
+    then
+       detected=$((`sysctl hw.memsize | sed s/"hw.memsize: "//`/1024/1024))
+    elif [ $DIST_OS = "freebsd" ]
+    then
+       detected=$((`sysctl hw.physmem | sed s/"hw.physmem: "//`/1024/1024))
+    elif [ $DIST_OS = "linux" ]
+    then
+       detected=$((`cat /proc/meminfo | grep MemTotal | awk '{print $2}'`/1024))
+    fi
+# Exit codes only support values between 0 and 255. So use stdout.
+    echo $detected
+}
+
+
 case $1 in
 	-p)
 		# override DISTRIB_ID
@@ -1329,6 +1470,10 @@ case $1 in
 		echo "Usage: distr_vendor [options] [args]"
 		echo "-p [SystemName] - print type of packaging system"
 		echo "-d - print distro name"
+		echo "-a - print hardware architecture"
+		echo "-b - print size of arch bit (32/64)"
+		echo "-m - print system memory size (in MB)"
+		echo "-o - print base os name"
 		echo "-v - print version of distro"
 		echo "-e - print full name of distro with version (by default)"
 		echo "-s [SystemName] - print name of distro for build system (like in the package release name)"
@@ -1339,6 +1484,18 @@ case $1 in
 		;;
 	-d)
 		echo $DISTRIB_ID
+		;;
+	-a)
+		get_arch
+		;;
+	-b)
+		get_bit_size
+		;;
+	-m)
+		get_memory_size
+		;;
+	-o)
+		get_base_os_name
 		;;
 	-v)
 		echo $DISTRIB_RELEASE
@@ -1366,16 +1523,19 @@ case $1 in
 esac
 
 }
+################# end of incorporated bin/distr_info #################
 
+
+################# incorporate bin/tools_eget #################
 internal_tools_eget()
 {
-# eget - simply shell on wget for loading directories over http
+# eget - simply shell on wget for loading directories over http (wget does not support wildcard for http)
 # Example use:
-# eget ftp://ftp.altlinux.ru/pub/security/ssl/*
+# eget http://ftp.altlinux.ru/pub/security/ssl/*
 #
 # Copyright (C) 2014-2014, 2016  Etersoft
 # Copyright (C) 2014 Daniil Mikhailov <danil@etersoft.ru>
-# Copyright (C) 2016 Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2016-2017 Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -1410,29 +1570,39 @@ fi
 # TODO:
 # -P support
 
-# If ftp protocol or have no asterisk, just download
-# TODO: use has()
-if echo "$1" | grep -q "\(^ftp://\|[^*]\)" ; then
+if [ -z "$1" ] ; then
+    echo "eget - wget wrapper" >&2
+    echo "Run with URL, like http://somesite.ru/dir/*.log" >&2
+    exit 1
+fi
+
+# If ftp protocol, just download
+if echo "$1" | grep -q "^ftp://" ; then
+    $WGET $WGET_OPTION_TARGET "$1"
+    return
+fi
+
+# drop mask part (if has /$, not changed)
+URL=$(echo "$1" | grep "/$" || dirname "$1")
+
+# If have no wildcard symbol like asterisk and no / at the end, just download
+if [ "$URL" != "$1" ] && echo "$1" | grep -qv "[*?]" ; then
     $WGET $WGET_OPTION_TARGET "$1"
     return
 fi
 
 echo "Fall to http workaround"
 
-URL=$(echo "$1" | grep "/$" || dirname "$1")
 # mask allowed only in last part of path
 MASK=$(basename "$1")
-
-get_index()
-{
-    MYTMPDIR="$(mktemp -d)"
-    INDEX=$MYTMPDIR/index
-    $WGET $URL -O $INDEX
-}
+# TODO: skip create_fake_files for full dir
+# add * if full dir
+#[ "$URL" != "$1" ] && MASK="*"
 
 print_files()
 {
-    cat $INDEX | grep -o -E 'href="([^\*/"#]+)"' | cut -d'"' -f2
+    $WGET -O- $URL | \
+        grep -o -E 'href="([^\*/"#]+)"' | cut -d'"' -f2
 }
 
 create_fake_files()
@@ -1448,18 +1618,23 @@ create_fake_files()
 download_files()
 {
     ERROR=0
+    # TODO: test fix / at the end
     for line in $DIRALLFILES/$MASK ; do
+        [ -r "$line" ] || { ERROR=1 ; break ; }
         $WGET $URL/$(basename "$line") || ERROR=1
     done
     return $ERROR
 }
 
-get_index || return
+MYTMPDIR="$(mktemp -d)"
 create_fake_files
 download_files || echo "There was some download errors" >&2
 rm -rf "$MYTMPDIR"
 }
+################# end of incorporated bin/tools_eget #################
 
+
+################# incorporate bin/tools_json #################
 internal_tools_json()
 {
 
@@ -1673,6 +1848,8 @@ fi
 
 # vi: expandtab sw=2 ts=2
 }
+################# end of incorporated bin/tools_json #################
+
 
 INITDIR=/etc/init.d
 
@@ -1771,7 +1948,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 2.1.1"
+        echo "Service manager version 2.3.0"
         echo "Running on $($DISTRVENDOR) with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012, 2013, 2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
