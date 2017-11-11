@@ -1,11 +1,11 @@
 #!/bin/sh
-# eget - simply shell on wget for loading directories over http
+# eget - simply shell on wget for loading directories over http (wget does not support wildcard for http)
 # Example use:
-# eget ftp://ftp.altlinux.ru/pub/security/ssl/*
+# eget http://ftp.altlinux.ru/pub/security/ssl/*
 #
 # Copyright (C) 2014-2014, 2016  Etersoft
 # Copyright (C) 2014 Daniil Mikhailov <danil@etersoft.ru>
-# Copyright (C) 2016 Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2016-2017 Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -40,29 +40,39 @@ fi
 # TODO:
 # -P support
 
-# If ftp protocol or have no asterisk, just download
-# TODO: use has()
-if echo "$1" | grep -q "^ftp://" || echo "$1" | grep -qv "[*?]" ; then
+if [ -z "$1" ] ; then
+    echo "eget - wget wrapper" >&2
+    echo "Run with URL, like http://somesite.ru/dir/*.log" >&2
+    exit 1
+fi
+
+# If ftp protocol, just download
+if echo "$1" | grep -q "^ftp://" ; then
+    $WGET $WGET_OPTION_TARGET "$1"
+    exit
+fi
+
+# drop mask part (if has /$, not changed)
+URL=$(echo "$1" | grep "/$" || dirname "$1")
+
+# If have no wildcard symbol like asterisk and no / at the end, just download
+if [ "$URL" != "$1" ] && echo "$1" | grep -qv "[*?]" ; then
     $WGET $WGET_OPTION_TARGET "$1"
     exit
 fi
 
 echo "Fall to http workaround"
 
-URL=$(echo "$1" | grep "/$" || dirname "$1")
 # mask allowed only in last part of path
 MASK=$(basename "$1")
-
-get_index()
-{
-    MYTMPDIR="$(mktemp -d)"
-    INDEX=$MYTMPDIR/index
-    $WGET $URL -O $INDEX
-}
+# TODO: skip create_fake_files for full dir
+# add * if full dir
+#[ "$URL" != "$1" ] && MASK="*"
 
 print_files()
 {
-    cat $INDEX | grep -o -E 'href="([^\*/"#]+)"' | cut -d'"' -f2
+    $WGET -O- $URL | \
+        grep -o -E 'href="([^\*/"#]+)"' | cut -d'"' -f2
 }
 
 create_fake_files()
@@ -73,19 +83,20 @@ create_fake_files()
     print_files | while read -r line ; do
         touch $DIRALLFILES/$(basename "$line")
     done
-    rm -f $INDEX
 }
 
 download_files()
 {
     ERROR=0
+    # TODO: test fix / at the end
     for line in $DIRALLFILES/$MASK ; do
+        [ -r "$line" ] || { ERROR=1 ; break ; }
         $WGET $URL/$(basename "$line") || ERROR=1
     done
     return $ERROR
 }
 
-get_index || { rm -rf "$MYTMPDIR" ; exit ; }
+MYTMPDIR="$(mktemp -d)"
 create_fake_files
 download_files || echo "There was some download errors" >&2
 rm -rf "$MYTMPDIR"
