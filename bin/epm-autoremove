@@ -69,12 +69,12 @@ __epm_autoremove_altrpm_lib()
 	local force=force
 
 	local flag=
-	local libexclude='^(lib|i586-lib)'
-	[ -n "$force" ] || libexclude=$libexclude'[^-]*$'
+	local libgrep='^(lib|i586-lib|bzlib|zlib)'
+	[ -n "$force" ] || libexclude=$libgrep'[^-]*$'
 
 	# https://www.altlinux.org/APT_в_ALT_Linux/Советы_по_использованию#apt-cache_list-nodeps
-	showcmd "apt-cache list-nodeps | grep -E -- \"$libexclude\""
-	pkgs=$(apt-cache list-nodeps | grep -E -- "$libexclude" \
+	showcmd "apt-cache list-nodeps | grep -E -- \"$libgrep\""
+	pkgs=$(apt-cache list-nodeps | grep -E -- "$libgrep" \
 		| sed -e "s/[-\.]32bit$//g" \
 		| grep -E -v -- "$develrule" \
 		| grep -E -v -- "-(debuginfo)$" \
@@ -85,6 +85,13 @@ __epm_autoremove_altrpm_lib()
 		info "Packages for autoremoving:"
 		echo "$pkgs"
 		return 0
+	fi
+
+	# commented, with hi probability user install i586- manually
+	# workaround against missed i586- handling in apt-cache list-nodeps
+	if epmqp i586-lib >/dev/null ; then
+		info "You can try removing i586- with follow command"
+		showcmd rpm -v -e $(epmqp i586-lib)
 	fi
 
 	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
