@@ -274,6 +274,7 @@ check_command()
     download)                 # HELPCMD: download package(s) file to the current dir
         epm_cmd=download
         ;;
+# TODO: replace with install --simulate
     simulate)                 # HELPCMD: simulate install with check requires
         epm_cmd=simulate
         ;;
@@ -323,7 +324,7 @@ check_option()
     --show-command-only)  # HELPOPT: show command only, do not any action (supports install and remove ONLY)
         show_command_only=1
         ;;
-    --quiet)              # HELPOPT: quiet mode (do not print commands before exec)
+    --quiet|--silent)     # HELPOPT: quiet mode (do not print commands before exec)
         quiet=1
         ;;
     --nodeps)             # HELPOPT: skip dependency check (during install/simulate and so on)
@@ -335,7 +336,7 @@ check_option()
     --noremove|--no-remove)  # HELPOPT: exit if any packages are to be removed during upgrade
         noremove="--no-remove"
         ;;
-    --dry-run|--simulate|--just-print|-recon--no-act) # HELPOPT: print only (autoremove/autoorphans only)
+    --dry-run|--simulate|--just-print|-recon--no-act) # HELPOPT: print only (autoremove/autoorphans/remove only)
         dryrun="--dry-run"
         ;;
     --short)              # HELPOPT: short output (just 'package' instead 'package-version-release')
