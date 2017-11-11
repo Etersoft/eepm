@@ -4525,7 +4525,7 @@ epm_remove()
 				nodeps="--test"
 				APTOPTIONS="--simulate"
 				;;
-			*
+			*)
 				return
 				;;
 		esac
@@ -4533,6 +4533,7 @@ epm_remove()
 
 	epm_remove_low $pkg_names && return
 	local STATUS=$?
+	# TODO: check if we need continue with hi level
 
 	if [ -n "$direct" ] ; then
 		return $STATUS
