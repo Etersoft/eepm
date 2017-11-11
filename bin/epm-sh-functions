@@ -367,10 +367,26 @@ assure_exists()
 	__epm_assure "$1" $package $3 || fatal "Can't assure in '$1' command from $package$textpackage package"
 }
 
+# will replaced within disabled_eget in packaged version
 eget()
 {
+	# use internal eget only if exists
+	if [ -s $SHAREDIR/tools_eget ] ; then
+		$SHAREDIR/tools_eget "$@"
+		return
+	fi
+
+	assure_exists eget
+	# run external command, not the function
+	EGET=$(which eget) || fatal "Missed command eget from installed package eget"
+	$EGET "$@"
+}
+
+# will replaced within eget() in packed version
+onefile_eget()
+{
 	assure_exists wget
-	$SHAREDIR/tools_eget "$@"
+	internal_tools_eget "$@"
 }
 
 # TODO: improve and drop!
