@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.1.10
+Version: 2.2.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -41,8 +41,8 @@ See detailed description here: http://wiki.etersoft.ru/EPM
 # install to datadir and so on
 # do not use uncommon makeinstall_std here
 %make_install install DESTDIR=%buildroot datadir=%_datadir bindir=%_bindir mandir=%_mandir version=%version-%release
-install -m 0755 packed/epm.sh %buildroot/%_datadir/%name/epm-packed.sh
-install -m 0755 packed/serv.sh %buildroot/%_datadir/%name/serv-packed.sh
+#install -m 0755 packed/epm.sh %buildroot/%_datadir/%name/epm-packed.sh
+#install -m 0755 packed/serv.sh %buildroot/%_datadir/%name/serv-packed.sh
 
 mkdir -p %buildroot%_sysconfdir/bash_completion.d/
 install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/serv
@@ -51,6 +51,11 @@ ln -s serv %buildroot%_sysconfdir/bash_completion.d/cerv
 # shebang.req.files
 chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 chmod a+x %buildroot%_datadir/%name/tools_*
+
+%if %_vendor == "alt"
+# use external eget
+rm -f %buildroot%_datadir/%name/tools_eget
+%endif
 
 %files
 %doc README TODO LICENSE
@@ -66,6 +71,11 @@ chmod a+x %buildroot%_datadir/%name/tools_*
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Sat Nov 11 2017 Vitaly Lipatov <lav@altlinux.ru> 2.2.0-alt1
+- use external eget on ALT
+- disable one file version packing
+- update internal eget to 2.0
+
 * Fri Nov 10 2017 Vitaly Lipatov <lav@altlinux.ru> 2.1.10-alt1
 - install: print low level install command if args is empty
 - epm: add wd alias for whatdepends
