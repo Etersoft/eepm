@@ -31,7 +31,9 @@ epm_whatdepends()
 # by package name
 case $PMTYPE in
 	apt-rpm)
-		CMD="apt-cache whatdepends"
+		#CMD="apt-cache whatdepends"
+		# more quiet
+		CMD="apt-cache rdepends"
 		;;
 	apt-dpkg|aptitude-dpkg)
 		CMD="apt-cache rdepends"
