@@ -178,11 +178,11 @@ epm_query_file()
     [ -n "$pkg_filenames" ] || fatal "Run query without file names"
 
 
-    load_helper epm-search_file
+    #load_helper epm-search_file
 
     for pkg in $pkg_filenames ; do
         __do_query_real_file "$pkg"
-        __do_query "$FULLFILEPATH" || pkg_filenames="$FULLFILEPATH" epm_search_file
+        __do_query "$FULLFILEPATH" || info "Try epm sf for search file in all packages in repository" #|| pkg_filenames="$FULLFILEPATH" epm_search_file
     done
 
 }
