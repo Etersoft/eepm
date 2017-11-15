@@ -49,7 +49,7 @@ __try_fix_apt_source_list()
 __fix_apt_sources_list()
 {
 	# for beauty spaces
-	local SUBST_ALT_RULE='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ](Sisyphus|p8[/ ]branch|p7[/ ]branch|t7[/ ]branch|c7[/ ]branch|p6[/ ]branch|t6[/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch) !\1 \2/\3/\4 !gi'
+	local SUBST_ALT_RULE='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ]*(Sisyphus|p8[/ ]branch|p7[/ ]branch|t7[/ ]branch|c7[/ ]branch|p6[/ ]branch|t6[/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch) !\1 \2/\3/\4 !gi'
 	local i
 	assure_root
 	for i in "$@" ; do
