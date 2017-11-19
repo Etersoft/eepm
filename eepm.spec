@@ -1,6 +1,6 @@
 Name: eepm
-Version: 2.3.0
-Release: alt2
+Version: 2.3.1
+Release: alt1
 
 Summary: Etersoft EPM package manager
 
@@ -71,6 +71,13 @@ rm -f %buildroot%_datadir/%name/tools_eget
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Sun Nov 19 2017 Vitaly Lipatov <lav@altlinux.ru> 2.3.1-alt1
+- epm whatdepends: use rdepends
+- repofix: fix signing when we have /
+- query_file: only inform about epm sf using
+- allow ei/ik install any package(s) from Korinf
+- ei/ik: add support for --list [mask], install via eget
+
 * Sun Nov 12 2017 Vitaly Lipatov <lav@altlinux.ru> 2.3.0-alt2
 - epm: rewrite release_upgrade for ALT
 - autoremove: small improvement
