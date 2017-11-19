@@ -23,12 +23,31 @@
 
 WGET="wget"
 
+# TODO: passthrou all wget options
 if [ "$1" = "-q" ] ; then
     WGET="wget -q"
     shift
 fi
 
-# TODO:
+if [ "$1" = "--list" ] ; then
+    LISTONLY="$1"
+    shift
+fi
+
+fatal()
+{
+    echo "$*" >&2
+    exit 1
+}
+
+# check man glob
+filter_glob()
+{
+	# translate glob to regexp
+	grep "^$(echo "$1" | sed -e "s|\*|.*|g" -e "s|\?|.|g")$"
+}
+
+
 # download to this file
 WGET_OPTION_TARGET=
 if [ "$1" = "-O" ] ; then
@@ -42,61 +61,54 @@ fi
 
 if [ -z "$1" ] ; then
     echo "eget - wget wrapper" >&2
-    echo "Run with URL, like http://somesite.ru/dir/*.log" >&2
-    exit 1
+    fatal "Run with URL, like http://somesite.ru/dir/*.log"
+fi
+
+# do not support /
+if echo "$1" | grep -q "/$" ; then
+    fatal "Use http://example.com/e/* to download all files in dir"
 fi
 
 # If ftp protocol, just download
 if echo "$1" | grep -q "^ftp://" ; then
+    [ -n "$LISTONLY" ] && fatal "Error: list files for ftp:// do not supported yet"
     $WGET $WGET_OPTION_TARGET "$1"
     exit
 fi
 
-# drop mask part (if has /$, not changed)
-URL=$(echo "$1" | grep "/$" || dirname "$1")
+# drop mask part
+URL="$(dirname "$1")/"
 
-# If have no wildcard symbol like asterisk and no / at the end, just download
-if [ "$URL" != "$1" ] && echo "$1" | grep -qv "[*?]" ; then
-    $WGET $WGET_OPTION_TARGET "$1"
-    exit
+if echo "$URL" | grep -q "[*?]" ; then
+    fatal "Error: there are globbing symbols (*?) in $URL"
 fi
-
-echo "Fall to http workaround"
 
 # mask allowed only in last part of path
 MASK=$(basename "$1")
-# TODO: skip create_fake_files for full dir
-# add * if full dir
-#[ "$URL" != "$1" ] && MASK="*"
 
-print_files()
+# If have no wildcard symbol like asterisk, just download
+if echo "$MASK" | grep -qv "[*?]" ; then
+    $WGET $WGET_OPTION_TARGET "$1"
+    exit
+fi
+
+get_urls()
 {
     $WGET -O- $URL | \
         grep -o -E 'href="([^\*/"#]+)"' | cut -d'"' -f2
 }
 
-create_fake_files()
-{
-    DIRALLFILES="$MYTMPDIR/files/"
-    mkdir -p "$DIRALLFILES"
-
-    print_files | while read -r line ; do
-        touch $DIRALLFILES/$(basename "$line")
+if [ -n "$LISTONLY" ] ; then
+    WGET="$WGET -q"
+    for fn in $(get_urls | filter_glob "$MASK") ; do
+        echo "$(basename "$fn")"
     done
-}
+    exit
+fi
 
-download_files()
-{
-    ERROR=0
-    # TODO: test fix / at the end
-    for line in $DIRALLFILES/$MASK ; do
-        [ -r "$line" ] || { ERROR=1 ; break ; }
-        $WGET $URL/$(basename "$line") || ERROR=1
-    done
-    return $ERROR
-}
+ERROR=0
+for fn in $(get_urls | filter_glob "$MASK") ; do
+    $WGET "$URL/$(basename "$fn")" || ERROR=1
+done
+exit $ERROR
 
-MYTMPDIR="$(mktemp -d)"
-create_fake_files
-download_files || echo "There was some download errors" >&2
-rm -rf "$MYTMPDIR"
