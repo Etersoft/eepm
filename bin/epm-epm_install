@@ -20,16 +20,27 @@
 
 load_helper epm-install
 
-__epm_korinf_install(){
-    local PACKAGE="$1"
+__epm_korinf_site() {
     local archprefix=""
     [ "$($DISTRVENDOR -b)" = "64" ] && archprefix="x86_64/"
-    local etersoft_updates_site="http://updates.etersoft.ru/pub/Korinf/$archprefix$($DISTRVENDOR -e)"
-    # FIXME: some way to get latest package
-    assure_exists wget
-    # TODO: use eget or file with last versions?
-    local download_link=$etersoft_updates_site/$(wget -qO- $etersoft_updates_site/ | grep -m1 -Eo "$PACKAGE[^\"]+\.$($DISTRVENDOR -p)" | tail -n1) #"
+    local aftername="-"
+    [ "$($DISTRVENDOR -p)" = "deb" ] && aftername="_"
+    echo "http://updates.etersoft.ru/pub/Korinf/$archprefix$($DISTRVENDOR -e)"
+}
 
+__epm_korinf_list() {
+    [ "$1" = "--list" ] && shift
+    local MASK="$1"
+    showcmd eget --list "$(__epm_korinf_site)/$MASK*.$($DISTRVENDOR -p)"
+    eget --list "$(__epm_korinf_site)/$MASK*.$($DISTRVENDOR -p)" | sort
+}
+
+
+__epm_korinf_install(){
+    local PACKAGE="$1"
+    # FIXME: some way to get latest package
+    local download_link=$(__epm_korinf_site)/$(__epm_korinf_list $PACKAGE$aftername | tail -n1)
+    #info "Install $download_link ..."
     pkg_names='' pkg_files='' pkg_urls="$download_link" epm_install
 }
 
@@ -38,6 +49,14 @@ epm_epm_install(){
     local pkglist="$pkg_filenames"
     # install epm by default
     [ -n "$pkglist" ] || pkglist="eepm"
+
+    case "$pkglist" in
+        --list*)
+            __epm_korinf_list $pkglist
+            return
+            ;;
+    esac
+
     for i in $pkglist ; do
         __epm_korinf_install $i
     done
