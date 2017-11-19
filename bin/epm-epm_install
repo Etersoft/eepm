@@ -39,7 +39,9 @@ __epm_korinf_list() {
 __epm_korinf_install(){
     local PACKAGE="$1"
     # FIXME: some way to get latest package
-    local download_link=$(__epm_korinf_site)/$(__epm_korinf_list $PACKAGE$aftername | tail -n1)
+    local fn="$(__epm_korinf_list $PACKAGE$aftername | tail -n1)"
+    [ -n "$fn" ] || fatal "Can't find package file for $PACKAGE"
+    local download_link=$(__epm_korinf_site)/$fn
     #info "Install $download_link ..."
     pkg_names='' pkg_files='' pkg_urls="$download_link" epm_install
 }
