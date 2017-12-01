@@ -173,6 +173,9 @@ epm_remove_nonint()
 		yum-rpm)
 			sudocmd yum -y remove $@
 			return ;;
+		dnf-rpm)
+			sudocmd dnf remove --assumeyes $@
+			return ;;
 		zypper-rpm)
 			sudocmd zypper --non-interactive remove --clean-deps $@
 			return ;;
