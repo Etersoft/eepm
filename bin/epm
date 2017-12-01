@@ -349,7 +349,7 @@ check_option()
         # TODO: how to read arg?
         sort="$1"
         ;;
-    --auto)               # HELPOPT: non interactive mode
+    --auto|--non-interactive)  # HELPOPT: non interactive mode
         non_interactive=1
         ;;
     *)
