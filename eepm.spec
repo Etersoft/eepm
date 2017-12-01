@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.3.1
+Version: 2.3.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -71,6 +71,13 @@ rm -f %buildroot%_datadir/%name/tools_eget
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Fri Dec 01 2017 Vitaly Lipatov <lav@altlinux.ru> 2.3.2-alt1
+- fix --auto remove for dnf
+- release_upgrade: do not update rpm apt when downgraded from Sisyphus
+- release_upgrade: fix downgrade to p8
+- release_upgrade: ask confirm before upgrade
+- epm: add --non-interactive alias for --auto
+
 * Sun Nov 19 2017 Vitaly Lipatov <lav@altlinux.ru> 2.3.1-alt1
 - epm whatdepends: use rdepends
 - repofix: fix signing when we have /
