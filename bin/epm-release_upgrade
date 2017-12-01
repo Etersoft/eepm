@@ -283,12 +283,15 @@ epm_release_upgrade()
 		docmd epm install dnf
 		sudocmd dnf clean all
 		assure_exists dnf-plugin-system-upgrade
-		sudocmd dnf system-upgrade
+		sudocmd dnf upgrade --refresh
 		local RELEASEVER="$pkg_filenames"
 		[ -n "$RELEASEVER" ] || RELEASEVER=$(($DISTRVERSION + 1))
 		#[ -n "$RELEASEVER" ] || fatal "Run me with new version"
-		info "Upgrate to $DISTRNAME/$RELEASEVER"
+		info "Upgrade to $DISTRNAME/$RELEASEVER"
 		sudocmd dnf system-upgrade download --refresh --releasever=$RELEASEVER
+		# TODO: from docs:
+		# dnf system-upgrade reboot
+		# FIXME: download all packages again
 		sudocmd dnf distro-sync --releasever=$RELEASEVER
 		info "Run epm autoorphans to remove orphaned packages"
 		;;
