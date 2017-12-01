@@ -194,7 +194,7 @@ __update_alt_to_next_distro()
 			TO="p8"
 			info "Downgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install "$(get_fix_release_pkg "$FROM")" || fatal
-			__replace_alt_version_in_repo "$FROM/" "$FROM/branch/"
+			__replace_alt_version_in_repo "$FROM/" "$TO/branch/"
 			__replace_text_in_alt_repo "/^ *#/! s!\[alt\]![$TO]!g"
 			__update_to_the_distro $TO
 			docmd epm downgrade || fatal
