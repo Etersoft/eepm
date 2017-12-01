@@ -97,8 +97,6 @@ get_fix_release_pkg()
 
 	local TO="$1"
 
-	echo "rpm apt"
-
 	if [ "$TO" = "Sisyphus" ] ; then
 		TO="sisyphus"
 		echo "apt-conf-$TO"
@@ -138,7 +136,7 @@ __update_to_the_distro()
 	case "$TO" in
 		p7)
 			docmd epm update || fatal
-			docmd epm install "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
+			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
 			__alt_repofix
 			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![$TO]!g"
 			docmd epm update || fatal
@@ -146,7 +144,7 @@ __update_to_the_distro()
 			;;
 		p8)
 			docmd epm update || fatal
-			docmd epm install "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
+			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
 			__alt_repofix
 			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![$TO]!g"
 			docmd epm update || fatal
@@ -158,7 +156,7 @@ __update_to_the_distro()
 			;;
 		Sisyphus)
 			docmd epm update || fatal
-			docmd epm install librpm7 librpm "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run again"
+			docmd epm install librpm7 librpm rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run again"
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
 			;;
 		*)
@@ -176,7 +174,7 @@ __update_alt_to_next_distro()
 		"p6"|"p6 p7"|"t6 p7"|"c6 c7")
 			TO="p7"
 			info "Upgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install "$(get_fix_release_pkg "$FROM")" || fatal
+			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__replace_alt_version_in_repo "$FROM/branch/" "$TO/branch/"
 			__update_to_the_distro "$TO"
 			docmd epm update-kernel
@@ -186,7 +184,7 @@ __update_alt_to_next_distro()
 		"p7"|"p7 p8"|"t7 p8"|"c7 c8"|"p8 p8")
 			TO="p8"
 			info "Upgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install "$(get_fix_release_pkg "$FROM")" || fatal
+			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__replace_alt_version_in_repo $FROM/branch/ $TO/branch/
 			__update_to_the_distro $TO
 			docmd epm update-kernel || fatal
@@ -205,7 +203,7 @@ __update_alt_to_next_distro()
 		"p8 Sisyphus"|"Sisyphus Sisyphus")
 			TO="Sisyphus"
 			info "Upgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install "$(get_fix_release_pkg "$FROM")" || fatal
+			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			docmd epm upgrade || fatal
 			__replace_alt_version_in_repo "$FROM/branch/" "$TO/"
 			__alt_repofix
