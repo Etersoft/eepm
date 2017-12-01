@@ -19,6 +19,15 @@
 
 load_helper epm-query
 
+confirm_info()
+{
+	info "$*"
+	if [ -z "$non_interactive" ] ; then
+		confirm "Are you sure? [y/N]" || fatal "Exiting"
+	fi
+
+}
+
 __replace_text_in_alt_repo()
 {
 	local i
@@ -66,7 +75,6 @@ __replace_alt_version_in_repo()
 	docmd apt-repo list | sed -e "s|\($1\)|{\1}->{$2}|g" | grep -E --color -- "$1"
 	# ask and replace only we will have changes
 	if a='' apt-repo list | grep -E -q -- "$1" ; then
-		confirm "Are these correct changes? [y/N]" || fatal "Exiting"
 		__replace_text_in_alt_repo "/^ *#/! s!$1!$2!g"
 	fi
 	docmd apt-repo list
@@ -173,7 +181,7 @@ __update_alt_to_next_distro()
  	case "$*" in
 		"p6"|"p6 p7"|"t6 p7"|"c6 c7")
 			TO="p7"
-			info "Upgrade $DISTRNAME from $FROM to $TO ..."
+			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__replace_alt_version_in_repo "$FROM/branch/" "$TO/branch/"
 			__update_to_the_distro "$TO"
@@ -183,7 +191,7 @@ __update_alt_to_next_distro()
 			;;
 		"p7"|"p7 p8"|"t7 p8"|"c7 c8"|"p8 p8")
 			TO="p8"
-			info "Upgrade $DISTRNAME from $FROM to $TO ..."
+			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__replace_alt_version_in_repo $FROM/branch/ $TO/branch/
 			__update_to_the_distro $TO
@@ -192,7 +200,7 @@ __update_alt_to_next_distro()
 			;;
 		"Sisyphus p8")
 			TO="p8"
-			info "Downgrade $DISTRNAME from $FROM to $TO ..."
+			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install "$(get_fix_release_pkg "$FROM")" || fatal
 			__replace_alt_version_in_repo "$FROM/" "$TO/branch/"
 			__replace_text_in_alt_repo "/^ *#/! s!\[alt\]![$TO]!g"
@@ -202,7 +210,7 @@ __update_alt_to_next_distro()
 			;;
 		"p8 Sisyphus"|"Sisyphus Sisyphus")
 			TO="Sisyphus"
-			info "Upgrade $DISTRNAME from $FROM to $TO ..."
+			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			docmd epm upgrade || fatal
 			__replace_alt_version_in_repo "$FROM/branch/" "$TO/"
@@ -235,7 +243,7 @@ epm_release_upgrade()
 
 	case $DISTRNAME in
 	ALTLinux)
-		docmd epm update
+		docmd epm update || fatal
 
 		# try to detect current release by repo
 		if [ "$DISTRVERSION" = "Sisyphus" ] || [ -z "$DISTRVERSION" ] ; then
@@ -287,7 +295,7 @@ epm_release_upgrade()
 		local RELEASEVER="$pkg_filenames"
 		[ -n "$RELEASEVER" ] || RELEASEVER=$(($DISTRVERSION + 1))
 		#[ -n "$RELEASEVER" ] || fatal "Run me with new version"
-		info "Upgrade to $DISTRNAME/$RELEASEVER"
+		confirm_info "Upgrade to $DISTRNAME/$RELEASEVER"
 		sudocmd dnf system-upgrade download --refresh --releasever=$RELEASEVER
 		# TODO: from docs:
 		# dnf system-upgrade reboot
