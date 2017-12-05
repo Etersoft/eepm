@@ -296,7 +296,7 @@ __epm_check_if_try_install_deb()
 		showcmd_store_output alien -r -k --scripts "$pkg" || fatal
 		local RPMCONVERTED=$(grep "rpm generated" $RC_STDOUT | sed -e "s| generated||g")
 		clean_store_output
-		epm install $RPMCONVERTED
+		docmd epm install $force $nodeps $RPMCONVERTED
 	done
 	rm -f $TDIR/*
 	rmdir $TDIR/
@@ -326,7 +326,7 @@ __epm_check_if_try_install_rpm()
 		showcmd_store_output fakeroot alien -d -k --scripts "$pkg"
 		local DEBCONVERTED=$(grep "deb generated" $RC_STDOUT | sed -e "s| generated||g")
 		clean_store_output
-		epm install $DEBCONVERTED
+		docmd epm install $force $nodeps $DEBCONVERTED
 	done
 	rm -f $TDIR/*
 	rmdir $TDIR/
