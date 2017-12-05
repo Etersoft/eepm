@@ -22,7 +22,7 @@ load_helper epm-install
 
 __epm_korinf_site() {
     local archprefix=""
-    [ "$($DISTRVENDOR -b)" = "64" ] && archprefix="x86_64/"
+    [ "$($DISTRVENDOR -a)" = "x86_64" ] && archprefix="x86_64/"
     local aftername="-"
     [ "$($DISTRVENDOR -p)" = "deb" ] && aftername="_"
     echo "http://updates.etersoft.ru/pub/Korinf/$archprefix$($DISTRVENDOR -e)"
