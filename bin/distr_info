@@ -360,8 +360,11 @@ local DIST_ARCH
 # Resolve the architecture
 DIST_ARCH=`uname -m | tr [:upper:] [:lower:] | tr -d " \t\r\n"`
 case "$DIST_ARCH" in
-    'amd64' | 'ia32' | 'i386' | 'i486' | 'i586' | 'i686' | 'x86_64')
+    'ia32' | 'i386' | 'i486' | 'i586' | 'i686')
         DIST_ARCH="x86"
+        ;;
+    'amd64' | 'x86_64')
+        DIST_ARCH="x86_64"
         ;;
     'ia64' | 'ia-64')
         DIST_ARCH="ia64"
@@ -490,7 +493,7 @@ case $1 in
 		exit 0
 		;;
 	-V)
-		echo "20161212"
+		echo "20171010"
 		exit 0
 		;;
 	*)
