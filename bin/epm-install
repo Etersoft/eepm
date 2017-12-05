@@ -285,6 +285,9 @@ __epm_check_if_try_install_deb()
 	[ -n "$debpkgs" ] || return 1
 
 	assure_exists alien
+	assure_exists dpkg
+	# TODO: Для установки требует: /usr/share/debconf/confmodule но пакет не может быть установлен
+	# assure_exists debconf
 
 	local TDIR=$(mktemp -d)
 	cd $TDIR || fatal
@@ -315,6 +318,7 @@ __epm_check_if_try_install_rpm()
 
 	assure_exists alien
 	assure_exists fakeroot
+	assure_exists rpm
 
 	local TDIR=$(mktemp -d)
 	cd $TDIR || fatal
@@ -360,7 +364,9 @@ epm_install_files()
         apt-rpm)
             __epm_check_if_try_install_deb $@ && return
 
-            # do not use low-level for install by file path
+            # TODO: add --repack support, will force repack rpm
+
+            # do not using low-level for install by file path (FIXME: reasons?)
             if ! is_dirpath "$@" || [ "$(get_package_type "$@")" = "rpm" ] ; then
                 sudocmd rpm -Uvh $force $nodeps $@ && return
                 local RES=$?
