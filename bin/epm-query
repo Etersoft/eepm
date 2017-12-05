@@ -42,7 +42,10 @@ exp_with_arch_suffix()
 	# TODO: use estrlist or some function to do it
 	local str
 	while read -r str ; do
-		echo "$str" | grep "$suffix$" && continue
+		# do not change if some suffix already exists
+		echo "$str" | grep "(x86-32)$" && continue
+		echo "$str" | grep "\.x86_64$" && continue
+		echo "$str" | grep "\.i[56]86$" && continue
 		echo "$str$suffix"
 	done
 }
