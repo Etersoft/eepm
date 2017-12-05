@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.3.2
+Version: 2.3.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -71,6 +71,12 @@ rm -f %buildroot%_datadir/%name/tools_eget
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Tue Dec 05 2017 Vitaly Lipatov <lav@altlinux.ru> 2.3.3-alt1
+- add repo alias for repolist
+- epm-install: add options support during cross install
+- distr_info: distinct between x86 and x86_64 for -a
+- epm install: expand package names with arch before isinstalled checking (eterbug #12332)
+
 * Fri Dec 01 2017 Vitaly Lipatov <lav@altlinux.ru> 2.3.2-alt1
 - fix --auto remove for dnf
 - release_upgrade: do not update rpm apt when downgraded from Sisyphus
