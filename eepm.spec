@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.3.3
+Version: 2.3.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -71,6 +71,9 @@ rm -f %buildroot%_datadir/%name/tools_eget
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Wed Dec 06 2017 Vitaly Lipatov <lav@altlinux.ru> 2.3.4-alt1
+- apply prefix only if there are no other prefix
+
 * Tue Dec 05 2017 Vitaly Lipatov <lav@altlinux.ru> 2.3.3-alt1
 - add repo alias for repolist
 - epm-install: add options support during cross install
