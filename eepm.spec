@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.3.4
+Version: 2.3.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -71,6 +71,14 @@ rm -f %buildroot%_datadir/%name/tools_eget
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Thu Dec 07 2017 Vitaly Lipatov <lav@altlinux.ru> 2.3.5-alt1
+- serv-status: mask stderr in is_service_running
+- epm-query: fix list package by package
+- serv list-all: cleanup output
+- serv list: improve speed with run sudo once
+- serv status: improve running state detection
+- query: replace (x86-32) with .i686 for rpm/dnf
+
 * Wed Dec 06 2017 Vitaly Lipatov <lav@altlinux.ru> 2.3.4-alt1
 - apply prefix only if there are no other prefix
 
