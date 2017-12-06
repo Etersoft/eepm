@@ -43,7 +43,7 @@ exp_with_arch_suffix()
 	local pkg
 	for pkg in $(cat) ; do
 		# do not change if some suffix already exists
-		echo "$pkg" | grep "(x86-32)$" && continue
+		echo "$pkg" | grep -q "(x86-32)$" && echo "$pkg" | sed -e "s|(x86-32)$|.i686|" && continue
 		echo "$pkg" | grep "\.x86_64$" && continue
 		echo "$pkg" | grep "\.i[56]86$" && continue
 		echo "$pkg$suffix"
