@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012, 2013, 2016  Etersoft
-# Copyright (C) 2012, 2013, 2016  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2013, 2016, 2017  Etersoft
+# Copyright (C) 2012, 2013, 2016, 2017  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -21,14 +21,18 @@
 is_service_running()
 {
 	local SERVICE="$1"
-
+	local OUTPUT
+	# TODO: real status can be checked only with grep output
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)
 			if is_anyservice $1 ; then
-				$SUDO anyservice $1 status >/dev/null 2>/dev/null
-				return
+				OUTPUT="$($SUDO anyservice $1 status 2>/dev/null)" || return 1
+				echo "$OUTPUT" | grep -q "is stopped" && return 1
+				return 0
 			fi
-			$SUDO service $1 status >/dev/null 2>/dev/null
+			OUTPUT="$($SUDO service $1 status 2>/dev/null)" || return 1
+			echo "$OUTPUT" | grep -q "is stopped" && return 1
+			return 0
 			;;
 		service-initd|service-update)
 			$SUDO $INITDIR/$1 status >/dev/null 2>/dev/null
