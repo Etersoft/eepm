@@ -25,19 +25,19 @@ is_service_running()
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)
 			if is_anyservice $1 ; then
-				$SUDO anyservice $1 status >/dev/null
+				$SUDO anyservice $1 status >/dev/null 2>/dev/null
 				return
 			fi
-			$SUDO service $1 status >/dev/null
+			$SUDO service $1 status >/dev/null 2>/dev/null
 			;;
 		service-initd|service-update)
-			$SUDO $INITDIR/$1 status >/dev/null
+			$SUDO $INITDIR/$1 status >/dev/null 2>/dev/null
 			;;
 		systemd)
-			$SUDO systemctl status $1 >/dev/null
+			$SUDO systemctl status $1 >/dev/null 2>/dev/null
 			;;
 		runit)
-			$SUDO sv status "$SERVICE" >/dev/null
+			$SUDO sv status "$SERVICE" >/dev/null 2>/dev/null
 			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
