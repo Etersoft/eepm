@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.3.5
+Version: 2.3.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -71,6 +71,10 @@ rm -f %buildroot%_datadir/%name/tools_eget
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Sat Dec 09 2017 Vitaly Lipatov <lav@altlinux.ru> 2.3.6-alt1
+- drop arch suffix adding (we can't distinct between arch/noarch)
+- improve --skip-installed on x86_64 Fedora based: check for noarch too
+
 * Thu Dec 07 2017 Vitaly Lipatov <lav@altlinux.ru> 2.3.5-alt1
 - serv-status: mask stderr in is_service_running
 - epm-query: fix list package by package
