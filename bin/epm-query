@@ -20,6 +20,18 @@
 load_helper epm-packages
 load_helper epm-print
 
+# pkg suffix
+__print_with_arch_suffix()
+{
+	local pkg="$1"
+	local suffix="$2"
+	# do not change if some suffix already exists
+	echo "$pkg" | grep -q "(x86-32)$" && echo "$pkg" | sed -e "s|(x86-32)$|.i686|" && return
+	echo "$pkg" | grep "\.x86_64$" && return
+	echo "$pkg" | grep "\.noarch$" && return
+	echo "$pkg" | grep "\.i[56]86$" && return
+	echo "$pkg$suffix"
+}
 
 # add suffix .x86_64 if we have 64 arch
 exp_with_arch_suffix()
@@ -42,11 +54,7 @@ exp_with_arch_suffix()
 	# TODO: use estrlist or some function to do it
 	local pkg
 	for pkg in $(cat) ; do
-		# do not change if some suffix already exists
-		echo "$pkg" | grep -q "(x86-32)$" && echo "$pkg" | sed -e "s|(x86-32)$|.i686|" && continue
-		echo "$pkg" | grep "\.x86_64$" && continue
-		echo "$pkg" | grep "\.i[56]86$" && continue
-		echo "$pkg$suffix"
+		__print_with_arch_suffix $pkg $suffix
 	done
 }
 

@@ -23,15 +23,32 @@ load_helper epm-assure
 load_helper epm-check_updated_repo
 load_helper epm-sh-warmup
 
+__fast_hack_for_filter_out_installed_rpm()
+{
+	LANG=C LC_ALL=C xargs -n1 rpm -q 2>&1 | grep 'is not installed' |
+		sed -e 's|^.*package \(.*\) is not installed.*|\1|g'
+}
+
 # TODO: use when run install with epm --skip-installed install
 filter_out_installed_packages()
 {
 	[ -z "$skip_installed" ] && cat && return
 
-	case $PKGFORMAT in
-		"rpm")
-			LANG=C LC_ALL=C xargs -n1 rpm -q 2>&1 | grep 'is not installed' |
-				sed -e 's|^.*package \(.*\) is not installed.*|\1|g'
+	case $PMTYPE in
+		yum-rpm|dnf-rpm)
+			if [ "$($DISTRVENDOR -a)" = "x86_64" ] ; then
+				# shellcheck disable=SC2013
+				for i in $(cat) ; do
+					is_installed "$(__print_with_arch_suffix $i .x86_64)" && continue
+					is_installed "$(__print_with_arch_suffix $i .noarch)" && continue
+					is_installed $i || echo $i
+				done
+			else
+				__fast_hack_for_filter_out_installed_rpm
+			fi
+			;;
+		*-rpm)
+			__fast_hack_for_filter_out_installed_rpm
 			;;
 		# dpkg -l lists some non ii status (un, etc)
 		#"deb")
