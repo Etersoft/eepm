@@ -256,7 +256,8 @@ epm_remove()
 	pkg_files=''
 
 	[ -n "$pkg_names" ] || fatal "Remove: missing package(s) name."
-	pkg_names="$(echo $pkg_names | exp_with_arch_suffix)"
+	# TODO: remove only according current arch (if x86_64)
+	#pkg_names="$(echo $pkg_names | exp_with_arch_suffix)"
 
 	if [ -n "$dryrun" ] ; then
 		info "Packages for removing:"
