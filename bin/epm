@@ -74,13 +74,15 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-
+EPMVERSION=@VERSION@
 verbose=
 quiet=
 nodeps=
 noremove=
 dryrun=
 force=
+repack=
+scripts=
 short=
 direct=
 sort=
@@ -344,6 +346,12 @@ check_option()
         ;;
     --direct)              # HELPOPT: direct install package file from ftp (not via hilevel repository manager)
         direct="--direct"
+        ;;
+    --repack)              # HELPOPT: repack rpm package(s) before install
+        repack="--repack"
+        ;;
+    --scripts)              # HELPOPT: include scripts in repacked rpm package(s) (see --repack)
+        scripts="--scripts"
         ;;
     --sort)               # HELPOPT: sort output, f.i. --sort=size (supported only for packages command)
         # TODO: how to read arg?
