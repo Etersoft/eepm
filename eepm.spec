@@ -44,6 +44,16 @@ See detailed description here: http://wiki.etersoft.ru/EPM
 #install -m 0755 packed/epm.sh %buildroot/%_datadir/%name/epm-packed.sh
 #install -m 0755 packed/serv.sh %buildroot/%_datadir/%name/serv-packed.sh
 
+mkdir -p %buildroot%_sysconfdir/eepm/
+cat <<EOF >%buildroot%_sysconfdir/eepm/eepm.conf
+# EEPM config (will insource in epm shell script)
+# Not known variable yet
+
+#verbose=--verbose
+#quiet==--quiet
+EOF
+
+mkdir -p %buildroot%_sysconfdir/eepm/repack.d/
 mkdir -p %buildroot%_sysconfdir/bash_completion.d/
 install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/serv
 ln -s serv %buildroot%_sysconfdir/bash_completion.d/cerv
@@ -59,6 +69,8 @@ rm -f %buildroot%_datadir/%name/tools_eget
 
 %files
 %doc README TODO LICENSE
+%dir %_sysconfdir/eepm/
+%(config, noreplace) %_sysconfdir/eepm/eepm.conf
 %_bindir/epm*
 %_bindir/eepm
 %_bindir/upm

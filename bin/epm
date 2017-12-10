@@ -96,6 +96,10 @@ pkg_names=
 pkg_urls=
 quoted_args=
 
+# load system wide config
+[ -f /etc/eepm/eepm.conf ] && . /etc/eepm/eepm.conf
+
+
 case $PROGNAME in
     epmi)
         epm_cmd=install
