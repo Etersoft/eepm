@@ -411,9 +411,9 @@ __epm_repack_rpm()
         __apply_fix_code $pkgname $tmpbuilddir/$subdir $spec
         showcmd fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir --define='_allow_root_build 1' -bb $spec
         if [ -n "$verbose" ] ; then
-            fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir --define='_allow_root_build 1' -bb $spec || fatal
+            a='' fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir --define='_allow_root_build 1' -bb $spec || fatal
         else
-            fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir --define='_allow_root_build 1' -bb $spec >/dev/null || fatal
+            a='' fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir --define='_allow_root_build 1' -bb $spec >/dev/null || fatal
         fi
         local repacked_rpm="$(realpath $tmpbuilddir/../*.rpm)"
         if [ -s "$repacked_rpm" ] ; then

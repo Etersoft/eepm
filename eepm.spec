@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.3.6
+Version: 2.4.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -74,8 +74,8 @@ rm -f %buildroot%_datadir/%name/tools_eget
 %doc README TODO LICENSE
 %dir %_sysconfdir/eepm/
 %dir %_sysconfdir/eepm/repack.d/
-%(config, noreplace) %_sysconfdir/eepm/eepm.conf
-%(config, noreplace) %_sysconfdir/eepm/repack.d/*.sh
+%config(noreplace) %_sysconfdir/eepm/eepm.conf
+%config(noreplace) %_sysconfdir/eepm/repack.d/*.sh
 %_bindir/epm*
 %_bindir/eepm
 %_bindir/upm
@@ -88,6 +88,14 @@ rm -f %buildroot%_datadir/%name/tools_eget
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Sun Dec 10 2017 Vitaly Lipatov <lav@altlinux.ru> 2.4.0-alt1
+- epm: add /etc/eepm/eepm.conf support
+- epm install: add --repack support (binary rpm repacking before install)
+- add --scripts support to repack foreign packages with alien
+- epm-install: add /etc/eepm/repack.d/PKGNAME.sh support during repacking
+- add mssql-server, skypeforlinux rules
+- revert "epm whatdepends: use rdepends": miss many dependencies
+
 * Sat Dec 09 2017 Vitaly Lipatov <lav@altlinux.ru> 2.3.6-alt1
 - drop arch suffix adding (we can't distinct between arch/noarch)
 - improve --skip-installed on x86_64 Fedora based: check for noarch too
