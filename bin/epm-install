@@ -369,6 +369,14 @@ __fix_spec()
     #" hack for highlight
 }
 
+__apply_fix_code()
+{
+    local repackcode="/etc/eepm/repack.d/$1.sh"
+    [ -x "$repackcode" ] || return
+    shift
+    docmd $repackcode "$1" "$2" || warning "There was errors with $repackcode script"
+}
+
 # will fill repacked_rpms var
 __epm_repack_rpm()
 {
@@ -399,6 +407,8 @@ __epm_repack_rpm()
         mv $spec $tmpbuilddir || fatal
         spec="$tmpbuilddir/$(basename "$spec")"
         __fix_spec $tmpbuilddir/$subdir $spec
+        local pkgname="$(grep "^Name: " $spec | sed -e "s|Name: ||g" | head -n1)"
+        __apply_fix_code $pkgname $tmpbuilddir/$subdir $spec
         showcmd fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir --define='_allow_root_build 1' -bb $spec
         if [ -n "$verbose" ] ; then
             fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir --define='_allow_root_build 1' -bb $spec || fatal

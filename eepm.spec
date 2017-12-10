@@ -54,6 +54,9 @@ cat <<EOF >%buildroot%_sysconfdir/eepm/eepm.conf
 EOF
 
 mkdir -p %buildroot%_sysconfdir/eepm/repack.d/
+cp repack.d/*.sh %buildroot%_sysconfdir/eepm/repack.d/
+chmod 0755 %buildroot%_sysconfdir/eepm/repack.d/*.sh
+
 mkdir -p %buildroot%_sysconfdir/bash_completion.d/
 install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/serv
 ln -s serv %buildroot%_sysconfdir/bash_completion.d/cerv
@@ -70,7 +73,9 @@ rm -f %buildroot%_datadir/%name/tools_eget
 %files
 %doc README TODO LICENSE
 %dir %_sysconfdir/eepm/
+%dir %_sysconfdir/eepm/repack.d/
 %(config, noreplace) %_sysconfdir/eepm/eepm.conf
+%(config, noreplace) %_sysconfdir/eepm/repack.d/*.sh
 %_bindir/epm*
 %_bindir/eepm
 %_bindir/upm
