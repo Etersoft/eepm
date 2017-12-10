@@ -310,7 +310,7 @@ __epm_check_if_try_install_deb()
 	cd $TDIR || fatal
 	for pkg in $debpkgs ; do
 		# TODO: fakeroot for non ALT?
-		showcmd_store_output alien -r -k --scripts "$pkg" || fatal
+		showcmd_store_output alien -r -k $scripts "$pkg" || fatal
 		local RPMCONVERTED=$(grep "rpm generated" $RC_STDOUT | sed -e "s| generated||g")
 		clean_store_output
 		docmd epm install $force $nodeps $RPMCONVERTED
@@ -340,7 +340,7 @@ __epm_check_if_try_install_rpm()
 	local TDIR=$(mktemp -d)
 	cd $TDIR || fatal
 	for pkg in $rpmpkgs ; do
-		showcmd_store_output fakeroot alien -d -k --scripts "$pkg"
+		showcmd_store_output fakeroot alien -d -k $scripts "$pkg"
 		local DEBCONVERTED=$(grep "deb generated" $RC_STDOUT | sed -e "s| generated||g")
 		clean_store_output
 		docmd epm install $force $nodeps $DEBCONVERTED

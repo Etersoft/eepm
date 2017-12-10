@@ -350,7 +350,7 @@ check_option()
     --repack)              # HELPOPT: repack rpm package(s) before install
         repack="--repack"
         ;;
-    --scripts)              # HELPOPT: include scripts in repacked rpm package(s) (see --repack)
+    --scripts)              # HELPOPT: include scripts in repacked rpm package(s) (see --repack or repacking when foreign package is installed)
         scripts="--scripts"
         ;;
     --sort)               # HELPOPT: sort output, f.i. --sort=size (supported only for packages command)
