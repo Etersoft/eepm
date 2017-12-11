@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.4.0
+Version: 2.4.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -88,6 +88,9 @@ rm -f %buildroot%_datadir/%name/tools_eget
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Tue Dec 12 2017 Vitaly Lipatov <lav@altlinux.ru> 2.4.1-alt1
+- add teamviewer.sh for repack (ALT bug 34318)
+
 * Sun Dec 10 2017 Vitaly Lipatov <lav@altlinux.ru> 2.4.0-alt1
 - epm: add /etc/eepm/eepm.conf support
 - epm install: add --repack support (binary rpm repacking before install)
