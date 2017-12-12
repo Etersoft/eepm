@@ -144,10 +144,10 @@ epm_install_names()
 			sudocmd aura -A $force $nodeps $@
 			return ;;
 		yum-rpm)
-			sudocmd yum $YUMOPTIONS install $@
+			sudocmd yum $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
 			return ;;
 		dnf-rpm)
-			sudocmd dnf install $@
+			sudocmd dnf install $(echo "$*" | exp_with_arch_suffix)
 			return ;;
 		snappy)
 			sudocmd snappy install $@
@@ -217,10 +217,10 @@ epm_ni_install_names()
 			sudocmd aptitude -y install $@
 			return ;;
 		yum-rpm)
-			sudocmd yum -y $YUMOPTIONS install $@
+			sudocmd yum -y $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
 			return ;;
 		dnf-rpm)
-			sudocmd dnf -y $YUMOPTIONS install $@
+			sudocmd dnf -y $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
 			return ;;
 		urpm-rpm)
 			sudocmd urpmi --auto $URPMOPTIONS $@
