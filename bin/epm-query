@@ -26,10 +26,10 @@ __print_with_arch_suffix()
 	local pkg="$1"
 	local suffix="$2"
 	# do not change if some suffix already exists
-	echo "$pkg" | grep -q "(x86-32)$" && echo "$pkg" | sed -e "s|(x86-32)$|.i686|" && return
-	echo "$pkg" | grep "\.x86_64$" && return
-	echo "$pkg" | grep "\.noarch$" && return
-	echo "$pkg" | grep "\.i[56]86$" && return
+	echo "$pkg" | grep -q "(x86-32)$" && echo "$pkg" | sed -e "s|(x86-32)$|.i686|" && return 1
+	echo "$pkg" | grep "\.x86_64$" && return 1
+	echo "$pkg" | grep "\.noarch$" && return 1
+	echo "$pkg" | grep "\.i[56]86$" && return 1
 	echo "$pkg$suffix"
 }
 
@@ -54,7 +54,11 @@ exp_with_arch_suffix()
 	# TODO: use estrlist or some function to do it
 	local pkg
 	for pkg in $(cat) ; do
-		__print_with_arch_suffix $pkg $suffix
+		# check only packages without arch
+		local p="$(__print_with_arch_suffix "$pkg" .i686)" || { echo "$pkg" ; continue ; }
+		# add arch suffix only if arch package already installed (otherwise we don't know package arch)
+		is_installed "$p" || { echo "$pkg" ; continue ; }
+		echo "$pkg.x86_64"
 	done
 }
 
