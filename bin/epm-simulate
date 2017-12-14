@@ -120,8 +120,11 @@ EOF
     		for pkg in $filenames ; do
     			# FIXME: -[0-0] does not work in search!
     			# FIXME: we need strict search here (not find gst-plugins-base if search for gst-plugins
-    			pkg_filenames="$pkg-[0-9]" epm_search | grep -E "(installed|upgrade)" && continue
-    			pkg_filenames="$pkg" epm_search | grep -E "(installed|upgrade)" && continue
+    			# TODO: use short?
+    			# use verbose for get package status
+    			#pkg_filenames="$pkg-[0-9]" verbose=--verbose __epm_search_internal | egrep "(installed|upgrade)" && continue
+    			#pkg_filenames="$pkg" verbose=--verbose __epm_search_internal | egrep "(installed|upgrade)" && continue
+    			pkg_filenames="$pkg" __epm_search_internal | grep -q "^$pkg-[0-9]" && continue
     			res=1
     			info "Package '$pkg' does not found in repository."
     		done
