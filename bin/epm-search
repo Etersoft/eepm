@@ -84,7 +84,12 @@ case $PMTYPE in
 	slackpkg)
 		# FIXME
 		echo "Note: case sensitive search"
-		CMD="/usr/sbin/slackpkg search"
+		if [ -n "$verbose" ] ; then
+			CMD="/usr/sbin/slackpkg search"
+		else
+			LANG=C docmd /usr/sbin/slackpkg search $string | grep " - " | sed -e 's|.* - ||g'
+			return
+		fi
 		;;
 	homebrew)
 		CMD="brew search"
