@@ -94,6 +94,7 @@ _shortquery_via_packages_list()
 		short=1 pkg_filenames=$pkg epm_packages 2>/dev/null | grep -- "$grepexp" || res=1
 	done
 
+	# TODO: print in query (for user): 'warning: package $pkg is not installed'
 	return $res
 }
 
