@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.4.2
+Version: 2.4.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -88,6 +88,11 @@ rm -f %buildroot%_datadir/%name/tools_eget
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Thu Dec 14 2017 Vitaly Lipatov <lav@altlinux.ru> 2.4.3-alt1
+- implement __epm_search_internal
+- full search output for Slackware only with --verbose
+- fix simulate for Slackware
+
 * Tue Dec 12 2017 Vitaly Lipatov <lav@altlinux.ru> 2.4.2-alt1
 - epm-install: fix --skip-install with dnf/yum
 - dnf/yum: fix install/remove current arch packages (https://bugzilla.redhat.com/show_bug.cgi?id=1525164)
