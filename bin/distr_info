@@ -420,6 +420,7 @@ esac
 echo "$DIST_BIT"
 }
 
+# TODO: check before calc
 get_memory_size() {
     local detected=0
     local DIST_OS=$(get_base_os_name)
@@ -431,7 +432,7 @@ get_memory_size() {
        detected=$((`sysctl hw.physmem | sed s/"hw.physmem: "//`/1024/1024))
     elif [ $DIST_OS = "linux" ]
     then
-       detected=$((`cat /proc/meminfo | grep MemTotal | awk '{print $2}'`/1024))
+       [ -r /proc/meminfo ] && detected=$((`cat /proc/meminfo | grep MemTotal | awk '{print $2}'`/1024))
     fi
 # Exit codes only support values between 0 and 255. So use stdout.
     echo $detected
