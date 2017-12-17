@@ -20,9 +20,9 @@
 is_warmup_allowed()
 {
     local MEM
-    MEM=$($DISTRVENDOR -m)
+    MEM="$($DISTRVENDOR -m)"
     # disable warm if have no enough memory
-    [ $MEM -le 1024 ] && return 1
+    [ "$MEM" -le 1024 ] && return 1
     return 0
 }
 
