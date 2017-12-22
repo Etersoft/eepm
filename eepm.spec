@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.4.3
+Version: 2.4.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -88,6 +88,10 @@ rm -f %buildroot%_datadir/%name/tools_eget
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Fri Dec 22 2017 Vitaly Lipatov <lav@altlinux.ru> 2.4.4-alt1
+- distr_info: check if proc exists before use
+- repack: add duplicati support
+
 * Thu Dec 14 2017 Vitaly Lipatov <lav@altlinux.ru> 2.4.3-alt1
 - implement __epm_search_internal
 - full search output for Slackware only with --verbose
