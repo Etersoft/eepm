@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012-2017  Etersoft
-# Copyright (C) 2012-2017  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2018  Etersoft
+# Copyright (C) 2012-2018  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -20,6 +20,7 @@
 load_helper epm-sh-altlinux
 load_helper epm-query
 load_helper epm-assure
+load_helper epm-repack
 load_helper epm-check_updated_repo
 load_helper epm-sh-warmup
 
@@ -289,149 +290,6 @@ __epm_check_if_rpm_already_installed()
 	LANG=C $SUDO rpm -Uvh $force $nodeps $@ 2>&1 | grep -q "is already installed"
 }
 
-# TODO: rewrite to convert (get some code from Korinf?)
-__epm_check_if_try_install_deb()
-{
-	local pkg
-	local debpkgs=""
-	for pkg in $@ ; do
-		[ "$(get_package_type "$pkg")" = "deb" ] || return 1
-		[ -e "$pkg" ] || fatal "Can't read $pkg"
-		debpkgs="$debpkgs $(realpath $pkg)"
-	done
-	[ -n "$debpkgs" ] || return 1
-
-	assure_exists alien
-	assure_exists dpkg
-	# TODO: Для установки требует: /usr/share/debconf/confmodule но пакет не может быть установлен
-	# assure_exists debconf
-
-	local TDIR=$(mktemp -d)
-	cd $TDIR || fatal
-	for pkg in $debpkgs ; do
-		# TODO: fakeroot for non ALT?
-		showcmd_store_output alien -r -k $scripts "$pkg" || fatal
-		local RPMCONVERTED=$(grep "rpm generated" $RC_STDOUT | sed -e "s| generated||g")
-		clean_store_output
-		docmd epm install $force $nodeps $RPMCONVERTED
-	done
-	rm -f $TDIR/*
-	rmdir $TDIR/
-
-	return 0
-}
-
-# TODO: rewrite to convert (get some code from Korinf?)
-__epm_check_if_try_install_rpm()
-{
-	local pkg
-	local rpmpkgs=""
-	for pkg in $@ ; do
-		[ "$(get_package_type "$pkg")" = "rpm" ] || return 1
-		[ -e "$pkg" ] || fatal "Can't read $pkg"
-		rpmpkgs="$rpmpkgs $(realpath $pkg)"
-	done
-	[ -n "$rpmpkgs" ] || return 1
-
-	assure_exists alien
-	assure_exists fakeroot
-	assure_exists rpm
-
-	local TDIR=$(mktemp -d)
-	cd $TDIR || fatal
-	for pkg in $rpmpkgs ; do
-		showcmd_store_output fakeroot alien -d -k $scripts "$pkg"
-		local DEBCONVERTED=$(grep "deb generated" $RC_STDOUT | sed -e "s| generated||g")
-		clean_store_output
-		docmd epm install $force $nodeps $DEBCONVERTED
-	done
-	rm -f $TDIR/*
-	rmdir $TDIR/
-
-	return 0
-}
-
-# args: buildroot spec
-__fix_spec()
-{
-    local buildroot="$1"
-    local spec="$2"
-    local i
-    for i in $(grep '^"/' $spec | sed -e 's|^"\(.*\)"$|\1|') ; do
-        #' hack for highlight
-        # add %dir to dir in list
-        if [ -d "$buildroot$i" ] ; then
-            subst 's|^\("'$i'"\)$|%dir \1|' $spec
-        fi
-    done
-    subst "s|^Release: |Release: alt1.repacked.with.epm.|" $spec
-    subst "s|^\((Converted from a rpm package.*\)|(Repacked from binary rpm with epm $EPMVERSION)\n\1|" $spec
-    #" hack for highlight
-}
-
-__apply_fix_code()
-{
-    local repackcode="/etc/eepm/repack.d/$1.sh"
-    [ -x "$repackcode" ] || return
-    shift
-    docmd $repackcode "$1" "$2" || warning "There was errors with $repackcode script"
-}
-
-# will fill repacked_rpms var
-__epm_repack_rpm()
-{
-    [ "$DISTRNAME" = "ALTLinux" ] || fatal "install --repack supported only for ALT Linux distros"
-
-    assure_exists fakeroot || fatal
-    assure_exists alien || fatal
-    assure_exists rpmbuild rpm-build || fatal
-
-    local pkg
-    local tmpbuilddir=$(mktemp -d)/repack
-    mkdir $tmpbuilddir
-
-    local abspkg
-    repacked_rpms=''
-    for pkg in $* ; do
-        abspkg=$(realpath $pkg)
-        info "Repacking $abspkg to local rpm format ..."
-        cd $tmpbuilddir || fatal
-        docmd fakeroot alien --generate --to-rpm $verbose $scripts $abspkg || fatal
-
-        local subdir="$(echo *)"
-        [ -d "$subdir" ] || fatal "can't find subdir"
-
-        # detect spec and move to prev dir
-        local spec="$(echo $tmpbuilddir/$subdir/*.spec)"
-        [ -s "$spec" ] || fatal "can't find spec"
-        mv $spec $tmpbuilddir || fatal
-        spec="$tmpbuilddir/$(basename "$spec")"
-        __fix_spec $tmpbuilddir/$subdir $spec
-        local pkgname="$(grep "^Name: " $spec | sed -e "s|Name: ||g" | head -n1)"
-        __apply_fix_code $pkgname $tmpbuilddir/$subdir $spec
-        showcmd fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir --define='_allow_root_build 1' -bb $spec
-        if [ -n "$verbose" ] ; then
-            a='' fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir --define='_allow_root_build 1' -bb $spec || fatal
-        else
-            a='' fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir --define='_allow_root_build 1' -bb $spec >/dev/null || fatal
-        fi
-        local repacked_rpm="$(realpath $tmpbuilddir/../*.rpm)"
-        if [ -s "$repacked_rpm" ] ; then
-            repacked_rpms="$repacked_rpms $repacked_rpm"
-            to_remove_pkg_files="$to_remove_pkg_files $repacked_rpm"
-        else
-            warning "Can't find converted rpm for source binary $pkg package"
-        fi
-        cd - >/dev/null
-        rm -rf $tmpbuilddir/$subdir/
-        #rm -rf $tmpbuilddir/../*.rpm
-        rm -rf $spec
-    done
-    rmdir $tmpbuilddir
-    #rmdir $tmpbuilddir/..
-    true
-}
-
 __handle_direct_install()
 {
     case "$DISTRNAME" in
@@ -461,8 +319,6 @@ epm_install_files()
     case $PMTYPE in
         apt-rpm)
             __epm_check_if_try_install_deb $@ && return
-
-            # TODO: add --repack support, will force repack rpm
 
             # do not using low-level for install by file path (FIXME: reasons?)
             if ! is_dirpath "$@" || [ "$(get_package_type "$@")" = "rpm" ] ; then
@@ -692,7 +548,7 @@ epm_install()
         return
     fi
 
-    if [ -n "$direct" ] || [ -n "$repack" ] ; then
+    if [ -n "$direct" ] && [ -z "$repack" ] ; then
         __handle_direct_install
     fi
 

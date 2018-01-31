@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012-2016  Etersoft
-# Copyright (C) 2012-2016  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2018  Etersoft
+# Copyright (C) 2012-2018  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -298,6 +298,9 @@ check_command()
         ;;
     print)                    # HELPCMD: print various info, run epm print help for details
         epm_cmd=print
+        ;;
+    repack)                   # HELPCMD: repack rpm to local compatibility
+        epm_cmd=repack
         ;;
     -V|checkpkg|integrity)    # HELPCMD: check package file integrity (checksum)
         epm_cmd=checkpkg
