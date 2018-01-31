@@ -244,6 +244,7 @@ epm_remove()
 
 	local tn=$(tasknumber "$pkg_names")
 	if [ -n "$tn" ] ; then
+		assure_distr ALTLinux "remove with task number"
 		assure_exists apt-repo
 		pkg_names=$(showcmd apt-repo list $tn)
 		#docmd epm remove $dryrun

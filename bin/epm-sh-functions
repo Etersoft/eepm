@@ -549,3 +549,10 @@ is_active_systemd()
 	# shellcheck disable=SC2009
 	ps ax | grep '[s]ystemd' | grep -q -v 'systemd-udev'
 }
+
+assure_distr()
+{
+	local TEXT="this option"
+	[ -n "$2" ] && TEXT="$2"
+	[ "$DISTRNAME" = "$1" ] || fatal "$TEXT supported only for $1 distro"
+}
