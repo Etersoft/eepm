@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.4.4
+Version: 2.4.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -88,6 +88,10 @@ rm -f %buildroot%_datadir/%name/tools_eget
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Sun Feb 04 2018 Vitaly Lipatov <lav@altlinux.ru> 2.4.5-alt1
+- implement assure_distr and use it
+- add repack command and move all repack code to a separate module
+
 * Fri Dec 22 2017 Vitaly Lipatov <lav@altlinux.ru> 2.4.4-alt1
 - distr_info: check if proc exists before use
 - repack: add duplicati support
