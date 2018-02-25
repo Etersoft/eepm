@@ -25,7 +25,7 @@ check_pkg_integrity()
 	case $(get_package_type $PKG) in
 	rpm)
 		assure_exists rpm
-		docmd rpm --checksig $PKG
+		docmd rpm --checksig --nogpg $PKG
 		;;
 	deb)
 		assure_exists dpkg
