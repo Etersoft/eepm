@@ -1,0 +1,223 @@
+#!/bin/bash
+# 2009-2010, 2012, 2017 Etersoft www.etersoft.ru
+# Author: Vitaly Lipatov <lav@etersoft.ru>
+# Public domain
+
+# TODO: rewrite with shell commands, perl or C
+# Python - http://www.linuxtopia.org/online_books/programming_books/python_programming/python_ch16s03.html
+# Shell  - http://linux.byexamples.com/archives/127/uniq-and-basic-set-theory/
+#        - http://maiaco.com/articles/shellSetOperations.php
+# Perl   - http://docstore.mik.ua/orelly/perl/cookbook/ch04_09.htm
+#        - http://blogs.perl.org/users/polettix/2012/03/sets-operations.html
+# http://rosettacode.org/wiki/Symmetric_difference
+# TODO: add unit tests
+# http://ru.wikipedia.org/wiki/Операции_над_множествами
+
+# Base set operations:
+# * union
+#   "1 2 3" "3 4 5" -> "1 2 3 4 5"
+# * intersection
+#   "1 2 3" "3 4 5" -> "3"
+# * relative complement (substracted, difference) ( A ? B – members in A but not in B )
+# http://en.wikipedia.org/wiki/Complement_%28set_theory%29
+#   "1 3" "1 2 3 4" -> "2 4"
+# * symmetric difference (симметричная разность) ( A ^ B – members in A or B but not both )
+# http://en.wikipedia.org/wiki/Symmetric_difference
+#   "1 2 3" "3 4 5" -> "1 2 4 5"
+
+filter_strip_spaces()
+{
+        # possible use just
+        #xargs echo
+        sed -e "s| \+| |g" -e "s|^ ||" -e "s| \$||"
+}
+
+strip_spaces()
+{
+        echo "$*" | filter_strip_spaces
+}
+
+isempty()
+{
+        [ "$(strip_spaces "$*")" = "" ]
+}
+
+list()
+{
+        local i
+        for i in $@ ; do
+                echo "$i"
+        done
+}
+
+count()
+{
+         list $@ | wc -l
+}
+
+union()
+{
+         strip_spaces $(list $@ | sort -u)
+}
+
+uniq()
+{
+        union $@
+}
+
+has()
+{
+	local wd="$1"
+	shift
+	echo "$*" | grep -q -- "$wd"
+}
+
+# Note: used egrep! write '[0-9]+(first|two)', not '[0-9]\+...'
+match()
+{
+	local wd="$1"
+	shift
+	echo "$*" | egrep -q -- "$wd"
+}
+
+
+# remove_from_list "1." "11 12 21 22" -> "21 22"
+reg_remove()
+{
+        local i
+        local RES=
+        for i in $2 ; do
+                echo "$i" | grep -q "$1" || RES="$RES $i"
+        done
+        strip_spaces "$RES"
+}
+
+# remove_from_list "1." "11 12 21 22" -> "21 22"
+reg_wordremove()
+{
+        local i
+        local RES=
+        for i in $2 ; do
+                echo "$i" | grep -q -w "$1" || RES="$RES $i"
+        done
+        strip_spaces "$RES"
+}
+
+# Args: LIST1 LIST2
+# do_exclude_list print LIST2 list exclude fields contains also in LIST1
+# Example: exclude "1 3" "1 2 3 4" -> "2 4"
+exclude()
+{
+        local i
+        local RES=
+        for i in $2 ; do
+                echo "$1" | grep -q -w "$i" || RES="$RES $i"
+        done
+        strip_spaces "$RES"
+}
+
+# regexclude_list "22 1." "11 12 21 22" -> "21"
+reg_exclude()
+{
+        local i
+        local RES="$2"
+        for i in $1 ; do
+                RES=$(reg_remove "$i" "$RES")
+        done
+        strip_spaces "$RES"
+}
+
+# regexclude_list "22 1." "11 12 21 22" -> "21"
+reg_wordexclude()
+{
+        local i
+        local RES="$2"
+        for i in $1 ; do
+                RES=$(reg_wordremove "$i" "$RES")
+        done
+        strip_spaces "$RES"
+}
+
+# FIXME:
+# reg_include "1." "11 12 21 22" -> "11 12"
+reg_include()
+{
+        local i
+        local RES=
+        for i in $2 ; do
+                echo "$i" | grep -q -w "$1" && RES="$RES $i"
+        done
+        strip_spaces "$RES"
+}
+
+example()
+{
+        local CMD="$1"
+        local ARG1="$2"
+        shift 2
+        echo "\$ $0 $CMD \"$ARG1\" \"$@\""
+        $0 $CMD "$ARG1" "$@"
+}
+
+example_res()
+{
+	example "$@" && echo TRUE || echo FALSE
+}
+
+help()
+{
+        echo "estrlist developed for string list operations. See also cut, join, paste..."
+        echo "Usage: $0 <command> [args]"
+        echo "Commands:"
+        echo "  strip_spaces [args]               - remove spaces between words"
+        echo "  filter_strip_spaces               - remove spaces from words from standart input"
+        echo "  reg_remove  <PATTERN> [word list] - remove words containing a match to the given PATTERN (grep notation)"
+        echo "  reg_wordremove  <PATTERN> [word list] - remove words containing a match to the given PATTERN (grep -w notation)"
+        echo "  exclude <list1> <list2>           - print list2 words exclude list1 items"
+        echo "  reg_exclude <PATTERN> [word list] - print only words do not matched with PATTERN"
+        echo "  reg_wordexclude <PATTERN> [word list] - print only words do not matched with PATTERN"
+        echo "  has <PATTERN> string              - check the string for a match to the regular expression given in PATTERN (grep notation)"
+        echo "  match <PATTERN> string            - check the string for a match to the regular expression given in PATTERN (egrep notation)"
+        echo "  isempty [string]                  - true if string has no any symbols (only zero or more spaces)"
+        echo "  union [word list]                 - sort and remove duplicates"
+        echo "  uniq [word list]                  - alias for union"
+        echo "  list [word list]                  - just list words line by line"
+        echo "  count [word list]                 - print word count"
+        echo
+        echo "Examples:"
+        example reg_remove "1." "11 12 21 22"
+        example reg_wordremove "1." "11 12 21 22"
+        example exclude "1 3" "1 2 3 4"
+        example reg_exclude "22 1." "11 12 21 22"
+        example reg_wordexclude "wo.* er" "work were more else"
+        example union "1 2 2 3 3"
+        example count "1 2 3 4 10"
+        example_res isempty "  "
+        #example_res isempty " 1 "
+        example_res has ex "exactly"
+        example_res has exo "exactly"
+        example_res match "M[0-9]+" "M250"
+        example_res match "M[0-9]+" "MI"
+}
+
+COMMAND="$1"
+if [ -z "$COMMAND" ] ; then
+        echo "Run with --help for get command description."
+        exit 1
+fi
+
+if [ "$COMMAND" = "-h" ] || [ "$COMMAND" = "--help" ] ; then
+        COMMAND="help"
+fi
+
+shift
+
+# FIXME: do to call function directly, use case instead?
+if [ "$1" = "-" ] ; then
+    shift
+    "$COMMAND" "$(cat) $@"
+elif [ "$2" = "-" ] ; then
+    "$COMMAND" "$1" "$(cat)"
+else
+    "$COMMAND" "$@"
+fi

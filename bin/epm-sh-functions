@@ -382,6 +382,20 @@ eget()
 	$EGET "$@"
 }
 
+estrlist()
+{
+	if [ -s $SHAREDIR/tools_estrlist ] ; then
+		$SHAREDIR/tools_estrlist "$@"
+		return
+	fi
+	fatal "missed tools_estrlist"
+}
+
+onefile_estrlist()
+{
+	internal_tools_estrlist "$@"
+}
+
 # will replaced within eget() in packed version
 onefile_eget()
 {
