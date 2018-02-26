@@ -370,6 +370,20 @@ disabled_eget()
 	$EGET "$@"
 }
 
+disabled_estrlist()
+{
+	if [ -s $SHAREDIR/tools_estrlist ] ; then
+		$SHAREDIR/tools_estrlist "$@"
+		return
+	fi
+	fatal "missed tools_estrlist"
+}
+
+estrlist()
+{
+	internal_tools_estrlist "$@"
+}
+
 eget()
 {
 	assure_exists wget
@@ -531,6 +545,13 @@ is_active_systemd()
 	ps ax | grep '[s]ystemd' | grep -q -v 'systemd-udev'
 }
 
+assure_distr()
+{
+	local TEXT="this option"
+	[ -n "$2" ] && TEXT="$2"
+	[ "$DISTRNAME" = "$1" ] || fatal "$TEXT supported only for $1 distro"
+}
+
 # File bin/serv-common:
 
 serv_common()
@@ -649,6 +670,7 @@ serv_enable()
 
 serv_list()
 {
+	info "Running services:"
 	case $SERVICETYPE in
 		service-upstart)
 			sudocmd initctl list
@@ -660,7 +682,9 @@ serv_list()
 			sudocmd systemctl list-units $@
 			;;
 		*)
-			for i in $(serv_list_all) ; do
+			# hack to improve list speed
+			[ "$UID" = 0 ] || { sudocmd $PROGDIR/serv --quiet list ; return ; }
+			for i in $(quiet=1 serv_list_all) ; do
 				is_service_running $i >/dev/null && echo $i
 			done
 			;;
@@ -674,7 +698,7 @@ serv_list_all()
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)
 			# service --status-all for Ubuntu/Fedora
-			sudocmd chkconfig --list | cut -f1
+			sudocmd chkconfig --list | cut -f1 | grep -v "^$" | grep -v "xinetd:$"
 
 			if [ -n "$ANYSERVICE" ] ; then
 				sudocmd anyservice --quiet list
@@ -853,23 +877,27 @@ serv_start()
 is_service_running()
 {
 	local SERVICE="$1"
-
+	local OUTPUT
+	# TODO: real status can be checked only with grep output
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)
 			if is_anyservice $1 ; then
-				$SUDO anyservice $1 status >/dev/null
-				return
+				OUTPUT="$($SUDO anyservice $1 status 2>/dev/null)" || return 1
+				echo "$OUTPUT" | grep -q "is stopped" && return 1
+				return 0
 			fi
-			$SUDO service $1 status >/dev/null
+			OUTPUT="$($SUDO service $1 status 2>/dev/null)" || return 1
+			echo "$OUTPUT" | grep -q "is stopped" && return 1
+			return 0
 			;;
 		service-initd|service-update)
-			$SUDO $INITDIR/$1 status >/dev/null
+			$SUDO $INITDIR/$1 status >/dev/null 2>/dev/null
 			;;
 		systemd)
-			$SUDO systemctl status $1 >/dev/null
+			$SUDO systemctl status $1 >/dev/null 2>/dev/null
 			;;
 		runit)
-			$SUDO sv status "$SERVICE" >/dev/null
+			$SUDO sv status "$SERVICE" >/dev/null 2>/dev/null
 			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
@@ -1377,14 +1405,22 @@ esac
 echo "$DIST_OS"
 }
 
+get_uname_m()
+{
+    uname -m | tr [:upper:] [:lower:] | tr -d " \t\r\n"
+}
+
 get_arch()
 {
 local DIST_ARCH
 # Resolve the architecture
-DIST_ARCH=`uname -m | tr [:upper:] [:lower:] | tr -d " \t\r\n"`
+DIST_ARCH="$(get_uname_m)"
 case "$DIST_ARCH" in
-    'amd64' | 'ia32' | 'i386' | 'i486' | 'i586' | 'i686' | 'x86_64')
+    'ia32' | 'i386' | 'i486' | 'i586' | 'i686')
         DIST_ARCH="x86"
+        ;;
+    'amd64' | 'x86_64')
+        DIST_ARCH="x86_64"
         ;;
     'ia64' | 'ia-64')
         DIST_ARCH="ia64"
@@ -1405,7 +1441,7 @@ case "$DIST_ARCH" in
         DIST_ARCH="parisc"
         ;;
     armv*)
-        if [ -z "`readelf -A /proc/self/exe | grep Tag_ABI_VFP_args`" ] ; then
+        if [ -z "$(readelf -A /proc/self/exe | grep Tag_ABI_VFP_args)" ] ; then
             DIST_ARCH="armel"
         else
             DIST_ARCH="armhf"
@@ -1419,7 +1455,7 @@ get_bit_size()
 {
 local DIST_BIT
 # Check if we are running on 64bit platform, seems like a workaround for now...
-DIST_BIT=`uname -m | tr [:upper:] [:lower:] | tr -d " \t\r\n"`
+DIST_BIT="$(get_uname_m)"
 case "$DIST_BIT" in
     'amd64' | 'ia64' | 'x86_64' | 'ppc64')
         DIST_BIT="64"
@@ -1440,20 +1476,23 @@ esac
 echo "$DIST_BIT"
 }
 
+# TODO: check before calc
 get_memory_size() {
     local detected=0
-    local DIST_OS=$(get_base_os_name)
-    if [ $DIST_OS = "macosx" ]
-    then
-       detected=$((`sysctl hw.memsize | sed s/"hw.memsize: "//`/1024/1024))
-    elif [ $DIST_OS = "freebsd" ]
-    then
-       detected=$((`sysctl hw.physmem | sed s/"hw.physmem: "//`/1024/1024))
-    elif [ $DIST_OS = "linux" ]
-    then
-       detected=$((`cat /proc/meminfo | grep MemTotal | awk '{print $2}'`/1024))
-    fi
-# Exit codes only support values between 0 and 255. So use stdout.
+    local DIST_OS="$(get_base_os_name)"
+    case "$DIST_OS" in
+        macosx)
+            detected=$((`sysctl hw.memsize | sed s/"hw.memsize: "//`/1024/1024))
+            ;;
+        freebsd)
+            detected=$((`sysctl hw.physmem | sed s/"hw.physmem: "//`/1024/1024))
+            ;;
+        linux)
+            [ -r /proc/meminfo ] && detected=$((`cat /proc/meminfo | grep MemTotal | awk '{print $2}'`/1024))
+            ;;
+    esac
+
+    # Exit codes only support values between 0 and 255. So use stdout.
     echo $detected
 }
 
@@ -1513,7 +1552,7 @@ case $1 in
 		exit 0
 		;;
 	-V)
-		echo "20161212"
+		echo "20171010"
 		exit 0
 		;;
 	*)
@@ -1553,12 +1592,31 @@ internal_tools_eget()
 
 WGET="wget"
 
+# TODO: passthrou all wget options
 if [ "$1" = "-q" ] ; then
     WGET="wget -q"
     shift
 fi
 
-# TODO:
+if [ "$1" = "--list" ] ; then
+    LISTONLY="$1"
+    shift
+fi
+
+fatal()
+{
+    echo "$*" >&2
+    exit 1
+}
+
+# check man glob
+filter_glob()
+{
+	# translate glob to regexp
+	grep "^$(echo "$1" | sed -e "s|\*|.*|g" -e "s|\?|.|g")$"
+}
+
+
 # download to this file
 WGET_OPTION_TARGET=
 if [ "$1" = "-O" ] ; then
@@ -1572,66 +1630,299 @@ fi
 
 if [ -z "$1" ] ; then
     echo "eget - wget wrapper" >&2
-    echo "Run with URL, like http://somesite.ru/dir/*.log" >&2
-    exit 1
+    fatal "Run with URL, like http://somesite.ru/dir/*.log"
+fi
+
+if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
+    echo "eget - wget wrapper, with support"
+    echo "Usage: eget [-O target file] [--list] http://somesite.ru/dir/na*.log"
+    echo "Options:"
+    echo "    --list - print files frm url with mask"
+    echo
+    wget --help
+    return
+fi
+
+# do not support /
+if echo "$1" | grep -q "/$" ; then
+    fatal "Use http://example.com/e/* to download all files in dir"
 fi
 
 # If ftp protocol, just download
 if echo "$1" | grep -q "^ftp://" ; then
+    [ -n "$LISTONLY" ] && fatal "Error: list files for ftp:// do not supported yet"
     $WGET $WGET_OPTION_TARGET "$1"
     return
 fi
 
-# drop mask part (if has /$, not changed)
-URL=$(echo "$1" | grep "/$" || dirname "$1")
+# drop mask part
+URL="$(dirname "$1")/"
 
-# If have no wildcard symbol like asterisk and no / at the end, just download
-if [ "$URL" != "$1" ] && echo "$1" | grep -qv "[*?]" ; then
-    $WGET $WGET_OPTION_TARGET "$1"
-    return
+if echo "$URL" | grep -q "[*?]" ; then
+    fatal "Error: there are globbing symbols (*?) in $URL"
 fi
-
-echo "Fall to http workaround"
 
 # mask allowed only in last part of path
 MASK=$(basename "$1")
-# TODO: skip create_fake_files for full dir
-# add * if full dir
-#[ "$URL" != "$1" ] && MASK="*"
 
-print_files()
+# If have no wildcard symbol like asterisk, just download
+if echo "$MASK" | grep -qv "[*?]" ; then
+    $WGET $WGET_OPTION_TARGET "$1"
+    return
+fi
+
+get_urls()
 {
     $WGET -O- $URL | \
         grep -o -E 'href="([^\*/"#]+)"' | cut -d'"' -f2
 }
 
-create_fake_files()
-{
-    DIRALLFILES="$MYTMPDIR/files/"
-    mkdir -p "$DIRALLFILES"
-
-    print_files | while read -r line ; do
-        touch $DIRALLFILES/$(basename "$line")
+if [ -n "$LISTONLY" ] ; then
+    WGET="$WGET -q"
+    for fn in $(get_urls | filter_glob "$MASK") ; do
+        echo "$(basename "$fn")"
     done
-}
+    return
+fi
 
-download_files()
-{
-    ERROR=0
-    # TODO: test fix / at the end
-    for line in $DIRALLFILES/$MASK ; do
-        [ -r "$line" ] || { ERROR=1 ; break ; }
-        $WGET $URL/$(basename "$line") || ERROR=1
-    done
-    return $ERROR
-}
+ERROR=0
+for fn in $(get_urls | filter_glob "$MASK") ; do
+    $WGET "$URL/$(basename "$fn")" || ERROR=1
+done
+exit $ERROR
 
-MYTMPDIR="$(mktemp -d)"
-create_fake_files
-download_files || echo "There was some download errors" >&2
-rm -rf "$MYTMPDIR"
 }
 ################# end of incorporated bin/tools_eget #################
+
+
+################# incorporate bin/tools_estrlist #################
+internal_tools_estrlist()
+{
+#!/bin/bash
+# 2009-2010, 2012, 2017 Etersoft www.etersoft.ru
+# Author: Vitaly Lipatov <lav@etersoft.ru>
+# Public domain
+
+# TODO: rewrite with shell commands, perl or C
+# Python - http://www.linuxtopia.org/online_books/programming_books/python_programming/python_ch16s03.html
+# Shell  - http://linux.byexamples.com/archives/127/uniq-and-basic-set-theory/
+#        - http://maiaco.com/articles/shellSetOperations.php
+# Perl   - http://docstore.mik.ua/orelly/perl/cookbook/ch04_09.htm
+#        - http://blogs.perl.org/users/polettix/2012/03/sets-operations.html
+# http://rosettacode.org/wiki/Symmetric_difference
+# TODO: add unit tests
+# http://ru.wikipedia.org/wiki/Операции_над_множествами
+
+# Base set operations:
+# * union
+#   "1 2 3" "3 4 5" -> "1 2 3 4 5"
+# * intersection
+#   "1 2 3" "3 4 5" -> "3"
+# * relative complement (substracted, difference) ( A ? B – members in A but not in B )
+# http://en.wikipedia.org/wiki/Complement_%28set_theory%29
+#   "1 3" "1 2 3 4" -> "2 4"
+# * symmetric difference (симметричная разность) ( A ^ B – members in A or B but not both )
+# http://en.wikipedia.org/wiki/Symmetric_difference
+#   "1 2 3" "3 4 5" -> "1 2 4 5"
+
+filter_strip_spaces()
+{
+        # possible use just
+        #xargs echo
+        sed -e "s| \+| |g" -e "s|^ ||" -e "s| \$||"
+}
+
+strip_spaces()
+{
+        echo "$*" | filter_strip_spaces
+}
+
+isempty()
+{
+        [ "$(strip_spaces "$*")" = "" ]
+}
+
+list()
+{
+        local i
+        for i in $@ ; do
+                echo "$i"
+        done
+}
+
+count()
+{
+         list $@ | wc -l
+}
+
+union()
+{
+         strip_spaces $(list $@ | sort -u)
+}
+
+uniq()
+{
+        union $@
+}
+
+has()
+{
+	local wd="$1"
+	shift
+	echo "$*" | grep -q -- "$wd"
+}
+
+# Note: used egrep! write '[0-9]+(first|two)', not '[0-9]\+...'
+match()
+{
+	local wd="$1"
+	shift
+	echo "$*" | egrep -q -- "$wd"
+}
+
+
+# remove_from_list "1." "11 12 21 22" -> "21 22"
+reg_remove()
+{
+        local i
+        local RES=
+        for i in $2 ; do
+                echo "$i" | grep -q "$1" || RES="$RES $i"
+        done
+        strip_spaces "$RES"
+}
+
+# remove_from_list "1." "11 12 21 22" -> "21 22"
+reg_wordremove()
+{
+        local i
+        local RES=
+        for i in $2 ; do
+                echo "$i" | grep -q -w "$1" || RES="$RES $i"
+        done
+        strip_spaces "$RES"
+}
+
+# Args: LIST1 LIST2
+# do_exclude_list print LIST2 list exclude fields contains also in LIST1
+# Example: exclude "1 3" "1 2 3 4" -> "2 4"
+exclude()
+{
+        local i
+        local RES=
+        for i in $2 ; do
+                echo "$1" | grep -q -w "$i" || RES="$RES $i"
+        done
+        strip_spaces "$RES"
+}
+
+# regexclude_list "22 1." "11 12 21 22" -> "21"
+reg_exclude()
+{
+        local i
+        local RES="$2"
+        for i in $1 ; do
+                RES=$(reg_remove "$i" "$RES")
+        done
+        strip_spaces "$RES"
+}
+
+# regexclude_list "22 1." "11 12 21 22" -> "21"
+reg_wordexclude()
+{
+        local i
+        local RES="$2"
+        for i in $1 ; do
+                RES=$(reg_wordremove "$i" "$RES")
+        done
+        strip_spaces "$RES"
+}
+
+# FIXME:
+# reg_include "1." "11 12 21 22" -> "11 12"
+reg_include()
+{
+        local i
+        local RES=
+        for i in $2 ; do
+                echo "$i" | grep -q -w "$1" && RES="$RES $i"
+        done
+        strip_spaces "$RES"
+}
+
+example()
+{
+        local CMD="$1"
+        local ARG1="$2"
+        shift 2
+        echo "\$ $0 $CMD \"$ARG1\" \"$@\""
+        $0 $CMD "$ARG1" "$@"
+}
+
+example_res()
+{
+	example "$@" && echo TRUE || echo FALSE
+}
+
+help()
+{
+        echo "estrlist developed for string list operations. See also cut, join, paste..."
+        echo "Usage: $0 <command> [args]"
+        echo "Commands:"
+        echo "  strip_spaces [args]               - remove spaces between words"
+        echo "  filter_strip_spaces               - remove spaces from words from standart input"
+        echo "  reg_remove  <PATTERN> [word list] - remove words containing a match to the given PATTERN (grep notation)"
+        echo "  reg_wordremove  <PATTERN> [word list] - remove words containing a match to the given PATTERN (grep -w notation)"
+        echo "  exclude <list1> <list2>           - print list2 words exclude list1 items"
+        echo "  reg_exclude <PATTERN> [word list] - print only words do not matched with PATTERN"
+        echo "  reg_wordexclude <PATTERN> [word list] - print only words do not matched with PATTERN"
+        echo "  has <PATTERN> string              - check the string for a match to the regular expression given in PATTERN (grep notation)"
+        echo "  match <PATTERN> string            - check the string for a match to the regular expression given in PATTERN (egrep notation)"
+        echo "  isempty [string]                  - true if string has no any symbols (only zero or more spaces)"
+        echo "  union [word list]                 - sort and remove duplicates"
+        echo "  uniq [word list]                  - alias for union"
+        echo "  list [word list]                  - just list words line by line"
+        echo "  count [word list]                 - print word count"
+        echo
+        echo "Examples:"
+        example reg_remove "1." "11 12 21 22"
+        example reg_wordremove "1." "11 12 21 22"
+        example exclude "1 3" "1 2 3 4"
+        example reg_exclude "22 1." "11 12 21 22"
+        example reg_wordexclude "wo.* er" "work were more else"
+        example union "1 2 2 3 3"
+        example count "1 2 3 4 10"
+        example_res isempty "  "
+        #example_res isempty " 1 "
+        example_res has ex "exactly"
+        example_res has exo "exactly"
+        example_res match "M[0-9]+" "M250"
+        example_res match "M[0-9]+" "MI"
+}
+
+COMMAND="$1"
+if [ -z "$COMMAND" ] ; then
+        echo "Run with --help for get command description."
+        exit 1
+fi
+
+if [ "$COMMAND" = "-h" ] || [ "$COMMAND" = "--help" ] ; then
+        COMMAND="help"
+fi
+
+shift
+
+# FIXME: do to call function directly, use case instead?
+if [ "$1" = "-" ] ; then
+    shift
+    "$COMMAND" "$(cat) $@"
+elif [ "$2" = "-" ] ; then
+    "$COMMAND" "$1" "$(cat)"
+else
+    "$COMMAND" "$@"
+fi
+}
+################# end of incorporated bin/tools_estrlist #################
 
 
 ################# incorporate bin/tools_json #################
@@ -1948,7 +2239,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 2.3.0"
+        echo "Service manager version 2.4.6"
         echo "Running on $($DISTRVENDOR) with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012, 2013, 2016"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
