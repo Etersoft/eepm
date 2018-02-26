@@ -20,65 +20,97 @@
 load_helper epm-sh-altlinux
 load_helper epm-assure
 
+# arg: rpm or deb
+# fills split_replaced_pkgs with packages of that type
+__epm_split_by_pkg_type()
+{
+	local type="$1"
+	shift
 
-# TODO: rewrite to convert (get some code from Korinf?)
-__epm_check_if_try_install_deb()
+	split_replaced_pkgs=''
+
+	for pkg in "$@" ; do
+		[ "$(get_package_type "$pkg")" = "$type" ] || return 1
+		[ -e "$pkg" ] || fatal "Can't read $pkg"
+		split_replaced_pkgs="$split_target_pkgs $(realpath "$pkg")"
+	done
+
+	[ -n "$split_replaced_pkgs" ]
+}
+
+# fills repacked_rpms
+__epm_repack_deb_to_rpm()
 {
 	local pkg
-	local debpkgs=""
-	for pkg in $@ ; do
-		[ "$(get_package_type "$pkg")" = "deb" ] || return 1
-		[ -e "$pkg" ] || fatal "Can't read $pkg"
-		debpkgs="$debpkgs $(realpath $pkg)"
-	done
-	[ -n "$debpkgs" ] || return 1
 
 	assure_exists alien
 	assure_exists dpkg
 	# TODO: Для установки требует: /usr/share/debconf/confmodule но пакет не может быть установлен
 	# assure_exists debconf
 
+	repacked_rpms=''
+
 	local TDIR=$(mktemp -d)
 	cd $TDIR || fatal
-	for pkg in $debpkgs ; do
+	for pkg in "$@" ; do
 		# TODO: fakeroot for non ALT?
 		showcmd_store_output alien -r -k $scripts "$pkg" || fatal
 		local RPMCONVERTED=$(grep "rpm generated" $RC_STDOUT | sed -e "s| generated||g")
+		repacked_rpms="$repacked_rpms $(realpath $RPMCONVERTED)"
+		to_remove_pkg_files="$to_remove_pkg_files $(realpath $RPMCONVERTED)"
 		clean_store_output
-		docmd epm install $force $nodeps $RPMCONVERTED
 	done
-	rm -f $TDIR/*
-	rmdir $TDIR/
+
+	cd - >/dev/null
+	return 0
+}
+
+__epm_check_if_try_install_deb()
+{
+	__epm_split_by_pkg_type deb "$@" || return 1
+	__epm_repack_deb_to_rpm "$@"
+
+	# TODO: move to install
+	docmd epm install $force $nodeps $repacked_rpms
 
 	return 0
 }
 
-# TODO: rewrite to convert (get some code from Korinf?)
-__epm_check_if_try_install_rpm()
+# fills repacked_debs
+__epm_repack_rpm_to_deb()
 {
 	local pkg
-	local rpmpkgs=""
-	for pkg in $@ ; do
-		[ "$(get_package_type "$pkg")" = "rpm" ] || return 1
-		[ -e "$pkg" ] || fatal "Can't read $pkg"
-		rpmpkgs="$rpmpkgs $(realpath $pkg)"
-	done
-	[ -n "$rpmpkgs" ] || return 1
 
 	assure_exists alien
 	assure_exists fakeroot
 	assure_exists rpm
 
+	repacked_debs=''
+
 	local TDIR=$(mktemp -d)
 	cd $TDIR || fatal
+
 	for pkg in $rpmpkgs ; do
 		showcmd_store_output fakeroot alien -d -k $scripts "$pkg"
 		local DEBCONVERTED=$(grep "deb generated" $RC_STDOUT | sed -e "s| generated||g")
+		repacked_debs="$repacked_rpms $(realpath $DEBCONVERTED)"
+		to_remove_pkg_files="$to_remove_pkg_files $(realpath $DEBCONVERTED)"
 		clean_store_output
-		docmd epm install $force $nodeps $DEBCONVERTED
 	done
-	rm -f $TDIR/*
-	rmdir $TDIR/
+
+	cd - >/dev/null
+	return 0
+}
+
+
+# TODO: rewrite to convert (get some code from Korinf?)
+__epm_check_if_try_install_rpm()
+{
+	__epm_split_by_pkg_type rpm "$@" || return 1
+	__epm_repack_rpm_to_deb "$@"
+
+	# TODO: move to install
+	docmd epm install $force $nodeps $repacked_debs
 
 	return 0
 }
@@ -175,8 +207,32 @@ epm_repack()
 
     [ -z "$pkg_files" ] && info "Skip empty repack list" && return 22
 
-    __epm_repack_rpm $pkg_files || fatal
-    cp -v $repacked_rpms .
+    # TODO: если у нас rpm, а пакет - deb и наоборот
+    case $PKGFORMAT in
+        rpm)
+            if __epm_split_by_pkg_type deb $pkg_files ; then
+                __epm_repack_deb_to_rpm $split_replaced_pkgs
+                cp -v $repacked_rpms .
+                pkg_files="$(estrlist exclude $split_replaced_pkgs $pkg_files)"
+            fi
+
+            if [ -n "$pkg_files" ] ; then
+                __epm_repack_rpm $pkg_files || fatal
+                cp -v $repacked_rpms .
+            fi
+            ;;
+        deb)
+            if __epm_split_by_pkg_type rpm $pkg_files ; then
+                __epm_repack_rpm_to_deb $split_replaced_pkgs
+                cp -v $repacked_debs .
+                pkg_files="$(estrlist exclude $split_replaced_pkgs $pkg_files)"
+            fi
+            ;;
+        *)
+            fatal "$PKGFORMAT is not supported for repack yet"
+            ;;
+    esac
+
 
     # TODO: move it to exit handler
     if [ -z "$DEBUG" ] ; then
