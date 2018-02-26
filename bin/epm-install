@@ -318,6 +318,7 @@ epm_install_files()
 
     case $PMTYPE in
         apt-rpm)
+            # TODO: replace with name changed function
             __epm_check_if_try_install_deb $@ && return
 
             # do not using low-level for install by file path (FIXME: reasons?)
@@ -571,6 +572,7 @@ epm_install()
     if [ -z "$files$names" ] ; then
         # TODO: assert $skip_installed
         [ -n "$verbose" ] && info "Skip empty install list"
+        # FIXME: see to_remove below
         return 22
     fi
 
@@ -579,10 +581,12 @@ epm_install()
         update_repo_if_needed
     fi
 
+    # FIXME: see to_remove below
     epm_install_names $names || return
 
     # repack binary files
     if [ -n "$repack" ] ; then
+        # FIXME: see to_remove below
         __epm_repack_rpm $files || fatal
         files="$repacked_rpms"
     fi
