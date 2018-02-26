@@ -64,6 +64,16 @@ if [ -z "$1" ] ; then
     fatal "Run with URL, like http://somesite.ru/dir/*.log"
 fi
 
+if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
+    echo "eget - wget wrapper, with support"
+    echo "Usage: eget [-O target file] [--list] http://somesite.ru/dir/na*.log"
+    echo "Options:"
+    echo "    --list - print files frm url with mask"
+    echo
+    wget --help
+    exit
+fi
+
 # do not support /
 if echo "$1" | grep -q "/$" ; then
     fatal "Use http://example.com/e/* to download all files in dir"
