@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2009, 2012, 2013, 2014, 2016  Etersoft
-# Copyright (C) 2009, 2012, 2013, 2014, 2016  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2009, 2012, 2013, 2014, 2016, 2018  Etersoft
+# Copyright (C) 2009, 2012, 2013, 2014, 2016, 2018  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -17,15 +17,23 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+# changed since rpm 4.0.4
+__rpm_allows_nosignature()
+{
+    a= rpm --help | grep -q -- "--nosignature"
+}
+
 check_pkg_integrity()
 {
 	local PKG="$1"
 	local RET
+	local NOSIGNATURE
 
 	case $(get_package_type $PKG) in
 	rpm)
 		assure_exists rpm
-		docmd rpm --checksig --nogpg $PKG
+		__rpm_allows_nosignature && NOSIGNATURE="--nosignature" || NOSIGNATURE="--nogpg"
+		docmd rpm --checksig $NOSIGNATURE $PKG
 		;;
 	deb)
 		assure_exists dpkg
