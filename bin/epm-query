@@ -54,8 +54,9 @@ exp_with_arch_suffix()
 	# TODO: use estrlist or some function to do it
 	local pkg
 	for pkg in $(cat) ; do
+		local p
 		# check only packages without arch
-		local p="$(__print_with_arch_suffix "$pkg" .i686)" || { echo "$pkg" ; continue ; }
+		p="$(__print_with_arch_suffix "$pkg" .i686)" || { echo "$pkg" ; continue ; }
 		# add arch suffix only if arch package already installed (otherwise we don't know package arch)
 		is_installed "$p" || { echo "$pkg" ; continue ; }
 		echo "$pkg.x86_64"
