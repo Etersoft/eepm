@@ -56,13 +56,16 @@ case $PMTYPE in
 	#	sudocmd aura -Oj
 	#	;;
 	yum-rpm)
+		docmd epm upgrade
+		assure_exists package-cleanup yum-utils
 		showcmd package-cleanup --orphans
 		local PKGLIST=$(package-cleanup -q --orphans | grep -v "^eepm-")
 		docmd epm remove $dryrun $PKGLIST
 		;;
 	dnf-rpm)
 		# TODO: dnf list extras
-		# TODO: Yum-utils package has been deprecated, use dnf instead.
+		docmd epm upgrade
+		assure_exists package-cleanup dnf-utils
 		showcmd package-cleanup --orphans
 		local PKGLIST=$(package-cleanup -q --orphans | grep -v "^eepm-")
 		docmd epm remove $dryrun $PKGLIST
