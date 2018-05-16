@@ -57,11 +57,14 @@ __epm_addrepo_altlinux()
 			local arch=$(uname -m)
 			[ "$arch" = "i686" ] && arch="i586"
 			echo "" | sudocmd tee -a /etc/apt/sources.list
-			echo "rpm [alt] http://ftp.altlinux.org/pub/distributions archive/sisyphus/date/$datestr/$arch classic" | sudocmd tee -a /etc/apt/sources.list
+			local distrversion="$(echo "$DISTRVERSION" | tr "[:upper:]" "[:lower:]")"
+			local rpmsign='[alt]'
+			[ "$distrversion" != "sisyphus" ] && rpmsign="[$distrversion]"
+			echo "rpm $rpmsign http://ftp.altlinux.org/pub/distributions archive/$distrversion/date/$datestr/$arch classic" | sudocmd tee -a /etc/apt/sources.list
 			if [ "$arch" = "x86_64" ] ; then
-				echo "rpm [alt] http://ftp.altlinux.org/pub/distributions archive/sisyphus/date/$datestr/$arch-i586 classic" | sudocmd tee -a /etc/apt/sources.list
+				echo "rpm $rpmsign http://ftp.altlinux.org/pub/distributions archive/$distrversion/date/$datestr/$arch-i586 classic" | sudocmd tee -a /etc/apt/sources.list
 			fi
-			echo "rpm [alt] http://ftp.altlinux.org/pub/distributions archive/sisyphus/date/$datestr/noarch classic" | sudocmd tee -a /etc/apt/sources.list
+			echo "rpm $rpmsign http://ftp.altlinux.org/pub/distributions archive/$distrversion/date/$datestr/noarch classic" | sudocmd tee -a /etc/apt/sources.list
 			return 0
 			;;
 	esac
