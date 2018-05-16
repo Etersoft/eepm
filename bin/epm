@@ -236,7 +236,7 @@ check_command()
     update)                   # HELPCMD: update remote package repository databases
         epm_cmd=update
         ;;
-    addrepo|ar)               # HELPCMD: add package repo
+    addrepo|ar)               # HELPCMD: add package repo (etersoft, autoimports, archive 2017/12/31); run with param to get list
         epm_cmd=addrepo
         ;;
     repolist|sl|rl|listrepo|repo)  # HELPCMD: print repo list
