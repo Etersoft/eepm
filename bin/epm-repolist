@@ -39,7 +39,7 @@ case $PMTYPE in
 		docmd ds-conf
 		;;
 	apt-dpkg|aptitude-dpkg)
-		showcmd cat /etc/apt/sources.list*
+		showcmd cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list
 		print_apt_sources_list /etc/apt/sources.list /etc/apt/sources.list.d/*.list
 		;;
 	yum-rpm)

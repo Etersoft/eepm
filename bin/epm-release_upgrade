@@ -277,7 +277,7 @@ epm_release_upgrade()
 		;;
 	*-dpkg)
 		assure_exists do-release-upgrade update-manager-core
-		sudocmd do-release-upgrade -d
+		sudocmd do-release-upgrade
 		;;
 	yum-rpm)
 		docmd epm install rpm yum
