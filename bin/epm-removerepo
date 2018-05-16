@@ -63,7 +63,12 @@ case $DISTRNAME in
 esac;
 
 case $PMTYPE in
-	apt-dpkg|aptitude-dpkg)
+	apt-dpkg)
+		assure_exists apt-add-repository software-properties-common
+		apt-add-repository --remove "$repo"
+		info "Check file /etc/apt/sources.list if needed"
+		;;
+	aptitude-dpkg)
 		info "You need remove repo from /etc/apt/sources.list"
 		;;
 	yum-rpm)

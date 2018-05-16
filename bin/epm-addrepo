@@ -97,7 +97,15 @@ case $DISTRNAME in
 esac
 
 case $PMTYPE in
-	apt-dpkg|aptitude-dpkg)
+	apt-dpkg)
+		assure_exists apt-add-repository software-properties-common
+		if echo "$repo" | grep -q "https://" ; then
+			assure_exists apt-transport-https
+		fi
+		apt-add-repository "$repo"
+		info "Check file /etc/apt/sources.list if needed"
+		;;
+	aptitude-dpkg)
 		info "You need manually add repo to /etc/apt/sources.list (TODO)"
 		;;
 	yum-rpm)
