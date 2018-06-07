@@ -165,7 +165,8 @@ __update_to_the_distro()
 		Sisyphus)
 			docmd epm update || fatal
 			docmd epm install librpm7 librpm rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run again"
-			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
+			#docmd apt-get upgrade || fatal "Check an error and run epm release-upgrade or just epm upgrade again"
+			docmd epm upgrade || fatal "Check an error and run epm release-upgrade or just epm upgrade again"
 			;;
 		*)
 	esac
