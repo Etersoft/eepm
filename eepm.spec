@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.4.7
+Version: 2.4.8
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -88,6 +88,13 @@ rm -f %buildroot%_datadir/%name/tools_eget
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Thu Jun 07 2018 Vitaly Lipatov <lav@altlinux.ru> 2.4.8-alt1
+- autoorphans: assure for package-cleanup for yum/dnf
+- apt-dpkg: implement addrepo/removerepo
+- addrepo: add ALT branch support
+- distr_info: support ALT starter kits
+- epm-packages: add arch on deb
+
 * Mon Mar 19 2018 Vitaly Lipatov <lav@altlinux.ru> 2.4.7-alt1
 - checkpkg: detect rpm --nosignature/--nogpg
 - epm-query: fix check only names without arch
