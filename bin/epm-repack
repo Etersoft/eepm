@@ -142,6 +142,17 @@ __apply_fix_code()
     docmd $repackcode "$1" "$2" || warning "There was errors with $repackcode script"
 }
 
+__create_rpmmacros()
+{
+    cat <<EOF >$HOME/.rpmmacros
+%_topdir	$HOME/RPM
+%_tmppath	$TMPDIR
+
+%packager	EPM <support@etersoft.ru>
+%_gpg_name	support@etersoft.ru
+EOF
+}
+
 # will fill repacked_rpms var
 __epm_repack_rpm()
 {
@@ -152,8 +163,10 @@ __epm_repack_rpm()
     assure_exists rpmbuild rpm-build || fatal
 
     local pkg
-    local tmpbuilddir=$(mktemp -d)/repack
+    export HOME=$(mktemp -d)
+    local tmpbuilddir=$HOME/repack
     mkdir $tmpbuilddir
+    __create_rpmmacros
 
     local abspkg
     repacked_rpms=''
@@ -176,9 +189,9 @@ __epm_repack_rpm()
         __apply_fix_code $pkgname $tmpbuilddir/$subdir $spec
         showcmd fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir --define='_allow_root_build 1' -bb $spec
         if [ -n "$verbose" ] ; then
-            a='' fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir --define='_allow_root_build 1' -bb $spec || fatal
+            a='' fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir  --define='_allow_root_build 1' -bb $spec || fatal
         else
-            a='' fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir --define='_allow_root_build 1' -bb $spec >/dev/null || fatal
+            a='' fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir  --define='_allow_root_build 1' -bb $spec >/dev/null || fatal
         fi
         local repacked_rpm="$(realpath $tmpbuilddir/../*.rpm)"
         if [ -s "$repacked_rpm" ] ; then
