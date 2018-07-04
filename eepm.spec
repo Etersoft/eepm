@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.4.9
+Version: 2.5.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -88,6 +88,9 @@ rm -f %buildroot%_datadir/%name/tools_eget
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Wed Jul 04 2018 Vitaly Lipatov <lav@altlinux.ru> 2.5.0-alt1
+- epm autoremove: skip manually installed packages on ALT
+
 * Mon Jun 18 2018 Vitaly Lipatov <lav@altlinux.ru> 2.4.9-alt1
 - repack: run independently to user's .rpmmacros
 
