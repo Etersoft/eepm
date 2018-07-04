@@ -118,7 +118,7 @@ epm_install_names()
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
 			APTOPTIONS="$APTOPTIONS $(subst_option verbose "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
-			sudocmd apt-get $APTOPTIONS $noremove install $@
+			sudocmd apt-get $APTOPTIONS $noremove install $@ && save_installed_packages $@
 			return ;;
 		aptitude-dpkg)
 			sudocmd aptitude install $@
@@ -323,7 +323,7 @@ epm_install_files()
 
             # do not using low-level for install by file path (FIXME: reasons?)
             if ! is_dirpath "$@" || [ "$(get_package_type "$@")" = "rpm" ] ; then
-                sudocmd rpm -Uvh $force $nodeps $@ && return
+                sudocmd rpm -Uvh $force $nodeps $@ && save_installed_packages $@ && return
                 local RES=$?
                 # TODO: check rpm result code and convert it to compatible format if possible
                 __epm_check_if_rpm_already_installed $@ && return
