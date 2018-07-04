@@ -1169,6 +1169,8 @@ if distro altlinux-release ; then
 	elif has "ALT Linux 4.1" ; then DISTRIB_RELEASE="4.1"
 	elif has "ALT Linux 4.0" ; then DISTRIB_RELEASE="4.0"
 	elif has Walnut          ; then DISTRIB_RELEASE="4.0"
+	elif has Hypericum       ; then DISTRIB_RELEASE="p8"
+	elif has "starter kit"   ; then DISTRIB_RELEASE="p8"
 	elif has 20070810 ; then DISTRIB_RELEASE="4.0"
 	elif has Ajuga    ; then DISTRIB_RELEASE="4.0"
 	elif has 20050723 ; then DISTRIB_RELEASE="3.0"
@@ -2239,9 +2241,9 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 2.4.6"
+        echo "Service manager version 2.5.0"
         echo "Running on $($DISTRVENDOR) with $SERVICETYPE"
-        echo "Copyright (c) Etersoft 2012, 2013, 2016"
+        echo "Copyright (c) Etersoft 2012-2018"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 

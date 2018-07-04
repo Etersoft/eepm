@@ -600,11 +600,14 @@ __epm_addrepo_altlinux()
 			local arch=$(uname -m)
 			[ "$arch" = "i686" ] && arch="i586"
 			echo "" | sudocmd tee -a /etc/apt/sources.list
-			echo "rpm [alt] http://ftp.altlinux.org/pub/distributions archive/sisyphus/date/$datestr/$arch classic" | sudocmd tee -a /etc/apt/sources.list
+			local distrversion="$(echo "$DISTRVERSION" | tr "[:upper:]" "[:lower:]")"
+			local rpmsign='[alt]'
+			[ "$distrversion" != "sisyphus" ] && rpmsign="[$distrversion]"
+			echo "rpm $rpmsign http://ftp.altlinux.org/pub/distributions archive/$distrversion/date/$datestr/$arch classic" | sudocmd tee -a /etc/apt/sources.list
 			if [ "$arch" = "x86_64" ] ; then
-				echo "rpm [alt] http://ftp.altlinux.org/pub/distributions archive/sisyphus/date/$datestr/$arch-i586 classic" | sudocmd tee -a /etc/apt/sources.list
+				echo "rpm $rpmsign http://ftp.altlinux.org/pub/distributions archive/$distrversion/date/$datestr/$arch-i586 classic" | sudocmd tee -a /etc/apt/sources.list
 			fi
-			echo "rpm [alt] http://ftp.altlinux.org/pub/distributions archive/sisyphus/date/$datestr/noarch classic" | sudocmd tee -a /etc/apt/sources.list
+			echo "rpm $rpmsign http://ftp.altlinux.org/pub/distributions archive/$distrversion/date/$datestr/noarch classic" | sudocmd tee -a /etc/apt/sources.list
 			return 0
 			;;
 	esac
@@ -617,8 +620,10 @@ __epm_addrepo_altlinux()
 	fi
 
 	if [ -z "$repo" ] ; then
-		info "Add branch repo. TODO?"
+		info "Add branch repo. Use follow params:"
 		sudocmd apt-repo add branch
+		echo "etersoft (for LINUX@Etersoft repo)"
+		echo "archive 2018/02/09 (for archive from that date)"
 		return
 	fi
 
@@ -638,7 +643,15 @@ case $DISTRNAME in
 esac
 
 case $PMTYPE in
-	apt-dpkg|aptitude-dpkg)
+	apt-dpkg)
+		assure_exists apt-add-repository software-properties-common
+		if echo "$repo" | grep -q "https://" ; then
+			assure_exists apt-transport-https
+		fi
+		apt-add-repository "$repo"
+		info "Check file /etc/apt/sources.list if needed"
+		;;
+	aptitude-dpkg)
 		info "You need manually add repo to /etc/apt/sources.list (TODO)"
 		;;
 	yum-rpm)
@@ -832,13 +845,16 @@ case $PMTYPE in
 	#	sudocmd aura -Oj
 	#	;;
 	yum-rpm)
+		docmd epm upgrade
+		assure_exists package-cleanup yum-utils
 		showcmd package-cleanup --orphans
 		local PKGLIST=$(package-cleanup -q --orphans | grep -v "^eepm-")
 		docmd epm remove $dryrun $PKGLIST
 		;;
 	dnf-rpm)
 		# TODO: dnf list extras
-		# TODO: Yum-utils package has been deprecated, use dnf instead.
+		docmd epm upgrade
+		assure_exists package-cleanup dnf-utils
 		showcmd package-cleanup --orphans
 		local PKGLIST=$(package-cleanup -q --orphans | grep -v "^eepm-")
 		docmd epm remove $dryrun $PKGLIST
@@ -899,9 +915,22 @@ esac
 
 # File bin/epm-autoremove:
 
+
+__epm_print_excluded()
+{
+	local pkgs="$1"
+	local fullpkgs="$2"
+	local excluded
+	excluded="$(estrlist exclude "$pkgs" "$fullpkgs")"
+	if [ -n "$excluded" ] ; then
+		echo "Skipped manually installed:"
+		estrlist union $excluded
+	fi
+}
+
 __epm_autoremove_altrpm_pp()
 {
-	local pkgs
+	local pkgs fullpkgs
 
 	info "Removing unused python/perl modules..."
 	#[ -n "$force" ] || info "You can run with --force for more deep removing"
@@ -914,14 +943,18 @@ __epm_autoremove_altrpm_pp()
 	[ -n "$force" ] || libexclude=$libexclude'[^-]*$'
 
 	showcmd "apt-cache list-nodeps | grep -E -- \"$libexclude\""
-	pkgs=$(apt-cache list-nodeps | grep -E -- "$libexclude" )
+	fullpkgs=$(apt-cache list-nodeps | grep -E -- "$libexclude" )
+	pkgs=$(skip_manually_installed $fullpkgs)
 
 	if [ -n "$dryrun" ] ; then
 		info "Packages for autoremoving:"
 		echo "$pkgs"
+		__epm_print_excluded "$pkgs" "$fullpkgs"
 		return 0
 	fi
-	
+
+	__epm_print_excluded "$pkgs" "$fullpkgs"
+
 	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
 
 	if [ -n "$flag" ] ; then
@@ -935,7 +968,7 @@ __epm_autoremove_altrpm_pp()
 
 __epm_autoremove_altrpm_lib()
 {
-	local pkgs
+	local pkgs fullpkgs
 
 	local nodevel="$1"
 
@@ -956,23 +989,27 @@ __epm_autoremove_altrpm_lib()
 
 	# https://www.altlinux.org/APT_в_ALT_Linux/Советы_по_использованию#apt-cache_list-nodeps
 	showcmd "apt-cache list-nodeps | grep -E -- \"$libgrep\""
-	pkgs=$(apt-cache list-nodeps | grep -E -- "$libgrep" \
+	fullpkgs=$(apt-cache list-nodeps | grep -E -- "$libgrep" \
 		| sed -e "s/[-\.]32bit$//g" \
 		| grep -E -v -- "$develrule" \
 		| grep -E -v -- "-(debuginfo)$" \
 		| grep -E -v -- "-(util|utils|tool|tools|plugin|daemon|help)$" \
 		| grep -E -v -- "^(libsystemd|libreoffice|libnss|libvirt-client|libvirt-daemon|libsasl2-plugin|eepm)" )
+	pkgs=$(skip_manually_installed $fullpkgs)
 
 	if [ -n "$dryrun" ] ; then
 		info "Packages for autoremoving:"
 		echo "$pkgs"
+		__epm_print_excluded "$pkgs" "$fullpkgs"
 		return 0
 	fi
+
+	__epm_print_excluded "$pkgs" "$fullpkgs"
 
 	# commented, with hi probability user install i586- manually
 	# workaround against missed i586- handling in apt-cache list-nodeps
 	if epmqp i586-lib >/dev/null ; then
-		info "You can try removing i586- with follow command"
+		info "You can try removing all i586- with follow command"
 		showcmd rpm -v -e $(epmqp i586-lib)
 	fi
 
@@ -1278,15 +1315,22 @@ esac
 
 # File bin/epm-checkpkg:
 
+__rpm_allows_nosignature()
+{
+    a= rpm --help | grep -q -- "--nosignature"
+}
+
 check_pkg_integrity()
 {
 	local PKG="$1"
 	local RET
+	local NOSIGNATURE
 
 	case $(get_package_type $PKG) in
 	rpm)
 		assure_exists rpm
-		docmd rpm --checksig --nogpg $PKG
+		__rpm_allows_nosignature && NOSIGNATURE="--nosignature" || NOSIGNATURE="--nogpg"
+		docmd rpm --checksig $NOSIGNATURE $PKG
 		;;
 	deb)
 		assure_exists dpkg
@@ -1456,6 +1500,27 @@ update_repo_if_needed()
     fi
     cd - >/dev/null || fatal
 
+}
+
+save_installed_packages()
+{
+	[ -d /var/lib/rpm ] || return 0
+	estrlist list "$@" | $SUDO tee /var/lib/rpm/EPM-installed >/dev/null
+}
+
+check_manually_installed()
+{
+	[ -r /var/lib/rpm/EPM-installed ] || return 1
+	grep -q -- "^$1\$" /var/lib/rpm/EPM-installed
+}
+
+skip_manually_installed()
+{
+	local i
+	for i in "$@" ; do
+		check_manually_installed "$i" && continue
+		echo "$i"
+	done
 }
 
 # File bin/epm-clean:
@@ -2333,7 +2398,7 @@ epm_install_names()
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
 			APTOPTIONS="$APTOPTIONS $(subst_option verbose "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
-			sudocmd apt-get $APTOPTIONS $noremove install $@
+			sudocmd apt-get $APTOPTIONS $noremove install $@ && save_installed_packages $@
 			return ;;
 		aptitude-dpkg)
 			sudocmd aptitude install $@
@@ -2536,7 +2601,7 @@ epm_install_files()
 
             # do not using low-level for install by file path (FIXME: reasons?)
             if ! is_dirpath "$@" || [ "$(get_package_type "$@")" = "rpm" ] ; then
-                sudocmd rpm -Uvh $force $nodeps $@ && return
+                sudocmd rpm -Uvh $force $nodeps $@ && save_installed_packages $@ && return
                 local RES=$?
                 # TODO: check rpm result code and convert it to compatible format if possible
                 __epm_check_if_rpm_already_installed $@ && return
@@ -2988,7 +3053,7 @@ case $PMTYPE in
 		;;
 	apt-dpkg)
 		warmup_dpkgbase
-		docmd dpkg-query -W --showformat="\${Installed-Size}@\${Package}-\${Version}\n" $pkg_filenames | sed -e "s|@| |g" | sort -n -k1
+		docmd dpkg-query -W --showformat="\${Installed-Size}@\${Package}-\${Version}:\${Architecture}\n" $pkg_filenames | sed -e "s|@| |g" | sort -n -k1
 		;;
 	*)
 		fatal "Sorted package list function is not implemented for $PMTYPE"
@@ -3025,7 +3090,8 @@ case $PMTYPE in
 		warmup_dpkgbase
 		# FIXME: strong equal
 		#CMD="dpkg -l $pkg_filenames"
-		CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}-\${Version}\n $pkg_filenames"
+		CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}-\${Version}:\${Architecture}\n $pkg_filenames"
+		# TODO: ${Architecture}
 		[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}\n $pkg_filenames"
 		showcmd $CMD
 		$CMD | grep "^i" | sed -e "s|.* ||g" | __fo_pfn
@@ -3518,8 +3584,9 @@ exp_with_arch_suffix()
 	# TODO: use estrlist or some function to do it
 	local pkg
 	for pkg in $(cat) ; do
+		local p
 		# check only packages without arch
-		local p="$(__print_with_arch_suffix "$pkg" .i686)" || { echo "$pkg" ; continue ; }
+		p="$(__print_with_arch_suffix "$pkg" .i686)" || { echo "$pkg" ; continue ; }
 		# add arch suffix only if arch package already installed (otherwise we don't know package arch)
 		is_installed "$p" || { echo "$pkg" ; continue ; }
 		echo "$pkg.x86_64"
@@ -4196,7 +4263,8 @@ __update_to_the_distro()
 		Sisyphus)
 			docmd epm update || fatal
 			docmd epm install librpm7 librpm rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run again"
-			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
+			#docmd apt-get upgrade || fatal "Check an error and run epm release-upgrade or just epm upgrade again"
+			docmd epm upgrade || fatal "Check an error and run epm release-upgrade or just epm upgrade again"
 			;;
 		*)
 	esac
@@ -4308,7 +4376,7 @@ epm_release_upgrade()
 		;;
 	*-dpkg)
 		assure_exists do-release-upgrade update-manager-core
-		sudocmd do-release-upgrade -d
+		sudocmd do-release-upgrade
 		;;
 	yum-rpm)
 		docmd epm install rpm yum
@@ -4320,6 +4388,7 @@ epm_release_upgrade()
 	dnf-rpm)
 		info "Check https://fedoraproject.org/wiki/DNF_system_upgrade for an additional info"
 		docmd epm install dnf
+		sudocmd dnf --refresh upgrade
 		sudocmd dnf clean all
 		assure_exists dnf-plugin-system-upgrade
 		sudocmd dnf upgrade --refresh
@@ -4743,7 +4812,12 @@ case $DISTRNAME in
 esac;
 
 case $PMTYPE in
-	apt-dpkg|aptitude-dpkg)
+	apt-dpkg)
+		assure_exists apt-add-repository software-properties-common
+		apt-add-repository --remove "$repo"
+		info "Check file /etc/apt/sources.list if needed"
+		;;
+	aptitude-dpkg)
 		info "You need remove repo from /etc/apt/sources.list"
 		;;
 	yum-rpm)
@@ -4894,6 +4968,17 @@ __apply_fix_code()
     docmd $repackcode "$1" "$2" || warning "There was errors with $repackcode script"
 }
 
+__create_rpmmacros()
+{
+    cat <<EOF >$HOME/.rpmmacros
+%_topdir	$HOME/RPM
+%_tmppath	$TMPDIR
+
+%packager	EPM <support@etersoft.ru>
+%_gpg_name	support@etersoft.ru
+EOF
+}
+
 __epm_repack_rpm()
 {
     assure_distr ALTLinux "install --repack"
@@ -4903,8 +4988,10 @@ __epm_repack_rpm()
     assure_exists rpmbuild rpm-build || fatal
 
     local pkg
-    local tmpbuilddir=$(mktemp -d)/repack
+    export HOME=$(mktemp -d)
+    local tmpbuilddir=$HOME/repack
     mkdir $tmpbuilddir
+    __create_rpmmacros
 
     local abspkg
     repacked_rpms=''
@@ -4927,9 +5014,9 @@ __epm_repack_rpm()
         __apply_fix_code $pkgname $tmpbuilddir/$subdir $spec
         showcmd fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir --define='_allow_root_build 1' -bb $spec
         if [ -n "$verbose" ] ; then
-            a='' fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir --define='_allow_root_build 1' -bb $spec || fatal
+            a='' fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir  --define='_allow_root_build 1' -bb $spec || fatal
         else
-            a='' fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir --define='_allow_root_build 1' -bb $spec >/dev/null || fatal
+            a='' fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir  --define='_allow_root_build 1' -bb $spec >/dev/null || fatal
         fi
         local repacked_rpm="$(realpath $tmpbuilddir/../*.rpm)"
         if [ -s "$repacked_rpm" ] ; then
@@ -5103,7 +5190,7 @@ case $PMTYPE in
 		docmd ds-conf
 		;;
 	apt-dpkg|aptitude-dpkg)
-		showcmd cat /etc/apt/sources.list*
+		showcmd cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list
 		print_apt_sources_list /etc/apt/sources.list /etc/apt/sources.list.d/*.list
 		;;
 	yum-rpm)
@@ -6361,6 +6448,8 @@ if distro altlinux-release ; then
 	elif has "ALT Linux 4.1" ; then DISTRIB_RELEASE="4.1"
 	elif has "ALT Linux 4.0" ; then DISTRIB_RELEASE="4.0"
 	elif has Walnut          ; then DISTRIB_RELEASE="4.0"
+	elif has Hypericum       ; then DISTRIB_RELEASE="p8"
+	elif has "starter kit"   ; then DISTRIB_RELEASE="p8"
 	elif has 20070810 ; then DISTRIB_RELEASE="4.0"
 	elif has Ajuga    ; then DISTRIB_RELEASE="4.0"
 	elif has 20050723 ; then DISTRIB_RELEASE="3.0"
@@ -7358,9 +7447,9 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 2.4.6"
+        echo "EPM package manager version 2.5.0"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
-        echo "Copyright (c) Etersoft 2012-2017"
+        echo "Copyright (c) Etersoft 2012-2018"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 
@@ -7368,7 +7457,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=2.4.6
+EPMVERSION=2.5.0
 verbose=
 quiet=
 nodeps=
@@ -7530,7 +7619,7 @@ check_command()
     update)                   # HELPCMD: update remote package repository databases
         epm_cmd=update
         ;;
-    addrepo|ar)               # HELPCMD: add package repo
+    addrepo|ar)               # HELPCMD: add package repo (etersoft, autoimports, archive 2017/12/31); run with param to get list
         epm_cmd=addrepo
         ;;
     repolist|sl|rl|listrepo|repo)  # HELPCMD: print repo list
@@ -7542,7 +7631,7 @@ check_command()
     removerepo|rr)            # HELPCMD: remove package repo
         epm_cmd=removerepo
         ;;
-    release-upgrade|upgrade-release)          # HELPCMD: update whole system to the next release
+    release-upgrade|upgrade-release)          # HELPCMD: update whole system to the release in arg (default: next (latest) release)
         epm_cmd=release_upgrade
         ;;
     kernel-update|kernel-upgrade|update-kernel|upgrade-kernel)      # HELPCMD: update system kernel to the last repo version
