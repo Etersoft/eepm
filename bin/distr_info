@@ -1,7 +1,7 @@
 #!/bin/sh
 # Author: Vitaly Lipatov <lav@etersoft.ru>
-# 2007, 2009, 2010, 2012, 2016 (c) Etersoft
-# 2007-2016 Public domain
+# 2007, 2009, 2010, 2012, 2016, 2017, 2018 (c) Etersoft
+# 2007-2018 Public domain
 
 # Detect the distro and version
 # Welcome to send updates!
@@ -269,6 +269,7 @@ elif distro redhat-release ; then
 	elif has "release 5" ; then DISTRIB_RELEASE="5"
 	elif has "release 6" ; then DISTRIB_RELEASE="6"
 	elif has "release 7" ; then DISTRIB_RELEASE="7"
+	elif has "release 8" ; then DISTRIB_RELEASE="8"
 	fi
 
 # SUSE based
@@ -335,7 +336,7 @@ get_base_os_name()
 {
 local DIST_OS
 # Resolve the os
-DIST_OS=`uname -s | tr [:upper:] [:lower:] | tr -d " \t\r\n"`
+DIST_OS=`uname -s | tr "[:upper:]" "[:lower:]" | tr -d " \t\r\n"`
 case "$DIST_OS" in
     'sunos')
         DIST_OS="solaris"
