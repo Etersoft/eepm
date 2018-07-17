@@ -359,7 +359,7 @@ echo "$DIST_OS"
 
 get_uname_m()
 {
-    uname -m | tr [:upper:] [:lower:] | tr -d " \t\r\n"
+    uname -m | tr "[:upper:]" "[:lower:]" | tr -d " \t\r\n"
 }
 
 get_arch()
