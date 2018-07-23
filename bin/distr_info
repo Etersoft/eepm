@@ -25,6 +25,12 @@ has()
 	grep "$*" "$DISTROFILE" >/dev/null 2>&1
 }
 
+# Has a system the specified command?
+hascommand()
+{
+	which $1 2>/dev/null >/dev/null
+}
+
 firstupper()
 {
 	echo "$*" | sed 's/.*/\u&/'
@@ -146,19 +152,19 @@ elif distro slackware-version ; then
 	DISTRIB_ID="Slackware"
 	DISTRIB_RELEASE="$(grep -Eo '[0-9]+\.[0-9]+' $DISTROFILE)"
 
-elif distro os-release && which apk 2>/dev/null >/dev/null ; then
+elif distro os-release && hascommand apk ; then
 	# shellcheck disable=SC1090
 	. $ROOTDIR/etc/os-release
 	DISTRIB_ID="$(firstupper "$ID")"
 	DISTRIB_RELEASE="$VERSION_ID"
 
-elif distro os-release && which tce-ab 2>/dev/null >/dev/null ; then
+elif distro os-release && hascommand tce-ab ; then
 	# shellcheck disable=SC1090
 	. $ROOTDIR/etc/os-release
 	DISTRIB_ID="TinyCoreLinux"
 	DISTRIB_RELEASE="$VERSION_ID"
 
-elif distro os-release && which xbps-query 2>/dev/null >/dev/null ; then
+elif distro os-release && hascommand xbps-query ; then
 	# shellcheck disable=SC1090
 	. $ROOTDIR/etc/os-release
 	DISTRIB_ID="VoidLinux"
@@ -313,7 +319,7 @@ elif [ "$(uname -s 2>/dev/null)" = "Darwin" ] ; then
 	DISTRIB_RELEASE=$(uname -r)
 
 # fixme: move to up
-elif [ "$(uname)" = "Linux" ] && which guix 2>/dev/null >/dev/null ; then
+elif [ "$(uname)" = "Linux" ] && hascommand guix ; then
 	DISTRIB_ID="GNU/Linux/Guix"
 	DISTRIB_RELEASE=$(uname -r)
 
