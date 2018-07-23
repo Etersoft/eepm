@@ -139,7 +139,7 @@ case $PMTYPE in
 		docmd brew list | xargs -n1 echo
 		;;
 	opkg)
-		CMD="opkg list"
+		CMD="opkg list-installed"
 		;;
 	apk)
 		CMD="apk info"

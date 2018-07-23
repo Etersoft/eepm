@@ -110,7 +110,7 @@ __do_query()
             return
             ;;
         opkg)
-            CMD="opkg files"
+            CMD="opkg search"
             ;;
         xbps)
             # FIXME: maybe it is search file?

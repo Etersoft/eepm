@@ -84,7 +84,7 @@ case $PMTYPE in
 		CMD="/usr/sbin/slackpkg file-search"
 		;;
 	opkg)
-		CMD="opkg search"
+		CMD="opkg -A search"
 		;;
 	xbps)
 		CMD="xbps-query -Ro"

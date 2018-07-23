@@ -42,6 +42,9 @@ epm_reinstall_names()
 		pkgng)
 			sudocmd pkg install -f $@
 			return ;;
+		opkg)
+			sudocmd opkg --force-reinstall install $@
+			return ;;
 		slackpkg)
 			sudocmd_foreach "/usr/sbin/slackpkg reinstall" $@
 			return ;;

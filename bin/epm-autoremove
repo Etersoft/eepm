@@ -254,6 +254,13 @@ case $PMTYPE in
 		fi
 		sudocmd xbps-remove -O
 		;;
+	opkg)
+		if [ -n "$dryrun" ] ; then
+			sudocmd opkg --noaction --autoremove
+		else
+			sudocmd opkg --autoremove
+		fi
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
