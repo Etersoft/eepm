@@ -23,7 +23,8 @@
 inputisatty()
 {
 	# check stdin
-	tty -s 2>/dev/null
+	#tty -s 2>/dev/null
+	test -t 0
 }
 
 isatty()
