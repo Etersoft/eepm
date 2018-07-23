@@ -81,8 +81,8 @@ case $PMTYPE in
 	homebrew)
 		docmd brew update
 		;;
-	ipkg)
-		sudocmd ipkg update
+	opkg)
+		sudocmd opkg update
 		;;
 	apk)
 		sudocmd apk update

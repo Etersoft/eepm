@@ -139,9 +139,9 @@ epm_remove_names()
 		xbps)
 			sudocmd xbps remove -R $@
 			return ;;
-		ipkg)
+		opkg)
 			# shellcheck disable=SC2046
-			sudocmd ipkg $(subst_option force -force-depends) remove $@
+			sudocmd opkg $(subst_option force -force-depends) remove $@
 			return ;;
 		*)
 			fatal "Have no suitable command for $PMTYPE"
@@ -185,8 +185,8 @@ epm_remove_nonint()
 		pkgng)
 			sudocmd pkg delete -y -R $@
 			return ;;
-		ipkg)
-			sudocmd ipkg -force-defaults remove $@
+		opkg)
+			sudocmd opkg -force-defaults remove $@
 			return ;;
 		xbps)
 			sudocmd xbps remove -y $@
@@ -219,8 +219,8 @@ epm_print_remove_command()
 		slackpkg)
 			echo "/sbin/removepkg $*"
 			;;
-		ipkg)
-			echo "ipkg remove $*"
+		opkg)
+			echo "opkg remove $*"
 			;;
 		aptcyg)
 			echo "apt-cyg remove $*"

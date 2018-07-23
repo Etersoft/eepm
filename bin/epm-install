@@ -173,9 +173,9 @@ epm_install_names()
 			# FIXME: sudo and quote
 			SUDO='' __separate_sudocmd "brew install" "brew upgrade" "$@"
 			return ;;
-		ipkg)
+		opkg)
 			[ -n "$force" ] && force=-force-depends
-			sudocmd ipkg $force install $@
+			sudocmd opkg $force install $@
 			return ;;
 		nix)
 			__separate_sudocmd "nix-env --install" "nix-env --upgrade" "$@"
@@ -252,8 +252,8 @@ epm_ni_install_names()
 		chocolatey)
 			docmd chocolatey install $@
 			return ;;
-		ipkg)
-			sudocmd ipkg -force-defaults install $@
+		opkg)
+			sudocmd opkg -force-defaults install $@
 			return ;;
 		nix)
 			sudocmd nix-env --install $@
@@ -468,8 +468,8 @@ epm_print_install_command()
         npackd)
             echo "npackdcl add --package=$*"
             ;;
-        ipkg)
-            echo "ipkg install $*"
+        opkg)
+            echo "opkg install $*"
             ;;
         android)
             echo "pm install $*"

@@ -138,8 +138,8 @@ case $PMTYPE in
 	homebrew)
 		docmd brew list | xargs -n1 echo
 		;;
-	ipkg)
-		CMD="ipkg list"
+	opkg)
+		CMD="opkg list"
 		;;
 	apk)
 		CMD="apk info"

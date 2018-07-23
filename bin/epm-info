@@ -109,8 +109,8 @@ case $PMTYPE in
 	slackpkg)
 		docmd /usr/sbin/slackpkg info $pkg_names
 		;;
-	ipkg)
-		docmd ipkg info $pkg_names
+	opkg)
+		docmd opkg info $pkg_names
 		;;
 	pkgng)
 		docmd pkg info $pkg_names

@@ -86,8 +86,8 @@ epm_upgrade()
 		docmd "brew upgrade $(brew outdated)"
 		return
 		;;
-	ipkg)
-		CMD="ipkg upgrade"
+	opkg)
+		CMD="opkg upgrade"
 		;;
 	slackpkg)
 		CMD="/usr/sbin/slackpkg upgrade-all"

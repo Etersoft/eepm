@@ -521,8 +521,8 @@ case $DISTRNAME in
 	MacOS)
 		CMD="homebrew"
 		;;
-	OpenWRT)
-		CMD="ipkg"
+	OpenWrt)
+		CMD="opkg"
 		;;
 	GNU/Linux/Guix)
 		CMD="guix"

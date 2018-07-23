@@ -109,8 +109,8 @@ __do_query()
             docmd grep -R -- "$(echo $@ | sed -e 's|^/\+||g')" /var/log/packages | sed -e "s|/var/log/packages/||g"
             return
             ;;
-        ipkg)
-            CMD="ipkg files"
+        opkg)
+            CMD="opkg files"
             ;;
         xbps)
             # FIXME: maybe it is search file?
