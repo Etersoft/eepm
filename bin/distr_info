@@ -139,15 +139,6 @@ elif distro gentoo-release ; then
 	DISTRIB_RELEASE=$(basename $MAKEPROFILE)
 	echo $DISTRIB_RELEASE | grep -q "[0-9]" || DISTRIB_RELEASE=$(basename "$(dirname $MAKEPROFILE)") #"
 
-# Slackware based
-elif distro mopslinux-version ; then
-	DISTRIB_ID="MOPSLinux"
-	if   has 4.0 ; then DISTRIB_RELEASE="4.0"
-	elif has 5.0 ; then DISTRIB_RELEASE="5.0"
-	elif has 5.1 ; then DISTRIB_RELEASE="5.1"
-	elif has 6.0 ; then DISTRIB_RELEASE="6.0"
-	elif has 6.1 ; then DISTRIB_RELEASE="6.1"
-	fi
 elif distro slackware-version ; then
 	DISTRIB_ID="Slackware"
 	DISTRIB_RELEASE="$(grep -Eo '[0-9]+\.[0-9]+' $DISTROFILE)"
@@ -228,26 +219,6 @@ elif distro mandriva-release || distro mandrake-release ; then
 	fi
 
 # Fedora based
-elif distro linux-xp-release || distro lxp-release; then
-	DISTRIB_ID="LinuxXP"
-	if has "Attack of the Clones" ; then DISTRIB_RELEASE="2006"
-	elif has "2007" ; then DISTRIB_RELEASE="2007"
-	elif has "2008" ; then DISTRIB_RELEASE="2008"
-	elif has "2009" ; then DISTRIB_RELEASE="2009"
-	fi
-
-elif distro asplinux-release ; then
-	DISTRIB_ID="ASPLinux"
-	if   has Karelia ; then DISTRIB_RELEASE="10"
-	elif has Seliger ; then DISTRIB_RELEASE="11"
-	elif has "11.1" ; then DISTRIB_RELEASE="11.1"
-	elif has Ladoga ; then DISTRIB_RELEASE="11.2"
-	elif has "11.2" ; then DISTRIB_RELEASE="11.2"
-	elif has "12" ; then DISTRIB_RELEASE="12"
-	elif has "13" ; then DISTRIB_RELEASE="13"
-	elif has "14" ; then DISTRIB_RELEASE="14"
-	elif has "15" ; then DISTRIB_RELEASE="15"
-	fi
 
 elif distro MCBC-release ; then
 	DISTRIB_ID="MCBC"
@@ -257,7 +228,7 @@ elif distro MCBC-release ; then
 
 elif distro fedora-release ; then
 	DISTRIB_ID="Fedora"
-	DISTRIB_RELEASE=$(cat "$DISTROFILE" | grep "release" | sed -e "s|.*release \([0-9]*\).*|\1|g")
+	DISTRIB_RELEASE=$(cat "$DISTROFILE" | grep "release" | sed -e "s|.*release \([0-9]*\).*|\1|g") #"
 
 elif distro redhat-release ; then
 	# FIXME if need
@@ -273,10 +244,6 @@ elif distro redhat-release ; then
 	if has Beryllium ; then
 		DISTRIB_ID="Scientific"
 		DISTRIB_RELEASE="4.1"
-	elif has Shrike ; then
-		DISTRIB_ID="RedHat"
-		DISTRIB_RELEASE="9"
-	elif has Taroon ; then 	DISTRIB_RELEASE="3"
 	elif has "release 4" ; then DISTRIB_RELEASE="4"
 	elif has "release 5" ; then DISTRIB_RELEASE="5"
 	elif has "release 6" ; then DISTRIB_RELEASE="6"
