@@ -63,6 +63,7 @@ pkgtype()
 		alpine) echo "apk" ;;
 		tinycorelinux) echo "tcz" ;;
 		voidlinux) echo "xbps" ;;
+		openwrt) echo "ipk" ;;
 		cygwin) echo "tar.xz" ;;
 		debian|ubuntu|mint|runtu|mcst|astra) echo "deb" ;;
 		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
@@ -130,7 +131,7 @@ elif distro gentoo-release ; then
 	DISTRIB_ID="Gentoo"
 	MAKEPROFILE=$(readlink $ROOTDIR/etc/portage/make.profile 2>/dev/null) || MAKEPROFILE=$(readlink $ROOTDIR/etc/make.profile)
 	DISTRIB_RELEASE=$(basename $MAKEPROFILE)
-	echo $DISTRIB_RELEASE | grep -q "[0-9]" || DISTRIB_RELEASE=$(basename "$(dirname $MAKEPROFILE)")
+	echo $DISTRIB_RELEASE | grep -q "[0-9]" || DISTRIB_RELEASE=$(basename "$(dirname $MAKEPROFILE)") #"
 
 # Slackware based
 elif distro mopslinux-version ; then
@@ -174,6 +175,11 @@ elif distro arch-release ; then
 elif distro mcst_version ; then
 	DISTRIB_ID="MCST"
 	DISTRIB_RELEASE=$(cat "$DISTROFILE" | grep "release" | sed -e "s|.*release \([0-9]*\).*|\1|g")
+
+# OpenWrt
+elif distro openwrt_release ; then
+	. $DISTROFILE
+	DISTRIB_RELEASE=$(cat $ROOTDIR/etc/openwrt_version)
 
 elif distro astra_version ; then
 	#DISTRIB_ID=`cat $DISTROFILE | get_var DISTRIB_ID`
