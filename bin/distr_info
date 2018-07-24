@@ -36,6 +36,13 @@ firstupper()
 	echo "$*" | sed 's/.*/\u&/'
 }
 
+tolower()
+{
+	# tr is broken in busybox (checked with OpenWrt)
+	#echo "$*" | tr "[:upper:]" "[:lower:]"
+	echo "$*" | awk '{print tolower($0)}'
+}
+
 # Translate DISTRIB_ID to vendor name (like %_vendor does)
 rpmvendor()
 {
@@ -44,7 +51,7 @@ rpmvendor()
 	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
 	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
 	[ "$DISTRIB_ID" = "VoidLinux" ] && echo "void" && return
-	echo "$DISTRIB_ID" | tr "[:upper:]" "[:lower:]"
+	tolower "$DISTRIB_ID"
 }
 
 # Translate DISTRIB_ID name to package manner (like in the package release name)
@@ -311,11 +318,16 @@ elif distro lsb-release && [ -n "$DISTRIB_RELEASE" ]; then
 	esac
 fi
 
+get_uname()
+{
+    tolower $(uname $1) | tr -d " \t\r\n"
+}
+
 get_base_os_name()
 {
 local DIST_OS
 # Resolve the os
-DIST_OS=`uname -s | tr "[:upper:]" "[:lower:]" | tr -d " \t\r\n"`
+DIST_OS="$(get_uname -s)"
 case "$DIST_OS" in
     'sunos')
         DIST_OS="solaris"
@@ -336,16 +348,12 @@ esac
 echo "$DIST_OS"
 }
 
-get_uname_m()
-{
-    uname -m | tr "[:upper:]" "[:lower:]" | tr -d " \t\r\n"
-}
 
 get_arch()
 {
 local DIST_ARCH
 # Resolve the architecture
-DIST_ARCH="$(get_uname_m)"
+DIST_ARCH="$(get_uname -m)"
 case "$DIST_ARCH" in
     'ia32' | 'i386' | 'i486' | 'i586' | 'i686')
         DIST_ARCH="x86"
@@ -386,7 +394,7 @@ get_bit_size()
 {
 local DIST_BIT
 # Check if we are running on 64bit platform, seems like a workaround for now...
-DIST_BIT="$(get_uname_m)"
+DIST_BIT="$(get_uname -m)"
 case "$DIST_BIT" in
     'amd64' | 'ia64' | 'x86_64' | 'ppc64')
         DIST_BIT="64"
