@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2015, 2016  Etersoft
-# Copyright (C) 2008, 2015, 2016  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2015, 2016, 2018  Etersoft
+# Copyright (C) 2008, 2015, 2016, 2018  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -48,7 +48,7 @@ print_binpkgfilelist()
 # TODO: package name mask for every system
 #PKGNAMEMASK1="\(.*\)-\([^0-9].*[^0-9]\)-\(.*[0-9].*\)"
 # mask to parse package name
-PKGNAMEMASK="\(.*\)-\([0-9].*\)-\(.*[0-9].*\)"
+PKGNAMEMASK="\(.*\)-\([0-9].*\)-\(.*[0-9].*\)\.\(.*\)\.\(.*\)"
 
 print_name()
 {
@@ -63,6 +63,11 @@ print_version()
 print_release()
 {
     echo "$1" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK|\3|g"
+}
+
+print_version_release()
+{
+    echo "$1" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK|\2-\3|g"
 }
 
 print_pkgname()
@@ -125,6 +130,7 @@ cat <<EOF
     epm print name [from filename|for package] NN        print only name of package name or package file
     epm print version [from filename|for package] NN     print only version of package name or package file
     epm print release [from filename|for package] NN     print only release of package name or package file
+    epm print version-release [from filename|for package] NN     print only release-release of package name or package file
     epm print field FF for package NN        print field of the package
     epm print pkgname from filename NN       print package name for the package file
     epm print srcname from filename NN       print source name for the package file
@@ -162,6 +168,16 @@ EOF
                 query_package_field "release" "$@"
             else
                 print_release "$@"
+            fi
+            ;;
+        "version-release")
+            [ -n "$1" ] || fatal "Arg is missed"
+            if [ -n "$FNFLAG" ] ; then
+                print_version_release "$(print_pkgname "$@")"
+            elif [ -n "$PKFLAG" ] ; then
+                echo "$(query_package_field "version" "$@")-$(query_package_field "release" "$@")"
+            else
+                print_version_release "$@"
             fi
             ;;
         "field")
