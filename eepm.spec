@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.5.2
+Version: 2.5.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -88,6 +88,12 @@ rm -f %buildroot%_datadir/%name/tools_eget
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Sat Oct 06 2018 Vitaly Lipatov <lav@altlinux.ru> 2.5.3-alt1
+- distr_info -b: add 64 bit for aarch64
+- epm-print: fix release output, add version-release support
+- add yandex-browser-beta.sh
+- add --short support for what-depends
+
 * Tue Jul 24 2018 Vitaly Lipatov <lav@altlinux.ru> 2.5.2-alt1
 - distr_info: add OpenWrt detection
 - distr_info: drop obsoleted systems
