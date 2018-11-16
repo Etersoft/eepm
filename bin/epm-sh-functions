@@ -503,7 +503,7 @@ case $DISTRNAME in
 	ArchLinux)
 		CMD="pacman"
 		;;
-	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific|GosLinux)
+	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific|GosLinux|Amzn)
 		CMD="yum-rpm"
 		which dnf 2>/dev/null >/dev/null && test -d /var/lib/dnf/yumdb && CMD=dnf-rpm
 		;;

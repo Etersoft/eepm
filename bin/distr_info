@@ -9,6 +9,8 @@
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
 
+# TODO: check /etc/system-release
+
 # Check for DISTRO specific file in /etc
 distro()
 {
@@ -81,7 +83,7 @@ pkgtype()
 		debian|ubuntu|mint|runtu|mcst|astra) echo "deb" ;;
 		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
 			echo "rpm" ;;
-		fedora|redhat|scientific|centos|rhel|goslinux)
+		fedora|redhat|scientific|centos|rhel|goslinux|amzn)
 			echo "rpm" ;;
 		*)  echo "rpm" ;;
 	esac
