@@ -71,7 +71,7 @@ rm -f %buildroot%_datadir/%name/tools_eget
 %endif
 
 %files
-%doc README TODO LICENSE
+%doc README.md TODO LICENSE
 %dir %_sysconfdir/eepm/
 %dir %_sysconfdir/eepm/repack.d/
 %config(noreplace) %_sysconfdir/eepm/eepm.conf
