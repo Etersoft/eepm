@@ -510,7 +510,7 @@ case $DISTRNAME in
 	Slackware)
 		CMD="slackpkg"
 		;;
-	SUSE|SLED|SLES|Tumbleweed)
+	SUSE|SLED|SLES)
 		CMD="zypper-rpm"
 		;;
 	ForesightLinux|rPathLinux)
