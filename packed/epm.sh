@@ -45,7 +45,8 @@ load_helper()
 inputisatty()
 {
 	# check stdin
-	tty -s 2>/dev/null
+	#tty -s 2>/dev/null
+	test -t 0
 }
 
 isatty()
@@ -491,14 +492,14 @@ case $DISTRNAME in
 	ArchLinux)
 		CMD="pacman"
 		;;
-	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific|GosLinux)
+	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific|GosLinux|Amzn)
 		CMD="yum-rpm"
 		which dnf 2>/dev/null >/dev/null && test -d /var/lib/dnf/yumdb && CMD=dnf-rpm
 		;;
 	Slackware)
 		CMD="slackpkg"
 		;;
-	SUSE|SLED|SLES|Tumbleweed)
+	SUSE|SLED|SLES)
 		CMD="zypper-rpm"
 		;;
 	ForesightLinux|rPathLinux)
@@ -510,8 +511,8 @@ case $DISTRNAME in
 	MacOS)
 		CMD="homebrew"
 		;;
-	OpenWRT)
-		CMD="ipkg"
+	OpenWrt)
+		CMD="opkg"
 		;;
 	GNU/Linux/Guix)
 		CMD="guix"
@@ -1148,6 +1149,13 @@ case $PMTYPE in
 			fatal "--dry-run is not supported yet"
 		fi
 		sudocmd xbps-remove -O
+		;;
+	opkg)
+		if [ -n "$dryrun" ] ; then
+			sudocmd opkg --noaction --autoremove
+		else
+			sudocmd opkg --autoremove
+		fi
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -1965,6 +1973,9 @@ epm_download()
 	tce)
 		sudocmd tce-load -w $pkg_filenames
 		;;
+	opkg)
+		docmd opkg $pkg_filenames
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
@@ -2137,6 +2148,9 @@ __epm_filelist_name()
 		pkgng)
 			CMD="pkg info -l"
 			;;
+		opkg)
+			CMD="opkg files"
+			;;
 		xbps)
 			CMD="xbps-query -f"
 			;;
@@ -2265,8 +2279,8 @@ case $PMTYPE in
 	slackpkg)
 		docmd /usr/sbin/slackpkg info $pkg_names
 		;;
-	ipkg)
-		docmd ipkg info $pkg_names
+	opkg)
+		docmd opkg info $pkg_names
 		;;
 	pkgng)
 		docmd pkg info $pkg_names
@@ -2453,9 +2467,9 @@ epm_install_names()
 			# FIXME: sudo and quote
 			SUDO='' __separate_sudocmd "brew install" "brew upgrade" "$@"
 			return ;;
-		ipkg)
+		opkg)
 			[ -n "$force" ] && force=-force-depends
-			sudocmd ipkg $force install $@
+			sudocmd opkg $force install $@
 			return ;;
 		nix)
 			__separate_sudocmd "nix-env --install" "nix-env --upgrade" "$@"
@@ -2531,8 +2545,8 @@ epm_ni_install_names()
 		chocolatey)
 			docmd chocolatey install $@
 			return ;;
-		ipkg)
-			sudocmd ipkg -force-defaults install $@
+		opkg)
+			sudocmd opkg -force-defaults install $@
 			return ;;
 		nix)
 			sudocmd nix-env --install $@
@@ -2745,8 +2759,8 @@ epm_print_install_command()
         npackd)
             echo "npackdcl add --package=$*"
             ;;
-        ipkg)
-            echo "ipkg install $*"
+        opkg)
+            echo "opkg install $*"
             ;;
         android)
             echo "pm install $*"
@@ -3160,8 +3174,8 @@ case $PMTYPE in
 	homebrew)
 		docmd brew list | xargs -n1 echo
 		;;
-	ipkg)
-		CMD="ipkg list"
+	opkg)
+		CMD="opkg list-installed"
 		;;
 	apk)
 		CMD="apk info"
@@ -3259,7 +3273,7 @@ print_binpkgfilelist()
 		| xargs -n1 -I "{}" echo -n "$PKGDIR/{} "
 }
 
-PKGNAMEMASK="\(.*\)-\([0-9].*\)-\(.*[0-9].*\)"
+PKGNAMEMASK="\(.*\)-\([0-9].*\)-\(.*[0-9].*\)\.\(.*\)\.\(.*\)"
 
 print_name()
 {
@@ -3274,6 +3288,11 @@ print_version()
 print_release()
 {
     echo "$1" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK|\3|g"
+}
+
+print_version_release()
+{
+    echo "$1" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK|\2-\3|g"
 }
 
 print_pkgname()
@@ -3336,6 +3355,7 @@ cat <<EOF
     epm print name [from filename|for package] NN        print only name of package name or package file
     epm print version [from filename|for package] NN     print only version of package name or package file
     epm print release [from filename|for package] NN     print only release of package name or package file
+    epm print version-release [from filename|for package] NN     print only release-release of package name or package file
     epm print field FF for package NN        print field of the package
     epm print pkgname from filename NN       print package name for the package file
     epm print srcname from filename NN       print source name for the package file
@@ -3373,6 +3393,16 @@ EOF
                 query_package_field "release" "$@"
             else
                 print_release "$@"
+            fi
+            ;;
+        "version-release")
+            [ -n "$1" ] || fatal "Arg is missed"
+            if [ -n "$FNFLAG" ] ; then
+                print_version_release "$(print_pkgname "$@")"
+            elif [ -n "$PKFLAG" ] ; then
+                echo "$(query_package_field "version" "$@")-$(query_package_field "release" "$@")"
+            else
+                print_version_release "$@"
             fi
             ;;
         "field")
@@ -3556,6 +3586,7 @@ __print_with_arch_suffix()
 {
 	local pkg="$1"
 	local suffix="$2"
+	[ -n "$pkg" ] || return 1
 	# do not change if some suffix already exists
 	echo "$pkg" | grep -q "(x86-32)$" && echo "$pkg" | sed -e "s|(x86-32)$|.i686|" && return 1
 	echo "$pkg" | grep "\.x86_64$" && return 1
@@ -3947,8 +3978,8 @@ __do_query()
             docmd grep -R -- "$(echo $@ | sed -e 's|^/\+||g')" /var/log/packages | sed -e "s|/var/log/packages/||g"
             return
             ;;
-        ipkg)
-            CMD="ipkg files"
+        opkg)
+            CMD="opkg search"
             ;;
         xbps)
             # FIXME: maybe it is search file?
@@ -4067,6 +4098,9 @@ epm_reinstall_names()
 			return ;;
 		pkgng)
 			sudocmd pkg install -f $@
+			return ;;
+		opkg)
+			sudocmd opkg --force-reinstall install $@
 			return ;;
 		slackpkg)
 			sudocmd_foreach "/usr/sbin/slackpkg reinstall" $@
@@ -4262,7 +4296,9 @@ __update_to_the_distro()
 			;;
 		Sisyphus)
 			docmd epm update || fatal
-			docmd epm install librpm7 librpm rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run again"
+			local ADDPKG
+			ADDPKG=$(epm -q --short make-initrd)
+			docmd epm install librpm7 librpm rpm apt $ADDPKG "$(get_fix_release_pkg --force "$TO")" ConsoleKit2- || fatal "Check an error and run again"
 			#docmd apt-get upgrade || fatal "Check an error and run epm release-upgrade or just epm upgrade again"
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade or just epm upgrade again"
 			;;
@@ -4558,9 +4594,9 @@ epm_remove_names()
 		xbps)
 			sudocmd xbps remove -R $@
 			return ;;
-		ipkg)
+		opkg)
 			# shellcheck disable=SC2046
-			sudocmd ipkg $(subst_option force -force-depends) remove $@
+			sudocmd opkg $(subst_option force -force-depends) remove $@
 			return ;;
 		*)
 			fatal "Have no suitable command for $PMTYPE"
@@ -4603,8 +4639,8 @@ epm_remove_nonint()
 		pkgng)
 			sudocmd pkg delete -y -R $@
 			return ;;
-		ipkg)
-			sudocmd ipkg -force-defaults remove $@
+		opkg)
+			sudocmd opkg -force-defaults remove $@
 			return ;;
 		xbps)
 			sudocmd xbps remove -y $@
@@ -4637,8 +4673,8 @@ epm_print_remove_command()
 		slackpkg)
 			echo "/sbin/removepkg $*"
 			;;
-		ipkg)
-			echo "ipkg remove $*"
+		opkg)
+			echo "opkg remove $*"
 			;;
 		aptcyg)
 			echo "apt-cyg remove $*"
@@ -5312,6 +5348,9 @@ case $PMTYPE in
 		#CMD="pkg rquery '%dn-%dv'"
 		CMD="pkg info -d"
 		;;
+	opkg)
+		CMD="opkg depends"
+		;;
 	xbps)
 		CMD="xbps-query -x"
 		;;
@@ -5412,6 +5451,9 @@ case $PMTYPE in
 			LANG=C docmd /usr/sbin/slackpkg search $string | grep " - " | sed -e 's|.* - ||g'
 			return
 		fi
+		;;
+	opkg)
+		CMD="opkg find"
 		;;
 	homebrew)
 		CMD="brew search"
@@ -5586,8 +5628,8 @@ case $PMTYPE in
 	slackpkg)
 		CMD="/usr/sbin/slackpkg file-search"
 		;;
-	ipkg)
-		CMD="ipkg search"
+	opkg)
+		CMD="opkg -A search"
 		;;
 	xbps)
 		CMD="xbps-query -Ro"
@@ -5859,6 +5901,9 @@ EOF
 			break
     		done
     		return $res ;;
+    	opkg)
+    		docmd --noaction install $filenames
+    		return $res ;;
     	pacman)
     		LC_ALL=C store_output sudocmd pacman -v -S $filenames <<EOF
 no
@@ -6101,8 +6146,8 @@ case $PMTYPE in
 	homebrew)
 		docmd brew update
 		;;
-	ipkg)
-		sudocmd ipkg update
+	opkg)
+		sudocmd opkg update
 		;;
 	apk)
 		sudocmd apk update
@@ -6193,8 +6238,8 @@ epm_upgrade()
 		docmd "brew upgrade $(brew outdated)"
 		return
 		;;
-	ipkg)
-		CMD="ipkg upgrade"
+	opkg)
+		CMD="opkg upgrade"
 		;;
 	slackpkg)
 		CMD="/usr/sbin/slackpkg upgrade-all"
@@ -6247,6 +6292,11 @@ epm_whatdepends()
 
 case $PMTYPE in
 	apt-rpm)
+		if [ -n "$short" ] ; then
+			showcmd apt-cache whatdepends $pkg
+			a= apt-cache whatdepends $pkg | grep "^  [^ ]" | sed -e "s|[0-9]*:||" | grep -E -v "(i586-|-debuginfo)"
+			return
+		fi
 		CMD="apt-cache whatdepends"
 		;;
 	apt-dpkg|aptitude-dpkg)
@@ -6274,6 +6324,9 @@ case $PMTYPE in
 		;;
 	aptcyg)
 		CMD="apt-cyg rdepends"
+		;;
+	opkg)
+		CMD="opkg whatdepends"
 		;;
 	xbps)
 		CMD="xbps-query -X"
@@ -6317,6 +6370,9 @@ case $PMTYPE in
 	zypper-rpm)
 		CMD="zypper what-provides"
 		;;
+	opkg)
+		CMD="opkg whatprovides"
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
@@ -6330,14 +6386,16 @@ docmd $CMD $pkg
 internal_distr_info()
 {
 # Author: Vitaly Lipatov <lav@etersoft.ru>
-# 2007, 2009, 2010, 2012, 2016 (c) Etersoft
-# 2007-2016 Public domain
+# 2007, 2009, 2010, 2012, 2016, 2017, 2018 (c) Etersoft
+# 2007-2018 Public domain
 
 # Detect the distro and version
 # Welcome to send updates!
 
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
+
+# TODO: check /etc/system-release
 
 # Check for DISTRO specific file in /etc
 distro()
@@ -6355,9 +6413,22 @@ has()
 	grep "$*" "$DISTROFILE" >/dev/null 2>&1
 }
 
+# Has a system the specified command?
+hascommand()
+{
+	which $1 2>/dev/null >/dev/null
+}
+
 firstupper()
 {
 	echo "$*" | sed 's/.*/\u&/'
+}
+
+tolower()
+{
+	# tr is broken in busybox (checked with OpenWrt)
+	#echo "$*" | tr "[:upper:]" "[:lower:]"
+	echo "$*" | awk '{print tolower($0)}'
 }
 
 # Translate DISTRIB_ID to vendor name (like %_vendor does)
@@ -6368,7 +6439,8 @@ rpmvendor()
 	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
 	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
 	[ "$DISTRIB_ID" = "VoidLinux" ] && echo "void" && return
-	echo "$DISTRIB_ID" | tr "[:upper:]" "[:lower:]"
+	[ "$DISTRIB_ID" = "OpenSUSE" ] && echo "suse" && return
+	tolower "$DISTRIB_ID"
 }
 
 # Translate DISTRIB_ID name to package manner (like in the package release name)
@@ -6393,11 +6465,12 @@ pkgtype()
 		alpine) echo "apk" ;;
 		tinycorelinux) echo "tcz" ;;
 		voidlinux) echo "xbps" ;;
+		openwrt) echo "ipk" ;;
 		cygwin) echo "tar.xz" ;;
 		debian|ubuntu|mint|runtu|mcst|astra) echo "deb" ;;
 		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
 			echo "rpm" ;;
-		fedora|redhat|scientific|centos|rhel|goslinux)
+		fedora|redhat|scientific|centos|rhel|goslinux|amzn)
 			echo "rpm" ;;
 		*)  echo "rpm" ;;
 	esac
@@ -6460,34 +6533,25 @@ elif distro gentoo-release ; then
 	DISTRIB_ID="Gentoo"
 	MAKEPROFILE=$(readlink $ROOTDIR/etc/portage/make.profile 2>/dev/null) || MAKEPROFILE=$(readlink $ROOTDIR/etc/make.profile)
 	DISTRIB_RELEASE=$(basename $MAKEPROFILE)
-	echo $DISTRIB_RELEASE | grep -q "[0-9]" || DISTRIB_RELEASE=$(basename "$(dirname $MAKEPROFILE)")
+	echo $DISTRIB_RELEASE | grep -q "[0-9]" || DISTRIB_RELEASE=$(basename "$(dirname $MAKEPROFILE)") #"
 
-# Slackware based
-elif distro mopslinux-version ; then
-	DISTRIB_ID="MOPSLinux"
-	if   has 4.0 ; then DISTRIB_RELEASE="4.0"
-	elif has 5.0 ; then DISTRIB_RELEASE="5.0"
-	elif has 5.1 ; then DISTRIB_RELEASE="5.1"
-	elif has 6.0 ; then DISTRIB_RELEASE="6.0"
-	elif has 6.1 ; then DISTRIB_RELEASE="6.1"
-	fi
 elif distro slackware-version ; then
 	DISTRIB_ID="Slackware"
 	DISTRIB_RELEASE="$(grep -Eo '[0-9]+\.[0-9]+' $DISTROFILE)"
 
-elif distro os-release && which apk 2>/dev/null >/dev/null ; then
+elif distro os-release && hascommand apk ; then
 	# shellcheck disable=SC1090
 	. $ROOTDIR/etc/os-release
 	DISTRIB_ID="$(firstupper "$ID")"
 	DISTRIB_RELEASE="$VERSION_ID"
 
-elif distro os-release && which tce-ab 2>/dev/null >/dev/null ; then
+elif distro os-release && hascommand tce-ab ; then
 	# shellcheck disable=SC1090
 	. $ROOTDIR/etc/os-release
 	DISTRIB_ID="TinyCoreLinux"
 	DISTRIB_RELEASE="$VERSION_ID"
 
-elif distro os-release && which xbps-query 2>/dev/null >/dev/null ; then
+elif distro os-release && hascommand xbps-query ; then
 	# shellcheck disable=SC1090
 	. $ROOTDIR/etc/os-release
 	DISTRIB_ID="VoidLinux"
@@ -6504,6 +6568,11 @@ elif distro arch-release ; then
 elif distro mcst_version ; then
 	DISTRIB_ID="MCST"
 	DISTRIB_RELEASE=$(cat "$DISTROFILE" | grep "release" | sed -e "s|.*release \([0-9]*\).*|\1|g")
+
+# OpenWrt
+elif distro openwrt_release ; then
+	. $DISTROFILE
+	DISTRIB_RELEASE=$(cat $ROOTDIR/etc/openwrt_version)
 
 elif distro astra_version ; then
 	#DISTRIB_ID=`cat $DISTROFILE | get_var DISTRIB_ID`
@@ -6546,26 +6615,6 @@ elif distro mandriva-release || distro mandrake-release ; then
 	fi
 
 # Fedora based
-elif distro linux-xp-release || distro lxp-release; then
-	DISTRIB_ID="LinuxXP"
-	if has "Attack of the Clones" ; then DISTRIB_RELEASE="2006"
-	elif has "2007" ; then DISTRIB_RELEASE="2007"
-	elif has "2008" ; then DISTRIB_RELEASE="2008"
-	elif has "2009" ; then DISTRIB_RELEASE="2009"
-	fi
-
-elif distro asplinux-release ; then
-	DISTRIB_ID="ASPLinux"
-	if   has Karelia ; then DISTRIB_RELEASE="10"
-	elif has Seliger ; then DISTRIB_RELEASE="11"
-	elif has "11.1" ; then DISTRIB_RELEASE="11.1"
-	elif has Ladoga ; then DISTRIB_RELEASE="11.2"
-	elif has "11.2" ; then DISTRIB_RELEASE="11.2"
-	elif has "12" ; then DISTRIB_RELEASE="12"
-	elif has "13" ; then DISTRIB_RELEASE="13"
-	elif has "14" ; then DISTRIB_RELEASE="14"
-	elif has "15" ; then DISTRIB_RELEASE="15"
-	fi
 
 elif distro MCBC-release ; then
 	DISTRIB_ID="MCBC"
@@ -6575,7 +6624,7 @@ elif distro MCBC-release ; then
 
 elif distro fedora-release ; then
 	DISTRIB_ID="Fedora"
-	DISTRIB_RELEASE=$(cat "$DISTROFILE" | grep "release" | sed -e "s|.*release \([0-9]*\).*|\1|g")
+	DISTRIB_RELEASE=$(cat "$DISTROFILE" | grep "release" | sed -e "s|.*release \([0-9]*\).*|\1|g") #"
 
 elif distro redhat-release ; then
 	# FIXME if need
@@ -6591,14 +6640,11 @@ elif distro redhat-release ; then
 	if has Beryllium ; then
 		DISTRIB_ID="Scientific"
 		DISTRIB_RELEASE="4.1"
-	elif has Shrike ; then
-		DISTRIB_ID="RedHat"
-		DISTRIB_RELEASE="9"
-	elif has Taroon ; then 	DISTRIB_RELEASE="3"
 	elif has "release 4" ; then DISTRIB_RELEASE="4"
 	elif has "release 5" ; then DISTRIB_RELEASE="5"
 	elif has "release 6" ; then DISTRIB_RELEASE="6"
 	elif has "release 7" ; then DISTRIB_RELEASE="7"
+	elif has "release 8" ; then DISTRIB_RELEASE="8"
 	fi
 
 # SUSE based
@@ -6618,6 +6664,9 @@ elif distro os-release ; then
 	DISTRIB_ID="$(firstupper "$ID")"
 	DISTRIB_RELEASE="$VERSION_ID"
 	[ -n "$DISTRIB_RELEASE" ] || DISTRIB_RELEASE="CUR"
+	if [ "$ID" = "opensuse-leap" ] ; then
+		DISTRIB_ID="SUSE"
+	fi
 
 # fixme: can we detect by some file?
 elif [ "$(uname)" = "FreeBSD" ] ; then
@@ -6636,7 +6685,7 @@ elif [ "$(uname -s 2>/dev/null)" = "Darwin" ] ; then
 	DISTRIB_RELEASE=$(uname -r)
 
 # fixme: move to up
-elif [ "$(uname)" = "Linux" ] && which guix 2>/dev/null >/dev/null ; then
+elif [ "$(uname)" = "Linux" ] && hascommand guix ; then
 	DISTRIB_ID="GNU/Linux/Guix"
 	DISTRIB_RELEASE=$(uname -r)
 
@@ -6656,16 +6705,22 @@ elif distro lsb-release && [ -n "$DISTRIB_RELEASE" ]; then
 	# fix distro name
 	case "$DISTRIB_ID" in
 		"openSUSE Tumbleweed")
-			DISTRIB_ID="Tumbleweed"
+			DISTRIB_ID="SUSE"
+			DISTRIB_RELEASE="Tumbleweed"
 			;;
 	esac
 fi
+
+get_uname()
+{
+    tolower $(uname $1) | tr -d " \t\r\n"
+}
 
 get_base_os_name()
 {
 local DIST_OS
 # Resolve the os
-DIST_OS=`uname -s | tr [:upper:] [:lower:] | tr -d " \t\r\n"`
+DIST_OS="$(get_uname -s)"
 case "$DIST_OS" in
     'sunos')
         DIST_OS="solaris"
@@ -6686,16 +6741,12 @@ esac
 echo "$DIST_OS"
 }
 
-get_uname_m()
-{
-    uname -m | tr [:upper:] [:lower:] | tr -d " \t\r\n"
-}
 
 get_arch()
 {
 local DIST_ARCH
 # Resolve the architecture
-DIST_ARCH="$(get_uname_m)"
+DIST_ARCH="$(get_uname -m)"
 case "$DIST_ARCH" in
     'ia32' | 'i386' | 'i486' | 'i586' | 'i686')
         DIST_ARCH="x86"
@@ -6736,9 +6787,12 @@ get_bit_size()
 {
 local DIST_BIT
 # Check if we are running on 64bit platform, seems like a workaround for now...
-DIST_BIT="$(get_uname_m)"
+DIST_BIT="$(get_uname -m)"
 case "$DIST_BIT" in
     'amd64' | 'ia64' | 'x86_64' | 'ppc64')
+        DIST_BIT="64"
+        ;;
+    'aarch64')
         DIST_BIT="64"
         ;;
 #    'pa_risc' | 'pa-risc') # Are some of these 64bit? Least not all...
@@ -7447,7 +7501,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 2.5.0"
+        echo "EPM package manager version 2.5.4"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2018"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -7457,7 +7511,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=2.5.0
+EPMVERSION=2.5.4
 verbose=
 quiet=
 nodeps=
