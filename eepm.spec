@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.5.4
+Version: 2.5.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -88,6 +88,10 @@ rm -f %buildroot%_datadir/%name/tools_eget
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Fri Jan 25 2019 Vitaly Lipatov <lav@altlinux.ru> 2.5.5-alt1
+- check: add fix duplicates
+- epm: keep sssd-ad during upgrade
+
 * Thu Nov 29 2018 Vitaly Lipatov <lav@altlinux.ru> 2.5.4-alt1
 - add Amzn (Amazon Linux AMI) support
 - rename README to README.md
