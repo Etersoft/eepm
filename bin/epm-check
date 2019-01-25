@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012-2013  Etersoft
-# Copyright (C) 2012-2013  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2019  Etersoft
+# Copyright (C) 2012-2019  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -17,19 +17,45 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+# remove duplicates
+try_fix_apt_rpm_dupls()
+{
+	echo "Check for duplicates ..."
+	local TESTPKG="ignoreflock"
+	local has_testpkg=""
+	if epm installed $TESTPKG ; then
+		has_iconv=1
+		sudocmd epm remove $TESTPKG || return
+	fi
+	local PKGLIST
+	PKGLIST=$(LANG=C $SUDO apt-get install $TESTPKG 2>&1 | grep "W: There are multiple versions of" | \
+		sed -e 's|W: There are multiple versions of "\(.*\)" in your system.|\1|')
+	for i in $PKGLIST ; do
+		local pkg=${i/.32bit/}
+		sudocmd rpm -e $(rpm -q $pkg | head -n1)
+	done
+	#[ -n "$has_iconv" ] && epm install $TESTPKG
+}
+
 epm_check()
 {
 case $PMTYPE in
-	apt-rpm|apt-dpkg)
+	apt-rpm)
 		#sudocmd apt-get check || exit
 		#sudocmd apt-get update || exit
-		sudocmd apt-get -f install
+		sudocmd apt-get -f install || return
+		try_fix_apt_rpm_dupls
+		;;
+	apt-dpkg)
+		#sudocmd apt-get check || exit
+		#sudocmd apt-get update || exit
+		sudocmd apt-get -f install || return
 		;;
 	apt-dpkg)
 		#sudocmd apt-get update || exit
 		#sudocmd apt-get check || exit
 		sudocmd apt-get -f install || return
-		sudocmd apt-get autoremove
+		#sudocmd apt-get autoremove
 		;;
 	aptitude-dpkg)
 		sudocmd aptitude -f install || return
