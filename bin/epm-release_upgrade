@@ -165,7 +165,7 @@ __update_to_the_distro()
 		Sisyphus)
 			docmd epm update || fatal
 			local ADDPKG
-			ADDPKG=$(epm -q --short make-initrd)
+			ADDPKG=$(epm -q --short make-initrd sssd-ad 2>/dev/null)
 			docmd epm install librpm7 librpm rpm apt $ADDPKG "$(get_fix_release_pkg --force "$TO")" ConsoleKit2- || fatal "Check an error and run again"
 			#docmd apt-get upgrade || fatal "Check an error and run epm release-upgrade or just epm upgrade again"
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade or just epm upgrade again"
