@@ -20,21 +20,29 @@
 # remove duplicates
 try_fix_apt_rpm_dupls()
 {
-	echo "Check for duplicates ..."
+	info "Check for duplicates ..."
 	local TESTPKG="ignoreflock"
 	local has_testpkg=""
-	if epm installed $TESTPKG ; then
-		has_iconv=1
-		sudocmd epm remove $TESTPKG || return
+	if epm --quiet installed $TESTPKG ; then
+		has_testpkg=1
+		sudocmd epm remove --auto $TESTPKG || return
 	fi
 	local PKGLIST
 	PKGLIST=$(LANG=C $SUDO apt-get install $TESTPKG 2>&1 | grep "W: There are multiple versions of" | \
 		sed -e 's|W: There are multiple versions of "\(.*\)" in your system.|\1|')
+	local TODEL
 	for i in $PKGLIST ; do
 		local pkg=${i/.32bit/}
-		sudocmd rpm -e $(rpm -q $pkg | head -n1)
+		local todel="$(rpm -q $pkg | head -n1)"
+		local todel2="$(rpm -q $pkg | head -n2 | tail -n1)"
+		if [ "$todel" = "$todel2" ] ; then
+			echo "Fix the same name duplicates for $pkg..."
+			sudocmd rpm -e "$todel" --allmatches --nodeps && epm install $pkg && continue
+		fi
+		sudocmd rpm -e "$todel" || TODEL="$TODEL $todel"
 	done
-	#[ -n "$has_iconv" ] && epm install $TESTPKG
+	[ -n "$TODEL" ] && sudocmd rpm -e "$TODEL"
+	[ -n "$has_testpkg" ] && epm install $TESTPKG
 }
 
 epm_check()
