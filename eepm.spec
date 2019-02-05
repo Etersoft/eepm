@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.5.5
+Version: 2.5.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -88,6 +88,9 @@ rm -f %buildroot%_datadir/%name/tools_eget
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Tue Feb 05 2019 Vitaly Lipatov <lav@altlinux.ru> 2.5.6-alt1
+- check: improve remove dupls: remove identical packages, add common removing
+
 * Fri Jan 25 2019 Vitaly Lipatov <lav@altlinux.ru> 2.5.5-alt1
 - check: add fix duplicates
 - epm: keep sssd-ad during upgrade
