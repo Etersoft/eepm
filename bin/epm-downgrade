@@ -71,20 +71,22 @@ epm_downgrade()
 
 	case $PMTYPE in
 	apt-rpm)
+		local APTOPTIONS="$(subst_option non_interactive -y)"
 		__epm_add_alt_apt_downgrade_preferences || return
 		if [ -n "$pkg_filenames" ] ; then
-			sudocmd apt-get install $pkg_filenames
+			sudocmd apt-get $APTOPTIONS install $pkg_filenames
 		else
-			sudocmd apt-get dist-upgrade
+			sudocmd apt-get $APTOPTIONS dist-upgrade
 		fi
 		__epm_remove_apt_downgrade_preferences
 		;;
 	apt-dpkg)
+		local APTOPTIONS="$(subst_option non_interactive -y)"
 		__epm_add_deb_apt_downgrade_preferences || return
 		if [ -n "$pkg_filenames" ] ; then
-			sudocmd apt-get install $pkg_filenames
+			sudocmd apt-get  $APTOPTIONS install $pkg_filenames
 		else
-			sudocmd apt-get dist-upgrade
+			sudocmd apt-get $APTOPTIONS dist-upgrade
 		fi
 		__epm_remove_apt_downgrade_preferences
 		;;
