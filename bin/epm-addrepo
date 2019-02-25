@@ -105,7 +105,7 @@ case $PMTYPE in
 		if echo "$repo" | grep -q "https://" ; then
 			assure_exists apt-transport-https
 		fi
-		apt-add-repository "$repo"
+		sudocmd apt-add-repository "$repo"
 		info "Check file /etc/apt/sources.list if needed"
 		;;
 	aptitude-dpkg)

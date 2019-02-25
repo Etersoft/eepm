@@ -65,7 +65,7 @@ esac;
 case $PMTYPE in
 	apt-dpkg)
 		assure_exists apt-add-repository software-properties-common
-		apt-add-repository --remove "$repo"
+		sudocmd apt-add-repository --remove "$repo"
 		info "Check file /etc/apt/sources.list if needed"
 		;;
 	aptitude-dpkg)
