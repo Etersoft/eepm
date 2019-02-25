@@ -27,6 +27,7 @@ fi
 
 # will replaced to /usr/share/eepm during install
 SHAREDIR=$PROGDIR
+CONFIGDIR=$PROGDIR/..
 
 load_helper()
 {

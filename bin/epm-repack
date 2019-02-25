@@ -136,7 +136,7 @@ __fix_spec()
 
 __apply_fix_code()
 {
-    local repackcode="/etc/eepm/repack.d/$1.sh"
+    local repackcode="$CONFIGDIR/repack.d/$1.sh"
     [ -x "$repackcode" ] || return
     shift
     docmd $repackcode "$1" "$2" || warning "There was errors with $repackcode script"
