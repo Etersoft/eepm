@@ -1,7 +1,8 @@
 #!/bin/sh
-# Place shell code here
-# It will run with two args: buildroot spec
-# Name this script like package name
+# Place your shell code here
+# It will be run with two args: buildroot spec
+# Name this script as package name
+
 BUILDROOT="$1"
 SPEC="$2"
 
