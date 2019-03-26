@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.5.7
+Version: 2.5.8
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -88,6 +88,11 @@ rm -f %buildroot%_datadir/%name/tools_eget
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Tue Mar 26 2019 Vitaly Lipatov <lav@altlinux.ru> 2.5.8-alt1
+- add trueconf-client repack config
+- epm: set timeout for 2 secs
+- fix broken pkg_filenames
+
 * Mon Feb 25 2019 Vitaly Lipatov <lav@altlinux.ru> 2.5.7-alt1
 - epm downgrade: add --auto support
 - add CONFIGDIR support
