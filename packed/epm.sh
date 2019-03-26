@@ -27,6 +27,7 @@ fi
 
 # will replaced to /usr/share/eepm during install
 SHAREDIR=$PROGDIR
+CONFIGDIR=$PROGDIR/..
 
 load_helper()
 {
@@ -649,7 +650,7 @@ case $PMTYPE in
 		if echo "$repo" | grep -q "https://" ; then
 			assure_exists apt-transport-https
 		fi
-		apt-add-repository "$repo"
+		sudocmd apt-add-repository "$repo"
 		info "Check file /etc/apt/sources.list if needed"
 		;;
 	aptitude-dpkg)
@@ -1266,19 +1267,52 @@ epm_changelog()
 
 # File bin/epm-check:
 
+try_fix_apt_rpm_dupls()
+{
+	info "Check for duplicates ..."
+	local TESTPKG="ignoreflock"
+	local has_testpkg=""
+	if epm --quiet installed $TESTPKG ; then
+		has_testpkg=1
+		sudocmd epm remove --auto $TESTPKG || return
+	fi
+	local PKGLIST
+	PKGLIST=$(LANG=C $SUDO apt-get install $TESTPKG 2>&1 | grep "W: There are multiple versions of" | \
+		sed -e 's|W: There are multiple versions of "\(.*\)" in your system.|\1|')
+	local TODEL
+	for i in $PKGLIST ; do
+		local pkg=${i/.32bit/}
+		local todel="$(rpm -q $pkg | head -n1)"
+		local todel2="$(rpm -q $pkg | head -n2 | tail -n1)"
+		if [ "$todel" = "$todel2" ] ; then
+			echo "Fix the same name duplicates for $pkg..."
+			sudocmd rpm -e "$todel" --allmatches --nodeps && epm install $pkg && continue
+		fi
+		sudocmd rpm -e "$todel" || TODEL="$TODEL $todel"
+	done
+	[ -n "$TODEL" ] && sudocmd rpm -e "$TODEL"
+	[ -n "$has_testpkg" ] && epm install $TESTPKG
+}
+
 epm_check()
 {
 case $PMTYPE in
-	apt-rpm|apt-dpkg)
+	apt-rpm)
 		#sudocmd apt-get check || exit
 		#sudocmd apt-get update || exit
-		sudocmd apt-get -f install
+		sudocmd apt-get -f install || return
+		try_fix_apt_rpm_dupls
+		;;
+	apt-dpkg)
+		#sudocmd apt-get check || exit
+		#sudocmd apt-get update || exit
+		sudocmd apt-get -f install || return
 		;;
 	apt-dpkg)
 		#sudocmd apt-get update || exit
 		#sudocmd apt-get check || exit
 		sudocmd apt-get -f install || return
-		sudocmd apt-get autoremove
+		#sudocmd apt-get autoremove
 		;;
 	aptitude-dpkg)
 		sudocmd aptitude -f install || return
@@ -1743,20 +1777,22 @@ epm_downgrade()
 
 	case $PMTYPE in
 	apt-rpm)
+		local APTOPTIONS="$(subst_option non_interactive -y)"
 		__epm_add_alt_apt_downgrade_preferences || return
 		if [ -n "$pkg_filenames" ] ; then
-			sudocmd apt-get install $pkg_filenames
+			sudocmd apt-get $APTOPTIONS install $pkg_filenames
 		else
-			sudocmd apt-get dist-upgrade
+			sudocmd apt-get $APTOPTIONS dist-upgrade
 		fi
 		__epm_remove_apt_downgrade_preferences
 		;;
 	apt-dpkg)
+		local APTOPTIONS="$(subst_option non_interactive -y)"
 		__epm_add_deb_apt_downgrade_preferences || return
 		if [ -n "$pkg_filenames" ] ; then
-			sudocmd apt-get install $pkg_filenames
+			sudocmd apt-get  $APTOPTIONS install $pkg_filenames
 		else
-			sudocmd apt-get dist-upgrade
+			sudocmd apt-get $APTOPTIONS dist-upgrade
 		fi
 		__epm_remove_apt_downgrade_preferences
 		;;
@@ -4061,7 +4097,7 @@ epm_query_file()
 
 __epm_query_package()
 {
-	pkg_filenames="$*" quoted_args="$*" quiet=1 epm_query_package
+	(pkg_filenames="$*" quoted_args="$*" quiet=1 epm_query_package)
 }
 
 epm_query_package()
@@ -4072,7 +4108,7 @@ epm_query_package()
 	MGS=$(eval __epm_search_make_grep $quoted_args)
 	EXTRA_SHOWDOCMD=$MGS
 	# Note: get all packages list and do grep
-	eval "pkg_filenames='' epm_packages \"$(eval get_firstarg $quoted_args)\" $MGS"
+	(eval "pkg_filenames='' epm_packages \"$(eval get_firstarg $quoted_args)\" $MGS")
 }
 
 # File bin/epm-reinstall:
@@ -4297,7 +4333,7 @@ __update_to_the_distro()
 		Sisyphus)
 			docmd epm update || fatal
 			local ADDPKG
-			ADDPKG=$(epm -q --short make-initrd)
+			ADDPKG=$(epm -q --short make-initrd sssd-ad 2>/dev/null)
 			docmd epm install librpm7 librpm rpm apt $ADDPKG "$(get_fix_release_pkg --force "$TO")" ConsoleKit2- || fatal "Check an error and run again"
 			#docmd apt-get upgrade || fatal "Check an error and run epm release-upgrade or just epm upgrade again"
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade or just epm upgrade again"
@@ -4850,7 +4886,7 @@ esac;
 case $PMTYPE in
 	apt-dpkg)
 		assure_exists apt-add-repository software-properties-common
-		apt-add-repository --remove "$repo"
+		sudocmd apt-add-repository --remove "$repo"
 		info "Check file /etc/apt/sources.list if needed"
 		;;
 	aptitude-dpkg)
@@ -4998,7 +5034,7 @@ __fix_spec()
 
 __apply_fix_code()
 {
-    local repackcode="/etc/eepm/repack.d/$1.sh"
+    local repackcode="$CONFIGDIR/repack.d/$1.sh"
     [ -x "$repackcode" ] || return
     shift
     docmd $repackcode "$1" "$2" || warning "There was errors with $repackcode script"
@@ -7501,7 +7537,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 2.5.4"
+        echo "EPM package manager version 2.5.8"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2018"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -7511,7 +7547,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=2.5.4
+EPMVERSION=2.5.8
 verbose=
 quiet=
 nodeps=
@@ -7842,7 +7878,7 @@ done
 
 # if input is not console and run script from file, get pkgs from stdin too
 if ! inputisatty && [ -n "$PROGDIR" ] ; then
-    for opt in $(withtimeout 1 cat) ; do
+    for opt in $(withtimeout 2 cat) ; do
         # FIXME: do not work
         # workaround against # yes | epme
         [ "$opt" = "y" ] && break;

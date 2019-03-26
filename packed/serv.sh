@@ -2240,7 +2240,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "Service manager version 2.5.4"
+        echo "Service manager version 2.5.8"
         echo "Running on $($DISTRVENDOR) with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2018"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
