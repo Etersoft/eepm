@@ -37,8 +37,10 @@ try_fix_apt_rpm_dupls()
 		local todel2="$(rpm -q $pkg | head -n2 | tail -n1)"
 		if [ "$todel" = "$todel2" ] ; then
 			echo "Fix the same name duplicates for $pkg..."
-			sudocmd rpm -e "$todel" --allmatches --nodeps && epm install $pkg && continue
+			sudocmd rpm -e "$todel" --allmatches --nodeps --justdb && epm install $pkg && continue
 		fi
+                # first use older package
+                [ "$(rpmevrcmp "$todel" "$todel2")" = "1" ] && todel="$todel2"
 		sudocmd rpm -e "$todel" || TODEL="$TODEL $todel"
 	done
 	[ -n "$TODEL" ] && sudocmd rpm -e "$TODEL"
