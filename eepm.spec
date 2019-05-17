@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.5.8
+Version: 2.5.9
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -88,6 +88,11 @@ rm -f %buildroot%_datadir/%name/tools_eget
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Fri May 17 2019 Vitaly Lipatov <lav@altlinux.ru> 2.5.9-alt1
+- epm-check: use rpmevrcmp to delete old versions
+- epm-sh-functions: improve systemd detection (docker support)
+- support release upgrade for p9
+
 * Tue Mar 26 2019 Vitaly Lipatov <lav@altlinux.ru> 2.5.8-alt1
 - add trueconf-client repack config
 - epm: set timeout for 2 secs
