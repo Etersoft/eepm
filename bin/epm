@@ -67,7 +67,7 @@ print_version()
 {
         echo "EPM package manager version @VERSION@"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
-        echo "Copyright (c) Etersoft 2012-2018"
+        echo "Copyright (c) Etersoft 2012-2019"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 
@@ -198,6 +198,9 @@ check_command()
         ;;
     check|fix|verify)         # HELPCMD: check local package base integrity and fix it
         epm_cmd=check
+        ;;
+    dedup)                    # HELPCMD: remove unallowed duplicated pkgs (after upgrade crash)
+        epm_cmd=dedup
         ;;
     -cl|cl|changelog)         # HELPCMD: show changelog for package
         epm_cmd=changelog
