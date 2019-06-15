@@ -31,7 +31,7 @@ epm_autoorphans()
 case $PMTYPE in
 	apt-rpm)
 		# ALT Linux only
-		assure_exists /etc/buildreqs/files/ignore.d/apt-scripts apt-scripts
+		assure_exists /usr/share/apt/scripts/list-extras.lua apt-scripts
 		if [ -z "$dryrun" ] ; then
 			echo "We will try remove all installed packages which are missed in repositories"
 			warning "Use with caution!"

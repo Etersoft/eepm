@@ -132,7 +132,7 @@ __epm_autoremove_altrpm()
 {
 	local i
 	load_helper epm-packages
-	assure_exists /etc/buildreqs/files/ignore.d/apt-scripts apt-scripts
+	assure_exists /usr/share/apt/scripts/list-nodeps.lua apt-scripts
 
 	if [ -z "$pkg_names" ] ; then
 		__epm_autoremove_altrpm_pp '^(python-module-|python3-module-|python-modules-|python3-modules|perl-)'
