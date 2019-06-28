@@ -60,7 +60,7 @@ case $PMTYPE in
 		CMD="dnf search --"
 		;;
 	zypper-rpm)
-		CMD="zypper search --"
+		CMD="zypper search -d --"
 		;;
 	mpkg)
 		CMD="mpkg search"

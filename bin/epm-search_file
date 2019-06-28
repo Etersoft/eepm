@@ -75,7 +75,7 @@ case $PMTYPE in
 		CMD="urpmf"
 		;;
 	zypper-rpm)
-		CMD="zypper wp vi"
+		CMD="zypper search --file-list"
 		;;
 	pacman)
 		CMD="pacman -Qo"
