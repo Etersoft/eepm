@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.5.9
+Version: 2.5.10
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -88,6 +88,12 @@ rm -f %buildroot%_datadir/%name/tools_eget
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Thu Aug 15 2019 Vitaly Lipatov <lav@altlinux.ru> 2.5.10-alt1
+- move dedup code to the separate command
+- epm dedup: add apt-get dedup from apt-get dedup support
+- epm search: improve for zypper
+- release_upgrade: rewrite to p9 upgrade support
+
 * Fri May 17 2019 Vitaly Lipatov <lav@altlinux.ru> 2.5.9-alt1
 - epm-check: use rpmevrcmp to delete old versions
 - epm-sh-functions: improve systemd detection (docker support)
