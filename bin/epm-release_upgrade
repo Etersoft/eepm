@@ -82,10 +82,17 @@ __replace_alt_version_in_repo()
 
 __alt_repofix()
 {
+	local TO="$1"
 	load_helper epm-repofix
 	showcmd epm repofix
 	quiet=1 pkg_filenames='' epm_repofix >/dev/null
-	__replace_text_in_alt_repo "/^ *#/! s!\[[tpc][6-9]\]![updates]!g"
+	# replace sign name
+	if [ -n "$TO" ] ; then
+		__replace_text_in_alt_repo "/^ *#/! s!\[alt\]![$TO]!g"
+		__replace_text_in_alt_repo "/^ *#/! s!\[sisyphus\]![$TO]!g"
+		__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![$TO]!g"
+		__replace_text_in_alt_repo "/^ *#/! s!\[[tpc][6-9]\]![$TO]!g"
+	fi
 }
 
 __get_conflict_release_pkg()
@@ -140,21 +147,20 @@ get_fix_release_pkg()
 __update_to_the_distro()
 {
 	local TO="$1"
-	__alt_repofix
 	case "$TO" in
 		p7)
+			__alt_repofix
 			docmd epm update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
-			__alt_repofix
-			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![$TO]!g"
+			__alt_repofix $TO
 			docmd epm update || fatal
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
 			;;
-		p8|p9)
+		p8)
+			__alt_repofix
 			docmd epm update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
-			__alt_repofix
-			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![$TO]!g"
+			__alt_repofix $TO
 			docmd epm update || fatal
 			# sure we have systemd if systemd is running
 			if is_installed systemd && is_active_systemd systemd ; then
@@ -162,12 +168,23 @@ __update_to_the_distro()
 			fi
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
 			;;
-		Sisyphus)
+		p9)
+			#docmd epm update || fatal
+			#docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
+			__alt_repofix $TO
 			docmd epm update || fatal
-			local ADDPKG
-			ADDPKG=$(epm -q --short make-initrd sssd-ad 2>/dev/null)
-			docmd epm install librpm7 librpm rpm apt $ADDPKG "$(get_fix_release_pkg --force "$TO")" ConsoleKit2- || fatal "Check an error and run again"
-			#docmd apt-get upgrade || fatal "Check an error and run epm release-upgrade or just epm upgrade again"
+			# sure we have systemd if systemd is running
+			#if is_installed systemd && is_active_systemd systemd ; then
+			#	docmd epm install systemd || fatal
+			#fi
+			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
+			;;
+		Sisyphus)
+			__alt_repofix
+			docmd epm update || fatal
+			#local ADDPKG
+			#ADDPKG=$(epm -q --short make-initrd sssd-ad 2>/dev/null)
+			#docmd epm install librpm7 librpm rpm apt $ADDPKG "$(get_fix_release_pkg --force "$TO")" ConsoleKit2- || fatal "Check an error and run again"
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade or just epm upgrade again"
 			;;
 		*)
@@ -186,6 +203,7 @@ __update_alt_to_next_distro()
 			TO="p7"
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
+			__replace_alt_version_in_repo "Sisyphus/" "$TO/branch/"
 			__replace_alt_version_in_repo "$FROM/branch/" "$TO/branch/"
 			__update_to_the_distro "$TO"
 			docmd epm update-kernel
@@ -196,6 +214,17 @@ __update_alt_to_next_distro()
 			TO="p8"
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
+			__replace_alt_version_in_repo "Sisyphus/" "$TO/branch/"
+			__replace_alt_version_in_repo $FROM/branch/ $TO/branch/
+			__update_to_the_distro $TO
+			docmd epm update-kernel || fatal
+			info "Done."
+			;;
+		"p8"|"p8 p9"|"t8 p9"|"c8 c9"|"p9 p9")
+			TO="p9"
+			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
+			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
+			__replace_alt_version_in_repo "Sisyphus/" "$TO/branch/"
 			__replace_alt_version_in_repo $FROM/branch/ $TO/branch/
 			__update_to_the_distro $TO
 			docmd epm update-kernel || fatal
@@ -206,7 +235,7 @@ __update_alt_to_next_distro()
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install "$(get_fix_release_pkg "$FROM")" || fatal
 			__replace_alt_version_in_repo "$FROM/" "$TO/branch/"
-			__replace_text_in_alt_repo "/^ *#/! s!\[alt\]![$TO]!g"
+			#__replace_text_in_alt_repo "/^ *#/! s!\[alt\]![$TO]!g"
 			__update_to_the_distro $TO
 			docmd epm downgrade || fatal
 			info "Done."
@@ -216,7 +245,7 @@ __update_alt_to_next_distro()
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install "$(get_fix_release_pkg "$FROM")" || fatal
 			__replace_alt_version_in_repo "$FROM/" "$TO/branch/"
-			__replace_text_in_alt_repo "/^ *#/! s!\[alt\]![$TO]!g"
+			#__replace_text_in_alt_repo "/^ *#/! s!\[alt\]![$TO]!g"
 			__update_to_the_distro $TO
 			docmd epm downgrade || fatal
 			info "Done."
@@ -227,8 +256,7 @@ __update_alt_to_next_distro()
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			docmd epm upgrade || fatal
 			__replace_alt_version_in_repo "$FROM/branch/" "$TO/"
-			__alt_repofix
-			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![alt]!g"
+			__alt_repofix "sisyphus"
 			__update_to_the_distro $TO
 			docmd epm update-kernel || fatal
 			info "Done."
