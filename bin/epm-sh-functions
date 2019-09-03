@@ -559,11 +559,9 @@ is_active_systemd()
 	[ -x "$SYSTEMCTL" ] || return
 	[ -d "$SYSTEMD_CGROUP_DIR" ] || return
 	#a='' mountpoint -q "$SYSTEMD_CGROUP_DIR" || return
-        cat /proc/1/cmdline | grep -q 'systemd' || return
-	#readlink /sbin/init | grep -q 'systemd' || return
-	# some hack
-	# shellcheck disable=SC2009
-	#ps ax | grep '[s]ystemd' | grep -q -v 'systemd-udev'
+	cat /proc/1/cmdline | grep -q 'systemd' && return
+	cat /proc/1/cmdline | grep -q '/sbin/init' || return
+	readlink /sbin/init | grep -q 'systemd' || return
 }
 
 assure_distr()
