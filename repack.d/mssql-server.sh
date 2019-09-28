@@ -4,4 +4,7 @@
 BUILDROOT="$1"
 SPEC="$2"
 
-subst "s|^\(Name: .*\)$|# FIXME: due libcrypto.so.10(libcrypto.so.10)(64bit) autoreqs\nAutoReq:yes,nolib\n# Converted from original package requires\nRequires:libssl pbzip2 bzip2 gdb python-base libnuma libkrb5 libsss_nss_idmap\n\1|g" $SPEC
+# we need libssl/libcrypto-devel due libssl.so/libcrypto.so using (ALT bug 35559)
+REQUIRES="libssl libssl-devel libcrypto-devel pbzip2 bzip2 gdb python-base libnuma libkrb5 libsss_nss_idmap cyrus-sasl2 libsasl2-plugin-gssapi"
+
+subst "s|^\(Name: .*\)$|# FIXME: due libcrypto.so.10(libcrypto.so.10)(64bit) autoreqs\nAutoReq:yes,nolib\n# Converted from original package requires\nRequires:$REQUIRES\n\1|g" $SPEC
