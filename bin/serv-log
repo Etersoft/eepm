@@ -25,6 +25,9 @@ __serv_log_altlinux()
 		postfix)
 			sudocmd tail -f /var/log/mail/all /var/log/mail/errors
 			;;
+		sshd)
+			sudocmd tail -f /var/log/auth/all
+			;;
 		cups)
 			sudocmd tail -f /var/log/cups/access_log /var/log/cups/error_log
 			;;
