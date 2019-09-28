@@ -1,3 +1,8 @@
+repack: проверять, если нет входного файла; писать полный путь к выходному файлу
+
+apt-mark hold unhold showhold auto manual showauto showmanual
+https://manpages.ubuntu.com/manpages/bionic/man8/apt-mark.8.html
+
 на p8, если в sources.list спереди стоит пробел
 " rpm http://"
 то имеем
