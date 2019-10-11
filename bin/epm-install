@@ -539,7 +539,10 @@ epm_install()
     if tasknumber "$pkg_names" >/dev/null ; then
         assure_distr ALTLinux "install with task number"
         assure_exists apt-repo
-        sudocmd apt-repo test $(tasknumber "$pkg_names")
+        local task
+        for task in $(tasknumber "$pkg_names") ; do
+            sudocmd apt-repo test $task
+        done
         return
     fi
 
