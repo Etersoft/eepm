@@ -232,7 +232,7 @@ check_command()
     assure)                   # HELPCMD: <command> [package]: install package if command does not exist
         epm_cmd=assure
         ;;
-    policy)                   # HELPCMD: print detailed information about the priority selection of package
+    policy|resolve)           # HELPCMD: print detailed information about the priority selection of package
         epm_cmd=policy
         ;;
 
@@ -252,7 +252,7 @@ check_command()
     removerepo|rr)            # HELPCMD: remove package repo
         epm_cmd=removerepo
         ;;
-    release-upgrade|upgrade-release)          # HELPCMD: update whole system to the release in arg (default: next (latest) release)
+    release-upgrade|upgrade-release|upgrade-system)          # HELPCMD: update whole system to the release in arg (default: next (latest) release)
         epm_cmd=release_upgrade
         ;;
     kernel-update|kernel-upgrade|update-kernel|upgrade-kernel)      # HELPCMD: update system kernel to the last repo version
