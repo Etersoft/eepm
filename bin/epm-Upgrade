@@ -23,10 +23,10 @@ load_helper epm-upgrade
 epm_Upgrade()
 {
 	case $PMTYPE in
-		yum-rpm)
+		yum-rpm|dnf-rpm)
 			;;
 		*)
-			pkg_filenames='' epm_update || return
+			(pkg_filenames='' epm_update) || return
 			;;
 	esac
 

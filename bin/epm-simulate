@@ -127,7 +127,7 @@ EOF
     			# use verbose for get package status
     			#pkg_filenames="$pkg-[0-9]" verbose=--verbose __epm_search_internal | egrep "(installed|upgrade)" && continue
     			#pkg_filenames="$pkg" verbose=--verbose __epm_search_internal | egrep "(installed|upgrade)" && continue
-    			pkg_filenames="$pkg" __epm_search_internal | grep -q "^$pkg-[0-9]" && continue
+    			(pkg_filenames="$pkg" __epm_search_internal) | grep -q "^$pkg-[0-9]" && continue
     			res=1
     			info "Package '$pkg' does not found in repository."
     		done

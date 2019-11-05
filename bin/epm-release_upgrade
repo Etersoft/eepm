@@ -85,7 +85,7 @@ __alt_repofix()
 	local TO="$1"
 	load_helper epm-repofix
 	showcmd epm repofix
-	quiet=1 pkg_filenames='' epm_repofix >/dev/null
+	(quiet=1 pkg_filenames='' epm_repofix >/dev/null)
 	# replace sign name
 	if [ -n "$TO" ] ; then
 		__replace_text_in_alt_repo "/^ *#/! s!\[alt\]![$TO]!g"
