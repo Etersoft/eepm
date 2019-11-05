@@ -23,12 +23,12 @@ __epm_packages_sort()
 {
 # FIXME: sort depends on --sort value
 case $PMTYPE in
-	apt-rpm|yum-rpm|urpm-rpm|zypper-rpm|dnf-rpm)
+	*-rpm)
 		# FIXME: space with quotes problems, use point instead
 		warmup_rpmbase
 		docmd rpm -qa --queryformat "%{size}@%{name}-%{version}-%{release}\n" $pkg_filenames | sed -e "s|@| |g" | sort -n -k1
 		;;
-	apt-dpkg)
+	*-dpkg)
 		warmup_dpkgbase
 		docmd dpkg-query -W --showformat="\${Installed-Size}@\${Package}-\${Version}:\${Architecture}\n" $pkg_filenames | sed -e "s|@| |g" | sort -n -k1
 		;;
@@ -57,13 +57,6 @@ epm_packages()
 	[ -n "$sort" ] && __epm_packages_sort && return
 
 case $PMTYPE in
-	apt-rpm)
-		warmup_rpmbase
-		# FIXME: strong equal
-		CMD="rpm -qa $pkg_filenames"
-		[ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n $pkg_filenames"
-		docmd $CMD
-		return ;;
 	*-dpkg)
 		warmup_dpkgbase
 		# FIXME: strong equal
@@ -74,10 +67,7 @@ case $PMTYPE in
 		showcmd $CMD
 		$CMD | grep "^i" | sed -e "s|.* ||g" | __fo_pfn
 		return ;;
-	snappy)
-		CMD="snappy info"
-		;;
-	yum-rpm|urpm-rpm|zypper-rpm|dnf-rpm)
+	*-rpm)
 		warmup_rpmbase
 		# FIXME: strong equal
 		CMD="rpm -qa $pkg_filenames"
@@ -86,6 +76,9 @@ case $PMTYPE in
 		return ;;
 	packagekit-*)
 		docmd pkcon get-packages --filter installed
+		;;
+	snappy)
+		CMD="snappy info"
 		;;
 	emerge)
 		CMD="qlist -I -C"

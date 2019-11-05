@@ -184,8 +184,8 @@ epm_download()
 {
 	local CMD
 
-	case $DISTRNAME in
-		ALTLinux)
+	case $DISTRNAME-$PMTYPE in
+		ALTLinux-apt-rpm)
 			__epm_download_alt $pkg_filenames
 			return
 			;;

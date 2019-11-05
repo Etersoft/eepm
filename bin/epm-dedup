@@ -49,9 +49,8 @@ try_fix_apt_rpm_dupls()
 
 epm_dedup()
 {
-case $PMTYPE in
-	apt-rpm)
-		# ALT Linux only
+case "$DISTRNAME" in
+	"ALTLinux")
 		assure_exists /usr/share/apt/scripts apt-scripts
 		if [ -f /usr/share/apt/scripts/dedup.lua ] ; then
 			"Check for duplicates via apt-get dedup from apt-scripts"

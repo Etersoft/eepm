@@ -442,10 +442,10 @@ epm_print_install_command()
     #[ -z "$1" ] && return
     [ -z "$1" ] && [ -n "$pkg_names" ] && return
     case $PMTYPE in
-        apt-rpm|yum-rpm|urpm-rpm|zypper-rpm|dnf-rpm)
+        *-rpm)
             echo "rpm -Uvh --force $nodeps $*"
             ;;
-        apt-dpkg|aptitude-dpkg)
+        *-dpkg)
             echo "dpkg -i $*"
             ;;
         pkgsrc)
