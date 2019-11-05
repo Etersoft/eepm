@@ -1,5 +1,5 @@
 Name: eepm
-Version: 2.6.0
+Version: 3.0.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -88,6 +88,18 @@ rm -f %buildroot%_datadir/%name/tools_eget
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Tue Nov 05 2019 Vitaly Lipatov <lav@altlinux.ru> 3.0.0-alt1
+- distr_info: p9 support
+- addrepo: add check for empty DISTRVERSION
+- epm install: add support for several task numbers
+- fix tasknumber checking
+- addrepo: add support for dnf, add support for epel repo add
+- release_upgrade: install etersoft-gpgkeys firstly if used one
+- epm: add alias for policy (resolve) and release-upgrade (upgrade-system)
+- add initial packagekit (pkcon) support
+- more clean and strict rules
+- workaround against ALT bug 37272
+
 * Sat Sep 28 2019 Vitaly Lipatov <lav@altlinux.ru> 2.6.0-alt1
 - add repack.d/XenDesktopVDA.sh (ALT bug 37167)
 - fix systemd detection
