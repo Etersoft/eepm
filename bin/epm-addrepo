@@ -19,6 +19,9 @@
 
 load_helper epm-sh-altlinux
 
+ETERSOFTPUBURL=http://download.etersoft.ru/pub
+ALTLINUXPUBURL=http://ftp.altlinux.org/pub/distributions
+
 __epm_addrepo_rhel()
 {
 	local repo="$@"
@@ -56,11 +59,11 @@ __epm_addrepo_altlinux()
 			# TODO: use apt-repo add ?
 			echo "" | sudocmd tee -a /etc/apt/sources.list
 			echo "# added with eepm addrepo etersoft" | sudocmd tee -a /etc/apt/sources.list
-			echo "rpm [etersoft] http://download.etersoft.ru/pub/Etersoft LINUX@Etersoft/$branch/$arch addon" | sudocmd tee -a /etc/apt/sources.list
+			echo "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$branch/$arch addon" | sudocmd tee -a /etc/apt/sources.list
 			if [ "$arch" = "x86_64" ] ; then
-				echo "rpm [etersoft] http://download.etersoft.ru/pub/Etersoft LINUX@Etersoft/$branch/$arch-i586 addon" | sudocmd tee -a /etc/apt/sources.list
+				echo "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$branch/$arch-i586 addon" | sudocmd tee -a /etc/apt/sources.list
 			fi
-			echo "rpm [etersoft] http://download.etersoft.ru/pub/Etersoft LINUX@Etersoft/$branch/noarch addon" | sudocmd tee -a /etc/apt/sources.list
+			echo "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$branch/noarch addon" | sudocmd tee -a /etc/apt/sources.list
 			repo="$DISTRVERSION"
 			return 0
 			;;
@@ -79,11 +82,11 @@ __epm_addrepo_altlinux()
 			local distrversion="$(echo "$DISTRVERSION" | tr "[:upper:]" "[:lower:]")"
 			local rpmsign='[alt]'
 			[ "$distrversion" != "sisyphus" ] && rpmsign="[$distrversion]"
-			echo "rpm $rpmsign http://ftp.altlinux.org/pub/distributions archive/$distrversion/date/$datestr/$arch classic" | sudocmd tee -a /etc/apt/sources.list
+			echo "rpm $rpmsign $ALTLINUXPUBURL archive/$distrversion/date/$datestr/$arch classic" | sudocmd tee -a /etc/apt/sources.list
 			if [ "$arch" = "x86_64" ] ; then
-				echo "rpm $rpmsign http://ftp.altlinux.org/pub/distributions archive/$distrversion/date/$datestr/$arch-i586 classic" | sudocmd tee -a /etc/apt/sources.list
+				echo "rpm $rpmsign $ALTLINUXPUBURL archive/$distrversion/date/$datestr/$arch-i586 classic" | sudocmd tee -a /etc/apt/sources.list
 			fi
-			echo "rpm $rpmsign http://ftp.altlinux.org/pub/distributions archive/$distrversion/date/$datestr/noarch classic" | sudocmd tee -a /etc/apt/sources.list
+			echo "rpm $rpmsign $ALTLINUXPUBURL archive/$distrversion/date/$datestr/noarch classic" | sudocmd tee -a /etc/apt/sources.list
 			return 0
 			;;
 	esac
@@ -98,11 +101,13 @@ __epm_addrepo_altlinux()
 	if [ -z "$repo" ] ; then
 		info "Add branch repo. Use follow params:"
 		sudocmd apt-repo add branch
-		echo "etersoft (for LINUX@Etersoft repo)"
-		echo "archive 2018/02/09 (for archive from that date)"
+		echo "etersoft           - for LINUX@Etersoft repo"
+		echo "archive 2018/02/09 - for archive from that date"
 		return
 	fi
 
+	# TODO: add other mirror (mirror.yandex.ru)
+	# TODO: apt-repo supports archive
 	sudocmd apt-repo add "$repo"
 
 }
