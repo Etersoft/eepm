@@ -198,6 +198,10 @@ epm_download()
 	aptcyg)
 		sudocmd apt-cyg download $pkg_filenames
 		;;
+	packagekit-*)
+		# TODO: force
+		docmd pkcon download $pkg_filenames
+		;;
 	yum-rpm)
 		# TODO: check yum install --downloadonly --downloaddir=/tmp <package-name>
 		assure_exists yumdownloader yum-utils

@@ -197,6 +197,9 @@ case $PMTYPE in
 		fi
 		sudocmd aura -Oj
 		;;
+	packagekit-*)
+		docmd pkcon repair --autoremove
+		;;
 	yum-rpm)
 		# cleanup orphanes?
 		while true ; do

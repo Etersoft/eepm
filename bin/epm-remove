@@ -72,6 +72,9 @@ epm_remove_names()
 		apt-rpm)
 			sudocmd apt-get remove $APTOPTIONS $@
 			return ;;
+		packagekit-*)
+			docmd pkcon remove $@
+			return ;;
 		deepsolver-rpm)
 			sudocmd ds-remove $@
 			return ;;
@@ -164,6 +167,9 @@ epm_remove_nonint()
 		apt-rpm)
 			sudocmd apt-get -y --force-yes remove $@
 			return ;;
+		packagekit-*)
+			docmd pkcon remove --noninteractive $@
+			return ;;
 		urpm-rpm)
 			sudocmd urpme --auto $@
 			return ;;
@@ -203,6 +209,9 @@ epm_print_remove_command()
 			;;
 		apt-dpkg|aptitude-dpkg)
 			echo "dpkg -P $*"
+			;;
+		packagekit-*)
+			echo "pkcon remove --noninteractive $*"
 			;;
 		pkgsrc)
 			echo "pkg_delete -r $*"

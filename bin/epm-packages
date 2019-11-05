@@ -84,6 +84,9 @@ case $PMTYPE in
 		[ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n $pkg_filenames"
 		docmd $CMD
 		return ;;
+	packagekit-*)
+		docmd pkcon get-packages --filter installed
+		;;
 	emerge)
 		CMD="qlist -I -C"
 		# print with colors for console output

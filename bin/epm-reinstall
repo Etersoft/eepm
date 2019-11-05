@@ -33,6 +33,10 @@ epm_reinstall_names()
 		aptitude-dpkg)
 			sudocmd aptitude reinstall $@
 			return ;;
+		packagekit-*)
+			warning "Please send me the correct command form for it"
+			docmd pkcon install --allow-reinstall $@
+			return ;;
 		yum-rpm)
 			sudocmd yum reinstall $@
 			return ;;

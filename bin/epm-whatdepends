@@ -44,6 +44,9 @@ case $PMTYPE in
 	aptitude-dpkg)
 		CMD="aptitude why"
 		;;
+	packagekit-*)
+		CMD="pkcon depends-on"
+		;;
 	yum-rpm)
 		CMD="repoquery --whatrequires"
 		;;

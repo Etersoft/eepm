@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012-2018  Etersoft
-# Copyright (C) 2012-2018  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2019  Etersoft
+# Copyright (C) 2012-2019  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -129,6 +129,9 @@ epm_install_names()
 		urpm-rpm)
 			sudocmd urpmi $URPMOPTIONS $@
 			return ;;
+		packagekit-*)
+			docmd pkcon install $@
+			return ;;
 		pkgsrc)
 			sudocmd pkg_add -r $@
 			return ;;
@@ -230,6 +233,9 @@ epm_ni_install_names()
 			# FIXME: returns true ever no package found, need check for "no found", "Nothing to do."
 			yes | sudocmd zypper --non-interactive $ZYPPEROPTIONS install $@
 			return ;;
+		packagekit-*)
+			docmd pkcon install --noninteractive $@
+			return ;;
 		pkgsrc)
 			sudocmd pkg_add -r $@
 			return ;;
@@ -315,9 +321,9 @@ epm_install_files()
     # TODO: check read permissions
     # sudo test -r FILE
     # do not fallback to install_names if we have no permissions
+    case "$DISTRNAME" in
+        "ALTLinux")
 
-    case $PMTYPE in
-        apt-rpm)
             # TODO: replace with name changed function
             __epm_check_if_try_install_deb $@ && return
 
@@ -334,7 +340,9 @@ epm_install_files()
 
             # use install_names
             ;;
+    esac
 
+    case $PMTYPE in
         apt-dpkg|aptitude-dpkg)
             # the new version of the conf. file is installed with a .dpkg-dist suffix
             if [ -n "$non_interactive" ] ; then
@@ -358,34 +366,7 @@ epm_install_files()
             return
             ;;
 
-        yum-rpm|dnf-rpm)
-            __epm_check_if_try_install_deb $@ && return
-
-            sudocmd rpm -Uvh $force $nodeps $@ && return
-            # if run with --nodeps, do not fallback on hi level
-
-            __epm_check_if_rpm_already_installed $@ && return
-
-            [ -n "$nodeps" ] && return
-            YUMOPTIONS=--nogpgcheck
-            # use install_names
-            ;;
-
-        zypper-rpm)
-            __epm_check_if_try_install_deb $@ && return
-            sudocmd rpm -Uvh $force $nodeps $@ && return
-            local RES=$?
-
-            __epm_check_if_rpm_already_installed $@ && return
-
-            # if run with --nodeps, do not fallback on hi level
-
-            [ -n "$nodeps" ] && return $RES
-            ZYPPEROPTIONS=$(__use_zypper_no_gpg_checks)
-            # use install_names
-            ;;
-
-        urpm-rpm)
+       *-rpm)
             __epm_check_if_try_install_deb $@ && return
             sudocmd rpm -Uvh $force $nodeps $@ && return
             local RES=$?
@@ -395,9 +376,27 @@ epm_install_files()
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return $RES
 
-            URPMOPTIONS=--no-verify-rpm
-            # use install_names
+            case $PMTYPE in
+                yum-rpm|dnf-rpm)
+                    YUMOPTIONS=--nogpgcheck
+                    # use install_names
+                    ;;
+                zypper-rpm)
+                    ZYPPEROPTIONS=$(__use_zypper_no_gpg_checks)
+                    # use install_names
+                    ;;
+                urpm-rpm)
+                    URPMOPTIONS=--no-verify-rpm
+                    # use install_names
+                    ;;
+                *)
+                    # use install_names
+                    ;;
+            esac
             ;;
+        packagekit-*)
+            docmd pkcon install-local $@
+            return ;;
         pkgsrc)
             sudocmd pkg_add $@
             return ;;
@@ -517,6 +516,9 @@ epm_print_install_names_command()
 			return ;;
 		zypper-rpm)
 			echo "zypper --non-interactive $ZYPPEROPTIONS install $*"
+			return ;;
+		packagekit-*)
+			echo "pkcon --noninteractive $*"
 			return ;;
 		pacman)
 			echo "pacman -S --noconfirm $force $*"

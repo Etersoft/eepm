@@ -475,12 +475,16 @@ if [ -n "$FORCEPM" ] ; then
 	return
 fi
 
+# TODO: in more appropriate way
+#which pkcon 2>/dev/null >/dev/null && info "You can run $ PMTYPE=packagekit epm to use packagekit backend"
+
 # TODO: move it in distr_vendor?
 # FIXME: some problems with multibased distros (Server Edition on CentOS and Desktop Edition on Ubuntu)
 case $DISTRNAME in
 	ALTLinux)
 		CMD="apt-rpm"
 		#which ds-install 2>/dev/null >/dev/null && CMD=deepsolver-rpm
+		#which pkcon 2>/dev/null >/dev/null && CMD=packagekit-rpm
 		;;
 	PCLinux)
 		CMD="apt-rpm"

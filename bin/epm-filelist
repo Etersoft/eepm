@@ -67,6 +67,9 @@ __epm_filelist_remote()
 			fi
 			docmd_foreach __deb_local_content_filelist "$@"
 			;;
+		packagekit-*)
+			docmd pkcon get-files "$@"
+			;;
 		yum-rpm)
 			assure_exists yum-utils || return
 			docmd repoquery -q -l "$@"
@@ -119,6 +122,9 @@ __epm_filelist_name()
 			;;
 		*-dpkg)
 			CMD="dpkg -L"
+			;;
+		packagekit-*)
+			CMD="pkcon get-files"
 			;;
 		android)
 			CMD="pm list packages -f"

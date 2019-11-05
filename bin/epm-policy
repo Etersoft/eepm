@@ -34,8 +34,8 @@ case $PMTYPE in
 	apt-rpm)
 		docmd apt-cache policy $pkg_names
 		;;
-	apt-dpkg)
-		docmd apt-cache policy $pkg_names
+	packagekit-*)
+		docmd pkcon resolve $pkg_names
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
