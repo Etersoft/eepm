@@ -55,7 +55,7 @@ case $DISTRNAME in
 				;;
 		esac
 
-		[ -n "$repo" ] || fatal "No such repo or task. Use epm remove repo [autoimports|archive|TASK]"
+		[ -n "$repo" ] || fatal "No such repo or task. Use epm remove repo [autoimports|archive|tasks/TASKNUMBER]"
 		assure_exists apt-repo
 		sudocmd apt-repo rm "$repo"
 		return

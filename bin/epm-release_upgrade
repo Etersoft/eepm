@@ -97,7 +97,7 @@ __alt_repofix()
 
 __get_conflict_release_pkg()
 {
-	epmqf --quiet --short /etc/fedora-release | head -n1
+	epm qf --quiet --short /etc/fedora-release | head -n1
 }
 
 get_fix_release_pkg()
