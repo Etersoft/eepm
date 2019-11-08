@@ -127,11 +127,20 @@ $(get_help HELPOPT)
 "
 }
 
+detect_virt()
+{
+        which systemd-detect-virt >/dev/null 2>/dev/null || return
+        a= systemd-detect-virt
+}
+
 print_version()
 {
+        local on_text="(host system)"
+        local virt="$(detect_virt)"
+        [ "$virt" = "none" ] || [ "$virt" = "" ] || on_text="(under $virt)"
         echo "Service manager version @VERSION@"
-        echo "Running on $($DISTRVENDOR) with $SERVICETYPE"
-        echo "Copyright (c) Etersoft 2012-2018"
+        echo "Running on $($DISTRVENDOR) $on_text with $SERVICETYPE"
+        echo "Copyright (c) Etersoft 2012-2019"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 
