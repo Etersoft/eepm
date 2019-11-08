@@ -48,14 +48,12 @@ case $PMTYPE in
 		sudocmd aptitude update || return
 		;;
 	yum-rpm)
-		info "update command is stubbed for yum"
-		# yum makecache
-		#sudocmd yum check-update
+		# just skipped
+		[ -n "$verbose" ] && info "update command is stubbed for yum"
 		;;
 	dnf-rpm)
-		info "update command is stubbed for dnf"
-		# dnf makecache
-		#sudocmd dnf check-update
+		# just skipped
+		[ -n "$verbose" ] && info "update command is stubbed for dnf"
 		;;
 	urpm-rpm)
 		sudocmd urpmi.update -a
