@@ -458,10 +458,12 @@ if [ -n "$FORCEPM" ] ; then
 	return
 fi
 
+
 case $DISTRNAME in
 	ALTLinux)
 		CMD="apt-rpm"
 		#which ds-install 2>/dev/null >/dev/null && CMD=deepsolver-rpm
+		#which pkcon 2>/dev/null >/dev/null && CMD=packagekit-rpm
 		;;
 	PCLinux)
 		CMD="apt-rpm"
@@ -531,19 +533,15 @@ esac
 PMTYPE=$CMD
 }
 
-
 is_active_systemd()
 {
 	local a
 	SYSTEMCTL=/bin/systemctl
-	SYSTEMD_CGROUP_DIR=/sys/fs/cgroup/systemd
-	[ -x "$SYSTEMCTL" ] || return
-	[ -d "$SYSTEMD_CGROUP_DIR" ] || return
-	a='' mountpoint -q "$SYSTEMD_CGROUP_DIR" || return
-	readlink /sbin/init | grep -q 'systemd' || return
-	# some hack
-	# shellcheck disable=SC2009
-	ps ax | grep '[s]ystemd' | grep -q -v 'systemd-udev'
+	#[ -x "$SYSTEMCTL" ] || return
+	[ -d /run/systemd/system ] || return
+	#SYSTEMD_CGROUP_DIR=/sys/fs/cgroup/systemd
+	#[ -d "$SYSTEMD_CGROUP_DIR" ] || return
+	#cat /proc/1/comm | grep -q 'systemd' && return
 }
 
 assure_distr()
@@ -741,6 +739,9 @@ __serv_log_altlinux()
 	case "$SERVICE" in
 		postfix)
 			sudocmd tail -f /var/log/mail/all /var/log/mail/errors
+			;;
+		sshd)
+			sudocmd tail -f /var/log/auth/all
 			;;
 		cups)
 			sudocmd tail -f /var/log/cups/access_log /var/log/cups/error_log
@@ -1168,15 +1169,19 @@ fi
 
 # ALT Linux based
 if distro altlinux-release ; then
+	# TODO: use os-release firsly
 	DISTRIB_ID="ALTLinux"
 	if has Sisyphus ; then DISTRIB_RELEASE="Sisyphus"
 	elif has "ALT Linux 7." ; then DISTRIB_RELEASE="p7"
 	elif has "ALT Linux t7." ; then DISTRIB_RELEASE="t7"
 	elif has "ALT Linux 8." ; then DISTRIB_RELEASE="p8"
 	elif has "ALT .*8.[0-9]" ; then DISTRIB_RELEASE="p8"
+	elif has "ALT .*9.[0-9]" ; then DISTRIB_RELEASE="p9"
+	elif has "ALT p9 p9" ; then DISTRIB_RELEASE="p9"
 	elif has "Simply Linux 6." ; then DISTRIB_RELEASE="p6"
 	elif has "Simply Linux 7." ; then DISTRIB_RELEASE="p7"
 	elif has "Simply Linux 8." ; then DISTRIB_RELEASE="p8"
+	elif has "Simply Linux 9." ; then DISTRIB_RELEASE="p9"
 	elif has "ALT Linux 6." ; then DISTRIB_RELEASE="p6"
 	elif has "ALT Linux p8"  ; then DISTRIB_RELEASE="p8"
 	elif has "ALT Linux p7"  ; then DISTRIB_RELEASE="p7"
@@ -2238,11 +2243,20 @@ $(get_help HELPOPT)
 "
 }
 
+detect_virt()
+{
+        which systemd-detect-virt >/dev/null 2>/dev/null || return
+        a= systemd-detect-virt
+}
+
 print_version()
 {
-        echo "Service manager version 2.5.8"
-        echo "Running on $($DISTRVENDOR) with $SERVICETYPE"
-        echo "Copyright (c) Etersoft 2012-2018"
+        local on_text="(host system)"
+        local virt="$(detect_virt)"
+        [ "$virt" = "none" ] || [ "$virt" = "" ] || on_text="(under $virt)"
+        echo "Service manager version 3.1.0"
+        echo "Running on $($DISTRVENDOR) $on_text with $SERVICETYPE"
+        echo "Copyright (c) Etersoft 2012-2019"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 

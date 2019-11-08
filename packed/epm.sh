@@ -467,10 +467,12 @@ if [ -n "$FORCEPM" ] ; then
 	return
 fi
 
+
 case $DISTRNAME in
 	ALTLinux)
 		CMD="apt-rpm"
 		#which ds-install 2>/dev/null >/dev/null && CMD=deepsolver-rpm
+		#which pkcon 2>/dev/null >/dev/null && CMD=packagekit-rpm
 		;;
 	PCLinux)
 		CMD="apt-rpm"
@@ -540,19 +542,15 @@ esac
 PMTYPE=$CMD
 }
 
-
 is_active_systemd()
 {
 	local a
 	SYSTEMCTL=/bin/systemctl
-	SYSTEMD_CGROUP_DIR=/sys/fs/cgroup/systemd
-	[ -x "$SYSTEMCTL" ] || return
-	[ -d "$SYSTEMD_CGROUP_DIR" ] || return
-	a='' mountpoint -q "$SYSTEMD_CGROUP_DIR" || return
-	readlink /sbin/init | grep -q 'systemd' || return
-	# some hack
-	# shellcheck disable=SC2009
-	ps ax | grep '[s]ystemd' | grep -q -v 'systemd-udev'
+	#[ -x "$SYSTEMCTL" ] || return
+	[ -d /run/systemd/system ] || return
+	#SYSTEMD_CGROUP_DIR=/sys/fs/cgroup/systemd
+	#[ -d "$SYSTEMD_CGROUP_DIR" ] || return
+	#cat /proc/1/comm | grep -q 'systemd' && return
 }
 
 assure_distr()
@@ -564,6 +562,27 @@ assure_distr()
 
 # File bin/epm-addrepo:
 
+
+ETERSOFTPUBURL=http://download.etersoft.ru/pub
+ALTLINUXPUBURL=http://ftp.altlinux.org/pub/distributions
+
+__epm_addrepo_rhel()
+{
+	local repo="$@"
+	if [ -z "$repo" ] ; then
+		echo "Add repo."
+		echo "1. Use with repository URL, f.i. http://www.example.com/example.repo"
+		echo "2. Use with epel to add EPEL repository"
+		return 1
+	fi
+	case "$1" in
+		epel)
+			epm install epel-release
+			return 1
+			;;
+	esac
+	return 0
+}
 
 __epm_addrepo_altlinux()
 {
@@ -583,11 +602,11 @@ __epm_addrepo_altlinux()
 			# TODO: use apt-repo add ?
 			echo "" | sudocmd tee -a /etc/apt/sources.list
 			echo "# added with eepm addrepo etersoft" | sudocmd tee -a /etc/apt/sources.list
-			echo "rpm [etersoft] http://download.etersoft.ru/pub/Etersoft LINUX@Etersoft/$branch/$arch addon" | sudocmd tee -a /etc/apt/sources.list
+			echo "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$branch/$arch addon" | sudocmd tee -a /etc/apt/sources.list
 			if [ "$arch" = "x86_64" ] ; then
-				echo "rpm [etersoft] http://download.etersoft.ru/pub/Etersoft LINUX@Etersoft/$branch/$arch-i586 addon" | sudocmd tee -a /etc/apt/sources.list
+				echo "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$branch/$arch-i586 addon" | sudocmd tee -a /etc/apt/sources.list
 			fi
-			echo "rpm [etersoft] http://download.etersoft.ru/pub/Etersoft LINUX@Etersoft/$branch/noarch addon" | sudocmd tee -a /etc/apt/sources.list
+			echo "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$branch/noarch addon" | sudocmd tee -a /etc/apt/sources.list
 			repo="$DISTRVERSION"
 			return 0
 			;;
@@ -596,6 +615,7 @@ __epm_addrepo_altlinux()
 			repo="$repo.$(echo "$DISTRVERSION" | tr "[:upper:]" "[:lower:]")"
 			;;
 		archive)
+			[ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
 			datestr="$2"
 			echo "$datestr" | grep -Eq "^20[0-2][0-9]/[01][0-9]/[0-3][0-9]$" || fatal "use follow date format: 2017/12/31"
 			# TODO: func?
@@ -605,11 +625,11 @@ __epm_addrepo_altlinux()
 			local distrversion="$(echo "$DISTRVERSION" | tr "[:upper:]" "[:lower:]")"
 			local rpmsign='[alt]'
 			[ "$distrversion" != "sisyphus" ] && rpmsign="[$distrversion]"
-			echo "rpm $rpmsign http://ftp.altlinux.org/pub/distributions archive/$distrversion/date/$datestr/$arch classic" | sudocmd tee -a /etc/apt/sources.list
+			echo "rpm $rpmsign $ALTLINUXPUBURL archive/$distrversion/date/$datestr/$arch classic" | sudocmd tee -a /etc/apt/sources.list
 			if [ "$arch" = "x86_64" ] ; then
-				echo "rpm $rpmsign http://ftp.altlinux.org/pub/distributions archive/$distrversion/date/$datestr/$arch-i586 classic" | sudocmd tee -a /etc/apt/sources.list
+				echo "rpm $rpmsign $ALTLINUXPUBURL archive/$distrversion/date/$datestr/$arch-i586 classic" | sudocmd tee -a /etc/apt/sources.list
 			fi
-			echo "rpm $rpmsign http://ftp.altlinux.org/pub/distributions archive/$distrversion/date/$datestr/noarch classic" | sudocmd tee -a /etc/apt/sources.list
+			echo "rpm $rpmsign $ALTLINUXPUBURL archive/$distrversion/date/$datestr/noarch classic" | sudocmd tee -a /etc/apt/sources.list
 			return 0
 			;;
 	esac
@@ -624,11 +644,13 @@ __epm_addrepo_altlinux()
 	if [ -z "$repo" ] ; then
 		info "Add branch repo. Use follow params:"
 		sudocmd apt-repo add branch
-		echo "etersoft (for LINUX@Etersoft repo)"
-		echo "archive 2018/02/09 (for archive from that date)"
+		echo "etersoft           - for LINUX@Etersoft repo"
+		echo "archive 2018/02/09 - for archive from that date"
 		return
 	fi
 
+	# TODO: add other mirror (mirror.yandex.ru)
+	# TODO: apt-repo supports archive
 	sudocmd apt-repo add "$repo"
 
 }
@@ -658,7 +680,12 @@ case $PMTYPE in
 		;;
 	yum-rpm)
 		assure_exists yum-utils
+		__epm_addrepo_rhel "$repo" || return
 		sudocmd yum-config-manager --add-repo "$repo"
+		;;
+	dnf-rpm)
+		__epm_addrepo_rhel "$repo" || return
+		sudocmd dnf config-manager --add-repo "$repo"
 		;;
 	urpm-rpm)
 		sudocmd urpmi.addmedia "$repo"
@@ -822,7 +849,7 @@ epm_autoorphans()
 case $PMTYPE in
 	apt-rpm)
 		# ALT Linux only
-		assure_exists /etc/buildreqs/files/ignore.d/apt-scripts apt-scripts
+		assure_exists /usr/share/apt/scripts/list-extras.lua apt-scripts
 		if [ -z "$dryrun" ] ; then
 			echo "We will try remove all installed packages which are missed in repositories"
 			warning "Use with caution!"
@@ -1030,7 +1057,7 @@ __epm_autoremove_altrpm_lib()
 __epm_autoremove_altrpm()
 {
 	local i
-	assure_exists /etc/buildreqs/files/ignore.d/apt-scripts apt-scripts
+	assure_exists /usr/share/apt/scripts/list-nodeps.lua apt-scripts
 
 	if [ -z "$pkg_names" ] ; then
 		__epm_autoremove_altrpm_pp '^(python-module-|python3-module-|python-modules-|python3-modules|perl-)'
@@ -1093,6 +1120,9 @@ case $PMTYPE in
 			fatal "--dry-run is not supported yet"
 		fi
 		sudocmd aura -Oj
+		;;
+	packagekit-*)
+		docmd pkcon repair --autoremove
 		;;
 	yum-rpm)
 		# cleanup orphanes?
@@ -1267,33 +1297,6 @@ epm_changelog()
 
 # File bin/epm-check:
 
-try_fix_apt_rpm_dupls()
-{
-	info "Check for duplicates ..."
-	local TESTPKG="ignoreflock"
-	local has_testpkg=""
-	if epm --quiet installed $TESTPKG ; then
-		has_testpkg=1
-		sudocmd epm remove --auto $TESTPKG || return
-	fi
-	local PKGLIST
-	PKGLIST=$(LANG=C $SUDO apt-get install $TESTPKG 2>&1 | grep "W: There are multiple versions of" | \
-		sed -e 's|W: There are multiple versions of "\(.*\)" in your system.|\1|')
-	local TODEL
-	for i in $PKGLIST ; do
-		local pkg=${i/.32bit/}
-		local todel="$(rpm -q $pkg | head -n1)"
-		local todel2="$(rpm -q $pkg | head -n2 | tail -n1)"
-		if [ "$todel" = "$todel2" ] ; then
-			echo "Fix the same name duplicates for $pkg..."
-			sudocmd rpm -e "$todel" --allmatches --nodeps && epm install $pkg && continue
-		fi
-		sudocmd rpm -e "$todel" || TODEL="$TODEL $todel"
-	done
-	[ -n "$TODEL" ] && sudocmd rpm -e "$TODEL"
-	[ -n "$has_testpkg" ] && epm install $TESTPKG
-}
-
 epm_check()
 {
 case $PMTYPE in
@@ -1301,7 +1304,7 @@ case $PMTYPE in
 		#sudocmd apt-get check || exit
 		#sudocmd apt-get update || exit
 		sudocmd apt-get -f install || return
-		try_fix_apt_rpm_dupls
+		info "You can use epm dedup also"
 		;;
 	apt-dpkg)
 		#sudocmd apt-get check || exit
@@ -1313,6 +1316,9 @@ case $PMTYPE in
 		#sudocmd apt-get check || exit
 		sudocmd apt-get -f install || return
 		#sudocmd apt-get autoremove
+		;;
+	packagekit-*)
+		docmd pkcon repair
 		;;
 	aptitude-dpkg)
 		sudocmd aptitude -f install || return
@@ -1538,7 +1544,8 @@ update_repo_if_needed()
 
     cd / || fatal
     if ! __is_repo_info_downloaded || ! __is_repo_info_uptodate ; then
-        pkg_filenames='' epm_update
+        # FIXME: cleans!!!
+        (pkg_filenames='' epm_update)
     fi
     cd - >/dev/null || fatal
 
@@ -1723,6 +1730,56 @@ epm_conflicts()
 	[ -n "$pkg_filenames" ] || fatal "Conflicts: Missing package(s) name"
 	epm_conflicts_files
 	epm_conflicts_names
+}
+
+# File bin/epm-dedup:
+
+try_fix_apt_rpm_dupls()
+{
+	info "Check for duplicates (internal implementation) ..."
+	local TESTPKG="ignoreflock"
+	local has_testpkg=""
+	if epm --quiet installed $TESTPKG ; then
+		has_testpkg=1
+		sudocmd epm remove --auto $TESTPKG || return
+	fi
+	local PKGLIST
+	PKGLIST=$(LANG=C $SUDO apt-get install $TESTPKG 2>&1 | grep "W: There are multiple versions of" | \
+		sed -e 's|W: There are multiple versions of "\(.*\)" in your system.|\1|')
+	local TODEL
+	for i in $PKGLIST ; do
+		local pkg=${i/.32bit/}
+		local todel="$(rpm -q $pkg | head -n1)"
+		local todel2="$(rpm -q $pkg | head -n2 | tail -n1)"
+		if [ "$todel" = "$todel2" ] ; then
+			echo "Fix the same name duplicates for $pkg..."
+			sudocmd rpm -e "$todel" --allmatches --nodeps --justdb && epm install $pkg && continue
+		fi
+                # first use older package
+                [ "$(rpmevrcmp "$todel" "$todel2")" = "1" ] && todel="$todel2"
+		sudocmd rpm -e "$todel" || TODEL="$TODEL $todel"
+	done
+	[ -n "$TODEL" ] && sudocmd rpm -e "$TODEL"
+	[ -n "$has_testpkg" ] && epm install $TESTPKG
+}
+
+epm_dedup()
+{
+case "$DISTRNAME" in
+	"ALTLinux")
+		assure_exists /usr/share/apt/scripts apt-scripts
+		if [ -f /usr/share/apt/scripts/dedup.lua ] ; then
+			"Check for duplicates via apt-get dedup from apt-scripts"
+			sudocmd apt-get dedup
+		else
+			try_fix_apt_rpm_dupls
+		fi
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
 }
 
 # File bin/epm-downgrade:
@@ -1981,8 +2038,8 @@ epm_download()
 {
 	local CMD
 
-	case $DISTRNAME in
-		ALTLinux)
+	case $DISTRNAME-$PMTYPE in
+		ALTLinux-apt-rpm)
 			__epm_download_alt $pkg_filenames
 			return
 			;;
@@ -1994,6 +2051,10 @@ epm_download()
 		;;
 	aptcyg)
 		sudocmd apt-cyg download $pkg_filenames
+		;;
+	packagekit-*)
+		# TODO: force
+		docmd pkcon download $pkg_filenames
 		;;
 	yum-rpm)
 		# TODO: check yum install --downloadonly --downloaddir=/tmp <package-name>
@@ -2111,6 +2172,9 @@ __epm_filelist_remote()
 			fi
 			docmd_foreach __deb_local_content_filelist "$@"
 			;;
+		packagekit-*)
+			docmd pkcon get-files "$@"
+			;;
 		yum-rpm)
 			assure_exists yum-utils || return
 			docmd repoquery -q -l "$@"
@@ -2163,6 +2227,9 @@ __epm_filelist_name()
 			;;
 		*-dpkg)
 			CMD="dpkg -L"
+			;;
+		packagekit-*)
+			CMD="pkcon get-files"
 			;;
 		android)
 			CMD="pm list packages -f"
@@ -2222,6 +2289,18 @@ epm_filelist()
 
 }
 
+# File bin/epm-full_upgrade:
+
+
+epm_full_upgrade()
+{
+	(pkg_filenames='' epm_update) || return
+
+	epm_upgrade || return
+
+	epm_kernel_update || return
+}
+
 # File bin/epm-info:
 
 
@@ -2254,10 +2333,6 @@ __epm_info_by_pkgtype()
 __epm_info_by_pmtype()
 {
 case $PMTYPE in
-	apt-rpm)
-		__epm_info_rpm_low && return
-		docmd apt-cache show $pkg_names
-		;;
 	apt-dpkg)
 		if [ -n "$pkg_files" ] ; then
 			docmd dpkg -I $pkg_files
@@ -2273,21 +2348,35 @@ case $PMTYPE in
 		[ -z "$pkg_names" ] && return
 		docmd aptitude show $pkg_names
 		;;
-	yum-rpm)
+	*-rpm)
 		__epm_info_rpm_low && return
-		docmd yum info $pkg_names
+		case $PMTYPE in
+			apt-rpm)
+				docmd apt-cache show $pkg_names
+				;;
+			packagekit-rpm)
+				docmd pkcon get-details $pkg_names
+				;;
+			yum-rpm)
+				docmd yum info $pkg_names
+				;;
+			urpmi-rpm)
+				docmd urpmq -i $pkg_names
+				;;
+			dnf-rpm)
+				docmd dnf info $pkg_names
+				;;
+			zypper-rpm)
+				docmd zypper info $pkg_names
+				;;
+			*)
+				warning "Unknown command for $PMTYPE"
+				;;
+		esac
 		;;
-	urpmi-rpm)
-		__epm_info_rpm_low && return
-		docmd urpmq -i $pkg_names
-		;;
-	dnf-rpm)
-		__epm_info_rpm_low && return
-		docmd dnf info $pkg_names
-		;;
-	zypper-rpm)
-		__epm_info_rpm_low && return
-		docmd zypper info $pkg_names
+	packagekit-*)
+		# TODO: get-details-local
+		docmd pkcon get-details $pkg_names
 		;;
 	pacman)
 		is_installed $pkg_names && docmd pacman -Qi $pkg_names && return
@@ -2459,6 +2548,9 @@ epm_install_names()
 		urpm-rpm)
 			sudocmd urpmi $URPMOPTIONS $@
 			return ;;
+		packagekit-*)
+			docmd pkcon install $@
+			return ;;
 		pkgsrc)
 			sudocmd pkg_add -r $@
 			return ;;
@@ -2559,6 +2651,9 @@ epm_ni_install_names()
 			# FIXME: returns true ever no package found, need check for "no found", "Nothing to do."
 			yes | sudocmd zypper --non-interactive $ZYPPEROPTIONS install $@
 			return ;;
+		packagekit-*)
+			docmd pkcon install --noninteractive $@
+			return ;;
 		pkgsrc)
 			sudocmd pkg_add -r $@
 			return ;;
@@ -2643,9 +2738,9 @@ epm_install_files()
     # TODO: check read permissions
     # sudo test -r FILE
     # do not fallback to install_names if we have no permissions
+    case "$DISTRNAME" in
+        "ALTLinux")
 
-    case $PMTYPE in
-        apt-rpm)
             # TODO: replace with name changed function
             __epm_check_if_try_install_deb $@ && return
 
@@ -2662,7 +2757,9 @@ epm_install_files()
 
             # use install_names
             ;;
+    esac
 
+    case $PMTYPE in
         apt-dpkg|aptitude-dpkg)
             # the new version of the conf. file is installed with a .dpkg-dist suffix
             if [ -n "$non_interactive" ] ; then
@@ -2686,34 +2783,7 @@ epm_install_files()
             return
             ;;
 
-        yum-rpm|dnf-rpm)
-            __epm_check_if_try_install_deb $@ && return
-
-            sudocmd rpm -Uvh $force $nodeps $@ && return
-            # if run with --nodeps, do not fallback on hi level
-
-            __epm_check_if_rpm_already_installed $@ && return
-
-            [ -n "$nodeps" ] && return
-            YUMOPTIONS=--nogpgcheck
-            # use install_names
-            ;;
-
-        zypper-rpm)
-            __epm_check_if_try_install_deb $@ && return
-            sudocmd rpm -Uvh $force $nodeps $@ && return
-            local RES=$?
-
-            __epm_check_if_rpm_already_installed $@ && return
-
-            # if run with --nodeps, do not fallback on hi level
-
-            [ -n "$nodeps" ] && return $RES
-            ZYPPEROPTIONS=$(__use_zypper_no_gpg_checks)
-            # use install_names
-            ;;
-
-        urpm-rpm)
+       *-rpm)
             __epm_check_if_try_install_deb $@ && return
             sudocmd rpm -Uvh $force $nodeps $@ && return
             local RES=$?
@@ -2723,9 +2793,27 @@ epm_install_files()
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return $RES
 
-            URPMOPTIONS=--no-verify-rpm
-            # use install_names
+            case $PMTYPE in
+                yum-rpm|dnf-rpm)
+                    YUMOPTIONS=--nogpgcheck
+                    # use install_names
+                    ;;
+                zypper-rpm)
+                    ZYPPEROPTIONS=$(__use_zypper_no_gpg_checks)
+                    # use install_names
+                    ;;
+                urpm-rpm)
+                    URPMOPTIONS=--no-verify-rpm
+                    # use install_names
+                    ;;
+                *)
+                    # use install_names
+                    ;;
+            esac
             ;;
+        packagekit-*)
+            docmd pkcon install-local $@
+            return ;;
         pkgsrc)
             sudocmd pkg_add $@
             return ;;
@@ -2770,10 +2858,10 @@ epm_print_install_command()
     #[ -z "$1" ] && return
     [ -z "$1" ] && [ -n "$pkg_names" ] && return
     case $PMTYPE in
-        apt-rpm|yum-rpm|urpm-rpm|zypper-rpm|dnf-rpm)
+        *-rpm)
             echo "rpm -Uvh --force $nodeps $*"
             ;;
-        apt-dpkg|aptitude-dpkg)
+        *-dpkg)
             echo "dpkg -i $*"
             ;;
         pkgsrc)
@@ -2845,6 +2933,9 @@ epm_print_install_names_command()
 		zypper-rpm)
 			echo "zypper --non-interactive $ZYPPEROPTIONS install $*"
 			return ;;
+		packagekit-*)
+			echo "pkcon --noninteractive $*"
+			return ;;
 		pacman)
 			echo "pacman -S --noconfirm $force $*"
 			return ;;
@@ -2866,7 +2957,10 @@ epm_install()
     if tasknumber "$pkg_names" >/dev/null ; then
         assure_distr ALTLinux "install with task number"
         assure_exists apt-repo
-        sudocmd apt-repo test $(tasknumber "$pkg_names")
+        local task
+        for task in $(tasknumber "$pkg_names") ; do
+            sudocmd apt-repo test $task
+        done
         return
     fi
 
@@ -2941,18 +3035,11 @@ epm_Install()
 
     [ -z "$files$names" ] && info "Install: Skip empty install list." && return 22
 
-	# do update only if really need install something
-	case $PMTYPE in
-		yum-rpm)
-			;;
-		*)
-			pkg_filenames='' epm_update || return
-			;;
-	esac
+    (pkg_filenames='' epm_update) || return
 
     epm_install_names $names || return
-    epm_install_files $files
 
+    epm_install_files $files
 }
 
 # File bin/epm-install-emerge:
@@ -3047,8 +3134,8 @@ epm_kernel_update()
 		fi
 		assure_exists update-kernel update-kernel 0.9.9
 		update_repo_if_needed
-		sudocmd update-kernel $pkg_filenames || return
-		docmd epm remove-old-kernels $pkg_filenames || fatal
+		sudocmd update-kernel $(subst_option non_interactive -y) $pkg_filenames || return
+		docmd epm remove-old-kernels $(subst_option non_interactive -y) $pkg_filenames || fatal
 		return ;;
 	esac
 
@@ -3096,12 +3183,12 @@ esac
 __epm_packages_sort()
 {
 case $PMTYPE in
-	apt-rpm|yum-rpm|urpm-rpm|zypper-rpm|dnf-rpm)
+	*-rpm)
 		# FIXME: space with quotes problems, use point instead
 		warmup_rpmbase
 		docmd rpm -qa --queryformat "%{size}@%{name}-%{version}-%{release}\n" $pkg_filenames | sed -e "s|@| |g" | sort -n -k1
 		;;
-	apt-dpkg)
+	*-dpkg)
 		warmup_dpkgbase
 		docmd dpkg-query -W --showformat="\${Installed-Size}@\${Package}-\${Version}:\${Architecture}\n" $pkg_filenames | sed -e "s|@| |g" | sort -n -k1
 		;;
@@ -3129,13 +3216,6 @@ epm_packages()
 	[ -n "$sort" ] && __epm_packages_sort && return
 
 case $PMTYPE in
-	apt-rpm)
-		warmup_rpmbase
-		# FIXME: strong equal
-		CMD="rpm -qa $pkg_filenames"
-		[ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n $pkg_filenames"
-		docmd $CMD
-		return ;;
 	*-dpkg)
 		warmup_dpkgbase
 		# FIXME: strong equal
@@ -3146,16 +3226,19 @@ case $PMTYPE in
 		showcmd $CMD
 		$CMD | grep "^i" | sed -e "s|.* ||g" | __fo_pfn
 		return ;;
-	snappy)
-		CMD="snappy info"
-		;;
-	yum-rpm|urpm-rpm|zypper-rpm|dnf-rpm)
+	*-rpm)
 		warmup_rpmbase
 		# FIXME: strong equal
 		CMD="rpm -qa $pkg_filenames"
 		[ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n $pkg_filenames"
 		docmd $CMD
 		return ;;
+	packagekit-*)
+		docmd pkcon get-packages --filter installed
+		;;
+	snappy)
+		CMD="snappy info"
+		;;
 	emerge)
 		CMD="qlist -I -C"
 		# print with colors for console output
@@ -3271,11 +3354,11 @@ warmup_bases
 pkg_names=$(__epm_get_hilevel_name $pkg_names)
 
 case $PMTYPE in
-	apt-rpm)
+	apt-*)
 		docmd apt-cache policy $pkg_names
 		;;
-	apt-dpkg)
-		docmd apt-cache policy $pkg_names
+	packagekit-*)
+		docmd pkcon resolve $pkg_names
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -3683,12 +3766,12 @@ _shortquery_via_packages_list()
 	# Note: double call due stderr redirect
 	# Note: we use short=1 here due grep by ^name$
 	# separate first line for print out command
-	short=1 pkg_filenames=$firstpkg epm_packages | grep -- "$grepexp" && res=0 || res=1
+	(short=1 pkg_filenames=$firstpkg epm_packages | grep -- "$grepexp") && res=0 || res=1
 
 	local pkg
 	for pkg in "$@" ; do
 		grepexp=$(_get_grep_exp $pkg)
-		short=1 pkg_filenames=$pkg epm_packages 2>/dev/null | grep -- "$grepexp" || res=1
+		(short=1 pkg_filenames=$pkg epm_packages 2>/dev/null) | grep -- "$grepexp" || res=1
 	done
 
 	# TODO: print in query (for user): 'warning: package $pkg is not installed'
@@ -3709,12 +3792,12 @@ _query_via_packages_list()
 	# Note: double call due stderr redirect
 	# Note: we use short=1 here due grep by ^name$
 	# separate first line for print out command
-	short=1 pkg_filenames=$firstpkg epm_packages | grep -q -- "$grepexp" && quiet=1 pkg_filenames=$firstpkg epm_packages && res=0 || res=1
+	(short=1 pkg_filenames=$firstpkg epm_packages) | grep -q -- "$grepexp" && (quiet=1 pkg_filenames=$firstpkg epm_packages) && res=0 || res=1
 
 	local pkg
 	for pkg in "$@" ; do
 		grepexp=$(_get_grep_exp $pkg)
-		short=1 pkg_filenames=$pkg epm_packages 2>/dev/null | grep -q -- "$grepexp" && quiet=1 pkg_filenames=$pkg epm_packages || res=1
+		(short=1 pkg_filenames=$pkg epm_packages 2>/dev/null) | grep -q -- "$grepexp" && (quiet=1 pkg_filenames=$pkg epm_packages) || res=1
 	done
 
 	return $res
@@ -3983,17 +4066,11 @@ __do_query()
 {
     local CMD
     case $PMTYPE in
-        apt-rpm)
-            CMD="rpm -qf"
-            ;;
         *-dpkg)
             showcmd dpkg -S "$1"
             dpkg_print_name_version "$(dpkg -S $1 | grep -v "^diversion by" | sed -e "s|:.*||")"
             return ;;
-        yum-rpm|dnf-rpm|urpm-rpm)
-            CMD="rpm -qf"
-            ;;
-        zypper-rpm)
+        *-rpm)
             CMD="rpm -qf"
             ;;
         emerge)
@@ -4126,6 +4203,10 @@ epm_reinstall_names()
 		aptitude-dpkg)
 			sudocmd aptitude reinstall $@
 			return ;;
+		packagekit-*)
+			warning "Please send me the correct command form for it"
+			docmd pkcon install --allow-reinstall $@
+			return ;;
 		yum-rpm)
 			sudocmd yum reinstall $@
 			return ;;
@@ -4251,14 +4332,21 @@ __replace_alt_version_in_repo()
 
 __alt_repofix()
 {
+	local TO="$1"
 	showcmd epm repofix
-	quiet=1 pkg_filenames='' epm_repofix >/dev/null
-	__replace_text_in_alt_repo "/^ *#/! s!\[[tpc][6-9]\]![updates]!g"
+	(quiet=1 pkg_filenames='' epm_repofix >/dev/null)
+	# replace sign name
+	if [ -n "$TO" ] ; then
+		__replace_text_in_alt_repo "/^ *#/! s!\[alt\]![$TO]!g"
+		__replace_text_in_alt_repo "/^ *#/! s!\[sisyphus\]![$TO]!g"
+		__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![$TO]!g"
+		__replace_text_in_alt_repo "/^ *#/! s!\[[tpc][6-9]\]![$TO]!g"
+	fi
 }
 
 __get_conflict_release_pkg()
 {
-	epmqf --quiet --short /etc/fedora-release | head -n1
+	epm qf --quiet --short /etc/fedora-release | head -n1
 }
 
 get_fix_release_pkg()
@@ -4293,6 +4381,9 @@ get_fix_release_pkg()
 	# workaround against obsoleted altlinux-release-sisyphus package from 2008 year
 	[ "$TOINSTALL" = "altlinux-release-sisyphus" ] && TOINSTALL="branding-alt-sisyphus-release"
 
+	# update if installed (just print package name here to include in the install list)
+	epm --quiet --short -q etersoft-gpgkeys 2>/dev/null
+
 	if [ -n "$TOINSTALL" ] ; then
 		echo "$TOINSTALL"
 
@@ -4308,21 +4399,20 @@ get_fix_release_pkg()
 __update_to_the_distro()
 {
 	local TO="$1"
-	__alt_repofix
 	case "$TO" in
 		p7)
+			__alt_repofix
 			docmd epm update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
-			__alt_repofix
-			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![$TO]!g"
+			__alt_repofix $TO
 			docmd epm update || fatal
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
 			;;
 		p8)
+			__alt_repofix
 			docmd epm update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
-			__alt_repofix
-			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![$TO]!g"
+			__alt_repofix $TO
 			docmd epm update || fatal
 			# sure we have systemd if systemd is running
 			if is_installed systemd && is_active_systemd systemd ; then
@@ -4330,12 +4420,23 @@ __update_to_the_distro()
 			fi
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
 			;;
-		Sisyphus)
+		p9)
+			#docmd epm update || fatal
+			#docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
+			__alt_repofix $TO
 			docmd epm update || fatal
-			local ADDPKG
-			ADDPKG=$(epm -q --short make-initrd sssd-ad 2>/dev/null)
-			docmd epm install librpm7 librpm rpm apt $ADDPKG "$(get_fix_release_pkg --force "$TO")" ConsoleKit2- || fatal "Check an error and run again"
-			#docmd apt-get upgrade || fatal "Check an error and run epm release-upgrade or just epm upgrade again"
+			# sure we have systemd if systemd is running
+			#if is_installed systemd && is_active_systemd systemd ; then
+			#	docmd epm install systemd || fatal
+			#fi
+			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
+			;;
+		Sisyphus)
+			__alt_repofix
+			docmd epm update || fatal
+			#local ADDPKG
+			#ADDPKG=$(epm -q --short make-initrd sssd-ad 2>/dev/null)
+			#docmd epm install librpm7 librpm rpm apt $ADDPKG "$(get_fix_release_pkg --force "$TO")" ConsoleKit2- || fatal "Check an error and run again"
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade or just epm upgrade again"
 			;;
 		*)
@@ -4354,6 +4455,7 @@ __update_alt_to_next_distro()
 			TO="p7"
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
+			__replace_alt_version_in_repo "Sisyphus/" "$TO/branch/"
 			__replace_alt_version_in_repo "$FROM/branch/" "$TO/branch/"
 			__update_to_the_distro "$TO"
 			docmd epm update-kernel
@@ -4364,6 +4466,17 @@ __update_alt_to_next_distro()
 			TO="p8"
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
+			__replace_alt_version_in_repo "Sisyphus/" "$TO/branch/"
+			__replace_alt_version_in_repo $FROM/branch/ $TO/branch/
+			__update_to_the_distro $TO
+			docmd epm update-kernel || fatal
+			info "Done."
+			;;
+		"p8"|"p8 p9"|"t8 p9"|"c8 c9"|"p9 p9")
+			TO="p9"
+			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
+			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
+			__replace_alt_version_in_repo "Sisyphus/" "$TO/branch/"
 			__replace_alt_version_in_repo $FROM/branch/ $TO/branch/
 			__update_to_the_distro $TO
 			docmd epm update-kernel || fatal
@@ -4374,19 +4487,28 @@ __update_alt_to_next_distro()
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install "$(get_fix_release_pkg "$FROM")" || fatal
 			__replace_alt_version_in_repo "$FROM/" "$TO/branch/"
-			__replace_text_in_alt_repo "/^ *#/! s!\[alt\]![$TO]!g"
+			#__replace_text_in_alt_repo "/^ *#/! s!\[alt\]![$TO]!g"
 			__update_to_the_distro $TO
 			docmd epm downgrade || fatal
 			info "Done."
 			;;
-		"p8 Sisyphus"|"Sisyphus Sisyphus")
+		"Sisyphus p9")
+			TO="p9"
+			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
+			docmd epm install "$(get_fix_release_pkg "$FROM")" || fatal
+			__replace_alt_version_in_repo "$FROM/" "$TO/branch/"
+			#__replace_text_in_alt_repo "/^ *#/! s!\[alt\]![$TO]!g"
+			__update_to_the_distro $TO
+			docmd epm downgrade || fatal
+			info "Done."
+			;;
+		"p8 Sisyphus"|"p9 Sisyphus"|"Sisyphus Sisyphus")
 			TO="Sisyphus"
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			docmd epm upgrade || fatal
 			__replace_alt_version_in_repo "$FROM/branch/" "$TO/"
-			__alt_repofix
-			__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![alt]!g"
+			__alt_repofix "sisyphus"
 			__update_to_the_distro $TO
 			docmd epm update-kernel || fatal
 			info "Done."
@@ -4426,15 +4548,18 @@ epm_release_upgrade()
 			fi
 		fi
 
-		__alt_repofix
-
 		# check forced target
 		if [ -n "$pkg_filenames" ] ; then
 			[ "$(__wcount $pkg_filenames)" = "1" ] || fatal "Too many args: $pkg_filenames"
 		fi
 
+		TARGET="$pkg_filenames"
+
+		__alt_repofix
+
+
 		# TODO: ask before upgrade
-		__update_alt_to_next_distro $DISTRVERSION $pkg_filenames
+		__update_alt_to_next_distro $DISTRVERSION $TARGET
 		return
 		;;
 	*)
@@ -4449,6 +4574,9 @@ epm_release_upgrade()
 	*-dpkg)
 		assure_exists do-release-upgrade update-manager-core
 		sudocmd do-release-upgrade
+		;;
+	packagekit-*)
+		docmd pkcon upgrade-system $pkg_filenames
 		;;
 	yum-rpm)
 		docmd epm install rpm yum
@@ -4521,10 +4649,10 @@ epm_remove_low()
 	warmup_lowbase
 
 	case $PMTYPE in
-		apt-rpm|yum-rpm|zypper-rpm|urpm-rpm|dnf-rpm)
+		*-rpm)
 			sudocmd rpm -ev $nodeps $@
 			return ;;
-		apt-dpkg|aptitude-dpkg)
+		*-dpkg|-dpkg)
 			# shellcheck disable=SC2046
 			sudocmd dpkg -P $(subst_option nodeps --force-all) $(print_name "$@")
 			return ;;
@@ -4562,6 +4690,9 @@ epm_remove_names()
 			return ;;
 		apt-rpm)
 			sudocmd apt-get remove $APTOPTIONS $@
+			return ;;
+		packagekit-*)
+			docmd pkcon remove $@
 			return ;;
 		deepsolver-rpm)
 			sudocmd ds-remove $@
@@ -4654,6 +4785,9 @@ epm_remove_nonint()
 		apt-rpm)
 			sudocmd apt-get -y --force-yes remove $@
 			return ;;
+		packagekit-*)
+			docmd pkcon remove --noninteractive $@
+			return ;;
 		urpm-rpm)
 			sudocmd urpme --auto $@
 			return ;;
@@ -4688,11 +4822,14 @@ epm_remove_nonint()
 epm_print_remove_command()
 {
 	case $PMTYPE in
-		apt-rpm|yum-rpm|zypper-rpm|urpm-rpm|dnf-rpm)
+		*-rpm)
 			echo "rpm -ev $nodeps $*"
 			;;
-		apt-dpkg|aptitude-dpkg)
+		*-dpkg)
 			echo "dpkg -P $*"
+			;;
+		packagekit-*)
+			echo "pkcon remove --noninteractive $*"
 			;;
 		pkgsrc)
 			echo "pkg_delete -r $*"
@@ -4801,7 +4938,7 @@ epm_remove_old_kernels()
 			return
 		fi
 		assure_exists update-kernel update-kernel 0.9.9
-		sudocmd remove-old-kernels $pkg_filenames
+		sudocmd remove-old-kernels $(subst_option non_interactive -y) $pkg_filenames
 		return ;;
 	Ubuntu)
 		if ! __epm_query_package linux-image >/dev/null ; then
@@ -4876,7 +5013,7 @@ case $DISTRNAME in
 				;;
 		esac
 
-		[ -n "$repo" ] || fatal "No such repo or task. Use epm remove repo [autoimports|archive|TASK]"
+		[ -n "$repo" ] || fatal "No such repo or task. Use epm remove repo [autoimports|archive|tasks/TASKNUMBER]"
 		assure_exists apt-repo
 		sudocmd apt-repo rm "$repo"
 		return
@@ -5277,6 +5414,9 @@ case $PMTYPE in
 	zypper-rpm)
 		docmd zypper sl -d
 		;;
+	packagekit-*)
+		docmd pkcon repo-list
+		;;
 	emerge)
 		docmd eselect profile list
 		docmd layman -L
@@ -5340,7 +5480,9 @@ case $PMTYPE in
 			#return
 			CMD="apt-cache depends"
 		fi
-
+		;;
+	packagekit-*)
+		CMD="pkcon required-by"
 		;;
 	#zypper-rpm)
 	#	# FIXME: use hi level commands
@@ -5431,6 +5573,9 @@ case $PMTYPE in
 	deepsolver-rpm)
 		CMD="ds-require --"
 		;;
+	packagekit-*)
+		CMD="pkcon search name"
+		;;
 	urpm-rpm)
 		# urpmq does not support --
 		CMD="urpmq -y"
@@ -5457,7 +5602,7 @@ case $PMTYPE in
 		CMD="dnf search --"
 		;;
 	zypper-rpm)
-		CMD="zypper search --"
+		CMD="zypper search -d --"
 		;;
 	mpkg)
 		CMD="mpkg search"
@@ -5642,6 +5787,9 @@ case $PMTYPE in
 		sudocmd apt-file update
 		docmd apt-file search $pkg_filenames
 		return ;;
+	packagekit-*)
+		CMD="pkcon search file"
+		;;
 	yum-rpm)
 		# TODO
 		info "Search by full packages list is not implemented yet"
@@ -5656,7 +5804,7 @@ case $PMTYPE in
 		CMD="urpmf"
 		;;
 	zypper-rpm)
-		CMD="zypper wp vi"
+		CMD="zypper search --file-list"
 		;;
 	pacman)
 		CMD="pacman -Qo"
@@ -5777,8 +5925,8 @@ get_local_alt_contents_index()
 
 tasknumber()
 {
-    local num="$(echo "$*" | sed -e "s| *#*||g")"
-    isnumber "$num" && echo "$num"
+    local num="$(echo "$1" | sed -e "s| *#*||g")"
+    isnumber "$num" && echo "$*"
 }
 
 
@@ -5961,7 +6109,7 @@ EOF
     			# use verbose for get package status
     			#pkg_filenames="$pkg-[0-9]" verbose=--verbose __epm_search_internal | egrep "(installed|upgrade)" && continue
     			#pkg_filenames="$pkg" verbose=--verbose __epm_search_internal | egrep "(installed|upgrade)" && continue
-    			pkg_filenames="$pkg" __epm_search_internal | grep -q "^$pkg-[0-9]" && continue
+    			(pkg_filenames="$pkg" __epm_search_internal) | grep -q "^$pkg-[0-9]" && continue
     			res=1
     			info "Package '$pkg' does not found in repository."
     		done
@@ -6139,6 +6287,9 @@ case $PMTYPE in
 		#sudocmd apt-get -f install || exit
 		#sudocmd apt-get autoremove
 		;;
+	packagekit-*)
+		docmd pkcon refresh
+		;;
 	#snappy)
 	#	sudocmd snappy
 	#	;;
@@ -6146,14 +6297,12 @@ case $PMTYPE in
 		sudocmd aptitude update || return
 		;;
 	yum-rpm)
-		info "update command is stubbed for yum"
-		# yum makecache
-		#sudocmd yum check-update
+		# just skipped
+		[ -n "$verbose" ] && info "update command is stubbed for yum"
 		;;
 	dnf-rpm)
-		info "update command is stubbed for dnf"
-		# dnf makecache
-		#sudocmd dnf check-update
+		# just skipped
+		[ -n "$verbose" ] && info "update command is stubbed for dnf"
 		;;
 	urpm-rpm)
 		sudocmd urpmi.update -a
@@ -6228,6 +6377,10 @@ epm_upgrade()
 		;;
 	aptitude-dpkg)
 		CMD="aptitude dist-upgrade"
+		;;
+	packagekit-*)
+		docmd pkcon update
+		return
 		;;
 	yum-rpm)
 		local OPTIONS="$(subst_option non_interactive -y)"
@@ -6304,13 +6457,7 @@ epm_upgrade()
 
 epm_Upgrade()
 {
-	case $PMTYPE in
-		yum-rpm)
-			;;
-		*)
-			pkg_filenames='' epm_update || return
-			;;
-	esac
+	(pkg_filenames='' epm_update)
 
 	epm_upgrade
 }
@@ -6340,6 +6487,9 @@ case $PMTYPE in
 		;;
 	aptitude-dpkg)
 		CMD="aptitude why"
+		;;
+	packagekit-*)
+		CMD="pkcon depends-on"
 		;;
 	yum-rpm)
 		CMD="repoquery --whatrequires"
@@ -6538,15 +6688,19 @@ fi
 
 # ALT Linux based
 if distro altlinux-release ; then
+	# TODO: use os-release firsly
 	DISTRIB_ID="ALTLinux"
 	if has Sisyphus ; then DISTRIB_RELEASE="Sisyphus"
 	elif has "ALT Linux 7." ; then DISTRIB_RELEASE="p7"
 	elif has "ALT Linux t7." ; then DISTRIB_RELEASE="t7"
 	elif has "ALT Linux 8." ; then DISTRIB_RELEASE="p8"
 	elif has "ALT .*8.[0-9]" ; then DISTRIB_RELEASE="p8"
+	elif has "ALT .*9.[0-9]" ; then DISTRIB_RELEASE="p9"
+	elif has "ALT p9 p9" ; then DISTRIB_RELEASE="p9"
 	elif has "Simply Linux 6." ; then DISTRIB_RELEASE="p6"
 	elif has "Simply Linux 7." ; then DISTRIB_RELEASE="p7"
 	elif has "Simply Linux 8." ; then DISTRIB_RELEASE="p8"
+	elif has "Simply Linux 9." ; then DISTRIB_RELEASE="p9"
 	elif has "ALT Linux 6." ; then DISTRIB_RELEASE="p6"
 	elif has "ALT Linux p8"  ; then DISTRIB_RELEASE="p8"
 	elif has "ALT Linux p7"  ; then DISTRIB_RELEASE="p7"
@@ -7537,9 +7691,9 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 2.5.8"
+        echo "EPM package manager version 3.1.0"
         echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
-        echo "Copyright (c) Etersoft 2012-2018"
+        echo "Copyright (c) Etersoft 2012-2019"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 
@@ -7547,7 +7701,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=2.5.8
+EPMVERSION=3.1.0
 verbose=
 quiet=
 nodeps=
@@ -7671,6 +7825,9 @@ check_command()
     check|fix|verify)         # HELPCMD: check local package base integrity and fix it
         epm_cmd=check
         ;;
+    dedup)                    # HELPCMD: remove unallowed duplicated pkgs (after upgrade crash)
+        epm_cmd=dedup
+        ;;
     -cl|cl|changelog)         # HELPCMD: show changelog for package
         epm_cmd=changelog
         ;;
@@ -7701,7 +7858,7 @@ check_command()
     assure)                   # HELPCMD: <command> [package]: install package if command does not exist
         epm_cmd=assure
         ;;
-    policy)                   # HELPCMD: print detailed information about the priority selection of package
+    policy|resolve)           # HELPCMD: print detailed information about the priority selection of package
         epm_cmd=policy
         ;;
 
@@ -7721,7 +7878,10 @@ check_command()
     removerepo|rr)            # HELPCMD: remove package repo
         epm_cmd=removerepo
         ;;
-    release-upgrade|upgrade-release)          # HELPCMD: update whole system to the release in arg (default: next (latest) release)
+    full-upgrade)              # HELPCMD: update all system packages and kernel
+        epm_cmd=full_upgrade
+        ;;
+    release-upgrade|upgrade-release|upgrade-system)          # HELPCMD: update whole system to the release in arg (default: next (latest) release)
         epm_cmd=release_upgrade
         ;;
     kernel-update|kernel-upgrade|update-kernel|upgrade-kernel)      # HELPCMD: update system kernel to the last repo version
