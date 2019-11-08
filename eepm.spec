@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.0.0
+Version: 3.1.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -88,6 +88,12 @@ rm -f %buildroot%_datadir/%name/tools_eget
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Fri Nov 08 2019 Vitaly Lipatov <lav@altlinux.ru> 3.1.0-alt1
+- add epm full-upgrade
+- kernel update/remove: add --auto support (non interactive)
+- is_active_systemd: rewrite systemd detection
+- serv: add print out virtualization type (via systemd helper)
+
 * Tue Nov 05 2019 Vitaly Lipatov <lav@altlinux.ru> 3.0.0-alt1
 - distr_info: p9 support
 - addrepo: add check for empty DISTRVERSION
