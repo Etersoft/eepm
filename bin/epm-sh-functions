@@ -554,18 +554,16 @@ esac
 PMTYPE=$CMD
 }
 
-
+# https://unix.stackexchange.com/questions/196166/how-to-find-out-if-a-system-uses-sysv-upstart-or-systemd-initsystem
 is_active_systemd()
 {
 	local a
 	SYSTEMCTL=/bin/systemctl
-	SYSTEMD_CGROUP_DIR=/sys/fs/cgroup/systemd
-	[ -x "$SYSTEMCTL" ] || return
-	[ -d "$SYSTEMD_CGROUP_DIR" ] || return
-	#a='' mountpoint -q "$SYSTEMD_CGROUP_DIR" || return
-	cat /proc/1/cmdline | grep -q 'systemd' && return
-	cat /proc/1/cmdline | grep -q '/sbin/init' || return
-	readlink /sbin/init | grep -q 'systemd' || return
+	#[ -x "$SYSTEMCTL" ] || return
+	[ -d /run/systemd/system ] || return
+	#SYSTEMD_CGROUP_DIR=/sys/fs/cgroup/systemd
+	#[ -d "$SYSTEMD_CGROUP_DIR" ] || return
+	#cat /proc/1/comm | grep -q 'systemd' && return
 }
 
 assure_distr()
