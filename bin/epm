@@ -83,6 +83,7 @@ noremove=
 dryrun=
 force=
 repack=
+inscript=
 scripts=
 short=
 direct=
@@ -352,6 +353,9 @@ check_option()
     --noremove|--no-remove)  # HELPOPT: exit if any packages are to be removed during upgrade
         noremove="--no-remove"
         ;;
+    --no-stdin|--inscript) # HELPOPT: don't read from stdin for epm args
+        inscript=1
+        ;;
     --dry-run|--simulate|--just-print|-recon--no-act) # HELPOPT: print only (autoremove/autoorphans/remove only)
         dryrun="--dry-run"
         ;;
@@ -411,7 +415,7 @@ for opt in "$@" ; do
 done
 
 # if input is not console and run script from file, get pkgs from stdin too
-if ! inputisatty && [ -n "$PROGDIR" ] ; then
+if [ ! -n "$inscript" ] && ! inputisatty && [ -n "$PROGDIR" ] ; then
     for opt in $(withtimeout 2 cat) ; do
         # FIXME: do not work
         # workaround against # yes | epme
