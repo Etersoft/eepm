@@ -371,6 +371,7 @@ assure_exists()
 # will replaced within disabled_eget in packaged version
 eget()
 {
+	local EGET
 	# use internal eget only if exists
 	if [ -s $SHAREDIR/tools_eget ] ; then
 		$SHAREDIR/tools_eget "$@"
