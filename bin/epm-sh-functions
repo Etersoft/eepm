@@ -229,7 +229,7 @@ clean_store_output()
 epm()
 {
 	[ -n "$PROGNAME" ] || fatal "Can't use epm call from the piped script"
-	$PROGDIR/$PROGNAME $@
+	$PROGDIR/$PROGNAME --inscript $@
 }
 
 # Print error message and stop the program
