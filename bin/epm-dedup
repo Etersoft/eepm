@@ -53,7 +53,7 @@ case "$DISTRNAME" in
 	"ALTLinux")
 		assure_exists /usr/share/apt/scripts apt-scripts
 		if [ -f /usr/share/apt/scripts/dedup.lua ] ; then
-			"Check for duplicates via apt-get dedup from apt-scripts"
+			info "Check for duplicates via apt-get dedup from apt-scripts"
 			sudocmd apt-get dedup
 		else
 			try_fix_apt_rpm_dupls
