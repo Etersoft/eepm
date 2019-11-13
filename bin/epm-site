@@ -80,6 +80,10 @@ query_package_url()
 			#LANG=C epm info "$1"
 			return
 			;;
+		homebrew)
+			docmd brew "$1" | grep "^From: " | sed -e "s|^From: ||"
+			return
+			;;
 	esac
 	fatal "rpm based distro supported only. TODO: Realize via web service?"
 }
