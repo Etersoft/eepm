@@ -43,6 +43,9 @@ epm_reinstall_names()
 		dnf-rpm)
 			sudocmd dnf reinstall $@
 			return ;;
+		homebrew)
+			sudocmd brew reinstall $@
+			return ;;
 		pkgng)
 			sudocmd pkg install -f $@
 			return ;;
