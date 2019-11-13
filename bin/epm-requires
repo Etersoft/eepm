@@ -103,6 +103,10 @@ case $PMTYPE in
 		assure_exists equery
 		CMD="equery depgraph"
 		;;
+	homebrew)
+		docmd brew info $pkg_names | grep "^Required: " | sed -s "|s|^Requires: ||"
+		return
+		;;
 	pkgng)
 		#CMD="pkg rquery '%dn-%dv'"
 		CMD="pkg info -d"
