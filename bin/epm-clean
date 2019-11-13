@@ -63,6 +63,9 @@ case $PMTYPE in
 	urpm-rpm)
 		sudocmd urpmi --clean
 		;;
+	homebrew)
+		sudocmd brew cleanup -s
+		;;
 	pacman)
 		sudocmd pacman -Sc --noconfirm
 		;;
