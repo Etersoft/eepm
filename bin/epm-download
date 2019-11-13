@@ -219,6 +219,9 @@ epm_download()
 	opkg)
 		docmd opkg $pkg_filenames
 		;;
+	homebrew)
+		docmd brew fetch $pkg_filenames
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
