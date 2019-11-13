@@ -235,7 +235,7 @@ __epm_query_name()
 			showcmd "brew info $1"
 			local HBRESULT
 			HBRESULT="$(brew info "$1" 2>/dev/null)" || return
-			echo "$HBRESULT" | grep -q -v "^Not installed" || return
+			echo "$HBRESULT" | grep -q "Not installed" && return 1
 			echo "$1"
 			return 0
 			;;
