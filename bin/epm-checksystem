@@ -40,6 +40,13 @@ epm_checksystem()
 
 [ $EFFUID = "0" ] && fatal "Do not use checksystem under root"
 
+case $PMTYPE in
+	homebrew)
+		sudocmd brew doctor
+		return
+		;;
+esac
+
 case $DISTRNAME in
 	ALTLinux)
 		epm_checksystem_$DISTRNAME
