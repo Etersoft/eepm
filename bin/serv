@@ -213,6 +213,9 @@ check_command()
     log|journal)              # HELPCMD: print log for the service
         serv_cmd=log
         ;;
+    edit)
+        serv_cmd=edit         # HELPCMD: edit service file overload (use --full to edit full file)
+        ;;
     *)
         return 1
         ;;
