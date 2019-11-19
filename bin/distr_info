@@ -124,7 +124,7 @@ if distro altlinux-release ; then
 	elif has "ALT Linux 8." ; then DISTRIB_RELEASE="p8"
 	elif has "ALT .*8.[0-9]" ; then DISTRIB_RELEASE="p8"
 	elif has "ALT .*9.[0-9]" ; then DISTRIB_RELEASE="p9"
-	elif has "ALT p9 p9" ; then DISTRIB_RELEASE="p9"
+	elif has "ALT p9 " ; then DISTRIB_RELEASE="p9"
 	elif has "Simply Linux 6." ; then DISTRIB_RELEASE="p6"
 	elif has "Simply Linux 7." ; then DISTRIB_RELEASE="p7"
 	elif has "Simply Linux 8." ; then DISTRIB_RELEASE="p8"
@@ -138,12 +138,7 @@ if distro altlinux-release ; then
 	elif has "ALT Linux 5.0" ; then DISTRIB_RELEASE="5.0"
 	elif has "ALT Linux 4.1" ; then DISTRIB_RELEASE="4.1"
 	elif has "ALT Linux 4.0" ; then DISTRIB_RELEASE="4.0"
-	elif has Walnut          ; then DISTRIB_RELEASE="4.0"
-	elif has Hypericum       ; then DISTRIB_RELEASE="p8"
 	elif has "starter kit"   ; then DISTRIB_RELEASE="p8"
-	elif has 20070810 ; then DISTRIB_RELEASE="4.0"
-	elif has Ajuga    ; then DISTRIB_RELEASE="4.0"
-	elif has 20050723 ; then DISTRIB_RELEASE="3.0"
 	elif has Citron   ; then DISTRIB_RELEASE="2.4"
 	fi
 
