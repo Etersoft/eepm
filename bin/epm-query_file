@@ -41,7 +41,7 @@ __do_query_real_file()
 	if [ -e "$1" ] ; then
 		TOFILE="$(__abs_filename "$1")"
 	else
-		TOFILE=$(which "$1" 2>/dev/null || echo "$1")
+		TOFILE=$(which -- "$1" 2>/dev/null || echo "$1")
 		if [ "$TOFILE" != "$1" ] ; then
 			info "Note: $1 is placed as $TOFILE"
 		fi
@@ -51,7 +51,7 @@ __do_query_real_file()
 	if [ -L "$TOFILE" ] ; then
 		local LINKTO
 		__do_query "$TOFILE"
-		LINKTO=$(readlink -f "$TOFILE")
+		LINKTO=$(readlink -f -- "$TOFILE")
 		info "Note: $TOFILE is link to $LINKTO"
 		__do_query_real_file "$LINKTO"
 		return
