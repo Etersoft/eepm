@@ -48,9 +48,12 @@ set_service_type()
 {
 	local CMD
 
-	# Fill for use: PMTYPE, DISTRNAME, DISTRVERSION, PKGFORMAT, PKGVENDOR, RPMVENDOR
+	# use external distro_info if internal one is missed
 	DISTRVENDOR=$PROGDIR/distr_info
-	[ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d) || fatal "Can't get distro name."
+	[ -x $DISTRVENDOR ] || DISTRVENDOR=distro_info
+
+	# Fill for use: PMTYPE, DISTRNAME, DISTRVERSION, PKGFORMAT, PKGVENDOR, RPMVENDOR
+	[ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d) || fatal "Can't get distro name from $DISTRVENDOR."
 	[ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
 	set_target_pkg_env
 
@@ -139,7 +142,7 @@ print_version()
         local virt="$(detect_virt)"
         [ "$virt" = "none" ] || [ "$virt" = "" ] || on_text="(under $virt)"
         echo "Service manager version @VERSION@"
-        echo "Running on $($DISTRVENDOR) $on_text with $SERVICETYPE"
+        echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2019"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
