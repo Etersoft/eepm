@@ -23,6 +23,7 @@ Provides: upm
 %if %_vendor == "alt"
 # FIXHERE: Replace with target platform package manager
 Requires: apt rpm
+Requires: distro_info >= 1.1
 %endif
 
 %description
@@ -68,6 +69,8 @@ chmod a+x %buildroot%_datadir/%name/tools_*
 %if %_vendor == "alt"
 # use external eget
 rm -f %buildroot%_datadir/%name/tools_eget
+# use external distro_info
+rm -f %buildroot%_bindir/distr_info
 %endif
 
 %files
@@ -81,7 +84,9 @@ rm -f %buildroot%_datadir/%name/tools_eget
 %_bindir/upm
 %_bindir/serv
 %_bindir/cerv
+%if %_vendor != "alt"
 %_bindir/distr_info
+%endif
 %_man1dir/*
 %_datadir/%name/
 %_sysconfdir/bash_completion.d/serv
