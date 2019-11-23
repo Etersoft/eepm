@@ -251,13 +251,12 @@ epm_remove()
 		return
 	fi
 
-	local tn=$(tasknumber "$pkg_names")
-	if [ -n "$tn" ] ; then
-		assure_distr ALTLinux "remove with task number"
-		assure_exists apt-repo
-		pkg_names=$(showcmd apt-repo list $tn)
-		#docmd epm remove $dryrun
-		return
+	if [ "$DISTRNAME" = "ALTLinux" ] ; then
+		load_helper epm-sh-altlinux
+		if tasknumber "$pkg_names" >/dev/null ; then
+			assure_exists apt-repo
+			pkg_names="$(get_task_packages $pkg_names)"
+		fi
 	fi
 
 	# TODO: fix pkg_names override
