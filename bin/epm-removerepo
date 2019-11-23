@@ -25,6 +25,7 @@ local repo="$(eval echo $quoted_args)"
 
 case $DISTRNAME in
 	ALTLinux)
+		assure_exists apt-repo
 		case "$repo" in
 			autoimports)
 				info "remove autoimports repo"
@@ -49,14 +50,24 @@ case $DISTRNAME in
 				;;
 			*)
 				if tasknumber "$repo" >/dev/null ; then
-					repo="$(epm repolist | grep "repo/$(tasknumber "$repo")" | line)"
-					# "
+					#sudocmd apt-repo rm all tasks
+					#return
+					local tn
+					for tn in $(tasknumber "$repo") ; do
+						repoline="$(epm repolist | grep " repo/$tn/" | line)" #"
+						[ -n "$repoline" ] || { info "Can't find $tn task in the repository list" ; continue ; }
+						sudocmd apt-repo rm "$repoline"
+						# try again to remove possible x86_64-i586
+						repoline="$(epm repolist | grep " repo/$tn/" | line)" #"
+						[ -n "$repoline" ] || continue
+						sudocmd apt-repo rm "$repoline"
+					done
+					return 0
 				fi
 				;;
 		esac
 
 		[ -n "$repo" ] || fatal "No such repo or task. Use epm remove repo [autoimports|archive|tasks/TASKNUMBER]"
-		assure_exists apt-repo
 		sudocmd apt-repo rm "$repo"
 		return
 		;;

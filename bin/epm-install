@@ -538,14 +538,12 @@ epm_print_install_names_command()
 
 epm_install()
 {
-    if tasknumber "$pkg_names" >/dev/null ; then
-        assure_distr ALTLinux "install with task number"
-        assure_exists apt-repo
-        local task
-        for task in $(tasknumber "$pkg_names") ; do
-            sudocmd apt-repo test $task
-        done
-        return
+    if [ "$DISTRNAME" = "ALTLinux" ] ; then
+        if tasknumber "$pkg_names" >/dev/null ; then
+            assure_exists apt-repo
+            sudocmd_foreach "apt-repo test" "$(tasknumber $pkg_names)"
+            return
+        fi
     fi
 
     if [ -n "$show_command_only" ] ; then

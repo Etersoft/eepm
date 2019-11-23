@@ -94,7 +94,7 @@ __epm_addrepo_altlinux()
 	assure_exists apt-repo
 
 	if tasknumber "$repo" >/dev/null ; then
-		sudocmd apt-repo add $(tasknumber "$repo")
+		sudocmd_foreach 'apt-repo add' $(tasknumber "$repo")
 		return
 	fi
 
@@ -118,7 +118,7 @@ local repo="$(eval echo "$quoted_args")"
 
 case $DISTRNAME in
 	ALTLinux)
-		__epm_addrepo_altlinux $repo
+		__epm_addrepo_altlinux $pkg_names
 		return
 		;;
 esac
