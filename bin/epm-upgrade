@@ -30,6 +30,25 @@ epm_upgrade()
 	update_repo_if_needed
 
 	warmup_bases
+
+	if [ "$DISTRNAME" = "ALTLinux" ] ; then
+		load_helper epm-sh-altlinux
+		if tasknumber "$pkg_names" >/dev/null ; then
+			load_helper epm-addrepo
+			load_helper epm-removerepo
+			load_helper epm-Install
+			epm_addrepo
+			local installlist="$(get_task_packages $pkg_names)"
+			[ -n "$verbose" ] && info "Packages from task(s): $installlist"
+			# install only installed packages (simulate upgrade packages)
+			installlist="$(estrlist exclude "$(echo "$installlist" | (skip_installed='yes' filter_out_installed_packages))" "$installlist")"
+			[ -n "$verbose" ] && info "Packages to upgrade: $installlist"
+			(pkg_names="$installlist" epm_Install)
+			epm_removerepo
+			return
+		fi
+	fi
+
 	info "Running command for upgrade packages"
 
 	case $PMTYPE in
@@ -113,4 +132,5 @@ epm_upgrade()
 	esac
 
 	sudocmd $CMD $pkg_filenames
+
 }

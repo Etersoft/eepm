@@ -122,3 +122,11 @@ tasknumber()
     isnumber "$num" && echo "$*"
 }
 
+# use assure apt-repo before
+get_task_packages()
+{
+    local tn
+    for tn in $(tasknumber "$@") ; do
+        docmd apt-repo list task "$tn"
+    done
+}
