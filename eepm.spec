@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.1.1
+Version: 3.1.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -93,6 +93,17 @@ rm -f %buildroot%_bindir/distr_info
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Tue Nov 26 2019 Vitaly Lipatov <lav@altlinux.ru> 3.1.2-alt1
+- improve homebrew support
+- serv: add edit support for systemd
+- fixes for ALT p9 detection
+- epm query_file: use -- after options
+- use external distro_info on non ALT systems
+- epm: add support for a few tasks in addrepo/removerepo/install
+- upgrade: add support for epm upgrade TASK (upgrade only already installed packages)
+- remove TASK: remove all packages from the TASK
+- release_upgrade: install alt-gpgkeys firstly
+
 * Tue Nov 12 2019 Vitaly Lipatov <lav@altlinux.ru> 3.1.1-alt1
 - epm-dedup: fix info message (ALT bug 37473)
 - epm: add --no-stdin support (do not read commands from stdin)
