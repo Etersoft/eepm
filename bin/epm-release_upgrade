@@ -133,6 +133,7 @@ get_fix_release_pkg()
 	[ "$TOINSTALL" = "altlinux-release-sisyphus" ] && TOINSTALL="branding-alt-sisyphus-release"
 
 	# update if installed (just print package name here to include in the install list)
+	epm --quiet --short -q alt-gpgkeys 2>/dev/null
 	epm --quiet --short -q etersoft-gpgkeys 2>/dev/null
 
 	if [ -n "$TOINSTALL" ] ; then
