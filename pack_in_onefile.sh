@@ -52,6 +52,7 @@ filter_out()
 		sed -e 's|^onefile_estrlist()|estrlist()|g' | \
 		sed -e 's|$SHAREDIR/tools_json|internal_tools_json|g' | \
 		sed -e 's|DISTRVENDOR=$PROGDIR/distr_info|DISTRVENDOR=internal_distr_info|g' | \
+		sed -e 's|DISTRVENDOR=distro_info|DISTRVENDOR=internal_distr_info|g' | \
 		sed -e "s|@VERSION@|$(get_version)|g"
 
 }

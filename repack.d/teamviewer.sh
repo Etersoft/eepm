@@ -4,7 +4,7 @@
 BUILDROOT="$1"
 SPEC="$2"
 
-if [ "$(distr_info -a)" = "x86_64" ] ; then
+if [ "$($DISTRVENDOR -a)" = "x86_64" ] ; then
     # 32 bit
     rm -fv $BUILDROOT/opt/teamviewer/tv_bin/script/libdepend
     subst "s|.*script/libdepend.*||" $SPEC

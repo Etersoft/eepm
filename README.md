@@ -57,7 +57,7 @@ Just run under root user:
 ```
 
 ## How to add new distro support
-1. Fix detection with `distr_info`
+1. Fix detection with `distro_info`
 2. Add distro support in `set_pm_type` function
 3. Implement every command in epm-* files
 4. Ensure that `epm packages` and `epm --short packages` works correctly

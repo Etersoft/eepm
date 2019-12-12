@@ -459,8 +459,8 @@ set_pm_type()
 
 	# use external distro_info if internal one is missed
 	DISTRVENDOR=internal_distr_info
-	[ -x $DISTRVENDOR ] || DISTRVENDOR=distro_info
-
+	[ -x $DISTRVENDOR ] || DISTRVENDOR=internal_distr_info
+	export DISTRVENDOR
 	# Fill for use: PMTYPE, DISTRNAME, DISTRVERSION, PKGFORMAT, PKGVENDOR, RPMVENDOR
 	[ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d) || fatal "Can't get distro name."
 	[ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)

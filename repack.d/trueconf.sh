@@ -14,7 +14,7 @@ chmod a+x $BUILDROOT/opt/trueconf/trueconf-client
 
 rm -rvf $BUILDROOT/usr/local/
 
-[ "$(distr_info -b)" = 64 ] && LIBUDEV=/lib64/libudev.so.0 || LIBUDEV=/lib/libudev.so.0
+[ "$($DISTRVENDOR -b)" = 64 ] && LIBUDEV=/lib64/libudev.so.0 || LIBUDEV=/lib/libudev.so.0
 ln -s $LIBUDEV $BUILDROOT/opt/trueconf/lib/libudev.so.0
 
 REQUIRES="libudev1 pulseaudio alsa-utils libv4l sqlite gtk2 libpng openssl udev libxslt xdg-utils"

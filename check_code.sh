@@ -20,4 +20,4 @@ checkbashisms -f bin/*
 checkbashisms -f Makefile
 
 shellcheck $EXCL \
-	bin/epm bin/distr_info bin/epm-* bin/serv-* bin/tools_*
+	bin/epm bin/distro_info bin/epm-* bin/serv-* bin/tools_*
