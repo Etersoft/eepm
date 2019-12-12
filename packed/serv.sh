@@ -230,7 +230,7 @@ clean_store_output()
 epm()
 {
 	[ -n "$PROGNAME" ] || fatal "Can't use epm call from the piped script"
-	$PROGDIR/$PROGNAME $@
+	$PROGDIR/$PROGNAME --inscript $@
 }
 
 fatal()
@@ -359,6 +359,7 @@ assure_exists()
 
 disabled_eget()
 {
+	local EGET
 	# use internal eget only if exists
 	if [ -s $SHAREDIR/tools_eget ] ; then
 		$SHAREDIR/tools_eget "$@"
@@ -447,8 +448,11 @@ set_pm_type()
 {
 	local CMD
 
-	# Fill for use: PMTYPE, DISTRNAME, DISTRVERSION, PKGFORMAT, PKGVENDOR, RPMVENDOR
+	# use external distro_info if internal one is missed
 	DISTRVENDOR=internal_distr_info
+	[ -x $DISTRVENDOR ] || DISTRVENDOR=distro_info
+
+	# Fill for use: PMTYPE, DISTRNAME, DISTRVERSION, PKGFORMAT, PKGVENDOR, RPMVENDOR
 	[ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d) || fatal "Can't get distro name."
 	[ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
 	set_target_pkg_env
@@ -535,13 +539,7 @@ PMTYPE=$CMD
 
 is_active_systemd()
 {
-	local a
-	SYSTEMCTL=/bin/systemctl
-	#[ -x "$SYSTEMCTL" ] || return
-	[ -d /run/systemd/system ] || return
-	#SYSTEMD_CGROUP_DIR=/sys/fs/cgroup/systemd
-	#[ -d "$SYSTEMD_CGROUP_DIR" ] || return
-	#cat /proc/1/comm | grep -q 'systemd' && return
+	[ "$($DISTRVENDOR -y)" = "systemd" ]
 }
 
 assure_distr()
@@ -613,6 +611,23 @@ serv_disable()
 			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
+			;;
+	esac
+}
+
+# File bin/serv-edit:
+
+serv_edit()
+{
+	local SERVICE="$1"
+	shift
+
+	case $SERVICETYPE in
+		systemd)
+			sudocmd systemctl edit "$@" "$SERVICE"
+			;;
+		*)
+			fatal "Have no suitable for $DISTRNAME command for $SERVICETYPE"
 			;;
 	esac
 }
@@ -1052,12 +1067,9 @@ _print_additional_usage
 ################# incorporate bin/distr_info #################
 internal_distr_info()
 {
-# Author: Vitaly Lipatov <lav@etersoft.ru>
-# 2007, 2009, 2010, 2012, 2016, 2017, 2018 (c) Etersoft
-# 2007-2018 Public domain
-
-# Detect the distro and version
-# Welcome to send updates!
+# 2007-2019 (c) Vitaly Lipatov <lav@etersoft.ru>
+# 2007-2019 (c) Etersoft
+# 2007-2019 Public domain
 
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
@@ -1177,7 +1189,7 @@ if distro altlinux-release ; then
 	elif has "ALT Linux 8." ; then DISTRIB_RELEASE="p8"
 	elif has "ALT .*8.[0-9]" ; then DISTRIB_RELEASE="p8"
 	elif has "ALT .*9.[0-9]" ; then DISTRIB_RELEASE="p9"
-	elif has "ALT p9 p9" ; then DISTRIB_RELEASE="p9"
+	elif has "ALT p9 " ; then DISTRIB_RELEASE="p9"
 	elif has "Simply Linux 6." ; then DISTRIB_RELEASE="p6"
 	elif has "Simply Linux 7." ; then DISTRIB_RELEASE="p7"
 	elif has "Simply Linux 8." ; then DISTRIB_RELEASE="p8"
@@ -1191,12 +1203,7 @@ if distro altlinux-release ; then
 	elif has "ALT Linux 5.0" ; then DISTRIB_RELEASE="5.0"
 	elif has "ALT Linux 4.1" ; then DISTRIB_RELEASE="4.1"
 	elif has "ALT Linux 4.0" ; then DISTRIB_RELEASE="4.0"
-	elif has Walnut          ; then DISTRIB_RELEASE="4.0"
-	elif has Hypericum       ; then DISTRIB_RELEASE="p8"
 	elif has "starter kit"   ; then DISTRIB_RELEASE="p8"
-	elif has 20070810 ; then DISTRIB_RELEASE="4.0"
-	elif has Ajuga    ; then DISTRIB_RELEASE="4.0"
-	elif has 20050723 ; then DISTRIB_RELEASE="3.0"
 	elif has Citron   ; then DISTRIB_RELEASE="2.4"
 	fi
 
@@ -1466,6 +1473,9 @@ case "$DIST_BIT" in
     'aarch64')
         DIST_BIT="64"
         ;;
+    'e2k')
+        DIST_BIT="64"
+        ;;
 #    'pa_risc' | 'pa-risc') # Are some of these 64bit? Least not all...
 #       BIT="64"
 #        ;;
@@ -1502,29 +1512,83 @@ get_memory_size() {
     echo $detected
 }
 
+print_name_version()
+{
+    [ -n "$DISTRIB_RELEASE" ] && echo $DISTRIB_ID/$DISTRIB_RELEASE || echo $DISTRIB_ID
+}
+
+get_virt()
+{
+    local VIRT
+    local SDCMD
+    SDCMD=$(which systemd-detect-virt 2>/dev/null)
+    if [ -n "$SDCMD" ] ; then
+        VIRT="$($SDCMD)"
+        [ "$VIRT" = "none" ] && echo "(host system)" && return
+        [ -z "$VIRT" ] && echo "(unknown)" && return
+        echo "$VIRT" && return
+    fi
+    if [ -r /proc/user_beancounters ] ; then
+        echo "openvz" && return
+    fi
+    echo "(unknown)"
+    # TODO: check for openvz
+}
+
+# https://unix.stackexchange.com/questions/196166/how-to-find-out-if-a-system-uses-sysv-upstart-or-systemd-initsystem
+get_service_manager()
+{
+    [ -d /run/systemd/system ] && echo "systemd" && return
+    [ -d /usr/share/upstart ] && echo "upstart" && return
+    [ -d /etc/init.d ] && echo "sysvinit" && return
+    echo "(unknown)"
+}
+
+
+print_total_info()
+{
+cat <<EOF
+distro_info total information (run with -h to get help):
+ Distro name and version (-e): $(print_name_version)
+        Packaging system (-p): $(pkgtype)
+ Running service manager (-y): $(get_service_manager)
+          Virtualization (-i): $(get_virt)
+        CPU Architecture (-a): $(get_arch)
+ CPU norm register size  (-b): $(get_bit_size)
+ System memory size (MB) (-m): $(get_memory_size)
+            Base OS name (-o): $(get_base_os_name)
+Build system distro name (-s): $(pkgvendor)
+Build system vendor name (-n): $(rpmvendor)
+EOF
+}
+
 
 case $1 in
+	-h)
+		echo "distro_info - distro name and version detection"
+		echo "Usage: distro_info [options] [args]"
+		echo "Options:"
+		echo " -a - print hardware architecture"
+		echo " -b - print size of arch bit (32/64)"
+		echo " -d - print distro name"
+		echo " -e - print full name of distro with version"
+		echo " -i - print virtualization type"
+		echo " -h - this help"
+		echo " -m - print system memory size (in MB)"
+		echo " -n [SystemName] - print vendor name (as _vendor macros in rpm)"
+		echo " -o - print base OS name"
+		echo " -p [SystemName] - print type of the packaging system"
+		echo " -s [SystemName] - print name of distro for build system (like in the package release name)"
+		ecgi " -y - print running service manager"
+		echo " -v - print version of distro"
+		echo " -V - print the utility version"
+		echo "Run without args to print all information."
+		exit 0
+		;;
 	-p)
 		# override DISTRIB_ID
 		test -n "$2" && DISTRIB_ID="$2"
 		pkgtype
-		exit 0
-		;;
-	-h)
-		echo "distr_vendor - system name and version detection"
-		echo "Usage: distr_vendor [options] [args]"
-		echo "-p [SystemName] - print type of packaging system"
-		echo "-d - print distro name"
-		echo "-a - print hardware architecture"
-		echo "-b - print size of arch bit (32/64)"
-		echo "-m - print system memory size (in MB)"
-		echo "-o - print base os name"
-		echo "-v - print version of distro"
-		echo "-e - print full name of distro with version (by default)"
-		echo "-s [SystemName] - print name of distro for build system (like in the package release name)"
-		echo "-n [SystemName] - print vendor name (as _vendor macros in rpm)"
-		echo "-V - print the version of $0"
-		echo "-h - this help"
 		exit 0
 		;;
 	-d)
@@ -1535,6 +1599,9 @@ case $1 in
 		;;
 	-b)
 		get_bit_size
+		;;
+	-i)
+		get_virt
 		;;
 	-m)
 		get_memory_size
@@ -1557,13 +1624,18 @@ case $1 in
 		rpmvendor
 		exit 0
 		;;
+	-y)
+		get_service_manager
+		;;
 	-V)
-		echo "20171010"
+		echo "20191121"
 		exit 0
 		;;
+	-e)
+		print_name_version
+		;;
 	*)
-		# if run without args, just printout Name/Version of the current system
-		[ -n "$DISTRIB_RELEASE" ] && echo $DISTRIB_ID/$DISTRIB_RELEASE || echo $DISTRIB_ID
+		print_total_info
 		;;
 esac
 
@@ -2164,9 +2236,12 @@ set_service_type()
 {
 	local CMD
 
-	# Fill for use: PMTYPE, DISTRNAME, DISTRVERSION, PKGFORMAT, PKGVENDOR, RPMVENDOR
+	# use external distro_info if internal one is missed
 	DISTRVENDOR=internal_distr_info
-	[ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d) || fatal "Can't get distro name."
+	[ -x $DISTRVENDOR ] || DISTRVENDOR=distro_info
+
+	# Fill for use: PMTYPE, DISTRNAME, DISTRVERSION, PKGFORMAT, PKGVENDOR, RPMVENDOR
+	[ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d) || fatal "Can't get distro name from $DISTRVENDOR."
 	[ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
 	set_target_pkg_env
 
@@ -2243,19 +2318,13 @@ $(get_help HELPOPT)
 "
 }
 
-detect_virt()
-{
-        which systemd-detect-virt >/dev/null 2>/dev/null || return
-        a= systemd-detect-virt
-}
-
 print_version()
 {
         local on_text="(host system)"
-        local virt="$(detect_virt)"
-        [ "$virt" = "none" ] || [ "$virt" = "" ] || on_text="(under $virt)"
-        echo "Service manager version 3.1.0"
-        echo "Running on $($DISTRVENDOR) $on_text with $SERVICETYPE"
+        local virt="$($DISTRVENDOR -i)"
+        [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
+        echo "Service manager version 3.1.2"
+        echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2019"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
@@ -2328,6 +2397,9 @@ check_command()
         ;;
     log|journal)              # HELPCMD: print log for the service
         serv_cmd=log
+        ;;
+    edit)
+        serv_cmd=edit         # HELPCMD: edit service file overload (use --full to edit full file)
         ;;
     *)
         return 1

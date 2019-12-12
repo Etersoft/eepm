@@ -239,7 +239,7 @@ clean_store_output()
 epm()
 {
 	[ -n "$PROGNAME" ] || fatal "Can't use epm call from the piped script"
-	$PROGDIR/$PROGNAME $@
+	$PROGDIR/$PROGNAME --inscript $@
 }
 
 fatal()
@@ -368,6 +368,7 @@ assure_exists()
 
 disabled_eget()
 {
+	local EGET
 	# use internal eget only if exists
 	if [ -s $SHAREDIR/tools_eget ] ; then
 		$SHAREDIR/tools_eget "$@"
@@ -456,8 +457,11 @@ set_pm_type()
 {
 	local CMD
 
-	# Fill for use: PMTYPE, DISTRNAME, DISTRVERSION, PKGFORMAT, PKGVENDOR, RPMVENDOR
+	# use external distro_info if internal one is missed
 	DISTRVENDOR=internal_distr_info
+	[ -x $DISTRVENDOR ] || DISTRVENDOR=distro_info
+
+	# Fill for use: PMTYPE, DISTRNAME, DISTRVERSION, PKGFORMAT, PKGVENDOR, RPMVENDOR
 	[ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d) || fatal "Can't get distro name."
 	[ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
 	set_target_pkg_env
@@ -544,13 +548,7 @@ PMTYPE=$CMD
 
 is_active_systemd()
 {
-	local a
-	SYSTEMCTL=/bin/systemctl
-	#[ -x "$SYSTEMCTL" ] || return
-	[ -d /run/systemd/system ] || return
-	#SYSTEMD_CGROUP_DIR=/sys/fs/cgroup/systemd
-	#[ -d "$SYSTEMD_CGROUP_DIR" ] || return
-	#cat /proc/1/comm | grep -q 'systemd' && return
+	[ "$($DISTRVENDOR -y)" = "systemd" ]
 }
 
 assure_distr()
@@ -637,7 +635,7 @@ __epm_addrepo_altlinux()
 	assure_exists apt-repo
 
 	if tasknumber "$repo" >/dev/null ; then
-		sudocmd apt-repo add $(tasknumber "$repo")
+		sudocmd_foreach 'apt-repo add' $(tasknumber "$repo")
 		return
 	fi
 
@@ -661,7 +659,7 @@ local repo="$(eval echo "$quoted_args")"
 
 case $DISTRNAME in
 	ALTLinux)
-		__epm_addrepo_altlinux $repo
+		__epm_addrepo_altlinux $pkg_names
 		return
 		;;
 esac
@@ -1481,6 +1479,13 @@ epm_checksystem()
 
 [ $EFFUID = "0" ] && fatal "Do not use checksystem under root"
 
+case $PMTYPE in
+	homebrew)
+		sudocmd brew doctor
+		return
+		;;
+esac
+
 case $DISTRNAME in
 	ALTLinux)
 		epm_checksystem_$DISTRNAME
@@ -1619,6 +1624,9 @@ case $PMTYPE in
 		;;
 	urpm-rpm)
 		sudocmd urpmi --clean
+		;;
+	homebrew)
+		sudocmd brew cleanup -s
 		;;
 	pacman)
 		sudocmd pacman -Sc --noconfirm
@@ -1769,7 +1777,7 @@ case "$DISTRNAME" in
 	"ALTLinux")
 		assure_exists /usr/share/apt/scripts apt-scripts
 		if [ -f /usr/share/apt/scripts/dedup.lua ] ; then
-			"Check for duplicates via apt-get dedup from apt-scripts"
+			info "Check for duplicates via apt-get dedup from apt-scripts"
 			sudocmd apt-get dedup
 		else
 			try_fix_apt_rpm_dupls
@@ -2072,6 +2080,9 @@ epm_download()
 		;;
 	opkg)
 		docmd opkg $pkg_filenames
+		;;
+	homebrew)
+		docmd brew fetch $pkg_filenames
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -2954,14 +2965,12 @@ epm_print_install_names_command()
 
 epm_install()
 {
-    if tasknumber "$pkg_names" >/dev/null ; then
-        assure_distr ALTLinux "install with task number"
-        assure_exists apt-repo
-        local task
-        for task in $(tasknumber "$pkg_names") ; do
-            sudocmd apt-repo test $task
-        done
-        return
+    if [ "$DISTRNAME" = "ALTLinux" ] ; then
+        if tasknumber "$pkg_names" >/dev/null ; then
+            assure_exists apt-repo
+            sudocmd_foreach "apt-repo test" "$(tasknumber $pkg_names)"
+            return
+        fi
     fi
 
     if [ -n "$show_command_only" ] ; then
@@ -3903,10 +3912,14 @@ __epm_query_name()
 		conary)
 			CMD="conary query"
 			;;
-		homebrew)
-			docmd brew info "$1" >/dev/null 2>/dev/null && echo "$1" && return
-			return 1
-			;;
+		#homebrew)
+		#	showcmd "brew info $1"
+		#	local HBRESULT
+		#	HBRESULT="$(brew info "$1" 2>/dev/null)" || return
+		#	echo "$HBRESULT" | grep -q "Not installed" && return 1
+		#	echo "$1"
+		#	return 0
+		#	;;
 		pacman)
 			docmd pacman -Q $@
 			return
@@ -4029,7 +4042,7 @@ __do_query_real_file()
 	if [ -e "$1" ] ; then
 		TOFILE="$(__abs_filename "$1")"
 	else
-		TOFILE=$(which "$1" 2>/dev/null || echo "$1")
+		TOFILE=$(which -- "$1" 2>/dev/null || echo "$1")
 		if [ "$TOFILE" != "$1" ] ; then
 			info "Note: $1 is placed as $TOFILE"
 		fi
@@ -4039,7 +4052,7 @@ __do_query_real_file()
 	if [ -L "$TOFILE" ] ; then
 		local LINKTO
 		__do_query "$TOFILE"
-		LINKTO=$(readlink -f "$TOFILE")
+		LINKTO=$(readlink -f -- "$TOFILE")
 		info "Note: $TOFILE is link to $LINKTO"
 		__do_query_real_file "$LINKTO"
 		return
@@ -4213,6 +4226,9 @@ epm_reinstall_names()
 		dnf-rpm)
 			sudocmd dnf reinstall $@
 			return ;;
+		homebrew)
+			sudocmd brew reinstall $@
+			return ;;
 		pkgng)
 			sudocmd pkg install -f $@
 			return ;;
@@ -4382,6 +4398,7 @@ get_fix_release_pkg()
 	[ "$TOINSTALL" = "altlinux-release-sisyphus" ] && TOINSTALL="branding-alt-sisyphus-release"
 
 	# update if installed (just print package name here to include in the install list)
+	epm --quiet --short -q alt-gpgkeys 2>/dev/null
 	epm --quiet --short -q etersoft-gpgkeys 2>/dev/null
 
 	if [ -n "$TOINSTALL" ] ; then
@@ -4869,13 +4886,11 @@ epm_remove()
 		return
 	fi
 
-	local tn=$(tasknumber "$pkg_names")
-	if [ -n "$tn" ] ; then
-		assure_distr ALTLinux "remove with task number"
-		assure_exists apt-repo
-		pkg_names=$(showcmd apt-repo list $tn)
-		#docmd epm remove $dryrun
-		return
+	if [ "$DISTRNAME" = "ALTLinux" ] ; then
+		if tasknumber "$pkg_names" >/dev/null ; then
+			assure_exists apt-repo
+			pkg_names="$(get_task_packages $pkg_names)"
+		fi
 	fi
 
 	# TODO: fix pkg_names override
@@ -4983,6 +4998,7 @@ local repo="$(eval echo $quoted_args)"
 
 case $DISTRNAME in
 	ALTLinux)
+		assure_exists apt-repo
 		case "$repo" in
 			autoimports)
 				info "remove autoimports repo"
@@ -5007,14 +5023,24 @@ case $DISTRNAME in
 				;;
 			*)
 				if tasknumber "$repo" >/dev/null ; then
-					repo="$(epm repolist | grep "repo/$(tasknumber "$repo")" | line)"
-					# "
+					#sudocmd apt-repo rm all tasks
+					#return
+					local tn
+					for tn in $(tasknumber "$repo") ; do
+						repoline="$(epm repolist | grep " repo/$tn/" | line)" #"
+						[ -n "$repoline" ] || { info "Can't find $tn task in the repository list" ; continue ; }
+						sudocmd apt-repo rm "$repoline"
+						# try again to remove possible x86_64-i586
+						repoline="$(epm repolist | grep " repo/$tn/" | line)" #"
+						[ -n "$repoline" ] || continue
+						sudocmd apt-repo rm "$repoline"
+					done
+					return 0
 				fi
 				;;
 		esac
 
 		[ -n "$repo" ] || fatal "No such repo or task. Use epm remove repo [autoimports|archive|tasks/TASKNUMBER]"
-		assure_exists apt-repo
 		sudocmd apt-repo rm "$repo"
 		return
 		;;
@@ -5522,6 +5548,11 @@ case $PMTYPE in
 		assure_exists equery
 		CMD="equery depgraph"
 		;;
+	homebrew)
+		#docmd brew info $pkg_names | grep "^Required: " | sed -s "|s|^Requires: ||"
+		docmd brew deps $pkg_names
+		return
+		;;
 	pkgng)
 		#CMD="pkg rquery '%dn-%dv'"
 		CMD="pkg info -d"
@@ -5917,7 +5948,7 @@ get_local_alt_contents_index()
 
     epm_repolist | grep -E "rpm.*(ftp://|http://|https://|file:/)" | sed -e "s@^rpm.*\(ftp://\|http://\|https://\|file:\)@\1@g" | while read -r URL ARCH other ; do
         LOCALPATH=$(get_local_alt_mirror_path "$URL/$ARCH")
-        download_alt_contents_index $URL/$ARCH/base/contents_index $LOCALPATH >&2 || continue
+        download_alt_contents_index $URL/$ARCH/base/contents_index $LOCALPATH >&2 </dev/null || continue
         echo "$LOCALPATH/contents_index*"
     done
 
@@ -5929,6 +5960,13 @@ tasknumber()
     isnumber "$num" && echo "$*"
 }
 
+get_task_packages()
+{
+    local tn
+    for tn in $(tasknumber "$@") ; do
+        docmd apt-repo list task "$tn"
+    done
+}
 
 # File bin/epm-sh-warmup:
 
@@ -6205,6 +6243,10 @@ query_package_url()
 			#LANG=C epm info "$1"
 			return
 			;;
+		homebrew)
+			docmd brew "$1" | grep "^From: " | sed -e "s|^From: ||"
+			return
+			;;
 	esac
 	fatal "rpm based distro supported only. TODO: Realize via web service?"
 }
@@ -6367,6 +6409,21 @@ epm_upgrade()
 	update_repo_if_needed
 
 	warmup_bases
+
+	if [ "$DISTRNAME" = "ALTLinux" ] ; then
+		if tasknumber "$pkg_names" >/dev/null ; then
+			epm_addrepo
+			local installlist="$(get_task_packages $pkg_names)"
+			[ -n "$verbose" ] && info "Packages from task(s): $installlist"
+			# install only installed packages (simulate upgrade packages)
+			installlist="$(estrlist exclude "$(echo "$installlist" | (skip_installed='yes' filter_out_installed_packages))" "$installlist")"
+			[ -n "$verbose" ] && info "Packages to upgrade: $installlist"
+			(pkg_names="$installlist" epm_Install)
+			epm_removerepo
+			return
+		fi
+	fi
+
 	info "Running command for upgrade packages"
 
 	case $PMTYPE in
@@ -6450,6 +6507,7 @@ epm_upgrade()
 	esac
 
 	sudocmd $CMD $pkg_filenames
+
 }
 
 # File bin/epm-Upgrade:
@@ -6504,6 +6562,9 @@ case $PMTYPE in
 	emerge)
 		assure_exists equery
 		CMD="equery depends -a"
+		;;
+	homebrew)
+		CMD="brew uses"
 		;;
 	pkgng)
 		CMD="pkg info -r"
@@ -6571,12 +6632,9 @@ docmd $CMD $pkg
 ################# incorporate bin/distr_info #################
 internal_distr_info()
 {
-# Author: Vitaly Lipatov <lav@etersoft.ru>
-# 2007, 2009, 2010, 2012, 2016, 2017, 2018 (c) Etersoft
-# 2007-2018 Public domain
-
-# Detect the distro and version
-# Welcome to send updates!
+# 2007-2019 (c) Vitaly Lipatov <lav@etersoft.ru>
+# 2007-2019 (c) Etersoft
+# 2007-2019 Public domain
 
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
@@ -6696,7 +6754,7 @@ if distro altlinux-release ; then
 	elif has "ALT Linux 8." ; then DISTRIB_RELEASE="p8"
 	elif has "ALT .*8.[0-9]" ; then DISTRIB_RELEASE="p8"
 	elif has "ALT .*9.[0-9]" ; then DISTRIB_RELEASE="p9"
-	elif has "ALT p9 p9" ; then DISTRIB_RELEASE="p9"
+	elif has "ALT p9 " ; then DISTRIB_RELEASE="p9"
 	elif has "Simply Linux 6." ; then DISTRIB_RELEASE="p6"
 	elif has "Simply Linux 7." ; then DISTRIB_RELEASE="p7"
 	elif has "Simply Linux 8." ; then DISTRIB_RELEASE="p8"
@@ -6710,12 +6768,7 @@ if distro altlinux-release ; then
 	elif has "ALT Linux 5.0" ; then DISTRIB_RELEASE="5.0"
 	elif has "ALT Linux 4.1" ; then DISTRIB_RELEASE="4.1"
 	elif has "ALT Linux 4.0" ; then DISTRIB_RELEASE="4.0"
-	elif has Walnut          ; then DISTRIB_RELEASE="4.0"
-	elif has Hypericum       ; then DISTRIB_RELEASE="p8"
 	elif has "starter kit"   ; then DISTRIB_RELEASE="p8"
-	elif has 20070810 ; then DISTRIB_RELEASE="4.0"
-	elif has Ajuga    ; then DISTRIB_RELEASE="4.0"
-	elif has 20050723 ; then DISTRIB_RELEASE="3.0"
 	elif has Citron   ; then DISTRIB_RELEASE="2.4"
 	fi
 
@@ -6985,6 +7038,9 @@ case "$DIST_BIT" in
     'aarch64')
         DIST_BIT="64"
         ;;
+    'e2k')
+        DIST_BIT="64"
+        ;;
 #    'pa_risc' | 'pa-risc') # Are some of these 64bit? Least not all...
 #       BIT="64"
 #        ;;
@@ -7021,29 +7077,83 @@ get_memory_size() {
     echo $detected
 }
 
+print_name_version()
+{
+    [ -n "$DISTRIB_RELEASE" ] && echo $DISTRIB_ID/$DISTRIB_RELEASE || echo $DISTRIB_ID
+}
+
+get_virt()
+{
+    local VIRT
+    local SDCMD
+    SDCMD=$(which systemd-detect-virt 2>/dev/null)
+    if [ -n "$SDCMD" ] ; then
+        VIRT="$($SDCMD)"
+        [ "$VIRT" = "none" ] && echo "(host system)" && return
+        [ -z "$VIRT" ] && echo "(unknown)" && return
+        echo "$VIRT" && return
+    fi
+    if [ -r /proc/user_beancounters ] ; then
+        echo "openvz" && return
+    fi
+    echo "(unknown)"
+    # TODO: check for openvz
+}
+
+# https://unix.stackexchange.com/questions/196166/how-to-find-out-if-a-system-uses-sysv-upstart-or-systemd-initsystem
+get_service_manager()
+{
+    [ -d /run/systemd/system ] && echo "systemd" && return
+    [ -d /usr/share/upstart ] && echo "upstart" && return
+    [ -d /etc/init.d ] && echo "sysvinit" && return
+    echo "(unknown)"
+}
+
+
+print_total_info()
+{
+cat <<EOF
+distro_info total information (run with -h to get help):
+ Distro name and version (-e): $(print_name_version)
+        Packaging system (-p): $(pkgtype)
+ Running service manager (-y): $(get_service_manager)
+          Virtualization (-i): $(get_virt)
+        CPU Architecture (-a): $(get_arch)
+ CPU norm register size  (-b): $(get_bit_size)
+ System memory size (MB) (-m): $(get_memory_size)
+            Base OS name (-o): $(get_base_os_name)
+Build system distro name (-s): $(pkgvendor)
+Build system vendor name (-n): $(rpmvendor)
+EOF
+}
+
 
 case $1 in
+	-h)
+		echo "distro_info - distro name and version detection"
+		echo "Usage: distro_info [options] [args]"
+		echo "Options:"
+		echo " -a - print hardware architecture"
+		echo " -b - print size of arch bit (32/64)"
+		echo " -d - print distro name"
+		echo " -e - print full name of distro with version"
+		echo " -i - print virtualization type"
+		echo " -h - this help"
+		echo " -m - print system memory size (in MB)"
+		echo " -n [SystemName] - print vendor name (as _vendor macros in rpm)"
+		echo " -o - print base OS name"
+		echo " -p [SystemName] - print type of the packaging system"
+		echo " -s [SystemName] - print name of distro for build system (like in the package release name)"
+		ecgi " -y - print running service manager"
+		echo " -v - print version of distro"
+		echo " -V - print the utility version"
+		echo "Run without args to print all information."
+		exit 0
+		;;
 	-p)
 		# override DISTRIB_ID
 		test -n "$2" && DISTRIB_ID="$2"
 		pkgtype
-		exit 0
-		;;
-	-h)
-		echo "distr_vendor - system name and version detection"
-		echo "Usage: distr_vendor [options] [args]"
-		echo "-p [SystemName] - print type of packaging system"
-		echo "-d - print distro name"
-		echo "-a - print hardware architecture"
-		echo "-b - print size of arch bit (32/64)"
-		echo "-m - print system memory size (in MB)"
-		echo "-o - print base os name"
-		echo "-v - print version of distro"
-		echo "-e - print full name of distro with version (by default)"
-		echo "-s [SystemName] - print name of distro for build system (like in the package release name)"
-		echo "-n [SystemName] - print vendor name (as _vendor macros in rpm)"
-		echo "-V - print the version of $0"
-		echo "-h - this help"
 		exit 0
 		;;
 	-d)
@@ -7054,6 +7164,9 @@ case $1 in
 		;;
 	-b)
 		get_bit_size
+		;;
+	-i)
+		get_virt
 		;;
 	-m)
 		get_memory_size
@@ -7076,13 +7189,18 @@ case $1 in
 		rpmvendor
 		exit 0
 		;;
+	-y)
+		get_service_manager
+		;;
 	-V)
-		echo "20171010"
+		echo "20191121"
 		exit 0
 		;;
+	-e)
+		print_name_version
+		;;
 	*)
-		# if run without args, just printout Name/Version of the current system
-		[ -n "$DISTRIB_RELEASE" ] && echo $DISTRIB_ID/$DISTRIB_RELEASE || echo $DISTRIB_ID
+		print_total_info
 		;;
 esac
 
@@ -7691,8 +7809,8 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 3.1.0"
-        echo "Running on $($DISTRVENDOR) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
+        echo "EPM package manager version 3.1.2"
+        echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2019"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
@@ -7701,7 +7819,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.1.0
+EPMVERSION=3.1.2
 verbose=
 quiet=
 nodeps=
@@ -7709,6 +7827,7 @@ noremove=
 dryrun=
 force=
 repack=
+inscript=
 scripts=
 short=
 direct=
@@ -7978,6 +8097,9 @@ check_option()
     --noremove|--no-remove)  # HELPOPT: exit if any packages are to be removed during upgrade
         noremove="--no-remove"
         ;;
+    --no-stdin|--inscript) # HELPOPT: don't read from stdin for epm args
+        inscript=1
+        ;;
     --dry-run|--simulate|--just-print|-recon--no-act) # HELPOPT: print only (autoremove/autoorphans/remove only)
         dryrun="--dry-run"
         ;;
@@ -8037,7 +8159,7 @@ for opt in "$@" ; do
 done
 
 # if input is not console and run script from file, get pkgs from stdin too
-if ! inputisatty && [ -n "$PROGDIR" ] ; then
+if [ ! -n "$inscript" ] && ! inputisatty && [ -n "$PROGDIR" ] ; then
     for opt in $(withtimeout 2 cat) ; do
         # FIXME: do not work
         # workaround against # yes | epme
