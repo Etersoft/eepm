@@ -42,6 +42,9 @@ serv_restart()
 		runit)
 			sudocmd sv restart "$SERVICE"
 			;;
+		openrc)
+			sudocmd rc-service restart "$SERVICE"
+			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
 			;;

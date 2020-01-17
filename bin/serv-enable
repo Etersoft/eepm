@@ -46,6 +46,9 @@ __serv_enable()
 		systemd)
 			sudocmd systemctl enable $1
 			;;
+		openrc)
+			sudocmd rc-update add $1 default
+			;;
 		runit)
 			epm assure $SERVICE
 			[ -r "/etc/sv/$SERVICE" ] || fatal "Can't find /etc/sv/$SERVICE"

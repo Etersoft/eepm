@@ -36,6 +36,9 @@ serv_list_all()
 		systemd)
 			sudocmd systemctl list-unit-files $@
 			;;
+		openrc)
+			sudocmd rc-service -l
+			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
 			;;

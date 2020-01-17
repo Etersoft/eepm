@@ -42,6 +42,9 @@ serv_disable()
 		systemd)
 			sudocmd systemctl disable $1
 			;;
+		openrc)
+			sudocmd rc-update del $1 default
+			;;
 		runit)
 			sudocmd rm -fv /var/service/$SERVICE
 			;;

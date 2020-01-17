@@ -40,6 +40,9 @@ serv_stop()
 		runit)
 			sudocmd sv down "$SERVICE"
 			;;
+		openrc)
+			sudocmd rc-service stop "$SERVICE"
+			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
 			;;

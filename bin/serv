@@ -71,7 +71,7 @@ case $DISTRNAME in
 #		CMD="pkg_add"
 #		;;
 #	Gentoo)
-#		CMD="emerge"
+#		CMD="eselect"
 #		;;
 #	ArchLinux)
 #		CMD="pacman"

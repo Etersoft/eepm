@@ -33,6 +33,9 @@ serv_list()
 		systemd)
 			sudocmd systemctl list-units $@
 			;;
+		openrc)
+			sudocmd rc-status
+			;;
 		*)
 			# hack to improve list speed
 			[ "$UID" = 0 ] || { sudocmd $PROGDIR/serv --quiet list ; return ; }
