@@ -270,6 +270,9 @@ check_command()
     clean)                    # HELPCMD: clean local package cache
         epm_cmd=clean
         ;;
+    restore)                  # HELPCMD: install (restore) packages need for the project (f.i. by requirements.txt)
+        epm_cmd=restore
+        ;;
     autoremove|package-cleanup)   # HELPCMD: auto remove unneeded package(s) Supports args for ALT: [libs|python|perl|libs-devel]
         epm_cmd=autoremove
         ;;
@@ -353,7 +356,7 @@ check_option()
     --noremove|--no-remove)  # HELPOPT: exit if any packages are to be removed during upgrade
         noremove="--no-remove"
         ;;
-    --no-stdin|--inscript) # HELPOPT: don't read from stdin for epm args
+    --no-stdin|--inscript)  # HELPOPT: don't read from stdin for epm args
         inscript=1
         ;;
     --dry-run|--simulate|--just-print|-recon--no-act) # HELPOPT: print only (autoremove/autoorphans/remove only)

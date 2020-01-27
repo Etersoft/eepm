@@ -1,0 +1,102 @@
+#!/bin/sh
+#
+# Copyright (C) 2020  Etersoft
+# Copyright (C) 2020  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+load_helper epm-sh-altlinux
+load_helper epm-assure
+
+__epm_filter_pip_to_rpm()
+{
+    tr "A-Z" "a-z" | sed -e "s|-|_|g" -e "s|^python_||" \
+        -e "s|beautifulsoup4|bs4|" \
+        -e "s|pillow|PIL|" \
+        -e "s|pyjwt|jwt|" \
+        -e "s|pyyaml|yaml|" \
+        -e "s|memcached|memcache|" \
+        -e "s|pyopenssl|OpenSSL|"
+}
+
+__epm_restore_pip()
+{
+    local req_file="$1"
+    info "Install requirements from $req_file ..."
+
+    local ilist=''
+    while read l ; do
+        local t="$(echo "$l" | sed -e "s| *[<>]*=.*||" | __epm_filter_pip_to_rpm)"
+        if echo "$l" | grep -qE "^ *#" ; then
+            continue
+        fi
+        if echo "$l" | grep -qE "://" ; then
+            if echo "$l" | grep -q "#egg=" ; then
+                t="$(echo "$l" | sed -e "s|.*#egg=||" -e "s|\[.*||" | __epm_filter_pip_to_rpm)"
+            else
+                echo "    skipping URL $l ..."
+                continue
+            fi
+        fi
+        if echo "$l" | grep -q "; *python_version *< *'3.0'" ; then
+            echo "    $t is python2 only requirement, skipped"
+            continue
+        fi
+        local pi="python3($t)"
+        echo "    $l -> $t -> $pi"
+        [ -n "$t" ] || continue
+        ilist="$ilist $pi"
+    done < $req_file
+
+    epm install $ilist
+}
+
+__epm_restore_by()
+{
+    local req_file="$1"
+    [ -s "$req_file" ] || return
+    case $(basename $req_file) in
+        requirements.txt)
+            [ -s "$req_file" ] && __epm_restore_pip "$req_file"
+            ;;
+        Gemfile|package.json)
+            info "$req_file support is not implemented yet"
+            ;;
+    esac
+}
+
+epm_restore()
+{
+    req_file="$pkg_filenames"
+    if [ -n "$pkg_urls" ] && echo "$pkg_urls" | grep -qE "^https?://" ; then
+        req_file="$(basename "$pkg_urls")"
+        #assure eget
+        [ -r "$req_file" ] && fatal "File $req_file is already exists in $(pwd)"
+        info "Downloading '$req_file' from '$pkg_urls' ..."
+        eget "$pkg_urls"
+        [ -s "$req_file" ] || fatal "Can't download $req_file from '$pkg_urls'"
+    fi
+
+    if [ -n "$req_file" ] ; then
+        __epm_restore_by $req_file
+        return
+    fi
+
+    # if run with empty args
+    for i in requirements.txt Gemfile; do
+        __epm_restore_by $i
+    done
+
+}
