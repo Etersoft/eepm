@@ -50,8 +50,7 @@ case $DISTRNAME in
 				;;
 			*)
 				if tasknumber "$repo" >/dev/null ; then
-					#sudocmd apt-repo rm all tasks
-					#return
+					assure_exists apt-repo
 					local tn
 					for tn in $(tasknumber "$repo") ; do
 						repoline="$(epm repolist | grep " repo/$tn/" | line)" #"
