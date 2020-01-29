@@ -20,6 +20,7 @@
 load_helper epm-sh-altlinux
 load_helper epm-assure
 
+# FIXME: python modules are packaged into python packages, but we have only module names and rpm package names instead of python packages
 __epm_filter_pip_to_rpm()
 {
     tr "A-Z" "a-z" | sed -e "s|-|_|g" -e "s|^python_||" \
@@ -27,6 +28,7 @@ __epm_filter_pip_to_rpm()
         -e "s|pillow|PIL|" \
         -e "s|pyjwt|jwt|" \
         -e "s|pyyaml|yaml|" \
+        -e "s|attrs|attr|" \
         -e "s|memcached|memcache|" \
         -e "s|pyopenssl|OpenSSL|"
 }
@@ -39,7 +41,7 @@ __epm_restore_pip()
     local ilist=''
     while read l ; do
         local t="$(echo "$l" | sed -e "s| *[<>]*=.*||" | __epm_filter_pip_to_rpm)"
-        if echo "$l" | grep -qE "^ *#" ; then
+        if echo "$l" | grep -qE "^ *#" || [ -z "$l" ] ; then
             continue
         fi
         if echo "$l" | grep -qE "://" ; then
@@ -54,6 +56,7 @@ __epm_restore_pip()
             echo "    $t is python2 only requirement, skipped"
             continue
         fi
+        # TODO: python3-egg-info($t)
         local pi="python3($t)"
         echo "    $l -> $t -> $pi"
         [ -n "$t" ] || continue
