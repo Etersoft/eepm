@@ -314,6 +314,15 @@ __handle_direct_install()
     esac
 }
 
+# TODO: forbid src.rpm
+__epm_check_if_src_rpm()
+{
+    local pkg
+    for pkg in $@ ; do
+        echo "$pkg" | grep -q "\.src.\rpm" && fatal "Installation of a source packages (like '$pkg') is not supported."
+    done
+}
+
 epm_install_files()
 {
     [ -z "$1" ] && return
@@ -326,6 +335,7 @@ epm_install_files()
 
             # TODO: replace with name changed function
             __epm_check_if_try_install_deb $@ && return
+            __epm_check_if_src_rpm $@
 
             # do not using low-level for install by file path (FIXME: reasons?)
             if ! is_dirpath "$@" || [ "$(get_package_type "$@")" = "rpm" ] ; then
@@ -368,6 +378,7 @@ epm_install_files()
 
        *-rpm)
             __epm_check_if_try_install_deb $@ && return
+            __epm_check_if_src_rpm $@
             sudocmd rpm -Uvh $force $nodeps $@ && return
             local RES=$?
 
