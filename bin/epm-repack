@@ -198,7 +198,7 @@ __epm_repack_rpm()
             repacked_rpms="$repacked_rpms $repacked_rpm"
             to_remove_pkg_files="$to_remove_pkg_files $repacked_rpm"
         else
-            warning "Can't find converted rpm for source binary $pkg package"
+            warning "Can't find converted rpm for source binary package '$pkg'"
         fi
         cd - >/dev/null
         rm -rf $tmpbuilddir/$subdir/
@@ -218,6 +218,7 @@ epm_repack()
         __handle_pkg_urls_to_install
     fi
 
+    [ -n "$pkg_names" ] && warning "Can't find $pkg_names"
     [ -z "$pkg_files" ] && info "Skip empty repack list" && return 22
 
     # TODO: если у нас rpm, а пакет - deb и наоборот
@@ -225,13 +226,19 @@ epm_repack()
         rpm)
             if __epm_split_by_pkg_type deb $pkg_files ; then
                 __epm_repack_deb_to_rpm $split_replaced_pkgs
-                cp -v $repacked_rpms .
+                echo
+                echo "Adopted packages:"
+                estrlist list $repacked_rpms
+                cp $repacked_rpms .
                 pkg_files="$(estrlist exclude $split_replaced_pkgs $pkg_files)"
             fi
 
             if [ -n "$pkg_files" ] ; then
                 __epm_repack_rpm $pkg_files || fatal
-                cp -v $repacked_rpms .
+                echo
+                echo "Adopted packages:"
+                estrlist list $repacked_rpms
+                cp $repacked_rpms .
             fi
             ;;
         deb)
@@ -239,6 +246,7 @@ epm_repack()
                 __epm_repack_rpm_to_deb $split_replaced_pkgs
                 cp -v $repacked_debs .
                 pkg_files="$(estrlist exclude $split_replaced_pkgs $pkg_files)"
+                [ -n "$pkg_files" ] && warning "There are left unconverted packages $pkg_files."
             fi
             ;;
         *)
@@ -250,8 +258,8 @@ epm_repack()
     # TODO: move it to exit handler
     if [ -z "$DEBUG" ] ; then
     # TODO: reinvent
-    [ -n "$to_remove_pkg_files" ] && rm -fv $to_remove_pkg_files
-    [ -n "$to_remove_pkg_files" ] && rmdir -v $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
+    [ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
+    [ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
     fi
 
 }
