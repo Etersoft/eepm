@@ -70,6 +70,16 @@ __epm_restore_by()
 {
     local req_file="$1"
     [ -s "$req_file" ] || return
+
+    if file $req_file | grep -q "ELF [3264]*-bit LSB executable" ; then
+        assure_exists ldd-requires
+        showcmd ldd-requires $req_file
+        local TOINSTALL="$(a= ldd-requires $req_file | grep "^apt-get install" | sed -e "s|^apt-get install ||")"
+        [ -n "$TOINSTALL" ] || { info "There are no missed packages is found for $req_file binary." ; return ; }
+        epm install $TOINSTALL
+        return
+    fi
+
     case $(basename $req_file) in
         requirements.txt)
             [ -s "$req_file" ] && __epm_restore_pip "$req_file"
