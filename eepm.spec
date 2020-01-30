@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.1.2
+Version: 3.1.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -93,6 +93,16 @@ rm -f %buildroot%_bindir/distr_info
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Fri Jan 31 2020 Vitaly Lipatov <lav@altlinux.ru> 3.1.3-alt1
+- commit packed files
+- distro_info related fixes
+- add initial openrc support
+- add restore command (install packages by project list (python's requirements.txt)
+- epm install: forbid src.rpm installation
+- epm repolist: support task number(s)
+- epm repack: more cleanup output, print list of converted packages
+- epm restore: add using ldd-requires for binary files
+
 * Tue Nov 26 2019 Vitaly Lipatov <lav@altlinux.ru> 3.1.2-alt1
 - improve homebrew support
 - serv: add edit support for systemd
