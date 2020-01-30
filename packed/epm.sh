@@ -2742,6 +2742,14 @@ __handle_direct_install()
     esac
 }
 
+__epm_check_if_src_rpm()
+{
+    local pkg
+    for pkg in $@ ; do
+        echo "$pkg" | grep -q "\.src.\rpm" && fatal "Installation of a source packages (like '$pkg') is not supported."
+    done
+}
+
 epm_install_files()
 {
     [ -z "$1" ] && return
@@ -2754,6 +2762,7 @@ epm_install_files()
 
             # TODO: replace with name changed function
             __epm_check_if_try_install_deb $@ && return
+            __epm_check_if_src_rpm $@
 
             # do not using low-level for install by file path (FIXME: reasons?)
             if ! is_dirpath "$@" || [ "$(get_package_type "$@")" = "rpm" ] ; then
@@ -2796,6 +2805,7 @@ epm_install_files()
 
        *-rpm)
             __epm_check_if_try_install_deb $@ && return
+            __epm_check_if_src_rpm $@
             sudocmd rpm -Uvh $force $nodeps $@ && return
             local RES=$?
 
@@ -5023,8 +5033,7 @@ case $DISTRNAME in
 				;;
 			*)
 				if tasknumber "$repo" >/dev/null ; then
-					#sudocmd apt-repo rm all tasks
-					#return
+					assure_exists apt-repo
 					local tn
 					for tn in $(tasknumber "$repo") ; do
 						repoline="$(epm repolist | grep " repo/$tn/" | line)" #"
@@ -5258,7 +5267,7 @@ __epm_repack_rpm()
             repacked_rpms="$repacked_rpms $repacked_rpm"
             to_remove_pkg_files="$to_remove_pkg_files $repacked_rpm"
         else
-            warning "Can't find converted rpm for source binary $pkg package"
+            warning "Can't find converted rpm for source binary package '$pkg'"
         fi
         cd - >/dev/null
         rm -rf $tmpbuilddir/$subdir/
@@ -5277,6 +5286,7 @@ epm_repack()
         __handle_pkg_urls_to_install
     fi
 
+    [ -n "$pkg_names" ] && warning "Can't find $pkg_names"
     [ -z "$pkg_files" ] && info "Skip empty repack list" && return 22
 
     # TODO: если у нас rpm, а пакет - deb и наоборот
@@ -5284,13 +5294,19 @@ epm_repack()
         rpm)
             if __epm_split_by_pkg_type deb $pkg_files ; then
                 __epm_repack_deb_to_rpm $split_replaced_pkgs
-                cp -v $repacked_rpms .
+                echo
+                echo "Adopted packages:"
+                estrlist list $repacked_rpms
+                cp $repacked_rpms .
                 pkg_files="$(estrlist exclude $split_replaced_pkgs $pkg_files)"
             fi
 
             if [ -n "$pkg_files" ] ; then
                 __epm_repack_rpm $pkg_files || fatal
-                cp -v $repacked_rpms .
+                echo
+                echo "Adopted packages:"
+                estrlist list $repacked_rpms
+                cp $repacked_rpms .
             fi
             ;;
         deb)
@@ -5298,6 +5314,7 @@ epm_repack()
                 __epm_repack_rpm_to_deb $split_replaced_pkgs
                 cp -v $repacked_debs .
                 pkg_files="$(estrlist exclude $split_replaced_pkgs $pkg_files)"
+                [ -n "$pkg_files" ] && warning "There are left unconverted packages $pkg_files."
             fi
             ;;
         *)
@@ -5309,8 +5326,8 @@ epm_repack()
     # TODO: move it to exit handler
     if [ -z "$DEBUG" ] ; then
     # TODO: reinvent
-    [ -n "$to_remove_pkg_files" ] && rm -fv $to_remove_pkg_files
-    [ -n "$to_remove_pkg_files" ] && rmdir -v $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
+    [ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
+    [ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
     fi
 
 }
@@ -5403,6 +5420,7 @@ esac
 
 # File bin/epm-repolist:
 
+
 print_apt_sources_list()
 {
     local i
@@ -5419,7 +5437,11 @@ epm_repolist()
 case $PMTYPE in
 	apt-rpm)
 		assure_exists apt-repo
-		docmd apt-repo list
+		if tasknumber "$pkg_names" >/dev/null ; then
+			get_task_packages $pkg_names
+		else
+			docmd apt-repo list
+		fi
 		;;
 	deepsolver-rpm)
 		docmd ds-conf
@@ -5585,6 +5607,102 @@ epm_requires()
 	epm_requires_files $pkg_files
 	# shellcheck disable=SC2046
 	epm_requires_names $(print_name $pkg_names)
+}
+
+# File bin/epm-restore:
+
+
+__epm_filter_pip_to_rpm()
+{
+    tr "A-Z" "a-z" | sed -e "s|-|_|g" -e "s|^python_||" \
+        -e "s|beautifulsoup4|bs4|" \
+        -e "s|pillow|PIL|" \
+        -e "s|pyjwt|jwt|" \
+        -e "s|pyyaml|yaml|" \
+        -e "s|attrs|attr|" \
+        -e "s|memcached|memcache|" \
+        -e "s|pyopenssl|OpenSSL|"
+}
+
+__epm_restore_pip()
+{
+    local req_file="$1"
+    info "Install requirements from $req_file ..."
+
+    local ilist=''
+    while read l ; do
+        local t="$(echo "$l" | sed -e "s| *[<>]*=.*||" | __epm_filter_pip_to_rpm)"
+        if echo "$l" | grep -qE "^ *#" || [ -z "$l" ] ; then
+            continue
+        fi
+        if echo "$l" | grep -qE "://" ; then
+            if echo "$l" | grep -q "#egg=" ; then
+                t="$(echo "$l" | sed -e "s|.*#egg=||" -e "s|\[.*||" | __epm_filter_pip_to_rpm)"
+            else
+                echo "    skipping URL $l ..."
+                continue
+            fi
+        fi
+        if echo "$l" | grep -q "; *python_version *< *'3.0'" ; then
+            echo "    $t is python2 only requirement, skipped"
+            continue
+        fi
+        # TODO: python3-egg-info($t)
+        local pi="python3($t)"
+        echo "    $l -> $t -> $pi"
+        [ -n "$t" ] || continue
+        ilist="$ilist $pi"
+    done < $req_file
+
+    epm install $ilist
+}
+
+__epm_restore_by()
+{
+    local req_file="$1"
+    [ -s "$req_file" ] || return
+
+    if file $req_file | grep -q "ELF [3264]*-bit LSB executable" ; then
+        assure_exists ldd-requires
+        showcmd ldd-requires $req_file
+        local TOINSTALL="$(a= ldd-requires $req_file | grep "^apt-get install" | sed -e "s|^apt-get install ||")"
+        [ -n "$TOINSTALL" ] || { info "There are no missed packages is found for $req_file binary." ; return ; }
+        epm install $TOINSTALL
+        return
+    fi
+
+    case $(basename $req_file) in
+        requirements.txt)
+            [ -s "$req_file" ] && __epm_restore_pip "$req_file"
+            ;;
+        Gemfile|package.json)
+            info "$req_file support is not implemented yet"
+            ;;
+    esac
+}
+
+epm_restore()
+{
+    req_file="$pkg_filenames"
+    if [ -n "$pkg_urls" ] && echo "$pkg_urls" | grep -qE "^https?://" ; then
+        req_file="$(basename "$pkg_urls")"
+        #assure eget
+        [ -r "$req_file" ] && fatal "File $req_file is already exists in $(pwd)"
+        info "Downloading '$req_file' from '$pkg_urls' ..."
+        eget "$pkg_urls"
+        [ -s "$req_file" ] || fatal "Can't download $req_file from '$pkg_urls'"
+    fi
+
+    if [ -n "$req_file" ] ; then
+        __epm_restore_by $req_file
+        return
+    fi
+
+    # if run with empty args
+    for i in requirements.txt Gemfile; do
+        __epm_restore_by $i
+    done
+
 }
 
 # File bin/epm-search:
@@ -7809,7 +7927,7 @@ $(get_help HELPOPT)
 
 print_version()
 {
-        echo "EPM package manager version 3.1.2"
+        echo "EPM package manager version 3.1.3"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2019"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -7819,7 +7937,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.1.2
+EPMVERSION=3.1.3
 verbose=
 quiet=
 nodeps=
@@ -8014,6 +8132,9 @@ check_command()
     clean)                    # HELPCMD: clean local package cache
         epm_cmd=clean
         ;;
+    restore)                  # HELPCMD: install (restore) packages need for the project (f.i. by requirements.txt)
+        epm_cmd=restore
+        ;;
     autoremove|package-cleanup)   # HELPCMD: auto remove unneeded package(s) Supports args for ALT: [libs|python|perl|libs-devel]
         epm_cmd=autoremove
         ;;
@@ -8097,7 +8218,7 @@ check_option()
     --noremove|--no-remove)  # HELPOPT: exit if any packages are to be removed during upgrade
         noremove="--no-remove"
         ;;
-    --no-stdin|--inscript) # HELPOPT: don't read from stdin for epm args
+    --no-stdin|--inscript)  # HELPOPT: don't read from stdin for epm args
         inscript=1
         ;;
     --dry-run|--simulate|--just-print|-recon--no-act) # HELPOPT: print only (autoremove/autoorphans/remove only)

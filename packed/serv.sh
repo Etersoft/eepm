@@ -606,6 +606,9 @@ serv_disable()
 		systemd)
 			sudocmd systemctl disable $1
 			;;
+		openrc)
+			sudocmd rc-update del $1 default
+			;;
 		runit)
 			sudocmd rm -fv /var/service/$SERVICE
 			;;
@@ -660,6 +663,9 @@ __serv_enable()
 		systemd)
 			sudocmd systemctl enable $1
 			;;
+		openrc)
+			sudocmd rc-update add $1 default
+			;;
 		runit)
 			epm assure $SERVICE
 			[ -r "/etc/sv/$SERVICE" ] || fatal "Can't find /etc/sv/$SERVICE"
@@ -695,6 +701,9 @@ serv_list()
 		systemd)
 			sudocmd systemctl list-units $@
 			;;
+		openrc)
+			sudocmd rc-status
+			;;
 		*)
 			# hack to improve list speed
 			[ "$UID" = 0 ] || { sudocmd $PROGDIR/serv --quiet list ; return ; }
@@ -724,6 +733,9 @@ serv_list_all()
 			;;
 		systemd)
 			sudocmd systemctl list-unit-files $@
+			;;
+		openrc)
+			sudocmd rc-service -l
 			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
@@ -853,6 +865,9 @@ serv_restart()
 		runit)
 			sudocmd sv restart "$SERVICE"
 			;;
+		openrc)
+			sudocmd rc-service restart "$SERVICE"
+			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
 			;;
@@ -882,6 +897,9 @@ serv_start()
 			;;
 		runit)
 			sudocmd sv up "$SERVICE"
+			;;
+		openrc)
+			sudocmd rc-service start "$SERVICE"
 			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
@@ -1004,6 +1022,9 @@ serv_stop()
 			;;
 		runit)
 			sudocmd sv down "$SERVICE"
+			;;
+		openrc)
+			sudocmd rc-service stop "$SERVICE"
 			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
@@ -2259,7 +2280,7 @@ case $DISTRNAME in
 #		CMD="pkg_add"
 #		;;
 #	Gentoo)
-#		CMD="emerge"
+#		CMD="eselect"
 #		;;
 #	ArchLinux)
 #		CMD="pacman"
@@ -2323,7 +2344,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.1.2"
+        echo "Service manager version 3.1.3"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2019"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
