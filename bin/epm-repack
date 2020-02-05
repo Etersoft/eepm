@@ -69,7 +69,7 @@ __epm_repack_deb_to_rpm()
 __epm_check_if_try_install_deb()
 {
 	__epm_split_by_pkg_type deb "$@" || return 1
-	__epm_repack_deb_to_rpm "$@"
+	__epm_repack_deb_to_rpm $split_replaced_pkgs
 
 	# TODO: move to install
 	docmd epm install $force $nodeps $repacked_rpms
@@ -108,7 +108,7 @@ __epm_repack_rpm_to_deb()
 __epm_check_if_try_install_rpm()
 {
 	__epm_split_by_pkg_type rpm "$@" || return 1
-	__epm_repack_rpm_to_deb "$@"
+	__epm_repack_rpm_to_deb $split_replaced_pkgs
 
 	# TODO: move to install
 	docmd epm install $force $nodeps $repacked_debs
