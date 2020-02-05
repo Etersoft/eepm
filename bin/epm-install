@@ -348,7 +348,8 @@ epm_install_files()
             [ -n "$nodeps" ] && return $RES
             fi
 
-            # use install_names
+            epm_install_names "$@"
+            return
             ;;
     esac
 
