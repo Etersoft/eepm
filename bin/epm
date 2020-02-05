@@ -419,7 +419,7 @@ done
 
 # if input is not console and run script from file, get pkgs from stdin too
 if [ ! -n "$inscript" ] && ! inputisatty && [ -n "$PROGDIR" ] ; then
-    for opt in $(withtimeout 2 cat) ; do
+    for opt in $(withtimeout 10 cat) ; do
         # FIXME: do not work
         # workaround against # yes | epme
         [ "$opt" = "y" ] && break;
