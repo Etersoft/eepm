@@ -45,6 +45,7 @@ __epm_repack_deb_to_rpm()
 
 	assure_exists alien
 	assure_exists dpkg
+	assure_exists rpmbuild rpm-build || fatal
 	# TODO: Для установки требует: /usr/share/debconf/confmodule но пакет не может быть установлен
 	# assure_exists debconf
 
