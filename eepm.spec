@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.1.3
+Version: 3.1.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -93,6 +93,12 @@ rm -f %buildroot%_bindir/distr_info
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Wed Feb 05 2020 Vitaly Lipatov <lav@altlinux.ru> 3.1.4-alt1
+- epm-repack: alien will use rpmbuild, assure we have it
+- epm-repack: repack only selected packages with abs paths (eterbug #14411)
+- epm: increase stdinput wait to 10 seconds
+- epm-print: improve print pkgsourcename
+
 * Fri Jan 31 2020 Vitaly Lipatov <lav@altlinux.ru> 3.1.3-alt1
 - commit packed files
 - distro_info related fixes
