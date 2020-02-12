@@ -359,7 +359,7 @@ check_option()
     --no-stdin|--inscript)  # HELPOPT: don't read from stdin for epm args
         inscript=1
         ;;
-    --dry-run|--simulate|--just-print|-recon--no-act) # HELPOPT: print only (autoremove/autoorphans/remove only)
+    --dry-run|--simulate|--just-print|--no-act) # HELPOPT: print only (autoremove/autoorphans/remove only)
         dryrun="--dry-run"
         ;;
     --short)              # HELPOPT: short output (just 'package' instead 'package-version-release')
