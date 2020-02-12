@@ -29,18 +29,28 @@ __epm_filter_pip_to_rpm()
         -e "s|pyjwt|jwt|" \
         -e "s|pyyaml|yaml|" \
         -e "s|attrs|attr|" \
+        -e "s|pygments|Pygments|" \
+        -e "s|patch_ng|patch-ng|" \
         -e "s|memcached|memcache|" \
         -e "s|pyopenssl|OpenSSL|"
 }
 
+# TODO: remove me
+fill_sign()
+{
+    local sign="$1"
+    echo "$2" | grep -E -- "$sign[[:space:]]*[0-9.]+?" | sed -E -- "s|.*$sign[[:space:]]*([0-9.]+?).*|\1|"
+}
+
+
 __epm_restore_pip()
 {
     local req_file="$1"
-    info "Install requirements from $req_file ..."
+    [ -n "$dryrun" ] || info "Install requirements from $req_file ..."
 
     local ilist=''
     while read l ; do
-        local t="$(echo "$l" | sed -e "s| *[<>]*=.*||" | __epm_filter_pip_to_rpm)"
+        local t="$(echo "$l" | sed -e "s| *[<>!]*=.*||" | __epm_filter_pip_to_rpm)"
         if echo "$l" | grep -qE "^ *#" || [ -z "$l" ] ; then
             continue
         fi
@@ -56,14 +66,35 @@ __epm_restore_pip()
             echo "    $t is python2 only requirement, skipped"
             continue
         fi
-        # TODO: python3-egg-info($t)
-        local pi="python3($t)"
-        echo "    $l -> $t -> $pi"
+        if [ -n "$dryrun" ] ; then
+            local pi=''
+            local sign ll
+            for sign in "<=" "<" ">=" ">" "==" "!="; do
+                ll=$(fill_sign "$sign" "$l")
+                [ -n "$ll" ] || continue
+[ "$sign" = "==" ] && sign="="
+[ "$sign" = "!=" ] && sign=">="
+                pi="$pi
+%py3_use $t $sign $ll"
+            done
+            [ -n "$pi" ] || pi="%py3_use $t"
+            echo "$pi"
+            continue
+        else
+            # TODO: python3-egg-info($t)
+            local pi="python3($t)"
+            echo "    $l -> $t -> $pi"
+        fi
         [ -n "$t" ] || continue
         ilist="$ilist $pi"
     done < $req_file
 
-    epm install $ilist
+    if [ -n "$dryrun" ] ; then
+        echo "$ilist"
+        return
+   fi
+
+    docmd epm install $ilist
 }
 
 __epm_restore_by()
@@ -75,13 +106,17 @@ __epm_restore_by()
         assure_exists ldd-requires
         showcmd ldd-requires $req_file
         local TOINSTALL="$(a= ldd-requires $req_file | grep "^apt-get install" | sed -e "s|^apt-get install ||")"
+        if [ -n "$dryrun" ] ; then
+            estrlist list $TOINSTALL
+            return
+        fi
         [ -n "$TOINSTALL" ] || { info "There are no missed packages is found for $req_file binary." ; return ; }
-        epm install $TOINSTALL
+        docmd epm install $TOINSTALL
         return
     fi
 
     case $(basename $req_file) in
-        requirements.txt)
+        requirements.txt|requires.txt)
             [ -s "$req_file" ] && __epm_restore_pip "$req_file"
             ;;
         Gemfile|package.json)
@@ -108,7 +143,7 @@ epm_restore()
     fi
 
     # if run with empty args
-    for i in requirements.txt Gemfile; do
+    for i in requirements.txt Gemfile requires.txt; do
         __epm_restore_by $i
     done
 
