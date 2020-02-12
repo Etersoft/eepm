@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.1.4
+Version: 3.1.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -93,6 +93,12 @@ rm -f %buildroot%_bindir/distr_info
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Wed Feb 12 2020 Vitaly Lipatov <lav@altlinux.ru> 3.1.5-alt1
+- epm-install: fix double run rpm installing on ALT
+- epm-remove: don't use hilevel command if --nodeps
+- epm-remove: change to a writable dir (/tmp) before remove
+- epm-restore: temp. implementation of python requires translation to spec
+
 * Wed Feb 05 2020 Vitaly Lipatov <lav@altlinux.ru> 3.1.4-alt1
 - epm-repack: alien will use rpmbuild, assure we have it
 - epm-repack: repack only selected packages with abs paths (eterbug #14411)
