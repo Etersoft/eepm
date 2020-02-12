@@ -283,6 +283,7 @@ epm_release_upgrade()
 	info "Starting upgrade whole system to the next release"
 	info "Check also http://wiki.etersoft.ru/Admin/UpdateLinux"
 
+	cd /tmp || fatal
 	# TODO: it is possible eatmydata does not do his work
 	export EPMNOEATMYDATA=1
 
