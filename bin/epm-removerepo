@@ -43,7 +43,7 @@ case $DISTRNAME in
 			tasks)
 				info "remove task repos"
 				assure_exists apt-repo
-				epm repolist | grep "/repo/" | while read repo ; do
+				epm repolist | grep -E " repo/[0-9]+/" | while read repo ; do
 					sudocmd apt-repo rm "$repo"
 				done
 				return 0
@@ -66,7 +66,7 @@ case $DISTRNAME in
 				;;
 		esac
 
-		[ -n "$repo" ] || fatal "No such repo or task. Use epm remove repo [autoimports|archive|tasks/TASKNUMBER]"
+		[ -n "$repo" ] || fatal "No such repo or task. Use epm remove repo <autoimports|archive|tasks|TASKNUMBER>"
 		sudocmd apt-repo rm "$repo"
 		return
 		;;
