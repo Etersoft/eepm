@@ -33,7 +33,8 @@ epm_remove_low()
 		*-rpm)
 			cd /tmp || fatal
 			sudocmd rpm -ev $nodeps $@
-			cd - >/dev/null
+			# keep status
+			#cd - >/dev/null
 			return ;;
 		*-dpkg|-dpkg)
 			# shellcheck disable=SC2046
