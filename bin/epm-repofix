@@ -46,7 +46,7 @@ __try_fix_apt_source_list()
 	fi
 }
 
-__fix_apt_sources_list()
+__fix_alt_sources_list()
 {
 	# for beauty spaces
 	local SUBST_ALT_RULE='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ]*(Sisyphus|p8[/ ]branch|p7[/ ]branch|t7[/ ]branch|c7[/ ]branch|p6[/ ]branch|t6[/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch) !\1 \2/\3/\4 !gi'
@@ -77,26 +77,22 @@ epm_repofix()
 
 [ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
 
-case $PMTYPE in
-	apt-rpm)
+case $DISTRNAME in
+	ALTLinux)
 		assure_exists apt-repo
 		[ -n "$quiet" ] || docmd apt-repo list
-		__fix_apt_sources_list /etc/apt/sources.list
-		__fix_apt_sources_list /etc/apt/sources.list.d/*.list
+		__fix_alt_sources_list /etc/apt/sources.list
+		__fix_alt_sources_list /etc/apt/sources.list.d/*.list
 		docmd apt-repo list
-		# FIXME: what the best place?
-		# rebuild rpm database
-		#sudocmd rm -fv /var/lib/rpm/__db*
-		#sudocmd rpm --rebuilddb
+		return
 		;;
-	yum-rpm|dnf-rpm)
-		# FIXME: what the best place?
-		#sudocmd rm -fv /var/lib/rpm/__db*
-		#sudocmd rpm --rebuilddb
-		;;
-	xbps)
-		sudocmd xbps-pkgdb -a
-		;;
+esac
+
+case $PMTYPE in
+#	apt-rpm)
+#		;;
+#	yum-rpm|dnf-rpm)
+#		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;

@@ -74,6 +74,9 @@ case $PMTYPE in
 	homebrew)
 		docmd brew doctor
 		;;
+	xbps)
+		sudocmd xbps-pkgdb -a
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
