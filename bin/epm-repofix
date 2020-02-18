@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2015-2016  Etersoft
-# Copyright (C) 2015-2016  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2015-2016, 2020  Etersoft
+# Copyright (C) 2015-2016, 2020  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -72,10 +72,27 @@ __fix_alt_sources_list()
 	done
 }
 
+__subst_with_etersoft_url()
+{
+	local NURL="http://download.etersoft.ru/pub ALTLinux"
+	echo "$1" | sed \
+		-e "s|h\?f\?t\?tp://ftp.altlinux.org/pub/distributions ALTLinux|$NURL|" \
+		-e "s|h\?f\?t\?tp://mirror.yandex.ru altlinux|$NURL|"
+}
+
+__fix_repo_to_etersoft()
+{
+	local NN
+	apt-repo list | grep -v debuginfo | grep -v etersoft | grep -v "file:/" | while read nn ; do
+		NN="$(__subst_with_etersoft_url "$nn")"
+		epm addrepo "$NN"
+		epm removerepo "$nn"
+	done
+}
+
 epm_repofix()
 {
 
-[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
 
 case $DISTRNAME in
 	ALTLinux)
@@ -83,10 +100,16 @@ case $DISTRNAME in
 		[ -n "$quiet" ] || docmd apt-repo list
 		__fix_alt_sources_list /etc/apt/sources.list
 		__fix_alt_sources_list /etc/apt/sources.list.d/*.list
+		if [ "$pkg_filenames" = "etersoft" ] ; then
+			__fix_repo_to_etersoft /etc/apt/sources.list
+			__fix_repo_to_etersoft /etc/apt/sources.list.d/*.list
+		fi
 		docmd apt-repo list
 		return
 		;;
 esac
+
+[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
 
 case $PMTYPE in
 #	apt-rpm)
