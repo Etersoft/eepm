@@ -49,7 +49,8 @@ __try_fix_apt_source_list()
 __fix_alt_sources_list()
 {
 	# for beauty spaces
-	local SUBST_ALT_RULE='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ]*(Sisyphus|p8[/ ]branch|p7[/ ]branch|t7[/ ]branch|c7[/ ]branch|p6[/ ]branch|t6[/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch) !\1 \2/\3/\4 !gi'
+	local SUBST_ALT_RULE1='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ]*(Sisyphus)[/ ](x86_64|i586|x86_64-i586|noarch) !\1 \2/\3/\4 !gi'
+	local SUBST_ALT_RULE2='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ]*([tcp][6-9][/ ]branch|[tcp]1[012][/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch) !\1 \2/\3/\4 !gi'
 	local i
 	assure_root
 	for i in "$@" ; do
@@ -57,7 +58,8 @@ __fix_alt_sources_list()
 		#perl -i.bak -pe "$SUBST_ALT_RULE" $i
 		# TODO: only for uncommented strings
 		#sed -i -r -e "$SUBST_ALT_RULE" $i
-		regexp_subst "/^ *#/! $SUBST_ALT_RULE" $i
+		regexp_subst "/^ *#/! $SUBST_ALT_RULE1" $i
+		regexp_subst "/^ *#/! $SUBST_ALT_RULE2" $i
 
 		# Sisyphus uses 'alt' vendor key
 		__try_fix_apt_source_list $i alt "ALTLinux\/Sisyphus"
