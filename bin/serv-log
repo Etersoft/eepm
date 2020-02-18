@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2016  Etersoft
-# Copyright (C) 2016  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2016, 2020  Etersoft
+# Copyright (C) 2016, 2020  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -20,19 +20,21 @@
 __serv_log_altlinux()
 {
 	local SERVICE="$1"
+	local PRG="less"
+	[ "$2" = "-f" ] && PRG="tail -f"
 
 	case "$SERVICE" in
 		postfix)
-			sudocmd tail -f /var/log/mail/all /var/log/mail/errors
+			sudocmd $PRG /var/log/mail/all /var/log/mail/errors
 			;;
 		sshd)
-			sudocmd tail -f /var/log/auth/all
+			sudocmd $PRG /var/log/auth/all
 			;;
 		cups)
-			sudocmd tail -f /var/log/cups/access_log /var/log/cups/error_log
+			sudocmd $PRG /var/log/cups/access_log /var/log/cups/error_log
 			;;
 		fail2ban)
-			sudocmd tail -f /var/log/$SERVICE.log
+			sudocmd $PRG /var/log/$SERVICE.log
 			;;
 		*)
 			fatal "Have no suitable for $SERVICE service"
@@ -47,12 +49,13 @@ serv_log()
 
 	case $SERVICETYPE in
 		systemd)
-			sudocmd journalctl -f -b -u "$SERVICE" "$@"
+			sudocmd journalctl -b -u "$SERVICE" "$@"
 			;;
 		*)
 			case $DISTRNAME in
 			ALTLinux)
-				__serv_log_altlinux "$SERVICE"
+				FF="" ; [ "$1" = "-f" ] && FF="-f"
+				__serv_log_altlinux "$SERVICE" $FF
 				return ;;
 			*)
 				fatal "Have no suitable for $DISTRNAME command for $SERVICETYPE"

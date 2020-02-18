@@ -207,7 +207,7 @@ check_command()
         serv_cmd=print
         withoutservicename=1
         ;;
-    log|journal)              # HELPCMD: print log for the service
+    log|journal)              # HELPCMD: print log for the service (-f - follow,  -r - reverse order)
         serv_cmd=log
         ;;
     edit)
