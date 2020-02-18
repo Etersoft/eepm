@@ -118,7 +118,7 @@ local repo="$(eval echo "$quoted_args")"
 
 case $DISTRNAME in
 	ALTLinux)
-		__epm_addrepo_altlinux $pkg_names
+		__epm_addrepo_altlinux $repo
 		return
 		;;
 esac
