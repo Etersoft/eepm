@@ -50,10 +50,15 @@ __epm_restore_pip()
 
     local ilist=''
     while read l ; do
-        local t="$(echo "$l" | sed -e "s| *[<>!]*=.*||" | __epm_filter_pip_to_rpm)"
+        local t="$(echo "$l" | sed -e "s| *[<>!]*=.*||" -e "s| *#.*||" | __epm_filter_pip_to_rpm)"
         if echo "$l" | grep -qE "^ *#" || [ -z "$l" ] ; then
             continue
         fi
+        # until new section
+        if echo "$l" | grep -qE "^\[" ; then
+            break
+        fi
+        # if dependency_links URLs, use egg name
         if echo "$l" | grep -qE "://" ; then
             if echo "$l" | grep -q "#egg=" ; then
                 t="$(echo "$l" | sed -e "s|.*#egg=||" -e "s|\[.*||" | __epm_filter_pip_to_rpm)"
