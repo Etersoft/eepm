@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.1.6
+Version: 3.1.7
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -93,6 +93,13 @@ rm -f %buildroot%_bindir/distr_info
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Wed Feb 19 2020 Vitaly Lipatov <lav@altlinux.ru> 3.1.7-alt1
+- epm repofix: replace sources.list only on ALT
+- serv log: run without follow (-f) by default
+- epm addrepo: fix add url
+- epm-repofix: add initial support for repofix etersoft
+- epm repofix: unified subst rules (fix for p9)
+
 * Sun Feb 16 2020 Vitaly Lipatov <lav@altlinux.ru> 3.1.6-alt1
 - removerepo: fix tasks remove
 - rewrite removerepo
