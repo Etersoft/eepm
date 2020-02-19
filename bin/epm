@@ -177,7 +177,7 @@ check_command()
     -qp|qp|query_package)     # HELPCMD: search in the list of installed packages
         epm_cmd=query_package
         ;;
-    -qf|qf|-S|which|belongs)     # HELPCMD: query package(s) owning file
+    -qf|qf|-S|wp|which|belongs)     # HELPCMD: query package(s) owning file
         epm_cmd=query_file
         ;;
 
@@ -209,13 +209,13 @@ check_command()
     -qi|qi|info|show)         # HELPCMD: print package detail info
         epm_cmd=info
         ;;
-    requires|deplist|req)     # HELPCMD: print package requires
+    requires|deplist|depends|req)     # HELPCMD: print package requires
         epm_cmd=requires
         ;;
     provides|prov)            # HELPCMD: print package provides
         epm_cmd=provides
         ;;
-    whatdepends|wd)           # HELPCMD: print packages dependences on that
+    whatdepends|rdepends|whatrequires|wd)   # HELPCMD: print packages dependences on that
         epm_cmd=whatdepends
         ;;
     whatprovides)             # HELPCMD: print packages provides that target
