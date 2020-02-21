@@ -63,12 +63,12 @@ __epm_restore_pip()
             if echo "$l" | grep -q "#egg=" ; then
                 t="$(echo "$l" | sed -e "s|.*#egg=||" -e "s|\[.*||" | __epm_filter_pip_to_rpm)"
             else
-                echo "    skipping URL $l ..."
+                warning "    skipping URL $l ..."
                 continue
             fi
         fi
         if echo "$l" | grep -q "; *python_version *< *'3.0'" ; then
-            echo "    $t is python2 only requirement, skipped"
+            warning "    $t is python2 only requirement, skipped"
             continue
         fi
         if [ -n "$dryrun" ] ; then
@@ -77,10 +77,11 @@ __epm_restore_pip()
             for sign in "<=" "<" ">=" ">" "==" "!="; do
                 ll=$(fill_sign "$sign" "$l")
                 [ -n "$ll" ] || continue
-[ "$sign" = "==" ] && sign="="
-[ "$sign" = "!=" ] && sign=">="
-                pi="$pi
-%py3_use $t $sign $ll"
+                [ "$sign" = "==" ] && sign=">="
+                [ "$sign" = "!=" ] && sign=">="
+                [ -n "$pi" ] && pi="$pi
+"
+                pi="$pi%py3_use $t $sign $ll"
             done
             [ -n "$pi" ] || pi="%py3_use $t"
             echo "$pi"
@@ -146,6 +147,8 @@ epm_restore()
         __epm_restore_by $req_file
         return
     fi
+
+# TODO: nowhere works: python3 setup.py --requires
 
     # if run with empty args
     for i in requirements.txt Gemfile requires.txt; do
