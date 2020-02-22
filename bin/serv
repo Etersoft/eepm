@@ -157,6 +157,9 @@ service_name=
 params=
 withoutservicename=
 
+# load system wide config
+[ -f /etc/eepm/serv.conf ] && . /etc/eepm/serv.conf
+
 check_command()
 {
     # do not override command
