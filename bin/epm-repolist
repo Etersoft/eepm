@@ -60,7 +60,7 @@ case $PMTYPE in
 	zypper-rpm)
 		docmd zypper sl -d
 		;;
-	packagekit-*)
+	packagekit)
 		docmd pkcon repo-list
 		;;
 	emerge)

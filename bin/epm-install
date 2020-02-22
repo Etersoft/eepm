@@ -129,7 +129,7 @@ epm_install_names()
 		urpm-rpm)
 			sudocmd urpmi $URPMOPTIONS $@
 			return ;;
-		packagekit-*)
+		packagekit)
 			docmd pkcon install $@
 			return ;;
 		pkgsrc)
@@ -233,7 +233,7 @@ epm_ni_install_names()
 			# FIXME: returns true ever no package found, need check for "no found", "Nothing to do."
 			yes | sudocmd zypper --non-interactive $ZYPPEROPTIONS install $@
 			return ;;
-		packagekit-*)
+		packagekit)
 			docmd pkcon install --noninteractive $@
 			return ;;
 		pkgsrc)
@@ -406,7 +406,7 @@ epm_install_files()
                     ;;
             esac
             ;;
-        packagekit-*)
+        packagekit)
             docmd pkcon install-local $@
             return ;;
         pkgsrc)
@@ -529,7 +529,7 @@ epm_print_install_names_command()
 		zypper-rpm)
 			echo "zypper --non-interactive $ZYPPEROPTIONS install $*"
 			return ;;
-		packagekit-*)
+		packagekit)
 			echo "pkcon --noninteractive $*"
 			return ;;
 		pacman)

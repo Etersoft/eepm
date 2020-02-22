@@ -34,7 +34,7 @@ case $PMTYPE in
 	deepsolver-rpm)
 		CMD="ds-require --"
 		;;
-	packagekit-*)
+	packagekit)
 		CMD="pkcon search name"
 		;;
 	urpm-rpm)

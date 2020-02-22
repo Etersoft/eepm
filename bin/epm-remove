@@ -75,7 +75,7 @@ epm_remove_names()
 		apt-rpm)
 			sudocmd apt-get remove $APTOPTIONS $@
 			return ;;
-		packagekit-*)
+		packagekit)
 			docmd pkcon remove $@
 			return ;;
 		deepsolver-rpm)
@@ -170,7 +170,7 @@ epm_remove_nonint()
 		apt-rpm)
 			sudocmd apt-get -y --force-yes remove $@
 			return ;;
-		packagekit-*)
+		packagekit)
 			docmd pkcon remove --noninteractive $@
 			return ;;
 		urpm-rpm)

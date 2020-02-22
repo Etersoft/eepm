@@ -198,8 +198,7 @@ epm_download()
 	aptcyg)
 		sudocmd apt-cyg download $pkg_filenames
 		;;
-	packagekit-*)
-		# TODO: force
+	packagekit)
 		docmd pkcon download $pkg_filenames
 		;;
 	yum-rpm)

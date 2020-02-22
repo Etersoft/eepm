@@ -74,7 +74,7 @@ case $PMTYPE in
 		[ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n $pkg_filenames"
 		docmd $CMD
 		return ;;
-	packagekit-*)
+	packagekit)
 		docmd pkcon get-packages --filter installed
 		;;
 	snappy)

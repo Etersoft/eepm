@@ -34,7 +34,7 @@ case $PMTYPE in
 	apt-*)
 		docmd apt-cache policy $pkg_names
 		;;
-	packagekit-*)
+	packagekit)
 		docmd pkcon resolve $pkg_names
 		;;
 	*)

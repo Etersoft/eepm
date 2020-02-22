@@ -62,7 +62,7 @@ case $PMTYPE in
 			CMD="apt-cache depends"
 		fi
 		;;
-	packagekit-*)
+	packagekit)
 		CMD="pkcon required-by"
 		;;
 	#zypper-rpm)

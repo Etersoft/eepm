@@ -37,7 +37,7 @@ case $PMTYPE in
 		sudocmd apt-get -f install || return
 		#sudocmd apt-get autoremove
 		;;
-	packagekit-*)
+	packagekit)
 		docmd pkcon repair
 		;;
 	aptitude-dpkg)

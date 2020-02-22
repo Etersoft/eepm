@@ -69,7 +69,7 @@ case $PMTYPE in
 			apt-rpm)
 				docmd apt-cache show $pkg_names
 				;;
-			packagekit-rpm)
+			packagekit)
 				docmd pkcon get-details $pkg_names
 				;;
 			yum-rpm)
@@ -89,7 +89,7 @@ case $PMTYPE in
 				;;
 		esac
 		;;
-	packagekit-*)
+	packagekit)
 		# TODO: get-details-local
 		docmd pkcon get-details $pkg_names
 		;;

@@ -328,7 +328,7 @@ epm_release_upgrade()
 		assure_exists do-release-upgrade update-manager-core
 		sudocmd do-release-upgrade
 		;;
-	packagekit-*)
+	packagekit)
 		docmd pkcon upgrade-system $pkg_filenames
 		;;
 	yum-rpm)

@@ -61,7 +61,7 @@ case $PMTYPE in
 		sudocmd apt-file update
 		docmd apt-file search $pkg_filenames
 		return ;;
-	packagekit-*)
+	packagekit)
 		CMD="pkcon search file"
 		;;
 	yum-rpm)

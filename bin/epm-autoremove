@@ -197,7 +197,7 @@ case $PMTYPE in
 		fi
 		sudocmd aura -Oj
 		;;
-	packagekit-*)
+	packagekit)
 		docmd pkcon repair --autoremove
 		;;
 	yum-rpm)

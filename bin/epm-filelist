@@ -67,7 +67,7 @@ __epm_filelist_remote()
 			fi
 			docmd_foreach __deb_local_content_filelist "$@"
 			;;
-		packagekit-*)
+		packagekit)
 			docmd pkcon get-files "$@"
 			;;
 		yum-rpm)
@@ -123,7 +123,7 @@ __epm_filelist_name()
 		*-dpkg)
 			CMD="dpkg -L"
 			;;
-		packagekit-*)
+		packagekit)
 			CMD="pkcon get-files"
 			;;
 		android)
