@@ -32,6 +32,11 @@ Display help
 .TP
 .I -V
 Show version and exit
+.SH CONFIG
+TODO: epm reads /etc/eepm/serv.conf so you can leave your default options there.
+.SH ENV
+You can override used service system via FORCESERVICE environment variable.
+supported service systems: systemd, service-chkconfig, service-update, runit, service-initd
 .SH BUGS
 Please report any bugs to lav@etersoft.ru
 .SH EXIT STATUS

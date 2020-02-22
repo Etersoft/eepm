@@ -83,13 +83,20 @@ activate verbose output, mainly useful for debugging.
 .TP
 .I --force
 force operation
+.SH CONFIG
+TODO: epm reads /etc/eepm/eepm.conf so you can leave your default options there.
+.SH ENV
+You can override used system package manager via FORCEPM environment variable.
+autodetected PM: apt-rpm, apt-dpkg, urpm-rpm, pkgsrc, emerge, pacman, yum-rpm, slackpkg, zypper-rpm, conary, chocolatey, homebrew, opkg, guix, android, aptcyg, apk, tce, xbps
+not autodetected PM: npackd, pkgng, deepsolver-rpm, packagekit
+
 .SH BUGS
 Please report any bugs to lav@etersoft.ru
 .SH EXIT STATUS
 .B any epm command
 will return zero on success and non zero on operation failure.
 .SH SEE ALSO
-.BR cerv (1), erc (1)
+.BR serv (1), erc (1)
 .TP
 .B http://wiki.etersoft.ru/eepm
 EEPM wiki page
