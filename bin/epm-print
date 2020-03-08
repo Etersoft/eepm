@@ -124,7 +124,7 @@ compare_version()
     rpmevrcmp "$@"
 }
 
-__epm_print()
+epm_print()
 {
     local WHAT="$1"
     shift
@@ -255,14 +255,3 @@ EOF
             ;;
     esac
 }
-
-
-epm_print()
-{
-
-    [ -n "$pkg_filenames" ] || fatal "Missed args. Use epm print help for get help."
-    # Note! do not quote args below (see eterbug #11863)
-    # shellcheck disable=SC2046
-    __epm_print $(eval echo $quoted_args)
-}
-

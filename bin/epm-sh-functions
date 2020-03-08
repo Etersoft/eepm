@@ -365,7 +365,7 @@ assure_exists()
 	local textpackage=
 	[ -n "$package" ] || package="$(__get_package_for_command "$1")"
 	[ -n "$3" ] && textpackage=" >= $3"
-	__epm_assure "$1" $package $3 || fatal "Can't assure in '$1' command from $package$textpackage package"
+	epm_assure "$1" $package $3 || fatal "Can't assure in '$1' command from $package$textpackage package"
 }
 
 # will replaced within disabled_eget in packaged version

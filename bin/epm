@@ -410,11 +410,11 @@ FLAGENDOPTS=
 for opt in "$@" ; do
     [ "$opt" = "--" ] && FLAGENDOPTS=1 && continue
     if [ -z "$FLAGENDOPTS" ] ; then
-        check_command $opt && continue
-        check_option $opt && continue
+        check_command "$opt" && continue
+        check_option "$opt" && continue
     fi
     # Note: will parse all params separately (no package names with spaces!)
-    check_filenames $opt
+    check_filenames "$opt"
 done
 
 # if input is not console and run script from file, get pkgs from stdin too
@@ -457,7 +457,7 @@ case $epm_cmd in
         ;;
 esac
 
-# Run helper for command
+# Run helper for command with natural args
 load_helper epm-$epm_cmd
-epm_$epm_cmd
+eval epm_$epm_cmd $quoted_args
 # return last error code (from subroutine)

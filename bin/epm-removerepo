@@ -71,11 +71,10 @@ __epm_removerepo_alt()
 
 epm_removerepo()
 {
-local repo="$(eval echo $quoted_args)"
 
 case $DISTRNAME in
 	ALTLinux)
-		__epm_removerepo_alt $repo
+		__epm_removerepo_alt "$@"
 		return
 		;;
 esac;
@@ -83,7 +82,7 @@ esac;
 case $PMTYPE in
 	apt-dpkg)
 		assure_exists apt-add-repository software-properties-common
-		sudocmd apt-add-repository --remove "$repo"
+		sudocmd apt-add-repository --remove "$@"
 		info "Check file /etc/apt/sources.list if needed"
 		;;
 	aptitude-dpkg)
@@ -91,22 +90,22 @@ case $PMTYPE in
 		;;
 	yum-rpm)
 		assure_exists yum-utils
-		sudocmd yum-config-manager --disable "$repo"
+		sudocmd yum-config-manager --disable "$@"
 		;;
 	urpm-rpm)
-		sudocmd urpmi.removemedia "$repo"
+		sudocmd urpmi.removemedia "$@"
 		;;
 	zypper-rpm)
-		sudocmd zypper removerepo "$repo"
+		sudocmd zypper removerepo "$@"
 		;;
 	emerge)
-		sudocmd layman "-d$repo"
+		sudocmd layman "-d$@"
 		;;
 	pacman)
 		info "You need remove repo from /etc/pacman.conf"
 		;;
 	npackd)
-		sudocmd npackdcl remove-repo --url="$repo"
+		sudocmd npackdcl remove-repo --url="$@"
 		;;
 	slackpkg)
 		info "You need remove repo from /etc/slackpkg/mirrors"

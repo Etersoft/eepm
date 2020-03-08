@@ -96,7 +96,7 @@ __epm_assure_checking()
 # $2 - [package name]
 # $3 - [needed package version]
 
-__epm_assure()
+epm_assure()
 {
     local CMD="$1"
     local PACKAGE="$2"
@@ -114,14 +114,4 @@ __epm_assure()
     # check if we couldn't update and still need update
     __epm_need_update $PACKAGE $PACKAGEVERSION && return 1
     return 0
-}
-
-
-epm_assure()
-{
-    [ -n "$pkg_filenames" ] || fatal "Assure: Missing params. Check $0 --help for info."
-
-    # use helper func for extract separate params
-    # shellcheck disable=SC2046
-    __epm_assure $(eval echo $quoted_args)
 }
