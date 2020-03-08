@@ -261,6 +261,9 @@ check_command()
     removerepo|rr)            # HELPCMD: remove package repo
         epm_cmd=removerepo
         ;;
+    repo)                     # HELPCMD: manipulate with repository list (run epm repo --help to help)
+        epm_cmd=repo
+        ;;
     full-upgrade)              # HELPCMD: update all system packages and kernel
         epm_cmd=full_upgrade
         ;;

@@ -31,7 +31,7 @@ __epm_removerepo_alt_grepremove()
 __epm_removerepo_alt()
 {
 	local repo="$*"
-	[ -n "$repo" ] || fatal "No such repo or task. Use epm remove repo <autoimports|archive|tasks|TASKNUMBER>"
+	[ -n "$repo" ] || fatal "No such repo or task. Use epm repo remove <autoimports|archive|tasks|TASKNUMBER>"
 
 	assure_exists apt-repo
 
