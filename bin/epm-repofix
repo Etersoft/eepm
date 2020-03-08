@@ -40,7 +40,7 @@ __try_fix_apt_source_list()
 		if __repofix_check_vendor $br ; then
 			regexp_subst "/$path/s/^rpm[[:space:]]*([fhr])/rpm [$br] \1/" $list
 		else
-			warning "Skip set $br vendor key (it misssed) for $list"
+			warning "Skip set $br vendor key (it is missed) for $list"
 			regexp_subst "/$path/s/^rpm[[:space:]]*\[$br\][[:space:]]*([fhr])/rpm \1/" $list
 		fi
 	fi

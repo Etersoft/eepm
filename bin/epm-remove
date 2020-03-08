@@ -288,6 +288,10 @@ epm_remove()
 	epm_remove_low $pkg_names && return
 	local STATUS=$?
 	# TODO: check if we need continue with hi level
+	# TODO: we need fail if
+	# # rpm -ev python2-nase
+	# error: package python2-nase is not installed
+	
 
 	if [ -n "$direct" ] || [ -n "$nodeps" ]; then
 		return $STATUS
