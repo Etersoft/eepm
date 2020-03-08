@@ -451,9 +451,15 @@ get_help()
         return
     fi
 
-    grep -v -- "^#" $0 | grep -- "# $1" | while read -r n ; do
-        opt=$(echo $n | sed -e "s|) # $1:.*||g")
-        desc=$(echo $n | sed -e "s|.*) # $1:||g")
+    cat $0 | grep -- "# $1" | while read -r n ; do
+        if echo "$n" | grep -q "# $1: PART: " ; then
+            echo
+            echo "$n" | sed -e "s|# $1: PART: ||"
+            continue
+        fi
+        echo "$n" | grep -q "^ *#" && continue
+        opt="$(echo $n | sed -e "s|) # $1:.*||g")" #"
+        desc="$(echo $n | sed -e "s|.*) # $1:||g")" #"
         printf "    %-20s %s\n" $opt "$desc"
     done
 }

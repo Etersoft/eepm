@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012-2018  Etersoft
-# Copyright (C) 2012-2018  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2020  Etersoft
+# Copyright (C) 2012-2020  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -55,11 +55,19 @@ phelp()
 {
 	echo "$Descr
 $Usage
- Commands:
+
+Options:
+$(get_help HELPOPT)
+
+Short commands:
+$(get_help HELPSHORT)
+
 $(get_help HELPCMD)
 
- Options:
-$(get_help HELPOPT)
+Examples:
+    $ epmi etckeeper      install etckeeper package
+    $ epmqp lib           print out all installed packages with 'lib' in a name
+    $ epmqf ip            print out a package the command 'ip' from is
 "
 }
 
@@ -67,7 +75,7 @@ print_version()
 {
         echo "EPM package manager version @VERSION@  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
-        echo "Copyright (c) Etersoft 2012-2019"
+        echo "Copyright (c) Etersoft 2012-2020"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 
@@ -103,49 +111,49 @@ quoted_args=
 
 
 case $PROGNAME in
-    epmi)
+    epmi)                      # HELPSHORT: alias for epm install
         epm_cmd=install
         ;;
-    epmI)
+    epmI)                      # HELPSHORT: alias for epm Install
         epm_cmd=Install
         ;;
-    epme)
+    epme)                      # HELPSHORT: alias for epm remove
         epm_cmd=remove
         ;;
-    epmcl)
+    epmcl)                     # HELPSHORT: alias for epm changelog
         epm_cmd=changelog
         ;;
-    epms)
+    epms)                      # HELPSHORT: alias for epm search
         epm_cmd=search
         ;;
-    epmsf)
+    epmsf)                     # HELPSHORT: alias for epm search file
         epm_cmd=search_file
         ;;
-    epmq)
+    epmq)                      # HELPSHORT: alias for epm query
         epm_cmd=query
         ;;
-    epmqi)
+    epmqi)                     # HELPSHORT: alias for epm info
         epm_cmd=info
         ;;
-    epmqf)
+    epmqf)                     # HELPSHORT: alias for epm belongs
         epm_cmd=query_file
         ;;
-    epmqa)
+    epmqa)                     # HELPSHORT: alias for epm packages
         epm_cmd=packages
         ;;
-    epmqp)
+    epmqp)                     # HELPSHORT: alias for epm qp (epm query package)
         epm_cmd=query_package
         ;;
-    epmql)
+    epmql)                     # HELPSHORT: alias for epm filelist
         epm_cmd=filelist
         ;;
-    epmrl)
+    epmrl)                     # HELPSHORT: alias for epm repo list
         epm_cmd=repolist
         ;;
-    epmu)
+    epmu)                      # HELPSHORT: alias for epm update
         epm_cmd=update
         ;;
-    epm|upm|eepm)
+    epm|upm|eepm)              # HELPSHORT: other aliases for epm command
         ;;
     epm.sh)
         ;;
@@ -163,7 +171,7 @@ check_command()
     # do not override command
     [ -z "$epm_cmd" ] || return
 
-# Base commands
+# HELPCMD: PART: Base commands:
     case $1 in
     -i|install|add|i)         # HELPCMD: install package(s) from remote repositories or from local file
         epm_cmd=install
@@ -181,7 +189,7 @@ check_command()
         epm_cmd=query_file
         ;;
 
-# Useful commands
+# HELPCMD: PART: Useful commands:
     reinstall)                # HELPCMD: reinstall package(s) from remote repositories or from local file
         epm_cmd=reinstall
         ;;
@@ -230,21 +238,21 @@ check_command()
     programs)                 # HELPCMD: print list of installed GUI program(s) (they have .desktop files)
         epm_cmd=programs
         ;;
-    assure)                   # HELPCMD: <command> [package]: install package if command does not exist
+    assure)                   # HELPCMD: <command> [package] [version]: install package if command does not exist
         epm_cmd=assure
         ;;
     policy|resolve)           # HELPCMD: print detailed information about the priority selection of package
         epm_cmd=policy
         ;;
 
-# Repository control
+# HELPCMD: PART: Repository control:
     update)                   # HELPCMD: update remote package repository databases
         epm_cmd=update
         ;;
     addrepo|ar)               # HELPCMD: add package repo (etersoft, autoimports, archive 2017/12/31); run with param to get list
         epm_cmd=addrepo
         ;;
-    repolist|sl|rl|listrepo|repo)  # HELPCMD: print repo list
+    repolist|sl|rl|listrepo)  # HELPCMD: print repo list
         epm_cmd=repolist
         ;;
     repofix)                  # HELPCMD: fix paths in sources lists (ALT Linux only)
@@ -266,7 +274,7 @@ check_command()
         epm_cmd=remove_old_kernels
         ;;
 
-# Other commands
+# HELPCMD: PART: Other commands:
     clean)                    # HELPCMD: clean local package cache
         epm_cmd=clean
         ;;
