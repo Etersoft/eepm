@@ -512,8 +512,8 @@ case $DISTRNAME in
 		CMD="pacman"
 		;;
 	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific|GosLinux|Amzn)
-		CMD="yum-rpm"
-		which dnf 2>/dev/null >/dev/null && test -d /var/lib/dnf/yumdb && CMD=dnf-rpm
+		CMD="dnf-rpm"
+		which dnf 2>/dev/null >/dev/null || CMD=yum-rpm
 		;;
 	Slackware)
 		CMD="slackpkg"
