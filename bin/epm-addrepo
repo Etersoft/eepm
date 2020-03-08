@@ -94,13 +94,13 @@ __epm_addrepo_altlinux()
 	assure_exists apt-repo
 
 	if tasknumber "$repo" >/dev/null ; then
-		sudocmd_foreach 'apt-repo add' $(tasknumber "$repo")
+		sudocmd_foreach "apt-repo $dryrun add" $(tasknumber "$repo")
 		return
 	fi
 
 	if [ -z "$repo" ] ; then
 		info "Add branch repo. Use follow params:"
-		sudocmd apt-repo add branch
+		sudocmd apt-repo $dryrun add branch
 		echo "etersoft           - for LINUX@Etersoft repo"
 		echo "archive 2018/02/09 - for archive from that date"
 		return
@@ -108,7 +108,7 @@ __epm_addrepo_altlinux()
 
 	# TODO: add other mirror (mirror.yandex.ru)
 	# TODO: apt-repo supports archive
-	sudocmd apt-repo add "$repo"
+	sudocmd apt-repo $dryrun add "$repo"
 
 }
 

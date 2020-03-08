@@ -24,7 +24,7 @@ __epm_removerepo_alt_grepremove()
 {
 	local rp
 	epm repolist | grep -E "$1" | while read rp ; do
-		sudocmd apt-repo rm "$rp"
+		sudocmd apt-repo $dryrun rm "$rp"
 	done
 }
 
@@ -48,7 +48,7 @@ __epm_removerepo_alt()
 			info "remove autoimports repo"
 			[ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
 			repo="autoimports.$(echo "$DISTRVERSION" | tr "[:upper:]" "[:lower:]")"
-			sudocmd apt-repo rm "$repo"
+			sudocmd apt-repo $dryrun rm "$repo"
 			;;
 		archive)
 			info "remove archive repos"
@@ -63,7 +63,7 @@ __epm_removerepo_alt()
 			__epm_removerepo_alt_grepremove " repo/$1/"
 			;;
 		*)
-			sudocmd apt-repo rm "$*"
+			sudocmd apt-repo $dryrun rm "$*"
 			;;
 	esac
 
