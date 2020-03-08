@@ -1,6 +1,4 @@
-apt-mark (для работы autoremove)
-
-repack: проверять, если нет входного файла; писать полный путь к выходному файлу
+apt-mark (для работы autoremove and autoorphans) - помечать то, что удалять не следует
 
 apt-mark hold unhold showhold auto manual showauto showmanual
 https://manpages.ubuntu.com/manpages/bionic/man8/apt-mark.8.html

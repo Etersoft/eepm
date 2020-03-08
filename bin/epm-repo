@@ -36,11 +36,23 @@ epm_repo()
 		load_helper epm-repofix
 		epm_repofix "$@"
 		;;
+	clean)                            # HELPCMD: remove temp. repos
+		# TODO: check for ALT
+		sudocmd apt-repo $dryrun clean
+		;;
+	save)
+		load_helper epm-reposave
+		epm_reposave "$@"
+		;;
+	restore)
+		load_helper epm-reposave
+		epm_reporestore "$@"
+		;;
 	add)                              # HELPCMD: add package repo (etersoft, autoimports, archive 2017/12/31); run with param to get list
 		load_helper epm-addrepo
 		epm_addrepo "$@"
 		;;
-	rm|remove)                           # HELPCMD: remove repository from sources list
+	rm|remove)                           # HELPCMD: remove repository from sources list (epm repo remove all for all)
 		load_helper epm-removerepo
 		epm_removerepo "$@"
 		;;
