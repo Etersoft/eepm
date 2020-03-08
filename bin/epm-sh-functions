@@ -450,8 +450,10 @@ get_help()
     if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
         return
     fi
+    local F="$0"
+    [ -n "$2" ] && F="$(dirname $0)/$2"
 
-    cat $0 | grep -- "# $1" | while read -r n ; do
+    cat "$F" | grep -- "# $1" | while read -r n ; do
         if echo "$n" | grep -q "# $1: PART: " ; then
             echo
             echo "$n" | sed -e "s|# $1: PART: ||"
