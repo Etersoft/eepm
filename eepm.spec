@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.1.7
+Version: 3.2.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -54,6 +54,10 @@ cat <<EOF >%buildroot%_sysconfdir/eepm/eepm.conf
 #quiet==--quiet
 EOF
 
+cat <<EOF >%buildroot%_sysconfdir/eepm/serv.conf
+# EEPM config (will insource in serv shell script)
+EOF
+
 mkdir -p %buildroot%_sysconfdir/eepm/repack.d/
 cp repack.d/*.sh %buildroot%_sysconfdir/eepm/repack.d/
 chmod 0755 %buildroot%_sysconfdir/eepm/repack.d/*.sh
@@ -78,6 +82,7 @@ rm -f %buildroot%_bindir/distr_info
 %dir %_sysconfdir/eepm/
 %dir %_sysconfdir/eepm/repack.d/
 %config(noreplace) %_sysconfdir/eepm/eepm.conf
+%config(noreplace) %_sysconfdir/eepm/serv.conf
 %config(noreplace) %_sysconfdir/eepm/repack.d/*.sh
 %_bindir/epm*
 %_bindir/eepm
@@ -93,6 +98,16 @@ rm -f %buildroot%_bindir/distr_info
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Mon Mar 09 2020 Vitaly Lipatov <lav@altlinux.ru> 3.2.0-alt1
+- epm: use packagekit name for PackageKit
+- serv: add /etc/eepm/serv.conf support
+- addrepo/removerepo: add dry-run support
+- use dnf by default on Fedora based system
+- epm: improve help
+- implement epm repo [list|add|remove|fix]
+- implement serv cat
+- add epm repo clean|save|restore (just skeleton)
+
 * Wed Feb 19 2020 Vitaly Lipatov <lav@altlinux.ru> 3.1.7-alt1
 - epm repofix: replace sources.list only on ALT
 - serv log: run without follow (-f) by default
