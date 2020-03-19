@@ -174,9 +174,12 @@ epm_query_file()
 
     #load_helper epm-search_file
 
+    res=0
     for pkg in $pkg_filenames ; do
         __do_query_real_file "$pkg"
-        __do_query "$FULLFILEPATH" || info "Try epm sf for search file in all packages in repository" #|| pkg_filenames="$FULLFILEPATH" epm_search_file
+        __do_query "$FULLFILEPATH" || res=$?
     done
-
+    [ "$res" = "0" ] || info "Try epm sf for search file in all packages in repository"
+    #|| pkg_filenames="$FULLFILEPATH" epm_search_file
+    return $res
 }
