@@ -107,6 +107,9 @@ case $PMTYPE in
 	npackd)
 		sudocmd npackdcl remove-repo --url="$@"
 		;;
+	winget)
+		sudocmd winget source remove "$@"
+		;;
 	slackpkg)
 		info "You need remove repo from /etc/slackpkg/mirrors"
 		;;

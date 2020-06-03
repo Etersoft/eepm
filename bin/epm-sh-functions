@@ -533,7 +533,9 @@ case $DISTRNAME in
 		CMD="conary"
 		;;
 	Windows)
-		CMD="chocolatey"
+		CMD="appget"
+		which $CMD 2>/dev/null >/dev/null || CMD="chocolatey"
+		which $CMD 2>/dev/null >/dev/null || CMD="winget"
 		;;
 	MacOS)
 		CMD="homebrew"

@@ -52,6 +52,9 @@ epm_remove_low()
 		pacman)
 			sudocmd pacman -R $@
 			return ;;
+		appget|winget)
+			sudocmd $PMTYPE uninstall $@
+			return ;;
 		slackpkg)
 			sudocmd /sbin/removepkg $@
 			return ;;
@@ -145,6 +148,9 @@ epm_remove_names()
 		xbps)
 			sudocmd xbps remove -R $@
 			return ;;
+		appget|winget)
+			sudocmd $PMTYPE uninstall $@
+			return ;;
 		opkg)
 			# shellcheck disable=SC2046
 			sudocmd opkg $(subst_option force -force-depends) remove $@
@@ -197,6 +203,9 @@ epm_remove_nonint()
 		opkg)
 			sudocmd opkg -force-defaults remove $@
 			return ;;
+		appget|winget)
+			sudocmd $PMTYPE uninstall -s $@
+			return ;;
 		xbps)
 			sudocmd xbps remove -y $@
 			return ;;
@@ -239,6 +248,9 @@ epm_print_remove_command()
 			;;
 		xbps)
 			echo "xbps remove -y $*"
+			;;
+		appget|winget)
+			echo $PMTYPE uninstall -s $*"
 			;;
 		*)
 			fatal "Have no suitable appropriate remove command for $PMTYPE"

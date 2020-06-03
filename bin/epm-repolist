@@ -70,6 +70,9 @@ case $PMTYPE in
 	xbps)
 		docmd xbps-query -L
 		;;
+	winget)
+		docmd winget source list
+		;;
 	pacman)
 		docmd grep -v -- "^#\|^$" /etc/pacman.conf
 		;;

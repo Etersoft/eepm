@@ -118,6 +118,9 @@ epm_upgrade()
 	guix)
 		CMD="guix package -u"
 		;;
+	appget|winget)
+		CMD="$PMTYPE update-all"
+		;;
 	aptcyg)
 		# shellcheck disable=SC2046
 		docmd_foreach "epm install" $(short=1 epm packages)

@@ -98,6 +98,9 @@ case $PMTYPE in
 	xbps)
 		sudocmd xbps-install -S
 		;;
+	winget)
+		sudocmd winget source update
+		;;
 	*)
 		fatal "Have no suitable update command for $PMTYPE"
 		;;

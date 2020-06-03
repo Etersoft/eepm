@@ -80,6 +80,9 @@ case $PMTYPE in
 	pkgng)
 		sudocmd pkg clean -a
 		;;
+	appget|winget)
+		sudocmd $PMTYPE clean
+		;;
 	xbps)
 		sudocmd xbps-remove -O
 		;;

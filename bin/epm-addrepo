@@ -161,6 +161,9 @@ case $PMTYPE in
 	npackd)
 		sudocmd npackdcl add-repo --url="$repo"
 		;;
+	winget)
+		sudocmd winget source add "$repo"
+		;;
 	slackpkg)
 		info "You need manually add repo to /etc/slackpkg/mirrors"
 		;;

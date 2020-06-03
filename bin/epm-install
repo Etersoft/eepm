@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012-2019  Etersoft
-# Copyright (C) 2012-2019  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2020  Etersoft
+# Copyright (C) 2012-2020  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -201,6 +201,9 @@ epm_install_names()
 		xbps)
 			sudocmd xbps-install $@
 			return ;;
+		appget|winget)
+			sudocmd $PMTYPE install $@
+			return ;;
 		*)
 			fatal "Have no suitable install command for $PMTYPE"
 			;;
@@ -272,6 +275,9 @@ epm_ni_install_names()
 			return ;;
 		xbps)
 			sudocmd xbps-install -y $@
+			return ;;
+		appget|winget)
+			sudocmd $PMTYPE -s install $@
 			return ;;
 		homebrew)
 			# FIXME: sudo and quote
@@ -494,6 +500,9 @@ epm_print_install_command()
         xbps)
             echo "xbps-install -y $*"
             ;;
+        appget|winget)
+            echo "$PMTYPE install -s $*"
+            ;;
         homebrew)
             # FIXME: sudo and quote
             echo "brew install $*"
@@ -540,6 +549,9 @@ epm_print_install_names_command()
 			return ;;
 		nix)
 			echo "nix-env --install $*"
+			return ;;
+		appget|winget)
+			echo "$PMTYPE install $*"
 			return ;;
 		*)
 			fatal "Have no suitable appropriate install command for $PMTYPE"

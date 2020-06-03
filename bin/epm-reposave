@@ -44,3 +44,16 @@ case $PMTYPE in
 esac
 
 }
+
+epm_reporeset()
+{
+case $PMTYPE in
+	winget)
+		sudocmd winget source reset
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+}

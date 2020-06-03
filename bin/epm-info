@@ -134,6 +134,12 @@ case $PMTYPE in
 	aptcyg)
 		docmd apt-cyg show $pkg_names
 		;;
+	winget)
+		docmd winget show $pkg_names
+		;;
+	appget)
+		docmd appget view $pkg_names
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
