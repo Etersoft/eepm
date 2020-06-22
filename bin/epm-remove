@@ -250,7 +250,7 @@ epm_print_remove_command()
 			echo "xbps remove -y $*"
 			;;
 		appget|winget)
-			echo $PMTYPE uninstall -s $*"
+			echo "$PMTYPE uninstall -s $*"
 			;;
 		*)
 			fatal "Have no suitable appropriate remove command for $PMTYPE"
