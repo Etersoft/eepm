@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.2.1
+Version: 3.2.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,9 @@ rm -f %buildroot%_bindir/distr_info
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Mon Jun 22 2020 Vitaly Lipatov <lav@altlinux.ru> 3.2.2-alt1
+- filelist: fix grep by contents
+
 * Mon May 18 2020 Vitaly Lipatov <lav@altlinux.ru> 3.2.1-alt1
 - epm query_file: return error if file is missed
 - add zoom repack rule
