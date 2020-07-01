@@ -108,7 +108,10 @@ epm_assure()
     info "Installing appropriate package for $CMD command..."
     __epm_need_update $PACKAGE $PACKAGEVERSION || return 0
 
-    docmd epm --auto install $PACKAGE || return
+    # can't be used in epm ei case
+    #docmd epm --auto install $PACKAGE || return
+    load_helper epm-install
+    non_interactive=1 pkg_names="$PACKAGE" pkg_files='' pkg_urls='' epm_install
 
     [ -n "$PACKAGEVERSION" ] || return 0
     # check if we couldn't update and still need update
