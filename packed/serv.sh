@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012-2013, 2016  Etersoft
-# Copyright (C) 2012-2013, 2016  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2013, 2016, 2020  Etersoft
+# Copyright (C) 2012-2013, 2016, 2020  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -209,7 +209,7 @@ store_output()
     local CMDSTATUS=$RC_STDOUT.pipestatus
     echo 1 >$CMDSTATUS
     #RC_STDERR=$(mktemp)
-    ( $@ 2>&1 ; echo $? >$CMDSTATUS ) | tee $RC_STDOUT
+    ( LANG=C $@ 2>&1 ; echo $? >$CMDSTATUS ) | tee $RC_STDOUT
     return "$(cat $CMDSTATUS)"
     # bashism
     # http://tldp.org/LDP/abs/html/bashver3.html#PIPEFAILREF
@@ -354,7 +354,7 @@ assure_exists()
 	local textpackage=
 	[ -n "$package" ] || package="$(__get_package_for_command "$1")"
 	[ -n "$3" ] && textpackage=" >= $3"
-	__epm_assure "$1" $package $3 || fatal "Can't assure in '$1' command from $package$textpackage package"
+	epm_assure "$1" $package $3 || fatal "Can't assure in '$1' command from $package$textpackage package"
 }
 
 disabled_eget()
@@ -435,10 +435,18 @@ get_help()
     if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
         return
     fi
+    local F="$0"
+    [ -n "$2" ] && F="$(dirname $0)/$2"
 
-    grep -v -- "^#" $0 | grep -- "# $1" | while read -r n ; do
-        opt=$(echo $n | sed -e "s|) # $1:.*||g")
-        desc=$(echo $n | sed -e "s|.*) # $1:||g")
+    cat "$F" | grep -- "# $1" | while read -r n ; do
+        if echo "$n" | grep -q "# $1: PART: " ; then
+            echo
+            echo "$n" | sed -e "s|# $1: PART: ||"
+            continue
+        fi
+        echo "$n" | grep -q "^ *#" && continue
+        opt="$(echo $n | sed -e "s|) # $1:.*||g")" #"
+        desc="$(echo $n | sed -e "s|.*) # $1:||g")" #"
         printf "    %-20s %s\n" $opt "$desc"
     done
 }
@@ -491,8 +499,8 @@ case $DISTRNAME in
 		CMD="pacman"
 		;;
 	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific|GosLinux|Amzn)
-		CMD="yum-rpm"
-		which dnf 2>/dev/null >/dev/null && test -d /var/lib/dnf/yumdb && CMD=dnf-rpm
+		CMD="dnf-rpm"
+		which dnf 2>/dev/null >/dev/null || CMD=yum-rpm
 		;;
 	Slackware)
 		CMD="slackpkg"
@@ -504,7 +512,9 @@ case $DISTRNAME in
 		CMD="conary"
 		;;
 	Windows)
-		CMD="chocolatey"
+		CMD="appget"
+		which $CMD 2>/dev/null >/dev/null || CMD="chocolatey"
+		which $CMD 2>/dev/null >/dev/null || CMD="winget"
 		;;
 	MacOS)
 		CMD="homebrew"
@@ -547,6 +557,31 @@ assure_distr()
 	local TEXT="this option"
 	[ -n "$2" ] && TEXT="$2"
 	[ "$DISTRNAME" = "$1" ] || fatal "$TEXT supported only for $1 distro"
+}
+
+# File bin/serv-cat:
+
+serv_cat()
+{
+	local SERVICE="$1"
+	shift
+
+	case $SERVICETYPE in
+		systemd)
+			sudocmd systemctl cat "$SERVICE" "$@"
+			;;
+		*)
+			case $DISTRNAME in
+			ALTLinux)
+				local INITFILE=/etc/init.d/$SERVICE
+				[ -r "$INITFILE" ] || fatal "Can't find init file $INITFILE"
+				docmd cat $INITFILE
+				return ;;
+			*)
+				fatal "Have no suitable for $DISTRNAME command for $SERVICETYPE"
+				;;
+			esac
+	esac
 }
 
 # File bin/serv-common:
@@ -762,19 +797,21 @@ serv_list_startup()
 __serv_log_altlinux()
 {
 	local SERVICE="$1"
+	local PRG="less"
+	[ "$2" = "-f" ] && PRG="tail -f"
 
 	case "$SERVICE" in
 		postfix)
-			sudocmd tail -f /var/log/mail/all /var/log/mail/errors
+			sudocmd $PRG /var/log/mail/all /var/log/mail/errors
 			;;
 		sshd)
-			sudocmd tail -f /var/log/auth/all
+			sudocmd $PRG /var/log/auth/all
 			;;
 		cups)
-			sudocmd tail -f /var/log/cups/access_log /var/log/cups/error_log
+			sudocmd $PRG /var/log/cups/access_log /var/log/cups/error_log
 			;;
 		fail2ban)
-			sudocmd tail -f /var/log/$SERVICE.log
+			sudocmd $PRG /var/log/$SERVICE.log
 			;;
 		*)
 			fatal "Have no suitable for $SERVICE service"
@@ -789,12 +826,13 @@ serv_log()
 
 	case $SERVICETYPE in
 		systemd)
-			sudocmd journalctl -f -b -u "$SERVICE" "$@"
+			sudocmd journalctl -b -u "$SERVICE" "$@"
 			;;
 		*)
 			case $DISTRNAME in
 			ALTLinux)
-				__serv_log_altlinux "$SERVICE"
+				FF="" ; [ "$1" = "-f" ] && FF="-f"
+				__serv_log_altlinux "$SERVICE" $FF
 				return ;;
 			*)
 				fatal "Have no suitable for $DISTRNAME command for $SERVICETYPE"
@@ -2344,7 +2382,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.1.3"
+        echo "Service manager version 3.2.2  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2019"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -2365,6 +2403,9 @@ serv_cmd=
 service_name=
 params=
 withoutservicename=
+
+# load system wide config
+[ -f /etc/eepm/serv.conf ] && . /etc/eepm/serv.conf
 
 check_command()
 {
@@ -2416,8 +2457,11 @@ check_command()
         serv_cmd=print
         withoutservicename=1
         ;;
-    log|journal)              # HELPCMD: print log for the service
+    log|journal)              # HELPCMD: print log for the service (-f - follow,  -r - reverse order)
         serv_cmd=log
+        ;;
+    cat)                      # HELPCMD: print out service file for the service
+        serv_cmd=cat
         ;;
     edit)
         serv_cmd=edit         # HELPCMD: edit service file overload (use --full to edit full file)
