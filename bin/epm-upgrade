@@ -37,14 +37,14 @@ epm_upgrade()
 			load_helper epm-addrepo
 			load_helper epm-removerepo
 			load_helper epm-Install
-			epm_addrepo
+			epm_addrepo "$pkg_names"
 			local installlist="$(get_task_packages $pkg_names)"
 			[ -n "$verbose" ] && info "Packages from task(s): $installlist"
 			# install only installed packages (simulate upgrade packages)
 			installlist="$(estrlist exclude "$(echo "$installlist" | (skip_installed='yes' filter_out_installed_packages))" "$installlist")" #"
 			[ -n "$verbose" ] && info "Packages to upgrade: $installlist"
 			(pkg_names="$installlist" epm_Install)
-			epm_removerepo
+			epm_removerepo "$pkg_names"
 			return
 		fi
 	fi
