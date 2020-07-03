@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.2.2
+Version: 3.2.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,13 @@ rm -f %buildroot%_bindir/distr_info
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Sat Jul 04 2020 Vitaly Lipatov <lav@altlinux.ru> 3.2.3-alt1
+- epm-download: force download remote package on ALTtoo
+- epm-assure: don't use direct epm call to package install
+- epm-upgrade: add missed task number arg
+- epm-sh-functions: disable broken eget output
+- epm-Install: ignore failed update by force param
+
 * Mon Jun 22 2020 Vitaly Lipatov <lav@altlinux.ru> 3.2.2-alt1
 - filelist: fix grep by contents
 
