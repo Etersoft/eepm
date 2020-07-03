@@ -378,7 +378,8 @@ eget()
 		return
 	fi
 
-	assure_exists eget
+	# FIXME: we need disable output here, eget can be used for get output
+	assure_exists eget >/dev/null
 	# run external command, not the function
 	EGET=$(which eget) || fatal "Missed command eget from installed package eget"
 	$EGET "$@"
