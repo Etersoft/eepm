@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.2.3
+Version: 3.2.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,9 @@ rm -f %buildroot%_bindir/distr_info
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Fri Jul 24 2020 Andrey Cherepanov <cas@altlinux.org> 3.2.4-alt1
+- fix repack rules for mssql-server: remove libcrypto-devel and fix path to sysctl
+
 * Sat Jul 04 2020 Vitaly Lipatov <lav@altlinux.ru> 3.2.3-alt1
 - epm-download: force download remote package on ALTtoo
 - epm-assure: don't use direct epm call to package install
