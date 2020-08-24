@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.2.4
+Version: 3.2.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,12 @@ rm -f %buildroot%_bindir/distr_info
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Mon Aug 24 2020 Vitaly Lipatov <lav@altlinux.ru> 3.2.5-alt1
+- epm-repack: always use anypackage to rpm function for deb->rpm conversion
+- epm-repack: drop dir "/" and other root dir paths from a file list
+- epm-repack: improve cleanup tmp dir
+- add repack scripts for InfoWatch products
+
 * Fri Jul 24 2020 Andrey Cherepanov <cas@altlinux.org> 3.2.4-alt1
 - fix repack rules for mssql-server: remove libcrypto-devel and fix path to sysctl
 
