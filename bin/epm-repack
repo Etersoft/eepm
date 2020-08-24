@@ -60,6 +60,14 @@ __epm_repack_rpm_to_deb()
 		clean_store_output
 	done
 
+	# TODO: move it to exit handler
+	if [ -z "$DEBUG" ] ; then
+		# TODO: reinvent
+		[ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
+		[ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
+		[ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs
+	fi
+
 	cd - >/dev/null
 	return 0
 }
@@ -125,6 +133,7 @@ __create_rpmmacros()
 %packager	EPM <support@etersoft.ru>
 %_gpg_name	support@etersoft.ru
 EOF
+    to_remove_pkg_files="$to_remove_pkg_files $HOME/.rpmmacros"
 }
 
 # will fill repacked_rpms var
@@ -145,14 +154,15 @@ __epm_repack_rpm()
 
     local pkg
     export HOME=$(mktemp -d)
-    local tmpbuilddir=$HOME/repack
-    mkdir $tmpbuilddir
     __create_rpmmacros
 
     local abspkg
     repacked_rpms=''
     for pkg in $* ; do
+        local tmpbuilddir=$HOME/repack-$(basename $pkg)
+        mkdir $tmpbuilddir
         abspkg=$(realpath $pkg)
+        info ""
         info "Repacking $abspkg to local rpm format ..."
         cd $tmpbuilddir || fatal
         docmd fakeroot alien --generate --to-rpm $verbose $scripts $abspkg || fatal
@@ -168,13 +178,16 @@ __epm_repack_rpm()
         __fix_spec $tmpbuilddir/$subdir $spec
         local pkgname="$(grep "^Name: " $spec | sed -e "s|Name: ||g" | head -n1)"
         __apply_fix_code $pkgname $tmpbuilddir/$subdir $spec
+        # TODO: we need these dirs to be created
+        to_remove_pkg_dirs="$to_remove_pkg_dirs $HOME/RPM/BUILD $HOME/RPM"
         showcmd fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir --define='_allow_root_build 1' -bb $spec
         if [ -n "$verbose" ] ; then
             a='' fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir  --define='_allow_root_build 1' -bb $spec || fatal
         else
             a='' fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir  --define='_allow_root_build 1' -bb $spec >/dev/null || fatal
         fi
-        local repacked_rpm="$(realpath $tmpbuilddir/../*.rpm)"
+        mv $tmpbuilddir/../*.rpm $tmpbuilddir/
+        local repacked_rpm="$(realpath $tmpbuilddir/*.rpm)"
         if [ -s "$repacked_rpm" ] ; then
             repacked_rpms="$repacked_rpms $repacked_rpm"
             to_remove_pkg_files="$to_remove_pkg_files $repacked_rpm"
@@ -186,6 +199,8 @@ __epm_repack_rpm()
         #rm -rf $tmpbuilddir/../*.rpm
         rm -rf $spec
     done
+
+    to_remove_pkg_dirs="$to_remove_pkg_dirs $HOME"
     rmdir $tmpbuilddir
     #rmdir $tmpbuilddir/..
     true
@@ -198,6 +213,14 @@ __epm_check_if_try_install_deb()
 
 	# TODO: move to install
 	docmd epm install $force $nodeps $repacked_rpms
+
+	# TODO: move it to exit handler
+	if [ -z "$DEBUG" ] ; then
+		# TODO: reinvent
+		[ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
+		[ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
+		[ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
+	fi
 
 	return 0
 }
@@ -238,12 +261,13 @@ epm_repack()
             ;;
     esac
 
-
     # TODO: move it to exit handler
     if [ -z "$DEBUG" ] ; then
-    # TODO: reinvent
-    [ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
-    [ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
+        # TODO: reinvent
+        [ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
+        # hack??
+        [ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
+        [ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
     fi
 
 }
