@@ -84,11 +84,23 @@ __fix_spec()
     local buildroot="$1"
     local spec="$2"
     local i
-    for i in $(grep '^"/' $spec | sed -e 's|^"\(.*\)"$|\1|') ; do
-        #' hack for highlight
-        # add %dir to dir in list
+
+    # drop forbidded paths
+    # https://bugzilla.altlinux.org/show_bug.cgi?id=38842
+    for i in / /etc /etc/init.d /etc/systemd /bin /opt /usr /usr/bin /usr/share /usr/share/doc /var /var/log /var/run; do
+        sed -i -e "s|^%dir \"$i/*\"$||" \
+            -e "s|^\"$i/*\"$||" \
+            -e "s|^$i/*$||" \
+            $spec
+    done
+
+    # replace dir "/path/dir" -> %dir /path/dir
+    for i in $(grep '^"/' $spec | sed -e 's|^"\(/.*\)"$|\1|') ; do #" hack for highlight
+        # add dir as %dir in the filelist
         if [ -d "$buildroot$i" ] ; then
             subst 's|^\("'$i'"\)$|%dir \1|' $spec
+        #else
+        #    subst 's|^\("'$i'"\)$|\1|' $spec
         fi
     done
     subst "s|^Release: |Release: alt1.repacked.with.epm.|" $spec
