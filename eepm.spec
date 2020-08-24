@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.2.3
+Version: 3.2.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,12 @@ rm -f %buildroot%_bindir/distr_info
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Mon Aug 24 2020 Vitaly Lipatov <lav@altlinux.ru> 3.2.4-alt1
+- epm-repack: always use anypackage to rpm function for deb->rpm conversion
+- epm-repack: drop dir "/" and other root dir paths from a file list
+- epm-repack: improve cleanup tmp dir
+- add repack scripts for InfoWatch products
+
 * Sat Jul 04 2020 Vitaly Lipatov <lav@altlinux.ru> 3.2.3-alt1
 - epm-download: force download remote package on ALTtoo
 - epm-assure: don't use direct epm call to package install
