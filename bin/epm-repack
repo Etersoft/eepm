@@ -38,45 +38,6 @@ __epm_split_by_pkg_type()
 	[ -n "$split_replaced_pkgs" ]
 }
 
-# fills repacked_rpms
-__epm_repack_deb_to_rpm()
-{
-	local pkg
-
-	assure_exists alien
-	assure_exists dpkg
-	assure_exists rpmbuild rpm-build || fatal
-	# TODO: Для установки требует: /usr/share/debconf/confmodule но пакет не может быть установлен
-	# assure_exists debconf
-
-	repacked_rpms=''
-
-	local TDIR=$(mktemp -d)
-	cd $TDIR || fatal
-	for pkg in "$@" ; do
-		# TODO: fakeroot for non ALT?
-		showcmd_store_output alien -r -k $scripts "$pkg" || fatal
-		local RPMCONVERTED=$(grep "rpm generated" $RC_STDOUT | sed -e "s| generated||g")
-		repacked_rpms="$repacked_rpms $(realpath $RPMCONVERTED)"
-		to_remove_pkg_files="$to_remove_pkg_files $(realpath $RPMCONVERTED)"
-		clean_store_output
-	done
-
-	cd - >/dev/null
-	return 0
-}
-
-__epm_check_if_try_install_deb()
-{
-	__epm_split_by_pkg_type deb "$@" || return 1
-	__epm_repack_deb_to_rpm $split_replaced_pkgs
-
-	# TODO: move to install
-	docmd epm install $force $nodeps $repacked_rpms
-
-	return 0
-}
-
 # fills repacked_debs
 __epm_repack_rpm_to_deb()
 {
@@ -217,6 +178,18 @@ __epm_repack_rpm()
     #rmdir $tmpbuilddir/..
     true
 }
+
+__epm_check_if_try_install_deb()
+{
+	__epm_split_by_pkg_type deb "$@" || return 1
+	__epm_repack_rpm $split_replaced_pkgs || fatal
+
+	# TODO: move to install
+	docmd epm install $force $nodeps $repacked_rpms
+
+	return 0
+}
+
 
 epm_repack()
 {
