@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2017-2018  Etersoft
-# Copyright (C) 2017-2018  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2017-2018, 2020  Etersoft
+# Copyright (C) 2017-2018, 2020  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -163,6 +163,13 @@ __epm_repack_rpm()
     assure_exists alien || fatal
     assure_exists rpmbuild rpm-build || fatal
 
+    # TODO: improve
+    if echo "$*" | grep "\.deb" ; then
+        assure_exists dpkg || fatal
+        # TODO: Для установки требует: /usr/share/debconf/confmodule но пакет не может быть установлен
+        # assure_exists debconf
+    fi
+
     local pkg
     export HOME=$(mktemp -d)
     local tmpbuilddir=$HOME/repack
@@ -225,22 +232,13 @@ epm_repack()
     # TODO: если у нас rpm, а пакет - deb и наоборот
     case $PKGFORMAT in
         rpm)
-            if __epm_split_by_pkg_type deb $pkg_files ; then
-                __epm_repack_deb_to_rpm $split_replaced_pkgs
-                echo
-                echo "Adopted packages:"
-                estrlist list $repacked_rpms
-                cp $repacked_rpms .
-                pkg_files="$(estrlist exclude $split_replaced_pkgs $pkg_files)"
-            fi
-
-            if [ -n "$pkg_files" ] ; then
-                __epm_repack_rpm $pkg_files || fatal
-                echo
-                echo "Adopted packages:"
-                estrlist list $repacked_rpms
-                cp $repacked_rpms .
-            fi
+            __epm_repack_rpm $pkg_files || fatal
+            echo
+            echo "Adapted packages:"
+            cp $repacked_rpms .
+            for i in $repacked_rpms ; do
+                echo "	$(pwd)/$(basename "$i")"
+            done
             ;;
         deb)
             if __epm_split_by_pkg_type rpm $pkg_files ; then
