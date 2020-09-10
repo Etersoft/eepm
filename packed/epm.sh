@@ -375,7 +375,8 @@ disabled_eget()
 		return
 	fi
 
-	assure_exists eget
+	# FIXME: we need disable output here, eget can be used for get output
+	assure_exists eget >/dev/null
 	# run external command, not the function
 	EGET=$(which eget) || fatal "Missed command eget from installed package eget"
 	$EGET "$@"
@@ -3085,7 +3086,7 @@ epm_Install()
 
     [ -z "$files$names" ] && info "Install: Skip empty install list." && return 22
 
-    (pkg_filenames='' epm_update) || return
+    (pkg_filenames='' epm_update) || { [ -n "$force" ] || return ; }
 
     epm_install_names $names || return
 
@@ -5195,44 +5196,6 @@ __epm_split_by_pkg_type()
 	[ -n "$split_replaced_pkgs" ]
 }
 
-__epm_repack_deb_to_rpm()
-{
-	local pkg
-
-	assure_exists alien
-	assure_exists dpkg
-	assure_exists rpmbuild rpm-build || fatal
-	# TODO: Для установки требует: /usr/share/debconf/confmodule но пакет не может быть установлен
-	# assure_exists debconf
-
-	repacked_rpms=''
-
-	local TDIR=$(mktemp -d)
-	cd $TDIR || fatal
-	for pkg in "$@" ; do
-		# TODO: fakeroot for non ALT?
-		showcmd_store_output alien -r -k $scripts "$pkg" || fatal
-		local RPMCONVERTED=$(grep "rpm generated" $RC_STDOUT | sed -e "s| generated||g")
-		repacked_rpms="$repacked_rpms $(realpath $RPMCONVERTED)"
-		to_remove_pkg_files="$to_remove_pkg_files $(realpath $RPMCONVERTED)"
-		clean_store_output
-	done
-
-	cd - >/dev/null
-	return 0
-}
-
-__epm_check_if_try_install_deb()
-{
-	__epm_split_by_pkg_type deb "$@" || return 1
-	__epm_repack_deb_to_rpm $split_replaced_pkgs
-
-	# TODO: move to install
-	docmd epm install $force $nodeps $repacked_rpms
-
-	return 0
-}
-
 __epm_repack_rpm_to_deb()
 {
 	local pkg
@@ -5253,6 +5216,14 @@ __epm_repack_rpm_to_deb()
 		to_remove_pkg_files="$to_remove_pkg_files $(realpath $DEBCONVERTED)"
 		clean_store_output
 	done
+
+	# TODO: move it to exit handler
+	if [ -z "$DEBUG" ] ; then
+		# TODO: reinvent
+		[ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
+		[ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
+		[ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs
+	fi
 
 	cd - >/dev/null
 	return 0
@@ -5276,11 +5247,23 @@ __fix_spec()
     local buildroot="$1"
     local spec="$2"
     local i
-    for i in $(grep '^"/' $spec | sed -e 's|^"\(.*\)"$|\1|') ; do
-        #' hack for highlight
-        # add %dir to dir in list
+
+    # drop forbidded paths
+    # https://bugzilla.altlinux.org/show_bug.cgi?id=38842
+    for i in / /etc /etc/init.d /etc/systemd /bin /opt /usr /usr/bin /usr/share /usr/share/doc /var /var/log /var/run; do
+        sed -i -e "s|^%dir \"$i/*\"$||" \
+            -e "s|^\"$i/*\"$||" \
+            -e "s|^$i/*$||" \
+            $spec
+    done
+
+    # replace dir "/path/dir" -> %dir /path/dir
+    for i in $(grep '^"/' $spec | sed -e 's|^"\(/.*\)"$|\1|') ; do #" hack for highlight
+        # add dir as %dir in the filelist
         if [ -d "$buildroot$i" ] ; then
             subst 's|^\("'$i'"\)$|%dir \1|' $spec
+        #else
+        #    subst 's|^\("'$i'"\)$|\1|' $spec
         fi
     done
     subst "s|^Release: |Release: alt1.repacked.with.epm.|" $spec
@@ -5305,6 +5288,7 @@ __create_rpmmacros()
 %packager	EPM <support@etersoft.ru>
 %_gpg_name	support@etersoft.ru
 EOF
+    to_remove_pkg_files="$to_remove_pkg_files $HOME/.rpmmacros"
 }
 
 __epm_repack_rpm()
@@ -5315,16 +5299,24 @@ __epm_repack_rpm()
     assure_exists alien || fatal
     assure_exists rpmbuild rpm-build || fatal
 
+    # TODO: improve
+    if echo "$*" | grep "\.deb" ; then
+        assure_exists dpkg || fatal
+        # TODO: Для установки требует: /usr/share/debconf/confmodule но пакет не может быть установлен
+        # assure_exists debconf
+    fi
+
     local pkg
     export HOME=$(mktemp -d)
-    local tmpbuilddir=$HOME/repack
-    mkdir $tmpbuilddir
     __create_rpmmacros
 
     local abspkg
     repacked_rpms=''
     for pkg in $* ; do
+        local tmpbuilddir=$HOME/repack-$(basename $pkg)
+        mkdir $tmpbuilddir
         abspkg=$(realpath $pkg)
+        info ""
         info "Repacking $abspkg to local rpm format ..."
         cd $tmpbuilddir || fatal
         docmd fakeroot alien --generate --to-rpm $verbose $scripts $abspkg || fatal
@@ -5340,13 +5332,16 @@ __epm_repack_rpm()
         __fix_spec $tmpbuilddir/$subdir $spec
         local pkgname="$(grep "^Name: " $spec | sed -e "s|Name: ||g" | head -n1)"
         __apply_fix_code $pkgname $tmpbuilddir/$subdir $spec
+        # TODO: we need these dirs to be created
+        to_remove_pkg_dirs="$to_remove_pkg_dirs $HOME/RPM/BUILD $HOME/RPM"
         showcmd fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir --define='_allow_root_build 1' -bb $spec
         if [ -n "$verbose" ] ; then
             a='' fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir  --define='_allow_root_build 1' -bb $spec || fatal
         else
             a='' fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir  --define='_allow_root_build 1' -bb $spec >/dev/null || fatal
         fi
-        local repacked_rpm="$(realpath $tmpbuilddir/../*.rpm)"
+        mv $tmpbuilddir/../*.rpm $tmpbuilddir/
+        local repacked_rpm="$(realpath $tmpbuilddir/*.rpm)"
         if [ -s "$repacked_rpm" ] ; then
             repacked_rpms="$repacked_rpms $repacked_rpm"
             to_remove_pkg_files="$to_remove_pkg_files $repacked_rpm"
@@ -5358,10 +5353,32 @@ __epm_repack_rpm()
         #rm -rf $tmpbuilddir/../*.rpm
         rm -rf $spec
     done
+
+    to_remove_pkg_dirs="$to_remove_pkg_dirs $HOME"
     rmdir $tmpbuilddir
     #rmdir $tmpbuilddir/..
     true
 }
+
+__epm_check_if_try_install_deb()
+{
+	__epm_split_by_pkg_type deb "$@" || return 1
+	__epm_repack_rpm $split_replaced_pkgs || fatal
+
+	# TODO: move to install
+	docmd epm install $force $nodeps $repacked_rpms
+
+	# TODO: move it to exit handler
+	if [ -z "$DEBUG" ] ; then
+		# TODO: reinvent
+		[ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
+		[ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
+		[ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
+	fi
+
+	return 0
+}
+
 
 epm_repack()
 {
@@ -5376,22 +5393,13 @@ epm_repack()
     # TODO: если у нас rpm, а пакет - deb и наоборот
     case $PKGFORMAT in
         rpm)
-            if __epm_split_by_pkg_type deb $pkg_files ; then
-                __epm_repack_deb_to_rpm $split_replaced_pkgs
-                echo
-                echo "Adopted packages:"
-                estrlist list $repacked_rpms
-                cp $repacked_rpms .
-                pkg_files="$(estrlist exclude $split_replaced_pkgs $pkg_files)"
-            fi
-
-            if [ -n "$pkg_files" ] ; then
-                __epm_repack_rpm $pkg_files || fatal
-                echo
-                echo "Adopted packages:"
-                estrlist list $repacked_rpms
-                cp $repacked_rpms .
-            fi
+            __epm_repack_rpm $pkg_files || fatal
+            echo
+            echo "Adapted packages:"
+            cp $repacked_rpms .
+            for i in $repacked_rpms ; do
+                echo "	$(pwd)/$(basename "$i")"
+            done
             ;;
         deb)
             if __epm_split_by_pkg_type rpm $pkg_files ; then
@@ -5406,12 +5414,13 @@ epm_repack()
             ;;
     esac
 
-
     # TODO: move it to exit handler
     if [ -z "$DEBUG" ] ; then
-    # TODO: reinvent
-    [ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
-    [ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
+        # TODO: reinvent
+        [ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
+        # hack??
+        [ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
+        [ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
     fi
 
 }
@@ -6766,14 +6775,14 @@ epm_upgrade()
 
 	if [ "$DISTRNAME" = "ALTLinux" ] ; then
 		if tasknumber "$pkg_names" >/dev/null ; then
-			epm_addrepo
+			epm_addrepo "$pkg_names"
 			local installlist="$(get_task_packages $pkg_names)"
 			[ -n "$verbose" ] && info "Packages from task(s): $installlist"
 			# install only installed packages (simulate upgrade packages)
 			installlist="$(estrlist exclude "$(echo "$installlist" | (skip_installed='yes' filter_out_installed_packages))" "$installlist")" #"
 			[ -n "$verbose" ] && info "Packages to upgrade: $installlist"
 			(pkg_names="$installlist" epm_Install)
-			epm_removerepo
+			epm_removerepo "$pkg_names"
 			return
 		fi
 	fi
@@ -8174,7 +8183,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.2.2  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.2.5  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2020"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -8184,7 +8193,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.2.2
+EPMVERSION=3.2.5
 verbose=
 quiet=
 nodeps=
