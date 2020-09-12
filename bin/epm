@@ -284,7 +284,7 @@ check_command()
     restore)                  # HELPCMD: install (restore) packages need for the project (f.i. by requirements.txt)
         epm_cmd=restore
         ;;
-    autoremove|package-cleanup)   # HELPCMD: auto remove unneeded package(s) Supports args for ALT: [libs|python|perl|libs-devel]
+    autoremove|package-cleanup)   # HELPCMD: auto remove unneeded package(s) Supports args for ALT: [--direct [libs|python|perl|libs-devel]]
         epm_cmd=autoremove
         ;;
     autoorphans|--orphans)    # HELPCMD: remove all packages not from the repository
