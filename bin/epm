@@ -287,6 +287,9 @@ check_command()
     autoremove|package-cleanup)   # HELPCMD: auto remove unneeded package(s) Supports args for ALT: [--direct [libs|python|perl|libs-devel]]
         epm_cmd=autoremove
         ;;
+    mark)                     # HELPCMD: mark package as manually or automatically installed (see epm mark --help)
+        epm_cmd=mark
+        ;;
     autoorphans|--orphans)    # HELPCMD: remove all packages not from the repository
         epm_cmd=autoorphans
         ;;
