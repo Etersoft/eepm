@@ -202,7 +202,7 @@ check_command()
     -sf|sf|filesearch)        # HELPCMD: search in which package a file is included
         epm_cmd=search_file
         ;;
-    -ql|ql|filelist)          # HELPCMD: print package file list
+    -ql|ql|filelist|get-files)          # HELPCMD: print package file list
         epm_cmd=filelist
         ;;
     check|fix|verify)         # HELPCMD: check local package base integrity and fix it
@@ -217,13 +217,13 @@ check_command()
     -qi|qi|info|show)         # HELPCMD: print package detail info
         epm_cmd=info
         ;;
-    requires|deplist|depends|req)     # HELPCMD: print package requires
+    requires|deplist|depends|req|depends-on)     # HELPCMD: print package requires
         epm_cmd=requires
         ;;
     provides|prov)            # HELPCMD: print package provides
         epm_cmd=provides
         ;;
-    whatdepends|rdepends|whatrequires|wd)   # HELPCMD: print packages dependences on that
+    whatdepends|rdepends|whatrequires|wd|required-by)   # HELPCMD: print packages dependences on that
         epm_cmd=whatdepends
         ;;
     whatprovides)             # HELPCMD: print packages provides that target
@@ -252,7 +252,7 @@ check_command()
     addrepo|ar)               # HELPCMD: add package repo (etersoft, autoimports, archive 2017/12/31); run with param to get list
         epm_cmd=addrepo
         ;;
-    repolist|sl|rl|listrepo)  # HELPCMD: print repo list
+    repolist|sl|rl|listrepo|repo-list)  # HELPCMD: print repo list
         epm_cmd=repolist
         ;;
     repofix)                  # HELPCMD: fix paths in sources lists (ALT Linux only)
