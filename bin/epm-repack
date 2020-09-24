@@ -156,16 +156,21 @@ __epm_repack_rpm()
     export HOME=$(mktemp -d)
     __create_rpmmacros
 
+    local alpkg
     local abspkg
     repacked_rpms=''
     for pkg in $* ; do
         local tmpbuilddir=$HOME/repack-$(basename $pkg)
         mkdir $tmpbuilddir
-        abspkg=$(realpath $pkg)
+        abspkg="$(realpath $pkg)"
         info ""
         info "Repacking $abspkg to local rpm format ..."
+        # alien failed with spaced names
+        # alpkg=$abspkg
+        alpkg=$(basename $pkg)
+        cp -v $pkg $tmpbuilddir/../$alpkg
         cd $tmpbuilddir || fatal
-        docmd fakeroot alien --generate --to-rpm $verbose $scripts $abspkg || fatal
+        docmd fakeroot alien --generate --to-rpm $verbose $scripts "../$alpkg" || fatal
 
         local subdir="$(echo *)"
         [ -d "$subdir" ] || fatal "can't find subdir"
