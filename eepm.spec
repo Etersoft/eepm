@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.2.5
+Version: 3.2.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,13 @@ rm -f %buildroot%_bindir/distr_info
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Wed Sep 30 2020 Vitaly Lipatov <lav@altlinux.ru> 3.2.6-alt1
+- autoremove: use apt-get autoremove on ALT by default
+- epm-mark: add apt-mark support for ALT and deb based systems
+- epm-repack: add workaround for spaced paths to pkg
+- add PackageKit commands
+- zoom.sh: s/return/exit (ALT bug 39014)
+
 * Mon Aug 24 2020 Vitaly Lipatov <lav@altlinux.ru> 3.2.5-alt1
 - epm-repack: always use anypackage to rpm function for deb->rpm conversion
 - epm-repack: drop dir "/" and other root dir paths from a file list
