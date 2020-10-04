@@ -1,0 +1,42 @@
+#!/bin/sh
+#
+# Copyright (C) 2015, 2017, 2019, 2020  Etersoft
+# Copyright (C) 2015, 2017, 2019, 2020  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+epm_prescription()
+{
+
+local psdir="$CONFIGDIR/prescription.d"
+
+if [ -z "$pkg_filenames" ] ; then
+    echo "Run with a name of a prescription to run:"
+    for i in $psdir/*.sh ; do
+        printf "  %-20s - %s\n" "$(basename $i .sh)" "$($i --description)"
+    done
+    return
+fi
+
+local script="$psdir/$1.sh"
+
+if [ ! -x "$script" ] ; then
+    fatal "Can't find $script prescription."
+fi
+
+info "Running $($script --description) ..."
+docmd $script --run
+
+}
