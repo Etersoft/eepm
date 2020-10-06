@@ -1,3 +1,7 @@
+При удалении, если ошибка состоит в отсутствии пакета, не нужно переключаться на apt-get
+Если удаляется несколько пакетов, и один из них отсутствует, не удалится ничего.
+Параметр типа --skip-installed, но наоборот? (--skip-missed?)
+
 apt-mark (для работы autoremove and autoorphans) - помечать то, что удалять не следует
 
 apt-mark hold unhold showhold auto manual showauto showmanual
