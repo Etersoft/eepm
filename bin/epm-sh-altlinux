@@ -122,11 +122,25 @@ tasknumber()
     isnumber "$num" && echo "$*"
 }
 
+# todo: improve apt-repo
+get_task_arepo_packages()
+{
+    epm assure apt-repo
+    epm assure curl
+
+    info "TODO: please, improve apt-repo to support arepo (i586-) packages for apt-repo list task"
+    showcmd "curl -s -f http://git.altlinux.org/tasks/$tn/plan/arepo-add-x86_64-i586 | cut -f1"
+    a='' curl -s -f http://git.altlinux.org/tasks/$tn/plan/arepo-add-x86_64-i586 2>/dev/null | cut -f1
+}
+
 # use assure apt-repo before
 get_task_packages()
 {
+    local arch="$($DISTRVENDOR -a)"
     local tn
     for tn in $(tasknumber "$@") ; do
-        docmd apt-repo list task "$tn"
+        showcmd apt-repo list task "$tn"
+        a='' apt-repo list task "$tn"
+        [ "$arch" = "x64_64" ] && get_task_arepo_packages "$tn"
     done
 }
