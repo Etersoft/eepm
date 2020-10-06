@@ -1,0 +1,18 @@
+# Local package resource list for APT goes here.
+# To inspect package defined part, see /etc/apt/sources.list.d/*.list
+
+rpm [p7] http://download.etersoft.ru/pub ALTLinux/p8/branch/x86_64 classic
+rpm [p8] http://download.etersoft.ru/pub ALTLinux/p8/branch/x86_64-i586 classic
+rpm [t9] http://download.etersoft.ru/pub ALTLinux/p8/branch/noarch classic
+
+rpm [updates] http://download.etersoft.ru/pub ALTLinux/p8/branch/x86_64 classic
+rpm [updates] http://download.etersoft.ru/pub ALTLinux/p8/branch/x86_64-i586 classic
+rpm [updates] http://download.etersoft.ru/pub ALTLinux/p8/branch/noarch classic
+
+#rpm [alt] http://download.etersoft.ru/pub ALTLinux/p9/branch/x86_64 classic debuginfo
+#rpm [alt] http://download.etersoft.ru/pub ALTLinux/p9/branch/x86_64-i586 classic
+#rpm [alt] http://download.etersoft.ru/pub ALTLinux/p9/branch/noarch classic
+
+rpm [etersoft] http://download.etersoft.ru/pub/Etersoft LINUX@Etersoft/p8/branch/noarch addon
+rpm [etersoft] http://download.etersoft.ru/pub/Etersoft LINUX@Etersoft/p8/branch/x86_64-i586 addon
+rpm [etersoft] http://download.etersoft.ru/pub/Etersoft LINUX@Etersoft/p8/branch/x86_64 addon
