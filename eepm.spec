@@ -1,10 +1,10 @@
 Name: eepm
-Version: 3.2.6
+Version: 3.3.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
 
-License: AGPLv3
+License: AGPL-3.0+
 Group: System/Configuration/Packaging
 Url: http://wiki.etersoft.ru/EPM
 
@@ -62,6 +62,10 @@ mkdir -p %buildroot%_sysconfdir/eepm/repack.d/
 cp repack.d/*.sh %buildroot%_sysconfdir/eepm/repack.d/
 chmod 0755 %buildroot%_sysconfdir/eepm/repack.d/*.sh
 
+mkdir -p %buildroot%_sysconfdir/eepm/prescription.d/
+cp prescription.d/*.sh %buildroot%_sysconfdir/eepm/prescription.d/
+chmod 0755 %buildroot%_sysconfdir/eepm/prescription.d/*.sh
+
 mkdir -p %buildroot%_sysconfdir/bash_completion.d/
 install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/serv
 ln -s serv %buildroot%_sysconfdir/bash_completion.d/cerv
@@ -81,9 +85,11 @@ rm -f %buildroot%_bindir/distr_info
 %doc README.md TODO LICENSE
 %dir %_sysconfdir/eepm/
 %dir %_sysconfdir/eepm/repack.d/
+%dir %_sysconfdir/eepm/prescription.d/
 %config(noreplace) %_sysconfdir/eepm/eepm.conf
 %config(noreplace) %_sysconfdir/eepm/serv.conf
 %config(noreplace) %_sysconfdir/eepm/repack.d/*.sh
+%config(noreplace) %_sysconfdir/eepm/prescription.d/*.sh
 %_bindir/epm*
 %_bindir/eepm
 %_bindir/upm
@@ -98,6 +104,12 @@ rm -f %buildroot%_bindir/distr_info
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Tue Oct 06 2020 Vitaly Lipatov <lav@altlinux.ru> 3.3.0-alt1
+- add epm prescription support
+- add prescription for install missed i586 packages (i586-fix)
+- add prescriptions for wine, php7, glusterfs7, glusterfs8
+- distr_info: sync with distro_info-1.3
+
 * Wed Sep 30 2020 Vitaly Lipatov <lav@altlinux.ru> 3.2.6-alt1
 - autoremove: use apt-get autoremove on ALT by default
 - epm-mark: add apt-mark support for ALT and deb based systems
