@@ -100,6 +100,7 @@ get_major_version()
 }
 
 # Default values
+PRETTY_NAME=""
 DISTRIB_ID="Generic"
 DISTRIB_RELEASE=""
 DISTRIB_CODENAME=""
@@ -109,6 +110,7 @@ if distro lsb-release ; then
 	DISTRIB_ID=$(cat $DISTROFILE | get_var DISTRIB_ID)
 	DISTRIB_RELEASE=$(cat $DISTROFILE | get_var DISTRIB_RELEASE)
 	DISTRIB_CODENAME=$(cat $DISTROFILE | get_var DISTRIB_CODENAME)
+	PRETTY_NAME=$(cat $DISTROFILE | get_var DISTRIB_DESCRIPTION)
 fi
 
 # ALT Linux based
@@ -122,6 +124,8 @@ if distro altlinux-release ; then
 	elif has "ALT .*8.[0-9]" ; then DISTRIB_RELEASE="p8"
 	elif has "ALT .*9.[0-9]" ; then DISTRIB_RELEASE="p9"
 	elif has "ALT p9 " ; then DISTRIB_RELEASE="p9"
+	elif has "ALT 8 SP " ; then DISTRIB_RELEASE="c8"
+	elif has "ALT 9 SP " ; then DISTRIB_RELEASE="c9"
 	elif has "Simply Linux 6." ; then DISTRIB_RELEASE="p6"
 	elif has "Simply Linux 7." ; then DISTRIB_RELEASE="p7"
 	elif has "Simply Linux 8." ; then DISTRIB_RELEASE="p8"
@@ -138,6 +142,7 @@ if distro altlinux-release ; then
 	elif has "starter kit"   ; then DISTRIB_RELEASE="p8"
 	elif has Citron   ; then DISTRIB_RELEASE="2.4"
 	fi
+	PRETTY_NAME="$(cat /etc/altlinux-release)"
 
 elif distro gentoo-release ; then
 	DISTRIB_ID="Gentoo"
@@ -177,7 +182,7 @@ elif distro arch-release ; then
 # Elbrus
 elif distro mcst_version ; then
 	DISTRIB_ID="MCST"
-	DISTRIB_RELEASE=$(cat "$DISTROFILE" | grep "release" | sed -e "s|.*release \([0-9]*\).*|\1|g")
+	DISTRIB_RELEASE=$(cat "$DISTROFILE" | grep "release" | sed -e "s|.*release \([0-9]*\).*|\1|g") #"
 
 # OpenWrt
 elif distro openwrt_release ; then
@@ -460,9 +465,18 @@ get_virt()
         [ -z "$VIRT" ] && echo "(unknown)" && return
         echo "$VIRT" && return
     fi
-    if [ -r /proc/user_beancounters ] ; then
+
+    # TODO: use virt-what under root
+
+    # inspired by virt_what
+    if [ -d "/proc/vz" -a ! -d "/proc/bc" ]; then
         echo "openvz" && return
     fi
+
+    if [ -r "/sys/bus/xen" ] ; then
+        echo "xen" && return
+    fi
+
     echo "(unknown)"
     # TODO: check for openvz
 }
@@ -471,16 +485,22 @@ get_virt()
 get_service_manager()
 {
     [ -d /run/systemd/system ] && echo "systemd" && return
-    [ -d /usr/share/upstart ] && echo "upstart" && return
+    # TODO
+    #[ -d /usr/share/upstart ] && echo "upstart" && return
     [ -d /etc/init.d ] && echo "sysvinit" && return
     echo "(unknown)"
 }
 
+print_pretty_name()
+{
+    echo "$PRETTY_NAME"
+}
 
 print_total_info()
 {
 cat <<EOF
 distro_info total information (run with -h to get help):
+Pretty distro name (--pretty): $(print_pretty_name)
  Distro name and version (-e): $(print_name_version)
         Packaging system (-p): $(pkgtype)
  Running service manager (-y): $(get_service_manager)
@@ -511,7 +531,8 @@ case $1 in
 		echo " -o - print base OS name"
 		echo " -p [SystemName] - print type of the packaging system"
 		echo " -s [SystemName] - print name of distro for build system (like in the package release name)"
-		ecgi " -y - print running service manager"
+		echo " -y - print running service manager"
+		echo " --pretty - print pretty distro name"
 		echo " -v - print version of distro"
 		echo " -V - print the utility version"
 		echo "Run without args to print all information."
@@ -522,6 +543,9 @@ case $1 in
 		test -n "$2" && DISTRIB_ID="$2"
 		pkgtype
 		exit 0
+		;;
+	--pretty)
+		print_pretty_name
 		;;
 	-d)
 		echo $DISTRIB_ID
