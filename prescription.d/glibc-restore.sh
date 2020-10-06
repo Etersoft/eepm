@@ -2,7 +2,7 @@
 
 [ "$1" != "--run" ] && echo "Uninstall etersoft build of glibc" && exit
 
-[ "$(distro_info -d" != "ALTLinux" ] && echo "Only ALTLinux is supported" && exit 1
+[ "$(distro_info -d)" != "ALTLinux" ] && echo "Only ALTLinux is supported" && exit 1
 
 echo "TODO"
 exit 1

@@ -2,11 +2,12 @@
 
 [ "$1" != "--run" ] && echo "Install glusterfs7 (or upgrade from glusterfs6)" && exit
 
-[ "$(distro_info -d" != "ALTLinux" ] && echo "Only ALTLinux is supported" && exit 1
+[ "$(distro_info -d)" != "ALTLinux" ] && echo "Only ALTLinux is supported" && exit 1
 
 if epmqp --quiet glusterfs6- ; then
     # Upgrade if was installed
     epmi $(epmqp --short glusterfs6 | sed -e "s|fs6|fs7|") glusterfs6- glusterfs6-client- python3-module-glusterfs6-
+    epm installed glusterfs7-server && serv glusterd on
 else
     # Install all packages
     epmi glusterfs7-cli glusterfs7-client glusterfs7
