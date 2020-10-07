@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.3.0
+Version: 3.3.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -104,6 +104,12 @@ rm -f %buildroot%_bindir/distr_info
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Wed Oct 07 2020 Vitaly Lipatov <lav@altlinux.ru> 3.3.1-alt1
+- get_task_packages: add arepo packages (i586) too
+- epm-upgrade: drop devel subpackages from upgrade from a task
+- update tools_estrlist from estrlist package
+- update glibc-restore prescription
+
 * Tue Oct 06 2020 Vitaly Lipatov <lav@altlinux.ru> 3.3.0-alt1
 - add epm prescription support
 - add prescription for install missed i586 packages (i586-fix)
