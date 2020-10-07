@@ -4,8 +4,8 @@
 
 [ "$(distro_info -d)" != "ALTLinux" ] && echo "Only ALTLinux is supported" && exit 1
 
-echo "TODO"
-exit 1
+epm downgrade glibc glibc-core glibc-preinstall
+exit 0
 
 TR=$(mktemp)
 
