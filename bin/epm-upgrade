@@ -39,6 +39,8 @@ epm_upgrade()
 			load_helper epm-Install
 			epm_addrepo "$pkg_names"
 			local installlist="$(get_task_packages $pkg_names)"
+			# hack: drop -devel packages to avoid package provided by multiple packages
+			installlist="$(estrlist reg_exclude ".*-devel .*-devel-static" "$installlist")"
 			[ -n "$verbose" ] && info "Packages from task(s): $installlist"
 			# install only installed packages (simulate upgrade packages)
 			installlist="$(estrlist exclude "$(echo "$installlist" | (skip_installed='yes' filter_out_installed_packages))" "$installlist")" #"
