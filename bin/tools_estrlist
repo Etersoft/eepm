@@ -1,5 +1,5 @@
 #!/bin/bash
-# 2009-2010, 2012, 2017 Etersoft www.etersoft.ru
+# 2009-2010, 2012, 2017, 2020 Etersoft www.etersoft.ru
 # Author: Vitaly Lipatov <lav@etersoft.ru>
 # Public domain
 
@@ -24,6 +24,12 @@
 # * symmetric difference (симметричная разность) ( A ^ B – members in A or B but not both )
 # http://en.wikipedia.org/wiki/Symmetric_difference
 #   "1 2 3" "3 4 5" -> "1 2 4 5"
+
+fatal()
+{
+        echo "FATAL: $*" >&2
+        exit 1
+}
 
 filter_strip_spaces()
 {
@@ -60,6 +66,18 @@ union()
          strip_spaces $(list $@ | sort -u)
 }
 
+intersection()
+{
+        local RES=""
+        local i j
+        for i in $2 ; do
+            for j in $1 ; do
+                [ "$i" = "$j" ] && RES="$RES $i"
+            done
+        done
+        strip_spaces "$RES"
+}
+
 uniq()
 {
         union $@
@@ -87,7 +105,7 @@ reg_remove()
         local i
         local RES=
         for i in $2 ; do
-                echo "$i" | grep -q "$1" || RES="$RES $i"
+                echo "$i" | grep -q "^$1$" || RES="$RES $i"
         done
         strip_spaces "$RES"
 }
@@ -96,7 +114,7 @@ reg_remove()
 reg_wordremove()
 {
         local i
-        local RES=
+        local RES=""
         for i in $2 ; do
                 echo "$i" | grep -q -w "$1" || RES="$RES $i"
         done
@@ -109,7 +127,7 @@ reg_wordremove()
 exclude()
 {
         local i
-        local RES=
+        local RES=""
         for i in $2 ; do
                 echo "$1" | grep -q -w "$i" || RES="$RES $i"
         done
@@ -138,12 +156,35 @@ reg_wordexclude()
         strip_spaces "$RES"
 }
 
+if_contain()
+{
+        local i
+        for i in $2 ; do
+            [ "$i" = "$1" ] && return
+        done
+        return 1
+}
+
+difference()
+{
+        local RES=""
+        local i
+        for i in $1 ; do
+            if_contain $i "$2" || RES="$RES $i"
+        done
+        for i in $2 ; do
+            if_contain $i "$1" || RES="$RES $i"
+        done
+        strip_spaces "$RES"
+}
+
+
 # FIXME:
 # reg_include "1." "11 12 21 22" -> "11 12"
 reg_include()
 {
         local i
-        local RES=
+        local RES=""
         for i in $2 ; do
                 echo "$i" | grep -q -w "$1" && RES="$RES $i"
         done
@@ -169,24 +210,27 @@ help()
         echo "estrlist developed for string list operations. See also cut, join, paste..."
         echo "Usage: $0 <command> [args]"
         echo "Commands:"
-        echo "  strip_spaces [args]               - remove spaces between words"
-        echo "  filter_strip_spaces               - remove spaces from words from standart input"
-        echo "  reg_remove  <PATTERN> [word list] - remove words containing a match to the given PATTERN (grep notation)"
-        echo "  reg_wordremove  <PATTERN> [word list] - remove words containing a match to the given PATTERN (grep -w notation)"
-        echo "  exclude <list1> <list2>           - print list2 words exclude list1 items"
-        echo "  reg_exclude <PATTERN> [word list] - print only words do not matched with PATTERN"
-        echo "  reg_wordexclude <PATTERN> [word list] - print only words do not matched with PATTERN"
+        echo "  strip_spaces [args]               - remove extra spaces"
+# TODO: add filter
+#        echo "  filter_strip_spaces               - remove extra spaces from words from standart input"
+#        echo "  reg_remove  <PATTERN> [word list] - remove words containing a match to the given PATTERN (grep notation)"
+#        echo "  reg_wordremove  <PATTERN> [word list] - remove words containing a match to the given PATTERN (grep -w notation)"
+        echo "  exclude <list1> <list2>           - print list2 items exclude list1 items"
+        echo "  reg_exclude <list PATTERN> [word list] - print only words that do not match PATTERN"
+#        echo "  reg_wordexclude <list PATTERN> [word list] - print only words do not match PATTERN"
         echo "  has <PATTERN> string              - check the string for a match to the regular expression given in PATTERN (grep notation)"
         echo "  match <PATTERN> string            - check the string for a match to the regular expression given in PATTERN (egrep notation)"
         echo "  isempty [string]                  - true if string has no any symbols (only zero or more spaces)"
         echo "  union [word list]                 - sort and remove duplicates"
+        echo "  intersection <list1> <list2>      - print only intersected items (the same in both lists)"
+        echo "  difference <list1> <list2>        - symmetric difference between lists items (not in both lists)"
         echo "  uniq [word list]                  - alias for union"
         echo "  list [word list]                  - just list words line by line"
         echo "  count [word list]                 - print word count"
         echo
         echo "Examples:"
-        example reg_remove "1." "11 12 21 22"
-        example reg_wordremove "1." "11 12 21 22"
+#        example reg_remove "1." "11 12 21 22"
+#        example reg_wordremove "1." "11 12 21 22"
         example exclude "1 3" "1 2 3 4"
         example reg_exclude "22 1." "11 12 21 22"
         example reg_wordexclude "wo.* er" "work were more else"
@@ -209,6 +253,13 @@ fi
 if [ "$COMMAND" = "-h" ] || [ "$COMMAND" = "--help" ] ; then
         COMMAND="help"
 fi
+
+#
+case "$COMMAND" in
+    reg_remove|reg_wordremove)
+        fatal "obsoleted command $COMMAND"
+        ;;
+esac
 
 shift
 
