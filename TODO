@@ -2,6 +2,10 @@
 Если удаляется несколько пакетов, и один из них отсутствует, не удалится ничего.
 Параметр типа --skip-installed, но наоборот? (--skip-missed?)
 
+epme вызывает apt-get remove для пакетов, которых нет при удалении через rpm
+
+То же для простого epme пакет (не удалять отсутствующие пакеты)
+
 apt-mark (для работы autoremove and autoorphans) - помечать то, что удалять не следует
 
 apt-mark hold unhold showhold auto manual showauto showmanual
