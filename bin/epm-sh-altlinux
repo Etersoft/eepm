@@ -141,6 +141,6 @@ get_task_packages()
     for tn in $(tasknumber "$@") ; do
         showcmd apt-repo list task "$tn"
         a='' apt-repo list task "$tn"
-        [ "$arch" = "x64_64" ] && get_task_arepo_packages "$tn"
+        [ "$arch" = "x86_64" ] && get_task_arepo_packages "$tn"
     done
 }
