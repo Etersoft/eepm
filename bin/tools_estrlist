@@ -121,15 +121,25 @@ reg_wordremove()
         strip_spaces "$RES"
 }
 
+reg_rqremove()
+{
+        local i
+        local RES=""
+        for i in $2 ; do
+                [ "$i" = "$1" ] || RES="$RES $i"
+        done
+        strip_spaces "$RES"
+}
+
 # Args: LIST1 LIST2
 # do_exclude_list print LIST2 list exclude fields contains also in LIST1
 # Example: exclude "1 3" "1 2 3 4" -> "2 4"
 exclude()
 {
         local i
-        local RES=""
-        for i in $2 ; do
-                echo "$1" | grep -q -w "$i" || RES="$RES $i"
+        local RES="$2"
+        for i in $1 ; do
+                RES="$(reg_rqremove "$i" "$RES")"
         done
         strip_spaces "$RES"
 }
@@ -140,7 +150,7 @@ reg_exclude()
         local i
         local RES="$2"
         for i in $1 ; do
-                RES=$(reg_remove "$i" "$RES")
+                RES="$(reg_remove "$i" "$RES")"
         done
         strip_spaces "$RES"
 }
