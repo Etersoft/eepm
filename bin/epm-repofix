@@ -85,7 +85,7 @@ __subst_with_etersoft_url()
 __fix_repo_to_etersoft()
 {
 	local NN
-	apt-repo list | grep -v debuginfo | grep -v etersoft | grep -v "file:/" | while read nn ; do
+	a="" apt-repo list | grep -v debuginfo | grep -v etersoft | grep -v "file:/" | while read nn ; do
 		NN="$(__subst_with_etersoft_url "$nn")"
 		epm addrepo "$NN"
 		epm removerepo "$nn"
