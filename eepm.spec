@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.3.1
+Version: 3.3.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -104,6 +104,12 @@ rm -f %buildroot%_bindir/distr_info
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Sat Oct 10 2020 Vitaly Lipatov <lav@altlinux.ru> 3.3.2-alt1
+- mask direct in assure_exists
+- epm-repofix: mask apt-repo using
+- update tools_estrlist from estrlist package
+- epm-remove: add --skip-missed
+
 * Wed Oct 07 2020 Vitaly Lipatov <lav@altlinux.ru> 3.3.1-alt1
 - get_task_packages: add arepo packages (i586) too
 - epm-upgrade: drop devel subpackages from upgrade from a task
