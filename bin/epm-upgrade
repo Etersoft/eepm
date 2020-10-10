@@ -43,7 +43,7 @@ epm_upgrade()
 			installlist="$(estrlist reg_exclude ".*-devel .*-devel-static" "$installlist")"
 			[ -n "$verbose" ] && info "Packages from task(s): $installlist"
 			# install only installed packages (simulate upgrade packages)
-			installlist="$(estrlist exclude "$(echo "$installlist" | (skip_installed='yes' filter_out_installed_packages))" "$installlist")" #"
+			installlist="$(get_only_installed_packages "$installlist")"
 			[ -n "$verbose" ] && info "Packages to upgrade: $installlist"
 			(pkg_names="$installlist" epm_Install)
 			epm_removerepo "$pkg_names"

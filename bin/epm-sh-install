@@ -1,0 +1,69 @@
+#!/bin/sh
+#
+# Copyright (C) 2012-2020  Etersoft
+# Copyright (C) 2012-2020  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+load_helper epm-sh-altlinux
+load_helper epm-query
+
+__fast_hack_for_filter_out_installed_rpm()
+{
+	LANG=C LC_ALL=C xargs -n1 rpm -q 2>&1 | grep 'is not installed' |
+		sed -e 's|^.*package \(.*\) is not installed.*|\1|g'
+}
+
+# pass only uninstalled packages
+filter_out_installed_packages()
+{
+	[ -z "$skip_installed" ] && cat && return
+
+	case $PMTYPE in
+		yum-rpm|dnf-rpm)
+			if [ "$($DISTRVENDOR -a)" = "x86_64" ] ; then
+				# shellcheck disable=SC2013
+				for i in $(cat) ; do
+					is_installed "$(__print_with_arch_suffix $i .x86_64)" && continue
+					is_installed "$(__print_with_arch_suffix $i .noarch)" && continue
+					echo $i
+				done
+			else
+				__fast_hack_for_filter_out_installed_rpm
+			fi
+			;;
+		*-rpm)
+			__fast_hack_for_filter_out_installed_rpm
+			;;
+		# dpkg -l lists some non ii status (un, etc)
+		#"deb")
+		#	LANG=C LC_ALL=C xargs -n1 dpkg -l 2>&1 | grep -i 'no packages found matching' |
+		#		sed -e 's|\.\+$||g' -e 's|^.*[Nn]o packages found matching \(.*\)|\1|g'
+		#	;;
+		*)
+			# shellcheck disable=SC2013
+			for i in $(cat) ; do
+				is_installed $i || echo $i
+			done
+			;;
+	esac | sed -e "s|rpm-build-altlinux-compat[^ ]*||g" | filter_strip_spaces
+}
+
+get_only_installed_packages()
+{
+    local installlist="$*"
+    estrlist exclude "$(echo "$installlist" | (skip_installed='yes' filter_out_installed_packages))" "$installlist"
+}
+
