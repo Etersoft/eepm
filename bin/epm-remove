@@ -21,6 +21,7 @@ load_helper epm-sh-altlinux
 load_helper epm-query
 load_helper epm-print
 load_helper epm-sh-warmup
+load_helper epm-sh-install
 
 # Try remove with low level removing
 epm_remove_low()
@@ -295,6 +296,10 @@ epm_remove()
 				return
 				;;
 		esac
+	fi
+
+	if [ -n "$skip_missed" ] ; then
+		pkg_names="$(get_only_installed_packages $pkg_names)"
 	fi
 
 	epm_remove_low $pkg_names && return

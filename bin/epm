@@ -98,6 +98,7 @@ direct=
 sort=
 non_interactive=
 skip_installed=
+skip_missed=
 show_command_only=
 epm_cmd=
 pkg_files=
@@ -357,6 +358,9 @@ check_option()
         ;;
     --skip-installed)     # HELPOPT: skip already installed packages during install
         skip_installed=1
+        ;;
+    --skip-missed)        # HELPOPT: skip not installed packages during remove
+        skip_missed=1
         ;;
     --show-command-only)  # HELPOPT: show command only, do not any action (supports install and remove ONLY)
         show_command_only=1
