@@ -5,7 +5,6 @@ file
 findutils
 grep
 less
-procps
 rpm
 sed
 sudo
