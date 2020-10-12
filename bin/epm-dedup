@@ -51,11 +51,12 @@ epm_dedup()
 {
 case "$DISTRNAME" in
 	"ALTLinux")
-		assure_exists /usr/share/apt/scripts apt-scripts
-		if [ -f /usr/share/apt/scripts/dedup.lua ] ; then
-			info "Check for duplicates via apt-get dedup from apt-scripts"
+		assure_exists /usr/share/apt/scripts/dedup.lua apt-scripts
+		if [ -z "$direct" ] && [ -f /usr/share/apt/scripts/dedup.lua ] ; then
+			info "Check for duplicates via apt-get dedup from apt-scripts (also you can use internal EPM dedup implementation with --direct option)"
 			sudocmd apt-get dedup
 		else
+			info "You can use dedup from apt-scripts package"
 			try_fix_apt_rpm_dupls
 		fi
 		;;
