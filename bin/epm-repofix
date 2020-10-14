@@ -78,8 +78,26 @@ __subst_with_etersoft_url()
 {
 	local NURL="http://download.etersoft.ru/pub ALTLinux"
 	echo "$1" | sed \
-		-e "s|h\?f\?t\?tp://ftp.altlinux.org/pub/distributions ALTLinux|$NURL|" \
-		-e "s|h\?f\?t\?tp://mirror.yandex.ru altlinux|$NURL|"
+		-e "s|h\?f\?t\?tp://ftp.altlinux.org/pub/distributions/* ALTLinux|$NURL|" \
+		-e "s|h\?f\?t\?tp://ftp.basealt.ru/pub/distributions/* ALTLinux|$NURL|" \
+		-e "s|h\?f\?t\?tp://mirror.yandex.ru/* altlinux|$NURL|"
+}
+
+__subst_with_yandex_url()
+{
+	local NURL="http://mirror.yandex.ru altlinux"
+	echo "$1" | sed \
+		-e "s|h\?f\?t\?tp://ftp.altlinux.org/pub/distributions/* ALTLinux|$NURL|" \
+		-e "s|h\?f\?t\?tp://ftp.basealt.ru/pub/distributions/* ALTLinux|$NURL|" \
+		-e "s|h\?f\?t\?tp://download.etersoft.ru/pub/* ALTLinux|$NURL|"
+}
+
+__subst_with_basealt_url()
+{
+	local NURL="http://ftp.basealt.ru/pub/distributions ALTLinux"
+	echo "$1" | sed \
+		-e "s|h\?f\?t\?tp://mirror.yandex.ru/* altlinux|$NURL|" \
+		-e "s|h\?f\?t\?tp://download.etersoft.ru/pub/* ALTLinux|$NURL|"
 }
 
 __fix_repo_to_etersoft()
@@ -87,10 +105,34 @@ __fix_repo_to_etersoft()
 	local NN
 	a="" apt-repo list | grep -v debuginfo | grep -v etersoft | grep -v "file:/" | while read nn ; do
 		NN="$(__subst_with_etersoft_url "$nn")"
-		epm addrepo "$NN"
+		[ "$NN" = "$nn" ] && continue
 		epm removerepo "$nn"
+		epm addrepo "$NN"
 	done
 }
+
+__fix_repo_to_yandex()
+{
+	local NN
+	a="" apt-repo list | grep -v debuginfo | grep -v mirror\.yandex | grep -v "file:/" | while read nn ; do
+		NN="$(__subst_with_yandex_url "$nn")"
+		[ "$NN" = "$nn" ] && continue
+		epm removerepo "$nn"
+		epm addrepo "$NN"
+	done
+}
+
+__fix_repo_to_basealt()
+{
+	local NN
+	a="" apt-repo list | grep -v debuginfo | grep -v ftp.basealt | grep -v "file:/" | while read nn ; do
+		NN="$(__subst_with_basealt_url "$nn")"
+		[ "$NN" = "$nn" ] && continue
+		epm removerepo "$nn"
+		epm addrepo "$NN"
+	done
+}
+
 
 epm_repofix()
 {
@@ -102,9 +144,18 @@ case $DISTRNAME in
 		[ -n "$quiet" ] || docmd apt-repo list
 		__fix_alt_sources_list /etc/apt/sources.list
 		__fix_alt_sources_list /etc/apt/sources.list.d/*.list
+        # TODO: move to repo change
 		if [ "$pkg_filenames" = "etersoft" ] ; then
 			__fix_repo_to_etersoft /etc/apt/sources.list
 			__fix_repo_to_etersoft /etc/apt/sources.list.d/*.list
+		fi
+		if [ "$pkg_filenames" = "yandex" ] ; then
+			__fix_repo_to_yandex /etc/apt/sources.list
+			__fix_repo_to_yandex /etc/apt/sources.list.d/*.list
+		fi
+		if [ "$pkg_filenames" = "basealt" ] ; then
+			__fix_repo_to_basealt /etc/apt/sources.list
+			__fix_repo_to_basealt /etc/apt/sources.list.d/*.list
 		fi
 		docmd apt-repo list
 		return

@@ -256,7 +256,7 @@ check_command()
     repolist|sl|rl|listrepo|repo-list)  # HELPCMD: print repo list
         epm_cmd=repolist
         ;;
-    repofix)                  # HELPCMD: fix paths in sources lists (ALT Linux only)
+    repofix)                  # HELPCMD: <mirror>: fix paths in sources lists (ALT Linux only). use repofix etersoft/yandex/basealt for rewrite URL to the specified server
         epm_cmd=repofix
         ;;
     removerepo|rr)            # HELPCMD: remove package repo

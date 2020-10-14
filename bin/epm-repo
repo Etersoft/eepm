@@ -36,6 +36,10 @@ epm_repo()
 		load_helper epm-repofix
 		epm_repofix "$@"
 		;;
+	change|set)                       # HELPCMD: <mirror>: switch sources to the mirror (supports etersoft/yandex/basealt): rewrite URL to the specified server
+		load_helper epm-repofix
+		epm_repofix "$@"
+		;;
 	clean)                            # HELPCMD: remove temp. repos
 		# TODO: check for ALT
 		sudocmd apt-repo $dryrun clean
