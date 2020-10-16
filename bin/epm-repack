@@ -160,7 +160,7 @@ __epm_repack_rpm()
     local abspkg
     repacked_rpms=''
     for pkg in $* ; do
-        local tmpbuilddir=$HOME/repack-$(basename $pkg)
+        local tmpbuilddir=$HOME/$(basename $pkg).tmpdir
         mkdir $tmpbuilddir
         abspkg="$(realpath $pkg)"
         info ""
@@ -168,6 +168,7 @@ __epm_repack_rpm()
         # alien failed with spaced names
         # alpkg=$abspkg
         alpkg=$(basename $pkg)
+        # don't use abs package path: copy package to temp dir and use there
         cp -v $pkg $tmpbuilddir/../$alpkg
         cd $tmpbuilddir || fatal
         docmd fakeroot alien --generate --to-rpm $verbose $scripts "../$alpkg" || fatal
@@ -191,8 +192,9 @@ __epm_repack_rpm()
         else
             a='' fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir  --define='_allow_root_build 1' -bb $spec >/dev/null || fatal
         fi
-        mv $tmpbuilddir/../*.rpm $tmpbuilddir/
-        local repacked_rpm="$(realpath $tmpbuilddir/*.rpm)"
+        # remove copy of source binary package (don't mix with generated)
+        rm -f $tmpbuilddir/../$alpkg
+        local repacked_rpm="$(realpath $tmpbuilddir/../*.rpm)"
         if [ -s "$repacked_rpm" ] ; then
             repacked_rpms="$repacked_rpms $repacked_rpm"
             to_remove_pkg_files="$to_remove_pkg_files $repacked_rpm"
@@ -201,7 +203,6 @@ __epm_repack_rpm()
         fi
         cd - >/dev/null
         rm -rf $tmpbuilddir/$subdir/
-        #rm -rf $tmpbuilddir/../*.rpm
         rm -rf $spec
     done
 
