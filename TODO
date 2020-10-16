@@ -2,6 +2,9 @@
 
 epme вызывает apt-get remove для пакетов, которых нет при удалении через rpm
 
+yum versionlock - сравнить/обобщить
+https://itfb.com.ua/kak-zablokirovat-obnovlenie-odnogo-iz-paketov-ili-ispolzuem-yum-versionlock/
+
 apt-mark (для работы autoremove and autoorphans) - помечать то, что удалять не следует
 
 apt-mark hold unhold showhold auto manual showauto showmanual

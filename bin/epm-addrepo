@@ -118,12 +118,14 @@ __epm_addrepo_altlinux()
 		info "Add branch repo. Use follow params:"
 		sudocmd apt-repo $dryrun add branch
 		echo "etersoft           - for LINUX@Etersoft repo"
+		echo "basealt            - for BaseALT repo"
+		echo "yandex             - for BaseALT repo mirror on yandex (recommended)"
+		echo "<task number>      - add task repo"
 		echo "archive 2018/02/09 - for archive from that date"
+		echo "autoimports        - for BaseALT autoimports repo"
 		return
 	fi
 
-	# TODO: add other mirror (mirror.yandex.ru)
-	# TODO: apt-repo supports archive
 	sudocmd apt-repo $dryrun add "$repo"
 
 }
