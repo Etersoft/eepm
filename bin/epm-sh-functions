@@ -181,6 +181,21 @@ isnumber()
 	echo "$*" | filter_strip_spaces | grep -q "^[0-9]\+$"
 }
 
+# copied from strings
+# CHECKME: the same like estrlist has ?
+# Note: used egrep! write '[0-9]+(first|two)', not '[0-9]\+...'
+rhas()
+{
+	echo "$1" | grep -E -q -- "$2"
+}
+
+# copied from strings
+is_dirpath()
+{
+    [ "$1" = "." ] && return $?
+    rhas "$1" "/"
+}
+
 filter_strip_spaces()
 {
         # possible use just
@@ -452,7 +467,9 @@ get_help()
         return
     fi
     local F="$0"
-    [ -n "$2" ] && F="$(dirname $0)/$2"
+    if [ -n "$2" ] ; then
+        is_dirpath "$2" && F="$2" || F="$(dirname $0)/$2"
+    fi
 
     cat "$F" | grep -- "# $1" | while read -r n ; do
         if echo "$n" | grep -q "# $1: PART: " ; then
