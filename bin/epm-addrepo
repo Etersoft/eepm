@@ -40,51 +40,67 @@ __epm_addrepo_rhel()
 	return 0
 }
 
+__epm_addrepo_etersoft_addon()
+{
+	epm install --skip-installed apt-conf-etersoft-common apt-conf-etersoft-hold || fatal
+	# TODO: ignore only error code 22 (skipped) || fatal
+
+	local pb="$DISTRVERSION/branch"
+	[ "$DISTRVERSION" = "Sisyphus" ] && pb="$DISTRVERSION"
+
+	# FIXME
+	[ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
+
+	# TODO: use apt-repo add ?
+	echo "" | sudocmd tee -a /etc/apt/sources.list
+	echo "# added with eepm addrepo etersoft" | sudocmd tee -a /etc/apt/sources.list
+	echo "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/$DISTRARCH addon" | sudocmd tee -a /etc/apt/sources.list
+	if [ "$DISTRARCH" = "x86_64" ] ; then
+		echo "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/x86_64-i586 addon" | sudocmd tee -a /etc/apt/sources.list
+	fi
+	echo "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/noarch addon" | sudocmd tee -a /etc/apt/sources.list
+}
+
 __epm_addrepo_altlinux()
 {
 	local repo="$@"
+	local branch="$(echo "$DISTRVERSION" | tr "[:upper:]" "[:lower:]")"
+	[ -n "$branch" ] || fatal "Empty DISTRVERSION"
 	case "$1" in
 		etersoft)
 			info "add Etersoft's addon repo"
-			load_helper epm-query
-			epm install --skip-installed apt-conf-etersoft-common apt-conf-etersoft-hold
-			# TODO: ignore only error code 22 (skipped) || fatal
-			local branch="$DISTRVERSION/branch"
-			[ "$DISTRVERSION" = "Sisyphus" ] && branch="$DISTRVERSION"
-			# FIXME
-			[ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
-			# TODO: func?
-			local arch=$(uname -m)
-			[ "$arch" = "i686" ] && arch="i586"
-			# TODO: use apt-repo add ?
-			echo "" | sudocmd tee -a /etc/apt/sources.list
-			echo "# added with eepm addrepo etersoft" | sudocmd tee -a /etc/apt/sources.list
-			echo "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$branch/$arch addon" | sudocmd tee -a /etc/apt/sources.list
-			if [ "$arch" = "x86_64" ] ; then
-				echo "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$branch/$arch-i586 addon" | sudocmd tee -a /etc/apt/sources.list
-			fi
-			echo "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$branch/noarch addon" | sudocmd tee -a /etc/apt/sources.list
-			repo="$DISTRVERSION"
+			assure_exists apt-repo
+			__epm_addrepo_etersoft_addon
+			a='' apt-repo add $branch
+			epm repofix etersoft
+			return 0
+			;;
+		basealt|altlinux)
+			# TODO: setrepo?
+			assure_exists apt-repo
+			a='' apt-repo add $branch
+			return 0
+			;;
+		yandex)
+			assure_exists apt-repo
+			a='' apt-repo add $branch
+			epm repofix yandex
 			return 0
 			;;
 		autoimports)
-			[ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
-			repo="$repo.$(echo "$DISTRVERSION" | tr "[:upper:]" "[:lower:]")"
+			repo="autoimports.$branch"
 			;;
 		archive)
-			[ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
 			datestr="$2"
 			echo "$datestr" | grep -Eq "^20[0-2][0-9]/[01][0-9]/[0-3][0-9]$" || fatal "use follow date format: 2017/12/31"
-			# TODO: func?
-			local arch=$(uname -m)
-			[ "$arch" = "i686" ] && arch="i586"
+
 			echo "" | sudocmd tee -a /etc/apt/sources.list
 			local distrversion="$(echo "$DISTRVERSION" | tr "[:upper:]" "[:lower:]")"
 			local rpmsign='[alt]'
 			[ "$distrversion" != "sisyphus" ] && rpmsign="[$distrversion]"
-			echo "rpm $rpmsign $ALTLINUXPUBURL archive/$distrversion/date/$datestr/$arch classic" | sudocmd tee -a /etc/apt/sources.list
-			if [ "$arch" = "x86_64" ] ; then
-				echo "rpm $rpmsign $ALTLINUXPUBURL archive/$distrversion/date/$datestr/$arch-i586 classic" | sudocmd tee -a /etc/apt/sources.list
+			echo "rpm $rpmsign $ALTLINUXPUBURL archive/$distrversion/date/$datestr/$DISTRARCH classic" | sudocmd tee -a /etc/apt/sources.list
+			if [ "$DISTRARCH" = "x86_64" ] ; then
+				echo "rpm $rpmsign $ALTLINUXPUBURL archive/$distrversion/date/$datestr/x86_64-i586 classic" | sudocmd tee -a /etc/apt/sources.list
 			fi
 			echo "rpm $rpmsign $ALTLINUXPUBURL archive/$distrversion/date/$datestr/noarch classic" | sudocmd tee -a /etc/apt/sources.list
 			return 0
