@@ -134,7 +134,10 @@ get_fix_release_pkg()
 
 	# update if installed (just print package name here to include in the install list)
 	epm --quiet --short -q alt-gpgkeys 2>/dev/null
-	epm --quiet --short -q etersoft-gpgkeys 2>/dev/null
+	if epm --quiet --short -q etersoft-gpgkeys 2>/dev/null >/dev/null ; then
+		# leave etersoft-gpgkeys only we have LINUX@Etersoft repo
+		epm rl | grep -q "LINUX@Etersoft" && echo etersoft-gpgkeys || echo alt-gpgkeys
+	fi
 
 	if [ -n "$TOINSTALL" ] ; then
 		echo "$TOINSTALL"
