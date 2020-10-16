@@ -36,9 +36,13 @@ epm_repo()
 		load_helper epm-repofix
 		epm_repofix "$@"
 		;;
-	change|set)                       # HELPCMD: <mirror>: switch sources to the mirror (supports etersoft/yandex/basealt): rewrite URL to the specified server
+	change)                           # HELPCMD: <mirror>: switch sources to the mirror (supports etersoft/yandex/basealt): rewrite URL to the specified server
 		load_helper epm-repofix
 		epm_repofix "$@"
+		;;
+	set)                              # HELPCMD: <mirror>: remove all existing sources and add mirror for the branch
+		epm repo clean
+		epm addrepo "$@"
 		;;
 	clean)                            # HELPCMD: remove temp. repos
 		# TODO: check for ALT
