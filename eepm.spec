@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.3.3
+Version: 3.3.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -104,6 +104,15 @@ rm -f %buildroot%_bindir/distr_info
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Fri Oct 16 2020 Vitaly Lipatov <lav@altlinux.ru> 3.3.4-alt1
+- epm: skip all args with spaces (we don't support it)
+- epm-dedup: add --direct support to use epm internal implementation
+- epm-repofix: add support for yandex and basealt
+- epm-addrepo: add support for basealt and yandex repo sites
+- epm-release_upgrade: replace etersoft-gpgkeys with alt-gpgkeys if we have not LINUX@Etersoft repo
+- epm-repo: add set command implemented via clean & change
+- epm-repack: don't intersect with source rpm package
+
 * Sun Oct 11 2020 Vitaly Lipatov <lav@altlinux.ru> 3.3.3-alt1
 - fix typo in get_task_packages
 
