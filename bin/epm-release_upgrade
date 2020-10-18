@@ -203,11 +203,10 @@ __update_alt_to_next_distro()
 {
 	local TO="$2"
 	local FROM="$1"
-	[ -n "$TO" ] || TO="$FROM"
 	info
  	case "$*" in
 		"p6"|"p6 p7"|"t6 p7"|"c6 c7")
-			TO="p7"
+			[ -n "$TO" ] || TO="p7"
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__replace_alt_version_in_repo "Sisyphus/" "$TO/branch/"
@@ -218,7 +217,7 @@ __update_alt_to_next_distro()
 			info "Run epm release-upgrade again for update to p8"
 			;;
 		"p7"|"p7 p8"|"t7 p8"|"c7 c8"|"p8 p8")
-			TO="p8"
+			[ -n "$TO" ] || TO="p8"
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__replace_alt_version_in_repo "Sisyphus/" "$TO/branch/"
@@ -228,13 +227,22 @@ __update_alt_to_next_distro()
 			info "Done."
 			;;
 		"p8"|"p8 p9"|"t8 p9"|"c8 c9"|"p9 p9")
-			TO="p9"
+			[ -n "$TO" ] || TO="p9"
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__replace_alt_version_in_repo "Sisyphus/" "$TO/branch/"
 			__replace_alt_version_in_repo $FROM/branch/ $TO/branch/
 			__update_to_the_distro $TO
 			docmd epm update-kernel || fatal
+			info "Done."
+			;;
+		"p9 c8"|"p9 c8.1"|"Sisyphus c8"|"Sisyphus c8.1")
+			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
+			docmd epm install "$(get_fix_release_pkg "$FROM")" || fatal
+			__replace_alt_version_in_repo "$FROM/" "$TO/branch/"
+			#__replace_text_in_alt_repo "/^ *#/! s!\[alt\]![$TO]!g"
+			__update_to_the_distro $TO
+			docmd epm downgrade || fatal
 			info "Done."
 			;;
 		"Sisyphus p8")
@@ -269,10 +277,11 @@ __update_alt_to_next_distro()
 			info "Done."
 			;;
 		*)
+			[ -n "$TO" ] || TO="$FROM"
 			if [ "$FROM" = "$TO" ] ; then
 				info "It seems your system is already updated to newest $DISTRNAME $TO"
 			else
-				warning "Have no idea how to update from $DISTRNAME $FROM to $DISTRNAME $TO."
+				warning "Have no idea how to switch from $DISTRNAME $FROM to $DISTRNAME $TO."
 			fi
 			info "Try run f.i. # epm release-upgrade p8 or # epm release-upgrade Sisyphus"
 			info "Also possible you need install altlinux-release-p? package for correct distro version detecting"
@@ -283,7 +292,7 @@ __update_alt_to_next_distro()
 epm_release_upgrade()
 {
 	assure_root
-	info "Starting upgrade whole system to the next release"
+	info "Starting upgrade/switch whole system to other release"
 	info "Check also http://wiki.etersoft.ru/Admin/UpdateLinux"
 
 	cd /tmp || fatal
