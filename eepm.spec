@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.3.4
+Version: 3.3.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -23,7 +23,7 @@ Provides: upm
 %if %_vendor == "alt"
 # FIXHERE: Replace with target platform package manager
 Requires: apt rpm
-Requires: distro_info >= 1.1
+Requires: distro_info >= 1.6
 %endif
 
 %description
@@ -104,6 +104,11 @@ rm -f %buildroot%_bindir/distr_info
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Mon Oct 19 2020 Vitaly Lipatov <lav@altlinux.ru> 3.3.5-alt1
+- epm-repo: fix set
+- epm-release_upgrade: big rewrite, add support for downgrade to с8
+- epm-release_upgrade: allow two params: from and to
+
 * Fri Oct 16 2020 Vitaly Lipatov <lav@altlinux.ru> 3.3.4-alt1
 - epm: skip all args with spaces (we don't support it)
 - epm-dedup: add --direct support to use epm internal implementation
