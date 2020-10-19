@@ -20,6 +20,8 @@
 is_warmup_allowed()
 {
     local MEM
+    # disable warming up until set EPM_WARNUP in /etc/eepm/eepm.conf
+    [ -n "$EPM_WARMUP" ] || return 1
     MEM="$($DISTRVENDOR -m)"
     # disable warm if have no enough memory
     [ "$MEM" -le 1024 ] && return 1
