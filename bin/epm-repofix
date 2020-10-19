@@ -29,12 +29,27 @@ __repofix_check_vendor()
 	return 1
 }
 
+__repofix_filter_vendor()
+{
+	local br="$1"
+	br="$(echo "$br" | sed -e "s|\..*||")"
+	case $br in
+		c8)
+			br="cert8"
+			;;
+		c9)
+			br="cert9"
+			;;
+	esac
+	echo "$br"
+}
+
 # source-list vendor path
 # example: /etc/apt/source.list p7 ALTLinux\/Sisyphus
 __try_fix_apt_source_list()
 {
 	local list="$1"
-	local br="$2"
+	local br="$(__repofix_filter_vendor "$2")"
 	local path="$3"
 	if grep -q -e "^[^#].*$path" $list ; then
 		if __repofix_check_vendor $br ; then
@@ -49,8 +64,8 @@ __try_fix_apt_source_list()
 __fix_alt_sources_list()
 {
 	# for beauty spaces
-	local SUBST_ALT_RULE1='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ]*(Sisyphus)[/ ](x86_64|i586|x86_64-i586|noarch) !\1 \2/\3/\4 !gi'
-	local SUBST_ALT_RULE2='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ]*([tcp][6-9][/ ]branch|[tcp]1[012][/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch) !\1 \2/\3/\4 !gi'
+	local SUBST_ALT_RULE1='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ]*(Sisyphus)[/ ](x86_64|i586|x86_64-i586|noarch|aarch64) !\1 \2/\3/\4 !gi'
+	local SUBST_ALT_RULE2='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ]*([tcp][6-9]\.?[0-9]?[/ ]branch|[tcp]1[012][/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch|aarch64) !\1 \2/\3/\4 !gi'
 	local i
 	assure_root
 	for i in "$@" ; do
