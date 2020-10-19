@@ -44,7 +44,7 @@ fatal()
 filter_glob()
 {
 	# translate glob to regexp
-	grep "^$(echo "$1" | sed -e "s|\*|.*|g" -e "s|\?|.|g")$"
+	grep "^$(echo "$1" | sed -e "s|\*|.*|g" -e "s|?|.|g")$"
 }
 
 
@@ -105,7 +105,7 @@ fi
 get_urls()
 {
     $WGET -O- $URL | \
-        grep -o -E 'href="([^\*/"#]+)"' | cut -d'"' -f2
+        grep -i -o -E 'href="([^\*/"#]+)"' | cut -d'"' -f2
 }
 
 if [ -n "$LISTONLY" ] ; then
