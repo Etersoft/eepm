@@ -41,10 +41,10 @@ epm_repo()
 		epm_repofix "$@"
 		;;
 	set)                              # HELPCMD: <mirror>: remove all existing sources and add mirror for the branch
-		epm repo clean
+		epm repo rm all
 		epm addrepo "$@"
 		;;
-	clean)                            # HELPCMD: remove temp. repos
+	clean)                            # HELPCMD: remove temp. repos (tasks and CD-ROMs)
 		# TODO: check for ALT
 		sudocmd apt-repo $dryrun clean
 		;;
