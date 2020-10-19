@@ -425,7 +425,7 @@ check_filenames()
         elif [ -d "$opt" ] ; then
             has_space $opt && warning "There are space(s) in directory path '$opt', it is not supported. Skipped" && continue
             pkg_dirs="$pkg_dirs $opt"
-        elif echo "$opt" | grep -q "://" ; then
+        elif echo "$opt" | grep -q "^[fhtps]*://" ; then
             has_space $opt && warning "There are space(s) in URL '$opt', it is not supported. Skipped" && continue
             pkg_urls="$pkg_urls $opt"
         else

@@ -47,8 +47,8 @@ __detect_alt_release_by_repo()
 {
 	local BRD=$(cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list \
 		| grep -v "^#" \
-		| grep "[tpc][5-9]\.?[0-9]?/branch/" \
-		| sed -e "s|.*\([tpc][5-9]\.?[0-9]?\)/branch.*|\1|g" \
+		| egrep "[tpc][5-9]\.?[0-9]?/branch/" \
+		| sed -e "s|.*\([tpc][5-9]\.\?[0-9]\?\)/branch.*|\1|g" \
 		| sort -u )
 	if [ "$(__wcount $BRD)" = "1" ] ; then
 		echo "$BRD"
