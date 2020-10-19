@@ -131,6 +131,20 @@ __epm_addrepo_altlinux()
 
 }
 
+# TODO: add repo addkey command
+__epm_addkey_deb()
+{
+    local url="$1"
+    local fingerprint="$2"
+    if [ -z "$fingerprint" ] ; then
+        assure_exists curl
+        showcmd "curl -fsSL '$url' | sudo apt-key add -"
+        a= curl -fsSL "$url" | $SUDO apt-key add -
+        return
+    fi
+    sudocmd apt-key adv --keyserver "$url" --recv "$fingerprint"
+}
+
 __epm_addrepo_deb()
 {
 	assure_exists apt-add-repository software-properties-common
@@ -152,7 +166,7 @@ __epm_addrepo_deb()
 	# keywords
 	case "$1" in
 		docker)
-			# sudo apt-add-repository  "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+			__epm_addkey_deb https://download.docker.com/linux/$PKGVENDOR/gpg "9DC858229FC7DD38854AE2D88D81803C0EBFCD88"
 			repo="https://download.docker.com/linux/$PKGVENDOR $nd stable"
 			;;
 	esac
