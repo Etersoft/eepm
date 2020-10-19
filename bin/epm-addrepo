@@ -114,20 +114,50 @@ __epm_addrepo_altlinux()
 		return
 	fi
 
-	if [ -z "$repo" ] ; then
-		info "Add branch repo. Use follow params:"
-		sudocmd apt-repo $dryrun add branch
-		echo "etersoft           - for LINUX@Etersoft repo"
-		echo "basealt            - for BaseALT repo"
-		echo "yandex             - for BaseALT repo mirror on yandex (recommended)"
-		echo "<task number>      - add task repo"
-		echo "archive 2018/02/09 - for archive from that date"
-		echo "autoimports        - for BaseALT autoimports repo"
+	sudocmd apt-repo $dryrun add "$repo"
+
+}
+
+__epm_addrepo_deb()
+{
+	assure_exists apt-add-repository software-properties-common
+	local ad="$($DISTRVENDOR --distro-arch)"
+	# TODO: move to distro_info
+	local nd="$(lsb_release -cs)"
+	local repo="$*"
+
+	if [ -z "$repo" ] || [ "$repo" = "--help" ]; then
+		info "Add repo. You can use follow params:"
+		echo "  docker - add official docker repo"
+		echo "  ppa:<user>/<ppa-name> - add PPA repo"
+		echo "  distribution component name"
+		echo "  full sources list line"
+		echo "  URL version component"
 		return
 	fi
 
-	sudocmd apt-repo $dryrun add "$repo"
+	# keywords
+	case "$1" in
+		docker)
+			# sudo apt-add-repository  "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+			repo="https://download.docker.com/linux/$PKGVENDOR $nd stable"
+			;;
+	esac
 
+	# if started from url, use heroistic
+	if echo "$repo" | egrep -q "^https?://" ; then
+		repo="deb [arch=$ad] $repo"
+	fi
+
+	if echo "$repo" | grep -q "https://" ; then
+		assure_exists /usr/share/doc/apt-transport-https apt-transport-https
+		assure_exists /usr/sbin/update-ca-certificates ca-certificates 
+	fi
+
+	# FIXME: quotes in showcmd/sudocmd
+	showcmd apt-add-repository "$repo"
+	$SUDO apt-add-repository "$repo"
+	info "Check file /etc/apt/sources.list if needed"
 }
 
 epm_addrepo()
@@ -143,12 +173,8 @@ esac
 
 case $PMTYPE in
 	apt-dpkg)
-		assure_exists apt-add-repository software-properties-common
-		if echo "$repo" | grep -q "https://" ; then
-			assure_exists apt-transport-https
-		fi
-		sudocmd apt-add-repository "$repo"
-		info "Check file /etc/apt/sources.list if needed"
+		# Note! Don't use quotes here
+		__epm_addrepo_deb $repo
 		;;
 	aptitude-dpkg)
 		info "You need manually add repo to /etc/apt/sources.list (TODO)"
