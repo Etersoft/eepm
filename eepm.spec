@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.3.5
+Version: 3.4.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -104,6 +104,15 @@ rm -f %buildroot%_bindir/distr_info
 %_sysconfdir/bash_completion.d/cerv
 
 %changelog
+* Mon Oct 19 2020 Vitaly Lipatov <lav@altlinux.ru> 3.4.0-alt1
+- serv-list_startup: temp. fix for non systemd systems
+- serv: add list-failed command
+- epm-repack: add workaround for empty Summary
+- add repack support for dialog-ee-x deb package
+- epm: disable warming up by default
+- epm addrepo/removerepo: fix repo manipulating on deb systems
+- epm-addrepo: initial implementation of addkey for deb
+
 * Mon Oct 19 2020 Vitaly Lipatov <lav@altlinux.ru> 3.3.5-alt1
 - epm-repo: fix set
 - epm-release_upgrade: big rewrite, add support for downgrade to с8
