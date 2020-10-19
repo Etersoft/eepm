@@ -19,6 +19,8 @@
 
 serv_list_startup()
 {
+	load_helper serv-list_all
+	load_helper serv-status
 	case $SERVICETYPE in
 #		service-chkconfig|service-upstart)
 #			# service --status-all for Ubuntu/Fedora
@@ -27,13 +29,15 @@ serv_list_startup()
 #		service-initd|service-update)
 #			sudocmd ls -1 /etc/init.d/* | sed -e "s|/etc/init.d/||g" | grep -v README
 #			;;
-#		systemd)
-#			sudocmd systemctl list-unit-files
-#			;;
-		*)
-			load_helper serv-list_all
-			load_helper serv-status
+		systemd)
+			#sudocmd systemctl list-unit-files
+			# TODO: native command? implement --short for list (only names)
 			for i in $(serv_list_all | cut -f 1 -d" " | grep "\.service$") ; do
+				is_service_autostart >/dev/null $i && echo $i
+			done
+			;;
+		*)
+			for i in $(serv_list_all | cut -f 1 -d" ") ; do
 				is_service_autostart >/dev/null $i && echo $i
 			done
 			;;
