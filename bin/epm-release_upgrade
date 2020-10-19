@@ -363,15 +363,17 @@ epm_release_upgrade()
 			fi
 		fi
 
-		# check forced target
-		if [ -n "$pkg_filenames" ] ; then
-			[ "$(__wcount $pkg_filenames)" = "1" ] || fatal "Too many args: $pkg_filenames"
+		TARGET=""
+		[ -n "$3" ] && fatal "Too many args: $*"
+		if [ -n "$2" ] ; then
+			DISTRVERSION="$1"
+			info "Force current distro version as $DISTRVERSION"
+			TARGET="$2"
+		elif [ -n "$1" ] ; then
+			TARGET="$1"
 		fi
 
-		TARGET="$pkg_filenames"
-
 		__alt_repofix
-
 
 		# TODO: ask before upgrade
 		__switch_alt_to_distro $DISTRVERSION $TARGET
