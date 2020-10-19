@@ -63,9 +63,22 @@ __epm_addrepo_etersoft_addon()
 
 __epm_addrepo_altlinux()
 {
-	local repo="$@"
+	local repo="$*"
 	local branch="$(echo "$DISTRVERSION" | tr "[:upper:]" "[:lower:]")"
 	[ -n "$branch" ] || fatal "Empty DISTRVERSION"
+
+	if [ -z "$repo" ] || [ "$repo" == "--help" ] ; then
+		info "Add branch repo. Use follow params:"
+		sudocmd apt-repo $dryrun add branch
+		echo "etersoft           - for LINUX@Etersoft repo"
+		echo "basealt            - for BaseALT repo"
+		echo "yandex             - for BaseALT repo mirror on yandex (recommended)"
+		echo "<task number>      - add task repo"
+		echo "archive 2018/02/09 - for archive from that date"
+		echo "autoimports        - for BaseALT autoimports repo"
+		return
+	fi
+
 	case "$1" in
 		etersoft)
 			info "add Etersoft's addon repo"
@@ -166,6 +179,7 @@ local repo="$*"
 
 case $DISTRNAME in
 	ALTLinux)
+		# Note! Don't use quotes here
 		__epm_addrepo_altlinux $repo
 		return
 		;;
