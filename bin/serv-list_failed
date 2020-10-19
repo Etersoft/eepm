@@ -1,0 +1,44 @@
+#!/bin/sh
+#
+# Copyright (C) 2020  Etersoft
+# Copyright (C) 2020  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+serv_list_failed()
+{
+	case $SERVICETYPE in
+#		service-chkconfig|service-upstart)
+#			# service --status-all for Ubuntu/Fedora
+#			#sudocmd chkconfig --list | cut -f1
+#			;;
+#		service-initd|service-update)
+#			sudocmd ls -1 /etc/init.d/* | sed -e "s|/etc/init.d/||g" | grep -v README
+#			;;
+		systemd)
+			sudocmd systemctl --failed
+			;;
+		*)
+			load_helper serv-list_startup
+			load_helper serv-status
+			for i in $(serv_list_startup | cut -f 1 -d" ") ; do
+				is_service_running >/dev/null $i && continue
+				echo ; echo $i
+				serv_status $i
+			done
+			;;
+
+	esac
+}

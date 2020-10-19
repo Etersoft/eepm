@@ -200,6 +200,10 @@ check_command()
         serv_cmd=list_startup
         withoutservicename=1
         ;;
+    list-failed|--failed)       # HELPCMD: list services failed on startup
+        serv_cmd=list_failed
+        withoutservicename=1
+        ;;
     on|enable)                # HELPCMD: add service to run on startup and start it now
         serv_cmd=enable
         ;;
