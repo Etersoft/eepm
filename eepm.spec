@@ -1,6 +1,6 @@
 Name: eepm
 Version: 3.4.0
-Release: alt1
+Release: alt2
 
 Summary: Etersoft EPM package manager
 
@@ -34,6 +34,21 @@ Can be useful for system administrators working
 with various distros.
 
 See detailed description here: http://wiki.etersoft.ru/EPM
+
+%package repack
+Summary: Etersoft EPM package manager (repack requirements)
+Group: System/Configuration/Packaging
+Requires: %name = %EVR
+Requires: fakeroot alien rpm-build dpkg
+
+%description repack
+This package has requirements needed for using epm repack on ALT
+(repack rpm packages and repack/install deb packages).
+
+See https://bugzilla.altlinux.org/show_bug.cgi?id=34308 for
+a discussion about extra requirements.
+
+Requires: fakeroot alien rpm-build dpkg
 
 %prep
 %setup
@@ -103,7 +118,14 @@ rm -f %buildroot%_bindir/distr_info
 %_sysconfdir/bash_completion.d/serv
 %_sysconfdir/bash_completion.d/cerv
 
+%if %_vendor == "alt"
+%files repack
+%endif
+
 %changelog
+* Wed Oct 21 2020 Vitaly Lipatov <lav@altlinux.ru> 3.4.0-alt2
+- add epm-repack subpackage (just a static requirements)
+
 * Mon Oct 19 2020 Vitaly Lipatov <lav@altlinux.ru> 3.4.0-alt1
 - serv-list_startup: temp. fix for non systemd systems
 - serv: add list-failed command
