@@ -14,3 +14,7 @@ done
 
 rm -f $BUILDROOT/etc/cron.daily/$PRODUCT
 subst "s|.*/etc/cron.daily/$PRODUCT.*||" $SPEC
+
+subst "1i%filter_from_requires /.opt.google.chrome.WidevineCdm/d" $SPEC
+
+echo "You also can install chrome via epm play chrome to use WidevineCdm"
