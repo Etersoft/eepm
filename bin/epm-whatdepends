@@ -24,7 +24,7 @@ load_helper epm-print
 epm_whatdepends()
 {
 	local CMD
-	[ -n "$pkg_files" ] && fatal "whatdepends do not handle files"
+	[ -n "$pkg_files" ] && fatal "whatdepends does not handle files"
 	[ -n "$pkg_names" ] || fatal "whatdepends: missing package(s) name"
 	local pkg=$(print_name $pkg_names)
 

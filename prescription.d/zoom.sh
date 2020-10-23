@@ -25,4 +25,4 @@ if [ "$(distro_info -d)" = "ALTLinux" ] ; then
 fi
 
 # TODO: there are more complex distro dependent url
-epm install https://zoom.us/client/latest/zoom_$arch."$(distro_info -p)"
+epm --noscripts install "https://zoom.us/client/latest/zoom_$arch.$(distro_info -p)"
