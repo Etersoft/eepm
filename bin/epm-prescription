@@ -36,6 +36,9 @@ if [ ! -x "$script" ] ; then
     fatal "Can't find $script prescription."
 fi
 
+# allow use EGET in the scripts
+__set_EGET
+
 info "Running $($script --description) ..."
 docmd $script --run
 
