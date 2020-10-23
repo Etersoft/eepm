@@ -290,7 +290,12 @@ __epm_check_if_src_rpm()
     done
 }
 
+__epm_check_if_needed_repack()
 {
+    local pkgname="$(epm print name from "$1")"
+    local repackcode="$CONFIGDIR/repack.d/$pkgname.sh"
+    [ -x "$repackcode" ] || return
+    warning "There is exists repack rules for $pkgname package. It is better install this package via epm --repack install or epm play."
 }
 
 epm_install_files()
@@ -310,6 +315,7 @@ epm_install_files()
             # do not using low-level for install by file path (FIXME: reasons?)
             if ! is_dirpath "$@" || [ "$(get_package_type "$@")" = "rpm" ] ; then
                 __epm_check_vendor $@
+                __epm_check_if_needed_repack $@
                 sudocmd rpm -Uvh $force $noscripts $nodeps $@ && save_installed_packages $@ && return
                 local RES=$?
                 # TODO: check rpm result code and convert it to compatible format if possible
