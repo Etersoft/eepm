@@ -67,8 +67,9 @@ __download_pkg_urls()
 	[ -z "$pkg_urls" ] && return
 	for url in $pkg_urls ; do
 		local tmppkg=$(mktemp -d) || fatal "failed mktemp -d"
+		showcmd cd $tmppkg
 		cd $tmppkg || fatal
-		if docmd eget "$url" ; then
+		if docmd eget --latest "$url" ; then
 			local i
 			for i in $(basename $url) ; do
 				[ -s "$tmppkg/$i" ] || continue
