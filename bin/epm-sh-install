@@ -67,3 +67,19 @@ get_only_installed_packages()
     estrlist exclude "$(echo "$installlist" | (skip_installed='yes' filter_out_installed_packages))" "$installlist"
 }
 
+# Args: package names. Set noscripts for outside packages.
+__epm_check_vendor()
+{
+    # don't check vendor if there are forced script options
+    [ -n "$scripts$noscripts" ] && return
+
+    local i
+    for i in $* ; do
+        local vendor
+        vendor="$(epm print field Vendor for "$i" 2>/dev/null)" || continue
+        # TODO: check GPG
+        [ "$vendor" = "ALT Linux Team" ] && continue
+        warning "Scripts are disabled for package $i from outside vendor '$vendor'. Use --scripts if you need run scripts from such packages."
+        noscripts="--noscripts"
+    done
+}

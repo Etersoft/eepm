@@ -33,7 +33,8 @@ epm_remove_low()
 	case $PMTYPE in
 		*-rpm)
 			cd /tmp || fatal
-			sudocmd rpm -ev $nodeps $@
+			__epm_check_vendor $@
+			sudocmd rpm -ev $noscripts $nodeps $@
 			# keep status
 			#cd - >/dev/null
 			return ;;
