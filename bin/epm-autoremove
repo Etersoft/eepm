@@ -170,7 +170,7 @@ epm_autoremove()
 case $DISTRNAME in
 	ALTLinux)
 		if [ -z "$direct" ] ; then
-			sudocmd apt-get autoremove $dryrun
+			sudocmd apt-get $(subst_option non_interactive -y) autoremove $dryrun
 			local RET=$?
 			info "Also you can run 'epm autoremove --direct' to use low level autoremove (epm internal implementation)"
 			[ "$RET" = 0 ] || return
