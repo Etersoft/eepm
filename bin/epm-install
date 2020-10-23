@@ -307,6 +307,7 @@ epm_install_files()
             # do not using low-level for install by file path (FIXME: reasons?)
             if ! is_dirpath "$@" || [ "$(get_package_type "$@")" = "rpm" ] ; then
                 sudocmd rpm -Uvh $force $nodeps $@ && save_installed_packages $@ && return
+                sudocmd rpm -Uvh $force $noscripts $nodeps $@ && save_installed_packages $@ && return
                 local RES=$?
                 # TODO: check rpm result code and convert it to compatible format if possible
                 __epm_check_if_rpm_already_installed $@ && return
@@ -347,7 +348,7 @@ epm_install_files()
        *-rpm)
             __epm_check_if_try_install_deb $@ && return
             __epm_check_if_src_rpm $@
-            sudocmd rpm -Uvh $force $nodeps $@ && return
+            sudocmd rpm -Uvh $force $noscripts $nodeps $@ && return
             local RES=$?
 
             __epm_check_if_rpm_already_installed $@ && return

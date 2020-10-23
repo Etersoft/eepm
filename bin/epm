@@ -93,6 +93,7 @@ force=
 repack=
 inscript=
 scripts=
+noscripts=
 short=
 direct=
 sort=
@@ -395,8 +396,11 @@ check_option()
     --repack)              # HELPOPT: repack rpm package(s) before install
         repack="--repack"
         ;;
-    --scripts)              # HELPOPT: include scripts in repacked rpm package(s) (see --repack or repacking when foreign package is installed)
+    --scripts)             # HELPOPT: include scripts in repacked rpm package(s) (see --repack or repacking when foreign package is installed)
         scripts="--scripts"
+        ;;
+    --noscripts)           # HELPOPT: disable scripts in install packages
+        noscripts="--noscripts"
         ;;
     --sort)               # HELPOPT: sort output, f.i. --sort=size (supported only for packages command)
         # TODO: how to read arg?
