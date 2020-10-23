@@ -124,6 +124,21 @@ compare_version()
     rpmevrcmp "$@"
 }
 
+# construct package file name.
+# name version [arch] [pkgtype]
+construct_name()
+{
+    local name="$1"
+    local version="$2"
+    local arch="$3"
+    local pkgtype="$4"
+
+    [ -n "$arch" ] || arch="$(distro_info --distro-arch)"
+    [ -n "$pkgtype" ] || pkgtype="$(distro_info -p)"
+    local ds=$(get_pkg_name_delimiter $pkgtype)
+    echo "${name}$ds${version}${ds/-/.}$arch.$pkgtype"
+}
+
 epm_print()
 {
     local WHAT="$1"
@@ -161,6 +176,7 @@ cat <<EOF
     epm print specname from filename NN      print spec filename for the source package file
     epm print binpkgfilelist in DIR for NN   list binary package(s) filename(s) from DIR for the source package file
     epm print compare [package] version N1 N2          compare (package) versions and print -1, 0, 1
+    epm print constructname <name> <version> [arch] [ pkgtype]  print distro dependend package filename from args name version arch pkgtype
 EOF
             ;;
         "name")
@@ -249,6 +265,9 @@ EOF
             #else
                  compare_version "$1" "$2"
             #fi
+            ;;
+        "constructname")
+            construct_name "$@"
             ;;
         *)
             fatal "Unknown command $ epm print $WHAT. Use epm print help for get help."

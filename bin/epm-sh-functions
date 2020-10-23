@@ -616,3 +616,13 @@ assure_distr()
 	[ -n "$2" ] && TEXT="$2"
 	[ "$DISTRNAME" = "$1" ] || fatal "$TEXT supported only for $1 distro"
 }
+
+# return delimiter sign in depend of package type
+get_pkg_name_delimiter()
+{
+   local pkgtype="$1"
+   [ -n "$pkgtype" ] || pkgtype="$($DISTRVENDOR -p)"
+
+   [ "$pkgtype" = "deb" ] && echo "_" && return
+   echo "-"
+}
