@@ -3,9 +3,9 @@
 # Example use:
 # eget http://ftp.altlinux.ru/pub/security/ssl/*
 #
-# Copyright (C) 2014-2014, 2016  Etersoft
+# Copyright (C) 2014-2014, 2016, 2020  Etersoft
 # Copyright (C) 2014 Daniil Mikhailov <danil@etersoft.ru>
-# Copyright (C) 2016-2017 Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2016-2017, 2020 Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -29,8 +29,15 @@ if [ "$1" = "-q" ] ; then
     shift
 fi
 
+LISTONLY=''
 if [ "$1" = "--list" ] ; then
     LISTONLY="$1"
+    shift
+fi
+
+LATEST=''
+if [ "$1" = "--latest" ] ; then
+    LATEST="$1"
     shift
 fi
 
@@ -47,6 +54,11 @@ filter_glob()
 	grep "^$(echo "$1" | sed -e "s|\*|.*|g" -e "s|?|.|g")$"
 }
 
+filter_order()
+{
+    [ -z "$LATEST" ] && cat && return
+    sort | tail -n1
+}
 
 # download to this file
 WGET_OPTION_TARGET=
@@ -69,6 +81,7 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
     echo "Usage: eget [-O target file] [--list] http://somesite.ru/dir/na*.log"
     echo "Options:"
     echo "    --list - print files frm url with mask"
+    echo "    --latest - print only latest version of file"
     echo
     wget --help
     exit
@@ -110,14 +123,14 @@ get_urls()
 
 if [ -n "$LISTONLY" ] ; then
     WGET="$WGET -q"
-    for fn in $(get_urls | filter_glob "$MASK") ; do
+    for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
         echo "$(basename "$fn")"
     done
     exit
 fi
 
 ERROR=0
-for fn in $(get_urls | filter_glob "$MASK") ; do
+for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
     $WGET "$URL/$(basename "$fn")" || ERROR=1
 done
 exit $ERROR
