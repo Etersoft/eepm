@@ -1,6 +1,6 @@
 Name: eepm
-Version: 3.4.0
-Release: alt2
+Version: 3.5.0
+Release: alt1
 
 Summary: Etersoft EPM package manager
 
@@ -123,6 +123,14 @@ rm -f %buildroot%_bindir/distr_info
 %endif
 
 %changelog
+* Fri Oct 23 2020 Vitaly Lipatov <lav@altlinux.ru> 3.5.0-alt1
+- epm-autoremove: add --auto support
+- epm-repack: skip system dir packing
+- add repack script for microsoft-edge-dev
+- epm: introduce play command: use for install
+       edge, zoom, chrome, chromium-gost, skype
+       from the official sites
+
 * Wed Oct 21 2020 Vitaly Lipatov <lav@altlinux.ru> 3.4.0-alt2
 - add epm-repack subpackage (just a static requirements)
 
