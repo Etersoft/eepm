@@ -20,41 +20,40 @@
 
 load_helper epm-install
 
-__epm_korinf_site() {
+__epm_korinf_site_mask() {
+    local MASK="$1"
     local archprefix=""
+    # set arch for Korinf compatibility
     [ "$($DISTRVENDOR -a)" = "x86_64" ] && archprefix="x86_64/"
-    local aftername="-"
-    [ "$($DISTRVENDOR -p)" = "deb" ] && aftername="_"
-    echo "http://updates.etersoft.ru/pub/Korinf/$archprefix$($DISTRVENDOR -e)"
+    echo "http://updates.etersoft.ru/pub/Korinf/$archprefix$($DISTRVENDOR -e)/$MASK*.$($DISTRVENDOR -p)"
 }
 
 __epm_korinf_list() {
-    [ "$1" = "--list" ] && shift
     local MASK="$1"
-    showcmd eget --list "$(__epm_korinf_site)/$MASK*.$($DISTRVENDOR -p)"
-    eget --list "$(__epm_korinf_site)/$MASK*.$($DISTRVENDOR -p)" | sort
+    showcmd eget --list "$(__epm_korinf_site_mask "$MASK")"
+    eget --list "$(__epm_korinf_site "$MASK")" | sort
 }
 
 
 __epm_korinf_install(){
     local PACKAGE="$1"
-    # FIXME: some way to get latest package
-    local fn="$(__epm_korinf_list $PACKAGE$aftername | tail -n1)"
-    [ -n "$fn" ] || fatal "Can't find package file for $PACKAGE"
-    local download_link=$(__epm_korinf_site)/$fn
-    #info "Install $download_link ..."
-    pkg_names='' pkg_files='' pkg_urls="$download_link" epm_install
+    local aftername="-"
+    # hack
+    [ "$($DISTRVENDOR -p)" = "deb" ] && aftername="_"
+    epm install $(__epm_korinf_site_mask "$PACKAGE$aftername")
 }
 
 epm_epm_install(){
     local i
-    local pkglist="$pkg_filenames"
+    local pkglist="$*"
+
     # install epm by default
     [ -n "$pkglist" ] || pkglist="eepm"
 
     case "$pkglist" in
         --list*)
-            __epm_korinf_list $pkglist
+            shift
+            __epm_korinf_list "$1"
             return
             ;;
     esac
