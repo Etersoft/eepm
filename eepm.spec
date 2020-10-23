@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.5.0
+Version: 3.6.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -23,7 +23,7 @@ Provides: upm
 %if %_vendor == "alt"
 # FIXHERE: Replace with target platform package manager
 Requires: apt rpm
-Requires: distro_info >= 1.6
+Requires: distro_info >= 1.7
 %endif
 
 %description
@@ -123,6 +123,14 @@ rm -f %buildroot%_bindir/distr_info
 %endif
 
 %changelog
+* Sat Oct 24 2020 Vitaly Lipatov <lav@altlinux.ru> 3.6.0-alt1
+- epm-install: add --noscripts support for rpm install
+- epm-install: disable scripts by default for outside vendors
+- add prescription for teams, vivaldi
+- add repack for vivaldi-stable
+- prescription, repack: add PROGDIR to PATH
+- distr_info: sync with distro_info-1.7
+
 * Fri Oct 23 2020 Vitaly Lipatov <lav@altlinux.ru> 3.5.0-alt1
 - epm-autoremove: add --auto support
 - epm-repack: skip system dir packing
