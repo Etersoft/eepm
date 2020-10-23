@@ -403,6 +403,18 @@ esac
 echo "$DIST_ARCH"
 }
 
+get_debian_arch()
+{
+    local arch="$(get_arch)"
+    case $arch in
+    'i586')
+        arch='i386' ;;
+    'x86_64')
+        arch='amd64' ;;
+    esac
+    echo "$arch"
+}
+
 get_distro_arch()
 {
     local arch="$(get_arch)"
@@ -411,12 +423,8 @@ get_distro_arch()
             :
             ;;
         deb)
-            case $arch in
-                'i586')
-                    arch='i386' ;;
-                'x86_64')
-                    arch='amd64' ;;
-            esac
+            get_debian_arch
+            return
             ;;
     esac
     echo "$arch"
@@ -612,6 +620,12 @@ case $1 in
 		# override DISTRIB_ID
 		test -n "$2" && DISTRIB_ID="$2"
 		get_distro_arch
+		exit 0
+		;;
+	--debian-arch)
+		# override DISTRIB_ID
+		test -n "$2" && DISTRIB_ID="$2"
+		get_debian_arch
 		exit 0
 		;;
 	-d)
