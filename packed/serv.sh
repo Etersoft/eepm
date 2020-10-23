@@ -184,6 +184,17 @@ isnumber()
 	echo "$*" | filter_strip_spaces | grep -q "^[0-9]\+$"
 }
 
+rhas()
+{
+	echo "$1" | grep -E -q -- "$2"
+}
+
+is_dirpath()
+{
+    [ "$1" = "." ] && return $?
+    rhas "$1" "/"
+}
+
 filter_strip_spaces()
 {
         # possible use just
@@ -354,7 +365,21 @@ assure_exists()
 	local textpackage=
 	[ -n "$package" ] || package="$(__get_package_for_command "$1")"
 	[ -n "$3" ] && textpackage=" >= $3"
-	epm_assure "$1" $package $3 || fatal "Can't assure in '$1' command from $package$textpackage package"
+	( direct='' epm_assure "$1" $package $3 ) || fatal "Can't assure in '$1' command from $package$textpackage package"
+}
+
+__set_EGET()
+{
+	# use internal eget only if exists
+	if [ -s $SHAREDIR/tools_eget ] ; then
+		export EGET="$SHAREDIR/tools_eget"
+		return
+	fi
+
+	# FIXME: we need disable output here, eget can be used for get output
+	assure_exists eget >/dev/null
+	# use external command, not the function
+	export EGET="$(which eget)" || fatal "Missed command eget from installed package eget"
 }
 
 disabled_eget()
@@ -437,7 +462,9 @@ get_help()
         return
     fi
     local F="$0"
-    [ -n "$2" ] && F="$(dirname $0)/$2"
+    if [ -n "$2" ] ; then
+        is_dirpath "$2" && F="$2" || F="$(dirname $0)/$2"
+    fi
 
     cat "$F" | grep -- "# $1" | while read -r n ; do
         if echo "$n" | grep -q "# $1: PART: " ; then
@@ -446,7 +473,7 @@ get_help()
             continue
         fi
         echo "$n" | grep -q "^ *#" && continue
-        opt="$(echo $n | sed -e "s|) # $1:.*||g")" #"
+        opt="$(echo $n | sed -e "s|) # $1:.*||g" -e 's|"||g' -e 's@^|@@')" #"
         desc="$(echo $n | sed -e "s|.*) # $1:||g")" #"
         printf "    %-20s %s\n" $opt "$desc"
     done
@@ -464,6 +491,11 @@ set_pm_type()
 	# Fill for use: PMTYPE, DISTRNAME, DISTRVERSION, PKGFORMAT, PKGVENDOR, RPMVENDOR
 	[ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d) || fatal "Can't get distro name."
 	[ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
+	if [ -z "$DISTRARCH" ] ; then
+		DISTRARCH=$($DISTRVENDOR -a)
+		# TODO: translate func
+		[ "$DISTRARCH" = "x86" ] && DISTRARCH="i586"
+	fi
 	set_target_pkg_env
 
 if [ -n "$FORCEPM" ] ; then
@@ -779,13 +811,39 @@ serv_list_all()
 	esac
 }
 
+# File bin/serv-list_failed:
+
+serv_list_failed()
+{
+	case $SERVICETYPE in
+		systemd)
+			sudocmd systemctl --failed
+			;;
+		*)
+			for i in $(serv_list_startup | cut -f 1 -d" ") ; do
+				is_service_running >/dev/null $i && continue
+				echo ; echo $i
+				serv_status $i
+			done
+			;;
+
+	esac
+}
+
 # File bin/serv-list_startup:
 
 serv_list_startup()
 {
 	case $SERVICETYPE in
-		*)
+		systemd)
+			#sudocmd systemctl list-unit-files
+			# TODO: native command? implement --short for list (only names)
 			for i in $(serv_list_all | cut -f 1 -d" " | grep "\.service$") ; do
+				is_service_autostart >/dev/null $i && echo $i
+			done
+			;;
+		*)
+			for i in $(serv_list_all | cut -f 1 -d" ") ; do
 				is_service_autostart >/dev/null $i && echo $i
 			done
 			;;
@@ -1127,12 +1185,14 @@ _print_additional_usage
 ################# incorporate bin/distr_info #################
 internal_distr_info()
 {
-# 2007-2019 (c) Vitaly Lipatov <lav@etersoft.ru>
-# 2007-2019 (c) Etersoft
-# 2007-2019 Public domain
+# 2007-2020 (c) Vitaly Lipatov <lav@etersoft.ru>
+# 2007-2020 (c) Etersoft
+# 2007-2020 Public domain
 
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
+
+PROGVERSION="20201010"
 
 # TODO: check /etc/system-release
 
@@ -1228,6 +1288,7 @@ get_major_version()
 }
 
 # Default values
+PRETTY_NAME=""
 DISTRIB_ID="Generic"
 DISTRIB_RELEASE=""
 DISTRIB_CODENAME=""
@@ -1237,6 +1298,7 @@ if distro lsb-release ; then
 	DISTRIB_ID=$(cat $DISTROFILE | get_var DISTRIB_ID)
 	DISTRIB_RELEASE=$(cat $DISTROFILE | get_var DISTRIB_RELEASE)
 	DISTRIB_CODENAME=$(cat $DISTROFILE | get_var DISTRIB_CODENAME)
+	PRETTY_NAME=$(cat $DISTROFILE | get_var DISTRIB_DESCRIPTION)
 fi
 
 # ALT Linux based
@@ -1247,9 +1309,14 @@ if distro altlinux-release ; then
 	elif has "ALT Linux 7." ; then DISTRIB_RELEASE="p7"
 	elif has "ALT Linux t7." ; then DISTRIB_RELEASE="t7"
 	elif has "ALT Linux 8." ; then DISTRIB_RELEASE="p8"
+	elif has "ALT 8 SP " ; then DISTRIB_RELEASE="c8"
+	elif has "ALT 9 SP " ; then DISTRIB_RELEASE="c9"
+	elif has "ALT c8 " ; then DISTRIB_RELEASE="c8"
+	elif has "ALT c8.1 " ; then DISTRIB_RELEASE="c8.1"
+	elif has "ALT c8.2 " ; then DISTRIB_RELEASE="c8.2"
 	elif has "ALT .*8.[0-9]" ; then DISTRIB_RELEASE="p8"
 	elif has "ALT .*9.[0-9]" ; then DISTRIB_RELEASE="p9"
-	elif has "ALT p9 " ; then DISTRIB_RELEASE="p9"
+	elif has "ALT p9.* p9 " ; then DISTRIB_RELEASE="p9"
 	elif has "Simply Linux 6." ; then DISTRIB_RELEASE="p6"
 	elif has "Simply Linux 7." ; then DISTRIB_RELEASE="p7"
 	elif has "Simply Linux 8." ; then DISTRIB_RELEASE="p8"
@@ -1266,6 +1333,7 @@ if distro altlinux-release ; then
 	elif has "starter kit"   ; then DISTRIB_RELEASE="p8"
 	elif has Citron   ; then DISTRIB_RELEASE="2.4"
 	fi
+	PRETTY_NAME="$(cat /etc/altlinux-release)"
 
 elif distro gentoo-release ; then
 	DISTRIB_ID="Gentoo"
@@ -1305,7 +1373,7 @@ elif distro arch-release ; then
 # Elbrus
 elif distro mcst_version ; then
 	DISTRIB_ID="MCST"
-	DISTRIB_RELEASE=$(cat "$DISTROFILE" | grep "release" | sed -e "s|.*release \([0-9]*\).*|\1|g")
+	DISTRIB_RELEASE=$(cat "$DISTROFILE" | grep "release" | sed -e "s|.*release \([0-9]*\).*|\1|g") #"
 
 # OpenWrt
 elif distro openwrt_release ; then
@@ -1410,7 +1478,7 @@ elif distro os-release ; then
 elif [ "$(uname)" = "FreeBSD" ] ; then
 	DISTRIB_ID="FreeBSD"
 	UNAME=$(uname -r)
-	DISTRIB_RELEASE=$(echo "$UNAME" | grep RELEASE | sed -e "s|\([0-9]\.[0-9]\)-RELEASE|\1|g")
+	DISTRIB_RELEASE=$(echo "$UNAME" | grep RELEASE | sed -e "s|\([0-9]\.[0-9]\)-RELEASE|\1|g") #"
 
 # fixme: can we detect by some file?
 elif [ "$(uname)" = "SunOS" ] ; then
@@ -1521,6 +1589,25 @@ esac
 echo "$DIST_ARCH"
 }
 
+get_distro_arch()
+{
+    local arch="$(get_arch)"
+    case "$(pkgtype)" in
+        rpm)
+            :
+            ;;
+        deb)
+            case $arch in
+                'i586')
+                    arch='i386' ;;
+                'x86_64')
+                    arch='amd64' ;;
+            esac
+            ;;
+    esac
+    echo "$arch"
+}
+
 get_bit_size()
 {
 local DIST_BIT
@@ -1553,8 +1640,9 @@ echo "$DIST_BIT"
 }
 
 # TODO: check before calc
-get_memory_size() {
-    local detected=0
+get_memory_size()
+{
+    local detected=""
     local DIST_OS="$(get_base_os_name)"
     case "$DIST_OS" in
         macosx)
@@ -1566,9 +1654,14 @@ get_memory_size() {
         linux)
             [ -r /proc/meminfo ] && detected=$((`cat /proc/meminfo | grep MemTotal | awk '{print $2}'`/1024))
             ;;
+        solaris)
+            detected=$(prtconf | grep Memory | sed -e "s|Memory size: \([0-9][0-9]*\) Megabyte.*|\1|")
+            ;;
+#        *)
+#            fatal "Unsupported OS $DIST_OS"
     esac
 
-    # Exit codes only support values between 0 and 255. So use stdout.
+    [ -n "$detected" ] || detected=0
     echo $detected
 }
 
@@ -1576,6 +1669,32 @@ print_name_version()
 {
     [ -n "$DISTRIB_RELEASE" ] && echo $DISTRIB_ID/$DISTRIB_RELEASE || echo $DISTRIB_ID
 }
+
+get_core_count()
+{
+    local detected=""
+    local DIST_OS="$(get_base_os_name)"
+    case "$DIST_OS" in
+        macos|freebsd)
+            detected=$(sysctl hw.ncpu | awk '{print $2}')
+            ;;
+        linux)
+            detected=$(grep -c "^processor" /proc/cpuinfo)
+            ;;
+        solaris)
+            detected=$(prtconf | grep -c 'cpu[^s]')
+            ;;
+        aix)
+            detected=$(lsdev -Cc processor -S A | wc -l)
+            ;;
+#        *)
+#            fatal "Unsupported OS $DIST_OS"
+    esac
+
+    [ -n "$detected" ] || detected=0
+    echo $detected
+}
+
 
 get_virt()
 {
@@ -1588,9 +1707,18 @@ get_virt()
         [ -z "$VIRT" ] && echo "(unknown)" && return
         echo "$VIRT" && return
     fi
-    if [ -r /proc/user_beancounters ] ; then
+
+    # TODO: use virt-what under root
+
+    # inspired by virt_what
+    if [ -d "/proc/vz" -a ! -d "/proc/bc" ]; then
         echo "openvz" && return
     fi
+
+    if [ -r "/sys/bus/xen" ] ; then
+        echo "xen" && return
+    fi
+
     echo "(unknown)"
     # TODO: check for openvz
 }
@@ -1599,37 +1727,48 @@ get_virt()
 get_service_manager()
 {
     [ -d /run/systemd/system ] && echo "systemd" && return
-    [ -d /usr/share/upstart ] && echo "upstart" && return
+    # TODO
+    #[ -d /usr/share/upstart ] && echo "upstart" && return
     [ -d /etc/init.d ] && echo "sysvinit" && return
     echo "(unknown)"
 }
 
+print_pretty_name()
+{
+    echo "$PRETTY_NAME"
+}
 
 print_total_info()
 {
 cat <<EOF
-distro_info total information (run with -h to get help):
+distro_info v$PROGVERSION : Copyright © 2007-2020 Etersoft
+==== Total system information:
+Pretty distro name (--pretty): $(print_pretty_name)
  Distro name and version (-e): $(print_name_version)
         Packaging system (-p): $(pkgtype)
  Running service manager (-y): $(get_service_manager)
           Virtualization (-i): $(get_virt)
+               CPU Cores (-c): $(get_core_count)
         CPU Architecture (-a): $(get_arch)
  CPU norm register size  (-b): $(get_bit_size)
  System memory size (MB) (-m): $(get_memory_size)
             Base OS name (-o): $(get_base_os_name)
 Build system distro name (-s): $(pkgvendor)
 Build system vendor name (-n): $(rpmvendor)
+
+(run with -h to get help)
 EOF
 }
 
 
 case $1 in
 	-h)
-		echo "distro_info - distro name and version detection"
+		echo "distro_info v$PROGVERSION - distro information retriever"
 		echo "Usage: distro_info [options] [args]"
 		echo "Options:"
-		echo " -a - print hardware architecture"
+		echo " -a - print hardware architecture (--distro-arch for distro depended name)"
 		echo " -b - print size of arch bit (32/64)"
+		echo " -c - print number of CPU cores"
 		echo " -d - print distro name"
 		echo " -e - print full name of distro with version"
 		echo " -i - print virtualization type"
@@ -1639,7 +1778,8 @@ case $1 in
 		echo " -o - print base OS name"
 		echo " -p [SystemName] - print type of the packaging system"
 		echo " -s [SystemName] - print name of distro for build system (like in the package release name)"
-		ecgi " -y - print running service manager"
+		echo " -y - print running service manager"
+		echo " --pretty - print pretty distro name"
 		echo " -v - print version of distro"
 		echo " -V - print the utility version"
 		echo "Run without args to print all information."
@@ -1651,6 +1791,15 @@ case $1 in
 		pkgtype
 		exit 0
 		;;
+	--pretty)
+		print_pretty_name
+		;;
+	--distro-arch)
+		# override DISTRIB_ID
+		test -n "$2" && DISTRIB_ID="$2"
+		get_distro_arch
+		exit 0
+		;;
 	-d)
 		echo $DISTRIB_ID
 		;;
@@ -1659,6 +1808,9 @@ case $1 in
 		;;
 	-b)
 		get_bit_size
+		;;
+	-c)
+		get_core_count
 		;;
 	-i)
 		get_virt
@@ -1688,7 +1840,7 @@ case $1 in
 		get_service_manager
 		;;
 	-V)
-		echo "20191121"
+		echo "$PROGVERSION"
 		exit 0
 		;;
 	-e)
@@ -1710,9 +1862,9 @@ internal_tools_eget()
 # Example use:
 # eget http://ftp.altlinux.ru/pub/security/ssl/*
 #
-# Copyright (C) 2014-2014, 2016  Etersoft
+# Copyright (C) 2014-2014, 2016, 2020  Etersoft
 # Copyright (C) 2014 Daniil Mikhailov <danil@etersoft.ru>
-# Copyright (C) 2016-2017 Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2016-2017, 2020 Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -1736,8 +1888,15 @@ if [ "$1" = "-q" ] ; then
     shift
 fi
 
+LISTONLY=''
 if [ "$1" = "--list" ] ; then
     LISTONLY="$1"
+    shift
+fi
+
+LATEST=''
+if [ "$1" = "--latest" ] ; then
+    LATEST="$1"
     shift
 fi
 
@@ -1750,10 +1909,16 @@ fatal()
 # check man glob
 filter_glob()
 {
+	[ -z "$1" ] && cat && return
 	# translate glob to regexp
-	grep "^$(echo "$1" | sed -e "s|\*|.*|g" -e "s|\?|.|g")$"
+	grep "$(echo "$1" | sed -e "s|\*|.*|g" -e "s|?|.|g")$"
 }
 
+filter_order()
+{
+    [ -z "$LATEST" ] && cat && return
+    sort | tail -n1
+}
 
 # download to this file
 WGET_OPTION_TARGET=
@@ -1774,12 +1939,45 @@ fi
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
     echo "eget - wget wrapper, with support"
     echo "Usage: eget [-O target file] [--list] http://somesite.ru/dir/na*.log"
-    echo "Options:"
-    echo "    --list - print files frm url with mask"
     echo
-    wget --help
+    echo "Options:"
+    echo "    --list   - print files frm url with mask"
+    echo "    --latest - print only latest version of file"
+    echo
+    echo "eget supports --list and download for https://github.com/owner/project urls"
+    echo
+    echo "See $ wget --help for wget options you can use here"
     return
 fi
+
+get_github_urls()
+{
+    # https://github.com/OWNER/PROJECT
+    local owner="$(echo "$1" | sed -e "s|^https://github.com/||" -e "s|/.*||")" #"
+    local project="$(echo "$1" | sed -e "s|^https://github.com/$owner/||" -e "s|/.*||")" #"
+    [ -n "$owner" ] || fatal "Can't get owner from $1"
+    [ -n "$project" ] || fatal "Can't get project from $1"
+    local URL="https://api.github.com/repos/$owner/$project/releases/latest"
+    local q=''
+    [ -n "$LISTONLY" ] && q="-q"
+    $WGET $q -O- $URL | \
+        grep -i -o -E '"browser_download_url": "https://.*"' | cut -d'"' -f4
+}
+
+if echo "$1" | grep -q "^https://github.com/" ; then
+    MASK="$2"
+
+    if [ -n "$LISTONLY" ] ; then
+        get_github_urls "$1" | filter_glob "$MASK" | filter_order
+        return
+    fi
+
+    for fn in $(get_github_urls "$1" | filter_glob "$MASK" | filter_order) ; do
+        $WGET "$fn" || ERROR=1
+    done
+    return
+fi
+
 
 # do not support /
 if echo "$1" | grep -q "/$" ; then
@@ -1812,19 +2010,19 @@ fi
 get_urls()
 {
     $WGET -O- $URL | \
-        grep -o -E 'href="([^\*/"#]+)"' | cut -d'"' -f2
+        grep -i -o -E 'href="([^\*/"#]+)"' | cut -d'"' -f2
 }
 
 if [ -n "$LISTONLY" ] ; then
     WGET="$WGET -q"
-    for fn in $(get_urls | filter_glob "$MASK") ; do
+    for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
         echo "$(basename "$fn")"
     done
     return
 fi
 
 ERROR=0
-for fn in $(get_urls | filter_glob "$MASK") ; do
+for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
     $WGET "$URL/$(basename "$fn")" || ERROR=1
 done
 exit $ERROR
@@ -1837,7 +2035,7 @@ exit $ERROR
 internal_tools_estrlist()
 {
 #!/bin/bash
-# 2009-2010, 2012, 2017 Etersoft www.etersoft.ru
+# 2009-2010, 2012, 2017, 2020 Etersoft www.etersoft.ru
 # Author: Vitaly Lipatov <lav@etersoft.ru>
 # Public domain
 
@@ -1862,6 +2060,12 @@ internal_tools_estrlist()
 # * symmetric difference (симметричная разность) ( A ^ B – members in A or B but not both )
 # http://en.wikipedia.org/wiki/Symmetric_difference
 #   "1 2 3" "3 4 5" -> "1 2 4 5"
+
+fatal()
+{
+        echo "FATAL: $*" >&2
+        exit 1
+}
 
 filter_strip_spaces()
 {
@@ -1898,6 +2102,18 @@ union()
          strip_spaces $(list $@ | sort -u)
 }
 
+intersection()
+{
+        local RES=""
+        local i j
+        for i in $2 ; do
+            for j in $1 ; do
+                [ "$i" = "$j" ] && RES="$RES $i"
+            done
+        done
+        strip_spaces "$RES"
+}
+
 uniq()
 {
         union $@
@@ -1925,7 +2141,7 @@ reg_remove()
         local i
         local RES=
         for i in $2 ; do
-                echo "$i" | grep -q "$1" || RES="$RES $i"
+                echo "$i" | grep -q "^$1$" || RES="$RES $i"
         done
         strip_spaces "$RES"
 }
@@ -1934,9 +2150,19 @@ reg_remove()
 reg_wordremove()
 {
         local i
-        local RES=
+        local RES=""
         for i in $2 ; do
                 echo "$i" | grep -q -w "$1" || RES="$RES $i"
+        done
+        strip_spaces "$RES"
+}
+
+reg_rqremove()
+{
+        local i
+        local RES=""
+        for i in $2 ; do
+                [ "$i" = "$1" ] || RES="$RES $i"
         done
         strip_spaces "$RES"
 }
@@ -1947,9 +2173,9 @@ reg_wordremove()
 exclude()
 {
         local i
-        local RES=
-        for i in $2 ; do
-                echo "$1" | grep -q -w "$i" || RES="$RES $i"
+        local RES="$2"
+        for i in $1 ; do
+                RES="$(reg_rqremove "$i" "$RES")"
         done
         strip_spaces "$RES"
 }
@@ -1960,7 +2186,7 @@ reg_exclude()
         local i
         local RES="$2"
         for i in $1 ; do
-                RES=$(reg_remove "$i" "$RES")
+                RES="$(reg_remove "$i" "$RES")"
         done
         strip_spaces "$RES"
 }
@@ -1976,12 +2202,35 @@ reg_wordexclude()
         strip_spaces "$RES"
 }
 
+if_contain()
+{
+        local i
+        for i in $2 ; do
+            [ "$i" = "$1" ] && return
+        done
+        return 1
+}
+
+difference()
+{
+        local RES=""
+        local i
+        for i in $1 ; do
+            if_contain $i "$2" || RES="$RES $i"
+        done
+        for i in $2 ; do
+            if_contain $i "$1" || RES="$RES $i"
+        done
+        strip_spaces "$RES"
+}
+
+
 # FIXME:
 # reg_include "1." "11 12 21 22" -> "11 12"
 reg_include()
 {
         local i
-        local RES=
+        local RES=""
         for i in $2 ; do
                 echo "$i" | grep -q -w "$1" && RES="$RES $i"
         done
@@ -2007,24 +2256,27 @@ help()
         echo "estrlist developed for string list operations. See also cut, join, paste..."
         echo "Usage: $0 <command> [args]"
         echo "Commands:"
-        echo "  strip_spaces [args]               - remove spaces between words"
-        echo "  filter_strip_spaces               - remove spaces from words from standart input"
-        echo "  reg_remove  <PATTERN> [word list] - remove words containing a match to the given PATTERN (grep notation)"
-        echo "  reg_wordremove  <PATTERN> [word list] - remove words containing a match to the given PATTERN (grep -w notation)"
-        echo "  exclude <list1> <list2>           - print list2 words exclude list1 items"
-        echo "  reg_exclude <PATTERN> [word list] - print only words do not matched with PATTERN"
-        echo "  reg_wordexclude <PATTERN> [word list] - print only words do not matched with PATTERN"
+        echo "  strip_spaces [args]               - remove extra spaces"
+# TODO: add filter
+#        echo "  filter_strip_spaces               - remove extra spaces from words from standart input"
+#        echo "  reg_remove  <PATTERN> [word list] - remove words containing a match to the given PATTERN (grep notation)"
+#        echo "  reg_wordremove  <PATTERN> [word list] - remove words containing a match to the given PATTERN (grep -w notation)"
+        echo "  exclude <list1> <list2>           - print list2 items exclude list1 items"
+        echo "  reg_exclude <list PATTERN> [word list] - print only words that do not match PATTERN"
+#        echo "  reg_wordexclude <list PATTERN> [word list] - print only words do not match PATTERN"
         echo "  has <PATTERN> string              - check the string for a match to the regular expression given in PATTERN (grep notation)"
         echo "  match <PATTERN> string            - check the string for a match to the regular expression given in PATTERN (egrep notation)"
         echo "  isempty [string]                  - true if string has no any symbols (only zero or more spaces)"
         echo "  union [word list]                 - sort and remove duplicates"
+        echo "  intersection <list1> <list2>      - print only intersected items (the same in both lists)"
+        echo "  difference <list1> <list2>        - symmetric difference between lists items (not in both lists)"
         echo "  uniq [word list]                  - alias for union"
         echo "  list [word list]                  - just list words line by line"
         echo "  count [word list]                 - print word count"
         echo
         echo "Examples:"
-        example reg_remove "1." "11 12 21 22"
-        example reg_wordremove "1." "11 12 21 22"
+#        example reg_remove "1." "11 12 21 22"
+#        example reg_wordremove "1." "11 12 21 22"
         example exclude "1 3" "1 2 3 4"
         example reg_exclude "22 1." "11 12 21 22"
         example reg_wordexclude "wo.* er" "work were more else"
@@ -2047,6 +2299,13 @@ fi
 if [ "$COMMAND" = "-h" ] || [ "$COMMAND" = "--help" ] ; then
         COMMAND="help"
 fi
+
+#
+case "$COMMAND" in
+    reg_remove|reg_wordremove)
+        fatal "obsoleted command $COMMAND"
+        ;;
+esac
 
 shift
 
@@ -2383,7 +2642,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.2.5  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.5.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2019"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -2446,6 +2705,10 @@ check_command()
         ;;
     list-startup)             # HELPCMD: list all services to run on startup
         serv_cmd=list_startup
+        withoutservicename=1
+        ;;
+    list-failed|--failed)       # HELPCMD: list services failed on startup
+        serv_cmd=list_failed
         withoutservicename=1
         ;;
     on|enable)                # HELPCMD: add service to run on startup and start it now
