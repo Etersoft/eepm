@@ -39,6 +39,8 @@ fi
 # allow use EGET in the scripts
 __set_EGET
 
+export PATH=$PROGDIR:$PATH
+
 info "Running $($script --description) ..."
 docmd $script --run
 

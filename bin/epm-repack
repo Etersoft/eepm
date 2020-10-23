@@ -132,6 +132,7 @@ __apply_fix_code()
     local repackcode="$CONFIGDIR/repack.d/$1.sh"
     [ -x "$repackcode" ] || return
     shift
+    export PATH=$PROGDIR:$PATH
     docmd $repackcode "$1" "$2" || warning "There was errors with $repackcode script"
 }
 
