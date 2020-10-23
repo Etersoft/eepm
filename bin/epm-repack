@@ -96,11 +96,18 @@ __fix_spec()
 
     # drop forbidded paths
     # https://bugzilla.altlinux.org/show_bug.cgi?id=38842
-    for i in / /etc /etc/init.d /etc/systemd /bin /opt /usr /usr/bin /usr/share /usr/share/doc /var /var/log /var/run; do
+    for i in / /etc /etc/init.d /etc/systemd /bin /opt /usr /usr/bin /usr/share /usr/share/doc /var /var/log /var/run \
+            /etc/cron.daily /usr/share/man /usr/share/man/man1 /usr/share/appdata /usr/share/applications /usr/share/menu ; do
         sed -i -e "s|^%dir \"$i/*\"$||" \
             -e "s|^\"$i/*\"$||" \
             -e "s|^$i/*$||" \
             $spec
+    done
+
+    # drop %dir for existed system dirs
+    for i in $(grep '^%dir "' $spec | sed -e 's|^%dir  *"\(.*\)".*|\1|' ) ; do #"
+        echo "$i" | grep -q '^/opt/' && continue
+        [ -d "$i" ] && echo "drop dir $i from packing, it exists in the system"
     done
 
     # replace dir "/path/dir" -> %dir /path/dir
