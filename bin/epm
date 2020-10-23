@@ -416,27 +416,22 @@ check_option()
     return 0
 }
 
-has_space()
-{
-    [ -n "$2" ]
-}
-
 check_filenames()
 {
     local opt
     for opt in "$@" ; do
         # files can be with full path or have extension via .
         if [ -f "$opt" ] && echo "$opt" | grep -q "[/\.]" ; then
-            has_space $opt && warning "There are space(s) in filename '$opt', it is not supported. Skipped" && continue
+            has_space "$opt" && warning "There are space(s) in filename '$opt', it is not supported. Skipped" && continue
             pkg_files="$pkg_files $opt"
         elif [ -d "$opt" ] ; then
-            has_space $opt && warning "There are space(s) in directory path '$opt', it is not supported. Skipped" && continue
+            has_space "$opt" && warning "There are space(s) in directory path '$opt', it is not supported. Skipped" && continue
             pkg_dirs="$pkg_dirs $opt"
         elif echo "$opt" | grep -q "^[fhtps]*://" ; then
-            has_space $opt && warning "There are space(s) in URL '$opt', it is not supported. Skipped" && continue
+            has_space "$opt" && warning "There are space(s) in URL '$opt', it is not supported. Skipped" && continue
             pkg_urls="$pkg_urls $opt"
         else
-            has_space $opt && warning "There are space(s) in package name '$opt', it is not supported. Skipped" && continue
+            has_space "$opt" && warning "There are space(s) in package name '$opt', it is not supported. Skipped" && continue
             pkg_names="$pkg_names $opt"
         fi
         quoted_args="$quoted_args \"$opt\""

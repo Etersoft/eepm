@@ -626,3 +626,8 @@ get_pkg_name_delimiter()
    [ "$pkgtype" = "deb" ] && echo "_" && return
    echo "-"
 }
+
+has_space()
+{
+    [ "$1" != "${1/ //}" ]
+}
