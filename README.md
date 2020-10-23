@@ -33,6 +33,8 @@ to any platform. EEPM will print out any real command it uses so you can learn f
 
 Also EEPM has initial support for repository management: list, add, remove, update
 
+Also EEPM contains `serv` command to control system services in system independed manner.
+
 Pay attention to the following useful commands:
 * `epmqf` - query package(s) owning file
 * `epmqp` - search in the list of installed packages
@@ -48,6 +50,11 @@ Note: epm is placed as /usr/bin/epm
  $ rpm -qf /usr/bin/epm
 eepm-1.1.0-alt2
 ```
+
+Also you can use
+`epm play` to install the application from the official site.
+
+For example, run `epm play edge` to install Microsoft Edge browser in your system.
 
 ## Install on any system
 
