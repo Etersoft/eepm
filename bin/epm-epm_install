@@ -37,10 +37,7 @@ __epm_korinf_list() {
 
 __epm_korinf_install(){
     local PACKAGE="$1"
-    local aftername="-"
-    # hack
-    [ "$($DISTRVENDOR -p)" = "deb" ] && aftername="_"
-    epm install $(__epm_korinf_site_mask "$PACKAGE$aftername")
+    epm install $(__epm_korinf_site_mask "$PACKAGE$(get_pkg_name_delimiter)")
 }
 
 epm_epm_install(){
