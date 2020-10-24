@@ -2,8 +2,8 @@
 
 [ "$1" != "--run" ] && echo "Fix missed 32 bit package modules on 64 bit system" && exit
 
-[ "$(distro_info -d)" != "ALTLinux" ] && echo "Only ALTLinux is supported" && exit 1
-[ "$(distro_info -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
+[ "$($DISTRVENDOR -d)" != "ALTLinux" ] && echo "Only ALTLinux is supported" && exit 1
+[ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
 LIST=''
 

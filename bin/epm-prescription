@@ -38,6 +38,7 @@ fi
 
 # allow use EGET in the scripts
 __set_EGET
+# also we will have DISTRVENDOR there
 
 export PATH=$PROGDIR:$PATH
 

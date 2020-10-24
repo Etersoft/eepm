@@ -9,7 +9,7 @@ fatal()
 
 [ "$1" != "--run" ] && echo "Install Vivaldi browser from the official site" && exit
 
-arch="$(distro_info --debian-arch)"
+arch="$($DISTRVENDOR --debian-arch)"
 case "$arch" in
     amd64|i386|armhf)
         ;;

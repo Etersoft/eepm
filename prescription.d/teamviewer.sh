@@ -11,7 +11,7 @@ fatal()
 
 PKGNAME="teamviewer"
 
-arch="$(distro_info -a)"
+arch="$($DISTRVENDOR -a)"
 case "$arch" in
     x86_64|x86)
         ;;

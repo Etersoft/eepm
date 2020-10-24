@@ -9,10 +9,10 @@ fatal()
 
 [ "$1" != "--run" ] && echo "Install Chromium with GOST support from the official site" && exit
 
-[ "$(distro_info -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
+[ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
-#arch=$(distro_info --distro-arch)
-#pkgtype=$(distro_info -p)
+#arch=$($DISTRVENDOR --distro-arch)
+#pkgtype=$($DISTRVENDOR -p)
 arch=amd64
 pkgtype=deb
 
