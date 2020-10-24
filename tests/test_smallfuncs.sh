@@ -1,8 +1,9 @@
 #!/bin/sh
 
+#. ../bin/epm-sh-functions
 has_space()
 {
-    [ "$1" != "${1/ //}" ]
+    ../bin/tools_estrlist has_space "$@"
 }
 
 notok()
@@ -19,8 +20,11 @@ ok()
 
 notok "list"
 ok "l i s t"
+ok "li st"
 ok " l i s t "
 ok " l "
 ok "  "
 ok " "
 notok ""
+
+notok "http://updates.etersoft.ru/pub/Korinf/x86_64/Ubuntu/20.04/eepm_*.deb"
