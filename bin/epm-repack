@@ -146,7 +146,7 @@ __apply_fix_code()
     [ -x "$repackcode" ] || return
     shift
     export PATH=$PROGDIR:$PATH
-    docmd $repackcode "$1" "$2" || warning "There was errors with $repackcode script"
+    docmd $repackcode "$1" "$2" || fatal "There is an error from $repackcode script"
 }
 
 __create_rpmmacros()
