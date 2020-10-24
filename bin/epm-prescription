@@ -17,32 +17,97 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+# TODO
+epm_vardir=/var/lib/eepm
+
+__save_installed_app()
+{
+	[ -d "$epm_vardir" ] || return 0
+	estrlist list "$@" | $SUDO tee $epm_vardir/installed-app >/dev/null
+}
+
+__remove_installed_app()
+{
+	[ -d "$epm_vardir" ] || return 0
+	local i
+	for i in $* ; do
+		$SUDO sed -i '/^$i$/d' $epm_vardir/installed-app
+	done
+	return 0
+}
+
+__check_installed_app()
+{
+	[ -s $epm_vardir/installed-app ] || return 1
+	grep -q -- "^$1\$" $epm_vardir/installed-app
+}
+
+__list_installed_app()
+{
+    cat $epm_vardir/installed-app 2>/dev/null
+}
+
+
+__epm_prescription_run()
+{
+    local script="$psdir/$1.sh"
+    shift
+    local option="$1"
+
+    if [ ! -x "$script" ] ; then
+        fatal "Can't find $script prescription."
+    fi
+
+    # allow use EGET in the scripts
+    __set_EGET
+    # also we will have DISTRVENDOR there
+    export PATH=$PROGDIR:$PATH
+
+    #info "Running $($script --description 2>/dev/null) ..."
+    docmd $script $option
+}
+
 epm_prescription()
 {
 
 local psdir="$CONFIGDIR/prescription.d"
 
-if [ -z "$pkg_filenames" ] ; then
+if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
+    cat <<EOF
+Options:
+    APP            - install APP
+    --remove APP   - remove APP
+    --list         - list all installed apps
+    --list-all     - list all available apps
+EOF
+    exit
+fi
+
+if [ "$1" = "--remove" ] ; then
+    shift
+    echo "Installed::"
+    #__check_installed_app "$1" || fatal "$1 is not installed"
+    __epm_prescription_run $1 --remove && __remove_installed_app "$@"
+    exit
+fi
+
+if [ "$1" = "--list" ] ; then
+    shift
+    local i
+    for i in $(__list_installed_app) ; do
+        printf "  %-20s - %s\n" "$i" "$($psdir/$i.sh --description 2>/dev/null)"
+    done
+    exit
+fi
+
+if [ "$1" == "--list-all" ] || [ -z "$*" ] ; then
     echo "Run with a name of a prescription to run:"
     for i in $psdir/*.sh ; do
         printf "  %-20s - %s\n" "$(basename $i .sh)" "$($i --description 2>/dev/null)"
     done
-    return
+    exit
 fi
 
-local script="$psdir/$1.sh"
-
-if [ ! -x "$script" ] ; then
-    fatal "Can't find $script prescription."
-fi
-
-# allow use EGET in the scripts
-__set_EGET
-# also we will have DISTRVENDOR there
-
-export PATH=$PROGDIR:$PATH
-
-info "Running $($script --description 2>/dev/null) ..."
-docmd $script --run
-
+__check_installed_app "$1" && info "$1 is already installed" && exit 1
+__epm_prescription_run "$1" --run && __save_installed_app $1
 }
