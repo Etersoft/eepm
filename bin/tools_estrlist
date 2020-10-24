@@ -43,9 +43,21 @@ strip_spaces()
         echo "$*" | filter_strip_spaces
 }
 
-isempty()
+is_empty()
 {
         [ "$(strip_spaces "$*")" = "" ]
+}
+
+isempty()
+{
+        is_empty "$@"
+}
+
+has_space()
+{
+        # not for dash:
+        # [ "$1" != "${1/ //}" ]
+        [ "$(echo "$*" | sed -e "s| ||")" != "$*" ]
 }
 
 list()
@@ -230,7 +242,8 @@ help()
 #        echo "  reg_wordexclude <list PATTERN> [word list] - print only words do not match PATTERN"
         echo "  has <PATTERN> string              - check the string for a match to the regular expression given in PATTERN (grep notation)"
         echo "  match <PATTERN> string            - check the string for a match to the regular expression given in PATTERN (egrep notation)"
-        echo "  isempty [string]                  - true if string has no any symbols (only zero or more spaces)"
+        echo "  isempty [string] (is_empty)       - true if string has no any symbols (only zero or more spaces)"
+        echo "  has_space [string]                - true if string has no spaces"
         echo "  union [word list]                 - sort and remove duplicates"
         echo "  intersection <list1> <list2>      - print only intersected items (the same in both lists)"
         echo "  difference <list1> <list2>        - symmetric difference between lists items (not in both lists)"
