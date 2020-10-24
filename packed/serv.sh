@@ -592,6 +592,20 @@ assure_distr()
 	[ "$DISTRNAME" = "$1" ] || fatal "$TEXT supported only for $1 distro"
 }
 
+get_pkg_name_delimiter()
+{
+   local pkgtype="$1"
+   [ -n "$pkgtype" ] || pkgtype="$($DISTRVENDOR -p)"
+
+   [ "$pkgtype" = "deb" ] && echo "_" && return
+   echo "-"
+}
+
+has_space()
+{
+    estrlist has_space "$@"
+}
+
 # File bin/serv-cat:
 
 serv_cat()
@@ -1589,6 +1603,18 @@ esac
 echo "$DIST_ARCH"
 }
 
+get_debian_arch()
+{
+    local arch="$(get_arch)"
+    case $arch in
+    'i586')
+        arch='i386' ;;
+    'x86_64')
+        arch='amd64' ;;
+    esac
+    echo "$arch"
+}
+
 get_distro_arch()
 {
     local arch="$(get_arch)"
@@ -1597,12 +1623,8 @@ get_distro_arch()
             :
             ;;
         deb)
-            case $arch in
-                'i586')
-                    arch='i386' ;;
-                'x86_64')
-                    arch='amd64' ;;
-            esac
+            get_debian_arch
+            return
             ;;
     esac
     echo "$arch"
@@ -1798,6 +1820,12 @@ case $1 in
 		# override DISTRIB_ID
 		test -n "$2" && DISTRIB_ID="$2"
 		get_distro_arch
+		exit 0
+		;;
+	--debian-arch)
+		# override DISTRIB_ID
+		test -n "$2" && DISTRIB_ID="$2"
+		get_debian_arch
 		exit 0
 		;;
 	-d)
@@ -2079,9 +2107,21 @@ strip_spaces()
         echo "$*" | filter_strip_spaces
 }
 
-isempty()
+is_empty()
 {
         [ "$(strip_spaces "$*")" = "" ]
+}
+
+isempty()
+{
+        is_empty "$@"
+}
+
+has_space()
+{
+        # not for dash:
+        # [ "$1" != "${1/ //}" ]
+        [ "$(echo "$*" | sed -e "s| ||")" != "$*" ]
 }
 
 list()
@@ -2266,7 +2306,8 @@ help()
 #        echo "  reg_wordexclude <list PATTERN> [word list] - print only words do not match PATTERN"
         echo "  has <PATTERN> string              - check the string for a match to the regular expression given in PATTERN (grep notation)"
         echo "  match <PATTERN> string            - check the string for a match to the regular expression given in PATTERN (egrep notation)"
-        echo "  isempty [string]                  - true if string has no any symbols (only zero or more spaces)"
+        echo "  isempty [string] (is_empty)       - true if string has no any symbols (only zero or more spaces)"
+        echo "  has_space [string]                - true if string has no spaces"
         echo "  union [word list]                 - sort and remove duplicates"
         echo "  intersection <list1> <list2>      - print only intersected items (the same in both lists)"
         echo "  difference <list1> <list2>        - symmetric difference between lists items (not in both lists)"
@@ -2642,7 +2683,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.5.0  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.6.1  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2019"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

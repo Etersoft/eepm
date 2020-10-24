@@ -601,6 +601,20 @@ assure_distr()
 	[ "$DISTRNAME" = "$1" ] || fatal "$TEXT supported only for $1 distro"
 }
 
+get_pkg_name_delimiter()
+{
+   local pkgtype="$1"
+   [ -n "$pkgtype" ] || pkgtype="$($DISTRVENDOR -p)"
+
+   [ "$pkgtype" = "deb" ] && echo "_" && return
+   echo "-"
+}
+
+has_space()
+{
+    estrlist has_space "$@"
+}
+
 # File bin/epm-addrepo:
 
 
@@ -2225,10 +2239,7 @@ __epm_korinf_list() {
 
 __epm_korinf_install(){
     local PACKAGE="$1"
-    local aftername="-"
-    # hack
-    [ "$($DISTRVENDOR -p)" = "deb" ] && aftername="_"
-    epm install $(__epm_korinf_site_mask "$PACKAGE$aftername")
+    epm install $(__epm_korinf_site_mask "$PACKAGE$(get_pkg_name_delimiter)")
 }
 
 epm_epm_install(){
@@ -2836,6 +2847,14 @@ __epm_check_if_src_rpm()
     done
 }
 
+__epm_check_if_needed_repack()
+{
+    local pkgname="$(epm print name from "$1")"
+    local repackcode="$CONFIGDIR/repack.d/$pkgname.sh"
+    [ -x "$repackcode" ] || return
+    warning "There is exists repack rules for $pkgname package. It is better install this package via epm --repack install or epm play."
+}
+
 epm_install_files()
 {
     [ -z "$1" ] && return
@@ -2852,7 +2871,9 @@ epm_install_files()
 
             # do not using low-level for install by file path (FIXME: reasons?)
             if ! is_dirpath "$@" || [ "$(get_package_type "$@")" = "rpm" ] ; then
-                sudocmd rpm -Uvh $force $nodeps $@ && save_installed_packages $@ && return
+                __epm_check_vendor $@
+                __epm_check_if_needed_repack $@
+                sudocmd rpm -Uvh $force $noscripts $nodeps $@ && save_installed_packages $@ && return
                 local RES=$?
                 # TODO: check rpm result code and convert it to compatible format if possible
                 __epm_check_if_rpm_already_installed $@ && return
@@ -2893,7 +2914,7 @@ epm_install_files()
        *-rpm)
             __epm_check_if_try_install_deb $@ && return
             __epm_check_if_src_rpm $@
-            sudocmd rpm -Uvh $force $nodeps $@ && return
+            sudocmd rpm -Uvh $force $noscripts $nodeps $@ && return
             local RES=$?
 
             __epm_check_if_rpm_already_installed $@ && return
@@ -3120,7 +3141,7 @@ epm_install()
     # repack binary files
     if [ -n "$repack" ] ; then
         # FIXME: see to_remove below
-        __epm_repack_rpm $files || fatal
+        __epm_repack_to_rpm $files || fatal
         files="$repacked_rpms"
     fi
 
@@ -3526,6 +3547,8 @@ fi
 
 __set_EGET
 
+export PATH=$PROGDIR:$PATH
+
 info "Running $($script --description) ..."
 docmd $script --run
 
@@ -3632,6 +3655,20 @@ compare_version()
     rpmevrcmp "$@"
 }
 
+construct_name()
+{
+    local name="$1"
+    local version="$2"
+    local arch="$3"
+    local pkgtype="$4"
+
+    [ -n "$arch" ] || arch="$(distro_info --distro-arch)"
+    [ -n "$pkgtype" ] || pkgtype="$(distro_info -p)"
+    local ds=$(get_pkg_name_delimiter $pkgtype)
+    [ -n "$version" ] && version="$ds$version"
+    echo "${name}${version}${ds/-/.}$arch.$pkgtype"
+}
+
 epm_print()
 {
     local WHAT="$1"
@@ -3669,6 +3706,7 @@ cat <<EOF
     epm print specname from filename NN      print spec filename for the source package file
     epm print binpkgfilelist in DIR for NN   list binary package(s) filename(s) from DIR for the source package file
     epm print compare [package] version N1 N2          compare (package) versions and print -1, 0, 1
+    epm print constructname <name> <version> [arch] [ pkgtype]  print distro dependend package filename from args name version arch pkgtype
 EOF
             ;;
         "name")
@@ -3757,6 +3795,9 @@ EOF
             #else
                  compare_version "$1" "$2"
             #fi
+            ;;
+        "constructname")
+            construct_name "$@"
             ;;
         *)
             fatal "Unknown command $ epm print $WHAT. Use epm print help for get help."
@@ -4902,7 +4943,8 @@ epm_remove_low()
 	case $PMTYPE in
 		*-rpm)
 			cd /tmp || fatal
-			sudocmd rpm -ev $nodeps $@
+			__epm_check_vendor $@
+			sudocmd rpm -ev $noscripts $nodeps $@
 			# keep status
 			#cd - >/dev/null
 			return ;;
@@ -5455,12 +5497,25 @@ __fix_spec()
     #" hack for highlight
 }
 
+__check_stoplist()
+{
+    cat <<EOF | grep -q "^$1$"
+kesl
+kesl-astra
+klnagent
+klnagent64
+klnagent64-astra
+EOF
+}
+
+
 __apply_fix_code()
 {
     local repackcode="$CONFIGDIR/repack.d/$1.sh"
     [ -x "$repackcode" ] || return
     shift
-    docmd $repackcode "$1" "$2" || warning "There was errors with $repackcode script"
+    export PATH=$PROGDIR:$PATH
+    docmd $repackcode "$1" "$2" || fatal "There is an error from $repackcode script"
 }
 
 __create_rpmmacros()
@@ -5475,10 +5530,11 @@ EOF
     to_remove_pkg_files="$to_remove_pkg_files $HOME/.rpmmacros"
 }
 
-__epm_repack_rpm()
+__epm_repack_to_rpm()
 {
     assure_distr ALTLinux "install --repack"
 
+    # install epm-repack for static (package based) dependencies
     assure_exists fakeroot || fatal
     assure_exists alien || fatal
     assure_exists rpmbuild rpm-build || fatal
@@ -5506,6 +5562,10 @@ __epm_repack_rpm()
         # alien failed with spaced names
         # alpkg=$abspkg
         alpkg=$(basename $pkg)
+        # TODO: use func for get name from deb pkg
+        # TODO: epm print name from deb package
+        # TODO: use stoplist only for deb?
+        [ -z "$force" ] && __check_stoplist $(echo $alpkg | sed -e "s|_.*||") && fatal "Please use official rpm package instead of $alpkg (It is not recommended to use --force to skip this checking."
         # don't use abs package path: copy package to temp dir and use there
         cp -v $pkg $tmpbuilddir/../$alpkg
         cd $tmpbuilddir || fatal
@@ -5553,7 +5613,7 @@ __epm_repack_rpm()
 __epm_check_if_try_install_deb()
 {
 	__epm_split_by_pkg_type deb "$@" || return 1
-	__epm_repack_rpm $split_replaced_pkgs || fatal
+	__epm_repack_to_rpm $split_replaced_pkgs || fatal
 
 	# TODO: move to install
 	docmd epm install $force $nodeps $repacked_rpms
@@ -5580,10 +5640,9 @@ epm_repack()
     [ -n "$pkg_names" ] && warning "Can't find $pkg_names"
     [ -z "$pkg_files" ] && info "Skip empty repack list" && return 22
 
-    # TODO: если у нас rpm, а пакет - deb и наоборот
     case $PKGFORMAT in
         rpm)
-            __epm_repack_rpm $pkg_files || fatal
+            __epm_repack_to_rpm $pkg_files || fatal
             echo
             echo "Adapted packages:"
             cp $repacked_rpms .
@@ -6657,6 +6716,21 @@ get_only_installed_packages()
     estrlist exclude "$(echo "$installlist" | (skip_installed='yes' filter_out_installed_packages))" "$installlist"
 }
 
+__epm_check_vendor()
+{
+    # don't check vendor if there are forced script options
+    [ -n "$scripts$noscripts" ] && return
+
+    local i
+    for i in $* ; do
+        local vendor
+        vendor="$(epm print field Vendor for "$i" 2>/dev/null)" || continue
+        # TODO: check GPG
+        [ "$vendor" = "ALT Linux Team" ] && continue
+        warning "Scripts are disabled for package $i from outside vendor '$vendor'. Use --scripts if you need run scripts from such packages."
+        noscripts="--noscripts"
+    done
+}
 
 # File bin/epm-sh-warmup:
 
@@ -7227,7 +7301,7 @@ epm_Upgrade()
 epm_whatdepends()
 {
 	local CMD
-	[ -n "$pkg_files" ] && fatal "whatdepends do not handle files"
+	[ -n "$pkg_files" ] && fatal "whatdepends does not handle files"
 	[ -n "$pkg_names" ] || fatal "whatdepends: missing package(s) name"
 	local pkg=$(print_name $pkg_names)
 
@@ -7736,6 +7810,18 @@ esac
 echo "$DIST_ARCH"
 }
 
+get_debian_arch()
+{
+    local arch="$(get_arch)"
+    case $arch in
+    'i586')
+        arch='i386' ;;
+    'x86_64')
+        arch='amd64' ;;
+    esac
+    echo "$arch"
+}
+
 get_distro_arch()
 {
     local arch="$(get_arch)"
@@ -7744,12 +7830,8 @@ get_distro_arch()
             :
             ;;
         deb)
-            case $arch in
-                'i586')
-                    arch='i386' ;;
-                'x86_64')
-                    arch='amd64' ;;
-            esac
+            get_debian_arch
+            return
             ;;
     esac
     echo "$arch"
@@ -7945,6 +8027,12 @@ case $1 in
 		# override DISTRIB_ID
 		test -n "$2" && DISTRIB_ID="$2"
 		get_distro_arch
+		exit 0
+		;;
+	--debian-arch)
+		# override DISTRIB_ID
+		test -n "$2" && DISTRIB_ID="$2"
+		get_debian_arch
 		exit 0
 		;;
 	-d)
@@ -8226,9 +8314,21 @@ strip_spaces()
         echo "$*" | filter_strip_spaces
 }
 
-isempty()
+is_empty()
 {
         [ "$(strip_spaces "$*")" = "" ]
+}
+
+isempty()
+{
+        is_empty "$@"
+}
+
+has_space()
+{
+        # not for dash:
+        # [ "$1" != "${1/ //}" ]
+        [ "$(echo "$*" | sed -e "s| ||")" != "$*" ]
 }
 
 list()
@@ -8413,7 +8513,8 @@ help()
 #        echo "  reg_wordexclude <list PATTERN> [word list] - print only words do not match PATTERN"
         echo "  has <PATTERN> string              - check the string for a match to the regular expression given in PATTERN (grep notation)"
         echo "  match <PATTERN> string            - check the string for a match to the regular expression given in PATTERN (egrep notation)"
-        echo "  isempty [string]                  - true if string has no any symbols (only zero or more spaces)"
+        echo "  isempty [string] (is_empty)       - true if string has no any symbols (only zero or more spaces)"
+        echo "  has_space [string]                - true if string has no spaces"
         echo "  union [word list]                 - sort and remove duplicates"
         echo "  intersection <list1> <list2>      - print only intersected items (the same in both lists)"
         echo "  difference <list1> <list2>        - symmetric difference between lists items (not in both lists)"
@@ -8718,7 +8819,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.5.0  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.6.1  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2020"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -8728,7 +8829,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.5.0
+EPMVERSION=3.6.1
 verbose=
 quiet=
 nodeps=
@@ -8738,6 +8839,7 @@ force=
 repack=
 inscript=
 scripts=
+noscripts=
 short=
 direct=
 sort=
@@ -9040,8 +9142,11 @@ check_option()
     --repack)              # HELPOPT: repack rpm package(s) before install
         repack="--repack"
         ;;
-    --scripts)              # HELPOPT: include scripts in repacked rpm package(s) (see --repack or repacking when foreign package is installed)
+    --scripts)             # HELPOPT: include scripts in repacked rpm package(s) (see --repack or repacking when foreign package is installed)
         scripts="--scripts"
+        ;;
+    --noscripts)           # HELPOPT: disable scripts in install packages
+        noscripts="--noscripts"
         ;;
     --sort)               # HELPOPT: sort output, f.i. --sort=size (supported only for packages command)
         # TODO: how to read arg?
@@ -9057,10 +9162,7 @@ check_option()
     return 0
 }
 
-has_space()
-{
-    [ -n "$2" ]
-}
+# TODO: skip for commands where we don't need parse args
 
 check_filenames()
 {
@@ -9068,16 +9170,16 @@ check_filenames()
     for opt in "$@" ; do
         # files can be with full path or have extension via .
         if [ -f "$opt" ] && echo "$opt" | grep -q "[/\.]" ; then
-            has_space $opt && warning "There are space(s) in filename '$opt', it is not supported. Skipped" && continue
+            has_space "$opt" && warning "There are space(s) in filename '$opt', it is not supported. Skipped" && continue
             pkg_files="$pkg_files $opt"
         elif [ -d "$opt" ] ; then
-            has_space $opt && warning "There are space(s) in directory path '$opt', it is not supported. Skipped" && continue
+            has_space "$opt" && warning "There are space(s) in directory path '$opt', it is not supported. Skipped" && continue
             pkg_dirs="$pkg_dirs $opt"
         elif echo "$opt" | grep -q "^[fhtps]*://" ; then
-            has_space $opt && warning "There are space(s) in URL '$opt', it is not supported. Skipped" && continue
+            has_space "$opt" && warning "There are space(s) in URL '$opt', it is not supported. Skipped" && continue
             pkg_urls="$pkg_urls $opt"
         else
-            has_space $opt && warning "There are space(s) in package name '$opt', it is not supported. Skipped" && continue
+            has_space "$opt" && warning "There are space(s) in package name '$opt', it is not supported. Skipped." && continue
             pkg_names="$pkg_names $opt"
         fi
         quoted_args="$quoted_args \"$opt\""
