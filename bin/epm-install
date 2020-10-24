@@ -586,7 +586,7 @@ epm_install()
     # repack binary files
     if [ -n "$repack" ] ; then
         # FIXME: see to_remove below
-        __epm_repack_rpm $files || fatal
+        __epm_repack_to_rpm $files || fatal
         files="$repacked_rpms"
     fi
 

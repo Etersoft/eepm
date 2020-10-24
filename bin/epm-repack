@@ -162,10 +162,11 @@ EOF
 }
 
 # will fill repacked_rpms var
-__epm_repack_rpm()
+__epm_repack_to_rpm()
 {
     assure_distr ALTLinux "install --repack"
 
+    # install epm-repack for static (package based) dependencies
     assure_exists fakeroot || fatal
     assure_exists alien || fatal
     assure_exists rpmbuild rpm-build || fatal
@@ -244,7 +245,7 @@ __epm_repack_rpm()
 __epm_check_if_try_install_deb()
 {
 	__epm_split_by_pkg_type deb "$@" || return 1
-	__epm_repack_rpm $split_replaced_pkgs || fatal
+	__epm_repack_to_rpm $split_replaced_pkgs || fatal
 
 	# TODO: move to install
 	docmd epm install $force $nodeps $repacked_rpms
@@ -272,10 +273,9 @@ epm_repack()
     [ -n "$pkg_names" ] && warning "Can't find $pkg_names"
     [ -z "$pkg_files" ] && info "Skip empty repack list" && return 22
 
-    # TODO: если у нас rpm, а пакет - deb и наоборот
     case $PKGFORMAT in
         rpm)
-            __epm_repack_rpm $pkg_files || fatal
+            __epm_repack_to_rpm $pkg_files || fatal
             echo
             echo "Adapted packages:"
             cp $repacked_rpms .
