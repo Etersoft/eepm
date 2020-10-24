@@ -7,6 +7,13 @@ fatal()
     exit 1
 }
 
+PKGNAME=zoom
+
+if [ "$1" = "--remove" ] ; then
+    epm remove $PKGNAME
+    exit
+fi
+
 [ "$1" != "--run" ] && echo "Install Zoom client from the official site" && exit
 
 arch=$($DISTRVENDOR --distro-arch)

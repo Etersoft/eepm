@@ -7,6 +7,13 @@ fatal()
     exit 1
 }
 
+PKGNAME=microsoft-edge-dev
+
+if [ "$1" = "--remove" ] ; then
+    epm remove $PKGNAME
+    exit
+fi
+
 [ "$1" != "--run" ] && echo "Install Microsoft Edge browser (dev) from the official site" && exit
 
 [ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1

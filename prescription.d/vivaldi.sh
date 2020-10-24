@@ -7,6 +7,13 @@ fatal()
     exit 1
 }
 
+PKGNAME=vivaldi-stable
+
+if [ "$1" = "--remove" ] ; then
+    epm remove $PKGNAME
+    exit
+fi
+
 [ "$1" != "--run" ] && echo "Install Vivaldi browser from the official site" && exit
 
 arch="$($DISTRVENDOR --debian-arch)"
@@ -26,4 +33,4 @@ esac
 # https://repo.vivaldi.com/archive/rpm/x86_64/
 
 # epm uses eget to download * names
-epm --noscripts install "https://repo.vivaldi.com/archive/deb/pool/main/$(epm print constructname vivaldi-stable "*" $arch deb)"
+epm --noscripts install "https://repo.vivaldi.com/archive/deb/pool/main/$(epm print constructname $PKGNAME "*" $arch deb)"

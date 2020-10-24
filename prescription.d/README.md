@@ -8,3 +8,6 @@ Allowed command:
 
 TODO:
 * inject some functions
+
+TODO:
+* save packages for remove

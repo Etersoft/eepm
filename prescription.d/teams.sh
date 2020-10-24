@@ -7,6 +7,13 @@ fatal()
     exit 1
 }
 
+PKGNAME=teams
+
+if [ "$1" = "--remove" ] ; then
+    epm remove $PKGNAME
+    exit
+fi
+
 [ "$1" != "--run" ] && echo "Install Microsoft Teams for Linux from the official site" && exit
 
 [ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1

@@ -7,8 +7,6 @@ fatal()
     exit 1
 }
 
-[ "$1" != "--run" ] && echo "Install Teamviewer from the official site" && exit
-
 PKGNAME="teamviewer"
 
 arch="$($DISTRVENDOR -a)"
@@ -22,6 +20,13 @@ case "$arch" in
         fatal "$arch arch is not supported"
         ;;
 esac
+
+if [ "$1" = "--remove" ] ; then
+    epm remove $PKGNAME
+    exit
+fi
+
+[ "$1" != "--run" ] && echo "Install Teamviewer from the official site" && exit
 
 # See https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=teamviewer
 

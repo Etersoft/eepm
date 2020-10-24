@@ -25,7 +25,7 @@ local psdir="$CONFIGDIR/prescription.d"
 if [ -z "$pkg_filenames" ] ; then
     echo "Run with a name of a prescription to run:"
     for i in $psdir/*.sh ; do
-        printf "  %-20s - %s\n" "$(basename $i .sh)" "$($i --description)"
+        printf "  %-20s - %s\n" "$(basename $i .sh)" "$($i --description 2>/dev/null)"
     done
     return
 fi
@@ -42,7 +42,7 @@ __set_EGET
 
 export PATH=$PROGDIR:$PATH
 
-info "Running $($script --description) ..."
+info "Running $($script --description 2>/dev/null) ..."
 docmd $script --run
 
 }

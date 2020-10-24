@@ -7,6 +7,13 @@ fatal()
     exit 1
 }
 
+PKGNAME=chromium-gost
+
+if [ "$1" = "--remove" ] ; then
+    epm remove $PKGNAME
+    exit
+fi
+
 [ "$1" != "--run" ] && echo "Install Chromium with GOST support from the official site" && exit
 
 [ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
@@ -16,6 +23,6 @@ fatal()
 arch=amd64
 pkgtype=deb
 
-PKG=$($EGET --list --latest https://github.com/deemru/chromium-gost/releases "chromium-gost-*linux-$arch.$pkgtype") || fatal "Can't get package URL"
+PKG=$($EGET --list --latest https://github.com/deemru/chromium-gost/releases "$PKGNAME-*linux-$arch.$pkgtype") || fatal "Can't get package URL"
 
 epm install "$PKG"

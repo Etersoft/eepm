@@ -7,6 +7,11 @@ fatal()
     exit 1
 }
 
+if [ "$1" = "--remove" ] ; then
+    epm remove google-chrome-stable
+    exit
+fi
+
 [ "$1" != "--run" ] && echo "Install The popular and trusted web browser by Google (Stable Channel) from the official site" && exit
 
 [ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
