@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.6.1
+Version: 3.6.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -96,6 +96,8 @@ rm -f %buildroot%_datadir/%name/tools_eget
 rm -f %buildroot%_bindir/distr_info
 %endif
 
+mkdir -p %buildroot/var/lib/eepm/
+
 %files
 %doc README.md TODO LICENSE
 %dir %_sysconfdir/eepm/
@@ -110,6 +112,7 @@ rm -f %buildroot%_bindir/distr_info
 %_bindir/upm
 %_bindir/serv
 %_bindir/cerv
+%dir /var/lib/eepm/
 %if %_vendor != "alt"
 %_bindir/distr_info
 %endif
@@ -123,6 +126,11 @@ rm -f %buildroot%_bindir/distr_info
 %endif
 
 %changelog
+* Sat Oct 24 2020 Vitaly Lipatov <lav@altlinux.ru> 3.6.2-alt1
+- presctiptions: use DISTRVERNDOR instead of distro_info
+- prescriptions: add --remove support
+- epm-prescription: add support for --list, --list-all, --remove
+
 * Sat Oct 24 2020 Vitaly Lipatov <lav@altlinux.ru> 3.6.1-alt1
 - use has_space from estrlist (works with dash)
 - epm-repack: implement initial stoplist support for deb packages we don't want convert
