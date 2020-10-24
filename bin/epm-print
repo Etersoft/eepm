@@ -136,7 +136,8 @@ construct_name()
     [ -n "$arch" ] || arch="$(distro_info --distro-arch)"
     [ -n "$pkgtype" ] || pkgtype="$(distro_info -p)"
     local ds=$(get_pkg_name_delimiter $pkgtype)
-    echo "${name}$ds${version}${ds/-/.}$arch.$pkgtype"
+    [ -n "$version" ] && version="$ds$version"
+    echo "${name}${version}${ds/-/.}$arch.$pkgtype"
 }
 
 epm_print()
