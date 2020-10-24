@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.6.0
+Version: 3.6.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -123,6 +123,12 @@ rm -f %buildroot%_bindir/distr_info
 %endif
 
 %changelog
+* Sat Oct 24 2020 Vitaly Lipatov <lav@altlinux.ru> 3.6.1-alt1
+- use has_space from estrlist (works with dash)
+- epm-repack: implement initial stoplist support for deb packages we don't want convert
+- epm-repack: make fatal any errors in repack scripts
+- add prescription for teamviewer
+
 * Sat Oct 24 2020 Vitaly Lipatov <lav@altlinux.ru> 3.6.0-alt1
 - epm-install: add --noscripts support for rpm install
 - epm-install: disable scripts by default for outside vendors
