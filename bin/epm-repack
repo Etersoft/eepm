@@ -127,6 +127,19 @@ __fix_spec()
     #" hack for highlight
 }
 
+# TODO: move this list from external file
+__check_stoplist()
+{
+    cat <<EOF | grep -q "^$1$"
+kesl
+kesl-astra
+klnagent
+klnagent64
+klnagent64-astra
+EOF
+}
+
+
 __apply_fix_code()
 {
     local repackcode="$CONFIGDIR/repack.d/$1.sh"
@@ -180,6 +193,10 @@ __epm_repack_rpm()
         # alien failed with spaced names
         # alpkg=$abspkg
         alpkg=$(basename $pkg)
+        # TODO: use func for get name from deb pkg
+        # TODO: epm print name from deb package
+        # TODO: use stoplist only for deb?
+        [ -z "$force" ] && __check_stoplist $(echo $alpkg | sed -e "s|_.*||") && fatal "Please use official rpm package instead of $alpkg (It is not recommended to use --force to skip this checking."
         # don't use abs package path: copy package to temp dir and use there
         cp -v $pkg $tmpbuilddir/../$alpkg
         cd $tmpbuilddir || fatal
