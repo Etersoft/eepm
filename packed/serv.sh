@@ -375,9 +375,10 @@ __set_EGET()
 		export EGET="$SHAREDIR/tools_eget"
 		return
 	fi
+	fatal "Internal error: missed tools_eget"
 
 	# FIXME: we need disable output here, eget can be used for get output
-	assure_exists eget >/dev/null
+	assure_exists eget eget 3.3 >/dev/null
 	# use external command, not the function
 	export EGET="$(which eget)" || fatal "Missed command eget from installed package eget"
 }
@@ -390,9 +391,10 @@ disabled_eget()
 		$SHAREDIR/tools_eget "$@"
 		return
 	fi
+	fatal "Internal error: missed tools_eget"
 
 	# FIXME: we need disable output here, eget can be used for get output
-	assure_exists eget >/dev/null
+	assure_exists eget eget 3.3 >/dev/null
 	# run external command, not the function
 	EGET=$(which eget) || fatal "Missed command eget from installed package eget"
 	$EGET "$@"
@@ -492,9 +494,7 @@ set_pm_type()
 	[ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d) || fatal "Can't get distro name."
 	[ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
 	if [ -z "$DISTRARCH" ] ; then
-		DISTRARCH=$($DISTRVENDOR -a)
-		# TODO: translate func
-		[ "$DISTRARCH" = "x86" ] && DISTRARCH="i586"
+		DISTRARCH=$($DISTRVENDOR --distro-arch)
 	fi
 	set_target_pkg_env
 
@@ -1908,17 +1908,69 @@ internal_tools_eget()
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-WGET="wget"
+fatal()
+{
+    echo "FATAL: $*" >&2
+    exit 1
+}
+
+WGETQ='' #-q
+CURLQ='' #-s
+
+set_quiet()
+{
+    WGETQ='-q'
+    CURLQ='-s'
+}
 
 # TODO: passthrou all wget options
 if [ "$1" = "-q" ] ; then
-    WGET="wget -q"
+    set_quiet
     shift
+fi
+
+
+WGET="$(which wget 2>/dev/null)"
+
+if [ -n "$WGET" ] ; then
+# put remote content to stdout
+scat()
+{
+    $WGET $WGETQ -O- "$1"
+}
+# download to default name of to $2
+sget()
+{
+    if [ -n "$2" ] ; then
+       $WGET $WGETQ -O "$2" "$1"
+    else
+       $WGET $WGETQ "$1"
+    fi
+}
+
+else
+CURL="$(which curl 2>/dev/null)"
+[ -n "$CURL" ] || fatal "There are no wget nor curl in the system. Install it with $ epm install curl"
+# put remote content to stdout
+scat()
+{
+    $CURL -L $CURLQ "$1"
+}
+# download to default name of to $2
+sget()
+{
+    if [ -n "$2" ] ; then
+       $CURL -L $CURLQ --output "$2" "$1"
+    else
+       $CURL -L $CURLQ -O "$1"
+    fi
+}
 fi
 
 LISTONLY=''
 if [ "$1" = "--list" ] ; then
     LISTONLY="$1"
+    set_quiet
     shift
 fi
 
@@ -1949,10 +2001,9 @@ filter_order()
 }
 
 # download to this file
-WGET_OPTION_TARGET=
+TARGETFILE=''
 if [ "$1" = "-O" ] ; then
     TARGETFILE="$2"
-    WGET_OPTION_TARGET="-O $2"
     shift 2
 fi
 
@@ -1960,21 +2011,23 @@ fi
 # -P support
 
 if [ -z "$1" ] ; then
-    echo "eget - wget wrapper" >&2
-    fatal "Run with URL, like http://somesite.ru/dir/*.log"
+    echo "eget - wget like downloader" >&2
+    fatal "Run $0 --help to get help"
 fi
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
-    echo "eget - wget wrapper, with support"
-    echo "Usage: eget [-O target file] [--list] http://somesite.ru/dir/na*.log"
+    echo "eget - wget like downloader with wildcard support in filename part of URL"
+    echo "Usage: eget [-q] [-O target file] [--list] http://somesite.ru/dir/na*.log"
     echo
     echo "Options:"
-    echo "    --list   - print files frm url with mask"
+    echo "    -q       - quiet mode"
+    echo "    -O file  - download to this file (use filename from server if missed)"
+    echo "    --list   - print files from url with mask"
     echo "    --latest - print only latest version of file"
     echo
     echo "eget supports --list and download for https://github.com/owner/project urls"
     echo
-    echo "See $ wget --help for wget options you can use here"
+#    echo "See $ wget --help for wget options you can use here"
     return
 fi
 
@@ -1986,9 +2039,7 @@ get_github_urls()
     [ -n "$owner" ] || fatal "Can't get owner from $1"
     [ -n "$project" ] || fatal "Can't get project from $1"
     local URL="https://api.github.com/repos/$owner/$project/releases/latest"
-    local q=''
-    [ -n "$LISTONLY" ] && q="-q"
-    $WGET $q -O- $URL | \
+    scat $URL | \
         grep -i -o -E '"browser_download_url": "https://.*"' | cut -d'"' -f4
 }
 
@@ -2001,7 +2052,7 @@ if echo "$1" | grep -q "^https://github.com/" ; then
     fi
 
     for fn in $(get_github_urls "$1" | filter_glob "$MASK" | filter_order) ; do
-        $WGET "$fn" || ERROR=1
+        sget "$fn" || ERROR=1
     done
     return
 fi
@@ -2014,8 +2065,8 @@ fi
 
 # If ftp protocol, just download
 if echo "$1" | grep -q "^ftp://" ; then
-    [ -n "$LISTONLY" ] && fatal "Error: list files for ftp:// do not supported yet"
-    $WGET $WGET_OPTION_TARGET "$1"
+    [ -n "$LISTONLY" ] && fatal "TODO: list files for ftp:// do not supported yet"
+    sget "$1" "$TARGETFILE"
     return
 fi
 
@@ -2026,24 +2077,24 @@ if echo "$URL" | grep -q "[*?]" ; then
     fatal "Error: there are globbing symbols (*?) in $URL"
 fi
 
-# mask allowed only in last part of path
+# mask allowed only in the last part of path
 MASK=$(basename "$1")
 
 # If have no wildcard symbol like asterisk, just download
 if echo "$MASK" | grep -qv "[*?]" ; then
-    $WGET $WGET_OPTION_TARGET "$1"
+    sget "$1" "$TARGETFILE"
     return
 fi
 
 get_urls()
 {
-    $WGET -O- $URL | \
+    scat $URL | \
         grep -i -o -E 'href="([^\*/"#]+)"' | cut -d'"' -f2
 }
 
 if [ -n "$LISTONLY" ] ; then
-    WGET="$WGET -q"
     for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
+        # TODO: return full url? someone use old behaviour?
         echo "$(basename "$fn")"
     done
     return
@@ -2051,7 +2102,7 @@ fi
 
 ERROR=0
 for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
-    $WGET "$URL/$(basename "$fn")" || ERROR=1
+    sget "$URL/$(basename "$fn")" || ERROR=1
 done
 exit $ERROR
 
@@ -2683,7 +2734,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.6.1  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.6.3  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2019"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

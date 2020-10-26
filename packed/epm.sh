@@ -384,9 +384,10 @@ __set_EGET()
 		export EGET="$SHAREDIR/tools_eget"
 		return
 	fi
+	fatal "Internal error: missed tools_eget"
 
 	# FIXME: we need disable output here, eget can be used for get output
-	assure_exists eget >/dev/null
+	assure_exists eget eget 3.3 >/dev/null
 	# use external command, not the function
 	export EGET="$(which eget)" || fatal "Missed command eget from installed package eget"
 }
@@ -399,9 +400,10 @@ disabled_eget()
 		$SHAREDIR/tools_eget "$@"
 		return
 	fi
+	fatal "Internal error: missed tools_eget"
 
 	# FIXME: we need disable output here, eget can be used for get output
-	assure_exists eget >/dev/null
+	assure_exists eget eget 3.3 >/dev/null
 	# run external command, not the function
 	EGET=$(which eget) || fatal "Missed command eget from installed package eget"
 	$EGET "$@"
@@ -501,9 +503,7 @@ set_pm_type()
 	[ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d) || fatal "Can't get distro name."
 	[ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
 	if [ -z "$DISTRARCH" ] ; then
-		DISTRARCH=$($DISTRVENDOR -a)
-		# TODO: translate func
-		[ "$DISTRARCH" = "x86" ] && DISTRARCH="i586"
+		DISTRARCH=$($DISTRVENDOR --distro-arch)
 	fi
 	set_target_pkg_env
 
@@ -3526,32 +3526,98 @@ esac
 
 # File bin/epm-prescription:
 
+epm_vardir=/var/lib/eepm
+
+__save_installed_app()
+{
+	[ -d "$epm_vardir" ] || return 0
+	estrlist list "$@" | $SUDO tee $epm_vardir/installed-app >/dev/null
+}
+
+__remove_installed_app()
+{
+	[ -d "$epm_vardir" ] || return 0
+	local i
+	for i in $* ; do
+		$SUDO sed -i '/^$i$/d' $epm_vardir/installed-app
+	done
+	return 0
+}
+
+__check_installed_app()
+{
+	[ -s $epm_vardir/installed-app ] || return 1
+	grep -q -- "^$1\$" $epm_vardir/installed-app
+}
+
+__list_installed_app()
+{
+    cat $epm_vardir/installed-app 2>/dev/null
+}
+
+
+__epm_prescription_run()
+{
+    local script="$psdir/$1.sh"
+    shift
+    local option="$1"
+
+    if [ ! -x "$script" ] ; then
+        fatal "Can't find $script prescription."
+    fi
+
+    # allow use EGET in the scripts
+    __set_EGET
+    # also we will have DISTRVENDOR there
+    export PATH=$PROGDIR:$PATH
+
+    #info "Running $($script --description 2>/dev/null) ..."
+    docmd $script $option
+}
+
 epm_prescription()
 {
 
 local psdir="$CONFIGDIR/prescription.d"
 
-if [ -z "$pkg_filenames" ] ; then
+if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
+    cat <<EOF
+Options:
+    APP            - install APP
+    --remove APP   - remove APP
+    --list         - list all installed apps
+    --list-all     - list all available apps
+EOF
+    exit
+fi
+
+if [ "$1" = "--remove" ] ; then
+    shift
+    echo "Installed::"
+    #__check_installed_app "$1" || fatal "$1 is not installed"
+    __epm_prescription_run $1 --remove && __remove_installed_app "$@"
+    exit
+fi
+
+if [ "$1" = "--list" ] ; then
+    shift
+    local i
+    for i in $(__list_installed_app) ; do
+        printf "  %-20s - %s\n" "$i" "$($psdir/$i.sh --description 2>/dev/null)"
+    done
+    exit
+fi
+
+if [ "$1" == "--list-all" ] || [ -z "$*" ] ; then
     echo "Run with a name of a prescription to run:"
     for i in $psdir/*.sh ; do
-        printf "  %-20s - %s\n" "$(basename $i .sh)" "$($i --description)"
+        printf "  %-20s - %s\n" "$(basename $i .sh)" "$($i --description 2>/dev/null)"
     done
-    return
+    exit
 fi
 
-local script="$psdir/$1.sh"
-
-if [ ! -x "$script" ] ; then
-    fatal "Can't find $script prescription."
-fi
-
-__set_EGET
-
-export PATH=$PROGDIR:$PATH
-
-info "Running $($script --description) ..."
-docmd $script --run
-
+__check_installed_app "$1" && info "$1 is already installed" && exit 1
+__epm_prescription_run "$1" --run && __save_installed_app $1
 }
 
 # File bin/epm-print:
@@ -4736,6 +4802,8 @@ __switch_alt_to_distro()
 		"p8"|"p8 p9"|"t8 p9"|"c8 c9"|"c8 p9"|"c8.1 p9"|"c8.2 p9"|"p9 p9")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
+			info "Workaround for https://bugzilla.altlinux.org/show_bug.cgi?id=35492 ..."
+			docmd epm remove gdb || fatal
 			__switch_repo_to $TO
 			docmd epm update || fatal
 			__check_system
@@ -8115,17 +8183,69 @@ internal_tools_eget()
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-WGET="wget"
+fatal()
+{
+    echo "FATAL: $*" >&2
+    exit 1
+}
+
+WGETQ='' #-q
+CURLQ='' #-s
+
+set_quiet()
+{
+    WGETQ='-q'
+    CURLQ='-s'
+}
 
 # TODO: passthrou all wget options
 if [ "$1" = "-q" ] ; then
-    WGET="wget -q"
+    set_quiet
     shift
+fi
+
+
+WGET="$(which wget 2>/dev/null)"
+
+if [ -n "$WGET" ] ; then
+# put remote content to stdout
+scat()
+{
+    $WGET $WGETQ -O- "$1"
+}
+# download to default name of to $2
+sget()
+{
+    if [ -n "$2" ] ; then
+       $WGET $WGETQ -O "$2" "$1"
+    else
+       $WGET $WGETQ "$1"
+    fi
+}
+
+else
+CURL="$(which curl 2>/dev/null)"
+[ -n "$CURL" ] || fatal "There are no wget nor curl in the system. Install it with $ epm install curl"
+# put remote content to stdout
+scat()
+{
+    $CURL -L $CURLQ "$1"
+}
+# download to default name of to $2
+sget()
+{
+    if [ -n "$2" ] ; then
+       $CURL -L $CURLQ --output "$2" "$1"
+    else
+       $CURL -L $CURLQ -O "$1"
+    fi
+}
 fi
 
 LISTONLY=''
 if [ "$1" = "--list" ] ; then
     LISTONLY="$1"
+    set_quiet
     shift
 fi
 
@@ -8156,10 +8276,9 @@ filter_order()
 }
 
 # download to this file
-WGET_OPTION_TARGET=
+TARGETFILE=''
 if [ "$1" = "-O" ] ; then
     TARGETFILE="$2"
-    WGET_OPTION_TARGET="-O $2"
     shift 2
 fi
 
@@ -8167,21 +8286,23 @@ fi
 # -P support
 
 if [ -z "$1" ] ; then
-    echo "eget - wget wrapper" >&2
-    fatal "Run with URL, like http://somesite.ru/dir/*.log"
+    echo "eget - wget like downloader" >&2
+    fatal "Run $0 --help to get help"
 fi
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
-    echo "eget - wget wrapper, with support"
-    echo "Usage: eget [-O target file] [--list] http://somesite.ru/dir/na*.log"
+    echo "eget - wget like downloader with wildcard support in filename part of URL"
+    echo "Usage: eget [-q] [-O target file] [--list] http://somesite.ru/dir/na*.log"
     echo
     echo "Options:"
-    echo "    --list   - print files frm url with mask"
+    echo "    -q       - quiet mode"
+    echo "    -O file  - download to this file (use filename from server if missed)"
+    echo "    --list   - print files from url with mask"
     echo "    --latest - print only latest version of file"
     echo
     echo "eget supports --list and download for https://github.com/owner/project urls"
     echo
-    echo "See $ wget --help for wget options you can use here"
+#    echo "See $ wget --help for wget options you can use here"
     return
 fi
 
@@ -8193,9 +8314,7 @@ get_github_urls()
     [ -n "$owner" ] || fatal "Can't get owner from $1"
     [ -n "$project" ] || fatal "Can't get project from $1"
     local URL="https://api.github.com/repos/$owner/$project/releases/latest"
-    local q=''
-    [ -n "$LISTONLY" ] && q="-q"
-    $WGET $q -O- $URL | \
+    scat $URL | \
         grep -i -o -E '"browser_download_url": "https://.*"' | cut -d'"' -f4
 }
 
@@ -8208,7 +8327,7 @@ if echo "$1" | grep -q "^https://github.com/" ; then
     fi
 
     for fn in $(get_github_urls "$1" | filter_glob "$MASK" | filter_order) ; do
-        $WGET "$fn" || ERROR=1
+        sget "$fn" || ERROR=1
     done
     return
 fi
@@ -8221,8 +8340,8 @@ fi
 
 # If ftp protocol, just download
 if echo "$1" | grep -q "^ftp://" ; then
-    [ -n "$LISTONLY" ] && fatal "Error: list files for ftp:// do not supported yet"
-    $WGET $WGET_OPTION_TARGET "$1"
+    [ -n "$LISTONLY" ] && fatal "TODO: list files for ftp:// do not supported yet"
+    sget "$1" "$TARGETFILE"
     return
 fi
 
@@ -8233,24 +8352,24 @@ if echo "$URL" | grep -q "[*?]" ; then
     fatal "Error: there are globbing symbols (*?) in $URL"
 fi
 
-# mask allowed only in last part of path
+# mask allowed only in the last part of path
 MASK=$(basename "$1")
 
 # If have no wildcard symbol like asterisk, just download
 if echo "$MASK" | grep -qv "[*?]" ; then
-    $WGET $WGET_OPTION_TARGET "$1"
+    sget "$1" "$TARGETFILE"
     return
 fi
 
 get_urls()
 {
-    $WGET -O- $URL | \
+    scat $URL | \
         grep -i -o -E 'href="([^\*/"#]+)"' | cut -d'"' -f2
 }
 
 if [ -n "$LISTONLY" ] ; then
-    WGET="$WGET -q"
     for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
+        # TODO: return full url? someone use old behaviour?
         echo "$(basename "$fn")"
     done
     return
@@ -8258,7 +8377,7 @@ fi
 
 ERROR=0
 for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
-    $WGET "$URL/$(basename "$fn")" || ERROR=1
+    sget "$URL/$(basename "$fn")" || ERROR=1
 done
 exit $ERROR
 
@@ -8819,7 +8938,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.6.1  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.6.3  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2020"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -8829,7 +8948,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.6.1
+EPMVERSION=3.6.3
 verbose=
 quiet=
 nodeps=
