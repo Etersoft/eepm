@@ -262,6 +262,8 @@ __switch_alt_to_distro()
 		"p8"|"p8 p9"|"t8 p9"|"c8 c9"|"c8 p9"|"c8.1 p9"|"c8.2 p9"|"p9 p9")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
+			info "Workaround for https://bugzilla.altlinux.org/show_bug.cgi?id=35492 ..."
+			docmd epm remove gdb || fatal
 			__switch_repo_to $TO
 			docmd epm update || fatal
 			__check_system
