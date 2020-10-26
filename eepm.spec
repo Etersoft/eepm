@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.6.2
+Version: 3.6.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -91,7 +91,7 @@ chmod a+x %buildroot%_datadir/%name/tools_*
 
 %if %_vendor == "alt"
 # use external eget
-rm -f %buildroot%_datadir/%name/tools_eget
+#rm -f %buildroot%_datadir/%name/tools_eget
 # use external distro_info
 rm -f %buildroot%_bindir/distr_info
 %endif
@@ -126,6 +126,12 @@ mkdir -p %buildroot/var/lib/eepm/
 %endif
 
 %changelog
+* Mon Oct 26 2020 Vitaly Lipatov <lav@altlinux.ru> 3.6.3-alt1
+- epm-release-upgrade: remove gdb before update to p9
+- tools_eget: update to eget 4.0 (wget/curl support)
+- epm-sh-functions: always use internal tools_eget
+- epm-epm_install: fix for install more short name
+
 * Sat Oct 24 2020 Vitaly Lipatov <lav@altlinux.ru> 3.6.2-alt1
 - presctiptions: use DISTRVERNDOR instead of distro_info
 - prescriptions: add --remove support
