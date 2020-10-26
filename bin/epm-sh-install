@@ -73,6 +73,9 @@ __epm_check_vendor()
     # don't check vendor if there are forced script options
     [ -n "$scripts$noscripts" ] && return
 
+    # only ALT
+    [ "$DISTRNAME" = "ALTLinux" ] || return
+
     local i
     for i in $* ; do
         local vendor
