@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.6.3
+Version: 3.6.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -126,6 +126,12 @@ mkdir -p %buildroot/var/lib/eepm/
 %endif
 
 %changelog
+* Tue Oct 27 2020 Vitaly Lipatov <lav@altlinux.ru> 3.6.4-alt1
+- add repack for teams (move to /opt, fix reqs)
+- play: add viber support
+- repack: move skype to /opt, fix reqs
+- improve all prescriptions for play
+
 * Mon Oct 26 2020 Vitaly Lipatov <lav@altlinux.ru> 3.6.3-alt1
 - epm-release-upgrade: remove gdb before update to p9
 - tools_eget: update to eget 4.0 (wget/curl support)
