@@ -31,7 +31,7 @@ __remove_installed_app()
 	[ -d "$epm_vardir" ] || return 0
 	local i
 	for i in $* ; do
-		$SUDO sed -i '/^$i$/d' $epm_vardir/installed-app
+		$SUDO sed -i "/^$i$/d" $epm_vardir/installed-app
 	done
 	return 0
 }
@@ -85,14 +85,15 @@ fi
 
 if [ "$1" = "--remove" ] ; then
     shift
-    echo "Installed::"
     #__check_installed_app "$1" || fatal "$1 is not installed"
-    __epm_prescription_run $1 --remove && __remove_installed_app "$@"
+    __epm_prescription_run $1 --remove
+    __remove_installed_app "$@"
     exit
 fi
 
-if [ "$1" = "--list" ] ; then
+if [ "$1" = "--list" ] || [ "$1" = "--installed" ] ; then
     shift
+    echo "Installed:"
     local i
     for i in $(__list_installed_app) ; do
         printf "  %-20s - %s\n" "$i" "$($psdir/$i.sh --description 2>/dev/null)"
@@ -105,9 +106,11 @@ if [ "$1" == "--list-all" ] || [ -z "$*" ] ; then
     for i in $psdir/*.sh ; do
         printf "  %-20s - %s\n" "$(basename $i .sh)" "$($i --description 2>/dev/null)"
     done
+    echo
+    echo "run epm play --list to list installed only or --remove to remove one"
     exit
 fi
 
 __check_installed_app "$1" && info "$1 is already installed" && exit 1
-__epm_prescription_run "$1" --run && __save_installed_app $1
+__epm_prescription_run "$1" --run && __save_installed_app "$1"
 }

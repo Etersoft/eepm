@@ -97,7 +97,7 @@ __fix_spec()
     # drop forbidded paths
     # https://bugzilla.altlinux.org/show_bug.cgi?id=38842
     for i in / /etc /etc/init.d /etc/systemd /bin /opt /usr /usr/bin /usr/share /usr/share/doc /var /var/log /var/run \
-            /etc/cron.daily /usr/share/man /usr/share/man/man1 /usr/share/appdata /usr/share/applications /usr/share/menu ; do
+            /etc/cron.daily /usr/share/icons /usr/share/pixmaps /usr/share/man /usr/share/man/man1 /usr/share/appdata /usr/share/applications /usr/share/menu ; do
         sed -i -e "s|^%dir \"$i/*\"$||" \
             -e "s|^\"$i/*\"$||" \
             -e "s|^$i/*$||" \
