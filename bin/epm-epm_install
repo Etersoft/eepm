@@ -1,8 +1,8 @@
 #!/bin/sh
 
-# Copyright (C) 2016  Etersoft
+# Copyright (C) 2016, 2020  Etersoft
 # Copyright (C) 2016  Danil Mikhailov <danil@etersoft.ru>
-# Copyright (C) 2016  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2016, 2020  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -23,6 +23,8 @@ load_helper epm-install
 __epm_korinf_site_mask() {
     local MASK="$1"
     local archprefix=""
+    # short hack to install needed package
+    rhas "$MASK" "[-_]" || MASK="$MASK[-_][0-9]"
     # set arch for Korinf compatibility
     [ "$($DISTRVENDOR -a)" = "x86_64" ] && archprefix="x86_64/"
     echo "http://updates.etersoft.ru/pub/Korinf/$archprefix$($DISTRVENDOR -e)/$MASK*.$($DISTRVENDOR -p)"
@@ -30,17 +32,18 @@ __epm_korinf_site_mask() {
 
 __epm_korinf_list() {
     local MASK="$1"
-    showcmd eget --list "$(__epm_korinf_site_mask "$MASK")"
-    eget --list "$(__epm_korinf_site "$MASK")" | sort
+    MASK="$(__epm_korinf_site_mask "$MASK")"
+    showcmd eget --list "$MASK"
+    eget --list "$MASK" | sort
 }
 
 
-__epm_korinf_install(){
+__epm_korinf_install() {
     local PACKAGE="$1"
-    epm install $(__epm_korinf_site_mask "$PACKAGE$(get_pkg_name_delimiter)")
+    epm install $(__epm_korinf_site_mask "$PACKAGE")
 }
 
-epm_epm_install(){
+epm_epm_install() {
     local i
     local pkglist="$*"
 
