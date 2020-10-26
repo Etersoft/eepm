@@ -390,9 +390,10 @@ __set_EGET()
 		export EGET="$SHAREDIR/tools_eget"
 		return
 	fi
+	fatal "Internal error: missed tools_eget"
 
 	# FIXME: we need disable output here, eget can be used for get output
-	assure_exists eget >/dev/null
+	assure_exists eget eget 3.3 >/dev/null
 	# use external command, not the function
 	export EGET="$(which eget)" || fatal "Missed command eget from installed package eget"
 }
@@ -406,9 +407,10 @@ eget()
 		$SHAREDIR/tools_eget "$@"
 		return
 	fi
+	fatal "Internal error: missed tools_eget"
 
 	# FIXME: we need disable output here, eget can be used for get output
-	assure_exists eget >/dev/null
+	assure_exists eget eget 3.3 >/dev/null
 	# run external command, not the function
 	EGET=$(which eget) || fatal "Missed command eget from installed package eget"
 	$EGET "$@"
