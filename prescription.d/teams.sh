@@ -22,4 +22,4 @@ fi
 #https://packages.microsoft.com/yumrepos/ms-teams/teams-1.3.00.25560-1.x86_64.rpm
 
 # epm uses eget to download * names
-epm --noscripts install "https://packages.microsoft.com/repos/ms-teams/pool/main/t/teams/$(epm print constructname teams "*" amd64 deb)"
+epm install "https://packages.microsoft.com/repos/ms-teams/pool/main/t/teams/$(epm print constructname teams "*" amd64 deb)"

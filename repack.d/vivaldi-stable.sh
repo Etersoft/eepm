@@ -17,4 +17,8 @@ subst "s|.*/etc/cron.daily/$PRODUCT.*||" $SPEC
 
 subst "1i%filter_from_requires /.opt.google.chrome.WidevineCdm/d" $SPEC
 
+# unsupported format
+rm -f $BUILDROOT/usr/share/menu/$PRODUCT.menu
+subst "s|.*/usr/share/menu/$PRODUCT.menu.*||" $SPEC
+
 echo "You also can install chrome via epm play chrome to use WidevineCdm"

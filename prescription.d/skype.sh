@@ -19,7 +19,8 @@ fi
 [ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
 #arch=$($DISTRVENDOR --distro-arch)
-pkgtype=$($DISTRVENDOR -p)
+#pkgtype=$($DISTRVENDOR -p)
+pkgtype=deb
 
 # don't used
 complex_get()
@@ -33,4 +34,4 @@ complex_get()
 
 PKG="https://repo.skype.com/latest/skypeforlinux-64.$pkgtype"
 
-epm install --repack "$PKG"
+epm install "$PKG"

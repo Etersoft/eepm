@@ -16,8 +16,11 @@ fi
 
 [ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
-arch=$($DISTRVENDOR --distro-arch)
-pkgtype=$($DISTRVENDOR -p)
+#arch=$($DISTRVENDOR --distro-arch)
+#pkgtype=$($DISTRVENDOR -p)
+repack="--repack"
+arch=amd64
+pkgtype=deb
 
 # don't used
 complex_get()
@@ -34,4 +37,4 @@ complex_get()
 
 PKG="https://dl.google.com/linux/direct/google-chrome-stable_current_$arch.$pkgtype"
 
-epm install --repack "$PKG"
+epm install $repack "$PKG"

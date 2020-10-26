@@ -32,4 +32,4 @@ if [ "$($DISTRVENDOR -d)" = "ALTLinux" ] ; then
 fi
 
 # TODO: there are more complex distro dependent url
-epm --noscripts install "https://zoom.us/client/latest/zoom_$arch.$($DISTRVENDOR -p)"
+epm install "https://zoom.us/client/latest/zoom_$arch.$($DISTRVENDOR -p)"

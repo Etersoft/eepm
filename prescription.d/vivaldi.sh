@@ -33,4 +33,4 @@ esac
 # https://repo.vivaldi.com/archive/rpm/x86_64/
 
 # epm uses eget to download * names
-epm --noscripts install "https://repo.vivaldi.com/archive/deb/pool/main/$(epm print constructname $PKGNAME "*" $arch deb)"
+epm install "https://repo.vivaldi.com/archive/deb/pool/main/$(epm print constructname $PKGNAME "*" $arch deb)"
