@@ -194,7 +194,7 @@ fi
 MASK=$(basename "$1")
 
 # If have no wildcard symbol like asterisk, just download
-if echo "$MASK" | grep -qv "[*?]" ; then
+if echo "$MASK" | grep -qv "[*?]" || echo "$MASK" | grep -q "[?].*="; then
     sget "$1" "$TARGETFILE"
     exit
 fi
