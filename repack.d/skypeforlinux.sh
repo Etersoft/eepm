@@ -9,6 +9,10 @@ PRODUCT=skype
 #LIBDIR=$(rpmbuild --eval %_libdir 2>/dev/null)
 LIBDIR=/opt
 
+# remove key install script
+rm -rvf $BUILDROOT/opt/skypeforlinux/
+subst "s|.*/opt/skypeforlinux/.*||" $SPEC
+
 mkdir -p $BUILDROOT$LIBDIR/
 mv $BUILDROOT/usr/share/skypeforlinux/ $BUILDROOT$LIBDIR/$PRODUCT/
 subst "s|/usr/share/skypeforlinux|$LIBDIR/$PRODUCT|g" $SPEC
@@ -22,6 +26,8 @@ subst '1i%filter_from_requires /^libGLESv2.so().*/d' $SPEC
 subst '1i%filter_from_requires /^libEGL.so().*/d' $SPEC
 subst '1i%filter_from_requires /^libffmpeg.so().*/d' $SPEC
 
+# usual command skype
 mkdir -p $BUILDROOT/usr/bin/
 ln -s /usr/bin/skypeforlinux $BUILDROOT/usr/bin/skype
 subst 's|%files|%files\n/usr/bin/skype|' $SPEC
+
