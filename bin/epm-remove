@@ -293,6 +293,10 @@ epm_remove()
 				nodeps="--test"
 				APTOPTIONS="--simulate"
 				;;
+			apt-deb)
+				nodeps="--simulate"
+				APTOPTIONS="--simulate"
+				;;
 			*)
 				return
 				;;
