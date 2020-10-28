@@ -2225,6 +2225,8 @@ epm_download()
 __epm_korinf_site_mask() {
     local MASK="$1"
     local archprefix=""
+    # short hack to install needed package
+    rhas "$MASK" "[-_]" || MASK="$MASK[-_][0-9]"
     # set arch for Korinf compatibility
     [ "$($DISTRVENDOR -a)" = "x86_64" ] && archprefix="x86_64/"
     echo "http://updates.etersoft.ru/pub/Korinf/$archprefix$($DISTRVENDOR -e)/$MASK*.$($DISTRVENDOR -p)"
@@ -2232,17 +2234,20 @@ __epm_korinf_site_mask() {
 
 __epm_korinf_list() {
     local MASK="$1"
-    showcmd eget --list "$(__epm_korinf_site_mask "$MASK")"
-    eget --list "$(__epm_korinf_site "$MASK")" | sort
+    MASK="$(__epm_korinf_site_mask "$MASK")"
+    showcmd eget --list "$MASK"
+    eget --list "$MASK" | sort
 }
 
 
-__epm_korinf_install(){
+__epm_korinf_install() {
     local PACKAGE="$1"
-    epm install $(__epm_korinf_site_mask "$PACKAGE$(get_pkg_name_delimiter)")
+    # due Error: Can't use epm call from the piped script
+    #epm install $(__epm_korinf_site_mask "$PACKAGE")
+    pkg_names='' pkg_files='' pkg_urls="$(__epm_korinf_site_mask "$PACKAGE")" epm_install
 }
 
-epm_epm_install(){
+epm_epm_install() {
     local i
     local pkglist="$*"
 
@@ -3539,7 +3544,7 @@ __remove_installed_app()
 	[ -d "$epm_vardir" ] || return 0
 	local i
 	for i in $* ; do
-		$SUDO sed -i '/^$i$/d' $epm_vardir/installed-app
+		$SUDO sed -i "/^$i$/d" $epm_vardir/installed-app
 	done
 	return 0
 }
@@ -3593,14 +3598,15 @@ fi
 
 if [ "$1" = "--remove" ] ; then
     shift
-    echo "Installed::"
     #__check_installed_app "$1" || fatal "$1 is not installed"
-    __epm_prescription_run $1 --remove && __remove_installed_app "$@"
+    __epm_prescription_run $1 --remove
+    __remove_installed_app "$@"
     exit
 fi
 
-if [ "$1" = "--list" ] ; then
+if [ "$1" = "--list" ] || [ "$1" = "--installed" ] ; then
     shift
+    echo "Installed:"
     local i
     for i in $(__list_installed_app) ; do
         printf "  %-20s - %s\n" "$i" "$($psdir/$i.sh --description 2>/dev/null)"
@@ -3613,11 +3619,13 @@ if [ "$1" == "--list-all" ] || [ -z "$*" ] ; then
     for i in $psdir/*.sh ; do
         printf "  %-20s - %s\n" "$(basename $i .sh)" "$($i --description 2>/dev/null)"
     done
+    echo
+    echo "run epm play --list to list installed only or --remove to remove one"
     exit
 fi
 
 __check_installed_app "$1" && info "$1 is already installed" && exit 1
-__epm_prescription_run "$1" --run && __save_installed_app $1
+__epm_prescription_run "$1" --run && __save_installed_app "$1"
 }
 
 # File bin/epm-print:
@@ -5269,6 +5277,10 @@ epm_remove()
 				nodeps="--test"
 				APTOPTIONS="--simulate"
 				;;
+			apt-deb)
+				nodeps="--simulate"
+				APTOPTIONS="--simulate"
+				;;
 			*)
 				return
 				;;
@@ -5535,7 +5547,7 @@ __fix_spec()
     # drop forbidded paths
     # https://bugzilla.altlinux.org/show_bug.cgi?id=38842
     for i in / /etc /etc/init.d /etc/systemd /bin /opt /usr /usr/bin /usr/share /usr/share/doc /var /var/log /var/run \
-            /etc/cron.daily /usr/share/man /usr/share/man/man1 /usr/share/appdata /usr/share/applications /usr/share/menu ; do
+            /etc/cron.daily /usr/share/icons /usr/share/pixmaps /usr/share/man /usr/share/man/man1 /usr/share/appdata /usr/share/applications /usr/share/menu ; do
         sed -i -e "s|^%dir \"$i/*\"$||" \
             -e "s|^\"$i/*\"$||" \
             -e "s|^$i/*$||" \
@@ -6788,6 +6800,9 @@ __epm_check_vendor()
 {
     # don't check vendor if there are forced script options
     [ -n "$scripts$noscripts" ] && return
+
+    # only ALT
+    [ "$DISTRNAME" = "ALTLinux" ] || return
 
     local i
     for i in $* ; do
@@ -8356,7 +8371,7 @@ fi
 MASK=$(basename "$1")
 
 # If have no wildcard symbol like asterisk, just download
-if echo "$MASK" | grep -qv "[*?]" ; then
+if echo "$MASK" | grep -qv "[*?]" || echo "$MASK" | grep -q "[?].*="; then
     sget "$1" "$TARGETFILE"
     return
 fi
@@ -8938,7 +8953,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.6.3  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.6.5  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2020"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -8948,7 +8963,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.6.3
+EPMVERSION=3.6.5
 verbose=
 quiet=
 nodeps=
@@ -9355,6 +9370,8 @@ case $epm_cmd in
         set_eatmydata
         ;;
 esac
+
+[ -n "$verbose$EPM_VERBOSE" ] && showcmd "$0 $*"
 
 # Run helper for command with natural args
 eval epm_$epm_cmd $quoted_args

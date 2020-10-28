@@ -2081,7 +2081,7 @@ fi
 MASK=$(basename "$1")
 
 # If have no wildcard symbol like asterisk, just download
-if echo "$MASK" | grep -qv "[*?]" ; then
+if echo "$MASK" | grep -qv "[*?]" || echo "$MASK" | grep -q "[?].*="; then
     sget "$1" "$TARGETFILE"
     return
 fi
@@ -2734,7 +2734,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.6.3  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.6.5  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2019"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
