@@ -2104,7 +2104,7 @@ ERROR=0
 for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
     sget "$URL/$(basename "$fn")" || ERROR=1
 done
-exit $ERROR
+ return $ERROR
 
 }
 ################# end of incorporated bin/tools_eget #################
