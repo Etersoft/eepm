@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.6.4
+Version: 3.6.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -126,6 +126,15 @@ mkdir -p %buildroot/var/lib/eepm/
 %endif
 
 %changelog
+* Wed Oct 28 2020 Vitaly Lipatov <lav@altlinux.ru> 3.6.5-alt1
+- repack skypeforlinux: drop unneeded /opt/skypeforlinux dir
+- add play for discord
+- eget: add hack for skip mask if there ?...= (some args)
+- epm-epm_install: don't use epm command
+- add prescription for i586-remove
+- epm: print command when run with --verbose or EPM_VERBOSE is set
+- epm-remove: add --simulate support for deb
+
 * Tue Oct 27 2020 Vitaly Lipatov <lav@altlinux.ru> 3.6.4-alt1
 - add repack for teams (move to /opt, fix reqs)
 - play: add viber support
