@@ -491,6 +491,8 @@ case $epm_cmd in
         ;;
 esac
 
+[ -n "$verbose$EPM_VERBOSE" ] && showcmd "$0 $*"
+
 # Run helper for command with natural args
 load_helper epm-$epm_cmd
 eval epm_$epm_cmd $quoted_args
