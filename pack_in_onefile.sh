@@ -29,7 +29,7 @@ internal_$(basename $1)()
 {
 EOF
 
-cat $1 | grep -v "^#!/bin/sh" | sed -e "s| exit$| return|g" >>$OUTPUT
+cat $1 | grep -v "^#!/bin/sh" | sed -e 's| exit$| return|g' -e 's|exit \$| return $|g' >>$OUTPUT
 
 cat <<EOF >>$OUTPUT
 }
