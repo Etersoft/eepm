@@ -40,7 +40,9 @@ __epm_korinf_list() {
 
 __epm_korinf_install() {
     local PACKAGE="$1"
-    epm install $(__epm_korinf_site_mask "$PACKAGE")
+    # due Error: Can't use epm call from the piped script
+    #epm install $(__epm_korinf_site_mask "$PACKAGE")
+    pkg_names='' pkg_files='' pkg_urls="$(__epm_korinf_site_mask "$PACKAGE")" epm_install
 }
 
 epm_epm_install() {
