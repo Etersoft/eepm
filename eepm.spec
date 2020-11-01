@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.6.5
+Version: 3.6.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -126,6 +126,10 @@ mkdir -p %buildroot/var/lib/eepm/
 %endif
 
 %changelog
+* Sun Nov 01 2020 Vitaly Lipatov <lav@altlinux.ru> 3.6.6-alt1
+- epm-restore: add requirements_dev.txt, setup.py, require.json (npm)
+- epm-release_upgrade: drop signs if there are unknown vendor ID during update from repo
+
 * Wed Oct 28 2020 Vitaly Lipatov <lav@altlinux.ru> 3.6.5-alt1
 - repack skypeforlinux: drop unneeded /opt/skypeforlinux dir
 - add play for discord
