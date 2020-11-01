@@ -84,19 +84,19 @@ __epm_addrepo_altlinux()
 			info "add Etersoft's addon repo"
 			assure_exists apt-repo
 			__epm_addrepo_etersoft_addon
-			a='' apt-repo add $branch
+			sudocmd apt-repo add $branch
 			epm repofix etersoft
 			return 0
 			;;
 		basealt|altlinux)
 			# TODO: setrepo?
 			assure_exists apt-repo
-			a='' apt-repo add $branch
+			sudocmd apt-repo add $branch
 			return 0
 			;;
 		yandex)
 			assure_exists apt-repo
-			a='' apt-repo add $branch
+			sudocmd apt-repo add $branch
 			epm repofix yandex
 			return 0
 			;;
