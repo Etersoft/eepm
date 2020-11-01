@@ -67,7 +67,7 @@ __fix_alt_sources_list()
 	local SUBST_ALT_RULE1='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ]*(Sisyphus)[/ ](x86_64|i586|x86_64-i586|noarch|aarch64) !\1 \2/\3/\4 !gi'
 	local SUBST_ALT_RULE2='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ]*([tcp][6-9]\.?[0-9]?[/ ]branch|[tcp]1[012][/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch|aarch64) !\1 \2/\3/\4 !gi'
 	local i
-	assure_root
+	#assure_root
 	for i in "$@" ; do
 		[ -s "$i" ] || continue
 		#perl -i.bak -pe "$SUBST_ALT_RULE" $i
