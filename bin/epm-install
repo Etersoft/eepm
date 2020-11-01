@@ -570,9 +570,9 @@ epm_install()
     # can be empty only after skip installed
     if [ -z "$files$names" ] ; then
         # TODO: assert $skip_installed
-        [ -n "$verbose" ] && info "Skip empty install list"
+        [ -n "$verbose" ] && info "Skip empty install list (filtered out)"
         # FIXME: see to_remove below
-        return 22
+        return 0
     fi
 
     if [ -z "$files" ] && [ -z "$direct" ] ; then
