@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.6.6
+Version: 3.6.7
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -126,6 +126,11 @@ mkdir -p %buildroot/var/lib/eepm/
 %endif
 
 %changelog
+* Mon Nov 02 2020 Vitaly Lipatov <lav@altlinux.ru> 3.6.7-alt1
+- epm-install: return 0 if all packages are filtered out
+- epm-addrepo: use sudocmd for apt-repo
+- epm-repofix: disable root checking
+
 * Sun Nov 01 2020 Vitaly Lipatov <lav@altlinux.ru> 3.6.6-alt1
 - epm-restore: add requirements_dev.txt, setup.py, require.json (npm)
 - epm-release_upgrade: drop signs if there are unknown vendor ID during update from repo
