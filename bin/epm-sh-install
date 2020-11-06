@@ -79,7 +79,7 @@ __epm_check_vendor()
     local i
     for i in $* ; do
         local vendor
-        vendor="$(epm print field Vendor for "$i" 2>/dev/null)" || continue
+        vendor="$(epm print field Vendor for "$i" 2>/dev/null)"
         # TODO: check GPG
         [ "$vendor" = "ALT Linux Team" ] && continue
         warning "Scripts are disabled for package $i from outside vendor '$vendor'. Use --scripts if you need run scripts from such packages."
