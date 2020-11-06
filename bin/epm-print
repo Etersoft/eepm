@@ -26,7 +26,7 @@ query_package_field()
 	shift
 	local INSTALLED="-p"
 	# if not file, drop -p for get from rpm base
-	[ -e "$1" ] || INSTALLED=""
+	[ -f "$1" ] || INSTALLED=""
 	rpmquery $INSTALLED --queryformat "$FORMAT" "$@"
 }
 
