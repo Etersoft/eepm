@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.6.7
+Version: 3.6.8
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -126,6 +126,11 @@ mkdir -p %buildroot/var/lib/eepm/
 %endif
 
 %changelog
+* Fri Nov 06 2020 Vitaly Lipatov <lav@altlinux.ru> 3.6.8-alt1
+- epm-restore: add support for various names of requirements.txt file
+- epm play: add anydesk, assistant, onlyoffice support
+- various small improvements
+
 * Mon Nov 02 2020 Vitaly Lipatov <lav@altlinux.ru> 3.6.7-alt1
 - epm-install: return 0 if all packages are filtered out
 - epm-addrepo: use sudocmd for apt-repo
