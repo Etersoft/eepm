@@ -25,19 +25,20 @@ load_helper epm-assure
 # https://bugzilla.altlinux.org/show_bug.cgi?id=39003
 __epm_filter_pip_to_rpm()
 {
-    tr "A-Z" "a-z" | sed -e "s|-|_|g" -e "s|^python_||" \
+    tr "A-Z" "a-z" | sed -e "s|_|-|g" -e "s|^python[-_]||" \
         -e "s|beautifulsoup4|bs4|" \
+        -e "s|bs4|BeautifulSoup4|" \
         -e "s|pillow|Pillow|" \
+        -e "s|sqlalchemy|SQLAlchemy|" \
+        -e "s|flask-SQLAlchemy|flask_sqlalchemy|" \
         -e "s|redis|redis-py|" \
         -e "s|pyjwt|jwt|" \
-        -e "s|pytest_cov|pytest-cov|" \
         -e "s|pymonetdb|monetdb|" \
         -e "s|pyyaml|yaml|" \
+        -e "s|flask-migrate|Flask-Migrate|" \
         -e "s|twisted|twisted-core|" \
         -e "s|pymacaroons|pymacaroons-pynacl|" \
-        -e "s|pyasn1_modules|pyasn1-modules|" \
         -e "s|pygments|Pygments|" \
-        -e "s|patch_ng|patch-ng|" \
         -e "s|memcached|memcache|" \
         -e "s|pyopenssl|OpenSSL|"
 }
@@ -112,7 +113,7 @@ __epm_restore_convert_to_rpm_notation()
             fi
         fi
         if echo "$l" | grep -q "; *python_version *< *'3.0'" ; then
-            warning "    $t is python2 only requirement, skipped"
+            [ -n "$verbose" ] && warning "    $t is python2 only requirement, skipped"
             continue
         fi
         __epm_pi_sign_to_rpm "$t" "$l" "$equal"
