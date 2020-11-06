@@ -125,17 +125,18 @@ compare_version()
 }
 
 # construct package file name.
-# name version [arch] [pkgtype]
+# name version [arch] [pkgtype] [ds]
 construct_name()
 {
     local name="$1"
     local version="$2"
     local arch="$3"
     local pkgtype="$4"
+    local ds="$5"
 
     [ -n "$arch" ] || arch="$(distro_info --distro-arch)"
     [ -n "$pkgtype" ] || pkgtype="$(distro_info -p)"
-    local ds=$(get_pkg_name_delimiter $pkgtype)
+    [ -n "$ds" ] || ds=$(get_pkg_name_delimiter $pkgtype)
     [ -n "$version" ] && version="$ds$version"
     echo "${name}${version}${ds/-/.}$arch.$pkgtype"
 }
