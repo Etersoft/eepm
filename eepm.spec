@@ -15,10 +15,8 @@ Source: ftp://updates.etersoft.ru/pub/Etersoft/Sisyphus/sources/tarball/%name-%v
 
 BuildArchitectures: noarch
 
-# Contains the same command epm
-Conflicts: epm
-
-Provides: upm
+Obsoletes: epm
+Provides: epm = %EVR
 
 %if %_vendor == "alt"
 # FIXHERE: Replace with target platform package manager
