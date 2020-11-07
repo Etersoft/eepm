@@ -47,7 +47,7 @@ __epm_filter_pip_to_rpm()
 fill_sign()
 {
     local sign="$1"
-    echo "$2" | grep -E -- "$sign[[:space:]]*[0-9.]+?" | sed -E -- "s|.*$sign[[:space:]]*([0-9.]+?).*|\1|"
+    echo "$2" | grep -E -- "$sign[[:space:]]*[0-9.]+?" | sed -E -e "s|.*$sign[[:space:]]*([0-9.]+?).*|\1|"
 }
 
 
@@ -94,10 +94,16 @@ __epm_restore_convert_to_rpm_notation()
     local equal="$1"
     local l
     while read l ; do
-        local t="$(echo "$l" | sed -e "s| *[<>!]*=.*||" -e "s| *#.*||" | __epm_filter_pip_to_rpm)"
+        if echo "$l" | grep -q "; *python_version *< *'3.0'" ; then
+            [ -n "$verbose" ] && warning "    $t is python2 only requirement, skipped"
+            continue
+        fi
+        # drop various "python_version > '3.5'"
+        l="$(echo "$l" | sed -e "s| *;.*||")"
         if echo "$l" | grep -qE "^ *#" || [ -z "$l" ] ; then
             continue
         fi
+        local t="$(echo "$l" | sed -E -e "s|[[:space:]]*[<>!=]+.*||" -e "s| *#.*||" | __epm_filter_pip_to_rpm)"
         [ -n "$t" ] || continue
         # until new section
         if echo "$l" | grep -qE "^\[" ; then
@@ -112,10 +118,7 @@ __epm_restore_convert_to_rpm_notation()
                 continue
             fi
         fi
-        if echo "$l" | grep -q "; *python_version *< *'3.0'" ; then
-            [ -n "$verbose" ] && warning "    $t is python2 only requirement, skipped"
-            continue
-        fi
+
         __epm_pi_sign_to_rpm "$t" "$l" "$equal"
     done
 }
