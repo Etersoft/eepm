@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.6.8
+Version: 3.7.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -107,7 +107,6 @@ mkdir -p %buildroot/var/lib/eepm/
 %config(noreplace) %_sysconfdir/eepm/prescription.d/*.sh
 %_bindir/epm*
 %_bindir/eepm
-%_bindir/upm
 %_bindir/serv
 %_bindir/cerv
 %dir /var/lib/eepm/
@@ -124,6 +123,11 @@ mkdir -p %buildroot/var/lib/eepm/
 %endif
 
 %changelog
+* Tue Nov 10 2020 Vitaly Lipatov <lav@altlinux.ru> 3.7.0-alt1
+- drop alternative name upm, provide epm
+- epm-restore: some improvements
+- improve teamviewer repack
+
 * Fri Nov 06 2020 Vitaly Lipatov <lav@altlinux.ru> 3.6.8-alt1
 - epm-restore: add support for various names of requirements.txt file
 - epm play: add anydesk, assistant, onlyoffice support
@@ -160,7 +164,7 @@ mkdir -p %buildroot/var/lib/eepm/
 - epm-epm_install: fix for install more short name
 
 * Sat Oct 24 2020 Vitaly Lipatov <lav@altlinux.ru> 3.6.2-alt1
-- presctiptions: use DISTRVERNDOR instead of distro_info
+- prescriptions: use DISTRVERNDOR instead of distro_info
 - prescriptions: add --remove support
 - epm-prescription: add support for --list, --list-all, --remove
 
