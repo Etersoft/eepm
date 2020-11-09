@@ -683,19 +683,19 @@ __epm_addrepo_altlinux()
 			info "add Etersoft's addon repo"
 			assure_exists apt-repo
 			__epm_addrepo_etersoft_addon
-			a='' apt-repo add $branch
+			sudocmd apt-repo add $branch
 			epm repofix etersoft
 			return 0
 			;;
 		basealt|altlinux)
 			# TODO: setrepo?
 			assure_exists apt-repo
-			a='' apt-repo add $branch
+			sudocmd apt-repo add $branch
 			return 0
 			;;
 		yandex)
 			assure_exists apt-repo
-			a='' apt-repo add $branch
+			sudocmd apt-repo add $branch
 			epm repofix yandex
 			return 0
 			;;
@@ -3130,9 +3130,9 @@ epm_install()
     # can be empty only after skip installed
     if [ -z "$files$names" ] ; then
         # TODO: assert $skip_installed
-        [ -n "$verbose" ] && info "Skip empty install list"
+        [ -n "$verbose" ] && info "Skip empty install list (filtered out)"
         # FIXME: see to_remove below
-        return 22
+        return 0
     fi
 
     if [ -z "$files" ] && [ -z "$direct" ] ; then
@@ -3637,7 +3637,7 @@ query_package_field()
 	shift
 	local INSTALLED="-p"
 	# if not file, drop -p for get from rpm base
-	[ -e "$1" ] || INSTALLED=""
+	[ -f "$1" ] || INSTALLED=""
 	rpmquery $INSTALLED --queryformat "$FORMAT" "$@"
 }
 
@@ -3735,10 +3735,11 @@ construct_name()
     local version="$2"
     local arch="$3"
     local pkgtype="$4"
+    local ds="$5"
 
     [ -n "$arch" ] || arch="$(distro_info --distro-arch)"
     [ -n "$pkgtype" ] || pkgtype="$(distro_info -p)"
-    local ds=$(get_pkg_name_delimiter $pkgtype)
+    [ -n "$ds" ] || ds=$(get_pkg_name_delimiter $pkgtype)
     [ -n "$version" ] && version="$ds$version"
     echo "${name}${version}${ds/-/.}$arch.$pkgtype"
 }
@@ -4631,21 +4632,28 @@ __replace_alt_version_in_repo()
 	docmd apt-repo list
 }
 
+__alt_replace_sign_name()
+{
+	local TO="$1"
+	__replace_text_in_alt_repo "/^ *#/! s!\[alt\]!$TO!g"
+	__replace_text_in_alt_repo "/^ *#/! s!\[sisyphus\]!$TO!g"
+	__replace_text_in_alt_repo "/^ *#/! s!\[updates\]!$TO!g"
+	__replace_text_in_alt_repo "/^ *#/! s!\[cert[789]\]!$TO!g"
+	__replace_text_in_alt_repo "/^ *#/! s!\[[tpc][6-9]\.?[0-9]?\]!$TO!g"
+}
+
 __alt_repofix()
 {
 	local TO="$1"
 	epm --quiet repo fix >/dev/null
-	# TODO: switch it in repo code
-	TO="$(__repofix_filter_vendor "$TO")"
 
-	# replace sign name
 	if [ -n "$TO" ] ; then
-		__replace_text_in_alt_repo "/^ *#/! s!\[alt\]![$TO]!g"
-		__replace_text_in_alt_repo "/^ *#/! s!\[sisyphus\]![$TO]!g"
-		__replace_text_in_alt_repo "/^ *#/! s!\[updates\]![$TO]!g"
-		__replace_text_in_alt_repo "/^ *#/! s!\[[tpc][6-9]\.?[0-9]?\]![$TO]!g"
+		# TODO: switch it in repo code
+		TO="$(__repofix_filter_vendor "$TO")"
+		__alt_replace_sign_name "[$TO]"
 	fi
 }
+
 
 __get_conflict_release_pkg()
 {
@@ -4726,6 +4734,15 @@ __check_system()
 	fi
 }
 
+__epm_ru_update()
+{
+    docmd epm update && return
+    epm update 2>&1 | grep "E: Unknown vendor ID" || return
+    info "Drop vendor signs"
+    __alt_replace_sign_name ""
+    docmd epm update
+}
+
 get_next_release()
 {
 	local FROM="$1"
@@ -4762,7 +4779,7 @@ __switch_alt_to_distro()
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
-			docmd epm update || fatal
+			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
 			docmd epm update-kernel
@@ -4773,7 +4790,7 @@ __switch_alt_to_distro()
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
-			docmd epm update || fatal
+			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
 			__check_system
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
@@ -4784,7 +4801,7 @@ __switch_alt_to_distro()
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
-			docmd epm update || fatal
+			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
 			__check_system
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
@@ -4795,7 +4812,7 @@ __switch_alt_to_distro()
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
-			docmd epm update || fatal
+			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
 			__check_system
 			if epm installed libcrypt >/dev/null ; then
@@ -4813,7 +4830,7 @@ __switch_alt_to_distro()
 			info "Workaround for https://bugzilla.altlinux.org/show_bug.cgi?id=35492 ..."
 			docmd epm remove gdb || fatal
 			__switch_repo_to $TO
-			docmd epm update || fatal
+			__epm_ru_update || fatal
 			__check_system
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
@@ -4824,7 +4841,7 @@ __switch_alt_to_distro()
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
-			docmd epm update || fatal
+			__epm_ru_update || fatal
 			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
 			__check_system
 			if epm installed libcrypt >/dev/null ; then
@@ -4839,7 +4856,7 @@ __switch_alt_to_distro()
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
-			docmd epm update || fatal
+			__epm_ru_update || fatal
 			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
 			__check_system
 			#if epm installed libcrypt >/dev/null ; then
@@ -4854,7 +4871,7 @@ __switch_alt_to_distro()
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
-			docmd epm update || fatal
+			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
 			__check_system
 			docmd epm downgrade
@@ -4867,7 +4884,7 @@ __switch_alt_to_distro()
 			docmd epm upgrade || fatal
 			__replace_alt_version_in_repo "$FROM/branch/" "$TO/"
 			__alt_repofix "sisyphus"
-			docmd epm update || fatal
+			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
 			#local ADDPKG
 			#ADDPKG=$(epm -q --short make-initrd sssd-ad 2>/dev/null)
@@ -4901,7 +4918,7 @@ epm_release_upgrade()
 
 	case $DISTRNAME in
 	ALTLinux)
-		docmd epm update || fatal
+		__epm_ru_update || fatal
 
 		# try to detect current release by repo
 		if [ "$DISTRVERSION" = "Sisyphus" ] || [ -z "$DISTRVERSION" ] ; then
@@ -5853,7 +5870,7 @@ __fix_alt_sources_list()
 	local SUBST_ALT_RULE1='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ]*(Sisyphus)[/ ](x86_64|i586|x86_64-i586|noarch|aarch64) !\1 \2/\3/\4 !gi'
 	local SUBST_ALT_RULE2='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ]*([tcp][6-9]\.?[0-9]?[/ ]branch|[tcp]1[012][/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch|aarch64) !\1 \2/\3/\4 !gi'
 	local i
-	assure_root
+	#assure_root
 	for i in "$@" ; do
 		[ -s "$i" ] || continue
 		#perl -i.bak -pe "$SUBST_ALT_RULE" $i
@@ -6214,14 +6231,19 @@ epm_requires()
 
 __epm_filter_pip_to_rpm()
 {
-    tr "A-Z" "a-z" | sed -e "s|-|_|g" -e "s|^python_||" \
-        -e "s|beautifulsoup4|bs4|" \
-        -e "s|pillow|PIL|" \
+    tr "A-Z" "a-z" | sed -e "s|_|-|g" -e "s|^python[-_]||" \
+        -e "s|bs4|beautifulsoup4|" \
+        -e "s|pillow|Pillow|" \
+        -e "s|sqlalchemy|SQLAlchemy|" \
+        -e "s|flask-SQLAlchemy|flask_sqlalchemy|" \
+        -e "s|redis|redis-py|" \
         -e "s|pyjwt|jwt|" \
+        -e "s|pymonetdb|monetdb|" \
         -e "s|pyyaml|yaml|" \
-        -e "s|attrs|attr|" \
+        -e "s|flask-migrate|Flask-Migrate|" \
+        -e "s|twisted|twisted-core|" \
+        -e "s|pymacaroons|pymacaroons-pynacl|" \
         -e "s|pygments|Pygments|" \
-        -e "s|patch_ng|patch-ng|" \
         -e "s|memcached|memcache|" \
         -e "s|pyopenssl|OpenSSL|"
 }
@@ -6229,21 +6251,61 @@ __epm_filter_pip_to_rpm()
 fill_sign()
 {
     local sign="$1"
-    echo "$2" | grep -E -- "$sign[[:space:]]*[0-9.]+?" | sed -E -- "s|.*$sign[[:space:]]*([0-9.]+?).*|\1|"
+    echo "$2" | grep -E -- "$sign[[:space:]]*[0-9.]+?" | sed -E -e "s|.*$sign[[:space:]]*([0-9.]+?).*|\1|"
 }
 
 
-__epm_restore_pip()
+__epm_pi_sign_to_rpm()
 {
-    local req_file="$1"
-    [ -n "$dryrun" ] || info "Install requirements from $req_file ..."
+    local t="$1"
+    local l="$2"
+    local equal="$3"
+    [ -n "$equal" ] || equal=">="
 
-    local ilist=''
+    local pi=''
+    local sign ll
+    for sign in "<=" "<" ">=" ">" "==" "!="; do
+        ll=$(fill_sign "$sign" "$l")
+        [ -n "$ll" ] || continue
+        [ "$sign" = "==" ] && sign="$equal"
+        [ "$sign" = "!=" ] && sign=">="
+        [ -n "$pi" ] && pi="$pi
+"
+        pi="$pi$t $sign $ll"
+    done
+    [ -n "$pi" ] || pi="$t"
+    echo "$pi"
+}
+
+__epm_get_array_name()
+{
+    echo "$*" | grep "=" | head -n1 | sed -e 's| *=.*||'
+}
+
+__epm_lineprint_python_array()
+{
+    local a="$*"
+    [ -n "$a" ] || return
+    local name="$(__epm_get_array_name "$a")"
+    (echo "$a" | sed -E -e 's@(\]|\)).*@\1@' ; echo "print('\n'.join($name))" ) | ( a= python - || a= python3 )
+}
+
+__epm_restore_convert_to_rpm_notation()
+{
+    local equal="$1"
+    local l
     while read l ; do
-        local t="$(echo "$l" | sed -e "s| *[<>!]*=.*||" -e "s| *#.*||" | __epm_filter_pip_to_rpm)"
+        if echo "$l" | grep -q "; *python_version *< *['\"]3" ; then
+            [ -n "$verbose" ] && warning "    $t is python2 only requirement, skipped"
+            continue
+        fi
+        # drop various "python_version > '3.5'"
+        l="$(echo "$l" | sed -e "s| *;.*||")"
         if echo "$l" | grep -qE "^ *#" || [ -z "$l" ] ; then
             continue
         fi
+        local t="$(echo "$l" | sed -E -e "s|[[:space:]]*[<>!=]+.*||" -e "s| *#.*||" | __epm_filter_pip_to_rpm)"
+        [ -n "$t" ] || continue
         # until new section
         if echo "$l" | grep -qE "^\[" ; then
             break
@@ -6257,39 +6319,163 @@ __epm_restore_pip()
                 continue
             fi
         fi
-        if echo "$l" | grep -q "; *python_version *< *'3.0'" ; then
-            warning "    $t is python2 only requirement, skipped"
+
+        __epm_pi_sign_to_rpm "$t" "$l" "$equal"
+    done
+}
+
+__epm_restore_pip()
+{
+    local req_file="$1"
+    local reqmacro
+    local ilist
+
+    if [ -n "$dryrun" ] ; then
+        reqmacro="%py3_use"
+        basename "$req_file" | egrep -q "(dev|test)" && reqmacro="%py3_buildrequires"
+        echo
+        echo "# generated by epm --restore --dry-run from $(basename $(dirname $(realpath $req_file)))/$req_file"
+        cat $req_file | __epm_restore_convert_to_rpm_notation | sed -e "s|^|$reqmacro |"
+        return
+    else
+        info "Install requirements from $req_file ..."
+        ilist="$(cat $req_file | __epm_restore_convert_to_rpm_notation | cut -d' ' -f 1 | sed -e "s|^|python3-module-|")"
+    fi
+
+    ilist="$(estrlist list $ilist)"
+    docmd epm install $ilist
+}
+
+__eresection()
+{
+    rhas "$1" "[[:space:]]*$2[[:space:]]*=[[:space:]]*[\[(]"
+}
+
+__epm_restore_setup_py()
+{
+    local req_file="$1"
+    if [ -z "$dryrun" ] ; then
+        info "Install requirements from $req_file ..."
+    fi
+
+    local ar=''
+    local ilist=''
+    local reqmacro
+    local section=''
+    while read l ; do
+        if rhas "$l" "^ *#" ; then
             continue
         fi
+        # start of section
+        if __eresection "$l" "REQUIREMENTS" ; then
+            reqmacro="%py3_use"
+            section="$l"
+        fi
+        if __eresection "$l" "install_requires" ; then
+            reqmacro="%py3_use"
+            section="$l"
+        fi
+        if __eresection "$l" "setup_requires" ; then
+            reqmacro="%py3_buildrequires"
+            section="$l"
+        fi
+        if __eresection "$l" "tests_require" ; then
+            reqmacro="%py3_buildrequires"
+            section="$l"
+        fi
+        if [ -n "$section" ] ; then
+            ar="$ar
+$l"
+        fi
+
+        # not end of section
+        if [ -z "$section" ] || ! rhas "$l" "(\]|\)),*" ; then
+            continue
+        fi
+
         if [ -n "$dryrun" ] ; then
-            local pi=''
-            local sign ll
-            for sign in "<=" "<" ">=" ">" "==" "!="; do
-                ll=$(fill_sign "$sign" "$l")
-                [ -n "$ll" ] || continue
-                [ "$sign" = "==" ] && sign=">="
-                [ "$sign" = "!=" ] && sign=">="
-                [ -n "$pi" ] && pi="$pi
-"
-                pi="$pi%py3_use $t $sign $ll"
-            done
-            [ -n "$pi" ] || pi="%py3_use $t"
-            echo "$pi"
-            continue
+            echo
+            echo "# generated by epm --restore --dry-run from $(basename $(dirname $(realpath $req_file)))/$req_file $(__epm_get_array_name "$section")"
+            __epm_lineprint_python_array "$ar" | __epm_restore_convert_to_rpm_notation ">=" | sed -e "s|^|$reqmacro |"
         else
-            # TODO: python3-egg-info($t)
-            local pi="python3($t)"
-            echo "    $l -> $t -> $pi"
+            ilist="$ilist $(__epm_lineprint_python_array "$ar" | __epm_restore_convert_to_rpm_notation ">=" | cut -d' ' -f 1 | sed -e "s|^|python3-module-|")"
         fi
-        [ -n "$t" ] || continue
-        ilist="$ilist $pi"
+        section=''
+        ar=''
     done < $req_file
 
     if [ -n "$dryrun" ] ; then
-        echo "$ilist"
         return
-   fi
+    fi
 
+    ilist="$(estrlist list $ilist)"
+    docmd epm install $ilist
+}
+
+__epm_print_npm_list()
+{
+    local reqmacro="$1"
+    local req_file="$2"
+    local l
+    while read l ; do
+        # "tap": "^14.10.7"
+        echo "$l" | grep -q '"\(.*\)": "\(.*\)"' || continue
+        local name="$(echo "$l" | sed -e 's|.*"\(.*\)": ".*|\1|')"
+        [ -z "$name" ] && continue
+        local ver="$(echo "$l" | sed -e 's|.*"\(.*\)": "\(.*\)".*|\2|')" #'
+        [ -z "$name" ] && continue
+
+        if [ -n "$dryrun" ] ; then
+            local pi=''
+            local sign
+            if echo "$ver" | grep -q "^\^" ; then
+                sign=">="
+            else
+                sign="="
+            fi
+            ll=$(echo "$ver" | sed -e 's|^[^~]||')
+            pi="$pi$reqmacro node-$name $sign $ll"
+            echo "$pi"
+            continue
+        else
+            local pi="node-$name"
+            #echo "    $l -> $name -> $pi"
+        fi
+        [ -n "$name" ] || continue
+        ilist="$ilist $pi"
+    done < $req_file
+
+    [ -n "$dryrun" ] || echo "$ilist"
+}
+
+__epm_restore_npm()
+{
+    local req_file="$1"
+
+    epm assure jq
+
+    if [ -n "$dryrun" ] ; then
+        local lt=$(mktemp)
+        a= jq .dependencies <$req_file >$lt
+        echo
+        echo "# generated by epm --restore --dry-run from $(basename $(dirname $(realpath $req_file)))/$req_file"
+        __epm_print_npm_list "Requires:" $lt
+
+        echo
+        echo "# devDependencies generated by epm --restore --dry-run from $(basename $(dirname $(realpath $req_file)))/$req_file"
+        a= jq .devDependencies <$req_file >$lt
+        __epm_print_npm_list "BuildRequires:" $lt
+        rm -f $lt
+        return
+    fi
+
+    info "Install requirements from $req_file ..."
+    local lt=$(mktemp)
+    a= jq .dependencies <$req_file >$lt
+    ilist="$(__epm_print_npm_list "" $lt)"
+    a= jq .devDependencies <$req_file >$lt
+    ilist="$ilist $(__epm_print_npm_list "" $lt)"
+    rm -f $lt
     docmd epm install $ilist
 }
 
@@ -6312,8 +6498,14 @@ __epm_restore_by()
     fi
 
     case $(basename $req_file) in
-        requirements.txt|requires.txt)
+        requirements.txt|dev-requirements.txt|requirements-dev.txt|requirements_dev.txt|requirements_test.txt|requirements-test.txt|test-requirements.txt|requires.txt)
             [ -s "$req_file" ] && __epm_restore_pip "$req_file"
+            ;;
+        setup.py|python_dependencies.py)
+            [ -s "$req_file" ] && __epm_restore_setup_py "$req_file"
+            ;;
+        package.json)
+            [ -s "$req_file" ] && __epm_restore_npm "$req_file"
             ;;
         Gemfile|package.json)
             info "$req_file support is not implemented yet"
@@ -6340,7 +6532,7 @@ epm_restore()
 
 
     # if run with empty args
-    for i in requirements.txt Gemfile requires.txt; do
+    for i in requirements.txt requirements_dev.txt requirements-dev.txt dev-requirements.txt requirements-test.txt requirements_test.txt test-requirements.txt Gemfile requires.txt package.json setup.py python_dependencies.py; do
         __epm_restore_by $i
     done
 
@@ -6807,7 +6999,7 @@ __epm_check_vendor()
     local i
     for i in $* ; do
         local vendor
-        vendor="$(epm print field Vendor for "$i" 2>/dev/null)" || continue
+        vendor="$(epm print field Vendor for "$i" 2>/dev/null)"
         # TODO: check GPG
         [ "$vendor" = "ALT Linux Team" ] && continue
         warning "Scripts are disabled for package $i from outside vendor '$vendor'. Use --scripts if you need run scripts from such packages."
@@ -8270,12 +8462,6 @@ if [ "$1" = "--latest" ] ; then
     shift
 fi
 
-fatal()
-{
-    echo "$*" >&2
-    exit 1
-}
-
 # check man glob
 filter_glob()
 {
@@ -8953,7 +9139,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.6.5  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.6.8  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2020"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -8963,7 +9149,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.6.5
+EPMVERSION=3.6.8
 verbose=
 quiet=
 nodeps=

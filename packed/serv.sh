@@ -1980,12 +1980,6 @@ if [ "$1" = "--latest" ] ; then
     shift
 fi
 
-fatal()
-{
-    echo "$*" >&2
-    exit 1
-}
-
 # check man glob
 filter_glob()
 {
@@ -2734,7 +2728,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.6.5  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.6.8  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2019"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
