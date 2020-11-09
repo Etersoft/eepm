@@ -31,7 +31,7 @@ fi
 # See https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=teamviewer
 
 repack=''
-[ "$($DISTRVENDOR -p)" = "deb" || repack='--repack'
+[ "$($DISTRVENDOR -p)" = "deb" ] || repack='--repack'
 
 # epm uses eget to download * names
 epm $repack install "https://download.teamviewer.com/download/linux/$(epm print constructname $PKGNAME)"
