@@ -26,8 +26,7 @@ load_helper epm-assure
 __epm_filter_pip_to_rpm()
 {
     tr "A-Z" "a-z" | sed -e "s|_|-|g" -e "s|^python[-_]||" \
-        -e "s|beautifulsoup4|bs4|" \
-        -e "s|bs4|BeautifulSoup4|" \
+        -e "s|bs4|beautifulsoup4|" \
         -e "s|pillow|Pillow|" \
         -e "s|sqlalchemy|SQLAlchemy|" \
         -e "s|flask-SQLAlchemy|flask_sqlalchemy|" \
@@ -84,7 +83,7 @@ __epm_lineprint_python_array()
     local a="$*"
     [ -n "$a" ] || return
     local name="$(__epm_get_array_name "$a")"
-    (echo "$a" | sed -e 's|\].*|]|' ; echo "print('\n'.join($name))" ) | ( a= python - || a= python3 )
+    (echo "$a" | sed -E -e 's@(\]|\)).*@\1@' ; echo "print('\n'.join($name))" ) | ( a= python - || a= python3 )
 }
 
 # translate pip requirement lines to rpm notation
@@ -94,7 +93,7 @@ __epm_restore_convert_to_rpm_notation()
     local equal="$1"
     local l
     while read l ; do
-        if echo "$l" | grep -q "; *python_version *< *'3.0'" ; then
+        if echo "$l" | grep -q "; *python_version *< *['\"]3" ; then
             [ -n "$verbose" ] && warning "    $t is python2 only requirement, skipped"
             continue
         fi
@@ -147,7 +146,7 @@ __epm_restore_pip()
 
 __eresection()
 {
-    rhas "$1" "[[:space:]]*$2[[:space:]]*=[[:space:]]*\["
+    rhas "$1" "[[:space:]]*$2[[:space:]]*=[[:space:]]*[\[(]"
 }
 
 __epm_restore_setup_py()
@@ -188,7 +187,7 @@ $l"
         fi
 
         # not end of section
-        if [ -z "$section" ] || ! rhas "$l" "\],*" ; then
+        if [ -z "$section" ] || ! rhas "$l" "(\]|\)),*" ; then
             continue
         fi
 
