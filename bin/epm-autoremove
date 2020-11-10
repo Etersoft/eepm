@@ -148,6 +148,12 @@ __epm_autoremove_altrpm()
 		python)
 			__epm_autoremove_altrpm_pp '^(python-module-|python3-module-|python-modules-|python3-modules)'
 			;;
+		python2)
+			__epm_autoremove_altrpm_pp '^(python-module-|python-modules-)'
+			;;
+		python3)
+			__epm_autoremove_altrpm_pp '^(python3-module-|python3-modules)'
+			;;
 		perl)
 			__epm_autoremove_altrpm_pp '^(perl-)'
 			;;
@@ -155,7 +161,7 @@ __epm_autoremove_altrpm()
 			__epm_autoremove_altrpm_lib
 			;;
 		*)
-			fatal "autoremove: unsupported '$i'. Use libs, python, perl, libs-devel."
+			fatal "autoremove: unsupported '$i'. Use libs, python, python2, python3, perl, libs-devel."
 			;;
 		esac
 	done
