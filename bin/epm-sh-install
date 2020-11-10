@@ -78,7 +78,12 @@ __epm_check_vendor()
 
     local i
     for i in $* ; do
-        local vendor
+        local vendor rpmversion
+
+        # skip checking if the package is unaccessible
+        rpmversion="$(epm print field Version for "$i" 2>/dev/null)"
+        [ -n "$rpmversion" ] || continue
+
         vendor="$(epm print field Vendor for "$i" 2>/dev/null)"
         # TODO: check GPG
         [ "$vendor" = "ALT Linux Team" ] && continue
