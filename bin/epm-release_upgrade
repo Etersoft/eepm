@@ -334,7 +334,7 @@ __switch_alt_to_distro()
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			docmd epm upgrade || fatal
 			__replace_alt_version_in_repo "$FROM/branch/" "$TO/"
-			__alt_repofix "sisyphus"
+			__alt_repofix "alt"
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
 			#local ADDPKG
