@@ -111,7 +111,7 @@ __fix_spec()
     done
 
     # replace dir "/path/dir" -> %dir /path/dir
-    for i in $(grep '^"/' $spec | sed -e 's|^"\(/.*\)"$|\1|') ; do #" hack for highlight
+    grep '^"/' $spec | sed -e 's|^"\(/.*\)"$|\1|' | while read i ; do
         # add dir as %dir in the filelist
         if [ -d "$buildroot$i" ] ; then
             subst 's|^\("'$i'"\)$|%dir \1|' $spec
