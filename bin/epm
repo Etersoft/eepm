@@ -358,7 +358,7 @@ check_option()
         exit 0
         ;;
     --verbose)            # HELPOPT: verbose mode
-        verbose=1
+        verbose="--verbose"
         ;;
     --skip-installed)     # HELPOPT: skip already installed packages during install
         skip_installed=1
