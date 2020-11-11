@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.7.0
+Version: 3.7.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -123,6 +123,13 @@ mkdir -p %buildroot/var/lib/eepm/
 %endif
 
 %changelog
+* Wed Nov 11 2020 Vitaly Lipatov <lav@altlinux.ru> 3.7.1-alt1
+- epm-release_upgrade: use [alt] sign for Sisyphus
+- epm-autoremove: supports for python2 and python3 separately
+- epm-sh-install: don't check vendor if a package is unaccesible
+- add prescription python2-remove
+- repack: add lightworks.sh
+
 * Tue Nov 10 2020 Vitaly Lipatov <lav@altlinux.ru> 3.7.0-alt1
 - drop alternative name upm, provide epm
 - epm-restore: some improvements
