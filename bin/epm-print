@@ -134,8 +134,8 @@ construct_name()
     local pkgtype="$4"
     local ds="$5"
 
-    [ -n "$arch" ] || arch="$(distro_info --distro-arch)"
-    [ -n "$pkgtype" ] || pkgtype="$(distro_info -p)"
+    [ -n "$arch" ] || arch="$($DISTRVENDOR --distro-arch)"
+    [ -n "$pkgtype" ] || pkgtype="$($DISTRVENDOR -p)"
     [ -n "$ds" ] || ds=$(get_pkg_name_delimiter $pkgtype)
     [ -n "$version" ] && version="$ds$version"
     echo "${name}${version}${ds/-/.}$arch.$pkgtype"
@@ -162,11 +162,12 @@ epm_print()
 
     case "$WHAT" in
         "")
-            fatal "Use epm print help for get help."
+            fatal "Use epm print help to get help."
             ;;
         "-h"|"--help"|"help")
 cat <<EOF
   Examples:
+    epm print info [args]                    print system and distro info (via distro_info command)
     epm print name [from filename|for package] NN        print only name of package name or package file
     epm print version [from filename|for package] NN     print only version of package name or package file
     epm print release [from filename|for package] NN     print only release of package name or package file
@@ -270,6 +271,9 @@ EOF
             ;;
         "constructname")
             construct_name "$@"
+            ;;
+        "info")
+            $DISTRVENDOR "$@"
             ;;
         *)
             fatal "Unknown command $ epm print $WHAT. Use epm print help for get help."
