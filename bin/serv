@@ -223,6 +223,9 @@ check_command()
     edit)
         serv_cmd=edit         # HELPCMD: edit service file overload (use --full to edit full file)
         ;;
+    test|-t)
+        serv_cmd=test         # HELPCMD: test a config file of the service
+        ;;
     *)
         return 1
         ;;

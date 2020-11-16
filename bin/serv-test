@@ -1,0 +1,46 @@
+#!/bin/sh
+#
+# Copyright (C) 2020  Etersoft
+# Copyright (C) 2020  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+serv_test()
+{
+	local SERVICE="$1"
+	shift
+
+	case $SERVICE in
+		cups|cupsd)
+			docmd cupsd -t
+			;;
+		nginx)
+			docmd nginx -t
+			;;
+		sshd)
+			docmd sshd -t
+			;;
+		httpd2|httpd|apache|apache2)
+			if which httpd2 >/dev/null 2>/dev/null ; then
+				docmd httpd2 -t
+			elif which apache2 >/dev/null 2>/dev/null ; then
+				docmd apache2 -t
+			fi
+			;;
+		*)
+			fatal "$SERVICE is not supported yet. Please report if you know how to test"
+			;;
+	esac
+}
