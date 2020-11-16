@@ -481,7 +481,9 @@ if [ -z "$epm_cmd" ] ; then
     echo
     fatstr="Unknown command in $* arg(s)"
     [ -n "$*" ] || fatstr="That program needs be running with some command"
-    fatal "$fatstr. Run $ $PROGNAME --help to get help."
+    echo "Run $ $PROGNAME --help  to get help." >&2
+    echo "Run $ epm print info  to get some system and distro info." >&2
+    fatal "$fatstr."
 fi
 
 # Use eatmydata for write specific operations
