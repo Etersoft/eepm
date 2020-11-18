@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.7.1
+Version: 3.7.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -123,6 +123,12 @@ mkdir -p %buildroot/var/lib/eepm/
 %endif
 
 %changelog
+* Wed Nov 18 2020 Vitaly Lipatov <lav@altlinux.ru> 3.7.2-alt1
+- improve anydesk repack
+- epm-print: add epm print info command
+- serv: add test command (for nginx -t, cupsd -t and so on)
+- epm-restore: fix epm restore command example
+
 * Wed Nov 11 2020 Vitaly Lipatov <lav@altlinux.ru> 3.7.1-alt1
 - epm-release_upgrade: use [alt] sign for Sisyphus
 - epm-autoremove: supports for python2 and python3 separately
