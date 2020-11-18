@@ -39,6 +39,9 @@ serv_test()
 				docmd apache2 -t
 			fi
 			;;
+		postfix)
+			docmd /etc/init.d/postfix check
+			;;
 		*)
 			fatal "$SERVICE is not supported yet. Please report if you know how to test"
 			;;
