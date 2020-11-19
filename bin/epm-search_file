@@ -50,7 +50,7 @@ __alt_local_content_search()
 epm_search_file()
 {
 	local CMD
-	[ -n "$pkg_filenames" ] || fatal "Search file: missing file name(s)"
+	[ -n "$pkg_filenames" ] || fatal "Search file: file name is missed"
 
 case $PMTYPE in
 	apt-rpm)

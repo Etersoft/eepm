@@ -27,7 +27,7 @@
 __emerge_install_ebuild()
 {
 	local EBUILD="$1"
-	[ -s "$EBUILD" ] || fatal ".ebuild file '$EBUILD' is missing"
+	[ -s "$EBUILD" ] || fatal ".ebuild file '$EBUILD' is missed"
 
 	# load ebuild and get vars
 	. $(pwd)/$EBUILD

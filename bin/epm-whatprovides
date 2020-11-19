@@ -23,7 +23,7 @@ epm_whatprovides()
 {
 	local CMD
 	[ -n "$pkg_files" ] && fatal "whatprovides does not handle files"
-	[ -n "$pkg_names" ] || fatal "whatprovides: missing package(s) name"
+	[ -n "$pkg_names" ] || fatal "whatprovides: package name is missed"
 	local pkg=$(print_name $pkg_names)
 
 # by package name

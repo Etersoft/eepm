@@ -23,7 +23,7 @@ load_helper epm-sh-warmup
 epm_policy()
 {
 
-[ -n "$pkg_names" ] || fatal "Info: missing package(s) name"
+[ -n "$pkg_names" ] || fatal "Info: package name is missed"
 
 warmup_bases
 

@@ -326,7 +326,7 @@ separate_installed()
 
 epm_query()
 {
-	[ -n "$pkg_filenames" ] || fatal "Query: missing package(s) name"
+	[ -n "$pkg_filenames" ] || fatal "Query: package name is missed"
 
 	__epm_query_file $pkg_files || return
 

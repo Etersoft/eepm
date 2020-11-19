@@ -158,7 +158,7 @@ if [ -n "$pkg_urls" ] ; then
     __handle_pkg_urls_to_checking
 fi
 
-[ -n "$pkg_filenames" ] || fatal "Info: missing package(s) name"
+[ -n "$pkg_filenames" ] || fatal "Info: package name is missed"
 
 __epm_info_by_pkgtype || __epm_info_by_pmtype
 

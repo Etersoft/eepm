@@ -281,7 +281,7 @@ epm_remove()
 	[ -n "$pkg_files" ] && pkg_names="$pkg_names $(epm query $pkg_files)"
 	pkg_files=''
 
-	[ -n "$pkg_names" ] || fatal "Remove: missing package(s) name."
+	[ -n "$pkg_names" ] || fatal "Remove: package name is missed."
 	# remove according current arch (if x86_64) by default
 	pkg_names="$(echo $pkg_names | exp_with_arch_suffix)"
 

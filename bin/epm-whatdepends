@@ -25,7 +25,7 @@ epm_whatdepends()
 {
 	local CMD
 	[ -n "$pkg_files" ] && fatal "whatdepends does not handle files"
-	[ -n "$pkg_names" ] || fatal "whatdepends: missing package(s) name"
+	[ -n "$pkg_names" ] || fatal "whatdepends: package name is missed"
 	local pkg=$(print_name $pkg_names)
 
 # by package name

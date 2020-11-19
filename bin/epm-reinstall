@@ -85,7 +85,7 @@ epm_reinstall_files()
 
 epm_reinstall()
 {
-    [ -n "$pkg_filenames" ] || fatal "Reinstall: missing package(s) name."
+    [ -n "$pkg_filenames" ] || fatal "Reinstall: package name is missed."
 
     warmup_lowbase
 

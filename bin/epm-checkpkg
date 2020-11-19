@@ -96,7 +96,7 @@ epm_checkpkg()
 		__handle_pkg_urls_to_checking
 	fi
 
-	[ -n "$pkg_files" ] || fatal "Checkpkg: missing file or package name(s)"
+	[ -n "$pkg_files" ] || fatal "Checkpkg: filename is missed"
 
 	local RETVAL=0
 

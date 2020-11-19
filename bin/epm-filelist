@@ -175,7 +175,7 @@ __epm_filelist_name()
 
 epm_filelist()
 {
-	[ -n "$pkg_filenames" ] || fatal "Filelist: missing package(s) name"
+	[ -n "$pkg_filenames" ] || fatal "Filelist: package name is missed"
 
 
 	__epm_filelist_file $pkg_files || return

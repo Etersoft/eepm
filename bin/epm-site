@@ -127,7 +127,7 @@ query_altlinux_url()
 epm_site()
 {
 
-[ -n "$pkg_filenames" ] || fatal "Info: missing package(s) name"
+[ -n "$pkg_filenames" ] || fatal "Info: package name is missed"
 
 local PAO=""
 for f in $pkg_names $pkg_files ; do
