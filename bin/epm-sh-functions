@@ -516,6 +516,7 @@ set_pm_type()
 	if [ -z "$DISTRARCH" ] ; then
 		DISTRARCH=$($DISTRVENDOR --distro-arch)
 	fi
+	DISTRCONTROL="$($DISTRVENDOR -y)"
 	set_target_pkg_env
 
 # override package manager detection result
@@ -607,7 +608,7 @@ PMTYPE=$CMD
 
 is_active_systemd()
 {
-	[ "$($DISTRVENDOR -y)" = "systemd" ]
+	[ "$DISTRCONTROL" = "systemd" ]
 }
 
 assure_distr()
