@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2013, 2016, 2017, 2019  Etersoft
-# Copyright (C) 2013, 2016, 2017, 2019  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2013, 2016, 2017, 2019, 2020  Etersoft
+# Copyright (C) 2013, 2016, 2017, 2019, 2020  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -179,8 +179,8 @@ __switch_repo_to()
 __check_system()
 {
 	# sure we have systemd if systemd is running
-	if is_installed systemd && is_active_systemd systemd ; then
-		docmd epm install systemd || fatal
+	if is_active_systemd systemd ; then
+		docmd epm --skip-installed install systemd || fatal
 	fi
 }
 
@@ -243,8 +243,8 @@ __switch_alt_to_distro()
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
-			__check_system
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
+			__check_system
 			docmd epm update-kernel || fatal
 			info "Done."
 			;;
@@ -254,8 +254,8 @@ __switch_alt_to_distro()
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
-			__check_system
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
+			__check_system
 			docmd epm update-kernel || fatal
 			info "Done."
 			;;
@@ -265,13 +265,13 @@ __switch_alt_to_distro()
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
-			__check_system
 			if epm installed libcrypt >/dev/null ; then
 				# glibc-core coflicts libcrypt
 				docmd epm downgrade apt pam pam0_passwdqc glibc-core libcrypt- || fatal
 			fi
 			docmd epm downgrade
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
+			__check_system
 			docmd epm update-kernel || fatal
 			info "Done."
 			;;
@@ -282,9 +282,9 @@ __switch_alt_to_distro()
 			docmd epm remove gdb || fatal
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
-			__check_system
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
+			__check_system
 			docmd epm update-kernel || fatal
 			info "Done."
 			;;
@@ -294,12 +294,12 @@ __switch_alt_to_distro()
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
 			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
-			__check_system
 			if epm installed libcrypt >/dev/null ; then
 				# glibc-core coflicts libcrypt
 				docmd epm downgrade apt rpm pam pam0_passwdqc glibc-core libcrypt- || fatal
 			fi
 			docmd epm downgrade
+			__check_system
 			docmd epm upgrade || fatal
 			info "Done."
 			;;
@@ -309,12 +309,12 @@ __switch_alt_to_distro()
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
 			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
-			__check_system
 			#if epm installed libcrypt >/dev/null ; then
 			#	# glibc-core coflicts libcrypt
 			#	docmd epm downgrade apt rpm pam pam0_passwdqc glibc-core libcrypt- || fatal
 			#fi
 			docmd epm downgrade
+			__check_system
 			docmd epm upgrade || fatal
 			info "Done."
 			;;
@@ -324,8 +324,8 @@ __switch_alt_to_distro()
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
-			__check_system
 			docmd epm downgrade
+			__check_system
 			docmd epm upgrade || fatal
 			info "Done."
 			;;
