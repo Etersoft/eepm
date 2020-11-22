@@ -27,6 +27,13 @@ epm_repo()
 	case $CMD in
 	"-h"|"--help"|help)               # HELPCMD: help
 		get_help HELPCMD $SHAREDIR/epm-repo
+cat <<EOF
+Examples:
+  epm repo set p9
+  epm repo add autoimports
+  epm repo list
+  epm repo change yandex
+EOF
 		;;
 	""|list)                          # HELPCMD: list packages
 		load_helper epm-repolist
