@@ -67,12 +67,13 @@ __fix_alt_sources_list()
 	local SUBST_ALT_RULE1='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ]*(Sisyphus)[/ ](x86_64|i586|x86_64-i586|noarch|aarch64) !\1 \2/\3/\4 !gi'
 	local SUBST_ALT_RULE2='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ]*([tcp][6-9]\.?[0-9]?[/ ]branch|[tcp]1[012][/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch|aarch64) !\1 \2/\3/\4 !gi'
 	local i
-	#assure_root
+
 	for i in "$@" ; do
 		[ -s "$i" ] || continue
 		#perl -i.bak -pe "$SUBST_ALT_RULE" $i
 		# TODO: only for uncommented strings
 		#sed -i -r -e "$SUBST_ALT_RULE" $i
+		regexp_subst "/^ *#/! s| pub|/pub|" $i
 		regexp_subst "/^ *#/! $SUBST_ALT_RULE1" $i
 		regexp_subst "/^ *#/! $SUBST_ALT_RULE2" $i
 
@@ -104,6 +105,7 @@ __subst_with_yandex_url()
 	echo "$1" | sed \
 		-e "s|h\?f\?t\?tp://ftp.altlinux.org/pub/distributions/* ALTLinux|$NURL|" \
 		-e "s|h\?f\?t\?tp://ftp.basealt.ru/pub/distributions/* ALTLinux|$NURL|" \
+		-e "s|h\?f\?t\?tp://ftp.etersoft.ru/pub/* ALTLinux|$NURL|" \
 		-e "s|h\?f\?t\?tp://download.etersoft.ru/pub/* ALTLinux|$NURL|"
 }
 
@@ -112,6 +114,7 @@ __subst_with_basealt_url()
 	local NURL="http://ftp.basealt.ru/pub/distributions ALTLinux"
 	echo "$1" | sed \
 		-e "s|h\?f\?t\?tp://mirror.yandex.ru/* altlinux|$NURL|" \
+		-e "s|h\?f\?t\?tp://ftp.etersoft.ru/pub/* ALTLinux|$NURL|" \
 		-e "s|h\?f\?t\?tp://download.etersoft.ru/pub/* ALTLinux|$NURL|"
 }
 
@@ -152,23 +155,23 @@ __fix_repo_to_basealt()
 epm_repofix()
 {
 
-
 case $DISTRNAME in
 	ALTLinux)
 		assure_exists apt-repo
 		[ -n "$quiet" ] || docmd apt-repo list
+		assure_root
 		__fix_alt_sources_list /etc/apt/sources.list
 		__fix_alt_sources_list /etc/apt/sources.list.d/*.list
         # TODO: move to repo change
-		if [ "$pkg_filenames" = "etersoft" ] ; then
+		if [ "$1" = "etersoft" ] ; then
 			__fix_repo_to_etersoft /etc/apt/sources.list
 			__fix_repo_to_etersoft /etc/apt/sources.list.d/*.list
 		fi
-		if [ "$pkg_filenames" = "yandex" ] ; then
+		if [ "$1" = "yandex" ] ; then
 			__fix_repo_to_yandex /etc/apt/sources.list
 			__fix_repo_to_yandex /etc/apt/sources.list.d/*.list
 		fi
-		if [ "$pkg_filenames" = "basealt" ] ; then
+		if [ "$1" = "basealt" ] ; then
 			__fix_repo_to_basealt /etc/apt/sources.list
 			__fix_repo_to_basealt /etc/apt/sources.list.d/*.list
 		fi
@@ -177,7 +180,7 @@ case $DISTRNAME in
 		;;
 esac
 
-[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
+[ -z "$1" ] || fatal "No arguments are allowed here"
 
 case $PMTYPE in
 #	apt-rpm)
