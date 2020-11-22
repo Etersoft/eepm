@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.7.2
+Version: 3.7.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -123,6 +123,13 @@ mkdir -p %buildroot/var/lib/eepm/
 %endif
 
 %changelog
+* Mon Nov 23 2020 Vitaly Lipatov <lav@altlinux.ru> 3.7.3-alt1
+- glibc-restore.sh: don't touch glibc package
+- is_active_systemd: base on static info about systemd running
+- epm-release_upgrade: run __check_system (assure we still have systemd) after upgrade
+- add tip about epm repo --help and improve epm repo --help
+- epm-repofix: add hack to fix apt-repo urls, some improvements
+
 * Wed Nov 18 2020 Vitaly Lipatov <lav@altlinux.ru> 3.7.2-alt1
 - improve anydesk repack
 - epm-print: add epm print info command
