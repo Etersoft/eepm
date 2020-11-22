@@ -63,6 +63,12 @@ Just run under root user:
 # curl -s https://raw.githubusercontent.com/Etersoft/eepm/master/packed/epm.sh | bash /dev/stdin ei --auto
 ```
 
+You you have no curl on your system, just download file `https://raw.githubusercontent.com/Etersoft/eepm/master/packed/epm.sh`
+and run in the download directory:
+```
+# bash epm.sh ei
+```
+
 ## How to add new distro support
 1. Fix detection with `distro_info`
 2. Add distro support in `set_pm_type` function
