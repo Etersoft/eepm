@@ -1,4 +1,4 @@
-# Etersoft EPM package manager README
+# Etersoft EPM package manager
 
 Really, EPM is a wrapper for any package manager used in your operating system.
 
@@ -24,20 +24,22 @@ or
 # epm install NAME
 ```
 to install a package. It is just an alias for one command: install the package.
-EEPM will run `urpmi` on Mandriva, `apt-get install` on Ubuntu, `yum install` on Fedora.
-And it has a little intelligence, so EEPM will first try to install a package file via
+EPM will run `urpmi` on Mandriva, `apt install` on Ubuntu, `yum install` on Fedora,
+or `apt-get install` on ALT Linux.
+
+And it has a little intelligence, so EPM will first try to install a package file via
 low level commands (`rpm` or `dpkg`) before using higher level commands (`yum`, `apt`).
 
 Just try your comfort style for package management and carry your experience the same
-to any platform. EEPM will print out any real command it uses so you can learn from it.
+to any platform. EPM will print out the real command it uses so you can learn from it.
 
-Also EEPM has initial support for repository management: list, add, remove, update
+EPM has support for repository management: repo list, repo add, repo remove, update commands.
 
-Also EEPM contains `serv` command to control system services in system independed manner.
+Also EPM contains `serv` command to control system services in system independed manner.
 
 Pay attention to the following useful commands:
-* `epmqf` - query package(s) owning file
-* `epmqp` - search in the list of installed packages
+* `epmqf <command name>` - query package(s) owning file
+* `epmqp <word>` - search in the list of installed packages
 
 `epmqf` can be helpful to get package name for any file or command in the system:
 ```
@@ -63,7 +65,7 @@ Just run under root user:
 # curl -s https://raw.githubusercontent.com/Etersoft/eepm/master/packed/epm.sh | bash /dev/stdin ei --auto
 ```
 
-You you have no curl on your system, just download file `https://raw.githubusercontent.com/Etersoft/eepm/master/packed/epm.sh`
+If you have no `curl` on your system, just download file `https://raw.githubusercontent.com/Etersoft/eepm/master/packed/epm.sh`
 and run in the download directory:
 ```
 # bash epm.sh ei
@@ -74,10 +76,10 @@ and run in the download directory:
 2. Add distro support in `set_pm_type` function
 3. Implement every command in epm-* files
 4. Ensure that `epm packages` and `epm --short packages` works correctly
-(`epm package 'awk'` has to print packages with `awk` substring in their names)
+(`epm package 'awk'` have to print packages with `awk` substring in their names)
 
 See detailed description in Russian at
 http://wiki.etersoft.ru/Epm
 
-Please e-mail me:
-lav@etersoft.ru
+Please e-mail if you have any questions:
+`lav@etersoft.ru`
