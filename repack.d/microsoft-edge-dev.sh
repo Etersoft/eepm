@@ -18,3 +18,5 @@ subst "s|.*/etc/cron.daily/$PRODUCT.*||" $SPEC
 # unsupported format
 rm -f $BUILDROOT/usr/share/menu/microsoft-edge-dev.menu
 subst "s|.*/usr/share/menu/microsoft-edge-dev.menu.*||" $SPEC
+
+[ -e $BUILDROOT/usr/bin/microsoft-edge ] || ln -s $PRODUCT $BUILDROOT/usr/bin/microsoft-edge
