@@ -333,7 +333,7 @@ check_command()
         epm_cmd=prescription
         ;;
     play)                     # HELPCMD: install the application from the official site (run without args to get list)
-        epm_cmd=prescription
+        epm_cmd=play
         ;;
     -V|checkpkg|integrity)    # HELPCMD: check package file integrity (checksum)
         epm_cmd=checkpkg
