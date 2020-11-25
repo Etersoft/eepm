@@ -20,3 +20,7 @@ rm -f $BUILDROOT/usr/share/menu/microsoft-edge-dev.menu
 subst "s|.*/usr/share/menu/microsoft-edge-dev.menu.*||" $SPEC
 
 [ -e $BUILDROOT/usr/bin/microsoft-edge ] || ln -s $PRODUCT $BUILDROOT/usr/bin/microsoft-edge
+
+if ! grep -q '^"/usr/bin/microsoft-edge"' $SPEC ; then
+    subst 's|\(.*/usr/bin/microsoft-edge-dev.*\)|"/usr/bin/microsoft-edge"\n\1|' $SPEC
+fi
