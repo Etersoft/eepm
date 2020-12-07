@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.7.3
+Version: 3.7.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -123,6 +123,9 @@ mkdir -p %buildroot/var/lib/eepm/
 %endif
 
 %changelog
+* Mon Dec 07 2020 Andrey Cherepanov <cas@altlinux.org> 3.7.4-alt1
+- repack: add rule for ICAClient
+
 * Mon Nov 23 2020 Vitaly Lipatov <lav@altlinux.ru> 3.7.3-alt1
 - glibc-restore.sh: don't touch glibc package
 - is_active_systemd: base on static info about systemd running
