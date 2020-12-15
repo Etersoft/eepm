@@ -500,23 +500,27 @@ get_help()
     done
 }
 
-
-# FIXME: detect if not recognized
-set_pm_type()
+# TODO: get all info by one request (too slow)
+set_distro_info()
 {
-	local CMD
-
 	# use external distro_info if internal one is missed
 	DISTRVENDOR=$PROGDIR/distr_info
 	[ -x $DISTRVENDOR ] || DISTRVENDOR=distro_info
 	export DISTRVENDOR
-	# Fill for use: PMTYPE, DISTRNAME, DISTRVERSION, PKGFORMAT, PKGVENDOR, RPMVENDOR
+
 	[ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d) || fatal "Can't get distro name."
 	[ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
 	if [ -z "$DISTRARCH" ] ; then
 		DISTRARCH=$($DISTRVENDOR --distro-arch)
 	fi
 	DISTRCONTROL="$($DISTRVENDOR -y)"
+}
+
+# FIXME: detect if not recognized
+set_pm_type()
+{
+	local CMD
+	set_distro_info
 	set_target_pkg_env
 
 # override package manager detection result

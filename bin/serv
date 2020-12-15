@@ -48,13 +48,7 @@ set_service_type()
 {
 	local CMD
 
-	# use external distro_info if internal one is missed
-	DISTRVENDOR=$PROGDIR/distr_info
-	[ -x $DISTRVENDOR ] || DISTRVENDOR=distro_info
-
-	# Fill for use: PMTYPE, DISTRNAME, DISTRVERSION, PKGFORMAT, PKGVENDOR, RPMVENDOR
-	[ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d) || fatal "Can't get distro name from $DISTRVENDOR."
-	[ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
+	set_distro_info
 	set_target_pkg_env
 
 case $DISTRNAME in
