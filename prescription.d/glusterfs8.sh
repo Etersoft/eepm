@@ -15,7 +15,7 @@ else
     # Install all packages
     epmi ${GFSNEW}-cli ${GFSNEW}-client ${GFSNEW}
 
-    echo "You can install also '${GFSNEW}-server' if needed for this host"
+    echo "You can install also '${GFSNEW}-server' if it is needed for this host"
 
     epme $(epmqp ${GFSOLD})
 fi

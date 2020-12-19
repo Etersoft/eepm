@@ -164,6 +164,7 @@ EOF
 # will fill repacked_rpms var
 __epm_repack_to_rpm()
 {
+    local pkgs="$*"
     assure_distr ALTLinux "install --repack"
 
     # install epm-repack for static (package based) dependencies
@@ -172,7 +173,7 @@ __epm_repack_to_rpm()
     assure_exists rpmbuild rpm-build || fatal
 
     # TODO: improve
-    if echo "$*" | grep "\.deb" ; then
+    if echo "$pkgs" | grep "\.deb" ; then
         assure_exists dpkg || fatal
         # TODO: Для установки требует: /usr/share/debconf/confmodule но пакет не может быть установлен
         # assure_exists debconf
@@ -184,9 +185,10 @@ __epm_repack_to_rpm()
 
     local alpkg
     local abspkg
+    local tmpbuilddir
     repacked_rpms=''
-    for pkg in $* ; do
-        local tmpbuilddir=$HOME/$(basename $pkg).tmpdir
+    for pkg in $pkgs ; do
+        tmpbuilddir=$HOME/$(basename $pkg).tmpdir
         mkdir $tmpbuilddir
         abspkg="$(realpath $pkg)"
         info ""

@@ -269,7 +269,7 @@ check_command()
     full-upgrade)              # HELPCMD: update all system packages and kernel
         epm_cmd=full_upgrade
         ;;
-    release-upgrade|upgrade-release|upgrade-system|release-switch)  # HELPCMD: upgrade/switch whole system to the release in arg (default: next (latest) release)
+    release-upgrade|upgrade-release|upgrade-system|release-switch|release-downgrade)  # HELPCMD: upgrade/switch whole system to the release in arg (default: next (latest) release)
         epm_cmd=release_upgrade
         ;;
     kernel-update|kernel-upgrade|update-kernel|upgrade-kernel)      # HELPCMD: update system kernel to the last repo version
@@ -407,7 +407,7 @@ check_option()
         sort="$1"
         ;;
     --auto|--non-interactive)  # HELPOPT: non interactive mode
-        non_interactive=1
+        non_interactive="--auto"
         ;;
     *)
         return 1

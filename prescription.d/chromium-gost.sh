@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -x
 
 # TODO: common place
 fatal()
