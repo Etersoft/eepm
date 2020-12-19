@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.7.4
+Version: 3.7.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -123,6 +123,21 @@ mkdir -p %buildroot/var/lib/eepm/
 %endif
 
 %changelog
+* Sun Dec 20 2020 Vitaly Lipatov <lav@altlinux.ru> 3.7.5-alt1
+- microsoft-edge-dev.sh: add fix for missed alternatives in rpm package
+- repack: microsoft-edge-dev add /usr/bin/microsoft-edge in spec if missed
+- add repack microsoft-edge.sh (for future)
+- separate code for play command
+- get_local_alt_contents_index: skip task lines from repolist (ALT bug 38766)
+- epm-remove: make empty arg list is ok (ALT bug 39322)
+- prescriptions for php7/php8: fix return status
+- glusterfs7.sh: don't install glusterfs7-cli
+- epm-assure: fix reenterability
+- tools_eget: fix direct download from github
+- epm-autoremove: disable interactive for all parts (ALT bug 39321)
+- epm-autoorphans: add --auto support; print list for --dry-run
+- i586-wine: return error on error
+
 * Mon Dec 07 2020 Andrey Cherepanov <cas@altlinux.org> 3.7.4-alt1
 - repack: add rule for ICAClient
 
