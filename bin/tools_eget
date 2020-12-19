@@ -150,7 +150,16 @@ get_github_urls()
         grep -i -o -E '"browser_download_url": "https://.*"' | cut -d'"' -f4
 }
 
-if echo "$1" | grep -q "^https://github.com/" ; then
+# mask allowed only in the last part of path
+MASK=$(basename "$1")
+NOMASK=''
+
+# If have no wildcard symbol like asterisk, just download
+if echo "$MASK" | grep -qv "[*?]" || echo "$MASK" | grep -q "[?].*="; then
+    NOMASK='1'
+fi
+
+if echo "$1" | grep -q "^https://github.com/" && ! echo "$1" | grep -q "/releases/download/" ; then
     MASK="$2"
 
     if [ -n "$LISTONLY" ] ; then
@@ -184,11 +193,8 @@ if echo "$URL" | grep -q "[*?]" ; then
     fatal "Error: there are globbing symbols (*?) in $URL"
 fi
 
-# mask allowed only in the last part of path
-MASK=$(basename "$1")
-
 # If have no wildcard symbol like asterisk, just download
-if echo "$MASK" | grep -qv "[*?]" || echo "$MASK" | grep -q "[?].*="; then
+if [ -n "$NOMASK" ] ; then
     sget "$1" "$TARGETFILE"
     exit
 fi
