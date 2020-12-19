@@ -12,5 +12,5 @@ if epmqp --quiet php7- ; then
 else
     # Install all packages
     epmi php8 php8-mbstring php8-pdo php8-curl php8-fileinfo php8-dom php8-exif php8-pdo_mysql php8-mysqli php8-pcntl php8-openssl php8-mcrypt php8-gd2 php8-xmlreader php8-memcached php8-xsl php8-zip php8-redis php8-opcache
-    echo "Think twice about php8-imagick. See https://bugzilla.altlinux.org/show_bug.cgi?id=39033"
+    #echo "Think twice about php8-imagick. See https://bugzilla.altlinux.org/show_bug.cgi?id=39033"
 fi
