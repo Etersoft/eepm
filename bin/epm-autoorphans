@@ -41,11 +41,11 @@ case $PMTYPE in
 			| grep -v -- "^eepm$" \
 			| grep -v -- "^kernel")
 
-		if [ -n "$quiet" ] ; then
-			echo "$PKGLIST"
-		else
-			docmd epm remove $dryrun $PKGLIST
-		fi
+#		if [ -n "$dryrun" ] ; then
+#			echo "$PKGLIST"
+#		else
+			docmd epm remove $dryrun $(subst_option non_interactive --auto) $PKGLIST
+#		fi
 		;;
 	apt-dpkg|aptitude-dpkg)
 		assure_exists deborphan
