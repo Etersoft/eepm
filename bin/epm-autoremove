@@ -208,10 +208,14 @@ case $DISTRNAME in
 
 		[ -n "$dryrun" ] && return
 
-		docmd epm remove-old-kernels
-		
+		docmd epm remove-old-kernels $(subst_option non_interactive --auto)
+
 		if which nvidia-clean-driver 2>/dev/null ; then
-			sudocmd nvidia-clean-driver
+			if [ -n "$non_interactive" ] ; then
+				yes | sudocmd nvidia-clean-driver
+			else
+				sudocmd nvidia-clean-driver
+			fi
 		fi
 
 		return
