@@ -10,7 +10,8 @@ fatal()
 PKGNAME=chromium-gost
 
 if [ "$1" = "--remove" ] ; then
-    epm remove $PKGNAME
+    # $PKGNAME-stable really
+    epm remove $(epmqp $PKGNAME)
     exit
 fi
 
