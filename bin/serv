@@ -51,6 +51,7 @@ set_service_type()
 	set_distro_info
 	set_target_pkg_env
 
+# TODO: see Running in distro_info, check is_aсtive_systemd
 case $DISTRNAME in
 	ALTLinux)
 		CMD="service-chkconfig"
@@ -85,9 +86,9 @@ case $DISTRNAME in
 #	Windows)
 #		CMD="chocolatey"
 #		;;
-	*)
-		fatal "Have no suitable DISTRNAME $DISTRNAME yet"
-		;;
+#	*)
+#		fatal "Have no suitable DISTRNAME $DISTRNAME yet"
+#		;;
 esac
 
 # Note: force systemd using if active
