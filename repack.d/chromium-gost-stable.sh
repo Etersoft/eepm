@@ -3,6 +3,8 @@
 BUILDROOT="$1"
 SPEC="$2"
 
+PRODUCT=chromium-gost
+
 subst 's|%dir "/opt/chromium-gost"|%dir "/opt/chromium-gost"\n/usr/share/icons/hicolor/*x*/apps/*.png|' $SPEC
 
 # Make relative symlink
@@ -17,6 +19,11 @@ done
 
 rm -f $BUILDROOT/etc/cron.daily/chromium-gost
 subst 's|.*/etc/cron.daily/chromium-gost.*||' $SPEC
+
+# unsupported format
+rm -f $BUILDROOT/usr/share/menu/$PRODUCT.menu
+subst "s|.*/usr/share/menu/$PRODUCT.menu.*||" $SPEC
+
 
 subst 's|exec -a "$0" "$HERE/chrome" "$@"||' $BUILDROOT/opt/chromium-gost/chromium-gost
 cat <<EOF >>$BUILDROOT/opt/chromium-gost/chromium-gost
