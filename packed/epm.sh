@@ -516,81 +516,7 @@ if [ -n "$FORCEPM" ] ; then
 	return
 fi
 
-
-case $DISTRNAME in
-	ALTLinux)
-		CMD="apt-rpm"
-		#which ds-install 2>/dev/null >/dev/null && CMD=deepsolver-rpm
-		#which pkcon 2>/dev/null >/dev/null && CMD=packagekit-rpm
-		;;
-	PCLinux)
-		CMD="apt-rpm"
-		;;
-	Ubuntu|Debian|Mint|AstraLinux|Elbrus)
-		CMD="apt-dpkg"
-		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
-		which snappy 2>/dev/null >/dev/null && CMD=snappy
-		;;
-	Mandriva|ROSA)
-		CMD="urpm-rpm"
-		;;
-	FreeBSD|NetBSD|OpenBSD|Solaris)
-		CMD="pkgsrc"
-		which pkg 2>/dev/null >/dev/null && CMD=pkgng
-		;;
-	Gentoo)
-		CMD="emerge"
-		;;
-	ArchLinux)
-		CMD="pacman"
-		;;
-	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific|GosLinux|Amzn)
-		CMD="dnf-rpm"
-		which dnf 2>/dev/null >/dev/null || CMD=yum-rpm
-		;;
-	Slackware)
-		CMD="slackpkg"
-		;;
-	SUSE|SLED|SLES)
-		CMD="zypper-rpm"
-		;;
-	ForesightLinux|rPathLinux)
-		CMD="conary"
-		;;
-	Windows)
-		CMD="appget"
-		which $CMD 2>/dev/null >/dev/null || CMD="chocolatey"
-		which $CMD 2>/dev/null >/dev/null || CMD="winget"
-		;;
-	MacOS)
-		CMD="homebrew"
-		;;
-	OpenWrt)
-		CMD="opkg"
-		;;
-	GNU/Linux/Guix)
-		CMD="guix"
-		;;
-	Android)
-		CMD="android"
-		;;
-	Cygwin)
-		CMD="aptcyg"
-		;;
-	alpine)
-		CMD="apk"
-		;;
-	TinyCoreLinux)
-		CMD="tce"
-		;;
-	VoidLinux)
-		CMD="xbps"
-		;;
-	*)
-		fatal "Have no suitable DISTRNAME $DISTRNAME"
-		;;
-esac
-PMTYPE=$CMD
+	PMTYPE="$($DISTRVENDOR -g $DISTRNAME)"
 }
 
 is_active_systemd()
@@ -7853,6 +7779,7 @@ rpmvendor()
 	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
 	[ "$DISTRIB_ID" = "VoidLinux" ] && echo "void" && return
 	[ "$DISTRIB_ID" = "OpenSUSE" ] && echo "suse" && return
+	[ -n "$VENDOR_ID" ] && echo "$VENDOR_ID" && return
 	tolower "$DISTRIB_ID"
 }
 
@@ -7887,6 +7814,90 @@ pkgtype()
 			echo "rpm" ;;
 		*)  echo "rpm" ;;
 	esac
+}
+
+# TODO: in more appropriate way
+#which pkcon 2>/dev/null >/dev/null && info "You can run $ PMTYPE=packagekit epm to use packagekit backend"
+
+# Print package manager (need DISTRIB_ID var)
+pkgmanager()
+{
+local CMD
+# FIXME: some problems with multibased distros (Server Edition on CentOS and Desktop Edition on Ubuntu)
+case $DISTRIB_ID in
+	ALTLinux)
+		CMD="apt-rpm"
+		#which ds-install 2>/dev/null >/dev/null && CMD=deepsolver-rpm
+		#which pkcon 2>/dev/null >/dev/null && CMD=packagekit-rpm
+		;;
+	PCLinux)
+		CMD="apt-rpm"
+		;;
+	Ubuntu|Debian|Mint|AstraLinux|Elbrus)
+		CMD="apt-dpkg"
+		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
+		which snappy 2>/dev/null >/dev/null && CMD=snappy
+		;;
+	Mandriva|ROSA)
+		CMD="urpm-rpm"
+		;;
+	FreeBSD|NetBSD|OpenBSD|Solaris)
+		CMD="pkgsrc"
+		which pkg 2>/dev/null >/dev/null && CMD=pkgng
+		;;
+	Gentoo)
+		CMD="emerge"
+		;;
+	ArchLinux)
+		CMD="pacman"
+		;;
+	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific|GosLinux|Amzn|RedOS)
+		CMD="dnf-rpm"
+		which dnf 2>/dev/null >/dev/null || CMD=yum-rpm
+		;;
+	Slackware)
+		CMD="slackpkg"
+		;;
+	SUSE|SLED|SLES)
+		CMD="zypper-rpm"
+		;;
+	ForesightLinux|rPathLinux)
+		CMD="conary"
+		;;
+	Windows)
+		CMD="appget"
+		which $CMD 2>/dev/null >/dev/null || CMD="chocolatey"
+		which $CMD 2>/dev/null >/dev/null || CMD="winget"
+		;;
+	MacOS)
+		CMD="homebrew"
+		;;
+	OpenWrt)
+		CMD="opkg"
+		;;
+	GNU/Linux/Guix)
+		CMD="guix"
+		;;
+	Android)
+		CMD="android"
+		;;
+	Cygwin)
+		CMD="aptcyg"
+		;;
+	alpine)
+		CMD="apk"
+		;;
+	TinyCoreLinux)
+		CMD="tce"
+		;;
+	VoidLinux)
+		CMD="xbps"
+		;;
+	*)
+		fatal "Have no suitable DISTRIB_ID $DISTRIB_ID"
+		;;
+esac
+echo "$CMD"
 }
 
 get_var()
@@ -8361,11 +8372,11 @@ print_pretty_name()
 print_total_info()
 {
 cat <<EOF
-distro_info v$PROGVERSION : Copyright © 2007-2020 Etersoft
+distro_info v$PROGVERSION : Copyright © 2007-2021 Etersoft
 ==== Total system information:
 Pretty distro name (--pretty): $(print_pretty_name)
  Distro name and version (-e): $(print_name_version)
-        Packaging system (-p): $(pkgtype)
+ Package manager/type (-g/-p): $(pkgmanager) / $(pkgtype)
  Running service manager (-y): $(get_service_manager)
           Virtualization (-i): $(get_virt)
                CPU Cores (-c): $(get_core_count)
@@ -8397,6 +8408,7 @@ case $1 in
 		echo " -n [SystemName] - print vendor name (as _vendor macros in rpm)"
 		echo " -o - print base OS name"
 		echo " -p [SystemName] - print type of the packaging system"
+		echo " -g [SystemName] - print name of the packaging system"
 		echo " -s [SystemName] - print name of distro for build system (like in the package release name)"
 		echo " -y - print running service manager"
 		echo " --pretty - print pretty distro name"
@@ -8409,6 +8421,12 @@ case $1 in
 		# override DISTRIB_ID
 		test -n "$2" && DISTRIB_ID="$2"
 		pkgtype
+		exit 0
+		;;
+	-g)
+		# override DISTRIB_ID
+		test -n "$2" && DISTRIB_ID="$2"
+		pkgmanager
 		exit 0
 		;;
 	--pretty)
@@ -9261,7 +9279,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.7.6  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.8.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2020"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -9271,7 +9289,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.7.6
+EPMVERSION=3.8.0
 verbose=
 quiet=
 nodeps=
