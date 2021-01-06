@@ -324,7 +324,10 @@ elif [ "$(uname -o 2>/dev/null)" = "Cygwin" ] ; then
         DISTRIB_RELEASE="all"
 fi
 
+if [ -z "$PRETTY_NAME" ] ; then
+	PRETTY_NAME="$DISTRIB_ID $DISTRIB_RELEASE"
 fi
+
 
 get_uname()
 {
