@@ -1,12 +1,12 @@
 #!/bin/sh
-# 2007-2020 (c) Vitaly Lipatov <lav@etersoft.ru>
-# 2007-2020 (c) Etersoft
-# 2007-2020 Public domain
+# 2007-2021 (c) Vitaly Lipatov <lav@etersoft.ru>
+# 2007-2021 (c) Etersoft
+# 2007-2021 Public domain
 
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
 
-PROGVERSION="20201010"
+PROGVERSION="20210106"
 
 # TODO: check /etc/system-release
 
@@ -83,7 +83,7 @@ pkgtype()
 		debian|ubuntu|mint|runtu|mcst|astra) echo "deb" ;;
 		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
 			echo "rpm" ;;
-		fedora|redhat|scientific|centos|rhel|goslinux|amzn)
+		fedora|redhat|redos|scientific|centos|rhel|goslinux|amzn)
 			echo "rpm" ;;
 		*)  echo "rpm" ;;
 	esac
@@ -101,6 +101,13 @@ get_major_version()
 	echo "$1" | sed -e "s/\..*//g"
 }
 
+normalize_name()
+{
+	[ "$1" = "RED OS" ] && echo "RedOS" && return
+	[ "$1" = "CentOS Linux" ] && echo "CentOS" && return
+	echo "${1// /}"
+}
+
 # Default values
 PRETTY_NAME=""
 DISTRIB_ID="Generic"
@@ -113,6 +120,20 @@ if distro lsb-release ; then
 	DISTRIB_RELEASE=$(cat $DISTROFILE | get_var DISTRIB_RELEASE)
 	DISTRIB_CODENAME=$(cat $DISTROFILE | get_var DISTRIB_CODENAME)
 	PRETTY_NAME=$(cat $DISTROFILE | get_var DISTRIB_DESCRIPTION)
+fi
+
+# Next default by /etc/os-release
+# https://www.freedesktop.org/software/systemd/man/os-release.html
+if distro os-release ; then
+	# shellcheck disable=SC1090
+	. $DISTROFILE
+	DISTRIB_ID="$(normalize_name "$NAME")"
+#	DISTRIB_ID="$(firstupper "$ID")"
+	DISTRIB_RELEASE="$VERSION_ID"
+	[ -n "$DISTRIB_RELEASE" ] || DISTRIB_RELEASE="CUR"
+	# set by os-release:
+	#PRETTY_NAME
+	VENDOR_ID="$ID"
 fi
 
 # ALT Linux based
@@ -242,11 +263,8 @@ elif distro MCBC-release ; then
 	elif has 3.1 ; then DISTRIB_RELEASE="3.1"
 	fi
 
-elif distro fedora-release ; then
-	DISTRIB_ID="Fedora"
-	DISTRIB_RELEASE=$(cat "$DISTROFILE" | grep "release" | sed -e "s|.*release \([0-9]*\).*|\1|g") #"
-
-elif distro redhat-release ; then
+# TODO: drop in favour of /etc/os-release
+elif distro redhat-release && [ -z "$PRETTY_NAME" ] ; then
 	# FIXME if need
 	# actually in the original RHEL: Red Hat Enterprise Linux .. release N
 	DISTRIB_ID="RHEL"
@@ -275,17 +293,6 @@ elif distro SuSe-release || distro SuSE-release ; then
 		DISTRIB_ID="SLED"
 	elif has "SUSE Linux Enterprise Server" ; then
 		DISTRIB_ID="SLES"
-	fi
-
-# https://www.freedesktop.org/software/systemd/man/os-release.html
-elif distro os-release ; then
-	# shellcheck disable=SC1090
-	. $ROOTDIR/etc/os-release
-	DISTRIB_ID="$(firstupper "$ID")"
-	DISTRIB_RELEASE="$VERSION_ID"
-	[ -n "$DISTRIB_RELEASE" ] || DISTRIB_RELEASE="CUR"
-	if [ "$ID" = "opensuse-leap" ] ; then
-		DISTRIB_ID="SUSE"
 	fi
 
 # fixme: can we detect by some file?
@@ -317,18 +324,8 @@ elif [ "$(uname)" = "Linux" ] && [ -x $ROOTDIR/system/bin/getprop ] ; then
 elif [ "$(uname -o 2>/dev/null)" = "Cygwin" ] ; then
         DISTRIB_ID="Cygwin"
         DISTRIB_RELEASE="all"
+fi
 
-# try use standart LSB info by default
-elif distro lsb-release && [ -n "$DISTRIB_RELEASE" ]; then
-	# use LSB
-
-	# fix distro name
-	case "$DISTRIB_ID" in
-		"openSUSE Tumbleweed")
-			DISTRIB_ID="SUSE"
-			DISTRIB_RELEASE="Tumbleweed"
-			;;
-	esac
 fi
 
 get_uname()
