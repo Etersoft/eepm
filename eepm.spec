@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.8.0
+Version: 3.8.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -123,6 +123,10 @@ mkdir -p %buildroot/var/lib/eepm/
 %endif
 
 %changelog
+* Wed Jan 06 2021 Vitaly Lipatov <lav@altlinux.ru> 3.8.1-alt1
+- repack.d/tamtam-app.sh: set SUID for chromium-sandbox
+- epm-download: force download before install if wildcard is used in URL
+
 * Wed Jan 06 2021 Vitaly Lipatov <lav@altlinux.ru> 3.8.0-alt1
 - move package manager detection to distr_info
 
