@@ -21,14 +21,15 @@ alt_base_dist_url="http://ftp.basealt.ru/pub/distributions"
 
 __use_url_install()
 {
+	# force download if wildcard is used
+	echo "$pkg_urls" | grep -q "[?*]" && return 1
+
 	# install of remote files has a side affect
 	# (more fresh package from a repo can be installed instead of the file)
 	#case $DISTRNAME in
 	#	"ALTLinux")
 	#		# do not support https yet
 	#		echo "$pkg_urls" | grep -q "https://" && return 1
-	#		# force download if wildcard is used
-	#		echo "$pkg_urls" | grep -q "[?*]" && return 1
 	#		pkg_names="$pkg_names $pkg_urls"
 	#		return 0
 	#		;;
