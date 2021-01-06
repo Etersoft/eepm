@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.7.5
+Version: 3.7.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -123,6 +123,16 @@ mkdir -p %buildroot/var/lib/eepm/
 %endif
 
 %changelog
+* Wed Jan 06 2021 Vitaly Lipatov <lav@altlinux.ru> 3.7.6-alt1
+- prescription/chromium-gost.sh: fix removing
+- serv: use systemd by default for any system
+- chromium-gost-stable.sh: drop obsoleted menu file
+- epm play: add yandex-browser, improve repacking
+- epm play: add spotify install support
+- epm play: add tamtam messenger install support
+- distr_info: use /etc/os-release firstly, drop obsoleted code
+- distr_info: set rolling version for ArchLinux
+
 * Sun Dec 20 2020 Vitaly Lipatov <lav@altlinux.ru> 3.7.5-alt1
 - microsoft-edge-dev.sh: add fix for missed alternatives in rpm package
 - repack: microsoft-edge-dev add /usr/bin/microsoft-edge in spec if missed

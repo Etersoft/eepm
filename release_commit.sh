@@ -11,5 +11,5 @@ version="$(get_version $SPECNAME)"
 
 git add packed
 git commit packed -m "commit packed $version"
-git tag -a "$version" -e -s -m "$(rpmlog --last-changelog)"
+git tag -a "$version" -e -s -m "$(rpmlog -q --last-changelog)"
 git push pub.github $version
