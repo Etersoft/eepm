@@ -490,21 +490,25 @@ get_help()
     done
 }
 
-
-set_pm_type()
+set_distro_info()
 {
-	local CMD
-
 	# use external distro_info if internal one is missed
 	DISTRVENDOR=internal_distr_info
 	[ -x $DISTRVENDOR ] || DISTRVENDOR=internal_distr_info
 	export DISTRVENDOR
-	# Fill for use: PMTYPE, DISTRNAME, DISTRVERSION, PKGFORMAT, PKGVENDOR, RPMVENDOR
+
 	[ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d) || fatal "Can't get distro name."
 	[ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
 	if [ -z "$DISTRARCH" ] ; then
 		DISTRARCH=$($DISTRVENDOR --distro-arch)
 	fi
+	DISTRCONTROL="$($DISTRVENDOR -y)"
+}
+
+set_pm_type()
+{
+	local CMD
+	set_distro_info
 	set_target_pkg_env
 
 if [ -n "$FORCEPM" ] ; then
@@ -591,7 +595,7 @@ PMTYPE=$CMD
 
 is_active_systemd()
 {
-	[ "$($DISTRVENDOR -y)" = "systemd" ]
+	[ "$DISTRCONTROL" = "systemd" ]
 }
 
 assure_distr()
@@ -917,7 +921,8 @@ epm_assure()
 
     # can't be used in epm ei case
     #docmd epm --auto install $PACKAGE || return
-    non_interactive=1 pkg_names="$PACKAGE" pkg_files='' pkg_urls='' epm_install
+    # TODO: HACK: DEBUG=1 for skip to_remove_pkg handling
+    (DEBUG=1 repack='' non_interactive=1 pkg_names="$PACKAGE" pkg_files='' pkg_urls='' epm_install )
 
     [ -n "$PACKAGEVERSION" ] || return 0
     # check if we couldn't update and still need update
@@ -969,11 +974,7 @@ case $PMTYPE in
 			| grep -v -- "^eepm$" \
 			| grep -v -- "^kernel")
 
-		if [ -n "$quiet" ] ; then
-			echo "$PKGLIST"
-		else
-			docmd epm remove $dryrun $PKGLIST
-		fi
+			docmd epm remove $dryrun $(subst_option non_interactive --auto) $PKGLIST
 		;;
 	apt-dpkg|aptitude-dpkg)
 		assure_exists deborphan
@@ -1164,15 +1165,15 @@ __epm_autoremove_altrpm_lib()
 }
 
 
+epm_autoremove_default_groups="python2 python3 perl libs"
+
 __epm_autoremove_altrpm()
 {
 	local i
 	assure_exists /usr/share/apt/scripts/list-nodeps.lua apt-scripts
 
 	if [ -z "$pkg_names" ] ; then
-		__epm_autoremove_altrpm_pp '^(python-module-|python3-module-|python-modules-|python3-modules|perl-)'
-		__epm_autoremove_altrpm_lib nodevel
-		return 0
+		pkg_names="$epm_autoremove_default_groups"
 	fi
 
 	for i in $pkg_names ; do
@@ -1183,6 +1184,12 @@ __epm_autoremove_altrpm()
 		python)
 			__epm_autoremove_altrpm_pp '^(python-module-|python3-module-|python-modules-|python3-modules)'
 			;;
+		python2)
+			__epm_autoremove_altrpm_pp '^(python-module-|python-modules-)'
+			;;
+		python3)
+			__epm_autoremove_altrpm_pp '^(python3-module-|python3-modules)'
+			;;
 		perl)
 			__epm_autoremove_altrpm_pp '^(perl-)'
 			;;
@@ -1190,7 +1197,7 @@ __epm_autoremove_altrpm()
 			__epm_autoremove_altrpm_lib
 			;;
 		*)
-			fatal "autoremove: unsupported '$i'. Use libs, python, perl, libs-devel."
+			fatal "autoremove: unsupported '$i'. Use epm autoremove --help to list supported ones"
 			;;
 		esac
 	done
@@ -1198,26 +1205,52 @@ __epm_autoremove_altrpm()
 	return 0
 }
 
+epm_autoremove_print_help()
+{
+	echo "epm autoremove removes unneeded packages from the system"
+	echo "run 'epm autoremove' to use apt-get autoremove"
+	echo "or run 'epm autoremove --direct [group1] [group2] ...' to use epm implementation"
+	echo "Default groups: $epm_autoremove_default_groups"
+	cat <<EOF
+Supported package groups:
+    libs       - unused libraries
+    libs-devel - unused -devel packages
+    python     - all python modules
+    python2    - python2 modules
+    python3    - python3 modules
+    perl       - perl- modules
+EOF
+}
+
+
 epm_autoremove()
 {
 
 case $DISTRNAME in
 	ALTLinux)
+		if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "help" ] ; then
+			epm_autoremove_print_help
+			return 0
+		fi
 		if [ -z "$direct" ] ; then
 			sudocmd apt-get $(subst_option non_interactive -y) autoremove $dryrun
 			local RET=$?
-			info "Also you can run 'epm autoremove --direct' to use low level autoremove (epm internal implementation)"
+			info "Also you can run 'epm autoremove --direct' to use epm implementation of autoremove (see --help)"
 			[ "$RET" = 0 ] || return
 		else
-			__epm_autoremove_altrpm
+			__epm_autoremove_altrpm "$@"
 		fi
 
 		[ -n "$dryrun" ] && return
 
-		docmd epm remove-old-kernels
-		
+		docmd epm remove-old-kernels $(subst_option non_interactive --auto)
+
 		if which nvidia-clean-driver 2>/dev/null ; then
-			sudocmd nvidia-clean-driver
+			if [ -n "$non_interactive" ] ; then
+				yes | sudocmd nvidia-clean-driver
+			else
+				sudocmd nvidia-clean-driver
+			fi
 		fi
 
 		return
@@ -1560,7 +1593,7 @@ epm_checkpkg()
 		__handle_pkg_urls_to_checking
 	fi
 
-	[ -n "$pkg_files" ] || fatal "Checkpkg: missing file or package name(s)"
+	[ -n "$pkg_files" ] || fatal "Checkpkg: filename is missed"
 
 	local RETVAL=0
 
@@ -2274,7 +2307,7 @@ __alt_local_content_filelist()
 {
 
     local CI="$(get_local_alt_contents_index)"
-    [ -n "$CI" ] || fatal "Have no local contents index"
+    [ -n "$CI" ] || fatal "Have no local contents index. Check epm repo --help."
 
     # TODO: safe way to use less
     #local OUTCMD="less"
@@ -2420,7 +2453,7 @@ __epm_filelist_name()
 
 epm_filelist()
 {
-	[ -n "$pkg_filenames" ] || fatal "Filelist: missing package(s) name"
+	[ -n "$pkg_filenames" ] || fatal "Filelist: package name is missed"
 
 
 	__epm_filelist_file $pkg_files || return
@@ -2579,7 +2612,7 @@ if [ -n "$pkg_urls" ] ; then
     __handle_pkg_urls_to_checking
 fi
 
-[ -n "$pkg_filenames" ] || fatal "Info: missing package(s) name"
+[ -n "$pkg_filenames" ] || fatal "Info: package name is missed"
 
 __epm_info_by_pkgtype || __epm_info_by_pmtype
 
@@ -3188,7 +3221,7 @@ epm_Install()
 __emerge_install_ebuild()
 {
 	local EBUILD="$1"
-	[ -s "$EBUILD" ] || fatal ".ebuild file '$EBUILD' is missing"
+	[ -s "$EBUILD" ] || fatal ".ebuild file '$EBUILD' is missed"
 
 	# load ebuild and get vars
 	. $(pwd)/$EBUILD
@@ -3503,33 +3536,7 @@ docmd $CMD | __fo_pfn
 
 }
 
-# File bin/epm-policy:
-
-
-epm_policy()
-{
-
-[ -n "$pkg_names" ] || fatal "Info: missing package(s) name"
-
-warmup_bases
-
-pkg_names=$(__epm_get_hilevel_name $pkg_names)
-
-case $PMTYPE in
-	apt-*)
-		docmd apt-cache policy $pkg_names
-		;;
-	packagekit)
-		docmd pkcon resolve $pkg_names
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
-esac
-
-}
-
-# File bin/epm-prescription:
+# File bin/epm-play:
 
 epm_vardir=/var/lib/eepm
 
@@ -3561,6 +3568,103 @@ __list_installed_app()
 }
 
 
+__epm_play_run()
+{
+    local script="$psdir/$1.sh"
+    shift
+    local option="$1"
+
+    if [ ! -x "$script" ] ; then
+        fatal "Can't find play script $script."
+    fi
+
+    # allow use EGET in the scripts
+    __set_EGET
+    # also we will have DISTRVENDOR there
+    export PATH=$PROGDIR:$PATH
+
+    #info "Running $($script --description 2>/dev/null) ..."
+    docmd $script $option
+}
+
+epm_play()
+{
+local psdir="$CONFIGDIR/prescription.d"
+
+if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
+    cat <<EOF
+Options:
+    APP            - install APP
+    --remove APP   - remove APP
+    --list         - list all installed apps
+    --list-all     - list all available apps
+EOF
+    exit
+fi
+
+if [ "$1" = "--remove" ] ; then
+    shift
+    #__check_installed_app "$1" || fatal "$1 is not installed"
+    __epm_play_run $1 --remove
+    __remove_installed_app "$@"
+    exit
+fi
+
+if [ "$1" = "--list" ] || [ "$1" = "--installed" ] ; then
+    shift
+    echo "Installed:"
+    local i
+    for i in $(__list_installed_app) ; do
+        printf "  %-20s - %s\n" "$i" "$($psdir/$i.sh --description 2>/dev/null)"
+    done
+    exit
+fi
+
+if [ "$1" == "--list-all" ] || [ -z "$*" ] ; then
+    echo "Run with a name of a play script to run:"
+    for i in $psdir/*.sh ; do
+        printf "  %-20s - %s\n" "$(basename $i .sh)" "$($i --description 2>/dev/null)"
+    done
+    echo
+    echo "run epm play --list to list installed only or --remove to remove one"
+    exit
+fi
+
+__check_installed_app "$1" && info "$1 is already installed (use --remove to remove)" && exit 1
+__epm_play_run "$1" --run && __save_installed_app "$1"
+}
+
+# File bin/epm-policy:
+
+
+epm_policy()
+{
+
+[ -n "$pkg_names" ] || fatal "Info: package name is missed"
+
+warmup_bases
+
+pkg_names=$(__epm_get_hilevel_name $pkg_names)
+
+case $PMTYPE in
+	apt-*)
+		docmd apt-cache policy $pkg_names
+		;;
+	packagekit)
+		docmd pkcon resolve $pkg_names
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+}
+
+# File bin/epm-prescription:
+
+epm_vardir=/var/lib/eepm
+
+
 __epm_prescription_run()
 {
     local script="$psdir/$1.sh"
@@ -3589,18 +3693,9 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
     cat <<EOF
 Options:
     APP            - install APP
-    --remove APP   - remove APP
     --list         - list all installed apps
     --list-all     - list all available apps
 EOF
-    exit
-fi
-
-if [ "$1" = "--remove" ] ; then
-    shift
-    #__check_installed_app "$1" || fatal "$1 is not installed"
-    __epm_prescription_run $1 --remove
-    __remove_installed_app "$@"
     exit
 fi
 
@@ -3620,12 +3715,11 @@ if [ "$1" == "--list-all" ] || [ -z "$*" ] ; then
         printf "  %-20s - %s\n" "$(basename $i .sh)" "$($i --description 2>/dev/null)"
     done
     echo
-    echo "run epm play --list to list installed only or --remove to remove one"
+    echo "run epm prescription --list to list installed only"
     exit
 fi
 
-__check_installed_app "$1" && info "$1 is already installed" && exit 1
-__epm_prescription_run "$1" --run && __save_installed_app "$1"
+__epm_prescription_run "$1" --run
 }
 
 # File bin/epm-print:
@@ -3737,8 +3831,8 @@ construct_name()
     local pkgtype="$4"
     local ds="$5"
 
-    [ -n "$arch" ] || arch="$(distro_info --distro-arch)"
-    [ -n "$pkgtype" ] || pkgtype="$(distro_info -p)"
+    [ -n "$arch" ] || arch="$($DISTRVENDOR --distro-arch)"
+    [ -n "$pkgtype" ] || pkgtype="$($DISTRVENDOR -p)"
     [ -n "$ds" ] || ds=$(get_pkg_name_delimiter $pkgtype)
     [ -n "$version" ] && version="$ds$version"
     echo "${name}${version}${ds/-/.}$arch.$pkgtype"
@@ -3765,11 +3859,12 @@ epm_print()
 
     case "$WHAT" in
         "")
-            fatal "Use epm print help for get help."
+            fatal "Use epm print help to get help."
             ;;
         "-h"|"--help"|"help")
 cat <<EOF
   Examples:
+    epm print info [args]                    print system and distro info (via distro_info command)
     epm print name [from filename|for package] NN        print only name of package name or package file
     epm print version [from filename|for package] NN     print only version of package name or package file
     epm print release [from filename|for package] NN     print only release of package name or package file
@@ -3873,6 +3968,9 @@ EOF
             ;;
         "constructname")
             construct_name "$@"
+            ;;
+        "info")
+            $DISTRVENDOR "$@"
             ;;
         *)
             fatal "Unknown command $ epm print $WHAT. Use epm print help for get help."
@@ -3983,7 +4081,7 @@ docmd $CMD $pkg_names
 
 epm_provides()
 {
-	[ -n "$pkg_filenames" ] || fatal "Provides: missing package(s) name"
+	[ -n "$pkg_filenames" ] || fatal "Provides: package name is missed"
 
 	epm_provides_files $pkg_files
 	# shellcheck disable=SC2046
@@ -4288,7 +4386,7 @@ separate_installed()
 
 epm_query()
 {
-	[ -n "$pkg_filenames" ] || fatal "Query: missing package(s) name"
+	[ -n "$pkg_filenames" ] || fatal "Query: package name is missed"
 
 	__epm_query_file $pkg_files || return
 
@@ -4554,7 +4652,7 @@ epm_reinstall_files()
 
 epm_reinstall()
 {
-    [ -n "$pkg_filenames" ] || fatal "Reinstall: missing package(s) name."
+    [ -n "$pkg_filenames" ] || fatal "Reinstall: package name is missed."
 
     warmup_lowbase
 
@@ -4729,8 +4827,8 @@ __switch_repo_to()
 __check_system()
 {
 	# sure we have systemd if systemd is running
-	if is_installed systemd && is_active_systemd systemd ; then
-		docmd epm install systemd || fatal
+	if is_active_systemd systemd ; then
+		docmd epm --skip-installed install systemd || fatal
 	fi
 }
 
@@ -4792,8 +4890,8 @@ __switch_alt_to_distro()
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
-			__check_system
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
+			__check_system
 			docmd epm update-kernel || fatal
 			info "Done."
 			;;
@@ -4803,8 +4901,8 @@ __switch_alt_to_distro()
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
-			__check_system
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
+			__check_system
 			docmd epm update-kernel || fatal
 			info "Done."
 			;;
@@ -4814,13 +4912,13 @@ __switch_alt_to_distro()
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
-			__check_system
 			if epm installed libcrypt >/dev/null ; then
 				# glibc-core coflicts libcrypt
 				docmd epm downgrade apt pam pam0_passwdqc glibc-core libcrypt- || fatal
 			fi
 			docmd epm downgrade
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
+			__check_system
 			docmd epm update-kernel || fatal
 			info "Done."
 			;;
@@ -4831,9 +4929,9 @@ __switch_alt_to_distro()
 			docmd epm remove gdb || fatal
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
-			__check_system
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
+			__check_system
 			docmd epm update-kernel || fatal
 			info "Done."
 			;;
@@ -4843,12 +4941,12 @@ __switch_alt_to_distro()
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
 			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
-			__check_system
 			if epm installed libcrypt >/dev/null ; then
 				# glibc-core coflicts libcrypt
 				docmd epm downgrade apt rpm pam pam0_passwdqc glibc-core libcrypt- || fatal
 			fi
 			docmd epm downgrade
+			__check_system
 			docmd epm upgrade || fatal
 			info "Done."
 			;;
@@ -4858,12 +4956,12 @@ __switch_alt_to_distro()
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
 			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
-			__check_system
 			#if epm installed libcrypt >/dev/null ; then
 			#	# glibc-core coflicts libcrypt
 			#	docmd epm downgrade apt rpm pam pam0_passwdqc glibc-core libcrypt- || fatal
 			#fi
 			docmd epm downgrade
+			__check_system
 			docmd epm upgrade || fatal
 			info "Done."
 			;;
@@ -4873,8 +4971,8 @@ __switch_alt_to_distro()
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
-			__check_system
 			docmd epm downgrade
+			__check_system
 			docmd epm upgrade || fatal
 			info "Done."
 			;;
@@ -4883,7 +4981,7 @@ __switch_alt_to_distro()
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			docmd epm upgrade || fatal
 			__replace_alt_version_in_repo "$FROM/branch/" "$TO/"
-			__alt_repofix "sisyphus"
+			__alt_repofix "alt"
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
 			#local ADDPKG
@@ -5282,7 +5380,10 @@ epm_remove()
 	[ -n "$pkg_files" ] && pkg_names="$pkg_names $(epm query $pkg_files)"
 	pkg_files=''
 
-	[ -n "$pkg_names" ] || fatal "Remove: missing package(s) name."
+	if [ -z "$pkg_names" ] ; then
+		warning "no package(s) to remove."
+		exit 0
+	fi
 	# remove according current arch (if x86_64) by default
 	pkg_names="$(echo $pkg_names | exp_with_arch_suffix)"
 
@@ -5578,7 +5679,7 @@ __fix_spec()
     done
 
     # replace dir "/path/dir" -> %dir /path/dir
-    for i in $(grep '^"/' $spec | sed -e 's|^"\(/.*\)"$|\1|') ; do #" hack for highlight
+    grep '^"/' $spec | sed -e 's|^"\(/.*\)"$|\1|' | while read i ; do
         # add dir as %dir in the filelist
         if [ -d "$buildroot$i" ] ; then
             subst 's|^\("'$i'"\)$|%dir \1|' $spec
@@ -5629,6 +5730,7 @@ EOF
 
 __epm_repack_to_rpm()
 {
+    local pkgs="$*"
     assure_distr ALTLinux "install --repack"
 
     # install epm-repack for static (package based) dependencies
@@ -5637,7 +5739,7 @@ __epm_repack_to_rpm()
     assure_exists rpmbuild rpm-build || fatal
 
     # TODO: improve
-    if echo "$*" | grep "\.deb" ; then
+    if echo "$pkgs" | grep "\.deb" ; then
         assure_exists dpkg || fatal
         # TODO: Для установки требует: /usr/share/debconf/confmodule но пакет не может быть установлен
         # assure_exists debconf
@@ -5649,9 +5751,10 @@ __epm_repack_to_rpm()
 
     local alpkg
     local abspkg
+    local tmpbuilddir
     repacked_rpms=''
-    for pkg in $* ; do
-        local tmpbuilddir=$HOME/$(basename $pkg).tmpdir
+    for pkg in $pkgs ; do
+        tmpbuilddir=$HOME/$(basename $pkg).tmpdir
         mkdir $tmpbuilddir
         abspkg="$(realpath $pkg)"
         info ""
@@ -5781,6 +5884,13 @@ epm_repo()
 	case $CMD in
 	"-h"|"--help"|help)               # HELPCMD: help
 		get_help HELPCMD $SHAREDIR/epm-repo
+cat <<EOF
+Examples:
+  epm repo set p9
+  epm repo add autoimports
+  epm repo list
+  epm repo change yandex
+EOF
 		;;
 	""|list)                          # HELPCMD: list packages
 		epm_repolist "$@"
@@ -5870,12 +5980,13 @@ __fix_alt_sources_list()
 	local SUBST_ALT_RULE1='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ]*(Sisyphus)[/ ](x86_64|i586|x86_64-i586|noarch|aarch64) !\1 \2/\3/\4 !gi'
 	local SUBST_ALT_RULE2='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ]*([tcp][6-9]\.?[0-9]?[/ ]branch|[tcp]1[012][/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch|aarch64) !\1 \2/\3/\4 !gi'
 	local i
-	#assure_root
+
 	for i in "$@" ; do
 		[ -s "$i" ] || continue
 		#perl -i.bak -pe "$SUBST_ALT_RULE" $i
 		# TODO: only for uncommented strings
 		#sed -i -r -e "$SUBST_ALT_RULE" $i
+		regexp_subst "/^ *#/! s| pub|/pub|" $i
 		regexp_subst "/^ *#/! $SUBST_ALT_RULE1" $i
 		regexp_subst "/^ *#/! $SUBST_ALT_RULE2" $i
 
@@ -5907,6 +6018,7 @@ __subst_with_yandex_url()
 	echo "$1" | sed \
 		-e "s|h\?f\?t\?tp://ftp.altlinux.org/pub/distributions/* ALTLinux|$NURL|" \
 		-e "s|h\?f\?t\?tp://ftp.basealt.ru/pub/distributions/* ALTLinux|$NURL|" \
+		-e "s|h\?f\?t\?tp://ftp.etersoft.ru/pub/* ALTLinux|$NURL|" \
 		-e "s|h\?f\?t\?tp://download.etersoft.ru/pub/* ALTLinux|$NURL|"
 }
 
@@ -5915,6 +6027,7 @@ __subst_with_basealt_url()
 	local NURL="http://ftp.basealt.ru/pub/distributions ALTLinux"
 	echo "$1" | sed \
 		-e "s|h\?f\?t\?tp://mirror.yandex.ru/* altlinux|$NURL|" \
+		-e "s|h\?f\?t\?tp://ftp.etersoft.ru/pub/* ALTLinux|$NURL|" \
 		-e "s|h\?f\?t\?tp://download.etersoft.ru/pub/* ALTLinux|$NURL|"
 }
 
@@ -5955,23 +6068,23 @@ __fix_repo_to_basealt()
 epm_repofix()
 {
 
-
 case $DISTRNAME in
 	ALTLinux)
 		assure_exists apt-repo
 		[ -n "$quiet" ] || docmd apt-repo list
+		assure_root
 		__fix_alt_sources_list /etc/apt/sources.list
 		__fix_alt_sources_list /etc/apt/sources.list.d/*.list
         # TODO: move to repo change
-		if [ "$pkg_filenames" = "etersoft" ] ; then
+		if [ "$1" = "etersoft" ] ; then
 			__fix_repo_to_etersoft /etc/apt/sources.list
 			__fix_repo_to_etersoft /etc/apt/sources.list.d/*.list
 		fi
-		if [ "$pkg_filenames" = "yandex" ] ; then
+		if [ "$1" = "yandex" ] ; then
 			__fix_repo_to_yandex /etc/apt/sources.list
 			__fix_repo_to_yandex /etc/apt/sources.list.d/*.list
 		fi
-		if [ "$pkg_filenames" = "basealt" ] ; then
+		if [ "$1" = "basealt" ] ; then
 			__fix_repo_to_basealt /etc/apt/sources.list
 			__fix_repo_to_basealt /etc/apt/sources.list.d/*.list
 		fi
@@ -5980,7 +6093,7 @@ case $DISTRNAME in
 		;;
 esac
 
-[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
+[ -z "$1" ] || fatal "No arguments are allowed here"
 
 case $PMTYPE in
 	*)
@@ -6220,7 +6333,7 @@ docmd $CMD $pkg_names
 
 epm_requires()
 {
-	[ -n "$pkg_filenames" ] || fatal "Requires: missing package(s) name"
+	[ -n "$pkg_filenames" ] || fatal "Requires: package name is missed"
 	epm_requires_files $pkg_files
 	# shellcheck disable=SC2046
 	epm_requires_names $(print_name $pkg_names)
@@ -6287,7 +6400,7 @@ __epm_lineprint_python_array()
     local a="$*"
     [ -n "$a" ] || return
     local name="$(__epm_get_array_name "$a")"
-    (echo "$a" | sed -E -e 's@(\]|\)).*@\1@' ; echo "print('\n'.join($name))" ) | ( a= python - || a= python3 )
+    (echo "$a" | sed -E -e 's@(\]|\)).*@\1@' ; echo "print('\n'.join($name))" ) | ( a= python3 - || a= python - )
 }
 
 __epm_restore_convert_to_rpm_notation()
@@ -6334,7 +6447,7 @@ __epm_restore_pip()
         reqmacro="%py3_use"
         basename "$req_file" | egrep -q "(dev|test)" && reqmacro="%py3_buildrequires"
         echo
-        echo "# generated by epm --restore --dry-run from $(basename $(dirname $(realpath $req_file)))/$req_file"
+        echo "# generated by epm restore --dry-run from $(basename $(dirname $(realpath $req_file)))/$req_file"
         cat $req_file | __epm_restore_convert_to_rpm_notation | sed -e "s|^|$reqmacro |"
         return
     else
@@ -6395,7 +6508,7 @@ $l"
 
         if [ -n "$dryrun" ] ; then
             echo
-            echo "# generated by epm --restore --dry-run from $(basename $(dirname $(realpath $req_file)))/$req_file $(__epm_get_array_name "$section")"
+            echo "# generated by epm restore --dry-run from $(basename $(dirname $(realpath $req_file)))/$req_file $(__epm_get_array_name "$section")"
             __epm_lineprint_python_array "$ar" | __epm_restore_convert_to_rpm_notation ">=" | sed -e "s|^|$reqmacro |"
         else
             ilist="$ilist $(__epm_lineprint_python_array "$ar" | __epm_restore_convert_to_rpm_notation ">=" | cut -d' ' -f 1 | sed -e "s|^|python3-module-|")"
@@ -6458,11 +6571,11 @@ __epm_restore_npm()
         local lt=$(mktemp)
         a= jq .dependencies <$req_file >$lt
         echo
-        echo "# generated by epm --restore --dry-run from $(basename $(dirname $(realpath $req_file)))/$req_file"
+        echo "# generated by epm restore --dry-run from $(basename $(dirname $(realpath $req_file)))/$req_file"
         __epm_print_npm_list "Requires:" $lt
 
         echo
-        echo "# devDependencies generated by epm --restore --dry-run from $(basename $(dirname $(realpath $req_file)))/$req_file"
+        echo "# devDependencies generated by epm restore --dry-run from $(basename $(dirname $(realpath $req_file)))/$req_file"
         a= jq .devDependencies <$req_file >$lt
         __epm_print_npm_list "BuildRequires:" $lt
         rm -f $lt
@@ -6703,7 +6816,7 @@ __epm_search_make_grep()
 
 __epm_search_internal()
 {
-	[ -n "$pkg_filenames" ] || fatal "Search: missing search argument(s)"
+	[ -n "$pkg_filenames" ] || fatal "Search: search argument(s) is missed"
 
 	# it is useful for first time running
 	update_repo_if_needed soft
@@ -6716,7 +6829,7 @@ __epm_search_internal()
 
 epm_search()
 {
-	[ -n "$pkg_filenames" ] || fatal "Search: missing search argument(s)"
+	[ -n "$pkg_filenames" ] || fatal "Search: search argument(s) is missed"
 
 	# it is useful for first time running
 	update_repo_if_needed soft
@@ -6745,7 +6858,7 @@ __alt_local_content_search()
     info "Locate contents index file(s) ..."
     local CI="$(get_local_alt_contents_index)"
     # TODO use something like
-    [ -n "$CI" ] || fatal "Have no local contents index"
+    [ -n "$CI" ] || fatal "Have no local contents index. Check epm repo --help."
 
     info "Searching in"
     echo "$CI"
@@ -6761,7 +6874,7 @@ __alt_local_content_search()
 epm_search_file()
 {
 	local CMD
-	[ -n "$pkg_filenames" ] || fatal "Search file: missing file name(s)"
+	[ -n "$pkg_filenames" ] || fatal "Search file: file name is missed"
 
 case $PMTYPE in
 	apt-rpm)
@@ -6900,7 +7013,7 @@ get_local_alt_contents_index()
 
     local LOCALPATH
 
-    epm_repolist | grep -E "rpm.*(ftp://|http://|https://|file:/)" | sed -e "s@^rpm.*\(ftp://\|http://\|https://\|file:\)@\1@g" | while read -r URL ARCH other ; do
+    epm_repolist | grep -v " task$" | grep -E "rpm.*(ftp://|http://|https://|file:/)" | sed -e "s@^rpm.*\(ftp://\|http://\|https://\|file:\)@\1@g" | while read -r URL ARCH other ; do
         LOCALPATH=$(get_local_alt_mirror_path "$URL/$ARCH")
         download_alt_contents_index $URL/$ARCH/base/contents_index $LOCALPATH >&2 </dev/null || continue
         echo "$LOCALPATH/contents_index*"
@@ -6998,7 +7111,12 @@ __epm_check_vendor()
 
     local i
     for i in $* ; do
-        local vendor
+        local vendor rpmversion
+
+        # skip checking if the package is unaccessible
+        rpmversion="$(epm print field Version for "$i" 2>/dev/null)"
+        [ -n "$rpmversion" ] || continue
+
         vendor="$(epm print field Vendor for "$i" 2>/dev/null)"
         # TODO: check GPG
         [ "$vendor" = "ALT Linux Team" ] && continue
@@ -7331,7 +7449,7 @@ query_altlinux_url()
 epm_site()
 {
 
-[ -n "$pkg_filenames" ] || fatal "Info: missing package(s) name"
+[ -n "$pkg_filenames" ] || fatal "Info: package name is missed"
 
 local PAO=""
 for f in $pkg_names $pkg_files ; do
@@ -7577,7 +7695,7 @@ epm_whatdepends()
 {
 	local CMD
 	[ -n "$pkg_files" ] && fatal "whatdepends does not handle files"
-	[ -n "$pkg_names" ] || fatal "whatdepends: missing package(s) name"
+	[ -n "$pkg_names" ] || fatal "whatdepends: package name is missed"
 	local pkg=$(print_name $pkg_names)
 
 case $PMTYPE in
@@ -7643,7 +7761,7 @@ epm_whatprovides()
 {
 	local CMD
 	[ -n "$pkg_files" ] && fatal "whatprovides does not handle files"
-	[ -n "$pkg_names" ] || fatal "whatprovides: missing package(s) name"
+	[ -n "$pkg_names" ] || fatal "whatprovides: package name is missed"
 	local pkg=$(print_name $pkg_names)
 
 case $PMTYPE in
@@ -7681,14 +7799,14 @@ docmd $CMD $pkg
 ################# incorporate bin/distr_info #################
 internal_distr_info()
 {
-# 2007-2020 (c) Vitaly Lipatov <lav@etersoft.ru>
-# 2007-2020 (c) Etersoft
-# 2007-2020 Public domain
+# 2007-2021 (c) Vitaly Lipatov <lav@etersoft.ru>
+# 2007-2021 (c) Etersoft
+# 2007-2021 Public domain
 
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
 
-PROGVERSION="20201010"
+PROGVERSION="20210106"
 
 # TODO: check /etc/system-release
 
@@ -7765,7 +7883,7 @@ pkgtype()
 		debian|ubuntu|mint|runtu|mcst|astra) echo "deb" ;;
 		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
 			echo "rpm" ;;
-		fedora|redhat|scientific|centos|rhel|goslinux|amzn)
+		fedora|redhat|redos|scientific|centos|rhel|goslinux|amzn)
 			echo "rpm" ;;
 		*)  echo "rpm" ;;
 	esac
@@ -7783,6 +7901,13 @@ get_major_version()
 	echo "$1" | sed -e "s/\..*//g"
 }
 
+normalize_name()
+{
+	[ "$1" = "RED OS" ] && echo "RedOS" && return
+	[ "$1" = "CentOS Linux" ] && echo "CentOS" && return
+	echo "${1// /}"
+}
+
 # Default values
 PRETTY_NAME=""
 DISTRIB_ID="Generic"
@@ -7795,6 +7920,20 @@ if distro lsb-release ; then
 	DISTRIB_RELEASE=$(cat $DISTROFILE | get_var DISTRIB_RELEASE)
 	DISTRIB_CODENAME=$(cat $DISTROFILE | get_var DISTRIB_CODENAME)
 	PRETTY_NAME=$(cat $DISTROFILE | get_var DISTRIB_DESCRIPTION)
+fi
+
+# Next default by /etc/os-release
+# https://www.freedesktop.org/software/systemd/man/os-release.html
+if distro os-release ; then
+	# shellcheck disable=SC1090
+	. $DISTROFILE
+	DISTRIB_ID="$(normalize_name "$NAME")"
+#	DISTRIB_ID="$(firstupper "$ID")"
+	DISTRIB_RELEASE="$VERSION_ID"
+	[ -n "$DISTRIB_RELEASE" ] || DISTRIB_RELEASE="CUR"
+	# set by os-release:
+	#PRETTY_NAME
+	VENDOR_ID="$ID"
 fi
 
 # ALT Linux based
@@ -7859,12 +7998,10 @@ elif distro os-release && hascommand xbps-query ; then
 	DISTRIB_ID="VoidLinux"
 	DISTRIB_RELEASE="Live"
 
+# TODO: use standart /etc/os-release or lsb
 elif distro arch-release ; then
 	DISTRIB_ID="ArchLinux"
-	DISTRIB_RELEASE="2010"
-	if grep 2011 -q $ROOTDIR/etc/pacman.d/mirrorlist ; then
-		DISTRIB_RELEASE="2011"
-	fi
+	DISTRIB_RELEASE="rolling"
 
 # Elbrus
 elif distro mcst_version ; then
@@ -7924,11 +8061,8 @@ elif distro MCBC-release ; then
 	elif has 3.1 ; then DISTRIB_RELEASE="3.1"
 	fi
 
-elif distro fedora-release ; then
-	DISTRIB_ID="Fedora"
-	DISTRIB_RELEASE=$(cat "$DISTROFILE" | grep "release" | sed -e "s|.*release \([0-9]*\).*|\1|g") #"
-
-elif distro redhat-release ; then
+# TODO: drop in favour of /etc/os-release
+elif distro redhat-release && [ -z "$PRETTY_NAME" ] ; then
 	# FIXME if need
 	# actually in the original RHEL: Red Hat Enterprise Linux .. release N
 	DISTRIB_ID="RHEL"
@@ -7957,17 +8091,6 @@ elif distro SuSe-release || distro SuSE-release ; then
 		DISTRIB_ID="SLED"
 	elif has "SUSE Linux Enterprise Server" ; then
 		DISTRIB_ID="SLES"
-	fi
-
-# https://www.freedesktop.org/software/systemd/man/os-release.html
-elif distro os-release ; then
-	# shellcheck disable=SC1090
-	. $ROOTDIR/etc/os-release
-	DISTRIB_ID="$(firstupper "$ID")"
-	DISTRIB_RELEASE="$VERSION_ID"
-	[ -n "$DISTRIB_RELEASE" ] || DISTRIB_RELEASE="CUR"
-	if [ "$ID" = "opensuse-leap" ] ; then
-		DISTRIB_ID="SUSE"
 	fi
 
 # fixme: can we detect by some file?
@@ -7999,19 +8122,12 @@ elif [ "$(uname)" = "Linux" ] && [ -x $ROOTDIR/system/bin/getprop ] ; then
 elif [ "$(uname -o 2>/dev/null)" = "Cygwin" ] ; then
         DISTRIB_ID="Cygwin"
         DISTRIB_RELEASE="all"
-
-# try use standart LSB info by default
-elif distro lsb-release && [ -n "$DISTRIB_RELEASE" ]; then
-	# use LSB
-
-	# fix distro name
-	case "$DISTRIB_ID" in
-		"openSUSE Tumbleweed")
-			DISTRIB_ID="SUSE"
-			DISTRIB_RELEASE="Tumbleweed"
-			;;
-	esac
 fi
+
+if [ -z "$PRETTY_NAME" ] ; then
+	PRETTY_NAME="$DISTRIB_ID $DISTRIB_RELEASE"
+fi
+
 
 get_uname()
 {
@@ -8519,7 +8635,16 @@ get_github_urls()
         grep -i -o -E '"browser_download_url": "https://.*"' | cut -d'"' -f4
 }
 
-if echo "$1" | grep -q "^https://github.com/" ; then
+# mask allowed only in the last part of path
+MASK=$(basename "$1")
+NOMASK=''
+
+# If have no wildcard symbol like asterisk, just download
+if echo "$MASK" | grep -qv "[*?]" || echo "$MASK" | grep -q "[?].*="; then
+    NOMASK='1'
+fi
+
+if echo "$1" | grep -q "^https://github.com/" && ! echo "$1" | grep -q "/releases/download/" ; then
     MASK="$2"
 
     if [ -n "$LISTONLY" ] ; then
@@ -8553,11 +8678,8 @@ if echo "$URL" | grep -q "[*?]" ; then
     fatal "Error: there are globbing symbols (*?) in $URL"
 fi
 
-# mask allowed only in the last part of path
-MASK=$(basename "$1")
-
 # If have no wildcard symbol like asterisk, just download
-if echo "$MASK" | grep -qv "[*?]" || echo "$MASK" | grep -q "[?].*="; then
+if [ -n "$NOMASK" ] ; then
     sget "$1" "$TARGETFILE"
     return
 fi
@@ -9139,7 +9261,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.6.8  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.7.5  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2020"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -9149,7 +9271,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.6.8
+EPMVERSION=3.7.5
 verbose=
 quiet=
 nodeps=
@@ -9335,7 +9457,7 @@ check_command()
     full-upgrade)              # HELPCMD: update all system packages and kernel
         epm_cmd=full_upgrade
         ;;
-    release-upgrade|upgrade-release|upgrade-system|release-switch)  # HELPCMD: upgrade/switch whole system to the release in arg (default: next (latest) release)
+    release-upgrade|upgrade-release|upgrade-system|release-switch|release-downgrade)  # HELPCMD: upgrade/switch whole system to the release in arg (default: next (latest) release)
         epm_cmd=release_upgrade
         ;;
     kernel-update|kernel-upgrade|update-kernel|upgrade-kernel)      # HELPCMD: update system kernel to the last repo version
@@ -9399,7 +9521,7 @@ check_command()
         epm_cmd=prescription
         ;;
     play)                     # HELPCMD: install the application from the official site (run without args to get list)
-        epm_cmd=prescription
+        epm_cmd=play
         ;;
     -V|checkpkg|integrity)    # HELPCMD: check package file integrity (checksum)
         epm_cmd=checkpkg
@@ -9424,7 +9546,7 @@ check_option()
         exit 0
         ;;
     --verbose)            # HELPOPT: verbose mode
-        verbose=1
+        verbose="--verbose"
         ;;
     --skip-installed)     # HELPOPT: skip already installed packages during install
         skip_installed=1
@@ -9473,7 +9595,7 @@ check_option()
         sort="$1"
         ;;
     --auto|--non-interactive)  # HELPOPT: non interactive mode
-        non_interactive=1
+        non_interactive="--auto"
         ;;
     *)
         return 1
@@ -9547,7 +9669,9 @@ if [ -z "$epm_cmd" ] ; then
     echo
     fatstr="Unknown command in $* arg(s)"
     [ -n "$*" ] || fatstr="That program needs be running with some command"
-    fatal "$fatstr. Run $ $PROGNAME --help to get help."
+    echo "Run $ $PROGNAME --help  to get help." >&2
+    echo "Run $ epm print info  to get some system and distro info." >&2
+    fatal "$fatstr."
 fi
 
 # Use eatmydata for write specific operations

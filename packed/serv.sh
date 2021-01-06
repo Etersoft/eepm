@@ -481,21 +481,25 @@ get_help()
     done
 }
 
-
-set_pm_type()
+set_distro_info()
 {
-	local CMD
-
 	# use external distro_info if internal one is missed
 	DISTRVENDOR=internal_distr_info
 	[ -x $DISTRVENDOR ] || DISTRVENDOR=internal_distr_info
 	export DISTRVENDOR
-	# Fill for use: PMTYPE, DISTRNAME, DISTRVERSION, PKGFORMAT, PKGVENDOR, RPMVENDOR
+
 	[ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d) || fatal "Can't get distro name."
 	[ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
 	if [ -z "$DISTRARCH" ] ; then
 		DISTRARCH=$($DISTRVENDOR --distro-arch)
 	fi
+	DISTRCONTROL="$($DISTRVENDOR -y)"
+}
+
+set_pm_type()
+{
+	local CMD
+	set_distro_info
 	set_target_pkg_env
 
 if [ -n "$FORCEPM" ] ; then
@@ -582,7 +586,7 @@ PMTYPE=$CMD
 
 is_active_systemd()
 {
-	[ "$($DISTRVENDOR -y)" = "systemd" ]
+	[ "$DISTRCONTROL" = "systemd" ]
 }
 
 assure_distr()
@@ -1143,6 +1147,39 @@ serv_stop()
 	esac
 }
 
+# File bin/serv-test:
+
+serv_test()
+{
+	local SERVICE="$1"
+	shift
+
+	case $SERVICE in
+		cups|cupsd)
+			docmd cupsd -t
+			;;
+		nginx)
+			docmd nginx -t
+			;;
+		sshd)
+			docmd sshd -t
+			;;
+		httpd2|httpd|apache|apache2)
+			if which httpd2 >/dev/null 2>/dev/null ; then
+				docmd httpd2 -t
+			elif which apache2 >/dev/null 2>/dev/null ; then
+				docmd apache2 -t
+			fi
+			;;
+		postfix)
+			docmd /etc/init.d/postfix check
+			;;
+		*)
+			fatal "$SERVICE is not supported yet. Please report if you know how to test"
+			;;
+	esac
+}
+
 # File bin/serv-try_restart:
 
 
@@ -1199,14 +1236,14 @@ _print_additional_usage
 ################# incorporate bin/distr_info #################
 internal_distr_info()
 {
-# 2007-2020 (c) Vitaly Lipatov <lav@etersoft.ru>
-# 2007-2020 (c) Etersoft
-# 2007-2020 Public domain
+# 2007-2021 (c) Vitaly Lipatov <lav@etersoft.ru>
+# 2007-2021 (c) Etersoft
+# 2007-2021 Public domain
 
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
 
-PROGVERSION="20201010"
+PROGVERSION="20210106"
 
 # TODO: check /etc/system-release
 
@@ -1283,7 +1320,7 @@ pkgtype()
 		debian|ubuntu|mint|runtu|mcst|astra) echo "deb" ;;
 		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
 			echo "rpm" ;;
-		fedora|redhat|scientific|centos|rhel|goslinux|amzn)
+		fedora|redhat|redos|scientific|centos|rhel|goslinux|amzn)
 			echo "rpm" ;;
 		*)  echo "rpm" ;;
 	esac
@@ -1301,6 +1338,13 @@ get_major_version()
 	echo "$1" | sed -e "s/\..*//g"
 }
 
+normalize_name()
+{
+	[ "$1" = "RED OS" ] && echo "RedOS" && return
+	[ "$1" = "CentOS Linux" ] && echo "CentOS" && return
+	echo "${1// /}"
+}
+
 # Default values
 PRETTY_NAME=""
 DISTRIB_ID="Generic"
@@ -1313,6 +1357,20 @@ if distro lsb-release ; then
 	DISTRIB_RELEASE=$(cat $DISTROFILE | get_var DISTRIB_RELEASE)
 	DISTRIB_CODENAME=$(cat $DISTROFILE | get_var DISTRIB_CODENAME)
 	PRETTY_NAME=$(cat $DISTROFILE | get_var DISTRIB_DESCRIPTION)
+fi
+
+# Next default by /etc/os-release
+# https://www.freedesktop.org/software/systemd/man/os-release.html
+if distro os-release ; then
+	# shellcheck disable=SC1090
+	. $DISTROFILE
+	DISTRIB_ID="$(normalize_name "$NAME")"
+#	DISTRIB_ID="$(firstupper "$ID")"
+	DISTRIB_RELEASE="$VERSION_ID"
+	[ -n "$DISTRIB_RELEASE" ] || DISTRIB_RELEASE="CUR"
+	# set by os-release:
+	#PRETTY_NAME
+	VENDOR_ID="$ID"
 fi
 
 # ALT Linux based
@@ -1377,12 +1435,10 @@ elif distro os-release && hascommand xbps-query ; then
 	DISTRIB_ID="VoidLinux"
 	DISTRIB_RELEASE="Live"
 
+# TODO: use standart /etc/os-release or lsb
 elif distro arch-release ; then
 	DISTRIB_ID="ArchLinux"
-	DISTRIB_RELEASE="2010"
-	if grep 2011 -q $ROOTDIR/etc/pacman.d/mirrorlist ; then
-		DISTRIB_RELEASE="2011"
-	fi
+	DISTRIB_RELEASE="rolling"
 
 # Elbrus
 elif distro mcst_version ; then
@@ -1442,11 +1498,8 @@ elif distro MCBC-release ; then
 	elif has 3.1 ; then DISTRIB_RELEASE="3.1"
 	fi
 
-elif distro fedora-release ; then
-	DISTRIB_ID="Fedora"
-	DISTRIB_RELEASE=$(cat "$DISTROFILE" | grep "release" | sed -e "s|.*release \([0-9]*\).*|\1|g") #"
-
-elif distro redhat-release ; then
+# TODO: drop in favour of /etc/os-release
+elif distro redhat-release && [ -z "$PRETTY_NAME" ] ; then
 	# FIXME if need
 	# actually in the original RHEL: Red Hat Enterprise Linux .. release N
 	DISTRIB_ID="RHEL"
@@ -1475,17 +1528,6 @@ elif distro SuSe-release || distro SuSE-release ; then
 		DISTRIB_ID="SLED"
 	elif has "SUSE Linux Enterprise Server" ; then
 		DISTRIB_ID="SLES"
-	fi
-
-# https://www.freedesktop.org/software/systemd/man/os-release.html
-elif distro os-release ; then
-	# shellcheck disable=SC1090
-	. $ROOTDIR/etc/os-release
-	DISTRIB_ID="$(firstupper "$ID")"
-	DISTRIB_RELEASE="$VERSION_ID"
-	[ -n "$DISTRIB_RELEASE" ] || DISTRIB_RELEASE="CUR"
-	if [ "$ID" = "opensuse-leap" ] ; then
-		DISTRIB_ID="SUSE"
 	fi
 
 # fixme: can we detect by some file?
@@ -1517,19 +1559,12 @@ elif [ "$(uname)" = "Linux" ] && [ -x $ROOTDIR/system/bin/getprop ] ; then
 elif [ "$(uname -o 2>/dev/null)" = "Cygwin" ] ; then
         DISTRIB_ID="Cygwin"
         DISTRIB_RELEASE="all"
-
-# try use standart LSB info by default
-elif distro lsb-release && [ -n "$DISTRIB_RELEASE" ]; then
-	# use LSB
-
-	# fix distro name
-	case "$DISTRIB_ID" in
-		"openSUSE Tumbleweed")
-			DISTRIB_ID="SUSE"
-			DISTRIB_RELEASE="Tumbleweed"
-			;;
-	esac
 fi
+
+if [ -z "$PRETTY_NAME" ] ; then
+	PRETTY_NAME="$DISTRIB_ID $DISTRIB_RELEASE"
+fi
+
 
 get_uname()
 {
@@ -2037,7 +2072,16 @@ get_github_urls()
         grep -i -o -E '"browser_download_url": "https://.*"' | cut -d'"' -f4
 }
 
-if echo "$1" | grep -q "^https://github.com/" ; then
+# mask allowed only in the last part of path
+MASK=$(basename "$1")
+NOMASK=''
+
+# If have no wildcard symbol like asterisk, just download
+if echo "$MASK" | grep -qv "[*?]" || echo "$MASK" | grep -q "[?].*="; then
+    NOMASK='1'
+fi
+
+if echo "$1" | grep -q "^https://github.com/" && ! echo "$1" | grep -q "/releases/download/" ; then
     MASK="$2"
 
     if [ -n "$LISTONLY" ] ; then
@@ -2071,11 +2115,8 @@ if echo "$URL" | grep -q "[*?]" ; then
     fatal "Error: there are globbing symbols (*?) in $URL"
 fi
 
-# mask allowed only in the last part of path
-MASK=$(basename "$1")
-
 # If have no wildcard symbol like asterisk, just download
-if echo "$MASK" | grep -qv "[*?]" || echo "$MASK" | grep -q "[?].*="; then
+if [ -n "$NOMASK" ] ; then
     sget "$1" "$TARGETFILE"
     return
 fi
@@ -2641,15 +2682,10 @@ set_service_type()
 {
 	local CMD
 
-	# use external distro_info if internal one is missed
-	DISTRVENDOR=internal_distr_info
-	[ -x $DISTRVENDOR ] || DISTRVENDOR=internal_distr_info
-
-	# Fill for use: PMTYPE, DISTRNAME, DISTRVERSION, PKGFORMAT, PKGVENDOR, RPMVENDOR
-	[ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d) || fatal "Can't get distro name from $DISTRVENDOR."
-	[ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
+	set_distro_info
 	set_target_pkg_env
 
+# TODO: see Running in distro_info, check is_aсtive_systemd
 case $DISTRNAME in
 	ALTLinux)
 		CMD="service-chkconfig"
@@ -2684,9 +2720,9 @@ case $DISTRNAME in
 #	Windows)
 #		CMD="chocolatey"
 #		;;
-	*)
-		fatal "Have no suitable DISTRNAME $DISTRNAME yet"
-		;;
+#	*)
+#		fatal "Have no suitable DISTRNAME $DISTRNAME yet"
+#		;;
 esac
 
 # Note: force systemd using if active
@@ -2728,7 +2764,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.6.8  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.7.5  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2019"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -2815,6 +2851,9 @@ check_command()
         ;;
     edit)
         serv_cmd=edit         # HELPCMD: edit service file overload (use --full to edit full file)
+        ;;
+    test|-t)
+        serv_cmd=test         # HELPCMD: test a config file of the service
         ;;
     *)
         return 1
