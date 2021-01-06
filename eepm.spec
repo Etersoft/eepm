@@ -21,7 +21,7 @@ Provides: epm = %EVR
 %if %_vendor == "alt"
 # FIXHERE: Replace with target platform package manager
 Requires: apt rpm
-Requires: distro_info >= 1.7
+Requires: distro_info >= 1.8
 %endif
 
 %description
