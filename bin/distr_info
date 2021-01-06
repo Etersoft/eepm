@@ -198,12 +198,10 @@ elif distro os-release && hascommand xbps-query ; then
 	DISTRIB_ID="VoidLinux"
 	DISTRIB_RELEASE="Live"
 
+# TODO: use standart /etc/os-release or lsb
 elif distro arch-release ; then
 	DISTRIB_ID="ArchLinux"
-	DISTRIB_RELEASE="2010"
-	if grep 2011 -q $ROOTDIR/etc/pacman.d/mirrorlist ; then
-		DISTRIB_RELEASE="2011"
-	fi
+	DISTRIB_RELEASE="rolling"
 
 # Elbrus
 elif distro mcst_version ; then
