@@ -164,10 +164,6 @@ check_command()
     status)                   # HELPCMD: show service status
         serv_cmd=status
         ;;
-    usage)                    # HELPCMD: print out usage of the service
-        serv_cmd=usage
-        withoutservicename=1
-        ;;
     restart)                 # HELPCMD: restart service
         serv_cmd=restart
         ;;
@@ -177,11 +173,26 @@ check_command()
     start)                    # HELPCMD: start service
         serv_cmd=start
         ;;
-    try-restart|condrestart)  # HELPCMD: Restart service if running
-        serv_cmd=try_restart
-        ;;
     stop)                     # HELPCMD: stop service
         serv_cmd=stop
+        ;;
+    on|enable)                # HELPCMD: add service to run on startup and start it now
+        serv_cmd=enable
+        ;;
+    off|disable)              # HELPCMD: remove service to run on startup and stop it now
+        serv_cmd=disable
+        ;;
+    log|journal)              # HELPCMD: print log for the service (-f - follow,  -r - reverse order)
+        serv_cmd=log
+        ;;
+    cat)                      # HELPCMD: print out service file for the service
+        serv_cmd=cat
+        ;;
+    edit)                     # HELPCMD: edit service file overload (use --full to edit full file)
+        serv_cmd=edit
+        ;;
+    test|-t)                  # HELPCMD: test a config file of the service
+        serv_cmd=test
         ;;
     list)                     # HELPCMD: list running services
         serv_cmd=list
@@ -199,27 +210,16 @@ check_command()
         serv_cmd=list_failed
         withoutservicename=1
         ;;
-    on|enable)                # HELPCMD: add service to run on startup and start it now
-        serv_cmd=enable
-        ;;
-    off|disable)              # HELPCMD: remove service to run on startup and stop it now
-        serv_cmd=disable
-        ;;
     print)                    # HELPCMD: print some info
         serv_cmd=print
         withoutservicename=1
         ;;
-    log|journal)              # HELPCMD: print log for the service (-f - follow,  -r - reverse order)
-        serv_cmd=log
+    try-restart|condrestart)  # HELPCMD: Restart service if running
+        serv_cmd=try_restart
         ;;
-    cat)                      # HELPCMD: print out service file for the service
-        serv_cmd=cat
-        ;;
-    edit)
-        serv_cmd=edit         # HELPCMD: edit service file overload (use --full to edit full file)
-        ;;
-    test|-t)
-        serv_cmd=test         # HELPCMD: test a config file of the service
+    usage)                    # HELPCMD: print out usage of the service
+        serv_cmd=usage
+        withoutservicename=1
         ;;
     *)
         return 1
