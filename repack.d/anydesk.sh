@@ -15,4 +15,8 @@ mv -fv $BUILDROOT/usr/share/anydesk/files/init/anydesk $BUILDROOT/etc/rc.d/init.
 subst "s|.*/etc/default/NetworkManager.*||" $BUILDROOT/etc/rc.d/init.d/anydesk
 subst "s|/usr/share/anydesk/files/init/anydesk|/etc/rc.d/init.d/anydesk|" $SPEC
 
+# install all requires packages before packing (the list have got with rpmreqs anydesk)
+epm install --skip-installed fontconfig glib2 libatk libcairo libfreetype libgdk-pixbuf libgio libGL libGLU libgtk+2 libgtkglext libICE libpango libpangox-compat libpolkit \
+    libSM libX11 libxcb libXdamage libXext libXfixes libXi libxkbfile libXmu libXrandr libXrender libXt libXtst polkit
+
 #subst '1iAutoProv:no' $SPEC
