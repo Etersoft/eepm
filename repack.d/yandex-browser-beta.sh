@@ -27,3 +27,5 @@ fi
 # missed in rpm package (ALT bug #39564)
 [ -x $BUILDROOT/usr/bin/yandex-browser ] || ln -sv yandex-browser-beta $BUILDROOT/usr/bin/yandex-browser
 
+# install all requires packages before packing (the list have got with rpmreqs package | xargs echo)
+epm install --skip-installed at-spi2-atk binutils coreutils file gawk GConf glib2 grep libalsa libatk libat-spi2-core libcairo libcups libdbus libdrm libexpat libgbm libgdk-pixbuf libgio libgtk+3 libnspr libnss libpango libX11 libxcb libXcomposite libXcursor libXdamage libXext libXfixes libXi libXrandr libXrender libXtst perl-File-MimeInfo-scripts sed tar which xdg-utils xprop
