@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.8.1
+Version: 3.8.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,15 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Wed Jan 20 2021 Vitaly Lipatov <lav@altlinux.ru> 3.8.2-alt1
+- serv: fix help
+- repack.d/anydesk.sh: preinstall needed packages
+- epm: add --assumeyes alias for --auto
+- add and pack yum command in eepm-yum subpackage
+- repack.d/yandex-browser-beta.sh: add missed yandex-browser while repack rpm package (ALT bug 39564)
+- repack.d/yandex-browser-beta.sh: install all requires packages before repacking
+- repack.d/ICAClient.sh: filterout libc.so.6(GLIBC_PRIVATE) (ALT bug 39565)
+
 * Wed Jan 06 2021 Vitaly Lipatov <lav@altlinux.ru> 3.8.1-alt1
 - repack.d/tamtam-app.sh: set SUID for chromium-sandbox
 - epm-download: force download before install if wildcard is used in URL
