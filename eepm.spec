@@ -46,7 +46,15 @@ This package has requirements needed for using epm repack on ALT
 See https://bugzilla.altlinux.org/show_bug.cgi?id=34308 for
 a discussion about extra requirements.
 
-Requires: fakeroot alien rpm-build dpkg
+%package yum
+Summary: yum like frontend for Etersoft EPM package manager
+Group: System/Configuration/Packaging
+Requires: %name = %EVR
+Conflicts: yum
+
+%description yum
+This package contains yum like frontend for Etersoft EPM package manager.
+
 
 %prep
 %setup
@@ -109,6 +117,7 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/eepm
 %_bindir/serv
 %_bindir/cerv
+%exclude %_bindir/yum
 %dir /var/lib/eepm/
 %if %_vendor != "alt"
 %_bindir/distr_info
@@ -121,6 +130,9 @@ mkdir -p %buildroot/var/lib/eepm/
 %if %_vendor == "alt"
 %files repack
 %endif
+
+%files yum
+%_bindir/yum
 
 %changelog
 * Wed Jan 06 2021 Vitaly Lipatov <lav@altlinux.ru> 3.8.1-alt1
