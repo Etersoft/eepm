@@ -22,6 +22,8 @@ subst "s|.*/usr/share/menu/$PRODUCT.menu.*||" $SPEC
 
 if ! grep -q '^"/usr/bin/yandex-browser"' $SPEC ; then
     subst 's|\(.*/usr/bin/yandex-browser.*\)|"/usr/bin/yandex-browser"\n\1|' $SPEC
-    [ -x $BUILDROOT/usr/bin/yandex-browser ] || ln -sv yandex-browser-beta $BUILDROOT/usr/bin/yandex-browser
-
 fi
+
+# missed in rpm package (ALT bug #39564)
+[ -x $BUILDROOT/usr/bin/yandex-browser ] || ln -sv yandex-browser-beta $BUILDROOT/usr/bin/yandex-browser
+
