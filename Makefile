@@ -12,6 +12,9 @@ install:
 	sed -e "s|SHAREDIR=.*|SHAREDIR=$(instpkgdatadir)|g" \
 		-e "s|CONFIGDIR=.*|CONFIGDIR=$(sysconfdir)/eepm|g" \
 		-e "s|@VERSION@|$(version)|g" <bin/epm >$(DESTDIR)$(bindir)/epm
+	sed -e "s|SHAREDIR=.*|SHAREDIR=$(instpkgdatadir)|g" \
+		-e "s|CONFIGDIR=.*|CONFIGDIR=$(sysconfdir)/eepm|g" \
+		-e "s|@VERSION@|$(version)|g" <bin/yum >$(DESTDIR)$(bindir)/yum
 	sed -e "s|SHAREDIR=.*|SHAREDIR=$(instpkgdatadir)|g" -e "s|@VERSION@|$(version)|g" <bin/serv >$(DESTDIR)$(bindir)/serv
 
 	mkdir -p $(DESTDIR)$(pkgdatadir)/
