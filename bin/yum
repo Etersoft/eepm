@@ -317,7 +317,10 @@ if [ -z "$epm_cmd" ] ; then
     echo
     fatstr="No such command: $*. Please use /usr/bin/yum --help"
     [ -n "$*" ] || fatstr="You need to give some command"
-    info "$fatstr."
+    # TODO: https://bugzilla.altlinux.org/show_bug.cgi?id=39093
+    # Почему-то только в этом файле/пакете использование info вызывает зависимость на пакет info
+    #info "$fatstr."
+    echo "$fatstr."
     exit 1
 fi
 
