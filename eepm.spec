@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.8.2
+Version: 3.8.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,10 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Wed Jan 20 2021 Vitaly Lipatov <lav@altlinux.ru> 3.8.3-alt1
+- add reception.d/yandex-disk.sh
+- small fixes for yum command
+
 * Wed Jan 20 2021 Vitaly Lipatov <lav@altlinux.ru> 3.8.2-alt1
 - serv: fix help
 - repack.d/anydesk.sh: preinstall needed packages
