@@ -182,6 +182,16 @@ __check_system()
 	if is_active_systemd systemd ; then
 		docmd epm --skip-installed install systemd || fatal
 	fi
+
+	# switch from prefdm: https://bugzilla.altlinux.org/show_bug.cgi?id=26405#c52
+	if is_active_systemd systemd && serv display-manager status >/dev/null || serv prefdm status >/dev/null ; then
+		docmd systemctl disable prefdm.service
+		docmd systemctl disable display-manager.service
+		docmd systemctl enable display-manager.service
+	#	docmd systemctl enable sddm.service
+	#	docmd systemctl enable lightdm.service
+	fi
+
 }
 
 __epm_ru_update()
