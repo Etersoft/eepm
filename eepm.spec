@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.8.3
+Version: 3.8.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,13 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Thu Jan 21 2021 Vitaly Lipatov <lav@altlinux.ru> 3.8.4-alt1
+- yum: add version support, disable sudo using
+- prescripion.d/i586-wine*: fix removing (ALT bug 39320)
+- set_sudo: if sudo required a password, end with fatal error
+- epm-release_upgrade: add switch from prefdm to display-manager after upgrade (see altbug #26405)
+- add brave-browser install: prescription.d/brave.sh
+
 * Wed Jan 20 2021 Vitaly Lipatov <lav@altlinux.ru> 3.8.3-alt1
 - add reception.d/yandex-disk.sh
 - small fixes for yum command
