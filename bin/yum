@@ -45,7 +45,7 @@ load_helper epm-sh-functions
 
 set_pm_type
 
-set_sudo
+#set_sudo
 
 check_tty
 
