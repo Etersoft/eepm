@@ -287,15 +287,21 @@ set_sudo()
 	# do not need sudo
 	[ $EFFUID = "0" ] && return
 
-	# use sudo if possible
-	if which sudo >/dev/null 2>/dev/null ; then
-		SUDO="sudo --"
-		# check for < 1.7 version which do not support -- (and --help possible too)
-		sudo -h 2>/dev/null | grep -q "  --" || SUDO="sudo"
+	if ! which sudo >/dev/null 2>/dev/null ; then
+		SUDO="fatal 'Can't find sudo. Please install and tune sudo or run epm under root.'"
 		return
 	fi
 
-	SUDO="fatal 'Can't find sudo. Please install sudo or run epm under root.'"
+	# use sudo if one is tuned and tuned without password
+	if ! sudo -l -n >/dev/null 2>/dev/null ; then
+		SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
+		return
+	fi
+
+	SUDO="sudo --"
+	# check for < 1.7 version which do not support -- (and --help possible too)
+	sudo -h 2>/dev/null | grep -q "  --" || SUDO="sudo"
+
 }
 
 withtimeout()
@@ -475,9 +481,9 @@ get_help()
             continue
         fi
         echo "$n" | grep -q "^ *#" && continue
-        opt="$(echo $n | sed -e "s|) # $1:.*||g" -e 's|"||g' -e 's@^|@@')" #"
-        desc="$(echo $n | sed -e "s|.*) # $1:||g")" #"
-        printf "    %-20s %s\n" $opt "$desc"
+        opt=`echo $n | sed -e "s|) # $1:.*||g" -e 's|"||g' -e 's@^|@@'`
+        desc=`echo $n | sed -e "s|.*) # $1:||g"`
+        printf "    %-20s %s\n" "$opt" "$desc"
     done
 }
 
@@ -2782,7 +2788,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.8.1  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.8.4  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2019"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -2816,10 +2822,6 @@ check_command()
     status)                   # HELPCMD: show service status
         serv_cmd=status
         ;;
-    usage)                    # HELPCMD: print out usage of the service
-        serv_cmd=usage
-        withoutservicename=1
-        ;;
     restart)                 # HELPCMD: restart service
         serv_cmd=restart
         ;;
@@ -2829,11 +2831,26 @@ check_command()
     start)                    # HELPCMD: start service
         serv_cmd=start
         ;;
-    try-restart|condrestart)  # HELPCMD: Restart service if running
-        serv_cmd=try_restart
-        ;;
     stop)                     # HELPCMD: stop service
         serv_cmd=stop
+        ;;
+    on|enable)                # HELPCMD: add service to run on startup and start it now
+        serv_cmd=enable
+        ;;
+    off|disable)              # HELPCMD: remove service to run on startup and stop it now
+        serv_cmd=disable
+        ;;
+    log|journal)              # HELPCMD: print log for the service (-f - follow,  -r - reverse order)
+        serv_cmd=log
+        ;;
+    cat)                      # HELPCMD: print out service file for the service
+        serv_cmd=cat
+        ;;
+    edit)                     # HELPCMD: edit service file overload (use --full to edit full file)
+        serv_cmd=edit
+        ;;
+    test|-t)                  # HELPCMD: test a config file of the service
+        serv_cmd=test
         ;;
     list)                     # HELPCMD: list running services
         serv_cmd=list
@@ -2851,27 +2868,16 @@ check_command()
         serv_cmd=list_failed
         withoutservicename=1
         ;;
-    on|enable)                # HELPCMD: add service to run on startup and start it now
-        serv_cmd=enable
-        ;;
-    off|disable)              # HELPCMD: remove service to run on startup and stop it now
-        serv_cmd=disable
-        ;;
     print)                    # HELPCMD: print some info
         serv_cmd=print
         withoutservicename=1
         ;;
-    log|journal)              # HELPCMD: print log for the service (-f - follow,  -r - reverse order)
-        serv_cmd=log
+    try-restart|condrestart)  # HELPCMD: Restart service if running
+        serv_cmd=try_restart
         ;;
-    cat)                      # HELPCMD: print out service file for the service
-        serv_cmd=cat
-        ;;
-    edit)
-        serv_cmd=edit         # HELPCMD: edit service file overload (use --full to edit full file)
-        ;;
-    test|-t)
-        serv_cmd=test         # HELPCMD: test a config file of the service
+    usage)                    # HELPCMD: print out usage of the service
+        serv_cmd=usage
+        withoutservicename=1
         ;;
     *)
         return 1

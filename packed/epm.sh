@@ -296,15 +296,21 @@ set_sudo()
 	# do not need sudo
 	[ $EFFUID = "0" ] && return
 
-	# use sudo if possible
-	if which sudo >/dev/null 2>/dev/null ; then
-		SUDO="sudo --"
-		# check for < 1.7 version which do not support -- (and --help possible too)
-		sudo -h 2>/dev/null | grep -q "  --" || SUDO="sudo"
+	if ! which sudo >/dev/null 2>/dev/null ; then
+		SUDO="fatal 'Can't find sudo. Please install and tune sudo or run epm under root.'"
 		return
 	fi
 
-	SUDO="fatal 'Can't find sudo. Please install sudo or run epm under root.'"
+	# use sudo if one is tuned and tuned without password
+	if ! sudo -l -n >/dev/null 2>/dev/null ; then
+		SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
+		return
+	fi
+
+	SUDO="sudo --"
+	# check for < 1.7 version which do not support -- (and --help possible too)
+	sudo -h 2>/dev/null | grep -q "  --" || SUDO="sudo"
+
 }
 
 withtimeout()
@@ -484,9 +490,9 @@ get_help()
             continue
         fi
         echo "$n" | grep -q "^ *#" && continue
-        opt="$(echo $n | sed -e "s|) # $1:.*||g" -e 's|"||g' -e 's@^|@@')" #"
-        desc="$(echo $n | sed -e "s|.*) # $1:||g")" #"
-        printf "    %-20s %s\n" $opt "$desc"
+        opt=`echo $n | sed -e "s|) # $1:.*||g" -e 's|"||g' -e 's@^|@@'`
+        desc=`echo $n | sed -e "s|.*) # $1:||g"`
+        printf "    %-20s %s\n" "$opt" "$desc"
     done
 }
 
@@ -4757,6 +4763,16 @@ __check_system()
 	if is_active_systemd systemd ; then
 		docmd epm --skip-installed install systemd || fatal
 	fi
+
+	# switch from prefdm: https://bugzilla.altlinux.org/show_bug.cgi?id=26405#c52
+	if is_active_systemd systemd && serv display-manager status >/dev/null || serv prefdm status >/dev/null ; then
+		docmd systemctl disable prefdm.service
+		docmd systemctl disable display-manager.service
+		docmd systemctl enable display-manager.service
+	#	docmd systemctl enable sddm.service
+	#	docmd systemctl enable lightdm.service
+	fi
+
 }
 
 __epm_ru_update()
@@ -9280,7 +9296,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.8.1  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.8.4  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2020"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -9290,7 +9306,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.8.1
+EPMVERSION=3.8.4
 verbose=
 quiet=
 nodeps=
@@ -9613,7 +9629,7 @@ check_option()
         # TODO: how to read arg?
         sort="$1"
         ;;
-    --auto|--non-interactive)  # HELPOPT: non interactive mode
+    --auto|--assumeyes|--non-interactive)  # HELPOPT: non interactive mode
         non_interactive="--auto"
         ;;
     *)
