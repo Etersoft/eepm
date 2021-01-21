@@ -197,7 +197,9 @@ check_command()
         epm_cmd=upgrade
         ;;
     version)                  # HELPCMD: Display a version for the machine and/or available repos.
-        fatal "Is not supported"
+        echo "Installed: $DISTRVERSION/$DISTRARCH"
+        echo "version"
+        exit 0
         ;;
     *)
         return 1
