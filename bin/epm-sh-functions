@@ -296,15 +296,21 @@ set_sudo()
 	# do not need sudo
 	[ $EFFUID = "0" ] && return
 
-	# use sudo if possible
-	if which sudo >/dev/null 2>/dev/null ; then
-		SUDO="sudo --"
-		# check for < 1.7 version which do not support -- (and --help possible too)
-		sudo -h 2>/dev/null | grep -q "  --" || SUDO="sudo"
+	if ! which sudo >/dev/null 2>/dev/null ; then
+		SUDO="fatal 'Can't find sudo. Please install and tune sudo or run epm under root.'"
 		return
 	fi
 
-	SUDO="fatal 'Can't find sudo. Please install sudo or run epm under root.'"
+	# use sudo if one is tuned and tuned without password
+	if ! sudo -l -n >/dev/null 2>/dev/null ; then
+		SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
+		return
+	fi
+
+	SUDO="sudo --"
+	# check for < 1.7 version which do not support -- (and --help possible too)
+	sudo -h 2>/dev/null | grep -q "  --" || SUDO="sudo"
+
 }
 
 # wait for n seconds (if possible) during executing command
