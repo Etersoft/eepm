@@ -48,7 +48,7 @@ esac
 
 OPKG=/tmp/$OPKG
 $EGET -O $OPKG $URL
-epm $repack install "$OPKG"
+epm $repack install "$OPKG" || exit
 rm -fv $OPKG
 
 [ "$repack" = "--scripts" ] && echo "Warning! Privileged scripts from the vendor were running."

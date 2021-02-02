@@ -23,5 +23,5 @@ PKG=/tmp/discord.deb
 $EGET -O $PKG "https://discord.com/api/download?platform=linux&format=deb"
 #PKG="https://dl.discordapp.net/apps/linux/0.0.12/discord-0.0.12.deb"
 
-epm install "$PKG"
+epm install "$PKG" || exit
 rm -fv $PKG
