@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.8.4
+Version: 3.8.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,12 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Tue Feb 02 2021 Vitaly Lipatov <lav@altlinux.ru> 3.8.5-alt1
+- epm restore: add requirements/ dir support
+- add glusterfs9 install
+- prescription: add Visual Studio Code install
+- prescription: fix error code for assisant and discord
+
 * Thu Jan 21 2021 Vitaly Lipatov <lav@altlinux.ru> 3.8.4-alt1
 - yum: add version support, disable sudo using
 - prescripion.d/i586-wine*: fix removing (ALT bug 39320)
