@@ -48,20 +48,9 @@ local psdir="$CONFIGDIR/prescription.d"
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
     cat <<EOF
 Options:
-    APP            - install APP
-    --list         - list all installed apps
-    --list-all     - list all available apps
+    receipt        - run receipt
+    --list-all     - list all available receipts
 EOF
-    exit
-fi
-
-if [ "$1" = "--list" ] || [ "$1" = "--installed" ] ; then
-    shift
-    echo "Installed:"
-    local i
-    for i in $(__list_installed_app) ; do
-        printf "  %-20s - %s\n" "$i" "$($psdir/$i.sh --description 2>/dev/null)"
-    done
     exit
 fi
 
@@ -71,7 +60,6 @@ if [ "$1" == "--list-all" ] || [ -z "$*" ] ; then
         printf "  %-20s - %s\n" "$(basename $i .sh)" "$($i --description 2>/dev/null)"
     done
     echo
-    echo "run epm prescription --list to list installed only"
     exit
 fi
 
