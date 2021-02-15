@@ -103,8 +103,12 @@ fi
 
 if [ "$1" == "--list-all" ] || [ -z "$*" ] ; then
     echo "Run with a name of a play script to run:"
+    local i
+    local desc
     for i in $psdir/*.sh ; do
-        printf "  %-20s - %s\n" "$(basename $i .sh)" "$($i --description 2>/dev/null)"
+        desc="$($i --description 2>/dev/null)"
+        [ -z "$desc" ] && continue
+        printf "  %-20s - %s\n" "$(basename $i .sh)" "$desc"
     done
     echo
     echo "run epm play --list to list installed only or --remove to remove one"
