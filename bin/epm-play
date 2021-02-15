@@ -23,7 +23,7 @@ epm_vardir=/var/lib/eepm
 __save_installed_app()
 {
 	[ -d "$epm_vardir" ] || return 0
-	estrlist list "$@" | $SUDO tee $epm_vardir/installed-app >/dev/null
+	estrlist list "$@" | $SUDO tee -a $epm_vardir/installed-app >/dev/null
 }
 
 __remove_installed_app()
