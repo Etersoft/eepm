@@ -80,7 +80,7 @@ __epm_check_if_try_install_rpm()
 	__epm_repack_rpm_to_deb $split_replaced_pkgs
 
 	# TODO: move to install
-	docmd epm install $force $nodeps $repacked_debs
+	docmd epm install $repacked_debs
 
 	return 0
 }
@@ -250,7 +250,7 @@ __epm_check_if_try_install_deb()
 	__epm_repack_to_rpm $split_replaced_pkgs || fatal
 
 	# TODO: move to install
-	docmd epm install $force $nodeps $repacked_rpms
+	docmd epm install $repacked_rpms
 
 	# TODO: move it to exit handler
 	if [ -z "$DEBUG" ] ; then
