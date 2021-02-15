@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.8.5
+Version: 3.8.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,12 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Tue Feb 16 2021 Vitaly Lipatov <lav@altlinux.ru> 3.8.6-alt1
+- repack.d/code.sh: use upstream script to run code
+- epm-play: fix save installed app
+- teamviewer.sh: add comment about serv teamviewerd on
+- add env EPM_OPTIONS support
+
 * Tue Feb 02 2021 Vitaly Lipatov <lav@altlinux.ru> 3.8.5-alt1
 - epm restore: add requirements/ dir support
 - add glusterfs9 install
