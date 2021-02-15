@@ -34,4 +34,10 @@ repack=''
 [ "$($DISTRVENDOR -p)" = "deb" ] || repack='--repack'
 
 # epm uses eget to download * names
-epm $repack install "https://download.teamviewer.com/download/linux/$(epm print constructname $PKGNAME)"
+epm $repack install "https://download.teamviewer.com/download/linux/$(epm print constructname $PKGNAME)" || exit
+
+echo
+echo "Note: run
+# serv teamviewerd on
+to enable needed teamviewer system service
+"
