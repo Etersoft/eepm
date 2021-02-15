@@ -516,9 +516,15 @@ get_distro_arch()
 get_bit_size()
 {
 local DIST_BIT
-# Check if we are running on 64bit platform, seems like a workaround for now...
-DIST_BIT="$(get_uname -m)"
-case "$DIST_BIT" in
+
+DIST_BIT="$(getconf LONG_BIT 2>/dev/null)"
+if [ -n "$DIST_BIT" ] ; then
+    echo "$DIST_BIT"
+    exit
+fi
+
+# Try detect arch size by arch name
+case "$(get_uname -m)" in
     'amd64' | 'ia64' | 'x86_64' | 'ppc64')
         DIST_BIT="64"
         ;;
