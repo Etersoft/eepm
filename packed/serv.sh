@@ -1644,8 +1644,13 @@ case "$DIST_ARCH" in
     '9000/800')
         DIST_ARCH="parisc"
         ;;
-    armv*)
-        if [ -z "$(readelf -A /proc/self/exe | grep Tag_ABI_VFP_args)" ] ; then
+    'arm64' | 'aarch64')
+        DIST_ARCH='aarch64'
+        ;;
+    armv7*)
+        # TODO: use uname only
+        # uses binutils package
+        if which readelf >/dev/null 2>/dev/null && [ -z "$(readelf -A /proc/self/exe | grep Tag_ABI_VFP_args)" ] ; then
             DIST_ARCH="armel"
         else
             DIST_ARCH="armhf"
@@ -1685,9 +1690,15 @@ get_distro_arch()
 get_bit_size()
 {
 local DIST_BIT
-# Check if we are running on 64bit platform, seems like a workaround for now...
-DIST_BIT="$(get_uname -m)"
-case "$DIST_BIT" in
+
+DIST_BIT="$(getconf LONG_BIT 2>/dev/null)"
+if [ -n "$DIST_BIT" ] ; then
+    echo "$DIST_BIT"
+    return
+fi
+
+# Try detect arch size by arch name
+case "$(get_uname -m)" in
     'amd64' | 'ia64' | 'x86_64' | 'ppc64')
         DIST_BIT="64"
         ;;
@@ -2788,7 +2799,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.8.5  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.8.7  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2019"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

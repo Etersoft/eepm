@@ -3476,7 +3476,7 @@ epm_vardir=/var/lib/eepm
 __save_installed_app()
 {
 	[ -d "$epm_vardir" ] || return 0
-	estrlist list "$@" | $SUDO tee $epm_vardir/installed-app >/dev/null
+	estrlist list "$@" | $SUDO tee -a $epm_vardir/installed-app >/dev/null
 }
 
 __remove_installed_app()
@@ -3555,15 +3555,18 @@ fi
 
 if [ "$1" == "--list-all" ] || [ -z "$*" ] ; then
     echo "Run with a name of a play script to run:"
+    local i
+    local desc
     for i in $psdir/*.sh ; do
-        printf "  %-20s - %s\n" "$(basename $i .sh)" "$($i --description 2>/dev/null)"
+        desc="$($i --description 2>/dev/null)"
+        [ -z "$desc" ] && continue
+        printf "  %-20s - %s\n" "$(basename $i .sh)" "$desc"
     done
     echo
     echo "run epm play --list to list installed only or --remove to remove one"
     exit
 fi
 
-__check_installed_app "$1" && info "$1 is already installed (use --remove to remove)" && exit 1
 __epm_play_run "$1" --run && __save_installed_app "$1"
 }
 
@@ -3625,20 +3628,9 @@ local psdir="$CONFIGDIR/prescription.d"
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
     cat <<EOF
 Options:
-    APP            - install APP
-    --list         - list all installed apps
-    --list-all     - list all available apps
+    receipt        - run receipt
+    --list-all     - list all available receipts
 EOF
-    exit
-fi
-
-if [ "$1" = "--list" ] || [ "$1" = "--installed" ] ; then
-    shift
-    echo "Installed:"
-    local i
-    for i in $(__list_installed_app) ; do
-        printf "  %-20s - %s\n" "$i" "$($psdir/$i.sh --description 2>/dev/null)"
-    done
     exit
 fi
 
@@ -3648,7 +3640,6 @@ if [ "$1" == "--list-all" ] || [ -z "$*" ] ; then
         printf "  %-20s - %s\n" "$(basename $i .sh)" "$($i --description 2>/dev/null)"
     done
     echo
-    echo "run epm prescription --list to list installed only"
     exit
 fi
 
@@ -5592,7 +5583,7 @@ __epm_check_if_try_install_rpm()
 	__epm_repack_rpm_to_deb $split_replaced_pkgs
 
 	# TODO: move to install
-	docmd epm install $force $nodeps $repacked_debs
+	docmd epm install $repacked_debs
 
 	return 0
 }
@@ -5759,7 +5750,7 @@ __epm_check_if_try_install_deb()
 	__epm_repack_to_rpm $split_replaced_pkgs || fatal
 
 	# TODO: move to install
-	docmd epm install $force $nodeps $repacked_rpms
+	docmd epm install $repacked_rpms
 
 	# TODO: move it to exit handler
 	if [ -z "$DEBUG" ] ; then
@@ -8230,8 +8221,13 @@ case "$DIST_ARCH" in
     '9000/800')
         DIST_ARCH="parisc"
         ;;
-    armv*)
-        if [ -z "$(readelf -A /proc/self/exe | grep Tag_ABI_VFP_args)" ] ; then
+    'arm64' | 'aarch64')
+        DIST_ARCH='aarch64'
+        ;;
+    armv7*)
+        # TODO: use uname only
+        # uses binutils package
+        if which readelf >/dev/null 2>/dev/null && [ -z "$(readelf -A /proc/self/exe | grep Tag_ABI_VFP_args)" ] ; then
             DIST_ARCH="armel"
         else
             DIST_ARCH="armhf"
@@ -8271,9 +8267,15 @@ get_distro_arch()
 get_bit_size()
 {
 local DIST_BIT
-# Check if we are running on 64bit platform, seems like a workaround for now...
-DIST_BIT="$(get_uname -m)"
-case "$DIST_BIT" in
+
+DIST_BIT="$(getconf LONG_BIT 2>/dev/null)"
+if [ -n "$DIST_BIT" ] ; then
+    echo "$DIST_BIT"
+    return
+fi
+
+# Try detect arch size by arch name
+case "$(get_uname -m)" in
     'amd64' | 'ia64' | 'x86_64' | 'ppc64')
         DIST_BIT="64"
         ;;
@@ -9308,7 +9310,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.8.5  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.8.7  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2020"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -9318,7 +9320,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.8.5
+EPMVERSION=3.8.7
 verbose=
 quiet=
 nodeps=
@@ -9675,6 +9677,11 @@ check_filenames()
     done
 }
 
+# handle external EPM_OPTIONS
+for opt in $EPM_OPTIONS ; do
+        check_option "$opt"
+done
+
 FLAGENDOPTS=
 for opt in "$@" ; do
     [ "$opt" = "--" ] && FLAGENDOPTS=1 && continue
@@ -9685,6 +9692,9 @@ for opt in "$@" ; do
     # Note: will parse all params separately (no package names with spaces!)
     check_filenames "$opt"
 done
+
+# fill
+export EPM_OPTIONS="$nodeps $force $non_interactive"
 
 # if input is not console and run script from file, get pkgs from stdin too
 if [ ! -n "$inscript" ] && ! inputisatty && [ -n "$PROGDIR" ] ; then
