@@ -115,6 +115,6 @@ if [ "$1" == "--list-all" ] || [ -z "$*" ] ; then
     exit
 fi
 
-__check_installed_app "$1" && info "$1 is already installed (use --remove to remove)" && exit 1
+#__check_installed_app "$1" && info "$1 is already installed (use --remove to remove)" && exit 1
 __epm_play_run "$1" --run && __save_installed_app "$1"
 }
