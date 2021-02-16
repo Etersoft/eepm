@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.8.6
+Version: 3.8.7
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,11 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Tue Feb 16 2021 Vitaly Lipatov <lav@altlinux.ru> 3.8.7-alt1
+- epm-play: allow mask unvaluable prescription, hide glibc-restore
+- epm-play: disable check for already installed (it is allowed upgrade)
+- repack.d/code.sh: drop firefox installing (closes: #39693)
+
 * Tue Feb 16 2021 Vitaly Lipatov <lav@altlinux.ru> 3.8.6-alt1
 - repack.d/code.sh: use upstream script to run code
 - epm-play: fix save installed app
