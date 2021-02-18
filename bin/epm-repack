@@ -107,7 +107,7 @@ __fix_spec()
     # drop %dir for existed system dirs
     for i in $(grep '^%dir "' $spec | sed -e 's|^%dir  *"\(.*\)".*|\1|' ) ; do #"
         echo "$i" | grep -q '^/opt/' && continue
-        [ -d "$i" ] && echo "drop dir $i from packing, it exists in the system"
+        [ -d "$i" ] && [ -n "$verbose" ] && echo "drop dir $i from packing, it exists in the system"
     done
 
     # replace dir "/path/dir" -> %dir /path/dir
@@ -146,7 +146,9 @@ __apply_fix_code()
     [ -x "$repackcode" ] || return
     shift
     export PATH=$PROGDIR:$PATH
-    docmd $repackcode "$1" "$2" || fatal "There is an error from $repackcode script"
+    local bashopt=''
+    [ -n "$verbose" ] && bashopt='-x'
+    docmd bash $bashopt $repackcode "$1" "$2" || fatal "There is an error from $repackcode script"
 }
 
 __create_rpmmacros()
@@ -173,7 +175,7 @@ __epm_repack_to_rpm()
     assure_exists rpmbuild rpm-build || fatal
 
     # TODO: improve
-    if echo "$pkgs" | grep "\.deb" ; then
+    if echo "$pkgs" | grep -q "\.deb" ; then
         assure_exists dpkg || fatal
         # TODO: Для установки требует: /usr/share/debconf/confmodule но пакет не может быть установлен
         # assure_exists debconf
@@ -201,9 +203,14 @@ __epm_repack_to_rpm()
         # TODO: use stoplist only for deb?
         [ -z "$force" ] && __check_stoplist $(echo $alpkg | sed -e "s|_.*||") && fatal "Please use official rpm package instead of $alpkg (It is not recommended to use --force to skip this checking."
         # don't use abs package path: copy package to temp dir and use there
-        cp -v $pkg $tmpbuilddir/../$alpkg
+        cp $verbose $pkg $tmpbuilddir/../$alpkg
         cd $tmpbuilddir || fatal
-        docmd fakeroot alien --generate --to-rpm $verbose $scripts "../$alpkg" || fatal
+        if [ -n "$verbose" ] ; then
+            docmd fakeroot alien --generate --to-rpm $verbose $scripts "../$alpkg" || fatal
+        else
+            showcmd fakeroot alien --generate --to-rpm $scripts "../$alpkg"
+            a='' fakeroot alien --generate --to-rpm $scripts "../$alpkg" >/dev/null || fatal
+        fi
 
         local subdir="$(echo *)"
         [ -d "$subdir" ] || fatal "can't find subdir"
