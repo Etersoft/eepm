@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.8.7
+Version: 3.8.8
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,11 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Sat Feb 20 2021 Vitaly Lipatov <lav@altlinux.ru> 3.8.8-alt1
+- epm-repack: be verbose only with --verbose
+- add repack.d for trueconf-server (unsupported!)
+- fix some bashisms
+
 * Tue Feb 16 2021 Vitaly Lipatov <lav@altlinux.ru> 3.8.7-alt1
 - epm-play: allow mask unvaluable prescription, hide glibc-restore
 - epm-play: disable check for already installed (it is allowed upgrade)
