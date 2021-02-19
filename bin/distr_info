@@ -190,7 +190,8 @@ normalize_name()
 {
 	[ "$1" = "RED OS" ] && echo "RedOS" && return
 	[ "$1" = "CentOS Linux" ] && echo "CentOS" && return
-	echo "${1// /}"
+	#echo "${1// /}"
+	echo "$1" | sed -e "s/ //g"
 }
 
 # Default values
