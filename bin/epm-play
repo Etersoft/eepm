@@ -101,7 +101,7 @@ if [ "$1" = "--list" ] || [ "$1" = "--installed" ] ; then
     exit
 fi
 
-if [ "$1" == "--list-all" ] || [ -z "$*" ] ; then
+if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
     echo "Run with a name of a play script to run:"
     local i
     local desc
