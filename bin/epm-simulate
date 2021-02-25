@@ -34,20 +34,20 @@ __use_yum_assumeno()
 
 __check_yum_result()
 {
-    grep "^No package" $1 && return 1
-    grep "^Complete!" $1 && return 0
-    grep "Exiting on user [Cc]ommand" $1 && return 0
+    grep -q "^No package" $1 && return 1
+    grep -q "^Complete!" $1 && return 0
+    grep -q "Exiting on user [Cc]ommand" $1 && return 0
     # dnf issue
-    grep "^Operation aborted." $1 && return 0
+    grep -q "^Operation aborted." $1 && return 0
     # return default result by default
     return $2
 }
 
 __check_pacman_result()
 {
-    grep "^error: target not found:" $1 && return 1
-    grep "^Total Installed Size:" $1 && return 0
-    grep "^Total Download Size:" $1 && return 0
+    grep -q "^error: target not found:" $1 && return 1
+    grep -q "^Total Installed Size:" $1 && return 0
+    grep -q "^Total Download Size:" $1 && return 0
     # return default result by default
     return $2
 }
