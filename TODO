@@ -1,7 +1,3 @@
-При удалении, если ошибка состоит в отсутствии пакета, не нужно переключаться на apt-get
-
-epme вызывает apt-get remove для пакетов, которых нет при удалении через rpm
-
 yum versionlock - сравнить/обобщить
 https://itfb.com.ua/kak-zablokirovat-obnovlenie-odnogo-iz-paketov-ili-ispolzuem-yum-versionlock/
 
@@ -23,8 +19,6 @@ Locate contents index file(s) ...
 epm hs поиск с историей какой версией и changelog
 
 https://wiki.archlinux.org/index.php/Pacman/Tips_and_tricks_(Русский)
-
-systemctl edit юнит
 
 аналог epm purge: запоминаем список файлов, удаляем пакеты и по возможности всё, от чего зависит (рекурсивно).
 
@@ -54,8 +48,6 @@ Usage: openvpn {start|stop|reload|restart|reopen|condstop|condrestart|condreload
  #  chkconfig --list
  #  anyservice --quiet list
  
-
-epmqf - если каталог есть, искать полный /usr/share/node
 
 TODO: yaourt (pacman frontend), need we?
 https://archlinux.fr/man/yaourt.8.html
@@ -105,8 +97,6 @@ dotty - через ссылки на реальные названия (epm req 
 Использование | less теряет код возврата команды. Нужно сделать nobash решение, которое сохранит статус
 Команда
 docmdmore
-
-Дописывать .service для systemd, если не указано другое.
 
 Установка (для отсутствующих файлов пакетов) и удаление (в любом случае) должны производиться с укороченными именами (которые воспримет верхний уровень)
 

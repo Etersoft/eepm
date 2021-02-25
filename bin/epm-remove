@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012-2014, 2016, 2017, 2019, 2020  Etersoft
-# Copyright (C) 2012-2014, 2016, 2017, 2019, 2020  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2014, 2016, 2017, 2019-2021  Etersoft
+# Copyright (C) 2012-2014, 2016, 2017, 2019-2021  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -23,6 +23,13 @@ load_helper epm-print
 load_helper epm-sh-warmup
 load_helper epm-sh-install
 
+__check_rpm_e_result()
+{
+    grep -q "is not installed" $1 && return 2
+    return $2
+}
+
+
 # Try remove with low level removing
 epm_remove_low()
 {
@@ -34,10 +41,12 @@ epm_remove_low()
 		*-rpm)
 			cd /tmp || fatal
 			__epm_check_vendor $@
-			sudocmd rpm -ev $noscripts $nodeps $@
-			# keep status
-			#cd - >/dev/null
-			return ;;
+			store_output sudocmd rpm -ev $noscripts $nodeps $@
+			__check_rpm_e_result $RC_STDOUT $?
+			RES=$?
+			clean_store_output
+			cd - >/dev/null
+			return $RES ;;
 		*-dpkg|-dpkg)
 			# shellcheck disable=SC2046
 			sudocmd dpkg -P $(subst_option nodeps --force-all) $(print_name "$@")
@@ -312,13 +321,8 @@ epm_remove()
 
 	epm_remove_low $pkg_names && return
 	local STATUS=$?
-	# TODO: check if we need continue with hi level
-	# TODO: we need fail if
-	# # rpm -ev python2-nase
-	# error: package python2-nase is not installed
-	
 
-	if [ -n "$direct" ] || [ -n "$nodeps" ]; then
+	if [ -n "$direct" ] || [ -n "$nodeps" ] || [ "$STATUS" = "2" ]; then
 		return $STATUS
 	fi
 
