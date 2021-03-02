@@ -2239,7 +2239,7 @@ epm_epm_install() {
 __alt_local_content_filelist()
 {
 
-    local CI="$(get_local_alt_contents_index)"
+    local CI="$(get_local_alt_contents_index_rsync)"
     [ -n "$CI" ] || fatal "Have no local contents index. Check epm repo --help."
 
     # TODO: safe way to use less
@@ -3476,7 +3476,8 @@ epm_vardir=/var/lib/eepm
 __save_installed_app()
 {
 	[ -d "$epm_vardir" ] || return 0
-	estrlist list "$@" | $SUDO tee -a $epm_vardir/installed-app >/dev/null
+	__check_installed_app "$1" && return 0
+	echo "$1" | $SUDO tee -a $epm_vardir/installed-app >/dev/null
 }
 
 __remove_installed_app()
@@ -3553,7 +3554,7 @@ if [ "$1" = "--list" ] || [ "$1" = "--installed" ] ; then
     exit
 fi
 
-if [ "$1" == "--list-all" ] || [ -z "$*" ] ; then
+if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
     echo "Run with a name of a play script to run:"
     local i
     local desc
@@ -5059,6 +5060,13 @@ epm_release_upgrade()
 # File bin/epm-remove:
 
 
+__check_rpm_e_result()
+{
+    grep -q "is not installed" $1 && return 2
+    return $2
+}
+
+
 epm_remove_low()
 {
 	[ -z "$1" ] && return
@@ -5069,10 +5077,12 @@ epm_remove_low()
 		*-rpm)
 			cd /tmp || fatal
 			__epm_check_vendor $@
-			sudocmd rpm -ev $noscripts $nodeps $@
-			# keep status
-			#cd - >/dev/null
-			return ;;
+			store_output sudocmd rpm -ev $noscripts $nodeps $@
+			__check_rpm_e_result $RC_STDOUT $?
+			RES=$?
+			clean_store_output
+			cd - >/dev/null
+			return $RES ;;
 		*-dpkg|-dpkg)
 			# shellcheck disable=SC2046
 			sudocmd dpkg -P $(subst_option nodeps --force-all) $(print_name "$@")
@@ -5345,13 +5355,8 @@ epm_remove()
 
 	epm_remove_low $pkg_names && return
 	local STATUS=$?
-	# TODO: check if we need continue with hi level
-	# TODO: we need fail if
-	# # rpm -ev python2-nase
-	# error: package python2-nase is not installed
-	
 
-	if [ -n "$direct" ] || [ -n "$nodeps" ]; then
+	if [ -n "$direct" ] || [ -n "$nodeps" ] || [ "$STATUS" = "2" ]; then
 		return $STATUS
 	fi
 
@@ -5609,7 +5614,7 @@ __fix_spec()
     # drop %dir for existed system dirs
     for i in $(grep '^%dir "' $spec | sed -e 's|^%dir  *"\(.*\)".*|\1|' ) ; do #"
         echo "$i" | grep -q '^/opt/' && continue
-        [ -d "$i" ] && echo "drop dir $i from packing, it exists in the system"
+        [ -d "$i" ] && [ -n "$verbose" ] && echo "drop dir $i from packing, it exists in the system"
     done
 
     # replace dir "/path/dir" -> %dir /path/dir
@@ -5647,7 +5652,9 @@ __apply_fix_code()
     [ -x "$repackcode" ] || return
     shift
     export PATH=$PROGDIR:$PATH
-    docmd $repackcode "$1" "$2" || fatal "There is an error from $repackcode script"
+    local bashopt=''
+    [ -n "$verbose" ] && bashopt='-x'
+    docmd bash $bashopt $repackcode "$1" "$2" || fatal "There is an error from $repackcode script"
 }
 
 __create_rpmmacros()
@@ -5673,7 +5680,7 @@ __epm_repack_to_rpm()
     assure_exists rpmbuild rpm-build || fatal
 
     # TODO: improve
-    if echo "$pkgs" | grep "\.deb" ; then
+    if echo "$pkgs" | grep -q "\.deb" ; then
         assure_exists dpkg || fatal
         # TODO: Для установки требует: /usr/share/debconf/confmodule но пакет не может быть установлен
         # assure_exists debconf
@@ -5701,9 +5708,14 @@ __epm_repack_to_rpm()
         # TODO: use stoplist only for deb?
         [ -z "$force" ] && __check_stoplist $(echo $alpkg | sed -e "s|_.*||") && fatal "Please use official rpm package instead of $alpkg (It is not recommended to use --force to skip this checking."
         # don't use abs package path: copy package to temp dir and use there
-        cp -v $pkg $tmpbuilddir/../$alpkg
+        cp $verbose $pkg $tmpbuilddir/../$alpkg
         cd $tmpbuilddir || fatal
-        docmd fakeroot alien --generate --to-rpm $verbose $scripts "../$alpkg" || fatal
+        if [ -n "$verbose" ] ; then
+            docmd fakeroot alien --generate --to-rpm $verbose $scripts "../$alpkg" || fatal
+        else
+            showcmd fakeroot alien --generate --to-rpm $scripts "../$alpkg"
+            a='' fakeroot alien --generate --to-rpm $scripts "../$alpkg" >/dev/null || fatal
+        fi
 
         local subdir="$(echo *)"
         [ -d "$subdir" ] || fatal "can't find subdir"
@@ -6802,7 +6814,7 @@ __alt_local_content_search()
 {
 
     info "Locate contents index file(s) ..."
-    local CI="$(get_local_alt_contents_index)"
+    local CI="$(get_local_alt_contents_index_rsync)"
     # TODO use something like
     [ -n "$CI" ] || fatal "Have no local contents index. Check epm repo --help."
 
@@ -6878,7 +6890,7 @@ docmd $CMD $pkg_filenames
 # File bin/epm-sh-altlinux:
 
 
-get_local_alt_mirror_path()
+get_alt_repo_path()
 {
     local DN1=$(dirname "$1")
     local DN2=$(dirname $DN1)
@@ -6889,7 +6901,12 @@ get_local_alt_mirror_path()
     local BN2=$(basename $DN2) # p8/ALTLinux
     local BN3=$(basename $DN3) # ALTLinux/
 
-    [ "$BN1" = "branch" ] && echo "/tmp/eepm/$BN3/$BN2/$BN1/$BN0" || echo "/tmp/eepm/$BN2/$BN1/$BN0"
+    [ "$BN1" = "branch" ] && echo "$BN3/$BN2/$BN1/$BN0" || echo "$BN2/$BN1/$BN0"
+}
+
+get_local_alt_mirror_path()
+{
+    echo "/tmp/eepm/$(get_alt_repo_path "$1")"
 }
 
 __local_ercat()
@@ -6922,7 +6939,7 @@ compress_file_inplace()
         docmd lz4 -f "$OFILE" "$OFILE.lz4" || return
         rm -fv "$OFILE"
     else
-        epm assure xz </dev/null || return
+        epm assure xz </dev/null || fatal "Can't install nor lz4, nor xz compressor"
         docmd xz -f "$OFILE" || return
     fi
     return 0
@@ -6954,6 +6971,43 @@ download_alt_contents_index()
     compress_file_inplace "$OFILE"
 }
 
+rsync_alt_contents_index()
+{
+    local URL="$1"
+    local TD="$2"
+    assure_exists rsync
+    a= rsync --partial --inplace -z -av --progress "$URL" "$TD"
+    test -s "$TD"
+}
+
+get_url_to_etersoft_mirror()
+{
+    local REPOPATH
+    local ETERSOFT_MIRROR="rsync://download.etersoft.ru/pub"
+    echo "$ETERSOFT_MIRROR/$(get_alt_repo_path "$1" | sed -e "s|^ALTLinux/|ALTLinux/contents_index/|")"
+}
+
+get_local_alt_contents_index_rsync()
+{
+
+    # TODO: fix for Etersoft/LINUX@Etersoft
+    epm_repolist | grep -v " task$" | grep -E "rpm.*(ftp://|http://|https://|file:/)" | sed -e "s@^rpm.*\(ftp://\|http://\|https://\|file:\)@\1@g" | while read -r URL ARCH other ; do
+        if echo "$URL" | grep -q "^file:/" ; then
+            # first check for local mirror
+            local LOCALPATH="$(echo "$URL" | sed -e "s|^file:||")/$ARCH/base"
+            local LOCALPATHGZIP="$(echo "$LOCALPATH" | sed -e "s|/ALTLinux/|/ALTLinux/contents_index/|")"
+            [ -s "$LOCALPATHGZIP/contents_index.gz" ] && echo "$LOCALPATHGZIP/contents_index.gz" && continue
+            [ -s "$LOCALPATH/contents_index" ] && echo "$LOCALPATH/contents_index"
+        else
+            local LOCALPATH="$(get_local_alt_mirror_path "$URL/$ARCH")"
+            local REMOTEURL="$(get_url_to_etersoft_mirror "$URL/$ARCH")/base"
+            rsync_alt_contents_index $REMOTEURL/contents_index.gz $LOCALPATH/contents_index.gz >/dev/null 2>/dev/null </dev/null && echo "$LOCALPATH/contents_index.gz" && continue
+            [ -n "$verbose" ] && info "Note: Can't retrieve $REMOTEURL/contents_index.gz, fallback to $URL/$ARCH/base/contents_index"
+            rsync_alt_contents_index $URL/$ARCH/base/contents_index $LOCALPATH/contents_index >/dev/null 2>/dev/null </dev/null && echo "$LOCALPATH/contents_index" && continue
+        fi
+    done
+}
+
 get_local_alt_contents_index()
 {
 
@@ -6964,8 +7018,8 @@ get_local_alt_contents_index()
         download_alt_contents_index $URL/$ARCH/base/contents_index $LOCALPATH >&2 </dev/null || continue
         echo "$LOCALPATH/contents_index*"
     done
-
 }
+
 
 tasknumber()
 {
@@ -7159,20 +7213,20 @@ __use_yum_assumeno()
 
 __check_yum_result()
 {
-    grep "^No package" $1 && return 1
-    grep "^Complete!" $1 && return 0
-    grep "Exiting on user [Cc]ommand" $1 && return 0
+    grep -q "^No package" $1 && return 1
+    grep -q "^Complete!" $1 && return 0
+    grep -q "Exiting on user [Cc]ommand" $1 && return 0
     # dnf issue
-    grep "^Operation aborted." $1 && return 0
+    grep -q "^Operation aborted." $1 && return 0
     # return default result by default
     return $2
 }
 
 __check_pacman_result()
 {
-    grep "^error: target not found:" $1 && return 1
-    grep "^Total Installed Size:" $1 && return 0
-    grep "^Total Download Size:" $1 && return 0
+    grep -q "^error: target not found:" $1 && return 1
+    grep -q "^Total Installed Size:" $1 && return 0
+    grep -q "^Total Download Size:" $1 && return 0
     # return default result by default
     return $2
 }
@@ -7936,7 +7990,8 @@ normalize_name()
 {
 	[ "$1" = "RED OS" ] && echo "RedOS" && return
 	[ "$1" = "CentOS Linux" ] && echo "CentOS" && return
-	echo "${1// /}"
+	#echo "${1// /}"
+	echo "$1" | sed -e "s/ //g"
 }
 
 # Default values
@@ -9310,7 +9365,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.8.7  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.9.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2020"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -9320,7 +9375,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.8.7
+EPMVERSION=3.9.0
 verbose=
 quiet=
 nodeps=
