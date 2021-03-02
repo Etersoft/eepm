@@ -32,7 +32,7 @@ __alt_local_content_search()
     load_helper epm-search
 
     info "Locate contents index file(s) ..."
-    local CI="$(get_local_alt_contents_index)"
+    local CI="$(get_local_alt_contents_index_rsync)"
     # TODO use something like
     [ -n "$CI" ] || fatal "Have no local contents index. Check epm repo --help."
 

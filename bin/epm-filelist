@@ -28,7 +28,7 @@ __alt_local_content_filelist()
 {
     load_helper epm-sh-altlinux
 
-    local CI="$(get_local_alt_contents_index)"
+    local CI="$(get_local_alt_contents_index_rsync)"
     [ -n "$CI" ] || fatal "Have no local contents index. Check epm repo --help."
 
     # TODO: safe way to use less

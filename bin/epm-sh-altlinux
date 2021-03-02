@@ -20,8 +20,8 @@
 # apt-file like. See also
 # https://bugzilla.altlinux.org/show_bug.cgi?id=14449
 
-# convert "http://download.etersoft.ru/pub/ALTLinux/p8/branch x86_64" to /tmp/epm/ALTLinux/p8/branch/x86_64
-get_local_alt_mirror_path()
+# convert "http://download.etersoft.ru/pub/ALTLinux/p8/branch x86_64" to ALTLinux/p8/branch/x86_64
+get_alt_repo_path()
 {
     local DN1=$(dirname "$1")
     local DN2=$(dirname $DN1)
@@ -32,7 +32,13 @@ get_local_alt_mirror_path()
     local BN2=$(basename $DN2) # p8/ALTLinux
     local BN3=$(basename $DN3) # ALTLinux/
 
-    [ "$BN1" = "branch" ] && echo "/tmp/eepm/$BN3/$BN2/$BN1/$BN0" || echo "/tmp/eepm/$BN2/$BN1/$BN0"
+    [ "$BN1" = "branch" ] && echo "$BN3/$BN2/$BN1/$BN0" || echo "$BN2/$BN1/$BN0"
+}
+
+# convert "http://download.etersoft.ru/pub/ALTLinux/p8/branch x86_64" to /tmp/epm/ALTLinux/p8/branch/x86_64
+get_local_alt_mirror_path()
+{
+    echo "/tmp/eepm/$(get_alt_repo_path "$1")"
 }
 
 __local_ercat()
@@ -56,6 +62,7 @@ __local_ercat()
    done
 }
 
+# TODO: obsoleted
 # something like gzip
 compress_file_inplace()
 {
@@ -66,12 +73,13 @@ compress_file_inplace()
         docmd lz4 -f "$OFILE" "$OFILE.lz4" || return
         rm -fv "$OFILE"
     else
-        epm assure xz </dev/null || return
+        epm assure xz </dev/null || fatal "Can't install nor lz4, nor xz compressor"
         docmd xz -f "$OFILE" || return
     fi
     return 0
 }
 
+# TODO: obsoleted
 # args: url/path target_file
 # result: will set FILE
 download_alt_contents_index()
@@ -92,7 +100,7 @@ download_alt_contents_index()
         URL=$(echo "$URL" | sed -e "s|^file:||")
         [ -s "$URL" ] || { touch $OFILE.failed ; return 1; }
         ln -sf "$URL" "$OFILE" || { touch $OFILE.failed ; return 1; }
-# TODO rsync
+# TODO rsync -z
 # https://bugzilla.altlinux.org/show_bug.cgi?id=14449#c22
     else
         docmd eget -O "$OFILE" "$URL" || { rm -fv $OFILE ; touch $OFILE.failed ; return 1; }
@@ -102,6 +110,47 @@ download_alt_contents_index()
     compress_file_inplace "$OFILE"
 }
 
+# URL TARGETDIR
+rsync_alt_contents_index()
+{
+    local URL="$1"
+    local TD="$2"
+    assure_exists rsync
+    a= rsync --partial --inplace -z -av --progress "$URL" "$TD"
+    test -s "$TD"
+}
+
+# URL
+get_url_to_etersoft_mirror()
+{
+    local REPOPATH
+    local ETERSOFT_MIRROR="rsync://download.etersoft.ru/pub"
+    echo "$ETERSOFT_MIRROR/$(get_alt_repo_path "$1" | sed -e "s|^ALTLinux/|ALTLinux/contents_index/|")"
+}
+
+get_local_alt_contents_index_rsync()
+{
+    load_helper epm-repolist
+
+    # TODO: fix for Etersoft/LINUX@Etersoft
+    epm_repolist | grep -v " task$" | grep -E "rpm.*(ftp://|http://|https://|file:/)" | sed -e "s@^rpm.*\(ftp://\|http://\|https://\|file:\)@\1@g" | while read -r URL ARCH other ; do
+        if echo "$URL" | grep -q "^file:/" ; then
+            # first check for local mirror
+            local LOCALPATH="$(echo "$URL" | sed -e "s|^file:||")/$ARCH/base"
+            local LOCALPATHGZIP="$(echo "$LOCALPATH" | sed -e "s|/ALTLinux/|/ALTLinux/contents_index/|")"
+            [ -s "$LOCALPATHGZIP/contents_index.gz" ] && echo "$LOCALPATHGZIP/contents_index.gz" && continue
+            [ -s "$LOCALPATH/contents_index" ] && echo "$LOCALPATH/contents_index"
+        else
+            local LOCALPATH="$(get_local_alt_mirror_path "$URL/$ARCH")"
+            local REMOTEURL="$(get_url_to_etersoft_mirror "$URL/$ARCH")/base"
+            rsync_alt_contents_index $REMOTEURL/contents_index.gz $LOCALPATH/contents_index.gz >/dev/null 2>/dev/null </dev/null && echo "$LOCALPATH/contents_index.gz" && continue
+            [ -n "$verbose" ] && info "Note: Can't retrieve $REMOTEURL/contents_index.gz, fallback to $URL/$ARCH/base/contents_index"
+            rsync_alt_contents_index $URL/$ARCH/base/contents_index $LOCALPATH/contents_index >/dev/null 2>/dev/null </dev/null && echo "$LOCALPATH/contents_index" && continue
+        fi
+    done
+}
+
+# TODO: obsoleted
 get_local_alt_contents_index()
 {
     load_helper epm-repolist
@@ -113,8 +162,8 @@ get_local_alt_contents_index()
         download_alt_contents_index $URL/$ARCH/base/contents_index $LOCALPATH >&2 </dev/null || continue
         echo "$LOCALPATH/contents_index*"
     done
-
 }
+
 
 tasknumber()
 {
