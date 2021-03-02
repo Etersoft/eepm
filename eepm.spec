@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.8.9
+Version: 3.9.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,9 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Wed Mar 03 2021 Vitaly Lipatov <lav@altlinux.ru> 3.9.0-alt1
+- epm: use rsync to get contents_index for ALT (with rsyncable gzip mirror)
+
 * Thu Feb 25 2021 Vitaly Lipatov <lav@altlinux.ru> 3.8.9-alt1
 - epm-play: fix duplicates in the installed list
 - epm remove: don't try removing after rpm -e said there is not such package
