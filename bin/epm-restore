@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2021  Etersoft
-# Copyright (C) 2021  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2020, 2021  Etersoft
+# Copyright (C) 2020, 2021  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -256,6 +256,33 @@ __epm_print_npm_list()
     [ -n "$dryrun" ] || echo "$ilist"
 }
 
+
+__epm_print_nupkg_list()
+{
+    a= dotnet list $1 package | grep "^   > " | while read n name req other; do
+        if [ -n "$dryrun" ] ; then
+            echo "BuildRequires: nupkg($name) >= $req"
+        else
+            echo "nupkg($name)"
+        fi
+    done
+}
+
+__epm_restore_nupkg()
+{
+    local req_file="$1"
+    if [ -n "$dryrun" ] ; then
+        echo "# generated via dotnet list $(basename $(dirname $(realpath "$req_file")))/$(basename "$req_file") package"
+        __epm_print_nupkg_list $req_file
+        return
+    fi
+
+    info "Install requirements from $req_file ..."
+    ilist=$(__epm_print_nupkg_list $req_file)
+    ilist="$(estrlist list $ilist)"
+    docmd epm install $ilist
+}
+
 __epm_restore_npm()
 {
     local req_file="$1"
@@ -321,6 +348,10 @@ __epm_restore_by()
         package.json)
             [ -s "$req_file" ] && __epm_restore_npm "$req_file"
             ;;
+        *.sln|*.csproj)
+            local PROJ="$(echo $req_file)"
+            [ -s "$PROJ" ] && __epm_restore_nupkg "$PROJ"
+            ;;
         Gemfile|package.json)
             info "$req_file support is not implemented yet"
             ;;
@@ -347,7 +378,10 @@ epm_restore()
 # TODO: nowhere works: python3 setup.py --requires
 
     # if run with empty args
-    for i in requirements.txt requirements/default.txt requirements_dev.txt requirements-dev.txt requirements/dev.txt dev-requirements.txt requirements-test.txt requirements_test.txt  requirements/test.txt test-requirements.txt Gemfile requires.txt package.json setup.py python_dependencies.py; do
+    for i in requirements.txt requirements/default.txt requirements_dev.txt requirements-dev.txt requirements/dev.txt dev-requirements.txt \
+             requirements-test.txt requirements_test.txt  requirements/test.txt test-requirements.txt \
+             Gemfile requires.txt package.json setup.py python_dependencies.py \
+             *.sln *.csproj ; do
         __epm_restore_by $i
     done
 
