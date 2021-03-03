@@ -1,0 +1,153 @@
+#!/bin/sh
+#
+# Copyright (C) 2014, 2017, 2021  Etersoft
+# Copyright (C) 2014, 2017, 2021  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+# apt-file like. See also
+# https://bugzilla.altlinux.org/show_bug.cgi?id=14449
+
+# convert "http://download.etersoft.ru/pub/ALTLinux/p8/branch x86_64" to ALTLinux/p8/branch/x86_64
+get_alt_repo_path()
+{
+    local DN1=$(dirname "$1")
+    local DN2=$(dirname $DN1)
+    local DN3=$(dirname $DN2)
+
+    local BN0=$(basename "$1") # arch
+    local BN1=$(basename $DN1) # branch/Sisyphus
+    local BN2=$(basename $DN2) # p8/ALTLinux
+    local BN3=$(basename $DN3) # ALTLinux/
+
+    [ "$BN1" = "branch" ] && echo "$BN3/$BN2/$BN1/$BN0" || echo "$BN2/$BN1/$BN0"
+}
+
+# convert "http://download.etersoft.ru/pub/ALTLinux/p8/branch x86_64" to /tmp/epm/ALTLinux/p8/branch/x86_64
+get_local_alt_mirror_path()
+{
+    # TODO: /var/cache/eepm
+    echo "$TMPDIR/eepm/$(get_alt_repo_path "$1")"
+}
+
+ALT_CONTENTS_INDEX_LIST=$TMPDIR/eepm/contents_index_list
+
+__local_ercat()
+{
+   local i
+   for i in "$@" ; do
+       case "$i" in
+           *.xz)
+               a='' xzcat $i
+               ;;
+           *.lz4)
+               a='' lz4cat $i
+               ;;
+           *.gz)
+               a='' zcat $i
+               ;;
+           *.failed)
+               # just ignore
+               ;;
+           *)
+               cat $i
+               ;;
+       esac
+   done
+}
+
+# URL TARGETDIR
+rsync_alt_contents_index()
+{
+    local URL="$1"
+    local TD="$2"
+    assure_exists rsync
+    mkdir -p "$(dirname "$TD")"
+    if [ -n "$verbose" ] ; then
+        docmd rsync --partial --inplace -z -a --progress "$URL" "$TD"
+    else
+        a= rsync --partial --inplace -z -a --progress "$URL" "$TD" >/dev/null 2>/dev/null
+    fi
+}
+
+# URL
+get_url_to_etersoft_mirror()
+{
+    local REPOPATH
+    local ETERSOFT_MIRROR="rsync://download.etersoft.ru/pub"
+    local ALTREPO=$(get_alt_repo_path "$1")
+    echo "$ALTREPO" | grep -q "^ALTLinux" || return
+    echo "$ETERSOFT_MIRROR/$(get_alt_repo_path "$1" | sed -e "s|^ALTLinux/|ALTLinux/contents_index/|")"
+}
+
+__init_contents_index_list()
+{
+    mkdir -p "$(dirname $ALT_CONTENTS_INDEX_LIST)"
+    truncate -s0 $ALT_CONTENTS_INDEX_LIST
+}
+
+__add_to_contents_index_list()
+{
+    echo "    $1"
+    echo "$1" >>$ALT_CONTENTS_INDEX_LIST
+}
+
+# file file2
+__add_better_to_contents_index_list()
+{
+    if [ -s "$1" ] && [ -s "$2" ] ; then
+        [ "$1" -ot "$2" ] && __add_to_contents_index_list "$2" && return
+        __add_to_contents_index_list "$1" && return
+    fi
+    [ -s "$1" ] && __add_to_contents_index_list "$1" && return
+    [ -s "$2" ] && __add_to_contents_index_list "$2" && return
+}
+
+
+# fills ALT_CONTENTS_INDEX_LIST
+update_alt_contents_index()
+{
+    load_helper epm-repolist
+    __init_contents_index_list
+    # TODO: fix for Etersoft/LINUX@Etersoft
+    # TODO: fix for rsync
+    info "Retrieving contents_index ..."
+    epm_repolist | grep -v " task$" | grep -E "rpm.*(ftp://|http://|https://|rsync://|file:/)" | sed -e "s@^rpm.*\(ftp://\|http://\|https://\)@rsync://@g" | sed -e "s@^rpm.*\(file:\)@@g" | while read -r URL1 URL2 component ; do
+        [ "$component" = "debuginfo" ] && continue
+        URL="$URL1/$URL2"
+        if echo "$URL" | grep -q "^/" ; then
+            # first check for local mirror
+            local LOCALPATH="$(echo "$URL/base")"
+            local LOCALPATHGZIP="$(echo "$LOCALPATH" | sed -e "s|/ALTLinux/|/ALTLinux/contents_index/|")"
+            __add_better_to_contents_index_list "$LOCALPATHGZIP/contents_index.gz" "$LOCALPATH/contents_index"
+        else
+            local LOCALPATH="$(get_local_alt_mirror_path "$URL")"
+            local REMOTEURL="$(get_url_to_etersoft_mirror "$URL")"
+            if [ -n "$REMOTEURL" ] ; then
+                rsync_alt_contents_index $REMOTEURL/base/contents_index.gz $LOCALPATH/contents_index.gz && __add_to_contents_index_list "$LOCALPATH/contents_index.gz" && continue
+                [ -n "$verbose" ] && info "Note: Can't retrieve $REMOTEURL/base/contents_index.gz, fallback to $URL/base/contents_index"
+            fi
+            # fix rsync URL firstly
+            local RSYNCURL="$(echo "$URL" | sed -e "s|rsync://\(ftp.basealt.ru\|basealt.org\|altlinux.ru\)/pub/distributions/ALTLinux|rsync://\1/ALTLinux|")" #"
+            rsync_alt_contents_index $RSYNCURL/base/contents_index $LOCALPATH/contents_index && __add_to_contents_index_list "$LOCALPATH/contents_index" && continue
+
+            __add_better_to_contents_index_list "$LOCALPATH/contents_index.gz" "$LOCALPATH/contents_index"
+        fi
+    done
+    if [ ! -s "$ALT_CONTENTS_INDEX_LIST" ] ; then
+        fatal "Have no local contents index. Check epm repo --help."
+    fi
+}
+

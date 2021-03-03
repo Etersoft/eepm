@@ -29,16 +29,13 @@ __alt_search_file_output()
 __alt_local_content_search()
 {
     load_helper epm-sh-altlinux
+    load_helper epm-sh-altlinux-contents-index
     load_helper epm-search
 
-    info "Locate contents index file(s) ..."
-    local CI="$(get_local_alt_contents_index_rsync)"
-    # TODO use something like
-    [ -n "$CI" ] || fatal "Have no local contents index. Check epm repo --help."
+    update_alt_contents_index
+    local CI="$(cat $ALT_CONTENTS_INDEX_LIST)"
 
-    info "Searching in"
-    echo "$CI"
-    echo "for $1... "
+    info "Searching for $1 ... "
 
     # FIXME: do it better
     local MGS
