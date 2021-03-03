@@ -68,7 +68,7 @@ __local_ercat()
    done
 }
 
-# URL TARGETDIR
+# URL TARGETDIR OPTIONS
 rsync_alt_contents_index()
 {
     local URL="$1"
@@ -76,9 +76,9 @@ rsync_alt_contents_index()
     assure_exists rsync
     mkdir -p "$(dirname "$TD")"
     if [ -n "$verbose" ] ; then
-        docmd rsync --partial --inplace -z -a --progress "$URL" "$TD"
+        docmd rsync --partial --inplace $3 -a --progress "$URL" "$TD"
     else
-        a= rsync --partial --inplace -z -a --progress "$URL" "$TD" >/dev/null 2>/dev/null
+        a= rsync --partial --inplace $3 -a --progress "$URL" "$TD" >/dev/null 2>/dev/null
     fi
 }
 
@@ -142,7 +142,7 @@ update_alt_contents_index()
             fi
             # fix rsync URL firstly
             local RSYNCURL="$(echo "$URL" | sed -e "s|rsync://\(ftp.basealt.ru\|basealt.org\|altlinux.ru\)/pub/distributions/ALTLinux|rsync://\1/ALTLinux|")" #"
-            rsync_alt_contents_index $RSYNCURL/base/contents_index $LOCALPATH/contents_index && __add_to_contents_index_list "$RSYNCURL" "$LOCALPATH/contents_index" && continue
+            rsync_alt_contents_index $RSYNCURL/base/contents_index $LOCALPATH/contents_index -z && __add_to_contents_index_list "$RSYNCURL" "$LOCALPATH/contents_index" && continue
 
             __add_better_to_contents_index_list "(cached)" "$LOCALPATH/contents_index.gz" "$LOCALPATH/contents_index"
         fi
