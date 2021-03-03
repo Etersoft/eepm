@@ -2239,8 +2239,8 @@ epm_epm_install() {
 __alt_local_content_filelist()
 {
 
-    local CI="$(get_local_alt_contents_index_rsync)"
-    [ -n "$CI" ] || fatal "Have no local contents index. Check epm repo --help."
+    update_alt_contents_index
+    local CI="$(cat $ALT_CONTENTS_INDEX_LIST)"
 
     # TODO: safe way to use less
     #local OUTCMD="less"
@@ -6813,14 +6813,10 @@ __alt_search_file_output()
 __alt_local_content_search()
 {
 
-    info "Locate contents index file(s) ..."
-    local CI="$(get_local_alt_contents_index_rsync)"
-    # TODO use something like
-    [ -n "$CI" ] || fatal "Have no local contents index. Check epm repo --help."
+    update_alt_contents_index
+    local CI="$(cat $ALT_CONTENTS_INDEX_LIST)"
 
-    info "Searching in"
-    echo "$CI"
-    echo "for $1... "
+    info "Searching for $1 ... "
 
     # FIXME: do it better
     local MGS
@@ -6889,138 +6885,6 @@ docmd $CMD $pkg_filenames
 
 # File bin/epm-sh-altlinux:
 
-
-get_alt_repo_path()
-{
-    local DN1=$(dirname "$1")
-    local DN2=$(dirname $DN1)
-    local DN3=$(dirname $DN2)
-
-    local BN0=$(basename "$1") # arch
-    local BN1=$(basename $DN1) # branch/Sisyphus
-    local BN2=$(basename $DN2) # p8/ALTLinux
-    local BN3=$(basename $DN3) # ALTLinux/
-
-    [ "$BN1" = "branch" ] && echo "$BN3/$BN2/$BN1/$BN0" || echo "$BN2/$BN1/$BN0"
-}
-
-get_local_alt_mirror_path()
-{
-    echo "/tmp/eepm/$(get_alt_repo_path "$1")"
-}
-
-__local_ercat()
-{
-   local i
-   for i in "$@" ; do
-       case "$i" in
-           *.xz)
-               a='' xzcat $i
-               ;;
-           *.lz4)
-               a='' lz4cat $i
-               ;;
-           *.failed)
-               # just ignore
-               ;;
-           *)
-               cat $i
-               ;;
-       esac
-   done
-}
-
-compress_file_inplace()
-{
-    local OFILE="$1"
-    if epm assure lz4 </dev/null ; then
-        #docmd lz4 --rm "$OFILE" "$OFILE.lz4" || return
-        # due old lz4
-        docmd lz4 -f "$OFILE" "$OFILE.lz4" || return
-        rm -fv "$OFILE"
-    else
-        epm assure xz </dev/null || fatal "Can't install nor lz4, nor xz compressor"
-        docmd xz -f "$OFILE" || return
-    fi
-    return 0
-}
-
-download_alt_contents_index()
-{
-    local URL="$1"
-    local TD="$2"
-    local OFILE="$TD/$(basename "$URL")"
-
-    local DONE=$(echo $OFILE*)
-    # TODO: check if too old
-    if [ -r "$DONE" ] ; then
-        return
-    fi
-
-    mkdir -p "$TD"
-
-    if echo "$URL" | grep -q "^file:/" ; then
-        URL=$(echo "$URL" | sed -e "s|^file:||")
-        [ -s "$URL" ] || { touch $OFILE.failed ; return 1; }
-        ln -sf "$URL" "$OFILE" || { touch $OFILE.failed ; return 1; }
-    else
-        docmd eget -O "$OFILE" "$URL" || { rm -fv $OFILE ; touch $OFILE.failed ; return 1; }
-    fi
-
-    rm -f $OFILE.failed
-    compress_file_inplace "$OFILE"
-}
-
-rsync_alt_contents_index()
-{
-    local URL="$1"
-    local TD="$2"
-    assure_exists rsync
-    a= rsync --partial --inplace -z -av --progress "$URL" "$TD"
-    test -s "$TD"
-}
-
-get_url_to_etersoft_mirror()
-{
-    local REPOPATH
-    local ETERSOFT_MIRROR="rsync://download.etersoft.ru/pub"
-    echo "$ETERSOFT_MIRROR/$(get_alt_repo_path "$1" | sed -e "s|^ALTLinux/|ALTLinux/contents_index/|")"
-}
-
-get_local_alt_contents_index_rsync()
-{
-
-    # TODO: fix for Etersoft/LINUX@Etersoft
-    epm_repolist | grep -v " task$" | grep -E "rpm.*(ftp://|http://|https://|file:/)" | sed -e "s@^rpm.*\(ftp://\|http://\|https://\|file:\)@\1@g" | while read -r URL ARCH other ; do
-        if echo "$URL" | grep -q "^file:/" ; then
-            # first check for local mirror
-            local LOCALPATH="$(echo "$URL" | sed -e "s|^file:||")/$ARCH/base"
-            local LOCALPATHGZIP="$(echo "$LOCALPATH" | sed -e "s|/ALTLinux/|/ALTLinux/contents_index/|")"
-            [ -s "$LOCALPATHGZIP/contents_index.gz" ] && echo "$LOCALPATHGZIP/contents_index.gz" && continue
-            [ -s "$LOCALPATH/contents_index" ] && echo "$LOCALPATH/contents_index"
-        else
-            local LOCALPATH="$(get_local_alt_mirror_path "$URL/$ARCH")"
-            local REMOTEURL="$(get_url_to_etersoft_mirror "$URL/$ARCH")/base"
-            rsync_alt_contents_index $REMOTEURL/contents_index.gz $LOCALPATH/contents_index.gz >/dev/null 2>/dev/null </dev/null && echo "$LOCALPATH/contents_index.gz" && continue
-            [ -n "$verbose" ] && info "Note: Can't retrieve $REMOTEURL/contents_index.gz, fallback to $URL/$ARCH/base/contents_index"
-            rsync_alt_contents_index $URL/$ARCH/base/contents_index $LOCALPATH/contents_index >/dev/null 2>/dev/null </dev/null && echo "$LOCALPATH/contents_index" && continue
-        fi
-    done
-}
-
-get_local_alt_contents_index()
-{
-
-    local LOCALPATH
-
-    epm_repolist | grep -v " task$" | grep -E "rpm.*(ftp://|http://|https://|file:/)" | sed -e "s@^rpm.*\(ftp://\|http://\|https://\|file:\)@\1@g" | while read -r URL ARCH other ; do
-        LOCALPATH=$(get_local_alt_mirror_path "$URL/$ARCH")
-        download_alt_contents_index $URL/$ARCH/base/contents_index $LOCALPATH >&2 </dev/null || continue
-        echo "$LOCALPATH/contents_index*"
-    done
-}
-
-
 tasknumber()
 {
     local num="$(echo "$1" | sed -e "s| *#*||g")"
@@ -7051,6 +6915,134 @@ get_task_packages()
         [ "$arch" = "x86_64" ] && get_task_arepo_packages "$tn"
     done
 }
+
+# File bin/epm-sh-altlinux-contents-index:
+
+
+get_alt_repo_path()
+{
+    local DN1=$(dirname "$1")
+    local DN2=$(dirname $DN1)
+    local DN3=$(dirname $DN2)
+
+    local BN0=$(basename "$1") # arch
+    local BN1=$(basename $DN1) # branch/Sisyphus
+    local BN2=$(basename $DN2) # p8/ALTLinux
+    local BN3=$(basename $DN3) # ALTLinux/
+
+    [ "$BN1" = "branch" ] && echo "$BN3/$BN2/$BN1/$BN0" || echo "$BN2/$BN1/$BN0"
+}
+
+get_local_alt_mirror_path()
+{
+    # TODO: /var/cache/eepm
+    echo "$TMPDIR/eepm/$(get_alt_repo_path "$1")"
+}
+
+ALT_CONTENTS_INDEX_LIST=$TMPDIR/eepm/contents_index_list
+
+__local_ercat()
+{
+   local i
+   for i in "$@" ; do
+       case "$i" in
+           *.xz)
+               a='' xzcat $i
+               ;;
+           *.lz4)
+               a='' lz4cat $i
+               ;;
+           *.gz)
+               a='' zcat $i
+               ;;
+           *.failed)
+               # just ignore
+               ;;
+           *)
+               cat $i
+               ;;
+       esac
+   done
+}
+
+rsync_alt_contents_index()
+{
+    local URL="$1"
+    local TD="$2"
+    assure_exists rsync
+    mkdir -p "$(dirname "$TD")"
+    if [ -n "$verbose" ] ; then
+        docmd rsync --partial --inplace -z -a --progress "$URL" "$TD"
+    else
+        a= rsync --partial --inplace -z -a --progress "$URL" "$TD" >/dev/null 2>/dev/null
+    fi
+}
+
+get_url_to_etersoft_mirror()
+{
+    local REPOPATH
+    local ETERSOFT_MIRROR="rsync://download.etersoft.ru/pub"
+    local ALTREPO=$(get_alt_repo_path "$1")
+    echo "$ALTREPO" | grep -q "^ALTLinux" || return
+    echo "$ETERSOFT_MIRROR/$(get_alt_repo_path "$1" | sed -e "s|^ALTLinux/|ALTLinux/contents_index/|")"
+}
+
+__init_contents_index_list()
+{
+    mkdir -p "$(dirname $ALT_CONTENTS_INDEX_LIST)"
+    truncate -s0 $ALT_CONTENTS_INDEX_LIST
+}
+
+__add_to_contents_index_list()
+{
+    echo "  $1 -> $2"
+    echo "$2" >>$ALT_CONTENTS_INDEX_LIST
+}
+
+__add_better_to_contents_index_list()
+{
+    if [ -s "$2" ] && [ -s "$3" ] ; then
+        [ "$2" -ot "$3" ] && __add_to_contents_index_list "$1" "$3" && return
+        __add_to_contents_index_list "$1" "$2" && return
+    fi
+    [ -s "$2" ] && __add_to_contents_index_list "$1" "$2" && return
+    [ -s "$3" ] && __add_to_contents_index_list "$1" "$3" && return
+}
+
+
+update_alt_contents_index()
+{
+    __init_contents_index_list
+    # TODO: fix for Etersoft/LINUX@Etersoft
+    # TODO: fix for rsync
+    info "Retrieving contents_index ..."
+    epm_repolist | grep -v " task$" | grep -E "rpm.*(ftp://|http://|https://|rsync://|file:/)" | sed -e "s@^rpm.*\(ftp://\|http://\|https://\)@rsync://@g" | sed -e "s@^rpm.*\(file:\)@@g" | while read -r URL1 URL2 component ; do
+        [ "$component" = "debuginfo" ] && continue
+        URL="$URL1/$URL2"
+        if echo "$URL" | grep -q "^/" ; then
+            # first check for local mirror
+            local LOCALPATH="$(echo "$URL/base")"
+            local LOCALPATHGZIP="$(echo "$LOCALPATH" | sed -e "s|/ALTLinux/|/ALTLinux/contents_index/|")"
+            __add_better_to_contents_index_list "$URL" "$LOCALPATHGZIP/contents_index.gz" "$LOCALPATH/contents_index"
+        else
+            local LOCALPATH="$(get_local_alt_mirror_path "$URL")"
+            local REMOTEURL="$(get_url_to_etersoft_mirror "$URL")"
+            if [ -n "$REMOTEURL" ] ; then
+                rsync_alt_contents_index $REMOTEURL/base/contents_index.gz $LOCALPATH/contents_index.gz && __add_to_contents_index_list "$REMOTEURL" "$LOCALPATH/contents_index.gz" && continue
+                [ -n "$verbose" ] && info "Note: Can't retrieve $REMOTEURL/base/contents_index.gz, fallback to $URL/base/contents_index"
+            fi
+            # fix rsync URL firstly
+            local RSYNCURL="$(echo "$URL" | sed -e "s|rsync://\(ftp.basealt.ru\|basealt.org\|altlinux.ru\)/pub/distributions/ALTLinux|rsync://\1/ALTLinux|")" #"
+            rsync_alt_contents_index $RSYNCURL/base/contents_index $LOCALPATH/contents_index && __add_to_contents_index_list "$RSYNCURL" "$LOCALPATH/contents_index" && continue
+
+            __add_better_to_contents_index_list "(cached)" "$LOCALPATH/contents_index.gz" "$LOCALPATH/contents_index"
+        fi
+    done
+    if [ ! -s "$ALT_CONTENTS_INDEX_LIST" ] ; then
+        fatal "Have no local contents index. Check epm repo --help."
+    fi
+}
+
 
 # File bin/epm-sh-install:
 
@@ -9365,7 +9357,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.9.0  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.9.1  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2020"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -9375,7 +9367,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.9.0
+EPMVERSION=3.9.1
 verbose=
 quiet=
 nodeps=
