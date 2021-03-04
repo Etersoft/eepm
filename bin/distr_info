@@ -496,7 +496,7 @@ get_debian_arch()
 {
     local arch="$(get_arch)"
     case $arch in
-    'i586')
+    'x86')
         arch='i386' ;;
     'x86_64')
         arch='amd64' ;;
@@ -509,7 +509,10 @@ get_distro_arch()
     local arch="$(get_arch)"
     case "$(pkgtype)" in
         rpm)
-            :
+            case $arch in
+            'x86')
+                arch='i586' ;;
+            esac
             ;;
         deb)
             get_debian_arch
@@ -679,7 +682,7 @@ EOF
 
 
 case $1 in
-	-h)
+	-h|--help)
 		echo "distro_info v$PROGVERSION - distro information retriever"
 		echo "Usage: distro_info [options] [args]"
 		echo "Options:"
