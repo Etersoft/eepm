@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.9.1
+Version: 3.9.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,11 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Thu Mar 04 2021 Vitaly Lipatov <lav@altlinux.ru> 3.9.2-alt1
+- epm-sh-altlinux-contents-index: use rsync -z only for uncompressed files
+- epm-restore: add nupkg restore support
+- distro_info: fix --distro-arch for rpm based systems
+
 * Wed Mar 03 2021 Vitaly Lipatov <lav@altlinux.ru> 3.9.1-alt1
 - rewrite contents_index retrieving
 - epm-sh-altlinux-contents-index: improve content_index list informativity
