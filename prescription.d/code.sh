@@ -31,19 +31,6 @@ case "$arch" in
         ;;
 esac
 
-pkgtype="$($DISTRVENDOR -p)"
-repack=''
-
-case "$pkgtype" in
-    deb)
-        repack='--repack'
-        ;;
-    rpm)
-        ;;
-    *)
-        fatal "Package format $pkgtype is not supported yet"
-esac
-
 # we have workaround for their postinstall script, so always repack rpm package
 [ "$($DISTRVENDOR -p)" = "deb" ] || repack='--repack'
 
