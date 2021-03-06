@@ -6513,6 +6513,33 @@ __epm_print_npm_list()
     [ -n "$dryrun" ] || echo "$ilist"
 }
 
+
+__epm_print_nupkg_list()
+{
+    a= dotnet list $1 package | grep "^   > " | while read n name req other; do
+        if [ -n "$dryrun" ] ; then
+            echo "BuildRequires: nupkg($name) >= $req"
+        else
+            echo "nupkg($name)"
+        fi
+    done
+}
+
+__epm_restore_nupkg()
+{
+    local req_file="$1"
+    if [ -n "$dryrun" ] ; then
+        echo "# generated via dotnet list $(basename $(dirname $(realpath "$req_file")))/$(basename "$req_file") package"
+        __epm_print_nupkg_list $req_file
+        return
+    fi
+
+    info "Install requirements from $req_file ..."
+    ilist=$(__epm_print_nupkg_list $req_file)
+    ilist="$(estrlist list $ilist)"
+    docmd epm install $ilist
+}
+
 __epm_restore_npm()
 {
     local req_file="$1"
@@ -6578,6 +6605,10 @@ __epm_restore_by()
         package.json)
             [ -s "$req_file" ] && __epm_restore_npm "$req_file"
             ;;
+        *.sln|*.csproj)
+            local PROJ="$(echo $req_file)"
+            [ -s "$PROJ" ] && __epm_restore_nupkg "$PROJ"
+            ;;
         Gemfile|package.json)
             info "$req_file support is not implemented yet"
             ;;
@@ -6603,7 +6634,10 @@ epm_restore()
 
 
     # if run with empty args
-    for i in requirements.txt requirements/default.txt requirements_dev.txt requirements-dev.txt requirements/dev.txt dev-requirements.txt requirements-test.txt requirements_test.txt  requirements/test.txt test-requirements.txt Gemfile requires.txt package.json setup.py python_dependencies.py; do
+    for i in requirements.txt requirements/default.txt requirements_dev.txt requirements-dev.txt requirements/dev.txt dev-requirements.txt \
+             requirements-test.txt requirements_test.txt  requirements/test.txt test-requirements.txt \
+             Gemfile requires.txt package.json setup.py python_dependencies.py \
+             *.sln *.csproj ; do
         __epm_restore_by $i
     done
 
@@ -6972,9 +7006,9 @@ rsync_alt_contents_index()
     assure_exists rsync
     mkdir -p "$(dirname "$TD")"
     if [ -n "$verbose" ] ; then
-        docmd rsync --partial --inplace -z -a --progress "$URL" "$TD"
+        docmd rsync --partial --inplace $3 -a --progress "$URL" "$TD"
     else
-        a= rsync --partial --inplace -z -a --progress "$URL" "$TD" >/dev/null 2>/dev/null
+        a= rsync --partial --inplace $3 -a --progress "$URL" "$TD" >/dev/null 2>/dev/null
     fi
 }
 
@@ -7033,7 +7067,7 @@ update_alt_contents_index()
             fi
             # fix rsync URL firstly
             local RSYNCURL="$(echo "$URL" | sed -e "s|rsync://\(ftp.basealt.ru\|basealt.org\|altlinux.ru\)/pub/distributions/ALTLinux|rsync://\1/ALTLinux|")" #"
-            rsync_alt_contents_index $RSYNCURL/base/contents_index $LOCALPATH/contents_index && __add_to_contents_index_list "$RSYNCURL" "$LOCALPATH/contents_index" && continue
+            rsync_alt_contents_index $RSYNCURL/base/contents_index $LOCALPATH/contents_index -z && __add_to_contents_index_list "$RSYNCURL" "$LOCALPATH/contents_index" && continue
 
             __add_better_to_contents_index_list "(cached)" "$LOCALPATH/contents_index.gz" "$LOCALPATH/contents_index"
         fi
@@ -8288,7 +8322,7 @@ get_debian_arch()
 {
     local arch="$(get_arch)"
     case $arch in
-    'i586')
+    'x86')
         arch='i386' ;;
     'x86_64')
         arch='amd64' ;;
@@ -8301,7 +8335,10 @@ get_distro_arch()
     local arch="$(get_arch)"
     case "$(pkgtype)" in
         rpm)
-            :
+            case $arch in
+            'x86')
+                arch='i586' ;;
+            esac
             ;;
         deb)
             get_debian_arch
@@ -8471,7 +8508,7 @@ EOF
 
 
 case $1 in
-	-h)
+	-h|--help)
 		echo "distro_info v$PROGVERSION - distro information retriever"
 		echo "Usage: distro_info [options] [args]"
 		echo "Options:"
@@ -9357,7 +9394,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.9.1  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.9.2  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2020"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -9367,7 +9404,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.9.1
+EPMVERSION=3.9.2
 verbose=
 quiet=
 nodeps=

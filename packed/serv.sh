@@ -1665,7 +1665,7 @@ get_debian_arch()
 {
     local arch="$(get_arch)"
     case $arch in
-    'i586')
+    'x86')
         arch='i386' ;;
     'x86_64')
         arch='amd64' ;;
@@ -1678,7 +1678,10 @@ get_distro_arch()
     local arch="$(get_arch)"
     case "$(pkgtype)" in
         rpm)
-            :
+            case $arch in
+            'x86')
+                arch='i586' ;;
+            esac
             ;;
         deb)
             get_debian_arch
@@ -1848,7 +1851,7 @@ EOF
 
 
 case $1 in
-	-h)
+	-h|--help)
 		echo "distro_info v$PROGVERSION - distro information retriever"
 		echo "Usage: distro_info [options] [args]"
 		echo "Options:"
@@ -2800,7 +2803,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.9.1  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.9.2  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2019"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
