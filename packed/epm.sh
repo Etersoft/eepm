@@ -3289,7 +3289,7 @@ case $PMTYPE in
 	*-rpm)
 		#__repack_rpm_base
 		#rm -f /var/lib/rpm/__db*
-		rpm --rebuilddb
+		a= rpm --rebuilddb
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -3657,7 +3657,7 @@ query_package_field()
 	local INSTALLED="-p"
 	# if not file, drop -p for get from rpm base
 	[ -f "$1" ] || INSTALLED=""
-	rpmquery $INSTALLED --queryformat "$FORMAT" "$@"
+	a= rpmquery $INSTALLED --queryformat "$FORMAT" "$@"
 }
 
 
@@ -3711,7 +3711,7 @@ print_srcname()
 print_specname()
 {
     # CHECKME: it is possible to have two or more specs in one package?
-    rpm -qlp "$@" | grep "\.spec\$"
+    a= rpm -qlp "$@" | grep "\.spec\$"
 }
 
 print_srcpkgname()
@@ -3745,7 +3745,7 @@ print_srcpkgname()
 compare_version()
 {
     which rpmevrcmp 2>/dev/null >/dev/null || fatal "rpmevrcmp exists in ALT Linux only"
-    rpmevrcmp "$@"
+    a= rpmevrcmp "$@"
 }
 
 construct_name()
@@ -9394,7 +9394,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.9.2  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.9.3  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2020"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -9404,7 +9404,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.9.2
+EPMVERSION=3.9.3
 verbose=
 quiet=
 nodeps=
