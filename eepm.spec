@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.9.2
+Version: 3.9.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,11 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Tue Mar 09 2021 Vitaly Lipatov <lav@altlinux.ru> 3.9.3-alt1
+- prescription.d/code.sh: fix for deb based system
+- add repack.d/sbb.sh (Sberbank client)
+- don't require rpm directly
+
 * Thu Mar 04 2021 Vitaly Lipatov <lav@altlinux.ru> 3.9.2-alt1
 - epm-sh-altlinux-contents-index: use rsync -z only for uncompressed files
 - epm-restore: add nupkg restore support
