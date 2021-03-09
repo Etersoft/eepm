@@ -27,7 +27,7 @@ query_package_field()
 	local INSTALLED="-p"
 	# if not file, drop -p for get from rpm base
 	[ -f "$1" ] || INSTALLED=""
-	rpmquery $INSTALLED --queryformat "$FORMAT" "$@"
+	a= rpmquery $INSTALLED --queryformat "$FORMAT" "$@"
 }
 
 
@@ -87,7 +87,7 @@ print_srcname()
 print_specname()
 {
     # CHECKME: it is possible to have two or more specs in one package?
-    rpm -qlp "$@" | grep "\.spec\$"
+    a= rpm -qlp "$@" | grep "\.spec\$"
 }
 
 print_srcpkgname()
@@ -121,7 +121,7 @@ print_srcpkgname()
 compare_version()
 {
     which rpmevrcmp 2>/dev/null >/dev/null || fatal "rpmevrcmp exists in ALT Linux only"
-    rpmevrcmp "$@"
+    a= rpmevrcmp "$@"
 }
 
 # construct package file name.

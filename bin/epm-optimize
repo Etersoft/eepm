@@ -38,7 +38,7 @@ case $PMTYPE in
 	*-rpm)
 		#__repack_rpm_base
 		#rm -f /var/lib/rpm/__db*
-		rpm --rebuilddb
+		a= rpm --rebuilddb
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
