@@ -9,7 +9,7 @@ GFSNEW=glusterfs9
 
 if epmqp --quiet ${GFSOLD}- ; then
     # Upgrade if was installed
-    epmi $(epmqp --short $GFSOLD | grep -v rdma | sed -e "s|$GFSOLD|$GFSNEW|") ${GFSOLD}- ${GFSOLD}-client- python3-module-${GFSOLD}-
+    epmi $(epmqp --short $GFSOLD | grep -v rdma | grep -v devel | sed -e "s|$GFSOLD|$GFSNEW|") ${GFSOLD}- ${GFSOLD}-client- python3-module-${GFSOLD}-
     epm installed $GFSNEW-server && serv glusterd on
 else
     # Install all packages
