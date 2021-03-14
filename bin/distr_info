@@ -81,7 +81,7 @@ pkgtype()
 		voidlinux) echo "xbps" ;;
 		openwrt) echo "ipk" ;;
 		cygwin) echo "tar.xz" ;;
-		debian|ubuntu|mint|runtu|mcst|astra) echo "deb" ;;
+		debian|ubuntu|mint|runtu|mcst|astra|kali) echo "deb" ;;
 		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
 			echo "rpm" ;;
 		fedora|redhat|redos|scientific|centos|rhel|goslinux|amzn)
