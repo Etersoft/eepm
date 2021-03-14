@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.9.3
+Version: 3.9.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,11 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Mon Mar 15 2021 Vitaly Lipatov <lav@altlinux.ru> 3.9.4-alt1
+- glusterfs9: skip devel packages during upgrade
+- repack.d/PacketTracer.sh: add repack for Cisco PacketTracer
+- distr_info: fix package type detection for Kali Linux
+
 * Tue Mar 09 2021 Vitaly Lipatov <lav@altlinux.ru> 3.9.3-alt1
 - prescription.d/code.sh: fix for deb based system
 - add repack.d/sbb.sh (Sberbank client)
