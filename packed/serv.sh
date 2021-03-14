@@ -1250,7 +1250,7 @@ pkgtype()
 		voidlinux) echo "xbps" ;;
 		openwrt) echo "ipk" ;;
 		cygwin) echo "tar.xz" ;;
-		debian|ubuntu|mint|runtu|mcst|astra) echo "deb" ;;
+		debian|ubuntu|mint|runtu|mcst|astra|kali) echo "deb" ;;
 		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
 			echo "rpm" ;;
 		fedora|redhat|redos|scientific|centos|rhel|goslinux|amzn)
@@ -2803,7 +2803,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.9.3  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.9.4  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2019"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
