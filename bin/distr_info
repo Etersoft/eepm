@@ -615,6 +615,11 @@ get_core_count()
     echo $detected
 }
 
+get_core_mhz()
+{
+    cat /proc/cpuinfo | grep "cpu MHz" | head -n1 | cut -d':' -f2 | cut -d' ' -f2 | cut -d'.' -f1
+}
+
 
 get_virt()
 {
@@ -668,7 +673,7 @@ Pretty distro name (--pretty): $(print_pretty_name)
  Package manager/type (-g/-p): $(pkgmanager) / $(pkgtype)
  Running service manager (-y): $(get_service_manager)
           Virtualization (-i): $(get_virt)
-               CPU Cores (-c): $(get_core_count)
+        CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_core_mhz) MHz
         CPU Architecture (-a): $(get_arch)
  CPU norm register size  (-b): $(get_bit_size)
  System memory size (MB) (-m): $(get_memory_size)
@@ -689,6 +694,7 @@ case $1 in
 		echo " -a - print hardware architecture (--distro-arch for distro depended name)"
 		echo " -b - print size of arch bit (32/64)"
 		echo " -c - print number of CPU cores"
+		echo " -z - print current CPU MHz"
 		echo " -d - print distro name"
 		echo " -e - print full name of distro with version"
 		echo " -i - print virtualization type"
@@ -744,6 +750,9 @@ case $1 in
 		;;
 	-c)
 		get_core_count
+		;;
+	-z)
+		get_core_mhz
 		;;
 	-i)
 		get_virt
