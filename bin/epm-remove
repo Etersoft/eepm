@@ -23,9 +23,11 @@ load_helper epm-print
 load_helper epm-sh-warmup
 load_helper epm-sh-install
 
+RPMISNOTINSTALLED=202
+
 __check_rpm_e_result()
 {
-    grep -q "is not installed" $1 && return 2
+    grep -q "is not installed" $1 && return $RPMISNOTINSTALLED
     return $2
 }
 
@@ -42,6 +44,7 @@ epm_remove_low()
 			cd /tmp || fatal
 			__epm_check_vendor $@
 			store_output sudocmd rpm -ev $noscripts $nodeps $@
+			# rpm returns number of packages if failed on removing
 			__check_rpm_e_result $RC_STDOUT $?
 			RES=$?
 			clean_store_output
@@ -322,7 +325,7 @@ epm_remove()
 	epm_remove_low $pkg_names && return
 	local STATUS=$?
 
-	if [ -n "$direct" ] || [ -n "$nodeps" ] || [ "$STATUS" = "2" ]; then
+	if [ -n "$direct" ] || [ -n "$nodeps" ] || [ "$STATUS" = "$RPMISNOTINSTALLED" ]; then
 		return $STATUS
 	fi
 
