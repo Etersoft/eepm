@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.9.4
+Version: 3.9.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,10 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Sat Mar 27 2021 Vitaly Lipatov <lav@altlinux.ru> 3.9.5-alt1
+- distr_info: add -z for print current CPU MHz
+- epm-remove: fix remove skipping on failed deps
+
 * Mon Mar 15 2021 Vitaly Lipatov <lav@altlinux.ru> 3.9.4-alt1
 - glusterfs9: skip devel packages during upgrade
 - repack.d/PacketTracer.sh: add repack for Cisco PacketTracer
