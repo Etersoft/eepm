@@ -18,9 +18,12 @@ fi
 
 #arch=$($DISTRVENDOR --distro-arch)
 #pkgtype=$($DISTRVENDOR -p)
-repack="--repack"
+repack=''
 arch=amd64
 pkgtype=deb
+
+# we have workaround for their postinstall script, so always repack rpm package
+[ "$($DISTRVENDOR -p)" = "deb" ] || repack='--repack'
 
 # don't used
 complex_get()
