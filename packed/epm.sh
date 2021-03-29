@@ -3755,12 +3755,14 @@ construct_name()
     local arch="$3"
     local pkgtype="$4"
     local ds="$5"
+    local pds="$ds"
 
     [ -n "$arch" ] || arch="$($DISTRVENDOR --distro-arch)"
     [ -n "$pkgtype" ] || pkgtype="$($DISTRVENDOR -p)"
     [ -n "$ds" ] || ds=$(get_pkg_name_delimiter $pkgtype)
+    [ "$pds" = "-" ] && pds="."
     [ -n "$version" ] && version="$ds$version"
-    echo "${name}${version}${ds/-/.}$arch.$pkgtype"
+    echo "${name}${version}${pds}$arch.$pkgtype"
 }
 
 epm_print()
@@ -5060,9 +5062,11 @@ epm_release_upgrade()
 # File bin/epm-remove:
 
 
+RPMISNOTINSTALLED=202
+
 __check_rpm_e_result()
 {
-    grep -q "is not installed" $1 && return 2
+    grep -q "is not installed" $1 && return $RPMISNOTINSTALLED
     return $2
 }
 
@@ -5078,6 +5082,7 @@ epm_remove_low()
 			cd /tmp || fatal
 			__epm_check_vendor $@
 			store_output sudocmd rpm -ev $noscripts $nodeps $@
+			# rpm returns number of packages if failed on removing
 			__check_rpm_e_result $RC_STDOUT $?
 			RES=$?
 			clean_store_output
@@ -5356,7 +5361,7 @@ epm_remove()
 	epm_remove_low $pkg_names && return
 	local STATUS=$?
 
-	if [ -n "$direct" ] || [ -n "$nodeps" ] || [ "$STATUS" = "2" ]; then
+	if [ -n "$direct" ] || [ -n "$nodeps" ] || [ "$STATUS" = "$RPMISNOTINSTALLED" ]; then
 		return $STATUS
 	fi
 
@@ -8441,6 +8446,11 @@ get_core_count()
     echo $detected
 }
 
+get_core_mhz()
+{
+    cat /proc/cpuinfo | grep "cpu MHz" | head -n1 | cut -d':' -f2 | cut -d' ' -f2 | cut -d'.' -f1
+}
+
 
 get_virt()
 {
@@ -8494,7 +8504,7 @@ Pretty distro name (--pretty): $(print_pretty_name)
  Package manager/type (-g/-p): $(pkgmanager) / $(pkgtype)
  Running service manager (-y): $(get_service_manager)
           Virtualization (-i): $(get_virt)
-               CPU Cores (-c): $(get_core_count)
+        CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_core_mhz) MHz
         CPU Architecture (-a): $(get_arch)
  CPU norm register size  (-b): $(get_bit_size)
  System memory size (MB) (-m): $(get_memory_size)
@@ -8515,6 +8525,7 @@ case $1 in
 		echo " -a - print hardware architecture (--distro-arch for distro depended name)"
 		echo " -b - print size of arch bit (32/64)"
 		echo " -c - print number of CPU cores"
+		echo " -z - print current CPU MHz"
 		echo " -d - print distro name"
 		echo " -e - print full name of distro with version"
 		echo " -i - print virtualization type"
@@ -8570,6 +8581,9 @@ case $1 in
 		;;
 	-c)
 		get_core_count
+		;;
+	-z)
+		get_core_mhz
 		;;
 	-i)
 		get_virt
@@ -8687,6 +8701,7 @@ scat()
 {
     $CURL -L $CURLQ "$1"
 }
+
 # download to default name of to $2
 sget()
 {
@@ -8781,14 +8796,21 @@ if echo "$1" | grep -q "^https://github.com/" && ! echo "$1" | grep -q "/release
     MASK="$2"
 
     if [ -n "$LISTONLY" ] ; then
-        get_github_urls "$1" | filter_glob "$MASK" | filter_order
+        fn=''
+        for fn in $(get_github_urls "$1" | filter_glob "$MASK" | filter_order) ; do
+            echo "$fn"
+        done
+        test -n "$fn"
         return
     fi
 
+    ERROR=0
+    fn=''
     for fn in $(get_github_urls "$1" | filter_glob "$MASK" | filter_order) ; do
         sget "$fn" || ERROR=1
     done
-    return
+    test -n "$fn" || ERROR=1
+     return $ERROR
 fi
 
 
@@ -8824,17 +8846,21 @@ get_urls()
 }
 
 if [ -n "$LISTONLY" ] ; then
+    fn=''
     for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
         # TODO: return full url? someone use old behaviour?
         echo "$(basename "$fn")"
     done
+    test -n "$fn"
     return
 fi
 
 ERROR=0
+fn=''
 for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
     sget "$URL/$(basename "$fn")" || ERROR=1
 done
+test -n "$fn" || ERROR=1
  return $ERROR
 
 }
@@ -9394,7 +9420,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.9.4  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.9.6  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2020"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -9404,7 +9430,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.9.4
+EPMVERSION=3.9.6
 verbose=
 quiet=
 nodeps=

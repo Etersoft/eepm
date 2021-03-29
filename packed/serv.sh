@@ -1784,6 +1784,11 @@ get_core_count()
     echo $detected
 }
 
+get_core_mhz()
+{
+    cat /proc/cpuinfo | grep "cpu MHz" | head -n1 | cut -d':' -f2 | cut -d' ' -f2 | cut -d'.' -f1
+}
+
 
 get_virt()
 {
@@ -1837,7 +1842,7 @@ Pretty distro name (--pretty): $(print_pretty_name)
  Package manager/type (-g/-p): $(pkgmanager) / $(pkgtype)
  Running service manager (-y): $(get_service_manager)
           Virtualization (-i): $(get_virt)
-               CPU Cores (-c): $(get_core_count)
+        CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_core_mhz) MHz
         CPU Architecture (-a): $(get_arch)
  CPU norm register size  (-b): $(get_bit_size)
  System memory size (MB) (-m): $(get_memory_size)
@@ -1858,6 +1863,7 @@ case $1 in
 		echo " -a - print hardware architecture (--distro-arch for distro depended name)"
 		echo " -b - print size of arch bit (32/64)"
 		echo " -c - print number of CPU cores"
+		echo " -z - print current CPU MHz"
 		echo " -d - print distro name"
 		echo " -e - print full name of distro with version"
 		echo " -i - print virtualization type"
@@ -1913,6 +1919,9 @@ case $1 in
 		;;
 	-c)
 		get_core_count
+		;;
+	-z)
+		get_core_mhz
 		;;
 	-i)
 		get_virt
@@ -2030,6 +2039,7 @@ scat()
 {
     $CURL -L $CURLQ "$1"
 }
+
 # download to default name of to $2
 sget()
 {
@@ -2124,14 +2134,21 @@ if echo "$1" | grep -q "^https://github.com/" && ! echo "$1" | grep -q "/release
     MASK="$2"
 
     if [ -n "$LISTONLY" ] ; then
-        get_github_urls "$1" | filter_glob "$MASK" | filter_order
+        fn=''
+        for fn in $(get_github_urls "$1" | filter_glob "$MASK" | filter_order) ; do
+            echo "$fn"
+        done
+        test -n "$fn"
         return
     fi
 
+    ERROR=0
+    fn=''
     for fn in $(get_github_urls "$1" | filter_glob "$MASK" | filter_order) ; do
         sget "$fn" || ERROR=1
     done
-    return
+    test -n "$fn" || ERROR=1
+     return $ERROR
 fi
 
 
@@ -2167,17 +2184,21 @@ get_urls()
 }
 
 if [ -n "$LISTONLY" ] ; then
+    fn=''
     for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
         # TODO: return full url? someone use old behaviour?
         echo "$(basename "$fn")"
     done
+    test -n "$fn"
     return
 fi
 
 ERROR=0
+fn=''
 for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
     sget "$URL/$(basename "$fn")" || ERROR=1
 done
+test -n "$fn" || ERROR=1
  return $ERROR
 
 }
@@ -2803,7 +2824,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.9.4  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.9.6  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2019"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
