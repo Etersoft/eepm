@@ -2,6 +2,8 @@
 
 [ "$1" != "--run" ] && echo "Install php7 (or upgrade from php5)" && exit
 
+[ "$($DISTRVENDOR -d)" != "ALTLinux" ] && echo "Only ALTLinux is supported" && exit 1
+
 if epmqp --quiet php5- ; then
     # Upgrade if was installed php5
     epmqp php5 --short | grep -E -v "(php5-mysql|suhosin|timezonedb|zend-optimizer|mongo|xdebug|openid)" | sed -e "s|php5|php7|" | epmi --auto
