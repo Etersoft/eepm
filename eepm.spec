@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.9.5
+Version: 3.9.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,12 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Tue Mar 30 2021 Vitaly Lipatov <lav@altlinux.ru> 3.9.6-alt1
+- tools_eget: improve error handling
+- fix spotify-client repack (ALT bug 39817)
+- fix install zoom on ALTLinux i586
+- epm-print constructname: fix bashism
+
 * Sat Mar 27 2021 Vitaly Lipatov <lav@altlinux.ru> 3.9.5-alt1
 - distr_info: add -z for print current CPU MHz
 - epm-remove: fix remove skipping on failed deps
