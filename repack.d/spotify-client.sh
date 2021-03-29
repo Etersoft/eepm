@@ -26,5 +26,6 @@ for i in 16 22 24 32 48 64 128 256 ; do
     cp $BUILDROOT/$LIBDIR/$PRODUCT/icons/spotify-linux-$i.png $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/$PRODUCT.png
 done
 
-REQUIRES="libcurl-gnutls"
-subst "s|^\(Name: .*\)$|# Converted from original package requires\nRequires:$REQUIRES\n\1|g" $SPEC
+#subst "s|^\(Name: .*\)$|# Converted from original package requires\nRequires:$REQUIRES\n\1|g" $SPEC
+
+epm install --skip-installed libcurl4-gnutls
