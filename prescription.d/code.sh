@@ -31,8 +31,11 @@ case "$arch" in
         ;;
 esac
 
+
+pkgtype="$($DISTRVENDOR -p)"
+
 # we have workaround for their postinstall script, so always repack rpm package
-[ "$($DISTRVENDOR -p)" = "deb" ] || repack='--repack'
+[ "$pkgtype" = "deb" ] || repack='--repack'
 
 PKG=/tmp/$PKGNAME.$pkgtype
 # TODO: wget does not support:  Content-Disposition: attachment; filename="code-1.52.1-1608137084.el7.x86_64.rpm"
