@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.9.7
+Version: 3.9.8
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,11 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Mon Apr 05 2021 Vitaly Lipatov <lav@altlinux.ru> 3.9.8-alt1
+- assistant.sh: upgrade to 4.2, preinstall fontconfig-disable-type1-font-for-assistant
+- epm-print: fix constructname
+- distr_info: fix c9f1 detection
+
 * Tue Mar 30 2021 Vitaly Lipatov <lav@altlinux.ru> 3.9.7-alt1
 - play code.sh: fix code download
 
