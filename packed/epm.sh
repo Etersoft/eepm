@@ -3755,11 +3755,12 @@ construct_name()
     local arch="$3"
     local pkgtype="$4"
     local ds="$5"
-    local pds="$ds"
+    local pds
 
     [ -n "$arch" ] || arch="$($DISTRVENDOR --distro-arch)"
     [ -n "$pkgtype" ] || pkgtype="$($DISTRVENDOR -p)"
     [ -n "$ds" ] || ds=$(get_pkg_name_delimiter $pkgtype)
+    pds="$ds"
     [ "$pds" = "-" ] && pds="."
     [ -n "$version" ] && version="$ds$version"
     echo "${name}${version}${pds}$arch.$pkgtype"
@@ -8066,8 +8067,9 @@ if distro altlinux-release ; then
 	elif has "ALT c8 " ; then DISTRIB_RELEASE="c8"
 	elif has "ALT c8.1 " ; then DISTRIB_RELEASE="c8.1"
 	elif has "ALT c8.2 " ; then DISTRIB_RELEASE="c8.2"
-	elif has "ALT .*8.[0-9]" ; then DISTRIB_RELEASE="p8"
 	elif has "ALT .*9.[0-9]" ; then DISTRIB_RELEASE="p9"
+	elif has "ALT .*8.[0-9]" ; then DISTRIB_RELEASE="p8"
+	elif has "ALT c9f1" ; then DISTRIB_RELEASE="c9f1"
 	elif has "ALT p9.* p9 " ; then DISTRIB_RELEASE="p9"
 	elif has "Simply Linux 6." ; then DISTRIB_RELEASE="p6"
 	elif has "Simply Linux 7." ; then DISTRIB_RELEASE="p7"
@@ -9420,7 +9422,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.9.6  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.9.8  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2020"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -9430,7 +9432,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.9.6
+EPMVERSION=3.9.8
 verbose=
 quiet=
 nodeps=
