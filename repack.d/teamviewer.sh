@@ -48,3 +48,6 @@ subst "s|.*/opt/teamviewer/tv_bin/xdg-utils.*||" $SPEC
 
 rm -rfv $BUILDROOT/opt/teamviewer/tv_bin/script/teamviewerd.sysv
 subst "s|.*/opt/teamviewer/tv_bin/script/teamviewerd.sysv.*||" $SPEC
+
+# see https://bugzilla.altlinux.org/show_bug.cgi?id=39891
+subst '1i%filter_from_requires /^\\/bin\\/ip/d' $SPEC
