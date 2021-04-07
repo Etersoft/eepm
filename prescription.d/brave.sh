@@ -7,7 +7,7 @@ fatal()
     exit 1
 }
 
-PKGNAME=brave-browser-nightly
+PKGNAME=brave-browser
 
 if [ "$1" = "--remove" ] ; then
     epm remove $PKGNAME
