@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.9.8
+Version: 3.9.9
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,10 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Sat Apr 10 2021 Vitaly Lipatov <lav@altlinux.ru> 3.9.9-alt1
+- repack.d/teamviewer.sh: drop /bin/ip require (see ALT bug 39891)
+- prescription.d/brave.sh: fix downloading (ALT bug 39818)
+
 * Mon Apr 05 2021 Vitaly Lipatov <lav@altlinux.ru> 3.9.8-alt1
 - assistant.sh: upgrade to 4.2, preinstall fontconfig-disable-type1-font-for-assistant
 - epm-print: fix constructname
