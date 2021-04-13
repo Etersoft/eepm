@@ -22,3 +22,10 @@ fi
 
 # epm uses eget to download * names
 epm install "https://repo.yandex.ru/yandex-browser/deb/pool/main/y/yandex-browser-beta/$(epm print constructname $PKGNAME "*" amd64 deb)"
+
+echo
+echo '
+You can run
+ # /opt/yandex/browser-beta/update-ffmpeg
+to download and install libffmpeg.so with proprietary codecs from chromium-codecs-ffmpeg-extra package
+'
