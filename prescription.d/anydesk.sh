@@ -28,16 +28,21 @@ case $arch in
         fatal "Unsupported arch $arch for $($DISTRVENDOR -d)"
 esac
 
-#if [ "$($DISTRVENDOR -d)" = "ALTLinux" ] ; then
-#    epm install https://zoom.us/client/latest/zoom_$arch.rpm
-#    exit
-#fi
-
-# https://download.anydesk.com/linux/anydesk_6.0.1-1_x86_64.rpm?
-PKG="https://download.anydesk.com/linux/$(epm print constructname $PKGNAME "6.0.1-1" $arch "" "_")"
-
+VERSION=6.0.1
+# el8 build contains libpangx inside
+REL=1.el8
 # we have workaround for their postinstall script, so always repack rpm package
 repack=''
-[ "$($DISTRVENDOR -p)" = "deb" ] || repack='--repack'
+[ "$($DISTRVENDOR -p)" = "deb" ] && REL=1 || repack='--repack'
+
+# https://download.anydesk.com/linux/anydesk-6.0.1-1.el8.x86_64.rpm
+# https://download.anydesk.com/linux/anydesk_6.0.1-1_i386.deb
+PKG="https://download.anydesk.com/linux/$(epm print constructname $PKGNAME "$VERSION-$REL" $arch)"
 
 epm $repack install "$PKG"
+
+echo
+echo "Note: run
+# serv anydesk on
+to enable needed anydesk system service
+"
