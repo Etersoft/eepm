@@ -28,9 +28,9 @@ case $arch in
         fatal "Unsupported arch $arch for $($DISTRVENDOR -d)"
 esac
 
-VERSION=6.0.1
+VERSION=*
 # el8 build contains libpangx inside
-REL=1.el8
+REL=*.el8
 # we have workaround for their postinstall script, so always repack rpm package
 repack=''
 [ "$($DISTRVENDOR -p)" = "deb" ] && REL=1 || repack='--repack'
