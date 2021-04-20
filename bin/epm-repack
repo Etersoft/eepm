@@ -86,12 +86,12 @@ __epm_check_if_try_install_rpm()
 }
 
 
-# args: buildroot spec
+# args: pkgname buildroot spec
 __fix_spec()
 {
-    local buildroot="$1"
-    local spec="$2"
-    local pkgname="$3"
+    local pkgname="$1"
+    local buildroot="$2"
+    local spec="$3"
     local i
 
     # drop forbidded paths
@@ -140,6 +140,7 @@ EOF
 }
 
 
+# args: pkgname buildroot spec
 __apply_fix_code()
 {
     local repackcode="$CONFIGDIR/repack.d/$1.sh"
@@ -221,7 +222,7 @@ __epm_repack_to_rpm()
         mv $spec $tmpbuilddir || fatal
         spec="$tmpbuilddir/$(basename "$spec")"
         local pkgname="$(grep "^Name: " $spec | sed -e "s|Name: ||g" | head -n1)"
-        __fix_spec $tmpbuilddir/$subdir $spec $pkgname
+        __fix_spec $pkgname $tmpbuilddir/$subdir $spec
         __apply_fix_code $pkgname $tmpbuilddir/$subdir $spec
         # TODO: we need these dirs to be created
         to_remove_pkg_dirs="$to_remove_pkg_dirs $HOME/RPM/BUILD $HOME/RPM"
