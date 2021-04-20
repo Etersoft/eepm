@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.9.9
+Version: 3.9.10
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,12 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Tue Apr 20 2021 Vitaly Lipatov <lav@altlinux.ru> 3.9.10-alt1
+- rewrite anydesk install to use RHEL8 build
+- yandex-browser.sh: add instruction about libffmpeg.so install
+- epm-repack: run repack.d/common.sh before repack.d/script.sh
+- add repack.d/common.sh: move dist-packages to site-packages for python modules in /usr/lib
+
 * Sat Apr 10 2021 Vitaly Lipatov <lav@altlinux.ru> 3.9.9-alt1
 - repack.d/teamviewer.sh: drop /bin/ip require (see ALT bug 39891)
 - prescription.d/brave.sh: fix downloading (ALT bug 39818)
