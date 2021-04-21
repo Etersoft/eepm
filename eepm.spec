@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.9.10
+Version: 3.9.11
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,12 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Thu Apr 22 2021 Vitaly Lipatov <lav@altlinux.ru> 3.9.11-alt1
+- prescription.d/anydesk.sh: use latest version
+- epm play: add Autodesk EAGLE install
+- epm repack: add support for install any tarball, keep name and version
+- epm play: add Telegram Desktop
+
 * Tue Apr 20 2021 Vitaly Lipatov <lav@altlinux.ru> 3.9.10-alt1
 - rewrite anydesk install to use RHEL8 build
 - yandex-browser.sh: add instruction about libffmpeg.so install
