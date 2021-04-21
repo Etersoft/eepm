@@ -85,6 +85,15 @@ __epm_check_if_try_install_rpm()
 	return 0
 }
 
+# $spec $PKGNAME $VERSION
+__set_name_version()
+{
+    SPEC="$1"
+    PKGNAME="$2"
+    VERSION="$3"
+    [ -n "$PKGNAME" ] && subst "s|^Name:.*|Name: $PKGNAME|" $SPEC
+    [ -n "$VERSION" ] && subst "s|^Version:.*|Version: $VERSION|" $SPEC
+}
 
 # args: pkgname buildroot spec
 __fix_spec()
@@ -123,6 +132,7 @@ __fix_spec()
     # FIXME: where is a source of the bug with empty Summary?
     subst "s|Summary: *$|Summary: $pkgname (was empty Summary after alien)|" $spec
     subst "s|^Release: |Release: alt1.repacked.with.epm.|" $spec
+    subst "s|^Distribution:.*||" $SPEC
     subst "s|^\((Converted from a\) \(.*\) \(package.*\)|(Repacked from binary \2 package with epm $EPMVERSION)\n\1 \2 \3|" $spec
     #" hack for highlight
 }
@@ -203,9 +213,35 @@ __epm_repack_to_rpm()
         # TODO: epm print name from deb package
         # TODO: use stoplist only for deb?
         [ -z "$force" ] && __check_stoplist $(echo $alpkg | sed -e "s|_.*||") && fatal "Please use official rpm package instead of $alpkg (It is not recommended to use --force to skip this checking."
+
         # don't use abs package path: copy package to temp dir and use there
         cp $verbose $pkg $tmpbuilddir/../$alpkg
-        cd $tmpbuilddir || fatal
+
+        cd $tmpbuilddir/../ || fatal
+
+        PKGNAME=''
+        VERSION=''
+        # convert tarballs to tar (for alien)
+        if ! echo "$pkg" | grep -q "\.rpm" && ! echo "$pkg" | grep -q "\.deb" ; then
+            VERSION="$(echo "$alpkg" | grep -o -P "([0-9])(\.[0-9])*" | head -n1)" #"
+            if [ -n "$VERSION" ] ; then
+                PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
+                pkgtype="$(a= erc type $alpkg)"
+                [ -n "$PKGNAME" ] || PKGNAME=$(basename $alpkg .$pkgtype)
+                if [ "$pkgtype" = "tar" ] || [ "$pkgtype" = "tar.gz" ] || [ "$pkgtype" = "tgz" ] ; then
+                    :
+                else
+                    newalpkg=$(basename $alpkg .$pkgtype).tar
+                    assure_exists erc || fatal
+                    a= erc repack $alpkg $newalpkg || fatal
+                    rm -fv $alpkg
+                    alpkg=$newalpkg
+                fi
+            fi
+        fi
+
+        cd $tmpbuilddir/ || fatal
+
         if [ -n "$verbose" ] ; then
             docmd fakeroot alien --generate --to-rpm $verbose $scripts "../$alpkg" || fatal
         else
@@ -221,7 +257,12 @@ __epm_repack_to_rpm()
         [ -s "$spec" ] || fatal "can't find spec"
         mv $spec $tmpbuilddir || fatal
         spec="$tmpbuilddir/$(basename "$spec")"
+        __set_name_version $spec $PKGNAME $VERSION
         local pkgname="$(grep "^Name: " $spec | sed -e "s|Name: ||g" | head -n1)"
+
+        # for tarballs fix permissions
+        [ -n "$VERSION" ] && chmod -R a+rX $tmpbuilddir/$subdir/*
+
         __fix_spec $pkgname $tmpbuilddir/$subdir $spec
         __apply_fix_code "common" $tmpbuilddir/$subdir $spec
         __apply_fix_code $pkgname $tmpbuilddir/$subdir $spec
