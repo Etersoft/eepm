@@ -2166,7 +2166,7 @@ if echo "$1" | grep -q "^ftp://" ; then
 fi
 
 # drop mask part
-URL="$(dirname "$1")/"
+URL="$(dirname "$1")"
 
 if echo "$URL" | grep -q "[*?]" ; then
     fatal "Error: there are globbing symbols (*?) in $URL"
@@ -2180,15 +2180,15 @@ fi
 
 get_urls()
 {
-    scat $URL | \
-        grep -i -o -E 'href="([^\*/"#]+)"' | cut -d'"' -f2
+    scat $URL/ | \
+        grep -i -o -P 'href="(.*?)"' | cut -d'"' -f2 | sed -e "s|^./||"
 }
 
 if [ -n "$LISTONLY" ] ; then
     fn=''
     for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
         # TODO: return full url? someone use old behaviour?
-        echo "$(basename "$fn")"
+        echo "$fn" | sed -e "s|$URL/||"
     done
     test -n "$fn"
     return
@@ -2197,7 +2197,8 @@ fi
 ERROR=0
 fn=''
 for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
-    sget "$URL/$(basename "$fn")" || ERROR=1
+    echo "$fn" | grep -q "://" && furl=$fn || furl="$URL/$fn"
+    sget "$furl" || ERROR=1
 done
 test -n "$fn" || ERROR=1
  return $ERROR
@@ -2825,7 +2826,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.9.9  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.9.11  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2019"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

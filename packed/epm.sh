@@ -5599,12 +5599,20 @@ __epm_check_if_try_install_rpm()
 	return 0
 }
 
+__set_name_version()
+{
+    SPEC="$1"
+    PKGNAME="$2"
+    VERSION="$3"
+    [ -n "$PKGNAME" ] && subst "s|^Name:.*|Name: $PKGNAME|" $SPEC
+    [ -n "$VERSION" ] && subst "s|^Version:.*|Version: $VERSION|" $SPEC
+}
 
 __fix_spec()
 {
-    local buildroot="$1"
-    local spec="$2"
-    local pkgname="$3"
+    local pkgname="$1"
+    local buildroot="$2"
+    local spec="$3"
     local i
 
     # drop forbidded paths
@@ -5636,6 +5644,7 @@ __fix_spec()
     # FIXME: where is a source of the bug with empty Summary?
     subst "s|Summary: *$|Summary: $pkgname (was empty Summary after alien)|" $spec
     subst "s|^Release: |Release: alt1.repacked.with.epm.|" $spec
+    subst "s|^Distribution:.*||" $SPEC
     subst "s|^\((Converted from a\) \(.*\) \(package.*\)|(Repacked from binary \2 package with epm $EPMVERSION)\n\1 \2 \3|" $spec
     #" hack for highlight
 }
@@ -5713,9 +5722,35 @@ __epm_repack_to_rpm()
         # TODO: epm print name from deb package
         # TODO: use stoplist only for deb?
         [ -z "$force" ] && __check_stoplist $(echo $alpkg | sed -e "s|_.*||") && fatal "Please use official rpm package instead of $alpkg (It is not recommended to use --force to skip this checking."
+
         # don't use abs package path: copy package to temp dir and use there
         cp $verbose $pkg $tmpbuilddir/../$alpkg
-        cd $tmpbuilddir || fatal
+
+        cd $tmpbuilddir/../ || fatal
+
+        PKGNAME=''
+        VERSION=''
+        # convert tarballs to tar (for alien)
+        if ! echo "$pkg" | grep -q "\.rpm" && ! echo "$pkg" | grep -q "\.deb" ; then
+            VERSION="$(echo "$alpkg" | grep -o -P "([0-9])(\.[0-9])*" | head -n1)" #"
+            if [ -n "$VERSION" ] ; then
+                PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
+                pkgtype="$(a= erc type $alpkg)"
+                [ -n "$PKGNAME" ] || PKGNAME=$(basename $alpkg .$pkgtype)
+                if [ "$pkgtype" = "tar" ] || [ "$pkgtype" = "tar.gz" ] || [ "$pkgtype" = "tgz" ] ; then
+                    :
+                else
+                    newalpkg=$(basename $alpkg .$pkgtype).tar
+                    assure_exists erc || fatal
+                    a= erc repack $alpkg $newalpkg || fatal
+                    rm -fv $alpkg
+                    alpkg=$newalpkg
+                fi
+            fi
+        fi
+
+        cd $tmpbuilddir/ || fatal
+
         if [ -n "$verbose" ] ; then
             docmd fakeroot alien --generate --to-rpm $verbose $scripts "../$alpkg" || fatal
         else
@@ -5731,8 +5766,14 @@ __epm_repack_to_rpm()
         [ -s "$spec" ] || fatal "can't find spec"
         mv $spec $tmpbuilddir || fatal
         spec="$tmpbuilddir/$(basename "$spec")"
+        __set_name_version $spec $PKGNAME $VERSION
         local pkgname="$(grep "^Name: " $spec | sed -e "s|Name: ||g" | head -n1)"
-        __fix_spec $tmpbuilddir/$subdir $spec $pkgname
+
+        # for tarballs fix permissions
+        [ -n "$VERSION" ] && chmod -R a+rX $tmpbuilddir/$subdir/*
+
+        __fix_spec $pkgname $tmpbuilddir/$subdir $spec
+        __apply_fix_code "common" $tmpbuilddir/$subdir $spec
         __apply_fix_code $pkgname $tmpbuilddir/$subdir $spec
         # TODO: we need these dirs to be created
         to_remove_pkg_dirs="$to_remove_pkg_dirs $HOME/RPM/BUILD $HOME/RPM"
@@ -8829,7 +8870,7 @@ if echo "$1" | grep -q "^ftp://" ; then
 fi
 
 # drop mask part
-URL="$(dirname "$1")/"
+URL="$(dirname "$1")"
 
 if echo "$URL" | grep -q "[*?]" ; then
     fatal "Error: there are globbing symbols (*?) in $URL"
@@ -8843,15 +8884,15 @@ fi
 
 get_urls()
 {
-    scat $URL | \
-        grep -i -o -E 'href="([^\*/"#]+)"' | cut -d'"' -f2
+    scat $URL/ | \
+        grep -i -o -P 'href="(.*?)"' | cut -d'"' -f2 | sed -e "s|^./||"
 }
 
 if [ -n "$LISTONLY" ] ; then
     fn=''
     for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
         # TODO: return full url? someone use old behaviour?
-        echo "$(basename "$fn")"
+        echo "$fn" | sed -e "s|$URL/||"
     done
     test -n "$fn"
     return
@@ -8860,7 +8901,8 @@ fi
 ERROR=0
 fn=''
 for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
-    sget "$URL/$(basename "$fn")" || ERROR=1
+    echo "$fn" | grep -q "://" && furl=$fn || furl="$URL/$fn"
+    sget "$furl" || ERROR=1
 done
 test -n "$fn" || ERROR=1
  return $ERROR
@@ -9422,7 +9464,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.9.9  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.9.11  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2020"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -9432,7 +9474,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.9.9
+EPMVERSION=3.9.11
 verbose=
 quiet=
 nodeps=
