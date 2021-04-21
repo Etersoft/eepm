@@ -10,10 +10,8 @@ PRODUCT=eagle
 
 # move package to /opt
 ROOTDIR=$(basename $(find $BUILDROOT -mindepth 1 -maxdepth 1 -type d))
-VERSION="$(echo $ROOTDIR | sed -e "s|^$PRODUCT-||")"
-subst "s|^Version: 1$|Version: $VERSION|" $SPEC
 subst "s|^License: unknown$|License: Freeware|" $SPEC
-subst "s|^Distribution:.*||" $SPEC
+subst "s|^Summary:.*|Summary: EAGLE is electronic design automation (EDA) software that lets printed circuit board (PCB)|" $SPEC
 
 mkdir $BUILDROOT/opt
 mv $BUILDROOT/$ROOTDIR $BUILDROOT/opt/$PRODUCT
@@ -24,14 +22,11 @@ mkdir -p $BUILDROOT/usr/bin/
 ln -s /opt/$PRODUCT/eagle $BUILDROOT/usr/bin/$PRODUCT
 subst "s|%files|%files\n/usr/bin/$PRODUCT|" $SPEC
 
-# fix permissions
-chmod -Rv a+rX $BUILDROOT/*
-
 # create desktop file
 mkdir -p $BUILDROOT/usr/share/applications/
 cat <<EOF >$BUILDROOT/usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]
-Version=$VERSION
+Version=1.0
 Type=Application
 Terminal=false
 Name=EAGLE

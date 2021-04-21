@@ -19,12 +19,9 @@ fi
 [ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
 VERSION=9.6.2
-TGZ="https://trial2.autodesk.com/NET17SWDLD/2017/EGLPRM/ESD/Autodesk_EAGLE_${VERSION}_English_Linux_64bit.tar.gz"
-PKG=/tmp/$PKGNAME.tar.gz
-$EGET -O $PKG $TGZ || exit
+PKGURL="https://trial2.autodesk.com/NET17SWDLD/2017/EGLPRM/ESD/Autodesk_EAGLE_${VERSION}_English_Linux_64bit.tar.gz"
 
-epm install --repack "$PKG" || exit
-rm -fv $PKG
+epm install --repack "$PKGURL"
 
 echo
 echo "
