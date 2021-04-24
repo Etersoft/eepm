@@ -100,6 +100,18 @@ __epm_restore_convert_to_rpm_notation()
     local equal="$1"
     local l
     while read l ; do
+        if echo "$l" | grep -q 'platform_python_implementation != "PyPy"' ; then
+            [ -n "$verbose" ] && warning "    $t is not PyPi requirement, skipped"
+            continue
+        fi
+        if echo "$l" | grep -q 'sys_platform == "darwin"' ; then
+            [ -n "$verbose" ] && warning "    $t is darwin only requirement, skipped"
+            continue
+        fi
+        if echo "$l" | grep -q 'sys_platform == "win32"' ; then
+            [ -n "$verbose" ] && warning "    $t is win32 only requirement, skipped"
+            continue
+        fi
         if echo "$l" | grep -q "; *python_version *< *['\"]3" ; then
             [ -n "$verbose" ] && warning "    $t is python2 only requirement, skipped"
             continue
