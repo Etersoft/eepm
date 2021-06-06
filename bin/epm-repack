@@ -316,6 +316,7 @@ __epm_check_if_try_install_deb()
 
 epm_repack()
 {
+    local CURDIR="$(pwd)"
     # if possible, it will put pkg_urls into pkg_files and reconstruct pkg_filenames
     if [ -n "$pkg_urls" ] ; then
         load_helper epm-download
@@ -330,7 +331,7 @@ epm_repack()
             __epm_repack_to_rpm $pkg_files || fatal
             echo
             echo "Adapted packages:"
-            cp $repacked_rpms .
+            cp $repacked_rpms "$CURDIR"
             for i in $repacked_rpms ; do
                 echo "	$(pwd)/$(basename "$i")"
             done
