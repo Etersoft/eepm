@@ -289,7 +289,9 @@ __switch_alt_to_distro()
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			info "Workaround for https://bugzilla.altlinux.org/show_bug.cgi?id=35492 ..."
-			docmd epm remove gdb || fatal
+			if epm installed gdb >/dev/null ; then
+				docmd epm remove gdb || fatal
+			fi
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
