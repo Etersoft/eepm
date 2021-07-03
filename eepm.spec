@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.9.11
+Version: 3.9.12
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,14 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Sun Jul 04 2021 Vitaly Lipatov <lav@altlinux.ru> 3.9.12-alt1
+- epm-restore: add skip unrelated requires
+- release_upgrade: fix gdb removing
+- repack: fix copying to the place (ALT bug 40347)
+- prescription.d/zoom.sh: repack always (ALT bug 40367)
+- prescription.d/telegram.sh: download stable version if latest has no binary (ALT bug 40368)
+- epm-assure: return error from apt (ALT bug 40202)
+
 * Thu Apr 22 2021 Vitaly Lipatov <lav@altlinux.ru> 3.9.11-alt1
 - prescription.d/anydesk.sh: use latest version
 - epm play: add Autodesk EAGLE install
