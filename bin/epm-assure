@@ -96,9 +96,8 @@ epm_assure()
     #docmd epm --auto install $PACKAGE || return
     load_helper epm-install
     # TODO: HACK: DEBUG=1 for skip to_remove_pkg handling
-    (DEBUG=1 repack='' non_interactive=1 pkg_names="$PACKAGE" pkg_files='' pkg_urls='' epm_install )
+    (DEBUG=1 repack='' non_interactive=1 pkg_names="$PACKAGE" pkg_files='' pkg_urls='' epm_install ) || return
 
-    [ -n "$PACKAGEVERSION" ] || return 0
     # check if we couldn't update and still need update
     __epm_need_update $PACKAGE $PACKAGEVERSION && return 1
     return 0
