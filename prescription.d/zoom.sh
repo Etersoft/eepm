@@ -16,15 +16,15 @@ fi
 
 [ "$1" != "--run" ] && echo "Install Zoom client from the official site" && exit
 
+repack='--repack'
 arch=$($DISTRVENDOR --distro-arch)
 case $arch in
     x86_64|amd64)
         version=latest
-        repack=''
         arch=$arch ;;
     i586|i386)
+        # latest does not work
         version=5.4.53391.1108
-        repack='--repack'
         arch=i686 ;;
     *)
         fatal "Unsupported arch $arch for $($DISTRVENDOR -d)"
