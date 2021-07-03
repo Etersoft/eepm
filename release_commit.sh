@@ -14,3 +14,5 @@ git commit packed -m "commit packed $version"
 git tag -a "$version" -e -s -m "$(rpmlog -q --last-changelog ; echo)"
 git push pub.github $version
 gpush pub.github
+
+rpmpub /var/ftp/pub/Korinf/sources

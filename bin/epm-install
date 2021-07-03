@@ -536,6 +536,7 @@ epm_install()
     if [ "$DISTRNAME" = "ALTLinux" ] ; then
         if tasknumber "$pkg_names" >/dev/null ; then
             assure_exists apt-repo
+            # TODO: add --auto support
             sudocmd_foreach "apt-repo test" $(tasknumber $pkg_names)
             return
         fi
