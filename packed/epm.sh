@@ -551,6 +551,34 @@ has_space()
     estrlist has_space "$@"
 }
 
+# File bin/epm-Install:
+
+
+epm_Install()
+{
+    # copied from epm_install
+    local names="$(echo $pkg_names | filter_out_installed_packages)"
+    local files="$(echo $pkg_files | filter_out_installed_packages)"
+
+    [ -z "$files$names" ] && info "Install: Skip empty install list." && return 22
+
+    (pkg_filenames='' epm_update) || { [ -n "$force" ] || return ; }
+
+    epm_install_names $names || return
+
+    epm_install_files $files
+}
+
+# File bin/epm-Upgrade:
+
+
+epm_Upgrade()
+{
+	(pkg_filenames='' epm_update)
+
+	epm_upgrade
+}
+
 # File bin/epm-addrepo:
 
 
@@ -854,9 +882,8 @@ epm_assure()
     # can't be used in epm ei case
     #docmd epm --auto install $PACKAGE || return
     # TODO: HACK: DEBUG=1 for skip to_remove_pkg handling
-    (DEBUG=1 repack='' non_interactive=1 pkg_names="$PACKAGE" pkg_files='' pkg_urls='' epm_install )
+    (DEBUG=1 repack='' non_interactive=1 pkg_names="$PACKAGE" pkg_files='' pkg_urls='' epm_install ) || return
 
-    [ -n "$PACKAGEVERSION" ] || return 0
     # check if we couldn't update and still need update
     __epm_need_update $PACKAGE $PACKAGEVERSION && return 1
     return 0
@@ -1446,6 +1473,79 @@ esac
 
 }
 
+# File bin/epm-check_updated_repo:
+
+__is_repo_info_downloaded()
+{
+    case $PMTYPE in
+        apt-*)
+            if [ -r /var/cache/apt ] ; then
+                $SUDO test -r /var/cache/apt/pkgcache.bin || return
+            fi
+            ;;
+        *)
+            ;;
+    esac
+    return 0
+}
+
+__is_repo_info_uptodate()
+{
+    case $PMTYPE in
+        apt-*)
+            # apt-deb do not update lock file date
+            #if $SUDO test -r /var/lib/apt/lists ; then
+                local LOCKFILE=/var/lib/apt/lists
+                $SUDO test -r $LOCKFILE || return
+                # if repo older than 1 day, return false
+                # find print string if file is obsoleted
+                test -z "$(find $LOCKFILE -maxdepth 0 -mtime +1)" || return
+            #fi
+            ;;
+        *)
+            ;;
+    esac
+    return 0
+}
+
+update_repo_if_needed()
+{
+    # check if we need skip update checking
+    if [ "$1" = "soft" ] && [ -n "$SUDO" ] ; then
+        # if sudo requires a password, skip autoupdate
+        sudo -n true 2>/dev/null || { info "sudo requires a password, skip repo status checking" ; return 0 ; }
+    fi
+
+    cd / || fatal
+    if ! __is_repo_info_downloaded || ! __is_repo_info_uptodate ; then
+        # FIXME: cleans!!!
+        (pkg_filenames='' epm_update)
+    fi
+    cd - >/dev/null || fatal
+
+}
+
+save_installed_packages()
+{
+	[ -d /var/lib/rpm ] || return 0
+	estrlist list "$@" | $SUDO tee /var/lib/rpm/EPM-installed >/dev/null
+}
+
+check_manually_installed()
+{
+	[ -r /var/lib/rpm/EPM-installed ] || return 1
+	grep -q -- "^$1\$" /var/lib/rpm/EPM-installed
+}
+
+skip_manually_installed()
+{
+	local i
+	for i in "$@" ; do
+		check_manually_installed "$i" && continue
+		echo "$i"
+	done
+}
+
 # File bin/epm-checkpkg:
 
 __rpm_allows_nosignature()
@@ -1590,79 +1690,6 @@ if [ "$1" = "--debug" ] ; then
 	DISTRNAME=ALTLinux
 	epm_checksystem
 fi
-
-# File bin/epm-check_updated_repo:
-
-__is_repo_info_downloaded()
-{
-    case $PMTYPE in
-        apt-*)
-            if [ -r /var/cache/apt ] ; then
-                $SUDO test -r /var/cache/apt/pkgcache.bin || return
-            fi
-            ;;
-        *)
-            ;;
-    esac
-    return 0
-}
-
-__is_repo_info_uptodate()
-{
-    case $PMTYPE in
-        apt-*)
-            # apt-deb do not update lock file date
-            #if $SUDO test -r /var/lib/apt/lists ; then
-                local LOCKFILE=/var/lib/apt/lists
-                $SUDO test -r $LOCKFILE || return
-                # if repo older than 1 day, return false
-                # find print string if file is obsoleted
-                test -z "$(find $LOCKFILE -maxdepth 0 -mtime +1)" || return
-            #fi
-            ;;
-        *)
-            ;;
-    esac
-    return 0
-}
-
-update_repo_if_needed()
-{
-    # check if we need skip update checking
-    if [ "$1" = "soft" ] && [ -n "$SUDO" ] ; then
-        # if sudo requires a password, skip autoupdate
-        sudo -n true 2>/dev/null || { info "sudo requires a password, skip repo status checking" ; return 0 ; }
-    fi
-
-    cd / || fatal
-    if ! __is_repo_info_downloaded || ! __is_repo_info_uptodate ; then
-        # FIXME: cleans!!!
-        (pkg_filenames='' epm_update)
-    fi
-    cd - >/dev/null || fatal
-
-}
-
-save_installed_packages()
-{
-	[ -d /var/lib/rpm ] || return 0
-	estrlist list "$@" | $SUDO tee /var/lib/rpm/EPM-installed >/dev/null
-}
-
-check_manually_installed()
-{
-	[ -r /var/lib/rpm/EPM-installed ] || return 1
-	grep -q -- "^$1\$" /var/lib/rpm/EPM-installed
-}
-
-skip_manually_installed()
-{
-	local i
-	for i in "$@" ; do
-		check_manually_installed "$i" && continue
-		echo "$i"
-	done
-}
 
 # File bin/epm-clean:
 
@@ -3063,6 +3090,7 @@ epm_install()
     if [ "$DISTRNAME" = "ALTLinux" ] ; then
         if tasknumber "$pkg_names" >/dev/null ; then
             assure_exists apt-repo
+            # TODO: add --auto support
             sudocmd_foreach "apt-repo test" $(tasknumber $pkg_names)
             return
         fi
@@ -3127,24 +3155,6 @@ epm_install()
     fi
 
     return $RETVAL
-}
-
-# File bin/epm-Install:
-
-
-epm_Install()
-{
-    # copied from epm_install
-    local names="$(echo $pkg_names | filter_out_installed_packages)"
-    local files="$(echo $pkg_files | filter_out_installed_packages)"
-
-    [ -z "$files$names" ] && info "Install: Skip empty install list." && return 22
-
-    (pkg_filenames='' epm_update) || { [ -n "$force" ] || return ; }
-
-    epm_install_names $names || return
-
-    epm_install_files $files
 }
 
 # File bin/epm-install-emerge:
@@ -4864,7 +4874,9 @@ __switch_alt_to_distro()
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			info "Workaround for https://bugzilla.altlinux.org/show_bug.cgi?id=35492 ..."
-			docmd epm remove gdb || fatal
+			if epm installed gdb >/dev/null ; then
+				docmd epm remove gdb || fatal
+			fi
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
@@ -5825,6 +5837,7 @@ __epm_check_if_try_install_deb()
 
 epm_repack()
 {
+    local CURDIR="$(pwd)"
     # if possible, it will put pkg_urls into pkg_files and reconstruct pkg_filenames
     if [ -n "$pkg_urls" ] ; then
         __handle_pkg_urls_to_install
@@ -5838,7 +5851,7 @@ epm_repack()
             __epm_repack_to_rpm $pkg_files || fatal
             echo
             echo "Adapted packages:"
-            cp $repacked_rpms .
+            cp $repacked_rpms "$CURDIR"
             for i in $repacked_rpms ; do
                 echo "	$(pwd)/$(basename "$i")"
             done
@@ -6407,6 +6420,18 @@ __epm_restore_convert_to_rpm_notation()
     local equal="$1"
     local l
     while read l ; do
+        if echo "$l" | grep -q 'platform_python_implementation != "PyPy"' ; then
+            [ -n "$verbose" ] && warning "    $t is not PyPi requirement, skipped"
+            continue
+        fi
+        if echo "$l" | grep -q 'sys_platform == "darwin"' ; then
+            [ -n "$verbose" ] && warning "    $t is darwin only requirement, skipped"
+            continue
+        fi
+        if echo "$l" | grep -q 'sys_platform == "win32"' ; then
+            [ -n "$verbose" ] && warning "    $t is win32 only requirement, skipped"
+            continue
+        fi
         if echo "$l" | grep -q "; *python_version *< *['\"]3" ; then
             [ -n "$verbose" ] && warning "    $t is python2 only requirement, skipped"
             continue
@@ -7750,16 +7775,6 @@ epm_upgrade()
 
 }
 
-# File bin/epm-Upgrade:
-
-
-epm_Upgrade()
-{
-	(pkg_filenames='' epm_update)
-
-	epm_upgrade
-}
-
 # File bin/epm-whatdepends:
 
 
@@ -8069,7 +8084,7 @@ normalize_name()
 
 # Default values
 PRETTY_NAME=""
-DISTRIB_ID="Generic"
+DISTRIB_ID=""
 DISTRIB_RELEASE=""
 DISTRIB_CODENAME=""
 
@@ -8108,7 +8123,6 @@ if distro altlinux-release ; then
 	elif has "ALT c8 " ; then DISTRIB_RELEASE="c8"
 	elif has "ALT c8.1 " ; then DISTRIB_RELEASE="c8.1"
 	elif has "ALT c8.2 " ; then DISTRIB_RELEASE="c8.2"
-	elif has "ALT .*9.[0-9]" ; then DISTRIB_RELEASE="p9"
 	elif has "ALT .*8.[0-9]" ; then DISTRIB_RELEASE="p8"
 	elif has "ALT c9f1" ; then DISTRIB_RELEASE="c9f1"
 	elif has "ALT p9.* p9 " ; then DISTRIB_RELEASE="p9"
@@ -8125,7 +8139,7 @@ if distro altlinux-release ; then
 	elif has "ALT Linux 5.0" ; then DISTRIB_RELEASE="5.0"
 	elif has "ALT Linux 4.1" ; then DISTRIB_RELEASE="4.1"
 	elif has "ALT Linux 4.0" ; then DISTRIB_RELEASE="4.0"
-	elif has "starter kit"   ; then DISTRIB_RELEASE="p8"
+	elif has "starter kit"   ; then DISTRIB_RELEASE="Sisyphus"
 	elif has Citron   ; then DISTRIB_RELEASE="2.4"
 	fi
 	PRETTY_NAME="$(cat /etc/altlinux-release)"
@@ -8283,6 +8297,8 @@ elif [ "$(uname -o 2>/dev/null)" = "Cygwin" ] ; then
         DISTRIB_ID="Cygwin"
         DISTRIB_RELEASE="all"
 fi
+
+[ -n "$DISTRIB_ID" ] || DISTRIB_ID="Generic"
 
 if [ -z "$PRETTY_NAME" ] ; then
 	PRETTY_NAME="$DISTRIB_ID $DISTRIB_RELEASE"
@@ -9464,7 +9480,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.9.11  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.9.12  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2020"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -9474,7 +9490,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.9.11
+EPMVERSION=3.9.12
 verbose=
 quiet=
 nodeps=

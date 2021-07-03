@@ -1365,7 +1365,7 @@ normalize_name()
 
 # Default values
 PRETTY_NAME=""
-DISTRIB_ID="Generic"
+DISTRIB_ID=""
 DISTRIB_RELEASE=""
 DISTRIB_CODENAME=""
 
@@ -1404,7 +1404,6 @@ if distro altlinux-release ; then
 	elif has "ALT c8 " ; then DISTRIB_RELEASE="c8"
 	elif has "ALT c8.1 " ; then DISTRIB_RELEASE="c8.1"
 	elif has "ALT c8.2 " ; then DISTRIB_RELEASE="c8.2"
-	elif has "ALT .*9.[0-9]" ; then DISTRIB_RELEASE="p9"
 	elif has "ALT .*8.[0-9]" ; then DISTRIB_RELEASE="p8"
 	elif has "ALT c9f1" ; then DISTRIB_RELEASE="c9f1"
 	elif has "ALT p9.* p9 " ; then DISTRIB_RELEASE="p9"
@@ -1421,7 +1420,7 @@ if distro altlinux-release ; then
 	elif has "ALT Linux 5.0" ; then DISTRIB_RELEASE="5.0"
 	elif has "ALT Linux 4.1" ; then DISTRIB_RELEASE="4.1"
 	elif has "ALT Linux 4.0" ; then DISTRIB_RELEASE="4.0"
-	elif has "starter kit"   ; then DISTRIB_RELEASE="p8"
+	elif has "starter kit"   ; then DISTRIB_RELEASE="Sisyphus"
 	elif has Citron   ; then DISTRIB_RELEASE="2.4"
 	fi
 	PRETTY_NAME="$(cat /etc/altlinux-release)"
@@ -1579,6 +1578,8 @@ elif [ "$(uname -o 2>/dev/null)" = "Cygwin" ] ; then
         DISTRIB_ID="Cygwin"
         DISTRIB_RELEASE="all"
 fi
+
+[ -n "$DISTRIB_ID" ] || DISTRIB_ID="Generic"
 
 if [ -z "$PRETTY_NAME" ] ; then
 	PRETTY_NAME="$DISTRIB_ID $DISTRIB_RELEASE"
@@ -2826,7 +2827,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.9.11  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.9.12  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2019"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
