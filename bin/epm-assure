@@ -22,6 +22,7 @@ __check_command_in_path()
     PATH=$PATH:/sbin:/usr/sbin which "$1" 2>/dev/null
 }
 
+# returns TRUE if package version is omitted, or package is not installed, or version is too old
 __epm_need_update()
 {
     local PACKAGE="$1"
@@ -97,6 +98,9 @@ epm_assure()
     load_helper epm-install
     # TODO: HACK: DEBUG=1 for skip to_remove_pkg handling
     (DEBUG=1 repack='' non_interactive=1 pkg_names="$PACKAGE" pkg_files='' pkg_urls='' epm_install ) || return
+
+    # no check if we don't need a version
+    [ -n "$PACKAGEVERSION" ] || return 0
 
     # check if we couldn't update and still need update
     __epm_need_update $PACKAGE $PACKAGEVERSION && return 1
