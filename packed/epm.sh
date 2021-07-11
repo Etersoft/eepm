@@ -551,34 +551,6 @@ has_space()
     estrlist has_space "$@"
 }
 
-# File bin/epm-Install:
-
-
-epm_Install()
-{
-    # copied from epm_install
-    local names="$(echo $pkg_names | filter_out_installed_packages)"
-    local files="$(echo $pkg_files | filter_out_installed_packages)"
-
-    [ -z "$files$names" ] && info "Install: Skip empty install list." && return 22
-
-    (pkg_filenames='' epm_update) || { [ -n "$force" ] || return ; }
-
-    epm_install_names $names || return
-
-    epm_install_files $files
-}
-
-# File bin/epm-Upgrade:
-
-
-epm_Upgrade()
-{
-	(pkg_filenames='' epm_update)
-
-	epm_upgrade
-}
-
 # File bin/epm-addrepo:
 
 
@@ -883,6 +855,9 @@ epm_assure()
     #docmd epm --auto install $PACKAGE || return
     # TODO: HACK: DEBUG=1 for skip to_remove_pkg handling
     (DEBUG=1 repack='' non_interactive=1 pkg_names="$PACKAGE" pkg_files='' pkg_urls='' epm_install ) || return
+
+    # no check if we don't need a version
+    [ -n "$PACKAGEVERSION" ] || return 0
 
     # check if we couldn't update and still need update
     __epm_need_update $PACKAGE $PACKAGEVERSION && return 1
@@ -1473,79 +1448,6 @@ esac
 
 }
 
-# File bin/epm-check_updated_repo:
-
-__is_repo_info_downloaded()
-{
-    case $PMTYPE in
-        apt-*)
-            if [ -r /var/cache/apt ] ; then
-                $SUDO test -r /var/cache/apt/pkgcache.bin || return
-            fi
-            ;;
-        *)
-            ;;
-    esac
-    return 0
-}
-
-__is_repo_info_uptodate()
-{
-    case $PMTYPE in
-        apt-*)
-            # apt-deb do not update lock file date
-            #if $SUDO test -r /var/lib/apt/lists ; then
-                local LOCKFILE=/var/lib/apt/lists
-                $SUDO test -r $LOCKFILE || return
-                # if repo older than 1 day, return false
-                # find print string if file is obsoleted
-                test -z "$(find $LOCKFILE -maxdepth 0 -mtime +1)" || return
-            #fi
-            ;;
-        *)
-            ;;
-    esac
-    return 0
-}
-
-update_repo_if_needed()
-{
-    # check if we need skip update checking
-    if [ "$1" = "soft" ] && [ -n "$SUDO" ] ; then
-        # if sudo requires a password, skip autoupdate
-        sudo -n true 2>/dev/null || { info "sudo requires a password, skip repo status checking" ; return 0 ; }
-    fi
-
-    cd / || fatal
-    if ! __is_repo_info_downloaded || ! __is_repo_info_uptodate ; then
-        # FIXME: cleans!!!
-        (pkg_filenames='' epm_update)
-    fi
-    cd - >/dev/null || fatal
-
-}
-
-save_installed_packages()
-{
-	[ -d /var/lib/rpm ] || return 0
-	estrlist list "$@" | $SUDO tee /var/lib/rpm/EPM-installed >/dev/null
-}
-
-check_manually_installed()
-{
-	[ -r /var/lib/rpm/EPM-installed ] || return 1
-	grep -q -- "^$1\$" /var/lib/rpm/EPM-installed
-}
-
-skip_manually_installed()
-{
-	local i
-	for i in "$@" ; do
-		check_manually_installed "$i" && continue
-		echo "$i"
-	done
-}
-
 # File bin/epm-checkpkg:
 
 __rpm_allows_nosignature()
@@ -1690,6 +1592,79 @@ if [ "$1" = "--debug" ] ; then
 	DISTRNAME=ALTLinux
 	epm_checksystem
 fi
+
+# File bin/epm-check_updated_repo:
+
+__is_repo_info_downloaded()
+{
+    case $PMTYPE in
+        apt-*)
+            if [ -r /var/cache/apt ] ; then
+                $SUDO test -r /var/cache/apt/pkgcache.bin || return
+            fi
+            ;;
+        *)
+            ;;
+    esac
+    return 0
+}
+
+__is_repo_info_uptodate()
+{
+    case $PMTYPE in
+        apt-*)
+            # apt-deb do not update lock file date
+            #if $SUDO test -r /var/lib/apt/lists ; then
+                local LOCKFILE=/var/lib/apt/lists
+                $SUDO test -r $LOCKFILE || return
+                # if repo older than 1 day, return false
+                # find print string if file is obsoleted
+                test -z "$(find $LOCKFILE -maxdepth 0 -mtime +1)" || return
+            #fi
+            ;;
+        *)
+            ;;
+    esac
+    return 0
+}
+
+update_repo_if_needed()
+{
+    # check if we need skip update checking
+    if [ "$1" = "soft" ] && [ -n "$SUDO" ] ; then
+        # if sudo requires a password, skip autoupdate
+        sudo -n true 2>/dev/null || { info "sudo requires a password, skip repo status checking" ; return 0 ; }
+    fi
+
+    cd / || fatal
+    if ! __is_repo_info_downloaded || ! __is_repo_info_uptodate ; then
+        # FIXME: cleans!!!
+        (pkg_filenames='' epm_update)
+    fi
+    cd - >/dev/null || fatal
+
+}
+
+save_installed_packages()
+{
+	[ -d /var/lib/rpm ] || return 0
+	estrlist list "$@" | $SUDO tee /var/lib/rpm/EPM-installed >/dev/null
+}
+
+check_manually_installed()
+{
+	[ -r /var/lib/rpm/EPM-installed ] || return 1
+	grep -q -- "^$1\$" /var/lib/rpm/EPM-installed
+}
+
+skip_manually_installed()
+{
+	local i
+	for i in "$@" ; do
+		check_manually_installed "$i" && continue
+		echo "$i"
+	done
+}
 
 # File bin/epm-clean:
 
@@ -3155,6 +3130,24 @@ epm_install()
     fi
 
     return $RETVAL
+}
+
+# File bin/epm-Install:
+
+
+epm_Install()
+{
+    # copied from epm_install
+    local names="$(echo $pkg_names | filter_out_installed_packages)"
+    local files="$(echo $pkg_files | filter_out_installed_packages)"
+
+    [ -z "$files$names" ] && info "Install: Skip empty install list." && return 22
+
+    (pkg_filenames='' epm_update) || { [ -n "$force" ] || return ; }
+
+    epm_install_names $names || return
+
+    epm_install_files $files
 }
 
 # File bin/epm-install-emerge:
@@ -7775,6 +7768,16 @@ epm_upgrade()
 
 }
 
+# File bin/epm-Upgrade:
+
+
+epm_Upgrade()
+{
+	(pkg_filenames='' epm_update)
+
+	epm_upgrade
+}
+
 # File bin/epm-whatdepends:
 
 
@@ -9480,7 +9483,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.9.12  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.9.13  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2020"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -9490,7 +9493,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.9.12
+EPMVERSION=3.9.13
 verbose=
 quiet=
 nodeps=
