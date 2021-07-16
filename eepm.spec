@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.9.13
+Version: 3.9.14
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,9 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Fri Jul 16 2021 Vitaly Lipatov <lav@altlinux.ru> 3.9.14-alt1
+- repack: fix packing chrome-remote-desktop, hide it from epm play list (ALT bug 40492)
+
 * Sun Jul 11 2021 Vitaly Lipatov <lav@altlinux.ru> 3.9.13-alt1
 - epm play: add install chrome-remote-desktop
 - epm-assure: fix the result code (ALT bug 40391)
