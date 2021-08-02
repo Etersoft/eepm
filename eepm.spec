@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.9.14
+Version: 3.9.15
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,10 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Tue Aug 03 2021 Vitaly Lipatov <lav@altlinux.ru> 3.9.15-alt1
+- epm-repack: drop tilda from deb version
+- epm-release_upgrade: add support for p10
+
 * Fri Jul 16 2021 Vitaly Lipatov <lav@altlinux.ru> 3.9.14-alt1
 - repack: fix packing chrome-remote-desktop, hide it from epm play list (ALT bug 40492)
 
