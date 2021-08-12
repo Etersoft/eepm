@@ -6,7 +6,7 @@
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
 
-PROGVERSION="20210106"
+PROGVERSION="20210806"
 
 # TODO: check /etc/system-release
 
@@ -224,27 +224,31 @@ fi
 
 # ALT Linux based
 if distro altlinux-release ; then
-	# TODO: use os-release firsly
 	DISTRIB_ID="ALTLinux"
+	# FIXME: fast hack for fallback: 10 -> p10 for /etc/os-release
+	DISTRIB_RELEASE="p$DISTRIB_RELEASE"
 	if has Sisyphus ; then DISTRIB_RELEASE="Sisyphus"
+	elif has "ALT p10.* p10 " ; then DISTRIB_RELEASE="p10"
+	elif has "ALT c10.* c10 " ; then DISTRIB_RELEASE="c10"
+	elif has "ALT p9.* p9 " ; then DISTRIB_RELEASE="p9"
+	elif has "ALT 9 SP " ; then DISTRIB_RELEASE="c9"
+	elif has "ALT c9f1" ; then DISTRIB_RELEASE="c9f1"
+	elif has "ALT 8 SP " ; then DISTRIB_RELEASE="c8"
+	elif has "ALT c8.2 " ; then DISTRIB_RELEASE="c8.2"
+	elif has "ALT c8.1 " ; then DISTRIB_RELEASE="c8.1"
+	elif has "ALT c8 " ; then DISTRIB_RELEASE="c8"
+	elif has "ALT .*8.[0-9]" ; then DISTRIB_RELEASE="p8"
+	elif has "Simply Linux 10." ; then DISTRIB_RELEASE="p10"
+	elif has "Simply Linux 9." ; then DISTRIB_RELEASE="p9"
+	elif has "Simply Linux 8." ; then DISTRIB_RELEASE="p8"
+	elif has "Simply Linux 7." ; then DISTRIB_RELEASE="p7"
+	elif has "Simply Linux 6." ; then DISTRIB_RELEASE="p6"
+	elif has "ALT Linux p8"  ; then DISTRIB_RELEASE="p8"
+	elif has "ALT Linux 8." ; then DISTRIB_RELEASE="p8"
+	elif has "ALT Linux p7"  ; then DISTRIB_RELEASE="p7"
 	elif has "ALT Linux 7." ; then DISTRIB_RELEASE="p7"
 	elif has "ALT Linux t7." ; then DISTRIB_RELEASE="t7"
-	elif has "ALT Linux 8." ; then DISTRIB_RELEASE="p8"
-	elif has "ALT 8 SP " ; then DISTRIB_RELEASE="c8"
-	elif has "ALT 9 SP " ; then DISTRIB_RELEASE="c9"
-	elif has "ALT c8 " ; then DISTRIB_RELEASE="c8"
-	elif has "ALT c8.1 " ; then DISTRIB_RELEASE="c8.1"
-	elif has "ALT c8.2 " ; then DISTRIB_RELEASE="c8.2"
-	elif has "ALT .*8.[0-9]" ; then DISTRIB_RELEASE="p8"
-	elif has "ALT c9f1" ; then DISTRIB_RELEASE="c9f1"
-	elif has "ALT p9.* p9 " ; then DISTRIB_RELEASE="p9"
-	elif has "Simply Linux 6." ; then DISTRIB_RELEASE="p6"
-	elif has "Simply Linux 7." ; then DISTRIB_RELEASE="p7"
-	elif has "Simply Linux 8." ; then DISTRIB_RELEASE="p8"
-	elif has "Simply Linux 9." ; then DISTRIB_RELEASE="p9"
 	elif has "ALT Linux 6." ; then DISTRIB_RELEASE="p6"
-	elif has "ALT Linux p8"  ; then DISTRIB_RELEASE="p8"
-	elif has "ALT Linux p7"  ; then DISTRIB_RELEASE="p7"
 	elif has "ALT Linux p6"  ; then DISTRIB_RELEASE="p6"
 	elif has "ALT Linux p5"  ; then DISTRIB_RELEASE="p5"
 	elif has "ALT Linux 5.1" ; then DISTRIB_RELEASE="5.1"
