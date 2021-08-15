@@ -31,7 +31,7 @@ __epm_restore_print_comment()
 # https://bugzilla.altlinux.org/show_bug.cgi?id=39003
 __epm_filter_pip_to_rpm()
 {
-    tr "A-Z" "a-z" | sed -e "s|_|-|g" -e "s|^python[-_]||" \
+    tr "A-Z" "a-z" | sed -e "s|_|-|g" -e "s|^python[-_]||" -e "s|python$||" \
         -e "s|bs4|beautifulsoup4|" \
         -e "s|pillow|Pillow|" \
         -e "s|sqlalchemy|SQLAlchemy|" \
@@ -45,6 +45,7 @@ __epm_filter_pip_to_rpm()
         -e "s|pymacaroons|pymacaroons-pynacl|" \
         -e "s|pygments|Pygments|" \
         -e "s|memcached|memcache|" \
+        -e "s|pyinstaller||" \
         -e "s|pyopenssl|OpenSSL|"
 }
 
