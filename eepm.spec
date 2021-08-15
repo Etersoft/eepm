@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.9.15
+Version: 3.10.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,12 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Sun Aug 15 2021 Vitaly Lipatov <lav@altlinux.ru> 3.10.0-alt1
+- distro_info: fix p10 name
+- epm-release_upgrade: set distbranch priority before apt update
+- epm-release_upgrade: update-kernel -t std-def for p10
+- epm-release_upgrade: restore sources list on errors
+
 * Tue Aug 03 2021 Vitaly Lipatov <lav@altlinux.ru> 3.9.15-alt1
 - epm-repack: drop tilda from deb version
 - epm-release_upgrade: add support for p10
