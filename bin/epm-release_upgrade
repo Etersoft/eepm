@@ -29,6 +29,35 @@ confirm_info()
 
 }
 
+SAVELISTDIR=/tmp/eepm-release_upgrade
+__save_alt_repo_lists()
+{
+	info "Creating copy of all sources lists to $SAVELISTDIR ..."
+	local i
+	rm -rfv $SAVELISTDIR 2>/dev/null
+	mkdir -p $SAVELISTDIR/apt/ $SAVELISTDIR/apt/sources.list.d/
+	for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
+		[ -s "$i" ] || continue
+		local DD="$(echo "$i" | sed -e "s|/etc|$SAVELISTDIR|")"
+		cp -af $verbose "$i" "$DD" || fatal "Can't save apt source list files to $SAVELISTDIR"
+	done
+}
+
+__restore_alt_repo_lists()
+{
+	info "Some error. Restoring copy of all sources lists from $SAVELISTDIR ..."
+	local i
+	[ -d "$SAVELISTDIR/apt" ] || return 0
+	mkdir -p $SAVELISTDIR/apt/ $SAVELISTDIR/apt/sources.list.d/
+	for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
+		[ -s "$i" ] || continue
+		local DD="$(echo "$i" | sed -e "s|/etc|$SAVELISTDIR|")"
+		# restore only if there are differences
+		diff -q "$DD" "$i" >/dev/null | continue
+		mv $verbose "$DD" "$i" || warning "Can't restore $i file"
+	done
+}
+
 __replace_text_in_alt_repo()
 {
 	local i
@@ -239,6 +268,10 @@ __switch_alt_to_distro()
 	local FROM="$1"
 	info
 	[ -n "$TO" ] || TO="$(get_next_release $FROM)"
+
+	__save_alt_repo_lists
+	trap __restore_alt_repo_lists EXIT
+
 	case "$*" in
 		"p6"|"p6 p7"|"t6 p7"|"c6 c7")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
@@ -248,7 +281,6 @@ __switch_alt_to_distro()
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
 			docmd epm update-kernel
-			info "Done."
 			info "Run epm release-upgrade again for update to p8"
 			;;
 		"p7"|"p7 p8"|"t7 p8"|"c7 c8")
@@ -260,7 +292,7 @@ __switch_alt_to_distro()
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
 			__check_system
 			docmd epm update-kernel || fatal
-			info "Done."
+			info "Run epm release-upgrade again for update to p9"
 			;;
 		"c8"|"c8.1"|"c8.2"|"c8 c8.1"|"c8.1 c8.2"|"c8 c8.2")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
@@ -271,7 +303,6 @@ __switch_alt_to_distro()
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
 			__check_system
 			docmd epm update-kernel || fatal
-			info "Done."
 			;;
 		"p8 c8"|"p8 c8.1"|"p8 c8.2")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
@@ -287,7 +318,6 @@ __switch_alt_to_distro()
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
 			__check_system
 			docmd epm update-kernel || fatal
-			info "Done."
 			;;
 		"p8"|"p8 p9"|"t8 p9"|"c8 c9"|"c8 p9"|"c8.1 p9"|"c8.2 p9"|"p9 p9")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
@@ -302,7 +332,7 @@ __switch_alt_to_distro()
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
 			__check_system
 			docmd epm update-kernel || fatal
-			info "Done."
+			info "Run epm release-upgrade again for update to p10"
 			;;
 		"p9"|"p9 p10"|"p10 p10")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
@@ -314,7 +344,6 @@ __switch_alt_to_distro()
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
 			__check_system
 			docmd epm update-kernel -t std-def || fatal
-			info "Done."
 			;;
 		"p9 p8"|"c8.1 c8"|"c8.1 p8"|"p8 p8")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
@@ -329,7 +358,6 @@ __switch_alt_to_distro()
 			docmd epm downgrade
 			__check_system
 			docmd epm upgrade || fatal
-			info "Done."
 			;;
 		"p9 c8"|"p9 c8.1"|"p9 c8.2")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
@@ -344,7 +372,6 @@ __switch_alt_to_distro()
 			docmd epm downgrade
 			__check_system
 			docmd epm upgrade || fatal
-			info "Done."
 			;;
 		"p10 p9")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
@@ -356,7 +383,6 @@ __switch_alt_to_distro()
 			docmd epm downgrade
 			__check_system
 			docmd epm upgrade || fatal
-			info "Done."
 			;;
 		"Sisyphus p8"|"Sisyphus p9"|"Sisyphus p10"|"Sisyphus c8"|"Sisyphus c8.1")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
@@ -368,7 +394,6 @@ __switch_alt_to_distro()
 			docmd epm downgrade
 			__check_system
 			docmd epm upgrade || fatal
-			info "Done."
 			;;
 		"p8 Sisyphus"|"p9 Sisyphus"|"p10 Sisyphus"|"Sisyphus Sisyphus")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
@@ -385,7 +410,6 @@ __switch_alt_to_distro()
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade or just epm upgrade again"
 			__check_system
 			docmd epm update-kernel || fatal
-			info "Done."
 			;;
 		*)
 			if [ "$FROM" = "$TO" ] ; then
@@ -395,8 +419,11 @@ __switch_alt_to_distro()
 			fi
 			info "Try run f.i. # epm release-upgrade p10 or # epm release-upgrade Sisyphus"
 			info "Also possible you need install altlinux-release-p? package for correct distro version detecting"
+			trap - EXIT
 			return 1
 	esac
+	info "Done."
+	trap - EXIT
 }
 
 epm_release_upgrade()
