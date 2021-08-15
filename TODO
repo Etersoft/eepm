@@ -1,3 +1,17 @@
+p9 -> p10 notes:
+
+xargs: echo: terminated by signal 13
+E: Write error - write (32 Broken pipe)
+E: Failure running script xargs| (if [ -x /usr/bin/etckeeper ]; then etckeeper pre-install; fi)
+Error: Check an error and run epm release-upgrade again
+(потребовалось удалить etckeeper сначала)
+
+journalctl --vacuum-size=100M
+
+serv prefdm off
+serv lightdm on
+
+
 yum versionlock - сравнить/обобщить
 https://itfb.com.ua/kak-zablokirovat-obnovlenie-odnogo-iz-paketov-ili-ispolzuem-yum-versionlock/
 
