@@ -4609,6 +4609,35 @@ confirm_info()
 
 }
 
+SAVELISTDIR=/tmp/eepm-release_upgrade
+__save_alt_repo_lists()
+{
+	info "Creating copy of all sources lists to $SAVELISTDIR ..."
+	local i
+	rm -rfv $SAVELISTDIR 2>/dev/null
+	mkdir -p $SAVELISTDIR/apt/ $SAVELISTDIR/apt/sources.list.d/
+	for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
+		[ -s "$i" ] || continue
+		local DD="$(echo "$i" | sed -e "s|/etc|$SAVELISTDIR|")"
+		cp -af $verbose "$i" "$DD" || fatal "Can't save apt source list files to $SAVELISTDIR"
+	done
+}
+
+__restore_alt_repo_lists()
+{
+	info "Some error. Restoring copy of all sources lists from $SAVELISTDIR ..."
+	local i
+	[ -d "$SAVELISTDIR/apt" ] || return 0
+	mkdir -p $SAVELISTDIR/apt/ $SAVELISTDIR/apt/sources.list.d/
+	for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
+		[ -s "$i" ] || continue
+		local DD="$(echo "$i" | sed -e "s|/etc|$SAVELISTDIR|")"
+		# restore only if there are differences
+		diff -q "$DD" "$i" >/dev/null | continue
+		mv $verbose "$DD" "$i" || warning "Can't restore $i file"
+	done
+}
+
 __replace_text_in_alt_repo()
 {
 	local i
@@ -4668,6 +4697,7 @@ __alt_replace_sign_name()
 	__replace_text_in_alt_repo "/^ *#/! s!\[sisyphus\]!$TO!g"
 	__replace_text_in_alt_repo "/^ *#/! s!\[updates\]!$TO!g"
 	__replace_text_in_alt_repo "/^ *#/! s!\[cert[789]\]!$TO!g"
+	__replace_text_in_alt_repo "/^ *#/! s!\[p10\.?[0-9]?\]!$TO!g"
 	__replace_text_in_alt_repo "/^ *#/! s!\[[tpc][6-9]\.?[0-9]?\]!$TO!g"
 }
 
@@ -4752,6 +4782,7 @@ __switch_repo_to()
 	local TO="$1"
 	__replace_alt_version_in_repo "Sisyphus/" "$TO/branch/"
 	__replace_alt_version_in_repo "[tpc][5-9]\.?[0-9]?/branch/" "$TO/branch/"
+	__replace_alt_version_in_repo "p10\.?[0-9]?/branch/" "$TO/branch/"
 	__alt_repofix $TO
 }
 
@@ -4792,6 +4823,8 @@ get_next_release()
 		echo "p8" ;;
 	"p8")
 		echo "p9" ;;
+	"p9")
+		echo "p10" ;;
 	"c6")
 		echo "c7" ;;
 	"c7")
@@ -4813,6 +4846,10 @@ __switch_alt_to_distro()
 	local FROM="$1"
 	info
 	[ -n "$TO" ] || TO="$(get_next_release $FROM)"
+
+	__save_alt_repo_lists
+	trap __restore_alt_repo_lists EXIT
+
 	case "$*" in
 		"p6"|"p6 p7"|"t6 p7"|"c6 c7")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
@@ -4822,7 +4859,6 @@ __switch_alt_to_distro()
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
 			docmd epm update-kernel
-			info "Done."
 			info "Run epm release-upgrade again for update to p8"
 			;;
 		"p7"|"p7 p8"|"t7 p8"|"c7 c8")
@@ -4834,7 +4870,7 @@ __switch_alt_to_distro()
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
 			__check_system
 			docmd epm update-kernel || fatal
-			info "Done."
+			info "Run epm release-upgrade again for update to p9"
 			;;
 		"c8"|"c8.1"|"c8.2"|"c8 c8.1"|"c8.1 c8.2"|"c8 c8.2")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
@@ -4845,7 +4881,6 @@ __switch_alt_to_distro()
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
 			__check_system
 			docmd epm update-kernel || fatal
-			info "Done."
 			;;
 		"p8 c8"|"p8 c8.1"|"p8 c8.2")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
@@ -4861,7 +4896,6 @@ __switch_alt_to_distro()
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
 			__check_system
 			docmd epm update-kernel || fatal
-			info "Done."
 			;;
 		"p8"|"p8 p9"|"t8 p9"|"c8 c9"|"c8 p9"|"c8.1 p9"|"c8.2 p9"|"p9 p9")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
@@ -4876,7 +4910,18 @@ __switch_alt_to_distro()
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
 			__check_system
 			docmd epm update-kernel || fatal
-			info "Done."
+			info "Run epm release-upgrade again for update to p10"
+			;;
+		"p9"|"p9 p10"|"p10 p10")
+			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
+			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
+			__switch_repo_to $TO
+			echo '%_priority_distbranch p10' >/etc/rpm/macros.d/p10
+			__epm_ru_update || fatal
+			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
+			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
+			__check_system
+			docmd epm update-kernel -t std-def || fatal
 			;;
 		"p9 p8"|"c8.1 c8"|"c8.1 p8"|"p8 p8")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
@@ -4891,7 +4936,6 @@ __switch_alt_to_distro()
 			docmd epm downgrade
 			__check_system
 			docmd epm upgrade || fatal
-			info "Done."
 			;;
 		"p9 c8"|"p9 c8.1"|"p9 c8.2")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
@@ -4906,25 +4950,36 @@ __switch_alt_to_distro()
 			docmd epm downgrade
 			__check_system
 			docmd epm upgrade || fatal
-			info "Done."
 			;;
-		"Sisyphus p8"|"Sisyphus p9"|"Sisyphus c8"|"Sisyphus c8.1")
+		"p10 p9")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
+			rm -fv /etc/rpm/macros.d/p10
+			__epm_ru_update || fatal
+			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
+			docmd epm downgrade
+			__check_system
+			docmd epm upgrade || fatal
+			;;
+		"Sisyphus p8"|"Sisyphus p9"|"Sisyphus p10"|"Sisyphus c8"|"Sisyphus c8.1")
+			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
+			docmd epm install "$(get_fix_release_pkg "$FROM")" || fatal
+			__switch_repo_to $TO
+			[ "$TO" = "p10" ] && echo '%_priority_distbranch p10' >/etc/rpm/macros.d/p10
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
 			docmd epm downgrade
 			__check_system
 			docmd epm upgrade || fatal
-			info "Done."
 			;;
-		"p8 Sisyphus"|"p9 Sisyphus"|"Sisyphus Sisyphus")
+		"p8 Sisyphus"|"p9 Sisyphus"|"p10 Sisyphus"|"Sisyphus Sisyphus")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			docmd epm upgrade || fatal
 			__replace_alt_version_in_repo "$FROM/branch/" "$TO/"
 			__alt_repofix "alt"
+			[ -s /etc/rpm/macros.d/p10 ] && rm -fv /etc/rpm/macros.d/p10
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
 			#local ADDPKG
@@ -4933,7 +4988,6 @@ __switch_alt_to_distro()
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade or just epm upgrade again"
 			__check_system
 			docmd epm update-kernel || fatal
-			info "Done."
 			;;
 		*)
 			if [ "$FROM" = "$TO" ] ; then
@@ -4941,10 +4995,13 @@ __switch_alt_to_distro()
 			else
 				warning "Have no idea how to switch from $DISTRNAME $FROM to $DISTRNAME $TO."
 			fi
-			info "Try run f.i. # epm release-upgrade p8 or # epm release-upgrade Sisyphus"
+			info "Try run f.i. # epm release-upgrade p10 or # epm release-upgrade Sisyphus"
 			info "Also possible you need install altlinux-release-p? package for correct distro version detecting"
+			trap - EXIT
 			return 1
 	esac
+	info "Done."
+	trap - EXIT
 }
 
 epm_release_upgrade()
@@ -5648,6 +5705,7 @@ __fix_spec()
 
     # FIXME: where is a source of the bug with empty Summary?
     subst "s|Summary: *$|Summary: $pkgname (was empty Summary after alien)|" $spec
+    subst "s|^\(Version: .*\)~.*|\1|" $spec
     subst "s|^Release: |Release: alt1.repacked.with.epm.|" $spec
     subst "s|^Distribution:.*||" $SPEC
     subst "s|^\((Converted from a\) \(.*\) \(package.*\)|(Repacked from binary \2 package with epm $EPMVERSION)\n\1 \2 \3|" $spec
@@ -6348,7 +6406,7 @@ __epm_restore_print_comment()
 
 __epm_filter_pip_to_rpm()
 {
-    tr "A-Z" "a-z" | sed -e "s|_|-|g" -e "s|^python[-_]||" \
+    tr "A-Z" "a-z" | sed -e "s|_|-|g" -e "s|^python[-_]||" -e "s|python$||" \
         -e "s|bs4|beautifulsoup4|" \
         -e "s|pillow|Pillow|" \
         -e "s|sqlalchemy|SQLAlchemy|" \
@@ -6362,6 +6420,7 @@ __epm_filter_pip_to_rpm()
         -e "s|pymacaroons|pymacaroons-pynacl|" \
         -e "s|pygments|Pygments|" \
         -e "s|memcached|memcache|" \
+        -e "s|pyinstaller||" \
         -e "s|pyopenssl|OpenSSL|"
 }
 
@@ -7897,7 +7956,7 @@ internal_distr_info()
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
 
-PROGVERSION="20210106"
+PROGVERSION="20210806"
 
 # TODO: check /etc/system-release
 
@@ -8115,27 +8174,31 @@ fi
 
 # ALT Linux based
 if distro altlinux-release ; then
-	# TODO: use os-release firsly
 	DISTRIB_ID="ALTLinux"
+	# FIXME: fast hack for fallback: 10 -> p10 for /etc/os-release
+	DISTRIB_RELEASE="p$DISTRIB_RELEASE"
 	if has Sisyphus ; then DISTRIB_RELEASE="Sisyphus"
+	elif has "ALT p10.* p10 " ; then DISTRIB_RELEASE="p10"
+	elif has "ALT c10.* c10 " ; then DISTRIB_RELEASE="c10"
+	elif has "ALT p9.* p9 " ; then DISTRIB_RELEASE="p9"
+	elif has "ALT 9 SP " ; then DISTRIB_RELEASE="c9"
+	elif has "ALT c9f1" ; then DISTRIB_RELEASE="c9f1"
+	elif has "ALT 8 SP " ; then DISTRIB_RELEASE="c8"
+	elif has "ALT c8.2 " ; then DISTRIB_RELEASE="c8.2"
+	elif has "ALT c8.1 " ; then DISTRIB_RELEASE="c8.1"
+	elif has "ALT c8 " ; then DISTRIB_RELEASE="c8"
+	elif has "ALT .*8.[0-9]" ; then DISTRIB_RELEASE="p8"
+	elif has "Simply Linux 10." ; then DISTRIB_RELEASE="p10"
+	elif has "Simply Linux 9." ; then DISTRIB_RELEASE="p9"
+	elif has "Simply Linux 8." ; then DISTRIB_RELEASE="p8"
+	elif has "Simply Linux 7." ; then DISTRIB_RELEASE="p7"
+	elif has "Simply Linux 6." ; then DISTRIB_RELEASE="p6"
+	elif has "ALT Linux p8"  ; then DISTRIB_RELEASE="p8"
+	elif has "ALT Linux 8." ; then DISTRIB_RELEASE="p8"
+	elif has "ALT Linux p7"  ; then DISTRIB_RELEASE="p7"
 	elif has "ALT Linux 7." ; then DISTRIB_RELEASE="p7"
 	elif has "ALT Linux t7." ; then DISTRIB_RELEASE="t7"
-	elif has "ALT Linux 8." ; then DISTRIB_RELEASE="p8"
-	elif has "ALT 8 SP " ; then DISTRIB_RELEASE="c8"
-	elif has "ALT 9 SP " ; then DISTRIB_RELEASE="c9"
-	elif has "ALT c8 " ; then DISTRIB_RELEASE="c8"
-	elif has "ALT c8.1 " ; then DISTRIB_RELEASE="c8.1"
-	elif has "ALT c8.2 " ; then DISTRIB_RELEASE="c8.2"
-	elif has "ALT .*8.[0-9]" ; then DISTRIB_RELEASE="p8"
-	elif has "ALT c9f1" ; then DISTRIB_RELEASE="c9f1"
-	elif has "ALT p9.* p9 " ; then DISTRIB_RELEASE="p9"
-	elif has "Simply Linux 6." ; then DISTRIB_RELEASE="p6"
-	elif has "Simply Linux 7." ; then DISTRIB_RELEASE="p7"
-	elif has "Simply Linux 8." ; then DISTRIB_RELEASE="p8"
-	elif has "Simply Linux 9." ; then DISTRIB_RELEASE="p9"
 	elif has "ALT Linux 6." ; then DISTRIB_RELEASE="p6"
-	elif has "ALT Linux p8"  ; then DISTRIB_RELEASE="p8"
-	elif has "ALT Linux p7"  ; then DISTRIB_RELEASE="p7"
 	elif has "ALT Linux p6"  ; then DISTRIB_RELEASE="p6"
 	elif has "ALT Linux p5"  ; then DISTRIB_RELEASE="p5"
 	elif has "ALT Linux 5.1" ; then DISTRIB_RELEASE="5.1"
@@ -9483,7 +9546,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.9.13  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.10.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2020"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -9493,7 +9556,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.9.13
+EPMVERSION=3.10.0
 verbose=
 quiet=
 nodeps=
