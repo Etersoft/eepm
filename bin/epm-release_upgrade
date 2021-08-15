@@ -310,11 +310,10 @@ __switch_alt_to_distro()
 			__switch_repo_to $TO
 			echo '%_priority_distbranch p10' >/etc/rpm/macros.d/p10
 			__epm_ru_update || fatal
-			# TODO: update-kernel -t std-def
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
 			__check_system
-			docmd epm update-kernel || fatal
+			docmd epm update-kernel -t std-def || fatal
 			info "Done."
 			;;
 		"p9 p8"|"c8.1 c8"|"c8.1 p8"|"p8 p8")
