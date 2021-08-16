@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.10.0
+Version: 3.10.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,12 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Mon Aug 16 2021 Vitaly Lipatov <lav@altlinux.ru> 3.10.1-alt1
+- epm-repack: get tarball version after some prefix only
+- cleanup Telegram receipts
+- epm play: add SweetHome3D support (hidden for now)
+- epm-release_upgrade: allow update from p9.1 and p9.2
+
 * Sun Aug 15 2021 Vitaly Lipatov <lav@altlinux.ru> 3.10.0-alt1
 - distro_info: fix p10 name
 - epm-release_upgrade: set distbranch priority before apt update
