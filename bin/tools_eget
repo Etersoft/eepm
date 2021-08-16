@@ -69,7 +69,6 @@ scat()
 {
     $CURL -L $CURLQ "$1"
 }
-
 # download to default name of to $2
 sget()
 {
@@ -93,6 +92,12 @@ if [ "$1" = "--latest" ] ; then
     LATEST="$1"
     shift
 fi
+
+fatal()
+{
+    echo "$*" >&2
+    exit 1
+}
 
 # check man glob
 filter_glob()
@@ -146,39 +151,23 @@ get_github_urls()
     local project="$(echo "$1" | sed -e "s|^https://github.com/$owner/||" -e "s|/.*||")" #"
     [ -n "$owner" ] || fatal "Can't get owner from $1"
     [ -n "$project" ] || fatal "Can't get project from $1"
-    local URL="https://api.github.com/repos/$owner/$project/releases/latest"
+    local URL="https://api.github.com/repos/$owner/$project/releases"
     scat $URL | \
         grep -i -o -E '"browser_download_url": "https://.*"' | cut -d'"' -f4
 }
 
-# mask allowed only in the last part of path
-MASK=$(basename "$1")
-NOMASK=''
-
-# If have no wildcard symbol like asterisk, just download
-if echo "$MASK" | grep -qv "[*?]" || echo "$MASK" | grep -q "[?].*="; then
-    NOMASK='1'
-fi
-
-if echo "$1" | grep -q "^https://github.com/" && ! echo "$1" | grep -q "/releases/download/" ; then
+if echo "$1" | grep -q "^https://github.com/" ; then
     MASK="$2"
 
     if [ -n "$LISTONLY" ] ; then
-        fn=''
-        for fn in $(get_github_urls "$1" | filter_glob "$MASK" | filter_order) ; do
-            echo "$fn"
-        done
-        test -n "$fn"
+        get_github_urls "$1" | filter_glob "$MASK" | filter_order
         exit
     fi
 
-    ERROR=0
-    fn=''
     for fn in $(get_github_urls "$1" | filter_glob "$MASK" | filter_order) ; do
         sget "$fn" || ERROR=1
     done
-    test -n "$fn" || ERROR=1
-    exit $ERROR
+    exit
 fi
 
 
@@ -195,40 +184,38 @@ if echo "$1" | grep -q "^ftp://" ; then
 fi
 
 # drop mask part
-URL="$(dirname "$1")"
+URL="$(dirname "$1")/"
 
 if echo "$URL" | grep -q "[*?]" ; then
     fatal "Error: there are globbing symbols (*?) in $URL"
 fi
 
+# mask allowed only in the last part of path
+MASK=$(basename "$1")
+
 # If have no wildcard symbol like asterisk, just download
-if [ -n "$NOMASK" ] ; then
+if echo "$MASK" | grep -qv "[*?]" || echo "$MASK" | grep -q "[?].*="; then
     sget "$1" "$TARGETFILE"
     exit
 fi
 
 get_urls()
 {
-    scat $URL/ | \
-        grep -i -o -P 'href="(.*?)"' | cut -d'"' -f2 | sed -e "s|^./||"
+    scat $URL | \
+        grep -i -o -E 'href="([^\*/"#]+)"' | cut -d'"' -f2
 }
 
 if [ -n "$LISTONLY" ] ; then
-    fn=''
     for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
         # TODO: return full url? someone use old behaviour?
-        echo "$fn" | sed -e "s|$URL/||"
+        echo "$(basename "$fn")"
     done
-    test -n "$fn"
     exit
 fi
 
 ERROR=0
-fn=''
 for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
-    echo "$fn" | grep -q "://" && furl=$fn || furl="$URL/$fn"
-    sget "$furl" || ERROR=1
+    sget "$URL/$(basename "$fn")" || ERROR=1
 done
-test -n "$fn" || ERROR=1
 exit $ERROR
 
