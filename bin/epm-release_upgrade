@@ -214,8 +214,10 @@ __check_system()
 		docmd epm --skip-installed install systemd || fatal
 	fi
 
+	# FIXME: will GUI closed during that changes?
 	# switch from prefdm: https://bugzilla.altlinux.org/show_bug.cgi?id=26405#c52
 	if is_active_systemd systemd && serv display-manager status >/dev/null || serv prefdm status >/dev/null ; then
+#		docmd serv dm off
 		docmd systemctl disable prefdm.service
 		docmd systemctl disable display-manager.service
 		docmd systemctl enable display-manager.service
@@ -228,6 +230,7 @@ __check_system()
 __epm_ru_update()
 {
     docmd epm update && return
+    # TODO: there can be errors due obsoleted alt-gpgkeys
     epm update 2>&1 | grep "E: Unknown vendor ID" || return
     info "Drop vendor signs"
     __alt_replace_sign_name ""
@@ -422,7 +425,9 @@ __switch_alt_to_distro()
 			trap - EXIT
 			return 1
 	esac
-	info "Done."
+	epm clean
+	info "Note: You can try epm autoremove and epm autoorphans commands to remove obsoleted and unused packages."
+	info "Done. The system has been successfully upgraded to the next release."
 	trap - EXIT
 }
 
