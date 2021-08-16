@@ -4793,6 +4793,7 @@ __check_system()
 		docmd epm --skip-installed install systemd || fatal
 	fi
 
+	# FIXME: will GUI closed during that changes?
 	# switch from prefdm: https://bugzilla.altlinux.org/show_bug.cgi?id=26405#c52
 	if is_active_systemd systemd && serv display-manager status >/dev/null || serv prefdm status >/dev/null ; then
 		docmd systemctl disable prefdm.service
@@ -4807,6 +4808,7 @@ __check_system()
 __epm_ru_update()
 {
     docmd epm update && return
+    # TODO: there can be errors due obsoleted alt-gpgkeys
     epm update 2>&1 | grep "E: Unknown vendor ID" || return
     info "Drop vendor signs"
     __alt_replace_sign_name ""
@@ -4912,7 +4914,7 @@ __switch_alt_to_distro()
 			docmd epm update-kernel || fatal
 			info "Run epm release-upgrade again for update to p10"
 			;;
-		"p9"|"p9 p10"|"p10 p10")
+		"p9"|"p9 p10"|"p9.1 p10"|"p9.2 p10"|"p10 p10")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
@@ -5000,7 +5002,9 @@ __switch_alt_to_distro()
 			trap - EXIT
 			return 1
 	esac
-	info "Done."
+	epm clean
+	info "Note: You can try epm autoremove and epm autoorphans commands to remove obsoleted and unused packages."
+	info "Done. The system has been successfully upgraded to the next release."
 	trap - EXIT
 }
 
@@ -5795,7 +5799,7 @@ __epm_repack_to_rpm()
         VERSION=''
         # convert tarballs to tar (for alien)
         if ! echo "$pkg" | grep -q "\.rpm" && ! echo "$pkg" | grep -q "\.deb" ; then
-            VERSION="$(echo "$alpkg" | grep -o -P "([0-9])(\.[0-9])*" | head -n1)" #"
+            VERSION="$(echo "$alpkg" | grep -o -P "[-_.]([0-9])(\.[0-9])*" | head -n1 | sed -e 's|^[-_.]||')" #"
             if [ -n "$VERSION" ] ; then
                 PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
                 pkgtype="$(a= erc type $alpkg)"
@@ -8826,7 +8830,6 @@ scat()
 {
     $CURL -L $CURLQ "$1"
 }
-
 # download to default name of to $2
 sget()
 {
@@ -8850,6 +8853,12 @@ if [ "$1" = "--latest" ] ; then
     LATEST="$1"
     shift
 fi
+
+fatal()
+{
+    echo "$*" >&2
+    exit 1
+}
 
 # check man glob
 filter_glob()
@@ -8903,39 +8912,23 @@ get_github_urls()
     local project="$(echo "$1" | sed -e "s|^https://github.com/$owner/||" -e "s|/.*||")" #"
     [ -n "$owner" ] || fatal "Can't get owner from $1"
     [ -n "$project" ] || fatal "Can't get project from $1"
-    local URL="https://api.github.com/repos/$owner/$project/releases/latest"
+    local URL="https://api.github.com/repos/$owner/$project/releases"
     scat $URL | \
         grep -i -o -E '"browser_download_url": "https://.*"' | cut -d'"' -f4
 }
 
-# mask allowed only in the last part of path
-MASK=$(basename "$1")
-NOMASK=''
-
-# If have no wildcard symbol like asterisk, just download
-if echo "$MASK" | grep -qv "[*?]" || echo "$MASK" | grep -q "[?].*="; then
-    NOMASK='1'
-fi
-
-if echo "$1" | grep -q "^https://github.com/" && ! echo "$1" | grep -q "/releases/download/" ; then
+if echo "$1" | grep -q "^https://github.com/" ; then
     MASK="$2"
 
     if [ -n "$LISTONLY" ] ; then
-        fn=''
-        for fn in $(get_github_urls "$1" | filter_glob "$MASK" | filter_order) ; do
-            echo "$fn"
-        done
-        test -n "$fn"
+        get_github_urls "$1" | filter_glob "$MASK" | filter_order
         return
     fi
 
-    ERROR=0
-    fn=''
     for fn in $(get_github_urls "$1" | filter_glob "$MASK" | filter_order) ; do
         sget "$fn" || ERROR=1
     done
-    test -n "$fn" || ERROR=1
-     return $ERROR
+    return
 fi
 
 
@@ -8952,41 +8945,39 @@ if echo "$1" | grep -q "^ftp://" ; then
 fi
 
 # drop mask part
-URL="$(dirname "$1")"
+URL="$(dirname "$1")/"
 
 if echo "$URL" | grep -q "[*?]" ; then
     fatal "Error: there are globbing symbols (*?) in $URL"
 fi
 
+# mask allowed only in the last part of path
+MASK=$(basename "$1")
+
 # If have no wildcard symbol like asterisk, just download
-if [ -n "$NOMASK" ] ; then
+if echo "$MASK" | grep -qv "[*?]" || echo "$MASK" | grep -q "[?].*="; then
     sget "$1" "$TARGETFILE"
     return
 fi
 
 get_urls()
 {
-    scat $URL/ | \
-        grep -i -o -P 'href="(.*?)"' | cut -d'"' -f2 | sed -e "s|^./||"
+    scat $URL | \
+        grep -i -o -E 'href="([^\*/"#]+)"' | cut -d'"' -f2
 }
 
 if [ -n "$LISTONLY" ] ; then
-    fn=''
     for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
         # TODO: return full url? someone use old behaviour?
-        echo "$fn" | sed -e "s|$URL/||"
+        echo "$(basename "$fn")"
     done
-    test -n "$fn"
     return
 fi
 
 ERROR=0
-fn=''
 for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
-    echo "$fn" | grep -q "://" && furl=$fn || furl="$URL/$fn"
-    sget "$furl" || ERROR=1
+    sget "$URL/$(basename "$fn")" || ERROR=1
 done
-test -n "$fn" || ERROR=1
  return $ERROR
 
 }
@@ -9546,7 +9537,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.10.0  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.10.1  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2020"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -9556,7 +9547,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.10.0
+EPMVERSION=3.10.1
 verbose=
 quiet=
 nodeps=
