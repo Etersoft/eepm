@@ -337,7 +337,7 @@ __switch_alt_to_distro()
 			docmd epm update-kernel || fatal
 			info "Run epm release-upgrade again for update to p10"
 			;;
-		"p9"|"p9 p10"|"p10 p10")
+		"p9"|"p9 p10"|"p9.1 p10"|"p9.2 p10"|"p10 p10")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
