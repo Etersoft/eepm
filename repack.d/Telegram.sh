@@ -9,17 +9,18 @@ PRODUCT=Telegram
 # /usr/bin/Telegram
 #subst '1iConflicts:telegram-desktop' $SPEC
 
-# move package to /opt
-ROOTDIR=$(basename $(find $BUILDROOT -mindepth 1 -maxdepth 1 -type d))
 subst "s|^License: unknown$|License: GPLv2|" $SPEC
 subst "s|^URL:.*|URL: https://desktop.telegram.org/|" $SPEC
 subst "s|^Summary:.*|Summary: Telegram Desktop messaging app|" $SPEC
 
+
+# move package to /opt
+ROOTDIR=$(basename $(find $BUILDROOT -mindepth 1 -maxdepth 1 -type d))
 mkdir $BUILDROOT/opt
 mv $BUILDROOT/$ROOTDIR $BUILDROOT/opt/$PRODUCT
 subst "s|\"/$ROOTDIR/|\"/opt/$PRODUCT/|" $SPEC
 
-# add binary in standart path
+# add binary to the search path
 #mkdir -p $BUILDROOT/usr/bin/
 #ln -s /opt/$PRODUCT/Telegram $BUILDROOT/usr/bin/$PRODUCT
 #subst "s|%files|%files\n/usr/bin/$PRODUCT|" $SPEC
