@@ -20,15 +20,6 @@
 load_helper epm-query
 load_helper epm-repofix
 
-confirm_info()
-{
-	info "$*"
-	if [ -z "$non_interactive" ] ; then
-		confirm "Are you sure? [y/N]" || fatal "Exiting"
-	fi
-
-}
-
 SAVELISTDIR=/tmp/eepm-release_upgrade
 __save_alt_repo_lists()
 {

@@ -366,6 +366,17 @@ confirm() {
     esac
 }
 
+
+confirm_info()
+{
+	info "$*"
+	if [ -z "$non_interactive" ] ; then
+		confirm "Are you sure? [y/N]" || fatal "Exiting"
+	fi
+
+}
+
+
 assure_root()
 {
 	[ "$EFFUID" = 0 ] || fatal "run me only under root"
