@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012, 2017, 2018  Etersoft
-# Copyright (C) 2012, 2017, 2018  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2017, 2018, 2021  Etersoft
+# Copyright (C) 2012, 2017, 2018, 2021  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -36,14 +36,10 @@ __epm_autoremove_altrpm_pp()
 	local pkgs fullpkgs
 
 	info "Removing unused python/perl modules..."
-	#[ -n "$force" ] || info "You can run with --force for more deep removing"
-	local force=force
 
 	local libexclude="$1"
 
 	local flag=
-
-	[ -n "$force" ] || libexclude=$libexclude'[^-]*$'
 
 	showcmd "apt-cache list-nodeps | grep -E -- \"$libexclude\""
 	fullpkgs=$(apt-cache list-nodeps | grep -E -- "$libexclude" )
@@ -56,9 +52,16 @@ __epm_autoremove_altrpm_pp()
 		return 0
 	fi
 
-	__epm_print_excluded "$pkgs" "$fullpkgs"
+	if [ -n "$pkgs" ] ; then
+		info "The command we will run:"
+		showcmd rpm -v -e $pkgs
+		__epm_print_excluded "$pkgs" "$fullpkgs"
 
-	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
+		confirm_info "We will remove unused (without dependencies) packages above."
+
+		sudocmd rpm -v -e $pkgs && flag=1
+	fi
+
 
 	if [ -n "$flag" ] ; then
 		info ""
@@ -107,16 +110,14 @@ __epm_autoremove_altrpm_lib()
 		return 0
 	fi
 
-	__epm_print_excluded "$pkgs" "$fullpkgs"
+	if [ -n "$pkgs" ] ; then
+		info "The command we will run:"
+		showcmd rpm -v -e $pkgs
+		__epm_print_excluded "$pkgs" "$fullpkgs"
+		confirm_info "We will remove unused (without dependencies) packages above."
 
-	# commented, with hi probability user install i586- manually
-	# workaround against missed i586- handling in apt-cache list-nodeps
-	if epmqp i586-lib >/dev/null ; then
-		info "You can try removing all i586- with follow command"
-		showcmd rpm -v -e $(epmqp i586-lib)
+		sudocmd rpm -v -e $pkgs && flag=1
 	fi
-
-	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
 
 	if [ -n "$flag" ] ; then
 		info ""
@@ -197,16 +198,20 @@ case $DISTRNAME in
 			epm_autoremove_print_help
 			return 0
 		fi
+
 		if [ -z "$direct" ] ; then
+			fatal "Run autoremove without args or with --direct. Check epm autoremove --help to available commands."
 			sudocmd apt-get $(subst_option non_interactive -y) autoremove $dryrun
 			local RET=$?
-			info "Also you can run 'epm autoremove --direct' to use epm implementation of autoremove (see --help)"
 			[ "$RET" = 0 ] || return
 		else
 			__epm_autoremove_altrpm "$@"
 		fi
 
 		[ -n "$dryrun" ] && return
+
+		# remove old kernels only by a default way
+		[ -n "$@" ] && return
 
 		docmd epm remove-old-kernels $(subst_option non_interactive --auto)
 
@@ -216,6 +221,11 @@ case $DISTRNAME in
 			else
 				sudocmd nvidia-clean-driver
 			fi
+		fi
+
+		if [ -z "$direct" ] ; then
+			echo
+			info "Also you can run 'epm autoremove --direct' to use epm implementation of autoremove (see --help)"
 		fi
 
 		return
