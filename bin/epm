@@ -131,6 +131,9 @@ case $PROGNAME in
     epmsf)                     # HELPSHORT: alias for epm search file
         epm_cmd=search_file
         ;;
+    epmwd)                     # HELPSHORT: alias for epm wd
+        epm_cmd=whatdepends
+        ;;
     epmq)                      # HELPSHORT: alias for epm query
         epm_cmd=query
         ;;
