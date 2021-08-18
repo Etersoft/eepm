@@ -39,7 +39,13 @@ case $PMTYPE in
 		local PKGLIST=$(__epm_orphan_altrpm \
 			| sed -e "s/\.32bit//g" \
 			| grep -v -- "^eepm$" \
+			| grep -v -- "^distro_info$" \
 			| grep -v -- "^kernel")
+
+		if [ -z "$dryrun" ] && [ -n "$PKGLIST" ] ; then
+			showcmd epm remove $dryrun $PKGLIST
+			confirm_info "We will remove packages above."
+		fi
 
 #		if [ -n "$dryrun" ] ; then
 #			echo "$PKGLIST"
