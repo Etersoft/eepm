@@ -150,7 +150,7 @@ __epm_restore_pip()
 
     if [ -n "$dryrun" ] ; then
         reqmacro="%py3_use"
-        basename "$req_file" | egrep -q "(dev|test)" && reqmacro="%py3_buildrequires"
+        basename "$req_file" | egrep -q "(dev|test|coverage)" && reqmacro="%py3_buildrequires"
         echo
         __epm_restore_print_comment "$req_file"
         cat $req_file | __epm_restore_convert_to_rpm_notation | sed -e "s|^|$reqmacro |"
@@ -346,7 +346,7 @@ __epm_restore_by()
     fi
 
     case $req_file in
-        requirements/default.txt|requirements/dev.txt|requirements/test.txt)
+        requirements/default.txt|requirements/dev.txt|requirements/test.txt|requirements/coverage.txt)
             [ -s "$req_file" ] && __epm_restore_pip "$req_file" && return
             ;;
     esac
@@ -392,7 +392,7 @@ epm_restore()
 
     # if run with empty args
     for i in requirements.txt requirements/default.txt requirements_dev.txt requirements-dev.txt requirements/dev.txt dev-requirements.txt \
-             requirements-test.txt requirements_test.txt  requirements/test.txt test-requirements.txt \
+             requirements-test.txt requirements_test.txt requirements/test.txt test-requirements.txt requirements/coverage.txt \
              Gemfile requires.txt package.json setup.py python_dependencies.py \
              *.sln *.csproj ; do
         __epm_restore_by $i
