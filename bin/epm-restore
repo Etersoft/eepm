@@ -269,6 +269,38 @@ __epm_print_npm_list()
     [ -n "$dryrun" ] || echo "$ilist"
 }
 
+__epm_print_perl_list()
+{
+    local reqmacro="$1"
+    local req_file="$2"
+    local l
+    while read l ; do
+        # Convert::ASN1: 0.10
+        echo "$l" | grep -q '^ *\(.*\): \(.*\)' || continue
+        local name="$(echo "$l" | sed -e 's| *\(.*\): \(.*\)|\1|' -e 's|::|-|g')"
+        [ "$name" = "perl" ] && continue
+        [ -z "$name" ] && continue
+        local ver="$(echo "$l" | sed -e 's| *\(.*\): \(.*\)|\2|')"
+        [ -z "$name" ] && continue
+
+        if [ -n "$dryrun" ] ; then
+            local pi=''
+            local sign=''
+            [ "$ver" = "0" ] || sign=" >= $ver"
+            pi="$pi$reqmacro perl-$name$sign"
+            echo "$pi"
+            continue
+        else
+            local pi="perl-$name"
+            #echo "    $l -> $name -> $pi"
+        fi
+        [ -n "$name" ] || continue
+        ilist="$ilist $pi"
+    done < $req_file
+
+    [ -n "$dryrun" ] || echo "$ilist"
+}
+
 
 __epm_print_nupkg_list()
 {
@@ -300,7 +332,7 @@ __epm_restore_npm()
 {
     local req_file="$1"
 
-    epm assure jq
+    epm assure jq || fatal
 
     if [ -n "$dryrun" ] ; then
         local lt=$(mktemp)
@@ -323,6 +355,39 @@ __epm_restore_npm()
     ilist="$(__epm_print_npm_list "" $lt)"
     a= jq .devDependencies <$req_file >$lt
     ilist="$ilist $(__epm_print_npm_list "" $lt)"
+    rm -f $lt
+    docmd epm install $ilist
+}
+
+
+__epm_restore_perl()
+{
+    local req_file="$1"
+
+    epm assure shyaml || fatal
+
+    if [ -n "$dryrun" ] ; then
+        local lt=$(mktemp)
+        a= shyaml get-value requires <$req_file >$lt
+        # all requirements will autodetected during packing, put it to the buildreq
+        echo
+        __epm_restore_print_comment "$req_file"
+        __epm_print_perl_list "BuildRequires:" $lt
+
+        echo
+        __epm_restore_print_comment "$req_file" " build_requires"
+        a= shyaml get-value build_requires <$req_file >$lt
+        __epm_print_perl_list "BuildRequires:" $lt
+        rm -f $lt
+        return
+    fi
+
+    info "Install requirements from $req_file ..."
+    local lt=$(mktemp)
+    a= shyaml get-value requires <$req_file >$lt
+    ilist="$(__epm_print_perl_list "" $lt)"
+    a= shyaml get-value build_requires <$req_file >$lt
+    ilist="$ilist $(__epm_print_perl_list "" $lt)"
     rm -f $lt
     docmd epm install $ilist
 }
@@ -361,6 +426,9 @@ __epm_restore_by()
         package.json)
             [ -s "$req_file" ] && __epm_restore_npm "$req_file"
             ;;
+        META.yml)
+            [ -s "$req_file" ] && __epm_restore_perl "$req_file"
+            ;;
         *.sln|*.csproj)
             local PROJ="$(echo $req_file)"
             [ -s "$PROJ" ] && __epm_restore_nupkg "$PROJ"
@@ -393,7 +461,7 @@ epm_restore()
     # if run with empty args
     for i in requirements.txt requirements/default.txt requirements_dev.txt requirements-dev.txt requirements/dev.txt dev-requirements.txt \
              requirements-test.txt requirements_test.txt requirements/test.txt test-requirements.txt requirements/coverage.txt \
-             Gemfile requires.txt package.json setup.py python_dependencies.py \
+             Gemfile requires.txt package.json setup.py python_dependencies.py META.yml \
              *.sln *.csproj ; do
         __epm_restore_by $i
     done
