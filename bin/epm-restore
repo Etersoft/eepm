@@ -277,8 +277,8 @@ __epm_print_perl_list()
     while read l ; do
         # Convert::ASN1: 0.10
         echo "$l" | grep -q '^ *\(.*\): \(.*\)' || continue
-        local name="$(echo "$l" | sed -e 's| *\(.*\): \(.*\)|\1|' -e 's|::|-|g')"
-        [ "$name" = "perl" ] && continue
+        local name="$(echo "$l" | sed -e 's| *\(.*\): \(.*\)|\1|' -e 's|::|/|g')".pm
+        [ "$name" = "perl.pm" ] && continue
         [ -z "$name" ] && continue
         local ver="$(echo "$l" | sed -e 's| *\(.*\): \(.*\)|\2|')"
         [ -z "$name" ] && continue
@@ -287,11 +287,11 @@ __epm_print_perl_list()
             local pi=''
             local sign=''
             [ "$ver" = "0" ] || sign=" >= $ver"
-            pi="$pi$reqmacro perl-$name$sign"
+            pi="$pi$reqmacro perl($name)$sign"
             echo "$pi"
             continue
         else
-            local pi="perl-$name"
+            local pi="perl($name)"
             #echo "    $l -> $name -> $pi"
         fi
         [ -n "$name" ] || continue
