@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.10.1
+Version: 3.10.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,23 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Tue Aug 24 2021 Vitaly Lipatov <lav@altlinux.ru> 3.10.2-alt1
+- add epmwd alias for epm wd command
+- epm-autoorphans: add confirm step before removing
+- epm-autoremove: big rewrite, add confirm before removing
+- epm-autoremove: add i586-libs, debuginfo, devel, gem, ruby support
+- epm-restore: add requirements/coverage.txt support
+- epm-epm_install: install distro_info before eepm (on ALT)
+- epm restore: add perl requirements generation by META.yml
+- epm-restore: generate perl requires in perl(name.pm) form
+- epm-restore: rewrite perl requires without shyaml (via perl Makefile.PL PRINT_PREREQ=1)
+- epm-play: print fatal error if there is error during install
+- epm-release_upgrade: don't touch apt-conf and alt-release during update to p10
+- epm-release_upgrade: make dist-upgrade before start upgrade to p10 (see altbug# 40805)
+- epm-play: pass an additional args to the scripts
+- epm-release_upgrade: support upgrade from p9.1 and p9.2
+- add epm play wine script (supports new wine with new package naming scheme install)
+
 * Mon Aug 16 2021 Vitaly Lipatov <lav@altlinux.ru> 3.10.1-alt1
 - epm-repack: get tarball version after some prefix only
 - cleanup Telegram receipts
