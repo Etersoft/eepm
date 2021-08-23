@@ -1,3 +1,6 @@
+epmqp --short wine
+(--short удаляет всё, что больше wine (не может правильно оторвать версию)
+
 p9 -> p10 notes:
 
 xargs: echo: terminated by signal 13
