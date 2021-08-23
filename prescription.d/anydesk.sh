@@ -39,7 +39,7 @@ repack=''
 # https://download.anydesk.com/linux/anydesk_6.0.1-1_i386.deb
 PKG="https://download.anydesk.com/linux/$(epm print constructname $PKGNAME "$VERSION-$REL" $arch)"
 
-epm $repack install "$PKG"
+epm $repack install "$PKG" || exit
 
 echo
 echo "Note: run
