@@ -18,4 +18,6 @@ fi
 epm install $PKGNAMES || exit
 
 # Доставляем пропущенные модули (подпакеты) для установленных 64-битных
-epm prescription i586-fix
+epm prescription i586-fix || exit
+
+echo "See '# epm play wine' command to get best result."

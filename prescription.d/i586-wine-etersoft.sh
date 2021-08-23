@@ -12,10 +12,13 @@ if [ "$1" = "--remove" ] ; then
     exit
 fi
 
-[ "$1" != "--run" ] && echo "Install 32 bit $MAIN packages on 64 bit system" && exit
+[ "$1" != "--run" ] && exit #echo "Install 32 bit $MAIN packages on 64 bit system" && exit
 
 # Устанавливаем wine
 epm install $PKGNAMES || exit
 
 # Доставляем пропущенные модули (подпакеты) для установленных 64-битных
-epm prescription i586-fix
+epm prescription i586-fix || exit
+
+echo "See '# epm play wine wine-etersoft' command to get best result."
+
