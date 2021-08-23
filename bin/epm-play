@@ -53,7 +53,6 @@ __epm_play_run()
 {
     local script="$psdir/$1.sh"
     shift
-    local option="$1"
 
     if [ ! -x "$script" ] ; then
         fatal "Can't find play script $script."
@@ -65,7 +64,7 @@ __epm_play_run()
     export PATH=$PROGDIR:$PATH
 
     #info "Running $($script --description 2>/dev/null) ..."
-    docmd $script $option
+    docmd $script "$@"
 }
 
 epm_play()
@@ -116,6 +115,9 @@ if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
     exit
 fi
 
-#__check_installed_app "$1" && info "$1 is already installed (use --remove to remove)" && exit 1
-__epm_play_run "$1" --run && __save_installed_app "$1" || fatal "There was some error during install the application."
+prescription="$1"
+shift
+
+#__check_installed_app "$prescription" && info "$$prescription is already installed (use --remove to remove)" && exit 1
+__epm_play_run "$prescription" --run "$@" && __save_installed_app "$prescription" || fatal "There was some error during install the application."
 }
