@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012, 2016, 2019, 2020  Etersoft
-# Copyright (C) 2012, 2016, 2019, 2020  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2016, 2019, 2020, 2021  Etersoft
+# Copyright (C) 2012, 2016, 2019, 2020, 2021  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -19,34 +19,70 @@
 
 load_helper epm-sh-altlinux
 
-print_apt_sources_list()
+__print_apt_sources_list()
 {
     local i
     for i in $@ ; do
         test -r "$i" || continue
-        #echo
-        #echo "$i:"
-        grep -v -- "^#" $i
+        grep -v -- "^.*#" $i
     done | grep -v -- "^ *\$"
 }
+
+__print_apt_sources_list_list()
+{
+    local i
+    for i in $@ ; do
+        test -r "$i" || continue
+        grep -v -- "^.*#" $i | grep -v -- "^ *\$" | grep -q . && echo "$i"
+    done
+}
+
+__info_cyan()
+{
+		set_boldcolor $CYAN
+		echo "$*" >&2
+		restore_color
+}
+
+__print_apt_sources_list_verbose()
+{
+    local i
+    for i in $@ ; do
+        test -r "$i" || continue
+        grep -v -- "^.*#" $i | grep -v -- "^ *\$" | grep -q . && __info_cyan "$i:" || continue
+        grep -v -- "^.*#" $i | grep -v -- "^ *\$" | sed -e 's|^|    |'
+    done
+}
+
+print_apt_sources_list()
+{
+    local LISTS='/etc/apt/sources.list /etc/apt/sources.list.d/*.list'
+#    if [ -n "$verbose" ] ; then
+        __print_apt_sources_list_verbose $LISTS
+#    else
+#        __print_apt_sources_list_list $LISTS
+#        __print_apt_sources_list $LISTS
+#    fi
+}
+
 
 epm_repolist()
 {
 case $PMTYPE in
 	apt-rpm)
-		assure_exists apt-repo
+		#assure_exists apt-repo
 		if tasknumber "$pkg_names" >/dev/null ; then
 			get_task_packages $pkg_names
 		else
-			docmd apt-repo list
+			print_apt_sources_list
+			#docmd apt-repo list
 		fi
 		;;
 	deepsolver-rpm)
 		docmd ds-conf
 		;;
 	apt-dpkg|aptitude-dpkg)
-		showcmd cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list
-		print_apt_sources_list /etc/apt/sources.list /etc/apt/sources.list.d/*.list
+		print_apt_sources_list
 		;;
 	yum-rpm)
 		docmd yum repolist -v
