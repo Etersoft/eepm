@@ -88,21 +88,25 @@ __epm_autoremove_altrpm_lib()
 	local opt="$1"
 	local libgrep=''
 	info
-	if [ "$opt" = "libs" ] ; then
-		info "Removing all non -devel/-debuginfo libs packages not need by anything..."
-		local develrule='-(devel|devel-static)$'
-		libgrep='^(lib|bzlib|zlib)'
-	elif [ "$opt" = "i586-libs" ] ; then
-		info "Removing all non -devel/-debuginfo i586-libs packages not need by anything..."
-		local develrule='-(devel|devel-static)$'
-		libgrep='^(i586-lib|i586-bzlib|i586-zlib)'
-	elif [ "$opt" = "devel" ] ; then
-		info "Removing all non -debuginfo libs packages (-devel too) not need by anything..."
-		local develrule='-(NONONO)$'
-		libgrep='^(lib|bzlib|zlib)'
-	else
-		fatal "Internal error: unsupported opt $opt"
-	fi
+	case "$opt" in
+		libs)
+			info "Removing all non -devel/-debuginfo libs packages not need by anything..."
+			local develrule='-(devel|devel-static)$'
+			libgrep='^(lib|bzlib|zlib)'
+			;;
+		i586-libs)
+			info "Removing all non -devel/-debuginfo i586-libs packages not need by anything..."
+			local develrule='-(devel|devel-static)$'
+			libgrep='^(i586-lib|i586-bzlib|i586-zlib)'
+			;;
+		devel)
+			info "Removing all non -debuginfo libs packages (-devel too) not need by anything..."
+			local develrule='-(NONONO)$'
+			libgrep='^(lib|bzlib|zlib)'
+			;;
+		*)
+			fatal "Internal error: unsupported opt $opt"
+	esac
 
 	# https://www.altlinux.org/APT_в_ALT_Linux/Советы_по_использованию#apt-cache_list-nodeps
 	showcmd "apt-cache list-nodeps | grep -E -- \"$libgrep\""
@@ -133,7 +137,7 @@ __epm_autoremove_altrpm_lib()
 	if [ -n "$flag" ] ; then
 		info ""
 		info "call again for next cycle until all libs will be removed"
-		__epm_autoremove_altrpm_lib $nodevel
+		__epm_autoremove_altrpm_lib $opt
 	fi
 
 	return 0
