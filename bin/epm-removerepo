@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012, 2017, 2020  Etersoft
-# Copyright (C) 2012, 2017, 2020  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2017, 2020, 2021  Etersoft
+# Copyright (C) 2012, 2017, 2020, 2021  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -23,9 +23,17 @@ load_helper epm-sh-altlinux
 __epm_removerepo_alt_grepremove()
 {
 	local rp
-	epm repolist | grep -E "$1" | while read rp ; do
-		sudocmd apt-repo $dryrun rm "$rp"
+	local flag=0
+	epm repolist 2>/dev/null | grep -E "$1" | while read rp ; do
+		[ -n "$dryrun" ] || apt-repo --dry-run rm "$rp"
+		if [ -n "$verbose" ] ; then
+			sudocmd apt-repo $dryrun rm "$rp"
+		else
+			$SUDO apt-repo $dryrun rm "$rp"
+		fi
+		flag=1
 	done
+	[ "$flag" = "0" ] && warning "Can't find '$1' in the repos (see 'epm repolist' output)"
 }
 
 __epm_removerepo_alt()
@@ -64,7 +72,8 @@ __epm_removerepo_alt()
 			;;
 		*)
 # TODO: if return empty for whole line, use grep
-			sudocmd apt-repo $dryrun rm "$*"
+#			sudocmd apt-repo $dryrun rm "$*"
+			__epm_removerepo_alt_grepremove "$*"
 			;;
 	esac
 
