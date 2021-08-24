@@ -353,6 +353,17 @@ confirm() {
     esac
 }
 
+
+confirm_info()
+{
+	info "$*"
+	if [ -z "$non_interactive" ] ; then
+		confirm "Are you sure? [y/N]" || fatal "Exiting"
+	fi
+
+}
+
+
 assure_root()
 {
 	[ "$EFFUID" = 0 ] || fatal "run me only under root"
@@ -2132,7 +2143,8 @@ get_github_urls()
         grep -i -o -E '"browser_download_url": "https://.*"' | cut -d'"' -f4
 }
 
-if echo "$1" | grep -q "^https://github.com/" ; then
+if echo "$1" | grep -q "^https://github.com/" && \
+   echo "$1" | grep -q -v "/download/" && [ -n "$2" ] ; then
     MASK="$2"
 
     if [ -n "$LISTONLY" ] ; then
@@ -2159,15 +2171,21 @@ if echo "$1" | grep -q "^ftp://" ; then
     return
 fi
 
-# drop mask part
-URL="$(dirname "$1")/"
+# mask allowed only in the last part of path
+MASK=$(basename "$1")
+
+# if mask are second arg
+if [ -n "$2" ] ; then
+    URL="$1"
+    MASK="$2"
+else
+    # drop mask part
+    URL="$(dirname "$1")"
+fi
 
 if echo "$URL" | grep -q "[*?]" ; then
     fatal "Error: there are globbing symbols (*?) in $URL"
 fi
-
-# mask allowed only in the last part of path
-MASK=$(basename "$1")
 
 # If have no wildcard symbol like asterisk, just download
 if echo "$MASK" | grep -qv "[*?]" || echo "$MASK" | grep -q "[?].*="; then
@@ -2175,16 +2193,22 @@ if echo "$MASK" | grep -qv "[*?]" || echo "$MASK" | grep -q "[?].*="; then
     return
 fi
 
+is_url()
+{
+    echo "$1" | grep -q "://"
+}
+
 get_urls()
 {
     scat $URL | \
-        grep -i -o -E 'href="([^\*/"#]+)"' | cut -d'"' -f2
+         grep -i -o -E 'href="(.+)"' | cut -d'"' -f2
 }
 
 if [ -n "$LISTONLY" ] ; then
     for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
-        # TODO: return full url? someone use old behaviour?
-        echo "$(basename "$fn")"
+        is_url "$fn" && echo $fn && continue
+        fn="$(echo "$fn" | sed -e 's|^./||' -e 's|^/+||')"
+        echo "$URL/$fn"
     done
     return
 fi
@@ -2818,7 +2842,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.10.1  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.10.2  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2019"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

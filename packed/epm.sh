@@ -362,6 +362,17 @@ confirm() {
     esac
 }
 
+
+confirm_info()
+{
+	info "$*"
+	if [ -z "$non_interactive" ] ; then
+		confirm "Are you sure? [y/N]" || fatal "Exiting"
+	fi
+
+}
+
+
 assure_root()
 {
 	[ "$EFFUID" = 0 ] || fatal "run me only under root"
@@ -906,7 +917,13 @@ case $PMTYPE in
 		local PKGLIST=$(__epm_orphan_altrpm \
 			| sed -e "s/\.32bit//g" \
 			| grep -v -- "^eepm$" \
+			| grep -v -- "^distro_info$" \
 			| grep -v -- "^kernel")
+
+		if [ -z "$dryrun" ] && [ -n "$PKGLIST" ] ; then
+			showcmd epm remove $dryrun $PKGLIST
+			confirm_info "We will remove packages above."
+		fi
 
 			docmd epm remove $dryrun $(subst_option non_interactive --auto) $PKGLIST
 		;;
@@ -1007,14 +1024,10 @@ __epm_autoremove_altrpm_pp()
 	local pkgs fullpkgs
 
 	info "Removing unused python/perl modules..."
-	#[ -n "$force" ] || info "You can run with --force for more deep removing"
-	local force=force
 
 	local libexclude="$1"
 
 	local flag=
-
-	[ -n "$force" ] || libexclude=$libexclude'[^-]*$'
 
 	showcmd "apt-cache list-nodeps | grep -E -- \"$libexclude\""
 	fullpkgs=$(apt-cache list-nodeps | grep -E -- "$libexclude" )
@@ -1027,9 +1040,16 @@ __epm_autoremove_altrpm_pp()
 		return 0
 	fi
 
-	__epm_print_excluded "$pkgs" "$fullpkgs"
+	if [ -n "$pkgs" ] ; then
+		info "The command we will run:"
+		showcmd rpm -v -e $pkgs
+		__epm_print_excluded "$pkgs" "$fullpkgs"
 
-	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
+		confirm_info "We will remove unused (without dependencies) packages above."
+
+		sudocmd rpm -v -e $pkgs && flag=1
+	fi
+
 
 	if [ -n "$flag" ] ; then
 		info ""
@@ -1040,26 +1060,37 @@ __epm_autoremove_altrpm_pp()
 	return 0
 }
 
+__epm_autoremove_altrpm_package_group()
+{
+	if epmqp "$*" ; then
+		confirm_info "We will remove unused (without dependencies) packages above."
+		docmd epm remove $(epmqp --short "$*")
+	fi
+}
+
 __epm_autoremove_altrpm_lib()
 {
 	local pkgs fullpkgs
 
-	local nodevel="$1"
-
+	local flag=''
+	local opt="$1"
+	local libgrep=''
 	info
-	if [ "$nodevel" = "nodevel" ] ; then
+	if [ "$opt" = "libs" ] ; then
 		info "Removing all non -devel/-debuginfo libs packages not need by anything..."
 		local develrule='-(devel|devel-static)$'
-	else
+		libgrep='^(lib|bzlib|zlib)'
+	elif [ "$opt" = "i586-libs" ] ; then
+		info "Removing all non -devel/-debuginfo i586-libs packages not need by anything..."
+		local develrule='-(devel|devel-static)$'
+		libgrep='^(i586-lib|i586-bzlib|i586-zlib)'
+	elif [ "$opt" = "devel" ] ; then
 		info "Removing all non -debuginfo libs packages (-devel too) not need by anything..."
 		local develrule='-(NONONO)$'
+		libgrep='^(lib|bzlib|zlib)'
+	else
+		fatal "Internal error: unsupported opt $opt"
 	fi
-	#[ -n "$force" ] || info "You can run with --force for more deep removing"
-	local force=force
-
-	local flag=
-	local libgrep='^(lib|i586-lib|bzlib|zlib)'
-	[ -n "$force" ] || libexclude=$libgrep'[^-]*$'
 
 	# https://www.altlinux.org/APT_в_ALT_Linux/Советы_по_использованию#apt-cache_list-nodeps
 	showcmd "apt-cache list-nodeps | grep -E -- \"$libgrep\""
@@ -1068,7 +1099,7 @@ __epm_autoremove_altrpm_lib()
 		| grep -E -v -- "$develrule" \
 		| grep -E -v -- "-(debuginfo)$" \
 		| grep -E -v -- "-(util|utils|tool|tools|plugin|daemon|help)$" \
-		| grep -E -v -- "^(libsystemd|libreoffice|libnss|libvirt-client|libvirt-daemon|libsasl2-plugin|eepm)" )
+		| grep -E -v -- "^(libsystemd|libreoffice|libnss|libvirt-client|libvirt-daemon|libsasl2-plugin|eepm|distro_info)" )
 	pkgs=$(skip_manually_installed $fullpkgs)
 
 	if [ -n "$dryrun" ] ; then
@@ -1078,16 +1109,14 @@ __epm_autoremove_altrpm_lib()
 		return 0
 	fi
 
-	__epm_print_excluded "$pkgs" "$fullpkgs"
+	if [ -n "$pkgs" ] ; then
+		info "The command we will run:"
+		showcmd rpm -v -e $pkgs
+		__epm_print_excluded "$pkgs" "$fullpkgs"
+		confirm_info "We will remove unused (without dependencies) packages above."
 
-	# commented, with hi probability user install i586- manually
-	# workaround against missed i586- handling in apt-cache list-nodeps
-	if epmqp i586-lib >/dev/null ; then
-		info "You can try removing all i586- with follow command"
-		showcmd rpm -v -e $(epmqp i586-lib)
+		sudocmd rpm -v -e $pkgs && flag=1
 	fi
-
-	[ -n "$pkgs" ] && sudocmd rpm -v -e $pkgs && flag=1
 
 	if [ -n "$flag" ] ; then
 		info ""
@@ -1099,7 +1128,7 @@ __epm_autoremove_altrpm_lib()
 }
 
 
-epm_autoremove_default_groups="python2 python3 perl libs"
+epm_autoremove_default_groups="python2 python3 perl gem ruby libs"
 
 __epm_autoremove_altrpm()
 {
@@ -1108,27 +1137,44 @@ __epm_autoremove_altrpm()
 
 	if [ -z "$pkg_names" ] ; then
 		pkg_names="$epm_autoremove_default_groups"
+	elif [ "$pkg_names" = "python" ] ; then
+		pkg_names="python2 python3"
 	fi
 
 	for i in $pkg_names ; do
 		case $i in
 		libs)
-			__epm_autoremove_altrpm_lib nodevel
+			__epm_autoremove_altrpm_lib libs
 			;;
-		python)
-			__epm_autoremove_altrpm_pp '^(python-module-|python3-module-|python-modules-|python3-modules)'
+		i586-libs)
+			__epm_autoremove_altrpm_lib i586-libs
+			;;
+		debuginfo)
+			__epm_autoremove_altrpm_package_group '-debuginfo-'
+			;;
+		devel)
+			__epm_autoremove_altrpm_package_group '^(rpm-build-|gcc-|glibc-devel-)'
 			;;
 		python2)
 			__epm_autoremove_altrpm_pp '^(python-module-|python-modules-)'
 			;;
 		python3)
-			__epm_autoremove_altrpm_pp '^(python3-module-|python3-modules)'
+			__epm_autoremove_altrpm_pp '^(python3-module-|python3-modules-)'
+			;;
+		php)
+			__epm_autoremove_altrpm_pp '^(php7-|php5-|php8-)'
+			;;
+		gem)
+			__epm_autoremove_altrpm_pp '^(gem-)'
+			;;
+		ruby)
+			__epm_autoremove_altrpm_pp '^(ruby-)'
 			;;
 		perl)
 			__epm_autoremove_altrpm_pp '^(perl-)'
 			;;
 		libs-devel)
-			__epm_autoremove_altrpm_lib
+			__epm_autoremove_altrpm_lib devel
 			;;
 		*)
 			fatal "autoremove: unsupported '$i'. Use epm autoremove --help to list supported ones"
@@ -1149,10 +1195,18 @@ epm_autoremove_print_help()
 Supported package groups:
     libs       - unused libraries
     libs-devel - unused -devel packages
+    i586-libs  - unused i586-libs libraries
+    debuginfo  - all debuginfo packages
+    devel      - all packages used for build/developing
     python     - all python modules
     python2    - python2 modules
     python3    - python3 modules
-    perl       - perl- modules
+    perl       - perl modules
+    gem        - gem modules
+    ruby       - ruby modules
+
+Use
+--auto|--assumeyes|--non-interactive  for non interactive mode
 EOF
 }
 
@@ -1166,16 +1220,20 @@ case $DISTRNAME in
 			epm_autoremove_print_help
 			return 0
 		fi
+
 		if [ -z "$direct" ] ; then
+			fatal "Run autoremove without args or with --direct. Check epm autoremove --help to available commands."
 			sudocmd apt-get $(subst_option non_interactive -y) autoremove $dryrun
 			local RET=$?
-			info "Also you can run 'epm autoremove --direct' to use epm implementation of autoremove (see --help)"
 			[ "$RET" = 0 ] || return
 		else
 			__epm_autoremove_altrpm "$@"
 		fi
 
 		[ -n "$dryrun" ] && return
+
+		# remove old kernels only by a default way
+		[ -n "$@" ] && return
 
 		docmd epm remove-old-kernels $(subst_option non_interactive --auto)
 
@@ -1185,6 +1243,11 @@ case $DISTRNAME in
 			else
 				sudocmd nvidia-clean-driver
 			fi
+		fi
+
+		if [ -z "$direct" ] ; then
+			echo
+			info "Also you can run 'epm autoremove --direct' to use epm implementation of autoremove (see --help)"
 		fi
 
 		return
@@ -2220,7 +2283,13 @@ epm_epm_install() {
     local pkglist="$*"
 
     # install epm by default
-    [ -n "$pkglist" ] || pkglist="eepm"
+    if [ -z "$pkglist" ] ; then
+        if [ "$($DISTRVENDOR -s)" = "alt" ] ; then
+            pkglist="distro_info eepm"
+        else
+            pkglist="eepm"
+        fi
+    fi
 
     case "$pkglist" in
         --list*)
@@ -3509,7 +3578,6 @@ __epm_play_run()
 {
     local script="$psdir/$1.sh"
     shift
-    local option="$1"
 
     if [ ! -x "$script" ] ; then
         fatal "Can't find play script $script."
@@ -3521,7 +3589,7 @@ __epm_play_run()
     export PATH=$PROGDIR:$PATH
 
     #info "Running $($script --description 2>/dev/null) ..."
-    docmd $script $option
+    docmd $script "$@"
 }
 
 epm_play()
@@ -3571,7 +3639,10 @@ if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
     exit
 fi
 
-__epm_play_run "$1" --run && __save_installed_app "$1"
+prescription="$1"
+shift
+
+__epm_play_run "$prescription" --run "$@" && __save_installed_app "$prescription" || fatal "There was some error during install the application."
 }
 
 # File bin/epm-policy:
@@ -4600,15 +4671,6 @@ epm_reinstall()
 # File bin/epm-release_upgrade:
 
 
-confirm_info()
-{
-	info "$*"
-	if [ -z "$non_interactive" ] ; then
-		confirm "Are you sure? [y/N]" || fatal "Exiting"
-	fi
-
-}
-
 SAVELISTDIR=/tmp/eepm-release_upgrade
 __save_alt_repo_lists()
 {
@@ -4734,6 +4796,9 @@ get_fix_release_pkg()
 	if [ "$TO" = "Sisyphus" ] ; then
 		TO="sisyphus"
 		echo "apt-conf-$TO"
+	elif [ "$TO" = "p10" ] ; then
+		true
+		#echo "apt-conf-$TO"
 	else
 		echo "apt-conf-branch"
 	fi
@@ -4825,7 +4890,7 @@ get_next_release()
 		echo "p8" ;;
 	"p8")
 		echo "p9" ;;
-	"p9")
+	"p9"|"p9.1"|"p9.2")
 		echo "p10" ;;
 	"c6")
 		echo "c7" ;;
@@ -4915,13 +4980,15 @@ __switch_alt_to_distro()
 			info "Run epm release-upgrade again for update to p10"
 			;;
 		"p9"|"p9 p10"|"p9.1 p10"|"p9.2 p10"|"p10 p10")
+			info "Upgrade all packages to current $FROM repository"
+			docmd epm upgrade || fatal
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
 			echo '%_priority_distbranch p10' >/etc/rpm/macros.d/p10
 			__epm_ru_update || fatal
 			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
-			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
+			docmd epm install rpm apt "$(get_fix_release_pkg "$TO")" || fatal "Check an error and run epm release-upgrade again"
 			__check_system
 			docmd epm update-kernel -t std-def || fatal
 			;;
@@ -6525,7 +6592,7 @@ __epm_restore_pip()
 
     if [ -n "$dryrun" ] ; then
         reqmacro="%py3_use"
-        basename "$req_file" | egrep -q "(dev|test)" && reqmacro="%py3_buildrequires"
+        basename "$req_file" | egrep -q "(dev|test|coverage)" && reqmacro="%py3_buildrequires"
         echo
         __epm_restore_print_comment "$req_file"
         cat $req_file | __epm_restore_convert_to_rpm_notation | sed -e "s|^|$reqmacro |"
@@ -6642,6 +6709,71 @@ __epm_print_npm_list()
 }
 
 
+__epm_print_perl_list()
+{
+    local reqmacro="$1"
+    local req_file="$2"
+    local l
+    for l in $(cat) ; do
+        # perl(Class::ErrorHandler)>=0
+        echo "$l" | grep -q '^perl(' || continue
+        local name="$(echo "$l" | sed -e 's|>=.*||' -e 's|::|/|g' -e 's|)|.pm)|')"
+        [ "$name" = "perl(perl.pm)" ] && continue
+        [ -z "$name" ] && continue
+        local ver="$(echo "$l" | sed -e 's|.*>=||')"
+        [ -z "$name" ] && continue
+
+        if [ -n "$dryrun" ] ; then
+            local pi=''
+            local sign=''
+            [ "$ver" = "0" ] || sign=" >= $ver"
+            pi="$pi$reqmacro $name$sign"
+            echo "$pi"
+            continue
+        else
+            local pi="$name"
+            #echo "    $l -> $name -> $pi"
+        fi
+        [ -n "$name" ] || continue
+        ilist="$ilist $pi"
+    done < $req_file
+
+    [ -n "$dryrun" ] || echo "$ilist"
+}
+
+__epm_print_perl_list_shyaml()
+{
+    local reqmacro="$1"
+    local req_file="$2"
+    local l
+    while read l ; do
+        # Convert::ASN1: 0.10
+        echo "$l" | grep -q '^ *\(.*\): \(.*\)' || continue
+        local name="$(echo "$l" | sed -e 's| *\(.*\): \(.*\)|\1|' -e 's|::|/|g')".pm
+        [ "$name" = "perl.pm" ] && continue
+        [ -z "$name" ] && continue
+        local ver="$(echo "$l" | sed -e 's| *\(.*\): \(.*\)|\2|')"
+        [ -z "$name" ] && continue
+
+        if [ -n "$dryrun" ] ; then
+            local pi=''
+            local sign=''
+            [ "$ver" = "0" ] || sign=" >= $ver"
+            pi="$pi$reqmacro perl($name)$sign"
+            echo "$pi"
+            continue
+        else
+            local pi="perl($name)"
+            #echo "    $l -> $name -> $pi"
+        fi
+        [ -n "$name" ] || continue
+        ilist="$ilist $pi"
+    done < $req_file
+
+    [ -n "$dryrun" ] || echo "$ilist"
+}
+
+
 __epm_print_nupkg_list()
 {
     a= dotnet list $1 package | grep "^   > " | while read n name req other; do
@@ -6672,7 +6804,7 @@ __epm_restore_npm()
 {
     local req_file="$1"
 
-    epm assure jq
+    epm assure jq || fatal
 
     if [ -n "$dryrun" ] ; then
         local lt=$(mktemp)
@@ -6699,6 +6831,61 @@ __epm_restore_npm()
     docmd epm install $ilist
 }
 
+__epm_restore_perl()
+{
+    local req_file="$1"
+
+    if [ -n "$dryrun" ] ; then
+        local lt=$(mktemp)
+        a= /usr/bin/perl $req_file PRINT_PREREQ=1 >$lt
+        # all requirements will autodetected during packing, put it to the buildreq
+        echo
+        __epm_restore_print_comment "$req_file"
+        __epm_print_perl_list "BuildRequires:" $lt
+        rm -f $lt
+        return
+    fi
+
+    info "Install requirements from $req_file ..."
+    local lt=$(mktemp)
+    a= /usr/bin/perl $req_file PRINT_PREREQ=1 >$lt
+    ilist="$(__epm_print_perl_list "" $lt)"
+    rm -f $lt
+    docmd epm install $ilist
+}
+
+__epm_restore_perl_shyaml()
+{
+    local req_file="$1"
+
+    epm assure shyaml || fatal
+
+    if [ -n "$dryrun" ] ; then
+        local lt=$(mktemp)
+        a= shyaml get-value requires <$req_file >$lt
+        # all requirements will autodetected during packing, put it to the buildreq
+        echo
+        __epm_restore_print_comment "$req_file"
+        __epm_print_perl_list "BuildRequires:" $lt
+
+        echo
+        __epm_restore_print_comment "$req_file" " build_requires"
+        a= shyaml get-value build_requires <$req_file >$lt
+        __epm_print_perl_list "BuildRequires:" $lt
+        rm -f $lt
+        return
+    fi
+
+    info "Install requirements from $req_file ..."
+    local lt=$(mktemp)
+    a= shyaml get-value requires <$req_file >$lt
+    ilist="$(__epm_print_perl_list "" $lt)"
+    a= shyaml get-value build_requires <$req_file >$lt
+    ilist="$ilist $(__epm_print_perl_list "" $lt)"
+    rm -f $lt
+    docmd epm install $ilist
+}
+
 __epm_restore_by()
 {
     local req_file="$1"
@@ -6718,7 +6905,7 @@ __epm_restore_by()
     fi
 
     case $req_file in
-        requirements/default.txt|requirements/dev.txt|requirements/test.txt)
+        requirements/default.txt|requirements/dev.txt|requirements/test.txt|requirements/coverage.txt)
             [ -s "$req_file" ] && __epm_restore_pip "$req_file" && return
             ;;
     esac
@@ -6732,6 +6919,9 @@ __epm_restore_by()
             ;;
         package.json)
             [ -s "$req_file" ] && __epm_restore_npm "$req_file"
+            ;;
+        Makefile.PL)
+            [ -s "$req_file" ] && __epm_restore_perl "$req_file"
             ;;
         *.sln|*.csproj)
             local PROJ="$(echo $req_file)"
@@ -6763,8 +6953,8 @@ epm_restore()
 
     # if run with empty args
     for i in requirements.txt requirements/default.txt requirements_dev.txt requirements-dev.txt requirements/dev.txt dev-requirements.txt \
-             requirements-test.txt requirements_test.txt  requirements/test.txt test-requirements.txt \
-             Gemfile requires.txt package.json setup.py python_dependencies.py \
+             requirements-test.txt requirements_test.txt requirements/test.txt test-requirements.txt requirements/coverage.txt \
+             Gemfile requires.txt package.json setup.py python_dependencies.py Makefile.PL \
              *.sln *.csproj ; do
         __epm_restore_by $i
     done
@@ -8917,7 +9107,8 @@ get_github_urls()
         grep -i -o -E '"browser_download_url": "https://.*"' | cut -d'"' -f4
 }
 
-if echo "$1" | grep -q "^https://github.com/" ; then
+if echo "$1" | grep -q "^https://github.com/" && \
+   echo "$1" | grep -q -v "/download/" && [ -n "$2" ] ; then
     MASK="$2"
 
     if [ -n "$LISTONLY" ] ; then
@@ -8944,15 +9135,21 @@ if echo "$1" | grep -q "^ftp://" ; then
     return
 fi
 
-# drop mask part
-URL="$(dirname "$1")/"
+# mask allowed only in the last part of path
+MASK=$(basename "$1")
+
+# if mask are second arg
+if [ -n "$2" ] ; then
+    URL="$1"
+    MASK="$2"
+else
+    # drop mask part
+    URL="$(dirname "$1")"
+fi
 
 if echo "$URL" | grep -q "[*?]" ; then
     fatal "Error: there are globbing symbols (*?) in $URL"
 fi
-
-# mask allowed only in the last part of path
-MASK=$(basename "$1")
 
 # If have no wildcard symbol like asterisk, just download
 if echo "$MASK" | grep -qv "[*?]" || echo "$MASK" | grep -q "[?].*="; then
@@ -8960,16 +9157,22 @@ if echo "$MASK" | grep -qv "[*?]" || echo "$MASK" | grep -q "[?].*="; then
     return
 fi
 
+is_url()
+{
+    echo "$1" | grep -q "://"
+}
+
 get_urls()
 {
     scat $URL | \
-        grep -i -o -E 'href="([^\*/"#]+)"' | cut -d'"' -f2
+         grep -i -o -E 'href="(.+)"' | cut -d'"' -f2
 }
 
 if [ -n "$LISTONLY" ] ; then
     for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
-        # TODO: return full url? someone use old behaviour?
-        echo "$(basename "$fn")"
+        is_url "$fn" && echo $fn && continue
+        fn="$(echo "$fn" | sed -e 's|^./||' -e 's|^/+||')"
+        echo "$URL/$fn"
     done
     return
 fi
@@ -9537,7 +9740,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.10.1  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.10.2  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2020"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -9547,7 +9750,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.10.1
+EPMVERSION=3.10.2
 verbose=
 quiet=
 nodeps=
@@ -9594,6 +9797,9 @@ case $PROGNAME in
         ;;
     epmsf)                     # HELPSHORT: alias for epm search file
         epm_cmd=search_file
+        ;;
+    epmwd)                     # HELPSHORT: alias for epm wd
+        epm_cmd=whatdepends
         ;;
     epmq)                      # HELPSHORT: alias for epm query
         epm_cmd=query
