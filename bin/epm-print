@@ -70,6 +70,8 @@ print_version_release()
     echo "$1" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK|\2-\3|g"
 }
 
+# get package name only by package filename
+# TODO: see also __epm_get_hilevel_name()
 print_pkgname()
 {
     local i

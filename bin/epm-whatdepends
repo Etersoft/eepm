@@ -31,9 +31,16 @@ epm_whatdepends()
 # by package name
 case $PMTYPE in
 	apt-rpm)
-		if [ -n "$short" ] ; then
+		if [ -z "$verbose" ] ; then
 			showcmd apt-cache whatdepends $pkg
-			a= apt-cache whatdepends $pkg | grep "^  [^ ]" | sed -e "s|[0-9]*:||" | grep -E -v "(i586-|-debuginfo)"
+			if [ -n "$short" ] ; then
+# TODO: use common converter from full name to short name
+# TODO: see print_pkgname
+				a= apt-cache whatdepends $pkg | grep "^  [^ ]" | sed -e "s|[0-9]*:||" | grep -E -v "(i586-|-debuginfo)" | sed -e 's|[@:].*||' -e "s|-[0-9].*||g" -e 's|^ *||' -e 's/\.32bit//g'
+			else
+				load_helper epm-query
+				a= apt-cache whatdepends $pkg | grep "^  [^ ]" | sed -e "s|[0-9]*:||" | grep -E -v "(i586-|-debuginfo)"
+			fi
 			return
 		fi
 		CMD="apt-cache whatdepends"
