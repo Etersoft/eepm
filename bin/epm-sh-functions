@@ -301,10 +301,18 @@ set_sudo()
 		return
 	fi
 
-	# use sudo if one is tuned and tuned without password
-	if ! sudo -l -n >/dev/null 2>/dev/null ; then
-		SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
-		return
+	# if input is a console
+	if inputisatty && isatty && isatty2 ; then
+		if ! sudo -l >/dev/null ; then
+			SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
+			return
+		fi
+	else
+		# use sudo if one is tuned and tuned without password
+		if ! sudo -l -n >/dev/null 2>/dev/null ; then
+			SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
+			return
+		fi
 	fi
 
 	SUDO="sudo --"
