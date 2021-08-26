@@ -24,7 +24,7 @@ __epm_removerepo_alt_grepremove()
 {
 	local rp
 	local flag=0
-	epm repolist 2>/dev/null | grep -E "$1" | while read rp ; do
+	(quiet=1 epm repolist) 2>/dev/null | grep -E "$1" | while read rp ; do
 		[ -n "$dryrun" ] || apt-repo --dry-run rm "$rp"
 		if [ -n "$verbose" ] ; then
 			sudocmd apt-repo $dryrun rm "$rp"
