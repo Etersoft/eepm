@@ -240,7 +240,7 @@ case $DISTRNAME in
 		fi
 
 		if [ -z "$direct" ] ; then
-			fatal "Run autoremove without args or with --direct. Check epm autoremove --help to available commands."
+			[ -n "$1" ] && fatal "Run autoremove without args or with --direct. Check epm autoremove --help to available commands."
 			sudocmd apt-get $(subst_option non_interactive -y) autoremove $dryrun
 			local RET=$?
 			[ "$RET" = 0 ] || return
