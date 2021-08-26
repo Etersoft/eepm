@@ -301,10 +301,18 @@ set_sudo()
 		return
 	fi
 
-	# use sudo if one is tuned and tuned without password
-	if ! sudo -l -n >/dev/null 2>/dev/null ; then
-		SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
-		return
+	# if input is a console
+	if inputisatty && isatty && isatty2 ; then
+		if ! sudo -l >/dev/null ; then
+			SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
+			return
+		fi
+	else
+		# use sudo if one is tuned and tuned without password
+		if ! sudo -l -n >/dev/null 2>/dev/null ; then
+			SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
+			return
+		fi
 	fi
 
 	SUDO="sudo --"
@@ -1076,21 +1084,25 @@ __epm_autoremove_altrpm_lib()
 	local opt="$1"
 	local libgrep=''
 	info
-	if [ "$opt" = "libs" ] ; then
-		info "Removing all non -devel/-debuginfo libs packages not need by anything..."
-		local develrule='-(devel|devel-static)$'
-		libgrep='^(lib|bzlib|zlib)'
-	elif [ "$opt" = "i586-libs" ] ; then
-		info "Removing all non -devel/-debuginfo i586-libs packages not need by anything..."
-		local develrule='-(devel|devel-static)$'
-		libgrep='^(i586-lib|i586-bzlib|i586-zlib)'
-	elif [ "$opt" = "devel" ] ; then
-		info "Removing all non -debuginfo libs packages (-devel too) not need by anything..."
-		local develrule='-(NONONO)$'
-		libgrep='^(lib|bzlib|zlib)'
-	else
-		fatal "Internal error: unsupported opt $opt"
-	fi
+	case "$opt" in
+		libs)
+			info "Removing all non -devel/-debuginfo libs packages not need by anything..."
+			local develrule='-(devel|devel-static)$'
+			libgrep='^(lib|bzlib|zlib)'
+			;;
+		i586-libs)
+			info "Removing all non -devel/-debuginfo i586-libs packages not need by anything..."
+			local develrule='-(devel|devel-static)$'
+			libgrep='^(i586-lib|i586-bzlib|i586-zlib)'
+			;;
+		devel)
+			info "Removing all non -debuginfo libs packages (-devel too) not need by anything..."
+			local develrule='-(NONONO)$'
+			libgrep='^(lib|bzlib|zlib)'
+			;;
+		*)
+			fatal "Internal error: unsupported opt $opt"
+	esac
 
 	# https://www.altlinux.org/APT_в_ALT_Linux/Советы_по_использованию#apt-cache_list-nodeps
 	showcmd "apt-cache list-nodeps | grep -E -- \"$libgrep\""
@@ -1121,7 +1133,7 @@ __epm_autoremove_altrpm_lib()
 	if [ -n "$flag" ] ; then
 		info ""
 		info "call again for next cycle until all libs will be removed"
-		__epm_autoremove_altrpm_lib $nodevel
+		__epm_autoremove_altrpm_lib $opt
 	fi
 
 	return 0
@@ -5570,9 +5582,17 @@ epm_remove_old_kernels()
 __epm_removerepo_alt_grepremove()
 {
 	local rp
-	epm repolist | grep -E "$1" | while read rp ; do
-		sudocmd apt-repo $dryrun rm "$rp"
+	local flag=0
+	(quiet=1 epm repolist) 2>/dev/null | grep -E "$1" | while read rp ; do
+		[ -n "$dryrun" ] || apt-repo --dry-run rm "$rp"
+		if [ -n "$verbose" ] ; then
+			sudocmd apt-repo $dryrun rm "$rp"
+		else
+			$SUDO apt-repo $dryrun rm "$rp"
+		fi
+		flag=1
 	done
+	[ "$flag" = "0" ] && warning "Can't find '$1' in the repos (see 'epm repolist' output)"
 }
 
 __epm_removerepo_alt()
@@ -5610,7 +5630,7 @@ __epm_removerepo_alt()
 			__epm_removerepo_alt_grepremove " repo/$1/"
 			;;
 		*)
-			sudocmd apt-repo $dryrun rm "$*"
+			__epm_removerepo_alt_grepremove "$*"
 			;;
 	esac
 
@@ -6234,34 +6254,69 @@ esac
 # File bin/epm-repolist:
 
 
-print_apt_sources_list()
+__print_apt_sources_list()
 {
     local i
     for i in $@ ; do
         test -r "$i" || continue
-        #echo
-        #echo "$i:"
-        grep -v -- "^#" $i
+        grep -v -- "^.*#" $i
     done | grep -v -- "^ *\$"
 }
+
+__print_apt_sources_list_list()
+{
+    local i
+    for i in $@ ; do
+        test -r "$i" || continue
+        grep -v -- "^.*#" $i | grep -v -- "^ *\$" | grep -q . && echo "$i"
+    done
+}
+
+__info_cyan()
+{
+		set_boldcolor $CYAN
+		echo "$*" >&2
+		restore_color
+}
+
+__print_apt_sources_list_verbose()
+{
+    local i
+    for i in $@ ; do
+        test -r "$i" || continue
+        grep -v -- "^.*#" $i | grep -v -- "^ *\$" | grep -q . && __info_cyan "$i:" || continue
+        grep -v -- "^.*#" $i | grep -v -- "^ *\$" | sed -e 's|^|    |'
+    done
+}
+
+print_apt_sources_list()
+{
+    local LISTS='/etc/apt/sources.list /etc/apt/sources.list.d/*.list'
+    if [ -n "$quiet" ] ; then
+        __print_apt_sources_list $LISTS
+    else
+        __print_apt_sources_list_verbose $LISTS
+    fi
+}
+
 
 epm_repolist()
 {
 case $PMTYPE in
 	apt-rpm)
-		assure_exists apt-repo
+		#assure_exists apt-repo
 		if tasknumber "$pkg_names" >/dev/null ; then
 			get_task_packages $pkg_names
 		else
-			docmd apt-repo list
+			print_apt_sources_list
+			#docmd apt-repo list
 		fi
 		;;
 	deepsolver-rpm)
 		docmd ds-conf
 		;;
 	apt-dpkg|aptitude-dpkg)
-		showcmd cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list
-		print_apt_sources_list /etc/apt/sources.list /etc/apt/sources.list.d/*.list
+		print_apt_sources_list
 		;;
 	yum-rpm)
 		docmd yum repolist -v
@@ -7347,7 +7402,7 @@ __init_contents_index_list()
 
 __add_to_contents_index_list()
 {
-    echo "  $1 -> $2"
+    [ -n "$quiet" ] || echo "  $1 -> $2"
     echo "$2" >>$ALT_CONTENTS_INDEX_LIST
 }
 
@@ -7368,7 +7423,7 @@ update_alt_contents_index()
     # TODO: fix for Etersoft/LINUX@Etersoft
     # TODO: fix for rsync
     info "Retrieving contents_index ..."
-    epm_repolist | grep -v " task$" | grep -E "rpm.*(ftp://|http://|https://|rsync://|file:/)" | sed -e "s@^rpm.*\(ftp://\|http://\|https://\)@rsync://@g" | sed -e "s@^rpm.*\(file:\)@@g" | while read -r URL1 URL2 component ; do
+    (quiet=1 epm_repolist) | grep -v " task$" | grep -E "rpm.*(ftp://|http://|https://|rsync://|file:/)" | sed -e "s@^rpm.*\(ftp://\|http://\|https://\)@rsync://@g" | sed -e "s@^rpm.*\(file:\)@@g" | while read -r URL1 URL2 component ; do
         [ "$component" = "debuginfo" ] && continue
         URL="$URL1/$URL2"
         if echo "$URL" | grep -q "^/" ; then
@@ -8044,9 +8099,13 @@ epm_whatdepends()
 
 case $PMTYPE in
 	apt-rpm)
-		if [ -n "$short" ] ; then
+		if [ -z "$verbose" ] ; then
 			showcmd apt-cache whatdepends $pkg
-			a= apt-cache whatdepends $pkg | grep "^  [^ ]" | sed -e "s|[0-9]*:||" | grep -E -v "(i586-|-debuginfo)"
+			if [ -n "$short" ] ; then
+				a= apt-cache whatdepends $pkg | grep "^  [^ ]" | sed -e "s|[0-9]*:||" | grep -E -v "(i586-|-debuginfo)" | sed -e 's|[@:].*||' -e "s|-[0-9].*||g" -e 's|^ *||' -e 's/\.32bit//g'
+			else
+				a= apt-cache whatdepends $pkg | grep "^  [^ ]" | sed -e "s|[0-9]*:||" | grep -E -v "(i586-|-debuginfo)"
+			fi
 			return
 		fi
 		CMD="apt-cache whatdepends"
@@ -9740,7 +9799,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.10.2  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.10.4  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2020"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -9750,7 +9809,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.10.2
+EPMVERSION=3.10.4
 verbose=
 quiet=
 nodeps=

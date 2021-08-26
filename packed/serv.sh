@@ -292,10 +292,18 @@ set_sudo()
 		return
 	fi
 
-	# use sudo if one is tuned and tuned without password
-	if ! sudo -l -n >/dev/null 2>/dev/null ; then
-		SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
-		return
+	# if input is a console
+	if inputisatty && isatty && isatty2 ; then
+		if ! sudo -l >/dev/null ; then
+			SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
+			return
+		fi
+	else
+		# use sudo if one is tuned and tuned without password
+		if ! sudo -l -n >/dev/null 2>/dev/null ; then
+			SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
+			return
+		fi
 	fi
 
 	SUDO="sudo --"
@@ -2842,7 +2850,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.10.2  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.10.4  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2019"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
