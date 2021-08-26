@@ -22,18 +22,17 @@ load_helper epm-sh-altlinux
 # remove grepped lines
 __epm_removerepo_alt_grepremove()
 {
-	local rp
-	local flag=0
-	(quiet=1 epm repolist) 2>/dev/null | grep -E "$1" | while read rp ; do
-		[ -n "$dryrun" ] || apt-repo --dry-run rm "$rp"
+	local rl
+	rl="$((quiet=1 epm repolist) 2>/dev/null | grep -E "$1")"
+	[ -z "$rl" ] && warning "Can't find '$1' in the repos (see '# epm repolist' output)" && return 1
+	echo "$rl" | while read rp ; do
+		[ -n "$dryrun" ] && apt-repo --dry-run rm "$rp" && continue
 		if [ -n "$verbose" ] ; then
 			sudocmd apt-repo $dryrun rm "$rp"
 		else
 			$SUDO apt-repo $dryrun rm "$rp"
 		fi
-		flag=1
 	done
-	[ "$flag" = "0" ] && warning "Can't find '$1' in the repos (see 'epm repolist' output)"
 }
 
 __epm_removerepo_alt()
