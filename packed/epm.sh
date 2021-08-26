@@ -1234,7 +1234,7 @@ case $DISTRNAME in
 		fi
 
 		if [ -z "$direct" ] ; then
-			fatal "Run autoremove without args or with --direct. Check epm autoremove --help to available commands."
+			[ -n "$1" ] && fatal "Run autoremove without args or with --direct. Check epm autoremove --help to available commands."
 			sudocmd apt-get $(subst_option non_interactive -y) autoremove $dryrun
 			local RET=$?
 			[ "$RET" = 0 ] || return
@@ -4902,7 +4902,7 @@ get_next_release()
 		echo "p8" ;;
 	"p8")
 		echo "p9" ;;
-	"p9"|"p9.1"|"p9.2")
+	"p9")
 		echo "p10" ;;
 	"c6")
 		echo "c7" ;;
@@ -4935,8 +4935,8 @@ __switch_alt_to_distro()
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
-			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
-			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
+			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm update-kernel
 			info "Run epm release-upgrade again for update to p8"
 			;;
@@ -4945,8 +4945,8 @@ __switch_alt_to_distro()
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
-			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
-			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
+			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
 			__check_system
 			docmd epm update-kernel || fatal
 			info "Run epm release-upgrade again for update to p9"
@@ -4956,8 +4956,8 @@ __switch_alt_to_distro()
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
-			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
-			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
+			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
 			__check_system
 			docmd epm update-kernel || fatal
 			;;
@@ -4966,13 +4966,13 @@ __switch_alt_to_distro()
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
-			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
+			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			if epm installed libcrypt >/dev/null ; then
 				# glibc-core coflicts libcrypt
 				docmd epm downgrade apt pam pam0_passwdqc glibc-core libcrypt- || fatal
 			fi
 			docmd epm downgrade
-			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
+			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
 			__check_system
 			docmd epm update-kernel || fatal
 			;;
@@ -4985,13 +4985,13 @@ __switch_alt_to_distro()
 			fi
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
-			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
-			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
+			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			__check_system
 			docmd epm update-kernel || fatal
 			info "Run epm release-upgrade again for update to p10"
 			;;
-		"p9"|"p9 p10"|"p9.1 p10"|"p9.2 p10"|"p10 p10")
+		"p9"|"p9 p10"|"p10 p10")
 			info "Upgrade all packages to current $FROM repository"
 			docmd epm upgrade || fatal
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
@@ -4999,8 +4999,8 @@ __switch_alt_to_distro()
 			__switch_repo_to $TO
 			echo '%_priority_distbranch p10' >/etc/rpm/macros.d/p10
 			__epm_ru_update || fatal
-			docmd epm upgrade || fatal "Check an error and run epm release-upgrade again"
-			docmd epm install rpm apt "$(get_fix_release_pkg "$TO")" || fatal "Check an error and run epm release-upgrade again"
+			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm install rpm apt "$(get_fix_release_pkg "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			__check_system
 			docmd epm update-kernel -t std-def || fatal
 			;;
@@ -5009,7 +5009,7 @@ __switch_alt_to_distro()
 			docmd epm install "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
-			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
+			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			if epm installed libcrypt >/dev/null ; then
 				# glibc-core coflicts libcrypt
 				docmd epm downgrade apt rpm pam pam0_passwdqc glibc-core libcrypt- || fatal
@@ -5023,7 +5023,7 @@ __switch_alt_to_distro()
 			docmd epm install "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
-			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
+			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			#if epm installed libcrypt >/dev/null ; then
 			#	# glibc-core coflicts libcrypt
 			#	docmd epm downgrade apt rpm pam pam0_passwdqc glibc-core libcrypt- || fatal
@@ -5038,7 +5038,7 @@ __switch_alt_to_distro()
 			__switch_repo_to $TO
 			rm -fv /etc/rpm/macros.d/p10
 			__epm_ru_update || fatal
-			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
+			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm downgrade
 			__check_system
 			docmd epm upgrade || fatal
@@ -5049,7 +5049,7 @@ __switch_alt_to_distro()
 			__switch_repo_to $TO
 			[ "$TO" = "p10" ] && echo '%_priority_distbranch p10' >/etc/rpm/macros.d/p10
 			__epm_ru_update || fatal
-			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
+			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm downgrade
 			__check_system
 			docmd epm upgrade || fatal
@@ -5062,11 +5062,11 @@ __switch_alt_to_distro()
 			__alt_repofix "alt"
 			[ -s /etc/rpm/macros.d/p10 ] && rm -fv /etc/rpm/macros.d/p10
 			__epm_ru_update || fatal
-			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check an error and run epm release-upgrade again"
+			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			#local ADDPKG
 			#ADDPKG=$(epm -q --short make-initrd sssd-ad 2>/dev/null)
 			#docmd epm install librpm7 librpm rpm apt $ADDPKG "$(get_fix_release_pkg --force "$TO")" ConsoleKit2- || fatal "Check an error and run again"
-			docmd epm upgrade || fatal "Check an error and run epm release-upgrade or just epm upgrade again"
+			docmd epm upgrade || fatal "Check the error and run '# epm release-upgrade' or just '# epm upgrade' again"
 			__check_system
 			docmd epm update-kernel || fatal
 			;;
@@ -5074,7 +5074,7 @@ __switch_alt_to_distro()
 			if [ "$FROM" = "$TO" ] ; then
 				info "It seems your system is already updated to newest $DISTRNAME $TO"
 			else
-				warning "Have no idea how to switch from $DISTRNAME $FROM to $DISTRNAME $TO."
+				warning "Unknown distro version. Have no idea how to switch from $DISTRNAME $FROM to $DISTRNAME $TO."
 			fi
 			info "Try run f.i. # epm release-upgrade p10 or # epm release-upgrade Sisyphus"
 			info "Also possible you need install altlinux-release-p? package for correct distro version detecting"
@@ -5082,8 +5082,8 @@ __switch_alt_to_distro()
 			return 1
 	esac
 	epm clean
-	info "Note: You can try epm autoremove and epm autoorphans commands to remove obsoleted and unused packages."
-	info "Done. The system has been successfully upgraded to the next release."
+	info "Note: Also you can try '# epm autoremove' and '# epm autoorphans' commands to remove obsoleted and unused packages."
+	info "Done. The system has been successfully upgraded to the next release '$TO'."
 	trap - EXIT
 }
 
@@ -5581,18 +5581,17 @@ epm_remove_old_kernels()
 
 __epm_removerepo_alt_grepremove()
 {
-	local rp
-	local flag=0
-	(quiet=1 epm repolist) 2>/dev/null | grep -E "$1" | while read rp ; do
-		[ -n "$dryrun" ] || apt-repo --dry-run rm "$rp"
+	local rl
+	rl="$((quiet=1 epm repolist) 2>/dev/null | grep -E "$1")"
+	[ -z "$rl" ] && warning "Can't find '$1' in the repos (see '# epm repolist' output)" && return 1
+	echo "$rl" | while read rp ; do
+		[ -n "$dryrun" ] && apt-repo --dry-run rm "$rp" && continue
 		if [ -n "$verbose" ] ; then
 			sudocmd apt-repo $dryrun rm "$rp"
 		else
 			$SUDO apt-repo $dryrun rm "$rp"
 		fi
-		flag=1
 	done
-	[ "$flag" = "0" ] && warning "Can't find '$1' in the repos (see 'epm repolist' output)"
 }
 
 __epm_removerepo_alt()
@@ -8429,7 +8428,7 @@ fi
 if distro altlinux-release ; then
 	DISTRIB_ID="ALTLinux"
 	# FIXME: fast hack for fallback: 10 -> p10 for /etc/os-release
-	DISTRIB_RELEASE="p$DISTRIB_RELEASE"
+	DISTRIB_RELEASE="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
 	if has Sisyphus ; then DISTRIB_RELEASE="Sisyphus"
 	elif has "ALT p10.* p10 " ; then DISTRIB_RELEASE="p10"
 	elif has "ALT c10.* c10 " ; then DISTRIB_RELEASE="c10"
@@ -9799,7 +9798,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.10.4  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.10.5  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2020"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -9809,7 +9808,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.10.4
+EPMVERSION=3.10.5
 verbose=
 quiet=
 nodeps=
