@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.10.4
+Version: 3.10.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -21,7 +21,7 @@ Provides: epm = %EVR
 %if %_vendor == "alt"
 # FIXHERE: Replace with target platform package manager
 Requires: apt rpm
-Requires: distro_info >= 1.8
+Requires: distro_info >= 2.5
 %endif
 
 %description
@@ -135,6 +135,14 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Thu Aug 26 2021 Vitaly Lipatov <lav@altlinux.ru> 3.10.5-alt1
+- ignore dot part of the version for ALT (9.0 -> p9)
+- epm-release_upgrade: drop p9.x support
+- epm-autoremove: fix run autoremove
+- epm-release_upgrade: fix messages
+- epm-removerepo: fix remove repo status (warning about empty grep)
+- set distro_info >= 2.5
+
 * Thu Aug 26 2021 Vitaly Lipatov <lav@altlinux.ru> 3.10.4-alt1
 - epm-repolist: --quiet support
 - epm search-file: fix error introduced by the new repolist code, add --quiet support
