@@ -240,7 +240,7 @@ get_next_release()
 		echo "p8" ;;
 	"p8")
 		echo "p9" ;;
-	"p9"|"p9.1"|"p9.2")
+	"p9")
 		echo "p10" ;;
 	"c6")
 		echo "c7" ;;
@@ -330,7 +330,7 @@ __switch_alt_to_distro()
 			docmd epm update-kernel || fatal
 			info "Run epm release-upgrade again for update to p10"
 			;;
-		"p9"|"p9 p10"|"p9.1 p10"|"p9.2 p10"|"p10 p10")
+		"p9"|"p9 p10"|"p10 p10")
 			info "Upgrade all packages to current $FROM repository"
 			docmd epm upgrade || fatal
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
