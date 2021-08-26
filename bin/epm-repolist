@@ -57,12 +57,11 @@ __print_apt_sources_list_verbose()
 print_apt_sources_list()
 {
     local LISTS='/etc/apt/sources.list /etc/apt/sources.list.d/*.list'
-#    if [ -n "$verbose" ] ; then
+    if [ -n "$quiet" ] ; then
+        __print_apt_sources_list $LISTS
+    else
         __print_apt_sources_list_verbose $LISTS
-#    else
-#        __print_apt_sources_list_list $LISTS
-#        __print_apt_sources_list $LISTS
-#    fi
+    fi
 }
 
 
