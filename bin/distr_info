@@ -226,7 +226,7 @@ fi
 if distro altlinux-release ; then
 	DISTRIB_ID="ALTLinux"
 	# FIXME: fast hack for fallback: 10 -> p10 for /etc/os-release
-	DISTRIB_RELEASE="p$DISTRIB_RELEASE"
+	DISTRIB_RELEASE="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
 	if has Sisyphus ; then DISTRIB_RELEASE="Sisyphus"
 	elif has "ALT p10.* p10 " ; then DISTRIB_RELEASE="p10"
 	elif has "ALT c10.* c10 " ; then DISTRIB_RELEASE="c10"
