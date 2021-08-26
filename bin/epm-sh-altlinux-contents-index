@@ -101,7 +101,7 @@ __init_contents_index_list()
 # "comment" "file"
 __add_to_contents_index_list()
 {
-    echo "  $1 -> $2"
+    [ -n "$quiet" ] || echo "  $1 -> $2"
     echo "$2" >>$ALT_CONTENTS_INDEX_LIST
 }
 
@@ -125,7 +125,7 @@ update_alt_contents_index()
     # TODO: fix for Etersoft/LINUX@Etersoft
     # TODO: fix for rsync
     info "Retrieving contents_index ..."
-    epm_repolist | grep -v " task$" | grep -E "rpm.*(ftp://|http://|https://|rsync://|file:/)" | sed -e "s@^rpm.*\(ftp://\|http://\|https://\)@rsync://@g" | sed -e "s@^rpm.*\(file:\)@@g" | while read -r URL1 URL2 component ; do
+    (quiet=1 epm_repolist) | grep -v " task$" | grep -E "rpm.*(ftp://|http://|https://|rsync://|file:/)" | sed -e "s@^rpm.*\(ftp://\|http://\|https://\)@rsync://@g" | sed -e "s@^rpm.*\(file:\)@@g" | while read -r URL1 URL2 component ; do
         [ "$component" = "debuginfo" ] && continue
         URL="$URL1/$URL2"
         if echo "$URL" | grep -q "^/" ; then
