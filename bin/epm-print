@@ -24,9 +24,11 @@ query_package_field()
 {
 	local FORMAT="%{$1}\n"
 	shift
-	local INSTALLED="-p"
-	# if not file, drop -p for get from rpm base
-	[ -f "$1" ] || INSTALLED=""
+	local INSTALLED=""
+	# if a file, ad -p for get from rpm base
+	if [ -f "$1" ] && [ "$(get_package_type "$1")" = "rpm" ] ; then
+		INSTALLED="-p"
+	fi
 	a= rpmquery $INSTALLED --queryformat "$FORMAT" "$@"
 }
 
