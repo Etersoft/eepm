@@ -51,6 +51,7 @@ __epm_assure_checking()
     [ -n "$PACKAGEVERSION" ] && return 1
 
     if is_dirpath "$CMD" ; then
+        # TODO: check for /usr/bin, /bin, /usr/sbin, /sbin
         if [ -e "$CMD" ] ; then
             if [ -n "$verbose" ] ; then
                 info "File or directory $CMD is already exists."
@@ -59,7 +60,7 @@ __epm_assure_checking()
             return 0
         fi
 
-        [ -n "$PACKAGE" ] || fatal "You need run with package name param when use with absolute path"
+        [ -n "$PACKAGE" ] || fatal "You need run with package name param when use with absolute path to non executable file"
         return 1
     fi
 
