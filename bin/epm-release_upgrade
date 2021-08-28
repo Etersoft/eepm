@@ -44,7 +44,7 @@ __restore_alt_repo_lists()
 		[ -s "$i" ] || continue
 		local DD="$(echo "$i" | sed -e "s|/etc|$SAVELISTDIR|")"
 		# restore only if there are differences
-		diff -q "$DD" "$i" >/dev/null | continue
+		diff -q "$DD" "$i" >/dev/null || continue
 		mv $verbose "$DD" "$i" || warning "Can't restore $i file"
 	done
 }

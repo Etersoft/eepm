@@ -1,5 +1,6 @@
 /bin/echo
 coreutils
+diffutils
 eepm
 file
 findutils
