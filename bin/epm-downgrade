@@ -73,11 +73,8 @@ epm_downgrade()
 	apt-rpm)
 		local APTOPTIONS="$(subst_option non_interactive -y)"
 		__epm_add_alt_apt_downgrade_preferences || return
-		if [ -n "$pkg_filenames" ] ; then
-			sudocmd apt-get $APTOPTIONS install $pkg_filenames
-		else
-			sudocmd apt-get $APTOPTIONS dist-upgrade
-		fi
+		load_helper epm-upgrade
+		epm_upgrade "$@"
 		__epm_remove_apt_downgrade_preferences
 		;;
 	apt-dpkg)
