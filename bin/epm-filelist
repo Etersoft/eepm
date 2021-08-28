@@ -61,7 +61,8 @@ __epm_filelist_remote()
 			;;
 		apt-dpkg)
 			assure_exists apt-file || return
-			if sudo -n true 2>/dev/null ; then
+			# TODO: improve me
+			if sudorun -n true 2>/dev/null ; then
 				sudocmd apt-file update
 			else
 				info "sudo requires a password, skip apt-file update"

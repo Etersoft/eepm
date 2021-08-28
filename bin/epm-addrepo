@@ -138,8 +138,8 @@ __epm_addkey_deb()
     local fingerprint="$2"
     if [ -z "$fingerprint" ] ; then
         assure_exists curl
-        showcmd "curl -fsSL '$url' | sudo apt-key add -"
-        a= curl -fsSL "$url" | $SUDO apt-key add -
+        showcmd "curl -fsSL '$url' | $SUDO apt-key add -"
+        a= curl -fsSL "$url" | sudorun apt-key add -
         return
     fi
     sudocmd apt-key adv --keyserver "$url" --recv "$fingerprint"
@@ -183,7 +183,7 @@ __epm_addrepo_deb()
 
 	# FIXME: quotes in showcmd/sudocmd
 	showcmd apt-add-repository "$repo"
-	$SUDO apt-add-repository "$repo"
+	sudorun apt-add-repository "$repo"
 	info "Check file /etc/apt/sources.list if needed"
 }
 

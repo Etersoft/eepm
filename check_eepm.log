@@ -6,6 +6,5 @@ findutils
 grep
 less
 sed
-sudo
 termutils
 which

@@ -26,22 +26,22 @@ is_service_running()
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)
 			if is_anyservice $1 ; then
-				OUTPUT="$($SUDO anyservice $1 status 2>/dev/null)" || return 1
+				OUTPUT="$(sudorun anyservice $1 status 2>/dev/null)" || return 1
 				echo "$OUTPUT" | grep -q "is stopped" && return 1
 				return 0
 			fi
-			OUTPUT="$($SUDO service $1 status 2>/dev/null)" || return 1
+			OUTPUT="$(sudorun service $1 status 2>/dev/null)" || return 1
 			echo "$OUTPUT" | grep -q "is stopped" && return 1
 			return 0
 			;;
 		service-initd|service-update)
-			$SUDO $INITDIR/$1 status >/dev/null 2>/dev/null
+			sudorun $INITDIR/$1 status >/dev/null 2>/dev/null
 			;;
 		systemd)
-			$SUDO systemctl status $1 >/dev/null 2>/dev/null
+			sudorun systemctl status $1 >/dev/null 2>/dev/null
 			;;
 		runit)
-			$SUDO sv status "$SERVICE" >/dev/null 2>/dev/null
+			sudorun sv status "$SERVICE" >/dev/null 2>/dev/null
 			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
@@ -62,13 +62,13 @@ is_service_autostart()
 			fi
 
 			# FIXME: check for current runlevel
-			LANG=C $SUDO chkconfig $1 --list | grep -q "[35]:on"
+			LANG=C sudorun chkconfig $1 --list | grep -q "[35]:on"
 			;;
 		service-initd|service-update)
                         test -L "$(echo /etc/rc5.d/S??$1)"
 			;;
 		systemd)
-			$SUDO systemctl is-enabled $1
+			sudorun systemctl is-enabled $1
 			;;
 		runit)
 			test -L "/var/service/$SERVICE"

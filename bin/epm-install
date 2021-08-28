@@ -260,7 +260,7 @@ epm_ni_install_names()
 __epm_check_if_rpm_already_installed()
 {
 	# Not: we can make optimize if just check version?
-	LANG=C $SUDO rpm -Uvh $force $nodeps $@ 2>&1 | grep -q "is already installed"
+	LANG=C sudorun rpm -Uvh $force $nodeps $@ 2>&1 | grep -q "is already installed"
 }
 
 __handle_direct_install()

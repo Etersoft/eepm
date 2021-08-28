@@ -30,7 +30,7 @@ __epm_removerepo_alt_grepremove()
 		if [ -n "$verbose" ] ; then
 			sudocmd apt-repo $dryrun rm "$rp"
 		else
-			$SUDO apt-repo $dryrun rm "$rp"
+			sudorun apt-repo $dryrun rm "$rp"
 		fi
 	done
 }
@@ -91,7 +91,9 @@ esac;
 case $PMTYPE in
 	apt-dpkg)
 		assure_exists apt-add-repository software-properties-common
+		# FIXME: it is possible there is troubles to pass the args
 		showcmd apt-add-repository --remove "$*"
+		set_sudo
 		$SUDO apt-add-repository --remove "$*"
 		info "Check file /etc/apt/sources.list if needed"
 		;;

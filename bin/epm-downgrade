@@ -22,7 +22,7 @@ load_helper epm-check_updated_repo
 __epm_add_alt_apt_downgrade_preferences()
 {
 	[ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists"
-	cat <<EOF | $SUDO tee /etc/apt/preferences
+	cat <<EOF | sudorun tee /etc/apt/preferences
 # main repo
 Package: *
 Pin: release c=classic
@@ -40,7 +40,7 @@ __epm_add_deb_apt_downgrade_preferences()
 {
 	[ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists"
 	info "Running with /etc/apt/preferences:"
-	cat <<EOF | $SUDO tee /etc/apt/preferences
+	cat <<EOF | sudorun tee /etc/apt/preferences
 Package: *
 Pin: release a=stable
 Pin-Priority: 1001

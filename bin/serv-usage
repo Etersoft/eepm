@@ -31,11 +31,11 @@ serv_usage()
 		service-chkconfig|service-upstart)
 			# CHECKME: many services print out usage in stderr, it conflicts with printout command
 			#sudocmd service $SERVICE 2>&1
-			$SUDO service $SERVICE 2>&1
+			sudorun service $SERVICE 2>&1
 			;;
 		service-initd|service-update)
 			#sudocmd /etc/init.d/$SERVICE 2>&1
-			$SUDO service $SERVICE 2>&1
+			sudorun service $SERVICE 2>&1
 			;;
 		systemd)
 			sudocmd systemctl $SERVICE 2>&1

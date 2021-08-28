@@ -135,11 +135,19 @@ docmd_foreach()
 	done
 }
 
+# run command line with SUDO
+sudorun()
+{
+	set_sudo
+	[ -n "$SUDO" ] && $SUDO "$@" || "$@"
+}
+
 # Print command line and run command line with SUDO
 sudocmd()
 {
+	set_sudo
 	[ -n "$SUDO" ] && showcmd "$SUDO $*" || showcmd "$*"
-	$SUDO $@
+	sudorun "$@"
 }
 
 # Run every arg with sudocmd
@@ -281,8 +289,12 @@ info()
 	fi
 }
 
+SUDO_TESTED="0"
+SUDO_CMD="sudo"
 set_sudo()
 {
+	[ "$SUDO_TESTED" = "1" ] && return
+	SUDO_TESTED="1"
 	SUDO=""
 	# skip SUDO if disabled
 	[ -n "$EPMNOSUDO" ] && return
@@ -296,28 +308,28 @@ set_sudo()
 	# do not need sudo
 	[ $EFFUID = "0" ] && return
 
-	if ! which sudo >/dev/null 2>/dev/null ; then
-		SUDO="fatal 'Can't find sudo. Please install and tune sudo or run epm under root.'"
+	if ! which $SUDO_CMD >/dev/null 2>/dev/null ; then
+		SUDO="fatal 'Can't find sudo. Please install and tune sudo ('# epm install sudo') or run epm under root.'"
 		return
 	fi
 
 	# if input is a console
 	if inputisatty && isatty && isatty2 ; then
-		if ! sudo -l >/dev/null ; then
-			SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
+		if ! $SUDO_CMD -l >/dev/null ; then
+			SUDO="fatal 'Can't use sudo (only without password sudo is supported in non interactive using). Please run epm under root.'"
 			return
 		fi
 	else
 		# use sudo if one is tuned and tuned without password
-		if ! sudo -l -n >/dev/null 2>/dev/null ; then
+		if ! $SUDO_CMD -l -n >/dev/null 2>/dev/null ; then
 			SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
 			return
 		fi
 	fi
 
-	SUDO="sudo --"
+	SUDO="$SUDO_CMD --"
 	# check for < 1.7 version which do not support -- (and --help possible too)
-	sudo -h 2>/dev/null | grep -q "  --" || SUDO="sudo"
+	$SUDO_CMD -h 2>/dev/null | grep -q "  --" || SUDO="$SUDO_CMD"
 
 }
 
@@ -341,6 +353,7 @@ set_eatmydata()
 	[ -n "$EPMNOEATMYDATA" ] && return
 	# use if possible
 	which eatmydata >/dev/null 2>/dev/null || return
+	set_sudo
 	[ -n "$SUDO" ] && SUDO="$SUDO eatmydata" || SUDO="eatmydata"
 	[ -n "$verbose" ] && info "Uwaga! eatmydata is installed, we will use it for disable all sync operations."
 	return 0
