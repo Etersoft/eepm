@@ -365,7 +365,7 @@ __epm_restore_npm()
 {
     local req_file="$1"
 
-    epm assure jq || fatal
+    assure_exists jq || fatal
 
     if [ -n "$dryrun" ] ; then
         local lt=$(mktemp)
@@ -421,7 +421,7 @@ __epm_restore_perl_shyaml()
 {
     local req_file="$1"
 
-    epm assure shyaml || fatal
+    assure_exists shyaml || fatal
 
     if [ -n "$dryrun" ] ; then
         local lt=$(mktemp)

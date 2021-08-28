@@ -50,7 +50,7 @@ __serv_enable()
 			sudocmd rc-update add $1 default
 			;;
 		runit)
-			epm assure $SERVICE
+			assure_exists $SERVICE
 			[ -r "/etc/sv/$SERVICE" ] || fatal "Can't find /etc/sv/$SERVICE"
 			sudocmd ln -s /etc/sv/$SERVICE /var/service/
 			;;

@@ -27,8 +27,8 @@ tasknumber()
 get_task_arepo_packages()
 {
     local res
-    epm assure apt-repo
-    epm assure curl
+    assure_exists apt-repo
+    assure_exists curl
 
     info "TODO: please, improve apt-repo to support arepo (i586-) packages for apt-repo list task"
     showcmd "curl -s -f http://git.altlinux.org/tasks/$tn/plan/arepo-add-x86_64-i586 | cut -f1"

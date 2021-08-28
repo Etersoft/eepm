@@ -150,7 +150,7 @@ __epm_print_url_alt_check()
 	local pkg=$1
 	shift
 	local tm=$(mktemp)
-	epm assure curl
+	assure_exists curl
 	load_helper epm-site
 	quiet=1
 	local buildtime=$(paoapi packages/$pkg | get_pao_var buildtime)
