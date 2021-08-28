@@ -50,7 +50,7 @@ epm_epm_install() {
     local pkglist="$*"
 
     # install epm by default
-    if [ -z "$pkglist" ] ; then
+    if [ -z "$pkglist" ] || [ "$pkglist" = "epm" ] || [ "$pkglist" = "eepm" ]; then
         if [ "$($DISTRVENDOR -s)" = "alt" ] ; then
             pkglist="distro_info eepm"
         else
