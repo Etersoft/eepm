@@ -1,6 +1,6 @@
 #!/bin/sh
 
-SUDO=
+SUDO="sudo --"
 #sudofunc
 
 sudofunc()
@@ -22,8 +22,10 @@ sudocmd()
 {
 	showcmd "$SUDO $@"
 #FIXME
-	$SUDO $@
+	$SUDO "$@"
 }
 
 
 sudocmd "ls -l" "-a -a"
+
+sudocmd ls -l

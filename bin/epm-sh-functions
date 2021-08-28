@@ -159,7 +159,8 @@ sudocmd_foreach()
 	#showcmd "$@"
 	shift
 	for pkg in "$@" ; do
-		sudocmd "$cmd" $pkg || return
+		# don't quote $cmd here: it can be a command with an args
+		sudocmd $cmd $pkg || return
 	done
 }
 

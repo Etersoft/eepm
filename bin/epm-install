@@ -56,10 +56,10 @@ __separate_sudocmd()
     shift 2
     separate_installed $@
     if [ -n "$pkg_noninstalled" ] ; then
-        sudocmd "$cmd_re" $pkg_noninstalled || return
+        sudocmd $cmd_re $pkg_noninstalled || return
     fi
     if [ -n "$pkg_installed" ] ; then
-        sudocmd "$cmd_in" $pkg_installed || return
+        sudocmd $cmd_in $pkg_installed || return
     fi
     return 0
 }
