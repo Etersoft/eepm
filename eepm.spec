@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.10.5
+Version: 3.11.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,12 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Sat Aug 28 2021 Vitaly Lipatov <lav@altlinux.ru> 3.11.0-alt1
+- check sudo only when needed
+- epm print: use local file for query_package_field only if it has .rpm extension
+- epm-play: allow pass package name when --remove
+- epm-epm_install: add distro_info and eepm if we try install epm or eepm package
+
 * Thu Aug 26 2021 Vitaly Lipatov <lav@altlinux.ru> 3.10.5-alt1
 - ignore dot part of the version for ALT (9.0 -> p9)
 - epm-release_upgrade: drop p9.x support
