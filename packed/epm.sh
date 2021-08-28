@@ -152,10 +152,17 @@ docmd_foreach()
 	done
 }
 
+sudorun()
+{
+	set_sudo
+	[ -n "$SUDO" ] && $SUDO "$@" || "$@"
+}
+
 sudocmd()
 {
+	set_sudo
 	[ -n "$SUDO" ] && showcmd "$SUDO $*" || showcmd "$*"
-	$SUDO $@
+	sudorun "$@"
 }
 
 sudocmd_foreach()
@@ -165,7 +172,8 @@ sudocmd_foreach()
 	#showcmd "$@"
 	shift
 	for pkg in "$@" ; do
-		sudocmd "$cmd" $pkg || return
+		# don't quote $cmd here: it can be a command with an args
+		sudocmd $cmd $pkg || return
 	done
 }
 
@@ -281,8 +289,12 @@ info()
 	fi
 }
 
+SUDO_TESTED="0"
+SUDO_CMD="sudo"
 set_sudo()
 {
+	[ "$SUDO_TESTED" = "1" ] && return
+	SUDO_TESTED="1"
 	SUDO=""
 	# skip SUDO if disabled
 	[ -n "$EPMNOSUDO" ] && return
@@ -296,28 +308,28 @@ set_sudo()
 	# do not need sudo
 	[ $EFFUID = "0" ] && return
 
-	if ! which sudo >/dev/null 2>/dev/null ; then
-		SUDO="fatal 'Can't find sudo. Please install and tune sudo or run epm under root.'"
+	if ! which $SUDO_CMD >/dev/null 2>/dev/null ; then
+		SUDO="fatal 'Can't find sudo. Please install and tune sudo ('# epm install sudo') or run epm under root.'"
 		return
 	fi
 
 	# if input is a console
 	if inputisatty && isatty && isatty2 ; then
-		if ! sudo -l >/dev/null ; then
-			SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
+		if ! $SUDO_CMD -l >/dev/null ; then
+			SUDO="fatal 'Can't use sudo (only without password sudo is supported in non interactive using). Please run epm under root.'"
 			return
 		fi
 	else
 		# use sudo if one is tuned and tuned without password
-		if ! sudo -l -n >/dev/null 2>/dev/null ; then
+		if ! $SUDO_CMD -l -n >/dev/null 2>/dev/null ; then
 			SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
 			return
 		fi
 	fi
 
-	SUDO="sudo --"
+	SUDO="$SUDO_CMD --"
 	# check for < 1.7 version which do not support -- (and --help possible too)
-	sudo -h 2>/dev/null | grep -q "  --" || SUDO="sudo"
+	$SUDO_CMD -h 2>/dev/null | grep -q "  --" || SUDO="$SUDO_CMD"
 
 }
 
@@ -339,6 +351,7 @@ set_eatmydata()
 	[ -n "$EPMNOEATMYDATA" ] && return
 	# use if possible
 	which eatmydata >/dev/null 2>/dev/null || return
+	set_sudo
 	[ -n "$SUDO" ] && SUDO="$SUDO eatmydata" || SUDO="eatmydata"
 	[ -n "$verbose" ] && info "Uwaga! eatmydata is installed, we will use it for disable all sync operations."
 	return 0
@@ -691,8 +704,8 @@ __epm_addkey_deb()
     local fingerprint="$2"
     if [ -z "$fingerprint" ] ; then
         assure_exists curl
-        showcmd "curl -fsSL '$url' | sudo apt-key add -"
-        a= curl -fsSL "$url" | $SUDO apt-key add -
+        showcmd "curl -fsSL '$url' | $SUDO apt-key add -"
+        a= curl -fsSL "$url" | sudorun apt-key add -
         return
     fi
     sudocmd apt-key adv --keyserver "$url" --recv "$fingerprint"
@@ -736,7 +749,7 @@ __epm_addrepo_deb()
 
 	# FIXME: quotes in showcmd/sudocmd
 	showcmd apt-add-repository "$repo"
-	$SUDO apt-add-repository "$repo"
+	sudorun apt-add-repository "$repo"
 	info "Check file /etc/apt/sources.list if needed"
 }
 
@@ -832,6 +845,7 @@ __epm_assure_checking()
     [ -n "$PACKAGEVERSION" ] && return 1
 
     if is_dirpath "$CMD" ; then
+        # TODO: check for /usr/bin, /bin, /usr/sbin, /sbin
         if [ -e "$CMD" ] ; then
             if [ -n "$verbose" ] ; then
                 info "File or directory $CMD is already exists."
@@ -840,7 +854,7 @@ __epm_assure_checking()
             return 0
         fi
 
-        [ -n "$PACKAGE" ] || fatal "You need run with package name param when use with absolute path"
+        [ -n "$PACKAGE" ] || fatal "You need run with package name param when use with absolute path to non executable file"
         return 1
     fi
 
@@ -1675,7 +1689,7 @@ __is_repo_info_downloaded()
     case $PMTYPE in
         apt-*)
             if [ -r /var/cache/apt ] ; then
-                $SUDO test -r /var/cache/apt/pkgcache.bin || return
+                sudorun test -r /var/cache/apt/pkgcache.bin || return
             fi
             ;;
         *)
@@ -1691,7 +1705,7 @@ __is_repo_info_uptodate()
             # apt-deb do not update lock file date
             #if $SUDO test -r /var/lib/apt/lists ; then
                 local LOCKFILE=/var/lib/apt/lists
-                $SUDO test -r $LOCKFILE || return
+                sudorun test -r $LOCKFILE || return
                 # if repo older than 1 day, return false
                 # find print string if file is obsoleted
                 test -z "$(find $LOCKFILE -maxdepth 0 -mtime +1)" || return
@@ -1708,7 +1722,7 @@ update_repo_if_needed()
     # check if we need skip update checking
     if [ "$1" = "soft" ] && [ -n "$SUDO" ] ; then
         # if sudo requires a password, skip autoupdate
-        sudo -n true 2>/dev/null || { info "sudo requires a password, skip repo status checking" ; return 0 ; }
+        sudorun -n true 2>/dev/null || { info "sudo requires a password, skip repo status checking" ; return 0 ; }
     fi
 
     cd / || fatal
@@ -1723,7 +1737,7 @@ update_repo_if_needed()
 save_installed_packages()
 {
 	[ -d /var/lib/rpm ] || return 0
-	estrlist list "$@" | $SUDO tee /var/lib/rpm/EPM-installed >/dev/null
+	estrlist list "$@" | sudorun tee /var/lib/rpm/EPM-installed >/dev/null
 }
 
 check_manually_installed()
@@ -1919,7 +1933,7 @@ try_fix_apt_rpm_dupls()
 		sudocmd epm remove --auto $TESTPKG || return
 	fi
 	local PKGLIST
-	PKGLIST=$(LANG=C $SUDO apt-get install $TESTPKG 2>&1 | grep "W: There are multiple versions of" | \
+	PKGLIST=$(LANG=C sudorun apt-get install $TESTPKG 2>&1 | grep "W: There are multiple versions of" | \
 		sed -e 's|W: There are multiple versions of "\(.*\)" in your system.|\1|')
 	local TODEL
 	for i in $PKGLIST ; do
@@ -1964,7 +1978,7 @@ esac
 __epm_add_alt_apt_downgrade_preferences()
 {
 	[ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists"
-	cat <<EOF | $SUDO tee /etc/apt/preferences
+	cat <<EOF | sudocmd tee /etc/apt/preferences
 Package: *
 Pin: release c=classic
 Pin-Priority: 1001
@@ -1972,6 +1986,10 @@ Pin-Priority: 1001
 Package: *
 Pin: release c=addon
 Pin-Priority: 1101
+
+Package: *
+Pin: release c=task
+Pin-Priority: 1201
 EOF
 }
 
@@ -1979,7 +1997,7 @@ __epm_add_deb_apt_downgrade_preferences()
 {
 	[ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists"
 	info "Running with /etc/apt/preferences:"
-	cat <<EOF | $SUDO tee /etc/apt/preferences
+	cat <<EOF | sudorun tee /etc/apt/preferences
 Package: *
 Pin: release a=stable
 Pin-Priority: 1001
@@ -2012,11 +2030,7 @@ epm_downgrade()
 	apt-rpm)
 		local APTOPTIONS="$(subst_option non_interactive -y)"
 		__epm_add_alt_apt_downgrade_preferences || return
-		if [ -n "$pkg_filenames" ] ; then
-			sudocmd apt-get $APTOPTIONS install $pkg_filenames
-		else
-			sudocmd apt-get $APTOPTIONS dist-upgrade
-		fi
+		epm_upgrade "$@"
 		__epm_remove_apt_downgrade_preferences
 		;;
 	apt-dpkg)
@@ -2181,7 +2195,7 @@ __epm_print_url_alt_check()
 	local pkg=$1
 	shift
 	local tm=$(mktemp)
-	epm assure curl
+	assure_exists curl
 	quiet=1
 	local buildtime=$(paoapi packages/$pkg | get_pao_var buildtime)
 	echo
@@ -2295,7 +2309,7 @@ epm_epm_install() {
     local pkglist="$*"
 
     # install epm by default
-    if [ -z "$pkglist" ] ; then
+    if [ -z "$pkglist" ] || [ "$pkglist" = "epm" ] || [ "$pkglist" = "eepm" ]; then
         if [ "$($DISTRVENDOR -s)" = "alt" ] ; then
             pkglist="distro_info eepm"
         else
@@ -2354,7 +2368,8 @@ __epm_filelist_remote()
 			;;
 		apt-dpkg)
 			assure_exists apt-file || return
-			if sudo -n true 2>/dev/null ; then
+			# TODO: improve me
+			if sudorun -n true 2>/dev/null ; then
 				sudocmd apt-file update
 			else
 				info "sudo requires a password, skip apt-file update"
@@ -2671,10 +2686,10 @@ __separate_sudocmd()
     shift 2
     separate_installed $@
     if [ -n "$pkg_noninstalled" ] ; then
-        sudocmd "$cmd_re" $pkg_noninstalled || return
+        sudocmd $cmd_re $pkg_noninstalled || return
     fi
     if [ -n "$pkg_installed" ] ; then
-        sudocmd "$cmd_in" $pkg_installed || return
+        sudocmd $cmd_in $pkg_installed || return
     fi
     return 0
 }
@@ -2873,7 +2888,7 @@ epm_ni_install_names()
 __epm_check_if_rpm_already_installed()
 {
 	# Not: we can make optimize if just check version?
-	LANG=C $SUDO rpm -Uvh $force $nodeps $@ 2>&1 | grep -q "is already installed"
+	LANG=C sudorun rpm -Uvh $force $nodeps $@ 2>&1 | grep -q "is already installed"
 }
 
 __handle_direct_install()
@@ -3561,7 +3576,7 @@ __save_installed_app()
 {
 	[ -d "$epm_vardir" ] || return 0
 	__check_installed_app "$1" && return 0
-	echo "$1" | $SUDO tee -a $epm_vardir/installed-app >/dev/null
+	echo "$1" | sudorun tee -a $epm_vardir/installed-app >/dev/null
 }
 
 __remove_installed_app()
@@ -3569,7 +3584,7 @@ __remove_installed_app()
 	[ -d "$epm_vardir" ] || return 0
 	local i
 	for i in $* ; do
-		$SUDO sed -i "/^$i$/d" $epm_vardir/installed-app
+		sudorun sed -i "/^$i$/d" $epm_vardir/installed-app
 	done
 	return 0
 }
@@ -3622,7 +3637,9 @@ fi
 if [ "$1" = "--remove" ] ; then
     shift
     #__check_installed_app "$1" || fatal "$1 is not installed"
-    __epm_play_run $1 --remove
+    prescription="$1"
+    shift
+    __epm_play_run $prescription --remove "$@"
     __remove_installed_app "$@"
     exit
 fi
@@ -3740,9 +3757,11 @@ query_package_field()
 {
 	local FORMAT="%{$1}\n"
 	shift
-	local INSTALLED="-p"
-	# if not file, drop -p for get from rpm base
-	[ -f "$1" ] || INSTALLED=""
+	local INSTALLED=""
+	# if a file, ad -p for get from rpm base
+	if [ -f "$1" ] && [ "$(get_package_type "$1")" = "rpm" ] ; then
+		INSTALLED="-p"
+	fi
 	a= rpmquery $INSTALLED --queryformat "$FORMAT" "$@"
 }
 
@@ -4707,7 +4726,7 @@ __restore_alt_repo_lists()
 		[ -s "$i" ] || continue
 		local DD="$(echo "$i" | sed -e "s|/etc|$SAVELISTDIR|")"
 		# restore only if there are differences
-		diff -q "$DD" "$i" >/dev/null | continue
+		diff -q "$DD" "$i" >/dev/null || continue
 		mv $verbose "$DD" "$i" || warning "Can't restore $i file"
 	done
 }
@@ -5585,11 +5604,11 @@ __epm_removerepo_alt_grepremove()
 	rl="$((quiet=1 epm repolist) 2>/dev/null | grep -E "$1")"
 	[ -z "$rl" ] && warning "Can't find '$1' in the repos (see '# epm repolist' output)" && return 1
 	echo "$rl" | while read rp ; do
-		[ -n "$dryrun" ] && apt-repo --dry-run rm "$rp" && continue
+		[ -n "$dryrun" ] && docmd apt-repo $dryrun rm "$rp" && continue
 		if [ -n "$verbose" ] ; then
 			sudocmd apt-repo $dryrun rm "$rp"
 		else
-			$SUDO apt-repo $dryrun rm "$rp"
+			sudorun apt-repo $dryrun rm "$rp"
 		fi
 	done
 }
@@ -5648,7 +5667,9 @@ esac;
 case $PMTYPE in
 	apt-dpkg)
 		assure_exists apt-add-repository software-properties-common
+		# FIXME: it is possible there is troubles to pass the args
 		showcmd apt-add-repository --remove "$*"
+		set_sudo
 		$SUDO apt-add-repository --remove "$*"
 		info "Check file /etc/apt/sources.list if needed"
 		;;
@@ -6858,7 +6879,7 @@ __epm_restore_npm()
 {
     local req_file="$1"
 
-    epm assure jq || fatal
+    assure_exists jq || fatal
 
     if [ -n "$dryrun" ] ; then
         local lt=$(mktemp)
@@ -6912,7 +6933,7 @@ __epm_restore_perl_shyaml()
 {
     local req_file="$1"
 
-    epm assure shyaml || fatal
+    assure_exists shyaml || fatal
 
     if [ -n "$dryrun" ] ; then
         local lt=$(mktemp)
@@ -7300,8 +7321,8 @@ tasknumber()
 get_task_arepo_packages()
 {
     local res
-    epm assure apt-repo
-    epm assure curl
+    assure_exists apt-repo
+    assure_exists curl
 
     info "TODO: please, improve apt-repo to support arepo (i586-) packages for apt-repo list task"
     showcmd "curl -s -f http://git.altlinux.org/tasks/$tn/plan/arepo-add-x86_64-i586 | cut -f1"
@@ -7746,7 +7767,7 @@ PAOURL="https://packages.altlinux.org"
 paoapi()
 {
 	# http://petstore.swagger.io/?url=http://packages.altlinux.org/api/docs
-	epm assure curl || return 1
+	assure_exists curl || return 1
 	showcmd curl "$PAOURL/api/$1"
 	a='' curl -s --header "Accept: application/json" "$PAOURL/api/$1"
 }
@@ -9770,8 +9791,6 @@ fi
 
 set_pm_type
 
-set_sudo
-
 check_tty
 
 #############################
@@ -9798,7 +9817,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.10.5  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.11.1  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2020"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -9808,7 +9827,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.10.5
+EPMVERSION=3.11.1
 verbose=
 quiet=
 nodeps=

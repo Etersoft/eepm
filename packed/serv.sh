@@ -143,10 +143,17 @@ docmd_foreach()
 	done
 }
 
+sudorun()
+{
+	set_sudo
+	[ -n "$SUDO" ] && $SUDO "$@" || "$@"
+}
+
 sudocmd()
 {
+	set_sudo
 	[ -n "$SUDO" ] && showcmd "$SUDO $*" || showcmd "$*"
-	$SUDO $@
+	sudorun "$@"
 }
 
 sudocmd_foreach()
@@ -156,7 +163,8 @@ sudocmd_foreach()
 	#showcmd "$@"
 	shift
 	for pkg in "$@" ; do
-		sudocmd "$cmd" $pkg || return
+		# don't quote $cmd here: it can be a command with an args
+		sudocmd $cmd $pkg || return
 	done
 }
 
@@ -272,8 +280,12 @@ info()
 	fi
 }
 
+SUDO_TESTED="0"
+SUDO_CMD="sudo"
 set_sudo()
 {
+	[ "$SUDO_TESTED" = "1" ] && return
+	SUDO_TESTED="1"
 	SUDO=""
 	# skip SUDO if disabled
 	[ -n "$EPMNOSUDO" ] && return
@@ -287,28 +299,28 @@ set_sudo()
 	# do not need sudo
 	[ $EFFUID = "0" ] && return
 
-	if ! which sudo >/dev/null 2>/dev/null ; then
-		SUDO="fatal 'Can't find sudo. Please install and tune sudo or run epm under root.'"
+	if ! which $SUDO_CMD >/dev/null 2>/dev/null ; then
+		SUDO="fatal 'Can't find sudo. Please install and tune sudo ('# epm install sudo') or run epm under root.'"
 		return
 	fi
 
 	# if input is a console
 	if inputisatty && isatty && isatty2 ; then
-		if ! sudo -l >/dev/null ; then
-			SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
+		if ! $SUDO_CMD -l >/dev/null ; then
+			SUDO="fatal 'Can't use sudo (only without password sudo is supported in non interactive using). Please run epm under root.'"
 			return
 		fi
 	else
 		# use sudo if one is tuned and tuned without password
-		if ! sudo -l -n >/dev/null 2>/dev/null ; then
+		if ! $SUDO_CMD -l -n >/dev/null 2>/dev/null ; then
 			SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
 			return
 		fi
 	fi
 
-	SUDO="sudo --"
+	SUDO="$SUDO_CMD --"
 	# check for < 1.7 version which do not support -- (and --help possible too)
-	sudo -h 2>/dev/null | grep -q "  --" || SUDO="sudo"
+	$SUDO_CMD -h 2>/dev/null | grep -q "  --" || SUDO="$SUDO_CMD"
 
 }
 
@@ -330,6 +342,7 @@ set_eatmydata()
 	[ -n "$EPMNOEATMYDATA" ] && return
 	# use if possible
 	which eatmydata >/dev/null 2>/dev/null || return
+	set_sudo
 	[ -n "$SUDO" ] && SUDO="$SUDO eatmydata" || SUDO="eatmydata"
 	[ -n "$verbose" ] && info "Uwaga! eatmydata is installed, we will use it for disable all sync operations."
 	return 0
@@ -704,7 +717,7 @@ __serv_enable()
 			sudocmd rc-update add $1 default
 			;;
 		runit)
-			epm assure $SERVICE
+			assure_exists $SERVICE
 			[ -r "/etc/sv/$SERVICE" ] || fatal "Can't find /etc/sv/$SERVICE"
 			sudocmd ln -s /etc/sv/$SERVICE /var/service/
 			;;
@@ -983,22 +996,22 @@ is_service_running()
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)
 			if is_anyservice $1 ; then
-				OUTPUT="$($SUDO anyservice $1 status 2>/dev/null)" || return 1
+				OUTPUT="$(sudorun anyservice $1 status 2>/dev/null)" || return 1
 				echo "$OUTPUT" | grep -q "is stopped" && return 1
 				return 0
 			fi
-			OUTPUT="$($SUDO service $1 status 2>/dev/null)" || return 1
+			OUTPUT="$(sudorun service $1 status 2>/dev/null)" || return 1
 			echo "$OUTPUT" | grep -q "is stopped" && return 1
 			return 0
 			;;
 		service-initd|service-update)
-			$SUDO $INITDIR/$1 status >/dev/null 2>/dev/null
+			sudorun $INITDIR/$1 status >/dev/null 2>/dev/null
 			;;
 		systemd)
-			$SUDO systemctl status $1 >/dev/null 2>/dev/null
+			sudorun systemctl status $1 >/dev/null 2>/dev/null
 			;;
 		runit)
-			$SUDO sv status "$SERVICE" >/dev/null 2>/dev/null
+			sudorun sv status "$SERVICE" >/dev/null 2>/dev/null
 			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
@@ -1018,13 +1031,13 @@ is_service_autostart()
 			fi
 
 			# FIXME: check for current runlevel
-			LANG=C $SUDO chkconfig $1 --list | grep -q "[35]:on"
+			LANG=C sudorun chkconfig $1 --list | grep -q "[35]:on"
 			;;
 		service-initd|service-update)
                         test -L "$(echo /etc/rc5.d/S??$1)"
 			;;
 		systemd)
-			$SUDO systemctl is-enabled $1
+			sudorun systemctl is-enabled $1
 			;;
 		runit)
 			test -L "/var/service/$SERVICE"
@@ -1166,11 +1179,11 @@ serv_usage()
 		service-chkconfig|service-upstart)
 			# CHECKME: many services print out usage in stderr, it conflicts with printout command
 			#sudocmd service $SERVICE 2>&1
-			$SUDO service $SERVICE 2>&1
+			sudorun service $SERVICE 2>&1
 			;;
 		service-initd|service-update)
 			#sudocmd /etc/init.d/$SERVICE 2>&1
-			$SUDO service $SERVICE 2>&1
+			sudorun service $SERVICE 2>&1
 			;;
 		systemd)
 			sudocmd systemctl $SERVICE 2>&1
@@ -2850,7 +2863,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.10.5  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.11.1  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2019"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
