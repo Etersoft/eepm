@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.11.0
+Version: 3.11.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,11 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Sun Aug 29 2021 Vitaly Lipatov <lav@altlinux.ru> 3.11.1-alt1
+- epm-downgrade: use epm-upgrade for apt-rpm PMTYPE, instead of direct apt-get dist-upgrade
+- fix sudocmd using (don't quote command with args)
+- epm-downgrade: fix downgrade to a task
+
 * Sat Aug 28 2021 Vitaly Lipatov <lav@altlinux.ru> 3.11.0-alt1
 - check sudo only when needed
 - epm print: use local file for query_package_field only if it has .rpm extension
