@@ -22,7 +22,7 @@ load_helper epm-check_updated_repo
 __epm_add_alt_apt_downgrade_preferences()
 {
 	[ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists"
-	cat <<EOF | sudorun tee /etc/apt/preferences
+	cat <<EOF | sudocmd tee /etc/apt/preferences
 # main repo
 Package: *
 Pin: release c=classic
@@ -32,6 +32,11 @@ Pin-Priority: 1001
 Package: *
 Pin: release c=addon
 Pin-Priority: 1101
+
+# overload with test (task) repo
+Package: *
+Pin: release c=task
+Pin-Priority: 1201
 EOF
 }
 
