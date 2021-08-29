@@ -158,16 +158,6 @@ __do_short_query()
 
 epm_query_file()
 {
-    # И где это используется?
-    # in short mode print handle only real names and do short output
-    # TODO: move to separate command?
-    # FIXME: it is possible use query
-    if [ -n "$short" ] ; then
-        [ -n "$pkg_files$pkg_dirs" ] || fatal "Run query without file names (needed path to files)"
-        __do_short_query $pkg_files $pkg_dirs
-         return
-    fi
-
     # file can exists or not
     [ -n "$pkg_filenames" ] || fatal "Run query without file names"
 
@@ -177,7 +167,11 @@ epm_query_file()
     res=0
     for pkg in $pkg_filenames ; do
         __do_query_real_file "$pkg"
-        __do_query "$FULLFILEPATH" || res=$?
+        if [ -n "$short" ] ; then
+            __do_short_query "$FULLFILEPATH" || res=$?
+        else
+            __do_query "$FULLFILEPATH" || res=$?
+        fi
     done
     [ "$res" = "0" ] || info "Try epm sf for search file in all packages in repository"
     #|| pkg_filenames="$FULLFILEPATH" epm_search_file
