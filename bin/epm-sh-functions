@@ -139,7 +139,11 @@ docmd_foreach()
 sudorun()
 {
 	set_sudo
-	[ -n "$SUDO" ] && $SUDO "$@" || "$@"
+	if [ -z "$SUDO" ] ; then
+		"$@"
+		return
+	fi
+	$SUDO "$@"
 }
 
 # Print command line and run command line with SUDO
