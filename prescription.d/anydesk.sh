@@ -28,16 +28,23 @@ case $arch in
         fatal "Unsupported arch $arch for $($DISTRVENDOR -d)"
 esac
 
-VERSION=*
-# el8 build contains libpangx inside
-REL=*.el8
 # we have workaround for their postinstall script, so always repack rpm package
 repack=''
-[ "$($DISTRVENDOR -p)" = "deb" ] && REL=1 || repack='--repack'
+[ "$($DISTRVENDOR -p)" = "deb" ] || repack='--repack'
 
-# https://download.anydesk.com/linux/anydesk-6.0.1-1.el8.x86_64.rpm
-# https://download.anydesk.com/linux/anydesk_6.0.1-1_i386.deb
-PKG="https://download.anydesk.com/linux/$(epm print constructname $PKGNAME "$VERSION-$REL" $arch)"
+# current links:
+# https://download.anydesk.com/rpm/anydesk_6.0.1-1_x86_64.rpm
+# https://download.anydesk.com/os-specific/rhel8/anydesk-6.0.1-1.el8.x86_64.rpm
+# https://download.anydesk.com/deb/anydesk_6.0.1-1_amd64.deb
+
+# general msk
+PKGMASK="$($DISTRVENDOR -p)/$(epm print constructname $PKGNAME "*" $arch '' '_')"
+
+# we miss obsoleted libpangox on ALT, so use RHEL8 build
+# lib.req: WARNING: /usr/bin/anydesk: library libpangox-1.0.so.0 not found
+[ "$($DISTRVENDOR -d)" = "ALTLinux" ] && PKGMASK="os-specific/rhel8/$(epm print constructname $PKGNAME "*" $arch)"
+
+PKG="$($EGET --list --latest https://download.anydesk.com/linux $PKGMASK)" || fatal "Can't get package URL"
 
 epm $repack install "$PKG" || exit
 
