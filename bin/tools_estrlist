@@ -287,7 +287,12 @@ esac
 shift
 
 # FIXME: do to call function directly, use case instead?
-if [ "$1" = "-" ] ; then
+if [ "$COMMAND" = "--" ] ; then
+    # ignore all options (-)
+    COMMAND="$1"
+    shift
+    "$COMMAND" "$@"
+elif [ "$1" = "-" ] ; then
     shift
     "$COMMAND" "$(cat) $@"
 elif [ "$2" = "-" ] ; then

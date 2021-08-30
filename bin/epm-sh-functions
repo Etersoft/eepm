@@ -600,5 +600,5 @@ get_pkg_name_delimiter()
 
 has_space()
 {
-    estrlist has_space "$@"
+    estrlist -- has_space "$@"
 }
