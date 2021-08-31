@@ -121,6 +121,7 @@ case $PMTYPE in
 esac
 
 LANG=C docmd $CMD $string
+epm play $short --list-all | sed -e 's|^ *||g' -e 's|[[:space:]]\+| |g' -e "s|\$| (use \'epm play\' to install it)|"
 }
 
 # produce grep sequence
