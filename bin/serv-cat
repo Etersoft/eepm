@@ -24,7 +24,7 @@ serv_cat()
 
 	case $SERVICETYPE in
 		systemd)
-			sudocmd systemctl cat "$SERVICE" "$@"
+			docmd systemctl cat "$SERVICE" "$@"
 			;;
 		*)
 			case $DISTRNAME in

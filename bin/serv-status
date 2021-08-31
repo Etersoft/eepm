@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012, 2013, 2016, 2017  Etersoft
-# Copyright (C) 2012, 2013, 2016, 2017  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2013, 2016, 2017, 2021  Etersoft
+# Copyright (C) 2012, 2013, 2016, 2017, 2021  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -38,7 +38,7 @@ is_service_running()
 			sudorun $INITDIR/$1 status >/dev/null 2>/dev/null
 			;;
 		systemd)
-			sudorun systemctl status $1 >/dev/null 2>/dev/null
+			a='' systemctl status $1 >/dev/null 2>/dev/null
 			;;
 		runit)
 			sudorun sv status "$SERVICE" >/dev/null 2>/dev/null
@@ -65,10 +65,10 @@ is_service_autostart()
 			LANG=C sudorun chkconfig $1 --list | grep -q "[35]:on"
 			;;
 		service-initd|service-update)
-                        test -L "$(echo /etc/rc5.d/S??$1)"
+			test -L "$(echo /etc/rc5.d/S??$1)"
 			;;
 		systemd)
-			sudorun systemctl is-enabled $1
+			a='' systemctl is-enabled $1
 			;;
 		runit)
 			test -L "/var/service/$SERVICE"
@@ -98,7 +98,7 @@ serv_status()
 			sudocmd $INITDIR/$SERVICE status "$@"
 			;;
 		systemd)
-			sudocmd systemctl -l status $SERVICE "$@"
+			docmd systemctl -l status $SERVICE "$@"
 			;;
 		runit)
 			sudocmd sv status "$SERVICE"
