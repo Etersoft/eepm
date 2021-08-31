@@ -3,8 +3,8 @@ name: testsuite
 on:
   push:
     branches: [ "*" ]
-  pull_request:
-    branches: [ "*" ]
+#  pull_request:
+#    branches: [ "*" ]
 
 jobs:
   build:
@@ -12,16 +12,16 @@ jobs:
     container:
       image: alt:sisyphus
 
+    env:
+      BUILDER: builder
+
     steps:
       - name: install packages
         run: |
-            apt-get update && apt-get -y install etersoft-build-utils su sudo git-core
-      - uses: actions/checkout@v2
+            apt-get update && apt-get -y install su sudo
 
-      - name: build
-        run: rpmbb
+      - uses: actions/checkout@v2
 
       - name: testsuite
         run: |
-            cd testsuite;
-            make check
+            echo "testsuite.."
