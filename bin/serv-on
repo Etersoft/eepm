@@ -17,38 +17,14 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-load_helper serv-stop
+load_helper serv-start
+load_helper serv-enable
 load_helper serv-status
 
-# Enable service by default
-serv_disable()
+serv_on()
 {
-	local SERVICE="$1"
-
-	is_service_autostart $1 || { info "Service $1 already disabled for startup" && return ; }
-
-	case $SERVICETYPE in
-		service-chkconfig|service-upstart)
-			if is_anyservice $SERVICE ; then
-				sudocmd anyservice $SERVICE off
-				return
-			fi
-			sudocmd chkconfig $1 off
-			;;
-		service-initd|service-update)
-			sudocmd update-rc.d $1 remove
-			;;
-		systemd)
-			sudocmd systemctl disable $1
-			;;
-		openrc)
-			sudocmd rc-update del $1 default
-			;;
-		runit)
-			sudocmd rm -fv /var/service/$SERVICE
-			;;
-		*)
-			fatal "Have no suitable command for $SERVICETYPE"
-			;;
-	esac
+	serv_enable "$1" || return
+	# start if need
+	is_service_running $1 && info "Service $1 is already running" && return
+	serv_start $1
 }

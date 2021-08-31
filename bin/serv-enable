@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012, 2016  Etersoft
-# Copyright (C) 2012, 2016  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2016, 2021  Etersoft
+# Copyright (C) 2012, 2016, 2021  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -21,7 +21,7 @@ load_helper serv-start
 load_helper serv-status
 
 # Enable service by default
-__serv_enable()
+serv_enable()
 {
 	local SERVICE="$1"
 
@@ -58,13 +58,4 @@ __serv_enable()
 			fatal "Have no suitable command for $SERVICETYPE"
 			;;
 	esac
-
-}
-
-serv_enable()
-{
-	__serv_enable "$1" || return
-	# start if need
-	is_service_running $1 && info "Service $1 is already running" && return
-	serv_start $1
 }

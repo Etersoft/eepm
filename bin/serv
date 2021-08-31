@@ -132,7 +132,7 @@ print_version()
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
         echo "Service manager version @VERSION@  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
-        echo "Copyright (c) Etersoft 2012-2019"
+        echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 
@@ -176,10 +176,16 @@ check_command()
     stop)                     # HELPCMD: stop service
         serv_cmd=stop
         ;;
-    on|enable)                # HELPCMD: add service to run on startup and start it now
+    on)                       # HELPCMD: add service to run on startup and start it now
+        serv_cmd=on
+        ;;
+    off)                      # HELPCMD: remove service to run on startup and stop it now
+        serv_cmd=off
+        ;;
+    enable)                   # HELPCMD: add service to run on startup (see 'on' also)
         serv_cmd=enable
         ;;
-    off|disable)              # HELPCMD: remove service to run on startup and stop it now
+    disable)                 # HELPCMD: remove service to run on startup (see 'off' also)
         serv_cmd=disable
         ;;
     log|journal)              # HELPCMD: print log for the service (-f - follow,  -r - reverse order)
