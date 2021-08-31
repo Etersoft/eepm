@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.11.2
+Version: 3.12.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,22 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Wed Sep 01 2021 Vitaly Lipatov <lav@altlinux.ru> 3.12.0-alt1
+- epm-query_file: allow --short in the same manner as usual
+- play anydesk.sh: update for their updated site
+- add epm play sferum
+- add epm play steam (but hidden from play list)
+- epm-play: add --short support
+- epm-search: search in epm play --list-all too
+- rewrite set_sudo (add return status, don' fail SUDO if nofail arg is there)
+- epm play: drop Install word from descriptions (exclude true prescriptions)
+- serv: separate enable/disable and on/off
+- serv: add --short support for lists
+- serv: don't use sudo for systemd if it is not needed
+- add serv exists for check of service existence
+- epm release-upgrade: try be assured we have dm service is enabled
+- epm-play: don't list i586- only prescriptions
+
 * Mon Aug 30 2021 Vitaly Lipatov <lav@altlinux.ru> 3.11.2-alt1
 - fix sudorun
 - add 'epm repo Add' command (do update after add)
