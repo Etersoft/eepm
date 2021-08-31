@@ -248,6 +248,9 @@ check_option()
     --verbose)            # HELPOPT: verbose mode
         verbose=1
         ;;
+    --short)              # HELPOPT: short mode
+        short=1
+        ;;
     --show-command-only)  # HELPOPT: show command only, do not any action
         show_command_only=1
         ;;

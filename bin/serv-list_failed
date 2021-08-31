@@ -33,12 +33,11 @@ serv_list_failed()
 		*)
 			load_helper serv-list_startup
 			load_helper serv-status
-			for i in $(serv_list_startup | cut -f 1 -d" ") ; do
+			for i in $(short=1 serv_list_startup) ; do
 				is_service_running >/dev/null $i && continue
 				echo ; echo $i
 				serv_status $i
 			done
 			;;
-
 	esac
 }

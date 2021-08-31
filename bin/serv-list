@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012, 2016  Etersoft
-# Copyright (C) 2012, 2016  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2016, 2021  Etersoft
+# Copyright (C) 2012, 2016, 2021  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -20,7 +20,7 @@
 # List running services
 serv_list()
 {
-	info "Running services:"
+	[ -n "$short" ] || info "Running services:"
 	case $SERVICETYPE in
 #		service-chkconfig)
 #			;;
@@ -31,7 +31,11 @@ serv_list()
 			sudocmd service --status-all
 			;;
 		systemd)
-			sudocmd systemctl list-units $@
+			if [ -n "$short" ] ; then
+				docmd systemctl list-units --type=service "$@" | grep '\.service' | sed -e 's|\.service.*||' -e 's|^ *||'
+			else
+				docmd systemctl list-units --type=service "$@"
+			fi
 			;;
 		openrc)
 			sudocmd rc-status

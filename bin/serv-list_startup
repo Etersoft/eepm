@@ -32,15 +32,14 @@ serv_list_startup()
 		systemd)
 			#sudocmd systemctl list-unit-files
 			# TODO: native command? implement --short for list (only names)
-			for i in $(serv_list_all | cut -f 1 -d" " | grep "\.service$") ; do
-				is_service_autostart >/dev/null $i && echo $i
+			for i in $(short=1 serv_list_all) ; do
+				is_service_autostart >/dev/null 2>/dev/null $i && echo $i
 			done
 			;;
 		*)
-			for i in $(serv_list_all | cut -f 1 -d" ") ; do
-				is_service_autostart >/dev/null $i && echo $i
+			for i in $(short=1 serv_list_all) ; do
+				is_service_autostart >/dev/null 2>/dev/null $i && echo $i
 			done
 			;;
-
 	esac
 }
