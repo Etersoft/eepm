@@ -405,6 +405,7 @@ confirm_info()
 
 assure_root()
 {
+	set_sudo
 	[ "$EFFUID" = 0 ] || fatal "run me only under root"
 }
 
