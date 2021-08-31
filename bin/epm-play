@@ -110,6 +110,8 @@ if [ "$1" = "--list" ] || [ "$1" = "--installed" ] ; then
     exit
 fi
 
+[ "($DISTRVENDOR -a)" = "x86_64" ] && IGNOREi586='' || IGNOREi586=1
+
 if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
     echo "Run with a name of a play script to run:"
     local i
@@ -119,14 +121,18 @@ if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
             # print all
             #desc="$($i --description 2>/dev/null)"
             #[ -z "$desc" ] && continue
-            basename $i .sh
+            local name=$(basename $i .sh)
+            [ -n "$IGNOREi586" ] && rhas "$name" "^i586-" && continue
+            echo "$name"
         done
         exit
     fi
     for i in $psdir/*.sh ; do
         desc="$($i --description 2>/dev/null)"
         [ -z "$desc" ] && continue
-        printf "  %-20s - %s\n" "$(basename $i .sh)" "$desc"
+        local name=$(basename $i .sh)
+        [ -n "$IGNOREi586" ] && rhas "$name" "^i586-" && continue
+        printf "  %-20s - %s\n" "$name" "$desc"
     done
     echo
     echo "run epm play --list to list installed only or --remove to remove one"
