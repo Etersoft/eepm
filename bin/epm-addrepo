@@ -138,6 +138,7 @@ __epm_addkey_deb()
     local fingerprint="$2"
     if [ -z "$fingerprint" ] ; then
         assure_exists curl
+        set_sudo
         showcmd "curl -fsSL '$url' | $SUDO apt-key add -"
         a= curl -fsSL "$url" | sudorun apt-key add -
         return

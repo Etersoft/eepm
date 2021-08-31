@@ -91,10 +91,9 @@ esac;
 case $PMTYPE in
 	apt-dpkg)
 		assure_exists apt-add-repository software-properties-common
-		# FIXME: it is possible there is troubles to pass the args
-		showcmd apt-add-repository --remove "$*"
 		set_sudo
-		$SUDO apt-add-repository --remove "$*"
+		# FIXME: it is possible there is troubles to pass the args
+		sudocmd apt-add-repository --remove "$*"
 		info "Check file /etc/apt/sources.list if needed"
 		;;
 	aptitude-dpkg)
