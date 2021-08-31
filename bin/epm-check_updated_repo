@@ -53,9 +53,10 @@ __is_repo_info_uptodate()
 update_repo_if_needed()
 {
     # check if we need skip update checking
-    if [ "$1" = "soft" ] && [ -n "$SUDO" ] ; then
+    if [ "$1" = "soft" ] && ! set_sudo nofail ; then
         # if sudo requires a password, skip autoupdate
-        sudorun -n true 2>/dev/null || { info "sudo requires a password, skip repo status checking" ; return 0 ; }
+        info "can't use sudo, so skip repo status checking"
+        return 1
     fi
 
     cd / || fatal
