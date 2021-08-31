@@ -14,7 +14,7 @@ if [ "$1" = "--remove" ] ; then
     exit
 fi
 
-[ "$1" != "--run" ] && exit #echo "Install Sferium for Linux from the official site" && exit
+[ "$1" != "--run" ] && exit #echo "Sferium for Linux from the official site" && exit
 
 arch=$($DISTRVENDOR --distro-arch)
 case $arch in

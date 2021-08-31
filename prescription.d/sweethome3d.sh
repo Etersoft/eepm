@@ -26,7 +26,7 @@ if [ "$1" = "--remove" ] ; then
     exit
 fi
 
-[ "$1" != "--run" ] && exit #echo "Install Sweet Home 3D from the official site" && exit
+[ "$1" != "--run" ] && exit #echo "Sweet Home 3D from the official site" && exit
 
 # TODO: get url from https://sourceforge.net/projects/sweethome3d/best_release.json (is it client system dependend??)
 # see get_github_urls in eget

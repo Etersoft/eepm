@@ -14,7 +14,7 @@ if [ "$1" = "--remove" ] ; then
     exit
 fi
 
-[ "$1" != "--run" ] && echo "Install Yandex Disk from the official site" && exit
+[ "$1" != "--run" ] && echo "Yandex Disk from the official site" && exit
 
 # http://repo.yandex.ru/yandex-disk/yandex-disk_latest_amd64.deb
 # http://repo.yandex.ru/yandex-disk/yandex-disk-latest.x86_64.rpm

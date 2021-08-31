@@ -14,7 +14,7 @@ if [ "$1" = "--remove" ] ; then
     exit
 fi
 
-[ "$1" != "--run" ] && echo "Install Spotify client for Linux from the official site" && exit
+[ "$1" != "--run" ] && echo "Spotify client for Linux from the official site" && exit
 
 [ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 

@@ -15,7 +15,7 @@ if [ "$1" = "--remove" ] ; then
     exit
 fi
 
-[ "$1" != "--run" ] && echo "Install Chromium with GOST support from the official site" && exit
+[ "$1" != "--run" ] && echo "Chromium with GOST support from the official site" && exit
 
 [ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 

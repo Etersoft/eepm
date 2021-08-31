@@ -14,7 +14,7 @@ if [ "$1" = "--remove" ] ; then
     exit
 fi
 
-[ "$1" != "--run" ] && echo "Install Zoom client from the official site" && exit
+[ "$1" != "--run" ] && echo "Zoom client from the official site" && exit
 
 repack='--repack'
 arch=$($DISTRVENDOR --distro-arch)

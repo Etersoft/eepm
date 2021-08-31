@@ -14,7 +14,7 @@ if [ "$1" = "--remove" ] ; then
     exit
 fi
 
-[ "$1" != "--run" ] && exit # echo "Install  Remote desktop support for google-chrome & chromium" && exit
+[ "$1" != "--run" ] && exit # echo " Remote desktop support for google-chrome & chromium" && exit
 
 [ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 

@@ -26,7 +26,7 @@ if [ "$1" = "--remove" ] ; then
     exit
 fi
 
-[ "$1" != "--run" ] && echo "Install Teamviewer from the official site" && exit
+[ "$1" != "--run" ] && echo "Teamviewer from the official site" && exit
 
 # See https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=teamviewer
 

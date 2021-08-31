@@ -14,7 +14,7 @@ if [ "$1" = "--remove" ] ; then
     exit
 fi
 
-[ "$1" != "--run" ] && echo "Install TamTam messenger from the official site" && exit
+[ "$1" != "--run" ] && echo "TamTam messenger from the official site" && exit
 
 arch="$($DISTRVENDOR --debian-arch)"
 case "$arch" in

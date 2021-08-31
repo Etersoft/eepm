@@ -14,7 +14,7 @@ if [ "$1" = "--remove" ] ; then
     exit
 fi
 
-[ "$1" != "--run" ] && echo "Install Visual Studio Code from the official site" && exit
+[ "$1" != "--run" ] && echo "Visual Studio Code from the official site" && exit
 
 arch="$($DISTRVENDOR -a)"
 case "$arch" in
