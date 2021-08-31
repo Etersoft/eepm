@@ -23,3 +23,6 @@ install:
 
 	mkdir -p $(DESTDIR)$(mandir)/man1
 	cp -a `ls -1 man/*` $(DESTDIR)$(mandir)/man1/
+
+check:
+	echo "test suite.."
