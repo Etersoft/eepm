@@ -294,12 +294,17 @@ info()
 	fi
 }
 
-SUDO_TESTED="0"
-SUDO_CMD="sudo"
+# if we have not sudo, returns 1 and set SUDO variable to fatal
+SUDO_TESTED=''
+SUDO_CMD='sudo'
 set_sudo()
 {
-	[ "$SUDO_TESTED" = "1" ] && return
-	SUDO_TESTED="1"
+	local nofail="$1"
+
+	# cache the result
+	[ -n "$SUDO_TESTED" ] && return "$SUDO_TESTED"
+	SUDO_TESTED="0"
+
 	SUDO=""
 	# skip SUDO if disabled
 	[ -n "$EPMNOSUDO" ] && return
@@ -310,28 +315,32 @@ set_sudo()
 
 	EFFUID=$(id -u)
 
-	# do not need sudo
+	# if we are root, do not need sudo
 	[ $EFFUID = "0" ] && return
 
+	# start error section
+	SUDO_TESTED="1"
+
 	if ! which $SUDO_CMD >/dev/null 2>/dev/null ; then
-		SUDO="fatal 'Can't find sudo. Please install and tune sudo ('# epm install sudo') or run epm under root.'"
-		return
+		[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't find sudo. Please install and tune sudo ('# epm install sudo') or run epm under root.'"
+		return "$SUDO_TESTED"
 	fi
 
 	# if input is a console
 	if inputisatty && isatty && isatty2 ; then
 		if ! $SUDO_CMD -l >/dev/null ; then
-			SUDO="fatal 'Can't use sudo (only without password sudo is supported in non interactive using). Please run epm under root.'"
-			return
+			[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only without password sudo is supported in non interactive using). Please run epm under root.'"
+			return "$SUDO_TESTED"
 		fi
 	else
 		# use sudo if one is tuned and tuned without password
 		if ! $SUDO_CMD -l -n >/dev/null 2>/dev/null ; then
-			SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
-			return
+			[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
+			return "$SUDO_TESTED"
 		fi
 	fi
 
+	SUDO_TESTED="0"
 	SUDO="$SUDO_CMD --"
 	# check for < 1.7 version which do not support -- (and --help possible too)
 	$SUDO_CMD -h 2>/dev/null | grep -q "  --" || SUDO="$SUDO_CMD"
