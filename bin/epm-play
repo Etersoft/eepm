@@ -79,6 +79,7 @@ Options:
     --remove APP   - remove APP
     --list         - list all installed apps
     --list-all     - list all available apps
+    --short        - print only names
 EOF
     exit
 fi
@@ -95,8 +96,14 @@ fi
 
 if [ "$1" = "--list" ] || [ "$1" = "--installed" ] ; then
     shift
-    echo "Installed:"
     local i
+    if [ -n "$short" ] ; then
+        for i in $(__list_installed_app) ; do
+            echo "$i"
+        done
+        exit
+    fi
+    echo "Installed:"
     for i in $(__list_installed_app) ; do
         printf "  %-20s - %s\n" "$i" "$($psdir/$i.sh --description 2>/dev/null)"
     done
@@ -107,6 +114,15 @@ if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
     echo "Run with a name of a play script to run:"
     local i
     local desc
+    if [ -n "$short" ] ; then
+        for i in $psdir/*.sh ; do
+            # print all
+            #desc="$($i --description 2>/dev/null)"
+            #[ -z "$desc" ] && continue
+            basename $i .sh
+        done
+        exit
+    fi
     for i in $psdir/*.sh ; do
         desc="$($i --description 2>/dev/null)"
         [ -z "$desc" ] && continue
