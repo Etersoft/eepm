@@ -145,6 +145,7 @@ set_service_type
 
 verbose=
 quiet=
+short=
 non_interactive=
 show_command_only=
 serv_cmd=
@@ -193,6 +194,9 @@ check_command()
         ;;
     cat)                      # HELPCMD: print out service file for the service
         serv_cmd=cat
+        ;;
+    exists)                   # HELPCMD: check if the service is installed on the system
+        serv_cmd=exists
         ;;
     edit)                     # HELPCMD: edit service file overload (use --full to edit full file)
         serv_cmd=edit
