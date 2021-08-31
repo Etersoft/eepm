@@ -207,15 +207,27 @@ __check_system()
 		docmd epm --skip-installed install systemd || fatal
 	fi
 
-	# FIXME: will GUI closed during that changes?
-	# switch from prefdm: https://bugzilla.altlinux.org/show_bug.cgi?id=26405#c52
-	if is_active_systemd systemd && serv display-manager status >/dev/null || serv prefdm status >/dev/null ; then
-#		docmd serv dm off
-		docmd systemctl disable prefdm.service
-		docmd systemctl disable display-manager.service
-		docmd systemctl enable display-manager.service
-	#	docmd systemctl enable sddm.service
-	#	docmd systemctl enable lightdm.service
+	# switch from prefdm: https://bugzilla.altlinux.org/show_bug.cgi?id=26405#c47
+	if is_active_systemd systemd ; then
+		if serv display-manager exists || serv prefdm exists ; then
+			# don't stop running X server!
+			# docmd serv dm off
+			docmd serv disable prefdm
+			docmd serv disable display-manager
+			docmd serv enable display-manager
+
+# $ epm sf dm.service
+# xinitrc: /lib/systemd/system/dm.service
+# gdm: /lib/systemd/system/gdm.service
+# lightdm: /lib/systemd/system/lightdm.service
+# lxde-lxdm: /lib/systemd/system/lxdm.service
+# xinitrc: /lib/systemd/system/prefdm.service
+# sddm: /lib/systemd/system/sddm.service
+			# enable first available DM
+			for i in lightdm sddm lxde-lxdm gdm ; do
+				serv $i exists && docmd serv enable $i && break
+			done
+		fi
 	fi
 
 }
