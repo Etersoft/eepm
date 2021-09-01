@@ -19,7 +19,6 @@
 
 load_helper epm-sh-altlinux
 
-# TODO: save/restore
 epm_repo()
 {
 	local CMD="$1"

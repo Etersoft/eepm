@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2020  Etersoft
-# Copyright (C) 2020  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2020, 2021  Etersoft
+# Copyright (C) 2020, 2021  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -19,11 +19,44 @@
 
 load_helper epm-sh-altlinux
 
+
+SAVELISTDIR=/tmp/eepm-etc-apt
+__save_alt_repo_lists()
+{
+	info "Creating copy of all sources lists to $SAVELISTDIR ..."
+	local i
+	rm -rf $verbose $SAVELISTDIR 2>/dev/null
+	mkdir -p $SAVELISTDIR/apt/ $SAVELISTDIR/apt/sources.list.d/
+	for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
+		[ -s "$i" ] || continue
+		local DD="$(echo "$i" | sed -e "s|/etc|$SAVELISTDIR|")"
+		cp -af $verbose "$i" "$DD" || fatal "Can't save apt source list files to $SAVELISTDIR"
+	done
+}
+
+__restore_alt_repo_lists()
+{
+	info "Restoring copy of all sources lists from $SAVELISTDIR ..."
+	local i
+	[ -d "$SAVELISTDIR/apt" ] || return 0
+	mkdir -p $SAVELISTDIR/apt/ $SAVELISTDIR/apt/sources.list.d/
+	for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
+		[ -s "$i" ] || continue
+		local DD="$(echo "$i" | sed -e "s|/etc|$SAVELISTDIR|")"
+		# restore only if there are differences
+		diff -q "$DD" "$i" >/dev/null || continue
+		mv $verbose "$DD" "$i" || warning "Can't restore $i file"
+	done
+}
+
+
+
 epm_reposave()
 {
 case $PMTYPE in
-	apt-rpm)
-		fatal "TODO"
+	apt-*)
+		assure_root
+		__save_alt_repo_lists
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -35,8 +68,9 @@ esac
 epm_reporestore()
 {
 case $PMTYPE in
-	apt-rpm)
-		fatal "TODO"
+	apt-*)
+		assure_root
+		__restore_alt_repo_lists
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"

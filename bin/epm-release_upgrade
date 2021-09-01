@@ -19,6 +19,7 @@
 
 load_helper epm-query
 load_helper epm-repofix
+load_helper epm-reposave
 
 assure_safe_run()
 {
@@ -63,35 +64,6 @@ assure_safe_run()
 	return 0
 }
 
-
-SAVELISTDIR=/tmp/eepm-release_upgrade
-__save_alt_repo_lists()
-{
-	info "Creating copy of all sources lists to $SAVELISTDIR ..."
-	local i
-	rm -rfv $SAVELISTDIR 2>/dev/null
-	mkdir -p $SAVELISTDIR/apt/ $SAVELISTDIR/apt/sources.list.d/
-	for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
-		[ -s "$i" ] || continue
-		local DD="$(echo "$i" | sed -e "s|/etc|$SAVELISTDIR|")"
-		cp -af $verbose "$i" "$DD" || fatal "Can't save apt source list files to $SAVELISTDIR"
-	done
-}
-
-__restore_alt_repo_lists()
-{
-	info "Some error. Restoring copy of all sources lists from $SAVELISTDIR ..."
-	local i
-	[ -d "$SAVELISTDIR/apt" ] || return 0
-	mkdir -p $SAVELISTDIR/apt/ $SAVELISTDIR/apt/sources.list.d/
-	for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
-		[ -s "$i" ] || continue
-		local DD="$(echo "$i" | sed -e "s|/etc|$SAVELISTDIR|")"
-		# restore only if there are differences
-		diff -q "$DD" "$i" >/dev/null || continue
-		mv $verbose "$DD" "$i" || warning "Can't restore $i file"
-	done
-}
 
 __replace_text_in_alt_repo()
 {
