@@ -28,7 +28,7 @@ epm_Install()
 
     [ -z "$files$names" ] && info "Install: Skip empty install list." && return 22
 
-    (pkg_filenames='' epm_update) || { [ -n "$force" ] || return ; }
+    epm_update || { [ -n "$force" ] || return ; }
 
     epm_install_names $names || return
 

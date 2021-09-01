@@ -22,7 +22,6 @@ load_helper epm-upgrade
 
 epm_Upgrade()
 {
-	(pkg_filenames='' epm_update)
-
+	epm_update
 	epm_upgrade
 }

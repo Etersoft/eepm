@@ -63,7 +63,7 @@ update_repo_if_needed()
     if ! __is_repo_info_downloaded || ! __is_repo_info_uptodate ; then
         load_helper epm-update
         # FIXME: cleans!!!
-        (pkg_filenames='' epm_update)
+        epm_update
     fi
     cd - >/dev/null || fatal
 

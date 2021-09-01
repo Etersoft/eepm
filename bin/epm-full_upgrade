@@ -23,7 +23,7 @@ load_helper epm-kernel_update
 
 epm_full_upgrade()
 {
-	(pkg_filenames='' epm_update) || return
+	epm_update || return
 
 	epm_upgrade || return
 
