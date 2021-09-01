@@ -34,4 +34,4 @@ jobs:
 
       - name: testsuite
         run: |
-            echo "testsuite.."
+            eepm -v
