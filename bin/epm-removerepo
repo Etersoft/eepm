@@ -26,6 +26,7 @@ __epm_removerepo_alt_grepremove()
 	rl="$((quiet=1 epm repolist) 2>/dev/null | grep -E "$1")"
 	[ -z "$rl" ] && warning "Can't find '$1' in the repos (see '# epm repolist' output)" && return 1
 	echo "$rl" | while read rp ; do
+		# TODO: print removed lines
 		[ -n "$dryrun" ] && docmd apt-repo $dryrun rm "$rp" && continue
 		if [ -n "$verbose" ] ; then
 			sudocmd apt-repo $dryrun rm "$rp"
