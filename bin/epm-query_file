@@ -50,7 +50,11 @@ __do_query_real_file()
 	# get value of symbolic link
 	if [ -L "$TOFILE" ] ; then
 		local LINKTO
-		__do_query "$TOFILE"
+		if [ -n "$short" ] ; then
+			__do_short_query "$TOFILE"
+		else
+			__do_query "$TOFILE"
+		fi
 		LINKTO=$(readlink -f -- "$TOFILE")
 		info "Note: $TOFILE is link to $LINKTO"
 		__do_query_real_file "$LINKTO"
