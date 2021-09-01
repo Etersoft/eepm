@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.12.0
+Version: 3.13.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -135,6 +135,14 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Thu Sep 02 2021 Vitaly Lipatov <lav@altlinux.ru> 3.13.0-alt1
+- big arg parsing rewrite
+- epm-release_upgrade: add checking for local console, for screen using, for logind
+- epm release-upgrade: try replace altlinux-release-sisyphus if target distro is not Sisyphus
+- epm-reposave: fix bug with repo settings
+- epm-query: fix query file output (fix --short support)
+- epm-removerepo: restore remove all
+
 * Wed Sep 01 2021 Vitaly Lipatov <lav@altlinux.ru> 3.12.0-alt1
 - epm-query_file: allow --short in the same manner as usual
 - play anydesk.sh: update for their updated site
