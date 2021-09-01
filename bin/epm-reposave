@@ -20,7 +20,7 @@
 load_helper epm-sh-altlinux
 
 
-SAVELISTDIR=/tmp/eepm-etc-apt
+SAVELISTDIR=/tmp/eepm-etc-save
 __save_alt_repo_lists()
 {
 	info "Creating copy of all sources lists to $SAVELISTDIR ..."
@@ -44,8 +44,11 @@ __restore_alt_repo_lists()
 		[ -s "$i" ] || continue
 		local DD="$(echo "$i" | sed -e "s|/etc|$SAVELISTDIR|")"
 		# restore only if there are differences
-		diff -q "$DD" "$i" >/dev/null || continue
-		mv $verbose "$DD" "$i" || warning "Can't restore $i file"
+		if diff -q "$DD" "$i" >/dev/null ; then
+			rm -f $verbose "$DD"
+		else
+			mv $verbose "$DD" "$i" || warning "Can't restore $i file"
+		fi
 	done
 }
 
