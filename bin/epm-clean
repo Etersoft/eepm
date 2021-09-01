@@ -37,7 +37,7 @@ __remove_deb_apt_cache_file()
 epm_clean()
 {
 
-[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
+[ -z "$*" ] || fatal "No arguments are allowed here"
 
 
 case $PMTYPE in

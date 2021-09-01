@@ -180,8 +180,6 @@ case $DISTRNAME in
 		;;
 esac
 
-[ -z "$1" ] || fatal "No arguments are allowed here"
-
 case $PMTYPE in
 #	apt-rpm)
 #		;;

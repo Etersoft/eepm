@@ -32,7 +32,7 @@ __repack_rpm_base()
 epm_optimize()
 {
 
-[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
+[ -z "$*" ] || fatal "No arguments are allowed here"
 
 case $PMTYPE in
 	*-rpm)

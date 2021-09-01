@@ -25,7 +25,7 @@ __epm_orphan_altrpm()
 epm_autoorphans()
 {
 
-[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
+[ -z "$*" ] || fatal "No arguments are allowed here"
 
 
 case $PMTYPE in

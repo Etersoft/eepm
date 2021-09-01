@@ -32,7 +32,7 @@ epm_remove_old_kernels()
 			return
 		fi
 		assure_exists update-kernel update-kernel 0.9.9
-		sudocmd remove-old-kernels $(subst_option non_interactive -y) $pkg_filenames
+		sudocmd remove-old-kernels $(subst_option non_interactive -y) "$@"
 		return ;;
 	Ubuntu)
 		load_helper epm-query_package
@@ -52,7 +52,7 @@ epm_remove_old_kernels()
 			assure_exists purge-old-kernels byobu
 			;;
 		esac
-		sudocmd purge-old-kernels $pkg_filenames
+		sudocmd purge-old-kernels "$@"
 		return ;;
 	Gentoo)
 		sudocmd emerge -P gentoo-sources

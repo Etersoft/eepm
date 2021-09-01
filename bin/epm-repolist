@@ -70,8 +70,8 @@ epm_repolist()
 case $PMTYPE in
 	apt-rpm)
 		#assure_exists apt-repo
-		if tasknumber "$pkg_names" >/dev/null ; then
-			get_task_packages $pkg_names
+		if tasknumber "$1" >/dev/null ; then
+			get_task_packages "$@"
 		else
 			print_apt_sources_list
 			#docmd apt-repo list

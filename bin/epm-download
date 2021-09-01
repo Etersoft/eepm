@@ -190,40 +190,40 @@ epm_download()
 
 	case $DISTRNAME-$PMTYPE in
 		ALTLinux-apt-rpm)
-			__epm_download_alt $pkg_filenames
+			__epm_download_alt $*
 			return
 			;;
 	esac
 
 	case $PMTYPE in
 	dnf-rpm)
-		sudocmd dnf download $pkg_filenames
+		sudocmd dnf download $*
 		;;
 	aptcyg)
-		sudocmd apt-cyg download $pkg_filenames
+		sudocmd apt-cyg download $*
 		;;
 	packagekit)
-		docmd pkcon download $pkg_filenames
+		docmd pkcon download $*
 		;;
 	yum-rpm)
 		# TODO: check yum install --downloadonly --downloaddir=/tmp <package-name>
 		assure_exists yumdownloader yum-utils
-		sudocmd yumdownloader $pkg_filenames
+		sudocmd yumdownloader $*
 		;;
 	dnf-rpm)
-		sudocmd dnf download $pkg_filenames
+		sudocmd dnf download $*
 		;;
 	urpm-rpm)
 		sudocmd urpmi --no-install $URPMOPTIONS $@
 		;;
 	tce)
-		sudocmd tce-load -w $pkg_filenames
+		sudocmd tce-load -w $*
 		;;
 	opkg)
-		docmd opkg $pkg_filenames
+		docmd opkg $*
 		;;
 	homebrew)
-		docmd brew fetch $pkg_filenames
+		docmd brew fetch $*
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"

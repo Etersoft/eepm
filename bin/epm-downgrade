@@ -79,6 +79,7 @@ epm_downgrade()
 		local APTOPTIONS="$(subst_option non_interactive -y)"
 		__epm_add_alt_apt_downgrade_preferences || return
 		load_helper epm-upgrade
+		# pass pkg_filenames too
 		epm_upgrade "$@"
 		__epm_remove_apt_downgrade_preferences
 		;;

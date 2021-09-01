@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012, 2014, 2016, 2019  Etersoft
-# Copyright (C) 2012, 2014, 2016, 2019  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2014, 2016, 2019, 2021  Etersoft
+# Copyright (C) 2012, 2014, 2016, 2019, 2021  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -24,8 +24,6 @@ epm_upgrade()
 {
 	local CMD
 
-	#[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
-
 	# it is useful for first time running
 	update_repo_if_needed
 
@@ -33,12 +31,12 @@ epm_upgrade()
 
 	if [ "$DISTRNAME" = "ALTLinux" ] ; then
 		load_helper epm-sh-altlinux
-		if tasknumber "$pkg_names" >/dev/null ; then
+		if tasknumber "$*" >/dev/null ; then
 			load_helper epm-addrepo
 			load_helper epm-removerepo
 			load_helper epm-Install
-			epm_addrepo "$pkg_names"
-			local installlist="$(get_task_packages $pkg_names)"
+			epm_addrepo "$*"
+			local installlist="$(get_task_packages $*)"
 			# hack: drop -devel packages to avoid package provided by multiple packages
 			installlist="$(estrlist reg_exclude ".*-devel .*-devel-static" "$installlist")"
 			[ -n "$verbose" ] && info "Packages from task(s): $installlist"
@@ -69,18 +67,18 @@ epm_upgrade()
 	yum-rpm)
 		local OPTIONS="$(subst_option non_interactive -y)"
 		# can do update repobase automagically
-		CMD="yum $OPTIONS update $pkg_filenames"
+		CMD="yum $OPTIONS update $*"
 		;;
 	dnf-rpm)
 		local OPTIONS="$(subst_option non_interactive -y)"
-		CMD="dnf $OPTIONS distro-sync $pkg_filenames"
+		CMD="dnf $OPTIONS distro-sync $*"
 		;;
 	snappy)
 		CMD="snappy update"
 		;;
 	urpm-rpm)
 		# or --auto-select --replace-files
-		CMD="urpmi --update --auto-select $pkg_filenames"
+		CMD="urpmi --update --auto-select $*"
 		;;
 	zypper-rpm)
 		CMD="zypper dist-upgrade"
@@ -136,6 +134,6 @@ epm_upgrade()
 		;;
 	esac
 
-	sudocmd $CMD $pkg_filenames
+	sudocmd $CMD "$@"
 
 }

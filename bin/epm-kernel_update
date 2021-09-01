@@ -35,8 +35,8 @@ epm_kernel_update()
 		fi
 		assure_exists update-kernel update-kernel 0.9.9
 		update_repo_if_needed
-		sudocmd update-kernel $(subst_option non_interactive -y) $pkg_filenames || return
-		docmd epm remove-old-kernels $(subst_option non_interactive -y) $pkg_filenames || fatal
+		sudocmd update-kernel $(subst_option non_interactive -y) "$@" || return
+		docmd epm remove-old-kernels $(subst_option non_interactive -y) "$@" || fatal
 		return ;;
 	esac
 
