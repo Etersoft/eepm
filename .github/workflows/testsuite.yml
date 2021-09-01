@@ -14,13 +14,19 @@ jobs:
 
     env:
       BUILDER: builder
+      ALLOW_ROOT_USER: 1
 
     steps:
       - name: install packages
         run: |
-            apt-get update && apt-get -y install su sudo
+            apt-get update && apt-get -y install etersoft-build-utils su sudo
 
       - uses: actions/checkout@v2
+
+      - name: build rpm
+        run: |
+            echo "%_allow_root_build 1" > ${HOME}/.rpmmacros
+            rpmbb
 
       - name: testsuite
         run: |
