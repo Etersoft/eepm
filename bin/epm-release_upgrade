@@ -216,7 +216,7 @@ get_fix_release_pkg()
 	[ "$TOINSTALL" = "altlinux-release-sisyphus" ] && TOINSTALL="branding-alt-sisyphus-release"
 
 	# update if installed (just print package name here to include in the install list)
-	epm --quiet --short -q alt-gpgkeys 2>/dev/null
+	epm --quiet --short installed alt-gpgkeys 2>/dev/null
 	if epm --quiet --short -q etersoft-gpgkeys 2>/dev/null >/dev/null ; then
 		# leave etersoft-gpgkeys only we have LINUX@Etersoft repo
 		epm rl | grep -q "LINUX@Etersoft" && echo etersoft-gpgkeys || echo alt-gpgkeys
@@ -246,9 +246,20 @@ __switch_repo_to()
 
 __check_system()
 {
+	local TO="$1"
+	shift
+
 	# sure we have systemd if systemd is running
 	if is_active_systemd systemd ; then
 		docmd epm --skip-installed install systemd || fatal
+	fi
+
+	if [ "$TO" != "Sisyphus" ] ; then
+		if epm installed altlinux-release-sisyphus >/dev/null ; then
+			warning "Target distro is $TO, but altlinux-release-sisyphus package is installed."
+			warning "Trying to replace it with altlinux-release-$TO"
+			docmd epm install altlinux-release-$TO
+		fi
 	fi
 
 	# switch from prefdm: https://bugzilla.altlinux.org/show_bug.cgi?id=26405#c47
@@ -342,7 +353,7 @@ __switch_alt_to_distro()
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
-			__check_system
+			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			info "Run epm release-upgrade again for update to p9"
 			;;
@@ -353,7 +364,7 @@ __switch_alt_to_distro()
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
-			__check_system
+			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			;;
 		"p8 c8"|"p8 c8.1"|"p8 c8.2")
@@ -368,7 +379,7 @@ __switch_alt_to_distro()
 			fi
 			docmd epm downgrade
 			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
-			__check_system
+			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			;;
 		"p8"|"p8 p9"|"t8 p9"|"c8 c9"|"c8 p9"|"c8.1 p9"|"c8.2 p9"|"p9 p9")
@@ -382,7 +393,7 @@ __switch_alt_to_distro()
 			__epm_ru_update || fatal
 			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
-			__check_system
+			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			info "Run epm release-upgrade again for update to p10"
 			;;
@@ -396,7 +407,7 @@ __switch_alt_to_distro()
 			__epm_ru_update || fatal
 			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm install rpm apt "$(get_fix_release_pkg "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
-			__check_system
+			__check_system "$TO"
 			docmd epm update-kernel -t std-def || fatal
 			;;
 		"p9 p8"|"c8.1 c8"|"c8.1 p8"|"p8 p8")
@@ -410,7 +421,7 @@ __switch_alt_to_distro()
 				docmd epm downgrade apt rpm pam pam0_passwdqc glibc-core libcrypt- || fatal
 			fi
 			docmd epm downgrade
-			__check_system
+			__check_system "$TO"
 			docmd epm upgrade || fatal
 			;;
 		"p9 c8"|"p9 c8.1"|"p9 c8.2")
@@ -424,7 +435,7 @@ __switch_alt_to_distro()
 			#	docmd epm downgrade apt rpm pam pam0_passwdqc glibc-core libcrypt- || fatal
 			#fi
 			docmd epm downgrade
-			__check_system
+			__check_system "$TO"
 			docmd epm upgrade || fatal
 			;;
 		"p10 p9")
@@ -435,7 +446,7 @@ __switch_alt_to_distro()
 			__epm_ru_update || fatal
 			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm downgrade
-			__check_system
+			__check_system "$TO"
 			docmd epm upgrade || fatal
 			;;
 		"Sisyphus p8"|"Sisyphus p9"|"Sisyphus p10"|"Sisyphus c8"|"Sisyphus c8.1")
@@ -446,7 +457,7 @@ __switch_alt_to_distro()
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm downgrade
-			__check_system
+			__check_system "$TO"
 			docmd epm upgrade || fatal
 			;;
 		"p8 Sisyphus"|"p9 Sisyphus"|"p10 Sisyphus"|"Sisyphus Sisyphus")
@@ -462,7 +473,7 @@ __switch_alt_to_distro()
 			#ADDPKG=$(epm -q --short make-initrd sssd-ad 2>/dev/null)
 			#docmd epm install librpm7 librpm rpm apt $ADDPKG "$(get_fix_release_pkg --force "$TO")" ConsoleKit2- || fatal "Check an error and run again"
 			docmd epm upgrade || fatal "Check the error and run '# epm release-upgrade' or just '# epm upgrade' again"
-			__check_system
+			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			;;
 		*)
