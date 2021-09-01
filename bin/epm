@@ -105,6 +105,7 @@ pkg_dirs=
 pkg_names=
 pkg_urls=
 quoted_args=
+direct_args=
 
 # load system wide config
 [ -f /etc/eepm/eepm.conf ] && . /etc/eepm/eepm.conf
@@ -152,9 +153,11 @@ case $PROGNAME in
         ;;
     epmrl)                     # HELPSHORT: alias for epm repo list
         epm_cmd=repolist
+        direct_args=1
         ;;
     epmu)                      # HELPSHORT: alias for epm update
         epm_cmd=update
+        direct_args=1
         ;;
     epm|upm|eepm)              # HELPSHORT: other aliases for epm command
         ;;
@@ -210,15 +213,18 @@ check_command()
         ;;
     check|fix|verify)         # HELPCMD: check local package base integrity and fix it
         epm_cmd=check
+        direct_args=1
         ;;
     dedup)                    # HELPCMD: remove unallowed duplicated pkgs (after upgrade crash)
         epm_cmd=dedup
+        direct_args=1
         ;;
     -cl|cl|changelog)         # HELPCMD: show changelog for package
         epm_cmd=changelog
         ;;
     -qi|qi|info|show)         # HELPCMD: print package detail info
         epm_cmd=info
+        direct_args=1
         ;;
     requires|deplist|depends|req|depends-on)     # HELPCMD: print package requires
         epm_cmd=requires
@@ -240,6 +246,7 @@ check_command()
         ;;
     programs)                 # HELPCMD: print list of installed GUI program(s) (they have .desktop files)
         epm_cmd=programs
+        direct_args=1
         ;;
     assure)                   # HELPCMD: <command> [package] [version]: install package if command does not exist
         epm_cmd=assure
@@ -251,44 +258,56 @@ check_command()
 # HELPCMD: PART: Repository control:
     update)                   # HELPCMD: update remote package repository databases
         epm_cmd=update
+        direct_args=1
         ;;
     addrepo|ar)               # HELPCMD: add package repo (etersoft, autoimports, archive 2017/12/31); run with param to get list
         epm_cmd=addrepo
+        direct_args=1
         ;;
     repolist|sl|rl|listrepo|repo-list)  # HELPCMD: print repo list
         epm_cmd=repolist
+        direct_args=1
         ;;
     repofix)                  # HELPCMD: <mirror>: fix paths in sources lists (ALT Linux only). use repofix etersoft/yandex/basealt for rewrite URL to the specified server
         epm_cmd=repofix
+        direct_args=1
         ;;
     removerepo|rr)            # HELPCMD: remove package repo (shortcut for epm repo remove)
         epm_cmd=removerepo
+        direct_args=1
         ;;
     repo)                     # HELPCMD: manipulate with repository list (run epm repo --help to help)
         epm_cmd=repo
+        direct_args=1
         ;;
     full-upgrade)              # HELPCMD: update all system packages and kernel
         epm_cmd=full_upgrade
+        direct_args=1
         ;;
     release-upgrade|upgrade-release|upgrade-system|release-switch|release-downgrade)  # HELPCMD: upgrade/switch whole system to the release in arg (default: next (latest) release)
         epm_cmd=release_upgrade
+        direct_args=1
         ;;
     kernel-update|kernel-upgrade|update-kernel|upgrade-kernel)      # HELPCMD: update system kernel to the last repo version
         epm_cmd=kernel_update
+        direct_args=1
         ;;
     remove-old-kernels|remove-old-kernel)      # HELPCMD: remove old system kernels (exclude current or last two kernels)
         epm_cmd=remove_old_kernels
+        direct_args=1
         ;;
 
 # HELPCMD: PART: Other commands:
     clean)                    # HELPCMD: clean local package cache
         epm_cmd=clean
+        direct_args=1
         ;;
     restore)                  # HELPCMD: install (restore) packages need for the project (f.i. by requirements.txt)
         epm_cmd=restore
         ;;
     autoremove|package-cleanup)   # HELPCMD: auto remove unneeded package(s) Supports args for ALT: [--direct [libs|python|perl|libs-devel]]
         epm_cmd=autoremove
+        direct_args=1
         ;;
     mark)                     # HELPCMD: mark package as manually or automatically installed (see epm mark --help)
         epm_cmd=mark
@@ -298,12 +317,15 @@ check_command()
         ;;
     upgrade|dist-upgrade)     # HELPCMD: performs upgrades of package software distributions
         epm_cmd=upgrade
+        direct_args=1
         ;;
     Upgrade)                  # HELPCMD: force update package base, then run upgrade
         epm_cmd=Upgrade
+        direct_args=1
         ;;
     downgrade)                # HELPCMD: downgrade [all] packages to the repo state
         epm_cmd=downgrade
+        direct_args=1
         ;;
     download)                 # HELPCMD: download package(s) file to the current dir
         epm_cmd=download
@@ -314,9 +336,11 @@ check_command()
         ;;
     audit)                    # HELPCMD: audits installed packages against known vulnerabilities
         epm_cmd=audit
+        direct_args=1
         ;;
     #checksystem)              # HELPCMD: check system for known errors (package management related)
     #    epm_cmd=checksystem
+    #    direct_args=1
     #    ;;
     site|url)                 # HELPCMD: open package's site in a browser (use -p for open packages.altlinux.org site)
         epm_cmd=site
@@ -326,15 +350,18 @@ check_command()
         ;;
     print)                    # HELPCMD: print various info, run epm print help for details
         epm_cmd=print
+        direct_args=1
         ;;
     repack)                   # HELPCMD: repack rpm to local compatibility
         epm_cmd=repack
         ;;
     prescription|recipe)      # HELPCMD: run prescription (a script to achieving the goal), run without args to get list
         epm_cmd=prescription
+        direct_args=1
         ;;
     play)                     # HELPCMD: install the application from the official site (run without args to get list)
         epm_cmd=play
+        direct_args=1
         ;;
     -V|checkpkg|integrity)    # HELPCMD: check package file integrity (checksum)
         epm_cmd=checkpkg
@@ -447,11 +474,17 @@ for opt in $EPM_OPTIONS ; do
 done
 
 FLAGENDOPTS=
+# NOTE: can't use while read here: set vars inside
 for opt in "$@" ; do
     [ "$opt" = "--" ] && FLAGENDOPTS=1 && continue
     if [ -z "$FLAGENDOPTS" ] ; then
         check_command "$opt" && continue
         check_option "$opt" && continue
+    fi
+    if [ -n "$direct_args" ] ; then
+        quoted_args="$quoted_args \"$opt\""
+        FLAGENDOPTS=1
+        continue
     fi
     # Note: will parse all params separately (no package names with spaces!)
     check_filenames "$opt"
