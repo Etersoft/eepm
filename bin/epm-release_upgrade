@@ -20,6 +20,50 @@
 load_helper epm-query
 load_helper epm-repofix
 
+assure_safe_run()
+{
+	if [ "$TERM" = "linux" ] ; then
+		echo "You have the best choise to run the '# epm release-upgrade' from text console."
+		return
+	fi
+	if [ "$TERM" != "screen" ] ; then
+		if [ -n "$force" ] ; then
+			echo "You force me running not under screen (TERM=$TERM now)! You can lost your system!"
+			return
+		else
+			warning "It is very dangerous to upgrade to next release from a GUI (your TERM=$TERM)."
+			warning "It is recommended install 'screen' and run upgrade via screen: '# screen epm release-upgrade'"
+			fatal "or run me with --force if you understand the risk."
+		fi
+	fi
+
+	# run under screen, check if systemd will not kill our processes
+	local res
+	if ! is_active_systemd systemd ; then
+		return
+	fi
+
+	res="$(busctl get-property org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager KillUserProcesses)"
+	if [ "$res" = "b false" ] ; then
+		echo "Good news: systemd-logind will not kill your screen processes (KillUserProcesses=false)"
+		return
+	else
+		if [ -n "$force" ] ; then
+			warning "You force runnning even if systemd-logind kills screen on disconnect"
+		else
+			docmd epm install systemd-settings-disable-kill-user-processes || fatal "Can't install the package above. Fix it or run with --force."
+			docmd serv systemd-logind restart || fatal "Can't restart systemd-logind service. Fix it or run with --force."
+			fatal "Now you need relogin to the system. In this session your screen still will be killed."
+		fi
+	fi
+
+	# check too: KillExcludeUsers
+
+	# can continue
+	return 0
+}
+
+
 SAVELISTDIR=/tmp/eepm-release_upgrade
 __save_alt_repo_lists()
 {
@@ -441,6 +485,7 @@ __switch_alt_to_distro()
 epm_release_upgrade()
 {
 	assure_root
+	assure_safe_run
 	info "Starting upgrade/switch whole system to other release"
 	info "Check also http://wiki.etersoft.ru/Admin/UpdateLinux"
 
