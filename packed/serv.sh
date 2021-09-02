@@ -284,12 +284,16 @@ info()
 	fi
 }
 
-SUDO_TESTED="0"
-SUDO_CMD="sudo"
+SUDO_TESTED=''
+SUDO_CMD='sudo'
 set_sudo()
 {
-	[ "$SUDO_TESTED" = "1" ] && return
-	SUDO_TESTED="1"
+	local nofail="$1"
+
+	# cache the result
+	[ -n "$SUDO_TESTED" ] && return "$SUDO_TESTED"
+	SUDO_TESTED="0"
+
 	SUDO=""
 	# skip SUDO if disabled
 	[ -n "$EPMNOSUDO" ] && return
@@ -300,28 +304,32 @@ set_sudo()
 
 	EFFUID=$(id -u)
 
-	# do not need sudo
+	# if we are root, do not need sudo
 	[ $EFFUID = "0" ] && return
 
+	# start error section
+	SUDO_TESTED="1"
+
 	if ! which $SUDO_CMD >/dev/null 2>/dev/null ; then
-		SUDO="fatal 'Can't find sudo. Please install and tune sudo ('# epm install sudo') or run epm under root.'"
-		return
+		[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't find sudo. Please install and tune sudo ('# epm install sudo') or run epm under root.'"
+		return "$SUDO_TESTED"
 	fi
 
 	# if input is a console
 	if inputisatty && isatty && isatty2 ; then
 		if ! $SUDO_CMD -l >/dev/null ; then
-			SUDO="fatal 'Can't use sudo (only without password sudo is supported in non interactive using). Please run epm under root.'"
-			return
+			[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only without password sudo is supported in non interactive using). Please run epm under root.'"
+			return "$SUDO_TESTED"
 		fi
 	else
 		# use sudo if one is tuned and tuned without password
 		if ! $SUDO_CMD -l -n >/dev/null 2>/dev/null ; then
-			SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
-			return
+			[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
+			return "$SUDO_TESTED"
 		fi
 	fi
 
+	SUDO_TESTED="0"
 	SUDO="$SUDO_CMD --"
 	# check for < 1.7 version which do not support -- (and --help possible too)
 	$SUDO_CMD -h 2>/dev/null | grep -q "  --" || SUDO="$SUDO_CMD"
@@ -391,6 +399,7 @@ confirm_info()
 
 assure_root()
 {
+	set_sudo
 	[ "$EFFUID" = 0 ] || fatal "run me only under root"
 }
 
@@ -575,7 +584,7 @@ get_pkg_name_delimiter()
 
 has_space()
 {
-    estrlist has_space "$@"
+    estrlist -- has_space "$@"
 }
 
 # File bin/serv-cat:
@@ -587,7 +596,7 @@ serv_cat()
 
 	case $SERVICETYPE in
 		systemd)
-			sudocmd systemctl cat "$SERVICE" "$@"
+			docmd systemctl cat "$SERVICE" "$@"
 			;;
 		*)
 			case $DISTRNAME in
@@ -643,7 +652,6 @@ serv_disable()
 {
 	local SERVICE="$1"
 
-	is_service_running $1 && { serv_stop $1 || return ; }
 	is_service_autostart $1 || { info "Service $1 already disabled for startup" && return ; }
 
 	case $SERVICETYPE in
@@ -692,7 +700,7 @@ serv_edit()
 # File bin/serv-enable:
 
 
-__serv_enable()
+serv_enable()
 {
 	local SERVICE="$1"
 
@@ -729,22 +737,38 @@ __serv_enable()
 			fatal "Have no suitable command for $SERVICETYPE"
 			;;
 	esac
-
 }
 
-serv_enable()
+# File bin/serv-exists:
+
+serv_exists()
 {
-	__serv_enable "$1" || return
-	# start if need
-	is_service_running $1 && info "Service $1 is already running" && return
-	serv_start $1
+	local SERVICE="$1"
+	shift
+
+	case $SERVICETYPE in
+		systemd)
+			# too direct way: test -s /lib/systemd/system/dm.service
+			docmd systemctl cat "$SERVICE" "$@" >/dev/null 2>/dev/null
+			;;
+		*)
+			case $DISTRNAME in
+			ALTLinux)
+				local INITFILE=/etc/init.d/$SERVICE
+				[ -r "$INITFILE" ] || return
+				return ;;
+			*)
+				fatal "Have no suitable for $DISTRNAME command for $SERVICETYPE"
+				;;
+			esac
+	esac
 }
 
 # File bin/serv-list:
 
 serv_list()
 {
-	info "Running services:"
+	[ -n "$short" ] || info "Running services:"
 	case $SERVICETYPE in
 		service-upstart)
 			sudocmd initctl list
@@ -753,7 +777,11 @@ serv_list()
 			sudocmd service --status-all
 			;;
 		systemd)
-			sudocmd systemctl list-units $@
+			if [ -n "$short" ] ; then
+				docmd systemctl list-units --type=service "$@" | grep '\.service' | sed -e 's|\.service.*||' -e 's|^ *||'
+			else
+				docmd systemctl list-units --type=service "$@"
+			fi
 			;;
 		openrc)
 			sudocmd rc-status
@@ -774,22 +802,42 @@ serv_list_all()
 {
 	case $SERVICETYPE in
 		service-chkconfig|service-upstart)
-			# service --status-all for Ubuntu/Fedora
-			sudocmd chkconfig --list | cut -f1 | grep -v "^$" | grep -v "xinetd:$"
-
+			if [ -n "$short" ] ; then
+				# service --status-all for Ubuntu/Fedora
+				sudocmd chkconfig --list | cut -f1 | grep -v "^$" | grep -v "xinetd:$" | cut -f 1 -d" "
+			else
+				# service --status-all for Ubuntu/Fedora
+				sudocmd chkconfig --list | cut -f1 | grep -v "^$" | grep -v "xinetd:$"
+			fi
 			if [ -n "$ANYSERVICE" ] ; then
-				sudocmd anyservice --quiet list
+				if [ -n "$short" ] ; then
+					sudocmd anyservice --quiet list | cut -f 1 -d" "
+				else
+					sudocmd anyservice --quiet list
+				fi
 				return
 			fi
 			;;
 		service-initd|service-update)
-			sudocmd ls $INITDIR/ | grep -v README
+			if [ -n "$short" ] ; then
+				sudocmd ls $INITDIR/ | grep -v README | cut -f 1 -d" "
+			else
+				sudocmd ls $INITDIR/ | grep -v README
+			fi
 			;;
 		systemd)
-			sudocmd systemctl list-unit-files $@
+			if [ -n "$short" ] ; then
+				docmd systemctl list-unit-files --type=service "$@" | sed -e 's|\.service.*||' | grep -v 'unit files listed' | grep -v '^$'
+			else
+				docmd systemctl list-unit-files --type=service "$@"
+			fi
 			;;
 		openrc)
-			sudocmd rc-service -l
+			if [ -n "$short" ] ; then
+				sudocmd rc-service -l | cut -f 1 -d" "
+			else
+				sudocmd rc-service -l
+			fi
 			;;
 		*)
 			fatal "Have no suitable command for $SERVICETYPE"
@@ -806,13 +854,12 @@ serv_list_failed()
 			sudocmd systemctl --failed
 			;;
 		*)
-			for i in $(serv_list_startup | cut -f 1 -d" ") ; do
+			for i in $(short=1 serv_list_startup) ; do
 				is_service_running >/dev/null $i && continue
 				echo ; echo $i
 				serv_status $i
 			done
 			;;
-
 	esac
 }
 
@@ -824,16 +871,15 @@ serv_list_startup()
 		systemd)
 			#sudocmd systemctl list-unit-files
 			# TODO: native command? implement --short for list (only names)
-			for i in $(serv_list_all | cut -f 1 -d" " | grep "\.service$") ; do
-				is_service_autostart >/dev/null $i && echo $i
+			for i in $(short=1 serv_list_all) ; do
+				is_service_autostart >/dev/null 2>/dev/null $i && echo $i
 			done
 			;;
 		*)
-			for i in $(serv_list_all | cut -f 1 -d" ") ; do
-				is_service_autostart >/dev/null $i && echo $i
+			for i in $(short=1 serv_list_all) ; do
+				is_service_autostart >/dev/null 2>/dev/null $i && echo $i
 			done
 			;;
-
 	esac
 }
 
@@ -884,6 +930,29 @@ serv_log()
 				;;
 			esac
 	esac
+}
+
+# File bin/serv-off:
+
+
+serv_off()
+{
+	local SERVICE="$1"
+
+	is_service_running $1 && { serv_stop $1 || return ; }
+	is_service_autostart $1 || { info "Service $1 already disabled for startup" && return ; }
+	serv_disable $SERVICE
+}
+
+# File bin/serv-on:
+
+
+serv_on()
+{
+	serv_enable "$1" || return
+	# start if need
+	is_service_running $1 && info "Service $1 is already running" && return
+	serv_start $1
 }
 
 # File bin/serv-print:
@@ -1012,7 +1081,7 @@ is_service_running()
 			sudorun $INITDIR/$1 status >/dev/null 2>/dev/null
 			;;
 		systemd)
-			sudorun systemctl status $1 >/dev/null 2>/dev/null
+			a='' systemctl status $1 >/dev/null 2>/dev/null
 			;;
 		runit)
 			sudorun sv status "$SERVICE" >/dev/null 2>/dev/null
@@ -1038,10 +1107,10 @@ is_service_autostart()
 			LANG=C sudorun chkconfig $1 --list | grep -q "[35]:on"
 			;;
 		service-initd|service-update)
-                        test -L "$(echo /etc/rc5.d/S??$1)"
+			test -L "$(echo /etc/rc5.d/S??$1)"
 			;;
 		systemd)
-			sudorun systemctl is-enabled $1
+			a='' systemctl is-enabled $1
 			;;
 		runit)
 			test -L "/var/service/$SERVICE"
@@ -1071,7 +1140,7 @@ serv_status()
 			sudocmd $INITDIR/$SERVICE status "$@"
 			;;
 		systemd)
-			sudocmd systemctl -l status $SERVICE "$@"
+			docmd systemctl -l status $SERVICE "$@"
 			;;
 		runit)
 			sudocmd sv status "$SERVICE"
@@ -2540,7 +2609,12 @@ esac
 shift
 
 # FIXME: do to call function directly, use case instead?
-if [ "$1" = "-" ] ; then
+if [ "$COMMAND" = "--" ] ; then
+    # ignore all options (-)
+    COMMAND="$1"
+    shift
+    "$COMMAND" "$@"
+elif [ "$1" = "-" ] ; then
     shift
     "$COMMAND" "$(cat) $@"
 elif [ "$2" = "-" ] ; then
@@ -2867,9 +2941,9 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.11.2  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.13.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
-        echo "Copyright (c) Etersoft 2012-2019"
+        echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 
@@ -2882,6 +2956,7 @@ set_service_type
 
 verbose=
 quiet=
+short=
 non_interactive=
 show_command_only=
 serv_cmd=
@@ -2913,10 +2988,16 @@ check_command()
     stop)                     # HELPCMD: stop service
         serv_cmd=stop
         ;;
-    on|enable)                # HELPCMD: add service to run on startup and start it now
+    on)                       # HELPCMD: add service to run on startup and start it now
+        serv_cmd=on
+        ;;
+    off)                      # HELPCMD: remove service to run on startup and stop it now
+        serv_cmd=off
+        ;;
+    enable)                   # HELPCMD: add service to run on startup (see 'on' also)
         serv_cmd=enable
         ;;
-    off|disable)              # HELPCMD: remove service to run on startup and stop it now
+    disable)                 # HELPCMD: remove service to run on startup (see 'off' also)
         serv_cmd=disable
         ;;
     log|journal)              # HELPCMD: print log for the service (-f - follow,  -r - reverse order)
@@ -2924,6 +3005,9 @@ check_command()
         ;;
     cat)                      # HELPCMD: print out service file for the service
         serv_cmd=cat
+        ;;
+    exists)                   # HELPCMD: check if the service is installed on the system
+        serv_cmd=exists
         ;;
     edit)                     # HELPCMD: edit service file overload (use --full to edit full file)
         serv_cmd=edit
@@ -2978,6 +3062,9 @@ check_option()
         ;;
     --verbose)            # HELPOPT: verbose mode
         verbose=1
+        ;;
+    --short)              # HELPOPT: short mode
+        short=1
         ;;
     --show-command-only)  # HELPOPT: show command only, do not any action
         show_command_only=1
