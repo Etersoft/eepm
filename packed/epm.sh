@@ -293,12 +293,16 @@ info()
 	fi
 }
 
-SUDO_TESTED="0"
-SUDO_CMD="sudo"
+SUDO_TESTED=''
+SUDO_CMD='sudo'
 set_sudo()
 {
-	[ "$SUDO_TESTED" = "1" ] && return
-	SUDO_TESTED="1"
+	local nofail="$1"
+
+	# cache the result
+	[ -n "$SUDO_TESTED" ] && return "$SUDO_TESTED"
+	SUDO_TESTED="0"
+
 	SUDO=""
 	# skip SUDO if disabled
 	[ -n "$EPMNOSUDO" ] && return
@@ -309,28 +313,32 @@ set_sudo()
 
 	EFFUID=$(id -u)
 
-	# do not need sudo
+	# if we are root, do not need sudo
 	[ $EFFUID = "0" ] && return
 
+	# start error section
+	SUDO_TESTED="1"
+
 	if ! which $SUDO_CMD >/dev/null 2>/dev/null ; then
-		SUDO="fatal 'Can't find sudo. Please install and tune sudo ('# epm install sudo') or run epm under root.'"
-		return
+		[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't find sudo. Please install and tune sudo ('# epm install sudo') or run epm under root.'"
+		return "$SUDO_TESTED"
 	fi
 
 	# if input is a console
 	if inputisatty && isatty && isatty2 ; then
 		if ! $SUDO_CMD -l >/dev/null ; then
-			SUDO="fatal 'Can't use sudo (only without password sudo is supported in non interactive using). Please run epm under root.'"
-			return
+			[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only without password sudo is supported in non interactive using). Please run epm under root.'"
+			return "$SUDO_TESTED"
 		fi
 	else
 		# use sudo if one is tuned and tuned without password
 		if ! $SUDO_CMD -l -n >/dev/null 2>/dev/null ; then
-			SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
-			return
+			[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
+			return "$SUDO_TESTED"
 		fi
 	fi
 
+	SUDO_TESTED="0"
 	SUDO="$SUDO_CMD --"
 	# check for < 1.7 version which do not support -- (and --help possible too)
 	$SUDO_CMD -h 2>/dev/null | grep -q "  --" || SUDO="$SUDO_CMD"
@@ -400,6 +408,7 @@ confirm_info()
 
 assure_root()
 {
+	set_sudo
 	[ "$EFFUID" = 0 ] || fatal "run me only under root"
 }
 
@@ -584,7 +593,7 @@ get_pkg_name_delimiter()
 
 has_space()
 {
-    estrlist has_space "$@"
+    estrlist -- has_space "$@"
 }
 
 # File bin/epm-addrepo:
@@ -708,6 +717,7 @@ __epm_addkey_deb()
     local fingerprint="$2"
     if [ -z "$fingerprint" ] ; then
         assure_exists curl
+        set_sudo
         showcmd "curl -fsSL '$url' | $SUDO apt-key add -"
         a= curl -fsSL "$url" | sudorun apt-key add -
         return
@@ -929,7 +939,7 @@ __epm_orphan_altrpm()
 epm_autoorphans()
 {
 
-[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
+[ -z "$*" ] || fatal "No arguments are allowed here"
 
 
 case $PMTYPE in
@@ -1724,15 +1734,16 @@ __is_repo_info_uptodate()
 update_repo_if_needed()
 {
     # check if we need skip update checking
-    if [ "$1" = "soft" ] && [ -n "$SUDO" ] ; then
+    if [ "$1" = "soft" ] && ! set_sudo nofail ; then
         # if sudo requires a password, skip autoupdate
-        sudorun -n true 2>/dev/null || { info "sudo requires a password, skip repo status checking" ; return 0 ; }
+        info "can't use sudo, so skip repo status checking"
+        return 1
     fi
 
     cd / || fatal
     if ! __is_repo_info_downloaded || ! __is_repo_info_uptodate ; then
         # FIXME: cleans!!!
-        (pkg_filenames='' epm_update)
+        epm_update
     fi
     cd - >/dev/null || fatal
 
@@ -1781,7 +1792,7 @@ __remove_deb_apt_cache_file()
 epm_clean()
 {
 
-[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
+[ -z "$*" ] || fatal "No arguments are allowed here"
 
 
 case $PMTYPE in
@@ -2034,6 +2045,7 @@ epm_downgrade()
 	apt-rpm)
 		local APTOPTIONS="$(subst_option non_interactive -y)"
 		__epm_add_alt_apt_downgrade_preferences || return
+		# pass pkg_filenames too
 		epm_upgrade "$@"
 		__epm_remove_apt_downgrade_preferences
 		;;
@@ -2238,40 +2250,40 @@ epm_download()
 
 	case $DISTRNAME-$PMTYPE in
 		ALTLinux-apt-rpm)
-			__epm_download_alt $pkg_filenames
+			__epm_download_alt $*
 			return
 			;;
 	esac
 
 	case $PMTYPE in
 	dnf-rpm)
-		sudocmd dnf download $pkg_filenames
+		sudocmd dnf download $*
 		;;
 	aptcyg)
-		sudocmd apt-cyg download $pkg_filenames
+		sudocmd apt-cyg download $*
 		;;
 	packagekit)
-		docmd pkcon download $pkg_filenames
+		docmd pkcon download $*
 		;;
 	yum-rpm)
 		# TODO: check yum install --downloadonly --downloaddir=/tmp <package-name>
 		assure_exists yumdownloader yum-utils
-		sudocmd yumdownloader $pkg_filenames
+		sudocmd yumdownloader $*
 		;;
 	dnf-rpm)
-		sudocmd dnf download $pkg_filenames
+		sudocmd dnf download $*
 		;;
 	urpm-rpm)
 		sudocmd urpmi --no-install $URPMOPTIONS $@
 		;;
 	tce)
-		sudocmd tce-load -w $pkg_filenames
+		sudocmd tce-load -w $*
 		;;
 	opkg)
-		docmd opkg $pkg_filenames
+		docmd opkg $*
 		;;
 	homebrew)
-		docmd brew fetch $pkg_filenames
+		docmd brew fetch $*
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -2502,7 +2514,7 @@ epm_filelist()
 
 epm_full_upgrade()
 {
-	(pkg_filenames='' epm_update) || return
+	epm_update || return
 
 	epm_upgrade || return
 
@@ -3243,7 +3255,7 @@ epm_Install()
 
     [ -z "$files$names" ] && info "Install: Skip empty install list." && return 22
 
-    (pkg_filenames='' epm_update) || { [ -n "$force" ] || return ; }
+    epm_update || { [ -n "$force" ] || return ; }
 
     epm_install_names $names || return
 
@@ -3342,8 +3354,8 @@ epm_kernel_update()
 		fi
 		assure_exists update-kernel update-kernel 0.9.9
 		update_repo_if_needed
-		sudocmd update-kernel $(subst_option non_interactive -y) $pkg_filenames || return
-		docmd epm remove-old-kernels $(subst_option non_interactive -y) $pkg_filenames || fatal
+		sudocmd update-kernel $(subst_option non_interactive -y) "$@" || return
+		docmd epm remove-old-kernels $(subst_option non_interactive -y) "$@" || fatal
 		return ;;
 	esac
 
@@ -3386,7 +3398,7 @@ __repack_rpm_base()
 epm_optimize()
 {
 
-[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
+[ -z "$*" ] || fatal "No arguments are allowed here"
 
 case $PMTYPE in
 	*-rpm)
@@ -3634,6 +3646,7 @@ Options:
     --remove APP   - remove APP
     --list         - list all installed apps
     --list-all     - list all available apps
+    --short        - print only names
 EOF
     exit
 fi
@@ -3650,22 +3663,43 @@ fi
 
 if [ "$1" = "--list" ] || [ "$1" = "--installed" ] ; then
     shift
-    echo "Installed:"
     local i
+    if [ -n "$short" ] ; then
+        for i in $(__list_installed_app) ; do
+            echo "$i"
+        done
+        exit
+    fi
+    echo "Installed:"
     for i in $(__list_installed_app) ; do
         printf "  %-20s - %s\n" "$i" "$($psdir/$i.sh --description 2>/dev/null)"
     done
     exit
 fi
 
+[ "($DISTRVENDOR -a)" = "x86_64" ] && IGNOREi586='' || IGNOREi586=1
+
 if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
     echo "Run with a name of a play script to run:"
     local i
     local desc
+    if [ -n "$short" ] ; then
+        for i in $psdir/*.sh ; do
+            # print all
+            #desc="$($i --description 2>/dev/null)"
+            #[ -z "$desc" ] && continue
+            local name=$(basename $i .sh)
+            [ -n "$IGNOREi586" ] && rhas "$name" "^i586-" && continue
+            echo "$name"
+        done
+        exit
+    fi
     for i in $psdir/*.sh ; do
         desc="$($i --description 2>/dev/null)"
         [ -z "$desc" ] && continue
-        printf "  %-20s - %s\n" "$(basename $i .sh)" "$desc"
+        local name=$(basename $i .sh)
+        [ -n "$IGNOREi586" ] && rhas "$name" "^i586-" && continue
+        printf "  %-20s - %s\n" "$name" "$desc"
     done
     echo
     echo "run epm play --list to list installed only or --remove to remove one"
@@ -4469,7 +4503,11 @@ __do_query_real_file()
 	# get value of symbolic link
 	if [ -L "$TOFILE" ] ; then
 		local LINKTO
-		__do_query "$TOFILE"
+		if [ -n "$short" ] ; then
+			__do_short_query "$TOFILE"
+		else
+			__do_query "$TOFILE"
+		fi
 		LINKTO=$(readlink -f -- "$TOFILE")
 		info "Note: $TOFILE is link to $LINKTO"
 		__do_query_real_file "$LINKTO"
@@ -4577,16 +4615,6 @@ __do_short_query()
 
 epm_query_file()
 {
-    # И где это используется?
-    # in short mode print handle only real names and do short output
-    # TODO: move to separate command?
-    # FIXME: it is possible use query
-    if [ -n "$short" ] ; then
-        [ -n "$pkg_files$pkg_dirs" ] || fatal "Run query without file names (needed path to files)"
-        __do_short_query $pkg_files $pkg_dirs
-         return
-    fi
-
     # file can exists or not
     [ -n "$pkg_filenames" ] || fatal "Run query without file names"
 
@@ -4596,7 +4624,11 @@ epm_query_file()
     res=0
     for pkg in $pkg_filenames ; do
         __do_query_real_file "$pkg"
-        __do_query "$FULLFILEPATH" || res=$?
+        if [ -n "$short" ] ; then
+            __do_short_query "$FULLFILEPATH" || res=$?
+        else
+            __do_query "$FULLFILEPATH" || res=$?
+        fi
     done
     [ "$res" = "0" ] || info "Try epm sf for search file in all packages in repository"
     #|| pkg_filenames="$FULLFILEPATH" epm_search_file
@@ -4706,34 +4738,49 @@ epm_reinstall()
 # File bin/epm-release_upgrade:
 
 
-SAVELISTDIR=/tmp/eepm-release_upgrade
-__save_alt_repo_lists()
+assure_safe_run()
 {
-	info "Creating copy of all sources lists to $SAVELISTDIR ..."
-	local i
-	rm -rfv $SAVELISTDIR 2>/dev/null
-	mkdir -p $SAVELISTDIR/apt/ $SAVELISTDIR/apt/sources.list.d/
-	for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
-		[ -s "$i" ] || continue
-		local DD="$(echo "$i" | sed -e "s|/etc|$SAVELISTDIR|")"
-		cp -af $verbose "$i" "$DD" || fatal "Can't save apt source list files to $SAVELISTDIR"
-	done
+	if [ "$TERM" = "linux" ] ; then
+		echo "You have the best choise to run the '# epm release-upgrade' from text console."
+		return
+	fi
+	if [ "$TERM" != "screen" ] ; then
+		if [ -n "$force" ] ; then
+			echo "You force me running not under screen (TERM=$TERM now)! You can lost your system!"
+			return
+		else
+			warning "It is very dangerous to upgrade to next release from a GUI (your TERM=$TERM)."
+			warning "It is recommended install 'screen' and run upgrade via screen: '# screen epm release-upgrade'"
+			fatal "or run me with --force if you understand the risk."
+		fi
+	fi
+
+	# run under screen, check if systemd will not kill our processes
+	local res
+	if ! is_active_systemd systemd ; then
+		return
+	fi
+
+	res="$(busctl get-property org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager KillUserProcesses)"
+	if [ "$res" = "b false" ] ; then
+		echo "Good news: systemd-logind will not kill your screen processes (KillUserProcesses=false)"
+		return
+	else
+		if [ -n "$force" ] ; then
+			warning "You force runnning even if systemd-logind kills screen on disconnect"
+		else
+			docmd epm install systemd-settings-disable-kill-user-processes || fatal "Can't install the package above. Fix it or run with --force."
+			docmd serv systemd-logind restart || fatal "Can't restart systemd-logind service. Fix it or run with --force."
+			fatal "Now you need relogin to the system. In this session your screen still will be killed."
+		fi
+	fi
+
+	# check too: KillExcludeUsers
+
+	# can continue
+	return 0
 }
 
-__restore_alt_repo_lists()
-{
-	info "Some error. Restoring copy of all sources lists from $SAVELISTDIR ..."
-	local i
-	[ -d "$SAVELISTDIR/apt" ] || return 0
-	mkdir -p $SAVELISTDIR/apt/ $SAVELISTDIR/apt/sources.list.d/
-	for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
-		[ -s "$i" ] || continue
-		local DD="$(echo "$i" | sed -e "s|/etc|$SAVELISTDIR|")"
-		# restore only if there are differences
-		diff -q "$DD" "$i" >/dev/null || continue
-		mv $verbose "$DD" "$i" || warning "Can't restore $i file"
-	done
-}
 
 __replace_text_in_alt_repo()
 {
@@ -4858,7 +4905,7 @@ get_fix_release_pkg()
 	[ "$TOINSTALL" = "altlinux-release-sisyphus" ] && TOINSTALL="branding-alt-sisyphus-release"
 
 	# update if installed (just print package name here to include in the install list)
-	epm --quiet --short -q alt-gpgkeys 2>/dev/null
+	epm --quiet --short installed alt-gpgkeys 2>/dev/null
 	if epm --quiet --short -q etersoft-gpgkeys 2>/dev/null >/dev/null ; then
 		# leave etersoft-gpgkeys only we have LINUX@Etersoft repo
 		epm rl | grep -q "LINUX@Etersoft" && echo etersoft-gpgkeys || echo alt-gpgkeys
@@ -4888,19 +4935,36 @@ __switch_repo_to()
 
 __check_system()
 {
+	local TO="$1"
+	shift
+
 	# sure we have systemd if systemd is running
 	if is_active_systemd systemd ; then
 		docmd epm --skip-installed install systemd || fatal
 	fi
 
-	# FIXME: will GUI closed during that changes?
-	# switch from prefdm: https://bugzilla.altlinux.org/show_bug.cgi?id=26405#c52
-	if is_active_systemd systemd && serv display-manager status >/dev/null || serv prefdm status >/dev/null ; then
-		docmd systemctl disable prefdm.service
-		docmd systemctl disable display-manager.service
-		docmd systemctl enable display-manager.service
-	#	docmd systemctl enable sddm.service
-	#	docmd systemctl enable lightdm.service
+	if [ "$TO" != "Sisyphus" ] ; then
+		if epm installed altlinux-release-sisyphus >/dev/null ; then
+			warning "Target distro is $TO, but altlinux-release-sisyphus package is installed."
+			warning "Trying to replace it with altlinux-release-$TO"
+			docmd epm install altlinux-release-$TO
+		fi
+	fi
+
+	# switch from prefdm: https://bugzilla.altlinux.org/show_bug.cgi?id=26405#c47
+	if is_active_systemd systemd ; then
+		if serv display-manager exists || serv prefdm exists ; then
+			# don't stop running X server!
+			# docmd serv dm off
+			docmd serv disable prefdm
+			docmd serv disable display-manager
+			docmd serv enable display-manager
+
+			# enable first available DM
+			for i in lightdm sddm lxde-lxdm gdm ; do
+				serv $i exists && docmd serv enable $i && break
+			done
+		fi
 	fi
 
 }
@@ -4970,7 +5034,7 @@ __switch_alt_to_distro()
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
-			__check_system
+			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			info "Run epm release-upgrade again for update to p9"
 			;;
@@ -4981,7 +5045,7 @@ __switch_alt_to_distro()
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
-			__check_system
+			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			;;
 		"p8 c8"|"p8 c8.1"|"p8 c8.2")
@@ -4996,7 +5060,7 @@ __switch_alt_to_distro()
 			fi
 			docmd epm downgrade
 			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
-			__check_system
+			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			;;
 		"p8"|"p8 p9"|"t8 p9"|"c8 c9"|"c8 p9"|"c8.1 p9"|"c8.2 p9"|"p9 p9")
@@ -5010,7 +5074,7 @@ __switch_alt_to_distro()
 			__epm_ru_update || fatal
 			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
-			__check_system
+			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			info "Run epm release-upgrade again for update to p10"
 			;;
@@ -5024,7 +5088,7 @@ __switch_alt_to_distro()
 			__epm_ru_update || fatal
 			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm install rpm apt "$(get_fix_release_pkg "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
-			__check_system
+			__check_system "$TO"
 			docmd epm update-kernel -t std-def || fatal
 			;;
 		"p9 p8"|"c8.1 c8"|"c8.1 p8"|"p8 p8")
@@ -5038,7 +5102,7 @@ __switch_alt_to_distro()
 				docmd epm downgrade apt rpm pam pam0_passwdqc glibc-core libcrypt- || fatal
 			fi
 			docmd epm downgrade
-			__check_system
+			__check_system "$TO"
 			docmd epm upgrade || fatal
 			;;
 		"p9 c8"|"p9 c8.1"|"p9 c8.2")
@@ -5052,7 +5116,7 @@ __switch_alt_to_distro()
 			#	docmd epm downgrade apt rpm pam pam0_passwdqc glibc-core libcrypt- || fatal
 			#fi
 			docmd epm downgrade
-			__check_system
+			__check_system "$TO"
 			docmd epm upgrade || fatal
 			;;
 		"p10 p9")
@@ -5063,7 +5127,7 @@ __switch_alt_to_distro()
 			__epm_ru_update || fatal
 			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm downgrade
-			__check_system
+			__check_system "$TO"
 			docmd epm upgrade || fatal
 			;;
 		"Sisyphus p8"|"Sisyphus p9"|"Sisyphus p10"|"Sisyphus c8"|"Sisyphus c8.1")
@@ -5074,7 +5138,7 @@ __switch_alt_to_distro()
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm downgrade
-			__check_system
+			__check_system "$TO"
 			docmd epm upgrade || fatal
 			;;
 		"p8 Sisyphus"|"p9 Sisyphus"|"p10 Sisyphus"|"Sisyphus Sisyphus")
@@ -5090,7 +5154,7 @@ __switch_alt_to_distro()
 			#ADDPKG=$(epm -q --short make-initrd sssd-ad 2>/dev/null)
 			#docmd epm install librpm7 librpm rpm apt $ADDPKG "$(get_fix_release_pkg --force "$TO")" ConsoleKit2- || fatal "Check an error and run again"
 			docmd epm upgrade || fatal "Check the error and run '# epm release-upgrade' or just '# epm upgrade' again"
-			__check_system
+			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			;;
 		*)
@@ -5113,6 +5177,7 @@ __switch_alt_to_distro()
 epm_release_upgrade()
 {
 	assure_root
+	assure_safe_run
 	info "Starting upgrade/switch whole system to other release"
 	info "Check also http://wiki.etersoft.ru/Admin/UpdateLinux"
 
@@ -5563,7 +5628,7 @@ epm_remove_old_kernels()
 			return
 		fi
 		assure_exists update-kernel update-kernel 0.9.9
-		sudocmd remove-old-kernels $(subst_option non_interactive -y) $pkg_filenames
+		sudocmd remove-old-kernels $(subst_option non_interactive -y) "$@"
 		return ;;
 	Ubuntu)
 		if ! __epm_query_package linux-image >/dev/null ; then
@@ -5582,7 +5647,7 @@ epm_remove_old_kernels()
 			assure_exists purge-old-kernels byobu
 			;;
 		esac
-		sudocmd purge-old-kernels $pkg_filenames
+		sudocmd purge-old-kernels "$@"
 		return ;;
 	Gentoo)
 		sudocmd emerge -P gentoo-sources
@@ -5605,9 +5670,14 @@ epm_remove_old_kernels()
 __epm_removerepo_alt_grepremove()
 {
 	local rl
-	rl="$((quiet=1 epm repolist) 2>/dev/null | grep -E "$1")"
-	[ -z "$rl" ] && warning "Can't find '$1' in the repos (see '# epm repolist' output)" && return 1
+	if [ "$1" = "all" ] || rhas "$1" "^rpm" ; then
+		rl="$1"
+	else
+		rl="$((quiet=1 epm repolist) 2>/dev/null | grep -E "$1")"
+		[ -z "$rl" ] && warning "Can't find '$1' in the repos (see '# epm repolist' output)" && return 1
+	fi
 	echo "$rl" | while read rp ; do
+		# TODO: print removed lines
 		[ -n "$dryrun" ] && docmd apt-repo $dryrun rm "$rp" && continue
 		if [ -n "$verbose" ] ; then
 			sudocmd apt-repo $dryrun rm "$rp"
@@ -5671,10 +5741,9 @@ esac;
 case $PMTYPE in
 	apt-dpkg)
 		assure_exists apt-add-repository software-properties-common
-		# FIXME: it is possible there is troubles to pass the args
-		showcmd apt-add-repository --remove "$*"
 		set_sudo
-		$SUDO apt-add-repository --remove "$*"
+		# FIXME: it is possible there is troubles to pass the args
+		sudocmd apt-add-repository --remove "$*"
 		info "Check file /etc/apt/sources.list if needed"
 		;;
 	aptitude-dpkg)
@@ -6269,8 +6338,6 @@ case $DISTRNAME in
 		;;
 esac
 
-[ -z "$1" ] || fatal "No arguments are allowed here"
-
 case $PMTYPE in
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -6330,11 +6397,14 @@ print_apt_sources_list()
 
 epm_repolist()
 {
+
+[ -z "$*" ] || fatal "No arguments are allowed here"
+
 case $PMTYPE in
 	apt-rpm)
 		#assure_exists apt-repo
-		if tasknumber "$pkg_names" >/dev/null ; then
-			get_task_packages $pkg_names
+		if tasknumber "$1" >/dev/null ; then
+			get_task_packages "$@"
 		else
 			print_apt_sources_list
 			#docmd apt-repo list
@@ -6387,11 +6457,47 @@ esac
 # File bin/epm-reposave:
 
 
+
+SAVELISTDIR=/tmp/eepm-etc-save
+__save_alt_repo_lists()
+{
+	info "Creating copy of all sources lists to $SAVELISTDIR ..."
+	local i
+	rm -rf $verbose $SAVELISTDIR 2>/dev/null
+	mkdir -p $SAVELISTDIR/apt/ $SAVELISTDIR/apt/sources.list.d/
+	for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
+		[ -s "$i" ] || continue
+		local DD="$(echo "$i" | sed -e "s|/etc|$SAVELISTDIR|")"
+		cp -af $verbose "$i" "$DD" || fatal "Can't save apt source list files to $SAVELISTDIR"
+	done
+}
+
+__restore_alt_repo_lists()
+{
+	info "Restoring copy of all sources lists from $SAVELISTDIR ..."
+	local i
+	[ -d "$SAVELISTDIR/apt" ] || return 0
+	mkdir -p $SAVELISTDIR/apt/ $SAVELISTDIR/apt/sources.list.d/
+	for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
+		[ -s "$i" ] || continue
+		local DD="$(echo "$i" | sed -e "s|/etc|$SAVELISTDIR|")"
+		# restore only if there are differences
+		if diff -q "$DD" "$i" >/dev/null ; then
+			rm -f $verbose "$DD"
+		else
+			mv $verbose "$DD" "$i" || warning "Can't restore $i file"
+		fi
+	done
+}
+
+
+
 epm_reposave()
 {
 case $PMTYPE in
-	apt-rpm)
-		fatal "TODO"
+	apt-*)
+		assure_root
+		__save_alt_repo_lists
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -6403,8 +6509,9 @@ esac
 epm_reporestore()
 {
 case $PMTYPE in
-	apt-rpm)
-		fatal "TODO"
+	apt-*)
+		assure_root
+		__restore_alt_repo_lists
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -7148,6 +7255,7 @@ case $PMTYPE in
 esac
 
 LANG=C docmd $CMD $string
+epm play $short --list-all | sed -e 's|^ *||g' -e 's|[[:space:]]\+| |g' -e "s|\$| (use \'epm play\' to install it)|"
 }
 
 __epm_search_make_grep()
@@ -7900,7 +8008,7 @@ done
 
 epm_update()
 {
-	[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
+	[ -z "$*" ] || fatal "No arguments are allowed here"
 	info "Running command for update remote package repository database"
 
 warmup_hibase
@@ -7992,17 +8100,15 @@ epm_upgrade()
 {
 	local CMD
 
-	#[ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
-
 	# it is useful for first time running
 	update_repo_if_needed
 
 	warmup_bases
 
 	if [ "$DISTRNAME" = "ALTLinux" ] ; then
-		if tasknumber "$pkg_names" >/dev/null ; then
-			epm_addrepo "$pkg_names"
-			local installlist="$(get_task_packages $pkg_names)"
+		if tasknumber "$*" >/dev/null ; then
+			epm_addrepo "$*"
+			local installlist="$(get_task_packages $*)"
 			# hack: drop -devel packages to avoid package provided by multiple packages
 			installlist="$(estrlist reg_exclude ".*-devel .*-devel-static" "$installlist")"
 			[ -n "$verbose" ] && info "Packages from task(s): $installlist"
@@ -8033,18 +8139,18 @@ epm_upgrade()
 	yum-rpm)
 		local OPTIONS="$(subst_option non_interactive -y)"
 		# can do update repobase automagically
-		CMD="yum $OPTIONS update $pkg_filenames"
+		CMD="yum $OPTIONS update $*"
 		;;
 	dnf-rpm)
 		local OPTIONS="$(subst_option non_interactive -y)"
-		CMD="dnf $OPTIONS distro-sync $pkg_filenames"
+		CMD="dnf $OPTIONS distro-sync $*"
 		;;
 	snappy)
 		CMD="snappy update"
 		;;
 	urpm-rpm)
 		# or --auto-select --replace-files
-		CMD="urpmi --update --auto-select $pkg_filenames"
+		CMD="urpmi --update --auto-select $*"
 		;;
 	zypper-rpm)
 		CMD="zypper dist-upgrade"
@@ -8100,7 +8206,7 @@ epm_upgrade()
 		;;
 	esac
 
-	sudocmd $CMD $pkg_filenames
+	sudocmd $CMD "$@"
 
 }
 
@@ -8109,8 +8215,7 @@ epm_upgrade()
 
 epm_Upgrade()
 {
-	(pkg_filenames='' epm_update)
-
+	epm_update
 	epm_upgrade
 }
 
@@ -9566,7 +9671,12 @@ esac
 shift
 
 # FIXME: do to call function directly, use case instead?
-if [ "$1" = "-" ] ; then
+if [ "$COMMAND" = "--" ] ; then
+    # ignore all options (-)
+    COMMAND="$1"
+    shift
+    "$COMMAND" "$@"
+elif [ "$1" = "-" ] ; then
     shift
     "$COMMAND" "$(cat) $@"
 elif [ "$2" = "-" ] ; then
@@ -9825,7 +9935,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.11.2  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.13.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2020"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -9835,7 +9945,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.11.2
+EPMVERSION=3.13.0
 verbose=
 quiet=
 nodeps=
@@ -9859,6 +9969,7 @@ pkg_dirs=
 pkg_names=
 pkg_urls=
 quoted_args=
+direct_args=
 
 # load system wide config
 [ -f /etc/eepm/eepm.conf ] && . /etc/eepm/eepm.conf
@@ -9906,9 +10017,11 @@ case $PROGNAME in
         ;;
     epmrl)                     # HELPSHORT: alias for epm repo list
         epm_cmd=repolist
+        direct_args=1
         ;;
     epmu)                      # HELPSHORT: alias for epm update
         epm_cmd=update
+        direct_args=1
         ;;
     epm|upm|eepm)              # HELPSHORT: other aliases for epm command
         ;;
@@ -9964,15 +10077,18 @@ check_command()
         ;;
     check|fix|verify)         # HELPCMD: check local package base integrity and fix it
         epm_cmd=check
+        direct_args=1
         ;;
     dedup)                    # HELPCMD: remove unallowed duplicated pkgs (after upgrade crash)
         epm_cmd=dedup
+        direct_args=1
         ;;
     -cl|cl|changelog)         # HELPCMD: show changelog for package
         epm_cmd=changelog
         ;;
     -qi|qi|info|show)         # HELPCMD: print package detail info
         epm_cmd=info
+        direct_args=1
         ;;
     requires|deplist|depends|req|depends-on)     # HELPCMD: print package requires
         epm_cmd=requires
@@ -9994,6 +10110,7 @@ check_command()
         ;;
     programs)                 # HELPCMD: print list of installed GUI program(s) (they have .desktop files)
         epm_cmd=programs
+        direct_args=1
         ;;
     assure)                   # HELPCMD: <command> [package] [version]: install package if command does not exist
         epm_cmd=assure
@@ -10005,44 +10122,56 @@ check_command()
 # HELPCMD: PART: Repository control:
     update)                   # HELPCMD: update remote package repository databases
         epm_cmd=update
+        direct_args=1
         ;;
     addrepo|ar)               # HELPCMD: add package repo (etersoft, autoimports, archive 2017/12/31); run with param to get list
         epm_cmd=addrepo
+        direct_args=1
         ;;
     repolist|sl|rl|listrepo|repo-list)  # HELPCMD: print repo list
         epm_cmd=repolist
+        direct_args=1
         ;;
     repofix)                  # HELPCMD: <mirror>: fix paths in sources lists (ALT Linux only). use repofix etersoft/yandex/basealt for rewrite URL to the specified server
         epm_cmd=repofix
+        direct_args=1
         ;;
     removerepo|rr)            # HELPCMD: remove package repo (shortcut for epm repo remove)
         epm_cmd=removerepo
+        direct_args=1
         ;;
     repo)                     # HELPCMD: manipulate with repository list (run epm repo --help to help)
         epm_cmd=repo
+        direct_args=1
         ;;
     full-upgrade)              # HELPCMD: update all system packages and kernel
         epm_cmd=full_upgrade
+        direct_args=1
         ;;
     release-upgrade|upgrade-release|upgrade-system|release-switch|release-downgrade)  # HELPCMD: upgrade/switch whole system to the release in arg (default: next (latest) release)
         epm_cmd=release_upgrade
+        direct_args=1
         ;;
     kernel-update|kernel-upgrade|update-kernel|upgrade-kernel)      # HELPCMD: update system kernel to the last repo version
         epm_cmd=kernel_update
+        direct_args=1
         ;;
     remove-old-kernels|remove-old-kernel)      # HELPCMD: remove old system kernels (exclude current or last two kernels)
         epm_cmd=remove_old_kernels
+        direct_args=1
         ;;
 
 # HELPCMD: PART: Other commands:
     clean)                    # HELPCMD: clean local package cache
         epm_cmd=clean
+        direct_args=1
         ;;
     restore)                  # HELPCMD: install (restore) packages need for the project (f.i. by requirements.txt)
         epm_cmd=restore
         ;;
     autoremove|package-cleanup)   # HELPCMD: auto remove unneeded package(s) Supports args for ALT: [--direct [libs|python|perl|libs-devel]]
         epm_cmd=autoremove
+        direct_args=1
         ;;
     mark)                     # HELPCMD: mark package as manually or automatically installed (see epm mark --help)
         epm_cmd=mark
@@ -10052,12 +10181,15 @@ check_command()
         ;;
     upgrade|dist-upgrade)     # HELPCMD: performs upgrades of package software distributions
         epm_cmd=upgrade
+        direct_args=1
         ;;
     Upgrade)                  # HELPCMD: force update package base, then run upgrade
         epm_cmd=Upgrade
+        direct_args=1
         ;;
     downgrade)                # HELPCMD: downgrade [all] packages to the repo state
         epm_cmd=downgrade
+        direct_args=1
         ;;
     download)                 # HELPCMD: download package(s) file to the current dir
         epm_cmd=download
@@ -10068,9 +10200,11 @@ check_command()
         ;;
     audit)                    # HELPCMD: audits installed packages against known vulnerabilities
         epm_cmd=audit
+        direct_args=1
         ;;
     #checksystem)              # HELPCMD: check system for known errors (package management related)
     #    epm_cmd=checksystem
+    #    direct_args=1
     #    ;;
     site|url)                 # HELPCMD: open package's site in a browser (use -p for open packages.altlinux.org site)
         epm_cmd=site
@@ -10080,15 +10214,18 @@ check_command()
         ;;
     print)                    # HELPCMD: print various info, run epm print help for details
         epm_cmd=print
+        direct_args=1
         ;;
     repack)                   # HELPCMD: repack rpm to local compatibility
         epm_cmd=repack
         ;;
     prescription|recipe)      # HELPCMD: run prescription (a script to achieving the goal), run without args to get list
         epm_cmd=prescription
+        direct_args=1
         ;;
     play)                     # HELPCMD: install the application from the official site (run without args to get list)
         epm_cmd=play
+        direct_args=1
         ;;
     -V|checkpkg|integrity)    # HELPCMD: check package file integrity (checksum)
         epm_cmd=checkpkg
@@ -10201,11 +10338,17 @@ for opt in $EPM_OPTIONS ; do
 done
 
 FLAGENDOPTS=
+# NOTE: can't use while read here: set vars inside
 for opt in "$@" ; do
     [ "$opt" = "--" ] && FLAGENDOPTS=1 && continue
     if [ -z "$FLAGENDOPTS" ] ; then
         check_command "$opt" && continue
         check_option "$opt" && continue
+    fi
+    if [ -n "$direct_args" ] ; then
+        quoted_args="$quoted_args \"$opt\""
+        FLAGENDOPTS=1
+        continue
     fi
     # Note: will parse all params separately (no package names with spaces!)
     check_filenames "$opt"
