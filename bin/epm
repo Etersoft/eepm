@@ -476,18 +476,20 @@ done
 FLAGENDOPTS=
 # NOTE: can't use while read here: set vars inside
 for opt in "$@" ; do
+
     [ "$opt" = "--" ] && FLAGENDOPTS=1 && continue
+
     if [ -z "$FLAGENDOPTS" ] ; then
         check_command "$opt" && continue
         check_option "$opt" && continue
     fi
+
     if [ -n "$direct_args" ] ; then
         quoted_args="$quoted_args \"$opt\""
-        FLAGENDOPTS=1
-        continue
+    else
+        # Note: will parse all params separately (no package names with spaces!)
+        check_filenames "$opt"
     fi
-    # Note: will parse all params separately (no package names with spaces!)
-    check_filenames "$opt"
 done
 
 # fill
