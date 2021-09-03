@@ -83,6 +83,7 @@ __wcount()
 	echo "$*" | wc -w
 }
 
+# TODO: remove it or move to distro_info
 __detect_alt_release_by_repo()
 {
 	local BRD=$(cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list \
@@ -231,7 +232,7 @@ __check_system()
 	fi
 
 	if [ "$TO" != "Sisyphus" ] ; then
-		if epm installed altlinux-release-sisyphus >/dev/null ; then
+		if [ "$($DISTRVENDOR -v)" != "$TO" ] || epm installed altlinux-release-sisyphus >/dev/null ; then
 			warning "Target distro is $TO, but altlinux-release-sisyphus package is installed."
 			warning "Trying to replace it with altlinux-release-$TO"
 			docmd epm install altlinux-release-$TO
@@ -482,6 +483,7 @@ epm_release_upgrade()
 	ALTLinux)
 		__epm_ru_update || fatal
 
+		# TODO: remove this hack (or move it to distro_info)
 		# try to detect current release by repo
 		if [ "$DISTRVERSION" = "Sisyphus" ] || [ -z "$DISTRVERSION" ] ; then
 			local dv
