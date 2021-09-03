@@ -1,0 +1,167 @@
+#!/bin/sh
+#
+# Copyright (C) 2013, 2016, 2017, 2019, 2020, 2021  Etersoft
+# Copyright (C) 2013, 2016, 2017, 2019, 2020, 2021  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+load_helper epm-release_upgrade
+
+get_prev_release()
+{
+	local FROM="$1"
+	case "$FROM" in
+	"p8")
+		echo "p7" ;;
+	"p9")
+		echo "p8" ;;
+	"p10")
+		echo "p9" ;;
+	"c7")
+		echo "c6" ;;
+	"c8")
+		echo "c7" ;;
+	"c8.1")
+		echo "c8" ;;
+	"c8.2")
+		echo "c8.1" ;;
+	"c9")
+		echo "c8.2" ;;
+	*)
+		echo "$FROM" ;;
+	esac
+}
+
+# FIXME: see epm_release_upgrade
+epm_release_downgrade()
+{
+	assure_root
+	assure_safe_run
+	info "Starting upgrade/switch whole system to other release"
+	info "Check also http://wiki.etersoft.ru/Admin/UpdateLinux"
+
+	cd /tmp || fatal
+	# TODO: it is possible eatmydata does not do his work
+	export EPMNOEATMYDATA=1
+
+	case $DISTRNAME in
+	ALTLinux)
+		__epm_ru_update || fatal
+
+		# try to detect current release by repo
+		if [ "$DISTRVERSION" = "Sisyphus" ] || [ -z "$DISTRVERSION" ] ; then
+			local dv
+			dv="$(__detect_alt_release_by_repo)"
+			if [ -n "$dv" ] && [ "$dv" != "$DISTRVERSION" ] ; then
+				DISTRVERSION="$dv"
+				info "Detected running $DISTRNAME $DISTRVERSION (according to using repos)"
+			fi
+		fi
+
+		TARGET=""
+		[ -n "$3" ] && fatal "Too many args: $*"
+		if [ -n "$2" ] ; then
+			DISTRVERSION="$1"
+			info "Force current distro version as $DISTRVERSION"
+			TARGET="$2"
+		elif [ -n "$1" ] ; then
+			TARGET="$1"
+		fi
+
+		[ -n "$TARGET" ] || TARGET="$(get_prev_release $DISTRVERSION)"
+
+		__alt_repofix
+
+		__switch_alt_to_distro $DISTRVERSION $TARGET && info "Done. The system has been successfully downgraded to the previous release '$TO'."
+
+		return 0
+		;;
+	*)
+		;;
+	esac
+
+	case $PMTYPE in
+	apt-rpm)
+		#docmd epm update
+		info "Have no idea how to downgrade $DISTRNAME"
+		;;
+	*-dpkg)
+		assure_exists do-release-upgrade update-manager-core
+		sudocmd do-release-upgrade
+		;;
+	packagekit)
+		docmd pkcon upgrade-system "$@"
+		;;
+	yum-rpm)
+		docmd epm install rpm yum
+		sudocmd yum clean all
+		# TODO
+		showcmd rpm -Uvh http://mirror.yandex.ru/fedora/linux/releases/16/Fedora/x86_64/os/Packages/fedora-release-16-1.noarch.rpm
+		showcmd epm Upgrade
+		;;
+	dnf-rpm)
+		info "Check https://fedoraproject.org/wiki/DNF_system_upgrade for an additional info"
+		docmd epm install dnf
+		#docmd epm install epel-release yum-utils
+		sudocmd dnf --refresh upgrade
+		sudocmd dnf clean all
+		assure_exists dnf-plugin-system-upgrade
+		sudocmd dnf upgrade --refresh
+		local RELEASEVER="$1"
+		[ -n "$RELEASEVER" ] || RELEASEVER=$(($DISTRVERSION + 1))
+		#[ -n "$RELEASEVER" ] || fatal "Run me with new version"
+		confirm_info "Upgrade to $DISTRNAME/$RELEASEVER"
+		sudocmd dnf system-upgrade download --refresh --releasever=$RELEASEVER
+		# TODO: from docs:
+		# dnf system-upgrade reboot
+		# FIXME: download all packages again
+		sudocmd dnf distro-sync --releasever=$RELEASEVER
+		info "Run epm autoorphans to remove orphaned packages"
+		;;
+	urpm-rpm)
+		sudocmd urpmi.removemedia -av
+		# TODO
+		showcmd urpmi.addmedia --distrib http://mirror.yandex.ru/mandriva/devel/2010.2/i586/
+		sudocmd urpmi --auto-update --replacefiles
+		;;
+	zypper-rpm)
+		docmd epm repolist
+		# TODO
+		# sudocmd zypper rr <номер_репозитория>
+		showcmd rr N
+		showcmd epm ar http://mirror.yandex.ru/opensuse/distribution/11.1/repo/oss 11.1oss
+		showcmd zypper ref
+		docmd epm update
+		docmd epm install rpm zypper
+		docmd epm upgrade
+		;;
+	pacman)
+		epm Upgrade
+		;;
+	conary)
+		epm Upgrade
+		;;
+	emerge)
+		epm Upgrade
+		;;
+	guix)
+		sudocmd guix pull --verbose
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+	esac
+
+}

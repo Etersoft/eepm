@@ -284,8 +284,12 @@ check_command()
         epm_cmd=full_upgrade
         direct_args=1
         ;;
-    release-upgrade|upgrade-release|upgrade-system|release-switch|release-downgrade)  # HELPCMD: upgrade/switch whole system to the release in arg (default: next (latest) release)
+    release-upgrade|upgrade-release|upgrade-system|release-switch)  # HELPCMD: upgrade/switch whole system to the release in arg (default: next (latest) release)
         epm_cmd=release_upgrade
+        direct_args=1
+        ;;
+    release-downgrade|downgrade-release|downgrade-system)           # HELPCMD: downgrade whole system to the release in arg (default: previuos release)
+        epm_cmd=release_downgrade
         direct_args=1
         ;;
     kernel-update|kernel-upgrade|update-kernel|upgrade-kernel)      # HELPCMD: update system kernel to the last repo version
@@ -532,7 +536,7 @@ fi
 
 # Use eatmydata for write specific operations
 case $epm_cmd in
-    update|upgrade|Upgrade|install|reinstall|Install|remove|autoremove|kernel_update|release_upgrade|check)
+    update|upgrade|Upgrade|install|reinstall|Install|remove|autoremove|kernel_update|release_upgrade|release_downgrade|check)
         set_eatmydata
         ;;
 esac

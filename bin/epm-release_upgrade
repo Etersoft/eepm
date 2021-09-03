@@ -306,7 +306,6 @@ __switch_alt_to_distro()
 	local TO="$2"
 	local FROM="$1"
 	info
-	[ -n "$TO" ] || TO="$(get_next_release $FROM)"
 
 	__save_alt_repo_lists
 	trap __restore_alt_repo_lists EXIT
@@ -454,19 +453,18 @@ __switch_alt_to_distro()
 			;;
 		*)
 			if [ "$FROM" = "$TO" ] ; then
-				info "It seems your system is already updated to newest $DISTRNAME $TO"
+				info "It seems your system is already $DISTRNAME $TO"
 			else
 				warning "Unknown distro version. Have no idea how to switch from $DISTRNAME $FROM to $DISTRNAME $TO."
 			fi
-			info "Try run f.i. # epm release-upgrade p10 or # epm release-upgrade Sisyphus"
-			info "Also possible you need install altlinux-release-p? package for correct distro version detecting"
 			trap - EXIT
+			info "Try run f.i. '# epm release-upgrade p10' or '# epm release-downgrade p9' or '# epm release-upgrade Sisyphus'"
+			info "Also possible you need install altlinux-release-p? package for correct distro version detecting"
 			return 1
 	esac
+	trap - EXIT
 	epm clean
 	info "Note: Also you can try '# epm autoremove' and '# epm autoorphans' commands to remove obsoleted and unused packages."
-	info "Done. The system has been successfully upgraded to the next release '$TO'."
-	trap - EXIT
 }
 
 epm_release_upgrade()
@@ -504,11 +502,13 @@ epm_release_upgrade()
 			TARGET="$1"
 		fi
 
+		[ -n "$TARGET" ] || TARGET="$(get_next_release $DISTRVERSION)"
+
 		__alt_repofix
 
-		# TODO: ask before upgrade
-		__switch_alt_to_distro $DISTRVERSION $TARGET
-		return
+		__switch_alt_to_distro $DISTRVERSION $TARGET && info "Done. The system has been successfully upgraded to the next release '$TO'."
+
+		return 0
 		;;
 	*)
 		;;
@@ -517,14 +517,14 @@ epm_release_upgrade()
 	case $PMTYPE in
 	apt-rpm)
 		#docmd epm update
-		info "Have no idea how to upgrade $DISTRNAME"
+		info "Have no idea how to upgrade $DISTRNAME. It is possible you need use 'release-downgrade'"
 		;;
 	*-dpkg)
 		assure_exists do-release-upgrade update-manager-core
 		sudocmd do-release-upgrade
 		;;
 	packagekit)
-		docmd pkcon upgrade-system $pkg_filenames
+		docmd pkcon upgrade-system "$@"
 		;;
 	yum-rpm)
 		docmd epm install rpm yum
@@ -541,7 +541,7 @@ epm_release_upgrade()
 		sudocmd dnf clean all
 		assure_exists dnf-plugin-system-upgrade
 		sudocmd dnf upgrade --refresh
-		local RELEASEVER="$pkg_filenames"
+		local RELEASEVER="$1"
 		[ -n "$RELEASEVER" ] || RELEASEVER=$(($DISTRVERSION + 1))
 		#[ -n "$RELEASEVER" ] || fatal "Run me with new version"
 		confirm_info "Upgrade to $DISTRNAME/$RELEASEVER"
