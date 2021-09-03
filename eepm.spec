@@ -37,7 +37,8 @@ See detailed description here: http://wiki.etersoft.ru/EPM
 Summary: Etersoft EPM package manager (repack requirements)
 Group: System/Configuration/Packaging
 Requires: %name = %EVR
-Requires: fakeroot alien rpm-build dpkg
+Requires: fakeroot alien dpkg
+Requires: /usr/bin/rpmbuild
 
 %description repack
 This package has requirements needed for using epm repack on ALT

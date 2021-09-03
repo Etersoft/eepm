@@ -184,7 +184,7 @@ __epm_repack_to_rpm()
     # install epm-repack for static (package based) dependencies
     assure_exists fakeroot || fatal
     assure_exists alien || fatal
-    assure_exists rpmbuild rpm-build || fatal
+    assure_exists /usr/bin/rpmbuild || fatal
 
     # TODO: improve
     if echo "$pkgs" | grep -q "\.deb" ; then
