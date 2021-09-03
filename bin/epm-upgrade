@@ -31,11 +31,11 @@ epm_upgrade()
 
 	if [ "$DISTRNAME" = "ALTLinux" ] ; then
 		load_helper epm-sh-altlinux
-		if tasknumber "$*" >/dev/null ; then
+		if tasknumber "$@" >/dev/null ; then
 			load_helper epm-addrepo
 			load_helper epm-removerepo
 			load_helper epm-Install
-			epm_addrepo "$*"
+			epm_addrepo "$@"
 			local installlist="$(get_task_packages $*)"
 			# hack: drop -devel packages to avoid package provided by multiple packages
 			installlist="$(estrlist reg_exclude ".*-devel .*-devel-static" "$installlist")"
@@ -44,7 +44,7 @@ epm_upgrade()
 			installlist="$(get_only_installed_packages "$installlist")"
 			[ -n "$verbose" ] && info "Packages to upgrade: $installlist"
 			(pkg_names="$installlist" epm_Install)
-			epm_removerepo "$pkg_names"
+			epm_removerepo "$@"
 			return
 		fi
 	fi
