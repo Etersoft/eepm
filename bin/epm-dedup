@@ -43,7 +43,7 @@ try_fix_apt_rpm_dupls()
                 [ "$(rpmevrcmp "$todel" "$todel2")" = "1" ] && todel="$todel2"
 		sudocmd rpm -e "$todel" || TODEL="$TODEL $todel"
 	done
-	[ -n "$TODEL" ] && sudocmd rpm -e "$TODEL"
+	[ -n "$TODEL" ] && sudocmd rpm -e $TODEL
 	[ -n "$has_testpkg" ] && epm install $TESTPKG
 }
 
