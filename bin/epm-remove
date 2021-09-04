@@ -326,7 +326,7 @@ epm_remove()
 	local STATUS=$?
 
 	if [ -n "$direct" ] || [ -n "$nodeps" ] || [ "$STATUS" = "$RPMISNOTINSTALLED" ]; then
-		return $STATUS
+		[ -n "$force" ] || return $STATUS
 	fi
 
 	# get package name for hi level package management command (with version if supported and if possible)

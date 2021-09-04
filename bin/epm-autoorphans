@@ -43,14 +43,14 @@ case $PMTYPE in
 			| grep -v -- "^kernel")
 
 		if [ -z "$dryrun" ] && [ -n "$PKGLIST" ] ; then
-			showcmd epm remove $dryrun $PKGLIST
+			showcmd epm remove $dryrun $force $PKGLIST
 			confirm_info "We will remove packages above."
 		fi
 
 #		if [ -n "$dryrun" ] ; then
 #			echo "$PKGLIST"
 #		else
-			docmd epm remove $dryrun $(subst_option non_interactive --auto) $PKGLIST
+			docmd epm remove $dryrun $force $(subst_option non_interactive --auto) $PKGLIST
 #		fi
 		;;
 	apt-dpkg|aptitude-dpkg)
