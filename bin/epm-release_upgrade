@@ -318,6 +318,7 @@ __switch_alt_to_distro()
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
+			end_change_alt_repo
 			docmd epm update-kernel
 			info "Run epm release-upgrade again for update to p8"
 			;;
@@ -328,6 +329,7 @@ __switch_alt_to_distro()
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
+			end_change_alt_repo
 			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			info "Run epm release-upgrade again for update to p9"
@@ -339,6 +341,7 @@ __switch_alt_to_distro()
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
+			end_change_alt_repo
 			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			;;
@@ -348,12 +351,13 @@ __switch_alt_to_distro()
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
-			if epm installed libcrypt >/dev/null ; then
+			if epm installed libcrypt ; then
 				# glibc-core coflicts libcrypt
 				docmd epm downgrade apt pam pam0_passwdqc glibc-core libcrypt- || fatal
 			fi
 			docmd epm downgrade
 			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
+			end_change_alt_repo
 			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			;;
@@ -367,6 +371,7 @@ __switch_alt_to_distro()
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
 			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
+			end_change_alt_repo
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			__check_system "$TO"
 			docmd epm update-kernel || fatal
@@ -381,6 +386,7 @@ __switch_alt_to_distro()
 			echo '%_priority_distbranch p10' >/etc/rpm/macros.d/p10
 			__epm_ru_update || fatal
 			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
+			end_change_alt_repo
 			docmd epm install rpm apt "$(get_fix_release_pkg "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			__check_system "$TO"
 			docmd epm update-kernel -t std-def || fatal
@@ -396,6 +402,7 @@ __switch_alt_to_distro()
 				docmd epm downgrade apt rpm pam pam0_passwdqc glibc-core libcrypt- || fatal
 			fi
 			docmd epm downgrade
+			end_change_alt_repo
 			__check_system "$TO"
 			docmd epm upgrade || fatal
 			;;
@@ -410,6 +417,7 @@ __switch_alt_to_distro()
 			#	docmd epm downgrade apt rpm pam pam0_passwdqc glibc-core libcrypt- || fatal
 			#fi
 			docmd epm downgrade
+			end_change_alt_repo
 			__check_system "$TO"
 			docmd epm upgrade || fatal
 			;;
@@ -421,6 +429,7 @@ __switch_alt_to_distro()
 			__epm_ru_update || fatal
 			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm downgrade
+			end_change_alt_repo
 			__check_system "$TO"
 			docmd epm upgrade || fatal
 			;;
@@ -432,6 +441,7 @@ __switch_alt_to_distro()
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm downgrade
+			end_change_alt_repo
 			__check_system "$TO"
 			docmd epm upgrade || fatal
 			;;
@@ -448,6 +458,7 @@ __switch_alt_to_distro()
 			#ADDPKG=$(epm -q --short make-initrd sssd-ad 2>/dev/null)
 			#docmd epm install librpm7 librpm rpm apt $ADDPKG "$(get_fix_release_pkg --force "$TO")" ConsoleKit2- || fatal "Check an error and run again"
 			docmd epm upgrade || fatal "Check the error and run '# epm release-upgrade' or just '# epm upgrade' again"
+			end_change_alt_repo
 			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			;;
@@ -462,7 +473,6 @@ __switch_alt_to_distro()
 			info "Also possible you need install altlinux-release-p? package for correct distro version detecting"
 			return 1
 	esac
-	end_change_alt_repo
 	epm clean
 	info "Note: Also you can try '# epm autoremove' and '# epm autoorphans' commands to remove obsoleted and unused packages."
 }
