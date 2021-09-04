@@ -14,7 +14,7 @@ if [ "$1" = "--remove" ] ; then
     exit
 fi
 
-[ "$1" != "--run" ] && echo "Sferium for Linux from the official site" && exit
+[ "$1" != "--run" ] && echo "Sferum for Linux from the official site" && exit
 
 arch=$($DISTRVENDOR --distro-arch)
 case $arch in
@@ -36,6 +36,6 @@ repack=''
 #https://st.mycdn.me/static/sferum/latest/sferum-i686.rpm
 #https://st.mycdn.me/static/sferum/latest/sferum-x86_64.rpm
 
-# don't use constructname due - before arch
+# can't use constructname due '-' before arch
 #epm install "https://st.mycdn.me/static/sferum/latest/$(epm print constructname $PKGNAME '' $arch '' '-')"
 epm $repack install "https://st.mycdn.me/static/sferum/latest/$PKGNAME-$arch.$($DISTRVENDOR -p)"
