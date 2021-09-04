@@ -202,8 +202,11 @@ check_command()
     Install)                  # HELPCMD: perform update package repo info and install package(s) via install command
         epm_cmd=Install
         ;;
-    -q|q|installed|query)     # HELPCMD: check presence of package(s) and print this name (also --short is supported)
+    -q|q|query)               # HELPCMD: check presence of package(s) and print this name (also --short is supported)
         epm_cmd=query
+        ;;
+    installed)                # HELPCMD: check presence of package(s) (like -q with --quiet)
+        epm_cmd=installed
         ;;
     -sf|sf|filesearch)        # HELPCMD: search in which package a file is included
         epm_cmd=search_file

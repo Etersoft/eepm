@@ -306,23 +306,16 @@ __epm_query_shortname()
 	docmd $CMD $@
 }
 
+
+# keep here, all modules and epm-query use is_installed from epm-query
+# see epm-installed
+
 # check if pkg is installed
 is_installed()
 {
-	__epm_query_shortname "$@" >/dev/null 2>/dev/null
-	# broken way to recursive call here (overhead!)
-	#epm installed $@ >/dev/null 2>/dev/null
+	(quiet=1 __epm_query_name "$@") >/dev/null 2>/dev/null
 }
 
-# fill pkg_installed and pkg_noninstalled
-separate_installed()
-{
-	pkg_installed=
-	pkg_noninstalled=
-	for i in "$@" ; do
-		is_installed $i && pkg_installed="$pkg_installed $i" || pkg_noninstalled="$pkg_noninstalled $i"
-	done
-}
 
 epm_query()
 {
