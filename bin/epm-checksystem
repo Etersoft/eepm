@@ -38,7 +38,7 @@ epm_checksystem_ALTLinux()
 epm_checksystem()
 {
 
-[ $EFFUID = "0" ] && fatal "Do not use checksystem under root"
+is_root && fatal "Do not use checksystem under root"
 
 case $PMTYPE in
 	homebrew)

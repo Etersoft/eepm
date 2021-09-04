@@ -109,7 +109,7 @@ showcmd()
 	if [ -z "$quiet" ] ; then
 		set_boldcolor $GREEN
 		local PROMTSIG="\$"
-		[ "$EFFUID" = 0 ] && PROMTSIG="#"
+		is_root && PROMTSIG="#"
 		echo " $PROMTSIG $*"
 		restore_color
 	fi >&2
@@ -257,7 +257,14 @@ clean_store_output()
 epm()
 {
 	[ -n "$PROGNAME" ] || fatal "Can't use epm call from the piped script"
-	$PROGDIR/$PROGNAME --inscript $@
+	$PROGDIR/$PROGNAME --inscript "$@"
+}
+
+# run $SUDO epm, possible from side repo
+sudoepm()
+{
+	[ -n "$PROGNAME" ] || fatal "Can't use epm call from the piped script"
+	sudorun $PROGDIR/$PROGNAME --inscript "$@"
 }
 
 # Print error message and stop the program
@@ -313,10 +320,8 @@ set_sudo()
 		return
 	fi
 
-	EFFUID=$(id -u)
-
 	# if we are root, do not need sudo
-	[ $EFFUID = "0" ] && return
+	is_root && return
 
 	# start error section
 	SUDO_TESTED="1"
@@ -412,10 +417,15 @@ confirm_info()
 }
 
 
+is_root()
+{
+	local EFFUID="$(id -u)"
+	[ "$EFFUID" = "0" ]
+}
+
 assure_root()
 {
-	set_sudo
-	[ "$EFFUID" = 0 ] || fatal "run me only under root"
+	is_root || fatal "run me only under root"
 }
 
 regexp_subst()
