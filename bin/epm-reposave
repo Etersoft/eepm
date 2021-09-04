@@ -20,9 +20,11 @@
 load_helper epm-sh-altlinux
 
 
+# under root only
 SAVELISTDIR=/tmp/eepm-etc-save
 __save_alt_repo_lists()
 {
+	assure_root
 	info "Creating copy of all sources lists to $SAVELISTDIR ..."
 	local i
 	rm -rf $verbose $SAVELISTDIR 2>/dev/null
@@ -34,8 +36,10 @@ __save_alt_repo_lists()
 	done
 }
 
+# under root only
 __restore_alt_repo_lists()
 {
+	assure_root
 	info "Restoring copy of all sources lists from $SAVELISTDIR ..."
 	local i
 	[ -d "$SAVELISTDIR/apt" ] || return 0
@@ -52,10 +56,17 @@ __restore_alt_repo_lists()
 	done
 }
 
+# save and restore repo lists
+__on_error_restore_alt_repo_lists()
+{
+	warning "An error occurred..."
+	epm repo restore
+}
+
 try_change_alt_repo()
 {
-	__save_alt_repo_lists
-	trap __restore_alt_repo_lists EXIT
+	epm repo save
+	trap __on_error_restore_alt_repo_lists EXIT
 }
 
 end_change_alt_repo()
@@ -64,11 +75,15 @@ end_change_alt_repo()
 }
 
 
+
 epm_reposave()
 {
 case $PMTYPE in
 	apt-*)
-		assure_root
+		if ! is_root ; then
+			sudoepm repo save
+			return
+		fi
 		__save_alt_repo_lists
 		;;
 	*)
@@ -82,7 +97,10 @@ epm_reporestore()
 {
 case $PMTYPE in
 	apt-*)
-		assure_root
+		if ! is_root ; then
+			sudoepm repo restore
+			return
+		fi
 		__restore_alt_repo_lists
 		;;
 	*)
