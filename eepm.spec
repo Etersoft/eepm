@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.13.1
+Version: 3.13.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -136,6 +136,14 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/yum
 
 %changelog
+* Sat Sep 04 2021 Vitaly Lipatov <lav@altlinux.ru> 3.13.2-alt1
+- separate 'installed' from 'query' command
+- epm-release_upgrade: mute screen checking
+- epm-upgrade: restore repo list after error
+- epm reposave: fix run under user
+- epm dedup: fix rpm -e remove for common removing
+- add --force to epm-remove (pass packages to apt in any case) and use it in autoorphans
+
 * Fri Sep 03 2021 Vitaly Lipatov <lav@altlinux.ru> 3.13.1-alt1
 - require /usr/bin/rpmbuild, not rpm-build package
 - epm-release_upgrade: say install screen only it is not installed yet
