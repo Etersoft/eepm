@@ -308,8 +308,7 @@ __switch_alt_to_distro()
 	local FROM="$1"
 	info
 
-	__save_alt_repo_lists
-	trap __restore_alt_repo_lists EXIT
+	try_change_alt_repo
 
 	case "$*" in
 		"p6"|"p6 p7"|"t6 p7"|"c6 c7")
@@ -458,12 +457,12 @@ __switch_alt_to_distro()
 			else
 				warning "Unknown distro version. Have no idea how to switch from $DISTRNAME $FROM to $DISTRNAME $TO."
 			fi
-			trap - EXIT
+			end_change_alt_repo
 			info "Try run f.i. '# epm release-upgrade p10' or '# epm release-downgrade p9' or '# epm release-upgrade Sisyphus'"
 			info "Also possible you need install altlinux-release-p? package for correct distro version detecting"
 			return 1
 	esac
-	trap - EXIT
+	end_change_alt_repo
 	epm clean
 	info "Note: Also you can try '# epm autoremove' and '# epm autoorphans' commands to remove obsoleted and unused packages."
 }

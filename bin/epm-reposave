@@ -52,6 +52,16 @@ __restore_alt_repo_lists()
 	done
 }
 
+try_change_alt_repo()
+{
+	__save_alt_repo_lists
+	trap __restore_alt_repo_lists EXIT
+}
+
+end_change_alt_repo()
+{
+	trap - EXIT
+}
 
 
 epm_reposave()

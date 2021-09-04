@@ -43,7 +43,7 @@ epm_upgrade()
 			# install only installed packages (simulate upgrade packages)
 			installlist="$(get_only_installed_packages "$installlist")"
 			[ -n "$verbose" ] && info "Packages to upgrade: $installlist"
-			(pkg_names="$installlist" epm_Install)
+			(pkg_names="$installlist" epm_Install) || fatal "Can't update repo"
 			epm_removerepo "$@"
 			return
 		fi
