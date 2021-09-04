@@ -224,7 +224,6 @@ check_command()
         ;;
     -qi|qi|info|show)         # HELPCMD: print package detail info
         epm_cmd=info
-        direct_args=1
         ;;
     requires|deplist|depends|req|depends-on)     # HELPCMD: print package requires
         epm_cmd=requires
