@@ -33,7 +33,7 @@ assure_safe_run()
 			return
 		else
 			warning "It is very dangerous to upgrade to next release from a GUI (your TERM=$TERM)."
-			if docmd epm installed screen ; then
+			if is_installed screen ; then
 				warning "You have 'screen' already installed, just run upgrade via screen: '# screen epm release-upgrade'"
 			else
 				warning "It is recommended install 'screen' and run upgrade via screen: '# screen epm release-upgrade'"
