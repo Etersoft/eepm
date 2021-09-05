@@ -331,7 +331,6 @@ check_command()
         ;;
     downgrade)                # HELPCMD: downgrade [all] packages to the repo state
         epm_cmd=downgrade
-        direct_args=1
         ;;
     download)                 # HELPCMD: download package(s) file to the current dir
         epm_cmd=download
