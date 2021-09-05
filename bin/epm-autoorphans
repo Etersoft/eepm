@@ -36,6 +36,7 @@ case $PMTYPE in
 			echo "We will try remove all installed packages which are missed in repositories"
 			warning "Use with caution!"
 		fi
+		epm upgrade || fatal
 		local PKGLIST=$(__epm_orphan_altrpm \
 			| sed -e "s/\.32bit//g" \
 			| grep -v -- "^eepm$" \
