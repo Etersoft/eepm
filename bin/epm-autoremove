@@ -243,7 +243,11 @@ case $DISTRNAME in
 			[ -n "$1" ] && fatal "Run autoremove without args or with --direct. Check epm autoremove --help to available commands."
 			sudocmd apt-get $(subst_option non_interactive -y) autoremove $dryrun
 			local RET=$?
-			[ "$RET" = 0 ] || return
+			if [ "$RET" != 0 ] ; then
+				echo
+				info "Also you can run 'epm autoremove --direct' to use epm implementation of autoremove (see --help)"
+				return
+			fi
 		else
 			__epm_autoremove_altrpm "$@"
 		fi
@@ -251,7 +255,7 @@ case $DISTRNAME in
 		[ -n "$dryrun" ] && return
 
 		# remove old kernels only by a default way
-		[ -n "$@" ] && return
+		[ -n "$1" ] && return
 
 		docmd epm remove-old-kernels $(subst_option non_interactive --auto)
 
