@@ -98,9 +98,11 @@ echon()
 set_target_pkg_env()
 {
 	[ -n "$DISTRNAME" ] || fatal "Missing DISTRNAME in set_target_pkg_env."
-	PKGFORMAT=$($DISTRVENDOR -p "$DISTRNAME")
-	PKGVENDOR=$($DISTRVENDOR -s "$DISTRNAME")
-	RPMVENDOR=$($DISTRVENDOR -n "$DISTRNAME")
+	local ver="$DISTRVERSION"
+	[ -n "$ver" ] && ver="/$ver"
+	PKGFORMAT=$($DISTRVENDOR -p "$DISTRNAME$ver")
+	PKGVENDOR=$($DISTRVENDOR -s "$DISTRNAME$ver")
+	RPMVENDOR=$($DISTRVENDOR -n "$DISTRNAME$ver")
 }
 
 # Print command line and run command line
@@ -593,7 +595,7 @@ if [ -n "$FORCEPM" ] ; then
 	return
 fi
 
-	PMTYPE="$($DISTRVENDOR -g $DISTRNAME)"
+	PMTYPE="$($DISTRVENDOR -g $DISTRNAME/$DISTRVERSION)"
 }
 
 is_active_systemd()
