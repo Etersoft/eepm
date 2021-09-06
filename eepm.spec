@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.13.2
+Version: 3.13.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,9 +98,11 @@ chmod a+x %buildroot%_datadir/%name/tools_*
 
 %if %_vendor == "alt"
 # use external eget
-#rm -f %buildroot%_datadir/%name/tools_eget
+#rm -v %buildroot%_datadir/%name/tools_eget
 # use external distro_info
-rm -f %buildroot%_bindir/distr_info
+rm -v %buildroot%_bindir/distr_info
+%else
+rm -v %buildroot%_bindir/yum
 %endif
 
 mkdir -p %buildroot/var/lib/eepm/
@@ -130,12 +132,22 @@ mkdir -p %buildroot/var/lib/eepm/
 
 %if %_vendor == "alt"
 %files repack
-%endif
 
+# not for yum based system
 %files yum
 %_bindir/yum
+%endif
 
 %changelog
+* Mon Sep 06 2021 Vitaly Lipatov <lav@altlinux.ru> 3.13.3-alt1
+- epm-release_upgrade: add downgrade after upgrade to Sisyphus
+- epm-autoorphans: upgrade before run autoorphans
+- epm-autoremove: small fix
+- epm-downgrade: fix downgrade a package
+- distr_name: update to 2.6
+- pass name/version to distro_info
+- pack eepm-yum only on ALT
+
 * Sat Sep 04 2021 Vitaly Lipatov <lav@altlinux.ru> 3.13.2-alt1
 - separate 'installed' from 'query' command
 - epm-release_upgrade: mute screen checking
