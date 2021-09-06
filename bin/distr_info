@@ -44,7 +44,15 @@ tolower()
 	echo "$*" | awk '{print tolower($0)}'
 }
 
-# Translate DISTRIB_ID to vendor name (like %_vendor does)
+override_distrib()
+{
+	[ -n "$1" ] || return
+	VENDOR_ID=''
+	DISTRIB_ID="$(echo "$1" | sed -e 's|/.*||')"
+	DISTRIB_RELEASE="$(echo "$1" | sed -e 's|.*/||')"
+}
+
+# Translate DISTRIB_ID to vendor name (like %_vendor does), uses VENDOR_ID by default
 rpmvendor()
 {
 	[ "$DISTRIB_ID" = "ALTLinux" ] && echo "alt" && return
@@ -128,6 +136,7 @@ case $DISTRIB_ID in
 	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific|GosLinux|Amzn|RedOS)
 		CMD="dnf-rpm"
 		which dnf 2>/dev/null >/dev/null || CMD=yum-rpm
+		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "CentOS/7" ] && CMD=yum-rpm
 		;;
 	Slackware)
 		CMD="slackpkg"
@@ -168,7 +177,7 @@ case $DISTRIB_ID in
 		CMD="xbps"
 		;;
 	*)
-		fatal "Have no suitable DISTRIB_ID $DISTRIB_ID"
+		echo "We don't support yet DISTRIB_ID $DISTRIB_ID" >&2
 		;;
 esac
 echo "$CMD"
@@ -719,14 +728,12 @@ case $1 in
 		exit 0
 		;;
 	-p)
-		# override DISTRIB_ID
-		test -n "$2" && DISTRIB_ID="$2"
+		override_distrib "$2"
 		pkgtype
 		exit 0
 		;;
 	-g)
-		# override DISTRIB_ID
-		test -n "$2" && DISTRIB_ID="$2"
+		override_distrib "$2"
 		pkgmanager
 		exit 0
 		;;
@@ -734,14 +741,12 @@ case $1 in
 		print_pretty_name
 		;;
 	--distro-arch)
-		# override DISTRIB_ID
-		test -n "$2" && DISTRIB_ID="$2"
+		override_distrib "$2"
 		get_distro_arch
 		exit 0
 		;;
 	--debian-arch)
-		# override DISTRIB_ID
-		test -n "$2" && DISTRIB_ID="$2"
+		override_distrib "$2"
 		get_debian_arch
 		exit 0
 		;;
@@ -773,14 +778,12 @@ case $1 in
 		echo $DISTRIB_RELEASE
 		;;
 	-s)
-		# override DISTRIB_ID
-		test -n "$2" && DISTRIB_ID="$2"
+		override_distrib "$2"
 		pkgvendor
 		exit 0
 		;;
 	-n)
-		# override DISTRIB_ID
-		test -n "$2" && DISTRIB_ID="$2"
+		override_distrib "$2"
 		rpmvendor
 		exit 0
 		;;
