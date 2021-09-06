@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012-2013, 2016, 2020  Etersoft
-# Copyright (C) 2012-2013, 2016, 2020  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2013, 2016, 2020, 2021  Etersoft
+# Copyright (C) 2012-2013, 2016, 2020, 2021  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -110,9 +110,11 @@ echon()
 set_target_pkg_env()
 {
 	[ -n "$DISTRNAME" ] || fatal "Missing DISTRNAME in set_target_pkg_env."
-	PKGFORMAT=$($DISTRVENDOR -p "$DISTRNAME")
-	PKGVENDOR=$($DISTRVENDOR -s "$DISTRNAME")
-	RPMVENDOR=$($DISTRVENDOR -n "$DISTRNAME")
+	local ver="$DISTRVERSION"
+	[ -n "$ver" ] && ver="/$ver"
+	PKGFORMAT=$($DISTRVENDOR -p "$DISTRNAME$ver")
+	PKGVENDOR=$($DISTRVENDOR -s "$DISTRNAME$ver")
+	RPMVENDOR=$($DISTRVENDOR -n "$DISTRNAME$ver")
 }
 
 showcmd()
@@ -120,7 +122,7 @@ showcmd()
 	if [ -z "$quiet" ] ; then
 		set_boldcolor $GREEN
 		local PROMTSIG="\$"
-		[ "$EFFUID" = 0 ] && PROMTSIG="#"
+		is_root && PROMTSIG="#"
 		echo " $PROMTSIG $*"
 		restore_color
 	fi >&2
@@ -253,7 +255,13 @@ clean_store_output()
 epm()
 {
 	[ -n "$PROGNAME" ] || fatal "Can't use epm call from the piped script"
-	$PROGDIR/$PROGNAME --inscript $@
+	$PROGDIR/$PROGNAME --inscript "$@"
+}
+
+sudoepm()
+{
+	[ -n "$PROGNAME" ] || fatal "Can't use epm call from the piped script"
+	sudorun $PROGDIR/$PROGNAME --inscript "$@"
 }
 
 fatal()
@@ -302,10 +310,8 @@ set_sudo()
 		return
 	fi
 
-	EFFUID=$(id -u)
-
 	# if we are root, do not need sudo
-	[ $EFFUID = "0" ] && return
+	is_root && return
 
 	# start error section
 	SUDO_TESTED="1"
@@ -397,10 +403,15 @@ confirm_info()
 }
 
 
+is_root()
+{
+	local EFFUID="$(id -u)"
+	[ "$EFFUID" = "0" ]
+}
+
 assure_root()
 {
-	set_sudo
-	[ "$EFFUID" = 0 ] || fatal "run me only under root"
+	is_root || fatal "run me only under root"
 }
 
 regexp_subst()
@@ -558,7 +569,7 @@ if [ -n "$FORCEPM" ] ; then
 	return
 fi
 
-	PMTYPE="$($DISTRVENDOR -g $DISTRNAME)"
+	PMTYPE="$($DISTRVENDOR -g $DISTRNAME/$DISTRVERSION)"
 }
 
 is_active_systemd()
@@ -1318,7 +1329,15 @@ tolower()
 	echo "$*" | awk '{print tolower($0)}'
 }
 
-# Translate DISTRIB_ID to vendor name (like %_vendor does)
+override_distrib()
+{
+	[ -n "$1" ] || return
+	VENDOR_ID=''
+	DISTRIB_ID="$(echo "$1" | sed -e 's|/.*||')"
+	DISTRIB_RELEASE="$(echo "$1" | sed -e 's|.*/||')"
+}
+
+# Translate DISTRIB_ID to vendor name (like %_vendor does), uses VENDOR_ID by default
 rpmvendor()
 {
 	[ "$DISTRIB_ID" = "ALTLinux" ] && echo "alt" && return
@@ -1402,6 +1421,7 @@ case $DISTRIB_ID in
 	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific|GosLinux|Amzn|RedOS)
 		CMD="dnf-rpm"
 		which dnf 2>/dev/null >/dev/null || CMD=yum-rpm
+		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "CentOS/7" ] && CMD=yum-rpm
 		;;
 	Slackware)
 		CMD="slackpkg"
@@ -1442,7 +1462,7 @@ case $DISTRIB_ID in
 		CMD="xbps"
 		;;
 	*)
-		fatal "Have no suitable DISTRIB_ID $DISTRIB_ID"
+		echo "We don't support yet DISTRIB_ID $DISTRIB_ID" >&2
 		;;
 esac
 echo "$CMD"
@@ -1993,14 +2013,12 @@ case $1 in
 		exit 0
 		;;
 	-p)
-		# override DISTRIB_ID
-		test -n "$2" && DISTRIB_ID="$2"
+		override_distrib "$2"
 		pkgtype
 		exit 0
 		;;
 	-g)
-		# override DISTRIB_ID
-		test -n "$2" && DISTRIB_ID="$2"
+		override_distrib "$2"
 		pkgmanager
 		exit 0
 		;;
@@ -2008,14 +2026,12 @@ case $1 in
 		print_pretty_name
 		;;
 	--distro-arch)
-		# override DISTRIB_ID
-		test -n "$2" && DISTRIB_ID="$2"
+		override_distrib "$2"
 		get_distro_arch
 		exit 0
 		;;
 	--debian-arch)
-		# override DISTRIB_ID
-		test -n "$2" && DISTRIB_ID="$2"
+		override_distrib "$2"
 		get_debian_arch
 		exit 0
 		;;
@@ -2047,14 +2063,12 @@ case $1 in
 		echo $DISTRIB_RELEASE
 		;;
 	-s)
-		# override DISTRIB_ID
-		test -n "$2" && DISTRIB_ID="$2"
+		override_distrib "$2"
 		pkgvendor
 		exit 0
 		;;
 	-n)
-		# override DISTRIB_ID
-		test -n "$2" && DISTRIB_ID="$2"
+		override_distrib "$2"
 		rpmvendor
 		exit 0
 		;;
@@ -2941,7 +2955,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.13.0  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.13.3  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
