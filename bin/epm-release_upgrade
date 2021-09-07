@@ -34,9 +34,9 @@ assure_safe_run()
 		else
 			warning "It is very dangerous to upgrade to next release from a GUI (your TERM=$TERM)."
 			if is_installed screen ; then
-				warning "You have 'screen' already installed, just run upgrade via screen: '# screen epm release-upgrade'"
+				warning "You have 'screen' already installed, just run upgrade via screen (check https://losst.ru/komanda-screen-linux if needed)."
 			else
-				warning "It is recommended install 'screen' and run upgrade via screen: '# screen epm release-upgrade'"
+				warning "It is recommended install 'screen' and run upgrade via screen (check https://losst.ru/komanda-screen-linux if needed)."
 			fi
 			fatal "or run me with --force if you understand the risk."
 		fi
