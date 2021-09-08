@@ -41,6 +41,9 @@ epm_kernel_update()
 	esac
 
 	case $PMTYPE in
+	dnf-rpm)
+		docmd epm install kernel
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
