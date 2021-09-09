@@ -1,10 +1,11 @@
-#!/bin/sh -e
+#!/bin/bash
 
 fatal()
 {
     exit 1
 }
 
+set -e -x
 set -o pipefail
 
 epm print info
@@ -31,17 +32,20 @@ epm ql eepm | head
 
 epm cl erc | head
 
-epm --auto --force downgrade-release p10
+# Sisyphus -> p10
+epm --auto --force --force-yes downgrade-release p10
 
-epm --auto --force downgrade-release
+# p10 -> p9
+epm --auto --force --force-yes downgrade-release
 
-epm --auto --force upgrade-release
+# p9 -> p10
+epm --auto --force --force-yes upgrade-release
 
-epm --auto --force upgrade-release
+# try upgrade p10
+epm --auto --force --force-yes upgrade-release && fatal
 
-epm --auto --force upgrade-release && fatal
-
-epm --auto --force upgrade-release Sisyphus
+# p10 -> Sisyphus
+epm --auto --force --force-yes upgrade-release Sisyphus
 
 epm checkpkg eepm
 
