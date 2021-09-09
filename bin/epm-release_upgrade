@@ -400,7 +400,7 @@ __switch_alt_to_distro()
 			;;
 		"p9 p8"|"c8.1 c8"|"c8.1 p8"|"p8 p8")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install "$(get_fix_release_pkg "$FROM")" || fatal
+			docmd epm install "$(get_fix_release_pkg "$FROM")"
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
 			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
@@ -415,7 +415,7 @@ __switch_alt_to_distro()
 			;;
 		"p9 c8"|"p9 c8.1"|"p9 c8.2")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install "$(get_fix_release_pkg "$FROM")" || fatal
+			docmd epm install "$(get_fix_release_pkg "$FROM")"
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
 			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
@@ -430,7 +430,7 @@ __switch_alt_to_distro()
 			;;
 		"p10 p9")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install "$(get_fix_release_pkg "$FROM")" || fatal
+			docmd epm install "$(get_fix_release_pkg "$FROM")"
 			__switch_repo_to $TO
 			rm -fv /etc/rpm/macros.d/p10
 			__epm_ru_update || fatal
@@ -442,7 +442,7 @@ __switch_alt_to_distro()
 			;;
 		"Sisyphus p8"|"Sisyphus p9"|"Sisyphus p10"|"Sisyphus c8"|"Sisyphus c8.1")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install "$(get_fix_release_pkg "$FROM")" || fatal
+			docmd epm install "$(get_fix_release_pkg "$FROM")"
 			__switch_repo_to $TO
 			[ "$TO" = "p10" ] && echo '%_priority_distbranch p10' >/etc/rpm/macros.d/p10
 			__epm_ru_update || fatal
