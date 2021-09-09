@@ -1,3 +1,5 @@
+%def_without external_distro_info
+
 Name: eepm
 Version: 3.13.3
 Release: alt1
@@ -21,6 +23,9 @@ Provides: epm = %EVR
 %if %_vendor == "alt"
 # FIXHERE: Replace with target platform package manager
 Requires: apt rpm
+%endif
+
+%if_with external_distro_info
 Requires: distro_info >= 2.5
 %endif
 
@@ -96,12 +101,14 @@ ln -s serv %buildroot%_sysconfdir/bash_completion.d/cerv
 chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 chmod a+x %buildroot%_datadir/%name/tools_*
 
-%if %_vendor == "alt"
+%if_with external_distro_info
 # use external eget
 #rm -v %buildroot%_datadir/%name/tools_eget
 # use external distro_info
 rm -v %buildroot%_bindir/distr_info
-%else
+%endif
+
+%if %_vendor != "alt"
 rm -v %buildroot%_bindir/yum
 %endif
 
@@ -122,7 +129,7 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/cerv
 %exclude %_bindir/yum
 %dir /var/lib/eepm/
-%if %_vendor != "alt"
+%if_without external_distro_info
 %_bindir/distr_info
 %endif
 %_man1dir/*
