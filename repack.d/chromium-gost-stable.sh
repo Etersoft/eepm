@@ -5,6 +5,9 @@ SPEC="$2"
 
 PRODUCT=chromium-gost
 
+# can be in the repo
+subst '1iConflicts:chromium-gost' $SPEC
+
 subst 's|%dir "/opt/chromium-gost"|%dir "/opt/chromium-gost"\n/usr/share/icons/hicolor/*x*/apps/*.png|' $SPEC
 
 # Make relative symlink
@@ -12,7 +15,7 @@ rm -f $BUILDROOT/usr/bin/chromium-gost-stable
 ln -s ../../opt/chromium-gost/chromium-gost $BUILDROOT/usr/bin/chromium-gost-stable
 ln -s chromium-gost-stable $BUILDROOT/usr/bin/chromium-gost
 
-for i in 16 22 24 32 48 64 128 256 ; do
+for i in 16 24 32 48 64 128 256 ; do
     mkdir -p $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/
     cp $BUILDROOT/opt/chromium-gost/product_logo_$i.png $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/chromium-gost.png
 done
