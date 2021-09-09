@@ -96,6 +96,7 @@ short=
 direct=
 sort=
 non_interactive=
+force_yes=
 skip_installed=
 skip_missed=
 show_command_only=
@@ -441,6 +442,9 @@ check_option()
         ;;
     --auto|--assumeyes|--non-interactive)  # HELPOPT: non interactive mode
         non_interactive="--auto"
+        ;;
+    --force-yes)           # HELPOPT: force yes in a danger cases (f.i., during release upgrade)
+        force_yes="--force-yes"
         ;;
     *)
         return 1

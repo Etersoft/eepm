@@ -93,10 +93,10 @@ epm_downgrade()
 		fi
 		;;
 	apt-dpkg)
-		local APTOPTIONS="$(subst_option non_interactive -y)"
+		local APTOPTIONS="$(subst_option non_interactive -y) $force_yes"
 		__epm_add_deb_apt_downgrade_preferences || return
 		if [ -n "$pkg_filenames" ] ; then
-			sudocmd apt-get  $APTOPTIONS install $pkg_filenames
+			sudocmd apt-get $APTOPTIONS install $pkg_filenames
 		else
 			sudocmd apt-get $APTOPTIONS dist-upgrade
 		fi
