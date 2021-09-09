@@ -235,8 +235,8 @@ __check_system()
 		# we could miss DISTRVENDOR script during downgrade, reread
 		set_distro_info
 		if [ "$($DISTRVENDOR -v)" != "$TO" ] || epm installed altlinux-release-sisyphus >/dev/null ; then
-			warning "Target distro is $TO, but altlinux-release-sisyphus package is installed."
-			warning "Trying to replace it with altlinux-release-$TO"
+			warning "Current distro still is not $TO, or altlinux-release-sisyphus package is installed."
+			warning "Trying to fix with altlinux-release-$TO"
 			docmd epm install altlinux-release-$TO
 		fi
 	fi
