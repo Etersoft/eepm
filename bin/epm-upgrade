@@ -57,9 +57,24 @@ epm_upgrade()
 	info "Running command for upgrade packages"
 
 	case $PMTYPE in
+		*-rpm)
+			# upgrade only install files from the list
+			if [ -n "$pkg_files" ] ; then
+				load_helper epm-install
+				#sudocmd rpm -Fvh $pkg_files
+				(pkg_files=$pkg_files force="$force -F" epm_install)
+				return
+			elif [ -n "$pkg_names" ] ; then
+				load_helper epm-install
+				(pkg_names=$(get_only_installed_packages $pkg_names) epm_install)
+				return
+			fi
+		;;
+	esac
+
+	case $PMTYPE in
 	apt-rpm|apt-dpkg)
 		local APTOPTIONS="$(subst_option non_interactive -y) $(subst_option verbose "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
-		# Функцию добавления параметра при условии
 		CMD="apt-get $APTOPTIONS $noremove $force_yes dist-upgrade"
 		;;
 	aptitude-dpkg)

@@ -195,7 +195,7 @@ get_fix_release_pkg()
 	# update if installed (just print package name here to include in the install list)
 	epm --quiet --short installed alt-gpgkeys 2>/dev/null
 	if epm --quiet --short -q etersoft-gpgkeys 2>/dev/null >/dev/null ; then
-		# leave etersoft-gpgkeys only we have LINUX@Etersoft repo
+		# leave etersoft-gpgkeys only if we have LINUX@Etersoft repo
 		epm rl | grep -q "LINUX@Etersoft" && echo etersoft-gpgkeys || echo alt-gpgkeys
 	fi
 
@@ -232,6 +232,8 @@ __check_system()
 	fi
 
 	if [ "$TO" != "Sisyphus" ] ; then
+		# we could miss DISTRVENDOR script during downgrade, reread
+		set_distro_info
 		if [ "$($DISTRVENDOR -v)" != "$TO" ] || epm installed altlinux-release-sisyphus >/dev/null ; then
 			warning "Target distro is $TO, but altlinux-release-sisyphus package is installed."
 			warning "Trying to replace it with altlinux-release-$TO"
@@ -490,7 +492,7 @@ epm_release_upgrade()
 	info "Starting upgrade/switch whole system to other release"
 	info "Check also http://wiki.etersoft.ru/Admin/UpdateLinux"
 
-	cd /tmp || fatal
+	cd / || fatal
 	# TODO: it is possible eatmydata does not do his work
 	export EPMNOEATMYDATA=1
 

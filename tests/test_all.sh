@@ -37,6 +37,7 @@ epm --auto --force --force-yes downgrade-release p10
 
 # p10 -> p9
 epm --auto --force --force-yes downgrade-release
+restore_epm
 
 # p9 -> p10
 epm --auto --force --force-yes upgrade-release

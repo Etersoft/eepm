@@ -84,7 +84,7 @@ epm_release_downgrade()
 
 		__alt_repofix
 
-		__switch_alt_to_distro $DISTRVERSION $TARGET && info "Done. The system has been successfully downgraded to the previous release '$TO'."
+		__switch_alt_to_distro $DISTRVERSION $TARGET && info "Done. The system has been successfully downgraded to the previous release '$TARGET'."
 
 		return 0
 		;;
