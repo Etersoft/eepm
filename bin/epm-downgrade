@@ -76,7 +76,6 @@ epm_downgrade()
 
 	case $PMTYPE in
 	apt-rpm)
-		local APTOPTIONS="$(subst_option non_interactive -y)"
 		# pass pkg_filenames too
 		if [ -n "$pkg_names" ] ; then
 			__epm_add_alt_apt_downgrade_preferences || return
