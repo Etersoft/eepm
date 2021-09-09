@@ -182,7 +182,7 @@ check_command()
     -i|install|add|i)         # HELPCMD: install package(s) from remote repositories or from local file
         epm_cmd=install
         ;;
-    -e|-P|rm|del|remove|delete|uninstall|erase|e)  # HELPCMD: remove (delete) package(s) from the database and the system
+    -e|-P|rm|del|remove|delete|uninstall|erase|purge|e)  # HELPCMD: remove (delete) package(s) from the database and the system
         epm_cmd=remove
         ;;
     -s|search|s)                # HELPCMD: search in remote package repositories
