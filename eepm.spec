@@ -1,7 +1,7 @@
 %def_without external_distro_info
 
 Name: eepm
-Version: 3.13.3
+Version: 3.14.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -146,6 +146,19 @@ mkdir -p %buildroot/var/lib/eepm/
 %endif
 
 %changelog
+* Fri Sep 10 2021 Vitaly Lipatov <lav@altlinux.ru> 3.14.1-alt1
+- epm-kernel_update: add kernel update for dnf-rpm
+- epm-query-file: cleanup, print all symlinks chain
+- epm-autoorphans: do update too
+- epm: add epm purge alias for epm remove
+- repack chromium-gost-stable.sh: small fixes
+- epm: add --force-yes support
+- epm-release-upgrade: pass --auto and --force-yes to epm upgrade/downgrade
+- epm-release_upgrade: skip error on empty package list
+- epm-upgrade: add support for upgrade installed packages (and package files, with -F)
+- epm-downgrade: downgrade only installed packages (file packages with --oldpackage)
+- always pack and use internal distr_info
+
 * Mon Sep 06 2021 Vitaly Lipatov <lav@altlinux.ru> 3.13.3-alt1
 - epm-release_upgrade: add downgrade after upgrade to Sisyphus
 - epm-autoorphans: upgrade before run autoorphans
