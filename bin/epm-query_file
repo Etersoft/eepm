@@ -43,25 +43,24 @@ __do_query_real_file()
 	else
 		TOFILE=$(which -- "$1" 2>/dev/null || echo "$1")
 		if [ "$TOFILE" != "$1" ] ; then
-			info "Note: $1 is placed as $TOFILE"
+			info " > $1 is placed as $TOFILE"
 		fi
 	fi
-	
+
+	if [ -n "$short" ] ; then
+		__do_short_query "$TOFILE"
+	else
+		__do_query "$TOFILE"
+	fi
+
 	# get value of symbolic link
 	if [ -L "$TOFILE" ] ; then
 		local LINKTO
-		if [ -n "$short" ] ; then
-			__do_short_query "$TOFILE"
-		else
-			__do_query "$TOFILE"
-		fi
-		LINKTO=$(readlink -f -- "$TOFILE")
-		info "Note: $TOFILE is link to $LINKTO"
+		LINKTO=$(readlink -- "$TOFILE")
+		info " > $TOFILE is link to $LINKTO"
 		__do_query_real_file "$LINKTO"
 		return
 	fi
-
-	FULLFILEPATH="$TOFILE"
 }
 
 dpkg_print_name_version()
@@ -170,14 +169,10 @@ epm_query_file()
 
     res=0
     for pkg in $pkg_filenames ; do
-        __do_query_real_file "$pkg"
-        if [ -n "$short" ] ; then
-            __do_short_query "$FULLFILEPATH" || res=$?
-        else
-            __do_query "$FULLFILEPATH" || res=$?
-        fi
+        __do_query_real_file "$pkg" || res=$?
     done
-    [ "$res" = "0" ] || info "Try epm sf for search file in all packages in repository"
+
+    [ "$res" = "0" ] || info "Try epm sf for search file in all packages of the repositories"
     #|| pkg_filenames="$FULLFILEPATH" epm_search_file
     return $res
 }
