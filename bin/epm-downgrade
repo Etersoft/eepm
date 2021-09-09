@@ -80,11 +80,11 @@ epm_downgrade()
 		if [ -n "$pkg_names" ] ; then
 			__epm_add_alt_apt_downgrade_preferences || return
 			load_helper epm-install
-			(pkg_names=$pkg_names epm_install)
+			(pkg_names=$(get_only_installed_packages $pkg_names) epm_install)
 			__epm_remove_apt_downgrade_preferences
 		elif [ -n "$pkg_files" ] ; then
 			load_helper epm-install
-			(pkg_files=$pkg_files force="$force --oldpackage" epm_install)
+			(pkg_files=$pkg_files force="$force -F --oldpackage" epm_install)
 		else
 			__epm_add_alt_apt_downgrade_preferences || return
 			load_helper epm-upgrade
