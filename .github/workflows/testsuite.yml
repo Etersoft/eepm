@@ -34,4 +34,4 @@ jobs:
 
       - name: testsuite
         run: |
-            eepm -v
+            tests/test_all.sh
