@@ -481,7 +481,8 @@ __switch_alt_to_distro()
 			info "Also possible you need install altlinux-release-p? package for correct distro version detecting"
 			return 1
 	esac
-	epm clean
+	docmd epm clean
+	docmd epm update
 	info "Note: Also you can try '# epm autoremove' and '# epm autoorphans' commands to remove obsoleted and unused packages."
 }
 
