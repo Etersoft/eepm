@@ -30,7 +30,7 @@ jobs:
 
       - name: install
         run: |
-            apt-get install -y /usr/src/RPM/RPMS/noarch/*.rpm
+            apt-get install -y /usr/src/RPM/RPMS/noarch/eepm-3*.rpm
 
       - name: testsuite
         run: |

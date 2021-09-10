@@ -1,5 +1,7 @@
 #!/bin/bash
 
+EPMPKGFILE=/usr/src/RPM/RPMS/noarch/eepm-3*.rpm
+
 fatal()
 {
     exit 1
@@ -8,7 +10,7 @@ fatal()
 restore_epm()
 {
 	# in the far future: epm upgrade /usr/src/RPM/RPMS/noarch/*.rpm
-	epm --auto install /usr/src/RPM/RPMS/noarch/*.rpm
+	epm --auto install $EPMPKGFILE
 }
 
 set -e -x
@@ -18,9 +20,9 @@ epm print info
 
 epm update
 
-epm upgrade /usr/src/RPM/RPMS/noarch/*.rpm
+epm upgrade $EPMPKGFILE
 
-epm downgrade /usr/src/RPM/RPMS/noarch/*.rpm
+epm downgrade $EPMPKGFILE
 
 epm --auto remove erc
 
