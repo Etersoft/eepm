@@ -51,11 +51,11 @@ epm_epm_install() {
 
     # install epm by default
     if [ -z "$pkglist" ] || [ "$pkglist" = "epm" ] || [ "$pkglist" = "eepm" ]; then
-        if [ "$($DISTRVENDOR -s)" = "alt" ] ; then
-            pkglist="distro_info eepm"
-        else
+#        if [ "$($DISTRVENDOR -s)" = "alt" ] ; then
+#            pkglist="distro_info eepm"
+#        else
             pkglist="eepm"
-        fi
+#        fi
     fi
 
     case "$pkglist" in
