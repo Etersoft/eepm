@@ -259,14 +259,6 @@ case $DISTRNAME in
 
 		docmd epm remove-old-kernels $(subst_option non_interactive --auto)
 
-		if which nvidia-clean-driver 2>/dev/null ; then
-			if [ -n "$non_interactive" ] ; then
-				yes | sudocmd nvidia-clean-driver
-			else
-				sudocmd nvidia-clean-driver
-			fi
-		fi
-
 		if [ -z "$direct" ] ; then
 			echo
 			info "Also you can run 'epm autoremove --direct' to use epm implementation of autoremove (see --help)"

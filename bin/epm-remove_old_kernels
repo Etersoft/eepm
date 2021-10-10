@@ -33,6 +33,16 @@ epm_remove_old_kernels()
 		fi
 		assure_exists update-kernel update-kernel 0.9.9
 		sudocmd remove-old-kernels $(subst_option non_interactive -y) "$@"
+
+		# remove unused nvidia drivers
+		if which nvidia-clean-driver 2>/dev/null ; then
+			if [ -n "$non_interactive" ] ; then
+				yes | sudocmd nvidia-clean-driver
+			else
+				sudocmd nvidia-clean-driver
+			fi
+		fi
+
 		return ;;
 	Ubuntu)
 		load_helper epm-query_package
