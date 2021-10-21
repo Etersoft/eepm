@@ -8,7 +8,7 @@ PRODUCT=chromium-gost
 # can be in the repo
 subst '1iConflicts:chromium-gost' $SPEC
 
-subst 's|%dir "/opt/chromium-gost"|%dir "/opt/chromium-gost"\n/usr/share/icons/hicolor/*x*/apps/*.png|' $SPEC
+subst 's|%files|%files\n/usr/share/icons/hicolor/*x*/apps/*.png|' $SPEC
 
 # Make relative symlink
 rm -f $BUILDROOT/usr/bin/chromium-gost-stable
