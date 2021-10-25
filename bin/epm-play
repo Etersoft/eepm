@@ -86,11 +86,11 @@ fi
 
 if [ "$1" = "--remove" ] ; then
     shift
-    #__check_installed_app "$1" || fatal "$1 is not installed"
+    #__check_installed_app "$1" || warning "$1 is not installed"
     prescription="$1"
     shift
     __epm_play_run $prescription --remove "$@"
-    __remove_installed_app "$@"
+    __remove_installed_app "$prescription"
     exit
 fi
 
