@@ -1,7 +1,7 @@
 %def_without external_distro_info
 
 Name: eepm
-Version: 3.14.1
+Version: 3.14.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -146,6 +146,16 @@ mkdir -p %buildroot/var/lib/eepm/
 %endif
 
 %changelog
+* Mon Oct 25 2021 Vitaly Lipatov <lav@altlinux.ru> 3.14.2-alt1
+- epm-epm_install: don't need distro-info since 3.14.1
+- move nvidia-clean-drivers to epm remove-old-kernels
+- google-chrome-stable.sh: fix icon packing
+- chromium-gost-stable.sh: cleanup
+- google-chrome-stable.sh: don't pack menu file
+- epm-play: fix removing from the list
+- epm-sh-functions: wait after error when under screen
+- epm play: add sputnik-browser
+
 * Fri Sep 10 2021 Vitaly Lipatov <lav@altlinux.ru> 3.14.1-alt1
 - epm-kernel_update: add kernel update for dnf-rpm
 - epm-query-file: cleanup, print all symlinks chain
