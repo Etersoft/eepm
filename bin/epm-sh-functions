@@ -277,6 +277,7 @@ fatal()
 #	else
 #		echog "Error in $0: $@" >&2
 	fi
+#	[ "$TERM" = "screen" ] && echo "(screen detected: waiting ten seconds to exit ...)" >&2 && sleep 10
 	exit 1
 }
 
