@@ -3,6 +3,8 @@
 BUILDROOT="$1"
 SPEC="$2"
 
+PRODUCT=google-chrome
+
 subst 's|%files|%files\n/usr/share/icons/hicolor/*x*/apps/*.png|' $SPEC
 
 # Make relative symlink
@@ -17,6 +19,10 @@ done
 
 rm -f $BUILDROOT/etc/cron.daily/google-chrome
 subst 's|.*/etc/cron.daily/google-chrome.*||' $SPEC
+
+# unsupported format
+rm -f $BUILDROOT/usr/share/menu/$PRODUCT.menu
+subst "s|.*/usr/share/menu/$PRODUCT.menu.*||" $SPEC
 
 # google-chrome by default?
 #subst 's|exec -a "$0" "$HERE/chrome" "$@"||' $BUILDROOT/opt/google/chrome/google-chrome
