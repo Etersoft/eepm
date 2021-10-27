@@ -7,7 +7,7 @@ fatal()
     exit 1
 }
 
-PKGNAME=sputnik-browser
+PKGNAME=sputnik-browser-stable
 
 if [ "$1" = "--remove" ] ; then
     epm remove $PKGNAME
