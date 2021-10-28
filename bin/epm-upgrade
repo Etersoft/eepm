@@ -65,6 +65,11 @@ epm_upgrade()
 				(pkg_files=$pkg_files force="$force -F" epm_install)
 				return
 			elif [ -n "$pkg_names" ] ; then
+				# hack for https://bugzilla.altlinux.org/41225
+				case "$pkg_names" in
+					-*)
+						fatal "Option $pkg_names is not allowed here"
+				esac
 				load_helper epm-install
 				(pkg_names=$(get_only_installed_packages $pkg_names) epm_install)
 				return

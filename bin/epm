@@ -470,6 +470,7 @@ check_filenames()
             pkg_urls="$pkg_urls $opt"
         else
             has_space "$opt" && warning "There are space(s) in package name '$opt', it is not supported. Skipped." && continue
+            # TODO: don't add unknown options (like -y, --unknown) to pkg_names
             pkg_names="$pkg_names $opt"
         fi
         quoted_args="$quoted_args \"$opt\""
