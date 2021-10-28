@@ -1,7 +1,7 @@
 %def_without external_distro_info
 
 Name: eepm
-Version: 3.14.2
+Version: 3.14.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -146,6 +146,13 @@ mkdir -p %buildroot/var/lib/eepm/
 %endif
 
 %changelog
+* Thu Oct 28 2021 Vitaly Lipatov <lav@altlinux.ru> 3.14.3-alt1
+- sputnik-browser.sh: fix removing (ALT bug 41226)
+- epm play viber: remove versioned libtiff5 require (ALT bug 41224)
+- epm-release_upgrade: don't restart system-logind after install systemd-settings-disable-kill-user-processes
+- epm-release_upgrade: don't install apt-conf-branch if apt-conf-branch-* is already installed
+- epm-upgrade: don't allow unknown options (ALT bug 41225)
+
 * Mon Oct 25 2021 Vitaly Lipatov <lav@altlinux.ru> 3.14.2-alt1
 - epm-epm_install: don't need distro-info since 3.14.1
 - move nvidia-clean-drivers to epm remove-old-kernels
