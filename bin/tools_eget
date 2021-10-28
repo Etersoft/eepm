@@ -213,7 +213,7 @@ is_url()
 
 get_urls()
 {
-    scat $URL | \
+    scat $URL/ | \
          grep -i -o -E 'href="(.+)"' | cut -d'"' -f2
 }
 
