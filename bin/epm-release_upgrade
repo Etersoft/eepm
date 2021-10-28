@@ -171,7 +171,7 @@ get_fix_release_pkg()
 		true
 		#echo "apt-conf-$TO"
 	else
-		echo "apt-conf-branch"
+		epmqp apt-conf-branch >/dev/null 2>/dev/null || echo "apt-conf-branch"
 	fi
 
 	if [ "$FORCE" == "--force" ] ; then
