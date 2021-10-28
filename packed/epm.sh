@@ -961,7 +961,7 @@ case $PMTYPE in
 			echo "We will try remove all installed packages which are missed in repositories"
 			warning "Use with caution!"
 		fi
-		epm upgrade || fatal
+		epm Upgrade || fatal
 		local PKGLIST=$(__epm_orphan_altrpm \
 			| sed -e "s/\.32bit//g" \
 			| grep -v -- "^eepm$" \
@@ -1292,14 +1292,6 @@ case $DISTRNAME in
 		[ -n "$1" ] && return
 
 		docmd epm remove-old-kernels $(subst_option non_interactive --auto)
-
-		if which nvidia-clean-driver 2>/dev/null ; then
-			if [ -n "$non_interactive" ] ; then
-				yes | sudocmd nvidia-clean-driver
-			else
-				sudocmd nvidia-clean-driver
-			fi
-		fi
 
 		if [ -z "$direct" ] ; then
 			echo
@@ -2059,21 +2051,24 @@ epm_downgrade()
 
 	case $PMTYPE in
 	apt-rpm)
-		local APTOPTIONS="$(subst_option non_interactive -y)"
-		__epm_add_alt_apt_downgrade_preferences || return
 		# pass pkg_filenames too
 		if [ -n "$pkg_names" ] ; then
-			(pkg_names=$pkg_names epm_install)
+			__epm_add_alt_apt_downgrade_preferences || return
+			(pkg_names=$(get_only_installed_packages $pkg_names) epm_install)
+			__epm_remove_apt_downgrade_preferences
+		elif [ -n "$pkg_files" ] ; then
+			(pkg_files=$pkg_files force="$force -F --oldpackage" epm_install)
 		else
+			__epm_add_alt_apt_downgrade_preferences || return
 			epm_upgrade "$@"
+			__epm_remove_apt_downgrade_preferences
 		fi
-		__epm_remove_apt_downgrade_preferences
 		;;
 	apt-dpkg)
-		local APTOPTIONS="$(subst_option non_interactive -y)"
+		local APTOPTIONS="$(subst_option non_interactive -y) $force_yes"
 		__epm_add_deb_apt_downgrade_preferences || return
 		if [ -n "$pkg_filenames" ] ; then
-			sudocmd apt-get  $APTOPTIONS install $pkg_filenames
+			sudocmd apt-get $APTOPTIONS install $pkg_filenames
 		else
 			sudocmd apt-get $APTOPTIONS dist-upgrade
 		fi
@@ -2346,11 +2341,7 @@ epm_epm_install() {
 
     # install epm by default
     if [ -z "$pkglist" ] || [ "$pkglist" = "epm" ] || [ "$pkglist" = "eepm" ]; then
-        if [ "$($DISTRVENDOR -s)" = "alt" ] ; then
-            pkglist="distro_info eepm"
-        else
             pkglist="eepm"
-        fi
     fi
 
     case "$pkglist" in
@@ -3399,6 +3390,9 @@ epm_kernel_update()
 	esac
 
 	case $PMTYPE in
+	dnf-rpm)
+		docmd epm install kernel
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
@@ -3692,11 +3686,11 @@ fi
 
 if [ "$1" = "--remove" ] ; then
     shift
-    #__check_installed_app "$1" || fatal "$1 is not installed"
+    #__check_installed_app "$1" || warning "$1 is not installed"
     prescription="$1"
     shift
     __epm_play_run $prescription --remove "$@"
-    __remove_installed_app "$@"
+    __remove_installed_app "$prescription"
     exit
 fi
 
@@ -4527,25 +4521,24 @@ __do_query_real_file()
 	else
 		TOFILE=$(which -- "$1" 2>/dev/null || echo "$1")
 		if [ "$TOFILE" != "$1" ] ; then
-			info "Note: $1 is placed as $TOFILE"
+			info " > $1 is placed as $TOFILE"
 		fi
 	fi
-	
+
+	if [ -n "$short" ] ; then
+		__do_short_query "$TOFILE"
+	else
+		__do_query "$TOFILE"
+	fi
+
 	# get value of symbolic link
 	if [ -L "$TOFILE" ] ; then
 		local LINKTO
-		if [ -n "$short" ] ; then
-			__do_short_query "$TOFILE"
-		else
-			__do_query "$TOFILE"
-		fi
-		LINKTO=$(readlink -f -- "$TOFILE")
-		info "Note: $TOFILE is link to $LINKTO"
+		LINKTO=$(readlink -- "$TOFILE")
+		info " > $TOFILE is link to $LINKTO"
 		__do_query_real_file "$LINKTO"
 		return
 	fi
-
-	FULLFILEPATH="$TOFILE"
 }
 
 dpkg_print_name_version()
@@ -4654,14 +4647,10 @@ epm_query_file()
 
     res=0
     for pkg in $pkg_filenames ; do
-        __do_query_real_file "$pkg"
-        if [ -n "$short" ] ; then
-            __do_short_query "$FULLFILEPATH" || res=$?
-        else
-            __do_query "$FULLFILEPATH" || res=$?
-        fi
+        __do_query_real_file "$pkg" || res=$?
     done
-    [ "$res" = "0" ] || info "Try epm sf for search file in all packages in repository"
+
+    [ "$res" = "0" ] || info "Try epm sf for search file in all packages of the repositories"
     #|| pkg_filenames="$FULLFILEPATH" epm_search_file
     return $res
 }
@@ -4833,7 +4822,7 @@ epm_release_downgrade()
 
 		__alt_repofix
 
-		__switch_alt_to_distro $DISTRVERSION $TARGET && info "Done. The system has been successfully downgraded to the previous release '$TO'."
+		__switch_alt_to_distro $DISTRVERSION $TARGET && info "Done. The system has been successfully downgraded to the previous release '$TARGET'."
 
 		return 0
 		;;
@@ -4931,9 +4920,9 @@ assure_safe_run()
 		else
 			warning "It is very dangerous to upgrade to next release from a GUI (your TERM=$TERM)."
 			if is_installed screen ; then
-				warning "You have 'screen' already installed, just run upgrade via screen: '# screen epm release-upgrade'"
+				warning "You have 'screen' already installed, just run upgrade via screen (check https://losst.ru/komanda-screen-linux if needed)."
 			else
-				warning "It is recommended install 'screen' and run upgrade via screen: '# screen epm release-upgrade'"
+				warning "It is recommended install 'screen' and run upgrade via screen (check https://losst.ru/komanda-screen-linux if needed)."
 			fi
 			fatal "or run me with --force if you understand the risk."
 		fi
@@ -4954,7 +4943,8 @@ assure_safe_run()
 			warning "You force runnning even if systemd-logind kills screen on disconnect"
 		else
 			docmd epm install systemd-settings-disable-kill-user-processes || fatal "Can't install the package above. Fix it or run with --force."
-			docmd serv systemd-logind restart || fatal "Can't restart systemd-logind service. Fix it or run with --force."
+			# commented, will kick off the user from the system (ALT issue 50580)
+			#docmd serv systemd-logind restart || fatal "Can't restart systemd-logind service. Fix it or run with --force."
 			fatal "Now you need relogin to the system. In this session your screen still will be killed."
 		fi
 	fi
@@ -5066,7 +5056,7 @@ get_fix_release_pkg()
 		true
 		#echo "apt-conf-$TO"
 	else
-		echo "apt-conf-branch"
+		epmqp apt-conf-branch >/dev/null 2>/dev/null || echo "apt-conf-branch"
 	fi
 
 	if [ "$FORCE" == "--force" ] ; then
@@ -5091,7 +5081,7 @@ get_fix_release_pkg()
 	# update if installed (just print package name here to include in the install list)
 	epm --quiet --short installed alt-gpgkeys 2>/dev/null
 	if epm --quiet --short -q etersoft-gpgkeys 2>/dev/null >/dev/null ; then
-		# leave etersoft-gpgkeys only we have LINUX@Etersoft repo
+		# leave etersoft-gpgkeys only if we have LINUX@Etersoft repo
 		epm rl | grep -q "LINUX@Etersoft" && echo etersoft-gpgkeys || echo alt-gpgkeys
 	fi
 
@@ -5128,9 +5118,11 @@ __check_system()
 	fi
 
 	if [ "$TO" != "Sisyphus" ] ; then
+		# we could miss DISTRVENDOR script during downgrade, reread
+		set_distro_info
 		if [ "$($DISTRVENDOR -v)" != "$TO" ] || epm installed altlinux-release-sisyphus >/dev/null ; then
-			warning "Target distro is $TO, but altlinux-release-sisyphus package is installed."
-			warning "Trying to replace it with altlinux-release-$TO"
+			warning "Current distro still is not $TO, or altlinux-release-sisyphus package is installed."
+			warning "Trying to fix with altlinux-release-$TO"
 			docmd epm install altlinux-release-$TO
 		fi
 	fi
@@ -5190,6 +5182,11 @@ get_next_release()
 	esac
 }
 
+__do_upgrade()
+{
+	docmd epm $non_interactive $force_yes upgrade || fatal "Check the errors and run '# $0' again"
+}
+
 __switch_alt_to_distro()
 {
 	local TO="$2"
@@ -5205,7 +5202,7 @@ __switch_alt_to_distro()
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
-			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
+			__do_upgrade
 			end_change_alt_repo
 			docmd epm update-kernel
 			info "Run epm release-upgrade again for update to p8"
@@ -5216,7 +5213,7 @@ __switch_alt_to_distro()
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
-			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
+			__do_upgrade
 			end_change_alt_repo
 			__check_system "$TO"
 			docmd epm update-kernel || fatal
@@ -5228,7 +5225,7 @@ __switch_alt_to_distro()
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
-			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
+			__do_upgrade
 			end_change_alt_repo
 			__check_system "$TO"
 			docmd epm update-kernel || fatal
@@ -5243,8 +5240,8 @@ __switch_alt_to_distro()
 				# glibc-core coflicts libcrypt
 				docmd epm downgrade apt pam pam0_passwdqc glibc-core libcrypt- || fatal
 			fi
-			docmd epm downgrade
-			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm $non_interactive $force_yes downgrade || fatal
+			__do_upgrade
 			end_change_alt_repo
 			__check_system "$TO"
 			docmd epm update-kernel || fatal
@@ -5258,7 +5255,7 @@ __switch_alt_to_distro()
 			fi
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
-			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
+			__do_upgrade
 			end_change_alt_repo
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			__check_system "$TO"
@@ -5267,13 +5264,13 @@ __switch_alt_to_distro()
 			;;
 		"p9"|"p9 p10"|"p10 p10")
 			info "Upgrade all packages to current $FROM repository"
-			docmd epm upgrade || fatal
+			__do_upgrade
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
 			echo '%_priority_distbranch p10' >/etc/rpm/macros.d/p10
 			__epm_ru_update || fatal
-			docmd epm upgrade || fatal "Check the errors and run '# epm release-upgrade' again"
+			__do_upgrade
 			end_change_alt_repo
 			docmd epm install rpm apt "$(get_fix_release_pkg "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			__check_system "$TO"
@@ -5281,7 +5278,7 @@ __switch_alt_to_distro()
 			;;
 		"p9 p8"|"c8.1 c8"|"c8.1 p8"|"p8 p8")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install "$(get_fix_release_pkg "$FROM")" || fatal
+			docmd epm install "$(get_fix_release_pkg "$FROM")"
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
 			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
@@ -5289,14 +5286,14 @@ __switch_alt_to_distro()
 				# glibc-core coflicts libcrypt
 				docmd epm downgrade apt rpm pam pam0_passwdqc glibc-core libcrypt- || fatal
 			fi
-			docmd epm downgrade || fatal "Check the error and run '# epm downgrade'"
+			docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
 			end_change_alt_repo
 			__check_system "$TO"
 			docmd epm upgrade || fatal
 			;;
 		"p9 c8"|"p9 c8.1"|"p9 c8.2")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install "$(get_fix_release_pkg "$FROM")" || fatal
+			docmd epm install "$(get_fix_release_pkg "$FROM")"
 			__switch_repo_to $TO
 			__epm_ru_update || fatal
 			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
@@ -5304,31 +5301,31 @@ __switch_alt_to_distro()
 			#	# glibc-core coflicts libcrypt
 			#	docmd epm downgrade apt rpm pam pam0_passwdqc glibc-core libcrypt- || fatal
 			#fi
-			docmd epm downgrade || fatal "Check the error and run '# epm downgrade'"
+			docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
 			end_change_alt_repo
 			__check_system "$TO"
 			docmd epm upgrade || fatal
 			;;
 		"p10 p9")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install "$(get_fix_release_pkg "$FROM")" || fatal
+			docmd epm install "$(get_fix_release_pkg "$FROM")"
 			__switch_repo_to $TO
 			rm -fv /etc/rpm/macros.d/p10
 			__epm_ru_update || fatal
 			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
-			docmd epm downgrade || fatal "Check the error and run '# epm downgrade'"
+			docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
 			end_change_alt_repo
 			__check_system "$TO"
 			docmd epm upgrade || fatal
 			;;
 		"Sisyphus p8"|"Sisyphus p9"|"Sisyphus p10"|"Sisyphus c8"|"Sisyphus c8.1")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install "$(get_fix_release_pkg "$FROM")" || fatal
+			docmd epm install "$(get_fix_release_pkg "$FROM")"
 			__switch_repo_to $TO
 			[ "$TO" = "p10" ] && echo '%_priority_distbranch p10' >/etc/rpm/macros.d/p10
 			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
-			docmd epm downgrade || fatal "Check the error and run '# epm downgrade'"
+			docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
 			end_change_alt_repo
 			__check_system "$TO"
 			docmd epm upgrade || fatal
@@ -5345,8 +5342,8 @@ __switch_alt_to_distro()
 			#local ADDPKG
 			#ADDPKG=$(epm -q --short make-initrd sssd-ad 2>/dev/null)
 			#docmd epm install librpm7 librpm rpm apt $ADDPKG "$(get_fix_release_pkg --force "$TO")" ConsoleKit2- || fatal "Check an error and run again"
-			docmd epm upgrade || fatal "Check the error and run '# epm release-upgrade' again or just '# epm upgrade'"
-			docmd epm downgrade
+			docmd epm $force_yes $non_interactive upgrade || fatal "Check the error and run '# epm release-upgrade' again or just '# epm upgrade'"
+			docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
 			end_change_alt_repo
 			__check_system "$TO"
 			docmd epm update-kernel || fatal
@@ -5362,7 +5359,8 @@ __switch_alt_to_distro()
 			info "Also possible you need install altlinux-release-p? package for correct distro version detecting"
 			return 1
 	esac
-	epm clean
+	docmd epm clean
+	docmd epm update
 	info "Note: Also you can try '# epm autoremove' and '# epm autoorphans' commands to remove obsoleted and unused packages."
 }
 
@@ -5373,7 +5371,7 @@ epm_release_upgrade()
 	info "Starting upgrade/switch whole system to other release"
 	info "Check also http://wiki.etersoft.ru/Admin/UpdateLinux"
 
-	cd /tmp || fatal
+	cd / || fatal
 	# TODO: it is possible eatmydata does not do his work
 	export EPMNOEATMYDATA=1
 
@@ -5824,6 +5822,16 @@ epm_remove_old_kernels()
 		fi
 		assure_exists update-kernel update-kernel 0.9.9
 		sudocmd remove-old-kernels $(subst_option non_interactive -y) "$@"
+
+		# remove unused nvidia drivers
+		if which nvidia-clean-driver 2>/dev/null ; then
+			if [ -n "$non_interactive" ] ; then
+				yes | sudocmd nvidia-clean-driver
+			else
+				sudocmd nvidia-clean-driver
+			fi
+		fi
+
 		return ;;
 	Ubuntu)
 		if ! __epm_query_package linux-image >/dev/null ; then
@@ -8349,10 +8357,28 @@ epm_upgrade()
 	info "Running command for upgrade packages"
 
 	case $PMTYPE in
+		*-rpm)
+			# upgrade only install files from the list
+			if [ -n "$pkg_files" ] ; then
+				#sudocmd rpm -Fvh $pkg_files
+				(pkg_files=$pkg_files force="$force -F" epm_install)
+				return
+			elif [ -n "$pkg_names" ] ; then
+				# hack for https://bugzilla.altlinux.org/41225
+				case "$pkg_names" in
+					-*)
+						fatal "Option $pkg_names is not allowed here"
+				esac
+				(pkg_names=$(get_only_installed_packages $pkg_names) epm_install)
+				return
+			fi
+		;;
+	esac
+
+	case $PMTYPE in
 	apt-rpm|apt-dpkg)
 		local APTOPTIONS="$(subst_option non_interactive -y) $(subst_option verbose "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
-		# Функцию добавления параметра при условии
-		CMD="apt-get $APTOPTIONS dist-upgrade $noremove"
+		CMD="apt-get $APTOPTIONS $noremove $force_yes dist-upgrade"
 		;;
 	aptitude-dpkg)
 		CMD="aptitude dist-upgrade"
@@ -10163,7 +10189,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.13.3  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.14.3  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10173,7 +10199,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.13.3
+EPMVERSION=3.14.3
 verbose=
 quiet=
 nodeps=
@@ -10188,6 +10214,7 @@ short=
 direct=
 sort=
 non_interactive=
+force_yes=
 skip_installed=
 skip_missed=
 show_command_only=
@@ -10274,7 +10301,7 @@ check_command()
     -i|install|add|i)         # HELPCMD: install package(s) from remote repositories or from local file
         epm_cmd=install
         ;;
-    -e|-P|rm|del|remove|delete|uninstall|erase|e)  # HELPCMD: remove (delete) package(s) from the database and the system
+    -e|-P|rm|del|remove|delete|uninstall|erase|purge|e)  # HELPCMD: remove (delete) package(s) from the database and the system
         epm_cmd=remove
         ;;
     -s|search|s)                # HELPCMD: search in remote package repositories
@@ -10415,7 +10442,6 @@ check_command()
         ;;
     upgrade|dist-upgrade)     # HELPCMD: performs upgrades of package software distributions
         epm_cmd=upgrade
-        direct_args=1
         ;;
     Upgrade)                  # HELPCMD: force update package base, then run upgrade
         epm_cmd=Upgrade
@@ -10534,6 +10560,9 @@ check_option()
     --auto|--assumeyes|--non-interactive)  # HELPOPT: non interactive mode
         non_interactive="--auto"
         ;;
+    --force-yes)           # HELPOPT: force yes in a danger cases (f.i., during release upgrade)
+        force_yes="--force-yes"
+        ;;
     *)
         return 1
         ;;
@@ -10559,6 +10588,7 @@ check_filenames()
             pkg_urls="$pkg_urls $opt"
         else
             has_space "$opt" && warning "There are space(s) in package name '$opt', it is not supported. Skipped." && continue
+            # TODO: don't add unknown options (like -y, --unknown) to pkg_names
             pkg_names="$pkg_names $opt"
         fi
         quoted_args="$quoted_args \"$opt\""
