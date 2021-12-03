@@ -109,6 +109,10 @@ check_command()
     # do not override command
     [ -z "$epm_cmd" ] || return
 
+# Bellow original commands to be mapped into eepm are taken from the following places:
+# - yum help
+# - source code of dnf 4.x, dnf/cli/commands/*.py, "aliases = (<...>)" (yum-dnf will understand them)
+# - default upstream configs of aliases in dnf 4.x (output of `dnf alias`)
 # HELPCMD:
     case $1 in
     check)                    # HELPCMD: Check for problems in the rpmdb
@@ -124,14 +128,15 @@ check_command()
         # TODO: hilevel in any case
         epm_cmd=requires
         ;;
-    distribution-synchronization) # HELPCMD: Synchronize installed packages to the latest available versions
-        # TODO: some differences from just upgrade?
-        epm_cmd=upgrade
+    distribution-synchronization | distro-sync | distrosync | dsync | dup) # HELPCMD: Synchronize installed packages to the latest available versions
+        # TODO: distro-sync can either upgrade or downgrade packages,
+        # apt-get with pinned priorities of repositiories would be a replacement
+        fatal "Is not supported"
         ;;
-    downgrade)                # HELPCMD: downgrade a package
+    downgrade | dg)           # HELPCMD: downgrade a package
         epm_cmd=downgrade
         ;;
-    erase)                    # HELPCMD: Remove a package or packages from your system
+    remove | rm | erase)      # HELPCMD: Remove a package or packages from your system
         epm_cmd=remove
         ;;
     groupinfo)                # HELPCMD: Display details about a package group
@@ -151,13 +156,13 @@ check_command()
         phelp
         exit 0
         ;;
-    history)                  # HELPCMD: Display, or use, the transaction history
+    history | hist)           # HELPCMD: Display, or use, the transaction history
         fatal "Is not supported"
         ;;
     info)                     # HELPCMD: Display details about a package or group of packages
         epm_cmd=info
         ;;
-    install)                  # HELPCMD: Install a package or packages on your system
+    install | in | localinstall) # HELPCMD: Install a package or packages on your system
         epm_cmd=install
         ;;
     list)                     # HELPCMD: List a package or groups of packages
@@ -167,26 +172,26 @@ check_command()
     load-transaction)         # HELPCMD: load a saved transaction from filename
         fatal "Is not supported"
         ;;
-    makecache)                # HELPCMD: Generate the metadata cache
-        fatal "Is not supported"
+    makecache | refresh)      # HELPCMD: Generate or update the metadata cache
+        epm_cmd=update
         ;;
     provides)                 # HELPCMD: Find what package provides the given value
         # TODO: hilevel in any case
         epm_cmd=provides
         ;;
-    reinstall)                # HELPCMD: reinstall a package
+    reinstall | rei)          # HELPCMD: reinstall a package
         epm_cmd=reinstall
         ;;
-    repolist)                 # HELPCMD: Display the configured software repositories
+    repolist | repoinfo)      # HELPCMD: Display the configured software repositories
         epm_cmd=repolist
         ;;
     resolvedep)               # HELPCMD: Determine which package provides the given dependency
         epm_cmd=whatprovides
         ;;
-    search)                   # HELPCMD: Search package details for the given string
+    search | se)              # HELPCMD: Search package details for the given string
         epm_cmd=search
         ;;
-    shell)                    # HELPCMD: Run an interactive yum shell
+    shell | sh)               # HELPCMD: Run an interactive yum shell
         # TODO: not full compatible
         apt-shell
         ;;
