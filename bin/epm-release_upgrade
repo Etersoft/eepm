@@ -69,16 +69,6 @@ assure_safe_run()
 	return 0
 }
 
-
-__replace_text_in_alt_repo()
-{
-	local i
-	for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
-		[ -s "$i" ] || continue
-		regexp_subst "$1" "$i"
-	done
-}
-
 __wcount()
 {
 	echo "$*" | wc -w
@@ -108,42 +98,6 @@ __detect_alt_release_by_repo()
 	fi
 
 	return 1
-}
-
-__replace_alt_version_in_repo()
-{
-	local i
-	assure_exists apt-repo
-	#echo "Upgrading $DISTRNAME from $1 to $2 ..."
-	docmd apt-repo list | sed -e "s|\($1\)|{\1}->{$2}|g" | grep -E --color -- "$1"
-	# ask and replace only we will have changes
-	if a='' apt-repo list | grep -E -q -- "$1" ; then
-		__replace_text_in_alt_repo "/^ *#/! s!$1!$2!g"
-	fi
-	docmd apt-repo list
-}
-
-__alt_replace_sign_name()
-{
-	local TO="$1"
-	__replace_text_in_alt_repo "/^ *#/! s!\[alt\]!$TO!g"
-	__replace_text_in_alt_repo "/^ *#/! s!\[sisyphus\]!$TO!g"
-	__replace_text_in_alt_repo "/^ *#/! s!\[updates\]!$TO!g"
-	__replace_text_in_alt_repo "/^ *#/! s!\[cert[789]\]!$TO!g"
-	__replace_text_in_alt_repo "/^ *#/! s!\[p10\.?[0-9]?\]!$TO!g"
-	__replace_text_in_alt_repo "/^ *#/! s!\[[tpc][6-9]\.?[0-9]?\]!$TO!g"
-}
-
-__alt_repofix()
-{
-	local TO="$1"
-	epm --quiet repo fix >/dev/null
-
-	if [ -n "$TO" ] ; then
-		# TODO: switch it in repo code
-		TO="$(__repofix_filter_vendor "$TO")"
-		__alt_replace_sign_name "[$TO]"
-	fi
 }
 
 
@@ -213,15 +167,6 @@ get_fix_release_pkg()
 	fi
 }
 
-__switch_repo_to()
-{
-	local TO="$1"
-	__replace_alt_version_in_repo "Sisyphus/" "$TO/branch/"
-	__replace_alt_version_in_repo "[tpc][5-9]\.?[0-9]?/branch/" "$TO/branch/"
-	__replace_alt_version_in_repo "p10\.?[0-9]?/branch/" "$TO/branch/"
-	__alt_repofix $TO
-}
-
 __check_system()
 {
 	local TO="$1"
@@ -277,6 +222,12 @@ __epm_ru_update()
     docmd epm update
 }
 
+__switch_repo_to()
+{
+    epm_reposwitch "$@"
+    __epm_ru_update || fatal
+}
+
 get_next_release()
 {
 	local FROM="$1"
@@ -323,7 +274,6 @@ __switch_alt_to_distro()
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
-			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			__do_upgrade
 			end_change_alt_repo
@@ -334,7 +284,6 @@ __switch_alt_to_distro()
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
-			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			__do_upgrade
 			end_change_alt_repo
@@ -346,7 +295,6 @@ __switch_alt_to_distro()
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
-			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			__do_upgrade
 			end_change_alt_repo
@@ -357,7 +305,6 @@ __switch_alt_to_distro()
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
-			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			if epm installed libcrypt ; then
 				# glibc-core coflicts libcrypt
@@ -377,7 +324,6 @@ __switch_alt_to_distro()
 				docmd epm remove gdb || fatal
 			fi
 			__switch_repo_to $TO
-			__epm_ru_update || fatal
 			__do_upgrade
 			end_change_alt_repo
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
@@ -391,8 +337,6 @@ __switch_alt_to_distro()
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
-			echo '%_priority_distbranch p10' >/etc/rpm/macros.d/p10
-			__epm_ru_update || fatal
 			__do_upgrade
 			end_change_alt_repo
 			docmd epm install rpm apt "$(get_fix_release_pkg "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
@@ -403,7 +347,6 @@ __switch_alt_to_distro()
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install "$(get_fix_release_pkg "$FROM")"
 			__switch_repo_to $TO
-			__epm_ru_update || fatal
 			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			if epm installed libcrypt >/dev/null ; then
 				# glibc-core coflicts libcrypt
@@ -418,7 +361,6 @@ __switch_alt_to_distro()
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install "$(get_fix_release_pkg "$FROM")"
 			__switch_repo_to $TO
-			__epm_ru_update || fatal
 			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			#if epm installed libcrypt >/dev/null ; then
 			#	# glibc-core coflicts libcrypt
@@ -433,8 +375,6 @@ __switch_alt_to_distro()
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install "$(get_fix_release_pkg "$FROM")"
 			__switch_repo_to $TO
-			rm -fv /etc/rpm/macros.d/p10
-			__epm_ru_update || fatal
 			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
 			end_change_alt_repo
@@ -445,8 +385,6 @@ __switch_alt_to_distro()
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install "$(get_fix_release_pkg "$FROM")"
 			__switch_repo_to $TO
-			[ "$TO" = "p10" ] && echo '%_priority_distbranch p10' >/etc/rpm/macros.d/p10
-			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
 			end_change_alt_repo
@@ -457,6 +395,7 @@ __switch_alt_to_distro()
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			docmd epm upgrade || fatal
+			# TODO: epm_reposwitch??
 			__replace_alt_version_in_repo "$FROM/branch/" "$TO/"
 			__alt_repofix "alt"
 			[ -s /etc/rpm/macros.d/p10 ] && rm -fv /etc/rpm/macros.d/p10
