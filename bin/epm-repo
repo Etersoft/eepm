@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2020  Etersoft
-# Copyright (C) 2020  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2021  Etersoft
+# Copyright (C) 2021  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -42,13 +42,17 @@ EOF
 		load_helper epm-repofix
 		epm_repofix "$@"
 		;;
-	change)                           # HELPCMD: <mirror>: switch sources to the mirror (supports etersoft/yandex/basealt): rewrite URL to the specified server
+	change)                           # HELPCMD: <mirror>: switch sources to the mirror (supports etersoft/yandex/basealt): rewrite URLs to the specified server
 		load_helper epm-repofix
 		epm_repofix "$@"
 		;;
 	set)                              # HELPCMD: <mirror>: remove all existing sources and add mirror for the branch
 		epm repo rm all
 		epm addrepo "$@"
+		;;
+	switch)                           # HELPCMD: switch repo to <repo>: rewrite URLs to the repo
+		load_helper epm-repofix
+		epm_reposwitch "$@"
 		;;
 	clean)                            # HELPCMD: remove temp. repos (tasks and CD-ROMs)
 		# TODO: check for ALT
