@@ -7,7 +7,7 @@ SPEC="$2"
 PRODUCT=Telegram
 
 # /usr/bin/Telegram
-#subst '1iConflicts:telegram-desktop' $SPEC
+subst '1iConflicts:telegram-desktop < 3.2.8' $SPEC
 
 subst "s|^License: unknown$|License: GPLv2|" $SPEC
 subst "s|^URL:.*|URL: https://desktop.telegram.org/|" $SPEC
@@ -21,9 +21,9 @@ mv $BUILDROOT/$ROOTDIR $BUILDROOT/opt/$PRODUCT
 subst "s|\"/$ROOTDIR/|\"/opt/$PRODUCT/|" $SPEC
 
 # add binary to the search path
-#mkdir -p $BUILDROOT/usr/bin/
-#ln -s /opt/$PRODUCT/Telegram $BUILDROOT/usr/bin/$PRODUCT
-#subst "s|%files|%files\n/usr/bin/$PRODUCT|" $SPEC
+mkdir -p $BUILDROOT/usr/bin/
+ln -s /opt/$PRODUCT/Telegram $BUILDROOT/usr/bin/$PRODUCT
+subst "s|%files|%files\n/usr/bin/$PRODUCT|" $SPEC
 
 # create desktop file
 mkdir -p $BUILDROOT/usr/share/applications/
