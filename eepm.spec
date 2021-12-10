@@ -1,7 +1,7 @@
 %def_without external_distro_info
 
 Name: eepm
-Version: 3.14.4
+Version: 3.14.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -146,6 +146,16 @@ mkdir -p %buildroot/var/lib/eepm/
 %endif
 
 %changelog
+* Fri Dec 10 2021 Vitaly Lipatov <lav@altlinux.ru> 3.14.5-alt1
+- epm-Upgrade: pass args to epm-upgrade
+- yum: update supported actions
+- move repo fix code from release_upgrade to repofix
+- epm-repo: add epm repo switch <repo> command
+- epm repack Telegram: add /usr/bin/Telegram command
+- epm play: add XnViewMP support
+- epm repack zoom: drop embedded libs from reqs
+- epm removerepo: error if there is an option as arg
+
 * Thu Oct 28 2021 Vitaly Lipatov <lav@altlinux.ru> 3.14.4-alt1
 - eget: add / in the end of URL to avoid redirect
 
