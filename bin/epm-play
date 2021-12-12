@@ -80,6 +80,7 @@ Options:
     --list         - list all installed apps
     --list-all     - list all available apps
     --short        - print only names
+    --update [APP|all]  - update APP (or all installed apps) if there is new version
 EOF
     exit
 fi
@@ -91,6 +92,24 @@ if [ "$1" = "--remove" ] ; then
     shift
     __epm_play_run $prescription --remove "$@"
     __remove_installed_app "$prescription"
+    exit
+fi
+
+if [ "$1" = "--update" ] ; then
+    shift
+    if [ "$1" = "all" ] ; then
+        shift
+        for i in $(__list_installed_app) ; do
+            echo "$i"
+            prescription="$i"
+            __epm_play_run $prescription --run "$@"
+        done
+        exit
+    fi
+    __check_installed_app "$1" || fatal "$1 is not installed"
+    prescription="$1"
+    shift
+    __epm_play_run $prescription --run "$@"
     exit
 fi
 
@@ -135,7 +154,7 @@ if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
         printf "  %-20s - %s\n" "$name" "$desc"
     done
     echo
-    echo "run epm play --list to list installed only or --remove to remove one"
+    echo "run epm play --list to list installed only, or --remove to remove one, or --update to update [all] installed apps"
     exit
 fi
 
