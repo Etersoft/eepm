@@ -61,6 +61,8 @@ rpmvendor()
 	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
 	[ "$DISTRIB_ID" = "VoidLinux" ] && echo "void" && return
 	[ "$DISTRIB_ID" = "OpenSUSE" ] && echo "suse" && return
+	[ "$DISTRIB_ID" = "openSUSETumbleweed" ] && echo "suse" && return
+	[ "$DISTRIB_ID" = "openSUSELeap" ] && echo "suse" && return
 	[ -n "$VENDOR_ID" ] && echo "$VENDOR_ID" && return
 	tolower "$DISTRIB_ID"
 }
@@ -141,7 +143,7 @@ case $DISTRIB_ID in
 	Slackware)
 		CMD="slackpkg"
 		;;
-	SUSE|SLED|SLES)
+	SUSE|SLED|SLES|openSUSETumbleweed|openSUSELeap)
 		CMD="zypper-rpm"
 		;;
 	ForesightLinux|rPathLinux)
