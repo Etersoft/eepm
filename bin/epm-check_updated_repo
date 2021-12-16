@@ -21,9 +21,9 @@ __is_repo_info_downloaded()
 {
     case $PMTYPE in
         apt-*)
-            if [ -r /var/cache/apt ] ; then
-                sudorun test -r /var/cache/apt/pkgcache.bin || return
-            fi
+            #if [ -r /var/cache/apt ] ; then
+            #    sudorun test -r /var/cache/apt/pkgcache.bin || return
+            #fi
             ;;
         *)
             ;;
