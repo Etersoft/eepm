@@ -1346,6 +1346,8 @@ rpmvendor()
 	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
 	[ "$DISTRIB_ID" = "VoidLinux" ] && echo "void" && return
 	[ "$DISTRIB_ID" = "OpenSUSE" ] && echo "suse" && return
+	[ "$DISTRIB_ID" = "openSUSETumbleweed" ] && echo "suse" && return
+	[ "$DISTRIB_ID" = "openSUSELeap" ] && echo "suse" && return
 	[ -n "$VENDOR_ID" ] && echo "$VENDOR_ID" && return
 	tolower "$DISTRIB_ID"
 }
@@ -1418,7 +1420,7 @@ case $DISTRIB_ID in
 	ArchLinux)
 		CMD="pacman"
 		;;
-	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific|GosLinux|Amzn|RedOS)
+	Fedora|FedoraLinux|LinuxXP|ASPLinux|CentOS|RHEL|Scientific|GosLinux|Amzn|RedOS)
 		CMD="dnf-rpm"
 		which dnf 2>/dev/null >/dev/null || CMD=yum-rpm
 		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "CentOS/7" ] && CMD=yum-rpm
@@ -1426,7 +1428,7 @@ case $DISTRIB_ID in
 	Slackware)
 		CMD="slackpkg"
 		;;
-	SUSE|SLED|SLES)
+	SUSE|SLED|SLES|openSUSETumbleweed|openSUSELeap)
 		CMD="zypper-rpm"
 		;;
 	ForesightLinux|rPathLinux)
@@ -2955,7 +2957,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.14.4  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.14.6  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

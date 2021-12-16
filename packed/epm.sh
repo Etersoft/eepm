@@ -1710,9 +1710,9 @@ __is_repo_info_downloaded()
 {
     case $PMTYPE in
         apt-*)
-            if [ -r /var/cache/apt ] ; then
-                sudorun test -r /var/cache/apt/pkgcache.bin || return
-            fi
+            #if [ -r /var/cache/apt ] ; then
+            #    sudorun test -r /var/cache/apt/pkgcache.bin || return
+            #fi
             ;;
         *)
             ;;
@@ -2759,7 +2759,7 @@ epm_install_names()
 			sudocmd emerge -uD $@
 			return ;;
 		pacman)
-			sudocmd pacman -S $force $nodeps $@
+			sudocmd pacman -S $nodeps $@
 			return ;;
 		aura)
 			sudocmd aura -A $force $nodeps $@
@@ -2865,7 +2865,7 @@ epm_ni_install_names()
 			sudocmd emerge -uD $@
 			return ;;
 		pacman)
-			sudocmd pacman -S --noconfirm $force $nodeps $@
+			sudocmd pacman -S --noconfirm $nodeps $@
 			return ;;
 		aura)
 			sudocmd aura -A $force $nodeps $@
@@ -3060,11 +3060,11 @@ epm_install_files()
             sudocmd epm_install_emerge $@
             return ;;
         pacman)
-            sudocmd pacman -U --noconfirm $force $nodeps $@ && return
+            sudocmd pacman -U --noconfirm $nodeps $@ && return
             local RES=$?
 
             [ -n "$nodeps" ] && return $RES
-            sudocmd pacman -U $force $@
+            sudocmd pacman -U $@
             return ;;
         slackpkg)
             # FIXME: check for full package name
@@ -3100,7 +3100,7 @@ epm_print_install_command()
             echo "emerge --usepkg $*"
             ;;
         pacman)
-            echo "pacman -U --noconfirm --force $nodeps $*"
+            echo "pacman -U --noconfirm $nodeps $*"
             ;;
         slackpkg)
             echo "/sbin/installpkg $*"
@@ -3165,7 +3165,7 @@ epm_print_install_names_command()
 			echo "pkcon --noninteractive $*"
 			return ;;
 		pacman)
-			echo "pacman -S --noconfirm $force $*"
+			echo "pacman -S --noconfirm $*"
 			return ;;
 		chocolatey)
 			echo "chocolatey install $*"
@@ -3680,6 +3680,7 @@ Options:
     --list         - list all installed apps
     --list-all     - list all available apps
     --short        - print only names
+    --update [APP|all]  - update APP (or all installed apps) if there is new version
 EOF
     exit
 fi
@@ -3691,6 +3692,24 @@ if [ "$1" = "--remove" ] ; then
     shift
     __epm_play_run $prescription --remove "$@"
     __remove_installed_app "$prescription"
+    exit
+fi
+
+if [ "$1" = "--update" ] ; then
+    shift
+    if [ "$1" = "all" ] ; then
+        shift
+        for i in $(__list_installed_app) ; do
+            echo "$i"
+            prescription="$i"
+            __epm_play_run $prescription --run "$@"
+        done
+        exit
+    fi
+    __check_installed_app "$1" || fatal "$1 is not installed"
+    prescription="$1"
+    shift
+    __epm_play_run $prescription --run "$@"
     exit
 fi
 
@@ -3735,7 +3754,7 @@ if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
         printf "  %-20s - %s\n" "$name" "$desc"
     done
     echo
-    echo "run epm play --list to list installed only or --remove to remove one"
+    echo "run epm play --list to list installed only, or --remove to remove one, or --update to update [all] installed apps"
     exit
 fi
 
@@ -4955,16 +4974,6 @@ assure_safe_run()
 	return 0
 }
 
-
-__replace_text_in_alt_repo()
-{
-	local i
-	for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
-		[ -s "$i" ] || continue
-		regexp_subst "$1" "$i"
-	done
-}
-
 __wcount()
 {
 	echo "$*" | wc -w
@@ -4993,42 +5002,6 @@ __detect_alt_release_by_repo()
 	fi
 
 	return 1
-}
-
-__replace_alt_version_in_repo()
-{
-	local i
-	assure_exists apt-repo
-	#echo "Upgrading $DISTRNAME from $1 to $2 ..."
-	docmd apt-repo list | sed -e "s|\($1\)|{\1}->{$2}|g" | grep -E --color -- "$1"
-	# ask and replace only we will have changes
-	if a='' apt-repo list | grep -E -q -- "$1" ; then
-		__replace_text_in_alt_repo "/^ *#/! s!$1!$2!g"
-	fi
-	docmd apt-repo list
-}
-
-__alt_replace_sign_name()
-{
-	local TO="$1"
-	__replace_text_in_alt_repo "/^ *#/! s!\[alt\]!$TO!g"
-	__replace_text_in_alt_repo "/^ *#/! s!\[sisyphus\]!$TO!g"
-	__replace_text_in_alt_repo "/^ *#/! s!\[updates\]!$TO!g"
-	__replace_text_in_alt_repo "/^ *#/! s!\[cert[789]\]!$TO!g"
-	__replace_text_in_alt_repo "/^ *#/! s!\[p10\.?[0-9]?\]!$TO!g"
-	__replace_text_in_alt_repo "/^ *#/! s!\[[tpc][6-9]\.?[0-9]?\]!$TO!g"
-}
-
-__alt_repofix()
-{
-	local TO="$1"
-	epm --quiet repo fix >/dev/null
-
-	if [ -n "$TO" ] ; then
-		# TODO: switch it in repo code
-		TO="$(__repofix_filter_vendor "$TO")"
-		__alt_replace_sign_name "[$TO]"
-	fi
 }
 
 
@@ -5098,15 +5071,6 @@ get_fix_release_pkg()
 	fi
 }
 
-__switch_repo_to()
-{
-	local TO="$1"
-	__replace_alt_version_in_repo "Sisyphus/" "$TO/branch/"
-	__replace_alt_version_in_repo "[tpc][5-9]\.?[0-9]?/branch/" "$TO/branch/"
-	__replace_alt_version_in_repo "p10\.?[0-9]?/branch/" "$TO/branch/"
-	__alt_repofix $TO
-}
-
 __check_system()
 {
 	local TO="$1"
@@ -5155,6 +5119,12 @@ __epm_ru_update()
     docmd epm update
 }
 
+__switch_repo_to()
+{
+    epm_reposwitch "$@"
+    __epm_ru_update || fatal
+}
+
 get_next_release()
 {
 	local FROM="$1"
@@ -5200,7 +5170,6 @@ __switch_alt_to_distro()
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
-			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			__do_upgrade
 			end_change_alt_repo
@@ -5211,7 +5180,6 @@ __switch_alt_to_distro()
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
-			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			__do_upgrade
 			end_change_alt_repo
@@ -5223,7 +5191,6 @@ __switch_alt_to_distro()
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
-			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			__do_upgrade
 			end_change_alt_repo
@@ -5234,7 +5201,6 @@ __switch_alt_to_distro()
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
-			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			if epm installed libcrypt ; then
 				# glibc-core coflicts libcrypt
@@ -5254,7 +5220,6 @@ __switch_alt_to_distro()
 				docmd epm remove gdb || fatal
 			fi
 			__switch_repo_to $TO
-			__epm_ru_update || fatal
 			__do_upgrade
 			end_change_alt_repo
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
@@ -5268,8 +5233,6 @@ __switch_alt_to_distro()
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
-			echo '%_priority_distbranch p10' >/etc/rpm/macros.d/p10
-			__epm_ru_update || fatal
 			__do_upgrade
 			end_change_alt_repo
 			docmd epm install rpm apt "$(get_fix_release_pkg "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
@@ -5280,7 +5243,6 @@ __switch_alt_to_distro()
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install "$(get_fix_release_pkg "$FROM")"
 			__switch_repo_to $TO
-			__epm_ru_update || fatal
 			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			if epm installed libcrypt >/dev/null ; then
 				# glibc-core coflicts libcrypt
@@ -5295,7 +5257,6 @@ __switch_alt_to_distro()
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install "$(get_fix_release_pkg "$FROM")"
 			__switch_repo_to $TO
-			__epm_ru_update || fatal
 			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			#if epm installed libcrypt >/dev/null ; then
 			#	# glibc-core coflicts libcrypt
@@ -5310,8 +5271,6 @@ __switch_alt_to_distro()
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install "$(get_fix_release_pkg "$FROM")"
 			__switch_repo_to $TO
-			rm -fv /etc/rpm/macros.d/p10
-			__epm_ru_update || fatal
 			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
 			end_change_alt_repo
@@ -5322,8 +5281,6 @@ __switch_alt_to_distro()
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install "$(get_fix_release_pkg "$FROM")"
 			__switch_repo_to $TO
-			[ "$TO" = "p10" ] && echo '%_priority_distbranch p10' >/etc/rpm/macros.d/p10
-			__epm_ru_update || fatal
 			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
 			end_change_alt_repo
@@ -5334,6 +5291,7 @@ __switch_alt_to_distro()
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			docmd epm upgrade || fatal
+			# TODO: epm_reposwitch??
 			__replace_alt_version_in_repo "$FROM/branch/" "$TO/"
 			__alt_repofix "alt"
 			[ -s /etc/rpm/macros.d/p10 ] && rm -fv /etc/rpm/macros.d/p10
@@ -5882,7 +5840,10 @@ __epm_removerepo_alt_grepremove()
 	fi
 	echo "$rl" | while read rp ; do
 		# TODO: print removed lines
-		[ -n "$dryrun" ] && docmd apt-repo $dryrun rm "$rp" && continue
+		if [ -n "$dryrun" ] ; then
+			docmd apt-repo $dryrun rm "$rp"
+			continue
+		fi
 		if [ -n "$verbose" ] ; then
 			sudocmd apt-repo $dryrun rm "$rp"
 		else
@@ -5924,6 +5885,9 @@ __epm_removerepo_alt()
 		task)
 			shift
 			__epm_removerepo_alt_grepremove " repo/$1/"
+			;;
+		-*)
+			fatal "epm removerepo: no options are supported"
 			;;
 		*)
 			__epm_removerepo_alt_grepremove "$*"
@@ -6343,12 +6307,15 @@ EOF
 	fix)                              # HELPCMD: fix paths in sources lists (ALT Linux only)
 		epm_repofix "$@"
 		;;
-	change)                           # HELPCMD: <mirror>: switch sources to the mirror (supports etersoft/yandex/basealt): rewrite URL to the specified server
+	change)                           # HELPCMD: <mirror>: switch sources to the mirror (supports etersoft/yandex/basealt): rewrite URLs to the specified server
 		epm_repofix "$@"
 		;;
 	set)                              # HELPCMD: <mirror>: remove all existing sources and add mirror for the branch
 		epm repo rm all
 		epm addrepo "$@"
+		;;
+	switch)                           # HELPCMD: switch repo to <repo>: rewrite URLs to the repo
+		epm_reposwitch "$@"
 		;;
 	clean)                            # HELPCMD: remove temp. repos (tasks and CD-ROMs)
 		# TODO: check for ALT
@@ -6383,6 +6350,16 @@ esac
 # File bin/epm-repofix:
 
 
+
+__replace_text_in_alt_repo()
+{
+	local i
+	for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
+		[ -s "$i" ] || continue
+		regexp_subst "$1" "$i"
+	done
+}
+
 __repofix_check_vendor()
 {
 	local i
@@ -6407,6 +6384,60 @@ __repofix_filter_vendor()
 	esac
 	echo "$br"
 }
+
+
+__replace_alt_version_in_repo()
+{
+	local i
+	assure_exists apt-repo
+	#echo "Upgrading $DISTRNAME from $1 to $2 ..."
+	apt-repo list | sed -e "s|\($1\)|{\1}->{$2}|g" | grep -E --color -- "$1"
+	# ask and replace only we will have changes
+	if a='' apt-repo list | grep -E -q -- "$1" ; then
+		__replace_text_in_alt_repo "/^ *#/! s!$1!$2!g"
+	fi
+	#docmd apt-repo list
+}
+
+__alt_replace_sign_name()
+{
+	local TO="$1"
+	__replace_text_in_alt_repo "/^ *#/! s!\[alt\]!$TO!g"
+	__replace_text_in_alt_repo "/^ *#/! s!\[sisyphus\]!$TO!g"
+	__replace_text_in_alt_repo "/^ *#/! s!\[updates\]!$TO!g"
+	__replace_text_in_alt_repo "/^ *#/! s!\[cert[789]\]!$TO!g"
+	__replace_text_in_alt_repo "/^ *#/! s!\[p10\.?[0-9]?\]!$TO!g"
+	__replace_text_in_alt_repo "/^ *#/! s!\[[tpc][6-9]\.?[0-9]?\]!$TO!g"
+}
+
+__alt_repofix()
+{
+	local TO="$1"
+	epm --quiet repo fix >/dev/null
+
+	if [ -n "$TO" ] ; then
+		# TODO: switch it in repo code
+		TO="$(__repofix_filter_vendor "$TO")"
+		__alt_replace_sign_name "[$TO]"
+	fi
+}
+
+epm_reposwitch()
+{
+	local TO="$1"
+	[ -n "$TO" ] || fatal "run repo switch with arg (p9, p10, Sisyphus)"
+	__replace_alt_version_in_repo "Sisyphus/" "$TO/branch/"
+	__replace_alt_version_in_repo "[tpc][5-9]\.?[0-9]?/branch/" "$TO/branch/"
+	__replace_alt_version_in_repo "p10\.?[0-9]?/branch/" "$TO/branch/"
+	__alt_repofix $TO
+	if [ "$TO" = "p10" ] ; then
+		echo '%_priority_distbranch p10' >/etc/rpm/macros.d/p10
+	else
+		rm -fv /etc/rpm/macros.d/p10
+	fi
+	#epm repo list
+}
+
 
 __try_fix_apt_source_list()
 {
@@ -8467,7 +8498,7 @@ epm_upgrade()
 epm_Upgrade()
 {
 	epm_update
-	epm_upgrade
+	epm_upgrade "$@"
 }
 
 # File bin/epm-whatdepends:
@@ -8648,6 +8679,8 @@ rpmvendor()
 	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
 	[ "$DISTRIB_ID" = "VoidLinux" ] && echo "void" && return
 	[ "$DISTRIB_ID" = "OpenSUSE" ] && echo "suse" && return
+	[ "$DISTRIB_ID" = "openSUSETumbleweed" ] && echo "suse" && return
+	[ "$DISTRIB_ID" = "openSUSELeap" ] && echo "suse" && return
 	[ -n "$VENDOR_ID" ] && echo "$VENDOR_ID" && return
 	tolower "$DISTRIB_ID"
 }
@@ -8720,7 +8753,7 @@ case $DISTRIB_ID in
 	ArchLinux)
 		CMD="pacman"
 		;;
-	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific|GosLinux|Amzn|RedOS)
+	Fedora|FedoraLinux|LinuxXP|ASPLinux|CentOS|RHEL|Scientific|GosLinux|Amzn|RedOS)
 		CMD="dnf-rpm"
 		which dnf 2>/dev/null >/dev/null || CMD=yum-rpm
 		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "CentOS/7" ] && CMD=yum-rpm
@@ -8728,7 +8761,7 @@ case $DISTRIB_ID in
 	Slackware)
 		CMD="slackpkg"
 		;;
-	SUSE|SLED|SLES)
+	SUSE|SLED|SLES|openSUSETumbleweed|openSUSELeap)
 		CMD="zypper-rpm"
 		;;
 	ForesightLinux|rPathLinux)
@@ -10189,7 +10222,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.14.4  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.14.6  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10199,7 +10232,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.14.4
+EPMVERSION=3.14.6
 verbose=
 quiet=
 nodeps=
