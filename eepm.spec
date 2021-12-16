@@ -8,7 +8,7 @@
 %endif
 
 Name: eepm
-Version: 3.14.5
+Version: 3.14.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -157,6 +157,15 @@ mkdir -p %buildroot/var/lib/eepm/
 %endif
 
 %changelog
+* Thu Dec 16 2021 Vitaly Lipatov <lav@altlinux.ru> 3.14.6-alt1
+- epm play: add initial --update [receipt|all] support (do update in any case as for now)
+- distr_info: add FedoraLinux support (Fedora 35)
+- prescriptions: remove -x
+- distr_info: add openSUSE support
+- skip eepm-yum packing on yum based systems
+- epm-check_updated_repo: disable check if we never do apt-get update
+- epm-install: pacman no more support --force
+
 * Fri Dec 10 2021 Vitaly Lipatov <lav@altlinux.ru> 3.14.5-alt1
 - epm-Upgrade: pass args to epm-upgrade
 - yum: update supported actions
