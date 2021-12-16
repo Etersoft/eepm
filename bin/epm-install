@@ -103,7 +103,7 @@ epm_install_names()
 			sudocmd emerge -uD $@
 			return ;;
 		pacman)
-			sudocmd pacman -S $force $nodeps $@
+			sudocmd pacman -S $nodeps $@
 			return ;;
 		aura)
 			sudocmd aura -A $force $nodeps $@
@@ -210,7 +210,7 @@ epm_ni_install_names()
 			sudocmd emerge -uD $@
 			return ;;
 		pacman)
-			sudocmd pacman -S --noconfirm $force $nodeps $@
+			sudocmd pacman -S --noconfirm $nodeps $@
 			return ;;
 		aura)
 			sudocmd aura -A $force $nodeps $@
@@ -408,11 +408,11 @@ epm_install_files()
             sudocmd epm_install_emerge $@
             return ;;
         pacman)
-            sudocmd pacman -U --noconfirm $force $nodeps $@ && return
+            sudocmd pacman -U --noconfirm $nodeps $@ && return
             local RES=$?
 
             [ -n "$nodeps" ] && return $RES
-            sudocmd pacman -U $force $@
+            sudocmd pacman -U $@
             return ;;
         slackpkg)
             # FIXME: check for full package name
@@ -448,7 +448,7 @@ epm_print_install_command()
             echo "emerge --usepkg $*"
             ;;
         pacman)
-            echo "pacman -U --noconfirm --force $nodeps $*"
+            echo "pacman -U --noconfirm $nodeps $*"
             ;;
         slackpkg)
             echo "/sbin/installpkg $*"
@@ -513,7 +513,7 @@ epm_print_install_names_command()
 			echo "pkcon --noninteractive $*"
 			return ;;
 		pacman)
-			echo "pacman -S --noconfirm $force $*"
+			echo "pacman -S --noconfirm $*"
 			return ;;
 		chocolatey)
 			echo "chocolatey install $*"
