@@ -1,5 +1,12 @@
 %def_without external_distro_info
 
+%define pkgsystem "%(bin/distr_info -g)"
+%if %pkgsystem == "yum-rpm"
+%def_disable yum
+%else
+%def_enable yum
+%endif
+
 Name: eepm
 Version: 3.14.5
 Release: alt1
@@ -108,7 +115,7 @@ chmod a+x %buildroot%_datadir/%name/tools_*
 rm -v %buildroot%_bindir/distr_info
 %endif
 
-%if %_vendor != "alt"
+%if_disabled yum
 rm -v %buildroot%_bindir/yum
 %endif
 
@@ -127,7 +134,9 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/eepm
 %_bindir/serv
 %_bindir/cerv
+%if_enabled yum
 %exclude %_bindir/yum
+%endif
 %dir /var/lib/eepm/
 %if_without external_distro_info
 %_bindir/distr_info
@@ -139,7 +148,9 @@ mkdir -p %buildroot/var/lib/eepm/
 
 %if %_vendor == "alt"
 %files repack
+%endif
 
+%if_enabled yum
 # not for yum based system
 %files yum
 %_bindir/yum
