@@ -8,7 +8,7 @@
 %endif
 
 Name: eepm
-Version: 3.14.6
+Version: 3.14.7
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -157,6 +157,9 @@ mkdir -p %buildroot/var/lib/eepm/
 %endif
 
 %changelog
+* Mon Dec 20 2021 Vitaly Lipatov <lav@altlinux.ru> 3.14.7-alt1
+- add epm play mssql-server
+
 * Thu Dec 16 2021 Vitaly Lipatov <lav@altlinux.ru> 3.14.6-alt1
 - epm play: add initial --update [receipt|all] support (do update in any case as for now)
 - distr_info: add FedoraLinux support (Fedora 35)
