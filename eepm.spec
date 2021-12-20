@@ -1,11 +1,5 @@
-%def_without external_distro_info
-
-%define pkgsystem "%(bin/distr_info -g)"
-%if %pkgsystem == "yum-rpm"
-%def_disable yum
-%else
-%def_enable yum
-%endif
+# from rpm-build-intro
+%define pkgsystem %(distr_vendor -g)
 
 Name: eepm
 Version: 3.14.7
@@ -19,21 +13,20 @@ Url: http://wiki.etersoft.ru/EPM
 
 Packager: Vitaly Lipatov <lav@altlinux.ru>
 
-# git-clone http://git.etersoft.ru/projects/korinf/eepm.git
+# git clone https://github.com/Etersoft/eepm.git
 Source: ftp://updates.etersoft.ru/pub/Etersoft/Sisyphus/sources/tarball/%name-%version.tar
 
 BuildArchitectures: noarch
 
+# use distr_vendor from it
+BuildRequires: rpm-build-intro
+
 Obsoletes: epm
 Provides: epm = %EVR
 
-%if %_vendor == "alt"
+%if "%_vendor" == "alt"
 # FIXHERE: Replace with target platform package manager
 Requires: apt rpm
-%endif
-
-%if_with external_distro_info
-Requires: distro_info >= 2.5
 %endif
 
 %description
@@ -108,18 +101,12 @@ ln -s serv %buildroot%_sysconfdir/bash_completion.d/cerv
 chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
 chmod a+x %buildroot%_datadir/%name/tools_*
 
-%if_with external_distro_info
-# use external eget
-#rm -v %buildroot%_datadir/%name/tools_eget
-# use external distro_info
-rm -v %buildroot%_bindir/distr_info
-%endif
+mkdir -p %buildroot/var/lib/eepm/
 
-%if_disabled yum
+%if "%pkgsystem" == "yum-rpm"
 rm -v %buildroot%_bindir/yum
 %endif
 
-mkdir -p %buildroot/var/lib/eepm/
 
 %files
 %doc README.md TODO LICENSE
@@ -134,23 +121,21 @@ mkdir -p %buildroot/var/lib/eepm/
 %_bindir/eepm
 %_bindir/serv
 %_bindir/cerv
-%if_enabled yum
+%if "%pkgsystem" != "yum-rpm"
 %exclude %_bindir/yum
 %endif
 %dir /var/lib/eepm/
-%if_without external_distro_info
 %_bindir/distr_info
-%endif
 %_man1dir/*
 %_datadir/%name/
 %_sysconfdir/bash_completion.d/serv
 %_sysconfdir/bash_completion.d/cerv
 
-%if %_vendor == "alt"
+%if "%_vendor" == "alt"
 %files repack
 %endif
 
-%if_enabled yum
+%if "%pkgsystem" != "yum-rpm"
 # not for yum based system
 %files yum
 %_bindir/yum
