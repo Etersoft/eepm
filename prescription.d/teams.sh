@@ -23,3 +23,4 @@ fi
 
 # epm uses eget to download * names
 epm install "https://packages.microsoft.com/repos/ms-teams/pool/main/t/teams/$(epm print constructname teams "*" amd64 deb)"
+chmod 4755 /opt/teams/chrome-sandbox
