@@ -22,7 +22,7 @@ load_helper epm-sh-altlinux
 epm_repo()
 {
 	local CMD="$1"
-	shift
+	[ -n "$CMD" ] && shift
 	case $CMD in
 	"-h"|"--help"|help)               # HELPCMD: help
 		get_help HELPCMD $SHAREDIR/epm-repo
