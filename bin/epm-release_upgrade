@@ -496,7 +496,7 @@ epm_release_upgrade()
 	dnf-rpm)
 		if [ "$DISTRNAME/$DISTRVERSION" = "CentOS/8" ] ; then
 			if [ "$1" = "RockyLinux" ] ; then
-				info "Check https://www.cyberciti.biz/howto/migrate-from-centos-8-to-rocky-linux-conversion/"
+				info "https://github.com/rocky-linux/rocky-tools/tree/main/migrate2rocky/"
 				confirm_info "Switch to Rocky Linux 8.x"
 				cd /tmp
 				showcmd epm install git
@@ -510,8 +510,10 @@ epm_release_upgrade()
 				confirm_info "Switch to Oracle Linux 8.x"
 				cd /tmp
 				showcmd epm install git
-				sudocmd sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
-				sudocmd sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+				sudocmd sed -i -r \
+					-e 's!^mirrorlist=!#mirrorlist=!' \
+					-e 's!^#?baseurl=http://(mirror|vault).centos.org/\$contentdir/\$releasever/!baseurl=https://dl.rockylinux.org/vault/centos/8.5.2111/!i' \
+						/etc/yum.repos.d/CentOS-*.repo
 				sudocmd git clone https://github.com/oracle/centos2ol.git || fatal
 				a= bash centos2ol/centos2ol.sh
 				exit
@@ -519,8 +521,10 @@ epm_release_upgrade()
 
 			info "Check https://www.cyberciti.biz/howto/upgrade-migrate-from-centos-8-to-centos-stream-conversion/"
 			confirm_info "Switch to CentOS Stream?"
-			sudocmd sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
-			sudocmd sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+			sudocmd sed -i -r \
+					-e 's!^mirrorlist=!#mirrorlist=!' \
+					-e 's!^#?baseurl=http://(mirror|vault).centos.org/\$contentdir/\$releasever/!baseurl=https://dl.rockylinux.org/vault/centos/8.5.2111/!i' \
+						/etc/yum.repos.d/CentOS-*.repo
 			docmd epm install centos-release-stream
 			sudocmd dnf swap centos-{linux,stream}-repos
 			sudocmd dnf distro-sync
