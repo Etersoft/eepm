@@ -494,10 +494,27 @@ epm_release_upgrade()
 		showcmd epm Upgrade
 		;;
 	dnf-rpm)
-		info "Check https://fedoraproject.org/wiki/DNF_system_upgrade for an additional info"
 		docmd epm install dnf
+		if [ "$DISTRNAME/$DISTRVERSION" = "CentOS/8" ] ; then
+			if [ "$1" = "RockyLinux" ] ; then
+				info "Check https://www.cyberciti.biz/howto/migrate-from-centos-8-to-rocky-linux-conversion/"
+				confirm_info "Switch to Rocky Linux 8.x"
+				cd /tmp
+				git clone https://github.com/rocky-linux/rocky-tools.git || fatal
+				a= bash rocky-tools/migrate2rocky/migrate2rocky.sh -r
+				exit
+			fi
+			info "Check https://www.cyberciti.biz/howto/upgrade-migrate-from-centos-8-to-centos-stream-conversion/"
+			confirm_info "Switch to CentOS Stream?"
+			docmd epm install centos-release-stream
+			sudocmd dnf swap centos-{linux,stream}-repos
+			sudocmd dnf distro-sync
+			info "You can run '# epm autoorphans' to remove orphaned packages"
+			exit
+		fi
+		info "Check https://fedoraproject.org/wiki/DNF_system_upgrade for an additional info"
 		#docmd epm install epel-release yum-utils
-		sudocmd dnf --refresh upgrade
+		sudocmd dnf --refresh upgrade || fatal
 		sudocmd dnf clean all
 		assure_exists dnf-plugin-system-upgrade
 		sudocmd dnf upgrade --refresh
@@ -510,7 +527,7 @@ epm_release_upgrade()
 		# dnf system-upgrade reboot
 		# FIXME: download all packages again
 		sudocmd dnf distro-sync --releasever=$RELEASEVER
-		info "Run epm autoorphans to remove orphaned packages"
+		info "You can run '# epm autoorphans' to remove orphaned packages"
 		;;
 	urpm-rpm)
 		sudocmd urpmi.removemedia -av
