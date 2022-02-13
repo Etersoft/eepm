@@ -68,7 +68,7 @@ print_apt_sources_list()
 epm_repolist()
 {
 
-[ -z "$*" ] || fatal "No arguments are allowed here"
+[ -z "$*" ] || [ "$PMTYPE" = "apt-rpm" ] || fatal "No arguments are allowed here"
 
 case $PMTYPE in
 	apt-rpm)
