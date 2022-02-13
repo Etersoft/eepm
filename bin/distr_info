@@ -94,7 +94,7 @@ pkgtype()
 		debian|ubuntu|mint|runtu|mcst|astra|kali) echo "deb" ;;
 		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
 			echo "rpm" ;;
-		fedora|redhat|redos|scientific|centos|rhel|goslinux|amzn)
+		fedora|redhat|redos|scientific|centos|rockylinux|oraclelinux|rhel|goslinux|amzn)
 			echo "rpm" ;;
 		*)  echo "rpm" ;;
 	esac
@@ -135,7 +135,7 @@ case $DISTRIB_ID in
 	ArchLinux)
 		CMD="pacman"
 		;;
-	Fedora|FedoraLinux|LinuxXP|ASPLinux|CentOS|RHEL|Scientific|GosLinux|Amzn|RedOS)
+	Fedora|FedoraLinux|LinuxXP|ASPLinux|CentOS|OracleLinux|RockyLinux|RHEL|Scientific|GosLinux|Amzn|RedOS)
 		CMD="dnf-rpm"
 		which dnf 2>/dev/null >/dev/null || CMD=yum-rpm
 		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "CentOS/7" ] && CMD=yum-rpm
@@ -201,6 +201,8 @@ normalize_name()
 {
 	[ "$1" = "RED OS" ] && echo "RedOS" && return
 	[ "$1" = "CentOS Linux" ] && echo "CentOS" && return
+	[ "$1" = "Rocky Linux" ] && echo "RockyLinux" && return
+	[ "$1" = "Oracle Linux" ] && echo "OracleLinux" && return
 	#echo "${1// /}"
 	echo "$1" | sed -e "s/ //g"
 }
