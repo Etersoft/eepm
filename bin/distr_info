@@ -74,32 +74,6 @@ pkgvendor()
 	rpmvendor
 }
 
-# Print pkgtype (need DISTRIB_ID var)
-pkgtype()
-{
-# TODO: try use generic names
-    case $(pkgvendor) in
-		freebsd) echo "tbz" ;;
-		sunos) echo "pkg.gz" ;;
-		slackware|mopslinux) echo "tgz" ;;
-		archlinux|manjaro) echo "pkg.tar.xz" ;;
-		gentoo) echo "tbz2" ;;
-		windows) echo "exe" ;;
-		android) echo "apk" ;;
-		alpine) echo "apk" ;;
-		tinycorelinux) echo "tcz" ;;
-		voidlinux) echo "xbps" ;;
-		openwrt) echo "ipk" ;;
-		cygwin) echo "tar.xz" ;;
-		debian|ubuntu|mint|runtu|mcst|astra|kali) echo "deb" ;;
-		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
-			echo "rpm" ;;
-		fedora|redhat|redos|scientific|centos|rockylinux|oraclelinux|rhel|goslinux|amzn)
-			echo "rpm" ;;
-		*)  echo "rpm" ;;
-	esac
-}
-
 # TODO: in more appropriate way
 #which pkcon 2>/dev/null >/dev/null && info "You can run $ PMTYPE=packagekit epm to use packagekit backend"
 
@@ -184,6 +158,36 @@ case $DISTRIB_ID in
 esac
 echo "$CMD"
 }
+
+# Print pkgtype (need DISTRIB_ID var)
+pkgtype()
+{
+# TODO: try use generic names
+    case $(pkgvendor) in
+		freebsd) echo "tbz" ;;
+		sunos) echo "pkg.gz" ;;
+		slackware|mopslinux) echo "tgz" ;;
+		archlinux|manjaro) echo "pkg.tar.xz" ;;
+		gentoo) echo "tbz2" ;;
+		windows) echo "exe" ;;
+		android) echo "apk" ;;
+		alpine) echo "apk" ;;
+		tinycorelinux) echo "tcz" ;;
+		voidlinux) echo "xbps" ;;
+		openwrt) echo "ipk" ;;
+		cygwin) echo "tar.xz" ;;
+		*)
+			case $(pkgmanager) in
+				*-dpkg)
+					echo "dpkg" ;;
+				*-rpm)
+					echo "rpm" ;;
+				*)
+					echo "rpm" ;;
+			esac
+	esac
+}
+
 
 get_var()
 {
