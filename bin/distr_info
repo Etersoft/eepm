@@ -29,7 +29,7 @@ has()
 # Has a system the specified command?
 hascommand()
 {
-	which $1 2>/dev/null >/dev/null
+	which "$1" 2>/dev/null >/dev/null
 }
 
 firstupper()
@@ -94,7 +94,7 @@ case $DISTRIB_ID in
 	Ubuntu|Debian|Mint|AstraLinux|Elbrus)
 		CMD="apt-dpkg"
 		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
-		which snappy 2>/dev/null >/dev/null && CMD=snappy
+		hascommand snappy && CMD=snappy
 		;;
 	Mandriva|ROSA)
 		CMD="urpm-rpm"
@@ -111,7 +111,7 @@ case $DISTRIB_ID in
 		;;
 	Fedora|FedoraLinux|LinuxXP|ASPLinux|CentOS|OracleLinux|RockyLinux|RHEL|Scientific|GosLinux|Amzn|RedOS)
 		CMD="dnf-rpm"
-		which dnf 2>/dev/null >/dev/null || CMD=yum-rpm
+		hascommand dnf || CMD=yum-rpm
 		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "CentOS/7" ] && CMD=yum-rpm
 		;;
 	Slackware)
@@ -125,8 +125,8 @@ case $DISTRIB_ID in
 		;;
 	Windows)
 		CMD="appget"
-		which $CMD 2>/dev/null >/dev/null || CMD="chocolatey"
-		which $CMD 2>/dev/null >/dev/null || CMD="winget"
+		hascommand $CMD || CMD="chocolatey"
+		hascommand $CMD || CMD="winget"
 		;;
 	MacOS)
 		CMD="homebrew"
@@ -153,6 +153,16 @@ case $DISTRIB_ID in
 		CMD="xbps"
 		;;
 	*)
+		# try detect firstly
+		if hascommand "rpm" ; then
+			hascommand "urpmi" && echo "urpmi-rpm" && return
+			hascommand "zypper" && echo "zypper-rpm" && return
+			hascommand "dnf" && echo "dnf-rpm" && return
+		fi
+		if hascommand "dpkg" ; then
+			hascommand "apt" && echo "apt-dpkg" && return
+			hascommand "apt-get" && echo "apt-dpkg" && return
+		fi
 		echo "We don't support yet DISTRIB_ID $DISTRIB_ID" >&2
 		;;
 esac
