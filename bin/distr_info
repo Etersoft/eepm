@@ -109,7 +109,7 @@ case $DISTRIB_ID in
 	ArchLinux)
 		CMD="pacman"
 		;;
-	Fedora|FedoraLinux|LinuxXP|ASPLinux|CentOS|OracleLinux|RockyLinux|RHEL|Scientific|GosLinux|Amzn|RedOS)
+	Fedora|FedoraLinux|LinuxXP|ASPLinux|CentOS|OracleLinux|RockyLinux|AlmaLinux|RHEL|Scientific|GosLinux|Amzn|RedOS)
 		CMD="dnf-rpm"
 		hascommand dnf || CMD=yum-rpm
 		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "CentOS/7" ] && CMD=yum-rpm
@@ -217,6 +217,7 @@ normalize_name()
 	[ "$1" = "CentOS Linux" ] && echo "CentOS" && return
 	[ "$1" = "Rocky Linux" ] && echo "RockyLinux" && return
 	[ "$1" = "Oracle Linux" ] && echo "OracleLinux" && return
+	[ "$1" = "Alma Linux" ] && echo "AlmaLinux" && return
 	#echo "${1// /}"
 	echo "$1" | sed -e "s/ //g"
 }
