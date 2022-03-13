@@ -48,13 +48,13 @@ __do_query_real_file()
 	fi
 
 	if [ -n "$short" ] ; then
-		__do_short_query "$TOFILE"
+		__do_short_query "$TOFILE" || return
 	else
-		__do_query "$TOFILE"
+		__do_query "$TOFILE" || return
 	fi
 
 	# get value of symbolic link
-	if [ -L "$TOFILE" ] ; then
+	if [ -n "$TOFILE" ] && [ -L "$TOFILE" ] ; then
 		local LINKTO
 		LINKTO=$(readlink -- "$TOFILE")
 		info " > $TOFILE is link to $LINKTO"
@@ -67,7 +67,8 @@ dpkg_print_name_version()
 {
 	local ver i
 	for i in "$@" ; do
-		ver=$(dpkg -s $i 2>/dev/null | grep "Version:" | sed -e "s|Version: ||g")
+		[ -n "$i" ] || continue
+		ver=$(dpkg -s "$i" 2>/dev/null | grep "Version:" | sed -e "s|Version: ||g")
 		if [ -z "$ver" ] ; then
 			echo "$i"
 		else
@@ -83,7 +84,7 @@ __do_query()
     case $PMTYPE in
         *-dpkg)
             showcmd dpkg -S "$1"
-            dpkg_print_name_version "$(dpkg -S $1 | grep -v "^diversion by" | sed -e "s|:.*||")"
+            dpkg_print_name_version "$(dpkg -S "$1" | grep -v "^diversion by" | sed -e "s|:.*||")"
             return ;;
         *-rpm)
             CMD="rpm -qf"
