@@ -117,6 +117,10 @@ __epm_restore_convert_to_rpm_notation()
             [ -n "$verbose" ] && warning "    $t is python2 only requirement, skipped"
             continue
         fi
+        if echo "$l" | grep -q "; *python_version *<= *['\"]2\." ; then
+            [ -n "$verbose" ] && warning "    $t is python2 only requirement, skipped"
+            continue
+        fi
         # drop various "python_version > '3.5'"
         l="$(echo "$l" | sed -e "s| *;.*||")"
         if echo "$l" | grep -qE "^ *#" || [ -z "$l" ] ; then
