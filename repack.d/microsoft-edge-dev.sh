@@ -24,3 +24,9 @@ subst "s|.*/usr/share/menu/microsoft-edge-dev.menu.*||" $SPEC
 if ! grep -q '^"/usr/bin/microsoft-edge"' $SPEC ; then
     subst 's|\(.*/usr/bin/microsoft-edge-dev.*\)|"/usr/bin/microsoft-edge"\n\1|' $SPEC
 fi
+
+# fix wrong interpreter
+epm assure patchelf || exit
+for i in $BUILDROOT/opt/microsoft/msedge-dev/libmip_*.so ; do
+    [ "$(a= patchelf --print-interpreter $i)" = "/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2" ] && a= patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 $i
+done
