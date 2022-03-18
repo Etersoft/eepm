@@ -27,5 +27,12 @@ fi
 # missed in rpm package (ALT bug #39564)
 [ -x $BUILDROOT/usr/bin/yandex-browser ] || ln -sv yandex-browser-beta $BUILDROOT/usr/bin/yandex-browser
 
+# replace embedded xdg tools
+for EMBDIR in /opt/yandex/browser-beta/{xdg-mime,xdg-settings} ; do
+    rm -v $BUILDROOT$EMBDIR
+    ln -s /usr/bin/$(basename $EMBDIR) $BUILDROOT$EMBDIR
+done
+
 # install all requires packages before packing (the list have got with rpmreqs package | xargs echo)
-epm install --skip-installed at-spi2-atk file gawk GConf glib2 grep libalsa libatk libat-spi2-core libcairo libcups libdbus libdrm libexpat libgbm libgdk-pixbuf libgio libgtk+3 libnspr libnss libpango libX11 libxcb libXcomposite libXcursor libXdamage libXext libXfixes libXi libXrandr libXrender libXtst perl-File-MimeInfo-scripts sed tar which xdg-utils xprop jq
+epm install --skip-installed at-spi2-atk file gawk GConf glib2 grep libatk libat-spi2-core libcairo libcups libdbus libdrm libexpat libgbm libgdk-pixbuf libgio libgtk+3 libnspr libnss libpango \
+            libX11 libxcb libXcomposite libXcursor libXdamage libXext libXfixes libXi libXrandr libXrender libXtst sed tar which xdg-utils xprop
