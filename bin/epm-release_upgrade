@@ -56,7 +56,9 @@ assure_safe_run()
 		if [ -n "$force" ] ; then
 			warning "You force runnning even if systemd-logind kills screen on disconnect"
 		else
-			docmd epm install systemd-settings-disable-kill-user-processes || fatal "Can't install the package above. Fix it or run with --force."
+			if ! epm installed systemd-settings-disable-kill-user-processes ; then
+				docmd epm install systemd-settings-disable-kill-user-processes || fatal "Can't install the package above. Fix it or run with --force."
+			fi
 			# commented, will kick off the user from the system (ALT issue 50580)
 			#docmd serv systemd-logind restart || fatal "Can't restart systemd-logind service. Fix it or run with --force."
 			fatal "Now you need relogin to the system. In this session your screen still will be killed."
