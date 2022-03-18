@@ -56,6 +56,7 @@ override_distrib()
 rpmvendor()
 {
 	[ "$DISTRIB_ID" = "ALTLinux" ] && echo "alt" && return
+	[ "$DISTRIB_ID" = "ALTServer" ] && echo "alt" && return
 	[ "$DISTRIB_ID" = "AstraLinux" ] && echo "astra" && return
 	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
 	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
@@ -84,9 +85,12 @@ local CMD
 # FIXME: some problems with multibased distros (Server Edition on CentOS and Desktop Edition on Ubuntu)
 case $DISTRIB_ID in
 	ALTLinux)
-		CMD="apt-rpm"
 		#which ds-install 2>/dev/null >/dev/null && CMD=deepsolver-rpm
 		#which pkcon 2>/dev/null >/dev/null && CMD=packagekit-rpm
+		CMD="apt-rpm"
+		;;
+	ALTServer)
+		CMD="apt-rpm"
 		;;
 	PCLinux)
 		CMD="apt-rpm"
@@ -157,6 +161,7 @@ case $DISTRIB_ID in
 		if hascommand "rpm" ; then
 			hascommand "urpmi" && echo "urpmi-rpm" && return
 			hascommand "zypper" && echo "zypper-rpm" && return
+			hascommand "apt-get" && echo "apt-rpm" && return
 			hascommand "dnf" && echo "dnf-rpm" && return
 		fi
 		if hascommand "dpkg" ; then
@@ -257,6 +262,8 @@ if distro altlinux-release ; then
 	DISTRIB_RELEASE="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
 	if has Sisyphus ; then DISTRIB_RELEASE="Sisyphus"
 	elif has "ALT p10.* p10 " ; then DISTRIB_RELEASE="p10"
+	elif has "ALTServer 10." ; then DISTRIB_RELEASE="p10"
+	elif has "ALTServer 9." ; then DISTRIB_RELEASE="p9"
 	elif has "ALT c10.* c10 " ; then DISTRIB_RELEASE="c10"
 	elif has "ALT p9.* p9 " ; then DISTRIB_RELEASE="p9"
 	elif has "ALT 9 SP " ; then DISTRIB_RELEASE="c9"
