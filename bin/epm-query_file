@@ -58,6 +58,7 @@ __do_query_real_file()
 		local LINKTO
 		LINKTO=$(readlink -- "$TOFILE")
 		info " > $TOFILE is link to $LINKTO"
+		LINKTO=$(readlink -f -- "$TOFILE")
 		__do_query_real_file "$LINKTO"
 		return
 	fi
