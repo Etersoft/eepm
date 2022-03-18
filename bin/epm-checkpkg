@@ -85,7 +85,7 @@ epm_checkpkg()
 {
 	if [ -n "$pkg_names" ] ; then
 		# TODO: если есть / или расширение, это отсутствующий файл
-		info "Suggest $pkg_names are name(s) of installed packages"
+		info "Suggest $pkg_names are name(s) of installed package(s)"
 		__epm_check_installed_pkg $pkg_names
 		return
 	fi
@@ -96,7 +96,7 @@ epm_checkpkg()
 		__handle_pkg_urls_to_checking
 	fi
 
-	[ -n "$pkg_files" ] || fatal "Checkpkg: filename is missed"
+	[ -n "$pkg_files" ] || fatal "Checkpkg: filename(s) is missed"
 
 	local RETVAL=0
 
