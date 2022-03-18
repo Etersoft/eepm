@@ -31,3 +31,7 @@ mkdir -p $BUILDROOT/usr/bin/
 ln -s /usr/bin/skypeforlinux $BUILDROOT/usr/bin/skype
 subst 's|%files|%files\n/usr/bin/skype|' $SPEC
 
+# Set SUID for chrome-sandbox if userns_clone is not supported
+userns_path='/proc/sys/kernel/unprivileged_userns_clone'
+userns_val="$(cat $userns_path 2>/dev/null)"
+[ "$userns_val" = '1' ] || chmod 4755 $BUILDROOT/$LIBDIR/$PRODUCT/chrome-sandbox
