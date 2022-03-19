@@ -224,7 +224,7 @@ __epm_repack_to_rpm()
         VERSION=''
         # convert tarballs to tar (for alien)
         if ! echo "$pkg" | grep -q "\.rpm" && ! echo "$pkg" | grep -q "\.deb" ; then
-            VERSION="$(echo "$alpkg" | grep -o -P "[-_.]([0-9])(\.[0-9])*" | head -n1 | sed -e 's|^[-_.]||')" #"
+            VERSION="$(echo "$alpkg" | grep -o -P "[-_.]([0-9])([0-9])*(\.[0-9])*" | head -n1 | sed -e 's|^[-_.]||')" #"
             if [ -n "$VERSION" ] ; then
                 PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
                 pkgtype="$(a= erc type $alpkg)"
