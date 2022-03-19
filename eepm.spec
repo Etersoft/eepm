@@ -2,7 +2,7 @@
 %define pkgsystem %(distr_vendor -g)
 
 Name: eepm
-Version: 3.14.7
+Version: 3.15.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -142,6 +142,34 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Sat Mar 19 2022 Vitaly Lipatov <lav@altlinux.ru> 3.15.0-alt1
+- epm play: add R7 Office from the official site
+- spec: drop ALT specific cases, use rpm-build-intro
+- epm play xnview: remove libs embedded in Plugins
+- epm-release_upgrade: add support for migrate from CentOS/8 to RockyLinux/8
+- epm-release_upgrade: add migrate to Oracle Linux and CentOS Stream
+- epm-repolist: allow args on ALT
+- distr_info: add RockyLinux and OracleLinux support
+- epm-release_upgrade: improve fix CentOS/8 repo
+- distr_info pkgtype: add package type autodetect by package manager
+- distr_info pkgmanager: detect package manager by commands in the system
+- distr_info: add Alma Linux support
+- epm play assistant: update version to 4.7
+- epm-restore: fix for python_version <= 2.7
+- epm-query_file: fix on deb systems
+- epm qf: always use full path for rpm --query
+- epm-release_upgrade: install systemd-settings-disable-kill-user-processes only if missed
+- distr_info: add ALTServer support
+- epm play: add Atom support
+- epm-checkpkg: fix message
+- epm play edge: fix binary interpreter (ALT bug 41921)
+- epm play skype: set SUID for chrome-sandbox if userns_clone is not supported (ALT bug 41599)
+- epm play zoom: fix repack (ALT bug 41775) (ALT bug 41954)
+- epm play: add mssql-tools install
+- epm-repack: allow multidigital versions
+- epm play yandex-browser: add install yandex-browser-beta-codecs-ffmpeg-extra (ALT bug 40113)
+- epm repack yandex-browser-beta.sh: improved
+
 * Mon Dec 20 2021 Vitaly Lipatov <lav@altlinux.ru> 3.14.7-alt1
 - add epm play mssql-server
 
