@@ -1314,7 +1314,7 @@ has()
 # Has a system the specified command?
 hascommand()
 {
-	which $1 2>/dev/null >/dev/null
+	which "$1" 2>/dev/null >/dev/null
 }
 
 firstupper()
@@ -1341,6 +1341,7 @@ override_distrib()
 rpmvendor()
 {
 	[ "$DISTRIB_ID" = "ALTLinux" ] && echo "alt" && return
+	[ "$DISTRIB_ID" = "ALTServer" ] && echo "alt" && return
 	[ "$DISTRIB_ID" = "AstraLinux" ] && echo "astra" && return
 	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
 	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
@@ -1359,32 +1360,6 @@ pkgvendor()
 	rpmvendor
 }
 
-# Print pkgtype (need DISTRIB_ID var)
-pkgtype()
-{
-# TODO: try use generic names
-    case $(pkgvendor) in
-		freebsd) echo "tbz" ;;
-		sunos) echo "pkg.gz" ;;
-		slackware|mopslinux) echo "tgz" ;;
-		archlinux|manjaro) echo "pkg.tar.xz" ;;
-		gentoo) echo "tbz2" ;;
-		windows) echo "exe" ;;
-		android) echo "apk" ;;
-		alpine) echo "apk" ;;
-		tinycorelinux) echo "tcz" ;;
-		voidlinux) echo "xbps" ;;
-		openwrt) echo "ipk" ;;
-		cygwin) echo "tar.xz" ;;
-		debian|ubuntu|mint|runtu|mcst|astra|kali) echo "deb" ;;
-		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
-			echo "rpm" ;;
-		fedora|redhat|redos|scientific|centos|rhel|goslinux|amzn)
-			echo "rpm" ;;
-		*)  echo "rpm" ;;
-	esac
-}
-
 # TODO: in more appropriate way
 #which pkcon 2>/dev/null >/dev/null && info "You can run $ PMTYPE=packagekit epm to use packagekit backend"
 
@@ -1395,9 +1370,12 @@ local CMD
 # FIXME: some problems with multibased distros (Server Edition on CentOS and Desktop Edition on Ubuntu)
 case $DISTRIB_ID in
 	ALTLinux)
-		CMD="apt-rpm"
 		#which ds-install 2>/dev/null >/dev/null && CMD=deepsolver-rpm
 		#which pkcon 2>/dev/null >/dev/null && CMD=packagekit-rpm
+		CMD="apt-rpm"
+		;;
+	ALTServer)
+		CMD="apt-rpm"
 		;;
 	PCLinux)
 		CMD="apt-rpm"
@@ -1405,7 +1383,7 @@ case $DISTRIB_ID in
 	Ubuntu|Debian|Mint|AstraLinux|Elbrus)
 		CMD="apt-dpkg"
 		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
-		which snappy 2>/dev/null >/dev/null && CMD=snappy
+		hascommand snappy && CMD=snappy
 		;;
 	Mandriva|ROSA)
 		CMD="urpm-rpm"
@@ -1420,9 +1398,9 @@ case $DISTRIB_ID in
 	ArchLinux)
 		CMD="pacman"
 		;;
-	Fedora|FedoraLinux|LinuxXP|ASPLinux|CentOS|RHEL|Scientific|GosLinux|Amzn|RedOS)
+	Fedora|FedoraLinux|LinuxXP|ASPLinux|CentOS|OracleLinux|RockyLinux|AlmaLinux|RHEL|Scientific|GosLinux|Amzn|RedOS)
 		CMD="dnf-rpm"
-		which dnf 2>/dev/null >/dev/null || CMD=yum-rpm
+		hascommand dnf || CMD=yum-rpm
 		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "CentOS/7" ] && CMD=yum-rpm
 		;;
 	Slackware)
@@ -1436,8 +1414,8 @@ case $DISTRIB_ID in
 		;;
 	Windows)
 		CMD="appget"
-		which $CMD 2>/dev/null >/dev/null || CMD="chocolatey"
-		which $CMD 2>/dev/null >/dev/null || CMD="winget"
+		hascommand $CMD || CMD="chocolatey"
+		hascommand $CMD || CMD="winget"
 		;;
 	MacOS)
 		CMD="homebrew"
@@ -1464,11 +1442,52 @@ case $DISTRIB_ID in
 		CMD="xbps"
 		;;
 	*)
+		# try detect firstly
+		if hascommand "rpm" ; then
+			hascommand "urpmi" && echo "urpmi-rpm" && return
+			hascommand "zypper" && echo "zypper-rpm" && return
+			hascommand "apt-get" && echo "apt-rpm" && return
+			hascommand "dnf" && echo "dnf-rpm" && return
+		fi
+		if hascommand "dpkg" ; then
+			hascommand "apt" && echo "apt-dpkg" && return
+			hascommand "apt-get" && echo "apt-dpkg" && return
+		fi
 		echo "We don't support yet DISTRIB_ID $DISTRIB_ID" >&2
 		;;
 esac
 echo "$CMD"
 }
+
+# Print pkgtype (need DISTRIB_ID var)
+pkgtype()
+{
+# TODO: try use generic names
+    case $(pkgvendor) in
+		freebsd) echo "tbz" ;;
+		sunos) echo "pkg.gz" ;;
+		slackware|mopslinux) echo "tgz" ;;
+		archlinux|manjaro) echo "pkg.tar.xz" ;;
+		gentoo) echo "tbz2" ;;
+		windows) echo "exe" ;;
+		android) echo "apk" ;;
+		alpine) echo "apk" ;;
+		tinycorelinux) echo "tcz" ;;
+		voidlinux) echo "xbps" ;;
+		openwrt) echo "ipk" ;;
+		cygwin) echo "tar.xz" ;;
+		*)
+			case $(pkgmanager) in
+				*-dpkg)
+					echo "dpkg" ;;
+				*-rpm)
+					echo "rpm" ;;
+				*)
+					echo "rpm" ;;
+			esac
+	esac
+}
+
 
 get_var()
 {
@@ -1486,6 +1505,9 @@ normalize_name()
 {
 	[ "$1" = "RED OS" ] && echo "RedOS" && return
 	[ "$1" = "CentOS Linux" ] && echo "CentOS" && return
+	[ "$1" = "Rocky Linux" ] && echo "RockyLinux" && return
+	[ "$1" = "Oracle Linux" ] && echo "OracleLinux" && return
+	[ "$1" = "Alma Linux" ] && echo "AlmaLinux" && return
 	#echo "${1// /}"
 	echo "$1" | sed -e "s/ //g"
 }
@@ -1525,6 +1547,8 @@ if distro altlinux-release ; then
 	DISTRIB_RELEASE="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
 	if has Sisyphus ; then DISTRIB_RELEASE="Sisyphus"
 	elif has "ALT p10.* p10 " ; then DISTRIB_RELEASE="p10"
+	elif has "ALTServer 10." ; then DISTRIB_RELEASE="p10"
+	elif has "ALTServer 9." ; then DISTRIB_RELEASE="p9"
 	elif has "ALT c10.* c10 " ; then DISTRIB_RELEASE="c10"
 	elif has "ALT p9.* p9 " ; then DISTRIB_RELEASE="p9"
 	elif has "ALT 9 SP " ; then DISTRIB_RELEASE="c9"
@@ -2957,7 +2981,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.14.7  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.15.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

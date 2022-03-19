@@ -1628,7 +1628,7 @@ epm_checkpkg()
 {
 	if [ -n "$pkg_names" ] ; then
 		# TODO: если есть / или расширение, это отсутствующий файл
-		info "Suggest $pkg_names are name(s) of installed packages"
+		info "Suggest $pkg_names are name(s) of installed package(s)"
 		__epm_check_installed_pkg $pkg_names
 		return
 	fi
@@ -1638,7 +1638,7 @@ epm_checkpkg()
 		__handle_pkg_urls_to_checking
 	fi
 
-	[ -n "$pkg_files" ] || fatal "Checkpkg: filename is missed"
+	[ -n "$pkg_files" ] || fatal "Checkpkg: filename(s) is missed"
 
 	local RETVAL=0
 
@@ -4545,16 +4545,17 @@ __do_query_real_file()
 	fi
 
 	if [ -n "$short" ] ; then
-		__do_short_query "$TOFILE"
+		__do_short_query "$TOFILE" || return
 	else
-		__do_query "$TOFILE"
+		__do_query "$TOFILE" || return
 	fi
 
 	# get value of symbolic link
-	if [ -L "$TOFILE" ] ; then
+	if [ -n "$TOFILE" ] && [ -L "$TOFILE" ] ; then
 		local LINKTO
 		LINKTO=$(readlink -- "$TOFILE")
 		info " > $TOFILE is link to $LINKTO"
+		LINKTO=$(readlink -f -- "$TOFILE")
 		__do_query_real_file "$LINKTO"
 		return
 	fi
@@ -4564,7 +4565,8 @@ dpkg_print_name_version()
 {
 	local ver i
 	for i in "$@" ; do
-		ver=$(dpkg -s $i 2>/dev/null | grep "Version:" | sed -e "s|Version: ||g")
+		[ -n "$i" ] || continue
+		ver=$(dpkg -s "$i" 2>/dev/null | grep "Version:" | sed -e "s|Version: ||g")
 		if [ -z "$ver" ] ; then
 			echo "$i"
 		else
@@ -4580,7 +4582,7 @@ __do_query()
     case $PMTYPE in
         *-dpkg)
             showcmd dpkg -S "$1"
-            dpkg_print_name_version "$(dpkg -S $1 | grep -v "^diversion by" | sed -e "s|:.*||")"
+            dpkg_print_name_version "$(dpkg -S "$1" | grep -v "^diversion by" | sed -e "s|:.*||")"
             return ;;
         *-rpm)
             CMD="rpm -qf"
@@ -4961,7 +4963,9 @@ assure_safe_run()
 		if [ -n "$force" ] ; then
 			warning "You force runnning even if systemd-logind kills screen on disconnect"
 		else
-			docmd epm install systemd-settings-disable-kill-user-processes || fatal "Can't install the package above. Fix it or run with --force."
+			if ! epm installed systemd-settings-disable-kill-user-processes ; then
+				docmd epm install systemd-settings-disable-kill-user-processes || fatal "Can't install the package above. Fix it or run with --force."
+			fi
 			# commented, will kick off the user from the system (ALT issue 50580)
 			#docmd serv systemd-logind restart || fatal "Can't restart systemd-logind service. Fix it or run with --force."
 			fatal "Now you need relogin to the system. In this session your screen still will be killed."
@@ -5390,10 +5394,46 @@ epm_release_upgrade()
 		showcmd epm Upgrade
 		;;
 	dnf-rpm)
+		if [ "$DISTRNAME/$DISTRVERSION" = "CentOS/8" ] ; then
+			if [ "$1" = "RockyLinux" ] ; then
+				info "https://github.com/rocky-linux/rocky-tools/tree/main/migrate2rocky/"
+				confirm_info "Switch to Rocky Linux 8.x"
+				cd /tmp
+				showcmd epm install git
+				sudocmd git clone https://github.com/rocky-linux/rocky-tools.git || fatal
+				sudocmd bash rocky-tools/migrate2rocky/migrate2rocky.sh -r
+				exit
+			fi
+
+			if [ "$1" = "OracleLinux" ] ; then
+				info "Check https://t.me/srv_admin/1630"
+				confirm_info "Switch to Oracle Linux 8.x"
+				cd /tmp
+				showcmd epm install git
+				sudocmd sed -i -r \
+					-e 's!^mirrorlist=!#mirrorlist=!' \
+					-e 's!^#?baseurl=http://(mirror|vault).centos.org/\$contentdir/\$releasever/!baseurl=https://dl.rockylinux.org/vault/centos/8.5.2111/!i' \
+						/etc/yum.repos.d/CentOS-*.repo
+				sudocmd git clone https://github.com/oracle/centos2ol.git || fatal
+				a= bash centos2ol/centos2ol.sh
+				exit
+			fi
+
+			info "Check https://www.cyberciti.biz/howto/upgrade-migrate-from-centos-8-to-centos-stream-conversion/"
+			confirm_info "Switch to CentOS Stream?"
+			sudocmd sed -i -r \
+					-e 's!^mirrorlist=!#mirrorlist=!' \
+					-e 's!^#?baseurl=http://(mirror|vault).centos.org/\$contentdir/\$releasever/!baseurl=https://dl.rockylinux.org/vault/centos/8.5.2111/!i' \
+						/etc/yum.repos.d/CentOS-*.repo
+			docmd epm install centos-release-stream
+			sudocmd dnf swap centos-{linux,stream}-repos
+			sudocmd dnf distro-sync
+			info "You can run '# epm autoorphans' to remove orphaned packages"
+			exit
+		fi
 		info "Check https://fedoraproject.org/wiki/DNF_system_upgrade for an additional info"
-		docmd epm install dnf
 		#docmd epm install epel-release yum-utils
-		sudocmd dnf --refresh upgrade
+		sudocmd dnf --refresh upgrade || fatal
 		sudocmd dnf clean all
 		assure_exists dnf-plugin-system-upgrade
 		sudocmd dnf upgrade --refresh
@@ -5406,7 +5446,7 @@ epm_release_upgrade()
 		# dnf system-upgrade reboot
 		# FIXME: download all packages again
 		sudocmd dnf distro-sync --releasever=$RELEASEVER
-		info "Run epm autoorphans to remove orphaned packages"
+		info "You can run '# epm autoorphans' to remove orphaned packages"
 		;;
 	urpm-rpm)
 		sudocmd urpmi.removemedia -av
@@ -6147,7 +6187,7 @@ __epm_repack_to_rpm()
         VERSION=''
         # convert tarballs to tar (for alien)
         if ! echo "$pkg" | grep -q "\.rpm" && ! echo "$pkg" | grep -q "\.deb" ; then
-            VERSION="$(echo "$alpkg" | grep -o -P "[-_.]([0-9])(\.[0-9])*" | head -n1 | sed -e 's|^[-_.]||')" #"
+            VERSION="$(echo "$alpkg" | grep -o -P "[-_.]([0-9])([0-9])*(\.[0-9])*" | head -n1 | sed -e 's|^[-_.]||')" #"
             if [ -n "$VERSION" ] ; then
                 PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
                 pkgtype="$(a= erc type $alpkg)"
@@ -6289,7 +6329,7 @@ epm_repack()
 epm_repo()
 {
 	local CMD="$1"
-	shift
+	[ -n "$CMD" ] && shift
 	case $CMD in
 	"-h"|"--help"|help)               # HELPCMD: help
 		get_help HELPCMD $SHAREDIR/epm-repo
@@ -6633,7 +6673,7 @@ print_apt_sources_list()
 epm_repolist()
 {
 
-[ -z "$*" ] || fatal "No arguments are allowed here"
+[ -z "$*" ] || [ "$PMTYPE" = "apt-rpm" ] || fatal "No arguments are allowed here"
 
 case $PMTYPE in
 	apt-rpm)
@@ -7006,6 +7046,10 @@ __epm_restore_convert_to_rpm_notation()
             continue
         fi
         if echo "$l" | grep -q "; *python_version *< *['\"]3" ; then
+            [ -n "$verbose" ] && warning "    $t is python2 only requirement, skipped"
+            continue
+        fi
+        if echo "$l" | grep -q "; *python_version *<= *['\"]2\." ; then
             [ -n "$verbose" ] && warning "    $t is python2 only requirement, skipped"
             continue
         fi
@@ -8647,7 +8691,7 @@ has()
 # Has a system the specified command?
 hascommand()
 {
-	which $1 2>/dev/null >/dev/null
+	which "$1" 2>/dev/null >/dev/null
 }
 
 firstupper()
@@ -8674,6 +8718,7 @@ override_distrib()
 rpmvendor()
 {
 	[ "$DISTRIB_ID" = "ALTLinux" ] && echo "alt" && return
+	[ "$DISTRIB_ID" = "ALTServer" ] && echo "alt" && return
 	[ "$DISTRIB_ID" = "AstraLinux" ] && echo "astra" && return
 	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
 	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
@@ -8692,32 +8737,6 @@ pkgvendor()
 	rpmvendor
 }
 
-# Print pkgtype (need DISTRIB_ID var)
-pkgtype()
-{
-# TODO: try use generic names
-    case $(pkgvendor) in
-		freebsd) echo "tbz" ;;
-		sunos) echo "pkg.gz" ;;
-		slackware|mopslinux) echo "tgz" ;;
-		archlinux|manjaro) echo "pkg.tar.xz" ;;
-		gentoo) echo "tbz2" ;;
-		windows) echo "exe" ;;
-		android) echo "apk" ;;
-		alpine) echo "apk" ;;
-		tinycorelinux) echo "tcz" ;;
-		voidlinux) echo "xbps" ;;
-		openwrt) echo "ipk" ;;
-		cygwin) echo "tar.xz" ;;
-		debian|ubuntu|mint|runtu|mcst|astra|kali) echo "deb" ;;
-		alt|asplinux|suse|mandriva|rosa|mandrake|pclinux|sled|sles)
-			echo "rpm" ;;
-		fedora|redhat|redos|scientific|centos|rhel|goslinux|amzn)
-			echo "rpm" ;;
-		*)  echo "rpm" ;;
-	esac
-}
-
 # TODO: in more appropriate way
 #which pkcon 2>/dev/null >/dev/null && info "You can run $ PMTYPE=packagekit epm to use packagekit backend"
 
@@ -8728,9 +8747,12 @@ local CMD
 # FIXME: some problems with multibased distros (Server Edition on CentOS and Desktop Edition on Ubuntu)
 case $DISTRIB_ID in
 	ALTLinux)
-		CMD="apt-rpm"
 		#which ds-install 2>/dev/null >/dev/null && CMD=deepsolver-rpm
 		#which pkcon 2>/dev/null >/dev/null && CMD=packagekit-rpm
+		CMD="apt-rpm"
+		;;
+	ALTServer)
+		CMD="apt-rpm"
 		;;
 	PCLinux)
 		CMD="apt-rpm"
@@ -8738,7 +8760,7 @@ case $DISTRIB_ID in
 	Ubuntu|Debian|Mint|AstraLinux|Elbrus)
 		CMD="apt-dpkg"
 		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
-		which snappy 2>/dev/null >/dev/null && CMD=snappy
+		hascommand snappy && CMD=snappy
 		;;
 	Mandriva|ROSA)
 		CMD="urpm-rpm"
@@ -8753,9 +8775,9 @@ case $DISTRIB_ID in
 	ArchLinux)
 		CMD="pacman"
 		;;
-	Fedora|FedoraLinux|LinuxXP|ASPLinux|CentOS|RHEL|Scientific|GosLinux|Amzn|RedOS)
+	Fedora|FedoraLinux|LinuxXP|ASPLinux|CentOS|OracleLinux|RockyLinux|AlmaLinux|RHEL|Scientific|GosLinux|Amzn|RedOS)
 		CMD="dnf-rpm"
-		which dnf 2>/dev/null >/dev/null || CMD=yum-rpm
+		hascommand dnf || CMD=yum-rpm
 		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "CentOS/7" ] && CMD=yum-rpm
 		;;
 	Slackware)
@@ -8769,8 +8791,8 @@ case $DISTRIB_ID in
 		;;
 	Windows)
 		CMD="appget"
-		which $CMD 2>/dev/null >/dev/null || CMD="chocolatey"
-		which $CMD 2>/dev/null >/dev/null || CMD="winget"
+		hascommand $CMD || CMD="chocolatey"
+		hascommand $CMD || CMD="winget"
 		;;
 	MacOS)
 		CMD="homebrew"
@@ -8797,11 +8819,52 @@ case $DISTRIB_ID in
 		CMD="xbps"
 		;;
 	*)
+		# try detect firstly
+		if hascommand "rpm" ; then
+			hascommand "urpmi" && echo "urpmi-rpm" && return
+			hascommand "zypper" && echo "zypper-rpm" && return
+			hascommand "apt-get" && echo "apt-rpm" && return
+			hascommand "dnf" && echo "dnf-rpm" && return
+		fi
+		if hascommand "dpkg" ; then
+			hascommand "apt" && echo "apt-dpkg" && return
+			hascommand "apt-get" && echo "apt-dpkg" && return
+		fi
 		echo "We don't support yet DISTRIB_ID $DISTRIB_ID" >&2
 		;;
 esac
 echo "$CMD"
 }
+
+# Print pkgtype (need DISTRIB_ID var)
+pkgtype()
+{
+# TODO: try use generic names
+    case $(pkgvendor) in
+		freebsd) echo "tbz" ;;
+		sunos) echo "pkg.gz" ;;
+		slackware|mopslinux) echo "tgz" ;;
+		archlinux|manjaro) echo "pkg.tar.xz" ;;
+		gentoo) echo "tbz2" ;;
+		windows) echo "exe" ;;
+		android) echo "apk" ;;
+		alpine) echo "apk" ;;
+		tinycorelinux) echo "tcz" ;;
+		voidlinux) echo "xbps" ;;
+		openwrt) echo "ipk" ;;
+		cygwin) echo "tar.xz" ;;
+		*)
+			case $(pkgmanager) in
+				*-dpkg)
+					echo "dpkg" ;;
+				*-rpm)
+					echo "rpm" ;;
+				*)
+					echo "rpm" ;;
+			esac
+	esac
+}
+
 
 get_var()
 {
@@ -8819,6 +8882,9 @@ normalize_name()
 {
 	[ "$1" = "RED OS" ] && echo "RedOS" && return
 	[ "$1" = "CentOS Linux" ] && echo "CentOS" && return
+	[ "$1" = "Rocky Linux" ] && echo "RockyLinux" && return
+	[ "$1" = "Oracle Linux" ] && echo "OracleLinux" && return
+	[ "$1" = "Alma Linux" ] && echo "AlmaLinux" && return
 	#echo "${1// /}"
 	echo "$1" | sed -e "s/ //g"
 }
@@ -8858,6 +8924,8 @@ if distro altlinux-release ; then
 	DISTRIB_RELEASE="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
 	if has Sisyphus ; then DISTRIB_RELEASE="Sisyphus"
 	elif has "ALT p10.* p10 " ; then DISTRIB_RELEASE="p10"
+	elif has "ALTServer 10." ; then DISTRIB_RELEASE="p10"
+	elif has "ALTServer 9." ; then DISTRIB_RELEASE="p9"
 	elif has "ALT c10.* c10 " ; then DISTRIB_RELEASE="c10"
 	elif has "ALT p9.* p9 " ; then DISTRIB_RELEASE="p9"
 	elif has "ALT 9 SP " ; then DISTRIB_RELEASE="c9"
@@ -10222,7 +10290,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.14.7  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.15.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10232,7 +10300,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.14.7
+EPMVERSION=3.15.0
 verbose=
 quiet=
 nodeps=
