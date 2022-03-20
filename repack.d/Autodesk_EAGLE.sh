@@ -5,6 +5,7 @@ BUILDROOT="$1"
 SPEC="$2"
 
 PRODUCT=eagle
+PRODUCTDIR=/opt/$PRODUCT
 
 #subst '1iAutoProv:no' $SPEC
 
@@ -45,3 +46,8 @@ MimeType=application/x-eagle-schematic;application/x-eagle-board;application/x-e
 StartupWMClass=eagle
 EOF
 subst "s|%files|%files\n/usr/share/applications/$PRODUCT.desktop|" $SPEC
+
+epm assure patchelf || exit
+for i in $BUILDROOT/$PRODUCTDIR/lib/{libssl.so,libssl.so.1.*} ; do
+    a= patchelf --set-rpath '$ORIGIN/' $i
+done
