@@ -21,30 +21,38 @@ fi
 
 case "$($DISTRVENDOR -e)" in
     Ubuntu/20.04)
-        epm install https://upd.sputnik-lab.com/api-updates/updates/download/e91f9650-23cf-411c-9f51-f723acca5ced/sputnik-browser-stable_5.5.6078.0-1_amd64.deb || exit
+        epm install https://upd.sputnik-lab.com/api-updates/updates/download/f02e89f4-a256-4a8f-964e-047e3a44eaff/sputnik-browser-stable_5.6.6306.0-1_amd64.deb
         ;;
     Ubuntu/16.04)
-        epm install https://upd.sputnik-lab.com/api-updates/updates/download/f133a2c4-0d2e-4e40-989b-5b86d9b246e5/sputnik-browser-stable_5.5.6145.0-1_amd64.deb || exit
+        epm install https://upd.sputnik-lab.com/api-updates/updates/download/a5be3569-9c9b-4d91-ae7e-a44c7e96e907/sputnik-browser-stable_5.6.6312.0-1_amd64.deb
         ;;
     Ubuntu/*)
-        epm install https://upd.sputnik-lab.com/api-updates/updates/download/e91f9650-23cf-411c-9f51-f723acca5ced/sputnik-browser-stable_5.5.6078.0-1_amd64.deb || exit
+        epm install https://upd.sputnik-lab.com/api-updates/updates/download/f02e89f4-a256-4a8f-964e-047e3a44eaff/sputnik-browser-stable_5.6.6306.0-1_amd64.deb
         ;;
     ALTLinux/c8)
-        epm install https://upd.sputnik-lab.com/api-updates/updates/download/6b338f94-64cc-4530-9515-0c2b1bda36ee/sputnik-browser-stable-5.5.6150.0-1.x86_64.rpm || exit
+        epm --repack install https://upd.sputnik-lab.com/api-updates/updates/download/94d70495-75ec-4ad7-831d-8008d0525d90/sputnik-browser-stable-5.6.6322.0-1.x86_64.rpm
         ;;
     ALTLinux/*)
-        epm install https://upd.sputnik-lab.com/api-updates/updates/download/8e611d44-be64-4397-8ce4-a4af5616c65e/sputnik-browser-stable-5.5.6108.0-1.x86_64.rpm || exit
+        epm --repack install https://upd.sputnik-lab.com/api-updates/updates/download/49734e35-cfe1-493c-bfae-8fa83f2a4365/sputnik-browser-stable-5.6.6324.0-1.x86_64.rpm
         ;;
     AstraLinux/*)
-        epm install https://upd.sputnik-lab.com/api-updates/updates/download/ebd059bb-98ab-4851-8c7b-1d6bada095b6/sputnik-browser-stable_5.5.6154.0-1_amd64.deb || exit
+        epm install https://upd.sputnik-lab.com/api-updates/updates/download/3fb587b6-19fa-421b-b757-7f232ed46d74/sputnik-browser-stable_5.6.6316.0-1_amd64.deb
         ;;
     RedOS/*)
-        epm install https://upd.sputnik-lab.com/api-updates/updates/download/7f5d5ad0-a5f9-4ccd-ad4a-6e4a1be777de/sputnik-browser-stable-5.5.6101.0-1.x86_64.rpm || exit
+        epm install https://upd.sputnik-lab.com/api-updates/updates/download/569b5726-5899-4bb1-b064-6b1b00a5bc15/sputnik-browser-stable-5.6.6325.0-1.x86_64.rpm
         ;;
     RosaLinux/*)
-        epm install https://upd.sputnik-lab.com/api-updates/updates/download/b4a5bacd-31aa-4e6f-bffa-8fc53b35a51a/sputnik-browser-stable-5.5.6115.0-1.x86_64.rpm || exit
+        epm install https://upd.sputnik-lab.com/api-updates/updates/download/0618f239-abfb-44f8-a771-1622a6336eb6/sputnik-browser-stable-5.6.6319.0-1.x86_64.rpm
         ;;
     Windows/*)
-        epm install https://upd.sputnik-lab.com/api-updates/updates/download/21425e74-e3fb-42bc-95cd-e3c243db75b5/SputnikOfflineInstaller-b2c-5.4.5991.1.exe || exit
+        epm install https://upd.sputnik-lab.com/api-updates/updates/download/c8b0945b-4d89-4a72-82ec-b7ed1b259384/SputnikOfflineInstaller-free-5.6.6282.0.exe
         ;;
 esac
+
+ERR=$?
+if [ "$ERR" = 0 ] ; then
+    echo "Running # /opt/sputnik-browser/sputnik_client --generate_branding to get license in config.dat"
+    a='' $SUDO /opt/sputnik-browser/sputnik_client --generate_branding
+fi
+
+exit $ERR
