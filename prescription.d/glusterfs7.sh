@@ -10,7 +10,7 @@ if epmqp --quiet glusterfs6- ; then
     epm installed glusterfs7-server && serv glusterd on
 else
     # Install all packages
-    epmi glusterfs7-client glusterfs7
+    epmi glusterfs7-client glusterfs7 || exit
 
     echo "You can install also 'glusterfs7-server' if it is needed for this host"
 

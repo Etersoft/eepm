@@ -13,7 +13,7 @@ if epmqp --quiet ${GFSOLD}- ; then
     epm installed $GFSNEW-server && serv glusterd on
 else
     # Install all packages
-    epmi ${GFSNEW}-cli ${GFSNEW}-client ${GFSNEW}
+    epmi ${GFSNEW}-cli ${GFSNEW}-client ${GFSNEW} || exit
 
     echo "You can install also '${GFSNEW}-server' if it is needed for this host"
 
