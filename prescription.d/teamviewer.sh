@@ -39,5 +39,5 @@ epm $repack install "https://download.teamviewer.com/download/linux/$(epm print 
 echo
 echo "Note: run
 # serv teamviewerd on
-to enable needed teamviewer system service
+to enable needed teamviewer system service (daemon)
 "

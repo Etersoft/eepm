@@ -100,7 +100,7 @@ add_bin_commands()
         ln -rs $BUILDROOT$PRODUCTDIR/$PRODUCT $BUILDROOT/usr/bin/$PRODUCTCUR
     fi
 
-    # fix links
+    # fix links (may be broken due https://bugzilla.altlinux.org/42189)
     if [ ! -r $BUILDROOT$(readlink $BUILDROOT$PRODUCTDIR/$PRODUCT) ] ; then
         rm -fv $BUILDROOT$PRODUCTDIR/$PRODUCT
         ln -s $PRODUCTCUR $BUILDROOT$PRODUCTDIR/$PRODUCT
