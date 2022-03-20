@@ -25,12 +25,12 @@ pkg="$($DISTRVENDOR -p)"
 
 case $pkg in
     rpm)
-        URL="https://xn--80akicokc0aablc.xn--p1ai/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C/Download/513"
-        OPKG=assistant-4.7-0.x86_64.rpm
+        URL="https://мойассистент.рф/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C/Download/542"
+        OPKG=assistant-4.8-0.x86_64.rpm
         ;;
     deb)
-        URL="https://xn--80akicokc0aablc.xn--p1ai/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C/Download/516"
-        OPKG=assistant_4.7-0_amd64.deb
+        URL="https://мойассистент.рф/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C/Download/545"
+        OPKG=assistant_4.8-0_amd64.deb
         ;;
     *)
         fatal "$($DISTRVENDOR -e) is not supported (package type is $pkg)"
