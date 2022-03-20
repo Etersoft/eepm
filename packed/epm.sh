@@ -10295,7 +10295,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.15.1  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.15.2  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10305,7 +10305,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.15.1
+EPMVERSION=3.15.2
 verbose=
 quiet=
 nodeps=
