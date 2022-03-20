@@ -4,32 +4,29 @@ BUILDROOT="$1"
 SPEC="$2"
 
 PRODUCT=vivaldi
+PRODUCTCUR=vivaldi-stable
 PRODUCTDIR=/opt/vivaldi
 
-# needed alternatives
-subst '1iProvides:webclient' $SPEC
 
-subst "s|%files|%files\n/etc/alternatives/packages.d/$PRODUCT|" $SPEC
-mkdir -p $BUILDROOT/etc/alternatives/packages.d/
-cat <<EOF >$BUILDROOT/etc/alternatives/packages.d/$PRODUCT
-/usr/bin/xbrowser	/usr/bin/$PRODUCT	83
-/usr/bin/x-www-browser	/usr/bin/$PRODUCT	83
-EOF
+. $(dirname $0)/common-chromium-browser.sh
 
-subst 's|%files|%files\n/usr/share/icons/hicolor/*x*/apps/*.png|' $SPEC
+set_alt_alternatives 65
 
-for i in 16 22 24 32 48 64 128 256 ; do
-    mkdir -p $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/
-    cp $BUILDROOT/$PRODUCTDIR/product_logo_${i}.png $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/$PRODUCT.png
-done
+copy_icons_to_share
 
-rm -f $BUILDROOT/etc/cron.daily/$PRODUCT
-subst "s|.*/etc/cron.daily/$PRODUCT.*||" $SPEC
+cleanup
+
+add_bin_commands
+
+use_system_xdg
+
+#install_deps
+
+# install all requires packages before packing (the list have got with rpmreqs package | xargs echo)
+epm install --skip-installed at-spi2-atk file gawk GConf glib2 grep libatk libat-spi2-core libcairo libcups libdbus libdrm libexpat libgbm libgdk-pixbuf libgio libgtk+3 libnspr libnss libpango \
+            libX11 libxcb libXcomposite libXcursor libXdamage libXext libXfixes libXi libXrandr libXrender libXtst sed tar which xdg-utils xprop
+
 
 subst "1i%filter_from_requires /.opt.google.chrome.WidevineCdm/d" $SPEC
-
-# unsupported format
-rm -f $BUILDROOT/usr/share/menu/$PRODUCT.menu
-subst "s|.*/usr/share/menu/$PRODUCT.menu.*||" $SPEC
 
 echo "You also can install chrome via epm play chrome to use WidevineCdm"
