@@ -39,7 +39,8 @@ fi
 [ -x $BUILDROOT/usr/bin/yandex-browser ] || ln -sv yandex-browser-beta $BUILDROOT/usr/bin/yandex-browser
 
 # replace embedded xdg tools
-for EMBDIR in /opt/yandex/browser-beta/{xdg-mime,xdg-settings} ; do
+for EMBDIR in $PRODUCTDIR/{xdg-mime,xdg-settings} ; do
+    [ -s $BUILDROOT$EMBDIR ] || continue
     rm -v $BUILDROOT$EMBDIR
     ln -s /usr/bin/$(basename $EMBDIR) $BUILDROOT$EMBDIR
 done
