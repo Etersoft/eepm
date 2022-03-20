@@ -6,6 +6,17 @@ SPEC="$2"
 
 PRODUCT=yandex-browser-beta
 PRODUCTDIR=/opt/yandex/browser-beta
+
+# needed alternatives
+subst '1iProvides:webclient' $SPEC
+
+subst "s|%files|%files\n/etc/alternatives/packages.d/$PRODUCT|" $SPEC
+mkdir -p $BUILDROOT/etc/alternatives/packages.d/
+cat <<EOF >$BUILDROOT/etc/alternatives/packages.d/$PRODUCT
+/usr/bin/xbrowser	/usr/bin/$PRODUCT	55
+/usr/bin/x-www-browser	/usr/bin/$PRODUCT	55
+EOF
+
 subst 's|%files|%files\n/usr/share/icons/hicolor/*x*/apps/*.png|' $SPEC
 
 for i in 16 22 24 32 48 64 128 256 ; do
