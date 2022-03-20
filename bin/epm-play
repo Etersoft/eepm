@@ -63,6 +63,8 @@ __epm_play_run()
     # also we will have DISTRVENDOR there
     export PATH=$PROGDIR:$PATH
 
+    export SUDO
+
     #info "Running $($script --description 2>/dev/null) ..."
     docmd $script "$@"
 }
@@ -105,6 +107,9 @@ if [ "$1" = "--update" ] ; then
             __epm_play_run $prescription --run "$@"
         done
         exit
+    fi
+    if [ -z "$1" ] ; then
+        fatal "run --update with 'all' or project name"
     fi
     __check_installed_app "$1" || fatal "$1 is not installed"
     prescription="$1"
