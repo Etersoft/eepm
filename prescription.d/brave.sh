@@ -20,7 +20,10 @@ fi
 
 arch=x86_64
 pkgtype=rpm
+repack=''
+# we have workaround for their postinstall script, so always repack rpm package
+[ "$($DISTRVENDOR -p)" = "deb" ] || repack='--repack'
 
 PKG=$($EGET --list --latest https://github.com/brave/brave-browser/releases "$PKGNAME-*.$arch.$pkgtype") || fatal "Can't get package URL"
 
-epm install "$PKG"
+epm $repack install "$PKG"
