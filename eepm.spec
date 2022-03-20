@@ -2,7 +2,7 @@
 %define pkgsystem %(distr_vendor -g)
 
 Name: eepm
-Version: 3.15.1
+Version: 3.15.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -142,6 +142,11 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Sun Mar 20 2022 Vitaly Lipatov <lav@altlinux.ru> 3.15.2-alt1
+- epm play: fix Autodesk Eagle install
+- epm play eagle: add downloading workaround via IPFS
+- epm play teamviewer: fix repacking
+
 * Sun Mar 20 2022 Vitaly Lipatov <lav@altlinux.ru> 3.15.1-alt1
 - glusterfs*.sh: fix returned error code (ALT bug 41429)
 - epm-play: export SUDO for scripts
