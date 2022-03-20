@@ -2,7 +2,7 @@
 %define pkgsystem %(distr_vendor -g)
 
 Name: eepm
-Version: 3.15.0
+Version: 3.15.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -142,6 +142,19 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Sun Mar 20 2022 Vitaly Lipatov <lav@altlinux.ru> 3.15.1-alt1
+- glusterfs*.sh: fix returned error code (ALT bug 41429)
+- epm-play: export SUDO for scripts
+- epm play assistant: update version to 4.8
+- epm play: add alternatives xbrowser/x-www-browser and webclient provides for all browsers
+- epm play: update sputnik-browser to 5.6
+- epm play: do correct repack for brave browser
+- epm play scripts: cleanup
+- epm play: move all chrome based browser code to the common file
+- epm play: fix permissions (The Teams did not start)
+- epm play geogebra
+- epm play webex (ALT bug 42115)
+
 * Sat Mar 19 2022 Vitaly Lipatov <lav@altlinux.ru> 3.15.0-alt1
 - epm play: add R7 Office from the official site
 - spec: drop ALT specific cases, use rpm-build-intro
