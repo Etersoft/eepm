@@ -1,5 +1,5 @@
 # from rpm-build-intro
-%define pkgsystem %(distr_vendor -g)
+%define pkgsystem apt-rpm
 
 Name: eepm
 Version: 3.15.2
