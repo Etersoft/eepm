@@ -1284,14 +1284,14 @@ _print_additional_usage
 ################# incorporate bin/distr_info #################
 internal_distr_info()
 {
-# 2007-2021 (c) Vitaly Lipatov <lav@etersoft.ru>
-# 2007-2021 (c) Etersoft
-# 2007-2021 Public domain
+# 2007-2022 (c) Vitaly Lipatov <lav@etersoft.ru>
+# 2007-2022 (c) Etersoft
+# 2007-2022 Public domain
 
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
 
-PROGVERSION="20210806"
+PROGVERSION="20220318"
 
 # TODO: check /etc/system-release
 
@@ -1992,7 +1992,7 @@ print_pretty_name()
 print_total_info()
 {
 cat <<EOF
-distro_info v$PROGVERSION : Copyright © 2007-2021 Etersoft
+distro_info v$PROGVERSION : Copyright © 2007-2022 Etersoft
 ==== Total system information:
 Pretty distro name (--pretty): $(print_pretty_name)
  Distro name and version (-e): $(print_name_version)
@@ -2981,7 +2981,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.15.0  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.15.1  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
