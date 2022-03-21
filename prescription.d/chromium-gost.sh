@@ -19,6 +19,10 @@ fi
 
 [ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
+if epm installed chromium-gost ; then
+    fatal "Package $PKGNAME is already installed from ALT repository."
+fi
+
 #arch=$($DISTRVENDOR --distro-arch)
 #pkgtype=$($DISTRVENDOR -p)
 arch=amd64
