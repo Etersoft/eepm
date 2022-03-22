@@ -28,4 +28,6 @@ epm_full_upgrade()
 	epm_upgrade || return
 
 	epm_kernel_update || return
+
+	epm play --update all || return
 }
