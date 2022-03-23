@@ -19,9 +19,21 @@ PRODUCT=anydesk
 epm install --skip-installed fontconfig glib2 libatk libcairo libfreetype libgdk-pixbuf libgio libGL libGLU libgtk+2 libICE libpango libpolkit \
     libSM libX11 libxcb libXdamage libXext libXfixes libXi libxkbfile libXmu libXrandr libXrender libXt libXtst polkit
 
-#subst '1iAutoProv:no' $SPEC
+subst '1iAutoProv:no' $SPEC
 
 # preloaded from /usr/lib64/anydesk/, drop external requires
 subst '1i%filter_from_requires /^libpangox-1.0.so.0.*/d' $SPEC
 subst '1i%filter_from_requires /^libgdkglext-x11-1.0.so.0.*/d' $SPEC
 subst '1i%filter_from_requires /^libgtkglext-x11-1.0.so.0.*/d' $SPEC
+
+LIBDIR=/usr/lib64
+[ -d $BUILDROOT$LIBDIR ] || LIBDIR=/usr/lib
+
+epm assure patchelf || exit
+for i in $BUILDROOT$LIBDIR/anydesk/{libgdkglext-x11-1.0.*,libgtkglext-x11-1.0.*} ; do
+    a= patchelf --set-rpath '$ORIGIN/' $i
+done
+# /usr/libexec/anydesk: library libpangox-1.0.so.0 not found
+for i in $BUILDROOT/usr/libexec/anydesk ; do
+    a= patchelf --set-rpath "$LIBDIR/anydesk" $i
+done
