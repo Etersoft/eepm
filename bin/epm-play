@@ -73,8 +73,7 @@ __epm_play_run()
 
 epm_play()
 {
-# TODO: change to play.d
-local psdir="$CONFIGDIR/prescription.d"
+local psdir="$CONFIGDIR/play.d"
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
     cat <<EOF
