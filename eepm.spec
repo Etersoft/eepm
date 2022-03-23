@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.15.2
+Version: 3.15.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -142,6 +142,14 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Wed Mar 23 2022 Vitaly Lipatov <lav@altlinux.ru> 3.15.3-alt1
+- spec: fix pkg system checking
+- epm play: forbid install chromium-gost if it is already installed from the repo (ALT bug 41898)
+- epm-full_upgrade: also run epm play --update all
+- epm repo: add workaround for AstraLinux (add-apt-repository is broken)
+- epm repack: fix anydesk repacking
+- add EPM_VERBOSE support and allow verbose for repack scripts
+
 * Sun Mar 20 2022 Vitaly Lipatov <lav@altlinux.ru> 3.15.2-alt1
 - epm play: fix Autodesk Eagle install
 - epm play eagle: add downloading workaround via IPFS
