@@ -82,7 +82,7 @@ Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
 EPMVERSION=@VERSION@
-verbose=
+verbose=$EPM_VERBOSE
 quiet=
 nodeps=
 noremove=

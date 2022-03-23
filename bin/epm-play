@@ -55,7 +55,7 @@ __epm_play_run()
     shift
 
     if [ ! -x "$script" ] ; then
-        fatal "Can't find play script $script."
+        fatal "Can't find executable play script $script."
     fi
 
     # allow use EGET in the scripts
@@ -65,8 +65,10 @@ __epm_play_run()
 
     export SUDO
 
+    local bashopt=''
+    [ -n "$verbose" ] && bashopt='-x' && export EPM_VERBOSE="$verbose"
     #info "Running $($script --description 2>/dev/null) ..."
-    docmd $script "$@"
+    docmd bash $bashopt $script "$@"
 }
 
 epm_play()
