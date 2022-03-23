@@ -6,7 +6,7 @@
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
 
-PROGVERSION="20220318"
+PROGVERSION="20220323"
 
 # TODO: check /etc/system-release
 
@@ -194,7 +194,7 @@ pkgtype()
 		*)
 			case $(pkgmanager) in
 				*-dpkg)
-					echo "dpkg" ;;
+					echo "deb" ;;
 				*-rpm)
 					echo "rpm" ;;
 				*)
