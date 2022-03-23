@@ -27,7 +27,7 @@ __epm_removerepo_alt_grepremove()
 	if [ "$1" = "all" ] || rhas "$1" "^rpm" ; then
 		rl="$1"
 	else
-		rl="$((quiet=1 epm repolist) 2>/dev/null | grep -E "$1")"
+		rl="$( (quiet=1 epm repolist) 2>/dev/null | grep -E "$1")"
 		[ -z "$rl" ] && warning "Can't find '$1' in the repos (see '# epm repolist' output)" && return 1
 	fi
 	echo "$rl" | while read rp ; do
