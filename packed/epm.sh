@@ -754,6 +754,15 @@ __epm_addrepo_deb()
 		return
 	fi
 
+	if [ "$DISTRNAME" = "AstraLinux" ] ; then
+		echo "Use workaround for AstraLinux"
+		# aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
+		echo "" | sudocmd tee -a /etc/apt/sources.list
+		echo "$repo" | sudocmd tee -a /etc/apt/sources.list
+		exit
+	fi
+
+
 	# keywords
 	case "$1" in
 		docker)
@@ -2530,6 +2539,8 @@ epm_full_upgrade()
 	epm_upgrade || return
 
 	epm_kernel_update || return
+
+	epm play --update all || return
 }
 
 # File bin/epm-info:
@@ -3656,7 +3667,7 @@ __epm_play_run()
     shift
 
     if [ ! -x "$script" ] ; then
-        fatal "Can't find play script $script."
+        fatal "Can't find executable play script $script."
     fi
 
     # allow use EGET in the scripts
@@ -3666,8 +3677,10 @@ __epm_play_run()
 
     export SUDO
 
+    local bashopt=''
+    [ -n "$verbose" ] && bashopt='-x' && export EPM_VERBOSE="$verbose"
     #info "Running $($script --description 2>/dev/null) ..."
-    docmd $script "$@"
+    docmd bash $bashopt $script "$@"
 }
 
 epm_play()
@@ -5880,7 +5893,7 @@ __epm_removerepo_alt_grepremove()
 	if [ "$1" = "all" ] || rhas "$1" "^rpm" ; then
 		rl="$1"
 	else
-		rl="$((quiet=1 epm repolist) 2>/dev/null | grep -E "$1")"
+		rl="$( (quiet=1 epm repolist) 2>/dev/null | grep -E "$1")"
 		[ -z "$rl" ] && warning "Can't find '$1' in the repos (see '# epm repolist' output)" && return 1
 	fi
 	echo "$rl" | while read rp ; do
@@ -5955,6 +5968,18 @@ case $PMTYPE in
 	apt-dpkg)
 		assure_exists apt-add-repository software-properties-common
 		set_sudo
+
+		if [ "$DISTRNAME" = "AstraLinux" ] ; then
+			echo "Use workaround for AstraLinux"
+			[ -n "$*" ] || fatal "empty repo name"
+			# aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
+			sudocmd sed -i -e "s|.*$*.*||" /etc/apt/sources.list
+			if [ -d /etc/apt/sources.list.d ] && ls /etc/apt/sources.list.d/*.list >/dev/null 2>/dev/null ; then
+				sudocmd sed -i -e "s|.*$*.*||" /etc/apt/sources.list.d/*.list
+			fi
+			exit
+		fi
+
 		# FIXME: it is possible there is troubles to pass the args
 		sudocmd apt-add-repository --remove "$*"
 		info "Check file /etc/apt/sources.list if needed"
@@ -8673,7 +8698,7 @@ internal_distr_info()
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
 
-PROGVERSION="20220318"
+PROGVERSION="20220323"
 
 # TODO: check /etc/system-release
 
@@ -8861,7 +8886,7 @@ pkgtype()
 		*)
 			case $(pkgmanager) in
 				*-dpkg)
-					echo "dpkg" ;;
+					echo "deb" ;;
 				*-rpm)
 					echo "rpm" ;;
 				*)
@@ -10295,7 +10320,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.15.2  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.15.3  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10305,8 +10330,8 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.15.2
-verbose=
+EPMVERSION=3.15.3
+verbose=$EPM_VERBOSE
 quiet=
 nodeps=
 noremove=

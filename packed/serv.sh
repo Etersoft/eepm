@@ -1291,7 +1291,7 @@ internal_distr_info()
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
 
-PROGVERSION="20220318"
+PROGVERSION="20220323"
 
 # TODO: check /etc/system-release
 
@@ -1479,7 +1479,7 @@ pkgtype()
 		*)
 			case $(pkgmanager) in
 				*-dpkg)
-					echo "dpkg" ;;
+					echo "deb" ;;
 				*-rpm)
 					echo "rpm" ;;
 				*)
@@ -2981,7 +2981,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.15.2  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.15.3  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
