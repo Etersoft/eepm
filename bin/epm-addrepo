@@ -164,6 +164,15 @@ __epm_addrepo_deb()
 		return
 	fi
 
+	if [ "$DISTRNAME" = "AstraLinux" ] ; then
+		echo "Use workaround for AstraLinux"
+		# aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
+		echo "" | sudocmd tee -a /etc/apt/sources.list
+		echo "$repo" | sudocmd tee -a /etc/apt/sources.list
+		exit
+	fi
+
+
 	# keywords
 	case "$1" in
 		docker)
