@@ -5,10 +5,10 @@ BUILDROOT="$1"
 SPEC="$2"
 
 PRODUCT=yandex-browser
-PRODUCTCUR=yandex-browser-beta
-PRODUCTDIR=/opt/yandex/browser-beta
+PRODUCTCUR=yandex-browser-stable
+PRODUCTDIR=/opt/yandex/browser
 
-subst '1iConflicts:yandex-browser-stable' $SPEC
+subst '1iConflicts:yandex-browser-beta' $SPEC
 
 . $(dirname $0)/common-chromium-browser.sh
 
