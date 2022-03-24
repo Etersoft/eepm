@@ -1,6 +1,6 @@
 #!/bin/sh
 
-[ "$1" != "--run" ] && exit #echo "Uninstall etersoft build of glibc" && exit
+[ "$1" != "--run" ] && echo "Uninstall etersoft build of glibc" && exit
 
 [ "$($DISTRVENDOR -d)" != "ALTLinux" ] && echo "Only ALTLinux is supported" && exit 1
 

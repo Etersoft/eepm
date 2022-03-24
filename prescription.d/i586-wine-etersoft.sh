@@ -12,7 +12,7 @@ if [ "$1" = "--remove" ] ; then
     exit
 fi
 
-[ "$1" != "--run" ] && exit #echo "Install 32 bit $MAIN packages on 64 bit system" && exit
+[ "$1" != "--run" ] && echo "Install 32 bit $MAIN packages on 64 bit system" && exit
 
 # Устанавливаем wine
 epm install $PKGNAMES || exit
