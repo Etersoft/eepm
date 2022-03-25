@@ -63,6 +63,7 @@ __epm_play_run()
     # also we will have DISTRVENDOR there
     export PATH=$PROGDIR:$PATH
 
+    set_sudo
     export SUDO
 
     local bashopt=''
