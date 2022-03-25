@@ -1,13 +1,10 @@
 #!/bin/sh
 
-# TODO: common place
-fatal()
-{
-    echo "FATAL: $*" >&2
-    exit 1
-}
-
 PKGNAME=SweetHome3D
+DESCRIPTION=''
+
+. $(dirname $0)/common.sh
+
 
 arch="$($DISTRVENDOR -a)"
 case "$arch" in
@@ -20,13 +17,6 @@ case "$arch" in
         fatal "$arch arch is not supported"
         ;;
 esac
-
-if [ "$1" = "--remove" ] ; then
-    epm remove $PKGNAME
-    exit
-fi
-
-[ "$1" != "--run" ] && exit #echo "Sweet Home 3D from the official site" && exit
 
 # TODO: get url from https://sourceforge.net/projects/sweethome3d/best_release.json (is it client system dependend??)
 # see get_github_urls in eget

@@ -1,20 +1,10 @@
 #!/bin/sh
 
-# TODO: common place
-fatal()
-{
-    echo "FATAL: $*" >&2
-    exit 1
-}
-
 PKGNAME=yandex-disk
+DESCRIPTION="Yandex Disk from the official site"
 
-if [ "$1" = "--remove" ] ; then
-    epm remove $PKGNAME
-    exit
-fi
+. $(dirname $0)/common.sh
 
-[ "$1" != "--run" ] && echo "Yandex Disk from the official site" && exit
 
 # http://repo.yandex.ru/yandex-disk/yandex-disk_latest_amd64.deb
 # http://repo.yandex.ru/yandex-disk/yandex-disk-latest.x86_64.rpm

@@ -1,20 +1,10 @@
 #!/bin/sh
 
-# TODO: common place
-fatal()
-{
-    echo "FATAL: $*" >&2
-    exit 1
-}
-
 PKGNAME=atom-beta
+DESCRIPTION="The hackable text editor from the official site"
 
-if [ "$1" = "--remove" ] ; then
-    epm remove $PKGNAME
-    exit
-fi
 
-[ "$1" != "--run" ] && echo "The hackable text editor from the official site" && exit
+. $(dirname $0)/common.sh
 
 [ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 

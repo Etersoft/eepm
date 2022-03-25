@@ -17,6 +17,4 @@ if [ "$1" = "--installed" ] ; then
 fi
 
 
-if [ -n "$DESCRIPTION" ] ; then
-    [ "$1" != "--run" ] && echo "$DESCRIPTION" && exit
-fi
+[ "$1" != "--run" ] && echo "$DESCRIPTION" && exit

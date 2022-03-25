@@ -1,20 +1,10 @@
 #!/bin/sh
 
-# TODO: common place
-fatal()
-{
-    echo "FATAL: $*" >&2
-    exit 1
-}
-
 PKGNAME=vivaldi-stable
+DESCRIPTION="Vivaldi browser from the official site"
 
-if [ "$1" = "--remove" ] ; then
-    epm remove $PKGNAME
-    exit
-fi
+. $(dirname $0)/common.sh
 
-[ "$1" != "--run" ] && echo "Vivaldi browser from the official site" && exit
 
 arch="$($DISTRVENDOR --debian-arch)"
 case "$arch" in

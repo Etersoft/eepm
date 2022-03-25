@@ -1,13 +1,10 @@
 #!/bin/sh
 
-# TODO: common place
-fatal()
-{
-    echo "FATAL: $*" >&2
-    exit 1
-}
-
 PKGNAME="teamviewer"
+DESCRIPTION="Teamviewer from the official site"
+
+. $(dirname $0)/common.sh
+
 
 arch="$($DISTRVENDOR -a)"
 case "$arch" in
@@ -21,12 +18,6 @@ case "$arch" in
         ;;
 esac
 
-if [ "$1" = "--remove" ] ; then
-    epm remove $PKGNAME
-    exit
-fi
-
-[ "$1" != "--run" ] && echo "Teamviewer from the official site" && exit
 
 # See https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=teamviewer
 
@@ -36,8 +27,9 @@ repack=''
 # epm uses eget to download * names
 epm $repack install "https://download.teamviewer.com/download/linux/$(epm print constructname $PKGNAME)" || exit
 
-echo
-echo "Note: run
+cat <<EOF
+
+Note: run
 # serv teamviewerd on
 to enable needed teamviewer system service (daemon)
-"
+EOF

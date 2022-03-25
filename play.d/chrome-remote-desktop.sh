@@ -1,20 +1,11 @@
 #!/bin/sh
 
-# TODO: common place
-fatal()
-{
-    echo "FATAL: $*" >&2
-    exit 1
-}
-
 PKGNAME=chrome-remote-desktop
 
-if [ "$1" = "--remove" ] ; then
-    epm remove chrome-remote-desktop
-    exit
-fi
-
 [ "$1" != "--run" ] && exit # echo " Remote desktop support for google-chrome & chromium" && exit
+
+. $(dirname $0)/common.sh
+
 
 [ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 

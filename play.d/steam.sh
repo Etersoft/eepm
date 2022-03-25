@@ -1,20 +1,9 @@
 #!/bin/sh
 
-# TODO: common place
-fatal()
-{
-    echo "FATAL: $*" >&2
-    exit 1
-}
-
 PKGNAME=steam-launcher
+DESCRIPTION=''
 
-if [ "$1" = "--remove" ] ; then
-    epm remove $PKGNAME
-    exit
-fi
-
-[ "$1" != "--run" ] && exit #echo "Steam for Linux from the official site" && exit
+. $(dirname $0)/common.sh
 
 [ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 

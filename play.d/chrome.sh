@@ -1,18 +1,10 @@
 #!/bin/sh
 
-# TODO: common place
-fatal()
-{
-    echo "FATAL: $*" >&2
-    exit 1
-}
+PKGNAME=google-chrome-stable
+DESCRIPTION="The popular and trusted web browser by Google (Stable Channel) from the official site"
 
-if [ "$1" = "--remove" ] ; then
-    epm remove google-chrome-stable
-    exit
-fi
+. $(dirname $0)/common.sh
 
-[ "$1" != "--run" ] && echo "The popular and trusted web browser by Google (Stable Channel) from the official site" && exit
 
 [ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 

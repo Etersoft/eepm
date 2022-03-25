@@ -1,13 +1,7 @@
 #!/bin/sh
 
-# TODO: common place
-fatal()
-{
-    echo "FATAL: $*" >&2
-    exit 1
-}
-
 PKGNAME=Telegram
+DESCRIPTION="Telegram client from the official site"
 
 if [ "$1" = "--remove" ] ; then
     # $PKGNAME-stable really
@@ -15,11 +9,12 @@ if [ "$1" = "--remove" ] ; then
     exit
 fi
 
-[ "$1" != "--run" ] && echo "Telegram client from the official site" && exit
+. $(dirname $0)/common.sh
+
 
 [ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
-PKGURL=$($EGET --list --latest https://github.com/telegramdesktop/tdesktop/releases "tsetup.*.tar.xz")
+PKGURL=$($EGET --list --latest https://github.com/telegramdesktop/tdesktop/releases "tsetup.*.tar.xz") #"
 [ -n "$PKGURL" ] || fatal "Can't get package URL"
 PKGFILE=$(echo /tmp/$(basename $PKGURL) | sed -e "s|/tsetup|/$PKGNAME|")
 $EGET -O $PKGFILE $PKGURL || exit

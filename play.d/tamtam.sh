@@ -1,20 +1,10 @@
 #!/bin/sh
 
-# TODO: common place
-fatal()
-{
-    echo "FATAL: $*" >&2
-    exit 1
-}
-
 PKGNAME=tamtam-app
+DESCRIPTION="TamTam messenger from the official site"
 
-if [ "$1" = "--remove" ] ; then
-    epm remove $PKGNAME
-    exit
-fi
+. $(dirname $0)/common.sh
 
-[ "$1" != "--run" ] && echo "TamTam messenger from the official site" && exit
 
 arch="$($DISTRVENDOR --debian-arch)"
 case "$arch" in

@@ -1,23 +1,18 @@
 #!/bin/sh
 
-# TODO: common place
-fatal()
-{
-    echo "FATAL: $*" >&2
-    exit 1
-}
-
 PKGNAME=assistant
+DESCRIPTION="Assistant (Ассистент) from the official site"
+
 # Assistant reclaim their rpm package supports ALT
 repack="--scripts"
-
 
 if [ "$1" = "--remove" ] ; then
     epm remove $repack $PKGNAME
     exit
 fi
 
-[ "$1" != "--run" ] && echo "Assistant (Ассистент) from the official site" && exit
+. $(dirname $0)/common.sh
+
 
 [ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
