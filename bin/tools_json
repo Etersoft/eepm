@@ -58,10 +58,11 @@ parse_options() {
   done
 }
 
+# compatibility
 awk_egrep () {
   local pattern_string=$1
 
-  gawk '{
+  a='' gawk '{
     while ($0) {
       start=match($0, pattern);
       token=substr($0, start, RLENGTH);
