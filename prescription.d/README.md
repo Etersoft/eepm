@@ -5,9 +5,3 @@ Allowed variables:
 
 Allowed command:
 * epm (run the same epm called from)
-
-TODO:
-* inject some functions
-
-TODO:
-* save packages for remove
