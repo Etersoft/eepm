@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.15.3
+Version: 3.16.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -142,6 +142,17 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Sat Mar 26 2022 Vitaly Lipatov <lav@altlinux.ru> 3.16.0-alt1
+- move play files to play.d
+- pack yandex-browser-stable (ALT bug 42238)
+- epm-repofix: fix static apt-repo require
+- epm-removerepo: fix removing repo by mask
+- epm-play: fix SUDO for play scripts
+- epm play mssql-*: add AstraLinux support
+- epm repack: add fix_chrome_sandbox and use it
+- epm repack: fix zoom linking
+- epm play: rewrite geobra install
+
 * Wed Mar 23 2022 Vitaly Lipatov <lav@altlinux.ru> 3.15.3-alt1
 - spec: fix pkg system checking
 - epm play: forbid install chromium-gost if it is already installed from the repo (ALT bug 41898)
