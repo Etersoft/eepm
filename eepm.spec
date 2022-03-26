@@ -86,12 +86,16 @@ cat <<EOF >%buildroot%_sysconfdir/eepm/serv.conf
 EOF
 
 mkdir -p %buildroot%_sysconfdir/eepm/repack.d/
-cp repack.d/*.sh %buildroot%_sysconfdir/eepm/repack.d/
+cp repack.d/* %buildroot%_sysconfdir/eepm/repack.d/
 chmod 0755 %buildroot%_sysconfdir/eepm/repack.d/*.sh
 
 mkdir -p %buildroot%_sysconfdir/eepm/prescription.d/
-cp prescription.d/*.sh %buildroot%_sysconfdir/eepm/prescription.d/
+cp prescription.d/* %buildroot%_sysconfdir/eepm/prescription.d/
 chmod 0755 %buildroot%_sysconfdir/eepm/prescription.d/*.sh
+
+mkdir -p %buildroot%_sysconfdir/eepm/play.d/
+cp play.d/* %buildroot%_sysconfdir/eepm/play.d/
+chmod 0755 %buildroot%_sysconfdir/eepm/play.d/*.sh
 
 mkdir -p %buildroot%_sysconfdir/bash_completion.d/
 install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/serv
@@ -111,12 +115,14 @@ rm -v %buildroot%_bindir/yum
 %files
 %doc README.md TODO LICENSE
 %dir %_sysconfdir/eepm/
+%dir %_sysconfdir/eepm/play.d/
 %dir %_sysconfdir/eepm/repack.d/
 %dir %_sysconfdir/eepm/prescription.d/
 %config(noreplace) %_sysconfdir/eepm/eepm.conf
 %config(noreplace) %_sysconfdir/eepm/serv.conf
-%config(noreplace) %_sysconfdir/eepm/repack.d/*.sh
-%config(noreplace) %_sysconfdir/eepm/prescription.d/*.sh
+%config(noreplace) %_sysconfdir/eepm/repack.d/*
+%config(noreplace) %_sysconfdir/eepm/play.d/*
+%config(noreplace) %_sysconfdir/eepm/prescription.d/*
 %_bindir/epm*
 %_bindir/eepm
 %_bindir/serv
