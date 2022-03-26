@@ -3,7 +3,7 @@
 
 Name: eepm
 Version: 3.16.0
-Release: alt1
+Release: alt2
 
 Summary: Etersoft EPM package manager
 
@@ -148,6 +148,10 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Sat Mar 26 2022 Vitaly Lipatov <lav@altlinux.ru> 3.16.0-alt2
+- update check_reqs.sh script, fix extra requires
+- pack missed play.d
+
 * Sat Mar 26 2022 Vitaly Lipatov <lav@altlinux.ru> 3.16.0-alt1
 - move play files to play.d
 - pack yandex-browser-stable (ALT bug 42238)
