@@ -20,7 +20,7 @@ fi
 epm install "https://repo.yandex.ru/yandex-browser/deb/pool/main/y/$PKGNAME/$(epm print constructname $PKGNAME "*" amd64 deb)" || exit
 
 # used in update-ffmpeg
-epm install jq tar binutils || exit
+epm install --skip-installed jq tar binutils || exit
 
 # install appropriate ffmpeg extra codecs
 pack_ffmpeg() {
@@ -29,7 +29,7 @@ pack_ffmpeg() {
   mkdir -p .$DEST
   cp $SOURCE .$DEST
   CNAME=$(echo "$(basename $SUITABLE_URLS)" | sed -e "s|chromium|$PKGNAME|" -e "s|-0ubuntu.*|-1.tar|")
-  tar cvf $CNAME ./$(dirname $DEST)
+  a='' tar cvf $CNAME ./$(dirname $DEST)
   epm --repack install $CNAME
 }
 

@@ -1,7 +1,9 @@
 #!/bin/sh
 
+LIST="bin/epm-* bin/distr_info bin/serv-* bin/tools* bin/yum play.d/*.sh prescription.d/*.sh repack.d/*.sh"
+
 if [ "$1" = "--detail" ] ; then
-    for i in bin/epm-* ; do
+    for i in $LIST  ; do
         echo
         echo "==== $i:"
         /usr/lib/rpm/shell.req $i
@@ -9,5 +11,5 @@ if [ "$1" = "--detail" ] ; then
     exit 0
 fi
 
-/usr/lib/rpm/shell.req bin/epm-* | sort -u | tee ./check_eepm.log
+/usr/lib/rpm/shell.req $LIST | sort -u | tee ./check_eepm.log
 git diff ./check_eepm.log

@@ -32,8 +32,8 @@ case "$($DISTRVENDOR -d)" in
     ;;
 esac
 
-sudo odbcinst -i -d -f /opt/microsoft/msodbcsql17/etc/odbcinst.ini
-sudo odbcinst -q -d
+$SUDO odbcinst -i -d -f /opt/microsoft/msodbcsql17/etc/odbcinst.ini
+$SUDO odbcinst -q -d
 
 
 cat <<EOF
