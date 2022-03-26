@@ -1,8 +1,12 @@
 #!/bin/sh -x
 # It will run with two args: buildroot spec
 BUILDROOT="$1"
-
 SPEC="$2"
+
+PRODUCT=zoom
+PRODUCTDIR=/opt/zoom
+
+. $(dirname $0)/common-chromium-browser.sh
 
 # TODO: s/freetype/libfreetype/
 # see https://bugzilla.altlinux.org/show_bug.cgi?id=38892
@@ -36,3 +40,5 @@ done
 rm -v $BUILDROOT/opt/zoom/QtQuick/Scene2D/libqtquickscene2dplugin.so $BUILDROOT/opt/zoom/QtQuick/Scene3D/libqtquickscene3dplugin.so
 subst 's|.*/opt/zoom/QtQuick/Scene2D/libqtquickscene2dplugin.so.*||' $SPEC
 subst 's|.*/opt/zoom/QtQuick/Scene3D/libqtquickscene3dplugin.so.*||' $SPEC
+
+fix_chrome_sandbox $PRODUCTDIR/cef

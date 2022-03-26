@@ -5,19 +5,19 @@ BUILDROOT="$1"
 SPEC="$2"
 
 PRODUCT=skype
-# move binaries from /usr/share/PKGNAME to _libdir/PKGNAME
-#LIBDIR=$(rpmbuild --eval %_libdir 2>/dev/null)
-LIBDIR=/opt
+PRODUCTDIR=/opt/skype
+
+. $(dirname $0)/common-chromium-browser.sh
 
 # remove key install script
 rm -rvf $BUILDROOT/opt/skypeforlinux/
 subst "s|.*/opt/skypeforlinux/.*||" $SPEC
 
-mkdir -p $BUILDROOT$LIBDIR/
-mv $BUILDROOT/usr/share/skypeforlinux/ $BUILDROOT$LIBDIR/$PRODUCT/
-subst "s|/usr/share/skypeforlinux|$LIBDIR/$PRODUCT|g" $SPEC
+mkdir -p $BUILDROOT$PRODUCTDIR/
+mv $BUILDROOT/usr/share/skypeforlinux/* $BUILDROOT$PRODUCTDIR/
+subst "s|/usr/share/skypeforlinux|$PRODUCTDIR|g" $SPEC
 
-subst "s|^SKYPE_PATH=.*|SKYPE_PATH=$LIBDIR/$PRODUCT/skypeforlinux|" $BUILDROOT/usr/bin/skypeforlinux
+subst "s|^SKYPE_PATH=.*|SKYPE_PATH=$PRODUCTDIR/skypeforlinux|" $BUILDROOT/usr/bin/skypeforlinux
 
 subst '1iAutoProv:no' $SPEC
 
@@ -31,7 +31,4 @@ mkdir -p $BUILDROOT/usr/bin/
 ln -s /usr/bin/skypeforlinux $BUILDROOT/usr/bin/skype
 subst 's|%files|%files\n/usr/bin/skype|' $SPEC
 
-# Set SUID for chrome-sandbox if userns_clone is not supported
-userns_path='/proc/sys/kernel/unprivileged_userns_clone'
-userns_val="$(cat $userns_path 2>/dev/null)"
-[ "$userns_val" = '1' ] || chmod 4755 $BUILDROOT/$LIBDIR/$PRODUCT/chrome-sandbox
+fix_chrome_sandbox

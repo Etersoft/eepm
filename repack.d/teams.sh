@@ -6,6 +6,9 @@ SPEC="$2"
 
 PRODUCT=teams
 LIBDIR=/opt
+PRODUCTDIR=/opt/teams
+
+. $(dirname $0)/common-chromium-browser.sh
 
 if [ "$($DISTRVENDOR -e)" = "ALTLinux/p8" ] ; then
     # drop unsupported binary
@@ -26,3 +29,5 @@ subst '1iAutoProv:no' $SPEC
 subst '1i%filter_from_requires /^libGLESv2.so().*/d' $SPEC
 subst '1i%filter_from_requires /^libEGL.so().*/d' $SPEC
 subst '1i%filter_from_requires /^libffmpeg.so().*/d' $SPEC
+
+fix_chrome_sandbox
