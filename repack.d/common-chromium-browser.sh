@@ -43,27 +43,25 @@ copy_icons_to_share()
 }
 
 
+remove_file()
+{
+    local file="$1"
+    [ -f $BUILDROOT/$file ] || return
+
+    rm -f $BUILDROOT/$file
+    subst "s|.*$file.*||" $SPEC
+}
+
 cleanup()
 {
     subst '1iAutoProv:no' $SPEC
 
     # remove cron update
-    if [ -r $BUILDROOT/etc/cron.daily/$PRODUCTCUR ] ; then
-        rm -f $BUILDROOT/etc/cron.daily/$PRODUCTCUR
-        subst 's|.*/etc/cron.daily/.*||' $SPEC
-    fi
-
-    if [ -r $BUILDROOT/etc/cron.daily/$PRODUCT ] ; then
-        rm -f $BUILDROOT/etc/cron.daily/$PRODUCT
-        subst 's|.*/etc/cron.daily/.*||' $SPEC
-    fi
+    remove_file /etc/cron.daily/$PRODUCTCUR
+    remove_file /etc/cron.daily/$PRODUCT
 
     # remove unsupported file
-    if [ -r $BUILDROOT/usr/share/menu/*.menu ] ; then
-        rm -f $BUILDROOT/usr/share/menu/*.menu
-        subst "s|.*/usr/share/menu/.*.menu.*||" $SPEC
-    fi
-
+    remove_file /usr/share/menu/$PRODUCT.menu
 }
 
 

@@ -5,6 +5,7 @@ BUILDROOT="$1"
 SPEC="$2"
 
 PRODUCT=atom
+PRODUCTDIR=/usr/share/atom-beta
 
 # TODO: /usr/share/atom-beta -> /usr/lib64/atom-beta
 
@@ -51,5 +52,5 @@ epm install --skip-installed coreutils findutils git-core glib2 grep libalsa lib
             libcairo libcups libdbus libdrm libexpat libgbm libgdk-pixbuf libgio libgtk+3 libnspr libnss libpango libsecret \
             libX11 libxcb libXcomposite libXdamage libXext libXfixes libxkbcommon libxkbfile libXrandr \
             sed /usr/bin/git /usr/bin/node /usr/bin/npm /usr/bin/npx util-linux which xprop \
-            node python3
+            node python3 rpm-build-python3
 # enlightenment exo-utils seamonkey
