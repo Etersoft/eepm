@@ -10136,10 +10136,11 @@ parse_options() {
   done
 }
 
+# compatibility
 awk_egrep () {
   local pattern_string=$1
 
-  gawk '{
+  a='' gawk '{
     while ($0) {
       start=match($0, pattern);
       token=substr($0, start, RLENGTH);
@@ -10321,7 +10322,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.16.0  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.16.1  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10331,7 +10332,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.16.0
+EPMVERSION=3.16.1
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
