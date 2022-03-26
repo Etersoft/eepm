@@ -19,7 +19,7 @@ jobs:
     steps:
       - name: install packages
         run: |
-            apt-get update && apt-get -y install etersoft-build-utils su sudo
+            apt-get update && apt-get -y install etersoft-build-utils rpm-build-intro su sudo
 
       - uses: actions/checkout@v2
 
