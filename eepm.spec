@@ -111,11 +111,13 @@ rm -v %buildroot%_bindir/yum
 %files
 %doc README.md TODO LICENSE
 %dir %_sysconfdir/eepm/
+%dir %_sysconfdir/eepm/play.d/
 %dir %_sysconfdir/eepm/repack.d/
 %dir %_sysconfdir/eepm/prescription.d/
 %config(noreplace) %_sysconfdir/eepm/eepm.conf
 %config(noreplace) %_sysconfdir/eepm/serv.conf
 %config(noreplace) %_sysconfdir/eepm/repack.d/*.sh
+%config(noreplace) %_sysconfdir/eepm/play.d/*.sh
 %config(noreplace) %_sysconfdir/eepm/prescription.d/*.sh
 %_bindir/epm*
 %_bindir/eepm
