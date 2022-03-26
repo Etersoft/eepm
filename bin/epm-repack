@@ -265,7 +265,7 @@ __epm_repack_to_rpm()
         [ -n "$VERSION" ] && chmod -R a+rX $tmpbuilddir/$subdir/*
 
         __fix_spec $pkgname $tmpbuilddir/$subdir $spec
-        __apply_fix_code "common" $tmpbuilddir/$subdir $spec
+        __apply_fix_code "generic" $tmpbuilddir/$subdir $spec
         __apply_fix_code $pkgname $tmpbuilddir/$subdir $spec
         # TODO: we need these dirs to be created
         to_remove_pkg_dirs="$to_remove_pkg_dirs $HOME/RPM/BUILD $HOME/RPM"
