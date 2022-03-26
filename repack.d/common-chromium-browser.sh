@@ -113,6 +113,16 @@ add_bin_commands()
     fi
 }
 
+move_to_opt()
+{
+    local from=/usr/share/$PRODUCT
+    mkdir -p $BUILDROOT$PRODUCTDIR/
+    mv $BUILDROOT/$from/* $BUILDROOT$PRODUCTDIR/
+    subst "s|$from|$PRODUCTDIR|g" $SPEC
+}
+
+
+
 fix_chrome_sandbox()
 {
     local sandbox="$1"

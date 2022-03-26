@@ -1,39 +1,34 @@
 #!/bin/sh
 
-# TODO: common place
-fatal()
-{
-    echo "FATAL: $*" >&2
-    exit 1
-}
+PKGNAME=geogebra-classic
+DESCRIPTION="Geogebra 6 from the official site"
 
-PKGNAME=geogebra
+. $(dirname $0)/common.sh
 
-if [ "$1" = "--remove" ] ; then
-    epm remove $PKGNAME
-    exit
-fi
+arch=$($DISTRVENDOR --distro-arch)
+case $arch in
+    x86_64|amd64)
+        arch=$arch ;;
+    i686|i586|i386)
+        arch=i386 ;;
+    *)
+        fatal "Unsupported arch $arch for $($DISTRVENDOR -d)"
+esac
 
-[ "$1" != "--run" ] && echo "Geogebra 6 from the official site" && exit
+pkgtype="$($DISTRVENDOR -p)"
 
-[ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
+repack=''
+[ "$($DISTRVENDOR -d)" = "ALTLinux" ] && repack='--repack'
 
-# See also 
+case $pkgtype in
+    deb)
+        epm install "http://www.geogebra.net/linux/pool/main/g/geogebra-classic/(epm print constructname $PKGNAME "*")"
+        ;;
+    rpm)
+        epm $repack install "http://www.geogebra.net/linux/rpm/$arch/$(epm print constructname $PKGNAME "*")"
+        ;;
+    *)
+        fatal "Unsupported $pkgtype"
+        ;;
+esac
 
-arch=x86_64
-pkgtype=rpm
-pkgver="6.0.666.0"
-pkgrel="202109211234"
-
-epm install "http://www.geogebra.net/linux/rpm/x86_64/$PKGNAME-classic-$pkgver-$pkgrel.$arch.$pkgtype"
-
-echo
-echo '
-Setting SUID bit on /usr/share/geogebra-classic/chrome-sandbox to allow this crap to work...
-'
-chmod 4755 /usr/share/geogebra-classic/chrome-sandbox
-
-echo
-echo '
-Geogebra 6 successfully installed.
-'
