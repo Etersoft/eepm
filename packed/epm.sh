@@ -3675,6 +3675,7 @@ __epm_play_run()
     # also we will have DISTRVENDOR there
     export PATH=$PROGDIR:$PATH
 
+    set_sudo
     export SUDO
 
     local bashopt=''
@@ -3685,7 +3686,7 @@ __epm_play_run()
 
 epm_play()
 {
-local psdir="$CONFIGDIR/prescription.d"
+local psdir="$CONFIGDIR/play.d"
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
     cat <<EOF
@@ -5893,7 +5894,7 @@ __epm_removerepo_alt_grepremove()
 	if [ "$1" = "all" ] || rhas "$1" "^rpm" ; then
 		rl="$1"
 	else
-		rl="$( (quiet=1 epm repolist) 2>/dev/null | grep -E "$1")"
+		rl="$( (epm --quiet repolist) 2>/dev/null | grep -E "$1")"
 		[ -z "$rl" ] && warning "Can't find '$1' in the repos (see '# epm repolist' output)" && return 1
 	fi
 	echo "$rl" | while read rp ; do
@@ -6461,7 +6462,7 @@ __replace_alt_version_in_repo()
 	local i
 	assure_exists apt-repo
 	#echo "Upgrading $DISTRNAME from $1 to $2 ..."
-	apt-repo list | sed -e "s|\($1\)|{\1}->{$2}|g" | grep -E --color -- "$1"
+	a='' apt-repo list | sed -e "s|\($1\)|{\1}->{$2}|g" | grep -E --color -- "$1"
 	# ask and replace only we will have changes
 	if a='' apt-repo list | grep -E -q -- "$1" ; then
 		__replace_text_in_alt_repo "/^ *#/! s!$1!$2!g"
@@ -10320,7 +10321,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.15.3  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.16.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10330,7 +10331,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.15.3
+EPMVERSION=3.16.0
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
