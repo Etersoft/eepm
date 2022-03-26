@@ -20,6 +20,7 @@ fi
 # TODO: add all subdirs
 subst 's|%files|%files\n%dir /opt/zoom|' $SPEC
 
+# TODO: remove it after fix https://bugzilla.altlinux.org/42189
 # fix broken symlink
 rm -fv $BUILDROOT/usr/bin/zoom
 ln -sv /opt/zoom/ZoomLauncher $BUILDROOT/usr/bin/zoom
@@ -36,9 +37,14 @@ for i in $BUILDROOT/opt/zoom/{libicui18n.so,libicui18n.so.56,libicuuc.so,libicuu
     a= patchelf --set-rpath '$ORIGIN/' $i
 done
 
+for i in $BUILDROOT/opt/zoom/zoom ; do
+    a= patchelf --set-rpath "$PRODUCTDIR/cef" $i
+done
+
 # qt5-3d libqt5-3dquickscene2d
 rm -v $BUILDROOT/opt/zoom/QtQuick/Scene2D/libqtquickscene2dplugin.so $BUILDROOT/opt/zoom/QtQuick/Scene3D/libqtquickscene3dplugin.so
 subst 's|.*/opt/zoom/QtQuick/Scene2D/libqtquickscene2dplugin.so.*||' $SPEC
 subst 's|.*/opt/zoom/QtQuick/Scene3D/libqtquickscene3dplugin.so.*||' $SPEC
 
 fix_chrome_sandbox $PRODUCTDIR/cef
+
