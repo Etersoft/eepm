@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.16.1
+Version: 3.16.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -148,6 +148,13 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Sun Mar 27 2022 Vitaly Lipatov <lav@altlinux.ru> 3.16.2-alt1
+- epm repack: rename common.sh to generic.sh
+- add patchelf to eepm-repack
+- ci testsuite: install rpm-build-intro for build
+- epm play: improve list and description out
+- epm prescription: improve list
+
 * Sat Mar 26 2022 Vitaly Lipatov <lav@altlinux.ru> 3.16.1-alt1
 - tools_json: don't req gawk directly
 - repack: update install_deps for chromium based browsers, use it for vivaldi
