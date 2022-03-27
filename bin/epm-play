@@ -174,7 +174,7 @@ if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
     echo "             --list                - to list installed only"
     echo "             --list-all (default)  - to list all app"
     echo "             --remove <app>        - to remove app"
-    echo "             --update <app|all>    - to update app or all installed apps"
+    echo "             --update <app>|all    - to update app or all installed apps"
     echo "             --short (with --list) - list names only"
     exit
 fi
