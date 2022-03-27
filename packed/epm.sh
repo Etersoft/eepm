@@ -3632,6 +3632,7 @@ docmd $CMD | __fo_pfn
 
 epm_vardir=/var/lib/eepm
 
+
 __save_installed_app()
 {
 	[ -d "$epm_vardir" ] || return 0
@@ -3660,6 +3661,11 @@ __list_installed_app()
     cat $epm_vardir/installed-app 2>/dev/null
 }
 
+__get_app_description()
+{
+    [ -x "$1" ] || return
+    $1 --description 2>/dev/null
+}
 
 __epm_play_run()
 {
@@ -3701,6 +3707,7 @@ EOF
     exit
 fi
 
+
 if [ "$1" = "--remove" ] ; then
     shift
     #__check_installed_app "$1" || warning "$1 is not installed"
@@ -3710,6 +3717,7 @@ if [ "$1" = "--remove" ] ; then
     __remove_installed_app "$prescription"
     exit
 fi
+
 
 if [ "$1" = "--update" ] ; then
     shift
@@ -3723,7 +3731,7 @@ if [ "$1" = "--update" ] ; then
         exit
     fi
     if [ -z "$1" ] ; then
-        fatal "run --update with 'all' or project name"
+        fatal "run --update with 'all' or a project name"
     fi
     __check_installed_app "$1" || fatal "$1 is not installed"
     prescription="$1"
@@ -3731,6 +3739,7 @@ if [ "$1" = "--update" ] ; then
     __epm_play_run $prescription --run "$@"
     exit
 fi
+
 
 if [ "$1" = "--list" ] || [ "$1" = "--installed" ] ; then
     shift
@@ -3743,37 +3752,42 @@ if [ "$1" = "--list" ] || [ "$1" = "--installed" ] ; then
     fi
     echo "Installed:"
     for i in $(__list_installed_app) ; do
-        printf "  %-20s - %s\n" "$i" "$($psdir/$i.sh --description 2>/dev/null)"
+        local desc="$(__get_app_description $psdir/$i.sh)"
+        [ -n "$desc" ] || continue
+        printf "  %-20s - %s\n" "$i" "$desc"
     done
     exit
 fi
 
-[ "($DISTRVENDOR -a)" = "x86_64" ] && IGNOREi586='' || IGNOREi586=1
+[ "$($DISTRVENDOR -a)" = "x86_64" ] && IGNOREi586='' || IGNOREi586=1
 
 if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
-    echo "Run with a name of a play script to run:"
     local i
-    local desc
     if [ -n "$short" ] ; then
         for i in $psdir/*.sh ; do
-            # print all
-            #desc="$($i --description 2>/dev/null)"
-            #[ -z "$desc" ] && continue
             local name=$(basename $i .sh)
             [ -n "$IGNOREi586" ] && rhas "$name" "^i586-" && continue
+            rhas "$name" "^common" && continue
             echo "$name"
         done
         exit
     fi
+    echo "Run with a name of a play script to run:"
     for i in $psdir/*.sh ; do
-        desc="$($i --description 2>/dev/null)"
-        [ -z "$desc" ] && continue
+        local desc="$(__get_app_description $i)"
+        [ -n "$desc" ] || continue
         local name=$(basename $i .sh)
         [ -n "$IGNOREi586" ] && rhas "$name" "^i586-" && continue
+        rhas "$name" "^common" && continue
         printf "  %-20s - %s\n" "$name" "$desc"
     done
     echo
-    echo "run epm play --list to list installed only, or --remove to remove one, or --update to update [all] installed apps"
+    echo "run epm play"
+    echo "             --list                - to list installed only"
+    echo "             --list-all (default)  - to list all app"
+    echo "             --remove <app>        - to remove app"
+    echo "             --update <app|all>    - to update app or all installed apps"
+    echo "             --short (with --list) - list names only"
     exit
 fi
 
@@ -3841,16 +3855,30 @@ local psdir="$CONFIGDIR/prescription.d"
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
     cat <<EOF
 Options:
-    receipt        - run receipt
+    <receipt>      - run receipt
     --list-all     - list all available receipts
 EOF
     exit
 fi
 
+[ "$($DISTRVENDOR -a)" = "x86_64" ] && IGNOREi586='' || IGNOREi586=1
+
 if [ "$1" == "--list-all" ] || [ -z "$*" ] ; then
+    if [ -n "$short" ] ; then
+        for i in $psdir/*.sh ; do
+            local name=$(basename $i .sh)
+            [ -n "$IGNOREi586" ] && rhas "$name" "^i586-" && continue
+            rhas "$name" "^common" && continue
+            echo "$name"
+        done
+        exit
+    fi
     echo "Run with a name of a prescription to run:"
     for i in $psdir/*.sh ; do
-        printf "  %-20s - %s\n" "$(basename $i .sh)" "$($i --description 2>/dev/null)"
+        local name=$(basename $i .sh)
+        [ -n "$IGNOREi586" ] && rhas "$name" "^i586-" && continue
+        rhas "$name" "^common" && continue
+        printf "  %-20s - %s\n" "$name" "$($i --description 2>/dev/null)"
     done
     echo
     exit
@@ -6259,7 +6287,7 @@ __epm_repack_to_rpm()
         [ -n "$VERSION" ] && chmod -R a+rX $tmpbuilddir/$subdir/*
 
         __fix_spec $pkgname $tmpbuilddir/$subdir $spec
-        __apply_fix_code "common" $tmpbuilddir/$subdir $spec
+        __apply_fix_code "generic" $tmpbuilddir/$subdir $spec
         __apply_fix_code $pkgname $tmpbuilddir/$subdir $spec
         # TODO: we need these dirs to be created
         to_remove_pkg_dirs="$to_remove_pkg_dirs $HOME/RPM/BUILD $HOME/RPM"
@@ -10322,7 +10350,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.16.1  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.16.2  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10332,7 +10360,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.16.1
+EPMVERSION=3.16.2
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
