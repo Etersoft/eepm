@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2015, 2017, 2019, 2020  Etersoft
-# Copyright (C) 2015, 2017, 2019, 2020  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2015, 2017, 2019, 2020, 2022  Etersoft
+# Copyright (C) 2015, 2017, 2019, 2020, 2022  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -19,6 +19,7 @@
 
 # TODO
 epm_vardir=/var/lib/eepm
+
 
 __save_installed_app()
 {
@@ -48,6 +49,11 @@ __list_installed_app()
     cat $epm_vardir/installed-app 2>/dev/null
 }
 
+__get_app_description()
+{
+    [ -x "$1" ] || return
+    $1 --description 2>/dev/null
+}
 
 __epm_play_run()
 {
@@ -89,6 +95,7 @@ EOF
     exit
 fi
 
+
 if [ "$1" = "--remove" ] ; then
     shift
     #__check_installed_app "$1" || warning "$1 is not installed"
@@ -98,6 +105,7 @@ if [ "$1" = "--remove" ] ; then
     __remove_installed_app "$prescription"
     exit
 fi
+
 
 if [ "$1" = "--update" ] ; then
     shift
@@ -111,7 +119,7 @@ if [ "$1" = "--update" ] ; then
         exit
     fi
     if [ -z "$1" ] ; then
-        fatal "run --update with 'all' or project name"
+        fatal "run --update with 'all' or a project name"
     fi
     __check_installed_app "$1" || fatal "$1 is not installed"
     prescription="$1"
@@ -119,6 +127,7 @@ if [ "$1" = "--update" ] ; then
     __epm_play_run $prescription --run "$@"
     exit
 fi
+
 
 if [ "$1" = "--list" ] || [ "$1" = "--installed" ] ; then
     shift
@@ -131,37 +140,42 @@ if [ "$1" = "--list" ] || [ "$1" = "--installed" ] ; then
     fi
     echo "Installed:"
     for i in $(__list_installed_app) ; do
-        printf "  %-20s - %s\n" "$i" "$($psdir/$i.sh --description 2>/dev/null)"
+        local desc="$(__get_app_description $psdir/$i.sh)"
+        [ -n "$desc" ] || continue
+        printf "  %-20s - %s\n" "$i" "$desc"
     done
     exit
 fi
 
-[ "($DISTRVENDOR -a)" = "x86_64" ] && IGNOREi586='' || IGNOREi586=1
+[ "$($DISTRVENDOR -a)" = "x86_64" ] && IGNOREi586='' || IGNOREi586=1
 
 if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
-    echo "Run with a name of a play script to run:"
     local i
-    local desc
     if [ -n "$short" ] ; then
         for i in $psdir/*.sh ; do
-            # print all
-            #desc="$($i --description 2>/dev/null)"
-            #[ -z "$desc" ] && continue
             local name=$(basename $i .sh)
             [ -n "$IGNOREi586" ] && rhas "$name" "^i586-" && continue
+            rhas "$name" "^common" && continue
             echo "$name"
         done
         exit
     fi
+    echo "Run with a name of a play script to run:"
     for i in $psdir/*.sh ; do
-        desc="$($i --description 2>/dev/null)"
-        [ -z "$desc" ] && continue
+        local desc="$(__get_app_description $i)"
+        [ -n "$desc" ] || continue
         local name=$(basename $i .sh)
         [ -n "$IGNOREi586" ] && rhas "$name" "^i586-" && continue
+        rhas "$name" "^common" && continue
         printf "  %-20s - %s\n" "$name" "$desc"
     done
     echo
-    echo "run epm play --list to list installed only, or --remove to remove one, or --update to update [all] installed apps"
+    echo "run epm play"
+    echo "             --list                - to list installed only"
+    echo "             --list-all (default)  - to list all app"
+    echo "             --remove <app>        - to remove app"
+    echo "             --update <app|all>    - to update app or all installed apps"
+    echo "             --short (with --list) - list names only"
     exit
 fi
 
