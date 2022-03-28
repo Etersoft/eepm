@@ -2280,6 +2280,9 @@ epm_download()
 	esac
 
 	case $PMTYPE in
+	apt-dpkg)
+		docmd apt-get download $*
+		;;
 	dnf-rpm)
 		sudocmd dnf download $*
 		;;
@@ -2531,16 +2534,18 @@ epm_filelist()
 
 # File bin/epm-full_upgrade:
 
-
 epm_full_upgrade()
 {
-	epm_update || return
+	docmd epm update || return
 
-	epm_upgrade || return
+	[ -n "$quiet" ] || echo
+	docmd epm upgrade || return
 
-	epm_kernel_update || return
+	[ -n "$quiet" ] || echo
+	docmd epm update-kernel || return
 
-	epm play --update all || return
+	[ -n "$quiet" ] || echo
+	docmd epm play --update all || return
 }
 
 # File bin/epm-info:
@@ -3667,14 +3672,21 @@ __get_app_description()
     $1 --description 2>/dev/null
 }
 
-__epm_play_run()
+__check_play_script()
 {
     local script="$psdir/$1.sh"
     shift
 
-    if [ ! -x "$script" ] ; then
-        fatal "Can't find executable play script $script."
-    fi
+    [ -x "$script" ]
+}
+
+
+__epm_play_run()
+{
+    local script="$psdir/$1.sh"
+
+    __check_play_script "$1" || fatal "Can't find executable play script $script. Run epm play to list all available apps."
+    shift
 
     # allow use EGET in the scripts
     __set_EGET
@@ -3692,7 +3704,7 @@ __epm_play_run()
 
 epm_play()
 {
-local psdir="$CONFIGDIR/play.d"
+local psdir="$(realpath $CONFIGDIR/play.d)"
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
     cat <<EOF
@@ -3724,8 +3736,13 @@ if [ "$1" = "--update" ] ; then
     if [ "$1" = "all" ] ; then
         shift
         for i in $(__list_installed_app) ; do
+            echo
             echo "$i"
             prescription="$i"
+            if ! __check_play_script $prescription ; then
+                warning "Can't find executable play script for $prescription. Try epm play --remove $prescription if you don't need it anymore."
+                continue
+            fi
             __epm_play_run $prescription --run "$@"
         done
         exit
@@ -3740,8 +3757,13 @@ if [ "$1" = "--update" ] ; then
     exit
 fi
 
+if [ "$1" = "--installed" ] ; then
+    shift
+    __check_installed_app "$1"
+    exit
+fi
 
-if [ "$1" = "--list" ] || [ "$1" = "--installed" ] ; then
+if [ "$1" = "--list" ] ; then
     shift
     local i
     if [ -n "$short" ] ; then
@@ -3783,10 +3805,11 @@ if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
     done
     echo
     echo "run epm play"
-    echo "             --list                - to list installed only"
-    echo "             --list-all (default)  - to list all app"
-    echo "             --remove <app>        - to remove app"
-    echo "             --update <app|all>    - to update app or all installed apps"
+    echo "             --list                - list installed apps"
+    echo "             --list-all (default)  - list all apps"
+    echo "             --remove <app>        - remove <app>"
+    echo "             --update <app>|all    - update <app> or all installed apps"
+    echo "             --installed <app>     - check if the app is installed"
     echo "             --short (with --list) - list names only"
     exit
 fi
@@ -6177,7 +6200,7 @@ EOF
 
 __apply_fix_code()
 {
-    local repackcode="$CONFIGDIR/repack.d/$1.sh"
+    local repackcode="$(realpath $CONFIGDIR/repack.d/$1.sh)"
     [ -x "$repackcode" ] || return
     shift
     export PATH=$PROGDIR:$PATH
@@ -10350,7 +10373,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.16.2  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.16.4  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10360,7 +10383,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.16.2
+EPMVERSION=3.16.4
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
