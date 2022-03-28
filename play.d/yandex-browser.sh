@@ -1,15 +1,15 @@
 #!/bin/sh
 
 BRANCH=stable
-PKGNAME=yandex-browser-stable
 PRODUCTDIR=/opt/yandex/browser
 DESCRIPTION="Yandex browser from the official site"
 
-if [ "$1" = "--remove" ] ; then
-    epm remove $PKGNAME
-    epm remove $PKGNAME-codecs-ffmpeg-extra
-    exit
+if [ "$2" = "beta" ] ; then
+    BRANCH=beta
+    PRODUCTDIR=/opt/yandex/browser-$BRANCH
 fi
+
+PKGNAME=yandex-browser-$BRANCH
 
 . $(dirname $0)/common.sh
 
