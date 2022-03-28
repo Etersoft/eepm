@@ -99,7 +99,7 @@ chmod 0755 %buildroot%_sysconfdir/eepm/play.d/*.sh
 
 mkdir -p %buildroot%_sysconfdir/bash_completion.d/
 install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/serv
-ln -s serv %buildroot%_sysconfdir/bash_completion.d/cerv
+install -m 0644 bash_completion/cerv %buildroot%_sysconfdir/bash_completion.d/cerv
 
 # shebang.req.files
 chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
