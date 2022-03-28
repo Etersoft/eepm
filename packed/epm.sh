@@ -1987,7 +1987,7 @@ try_fix_apt_rpm_dupls()
 epm_dedup()
 {
 case "$DISTRNAME" in
-	"ALTLinux")
+	ALTLinux|ALTServer)
 		assure_exists /usr/share/apt/scripts/dedup.lua apt-scripts
 		if [ -z "$direct" ] && [ -f /usr/share/apt/scripts/dedup.lua ] ; then
 			info "Check for duplicates via apt-get dedup from apt-scripts (also you can use internal EPM dedup implementation with --direct option)"
@@ -2273,7 +2273,7 @@ epm_download()
 	local CMD
 
 	case $DISTRNAME-$PMTYPE in
-		ALTLinux-apt-rpm)
+		ALTLinux-apt-rpm|ALTServer-apt-rpm)
 			__epm_download_alt $*
 			return
 			;;
@@ -2937,7 +2937,7 @@ __epm_check_if_rpm_already_installed()
 __handle_direct_install()
 {
     case "$DISTRNAME" in
-        "ALTLinux")
+        ALTLinux|ALTServer)
             local pkg url
             for pkg in $pkg_names ; do
                 url=$(__epm_get_altpkg_url $pkg)
@@ -2975,7 +2975,7 @@ epm_install_files()
     # sudo test -r FILE
     # do not fallback to install_names if we have no permissions
     case "$DISTRNAME" in
-        "ALTLinux")
+        ALTLinux|ALTServer)
 
             # TODO: replace with name changed function
             __epm_check_if_try_install_deb $@ && return
@@ -3201,7 +3201,7 @@ epm_print_install_names_command()
 
 epm_install()
 {
-    if [ "$DISTRNAME" = "ALTLinux" ] ; then
+    if [ "$DISTRNAME" = "ALTLinux" ] || [ "$DISTRNAME" = "ALTServer" ] ; then
         if tasknumber "$pkg_names" >/dev/null ; then
             assure_exists apt-repo
             # TODO: add --auto support
@@ -5361,7 +5361,7 @@ __switch_alt_to_distro()
 			__check_system "$TO"
 			docmd epm upgrade || fatal
 			;;
-		"p8 Sisyphus"|"p9 Sisyphus"|"p10 Sisyphus"|"Sisyphus Sisyphus")
+		"p8 Sisyphus"|"p9 Sisyphus"|"p10 Sisyphus"|"10 Sisyphus"|"Sisyphus Sisyphus")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			docmd epm upgrade || fatal
@@ -5812,7 +5812,7 @@ epm_remove()
 		return
 	fi
 
-	if [ "$DISTRNAME" = "ALTLinux" ] ; then
+	if [ "$DISTRNAME" = "ALTLinux" ] || [ "$DISTRNAME" = "ALTServer" ] ; then
 		if tasknumber "$pkg_names" >/dev/null ; then
 			assure_exists apt-repo
 			pkg_names="$(get_task_packages $pkg_names)"
@@ -5872,7 +5872,6 @@ epm_remove()
 
 	epm_remove_names $pkg_names
 }
-
 
 # File bin/epm-remove_old_kernels:
 
@@ -6224,7 +6223,13 @@ EOF
 __epm_repack_to_rpm()
 {
     local pkgs="$*"
-    assure_distr ALTLinux "install --repack"
+    case $DISTRNAME in
+        ALTLinux|ALTServer)
+            ;;
+        *)
+            assure_distr ALTLinux "install --repack"
+            ;;
+    esac
 
     # install epm-repack for static (package based) dependencies
     assure_exists fakeroot || fatal
@@ -8028,7 +8033,7 @@ __epm_check_vendor()
     [ -n "$scripts$noscripts" ] && return
 
     # only ALT
-    [ "$DISTRNAME" = "ALTLinux" ] || return
+    [ "$DISTRNAME" = "ALTLinux" ] || [ "$DISTRNAME" = "ALTServer" ] || return
 
     local i
     for i in $* ; do
@@ -8491,7 +8496,7 @@ epm_upgrade()
 
 	warmup_bases
 
-	if [ "$DISTRNAME" = "ALTLinux" ] ; then
+	if [ "$DISTRNAME" = "ALTLinux" ] || [ "$DISTRNAME" = "ALTServer" ] ; then
 		if tasknumber "$@" >/dev/null ; then
 
 			try_change_alt_repo
@@ -9044,6 +9049,9 @@ elif distro gentoo-release ; then
 	MAKEPROFILE=$(readlink $ROOTDIR/etc/portage/make.profile 2>/dev/null) || MAKEPROFILE=$(readlink $ROOTDIR/etc/make.profile)
 	DISTRIB_RELEASE=$(basename $MAKEPROFILE)
 	echo $DISTRIB_RELEASE | grep -q "[0-9]" || DISTRIB_RELEASE=$(basename "$(dirname $MAKEPROFILE)") #"
+
+elif [ "$DISTRIB_ID" = "ALTServer" ] ; then
+	DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\..*//g")
 
 elif distro slackware-version ; then
 	DISTRIB_ID="Slackware"
@@ -10373,7 +10381,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.16.4  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.16.5  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10383,7 +10391,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.16.4
+EPMVERSION=3.16.5
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
