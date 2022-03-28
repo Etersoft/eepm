@@ -3,7 +3,7 @@
 MAIN=wine
 [ -n "$2" ] && MAIN="$2"
 
-[ "$($DISTRVENDOR -d)" != "ALTLinux" ] && echo "Only ALTLinux is supported" && exit 1
+distro="$($DISTRVENDOR -d)" ; [ "$distro" = "ALTLinux" ] || [ "$distro" = "ALTServer" ] || { echo "Only ALTLinux is supported" ; exit 1 ; }
 
 arch="$($DISTRVENDOR -a)"
 

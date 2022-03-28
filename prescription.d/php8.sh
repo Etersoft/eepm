@@ -2,7 +2,7 @@
 
 [ "$1" != "--run" ] && echo "Install php8 (or upgrade from php7)" && exit
 
-[ "$($DISTRVENDOR -d)" != "ALTLinux" ] && echo "Only ALTLinux is supported" && exit 1
+distro="$($DISTRVENDOR -d)" ; [ "$distro" = "ALTLinux" ] || [ "$distro" = "ALTServer" ] || { echo "Only ALTLinux is supported" ; exit 1 ; }
 
 # TODO: check for apache2-mod_php7
 

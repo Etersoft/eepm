@@ -88,7 +88,7 @@ __epm_addrepo_altlinux()
 			epm repofix etersoft
 			return 0
 			;;
-		basealt|altlinux)
+		basealt|ALTLinux|ALTServer)
 			# TODO: setrepo?
 			assure_exists apt-repo
 			sudocmd apt-repo add $branch
@@ -202,7 +202,7 @@ epm_addrepo()
 local repo="$*"
 
 case $DISTRNAME in
-	ALTLinux)
+	ALTLinux|ALTServer)
 		# Note! Don't use quotes here
 		__epm_addrepo_altlinux $repo
 		return

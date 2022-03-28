@@ -280,7 +280,7 @@ epm_remove()
 		return
 	fi
 
-	if [ "$DISTRNAME" = "ALTLinux" ] ; then
+	if [ "$DISTRNAME" = "ALTLinux" ] || [ "$DISTRNAME" = "ALTServer" ] ; then
 		load_helper epm-sh-altlinux
 		if tasknumber "$pkg_names" >/dev/null ; then
 			assure_exists apt-repo
@@ -341,4 +341,3 @@ epm_remove()
 
 	epm_remove_names $pkg_names
 }
-

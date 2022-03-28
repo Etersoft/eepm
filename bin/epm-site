@@ -62,7 +62,7 @@ open_browser()
 __query_package_hl_url()
 {
 	case $DISTRNAME in
-		ALTLinux)
+		ALTLinux|ALTServer)
 			paoapi srpms/$1 | get_pao_var url
 			;;
 	esac

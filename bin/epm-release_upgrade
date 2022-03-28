@@ -393,7 +393,7 @@ __switch_alt_to_distro()
 			__check_system "$TO"
 			docmd epm upgrade || fatal
 			;;
-		"p8 Sisyphus"|"p9 Sisyphus"|"p10 Sisyphus"|"Sisyphus Sisyphus")
+		"p8 Sisyphus"|"p9 Sisyphus"|"p10 Sisyphus"|"10 Sisyphus"|"Sisyphus Sisyphus")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			docmd epm upgrade || fatal
@@ -440,7 +440,7 @@ epm_release_upgrade()
 	export EPMNOEATMYDATA=1
 
 	case $DISTRNAME in
-	ALTLinux)
+	ALTLinux|ALTServer)
 		__epm_ru_update || fatal
 
 		# TODO: remove this hack (or move it to distro_info)

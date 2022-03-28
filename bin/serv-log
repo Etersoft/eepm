@@ -53,7 +53,7 @@ serv_log()
 			;;
 		*)
 			case $DISTRNAME in
-			ALTLinux)
+			ALTLinux|ALTServer)
 				FF="" ; [ "$1" = "-f" ] && FF="-f"
 				__serv_log_altlinux "$SERVICE" $FF
 				return ;;

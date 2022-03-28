@@ -679,7 +679,7 @@ __epm_addrepo_altlinux()
 			epm repofix etersoft
 			return 0
 			;;
-		basealt|altlinux)
+		basealt|ALTLinux|ALTServer)
 			# TODO: setrepo?
 			assure_exists apt-repo
 			sudocmd apt-repo add $branch
@@ -792,7 +792,7 @@ epm_addrepo()
 local repo="$*"
 
 case $DISTRNAME in
-	ALTLinux)
+	ALTLinux|ALTServer)
 		# Note! Don't use quotes here
 		__epm_addrepo_altlinux $repo
 		return
@@ -1276,7 +1276,7 @@ epm_autoremove()
 {
 
 case $DISTRNAME in
-	ALTLinux)
+	ALTLinux|ALTServer)
 		if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "help" ] ; then
 			epm_autoremove_print_help
 			return 0
@@ -1696,7 +1696,7 @@ case $PMTYPE in
 esac
 
 case $DISTRNAME in
-	ALTLinux)
+	ALTLinux|ALTServer)
 		epm_checksystem_$DISTRNAME
 		;;
 	*)
@@ -3393,7 +3393,7 @@ epm_kernel_update()
 	info "Updating system kernel to the latest version..."
 
 	case $DISTRNAME in
-	ALTLinux)
+	ALTLinux|ALTServer)
 		if ! __epm_query_package kernel-image >/dev/null ; then
 			info "No installed kernel packages, skipping update"
 			return
@@ -4886,7 +4886,7 @@ epm_release_downgrade()
 	export EPMNOEATMYDATA=1
 
 	case $DISTRNAME in
-	ALTLinux)
+	ALTLinux|ALTServer)
 		__epm_ru_update || fatal
 
 		# try to detect current release by repo
@@ -5408,7 +5408,7 @@ epm_release_upgrade()
 	export EPMNOEATMYDATA=1
 
 	case $DISTRNAME in
-	ALTLinux)
+	ALTLinux|ALTServer)
 		__epm_ru_update || fatal
 
 		# TODO: remove this hack (or move it to distro_info)
@@ -5883,7 +5883,7 @@ epm_remove_old_kernels()
 	warmup_bases
 
 	case $DISTRNAME in
-	ALTLinux)
+	ALTLinux|ALTServer)
 		if ! __epm_query_package kernel-image >/dev/null ; then
 			info "No installed kernel packages, skipping cleaning"
 			return
@@ -6010,7 +6010,7 @@ epm_removerepo()
 {
 
 case $DISTRNAME in
-	ALTLinux)
+	ALTLinux|ALTServer)
 		__epm_removerepo_alt "$@"
 		return
 		;;
@@ -6671,7 +6671,7 @@ epm_repofix()
 {
 
 case $DISTRNAME in
-	ALTLinux)
+	ALTLinux|ALTServer)
 		assure_exists apt-repo
 		[ -n "$quiet" ] || docmd apt-repo list
 		assure_root
@@ -8305,7 +8305,7 @@ open_browser()
 __query_package_hl_url()
 {
 	case $DISTRNAME in
-		ALTLinux)
+		ALTLinux|ALTServer)
 			paoapi srpms/$1 | get_pao_var url
 			;;
 	esac
@@ -8828,7 +8828,7 @@ pkgmanager()
 local CMD
 # FIXME: some problems with multibased distros (Server Edition on CentOS and Desktop Edition on Ubuntu)
 case $DISTRIB_ID in
-	ALTLinux)
+	ALTLinux|ALTServer)
 		#which ds-install 2>/dev/null >/dev/null && CMD=deepsolver-rpm
 		#which pkcon 2>/dev/null >/dev/null && CMD=packagekit-rpm
 		CMD="apt-rpm"

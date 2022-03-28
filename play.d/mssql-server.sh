@@ -27,7 +27,7 @@ case "$($DISTRVENDOR -d)" in
     epm install https://packages.microsoft.com/ubuntu/20.04/mssql-server-2019/pool/main/m/mssql-server/mssql-server_1*_amd64.deb
     epm rr $DEBREPO ; epm update
     ;;
-  "ALTLinux")
+  ALTLinux|ALTServer)
     epm install --repack https://packages.microsoft.com/rhel/8/mssql-server-2019/mssql-server-1*.x86_64.rpm || fatal
     ;;
   *)

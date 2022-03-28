@@ -2,7 +2,7 @@
 
 [ "$1" != "--run" ] && echo "Install glusterfs7 (or upgrade from glusterfs6)" && exit
 
-[ "$($DISTRVENDOR -d)" != "ALTLinux" ] && echo "Only ALTLinux is supported" && exit 1
+distro="$($DISTRVENDOR -d)" ; [ "$distro" = "ALTLinux" ] || [ "$distro" = "ALTServer" ] || { echo "Only ALTLinux is supported" ; exit 1 ; }
 
 if epmqp --quiet glusterfs6- ; then
     # Upgrade if was installed

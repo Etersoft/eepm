@@ -19,7 +19,7 @@ case $arch in
 esac
 
 repack=''
-[ "$($DISTRVENDOR -d)" = "ALTLinux" ] && repack='--repack'
+[ "$($DISTRVENDOR -s)" = "alt" ] && repack='--repack'
 
 #https://st.mycdn.me/static/sferum/latest/sferum-i386.deb
 #https://st.mycdn.me/static/sferum/latest/sferum-amd64.deb

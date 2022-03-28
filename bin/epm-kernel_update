@@ -27,7 +27,7 @@ epm_kernel_update()
 	info "Updating system kernel to the latest version..."
 
 	case $DISTRNAME in
-	ALTLinux)
+	ALTLinux|ALTServer)
 		load_helper epm-query_package
 		if ! __epm_query_package kernel-image >/dev/null ; then
 			info "No installed kernel packages, skipping update"

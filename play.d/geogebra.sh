@@ -18,7 +18,7 @@ esac
 pkgtype="$($DISTRVENDOR -p)"
 
 repack=''
-[ "$($DISTRVENDOR -d)" = "ALTLinux" ] && repack='--repack'
+[ "$($DISTRVENDOR -s)" = "alt" ] && repack='--repack'
 
 case $pkgtype in
     deb)

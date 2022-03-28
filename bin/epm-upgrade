@@ -29,7 +29,7 @@ epm_upgrade()
 
 	warmup_bases
 
-	if [ "$DISTRNAME" = "ALTLinux" ] ; then
+	if [ "$DISTRNAME" = "ALTLinux" ] || [ "$DISTRNAME" = "ALTServer" ] ; then
 		load_helper epm-sh-altlinux
 		if tasknumber "$@" >/dev/null ; then
 			load_helper epm-addrepo

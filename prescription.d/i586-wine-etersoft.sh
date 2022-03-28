@@ -2,7 +2,7 @@
 
 MAIN=wine-etersoft
 
-[ "$($DISTRVENDOR -d)" != "ALTLinux" ] && echo "Only ALTLinux is supported" && exit 1
+distro="$($DISTRVENDOR -d)" ; [ "$distro" = "ALTLinux" ] || [ "$distro" = "ALTServer" ] || { echo "Only ALTLinux is supported" ; exit 1 ; }
 [ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
 PKGNAMES="lib$MAIN i586-$MAIN i586-lib$MAIN i586-lib$MAIN-gl"

@@ -57,7 +57,7 @@ epm_release_downgrade()
 	export EPMNOEATMYDATA=1
 
 	case $DISTRNAME in
-	ALTLinux)
+	ALTLinux|ALTServer)
 		__epm_ru_update || fatal
 
 		# try to detect current release by repo

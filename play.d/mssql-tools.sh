@@ -22,7 +22,7 @@ case "$($DISTRVENDOR -d)" in
     #epm install https://packages.microsoft.com/ubuntu/16.04/prod/pool/main/m/msodbcsql17/msodbcsql17_1*_amd64.deb
     epm install unixodbc
     ;;
-  "ALTLinux")
+  ALTLinux|ALTServer)
     epm install --repack https://packages.microsoft.com/rhel/8/prod/mssql-tools-1*.x86_64.rpm
     epm install --repack https://packages.microsoft.com/rhel/8/prod/msodbcsql17-1*.x86_64.rpm
     epm install unixODBC

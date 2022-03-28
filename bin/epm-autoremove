@@ -233,7 +233,7 @@ epm_autoremove()
 {
 
 case $DISTRNAME in
-	ALTLinux)
+	ALTLinux|ALTServer)
 		if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "help" ] ; then
 			epm_autoremove_print_help
 			return 0

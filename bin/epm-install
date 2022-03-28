@@ -266,7 +266,7 @@ __epm_check_if_rpm_already_installed()
 __handle_direct_install()
 {
     case "$DISTRNAME" in
-        "ALTLinux")
+        ALTLinux|ALTServer)
             load_helper epm-download
             local pkg url
             for pkg in $pkg_names ; do
@@ -306,7 +306,7 @@ epm_install_files()
     # sudo test -r FILE
     # do not fallback to install_names if we have no permissions
     case "$DISTRNAME" in
-        "ALTLinux")
+        ALTLinux|ALTServer)
 
             # TODO: replace with name changed function
             __epm_check_if_try_install_deb $@ && return
@@ -533,7 +533,7 @@ epm_print_install_names_command()
 
 epm_install()
 {
-    if [ "$DISTRNAME" = "ALTLinux" ] ; then
+    if [ "$DISTRNAME" = "ALTLinux" ] || [ "$DISTRNAME" = "ALTServer" ] ; then
         if tasknumber "$pkg_names" >/dev/null ; then
             assure_exists apt-repo
             # TODO: add --auto support

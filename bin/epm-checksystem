@@ -48,7 +48,7 @@ case $PMTYPE in
 esac
 
 case $DISTRNAME in
-	ALTLinux)
+	ALTLinux|ALTServer)
 		epm_checksystem_$DISTRNAME
 		;;
 	*)

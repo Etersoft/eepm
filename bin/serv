@@ -53,7 +53,7 @@ set_service_type()
 
 # TODO: see Running in distro_info, check is_aсtive_systemd
 case $DISTRNAME in
-	ALTLinux)
+	ALTLinux|ALTServer)
 		CMD="service-chkconfig"
 		;;
 	Ubuntu|Debian|Mint|AstraLinux)

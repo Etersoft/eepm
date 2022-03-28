@@ -25,7 +25,7 @@ epm_remove_old_kernels()
 	warmup_bases
 
 	case $DISTRNAME in
-	ALTLinux)
+	ALTLinux|ALTServer)
 		load_helper epm-query_package
 		if ! __epm_query_package kernel-image >/dev/null ; then
 			info "No installed kernel packages, skipping cleaning"

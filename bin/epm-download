@@ -189,7 +189,7 @@ epm_download()
 	local CMD
 
 	case $DISTRNAME-$PMTYPE in
-		ALTLinux-apt-rpm)
+		ALTLinux-apt-rpm|ALTServer-apt-rpm)
 			__epm_download_alt $*
 			return
 			;;

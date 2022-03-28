@@ -84,7 +84,7 @@ pkgmanager()
 local CMD
 # FIXME: some problems with multibased distros (Server Edition on CentOS and Desktop Edition on Ubuntu)
 case $DISTRIB_ID in
-	ALTLinux)
+	ALTLinux|ALTServer)
 		#which ds-install 2>/dev/null >/dev/null && CMD=deepsolver-rpm
 		#which pkcon 2>/dev/null >/dev/null && CMD=packagekit-rpm
 		CMD="apt-rpm"
@@ -300,6 +300,9 @@ elif distro gentoo-release ; then
 	MAKEPROFILE=$(readlink $ROOTDIR/etc/portage/make.profile 2>/dev/null) || MAKEPROFILE=$(readlink $ROOTDIR/etc/make.profile)
 	DISTRIB_RELEASE=$(basename $MAKEPROFILE)
 	echo $DISTRIB_RELEASE | grep -q "[0-9]" || DISTRIB_RELEASE=$(basename "$(dirname $MAKEPROFILE)") #"
+
+elif [ "$DISTRIB_ID" = "ALTServer" ] ; then
+	DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\..*//g")
 
 elif distro slackware-version ; then
 	DISTRIB_ID="Slackware"

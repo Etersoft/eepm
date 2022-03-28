@@ -20,7 +20,7 @@ case $arch in
         fatal "Unsupported arch $arch for $($DISTRVENDOR -d)"
 esac
 
-if [ "$($DISTRVENDOR -d)" = "ALTLinux" ] ; then
+if [ "$($DISTRVENDOR -s)" = "alt" ] ; then
     epm install $repack https://zoom.us/client/$version/zoom_$arch.rpm
     exit
 fi

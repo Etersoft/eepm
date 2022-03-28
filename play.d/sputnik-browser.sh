@@ -22,7 +22,7 @@ case "$($DISTRVENDOR -e)" in
     ALTLinux/c8)
         epm --repack install https://upd.sputnik-lab.com/api-updates/updates/download/94d70495-75ec-4ad7-831d-8008d0525d90/sputnik-browser-stable-5.6.6322.0-1.x86_64.rpm
         ;;
-    ALTLinux/*)
+    ALTLinux/*|ALTServer/*)
         epm --repack install https://upd.sputnik-lab.com/api-updates/updates/download/49734e35-cfe1-493c-bfae-8fa83f2a4365/sputnik-browser-stable-5.6.6324.0-1.x86_64.rpm
         ;;
     AstraLinux/*)

@@ -611,7 +611,7 @@ serv_cat()
 			;;
 		*)
 			case $DISTRNAME in
-			ALTLinux)
+			ALTLinux|ALTServer)
 				local INITFILE=/etc/init.d/$SERVICE
 				[ -r "$INITFILE" ] || fatal "Can't find init file $INITFILE"
 				docmd cat $INITFILE
@@ -764,7 +764,7 @@ serv_exists()
 			;;
 		*)
 			case $DISTRNAME in
-			ALTLinux)
+			ALTLinux|ALTServer)
 				local INITFILE=/etc/init.d/$SERVICE
 				[ -r "$INITFILE" ] || return
 				return ;;
@@ -932,7 +932,7 @@ serv_log()
 			;;
 		*)
 			case $DISTRNAME in
-			ALTLinux)
+			ALTLinux|ALTServer)
 				FF="" ; [ "$1" = "-f" ] && FF="-f"
 				__serv_log_altlinux "$SERVICE" $FF
 				return ;;
@@ -1369,7 +1369,7 @@ pkgmanager()
 local CMD
 # FIXME: some problems with multibased distros (Server Edition on CentOS and Desktop Edition on Ubuntu)
 case $DISTRIB_ID in
-	ALTLinux)
+	ALTLinux|ALTServer)
 		#which ds-install 2>/dev/null >/dev/null && CMD=deepsolver-rpm
 		#which pkcon 2>/dev/null >/dev/null && CMD=packagekit-rpm
 		CMD="apt-rpm"
@@ -2905,7 +2905,7 @@ set_service_type()
 
 # TODO: see Running in distro_info, check is_aсtive_systemd
 case $DISTRNAME in
-	ALTLinux)
+	ALTLinux|ALTServer)
 		CMD="service-chkconfig"
 		;;
 	Ubuntu|Debian|Mint|AstraLinux)

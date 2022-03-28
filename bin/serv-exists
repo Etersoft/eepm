@@ -29,7 +29,7 @@ serv_exists()
 			;;
 		*)
 			case $DISTRNAME in
-			ALTLinux)
+			ALTLinux|ALTServer)
 				local INITFILE=/etc/init.d/$SERVICE
 				[ -r "$INITFILE" ] || return
 				return ;;

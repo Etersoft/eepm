@@ -5,7 +5,7 @@
 [ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
 case "$($DISTRVENDOR -d)" in
-    "ALTLinux")
+    "ALTLinux"|"ALTServer")
         epm --verbose --simulate remove $(epmqp "^i586-")
         ;;
     "Ubuntu"|"Debian")
