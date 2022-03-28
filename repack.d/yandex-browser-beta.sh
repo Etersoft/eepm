@@ -8,9 +8,10 @@ PRODUCT=yandex-browser
 PRODUCTCUR=yandex-browser-beta
 PRODUCTDIR=/opt/yandex/browser-beta
 
+. $(dirname $0)/common-chromium-browser.sh
+
 subst '1iConflicts:yandex-browser-stable' $SPEC
 
-. $(dirname $0)/common-chromium-browser.sh
 
 set_alt_alternatives 65
 
@@ -24,7 +25,3 @@ use_system_xdg
 
 install_deps
 
-
-#if ! grep -q '^"/usr/bin/yandex-browser"' $SPEC ; then
-#    subst 's|\(.*/usr/bin/yandex-browser.*\)|"/usr/bin/yandex-browser"\n\1|' $SPEC
-#fi

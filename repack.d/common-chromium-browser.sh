@@ -48,7 +48,7 @@ remove_file()
     local file="$1"
     [ -f $BUILDROOT/$file ] || return
 
-    rm -f $BUILDROOT/$file
+    rm -fv $BUILDROOT/$file
     subst "s|.*$file.*||" $SPEC
 }
 
@@ -62,6 +62,7 @@ cleanup()
 
     # remove unsupported file
     remove_file /usr/share/menu/$PRODUCT.menu
+    remove_file /usr/share/menu/$PRODUCTCUR.menu
 }
 
 

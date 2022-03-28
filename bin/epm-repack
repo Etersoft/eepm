@@ -154,7 +154,7 @@ EOF
 # args: pkgname buildroot spec
 __apply_fix_code()
 {
-    local repackcode="$CONFIGDIR/repack.d/$1.sh"
+    local repackcode="$(realpath $CONFIGDIR/repack.d/$1.sh)"
     [ -x "$repackcode" ] || return
     shift
     export PATH=$PROGDIR:$PATH
