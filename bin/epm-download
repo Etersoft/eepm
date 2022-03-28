@@ -196,6 +196,9 @@ epm_download()
 	esac
 
 	case $PMTYPE in
+	apt-dpkg)
+		docmd apt-get download $*
+		;;
 	dnf-rpm)
 		sudocmd dnf download $*
 		;;
