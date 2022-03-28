@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.16.4
+Version: 3.16.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -148,6 +148,10 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Mon Mar 28 2022 Vitaly Lipatov <lav@altlinux.ru> 3.16.5-alt1
+- epm repack code: move to /opt
+- add support for ALTServer distro
+
 * Mon Mar 28 2022 Vitaly Lipatov <lav@altlinux.ru> 3.16.4-alt1
 - epm-full_upgrade: run commands separately
 - epm play: refactor yandex-browser-codecs packing
