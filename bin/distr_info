@@ -64,7 +64,11 @@ pkgvendor()
 	[ "$DISTRIB_ID" = "OpenSUSE" ] && echo "suse" && return
 	[ "$DISTRIB_ID" = "openSUSETumbleweed" ] && echo "suse" && return
 	[ "$DISTRIB_ID" = "openSUSELeap" ] && echo "suse" && return
-	[ -n "$VENDOR_ID" ] && echo "$VENDOR_ID" && return
+	if [ -n "$VENDOR_ID" ] ; then
+		[ "$VENDOR_ID" = "altlinux" ] && echo "alt" && return
+		echo "$VENDOR_ID"
+		return
+	fi
 	tolower "$DISTRIB_ID"
 }
 
