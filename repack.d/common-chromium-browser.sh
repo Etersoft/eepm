@@ -87,6 +87,7 @@ install_deps()
 
 add_bin_commands()
 {
+    mkdir -p $BUILDROOT/usr/bin
     if [ -L $BUILDROOT/usr/bin/$PRODUCTCUR ] ; then
         rm -fv $BUILDROOT/usr/bin/$PRODUCTCUR
     else

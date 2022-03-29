@@ -1,9 +1,9 @@
 #!/bin/sh
 
-BRANCH=stable
 PRODUCTDIR=/opt/yandex/browser
 DESCRIPTION="Yandex browser from the official site"
 
+BRANCH=stable
 if [ "$2" = "beta" ] ; then
     BRANCH=beta
     PRODUCTDIR=/opt/yandex/browser-$BRANCH
