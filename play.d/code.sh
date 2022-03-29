@@ -5,6 +5,7 @@ DESCRIPTION="Visual Studio Code from the official site"
 
 . $(dirname $0)/common.sh
 
+VERSION="$2"
 
 arch="$($DISTRVENDOR -a)"
 case "$arch" in
@@ -28,8 +29,15 @@ pkgtype="$($DISTRVENDOR -p)"
 [ "$pkgtype" = "deb" ] || repack='--repack'
 
 PKG=/tmp/$PKGNAME.$pkgtype
-# TODO: wget does not support:  Content-Disposition: attachment; filename="code-1.52.1-1608137084.el7.x86_64.rpm"
-$EGET -O $PKG "https://code.visualstudio.com/sha/download?build=stable&os=linux-$pkgtype-$arch" || fatal
+
+if [ -n "$VERSION" ] ; then
+    # get the version
+    $EGET -O $PKG "https://update.code.visualstudio.com/$VERSION/linux-$pkgtype-$arch/stable" || fatal
+else
+    # get latest version
+    # TODO: wget does not support:  Content-Disposition: attachment; filename="code-1.52.1-1608137084.el7.x86_64.rpm"
+    $EGET -O $PKG "https://code.visualstudio.com/sha/download?build=stable&os=linux-$pkgtype-$arch" || fatal
+fi
 
 epm install $repack "$PKG" || exit
 rm -fv $PKG
