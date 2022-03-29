@@ -52,8 +52,8 @@ override_distrib()
 	DISTRIB_RELEASE="$(echo "$1" | sed -e 's|.*/||')"
 }
 
-# Translate DISTRIB_ID to vendor name (like %_vendor does), uses VENDOR_ID by default
-rpmvendor()
+# Translate DISTRIB_ID to vendor name (like %_vendor does or package release name uses), uses VENDOR_ID by default
+pkgvendor()
 {
 	[ "$DISTRIB_ID" = "ALTLinux" ] && echo "alt" && return
 	[ "$DISTRIB_ID" = "ALTServer" ] && echo "alt" && return
@@ -66,13 +66,6 @@ rpmvendor()
 	[ "$DISTRIB_ID" = "openSUSELeap" ] && echo "suse" && return
 	[ -n "$VENDOR_ID" ] && echo "$VENDOR_ID" && return
 	tolower "$DISTRIB_ID"
-}
-
-# Translate DISTRIB_ID name to package manner (like in the package release name)
-pkgvendor()
-{
-	[ "$DISTRIB_ID" = "Mandriva" ] && echo "mdv" && return
-	rpmvendor
 }
 
 # TODO: in more appropriate way
@@ -722,8 +715,7 @@ Pretty distro name (--pretty): $(print_pretty_name)
  CPU norm register size  (-b): $(get_bit_size)
  System memory size (MB) (-m): $(get_memory_size)
             Base OS name (-o): $(get_base_os_name)
-Build system distro name (-s): $(pkgvendor)
-Build system vendor name (-n): $(rpmvendor)
+     Base distro name (-s|-n): $(pkgvendor)
 
 (run with -h to get help)
 EOF
@@ -744,11 +736,10 @@ case $1 in
 		echo " -i - print virtualization type"
 		echo " -h - this help"
 		echo " -m - print system memory size (in MB)"
-		echo " -n [SystemName] - print vendor name (as _vendor macros in rpm)"
 		echo " -o - print base OS name"
 		echo " -p [SystemName] - print type of the packaging system"
 		echo " -g [SystemName] - print name of the packaging system"
-		echo " -s [SystemName] - print name of distro for build system (like in the package release name)"
+		echo " -s|-n [SystemName] - print base name of the distro (ubuntu for all Ubuntu family, alt for all ALT family) (as _vendor macros in rpm)"
 		echo " -y - print running service manager"
 		echo " --pretty - print pretty distro name"
 		echo " -v - print version of distro"
@@ -806,14 +797,9 @@ case $1 in
 	-v)
 		echo $DISTRIB_RELEASE
 		;;
-	-s)
+	-s|-n)
 		override_distrib "$2"
 		pkgvendor
-		exit 0
-		;;
-	-n)
-		override_distrib "$2"
-		rpmvendor
 		exit 0
 		;;
 	-y)
