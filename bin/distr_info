@@ -309,6 +309,17 @@ elif distro gentoo-release ; then
 elif [ "$DISTRIB_ID" = "ALTServer" ] ; then
 	DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\..*//g")
 
+elif [ "$DISTRIB_ID" = "ALTSPWorkstation" ] ; then
+	DISTRIB_ID="ALTLinux"
+	case "$DISTRIB_RELEASE" in
+		8.0|8.1)
+			;;
+		8.*)
+			DISTRIB_RELEASE="c9"
+			;;
+	esac
+	DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\..*//g")
+
 elif distro slackware-version ; then
 	DISTRIB_ID="Slackware"
 	DISTRIB_RELEASE="$(grep -Eo '[0-9]+\.[0-9]+' $DISTROFILE)"
