@@ -8801,8 +8801,8 @@ override_distrib()
 	DISTRIB_RELEASE="$(echo "$1" | sed -e 's|.*/||')"
 }
 
-# Translate DISTRIB_ID to vendor name (like %_vendor does), uses VENDOR_ID by default
-rpmvendor()
+# Translate DISTRIB_ID to vendor name (like %_vendor does or package release name uses), uses VENDOR_ID by default
+pkgvendor()
 {
 	[ "$DISTRIB_ID" = "ALTLinux" ] && echo "alt" && return
 	[ "$DISTRIB_ID" = "ALTServer" ] && echo "alt" && return
@@ -8813,15 +8813,12 @@ rpmvendor()
 	[ "$DISTRIB_ID" = "OpenSUSE" ] && echo "suse" && return
 	[ "$DISTRIB_ID" = "openSUSETumbleweed" ] && echo "suse" && return
 	[ "$DISTRIB_ID" = "openSUSELeap" ] && echo "suse" && return
-	[ -n "$VENDOR_ID" ] && echo "$VENDOR_ID" && return
+	if [ -n "$VENDOR_ID" ] ; then
+		[ "$VENDOR_ID" = "altlinux" ] && echo "alt" && return
+		echo "$VENDOR_ID"
+		return
+	fi
 	tolower "$DISTRIB_ID"
-}
-
-# Translate DISTRIB_ID name to package manner (like in the package release name)
-pkgvendor()
-{
-	[ "$DISTRIB_ID" = "Mandriva" ] && echo "mdv" && return
-	rpmvendor
 }
 
 # TODO: in more appropriate way
@@ -8862,7 +8859,7 @@ case $DISTRIB_ID in
 	ArchLinux)
 		CMD="pacman"
 		;;
-	Fedora|FedoraLinux|LinuxXP|ASPLinux|CentOS|OracleLinux|RockyLinux|AlmaLinux|RHEL|Scientific|GosLinux|Amzn|RedOS)
+	Fedora|CentOS|OracleLinux|RockyLinux|AlmaLinux|RHEL|Scientific|GosLinux|Amzn|RedOS)
 		CMD="dnf-rpm"
 		hascommand dnf || CMD=yum-rpm
 		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "CentOS/7" ] && CMD=yum-rpm
@@ -8967,13 +8964,21 @@ get_major_version()
 
 normalize_name()
 {
-	[ "$1" = "RED OS" ] && echo "RedOS" && return
-	[ "$1" = "CentOS Linux" ] && echo "CentOS" && return
-	[ "$1" = "Rocky Linux" ] && echo "RockyLinux" && return
-	[ "$1" = "Oracle Linux" ] && echo "OracleLinux" && return
-	[ "$1" = "Alma Linux" ] && echo "AlmaLinux" && return
-	#echo "${1// /}"
-	echo "$1" | sed -e "s/ //g"
+	case "$1" in
+		"RED OS")
+			echo "RedOS"
+			;;
+		"CentOS Linux")
+			echo "CentOS"
+			;;
+		"Fedora Linux")
+			echo "Fedora"
+			;;
+		*)
+			#echo "${1// /}"
+			echo "$1" | sed -e "s/ //g"
+			;;
+	esac
 }
 
 # Default values
@@ -9051,6 +9056,17 @@ elif distro gentoo-release ; then
 	echo $DISTRIB_RELEASE | grep -q "[0-9]" || DISTRIB_RELEASE=$(basename "$(dirname $MAKEPROFILE)") #"
 
 elif [ "$DISTRIB_ID" = "ALTServer" ] ; then
+	DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\..*//g")
+
+elif [ "$DISTRIB_ID" = "ALTSPWorkstation" ] ; then
+	DISTRIB_ID="ALTLinux"
+	case "$DISTRIB_RELEASE" in
+		8.0|8.1)
+			;;
+		8.*)
+			DISTRIB_RELEASE="c9"
+			;;
+	esac
 	DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\..*//g")
 
 elif distro slackware-version ; then
@@ -9471,8 +9487,7 @@ Pretty distro name (--pretty): $(print_pretty_name)
  CPU norm register size  (-b): $(get_bit_size)
  System memory size (MB) (-m): $(get_memory_size)
             Base OS name (-o): $(get_base_os_name)
-Build system distro name (-s): $(pkgvendor)
-Build system vendor name (-n): $(rpmvendor)
+     Base distro name (-s|-n): $(pkgvendor)
 
 (run with -h to get help)
 EOF
@@ -9493,11 +9508,10 @@ case $1 in
 		echo " -i - print virtualization type"
 		echo " -h - this help"
 		echo " -m - print system memory size (in MB)"
-		echo " -n [SystemName] - print vendor name (as _vendor macros in rpm)"
 		echo " -o - print base OS name"
 		echo " -p [SystemName] - print type of the packaging system"
 		echo " -g [SystemName] - print name of the packaging system"
-		echo " -s [SystemName] - print name of distro for build system (like in the package release name)"
+		echo " -s|-n [SystemName] - print base name of the distro (ubuntu for all Ubuntu family, alt for all ALT family) (as _vendor macros in rpm)"
 		echo " -y - print running service manager"
 		echo " --pretty - print pretty distro name"
 		echo " -v - print version of distro"
@@ -9555,14 +9569,9 @@ case $1 in
 	-v)
 		echo $DISTRIB_RELEASE
 		;;
-	-s)
+	-s|-n)
 		override_distrib "$2"
 		pkgvendor
-		exit 0
-		;;
-	-n)
-		override_distrib "$2"
-		rpmvendor
 		exit 0
 		;;
 	-y)
@@ -10381,7 +10390,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.16.5  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.16.6  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10391,7 +10400,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.16.5
+EPMVERSION=3.16.6
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
