@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.16.5
+Version: 3.16.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -148,6 +148,12 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Wed Mar 30 2022 Vitaly Lipatov <lav@altlinux.ru> 3.16.6-alt1
+- epm play: add Obsidian support
+- epm play code: add version support (f.i. epm play code 1.42.1)
+- distr_info: base distro name for ALT is alt
+- distr_info: add support for ALT SPWorkstation
+
 * Mon Mar 28 2022 Vitaly Lipatov <lav@altlinux.ru> 3.16.5-alt1
 - epm repack code: move to /opt
 - add support for ALTServer distro
