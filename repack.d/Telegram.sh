@@ -5,6 +5,7 @@ BUILDROOT="$1"
 SPEC="$2"
 
 PRODUCT=Telegram
+PRODUCTOPT=telegram-desktop
 
 # /usr/bin/Telegram
 subst '1iConflicts:telegram-desktop < 3.2.8' $SPEC
@@ -24,6 +25,8 @@ subst "s|\"/$ROOTDIR/|\"/opt/$PRODUCT/|" $SPEC
 mkdir -p $BUILDROOT/usr/bin/
 ln -s /opt/$PRODUCT/Telegram $BUILDROOT/usr/bin/$PRODUCT
 subst "s|%files|%files\n/usr/bin/$PRODUCT|" $SPEC
+ln -s /opt/$PRODUCT/Telegram $BUILDROOT/usr/bin/$PRODUCTOPT
+subst "s|%files|%files\n/usr/bin/$PRODUCTOPT|" $SPEC
 
 # create desktop file
 mkdir -p $BUILDROOT/usr/share/applications/
