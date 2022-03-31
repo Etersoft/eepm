@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.16.6
+Version: 3.16.7
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -148,6 +148,10 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Thu Mar 31 2022 Vitaly Lipatov <lav@altlinux.ru> 3.16.7-alt1
+- epm repack Telegram: add telegram-desktop link
+- epm-play: add --quiet support, rewrite help
+
 * Wed Mar 30 2022 Vitaly Lipatov <lav@altlinux.ru> 3.16.6-alt1
 - epm play: add Obsidian support
 - epm play code: add version support (f.i. epm play code 1.42.1)
