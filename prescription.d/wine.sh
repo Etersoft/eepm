@@ -3,7 +3,7 @@
 MAIN=wine
 [ -n "$2" ] && MAIN="$2"
 
-distro="$($DISTRVENDOR -d)" ; [ "$distro" = "ALTLinux" ] || [ "$distro" = "ALTServer" ] || { echo "Only ALTLinux is supported" ; exit 1 ; }
+vendor="$($DISTRVENDOR -s)" ; [ "$vendor" = "alt" ] || { echo "Only ALT distros is supported for now" ; exit 1 ; }
 
 arch="$($DISTRVENDOR -a)"
 
@@ -15,7 +15,7 @@ if [ "$1" = "--remove" ] ; then
     exit
 fi
 
-[ "$1" != "--run" ] && echo "Install $MAIN packages" && exit
+[ "$1" != "--run" ] && echo "Install $MAIN packages (add vanilla or etersoft if you need these packages)" && exit
 
 # do some magic: if winetricks more than 20210206, we have new wine package naming
 epm install winetricks || exit 1
