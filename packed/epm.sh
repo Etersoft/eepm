@@ -3702,20 +3702,27 @@ __epm_play_run()
     docmd bash $bashopt $script "$@"
 }
 
+__epm_play_help()
+{
+    cat <<EOF
+Usage: epm play [options] [<app>]
+Options:
+    <app>                 - install <app>
+    --remove <app>        - uninstall <app>
+    --update [<app>|all]  - update <app> (or all installed apps) if there is new version
+    --list                - list all installed apps
+    --list-all            - list all available apps
+    --short (with --list) - list names only"
+    --installed <app>     - check if the app is installed"
+EOF
+}
+
 epm_play()
 {
 local psdir="$(realpath $CONFIGDIR/play.d)"
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
-    cat <<EOF
-Options:
-    APP            - install APP
-    --remove APP   - remove APP
-    --list         - list all installed apps
-    --list-all     - list all available apps
-    --short        - print only names
-    --update [APP|all]  - update APP (or all installed apps) if there is new version
-EOF
+    __epm_play_help
     exit
 fi
 
@@ -3772,11 +3779,12 @@ if [ "$1" = "--list" ] ; then
         done
         exit
     fi
-    echo "Installed:"
+    [ -n "$quiet" ] || echo "Installed:"
     for i in $(__list_installed_app) ; do
         local desc="$(__get_app_description $psdir/$i.sh)"
         [ -n "$desc" ] || continue
-        printf "  %-20s - %s\n" "$i" "$desc"
+        [ -n "$quiet" ] || echo -n "  "
+        printf "%-20s - %s\n" "$i" "$desc"
     done
     exit
 fi
@@ -3794,23 +3802,20 @@ if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
         done
         exit
     fi
-    echo "Run with a name of a play script to run:"
+    [ -n "$quiet" ] || echo "Run with a name of a play script to run:"
     for i in $psdir/*.sh ; do
         local desc="$(__get_app_description $i)"
         [ -n "$desc" ] || continue
         local name=$(basename $i .sh)
         [ -n "$IGNOREi586" ] && rhas "$name" "^i586-" && continue
         rhas "$name" "^common" && continue
-        printf "  %-20s - %s\n" "$name" "$desc"
+        [ -n "$quiet" ] || echo -n "  "
+        printf "%-20s - %s\n" "$name" "$desc"
     done
+    [ -n "$quiet" ] || [ -n "$*" ] && exit
     echo
-    echo "run epm play"
-    echo "             --list                - list installed apps"
-    echo "             --list-all (default)  - list all apps"
-    echo "             --remove <app>        - remove <app>"
-    echo "             --update <app>|all    - update <app> or all installed apps"
-    echo "             --installed <app>     - check if the app is installed"
-    echo "             --short (with --list) - list names only"
+    #echo "Run epm play --help for help"
+    __epm_play_help
     exit
 fi
 
@@ -10390,7 +10395,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.16.6  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.16.7  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10400,7 +10405,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.16.6
+EPMVERSION=3.16.7
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
