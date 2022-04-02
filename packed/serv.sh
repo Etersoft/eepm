@@ -2012,18 +2012,18 @@ print_total_info()
 {
 cat <<EOF
 distro_info v$PROGVERSION : Copyright © 2007-2022 Etersoft
-==== Total system information:
-Pretty distro name (--pretty): $(print_pretty_name)
- Distro name and version (-e): $(print_name_version)
- Package manager/type (-g/-p): $(pkgmanager) / $(pkgtype)
- Running service manager (-y): $(get_service_manager)
-          Virtualization (-i): $(get_virt)
-        CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_core_mhz) MHz
-        CPU Architecture (-a): $(get_arch)
- CPU norm register size  (-b): $(get_bit_size)
- System memory size (MB) (-m): $(get_memory_size)
-            Base OS name (-o): $(get_base_os_name)
-     Base distro name (-s|-n): $(pkgvendor)
+Total system information:
+    Pretty distro name (--pretty): $(print_pretty_name)
+     Distro name and version (-e): $(print_name_version)
+     Package manager/type (-g/-p): $(pkgmanager) / $(pkgtype)
+     Running service manager (-y): $(get_service_manager)
+              Virtualization (-i): $(get_virt)
+            CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_core_mhz) MHz
+            CPU Architecture (-a): $(get_arch)
+     CPU norm register size  (-b): $(get_bit_size)
+     System memory size (MB) (-m): $(get_memory_size)
+                Base OS name (-o): $(get_base_os_name)
+Base distro (vendor) name (-s|-n): $(pkgvendor)
 
 (run with -h to get help)
 EOF
@@ -2047,7 +2047,7 @@ case $1 in
 		echo " -o - print base OS name"
 		echo " -p [SystemName] - print type of the packaging system"
 		echo " -g [SystemName] - print name of the packaging system"
-		echo " -s|-n [SystemName] - print base name of the distro (ubuntu for all Ubuntu family, alt for all ALT family) (as _vendor macros in rpm)"
+		echo " -s|-n [SystemName] - print base name of the distro (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (as _vendor macros in rpm)"
 		echo " -y - print running service manager"
 		echo " --pretty - print pretty distro name"
 		echo " -v - print version of distro"
@@ -2994,7 +2994,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.16.7  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.16.8  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

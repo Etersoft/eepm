@@ -3684,8 +3684,6 @@ __check_play_script()
 __epm_play_run()
 {
     local script="$psdir/$1.sh"
-
-    __check_play_script "$1" || fatal "Can't find executable play script $script. Run epm play to list all available apps."
     shift
 
     # allow use EGET in the scripts
@@ -3702,6 +3700,53 @@ __epm_play_run()
     docmd bash $bashopt $script "$@"
 }
 
+__epm_play_list_installed()
+{
+    local i
+    if [ -n "$short" ] ; then
+        for i in $(__list_installed_app) ; do
+            echo "$i"
+        done
+        exit
+    fi
+    [ -n "$quiet" ] || echo "Installed applications:"
+    for i in $(__list_installed_app) ; do
+        local desc="$(__get_app_description $psdir/$i.sh)"
+        [ -n "$desc" ] || continue
+        [ -n "$quiet" ] || echo -n "  "
+        printf "%-20s - %s\n" "$i" "$desc"
+    done
+}
+
+
+__epm_play_list()
+{
+    local psdir="$1"
+    local i
+    local IGNOREi586
+    [ "$($DISTRVENDOR -a)" = "x86_64" ] && IGNOREi586='' || IGNOREi586=1
+
+    if [ -n "$short" ] ; then
+        for i in $psdir/*.sh ; do
+            local name=$(basename $i .sh)
+            [ -n "$IGNOREi586" ] && rhas "$name" "^i586-" && continue
+            rhas "$name" "^common" && continue
+            echo "$name"
+        done
+        exit
+    fi
+    for i in $psdir/*.sh ; do
+        local desc="$(__get_app_description $i)"
+        [ -n "$desc" ] || continue
+        local name=$(basename $i .sh)
+        [ -n "$IGNOREi586" ] && rhas "$name" "^i586-" && continue
+        rhas "$name" "^common" && continue
+        [ -n "$quiet" ] || echo -n "  "
+        printf "%-20s - %s\n" "$name" "$desc"
+    done
+}
+
+
 __epm_play_help()
 {
     cat <<EOF
@@ -3712,6 +3757,7 @@ Options:
     --update [<app>|all]  - update <app> (or all installed apps) if there is new version
     --list                - list all installed apps
     --list-all            - list all available apps
+    --list-scripts        - list all available scripts
     --short (with --list) - list names only"
     --installed <app>     - check if the app is installed"
 EOF
@@ -3720,6 +3766,7 @@ EOF
 epm_play()
 {
 local psdir="$(realpath $CONFIGDIR/play.d)"
+local prsdir="$(realpath $CONFIGDIR/prescription.d)"
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
     __epm_play_help
@@ -3767,51 +3814,18 @@ fi
 if [ "$1" = "--installed" ] ; then
     shift
     __check_installed_app "$1"
+    #[ -n "$quiet" ] && exit
     exit
 fi
 
 if [ "$1" = "--list" ] ; then
-    shift
-    local i
-    if [ -n "$short" ] ; then
-        for i in $(__list_installed_app) ; do
-            echo "$i"
-        done
-        exit
-    fi
-    [ -n "$quiet" ] || echo "Installed:"
-    for i in $(__list_installed_app) ; do
-        local desc="$(__get_app_description $psdir/$i.sh)"
-        [ -n "$desc" ] || continue
-        [ -n "$quiet" ] || echo -n "  "
-        printf "%-20s - %s\n" "$i" "$desc"
-    done
+    __epm_play_list_installed
     exit
 fi
 
-[ "$($DISTRVENDOR -a)" = "x86_64" ] && IGNOREi586='' || IGNOREi586=1
-
 if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
-    local i
-    if [ -n "$short" ] ; then
-        for i in $psdir/*.sh ; do
-            local name=$(basename $i .sh)
-            [ -n "$IGNOREi586" ] && rhas "$name" "^i586-" && continue
-            rhas "$name" "^common" && continue
-            echo "$name"
-        done
-        exit
-    fi
-    [ -n "$quiet" ] || echo "Run with a name of a play script to run:"
-    for i in $psdir/*.sh ; do
-        local desc="$(__get_app_description $i)"
-        [ -n "$desc" ] || continue
-        local name=$(basename $i .sh)
-        [ -n "$IGNOREi586" ] && rhas "$name" "^i586-" && continue
-        rhas "$name" "^common" && continue
-        [ -n "$quiet" ] || echo -n "  "
-        printf "%-20s - %s\n" "$name" "$desc"
-    done
+    [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications:"
+    __epm_play_list $psdir
     [ -n "$quiet" ] || [ -n "$*" ] && exit
     echo
     #echo "Run epm play --help for help"
@@ -3819,10 +3833,23 @@ if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
     exit
 fi
 
+if [ "$1" = "--list-scripts" ] ; then
+    [ -n "$short" ] || [ -n "$quiet" ] || echo "Run with a name of a play script to run:"
+    __epm_play_list $prsdir
+    exit
+fi
+
 prescription="$1"
 shift
 
-__epm_play_run "$prescription" --run "$@" && __save_installed_app "$prescription" || fatal "There was some error during install the application."
+if __check_play_script "$prescription" ; then
+    #__check_installed_app "$prescription" && info "$$prescription is already installed (use --remove to remove)" && exit 1
+    __epm_play_run "$prescription" --run "$@" && __save_installed_app "$prescription" || fatal "There was some error during install the application."
+else
+    psdir=$prsdir
+    __check_play_script "$prescription" || fatal "We have no idea how to play $prescription (checked in $psdir and $prsdir)"
+    __epm_play_run "$prescription" --run "$@" || fatal "There was some error during run the script."
+fi
 }
 
 # File bin/epm-policy:
@@ -3853,27 +3880,6 @@ esac
 
 # File bin/epm-prescription:
 
-epm_vardir=/var/lib/eepm
-
-
-__epm_prescription_run()
-{
-    local script="$psdir/$1.sh"
-    shift
-    local option="$1"
-
-    if [ ! -x "$script" ] ; then
-        fatal "Can't find $script prescription."
-    fi
-
-    # allow use EGET in the scripts
-    __set_EGET
-    # also we will have DISTRVENDOR there
-    export PATH=$PROGDIR:$PATH
-
-    #info "Running $($script --description 2>/dev/null) ..."
-    docmd $script $option
-}
 
 epm_prescription()
 {
@@ -3883,36 +3889,24 @@ local psdir="$CONFIGDIR/prescription.d"
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
     cat <<EOF
 Options:
-    <receipt>      - run receipt
+    <receipt>      - run <receipt>
     --list-all     - list all available receipts
 EOF
     exit
 fi
 
-[ "$($DISTRVENDOR -a)" = "x86_64" ] && IGNOREi586='' || IGNOREi586=1
-
 if [ "$1" == "--list-all" ] || [ -z "$*" ] ; then
-    if [ -n "$short" ] ; then
-        for i in $psdir/*.sh ; do
-            local name=$(basename $i .sh)
-            [ -n "$IGNOREi586" ] && rhas "$name" "^i586-" && continue
-            rhas "$name" "^common" && continue
-            echo "$name"
-        done
-        exit
-    fi
-    echo "Run with a name of a prescription to run:"
-    for i in $psdir/*.sh ; do
-        local name=$(basename $i .sh)
-        [ -n "$IGNOREi586" ] && rhas "$name" "^i586-" && continue
-        rhas "$name" "^common" && continue
-        printf "  %-20s - %s\n" "$name" "$($i --description 2>/dev/null)"
-    done
-    echo
+    [ -n "$short" ] || [ -n "$quiet" ] || echo "Run with a name of a prescription to run:"
+    __epm_play_list $psdir
     exit
 fi
 
-__epm_prescription_run "$1" --run
+prescription="$1"
+shift
+
+__check_play_script "$prescription" || fatal "We have no idea how to play $prescription (checked in $psdir)"
+__epm_play_run "$prescription" --run "$@" || fatal "There was some error during run the script."
+
 }
 
 # File bin/epm-print:
@@ -9481,18 +9475,18 @@ print_total_info()
 {
 cat <<EOF
 distro_info v$PROGVERSION : Copyright © 2007-2022 Etersoft
-==== Total system information:
-Pretty distro name (--pretty): $(print_pretty_name)
- Distro name and version (-e): $(print_name_version)
- Package manager/type (-g/-p): $(pkgmanager) / $(pkgtype)
- Running service manager (-y): $(get_service_manager)
-          Virtualization (-i): $(get_virt)
-        CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_core_mhz) MHz
-        CPU Architecture (-a): $(get_arch)
- CPU norm register size  (-b): $(get_bit_size)
- System memory size (MB) (-m): $(get_memory_size)
-            Base OS name (-o): $(get_base_os_name)
-     Base distro name (-s|-n): $(pkgvendor)
+Total system information:
+    Pretty distro name (--pretty): $(print_pretty_name)
+     Distro name and version (-e): $(print_name_version)
+     Package manager/type (-g/-p): $(pkgmanager) / $(pkgtype)
+     Running service manager (-y): $(get_service_manager)
+              Virtualization (-i): $(get_virt)
+            CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_core_mhz) MHz
+            CPU Architecture (-a): $(get_arch)
+     CPU norm register size  (-b): $(get_bit_size)
+     System memory size (MB) (-m): $(get_memory_size)
+                Base OS name (-o): $(get_base_os_name)
+Base distro (vendor) name (-s|-n): $(pkgvendor)
 
 (run with -h to get help)
 EOF
@@ -9516,7 +9510,7 @@ case $1 in
 		echo " -o - print base OS name"
 		echo " -p [SystemName] - print type of the packaging system"
 		echo " -g [SystemName] - print name of the packaging system"
-		echo " -s|-n [SystemName] - print base name of the distro (ubuntu for all Ubuntu family, alt for all ALT family) (as _vendor macros in rpm)"
+		echo " -s|-n [SystemName] - print base name of the distro (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (as _vendor macros in rpm)"
 		echo " -y - print running service manager"
 		echo " --pretty - print pretty distro name"
 		echo " -v - print version of distro"
@@ -10395,7 +10389,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.16.7  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.16.8  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10405,7 +10399,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.16.7
+EPMVERSION=3.16.8
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
