@@ -5,20 +5,17 @@ BUILDROOT="$1"
 SPEC="$2"
 
 PRODUCT=atom
+PRODUCTCUR=atom-beta
 PRODUCTDIR=/usr/share/atom-beta
+
+. $(dirname $0)/common-chromium-browser.sh
 
 # TODO: /usr/share/atom-beta -> /usr/lib64/atom-beta
 
 subst '1iAutoReq:yes,nomonolib,nomono,nopython' $SPEC
 subst '1iAutoProv:no' $SPEC
 
-if [ ! -f "$BUILDROOT/usr/bin/$PRODUCT" ] ; then
-    subst "s|%files|%files\n%_bindir/$PRODUCT|" $SPEC
-    #ln -s $PRODUCT-beta $BUILDROOT/usr/bin/$PRODUCT
-    # command name is sensitive
-    echo "exec /usr/bin/$PRODUCT-beta" > $BUILDROOT/usr/bin/$PRODUCT
-    chmod a+x $BUILDROOT/usr/bin/$PRODUCT
-fi
+add_bin_exec_command $PRODUCT /usr/bin/$PRODUCTCUR
 
 subst '1iBuildRequires:rpm-build-python3' $SPEC
 subst '1i%add_python3_path /usr/share/atom-beta' $SPEC

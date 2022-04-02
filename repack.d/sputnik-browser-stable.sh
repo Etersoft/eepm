@@ -4,7 +4,7 @@ BUILDROOT="$1"
 SPEC="$2"
 
 PRODUCT=sputnik-browser
-PRODUCT=sputnik-browser-stable
+PRODUCTCUR=sputnik-browser-stable
 PRODUCTDIR=/opt/$PRODUCT
 
 
@@ -16,11 +16,12 @@ copy_icons_to_share
 
 cleanup
 
+# fix permission
+chmod o-w -v $BUILDROOT$PRODUCTDIR/*
+
 add_bin_commands
 
 use_system_xdg
 
 install_deps
 
-# fix permission
-chmod o-w -v $BUILDROOT$PRODUCTDIR/*

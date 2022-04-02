@@ -4,16 +4,15 @@
 BUILDROOT="$1"
 SPEC="$2"
 
-PRODUCT=TamTam
-PRODUCTDIR=/opt/$PRODUCT
+PRODUCT=tamtam
+PRODUCTCUR=TamTam
+PRODUCTDIR=/opt/$PRODUCTCUR
 
 . $(dirname $0)/common-chromium-browser.sh
 
-subst '1iAutoProv:no' $SPEC
+cleanup
 
-mkdir -p $BUILDROOT/usr/bin/
-ln -sf $PRODUCTDIRT/tamtam $BUILDROOT/usr/bin/tamtam
-
-subst "s|%files|%files\n%_bindir/tamtam|" $SPEC
+add_bin_exec_command $PRODUCT
+add_bin_exec_command $PRODUCTCUR $PRODUCTDIR/$PRODUCT
 
 fix_chrome_sandbox

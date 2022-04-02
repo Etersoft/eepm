@@ -4,12 +4,14 @@ BUILDROOT="$1"
 SPEC="$2"
 
 PRODUCT=Sferum
+PRODUCTCUR=sferum
 PRODUCTDIR=/opt/$PRODUCT
 
 . $(dirname $0)/common-chromium-browser.sh
 
-mkdir -p $BUILDROOT/usr/bin/
-ln -s $PRODUCTDIR/sferum $BUILDROOT/usr/bin/sferum
-subst 's|%files|%files\n/usr/bin/sferum|' $SPEC
+cleanup
+
+add_bin_exec_command $PRODUCTCUR
+add_bin_exec_command $PRODUCT $PRODUCTDIR/$PRODUCTCUR
 
 fix_chrome_sandbox
