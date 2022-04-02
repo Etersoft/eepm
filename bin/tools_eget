@@ -110,7 +110,7 @@ filter_glob()
 filter_order()
 {
     [ -z "$LATEST" ] && cat && return
-    sort | tail -n1
+    sort -V | tail -n1
 }
 
 # download to this file
