@@ -67,8 +67,6 @@ __check_play_script()
 __epm_play_run()
 {
     local script="$psdir/$1.sh"
-
-    __check_play_script "$1" || fatal "Can't find executable play script $script. Run epm play to list all available apps."
     shift
 
     # allow use EGET in the scripts
@@ -142,6 +140,7 @@ Options:
     --update [<app>|all]  - update <app> (or all installed apps) if there is new version
     --list                - list all installed apps
     --list-all            - list all available apps
+    --list-scripts        - list all available scripts
     --short (with --list) - list names only"
     --installed <app>     - check if the app is installed"
 EOF
@@ -150,6 +149,7 @@ EOF
 epm_play()
 {
 local psdir="$(realpath $CONFIGDIR/play.d)"
+local prsdir="$(realpath $CONFIGDIR/prescription.d)"
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
     __epm_play_help
@@ -216,9 +216,21 @@ if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
     exit
 fi
 
+if [ "$1" = "--list-scripts" ] ; then
+    [ -n "$short" ] || [ -n "$quiet" ] || echo "Run with a name of a play script to run:"
+    __epm_play_list $prsdir
+    exit
+fi
+
 prescription="$1"
 shift
 
-#__check_installed_app "$prescription" && info "$$prescription is already installed (use --remove to remove)" && exit 1
-__epm_play_run "$prescription" --run "$@" && __save_installed_app "$prescription" || fatal "There was some error during install the application."
+if __check_play_script "$prescription" ; then
+    #__check_installed_app "$prescription" && info "$$prescription is already installed (use --remove to remove)" && exit 1
+    __epm_play_run "$prescription" --run "$@" && __save_installed_app "$prescription" || fatal "There was some error during install the application."
+else
+    psdir=$prsdir
+    __check_play_script "$prescription" || fatal "We have no idea how to play $prescription (checked in $psdir and $prsdir)"
+    __epm_play_run "$prescription" --run "$@" || fatal "There was some error during run the script."
+fi
 }
