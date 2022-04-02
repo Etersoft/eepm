@@ -14,6 +14,7 @@ echo
 echo "Checking for installed modules... "
 for i in glibc-nss glibc-gconv-modules \
          sssd-client \
+         vulkan-amdgpu libvulkan1 \
          $(epmqp --short libnss | grep "^libnss-") \
          $(epmqp --short xorg-dri | grep "^xorg-dri-")
 do
