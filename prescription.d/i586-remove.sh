@@ -4,14 +4,14 @@
 
 [ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
-case "$($DISTRVENDOR -d)" in
-    "ALTLinux"|"ALTServer")
+case "$($DISTRVENDOR -s)" in
+    alt)
         epm --verbose --simulate remove $(epmqp "^i586-")
         ;;
-    "Ubuntu"|"Debian")
+    ubuntu|debian)
         epm --verbose --simulate remove $(epmqp "^i386-")
         ;;
     *)
-        fatal "unsupported vendor"
+        fatal "unsupported vendor $($DISTRVENDOR -s)"
         ;;
 esac

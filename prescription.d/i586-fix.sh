@@ -2,7 +2,8 @@
 
 [ "$1" != "--run" ] && echo "Fix missed 32 bit package modules on 64 bit system" && exit
 
-distro="$($DISTRVENDOR -d)" ; [ "$distro" = "ALTLinux" ] || [ "$distro" = "ALTServer" ] || { echo "Only ALTLinux is supported" ; exit 1 ; }
+vendor="$($DISTRVENDOR -s)" ; [ "$vendor" = "alt" ] || { echo "Only ALT distros is supported for now" ; exit 1 ; }
+
 [ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
 LIST=''
@@ -21,4 +22,4 @@ done
 
 echo
 echo "Installing all appropiate i586-* packages ..."
-epmi $LIST
+epm install $LIST
