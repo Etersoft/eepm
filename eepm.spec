@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.16.7
+Version: 3.16.8
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -148,6 +148,16 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Sat Apr 02 2022 Vitaly Lipatov <lav@altlinux.ru> 3.16.8-alt1
+- distr_info: improve default output (distro info)
+- epm prescription wine: fix alt detection
+- epm prescription: fix php8 install
+- epm play: check for a script in prescription.d also, add --list-scripts for list prescription.d scripts
+- epm prescription: implement via epm play functions
+- epm prescription wine: fix for 32-bit system
+- epm prescription: fix i586-fix/i586-remove
+- epm play: drop obsoleted i586-wine-vanilla, i586-wine-etersoft, i586-wine
+
 * Thu Mar 31 2022 Vitaly Lipatov <lav@altlinux.ru> 3.16.7-alt1
 - epm repack Telegram: add telegram-desktop link
 - epm-play: add --quiet support, rewrite help
