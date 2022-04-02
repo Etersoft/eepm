@@ -93,7 +93,7 @@ __epm_play_list_installed()
         exit
     fi
     [ -n "$quiet" ] || echo "Installed applications:"
-    for i in $(__list_installed_app) ; do
+    for i in $(__list_installed_app | sort) ; do
         local desc="$(__get_app_description $psdir/$i.sh)"
         [ -n "$desc" ] || continue
         [ -n "$quiet" ] || echo -n "  "
@@ -172,17 +172,19 @@ if [ "$1" = "--update" ] ; then
     shift
     if [ "$1" = "all" ] ; then
         shift
+        RES=0
         for i in $(__list_installed_app) ; do
             echo
             echo "$i"
             prescription="$i"
             if ! __check_play_script $prescription ; then
                 warning "Can't find executable play script for $prescription. Try epm play --remove $prescription if you don't need it anymore."
+                RES=1
                 continue
             fi
-            __epm_play_run $prescription --run "$@"
+            __epm_play_run $prescription --run "$@" || RES=$?
         done
-        exit
+        exit $RES
     fi
     if [ -z "$1" ] ; then
         fatal "run --update with 'all' or a project name"
@@ -201,7 +203,7 @@ if [ "$1" = "--installed" ] ; then
     exit
 fi
 
-if [ "$1" = "--list" ] ; then
+if [ "$1" = "--list" ] || [ "$1" = "--list-installed" ]  ; then
     __epm_play_list_installed
     exit
 fi
