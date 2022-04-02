@@ -8,7 +8,7 @@ distro="$($DISTRVENDOR -d)" ; [ "$distro" = "ALTLinux" ] || [ "$distro" = "ALTSe
 
 if epmqp --quiet php7- ; then
     # Upgrade if was installed php5
-    epmqp php7 --short | sed -e "s|php7|php8|" | epmi --auto
+    epmqp php7 --short | sed -e "s|php7-http||" -e "s|php7-raphf||" -e "s|php7-propro||" -e "s|php7-memcache||" -e "s|php7|php8.1|" | epmi --auto
 
     epme php7-libs
 else
