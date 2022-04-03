@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.16.8
+Version: 3.16.9
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -148,6 +148,10 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Sun Apr 03 2022 Vitaly Lipatov <lav@altlinux.ru> 3.16.9-alt1
+- epm play: sort installed apps, return status for update
+- epm play: refactoring, fix tamtam, sputnik, chromium-gost install
+
 * Sat Apr 02 2022 Vitaly Lipatov <lav@altlinux.ru> 3.16.8-alt1
 - distr_info: improve default output (distro info)
 - epm prescription wine: fix alt detection
