@@ -105,6 +105,8 @@ check_tty
 
 WGETQ='' #-q
 CURLQ='' #-s
+WGETOPTIONS='--content-disposition'
+CURLOPTIONS='--remote-name --remote-header-name'
 
 set_quiet()
 {
@@ -125,15 +127,19 @@ if [ -n "$WGET" ] ; then
 # put remote content to stdout
 scat()
 {
-    $WGET $WGETQ -O- "$1"
+    docmd $WGET $WGETQ -O- "$1"
 }
 # download to default name of to $2
 sget()
 {
     if [ -n "$2" ] ; then
-       $WGET $WGETQ -O "$2" "$1"
+       docmd $WGET $WGETQ $WGETOPTIONS -O "$2" "$1"
     else
-       $WGET $WGETQ "$1"
+# TODO: поддержка rsync для известных хостов?
+# Не качать, если одинаковый размер и дата
+# -nc
+# TODO: overwrite always
+       docmd $WGET $WGETQ $WGETOPTIONS "$1"
     fi
 }
 
@@ -149,9 +155,9 @@ scat()
 sget()
 {
     if [ -n "$2" ] ; then
-       $CURL -L $CURLQ --output "$2" "$1"
+       docmd $CURL -L $CURLQ $CURLOPTIONS --output "$2" "$1"
     else
-       $CURL -L $CURLQ -O "$1"
+       docmd $CURL -L $CURLQ $CURLOPTIONS -O "$1"
     fi
 }
 fi
