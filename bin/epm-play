@@ -30,7 +30,7 @@ __save_installed_app()
 
 __remove_installed_app()
 {
-	[ -d "$epm_vardir" ] || return 0
+	[ -s $epm_vardir/installed-app ] || return 0
 	local i
 	for i in $* ; do
 		sudorun sed -i "/^$i$/d" $epm_vardir/installed-app
