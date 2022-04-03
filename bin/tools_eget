@@ -1,11 +1,11 @@
 #!/bin/sh
 # eget - simply shell on wget for loading directories over http (wget does not support wildcard for http)
-# Example use:
+# Use:
 # eget http://ftp.altlinux.ru/pub/security/ssl/*
 #
-# Copyright (C) 2014-2014, 2016, 2020  Etersoft
+# Copyright (C) 2014-2014, 2016, 2020, 2022  Etersoft
 # Copyright (C) 2014 Daniil Mikhailov <danil@etersoft.ru>
-# Copyright (C) 2016-2017, 2020 Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2016-2017, 2020, 2022 Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -206,12 +206,12 @@ fi
 # -P support
 
 if [ -z "$1" ] ; then
-    echo "eget - wget like downloader" >&2
+    echo "eget - wget like downloader wrapper with wildcard support" >&2
     fatal "Run $0 --help to get help"
 fi
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
-    echo "eget - wget like downloader with wildcard support in filename part of URL"
+    echo "eget - wget like downloader wrapper with wildcard support in filename part of URL"
     echo "Usage: eget [-q] [-O target file] [--list] http://somesite.ru/dir/na*.log"
     echo
     echo "Options:"
