@@ -3710,7 +3710,7 @@ __epm_play_list_installed()
         exit
     fi
     [ -n "$quiet" ] || echo "Installed applications:"
-    for i in $(__list_installed_app) ; do
+    for i in $(__list_installed_app | sort) ; do
         local desc="$(__get_app_description $psdir/$i.sh)"
         [ -n "$desc" ] || continue
         [ -n "$quiet" ] || echo -n "  "
@@ -3789,17 +3789,19 @@ if [ "$1" = "--update" ] ; then
     shift
     if [ "$1" = "all" ] ; then
         shift
+        RES=0
         for i in $(__list_installed_app) ; do
             echo
             echo "$i"
             prescription="$i"
             if ! __check_play_script $prescription ; then
                 warning "Can't find executable play script for $prescription. Try epm play --remove $prescription if you don't need it anymore."
+                RES=1
                 continue
             fi
-            __epm_play_run $prescription --run "$@"
+            __epm_play_run $prescription --run "$@" || RES=$?
         done
-        exit
+        exit $RES
     fi
     if [ -z "$1" ] ; then
         fatal "run --update with 'all' or a project name"
@@ -3818,7 +3820,7 @@ if [ "$1" = "--installed" ] ; then
     exit
 fi
 
-if [ "$1" = "--list" ] ; then
+if [ "$1" = "--list" ] || [ "$1" = "--list-installed" ]  ; then
     __epm_play_list_installed
     exit
 fi
@@ -9706,7 +9708,7 @@ filter_glob()
 filter_order()
 {
     [ -z "$LATEST" ] && cat && return
-    sort | tail -n1
+    sort -V | tail -n1
 }
 
 # download to this file
@@ -10389,7 +10391,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.16.8  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.16.9  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10399,7 +10401,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.16.8
+EPMVERSION=3.16.9
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
