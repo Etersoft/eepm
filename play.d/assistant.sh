@@ -14,21 +14,31 @@ fi
 . $(dirname $0)/common.sh
 
 
-[ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
+arch="$($DISTRVENDOR -a)"
 
 pkg="$($DISTRVENDOR -p)"
 
-case $pkg in
-    rpm)
-        URL="https://мойассистент.рф/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C/Download/542"
+echo "ОШИБКА: невозможно проверить сертификат xn--80akicokc0aablc.xn--p1ai, выпущенный «CN=Sectigo RSA Domain Validation Secure Server CA,O=Sectigo Limited,L=Salford,ST=Greater Manchester,C=GB»:"
+
+case $arch-$pkg in
+    x86_64-rpm)
+        URL="http://мойассистент.рф/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C/Download/542"
         OPKG=assistant-4.8-0.x86_64.rpm
         ;;
-    deb)
-        URL="https://мойассистент.рф/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C/Download/545"
+    x86_64-deb)
+        URL="http://мойассистент.рф/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C/Download/545"
+        OPKG=assistant_4.8-0_amd64.deb
+        ;;
+    aarch64-rpm)
+        URL="https://мойассистент.рф/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C/Download/551"
+        OPKG=assistant-4.8-0.x86_64.rpm
+        ;;
+    aarch64-deb)
+        URL="https://мойассистент.рф/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C/Download/552"
         OPKG=assistant_4.8-0_amd64.deb
         ;;
     *)
-        fatal "$($DISTRVENDOR -e) is not supported (package type is $pkg)"
+        fatal "$($DISTRVENDOR -e) is not supported (arch $arch, package type is $pkg)"
         ;;
 esac
 
