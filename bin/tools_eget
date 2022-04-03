@@ -27,6 +27,82 @@ fatal()
     exit 1
 }
 
+
+# copied from eepm project
+
+# copied from /etc/init.d/outformat (ALT Linux)
+isatty()
+{
+	# Set a sane TERM required for tput
+	[ -n "$TERM" ] || TERM=dumb
+	export TERM
+	test -t 1
+}
+
+isatty2()
+{
+	# check stderr
+	test -t 2
+}
+
+
+check_tty()
+{
+	isatty || return
+	which tput >/dev/null 2>/dev/null || return
+	# FreeBSD does not support tput -S
+	echo | tput -S >/dev/null 2>/dev/null || return
+	[ -z "$USETTY" ] || return
+	export USETTY=1
+}
+
+: ${BLACK:=0} ${RED:=1} ${GREEN:=2} ${YELLOW:=3} ${BLUE:=4} ${MAGENTA:=5} ${CYAN:=6} ${WHITE:=7}
+
+set_boldcolor()
+{
+	[ "$USETTY" = "1" ] || return
+	{
+		echo bold
+		echo setaf $1
+	} |tput -S
+}
+
+restore_color()
+{
+	[ "$USETTY" = "1" ] || return
+	{
+		echo op; # set Original color Pair.
+		echo sgr0; # turn off all special graphics mode (bold in our case).
+	} |tput -S
+}
+
+echover()
+{
+    [ -n "$verbose" ] || return
+    echo "$*" >&2
+}
+
+# Print command line and run command line
+showcmd()
+{
+	if [ -z "$quiet" ] ; then
+		set_boldcolor $GREEN
+		local PROMTSIG="\$"
+		[ "$UID" = 0 ] && PROMTSIG="#"
+		echo " $PROMTSIG $@"
+		restore_color
+	fi >&2
+}
+
+# Print command line and run command line
+docmd()
+{
+	showcmd "$@"
+	"$@"
+}
+
+check_tty
+
 WGETQ='' #-q
 CURLQ='' #-s
 
