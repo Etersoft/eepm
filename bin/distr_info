@@ -250,6 +250,8 @@ if distro os-release ; then
 	# set by os-release:
 	#PRETTY_NAME
 	VENDOR_ID="$ID"
+	DISTRIB_FULL_RELEASE=$DISTRIB_RELEASE
+	DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\.[0-9]$//g")
 elif distro lsb-release ; then
 	DISTRIB_ID=$(cat $DISTROFILE | get_var DISTRIB_ID)
 	DISTRIB_RELEASE=$(cat $DISTROFILE | get_var DISTRIB_RELEASE)
