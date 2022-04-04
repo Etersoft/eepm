@@ -238,14 +238,6 @@ DISTRIB_ID=""
 DISTRIB_RELEASE=""
 DISTRIB_CODENAME=""
 
-# Default with LSB
-if distro lsb-release ; then
-	DISTRIB_ID=$(cat $DISTROFILE | get_var DISTRIB_ID)
-	DISTRIB_RELEASE=$(cat $DISTROFILE | get_var DISTRIB_RELEASE)
-	DISTRIB_CODENAME=$(cat $DISTROFILE | get_var DISTRIB_CODENAME)
-	PRETTY_NAME=$(cat $DISTROFILE | get_var DISTRIB_DESCRIPTION)
-fi
-
 # Next default by /etc/os-release
 # https://www.freedesktop.org/software/systemd/man/os-release.html
 if distro os-release ; then
@@ -258,6 +250,11 @@ if distro os-release ; then
 	# set by os-release:
 	#PRETTY_NAME
 	VENDOR_ID="$ID"
+elif distro lsb-release ; then
+	DISTRIB_ID=$(cat $DISTROFILE | get_var DISTRIB_ID)
+	DISTRIB_RELEASE=$(cat $DISTROFILE | get_var DISTRIB_RELEASE)
+	DISTRIB_CODENAME=$(cat $DISTROFILE | get_var DISTRIB_CODENAME)
+	PRETTY_NAME=$(cat $DISTROFILE | get_var DISTRIB_DESCRIPTION)
 fi
 
 # ALT Linux based
