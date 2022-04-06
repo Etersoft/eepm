@@ -27,6 +27,8 @@ fatal()
     exit 1
 }
 
+# TODO:
+arch="$(uname -m)"
 
 # copied from eepm project
 
@@ -105,6 +107,8 @@ check_tty
 
 WGETNOSSLCHECK=''
 CURLNOSSLCHECK=''
+WGETUSERAGENT=''
+CURLUSERAGENT=''
 WGETQ='' #-q
 CURLQ='' #-s
 WGETOPTIONS='--content-disposition'
@@ -128,6 +132,13 @@ if [ "$1" = "-k" ] || [ "$1" = "--no-check-certificate" ] ; then
     shift
 fi
 
+if [ "$1" = "-U" ] || [ "$1" = "-A" ] || [ "$1" = "--user-agent" ] ; then
+    user_agent="'Mozilla/5.0 (X11; Linux $arch)'"
+    WGETUSERAGENT="-U $user_agent"
+    CURLUSERAGENT="-A $user_agent"
+    shift
+fi
+
 
 WGET="$(which wget 2>/dev/null)"
 
@@ -135,19 +146,19 @@ if [ -n "$WGET" ] ; then
 # put remote content to stdout
 scat()
 {
-    docmd $WGET $WGETQ $WGETNOSSLCHECK -O- "$1"
+    docmd $WGET $WGETQ "$WGETUSERAGENT" $WGETNOSSLCHECK -O- "$1"
 }
 # download to default name of to $2
 sget()
 {
     if [ -n "$2" ] ; then
-       docmd $WGET $WGETQ $WGETNOSSLCHECK $WGETOPTIONS -O "$2" "$1"
+       docmd $WGET $WGETQ "$WGETUSERAGENT" $WGETNOSSLCHECK $WGETOPTIONS -O "$2" "$1"
     else
 # TODO: поддержка rsync для известных хостов?
 # Не качать, если одинаковый размер и дата
 # -nc
 # TODO: overwrite always
-       docmd $WGET $WGETQ $WGETNOSSLCHECK $WGETOPTIONS "$1"
+       docmd $WGET $WGETQ "$WGETUSERAGENT" $WGETNOSSLCHECK $WGETOPTIONS "$1"
     fi
 }
 
@@ -157,15 +168,15 @@ CURL="$(which curl 2>/dev/null)"
 # put remote content to stdout
 scat()
 {
-    $CURL -L $CURLQ $CURLNOSSLCHECK "$1"
+    $CURL -L $CURLQ "$CURLUSERAGENT" $CURLNOSSLCHECK "$1"
 }
 # download to default name of to $2
 sget()
 {
     if [ -n "$2" ] ; then
-       docmd $CURL -L $CURLQ $CURLNOSSLCHECK $CURLOPTIONS --output "$2" "$1"
+       docmd $CURL -L $CURLQ "$CURLUSERAGENT" $CURLNOSSLCHECK $CURLOPTIONS --output "$2" "$1"
     else
-       docmd $CURL -L $CURLQ $CURLNOSSLCHECK $CURLOPTIONS -O "$1"
+       docmd $CURL -L $CURLQ "$CURLUSERAGENT" $CURLNOSSLCHECK $CURLOPTIONS -O "$1"
     fi
 }
 fi
@@ -225,6 +236,7 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
     echo "Options:"
     echo "    -q       - quiet mode"
     echo "    -k|--no-check-certificate - skip SSL certificate chain support"
+    echo "    -U|-A|--user-agent - send browser like UserAgent"
     echo "    -O file  - download to this file (use filename from server if missed)"
     echo "    --list   - print files from url with mask"
     echo "    --latest - print only latest version of file"
