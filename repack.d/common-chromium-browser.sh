@@ -7,6 +7,8 @@
 # PRODUCTCUR=mybrowser-nightly
 # PRODUCTDIR=/opt/my/browser
 
+. $(dirname $0)/common.sh
+
 set_alt_alternatives()
 {
     local priority="$1"
@@ -43,15 +45,6 @@ copy_icons_to_share()
 }
 
 
-remove_file()
-{
-    local file="$1"
-    [ -f $BUILDROOT/$file ] || return
-
-    rm -fv $BUILDROOT/$file
-    subst "s|.*$file.*||" $SPEC
-}
-
 cleanup()
 {
     subst '1iAutoProv:no' $SPEC
@@ -85,43 +78,6 @@ install_deps()
 }
 
 
-pack_file()
-{
-    grep -q "^$1$" $SPEC && return
-    grep -q "\"$1\"" $SPEC && return
-    subst "s|%files|%files\n$1|" $SPEC
-}
-
-
-add_bin_link_command()
-{
-    local name="$1"
-    local target="$2"
-    [ -n "$name" ] || name="$PRODUCT"
-    [ -n "$target" ] || target="$PRODUCTDIR/$name"
-    [ -e $BUILDROOT/usr/bin/$name ] && return
-
-    mkdir -p $BUILDROOT/usr/bin/
-    ln -s $target $BUILDROOT/usr/bin/$name
-    pack_file /usr/bin/$name
-}
-
-
-add_bin_exec_command()
-{
-    local name="$1"
-    local target="$2"
-    [ -n "$name" ] || name="$PRODUCT"
-    [ -n "$target" ] || target="$PRODUCTDIR/$name"
-    [ -e $BUILDROOT/usr/bin/$name ] && return
-
-    mkdir -p $BUILDROOT/usr/bin/
-    echo "exec $target \"\$@\"" > $BUILDROOT/usr/bin/$name
-    chmod 0755 $BUILDROOT/usr/bin/$name
-    pack_file /usr/bin/$name
-}
-
-
 # FIXME: too many heruistic due https://bugzilla.altlinux.org/42189
 add_bin_commands()
 {
@@ -148,16 +104,6 @@ add_bin_commands()
     # short command for run
     add_bin_link_command $PRODUCT $PRODUCTCUR
 }
-
-move_to_opt()
-{
-    local from="$1"
-    [ -n "$from" ] || from="/usr/share/$PRODUCT"
-    mkdir -p $BUILDROOT$PRODUCTDIR/
-    mv $BUILDROOT/$from/* $BUILDROOT$PRODUCTDIR/
-    subst "s|$from|$PRODUCTDIR|g" $SPEC
-}
-
 
 
 fix_chrome_sandbox()
