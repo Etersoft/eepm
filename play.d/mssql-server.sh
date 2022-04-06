@@ -35,9 +35,16 @@ case "$($DISTRVENDOR -d)" in
     ;;
 esac
 
-$SUDO /opt/mssql/bin/mssql-conf setup accept-eula
-
-serv mssql-server on
+if [ -z "$EPM_AUTO" ] ; then
+    $SUDO /opt/mssql/bin/mssql-conf setup accept-eula
+    serv mssql-server on
+else
+cat <<EOF
+Run follow commands manually for complete the setup:
+    # /opt/mssql/bin/mssql-conf setup accept-eula
+    # serv mssql-server on
+EOF
+fi
 
 
 cat <<EOF

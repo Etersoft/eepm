@@ -77,6 +77,8 @@ __epm_play_run()
     set_sudo
     export SUDO
 
+    [ -n "$non_interactive" ] && export EPM_AUTO="--auto"
+
     local bashopt=''
     [ -n "$verbose" ] && bashopt='-x' && export EPM_VERBOSE="$verbose"
     #info "Running $($script --description 2>/dev/null) ..."
