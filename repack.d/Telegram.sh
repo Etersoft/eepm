@@ -8,6 +8,8 @@ PRODUCT=Telegram
 PRODUCTCUR=telegram-desktop
 PRODUCTDIR=/opt/Telegram
 
+. $(dirname $0)/common.sh
+
 # /usr/bin/Telegram
 subst '1iConflicts:telegram-desktop < 3.2.8' $SPEC
 
@@ -28,6 +30,26 @@ ln -s $PRODUCTDIR/Telegram $BUILDROOT/usr/bin/$PRODUCT
 subst "s|%files|%files\n/usr/bin/$PRODUCT|" $SPEC
 ln -s $PRODUCTDIR/Telegram $BUILDROOT/usr/bin/$PRODUCTCUR
 subst "s|%files|%files\n/usr/bin/$PRODUCTCUR|" $SPEC
+
+# Icons
+iconname=$PRODUCT
+url=https://github.com/telegramdesktop/tdesktop
+for i in 16 32 48 64 128 256 512 ; do
+    mkdir -p $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/
+    $EGET -O $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png $url/raw/master/Telegram/Resources/art/icon$i.png || continue
+    pack_file /usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png
+done
+
+
+# Disable the official Telegram Desktop updater
+mkdir -p "$BUILDROOT/etc/tdesktop"
+echo "$PRODUCTCUR" >"$BUILDROOT/etc/tdesktop/externalupdater"
+pack_file /etc/tdesktop/externalupdater
+remove_file /opt/Telegram/Updater
+
+
+# TODO: tg.protocol
+# https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=telegram-desktop-bin
 
 # create desktop file
 mkdir -p $BUILDROOT/usr/share/applications/
