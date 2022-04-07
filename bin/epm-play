@@ -61,15 +61,45 @@ __list_all_app()
     done
 }
 
-__list_installed_app()
+__list_all_packages()
 {
     local name
     for name in $(__list_all_app) ; do
-        __check_installed_app $name && echo "$name"
+        __get_app_package $name
     done
+}
+
+# pkg app
+__list_app_packages_table()
+{
+    local name
+    for name in $(__list_all_app) ; do
+        echo "$(__get_app_package $name) $name"
+    done
+}
+
+__list_installed_app()
+{
+    local i
+    local tapt=$(mktemp) || fatal
+    __list_app_packages_table >$tapt
+    # get all installed packages and convert it to a apps list
+    for i in $(epm query --short $(cat $tapt | sed -e 's| .*$||') 2>/dev/null) ; do
+        grep "^$i " $tapt | sed -e 's|^.* ||'
+    done
+    rm -f $tapt
     return
+
     cat $epm_vardir/installed-app 2>/dev/null
 }
+
+__get_app_package()
+{
+    local script="$psdir/$1.sh"
+    [ -x "$script" ] || return
+    $script --package 2>/dev/null
+}
+
 
 __get_app_description()
 {

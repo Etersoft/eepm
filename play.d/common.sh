@@ -11,6 +11,11 @@ if [ "$1" = "--remove" ] ; then
     exit
 fi
 
+if [ "$1" = "--package" ] ; then
+    echo "$PKGNAME"
+    exit
+fi
+
 if [ "$1" = "--installed" ] ; then
     epm installed $PKGNAME
     exit
