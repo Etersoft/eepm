@@ -1523,14 +1523,6 @@ DISTRIB_ID=""
 DISTRIB_RELEASE=""
 DISTRIB_CODENAME=""
 
-# Default with LSB
-if distro lsb-release ; then
-	DISTRIB_ID=$(cat $DISTROFILE | get_var DISTRIB_ID)
-	DISTRIB_RELEASE=$(cat $DISTROFILE | get_var DISTRIB_RELEASE)
-	DISTRIB_CODENAME=$(cat $DISTROFILE | get_var DISTRIB_CODENAME)
-	PRETTY_NAME=$(cat $DISTROFILE | get_var DISTRIB_DESCRIPTION)
-fi
-
 # Next default by /etc/os-release
 # https://www.freedesktop.org/software/systemd/man/os-release.html
 if distro os-release ; then
@@ -1543,6 +1535,13 @@ if distro os-release ; then
 	# set by os-release:
 	#PRETTY_NAME
 	VENDOR_ID="$ID"
+	DISTRIB_FULL_RELEASE=$DISTRIB_RELEASE
+	DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\.[0-9]$//g")
+elif distro lsb-release ; then
+	DISTRIB_ID=$(cat $DISTROFILE | get_var DISTRIB_ID)
+	DISTRIB_RELEASE=$(cat $DISTROFILE | get_var DISTRIB_RELEASE)
+	DISTRIB_CODENAME=$(cat $DISTROFILE | get_var DISTRIB_CODENAME)
+	PRETTY_NAME=$(cat $DISTROFILE | get_var DISTRIB_DESCRIPTION)
 fi
 
 # ALT Linux based
@@ -2133,12 +2132,12 @@ esac
 internal_tools_eget()
 {
 # eget - simply shell on wget for loading directories over http (wget does not support wildcard for http)
-# Example use:
+# Use:
 # eget http://ftp.altlinux.ru/pub/security/ssl/*
 #
-# Copyright (C) 2014-2014, 2016, 2020  Etersoft
+# Copyright (C) 2014-2014, 2016, 2020, 2022  Etersoft
 # Copyright (C) 2014 Daniil Mikhailov <danil@etersoft.ru>
-# Copyright (C) 2016-2017, 2020 Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2016-2017, 2020, 2022 Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -2160,8 +2159,86 @@ fatal()
     exit 1
 }
 
+
+# copied from eepm project
+
+# copied from /etc/init.d/outformat (ALT Linux)
+isatty()
+{
+	# Set a sane TERM required for tput
+	[ -n "$TERM" ] || TERM=dumb
+	export TERM
+	test -t 1
+}
+
+isatty2()
+{
+	# check stderr
+	test -t 2
+}
+
+
+check_tty()
+{
+	isatty || return
+	which tput >/dev/null 2>/dev/null || return
+	# FreeBSD does not support tput -S
+	echo | tput -S >/dev/null 2>/dev/null || return
+	[ -z "$USETTY" ] || return
+	export USETTY=1
+}
+
+: ${BLACK:=0} ${RED:=1} ${GREEN:=2} ${YELLOW:=3} ${BLUE:=4} ${MAGENTA:=5} ${CYAN:=6} ${WHITE:=7}
+
+set_boldcolor()
+{
+	[ "$USETTY" = "1" ] || return
+	{
+		echo bold
+		echo setaf $1
+	} |tput -S
+}
+
+restore_color()
+{
+	[ "$USETTY" = "1" ] || return
+	{
+		echo op; # set Original color Pair.
+		echo sgr0; # turn off all special graphics mode (bold in our case).
+	} |tput -S
+}
+
+echover()
+{
+    [ -n "$verbose" ] || return
+    echo "$*" >&2
+}
+
+# Print command line and run command line
+showcmd()
+{
+	if [ -z "$quiet" ] ; then
+		set_boldcolor $GREEN
+		local PROMTSIG="\$"
+		[ "$UID" = 0 ] && PROMTSIG="#"
+		echo " $PROMTSIG $@"
+		restore_color
+	fi >&2
+}
+
+# Print command line and run command line
+docmd()
+{
+	showcmd "$@"
+	"$@"
+}
+
+check_tty
+
 WGETQ='' #-q
 CURLQ='' #-s
+WGETOPTIONS='--content-disposition'
+CURLOPTIONS='--remote-name --remote-header-name'
 
 set_quiet()
 {
@@ -2182,15 +2259,19 @@ if [ -n "$WGET" ] ; then
 # put remote content to stdout
 scat()
 {
-    $WGET $WGETQ -O- "$1"
+    docmd $WGET $WGETQ -O- "$1"
 }
 # download to default name of to $2
 sget()
 {
     if [ -n "$2" ] ; then
-       $WGET $WGETQ -O "$2" "$1"
+       docmd $WGET $WGETQ $WGETOPTIONS -O "$2" "$1"
     else
-       $WGET $WGETQ "$1"
+# TODO: поддержка rsync для известных хостов?
+# Не качать, если одинаковый размер и дата
+# -nc
+# TODO: overwrite always
+       docmd $WGET $WGETQ $WGETOPTIONS "$1"
     fi
 }
 
@@ -2206,9 +2287,9 @@ scat()
 sget()
 {
     if [ -n "$2" ] ; then
-       $CURL -L $CURLQ --output "$2" "$1"
+       docmd $CURL -L $CURLQ $CURLOPTIONS --output "$2" "$1"
     else
-       $CURL -L $CURLQ -O "$1"
+       docmd $CURL -L $CURLQ $CURLOPTIONS -O "$1"
     fi
 }
 fi
@@ -2257,12 +2338,12 @@ fi
 # -P support
 
 if [ -z "$1" ] ; then
-    echo "eget - wget like downloader" >&2
+    echo "eget - wget like downloader wrapper with wildcard support" >&2
     fatal "Run $0 --help to get help"
 fi
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
-    echo "eget - wget like downloader with wildcard support in filename part of URL"
+    echo "eget - wget like downloader wrapper with wildcard support in filename part of URL"
     echo "Usage: eget [-q] [-O target file] [--list] http://somesite.ru/dir/na*.log"
     echo
     echo "Options:"
@@ -2994,7 +3075,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.16.9  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.16.10  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
