@@ -2164,11 +2164,11 @@ __download_pkg_urls()
 		cd $tmppkg || fatal
 		if docmd eget --latest "$url" ; then
 			local i
-			for i in $(basename $url) ; do
-				[ -s "$tmppkg/$i" ] || continue
-				pkg_files="$pkg_files $tmppkg/$i"
-				to_remove_pkg_files="$to_remove_pkg_files $tmppkg/$i"
-			done
+			# use downloaded file
+			i=$(echo *.*)
+			[ -s "$tmppkg/$i" ] || continue
+			pkg_files="$pkg_files $tmppkg/$i"
+			to_remove_pkg_files="$to_remove_pkg_files $tmppkg/$i"
 		else
 			warning "Failed to download $url, ignoring"
 		fi
@@ -3640,6 +3640,7 @@ epm_vardir=/var/lib/eepm
 
 __save_installed_app()
 {
+	return 0 # stub
 	[ -d "$epm_vardir" ] || return 0
 	__check_installed_app "$1" && return 0
 	echo "$1" | sudorun tee -a $epm_vardir/installed-app >/dev/null
@@ -3647,6 +3648,7 @@ __save_installed_app()
 
 __remove_installed_app()
 {
+	return 0 # stub
 	[ -s $epm_vardir/installed-app ] || return 0
 	local i
 	for i in $* ; do
@@ -3657,19 +3659,69 @@ __remove_installed_app()
 
 __check_installed_app()
 {
+	local script="$psdir/$1.sh"
+	[ -x "$script" ] || return
+	$script --installed
+	return
+
 	[ -s $epm_vardir/installed-app ] || return 1
 	grep -q -- "^$1\$" $epm_vardir/installed-app
 }
 
+__list_all_app()
+{
+    for i in $psdir/*.sh ; do
+       local name=$(basename $i .sh)
+       [ -n "$IGNOREi586" ] && rhas "$name" "^i586-" && continue
+       rhas "$name" "^common" && continue
+       echo "$name"
+    done
+}
+
+__list_all_packages()
+{
+    local name
+    for name in $(__list_all_app) ; do
+        __get_app_package $name
+    done
+}
+
+__list_app_packages_table()
+{
+    local name
+    for name in $(__list_all_app) ; do
+        echo "$(__get_app_package $name) $name"
+    done
+}
+
 __list_installed_app()
 {
+    local i
+    local tapt=$(mktemp) || fatal
+    __list_app_packages_table >$tapt
+    # get all installed packages and convert it to a apps list
+    for i in $(epm query --short $(cat $tapt | sed -e 's| .*$||') 2>/dev/null) ; do
+        grep "^$i " $tapt | sed -e 's|^.* ||'
+    done
+    rm -f $tapt
+    return
+
     cat $epm_vardir/installed-app 2>/dev/null
 }
 
+__get_app_package()
+{
+    local script="$psdir/$1.sh"
+    [ -x "$script" ] || return
+    $script --package 2>/dev/null
+}
+
+
 __get_app_description()
 {
-    [ -x "$1" ] || return
-    $1 --description 2>/dev/null
+    local script="$psdir/$1.sh"
+    [ -x "$script" ] || return
+    $script --description 2>/dev/null
 }
 
 __check_play_script()
@@ -3712,8 +3764,8 @@ __epm_play_list_installed()
         exit
     fi
     [ -n "$quiet" ] || echo "Installed applications:"
-    for i in $(__list_installed_app | sort) ; do
-        local desc="$(__get_app_description $psdir/$i.sh)"
+    for i in $(__list_installed_app) ; do
+        local desc="$(__get_app_description $i)"
         [ -n "$desc" ] || continue
         [ -n "$quiet" ] || echo -n "  "
         printf "%-20s - %s\n" "$i" "$desc"
@@ -3729,22 +3781,16 @@ __epm_play_list()
     [ "$($DISTRVENDOR -a)" = "x86_64" ] && IGNOREi586='' || IGNOREi586=1
 
     if [ -n "$short" ] ; then
-        for i in $psdir/*.sh ; do
-            local name=$(basename $i .sh)
-            [ -n "$IGNOREi586" ] && rhas "$name" "^i586-" && continue
-            rhas "$name" "^common" && continue
-            echo "$name"
+        for i in $(__list_all_app) ; do
+            echo "$i"
         done
         exit
     fi
-    for i in $psdir/*.sh ; do
+    for i in $(__list_all_app) ; do
         local desc="$(__get_app_description $i)"
         [ -n "$desc" ] || continue
-        local name=$(basename $i .sh)
-        [ -n "$IGNOREi586" ] && rhas "$name" "^i586-" && continue
-        rhas "$name" "^common" && continue
         [ -n "$quiet" ] || echo -n "  "
-        printf "%-20s - %s\n" "$name" "$desc"
+        printf "%-20s - %s\n" "$i" "$desc"
     done
 }
 
@@ -3801,7 +3847,7 @@ if [ "$1" = "--update" ] ; then
                 RES=1
                 continue
             fi
-            __epm_play_run $prescription --run "$@" || RES=$?
+            __epm_play_run $prescription --update "$@" || RES=$?
         done
         exit $RES
     fi
@@ -3811,7 +3857,7 @@ if [ "$1" = "--update" ] ; then
     __check_installed_app "$1" || fatal "$1 is not installed"
     prescription="$1"
     shift
-    __epm_play_run $prescription --run "$@"
+    __epm_play_run $prescription --update "$@"
     exit
 fi
 
@@ -9024,6 +9070,7 @@ if distro altlinux-release ; then
 	elif has "ALT p9.* p9 " ; then DISTRIB_RELEASE="p9"
 	elif has "ALT 9 SP " ; then DISTRIB_RELEASE="c9"
 	elif has "ALT c9f1" ; then DISTRIB_RELEASE="c9f1"
+	elif has "ALT MED72 " ; then DISTRIB_RELEASE="p8"
 	elif has "ALT 8 SP " ; then DISTRIB_RELEASE="c8"
 	elif has "ALT c8.2 " ; then DISTRIB_RELEASE="c8.2"
 	elif has "ALT c8.1 " ; then DISTRIB_RELEASE="c8.1"
@@ -10474,7 +10521,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.16.10  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.17.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10484,7 +10531,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.16.10
+EPMVERSION=3.17.0
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
@@ -10790,6 +10837,7 @@ check_option()
 {
     case $1 in
     -v|--version)         # HELPOPT: print version
+        [ -n "$epm_cmd" ] && return 1
         print_version
         exit 0
         ;;
