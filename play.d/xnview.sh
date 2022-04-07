@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME=XnViewMP
+PKGNAME=xnview
 DESCRIPTION="XnView MP: Image management from the official site"
 
 . $(dirname $0)/common.sh

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME=brave-browser
+PKGNAME=brave-browser-nightly
 DESCRIPTION="Brave browser from the official site"
 
 . $(dirname $0)/common.sh
@@ -14,6 +14,6 @@ repack=''
 # we have workaround for their postinstall script, so always repack rpm package
 [ "$($DISTRVENDOR -p)" = "deb" ] || repack='--repack'
 
-PKG=$($EGET --list --latest https://github.com/brave/brave-browser/releases "$PKGNAME-*.$arch.$pkgtype") || fatal "Can't get package URL"
+PKG=$($EGET --list --latest https://github.com/brave/brave-browser/releases "brave-browser-*.$arch.$pkgtype") || fatal "Can't get package URL"
 
 epm $repack install "$PKG"

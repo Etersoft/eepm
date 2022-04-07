@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME=chromium-gost
+PKGNAME=chromium-gost-stable
 DESCRIPTION="Chromium with GOST support from the official site"
 
 . $(dirname $0)/common.sh
@@ -16,6 +16,6 @@ fi
 arch=amd64
 pkgtype=deb
 
-PKG=$($EGET --list --latest https://github.com/deemru/chromium-gost/releases "$PKGNAME-*linux-$arch.$pkgtype") || fatal "Can't get package URL"
+PKG=$($EGET --list --latest https://github.com/deemru/chromium-gost/releases "chromium-gost-*linux-$arch.$pkgtype") || fatal "Can't get package URL"
 
 epm install "$PKG"
