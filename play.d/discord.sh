@@ -8,10 +8,5 @@ DESCRIPTION="Discord from the official site"
 
 [ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
-# FIXME: improve eget to support ? not ask mask (detect by =?)
-PKG=/tmp/discord.deb
-$EGET -O $PKG "https://discord.com/api/download?platform=linux&format=deb"
-#PKG="https://dl.discordapp.net/apps/linux/0.0.12/discord-0.0.12.deb"
+epm install "https://discord.com/api/download?platform=linux&format=deb"
 
-epm install "$PKG" || exit
-rm -fv $PKG

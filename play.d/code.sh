@@ -2,6 +2,7 @@
 
 PKGNAME=code
 DESCRIPTION="Visual Studio Code from the official site"
+TIPS="Run epm play code <version> to install specific version."
 
 . $(dirname $0)/common.sh
 

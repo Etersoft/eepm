@@ -51,13 +51,11 @@ esac
 
 [ "$($DISTRVENDOR -d)" = "ALTLinux" ] && epmi --skip-installed fontconfig-disable-type1-font-for-assistant
 
-OPKG=/tmp/$OPKG
-$EGET -O $OPKG $URL
-epm $repack install "$OPKG" || exit
-rm -fv $OPKG
+epm $repack install "$URL" || exit
 
 [ "$repack" = "--scripts" ] && echo "Warning! Privileged scripts from the vendor were running."
 
+# TODO:
 # after install:
 #/usr/share/assistantd/daemon.sh --install
 #/opt/assistant/scripts/fonts.sh --install
