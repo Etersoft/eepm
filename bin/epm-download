@@ -72,11 +72,11 @@ __download_pkg_urls()
 		cd $tmppkg || fatal
 		if docmd eget --latest "$url" ; then
 			local i
-			for i in $(basename $url) ; do
-				[ -s "$tmppkg/$i" ] || continue
-				pkg_files="$pkg_files $tmppkg/$i"
-				to_remove_pkg_files="$to_remove_pkg_files $tmppkg/$i"
-			done
+			# use downloaded file
+			i=$(echo *.*)
+			[ -s "$tmppkg/$i" ] || continue
+			pkg_files="$pkg_files $tmppkg/$i"
+			to_remove_pkg_files="$to_remove_pkg_files $tmppkg/$i"
 		else
 			warning "Failed to download $url, ignoring"
 		fi
