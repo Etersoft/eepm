@@ -1,8 +1,7 @@
 #!/bin/sh
 
 PKGNAME=chrome-remote-desktop
-
-[ "$1" != "--run" ] && exit # echo " Remote desktop support for google-chrome & chromium" && exit
+DESCRIPTION='' # echo " Remote desktop support for google-chrome & chromium" && exit
 
 . $(dirname $0)/common.sh
 

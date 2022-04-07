@@ -184,7 +184,7 @@ if [ "$1" = "--update" ] ; then
                 RES=1
                 continue
             fi
-            __epm_play_run $prescription --run "$@" || RES=$?
+            __epm_play_run $prescription --update "$@" || RES=$?
         done
         exit $RES
     fi
@@ -194,7 +194,7 @@ if [ "$1" = "--update" ] ; then
     __check_installed_app "$1" || fatal "$1 is not installed"
     prescription="$1"
     shift
-    __epm_play_run $prescription --run "$@"
+    __epm_play_run $prescription --update "$@"
     exit
 fi
 

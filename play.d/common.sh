@@ -16,5 +16,18 @@ if [ "$1" = "--installed" ] ; then
     exit
 fi
 
+if [ "$1" = "--description" ] ; then
+     echo "$DESCRIPTION"
+     exit
+fi
 
-[ "$1" != "--run" ] && echo "$DESCRIPTION" && exit
+
+[ "$1" != "--run" ] && [ "$1" != "--update" ] && fatal "Unknown command $1"
+
+if [ "$1" = "--update" ] ; then
+     if ! epm installed $PKGNAME ; then
+         echo "Skipping update of $PKGNAME (package is not installed)"
+         exit
+     fi
+fi
+

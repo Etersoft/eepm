@@ -10,8 +10,6 @@ fi
 
 . $(dirname $0)/common.sh
 
-[ "$1" != "--run" ] && echo "MS SQL Server sqlcmd and bcp from the official site" && exit
-
 [ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
 case "$($DISTRVENDOR -d)" in
