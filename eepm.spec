@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.16.10
+Version: 3.17.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -148,6 +148,17 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Thu Apr 07 2022 Vitaly Lipatov <lav@altlinux.ru> 3.17.0-alt1
+- epm play yandex-browser: still update beta version if it is installed
+- epm download: use downloaded name, not URL basename
+- distr_info: add ALT MED72 support
+- epm play: fix remove package for brave, chromium-gost and xnview
+- epm play anydesk: force get 6.1.* packages, fix repack
+- epm play: skip --update if the package is not installed
+- epm play: implement list of installed packages via package manager
+- epm: allow -v only for empty command
+- epm play: cleanup downloading
+
 * Thu Apr 07 2022 Vitaly Lipatov <lav@altlinux.ru> 3.16.10-alt1
 - epm play assistant: add support for aarch64
 - epm-play: check installed-app file before removing
