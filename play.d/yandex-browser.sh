@@ -4,7 +4,7 @@ PRODUCTDIR=/opt/yandex/browser
 DESCRIPTION="Yandex browser from the official site"
 
 BRANCH=stable
-if [ "$2" = "beta" ] ; then
+if [ "$2" = "beta" ] || epm installed yandex-browser-beta ; then
     BRANCH=beta
     PRODUCTDIR=/opt/yandex/browser-$BRANCH
 fi
