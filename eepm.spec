@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.16.9
+Version: 3.16.10
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -148,6 +148,16 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Thu Apr 07 2022 Vitaly Lipatov <lav@altlinux.ru> 3.16.10-alt1
+- epm play assistant: add support for aarch64
+- epm-play: check installed-app file before removing
+- distr_info: check os-release and lsb-release after it
+- distr_info: use only major part of a version (8.5 -> 8)
+- epm play mssql-server: support --auto (--non-interactive)
+- split common functions from common-chromium-browser.sh to chromium.sh
+- epm repack Telegram: add icons, remove Updater
+- epm repack: add initial spnxclient support
+
 * Sun Apr 03 2022 Vitaly Lipatov <lav@altlinux.ru> 3.16.9-alt1
 - epm play: sort installed apps, return status for update
 - epm play: refactoring, fix tamtam, sputnik, chromium-gost install
