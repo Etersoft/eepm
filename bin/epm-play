@@ -23,6 +23,7 @@ epm_vardir=/var/lib/eepm
 
 __save_installed_app()
 {
+	return 0 # stub
 	[ -d "$epm_vardir" ] || return 0
 	__check_installed_app "$1" && return 0
 	echo "$1" | sudorun tee -a $epm_vardir/installed-app >/dev/null
@@ -30,6 +31,7 @@ __save_installed_app()
 
 __remove_installed_app()
 {
+	return 0 # stub
 	[ -s $epm_vardir/installed-app ] || return 0
 	local i
 	for i in $* ; do
@@ -40,19 +42,40 @@ __remove_installed_app()
 
 __check_installed_app()
 {
+	local script="$psdir/$1.sh"
+	[ -x "$script" ] || return
+	$script --installed
+	return
+
 	[ -s $epm_vardir/installed-app ] || return 1
 	grep -q -- "^$1\$" $epm_vardir/installed-app
 }
 
+__list_all_app()
+{
+    for i in $psdir/*.sh ; do
+       local name=$(basename $i .sh)
+       [ -n "$IGNOREi586" ] && rhas "$name" "^i586-" && continue
+       rhas "$name" "^common" && continue
+       echo "$name"
+    done
+}
+
 __list_installed_app()
 {
+    local name
+    for name in $(__list_all_app) ; do
+        __check_installed_app $name && echo "$name"
+    done
+    return
     cat $epm_vardir/installed-app 2>/dev/null
 }
 
 __get_app_description()
 {
-    [ -x "$1" ] || return
-    $1 --description 2>/dev/null
+    local script="$psdir/$1.sh"
+    [ -x "$script" ] || return
+    $script --description 2>/dev/null
 }
 
 __check_play_script()
@@ -95,8 +118,8 @@ __epm_play_list_installed()
         exit
     fi
     [ -n "$quiet" ] || echo "Installed applications:"
-    for i in $(__list_installed_app | sort) ; do
-        local desc="$(__get_app_description $psdir/$i.sh)"
+    for i in $(__list_installed_app) ; do
+        local desc="$(__get_app_description $i)"
         [ -n "$desc" ] || continue
         [ -n "$quiet" ] || echo -n "  "
         printf "%-20s - %s\n" "$i" "$desc"
@@ -112,22 +135,16 @@ __epm_play_list()
     [ "$($DISTRVENDOR -a)" = "x86_64" ] && IGNOREi586='' || IGNOREi586=1
 
     if [ -n "$short" ] ; then
-        for i in $psdir/*.sh ; do
-            local name=$(basename $i .sh)
-            [ -n "$IGNOREi586" ] && rhas "$name" "^i586-" && continue
-            rhas "$name" "^common" && continue
-            echo "$name"
+        for i in $(__list_all_app) ; do
+            echo "$i"
         done
         exit
     fi
-    for i in $psdir/*.sh ; do
+    for i in $(__list_all_app) ; do
         local desc="$(__get_app_description $i)"
         [ -n "$desc" ] || continue
-        local name=$(basename $i .sh)
-        [ -n "$IGNOREi586" ] && rhas "$name" "^i586-" && continue
-        rhas "$name" "^common" && continue
         [ -n "$quiet" ] || echo -n "  "
-        printf "%-20s - %s\n" "$name" "$desc"
+        printf "%-20s - %s\n" "$i" "$desc"
     done
 }
 
