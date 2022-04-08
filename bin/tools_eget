@@ -133,9 +133,9 @@ if [ "$1" = "-k" ] || [ "$1" = "--no-check-certificate" ] ; then
 fi
 
 if [ "$1" = "-U" ] || [ "$1" = "-A" ] || [ "$1" = "--user-agent" ] ; then
-    user_agent="'Mozilla/5.0 (X11; Linux $arch)'"
-    WGETUSERAGENT="-U $user_agent"
-    CURLUSERAGENT="-A $user_agent"
+    user_agent="Mozilla/5.0 (X11; Linux $arch)"
+    WGETUSERAGENT="-U '$user_agent'"
+    CURLUSERAGENT="-A '$user_agent'"
     shift
 fi
 
@@ -143,40 +143,56 @@ fi
 WGET="$(which wget 2>/dev/null)"
 
 if [ -n "$WGET" ] ; then
+__wget()
+{
+    if [ -n "$WGETUSERAGENT" ] ; then
+        docmd $WGET $WGETQ $WGETNOSSLCHECK "$WGETUSERAGENT" "$@"
+    else
+        docmd $WGET $WGETQ $WGETNOSSLCHECK "$@"
+    fi
+}
 # put remote content to stdout
 scat()
 {
-    docmd $WGET $WGETQ "$WGETUSERAGENT" $WGETNOSSLCHECK -O- "$1"
+    __wget $WGETNOSSLCHECK -O- "$1"
 }
 # download to default name of to $2
 sget()
 {
     if [ -n "$2" ] ; then
-       docmd $WGET $WGETQ "$WGETUSERAGENT" $WGETNOSSLCHECK $WGETOPTIONS -O "$2" "$1"
+       docmd __wget $WGETOPTIONS -O "$2" "$1"
     else
 # TODO: поддержка rsync для известных хостов?
 # Не качать, если одинаковый размер и дата
 # -nc
 # TODO: overwrite always
-       docmd $WGET $WGETQ "$WGETUSERAGENT" $WGETNOSSLCHECK $WGETOPTIONS "$1"
+       docmd __wget $WGETOPTIONS "$1"
     fi
 }
 
 else
 CURL="$(which curl 2>/dev/null)"
 [ -n "$CURL" ] || fatal "There are no wget nor curl in the system. Install it with $ epm install curl"
+__curl()
+{
+    if [ -n "$CURLUSERAGENT" ] ; then
+        docmd $CURL -L $CURLQ "$CURLUSERAGENT" $CURLNOSSLCHECK "$@"
+    else
+        docmd $CURL -L $CURLQ $CURLNOSSLCHECK "$@"
+    fi
+}
 # put remote content to stdout
 scat()
 {
-    $CURL -L $CURLQ "$CURLUSERAGENT" $CURLNOSSLCHECK "$1"
+    __curl "$1"
 }
 # download to default name of to $2
 sget()
 {
     if [ -n "$2" ] ; then
-       docmd $CURL -L $CURLQ "$CURLUSERAGENT" $CURLNOSSLCHECK $CURLOPTIONS --output "$2" "$1"
+       __curl $CURLOPTIONS --output "$2" "$1"
     else
-       docmd $CURL -L $CURLQ "$CURLUSERAGENT" $CURLNOSSLCHECK $CURLOPTIONS -O "$1"
+       __curl $CURLOPTIONS -O "$1"
     fi
 }
 fi
