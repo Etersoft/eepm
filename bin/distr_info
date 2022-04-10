@@ -225,6 +225,9 @@ normalize_name()
 		"Fedora Linux")
 			echo "Fedora"
 			;;
+		"RedHatEnterpriseLinuxServer")
+			echo "RHEL"
+			;;
 		*)
 			#echo "${1// /}"
 			echo "$1" | sed -e "s/ //g"
