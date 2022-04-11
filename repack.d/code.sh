@@ -7,14 +7,16 @@ SPEC="$2"
 PRODUCT=code
 PRODUCTDIR=/opt/$PRODUCT
 
-mkdir -p $BUILDROOT/opt
-mv $BUILDROOT/usr/share/$PRODUCT/ $BUILDROOT$PRODUCTDIR/
-subst "s|/usr/share/$PRODUCT|$PRODUCTDIR|g" $SPEC
+. $(dirname $0)/common.sh
+
+move_to_opt
 
 subst '1iAutoReq:yes,nomonolib,nomono' $SPEC
 subst '1iAutoProv:no' $SPEC
 
 subst "s|\(.*$PRODUCTDIR/code.*\)|/usr/bin/code\n/usr/bin/vscode\n\1|" $SPEC
+subst "s|/usr/share/code/code|$PRODUCTDIR/bin/code|g" $BUILDROOT/usr/share/applications/$PRODUCT.desktop
+chmod 0644 $BUILDROOT/usr/share/applications/$PRODUCT.desktop
 
 mkdir -p $BUILDROOT/usr/bin/
 ln -rs $BUILDROOT$PRODUCTDIR/bin/code $BUILDROOT/usr/bin/code
