@@ -206,7 +206,7 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
 fi
 
 
-if [ "$1" = "--remove" ] ; then
+if [ "$1" = "--remove" ] || [ "$1" = "remove" ]  ; then
     shift
     #__check_installed_app "$1" || warning "$1 is not installed"
     prescription="$1"
@@ -245,19 +245,19 @@ if [ "$1" = "--update" ] ; then
     exit
 fi
 
-if [ "$1" = "--installed" ] ; then
+if [ "$1" = "--installed" ] || [ "$1" = "installed" ]  ; then
     shift
     __check_installed_app "$1"
     #[ -n "$quiet" ] && exit
     exit
 fi
 
-if [ "$1" = "--list" ] || [ "$1" = "--list-installed" ]  ; then
+if [ "$1" = "--list" ] || [ "$1" = "--list-installed" ] || [ "$1" = "list" ] || [ "$1" = "list-installed" ]  ; then
     __epm_play_list_installed
     exit
 fi
 
-if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
+if [ "$1" = "--list-all" ] || [ "$1" = "list-all" ] || [ -z "$*" ] ; then
     [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications:"
     __epm_play_list $psdir
     [ -n "$quiet" ] || [ -n "$*" ] && exit
@@ -267,7 +267,7 @@ if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
     exit
 fi
 
-if [ "$1" = "--list-scripts" ] ; then
+if [ "$1" = "--list-scripts" ] || [ "$1" = "list-scripts" ] ; then
     [ -n "$short" ] || [ -n "$quiet" ] || echo "Run with a name of a play script to run:"
     __epm_play_list $prsdir
     exit
