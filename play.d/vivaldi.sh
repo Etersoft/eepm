@@ -1,7 +1,12 @@
 #!/bin/sh
 
-PKGNAME=vivaldi-stable
 DESCRIPTION="Vivaldi browser from the official site"
+
+BRANCH=stable
+if [ "$2" = "snapshot" ] || epm installed vivaldi-snapshot ; then
+    BRANCH=snapshot
+fi
+PKGNAME=vivaldi-$BRANCH
 
 . $(dirname $0)/common.sh
 

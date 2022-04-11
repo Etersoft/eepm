@@ -4,12 +4,12 @@ BUILDROOT="$1"
 SPEC="$2"
 
 PRODUCT=vivaldi
-PRODUCTCUR=vivaldi-stable
+PRODUCTCUR=vivaldi-snapshot
 PRODUCTDIR=/opt/vivaldi
 
 . $(dirname $0)/common-chromium-browser.sh
 
-subst '1iConflicts:vivaldi-snapshot' $SPEC
+subst '1iConflicts:vivaldi-stable' $SPEC
 
 set_alt_alternatives 65
 
