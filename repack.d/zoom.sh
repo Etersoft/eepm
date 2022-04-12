@@ -46,5 +46,4 @@ rm -v $BUILDROOT/opt/zoom/QtQuick/Scene2D/libqtquickscene2dplugin.so $BUILDROOT/
 subst 's|.*/opt/zoom/QtQuick/Scene2D/libqtquickscene2dplugin.so.*||' $SPEC
 subst 's|.*/opt/zoom/QtQuick/Scene3D/libqtquickscene3dplugin.so.*||' $SPEC
 
-fix_chrome_sandbox $PRODUCTDIR/cef
-
+[ -e $PRODUCTDIR/cef/chrome-sandbox ] && fix_chrome_sandbox $PRODUCTDIR/cef/chrome-sandbox
