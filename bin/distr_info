@@ -360,15 +360,15 @@ elif distro openwrt_release ; then
 	. $DISTROFILE
 	DISTRIB_RELEASE=$(cat $ROOTDIR/etc/openwrt_version)
 
-elif distro astra_version ; then
-	#DISTRIB_ID=`cat $DISTROFILE | get_var DISTRIB_ID`
-	DISTRIB_ID="AstraLinux"
-	#DISTRIB_RELEASE=$(cat "$DISTROFILE" | head -n1 | sed -e "s|.* \([a-z]*\).*|\1|g")
-	DISTRIB_RELEASE=$DISTRIB_CODENAME
-
 # for Ubuntu use standard LSB info
 elif [ "$DISTRIB_ID" = "Ubuntu" ] && [ -n "$DISTRIB_RELEASE" ]; then
 	# use LSB version
+	true
+
+elif distro astra_version ; then
+	# use OS release
+	DISTRIB_ID="$(echo "$DISTRIB_ID" | sed -e 's|(.*||')"
+	DISTRIB_RELEASE="$VERSION_CODENAME"
 	true
 
 # Debian based
