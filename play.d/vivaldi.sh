@@ -13,7 +13,7 @@ PKGNAME=vivaldi-$BRANCH
 
 arch="$($DISTRVENDOR --debian-arch)"
 case "$arch" in
-    amd64|i386|armhf)
+    amd64|aarch64|i386|armhf)
         ;;
     *)
         fatal "Debian $arch arch is not supported"
@@ -29,3 +29,5 @@ esac
 
 # epm uses eget to download * names
 epm install "https://repo.vivaldi.com/archive/deb/pool/main/$(epm print constructname $PKGNAME "*" $arch deb)"
+
+epm play vivaldi-codecs-ffmpeg-extra $BRANCH
