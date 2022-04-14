@@ -88,7 +88,7 @@ case $PMTYPE in
 		#	CMD="rpm -q --provides"
 		#else
 			EXTRA_SHOWDOCMD=' | grep "Provides:"'
-			docmd apt-cache show $pkg_names | grep "Provides:"
+			docmd apt-cache show $pkg_names | grep "Provides:" | sed -e 's|, |\n|g' | grep -v "^Provides:"
 			return
 		#fi
 		;;
