@@ -22,10 +22,10 @@ repack=''
 
 case $pkgtype in
     deb)
-        epm install "http://www.geogebra.net/linux/pool/main/g/geogebra-classic/(epm print constructname $PKGNAME "*")"
+        epm install "http://www.geogebra.net/linux/pool/main/g/geogebra-classic/(epm print constructname $PKGNAME "*" $arch)"
         ;;
     rpm)
-        epm $repack install "http://www.geogebra.net/linux/rpm/$arch/$(epm print constructname $PKGNAME "*")"
+        epm $repack install "http://www.geogebra.net/linux/rpm/$arch/$(epm print constructname $PKGNAME "*" $arch)"
         ;;
     *)
         fatal "Unsupported $pkgtype"
