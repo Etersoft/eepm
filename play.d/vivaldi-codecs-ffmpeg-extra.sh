@@ -10,7 +10,7 @@ if [ "$2" = "snapshot" ] ; then
 fi
 
 BASEPKGNAME=vivaldi-$BRANCH
-PKGNAME=$vivaldi-$BRANCH-codecs-ffmpeg-extra
+PKGNAME=vivaldi-$BRANCH-codecs-ffmpeg-extra
 
 
 . $(dirname $0)/common.sh
