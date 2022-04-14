@@ -1510,6 +1510,9 @@ normalize_name()
 		"Fedora Linux")
 			echo "Fedora"
 			;;
+		"RedHatEnterpriseLinuxServer")
+			echo "RHEL"
+			;;
 		*)
 			#echo "${1// /}"
 			echo "$1" | sed -e "s/ //g"
@@ -1548,7 +1551,7 @@ fi
 if distro altlinux-release ; then
 	DISTRIB_ID="ALTLinux"
 	# FIXME: fast hack for fallback: 10 -> p10 for /etc/os-release
-	DISTRIB_RELEASE="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
+	DISTRIB_RELEASE="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||' -e 's|^pp|p|')"
 	if has Sisyphus ; then DISTRIB_RELEASE="Sisyphus"
 	elif has "ALT p10.* p10 " ; then DISTRIB_RELEASE="p10"
 	elif has "ALTServer 10." ; then DISTRIB_RELEASE="p10"
@@ -1642,15 +1645,15 @@ elif distro openwrt_release ; then
 	. $DISTROFILE
 	DISTRIB_RELEASE=$(cat $ROOTDIR/etc/openwrt_version)
 
-elif distro astra_version ; then
-	#DISTRIB_ID=`cat $DISTROFILE | get_var DISTRIB_ID`
-	DISTRIB_ID="AstraLinux"
-	#DISTRIB_RELEASE=$(cat "$DISTROFILE" | head -n1 | sed -e "s|.* \([a-z]*\).*|\1|g")
-	DISTRIB_RELEASE=$DISTRIB_CODENAME
-
 # for Ubuntu use standard LSB info
 elif [ "$DISTRIB_ID" = "Ubuntu" ] && [ -n "$DISTRIB_RELEASE" ]; then
 	# use LSB version
+	true
+
+elif distro astra_version ; then
+	# use OS release
+	DISTRIB_ID="$(echo "$DISTRIB_ID" | sed -e 's|(.*||')"
+	DISTRIB_RELEASE="$VERSION_CODENAME"
 	true
 
 # Debian based
@@ -1845,6 +1848,8 @@ get_debian_arch()
         arch='i386' ;;
     'x86_64')
         arch='amd64' ;;
+    'aarch64')
+        arch='arm64' ;;
     esac
     echo "$arch"
 }
@@ -3076,7 +3081,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.17.0  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.17.1  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
