@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.17.1
+Version: 3.17.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -148,6 +148,10 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Thu Apr 14 2022 Vitaly Lipatov <lav@altlinux.ru> 3.17.2-alt1
+- epm-query: add -- after options, fix query --short for rpm
+- epm play vivaldi-codecs-ffmpeg-extra: fix package name
+
 * Thu Apr 14 2022 Vitaly Lipatov <lav@altlinux.ru> 3.17.1-alt1
 - distr_info: interpret RedHatEnterpriseLinuxServer as RHEL
 - epm play code: fix desktop file (ALT bug 42391)
