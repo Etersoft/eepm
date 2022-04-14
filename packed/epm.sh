@@ -4443,8 +4443,8 @@ __epm_get_hilevel_nameform()
 		apt-rpm)
 			# use # as delimeter for apt
 			local pkg
-			pkg=$(rpm -q --queryformat "%{NAME}#%{SERIAL}:%{VERSION}-%{RELEASE}\n" $1)
-			echo $pkg | grep -q "(none)" && pkg=$(rpm -q --queryformat "%{NAME}#%{VERSION}-%{RELEASE}\n" $1)
+			pkg=$(rpm -q --queryformat "%{NAME}#%{SERIAL}:%{VERSION}-%{RELEASE}\n" -- $1)
+			echo $pkg | grep -q "(none)" && pkg=$(rpm -q --queryformat "%{NAME}#%{VERSION}-%{RELEASE}\n" -- $1)
 			# HACK: can use only for multiple install packages like kernel
 			echo $pkg | grep -q kernel || return 1
 			echo $pkg
@@ -4453,8 +4453,8 @@ __epm_get_hilevel_nameform()
 		yum-rpm|dnf-rpm)
 			# just use strict version with Epoch and Serial
 			local pkg
-			pkg=$(rpm -q --queryformat "%{EPOCH}:%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" $1)
-			echo $pkg | grep -q "(none)" && pkg=$(rpm -q --queryformat "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" $1)
+			pkg=$(rpm -q --queryformat "%{EPOCH}:%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" -- $1)
+			echo $pkg | grep -q "(none)" && pkg=$(rpm -q --queryformat "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" -- $1)
 			echo $pkg
 			return
 			;;
@@ -4499,7 +4499,7 @@ __epm_query_file()
 			;;
 	esac
 
-	docmd $CMD $@
+	docmd $CMD -- $@
 }
 
 __epm_query_dpkg_check()
@@ -4524,7 +4524,7 @@ __epm_query_name()
 		*-dpkg)
 			#docmd dpkg -l $@ | grep "^ii"
 			#CMD="dpkg-query -W --showformat=\${Package}-\${Version}\n"
-			docmd dpkg-query -W "--showformat=\${Package}-\${Version}\n" $@ || return
+			docmd dpkg-query -W "--showformat=\${Package}-\${Version}\n" -- $@ || return
 			__epm_query_dpkg_check $@ || return
 			return
 			;;
@@ -4570,11 +4570,13 @@ __epm_query_shortname()
 
 	case $PMTYPE in
 		*-rpm)
-			CMD="rpm -q --queryformat %{name}\n"
+			showcmd rpm -q --queryformat '%{name} \n' -- $@
+			a='' rpm -q --queryformat '%{name} \n' -- $@
+			return
 			;;
 		*-dpkg)
 			#CMD="dpkg-query -W --showformat=\${Package}\n"
-			docmd dpkg-query -W "--showformat=\${Package}\n" $@ || return
+			docmd dpkg-query -W "--showformat=\${Package}\n" -- $@ || return
 			__epm_query_dpkg_check $@ || return
 			return
 			;;
@@ -10526,7 +10528,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.17.1  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.17.2  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10536,7 +10538,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.17.1
+EPMVERSION=3.17.2
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
