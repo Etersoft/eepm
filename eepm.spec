@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.17.0
+Version: 3.17.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -148,6 +148,22 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Thu Apr 14 2022 Vitaly Lipatov <lav@altlinux.ru> 3.17.1-alt1
+- distr_info: interpret RedHatEnterpriseLinuxServer as RHEL
+- epm play code: fix desktop file (ALT bug 42391)
+- epm play brave: install beta by default (nightly as alternative)
+- epm play vivaldi: add support for snapshot install
+- epm play: allow subcommands without -- prefix
+- distr_info: fix AstraLinux detection
+- distr_info: add support for arm64 debian arch
+- epm repack zoom: fix chrome-sandbox SGID (ALT bug 42412)
+- epm play: add vivaldi-codecs-ffmpeg-extra
+- distr_info: exclude pp10 possibility
+- epm provides: more clean output for deb
+- epm repack anydesk: fix requires (ALT bug 42403)
+- epm play geogebra: fix install on i586 (ALT bug 42404)
+- epm play zoom: fix install on i586 (ALT bug 42405)
+
 * Thu Apr 07 2022 Vitaly Lipatov <lav@altlinux.ru> 3.17.0-alt1
 - epm play yandex-browser: still update beta version if it is installed
 - epm download: use downloaded name, not URL basename
