@@ -13,6 +13,7 @@ PRODUCTDIR=/opt/Telegram
 # /usr/bin/Telegram
 subst '1iConflicts:telegram-desktop < 3.2.8' $SPEC
 
+subst "s|^Group:.*|Group: Networking/Instant messaging|" $SPEC
 subst "s|^License: unknown$|License: GPLv2|" $SPEC
 subst "s|^URL:.*|URL: https://desktop.telegram.org/|" $SPEC
 subst "s|^Summary:.*|Summary: Telegram Desktop messaging app|" $SPEC
