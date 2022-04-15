@@ -332,7 +332,8 @@ is_url()
 
 get_urls()
 {
-    scat $URL/ | \
+    # cat html, divide to lines by tags and cut off hrefs only
+    scat $URL | sed -e 's|<|<\n|g' | \
          grep -i -o -E 'href="(.+)"' | cut -d'"' -f2
 }
 
