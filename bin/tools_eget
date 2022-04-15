@@ -120,6 +120,8 @@ set_quiet()
     CURLQ='-s'
 }
 
+# TODO: parse options in a good way
+
 # TODO: passthrou all wget options
 if [ "$1" = "-q" ] ; then
     set_quiet
@@ -247,7 +249,7 @@ fi
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
     echo "eget - wget like downloader wrapper with wildcard support in filename part of URL"
-    echo "Usage: eget [-q] [-O target file] [--list] http://somesite.ru/dir/na*.log"
+    echo "Usage: eget [-q] [-k] [-U] [-O target file] [--list] http://somesite.ru/dir/na*.log"
     echo
     echo "Options:"
     echo "    -q       - quiet mode"
@@ -255,10 +257,15 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
     echo "    -U|-A|--user-agent - send browser like UserAgent"
     echo "    -O file  - download to this file (use filename from server if missed)"
     echo "    --list   - print files from url with mask"
-    echo "    --latest - print only latest version of file"
+    echo "    --latest - print only latest version of a file"
     echo
     echo "eget supports --list and download for https://github.com/owner/project urls"
     echo
+    echo "Examples:"
+    echo "  $ eget --list http://ftp.somesite.ru/package-*.tar"
+    echo "  $ eget http://ftp.somesite.ru/package-*.x64.tar"
+    echo "  $ eget --list http://download.somesite.ru 'package-*.tar.xz'"
+    echo "  $ eget --list --latest https://github.com/telegramdesktop/tdesktop/releases 'tsetup.*.tar.xz'"
 #    echo "See $ wget --help for wget options you can use here"
     exit
 fi
