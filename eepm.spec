@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.17.2
+Version: 3.17.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -148,6 +148,13 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Fri Apr 15 2022 Vitaly Lipatov <lav@altlinux.ru> 3.17.3-alt1
+- epm play: allow --remove for scripts (f.i., wine)
+- epm-sh-functions: add URL described how to tune sudo
+- update eget to 0.5.5
+- epm play: add Sublime Text 4 support
+- epm play telegram: add Group to the package
+
 * Thu Apr 14 2022 Vitaly Lipatov <lav@altlinux.ru> 3.17.2-alt1
 - epm-query: add -- after options, fix query --short for rpm
 - epm play vivaldi-codecs-ffmpeg-extra: fix package name
