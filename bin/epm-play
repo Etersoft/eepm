@@ -211,8 +211,14 @@ if [ "$1" = "--remove" ] || [ "$1" = "remove" ]  ; then
     #__check_installed_app "$1" || warning "$1 is not installed"
     prescription="$1"
     shift
-    __epm_play_run $prescription --remove "$@"
-    __remove_installed_app "$prescription"
+    if __check_play_script "$prescription" ; then
+        __epm_play_run $prescription --remove "$@"
+        __remove_installed_app "$prescription"
+    else
+        psdir=$prsdir
+        __check_play_script "$prescription" || fatal "We have no idea how to remove $prescription (checked in $psdir and $prsdir)"
+        __epm_play_run "$prescription" --remove "$@" || fatal "There was some error during run the script."
+    fi
     exit
 fi
 
