@@ -343,7 +343,7 @@ set_sudo()
 	else
 		# use sudo if one is tuned and tuned without password
 		if ! $SUDO_CMD -l -n >/dev/null 2>/dev/null ; then
-			[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
+			[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root or check http://altlinux.org/sudo.'"
 			return "$SUDO_TESTED"
 		fi
 	fi
