@@ -1,0 +1,8 @@
+NAME="MESh"
+VERSION="School 830"
+ID=kometa
+VERSION_ID=10
+PRETTY_NAME="KOMETA School 830"
+ANSI_COLOR="1;33"
+CPE_NAME="cpe:/o:alt:kometa:p10"
+LOGO=kometa

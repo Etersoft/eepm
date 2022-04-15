@@ -1,0 +1,17 @@
+#
+# Examples:
+#
+# DISTRIB_ID - single word, ID of DISTRIBUTOR
+# DISTRIB_RELEASE="5.0.0"
+# DISTRIB_CODENAME="Lycoris Radiata"
+# DISTRIB_DESCRIPTION="ALT Linux Sisyphus (20081222)"
+# DISTRIB_DESCRIPTION="ALT Linux 1.0.0 Server Light r1 (Lycoris Radiata)"
+NAME="ALT MED72"
+VERSION="8.3 ()"
+ID=altlinux
+VERSION_ID=8.3
+PRETTY_NAME="ALT MED72 ()"
+ANSI_COLOR="1;33"
+CPE_NAME="cpe:/o:alt linux:med72:8.3"
+HOME_URL="http://basealt.ru/"
+BUG_REPORT_URL="https://bugs.altlinux.org/"
