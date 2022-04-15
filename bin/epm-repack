@@ -188,7 +188,6 @@ __epm_repack_to_rpm()
     esac
 
     # install epm-repack for static (package based) dependencies
-    assure_exists fakeroot || fatal
     assure_exists alien || fatal
     assure_exists /usr/bin/rpmbuild || fatal
 
@@ -250,10 +249,10 @@ __epm_repack_to_rpm()
         cd $tmpbuilddir/ || fatal
 
         if [ -n "$verbose" ] ; then
-            docmd fakeroot alien --generate --to-rpm $verbose $scripts "../$alpkg" || fatal
+            docmd alien --generate --to-rpm $verbose $scripts "../$alpkg" || fatal
         else
-            showcmd fakeroot alien --generate --to-rpm $scripts "../$alpkg"
-            a='' fakeroot alien --generate --to-rpm $scripts "../$alpkg" >/dev/null || fatal
+            showcmd alien --generate --to-rpm $scripts "../$alpkg"
+            a='' alien --generate --to-rpm $scripts "../$alpkg" >/dev/null || fatal
         fi
 
         local subdir="$(echo *)"
@@ -275,11 +274,11 @@ __epm_repack_to_rpm()
         __apply_fix_code $pkgname $tmpbuilddir/$subdir $spec
         # TODO: we need these dirs to be created
         to_remove_pkg_dirs="$to_remove_pkg_dirs $HOME/RPM/BUILD $HOME/RPM"
-        showcmd fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir --define='_allow_root_build 1' -bb $spec
+        showcmd rpmbuild --buildroot $tmpbuilddir/$subdir --define='_allow_root_build 1' -bb $spec
         if [ -n "$verbose" ] ; then
-            a='' fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir  --define='_allow_root_build 1' -bb $spec || fatal
+            a='' rpmbuild --buildroot $tmpbuilddir/$subdir  --define='_allow_root_build 1' -bb $spec || fatal
         else
-            a='' fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir  --define='_allow_root_build 1' -bb $spec >/dev/null || fatal
+            a='' rpmbuild --buildroot $tmpbuilddir/$subdir  --define='_allow_root_build 1' -bb $spec >/dev/null || fatal
         fi
         # remove copy of source binary package (don't mix with generated)
         rm -f $tmpbuilddir/../$alpkg
