@@ -105,14 +105,3 @@ add_bin_commands()
     add_bin_link_command $PRODUCT $PRODUCTCUR
 }
 
-
-fix_chrome_sandbox()
-{
-    local sandbox="$1"
-    # Set SUID for chrome-sandbox if userns_clone is not supported
-    userns_path='/proc/sys/kernel/unprivileged_userns_clone'
-    userns_val="$(cat $userns_path 2>/dev/null)"
-    [ "$userns_val" = '1' ] && return
-    [ -n "$sandbox" ] || sandbox=$PRODUCTDIR/chrome-sandbox
-    chmod 4755 $BUILDROOT/$sandbox
-}

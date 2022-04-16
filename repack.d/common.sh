@@ -58,3 +58,16 @@ move_to_opt()
     subst "s|$from|$PRODUCTDIR|g" $SPEC
 }
 
+
+fix_chrome_sandbox()
+{
+    local sandbox="$1"
+    # Set SUID for chrome-sandbox if userns_clone is not supported
+    # CHECKME: Also userns can be enabled via sysctl-conf-userns package install
+    userns_path='/proc/sys/kernel/unprivileged_userns_clone'
+    userns_val="$(cat $userns_path 2>/dev/null)"
+    [ "$userns_val" = '1' ] && return
+    [ -n "$sandbox" ] || sandbox=$PRODUCTDIR/chrome-sandbox
+    [ -e "$BUILDROOT$sandbox" ] || return
+    chmod 4755 $BUILDROOT$sandbox
+}
