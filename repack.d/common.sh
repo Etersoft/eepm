@@ -4,9 +4,9 @@
 remove_file()
 {
     local file="$1"
-    [ -e "$BUILDROOT/$file" ] || return
+    [ -e "$BUILDROOT$file" ] || [ -L "$BUILDROOT$file" ] || return
 
-    rm -v "$BUILDROOT/$file"
+    rm -v "$BUILDROOT$file"
     subst "s|.*$file.*||" $SPEC
 }
 
