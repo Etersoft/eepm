@@ -111,8 +111,8 @@ WGETUSERAGENT=''
 CURLUSERAGENT=''
 WGETQ='' #-q
 CURLQ='' #-s
-WGETOPTIONS='--content-disposition'
-CURLOPTIONS='--remote-name --remote-header-name'
+WGETNAMEOPTIONS='--content-disposition'
+CURLNAMEOPTIONS='--remote-name --remote-header-name'
 
 set_quiet()
 {
@@ -162,13 +162,13 @@ scat()
 sget()
 {
     if [ -n "$2" ] ; then
-       docmd __wget $WGETOPTIONS -O "$2" "$1"
+       docmd __wget -O "$2" "$1"
     else
 # TODO: поддержка rsync для известных хостов?
 # Не качать, если одинаковый размер и дата
 # -nc
 # TODO: overwrite always
-       docmd __wget $WGETOPTIONS "$1"
+       docmd __wget $WGETNAMEOPTIONS "$1"
     fi
 }
 
@@ -192,9 +192,9 @@ scat()
 sget()
 {
     if [ -n "$2" ] ; then
-       __curl $CURLOPTIONS --output "$2" "$1"
+       __curl --output "$2" "$1"
     else
-       __curl $CURLOPTIONS -O "$1"
+       __curl $CURLNAMEOPTIONS "$1"
     fi
 }
 fi
