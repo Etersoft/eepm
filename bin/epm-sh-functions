@@ -532,6 +532,10 @@ get_package_type()
 			echo "msi"
 			return
 			;;
+		*.AppImage)
+			echo "AppImage"
+			return
+			;;
 		*)
 			#fatal "Don't know type of $1"
 			# return package name for info

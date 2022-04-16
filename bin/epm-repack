@@ -227,8 +227,23 @@ __epm_repack_to_rpm()
 
         PKGNAME=''
         VERSION=''
+        SUBGENERIC=''
         # convert tarballs to tar (for alien)
-        if ! echo "$pkg" | grep -q "\.rpm" && ! echo "$pkg" | grep -q "\.deb" ; then
+        if rhas "$pkg" "\.(rpm|deb)$" ; then
+            :
+        elif rhas "$pkg" "\.AppImage$" ; then
+            VERSION="$(echo "$alpkg" | grep -o -P "[-_.]([0-9])([0-9])*(\.[0-9])*" | head -n1 | sed -e 's|^[-_.]||')" #"
+            [ -n "$VERSION" ] || fatal "Can't get version from $alpkg."
+            PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
+            # TODO: move repack archive to erc?
+            [ -x "$alpkg" ] || docmd chmod u+x -v "$alpkg"
+            #[ -x "$alpkg" ] || sudocmd chmod u+x -v "$abspkg"
+            SUBGENERIC='appimage'
+            ./$alpkg --appimage-extract || fatal
+            alpkg=$PKGNAME-$VERSION.tar
+            erc a $alpkg squashfs-root
+        fi
+
             VERSION="$(echo "$alpkg" | grep -o -P "[-_.]([0-9])([0-9])*(\.[0-9])*" | head -n1 | sed -e 's|^[-_.]||')" #"
             if [ -n "$VERSION" ] ; then
                 PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
@@ -244,7 +259,6 @@ __epm_repack_to_rpm()
                     alpkg=$newalpkg
                 fi
             fi
-        fi
 
         cd $tmpbuilddir/ || fatal
 
@@ -271,6 +285,7 @@ __epm_repack_to_rpm()
 
         __fix_spec $pkgname $tmpbuilddir/$subdir $spec
         __apply_fix_code "generic" $tmpbuilddir/$subdir $spec
+        [ -n "$SUBGENERIC" ] && __apply_fix_code "generic-$SUBGENERIC" $tmpbuilddir/$subdir $spec
         __apply_fix_code $pkgname $tmpbuilddir/$subdir $spec
         # TODO: we need these dirs to be created
         to_remove_pkg_dirs="$to_remove_pkg_dirs $HOME/RPM/BUILD $HOME/RPM"
@@ -300,14 +315,16 @@ __epm_repack_to_rpm()
     true
 }
 
-__epm_check_if_try_install_deb()
+__epm_check_if_try_install_pkgtype()
 {
-	__epm_split_by_pkg_type deb "$@" || return 1
+	local PKG="$1"
+	shift
+	__epm_split_by_pkg_type $PKG "$@" || return 1
 	__epm_repack_to_rpm $split_replaced_pkgs || fatal
 
 	# TODO: move to install
 	docmd epm install $repacked_rpms
-
+	local RES=$?
 	# TODO: move it to exit handler
 	if [ -z "$DEBUG" ] ; then
 		# TODO: reinvent
@@ -316,7 +333,7 @@ __epm_check_if_try_install_deb()
 		[ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
 	fi
 
-	return 0
+	return $RES
 }
 
 
