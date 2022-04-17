@@ -165,12 +165,17 @@ __apply_fix_code()
 
 __create_rpmmacros()
 {
+# FIXME:
+[ -n "$TMPDIR" ] || TMPDIR=/tmp
+
     cat <<EOF >$HOME/.rpmmacros
 %_topdir	$HOME/RPM
 %_tmppath	$TMPDIR
 
 %packager	EPM <support@etersoft.ru>
 %_gpg_name	support@etersoft.ru
+
+%_allow_root_build	1
 EOF
     to_remove_pkg_files="$to_remove_pkg_files $HOME/.rpmmacros"
 }
@@ -189,7 +194,7 @@ __epm_repack_to_rpm()
 
     # install epm-repack for static (package based) dependencies
     assure_exists alien || fatal
-    assure_exists /usr/bin/rpmbuild || fatal
+    assure_exists /usr/bin/rpmbuild rpm-build || fatal
 
     # TODO: improve
     if echo "$pkgs" | grep -q "\.deb" ; then
@@ -289,11 +294,11 @@ __epm_repack_to_rpm()
         __apply_fix_code $pkgname $tmpbuilddir/$subdir $spec
         # TODO: we need these dirs to be created
         to_remove_pkg_dirs="$to_remove_pkg_dirs $HOME/RPM/BUILD $HOME/RPM"
-        showcmd rpmbuild --buildroot $tmpbuilddir/$subdir --define='_allow_root_build 1' -bb $spec
+        showcmd rpmbuild --buildroot $tmpbuilddir/$subdir -bb $spec
         if [ -n "$verbose" ] ; then
-            a='' rpmbuild --buildroot $tmpbuilddir/$subdir  --define='_allow_root_build 1' -bb $spec || fatal
+            a='' rpmbuild --buildroot $tmpbuilddir/$subdir -bb $spec || fatal
         else
-            a='' rpmbuild --buildroot $tmpbuilddir/$subdir  --define='_allow_root_build 1' -bb $spec >/dev/null || fatal
+            a='' rpmbuild --buildroot $tmpbuilddir/$subdir -bb $spec >/dev/null || fatal
         fi
         # remove copy of source binary package (don't mix with generated)
         rm -f $tmpbuilddir/../$alpkg
