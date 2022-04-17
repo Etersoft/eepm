@@ -69,5 +69,5 @@ fix_chrome_sandbox()
     [ "$userns_val" = '1' ] && return
     [ -n "$sandbox" ] || sandbox=$PRODUCTDIR/chrome-sandbox
     [ -e "$BUILDROOT$sandbox" ] || return
-    chmod 4755 $BUILDROOT$sandbox
+    chmod 4711 $BUILDROOT$sandbox
 }
