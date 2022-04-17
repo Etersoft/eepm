@@ -37,7 +37,8 @@ subst "s|.*$EMBDIR/..*\"||" $SPEC
 
 # replace embedded node and npm
 for EMBDIR in /usr/share/atom-beta/resources/app/apm/bin/{node,npm} /usr/share/atom-beta/resources/app/apm/node_modules/.bin/{npm,npx} /usr/share/atom-beta/resources/app/apm/node_modules/open/xdg-open ; do
-    rm -v $BUILDROOT$EMBDIR
+    echo "Removing $BUILDROOT$EMBDIR ..."
+    rm $BUILDROOT$EMBDIR
     ln -s /usr/bin/$(basename $EMBDIR) $BUILDROOT$EMBDIR
 done
 

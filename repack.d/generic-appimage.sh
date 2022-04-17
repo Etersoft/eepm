@@ -26,8 +26,13 @@ pack_file /usr/share/applications/$DESKTOPFILE
 
 mkdir -p $BUILDROOT/usr/share/pixmaps/
 cp $ICONFILE $BUILDROOT/usr/share/pixmaps/
-pack_file /usr/share/pixmaps/kontur-talk.png
+pack_file /usr/share/pixmaps/$ICONFILE
 
 cd - >/dev/null
 
 add_bin_exec_command $PRODUCT $PRODUCTDIR/AppRun
+
+subst '1iAutoProv:no' $SPEC
+
+# ignore embedded libs
+drop_embedded_reqs

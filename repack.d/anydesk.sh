@@ -24,7 +24,7 @@ epm install --skip-installed fontconfig glib2 libatk libcairo libfreetype libgdk
 
 subst '1iAutoProv:no' $SPEC
 
-remove_file usr/share/anydesk/files/init/anydesk
+remove_file /usr/share/anydesk/files/init/anydesk
 
 # put service file to the normal place
 mkdir -p $BUILDROOT/etc/systemd/system/

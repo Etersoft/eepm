@@ -22,9 +22,7 @@ subst "s|^SKYPE_PATH=.*|SKYPE_PATH=$PRODUCTDIR/skypeforlinux|" $BUILDROOT/usr/bi
 subst '1iAutoProv:no' $SPEC
 
 # ignore embedded libs
-subst '1i%filter_from_requires /^libGLESv2.so().*/d' $SPEC
-subst '1i%filter_from_requires /^libEGL.so().*/d' $SPEC
-subst '1i%filter_from_requires /^libffmpeg.so().*/d' $SPEC
+drop_embedded_reqs
 
 # usual command skype
 mkdir -p $BUILDROOT/usr/bin/

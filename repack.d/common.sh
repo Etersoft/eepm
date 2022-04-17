@@ -71,3 +71,11 @@ fix_chrome_sandbox()
     [ -e "$BUILDROOT$sandbox" ] || return
     chmod 4711 $BUILDROOT$sandbox
 }
+
+# ignore embedded libs
+drop_embedded_reqs()
+{
+    subst '1i%filter_from_requires /^libGLESv2.so().*/d' $SPEC
+    subst '1i%filter_from_requires /^libEGL.so().*/d' $SPEC
+    subst '1i%filter_from_requires /^libffmpeg.so().*/d' $SPEC
+}
