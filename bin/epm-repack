@@ -247,8 +247,7 @@ __epm_repack_to_rpm()
             ./$alpkg --appimage-extract || fatal
             alpkg=$PKGNAME-$VERSION.tar
             erc a $alpkg squashfs-root
-        fi
-
+        else
             VERSION="$(echo "$alpkg" | grep -o -P "[-_.]([0-9])([0-9])*(\.[0-9])*" | head -n1 | sed -e 's|^[-_.]||')" #"
             if [ -n "$VERSION" ] ; then
                 PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
@@ -264,6 +263,7 @@ __epm_repack_to_rpm()
                     alpkg=$newalpkg
                 fi
             fi
+        fi
 
         cd $tmpbuilddir/ || fatal
 
@@ -320,16 +320,17 @@ __epm_repack_to_rpm()
     true
 }
 
+# FIXME: Нужно как-то обеспечить непродолжение выполнения.
 __epm_check_if_try_install_pkgtype()
 {
 	local PKG="$1"
 	shift
 	__epm_split_by_pkg_type $PKG "$@" || return 1
-	__epm_repack_to_rpm $split_replaced_pkgs || fatal
+	__epm_repack_to_rpm $split_replaced_pkgs || { RES=$? ; return 0 ; }
 
 	# TODO: move to install
 	docmd epm install $repacked_rpms
-	local RES=$?
+	RES=$?
 	# TODO: move it to exit handler
 	if [ -z "$DEBUG" ] ; then
 		# TODO: reinvent
@@ -338,7 +339,7 @@ __epm_check_if_try_install_pkgtype()
 		[ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
 	fi
 
-	return $RES
+	return 0
 }
 
 

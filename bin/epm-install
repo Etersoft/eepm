@@ -309,11 +309,11 @@ epm_install_files()
         ALTLinux|ALTServer)
 
             # TODO: replace with name changed function
-            __epm_check_if_try_install_pkgtype deb $@ && return
-            __epm_check_if_try_install_pkgtype AppImage $@ && return
+            __epm_check_if_try_install_pkgtype deb $@ && return $RES
+            __epm_check_if_try_install_pkgtype AppImage $@ && return $RES
             __epm_check_if_src_rpm $@
 
-            # do not using low-level for install by file path (FIXME: reasons?)
+            # do not use low-level for install by file path (FIXME: reasons?)
             if ! is_dirpath "$@" || [ "$(get_package_type "$@")" = "rpm" ] ; then
                 __epm_check_vendor $@
                 __epm_check_if_needed_repack $@
@@ -356,8 +356,8 @@ epm_install_files()
             ;;
 
        *-rpm)
-            __epm_check_if_try_install_pkgtype deb $@ && return
-            __epm_check_if_try_install_pkgtype AppImage $@ && return
+            __epm_check_if_try_install_pkgtype deb $@ && return $RES
+            __epm_check_if_try_install_pkgtype AppImage $@ && return $RES
             __epm_check_if_src_rpm $@
             sudocmd rpm -Uvh $force $noscripts $nodeps $@ && return
             local RES=$?
