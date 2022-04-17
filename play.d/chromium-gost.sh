@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# filename does not contain -stable, but package name with -stable
 PKGNAME=chromium-gost-stable
 DESCRIPTION="Chromium with GOST support from the official site"
 

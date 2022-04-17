@@ -10,10 +10,13 @@ DESCRIPTION="Контур.Толк (ktalk) from the official site"
 
 URL="https://app.ktalk.ru/system/dist/download/linux"
 
+# curl can't get filename: https://github.com/curl/curl/issues/8461
+epm assure wget || fatal
+
 # hack due ОШИБКА: невозможно проверить сертификат app.ktalk.ru, выпущенный «CN=RapidSSL TLS DV RSA Mixed SHA256 2020 CA-1,O=DigiCert Inc,C=US»
 PKGDIR="$(mktemp -d)"
 cd $PKGDIR || fatal
-$EGET --no-check-certificate "$URL"
+$EGET --no-check-certificate "$URL" || fatal
 
 epm install *.AppImage
 RES=$?

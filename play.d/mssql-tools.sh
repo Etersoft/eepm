@@ -14,16 +14,16 @@ fi
 
 case "$($DISTRVENDOR -d)" in
   "AstraLinux")
+    epm install unixodbc
     epm install https://packages.microsoft.com/debian/8/prod/pool/main/m/msodbcsql17/msodbcsql17_1*_amd64.deb
     epm install https://packages.microsoft.com/debian/8/prod/pool/main/m/mssql-tools/mssql-tools_1*_amd64.deb
     #epm install https://packages.microsoft.com/ubuntu/16.04/prod/pool/main/m/mssql-tools/mssql-tools_1*_amd64.deb
     #epm install https://packages.microsoft.com/ubuntu/16.04/prod/pool/main/m/msodbcsql17/msodbcsql17_1*_amd64.deb
-    epm install unixodbc
     ;;
   ALTLinux|ALTServer)
+    epm install unixODBC
     epm install --repack https://packages.microsoft.com/rhel/8/prod/mssql-tools-1*.x86_64.rpm
     epm install --repack https://packages.microsoft.com/rhel/8/prod/msodbcsql17-1*.x86_64.rpm
-    epm install unixODBC
     ;;
   *)
     fatal "$(DISTRVENDOR -d) is not supported yet."

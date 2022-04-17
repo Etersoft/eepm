@@ -12,13 +12,18 @@ VERSION=9.6.2
 IPFSHASH=Qmd38jJnTnUMUeJuKSDBGesqXF3SxEahUVZc6NUPyMKgj1
 PKGURL="https://trial2.autodesk.com/NET17SWDLD/2017/EGLPRM/ESD/Autodesk_EAGLE_${VERSION}_English_Linux_64bit.tar.gz"
 
-if ! epm install --repack "$PKGURL" ; then
+PKGDIR="$(mktemp -d)"
+cd $PKGDIR || fatal
+if ! $EGET $PKGURL ; then
     echo "It is possible you are blocked from USA, trying get from IPFS ..."
     pkgname=$(basename $PKGURL)
     $EGET -O $pkgname http://dhash.ru/ipfs/$IPFSHASH || fatal "Can't get $pkgname from IPFS."
-    epm install --repack $pkgname || exit
-    rm -fv $pkgname
 fi
+
+epm install --repack *.tar.gz
+RES=$?
+
+rm -rfv $PKGDIR
 
 echo
 echo "

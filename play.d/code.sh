@@ -29,16 +29,10 @@ pkgtype="$($DISTRVENDOR -p)"
 # we have workaround for their postinstall script, so always repack rpm package
 [ "$pkgtype" = "deb" ] || repack='--repack'
 
-PKG=/tmp/$PKGNAME.$pkgtype
-
 if [ -n "$VERSION" ] ; then
-    # get the version
-    $EGET -O $PKG "https://update.code.visualstudio.com/$VERSION/linux-$pkgtype-$arch/stable" || fatal
+    URL="https://update.code.visualstudio.com/$VERSION/linux-$pkgtype-$arch/stable"
 else
-    # get latest version
-    # TODO: wget does not support:  Content-Disposition: attachment; filename="code-1.52.1-1608137084.el7.x86_64.rpm"
-    $EGET -O $PKG "https://code.visualstudio.com/sha/download?build=stable&os=linux-$pkgtype-$arch" || fatal
+    URL="https://code.visualstudio.com/sha/download?build=stable&os=linux-$pkgtype-$arch"
 fi
 
-epm install $repack "$PKG" || exit
-rm -fv $PKG
+epm install $repack "$URL"

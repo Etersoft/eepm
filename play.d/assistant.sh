@@ -18,15 +18,13 @@ arch="$($DISTRVENDOR -a)"
 
 pkg="$($DISTRVENDOR -p)"
 
-echo "ОШИБКА: невозможно проверить сертификат xn--80akicokc0aablc.xn--p1ai, выпущенный «CN=Sectigo RSA Domain Validation Secure Server CA,O=Sectigo Limited,L=Salford,ST=Greater Manchester,C=GB»:"
-
 case $arch-$pkg in
     x86_64-rpm)
-        URL="http://мойассистент.рф/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C/Download/542"
+        URL="https://мойассистент.рф/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C/Download/542"
         OPKG=assistant-4.8-0.x86_64.rpm
         ;;
     x86_64-deb)
-        URL="http://мойассистент.рф/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C/Download/545"
+        URL="https://мойассистент.рф/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C/Download/545"
         OPKG=assistant_4.8-0_amd64.deb
         ;;
     aarch64-rpm)
@@ -51,7 +49,7 @@ esac
 
 [ "$($DISTRVENDOR -d)" = "ALTLinux" ] && epmi --skip-installed fontconfig-disable-type1-font-for-assistant
 
-epm $repack install "$URL" || exit
+LANG=ru_RU.UTF8 epm $repack install "$URL" || exit
 
 [ "$repack" = "--scripts" ] && echo "Warning! Privileged scripts from the vendor were running."
 
