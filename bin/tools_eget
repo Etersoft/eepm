@@ -156,12 +156,14 @@ __wget()
 # put remote content to stdout
 scat()
 {
-    __wget $WGETNOSSLCHECK -O- "$1"
+    __wget -O- "$1"
 }
 # download to default name of to $2
 sget()
 {
-    if [ -n "$2" ] ; then
+    if [ "$2" = "/dev/stdout" ] || [ "$2" = "-" ] ; then
+       scat "$1"
+    elif [ -n "$2" ] ; then
        docmd __wget -O "$2" "$1"
     else
 # TODO: поддержка rsync для известных хостов?
@@ -191,7 +193,9 @@ scat()
 # download to default name of to $2
 sget()
 {
-    if [ -n "$2" ] ; then
+    if [ "$2" = "/dev/stdout" ] || [ "$2" = "-" ] ; then
+       scat "$1"
+    elif [ -n "$2" ] ; then
        __curl --output "$2" "$1"
     else
        __curl $CURLNAMEOPTIONS "$1"
@@ -237,6 +241,9 @@ TARGETFILE=''
 if [ "$1" = "-O" ] ; then
     TARGETFILE="$2"
     shift 2
+elif [ "$1" = "-O-" ] ; then
+    TARGETFILE="-"
+    shift 1
 fi
 
 # TODO:
