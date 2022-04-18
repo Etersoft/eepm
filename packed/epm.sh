@@ -339,7 +339,7 @@ set_sudo()
 	else
 		# use sudo if one is tuned and tuned without password
 		if ! $SUDO_CMD -l -n >/dev/null 2>/dev/null ; then
-			[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
+			[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root or check http://altlinux.org/sudo.'"
 			return "$SUDO_TESTED"
 		fi
 	fi
@@ -517,6 +517,10 @@ get_package_type()
 			;;
 		*.msi)
 			echo "msi"
+			return
+			;;
+		*.AppImage)
+			echo "AppImage"
 			return
 			;;
 		*)
@@ -2978,10 +2982,11 @@ epm_install_files()
         ALTLinux|ALTServer)
 
             # TODO: replace with name changed function
-            __epm_check_if_try_install_deb $@ && return
+            __epm_check_if_try_install_pkgtype deb $@ && return $RES
+            __epm_check_if_try_install_pkgtype AppImage $@ && return $RES
             __epm_check_if_src_rpm $@
 
-            # do not using low-level for install by file path (FIXME: reasons?)
+            # do not use low-level for install by file path (FIXME: reasons?)
             if ! is_dirpath "$@" || [ "$(get_package_type "$@")" = "rpm" ] ; then
                 __epm_check_vendor $@
                 __epm_check_if_needed_repack $@
@@ -3024,7 +3029,8 @@ epm_install_files()
             ;;
 
        *-rpm)
-            __epm_check_if_try_install_deb $@ && return
+            __epm_check_if_try_install_pkgtype deb $@ && return $RES
+            __epm_check_if_try_install_pkgtype AppImage $@ && return $RES
             __epm_check_if_src_rpm $@
             sudocmd rpm -Uvh $force $noscripts $nodeps $@ && return
             local RES=$?
@@ -3827,8 +3833,14 @@ if [ "$1" = "--remove" ] || [ "$1" = "remove" ]  ; then
     #__check_installed_app "$1" || warning "$1 is not installed"
     prescription="$1"
     shift
-    __epm_play_run $prescription --remove "$@"
-    __remove_installed_app "$prescription"
+    if __check_play_script "$prescription" ; then
+        __epm_play_run $prescription --remove "$@"
+        __remove_installed_app "$prescription"
+    else
+        psdir=$prsdir
+        __check_play_script "$prescription" || fatal "We have no idea how to remove $prescription (checked in $psdir and $prsdir)"
+        __epm_play_run "$prescription" --remove "$@" || fatal "There was some error during run the script."
+    fi
     exit
 fi
 
@@ -6261,12 +6273,16 @@ __apply_fix_code()
 
 __create_rpmmacros()
 {
+[ -n "$TMPDIR" ] || TMPDIR=/tmp
+
     cat <<EOF >$HOME/.rpmmacros
 %_topdir	$HOME/RPM
 %_tmppath	$TMPDIR
 
 %packager	EPM <support@etersoft.ru>
 %_gpg_name	support@etersoft.ru
+
+%_allow_root_build	1
 EOF
     to_remove_pkg_files="$to_remove_pkg_files $HOME/.rpmmacros"
 }
@@ -6283,9 +6299,8 @@ __epm_repack_to_rpm()
     esac
 
     # install epm-repack for static (package based) dependencies
-    assure_exists fakeroot || fatal
     assure_exists alien || fatal
-    assure_exists /usr/bin/rpmbuild || fatal
+    assure_exists /usr/bin/rpmbuild rpm-build || fatal
 
     # TODO: improve
     if echo "$pkgs" | grep -q "\.deb" ; then
@@ -6323,8 +6338,22 @@ __epm_repack_to_rpm()
 
         PKGNAME=''
         VERSION=''
+        SUBGENERIC=''
         # convert tarballs to tar (for alien)
-        if ! echo "$pkg" | grep -q "\.rpm" && ! echo "$pkg" | grep -q "\.deb" ; then
+        if rhas "$pkg" "\.(rpm|deb)$" ; then
+            :
+        elif rhas "$pkg" "\.AppImage$" ; then
+            VERSION="$(echo "$alpkg" | grep -o -P "[-_.]([0-9])([0-9])*(\.[0-9])*" | head -n1 | sed -e 's|^[-_.]||')" #"
+            [ -n "$VERSION" ] || fatal "Can't get version from $alpkg."
+            PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
+            # TODO: move repack archive to erc?
+            [ -x "$alpkg" ] || docmd chmod u+x -v "$alpkg"
+            #[ -x "$alpkg" ] || sudocmd chmod u+x -v "$abspkg"
+            SUBGENERIC='appimage'
+            ./$alpkg --appimage-extract || fatal
+            alpkg=$PKGNAME-$VERSION.tar
+            erc a $alpkg squashfs-root
+        else
             VERSION="$(echo "$alpkg" | grep -o -P "[-_.]([0-9])([0-9])*(\.[0-9])*" | head -n1 | sed -e 's|^[-_.]||')" #"
             if [ -n "$VERSION" ] ; then
                 PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
@@ -6345,10 +6374,10 @@ __epm_repack_to_rpm()
         cd $tmpbuilddir/ || fatal
 
         if [ -n "$verbose" ] ; then
-            docmd fakeroot alien --generate --to-rpm $verbose $scripts "../$alpkg" || fatal
+            docmd alien --generate --to-rpm $verbose $scripts "../$alpkg" || fatal
         else
-            showcmd fakeroot alien --generate --to-rpm $scripts "../$alpkg"
-            a='' fakeroot alien --generate --to-rpm $scripts "../$alpkg" >/dev/null || fatal
+            showcmd alien --generate --to-rpm $scripts "../$alpkg"
+            a='' alien --generate --to-rpm $scripts "../$alpkg" >/dev/null || fatal
         fi
 
         local subdir="$(echo *)"
@@ -6367,14 +6396,15 @@ __epm_repack_to_rpm()
 
         __fix_spec $pkgname $tmpbuilddir/$subdir $spec
         __apply_fix_code "generic" $tmpbuilddir/$subdir $spec
+        [ -n "$SUBGENERIC" ] && __apply_fix_code "generic-$SUBGENERIC" $tmpbuilddir/$subdir $spec
         __apply_fix_code $pkgname $tmpbuilddir/$subdir $spec
         # TODO: we need these dirs to be created
         to_remove_pkg_dirs="$to_remove_pkg_dirs $HOME/RPM/BUILD $HOME/RPM"
-        showcmd fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir --define='_allow_root_build 1' -bb $spec
+        showcmd rpmbuild --buildroot $tmpbuilddir/$subdir -bb $spec
         if [ -n "$verbose" ] ; then
-            a='' fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir  --define='_allow_root_build 1' -bb $spec || fatal
+            a='' rpmbuild --buildroot $tmpbuilddir/$subdir -bb $spec || fatal
         else
-            a='' fakeroot rpmbuild --buildroot $tmpbuilddir/$subdir  --define='_allow_root_build 1' -bb $spec >/dev/null || fatal
+            a='' rpmbuild --buildroot $tmpbuilddir/$subdir -bb $spec >/dev/null || fatal
         fi
         # remove copy of source binary package (don't mix with generated)
         rm -f $tmpbuilddir/../$alpkg
@@ -6396,14 +6426,16 @@ __epm_repack_to_rpm()
     true
 }
 
-__epm_check_if_try_install_deb()
+__epm_check_if_try_install_pkgtype()
 {
-	__epm_split_by_pkg_type deb "$@" || return 1
-	__epm_repack_to_rpm $split_replaced_pkgs || fatal
+	local PKG="$1"
+	shift
+	__epm_split_by_pkg_type $PKG "$@" || return 1
+	__epm_repack_to_rpm $split_replaced_pkgs || { RES=$? ; return 0 ; }
 
 	# TODO: move to install
 	docmd epm install $repacked_rpms
-
+	RES=$?
 	# TODO: move it to exit handler
 	if [ -z "$DEBUG" ] ; then
 		# TODO: reinvent
@@ -9680,6 +9712,8 @@ fatal()
     exit 1
 }
 
+# TODO:
+arch="$(uname -m)"
 
 # copied from eepm project
 
@@ -9756,10 +9790,14 @@ docmd()
 
 check_tty
 
+WGETNOSSLCHECK=''
+CURLNOSSLCHECK=''
+WGETUSERAGENT=''
+CURLUSERAGENT=''
 WGETQ='' #-q
 CURLQ='' #-s
-WGETOPTIONS='--content-disposition'
-CURLOPTIONS='--remote-name --remote-header-name'
+WGETNAMEOPTIONS='--content-disposition'
+CURLNAMEOPTIONS='--remote-name --remote-header-name'
 
 set_quiet()
 {
@@ -9767,9 +9805,24 @@ set_quiet()
     CURLQ='-s'
 }
 
+# TODO: parse options in a good way
+
 # TODO: passthrou all wget options
 if [ "$1" = "-q" ] ; then
     set_quiet
+    shift
+fi
+
+if [ "$1" = "-k" ] || [ "$1" = "--no-check-certificate" ] ; then
+    WGETNOSSLCHECK='--no-check-certificate'
+    CURLNOSSLCHECK='-k'
+    shift
+fi
+
+if [ "$1" = "-U" ] || [ "$1" = "-A" ] || [ "$1" = "--user-agent" ] ; then
+    user_agent="Mozilla/5.0 (X11; Linux $arch)"
+    WGETUSERAGENT="-U '$user_agent'"
+    CURLUSERAGENT="-A '$user_agent'"
     shift
 fi
 
@@ -9777,40 +9830,60 @@ fi
 WGET="$(which wget 2>/dev/null)"
 
 if [ -n "$WGET" ] ; then
+__wget()
+{
+    if [ -n "$WGETUSERAGENT" ] ; then
+        docmd $WGET $WGETQ $WGETNOSSLCHECK "$WGETUSERAGENT" "$@"
+    else
+        docmd $WGET $WGETQ $WGETNOSSLCHECK "$@"
+    fi
+}
 # put remote content to stdout
 scat()
 {
-    docmd $WGET $WGETQ -O- "$1"
+    __wget -O- "$1"
 }
 # download to default name of to $2
 sget()
 {
-    if [ -n "$2" ] ; then
-       docmd $WGET $WGETQ $WGETOPTIONS -O "$2" "$1"
+    if [ "$2" = "/dev/stdout" ] || [ "$2" = "-" ] ; then
+       scat "$1"
+    elif [ -n "$2" ] ; then
+       docmd __wget -O "$2" "$1"
     else
 # TODO: поддержка rsync для известных хостов?
 # Не качать, если одинаковый размер и дата
 # -nc
 # TODO: overwrite always
-       docmd $WGET $WGETQ $WGETOPTIONS "$1"
+       docmd __wget $WGETNAMEOPTIONS "$1"
     fi
 }
 
 else
 CURL="$(which curl 2>/dev/null)"
 [ -n "$CURL" ] || fatal "There are no wget nor curl in the system. Install it with $ epm install curl"
+__curl()
+{
+    if [ -n "$CURLUSERAGENT" ] ; then
+        docmd $CURL -L $CURLQ "$CURLUSERAGENT" $CURLNOSSLCHECK "$@"
+    else
+        docmd $CURL -L $CURLQ $CURLNOSSLCHECK "$@"
+    fi
+}
 # put remote content to stdout
 scat()
 {
-    $CURL -L $CURLQ "$1"
+    __curl "$1"
 }
 # download to default name of to $2
 sget()
 {
-    if [ -n "$2" ] ; then
-       docmd $CURL -L $CURLQ $CURLOPTIONS --output "$2" "$1"
+    if [ "$2" = "/dev/stdout" ] || [ "$2" = "-" ] ; then
+       scat "$1"
+    elif [ -n "$2" ] ; then
+       __curl --output "$2" "$1"
     else
-       docmd $CURL -L $CURLQ $CURLOPTIONS -O "$1"
+       __curl $CURLNAMEOPTIONS "$1"
     fi
 }
 fi
@@ -9853,6 +9926,9 @@ TARGETFILE=''
 if [ "$1" = "-O" ] ; then
     TARGETFILE="$2"
     shift 2
+elif [ "$1" = "-O-" ] ; then
+    TARGETFILE="-"
+    shift 1
 fi
 
 # TODO:
@@ -9865,16 +9941,23 @@ fi
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
     echo "eget - wget like downloader wrapper with wildcard support in filename part of URL"
-    echo "Usage: eget [-q] [-O target file] [--list] http://somesite.ru/dir/na*.log"
+    echo "Usage: eget [-q] [-k] [-U] [-O target file] [--list] http://somesite.ru/dir/na*.log"
     echo
     echo "Options:"
     echo "    -q       - quiet mode"
+    echo "    -k|--no-check-certificate - skip SSL certificate chain support"
+    echo "    -U|-A|--user-agent - send browser like UserAgent"
     echo "    -O file  - download to this file (use filename from server if missed)"
     echo "    --list   - print files from url with mask"
-    echo "    --latest - print only latest version of file"
+    echo "    --latest - print only latest version of a file"
     echo
     echo "eget supports --list and download for https://github.com/owner/project urls"
     echo
+    echo "Examples:"
+    echo "  $ eget --list http://ftp.somesite.ru/package-*.tar"
+    echo "  $ eget http://ftp.somesite.ru/package-*.x64.tar"
+    echo "  $ eget --list http://download.somesite.ru 'package-*.tar.xz'"
+    echo "  $ eget --list --latest https://github.com/telegramdesktop/tdesktop/releases 'tsetup.*.tar.xz'"
 #    echo "See $ wget --help for wget options you can use here"
     return
 fi
@@ -9908,10 +9991,11 @@ fi
 
 
 # do not support /
-if echo "$1" | grep -q "/$" ; then
+if echo "$1" | grep -q "/$" && [ -z "$2" ] ; then
     fatal "Use http://example.com/e/* to download all files in dir"
 fi
 
+# TODO: curl?
 # If ftp protocol, just download
 if echo "$1" | grep -q "^ftp://" ; then
     [ -n "$LISTONLY" ] && fatal "TODO: list files for ftp:// do not supported yet"
@@ -9948,7 +10032,8 @@ is_url()
 
 get_urls()
 {
-    scat $URL/ | \
+    # cat html, divide to lines by tags and cut off hrefs only
+    scat $URL | sed -e 's|<|<\n|g' | \
          grep -i -o -E 'href="(.+)"' | cut -d'"' -f2
 }
 
@@ -9963,7 +10048,8 @@ fi
 
 ERROR=0
 for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
-    sget "$URL/$(basename "$fn")" || ERROR=1
+    is_url "$fn" || fn="$URL/$(basename "$fn")"
+    sget "$fn" || ERROR=1
 done
  return $ERROR
 
@@ -10528,7 +10614,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.17.2  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.18.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10538,7 +10624,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.17.2
+EPMVERSION=3.18.0
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
