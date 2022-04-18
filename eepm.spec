@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.17.3
+Version: 3.18.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -148,6 +148,17 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Mon Apr 18 2022 Vitaly Lipatov <lav@altlinux.ru> 3.18.0-alt1
+- epm install/repack: add AppImage support
+- epm repack: drop using fakeroot during repack to rpm
+- epm repack: set TMPDIR if missed, set _allow_root_build in temp. .rpmmacros
+- epm play: add ktalk support
+- epm repack: fix_chrome_sandbox: set 4711 permissions
+- epm repack: fix error code
+- epm play/repack: big rules cleanup
+- epm play: add duplicati support
+- epm play vivaldi: fix download (ALT bug 42477)
+
 * Fri Apr 15 2022 Vitaly Lipatov <lav@altlinux.ru> 3.17.3-alt1
 - epm play: allow --remove for scripts (f.i., wine)
 - epm-sh-functions: add URL described how to tune sudo
