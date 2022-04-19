@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.18.1
+Version: 3.18.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,9 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Tue Apr 19 2022 Vitaly Lipatov <lav@altlinux.ru> 3.18.2-alt1
+- epm-sh-functions: fix which command detection (deb based distro related)
+
 * Tue Apr 19 2022 Vitaly Lipatov <lav@altlinux.ru> 3.18.1-alt1
 - add check for sed, which and grep commands
 - drop extra requires
