@@ -29,6 +29,8 @@ Provides: epm = %EVR
 Requires: apt rpm
 %endif
 
+Requires: which
+
 %description
 Etersoft EPM is the package manager for any platform
 and any platform version. It provides

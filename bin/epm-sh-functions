@@ -19,6 +19,14 @@
 
 # copied from /etc/init.d/outformat (ALT Linux)
 
+check_core_commands()
+{
+	which --help >/dev/null || fatal "Can't find which command (which package is missed?)"
+	grep --help >/dev/null || fatal "Can't find grep command (coreutils package is missed?)"
+	sed --help >/dev/null || fatal "Can't find sed command (sed package is missed?)"
+}
+
+
 # FIXME on Android: FIX ME! implement ttyname_r() bionic/libc/bionic/stubs.c:366
 inputisatty()
 {
@@ -46,6 +54,8 @@ check_tty()
 	# Set a sane TERM required for tput
 	[ -n "$TERM" ] || TERM=dumb
 	export TERM
+
+	check_core_commands
 
 	# egrep from busybox may not --color
 	# egrep from MacOS print help to stderr
@@ -364,9 +374,10 @@ withtimeout()
 		$TO "$@"
 		return
 	fi
+	fatal "Possible indefinite wait due timeout command is missed"
 	# fallback: drop time arg and run without timeout
-	shift
-	"$@"
+	#shift
+	#"$@"
 }
 
 set_eatmydata()
