@@ -21,9 +21,11 @@
 
 check_core_commands()
 {
-	which --help >/dev/null || fatal "Can't find which command (which package is missed?)"
-	grep --help >/dev/null || fatal "Can't find grep command (coreutils package is missed?)"
-	sed --help >/dev/null || fatal "Can't find sed command (sed package is missed?)"
+	#which --help >/dev/null || fatal "Can't find which command (which package is missed?)"
+	# broken which on Debian systems
+	which which >/dev/null || fatal "Can't find which command (which or debianutils package is missed?)"
+	which grep >/dev/null || fatal "Can't find grep command (coreutils package is missed?)"
+	which sed >/dev/null || fatal "Can't find sed command (sed package is missed?)"
 }
 
 
