@@ -43,6 +43,14 @@ load_helper()
 # File bin/epm-sh-functions:
 
 
+check_core_commands()
+{
+	which --help >/dev/null || fatal "Can't find which command (which package is missed?)"
+	grep --help >/dev/null || fatal "Can't find grep command (coreutils package is missed?)"
+	sed --help >/dev/null || fatal "Can't find sed command (sed package is missed?)"
+}
+
+
 inputisatty()
 {
 	# check stdin
@@ -69,6 +77,8 @@ check_tty()
 	# Set a sane TERM required for tput
 	[ -n "$TERM" ] || TERM=dumb
 	export TERM
+
+	check_core_commands
 
 	# egrep from busybox may not --color
 	# egrep from MacOS print help to stderr
@@ -358,9 +368,10 @@ withtimeout()
 		$TO "$@"
 		return
 	fi
+	fatal "Possible indefinite wait due timeout command is missed"
 	# fallback: drop time arg and run without timeout
-	shift
-	"$@"
+	#shift
+	#"$@"
 }
 
 set_eatmydata()
@@ -6352,7 +6363,8 @@ __epm_repack_to_rpm()
             SUBGENERIC='appimage'
             ./$alpkg --appimage-extract || fatal
             alpkg=$PKGNAME-$VERSION.tar
-            erc a $alpkg squashfs-root
+            assure_exists erc || fatal
+            a= erc a $alpkg squashfs-root
         else
             VERSION="$(echo "$alpkg" | grep -o -P "[-_.]([0-9])([0-9])*(\.[0-9])*" | head -n1 | sed -e 's|^[-_.]||')" #"
             if [ -n "$VERSION" ] ; then
@@ -10614,7 +10626,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.18.0  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.18.1  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10624,7 +10636,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.18.0
+EPMVERSION=3.18.1
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
