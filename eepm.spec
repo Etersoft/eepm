@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.18.0
+Version: 3.18.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,10 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Tue Apr 19 2022 Vitaly Lipatov <lav@altlinux.ru> 3.18.1-alt1
+- add check for sed, which and grep commands
+- drop extra requires
+
 * Mon Apr 18 2022 Vitaly Lipatov <lav@altlinux.ru> 3.18.0-alt1
 - epm install/repack: add AppImage support
 - epm repack: drop using fakeroot during repack to rpm
