@@ -36,9 +36,11 @@ load_helper()
 
 check_core_commands()
 {
-	which --help >/dev/null || fatal "Can't find which command (which package is missed?)"
-	grep --help >/dev/null || fatal "Can't find grep command (coreutils package is missed?)"
-	sed --help >/dev/null || fatal "Can't find sed command (sed package is missed?)"
+	#which --help >/dev/null || fatal "Can't find which command (which package is missed?)"
+	# broken which on Debian systems
+	which which >/dev/null || fatal "Can't find which command (which or debianutils package is missed?)"
+	which grep >/dev/null || fatal "Can't find grep command (coreutils package is missed?)"
+	which sed >/dev/null || fatal "Can't find sed command (sed package is missed?)"
 }
 
 
@@ -3150,7 +3152,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.18.1  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.18.2  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

@@ -45,9 +45,11 @@ load_helper()
 
 check_core_commands()
 {
-	which --help >/dev/null || fatal "Can't find which command (which package is missed?)"
-	grep --help >/dev/null || fatal "Can't find grep command (coreutils package is missed?)"
-	sed --help >/dev/null || fatal "Can't find sed command (sed package is missed?)"
+	#which --help >/dev/null || fatal "Can't find which command (which package is missed?)"
+	# broken which on Debian systems
+	which which >/dev/null || fatal "Can't find which command (which or debianutils package is missed?)"
+	which grep >/dev/null || fatal "Can't find grep command (coreutils package is missed?)"
+	which sed >/dev/null || fatal "Can't find sed command (sed package is missed?)"
 }
 
 
@@ -10626,7 +10628,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.18.1  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.18.2  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10636,7 +10638,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.18.1
+EPMVERSION=3.18.2
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
