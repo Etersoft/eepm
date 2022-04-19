@@ -246,7 +246,8 @@ __epm_repack_to_rpm()
             SUBGENERIC='appimage'
             ./$alpkg --appimage-extract || fatal
             alpkg=$PKGNAME-$VERSION.tar
-            erc a $alpkg squashfs-root
+            assure_exists erc || fatal
+            a= erc a $alpkg squashfs-root
         else
             VERSION="$(echo "$alpkg" | grep -o -P "[-_.]([0-9])([0-9])*(\.[0-9])*" | head -n1 | sed -e 's|^[-_.]||')" #"
             if [ -n "$VERSION" ] ; then

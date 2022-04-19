@@ -19,8 +19,8 @@ PKGNAME=vivaldi-$BRANCH-codecs-ffmpeg-extra
 
 VIVALDI_VERSION=$(epm print version for package vivaldi-stable) || fatal
 
-# used in update-ffmpeg
 epm install --skip-installed tar binutils || exit
+epm assure awk gawk || exit
 
 # install ffmpeg extra codecs
 pack_ffmpeg() {
@@ -36,14 +36,14 @@ pack_ffmpeg() {
 # download ffmpeg with upstream script update-ffmpeg but with our pack_ffmpeg function
 [ -s $PRODUCTDIR/update-ffmpeg ] || fatal "$PRODUCTDIR/update-ffmpeg is missed"
 SC=$(mktemp)
-awk 'BEGIN{desk=0}{ if(/^.*--system.*/&&desk==0){desk++} ; if (desk==0) {print} }' < $PRODUCTDIR/update-ffmpeg > $SC
+a='' awk 'BEGIN{desk=0}{ if(/^.*--system.*/&&desk==0){desk++} ; if (desk==0) {print} }' < $PRODUCTDIR/update-ffmpeg > $SC
 . $SC
 DDIR=$(mktemp -d)
 cd $DDIR || fatal
 $EGET $FFMPEG_URL_DEB
 SUITABLE_URLS=$FFMPEG_URL_DEB
-ar -x *.deb
-tar xf "data.tar.xz"
+a='' ar -x *.deb
+a='' tar xf "data.tar.xz"
 pack_ffmpeg
 rm -rf $DDIR
 rm -f $SC
