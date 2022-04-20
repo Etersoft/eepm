@@ -48,4 +48,4 @@ if [ -d $BUILDROOT/opt/zoom/QtQuick/Scene2D ] ; then
     subst 's|.*/opt/zoom/QtQuick/Scene3D/libqtquickscene3dplugin.so.*||' $SPEC
 fi
 
-[ -e $PRODUCTDIR/cef/chrome-sandbox ] && fix_chrome_sandbox $PRODUCTDIR/cef/chrome-sandbox
+fix_chrome_sandbox $PRODUCTDIR/cef/chrome-sandbox
