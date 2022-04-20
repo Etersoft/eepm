@@ -357,6 +357,10 @@ check_command()
         epm_cmd=print
         direct_args=1
         ;;
+    tool)                     # HELPCMD: run embedded tool (f.i., epm tool eget)
+        epm_cmd=tool
+        direct_args=1
+        ;;
     repack)                   # HELPCMD: repack rpm to local compatibility
         epm_cmd=repack
         ;;
