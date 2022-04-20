@@ -13,6 +13,6 @@ DESCRIPTION="The hackable text editor from the official site"
 arch=amd64
 pkgtype=deb
 
-PKG=$($EGET --list --latest https://github.com/atom/atom/releases/ "atom-$arch.$pkgtype") || fatal "Can't get package URL"
+PKG=$(epm tool eget --list --latest https://github.com/atom/atom/releases/ "atom-$arch.$pkgtype") || fatal "Can't get package URL"
 
 epm install "$PKG"

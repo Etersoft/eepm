@@ -30,7 +30,7 @@ esac
 # epm uses eget to download * names
 #epm install "https://repo.vivaldi.com/archive/deb/pool/main/$(epm print constructname $PKGNAME "*" $arch deb)"
 
-PKGURL="$($EGET --list --latest https://vivaldi.com/ru/download "$(epm print constructname $PKGNAME "*" $arch deb)")" || fatal
+PKGURL="$(epm tool eget --list --latest https://vivaldi.com/ru/download "$(epm print constructname $PKGNAME "*" $arch deb)")" || fatal
 epm install $PKGURL || fatal
 
 epm play vivaldi-codecs-ffmpeg-extra $BRANCH

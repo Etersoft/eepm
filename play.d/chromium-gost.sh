@@ -17,6 +17,6 @@ fi
 arch=amd64
 pkgtype=deb
 
-PKG=$($EGET --list --latest https://github.com/deemru/chromium-gost/releases "chromium-gost-*linux-$arch.$pkgtype") || fatal "Can't get package URL"
+PKG=$(epm tool eget --list --latest https://github.com/deemru/chromium-gost/releases "chromium-gost-*linux-$arch.$pkgtype") || fatal "Can't get package URL"
 
 epm install "$PKG"

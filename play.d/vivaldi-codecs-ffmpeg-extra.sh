@@ -40,7 +40,7 @@ a='' awk 'BEGIN{desk=0}{ if(/^.*--system.*/&&desk==0){desk++} ; if (desk==0) {pr
 . $SC
 DDIR=$(mktemp -d)
 cd $DDIR || fatal
-$EGET $FFMPEG_URL_DEB
+epm tool eget $FFMPEG_URL_DEB
 SUITABLE_URLS=$FFMPEG_URL_DEB
 a='' ar -x *.deb
 a='' tar xf "data.tar.xz"

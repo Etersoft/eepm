@@ -462,21 +462,6 @@ assure_exists()
 	( direct='' epm_assure "$1" $package $3 ) || fatal "Can't assure in '$1' command from $package$textpackage package"
 }
 
-__set_EGET()
-{
-	# use internal eget only if exists
-	if [ -s $SHAREDIR/tools_eget ] ; then
-		export EGET="$SHAREDIR/tools_eget"
-		return
-	fi
-	fatal "Internal error: missed tools_eget"
-
-	# FIXME: we need disable output here, eget can be used for get output
-	assure_exists eget eget 3.3 >/dev/null
-	# use external command, not the function
-	export EGET="$(which eget)" || fatal "Missed command eget from installed package eget"
-}
-
 # will replaced within disabled_eget in packaged version
 eget()
 {

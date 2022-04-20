@@ -1,14 +1,14 @@
 
 Allowed variables:
-* $EGET (wget like utility)
 * $DISTRVENDOR (distro_info utility)
 * $SUDO
 
-Allowed command:
+Allowed commands:
 * epm (run the same epm called from)
+* epm tool eget (wget like utility)
+* epm tool estrlist (string operations)
 
-TODO:
-* inject some functions
+See any file for
+. $(dirname $0)/common.sh
+using
 
-TODO:
-* save packages for remove

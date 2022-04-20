@@ -18,11 +18,11 @@ case "$arch" in
         ;;
 esac
 
-PKG=$($EGET --list --latest https://www.sublimetext.com/download "sublime_text_build_*_$arch.tar.xz") || fatal "Can't get package URL"
+PKG=$(epm tool eget --list --latest https://www.sublimetext.com/download "sublime_text_build_*_$arch.tar.xz") || fatal "Can't get package URL"
 [ -n "$PKG" ] || fatal "Can't get package URL"
 
 PKGFILE=$(echo /tmp/$(basename $PKGURL) | sed -e "s|/sublime_text_build_|/$PKGNAME-|")
-$EGET -O $PKGFILE $PKGURL || exit
+epm tool eget -O $PKGFILE $PKGURL || exit
 
 epm install --repack "$PKG" || exit
 

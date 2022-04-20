@@ -14,10 +14,10 @@ PKGURL="https://trial2.autodesk.com/NET17SWDLD/2017/EGLPRM/ESD/Autodesk_EAGLE_${
 
 PKGDIR="$(mktemp -d)"
 cd $PKGDIR || fatal
-if ! $EGET $PKGURL ; then
+if ! epm tool eget $PKGURL ; then
     echo "It is possible you are blocked from USA, trying get from IPFS ..."
     pkgname=$(basename $PKGURL)
-    $EGET -O $pkgname http://dhash.ru/ipfs/$IPFSHASH || fatal "Can't get $pkgname from IPFS."
+    epm tool eget -O $pkgname http://dhash.ru/ipfs/$IPFSHASH || fatal "Can't get $pkgname from IPFS."
 fi
 
 epm install --repack *.tar.gz

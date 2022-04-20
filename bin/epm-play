@@ -122,9 +122,8 @@ __epm_play_run()
     local script="$psdir/$1.sh"
     shift
 
-    # allow use EGET in the scripts
-    __set_EGET
-    # also we will have DISTRVENDOR there
+    # TODO: use epm print info instead of one?
+    # we will have DISTRVENDOR there
     export PATH=$PROGDIR:$PATH
 
     set_sudo
