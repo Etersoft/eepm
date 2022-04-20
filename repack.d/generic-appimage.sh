@@ -31,6 +31,8 @@ pack_file /usr/share/pixmaps/$ICONFILE
 cd - >/dev/null
 
 add_bin_exec_command $PRODUCT $PRODUCTDIR/AppRun
+# Strange AppRun script uses args as path, so override apth detection
+subst "1iexport APPDIR=$PRODUCTDIR" $BUILDROOT/usr/bin/$PRODUCT
 
 subst '1iAutoProv:no' $SPEC
 
