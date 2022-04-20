@@ -8,6 +8,9 @@ DESCRIPTION='' # echo " Remote desktop support for google-chrome & chromium" && 
 
 [ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
+echo "It is not finished yet. Just skipping."
+exit 0
+
 #arch=$($DISTRVENDOR --distro-arch)
 #pkgtype=$($DISTRVENDOR -p)
 repack=''
