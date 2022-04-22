@@ -452,21 +452,6 @@ assure_exists()
 	( direct='' epm_assure "$1" $package $3 ) || fatal "Can't assure in '$1' command from $package$textpackage package"
 }
 
-__set_EGET()
-{
-	# use internal eget only if exists
-	if [ -s $SHAREDIR/tools_eget ] ; then
-		export EGET="$SHAREDIR/tools_eget"
-		return
-	fi
-	fatal "Internal error: missed tools_eget"
-
-	# FIXME: we need disable output here, eget can be used for get output
-	assure_exists eget eget 3.3 >/dev/null
-	# use external command, not the function
-	export EGET="$(which eget)" || fatal "Missed command eget from installed package eget"
-}
-
 disabled_eget()
 {
 	local EGET
@@ -3757,9 +3742,8 @@ __epm_play_run()
     local script="$psdir/$1.sh"
     shift
 
-    # allow use EGET in the scripts
-    __set_EGET
-    # also we will have DISTRVENDOR there
+    # TODO: use epm print info instead of one?
+    # we will have DISTRVENDOR there
     export PATH=$PROGDIR:$PATH
 
     set_sudo
@@ -8490,6 +8474,38 @@ done
 
 }
 
+# File bin/epm-tool:
+
+
+
+epm_tool()
+{
+    local WHAT="$1"
+    shift
+
+    case "$WHAT" in
+        "")
+            fatal "Use epm tool help to get help."
+            ;;
+        "-h"|"--help"|"help")
+cat <<EOF
+  Examples:
+    epm tool eget
+    epm tool estrlist
+EOF
+            ;;
+        "eget")
+            eget "$@"
+            ;;
+        "estrlist")
+            estrlist "$@"
+            ;;
+        *)
+            fatal "Unknown command $ epm tool $WHAT. Use epm print help for get help."
+            ;;
+    esac
+}
+
 # File bin/epm-update:
 
 
@@ -10628,7 +10644,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.18.2  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.18.3  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10638,7 +10654,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.18.2
+EPMVERSION=3.18.3
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
@@ -10912,6 +10928,10 @@ check_command()
         ;;
     print)                    # HELPCMD: print various info, run epm print help for details
         epm_cmd=print
+        direct_args=1
+        ;;
+    tool)                     # HELPCMD: run embedded tool (f.i., epm tool eget)
+        epm_cmd=tool
         direct_args=1
         ;;
     repack)                   # HELPCMD: repack rpm to local compatibility

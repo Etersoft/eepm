@@ -443,21 +443,6 @@ assure_exists()
 	( direct='' epm_assure "$1" $package $3 ) || fatal "Can't assure in '$1' command from $package$textpackage package"
 }
 
-__set_EGET()
-{
-	# use internal eget only if exists
-	if [ -s $SHAREDIR/tools_eget ] ; then
-		export EGET="$SHAREDIR/tools_eget"
-		return
-	fi
-	fatal "Internal error: missed tools_eget"
-
-	# FIXME: we need disable output here, eget can be used for get output
-	assure_exists eget eget 3.3 >/dev/null
-	# use external command, not the function
-	export EGET="$(which eget)" || fatal "Missed command eget from installed package eget"
-}
-
 disabled_eget()
 {
 	local EGET
@@ -3152,7 +3137,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.18.2  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.18.3  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
