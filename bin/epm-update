@@ -49,11 +49,11 @@ case $PMTYPE in
 		;;
 	yum-rpm)
 		# just skipped
-		[ -n "$verbose" ] && info "update command is stubbed for yum"
+		[ -z "$verbose" ] || info "update command is stubbed for yum"
 		;;
 	dnf-rpm)
 		# just skipped
-		[ -n "$verbose" ] && info "update command is stubbed for dnf"
+		[ -z "$verbose" ] || info "update command is stubbed for dnf"
 		;;
 	urpm-rpm)
 		sudocmd urpmi.update -a
