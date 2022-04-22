@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.18.4
+Version: 3.18.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,9 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Fri Apr 22 2022 Vitaly Lipatov <lav@altlinux.ru> 3.18.5-alt1
+- epm-update: fix error code in epm-update
+
 * Fri Apr 22 2022 Vitaly Lipatov <lav@altlinux.ru> 3.18.4-alt1
 - epm play sublime: fix download URL
 - epm repack: fix onlyoffice-desktopeditors
