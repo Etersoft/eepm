@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.18.3
+Version: 3.18.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,10 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Fri Apr 22 2022 Vitaly Lipatov <lav@altlinux.ru> 3.18.4-alt1
+- epm play sublime: fix download URL
+- epm repack: fix onlyoffice-desktopeditors
+
 * Fri Apr 22 2022 Vitaly Lipatov <lav@altlinux.ru> 3.18.3-alt1
 - add epm tool command for call embedded tools like eget or estrlist
 - epm play yandex-browser-codecs-ffmpeg-extra: use eget for download
