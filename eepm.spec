@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.18.2
+Version: 3.18.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,15 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Fri Apr 22 2022 Vitaly Lipatov <lav@altlinux.ru> 3.18.3-alt1
+- add epm tool command for call embedded tools like eget or estrlist
+- epm play yandex-browser-codecs-ffmpeg-extra: use eget for download
+- use epm tool eget instead of EGET variable
+- epm repack AppImage: fix path to AppRun
+- epm repack: fix fix_chrome_sandbox return code
+- epm play: chrome-remote-desktop.sh: disable script
+- epm repack zoom: small improvements
+
 * Tue Apr 19 2022 Vitaly Lipatov <lav@altlinux.ru> 3.18.2-alt1
 - epm-sh-functions: fix which command detection (deb based distro related)
 
