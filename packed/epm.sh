@@ -8538,11 +8538,11 @@ case $PMTYPE in
 		;;
 	yum-rpm)
 		# just skipped
-		[ -n "$verbose" ] && info "update command is stubbed for yum"
+		[ -z "$verbose" ] || info "update command is stubbed for yum"
 		;;
 	dnf-rpm)
 		# just skipped
-		[ -n "$verbose" ] && info "update command is stubbed for dnf"
+		[ -z "$verbose" ] || info "update command is stubbed for dnf"
 		;;
 	urpm-rpm)
 		sudocmd urpmi.update -a
@@ -10644,7 +10644,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.18.3  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.18.5  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10654,7 +10654,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.18.3
+EPMVERSION=3.18.5
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
