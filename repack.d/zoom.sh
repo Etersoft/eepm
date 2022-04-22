@@ -39,6 +39,7 @@ done
 
 for i in $BUILDROOT/opt/zoom/zoom ; do
     a= patchelf --set-rpath "$PRODUCTDIR/cef" $i
+    a= patchelf --add-rpath '$ORIGIN/' $i
 done
 
 if [ -d $BUILDROOT/opt/zoom/QtQuick/Scene2D ] ; then
@@ -47,5 +48,9 @@ if [ -d $BUILDROOT/opt/zoom/QtQuick/Scene2D ] ; then
     subst 's|.*/opt/zoom/QtQuick/Scene2D/libqtquickscene2dplugin.so.*||' $SPEC
     subst 's|.*/opt/zoom/QtQuick/Scene3D/libqtquickscene3dplugin.so.*||' $SPEC
 fi
+
+install_deps
+
+epm --skip-installed install libxkbcommon-x11
 
 fix_chrome_sandbox $PRODUCTDIR/cef/chrome-sandbox
