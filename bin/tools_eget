@@ -345,6 +345,16 @@ is_url()
     echo "$1" | grep -q "://"
 }
 
+# Args: URL filename
+make_fileurl()
+{
+    local url="$1"
+    local fn="$2"
+    fn="$(echo "$fn" | sed -e 's|^./||' -e 's|^/+||')"
+    # workaround for a slash in the end of URL
+    echo "$(echo "$url" | sed -e 's|/*$||')/$fn"
+}
+
 get_urls()
 {
     # cat html, divide to lines by tags and cut off hrefs only
@@ -355,15 +365,14 @@ get_urls()
 if [ -n "$LISTONLY" ] ; then
     for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
         is_url "$fn" && echo $fn && continue
-        fn="$(echo "$fn" | sed -e 's|^./||' -e 's|^/+||')"
-        echo "$URL/$fn"
+        make_fileurl "$URL" "$fn"
     done
     exit
 fi
 
 ERROR=0
 for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
-    is_url "$fn" || fn="$URL/$(basename "$fn")"
+    is_url "$fn" || fn="$(make_fileurl "$URL" "$(basename "$fn")" )" #"
     sget "$fn" || ERROR=1
 done
 exit $ERROR
