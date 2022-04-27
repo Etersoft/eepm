@@ -38,8 +38,7 @@ for i in $BUILDROOT/opt/zoom/{libicui18n.so,libicui18n.so.*,libicuuc.so,libicuuc
 done
 
 for i in $BUILDROOT/opt/zoom/zoom ; do
-    a= patchelf --set-rpath "$PRODUCTDIR/cef" $i
-    a= patchelf --add-rpath '$ORIGIN/' $i
+    a= patchelf --set-rpath "$ORIGIN/:$PRODUCTDIR/cef" $i
 done
 
 if [ -d $BUILDROOT/opt/zoom/QtQuick/Scene2D ] ; then

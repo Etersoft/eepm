@@ -20,11 +20,11 @@ done
 
 epm assure patchelf || exit
 for i in $BUILDROOT/opt/onlyoffice/desktopeditors/{libQt5Core.so.*,libicui18n.so,libicui18n.so.*,libicuuc.so,libicuuc.so.*} ; do
-    a= patchelf --add-rpath '$ORIGIN/' $i || continue
+    a= patchelf --set-rpath '$ORIGIN/' $i || continue
 done
 
 for i in $BUILDROOT/opt/onlyoffice/desktopeditors/converter/*.so ; do
-    a= patchelf --add-rpath '$ORIGIN/../' $i || continue
+    a= patchelf --set-rpath '$ORIGIN/:$ORIGIN/../' $i || continue
 done
 
 subst '1iAutoReq:no' $SPEC
