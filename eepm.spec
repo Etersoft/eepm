@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.18.5
+Version: 3.18.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,13 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Wed Apr 27 2022 Vitaly Lipatov <lav@altlinux.ru> 3.18.6-alt1
+- prescription/php8.sh: fix upgrade
+- repack.d/generic.sh: install rpm-build-python3 for build packages with python code
+- epm-play: make --short list the same like full (ALT bug 42566)
+- epm repack.d: don't use patchelf --add-rpath (missed in old patch-elf)
+- epm repack mssql-server.sh: fix packing (ALT bug 42559)
+
 * Fri Apr 22 2022 Vitaly Lipatov <lav@altlinux.ru> 3.18.5-alt1
 - epm-update: fix error code in epm-update
 
