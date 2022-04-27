@@ -10,6 +10,15 @@ remove_file()
     subst "s|.*$file.*||" $SPEC
 }
 
+remove_dir()
+{
+    local file="$1"
+    [ -d "$BUILDROOT$file" ] || return
+
+    rm -rv "$BUILDROOT$file"
+    subst "s|.*$file.*||" $SPEC
+}
+
 
 # Usage: pack_file <path_to_file>
 pack_file()
