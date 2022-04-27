@@ -7,8 +7,8 @@ distro="$($DISTRVENDOR -d)" ; [ "$distro" = "ALTLinux" ] || [ "$distro" = "ALTSe
 # TODO: check for apache2-mod_php7
 
 if epmqp --quiet php7- ; then
-    # Upgrade if was installed php5
-    epmqp php7 --short | sed -e "s|php7-http||" -e "s|php7-raphf||" -e "s|php7-propro||" -e "s|php7-memcache||" -e "s|php7|php8.1|" | epmi --auto
+    # Upgrade if was installed php7
+    epmqp php7 --short | grep -v "rpm-build-php" | sed  -e "s|php7-http||" -e "s|php7-xmlrpc||" -e "s|php7-krb5||" -e "s|php7-raphf||" -e "s|php7-propro||" -e "s|php7-memcache$||" -e "s|php7-apcu_bc$||" -e "s|php7-enchant||" -e "s|php7-pdo_sqlsrv$||" -e "s|php7-sqlsrv$||" -e "s|php7-geoip||" -e "s|php7|php8.1|" | epmi --auto
 
     epme php7-libs
 else
