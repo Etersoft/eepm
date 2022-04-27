@@ -3785,6 +3785,8 @@ __epm_play_list()
 
     if [ -n "$short" ] ; then
         for i in $(__list_all_app) ; do
+            local desc="$(__get_app_description $i)"
+            [ -n "$desc" ] || continue
             echo "$i"
         done
         exit
@@ -10644,7 +10646,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.18.5  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.18.6  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10654,7 +10656,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.18.5
+EPMVERSION=3.18.6
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
