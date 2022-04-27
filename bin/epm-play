@@ -165,6 +165,8 @@ __epm_play_list()
 
     if [ -n "$short" ] ; then
         for i in $(__list_all_app) ; do
+            local desc="$(__get_app_description $i)"
+            [ -n "$desc" ] || continue
             echo "$i"
         done
         exit
