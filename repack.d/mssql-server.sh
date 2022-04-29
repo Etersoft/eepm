@@ -23,6 +23,10 @@ subst 's|/usr/bin/basename|/bin/basename|' $BUILDROOT/opt/mssql/bin/*.sh
 
 remove_dir /usr/lib/.build-id
 
+epm assure patchelf || exit
 for i in $BUILDROOT/opt/mssql/lib/libunwind-x86_64.so.8 ; do
-    a= patchelf --set-rpath "$ORIGIN/" $i
+    a= patchelf --set-rpath '$ORIGIN/' $i
 done
+
+epm install libnuma libsss_nss_idmap bzip2 cyrus-sasl2 libcom_err libkrb5 libldap libsasl2-plugin-gssapi python3 su glibc-utils liblzma
+# sudo
