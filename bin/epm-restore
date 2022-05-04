@@ -154,7 +154,7 @@ __epm_restore_pip()
 
     if [ -n "$dryrun" ] ; then
         reqmacro="%py3_use"
-        basename "$req_file" | egrep -q "(dev|test|coverage)" && reqmacro="%py3_buildrequires"
+        basename "$req_file" | grep -E -q "(dev|test|coverage)" && reqmacro="%py3_buildrequires"
         echo
         __epm_restore_print_comment "$req_file"
         cat $req_file | __epm_restore_convert_to_rpm_notation | sed -e "s|^|$reqmacro |"

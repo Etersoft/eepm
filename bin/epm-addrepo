@@ -182,7 +182,7 @@ __epm_addrepo_deb()
 	esac
 
 	# if started from url, use heroistic
-	if echo "$repo" | egrep -q "^https?://" ; then
+	if echo "$repo" | grep -E -q "^https?://" ; then
 		repo="deb [arch=$ad] $repo"
 	fi
 

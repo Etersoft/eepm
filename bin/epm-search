@@ -151,7 +151,7 @@ __epm_search_make_grep()
 		echon " | sed -e \"s| .*||g\""
 	fi
 
-	[ -n "$listN" ] && echon " | egrep -i -v -- \"$listN\""
+	[ -n "$listN" ] && echon " | grep -E -i -v -- \"$listN\""
 
 	# FIXME: The World has not idea how to do grep both string
 	# http://stackoverflow.com/questions/10110051/grep-with-two-strings-logical-and-in-regex?rq=1
@@ -160,7 +160,7 @@ __epm_search_make_grep()
 	if [ "$(echo "$list" | wc -w)" -gt 1 ] ; then
 		for i in $list ; do
 			# FIXME -n on MacOS?
-			echon " | egrep -i -- \"$i\""
+			echon " | grep -E -i -- \"$i\""
 		done
 	fi
 
@@ -178,7 +178,7 @@ __epm_search_make_grep()
 
 	# TODO: use some colorifer instead grep (check grep adove too)
 	if [ -n "$list" ] ; then
-		echon " | egrep -i $EGREPCOLOR -- \"($COLO)\""
+		echon " | grep -E -i $EGREPCOLOR -- \"($COLO)\""
 	fi
 }
 

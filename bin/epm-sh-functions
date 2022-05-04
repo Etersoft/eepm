@@ -59,8 +59,8 @@ check_tty()
 
 	check_core_commands
 
-	# egrep from busybox may not --color
-	# egrep from MacOS print help to stderr
+	# grep -E from busybox may not --color
+	# grep -E from MacOS print help to stderr
 	if grep -E --help 2>&1 | grep -q -- "--color" ; then
 		export EGREPCOLOR="--color"
 	fi
@@ -210,7 +210,7 @@ isnumber()
 
 # copied from strings
 # CHECKME: the same like estrlist has ?
-# Note: used egrep! write '[0-9]+(first|two)', not '[0-9]\+...'
+# Note: used grep -E! write '[0-9]+(first|two)', not '[0-9]\+...'
 rhas()
 {
 	echo "$1" | grep -E -q -- "$2"
