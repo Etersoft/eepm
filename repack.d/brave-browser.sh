@@ -4,12 +4,12 @@ BUILDROOT="$1"
 SPEC="$2"
 
 PRODUCT=brave-browser
-PRODUCTCUR=brave-browser-nightly
-PRODUCTDIR=/opt/brave.com/brave-nightly
+PRODUCTCUR=brave-browser
+PRODUCTDIR=/opt/brave.com/brave
 
 . $(dirname $0)/common-chromium-browser.sh
 
-subst '1iConflicts:brave-browser brave-browser-beta' $SPEC
+subst '1iConflicts:brave-browser-beta brave-browser-nightly' $SPEC
 
 set_alt_alternatives 80
 
