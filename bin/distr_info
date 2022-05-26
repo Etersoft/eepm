@@ -709,6 +709,10 @@ get_virt()
         echo "xen" && return
     fi
 
+    if lscpu | grep "Hypervisor vendor:" | grep -q "KVM" ; then
+        echo "kvm" && return
+    fi
+
     echo "(unknown)"
     # TODO: check for openvz
 }
