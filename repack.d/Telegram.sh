@@ -37,7 +37,7 @@ iconname=$PRODUCT
 url=https://github.com/telegramdesktop/tdesktop
 for i in 16 32 48 64 128 256 512 ; do
     mkdir -p $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/
-    $EGET -O $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png $url/raw/master/Telegram/Resources/art/icon$i.png || continue
+    epm tool eget -O $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png $url/raw/master/Telegram/Resources/art/icon$i.png || continue
     pack_file /usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png
 done
 
