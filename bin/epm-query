@@ -136,7 +136,8 @@ __epm_get_hilevel_nameform()
 		apt-rpm)
 			# use # as delimeter for apt
 			local pkg
-			pkg=$(rpm -q --queryformat "%{NAME}#%{SERIAL}:%{VERSION}-%{RELEASE}\n" -- $1)
+			pkg=$(rpm -q --queryformat "%{NAME}=%{SERIAL}:%{VERSION}-%{RELEASE}\n" -- $1)
+			# for case if serial is missed
 			echo $pkg | grep -q "(none)" && pkg=$(rpm -q --queryformat "%{NAME}#%{VERSION}-%{RELEASE}\n" -- $1)
 			# HACK: can use only for multiple install packages like kernel
 			echo $pkg | grep -q kernel || return 1
