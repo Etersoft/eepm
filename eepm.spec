@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.18.6
+Version: 3.19.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,18 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Wed Jun 29 2022 Vitaly Lipatov <lav@altlinux.ru> 3.19.1-alt1
+- epm repack: fix mssql-server install (ALT bug 42639), tested in hasher
+- egrep -> grep -E
+- epm repack: improve zoom repack
+- epm play brave: install stable branch by default (beta or nightly as alternative)
+- epm-upgrade: return error status if there are no packages for upgrade
+- distr_info: detect kvm without systemd
+- repack.d/Telegram.sh: fix icons download
+- epm-query: fix removing packages with serial
+- add epm repo comment
+- epm release-upgrade: fixes
+
 * Wed Apr 27 2022 Vitaly Lipatov <lav@altlinux.ru> 3.18.6-alt1
 - prescription/php8.sh: fix upgrade
 - repack.d/generic.sh: install rpm-build-python3 for build packages with python code
