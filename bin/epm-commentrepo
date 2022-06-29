@@ -1,0 +1,102 @@
+#!/bin/sh
+#
+# Copyright (C) 2012, 2017, 2020, 2021, 2022  Etersoft
+# Copyright (C) 2012, 2017, 2020, 2021, 2022  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+load_helper epm-sh-altlinux
+load_helper epm-repofix
+
+# remove grepped lines
+__epm_commentrepo_alt_grepremove()
+{
+	local rl
+	__replace_text_in_alt_repo "/^ *#/! s! *(.*$1)!# \1!g"
+	exit
+	# TODO
+	# ^rpm means full string
+	if rhas "$1" "^rpm" ; then
+		rl="$1"
+	else
+		rl="$( (epm --quiet repo list) 2>/dev/null | grep -E "$1")"
+		[ -z "$rl" ] && warning "Can't find '$1' in the repos (see '# epm repolist' output)" && return 1
+	fi
+	echo "$rl" | while read rp ; do
+		if [ -n "$dryrun" ] ; then
+			echo "$rp" | grep -E --color -- "$1"
+			continue
+		fi
+		#if [ -n "$verbose" ] ; then
+		#	sudocmd apt-repo $dryrun rm "$rp"
+		#else
+		__replace_text_in_alt_repo "s! *$rp!# $rp!g"
+		#fi
+	done
+}
+
+__epm_commentrepo_alt()
+{
+	local repo="$*"
+	[ -n "$repo" ] || fatal "No such repo or task. Use epm repo comment <regexp|archive|tasks|TASKNUMBER>"
+
+	assure_exists apt-repo
+
+	if tasknumber "$repo" >/dev/null ; then
+		local tn
+		for tn in $(tasknumber "$repo") ; do
+			__epm_commentrepo_alt_grepremove " repo/$tn/"
+		done
+		return
+	fi
+
+	case "$1" in
+		archive)
+			info "remove archive repos"
+			__epm_commentrepo_alt_grepremove "archive/"
+			;;
+		tasks)
+			info "remove task repos"
+			__epm_commentrepo_alt_grepremove " repo/[0-9]+/"
+			;;
+		task)
+			shift
+			__epm_commentrepo_alt_grepremove " repo/$1/"
+			;;
+		-*)
+			fatal "epm commentrepo: no options are supported"
+			;;
+		*)
+# TODO: if return empty for whole line, use grep
+#			sudocmd apt-repo $dryrun rm "$*"
+			__epm_commentrepo_alt_grepremove "$*"
+			;;
+	esac
+
+}
+
+epm_commentrepo()
+{
+
+case $DISTRNAME in
+	ALTLinux|ALTServer)
+		__epm_commentrepo_alt "$@"
+		return
+		;;
+esac;
+
+fatal "Have no suitable command for $PMTYPE"
+
+}

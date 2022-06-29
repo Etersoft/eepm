@@ -83,6 +83,10 @@ EOF
 		load_helper epm-removerepo
 		epm_removerepo "$@"
 		;;
+	comment)                             # HELPCMD: comment out repository line from the sources lists
+		load_helper epm-commentrepo
+		epm_commentrepo "$@"
+		;;
 	*)
 		fatal "Unknown command $ epm repo '$CMD'"
 		;;
