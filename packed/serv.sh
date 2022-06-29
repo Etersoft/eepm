@@ -73,8 +73,8 @@ check_tty()
 
 	check_core_commands
 
-	# egrep from busybox may not --color
-	# egrep from MacOS print help to stderr
+	# grep -E from busybox may not --color
+	# grep -E from MacOS print help to stderr
 	if grep -E --help 2>&1 | grep -q -- "--color" ; then
 		export EGREPCOLOR="--color"
 	fi
@@ -1996,6 +1996,10 @@ get_virt()
         echo "xen" && return
     fi
 
+    if lscpu | grep "Hypervisor vendor:" | grep -q "KVM" ; then
+        echo "kvm" && return
+    fi
+
     echo "(unknown)"
     # TODO: check for openvz
 }
@@ -2580,19 +2584,25 @@ has_space()
 list()
 {
         local i
+        set -f
         for i in $@ ; do
                 echo "$i"
         done
+        set +f
 }
 
 count()
 {
-         list $@ | wc -l
+        set -f
+        list $@ | wc -l
+        set +f
 }
 
 union()
 {
-         strip_spaces $(list $@ | sort -u)
+        set -f
+        strip_spaces $(list $@ | sort -u)
+        set +f
 }
 
 intersection()
@@ -2624,7 +2634,7 @@ match()
 {
 	local wd="$1"
 	shift
-	echo "$*" | egrep -q -- "$wd"
+	echo "$*" | grep -E -q -- "$wd"
 }
 
 
@@ -2633,9 +2643,11 @@ reg_remove()
 {
         local i
         local RES=
+        set -f
         for i in $2 ; do
                 echo "$i" | grep -q "^$1$" || RES="$RES $i"
         done
+        set +f
         strip_spaces "$RES"
 }
 
@@ -2644,9 +2656,11 @@ reg_wordremove()
 {
         local i
         local RES=""
+        set -f
         for i in $2 ; do
                 echo "$i" | grep -q -w "$1" || RES="$RES $i"
         done
+        set +f
         strip_spaces "$RES"
 }
 
@@ -2667,9 +2681,11 @@ exclude()
 {
         local i
         local RES="$2"
+        set -f
         for i in $1 ; do
                 RES="$(reg_rqremove "$i" "$RES")"
         done
+        set +f
         strip_spaces "$RES"
 }
 
@@ -2678,9 +2694,11 @@ reg_exclude()
 {
         local i
         local RES="$2"
+        set -f
         for i in $1 ; do
                 RES="$(reg_remove "$i" "$RES")"
         done
+        set +f
         strip_spaces "$RES"
 }
 
@@ -2689,18 +2707,22 @@ reg_wordexclude()
 {
         local i
         local RES="$2"
+        set -f
         for i in $1 ; do
                 RES=$(reg_wordremove "$i" "$RES")
         done
+        set +f
         strip_spaces "$RES"
 }
 
 if_contain()
 {
         local i
+        set -f
         for i in $2 ; do
             [ "$i" = "$1" ] && return
         done
+        set +f
         return 1
 }
 
@@ -2708,12 +2730,14 @@ difference()
 {
         local RES=""
         local i
+        set -f
         for i in $1 ; do
             if_contain $i "$2" || RES="$RES $i"
         done
         for i in $2 ; do
             if_contain $i "$1" || RES="$RES $i"
         done
+        set +f
         strip_spaces "$RES"
 }
 
@@ -2724,9 +2748,11 @@ reg_include()
 {
         local i
         local RES=""
+        set -f
         for i in $2 ; do
                 echo "$i" | grep -q -w "$1" && RES="$RES $i"
         done
+        set +f
         strip_spaces "$RES"
 }
 
@@ -3137,7 +3163,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.18.6  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.19.1  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

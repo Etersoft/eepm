@@ -82,8 +82,8 @@ check_tty()
 
 	check_core_commands
 
-	# egrep from busybox may not --color
-	# egrep from MacOS print help to stderr
+	# grep -E from busybox may not --color
+	# grep -E from MacOS print help to stderr
 	if grep -E --help 2>&1 | grep -q -- "--color" ; then
 		export EGREPCOLOR="--color"
 	fi
@@ -774,7 +774,7 @@ __epm_addrepo_deb()
 	esac
 
 	# if started from url, use heroistic
-	if echo "$repo" | egrep -q "^https?://" ; then
+	if echo "$repo" | grep -E -q "^https?://" ; then
 		repo="deb [arch=$ad] $repo"
 	fi
 
@@ -1865,6 +1865,87 @@ case $PMTYPE in
 		;;
 esac
 	info "It is recommend to run 'epm autoremove' also"
+
+}
+
+# File bin/epm-commentrepo:
+
+
+__epm_commentrepo_alt_grepremove()
+{
+	local rl
+	__replace_text_in_alt_repo "/^ *#/! s! *(.*$1)!# \1!g"
+	exit
+	# TODO
+	# ^rpm means full string
+	if rhas "$1" "^rpm" ; then
+		rl="$1"
+	else
+		rl="$( (epm --quiet repo list) 2>/dev/null | grep -E "$1")"
+		[ -z "$rl" ] && warning "Can't find '$1' in the repos (see '# epm repolist' output)" && return 1
+	fi
+	echo "$rl" | while read rp ; do
+		if [ -n "$dryrun" ] ; then
+			echo "$rp" | grep -E --color -- "$1"
+			continue
+		fi
+		#if [ -n "$verbose" ] ; then
+		#	sudocmd apt-repo $dryrun rm "$rp"
+		#else
+		__replace_text_in_alt_repo "s! *$rp!# $rp!g"
+		#fi
+	done
+}
+
+__epm_commentrepo_alt()
+{
+	local repo="$*"
+	[ -n "$repo" ] || fatal "No such repo or task. Use epm repo comment <regexp|archive|tasks|TASKNUMBER>"
+
+	assure_exists apt-repo
+
+	if tasknumber "$repo" >/dev/null ; then
+		local tn
+		for tn in $(tasknumber "$repo") ; do
+			__epm_commentrepo_alt_grepremove " repo/$tn/"
+		done
+		return
+	fi
+
+	case "$1" in
+		archive)
+			info "remove archive repos"
+			__epm_commentrepo_alt_grepremove "archive/"
+			;;
+		tasks)
+			info "remove task repos"
+			__epm_commentrepo_alt_grepremove " repo/[0-9]+/"
+			;;
+		task)
+			shift
+			__epm_commentrepo_alt_grepremove " repo/$1/"
+			;;
+		-*)
+			fatal "epm commentrepo: no options are supported"
+			;;
+		*)
+			__epm_commentrepo_alt_grepremove "$*"
+			;;
+	esac
+
+}
+
+epm_commentrepo()
+{
+
+case $DISTRNAME in
+	ALTLinux|ALTServer)
+		__epm_commentrepo_alt "$@"
+		return
+		;;
+esac;
+
+fatal "Have no suitable command for $PMTYPE"
 
 }
 
@@ -4454,7 +4535,8 @@ __epm_get_hilevel_nameform()
 		apt-rpm)
 			# use # as delimeter for apt
 			local pkg
-			pkg=$(rpm -q --queryformat "%{NAME}#%{SERIAL}:%{VERSION}-%{RELEASE}\n" -- $1)
+			pkg=$(rpm -q --queryformat "%{NAME}=%{SERIAL}:%{VERSION}-%{RELEASE}\n" -- $1)
+			# for case if serial is missed
 			echo $pkg | grep -q "(none)" && pkg=$(rpm -q --queryformat "%{NAME}#%{VERSION}-%{RELEASE}\n" -- $1)
 			# HACK: can use only for multiple install packages like kernel
 			echo $pkg | grep -q kernel || return 1
@@ -5119,7 +5201,7 @@ __detect_alt_release_by_repo()
 {
 	local BRD=$(cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list \
 		| grep -v "^#" \
-		| egrep "[tpc][5-9]\.?[0-9]?/branch/" \
+		| grep -E "[tpc][5-9]\.?[0-9]?/branch/" \
 		| sed -e "s|.*\([tpc][5-9]\.\?[0-9]\?\)/branch.*|\1|g" \
 		| sort -u )
 	if [ "$(__wcount $BRD)" = "1" ] ; then
@@ -5161,11 +5243,8 @@ get_fix_release_pkg()
 	if [ "$TO" = "Sisyphus" ] ; then
 		TO="sisyphus"
 		echo "apt-conf-$TO"
-	elif [ "$TO" = "p10" ] ; then
-		true
-		#echo "apt-conf-$TO"
 	else
-		epmqp apt-conf-branch >/dev/null 2>/dev/null || echo "apt-conf-branch"
+		epm installed apt-conf-branch && echo "apt-conf-branch"
 	fi
 
 	if [ "$FORCE" == "--force" ] ; then
@@ -5187,11 +5266,15 @@ get_fix_release_pkg()
 	# workaround against obsoleted altlinux-release-sisyphus package from 2008 year
 	[ "$TOINSTALL" = "altlinux-release-sisyphus" ] && TOINSTALL="branding-alt-sisyphus-release"
 
-	# update if installed (just print package name here to include in the install list)
-	epm --quiet --short installed alt-gpgkeys 2>/dev/null
-	if epm --quiet --short -q etersoft-gpgkeys 2>/dev/null >/dev/null ; then
+	if epm installed etersoft-gpgkeys ; then
+		# TODO: we don't support LINUX@Etersoft for now
 		# leave etersoft-gpgkeys only if we have LINUX@Etersoft repo
-		epm rl | grep -q "LINUX@Etersoft" && echo etersoft-gpgkeys || echo alt-gpgkeys
+		#epm repo list | grep -q "LINUX@Etersoft" && echo "etersoft-gpgkeys" || echo "alt-gpgkeys"
+		epm --quiet repo comment "LINUX@Etersoft"
+		echo "alt-gpgkeys"
+	else
+		# update if installed (just print package name here to include in the install list)
+		epm query --short alt-gpgkeys 2>/dev/null
 	fi
 
 	if [ -n "$TOINSTALL" ] ; then
@@ -6026,7 +6109,7 @@ __epm_removerepo_alt_grepremove()
 __epm_removerepo_alt()
 {
 	local repo="$*"
-	[ -n "$repo" ] || fatal "No such repo or task. Use epm repo remove <autoimports|archive|tasks|TASKNUMBER>"
+	[ -n "$repo" ] || fatal "No such repo or task. Use epm repo remove <regexp|autoimports|archive|tasks|TASKNUMBER>"
 
 	assure_exists apt-repo
 
@@ -6547,8 +6630,11 @@ EOF
 		epm_addrepo "$@"
 		epm update
 		;;
-	rm|remove)                           # HELPCMD: remove repository from sources list (epm repo remove all for all)
+	rm|remove)                           # HELPCMD: remove repository from the sources lists (epm repo remove all for all)
 		epm_removerepo "$@"
+		;;
+	comment)                             # HELPCMD: comment out repository line from the sources lists
+		epm_commentrepo "$@"
 		;;
 	*)
 		fatal "Unknown command $ epm repo '$CMD'"
@@ -6566,6 +6652,8 @@ __replace_text_in_alt_repo()
 	local i
 	for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
 		[ -s "$i" ] || continue
+		# TODO: don't change file if untouched
+		#grep -q -- "$1" "$i" || continue
 		regexp_subst "$1" "$i"
 	done
 }
@@ -6601,7 +6689,7 @@ __replace_alt_version_in_repo()
 	local i
 	assure_exists apt-repo
 	#echo "Upgrading $DISTRNAME from $1 to $2 ..."
-	a='' apt-repo list | sed -e "s|\($1\)|{\1}->{$2}|g" | grep -E --color -- "$1"
+	a='' apt-repo list | sed -E -e "s|($1)|{\1}->{$2}|g" | grep -E --color -- "$1"
 	# ask and replace only we will have changes
 	if a='' apt-repo list | grep -E -q -- "$1" ; then
 		__replace_text_in_alt_repo "/^ *#/! s!$1!$2!g"
@@ -6624,7 +6712,6 @@ __alt_repofix()
 {
 	local TO="$1"
 	epm --quiet repo fix >/dev/null
-
 	if [ -n "$TO" ] ; then
 		# TODO: switch it in repo code
 		TO="$(__repofix_filter_vendor "$TO")"
@@ -6638,8 +6725,12 @@ epm_reposwitch()
 	[ -n "$TO" ] || fatal "run repo switch with arg (p9, p10, Sisyphus)"
 	__replace_alt_version_in_repo "Sisyphus/" "$TO/branch/"
 	__replace_alt_version_in_repo "[tpc][5-9]\.?[0-9]?/branch/" "$TO/branch/"
-	__replace_alt_version_in_repo "p10\.?[0-9]?/branch/" "$TO/branch/"
-	__alt_repofix $TO
+	if [ "$TO" != "p10" ] ; then
+		__replace_alt_version_in_repo "p10\.?[0-9]?/branch/" "$TO/branch/"
+	fi
+
+	__alt_repofix "$TO"
+
 	if [ "$TO" = "p10" ] ; then
 		echo '%_priority_distbranch p10' >/etc/rpm/macros.d/p10
 	else
@@ -7256,7 +7347,7 @@ __epm_restore_pip()
 
     if [ -n "$dryrun" ] ; then
         reqmacro="%py3_use"
-        basename "$req_file" | egrep -q "(dev|test|coverage)" && reqmacro="%py3_buildrequires"
+        basename "$req_file" | grep -E -q "(dev|test|coverage)" && reqmacro="%py3_buildrequires"
         echo
         __epm_restore_print_comment "$req_file"
         cat $req_file | __epm_restore_convert_to_rpm_notation | sed -e "s|^|$reqmacro |"
@@ -7758,7 +7849,7 @@ __epm_search_make_grep()
 		echon " | sed -e \"s| .*||g\""
 	fi
 
-	[ -n "$listN" ] && echon " | egrep -i -v -- \"$listN\""
+	[ -n "$listN" ] && echon " | grep -E -i -v -- \"$listN\""
 
 	# FIXME: The World has not idea how to do grep both string
 	# http://stackoverflow.com/questions/10110051/grep-with-two-strings-logical-and-in-regex?rq=1
@@ -7767,7 +7858,7 @@ __epm_search_make_grep()
 	if [ "$(echo "$list" | wc -w)" -gt 1 ] ; then
 		for i in $list ; do
 			# FIXME -n on MacOS?
-			echon " | egrep -i -- \"$i\""
+			echon " | grep -E -i -- \"$i\""
 		done
 	fi
 
@@ -7785,7 +7876,7 @@ __epm_search_make_grep()
 
 	# TODO: use some colorifer instead grep (check grep adove too)
 	if [ -n "$list" ] ; then
-		echon " | egrep -i $EGREPCOLOR -- \"($COLO)\""
+		echon " | grep -E -i $EGREPCOLOR -- \"($COLO)\""
 	fi
 }
 
@@ -8313,8 +8404,8 @@ EOF
     			# FIXME: we need strict search here (not find gst-plugins-base if search for gst-plugins
     			# TODO: use short?
     			# use verbose for get package status
-    			#pkg_filenames="$pkg-[0-9]" verbose=--verbose __epm_search_internal | egrep "(installed|upgrade)" && continue
-    			#pkg_filenames="$pkg" verbose=--verbose __epm_search_internal | egrep "(installed|upgrade)" && continue
+    			#pkg_filenames="$pkg-[0-9]" verbose=--verbose __epm_search_internal | grep -E "(installed|upgrade)" && continue
+    			#pkg_filenames="$pkg" verbose=--verbose __epm_search_internal | grep -E "(installed|upgrade)" && continue
     			(pkg_filenames="$pkg" __epm_search_internal) | grep -q "^$pkg-[0-9]" && continue
     			res=1
     			info "Package '$pkg' does not found in repository."
@@ -8614,8 +8705,6 @@ epm_upgrade()
 	if [ "$DISTRNAME" = "ALTLinux" ] || [ "$DISTRNAME" = "ALTServer" ] ; then
 		if tasknumber "$@" >/dev/null ; then
 
-			try_change_alt_repo
-			epm_addrepo "$@"
 			local installlist="$(get_task_packages $*)"
 			# hack: drop -devel packages to avoid package provided by multiple packages
 			installlist="$(estrlist reg_exclude ".*-devel .*-devel-static" "$installlist")"
@@ -8623,6 +8712,13 @@ epm_upgrade()
 			# install only installed packages (simulate upgrade packages)
 			installlist="$(get_only_installed_packages "$installlist")"
 			[ -n "$verbose" ] && info "Packages to upgrade: $installlist"
+			if [ -z "$installlist" ] ; then
+				warning "There is no installed packages for upgrade from task $*"
+				exit 22
+			fi
+
+			try_change_alt_repo
+			epm_addrepo "$@"
 			(pkg_names="$installlist" epm_Install) || fatal "Can't update repo"
 			epm_removerepo "$@"
 			end_change_alt_repo
@@ -9573,6 +9669,10 @@ get_virt()
         echo "xen" && return
     fi
 
+    if lscpu | grep "Hypervisor vendor:" | grep -q "KVM" ; then
+        echo "kvm" && return
+    fi
+
     echo "(unknown)"
     # TODO: check for openvz
 }
@@ -10157,19 +10257,25 @@ has_space()
 list()
 {
         local i
+        set -f
         for i in $@ ; do
                 echo "$i"
         done
+        set +f
 }
 
 count()
 {
-         list $@ | wc -l
+        set -f
+        list $@ | wc -l
+        set +f
 }
 
 union()
 {
-         strip_spaces $(list $@ | sort -u)
+        set -f
+        strip_spaces $(list $@ | sort -u)
+        set +f
 }
 
 intersection()
@@ -10201,7 +10307,7 @@ match()
 {
 	local wd="$1"
 	shift
-	echo "$*" | egrep -q -- "$wd"
+	echo "$*" | grep -E -q -- "$wd"
 }
 
 
@@ -10210,9 +10316,11 @@ reg_remove()
 {
         local i
         local RES=
+        set -f
         for i in $2 ; do
                 echo "$i" | grep -q "^$1$" || RES="$RES $i"
         done
+        set +f
         strip_spaces "$RES"
 }
 
@@ -10221,9 +10329,11 @@ reg_wordremove()
 {
         local i
         local RES=""
+        set -f
         for i in $2 ; do
                 echo "$i" | grep -q -w "$1" || RES="$RES $i"
         done
+        set +f
         strip_spaces "$RES"
 }
 
@@ -10244,9 +10354,11 @@ exclude()
 {
         local i
         local RES="$2"
+        set -f
         for i in $1 ; do
                 RES="$(reg_rqremove "$i" "$RES")"
         done
+        set +f
         strip_spaces "$RES"
 }
 
@@ -10255,9 +10367,11 @@ reg_exclude()
 {
         local i
         local RES="$2"
+        set -f
         for i in $1 ; do
                 RES="$(reg_remove "$i" "$RES")"
         done
+        set +f
         strip_spaces "$RES"
 }
 
@@ -10266,18 +10380,22 @@ reg_wordexclude()
 {
         local i
         local RES="$2"
+        set -f
         for i in $1 ; do
                 RES=$(reg_wordremove "$i" "$RES")
         done
+        set +f
         strip_spaces "$RES"
 }
 
 if_contain()
 {
         local i
+        set -f
         for i in $2 ; do
             [ "$i" = "$1" ] && return
         done
+        set +f
         return 1
 }
 
@@ -10285,12 +10403,14 @@ difference()
 {
         local RES=""
         local i
+        set -f
         for i in $1 ; do
             if_contain $i "$2" || RES="$RES $i"
         done
         for i in $2 ; do
             if_contain $i "$1" || RES="$RES $i"
         done
+        set +f
         strip_spaces "$RES"
 }
 
@@ -10301,9 +10421,11 @@ reg_include()
 {
         local i
         local RES=""
+        set -f
         for i in $2 ; do
                 echo "$i" | grep -q -w "$1" && RES="$RES $i"
         done
+        set +f
         strip_spaces "$RES"
 }
 
@@ -10646,7 +10768,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.18.6  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.19.1  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10656,7 +10778,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.18.6
+EPMVERSION=3.19.1
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
