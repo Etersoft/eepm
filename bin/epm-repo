@@ -79,7 +79,7 @@ EOF
 		epm_addrepo "$@"
 		epm update
 		;;
-	rm|remove)                           # HELPCMD: remove repository from sources list (epm repo remove all for all)
+	rm|remove)                           # HELPCMD: remove repository from the sources lists (epm repo remove all for all)
 		load_helper epm-removerepo
 		epm_removerepo "$@"
 		;;

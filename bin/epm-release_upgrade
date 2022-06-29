@@ -123,11 +123,8 @@ get_fix_release_pkg()
 	if [ "$TO" = "Sisyphus" ] ; then
 		TO="sisyphus"
 		echo "apt-conf-$TO"
-	elif [ "$TO" = "p10" ] ; then
-		true
-		#echo "apt-conf-$TO"
 	else
-		epmqp apt-conf-branch >/dev/null 2>/dev/null || echo "apt-conf-branch"
+		epm installed apt-conf-branch && echo "apt-conf-branch"
 	fi
 
 	if [ "$FORCE" == "--force" ] ; then
@@ -149,11 +146,15 @@ get_fix_release_pkg()
 	# workaround against obsoleted altlinux-release-sisyphus package from 2008 year
 	[ "$TOINSTALL" = "altlinux-release-sisyphus" ] && TOINSTALL="branding-alt-sisyphus-release"
 
-	# update if installed (just print package name here to include in the install list)
-	epm --quiet --short installed alt-gpgkeys 2>/dev/null
-	if epm --quiet --short -q etersoft-gpgkeys 2>/dev/null >/dev/null ; then
+	if epm installed etersoft-gpgkeys ; then
+		# TODO: we don't support LINUX@Etersoft for now
 		# leave etersoft-gpgkeys only if we have LINUX@Etersoft repo
-		epm rl | grep -q "LINUX@Etersoft" && echo etersoft-gpgkeys || echo alt-gpgkeys
+		#epm repo list | grep -q "LINUX@Etersoft" && echo "etersoft-gpgkeys" || echo "alt-gpgkeys"
+		epm --quiet repo comment "LINUX@Etersoft"
+		echo "alt-gpgkeys"
+	else
+		# update if installed (just print package name here to include in the install list)
+		epm query --short alt-gpgkeys 2>/dev/null
 	fi
 
 	if [ -n "$TOINSTALL" ] ; then
