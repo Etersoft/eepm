@@ -10738,6 +10738,9 @@ fi
 ################# end of incorporated bin/tools_json #################
 
 
+epm_main()
+{
+
 #PATH=$PATH:/sbin:/usr/sbin
 
 set_pm_type
@@ -11253,3 +11256,5 @@ esac
 # Run helper for command with natural args
 eval epm_$epm_cmd $quoted_args
 # return last error code (from subroutine)
+}
+epm_main "$@"
