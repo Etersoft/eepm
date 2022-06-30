@@ -71,12 +71,25 @@ for i in bin/epm-sh-functions $(ls -1 bin/$PACKCOMMAND-* | grep -v epm-sh-functi
 done | filter_out >>$OUTPUT
 
 incorporate_subfile bin/distr_info
-#incorporate_subfile /usr/bin/eget
-incorporate_subfile bin/tools_eget
-incorporate_subfile bin/tools_estrlist
-incorporate_subfile bin/tools_json
+if [ "$PACKCOMMAND" = "epm" ] ; then
+    incorporate_subfile bin/tools_eget
+    incorporate_subfile bin/tools_estrlist
+    incorporate_subfile bin/tools_json
+fi
+
+cat <<EOF >>$OUTPUT
+
+${PACKCOMMAND}_main()
+{
+EOF
 
 awk 'BEGIN{desk=0}{if(desk>0) {print} ; if(/^load_helper epm-sh-functions/){desk++}}' <bin/$PACKCOMMAND | filter_out >>$OUTPUT
+
+cat <<EOF >>$OUTPUT
+}
+${PACKCOMMAND}_main "\$@"
+EOF
+
 chmod 0755 $OUTPUT
 }
 
