@@ -295,7 +295,7 @@ epm_remove()
 
 	if [ -z "$pkg_names" ] ; then
 		warning "no package(s) to remove."
-		exit 0
+		return
 	fi
 	# remove according current arch (if x86_64) by default
 	pkg_names="$(echo $pkg_names | exp_with_arch_suffix)"

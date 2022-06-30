@@ -46,7 +46,7 @@ epm_upgrade()
 			[ -n "$verbose" ] && info "Packages to upgrade: $installlist"
 			if [ -z "$installlist" ] ; then
 				warning "There is no installed packages for upgrade from task $*"
-				exit 22
+				return 22
 			fi
 
 			try_change_alt_repo
