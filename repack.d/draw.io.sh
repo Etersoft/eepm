@@ -9,4 +9,7 @@ PRODUCTDIR=/opt/drawio/
 
 . $(dirname $0)/common-chromium-browser.sh
 
+add_bin_link_command drawio
+add_bin_link_command $PRODUCT $PRODUCTDIR/drawio
+
 fix_chrome_sandbox
