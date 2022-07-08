@@ -5971,7 +5971,7 @@ epm_remove()
 
 	if [ -z "$pkg_names" ] ; then
 		warning "no package(s) to remove."
-		exit 0
+		return
 	fi
 	# remove according current arch (if x86_64) by default
 	pkg_names="$(echo $pkg_names | exp_with_arch_suffix)"
@@ -8714,7 +8714,7 @@ epm_upgrade()
 			[ -n "$verbose" ] && info "Packages to upgrade: $installlist"
 			if [ -z "$installlist" ] ; then
 				warning "There is no installed packages for upgrade from task $*"
-				exit 22
+				return 22
 			fi
 
 			try_change_alt_repo
@@ -9057,8 +9057,12 @@ case $DISTRIB_ID in
 		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
 		hascommand snappy && CMD=snappy
 		;;
-	Mandriva|ROSA)
+	Mandriva)
 		CMD="urpm-rpm"
+		;;
+	ROSA)
+		CMD="dnf-rpm"
+		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "ROSA/2020" ] && CMD="urpm-rpm"
 		;;
 	FreeBSD|NetBSD|OpenBSD|Solaris)
 		CMD="pkgsrc"
@@ -9072,8 +9076,8 @@ case $DISTRIB_ID in
 		;;
 	Fedora|CentOS|OracleLinux|RockyLinux|AlmaLinux|RHEL|Scientific|GosLinux|Amzn|RedOS)
 		CMD="dnf-rpm"
-		hascommand dnf || CMD=yum-rpm
-		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "CentOS/7" ] && CMD=yum-rpm
+		hascommand dnf || CMD="yum-rpm"
+		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "CentOS/7" ] && CMD="yum-rpm"
 		;;
 	Slackware)
 		CMD="slackpkg"
@@ -9188,6 +9192,9 @@ normalize_name()
 		"RedHatEnterpriseLinuxServer")
 			echo "RHEL"
 			;;
+		"ROSA Enterprise Linux Desktop"|"ROSA Enterprise Linux Server")
+			echo "ROSA"
+			;;
 		*)
 			#echo "${1// /}"
 			echo "$1" | sed -e "s/ //g"
@@ -9195,6 +9202,8 @@ normalize_name()
 	esac
 }
 
+fill_distr_info()
+{
 # Default values
 PRETTY_NAME=""
 DISTRIB_ID=""
@@ -9222,6 +9231,10 @@ elif distro lsb-release ; then
 	PRETTY_NAME=$(cat $DISTROFILE | get_var DISTRIB_DESCRIPTION)
 fi
 
+# TODO:
+#if [ -n "$DISTRIB_ID" ] ; then
+#	# don't check obsoleted ways
+#	;
 # ALT Linux based
 if distro altlinux-release ; then
 	DISTRIB_ID="ALTLinux"
@@ -9436,7 +9449,9 @@ fi
 if [ -z "$PRETTY_NAME" ] ; then
 	PRETTY_NAME="$DISTRIB_ID $DISTRIB_RELEASE"
 fi
+}
 
+fill_distr_info
 
 get_uname()
 {
@@ -10771,7 +10786,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.19.1  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.19.2  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10781,7 +10796,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.19.1
+EPMVERSION=3.19.2
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
