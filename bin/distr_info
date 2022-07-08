@@ -242,6 +242,8 @@ normalize_name()
 	esac
 }
 
+fill_distr_info()
+{
 # Default values
 PRETTY_NAME=""
 DISTRIB_ID=""
@@ -269,6 +271,10 @@ elif distro lsb-release ; then
 	PRETTY_NAME=$(cat $DISTROFILE | get_var DISTRIB_DESCRIPTION)
 fi
 
+# TODO:
+#if [ -n "$DISTRIB_ID" ] ; then
+#	# don't check obsoleted ways
+#	;
 # ALT Linux based
 if distro altlinux-release ; then
 	DISTRIB_ID="ALTLinux"
@@ -483,7 +489,9 @@ fi
 if [ -z "$PRETTY_NAME" ] ; then
 	PRETTY_NAME="$DISTRIB_ID $DISTRIB_RELEASE"
 fi
+}
 
+fill_distr_info
 
 get_uname()
 {
