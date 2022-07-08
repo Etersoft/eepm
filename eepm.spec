@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.19.1
+Version: 3.19.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,15 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Fri Jul 08 2022 Vitaly Lipatov <lav@altlinux.ru> 3.19.2-alt1
+- pack_in_onefile.sh: use epm_main/serv_main functions for the main code
+- use return instead of exit in functions
+- epm play: add snap4arduino support
+- epm play: add draw.io support
+- epm play: fix sublime download link
+- repack.d/draw.io: add drawio and draw.io commands to /usr/bin
+- distr_info: fix ROSA support
+
 * Wed Jun 29 2022 Vitaly Lipatov <lav@altlinux.ru> 3.19.1-alt1
 - epm repack: fix mssql-server install (ALT bug 42639), tested in hasher
 - egrep -> grep -E
