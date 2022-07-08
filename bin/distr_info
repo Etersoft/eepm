@@ -97,8 +97,12 @@ case $DISTRIB_ID in
 		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
 		hascommand snappy && CMD=snappy
 		;;
-	Mandriva|ROSA)
+	Mandriva)
 		CMD="urpm-rpm"
+		;;
+	ROSA)
+		CMD="dnf-rpm"
+		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "ROSA/2020" ] && CMD="urpm-rpm"
 		;;
 	FreeBSD|NetBSD|OpenBSD|Solaris)
 		CMD="pkgsrc"
@@ -112,8 +116,8 @@ case $DISTRIB_ID in
 		;;
 	Fedora|CentOS|OracleLinux|RockyLinux|AlmaLinux|RHEL|Scientific|GosLinux|Amzn|RedOS)
 		CMD="dnf-rpm"
-		hascommand dnf || CMD=yum-rpm
-		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "CentOS/7" ] && CMD=yum-rpm
+		hascommand dnf || CMD="yum-rpm"
+		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "CentOS/7" ] && CMD="yum-rpm"
 		;;
 	Slackware)
 		CMD="slackpkg"
@@ -227,6 +231,9 @@ normalize_name()
 			;;
 		"RedHatEnterpriseLinuxServer")
 			echo "RHEL"
+			;;
+		"ROSA Enterprise Linux Desktop"|"ROSA Enterprise Linux Server")
+			echo "ROSA"
 			;;
 		*)
 			#echo "${1// /}"
