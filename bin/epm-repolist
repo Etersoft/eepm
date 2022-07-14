@@ -87,10 +87,10 @@ case $PMTYPE in
 		print_apt_sources_list
 		;;
 	yum-rpm)
-		docmd yum repolist -v
+		docmd yum repolist $verbose
 		;;
 	dnf-rpm)
-		docmd dnf repolist -v
+		docmd dnf repolist $verbose
 		;;
 	urpm-rpm)
 		docmd urpmq --list-url
