@@ -51,6 +51,14 @@ __check_installed_app()
 	grep -q -- "^$1\$" $epm_vardir/installed-app
 }
 
+__get_app_version()
+{
+	local script="$psdir/$1.sh"
+	[ -x "$script" ] || return
+	$script --installed-version
+	return
+}
+
 __list_all_app()
 {
     for i in $psdir/*.sh ; do
@@ -255,6 +263,13 @@ fi
 if [ "$1" = "--installed" ] || [ "$1" = "installed" ]  ; then
     shift
     __check_installed_app "$1"
+    #[ -n "$quiet" ] && exit
+    exit
+fi
+
+if [ "$1" = "--installed-version" ] || [ "$1" = "installed-version" ]  ; then
+    shift
+    __get_app_version "$1"
     #[ -n "$quiet" ] && exit
     exit
 fi
