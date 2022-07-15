@@ -274,6 +274,12 @@ if [ "$1" = "--installed-version" ] || [ "$1" = "installed-version" ]  ; then
     exit
 fi
 
+if [ "$1" = "--package-name" ] || [ "$1" = "package-name" ]  ; then
+    shift
+    __get_app_package "$1"
+    exit
+fi
+
 if [ "$1" = "--list" ] || [ "$1" = "--list-installed" ] || [ "$1" = "list" ] || [ "$1" = "list-installed" ]  ; then
     __epm_play_list_installed
     exit
