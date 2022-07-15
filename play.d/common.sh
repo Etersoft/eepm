@@ -6,6 +6,12 @@ fatal()
     exit 1
 }
 
+get_latest_version()
+{
+    local URL="https://eepm.ru/app-versions"
+    epm tool eget -q -O- "$URL/$1"
+}
+
 case "$1" in
     "--remove")
         epm remove $PKGNAME
@@ -19,6 +25,10 @@ case "$1" in
         epm installed $PKGNAME
         exit
         ;;
+    "--installed-version")
+        epm print version for package $PKGNAME
+        exit
+        ;;
     "--description")
         echo "$DESCRIPTION"
         exit
@@ -26,6 +36,11 @@ case "$1" in
     "--update")
         if ! epm installed $PKGNAME ; then
             echo "Skipping update of $PKGNAME (package is not installed)"
+            exit
+        fi
+        pkgver="$(epm print version for package $PKGNAME)"
+        if [ -n "$pkgver" ] && [ "$(get_latest_version $PKGNAME)" = "$pkgver" ] ; then
+            echo "There is no newer version of $PKGNAME then installed version $version."
             exit
         fi
         ;;
