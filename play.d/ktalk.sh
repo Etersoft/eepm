@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME=ktalk
+PKGNAME=ktalk2022
 DESCRIPTION="Контур.Толк (ktalk) from the official site"
 
 . $(dirname $0)/common.sh
