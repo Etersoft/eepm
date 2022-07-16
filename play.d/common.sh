@@ -59,7 +59,7 @@ case "$1" in
         fi
         pkgver="$(epm print version for package $PKGNAME)"
         if [ -n "$pkgver" ] && [ "$(get_latest_version $PKGNAME)" = "$pkgver" ] ; then
-            echo "There is no newer version of $PKGNAME then installed version $version."
+            echo "There is no newer version of $PKGNAME then installed version $pkgver."
             exit
         fi
         ;;
