@@ -5,15 +5,15 @@ DESCRIPTION="Brave browser from the official site"
 PKGNAME=brave-browser
 SUPPORTEDARCHES="x86_64"
 PRODUCTALT="'' beta nightly"
-if [ "$2" = "beta" ] || epm installed $PKGNAME-beta ; then
-    PKGNAME=$PKGNAME-beta
-fi
-if [ "$2" = "nightly" ] || epm installed $PKGNAME-nightly ; then
-    PKGNAME=$PKGNAME-nightly
-fi
+
+for i in $PRODUCTALT ; do
+    [ "$i" = "''" ] && continue
+    if [ "$2" = "$i" ] || epm installed $PKGNAME-$i ; then
+        PKGNAME=$PKGNAME-$i
+    fi
+done
 
 . $(dirname $0)/common.sh
-
 
 
 arch=x86_64
