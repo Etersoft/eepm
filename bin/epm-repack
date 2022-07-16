@@ -113,11 +113,12 @@ __fix_spec()
             $spec
     done
 
+    # commented out: conflicts with already installed package
     # drop %dir for existed system dirs
-    for i in $(grep '^%dir "' $spec | sed -e 's|^%dir  *"\(.*\)".*|\1|' ) ; do #"
-        echo "$i" | grep -q '^/opt/' && continue
-        [ -d "$i" ] && [ -n "$verbose" ] && echo "drop dir $i from packing, it exists in the system"
-    done
+    #for i in $(grep '^%dir "' $spec | sed -e 's|^%dir  *"\(.*\)".*|\1|' ) ; do #"
+    #    echo "$i" | grep -q '^/opt/' && continue
+    #    [ -d "$i" ] && [ -n "$verbose" ] && echo "drop dir $i from packing, it exists in the system"
+    #done
 
     # replace dir "/path/dir" -> %dir /path/dir
     grep '^"/' $spec | sed -e 's|^"\(/.*\)"$|\1|' | while read i ; do
