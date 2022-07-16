@@ -32,7 +32,7 @@ case "$1" in
         [ -n "$TIPS" ] && echo "$TIPS"
         exit
         ;;
-    "--package")
+    "--package-name")
         echo "$PKGNAME"
         exit
         ;;

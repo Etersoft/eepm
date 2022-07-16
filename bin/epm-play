@@ -40,24 +40,29 @@ __remove_installed_app()
 	return 0
 }
 
-__check_installed_app()
+__run_script()
 {
 	local script="$psdir/$1.sh"
 	[ -x "$script" ] || return
-	$script --installed
+	shift
+	$script "$@"
+	return
+}
+
+__get_app_package()
+{
+	__run_script "$1" --package-name "$2" 2>/dev/null
+}
+
+__check_installed_app()
+{
+	__run_script "$1" --installed "$2"
 	return
 
 	[ -s $epm_vardir/installed-app ] || return 1
 	grep -q -- "^$1\$" $epm_vardir/installed-app
 }
 
-__get_app_version()
-{
-	local script="$psdir/$1.sh"
-	[ -x "$script" ] || return
-	$script --installed-version
-	return
-}
 
 __list_all_app()
 {
@@ -101,19 +106,10 @@ __list_installed_app()
     cat $epm_vardir/installed-app 2>/dev/null
 }
 
-__get_app_package()
-{
-    local script="$psdir/$1.sh"
-    [ -x "$script" ] || return
-    $script --package 2>/dev/null
-}
-
 
 __get_app_description()
 {
-    local script="$psdir/$1.sh"
-    [ -x "$script" ] || return
-    $script --description 2>/dev/null
+    __run_script "$1" --description 2>/dev/null
 }
 
 __check_play_script()
@@ -262,23 +258,23 @@ fi
 
 if [ "$1" = "--installed" ] || [ "$1" = "installed" ]  ; then
     shift
-    __check_installed_app "$1"
+    __check_installed_app "$1" "$2"
     #[ -n "$quiet" ] && exit
     exit
 fi
 
-if [ "$1" = "--installed-version" ] || [ "$1" = "installed-version" ]  ; then
-    shift
-    __get_app_version "$1"
-    #[ -n "$quiet" ] && exit
-    exit
-fi
+# common internal options
+case "$1" in
+    "--installed-version"|"--package-name"|"--product-alternatives")
+        __run_script "$2" "$1" "$3"
+        exit
+        ;;
+    "--help"|"help")
+        __run_script "$2" "$1" "$3"
+        exit
+        ;;
+esac
 
-if [ "$1" = "--package-name" ] || [ "$1" = "package-name" ]  ; then
-    shift
-    __get_app_package "$1"
-    exit
-fi
 
 if [ "$1" = "--list" ] || [ "$1" = "--list-installed" ] || [ "$1" = "list" ] || [ "$1" = "list-installed" ]  ; then
     __epm_play_list_installed
