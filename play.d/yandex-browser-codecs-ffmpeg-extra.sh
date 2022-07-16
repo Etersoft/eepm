@@ -9,6 +9,7 @@ if [ "$2" = "beta" ] ; then
     PRODUCTDIR=/opt/yandex/browser-$BRANCH
 fi
 
+PRODUCTALT="stable beta"
 BASEPKGNAME=yandex-browser-$BRANCH
 PKGNAME=yandex-browser-$BRANCH-codecs-ffmpeg-extra
 SUPPORTEDARCHES="x86_64"

@@ -10,6 +10,7 @@ if [ "$2" = "snapshot" ] ; then
 fi
 
 BASEPKGNAME=vivaldi-$BRANCH
+PRODUCTALT="stable snapshot"
 PKGNAME=vivaldi-$BRANCH-codecs-ffmpeg-extra
 SUPPORTEDARCHES="x86_64"
 

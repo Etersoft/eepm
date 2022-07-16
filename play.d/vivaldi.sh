@@ -2,6 +2,7 @@
 
 DESCRIPTION="Vivaldi browser from the official site"
 
+PRODUCTALT="stable snapshot"
 BRANCH=stable
 if [ "$2" = "snapshot" ] || epm installed vivaldi-snapshot ; then
     BRANCH=snapshot

@@ -4,6 +4,7 @@ DESCRIPTION="Brave browser from the official site"
 
 PKGNAME=brave-browser
 SUPPORTEDARCHES="x86_64"
+PRODUCTALT="'' beta nightly"
 if [ "$2" = "beta" ] || epm installed $PKGNAME-beta ; then
     PKGNAME=$PKGNAME-beta
 fi

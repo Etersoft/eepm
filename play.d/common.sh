@@ -12,13 +12,32 @@ get_latest_version()
     epm tool eget -q -O- "$URL/$1"
 }
 
+print_product_alt()
+{
+    [ -n "$1" ] || return
+    shift
+    echo "$*"
+}
+
 case "$1" in
     "--remove")
         epm remove $PKGNAME
         exit
         ;;
+    "--help")
+        if [ -n "$PRODUCTALT" ] ; then
+            echo "Help about additional parameters."
+            echo "Use epm play $(basename $0 .sh) [$(echo "$PRODUCTALT" | sed -e 's@ @|@g')]"
+        fi
+        [ -n "$TIPS" ] && echo "$TIPS"
+        exit
+        ;;
     "--package")
         echo "$PKGNAME"
+        exit
+        ;;
+    "--product-alternatives")
+        print_product_alt $PRODUCTALT
         exit
         ;;
     "--installed")
