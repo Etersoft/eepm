@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.19.2
+Version: 3.19.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,14 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Sat Jul 16 2022 Vitaly Lipatov <lav@altlinux.ru> 3.19.3-alt1
+- distr_info: add ROSA/7 with yum support
+- epm-repolist: dnf/yum: be verbose only when --verbose
+- play/common.sh: add version checking
+- epm-play: add --installed-version and --package-name support
+- play.d/ktalk.sh: fix package name
+- play.d/sputnik-browser.sh: use url from b2c-distrs channel
+
 * Fri Jul 08 2022 Vitaly Lipatov <lav@altlinux.ru> 3.19.2-alt1
 - pack_in_onefile.sh: use epm_main/serv_main functions for the main code
 - use return instead of exit in functions
