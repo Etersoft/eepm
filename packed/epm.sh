@@ -3742,24 +3742,29 @@ __remove_installed_app()
 	return 0
 }
 
-__check_installed_app()
+__run_script()
 {
 	local script="$psdir/$1.sh"
 	[ -x "$script" ] || return
-	$script --installed
+	shift
+	$script "$@"
+	return
+}
+
+__get_app_package()
+{
+	__run_script "$1" --package-name "$2" 2>/dev/null
+}
+
+__check_installed_app()
+{
+	__run_script "$1" --installed "$2"
 	return
 
 	[ -s $epm_vardir/installed-app ] || return 1
 	grep -q -- "^$1\$" $epm_vardir/installed-app
 }
 
-__get_app_version()
-{
-	local script="$psdir/$1.sh"
-	[ -x "$script" ] || return
-	$script --installed-version
-	return
-}
 
 __list_all_app()
 {
@@ -3802,19 +3807,10 @@ __list_installed_app()
     cat $epm_vardir/installed-app 2>/dev/null
 }
 
-__get_app_package()
-{
-    local script="$psdir/$1.sh"
-    [ -x "$script" ] || return
-    $script --package 2>/dev/null
-}
-
 
 __get_app_description()
 {
-    local script="$psdir/$1.sh"
-    [ -x "$script" ] || return
-    $script --description 2>/dev/null
+    __run_script "$1" --description 2>/dev/null
 }
 
 __check_play_script()
@@ -3963,23 +3959,22 @@ fi
 
 if [ "$1" = "--installed" ] || [ "$1" = "installed" ]  ; then
     shift
-    __check_installed_app "$1"
+    __check_installed_app "$1" "$2"
     #[ -n "$quiet" ] && exit
     exit
 fi
 
-if [ "$1" = "--installed-version" ] || [ "$1" = "installed-version" ]  ; then
-    shift
-    __get_app_version "$1"
-    #[ -n "$quiet" ] && exit
-    exit
-fi
+case "$1" in
+    "--installed-version"|"--package-name"|"--product-alternatives")
+        __run_script "$2" "$1" "$3"
+        exit
+        ;;
+    "--help"|"help")
+        __run_script "$2" "$1" "$3"
+        exit
+        ;;
+esac
 
-if [ "$1" = "--package-name" ] || [ "$1" = "package-name" ]  ; then
-    shift
-    __get_app_package "$1"
-    exit
-fi
 
 if [ "$1" = "--list" ] || [ "$1" = "--list-installed" ] || [ "$1" = "list" ] || [ "$1" = "list-installed" ]  ; then
     __epm_play_list_installed
@@ -4075,18 +4070,110 @@ __epm_play_run "$prescription" --run "$@" || fatal "There was some error during 
 # File bin/epm-print:
 
 
-query_package_field()
+rpm_query_package_format_field()
 {
-	local FORMAT="%{$1}\n"
+	local FORMAT="$1\n"
 	shift
 	local INSTALLED=""
 	# if a file, ad -p for get from rpm base
-	if [ -f "$1" ] && [ "$(get_package_type "$1")" = "rpm" ] ; then
+	if [ -f "$1" ] ; then
 		INSTALLED="-p"
 	fi
 	a= rpmquery $INSTALLED --queryformat "$FORMAT" "$@"
 }
 
+rpm_query_package_field()
+{
+	local FORMAT="%{$1}"
+	shift
+	rpm_query_package_format_field "$FORMAT" "$@"
+}
+
+dpkg_query_package_format_field()
+{
+        local field="$1"
+        shift
+        if [ -f "$1" ] ; then
+            a= dpkg-deb --show --showformat="$field\n" "$@"
+        else
+            #a= dpkg -s "$1" | grep "^$field: " | sed -e "s|^$field: ||"
+            a= dpkg-query -W --showformat="$field\n" -- "$@"
+        fi
+}
+
+dpkg_query_package_field()
+{
+        local field="$1"
+        shift
+        #if [ -f "$1" ] ; then
+        #    a= dpkg -I "$@" | grep "^.*$field: " | sed -e "s|^.*$field: ||"
+        #else
+            dpkg_query_package_format_field "\${$field}" "$@"
+        #fi
+}
+
+query_package_field()
+{
+    local field="$1"
+    shift
+    case $PMTYPE in
+        *-dpkg)
+            dpkg_query_package_field "$field" "$@"
+            ;;
+        *-rpm)
+            rpm_query_package_field "$field" "$@"
+            ;;
+    esac
+}
+
+
+print_pkg_version()
+{
+    case $PMTYPE in
+        *-dpkg)
+            dpkg_query_package_field "Version" "$@" | sed -e "s|-.*||" -e "s|.*:||"
+            ;;
+        *-rpm)
+            rpm_query_package_field "version" "$@"
+            ;;
+    esac
+}
+
+print_pkg_release()
+{
+    case $PMTYPE in
+        *-dpkg)
+            dpkg_query_package_field "Version" "$@" | sed -e "s|.*-||"
+            ;;
+        *-rpm)
+            rpm_query_package_field "release" "$@"
+            ;;
+    esac
+}
+
+print_pkg_version_release()
+{
+    case $PMTYPE in
+        *-dpkg)
+            dpkg_query_package_field "Version" "$@" | sed -e "s|.*:||"
+            ;;
+        *-rpm)
+            rpm_query_package_format-field "%{version}-%{release}" "$@"
+            ;;
+    esac
+}
+
+print_pkg_name()
+{
+    case $PMTYPE in
+        *-dpkg)
+            dpkg_query_package_field "Package" "$@"
+            ;;
+        *-rpm)
+            rpm_query_package_field "name" "$@"
+            ;;
+    esac
+}
 
 print_binpkgfilelist()
 {
@@ -4145,7 +4232,7 @@ print_srcpkgname()
 {
 
     if [ -n "$FNFLAG" ] ; then
-        query_package_field sourcerpm "$@"
+        rpm_query_package_field "sourcerpm" "$@"
         return
     fi
 
@@ -4166,7 +4253,7 @@ print_srcpkgname()
     esac
 
     # FIXME: only for installed rpm packages
-    query_package_field sourcerpm "$@"
+    rpm_query_package_field "sourcerpm" "$@"
 }
 
 compare_version()
@@ -4201,6 +4288,7 @@ epm_print()
     local PKFLAG=
     [ "$1" = "from" ] && shift
     [ "$1" = "for" ] && shift
+    [ "$1" = "of" ] && shift
     [ "$1" = "in" ] && shift
     if [ "$1" = "filename" ] ; then
         FNFLAG="$1"
@@ -4239,7 +4327,7 @@ EOF
             if [ -n "$FNFLAG" ] ; then
                 print_name "$(print_pkgname "$@")"
             elif [ -n "$PKFLAG" ] ; then
-                query_package_field "name" "$@"
+                print_pkg_name "$@"
             else
                 print_name "$@"
             fi
@@ -4249,7 +4337,7 @@ EOF
             if [ -n "$FNFLAG" ] ; then
                 print_version "$(print_pkgname "$@")"
             elif [ -n "$PKFLAG" ] ; then
-                query_package_field "version" "$@"
+                print_pkg_version "$@"
             else
                 print_version "$@"
             fi
@@ -4259,7 +4347,7 @@ EOF
             if [ -n "$FNFLAG" ] ; then
                 print_release "$(print_pkgname "$@")"
             elif [ -n "$PKFLAG" ] ; then
-                query_package_field "release" "$@"
+                print_pkg_release "$@"
             else
                 print_release "$@"
             fi
@@ -4269,7 +4357,7 @@ EOF
             if [ -n "$FNFLAG" ] ; then
                 print_version_release "$(print_pkgname "$@")"
             elif [ -n "$PKFLAG" ] ; then
-                echo "$(query_package_field "version" "$@")-$(query_package_field "release" "$@")"
+                print_pkg_version_release "$@"
             else
                 print_version_release "$@"
             fi
@@ -4279,6 +4367,7 @@ EOF
             local FIELD="$1"
             shift
             [ "$1" = "for" ] && shift
+            [ "$1" = "package" ] && shift
             query_package_field "$FIELD" "$@"
             ;;
         "pkgname")
@@ -4416,14 +4505,14 @@ case $PMTYPE in
 	apt-dpkg)
 		# FIXME: need fix for a few names case
 		if is_installed $pkg_names ; then
-			info "Please inform the author how to get provides from dpkg"
-		fi
-		#	CMD="rpm -q --provides"
-		#else
+			showcmd dpkg -s $pkg_names
+			a='' dpkg -s $pkg_names | grep "^Provides:" | sed "s|^Provides:||g"
+			return
+		else
 			EXTRA_SHOWDOCMD=' | grep "Provides:"'
 			docmd apt-cache show $pkg_names | grep "Provides:" | sed -e 's|, |\n|g' | grep -v "^Provides:"
 			return
-		#fi
+		fi
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -6326,11 +6415,12 @@ __fix_spec()
             $spec
     done
 
+    # commented out: conflicts with already installed package
     # drop %dir for existed system dirs
-    for i in $(grep '^%dir "' $spec | sed -e 's|^%dir  *"\(.*\)".*|\1|' ) ; do #"
-        echo "$i" | grep -q '^/opt/' && continue
-        [ -d "$i" ] && [ -n "$verbose" ] && echo "drop dir $i from packing, it exists in the system"
-    done
+    #for i in $(grep '^%dir "' $spec | sed -e 's|^%dir  *"\(.*\)".*|\1|' ) ; do #"
+    #    echo "$i" | grep -q '^/opt/' && continue
+    #    [ -d "$i" ] && [ -n "$verbose" ] && echo "drop dir $i from packing, it exists in the system"
+    #done
 
     # replace dir "/path/dir" -> %dir /path/dir
     grep '^"/' $spec | sed -e 's|^"\(/.*\)"$|\1|' | while read i ; do
@@ -6469,7 +6559,7 @@ __epm_repack_to_rpm()
                     newalpkg=$(basename $alpkg .$pkgtype).tar
                     assure_exists erc || fatal
                     a= erc repack $alpkg $newalpkg || fatal
-                    rm -fv $alpkg
+                    rm -f $verbose $alpkg
                     alpkg=$newalpkg
                 fi
             fi
@@ -8609,9 +8699,11 @@ cat <<EOF
 EOF
             ;;
         "eget")
+            showcmd eget "$@"
             eget "$@"
             ;;
         "estrlist")
+            showcmd estrlist "$@"
             estrlist "$@"
             ;;
         *)
@@ -10810,7 +10902,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.19.3  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.19.4  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10820,7 +10912,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.19.3
+EPMVERSION=3.19.4
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
