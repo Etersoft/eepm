@@ -1293,7 +1293,7 @@ internal_distr_info()
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
 
-PROGVERSION="20220323"
+PROGVERSION="20220713"
 
 # TODO: check /etc/system-release
 
@@ -1389,6 +1389,8 @@ case $DISTRIB_ID in
 		;;
 	ROSA)
 		CMD="dnf-rpm"
+		hascommand dnf || CMD="yum-rpm"
+		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "ROSA/7" ] && CMD="yum-rpm"
 		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "ROSA/2020" ] && CMD="urpm-rpm"
 		;;
 	FreeBSD|NetBSD|OpenBSD|Solaris)
@@ -1447,10 +1449,11 @@ case $DISTRIB_ID in
 	*)
 		# try detect firstly
 		if hascommand "rpm" ; then
-			hascommand "urpmi" && echo "urpmi-rpm" && return
 			hascommand "zypper" && echo "zypper-rpm" && return
 			hascommand "apt-get" && echo "apt-rpm" && return
 			hascommand "dnf" && echo "dnf-rpm" && return
+			hascommand "yum" && echo "yum-rpm" && return
+			hascommand "urpmi" && echo "urpmi-rpm" && return
 		fi
 		if hascommand "dpkg" ; then
 			hascommand "apt" && echo "apt-dpkg" && return
@@ -2256,7 +2259,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.19.2  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.19.3  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

@@ -3753,6 +3753,14 @@ __check_installed_app()
 	grep -q -- "^$1\$" $epm_vardir/installed-app
 }
 
+__get_app_version()
+{
+	local script="$psdir/$1.sh"
+	[ -x "$script" ] || return
+	$script --installed-version
+	return
+}
+
 __list_all_app()
 {
     for i in $psdir/*.sh ; do
@@ -3957,6 +3965,19 @@ if [ "$1" = "--installed" ] || [ "$1" = "installed" ]  ; then
     shift
     __check_installed_app "$1"
     #[ -n "$quiet" ] && exit
+    exit
+fi
+
+if [ "$1" = "--installed-version" ] || [ "$1" = "installed-version" ]  ; then
+    shift
+    __get_app_version "$1"
+    #[ -n "$quiet" ] && exit
+    exit
+fi
+
+if [ "$1" = "--package-name" ] || [ "$1" = "package-name" ]  ; then
+    shift
+    __get_app_package "$1"
     exit
 fi
 
@@ -6953,10 +6974,10 @@ case $PMTYPE in
 		print_apt_sources_list
 		;;
 	yum-rpm)
-		docmd yum repolist -v
+		docmd yum repolist $verbose
 		;;
 	dnf-rpm)
-		docmd dnf repolist -v
+		docmd dnf repolist $verbose
 		;;
 	urpm-rpm)
 		docmd urpmq --list-url
@@ -8966,7 +8987,7 @@ internal_distr_info()
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
 
-PROGVERSION="20220323"
+PROGVERSION="20220713"
 
 # TODO: check /etc/system-release
 
@@ -9062,6 +9083,8 @@ case $DISTRIB_ID in
 		;;
 	ROSA)
 		CMD="dnf-rpm"
+		hascommand dnf || CMD="yum-rpm"
+		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "ROSA/7" ] && CMD="yum-rpm"
 		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "ROSA/2020" ] && CMD="urpm-rpm"
 		;;
 	FreeBSD|NetBSD|OpenBSD|Solaris)
@@ -9120,10 +9143,11 @@ case $DISTRIB_ID in
 	*)
 		# try detect firstly
 		if hascommand "rpm" ; then
-			hascommand "urpmi" && echo "urpmi-rpm" && return
 			hascommand "zypper" && echo "zypper-rpm" && return
 			hascommand "apt-get" && echo "apt-rpm" && return
 			hascommand "dnf" && echo "dnf-rpm" && return
+			hascommand "yum" && echo "yum-rpm" && return
+			hascommand "urpmi" && echo "urpmi-rpm" && return
 		fi
 		if hascommand "dpkg" ; then
 			hascommand "apt" && echo "apt-dpkg" && return
@@ -10786,7 +10810,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.19.2  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.19.3  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10796,7 +10820,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.19.2
+EPMVERSION=3.19.3
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
