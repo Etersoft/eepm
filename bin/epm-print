@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2015, 2016, 2018, 2020  Etersoft
-# Copyright (C) 2008, 2015, 2016, 2018, 2020  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2015, 2016, 2018, 2020, 2022  Etersoft
+# Copyright (C) 2008, 2015, 2016, 2018, 2020, 2022  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -20,18 +20,110 @@
 
 # Query variables from rpm package
 # TODO: rpm only
-query_package_field()
+rpm_query_package_format_field()
 {
-	local FORMAT="%{$1}\n"
+	local FORMAT="$1\n"
 	shift
 	local INSTALLED=""
 	# if a file, ad -p for get from rpm base
-	if [ -f "$1" ] && [ "$(get_package_type "$1")" = "rpm" ] ; then
+	if [ -f "$1" ] ; then
 		INSTALLED="-p"
 	fi
 	a= rpmquery $INSTALLED --queryformat "$FORMAT" "$@"
 }
 
+rpm_query_package_field()
+{
+	local FORMAT="%{$1}"
+	shift
+	rpm_query_package_format_field "$FORMAT" "$@"
+}
+
+dpkg_query_package_format_field()
+{
+        local field="$1"
+        shift
+        if [ -f "$1" ] ; then
+            a= dpkg-deb --show --showformat="$field\n" "$@"
+        else
+            #a= dpkg -s "$1" | grep "^$field: " | sed -e "s|^$field: ||"
+            a= dpkg-query -W --showformat="$field\n" -- "$@"
+        fi
+}
+
+dpkg_query_package_field()
+{
+        local field="$1"
+        shift
+        #if [ -f "$1" ] ; then
+        #    a= dpkg -I "$@" | grep "^.*$field: " | sed -e "s|^.*$field: ||"
+        #else
+            dpkg_query_package_format_field "\${$field}" "$@"
+        #fi
+}
+
+query_package_field()
+{
+    local field="$1"
+    shift
+    case $PMTYPE in
+        *-dpkg)
+            dpkg_query_package_field "$field" "$@"
+            ;;
+        *-rpm)
+            rpm_query_package_field "$field" "$@"
+            ;;
+    esac
+}
+
+
+print_pkg_version()
+{
+    case $PMTYPE in
+        *-dpkg)
+            dpkg_query_package_field "Version" "$@" | sed -e "s|-.*||" -e "s|.*:||"
+            ;;
+        *-rpm)
+            rpm_query_package_field "version" "$@"
+            ;;
+    esac
+}
+
+print_pkg_release()
+{
+    case $PMTYPE in
+        *-dpkg)
+            dpkg_query_package_field "Version" "$@" | sed -e "s|.*-||"
+            ;;
+        *-rpm)
+            rpm_query_package_field "release" "$@"
+            ;;
+    esac
+}
+
+print_pkg_version_release()
+{
+    case $PMTYPE in
+        *-dpkg)
+            dpkg_query_package_field "Version" "$@" | sed -e "s|.*:||"
+            ;;
+        *-rpm)
+            rpm_query_package_format-field "%{version}-%{release}" "$@"
+            ;;
+    esac
+}
+
+print_pkg_name()
+{
+    case $PMTYPE in
+        *-dpkg)
+            dpkg_query_package_field "Package" "$@"
+            ;;
+        *-rpm)
+            rpm_query_package_field "name" "$@"
+            ;;
+    esac
+}
 
 # build binary package list (1st - repo dir, 2st - pkgname)
 # algorithm: list all files in PKGDIR, print packages with our source pkg name
@@ -98,7 +190,7 @@ print_srcpkgname()
 {
 
     if [ -n "$FNFLAG" ] ; then
-        query_package_field sourcerpm "$@"
+        rpm_query_package_field "sourcerpm" "$@"
         return
     fi
 
@@ -119,7 +211,7 @@ print_srcpkgname()
     esac
 
     # FIXME: only for installed rpm packages
-    query_package_field sourcerpm "$@"
+    rpm_query_package_field "sourcerpm" "$@"
 }
 
 compare_version()
@@ -156,6 +248,7 @@ epm_print()
     local PKFLAG=
     [ "$1" = "from" ] && shift
     [ "$1" = "for" ] && shift
+    [ "$1" = "of" ] && shift
     [ "$1" = "in" ] && shift
     if [ "$1" = "filename" ] ; then
         FNFLAG="$1"
@@ -194,7 +287,7 @@ EOF
             if [ -n "$FNFLAG" ] ; then
                 print_name "$(print_pkgname "$@")"
             elif [ -n "$PKFLAG" ] ; then
-                query_package_field "name" "$@"
+                print_pkg_name "$@"
             else
                 print_name "$@"
             fi
@@ -204,7 +297,7 @@ EOF
             if [ -n "$FNFLAG" ] ; then
                 print_version "$(print_pkgname "$@")"
             elif [ -n "$PKFLAG" ] ; then
-                query_package_field "version" "$@"
+                print_pkg_version "$@"
             else
                 print_version "$@"
             fi
@@ -214,7 +307,7 @@ EOF
             if [ -n "$FNFLAG" ] ; then
                 print_release "$(print_pkgname "$@")"
             elif [ -n "$PKFLAG" ] ; then
-                query_package_field "release" "$@"
+                print_pkg_release "$@"
             else
                 print_release "$@"
             fi
@@ -224,7 +317,7 @@ EOF
             if [ -n "$FNFLAG" ] ; then
                 print_version_release "$(print_pkgname "$@")"
             elif [ -n "$PKFLAG" ] ; then
-                echo "$(query_package_field "version" "$@")-$(query_package_field "release" "$@")"
+                print_pkg_version_release "$@"
             else
                 print_version_release "$@"
             fi
@@ -234,6 +327,7 @@ EOF
             local FIELD="$1"
             shift
             [ "$1" = "for" ] && shift
+            [ "$1" = "package" ] && shift
             query_package_field "$FIELD" "$@"
             ;;
         "pkgname")
