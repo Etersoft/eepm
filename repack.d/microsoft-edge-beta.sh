@@ -4,8 +4,8 @@ BUILDROOT="$1"
 SPEC="$2"
 
 PRODUCT=microsoft-edge
-PRODUCTCUR=microsoft-edge-dev
-PRODUCTDIR=/opt/microsoft/msedge-dev
+PRODUCTCUR=microsoft-edge-beta
+PRODUCTDIR=/opt/microsoft/msedge-beta
 
 
 . $(dirname $0)/common-chromium-browser.sh
@@ -23,7 +23,7 @@ use_system_xdg
 install_deps
 
 #if ! grep -q '^"/usr/bin/microsoft-edge"' $SPEC ; then
-#    subst 's|\(.*/usr/bin/microsoft-edge-dev.*\)|"/usr/bin/microsoft-edge"\n\1|' $SPEC
+#    subst 's|\(.*/usr/bin/microsoft-edge-beta.*\)|"/usr/bin/microsoft-edge"\n\1|' $SPEC
 #fi
 
 # fix wrong interpreter
@@ -31,4 +31,3 @@ epm assure patchelf || exit
 for i in $BUILDROOT$PRODUCTDIR/libmip_*.so ; do
     [ "$(a= patchelf --print-interpreter $i)" = "/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2" ] && a= patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 $i
 done
-

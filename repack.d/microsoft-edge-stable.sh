@@ -4,8 +4,8 @@ BUILDROOT="$1"
 SPEC="$2"
 
 PRODUCT=microsoft-edge
-PRODUCTCUR=microsoft-edge-dev
-PRODUCTDIR=/opt/microsoft/msedge-dev
+PRODUCTCUR=microsoft-edge-stable
+PRODUCTDIR=/opt/microsoft/msedge
 
 
 . $(dirname $0)/common-chromium-browser.sh
@@ -23,7 +23,7 @@ use_system_xdg
 install_deps
 
 #if ! grep -q '^"/usr/bin/microsoft-edge"' $SPEC ; then
-#    subst 's|\(.*/usr/bin/microsoft-edge-dev.*\)|"/usr/bin/microsoft-edge"\n\1|' $SPEC
+#    subst 's|\(.*/usr/bin/microsoft-edge-stable.*\)|"/usr/bin/microsoft-edge"\n\1|' $SPEC
 #fi
 
 # fix wrong interpreter
