@@ -16,30 +16,36 @@ fi
 
 
 arch="$($DISTRVENDOR -a)"
-
 pkg="$($DISTRVENDOR -p)"
+
+# parse vendor site
+tmpfile=$(mktemp)
+epm tool eget -q -O- "https://мойассистент.рф/скачать" | grep -A50 "Ассистент для LINUX" >$tmpfile
+
+url_by_order()
+{
+    local order="$1"
+    echo "https://мойассистент.рф$(cat $tmpfile | grep "/Download/" | $order -n1 | sed -e 's|.*href="||' -e 's|".*||')"
+}
+
+version=$(cat $tmpfile | grep -A1 "Версия:" | tail -n1 | sed -e 's|.*<span class="v">||' -e 's| .*||')
+[ -n "$version" ] || fatal "Can't get package version"
 
 case $arch-$pkg in
     x86_64-rpm)
-        URL="https://мойассистент.рф/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C/Download/542"
-        OPKG=assistant-4.8-0.x86_64.rpm
+        URL="$(url_by_order head)"
+        OPKG=assistant-$version-0.x86_64.rpm
         ;;
     x86_64-deb)
-        URL="https://мойассистент.рф/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C/Download/545"
-        OPKG=assistant_4.8-0_amd64.deb
-        ;;
-    aarch64-rpm)
-        URL="https://мойассистент.рф/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C/Download/551"
-        OPKG=assistant-4.8-0.x86_64.rpm
-        ;;
-    aarch64-deb)
-        URL="https://мойассистент.рф/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C/Download/552"
-        OPKG=assistant_4.8-0_amd64.deb
+        URL="$(url_by_order tail)"
+        OPKG=assistant_$version-0_amd64.deb
         ;;
     *)
         fatal "$($DISTRVENDOR -e) is not supported (arch $arch, package type is $pkg)"
         ;;
 esac
+
+rm $tmpfile
 
 # after repack on ALT:
 #  assistant: Требует: /lib/init/vars.sh но пакет не может быть установлен
