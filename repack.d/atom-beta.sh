@@ -22,7 +22,8 @@ subst '1i%add_python3_path /usr/share/atom-beta' $SPEC
 
 # replace embedded git with standalone (due Can't locate Git/LoadCPAN/Error.pm)
 EMBDIR=/usr/share/atom-beta/resources/app.asar.unpacked/node_modules/dugite/git
-rm -rv $BUILDROOT$EMBDIR/
+echo "Removing $BUILDROOT$EMBDIR/ ..."
+rm -r $BUILDROOT$EMBDIR/
 mkdir -p $BUILDROOT$EMBDIR/bin/
 ln -s /usr/bin/git $BUILDROOT$EMBDIR/bin/git
 subst "s|.*$EMBDIR/libexec/.*||" $SPEC
@@ -31,7 +32,8 @@ subst "s|.*$EMBDIR/ssl/.*||" $SPEC
 
 # replace embedded npm with standalone
 EMBDIR=/usr/share/atom-beta/resources/app/apm/node_modules/npm
-rm -rv $BUILDROOT$EMBDIR/
+echo "Removing $BUILDROOT$EMBDIR/ ..."
+rm -r $BUILDROOT$EMBDIR/
 ln -s /usr/lib/node_modules/npm $BUILDROOT$EMBDIR
 subst "s|.*$EMBDIR/..*\"||" $SPEC
 
