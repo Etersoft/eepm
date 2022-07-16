@@ -1,6 +1,7 @@
 #!/bin/sh
 
 PKGNAME=zoom
+SUPPORTEDARCHES="x86_64 x86"
 DESCRIPTION="Zoom client from the official site"
 
 . $(dirname $0)/common.sh

@@ -3,6 +3,7 @@
 DESCRIPTION="Brave browser from the official site"
 
 PKGNAME=brave-browser
+SUPPORTEDARCHES="x86_64"
 if [ "$2" = "beta" ] || epm installed $PKGNAME-beta ; then
     PKGNAME=$PKGNAME-beta
 fi
@@ -13,7 +14,6 @@ fi
 . $(dirname $0)/common.sh
 
 
-[ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
 arch=x86_64
 pkgtype=rpm

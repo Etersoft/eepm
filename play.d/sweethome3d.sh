@@ -1,6 +1,7 @@
 #!/bin/sh
 
 PKGNAME=SweetHome3D
+SUPPORTEDARCHES="x86_64 x86"
 DESCRIPTION=''
 
 . $(dirname $0)/common.sh

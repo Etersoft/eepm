@@ -11,11 +11,9 @@ fi
 
 BASEPKGNAME=vivaldi-$BRANCH
 PKGNAME=vivaldi-$BRANCH-codecs-ffmpeg-extra
-
+SUPPORTEDARCHES="x86_64"
 
 . $(dirname $0)/common.sh
-
-[ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
 VIVALDI_VERSION=$(epm print version for package vivaldi-stable) || fatal
 

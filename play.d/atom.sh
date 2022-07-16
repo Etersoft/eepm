@@ -1,12 +1,11 @@
 #!/bin/sh
 
 PKGNAME=atom-beta
+SUPPORTEDARCHES="x86_64"
 DESCRIPTION="The hackable text editor from the official site"
 
 
 . $(dirname $0)/common.sh
-
-[ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
 #arch=$($DISTRVENDOR --distro-arch)
 #pkgtype=$($DISTRVENDOR -p)

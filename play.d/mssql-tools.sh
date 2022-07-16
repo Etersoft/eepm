@@ -1,6 +1,7 @@
 #!/bin/sh
 
 PKGNAME=mssql-tools
+SUPPORTEDARCHES="x86_64"
 DESCRIPTION="MS SQL Server sqlcmd and bcp from the official site"
 
 if [ "$1" = "--remove" ] ; then
@@ -9,8 +10,6 @@ if [ "$1" = "--remove" ] ; then
 fi
 
 . $(dirname $0)/common.sh
-
-[ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
 case "$($DISTRVENDOR -d)" in
   "AstraLinux")

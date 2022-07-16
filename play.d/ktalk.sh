@@ -1,12 +1,10 @@
 #!/bin/sh
 
 PKGNAME=ktalk2022
+SUPPORTEDARCHES="x86_64"
 DESCRIPTION="Контур.Толк (ktalk) from the official site"
 
 . $(dirname $0)/common.sh
-
-
-[ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
 URL="https://app.ktalk.ru/system/dist/download/linux"
 

@@ -1,12 +1,11 @@
 #!/bin/sh
 
 PKGNAME=sputnik-browser-stable
+SUPPORTEDARCHES="x86_64"
 DESCRIPTION="Sputnik browser from the official site"
 
 . $(dirname $0)/common.sh
 
-
-[ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported by vendor" && exit 1
 
 url_by_id_content()
 {

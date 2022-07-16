@@ -1,13 +1,12 @@
 #!/bin/sh
 
 PKGNAME=r7-office
+SUPPORTEDARCHES="x86_64"
 DESCRIPTION="R7 Office for Linux from the official site"
 
 
 . $(dirname $0)/common.sh
 
-
-[ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
 #arch=$($DISTRVENDOR --distro-arch)
 arch=amd64

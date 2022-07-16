@@ -1,6 +1,7 @@
 #!/bin/sh
 
 PKGNAME=geogebra-classic
+SUPPORTEDARCHES="x86_64 x86"
 DESCRIPTION="Geogebra 6 from the official site"
 
 . $(dirname $0)/common.sh

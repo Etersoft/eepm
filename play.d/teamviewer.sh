@@ -1,6 +1,7 @@
 #!/bin/sh
 
 PKGNAME="teamviewer"
+SUPPORTEDARCHES="x86_64 armhf"
 DESCRIPTION="Teamviewer from the official site"
 
 . $(dirname $0)/common.sh

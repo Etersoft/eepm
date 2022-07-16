@@ -1,6 +1,7 @@
 #!/bin/sh
 
 PKGNAME=sferum
+SUPPORTEDARCHES="x86_64 x86"
 DESCRIPTION="Sferum for Linux from the official site"
 
 . $(dirname $0)/common.sh

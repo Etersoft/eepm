@@ -11,10 +11,9 @@ if [ "$2" = "beta" ] || epm installed yandex-browser-beta ; then
 fi
 
 PKGNAME=yandex-browser-$BRANCH
+SUPPORTEDARCHES="x86_64"
 
 . $(dirname $0)/common.sh
-
-[ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
 # See also https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=yandex-browser-beta
 

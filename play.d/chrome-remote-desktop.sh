@@ -1,12 +1,11 @@
 #!/bin/sh
 
 PKGNAME=chrome-remote-desktop
+SUPPORTEDARCHES="x86_64"
 DESCRIPTION='' # echo " Remote desktop support for google-chrome & chromium" && exit
 
 . $(dirname $0)/common.sh
 
-
-[ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
 echo "It is not finished yet. Just skipping."
 exit 0

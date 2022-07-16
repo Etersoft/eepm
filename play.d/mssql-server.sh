@@ -1,6 +1,7 @@
 #!/bin/sh
 
 PKGNAME=mssql-server
+SUPPORTEDARCHES="x86_64"
 DESCRIPTION="MS SQL Server 2019 from the official site"
 
 DEBREPO="deb http://ftp.ru.debian.org/debian/ stretch main"
@@ -14,8 +15,6 @@ fi
 
 . $(dirname $0)/common.sh
 
-
-[ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
 serv mssql-server stop
 

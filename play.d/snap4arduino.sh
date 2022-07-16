@@ -1,6 +1,7 @@
 #!/bin/sh
 
 PKGNAME=snap4arduino
+SUPPORTEDARCHES="x86_64 x86"
 DESCRIPTION="Snap4Arduino binds Snap! and Arduino together"
 
 if [ "$1" = "--remove" ] ; then

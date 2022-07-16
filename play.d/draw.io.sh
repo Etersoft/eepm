@@ -1,13 +1,11 @@
 #!/bin/sh
 
 PKGNAME=draw.io
+SUPPORTEDARCHES="x86_64"
 DESCRIPTION="diagrams.net desktop"
 
 
 . $(dirname $0)/common.sh
-
-[ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
-
 
 arch=amd64
 pkgtype=deb

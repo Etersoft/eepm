@@ -1,6 +1,7 @@
 #!/bin/sh
 
 PKGNAME=anydesk
+SUPPORTEDARCHES="x86_64 x86"
 DESCRIPTION="AnyDesk from the official site"
 
 . $(dirname $0)/common.sh

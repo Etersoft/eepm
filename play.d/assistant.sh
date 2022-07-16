@@ -1,6 +1,7 @@
 #!/bin/sh
 
 PKGNAME=assistant
+SUPPORTEDARCHES="x86_64"
 DESCRIPTION="Assistant (Ассистент) from the official site"
 
 # Assistant reclaim their rpm package supports ALT

@@ -52,3 +52,16 @@ case "$1" in
         ;;
 esac
 
+
+check_supported_arch()
+{
+    # skip checking if no arches
+    [ -n "$1" ] || return 0
+    for i in $* ; do
+        [ "$(epm print info -a)" = "$i" ] && return 0
+    done
+
+    return 1
+}
+
+check_supported_arch $SUPPORTEDARCHES || fatal "Only $SUPPORTEDARCHES is supported"

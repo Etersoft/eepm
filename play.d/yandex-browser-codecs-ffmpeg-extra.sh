@@ -11,11 +11,9 @@ fi
 
 BASEPKGNAME=yandex-browser-$BRANCH
 PKGNAME=yandex-browser-$BRANCH-codecs-ffmpeg-extra
-
+SUPPORTEDARCHES="x86_64"
 
 . $(dirname $0)/common.sh
-
-[ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
 # used in update-ffmpeg
 epm install --skip-installed jq tar binutils || exit

@@ -1,6 +1,7 @@
 #!/bin/sh
 
 PKGNAME=sublime-text
+SUPPORTEDARCHES="x86_64 aarch64"
 DESCRIPTION='Sublime Text 4 from the official site'
 
 . $(dirname $0)/common.sh

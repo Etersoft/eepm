@@ -7,6 +7,7 @@ if [ "$2" = "snapshot" ] || epm installed vivaldi-snapshot ; then
     BRANCH=snapshot
 fi
 PKGNAME=vivaldi-$BRANCH
+SUPPORTEDARCHES="x86_64 x86 aarch64 armhf"
 
 . $(dirname $0)/common.sh
 

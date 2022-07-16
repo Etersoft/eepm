@@ -1,6 +1,7 @@
 #!/bin/sh
 
 PKGNAME=tamtam-app
+SUPPORTEDARCHES="x86_64 x86"
 DESCRIPTION="TamTam messenger from the official site"
 
 . $(dirname $0)/common.sh
