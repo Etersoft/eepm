@@ -261,7 +261,7 @@ __epm_repack_to_rpm()
                     newalpkg=$(basename $alpkg .$pkgtype).tar
                     assure_exists erc || fatal
                     a= erc repack $alpkg $newalpkg || fatal
-                    rm -fv $alpkg
+                    rm -f $verbose $alpkg
                     alpkg=$newalpkg
                 fi
             fi
