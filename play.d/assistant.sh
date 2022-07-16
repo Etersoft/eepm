@@ -28,17 +28,12 @@ url_by_order()
     echo "https://мойассистент.рф$(cat $tmpfile | grep "/Download/" | $order -n1 | sed -e 's|.*href="||' -e 's|".*||')"
 }
 
-version=$(cat $tmpfile | grep -A1 "Версия:" | tail -n1 | sed -e 's|.*<span class="v">||' -e 's| .*||')
-[ -n "$version" ] || fatal "Can't get package version"
-
 case $arch-$pkg in
     x86_64-rpm)
         URL="$(url_by_order head)"
-        OPKG=assistant-$version-0.x86_64.rpm
         ;;
     x86_64-deb)
         URL="$(url_by_order tail)"
-        OPKG=assistant_$version-0_amd64.deb
         ;;
     *)
         fatal "$($DISTRVENDOR -e) is not supported (arch $arch, package type is $pkg)"
