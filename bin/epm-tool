@@ -36,9 +36,11 @@ cat <<EOF
 EOF
             ;;
         "eget")
+            showcmd eget "$@"
             eget "$@"
             ;;
         "estrlist")
+            showcmd estrlist "$@"
             estrlist "$@"
             ;;
         *)
