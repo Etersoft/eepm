@@ -29,4 +29,7 @@ epm_full_upgrade()
 
 	[ -n "$quiet" ] || echo
 	docmd epm play --update all || return
+
+	[ -n "$quiet" ] || echo
+	docmd epm clean
 }
