@@ -4,7 +4,7 @@ BRANCH=stable
 PRODUCTDIR=/opt/yandex/browser
 DESCRIPTION=''
 
-if [ "$2" = "beta" ] ; then
+if [ "$2" = "beta" ] || epm installed yandex-browser-beta-codecs-ffmpeg-extra ; then
     BRANCH=beta
     PRODUCTDIR=/opt/yandex/browser-$BRANCH
 fi

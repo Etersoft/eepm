@@ -87,7 +87,9 @@ __list_app_packages_table()
 {
     local name
     for name in $(__list_all_app) ; do
-        echo "$(__get_app_package $name) $name"
+        local pkg="$(__get_app_package $name)"
+        [ -n "$pkg" ] || continue
+        echo "$pkg $name"
     done
 }
 
@@ -153,7 +155,7 @@ __epm_play_list_installed()
     [ -n "$quiet" ] || echo "Installed applications:"
     for i in $(__list_installed_app) ; do
         local desc="$(__get_app_description $i)"
-        [ -n "$desc" ] || continue
+        #[ -n "$desc" ] || continue
         [ -n "$quiet" ] || echo -n "  "
         printf "%-20s - %s\n" "$i" "$desc"
     done

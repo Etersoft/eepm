@@ -4,7 +4,7 @@ BRANCH=stable
 PRODUCTDIR=/opt/vivaldi
 DESCRIPTION=''
 
-if [ "$2" = "snapshot" ] ; then
+if [ "$2" = "snapshot" ] || epm installed vivaldi-snapshot-codecs-ffmpeg-extra ; then
     BRANCH=snapshot
     #PRODUCTDIR=$PRODUCTDIR-$BRANCH
 fi
