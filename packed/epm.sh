@@ -2629,6 +2629,9 @@ epm_full_upgrade()
 
 	[ -n "$quiet" ] || echo
 	docmd epm play --update all || return
+
+	[ -n "$quiet" ] || echo
+	docmd epm clean
 }
 
 # File bin/epm-info:
@@ -3788,7 +3791,9 @@ __list_app_packages_table()
 {
     local name
     for name in $(__list_all_app) ; do
-        echo "$(__get_app_package $name) $name"
+        local pkg="$(__get_app_package $name)"
+        [ -n "$pkg" ] || continue
+        echo "$pkg $name"
     done
 }
 
@@ -3854,7 +3859,7 @@ __epm_play_list_installed()
     [ -n "$quiet" ] || echo "Installed applications:"
     for i in $(__list_installed_app) ; do
         local desc="$(__get_app_description $i)"
-        [ -n "$desc" ] || continue
+        #[ -n "$desc" ] || continue
         [ -n "$quiet" ] || echo -n "  "
         printf "%-20s - %s\n" "$i" "$desc"
     done
@@ -4158,7 +4163,7 @@ print_pkg_version_release()
             dpkg_query_package_field "Version" "$@" | sed -e "s|.*:||"
             ;;
         *-rpm)
-            rpm_query_package_format-field "%{version}-%{release}" "$@"
+            rpm_query_package_format_field "%{version}-%{release}" "$@"
             ;;
     esac
 }
@@ -5123,6 +5128,8 @@ get_prev_release()
 		echo "c8.1" ;;
 	"c9")
 		echo "c8.2" ;;
+	"9")
+		echo "10" ;;
 	*)
 		echo "$FROM" ;;
 	esac
@@ -5541,7 +5548,7 @@ __switch_alt_to_distro()
 			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			;;
-		"p8"|"p8 p9"|"t8 p9"|"c8 c9"|"c8 p9"|"c8.1 p9"|"c8.2 p9"|"p9 p9")
+		"p8"|"p8 p9"|"t8 p9"|"c8 c9"|"c8 p9"|"c8.1 p9"|"c8.2 p9"|"p9 p9"|"p9 c9")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			info "Workaround for https://bugzilla.altlinux.org/show_bug.cgi?id=35492 ..."
@@ -5606,7 +5613,7 @@ __switch_alt_to_distro()
 			__check_system "$TO"
 			docmd epm upgrade || fatal
 			;;
-		"Sisyphus p8"|"Sisyphus p9"|"Sisyphus p10"|"Sisyphus c8"|"Sisyphus c8.1")
+		"Sisyphus p8"|"Sisyphus p9"|"Sisyphus p10"|"Sisyphus c8"|"Sisyphus c8.1"|"Sisyphus c9")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install "$(get_fix_release_pkg "$FROM")"
 			__switch_repo_to $TO
@@ -9079,7 +9086,7 @@ internal_distr_info()
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
 
-PROGVERSION="20220713"
+PROGVERSION="20220718"
 
 # TODO: check /etc/system-release
 
@@ -9313,7 +9320,7 @@ normalize_name()
 			;;
 		*)
 			#echo "${1// /}"
-			echo "$1" | sed -e "s/ //g"
+			firstupper "$1" | sed -e "s/ //g" -e 's|(.*||'
 			;;
 	esac
 }
@@ -9326,7 +9333,7 @@ DISTRIB_ID=""
 DISTRIB_RELEASE=""
 DISTRIB_CODENAME=""
 
-# Next default by /etc/os-release
+# Default detection by /etc/os-release
 # https://www.freedesktop.org/software/systemd/man/os-release.html
 if distro os-release ; then
 	# shellcheck disable=SC1090
@@ -9339,7 +9346,8 @@ if distro os-release ; then
 	#PRETTY_NAME
 	VENDOR_ID="$ID"
 	DISTRIB_FULL_RELEASE=$DISTRIB_RELEASE
-	DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\.[0-9]$//g")
+	DISTRIB_RELEASE=$(echo "$DISTRIB_RELEASE" | sed -e "s/\.[0-9]$//g")
+
 elif distro lsb-release ; then
 	DISTRIB_ID=$(cat $DISTROFILE | get_var DISTRIB_ID)
 	DISTRIB_RELEASE=$(cat $DISTROFILE | get_var DISTRIB_RELEASE)
@@ -9347,10 +9355,56 @@ elif distro lsb-release ; then
 	PRETTY_NAME=$(cat $DISTROFILE | get_var DISTRIB_DESCRIPTION)
 fi
 
-# TODO:
-#if [ -n "$DISTRIB_ID" ] ; then
-#	# don't check obsoleted ways
-#	;
+
+case "$VENDOR_ID" in
+	"alt"|"altlinux")
+		case "$DISTRIB_ID" in
+			"ALTServer"|"ALTSPWorkstation"|"Sisyphus")
+				;;
+			*)
+				DISTRIB_ID="ALTLinux"
+				;;
+		esac
+		;;
+	"astra")
+		DISTRIB_RELEASE="$VERSION_CODENAME"
+		;;
+esac
+
+case "$DISTRIB_ID" in
+	"ALTLinux")
+		echo "$VERSION" | grep -q "c9f.* branch" && DISTRIB_RELEASE="c9"
+		# FIXME: fast hack for fallback: 10 -> p10 for /etc/os-release
+		if echo "$DISTRIB_RELEASE" | grep -q "^[0-9]" && echo "$DISTRIB_RELEASE" | grep -q -v "[0-9][0-9][0-9]"  ; then
+			DISTRIB_RELEASE="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
+		fi
+		;;
+#	"ALTServer")
+#		DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\..*//g")
+#		;;
+	"ALTSPWorkstation")
+		DISTRIB_ID="ALTLinux"
+		case "$DISTRIB_FULL_RELEASE" in
+			8.0|8.1)
+				;;
+			8.*)
+				DISTRIB_RELEASE="c9"
+			;;
+		esac
+#		DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\..*//g")
+		;;
+	"Sisyphus")
+		DISTRIB_ID="ALTLinux"
+		DISTRIB_RELEASE="Sisyphus"
+		;;
+esac
+
+
+[ -n "$DISTRIB_ID" ] && return
+
+
+# check via obsoleted ways
+
 # ALT Linux based
 if distro altlinux-release ; then
 	DISTRIB_ID="ALTLinux"
@@ -9398,29 +9452,9 @@ elif distro gentoo-release ; then
 	DISTRIB_RELEASE=$(basename $MAKEPROFILE)
 	echo $DISTRIB_RELEASE | grep -q "[0-9]" || DISTRIB_RELEASE=$(basename "$(dirname $MAKEPROFILE)") #"
 
-elif [ "$DISTRIB_ID" = "ALTServer" ] ; then
-	DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\..*//g")
-
-elif [ "$DISTRIB_ID" = "ALTSPWorkstation" ] ; then
-	DISTRIB_ID="ALTLinux"
-	case "$DISTRIB_RELEASE" in
-		8.0|8.1)
-			;;
-		8.*)
-			DISTRIB_RELEASE="c9"
-			;;
-	esac
-	DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\..*//g")
-
 elif distro slackware-version ; then
 	DISTRIB_ID="Slackware"
 	DISTRIB_RELEASE="$(grep -Eo '[0-9]+\.[0-9]+' $DISTROFILE)"
-
-elif distro os-release && hascommand apk ; then
-	# shellcheck disable=SC1090
-	. $ROOTDIR/etc/os-release
-	DISTRIB_ID="$(firstupper "$ID")"
-	DISTRIB_RELEASE="$VERSION_ID"
 
 elif distro os-release && hascommand tce-ab ; then
 	# shellcheck disable=SC1090
@@ -9449,75 +9483,11 @@ elif distro openwrt_release ; then
 	. $DISTROFILE
 	DISTRIB_RELEASE=$(cat $ROOTDIR/etc/openwrt_version)
 
-# for Ubuntu use standard LSB info
-elif [ "$DISTRIB_ID" = "Ubuntu" ] && [ -n "$DISTRIB_RELEASE" ]; then
-	# use LSB version
-	true
-
-elif distro astra_version ; then
-	# use OS release
-	DISTRIB_ID="$(echo "$DISTRIB_ID" | sed -e 's|(.*||')"
-	DISTRIB_RELEASE="$VERSION_CODENAME"
-	true
-
 # Debian based
 elif distro debian_version ; then
 	DISTRIB_ID="Debian"
 	DISTRIB_RELEASE=$(cat $DISTROFILE | sed -e "s/\..*//g")
 
-
-# Mandriva based
-elif distro pclinuxos-release ; then
-	DISTRIB_ID="PCLinux"
-	if   has "2007" ; then DISTRIB_RELEASE="2007"
-	elif has "2008" ; then DISTRIB_RELEASE="2008"
-	elif has "2010" ; then DISTRIB_RELEASE="2010"
-	fi
-
-elif distro mandriva-release || distro mandrake-release ; then
-	DISTRIB_ID="Mandriva"
-	if   has 2005 ; then DISTRIB_RELEASE="2005"
-	elif has 2006 ; then DISTRIB_RELEASE="2006"
-	elif has 2007 ; then DISTRIB_RELEASE="2007"
-	elif has 2008 ; then DISTRIB_RELEASE="2008"
-	elif has 2009.0 ; then DISTRIB_RELEASE="2009.0"
-	elif has 2009.1 ; then DISTRIB_RELEASE="2009.1"
-	else
-		# use /etc/lsb-release info by default
-		if has ROSA ; then
-			DISTRIB_ID="ROSA"
-		fi
-	fi
-
-# Fedora based
-
-elif distro MCBC-release ; then
-	DISTRIB_ID="MCBC"
-	if   has 3.0 ; then DISTRIB_RELEASE="3.0"
-	elif has 3.1 ; then DISTRIB_RELEASE="3.1"
-	fi
-
-# TODO: drop in favour of /etc/os-release
-elif distro redhat-release && [ -z "$PRETTY_NAME" ] ; then
-	# FIXME if need
-	# actually in the original RHEL: Red Hat Enterprise Linux .. release N
-	DISTRIB_ID="RHEL"
-	if has CentOS ; then
-		DISTRIB_ID="CentOS"
-	elif has Scientific ; then
-		DISTRIB_ID="Scientific"
-	elif has GosLinux ; then
-		DISTRIB_ID="GosLinux"
-	fi
-	if has Beryllium ; then
-		DISTRIB_ID="Scientific"
-		DISTRIB_RELEASE="4.1"
-	elif has "release 4" ; then DISTRIB_RELEASE="4"
-	elif has "release 5" ; then DISTRIB_RELEASE="5"
-	elif has "release 6" ; then DISTRIB_RELEASE="6"
-	elif has "release 7" ; then DISTRIB_RELEASE="7"
-	elif has "release 8" ; then DISTRIB_RELEASE="8"
-	fi
 
 # SUSE based
 elif distro SuSe-release || distro SuSE-release ; then
@@ -9560,14 +9530,14 @@ elif [ "$(uname -o 2>/dev/null)" = "Cygwin" ] ; then
         DISTRIB_RELEASE="all"
 fi
 
+}
+
+fill_distr_info
 [ -n "$DISTRIB_ID" ] || DISTRIB_ID="Generic"
 
 if [ -z "$PRETTY_NAME" ] ; then
 	PRETTY_NAME="$DISTRIB_ID $DISTRIB_RELEASE"
 fi
-}
-
-fill_distr_info
 
 get_uname()
 {
@@ -10902,7 +10872,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.19.4  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.20.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10912,7 +10882,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.19.4
+EPMVERSION=3.20.0
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
