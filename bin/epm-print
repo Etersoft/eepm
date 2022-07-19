@@ -108,7 +108,7 @@ print_pkg_version_release()
             dpkg_query_package_field "Version" "$@" | sed -e "s|.*:||"
             ;;
         *-rpm)
-            rpm_query_package_format-field "%{version}-%{release}" "$@"
+            rpm_query_package_format_field "%{version}-%{release}" "$@"
             ;;
     esac
 }
