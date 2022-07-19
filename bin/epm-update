@@ -30,7 +30,12 @@ warmup_hibase
 
 case $PMTYPE in
 	apt-rpm)
-		sudocmd apt-get update || return
+		# TODO: hack against cd to cwd in apt-get on ALT
+		cd /
+		sudocmd apt-get update
+		local ret="$?"
+		cd - >/dev/null
+		return $ret
 		#sudocmd apt-get -f install || exit
 		;;
 	apt-dpkg)
