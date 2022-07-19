@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.19.4
+Version: 3.20.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,14 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Tue Jul 19 2022 Vitaly Lipatov <lav@altlinux.ru> 3.20.0-alt1
+- epm play: skip update for hidden packages
+- epm play.d: add rudesktop support
+- epm-full-upgrade: add epm clean after all
+- distr_info: big OS detection rewrite (based on /etc/os-release)
+- epm-release_upgrade: allow upgrade/downgrade to c9
+- epm-print: fix typo with rpm_query_package_format-field
+
 * Sun Jul 17 2022 Vitaly Lipatov <lav@altlinux.ru> 3.19.4-alt1
 - epm play assistant: parse site page to get download link
 - epm play edge: add support for stable, beta and dev install
