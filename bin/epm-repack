@@ -32,7 +32,7 @@ __epm_split_by_pkg_type()
 	for pkg in "$@" ; do
 		[ "$(get_package_type "$pkg")" = "$type" ] || return 1
 		[ -e "$pkg" ] || fatal "Can't read $pkg"
-		split_replaced_pkgs="$split_target_pkgs $(realpath "$pkg")"
+		split_replaced_pkgs="$split_target_pkgs $pkg"
 	done
 
 	[ -n "$split_replaced_pkgs" ]
@@ -42,6 +42,7 @@ __epm_split_by_pkg_type()
 __epm_repack_rpm_to_deb()
 {
 	local pkg
+	local rpmpkgs="$1"
 
 	assure_exists alien
 	assure_exists fakeroot
@@ -50,25 +51,27 @@ __epm_repack_rpm_to_deb()
 	repacked_debs=''
 
 	local TDIR=$(mktemp -d)
-	cd $TDIR || fatal
 
 	for pkg in $rpmpkgs ; do
+		pkg="$(realpath "$pkg")"
+		cd $TDIR || fatal
 		showcmd_store_output fakeroot alien -d -k $scripts "$pkg"
 		local DEBCONVERTED=$(grep "deb generated" $RC_STDOUT | sed -e "s| generated||g")
 		repacked_debs="$repacked_rpms $(realpath $DEBCONVERTED)"
 		to_remove_pkg_files="$to_remove_pkg_files $(realpath $DEBCONVERTED)"
 		clean_store_output
+		cd - >/dev/null
 	done
 
 	# TODO: move it to exit handler
-	if [ -z "$DEBUG" ] ; then
-		# TODO: reinvent
-		[ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
-		[ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
-		[ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs
-	fi
+	#if [ -z "$DEBUG" ] ; then
+	#	# TODO: reinvent
+	#	[ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
+	#	[ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
+	#	[ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs
+	#fi
 
-	cd - >/dev/null
+	#cd - >/dev/null
 	return 0
 }
 
