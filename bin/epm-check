@@ -17,8 +17,11 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+load_helper epm-check_updated_repo
+
 epm_check()
 {
+update_repo_if_needed
 case $PMTYPE in
 	apt-rpm)
 		#sudocmd apt-get check || exit
@@ -30,12 +33,6 @@ case $PMTYPE in
 		#sudocmd apt-get check || exit
 		#sudocmd apt-get update || exit
 		sudocmd apt-get -f install || return
-		;;
-	apt-dpkg)
-		#sudocmd apt-get update || exit
-		#sudocmd apt-get check || exit
-		sudocmd apt-get -f install || return
-		#sudocmd apt-get autoremove
 		;;
 	packagekit)
 		docmd pkcon repair
