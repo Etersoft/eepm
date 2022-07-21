@@ -10,6 +10,7 @@ for i in $PRODUCTALT ; do
     [ "$i" = "''" ] && continue
     if [ "$2" = "$i" ] || epm installed $PKGNAME-$i ; then
         PKGNAME=$PKGNAME-$i
+        break
     fi
 done
 

@@ -25,7 +25,9 @@ epm tool eget -q -O- "https://мойассистент.рф/скачать" | gr
 url_by_order()
 {
     local order="$1"
-    echo "https://мойассистент.рф$(cat $tmpfile | grep "/Download/" | $order -n1 | sed -e 's|.*href="||' -e 's|".*||')"
+    local pkg="$(cat $tmpfile | grep "/Download/" | $order -n1 | sed -e 's|.*href="||' -e 's|".*||')"
+    [ -n "$pkg" ] || fatal "Can't get Download href"
+    echo "https://мойассистент.рф$pkg"
 }
 
 case $arch-$pkg in
