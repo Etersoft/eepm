@@ -384,11 +384,14 @@ withtimeout()
 
 set_eatmydata()
 {
+	# don't use eatmydata (useless)
+	return 0
 	# skip if disabled
 	[ -n "$EPMNOEATMYDATA" ] && return
 	# use if possible
 	which eatmydata >/dev/null 2>/dev/null || return
 	set_sudo
+	# FIXME: check if SUDO already has eatmydata
 	[ -n "$SUDO" ] && SUDO="$SUDO eatmydata" || SUDO="eatmydata"
 	[ -n "$verbose" ] && info "Uwaga! eatmydata is installed, we will use it for disable all sync operations."
 	return 0
