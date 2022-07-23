@@ -136,9 +136,9 @@ __do_short_query()
         *-rpm)
             CMD="rpm -qf --queryformat %{NAME}\n"
             ;;
-        NOapt-dpkg)
+        apt-dpkg)
             showcmd dpkg -S "$1"
-            dpkg_print_name_version "$(dpkg -S $1 | sed -e "s|:.*||" | grep -v "^diversion by")"
+            a= dpkg -S $1 | sed -e "s|:.*||"
             return ;;
         NOemerge)
             assure_exists equery
