@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.20.0
+Version: 3.21.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,16 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Mon Jul 25 2022 Vitaly Lipatov <lav@altlinux.ru> 3.21.0-alt1
+- epm-update: cd / before apt-get update
+- distr_info: improve override support
+- epm-print: fix arg for distr_info
+- epm-check: add check_updated_repo before fix
+- epm-install: use apt-get install as fallback when install files with dpkg
+- epm repack: fix repack/install rpm on a deb system
+- epm-query-file: fix --short for apt
+- epm-sh-functions: disable eatmydata using
+
 * Tue Jul 19 2022 Vitaly Lipatov <lav@altlinux.ru> 3.20.0-alt1
 - epm play: skip update for hidden packages
 - epm play.d: add rudesktop support
