@@ -378,11 +378,14 @@ withtimeout()
 
 set_eatmydata()
 {
+	# don't use eatmydata (useless)
+	return 0
 	# skip if disabled
 	[ -n "$EPMNOEATMYDATA" ] && return
 	# use if possible
 	which eatmydata >/dev/null 2>/dev/null || return
 	set_sudo
+	# FIXME: check if SUDO already has eatmydata
 	[ -n "$SUDO" ] && SUDO="$SUDO eatmydata" || SUDO="eatmydata"
 	[ -n "$verbose" ] && info "Uwaga! eatmydata is installed, we will use it for disable all sync operations."
 	return 0
@@ -1503,8 +1506,10 @@ epm_changelog()
 
 # File bin/epm-check:
 
+
 epm_check()
 {
+update_repo_if_needed
 case $PMTYPE in
 	apt-rpm)
 		#sudocmd apt-get check || exit
@@ -1516,12 +1521,6 @@ case $PMTYPE in
 		#sudocmd apt-get check || exit
 		#sudocmd apt-get update || exit
 		sudocmd apt-get -f install || return
-		;;
-	apt-dpkg)
-		#sudocmd apt-get update || exit
-		#sudocmd apt-get check || exit
-		sudocmd apt-get -f install || return
-		#sudocmd apt-get autoremove
 		;;
 	packagekit)
 		docmd pkcon repair
@@ -3098,12 +3097,19 @@ epm_install_files()
             # FIXME: return false in case no install and in case install with broken deps
             sudocmd dpkg $DPKGOPTIONS -i $@
             local RES=$?
-            # if run with --nodeps, do not fallback on hi level
 
+            # if run with --nodeps, do not fallback on hi level in any case
             [ -n "$nodeps" ] && return $RES
-            # fall to apt-get -f install for fix deps
-            # can't use APTOPTIONS with empty install args
-            epm_install_names -f
+            # return OK if all is OK
+            [ "$RES" = "0" ] && return $RES
+
+            epm_install_names "$@"
+            return
+
+            # TODO: workaround with epm-check needed only for very old apt
+
+            # run apt -f install if there are were some errors during install
+            epm_check
 
             # repeat install for get correct status
             sudocmd dpkg $DPKGOPTIONS -i $@
@@ -4962,9 +4968,9 @@ __do_short_query()
         *-rpm)
             CMD="rpm -qf --queryformat %{NAME}\n"
             ;;
-        NOapt-dpkg)
+        apt-dpkg)
             showcmd dpkg -S "$1"
-            dpkg_print_name_version "$(dpkg -S $1 | sed -e "s|:.*||" | grep -v "^diversion by")"
+            a= dpkg -S $1 | sed -e "s|:.*||"
             return ;;
         NOemerge)
             assure_exists equery
@@ -6345,7 +6351,7 @@ __epm_split_by_pkg_type()
 	for pkg in "$@" ; do
 		[ "$(get_package_type "$pkg")" = "$type" ] || return 1
 		[ -e "$pkg" ] || fatal "Can't read $pkg"
-		split_replaced_pkgs="$split_target_pkgs $(realpath "$pkg")"
+		split_replaced_pkgs="$split_target_pkgs $pkg"
 	done
 
 	[ -n "$split_replaced_pkgs" ]
@@ -6354,6 +6360,7 @@ __epm_split_by_pkg_type()
 __epm_repack_rpm_to_deb()
 {
 	local pkg
+	local rpmpkgs="$1"
 
 	assure_exists alien
 	assure_exists fakeroot
@@ -6362,25 +6369,27 @@ __epm_repack_rpm_to_deb()
 	repacked_debs=''
 
 	local TDIR=$(mktemp -d)
-	cd $TDIR || fatal
 
 	for pkg in $rpmpkgs ; do
+		pkg="$(realpath "$pkg")"
+		cd $TDIR || fatal
 		showcmd_store_output fakeroot alien -d -k $scripts "$pkg"
 		local DEBCONVERTED=$(grep "deb generated" $RC_STDOUT | sed -e "s| generated||g")
 		repacked_debs="$repacked_rpms $(realpath $DEBCONVERTED)"
 		to_remove_pkg_files="$to_remove_pkg_files $(realpath $DEBCONVERTED)"
 		clean_store_output
+		cd - >/dev/null
 	done
 
 	# TODO: move it to exit handler
-	if [ -z "$DEBUG" ] ; then
-		# TODO: reinvent
-		[ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
-		[ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
-		[ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs
-	fi
+	#if [ -z "$DEBUG" ] ; then
+	#	# TODO: reinvent
+	#	[ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
+	#	[ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
+	#	[ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs
+	#fi
 
-	cd - >/dev/null
+	#cd - >/dev/null
 	return 0
 }
 
@@ -8732,7 +8741,12 @@ warmup_hibase
 
 case $PMTYPE in
 	apt-rpm)
-		sudocmd apt-get update || return
+		# TODO: hack against cd to cwd in apt-get on ALT
+		cd /
+		sudocmd apt-get update
+		local ret="$?"
+		cd - >/dev/null
+		return $ret
 		#sudocmd apt-get -f install || exit
 		;;
 	apt-dpkg)
@@ -9086,7 +9100,7 @@ internal_distr_info()
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
 
-PROGVERSION="20220718"
+PROGVERSION="20220719"
 
 # TODO: check /etc/system-release
 
@@ -9128,8 +9142,13 @@ override_distrib()
 {
 	[ -n "$1" ] || return
 	VENDOR_ID=''
-	DISTRIB_ID="$(echo "$1" | sed -e 's|/.*||')"
-	DISTRIB_RELEASE="$(echo "$1" | sed -e 's|.*/||')"
+	PRETTY_NAME=''
+	local name="$(echo "$1" | sed -e 's|x86_64/||')"
+	[ "$name" = "$1" ] && DIST_ARCH="x86" || DIST_ARCH="x86_64"
+	DISTRIB_ID="$(echo "$name" | sed -e 's|/.*||')"
+	DISTRIB_RELEASE="$(echo "$name" | sed -e 's|.*/||')"
+	[ "$DISTRIB_ID" = "$DISTRIB_RELEASE" ] && DISTRIB_RELEASE=''
+
 }
 
 # Translate DISTRIB_ID to vendor name (like %_vendor does or package release name uses), uses VENDOR_ID by default
@@ -9535,10 +9554,6 @@ fi
 fill_distr_info
 [ -n "$DISTRIB_ID" ] || DISTRIB_ID="Generic"
 
-if [ -z "$PRETTY_NAME" ] ; then
-	PRETTY_NAME="$DISTRIB_ID $DISTRIB_RELEASE"
-fi
-
 get_uname()
 {
     tolower $(uname $1) | tr -d " \t\r\n"
@@ -9790,6 +9805,10 @@ get_service_manager()
 
 print_pretty_name()
 {
+    if [ -z "$PRETTY_NAME" ] ; then
+        PRETTY_NAME="$DISTRIB_ID $DISTRIB_RELEASE"
+    fi
+
     echo "$PRETTY_NAME"
 }
 
@@ -9851,6 +9870,7 @@ case $1 in
 		exit 0
 		;;
 	--pretty)
+		override_distrib "$2"
 		print_pretty_name
 		;;
 	--distro-arch)
@@ -9864,9 +9884,12 @@ case $1 in
 		exit 0
 		;;
 	-d)
+		override_distrib "$2"
 		echo $DISTRIB_ID
 		;;
 	-a)
+		override_distrib "$2"
+		[ -n "$DIST_ARCH" ] && echo "$DIST_ARCH" && exit 0
 		get_arch
 		;;
 	-b)
@@ -9888,6 +9911,7 @@ case $1 in
 		get_base_os_name
 		;;
 	-v)
+		override_distrib "$2"
 		echo $DISTRIB_RELEASE
 		;;
 	-s|-n)
@@ -9903,9 +9927,11 @@ case $1 in
 		exit 0
 		;;
 	-e)
+		override_distrib "$2"
 		print_name_version
 		;;
 	*)
+		override_distrib "$1"
 		print_total_info
 		;;
 esac
@@ -10872,7 +10898,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.20.0  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.21.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10882,7 +10908,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.20.0
+EPMVERSION=3.21.0
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
