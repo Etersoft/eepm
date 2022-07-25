@@ -62,11 +62,23 @@ For example, run `epm play edge` to install Microsoft Edge browser in your syste
 
 Just run under root user:
 ```
+# curl -sL https://eepm.ru/epm.sh | bash /dev/stdin ei
+```
+
+or using wget:
+
+```
+# wget -O- https://eepm.ru/epm.sh | bash /dev/stdin ei
+```
+
+or more long version:
+
+```
 # curl -s https://raw.githubusercontent.com/Etersoft/eepm/master/packed/epm.sh | bash /dev/stdin ei --auto
 ```
 
-If you have no `curl` on your system, just download file `https://raw.githubusercontent.com/Etersoft/eepm/master/packed/epm.sh`
-and run in the download directory:
+If you have no `curl` or `wget` on your system, just download file `https://raw.githubusercontent.com/Etersoft/eepm/master/packed/epm.sh`
+and run in the download directory via bash:
 ```
 # bash epm.sh ei
 ```
