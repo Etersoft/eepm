@@ -202,6 +202,16 @@ realpath()
 }
 fi
 
+make_filepath()
+{
+	local i
+	for i in "$@" ; do
+		[ -f "$i" ] || continue
+		echo "$i" | grep -q "/" && echo "$i" && continue
+		echo "./$i"
+	done
+}
+
 get_firstarg()
 {
 	echon "$1"
@@ -3103,7 +3113,8 @@ epm_install_files()
             # return OK if all is OK
             [ "$RES" = "0" ] && return $RES
 
-            epm_install_names "$@"
+            # are there apt that don't support dpkg files to install?
+            epm_install_names $(make_filepath "$@")
             return
 
             # TODO: workaround with epm-check needed only for very old apt
@@ -10898,7 +10909,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.21.0  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.21.1  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10908,7 +10919,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.21.0
+EPMVERSION=3.21.1
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=

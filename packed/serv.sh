@@ -193,6 +193,16 @@ realpath()
 }
 fi
 
+make_filepath()
+{
+	local i
+	for i in "$@" ; do
+		[ -f "$i" ] || continue
+		echo "$i" | grep -q "/" && echo "$i" && continue
+		echo "./$i"
+	done
+}
+
 get_firstarg()
 {
 	echon "$1"
@@ -2237,7 +2247,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.21.0  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.21.1  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
