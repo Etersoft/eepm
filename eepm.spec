@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.21.0
+Version: 3.21.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,11 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Tue Jul 26 2022 Vitaly Lipatov <lav@altlinux.ru> 3.21.1-alt1
+- epm play wine: remove wine-gl and wine-twain packages
+- epm-install: apt need ./ path for install deb packages
+- epm play yandex-browser: add fallback for yandex-browser source URL
+
 * Mon Jul 25 2022 Vitaly Lipatov <lav@altlinux.ru> 3.21.0-alt1
 - epm-update: cd / before apt-get update
 - distr_info: improve override support
