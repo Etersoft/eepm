@@ -349,7 +349,8 @@ epm_install_files()
             # return OK if all is OK
             [ "$RES" = "0" ] && return $RES
 
-            epm_install_names "$@"
+            # are there apt that don't support dpkg files to install?
+            epm_install_names $(make_filepath "$@")
             return
 
             # TODO: workaround with epm-check needed only for very old apt

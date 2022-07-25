@@ -190,6 +190,17 @@ realpath()
 }
 fi
 
+# print full path to files
+make_filepath()
+{
+	local i
+	for i in "$@" ; do
+		[ -f "$i" ] || continue
+		echo "$i" | grep -q "/" && echo "$i" && continue
+		echo "./$i"
+	done
+}
+
 get_firstarg()
 {
 	echon "$1"
