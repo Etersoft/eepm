@@ -231,6 +231,9 @@ normalize_name()
 		"RED OS")
 			echo "RedOS"
 			;;
+		"Debian GNU/Linux")
+			echo "Debian"
+			;;
 		"CentOS Linux")
 			echo "CentOS"
 			;;
