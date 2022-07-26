@@ -140,28 +140,42 @@ print_binpkgfilelist()
 
 # TODO: need try detect more strict
 # TODO: package name mask for every system
+# TODO: broken for all systems
 #PKGNAMEMASK1="\(.*\)-\([^0-9].*[^0-9]\)-\(.*[0-9].*\)"
 # mask to parse package name
+
+# TODO: с хвоста, сначала релиз, потом версию, остаётся пакет.
+# всё равно остаются неоднозначности: libname-1.0 где 1.0 то ли версия, то ли часть названия.
+# возможно, нужно ориентироваться только на выделение в полном имени/
+
+# libpq5.2-9.0eter-9.0.4-alt14
+# nx-libs-3.5.99.26.1-eter2astra:amd64
+PKGNAMEMASK4="6\(.*\)[_-]\([^_-]*\)[_-]\(.*[0-9].*\):\(.*\)$"
+# nx-libs-3.5.99.26.1-eter2astra
+PKGNAMEMASK3="^\(.*\)[_-]\([^_-]*\)[_-]\(.*[0-9].*\)$"
+# nx-libs-3.5.99.26.1
+#PKGNAMEMASK2="^\(.*\)[_-]\([0-9].*\)$"
+
 PKGNAMEMASK="\(.*\)-\([0-9].*\)-\(.*[0-9].*\)\.\(.*\)\.\(.*\)"
 
 print_name()
 {
-    echo "$@" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK|\1|g"
+    echo "$@" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK4|\1-\2-\3|" -e "s|$PKGNAMEMASK3|\1|"
 }
 
 print_version()
 {
-    echo "$1" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK|\2|g"
+    echo "$1" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK4|\1-\2-\3|" -e "s|$PKGNAMEMASK3|\2|"
 }
 
 print_release()
 {
-    echo "$1" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK|\3|g"
+    echo "$1" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK4|\1-\2-\3|" -e "s|$PKGNAMEMASK3|\3|"
 }
 
 print_version_release()
 {
-    echo "$1" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK|\2-\3|g"
+    echo "$1" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK4|\1-\2-\3|" -e "s|$PKGNAMEMASK3|\2-\3|"
 }
 
 # get package name only by package filename
