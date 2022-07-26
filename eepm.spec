@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.21.2
+Version: 3.21.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,10 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Tue Jul 26 2022 Vitaly Lipatov <lav@altlinux.ru> 3.21.3-alt1
+- epm-check: add support for --auto and --verbose
+- epm-install: revert to old .deb install way
+
 * Tue Jul 26 2022 Vitaly Lipatov <lav@altlinux.ru> 3.21.2-alt1
 - distr_info: fix for RHEL
 - distr_info: stop detect snappy
