@@ -3104,18 +3104,24 @@ epm_install_files()
 
             __epm_check_if_try_install_rpm $@ && return
 
-            # FIXME: return false in case no install and in case install with broken deps
-            sudocmd dpkg $DPKGOPTIONS -i $@
-            local RES=$?
+            # TODO: if dpkg can't install due missed deps, trying with apt (as for now, --refuse-depends, --refuse-breaks don't help me)
 
-            # if run with --nodeps, do not fallback on hi level in any case
-            [ -n "$nodeps" ] && return $RES
-            # return OK if all is OK
-            [ "$RES" = "0" ] && return $RES
+            if [ -n "$nodeps" ] ; then
+                sudocmd dpkg $DPKGOPTIONS -i $@
+                return
+            fi
 
             # are there apt that don't support dpkg files to install?
             epm_install_names $(make_filepath "$@")
             return
+
+            # old way:
+
+            sudocmd dpkg $DPKGOPTIONS -i $@
+            local RES=$?
+
+            # return OK if all is OK
+            [ "$RES" = "0" ] && return $RES
 
             # TODO: workaround with epm-check needed only for very old apt
 
@@ -4208,26 +4214,31 @@ print_binpkgfilelist()
 		| xargs -n1 -I "{}" echo -n "$PKGDIR/{} "
 }
 
+
+
+PKGNAMEMASK4="6\(.*\)[_-]\([^_-]*\)[_-]\(.*[0-9].*\):\(.*\)$"
+PKGNAMEMASK3="^\(.*\)[_-]\([^_-]*\)[_-]\(.*[0-9].*\)$"
+
 PKGNAMEMASK="\(.*\)-\([0-9].*\)-\(.*[0-9].*\)\.\(.*\)\.\(.*\)"
 
 print_name()
 {
-    echo "$@" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK|\1|g"
+    echo "$@" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK4|\1-\2-\3|" -e "s|$PKGNAMEMASK3|\1|"
 }
 
 print_version()
 {
-    echo "$1" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK|\2|g"
+    echo "$1" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK4|\1-\2-\3|" -e "s|$PKGNAMEMASK3|\2|"
 }
 
 print_release()
 {
-    echo "$1" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK|\3|g"
+    echo "$1" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK4|\1-\2-\3|" -e "s|$PKGNAMEMASK3|\3|"
 }
 
 print_version_release()
 {
-    echo "$1" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK|\2-\3|g"
+    echo "$1" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK4|\1-\2-\3|" -e "s|$PKGNAMEMASK3|\2-\3|"
 }
 
 print_pkgname()
@@ -9205,7 +9216,7 @@ case $DISTRIB_ID in
 	Ubuntu|Debian|Mint|AstraLinux|Elbrus)
 		CMD="apt-dpkg"
 		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
-		hascommand snappy && CMD=snappy
+		#hascommand snappy && CMD=snappy
 		;;
 	Mandriva)
 		CMD="urpm-rpm"
@@ -9342,7 +9353,7 @@ normalize_name()
 		"Fedora Linux")
 			echo "Fedora"
 			;;
-		"RedHatEnterpriseLinuxServer")
+		"Red Hat Enterprise Linux Server")
 			echo "RHEL"
 			;;
 		"ROSA Enterprise Linux Desktop"|"ROSA Enterprise Linux Server")
@@ -10909,7 +10920,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.21.1  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.21.2  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10919,7 +10930,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.21.1
+EPMVERSION=3.21.2
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=

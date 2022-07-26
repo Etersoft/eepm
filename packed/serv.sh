@@ -1400,7 +1400,7 @@ case $DISTRIB_ID in
 	Ubuntu|Debian|Mint|AstraLinux|Elbrus)
 		CMD="apt-dpkg"
 		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
-		hascommand snappy && CMD=snappy
+		#hascommand snappy && CMD=snappy
 		;;
 	Mandriva)
 		CMD="urpm-rpm"
@@ -1537,7 +1537,7 @@ normalize_name()
 		"Fedora Linux")
 			echo "Fedora"
 			;;
-		"RedHatEnterpriseLinuxServer")
+		"Red Hat Enterprise Linux Server")
 			echo "RHEL"
 			;;
 		"ROSA Enterprise Linux Desktop"|"ROSA Enterprise Linux Server")
@@ -2247,7 +2247,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.21.1  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.21.2  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
