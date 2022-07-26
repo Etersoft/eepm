@@ -100,7 +100,7 @@ case $DISTRIB_ID in
 	Ubuntu|Debian|Mint|AstraLinux|Elbrus)
 		CMD="apt-dpkg"
 		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
-		hascommand snappy && CMD=snappy
+		#hascommand snappy && CMD=snappy
 		;;
 	Mandriva)
 		CMD="urpm-rpm"
