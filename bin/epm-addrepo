@@ -29,11 +29,19 @@ __epm_addrepo_rhel()
 		echo "Add repo."
 		echo "1. Use with repository URL, f.i. http://www.example.com/example.repo"
 		echo "2. Use with epel to add EPEL repository"
+		echo "3. Use with powertools to add PowerTools repository"
 		return 1
 	fi
 	case "$1" in
 		epel)
+			# dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
 			epm install epel-release
+			return 1
+			;;
+		powertools)
+			# https://serverfault.com/questions/997896/how-to-enable-powertools-repository-in-centos-8
+			epm install --skip-installed dnf-plugins-core
+			sudocmd dnf config-manager --set-enabled powertools
 			return 1
 			;;
 	esac
