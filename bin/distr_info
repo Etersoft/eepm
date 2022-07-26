@@ -237,7 +237,7 @@ normalize_name()
 		"Fedora Linux")
 			echo "Fedora"
 			;;
-		"RedHatEnterpriseLinuxServer")
+		"Red Hat Enterprise Linux Server")
 			echo "RHEL"
 			;;
 		"ROSA Enterprise Linux Desktop"|"ROSA Enterprise Linux Server")
