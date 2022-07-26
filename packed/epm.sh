@@ -1520,27 +1520,29 @@ epm_changelog()
 epm_check()
 {
 update_repo_if_needed
+local APTOPTIONS="$(subst_option non_interactive -y)"
+local DNFOPTIONS="$(subst_option non_interactive -y) $(subst_option verbose --verbose) "
 case $PMTYPE in
 	apt-rpm)
 		#sudocmd apt-get check || exit
 		#sudocmd apt-get update || exit
-		sudocmd apt-get -f install || return
+		sudocmd apt-get -f $APTOPTIONS install || return
 		info "You can use epm dedup also"
 		;;
 	apt-dpkg)
 		#sudocmd apt-get check || exit
 		#sudocmd apt-get update || exit
-		sudocmd apt-get -f install || return
+		sudocmd apt-get -f $APTOPTIONS install || return
 		;;
 	packagekit)
 		docmd pkcon repair
 		;;
 	aptitude-dpkg)
-		sudocmd aptitude -f install || return
+		sudocmd aptitude -f $APTOPTIONS install || return
 		#sudocmd apt-get autoremove
 		;;
 	yum-rpm)
-		docmd yum check
+		docmd yum check $DNFOPTIONS
 		docmd package-cleanup --problems
 
 		#docmd package-cleanup --dupes
@@ -1549,7 +1551,7 @@ case $PMTYPE in
 		docmd rpm -Va --nofiles --nodigest
 		;;
 	dnf-rpm)
-		sudocmd dnf check
+		sudocmd dnf check $DNFOPTIONS
 		;;
 	emerge)
 		sudocmd revdep-rebuild
@@ -3111,9 +3113,10 @@ epm_install_files()
                 return
             fi
 
+            # TODO: don't resolve fuzzy dependencies ()
             # are there apt that don't support dpkg files to install?
-            epm_install_names $(make_filepath "$@")
-            return
+            #epm_install_names $(make_filepath "$@")
+            #return
 
             # old way:
 
@@ -10920,7 +10923,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.21.2  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.21.3  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10930,7 +10933,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.21.2
+EPMVERSION=3.21.3
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
