@@ -635,11 +635,19 @@ __epm_addrepo_rhel()
 		echo "Add repo."
 		echo "1. Use with repository URL, f.i. http://www.example.com/example.repo"
 		echo "2. Use with epel to add EPEL repository"
+		echo "3. Use with powertools to add PowerTools repository"
 		return 1
 	fi
 	case "$1" in
 		epel)
+			# dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
 			epm install epel-release
+			return 1
+			;;
+		powertools)
+			# https://serverfault.com/questions/997896/how-to-enable-powertools-repository-in-centos-8
+			epm install --skip-installed dnf-plugins-core
+			sudocmd dnf config-manager --set-enabled powertools
 			return 1
 			;;
 	esac
@@ -4226,7 +4234,9 @@ PKGNAMEMASK="\(.*\)-\([0-9].*\)-\(.*[0-9].*\)\.\(.*\)\.\(.*\)"
 
 print_name()
 {
-    echo "$@" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK4|\1-\2-\3|" -e "s|$PKGNAMEMASK3|\1|"
+    # don't change name (false cases)
+    #echo "$@" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK4|\1-\2-\3|" -e "s|$PKGNAMEMASK3|\1|"
+    echo "$@" | xargs -n1 echo
 }
 
 print_version()
@@ -9350,6 +9360,9 @@ normalize_name()
 		"RED OS")
 			echo "RedOS"
 			;;
+		"Debian GNU/Linux")
+			echo "Debian"
+			;;
 		"CentOS Linux")
 			echo "CentOS"
 			;;
@@ -10923,7 +10936,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.21.3  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.21.4  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10933,7 +10946,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.21.3
+EPMVERSION=3.21.4
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
