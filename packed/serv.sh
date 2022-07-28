@@ -346,13 +346,13 @@ set_sudo()
 	# if input is a console
 	if inputisatty && isatty && isatty2 ; then
 		if ! $SUDO_CMD -l >/dev/null ; then
-			[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only without password sudo is supported in non interactive using). Please run epm under root.'"
+			[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported in non interactive using). Please run epm under root.'"
 			return "$SUDO_TESTED"
 		fi
 	else
 		# use sudo if one is tuned and tuned without password
 		if ! $SUDO_CMD -l -n >/dev/null 2>/dev/null ; then
-			[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root or check http://altlinux.org/sudo.'"
+			[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported). Please run epm under root or check http://altlinux.org/sudo.'"
 			return "$SUDO_TESTED"
 		fi
 	fi
@@ -362,6 +362,11 @@ set_sudo()
 	# check for < 1.7 version which do not support -- (and --help possible too)
 	$SUDO_CMD -h 2>/dev/null | grep -q "  --" || SUDO="$SUDO_CMD"
 
+}
+
+sudo_allowed()
+{
+	set_sudo nofail
 }
 
 withtimeout()
@@ -2250,7 +2255,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.21.4  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.21.5  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

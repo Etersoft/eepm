@@ -355,13 +355,13 @@ set_sudo()
 	# if input is a console
 	if inputisatty && isatty && isatty2 ; then
 		if ! $SUDO_CMD -l >/dev/null ; then
-			[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only without password sudo is supported in non interactive using). Please run epm under root.'"
+			[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported in non interactive using). Please run epm under root.'"
 			return "$SUDO_TESTED"
 		fi
 	else
 		# use sudo if one is tuned and tuned without password
 		if ! $SUDO_CMD -l -n >/dev/null 2>/dev/null ; then
-			[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root or check http://altlinux.org/sudo.'"
+			[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported). Please run epm under root or check http://altlinux.org/sudo.'"
 			return "$SUDO_TESTED"
 		fi
 	fi
@@ -371,6 +371,11 @@ set_sudo()
 	# check for < 1.7 version which do not support -- (and --help possible too)
 	$SUDO_CMD -h 2>/dev/null | grep -q "  --" || SUDO="$SUDO_CMD"
 
+}
+
+sudo_allowed()
+{
+	set_sudo nofail
 }
 
 withtimeout()
@@ -1568,7 +1573,7 @@ case $PMTYPE in
 	#	sudocmd urpme --auto-orphans
 	#	;;
 	zypper-rpm)
-		sudocmd zypper verify
+		sudocmd zypper $(subst_option non_interactive --non-interactive) verify
 		;;
 	conary)
 		sudocmd conary verify
@@ -2509,8 +2514,7 @@ __epm_filelist_remote()
 			;;
 		apt-dpkg)
 			assure_exists apt-file || return
-			# TODO: improve me
-			if sudorun -n true 2>/dev/null ; then
+			if sudo_allowed ; then
 				sudocmd apt-file update
 			else
 				info "sudo requires a password, skip apt-file update"
@@ -3123,8 +3127,8 @@ epm_install_files()
 
             # TODO: don't resolve fuzzy dependencies ()
             # are there apt that don't support dpkg files to install?
-            #epm_install_names $(make_filepath "$@")
-            #return
+            epm_install_names $(make_filepath "$@")
+            return
 
             # old way:
 
@@ -8816,7 +8820,7 @@ case $PMTYPE in
 		sudocmd aura -A -y
 		;;
 	zypper-rpm)
-		sudocmd zypper refresh
+		sudocmd zypper $(subst_option non_interactive --non-interactive) refresh
 		;;
 	emerge)
 		sudocmd emerge --sync
@@ -8946,7 +8950,7 @@ epm_upgrade()
 		CMD="urpmi --update --auto-select $*"
 		;;
 	zypper-rpm)
-		CMD="zypper dist-upgrade"
+		CMD="zypper $(subst_option non_interactive --non-interactive) dist-upgrade"
 		;;
 	pacman)
 		CMD="pacman -S -u $force"
@@ -10936,7 +10940,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.21.4  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.21.5  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10946,7 +10950,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.21.4
+EPMVERSION=3.21.5
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
