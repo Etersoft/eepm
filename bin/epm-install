@@ -349,8 +349,8 @@ epm_install_files()
 
             # TODO: don't resolve fuzzy dependencies ()
             # are there apt that don't support dpkg files to install?
-            #epm_install_names $(make_filepath "$@")
-            #return
+            epm_install_names $(make_filepath "$@")
+            return
 
             # old way:
 
