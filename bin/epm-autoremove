@@ -274,7 +274,7 @@ esac
 
 case $PMTYPE in
 	apt-dpkg|aptitude-dpkg)
-		sudocmd apt-get autoremove $dryrun
+		sudocmd apt-get autoremove local $(subst_option non_interactive -y) $dryrun
 		;;
 	aura)
 		if [ -n "$dryrun" ] ; then
