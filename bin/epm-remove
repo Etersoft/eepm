@@ -82,6 +82,8 @@ epm_remove_names()
 
 	warmup_bases
 
+	local APTOPTIONS="$(subst_option non_interactive -y)"
+
 	case $PMTYPE in
 		apt-dpkg)
 			sudocmd apt-get remove --purge $APTOPTIONS $@
