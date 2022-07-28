@@ -70,7 +70,7 @@ case $PMTYPE in
 		sudocmd aura -A -y
 		;;
 	zypper-rpm)
-		sudocmd zypper refresh
+		sudocmd zypper $(subst_option non_interactive --non-interactive) refresh
 		;;
 	emerge)
 		sudocmd emerge --sync

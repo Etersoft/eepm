@@ -62,7 +62,7 @@ case $PMTYPE in
 	#	sudocmd urpme --auto-orphans
 	#	;;
 	zypper-rpm)
-		sudocmd zypper verify
+		sudocmd zypper $(subst_option non_interactive --non-interactive) verify
 		;;
 	conary)
 		sudocmd conary verify

@@ -111,7 +111,7 @@ epm_upgrade()
 		CMD="urpmi --update --auto-select $*"
 		;;
 	zypper-rpm)
-		CMD="zypper dist-upgrade"
+		CMD="zypper $(subst_option non_interactive --non-interactive) dist-upgrade"
 		;;
 	pacman)
 		CMD="pacman -S -u $force"
