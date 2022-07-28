@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.21.4
+Version: 3.21.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,12 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Thu Jul 28 2022 Vitaly Lipatov <lav@altlinux.ru> 3.21.5-alt1
+- epm-sh-functions: add sudo_allowed
+- epm-filelist: fix sudo checking
+- zypper: add --non-interactive support
+- epm-install: always use apt for install deb packages
+
 * Wed Jul 27 2022 Vitaly Lipatov <lav@altlinux.ru> 3.21.4-alt1
 - distr_info: add support for Debian GNU/Linux
 - epm print: disable name from package name guessing
