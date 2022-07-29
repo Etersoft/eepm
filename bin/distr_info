@@ -108,7 +108,6 @@ case $DISTRIB_ID in
 	ROSA)
 		CMD="dnf-rpm"
 		hascommand dnf || CMD="yum-rpm"
-		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "ROSA/7" ] && CMD="yum-rpm"
 		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "ROSA/2020" ] && CMD="urpm-rpm"
 		;;
 	FreeBSD|NetBSD|OpenBSD|Solaris)
@@ -121,7 +120,7 @@ case $DISTRIB_ID in
 	ArchLinux)
 		CMD="pacman"
 		;;
-	Fedora|CentOS|OracleLinux|RockyLinux|AlmaLinux|RHEL|Scientific|GosLinux|Amzn|RedOS)
+	Fedora|CentOS|OracleLinux|RockyLinux|AlmaLinux|RHEL|RELS|Scientific|GosLinux|Amzn|RedOS)
 		CMD="dnf-rpm"
 		hascommand dnf || CMD="yum-rpm"
 		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "CentOS/7" ] && CMD="yum-rpm"
@@ -243,8 +242,11 @@ normalize_name()
 		"Red Hat Enterprise Linux Server")
 			echo "RHEL"
 			;;
-		"ROSA Enterprise Linux Desktop"|"ROSA Enterprise Linux Server")
+		"ROSA Enterprise Linux Desktop")
 			echo "ROSA"
+			;;
+		"ROSA Enterprise Linux Server")
+			echo "RELS"
 			;;
 		*)
 			#echo "${1// /}"
