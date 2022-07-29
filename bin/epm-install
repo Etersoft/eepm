@@ -185,10 +185,10 @@ epm_ni_install_names()
 			sudocmd aptitude -y install $@
 			return ;;
 		yum-rpm)
-			sudocmd yum -y $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
+			sudocmd yum -y --allowerasing $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
 			return ;;
 		dnf-rpm)
-			sudocmd dnf -y $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
+			sudocmd dnf -y --allowerasing $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
 			return ;;
 		urpm-rpm)
 			sudocmd urpmi --auto $URPMOPTIONS $@
@@ -516,10 +516,10 @@ epm_print_install_names_command()
 			echo "aptitude -y install $*"
 			return ;;
 		yum-rpm)
-			echo "yum -y $YUMOPTIONS install $*"
+			echo "yum -y $YUMOPTIONS --allowerasing install $*"
 			return ;;
 		dnf-rpm)
-			echo "dnf -y $YUMOPTIONS install $*"
+			echo "dnf -y $YUMOPTIONS --allowerasing install $*"
 			return ;;
 		urpm-rpm)
 			echo "urpmi --auto $URPMOPTIONS $*"
