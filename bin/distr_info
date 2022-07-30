@@ -242,8 +242,11 @@ normalize_name()
 		"Red Hat Enterprise Linux Server")
 			echo "RHEL"
 			;;
-		"ROSA Enterprise Linux Desktop")
+		"ROSA Chrome Desktop")
 			echo "ROSA"
+			;;
+		"ROSA Enterprise Linux Desktop")
+			echo "RELS"
 			;;
 		"ROSA Enterprise Linux Server")
 			echo "RELS"
