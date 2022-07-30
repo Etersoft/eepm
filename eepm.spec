@@ -1,4 +1,4 @@
-# from rpm-build-intro
+# redefined during rpmbps (originally set from rpm-build-intro)
 %define pkgsystem apt-rpm
 
 Name: eepm
@@ -21,10 +21,10 @@ BuildArchitectures: noarch
 # use distr_vendor from it
 BuildRequires: rpm-build-intro
 
+%if "%_vendor" == "alt"
 Obsoletes: epm
 Provides: epm = %EVR
 
-%if "%_vendor" == "alt"
 # FIXHERE: Replace with target platform package manager
 Requires: apt rpm
 %endif
