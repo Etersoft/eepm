@@ -1413,7 +1413,6 @@ case $DISTRIB_ID in
 	ROSA)
 		CMD="dnf-rpm"
 		hascommand dnf || CMD="yum-rpm"
-		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "ROSA/7" ] && CMD="yum-rpm"
 		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "ROSA/2020" ] && CMD="urpm-rpm"
 		;;
 	FreeBSD|NetBSD|OpenBSD|Solaris)
@@ -1426,7 +1425,7 @@ case $DISTRIB_ID in
 	ArchLinux)
 		CMD="pacman"
 		;;
-	Fedora|CentOS|OracleLinux|RockyLinux|AlmaLinux|RHEL|Scientific|GosLinux|Amzn|RedOS)
+	Fedora|CentOS|OracleLinux|RockyLinux|AlmaLinux|RHEL|RELS|Scientific|GosLinux|Amzn|RedOS)
 		CMD="dnf-rpm"
 		hascommand dnf || CMD="yum-rpm"
 		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "CentOS/7" ] && CMD="yum-rpm"
@@ -1548,8 +1547,14 @@ normalize_name()
 		"Red Hat Enterprise Linux Server")
 			echo "RHEL"
 			;;
-		"ROSA Enterprise Linux Desktop"|"ROSA Enterprise Linux Server")
+		"ROSA Chrome Desktop")
 			echo "ROSA"
+			;;
+		"ROSA Enterprise Linux Desktop")
+			echo "RELS"
+			;;
+		"ROSA Enterprise Linux Server")
+			echo "RELS"
 			;;
 		*)
 			#echo "${1// /}"
@@ -2255,7 +2260,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.21.5  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.21.6  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

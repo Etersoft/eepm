@@ -1345,7 +1345,7 @@ esac
 
 case $PMTYPE in
 	apt-dpkg|aptitude-dpkg)
-		sudocmd apt-get autoremove $dryrun
+		sudocmd apt-get autoremove local $(subst_option non_interactive -y) $dryrun
 		;;
 	aura)
 		if [ -n "$dryrun" ] ; then
@@ -2965,10 +2965,10 @@ epm_ni_install_names()
 			sudocmd aptitude -y install $@
 			return ;;
 		yum-rpm)
-			sudocmd yum -y $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
+			sudocmd yum -y --allowerasing $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
 			return ;;
 		dnf-rpm)
-			sudocmd dnf -y $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
+			sudocmd dnf -y --allowerasing $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
 			return ;;
 		urpm-rpm)
 			sudocmd urpmi --auto $URPMOPTIONS $@
@@ -3292,10 +3292,10 @@ epm_print_install_names_command()
 			echo "aptitude -y install $*"
 			return ;;
 		yum-rpm)
-			echo "yum -y $YUMOPTIONS install $*"
+			echo "yum -y $YUMOPTIONS --allowerasing install $*"
 			return ;;
 		dnf-rpm)
-			echo "dnf -y $YUMOPTIONS install $*"
+			echo "dnf -y $YUMOPTIONS --allowerasing install $*"
 			return ;;
 		urpm-rpm)
 			echo "urpmi --auto $URPMOPTIONS $*"
@@ -4706,8 +4706,9 @@ __epm_get_hilevel_nameform()
 		yum-rpm|dnf-rpm)
 			# just use strict version with Epoch and Serial
 			local pkg
-			pkg=$(rpm -q --queryformat "%{EPOCH}:%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" -- $1)
-			echo $pkg | grep -q "(none)" && pkg=$(rpm -q --queryformat "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" -- $1)
+			#pkg=$(rpm -q --queryformat "%{EPOCH}:%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" -- $1)
+			#echo $pkg | grep -q "(none)" && pkg=$(rpm -q --queryformat "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" -- $1)
+			pkg=$(rpm -q --queryformat "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" -- $1)
 			echo $pkg
 			return
 			;;
@@ -5921,6 +5922,8 @@ epm_remove_names()
 	[ -z "$1" ] && return
 
 	warmup_bases
+
+	local APTOPTIONS="$(subst_option non_interactive -y)"
 
 	case $PMTYPE in
 		apt-dpkg)
@@ -9241,7 +9244,6 @@ case $DISTRIB_ID in
 	ROSA)
 		CMD="dnf-rpm"
 		hascommand dnf || CMD="yum-rpm"
-		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "ROSA/7" ] && CMD="yum-rpm"
 		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "ROSA/2020" ] && CMD="urpm-rpm"
 		;;
 	FreeBSD|NetBSD|OpenBSD|Solaris)
@@ -9254,7 +9256,7 @@ case $DISTRIB_ID in
 	ArchLinux)
 		CMD="pacman"
 		;;
-	Fedora|CentOS|OracleLinux|RockyLinux|AlmaLinux|RHEL|Scientific|GosLinux|Amzn|RedOS)
+	Fedora|CentOS|OracleLinux|RockyLinux|AlmaLinux|RHEL|RELS|Scientific|GosLinux|Amzn|RedOS)
 		CMD="dnf-rpm"
 		hascommand dnf || CMD="yum-rpm"
 		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "CentOS/7" ] && CMD="yum-rpm"
@@ -9376,8 +9378,14 @@ normalize_name()
 		"Red Hat Enterprise Linux Server")
 			echo "RHEL"
 			;;
-		"ROSA Enterprise Linux Desktop"|"ROSA Enterprise Linux Server")
+		"ROSA Chrome Desktop")
 			echo "ROSA"
+			;;
+		"ROSA Enterprise Linux Desktop")
+			echo "RELS"
+			;;
+		"ROSA Enterprise Linux Server")
+			echo "RELS"
 			;;
 		*)
 			#echo "${1// /}"
@@ -10940,7 +10948,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.21.5  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.21.6  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10950,7 +10958,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.21.5
+EPMVERSION=3.21.6
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
