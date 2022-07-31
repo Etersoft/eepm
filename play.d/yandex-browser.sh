@@ -18,10 +18,8 @@ SUPPORTEDARCHES="x86_64"
 
 # See also https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=yandex-browser-beta
 
-URL="https://repo.yandex.r1u/yandex-browser"
-SECONDURL="https://download.etersoft.ru/pub/download/yandex-browser"
-
-check_url_is_accessible "$URL" "YANDEX-BROWSER-KEY.*" || check_url_is_accessible $SECONDURL "YANDEX-BROWSER-KEY.*" && URL="$SECONDURL"
+URL="https://repo.yandex.ru/yandex-browser"
+update_url_if_need_mirrored || update_url_if_need_mirrored https://download.etersoft.ru/pub/download/yandex-browser
 
 # epm uses eget to download * names
 epm install "$URL/deb/pool/main/y/$PKGNAME/$(epm print constructname $PKGNAME "*" amd64 deb)" || exit
