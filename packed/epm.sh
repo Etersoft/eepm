@@ -10170,6 +10170,12 @@ sget()
     fi
 }
 
+check_url_http()
+{
+    local URL="$1"
+    __wget --spider -S "$URL" 2>&1 | grep "HTTP" | tail -n1 | grep -q -w "200\|301"
+}
+
 else
 CURL="$(which curl 2>/dev/null)"
 [ -n "$CURL" ] || fatal "There are no wget nor curl in the system. Install it with $ epm install curl"
@@ -10197,6 +10203,13 @@ sget()
        __curl $CURLNAMEOPTIONS "$1"
     fi
 }
+
+check_url_http()
+{
+    local URL="$1"
+    __curl -I "$URL" 2>&1 | grep "HTTP" | tail -n1 | grep -q -w "200\|301"
+}
+
 fi
 
 LISTONLY=''
@@ -10205,6 +10218,14 @@ if [ "$1" = "--list" ] ; then
     set_quiet
     shift
 fi
+
+if [ "$1" = "--check" ] ; then
+    set_quiet
+    shift
+    check_url_http "$1"
+    return
+fi
+
 
 LATEST=''
 if [ "$1" = "--latest" ] ; then
@@ -10260,6 +10281,7 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
     echo "    -U|-A|--user-agent - send browser like UserAgent"
     echo "    -O file  - download to this file (use filename from server if missed)"
     echo "    --list   - print files from url with mask"
+    echo "    --check  - check if URL is accessible (returns HTTP 200 OK)"
     echo "    --latest - print only latest version of a file"
     echo
     echo "eget supports --list and download for https://github.com/owner/project urls"
@@ -10267,6 +10289,7 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
     echo "Examples:"
     echo "  $ eget --list http://ftp.somesite.ru/package-*.tar"
     echo "  $ eget http://ftp.somesite.ru/package-*.x64.tar"
+    echo "  $ eget --check http://ftp.somesite.ru/test"
     echo "  $ eget --list http://download.somesite.ru 'package-*.tar.xz'"
     echo "  $ eget --list --latest https://github.com/telegramdesktop/tdesktop/releases 'tsetup.*.tar.xz'"
 #    echo "See $ wget --help for wget options you can use here"
@@ -10341,6 +10364,16 @@ is_url()
     echo "$1" | grep -q "://"
 }
 
+# Args: URL filename
+make_fileurl()
+{
+    local url="$1"
+    local fn="$2"
+    fn="$(echo "$fn" | sed -e 's|^./||' -e 's|^/+||')"
+    # workaround for a slash in the end of URL
+    echo "$(echo "$url" | sed -e 's|/*$||')/$fn"
+}
+
 get_urls()
 {
     # cat html, divide to lines by tags and cut off hrefs only
@@ -10351,15 +10384,14 @@ get_urls()
 if [ -n "$LISTONLY" ] ; then
     for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
         is_url "$fn" && echo $fn && continue
-        fn="$(echo "$fn" | sed -e 's|^./||' -e 's|^/+||')"
-        echo "$URL/$fn"
+        make_fileurl "$URL" "$fn"
     done
     return
 fi
 
 ERROR=0
 for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
-    is_url "$fn" || fn="$URL/$(basename "$fn")"
+    is_url "$fn" || fn="$(make_fileurl "$URL" "$(basename "$fn")" )" #"
     sget "$fn" || ERROR=1
 done
  return $ERROR
@@ -10950,7 +10982,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.21.7  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.21.8  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10960,7 +10992,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.21.7
+EPMVERSION=3.21.8
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
