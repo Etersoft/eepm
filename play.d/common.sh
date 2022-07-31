@@ -90,4 +90,19 @@ check_url_is_accessible()
     epm tool eget --check "$1"
 }
 
+# update URL variable
+update_url_if_need_mirrored()
+{
+    local MIRROR="$1"
+    local SECONDURL
+    check_url_is_accessible "$URL" && return
+    if [ -n "$MIRROR" ] ; then
+        SECONDURL="$MIRROR"
+    else
+        MIRROR="https://mirror.eterfund.org"
+        SECONDURL="$(echo "$URL" | sed -e "s|^.*://|$MIRROR/|")"
+    fi
+    check_url_is_accessible "$SECONDURL" && URL="$SECONDURL"
+}
+
 check_supported_arch $SUPPORTEDARCHES || fatal "Only $SUPPORTEDARCHES is supported"
