@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.21.7
+Version: 3.21.8
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,13 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Mon Aug 01 2022 Vitaly Lipatov <lav@altlinux.ru> 3.21.8-alt1
+- eget: fix making file url from site url and filename
+- eget: add --check support for check url if accessible
+- play.d/common.sh: use eget --check in check_url_is_accessible
+- play.d/common.sh: add update_url_if_need_mirrored
+- epm play yandex-browser: use mirror.eterfund.org as mirror too
+
 * Sun Jul 31 2022 Vitaly Lipatov <lav@altlinux.ru> 3.21.7-alt1
 - epm-install: yum does not support --allowerasing
 - don't expand package names on ROSA
