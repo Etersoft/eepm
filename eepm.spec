@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.21.6
+Version: 3.21.7
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,10 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Sun Jul 31 2022 Vitaly Lipatov <lav@altlinux.ru> 3.21.7-alt1
+- epm-install: yum does not support --allowerasing
+- don't expand package names on ROSA
+
 * Sat Jul 30 2022 Vitaly Lipatov <lav@altlinux.ru> 3.21.6-alt1
 - epm-autoremove: add --auto support for apt
 - epm-remove: add missed --auto support for apt
