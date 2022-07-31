@@ -84,12 +84,10 @@ check_supported_arch()
     return 1
 }
 
-# TODO: improve me (move to eget, just http-accessed)
 check_url_is_accessible()
 {
     local res
-    res="$(epm tool eget --list "$1" "$2" 2>/dev/null)"
-    [ -n "$res" ]
+    epm tool eget --check "$1"
 }
 
 check_supported_arch $SUPPORTEDARCHES || fatal "Only $SUPPORTEDARCHES is supported"
