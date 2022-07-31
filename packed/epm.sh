@@ -2965,7 +2965,7 @@ epm_ni_install_names()
 			sudocmd aptitude -y install $@
 			return ;;
 		yum-rpm)
-			sudocmd yum -y --allowerasing $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
+			sudocmd yum -y $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
 			return ;;
 		dnf-rpm)
 			sudocmd dnf -y --allowerasing $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
@@ -3292,7 +3292,7 @@ epm_print_install_names_command()
 			echo "aptitude -y install $*"
 			return ;;
 		yum-rpm)
-			echo "yum -y $YUMOPTIONS --allowerasing install $*"
+			echo "yum -y $YUMOPTIONS install $*"
 			return ;;
 		dnf-rpm)
 			echo "dnf -y $YUMOPTIONS --allowerasing install $*"
@@ -4603,6 +4603,8 @@ exp_with_arch_suffix()
 	local suffix
 
 	[ "$($DISTRVENDOR -a)" = "x86_64" ] || { cat ; return ; }
+	[ "$DISTRNAME" = "ROSA" ] &&  { cat ; return ; }
+
 	# TODO: it is ok for ALT rpm to remove with this suffix
 	# TODO: separate install and remove?
 	case $PMTYPE in
@@ -8336,7 +8338,7 @@ filter_out_installed_packages()
 
 	case $PMTYPE in
 		yum-rpm|dnf-rpm)
-			if [ "$($DISTRVENDOR -a)" = "x86_64" ] ; then
+			if [ "$($DISTRVENDOR -a)" = "x86_64" ] && [ "$DISTRNAME" != "ROSA" ] ; then
 				# shellcheck disable=SC2013
 				for i in $(cat) ; do
 					is_installed "$(__print_with_arch_suffix $i .x86_64)" && continue
@@ -10948,7 +10950,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.21.6  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.21.7  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10958,7 +10960,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.21.6
+EPMVERSION=3.21.7
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
