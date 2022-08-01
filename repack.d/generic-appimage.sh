@@ -28,6 +28,9 @@ mkdir -p $BUILDROOT/usr/share/pixmaps/
 cp $ICONFILE $BUILDROOT/usr/share/pixmaps/
 pack_file /usr/share/pixmaps/$ICONFILE
 
+# hack for remove MacOS only stuffs
+remove_dir $(find $BUILDROOT -type d -name "*catalina*" | sed -e "s|$BUILDROOT||")
+
 cd - >/dev/null
 
 add_bin_exec_command $PRODUCT $PRODUCTDIR/AppRun
