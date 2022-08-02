@@ -1,0 +1,10 @@
+NAME="ALT Workstation"
+VERSION="10.0.900"
+ID=altlinux
+VERSION_ID=10.0.900
+PRETTY_NAME="ALT Workstation 10.0.900 (Autolycus)"
+ANSI_COLOR="1;33"
+CPE_NAME="cpe:/o:alt:workstation:10.0.900"
+BUILD_ID="ALT Workstation 10.0"
+HOME_URL="https://basealt.ru/"
+BUG_REPORT_URL="https://bugs.altlinux.org/"

@@ -291,6 +291,7 @@ fi
 
 case "$VENDOR_ID" in
 	"alt"|"altlinux")
+		DISTRIB_RELEASE=$(echo "$DISTRIB_RELEASE" | sed -e "s/\.[0-9].*//g")
 		case "$DISTRIB_ID" in
 			"ALTServer"|"ALTSPWorkstation"|"Sisyphus")
 				;;
