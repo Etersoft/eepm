@@ -652,16 +652,16 @@ get_core_count()
     local DIST_OS="$(get_base_os_name)"
     case "$DIST_OS" in
         macos|freebsd)
-            detected=$(sysctl hw.ncpu | awk '{print $2}')
+            detected=$(a= sysctl hw.ncpu | awk '{print $2}')
             ;;
         linux)
             detected=$(grep -c "^processor" /proc/cpuinfo)
             ;;
         solaris)
-            detected=$(prtconf | grep -c 'cpu[^s]')
+            detected=$(a= prtconf | grep -c 'cpu[^s]')
             ;;
         aix)
-            detected=$(lsdev -Cc processor -S A | wc -l)
+            detected=$(a= lsdev -Cc processor -S A | wc -l)
             ;;
 #        *)
 #            fatal "Unsupported OS $DIST_OS"
@@ -700,7 +700,8 @@ get_virt()
         echo "xen" && return
     fi
 
-    if lscpu | grep "Hypervisor vendor:" | grep -q "KVM" ; then
+    # use util-linux
+    if LANG=C a= lscpu | grep "Hypervisor vendor:" | grep -q "KVM" ; then
         echo "kvm" && return
     fi
 
