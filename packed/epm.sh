@@ -1005,6 +1005,12 @@ case $PMTYPE in
 			| grep -v -- "^distro_info$" \
 			| grep -v -- "^kernel")
 
+		local play_installed="$(epm play --list-installed-packages)"
+		if [ -n "$play_installed" ] ; then
+			echo "Skip follow packages installed via epm play: $play_installed"
+		fi
+		PKGLIST="$(estrlist exclude "$play_installed" "$PKGLIST")"
+
 		if [ -z "$dryrun" ] && [ -n "$PKGLIST" ] ; then
 			showcmd epm remove $dryrun $force $PKGLIST
 			confirm_info "We will remove packages above."
@@ -1637,6 +1643,22 @@ check_pkg_integrity()
 	esac
 }
 
+__epm_check_all_pkgs()
+{
+	local j cl
+	#local play_installed="$(epm play --list-installed-packages)"
+	epm qa --short | xargs -n20 | while read cl ; do
+		#cl="$(estrlist exclude "$play_installed" "$i")"
+		__epm_check_installed_pkg $cl && continue
+		# check each package
+		for j in $cl ; do
+			__epm_check_installed_pkg $j && continue
+			# TODO: check play installed too
+			epm --auto reinstall $j </dev/null || exit
+		done
+	done
+}
+
 __epm_check_installed_pkg()
 {
 case $PMTYPE in
@@ -1661,6 +1683,11 @@ esac
 
 epm_checkpkg()
 {
+	if [ "$1" = "--all" ] ; then
+		__epm_check_all_pkgs
+		return
+	fi
+
 	if [ -n "$pkg_names" ] ; then
 		# TODO: если есть / или расширение, это отсутствующий файл
 		info "Suggest $pkg_names are name(s) of installed package(s)"
@@ -1693,7 +1720,7 @@ epm_checkpkg()
 # File bin/epm-checksystem:
 
 
-epm_checksystem_ALTLinux()
+__alt_fix_triggers()
 {
 	local TDIR=$(mktemp -d)
 	assure_exists time
@@ -1706,6 +1733,12 @@ epm_checksystem_ALTLinux()
 	rmdir $TDIR || fatal
 	echo "Count lines:"
 	wc -l /var/lib/rpm/files-awaiting-filetriggers
+}
+
+epm_checksystem_ALTLinux()
+{
+	fatal "Not yet implemented"
+	#__alt_fix_triggers
 }
 
 
@@ -3764,9 +3797,14 @@ docmd $CMD | __fo_pfn
 epm_vardir=/var/lib/eepm
 
 
+__check_installed_app()
+{
+	[ -s $epm_vardir/installed-app ] || return 1
+	grep -q -- "^$1\$" $epm_vardir/installed-app
+}
+
 __save_installed_app()
 {
-	return 0 # stub
 	[ -d "$epm_vardir" ] || return 0
 	__check_installed_app "$1" && return 0
 	echo "$1" | sudorun tee -a $epm_vardir/installed-app >/dev/null
@@ -3774,13 +3812,19 @@ __save_installed_app()
 
 __remove_installed_app()
 {
-	return 0 # stub
 	[ -s $epm_vardir/installed-app ] || return 0
 	local i
 	for i in $* ; do
 		sudorun sed -i "/^$i$/d" $epm_vardir/installed-app
 	done
 	return 0
+}
+
+
+__is_app_installed()
+{
+	__run_script "$1" --installed "$2"
+	return
 }
 
 __run_script()
@@ -3797,14 +3841,6 @@ __get_app_package()
 	__run_script "$1" --package-name "$2" 2>/dev/null
 }
 
-__check_installed_app()
-{
-	__run_script "$1" --installed "$2"
-	return
-
-	[ -s $epm_vardir/installed-app ] || return 1
-	grep -q -- "^$1\$" $epm_vardir/installed-app
-}
 
 
 __list_all_app()
@@ -3848,6 +3884,18 @@ __list_installed_app()
     return
 
     cat $epm_vardir/installed-app 2>/dev/null
+}
+
+__list_installed_packages()
+{
+    local i
+    local tapt=$(mktemp) || fatal
+    __list_app_packages_table >$tapt
+    # get all installed packages and convert it to a apps list
+    for i in $(epm query --short $(cat $tapt | sed -e 's| .*$||') 2>/dev/null) ; do
+        grep "^$i " $tapt | cut -f1 -d" "
+    done
+    rm -f $tapt
 }
 
 
@@ -3957,7 +4005,6 @@ fi
 
 if [ "$1" = "--remove" ] || [ "$1" = "remove" ]  ; then
     shift
-    #__check_installed_app "$1" || warning "$1 is not installed"
     prescription="$1"
     shift
     if __check_play_script "$prescription" ; then
@@ -3974,6 +4021,8 @@ fi
 
 if [ "$1" = "--update" ] ; then
     shift
+    local CMDUPDATE="--update"
+    [ -n "$force" ] && CMDUPDATE="--run"
     if [ "$1" = "all" ] ; then
         shift
         RES=0
@@ -3986,43 +4035,47 @@ if [ "$1" = "--update" ] ; then
                 RES=1
                 continue
             fi
-            __epm_play_run $prescription --update "$@" || RES=$?
+            __epm_play_run $prescription $CMDUPDATE "$@" || RES=$?
         done
         exit $RES
     fi
     if [ -z "$1" ] ; then
         fatal "run --update with 'all' or a project name"
     fi
-    __check_installed_app "$1" || fatal "$1 is not installed"
+    __is_app_installed "$1" || fatal "$1 is not installed"
     prescription="$1"
     shift
-    __epm_play_run $prescription --update "$@"
+    __epm_play_run $prescription $CMDUPDATE "$@"
     exit
 fi
 
 if [ "$1" = "--installed" ] || [ "$1" = "installed" ]  ; then
     shift
-    __check_installed_app "$1" "$2"
+    __is_app_installed "$1" "$2"
     #[ -n "$quiet" ] && exit
     exit
 fi
 
 case "$1" in
+    # internal options
     "--installed-version"|"--package-name"|"--product-alternatives")
         __run_script "$2" "$1" "$3"
         exit
         ;;
+    "--list-installed-packages")
+        __list_installed_packages
+        exit
+        ;;
+    "--list"|"--list-installed"|"list"|"list-installed")
+        __epm_play_list_installed
+        exit
+        ;;
+    # internal options
     "--help"|"help")
         __run_script "$2" "$1" "$3"
         exit
         ;;
 esac
-
-
-if [ "$1" = "--list" ] || [ "$1" = "--list-installed" ] || [ "$1" = "list" ] || [ "$1" = "list-installed" ]  ; then
-    __epm_play_list_installed
-    exit
-fi
 
 if [ "$1" = "--list-all" ] || [ "$1" = "list-all" ] || [ -z "$*" ] ; then
     [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications:"
@@ -4044,7 +4097,7 @@ prescription="$1"
 shift
 
 if __check_play_script "$prescription" ; then
-    #__check_installed_app "$prescription" && info "$$prescription is already installed (use --remove to remove)" && exit 1
+    #__is_app_installed "$prescription" && info "$$prescription is already installed (use --remove to remove)" && exit 1
     __epm_play_run "$prescription" --run "$@" && __save_installed_app "$prescription" || fatal "There was some error during install the application."
 else
     psdir=$prsdir
@@ -9429,6 +9482,7 @@ fi
 
 case "$VENDOR_ID" in
 	"alt"|"altlinux")
+		DISTRIB_RELEASE=$(echo "$DISTRIB_RELEASE" | sed -e "s/\.[0-9].*//g")
 		case "$DISTRIB_ID" in
 			"ALTServer"|"ALTSPWorkstation"|"Sisyphus")
 				;;
@@ -9789,16 +9843,16 @@ get_core_count()
     local DIST_OS="$(get_base_os_name)"
     case "$DIST_OS" in
         macos|freebsd)
-            detected=$(sysctl hw.ncpu | awk '{print $2}')
+            detected=$(a= sysctl hw.ncpu | awk '{print $2}')
             ;;
         linux)
             detected=$(grep -c "^processor" /proc/cpuinfo)
             ;;
         solaris)
-            detected=$(prtconf | grep -c 'cpu[^s]')
+            detected=$(a= prtconf | grep -c 'cpu[^s]')
             ;;
         aix)
-            detected=$(lsdev -Cc processor -S A | wc -l)
+            detected=$(a= lsdev -Cc processor -S A | wc -l)
             ;;
 #        *)
 #            fatal "Unsupported OS $DIST_OS"
@@ -9837,7 +9891,8 @@ get_virt()
         echo "xen" && return
     fi
 
-    if lscpu | grep "Hypervisor vendor:" | grep -q "KVM" ; then
+    # use util-linux
+    if LANG=C a= lscpu | grep "Hypervisor vendor:" | grep -q "KVM" ; then
         echo "kvm" && return
     fi
 
@@ -10982,7 +11037,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.21.8  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.22.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -10992,7 +11047,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.21.8
+EPMVERSION=3.22.0
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
