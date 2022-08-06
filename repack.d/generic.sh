@@ -15,12 +15,14 @@ done
 
 for i in $BUILDROOT/usr/bin/* ; do
     [ -f "$i" ] || continue
-    grep -q '^#!/usr/bin/python' $i && flag_python3=1
+    grep -Eq '^#!/usr/bin/python|^#!/usr/bin/env python' $i && flag_python3=1
     subst 's|^#!/usr/bin/python$|#!/usr/bin/python3|' $i
+    subst 's|^#!/usr/bin/env python$|#!/usr/bin/env python3|' $i
 done
 
 # check for .py scripts
 find $BUILDROOT -name "*.py" | grep -q "\.py$" && flag_python3=1
+find $BUILDROOT -name "*.py" -exec subst '1{/python3/n};1i#!/usr/bin/python3' {} \;
 
 if [ -n "$flag_python3" ] ; then
     epm install --skip-installed rpm-build-python3
