@@ -111,6 +111,18 @@ __list_installed_app()
     cat $epm_vardir/installed-app 2>/dev/null
 }
 
+__list_installed_packages()
+{
+    local i
+    local tapt=$(mktemp) || fatal
+    __list_app_packages_table >$tapt
+    # get all installed packages and convert it to a apps list
+    for i in $(epm query --short $(cat $tapt | sed -e 's| .*$||') 2>/dev/null) ; do
+        grep "^$i " $tapt | cut -f1 -d" "
+    done
+    rm -f $tapt
+}
+
 
 __get_app_description()
 {
@@ -269,23 +281,26 @@ if [ "$1" = "--installed" ] || [ "$1" = "installed" ]  ; then
     exit
 fi
 
-# common internal options
 case "$1" in
+    # internal options
     "--installed-version"|"--package-name"|"--product-alternatives")
         __run_script "$2" "$1" "$3"
         exit
         ;;
+    "--list-installed-packages")
+        __list_installed_packages
+        exit
+        ;;
+    "--list"|"--list-installed"|"list"|"list-installed")
+        __epm_play_list_installed
+        exit
+        ;;
+    # internal options
     "--help"|"help")
         __run_script "$2" "$1" "$3"
         exit
         ;;
 esac
-
-
-if [ "$1" = "--list" ] || [ "$1" = "--list-installed" ] || [ "$1" = "list" ] || [ "$1" = "list-installed" ]  ; then
-    __epm_play_list_installed
-    exit
-fi
 
 if [ "$1" = "--list-all" ] || [ "$1" = "list-all" ] || [ -z "$*" ] ; then
     [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications:"
