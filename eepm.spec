@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.21.8
+Version: 3.22.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,16 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Sat Aug 06 2022 Vitaly Lipatov <lav@altlinux.ru> 3.22.0-alt1
+- generic-appimage.sh: drop MacOS only catalina dir (fix for balenaEtcher)
+- distr_info: strip long version for ALT Workstation
+- epm checkpkg: add --all support
+- epm play: add --force for --update support
+- epm play: add --list-installed-packages
+- repack.d/generic.sh: more common python -> python2 shebang suport
+- epm play: add signal messenger support (thanks, george@)
+- epm autoorphans: skip packages installed via epm play
+
 * Mon Aug 01 2022 Vitaly Lipatov <lav@altlinux.ru> 3.21.8-alt1
 - eget: fix making file url from site url and filename
 - eget: add --check support for check url if accessible
