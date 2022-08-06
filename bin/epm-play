@@ -234,6 +234,8 @@ fi
 
 if [ "$1" = "--update" ] ; then
     shift
+    local CMDUPDATE="--update"
+    [ -n "$force" ] && CMDUPDATE="--run"
     if [ "$1" = "all" ] ; then
         shift
         RES=0
@@ -246,7 +248,7 @@ if [ "$1" = "--update" ] ; then
                 RES=1
                 continue
             fi
-            __epm_play_run $prescription --update "$@" || RES=$?
+            __epm_play_run $prescription $CMDUPDATE "$@" || RES=$?
         done
         exit $RES
     fi
@@ -256,7 +258,7 @@ if [ "$1" = "--update" ] ; then
     __is_app_installed "$1" || fatal "$1 is not installed"
     prescription="$1"
     shift
-    __epm_play_run $prescription --update "$@"
+    __epm_play_run $prescription $CMDUPDATE "$@"
     exit
 fi
 
