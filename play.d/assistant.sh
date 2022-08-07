@@ -20,7 +20,7 @@ pkg="$($DISTRVENDOR -p)"
 
 # parse vendor site
 tmpfile=$(mktemp)
-epm tool eget -q -O- "https://мойассистент.рф/скачать" | grep -A50 "Ассистент для LINUX" >$tmpfile
+LANG=ru_RU.UTF8 epm tool eget -q -O- "https://мойассистент.рф/скачать" | grep -A50 "Ассистент для LINUX" >$tmpfile
 
 url_by_order()
 {
