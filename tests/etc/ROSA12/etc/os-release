@@ -1,0 +1,23 @@
+# Standard values
+# Specification: https://www.freedesktop.org/software/systemd/man/os-release.html
+NAME="ROSA Chrome Desktop"
+ID=rosa
+PRETTY_NAME="ROSA Chrome Desktop 12.2"
+CPE_NAME="cpe:/o:rosalinux:rosa:2021.1"
+META_CLASS=desktop
+VARIANT_ID=chrome-desktop
+ANSI_COLOR="1;43"
+VERSION="12.2"
+VERSION_ID=2021.1
+VERSION_CODENAME=12.2
+HOME_URL="https://www.rosalinux.ru/en/"
+# TODO: by far not all icons packages provide an icon "rosa"
+LOGO=rosa
+BUG_REPORT_URL="https://bugzilla.rosalinux.ru"
+# ROSA-specific values
+ROSA_OS_BRANCH=chrome
+ROSA_OS_PLATFORM="rosa2021.1"
+ROSA_OS_PLATFORM_INTEGER=202110
+ROSA_OS_TYPE=desktop
+ROSA_OS_VERSION=12.2
+
