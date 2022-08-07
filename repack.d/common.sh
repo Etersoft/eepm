@@ -4,6 +4,7 @@
 remove_file()
 {
     local file="$1"
+    [ -n "$file" ] || return
     [ -e "$BUILDROOT$file" ] || [ -L "$BUILDROOT$file" ] || return
 
     rm -v "$BUILDROOT$file"
@@ -13,6 +14,7 @@ remove_file()
 remove_dir()
 {
     local file="$1"
+    [ -n "$file" ] || return
     [ -d "$BUILDROOT$file" ] || return
 
     rm -rv "$BUILDROOT$file"
@@ -23,9 +25,11 @@ remove_dir()
 # Usage: pack_file <path_to_file>
 pack_file()
 {
-    grep -q "^$1$" $SPEC && return
-    grep -q "\"$1\"" $SPEC && return
-    subst "s|%files|%files\n$1|" $SPEC
+    local file="$1"
+    [ -n "$file" ] || return
+    grep -q "^$file$" $SPEC && return
+    grep -q "\"$file\"" $SPEC && return
+    subst "s|%files|%files\n$file|" $SPEC
 }
 
 
