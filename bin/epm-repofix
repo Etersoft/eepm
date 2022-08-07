@@ -52,6 +52,9 @@ __repofix_filter_vendor()
 		c9)
 			br="cert9"
 			;;
+		Sisyphus)
+			br="alt"
+			;;
 	esac
 	echo "$br"
 }
@@ -97,10 +100,16 @@ epm_reposwitch()
 {
 	local TO="$1"
 	[ -n "$TO" ] || fatal "run repo switch with arg (p9, p10, Sisyphus)"
-	__replace_alt_version_in_repo "Sisyphus/" "$TO/branch/"
-	__replace_alt_version_in_repo "[tpc][5-9]\.?[0-9]?/branch/" "$TO/branch/"
-	if [ "$TO" != "p10" ] ; then
-		__replace_alt_version_in_repo "p10\.?[0-9]?/branch/" "$TO/branch/"
+	[ "$TO" = "sisyphus" ] && TO="Sisyphus"
+	if [ "$TO" = "Sisyphus" ] ; then
+		__replace_alt_version_in_repo "[tpc][5-9]\.?[0-9]?/branch/" "$TO/"
+		__replace_alt_version_in_repo "p10\.?[0-9]?/branch/" "$TO/"
+	else
+		__replace_alt_version_in_repo "Sisyphus/" "$TO/branch/"
+		__replace_alt_version_in_repo "[tpc][5-9]\.?[0-9]?/branch/" "$TO/branch/"
+		if [ "$TO" != "p10" ] ; then
+			__replace_alt_version_in_repo "p10\.?[0-9]?/branch/" "$TO/branch/"
+		fi
 	fi
 
 	__alt_repofix "$TO"
