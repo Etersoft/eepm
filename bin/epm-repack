@@ -32,14 +32,14 @@ __epm_split_by_pkg_type()
 	for pkg in "$@" ; do
 		[ "$(get_package_type "$pkg")" = "$type" ] || return 1
 		[ -e "$pkg" ] || fatal "Can't read $pkg"
-		split_replaced_pkgs="$split_target_pkgs $pkg"
+		split_replaced_pkgs="$split_replaced_pkgs $pkg"
 	done
 
 	[ -n "$split_replaced_pkgs" ]
 }
 
-# fills repacked_debs
-__epm_repack_rpm_to_deb()
+# fills repacked_pkgs
+__epm_repack_to_deb()
 {
 	local pkg
 	local rpmpkgs="$1"
@@ -48,17 +48,28 @@ __epm_repack_rpm_to_deb()
 	assure_exists fakeroot
 	assure_exists rpm
 
-	repacked_debs=''
+	repacked_pkgs=''
 
 	local TDIR=$(mktemp -d)
 
 	for pkg in $rpmpkgs ; do
-		pkg="$(realpath "$pkg")"
+		abspkg="$(realpath "$pkg")"
+		info "Repacking $abspkg to local deb format ..."
+
+		alpkg=$(basename $pkg)
+		# don't use abs package path: copy package to temp dir and use there
+		cp $verbose $pkg $TDIR/$alpkg
+
 		cd $TDIR || fatal
-		showcmd_store_output fakeroot alien -d -k $scripts "$pkg"
+		__prepare_source_package "$pkg"
+
+		showcmd_store_output fakeroot alien -d -k $scripts "$alpkg"
 		local DEBCONVERTED=$(grep "deb generated" $RC_STDOUT | sed -e "s| generated||g")
-		repacked_debs="$repacked_rpms $(realpath $DEBCONVERTED)"
-		to_remove_pkg_files="$to_remove_pkg_files $(realpath $DEBCONVERTED)"
+		if [ -n "$DEBCONVERTED" ] ; then
+			repacked_pkgs="$repacked_pkgs $(realpath $DEBCONVERTED)"
+			to_remove_pkg_files="$to_remove_pkg_files $(realpath $DEBCONVERTED)"
+		fi
+		to_remove_pkg_dirs="$to_remove_pkg_files $TDIR"
 		clean_store_output
 		cd - >/dev/null
 	done
@@ -75,18 +86,6 @@ __epm_repack_rpm_to_deb()
 	return 0
 }
 
-
-# TODO: rewrite to convert (get some code from Korinf?)
-__epm_check_if_try_install_rpm()
-{
-	__epm_split_by_pkg_type rpm "$@" || return 1
-	__epm_repack_rpm_to_deb $split_replaced_pkgs
-
-	# TODO: move to install
-	docmd epm install $repacked_debs
-
-	return 0
-}
 
 # $spec $PKGNAME $VERSION
 __set_name_version()
@@ -184,7 +183,72 @@ EOF
     to_remove_pkg_files="$to_remove_pkg_files $HOME/.rpmmacros"
 }
 
-# will fill repacked_rpms var
+__set_version_pkgname()
+{
+    local alpkg="$1"
+    VERSION="$(echo "$alpkg" | grep -o -P "[-_.]([0-9])([0-9])*(\.[0-9])*" | head -n1 | sed -e 's|^[-_.]||')" #"
+    [ -n "$VERSION" ] && PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
+}
+
+# arg: <package file>
+# sets:
+#   alpkg      - package file name without path
+#   PKGNAME    - package name
+#   VERSION    - version of the package
+#   SUBGENERIC - name of generic file's extension
+__prepare_source_package()
+{
+    local pkg="$1"
+
+    alpkg=$(basename $pkg)
+
+    # TODO: use func for get name from deb pkg
+    # TODO: epm print name from deb package
+    # TODO: use stoplist only for deb?
+    [ -z "$force" ] && __check_stoplist $(echo $alpkg | sed -e "s|_.*||") && fatal "Please use official package instead of $alpkg repacking (It is not recommended to use --force to skip this checking."
+
+    PKGNAME=''
+    VERSION=''
+    SUBGENERIC=''
+
+    # convert tarballs to tar (for alien)
+    if rhas "$alpkg" "\.(rpm|deb)$" ; then
+        return
+    fi
+
+    if rhas "$alpkg" "\.AppImage$" ; then
+        __set_version_pkgname $alpkg
+        [ -n "$VERSION" ] || fatal "Can't get version from $alpkg."
+        SUBGENERIC='appimage'
+        # TODO: move repack archive to erc?
+        [ -x "$alpkg" ] || docmd chmod u+x -v "$alpkg"
+        ./$alpkg --appimage-extract || fatal
+        alpkg=$PKGNAME-$VERSION.tar
+        assure_exists erc || fatal
+        # make a tar for alien
+        a= erc a $alpkg squashfs-root
+        return
+    fi
+
+    __set_version_pkgname $alpkg
+    if [ -n "$VERSION" ] ; then
+        assure_exists erc || fatal
+        pkgtype="$(a= erc type $alpkg)"
+        [ -n "$PKGNAME" ] || PKGNAME=$(basename $alpkg .$pkgtype)
+        if [ "$pkgtype" = "tar" ] || [ "$pkgtype" = "tar.gz" ] || [ "$pkgtype" = "tgz" ] ; then
+            :
+        else
+            newalpkg=$(basename $alpkg .$pkgtype).tar
+            assure_exists erc || fatal
+            a= erc repack $alpkg $newalpkg || fatal
+            rm -f $verbose $alpkg
+            alpkg=$newalpkg
+        fi
+    fi
+}
+
+
+# will fill repacked_pkgs var
 __epm_repack_to_rpm()
 {
     local pkgs="$*"
@@ -192,7 +256,7 @@ __epm_repack_to_rpm()
         ALTLinux|ALTServer)
             ;;
         *)
-            assure_distr ALTLinux "install --repack"
+            assure_distr ALTLinux "install --repack for rpm target"
             ;;
     esac
 
@@ -214,62 +278,20 @@ __epm_repack_to_rpm()
     local alpkg
     local abspkg
     local tmpbuilddir
-    repacked_rpms=''
+    repacked_pkgs=''
     for pkg in $pkgs ; do
         tmpbuilddir=$HOME/$(basename $pkg).tmpdir
         mkdir $tmpbuilddir
         abspkg="$(realpath $pkg)"
         info ""
         info "Repacking $abspkg to local rpm format ..."
-        # alien failed with spaced names
-        # alpkg=$abspkg
-        alpkg=$(basename $pkg)
-        # TODO: use func for get name from deb pkg
-        # TODO: epm print name from deb package
-        # TODO: use stoplist only for deb?
-        [ -z "$force" ] && __check_stoplist $(echo $alpkg | sed -e "s|_.*||") && fatal "Please use official rpm package instead of $alpkg (It is not recommended to use --force to skip this checking."
 
+        alpkg=$(basename $pkg)
         # don't use abs package path: copy package to temp dir and use there
         cp $verbose $pkg $tmpbuilddir/../$alpkg
 
         cd $tmpbuilddir/../ || fatal
-
-        PKGNAME=''
-        VERSION=''
-        SUBGENERIC=''
-        # convert tarballs to tar (for alien)
-        if rhas "$pkg" "\.(rpm|deb)$" ; then
-            :
-        elif rhas "$pkg" "\.AppImage$" ; then
-            VERSION="$(echo "$alpkg" | grep -o -P "[-_.]([0-9])([0-9])*(\.[0-9])*" | head -n1 | sed -e 's|^[-_.]||')" #"
-            [ -n "$VERSION" ] || fatal "Can't get version from $alpkg."
-            PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
-            # TODO: move repack archive to erc?
-            [ -x "$alpkg" ] || docmd chmod u+x -v "$alpkg"
-            #[ -x "$alpkg" ] || sudocmd chmod u+x -v "$abspkg"
-            SUBGENERIC='appimage'
-            ./$alpkg --appimage-extract || fatal
-            alpkg=$PKGNAME-$VERSION.tar
-            assure_exists erc || fatal
-            a= erc a $alpkg squashfs-root
-        else
-            VERSION="$(echo "$alpkg" | grep -o -P "[-_.]([0-9])([0-9])*(\.[0-9])*" | head -n1 | sed -e 's|^[-_.]||')" #"
-            if [ -n "$VERSION" ] ; then
-                PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
-                pkgtype="$(a= erc type $alpkg)"
-                [ -n "$PKGNAME" ] || PKGNAME=$(basename $alpkg .$pkgtype)
-                if [ "$pkgtype" = "tar" ] || [ "$pkgtype" = "tar.gz" ] || [ "$pkgtype" = "tgz" ] ; then
-                    :
-                else
-                    newalpkg=$(basename $alpkg .$pkgtype).tar
-                    assure_exists erc || fatal
-                    a= erc repack $alpkg $newalpkg || fatal
-                    rm -f $verbose $alpkg
-                    alpkg=$newalpkg
-                fi
-            fi
-        fi
-
+        __prepare_source_package "$pkg"
         cd $tmpbuilddir/ || fatal
 
         if [ -n "$verbose" ] ; then
@@ -309,7 +331,7 @@ __epm_repack_to_rpm()
         rm -f $tmpbuilddir/../$alpkg
         local repacked_rpm="$(realpath $tmpbuilddir/../*.rpm)"
         if [ -s "$repacked_rpm" ] ; then
-            repacked_rpms="$repacked_rpms $repacked_rpm"
+            repacked_pkgs="$repacked_pkgs $repacked_rpm"
             to_remove_pkg_files="$to_remove_pkg_files $repacked_rpm"
         else
             warning "Can't find converted rpm for source binary package '$pkg'"
@@ -325,28 +347,49 @@ __epm_repack_to_rpm()
     true
 }
 
-# FIXME: Нужно как-то обеспечить непродолжение выполнения.
-__epm_check_if_try_install_pkgtype()
-{
-	local PKG="$1"
-	shift
-	__epm_split_by_pkg_type $PKG "$@" || return 1
-	__epm_repack_to_rpm $split_replaced_pkgs || { RES=$? ; return 0 ; }
 
-	# TODO: move to install
-	docmd epm install $repacked_rpms
-	RES=$?
-	# TODO: move it to exit handler
-	if [ -z "$DEBUG" ] ; then
-		# TODO: reinvent
-		[ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
-		[ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
-		[ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
-	fi
+__epm_remove_tmp_files()
+{
+    # TODO: move it to exit handler
+    if [ -z "$DEBUG" ] ; then
+        # TODO: reinvent
+        [ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
+        # hack??
+        [ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
+        [ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
+    fi
+    return 0
+}
+
+# FIXME: Нужно как-то обеспечить непродолжение выполнения.
+# used in epm install
+# fill repacked_pkgs
+__epm_repack()
+{
+	repacked_pkgs=''
+	case $PKGFORMAT in
+		rpm)
+			__epm_repack_to_rpm "$@" || return
+			;;
+		deb)
+			__epm_repack_to_deb "$@" || return
+			;;
+		*)
+			fatal "$PKGFORMAT is not supported for repack yet"
+			;;
+	esac
 
 	return 0
 }
 
+__epm_repack_if_needed()
+{
+	# return 1 if there is a package in host package format
+	__epm_split_by_pkg_type $PKGFORMAT "$@" && return 1
+
+	__epm_repack "$@"
+	return 0
+}
 
 epm_repack()
 {
@@ -360,36 +403,16 @@ epm_repack()
     [ -n "$pkg_names" ] && warning "Can't find $pkg_names"
     [ -z "$pkg_files" ] && info "Skip empty repack list" && return 22
 
-    case $PKGFORMAT in
-        rpm)
-            __epm_repack_to_rpm $pkg_files || fatal
+    if __epm_repack $pkg_files && [ -n "$repacked_pkgs" ] ; then
+        cp $repacked_pkgs "$CURDIR"
+        if [ -z "$quiet" ] ; then
             echo
             echo "Adapted packages:"
-            cp $repacked_rpms "$CURDIR"
-            for i in $repacked_rpms ; do
-                echo "	$(pwd)/$(basename "$i")"
+            for i in $repacked_pkgs ; do
+                echo "	$CURDIR/$(basename "$i")"
             done
-            ;;
-        deb)
-            if __epm_split_by_pkg_type rpm $pkg_files ; then
-                __epm_repack_rpm_to_deb $split_replaced_pkgs
-                cp -v $repacked_debs .
-                pkg_files="$(estrlist exclude $split_replaced_pkgs $pkg_files)"
-                [ -n "$pkg_files" ] && warning "There are left unconverted packages $pkg_files."
-            fi
-            ;;
-        *)
-            fatal "$PKGFORMAT is not supported for repack yet"
-            ;;
-    esac
-
-    # TODO: move it to exit handler
-    if [ -z "$DEBUG" ] ; then
-        # TODO: reinvent
-        [ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
-        # hack??
-        [ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
-        [ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
+        fi
     fi
 
+    __epm_remove_tmp_files
 }

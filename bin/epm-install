@@ -295,12 +295,13 @@ __epm_check_if_needed_repack()
     local pkgname="$(epm print name from "$1")"
     local repackcode="$CONFIGDIR/repack.d/$pkgname.sh"
     [ -x "$repackcode" ] || return
-    warning "There is exists repack rules for $pkgname package. It is better install this package via epm --repack install or epm play."
+    warning "There is repack rule for $pkgname package. It is better install this package via 'epm --repack install' or 'epm play'."
 }
 
 epm_install_files()
 {
-    [ -z "$1" ] && return
+    local files="$@"
+    [ -z "$files" ] && return
 
     # TODO: check read permissions
     # sudo test -r FILE
@@ -308,25 +309,31 @@ epm_install_files()
     case "$DISTRNAME" in
         ALTLinux|ALTServer)
 
-            # TODO: replace with name changed function
-            __epm_check_if_try_install_pkgtype deb $@ && return $RES
-            __epm_check_if_try_install_pkgtype AppImage $@ && return $RES
-            __epm_check_if_src_rpm $@
+            if __epm_repack_if_needed $files ; then
+                [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
+                files="$repacked_pkgs"
+                # TODO
+                #__epm_remove_tmp_files
+            fi
+
+            __epm_check_if_src_rpm $files
 
             # do not use low-level for install by file path (FIXME: reasons?)
-            if ! is_dirpath "$@" || [ "$(get_package_type "$@")" = "rpm" ] ; then
-                __epm_check_vendor $@
-                __epm_check_if_needed_repack $@
-                sudocmd rpm -Uvh $force $noscripts $nodeps $@ && save_installed_packages $@ && return
+            if ! is_dirpath "$files" || [ "$(get_package_type "$files")" = "rpm" ] ; then
+                if [ -z "$repacked_pkgs" ] ; then
+                    __epm_check_vendor $files
+                    __epm_check_if_needed_repack $files
+                fi
+                sudocmd rpm -Uvh $force $noscripts $nodeps $files && save_installed_packages $files && return
                 local RES=$?
                 # TODO: check rpm result code and convert it to compatible format if possible
-                __epm_check_if_rpm_already_installed $@ && return
+                __epm_check_if_rpm_already_installed $files && return
 
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return $RES
             fi
 
-            epm_install_names "$@"
+            epm_install_names $files
             return
             ;;
     esac
@@ -338,23 +345,28 @@ epm_install_files()
                 DPKGOPTIONS="--force-confdef --force-confold"
             fi
 
-            __epm_check_if_try_install_rpm $@ && return
+            if __epm_repack_if_needed $files ; then
+                [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
+                files="$repacked_pkgs"
+                # TODO
+                #__epm_remove_tmp_files
+            fi
 
             # TODO: if dpkg can't install due missed deps, trying with apt (as for now, --refuse-depends, --refuse-breaks don't help me)
 
             if [ -n "$nodeps" ] ; then
-                sudocmd dpkg $DPKGOPTIONS -i $@
+                sudocmd dpkg $DPKGOPTIONS -i $files
                 return
             fi
 
             # TODO: don't resolve fuzzy dependencies ()
             # are there apt that don't support dpkg files to install?
-            epm_install_names $(make_filepath "$@")
+            epm_install_names $(make_filepath $files)
             return
 
             # old way:
 
-            sudocmd dpkg $DPKGOPTIONS -i $@
+            sudocmd dpkg $DPKGOPTIONS -i $files
             local RES=$?
 
             # return OK if all is OK
@@ -367,18 +379,23 @@ epm_install_files()
             epm_check
 
             # repeat install for get correct status
-            sudocmd dpkg $DPKGOPTIONS -i $@
+            sudocmd dpkg $DPKGOPTIONS -i $files
             return
             ;;
 
        *-rpm)
-            __epm_check_if_try_install_pkgtype deb $@ && return $RES
-            __epm_check_if_try_install_pkgtype AppImage $@ && return $RES
-            __epm_check_if_src_rpm $@
-            sudocmd rpm -Uvh $force $noscripts $nodeps $@ && return
+            if __epm_repack_if_needed $files ; then
+                [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
+                files="$repacked_pkgs"
+                # TODO
+                #__epm_remove_tmp_files
+            fi
+
+            __epm_check_if_src_rpm $files
+            sudocmd rpm -Uvh $force $noscripts $nodeps $files && return
             local RES=$?
 
-            __epm_check_if_rpm_already_installed $@ && return
+            __epm_check_if_rpm_already_installed $files && return
 
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return $RES
@@ -402,45 +419,45 @@ epm_install_files()
             esac
             ;;
         packagekit)
-            docmd pkcon install-local $@
+            docmd pkcon install-local $files
             return ;;
         pkgsrc)
-            sudocmd pkg_add $@
+            sudocmd pkg_add $files
             return ;;
         pkgng)
-            local PKGTYPE="$(get_package_type $@)"
+            local PKGTYPE="$(get_package_type $files)"
             case "$PKGTYPE" in
                 tbz)
-                    sudocmd pkg_add $@
+                    sudocmd pkg_add $files
                     ;;
                 *)
-                    sudocmd pkg add $@
+                    sudocmd pkg add $files
                     ;;
             esac
             return ;;
         android)
-            sudocmd pm install $@
+            sudocmd pm install $files
             return ;;
         emerge)
             load_helper epm-install-emerge
-            sudocmd epm_install_emerge $@
+            sudocmd epm_install_emerge $files
             return ;;
         pacman)
-            sudocmd pacman -U --noconfirm $nodeps $@ && return
+            sudocmd pacman -U --noconfirm $nodeps $files && return
             local RES=$?
 
             [ -n "$nodeps" ] && return $RES
-            sudocmd pacman -U $@
+            sudocmd pacman -U $files
             return ;;
         slackpkg)
             # FIXME: check for full package name
             # FIXME: broken status when use batch and default answer
-            __separate_sudocmd_foreach "/sbin/installpkg" "/sbin/upgradepkg" $@
+            __separate_sudocmd_foreach "/sbin/installpkg" "/sbin/upgradepkg" $files
             return ;;
     esac
 
     # other systems can install file package via ordinary command
-    epm_install_names "$@"
+    epm_install_names $files
 }
 
 epm_print_install_command()
@@ -604,20 +621,14 @@ epm_install()
 
     # repack binary files
     if [ -n "$repack" ] ; then
-        # FIXME: see to_remove below
-        __epm_repack_to_rpm $files || fatal
-        files="$repacked_rpms"
+        __epm_repack $files || return
+        files="$repacked_pkgs"
     fi
 
     epm_install_files $files
     local RETVAL=$?
 
-    # TODO: move it to exit handler
-    if [ -z "$DEBUG" ] ; then
-    # TODO: reinvent
-    [ -n "$to_remove_pkg_files" ] && rm -fv $to_remove_pkg_files
-    [ -n "$to_remove_pkg_files" ] && rmdir -v $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
-    fi
+    __epm_remove_tmp_files
 
     return $RETVAL
 }
