@@ -290,12 +290,18 @@ __epm_check_if_src_rpm()
     done
 }
 
+# FIXME: move this hack to epm-repack
 __epm_check_if_needed_repack()
 {
     local pkgname="$(epm print name from "$1")"
     local repackcode="$CONFIGDIR/repack.d/$pkgname.sh"
     [ -x "$repackcode" ] || return
     warning "There is repack rule for $pkgname package. It is better install this package via 'epm --repack install' or 'epm play'."
+}
+
+__epm_if_command_path()
+{
+    is_dirpath "$1" && rhas "$1" "bin/"
 }
 
 epm_install_files()
@@ -309,32 +315,32 @@ epm_install_files()
     case "$DISTRNAME" in
         ALTLinux|ALTServer)
 
+            # do not use low-level for install by file path (f.i. epm install /usr/bin/git)
+            if __epm_if_command_path $files ; then
+                epm_install_names $files
+                return
+            fi
+
+            # on ALT install target can be a real path
             if __epm_repack_if_needed $files ; then
                 [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
                 files="$repacked_pkgs"
-                # TODO
-                #__epm_remove_tmp_files
             fi
 
             __epm_check_if_src_rpm $files
 
-            # do not use low-level for install by file path (FIXME: reasons?)
-            if ! is_dirpath "$files" || [ "$(get_package_type "$files")" = "rpm" ] ; then
-                if [ -z "$repacked_pkgs" ] ; then
-                    __epm_check_vendor $files
-                    __epm_check_if_needed_repack $files
-                fi
-                sudocmd rpm -Uvh $force $noscripts $nodeps $files && save_installed_packages $files && return
-                local RES=$?
-                # TODO: check rpm result code and convert it to compatible format if possible
-                __epm_check_if_rpm_already_installed $files && return
+            if [ -z "$repacked_pkgs" ] ; then
+                __epm_check_vendor $files
+                __epm_check_if_needed_repack $files
+            fi
+
+            sudocmd rpm -Uvh $force $noscripts $nodeps $files && save_installed_packages $files && return
+            local RES=$?
+            # TODO: check rpm result code and convert it to compatible format if possible
+            __epm_check_if_rpm_already_installed $files && return
 
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return $RES
-            fi
-
-            epm_install_names $files
-            return
             ;;
     esac
 

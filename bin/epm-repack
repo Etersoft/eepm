@@ -42,7 +42,7 @@ __epm_split_by_pkg_type()
 __epm_repack_to_deb()
 {
 	local pkg
-	local rpmpkgs="$1"
+	local pkgs="$@"
 
 	assure_exists alien
 	assure_exists fakeroot
@@ -52,7 +52,7 @@ __epm_repack_to_deb()
 
 	local TDIR=$(mktemp -d)
 
-	for pkg in $rpmpkgs ; do
+	for pkg in $pkgs ; do
 		abspkg="$(realpath "$pkg")"
 		info "Repacking $abspkg to local deb format ..."
 
