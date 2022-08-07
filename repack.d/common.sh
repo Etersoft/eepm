@@ -85,10 +85,16 @@ fix_chrome_sandbox()
     chmod -v 4711 $BUILDROOT$sandbox
 }
 
+filter_from_requires()
+{
+    local i
+    for i in "$@" ; do
+        subst "1i%filter_from_requires /^$i.*/d" $SPEC
+    done
+}
+
 # ignore embedded libs
 drop_embedded_reqs()
 {
-    subst '1i%filter_from_requires /^libGLESv2.so().*/d' $SPEC
-    subst '1i%filter_from_requires /^libEGL.so().*/d' $SPEC
-    subst '1i%filter_from_requires /^libffmpeg.so().*/d' $SPEC
+    filter_from_requires "libGLESv2.so()" "libEGL.so()" "libffmpeg.so()"
 }
