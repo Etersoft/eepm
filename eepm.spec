@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.22.1
+Version: 3.22.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,12 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Sun Aug 07 2022 Vitaly Lipatov <lav@altlinux.ru> 3.22.2-alt1
+- repack.d/common.h: skip *_file/dir with empty arg
+- repack.d/common.h: add filter_from_requires function
+- add repack.d/rudesktop.sh
+- epm repack.d: use filter_from_requires
+
 * Sun Aug 07 2022 Vitaly Lipatov <lav@altlinux.ru> 3.22.1-alt1
 - epm play rudesktop: fix eget using
 - epm play assisant: fix locale for cyrillic URL
