@@ -6903,6 +6903,9 @@ __repofix_filter_vendor()
 		c9)
 			br="cert9"
 			;;
+		Sisyphus)
+			br="alt"
+			;;
 	esac
 	echo "$br"
 }
@@ -6947,10 +6950,16 @@ epm_reposwitch()
 {
 	local TO="$1"
 	[ -n "$TO" ] || fatal "run repo switch with arg (p9, p10, Sisyphus)"
-	__replace_alt_version_in_repo "Sisyphus/" "$TO/branch/"
-	__replace_alt_version_in_repo "[tpc][5-9]\.?[0-9]?/branch/" "$TO/branch/"
-	if [ "$TO" != "p10" ] ; then
-		__replace_alt_version_in_repo "p10\.?[0-9]?/branch/" "$TO/branch/"
+	[ "$TO" = "sisyphus" ] && TO="Sisyphus"
+	if [ "$TO" = "Sisyphus" ] ; then
+		__replace_alt_version_in_repo "[tpc][5-9]\.?[0-9]?/branch/" "$TO/"
+		__replace_alt_version_in_repo "p10\.?[0-9]?/branch/" "$TO/"
+	else
+		__replace_alt_version_in_repo "Sisyphus/" "$TO/branch/"
+		__replace_alt_version_in_repo "[tpc][5-9]\.?[0-9]?/branch/" "$TO/branch/"
+		if [ "$TO" != "p10" ] ; then
+			__replace_alt_version_in_repo "p10\.?[0-9]?/branch/" "$TO/branch/"
+		fi
 	fi
 
 	__alt_repofix "$TO"
@@ -11037,7 +11046,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.22.0  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.22.1  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11047,7 +11056,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.22.0
+EPMVERSION=3.22.1
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
