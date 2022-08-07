@@ -12,5 +12,5 @@ case "$($DISTRVENDOR -d)" in
       ;;
 esac
 
-URL=$(eget --list --latest https://rudesktop.ru/ $PKGNAME-1*.deb)
+URL=$(epm tool eget --list --latest https://rudesktop.ru/ $PKGNAME-1*.deb)
 epm install $URL
