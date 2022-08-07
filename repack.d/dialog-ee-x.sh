@@ -7,4 +7,4 @@ SPEC="$2"
 . $(dirname $0)/common.sh
 
 # https://bugzilla.altlinux.org/show_bug.cgi?id=39099
-filter_from_requires "\\/opt\\/Dialog"
+filter_from_requires '\\/opt\\/Dialog'

@@ -54,7 +54,7 @@ rm -rfv $BUILDROOT/opt/teamviewer/tv_bin/script/teamviewerd.sysv
 subst "s|.*/opt/teamviewer/tv_bin/script/teamviewerd.sysv.*||" $SPEC
 
 # see https://bugzilla.altlinux.org/show_bug.cgi?id=39891
-filter_from_requires "\\/bin\\/ip"
+filter_from_requires '\\/bin\\/ip'
 
 # ignore embedded libs
 filter_from_requires libQt5
