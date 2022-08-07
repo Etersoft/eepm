@@ -50,7 +50,5 @@ for i in $BUILDROOT/usr/libexec/anydesk ; do
 done
 
 # preloaded from /usr/lib64/anydesk/, drop external requires
-subst '1i%filter_from_requires /^libpangox-1.0.so.0.*/d' $SPEC
-subst '1i%filter_from_requires /^libgdkglext-x11-1.0.so.0.*/d' $SPEC
-subst '1i%filter_from_requires /^libgtkglext-x11-1.0.so.0.*/d' $SPEC
+filter_from_requires libpangox-1.0.so.0 libgdkglext-x11-1.0.so.0 libgtkglext-x11-1.0.so.0
 

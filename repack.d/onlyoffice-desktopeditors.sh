@@ -4,6 +4,8 @@
 BUILDROOT="$1"
 SPEC="$2"
 
+. $(dirname $0)/common.sh
+
 # TODO: required libreoffice-opensymbol-fonts
 # $ rpm -qf /usr/lib64/LibreOffice/share/fonts/truetype/opens___.ttf
 #LibreOffice-common-7.0.1.2-alt1.0.p9.x86_64
@@ -14,8 +16,7 @@ subst "s|^\(Name: .*\)$|# Converted from original package requires\nRequires:$RE
 # ignore embedded libs
 for i in $BUILDROOT/opt/onlyoffice/desktopeditors/lib* ; do
     di=$(basename $i)
-    echo "Filter out $di ..."
-    subst "1i%filter_from_requires /^$di.*/d" $SPEC
+    filter_from_requires $di
 done
 
 epm assure patchelf || exit

@@ -15,8 +15,7 @@ subst "s|^URL:.*|URL: https://www.sublimetext.com|" $SPEC
 subst "s|^Summary:.*|Summary: Sophisticated text editor for code, html and prose|" $SPEC
 subst "s|^License: unknown$|License: Proprietary|" $SPEC
 
-subst "1i%filter_from_requires /^python3(sublime_api)/d" $SPEC
-
+filter_from_requires "python3(sublime_api)"
 
 # move package to /opt
 ROOTDIR=sublime_text

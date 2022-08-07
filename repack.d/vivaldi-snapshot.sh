@@ -23,6 +23,6 @@ use_system_xdg
 
 install_deps
 
-subst "1i%filter_from_requires /.opt.google.chrome.WidevineCdm/d" $SPEC
+filter_from_requires "\\/opt\\/google\\/chrome\\/WidevineCdm"
 
 echo "You also can install chrome via epm play chrome to use WidevineCdm"

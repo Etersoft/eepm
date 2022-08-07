@@ -6,6 +6,8 @@ SPEC="$2"
 
 PRODUCTDIR=/opt/teamviewer
 
+. $(dirname $0)/common.sh
+
 if [ "$($DISTRVENDOR -a)" = "x86_64" ] ; then
     # 32 bit
     rm -fv $BUILDROOT/opt/teamviewer/tv_bin/script/libdepend
@@ -52,12 +54,10 @@ rm -rfv $BUILDROOT/opt/teamviewer/tv_bin/script/teamviewerd.sysv
 subst "s|.*/opt/teamviewer/tv_bin/script/teamviewerd.sysv.*||" $SPEC
 
 # see https://bugzilla.altlinux.org/show_bug.cgi?id=39891
-subst '1i%filter_from_requires /^\\/bin\\/ip/d' $SPEC
+filter_from_requires "\\/bin\\/ip"
 
 # ignore embedded libs
-for i in libQt5 ; do
-    subst "1i%filter_from_requires /^$i.*/d" $SPEC
-done
+filter_from_requires libQt5
 
 epm assure patchelf || exit
 for i in $BUILDROOT$PRODUCTDIR/tv_bin/RTlib/{libicui18n.so.*,libicuuc.so.*} ; do
