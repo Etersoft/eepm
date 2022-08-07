@@ -68,6 +68,7 @@ __download_pkg_urls()
 	[ -z "$pkg_urls" ] && return
 	for url in $pkg_urls ; do
 		local tmppkg=$(mktemp -d) || fatal "failed mktemp -d"
+		docmd chmod -v a+rX $tmppkg
 		showcmd cd $tmppkg
 		cd $tmppkg || fatal
 		if docmd eget --latest "$url" ; then
@@ -75,6 +76,7 @@ __download_pkg_urls()
 			# use downloaded file
 			i=$(echo *.*)
 			[ -s "$tmppkg/$i" ] || continue
+			docmd chmod -v a+r "$tmppkg/$i"
 			pkg_files="$pkg_files $tmppkg/$i"
 			to_remove_pkg_files="$to_remove_pkg_files $tmppkg/$i"
 		else
