@@ -221,7 +221,7 @@ __prepare_source_package()
         [ -n "$VERSION" ] || fatal "Can't get version from $alpkg."
         SUBGENERIC='appimage'
         # TODO: move repack archive to erc?
-        [ -x "$alpkg" ] || docmd chmod u+x -v "$alpkg"
+        [ -x "$alpkg" ] || docmd chmod u+x $verbose "$alpkg"
         ./$alpkg --appimage-extract || fatal
         alpkg=$PKGNAME-$VERSION.tar
         assure_exists erc || fatal
@@ -313,7 +313,7 @@ __epm_repack_to_rpm()
         local pkgname="$(grep "^Name: " $spec | sed -e "s|Name: ||g" | head -n1)"
 
         # for tarballs fix permissions
-        [ -n "$VERSION" ] && chmod -R a+rX $tmpbuilddir/$subdir/*
+        [ -n "$VERSION" ] && chmod $verbose -R a+rX $tmpbuilddir/$subdir/*
 
         __fix_spec $pkgname $tmpbuilddir/$subdir $spec
         __apply_fix_code "generic" $tmpbuilddir/$subdir $spec
