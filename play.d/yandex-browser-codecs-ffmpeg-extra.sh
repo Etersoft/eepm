@@ -32,9 +32,14 @@ pack_ffmpeg() {
   exit
 }
 
+URL="https://browser-resources.s3.yandex.net/linux/codecs.json1"
+update_url_if_need_mirrored
+
 # download ffmpeg with upstream script update-ffmpeg but with our pack_ffmpeg function
 [ -s $PRODUCTDIR/update-ffmpeg ] || fatal "$PRODUCTDIR/update-ffmpeg is missed"
 SC=$(mktemp)
-sed -e 's|install_ffmpeg &&|pack_ffmpeg \&\&|' -e 's|wget -q-O|epm tool eget -q -O-|' < $PRODUCTDIR/update-ffmpeg > $SC
+sed -e 's|install_ffmpeg &&|pack_ffmpeg \&\&|' \
+    -e 's|wget -q-O|epm tool eget -q -O-|' \
+    -e "s|CODECS_JSON_URL='https://browser-resources.s3.yandex.net/linux/codecs.json'|CODECS_JSON_URL='$URL'|" < $PRODUCTDIR/update-ffmpeg > $SC
 . $SC
 rm -f $SC
