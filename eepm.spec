@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.22.2
+Version: 3.22.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,14 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Wed Aug 10 2022 Vitaly Lipatov <lav@altlinux.ru> 3.22.3-alt1
+- epm play: add MyOffice support
+- epm repack.d: fix quotes
+- epm-download: fix permissions for downloaded file
+- epm install/repack: big refactoring to support rpm/deb platform in common way
+- epm-install: check if install by command
+- epm play: add mirror check for yandex-browser-codecs-ffmpeg-extra
+
 * Sun Aug 07 2022 Vitaly Lipatov <lav@altlinux.ru> 3.22.2-alt1
 - repack.d/common.h: skip *_file/dir with empty arg
 - repack.d/common.h: add filter_from_requires function
