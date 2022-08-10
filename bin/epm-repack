@@ -232,15 +232,22 @@ __prepare_source_package()
 
     __set_version_pkgname $alpkg
     if [ -n "$VERSION" ] ; then
+        # TODO: don't use erc for detect type? then we potentially can skip install it
         assure_exists erc || fatal
         pkgtype="$(a= erc type $alpkg)"
-        [ -n "$PKGNAME" ] || PKGNAME=$(basename $alpkg .$pkgtype)
+        local newalpkg
+        newalpkg=$PKGNAME-$VERSION.$pkgtype
+        #[ -n "$PKGNAME" ] || PKGNAME=$(basename $alpkg .$pkgtype)
         if [ "$pkgtype" = "tar" ] || [ "$pkgtype" = "tar.gz" ] || [ "$pkgtype" = "tgz" ] ; then
+            mv $alpkg $newalpkg
             :
         else
-            newalpkg=$(basename $alpkg .$pkgtype).tar
+            newalpkg=$PKGNAME-$VERSION.tar
+            #newalpkg=$(basename $alpkg .$pkgtype).tar
             assure_exists erc || fatal
             a= erc repack $alpkg $newalpkg || fatal
+        fi
+        if [ "$alpkg" != "$newalpkg" ] ; then
             rm -f $verbose $alpkg
             alpkg=$newalpkg
         fi
@@ -309,7 +316,7 @@ __epm_repack_to_rpm()
         [ -s "$spec" ] || fatal "can't find spec"
         mv $spec $tmpbuilddir || fatal
         spec="$tmpbuilddir/$(basename "$spec")"
-        __set_name_version $spec $PKGNAME $VERSION
+        #__set_name_version $spec $PKGNAME $VERSION
         local pkgname="$(grep "^Name: " $spec | sed -e "s|Name: ||g" | head -n1)"
 
         # for tarballs fix permissions
