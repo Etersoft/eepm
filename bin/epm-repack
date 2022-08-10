@@ -270,17 +270,26 @@ __prepare_source_package()
 __epm_repack_to_rpm()
 {
     local pkgs="$*"
-    case $DISTRNAME in
-        ALTLinux|ALTServer)
-            ;;
-        *)
-            assure_distr ALTLinux "install --repack for rpm target"
-            ;;
-    esac
+    #case $DISTRNAME in
+    #    ALTLinux|ALTServer)
+    #        ;;
+    #    *)
+    #        assure_distr ALTLinux "install --repack for rpm target"
+    #        ;;
+    #esac
 
-    # install epm-repack for static (package based) dependencies
+    # Note: install epm-repack for static (package based) dependencies
     assure_exists alien || fatal
-    assure_exists /usr/bin/rpmbuild rpm-build || fatal
+
+    # TODO: check for all systems
+	case $PKGFORMAT in
+		rpm)
+			assure_exists /usr/bin/rpmbuild rpm-build || fatal
+			;;
+		deb)
+			assure_exists /usr/bin/rpmbuild rpm || fatal
+			;;
+	esac
 
     # TODO: improve
     if echo "$pkgs" | grep -q "\.deb" ; then
@@ -390,7 +399,17 @@ __epm_repack()
 			__epm_repack_to_rpm "$@" || return
 			;;
 		deb)
-			__epm_repack_to_deb "$@" || return
+			# FIXME: only one package in $@ is supported
+			#local pkgname="$(epm print name from "$@")"
+			__set_version_pkgname "$1"
+			local repackcode="$CONFIGDIR/repack.d/$PKGNAME.sh"
+			if [ -x "$repackcode" ] ; then
+				__epm_repack_to_rpm "$@" || return
+				[ -n "$repacked_pkgs" ] || return
+				__epm_repack_to_deb $repacked_pkgs
+			else
+				__epm_repack_to_deb "$@" || return
+			fi
 			;;
 		*)
 			fatal "$PKGFORMAT is not supported for repack yet"
