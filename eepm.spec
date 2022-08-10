@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.22.3
+Version: 3.23.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,17 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Thu Aug 11 2022 Vitaly Lipatov <lav@altlinux.ru> 3.23.0-alt1
+- epm-repack: fix package name-version before convert
+- epm play Telegram: restore Conflicts: telegram-desktop
+- epm-repack: on deb convert to an intermediate rpm package if we have repack.d rules
+- epm play.d/common.sh: use mirror.eterfund for eepm.ru too
+- distr_info: add error about unknown option
+- epm play: allow direct run the scripts
+- epm play sputnik-browser: cleanup, add verbose checking URI accessible
+- epm play assistant: add URI checking and fix download on Ubuntu
+- epm repack: use BIGTMPDIR conception (ALT bug 43491)
+
 * Wed Aug 10 2022 Vitaly Lipatov <lav@altlinux.ru> 3.22.3-alt1
 - epm play: add MyOffice support
 - epm repack.d: fix quotes
