@@ -11,7 +11,7 @@ PRODUCTDIR=/opt/Telegram
 . $(dirname $0)/common.sh
 
 # /usr/bin/Telegram
-subst '1iConflicts:telegram-desktop < 3.2.8' $SPEC
+subst '1iConflicts:telegram-desktop' $SPEC
 
 subst "s|^Group:.*|Group: Networking/Instant messaging|" $SPEC
 subst "s|^License: unknown$|License: GPLv2|" $SPEC
