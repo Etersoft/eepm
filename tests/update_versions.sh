@@ -7,9 +7,10 @@ fatal()
     exit 1
 }
 
-TDIR=~/epm-play-versions
-EDIR=~/epm-errors
-LDIR=~/epm-logs
+LOGDIR=~
+TDIR=$LOGDIR/epm-play-versions
+EDIR=$LOGDIR/epm-errors
+LDIR=$LOGDIR/epm-logs
 mkdir -p $TDIR/ $EDIR/ $LDIR/
 
 rm -f $EDIR/errors.txt
@@ -23,8 +24,11 @@ install_app()
     local alt="$2"
     [ -n "$alt" ] && applog="$applog.$alt"
 
-    echo "epm play $app $alt"
-    $EPM play --verbose --auto $app $alt >$EDIR/$applog 2>&1 || return
+    echo -n "epm play $app $alt ..."
+    $EPM play --verbose --auto $app $alt >$EDIR/$applog 2>&1
+    local RES=$?
+    [ "$RES" = 0 ] && echo "OK" || echo "FAILED"
+    [ "$RES" = 0 ] || return $RES
 
     mv -f $EDIR/$applog $LDIR/$applog
 
