@@ -6,9 +6,37 @@ fatal()
     exit 1
 }
 
+check_url_is_accessible()
+{
+    local res
+    epm tool eget --check "$1"
+}
+
+# update URL variable
+update_url_if_need_mirrored()
+{
+    local MIRROR="$1"
+    local SECONDURL
+    check_url_is_accessible "$URL" && return
+    if [ -n "$MIRROR" ] ; then
+        check_url_is_accessible "$MIRROR" && URL="$MIRROR"
+        return
+    fi
+
+    MIRROR="https://mirror.eterfund.ru"
+    SECONDURL="$(echo "$URL" | sed -e "s|^.*://|$MIRROR/|")"
+    check_url_is_accessible "$SECONDURL" && URL="$SECONDURL" && return
+
+    MIRROR="https://mirror.eterfund.org"
+    SECONDURL="$(echo "$URL" | sed -e "s|^.*://|$MIRROR/|")"
+    check_url_is_accessible "$SECONDURL" && URL="$SECONDURL" && return
+
+}
+
 get_latest_version()
 {
-    local URL="https://eepm.ru/app-versions"
+    URL="https://eepm.ru/app-versions"
+    update_url_if_need_mirrored
     epm tool eget -q -O- "$URL/$1"
 }
 
@@ -84,31 +112,5 @@ check_supported_arch()
     return 1
 }
 
-check_url_is_accessible()
-{
-    local res
-    epm tool eget --check "$1"
-}
-
-# update URL variable
-update_url_if_need_mirrored()
-{
-    local MIRROR="$1"
-    local SECONDURL
-    check_url_is_accessible "$URL" && return
-    if [ -n "$MIRROR" ] ; then
-        check_url_is_accessible "$MIRROR" && URL="$MIRROR"
-        return
-    fi
-
-    MIRROR="https://mirror.eterfund.ru"
-    SECONDURL="$(echo "$URL" | sed -e "s|^.*://|$MIRROR/|")"
-    check_url_is_accessible "$SECONDURL" && URL="$SECONDURL" && return
-
-    MIRROR="https://mirror.eterfund.org"
-    SECONDURL="$(echo "$URL" | sed -e "s|^.*://|$MIRROR/|")"
-    check_url_is_accessible "$SECONDURL" && URL="$SECONDURL" && return
-
-}
 
 check_supported_arch $SUPPORTEDARCHES || fatal "Only $SUPPORTEDARCHES is supported"
