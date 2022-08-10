@@ -749,11 +749,17 @@ Base distro (vendor) name (-s|-n): $(pkgvendor)
 EOF
 }
 
+case "$2" in
+	-*)
+		echo "Unsupported option $2" >&2
+		exit 1
+		;;
+esac
 
-case $1 in
+case "$1" in
 	-h|--help)
 		echo "distro_info v$PROGVERSION - distro information retriever"
-		echo "Usage: distro_info [options] [args]"
+		echo "Usage: distro_info [options] [SystemName/Version]"
 		echo "Options:"
 		echo " -a - print hardware architecture (--distro-arch for distro depended name)"
 		echo " -b - print size of arch bit (32/64)"
@@ -765,9 +771,9 @@ case $1 in
 		echo " -h - this help"
 		echo " -m - print system memory size (in MB)"
 		echo " -o - print base OS name"
-		echo " -p [SystemName] - print type of the packaging system"
-		echo " -g [SystemName] - print name of the packaging system"
-		echo " -s|-n [SystemName] - print base name of the distro (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (as _vendor macros in rpm)"
+		echo " -p - print type of the packaging system"
+		echo " -g - print name of the packaging system"
+		echo " -s|-n - print base name of the distro (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (see _vendor macros in rpm)"
 		echo " -y - print running service manager"
 		echo " --pretty - print pretty distro name"
 		echo " -v - print version of distro"
@@ -845,6 +851,10 @@ case $1 in
 	-e)
 		override_distrib "$2"
 		print_name_version
+		;;
+	-*)
+		echo "Unsupported option $1" >&2
+		exit 1
 		;;
 	*)
 		override_distrib "$1"
