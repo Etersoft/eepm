@@ -585,6 +585,12 @@ set_distro_info()
 		DISTRARCH=$($DISTRVENDOR --distro-arch)
 	fi
 	DISTRCONTROL="$($DISTRVENDOR -y)"
+
+	# TODO: improve BIGTMPDIR conception
+	# https://bugzilla.mozilla.org/show_bug.cgi?id=69938
+	# https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s15.html
+	# https://geekpeach.net/ru/%D0%BA%D0%B0%D0%BA-systemd-tmpfiles-%D0%BE%D1%87%D0%B8%D1%89%D0%B0%D0%B5%D1%82-tmp-%D0%B8%D0%BB%D0%B8-var-tmp-%D0%B7%D0%B0%D0%BC%D0%B5%D0%BD%D0%B0-tmpwatch-%D0%B2-centos-rhel-7
+	[ -n "$BIGTMPDIR" ] || [ -d "/var/tmp" ] && BIGTMPDIR="/var/tmp" || BIGTMPDIR="/tmp"
 }
 
 set_pm_type()
@@ -3101,14 +3107,6 @@ __epm_check_if_src_rpm()
     for pkg in $@ ; do
         echo "$pkg" | grep -q "\.src.\rpm" && fatal "Installation of a source packages (like '$pkg') is not supported."
     done
-}
-
-__epm_check_if_needed_repack()
-{
-    local pkgname="$(epm print name from "$1")"
-    local repackcode="$CONFIGDIR/repack.d/$pkgname.sh"
-    [ -x "$repackcode" ] || return
-    warning "There is repack rule for $pkgname package. It is better install this package via 'epm --repack install' or 'epm play'."
 }
 
 __epm_if_command_path()
@@ -6456,6 +6454,17 @@ esac
 # File bin/epm-repack:
 
 
+
+__epm_check_if_needed_repack()
+{
+    # FIXME: use real way (for any archive)
+    # FIXME: from вроде не существует и не работает
+    local pkgname="$(epm print name from "$1")"
+    local repackcode="$CONFIGDIR/repack.d/$pkgname.sh"
+    [ -x "$repackcode" ] || return
+    warning "There is repack rule for $pkgname package. It is better install this package via 'epm --repack install' or 'epm play'."
+}
+
 __epm_split_by_pkg_type()
 {
 	local type="$1"
@@ -6483,7 +6492,7 @@ __epm_repack_to_deb()
 
 	repacked_pkgs=''
 
-	local TDIR=$(mktemp -d)
+	local TDIR=$(mktemp -d --tmpdir=$BIGTMPDIR)
 
 	for pkg in $pkgs ; do
 		abspkg="$(realpath "$pkg")"
@@ -6567,7 +6576,7 @@ __fix_spec()
     subst "s|Summary: *$|Summary: $pkgname (was empty Summary after alien)|" $spec
     subst "s|^\(Version: .*\)~.*|\1|" $spec
     subst "s|^Release: |Release: alt1.repacked.with.epm.|" $spec
-    subst "s|^Distribution:.*||" $SPEC
+    subst "s|^Distribution:.*||" $spec
     subst "s|^\((Converted from a\) \(.*\) \(package.*\)|(Repacked from binary \2 package with epm $EPMVERSION)\n\1 \2 \3|" $spec
     #" hack for highlight
 }
@@ -6654,15 +6663,22 @@ __prepare_source_package()
 
     __set_version_pkgname $alpkg
     if [ -n "$VERSION" ] ; then
+        # TODO: don't use erc for detect type? then we potentially can skip install it
         assure_exists erc || fatal
         pkgtype="$(a= erc type $alpkg)"
-        [ -n "$PKGNAME" ] || PKGNAME=$(basename $alpkg .$pkgtype)
+        local newalpkg
+        newalpkg=$PKGNAME-$VERSION.$pkgtype
+        #[ -n "$PKGNAME" ] || PKGNAME=$(basename $alpkg .$pkgtype)
         if [ "$pkgtype" = "tar" ] || [ "$pkgtype" = "tar.gz" ] || [ "$pkgtype" = "tgz" ] ; then
+            mv $alpkg $newalpkg
             :
         else
-            newalpkg=$(basename $alpkg .$pkgtype).tar
+            newalpkg=$PKGNAME-$VERSION.tar
+            #newalpkg=$(basename $alpkg .$pkgtype).tar
             assure_exists erc || fatal
             a= erc repack $alpkg $newalpkg || fatal
+        fi
+        if [ "$alpkg" != "$newalpkg" ] ; then
             rm -f $verbose $alpkg
             alpkg=$newalpkg
         fi
@@ -6673,17 +6689,26 @@ __prepare_source_package()
 __epm_repack_to_rpm()
 {
     local pkgs="$*"
-    case $DISTRNAME in
-        ALTLinux|ALTServer)
-            ;;
-        *)
-            assure_distr ALTLinux "install --repack for rpm target"
-            ;;
-    esac
+    #case $DISTRNAME in
+    #    ALTLinux|ALTServer)
+    #        ;;
+    #    *)
+    #        assure_distr ALTLinux "install --repack for rpm target"
+    #        ;;
+    #esac
 
-    # install epm-repack for static (package based) dependencies
+    # Note: install epm-repack for static (package based) dependencies
     assure_exists alien || fatal
-    assure_exists /usr/bin/rpmbuild rpm-build || fatal
+
+    # TODO: check for all systems
+	case $PKGFORMAT in
+		rpm)
+			assure_exists /usr/bin/rpmbuild rpm-build || fatal
+			;;
+		deb)
+			assure_exists /usr/bin/rpmbuild rpm || fatal
+			;;
+	esac
 
     # TODO: improve
     if echo "$pkgs" | grep -q "\.deb" ; then
@@ -6693,7 +6718,7 @@ __epm_repack_to_rpm()
     fi
 
     local pkg
-    export HOME=$(mktemp -d)
+    export HOME=$(mktemp -d --tmpdir=$BIGTMPDIR)
     __create_rpmmacros
 
     local alpkg
@@ -6730,7 +6755,7 @@ __epm_repack_to_rpm()
         [ -s "$spec" ] || fatal "can't find spec"
         mv $spec $tmpbuilddir || fatal
         spec="$tmpbuilddir/$(basename "$spec")"
-        __set_name_version $spec $PKGNAME $VERSION
+        #__set_name_version $spec $PKGNAME $VERSION
         local pkgname="$(grep "^Name: " $spec | sed -e "s|Name: ||g" | head -n1)"
 
         # for tarballs fix permissions
@@ -6790,7 +6815,17 @@ __epm_repack()
 			__epm_repack_to_rpm "$@" || return
 			;;
 		deb)
-			__epm_repack_to_deb "$@" || return
+			# FIXME: only one package in $@ is supported
+			#local pkgname="$(epm print name from "$@")"
+			__set_version_pkgname "$1"
+			local repackcode="$CONFIGDIR/repack.d/$PKGNAME.sh"
+			if [ -x "$repackcode" ] ; then
+				__epm_repack_to_rpm "$@" || return
+				[ -n "$repacked_pkgs" ] || return
+				__epm_repack_to_deb $repacked_pkgs
+			else
+				__epm_repack_to_deb "$@" || return
+			fi
 			;;
 		*)
 			fatal "$PKGFORMAT is not supported for repack yet"
@@ -9983,11 +10018,17 @@ Base distro (vendor) name (-s|-n): $(pkgvendor)
 EOF
 }
 
+case "$2" in
+	-*)
+		echo "Unsupported option $2" >&2
+		exit 1
+		;;
+esac
 
-case $1 in
+case "$1" in
 	-h|--help)
 		echo "distro_info v$PROGVERSION - distro information retriever"
-		echo "Usage: distro_info [options] [args]"
+		echo "Usage: distro_info [options] [SystemName/Version]"
 		echo "Options:"
 		echo " -a - print hardware architecture (--distro-arch for distro depended name)"
 		echo " -b - print size of arch bit (32/64)"
@@ -9999,9 +10040,9 @@ case $1 in
 		echo " -h - this help"
 		echo " -m - print system memory size (in MB)"
 		echo " -o - print base OS name"
-		echo " -p [SystemName] - print type of the packaging system"
-		echo " -g [SystemName] - print name of the packaging system"
-		echo " -s|-n [SystemName] - print base name of the distro (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (as _vendor macros in rpm)"
+		echo " -p - print type of the packaging system"
+		echo " -g - print name of the packaging system"
+		echo " -s|-n - print base name of the distro (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (see _vendor macros in rpm)"
 		echo " -y - print running service manager"
 		echo " --pretty - print pretty distro name"
 		echo " -v - print version of distro"
@@ -10079,6 +10120,10 @@ case $1 in
 	-e)
 		override_distrib "$2"
 		print_name_version
+		;;
+	-*)
+		echo "Unsupported option $1" >&2
+		exit 1
 		;;
 	*)
 		override_distrib "$1"
@@ -11080,7 +11125,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.22.3  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.23.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11090,7 +11135,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.22.3
+EPMVERSION=3.23.0
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=

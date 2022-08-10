@@ -576,6 +576,12 @@ set_distro_info()
 		DISTRARCH=$($DISTRVENDOR --distro-arch)
 	fi
 	DISTRCONTROL="$($DISTRVENDOR -y)"
+
+	# TODO: improve BIGTMPDIR conception
+	# https://bugzilla.mozilla.org/show_bug.cgi?id=69938
+	# https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s15.html
+	# https://geekpeach.net/ru/%D0%BA%D0%B0%D0%BA-systemd-tmpfiles-%D0%BE%D1%87%D0%B8%D1%89%D0%B0%D0%B5%D1%82-tmp-%D0%B8%D0%BB%D0%B8-var-tmp-%D0%B7%D0%B0%D0%BC%D0%B5%D0%BD%D0%B0-tmpwatch-%D0%B2-centos-rhel-7
+	[ -n "$BIGTMPDIR" ] || [ -d "/var/tmp" ] && BIGTMPDIR="/var/tmp" || BIGTMPDIR="/tmp"
 }
 
 set_pm_type()
@@ -2054,11 +2060,17 @@ Base distro (vendor) name (-s|-n): $(pkgvendor)
 EOF
 }
 
+case "$2" in
+	-*)
+		echo "Unsupported option $2" >&2
+		exit 1
+		;;
+esac
 
-case $1 in
+case "$1" in
 	-h|--help)
 		echo "distro_info v$PROGVERSION - distro information retriever"
-		echo "Usage: distro_info [options] [args]"
+		echo "Usage: distro_info [options] [SystemName/Version]"
 		echo "Options:"
 		echo " -a - print hardware architecture (--distro-arch for distro depended name)"
 		echo " -b - print size of arch bit (32/64)"
@@ -2070,9 +2082,9 @@ case $1 in
 		echo " -h - this help"
 		echo " -m - print system memory size (in MB)"
 		echo " -o - print base OS name"
-		echo " -p [SystemName] - print type of the packaging system"
-		echo " -g [SystemName] - print name of the packaging system"
-		echo " -s|-n [SystemName] - print base name of the distro (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (as _vendor macros in rpm)"
+		echo " -p - print type of the packaging system"
+		echo " -g - print name of the packaging system"
+		echo " -s|-n - print base name of the distro (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (see _vendor macros in rpm)"
 		echo " -y - print running service manager"
 		echo " --pretty - print pretty distro name"
 		echo " -v - print version of distro"
@@ -2150,6 +2162,10 @@ case $1 in
 	-e)
 		override_distrib "$2"
 		print_name_version
+		;;
+	-*)
+		echo "Unsupported option $1" >&2
+		exit 1
 		;;
 	*)
 		override_distrib "$1"
@@ -2262,7 +2278,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.22.3  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.23.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
