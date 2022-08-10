@@ -96,7 +96,7 @@ case "$1" in
         # just pass
         ;;
     *)
-        fatal "Unknown command $1"
+        fatal "Unknown command '$1'. Use this script only via epm play."
         ;;
 esac
 
@@ -112,5 +112,16 @@ check_supported_arch()
     return 1
 }
 
+# legacy compatibility and support direct run the script
+if [ -z "$DISTRVENDOR" ] ; then
+    export DISTRVENDOR="epm print info"
+    if [ -x "../bin/epm" ] ; then
+        export PATH="$(realpath ../bin):$PATH"
+    fi
+fi
+
+if [ -z "$SUDO" ] && [ "$UID" != "0" ] ; then
+    SUDO="sudo"
+fi
 
 check_supported_arch $SUPPORTEDARCHES || fatal "Only $SUPPORTEDARCHES is supported"
