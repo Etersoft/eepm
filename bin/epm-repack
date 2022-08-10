@@ -147,7 +147,7 @@ __fix_spec()
     subst "s|Summary: *$|Summary: $pkgname (was empty Summary after alien)|" $spec
     subst "s|^\(Version: .*\)~.*|\1|" $spec
     subst "s|^Release: |Release: alt1.repacked.with.epm.|" $spec
-    subst "s|^Distribution:.*||" $SPEC
+    subst "s|^Distribution:.*||" $spec
     subst "s|^\((Converted from a\) \(.*\) \(package.*\)|(Repacked from binary \2 package with epm $EPMVERSION)\n\1 \2 \3|" $spec
     #" hack for highlight
 }
