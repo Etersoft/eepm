@@ -61,7 +61,7 @@ __epm_repack_to_deb()
 
 	repacked_pkgs=''
 
-	local TDIR=$(mktemp -d)
+	local TDIR=$(mktemp -d --tmpdir=$BIGTMPDIR)
 
 	for pkg in $pkgs ; do
 		abspkg="$(realpath "$pkg")"
@@ -299,7 +299,7 @@ __epm_repack_to_rpm()
     fi
 
     local pkg
-    export HOME=$(mktemp -d)
+    export HOME=$(mktemp -d --tmpdir=$BIGTMPDIR)
     __create_rpmmacros
 
     local alpkg
