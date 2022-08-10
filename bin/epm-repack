@@ -20,6 +20,17 @@
 load_helper epm-sh-altlinux
 load_helper epm-assure
 
+
+__epm_check_if_needed_repack()
+{
+    # FIXME: use real way (for any archive)
+    # FIXME: from вроде не существует и не работает
+    local pkgname="$(epm print name from "$1")"
+    local repackcode="$CONFIGDIR/repack.d/$pkgname.sh"
+    [ -x "$repackcode" ] || return
+    warning "There is repack rule for $pkgname package. It is better install this package via 'epm --repack install' or 'epm play'."
+}
+
 # arg: rpm or deb
 # fills split_replaced_pkgs with packages of that type
 __epm_split_by_pkg_type()
