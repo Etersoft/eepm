@@ -97,12 +97,18 @@ update_url_if_need_mirrored()
     local SECONDURL
     check_url_is_accessible "$URL" && return
     if [ -n "$MIRROR" ] ; then
-        SECONDURL="$MIRROR"
-    else
-        MIRROR="https://mirror.eterfund.org"
-        SECONDURL="$(echo "$URL" | sed -e "s|^.*://|$MIRROR/|")"
+        check_url_is_accessible "$MIRROR" && URL="$MIRROR"
+        return
     fi
-    check_url_is_accessible "$SECONDURL" && URL="$SECONDURL"
+
+    MIRROR="https://mirror.eterfund.ru"
+    SECONDURL="$(echo "$URL" | sed -e "s|^.*://|$MIRROR/|")"
+    check_url_is_accessible "$SECONDURL" && URL="$SECONDURL" && return
+
+    MIRROR="https://mirror.eterfund.org"
+    SECONDURL="$(echo "$URL" | sed -e "s|^.*://|$MIRROR/|")"
+    check_url_is_accessible "$SECONDURL" && URL="$SECONDURL" && return
+
 }
 
 check_supported_arch $SUPPORTEDARCHES || fatal "Only $SUPPORTEDARCHES is supported"
