@@ -30,7 +30,7 @@ case "$($DISTRVENDOR -d)" in
     epm install --repack https://packages.microsoft.com/rhel/8/mssql-server-2019/mssql-server-1*.x86_64.rpm || fatal
     ;;
   *)
-    fatal "$(DISTRVENDOR -d) is not supported yet."
+    fatal "$($DISTRVENDOR -d) is not supported yet."
     ;;
 esac
 
