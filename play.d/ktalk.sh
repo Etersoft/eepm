@@ -6,6 +6,14 @@ DESCRIPTION="Контур.Толк (ktalk) from the official site"
 
 . $(dirname $0)/common.sh
 
+
+case "$(epm print info -d)" in
+    ALTLinux|ALTServer)
+        epm install --skip-installed at-spi2-atk glib2 libalsa libatk libat-spi2-core libcairo libcups libdbus libdbus-glib libdbusmenu libdbusmenu-gtk2 libdrm libexpat libgbm libgdk-pixbuf libgio libgtk+2 libgtk+3 libindicator libpango libX11 libxcb libXcomposite libXdamage libXext libXfixes libxkbcommon libXrandr
+        ;;
+esac
+
+
 URL="https://app.ktalk.ru/system/dist/download/linux"
 
 # curl can't get filename: https://github.com/curl/curl/issues/8461
