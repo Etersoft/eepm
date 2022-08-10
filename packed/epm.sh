@@ -2300,6 +2300,7 @@ __download_pkg_urls()
 	[ -z "$pkg_urls" ] && return
 	for url in $pkg_urls ; do
 		local tmppkg=$(mktemp -d) || fatal "failed mktemp -d"
+		docmd chmod $verbose a+rX $tmppkg
 		showcmd cd $tmppkg
 		cd $tmppkg || fatal
 		if docmd eget --latest "$url" ; then
@@ -2307,6 +2308,7 @@ __download_pkg_urls()
 			# use downloaded file
 			i=$(echo *.*)
 			[ -s "$tmppkg/$i" ] || continue
+			docmd chmod $verbose a+r "$tmppkg/$i"
 			pkg_files="$pkg_files $tmppkg/$i"
 			to_remove_pkg_files="$to_remove_pkg_files $tmppkg/$i"
 		else
@@ -3106,12 +3108,18 @@ __epm_check_if_needed_repack()
     local pkgname="$(epm print name from "$1")"
     local repackcode="$CONFIGDIR/repack.d/$pkgname.sh"
     [ -x "$repackcode" ] || return
-    warning "There is exists repack rules for $pkgname package. It is better install this package via epm --repack install or epm play."
+    warning "There is repack rule for $pkgname package. It is better install this package via 'epm --repack install' or 'epm play'."
+}
+
+__epm_if_command_path()
+{
+    is_dirpath "$1" && rhas "$1" "bin/"
 }
 
 epm_install_files()
 {
-    [ -z "$1" ] && return
+    local files="$@"
+    [ -z "$files" ] && return
 
     # TODO: check read permissions
     # sudo test -r FILE
@@ -3119,26 +3127,32 @@ epm_install_files()
     case "$DISTRNAME" in
         ALTLinux|ALTServer)
 
-            # TODO: replace with name changed function
-            __epm_check_if_try_install_pkgtype deb $@ && return $RES
-            __epm_check_if_try_install_pkgtype AppImage $@ && return $RES
-            __epm_check_if_src_rpm $@
+            # do not use low-level for install by file path (f.i. epm install /usr/bin/git)
+            if __epm_if_command_path $files ; then
+                epm_install_names $files
+                return
+            fi
 
-            # do not use low-level for install by file path (FIXME: reasons?)
-            if ! is_dirpath "$@" || [ "$(get_package_type "$@")" = "rpm" ] ; then
-                __epm_check_vendor $@
-                __epm_check_if_needed_repack $@
-                sudocmd rpm -Uvh $force $noscripts $nodeps $@ && save_installed_packages $@ && return
-                local RES=$?
-                # TODO: check rpm result code and convert it to compatible format if possible
-                __epm_check_if_rpm_already_installed $@ && return
+            # on ALT install target can be a real path
+            if __epm_repack_if_needed $files ; then
+                [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
+                files="$repacked_pkgs"
+            fi
+
+            __epm_check_if_src_rpm $files
+
+            if [ -z "$repacked_pkgs" ] ; then
+                __epm_check_vendor $files
+                __epm_check_if_needed_repack $files
+            fi
+
+            sudocmd rpm -Uvh $force $noscripts $nodeps $files && save_installed_packages $files && return
+            local RES=$?
+            # TODO: check rpm result code and convert it to compatible format if possible
+            __epm_check_if_rpm_already_installed $files && return
 
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return $RES
-            fi
-
-            epm_install_names "$@"
-            return
             ;;
     esac
 
@@ -3149,23 +3163,28 @@ epm_install_files()
                 DPKGOPTIONS="--force-confdef --force-confold"
             fi
 
-            __epm_check_if_try_install_rpm $@ && return
+            if __epm_repack_if_needed $files ; then
+                [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
+                files="$repacked_pkgs"
+                # TODO
+                #__epm_remove_tmp_files
+            fi
 
             # TODO: if dpkg can't install due missed deps, trying with apt (as for now, --refuse-depends, --refuse-breaks don't help me)
 
             if [ -n "$nodeps" ] ; then
-                sudocmd dpkg $DPKGOPTIONS -i $@
+                sudocmd dpkg $DPKGOPTIONS -i $files
                 return
             fi
 
             # TODO: don't resolve fuzzy dependencies ()
             # are there apt that don't support dpkg files to install?
-            epm_install_names $(make_filepath "$@")
+            epm_install_names $(make_filepath $files)
             return
 
             # old way:
 
-            sudocmd dpkg $DPKGOPTIONS -i $@
+            sudocmd dpkg $DPKGOPTIONS -i $files
             local RES=$?
 
             # return OK if all is OK
@@ -3177,18 +3196,23 @@ epm_install_files()
             epm_check
 
             # repeat install for get correct status
-            sudocmd dpkg $DPKGOPTIONS -i $@
+            sudocmd dpkg $DPKGOPTIONS -i $files
             return
             ;;
 
        *-rpm)
-            __epm_check_if_try_install_pkgtype deb $@ && return $RES
-            __epm_check_if_try_install_pkgtype AppImage $@ && return $RES
-            __epm_check_if_src_rpm $@
-            sudocmd rpm -Uvh $force $noscripts $nodeps $@ && return
+            if __epm_repack_if_needed $files ; then
+                [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
+                files="$repacked_pkgs"
+                # TODO
+                #__epm_remove_tmp_files
+            fi
+
+            __epm_check_if_src_rpm $files
+            sudocmd rpm -Uvh $force $noscripts $nodeps $files && return
             local RES=$?
 
-            __epm_check_if_rpm_already_installed $@ && return
+            __epm_check_if_rpm_already_installed $files && return
 
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return $RES
@@ -3212,44 +3236,44 @@ epm_install_files()
             esac
             ;;
         packagekit)
-            docmd pkcon install-local $@
+            docmd pkcon install-local $files
             return ;;
         pkgsrc)
-            sudocmd pkg_add $@
+            sudocmd pkg_add $files
             return ;;
         pkgng)
-            local PKGTYPE="$(get_package_type $@)"
+            local PKGTYPE="$(get_package_type $files)"
             case "$PKGTYPE" in
                 tbz)
-                    sudocmd pkg_add $@
+                    sudocmd pkg_add $files
                     ;;
                 *)
-                    sudocmd pkg add $@
+                    sudocmd pkg add $files
                     ;;
             esac
             return ;;
         android)
-            sudocmd pm install $@
+            sudocmd pm install $files
             return ;;
         emerge)
-            sudocmd epm_install_emerge $@
+            sudocmd epm_install_emerge $files
             return ;;
         pacman)
-            sudocmd pacman -U --noconfirm $nodeps $@ && return
+            sudocmd pacman -U --noconfirm $nodeps $files && return
             local RES=$?
 
             [ -n "$nodeps" ] && return $RES
-            sudocmd pacman -U $@
+            sudocmd pacman -U $files
             return ;;
         slackpkg)
             # FIXME: check for full package name
             # FIXME: broken status when use batch and default answer
-            __separate_sudocmd_foreach "/sbin/installpkg" "/sbin/upgradepkg" $@
+            __separate_sudocmd_foreach "/sbin/installpkg" "/sbin/upgradepkg" $files
             return ;;
     esac
 
     # other systems can install file package via ordinary command
-    epm_install_names "$@"
+    epm_install_names $files
 }
 
 epm_print_install_command()
@@ -3412,20 +3436,14 @@ epm_install()
 
     # repack binary files
     if [ -n "$repack" ] ; then
-        # FIXME: see to_remove below
-        __epm_repack_to_rpm $files || fatal
-        files="$repacked_rpms"
+        __epm_repack $files || return
+        files="$repacked_pkgs"
     fi
 
     epm_install_files $files
     local RETVAL=$?
 
-    # TODO: move it to exit handler
-    if [ -z "$DEBUG" ] ; then
-    # TODO: reinvent
-    [ -n "$to_remove_pkg_files" ] && rm -fv $to_remove_pkg_files
-    [ -n "$to_remove_pkg_files" ] && rmdir -v $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
-    fi
+    __epm_remove_tmp_files
 
     return $RETVAL
 }
@@ -6448,32 +6466,43 @@ __epm_split_by_pkg_type()
 	for pkg in "$@" ; do
 		[ "$(get_package_type "$pkg")" = "$type" ] || return 1
 		[ -e "$pkg" ] || fatal "Can't read $pkg"
-		split_replaced_pkgs="$split_target_pkgs $pkg"
+		split_replaced_pkgs="$split_replaced_pkgs $pkg"
 	done
 
 	[ -n "$split_replaced_pkgs" ]
 }
 
-__epm_repack_rpm_to_deb()
+__epm_repack_to_deb()
 {
 	local pkg
-	local rpmpkgs="$1"
+	local pkgs="$@"
 
 	assure_exists alien
 	assure_exists fakeroot
 	assure_exists rpm
 
-	repacked_debs=''
+	repacked_pkgs=''
 
 	local TDIR=$(mktemp -d)
 
-	for pkg in $rpmpkgs ; do
-		pkg="$(realpath "$pkg")"
+	for pkg in $pkgs ; do
+		abspkg="$(realpath "$pkg")"
+		info "Repacking $abspkg to local deb format ..."
+
+		alpkg=$(basename $pkg)
+		# don't use abs package path: copy package to temp dir and use there
+		cp $verbose $pkg $TDIR/$alpkg
+
 		cd $TDIR || fatal
-		showcmd_store_output fakeroot alien -d -k $scripts "$pkg"
+		__prepare_source_package "$pkg"
+
+		showcmd_store_output fakeroot alien -d -k $scripts "$alpkg"
 		local DEBCONVERTED=$(grep "deb generated" $RC_STDOUT | sed -e "s| generated||g")
-		repacked_debs="$repacked_rpms $(realpath $DEBCONVERTED)"
-		to_remove_pkg_files="$to_remove_pkg_files $(realpath $DEBCONVERTED)"
+		if [ -n "$DEBCONVERTED" ] ; then
+			repacked_pkgs="$repacked_pkgs $(realpath $DEBCONVERTED)"
+			to_remove_pkg_files="$to_remove_pkg_files $(realpath $DEBCONVERTED)"
+		fi
+		to_remove_pkg_dirs="$to_remove_pkg_files $TDIR"
 		clean_store_output
 		cd - >/dev/null
 	done
@@ -6490,17 +6519,6 @@ __epm_repack_rpm_to_deb()
 	return 0
 }
 
-
-__epm_check_if_try_install_rpm()
-{
-	__epm_split_by_pkg_type rpm "$@" || return 1
-	__epm_repack_rpm_to_deb $split_replaced_pkgs
-
-	# TODO: move to install
-	docmd epm install $repacked_debs
-
-	return 0
-}
 
 __set_name_version()
 {
@@ -6593,6 +6611,65 @@ EOF
     to_remove_pkg_files="$to_remove_pkg_files $HOME/.rpmmacros"
 }
 
+__set_version_pkgname()
+{
+    local alpkg="$1"
+    VERSION="$(echo "$alpkg" | grep -o -P "[-_.]([0-9])([0-9])*(\.[0-9])*" | head -n1 | sed -e 's|^[-_.]||')" #"
+    [ -n "$VERSION" ] && PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
+}
+
+__prepare_source_package()
+{
+    local pkg="$1"
+
+    alpkg=$(basename $pkg)
+
+    # TODO: use func for get name from deb pkg
+    # TODO: epm print name from deb package
+    # TODO: use stoplist only for deb?
+    [ -z "$force" ] && __check_stoplist $(echo $alpkg | sed -e "s|_.*||") && fatal "Please use official package instead of $alpkg repacking (It is not recommended to use --force to skip this checking."
+
+    PKGNAME=''
+    VERSION=''
+    SUBGENERIC=''
+
+    # convert tarballs to tar (for alien)
+    if rhas "$alpkg" "\.(rpm|deb)$" ; then
+        return
+    fi
+
+    if rhas "$alpkg" "\.AppImage$" ; then
+        __set_version_pkgname $alpkg
+        [ -n "$VERSION" ] || fatal "Can't get version from $alpkg."
+        SUBGENERIC='appimage'
+        # TODO: move repack archive to erc?
+        [ -x "$alpkg" ] || docmd chmod u+x $verbose "$alpkg"
+        ./$alpkg --appimage-extract || fatal
+        alpkg=$PKGNAME-$VERSION.tar
+        assure_exists erc || fatal
+        # make a tar for alien
+        a= erc a $alpkg squashfs-root
+        return
+    fi
+
+    __set_version_pkgname $alpkg
+    if [ -n "$VERSION" ] ; then
+        assure_exists erc || fatal
+        pkgtype="$(a= erc type $alpkg)"
+        [ -n "$PKGNAME" ] || PKGNAME=$(basename $alpkg .$pkgtype)
+        if [ "$pkgtype" = "tar" ] || [ "$pkgtype" = "tar.gz" ] || [ "$pkgtype" = "tgz" ] ; then
+            :
+        else
+            newalpkg=$(basename $alpkg .$pkgtype).tar
+            assure_exists erc || fatal
+            a= erc repack $alpkg $newalpkg || fatal
+            rm -f $verbose $alpkg
+            alpkg=$newalpkg
+        fi
+    fi
+}
+
+
 __epm_repack_to_rpm()
 {
     local pkgs="$*"
@@ -6600,7 +6677,7 @@ __epm_repack_to_rpm()
         ALTLinux|ALTServer)
             ;;
         *)
-            assure_distr ALTLinux "install --repack"
+            assure_distr ALTLinux "install --repack for rpm target"
             ;;
     esac
 
@@ -6622,62 +6699,20 @@ __epm_repack_to_rpm()
     local alpkg
     local abspkg
     local tmpbuilddir
-    repacked_rpms=''
+    repacked_pkgs=''
     for pkg in $pkgs ; do
         tmpbuilddir=$HOME/$(basename $pkg).tmpdir
         mkdir $tmpbuilddir
         abspkg="$(realpath $pkg)"
         info ""
         info "Repacking $abspkg to local rpm format ..."
-        # alien failed with spaced names
-        # alpkg=$abspkg
-        alpkg=$(basename $pkg)
-        # TODO: use func for get name from deb pkg
-        # TODO: epm print name from deb package
-        # TODO: use stoplist only for deb?
-        [ -z "$force" ] && __check_stoplist $(echo $alpkg | sed -e "s|_.*||") && fatal "Please use official rpm package instead of $alpkg (It is not recommended to use --force to skip this checking."
 
+        alpkg=$(basename $pkg)
         # don't use abs package path: copy package to temp dir and use there
         cp $verbose $pkg $tmpbuilddir/../$alpkg
 
         cd $tmpbuilddir/../ || fatal
-
-        PKGNAME=''
-        VERSION=''
-        SUBGENERIC=''
-        # convert tarballs to tar (for alien)
-        if rhas "$pkg" "\.(rpm|deb)$" ; then
-            :
-        elif rhas "$pkg" "\.AppImage$" ; then
-            VERSION="$(echo "$alpkg" | grep -o -P "[-_.]([0-9])([0-9])*(\.[0-9])*" | head -n1 | sed -e 's|^[-_.]||')" #"
-            [ -n "$VERSION" ] || fatal "Can't get version from $alpkg."
-            PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
-            # TODO: move repack archive to erc?
-            [ -x "$alpkg" ] || docmd chmod u+x -v "$alpkg"
-            #[ -x "$alpkg" ] || sudocmd chmod u+x -v "$abspkg"
-            SUBGENERIC='appimage'
-            ./$alpkg --appimage-extract || fatal
-            alpkg=$PKGNAME-$VERSION.tar
-            assure_exists erc || fatal
-            a= erc a $alpkg squashfs-root
-        else
-            VERSION="$(echo "$alpkg" | grep -o -P "[-_.]([0-9])([0-9])*(\.[0-9])*" | head -n1 | sed -e 's|^[-_.]||')" #"
-            if [ -n "$VERSION" ] ; then
-                PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
-                pkgtype="$(a= erc type $alpkg)"
-                [ -n "$PKGNAME" ] || PKGNAME=$(basename $alpkg .$pkgtype)
-                if [ "$pkgtype" = "tar" ] || [ "$pkgtype" = "tar.gz" ] || [ "$pkgtype" = "tgz" ] ; then
-                    :
-                else
-                    newalpkg=$(basename $alpkg .$pkgtype).tar
-                    assure_exists erc || fatal
-                    a= erc repack $alpkg $newalpkg || fatal
-                    rm -f $verbose $alpkg
-                    alpkg=$newalpkg
-                fi
-            fi
-        fi
-
+        __prepare_source_package "$pkg"
         cd $tmpbuilddir/ || fatal
 
         if [ -n "$verbose" ] ; then
@@ -6699,7 +6734,7 @@ __epm_repack_to_rpm()
         local pkgname="$(grep "^Name: " $spec | sed -e "s|Name: ||g" | head -n1)"
 
         # for tarballs fix permissions
-        [ -n "$VERSION" ] && chmod -R a+rX $tmpbuilddir/$subdir/*
+        [ -n "$VERSION" ] && chmod $verbose -R a+rX $tmpbuilddir/$subdir/*
 
         __fix_spec $pkgname $tmpbuilddir/$subdir $spec
         __apply_fix_code "generic" $tmpbuilddir/$subdir $spec
@@ -6717,7 +6752,7 @@ __epm_repack_to_rpm()
         rm -f $tmpbuilddir/../$alpkg
         local repacked_rpm="$(realpath $tmpbuilddir/../*.rpm)"
         if [ -s "$repacked_rpm" ] ; then
-            repacked_rpms="$repacked_rpms $repacked_rpm"
+            repacked_pkgs="$repacked_pkgs $repacked_rpm"
             to_remove_pkg_files="$to_remove_pkg_files $repacked_rpm"
         else
             warning "Can't find converted rpm for source binary package '$pkg'"
@@ -6733,27 +6768,46 @@ __epm_repack_to_rpm()
     true
 }
 
-__epm_check_if_try_install_pkgtype()
-{
-	local PKG="$1"
-	shift
-	__epm_split_by_pkg_type $PKG "$@" || return 1
-	__epm_repack_to_rpm $split_replaced_pkgs || { RES=$? ; return 0 ; }
 
-	# TODO: move to install
-	docmd epm install $repacked_rpms
-	RES=$?
-	# TODO: move it to exit handler
-	if [ -z "$DEBUG" ] ; then
-		# TODO: reinvent
-		[ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
-		[ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
-		[ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
-	fi
+__epm_remove_tmp_files()
+{
+    # TODO: move it to exit handler
+    if [ -z "$DEBUG" ] ; then
+        # TODO: reinvent
+        [ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
+        # hack??
+        [ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
+        [ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
+    fi
+    return 0
+}
+
+__epm_repack()
+{
+	repacked_pkgs=''
+	case $PKGFORMAT in
+		rpm)
+			__epm_repack_to_rpm "$@" || return
+			;;
+		deb)
+			__epm_repack_to_deb "$@" || return
+			;;
+		*)
+			fatal "$PKGFORMAT is not supported for repack yet"
+			;;
+	esac
 
 	return 0
 }
 
+__epm_repack_if_needed()
+{
+	# return 1 if there is a package in host package format
+	__epm_split_by_pkg_type $PKGFORMAT "$@" && return 1
+
+	__epm_repack "$@"
+	return 0
+}
 
 epm_repack()
 {
@@ -6766,38 +6820,18 @@ epm_repack()
     [ -n "$pkg_names" ] && warning "Can't find $pkg_names"
     [ -z "$pkg_files" ] && info "Skip empty repack list" && return 22
 
-    case $PKGFORMAT in
-        rpm)
-            __epm_repack_to_rpm $pkg_files || fatal
+    if __epm_repack $pkg_files && [ -n "$repacked_pkgs" ] ; then
+        cp $repacked_pkgs "$CURDIR"
+        if [ -z "$quiet" ] ; then
             echo
             echo "Adapted packages:"
-            cp $repacked_rpms "$CURDIR"
-            for i in $repacked_rpms ; do
-                echo "	$(pwd)/$(basename "$i")"
+            for i in $repacked_pkgs ; do
+                echo "	$CURDIR/$(basename "$i")"
             done
-            ;;
-        deb)
-            if __epm_split_by_pkg_type rpm $pkg_files ; then
-                __epm_repack_rpm_to_deb $split_replaced_pkgs
-                cp -v $repacked_debs .
-                pkg_files="$(estrlist exclude $split_replaced_pkgs $pkg_files)"
-                [ -n "$pkg_files" ] && warning "There are left unconverted packages $pkg_files."
-            fi
-            ;;
-        *)
-            fatal "$PKGFORMAT is not supported for repack yet"
-            ;;
-    esac
-
-    # TODO: move it to exit handler
-    if [ -z "$DEBUG" ] ; then
-        # TODO: reinvent
-        [ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
-        # hack??
-        [ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
-        [ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
+        fi
     fi
 
+    __epm_remove_tmp_files
 }
 
 # File bin/epm-repo:
@@ -11046,7 +11080,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.22.2  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.22.3  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11056,7 +11090,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.22.2
+EPMVERSION=3.22.3
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
