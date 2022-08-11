@@ -47,20 +47,27 @@ __do_query_real_file()
 		fi
 	fi
 
+	[ -n "$TOFILE" ] || return
+
+	local RES
 	if [ -n "$short" ] ; then
-		__do_short_query "$TOFILE" || return
+		__do_short_query "$TOFILE"
+		RES=$?
 	else
-		__do_query "$TOFILE" || return
+		__do_query "$TOFILE"
+		RES=$?
 	fi
 
 	# get value of symbolic link
-	if [ -n "$TOFILE" ] && [ -L "$TOFILE" ] ; then
+	if [ -L "$TOFILE" ] ; then
 		local LINKTO
 		LINKTO=$(readlink -- "$TOFILE")
 		info " > $TOFILE is link to $LINKTO"
 		LINKTO=$(readlink -f -- "$TOFILE")
 		__do_query_real_file "$LINKTO"
 		return
+	else
+		return $RES
 	fi
 }
 
