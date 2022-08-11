@@ -56,7 +56,10 @@ add_bin_exec_command()
     [ -e $BUILDROOT/usr/bin/$name ] && return
 
     mkdir -p $BUILDROOT/usr/bin/
-    echo "exec $target \"\$@\"" > $BUILDROOT/usr/bin/$name
+    cat <<EOF > $BUILDROOT/usr/bin/$name
+#!/bin/sh
+exec $target \"\$@\"
+EOF
     chmod 0755 $BUILDROOT/usr/bin/$name
     pack_file /usr/bin/$name
 }
