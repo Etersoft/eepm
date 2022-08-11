@@ -28,6 +28,7 @@ install_deps
 # use standalone config dir
 subst 's|exec -a "$0" "$HERE/chrome" "$@"||' $BUILDROOT/$PRODUCTDIR/$PRODUCT
 cat <<EOF >>$BUILDROOT/$PRODUCTDIR/$PRODUCT
+#!/bin/sh
 if ! [[ "\$*" =~ \-user\-data\-dir= ]]; then
        exec -a "\$0" "\$HERE/chrome" "-user-data-dir=\$HOME/.config/chromium-gost" "\$@"
 else
