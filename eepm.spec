@@ -274,8 +274,8 @@ rm -v %buildroot%_bindir/yum
 * Fri Jul 08 2022 Vitaly Lipatov <lav@altlinux.ru> 3.19.2-alt1
 - pack_in_onefile.sh: use epm_main/serv_main functions for the main code
 - use return instead of exit in functions
-- epm play: add snap4arduino support
-- epm play: add draw.io support
+- epm play: add snap4arduino support (thanks, neurofreak@!)
+- epm play: add draw.io support (thanks, Ilya Demyanov!)
 - epm play: fix sublime download link
 - repack.d/draw.io: add drawio and draw.io commands to /usr/bin
 - distr_info: fix ROSA support
