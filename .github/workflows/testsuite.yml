@@ -18,7 +18,10 @@ jobs:
     steps:
       - name: install packages
         run: |
-            apt-get update && apt-get -y install etersoft-build-utils rpm-build-intro su sudo
+            apt-get update && apt-get -y install eepm
+            epm repo change yandex
+            epm update
+            epm --auto install etersoft-build-utils rpm-build-intro su sudo
 
       - uses: actions/checkout@v2
 
@@ -31,6 +34,7 @@ jobs:
       - name: install
         run: |
             apt-get install -y /usr/src/RPM/RPMS/noarch/eepm-3*.rpm
+            epm update
 
       - name: testsuite
         run: |
