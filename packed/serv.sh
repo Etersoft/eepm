@@ -1317,7 +1317,7 @@ internal_distr_info()
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
 
-PROGVERSION="20220719"
+PROGVERSION="20220812"
 
 # TODO: check /etc/system-release
 
@@ -1522,6 +1522,10 @@ pkgtype()
 	esac
 }
 
+print_codename()
+{
+	echo "$DISTRIB_CODENAME"
+}
 
 get_var()
 {
@@ -1591,6 +1595,7 @@ if distro os-release ; then
 	VENDOR_ID="$ID"
 	DISTRIB_FULL_RELEASE=$DISTRIB_RELEASE
 	DISTRIB_RELEASE=$(echo "$DISTRIB_RELEASE" | sed -e "s/\.[0-9]$//g")
+	DISTRIB_CODENAME="$VERSION_CODENAME"
 
 elif distro lsb-release ; then
 	DISTRIB_ID=$(cat $DISTROFILE | get_var DISTRIB_ID)
@@ -2055,6 +2060,7 @@ Total system information:
      System memory size (MB) (-m): $(get_memory_size)
                 Base OS name (-o): $(get_base_os_name)
 Base distro (vendor) name (-s|-n): $(pkgvendor)
+    Version codename (--codename): $(print_codename)
 
 (run with -h to get help)
 EOF
@@ -2075,6 +2081,7 @@ case "$1" in
 		echo " -a - print hardware architecture (--distro-arch for distro depended name)"
 		echo " -b - print size of arch bit (32/64)"
 		echo " -c - print number of CPU cores"
+		echo " --codename - print distro codename (focal for Ubuntu 20.04)"
 		echo " -z - print current CPU MHz"
 		echo " -d - print distro name"
 		echo " -e - print full name of distro with version"
@@ -2119,6 +2126,10 @@ case "$1" in
 	-d)
 		override_distrib "$2"
 		echo $DISTRIB_ID
+		;;
+	--codename)
+		override_distrib "$2"
+		print_codename
 		;;
 	-a)
 		override_distrib "$2"
@@ -2278,7 +2289,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.23.1  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.23.2  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

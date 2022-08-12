@@ -756,18 +756,62 @@ __epm_addrepo_altlinux()
 
 }
 
+__epm_addkey_altlinux()
+{
+    local url="$1"
+    local fingerprint="$2"
+    local comment="$3"
+
+    local name="$(basename "$url" .gpg)"
+
+    [ -s /etc/apt/vendors.list.d/$name.list ] && return
+
+    cat << EOF | sudorun tee /etc/apt/vendors.list.d/$name.list
+simple-key "$name" {
+        FingerPrint "$fingerprint";
+        Name "$comment";
+}
+EOF
+        eget -q -O /tmp/$name.gpg $url || fatal
+        sudorun gpg --no-default-keyring --keyring /usr/lib/alt-gpgkeys/pubring.gpg --import /tmp/$name.gpg
+        rm -f /tmp/$name.gpg
+}
+
 __epm_addkey_deb()
 {
     local url="$1"
     local fingerprint="$2"
+    local comment="$3"
+
+    local name="$(basename $url .gpg)"
+
+    [ -s /etc/apt/trusted.gpg.d/$name.gpg ] && return
+
     if [ -z "$fingerprint" ] ; then
-        assure_exists curl
         set_sudo
-        showcmd "curl -fsSL '$url' | $SUDO apt-key add -"
-        a= curl -fsSL "$url" | sudorun apt-key add -
+        eget -q -O- "$url" | sudorun apt-key add -
+
         return
     fi
     sudocmd apt-key adv --keyserver "$url" --recv "$fingerprint"
+}
+
+epm_addkey()
+{
+
+case $DISTRNAME in
+	ALTLinux|ALTServer)
+		__epm_addkey_altlinux "$@"
+		return
+		;;
+esac
+
+case $PMTYPE in
+	apt-dpkg)
+		__epm_addkey_deb "$@"
+		;;
+esac
+
 }
 
 __epm_addrepo_deb()
@@ -6930,6 +6974,9 @@ EOF
 		epm_addrepo "$@"
 		epm update
 		;;
+	addkey)                              # HELPCMD: add repository gpg key
+		epm_addkey "$@"
+		;;
 	rm|remove)                           # HELPCMD: remove repository from the sources lists (epm repo remove all for all)
 		epm_removerepo "$@"
 		;;
@@ -9282,7 +9329,7 @@ internal_distr_info()
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
 
-PROGVERSION="20220719"
+PROGVERSION="20220812"
 
 # TODO: check /etc/system-release
 
@@ -9487,6 +9534,10 @@ pkgtype()
 	esac
 }
 
+print_codename()
+{
+	echo "$DISTRIB_CODENAME"
+}
 
 get_var()
 {
@@ -9556,6 +9607,7 @@ if distro os-release ; then
 	VENDOR_ID="$ID"
 	DISTRIB_FULL_RELEASE=$DISTRIB_RELEASE
 	DISTRIB_RELEASE=$(echo "$DISTRIB_RELEASE" | sed -e "s/\.[0-9]$//g")
+	DISTRIB_CODENAME="$VERSION_CODENAME"
 
 elif distro lsb-release ; then
 	DISTRIB_ID=$(cat $DISTROFILE | get_var DISTRIB_ID)
@@ -10020,6 +10072,7 @@ Total system information:
      System memory size (MB) (-m): $(get_memory_size)
                 Base OS name (-o): $(get_base_os_name)
 Base distro (vendor) name (-s|-n): $(pkgvendor)
+    Version codename (--codename): $(print_codename)
 
 (run with -h to get help)
 EOF
@@ -10040,6 +10093,7 @@ case "$1" in
 		echo " -a - print hardware architecture (--distro-arch for distro depended name)"
 		echo " -b - print size of arch bit (32/64)"
 		echo " -c - print number of CPU cores"
+		echo " --codename - print distro codename (focal for Ubuntu 20.04)"
 		echo " -z - print current CPU MHz"
 		echo " -d - print distro name"
 		echo " -e - print full name of distro with version"
@@ -10084,6 +10138,10 @@ case "$1" in
 	-d)
 		override_distrib "$2"
 		echo $DISTRIB_ID
+		;;
+	--codename)
+		override_distrib "$2"
+		print_codename
 		;;
 	-a)
 		override_distrib "$2"
@@ -11132,7 +11190,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.23.1  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.23.2  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11142,7 +11200,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.23.1
+EPMVERSION=3.23.2
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
@@ -11324,7 +11382,7 @@ check_command()
         epm_cmd=update
         direct_args=1
         ;;
-    addrepo|ar)               # HELPCMD: add package repo (etersoft, autoimports, archive 2017/12/31); run with param to get list
+    addrepo|ar|--add-repo)    # HELPCMD: add package repo (etersoft, autoimports, archive 2017/12/31); run with param to get list
         epm_cmd=addrepo
         direct_args=1
         ;;
