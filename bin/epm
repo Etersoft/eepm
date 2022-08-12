@@ -263,7 +263,7 @@ check_command()
         epm_cmd=update
         direct_args=1
         ;;
-    addrepo|ar)               # HELPCMD: add package repo (etersoft, autoimports, archive 2017/12/31); run with param to get list
+    addrepo|ar|--add-repo)    # HELPCMD: add package repo (etersoft, autoimports, archive 2017/12/31); run with param to get list
         epm_cmd=addrepo
         direct_args=1
         ;;

@@ -79,6 +79,10 @@ EOF
 		epm_addrepo "$@"
 		epm update
 		;;
+	addkey)                              # HELPCMD: add repository gpg key
+		load_helper epm-addrepo
+		epm_addkey "$@"
+		;;
 	rm|remove)                           # HELPCMD: remove repository from the sources lists (epm repo remove all for all)
 		load_helper epm-removerepo
 		epm_removerepo "$@"

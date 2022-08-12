@@ -139,19 +139,68 @@ __epm_addrepo_altlinux()
 
 }
 
-# TODO: add repo addkey command
+__epm_addkey_altlinux()
+{
+    local url="$1"
+    local fingerprint="$2"
+    local comment="$3"
+
+    local name="$(basename "$url" .gpg)"
+
+    [ -s /etc/apt/vendors.list.d/$name.list ] && return
+
+# TODO: get this info from the gpg key
+    cat << EOF | sudorun tee /etc/apt/vendors.list.d/$name.list
+simple-key "$name" {
+        FingerPrint "$fingerprint";
+        Name "$comment";
+}
+EOF
+        eget -q -O /tmp/$name.gpg $url || fatal
+        sudorun gpg --no-default-keyring --keyring /usr/lib/alt-gpgkeys/pubring.gpg --import /tmp/$name.gpg
+        rm -f /tmp/$name.gpg
+}
+
 __epm_addkey_deb()
 {
     local url="$1"
     local fingerprint="$2"
+    local comment="$3"
+
+    local name="$(basename $url .gpg)"
+
+    [ -s /etc/apt/trusted.gpg.d/$name.gpg ] && return
+
     if [ -z "$fingerprint" ] ; then
-        assure_exists curl
         set_sudo
-        showcmd "curl -fsSL '$url' | $SUDO apt-key add -"
-        a= curl -fsSL "$url" | sudorun apt-key add -
+        eget -q -O- "$url" | sudorun apt-key add -
+#
+#        if [ ! -f /etc/apt/trusted.gpg.d/$name.gpg ]; then
+#                epm tool eget -q -O /etc/apt/trusted.gpg.d/$name.gpg https://example.com/$name.gpg > /dev/null
+#                chmod 0644 /etc/apt/trusted.gpg.d/$name.gpg
+#        fi
+
         return
     fi
     sudocmd apt-key adv --keyserver "$url" --recv "$fingerprint"
+}
+
+epm_addkey()
+{
+
+case $DISTRNAME in
+	ALTLinux|ALTServer)
+		__epm_addkey_altlinux "$@"
+		return
+		;;
+esac
+
+case $PMTYPE in
+	apt-dpkg)
+		__epm_addkey_deb "$@"
+		;;
+esac
+
 }
 
 __epm_addrepo_deb()
