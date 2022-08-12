@@ -105,8 +105,9 @@ check_supported_arch()
 {
     # skip checking if no arches
     [ -n "$1" ] || return 0
+    local arch="$(epm print info -a)"
     for i in $* ; do
-        [ "$(epm print info -a)" = "$i" ] && return 0
+        [ "$arch" = "$i" ] && return 0
     done
 
     return 1
@@ -124,4 +125,4 @@ if [ -z "$SUDO" ] && [ "$UID" != "0" ] ; then
     SUDO="sudo"
 fi
 
-check_supported_arch $SUPPORTEDARCHES || fatal "Only $SUPPORTEDARCHES is supported"
+check_supported_arch $SUPPORTEDARCHES || fatal "Only '$SUPPORTEDARCHES' architectures is supported"
