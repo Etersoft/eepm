@@ -13,7 +13,6 @@ jobs:
       image: alt:sisyphus
 
     env:
-      BUILDER: builder
       ALLOW_ROOT_USER: 1
 
     steps:
@@ -26,6 +25,7 @@ jobs:
       - name: build
         run: |
             echo "%_allow_root_build 1" > ${HOME}/.rpmmacros
+            git config --global --add safe.directory /__w/eepm/eepm
             rpmbb
 
       - name: install
