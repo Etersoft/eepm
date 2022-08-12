@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.23.0
+Version: 3.23.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,12 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Fri Aug 12 2022 Vitaly Lipatov <lav@altlinux.ru> 3.23.1-alt1
+- epm play ktalk: add pre requires (ALT bug 42558)
+- common.sh: create shell wrapper with shebang (KDE runs Exec via execvp) (ALT bug 42641)
+- epm repack: fix shebang for obsidian and chromium-gost-stable
+- epm-query_file: follow a link ever if the link is not from a package
+
 * Thu Aug 11 2022 Vitaly Lipatov <lav@altlinux.ru> 3.23.0-alt1
 - epm-repack: fix package name-version before convert
 - epm play Telegram: restore Conflicts: telegram-desktop
