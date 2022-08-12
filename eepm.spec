@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.23.1
+Version: 3.23.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,12 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Fri Aug 12 2022 Vitaly Lipatov <lav@altlinux.ru> 3.23.2-alt1
+- distr_info: add --codename support
+- epm: repo addkey support (add gpg key for a repo)
+- epm play: add rustdesk support
+- epm play: add Okular GOST support
+
 * Fri Aug 12 2022 Vitaly Lipatov <lav@altlinux.ru> 3.23.1-alt1
 - epm play ktalk: add pre requires (ALT bug 42558)
 - common.sh: create shell wrapper with shebang (KDE runs Exec via execvp) (ALT bug 42641)
