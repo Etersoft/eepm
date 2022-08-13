@@ -56,8 +56,8 @@ restore_epm
 epm --auto --force --force-yes upgrade-release
 restore_epm
 
-# try upgrade p10
-epm --auto --force --force-yes upgrade-release && fatal
+# try upgrade again p10
+epm --auto --force --force-yes upgrade-release
 restore_epm
 
 # p10 -> Sisyphus
