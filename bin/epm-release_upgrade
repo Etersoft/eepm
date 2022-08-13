@@ -165,7 +165,9 @@ get_fix_release_pkg()
 		# problem
 		local AR="$(__get_conflict_release_pkg)"
 		if [ -n "$AR" ] && [ "$TOINSTALL" != "$AR" ] ; then
-			echo $AR-
+			#echo $AR-
+			# remove conflicts package right here to workaround against asking 'Yes, do as I say!' later
+			epm remove --nodeps $AR >/dev/null
 		fi
 	fi
 }
