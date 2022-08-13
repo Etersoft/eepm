@@ -20,6 +20,8 @@
 load_helper epm-sh-altlinux
 load_helper epm-assure
 
+[ -n "$EPM_REPACK_SCRIPTS_DIR" ] || EPM_REPACK_SCRIPTS_DIR="$CONFIGDIR/repack.d"
+
 
 __epm_check_if_needed_repack()
 {
@@ -168,7 +170,7 @@ EOF
 # args: pkgname buildroot spec
 __apply_fix_code()
 {
-    local repackcode="$(realpath $CONFIGDIR/repack.d/$1.sh)"
+    local repackcode="$(realpath $EPM_REPACK_SCRIPTS_DIR/$1.sh)"
     [ -x "$repackcode" ] || return
     shift
     export PATH=$PROGDIR:$PATH
@@ -402,7 +404,7 @@ __epm_repack()
 			# FIXME: only one package in $@ is supported
 			#local pkgname="$(epm print name from "$@")"
 			__set_version_pkgname "$1"
-			local repackcode="$CONFIGDIR/repack.d/$PKGNAME.sh"
+			local repackcode="$EPM_REPACK_SCRIPTS_DIR/$PKGNAME.sh"
 			if [ -x "$repackcode" ] ; then
 				__epm_repack_to_rpm "$@" || return
 				[ -n "$repacked_pkgs" ] || return
