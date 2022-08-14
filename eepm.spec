@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.23.2
+Version: 3.23.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,12 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Mon Aug 15 2022 Vitaly Lipatov <lav@altlinux.ru> 3.23.3-alt1
+- epm-release_upgrade: remove conflicts branding file before upgrade
+- epm-repack: add support for EPM_REPACK_SCRIPTS_DIR
+- epm play anydesk: no strict version
+- epm play: add opera support
+
 * Fri Aug 12 2022 Vitaly Lipatov <lav@altlinux.ru> 3.23.2-alt1
 - distr_info: add --codename support
 - epm: repo addkey support (add gpg key for a repo)
