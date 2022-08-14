@@ -16,7 +16,7 @@ SUPPORTEDARCHES="x86_64"
 
 . $(dirname $0)/common.sh
 
-VIVALDI_VERSION=$(epm print version for package vivaldi-stable) || fatal
+VIVALDI_VERSION=$(epm print version for package $BASEPKGNAME) || fatal
 
 epm install --skip-installed tar binutils || exit
 epm assure awk gawk || exit
