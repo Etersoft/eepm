@@ -5570,7 +5570,9 @@ get_fix_release_pkg()
 		# problem
 		local AR="$(__get_conflict_release_pkg)"
 		if [ -n "$AR" ] && [ "$TOINSTALL" != "$AR" ] ; then
-			echo $AR-
+			#echo $AR-
+			# remove conflicts package right here to workaround against asking 'Yes, do as I say!' later
+			epm remove --nodeps $AR >/dev/null
 		fi
 	fi
 }
@@ -6505,6 +6507,8 @@ esac
 # File bin/epm-repack:
 
 
+[ -n "$EPM_REPACK_SCRIPTS_DIR" ] || EPM_REPACK_SCRIPTS_DIR="$CONFIGDIR/repack.d"
+
 
 __epm_check_if_needed_repack()
 {
@@ -6646,7 +6650,7 @@ EOF
 
 __apply_fix_code()
 {
-    local repackcode="$(realpath $CONFIGDIR/repack.d/$1.sh)"
+    local repackcode="$(realpath $EPM_REPACK_SCRIPTS_DIR/$1.sh)"
     [ -x "$repackcode" ] || return
     shift
     export PATH=$PROGDIR:$PATH
@@ -6869,7 +6873,7 @@ __epm_repack()
 			# FIXME: only one package in $@ is supported
 			#local pkgname="$(epm print name from "$@")"
 			__set_version_pkgname "$1"
-			local repackcode="$CONFIGDIR/repack.d/$PKGNAME.sh"
+			local repackcode="$EPM_REPACK_SCRIPTS_DIR/$PKGNAME.sh"
 			if [ -x "$repackcode" ] ; then
 				__epm_repack_to_rpm "$@" || return
 				[ -n "$repacked_pkgs" ] || return
@@ -11190,7 +11194,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.23.2  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.23.3  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11200,7 +11204,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.23.2
+EPMVERSION=3.23.3
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
