@@ -30,7 +30,8 @@ repack=''
 
 # general msk
 #PKGMASK="$($DISTRVENDOR -p)/$(epm print constructname $PKGNAME "*" $arch '' '_')"
-PKGMASK="$(epm print constructname $PKGNAME "6.1*" $arch '' '_')"
+# TODO: hack with version, there are too many files
+PKGMASK="$(epm print constructname $PKGNAME "[6-9].[1-9]*" $arch '' '_')"
 
 # we miss obsoleted libpangox on ALT, so use RHEL8 build
 # lib.req: WARNING: /usr/bin/anydesk: library libpangox-1.0.so.0 not found
