@@ -45,8 +45,15 @@ fi
 
 
 distrib=$(epm print info --codename)
+pkgsystem=$(epm print info -g)
 
 case $(epm print info -e) in
+# TODO:
+    AstraLinux/orel)
+        pkgsystem=''
+        epm repo addkey "$REPOURL/lab50.gpg"
+        epm repo add "deb $REPOURL/ce stable main"
+        ;;
 # TODO:
 #     AstraLinuxSE/1.7*)
     AstraLinux/smolensk)
@@ -60,7 +67,7 @@ case $(epm print info -e) in
         ;;
 esac
 
-case $(epm print info -g) in
+case $pkgsystem in
     apt-dpkg)
         epm repo addkey "$REPOURL/lab50.gpg"
         epm repo add "deb $REPOURL/okular $distrib main"

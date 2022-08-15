@@ -7,7 +7,7 @@ fatal()
     exit 1
 }
 
-LOGDIR=~
+[ -n "$LOGDIR" ] || LOGDIR=~
 TDIR=$LOGDIR/epm-play-versions
 EDIR=$LOGDIR/epm-errors
 LDIR=$LOGDIR/epm-logs
@@ -41,6 +41,7 @@ install_app_alt()
 {
     local app="$1"
     local productalt="$($EPM play --product-alternatives $app)"
+    local distr="$($EPM print info -s)"
 
     if [ -z "$productalt" ] ; then
         install_app $app
@@ -49,6 +50,8 @@ install_app_alt()
 
     # оставляем дефолтный вариант в конце в системе
     for i in $productalt "" ; do
+        # hack for broken gitlab-runner
+        [ "$distr" != "alt" ] && [ "$i" = "gitlab-runner" ] && continue
         $EPM play --remove --auto $app
         install_app $app $i
     done
