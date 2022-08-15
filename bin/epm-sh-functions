@@ -372,9 +372,11 @@ set_sudo()
 	fi
 
 	SUDO_TESTED="0"
-	SUDO="$SUDO_CMD --"
+	# FIXME: does not work: sudo -- VARIABLE=some command
+	SUDO="$SUDO_CMD"
+	#SUDO="$SUDO_CMD --"
 	# check for < 1.7 version which do not support -- (and --help possible too)
-	$SUDO_CMD -h 2>/dev/null | grep -q "  --" || SUDO="$SUDO_CMD"
+	#$SUDO_CMD -h 2>/dev/null | grep -q "  --" || SUDO="$SUDO_CMD"
 
 }
 
