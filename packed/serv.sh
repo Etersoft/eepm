@@ -277,13 +277,13 @@ clean_store_output()
 epm()
 {
 	[ -n "$PROGNAME" ] || fatal "Can't use epm call from the piped script"
-	$PROGDIR/$PROGNAME --inscript "$@"
+	bash $PROGDIR/$PROGNAME --inscript "$@"
 }
 
 sudoepm()
 {
 	[ -n "$PROGNAME" ] || fatal "Can't use epm call from the piped script"
-	sudorun $PROGDIR/$PROGNAME --inscript "$@"
+	sudorun bash $PROGDIR/$PROGNAME --inscript "$@"
 }
 
 fatal()
@@ -358,9 +358,11 @@ set_sudo()
 	fi
 
 	SUDO_TESTED="0"
-	SUDO="$SUDO_CMD --"
+	# FIXME: does not work: sudo -- VARIABLE=some command
+	SUDO="$SUDO_CMD"
+	#SUDO="$SUDO_CMD --"
 	# check for < 1.7 version which do not support -- (and --help possible too)
-	$SUDO_CMD -h 2>/dev/null | grep -q "  --" || SUDO="$SUDO_CMD"
+	#$SUDO_CMD -h 2>/dev/null | grep -q "  --" || SUDO="$SUDO_CMD"
 
 }
 
@@ -2289,7 +2291,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.23.4  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.24.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

@@ -286,13 +286,13 @@ clean_store_output()
 epm()
 {
 	[ -n "$PROGNAME" ] || fatal "Can't use epm call from the piped script"
-	$PROGDIR/$PROGNAME --inscript "$@"
+	bash $PROGDIR/$PROGNAME --inscript "$@"
 }
 
 sudoepm()
 {
 	[ -n "$PROGNAME" ] || fatal "Can't use epm call from the piped script"
-	sudorun $PROGDIR/$PROGNAME --inscript "$@"
+	sudorun bash $PROGDIR/$PROGNAME --inscript "$@"
 }
 
 fatal()
@@ -367,9 +367,11 @@ set_sudo()
 	fi
 
 	SUDO_TESTED="0"
-	SUDO="$SUDO_CMD --"
+	# FIXME: does not work: sudo -- VARIABLE=some command
+	SUDO="$SUDO_CMD"
+	#SUDO="$SUDO_CMD --"
 	# check for < 1.7 version which do not support -- (and --help possible too)
-	$SUDO_CMD -h 2>/dev/null | grep -q "  --" || SUDO="$SUDO_CMD"
+	#$SUDO_CMD -h 2>/dev/null | grep -q "  --" || SUDO="$SUDO_CMD"
 
 }
 
@@ -3043,11 +3045,10 @@ epm_ni_install_names()
 
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
-			export DEBIAN_FRONTEND=noninteractive
-			sudocmd apt-get -y $noremove --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
+			sudocmd ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive apt-get -y $noremove --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
 			return ;;
 		aptitude-dpkg)
-			sudocmd aptitude -y install $@
+			sudocmd ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive aptitude -y install $@
 			return ;;
 		yum-rpm)
 			sudocmd yum -y $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
@@ -6668,6 +6669,7 @@ __create_rpmmacros()
 %_tmppath	$TMPDIR
 
 %packager	EPM <support@etersoft.ru>
+%_vendor	EEPM
 %_gpg_name	support@etersoft.ru
 
 %_allow_root_build	1
@@ -11194,9 +11196,9 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.23.4  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.24.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
-        echo "Copyright (c) Etersoft 2012-2021"
+        echo "Copyright (c) Etersoft 2012-2022"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 
@@ -11204,7 +11206,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.23.4
+EPMVERSION=3.24.0
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
@@ -11218,7 +11220,7 @@ noscripts=
 short=
 direct=
 sort=
-non_interactive=
+non_interactive=$EPM_AUTO
 force_yes=
 skip_installed=
 skip_missed=
