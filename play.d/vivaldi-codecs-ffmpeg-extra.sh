@@ -6,7 +6,7 @@ DESCRIPTION=''
 
 if [ "$2" = "snapshot" ] || epm installed vivaldi-snapshot-codecs-ffmpeg-extra ; then
     BRANCH=snapshot
-    #PRODUCTDIR=$PRODUCTDIR-$BRANCH
+    PRODUCTDIR=$PRODUCTDIR-$BRANCH
 fi
 
 BASEPKGNAME=vivaldi-$BRANCH

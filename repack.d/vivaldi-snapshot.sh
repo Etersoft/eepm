@@ -5,7 +5,7 @@ SPEC="$2"
 
 PRODUCT=vivaldi
 PRODUCTCUR=vivaldi-snapshot
-PRODUCTDIR=/opt/vivaldi
+PRODUCTDIR=/opt/$PRODUCTCUR
 
 . $(dirname $0)/common-chromium-browser.sh
 
