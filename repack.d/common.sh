@@ -67,11 +67,24 @@ EOF
 # move files to $PRODUCTDIR
 move_to_opt()
 {
-    local from="$1"
+    local from="$@"
     [ -n "$from" ] || from="/usr/share/$PRODUCT"
     mkdir -p $BUILDROOT$PRODUCTDIR/
-    mv $BUILDROOT/$from/* $BUILDROOT$PRODUCTDIR/
-    subst "s|$from|$PRODUCTDIR|g" $SPEC
+
+    local sdir rdir i
+    for i in $from ; do
+        # workaround for wildcards in from
+        sdir="$(echo $BUILDROOT$i)"
+        [ -d "$sdir" ] || continue
+        rdir="$(echo $sdir | sed -e "s|^$BUILDROOT||")"
+        [ -n "$rdir" ] || return 1 #fatal "Can't resolve $from in $BUILDROOT"
+        [ -d "$BUILDROOT$rdir" ] || fatal "Can't resolve $from in $BUILDROOT"
+        break
+    done
+    [ -d "$sdir" ] || return 1 #fatal "Can't find any dir from $from list"
+
+    mv $BUILDROOT$rdir/* $BUILDROOT$PRODUCTDIR/
+    subst "s|$rdir|$PRODUCTDIR|g" $SPEC
 }
 
 

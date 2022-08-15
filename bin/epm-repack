@@ -67,7 +67,7 @@ __epm_repack_to_deb()
 
 	for pkg in $pkgs ; do
 		abspkg="$(realpath "$pkg")"
-		info "Repacking $abspkg to local deb format ..."
+		info "Repacking $abspkg to local deb format (inside $TDIR) ..."
 
 		alpkg=$(basename $pkg)
 		# don't use abs package path: copy package to temp dir and use there
@@ -170,7 +170,7 @@ EOF
 # args: pkgname buildroot spec
 __apply_fix_code()
 {
-    local repackcode="$(realpath $EPM_REPACK_SCRIPTS_DIR/$1.sh)"
+    local repackcode="$EPM_REPACK_SCRIPTS_DIR/$1.sh"
     [ -x "$repackcode" ] || return
     shift
     export PATH=$PROGDIR:$PATH
@@ -313,7 +313,7 @@ __epm_repack_to_rpm()
         mkdir $tmpbuilddir
         abspkg="$(realpath $pkg)"
         info ""
-        info "Repacking $abspkg to local rpm format ..."
+        info "Repacking $abspkg to local rpm format (inside $tmpbuilddir) ..."
 
         alpkg=$(basename $pkg)
         # don't use abs package path: copy package to temp dir and use there
