@@ -16,6 +16,15 @@ SUPPORTEDARCHES="x86_64"
 
 . $(dirname $0)/common.sh
 
+if epm installed yandex-browser-stable && [ "$(get_pkgvendor yandex-browser-stable)" = "YANDEX LLC" ] ; then
+    if [ "$(epm print field Vendor for package yandex-browser-stable)" = "Yandex Browser Team <browser@support.yandex.ru>" ] ; then
+        fatal "Package yandex-browser-stable is already manually from https://browser.yandex.ru/."
+    else
+        fatal "Package yandex-browser-stable is already installed from ALT repository."
+    fi
+fi
+
+
 # See also https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=yandex-browser-beta
 
 URL="https://repo.yandex.ru/yandex-browser"

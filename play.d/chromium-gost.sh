@@ -7,6 +7,7 @@ DESCRIPTION="Chromium with GOST support from the official site"
 
 . $(dirname $0)/common.sh
 
+# TODO: use get_pkgvendor = "ALT Linux Team"
 if epm installed chromium-gost ; then
     fatal "Package chromium-gost is already installed from ALT repository."
 fi

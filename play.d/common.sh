@@ -47,6 +47,11 @@ print_product_alt()
     echo "$*"
 }
 
+get_pkgvendor()
+{
+    epm print field Vendor for package $1
+}
+
 case "$1" in
     "--remove")
         epm remove $PKGNAME

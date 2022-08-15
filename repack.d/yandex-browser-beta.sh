@@ -11,7 +11,7 @@ PRODUCTDIR=/opt/yandex/browser-beta
 . $(dirname $0)/common-chromium-browser.sh
 
 subst '1iConflicts:yandex-browser-stable' $SPEC
-
+subst '5iProvides: yandex-browser = %{version}' $SPEC
 
 set_alt_alternatives 65
 

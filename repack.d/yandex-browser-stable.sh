@@ -12,6 +12,8 @@ PRODUCTDIR=/opt/yandex/browser
 
 subst '1iConflicts:yandex-browser-beta' $SPEC
 
+subst '5iProvides: yandex-browser = %{version}' $SPEC
+
 set_alt_alternatives 65
 
 copy_icons_to_share
