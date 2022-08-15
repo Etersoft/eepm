@@ -41,7 +41,6 @@ install_app_alt()
 {
     local app="$1"
     local productalt="$($EPM play --product-alternatives $app)"
-    local distr="$($EPM print info -s)"
 
     if [ -z "$productalt" ] ; then
         install_app $app
@@ -50,8 +49,6 @@ install_app_alt()
 
     # оставляем дефолтный вариант в конце в системе
     for i in $productalt "" ; do
-        # hack for broken gitlab-runner
-        [ "$distr" != "alt" ] && [ "$i" = "gitlab-runner" ] && continue
         $EPM play --remove --auto $app
         install_app $app $i
     done
@@ -62,8 +59,11 @@ if [ -n "$1" ] ; then
     exit
 fi
 
+distr="$($EPM print info -s)"
 # install/update all
 $EPM play --list-all --short | while read app ; do
+    # hack for broken gitlab-runner
+    [ "$distr" != "alt" ] && [ "$app" = "gitlab-runner" ] && continue
     install_app_alt $app </dev/null
 done
 
