@@ -177,7 +177,10 @@ epm_ni_install_names()
 	[ -z "$1" ] && return
 
 	case $PMTYPE in
-		apt-rpm|apt-dpkg)
+		apt-rpm)
+			sudocmd apt-get -y $noremove --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
+			return ;;
+		apt-dpkg)
 			sudocmd ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive apt-get -y $noremove --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
 			return ;;
 		aptitude-dpkg)
@@ -522,7 +525,11 @@ epm_print_install_names_command()
 	#[ -z "$1" ] && [ -n "$pkg_files" ] && return
 	[ -z "$1" ] && return
 	case $PMTYPE in
-		apt-rpm|apt-dpkg)
+		apt-rpm)
+			echo "apt-get -y --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true $APTOPTIONS install $*"
+			return ;;
+		apt-dpkg)
+			# this command  not for complex use. ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive
 			echo "apt-get -y --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true $APTOPTIONS install $*"
 			return ;;
 		aptitude-dpkg)
