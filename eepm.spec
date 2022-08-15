@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.24.0
+Version: 3.24.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,12 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Tue Aug 16 2022 Vitaly Lipatov <lav@altlinux.ru> 3.24.1-alt1
+- epm-check_updated_repo: stop autoupdate repo info (too buggy)
+- epm play mssql-server: add Debian/Ubuntu support
+- epm-sh-functions: docmd/sudorun: use eval to handle env
+- epm install: separate install command for apt-dpkg and apt-rpm
+
 * Mon Aug 15 2022 Vitaly Lipatov <lav@altlinux.ru> 3.24.0-alt1
 - epm play yandex-browser: add checking for yandex-browser-stable package from ALT repo
 - epm play opera: fix missed eget
