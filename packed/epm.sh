@@ -6551,7 +6551,7 @@ __epm_repack_to_deb()
 
 	for pkg in $pkgs ; do
 		abspkg="$(realpath "$pkg")"
-		info "Repacking $abspkg to local deb format ..."
+		info "Repacking $abspkg to local deb format (inside $TDIR) ..."
 
 		alpkg=$(basename $pkg)
 		# don't use abs package path: copy package to temp dir and use there
@@ -6650,7 +6650,7 @@ EOF
 
 __apply_fix_code()
 {
-    local repackcode="$(realpath $EPM_REPACK_SCRIPTS_DIR/$1.sh)"
+    local repackcode="$EPM_REPACK_SCRIPTS_DIR/$1.sh"
     [ -x "$repackcode" ] || return
     shift
     export PATH=$PROGDIR:$PATH
@@ -6785,7 +6785,7 @@ __epm_repack_to_rpm()
         mkdir $tmpbuilddir
         abspkg="$(realpath $pkg)"
         info ""
-        info "Repacking $abspkg to local rpm format ..."
+        info "Repacking $abspkg to local rpm format (inside $tmpbuilddir) ..."
 
         alpkg=$(basename $pkg)
         # don't use abs package path: copy package to temp dir and use there
@@ -11194,7 +11194,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.23.3  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.23.4  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11204,7 +11204,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.23.3
+EPMVERSION=3.23.4
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
