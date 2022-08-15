@@ -26,4 +26,4 @@ esac
 
 # https://docs.gitlab.com/runner/install/linux-manually.html
 # https://gitlab-runner-downloads.s3.amazonaws.com/latest/index.html
-epm install "https://gitlab-runner-downloads.s3.amazonaws.com/latest/rpm/gitlab-runner_${arch}.$pkg"
+epm install "https://gitlab-runner-downloads.s3.amazonaws.com/latest/$pkg/gitlab-runner_${arch}.$pkg"
