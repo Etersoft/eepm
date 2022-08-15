@@ -31,7 +31,7 @@ if ! check_url_is_accessible $URL ; then
     check_url_is_accessible $URL || fatal "Can't access to Opera CDN site $URL"
 fi
 
-PKGBASEURL="$(eget --list --latest $URL/*)"linux
+PKGBASEURL="$(epm tool eget --list --latest $URL/*)"linux
 PKGURL="$(epm tool eget --list --latest $PKGBASEURL "$(epm print constructname $PKGNAME "*" $arch deb)")" || fatal #"
 epm install "$PKGURL" || fatal
 exit
