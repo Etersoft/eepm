@@ -152,7 +152,7 @@ showcmd()
 docmd()
 {
 	showcmd "$*$EXTRA_SHOWDOCMD"
-	$@
+	eval "$@"
 }
 
 docmd_foreach()
@@ -170,7 +170,7 @@ sudorun()
 {
 	set_sudo
 	if [ -z "$SUDO" ] ; then
-		"$@"
+		eval "$@"
 		return
 	fi
 	$SUDO "$@"
@@ -839,7 +839,7 @@ __epm_addrepo_deb()
 		# aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
 		echo "" | sudocmd tee -a /etc/apt/sources.list
 		echo "$repo" | sudocmd tee -a /etc/apt/sources.list
-		exit
+		return
 	fi
 
 
@@ -1861,6 +1861,8 @@ __is_repo_info_uptodate()
 
 update_repo_if_needed()
 {
+    # TODO: needs careful testing
+    return
     # check if we need skip update checking
     if [ "$1" = "soft" ] && ! set_sudo nofail ; then
         # if sudo requires a password, skip autoupdate
@@ -3044,7 +3046,10 @@ epm_ni_install_names()
 	[ -z "$1" ] && return
 
 	case $PMTYPE in
-		apt-rpm|apt-dpkg)
+		apt-rpm)
+			sudocmd apt-get -y $noremove --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
+			return ;;
+		apt-dpkg)
 			sudocmd ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive apt-get -y $noremove --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
 			return ;;
 		aptitude-dpkg)
@@ -3385,7 +3390,11 @@ epm_print_install_names_command()
 	#[ -z "$1" ] && [ -n "$pkg_files" ] && return
 	[ -z "$1" ] && return
 	case $PMTYPE in
-		apt-rpm|apt-dpkg)
+		apt-rpm)
+			echo "apt-get -y --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true $APTOPTIONS install $*"
+			return ;;
+		apt-dpkg)
+			# this command  not for complex use. ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive
 			echo "apt-get -y --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true $APTOPTIONS install $*"
 			return ;;
 		aptitude-dpkg)
@@ -11196,7 +11205,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.24.0  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.24.1  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2022"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11206,7 +11215,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.24.0
+EPMVERSION=3.24.1
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
