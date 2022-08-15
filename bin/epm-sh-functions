@@ -154,7 +154,7 @@ sudorun()
 {
 	set_sudo
 	if [ -z "$SUDO" ] ; then
-		"$@"
+		$@
 		return
 	fi
 	$SUDO "$@"
