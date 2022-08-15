@@ -189,6 +189,7 @@ __create_rpmmacros()
 %_tmppath	$TMPDIR
 
 %packager	EPM <support@etersoft.ru>
+%_vendor	EEPM
 %_gpg_name	support@etersoft.ru
 
 %_allow_root_build	1
