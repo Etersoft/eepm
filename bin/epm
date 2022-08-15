@@ -73,7 +73,7 @@ print_version()
 {
         echo "EPM package manager version @VERSION@  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
-        echo "Copyright (c) Etersoft 2012-2021"
+        echo "Copyright (c) Etersoft 2012-2022"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 
@@ -95,7 +95,7 @@ noscripts=
 short=
 direct=
 sort=
-non_interactive=
+non_interactive=$EPM_AUTO
 force_yes=
 skip_installed=
 skip_missed=

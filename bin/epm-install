@@ -178,11 +178,10 @@ epm_ni_install_names()
 
 	case $PMTYPE in
 		apt-rpm|apt-dpkg)
-			export DEBIAN_FRONTEND=noninteractive
-			sudocmd apt-get -y $noremove --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
+			sudocmd ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive apt-get -y $noremove --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
 			return ;;
 		aptitude-dpkg)
-			sudocmd aptitude -y install $@
+			sudocmd ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive aptitude -y install $@
 			return ;;
 		yum-rpm)
 			sudocmd yum -y $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
