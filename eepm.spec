@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.23.4
+Version: 3.24.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,17 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Mon Aug 15 2022 Vitaly Lipatov <lav@altlinux.ru> 3.24.0-alt1
+- epm play yandex-browser: add checking for yandex-browser-stable package from ALT repo
+- epm play opera: fix missed eget
+- epm play gitlab-runner: fix download on deb systems
+- epm-sh-functions: sudo -- don't allow vars, revert to just sudo
+- epm: add ACCEPT_EULA=y for install deb packages in non interactive mode
+- epm repack: set EEPM vendor for repacked packages
+- epm play geogebra: fix download on deb systems
+- epm play vivaldi: add snapshot support
+- epm(): run the script via bash
+
 * Mon Aug 15 2022 Vitaly Lipatov <lav@altlinux.ru> 3.23.4-alt1
 - epm play: add support for opera beta and opera developer
 
