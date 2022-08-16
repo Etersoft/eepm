@@ -19,6 +19,7 @@
 
 PROGDIR=$(dirname "$0")
 PROGNAME=$(basename "$0")
+# TODO: pwd for ./epm and which for epm
 [ "$PROGDIR" = "." ] && PROGDIR=$(pwd)
 if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
     PROGDIR=""
@@ -4950,7 +4951,7 @@ __epm_query_shortname()
 	case $PMTYPE in
 		*-rpm)
 			showcmd rpm -q --queryformat '%{name} \n' -- $@
-			a='' rpm -q --queryformat '%{name} \\n' -- $@
+			a='' rpm -q --queryformat '%{name} \n' -- $@
 			return
 			;;
 		*-dpkg)
@@ -5138,7 +5139,7 @@ __do_short_query()
     local CMD
     case $PMTYPE in
         *-rpm)
-            CMD="rpm -qf --queryformat %{NAME}\n"
+            CMD="rpm -qf --queryformat '%{NAME}\\n'"
             ;;
         apt-dpkg)
             showcmd dpkg -S "$1"
@@ -5684,9 +5685,9 @@ __switch_alt_to_distro()
 	case "$*" in
 		"p6"|"p6 p7"|"t6 p7"|"c6 c7")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
+			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
 			__switch_repo_to $TO
-			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			__do_upgrade
 			end_change_alt_repo
 			docmd epm update-kernel
@@ -5694,9 +5695,9 @@ __switch_alt_to_distro()
 			;;
 		"p7"|"p7 p8"|"t7 p8"|"c7 c8")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
+			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
 			__switch_repo_to $TO
-			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			__do_upgrade
 			end_change_alt_repo
 			__check_system "$TO"
@@ -5705,9 +5706,9 @@ __switch_alt_to_distro()
 			;;
 		"c8"|"c8.1"|"c8.2"|"c8 c8.1"|"c8.1 c8.2"|"c8 c8.2")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
+			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
 			__switch_repo_to $TO
-			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			__do_upgrade
 			end_change_alt_repo
 			__check_system "$TO"
@@ -5715,9 +5716,9 @@ __switch_alt_to_distro()
 			;;
 		"p8 c8"|"p8 c8.1"|"p8 c8.2")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
+			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
 			__switch_repo_to $TO
-			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			if epm installed libcrypt ; then
 				# glibc-core coflicts libcrypt
 				docmd epm downgrade apt pam pam0_passwdqc glibc-core libcrypt- || fatal
@@ -5730,7 +5731,7 @@ __switch_alt_to_distro()
 			;;
 		"p8"|"p8 p9"|"t8 p9"|"c8 c9"|"c8 p9"|"c8.1 p9"|"c8.2 p9"|"p9 p9"|"p9 c9")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
+			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
 			info "Workaround for https://bugzilla.altlinux.org/show_bug.cgi?id=35492 ..."
 			if epm installed gdb >/dev/null ; then
 				docmd epm remove gdb || fatal
@@ -5738,7 +5739,7 @@ __switch_alt_to_distro()
 			__switch_repo_to $TO
 			__do_upgrade
 			end_change_alt_repo
-			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			info "Run epm release-upgrade again for update to p10"
@@ -5747,19 +5748,19 @@ __switch_alt_to_distro()
 			info "Upgrade all packages to current $FROM repository"
 			__do_upgrade
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
+			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
 			__switch_repo_to $TO
 			__do_upgrade
 			end_change_alt_repo
-			docmd epm install rpm apt "$(get_fix_release_pkg "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm install rpm apt $(get_fix_release_pkg "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			__check_system "$TO"
 			docmd epm update-kernel -t std-def || fatal
 			;;
 		"p9 p8"|"c8.1 c8"|"c8.1 p8"|"p8 p8")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install "$(get_fix_release_pkg "$FROM")"
+			docmd epm install $(get_fix_release_pkg "$FROM")
 			__switch_repo_to $TO
-			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm downgrade rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			if epm installed libcrypt >/dev/null ; then
 				# glibc-core coflicts libcrypt
 				docmd epm downgrade apt rpm pam pam0_passwdqc glibc-core libcrypt- || fatal
@@ -5771,9 +5772,9 @@ __switch_alt_to_distro()
 			;;
 		"p9 c8"|"p9 c8.1"|"p9 c8.2")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install "$(get_fix_release_pkg "$FROM")"
+			docmd epm install $(get_fix_release_pkg "$FROM")
 			__switch_repo_to $TO
-			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm downgrade rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			#if epm installed libcrypt >/dev/null ; then
 			#	# glibc-core coflicts libcrypt
 			#	docmd epm downgrade apt rpm pam pam0_passwdqc glibc-core libcrypt- || fatal
@@ -5785,9 +5786,9 @@ __switch_alt_to_distro()
 			;;
 		"p10 p9")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install "$(get_fix_release_pkg "$FROM")"
+			docmd epm install $(get_fix_release_pkg "$FROM")
 			__switch_repo_to $TO
-			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm downgrade rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
 			end_change_alt_repo
 			__check_system "$TO"
@@ -5795,9 +5796,9 @@ __switch_alt_to_distro()
 			;;
 		"Sisyphus p8"|"Sisyphus p9"|"Sisyphus p10"|"Sisyphus c8"|"Sisyphus c8.1"|"Sisyphus c9")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install "$(get_fix_release_pkg "$FROM")"
+			docmd epm install $(get_fix_release_pkg "$FROM")
 			__switch_repo_to $TO
-			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
 			end_change_alt_repo
 			__check_system "$TO"
@@ -5805,17 +5806,17 @@ __switch_alt_to_distro()
 			;;
 		"p8 Sisyphus"|"p9 Sisyphus"|"p10 Sisyphus"|"10 Sisyphus"|"Sisyphus Sisyphus")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
+			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
 			docmd epm upgrade || fatal
 			# TODO: epm_reposwitch??
 			__replace_alt_version_in_repo "$FROM/branch/" "$TO/"
 			__alt_repofix "alt"
 			[ -s /etc/rpm/macros.d/p10 ] && rm -fv /etc/rpm/macros.d/p10
 			__epm_ru_update || fatal
-			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			#local ADDPKG
 			#ADDPKG=$(epm -q --short make-initrd sssd-ad 2>/dev/null)
-			#docmd epm install librpm7 librpm rpm apt $ADDPKG "$(get_fix_release_pkg --force "$TO")" ConsoleKit2- || fatal "Check an error and run again"
+			#docmd epm install librpm7 librpm rpm apt $ADDPKG $(get_fix_release_pkg --force "$TO") ConsoleKit2- || fatal "Check an error and run again"
 			docmd epm $force_yes $non_interactive upgrade || fatal "Check the error and run '# epm release-upgrade' again or just '# epm upgrade'"
 			docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
 			end_change_alt_repo
@@ -8350,7 +8351,7 @@ case $PMTYPE in
 		CMD="xbps-query -Ro"
 		;;
 	aptcyg)
-		docmd apt-cyg searchall "$(echo " $pkg_filenames" | sed -e "s| /| |g")"
+		docmd apt-cyg searchall $(echo " $pkg_filenames" | sed -e "s| /| |g")
 		return
 		;;
 	*)
@@ -11205,7 +11206,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.24.2  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.24.3  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2022"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11215,7 +11216,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.24.2
+EPMVERSION=3.24.3
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
