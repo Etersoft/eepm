@@ -23,7 +23,7 @@ load_helper epm-sh-warmup
 __epm_search_output()
 {
 local CMD
-local string="$1"
+local string="$*"
 case $PMTYPE in
 	apt-rpm|apt-dpkg)
 		CMD="apt-cache search --"
@@ -146,6 +146,16 @@ __epm_search_make_grep()
 
 	#list=$(strip_spaces $list | sed -e "s/ /|/g")
 	listN=$(strip_spaces $listN | sed -e "s/ /|/g" | sed -e "s/~//g")
+
+	# only apt supports regexps?
+	case $PMTYPE in
+		apt-*)
+			;;
+		*)
+				list=$(echo "$list" | sed -e "s/[?\^.]/ /g")
+				listN=$(echo "$listN" | sed -e "s/[?\^.]/ /g")
+			;;
+	esac
 
 	if [ -n "$short" ] ; then
 		echon " | sed -e \"s| .*||g\""
