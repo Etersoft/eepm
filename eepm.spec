@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.24.2
+Version: 3.24.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,11 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Tue Aug 16 2022 Vitaly Lipatov <lav@altlinux.ru> 3.24.3-alt1
+- epm_query_file: fix --short query for rpm
+- epm-query: fix --short query on rpm
+- fix docmd using (remove extra quotes)
+
 * Tue Aug 16 2022 Vitaly Lipatov <lav@altlinux.ru> 3.24.2-alt1
 - fix quotes in format strings
 
