@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.24.1
+Version: 3.24.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,9 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Tue Aug 16 2022 Vitaly Lipatov <lav@altlinux.ru> 3.24.2-alt1
+- fix quotes in format strings
+
 * Tue Aug 16 2022 Vitaly Lipatov <lav@altlinux.ru> 3.24.1-alt1
 - epm-check_updated_repo: stop autoupdate repo info (too buggy)
 - epm play mssql-server: add Debian/Ubuntu support
