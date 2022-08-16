@@ -3700,11 +3700,11 @@ case $PMTYPE in
 	*-rpm)
 		# FIXME: space with quotes problems, use point instead
 		warmup_rpmbase
-		docmd rpm -qa --queryformat "%{size}@%{name}-%{version}-%{release}\n" $pkg_filenames | sed -e "s|@| |g" | sort -n -k1
+		docmd rpm -qa --queryformat '%{size}@%{name}-%{version}-%{release}\\n' $pkg_filenames | sed -e "s|@| |g" | sort -n -k1
 		;;
 	*-dpkg)
 		warmup_dpkgbase
-		docmd dpkg-query -W --showformat="\${Installed-Size}@\${Package}-\${Version}:\${Architecture}\n" $pkg_filenames | sed -e "s|@| |g" | sort -n -k1
+		docmd dpkg-query -W --showformat='\${Installed-Size}@\${Package}-\${Version}:\${Architecture}\\n' $pkg_filenames | sed -e "s|@| |g" | sort -n -k1
 		;;
 	*)
 		fatal "Sorted package list function is not implemented for $PMTYPE"
@@ -3734,17 +3734,17 @@ case $PMTYPE in
 		warmup_dpkgbase
 		# FIXME: strong equal
 		#CMD="dpkg -l $pkg_filenames"
-		CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}-\${Version}:\${Architecture}\n $pkg_filenames"
+		CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}-\${Version}:\${Architecture}\\n $pkg_filenames"
 		# TODO: ${Architecture}
-		[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}\n $pkg_filenames"
-		showcmd $CMD
+		[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}\\n $pkg_filenames"
+		showcmd "$CMD"
 		$CMD | grep "^i" | sed -e "s|.* ||g" | __fo_pfn
 		return ;;
 	*-rpm)
 		warmup_rpmbase
 		# FIXME: strong equal
 		CMD="rpm -qa $pkg_filenames"
-		[ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n $pkg_filenames"
+		[ -n "$short" ] && CMD="rpm -qa --queryformat '%{name}\\n' $pkg_filenames"
 		docmd $CMD
 		return ;;
 	packagekit)
@@ -4260,10 +4260,10 @@ dpkg_query_package_format_field()
         local field="$1"
         shift
         if [ -f "$1" ] ; then
-            a= dpkg-deb --show --showformat="$field\n" "$@"
+            a= dpkg-deb --show --showformat="$field\\\n" "$@"
         else
             #a= dpkg -s "$1" | grep "^$field: " | sed -e "s|^$field: ||"
-            a= dpkg-query -W --showformat="$field\n" -- "$@"
+            a= dpkg-query -W --showformat="$field\\\n" -- "$@"
         fi
 }
 
@@ -4870,8 +4870,8 @@ __epm_query_file()
 			[ -n "$short" ] && CMD="rpm -qp --queryformat %{name}\n"
 			;;
 		*-dpkg)
-			CMD="dpkg-deb --show --showformat=\${Package}-\${Version}\n"
-			[ -n "$short" ] && CMD="dpkg-query --show --showformat=\${Package}\n"
+			CMD="dpkg-deb --show --showformat='\${Package}-\${Version}\\n'"
+			[ -n "$short" ] && CMD="dpkg-query --show --showformat='\${Package}\\n'"
 			;;
 		*)
 			fatal "Do not know command for query file package"
@@ -4902,8 +4902,8 @@ __epm_query_name()
 			;;
 		*-dpkg)
 			#docmd dpkg -l $@ | grep "^ii"
-			#CMD="dpkg-query -W --showformat=\${Package}-\${Version}\n"
-			docmd dpkg-query -W "--showformat=\${Package}-\${Version}\n" -- $@ || return
+			#CMD="dpkg-query -W --showformat=\${Package}-\${Version}\\\n"
+			docmd dpkg-query -W "--showformat='\${Package}-\${Version}\\n'" -- $@ || return
 			__epm_query_dpkg_check $@ || return
 			return
 			;;
@@ -4950,12 +4950,12 @@ __epm_query_shortname()
 	case $PMTYPE in
 		*-rpm)
 			showcmd rpm -q --queryformat '%{name} \n' -- $@
-			a='' rpm -q --queryformat '%{name} \n' -- $@
+			a='' rpm -q --queryformat '%{name} \\n' -- $@
 			return
 			;;
 		*-dpkg)
-			#CMD="dpkg-query -W --showformat=\${Package}\n"
-			docmd dpkg-query -W "--showformat=\${Package}\n" -- $@ || return
+			#CMD="dpkg-query -W --showformat=\${Package}\\\n"
+			docmd dpkg-query -W --showformat='\${Package}\\n' -- $@ || return
 			__epm_query_dpkg_check $@ || return
 			return
 			;;
@@ -11205,7 +11205,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.24.1  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.24.2  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2022"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11215,7 +11215,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.24.1
+EPMVERSION=3.24.2
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
