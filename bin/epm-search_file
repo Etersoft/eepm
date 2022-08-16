@@ -90,7 +90,7 @@ case $PMTYPE in
 		CMD="xbps-query -Ro"
 		;;
 	aptcyg)
-		docmd apt-cyg searchall "$(echo " $pkg_filenames" | sed -e "s| /| |g")"
+		docmd apt-cyg searchall $(echo " $pkg_filenames" | sed -e "s| /| |g")
 		return
 		;;
 	*)
