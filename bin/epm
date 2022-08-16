@@ -19,6 +19,7 @@
 
 PROGDIR=$(dirname "$0")
 PROGNAME=$(basename "$0")
+# TODO: pwd for ./epm and which for epm
 [ "$PROGDIR" = "." ] && PROGDIR=$(pwd)
 if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
     PROGDIR=""

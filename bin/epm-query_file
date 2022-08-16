@@ -141,7 +141,7 @@ __do_short_query()
     local CMD
     case $PMTYPE in
         *-rpm)
-            CMD="rpm -qf --queryformat %{NAME}\n"
+            CMD="rpm -qf --queryformat '%{NAME}\\n'"
             ;;
         apt-dpkg)
             showcmd dpkg -S "$1"
