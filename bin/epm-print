@@ -44,10 +44,10 @@ dpkg_query_package_format_field()
         local field="$1"
         shift
         if [ -f "$1" ] ; then
-            a= dpkg-deb --show --showformat="$field\n" "$@"
+            a= dpkg-deb --show --showformat="$field\\\n" "$@"
         else
             #a= dpkg -s "$1" | grep "^$field: " | sed -e "s|^$field: ||"
-            a= dpkg-query -W --showformat="$field\n" -- "$@"
+            a= dpkg-query -W --showformat="$field\\\n" -- "$@"
         fi
 }
 
