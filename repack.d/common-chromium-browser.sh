@@ -13,7 +13,7 @@ set_alt_alternatives()
 {
     local priority="$1"
     # needed alternatives
-    subst '1iProvides:webclient' $SPEC
+    subst '1iProvides: webclient' $SPEC
 
     subst "s|%files|%files\n/etc/alternatives/packages.d/$PRODUCT|" $SPEC
     mkdir -p $BUILDROOT/etc/alternatives/packages.d/
@@ -47,7 +47,7 @@ copy_icons_to_share()
 
 cleanup()
 {
-    subst '1iAutoProv:no' $SPEC
+    subst '1iAutoProv: no' $SPEC
 
     # remove cron update
     remove_file /etc/cron.daily/$PRODUCTCUR
