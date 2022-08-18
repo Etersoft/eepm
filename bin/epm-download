@@ -36,9 +36,10 @@ __use_url_install()
 	#esac
 
 	case $PMTYPE in
-		#apt-rpm)
-		#	pkg_names="$pkg_names $pkg_urls"
-		#	;;
+		apt-rpm)
+			# we need check rpm package (skip scripts).FIXME: can apt skip scripts?
+			pkg_names="$pkg_names $pkg_urls"
+			;;
 		#deepsolver-rpm)
 		#	pkg_names="$pkg_names $pkg_urls"
 		#	;;
