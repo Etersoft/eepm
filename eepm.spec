@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.25.1
+Version: 3.26.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,11 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Thu Aug 18 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.0-alt1
+- fix: epm-download: always download rpm packages on ALT directly
+- epm play: add slack support
+- big revert "fix quotes in format strings"
+
 * Thu Aug 18 2022 Vitaly Lipatov <lav@altlinux.ru> 3.25.1-alt1
 - epm repack icq: fix URL, ignore empty download
 - epm repack yandex-browser: fix provides
