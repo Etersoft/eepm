@@ -43,6 +43,10 @@ EOF
             showcmd estrlist "$@"
             estrlist "$@"
             ;;
+        "json")
+            showcmd json "$@"
+            $SHAREDIR/tools_json "$@"
+            ;;
         *)
             fatal "Unknown command $ epm tool $WHAT. Use epm print help for get help."
             ;;
