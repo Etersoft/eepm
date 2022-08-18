@@ -39,6 +39,6 @@ EOF
 pack_file /usr/share/applications/$PRODUCT.desktop
 
 mkdir -p $BUILDROOT/usr/share/pixmaps/
-eget -O $BUILDROOT/usr/share/pixmaps/$PRODUCT.png https://res.cloudinary.com/canonical/image/fetch/f_auto,q_auto,fl_sanitize,w_60,h_60/https://dashboard.snapcraft.io/site_media/appmedia/2020/04/icq_copy.png
-pack_file /usr/share/pixmaps/$PRODUCT.png
+eget -O $BUILDROOT/usr/share/pixmaps/$PRODUCT.png https://dashboard.snapcraft.io/site_media/appmedia/2020/04/icq_copy.png
+[ ! -s $BUILDROOT/usr/share/pixmaps/$PRODUCT.png ] && pack_file /usr/share/pixmaps/$PRODUCT.png || "echo Can't download icon for the program."
 subst "s|.*/opt/icq/unittests.*||" $SPEC
