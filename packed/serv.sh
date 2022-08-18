@@ -153,7 +153,7 @@ docmd_foreach()
 	#showcmd "$@"
 	shift
 	for pkg in "$@" ; do
-		docmd "$cmd" $pkg
+		docmd $cmd $pkg
 	done
 }
 
@@ -1575,13 +1575,24 @@ normalize_name()
 	esac
 }
 
-normalize_version()
+# 1.2.3.4.5 -> 1
+normalize_version1()
 {
-	# hack 7.9 -> 7, 20.04 -> 20.04
-	# TODO: 2.12.123 -> 2.12
-	# TODO: 7.10 -> 7 for RHEL Family
-    echo "$1" | sed -e "s/\.[0-9]$//g"
+    echo "$1" | sed -e "s|\..*||"
 }
+
+# 1.2.3.4.5 -> 1.2
+normalize_version2()
+{
+    echo "$1" | sed -e "s|^\([^.][^.]*\.[^.][^.]*\)\..*|\1|"
+}
+
+# 1.2.3.4.5 -> 1.2.3
+normalize_version3()
+{
+    echo "$1" | sed -e "s|^\([^.][^.]*\.[^.][^.]*\.[^.][^.]*\)\..*|\1|"
+}
+
 
 fill_distr_info()
 {
@@ -1597,28 +1608,30 @@ if distro os-release ; then
 	# shellcheck disable=SC1090
 	. $DISTROFILE
 	DISTRIB_ID="$(normalize_name "$NAME")"
-#	DISTRIB_ID="$(firstupper "$ID")"
+	DISTRIB_RELEASE_ORIG="$VERSION_ID"
 	DISTRIB_RELEASE="$VERSION_ID"
 	[ -n "$DISTRIB_RELEASE" ] || DISTRIB_RELEASE="CUR"
 	# set by os-release:
 	#PRETTY_NAME
 	VENDOR_ID="$ID"
 	DISTRIB_FULL_RELEASE=$DISTRIB_RELEASE
-	DISTRIB_RELEASE=$(normalize_version "$DISTRIB_RELEASE")
 	DISTRIB_CODENAME="$VERSION_CODENAME"
 
 elif distro lsb-release ; then
 	DISTRIB_ID=$(cat $DISTROFILE | get_var DISTRIB_ID)
 	DISTRIB_RELEASE=$(cat $DISTROFILE | get_var DISTRIB_RELEASE)
+	DISTRIB_RELEASE_ORIG="$DISTRIB_RELEASE"
 	DISTRIB_CODENAME=$(cat $DISTROFILE | get_var DISTRIB_CODENAME)
 	PRETTY_NAME=$(cat $DISTROFILE | get_var DISTRIB_DESCRIPTION)
 fi
+
+DISTRIB_RELEASE=$(normalize_version2 "$DISTRIB_RELEASE")
 
 
 case "$VENDOR_ID" in
 	"alt"|"altlinux")
 		# 2.4.5.99 -> 2
-		DISTRIB_RELEASE=$(echo "$DISTRIB_RELEASE" | sed -e "s/\.[0-9].*//g")
+		DISTRIB_RELEASE=$(normalize_version1 "$DISTRIB_RELEASE_ORIG")
 		case "$DISTRIB_ID" in
 			"ALTServer"|"ALTSPWorkstation"|"Sisyphus")
 				;;
@@ -1628,7 +1641,8 @@ case "$VENDOR_ID" in
 		esac
 		;;
 	"astra")
-		[ "$DISTRIB_RELEASE" = "1.17" ] && DISTRIB_RELEASE="$VERSION_ID"
+		DISTRIB_RELEASE=$(normalize_version3 "$DISTRIB_RELEASE_ORIG" | sed -e 's|_.*||')
+		#[ "$DISTRIB_RELEASE" = "1.17" ] && DISTRIB_RELEASE="$VERSION_ID"
 		#DISTRIB_RELEASE="$VERSION_CODENAME"
 		;;
 esac
@@ -1649,8 +1663,14 @@ case "$DISTRIB_ID" in
 		case "$DISTRIB_FULL_RELEASE" in
 			8.0|8.1)
 				;;
+			8.2|8.3)
+				DISTRIB_RELEASE="c9f1"
+			;;
+			8.4)
+				DISTRIB_RELEASE="c9f2"
+			;;
 			8.*)
-				DISTRIB_RELEASE="c9"
+				DISTRIB_RELEASE="c9f3"
 			;;
 		esac
 #		DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\..*//g")
@@ -2301,7 +2321,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.26.0  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.26.1  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
