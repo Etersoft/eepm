@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.26.0
+Version: 3.26.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,10 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Fri Aug 19 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.1-alt1
+- add epm play virtualhere
+- more strong distro versions
+
 * Thu Aug 18 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.0-alt1
 - fix: epm-download: always download rpm packages on ALT directly
 - epm play: add slack support
