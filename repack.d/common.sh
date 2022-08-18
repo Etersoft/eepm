@@ -124,3 +124,5 @@ drop_embedded_reqs()
 {
     filter_from_requires "libGLESv2.so()" "libEGL.so()" "libffmpeg.so()"
 }
+
+[ -n "$PRODUCTDIR" ] && [ -n "$PRODUCT" ] || PRODUCTDIR="/opt/$PRODUCT"
