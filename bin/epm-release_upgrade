@@ -253,8 +253,10 @@ get_next_release()
 		echo "c8.1" ;;
 	"c8.1")
 		echo "c8.2" ;;
-	"c8.2")
-		echo "c9" ;;
+	"c8")
+		echo "c9f2" ;;
+	"c9f1")
+		echo "c9f2" ;;
 	*)
 		echo "$FROM" ;;
 	esac
@@ -321,7 +323,7 @@ __switch_alt_to_distro()
 			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			;;
-		"p8"|"p8 p9"|"t8 p9"|"c8 c9"|"c8 p9"|"c8.1 p9"|"c8.2 p9"|"p9 p9"|"p9 c9")
+		"p8"|"p8 p9"|"t8 p9"|"c8 c9"|"c8 p9"|"c8.1 p9"|"c8.2 p9"|"p9 p9"|"p9 c9f2")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			info "Workaround for https://bugzilla.altlinux.org/show_bug.cgi?id=35492 ..."
@@ -386,7 +388,7 @@ __switch_alt_to_distro()
 			__check_system "$TO"
 			docmd epm upgrade || fatal
 			;;
-		"Sisyphus p8"|"Sisyphus p9"|"Sisyphus p10"|"Sisyphus c8"|"Sisyphus c8.1"|"Sisyphus c9")
+		"Sisyphus p8"|"Sisyphus p9"|"Sisyphus p10"|"Sisyphus c8"|"Sisyphus c8.1"|"Sisyphus c9f2")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install "$(get_fix_release_pkg "$FROM")"
 			__switch_repo_to $TO

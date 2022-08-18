@@ -37,10 +37,12 @@ get_prev_release()
 		echo "c8" ;;
 	"c8.2")
 		echo "c8.1" ;;
-	"c9")
-		echo "c8.2" ;;
-	"9")
-		echo "10" ;;
+	"c9f1")
+		echo "c8" ;;
+	"c9f2")
+		echo "c9f1" ;;
+	"10")
+		echo "9" ;;
 	*)
 		echo "$FROM" ;;
 	esac

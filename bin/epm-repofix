@@ -46,10 +46,10 @@ __repofix_filter_vendor()
 	local br="$1"
 	br="$(echo "$br" | sed -e "s|\..*||")"
 	case $br in
-		c8)
+		c8*)
 			br="cert8"
 			;;
-		c9)
+		c9*)
 			br="cert9"
 			;;
 		Sisyphus)
