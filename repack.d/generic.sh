@@ -27,3 +27,6 @@ find $BUILDROOT -name "*.py" -exec subst '1{/python3/n};1i#!/usr/bin/python3' {}
 if [ -n "$flag_python3" ] ; then
     epm install --skip-installed rpm-build-python3
 fi
+
+# Set high Epoche to override repository package
+subst "s|^\(Name: .*\)$|# Override reposity package\nEpoch: 100\n\1|g" $SPEC
