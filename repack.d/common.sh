@@ -32,6 +32,16 @@ pack_file()
     subst "s|%files|%files\n$file|" $SPEC
 }
 
+# Usage: pack_dir <path_to_dir>
+pack_dir()
+{
+    local file="$1"
+    [ -n "$file" ] || return
+    grep -q "^%dir[[:space:]]$file$" $SPEC && return
+    grep -q "^%dir[[:space:]]\"$file\"$" $SPEC && return
+    subst "s|%files|%files\n%dir $file|" $SPEC
+}
+
 
 add_bin_link_command()
 {
