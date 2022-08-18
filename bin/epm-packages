@@ -26,11 +26,11 @@ case $PMTYPE in
 	*-rpm)
 		# FIXME: space with quotes problems, use point instead
 		warmup_rpmbase
-		docmd rpm -qa --queryformat '%{size}@%{name}-%{version}-%{release}\\n' $pkg_filenames | sed -e "s|@| |g" | sort -n -k1
+		docmd rpm -qa --queryformat "%{size}@%{name}-%{version}-%{release}\n" $pkg_filenames | sed -e "s|@| |g" | sort -n -k1
 		;;
 	*-dpkg)
 		warmup_dpkgbase
-		docmd dpkg-query -W --showformat='\${Installed-Size}@\${Package}-\${Version}:\${Architecture}\\n' $pkg_filenames | sed -e "s|@| |g" | sort -n -k1
+		docmd dpkg-query -W --showformat="\${Installed-Size}@\${Package}-\${Version}:\${Architecture}\n" $pkg_filenames | sed -e "s|@| |g" | sort -n -k1
 		;;
 	*)
 		fatal "Sorted package list function is not implemented for $PMTYPE"
@@ -61,17 +61,17 @@ case $PMTYPE in
 		warmup_dpkgbase
 		# FIXME: strong equal
 		#CMD="dpkg -l $pkg_filenames"
-		CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}-\${Version}:\${Architecture}\\n $pkg_filenames"
+		CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}-\${Version}:\${Architecture}\n $pkg_filenames"
 		# TODO: ${Architecture}
-		[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}\\n $pkg_filenames"
-		showcmd "$CMD"
+		[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}\n $pkg_filenames"
+		showcmd $CMD
 		$CMD | grep "^i" | sed -e "s|.* ||g" | __fo_pfn
 		return ;;
 	*-rpm)
 		warmup_rpmbase
 		# FIXME: strong equal
 		CMD="rpm -qa $pkg_filenames"
-		[ -n "$short" ] && CMD="rpm -qa --queryformat '%{name}\\n' $pkg_filenames"
+		[ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n $pkg_filenames"
 		docmd $CMD
 		return ;;
 	packagekit)

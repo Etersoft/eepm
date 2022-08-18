@@ -190,8 +190,8 @@ __epm_query_file()
 			[ -n "$short" ] && CMD="rpm -qp --queryformat %{name}\n"
 			;;
 		*-dpkg)
-			CMD="dpkg-deb --show --showformat='\${Package}-\${Version}\\n'"
-			[ -n "$short" ] && CMD="dpkg-query --show --showformat='\${Package}\\n'"
+			CMD="dpkg-deb --show --showformat=\${Package}-\${Version}\n"
+			[ -n "$short" ] && CMD="dpkg-query --show --showformat=\${Package}\n"
 			;;
 		*)
 			fatal "Do not know command for query file package"
@@ -223,8 +223,8 @@ __epm_query_name()
 			;;
 		*-dpkg)
 			#docmd dpkg -l $@ | grep "^ii"
-			#CMD="dpkg-query -W --showformat=\${Package}-\${Version}\\\n"
-			docmd dpkg-query -W "--showformat='\${Package}-\${Version}\\n'" -- $@ || return
+			#CMD="dpkg-query -W --showformat=\${Package}-\${Version}\n"
+			docmd dpkg-query -W "--showformat=\${Package}-\${Version}\n" -- $@ || return
 			__epm_query_dpkg_check $@ || return
 			return
 			;;
@@ -275,8 +275,8 @@ __epm_query_shortname()
 			return
 			;;
 		*-dpkg)
-			#CMD="dpkg-query -W --showformat=\${Package}\\\n"
-			docmd dpkg-query -W --showformat='\${Package}\\n' -- $@ || return
+			#CMD="dpkg-query -W --showformat=\${Package}\n"
+			docmd dpkg-query -W "--showformat=\${Package}\n" -- $@ || return
 			__epm_query_dpkg_check $@ || return
 			return
 			;;
