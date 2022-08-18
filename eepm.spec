@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.25.0
+Version: 3.25.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,11 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Thu Aug 18 2022 Vitaly Lipatov <lav@altlinux.ru> 3.25.1-alt1
+- epm repack icq: fix URL, ignore empty download
+- epm repack yandex-browser: fix provides
+- add epm play jetbrains-toolbox
+
 * Thu Aug 18 2022 Vitaly Lipatov <lav@altlinux.ru> 3.25.0-alt1
 - epm repack: always set Epoche: 100 to override repository package
 - epm-search: fix support regexp not for apt only
