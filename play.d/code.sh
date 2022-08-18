@@ -36,4 +36,7 @@ else
     URL="https://code.visualstudio.com/sha/download?build=stable&os=linux-$pkgtype-$arch"
 fi
 
-epm install $repack "$URL"
+epm install $repack "$URL" || exit
+
+echo
+echo "NOTE: VS Code is a proprietary build. We recommend to use open source editors: Codium, Atom."
