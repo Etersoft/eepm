@@ -1,6 +1,9 @@
 #!/bin/bash
 
 EPMPKGFILE=/usr/src/RPM/RPMS/noarch/eepm-3*.rpm
+# just a package
+TESTPKG1=fakeroot
+TESTPKG2=erc
 
 fatal()
 {
@@ -24,11 +27,11 @@ epm upgrade $EPMPKGFILE
 
 epm downgrade $EPMPKGFILE
 
-epm --auto remove erc
-
-epm --auto install erc
-
-epm --auto remove erc
+for i in $TESTPKG1 $TESTPKG2 ; do
+    epm --auto remove $i
+    epm --auto install $i
+    epm --auto remove $i
+done
 
 epm --auto autoremove
 
