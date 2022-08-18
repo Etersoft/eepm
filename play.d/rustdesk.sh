@@ -2,7 +2,7 @@
 
 PKGNAME=rustdesk
 SUPPORTEDARCHES="x86_64 armhf"
-DESCRIPTION="RustTDesk — Display and control your PC and Android devices"
+DESCRIPTION="RustDesk — Display and control your PC and Android devices"
 
 . $(dirname $0)/common.sh
 
