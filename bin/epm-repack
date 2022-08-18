@@ -265,6 +265,8 @@ __prepare_source_package()
             rm -f $verbose $alpkg
             alpkg=$newalpkg
         fi
+    else
+        warning "Can't detect version in $alpkg. We have almost no chance it will supported in alien."
     fi
 }
 
