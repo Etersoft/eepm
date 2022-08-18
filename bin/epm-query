@@ -229,7 +229,7 @@ __epm_query_name()
 			return
 			;;
 		npackd)
-			docmd "npackdcl path --package=$1"
+			docmd npackdcl path --package=$1
 			return
 			;;
 		conary)
@@ -281,7 +281,7 @@ __epm_query_shortname()
 			return
 			;;
 		npackd)
-			docmd "npackdcl path --package=$1"
+			docmd npackdcl path --package=$1
 			return
 			;;
 		conary)

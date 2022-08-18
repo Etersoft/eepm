@@ -19,7 +19,7 @@
 
 __epm_orphan_altrpm()
 {
-	docmd "apt-cache list-extras"
+	docmd apt-cache list-extras
 }
 
 epm_autoorphans()

@@ -144,7 +144,7 @@ docmd_foreach()
 	#showcmd "$@"
 	shift
 	for pkg in "$@" ; do
-		docmd "$cmd" $pkg
+		docmd $cmd $pkg
 	done
 }
 
