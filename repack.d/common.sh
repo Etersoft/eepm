@@ -129,3 +129,4 @@ drop_embedded_reqs()
 }
 
 [ -n "$PRODUCTDIR" ] && [ -n "$PRODUCT" ] || PRODUCTDIR="/opt/$PRODUCT"
+[ -n "$PRODUCTCUR" ] && [ -n "$PRODUCT" ] || PRODUCTCUR="$PRODUCT"
