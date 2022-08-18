@@ -153,7 +153,7 @@ showcmd()
 docmd()
 {
 	showcmd "$*$EXTRA_SHOWDOCMD"
-	eval "$@"
+	"$@"
 }
 
 docmd_foreach()
@@ -171,7 +171,7 @@ sudorun()
 {
 	set_sudo
 	if [ -z "$SUDO" ] ; then
-		eval "$@"
+		"$@"
 		return
 	fi
 	$SUDO "$@"
@@ -3051,10 +3051,10 @@ epm_ni_install_names()
 			sudocmd apt-get -y $noremove --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
 			return ;;
 		apt-dpkg)
-			sudocmd ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive apt-get -y $noremove --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
+			sudocmd env ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive apt-get -y $noremove --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
 			return ;;
 		aptitude-dpkg)
-			sudocmd ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive aptitude -y install $@
+			sudocmd env ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive aptitude -y install $@
 			return ;;
 		yum-rpm)
 			sudocmd yum -y $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
@@ -3701,11 +3701,11 @@ case $PMTYPE in
 	*-rpm)
 		# FIXME: space with quotes problems, use point instead
 		warmup_rpmbase
-		docmd rpm -qa --queryformat '%{size}@%{name}-%{version}-%{release}\\n' $pkg_filenames | sed -e "s|@| |g" | sort -n -k1
+		docmd rpm -qa --queryformat "%{size}@%{name}-%{version}-%{release}\n" $pkg_filenames | sed -e "s|@| |g" | sort -n -k1
 		;;
 	*-dpkg)
 		warmup_dpkgbase
-		docmd dpkg-query -W --showformat='\${Installed-Size}@\${Package}-\${Version}:\${Architecture}\\n' $pkg_filenames | sed -e "s|@| |g" | sort -n -k1
+		docmd dpkg-query -W --showformat="\${Installed-Size}@\${Package}-\${Version}:\${Architecture}\n" $pkg_filenames | sed -e "s|@| |g" | sort -n -k1
 		;;
 	*)
 		fatal "Sorted package list function is not implemented for $PMTYPE"
@@ -3735,17 +3735,17 @@ case $PMTYPE in
 		warmup_dpkgbase
 		# FIXME: strong equal
 		#CMD="dpkg -l $pkg_filenames"
-		CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}-\${Version}:\${Architecture}\\n $pkg_filenames"
+		CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}-\${Version}:\${Architecture}\n $pkg_filenames"
 		# TODO: ${Architecture}
-		[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}\\n $pkg_filenames"
-		showcmd "$CMD"
+		[ -n "$short" ] && CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}\n $pkg_filenames"
+		showcmd $CMD
 		$CMD | grep "^i" | sed -e "s|.* ||g" | __fo_pfn
 		return ;;
 	*-rpm)
 		warmup_rpmbase
 		# FIXME: strong equal
 		CMD="rpm -qa $pkg_filenames"
-		[ -n "$short" ] && CMD="rpm -qa --queryformat '%{name}\\n' $pkg_filenames"
+		[ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n $pkg_filenames"
 		docmd $CMD
 		return ;;
 	packagekit)
@@ -4261,10 +4261,10 @@ dpkg_query_package_format_field()
         local field="$1"
         shift
         if [ -f "$1" ] ; then
-            a= dpkg-deb --show --showformat="$field\\\n" "$@"
+            a= dpkg-deb --show --showformat="$field\n" "$@"
         else
             #a= dpkg -s "$1" | grep "^$field: " | sed -e "s|^$field: ||"
-            a= dpkg-query -W --showformat="$field\\\n" -- "$@"
+            a= dpkg-query -W --showformat="$field\n" -- "$@"
         fi
 }
 
@@ -4871,8 +4871,8 @@ __epm_query_file()
 			[ -n "$short" ] && CMD="rpm -qp --queryformat %{name}\n"
 			;;
 		*-dpkg)
-			CMD="dpkg-deb --show --showformat='\${Package}-\${Version}\\n'"
-			[ -n "$short" ] && CMD="dpkg-query --show --showformat='\${Package}\\n'"
+			CMD="dpkg-deb --show --showformat=\${Package}-\${Version}\n"
+			[ -n "$short" ] && CMD="dpkg-query --show --showformat=\${Package}\n"
 			;;
 		*)
 			fatal "Do not know command for query file package"
@@ -4903,8 +4903,8 @@ __epm_query_name()
 			;;
 		*-dpkg)
 			#docmd dpkg -l $@ | grep "^ii"
-			#CMD="dpkg-query -W --showformat=\${Package}-\${Version}\\\n"
-			docmd dpkg-query -W "--showformat='\${Package}-\${Version}\\n'" -- $@ || return
+			#CMD="dpkg-query -W --showformat=\${Package}-\${Version}\n"
+			docmd dpkg-query -W "--showformat=\${Package}-\${Version}\n" -- $@ || return
 			__epm_query_dpkg_check $@ || return
 			return
 			;;
@@ -4951,12 +4951,12 @@ __epm_query_shortname()
 	case $PMTYPE in
 		*-rpm)
 			showcmd rpm -q --queryformat '%{name} \n' -- $@
-			a='' rpm -q --queryformat '%{name} \n' -- $@
+			a='' rpm -q --queryformat '%{name} \\n' -- $@
 			return
 			;;
 		*-dpkg)
-			#CMD="dpkg-query -W --showformat=\${Package}\\\n"
-			docmd dpkg-query -W --showformat='\${Package}\\n' -- $@ || return
+			#CMD="dpkg-query -W --showformat=\${Package}\n"
+			docmd dpkg-query -W "--showformat=\${Package}\n" -- $@ || return
 			__epm_query_dpkg_check $@ || return
 			return
 			;;
@@ -5139,7 +5139,7 @@ __do_short_query()
     local CMD
     case $PMTYPE in
         *-rpm)
-            CMD="rpm -qf --queryformat '%{NAME}\\n'"
+            CMD="rpm -qf --queryformat %{NAME}\n"
             ;;
         apt-dpkg)
             showcmd dpkg -S "$1"
@@ -5685,9 +5685,9 @@ __switch_alt_to_distro()
 	case "$*" in
 		"p6"|"p6 p7"|"t6 p7"|"c6 c7")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
-			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			__do_upgrade
 			end_change_alt_repo
 			docmd epm update-kernel
@@ -5695,9 +5695,9 @@ __switch_alt_to_distro()
 			;;
 		"p7"|"p7 p8"|"t7 p8"|"c7 c8")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
-			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			__do_upgrade
 			end_change_alt_repo
 			__check_system "$TO"
@@ -5706,9 +5706,9 @@ __switch_alt_to_distro()
 			;;
 		"c8"|"c8.1"|"c8.2"|"c8 c8.1"|"c8.1 c8.2"|"c8 c8.2")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
-			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			__do_upgrade
 			end_change_alt_repo
 			__check_system "$TO"
@@ -5716,9 +5716,9 @@ __switch_alt_to_distro()
 			;;
 		"p8 c8"|"p8 c8.1"|"p8 c8.2")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
-			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			if epm installed libcrypt ; then
 				# glibc-core coflicts libcrypt
 				docmd epm downgrade apt pam pam0_passwdqc glibc-core libcrypt- || fatal
@@ -5731,7 +5731,7 @@ __switch_alt_to_distro()
 			;;
 		"p8"|"p8 p9"|"t8 p9"|"c8 c9"|"c8 p9"|"c8.1 p9"|"c8.2 p9"|"p9 p9"|"p9 c9")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			info "Workaround for https://bugzilla.altlinux.org/show_bug.cgi?id=35492 ..."
 			if epm installed gdb >/dev/null ; then
 				docmd epm remove gdb || fatal
@@ -5739,7 +5739,7 @@ __switch_alt_to_distro()
 			__switch_repo_to $TO
 			__do_upgrade
 			end_change_alt_repo
-			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			info "Run epm release-upgrade again for update to p10"
@@ -5748,19 +5748,19 @@ __switch_alt_to_distro()
 			info "Upgrade all packages to current $FROM repository"
 			__do_upgrade
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			__switch_repo_to $TO
 			__do_upgrade
 			end_change_alt_repo
-			docmd epm install rpm apt $(get_fix_release_pkg "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm install rpm apt "$(get_fix_release_pkg "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			__check_system "$TO"
 			docmd epm update-kernel -t std-def || fatal
 			;;
 		"p9 p8"|"c8.1 c8"|"c8.1 p8"|"p8 p8")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install $(get_fix_release_pkg "$FROM")
+			docmd epm install "$(get_fix_release_pkg "$FROM")"
 			__switch_repo_to $TO
-			docmd epm downgrade rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			if epm installed libcrypt >/dev/null ; then
 				# glibc-core coflicts libcrypt
 				docmd epm downgrade apt rpm pam pam0_passwdqc glibc-core libcrypt- || fatal
@@ -5772,9 +5772,9 @@ __switch_alt_to_distro()
 			;;
 		"p9 c8"|"p9 c8.1"|"p9 c8.2")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install $(get_fix_release_pkg "$FROM")
+			docmd epm install "$(get_fix_release_pkg "$FROM")"
 			__switch_repo_to $TO
-			docmd epm downgrade rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			#if epm installed libcrypt >/dev/null ; then
 			#	# glibc-core coflicts libcrypt
 			#	docmd epm downgrade apt rpm pam pam0_passwdqc glibc-core libcrypt- || fatal
@@ -5786,9 +5786,9 @@ __switch_alt_to_distro()
 			;;
 		"p10 p9")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install $(get_fix_release_pkg "$FROM")
+			docmd epm install "$(get_fix_release_pkg "$FROM")"
 			__switch_repo_to $TO
-			docmd epm downgrade rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
 			end_change_alt_repo
 			__check_system "$TO"
@@ -5796,9 +5796,9 @@ __switch_alt_to_distro()
 			;;
 		"Sisyphus p8"|"Sisyphus p9"|"Sisyphus p10"|"Sisyphus c8"|"Sisyphus c8.1"|"Sisyphus c9")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install $(get_fix_release_pkg "$FROM")
+			docmd epm install "$(get_fix_release_pkg "$FROM")"
 			__switch_repo_to $TO
-			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
 			end_change_alt_repo
 			__check_system "$TO"
@@ -5806,17 +5806,17 @@ __switch_alt_to_distro()
 			;;
 		"p8 Sisyphus"|"p9 Sisyphus"|"p10 Sisyphus"|"10 Sisyphus"|"Sisyphus Sisyphus")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
 			docmd epm upgrade || fatal
 			# TODO: epm_reposwitch??
 			__replace_alt_version_in_repo "$FROM/branch/" "$TO/"
 			__alt_repofix "alt"
 			[ -s /etc/rpm/macros.d/p10 ] && rm -fv /etc/rpm/macros.d/p10
 			__epm_ru_update || fatal
-			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
 			#local ADDPKG
 			#ADDPKG=$(epm -q --short make-initrd sssd-ad 2>/dev/null)
-			#docmd epm install librpm7 librpm rpm apt $ADDPKG $(get_fix_release_pkg --force "$TO") ConsoleKit2- || fatal "Check an error and run again"
+			#docmd epm install librpm7 librpm rpm apt $ADDPKG "$(get_fix_release_pkg --force "$TO")" ConsoleKit2- || fatal "Check an error and run again"
 			docmd epm $force_yes $non_interactive upgrade || fatal "Check the error and run '# epm release-upgrade' again or just '# epm upgrade'"
 			docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
 			end_change_alt_repo
@@ -6749,6 +6749,8 @@ __prepare_source_package()
             rm -f $verbose $alpkg
             alpkg=$newalpkg
         fi
+    else
+        warning "Can't detect version in $alpkg. We have almost no chance it will supported in alien."
     fi
 }
 
@@ -8094,7 +8096,7 @@ epm_restore()
 __epm_search_output()
 {
 local CMD
-local string="$1"
+local string="$*"
 case $PMTYPE in
 	apt-rpm|apt-dpkg)
 		CMD="apt-cache search --"
@@ -8216,6 +8218,16 @@ __epm_search_make_grep()
 
 	#list=$(strip_spaces $list | sed -e "s/ /|/g")
 	listN=$(strip_spaces $listN | sed -e "s/ /|/g" | sed -e "s/~//g")
+
+	# only apt supports regexps?
+	case $PMTYPE in
+		apt-*)
+			;;
+		*)
+				list=$(echo "$list" | sed -e "s/[?\^.]/ /g")
+				listN=$(echo "$listN" | sed -e "s/[?\^.]/ /g")
+			;;
+	esac
 
 	if [ -n "$short" ] ; then
 		echon " | sed -e \"s| .*||g\""
@@ -8351,7 +8363,7 @@ case $PMTYPE in
 		CMD="xbps-query -Ro"
 		;;
 	aptcyg)
-		docmd apt-cyg searchall $(echo " $pkg_filenames" | sed -e "s| /| |g")
+		docmd apt-cyg searchall "$(echo " $pkg_filenames" | sed -e "s| /| |g")"
 		return
 		;;
 	*)
@@ -8966,6 +8978,10 @@ EOF
         "estrlist")
             showcmd estrlist "$@"
             estrlist "$@"
+            ;;
+        "json")
+            showcmd json "$@"
+            internal_tools_json "$@"
             ;;
         *)
             fatal "Unknown command $ epm tool $WHAT. Use epm print help for get help."
@@ -9601,6 +9617,14 @@ normalize_name()
 	esac
 }
 
+normalize_version()
+{
+	# hack 7.9 -> 7, 20.04 -> 20.04
+	# TODO: 2.12.123 -> 2.12
+	# TODO: 7.10 -> 7 for RHEL Family
+    echo "$1" | sed -e "s/\.[0-9]$//g"
+}
+
 fill_distr_info()
 {
 # Default values
@@ -9622,7 +9646,7 @@ if distro os-release ; then
 	#PRETTY_NAME
 	VENDOR_ID="$ID"
 	DISTRIB_FULL_RELEASE=$DISTRIB_RELEASE
-	DISTRIB_RELEASE=$(echo "$DISTRIB_RELEASE" | sed -e "s/\.[0-9]$//g")
+	DISTRIB_RELEASE=$(normalize_version "$DISTRIB_RELEASE")
 	DISTRIB_CODENAME="$VERSION_CODENAME"
 
 elif distro lsb-release ; then
@@ -9635,6 +9659,7 @@ fi
 
 case "$VENDOR_ID" in
 	"alt"|"altlinux")
+		# 2.4.5.99 -> 2
 		DISTRIB_RELEASE=$(echo "$DISTRIB_RELEASE" | sed -e "s/\.[0-9].*//g")
 		case "$DISTRIB_ID" in
 			"ALTServer"|"ALTSPWorkstation"|"Sisyphus")
@@ -9645,7 +9670,8 @@ case "$VENDOR_ID" in
 		esac
 		;;
 	"astra")
-		DISTRIB_RELEASE="$VERSION_CODENAME"
+		[ "$DISTRIB_RELEASE" = "1.17" ] && DISTRIB_RELEASE="$VERSION_ID"
+		#DISTRIB_RELEASE="$VERSION_CODENAME"
 		;;
 esac
 
@@ -11206,7 +11232,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.24.3  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.26.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2022"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11216,7 +11242,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.24.3
+EPMVERSION=3.26.0
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=

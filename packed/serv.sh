@@ -143,7 +143,7 @@ showcmd()
 docmd()
 {
 	showcmd "$*$EXTRA_SHOWDOCMD"
-	eval "$@"
+	"$@"
 }
 
 docmd_foreach()
@@ -161,7 +161,7 @@ sudorun()
 {
 	set_sudo
 	if [ -z "$SUDO" ] ; then
-		eval "$@"
+		"$@"
 		return
 	fi
 	$SUDO "$@"
@@ -1575,6 +1575,14 @@ normalize_name()
 	esac
 }
 
+normalize_version()
+{
+	# hack 7.9 -> 7, 20.04 -> 20.04
+	# TODO: 2.12.123 -> 2.12
+	# TODO: 7.10 -> 7 for RHEL Family
+    echo "$1" | sed -e "s/\.[0-9]$//g"
+}
+
 fill_distr_info()
 {
 # Default values
@@ -1596,7 +1604,7 @@ if distro os-release ; then
 	#PRETTY_NAME
 	VENDOR_ID="$ID"
 	DISTRIB_FULL_RELEASE=$DISTRIB_RELEASE
-	DISTRIB_RELEASE=$(echo "$DISTRIB_RELEASE" | sed -e "s/\.[0-9]$//g")
+	DISTRIB_RELEASE=$(normalize_version "$DISTRIB_RELEASE")
 	DISTRIB_CODENAME="$VERSION_CODENAME"
 
 elif distro lsb-release ; then
@@ -1609,6 +1617,7 @@ fi
 
 case "$VENDOR_ID" in
 	"alt"|"altlinux")
+		# 2.4.5.99 -> 2
 		DISTRIB_RELEASE=$(echo "$DISTRIB_RELEASE" | sed -e "s/\.[0-9].*//g")
 		case "$DISTRIB_ID" in
 			"ALTServer"|"ALTSPWorkstation"|"Sisyphus")
@@ -1619,7 +1628,8 @@ case "$VENDOR_ID" in
 		esac
 		;;
 	"astra")
-		DISTRIB_RELEASE="$VERSION_CODENAME"
+		[ "$DISTRIB_RELEASE" = "1.17" ] && DISTRIB_RELEASE="$VERSION_ID"
+		#DISTRIB_RELEASE="$VERSION_CODENAME"
 		;;
 esac
 
@@ -2291,7 +2301,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.24.3  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.26.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
