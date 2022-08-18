@@ -78,7 +78,10 @@ EOF
 move_to_opt()
 {
     local from="$@"
-    [ -n "$from" ] || from="/usr/share/$PRODUCT"
+    if [ -z "$from" ] ; then
+        from="/usr/share/$PRODUCT"
+        [ -d "$BUILDROOT$from" ] || from="/usr/lib/$PRODUCT"
+    fi
     mkdir -p $BUILDROOT$PRODUCTDIR/
 
     local sdir rdir i
