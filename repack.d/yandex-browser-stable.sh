@@ -10,9 +10,9 @@ PRODUCTDIR=/opt/yandex/browser
 
 . $(dirname $0)/common-chromium-browser.sh
 
-subst '1iConflicts:yandex-browser-beta' $SPEC
+subst '1iConflicts: yandex-browser-beta' $SPEC
 
-subst '5iProvides: yandex-browser = %{version}' $SPEC
+subst '10iProvides: yandex-browser = %version' $SPEC
 
 set_alt_alternatives 65
 
