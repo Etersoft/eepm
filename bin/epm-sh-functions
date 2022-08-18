@@ -133,7 +133,7 @@ showcmd()
 docmd()
 {
 	showcmd "$*$EXTRA_SHOWDOCMD"
-	eval "$@"
+	"$@"
 }
 
 # Run every arg with docmd
@@ -153,7 +153,7 @@ sudorun()
 {
 	set_sudo
 	if [ -z "$SUDO" ] ; then
-		eval "$@"
+		"$@"
 		return
 	fi
 	$SUDO "$@"
