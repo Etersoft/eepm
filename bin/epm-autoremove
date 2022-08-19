@@ -293,7 +293,7 @@ case $PMTYPE in
 			# FIXME: package-cleanup have to use stderr for errors
 			local PKGLIST=$(package-cleanup -q --leaves | grep -v "^eepm-")
 			[ -n "$PKGLIST" ] || break
-			showcmd epm remove $PKGLIST
+			docmd epm remove $PKGLIST
 		done
 		;;
 	dnf-rpm)
