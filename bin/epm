@@ -393,6 +393,7 @@ check_option()
     case $1 in
     -v|--version)         # HELPOPT: print version
         [ -n "$epm_cmd" ] && return 1
+        [ -n "$short" ] && echo "@VERSION@" | sed -e 's|-.*||' && exit 0
         print_version
         exit 0
         ;;
