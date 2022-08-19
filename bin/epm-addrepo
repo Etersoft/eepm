@@ -24,7 +24,7 @@ ALTLINUXPUBURL=http://ftp.altlinux.org/pub/distributions
 
 __epm_addrepo_rhel()
 {
-	local repo="$@"
+	local repo="$*"
 	if [ -z "$repo" ] ; then
 		echo "Add repo."
 		echo "1. Use with repository URL, f.i. http://www.example.com/example.repo"

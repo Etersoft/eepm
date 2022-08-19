@@ -140,7 +140,7 @@ case $PMTYPE in
 		info "You need remove repo from /etc/pacman.conf"
 		;;
 	npackd)
-		sudocmd npackdcl remove-repo --url="$@"
+		sudocmd npackdcl remove-repo --url="$*"
 		;;
 	winget)
 		sudocmd winget source remove "$@"

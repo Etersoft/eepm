@@ -77,7 +77,7 @@ EOF
 # move files to $PRODUCTDIR
 move_to_opt()
 {
-    local from="$@"
+    local from="$*"
     if [ -z "$from" ] ; then
         from="/usr/share/$PRODUCT"
         [ -d "$BUILDROOT$from" ] || from="/usr/lib/$PRODUCT"

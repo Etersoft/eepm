@@ -299,7 +299,7 @@ __epm_if_command_path()
 
 epm_install_files()
 {
-    local files="$@"
+    local files="$*"
     [ -z "$files" ] && return
 
     # TODO: check read permissions

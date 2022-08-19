@@ -55,7 +55,7 @@ __epm_split_by_pkg_type()
 __epm_repack_to_deb()
 {
 	local pkg
-	local pkgs="$@"
+	local pkgs="$*"
 
 	assure_exists alien
 	assure_exists fakeroot
