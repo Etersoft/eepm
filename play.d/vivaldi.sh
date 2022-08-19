@@ -9,6 +9,7 @@ if [ "$2" = "snapshot" ] || epm installed vivaldi-snapshot ; then
 fi
 PKGNAME=vivaldi-$BRANCH
 SUPPORTEDARCHES="x86_64 x86 aarch64 armhf"
+TIPS="Run 'epm play vivaldi snapshot' to install snapshot version of the browser."
 
 . $(dirname $0)/common.sh
 
