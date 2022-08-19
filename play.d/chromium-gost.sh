@@ -9,7 +9,8 @@ DESCRIPTION="Chromium with GOST support from the official site"
 
 # TODO: use get_pkgvendor = "ALT Linux Team"
 if epm installed chromium-gost ; then
-    fatal "Package chromium-gost is already installed from ALT repository."
+    echo "Package chromium-gost is already installed from ALT repository."
+    exit 0
 fi
 
 #arch=$($DISTRVENDOR --distro-arch)
