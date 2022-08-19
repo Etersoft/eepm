@@ -1,0 +1,25 @@
+name: Ubuntu
+
+on:
+  push:
+    branches: [ "*" ]
+#  pull_request:
+#    branches: [ "*" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+#    container:
+#      image: alt:sisyphus
+
+#    env:
+#      ALLOW_ROOT_USER: 1
+
+    steps:
+      - name: test
+        run: |
+            bin/epm rl
+            bin/epm qa --sort | tail
+            bin/epm qp lib
+            bin/epm install fakeroot
+            bin/epm remove fakeroot
