@@ -644,7 +644,7 @@ ALTLINUXPUBURL=http://ftp.altlinux.org/pub/distributions
 
 __epm_addrepo_rhel()
 {
-	local repo="$@"
+	local repo="$*"
 	if [ -z "$repo" ] ; then
 		echo "Add repo."
 		echo "1. Use with repository URL, f.i. http://www.example.com/example.repo"
@@ -1423,7 +1423,7 @@ case $PMTYPE in
 			# FIXME: package-cleanup have to use stderr for errors
 			local PKGLIST=$(package-cleanup -q --leaves | grep -v "^eepm-")
 			[ -n "$PKGLIST" ] || break
-			showcmd epm remove $PKGLIST
+			docmd epm remove $PKGLIST
 		done
 		;;
 	dnf-rpm)
@@ -2732,16 +2732,16 @@ epm_filelist()
 
 epm_full_upgrade()
 {
-	docmd epm update || return
+	docmd epm update || fatal "repository updating is failed."
 
 	[ -n "$quiet" ] || echo
-	docmd epm upgrade || return
+	docmd epm upgrade || fatal "upgrading of the system is failed."
 
 	[ -n "$quiet" ] || echo
-	docmd epm update-kernel || return
+	docmd epm update-kernel || fatal "updating of the kernel is failed."
 
 	[ -n "$quiet" ] || echo
-	docmd epm play --update all || return
+	docmd epm play --update all || fatal "updating of applications installed via epm play is failed."
 
 	[ -n "$quiet" ] || echo
 	docmd epm clean
@@ -3167,7 +3167,7 @@ __epm_if_command_path()
 
 epm_install_files()
 {
-    local files="$@"
+    local files="$*"
     [ -z "$files" ] && return
 
     # TODO: check read permissions
@@ -6504,7 +6504,7 @@ case $PMTYPE in
 		info "You need remove repo from /etc/pacman.conf"
 		;;
 	npackd)
-		sudocmd npackdcl remove-repo --url="$@"
+		sudocmd npackdcl remove-repo --url="$*"
 		;;
 	winget)
 		sudocmd winget source remove "$@"
@@ -6530,7 +6530,7 @@ __epm_check_if_needed_repack()
     # FIXME: use real way (for any archive)
     # FIXME: from вроде не существует и не работает
     local pkgname="$(epm print name from "$1")"
-    local repackcode="$CONFIGDIR/repack.d/$pkgname.sh"
+    local repackcode="$EPM_REPACK_SCRIPTS_DIR/$pkgname.sh"
     [ -x "$repackcode" ] || return
     warning "There is repack rule for $pkgname package. It is better install this package via 'epm --repack install' or 'epm play'."
 }
@@ -6554,7 +6554,7 @@ __epm_split_by_pkg_type()
 __epm_repack_to_deb()
 {
 	local pkg
-	local pkgs="$@"
+	local pkgs="$*"
 
 	assure_exists alien
 	assure_exists fakeroot
@@ -11256,7 +11256,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.26.1  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.26.2  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2022"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11266,7 +11266,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.26.1
+EPMVERSION=3.26.2
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
@@ -11577,6 +11577,7 @@ check_option()
     case $1 in
     -v|--version)         # HELPOPT: print version
         [ -n "$epm_cmd" ] && return 1
+        [ -n "$short" ] && echo "3.26.2" | sed -e 's|-.*||' && exit 0
         print_version
         exit 0
         ;;
