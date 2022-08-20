@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.26.1
+Version: 3.26.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,14 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Sat Aug 20 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.2-alt1
+- add epm --short --version
+- epm-autoremove: enable real autoremove on yum based systems
+- fix $@ using for set vars (eterbug 15846)
+- epm repack icq: fix for ignore empty download
+- epm full-upgrade: do fatal on errors
+- epm play: return 0 if a package is already installed from the repo
+
 * Fri Aug 19 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.1-alt1
 - add epm play virtualhere
 - more strong distro versions
