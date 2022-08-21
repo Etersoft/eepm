@@ -176,7 +176,7 @@ __apply_fix_code()
     export PATH=$PROGDIR:$PATH
     local bashopt=''
     [ -n "$verbose" ] && bashopt='-x'
-    docmd bash $bashopt $repackcode "$1" "$2" || fatal "There is an error from $repackcode script"
+    docmd bash $bashopt $repackcode "$1" "$2" "$3" || fatal "There is an error from $repackcode script"
 }
 
 __create_rpmmacros()
@@ -348,9 +348,9 @@ __epm_repack_to_rpm()
         [ -n "$VERSION" ] && chmod $verbose -R a+rX $tmpbuilddir/$subdir/*
 
         __fix_spec $pkgname $tmpbuilddir/$subdir $spec
-        __apply_fix_code "generic" $tmpbuilddir/$subdir $spec
+        __apply_fix_code "generic" $tmpbuilddir/$subdir $spec $pkgname
         [ -n "$SUBGENERIC" ] && __apply_fix_code "generic-$SUBGENERIC" $tmpbuilddir/$subdir $spec
-        __apply_fix_code $pkgname $tmpbuilddir/$subdir $spec
+        __apply_fix_code $pkgname $tmpbuilddir/$subdir $spec $pkgname
         # TODO: we need these dirs to be created
         to_remove_pkg_dirs="$to_remove_pkg_dirs $HOME/RPM/BUILD $HOME/RPM"
         showcmd rpmbuild --buildroot $tmpbuilddir/$subdir -bb $spec

@@ -2,6 +2,10 @@
 # It will run with two args: buildroot spec
 BUILDROOT="$1"
 SPEC="$2"
+PRODUCT="$3"
+
+# firstly, pack /opt/$PRODUCT if used
+. $(dirname $0)/common.sh
 
 flag_python3=''
 
