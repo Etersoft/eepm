@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.26.2
+Version: 3.26.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,11 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Mon Aug 22 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.3-alt1
+- epm play: hide sputnik-browser (ALT bug 15741)
+- epm play: add Master PDF Editor
+- epm repack: fix /opt packing
+
 * Sat Aug 20 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.2-alt1
 - add epm --short --version
 - epm-autoremove: enable real autoremove on yum based systems
