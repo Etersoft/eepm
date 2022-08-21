@@ -2,7 +2,9 @@
 
 PKGNAME=sputnik-browser-stable
 SUPPORTEDARCHES="x86_64"
-DESCRIPTION="Sputnik browser from the official site"
+# discontinued
+# https://bugzilla.altlinux.org/43495
+#DESCRIPTION="Sputnik browser from the official site"
 
 . $(dirname $0)/common.sh
 
