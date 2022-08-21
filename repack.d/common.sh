@@ -128,5 +128,9 @@ drop_embedded_reqs()
     filter_from_requires "libGLESv2.so()" "libEGL.so()" "libffmpeg.so()"
 }
 
-[ -n "$PRODUCTDIR" ] && [ -n "$PRODUCT" ] || PRODUCTDIR="/opt/$PRODUCT"
-[ -n "$PRODUCTCUR" ] && [ -n "$PRODUCT" ] || PRODUCTCUR="$PRODUCT"
+if [ -n "$PRODUCT" ] ; then
+    [ -n "$PRODUCTDIR" ] || PRODUCTDIR="/opt/$PRODUCT"
+    [ -n "$PRODUCTCUR" ] || PRODUCTCUR="$PRODUCT"
+
+    [ -d "$BUILDROOT$PRODUCTDIR" ] && pack_dir $PRODUCTDIR
+fi
