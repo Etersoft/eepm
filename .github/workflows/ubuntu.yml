@@ -16,6 +16,8 @@ jobs:
 #      ALLOW_ROOT_USER: 1
 
     steps:
+      - uses: actions/checkout@v2
+
       - name: test
         run: |
             bin/epm rl
