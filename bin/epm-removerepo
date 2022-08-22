@@ -105,7 +105,7 @@ case $PMTYPE in
 		assure_exists apt-add-repository software-properties-common
 		set_sudo
 
-		if [ "$DISTRNAME" = "AstraLinux" ] ; then
+		if [ "$DISTRNAME" = "AstraLinuxCE" ] || [ "$DISTRNAME" = "AstraLinuxSE" ] ; then
 			echo "Use workaround for AstraLinux"
 			[ -n "$*" ] || fatal "empty repo name"
 			# aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel

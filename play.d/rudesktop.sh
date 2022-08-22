@@ -7,7 +7,7 @@ DESCRIPTION="RuDesktop for Linux from the official site"
 . $(dirname $0)/common.sh
 
 case "$($DISTRVENDOR -d)" in
-  "AstraLinux")
+  AstraLinux*)
       PKGNAME=rudesktop-astra
       ;;
 esac

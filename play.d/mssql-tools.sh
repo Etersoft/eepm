@@ -15,7 +15,7 @@ dname="$(epm print info -s)"
 dversion="$(epm print info -v)"
 
 case "$($DISTRVENDOR -d)" in
-  "AstraLinux")
+  AstraLinux*)
     epm install --skip-installed unixodbc || fatal
     epm install https://packages.microsoft.com/debian/8/prod/pool/main/m/msodbcsql17/msodbcsql17_1*_amd64.deb
     epm install https://packages.microsoft.com/debian/8/prod/pool/main/m/mssql-tools/mssql-tools_1*_amd64.deb

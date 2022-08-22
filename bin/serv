@@ -56,7 +56,7 @@ case $DISTRNAME in
 	ALTLinux|ALTServer)
 		CMD="service-chkconfig"
 		;;
-	Ubuntu|Debian|Mint|AstraLinux)
+	Ubuntu|Debian|Mint|AstraLinux*)
 		CMD="service-update"
 		;;
 	Mandriva|ROSA)

@@ -62,7 +62,8 @@ pkgvendor()
 {
 	[ "$DISTRIB_ID" = "ALTLinux" ] && echo "alt" && return
 	[ "$DISTRIB_ID" = "ALTServer" ] && echo "alt" && return
-	[ "$DISTRIB_ID" = "AstraLinux" ] && echo "astra" && return
+	[ "$DISTRIB_ID" = "AstraLinuxSE" ] && echo "astra" && return
+	[ "$DISTRIB_ID" = "AstraLinuxCE" ] && echo "astra" && return
 	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
 	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
 	[ "$DISTRIB_ID" = "VoidLinux" ] && echo "void" && return
@@ -97,7 +98,7 @@ case $DISTRIB_ID in
 	PCLinux)
 		CMD="apt-rpm"
 		;;
-	Ubuntu|Debian|Mint|AstraLinux|Elbrus)
+	Ubuntu|Debian|Mint|AstraLinux*|Elbrus)
 		CMD="apt-dpkg"
 		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
 		#hascommand snappy && CMD=snappy
@@ -329,6 +330,7 @@ case "$VENDOR_ID" in
 		;;
 	"astra")
 		DISTRIB_RELEASE=$(normalize_version3 "$DISTRIB_RELEASE_ORIG" | sed -e 's|_.*||')
+		[ "$VARIANT" = "orel" ] && DISTRIB_ID="AstraLinuxCE" || DISTRIB_ID="AstraLinuxSE"
 		#[ "$DISTRIB_RELEASE" = "1.17" ] && DISTRIB_RELEASE="$VERSION_ID"
 		#DISTRIB_RELEASE="$VERSION_CODENAME"
 		;;

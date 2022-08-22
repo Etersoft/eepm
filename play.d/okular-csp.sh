@@ -25,8 +25,7 @@ esac
 case $(epm print info -e) in
     Debian/11|Ubuntu/20.04)
         ;;
-#     AstraLinuxSE/1.7*)
-    AstraLinux/smolensk)
+    AstraLinuxSE/1.7*)
         ;;
     Fedora/35|ROSA/2021|RedOS/7)
         ;;
@@ -49,14 +48,13 @@ pkgsystem=$(epm print info -g)
 
 case $(epm print info -e) in
 # TODO:
-    AstraLinux/orel)
+    AstraLinuxCE*)
         pkgsystem=''
         epm repo addkey "$REPOURL/lab50.gpg"
         epm repo add "deb $REPOURL/ce stable main"
         ;;
 # TODO:
-#     AstraLinuxSE/1.7*)
-    AstraLinux/smolensk)
+    AstraLinuxSE*)
         distrib=alse17
         additional_packages="libkf5js5=5.78.0-0ubuntu2+alse17 libkf5jsapi5=5.78.0-0ubuntu2+alse17"
         ;;

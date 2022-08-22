@@ -22,7 +22,7 @@ dname="$(epm print info -s)"
 dversion="$(epm print info -v)"
 
 case "$($DISTRVENDOR -d)" in
-  "AstraLinux")
+  AstraLinux*)
     # we have libc++1-9, but this package requires libc++1
     epm ar $DEBREPO ; epm update
     epm install libc++1

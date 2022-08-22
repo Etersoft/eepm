@@ -36,11 +36,8 @@ case "$($DISTRVENDOR -e)" in
     ALTLinux/*|ALTServer/*)
         id_content='alt9-id'
         ;;
-    AstraLinux/smolensk)
+    AstraLinux*)
         id_content='astrase-id'
-        ;;
-    AstraLinux/*)
-        id_content='astrace-id'
         ;;
     RedOS/*)
         id_content='redos-id'
