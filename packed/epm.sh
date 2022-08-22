@@ -6619,7 +6619,10 @@ __fix_spec()
     # https://bugzilla.altlinux.org/show_bug.cgi?id=38842
     for i in / /etc /etc/init.d /etc/systemd /bin /opt /usr /usr/bin /usr/share /usr/share/doc /var /var/log /var/run \
             /etc/cron.daily /usr/share/icons /usr/share/pixmaps /usr/share/man /usr/share/man/man1 /usr/share/appdata /usr/share/applications /usr/share/menu ; do
-        sed -i -e "s|^%dir \"$i/*\"$||" \
+        sed -i \
+            -e "s|/./|/|" \
+            -e "s|^%dir[[:space:]]\"$i/*\"$||" \
+            -e "s|^%dir[[:space:]]$i/*$||" \
             -e "s|^\"$i/*\"$||" \
             -e "s|^$i/*$||" \
             $spec
@@ -6671,7 +6674,7 @@ __apply_fix_code()
     export PATH=$PROGDIR:$PATH
     local bashopt=''
     [ -n "$verbose" ] && bashopt='-x'
-    docmd bash $bashopt $repackcode "$1" "$2" || fatal "There is an error from $repackcode script"
+    docmd bash $bashopt $repackcode "$1" "$2" "$3" || fatal "There is an error from $repackcode script"
 }
 
 __create_rpmmacros()
@@ -6835,9 +6838,9 @@ __epm_repack_to_rpm()
         [ -n "$VERSION" ] && chmod $verbose -R a+rX $tmpbuilddir/$subdir/*
 
         __fix_spec $pkgname $tmpbuilddir/$subdir $spec
-        __apply_fix_code "generic" $tmpbuilddir/$subdir $spec
+        __apply_fix_code "generic" $tmpbuilddir/$subdir $spec $pkgname
         [ -n "$SUBGENERIC" ] && __apply_fix_code "generic-$SUBGENERIC" $tmpbuilddir/$subdir $spec
-        __apply_fix_code $pkgname $tmpbuilddir/$subdir $spec
+        __apply_fix_code $pkgname $tmpbuilddir/$subdir $spec $pkgname
         # TODO: we need these dirs to be created
         to_remove_pkg_dirs="$to_remove_pkg_dirs $HOME/RPM/BUILD $HOME/RPM"
         showcmd rpmbuild --buildroot $tmpbuilddir/$subdir -bb $spec
@@ -11256,7 +11259,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.26.2  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.26.3  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2022"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11266,7 +11269,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.26.2
+EPMVERSION=3.26.3
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
@@ -11577,7 +11580,7 @@ check_option()
     case $1 in
     -v|--version)         # HELPOPT: print version
         [ -n "$epm_cmd" ] && return 1
-        [ -n "$short" ] && echo "3.26.2" | sed -e 's|-.*||' && exit 0
+        [ -n "$short" ] && echo "3.26.3" | sed -e 's|-.*||' && exit 0
         print_version
         exit 0
         ;;
