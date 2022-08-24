@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.26.4
+Version: 3.26.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,15 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Thu Aug 25 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.5-alt1
+- epm play: add VK Teams support
+- epm repack icq: fix description
+- epm repack skypeforlinux: fix packing (ALT bug 43615)
+- epm repack: fix packing scripts
+- epm-addrepo: fix typo (eterbug #15852)
+- epm repack common.sh: set PRODUCTDIR to PRODUCTCUR if empty
+- epm play: rewrite atom downloading and packing, add atom and atom beta support
+
 * Mon Aug 22 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.4-alt1
 - change AstraLinux to AstraLinuxCE/SE
 
