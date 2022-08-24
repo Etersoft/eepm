@@ -17,7 +17,8 @@ remove_dir()
     [ -n "$file" ] || return
     [ -d "$BUILDROOT$file/" ] || return
 
-    rm -rv "$BUILDROOT$file/"
+    echo "Removeing $file dir ..."
+    rm -r "$BUILDROOT$file/"
     subst "s|.*$file/.*||" $SPEC
     subst "s|.*$file\"$||" $SPEC
     subst "s|.*$file$||" $SPEC
