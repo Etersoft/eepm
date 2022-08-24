@@ -123,7 +123,7 @@ __fix_spec()
     for i in / /etc /etc/init.d /etc/systemd /bin /opt /usr /usr/bin /usr/share /usr/share/doc /var /var/log /var/run \
             /etc/cron.daily /usr/share/icons /usr/share/pixmaps /usr/share/man /usr/share/man/man1 /usr/share/appdata /usr/share/applications /usr/share/menu ; do
         sed -i \
-            -e "s|/./|/|" \
+            -e "s|/\./|/|" \
             -e "s|^%dir[[:space:]]\"$i/*\"$||" \
             -e "s|^%dir[[:space:]]$i/*$||" \
             -e "s|^\"$i/*\"$||" \
