@@ -15,10 +15,12 @@ remove_dir()
 {
     local file="$1"
     [ -n "$file" ] || return
-    [ -d "$BUILDROOT$file" ] || return
+    [ -d "$BUILDROOT$file/" ] || return
 
-    rm -rv "$BUILDROOT$file"
-    subst "s|.*$file.*||" $SPEC
+    rm -rv "$BUILDROOT$file/"
+    subst "s|.*$file/.*||" $SPEC
+    subst "s|.*$file\"$||" $SPEC
+    subst "s|.*$file$||" $SPEC
 }
 
 
