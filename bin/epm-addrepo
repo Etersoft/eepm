@@ -221,7 +221,7 @@ __epm_addrepo_deb()
 		return
 	fi
 
-	if [ "$DISTRNAME" = "AstraLinuxCE" ] || [ "$DISTRNAME" = "AstraLinuxSE" ] ; then; then
+	if [ "$DISTRNAME" = "AstraLinuxCE" ] || [ "$DISTRNAME" = "AstraLinuxSE" ] ; then
 		echo "Use workaround for AstraLinux"
 		# aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
 		echo "" | sudocmd tee -a /etc/apt/sources.list
