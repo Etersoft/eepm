@@ -129,8 +129,8 @@ drop_embedded_reqs()
 }
 
 if [ -n "$PRODUCT" ] ; then
-    [ -n "$PRODUCTDIR" ] || PRODUCTDIR="/opt/$PRODUCT"
     [ -n "$PRODUCTCUR" ] || PRODUCTCUR="$PRODUCT"
+    [ -n "$PRODUCTDIR" ] || PRODUCTDIR="/opt/$PRODUCTCUR"
 
     [ -d "$BUILDROOT$PRODUCTDIR" ] && pack_dir $PRODUCTDIR
 fi
