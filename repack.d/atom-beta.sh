@@ -5,40 +5,52 @@ BUILDROOT="$1"
 SPEC="$2"
 
 PRODUCT=atom
-PRODUCTCUR=atom-beta
-PRODUCTDIR=/usr/share/atom-beta
+#PRODUCTCUR=atom-beta
+PRODUCTCUR=$(basename $0 .sh)
+
+for i in atom atom-beta ; do
+    [ "$i"  = "$PRODUCTCUR" ] && continue
+    subst "1iConflicts:$i" $SPEC
+done
 
 . $(dirname $0)/common-chromium-browser.sh
-
-# TODO: /usr/share/atom-beta -> /usr/lib64/atom-beta
 
 subst '1iAutoReq:yes,nomonolib,nomono,nopython' $SPEC
 subst '1iAutoProv:no' $SPEC
 
+move_to_opt
+subst "s|\$USR_DIRECTORY/share/atom|/opt/atom|" $BUILDROOT/usr/bin/$PRODUCTCUR
 add_bin_exec_command $PRODUCT /usr/bin/$PRODUCTCUR
 
+rm $PRODUCTDIR/resources/app/apm/node_modules/.bin/apm
+# TODO: app/apm/bin/apm?
+rm -v $BUILDROOT/usr/bin/apm
+add_bin_link_command apm $PRODUCTDIR/resources/app/apm/node_modules/.bin/apm
+
 subst '1iBuildRequires:rpm-build-python3' $SPEC
-subst '1i%add_python3_path /usr/share/atom-beta' $SPEC
+subst "1i%add_python3_path $PRODUCTDIR" $SPEC
 
 # replace embedded git with standalone (due Can't locate Git/LoadCPAN/Error.pm)
-EMBDIR=/usr/share/atom-beta/resources/app.asar.unpacked/node_modules/dugite/git
+EMBDIR=$PRODUCTDIR/resources/app.asar.unpacked/node_modules/dugite/git
 echo "Removing $BUILDROOT$EMBDIR/ ..."
-rm -r $BUILDROOT$EMBDIR/
+remove_dir $EMBDIR
 mkdir -p $BUILDROOT$EMBDIR/bin/
 ln -s /usr/bin/git $BUILDROOT$EMBDIR/bin/git
-subst "s|.*$EMBDIR/libexec/.*||" $SPEC
-subst "s|.*$EMBDIR/share/.*||" $SPEC
-subst "s|.*$EMBDIR/ssl/.*||" $SPEC
+pack_dir $EMBDIR
+pack_dir $EMBDIR/bin
+pack_file $EMBDIR/bin/git
 
 # replace embedded npm with standalone
-EMBDIR=/usr/share/atom-beta/resources/app/apm/node_modules/npm
+EMBDIR=$PRODUCTDIR/resources/app/apm/node_modules/npm
 echo "Removing $BUILDROOT$EMBDIR/ ..."
-rm -r $BUILDROOT$EMBDIR/
+remove_dir $EMBDIR
 ln -s /usr/lib/node_modules/npm $BUILDROOT$EMBDIR
-subst "s|.*$EMBDIR/..*\"||" $SPEC
+pack_file $EMBDIR
 
 # replace embedded node and npm
-for EMBDIR in /usr/share/atom-beta/resources/app/apm/bin/{node,npm} /usr/share/atom-beta/resources/app/apm/node_modules/.bin/{npm,npx} /usr/share/atom-beta/resources/app/apm/node_modules/open/xdg-open ; do
+for EMBDIR in $PRODUCTDIR/resources/app/apm/bin/{node,npm} \
+              $PRODUCTDIR/resources/app/apm/node_modules/.bin/{npm,npx} \
+              $PRODUCTDIR/resources/app/apm/node_modules/open/xdg-open ; do
     echo "Removing $BUILDROOT$EMBDIR ..."
     rm $BUILDROOT$EMBDIR
     ln -s /usr/bin/$(basename $EMBDIR) $BUILDROOT$EMBDIR
