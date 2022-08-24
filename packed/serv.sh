@@ -1375,7 +1375,8 @@ pkgvendor()
 {
 	[ "$DISTRIB_ID" = "ALTLinux" ] && echo "alt" && return
 	[ "$DISTRIB_ID" = "ALTServer" ] && echo "alt" && return
-	[ "$DISTRIB_ID" = "AstraLinux" ] && echo "astra" && return
+	[ "$DISTRIB_ID" = "AstraLinuxSE" ] && echo "astra" && return
+	[ "$DISTRIB_ID" = "AstraLinuxCE" ] && echo "astra" && return
 	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
 	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
 	[ "$DISTRIB_ID" = "VoidLinux" ] && echo "void" && return
@@ -1410,7 +1411,7 @@ case $DISTRIB_ID in
 	PCLinux)
 		CMD="apt-rpm"
 		;;
-	Ubuntu|Debian|Mint|AstraLinux|Elbrus)
+	Ubuntu|Debian|Mint|AstraLinux*|Elbrus)
 		CMD="apt-dpkg"
 		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
 		#hascommand snappy && CMD=snappy
@@ -1642,6 +1643,7 @@ case "$VENDOR_ID" in
 		;;
 	"astra")
 		DISTRIB_RELEASE=$(normalize_version3 "$DISTRIB_RELEASE_ORIG" | sed -e 's|_.*||')
+		[ "$VARIANT" = "orel" ] && DISTRIB_ID="AstraLinuxCE" || DISTRIB_ID="AstraLinuxSE"
 		#[ "$DISTRIB_RELEASE" = "1.17" ] && DISTRIB_RELEASE="$VERSION_ID"
 		#DISTRIB_RELEASE="$VERSION_CODENAME"
 		;;
@@ -2247,7 +2249,7 @@ case $DISTRNAME in
 	ALTLinux|ALTServer)
 		CMD="service-chkconfig"
 		;;
-	Ubuntu|Debian|Mint|AstraLinux)
+	Ubuntu|Debian|Mint|AstraLinux*)
 		CMD="service-update"
 		;;
 	Mandriva|ROSA)
@@ -2321,7 +2323,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.26.3  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.26.5  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

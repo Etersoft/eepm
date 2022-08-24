@@ -835,7 +835,7 @@ __epm_addrepo_deb()
 		return
 	fi
 
-	if [ "$DISTRNAME" = "AstraLinux" ] ; then
+	if [ "$DISTRNAME" = "AstraLinuxCE" ] || [ "$DISTRNAME" = "AstraLinuxSE" ] ; then
 		echo "Use workaround for AstraLinux"
 		# aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
 		echo "" | sudocmd tee -a /etc/apt/sources.list
@@ -6469,7 +6469,7 @@ case $PMTYPE in
 		assure_exists apt-add-repository software-properties-common
 		set_sudo
 
-		if [ "$DISTRNAME" = "AstraLinux" ] ; then
+		if [ "$DISTRNAME" = "AstraLinuxCE" ] || [ "$DISTRNAME" = "AstraLinuxSE" ] ; then
 			echo "Use workaround for AstraLinux"
 			[ -n "$*" ] || fatal "empty repo name"
 			# aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
@@ -6620,7 +6620,7 @@ __fix_spec()
     for i in / /etc /etc/init.d /etc/systemd /bin /opt /usr /usr/bin /usr/share /usr/share/doc /var /var/log /var/run \
             /etc/cron.daily /usr/share/icons /usr/share/pixmaps /usr/share/man /usr/share/man/man1 /usr/share/appdata /usr/share/applications /usr/share/menu ; do
         sed -i \
-            -e "s|/./|/|" \
+            -e "s|/\./|/|" \
             -e "s|^%dir[[:space:]]\"$i/*\"$||" \
             -e "s|^%dir[[:space:]]$i/*$||" \
             -e "s|^\"$i/*\"$||" \
@@ -9424,7 +9424,8 @@ pkgvendor()
 {
 	[ "$DISTRIB_ID" = "ALTLinux" ] && echo "alt" && return
 	[ "$DISTRIB_ID" = "ALTServer" ] && echo "alt" && return
-	[ "$DISTRIB_ID" = "AstraLinux" ] && echo "astra" && return
+	[ "$DISTRIB_ID" = "AstraLinuxSE" ] && echo "astra" && return
+	[ "$DISTRIB_ID" = "AstraLinuxCE" ] && echo "astra" && return
 	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
 	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
 	[ "$DISTRIB_ID" = "VoidLinux" ] && echo "void" && return
@@ -9459,7 +9460,7 @@ case $DISTRIB_ID in
 	PCLinux)
 		CMD="apt-rpm"
 		;;
-	Ubuntu|Debian|Mint|AstraLinux|Elbrus)
+	Ubuntu|Debian|Mint|AstraLinux*|Elbrus)
 		CMD="apt-dpkg"
 		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
 		#hascommand snappy && CMD=snappy
@@ -9691,6 +9692,7 @@ case "$VENDOR_ID" in
 		;;
 	"astra")
 		DISTRIB_RELEASE=$(normalize_version3 "$DISTRIB_RELEASE_ORIG" | sed -e 's|_.*||')
+		[ "$VARIANT" = "orel" ] && DISTRIB_ID="AstraLinuxCE" || DISTRIB_ID="AstraLinuxSE"
 		#[ "$DISTRIB_RELEASE" = "1.17" ] && DISTRIB_RELEASE="$VERSION_ID"
 		#DISTRIB_RELEASE="$VERSION_CODENAME"
 		;;
@@ -11259,7 +11261,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.26.3  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.26.5  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2022"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11269,7 +11271,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.26.3
+EPMVERSION=3.26.5
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
@@ -11580,7 +11582,7 @@ check_option()
     case $1 in
     -v|--version)         # HELPOPT: print version
         [ -n "$epm_cmd" ] && return 1
-        [ -n "$short" ] && echo "3.26.3" | sed -e 's|-.*||' && exit 0
+        [ -n "$short" ] && echo "3.26.5" | sed -e 's|-.*||' && exit 0
         print_version
         exit 0
         ;;
