@@ -79,7 +79,8 @@ move_to_opt()
 {
     local from="$*"
     if [ -z "$from" ] ; then
-        from="/usr/share/$PRODUCT"
+        from="/usr/share/$PRODUCTCUR"
+        [ -d "$BUILDROOT$from" ] || from="/usr/share/$PRODUCT"
         [ -d "$BUILDROOT$from" ] || from="/usr/lib/$PRODUCT"
     fi
     mkdir -p $BUILDROOT$PRODUCTDIR/
