@@ -10,8 +10,8 @@ PRODUCTCUR=icq
 
 subst "s|^Group:.*|Group: Networking/Instant messaging|" $SPEC
 #subst "s|^License: unknown$|License: GPLv2|" $SPEC
-subst "s|^URL:.*|URL: https://www.jetbrains.com/pycharm|" $SPEC
-subst "s|^Summary:.*|Summary: The Python IDE for Professional Developers|" $SPEC
+subst "s|^URL:.*|URL: https://icq.com/desktop/ru|" $SPEC
+subst "s|^Summary:.*|Summary: ICQ New for Linux|" $SPEC
 
 # move package to /opt
 mkdir -p $BUILDROOT$PRODUCTDIR
