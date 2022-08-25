@@ -60,7 +60,7 @@ rm $tmpfile
 #repack=''
 #[ "$($DISTRVENDOR -p)" = "deb" ] || repack='--repack'
 
-[ "$($DISTRVENDOR -d)" = "ALTLinux" ] && epmi --skip-installed fontconfig-disable-type1-font-for-assistant
+[ "$($DISTRVENDOR -s)" = "alt" ] && epmi --skip-installed fontconfig-disable-type1-font-for-assistant
 
 LANG=ru_RU.UTF8 epm $repack install "$URL" || exit
 
