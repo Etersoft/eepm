@@ -2519,6 +2519,34 @@ epm_download()
 
 
 
+
+check_url_is_accessible()
+{
+    local res
+    epm tool eget --check "$1"
+}
+
+update_url_if_need_mirrored()
+{
+    local MIRROR="$1"
+    local SECONDURL
+    check_url_is_accessible "$URL" && return
+    if [ -n "$MIRROR" ] ; then
+        check_url_is_accessible "$MIRROR" && URL="$MIRROR"
+        return
+    fi
+
+    MIRROR="https://mirror.eterfund.ru"
+    SECONDURL="$(echo "$URL" | sed -e "s|^.*://|$MIRROR/|")"
+    check_url_is_accessible "$SECONDURL" && URL="$SECONDURL" && return
+
+    MIRROR="https://mirror.eterfund.org"
+    SECONDURL="$(echo "$URL" | sed -e "s|^.*://|$MIRROR/|")"
+    check_url_is_accessible "$SECONDURL" && URL="$SECONDURL" && return
+
+}
+
+
 __epm_korinf_site_mask() {
     local MASK="$1"
     local archprefix=""
@@ -2526,7 +2554,9 @@ __epm_korinf_site_mask() {
     rhas "$MASK" "[-_]" || MASK="$MASK[-_][0-9]"
     # set arch for Korinf compatibility
     [ "$($DISTRVENDOR -a)" = "x86_64" ] && archprefix="x86_64/"
-    echo "http://updates.etersoft.ru/pub/Korinf/$archprefix$($DISTRVENDOR -e)/$MASK*.$($DISTRVENDOR -p)"
+    URL="http://updates.etersoft.ru/pub/Korinf"
+    update_url_if_need_mirrored
+    echo "$URL/$archprefix$($DISTRVENDOR -e)/$MASK*.$($DISTRVENDOR -p)"
 }
 
 __epm_korinf_list() {
@@ -11261,7 +11291,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.26.5  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.26.6  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2022"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11271,7 +11301,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.26.5
+EPMVERSION=3.26.6
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
@@ -11582,7 +11612,7 @@ check_option()
     case $1 in
     -v|--version)         # HELPOPT: print version
         [ -n "$epm_cmd" ] && return 1
-        [ -n "$short" ] && echo "3.26.5" | sed -e 's|-.*||' && exit 0
+        [ -n "$short" ] && echo "3.26.6" | sed -e 's|-.*||' && exit 0
         print_version
         exit 0
         ;;
