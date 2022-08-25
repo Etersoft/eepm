@@ -7,6 +7,7 @@ SPEC="$2"
 PRODUCT=atom
 #PRODUCTCUR=atom-beta
 PRODUCTCUR=$(basename $0 .sh)
+APMNAME=$(echo $PRODUCTCUR | sed -e 's|^atom|apm|')
 
 for i in atom atom-beta ; do
     [ "$i"  = "$PRODUCTCUR" ] && continue
@@ -22,10 +23,10 @@ move_to_opt
 subst "s|\$USR_DIRECTORY/share/atom|/opt/atom|" $BUILDROOT/usr/bin/$PRODUCTCUR
 add_bin_exec_command $PRODUCT /usr/bin/$PRODUCTCUR
 
-rm $PRODUCTDIR/resources/app/apm/node_modules/.bin/apm
+#rm $PRODUCTDIR/resources/app/apm/node_modules/.bin/apm
 # TODO: app/apm/bin/apm?
-rm -v $BUILDROOT/usr/bin/apm
-add_bin_link_command apm $PRODUCTDIR/resources/app/apm/node_modules/.bin/apm
+rm -v $BUILDROOT/usr/bin/$APMNAME
+add_bin_link_command $APMNAME $PRODUCTDIR/resources/app/apm/node_modules/.bin/apm
 
 subst '1iBuildRequires:rpm-build-python3' $SPEC
 subst "1i%add_python3_path $PRODUCTDIR" $SPEC
