@@ -17,7 +17,10 @@ remove_dir()
     [ -n "$file" ] || return
     [ -d "$BUILDROOT$file/" ] || return
 
-    echo "Removeing $file dir ..."
+    # canonicalize
+    file="$(echo "$file" | sed -e 's|/*$||')"
+
+    echo "Removing $file dir ..."
     rm -r "$BUILDROOT$file/"
     subst "s|.*$file/.*||" $SPEC
     subst "s|.*$file\"$||" $SPEC
