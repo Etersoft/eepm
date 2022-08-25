@@ -4,6 +4,13 @@ PKGNAME=myoffice-standard-home-edition
 SUPPORTEDARCHES="x86_64"
 DESCRIPTION="MyOffice for Linux from the official site"
 
+if [ "$1" = "--remove" ] ; then
+    # Allow scripts: MyOffice reclaims their rpm package supports ALT
+    epm remove --scripts $PKGNAME
+    exit
+fi
+
+
 . $(dirname $0)/common.sh
 
 arch=$($DISTRVENDOR --distro-arch)
