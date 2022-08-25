@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.26.5
+Version: 3.26.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,15 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Fri Aug 26 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.6-alt1
+- epm-epm_install: support mirrors
+- epm play master-pdf-editor: allow install on ALTLinux (ALT bug 43621)
+- epm play r7office: add support for many distro
+- epm play assistant: allow install on ALTServer
+- epm play myoffice: enable package scripts for removing too (ALT bug 43626)
+- epm repack common.sh: fix remove_dir (ALT bug 43613)
+- epm repack atom-beta.sh: fix (ALT bug 43614)
+
 * Thu Aug 25 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.5-alt1
 - epm play: add VK Teams support
 - epm repack icq: fix description
