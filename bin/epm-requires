@@ -30,7 +30,7 @@ epm_requires_files()
 	case "$PKGTYPE" in
 		rpm)
 			assure_exists rpm
-			docmd rpm -q --requires -p $pkg_files
+			docmd rpm -q --requires -p $pkg_files | grep -v "^rpmlib("
 			;;
 		deb)
 			assure_exists dpkg
