@@ -2,23 +2,21 @@
 # It will run with two args: buildroot spec
 BUILDROOT="$1"
 SPEC="$2"
+PRODUCT=trueconf
+PRODUCTDIR=/opt/trueconf
 
-subst 's|%dir "/usr/share/icons/hicolor/.*||' $SPEC
+. $(dirname $0)/common.sh
 
-# Make relative symlink
-# TODO: alien does not support ghost files?
-mkdir -p $BUILDROOT/usr/bin/
-rm -f $BUILDROOT/usr/bin/trueconf
-ln -s ../../opt/trueconf/trueconf-client $BUILDROOT/usr/bin/trueconf
-chmod a+x $BUILDROOT/opt/trueconf/trueconf-client
+add_bin_link_command
 
-rm -rvf $BUILDROOT/usr/local/
+chmod a+x $BUILDROOT/opt/trueconf/trueconf
+chmod a+x $BUILDROOT/opt/trueconf/trueconf-autostart
 
-[ "$($DISTRVENDOR -b)" = 64 ] && LIBUDEV=/lib64/libudev.so.0 || LIBUDEV=/lib/libudev.so.0
-ln -s $LIBUDEV $BUILDROOT/opt/trueconf/lib/libudev.so.0
+epm assure patchelf || exit
+for i in lib/libboost*.so  ; do
+    a= patchelf --set-rpath '$ORIGIN' $BUILDROOT$PRODUCTDIR/$i
+done
 
-REQUIRES="libudev1 pulseaudio alsa-utils libv4l sqlite gtk2 libpng openssl udev libxslt xdg-utils"
-subst "s|^\(Name: .*\)$|# FIXME: due libcrypto.so.10(libcrypto.so.10)(64bit) autoreqs\nAutoReq:yes,nolib\n# Converted from original package requires\nRequires:$REQUIRES\n\1|g" $SPEC
-
-subst 's|.*/usr/local.*||' $SPEC
-
+for i in TrueConf ; do
+    a= patchelf --set-rpath '$ORIGIN/lib' $BUILDROOT$PRODUCTDIR/$i
+done
