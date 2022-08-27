@@ -7518,7 +7518,7 @@ epm_requires_files()
 	case "$PKGTYPE" in
 		rpm)
 			assure_exists rpm
-			docmd rpm -q --requires -p $pkg_files
+			docmd rpm -q --requires -p $pkg_files | grep -v "^rpmlib("
 			;;
 		deb)
 			assure_exists dpkg
@@ -11291,7 +11291,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.26.6  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.26.7  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2022"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11301,7 +11301,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.26.6
+EPMVERSION=3.26.7
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
@@ -11612,7 +11612,7 @@ check_option()
     case $1 in
     -v|--version)         # HELPOPT: print version
         [ -n "$epm_cmd" ] && return 1
-        [ -n "$short" ] && echo "3.26.6" | sed -e 's|-.*||' && exit 0
+        [ -n "$short" ] && echo "$EPMVERSION" | sed -e 's|-.*||' && exit 0
         print_version
         exit 0
         ;;
