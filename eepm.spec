@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.26.6
+Version: 3.26.7
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,11 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Sat Aug 27 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.7-alt1
+- epm repack fix pycharm-community on Sisyphus
+- epm requires: filter out rpmlib(*  for rpm
+- epm play: add trueconf client support
+
 * Fri Aug 26 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.6-alt1
 - epm-epm_install: support mirrors
 - epm play master-pdf-editor: allow install on ALTLinux (ALT bug 43621)
