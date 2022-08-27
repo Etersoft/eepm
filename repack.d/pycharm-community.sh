@@ -70,6 +70,12 @@ for i in $BUILDROOT$PRODUCTDIR/plugins/python-ce/helpers/pydev/_pydevd_frame_eva
     remove_file $PRODUCTDIR/plugins/python-ce/helpers/pydev/_pydevd_frame_eval/$(basename $i)
 done
 
+epm assure patchelf || exit
+for i in jbr/lib/lib*.so  ; do
+    a= patchelf --set-rpath '$ORIGIN/server:$ORIGIN' $BUILDROOT$PRODUCTDIR/$i
+done
+
+
 subst 's|%dir "'$PRODUCTDIR'/"||' $SPEC
 subst 's|%dir "'$PRODUCTDIR'/bin/"||' $SPEC
 subst 's|%dir "'$PRODUCTDIR'/lib/"||' $SPEC
@@ -81,4 +87,4 @@ pack_dir $PRODUCTDIR/lib/
 pack_dir $PRODUCTDIR/plugins/
 
 subst '1iAutoProv:no' $SPEC
-subst '1iAutoReq:yes,nopython,nopython3' $SPEC
+subst '1iAutoReq:yes,nopython,nopython3,nomono,nomonolib' $SPEC
