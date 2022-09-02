@@ -368,12 +368,23 @@ is_url()
     echo "$1" | grep -q "://"
 }
 
+# drop file path from URL
+get_host_only()
+{
+    echo "$1/" | grep -Eo '(.*://[^/]+)'
+}
+
 # Args: URL filename
 make_fileurl()
 {
     local url="$1"
     local fn="$2"
     fn="$(echo "$fn" | sed -e 's|^./||' -e 's|^/+||')"
+    # if there is file path from the root of the site
+    if echo "$fn" | grep -q "^/" ; then
+        echo "$(get_host_only "$url")$fn"
+        return
+    fi
     # workaround for a slash in the end of URL
     echo "$(echo "$url" | sed -e 's|/*$||')/$fn"
 }
