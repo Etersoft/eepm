@@ -43,8 +43,8 @@ pack_dir()
 {
     local file="$1"
     [ -n "$file" ] || return
-    grep -q "^%dir[[:space:]]$file$" $SPEC && return
-    grep -q "^%dir[[:space:]]\"$file\"$" $SPEC && return
+    grep -q "^%dir[[:space:]]$file/*$" $SPEC && return
+    grep -q "^%dir[[:space:]]\"$file/*\"$" $SPEC && return
     subst "s|%files|%files\n%dir $file|" $SPEC
 }
 
