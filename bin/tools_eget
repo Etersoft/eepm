@@ -135,7 +135,7 @@ if [ "$1" = "-k" ] || [ "$1" = "--no-check-certificate" ] ; then
 fi
 
 if [ "$1" = "-U" ] || [ "$1" = "-A" ] || [ "$1" = "--user-agent" ] ; then
-    user_agent="Mozilla/5.0 (X11; Linux $arch)"
+    user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
     WGETUSERAGENT="-U '$user_agent'"
     CURLUSERAGENT="-A '$user_agent'"
     shift
