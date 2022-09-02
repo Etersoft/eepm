@@ -10440,7 +10440,7 @@ if [ "$1" = "-k" ] || [ "$1" = "--no-check-certificate" ] ; then
 fi
 
 if [ "$1" = "-U" ] || [ "$1" = "-A" ] || [ "$1" = "--user-agent" ] ; then
-    user_agent="Mozilla/5.0 (X11; Linux $arch)"
+    user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
     WGETUSERAGENT="-U '$user_agent'"
     CURLUSERAGENT="-A '$user_agent'"
     shift
@@ -10658,7 +10658,7 @@ else
     URL="$(dirname "$1")"
 fi
 
-if echo "$URL" | grep -q "[*?]" ; then
+if [ -z "$MASK" ] && echo "$URL" | grep -q "[*?]" ; then
     fatal "Error: there are globbing symbols (*?) in $URL"
 fi
 
@@ -10673,12 +10673,23 @@ is_url()
     echo "$1" | grep -q "://"
 }
 
+# drop file path from URL
+get_host_only()
+{
+    echo "$1/" | grep -Eo '(.*://[^/]+)'
+}
+
 # Args: URL filename
 make_fileurl()
 {
     local url="$1"
     local fn="$2"
     fn="$(echo "$fn" | sed -e 's|^./||' -e 's|^/+||')"
+    # if there is file path from the root of the site
+    if echo "$fn" | grep -q "^/" ; then
+        echo "$(get_host_only "$url")$fn"
+        return
+    fi
     # workaround for a slash in the end of URL
     echo "$(echo "$url" | sed -e 's|/*$||')/$fn"
 }
@@ -11291,7 +11302,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.26.7  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.26.8  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2022"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11301,7 +11312,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.26.7
+EPMVERSION=3.26.8
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
