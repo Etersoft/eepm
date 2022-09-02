@@ -353,7 +353,7 @@ else
     URL="$(dirname "$1")"
 fi
 
-if echo "$URL" | grep -q "[*?]" ; then
+if [ -z "$MASK" ] && echo "$URL" | grep -q "[*?]" ; then
     fatal "Error: there are globbing symbols (*?) in $URL"
 fi
 
