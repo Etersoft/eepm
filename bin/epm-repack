@@ -142,7 +142,7 @@ __fix_spec()
     grep '^"/' $spec | sed -e 's|^"\(/.*\)"$|\1|' | while read i ; do
         # add dir as %dir in the filelist
         if [ -d "$buildroot$i" ] ; then
-            subst 's|^\("'$i'"\)$|%dir \1|' $spec
+            subst "s|^\(\"$i\"\)$|%dir \1|" $spec
         #else
         #    subst 's|^\("'$i'"\)$|\1|' $spec
         fi
