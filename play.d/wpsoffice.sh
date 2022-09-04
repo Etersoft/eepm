@@ -28,6 +28,7 @@ case "$(epm print info -s)" in
   alt)
       # See in the package scripts: find /home/*/.config/Kingsoft/Office.conf
       epm install --repack $PKG
+      exit
       ;;
 esac
 
