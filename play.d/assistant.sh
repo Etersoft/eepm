@@ -1,7 +1,7 @@
 #!/bin/sh
 
 PKGNAME=assistant
-SUPPORTEDARCHES="x86_64"
+SUPPORTEDARCHES="x86_64 aarch64"
 DESCRIPTION="Assistant (Ассистент) from the official site"
 
 # Assistant reclaim their rpm package supports ALT
@@ -28,23 +28,29 @@ fi
 
 # parse vendor site
 tmpfile=$(mktemp)
-epm tool eget -q -O- "$URL" | grep -A50 "Ассистент для LINUX" >$tmpfile
+epm tool eget -q -O- "$URL" | grep -A200 "Ассистент для LINUX" >$tmpfile
 
-url_by_order()
+url_by_text()
 {
-    local order="$1"
-    local pkg="$(cat $tmpfile | grep "/Download/" | $order -n1 | sed -e 's|.*href="||' -e 's|".*||')"
-    [ -n "$pkg" ] || fatal "Can't get Download href"
+    local text="$1"
+    local pkg="$(cat $tmpfile | grep -B1 "$text" | grep "/Download/" | sed -e 's|.*href="||' -e 's|".*||')"
+    [ -n "$pkg" ] || fatal "Can't get Download href for $text"
     #echo "https://мойассистент.рф$pkg"
     echo "https://xn--80akicokc0aablc.xn--p1ai$pkg"
 }
 
 case $arch-$pkg in
     x86_64-rpm)
-        URL="$(url_by_order head)"
+        URL="$(url_by_text "Скачать RPM пакет")"
         ;;
     x86_64-deb)
-        URL="$(url_by_order tail)"
+        URL="$(url_by_text "Скачать DEB пакет")"
+        ;;
+    aarch64-rpm)
+        URL="$(url_by_text "Скачать RPM пакет для ARM устройств")"
+        ;;
+    aarch64-deb)
+        URL="$(url_by_text "Скачать DEB пакет для ARM устройств")"
         ;;
     *)
         fatal "$($DISTRVENDOR -e) is not supported (arch $arch, package type is $pkg)"
