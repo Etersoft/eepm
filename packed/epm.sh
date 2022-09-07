@@ -1387,7 +1387,7 @@ case $DISTRNAME in
 		# remove old kernels only by a default way
 		[ -n "$1" ] && return
 
-		docmd epm remove-old-kernels $(subst_option non_interactive --auto)
+		docmd epm remove-old-kernels $(subst_option non_interactive -y)
 
 		if [ -z "$direct" ] ; then
 			echo
@@ -6669,7 +6669,7 @@ __fix_spec()
     grep '^"/' $spec | sed -e 's|^"\(/.*\)"$|\1|' | while read i ; do
         # add dir as %dir in the filelist
         if [ -d "$buildroot$i" ] ; then
-            subst 's|^\("'$i'"\)$|%dir \1|' $spec
+            subst "s|^\(\"$i\"\)$|%dir \1|" $spec
         #else
         #    subst 's|^\("'$i'"\)$|\1|' $spec
         fi
@@ -11302,7 +11302,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.26.8  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.26.9  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2022"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11312,7 +11312,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.26.8
+EPMVERSION=3.26.9
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
