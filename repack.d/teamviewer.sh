@@ -15,7 +15,7 @@ if [ "$($DISTRVENDOR -a)" = "x86_64" ] ; then
 fi
 
 # comment out libexo (we have libexo-gtk3 only now)
-REQUIRES="xdg-utils,libdbus,libqt5-core,libqt5-dbus,libqt5-gui,libqt5-network,libqt5-qml,libqt5-quick,libqt5-webkit,libqt5-webkitwidgets,libqt5-widgets,libqt5-x11extras"
+REQUIRES="xdg-utils,libdbus,libqt5-core,libqt5-dbus,libqt5-gui,libqt5-network,libqt5-qml,libqt5-quick,libqt5-webkit,libqt5-webkitwidgets,libqt5-widgets,libqt5-x11extras,libminizip"
 subst "s|^\(Name: .*\)$|# Converted from original package requires\nRequires:$REQUIRES\n\1|g" $SPEC
 
 # TODO: check if we missed something from it
