@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.26.8
+Version: 3.26.9
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,14 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Wed Sep 07 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.9-alt1
+- epm play: add Flyview (Ipera) server
+- epm play wpsoffice: fix return
+- epm-repack: fix packing dirs with spaces
+- epm play common.sh: fix typo (ALT bug 43706)
+- epm play assistant: add support for aarch64
+- epm repack teamviewer: add libminizip require (ALT bug 43723)
+
 * Sat Sep 03 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.8-alt1
 - epm play: add wpsoffice
 - update embedded eget
