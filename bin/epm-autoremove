@@ -257,7 +257,7 @@ case $DISTRNAME in
 		# remove old kernels only by a default way
 		[ -n "$1" ] && return
 
-		docmd epm remove-old-kernels $(subst_option non_interactive --auto)
+		docmd epm remove-old-kernels $(subst_option non_interactive -y)
 
 		if [ -z "$direct" ] ; then
 			echo
