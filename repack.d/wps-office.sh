@@ -15,6 +15,7 @@ subst '1iAutoProv:no' $SPEC
 
 remove_dir /etc/cron.d
 remove_dir /etc/logrotate.d
+remove_dir /etc/xdg/menus/applications-merged
 
 #epm install --skip-installed bzlib fontconfig libalsa libcairo libcups libdrm libfreetype /usr/bin/perl zlib libXv glib2 libatk libcairo-gobject libEGL libgdk-pixbuf libgio libGL libgst-plugins1.0 libgstreamer1.0 libgtk+2 libgtk+3 libpango libpulseaudio libsqlite3 libX11 libxcb libxcb-render-util libXcomposite libXext libXfixes libxkbcommon libxkbcommon-x11 libXrender
 
