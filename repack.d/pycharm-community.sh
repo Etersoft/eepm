@@ -62,17 +62,21 @@ for i in attach_amd64.dll attach_linux_x86.so attach_linux_amd64.so attach_x86.d
     remove_dir $PRODUCTDIR/plugins/python-ce/helpers/pydev/pydevd_attach_to_process/
 done
 
-for i in $BUILDROOT$PRODUCTDIR/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_cython_{darwin,win32}* ; do
-    remove_file $PRODUCTDIR/plugins/python-ce/helpers/pydev/_pydevd_bundle/$(basename $i)
+cd $BUILDROOT/ || exit
+
+for i in $PRODUCTDIR/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_cython_{darwin,win32}* ; do
+    remove_file $i
 done
 
-for i in $BUILDROOT$PRODUCTDIR/plugins/python-ce/helpers/pydev/_pydevd_frame_eval/{win32.pyd,win_amd64.pyd,darwin.so} ; do
-    remove_file $PRODUCTDIR/plugins/python-ce/helpers/pydev/_pydevd_frame_eval/$(basename $i)
+for i in $PRODUCTDIR/plugins/python-ce/helpers/pydev/_pydevd_frame_eval/*-{win32.pyd,win_amd64.pyd,darwin.so} ; do
+    remove_file $i
 done
+
+cd $BUILDROOT$PRODUCTDIR/ || exit
 
 epm assure patchelf || exit
 for i in jbr/lib/lib*.so  ; do
-    a= patchelf --set-rpath '$ORIGIN/server:$ORIGIN' $BUILDROOT$PRODUCTDIR/$i
+    a= patchelf --set-rpath '$ORIGIN/server:$ORIGIN' $i
 done
 
 
