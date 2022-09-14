@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.26.9
+Version: 3.26.10
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,16 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Wed Sep 14 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.10-alt1
+- epm play: add meridius
+- fix non_interactive options
+- epm repack wps-office.sh: remove /etc/xdg/menus (ALT bug 43751)
+- epm repack spotify-client.sh: fix icon name (ALT bug 43720)
+- epm play yandex-disk: install also yandex-disk-indicator
+- github testsuite.yml: don't use yander mirror
+- epm play: add pycharm pro
+- epm play: improve pycharm (ALT bug 43613)
+
 * Wed Sep 07 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.9-alt1
 - epm play: add Flyview (Ipera) server
 - epm play wpsoffice: fix return
