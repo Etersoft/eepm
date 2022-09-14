@@ -3661,7 +3661,7 @@ epm_kernel_update()
 		assure_exists update-kernel update-kernel 0.9.9
 		update_repo_if_needed
 		sudocmd update-kernel $(subst_option non_interactive -y) "$@" || return
-		docmd epm remove-old-kernels $(subst_option non_interactive -y) "$@" || fatal
+		docmd epm remove-old-kernels "$@" || fatal
 		return ;;
 	esac
 
@@ -11302,7 +11302,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.26.9  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.26.10  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2022"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11312,7 +11312,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.26.9
+EPMVERSION=3.26.10
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
