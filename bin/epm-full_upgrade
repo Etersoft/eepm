@@ -30,6 +30,16 @@ epm_full_upgrade()
 	[ -n "$quiet" ] || echo
 	docmd epm play --update all || fatal "updating of applications installed via epm play is failed."
 
+	if which flatpak 2>/dev/null >/dev/null ; then
+		[ -n "$quiet" ] || echo
+		docmd flatpak update
+	fi
+
+	if which snap 2>/dev/null >/dev/null ; then
+		[ -n "$quiet" ] || echo
+		sudocmd snap refresh
+	fi
+
 	[ -n "$quiet" ] || echo
 	docmd epm clean
 }
