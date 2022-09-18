@@ -508,6 +508,11 @@ for opt in "$@" ; do
     fi
 done
 
+if [ -n "$quiet" ] ; then
+    verbose=''
+    EPM_VERBOSE=''
+fi
+
 # fill
 export EPM_OPTIONS="$nodeps $force $non_interactive"
 
