@@ -29,11 +29,11 @@ epm_requires_files()
 
 	case "$PKGTYPE" in
 		rpm)
-			assure_exists rpm
-			docmd rpm -q --requires -p $pkg_files | grep -v "^rpmlib("
+			assure_exists rpm >/dev/null
+			docmd rpm -q --requires -p $pkg_files | grep -v "^rpmlib(" | grep -v "^/bin/sh$"
 			;;
 		deb)
-			assure_exists dpkg
+			assure_exists dpkg >/dev/null
 			a='' docmd dpkg -I $pkg_files | grep "^ *Depends:" | sed "s|^ *Depends:||g"
 			;;
 		*)
