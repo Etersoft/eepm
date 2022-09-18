@@ -2773,6 +2773,16 @@ epm_full_upgrade()
 	[ -n "$quiet" ] || echo
 	docmd epm play --update all || fatal "updating of applications installed via epm play is failed."
 
+	if which flatpak 2>/dev/null >/dev/null ; then
+		[ -n "$quiet" ] || echo
+		docmd flatpak update
+	fi
+
+	if which snap 2>/dev/null >/dev/null ; then
+		[ -n "$quiet" ] || echo
+		sudocmd snap refresh
+	fi
+
 	[ -n "$quiet" ] || echo
 	docmd epm clean
 }
@@ -7517,11 +7527,11 @@ epm_requires_files()
 
 	case "$PKGTYPE" in
 		rpm)
-			assure_exists rpm
-			docmd rpm -q --requires -p $pkg_files | grep -v "^rpmlib("
+			assure_exists rpm >/dev/null
+			docmd rpm -q --requires -p $pkg_files | grep -v "^rpmlib(" | grep -v "^/bin/sh$"
 			;;
 		deb)
-			assure_exists dpkg
+			assure_exists dpkg >/dev/null
 			a='' docmd dpkg -I $pkg_files | grep "^ *Depends:" | sed "s|^ *Depends:||g"
 			;;
 		*)
@@ -11302,7 +11312,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.26.10  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.27.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2022"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11312,7 +11322,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.26.10
+EPMVERSION=3.27.0
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
@@ -11737,6 +11747,11 @@ for opt in "$@" ; do
         check_filenames "$opt"
     fi
 done
+
+if [ -n "$quiet" ] ; then
+    verbose=''
+    EPM_VERBOSE=''
+fi
 
 # fill
 export EPM_OPTIONS="$nodeps $force $non_interactive"
