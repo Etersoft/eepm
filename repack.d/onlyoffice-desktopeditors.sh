@@ -4,6 +4,8 @@
 BUILDROOT="$1"
 SPEC="$2"
 
+PRODUCTDIR=/opt/onlyoffice
+
 . $(dirname $0)/common.sh
 
 # TODO: required libreoffice-opensymbol-fonts
@@ -27,6 +29,15 @@ done
 for i in $BUILDROOT/opt/onlyoffice/desktopeditors/converter/*.so ; do
     a= patchelf --set-rpath '$ORIGIN/:$ORIGIN/../' $i || continue
 done
+
+# pack icons
+iconname=onlyoffice-desktopeditors
+for i in 16 22 24 32 48 64 128 256 ; do
+    mkdir -p $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/
+    cp $BUILDROOT/$PRODUCTDIR/desktopeditors/asc-de-$i.png $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png
+done
+subst "s|%files|%files\n/usr/share/icons/hicolor/*x*/apps/$iconname.png|" $SPEC
+
 
 subst '1iAutoReq:no' $SPEC
 subst '1iAutoProv:no' $SPEC
