@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.26.10
+Version: 3.27.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,15 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Mon Sep 19 2022 Vitaly Lipatov <lav@altlinux.ru> 3.27.0-alt1
+- epm play: add RStudio support (ALT bug 43794)
+- epm full-upgrade: add update for flatpak and snap packages
+- epm: force disable verbose in quiet mode
+- epm repack slack: fix packing (ALT bug 43718)
+- epm repack: fix ipera-client (ALT bug 43761)
+- epm repack: fix ipera-mediaserver (ALT bug 43762)
+- epm repack onlyoffice-desktopeditors: pack icons (ALT bug 43713)
+
 * Wed Sep 14 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.10-alt1
 - epm play: add meridius
 - fix non_interactive options
