@@ -12,6 +12,7 @@ PRODUCTDIR=/opt/Telegram
 
 # /usr/bin/Telegram
 subst '1iConflicts:telegram-desktop' $SPEC
+subst '1iConflicts:telegram-desktop-binary' $SPEC
 
 subst "s|^Group:.*|Group: Networking/Instant messaging|" $SPEC
 subst "s|^License: unknown$|License: GPLv2|" $SPEC
