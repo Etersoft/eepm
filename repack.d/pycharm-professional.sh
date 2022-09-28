@@ -16,7 +16,7 @@ subst "s|^URL:.*|URL: https://www.jetbrains.com/pycharm|" $SPEC
 subst "s|^Summary:.*|Summary: The Python IDE for Professional Developers (Free 30-day trial available)|" $SPEC
 
 move_to_opt "/pycharm-*"
-add_bin_link_command $PRODUCT $PRODUCTDIR/bin/$PRODUCT.sh
+add_bin_link_command $PRODUCT $PRODUCTDIR/bin/$PRODUCTCUR.sh
 
 # create desktop file
 mkdir -p $BUILDROOT/usr/share/applications/
@@ -54,8 +54,7 @@ for i in darwin-aarch64 darwin-x86-64 linux-aarch64 linux-x86-64 win32-x86-64 ; 
     remove_dir $PRODUCTDIR/plugins/cwm-plugin/quiche-native/$i/
 done
 
-for i in attach_amd64.dll attach_linux_x86.so attach_linux_amd64.so attach_x86.dll attach_x86.dylib attach_x86_64.dylib ; do
-    [ "$i" = "attach_linux_amd64.so" ] && continue
+for i in attach_amd64.dll attach_x86.dll attach_x86.dylib attach_x86_64.dylib ; do
     remove_dir $PRODUCTDIR/plugins/python-ce/helpers/pydev/pydevd_attach_to_process/
 done
 
@@ -68,6 +67,12 @@ done
 for i in $PRODUCTDIR/plugins/python/helpers/pydev/_pydevd_frame_eval/*-{win32.pyd,win_amd64.pyd,darwin.so} ; do
     remove_file $i
 done
+
+remove_file $PRODUCTDIR/plugins/performanceTesting/bin/libyjpagent.so
+filter_from_requires '\\/lib\\/libc.so.6(GLIBC'
+filter_from_requires '\\/lib\\/libgcc_s.so.1(GCC_'
+filter_from_requires '\\/usr\\/lib\\/libstdc++.so.6('
+filter_from_requires 'libcrypto.so.10(libcrypto.so.10)(64bit)'
 
 cd $BUILDROOT$PRODUCTDIR/ || exit
 
