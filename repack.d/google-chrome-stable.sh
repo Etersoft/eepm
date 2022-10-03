@@ -20,5 +20,11 @@ add_bin_commands
 
 use_system_xdg
 
+# TODO: report to the upstream
+subst 's|Name=Google Chrome|Name=Google Chrome Web Browser\nName[ru]=Веб-браузер Google Chrome|' $BUILDROOT/usr/share/applications/*.desktop
+subst 's|GenericName=Web Browser|GenericName=Google Chrome Web Browser|' $BUILDROOT/usr/share/applications/*.desktop
+subst 's|GenericName\[ru\]=Веб-браузер|GenericName[ru]=Веб-браузер Google Chrome|' $BUILDROOT/usr/share/applications/*.desktop
+
+
 install_deps
 
