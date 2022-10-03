@@ -16,6 +16,10 @@ subst '1iConflicts:chromium-gost' $SPEC
 set_alt_alternatives 62
 
 copy_icons_to_share
+# TODO: report to the upsteam
+# remove incorrect icons (https://bugzilla.altlinux.org/43760)
+remove_file /usr/share/icons/hicolor/32x32/apps/chromium-gost.png
+remove_file /usr/share/icons/hicolor/16x16/apps/chromium-gost.png
 
 cleanup
 
