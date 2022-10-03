@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.27.0
+Version: 3.27.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,15 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Mon Oct 03 2022 Vitaly Lipatov <lav@altlinux.ru> 3.27.1-alt1
+- epm repack Telegram: add Conflicts: telegram-desktop-binary
+- epm epack pycharm-professional: fix version 2022.2.2 packing
+- epm repack chromium-gost-stable: fix Name and Generic Name
+- google-chrome-stable: fix Name and Generic Name
+- epm repack chromium-gost-stable (ALT bug 43760)
+- epm repack wps-office: drop /usr/share/desktop-directories/wps-office.directory (ALT bug 43751)
+- epm play assistant: fix retrieving of a package URL
+
 * Mon Sep 19 2022 Vitaly Lipatov <lav@altlinux.ru> 3.27.0-alt1
 - epm play: add RStudio support (ALT bug 43794)
 - epm full-upgrade: add update for flatpak and snap packages
