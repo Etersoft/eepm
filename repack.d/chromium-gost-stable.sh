@@ -25,6 +25,11 @@ use_system_xdg
 
 install_deps
 
+# TODO: report to the upstream
+subst 's|Name=Chromium-Gost|Name=Chromium-Gost Web Browser\nName[ru]=Веб-браузер Chromium-gost|' $BUILDROOT/usr/share/applications/*.desktop
+subst 's|GenericName=Web Browser|GenericName=Chromium-Gost Web Browser|' $BUILDROOT/usr/share/applications/*.desktop
+subst 's|GenericName\[ru\]=Веб-браузер|GenericName[ru]=Веб-браузер Chromium-gost|' $BUILDROOT/usr/share/applications/*.desktop
+
 # use standalone config dir
 subst 's|exec -a "$0" "$HERE/chrome" "$@"||' $BUILDROOT/$PRODUCTDIR/$PRODUCT
 cat <<EOF >>$BUILDROOT/$PRODUCTDIR/$PRODUCT
