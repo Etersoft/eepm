@@ -27,7 +27,7 @@ Type=Application
 Name=PyCharm Professional Edition
 Comment=Python IDE for Professional Developers (Free 30-day trial available)
 Exec=/usr/bin/$PRODUCT %f
-Icon=pycharm
+Icon=$PRODUCT
 Terminal=false
 StartupNotify=true
 StartupWMClass=jetbrains-pycharm-pro
@@ -37,10 +37,10 @@ EOF
 pack_file /usr/share/applications/$PRODUCT.desktop
 
 mkdir -p $BUILDROOT/usr/share/pixmaps/
-cp -a $BUILDROOT$PRODUCTDIR/bin/$PRODUCTCUR.png $BUILDROOT/usr/share/pixmaps/
-cp -a $BUILDROOT$PRODUCTDIR/bin/$PRODUCTCUR.svg $BUILDROOT/usr/share/pixmaps/
-pack_file /usr/share/pixmaps/$PRODUCTCUR.png
-pack_file /usr/share/pixmaps/$PRODUCTCUR.svg
+cp -a $BUILDROOT$PRODUCTDIR/bin/$PRODUCTCUR.png $BUILDROOT/usr/share/pixmaps/$PRODUCT.png
+cp -a $BUILDROOT$PRODUCTDIR/bin/$PRODUCTCUR.svg $BUILDROOT/usr/share/pixmaps/$PRODUCT.svg
+pack_file /usr/share/pixmaps/$PRODUCT.png
+pack_file /usr/share/pixmaps/$PRODUCT.svg
 
 # TODO: support other arch
 for i in arm aarch64 mips64el ppc64le x86 x86-64 ; do
