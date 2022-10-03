@@ -33,7 +33,7 @@ epm tool eget -q -O- "$URL" | grep -A200 "Ассистент для LINUX" >$tmp
 url_by_text()
 {
     local text="$1"
-    local pkg="$(cat $tmpfile | grep -B1 "$text" | grep "/Download/" | sed -e 's|.*href="||' -e 's|".*||')"
+    local pkg="$(cat $tmpfile | grep -B1 "$text" | head -n1 | grep "/Download/" | sed -e 's|.*href="||' -e 's|".*||')"
     [ -n "$pkg" ] || fatal "Can't get Download href for $text"
     #echo "https://мойассистент.рф$pkg"
     echo "https://xn--80akicokc0aablc.xn--p1ai$pkg"
