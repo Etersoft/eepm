@@ -25,7 +25,7 @@ load_helper epm-install
 check_url_is_accessible()
 {
     local res
-    epm tool eget --check "$1"
+    eget --check "$1"
 }
 
 # update URL variable

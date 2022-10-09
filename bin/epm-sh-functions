@@ -280,8 +280,12 @@ clean_store_output()
 # run epm, possible from side repo
 epm()
 {
-	[ -n "$PROGNAME" ] || fatal "Can't use epm call from the piped script"
-	bash $PROGDIR/$PROGNAME --inscript "$@"
+	if [ -n "$PROGNAME" ] ; then
+		#|| fatal "Can't use epm call from the piped script"
+		bash $PROGDIR/$PROGNAME --inscript "$@"
+	else
+		epm_main --inscript "$@"
+	fi
 }
 
 # run $SUDO epm, possible from side repo
