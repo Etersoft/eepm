@@ -55,7 +55,7 @@ for i in darwin-aarch64 darwin-x86-64 linux-aarch64 linux-x86-64 win32-x86-64 ; 
 done
 
 for i in attach_amd64.dll attach_x86.dll attach_x86.dylib attach_x86_64.dylib ; do
-    remove_dir $PRODUCTDIR/plugins/python-ce/helpers/pydev/pydevd_attach_to_process/
+    remove_dir $PRODUCTDIR/plugins/python/helpers/pydev/pydevd_attach_to_process/
 done
 
 cd $BUILDROOT/ || exit
