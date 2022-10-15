@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.27.1
+Version: 3.27.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,17 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Sat Oct 15 2022 Vitaly Lipatov <lav@altlinux.ru> 3.27.2-alt1
+- epm repack pycharm-professional: rename icons to pycharm-pro
+- epm(): allow use it when run with pipe
+- epm repack pycharm-professional: fix packing
+- epm play flyview-client: fix package name
+- epm repack: fix icq packing
+- epm play okular-csp: remove repo also
+- epm repack ipera-client: filter out requires for embedded libs
+- eget: add --second-latest support
+- epm play opera: improve download latest available Linux version
+
 * Mon Oct 03 2022 Vitaly Lipatov <lav@altlinux.ru> 3.27.1-alt1
 - epm repack Telegram: add Conflicts: telegram-desktop-binary
 - epm epack pycharm-professional: fix version 2022.2.2 packing
