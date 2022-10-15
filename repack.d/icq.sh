@@ -15,7 +15,7 @@ subst "s|^Summary:.*|Summary: ICQ New for Linux|" $SPEC
 
 # move package to /opt
 mkdir -p $BUILDROOT$PRODUCTDIR
-mv $BUILDROOT/{icq,qt.conf,lib,QtQuick.2,QtQuick,plugins} $BUILDROOT$PRODUCTDIR || fatal
+mv $BUILDROOT/{icq,qt.conf,lib,QtQuick.2,QtQuick,plugins,resources} $BUILDROOT$PRODUCTDIR || fatal
 subst "s|\"/|\"$PRODUCTDIR/|" $SPEC
 
 add_bin_link_command $PRODUCT
