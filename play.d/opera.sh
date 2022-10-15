@@ -21,23 +21,24 @@ arch="amd64"
 
 epm play chromium-codecs-ffmpeg-extra || fatal
 
+# Stable branch here for deb too
 if [ "$BRANCH" = "stable" ] ; then
 
-# https://get.geo.opera.com/pub/${pkgname}/desktop/${pkgver}/linux/${pkgname}-stable_${pkgver}_amd64.deb
-# fast hack for download from CDN
-URL="https://download5.operacdn.com/pub/opera/desktop"
-if ! check_url_is_accessible $URL ; then
-    URL="https://download3.operacdn.com/pub/opera/desktop"
-    check_url_is_accessible $URL || fatal "Can't access to Opera CDN site $URL"
+URL="https://ftp.opera.com/pub/opera/desktop/"
+PKGBASEURL="$(epm tool eget --list --latest $URL/*)"linux
+
+if ! check_url_is_accessible $PKGBASEURL ; then
+    PKGBASEURL="$(epm tool eget --list --second-latest $URL/*)"linux
+    check_url_is_accessible $PKGBASEURL || fatal "Can't find Opera package for Linux at $URL"
 fi
 
-PKGBASEURL="$(epm tool eget --list --latest $URL/*)"linux
 PKGURL="$(epm tool eget --list --latest $PKGBASEURL "$(epm print constructname $PKGNAME "*" $arch deb)")" || fatal #"
 epm install "$PKGURL" || fatal
 exit
 
 else
 
+# they put all branch here (rpm only): https://rpm.opera.com/rpm/
 [ "$($DISTRVENDOR -s)" = "alt" ] && repack='--repack' || repack=''
 epm install $repack https://rpm.opera.com/rpm/opera_$BRANCH-*-linux-release-x64-signed.rpm
 
