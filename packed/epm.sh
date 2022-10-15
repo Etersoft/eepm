@@ -286,8 +286,12 @@ clean_store_output()
 
 epm()
 {
-	[ -n "$PROGNAME" ] || fatal "Can't use epm call from the piped script"
-	bash $PROGDIR/$PROGNAME --inscript "$@"
+	if [ -n "$PROGNAME" ] ; then
+		#|| fatal "Can't use epm call from the piped script"
+		bash $PROGDIR/$PROGNAME --inscript "$@"
+	else
+		epm_main --inscript "$@"
+	fi
 }
 
 sudoepm()
@@ -2523,7 +2527,7 @@ epm_download()
 check_url_is_accessible()
 {
     local res
-    epm tool eget --check "$1"
+    eget --check "$1"
 }
 
 update_url_if_need_mirrored()
@@ -10552,6 +10556,12 @@ if [ "$1" = "--latest" ] ; then
     shift
 fi
 
+SECONDLATEST=''
+if [ "$1" = "--second-latest" ] ; then
+    SECONDLATEST="$1"
+    shift
+fi
+
 fatal()
 {
     echo "$*" >&2
@@ -10568,6 +10578,10 @@ filter_glob()
 
 filter_order()
 {
+    if [ -n "$SECONDLATEST" ] ; then
+        sort -V | tail -n2 | head -n1
+        return
+    fi
     [ -z "$LATEST" ] && cat && return
     sort -V | tail -n1
 }
@@ -10602,6 +10616,7 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
     echo "    --list   - print files from url with mask"
     echo "    --check  - check if URL is accessible (returns HTTP 200 OK)"
     echo "    --latest - print only latest version of a file"
+    echo "    --second-latest - print only second to latest version of a file"
     echo
     echo "eget supports --list and download for https://github.com/owner/project urls"
     echo
@@ -11312,7 +11327,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.27.1  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.27.2  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2022"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11322,7 +11337,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.27.1
+EPMVERSION=3.27.2
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
