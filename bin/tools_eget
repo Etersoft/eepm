@@ -237,6 +237,12 @@ if [ "$1" = "--latest" ] ; then
     shift
 fi
 
+SECONDLATEST=''
+if [ "$1" = "--second-latest" ] ; then
+    SECONDLATEST="$1"
+    shift
+fi
+
 fatal()
 {
     echo "$*" >&2
@@ -253,6 +259,10 @@ filter_glob()
 
 filter_order()
 {
+    if [ -n "$SECONDLATEST" ] ; then
+        sort -V | tail -n2 | head -n1
+        return
+    fi
     [ -z "$LATEST" ] && cat && return
     sort -V | tail -n1
 }
@@ -287,6 +297,7 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
     echo "    --list   - print files from url with mask"
     echo "    --check  - check if URL is accessible (returns HTTP 200 OK)"
     echo "    --latest - print only latest version of a file"
+    echo "    --second-latest - print only second to latest version of a file"
     echo
     echo "eget supports --list and download for https://github.com/owner/project urls"
     echo
