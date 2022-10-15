@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME=flyview-client
+PKGNAME=ipera-client
 SUPPORTEDARCHES="x86_64"
 DESCRIPTION="FlyView Client from the official site"
 
