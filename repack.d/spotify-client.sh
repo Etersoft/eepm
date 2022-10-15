@@ -19,7 +19,7 @@ ln -sf $LIBDIR/$PRODUCT/$PRODUCT $BUILDROOT/usr/bin/$PRODUCT
 mkdir -p $BUILDROOT/usr/share/applications/
 ln -sf $LIBDIR/$PRODUCT/$PRODUCT.desktop $BUILDROOT/usr/share/applications/$PRODUCT.desktop
 subst "s|%files|%files\n/usr/share/applications/$PRODUCT.desktop|" $SPEC
-subst "s|%files|%files\n/usr/share/icons/hicolor/*/apps/$PRODUCT.png|" $SPEC
+subst "s|%files|%files\n/usr/share/icons/hicolor/*/apps/*.png|" $SPEC
 
 for i in 16 22 24 32 48 64 128 256 ; do
     mkdir -p $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/
