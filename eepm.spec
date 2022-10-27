@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.27.2
+Version: 3.27.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,9 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Thu Oct 27 2022 Vitaly Lipatov <lav@altlinux.ru> 3.27.3-alt1
+- epm repack spotify-client: fix icon packing error
+
 * Sat Oct 15 2022 Vitaly Lipatov <lav@altlinux.ru> 3.27.2-alt1
 - epm repack pycharm-professional: rename icons to pycharm-pro
 - epm(): allow use it when run with pipe
