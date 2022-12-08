@@ -321,6 +321,10 @@ fi
 prescription="$1"
 shift
 
+load_helper epm-check_updated_repo
+
+update_repo_if_needed
+
 if __check_play_script "$prescription" ; then
     #__is_app_installed "$prescription" && info "$$prescription is already installed (use --remove to remove)" && exit 1
     __epm_play_run "$prescription" --run "$@" && __save_installed_app "$prescription" || fatal "There was some error during install the application."
