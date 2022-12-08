@@ -25,7 +25,7 @@ pack_ffmpeg() {
   DEST="$PRODUCTDIR"
   mkdir -p .$DEST
   cp $SOURCE .$DEST
-  CNAME="$(echo "$(basename $SUITABLE_URLS)" | sed -e "s|chromium|$BASEPKGNAME|" -e "s|-0ubuntu.*|-1.tar|")" #"
+  CNAME="$(echo "$(basename $SUITABLE_URLS)" | sed -e "s|chromium|$BASEPKGNAME|" -e "s|-[0-9]*ubuntu.*|-1.tar|")" #"
   a='' tar cf $CNAME .$(dirname $DEST)
   epm --repack install $CNAME
   # exit from update-ffmpeg script here
