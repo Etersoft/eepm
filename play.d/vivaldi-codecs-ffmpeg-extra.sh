@@ -34,15 +34,16 @@ pack_ffmpeg() {
 
 # download ffmpeg with upstream script update-ffmpeg but with our pack_ffmpeg function
 [ -s $PRODUCTDIR/update-ffmpeg ] || fatal "$PRODUCTDIR/update-ffmpeg is missed"
+
 SC=$(mktemp)
+DDIR=$(mktemp -d)
+trap "rm -fr $SC $DDIR" EXIT
+
 a='' awk 'BEGIN{desk=0}{ if(/^.*--system.*/&&desk==0){desk++} ; if (desk==0) {print} }' < $PRODUCTDIR/update-ffmpeg > $SC
 . $SC
-DDIR=$(mktemp -d)
 cd $DDIR || fatal
 epm tool eget $FFMPEG_URL_DEB
 SUITABLE_URLS=$FFMPEG_URL_DEB
 a='' ar -x *.deb
 a='' tar xf "data.tar.xz"
 pack_ffmpeg
-rm -rf $DDIR
-rm -f $SC

@@ -28,6 +28,7 @@ fi
 
 # parse vendor site
 tmpfile=$(mktemp)
+trap "rm -f $tmpfile" EXIT
 epm tool eget -q -O- "$URL" | grep -A200 "Ассистент для LINUX" >$tmpfile
 
 url_by_text()
@@ -56,8 +57,6 @@ case $arch-$pkg in
         fatal "$($DISTRVENDOR -e) is not supported (arch $arch, package type is $pkg)"
         ;;
 esac
-
-rm $tmpfile
 
 # after repack on ALT:
 #  assistant: Требует: /lib/init/vars.sh но пакет не может быть установлен

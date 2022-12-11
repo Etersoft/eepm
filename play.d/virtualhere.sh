@@ -36,6 +36,7 @@ esac
 pkgtype="$($DISTRVENDOR -p)"
 
 tdir=$(mktemp -d)
+trap "rm -fr $tdir" EXIT
 mkdir -p $tdir/opt/$PKGNAME/
 cd $tdir || fatal
 
@@ -59,16 +60,10 @@ VERSION="$(epm tool eget -O- https://virtualhere.com/usb_server_software | grep 
 PKG=$PKGNAME-$VERSION.tar
 pack_tar $PKG opt/$PKGNAME/$BINNAME
 
-epm install --repack "$PKG"
-RES=$?
-
-rm -rf $tdir
-
-[ "$RES" = "0" ] || exit $RES
+epm install --repack "$PKG" || exit
 
 echo
 echo "Note: run
 # serv $PKGNAME on
 to enable and start $PKGNAME system service
 "
-

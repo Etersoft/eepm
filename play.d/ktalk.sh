@@ -21,10 +21,8 @@ epm assure wget || fatal
 
 # hack due ОШИБКА: невозможно проверить сертификат app.ktalk.ru, выпущенный «CN=RapidSSL TLS DV RSA Mixed SHA256 2020 CA-1,O=DigiCert Inc,C=US»
 PKGDIR="$(mktemp -d)"
+trap "rm -fr $PKGDIR" EXIT
 cd $PKGDIR || fatal
 epm tool eget --no-check-certificate "$URL" || fatal
 
 epm install *.AppImage
-RES=$?
-rm -rf $PKGDIR
-exit $RES

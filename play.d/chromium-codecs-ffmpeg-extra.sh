@@ -29,10 +29,9 @@ pack_ffmpeg() {
 }
 
 DDIR=$(mktemp -d)
+trap "rm -fr $DDIR" EXIT
 cd $DDIR || fatal
 epm tool eget $FFMPEG_URL_DEB || fatal
 a='' ar -x *.deb
 a='' tar xf "data.tar.xz"
 pack_ffmpeg
-rm -rf $DDIR
-rm -f $SC
