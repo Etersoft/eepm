@@ -12,6 +12,16 @@ check_url_is_accessible()
     epm tool eget --check "$1"
 }
 
+is_supported_arch()
+{
+    local i
+    [ -n "$SUPPORTEDARCHES" ] || return 0
+    for i in $SUPPORTEDARCHES ; do
+        [ "$i" = "$1" ] && return 0
+    done
+    return 1
+}
+
 # update URL variable
 update_url_if_need_mirrored()
 {
@@ -83,6 +93,7 @@ case "$1" in
         exit
         ;;
     "--description")
+        is_supported_arch "$2" || exit 0
         echo "$DESCRIPTION"
         exit
         ;;
