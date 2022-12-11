@@ -73,6 +73,7 @@ filter_from_requires '\\/lib\\/libc.so.6(GLIBC'
 filter_from_requires '\\/lib\\/libgcc_s.so.1(GCC_'
 filter_from_requires '\\/usr\\/lib\\/libstdc++.so.6('
 filter_from_requires 'libcrypto.so.10(libcrypto.so.10)(64bit)'
+filter_from_requires '\\/lib\\/ld-linux-aarch64.so.1'
 
 cd $BUILDROOT$PRODUCTDIR/ || exit
 
