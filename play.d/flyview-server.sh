@@ -10,3 +10,15 @@ DESCRIPTION="FlyView (Ipera) Server from the official site"
 PKG="https://flyviewvms.ru/distro/flyview-server.deb"
 
 epm install $PKG || exit
+
+# TODO:
+# groupadd -r ipera
+# useradd -r -g ipera ipera
+# mkdir -p /opt/ipera/var
+# chown ipera:ipera /opt/ipera/var
+
+echo
+echo "Note: run
+# serv $PKGNAME on
+to enable and start $PKGNAME system service
+"
