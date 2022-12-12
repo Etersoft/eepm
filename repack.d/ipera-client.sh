@@ -16,9 +16,9 @@ for i in lib*.so.* gstreamer-0.10/lib*.so.*  ; do
     a= patchelf --set-rpath '$ORIGIN' $i
 done
 
-for i in ../bin/qml/QtQuick/Particles.2/libparticlesplugin.so ; do
-    a= patchelf --set-rpath "$LIBDIR" $i
-done
+#for i in ../bin/qml/QtQuick/Particles.2/libparticlesplugin.so ; do
+#    a= patchelf --set-rpath "$LIBDIR" $i
+#done
 
 filter_from_requires "libldap_r-2.4.so.2(OPENLDAP_2.*)(64bit)" "liblber-2.4.so.2(OPENLDAP_2.*)(64bit)" "ld-linux-.*(GLIBC_PRIVATE)"
 # ignore embedded libs

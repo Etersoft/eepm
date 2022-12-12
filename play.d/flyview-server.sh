@@ -6,6 +6,7 @@ DESCRIPTION="FlyView (Ipera) Server from the official site"
 
 . $(dirname $0)/common.sh
 
-PKG="$(epm tool eget --list --latest https://flyviewvms.ru/downloads/ "flyview-server*linux64.deb")"
+#PKG="$(epm tool eget --list --latest https://flyviewvms.ru/downloads/ "flyview-server*linux64.deb")"
+PKG="https://flyviewvms.ru/distro/flyview-server.deb"
 
-epm install $PKG
+epm install $PKG || exit

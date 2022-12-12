@@ -6,6 +6,7 @@ DESCRIPTION="FlyView Client from the official site"
 
 . $(dirname $0)/common.sh
 
-PKG="$(epm tool eget --list --latest https://flyviewvms.ru/downloads/ "flyview-client*linux64.deb")"
+#PKG="$(epm tool eget --list --latest https://flyviewvms.ru/downloads/ "flyview-client*linux64.deb")"
+PKG="https://flyviewvms.ru/distro/flyview-client.deb"
 
 epm install $PKG
