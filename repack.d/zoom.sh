@@ -33,7 +33,7 @@ for i in libQt5 libav libfdkaac libmpg123 libquazip libturbojpeg libicu ; do
 done
 
 epm assure patchelf || exit
-for i in $BUILDROOT/opt/zoom/{libicui18n.so,libicui18n.so.*,libicuuc.so,libicuuc.so.*} ; do
+for i in $BUILDROOT/opt/zoom/{libicui18n.so,libicui18n.so.*,libicuuc.so,libicuuc.so.*,cef/libcef.so} ; do
     a= patchelf --set-rpath '$ORIGIN/' $i || continue
 done
 
