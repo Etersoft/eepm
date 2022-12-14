@@ -4,7 +4,7 @@ BUILDROOT="$1"
 SPEC="$2"
 
 PRODUCT=brave-browser
-PRODUCTCUR=brave-browser
+PRODUCTCUR=brave-browser-stable
 PRODUCTDIR=/opt/brave.com/brave
 
 . $(dirname $0)/common-chromium-browser.sh
