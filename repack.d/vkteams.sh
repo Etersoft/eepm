@@ -14,7 +14,7 @@ subst "s|^Summary:.*|Summary: VK Teams|" $SPEC
 
 # move package to /opt
 mkdir -p $BUILDROOT$PRODUCTDIR
-mv $BUILDROOT/{$PRODUCT,qt.conf,lib,libexec,QtQuick.2,QtQuick,plugins,resources} $BUILDROOT$PRODUCTDIR || fatal
+mv $BUILDROOT/* $BUILDROOT$PRODUCTDIR || fatal
 subst "s|\"/|\"$PRODUCTDIR/|" $SPEC
 
 add_bin_link_command $PRODUCT
