@@ -5797,7 +5797,7 @@ __switch_alt_to_distro()
 			docmd epm update-kernel || fatal
 			info "Run epm release-upgrade again for update to p10"
 			;;
-		"p9"|"p9 p10"|"p10 p10")
+		"p9"|"p9 p10"|"p10 p10"|"9 10"|"9 p10")
 			info "Upgrade all packages to current $FROM repository"
 			__do_upgrade
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
@@ -9699,6 +9699,8 @@ fill_distr_info()
 PRETTY_NAME=""
 DISTRIB_ID=""
 DISTRIB_RELEASE=""
+DISTRIB_FULL_RELEASE=""
+DISTRIB_RELEASE_ORIG=""
 DISTRIB_CODENAME=""
 
 # Default detection by /etc/os-release
@@ -9713,13 +9715,14 @@ if distro os-release ; then
 	# set by os-release:
 	#PRETTY_NAME
 	VENDOR_ID="$ID"
-	DISTRIB_FULL_RELEASE=$DISTRIB_RELEASE
+	DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
 	DISTRIB_CODENAME="$VERSION_CODENAME"
 
 elif distro lsb-release ; then
 	DISTRIB_ID=$(cat $DISTROFILE | get_var DISTRIB_ID)
-	DISTRIB_RELEASE=$(cat $DISTROFILE | get_var DISTRIB_RELEASE)
+	DISTRIB_RELEASE="$(cat $DISTROFILE | get_var DISTRIB_RELEASE)"
 	DISTRIB_RELEASE_ORIG="$DISTRIB_RELEASE"
+	DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
 	DISTRIB_CODENAME=$(cat $DISTROFILE | get_var DISTRIB_CODENAME)
 	PRETTY_NAME=$(cat $DISTROFILE | get_var DISTRIB_DESCRIPTION)
 fi
@@ -9740,10 +9743,13 @@ case "$VENDOR_ID" in
 		esac
 		;;
 	"astra")
-		DISTRIB_RELEASE=$(normalize_version3 "$DISTRIB_RELEASE_ORIG" | sed -e 's|_.*||')
-		[ "$VARIANT" = "orel" ] && DISTRIB_ID="AstraLinuxCE" || DISTRIB_ID="AstraLinuxSE"
-		#[ "$DISTRIB_RELEASE" = "1.17" ] && DISTRIB_RELEASE="$VERSION_ID"
-		#DISTRIB_RELEASE="$VERSION_CODENAME"
+		DISTRIB_RELEASE=$(normalize_version2 "$DISTRIB_RELEASE_ORIG" | sed -e 's|_.*||')
+		DISTRIB_FULL_RELEASE=$(normalize_version3 "$DISTRIB_RELEASE_ORIG" | sed -e 's|_.*||')
+		if [ "$VARIANT" = "orel" ] || [ "$VARIANT" = "Orel" ] ; then
+			DISTRIB_ID="AstraLinuxCE"
+		else
+			DISTRIB_ID="AstraLinuxSE"
+		fi
 		;;
 esac
 
@@ -9760,7 +9766,7 @@ case "$DISTRIB_ID" in
 #		;;
 	"ALTSPWorkstation")
 		DISTRIB_ID="ALTLinux"
-		case "$DISTRIB_FULL_RELEASE" in
+		case "$DISTRIB_RELEASE_ORIG" in
 			8.0|8.1)
 				;;
 			8.2|8.3)
@@ -10226,7 +10232,8 @@ case "$1" in
 		echo " -s|-n - print base name of the distro (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (see _vendor macros in rpm)"
 		echo " -y - print running service manager"
 		echo " --pretty - print pretty distro name"
-		echo " -v - print version of distro"
+		echo " -v - print version of the distro"
+		echo " --full-version - print full version of the distro"
 		echo " -V - print the utility version"
 		echo "Run without args to print all information."
 		exit 0
@@ -10288,7 +10295,11 @@ case "$1" in
 		;;
 	-v)
 		override_distrib "$2"
-		echo $DISTRIB_RELEASE
+		echo "$DISTRIB_RELEASE"
+		;;
+	--full-version)
+		override_distrib "$2"
+		echo "$DISTRIB_FULL_RELEASE"
 		;;
 	-s|-n)
 		override_distrib "$2"
@@ -11332,7 +11343,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.27.4  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.27.5  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2022"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11342,7 +11353,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.27.4
+EPMVERSION=3.27.5
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
