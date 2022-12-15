@@ -98,7 +98,7 @@ move_to_opt()
         [ -d "$sdir" ] || continue
         rdir="$(echo $sdir | sed -e "s|^$BUILDROOT||")"
         [ -n "$rdir" ] || return 1 #fatal "Can't resolve $from in $BUILDROOT"
-        [ -d "$BUILDROOT$rdir" ] || fatal "Can't resolve $from in $BUILDROOT"
+        [ -d "$BUILDROOT$rdir" ] || return 1 #fatal "Can't resolve $from in $BUILDROOT"
         break
     done
     [ -d "$sdir" ] || return 1 #fatal "Can't find any dir from $from list"

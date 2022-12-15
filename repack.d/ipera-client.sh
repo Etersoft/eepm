@@ -8,7 +8,7 @@ PRODUCTDIR=/opt/ipera
 . $(dirname $0)/common.sh
 
 LIBDIR=$(echo $BUILDROOT/opt/ipera/client/*/lib)
-[ -d "$LIBDIR" ] || fatal "Can't find $LIBDIR"
+[ -d "$LIBDIR" ] || exit
 
 epm assure patchelf || exit
 cd $LIBDIR

@@ -14,7 +14,7 @@ subst "s|^Summary:.*|Summary: VK Teams|" $SPEC
 
 # move package to /opt
 mkdir -p $BUILDROOT$PRODUCTDIR
-mv $BUILDROOT/* $BUILDROOT$PRODUCTDIR || fatal
+mv $BUILDROOT/* $BUILDROOT$PRODUCTDIR
 subst "s|\"/|\"$PRODUCTDIR/|" $SPEC
 
 add_bin_exec_command $PRODUCT
