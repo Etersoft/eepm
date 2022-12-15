@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.27.3
+Version: 3.27.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,22 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Thu Dec 15 2022 Vitaly Lipatov <lav@altlinux.ru> 3.27.4-alt1
+- remove dot in the end of wiki URL
+- epm play yandex-browser-codecs-ffmpeg-extra: fix repack
+- epm play: check if need update repo before install
+- epm play: use trap EXIT to remove tmp files
+- epm play pycharm-professional: fix install (ALT bug 44010)
+- epm play: print description only for applications with supported arch (ALT bug 43932)
+- epm play meridus: add support for install a given version
+- epm play: update flyview install
+- epm play flyview-server: add postinstall todo
+- epm repack: add support for pantum
+- epm repack brave-browser: fix repacking with broken cpio 2.13
+- epm repack: add support for brscanads2200ads2700w
+- epm repack: add libappindicator-gtk3 requirements for rustdesk
+- epm repack zoom: fix missed libffmpeg.so (ALT bug 44533)
+
 * Thu Oct 27 2022 Vitaly Lipatov <lav@altlinux.ru> 3.27.3-alt1
 - epm repack spotify-client: fix icon packing error
 
