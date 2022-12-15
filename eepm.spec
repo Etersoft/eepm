@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.27.4
+Version: 3.27.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,15 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Fri Dec 16 2022 Vitaly Lipatov <lav@altlinux.ru> 3.27.5-alt1
+- distr_info: add --full-version
+- distr_info: fix Orel/orel checking for AstraLinux
+- epm repack vkteams: fix packing
+- epm play: add VK messenger
+- epm repack vkteams: prevent local .desktop creating (ALT bug 43779)
+- epm repack icq: prevent local .desktop creating (ALT bug 44250)
+- epm repack: ignore mono autoreq in generic-appimage.sh (ALT bug 43993)
+
 * Thu Dec 15 2022 Vitaly Lipatov <lav@altlinux.ru> 3.27.4-alt1
 - remove dot in the end of wiki URL
 - epm play yandex-browser-codecs-ffmpeg-extra: fix repack
