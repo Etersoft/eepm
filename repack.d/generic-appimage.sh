@@ -38,6 +38,7 @@ add_bin_exec_command $PRODUCT $PRODUCTDIR/AppRun
 subst "1iexport APPDIR=$PRODUCTDIR" $BUILDROOT/usr/bin/$PRODUCT
 
 subst '1iAutoProv:no' $SPEC
+subst '1iAutoReq:yes,nopython,nomono,nomonolib' $SPEC
 
 # ignore embedded libs
 drop_embedded_reqs
