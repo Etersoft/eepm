@@ -334,6 +334,11 @@ case "$VENDOR_ID" in
 	"astra")
 		DISTRIB_RELEASE=$(normalize_version2 "$DISTRIB_RELEASE_ORIG" | sed -e 's|_.*||')
 		DISTRIB_FULL_RELEASE=$(normalize_version3 "$DISTRIB_RELEASE_ORIG" | sed -e 's|_.*||')
+		if [ "$VARIANT" = "orel" ] || [ "$VARIANT" = "Orel" ] ; then
+			DISTRIB_ID="AstraLinuxCE"
+		else
+			DISTRIB_ID="AstraLinuxSE"
+		fi
 		;;
 esac
 
