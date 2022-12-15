@@ -18,7 +18,16 @@ mkdir -p $BUILDROOT$PRODUCTDIR
 mv $BUILDROOT/* $BUILDROOT$PRODUCTDIR
 subst "s|\"/|\"$PRODUCTDIR/|" $SPEC
 
-add_bin_link_command $PRODUCT
+add_bin_exec_command $PRODUCT
+# Hack against https://bugzilla.altlinux.org/43779
+# Create non writeable local .desktop file
+cat <<EOF >$BUILDROOT/usr/bin/$PRODUCT
+#!/bin/sh
+LDT=~/.local/share/applications/icqdesktop.desktop
+[ ! -r "\$LDT" ] && mkdir -p ~/.local/share/applications/ && echo "[Desktop Entry]" > "\$LDT" && chmod a-w "\$LDT"
+exec $PRODUCTDIR/$PRODUCT "\$@"
+EOF
+
 
 # create desktop file
 mkdir -p $BUILDROOT/usr/share/applications/
