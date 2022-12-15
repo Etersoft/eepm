@@ -1,1 +1,1 @@
-AstraLinux/1.7
+AstraLinuxSE/1.7

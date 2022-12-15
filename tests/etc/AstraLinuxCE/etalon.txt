@@ -1,1 +1,1 @@
-AstraLinux/2.12
+AstraLinuxCE/2.12
