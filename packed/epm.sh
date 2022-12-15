@@ -366,7 +366,7 @@ set_sudo()
 	else
 		# use sudo if one is tuned and tuned without password
 		if ! $SUDO_CMD -l -n >/dev/null 2>/dev/null ; then
-			[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported). Please run epm under root or check http://altlinux.org/sudo.'"
+			[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported). Please run epm under root or check http://altlinux.org/sudo '"
 			return "$SUDO_TESTED"
 		fi
 	fi
@@ -4016,7 +4016,7 @@ __list_installed_packages()
 
 __get_app_description()
 {
-    __run_script "$1" --description 2>/dev/null
+    __run_script "$1" --description "$2" 2>/dev/null
 }
 
 __check_play_script()
@@ -4072,18 +4072,20 @@ __epm_play_list()
     local psdir="$1"
     local i
     local IGNOREi586
-    [ "$($DISTRVENDOR -a)" = "x86_64" ] && IGNOREi586='' || IGNOREi586=1
+    local arch="$($DISTRVENDOR -a)"
+    [ "$arch" = "x86_64" ] && IGNOREi586='' || IGNOREi586=1
 
     if [ -n "$short" ] ; then
         for i in $(__list_all_app) ; do
-            local desc="$(__get_app_description $i)"
+            local desc="$(__get_app_description $i $arch)"
             [ -n "$desc" ] || continue
             echo "$i"
         done
         exit
     fi
+
     for i in $(__list_all_app) ; do
-        local desc="$(__get_app_description $i)"
+        local desc="$(__get_app_description $i $arch)"
         [ -n "$desc" ] || continue
         [ -n "$quiet" ] || echo -n "  "
         printf "%-20s - %s\n" "$i" "$desc"
@@ -4210,6 +4212,9 @@ fi
 
 prescription="$1"
 shift
+
+
+update_repo_if_needed
 
 if __check_play_script "$prescription" ; then
     #__is_app_installed "$prescription" && info "$$prescription is already installed (use --remove to remove)" && exit 1
@@ -11327,7 +11332,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.27.2  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.27.4  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2022"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11337,7 +11342,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.27.2
+EPMVERSION=3.27.4
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
