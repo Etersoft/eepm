@@ -15,7 +15,11 @@ check_url_is_accessible()
 is_supported_arch()
 {
     local i
+
+    # skip checking if there are no arches
     [ -n "$SUPPORTEDARCHES" ] || return 0
+    [ -n "$1" ] || return 0
+
     for i in $SUPPORTEDARCHES ; do
         [ "$i" = "$1" ] && return 0
     done
@@ -117,18 +121,6 @@ case "$1" in
 esac
 
 
-check_supported_arch()
-{
-    # skip checking if no arches
-    [ -n "$1" ] || return 0
-    local arch="$(epm print info -a)"
-    for i in $* ; do
-        [ "$arch" = "$i" ] && return 0
-    done
-
-    return 1
-}
-
 # legacy compatibility and support direct run the script
 if [ -z "$DISTRVENDOR" ] ; then
     export DISTRVENDOR="epm print info"
@@ -141,4 +133,4 @@ if [ -z "$SUDO" ] && [ "$UID" != "0" ] ; then
     SUDO="sudo"
 fi
 
-check_supported_arch $SUPPORTEDARCHES || fatal "Only '$SUPPORTEDARCHES' architectures is supported"
+is_supported_arch "$(epm print info -a)" || fatal "Only '$SUPPORTEDARCHES' architectures is supported"

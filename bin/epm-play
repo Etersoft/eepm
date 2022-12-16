@@ -306,7 +306,7 @@ case "$1" in
 esac
 
 if [ "$1" = "--list-all" ] || [ "$1" = "list-all" ] || [ -z "$*" ] ; then
-    [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications:"
+    [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $($DISTRVENDOR -a)):"
     __epm_play_list $psdir
     [ -n "$quiet" ] || [ -n "$*" ] && exit
     echo
