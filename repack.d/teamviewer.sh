@@ -64,5 +64,5 @@ for i in $BUILDROOT$PRODUCTDIR/tv_bin/RTlib/{libicui18n.so.*,libicuuc.so.*} ; do
     a= patchelf --set-rpath '$ORIGIN/' $i
 done
 
-rm -fv $BUILDROOT$PRODUCTDIR/tv_bin/RTlib/qt/qml/QtWebEngine/libqtwebengineplugin.so.debug
-subst "s|.*libqtwebengineplugin.so.debug.*||" $SPEC
+remove_file $PRODUCTDIR/tv_bin/RTlib/qt/qml/QtWebEngine/libqtwebengineplugin.so.debug
+remove_file $PRODUCTDIR/tv_bin/RTlib/qt/qml/QtWebChannel/libdeclarative_webchannel.so.debug
