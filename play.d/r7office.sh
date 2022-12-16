@@ -4,6 +4,11 @@ PKGNAME=r7-office
 SUPPORTEDARCHES="x86_64"
 DESCRIPTION="R7 Office for Linux from the official site"
 
+# remove with scripts (need for remove icons and associations)
+if [ "$1" = "--remove" ] ; then
+    epm remove --scripts $PKGNAME
+    exit
+fi
 
 . $(dirname $0)/common.sh
 
@@ -31,4 +36,6 @@ case $(epm print info -e) in
         ;;
 esac
 
-epm install "$PKG"
+# install with scripts (need for install icons and associations)
+# TODO: pack it into the package
+epm install --scripts "$PKG"
