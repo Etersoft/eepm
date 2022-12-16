@@ -192,12 +192,24 @@ EOF
     to_remove_pkg_files="$to_remove_pkg_files $HOME/.rpmmacros"
 }
 
+
 __set_version_pkgname()
 {
     local alpkg="$1"
     VERSION="$(echo "$alpkg" | grep -o -P "[-_.]([0-9])([0-9])*(\.[0-9])*" | head -n1 | sed -e 's|^[-_.]||')" #"
     [ -n "$VERSION" ] && PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
 }
+
+
+# AppImage version
+# hack for ktalk2.4.2 -> ktalk 2.4.2
+__set_version_apppkgname()
+{
+    local alpkg="$1"
+    VERSION="$(echo "$alpkg" | grep -o -P "[-_.a-zA-Z]([0-9])([0-9])*(\.[0-9])*" | head -n1 | sed -e 's|^[-_.a-zA-Z]||')" #"
+    [ -n "$VERSION" ] && PKGNAME="$(echo "$alpkg" | sed -e "s|$VERSION.*||")"
+}
+
 
 # arg: <package file>
 # sets:
@@ -226,7 +238,7 @@ __prepare_source_package()
     fi
 
     if rhas "$alpkg" "\.AppImage$" ; then
-        __set_version_pkgname $alpkg
+        __set_version_apppkgname $alpkg
         [ -n "$VERSION" ] || fatal "Can't get version from $alpkg."
         SUBGENERIC='appimage'
         # TODO: move repack archive to erc?
