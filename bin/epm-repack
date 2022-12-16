@@ -64,6 +64,8 @@ __epm_repack_to_deb()
 	repacked_pkgs=''
 
 	local TDIR=$(mktemp -d --tmpdir=$BIGTMPDIR)
+	to_clean_tmp_dirs="$to_clean_tmp_dirs $TDIR"
+	trap "__epm_remove_tmp_files" EXIT
 
 	for pkg in $pkgs ; do
 		abspkg="$(realpath "$pkg")"
@@ -82,20 +84,10 @@ __epm_repack_to_deb()
 			repacked_pkgs="$repacked_pkgs $(realpath $DEBCONVERTED)"
 			to_remove_pkg_files="$to_remove_pkg_files $(realpath $DEBCONVERTED)"
 		fi
-		to_remove_pkg_dirs="$to_remove_pkg_files $TDIR"
 		clean_store_output
 		cd - >/dev/null
 	done
 
-	# TODO: move it to exit handler
-	#if [ -z "$DEBUG" ] ; then
-	#	# TODO: reinvent
-	#	[ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
-	#	[ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
-	#	[ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs
-	#fi
-
-	#cd - >/dev/null
 	return 0
 }
 
@@ -308,6 +300,8 @@ __epm_repack_to_rpm()
 
     local pkg
     export HOME=$(mktemp -d --tmpdir=$BIGTMPDIR)
+    to_clean_tmp_dirs="$to_clean_tmp_dirs $HOME"
+    trap "__epm_remove_tmp_files" EXIT
     __create_rpmmacros
 
     local alpkg
@@ -376,7 +370,6 @@ __epm_repack_to_rpm()
         rm -rf $spec
     done
 
-    to_remove_pkg_dirs="$to_remove_pkg_dirs $HOME"
     rmdir $tmpbuilddir
     #rmdir $tmpbuilddir/..
     true
@@ -392,6 +385,7 @@ __epm_remove_tmp_files()
         # hack??
         [ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
         [ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
+        [ -n "$to_clean_tmp_dirs" ] && rm -rf $to_clean_tmp_dirs 2>/dev/null
     fi
     return 0
 }
