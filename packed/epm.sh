@@ -4195,7 +4195,7 @@ case "$1" in
 esac
 
 if [ "$1" = "--list-all" ] || [ "$1" = "list-all" ] || [ -z "$*" ] ; then
-    [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications:"
+    [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $($DISTRVENDOR -a)):"
     __epm_play_list $psdir
     [ -n "$quiet" ] || [ -n "$*" ] && exit
     echo
@@ -5797,7 +5797,7 @@ __switch_alt_to_distro()
 			docmd epm update-kernel || fatal
 			info "Run epm release-upgrade again for update to p10"
 			;;
-		"p9"|"p9 p10"|"p10 p10"|"9 10"|"9 p10")
+		"p9"|"p9 p10"|"p10 p10")
 			info "Upgrade all packages to current $FROM repository"
 			__do_upgrade
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
@@ -6612,6 +6612,8 @@ __epm_repack_to_deb()
 	repacked_pkgs=''
 
 	local TDIR=$(mktemp -d --tmpdir=$BIGTMPDIR)
+	to_clean_tmp_dirs="$to_clean_tmp_dirs $TDIR"
+	trap "__epm_remove_tmp_files" EXIT
 
 	for pkg in $pkgs ; do
 		abspkg="$(realpath "$pkg")"
@@ -6630,20 +6632,10 @@ __epm_repack_to_deb()
 			repacked_pkgs="$repacked_pkgs $(realpath $DEBCONVERTED)"
 			to_remove_pkg_files="$to_remove_pkg_files $(realpath $DEBCONVERTED)"
 		fi
-		to_remove_pkg_dirs="$to_remove_pkg_files $TDIR"
 		clean_store_output
 		cd - >/dev/null
 	done
 
-	# TODO: move it to exit handler
-	#if [ -z "$DEBUG" ] ; then
-	#	# TODO: reinvent
-	#	[ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
-	#	[ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
-	#	[ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs
-	#fi
-
-	#cd - >/dev/null
 	return 0
 }
 
@@ -6743,12 +6735,22 @@ EOF
     to_remove_pkg_files="$to_remove_pkg_files $HOME/.rpmmacros"
 }
 
+
 __set_version_pkgname()
 {
     local alpkg="$1"
     VERSION="$(echo "$alpkg" | grep -o -P "[-_.]([0-9])([0-9])*(\.[0-9])*" | head -n1 | sed -e 's|^[-_.]||')" #"
     [ -n "$VERSION" ] && PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
 }
+
+
+__set_version_apppkgname()
+{
+    local alpkg="$1"
+    VERSION="$(echo "$alpkg" | grep -o -P "[-_.a-zA-Z]([0-9])([0-9])*(\.[0-9])*" | head -n1 | sed -e 's|^[-_.a-zA-Z]||')" #"
+    [ -n "$VERSION" ] && PKGNAME="$(echo "$alpkg" | sed -e "s|$VERSION.*||")"
+}
+
 
 __prepare_source_package()
 {
@@ -6771,7 +6773,7 @@ __prepare_source_package()
     fi
 
     if rhas "$alpkg" "\.AppImage$" ; then
-        __set_version_pkgname $alpkg
+        __set_version_apppkgname $alpkg
         [ -n "$VERSION" ] || fatal "Can't get version from $alpkg."
         SUBGENERIC='appimage'
         # TODO: move repack archive to erc?
@@ -6844,6 +6846,8 @@ __epm_repack_to_rpm()
 
     local pkg
     export HOME=$(mktemp -d --tmpdir=$BIGTMPDIR)
+    to_clean_tmp_dirs="$to_clean_tmp_dirs $HOME"
+    trap "__epm_remove_tmp_files" EXIT
     __create_rpmmacros
 
     local alpkg
@@ -6912,7 +6916,6 @@ __epm_repack_to_rpm()
         rm -rf $spec
     done
 
-    to_remove_pkg_dirs="$to_remove_pkg_dirs $HOME"
     rmdir $tmpbuilddir
     #rmdir $tmpbuilddir/..
     true
@@ -6928,6 +6931,7 @@ __epm_remove_tmp_files()
         # hack??
         [ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
         [ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
+        [ -n "$to_clean_tmp_dirs" ] && rm -rf $to_clean_tmp_dirs 2>/dev/null
     fi
     return 0
 }
@@ -11343,7 +11347,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.27.5  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.27.6  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2022"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11353,7 +11357,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.27.5
+EPMVERSION=3.27.6
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
