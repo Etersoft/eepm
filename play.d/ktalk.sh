@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME=ktalk2022
+PKGNAME=ktalk2
 SUPPORTEDARCHES="x86_64"
 DESCRIPTION="Контур.Толк (ktalk) from the official site"
 
