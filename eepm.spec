@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.27.5
+Version: 3.27.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,12 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Fri Dec 16 2022 Vitaly Lipatov <lav@altlinux.ru> 3.27.6-alt1
+- epm play ktalk: fix package name (ktalk2 now) (ALT bug 44230)
+- epm repack: clean created tmp dir
+- epm repack: fixes for ktalk (ALT bug 43486)
+- epm play: fix print description
+
 * Fri Dec 16 2022 Vitaly Lipatov <lav@altlinux.ru> 3.27.5-alt1
 - distr_info: add --full-version
 - distr_info: fix Orel/orel checking for AstraLinux
