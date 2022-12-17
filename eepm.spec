@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.27.6
+Version: 3.28.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,17 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Sat Dec 17 2022 Vitaly Lipatov <lav@altlinux.ru> 3.28.0-alt1
+- epm play r7office: fix install icons and associations (ALT bug 44093)
+- epm repack teamviewer: fix packing
+- epm repack rstudio: fix packing
+- epm repack meridius: remove unused discord integration (ALT bug 44251)
+- epm install: add --interactive support
+- epm ei: ask before install a package
+- epm play trueconf: drop unneeded workaround for install with --noscripts
+- epm requires: add support for --short
+- epm install: add workaround for --noscripts when using apt for additional requires
+
 * Fri Dec 16 2022 Vitaly Lipatov <lav@altlinux.ru> 3.27.6-alt1
 - epm play ktalk: fix package name (ktalk2 now) (ALT bug 44230)
 - epm repack: clean created tmp dir
