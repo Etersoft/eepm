@@ -1,0 +1,8 @@
+NAME="ALT Education"
+VERSION="9.2"
+ID=altlinux
+VERSION_ID=9.2
+PRETTY_NAME="ALT Education 9.2 (FalcoRusticolus)"
+ANSI_COLOR="1;33"
+CPE_NAME="cpe:/o:alt:education:9.2"
+HOME_URL="https://basealt.ru/"
