@@ -30,7 +30,12 @@ epm_requires_files()
 	case "$PKGTYPE" in
 		rpm)
 			assure_exists rpm >/dev/null
-			docmd rpm -q --requires -p $pkg_files | grep -v "^rpmlib(" | grep -v "^/bin/sh$"
+			if [ -n "$short" ] ; then
+				# TODO see also rpmreqs from etersoft-build-utils
+				docmd rpm -q --requires -p $pkg_files | grep -v "^rpmlib(" | grep -v "^/bin/sh$" | grep -v "^/bin/bash" | grep -v "rtld(GNU_HASH)" | sed -e "s| .*||"
+			else
+				docmd rpm -q --requires -p $pkg_files | grep -v "^rpmlib(" | grep -v "^/bin/sh$" | grep -v "^/bin/bash" | grep -v "rtld(GNU_HASH)"
+			fi
 			;;
 		deb)
 			assure_exists dpkg >/dev/null
