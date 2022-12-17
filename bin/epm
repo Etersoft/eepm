@@ -97,6 +97,7 @@ short=
 direct=
 sort=
 non_interactive=$EPM_AUTO
+interactive=
 force_yes=
 skip_installed=
 skip_missed=
@@ -448,6 +449,11 @@ check_option()
         ;;
     --auto|--assumeyes|--non-interactive)  # HELPOPT: non interactive mode
         non_interactive="--auto"
+        interactive=""
+        ;;
+    --interactive)  # HELPOPT: interactive mode (ask before any operation)
+        interactive="--interactive"
+        non_interactive=""
         ;;
     --force-yes)           # HELPOPT: force yes in a danger cases (f.i., during release upgrade)
         force_yes="--force-yes"
