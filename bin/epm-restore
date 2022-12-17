@@ -456,8 +456,8 @@ __epm_restore_perl_shyaml()
 __epm_restore_by()
 {
     local req_file="$1"
+    [ -n "$verbose" ] && info "Checking for $req_file ..."
     [ -s "$req_file" ] || return
-
     if file $req_file | grep -q "ELF [3264]*-bit LSB executable" ; then
         assure_exists ldd-requires
         showcmd ldd-requires $req_file
