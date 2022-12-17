@@ -2575,6 +2575,7 @@ __epm_korinf_install() {
     local PACKAGE="$1"
     # due Error: Can't use epm call from the piped script
     #epm install $(__epm_korinf_site_mask "$PACKAGE")
+    [ -n "$non_interactive" ] || interactive="--interactive"
     pkg_names='' pkg_files='' pkg_urls="$(__epm_korinf_site_mask "$PACKAGE")" epm_install
 }
 
@@ -3246,6 +3247,21 @@ epm_install_files()
 
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return $RES
+
+            # try install via apt if we could't install package file via rpm (we guess we need install requirements firsly)
+
+            # TODO: use it always (apt can install version from repo instead of a file package)
+            if [ -n "$noscripts" ] ; then
+                info "Workaround for install packages via apt with --noscripts (see https://bugzilla.altlinux.org/44670)"
+                info "Firstly install package requrements …"
+                # TODO: can we install only requires via apt?
+                epm install $(epm req --short $files) || return
+                # retry with rpm
+                sudocmd rpm -Uvh $force $noscripts $nodeps $files && save_installed_packages $files
+                return
+            fi
+
+            # common fallback
             ;;
     esac
 
@@ -3491,11 +3507,18 @@ epm_install()
     fi
 
     if [ -n "$show_command_only" ] ; then
+        # TODO: handle pkg_urls too
         epm_print_install_command $pkg_files
         epm_print_install_names_command $pkg_names
         return
     fi
 
+    if [ -n "$interactive" ] ; then
+        confirm_info "You are about to install $pkg_names $pkg_files $pkg_urls package(s)."
+        # TODO: for some packages with dependencies apt will ask later again
+    fi
+
+    # TODO: put it after empty install list checking?
     if [ -n "$direct" ] && [ -z "$repack" ] ; then
         __handle_direct_install
     fi
@@ -7541,7 +7564,12 @@ epm_requires_files()
 	case "$PKGTYPE" in
 		rpm)
 			assure_exists rpm >/dev/null
-			docmd rpm -q --requires -p $pkg_files | grep -v "^rpmlib(" | grep -v "^/bin/sh$"
+			if [ -n "$short" ] ; then
+				# TODO see also rpmreqs from etersoft-build-utils
+				docmd rpm -q --requires -p $pkg_files | grep -v "^rpmlib(" | grep -v "^/bin/sh$" | grep -v "^/bin/bash" | grep -v "rtld(GNU_HASH)" | sed -e "s| .*||"
+			else
+				docmd rpm -q --requires -p $pkg_files | grep -v "^rpmlib(" | grep -v "^/bin/sh$" | grep -v "^/bin/bash" | grep -v "rtld(GNU_HASH)"
+			fi
 			;;
 		deb)
 			assure_exists dpkg >/dev/null
@@ -8078,8 +8106,8 @@ __epm_restore_perl_shyaml()
 __epm_restore_by()
 {
     local req_file="$1"
+    [ -n "$verbose" ] && info "Checking for $req_file ..."
     [ -s "$req_file" ] || return
-
     if file $req_file | grep -q "ELF [3264]*-bit LSB executable" ; then
         assure_exists ldd-requires
         showcmd ldd-requires $req_file
@@ -11347,7 +11375,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.27.6  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.28.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2022"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11357,7 +11385,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.27.6
+EPMVERSION=3.28.0
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
@@ -11372,6 +11400,7 @@ short=
 direct=
 sort=
 non_interactive=$EPM_AUTO
+interactive=
 force_yes=
 skip_installed=
 skip_missed=
@@ -11723,6 +11752,11 @@ check_option()
         ;;
     --auto|--assumeyes|--non-interactive)  # HELPOPT: non interactive mode
         non_interactive="--auto"
+        interactive=""
+        ;;
+    --interactive)  # HELPOPT: interactive mode (ask before any operation)
+        interactive="--interactive"
+        non_interactive=""
         ;;
     --force-yes)           # HELPOPT: force yes in a danger cases (f.i., during release upgrade)
         force_yes="--force-yes"
