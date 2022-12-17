@@ -15,4 +15,4 @@ esac
 
 URL=$(eget --list --latest https://desktop.userapi.com/rpm/master/ "*.$arch.rpm")
 
-epm install $URL
+epm --repack install $URL
