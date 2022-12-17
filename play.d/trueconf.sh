@@ -35,16 +35,5 @@ case "$($DISTRVENDOR -e)" in
         fatal "$($DISTRVENDOR -e) is not supported"
 esac
 
-# workaround for --noscripts for apt-get
-if [ -n "$epmopt" ] ; then
-    tmpdir=$(mktemp -d)
-    trap "rm -fr $tmpdir" EXIT
-    cd $tmpdir || fatal
-    epm tool eget $URL || fatal
-    PKG=$(echo *)
-    epm install $(epm req $PKG) || fatal "Can't install requirements of the trueconf package"
-    epm install $epmopt "$PKG" || exit
-    exit 0
-fi
-
+# --repack includes --noscripts
 epm install $epmopt "$URL" || exit
