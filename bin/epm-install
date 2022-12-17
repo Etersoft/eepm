@@ -581,11 +581,18 @@ epm_install()
     fi
 
     if [ -n "$show_command_only" ] ; then
+        # TODO: handle pkg_urls too
         epm_print_install_command $pkg_files
         epm_print_install_names_command $pkg_names
         return
     fi
 
+    if [ -n "$interactive" ] ; then
+        confirm_info "You are about to install $pkg_names $pkg_files $pkg_urls package(s)."
+        # TODO: for some packages with dependencies apt will ask later again
+    fi
+
+    # TODO: put it after empty install list checking?
     if [ -n "$direct" ] && [ -z "$repack" ] ; then
         __handle_direct_install
     fi
