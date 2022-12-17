@@ -334,6 +334,21 @@ epm_install_files()
 
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return $RES
+
+            # try install via apt if we could't install package file via rpm (we guess we need install requirements firsly)
+
+            # TODO: use it always (apt can install version from repo instead of a file package)
+            if [ -n "$noscripts" ] ; then
+                info "Workaround for install packages via apt with --noscripts (see https://bugzilla.altlinux.org/44670)"
+                info "Firstly install package requrements …"
+                # TODO: can we install only requires via apt?
+                epm install $(epm req --short $files) || return
+                # retry with rpm
+                sudocmd rpm -Uvh $force $noscripts $nodeps $files && save_installed_packages $files
+                return
+            fi
+
+            # common fallback
             ;;
     esac
 
