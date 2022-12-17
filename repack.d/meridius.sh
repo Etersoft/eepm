@@ -39,6 +39,10 @@ cd - >/dev/null
 
 add_bin_exec_command $PRODUCT $PRODUCTDIR/meridiusreborn
 
+# remove broken discord integration
+# error: version `GLIBC_2.33' not found (required by ./python3)
+remove_dir $PRODUCTDIR/resources/app.asar.unpacked/node_modules/register-scheme
+
 subst '1iAutoProv:no' $SPEC
 
 # ignore embedded libs
