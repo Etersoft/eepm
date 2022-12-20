@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.28.0
+Version: 3.28.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -150,6 +150,11 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Tue Dec 20 2022 Vitaly Lipatov <lav@altlinux.ru> 3.28.1-alt1
+- epm requires: allow show also for non installed packages, improvements
+- epm play: add iptvnator (ALT bug 44047)
+- epm repack xnview: improve packing requires
+
 * Sat Dec 17 2022 Vitaly Lipatov <lav@altlinux.ru> 3.28.0-alt1
 - epm play r7office: fix install icons and associations (ALT bug 44093)
 - epm repack teamviewer: fix packing
