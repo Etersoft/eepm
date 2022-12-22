@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.28.1
+Version: 3.28.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -152,6 +152,11 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Fri Dec 23 2022 Vitaly Lipatov <lav@altlinux.ru> 3.28.2-alt1
+- epm play: enable install chrome-remote-desktop
+- spec: require apt-repo on ALT
+- epm-install: restore workaround for install deb packages without apt-get (for old Ubuntu)
+
 * Tue Dec 20 2022 Vitaly Lipatov <lav@altlinux.ru> 3.28.1-alt1
 - epm requires: allow show also for non installed packages, improvements
 - epm play: add iptvnator (ALT bug 44047)
