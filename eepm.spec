@@ -27,6 +27,8 @@ Provides: epm = %EVR
 
 # FIXHERE: Replace with target platform package manager
 Requires: apt rpm
+# TODO: don't use at all
+Requires: apt-repo
 %endif
 
 Requires: which
