@@ -11,5 +11,5 @@ cleanup
 subst '1iBuildRequires:rpm-build-python3' $SPEC
 
 # install all requires packages before packing ($ rpmreqs chrome-remote-desktop  | xargs echo)
-epm install --skip-installed coreutils glib2 libcairo libdbus libdrm libexpat libgbm libgio libgtk+3 libnspr libnss libpango libX11 libxcb libXdamage libXext libXfixes libXrandr libXtst python3-base python3-module-psutil python3 rpm-build-python3 libutempter
-
+epm install --skip-installed coreutils glib2 libcairo libdbus libdrm libexpat libgbm libgio libgtk+3 libnspr libnss libpango libX11 libxcb libXdamage libXext libXfixes libXrandr libXtst libutempter
+epm install --skip-installed python3-base python3-module-psutil python3 rpm-build-python3

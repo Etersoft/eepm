@@ -7,8 +7,7 @@ DESCRIPTION='' # echo " Remote desktop support for google-chrome & chromium" && 
 . $(dirname $0)/common.sh
 
 
-echo "It is not finished yet. Just skipping."
-exit 0
+echo "Note: It is not tested yet."
 
 #arch=$($DISTRVENDOR --distro-arch)
 #pkgtype=$($DISTRVENDOR -p)
