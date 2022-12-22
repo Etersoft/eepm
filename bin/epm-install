@@ -373,10 +373,20 @@ epm_install_files()
                 return
             fi
 
-            # TODO: don't resolve fuzzy dependencies ()
-            # are there apt that don't support dpkg files to install?
-            epm_install_names $(make_filepath $files)
-            return
+            # for too old apt-get
+            # TODO: check apt-get version?
+            apt_can_install_files='1'
+            if [ "$DISTRNAME" = "Ubuntu" ] ; then
+                [ "$DISTRVERSION" = "14.04" ] && apt_can_install_files=''
+                [ "$DISTRVERSION" = "12.04" ] && apt_can_install_files=''
+            fi
+
+            if [ -n "$apt_can_install_files" ] ; then
+                # TODO: don't resolve fuzzy dependencies ()
+                # are there apt that don't support dpkg files to install?
+                epm_install_names $(make_filepath $files)
+                return
+            fi
 
             # old way:
 
