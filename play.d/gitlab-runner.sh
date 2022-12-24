@@ -24,6 +24,13 @@ case "$arch" in
         ;;
 esac
 
+repack=''
+case $(epm print info -e) in
+    ALTLinux/*|ALTServer/*)
+        repack='--repack'
+        ;;
+esac
+
 # https://docs.gitlab.com/runner/install/linux-manually.html
 # https://gitlab-runner-downloads.s3.amazonaws.com/latest/index.html
-epm install "https://gitlab-runner-downloads.s3.amazonaws.com/latest/$pkg/gitlab-runner_${arch}.$pkg"
+epm install $repack "https://gitlab-runner-downloads.s3.amazonaws.com/latest/$pkg/gitlab-runner_${arch}.$pkg"
