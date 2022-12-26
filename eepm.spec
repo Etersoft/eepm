@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.28.2
+Version: 3.28.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -152,6 +152,13 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Mon Dec 26 2022 Vitaly Lipatov <lav@altlinux.ru> 3.28.3-alt1
+- epm repack: add gitlab-runner repack
+- epm play brave: add support for dev channel, do fallback to beta if release is missed
+- epm autoremove: fix on deb systems (eterbug #16189)
+- epm play gitlab-runner: repack on ALT
+- epm repack trueconf: fix repack on Sisyphus (remove libtbbbind requires missed libhwloc.so.5)
+
 * Fri Dec 23 2022 Vitaly Lipatov <lav@altlinux.ru> 3.28.2-alt1
 - epm play: enable install chrome-remote-desktop
 - spec: require apt-repo on ALT
