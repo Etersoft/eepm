@@ -1408,7 +1408,7 @@ esac
 
 case $PMTYPE in
 	apt-dpkg|aptitude-dpkg)
-		sudocmd apt-get autoremove local $(subst_option non_interactive -y) $dryrun
+		sudocmd apt-get autoremove $(subst_option non_interactive -y) $dryrun
 		;;
 	aura)
 		if [ -n "$dryrun" ] ; then
@@ -3286,10 +3286,20 @@ epm_install_files()
                 return
             fi
 
-            # TODO: don't resolve fuzzy dependencies ()
-            # are there apt that don't support dpkg files to install?
-            epm_install_names $(make_filepath $files)
-            return
+            # for too old apt-get
+            # TODO: check apt-get version?
+            apt_can_install_files='1'
+            if [ "$DISTRNAME" = "Ubuntu" ] ; then
+                [ "$DISTRVERSION" = "14.04" ] && apt_can_install_files=''
+                [ "$DISTRVERSION" = "12.04" ] && apt_can_install_files=''
+            fi
+
+            if [ -n "$apt_can_install_files" ] ; then
+                # TODO: don't resolve fuzzy dependencies ()
+                # are there apt that don't support dpkg files to install?
+                epm_install_names $(make_filepath $files)
+                return
+            fi
 
             # old way:
 
@@ -7554,6 +7564,21 @@ esac
 # File bin/epm-requires:
 
 
+__epm_filter_out_base_alt_reqs()
+{
+	grep -E -v "(^rpmlib\(|^/bin/sh|^/bin/bash|^rtld\(GNU_HASH\)|ld-linux)"
+}
+
+__epm_alt_rpm_requires()
+{
+	if [ -n "$short" ] ; then
+		# TODO see also rpmreqs from etersoft-build-utils
+		docmd rpm -q --requires "$@" | __epm_filter_out_base_alt_reqs | sed -e "s| .*||"
+	else
+		docmd rpm -q --requires "$@" | __epm_filter_out_base_alt_reqs
+	fi
+}
+
 epm_requires_files()
 {
 	local pkg_files="$*"
@@ -7564,12 +7589,7 @@ epm_requires_files()
 	case "$PKGTYPE" in
 		rpm)
 			assure_exists rpm >/dev/null
-			if [ -n "$short" ] ; then
-				# TODO see also rpmreqs from etersoft-build-utils
-				docmd rpm -q --requires -p $pkg_files | grep -v "^rpmlib(" | grep -v "^/bin/sh$" | grep -v "^/bin/bash" | grep -v "rtld(GNU_HASH)" | sed -e "s| .*||"
-			else
-				docmd rpm -q --requires -p $pkg_files | grep -v "^rpmlib(" | grep -v "^/bin/sh$" | grep -v "^/bin/bash" | grep -v "rtld(GNU_HASH)"
-			fi
+			__epm_alt_rpm_requires -p $pkg_files
 			;;
 		deb)
 			assure_exists dpkg >/dev/null
@@ -7592,12 +7612,20 @@ case $PMTYPE in
 		# FIXME: need fix for a few names case
 		# FIXME: too low level of requires name (libSOME.so)
 		if is_installed $pkg_names ; then
-			CMD="rpm -q --requires"
+			assure_exists rpm >/dev/null
+			__epm_alt_rpm_requires $pkg_names
+			return
 		else
-			#EXTRA_SHOWDOCMD=' | grep "Depends:"'
-			#docmd apt-cache show $pkg_names | grep "Depends:"
-			#return
-			CMD="apt-cache depends"
+			if [ -n "$verbose" ] ; then
+				CMD="apt-cache depends"
+			else
+				if [ -n "$short" ] ; then
+					LANG=C docmd apt-cache depends $pkg_names | grep "Depends:" | sed -e "s|.*Depends: ||" -e "s|<\(.*\)>|\1|" | __epm_filter_out_base_alt_reqs | sed -e "s| .*||"
+				else
+					LANG=C docmd apt-cache depends $pkg_names | grep "Depends:" | sed -e "s|.*Depends: ||" -e "s|<\(.*\)>|\1|" | __epm_filter_out_base_alt_reqs
+				fi
+				return
+			fi
 		fi
 		;;
 	packagekit)
@@ -11375,7 +11403,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.28.0  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.28.3  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2022"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11385,7 +11413,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.28.0
+EPMVERSION=3.28.3
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
