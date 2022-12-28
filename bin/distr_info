@@ -62,6 +62,8 @@ pkgvendor()
 {
 	[ "$DISTRIB_ID" = "ALTLinux" ] && echo "alt" && return
 	[ "$DISTRIB_ID" = "ALTServer" ] && echo "alt" && return
+	[ "$DISTRIB_ID" = "MOC" ] && echo "alt" && return
+	[ "$DISTRIB_ID" = "MESh" ] && echo "alt" && return
 	[ "$DISTRIB_ID" = "AstraLinuxSE" ] && echo "astra" && return
 	[ "$DISTRIB_ID" = "AstraLinuxCE" ] && echo "astra" && return
 	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
