@@ -9533,6 +9533,8 @@ pkgvendor()
 {
 	[ "$DISTRIB_ID" = "ALTLinux" ] && echo "alt" && return
 	[ "$DISTRIB_ID" = "ALTServer" ] && echo "alt" && return
+	[ "$DISTRIB_ID" = "MOC" ] && echo "alt" && return
+	[ "$DISTRIB_ID" = "MESh" ] && echo "alt" && return
 	[ "$DISTRIB_ID" = "AstraLinuxSE" ] && echo "astra" && return
 	[ "$DISTRIB_ID" = "AstraLinuxCE" ] && echo "astra" && return
 	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
@@ -11403,7 +11405,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.28.3  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.28.4  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2022"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11413,7 +11415,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.28.3
+EPMVERSION=3.28.4
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
