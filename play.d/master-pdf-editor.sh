@@ -15,7 +15,7 @@ case $(epm print info -e) in
     AstraLinuxSE/1.7*)
         PKG="master-pdf-editor-5.8.70-qt5_astra.x86_64.deb"
         ;;
-    RedOS/*|AlterOS/*|ALTLinux/*|ALTServer/*)
+    RedOS/*|AlterOS/*|ALTLinux/*|ALTServer/*|MOC/*)
         PKG="master-pdf-editor-5.8.70-qt5.x86_64.rpm"
         repack='--repack'
         ;;
