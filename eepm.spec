@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.28.3
+Version: 3.28.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -152,6 +152,13 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Wed Dec 28 2022 Vitaly Lipatov <lav@altlinux.ru> 3.28.4-alt1
+- epm play: add Kyocera printer driver
+- distr_info: add MOC/MeSh support
+- tests: add os-release tests
+- epm play master-pdf-editor: add MOC support
+- epm repack pantum: add libjpeg8 requires
+
 * Mon Dec 26 2022 Vitaly Lipatov <lav@altlinux.ru> 3.28.3-alt1
 - epm repack: add gitlab-runner repack
 - epm play brave: add support for dev channel, do fallback to beta if release is missed
