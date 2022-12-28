@@ -1,0 +1,9 @@
+NAME="M OC"
+VERSION="MOS p10"
+ID=mos
+ID_LIKE=altlinux
+VERSION_ID=10
+PRETTY_NAME="MOS 830"
+ANSI_COLOR="1;33"
+CPE_NAME="cpe:/o:alt:mos:p10"
+LOGO=mos
