@@ -8,8 +8,9 @@ DESCRIPTION="WPS Office for Linux from the official site"
 
 
 # https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=wps-office
-# TODO: get actual version
-pkgver=11.1.0.11664
+pkgverstr=$(epm tool eget -O- "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=wps-office" | grep "^pkgver=")
+eval $pkgverstr
+[ -n "$pkgver" ] || pkgver=11.1.0.11664
 
 pkgtype=$(epm print info -p)
 case $pkgtype in
