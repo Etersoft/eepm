@@ -278,7 +278,7 @@ epm()
 {
 	if [ -n "$PROGNAME" ] ; then
 		#|| fatal "Can't use epm call from the piped script"
-		bash $PROGDIR/$PROGNAME --inscript "$@"
+		$PROGDIR/$PROGNAME --inscript "$@"
 	else
 		epm_main --inscript "$@"
 	fi
@@ -287,7 +287,7 @@ epm()
 sudoepm()
 {
 	[ -n "$PROGNAME" ] || fatal "Can't use epm call from the piped script"
-	sudorun bash $PROGDIR/$PROGNAME --inscript "$@"
+	sudorun $PROGDIR/$PROGNAME --inscript "$@"
 }
 
 fatal()
@@ -2340,7 +2340,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.28.5  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.28.6  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
