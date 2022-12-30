@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.28.5
+Version: 3.28.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -152,6 +152,10 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Fri Dec 30 2022 Vitaly Lipatov <lav@altlinux.ru> 3.28.6-alt1
+- epm play kyodialog: fix erc req
+- epm-sh-functions: call the program internally without bash
+
 * Fri Dec 30 2022 Vitaly Lipatov <lav@altlinux.ru> 3.28.5-alt1
 - epm play: add librewolf support
 - epm play wpsoffice: get app version from Arch repo
