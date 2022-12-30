@@ -282,7 +282,7 @@ epm()
 {
 	if [ -n "$PROGNAME" ] ; then
 		#|| fatal "Can't use epm call from the piped script"
-		bash $PROGDIR/$PROGNAME --inscript "$@"
+		$PROGDIR/$PROGNAME --inscript "$@"
 	else
 		epm_main --inscript "$@"
 	fi
@@ -292,7 +292,7 @@ epm()
 sudoepm()
 {
 	[ -n "$PROGNAME" ] || fatal "Can't use epm call from the piped script"
-	sudorun bash $PROGDIR/$PROGNAME --inscript "$@"
+	sudorun $PROGDIR/$PROGNAME --inscript "$@"
 }
 
 # Print error message and stop the program
