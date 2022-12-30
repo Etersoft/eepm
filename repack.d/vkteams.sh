@@ -48,5 +48,5 @@ pack_file /usr/share/applications/$PRODUCT.desktop
 ICONURL=https://is1-ssl.mzstatic.com/image/thumb/Purple122/v4/a8/36/64/a83664d6-9401-a8a4-c845-89e0c3ab0c89/icons-bundle.png/246x0w.png
 mkdir -p $BUILDROOT/usr/share/pixmaps/
 epm tool eget -O $BUILDROOT/usr/share/pixmaps/$PRODUCT.png $ICONURL
-[ -s $BUILDROOT/usr/share/pixmaps/$PRODUCT.png ] && pack_file /usr/share/pixmaps/$PRODUCT.png || "echo Can't download icon for the program."
+[ -s $BUILDROOT/usr/share/pixmaps/$PRODUCT.png ] && pack_file /usr/share/pixmaps/$PRODUCT.png || echo "Can't download icon for the program."
 subst "s|.*$PRODUCTDIR/unittests.*||" $SPEC
