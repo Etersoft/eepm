@@ -1,5 +1,24 @@
 #!/bin/sh
 
+# compatibility layer
+# add realpath if missed
+if ! which realpath 2>/dev/null >/dev/null ; then
+realpath()
+{
+    [ -n "$*" ] || return
+    readlink -f "$@"
+}
+fi
+
+# add subst if missed
+if ! which subst 2>/dev/null >/dev/null ; then
+subst()
+{
+    sed -i -e "$@"
+}
+fi
+
+# Remove file from the file system and from spec
 # Usage: remove_file <path_to_file>
 remove_file()
 {
@@ -11,6 +30,7 @@ remove_file()
     subst "s|.*$file.*||" $SPEC
 }
 
+# Remove dir (recursively) from the file system and from spec
 remove_dir()
 {
     local file="$1"
@@ -28,6 +48,7 @@ remove_dir()
 }
 
 
+# Add file to spec (if missed)
 # Usage: pack_file <path_to_file>
 pack_file()
 {
@@ -38,6 +59,7 @@ pack_file()
     subst "s|%files|%files\n$file|" $SPEC
 }
 
+# Add dir (only dir) to spec (if missed)
 # Usage: pack_dir <path_to_dir>
 pack_dir()
 {

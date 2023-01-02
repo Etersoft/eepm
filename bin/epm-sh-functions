@@ -658,3 +658,21 @@ has_space()
 {
     estrlist -- has_space "$@"
 }
+
+# compatibility layer
+# add realpath if missed
+if ! which realpath 2>/dev/null >/dev/null ; then
+realpath()
+{
+    [ -n "$*" ] || return
+    readlink -f "$@"
+}
+fi
+
+# add subst if missed
+if ! which subst 2>/dev/null >/dev/null ; then
+subst()
+{
+    sed -i -e "$@"
+}
+fi
