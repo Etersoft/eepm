@@ -19,7 +19,6 @@ jobs:
       - name: install packages
         run: |
             apt-get update && apt-get -y install eepm
-#            epm repo change yandex
             epm update
             epm --auto install etersoft-build-utils rpm-build-intro su sudo
 
