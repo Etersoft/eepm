@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.28.6
+Version: 3.28.7
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -152,6 +152,11 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Sun Jan 08 2023 Vitaly Lipatov <lav@altlinux.ru> 3.28.7-alt1
+- epm repack librewolf: install required packages only on ALT
+- epm repack Telegram: hide locally created desktop file (ALT bug 42402)
+- epm repack meridius: fix packing
+
 * Fri Dec 30 2022 Vitaly Lipatov <lav@altlinux.ru> 3.28.6-alt1
 - epm play kyodialog: fix erc req
 - epm-sh-functions: call the program internally without bash
