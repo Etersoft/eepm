@@ -640,6 +640,21 @@ has_space()
     estrlist -- has_space "$@"
 }
 
+if ! which realpath 2>/dev/null >/dev/null ; then
+realpath()
+{
+    [ -n "$*" ] || return
+    readlink -f "$@"
+}
+fi
+
+if ! which subst 2>/dev/null >/dev/null ; then
+subst()
+{
+    sed -i -e "$@"
+}
+fi
+
 # File bin/epm-addrepo:
 
 
@@ -4253,8 +4268,9 @@ if __check_play_script "$prescription" ; then
     #__is_app_installed "$prescription" && info "$$prescription is already installed (use --remove to remove)" && exit 1
     __epm_play_run "$prescription" --run "$@" && __save_installed_app "$prescription" || fatal "There was some error during install the application."
 else
+    opsdir=$psdir
     psdir=$prsdir
-    __check_play_script "$prescription" || fatal "We have no idea how to play $prescription (checked in $psdir and $prsdir)"
+    __check_play_script "$prescription" || fatal "We have no idea how to play $prescription (checked in $opsdir and $prsdir)"
     __epm_play_run "$prescription" --run "$@" || fatal "There was some error during run the script."
 fi
 }
@@ -11405,7 +11421,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.28.6  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.28.7  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2022"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11415,7 +11431,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.28.6
+EPMVERSION=3.28.7
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
