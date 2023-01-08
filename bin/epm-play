@@ -332,8 +332,9 @@ if __check_play_script "$prescription" ; then
     #__is_app_installed "$prescription" && info "$$prescription is already installed (use --remove to remove)" && exit 1
     __epm_play_run "$prescription" --run "$@" && __save_installed_app "$prescription" || fatal "There was some error during install the application."
 else
+    opsdir=$psdir
     psdir=$prsdir
-    __check_play_script "$prescription" || fatal "We have no idea how to play $prescription (checked in $psdir and $prsdir)"
+    __check_play_script "$prescription" || fatal "We have no idea how to play $prescription (checked in $opsdir and $prsdir)"
     __epm_play_run "$prescription" --run "$@" || fatal "There was some error during run the script."
 fi
 }
