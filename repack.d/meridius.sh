@@ -37,7 +37,7 @@ pack_file /usr/share/pixmaps/$ICONFILE
 
 cd - >/dev/null
 
-add_bin_exec_command $PRODUCT $PRODUCTDIR/meridiusreborn
+add_bin_exec_command $PRODUCT
 
 # remove broken discord integration
 # error: version `GLIBC_2.33' not found (required by ./python3)
