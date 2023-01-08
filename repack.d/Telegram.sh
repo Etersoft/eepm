@@ -49,6 +49,9 @@ echo "$PRODUCTCUR" >"$BUILDROOT/etc/tdesktop/externalupdater"
 pack_file /etc/tdesktop/externalupdater
 remove_file /opt/Telegram/Updater
 
+# Hack against https://bugzilla.altlinux.org/42402
+# We can't forbit creating a desktop file, so just hide it
+subst "s|Terminal=false|NoDisplay=true|" $BUILDROOT$PRODUCTDIR/Telegram
 
 # TODO: tg.protocol
 # https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=telegram-desktop-bin
