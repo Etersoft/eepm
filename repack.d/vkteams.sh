@@ -50,3 +50,10 @@ mkdir -p $BUILDROOT/usr/share/pixmaps/
 epm tool eget -O $BUILDROOT/usr/share/pixmaps/$PRODUCT.png $ICONURL
 [ -s $BUILDROOT/usr/share/pixmaps/$PRODUCT.png ] && pack_file /usr/share/pixmaps/$PRODUCT.png || echo "Can't download icon for the program."
 subst "s|.*$PRODUCTDIR/unittests.*||" $SPEC
+
+
+epm assure patchelf || exit
+cd $BUILDROOT$PRODUCTDIR
+for i in QtQuick/Controls.2/libqtquickcontrols2plugin.so  ; do
+    a= patchelf --set-rpath '$ORIGIN/../..' $i
+done
