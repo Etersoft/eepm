@@ -13,6 +13,6 @@ case "$arch" in
         ;;
 esac
 
-URL=$(eget --list --latest https://desktop.userapi.com/rpm/master/ "*.$arch.rpm")
+URL=$(epm tool eget --list --latest https://desktop.userapi.com/rpm/master/ "*.$arch.rpm")
 
 epm --repack install $URL
