@@ -38,6 +38,9 @@ get_alt_repo_path()
 # convert "http://download.etersoft.ru/pub/ALTLinux/p8/branch x86_64" to /tmp/epm/ALTLinux/p8/branch/x86_64
 get_local_alt_mirror_path()
 {
+    # FIXME: by some reason missed in ALT docker image (no login?)
+    [ -n "$TMPDIR" ] || TMPDIR=/tmp
+
     # TODO: /var/cache/eepm
     echo "$TMPDIR/eepm/$(get_alt_repo_path "$1")"
 }
