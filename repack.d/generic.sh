@@ -33,4 +33,4 @@ if [ -n "$flag_python3" ] ; then
 fi
 
 # Set high Epoche to override repository package
-subst "s|^\(Name: .*\)$|# Override reposity package\nEpoch: 100\n\1|g" $SPEC
+subst "s|^\(Name: .*\)$|# Override repository package\nEpoch: 100\n\1|g" $SPEC
