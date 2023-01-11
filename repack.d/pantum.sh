@@ -24,5 +24,5 @@ remove_dir /usr/lib/x86_64-linux-gnu
 
 remove_dir /usr/local
 
-subst '1Requires: libjpeg8' $SPEC
+subst '1iRequires: libjpeg8' $SPEC
 

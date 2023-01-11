@@ -8,7 +8,7 @@ SPEC="$2"
 #ln -s /lib64/libbz2.so.1 $BUILDROOT/opt/XnView/lib/libbz2.so.1.0
 #subst "s|%files|%files\n/opt/XnView/lib/libbz2.so.1.0|" $SPEC
 
-#subst '1Requires:bzlib' $SPEC
+#subst '1iRequires:bzlib' $SPEC
 subst '1iAutoReq:yes,noperl' $SPEC
 subst '1iAutoProv:no' $SPEC
 

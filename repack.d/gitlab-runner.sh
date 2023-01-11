@@ -21,4 +21,4 @@ PRODUCT=gitlab-runner
 subst '1iAutoReq:no' $SPEC
 subst '1iAutoProv:no' $SPEC
 
-subst '1Requires:curl git tar' $SPEC
+subst '1iRequires:curl git tar' $SPEC
