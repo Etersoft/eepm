@@ -1,6 +1,7 @@
 #!/bin/sh
 
 PKGNAME=mssql-server
+SUPPORTEDARCHES="x86_64"
 DESCRIPTION="MS SQL Server 2019 from the official site"
 
 DEBREPO="deb http://ftp.ru.debian.org/debian/ stretch main"
@@ -15,12 +16,13 @@ fi
 . $(dirname $0)/common.sh
 
 
-[ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
-
 serv mssql-server stop
 
+dname="$(epm print info -s)"
+dversion="$(epm print info -v)"
+
 case "$($DISTRVENDOR -d)" in
-  "AstraLinux")
+  AstraLinux*)
     # we have libc++1-9, but this package requires libc++1
     epm ar $DEBREPO ; epm update
     epm install libc++1
@@ -30,8 +32,11 @@ case "$($DISTRVENDOR -d)" in
   ALTLinux|ALTServer)
     epm install --repack https://packages.microsoft.com/rhel/8/mssql-server-2019/mssql-server-1*.x86_64.rpm || fatal
     ;;
+  Debian|Ubuntu)
+    epm install https://packages.microsoft.com/$dname/$dversion/mssql-server-2019/pool/main/m/mssql-server/mssql-server_1*_amd64.deb
+    ;;
   *)
-    fatal "$(DISTRVENDOR -d) is not supported yet."
+    fatal "$($DISTRVENDOR -d) is not supported yet."
     ;;
 esac
 

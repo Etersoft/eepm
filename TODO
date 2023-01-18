@@ -1,19 +1,16 @@
+На сайт: eepm.ru
+
+как устанавливать
+https://losst.ru/ustanovka-wps-office-v-ubuntu-20-04
+
+
 Сделать поддержку внешних команд?
-Сделать, чтобы сценарии можно было запускать напрямую. — Включать соседний файл, если не запущен из epm?
 
 Пробовать локальный кэш — каталог, откуда брать пакеты для epm play, а не скачивать. Что-то подобное на ecryptmgr. Установка 1С и другого проприетарного.
 
 Не воспроизводится:
 epmqp --short wine
 (--short удаляет всё, что больше wine (не может правильно оторвать версию)
-
-p9 -> p10 notes:
-
-xargs: echo: terminated by signal 13
-E: Write error - write (32 Broken pipe)
-E: Failure running script xargs| (if [ -x /usr/bin/etckeeper ]; then etckeeper pre-install; fi)
-Error: Check an error and run epm release-upgrade again
-(потребовалось удалить etckeeper сначала)
 
 journalctl --vacuum-size=100M
 
@@ -29,12 +26,14 @@ https://manpages.ubuntu.com/manpages/bionic/man8/apt-mark.8.html
 " rpm http://"
 то имеем
 
+Там вообще apt-repo с багой
+
 # epm -sf /etc/fstab
 Locate contents index file(s) ...
  # apt-repo list
  # eget -O /tmp/eepm/http:/10.10.19.99/altrepos/contents_index rpm/http://10.10.19.99/altrepos//base/contents_index
  
-
+Запрос к базе?
 epm hs поиск с историей какой версией и changelog
 
 https://wiki.archlinux.org/index.php/Pacman/Tips_and_tricks_(Русский)

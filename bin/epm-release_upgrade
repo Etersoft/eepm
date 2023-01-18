@@ -81,7 +81,7 @@ __detect_alt_release_by_repo()
 {
 	local BRD=$(cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list \
 		| grep -v "^#" \
-		| egrep "[tpc][5-9]\.?[0-9]?/branch/" \
+		| grep -E "[tpc][5-9]\.?[0-9]?/branch/" \
 		| sed -e "s|.*\([tpc][5-9]\.\?[0-9]\?\)/branch.*|\1|g" \
 		| sort -u )
 	if [ "$(__wcount $BRD)" = "1" ] ; then
@@ -123,11 +123,8 @@ get_fix_release_pkg()
 	if [ "$TO" = "Sisyphus" ] ; then
 		TO="sisyphus"
 		echo "apt-conf-$TO"
-	elif [ "$TO" = "p10" ] ; then
-		true
-		#echo "apt-conf-$TO"
 	else
-		epmqp apt-conf-branch >/dev/null 2>/dev/null || echo "apt-conf-branch"
+		epm installed apt-conf-branch && echo "apt-conf-branch"
 	fi
 
 	if [ "$FORCE" == "--force" ] ; then
@@ -149,11 +146,15 @@ get_fix_release_pkg()
 	# workaround against obsoleted altlinux-release-sisyphus package from 2008 year
 	[ "$TOINSTALL" = "altlinux-release-sisyphus" ] && TOINSTALL="branding-alt-sisyphus-release"
 
-	# update if installed (just print package name here to include in the install list)
-	epm --quiet --short installed alt-gpgkeys 2>/dev/null
-	if epm --quiet --short -q etersoft-gpgkeys 2>/dev/null >/dev/null ; then
+	if epm installed etersoft-gpgkeys ; then
+		# TODO: we don't support LINUX@Etersoft for now
 		# leave etersoft-gpgkeys only if we have LINUX@Etersoft repo
-		epm rl | grep -q "LINUX@Etersoft" && echo etersoft-gpgkeys || echo alt-gpgkeys
+		#epm repo list | grep -q "LINUX@Etersoft" && echo "etersoft-gpgkeys" || echo "alt-gpgkeys"
+		epm --quiet repo comment "LINUX@Etersoft"
+		echo "alt-gpgkeys"
+	else
+		# update if installed (just print package name here to include in the install list)
+		epm query --short alt-gpgkeys 2>/dev/null
 	fi
 
 	if [ -n "$TOINSTALL" ] ; then
@@ -164,7 +165,9 @@ get_fix_release_pkg()
 		# problem
 		local AR="$(__get_conflict_release_pkg)"
 		if [ -n "$AR" ] && [ "$TOINSTALL" != "$AR" ] ; then
-			echo $AR-
+			#echo $AR-
+			# remove conflicts package right here to workaround against asking 'Yes, do as I say!' later
+			epm remove --nodeps $AR >/dev/null
 		fi
 	fi
 }
@@ -250,8 +253,10 @@ get_next_release()
 		echo "c8.1" ;;
 	"c8.1")
 		echo "c8.2" ;;
-	"c8.2")
-		echo "c9" ;;
+	"c8")
+		echo "c9f2" ;;
+	"c9f1")
+		echo "c9f2" ;;
 	*)
 		echo "$FROM" ;;
 	esac
@@ -274,9 +279,9 @@ __switch_alt_to_distro()
 	case "$*" in
 		"p6"|"p6 p7"|"t6 p7"|"c6 c7")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
+			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
 			__switch_repo_to $TO
-			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			__do_upgrade
 			end_change_alt_repo
 			docmd epm update-kernel
@@ -284,9 +289,9 @@ __switch_alt_to_distro()
 			;;
 		"p7"|"p7 p8"|"t7 p8"|"c7 c8")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
+			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
 			__switch_repo_to $TO
-			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			__do_upgrade
 			end_change_alt_repo
 			__check_system "$TO"
@@ -295,9 +300,9 @@ __switch_alt_to_distro()
 			;;
 		"c8"|"c8.1"|"c8.2"|"c8 c8.1"|"c8.1 c8.2"|"c8 c8.2")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
+			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
 			__switch_repo_to $TO
-			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			__do_upgrade
 			end_change_alt_repo
 			__check_system "$TO"
@@ -305,9 +310,9 @@ __switch_alt_to_distro()
 			;;
 		"p8 c8"|"p8 c8.1"|"p8 c8.2")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
+			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
 			__switch_repo_to $TO
-			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			if epm installed libcrypt ; then
 				# glibc-core coflicts libcrypt
 				docmd epm downgrade apt pam pam0_passwdqc glibc-core libcrypt- || fatal
@@ -318,9 +323,9 @@ __switch_alt_to_distro()
 			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			;;
-		"p8"|"p8 p9"|"t8 p9"|"c8 c9"|"c8 p9"|"c8.1 p9"|"c8.2 p9"|"p9 p9")
+		"p8"|"p8 p9"|"t8 p9"|"c8 c9"|"c8 p9"|"c8.1 p9"|"c8.2 p9"|"p9 p9"|"p9 c9f2")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
+			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
 			info "Workaround for https://bugzilla.altlinux.org/show_bug.cgi?id=35492 ..."
 			if epm installed gdb >/dev/null ; then
 				docmd epm remove gdb || fatal
@@ -328,7 +333,7 @@ __switch_alt_to_distro()
 			__switch_repo_to $TO
 			__do_upgrade
 			end_change_alt_repo
-			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			info "Run epm release-upgrade again for update to p10"
@@ -337,19 +342,19 @@ __switch_alt_to_distro()
 			info "Upgrade all packages to current $FROM repository"
 			__do_upgrade
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
+			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
 			__switch_repo_to $TO
 			__do_upgrade
 			end_change_alt_repo
-			docmd epm install rpm apt "$(get_fix_release_pkg "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm install rpm apt $(get_fix_release_pkg "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			__check_system "$TO"
 			docmd epm update-kernel -t std-def || fatal
 			;;
 		"p9 p8"|"c8.1 c8"|"c8.1 p8"|"p8 p8")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install "$(get_fix_release_pkg "$FROM")"
+			docmd epm install $(get_fix_release_pkg "$FROM")
 			__switch_repo_to $TO
-			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm downgrade rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			if epm installed libcrypt >/dev/null ; then
 				# glibc-core coflicts libcrypt
 				docmd epm downgrade apt rpm pam pam0_passwdqc glibc-core libcrypt- || fatal
@@ -361,9 +366,9 @@ __switch_alt_to_distro()
 			;;
 		"p9 c8"|"p9 c8.1"|"p9 c8.2")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install "$(get_fix_release_pkg "$FROM")"
+			docmd epm install $(get_fix_release_pkg "$FROM")
 			__switch_repo_to $TO
-			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm downgrade rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			#if epm installed libcrypt >/dev/null ; then
 			#	# glibc-core coflicts libcrypt
 			#	docmd epm downgrade apt rpm pam pam0_passwdqc glibc-core libcrypt- || fatal
@@ -375,19 +380,19 @@ __switch_alt_to_distro()
 			;;
 		"p10 p9")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install "$(get_fix_release_pkg "$FROM")"
+			docmd epm install $(get_fix_release_pkg "$FROM")
 			__switch_repo_to $TO
-			docmd epm downgrade rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm downgrade rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
 			end_change_alt_repo
 			__check_system "$TO"
 			docmd epm upgrade || fatal
 			;;
-		"Sisyphus p8"|"Sisyphus p9"|"Sisyphus p10"|"Sisyphus c8"|"Sisyphus c8.1")
+		"Sisyphus p8"|"Sisyphus p9"|"Sisyphus p10"|"Sisyphus c8"|"Sisyphus c8.1"|"Sisyphus c9f2")
 			confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install "$(get_fix_release_pkg "$FROM")"
+			docmd epm install $(get_fix_release_pkg "$FROM")
 			__switch_repo_to $TO
-			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
 			end_change_alt_repo
 			__check_system "$TO"
@@ -395,17 +400,17 @@ __switch_alt_to_distro()
 			;;
 		"p8 Sisyphus"|"p9 Sisyphus"|"p10 Sisyphus"|"10 Sisyphus"|"Sisyphus Sisyphus")
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
-			docmd epm install rpm apt "$(get_fix_release_pkg "$FROM")" || fatal
+			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
 			docmd epm upgrade || fatal
 			# TODO: epm_reposwitch??
 			__replace_alt_version_in_repo "$FROM/branch/" "$TO/"
 			__alt_repofix "alt"
 			[ -s /etc/rpm/macros.d/p10 ] && rm -fv /etc/rpm/macros.d/p10
 			__epm_ru_update || fatal
-			docmd epm install rpm apt "$(get_fix_release_pkg --force "$TO")" || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			#local ADDPKG
 			#ADDPKG=$(epm -q --short make-initrd sssd-ad 2>/dev/null)
-			#docmd epm install librpm7 librpm rpm apt $ADDPKG "$(get_fix_release_pkg --force "$TO")" ConsoleKit2- || fatal "Check an error and run again"
+			#docmd epm install librpm7 librpm rpm apt $ADDPKG $(get_fix_release_pkg --force "$TO") ConsoleKit2- || fatal "Check an error and run again"
 			docmd epm $force_yes $non_interactive upgrade || fatal "Check the error and run '# epm release-upgrade' again or just '# epm upgrade'"
 			docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
 			end_change_alt_repo

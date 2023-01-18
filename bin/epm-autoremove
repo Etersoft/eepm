@@ -257,7 +257,7 @@ case $DISTRNAME in
 		# remove old kernels only by a default way
 		[ -n "$1" ] && return
 
-		docmd epm remove-old-kernels $(subst_option non_interactive --auto)
+		docmd epm remove-old-kernels $(subst_option non_interactive -y)
 
 		if [ -z "$direct" ] ; then
 			echo
@@ -274,7 +274,7 @@ esac
 
 case $PMTYPE in
 	apt-dpkg|aptitude-dpkg)
-		sudocmd apt-get autoremove $dryrun
+		sudocmd apt-get autoremove $(subst_option non_interactive -y) $dryrun
 		;;
 	aura)
 		if [ -n "$dryrun" ] ; then
@@ -293,7 +293,7 @@ case $PMTYPE in
 			# FIXME: package-cleanup have to use stderr for errors
 			local PKGLIST=$(package-cleanup -q --leaves | grep -v "^eepm-")
 			[ -n "$PKGLIST" ] || break
-			showcmd epm remove $PKGLIST
+			docmd epm remove $PKGLIST
 		done
 		;;
 	dnf-rpm)

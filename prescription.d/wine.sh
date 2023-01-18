@@ -24,8 +24,8 @@ ONLY32=''
 epm install winetricks || exit 1
 WTVER="$(epm print version for package winetricks)"
 if [ "$(epm print compare package version "$WTVER" "20210206")" = "1" ] ; then
-    PKGNAMES="$MAIN-full $MAIN-twain"
-    PKGNAMES32="i586-$MAIN i586-$MAIN-gl i586-$MAIN-twain"
+    PKGNAMES="$MAIN-full"
+    PKGNAMES32="i586-$MAIN"
 else
     # old naming scheme
     PKGNAMES="$MAIN lib$MAIN lib$MAIN-gl lib$MAIN-twain"

@@ -47,7 +47,7 @@ __epm_removerepo_alt_grepremove()
 __epm_removerepo_alt()
 {
 	local repo="$*"
-	[ -n "$repo" ] || fatal "No such repo or task. Use epm repo remove <autoimports|archive|tasks|TASKNUMBER>"
+	[ -n "$repo" ] || fatal "No such repo or task. Use epm repo remove <regexp|autoimports|archive|tasks|TASKNUMBER>"
 
 	assure_exists apt-repo
 
@@ -105,7 +105,7 @@ case $PMTYPE in
 		assure_exists apt-add-repository software-properties-common
 		set_sudo
 
-		if [ "$DISTRNAME" = "AstraLinux" ] ; then
+		if [ "$DISTRNAME" = "AstraLinuxCE" ] || [ "$DISTRNAME" = "AstraLinuxSE" ] ; then
 			echo "Use workaround for AstraLinux"
 			[ -n "$*" ] || fatal "empty repo name"
 			# aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
@@ -140,7 +140,7 @@ case $PMTYPE in
 		info "You need remove repo from /etc/pacman.conf"
 		;;
 	npackd)
-		sudocmd npackdcl remove-repo --url="$@"
+		sudocmd npackdcl remove-repo --url="$*"
 		;;
 	winget)
 		sudocmd winget source remove "$@"

@@ -19,11 +19,12 @@ PRODUCT=anydesk
 
 # install all requires packages before packing (the list have got with rpmreqs anydesk)
 epm install --skip-installed fontconfig glib2 libatk libcairo libfreetype libgdk-pixbuf libgio libGL libGLU libgtk+2 libICE libpango libpolkit \
-    libSM libX11 libxcb libXdamage libXext libXfixes libXi libxkbfile libXmu libXrandr libXrender libXt libXtst polkit
+    libSM libX11 libxcb libXdamage libXext libXfixes libXi libxkbfile libXmu libXrandr libXrender libXt libXtst polkit \
+    libminizip libgtkglext libpangox1.0-compat
 
 subst '1iAutoProv:no' $SPEC
 
-remove_file usr/share/anydesk/files/init/anydesk
+remove_file /usr/share/anydesk/files/init/anydesk
 
 # put service file to the normal place
 mkdir -p $BUILDROOT/etc/systemd/system/
@@ -49,7 +50,5 @@ for i in $BUILDROOT/usr/libexec/anydesk ; do
 done
 
 # preloaded from /usr/lib64/anydesk/, drop external requires
-subst '1i%filter_from_requires /^libpangox-1.0.so.0.*/d' $SPEC
-subst '1i%filter_from_requires /^libgdkglext-x11-1.0.so.0.*/d' $SPEC
-subst '1i%filter_from_requires /^libgtkglext-x11-1.0.so.0.*/d' $SPEC
+filter_from_requires libpangox-1.0.so.0 libgdkglext-x11-1.0.so.0 libgtkglext-x11-1.0.so.0
 

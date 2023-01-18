@@ -4,5 +4,7 @@
 BUILDROOT="$1"
 SPEC="$2"
 
+. $(dirname $0)/common.sh
+
 # https://bugzilla.altlinux.org/show_bug.cgi?id=39099
-subst '1i%filter_from_requires /^.opt.Dialog$/d' $SPEC
+filter_from_requires '\\/opt\\/Dialog'

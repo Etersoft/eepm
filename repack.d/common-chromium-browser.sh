@@ -13,7 +13,7 @@ set_alt_alternatives()
 {
     local priority="$1"
     # needed alternatives
-    subst '1iProvides:webclient' $SPEC
+    subst '1iProvides: webclient' $SPEC
 
     subst "s|%files|%files\n/etc/alternatives/packages.d/$PRODUCT|" $SPEC
     mkdir -p $BUILDROOT/etc/alternatives/packages.d/
@@ -47,7 +47,7 @@ copy_icons_to_share()
 
 cleanup()
 {
-    subst '1iAutoProv:no' $SPEC
+    subst '1iAutoProv: no' $SPEC
 
     # remove cron update
     remove_file /etc/cron.daily/$PRODUCTCUR
@@ -73,8 +73,9 @@ use_system_xdg()
 install_deps()
 {
     # install all requires packages before packing (the list have got with rpmreqs package | xargs echo)
-    epm install --skip-installed at-spi2-atk file GConf glib2 grep libatk libat-spi2-core libcairo libcups libdbus libdrm libexpat libgbm libgdk-pixbuf libgio libgtk+3 libnspr libnss libpango \
-            libX11 libxcb libXcomposite libXcursor libXdamage libXext libXfixes libXi libXrandr libXrender libXtst sed which xdg-utils xprop
+    epm install --skip-installed at-spi2-atk file GConf glib2 grep libatk libat-spi2-core libalsa libcairo libcups libdbus libdrm libexpat libgbm libgdk-pixbuf libgio libgtk+3 libnspr libnss libpango \
+            libX11 libxcb libXcomposite libXcursor libXdamage libXext libXfixes libXi libXrandr libXrender libXtst sed which xdg-utils xprop \
+            libsecret
 }
 
 
@@ -105,14 +106,3 @@ add_bin_commands()
     add_bin_link_command $PRODUCT $PRODUCTCUR
 }
 
-
-fix_chrome_sandbox()
-{
-    local sandbox="$1"
-    # Set SUID for chrome-sandbox if userns_clone is not supported
-    userns_path='/proc/sys/kernel/unprivileged_userns_clone'
-    userns_val="$(cat $userns_path 2>/dev/null)"
-    [ "$userns_val" = '1' ] && return
-    [ -n "$sandbox" ] || sandbox=$PRODUCTDIR/chrome-sandbox
-    chmod 4755 $BUILDROOT/$sandbox
-}

@@ -1,0 +1,10 @@
+PRETTY_NAME="Astra Linux (Orel 2.12)"
+NAME="Astra Linux (Orel)"
+ID=astra
+ID_LIKE=debian
+ANSI_COLOR="1;31"
+HOME_URL="http://www.astra-linux.com/"
+SUPPORT_URL="http://www.astra-linux.com/support"
+VARIANT_ID=orel
+VARIANT=Orel
+VERSION_ID=2.12

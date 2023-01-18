@@ -6,33 +6,131 @@ fatal()
     exit 1
 }
 
-if [ "$1" = "--remove" ] ; then
-    epm remove $PKGNAME
-    exit
+check_url_is_accessible()
+{
+    local res
+    epm tool eget --check "$1"
+}
+
+is_supported_arch()
+{
+    local i
+
+    # skip checking if there are no arches
+    [ -n "$SUPPORTEDARCHES" ] || return 0
+    [ -n "$1" ] || return 0
+
+    for i in $SUPPORTEDARCHES ; do
+        [ "$i" = "$1" ] && return 0
+    done
+    return 1
+}
+
+# update URL variable
+update_url_if_need_mirrored()
+{
+    local MIRROR="$1"
+    local SECONDURL
+    check_url_is_accessible "$URL" && return
+    if [ -n "$MIRROR" ] ; then
+        check_url_is_accessible "$MIRROR" && URL="$MIRROR"
+        return
+    fi
+
+    MIRROR="https://mirror.eterfund.ru"
+    SECONDURL="$(echo "$URL" | sed -e "s|^.*://|$MIRROR/|")"
+    check_url_is_accessible "$SECONDURL" && URL="$SECONDURL" && return
+
+    MIRROR="https://mirror.eterfund.org"
+    SECONDURL="$(echo "$URL" | sed -e "s|^.*://|$MIRROR/|")"
+    check_url_is_accessible "$SECONDURL" && URL="$SECONDURL" && return
+
+}
+
+get_latest_version()
+{
+    URL="https://eepm.ru/app-versions"
+    update_url_if_need_mirrored
+    epm tool eget -q -O- "$URL/$1"
+}
+
+print_product_alt()
+{
+    [ -n "$1" ] || return
+    shift
+    echo "$*"
+}
+
+get_pkgvendor()
+{
+    epm print field Vendor for package $1
+}
+
+case "$1" in
+    "--remove")
+        epm remove $PKGNAME
+        exit
+        ;;
+    "--help")
+        if [ -n "$PRODUCTALT" ] ; then
+            echo "Help about additional parameters."
+            echo "Use epm play $(basename $0 .sh) [$(echo "$PRODUCTALT" | sed -e 's@ @|@g')]"
+        fi
+        [ -n "$TIPS" ] && echo "$TIPS"
+        exit
+        ;;
+    "--package-name")
+        [ -n "$DESCRIPTION" ] || exit 0
+        echo "$PKGNAME"
+        exit
+        ;;
+    "--product-alternatives")
+        print_product_alt $PRODUCTALT
+        exit
+        ;;
+    "--installed")
+        epm installed $PKGNAME
+        exit
+        ;;
+    "--installed-version")
+        epm print version for package $PKGNAME
+        exit
+        ;;
+    "--description")
+        is_supported_arch "$2" || exit 0
+        echo "$DESCRIPTION"
+        exit
+        ;;
+    "--update")
+        if ! epm installed $PKGNAME ; then
+            echo "Skipping update of $PKGNAME (package is not installed)"
+            exit
+        fi
+        pkgver="$(epm print version for package $PKGNAME)"
+        if [ -n "$pkgver" ] && [ "$(get_latest_version $PKGNAME)" = "$pkgver" ] ; then
+            echo "There is no newer version of $PKGNAME than installed version $pkgver."
+            exit
+        fi
+        ;;
+    "--run")
+        # just pass
+        ;;
+    *)
+        fatal "Unknown command '$1'. Use this script only via epm play."
+        ;;
+esac
+
+
+# legacy compatibility and support direct run the script
+if [ -z "$DISTRVENDOR" ] ; then
+    export DISTRVENDOR="epm print info"
+    if [ -x "../bin/epm" ] ; then
+        export PATH="$(realpath ../bin):$PATH"
+    fi
 fi
 
-if [ "$1" = "--package" ] ; then
-    echo "$PKGNAME"
-    exit
+if [ -z "$SUDO" ] && [ "$UID" != "0" ] ; then
+    SUDO="sudo"
 fi
 
-if [ "$1" = "--installed" ] ; then
-    epm installed $PKGNAME
-    exit
-fi
-
-if [ "$1" = "--description" ] ; then
-     echo "$DESCRIPTION"
-     exit
-fi
-
-
-[ "$1" != "--run" ] && [ "$1" != "--update" ] && fatal "Unknown command $1"
-
-if [ "$1" = "--update" ] ; then
-     if ! epm installed $PKGNAME ; then
-         echo "Skipping update of $PKGNAME (package is not installed)"
-         exit
-     fi
-fi
-
+is_supported_arch "$(epm print info -a)" || fatal "Only '$SUPPORTEDARCHES' architectures is supported"

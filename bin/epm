@@ -19,6 +19,7 @@
 
 PROGDIR=$(dirname "$0")
 PROGNAME=$(basename "$0")
+# TODO: pwd for ./epm and which for epm
 [ "$PROGDIR" = "." ] && PROGDIR=$(pwd)
 if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
     PROGDIR=""
@@ -73,7 +74,7 @@ print_version()
 {
         echo "EPM package manager version @VERSION@  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
-        echo "Copyright (c) Etersoft 2012-2021"
+        echo "Copyright (c) Etersoft 2012-2022"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 
@@ -95,7 +96,8 @@ noscripts=
 short=
 direct=
 sort=
-non_interactive=
+non_interactive=$EPM_AUTO
+interactive=
 force_yes=
 skip_installed=
 skip_missed=
@@ -263,7 +265,7 @@ check_command()
         epm_cmd=update
         direct_args=1
         ;;
-    addrepo|ar)               # HELPCMD: add package repo (etersoft, autoimports, archive 2017/12/31); run with param to get list
+    addrepo|ar|--add-repo)    # HELPCMD: add package repo (etersoft, autoimports, archive 2017/12/31); run with param to get list
         epm_cmd=addrepo
         direct_args=1
         ;;
@@ -357,6 +359,10 @@ check_command()
         epm_cmd=print
         direct_args=1
         ;;
+    tool)                     # HELPCMD: run embedded tool (f.i., epm tool eget)
+        epm_cmd=tool
+        direct_args=1
+        ;;
     repack)                   # HELPCMD: repack rpm to local compatibility
         epm_cmd=repack
         ;;
@@ -388,6 +394,7 @@ check_option()
     case $1 in
     -v|--version)         # HELPOPT: print version
         [ -n "$epm_cmd" ] && return 1
+        [ -n "$short" ] && echo "$EPMVERSION" | sed -e 's|-.*||' && exit 0
         print_version
         exit 0
         ;;
@@ -442,6 +449,11 @@ check_option()
         ;;
     --auto|--assumeyes|--non-interactive)  # HELPOPT: non interactive mode
         non_interactive="--auto"
+        interactive=""
+        ;;
+    --interactive)  # HELPOPT: interactive mode (ask before any operation)
+        interactive="--interactive"
+        non_interactive=""
         ;;
     --force-yes)           # HELPOPT: force yes in a danger cases (f.i., during release upgrade)
         force_yes="--force-yes"
@@ -501,6 +513,11 @@ for opt in "$@" ; do
         check_filenames "$opt"
     fi
 done
+
+if [ -n "$quiet" ] ; then
+    verbose=''
+    EPM_VERBOSE=''
+fi
 
 # fill
 export EPM_OPTIONS="$nodeps $force $non_interactive"

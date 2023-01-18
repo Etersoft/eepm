@@ -30,7 +30,12 @@ warmup_hibase
 
 case $PMTYPE in
 	apt-rpm)
-		sudocmd apt-get update || return
+		# TODO: hack against cd to cwd in apt-get on ALT
+		cd /
+		sudocmd apt-get update
+		local ret="$?"
+		cd - >/dev/null
+		return $ret
 		#sudocmd apt-get -f install || exit
 		;;
 	apt-dpkg)
@@ -49,11 +54,11 @@ case $PMTYPE in
 		;;
 	yum-rpm)
 		# just skipped
-		[ -n "$verbose" ] && info "update command is stubbed for yum"
+		[ -z "$verbose" ] || info "update command is stubbed for yum"
 		;;
 	dnf-rpm)
 		# just skipped
-		[ -n "$verbose" ] && info "update command is stubbed for dnf"
+		[ -z "$verbose" ] || info "update command is stubbed for dnf"
 		;;
 	urpm-rpm)
 		sudocmd urpmi.update -a
@@ -65,7 +70,7 @@ case $PMTYPE in
 		sudocmd aura -A -y
 		;;
 	zypper-rpm)
-		sudocmd zypper refresh
+		sudocmd zypper $(subst_option non_interactive --non-interactive) refresh
 		;;
 	emerge)
 		sudocmd emerge --sync

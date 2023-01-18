@@ -6,6 +6,8 @@ SPEC="$2"
 
 PRODUCTDIR=/opt/teamviewer
 
+. $(dirname $0)/common.sh
+
 if [ "$($DISTRVENDOR -a)" = "x86_64" ] ; then
     # 32 bit
     rm -fv $BUILDROOT/opt/teamviewer/tv_bin/script/libdepend
@@ -13,7 +15,7 @@ if [ "$($DISTRVENDOR -a)" = "x86_64" ] ; then
 fi
 
 # comment out libexo (we have libexo-gtk3 only now)
-REQUIRES="xdg-utils,libdbus,libqt5-core,libqt5-dbus,libqt5-gui,libqt5-network,libqt5-qml,libqt5-quick,libqt5-webkit,libqt5-webkitwidgets,libqt5-widgets,libqt5-x11extras"
+REQUIRES="xdg-utils,libdbus,libqt5-core,libqt5-dbus,libqt5-gui,libqt5-network,libqt5-qml,libqt5-quick,libqt5-webkit,libqt5-webkitwidgets,libqt5-widgets,libqt5-x11extras,libminizip"
 subst "s|^\(Name: .*\)$|# Converted from original package requires\nRequires:$REQUIRES\n\1|g" $SPEC
 
 # TODO: check if we missed something from it
@@ -52,17 +54,15 @@ rm -rfv $BUILDROOT/opt/teamviewer/tv_bin/script/teamviewerd.sysv
 subst "s|.*/opt/teamviewer/tv_bin/script/teamviewerd.sysv.*||" $SPEC
 
 # see https://bugzilla.altlinux.org/show_bug.cgi?id=39891
-subst '1i%filter_from_requires /^\\/bin\\/ip/d' $SPEC
+filter_from_requires '\\/bin\\/ip'
 
 # ignore embedded libs
-for i in libQt5 ; do
-    subst "1i%filter_from_requires /^$i.*/d" $SPEC
-done
+filter_from_requires libQt5
 
 epm assure patchelf || exit
 for i in $BUILDROOT$PRODUCTDIR/tv_bin/RTlib/{libicui18n.so.*,libicuuc.so.*} ; do
     a= patchelf --set-rpath '$ORIGIN/' $i
 done
 
-rm -fv $BUILDROOT$PRODUCTDIR/tv_bin/RTlib/qt/qml/QtWebEngine/libqtwebengineplugin.so.debug
-subst "s|.*libqtwebengineplugin.so.debug.*||" $SPEC
+remove_file $PRODUCTDIR/tv_bin/RTlib/qt/qml/QtWebEngine/libqtwebengineplugin.so.debug
+remove_file $PRODUCTDIR/tv_bin/RTlib/qt/qml/QtWebChannel/libdeclarative_webchannel.so.debug

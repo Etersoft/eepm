@@ -6,5 +6,7 @@ SPEC="$2"
 
 PRODUCT=webex
 
+. $(dirname $0)/common.sh
+
 # drop external requires
-subst '1i%filter_from_requires /^libutil.so.*/d' $SPEC
+filter_from_requires libutil.so

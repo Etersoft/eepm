@@ -1,0 +1,89 @@
+# redefined during rpmbps (originally set from rpm-build-intro)
+%define pkgsystem apt-rpm
+
+Name: eepm
+Version: 3.26.2
+Release: alt1
+
+Summary: Etersoft EPM package manager
+
+License: AGPL-3.0+
+Group: System/Configuration/Packaging
+Url: http://wiki.etersoft.ru/EPM
+
+Packager: Vitaly Lipatov <lav@altlinux.ru>
+
+# git clone https://github.com/Etersoft/eepm.git
+Source: ftp://updates.etersoft.ru/pub/Etersoft/Sisyphus/sources/tarball/%name-%version.tar
+
+BuildArchitectures: noarch
+
+# use distr_vendor from it
+BuildRequires: rpm-build-intro
+
+%if "%_vendor" == "alt"
+Obsoletes: epm
+Provides: epm = %EVR
+
+# FIXHERE: Replace with target platform package manager
+Requires: apt rpm
+%endif
+
+Requires: which
+
+%description
+Etersoft EPM is the package manager for any platform
+and any platform version. It provides
+universal interface to any package manager.
+Can be useful for system administrators working
+with various distros.
+
+See detailed description here: http://wiki.etersoft.ru/EPM
+
+%package repack
+Summary: Etersoft EPM package manager (repack requirements)
+Group: System/Configuration/Packaging
+Requires: %name = %EVR
+Requires: erc alien dpkg patchelf
+Requires: /usr/bin/rpmbuild
+
+%description repack
+This package has requirements needed for using epm repack on ALT
+(repack rpm packages and repack/install deb packages).
+
+See https://bugzilla.altlinux.org/show_bug.cgi?id=34308 for
+a discussion about extra requirements.
+
+%package yum
+Summary: yum like frontend for Etersoft EPM package manager
+Group: System/Configuration/Packaging
+Requires: %name = %EVR
+Conflicts: yum
+
+%description yum
+This package contains yum like frontend for Etersoft EPM package manager.
+
+
+%prep
+%setup
+
+%install
+
+
+%files
+%dir "/opt/"
+%dir /opt/
+%dir /opt
+%doc README.md TODO LICENSE
+%dir %_sysconfdir/eepm/
+%dir %_sysconfdir/eepm/play.d/
+
+%changelog
+* Sat Aug 20 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.2-alt1
+- add epm --short --version
+- epm-autoremove: enable real autoremove on yum based systems
+- fix $@ using for set vars (eterbug 15846)
+- epm repack icq: fix for ignore empty download
+- epm full-upgrade: do fatal on errors
+- epm play: return 0 if a package is already installed from the repo
+

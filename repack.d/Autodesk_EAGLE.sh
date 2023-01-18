@@ -51,3 +51,5 @@ epm assure patchelf || exit
 for i in $BUILDROOT/$PRODUCTDIR/lib/{libssl.so,libssl.so.1.*} ; do
     a= patchelf --set-rpath '$ORIGIN/' $i
 done
+
+epm install --skip-installed coreutils fontconfig glib2 libalsa libcom_err libcups libdrm libexpat libfreetype libGL libkeyutils libkrb5 libnspr libnss libX11 libxcb libXrandr zlib

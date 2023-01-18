@@ -37,8 +37,6 @@ epm_upgrade()
 			load_helper epm-removerepo
 			load_helper epm-Install
 
-			try_change_alt_repo
-			epm_addrepo "$@"
 			local installlist="$(get_task_packages $*)"
 			# hack: drop -devel packages to avoid package provided by multiple packages
 			installlist="$(estrlist reg_exclude ".*-devel .*-devel-static" "$installlist")"
@@ -46,6 +44,13 @@ epm_upgrade()
 			# install only installed packages (simulate upgrade packages)
 			installlist="$(get_only_installed_packages "$installlist")"
 			[ -n "$verbose" ] && info "Packages to upgrade: $installlist"
+			if [ -z "$installlist" ] ; then
+				warning "There is no installed packages for upgrade from task $*"
+				return 22
+			fi
+
+			try_change_alt_repo
+			epm_addrepo "$@"
 			(pkg_names="$installlist" epm_Install) || fatal "Can't update repo"
 			epm_removerepo "$@"
 			end_change_alt_repo
@@ -106,7 +111,7 @@ epm_upgrade()
 		CMD="urpmi --update --auto-select $*"
 		;;
 	zypper-rpm)
-		CMD="zypper dist-upgrade"
+		CMD="zypper $(subst_option non_interactive --non-interactive) dist-upgrade"
 		;;
 	pacman)
 		CMD="pacman -S -u $force"
@@ -131,7 +136,7 @@ epm_upgrade()
 		;;
 	homebrew)
 		#CMD="brew upgrade"
-		docmd "brew upgrade $(brew outdated)"
+		docmd brew upgrade $(brew outdated)
 		return
 		;;
 	opkg)

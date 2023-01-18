@@ -25,6 +25,8 @@ __replace_text_in_alt_repo()
 	local i
 	for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
 		[ -s "$i" ] || continue
+		# TODO: don't change file if untouched
+		#grep -q -- "$1" "$i" || continue
 		regexp_subst "$1" "$i"
 	done
 }
@@ -44,11 +46,14 @@ __repofix_filter_vendor()
 	local br="$1"
 	br="$(echo "$br" | sed -e "s|\..*||")"
 	case $br in
-		c8)
+		c8*)
 			br="cert8"
 			;;
-		c9)
+		c9*)
 			br="cert9"
+			;;
+		Sisyphus)
+			br="alt"
 			;;
 	esac
 	echo "$br"
@@ -60,7 +65,7 @@ __replace_alt_version_in_repo()
 	local i
 	assure_exists apt-repo
 	#echo "Upgrading $DISTRNAME from $1 to $2 ..."
-	a='' apt-repo list | sed -e "s|\($1\)|{\1}->{$2}|g" | grep -E --color -- "$1"
+	a='' apt-repo list | sed -E -e "s|($1)|{\1}->{$2}|g" | grep -E --color -- "$1"
 	# ask and replace only we will have changes
 	if a='' apt-repo list | grep -E -q -- "$1" ; then
 		__replace_text_in_alt_repo "/^ *#/! s!$1!$2!g"
@@ -83,7 +88,6 @@ __alt_repofix()
 {
 	local TO="$1"
 	epm --quiet repo fix >/dev/null
-
 	if [ -n "$TO" ] ; then
 		# TODO: switch it in repo code
 		TO="$(__repofix_filter_vendor "$TO")"
@@ -96,10 +100,20 @@ epm_reposwitch()
 {
 	local TO="$1"
 	[ -n "$TO" ] || fatal "run repo switch with arg (p9, p10, Sisyphus)"
-	__replace_alt_version_in_repo "Sisyphus/" "$TO/branch/"
-	__replace_alt_version_in_repo "[tpc][5-9]\.?[0-9]?/branch/" "$TO/branch/"
-	__replace_alt_version_in_repo "p10\.?[0-9]?/branch/" "$TO/branch/"
-	__alt_repofix $TO
+	[ "$TO" = "sisyphus" ] && TO="Sisyphus"
+	if [ "$TO" = "Sisyphus" ] ; then
+		__replace_alt_version_in_repo "[tpc][5-9]\.?[0-9]?/branch/" "$TO/"
+		__replace_alt_version_in_repo "p10\.?[0-9]?/branch/" "$TO/"
+	else
+		__replace_alt_version_in_repo "Sisyphus/" "$TO/branch/"
+		__replace_alt_version_in_repo "[tpc][5-9]\.?[0-9]?/branch/" "$TO/branch/"
+		if [ "$TO" != "p10" ] ; then
+			__replace_alt_version_in_repo "p10\.?[0-9]?/branch/" "$TO/branch/"
+		fi
+	fi
+
+	__alt_repofix "$TO"
+
 	if [ "$TO" = "p10" ] ; then
 		echo '%_priority_distbranch p10' >/etc/rpm/macros.d/p10
 	else

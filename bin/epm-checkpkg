@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2009, 2012, 2013, 2014, 2016, 2018  Etersoft
-# Copyright (C) 2009, 2012, 2013, 2014, 2016, 2018  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2009, 2012, 2013, 2014, 2016, 2018, 2022  Etersoft
+# Copyright (C) 2009, 2012, 2013, 2014, 2016, 2018, 2022  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -59,6 +59,22 @@ check_pkg_integrity()
 	esac
 }
 
+__epm_check_all_pkgs()
+{
+	local j cl
+	#local play_installed="$(epm play --list-installed-packages)"
+	epm qa --short | xargs -n20 | while read cl ; do
+		#cl="$(estrlist exclude "$play_installed" "$i")"
+		__epm_check_installed_pkg $cl && continue
+		# check each package
+		for j in $cl ; do
+			__epm_check_installed_pkg $j && continue
+			# TODO: check play installed too
+			epm --auto reinstall $j </dev/null || exit
+		done
+	done
+}
+
 __epm_check_installed_pkg()
 {
 case $PMTYPE in
@@ -83,6 +99,11 @@ esac
 
 epm_checkpkg()
 {
+	if [ "$1" = "--all" ] ; then
+		__epm_check_all_pkgs
+		return
+	fi
+
 	if [ -n "$pkg_names" ] ; then
 		# TODO: если есть / или расширение, это отсутствующий файл
 		info "Suggest $pkg_names are name(s) of installed package(s)"

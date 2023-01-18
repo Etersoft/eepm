@@ -1,0 +1,54 @@
+#!/bin/sh
+#
+# Copyright (C) 2022  Etersoft
+# Copyright (C) 2022  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+
+
+epm_tool()
+{
+    local WHAT="$1"
+    shift
+
+    case "$WHAT" in
+        "")
+            fatal "Use epm tool help to get help."
+            ;;
+        "-h"|"--help"|"help")
+cat <<EOF
+  Examples:
+    epm tool eget
+    epm tool estrlist
+EOF
+            ;;
+        "eget")
+            showcmd eget "$@"
+            eget "$@"
+            ;;
+        "estrlist")
+            showcmd estrlist "$@"
+            estrlist "$@"
+            ;;
+        "json")
+            showcmd json "$@"
+            $SHAREDIR/tools_json "$@"
+            ;;
+        *)
+            fatal "Unknown command $ epm tool $WHAT. Use epm print help for get help."
+            ;;
+    esac
+}

@@ -1,8 +1,8 @@
-# from rpm-build-intro
+# redefined during rpmbps (originally set from rpm-build-intro)
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.17.0
+Version: 3.28.7
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -21,13 +21,17 @@ BuildArchitectures: noarch
 # use distr_vendor from it
 BuildRequires: rpm-build-intro
 
+%if "%_vendor" == "alt"
 Obsoletes: epm
 Provides: epm = %EVR
 
-%if "%_vendor" == "alt"
 # FIXHERE: Replace with target platform package manager
 Requires: apt rpm
+# TODO: don't use at all
+Requires: apt-repo
 %endif
+
+Requires: which
 
 %description
 Etersoft EPM is the package manager for any platform
@@ -42,7 +46,7 @@ See detailed description here: http://wiki.etersoft.ru/EPM
 Summary: Etersoft EPM package manager (repack requirements)
 Group: System/Configuration/Packaging
 Requires: %name = %EVR
-Requires: fakeroot alien dpkg patchelf
+Requires: erc alien dpkg patchelf
 Requires: /usr/bin/rpmbuild
 
 %description repack
@@ -148,6 +152,458 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Sun Jan 08 2023 Vitaly Lipatov <lav@altlinux.ru> 3.28.7-alt1
+- epm repack librewolf: install required packages only on ALT
+- epm repack Telegram: hide locally created desktop file (ALT bug 42402)
+- epm repack meridius: fix packing
+
+* Fri Dec 30 2022 Vitaly Lipatov <lav@altlinux.ru> 3.28.6-alt1
+- epm play kyodialog: fix erc req
+- epm-sh-functions: call the program internally without bash
+
+* Fri Dec 30 2022 Vitaly Lipatov <lav@altlinux.ru> 3.28.5-alt1
+- epm play: add librewolf support
+- epm play wpsoffice: get app version from Arch repo
+
+* Wed Dec 28 2022 Vitaly Lipatov <lav@altlinux.ru> 3.28.4-alt1
+- epm play: add Kyocera printer driver
+- distr_info: add MOC/MeSh support
+- tests: add os-release tests
+- epm play master-pdf-editor: add MOC support
+- epm repack pantum: add libjpeg8 requires
+
+* Mon Dec 26 2022 Vitaly Lipatov <lav@altlinux.ru> 3.28.3-alt1
+- epm repack: add gitlab-runner repack
+- epm play brave: add support for dev channel, do fallback to beta if release is missed
+- epm autoremove: fix on deb systems (eterbug #16189)
+- epm play gitlab-runner: repack on ALT
+- epm repack trueconf: fix repack on Sisyphus (remove libtbbbind requires missed libhwloc.so.5)
+
+* Fri Dec 23 2022 Vitaly Lipatov <lav@altlinux.ru> 3.28.2-alt1
+- epm play: enable install chrome-remote-desktop
+- spec: require apt-repo on ALT
+- epm-install: restore workaround for install deb packages without apt-get (for old Ubuntu)
+
+* Tue Dec 20 2022 Vitaly Lipatov <lav@altlinux.ru> 3.28.1-alt1
+- epm requires: allow show also for non installed packages, improvements
+- epm play: add iptvnator (ALT bug 44047)
+- epm repack xnview: improve packing requires
+
+* Sat Dec 17 2022 Vitaly Lipatov <lav@altlinux.ru> 3.28.0-alt1
+- epm play r7office: fix install icons and associations (ALT bug 44093)
+- epm repack teamviewer: fix packing
+- epm repack rstudio: fix packing
+- epm repack meridius: remove unused discord integration (ALT bug 44251)
+- epm install: add --interactive support
+- epm ei: ask before install a package
+- epm play trueconf: drop unneeded workaround for install with --noscripts
+- epm requires: add support for --short
+- epm install: add workaround for --noscripts when using apt for additional requires
+
+* Fri Dec 16 2022 Vitaly Lipatov <lav@altlinux.ru> 3.27.6-alt1
+- epm play ktalk: fix package name (ktalk2 now) (ALT bug 44230)
+- epm repack: clean created tmp dir
+- epm repack: fixes for ktalk (ALT bug 43486)
+- epm play: fix print description
+
+* Fri Dec 16 2022 Vitaly Lipatov <lav@altlinux.ru> 3.27.5-alt1
+- distr_info: add --full-version
+- distr_info: fix Orel/orel checking for AstraLinux
+- epm repack vkteams: fix packing
+- epm play: add VK messenger
+- epm repack vkteams: prevent local .desktop creating (ALT bug 43779)
+- epm repack icq: prevent local .desktop creating (ALT bug 44250)
+- epm repack: ignore mono autoreq in generic-appimage.sh (ALT bug 43993)
+
+* Thu Dec 15 2022 Vitaly Lipatov <lav@altlinux.ru> 3.27.4-alt1
+- remove dot in the end of wiki URL
+- epm play yandex-browser-codecs-ffmpeg-extra: fix repack
+- epm play: check if need update repo before install
+- epm play: use trap EXIT to remove tmp files
+- epm play pycharm-professional: fix install (ALT bug 44010)
+- epm play: print description only for applications with supported arch (ALT bug 43932)
+- epm play meridus: add support for install a given version
+- epm play: update flyview install
+- epm play flyview-server: add postinstall todo
+- epm repack: add support for pantum
+- epm repack brave-browser: fix repacking with broken cpio 2.13
+- epm repack: add support for brscanads2200ads2700w
+- epm repack: add libappindicator-gtk3 requirements for rustdesk
+- epm repack zoom: fix missed libffmpeg.so (ALT bug 44533)
+
+* Thu Oct 27 2022 Vitaly Lipatov <lav@altlinux.ru> 3.27.3-alt1
+- epm repack spotify-client: fix icon packing error
+
+* Sat Oct 15 2022 Vitaly Lipatov <lav@altlinux.ru> 3.27.2-alt1
+- epm repack pycharm-professional: rename icons to pycharm-pro
+- epm(): allow use it when run with pipe
+- epm repack pycharm-professional: fix packing
+- epm play flyview-client: fix package name
+- epm repack: fix icq packing
+- epm play okular-csp: remove repo also
+- epm repack ipera-client: filter out requires for embedded libs
+- eget: add --second-latest support
+- epm play opera: improve download latest available Linux version
+
+* Mon Oct 03 2022 Vitaly Lipatov <lav@altlinux.ru> 3.27.1-alt1
+- epm repack Telegram: add Conflicts: telegram-desktop-binary
+- epm epack pycharm-professional: fix version 2022.2.2 packing
+- epm repack chromium-gost-stable: fix Name and Generic Name
+- google-chrome-stable: fix Name and Generic Name
+- epm repack chromium-gost-stable (ALT bug 43760)
+- epm repack wps-office: drop /usr/share/desktop-directories/wps-office.directory (ALT bug 43751)
+- epm play assistant: fix retrieving of a package URL
+
+* Mon Sep 19 2022 Vitaly Lipatov <lav@altlinux.ru> 3.27.0-alt1
+- epm play: add RStudio support (ALT bug 43794)
+- epm full-upgrade: add update for flatpak and snap packages
+- epm: force disable verbose in quiet mode
+- epm repack slack: fix packing (ALT bug 43718)
+- epm repack: fix ipera-client (ALT bug 43761)
+- epm repack: fix ipera-mediaserver (ALT bug 43762)
+- epm repack onlyoffice-desktopeditors: pack icons (ALT bug 43713)
+
+* Wed Sep 14 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.10-alt1
+- epm play: add meridius
+- fix non_interactive options
+- epm repack wps-office.sh: remove /etc/xdg/menus (ALT bug 43751)
+- epm repack spotify-client.sh: fix icon name (ALT bug 43720)
+- epm play yandex-disk: install also yandex-disk-indicator
+- github testsuite.yml: don't use yander mirror
+- epm play: add pycharm pro
+- epm play: improve pycharm (ALT bug 43613)
+
+* Wed Sep 07 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.9-alt1
+- epm play: add Flyview (Ipera) server
+- epm play wpsoffice: fix return
+- epm-repack: fix packing dirs with spaces
+- epm play common.sh: fix typo (ALT bug 43706)
+- epm play assistant: add support for aarch64
+- epm repack teamviewer: add libminizip require (ALT bug 43723)
+
+* Sat Sep 03 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.8-alt1
+- epm play: add wpsoffice
+- update embedded eget
+- epm repack common.sh: fix pack_dir
+- epm play: add FlyView client
+
+* Sat Aug 27 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.7-alt1
+- epm repack fix pycharm-community on Sisyphus
+- epm requires: filter out rpmlib(*  for rpm
+- epm play: add trueconf client support
+
+* Fri Aug 26 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.6-alt1
+- epm-epm_install: support mirrors
+- epm play master-pdf-editor: allow install on ALTLinux (ALT bug 43621)
+- epm play r7office: add support for many distro
+- epm play assistant: allow install on ALTServer
+- epm play myoffice: enable package scripts for removing too (ALT bug 43626)
+- epm repack common.sh: fix remove_dir (ALT bug 43613)
+- epm repack atom-beta.sh: fix (ALT bug 43614)
+
+* Thu Aug 25 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.5-alt1
+- epm play: add VK Teams support
+- epm repack icq: fix description
+- epm repack skypeforlinux: fix packing (ALT bug 43615)
+- epm repack: fix packing scripts
+- epm-addrepo: fix typo (eterbug #15852)
+- epm repack common.sh: set PRODUCTDIR to PRODUCTCUR if empty
+- epm play: rewrite atom downloading and packing, add atom and atom beta support
+
+* Mon Aug 22 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.4-alt1
+- change AstraLinux to AstraLinuxCE/SE
+
+* Mon Aug 22 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.3-alt1
+- epm play: hide sputnik-browser (ALT bug 15741)
+- epm play: add Master PDF Editor
+- epm repack: fix /opt packing
+
+* Sat Aug 20 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.2-alt1
+- add epm --short --version
+- epm-autoremove: enable real autoremove on yum based systems
+- fix $@ using for set vars (eterbug 15846)
+- epm repack icq: fix for ignore empty download
+- epm full-upgrade: do fatal on errors
+- epm play: return 0 if a package is already installed from the repo
+
+* Fri Aug 19 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.1-alt1
+- add epm play virtualhere
+- more strong distro versions
+
+* Thu Aug 18 2022 Vitaly Lipatov <lav@altlinux.ru> 3.26.0-alt1
+- fix: epm-download: always download rpm packages on ALT directly
+- epm play: add slack support
+- big revert "fix quotes in format strings"
+
+* Thu Aug 18 2022 Vitaly Lipatov <lav@altlinux.ru> 3.25.1-alt1
+- epm repack icq: fix URL, ignore empty download
+- epm repack yandex-browser: fix provides
+- add epm play jetbrains-toolbox
+
+* Thu Aug 18 2022 Vitaly Lipatov <lav@altlinux.ru> 3.25.0-alt1
+- epm repack: always set Epoche: 100 to override repository package
+- epm-search: fix support regexp not for apt only
+- epm-download: always download rpm packages on ALT directly
+- epm-tool: add json command support
+- epm play: add pycharm support
+- epm play: add icq support
+
+* Tue Aug 16 2022 Vitaly Lipatov <lav@altlinux.ru> 3.24.3-alt1
+- epm_query_file: fix --short query for rpm
+- epm-query: fix --short query on rpm
+- fix docmd using (remove extra quotes)
+
+* Tue Aug 16 2022 Vitaly Lipatov <lav@altlinux.ru> 3.24.2-alt1
+- fix quotes in format strings
+
+* Tue Aug 16 2022 Vitaly Lipatov <lav@altlinux.ru> 3.24.1-alt1
+- epm-check_updated_repo: stop autoupdate repo info (too buggy)
+- epm play mssql-server: add Debian/Ubuntu support
+- epm-sh-functions: docmd/sudorun: use eval to handle env
+- epm install: separate install command for apt-dpkg and apt-rpm
+
+* Mon Aug 15 2022 Vitaly Lipatov <lav@altlinux.ru> 3.24.0-alt1
+- epm play yandex-browser: add checking for yandex-browser-stable package from ALT repo
+- epm play opera: fix missed eget
+- epm play gitlab-runner: fix download on deb systems
+- epm-sh-functions: sudo -- don't allow vars, revert to just sudo
+- epm: add ACCEPT_EULA=y for install deb packages in non interactive mode
+- epm repack: set EEPM vendor for repacked packages
+- epm play geogebra: fix download on deb systems
+- epm play vivaldi: add snapshot support
+- epm(): run the script via bash
+
+* Mon Aug 15 2022 Vitaly Lipatov <lav@altlinux.ru> 3.23.4-alt1
+- epm play: add support for opera beta and opera developer
+
+* Mon Aug 15 2022 Vitaly Lipatov <lav@altlinux.ru> 3.23.3-alt1
+- epm-release_upgrade: remove conflicts branding file before upgrade
+- epm-repack: add support for EPM_REPACK_SCRIPTS_DIR
+- epm play anydesk: no strict version
+- epm play: add opera support
+
+* Fri Aug 12 2022 Vitaly Lipatov <lav@altlinux.ru> 3.23.2-alt1
+- distr_info: add --codename support
+- epm: repo addkey support (add gpg key for a repo)
+- epm play: add rustdesk support
+- epm play: add Okular GOST support
+
+* Fri Aug 12 2022 Vitaly Lipatov <lav@altlinux.ru> 3.23.1-alt1
+- epm play ktalk: add pre requires (ALT bug 42558)
+- common.sh: create shell wrapper with shebang (KDE runs Exec via execvp) (ALT bug 42641)
+- epm repack: fix shebang for obsidian and chromium-gost-stable
+- epm-query_file: follow a link ever if the link is not from a package
+
+* Thu Aug 11 2022 Vitaly Lipatov <lav@altlinux.ru> 3.23.0-alt1
+- epm-repack: fix package name-version before convert
+- epm play Telegram: restore Conflicts: telegram-desktop
+- epm-repack: on deb convert to an intermediate rpm package if we have repack.d rules
+- epm play.d/common.sh: use mirror.eterfund for eepm.ru too
+- distr_info: add error about unknown option
+- epm play: allow direct run the scripts
+- epm play sputnik-browser: cleanup, add verbose checking URI accessible
+- epm play assistant: add URI checking and fix download on Ubuntu
+- epm repack: use BIGTMPDIR conception (ALT bug 43491)
+
+* Wed Aug 10 2022 Vitaly Lipatov <lav@altlinux.ru> 3.22.3-alt1
+- epm play: add MyOffice support
+- epm repack.d: fix quotes
+- epm-download: fix permissions for downloaded file
+- epm install/repack: big refactoring to support rpm/deb platform in common way
+- epm-install: check if install by command
+- epm play: add mirror check for yandex-browser-codecs-ffmpeg-extra
+
+* Sun Aug 07 2022 Vitaly Lipatov <lav@altlinux.ru> 3.22.2-alt1
+- repack.d/common.h: skip *_file/dir with empty arg
+- repack.d/common.h: add filter_from_requires function
+- add repack.d/rudesktop.sh
+- epm repack.d: use filter_from_requires
+
+* Sun Aug 07 2022 Vitaly Lipatov <lav@altlinux.ru> 3.22.1-alt1
+- epm play rudesktop: fix eget using
+- epm play assisant: fix locale for cyrillic URL
+- epm-repofix: fix for Sisyphus
+- epm play: add gitlab-runner install
+- epm play code: fix link creating
+- epm play: fix sublime-text packing
+
+* Sat Aug 06 2022 Vitaly Lipatov <lav@altlinux.ru> 3.22.0-alt1
+- generic-appimage.sh: drop MacOS only catalina dir (fix for balenaEtcher)
+- distr_info: strip long version for ALT Workstation
+- epm checkpkg: add --all support
+- epm play: add --force for --update support
+- epm play: add --list-installed-packages
+- repack.d/generic.sh: more common python -> python2 shebang suport
+- epm play: add signal messenger support (thanks, george@)
+- epm autoorphans: skip packages installed via epm play
+
+* Mon Aug 01 2022 Vitaly Lipatov <lav@altlinux.ru> 3.21.8-alt1
+- eget: fix making file url from site url and filename
+- eget: add --check support for check url if accessible
+- play.d/common.sh: use eget --check in check_url_is_accessible
+- play.d/common.sh: add update_url_if_need_mirrored
+- epm play yandex-browser: use mirror.eterfund.org as mirror too
+
+* Sun Jul 31 2022 Vitaly Lipatov <lav@altlinux.ru> 3.21.7-alt1
+- epm-install: yum does not support --allowerasing
+- don't expand package names on ROSA
+
+* Sat Jul 30 2022 Vitaly Lipatov <lav@altlinux.ru> 3.21.6-alt1
+- epm-autoremove: add --auto support for apt
+- epm-remove: add missed --auto support for apt
+- epm-install: add --allowerasing for yum/dnf install
+- epm-query: don't use Epoche for hi level form
+- distr_info: use RELS name for ROSA Server, fixes for ROSA
+- eepm.spec: provides/obsoletes epm only on ALT
+
+* Thu Jul 28 2022 Vitaly Lipatov <lav@altlinux.ru> 3.21.5-alt1
+- epm-sh-functions: add sudo_allowed
+- epm-filelist: fix sudo checking
+- zypper: add --non-interactive support
+- epm-install: always use apt for install deb packages
+
+* Wed Jul 27 2022 Vitaly Lipatov <lav@altlinux.ru> 3.21.4-alt1
+- distr_info: add support for Debian GNU/Linux
+- epm print: disable name from package name guessing
+- epm-addrepo: add support for install powertools on RHEL family
+
+* Tue Jul 26 2022 Vitaly Lipatov <lav@altlinux.ru> 3.21.3-alt1
+- epm-check: add support for --auto and --verbose
+- epm-install: revert to old .deb install way
+
+* Tue Jul 26 2022 Vitaly Lipatov <lav@altlinux.ru> 3.21.2-alt1
+- distr_info: fix for RHEL
+- distr_info: stop detect snappy
+- epm-install: always use apt-get for install .deb file packages
+- epm print: fix print name/version/release by string
+
+* Tue Jul 26 2022 Vitaly Lipatov <lav@altlinux.ru> 3.21.1-alt1
+- epm play wine: remove wine-gl and wine-twain packages
+- epm-install: apt need ./ path for install deb packages
+- epm play yandex-browser: add fallback for yandex-browser source URL
+
+* Mon Jul 25 2022 Vitaly Lipatov <lav@altlinux.ru> 3.21.0-alt1
+- epm-update: cd / before apt-get update
+- distr_info: improve override support
+- epm-print: fix arg for distr_info
+- epm-check: add check_updated_repo before fix
+- epm-install: use apt-get install as fallback when install files with dpkg
+- epm repack: fix repack/install rpm on a deb system
+- epm-query-file: fix --short for apt
+- epm-sh-functions: disable eatmydata using
+
+* Tue Jul 19 2022 Vitaly Lipatov <lav@altlinux.ru> 3.20.0-alt1
+- epm play: skip update for hidden packages
+- epm play.d: add rudesktop support
+- epm-full-upgrade: add epm clean after all
+- distr_info: big OS detection rewrite (based on /etc/os-release)
+- epm-release_upgrade: allow upgrade/downgrade to c9
+- epm-print: fix typo with rpm_query_package_format-field
+
+* Sun Jul 17 2022 Vitaly Lipatov <lav@altlinux.ru> 3.19.4-alt1
+- epm play assistant: parse site page to get download link
+- epm play edge: add support for stable, beta and dev install
+- epm play: refactoring
+- epm-provides: fix for installed deb package
+- epm-print: major rewrite for deb support
+
+* Sat Jul 16 2022 Vitaly Lipatov <lav@altlinux.ru> 3.19.3-alt1
+- distr_info: add ROSA/7 with yum support
+- epm-repolist: dnf/yum: be verbose only when --verbose
+- play/common.sh: add version checking
+- epm-play: add --installed-version and --package-name support
+- play.d/ktalk.sh: fix package name
+- play.d/sputnik-browser.sh: use url from b2c-distrs channel
+
+* Fri Jul 08 2022 Vitaly Lipatov <lav@altlinux.ru> 3.19.2-alt1
+- pack_in_onefile.sh: use epm_main/serv_main functions for the main code
+- use return instead of exit in functions
+- epm play: add snap4arduino support (thanks, neurofreak@!)
+- epm play: add draw.io support (thanks, Ilya Demyanov!)
+- epm play: fix sublime download link
+- repack.d/draw.io: add drawio and draw.io commands to /usr/bin
+- distr_info: fix ROSA support
+
+* Wed Jun 29 2022 Vitaly Lipatov <lav@altlinux.ru> 3.19.1-alt1
+- epm repack: fix mssql-server install (ALT bug 42639), tested in hasher
+- egrep -> grep -E
+- epm repack: improve zoom repack
+- epm play brave: install stable branch by default (beta or nightly as alternative)
+- epm-upgrade: return error status if there are no packages for upgrade
+- distr_info: detect kvm without systemd
+- repack.d/Telegram.sh: fix icons download
+- epm-query: fix removing packages with serial
+- add epm repo comment
+- epm release-upgrade: fixes
+
+* Wed Apr 27 2022 Vitaly Lipatov <lav@altlinux.ru> 3.18.6-alt1
+- prescription/php8.sh: fix upgrade
+- repack.d/generic.sh: install rpm-build-python3 for build packages with python code
+- epm-play: make --short list the same like full (ALT bug 42566)
+- epm repack.d: don't use patchelf --add-rpath (missed in old patch-elf)
+- epm repack mssql-server.sh: fix packing (ALT bug 42559)
+
+* Fri Apr 22 2022 Vitaly Lipatov <lav@altlinux.ru> 3.18.5-alt1
+- epm-update: fix error code in epm-update
+
+* Fri Apr 22 2022 Vitaly Lipatov <lav@altlinux.ru> 3.18.4-alt1
+- epm play sublime: fix download URL
+- epm repack: fix onlyoffice-desktopeditors
+
+* Fri Apr 22 2022 Vitaly Lipatov <lav@altlinux.ru> 3.18.3-alt1
+- add epm tool command for call embedded tools like eget or estrlist
+- epm play yandex-browser-codecs-ffmpeg-extra: use eget for download
+- use epm tool eget instead of EGET variable
+- epm repack AppImage: fix path to AppRun
+- epm repack: fix fix_chrome_sandbox return code
+- epm play: chrome-remote-desktop.sh: disable script
+- epm repack zoom: small improvements
+
+* Tue Apr 19 2022 Vitaly Lipatov <lav@altlinux.ru> 3.18.2-alt1
+- epm-sh-functions: fix which command detection (deb based distro related)
+
+* Tue Apr 19 2022 Vitaly Lipatov <lav@altlinux.ru> 3.18.1-alt1
+- add check for sed, which and grep commands
+- drop extra requires
+
+* Mon Apr 18 2022 Vitaly Lipatov <lav@altlinux.ru> 3.18.0-alt1
+- epm install/repack: add AppImage support
+- epm repack: drop using fakeroot during repack to rpm
+- epm repack: set TMPDIR if missed, set _allow_root_build in temp. .rpmmacros
+- epm play: add ktalk support
+- epm repack: fix_chrome_sandbox: set 4711 permissions
+- epm repack: fix error code
+- epm play/repack: big rules cleanup
+- epm play: add duplicati support
+- epm play vivaldi: fix download (ALT bug 42477)
+
+* Fri Apr 15 2022 Vitaly Lipatov <lav@altlinux.ru> 3.17.3-alt1
+- epm play: allow --remove for scripts (f.i., wine)
+- epm-sh-functions: add URL described how to tune sudo
+- update eget to 0.5.5
+- epm play: add Sublime Text 4 support
+- epm play telegram: add Group to the package
+
+* Thu Apr 14 2022 Vitaly Lipatov <lav@altlinux.ru> 3.17.2-alt1
+- epm-query: add -- after options, fix query --short for rpm
+- epm play vivaldi-codecs-ffmpeg-extra: fix package name
+
+* Thu Apr 14 2022 Vitaly Lipatov <lav@altlinux.ru> 3.17.1-alt1
+- distr_info: interpret RedHatEnterpriseLinuxServer as RHEL
+- epm play code: fix desktop file (ALT bug 42391)
+- epm play brave: install beta by default (nightly as alternative)
+- epm play vivaldi: add support for snapshot install
+- epm play: allow subcommands without -- prefix
+- distr_info: fix AstraLinux detection
+- distr_info: add support for arm64 debian arch
+- epm repack zoom: fix chrome-sandbox SGID (ALT bug 42412)
+- epm play: add vivaldi-codecs-ffmpeg-extra
+- distr_info: exclude pp10 possibility
+- epm provides: more clean output for deb
+- epm repack anydesk: fix requires (ALT bug 42403)
+- epm play geogebra: fix install on i586 (ALT bug 42404)
+- epm play zoom: fix install on i586 (ALT bug 42405)
+
 * Thu Apr 07 2022 Vitaly Lipatov <lav@altlinux.ru> 3.17.0-alt1
 - epm play yandex-browser: still update beta version if it is installed
 - epm download: use downloaded name, not URL basename

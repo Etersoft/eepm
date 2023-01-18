@@ -1,6 +1,7 @@
 #!/bin/sh
 
 PKGNAME=anydesk
+SUPPORTEDARCHES="x86_64 x86"
 DESCRIPTION="AnyDesk from the official site"
 
 . $(dirname $0)/common.sh
@@ -29,13 +30,14 @@ repack=''
 
 # general msk
 #PKGMASK="$($DISTRVENDOR -p)/$(epm print constructname $PKGNAME "*" $arch '' '_')"
-PKGMASK="$(epm print constructname $PKGNAME "6.1*" $arch '' '_')"
+# TODO: hack with version, there are too many files
+PKGMASK="$(epm print constructname $PKGNAME "[6-9].[1-9]*" $arch '' '_')"
 
 # we miss obsoleted libpangox on ALT, so use RHEL8 build
 # lib.req: WARNING: /usr/bin/anydesk: library libpangox-1.0.so.0 not found
 #[ "$($DISTRVENDOR -s)" = "alt" ] && PKGMASK="os-specific/rhel8/$(epm print constructname $PKGNAME "*" $arch)"
 
-PKG="$($EGET --list --latest https://download.anydesk.com/linux $PKGMASK)" || fatal "Can't get package URL"
+PKG="$(epm tool eget --list --latest https://download.anydesk.com/linux $PKGMASK)" || fatal "Can't get package URL"
 
 epm $repack install "$PKG" || exit
 

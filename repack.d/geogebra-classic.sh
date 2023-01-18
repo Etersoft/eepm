@@ -21,4 +21,5 @@ cleanup
 
 fix_chrome_sandbox
 
+install_deps
 epm install --skip-installed python3 rpm-build-python3

@@ -10,21 +10,16 @@ PRODUCTDIR=/opt/skype
 . $(dirname $0)/common-chromium-browser.sh
 
 # remove key install script
-rm -rvf $BUILDROOT/opt/skypeforlinux/
-subst "s|.*/opt/skypeforlinux/.*||" $SPEC
+remove_dir /opt/skypeforlinux
 
-mkdir -p $BUILDROOT$PRODUCTDIR/
-mv $BUILDROOT/usr/share/skypeforlinux/* $BUILDROOT$PRODUCTDIR/
-subst "s|/usr/share/skypeforlinux|$PRODUCTDIR|g" $SPEC
+move_to_opt /usr/share/skypeforlinux
 
 subst "s|^SKYPE_PATH=.*|SKYPE_PATH=$PRODUCTDIR/skypeforlinux|" $BUILDROOT/usr/bin/skypeforlinux
 
 subst '1iAutoProv:no' $SPEC
 
 # ignore embedded libs
-subst '1i%filter_from_requires /^libGLESv2.so().*/d' $SPEC
-subst '1i%filter_from_requires /^libEGL.so().*/d' $SPEC
-subst '1i%filter_from_requires /^libffmpeg.so().*/d' $SPEC
+drop_embedded_reqs
 
 # usual command skype
 mkdir -p $BUILDROOT/usr/bin/

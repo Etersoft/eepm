@@ -52,6 +52,8 @@ __is_repo_info_uptodate()
 
 update_repo_if_needed()
 {
+    # TODO: needs careful testing
+    return
     # check if we need skip update checking
     if [ "$1" = "soft" ] && ! set_sudo nofail ; then
         # if sudo requires a password, skip autoupdate

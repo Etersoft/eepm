@@ -79,9 +79,17 @@ EOF
 		epm_addrepo "$@"
 		epm update
 		;;
-	rm|remove)                           # HELPCMD: remove repository from sources list (epm repo remove all for all)
+	addkey)                              # HELPCMD: add repository gpg key
+		load_helper epm-addrepo
+		epm_addkey "$@"
+		;;
+	rm|remove)                           # HELPCMD: remove repository from the sources lists (epm repo remove all for all)
 		load_helper epm-removerepo
 		epm_removerepo "$@"
+		;;
+	comment)                             # HELPCMD: comment out repository line from the sources lists
+		load_helper epm-commentrepo
+		epm_commentrepo "$@"
 		;;
 	*)
 		fatal "Unknown command $ epm repo '$CMD'"

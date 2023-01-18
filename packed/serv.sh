@@ -34,6 +34,16 @@ load_helper()
 # File bin/epm-sh-functions:
 
 
+check_core_commands()
+{
+	#which --help >/dev/null || fatal "Can't find which command (which package is missed?)"
+	# broken which on Debian systems
+	which which >/dev/null || fatal "Can't find which command (which or debianutils package is missed?)"
+	which grep >/dev/null || fatal "Can't find grep command (coreutils package is missed?)"
+	which sed >/dev/null || fatal "Can't find sed command (sed package is missed?)"
+}
+
+
 inputisatty()
 {
 	# check stdin
@@ -61,8 +71,10 @@ check_tty()
 	[ -n "$TERM" ] || TERM=dumb
 	export TERM
 
-	# egrep from busybox may not --color
-	# egrep from MacOS print help to stderr
+	check_core_commands
+
+	# grep -E from busybox may not --color
+	# grep -E from MacOS print help to stderr
 	if grep -E --help 2>&1 | grep -q -- "--color" ; then
 		export EGREPCOLOR="--color"
 	fi
@@ -131,7 +143,7 @@ showcmd()
 docmd()
 {
 	showcmd "$*$EXTRA_SHOWDOCMD"
-	$@
+	"$@"
 }
 
 docmd_foreach()
@@ -141,7 +153,7 @@ docmd_foreach()
 	#showcmd "$@"
 	shift
 	for pkg in "$@" ; do
-		docmd "$cmd" $pkg
+		docmd $cmd $pkg
 	done
 }
 
@@ -180,6 +192,16 @@ realpath()
 	readlink -f "$@"
 }
 fi
+
+make_filepath()
+{
+	local i
+	for i in "$@" ; do
+		[ -f "$i" ] || continue
+		echo "$i" | grep -q "/" && echo "$i" && continue
+		echo "./$i"
+	done
+}
 
 get_firstarg()
 {
@@ -254,8 +276,12 @@ clean_store_output()
 
 epm()
 {
-	[ -n "$PROGNAME" ] || fatal "Can't use epm call from the piped script"
-	$PROGDIR/$PROGNAME --inscript "$@"
+	if [ -n "$PROGNAME" ] ; then
+		#|| fatal "Can't use epm call from the piped script"
+		$PROGDIR/$PROGNAME --inscript "$@"
+	else
+		epm_main --inscript "$@"
+	fi
 }
 
 sudoepm()
@@ -324,22 +350,29 @@ set_sudo()
 	# if input is a console
 	if inputisatty && isatty && isatty2 ; then
 		if ! $SUDO_CMD -l >/dev/null ; then
-			[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only without password sudo is supported in non interactive using). Please run epm under root.'"
+			[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported in non interactive using). Please run epm under root.'"
 			return "$SUDO_TESTED"
 		fi
 	else
 		# use sudo if one is tuned and tuned without password
 		if ! $SUDO_CMD -l -n >/dev/null 2>/dev/null ; then
-			[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only without password sudo is supported). Please run epm under root.'"
+			[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported). Please run epm under root or check http://altlinux.org/sudo '"
 			return "$SUDO_TESTED"
 		fi
 	fi
 
 	SUDO_TESTED="0"
-	SUDO="$SUDO_CMD --"
+	# FIXME: does not work: sudo -- VARIABLE=some command
+	SUDO="$SUDO_CMD"
+	#SUDO="$SUDO_CMD --"
 	# check for < 1.7 version which do not support -- (and --help possible too)
-	$SUDO_CMD -h 2>/dev/null | grep -q "  --" || SUDO="$SUDO_CMD"
+	#$SUDO_CMD -h 2>/dev/null | grep -q "  --" || SUDO="$SUDO_CMD"
 
+}
+
+sudo_allowed()
+{
+	set_sudo nofail
 }
 
 withtimeout()
@@ -349,18 +382,22 @@ withtimeout()
 		$TO "$@"
 		return
 	fi
+	fatal "Possible indefinite wait due timeout command is missed"
 	# fallback: drop time arg and run without timeout
-	shift
-	"$@"
+	#shift
+	#"$@"
 }
 
 set_eatmydata()
 {
+	# don't use eatmydata (useless)
+	return 0
 	# skip if disabled
 	[ -n "$EPMNOEATMYDATA" ] && return
 	# use if possible
 	which eatmydata >/dev/null 2>/dev/null || return
 	set_sudo
+	# FIXME: check if SUDO already has eatmydata
 	[ -n "$SUDO" ] && SUDO="$SUDO eatmydata" || SUDO="eatmydata"
 	[ -n "$verbose" ] && info "Uwaga! eatmydata is installed, we will use it for disable all sync operations."
 	return 0
@@ -430,21 +467,6 @@ assure_exists()
 	( direct='' epm_assure "$1" $package $3 ) || fatal "Can't assure in '$1' command from $package$textpackage package"
 }
 
-__set_EGET()
-{
-	# use internal eget only if exists
-	if [ -s $SHAREDIR/tools_eget ] ; then
-		export EGET="$SHAREDIR/tools_eget"
-		return
-	fi
-	fatal "Internal error: missed tools_eget"
-
-	# FIXME: we need disable output here, eget can be used for get output
-	assure_exists eget eget 3.3 >/dev/null
-	# use external command, not the function
-	export EGET="$(which eget)" || fatal "Missed command eget from installed package eget"
-}
-
 disabled_eget()
 {
 	local EGET
@@ -510,6 +532,10 @@ get_package_type()
 			echo "msi"
 			return
 			;;
+		*.AppImage)
+			echo "AppImage"
+			return
+			;;
 		*)
 			#fatal "Don't know type of $1"
 			# return package name for info
@@ -556,6 +582,12 @@ set_distro_info()
 		DISTRARCH=$($DISTRVENDOR --distro-arch)
 	fi
 	DISTRCONTROL="$($DISTRVENDOR -y)"
+
+	# TODO: improve BIGTMPDIR conception
+	# https://bugzilla.mozilla.org/show_bug.cgi?id=69938
+	# https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s15.html
+	# https://geekpeach.net/ru/%D0%BA%D0%B0%D0%BA-systemd-tmpfiles-%D0%BE%D1%87%D0%B8%D1%89%D0%B0%D0%B5%D1%82-tmp-%D0%B8%D0%BB%D0%B8-var-tmp-%D0%B7%D0%B0%D0%BC%D0%B5%D0%BD%D0%B0-tmpwatch-%D0%B2-centos-rhel-7
+	[ -n "$BIGTMPDIR" ] || [ -d "/var/tmp" ] && BIGTMPDIR="/var/tmp" || BIGTMPDIR="/tmp"
 }
 
 set_pm_type()
@@ -597,6 +629,21 @@ has_space()
 {
     estrlist -- has_space "$@"
 }
+
+if ! which realpath 2>/dev/null >/dev/null ; then
+realpath()
+{
+    [ -n "$*" ] || return
+    readlink -f "$@"
+}
+fi
+
+if ! which subst 2>/dev/null >/dev/null ; then
+subst()
+{
+    sed -i -e "$@"
+}
+fi
 
 # File bin/serv-cat:
 
@@ -1291,7 +1338,7 @@ internal_distr_info()
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
 
-PROGVERSION="20220323"
+PROGVERSION="20220812"
 
 # TODO: check /etc/system-release
 
@@ -1333,8 +1380,13 @@ override_distrib()
 {
 	[ -n "$1" ] || return
 	VENDOR_ID=''
-	DISTRIB_ID="$(echo "$1" | sed -e 's|/.*||')"
-	DISTRIB_RELEASE="$(echo "$1" | sed -e 's|.*/||')"
+	PRETTY_NAME=''
+	local name="$(echo "$1" | sed -e 's|x86_64/||')"
+	[ "$name" = "$1" ] && DIST_ARCH="x86" || DIST_ARCH="x86_64"
+	DISTRIB_ID="$(echo "$name" | sed -e 's|/.*||')"
+	DISTRIB_RELEASE="$(echo "$name" | sed -e 's|.*/||')"
+	[ "$DISTRIB_ID" = "$DISTRIB_RELEASE" ] && DISTRIB_RELEASE=''
+
 }
 
 # Translate DISTRIB_ID to vendor name (like %_vendor does or package release name uses), uses VENDOR_ID by default
@@ -1342,7 +1394,10 @@ pkgvendor()
 {
 	[ "$DISTRIB_ID" = "ALTLinux" ] && echo "alt" && return
 	[ "$DISTRIB_ID" = "ALTServer" ] && echo "alt" && return
-	[ "$DISTRIB_ID" = "AstraLinux" ] && echo "astra" && return
+	[ "$DISTRIB_ID" = "MOC" ] && echo "alt" && return
+	[ "$DISTRIB_ID" = "MESh" ] && echo "alt" && return
+	[ "$DISTRIB_ID" = "AstraLinuxSE" ] && echo "astra" && return
+	[ "$DISTRIB_ID" = "AstraLinuxCE" ] && echo "astra" && return
 	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
 	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
 	[ "$DISTRIB_ID" = "VoidLinux" ] && echo "void" && return
@@ -1377,13 +1432,18 @@ case $DISTRIB_ID in
 	PCLinux)
 		CMD="apt-rpm"
 		;;
-	Ubuntu|Debian|Mint|AstraLinux|Elbrus)
+	Ubuntu|Debian|Mint|AstraLinux*|Elbrus)
 		CMD="apt-dpkg"
 		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
-		hascommand snappy && CMD=snappy
+		#hascommand snappy && CMD=snappy
 		;;
-	Mandriva|ROSA)
+	Mandriva)
 		CMD="urpm-rpm"
+		;;
+	ROSA)
+		CMD="dnf-rpm"
+		hascommand dnf || CMD="yum-rpm"
+		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "ROSA/2020" ] && CMD="urpm-rpm"
 		;;
 	FreeBSD|NetBSD|OpenBSD|Solaris)
 		CMD="pkgsrc"
@@ -1395,10 +1455,10 @@ case $DISTRIB_ID in
 	ArchLinux)
 		CMD="pacman"
 		;;
-	Fedora|CentOS|OracleLinux|RockyLinux|AlmaLinux|RHEL|Scientific|GosLinux|Amzn|RedOS)
+	Fedora|CentOS|OracleLinux|RockyLinux|AlmaLinux|RHEL|RELS|Scientific|GosLinux|Amzn|RedOS)
 		CMD="dnf-rpm"
-		hascommand dnf || CMD=yum-rpm
-		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "CentOS/7" ] && CMD=yum-rpm
+		hascommand dnf || CMD="yum-rpm"
+		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "CentOS/7" ] && CMD="yum-rpm"
 		;;
 	Slackware)
 		CMD="slackpkg"
@@ -1441,10 +1501,11 @@ case $DISTRIB_ID in
 	*)
 		# try detect firstly
 		if hascommand "rpm" ; then
-			hascommand "urpmi" && echo "urpmi-rpm" && return
 			hascommand "zypper" && echo "zypper-rpm" && return
 			hascommand "apt-get" && echo "apt-rpm" && return
 			hascommand "dnf" && echo "dnf-rpm" && return
+			hascommand "yum" && echo "yum-rpm" && return
+			hascommand "urpmi" && echo "urpmi-rpm" && return
 		fi
 		if hascommand "dpkg" ; then
 			hascommand "apt" && echo "apt-dpkg" && return
@@ -1485,6 +1546,10 @@ pkgtype()
 	esac
 }
 
+print_codename()
+{
+	echo "$DISTRIB_CODENAME"
+}
 
 get_var()
 {
@@ -1504,51 +1569,158 @@ normalize_name()
 		"RED OS")
 			echo "RedOS"
 			;;
+		"Debian GNU/Linux")
+			echo "Debian"
+			;;
 		"CentOS Linux")
 			echo "CentOS"
 			;;
 		"Fedora Linux")
 			echo "Fedora"
 			;;
+		"Red Hat Enterprise Linux Server")
+			echo "RHEL"
+			;;
+		"ROSA Chrome Desktop")
+			echo "ROSA"
+			;;
+		"ROSA Enterprise Linux Desktop")
+			echo "RELS"
+			;;
+		"ROSA Enterprise Linux Server")
+			echo "RELS"
+			;;
 		*)
 			#echo "${1// /}"
-			echo "$1" | sed -e "s/ //g"
+			firstupper "$1" | sed -e "s/ //g" -e 's|(.*||'
 			;;
 	esac
 }
 
+# 1.2.3.4.5 -> 1
+normalize_version1()
+{
+    echo "$1" | sed -e "s|\..*||"
+}
+
+# 1.2.3.4.5 -> 1.2
+normalize_version2()
+{
+    echo "$1" | sed -e "s|^\([^.][^.]*\.[^.][^.]*\)\..*|\1|"
+}
+
+# 1.2.3.4.5 -> 1.2.3
+normalize_version3()
+{
+    echo "$1" | sed -e "s|^\([^.][^.]*\.[^.][^.]*\.[^.][^.]*\)\..*|\1|"
+}
+
+
+fill_distr_info()
+{
 # Default values
 PRETTY_NAME=""
 DISTRIB_ID=""
 DISTRIB_RELEASE=""
+DISTRIB_FULL_RELEASE=""
+DISTRIB_RELEASE_ORIG=""
 DISTRIB_CODENAME=""
 
-# Next default by /etc/os-release
+# Default detection by /etc/os-release
 # https://www.freedesktop.org/software/systemd/man/os-release.html
 if distro os-release ; then
 	# shellcheck disable=SC1090
 	. $DISTROFILE
 	DISTRIB_ID="$(normalize_name "$NAME")"
-#	DISTRIB_ID="$(firstupper "$ID")"
+	DISTRIB_RELEASE_ORIG="$VERSION_ID"
 	DISTRIB_RELEASE="$VERSION_ID"
 	[ -n "$DISTRIB_RELEASE" ] || DISTRIB_RELEASE="CUR"
 	# set by os-release:
 	#PRETTY_NAME
 	VENDOR_ID="$ID"
-	DISTRIB_FULL_RELEASE=$DISTRIB_RELEASE
-	DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\.[0-9]$//g")
+	DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
+	DISTRIB_CODENAME="$VERSION_CODENAME"
+
 elif distro lsb-release ; then
 	DISTRIB_ID=$(cat $DISTROFILE | get_var DISTRIB_ID)
-	DISTRIB_RELEASE=$(cat $DISTROFILE | get_var DISTRIB_RELEASE)
+	DISTRIB_RELEASE="$(cat $DISTROFILE | get_var DISTRIB_RELEASE)"
+	DISTRIB_RELEASE_ORIG="$DISTRIB_RELEASE"
+	DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
 	DISTRIB_CODENAME=$(cat $DISTROFILE | get_var DISTRIB_CODENAME)
 	PRETTY_NAME=$(cat $DISTROFILE | get_var DISTRIB_DESCRIPTION)
 fi
+
+DISTRIB_RELEASE=$(normalize_version2 "$DISTRIB_RELEASE")
+
+
+case "$VENDOR_ID" in
+	"alt"|"altlinux")
+		# 2.4.5.99 -> 2
+		DISTRIB_RELEASE=$(normalize_version1 "$DISTRIB_RELEASE_ORIG")
+		case "$DISTRIB_ID" in
+			"ALTServer"|"ALTSPWorkstation"|"Sisyphus")
+				;;
+			*)
+				DISTRIB_ID="ALTLinux"
+				;;
+		esac
+		;;
+	"astra")
+		DISTRIB_RELEASE=$(normalize_version2 "$DISTRIB_RELEASE_ORIG" | sed -e 's|_.*||')
+		DISTRIB_FULL_RELEASE=$(normalize_version3 "$DISTRIB_RELEASE_ORIG" | sed -e 's|_.*||')
+		if [ "$VARIANT" = "orel" ] || [ "$VARIANT" = "Orel" ] ; then
+			DISTRIB_ID="AstraLinuxCE"
+		else
+			DISTRIB_ID="AstraLinuxSE"
+		fi
+		;;
+esac
+
+case "$DISTRIB_ID" in
+	"ALTLinux")
+		echo "$VERSION" | grep -q "c9f.* branch" && DISTRIB_RELEASE="c9"
+		# FIXME: fast hack for fallback: 10 -> p10 for /etc/os-release
+		if echo "$DISTRIB_RELEASE" | grep -q "^[0-9]" && echo "$DISTRIB_RELEASE" | grep -q -v "[0-9][0-9][0-9]"  ; then
+			DISTRIB_RELEASE="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
+		fi
+		;;
+#	"ALTServer")
+#		DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\..*//g")
+#		;;
+	"ALTSPWorkstation")
+		DISTRIB_ID="ALTLinux"
+		case "$DISTRIB_RELEASE_ORIG" in
+			8.0|8.1)
+				;;
+			8.2|8.3)
+				DISTRIB_RELEASE="c9f1"
+			;;
+			8.4)
+				DISTRIB_RELEASE="c9f2"
+			;;
+			8.*)
+				DISTRIB_RELEASE="c9f3"
+			;;
+		esac
+#		DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\..*//g")
+		;;
+	"Sisyphus")
+		DISTRIB_ID="ALTLinux"
+		DISTRIB_RELEASE="Sisyphus"
+		;;
+esac
+
+
+[ -n "$DISTRIB_ID" ] && return
+
+
+# check via obsoleted ways
 
 # ALT Linux based
 if distro altlinux-release ; then
 	DISTRIB_ID="ALTLinux"
 	# FIXME: fast hack for fallback: 10 -> p10 for /etc/os-release
-	DISTRIB_RELEASE="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
+	DISTRIB_RELEASE="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||' -e 's|^pp|p|')"
 	if has Sisyphus ; then DISTRIB_RELEASE="Sisyphus"
 	elif has "ALT p10.* p10 " ; then DISTRIB_RELEASE="p10"
 	elif has "ALTServer 10." ; then DISTRIB_RELEASE="p10"
@@ -1591,29 +1763,9 @@ elif distro gentoo-release ; then
 	DISTRIB_RELEASE=$(basename $MAKEPROFILE)
 	echo $DISTRIB_RELEASE | grep -q "[0-9]" || DISTRIB_RELEASE=$(basename "$(dirname $MAKEPROFILE)") #"
 
-elif [ "$DISTRIB_ID" = "ALTServer" ] ; then
-	DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\..*//g")
-
-elif [ "$DISTRIB_ID" = "ALTSPWorkstation" ] ; then
-	DISTRIB_ID="ALTLinux"
-	case "$DISTRIB_RELEASE" in
-		8.0|8.1)
-			;;
-		8.*)
-			DISTRIB_RELEASE="c9"
-			;;
-	esac
-	DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\..*//g")
-
 elif distro slackware-version ; then
 	DISTRIB_ID="Slackware"
 	DISTRIB_RELEASE="$(grep -Eo '[0-9]+\.[0-9]+' $DISTROFILE)"
-
-elif distro os-release && hascommand apk ; then
-	# shellcheck disable=SC1090
-	. $ROOTDIR/etc/os-release
-	DISTRIB_ID="$(firstupper "$ID")"
-	DISTRIB_RELEASE="$VERSION_ID"
 
 elif distro os-release && hascommand tce-ab ; then
 	# shellcheck disable=SC1090
@@ -1642,75 +1794,11 @@ elif distro openwrt_release ; then
 	. $DISTROFILE
 	DISTRIB_RELEASE=$(cat $ROOTDIR/etc/openwrt_version)
 
-elif distro astra_version ; then
-	#DISTRIB_ID=`cat $DISTROFILE | get_var DISTRIB_ID`
-	DISTRIB_ID="AstraLinux"
-	#DISTRIB_RELEASE=$(cat "$DISTROFILE" | head -n1 | sed -e "s|.* \([a-z]*\).*|\1|g")
-	DISTRIB_RELEASE=$DISTRIB_CODENAME
-
-# for Ubuntu use standard LSB info
-elif [ "$DISTRIB_ID" = "Ubuntu" ] && [ -n "$DISTRIB_RELEASE" ]; then
-	# use LSB version
-	true
-
 # Debian based
 elif distro debian_version ; then
 	DISTRIB_ID="Debian"
 	DISTRIB_RELEASE=$(cat $DISTROFILE | sed -e "s/\..*//g")
 
-
-# Mandriva based
-elif distro pclinuxos-release ; then
-	DISTRIB_ID="PCLinux"
-	if   has "2007" ; then DISTRIB_RELEASE="2007"
-	elif has "2008" ; then DISTRIB_RELEASE="2008"
-	elif has "2010" ; then DISTRIB_RELEASE="2010"
-	fi
-
-elif distro mandriva-release || distro mandrake-release ; then
-	DISTRIB_ID="Mandriva"
-	if   has 2005 ; then DISTRIB_RELEASE="2005"
-	elif has 2006 ; then DISTRIB_RELEASE="2006"
-	elif has 2007 ; then DISTRIB_RELEASE="2007"
-	elif has 2008 ; then DISTRIB_RELEASE="2008"
-	elif has 2009.0 ; then DISTRIB_RELEASE="2009.0"
-	elif has 2009.1 ; then DISTRIB_RELEASE="2009.1"
-	else
-		# use /etc/lsb-release info by default
-		if has ROSA ; then
-			DISTRIB_ID="ROSA"
-		fi
-	fi
-
-# Fedora based
-
-elif distro MCBC-release ; then
-	DISTRIB_ID="MCBC"
-	if   has 3.0 ; then DISTRIB_RELEASE="3.0"
-	elif has 3.1 ; then DISTRIB_RELEASE="3.1"
-	fi
-
-# TODO: drop in favour of /etc/os-release
-elif distro redhat-release && [ -z "$PRETTY_NAME" ] ; then
-	# FIXME if need
-	# actually in the original RHEL: Red Hat Enterprise Linux .. release N
-	DISTRIB_ID="RHEL"
-	if has CentOS ; then
-		DISTRIB_ID="CentOS"
-	elif has Scientific ; then
-		DISTRIB_ID="Scientific"
-	elif has GosLinux ; then
-		DISTRIB_ID="GosLinux"
-	fi
-	if has Beryllium ; then
-		DISTRIB_ID="Scientific"
-		DISTRIB_RELEASE="4.1"
-	elif has "release 4" ; then DISTRIB_RELEASE="4"
-	elif has "release 5" ; then DISTRIB_RELEASE="5"
-	elif has "release 6" ; then DISTRIB_RELEASE="6"
-	elif has "release 7" ; then DISTRIB_RELEASE="7"
-	elif has "release 8" ; then DISTRIB_RELEASE="8"
-	fi
 
 # SUSE based
 elif distro SuSe-release || distro SuSE-release ; then
@@ -1753,12 +1841,10 @@ elif [ "$(uname -o 2>/dev/null)" = "Cygwin" ] ; then
         DISTRIB_RELEASE="all"
 fi
 
+}
+
+fill_distr_info
 [ -n "$DISTRIB_ID" ] || DISTRIB_ID="Generic"
-
-if [ -z "$PRETTY_NAME" ] ; then
-	PRETTY_NAME="$DISTRIB_ID $DISTRIB_RELEASE"
-fi
-
 
 get_uname()
 {
@@ -1845,6 +1931,8 @@ get_debian_arch()
         arch='i386' ;;
     'x86_64')
         arch='amd64' ;;
+    'aarch64')
+        arch='arm64' ;;
     esac
     echo "$arch"
 }
@@ -1941,16 +2029,16 @@ get_core_count()
     local DIST_OS="$(get_base_os_name)"
     case "$DIST_OS" in
         macos|freebsd)
-            detected=$(sysctl hw.ncpu | awk '{print $2}')
+            detected=$(a= sysctl hw.ncpu | awk '{print $2}')
             ;;
         linux)
             detected=$(grep -c "^processor" /proc/cpuinfo)
             ;;
         solaris)
-            detected=$(prtconf | grep -c 'cpu[^s]')
+            detected=$(a= prtconf | grep -c 'cpu[^s]')
             ;;
         aix)
-            detected=$(lsdev -Cc processor -S A | wc -l)
+            detected=$(a= lsdev -Cc processor -S A | wc -l)
             ;;
 #        *)
 #            fatal "Unsupported OS $DIST_OS"
@@ -1989,6 +2077,11 @@ get_virt()
         echo "xen" && return
     fi
 
+    # use util-linux
+    if LANG=C a= lscpu | grep "Hypervisor vendor:" | grep -q "KVM" ; then
+        echo "kvm" && return
+    fi
+
     echo "(unknown)"
     # TODO: check for openvz
 }
@@ -2005,6 +2098,10 @@ get_service_manager()
 
 print_pretty_name()
 {
+    if [ -z "$PRETTY_NAME" ] ; then
+        PRETTY_NAME="$DISTRIB_ID $DISTRIB_RELEASE"
+    fi
+
     echo "$PRETTY_NAME"
 }
 
@@ -2024,20 +2121,28 @@ Total system information:
      System memory size (MB) (-m): $(get_memory_size)
                 Base OS name (-o): $(get_base_os_name)
 Base distro (vendor) name (-s|-n): $(pkgvendor)
+    Version codename (--codename): $(print_codename)
 
 (run with -h to get help)
 EOF
 }
 
+case "$2" in
+	-*)
+		echo "Unsupported option $2" >&2
+		exit 1
+		;;
+esac
 
-case $1 in
+case "$1" in
 	-h|--help)
 		echo "distro_info v$PROGVERSION - distro information retriever"
-		echo "Usage: distro_info [options] [args]"
+		echo "Usage: distro_info [options] [SystemName/Version]"
 		echo "Options:"
 		echo " -a - print hardware architecture (--distro-arch for distro depended name)"
 		echo " -b - print size of arch bit (32/64)"
 		echo " -c - print number of CPU cores"
+		echo " --codename - print distro codename (focal for Ubuntu 20.04)"
 		echo " -z - print current CPU MHz"
 		echo " -d - print distro name"
 		echo " -e - print full name of distro with version"
@@ -2045,12 +2150,13 @@ case $1 in
 		echo " -h - this help"
 		echo " -m - print system memory size (in MB)"
 		echo " -o - print base OS name"
-		echo " -p [SystemName] - print type of the packaging system"
-		echo " -g [SystemName] - print name of the packaging system"
-		echo " -s|-n [SystemName] - print base name of the distro (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (as _vendor macros in rpm)"
+		echo " -p - print type of the packaging system"
+		echo " -g - print name of the packaging system"
+		echo " -s|-n - print base name of the distro (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (see _vendor macros in rpm)"
 		echo " -y - print running service manager"
 		echo " --pretty - print pretty distro name"
-		echo " -v - print version of distro"
+		echo " -v - print version of the distro"
+		echo " --full-version - print full version of the distro"
 		echo " -V - print the utility version"
 		echo "Run without args to print all information."
 		exit 0
@@ -2066,6 +2172,7 @@ case $1 in
 		exit 0
 		;;
 	--pretty)
+		override_distrib "$2"
 		print_pretty_name
 		;;
 	--distro-arch)
@@ -2079,9 +2186,16 @@ case $1 in
 		exit 0
 		;;
 	-d)
+		override_distrib "$2"
 		echo $DISTRIB_ID
 		;;
+	--codename)
+		override_distrib "$2"
+		print_codename
+		;;
 	-a)
+		override_distrib "$2"
+		[ -n "$DIST_ARCH" ] && echo "$DIST_ARCH" && exit 0
 		get_arch
 		;;
 	-b)
@@ -2103,7 +2217,12 @@ case $1 in
 		get_base_os_name
 		;;
 	-v)
-		echo $DISTRIB_RELEASE
+		override_distrib "$2"
+		echo "$DISTRIB_RELEASE"
+		;;
+	--full-version)
+		override_distrib "$2"
+		echo "$DISTRIB_FULL_RELEASE"
 		;;
 	-s|-n)
 		override_distrib "$2"
@@ -2118,9 +2237,15 @@ case $1 in
 		exit 0
 		;;
 	-e)
+		override_distrib "$2"
 		print_name_version
 		;;
+	-*)
+		echo "Unsupported option $1" >&2
+		exit 1
+		;;
 	*)
+		override_distrib "$1"
 		print_total_info
 		;;
 esac
@@ -2129,854 +2254,8 @@ esac
 ################# end of incorporated bin/distr_info #################
 
 
-################# incorporate bin/tools_eget #################
-internal_tools_eget()
+serv_main()
 {
-# eget - simply shell on wget for loading directories over http (wget does not support wildcard for http)
-# Use:
-# eget http://ftp.altlinux.ru/pub/security/ssl/*
-#
-# Copyright (C) 2014-2014, 2016, 2020, 2022  Etersoft
-# Copyright (C) 2014 Daniil Mikhailov <danil@etersoft.ru>
-# Copyright (C) 2016-2017, 2020, 2022 Vitaly Lipatov <lav@etersoft.ru>
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Affero General Public License for more details.
-#
-# You should have received a copy of the GNU Affero General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-#
-
-fatal()
-{
-    echo "FATAL: $*" >&2
-    exit 1
-}
-
-
-# copied from eepm project
-
-# copied from /etc/init.d/outformat (ALT Linux)
-isatty()
-{
-	# Set a sane TERM required for tput
-	[ -n "$TERM" ] || TERM=dumb
-	export TERM
-	test -t 1
-}
-
-isatty2()
-{
-	# check stderr
-	test -t 2
-}
-
-
-check_tty()
-{
-	isatty || return
-	which tput >/dev/null 2>/dev/null || return
-	# FreeBSD does not support tput -S
-	echo | tput -S >/dev/null 2>/dev/null || return
-	[ -z "$USETTY" ] || return
-	export USETTY=1
-}
-
-: ${BLACK:=0} ${RED:=1} ${GREEN:=2} ${YELLOW:=3} ${BLUE:=4} ${MAGENTA:=5} ${CYAN:=6} ${WHITE:=7}
-
-set_boldcolor()
-{
-	[ "$USETTY" = "1" ] || return
-	{
-		echo bold
-		echo setaf $1
-	} |tput -S
-}
-
-restore_color()
-{
-	[ "$USETTY" = "1" ] || return
-	{
-		echo op; # set Original color Pair.
-		echo sgr0; # turn off all special graphics mode (bold in our case).
-	} |tput -S
-}
-
-echover()
-{
-    [ -n "$verbose" ] || return
-    echo "$*" >&2
-}
-
-# Print command line and run command line
-showcmd()
-{
-	if [ -z "$quiet" ] ; then
-		set_boldcolor $GREEN
-		local PROMTSIG="\$"
-		[ "$UID" = 0 ] && PROMTSIG="#"
-		echo " $PROMTSIG $@"
-		restore_color
-	fi >&2
-}
-
-# Print command line and run command line
-docmd()
-{
-	showcmd "$@"
-	"$@"
-}
-
-check_tty
-
-WGETQ='' #-q
-CURLQ='' #-s
-WGETOPTIONS='--content-disposition'
-CURLOPTIONS='--remote-name --remote-header-name'
-
-set_quiet()
-{
-    WGETQ='-q'
-    CURLQ='-s'
-}
-
-# TODO: passthrou all wget options
-if [ "$1" = "-q" ] ; then
-    set_quiet
-    shift
-fi
-
-
-WGET="$(which wget 2>/dev/null)"
-
-if [ -n "$WGET" ] ; then
-# put remote content to stdout
-scat()
-{
-    docmd $WGET $WGETQ -O- "$1"
-}
-# download to default name of to $2
-sget()
-{
-    if [ -n "$2" ] ; then
-       docmd $WGET $WGETQ $WGETOPTIONS -O "$2" "$1"
-    else
-# TODO: поддержка rsync для известных хостов?
-# Не качать, если одинаковый размер и дата
-# -nc
-# TODO: overwrite always
-       docmd $WGET $WGETQ $WGETOPTIONS "$1"
-    fi
-}
-
-else
-CURL="$(which curl 2>/dev/null)"
-[ -n "$CURL" ] || fatal "There are no wget nor curl in the system. Install it with $ epm install curl"
-# put remote content to stdout
-scat()
-{
-    $CURL -L $CURLQ "$1"
-}
-# download to default name of to $2
-sget()
-{
-    if [ -n "$2" ] ; then
-       docmd $CURL -L $CURLQ $CURLOPTIONS --output "$2" "$1"
-    else
-       docmd $CURL -L $CURLQ $CURLOPTIONS -O "$1"
-    fi
-}
-fi
-
-LISTONLY=''
-if [ "$1" = "--list" ] ; then
-    LISTONLY="$1"
-    set_quiet
-    shift
-fi
-
-LATEST=''
-if [ "$1" = "--latest" ] ; then
-    LATEST="$1"
-    shift
-fi
-
-fatal()
-{
-    echo "$*" >&2
-    exit 1
-}
-
-# check man glob
-filter_glob()
-{
-	[ -z "$1" ] && cat && return
-	# translate glob to regexp
-	grep "$(echo "$1" | sed -e "s|\*|.*|g" -e "s|?|.|g")$"
-}
-
-filter_order()
-{
-    [ -z "$LATEST" ] && cat && return
-    sort -V | tail -n1
-}
-
-# download to this file
-TARGETFILE=''
-if [ "$1" = "-O" ] ; then
-    TARGETFILE="$2"
-    shift 2
-fi
-
-# TODO:
-# -P support
-
-if [ -z "$1" ] ; then
-    echo "eget - wget like downloader wrapper with wildcard support" >&2
-    fatal "Run $0 --help to get help"
-fi
-
-if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
-    echo "eget - wget like downloader wrapper with wildcard support in filename part of URL"
-    echo "Usage: eget [-q] [-O target file] [--list] http://somesite.ru/dir/na*.log"
-    echo
-    echo "Options:"
-    echo "    -q       - quiet mode"
-    echo "    -O file  - download to this file (use filename from server if missed)"
-    echo "    --list   - print files from url with mask"
-    echo "    --latest - print only latest version of file"
-    echo
-    echo "eget supports --list and download for https://github.com/owner/project urls"
-    echo
-#    echo "See $ wget --help for wget options you can use here"
-    return
-fi
-
-get_github_urls()
-{
-    # https://github.com/OWNER/PROJECT
-    local owner="$(echo "$1" | sed -e "s|^https://github.com/||" -e "s|/.*||")" #"
-    local project="$(echo "$1" | sed -e "s|^https://github.com/$owner/||" -e "s|/.*||")" #"
-    [ -n "$owner" ] || fatal "Can't get owner from $1"
-    [ -n "$project" ] || fatal "Can't get project from $1"
-    local URL="https://api.github.com/repos/$owner/$project/releases"
-    scat $URL | \
-        grep -i -o -E '"browser_download_url": "https://.*"' | cut -d'"' -f4
-}
-
-if echo "$1" | grep -q "^https://github.com/" && \
-   echo "$1" | grep -q -v "/download/" && [ -n "$2" ] ; then
-    MASK="$2"
-
-    if [ -n "$LISTONLY" ] ; then
-        get_github_urls "$1" | filter_glob "$MASK" | filter_order
-        return
-    fi
-
-    for fn in $(get_github_urls "$1" | filter_glob "$MASK" | filter_order) ; do
-        sget "$fn" || ERROR=1
-    done
-    return
-fi
-
-
-# do not support /
-if echo "$1" | grep -q "/$" ; then
-    fatal "Use http://example.com/e/* to download all files in dir"
-fi
-
-# If ftp protocol, just download
-if echo "$1" | grep -q "^ftp://" ; then
-    [ -n "$LISTONLY" ] && fatal "TODO: list files for ftp:// do not supported yet"
-    sget "$1" "$TARGETFILE"
-    return
-fi
-
-# mask allowed only in the last part of path
-MASK=$(basename "$1")
-
-# if mask are second arg
-if [ -n "$2" ] ; then
-    URL="$1"
-    MASK="$2"
-else
-    # drop mask part
-    URL="$(dirname "$1")"
-fi
-
-if echo "$URL" | grep -q "[*?]" ; then
-    fatal "Error: there are globbing symbols (*?) in $URL"
-fi
-
-# If have no wildcard symbol like asterisk, just download
-if echo "$MASK" | grep -qv "[*?]" || echo "$MASK" | grep -q "[?].*="; then
-    sget "$1" "$TARGETFILE"
-    return
-fi
-
-is_url()
-{
-    echo "$1" | grep -q "://"
-}
-
-get_urls()
-{
-    scat $URL/ | \
-         grep -i -o -E 'href="(.+)"' | cut -d'"' -f2
-}
-
-if [ -n "$LISTONLY" ] ; then
-    for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
-        is_url "$fn" && echo $fn && continue
-        fn="$(echo "$fn" | sed -e 's|^./||' -e 's|^/+||')"
-        echo "$URL/$fn"
-    done
-    return
-fi
-
-ERROR=0
-for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
-    sget "$URL/$(basename "$fn")" || ERROR=1
-done
- return $ERROR
-
-}
-################# end of incorporated bin/tools_eget #################
-
-
-################# incorporate bin/tools_estrlist #################
-internal_tools_estrlist()
-{
-#!/bin/bash
-# 2009-2010, 2012, 2017, 2020 Etersoft www.etersoft.ru
-# Author: Vitaly Lipatov <lav@etersoft.ru>
-# Public domain
-
-# TODO: rewrite with shell commands, perl or C
-# Python - http://www.linuxtopia.org/online_books/programming_books/python_programming/python_ch16s03.html
-# Shell  - http://linux.byexamples.com/archives/127/uniq-and-basic-set-theory/
-#        - http://maiaco.com/articles/shellSetOperations.php
-# Perl   - http://docstore.mik.ua/orelly/perl/cookbook/ch04_09.htm
-#        - http://blogs.perl.org/users/polettix/2012/03/sets-operations.html
-# http://rosettacode.org/wiki/Symmetric_difference
-# TODO: add unit tests
-# http://ru.wikipedia.org/wiki/Операции_над_множествами
-
-# Base set operations:
-# * union
-#   "1 2 3" "3 4 5" -> "1 2 3 4 5"
-# * intersection
-#   "1 2 3" "3 4 5" -> "3"
-# * relative complement (substracted, difference) ( A ? B – members in A but not in B )
-# http://en.wikipedia.org/wiki/Complement_%28set_theory%29
-#   "1 3" "1 2 3 4" -> "2 4"
-# * symmetric difference (симметричная разность) ( A ^ B – members in A or B but not both )
-# http://en.wikipedia.org/wiki/Symmetric_difference
-#   "1 2 3" "3 4 5" -> "1 2 4 5"
-
-fatal()
-{
-        echo "FATAL: $*" >&2
-        exit 1
-}
-
-filter_strip_spaces()
-{
-        # possible use just
-        #xargs echo
-        sed -e "s| \+| |g" -e "s|^ ||" -e "s| \$||"
-}
-
-strip_spaces()
-{
-        echo "$*" | filter_strip_spaces
-}
-
-is_empty()
-{
-        [ "$(strip_spaces "$*")" = "" ]
-}
-
-isempty()
-{
-        is_empty "$@"
-}
-
-has_space()
-{
-        # not for dash:
-        # [ "$1" != "${1/ //}" ]
-        [ "$(echo "$*" | sed -e "s| ||")" != "$*" ]
-}
-
-list()
-{
-        local i
-        for i in $@ ; do
-                echo "$i"
-        done
-}
-
-count()
-{
-         list $@ | wc -l
-}
-
-union()
-{
-         strip_spaces $(list $@ | sort -u)
-}
-
-intersection()
-{
-        local RES=""
-        local i j
-        for i in $2 ; do
-            for j in $1 ; do
-                [ "$i" = "$j" ] && RES="$RES $i"
-            done
-        done
-        strip_spaces "$RES"
-}
-
-uniq()
-{
-        union $@
-}
-
-has()
-{
-	local wd="$1"
-	shift
-	echo "$*" | grep -q -- "$wd"
-}
-
-# Note: used egrep! write '[0-9]+(first|two)', not '[0-9]\+...'
-match()
-{
-	local wd="$1"
-	shift
-	echo "$*" | egrep -q -- "$wd"
-}
-
-
-# remove_from_list "1." "11 12 21 22" -> "21 22"
-reg_remove()
-{
-        local i
-        local RES=
-        for i in $2 ; do
-                echo "$i" | grep -q "^$1$" || RES="$RES $i"
-        done
-        strip_spaces "$RES"
-}
-
-# remove_from_list "1." "11 12 21 22" -> "21 22"
-reg_wordremove()
-{
-        local i
-        local RES=""
-        for i in $2 ; do
-                echo "$i" | grep -q -w "$1" || RES="$RES $i"
-        done
-        strip_spaces "$RES"
-}
-
-reg_rqremove()
-{
-        local i
-        local RES=""
-        for i in $2 ; do
-                [ "$i" = "$1" ] || RES="$RES $i"
-        done
-        strip_spaces "$RES"
-}
-
-# Args: LIST1 LIST2
-# do_exclude_list print LIST2 list exclude fields contains also in LIST1
-# Example: exclude "1 3" "1 2 3 4" -> "2 4"
-exclude()
-{
-        local i
-        local RES="$2"
-        for i in $1 ; do
-                RES="$(reg_rqremove "$i" "$RES")"
-        done
-        strip_spaces "$RES"
-}
-
-# regexclude_list "22 1." "11 12 21 22" -> "21"
-reg_exclude()
-{
-        local i
-        local RES="$2"
-        for i in $1 ; do
-                RES="$(reg_remove "$i" "$RES")"
-        done
-        strip_spaces "$RES"
-}
-
-# regexclude_list "22 1." "11 12 21 22" -> "21"
-reg_wordexclude()
-{
-        local i
-        local RES="$2"
-        for i in $1 ; do
-                RES=$(reg_wordremove "$i" "$RES")
-        done
-        strip_spaces "$RES"
-}
-
-if_contain()
-{
-        local i
-        for i in $2 ; do
-            [ "$i" = "$1" ] && return
-        done
-        return 1
-}
-
-difference()
-{
-        local RES=""
-        local i
-        for i in $1 ; do
-            if_contain $i "$2" || RES="$RES $i"
-        done
-        for i in $2 ; do
-            if_contain $i "$1" || RES="$RES $i"
-        done
-        strip_spaces "$RES"
-}
-
-
-# FIXME:
-# reg_include "1." "11 12 21 22" -> "11 12"
-reg_include()
-{
-        local i
-        local RES=""
-        for i in $2 ; do
-                echo "$i" | grep -q -w "$1" && RES="$RES $i"
-        done
-        strip_spaces "$RES"
-}
-
-example()
-{
-        local CMD="$1"
-        local ARG1="$2"
-        shift 2
-        echo "\$ $0 $CMD \"$ARG1\" \"$@\""
-        $0 $CMD "$ARG1" "$@"
-}
-
-example_res()
-{
-	example "$@" && echo TRUE || echo FALSE
-}
-
-help()
-{
-        echo "estrlist developed for string list operations. See also cut, join, paste..."
-        echo "Usage: $0 <command> [args]"
-        echo "Commands:"
-        echo "  strip_spaces [args]               - remove extra spaces"
-# TODO: add filter
-#        echo "  filter_strip_spaces               - remove extra spaces from words from standart input"
-#        echo "  reg_remove  <PATTERN> [word list] - remove words containing a match to the given PATTERN (grep notation)"
-#        echo "  reg_wordremove  <PATTERN> [word list] - remove words containing a match to the given PATTERN (grep -w notation)"
-        echo "  exclude <list1> <list2>           - print list2 items exclude list1 items"
-        echo "  reg_exclude <list PATTERN> [word list] - print only words that do not match PATTERN"
-#        echo "  reg_wordexclude <list PATTERN> [word list] - print only words do not match PATTERN"
-        echo "  has <PATTERN> string              - check the string for a match to the regular expression given in PATTERN (grep notation)"
-        echo "  match <PATTERN> string            - check the string for a match to the regular expression given in PATTERN (egrep notation)"
-        echo "  isempty [string] (is_empty)       - true if string has no any symbols (only zero or more spaces)"
-        echo "  has_space [string]                - true if string has no spaces"
-        echo "  union [word list]                 - sort and remove duplicates"
-        echo "  intersection <list1> <list2>      - print only intersected items (the same in both lists)"
-        echo "  difference <list1> <list2>        - symmetric difference between lists items (not in both lists)"
-        echo "  uniq [word list]                  - alias for union"
-        echo "  list [word list]                  - just list words line by line"
-        echo "  count [word list]                 - print word count"
-        echo
-        echo "Examples:"
-#        example reg_remove "1." "11 12 21 22"
-#        example reg_wordremove "1." "11 12 21 22"
-        example exclude "1 3" "1 2 3 4"
-        example reg_exclude "22 1." "11 12 21 22"
-        example reg_wordexclude "wo.* er" "work were more else"
-        example union "1 2 2 3 3"
-        example count "1 2 3 4 10"
-        example_res isempty "  "
-        #example_res isempty " 1 "
-        example_res has ex "exactly"
-        example_res has exo "exactly"
-        example_res match "M[0-9]+" "M250"
-        example_res match "M[0-9]+" "MI"
-}
-
-COMMAND="$1"
-if [ -z "$COMMAND" ] ; then
-        echo "Run with --help for get command description."
-        exit 1
-fi
-
-if [ "$COMMAND" = "-h" ] || [ "$COMMAND" = "--help" ] ; then
-        COMMAND="help"
-fi
-
-#
-case "$COMMAND" in
-    reg_remove|reg_wordremove)
-        fatal "obsoleted command $COMMAND"
-        ;;
-esac
-
-shift
-
-# FIXME: do to call function directly, use case instead?
-if [ "$COMMAND" = "--" ] ; then
-    # ignore all options (-)
-    COMMAND="$1"
-    shift
-    "$COMMAND" "$@"
-elif [ "$1" = "-" ] ; then
-    shift
-    "$COMMAND" "$(cat) $@"
-elif [ "$2" = "-" ] ; then
-    "$COMMAND" "$1" "$(cat)"
-else
-    "$COMMAND" "$@"
-fi
-}
-################# end of incorporated bin/tools_estrlist #################
-
-
-################# incorporate bin/tools_json #################
-internal_tools_json()
-{
-
-# License: MIT or Apache
-# Homepage: http://github.com/dominictarr/JSON.sh
-
-throw() {
-  echo "$*" >&2
-  exit 1
-}
-
-BRIEF=0
-LEAFONLY=0
-PRUNE=0
-NO_HEAD=0
-NORMALIZE_SOLIDUS=0
-
-usage() {
-  echo
-  echo "Usage: JSON.sh [-b] [-l] [-p] [-s] [-h]"
-  echo
-  echo "-p - Prune empty. Exclude fields with empty values."
-  echo "-l - Leaf only. Only show leaf nodes, which stops data duplication."
-  echo "-b - Brief. Combines 'Leaf only' and 'Prune empty' options."
-  echo "-n - No-head. Do not show nodes that have no path (lines that start with [])."
-  echo "-s - Remove escaping of the solidus symbol (straight slash)."
-  echo "-h - This help text."
-  echo
-}
-
-parse_options() {
-  set -- "$@"
-  local ARGN=$#
-  while [ "$ARGN" -ne 0 ]
-  do
-    case $1 in
-      -h) usage
-          exit 0
-      ;;
-      -b) BRIEF=1
-          LEAFONLY=1
-          PRUNE=1
-      ;;
-      -l) LEAFONLY=1
-      ;;
-      -p) PRUNE=1
-      ;;
-      -n) NO_HEAD=1
-      ;;
-      -s) NORMALIZE_SOLIDUS=1
-      ;;
-      ?*) echo "ERROR: Unknown option."
-          usage
-          exit 0
-      ;;
-    esac
-    shift 1
-    ARGN=$((ARGN-1))
-  done
-}
-
-# compatibility
-awk_egrep () {
-  local pattern_string=$1
-
-  a='' gawk '{
-    while ($0) {
-      start=match($0, pattern);
-      token=substr($0, start, RLENGTH);
-      print token;
-      $0=substr($0, start+RLENGTH);
-    }
-  }' pattern="$pattern_string"
-}
-
-tokenize () {
-  local GREP
-  local ESCAPE
-  local CHAR
-
-  if echo "test string" | egrep -ao --color=never "test" >/dev/null 2>&1
-  then
-    GREP='egrep -ao --color=never'
-  else
-    GREP='egrep -ao'
-  fi
-
-  if echo "test string" | egrep -o "test" >/dev/null 2>&1
-  then
-    ESCAPE='(\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
-    CHAR='[^[:cntrl:]"\\]'
-  else
-    GREP=awk_egrep
-    ESCAPE='(\\\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
-    CHAR='[^[:cntrl:]"\\\\]'
-  fi
-
-  local STRING="\"$CHAR*($ESCAPE$CHAR*)*\""
-  local NUMBER='-?(0|[1-9][0-9]*)([.][0-9]*)?([eE][+-]?[0-9]*)?'
-  local KEYWORD='null|false|true'
-  local SPACE='[[:space:]]+'
-
-  # Force zsh to expand $A into multiple words
-  local is_wordsplit_disabled=$(unsetopt 2>/dev/null | grep -c '^shwordsplit$')
-  if [ $is_wordsplit_disabled != 0 ]; then setopt shwordsplit; fi
-  $GREP "$STRING|$NUMBER|$KEYWORD|$SPACE|." | egrep -v "^$SPACE$"
-  if [ $is_wordsplit_disabled != 0 ]; then unsetopt shwordsplit; fi
-}
-
-parse_array () {
-  local index=0
-  local ary=''
-  read -r token
-  case "$token" in
-    ']') ;;
-    *)
-      while :
-      do
-        parse_value "$1" "$index"
-        index=$((index+1))
-        ary="$ary""$value" 
-        read -r token
-        case "$token" in
-          ']') break ;;
-          ',') ary="$ary," ;;
-          *) throw "EXPECTED , or ] GOT ${token:-EOF}" ;;
-        esac
-        read -r token
-      done
-      ;;
-  esac
-  [ "$BRIEF" -eq 0 ] && value=$(printf '[%s]' "$ary") || value=
-  :
-}
-
-parse_object () {
-  local key
-  local obj=''
-  read -r token
-  case "$token" in
-    '}') ;;
-    *)
-      while :
-      do
-        case "$token" in
-          '"'*'"') key=$token ;;
-          *) throw "EXPECTED string GOT ${token:-EOF}" ;;
-        esac
-        read -r token
-        case "$token" in
-          ':') ;;
-          *) throw "EXPECTED : GOT ${token:-EOF}" ;;
-        esac
-        read -r token
-        parse_value "$1" "$key"
-        obj="$obj$key:$value"        
-        read -r token
-        case "$token" in
-          '}') break ;;
-          ',') obj="$obj," ;;
-          *) throw "EXPECTED , or } GOT ${token:-EOF}" ;;
-        esac
-        read -r token
-      done
-    ;;
-  esac
-  [ "$BRIEF" -eq 0 ] && value=$(printf '{%s}' "$obj") || value=
-  :
-}
-
-parse_value () {
-  local jpath="${1:+$1,}$2" isleaf=0 isempty=0 print=0
-  case "$token" in
-    '{') parse_object "$jpath" ;;
-    '[') parse_array  "$jpath" ;;
-    # At this point, the only valid single-character tokens are digits.
-    ''|[!0-9]) throw "EXPECTED value GOT ${token:-EOF}" ;;
-    *) value=$token
-       # if asked, replace solidus ("\/") in json strings with normalized value: "/"
-       [ "$NORMALIZE_SOLIDUS" -eq 1 ] && value=$(echo "$value" | sed 's#\\/#/#g')
-       isleaf=1
-       [ "$value" = '""' ] && isempty=1
-       ;;
-  esac
-  [ "$value" = '' ] && return
-  [ "$NO_HEAD" -eq 1 ] && [ -z "$jpath" ] && return
-
-  [ "$LEAFONLY" -eq 0 ] && [ "$PRUNE" -eq 0 ] && print=1
-  [ "$LEAFONLY" -eq 1 ] && [ "$isleaf" -eq 1 ] && [ $PRUNE -eq 0 ] && print=1
-  [ "$LEAFONLY" -eq 0 ] && [ "$PRUNE" -eq 1 ] && [ "$isempty" -eq 0 ] && print=1
-  [ "$LEAFONLY" -eq 1 ] && [ "$isleaf" -eq 1 ] && \
-    [ $PRUNE -eq 1 ] && [ $isempty -eq 0 ] && print=1
-  [ "$print" -eq 1 ] && printf "[%s]\t%s\n" "$jpath" "$value"
-  :
-}
-
-parse () {
-  read -r token
-  parse_value
-  read -r token
-  case "$token" in
-    '') ;;
-    *) throw "EXPECTED EOF GOT $token" ;;
-  esac
-}
-
-if ([ "$0" = "$BASH_SOURCE" ] || ! [ -n "$BASH_SOURCE" ]);
-then
-  parse_options "$@"
-  tokenize | parse
-fi
-
-# vi: expandtab sw=2 ts=2
-}
-################# end of incorporated bin/tools_json #################
-
 
 INITDIR=/etc/init.d
 
@@ -3002,7 +2281,7 @@ case $DISTRNAME in
 	ALTLinux|ALTServer)
 		CMD="service-chkconfig"
 		;;
-	Ubuntu|Debian|Mint|AstraLinux)
+	Ubuntu|Debian|Mint|AstraLinux*)
 		CMD="service-update"
 		;;
 	Mandriva|ROSA)
@@ -3076,7 +2355,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.17.0  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.28.7  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -3242,3 +2521,5 @@ fi
 # Run helper for command
 serv_$serv_cmd $service_name $params
 # return last error code (from subroutine)
+}
+serv_main "$@"

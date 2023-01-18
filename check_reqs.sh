@@ -3,6 +3,11 @@
 LIST="bin/epm-* bin/distr_info bin/serv-* bin/tools* bin/yum play.d/*.sh prescription.d/*.sh repack.d/*.sh"
 
 if [ "$1" = "--detail" ] ; then
+    if [ -n "$2" ] ; then
+        LIST="$2"
+        bash --rpm-requires $LIST | sort -u | grep "executable"
+        exit
+    fi
     for i in $LIST  ; do
         echo
         echo "==== $i:"

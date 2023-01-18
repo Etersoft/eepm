@@ -19,14 +19,27 @@
 
 epm_full_upgrade()
 {
-	docmd epm update || return
+	docmd epm update || fatal "repository updating is failed."
 
 	[ -n "$quiet" ] || echo
-	docmd epm upgrade || return
+	docmd epm upgrade || fatal "upgrading of the system is failed."
 
 	[ -n "$quiet" ] || echo
-	docmd epm update-kernel || return
+	docmd epm update-kernel || fatal "updating of the kernel is failed."
 
 	[ -n "$quiet" ] || echo
-	docmd epm play --update all || return
+	docmd epm play --update all || fatal "updating of applications installed via epm play is failed."
+
+	if which flatpak 2>/dev/null >/dev/null ; then
+		[ -n "$quiet" ] || echo
+		docmd flatpak update
+	fi
+
+	if which snap 2>/dev/null >/dev/null ; then
+		[ -n "$quiet" ] || echo
+		sudocmd snap refresh
+	fi
+
+	[ -n "$quiet" ] || echo
+	docmd epm clean
 }

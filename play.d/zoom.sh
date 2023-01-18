@@ -1,12 +1,12 @@
 #!/bin/sh
 
 PKGNAME=zoom
+SUPPORTEDARCHES="x86_64 x86"
 DESCRIPTION="Zoom client from the official site"
 
 . $(dirname $0)/common.sh
 
 
-repack='--repack'
 arch=$($DISTRVENDOR --distro-arch)
 case $arch in
     x86_64|amd64)
@@ -21,7 +21,7 @@ case $arch in
 esac
 
 if [ "$($DISTRVENDOR -s)" = "alt" ] ; then
-    epm install $repack https://zoom.us/client/$version/zoom_$arch.rpm
+    epm install --repack https://zoom.us/client/$version/zoom_$arch.rpm
     exit
 fi
 

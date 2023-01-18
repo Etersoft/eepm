@@ -1,6 +1,7 @@
 #!/bin/sh
 
 PKGNAME=assistant
+SUPPORTEDARCHES="x86_64 aarch64"
 DESCRIPTION="Assistant (Ассистент) from the official site"
 
 # Assistant reclaim their rpm package supports ALT
@@ -15,27 +16,42 @@ fi
 
 
 arch="$($DISTRVENDOR -a)"
-
 pkg="$($DISTRVENDOR -p)"
 
-echo "ОШИБКА: невозможно проверить сертификат xn--80akicokc0aablc.xn--p1ai, выпущенный «CN=Sectigo RSA Domain Validation Secure Server CA,O=Sectigo Limited,L=Salford,ST=Greater Manchester,C=GB»:"
+# some locale depend troubles (ALT with bash 4 needs LANG=ru_RU.UTF-8, Ubuntu with bash 5 needs LANG=C.UTF-8)
+#URL="https://мойассистент.рф/скачать"
+URL="https://xn--80akicokc0aablc.xn--p1ai/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C"
+if ! LANG=ru_RU.UTF8 check_url_is_accessible "$URL" ; then
+    epm tool eget -O- "$URL"
+    fatal "Please, check why $URL is not accessible"
+fi
+
+# parse vendor site
+tmpfile=$(mktemp)
+trap "rm -f $tmpfile" EXIT
+epm tool eget -q -O- "$URL" | grep -A200 "Ассистент для LINUX" >$tmpfile
+
+url_by_text()
+{
+    local text="$1"
+    local pkg="$(cat $tmpfile | grep -B1 "$text" | head -n1 | grep "/Download/" | sed -e 's|.*href="||' -e 's|".*||')"
+    [ -n "$pkg" ] || fatal "Can't get Download href for $text"
+    #echo "https://мойассистент.рф$pkg"
+    echo "https://xn--80akicokc0aablc.xn--p1ai$pkg"
+}
 
 case $arch-$pkg in
     x86_64-rpm)
-        URL="http://мойассистент.рф/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C/Download/542"
-        OPKG=assistant-4.8-0.x86_64.rpm
+        URL="$(url_by_text "Скачать RPM пакет")"
         ;;
     x86_64-deb)
-        URL="http://мойассистент.рф/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C/Download/545"
-        OPKG=assistant_4.8-0_amd64.deb
+        URL="$(url_by_text "Скачать DEB пакет")"
         ;;
     aarch64-rpm)
-        URL="https://мойассистент.рф/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C/Download/551"
-        OPKG=assistant-4.8-0.x86_64.rpm
+        URL="$(url_by_text "Скачать RPM пакет для ARM устройств")"
         ;;
     aarch64-deb)
-        URL="https://мойассистент.рф/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C/Download/552"
-        OPKG=assistant_4.8-0_amd64.deb
+        URL="$(url_by_text "Скачать DEB пакет для ARM устройств")"
         ;;
     *)
         fatal "$($DISTRVENDOR -e) is not supported (arch $arch, package type is $pkg)"
@@ -49,9 +65,9 @@ esac
 #repack=''
 #[ "$($DISTRVENDOR -p)" = "deb" ] || repack='--repack'
 
-[ "$($DISTRVENDOR -d)" = "ALTLinux" ] && epmi --skip-installed fontconfig-disable-type1-font-for-assistant
+[ "$($DISTRVENDOR -s)" = "alt" ] && epmi --skip-installed fontconfig-disable-type1-font-for-assistant
 
-epm $repack install "$URL" || exit
+LANG=ru_RU.UTF8 epm $repack install "$URL" || exit
 
 [ "$repack" = "--scripts" ] && echo "Warning! Privileged scripts from the vendor were running."
 

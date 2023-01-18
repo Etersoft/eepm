@@ -45,7 +45,7 @@ run_command_if_exists()
 	local CMD="$1"
 	shift
 	if which "$CMD" 2>/dev/null >/dev/null ; then
-		docmd "$CMD" "$@"
+		docmd $CMD "$@"
 		return 0
 	fi
 	return 1

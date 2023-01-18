@@ -19,7 +19,7 @@ subst "s|/usr/share/code/code|$PRODUCTDIR/bin/code|g" $BUILDROOT/usr/share/appli
 chmod 0644 $BUILDROOT/usr/share/applications/$PRODUCT.desktop
 
 mkdir -p $BUILDROOT/usr/bin/
-ln -rs $BUILDROOT$PRODUCTDIR/bin/code $BUILDROOT/usr/bin/code
+ln -rsf $BUILDROOT$PRODUCTDIR/bin/code $BUILDROOT/usr/bin/code
 ln -rs $BUILDROOT$PRODUCTDIR/bin/code $BUILDROOT/usr/bin/vscode
 
 # install all requires packages before packing (the list have got with rpmreqs package | xargs echo)

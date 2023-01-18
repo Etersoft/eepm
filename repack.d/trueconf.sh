@@ -2,23 +2,28 @@
 # It will run with two args: buildroot spec
 BUILDROOT="$1"
 SPEC="$2"
+PRODUCT=trueconf
+PRODUCTDIR=/opt/trueconf
 
-subst 's|%dir "/usr/share/icons/hicolor/.*||' $SPEC
+. $(dirname $0)/common.sh
 
-# Make relative symlink
-# TODO: alien does not support ghost files?
-mkdir -p $BUILDROOT/usr/bin/
-rm -f $BUILDROOT/usr/bin/trueconf
-ln -s ../../opt/trueconf/trueconf-client $BUILDROOT/usr/bin/trueconf
-chmod a+x $BUILDROOT/opt/trueconf/trueconf-client
+add_bin_link_command
 
-rm -rvf $BUILDROOT/usr/local/
+chmod a+x $BUILDROOT/opt/trueconf/trueconf
+chmod a+x $BUILDROOT/opt/trueconf/trueconf-autostart
 
-[ "$($DISTRVENDOR -b)" = 64 ] && LIBUDEV=/lib64/libudev.so.0 || LIBUDEV=/lib/libudev.so.0
-ln -s $LIBUDEV $BUILDROOT/opt/trueconf/lib/libudev.so.0
+epm assure patchelf || exit
+for i in lib/lib*.so  ; do
+    a= patchelf --set-rpath '$ORIGIN' $BUILDROOT$PRODUCTDIR/$i
+done
 
-REQUIRES="libudev1 pulseaudio alsa-utils libv4l sqlite gtk2 libpng openssl udev libxslt xdg-utils"
-subst "s|^\(Name: .*\)$|# FIXME: due libcrypto.so.10(libcrypto.so.10)(64bit) autoreqs\nAutoReq:yes,nolib\n# Converted from original package requires\nRequires:$REQUIRES\n\1|g" $SPEC
+for i in TrueConf ; do
+    a= patchelf --set-rpath '$ORIGIN/lib' $BUILDROOT$PRODUCTDIR/$i
+done
 
-subst 's|.*/usr/local.*||' $SPEC
+# libhwloc.so.5 => not found (we have only libhwloc.so.15)
+remove_file $PRODUCTDIR/lib/libtbbbind.so
+remove_file $PRODUCTDIR/lib/libtbbbind.so.2
 
+epm install --skip-installed pulseaudio libalsa libcrypto1.1 libcurl libdbus libGL libicu69 libidn libgs libprotobuf27 libarchive13  libXScrnSaver libspeex libspeexdsp libudev1 libv4l libX11 libxcb libXrandr liblame libatomic1 coreutils
+epm install --skip-installed libqt5-core libqt5-dbus libqt5-gui libqt5-multimedia libqt5-network libqt5-opengl libqt5-sql libqt5-svg libqt5-webkit libqt5-webkitwidgets libqt5-widgets libqt5-webengine libqt5-concurrent qt5-graphicaleffects qt5-imageformats qt5-qtquickcontrols

@@ -62,6 +62,10 @@ check_pkg rootfiles-alt-alt11 rootfiles
 check_pkg git-bzr-1.1_48_g61d6007-alt1.1 git-bzr
 check_pkg liblz4-r127-alt1.svn20141224 liblz4
 check_pkg libijs-0.35_9.15-alt1 libijs
+check_pkg nx-libs-3.5.99.26.1-eter2astra:amd64 nx-libs
+check_pkg nx-libs-3.5.99.26.1-eter2astra nx-libs
+check_pkg nx-libs_3.5.99.26.1_eter2astra:amd64 nx-libs
+check_pkg nx-libs_3.5.99.26.1_eter2astra nx-libs
 
 echo
 echo "check_pkg"

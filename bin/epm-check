@@ -17,35 +17,34 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+load_helper epm-check_updated_repo
+
 epm_check()
 {
+update_repo_if_needed
+local APTOPTIONS="$(subst_option non_interactive -y)"
+local DNFOPTIONS="$(subst_option non_interactive -y) $(subst_option verbose --verbose) "
 case $PMTYPE in
 	apt-rpm)
 		#sudocmd apt-get check || exit
 		#sudocmd apt-get update || exit
-		sudocmd apt-get -f install || return
+		sudocmd apt-get -f $APTOPTIONS install || return
 		info "You can use epm dedup also"
 		;;
 	apt-dpkg)
 		#sudocmd apt-get check || exit
 		#sudocmd apt-get update || exit
-		sudocmd apt-get -f install || return
-		;;
-	apt-dpkg)
-		#sudocmd apt-get update || exit
-		#sudocmd apt-get check || exit
-		sudocmd apt-get -f install || return
-		#sudocmd apt-get autoremove
+		sudocmd apt-get -f $APTOPTIONS install || return
 		;;
 	packagekit)
 		docmd pkcon repair
 		;;
 	aptitude-dpkg)
-		sudocmd aptitude -f install || return
+		sudocmd aptitude -f $APTOPTIONS install || return
 		#sudocmd apt-get autoremove
 		;;
 	yum-rpm)
-		docmd yum check
+		docmd yum check $DNFOPTIONS
 		docmd package-cleanup --problems
 
 		#docmd package-cleanup --dupes
@@ -54,7 +53,7 @@ case $PMTYPE in
 		docmd rpm -Va --nofiles --nodigest
 		;;
 	dnf-rpm)
-		sudocmd dnf check
+		sudocmd dnf check $DNFOPTIONS
 		;;
 	emerge)
 		sudocmd revdep-rebuild
@@ -63,7 +62,7 @@ case $PMTYPE in
 	#	sudocmd urpme --auto-orphans
 	#	;;
 	zypper-rpm)
-		sudocmd zypper verify
+		sudocmd zypper $(subst_option non_interactive --non-interactive) verify
 		;;
 	conary)
 		sudocmd conary verify

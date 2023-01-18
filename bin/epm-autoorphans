@@ -19,7 +19,7 @@
 
 __epm_orphan_altrpm()
 {
-	docmd "apt-cache list-extras"
+	docmd apt-cache list-extras
 }
 
 epm_autoorphans()
@@ -42,6 +42,12 @@ case $PMTYPE in
 			| grep -v -- "^eepm$" \
 			| grep -v -- "^distro_info$" \
 			| grep -v -- "^kernel")
+
+		local play_installed="$(epm play --list-installed-packages)"
+		if [ -n "$play_installed" ] ; then
+			echo "Skip follow packages installed via epm play: $play_installed"
+		fi
+		PKGLIST="$(estrlist exclude "$play_installed" "$PKGLIST")"
 
 		if [ -z "$dryrun" ] && [ -n "$PKGLIST" ] ; then
 			showcmd epm remove $dryrun $force $PKGLIST

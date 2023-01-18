@@ -13,24 +13,27 @@ jobs:
       image: alt:sisyphus
 
     env:
-      BUILDER: builder
       ALLOW_ROOT_USER: 1
 
     steps:
       - name: install packages
         run: |
-            apt-get update && apt-get -y install etersoft-build-utils rpm-build-intro su sudo
+            apt-get update && apt-get -y install eepm
+            epm update
+            epm --auto install etersoft-build-utils rpm-build-intro su sudo
 
       - uses: actions/checkout@v2
 
       - name: build
         run: |
             echo "%_allow_root_build 1" > ${HOME}/.rpmmacros
+            git config --global --add safe.directory /__w/eepm/eepm
             rpmbb
 
       - name: install
         run: |
             apt-get install -y /usr/src/RPM/RPMS/noarch/eepm-3*.rpm
+            epm update
 
       - name: testsuite
         run: |

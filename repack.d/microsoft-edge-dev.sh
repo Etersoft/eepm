@@ -28,7 +28,7 @@ install_deps
 
 # fix wrong interpreter
 epm assure patchelf || exit
-for i in $BUILDROOT/opt/microsoft/msedge-dev/libmip_*.so ; do
+for i in $BUILDROOT$PRODUCTDIR/libmip_*.so ; do
     [ "$(a= patchelf --print-interpreter $i)" = "/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2" ] && a= patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 $i
 done
 

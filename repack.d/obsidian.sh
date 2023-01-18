@@ -15,13 +15,8 @@ cleanup
 #add_bin_commands
 
 if [ ! -f "$BUILDROOT/usr/bin/$PRODUCT" ] ; then
-    mkdir -p $BUILDROOT/usr/bin
-    subst "s|%files|%files\n%_bindir/$PRODUCT|" $SPEC
-    # fix lib.req: ERROR: /tmp/.private/lav/tmp.lPI2zBE3UA/obsidian_0.13.31_amd64.deb.tmpdir/obsidian-0.13.31/usr/bin/obsidian: library libffmpeg.so not found
-    echo "exec $PRODUCTDIR/$PRODUCT" > $BUILDROOT/usr/bin/$PRODUCT
-    chmod a+x $BUILDROOT/usr/bin/$PRODUCT
+    add_bin_exec_command
 fi
-
 
 install_deps
 

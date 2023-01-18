@@ -177,18 +177,20 @@ epm_ni_install_names()
 	[ -z "$1" ] && return
 
 	case $PMTYPE in
-		apt-rpm|apt-dpkg)
-			export DEBIAN_FRONTEND=noninteractive
+		apt-rpm)
 			sudocmd apt-get -y $noremove --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
 			return ;;
+		apt-dpkg)
+			sudocmd env ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive apt-get -y $noremove --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
+			return ;;
 		aptitude-dpkg)
-			sudocmd aptitude -y install $@
+			sudocmd env ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive aptitude -y install $@
 			return ;;
 		yum-rpm)
 			sudocmd yum -y $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
 			return ;;
 		dnf-rpm)
-			sudocmd dnf -y $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
+			sudocmd dnf -y --allowerasing $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
 			return ;;
 		urpm-rpm)
 			sudocmd urpmi --auto $URPMOPTIONS $@
@@ -290,17 +292,15 @@ __epm_check_if_src_rpm()
     done
 }
 
-__epm_check_if_needed_repack()
+__epm_if_command_path()
 {
-    local pkgname="$(epm print name from "$1")"
-    local repackcode="$CONFIGDIR/repack.d/$pkgname.sh"
-    [ -x "$repackcode" ] || return
-    warning "There is exists repack rules for $pkgname package. It is better install this package via epm --repack install or epm play."
+    is_dirpath "$1" && rhas "$1" "bin/"
 }
 
 epm_install_files()
 {
-    [ -z "$1" ] && return
+    local files="$*"
+    [ -z "$files" ] && return
 
     # TODO: check read permissions
     # sudo test -r FILE
@@ -308,25 +308,47 @@ epm_install_files()
     case "$DISTRNAME" in
         ALTLinux|ALTServer)
 
-            # TODO: replace with name changed function
-            __epm_check_if_try_install_deb $@ && return
-            __epm_check_if_src_rpm $@
+            # do not use low-level for install by file path (f.i. epm install /usr/bin/git)
+            if __epm_if_command_path $files ; then
+                epm_install_names $files
+                return
+            fi
 
-            # do not using low-level for install by file path (FIXME: reasons?)
-            if ! is_dirpath "$@" || [ "$(get_package_type "$@")" = "rpm" ] ; then
-                __epm_check_vendor $@
-                __epm_check_if_needed_repack $@
-                sudocmd rpm -Uvh $force $noscripts $nodeps $@ && save_installed_packages $@ && return
-                local RES=$?
-                # TODO: check rpm result code and convert it to compatible format if possible
-                __epm_check_if_rpm_already_installed $@ && return
+            # on ALT install target can be a real path
+            if __epm_repack_if_needed $files ; then
+                [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
+                files="$repacked_pkgs"
+            fi
+
+            __epm_check_if_src_rpm $files
+
+            if [ -z "$repacked_pkgs" ] ; then
+                __epm_check_vendor $files
+                __epm_check_if_needed_repack $files
+            fi
+
+            sudocmd rpm -Uvh $force $noscripts $nodeps $files && save_installed_packages $files && return
+            local RES=$?
+            # TODO: check rpm result code and convert it to compatible format if possible
+            __epm_check_if_rpm_already_installed $files && return
 
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return $RES
+
+            # try install via apt if we could't install package file via rpm (we guess we need install requirements firsly)
+
+            # TODO: use it always (apt can install version from repo instead of a file package)
+            if [ -n "$noscripts" ] ; then
+                info "Workaround for install packages via apt with --noscripts (see https://bugzilla.altlinux.org/44670)"
+                info "Firstly install package requrements …"
+                # TODO: can we install only requires via apt?
+                epm install $(epm req --short $files) || return
+                # retry with rpm
+                sudocmd rpm -Uvh $force $noscripts $nodeps $files && save_installed_packages $files
+                return
             fi
 
-            epm_install_names "$@"
-            return
+            # common fallback
             ;;
     esac
 
@@ -337,30 +359,67 @@ epm_install_files()
                 DPKGOPTIONS="--force-confdef --force-confold"
             fi
 
-            __epm_check_if_try_install_rpm $@ && return
+            if __epm_repack_if_needed $files ; then
+                [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
+                files="$repacked_pkgs"
+                # TODO
+                #__epm_remove_tmp_files
+            fi
 
-            # FIXME: return false in case no install and in case install with broken deps
-            sudocmd dpkg $DPKGOPTIONS -i $@
+            # TODO: if dpkg can't install due missed deps, trying with apt (as for now, --refuse-depends, --refuse-breaks don't help me)
+
+            if [ -n "$nodeps" ] ; then
+                sudocmd dpkg $DPKGOPTIONS -i $files
+                return
+            fi
+
+            # for too old apt-get
+            # TODO: check apt-get version?
+            apt_can_install_files='1'
+            if [ "$DISTRNAME" = "Ubuntu" ] ; then
+                [ "$DISTRVERSION" = "14.04" ] && apt_can_install_files=''
+                [ "$DISTRVERSION" = "12.04" ] && apt_can_install_files=''
+            fi
+
+            if [ -n "$apt_can_install_files" ] ; then
+                # TODO: don't resolve fuzzy dependencies ()
+                # are there apt that don't support dpkg files to install?
+                epm_install_names $(make_filepath $files)
+                return
+            fi
+
+            # old way:
+
+            sudocmd dpkg $DPKGOPTIONS -i $files
             local RES=$?
-            # if run with --nodeps, do not fallback on hi level
 
-            [ -n "$nodeps" ] && return $RES
-            # fall to apt-get -f install for fix deps
-            # can't use APTOPTIONS with empty install args
-            epm_install_names -f
+            # return OK if all is OK
+            [ "$RES" = "0" ] && return $RES
+
+            # TODO: workaround with epm-check needed only for very old apt
+
+            # run apt -f install if there are were some errors during install
+            load_helper epm-check
+            epm_check
 
             # repeat install for get correct status
-            sudocmd dpkg $DPKGOPTIONS -i $@
+            sudocmd dpkg $DPKGOPTIONS -i $files
             return
             ;;
 
        *-rpm)
-            __epm_check_if_try_install_deb $@ && return
-            __epm_check_if_src_rpm $@
-            sudocmd rpm -Uvh $force $noscripts $nodeps $@ && return
+            if __epm_repack_if_needed $files ; then
+                [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
+                files="$repacked_pkgs"
+                # TODO
+                #__epm_remove_tmp_files
+            fi
+
+            __epm_check_if_src_rpm $files
+            sudocmd rpm -Uvh $force $noscripts $nodeps $files && return
             local RES=$?
 
-            __epm_check_if_rpm_already_installed $@ && return
+            __epm_check_if_rpm_already_installed $files && return
 
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return $RES
@@ -384,45 +443,45 @@ epm_install_files()
             esac
             ;;
         packagekit)
-            docmd pkcon install-local $@
+            docmd pkcon install-local $files
             return ;;
         pkgsrc)
-            sudocmd pkg_add $@
+            sudocmd pkg_add $files
             return ;;
         pkgng)
-            local PKGTYPE="$(get_package_type $@)"
+            local PKGTYPE="$(get_package_type $files)"
             case "$PKGTYPE" in
                 tbz)
-                    sudocmd pkg_add $@
+                    sudocmd pkg_add $files
                     ;;
                 *)
-                    sudocmd pkg add $@
+                    sudocmd pkg add $files
                     ;;
             esac
             return ;;
         android)
-            sudocmd pm install $@
+            sudocmd pm install $files
             return ;;
         emerge)
             load_helper epm-install-emerge
-            sudocmd epm_install_emerge $@
+            sudocmd epm_install_emerge $files
             return ;;
         pacman)
-            sudocmd pacman -U --noconfirm $nodeps $@ && return
+            sudocmd pacman -U --noconfirm $nodeps $files && return
             local RES=$?
 
             [ -n "$nodeps" ] && return $RES
-            sudocmd pacman -U $@
+            sudocmd pacman -U $files
             return ;;
         slackpkg)
             # FIXME: check for full package name
             # FIXME: broken status when use batch and default answer
-            __separate_sudocmd_foreach "/sbin/installpkg" "/sbin/upgradepkg" $@
+            __separate_sudocmd_foreach "/sbin/installpkg" "/sbin/upgradepkg" $files
             return ;;
     esac
 
     # other systems can install file package via ordinary command
-    epm_install_names "$@"
+    epm_install_names $files
 }
 
 epm_print_install_command()
@@ -491,7 +550,11 @@ epm_print_install_names_command()
 	#[ -z "$1" ] && [ -n "$pkg_files" ] && return
 	[ -z "$1" ] && return
 	case $PMTYPE in
-		apt-rpm|apt-dpkg)
+		apt-rpm)
+			echo "apt-get -y --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true $APTOPTIONS install $*"
+			return ;;
+		apt-dpkg)
+			# this command  not for complex use. ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive
 			echo "apt-get -y --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true $APTOPTIONS install $*"
 			return ;;
 		aptitude-dpkg)
@@ -501,7 +564,7 @@ epm_print_install_names_command()
 			echo "yum -y $YUMOPTIONS install $*"
 			return ;;
 		dnf-rpm)
-			echo "dnf -y $YUMOPTIONS install $*"
+			echo "dnf -y $YUMOPTIONS --allowerasing install $*"
 			return ;;
 		urpm-rpm)
 			echo "urpmi --auto $URPMOPTIONS $*"
@@ -543,11 +606,18 @@ epm_install()
     fi
 
     if [ -n "$show_command_only" ] ; then
+        # TODO: handle pkg_urls too
         epm_print_install_command $pkg_files
         epm_print_install_names_command $pkg_names
         return
     fi
 
+    if [ -n "$interactive" ] ; then
+        confirm_info "You are about to install $pkg_names $pkg_files $pkg_urls package(s)."
+        # TODO: for some packages with dependencies apt will ask later again
+    fi
+
+    # TODO: put it after empty install list checking?
     if [ -n "$direct" ] && [ -z "$repack" ] ; then
         __handle_direct_install
     fi
@@ -586,20 +656,14 @@ epm_install()
 
     # repack binary files
     if [ -n "$repack" ] ; then
-        # FIXME: see to_remove below
-        __epm_repack_to_rpm $files || fatal
-        files="$repacked_rpms"
+        __epm_repack $files || return
+        files="$repacked_pkgs"
     fi
 
     epm_install_files $files
     local RETVAL=$?
 
-    # TODO: move it to exit handler
-    if [ -z "$DEBUG" ] ; then
-    # TODO: reinvent
-    [ -n "$to_remove_pkg_files" ] && rm -fv $to_remove_pkg_files
-    [ -n "$to_remove_pkg_files" ] && rmdir -v $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
-    fi
+    __epm_remove_tmp_files
 
     return $RETVAL
 }

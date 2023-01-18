@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012-2013, 2016, 2018, 2019  Etersoft
-# Copyright (C) 2012-2013, 2016, 2018, 2019  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2013, 2016, 2018, 2019, 2022  Etersoft
+# Copyright (C) 2012-2013, 2016, 2018, 2019, 2022  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -20,6 +20,21 @@
 load_helper epm-query
 load_helper epm-print
 
+__epm_filter_out_base_alt_reqs()
+{
+	grep -E -v "(^rpmlib\(|^/bin/sh|^/bin/bash|^rtld\(GNU_HASH\)|ld-linux)"
+}
+
+__epm_alt_rpm_requires()
+{
+	if [ -n "$short" ] ; then
+		# TODO see also rpmreqs from etersoft-build-utils
+		docmd rpm -q --requires "$@" | __epm_filter_out_base_alt_reqs | sed -e "s| .*||"
+	else
+		docmd rpm -q --requires "$@" | __epm_filter_out_base_alt_reqs
+	fi
+}
+
 epm_requires_files()
 {
 	local pkg_files="$*"
@@ -29,11 +44,11 @@ epm_requires_files()
 
 	case "$PKGTYPE" in
 		rpm)
-			assure_exists rpm
-			docmd rpm -q --requires -p $pkg_files
+			assure_exists rpm >/dev/null
+			__epm_alt_rpm_requires -p $pkg_files
 			;;
 		deb)
-			assure_exists dpkg
+			assure_exists dpkg >/dev/null
 			a='' docmd dpkg -I $pkg_files | grep "^ *Depends:" | sed "s|^ *Depends:||g"
 			;;
 		*)
@@ -54,12 +69,20 @@ case $PMTYPE in
 		# FIXME: need fix for a few names case
 		# FIXME: too low level of requires name (libSOME.so)
 		if is_installed $pkg_names ; then
-			CMD="rpm -q --requires"
+			assure_exists rpm >/dev/null
+			__epm_alt_rpm_requires $pkg_names
+			return
 		else
-			#EXTRA_SHOWDOCMD=' | grep "Depends:"'
-			#docmd apt-cache show $pkg_names | grep "Depends:"
-			#return
-			CMD="apt-cache depends"
+			if [ -n "$verbose" ] ; then
+				CMD="apt-cache depends"
+			else
+				if [ -n "$short" ] ; then
+					LANG=C docmd apt-cache depends $pkg_names | grep "Depends:" | sed -e "s|.*Depends: ||" -e "s|<\(.*\)>|\1|" | __epm_filter_out_base_alt_reqs | sed -e "s| .*||"
+				else
+					LANG=C docmd apt-cache depends $pkg_names | grep "Depends:" | sed -e "s|.*Depends: ||" -e "s|<\(.*\)>|\1|" | __epm_filter_out_base_alt_reqs
+				fi
+				return
+			fi
 		fi
 		;;
 	packagekit)

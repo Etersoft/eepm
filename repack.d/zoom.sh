@@ -33,18 +33,26 @@ for i in libQt5 libav libfdkaac libmpg123 libquazip libturbojpeg libicu ; do
 done
 
 epm assure patchelf || exit
-for i in $BUILDROOT/opt/zoom/{libicui18n.so,libicui18n.so.56,libicuuc.so,libicuuc.so.56} ; do
-    a= patchelf --set-rpath '$ORIGIN/' $i
+for i in $BUILDROOT/opt/zoom/{libicui18n.so,libicui18n.so.*,libicuuc.so,libicuuc.so.*,cef/libcef.so} ; do
+    a= patchelf --set-rpath '$ORIGIN/' $i || continue
 done
 
-for i in $BUILDROOT/opt/zoom/zoom ; do
-    a= patchelf --set-rpath "$PRODUCTDIR/cef" $i
+for i in $BUILDROOT/opt/zoom/{zoom,zopen} ; do
+    a= patchelf --set-rpath '$ORIGIN/':"$PRODUCTDIR/cef" $i
 done
 
-# qt5-3d libqt5-3dquickscene2d
-rm -v $BUILDROOT/opt/zoom/QtQuick/Scene2D/libqtquickscene2dplugin.so $BUILDROOT/opt/zoom/QtQuick/Scene3D/libqtquickscene3dplugin.so
-subst 's|.*/opt/zoom/QtQuick/Scene2D/libqtquickscene2dplugin.so.*||' $SPEC
-subst 's|.*/opt/zoom/QtQuick/Scene3D/libqtquickscene3dplugin.so.*||' $SPEC
+if [ -d $BUILDROOT/opt/zoom/QtQuick/Scene2D ] ; then
+    # qt5-3d libqt5-3dquickscene2d
+    remove_file /opt/zoom/QtQuick/Scene2D/libqtquickscene2dplugin.so
+    remove_file /opt/zoom/QtQuick/Scene3D/libqtquickscene3dplugin.so
+fi
 
-fix_chrome_sandbox $PRODUCTDIR/cef
+for i in $BUILDROOT/opt/zoom/xcbglintegrations/libqxcb-*-integration.so ; do
+    a= patchelf --set-rpath "$PRODUCTDIR" $i
+done
 
+install_deps
+
+epm --skip-installed install libxkbcommon-x11 libxcbutil-image libxcbutil-keysyms
+
+fix_chrome_sandbox $PRODUCTDIR/cef/chrome-sandbox

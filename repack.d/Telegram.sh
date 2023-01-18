@@ -11,8 +11,10 @@ PRODUCTDIR=/opt/Telegram
 . $(dirname $0)/common.sh
 
 # /usr/bin/Telegram
-subst '1iConflicts:telegram-desktop < 3.2.8' $SPEC
+subst '1iConflicts:telegram-desktop' $SPEC
+subst '1iConflicts:telegram-desktop-binary' $SPEC
 
+subst "s|^Group:.*|Group: Networking/Instant messaging|" $SPEC
 subst "s|^License: unknown$|License: GPLv2|" $SPEC
 subst "s|^URL:.*|URL: https://desktop.telegram.org/|" $SPEC
 subst "s|^Summary:.*|Summary: Telegram Desktop messaging app|" $SPEC
@@ -36,7 +38,7 @@ iconname=$PRODUCT
 url=https://github.com/telegramdesktop/tdesktop
 for i in 16 32 48 64 128 256 512 ; do
     mkdir -p $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/
-    $EGET -O $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png $url/raw/master/Telegram/Resources/art/icon$i.png || continue
+    epm tool eget -O $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png $url/raw/master/Telegram/Resources/art/icon$i.png || continue
     pack_file /usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png
 done
 
@@ -47,6 +49,9 @@ echo "$PRODUCTCUR" >"$BUILDROOT/etc/tdesktop/externalupdater"
 pack_file /etc/tdesktop/externalupdater
 remove_file /opt/Telegram/Updater
 
+# Hack against https://bugzilla.altlinux.org/42402
+# We can't forbit creating a desktop file, so just hide it
+subst "s|Terminal=false|NoDisplay=true|" $BUILDROOT$PRODUCTDIR/Telegram
 
 # TODO: tg.protocol
 # https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=telegram-desktop-bin

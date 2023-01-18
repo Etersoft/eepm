@@ -4,12 +4,12 @@
 BUILDROOT="$1"
 SPEC="$2"
 
+. $(dirname $0)/common.sh
+
 if [ "$($DISTRVENDOR -a)" = "x86_64" ] ; then
     # 32 bit
     rm -rfv $BUILDROOT/opt/Citrix/VDA/lib32
     subst "s|.*/libctxXrandrhook.so.||" $SPEC
 fi
 
-#REQUIRES=""
-subst "s|^\(Name: .*\)$|%filter_from_requires /AuthManagerDaemon/d\n\1|g" $SPEC
-
+filter_from_requires AuthManagerDaemon

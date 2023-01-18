@@ -21,9 +21,14 @@
 epm_vardir=/var/lib/eepm
 
 
+__check_installed_app()
+{
+	[ -s $epm_vardir/installed-app ] || return 1
+	grep -q -- "^$1\$" $epm_vardir/installed-app
+}
+
 __save_installed_app()
 {
-	return 0 # stub
 	[ -d "$epm_vardir" ] || return 0
 	__check_installed_app "$1" && return 0
 	echo "$1" | sudorun tee -a $epm_vardir/installed-app >/dev/null
@@ -31,7 +36,6 @@ __save_installed_app()
 
 __remove_installed_app()
 {
-	return 0 # stub
 	[ -s $epm_vardir/installed-app ] || return 0
 	local i
 	for i in $* ; do
@@ -40,16 +44,28 @@ __remove_installed_app()
 	return 0
 }
 
-__check_installed_app()
+
+__is_app_installed()
+{
+	__run_script "$1" --installed "$2"
+	return
+}
+
+__run_script()
 {
 	local script="$psdir/$1.sh"
 	[ -x "$script" ] || return
-	$script --installed
+	shift
+	$script "$@"
 	return
-
-	[ -s $epm_vardir/installed-app ] || return 1
-	grep -q -- "^$1\$" $epm_vardir/installed-app
 }
+
+__get_app_package()
+{
+	__run_script "$1" --package-name "$2" 2>/dev/null
+}
+
+
 
 __list_all_app()
 {
@@ -74,7 +90,9 @@ __list_app_packages_table()
 {
     local name
     for name in $(__list_all_app) ; do
-        echo "$(__get_app_package $name) $name"
+        local pkg="$(__get_app_package $name)"
+        [ -n "$pkg" ] || continue
+        echo "$pkg $name"
     done
 }
 
@@ -93,19 +111,23 @@ __list_installed_app()
     cat $epm_vardir/installed-app 2>/dev/null
 }
 
-__get_app_package()
+__list_installed_packages()
 {
-    local script="$psdir/$1.sh"
-    [ -x "$script" ] || return
-    $script --package 2>/dev/null
+    local i
+    local tapt=$(mktemp) || fatal
+    __list_app_packages_table >$tapt
+    # get all installed packages and convert it to a apps list
+    for i in $(epm query --short $(cat $tapt | sed -e 's| .*$||') 2>/dev/null) ; do
+        grep "^$i " $tapt | cut -f1 -d" "
+    done
+    rm -f $tapt
 }
 
 
+# args: script, host arch
 __get_app_description()
 {
-    local script="$psdir/$1.sh"
-    [ -x "$script" ] || return
-    $script --description 2>/dev/null
+    __run_script "$1" --description "$2" 2>/dev/null
 }
 
 __check_play_script()
@@ -122,9 +144,8 @@ __epm_play_run()
     local script="$psdir/$1.sh"
     shift
 
-    # allow use EGET in the scripts
-    __set_EGET
-    # also we will have DISTRVENDOR there
+    # TODO: use epm print info instead of one?
+    # we will have DISTRVENDOR there
     export PATH=$PROGDIR:$PATH
 
     set_sudo
@@ -150,7 +171,7 @@ __epm_play_list_installed()
     [ -n "$quiet" ] || echo "Installed applications:"
     for i in $(__list_installed_app) ; do
         local desc="$(__get_app_description $i)"
-        [ -n "$desc" ] || continue
+        #[ -n "$desc" ] || continue
         [ -n "$quiet" ] || echo -n "  "
         printf "%-20s - %s\n" "$i" "$desc"
     done
@@ -162,16 +183,20 @@ __epm_play_list()
     local psdir="$1"
     local i
     local IGNOREi586
-    [ "$($DISTRVENDOR -a)" = "x86_64" ] && IGNOREi586='' || IGNOREi586=1
+    local arch="$($DISTRVENDOR -a)"
+    [ "$arch" = "x86_64" ] && IGNOREi586='' || IGNOREi586=1
 
     if [ -n "$short" ] ; then
         for i in $(__list_all_app) ; do
+            local desc="$(__get_app_description $i $arch)"
+            [ -n "$desc" ] || continue
             echo "$i"
         done
         exit
     fi
+
     for i in $(__list_all_app) ; do
-        local desc="$(__get_app_description $i)"
+        local desc="$(__get_app_description $i $arch)"
         [ -n "$desc" ] || continue
         [ -n "$quiet" ] || echo -n "  "
         printf "%-20s - %s\n" "$i" "$desc"
@@ -208,17 +233,24 @@ fi
 
 if [ "$1" = "--remove" ] || [ "$1" = "remove" ]  ; then
     shift
-    #__check_installed_app "$1" || warning "$1 is not installed"
     prescription="$1"
     shift
-    __epm_play_run $prescription --remove "$@"
-    __remove_installed_app "$prescription"
+    if __check_play_script "$prescription" ; then
+        __epm_play_run $prescription --remove "$@"
+        __remove_installed_app "$prescription"
+    else
+        psdir=$prsdir
+        __check_play_script "$prescription" || fatal "We have no idea how to remove $prescription (checked in $psdir and $prsdir)"
+        __epm_play_run "$prescription" --remove "$@" || fatal "There was some error during run the script."
+    fi
     exit
 fi
 
 
 if [ "$1" = "--update" ] ; then
     shift
+    local CMDUPDATE="--update"
+    [ -n "$force" ] && CMDUPDATE="--run"
     if [ "$1" = "all" ] ; then
         shift
         RES=0
@@ -231,34 +263,50 @@ if [ "$1" = "--update" ] ; then
                 RES=1
                 continue
             fi
-            __epm_play_run $prescription --update "$@" || RES=$?
+            __epm_play_run $prescription $CMDUPDATE "$@" || RES=$?
         done
         exit $RES
     fi
     if [ -z "$1" ] ; then
         fatal "run --update with 'all' or a project name"
     fi
-    __check_installed_app "$1" || fatal "$1 is not installed"
+    __is_app_installed "$1" || fatal "$1 is not installed"
     prescription="$1"
     shift
-    __epm_play_run $prescription --update "$@"
+    __epm_play_run $prescription $CMDUPDATE "$@"
     exit
 fi
 
 if [ "$1" = "--installed" ] || [ "$1" = "installed" ]  ; then
     shift
-    __check_installed_app "$1"
+    __is_app_installed "$1" "$2"
     #[ -n "$quiet" ] && exit
     exit
 fi
 
-if [ "$1" = "--list" ] || [ "$1" = "--list-installed" ] || [ "$1" = "list" ] || [ "$1" = "list-installed" ]  ; then
-    __epm_play_list_installed
-    exit
-fi
+case "$1" in
+    # internal options
+    "--installed-version"|"--package-name"|"--product-alternatives")
+        __run_script "$2" "$1" "$3"
+        exit
+        ;;
+    "--list-installed-packages")
+        __list_installed_packages
+        exit
+        ;;
+    "--list"|"--list-installed"|"list"|"list-installed")
+        __epm_play_list_installed
+        exit
+        ;;
+    # internal options
+    "--help"|"help")
+        __run_script "$2" "$1" "$3"
+        exit
+        ;;
+esac
 
 if [ "$1" = "--list-all" ] || [ "$1" = "list-all" ] || [ -z "$*" ] ; then
-    [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications:"
+    [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $($DISTRVENDOR -a)):"
     __epm_play_list $psdir
     [ -n "$quiet" ] || [ -n "$*" ] && exit
     echo
@@ -276,12 +324,17 @@ fi
 prescription="$1"
 shift
 
+load_helper epm-check_updated_repo
+
+update_repo_if_needed
+
 if __check_play_script "$prescription" ; then
-    #__check_installed_app "$prescription" && info "$$prescription is already installed (use --remove to remove)" && exit 1
+    #__is_app_installed "$prescription" && info "$$prescription is already installed (use --remove to remove)" && exit 1
     __epm_play_run "$prescription" --run "$@" && __save_installed_app "$prescription" || fatal "There was some error during install the application."
 else
+    opsdir=$psdir
     psdir=$prsdir
-    __check_play_script "$prescription" || fatal "We have no idea how to play $prescription (checked in $psdir and $prsdir)"
+    __check_play_script "$prescription" || fatal "We have no idea how to play $prescription (checked in $opsdir and $prsdir)"
     __epm_play_run "$prescription" --run "$@" || fatal "There was some error during run the script."
 fi
 }

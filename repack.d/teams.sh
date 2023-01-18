@@ -26,8 +26,6 @@ subst "s|/usr/share/teams|$LIBDIR/$PRODUCT|" $SPEC
 subst '1iAutoProv:no' $SPEC
 
 # ignore embedded libs
-subst '1i%filter_from_requires /^libGLESv2.so().*/d' $SPEC
-subst '1i%filter_from_requires /^libEGL.so().*/d' $SPEC
-subst '1i%filter_from_requires /^libffmpeg.so().*/d' $SPEC
+drop_embedded_reqs
 
 fix_chrome_sandbox
