@@ -10,12 +10,16 @@ PRODUCT=rustdesk
 
 subst '1iAutoProv:no' $SPEC
 
-
 # put service file to the normal place
 mkdir -p $BUILDROOT/etc/systemd/system/
 cp $BUILDROOT/usr/share/rustdesk/files/systemd/rustdesk.service $BUILDROOT/etc/systemd/system/$PRODUCT.service
 remove_file /usr/share/rustdesk/files/systemd/rustdesk.service
 pack_file /etc/systemd/system/$PRODUCT.service
+
+remove_dir /usr/share/rustdesk
+
+move_to_opt
+add_bin_link_command
 
 # TODO
 # if [[ "$parsedVersion" -gt "360" ]]; then
@@ -25,4 +29,10 @@ remove_file /usr/share/rustdesk/files/pynput_service.py
 
 echo "Categories=GNOME;GTK;Network;RemoteAccess;" >> $BUILDROOT/usr/share/applications/$PRODUCT.desktop
 
+epm assure patchelf || fatal
+for i in $BUILDROOT/$PRODUCTDIR/lib/*.so ; do
+    a= patchelf --set-rpath '$ORIGIN/' $i || continue
+done
+
 epm install glib2 libappindicator-gtk3 libcairo libgdk-pixbuf libgtk+3 libpango libpulseaudio libuuid libX11 libXau libxcb libXdmcp libXfixes libXtst xdotool
+
