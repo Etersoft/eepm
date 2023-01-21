@@ -30,6 +30,7 @@ __epm_addrepo_rhel()
 		echo "1. Use with repository URL, f.i. http://www.example.com/example.repo"
 		echo "2. Use with epel to add EPEL repository"
 		echo "3. Use with powertools to add PowerTools repository"
+		echo "4. Use with crb to add Rocky Linux CRB repository"
 		return 1
 	fi
 	case "$1" in
@@ -42,6 +43,12 @@ __epm_addrepo_rhel()
 			# https://serverfault.com/questions/997896/how-to-enable-powertools-repository-in-centos-8
 			epm install --skip-installed dnf-plugins-core
 			sudocmd dnf config-manager --set-enabled powertools
+			return 1
+			;;
+		crb)
+			# https://wiki.rockylinux.org/rocky/repo/
+			epm install --skip-installed dnf-plugins-core
+			sudocmd dnf config-manager --set-enabled crb
 			return 1
 			;;
 	esac
