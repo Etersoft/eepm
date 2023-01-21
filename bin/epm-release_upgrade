@@ -538,6 +538,29 @@ epm_release_upgrade()
 			info "You can run '# epm autoorphans' to remove orphaned packages"
 			exit
 		fi
+
+		if [ "$1" = "RockyLinux" ] ; then
+			sudocmd dnf --refresh upgrade || fatal
+			sudocmd dnf clean all
+			info "Check https://www.centlinux.com/2022/07/upgrade-your-servers-from-rocky-linux-8-to-9.html"
+			info "For upgrading your yum repositories from Rocky Linux 8 to 9 ..."
+			epm install "https://download.rockylinux.org/pub/rocky/9/BaseOS/x86_64/os/Packages/r/rocky-gpg-keys*.rpm" || fatal
+			epm install "epmi https://download.rockylinux.org/pub/rocky/9/BaseOS/x86_64/os/Packages/r/rocky-repos*.rpm" "https://download.rockylinux.org/pub/rocky/9/BaseOS/x86_64/os/Packages/r/rocky-release*.rpm" || fatal
+
+			# hack (TODO)
+			DV=$(echo "$DISTRVERSION" | sed -e "s|\..*||")
+			local RELEASEVER="$1"
+			[ -n "$RELEASEVER" ] || RELEASEVER=$(($DV + 1))
+			confirm_info "Upgrade to $DISTRNAME/$RELEASEVER"
+
+			sudocmd dnf -y --releasever=$RELEASEVER --allowerasing --setopt=deltarpm=false distro-sync
+			sudocmd rpm --rebuilddb
+			epm upgrade
+			info "You can run '# epm autoorphans' to remove orphaned packages"
+			info "Use # dnf module reset <module> to resolve 'nothing provides module' error"
+			exit
+		fi
+
 		info "Check https://fedoraproject.org/wiki/DNF_system_upgrade for an additional info"
 		#docmd epm install epel-release yum-utils
 		sudocmd dnf --refresh upgrade || fatal
