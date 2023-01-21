@@ -282,8 +282,8 @@ __switch_alt_to_distro()
 			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
 			__switch_repo_to $TO
 			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
-			__do_upgrade
 			end_change_alt_repo
+			__do_upgrade
 			docmd epm update-kernel
 			info "Run epm release-upgrade again for update to p8"
 			;;
@@ -292,8 +292,8 @@ __switch_alt_to_distro()
 			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
 			__switch_repo_to $TO
 			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
-			__do_upgrade
 			end_change_alt_repo
+			__do_upgrade
 			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			info "Run epm release-upgrade again for update to p9"
@@ -303,8 +303,8 @@ __switch_alt_to_distro()
 			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
 			__switch_repo_to $TO
 			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
-			__do_upgrade
 			end_change_alt_repo
+			__do_upgrade
 			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			;;
@@ -318,8 +318,8 @@ __switch_alt_to_distro()
 				docmd epm downgrade apt pam pam0_passwdqc glibc-core libcrypt- || fatal
 			fi
 			docmd epm $non_interactive $force_yes downgrade || fatal
-			__do_upgrade
 			end_change_alt_repo
+			__do_upgrade
 			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			;;
@@ -331,8 +331,8 @@ __switch_alt_to_distro()
 				docmd epm remove gdb || fatal
 			fi
 			__switch_repo_to $TO
-			__do_upgrade
 			end_change_alt_repo
+			__do_upgrade
 			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			__check_system "$TO"
 			docmd epm update-kernel || fatal
@@ -344,8 +344,8 @@ __switch_alt_to_distro()
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
 			__switch_repo_to $TO
-			__do_upgrade
 			end_change_alt_repo
+			__do_upgrade
 			docmd epm install rpm apt $(get_fix_release_pkg "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			__check_system "$TO"
 			docmd epm update-kernel -t std-def || fatal
@@ -411,9 +411,9 @@ __switch_alt_to_distro()
 			#local ADDPKG
 			#ADDPKG=$(epm -q --short make-initrd sssd-ad 2>/dev/null)
 			#docmd epm install librpm7 librpm rpm apt $ADDPKG $(get_fix_release_pkg --force "$TO") ConsoleKit2- || fatal "Check an error and run again"
+			end_change_alt_repo
 			docmd epm $force_yes $non_interactive upgrade || fatal "Check the error and run '# epm release-upgrade' again or just '# epm upgrade'"
 			docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
-			end_change_alt_repo
 			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			;;
