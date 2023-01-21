@@ -206,7 +206,7 @@ __set_version_pkgname()
 __set_version_apppkgname()
 {
     local alpkg="$1"
-    VERSION="$(echo "$alpkg" | grep -o -P "[-_.a-zA-Z]([0-9])([0-9])*(\.[0-9])*" | head -n1 | sed -e 's|^[-_.a-zA-Z]||')" #"
+    VERSION="$(echo "$alpkg" | grep -o -P "[-_.a-zA-Z]([0-9])([0-9])*(\.[0-9])*" | head -n1 | sed -e 's|^[-_.a-zA-Z]||' -e 's|--|-|g' )"  #"
     [ -n "$VERSION" ] && PKGNAME="$(echo "$alpkg" | sed -e "s|$VERSION.*||")"
 }
 
