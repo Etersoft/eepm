@@ -270,8 +270,8 @@ __epm_query_shortname()
 
 	case $PMTYPE in
 		*-rpm)
-			showcmd rpm -q --queryformat '%{name} \n' -- $@
-			a='' rpm -q --queryformat '%{name} \n' -- $@
+			showcmd rpm -q --queryformat '%{name}\n' -- $@
+			a='' rpm -q --queryformat '%{name}\n' -- $@
 			return
 			;;
 		*-dpkg)
