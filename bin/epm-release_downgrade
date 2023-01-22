@@ -111,7 +111,7 @@ epm_release_downgrade()
 	yum-rpm)
 		docmd epm install rpm yum
 		sudocmd yum clean all
-		# TODO
+		info "Try manually:"
 		showcmd rpm -Uvh http://mirror.yandex.ru/fedora/linux/releases/16/Fedora/x86_64/os/Packages/fedora-release-16-1.noarch.rpm
 		showcmd epm Upgrade
 		;;
@@ -136,7 +136,7 @@ epm_release_downgrade()
 		;;
 	urpm-rpm)
 		sudocmd urpmi.removemedia -av
-		# TODO
+		info "Try do manually:"
 		showcmd urpmi.addmedia --distrib http://mirror.yandex.ru/mandriva/devel/2010.2/i586/
 		sudocmd urpmi --auto-update --replacefiles
 		;;

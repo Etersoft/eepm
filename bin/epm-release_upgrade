@@ -499,7 +499,7 @@ epm_release_upgrade()
 	yum-rpm)
 		docmd epm install rpm yum
 		sudocmd yum clean all
-		# TODO
+		info "Try do manually:"
 		showcmd rpm -Uvh http://mirror.yandex.ru/fedora/linux/releases/16/Fedora/x86_64/os/Packages/fedora-release-16-1.noarch.rpm
 		showcmd epm Upgrade
 		;;
@@ -509,7 +509,7 @@ epm_release_upgrade()
 				info "https://github.com/rocky-linux/rocky-tools/tree/main/migrate2rocky/"
 				confirm_info "Switch to Rocky Linux 8.x"
 				cd /tmp
-				showcmd epm install git
+				docmd epm install git
 				sudocmd git clone https://github.com/rocky-linux/rocky-tools.git || fatal
 				sudocmd bash rocky-tools/migrate2rocky/migrate2rocky.sh -r
 				exit
@@ -519,7 +519,7 @@ epm_release_upgrade()
 				info "Check https://t.me/srv_admin/1630"
 				confirm_info "Switch to Oracle Linux 8.x"
 				cd /tmp
-				showcmd epm install git
+				docmd epm install git
 				sudocmd sed -i -r \
 					-e 's!^mirrorlist=!#mirrorlist=!' \
 					-e 's!^#?baseurl=http://(mirror|vault).centos.org/\$contentdir/\$releasever/!baseurl=https://dl.rockylinux.org/vault/centos/8.5.2111/!i' \
@@ -583,7 +583,7 @@ epm_release_upgrade()
 		;;
 	urpm-rpm)
 		sudocmd urpmi.removemedia -av
-		# TODO
+		info "Try do manually"
 		showcmd urpmi.addmedia --distrib http://mirror.yandex.ru/mandriva/devel/2010.2/i586/
 		sudocmd urpmi --auto-update --replacefiles
 		;;
