@@ -123,8 +123,10 @@ get_fix_release_pkg()
 	if [ "$TO" = "Sisyphus" ] ; then
 		TO="sisyphus"
 		echo "apt-conf-$TO"
+		# apt-conf-sisyphus and apt-conf-branch conflicts
+		epm installed apt-conf-branch && echo "apt-conf-branch-"
 	else
-		epm installed apt-conf-branch && echo "apt-conf-branch"
+		epm installed apt-conf-branch && echo "apt-conf-branch apt-conf-sisyphus-"
 	fi
 
 	if [ "$FORCE" == "--force" ] ; then
@@ -407,7 +409,8 @@ __switch_alt_to_distro()
 			__alt_repofix "alt"
 			[ -s /etc/rpm/macros.d/p10 ] && rm -fv /etc/rpm/macros.d/p10
 			__epm_ru_update || fatal
-			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm fix || fatal
+			docmd epm install $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			#local ADDPKG
 			#ADDPKG=$(epm -q --short make-initrd sssd-ad 2>/dev/null)
 			#docmd epm install librpm7 librpm rpm apt $ADDPKG $(get_fix_release_pkg --force "$TO") ConsoleKit2- || fatal "Check an error and run again"
