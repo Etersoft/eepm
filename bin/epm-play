@@ -181,6 +181,7 @@ __epm_play_list_installed()
 __epm_play_list()
 {
     local psdir="$1"
+    local extra="$2"
     local i
     local IGNOREi586
     local arch="$($DISTRVENDOR -a)"
@@ -191,6 +192,11 @@ __epm_play_list()
             local desc="$(__get_app_description $i $arch)"
             [ -n "$desc" ] || continue
             echo "$i"
+            if [ -n "$extra" ] ; then
+                for j in $(__run_script "$i" "--product-alternatives") ; do
+                    echo "  $i $j"
+                done
+            fi
         done
         exit
     fi
@@ -200,6 +206,11 @@ __epm_play_list()
         [ -n "$desc" ] || continue
         [ -n "$quiet" ] || echo -n "  "
         printf "%-20s - %s\n" "$i" "$desc"
+        if [ -n "$extra" ] ; then
+            for j in $(__run_script "$i" "--product-alternatives") ; do
+                printf "  %-20s - %s\n" "$i $j" "$desc"
+            done
+        fi
     done
 }
 
@@ -304,6 +315,12 @@ case "$1" in
         exit
         ;;
 esac
+
+if [ "$1" = "--full-list-all" ] ; then
+    [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $($DISTRVENDOR -a)):"
+    __epm_play_list $psdir extra
+    exit
+fi
 
 if [ "$1" = "--list-all" ] || [ "$1" = "list-all" ] || [ -z "$*" ] ; then
     [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $($DISTRVENDOR -a)):"
