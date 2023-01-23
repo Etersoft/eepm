@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2022  Etersoft
-# Copyright (C) 2022  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2022, 2023  Etersoft
+# Copyright (C) 2022, 2023  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -29,21 +29,24 @@ epm_tool()
             fatal "Use epm tool help to get help."
             ;;
         "-h"|"--help"|"help")
+            echo "Tools embedded in epm:"
+            get_help HELPCMD $SHAREDIR/epm-tool
+
 cat <<EOF
   Examples:
-    epm tool eget
-    epm tool estrlist
+    epm tool eget -U http://ya.ru
+    epm tool estrlist union a b a c
 EOF
             ;;
-        "eget")
+        "eget")                      # HELPCMD: downloading tool (simular to wget or curl)
             showcmd eget "$@"
             eget "$@"
             ;;
-        "estrlist")
+        "estrlist")                  # HELPCMD: string operations
             showcmd estrlist "$@"
             estrlist "$@"
             ;;
-        "json")
+        "json")                      # HELPCMD: json operations
             showcmd json "$@"
             $SHAREDIR/tools_json "$@"
             ;;
