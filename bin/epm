@@ -321,6 +321,9 @@ check_command()
     mark)                     # HELPCMD: mark package as manually or automatically installed (see epm mark --help)
         epm_cmd=mark
         ;;
+    history)                  # HELPCMD: show a log of actions taken by the software management
+        epm_cmd=history
+        ;;
     autoorphans|--orphans)    # HELPCMD: remove all packages not from the repository
         epm_cmd=autoorphans
         ;;

@@ -157,7 +157,7 @@ check_command()
         exit 0
         ;;
     history | hist)           # HELPCMD: Display, or use, the transaction history
-        fatal "Is not supported"
+        epm_cmd=history
         ;;
     info)                     # HELPCMD: Display details about a package or group of packages
         epm_cmd=info
