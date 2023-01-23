@@ -124,6 +124,27 @@ LANG=C docmd $CMD $string
 epm play $short --list-all | sed -e 's|^ *||g' -e 's|[[:space:]]\+| |g' -e "s|\$| (use \'epm play\' to install it)|"
 }
 
+# copied from eget's filter_glob
+# check man glob
+__convert_glob__to_regexp()
+{
+	# translate glob to regexp
+	echo "$1" | sed -e "s|\*|.*|g" -e "s|?|.|g"
+}
+
+# ^mc.*ext -> mc
+_clean_from_regexp()
+{
+	sed -e "s/[?\^.*]/ /g"
+}
+
+# ^mc*e?t -> mc
+__clean_from_glob()
+{
+	sed -e "s/[?*].*//" -e "s/[?\^.*]/ /g"
+}
+
+
 # produce grep sequence
 __epm_search_make_grep()
 {
@@ -147,7 +168,7 @@ __epm_search_make_grep()
 	#list=$(strip_spaces $list | sed -e "s/ /|/g")
 	listN=$(strip_spaces $listN | sed -e "s/ /|/g" | sed -e "s/~//g")
 
-	# only apt supports regexps?
+	# TODO: only apt supports regexps?
 	case $PMTYPE in
 		apt-*)
 			;;
@@ -156,6 +177,9 @@ __epm_search_make_grep()
 				listN=$(echo "$listN" | sed -e "s/[?\^.]/ /g")
 			;;
 	esac
+
+	list=$(__convert_glob__to_regexp "$list")
+	listN=$(__convert_glob__to_regexp "$listN")
 
 	if [ -n "$short" ] ; then
 		echon " | sed -e \"s| .*||g\""
@@ -215,9 +239,12 @@ epm_search()
 
 	warmup_bases
 
+	echo "$*" | grep -q "\.[*?]" && warning "Only glob symbols * and ? are supported. Don't use regexp here!"
+
 	# FIXME: do it better
 	local MGS
 	MGS=$(eval __epm_search_make_grep $quoted_args)
 	EXTRA_SHOWDOCMD="$MGS"
-	eval "__epm_search_output \"$(eval get_firstarg $quoted_args)\" $MGS"
+	# TODO: use search args for more optimal output
+	eval "__epm_search_output \"$(eval get_firstarg $quoted_args | __clean_from_glob)\" $MGS"
 }
