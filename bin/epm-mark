@@ -17,15 +17,42 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+# TODO: move to a common place and use
+__is_wildcard()
+{
+	echo "$1" | grep -q "[*?]"
+}
+
+__alt_mark_hold_package()
+{
+		local pkg="$1"
+		showcmd "echo \"RPM::Hold {\"^$pkg\";};\" > /etc/apt/apt.conf.d/hold-$pkg.conf"
+		echo "RPM::Hold {\"^$pkg\";};" | sudorun tee "/etc/apt/apt.conf.d/hold-$pkg.conf" >/dev/null
+}
+
+__alt_test_glob()
+{
+	echo "$*" | grep -q "\.[*?]" && warning "Only glob symbols * and ? are supported. Don't use regexp here!"
+}
+
 __alt_mark_hold()
 {
 	# TODO: do more long checking via apt
 	local pkg
 	local i
+	__alt_test_glob "$*"
 	for i in "$@" ; do
-		pkg="$(epm query --short "$i")" || continue
-		showcmd "echo \"RPM::Hold {\"^$pkg\";};\" > /etc/apt/apt.conf.d/hold-$pkg.conf"
-		echo "RPM::Hold {\"^$pkg\";};" | sudorun tee "/etc/apt/apt.conf.d/hold-$pkg.conf" >/dev/null
+		if __is_wildcard "$i" ; then
+			local pkglist
+			pkglist="$(epm qp --short "^$i")" || continue
+			for pkg in $pkglist ; do
+				__alt_mark_hold_package $pkg
+			done
+			return
+		else
+			pkg="$(epm query --short "$i")" || continue
+		fi
+		__alt_mark_hold_package $pkg
 	done
 }
 
@@ -34,6 +61,7 @@ __alt_mark_unhold()
 	# TODO: do more long checking via apt
 	local pkg
 	local i
+	__alt_test_glob "$*"
 	for i in "$@" ; do
 		pkg="$(epm query --short "$i")" || pkg="$i"
 		sudocmd rm -fv /etc/apt/apt.conf.d/hold-$pkg.conf
