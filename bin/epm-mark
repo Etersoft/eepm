@@ -68,6 +68,11 @@ __alt_mark_unhold()
 	done
 }
 
+__alt_mark_showhold()
+{
+	grep -h "RPM::Hold" /etc/apt/apt.conf.d/hold-*.conf 2>/dev/null | sed -e 's|RPM::Hold {"^\(.*\)";};|\1|'
+}
+
 epm_mark()
 {
 
@@ -81,6 +86,11 @@ case $PMTYPE in
 		if [ "$1" = "unhold" ] ; then
 			shift
 			__alt_mark_unhold "$@"
+			exit
+		fi
+		if [ "$1" = "showhold" ] ; then
+			shift
+			__alt_mark_showhold "$@"
 			exit
 		fi
 		sudocmd apt-mark "$@"
