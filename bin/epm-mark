@@ -73,6 +73,10 @@ __alt_mark_showhold()
 	grep -h "RPM::Hold" /etc/apt/apt.conf.d/hold-*.conf 2>/dev/null | sed -e 's|RPM::Hold {"^\(.*\)";};|\1|'
 }
 
+__dnf_assure_versionlock()
+{
+	epm assure /etc/dnf/plugins/versionlock.conf 'dnf-command(versionlock)'
+}
 
 epm_mark_hold()
 {
@@ -89,7 +93,17 @@ case $PMTYPE in
 		sudocmd apt-mark hold "$@"
 		;;
 	yum-rpm|dnf-rpm)
-		fatal "Improve me"
+		__dnf_assure_versionlock
+		sudocmd dnf versionlock add "$@"
+		;;
+	zypper-rpm)
+		sudocmd zypper al "$@"
+		;;
+	emerge)
+		info "Check /etc/portage/package.mask"
+		;;
+	pacman)
+		info "Manually: edit /etc/pacman.conf modifying IgnorePkg array"
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -114,7 +128,17 @@ case $PMTYPE in
 		sudocmd apt-mark unhold "$@"
 		;;
 	yum-rpm|dnf-rpm)
-		fatal "Improve me"
+		__dnf_assure_versionlock
+		sudocmd dnf versionlock delete "$@"
+		;;
+	zypper-rpm)
+		sudocmd zypper rl "$@"
+		;;
+	emerge)
+		info "Check /etc/portage/package.mask (package.unmask)"
+		;;
+	pacman)
+		info "Manually: edit /etc/pacman.conf removing package from IgnorePkg line"
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -138,9 +162,19 @@ case $PMTYPE in
 	apt-dpkg)
 		sudocmd apt-mark showhold "$@"
 		;;
-#	yum-rpm|dnf-rpm)
-#		fatal "Improve me"
-#		;;
+	yum-rpm|dnf-rpm)
+		__dnf_assure_versionlock
+		sudocmd dnf versionlock list
+		;;
+	zypper-rpm)
+		sudocmd zypper ll "$@"
+		;;
+	emerge)
+		cat /etc/portage/package.mask
+		;;
+	pacman)
+		cat /etc/pacman.conf
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
@@ -166,6 +200,12 @@ case $PMTYPE in
 #	yum-rpm|dnf-rpm)
 #		sudocmd dnf mark remove "$@"
 #		;;
+		pacman)
+			sudocmd pacman -D --asdeps "$@"
+		;;
+		emerge)
+			sudocmd emerge --oneshot "$@"
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
@@ -191,6 +231,12 @@ case $PMTYPE in
 #	yum-rpm|dnf-rpm)
 #		sudocmd dnf mark install "$@"
 #		;;
+		pacman)
+			sudocmd pacman -D --asexplicit "$@"
+		;;
+		emerge)
+			sudocmd emerge --select "$@"
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
