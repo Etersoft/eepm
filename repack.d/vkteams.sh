@@ -54,6 +54,9 @@ subst "s|.*$PRODUCTDIR/unittests.*||" $SPEC
 
 epm assure patchelf || exit
 cd $BUILDROOT$PRODUCTDIR
-for i in QtQuick/Controls.2/libqtquickcontrols2plugin.so  ; do
-    a= patchelf --set-rpath '$ORIGIN/../..' $i
+for i in QtQuick/*/lib*.so  ; do
+    a= patchelf --set-rpath '$ORIGIN/../../lib' $i
 done
+
+# FIXME: check the full list
+filter_from_requires libQt5 libxcb libGL "libX.*"
