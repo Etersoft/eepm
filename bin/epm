@@ -318,7 +318,7 @@ check_command()
         epm_cmd=autoremove
         direct_args=1
         ;;
-    mark)                     # HELPCMD: mark package as manually or automatically installed (see epm mark --help)
+    mark)                     # HELPCMD: mark package as manually or automatically installed or hold/unhold it (see epm mark --help)
         epm_cmd=mark
         ;;
     history)                  # HELPCMD: show a log of actions taken by the software management

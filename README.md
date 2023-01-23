@@ -90,6 +90,9 @@ and run in the download directory via bash:
 4. Ensure that `epm packages` and `epm --short packages` works correctly
 (`epm package 'awk'` have to print packages with `awk` substring in their names)
 
+## Informational resources
+* https://wiki.archlinux.org/title/Pacman/Rosetta
+
 See detailed description in Russian at
 http://wiki.etersoft.ru/Epm
 
