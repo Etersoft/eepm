@@ -188,7 +188,7 @@ check_command()
     -e|-P|rm|del|remove|delete|uninstall|erase|purge|e)  # HELPCMD: remove (delete) package(s) from the database and the system
         epm_cmd=remove
         ;;
-    -s|search|s)                # HELPCMD: search in remote package repositories
+    -s|search|s|find)                # HELPCMD: search in remote package repositories
         epm_cmd=search
         ;;
     -qp|qp|query_package)     # HELPCMD: search in the list of installed packages
@@ -246,7 +246,7 @@ check_command()
     conflicts)                # HELPCMD: print package conflicts
         epm_cmd=conflicts
         ;;
-    -qa|qa|-l|list|packages)  # HELPCMD: print list of installed package(s)
+    -qa|qa|-l|list|ls|packages)  # HELPCMD: print list of installed package(s)
         epm_cmd=packages
         ;;
     programs)                 # HELPCMD: print list of installed GUI program(s) (they have .desktop files)
