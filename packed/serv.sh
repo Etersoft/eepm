@@ -1432,7 +1432,7 @@ case $DISTRIB_ID in
 	PCLinux)
 		CMD="apt-rpm"
 		;;
-	Ubuntu|Debian|Mint|AstraLinux*|Elbrus)
+	Ubuntu|Debian|Mint|OSNovaLinux|AstraLinux*|Elbrus)
 		CMD="apt-dpkg"
 		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
 		#hascommand snappy && CMD=snappy
@@ -1500,17 +1500,23 @@ case $DISTRIB_ID in
 		;;
 	*)
 		# try detect firstly
-		if hascommand "rpm" ; then
+		if grep -q "ID_LIKE=debian" /etc/os-release 2>/dev/null ; then
+			echo "apt-dpkg" && return
+		fi
+
+		if hascommand "rpm" && [ -s /var/lib/rpm/Name ] ; then
 			hascommand "zypper" && echo "zypper-rpm" && return
-			hascommand "apt-get" && echo "apt-rpm" && return
 			hascommand "dnf" && echo "dnf-rpm" && return
+			hascommand "apt-get" && echo "apt-rpm" && return
 			hascommand "yum" && echo "yum-rpm" && return
 			hascommand "urpmi" && echo "urpmi-rpm" && return
 		fi
-		if hascommand "dpkg" ; then
+
+		if hascommand "dpkg" && [ -s /var/lib/dpkg/status ] ; then
 			hascommand "apt" && echo "apt-dpkg" && return
 			hascommand "apt-get" && echo "apt-dpkg" && return
 		fi
+
 		echo "We don't support yet DISTRIB_ID $DISTRIB_ID" >&2
 		;;
 esac
@@ -2355,7 +2361,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.28.7  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.29.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

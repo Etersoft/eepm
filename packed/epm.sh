@@ -669,6 +669,7 @@ __epm_addrepo_rhel()
 		echo "1. Use with repository URL, f.i. http://www.example.com/example.repo"
 		echo "2. Use with epel to add EPEL repository"
 		echo "3. Use with powertools to add PowerTools repository"
+		echo "4. Use with crb to add Rocky Linux CRB repository"
 		return 1
 	fi
 	case "$1" in
@@ -681,6 +682,12 @@ __epm_addrepo_rhel()
 			# https://serverfault.com/questions/997896/how-to-enable-powertools-repository-in-centos-8
 			epm install --skip-installed dnf-plugins-core
 			sudocmd dnf config-manager --set-enabled powertools
+			return 1
+			;;
+		crb)
+			# https://wiki.rockylinux.org/rocky/repo/
+			epm install --skip-installed dnf-plugins-core
+			sudocmd dnf config-manager --set-enabled crb
 			return 1
 			;;
 	esac
@@ -2807,6 +2814,36 @@ epm_full_upgrade()
 	docmd epm clean
 }
 
+# File bin/epm-history:
+
+epm_history()
+{
+
+[ -z "$*" ] || fatal "No arguments are allowed here"
+
+case $PMTYPE in
+	apt-dpkg)
+		docmd less /var/log/dpkg.log
+		;;
+	dnf-rpm)
+		sudocmd dnf history
+		;;
+	zypper-rpm)
+		less /var/log/zypp/history
+		;;
+	pacman)
+		docmd less /var/log/pacman.log
+		;;
+	emerge)
+		docmd less /var/log/portage
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+}
+
 # File bin/epm-info:
 
 
@@ -3739,15 +3776,307 @@ epm_kernel_update()
 
 # File bin/epm-mark:
 
-epm_mark()
+__is_wildcard()
+{
+	echo "$1" | grep -q "[*?]"
+}
+
+__alt_mark_hold_package()
+{
+		local pkg="$1"
+		showcmd "echo \"RPM::Hold {\"^$pkg\";};\" > /etc/apt/apt.conf.d/hold-$pkg.conf"
+		echo "RPM::Hold {\"^$pkg\";};" | sudorun tee "/etc/apt/apt.conf.d/hold-$pkg.conf" >/dev/null
+}
+
+__alt_test_glob()
+{
+	echo "$*" | grep -q "\.[*?]" && warning "Only glob symbols * and ? are supported. Don't use regexp here!"
+}
+
+__alt_mark_hold()
+{
+	# TODO: do more long checking via apt
+	local pkg
+	local i
+	__alt_test_glob "$*"
+	for i in "$@" ; do
+		if __is_wildcard "$i" ; then
+			local pkglist
+			pkglist="$(epm qp --short "^$i")" || continue
+			for pkg in $pkglist ; do
+				__alt_mark_hold_package $pkg
+			done
+			return
+		else
+			pkg="$(epm query --short "$i")" || continue
+		fi
+		__alt_mark_hold_package $pkg
+	done
+}
+
+__alt_mark_unhold()
+{
+	# TODO: do more long checking via apt
+	local pkg
+	local i
+	__alt_test_glob "$*"
+	for i in "$@" ; do
+		pkg="$(epm query --short "$i")" || pkg="$i"
+		sudocmd rm -fv /etc/apt/apt.conf.d/hold-$pkg.conf
+	done
+}
+
+__alt_mark_showhold()
+{
+	grep -h "RPM::Hold" /etc/apt/apt.conf.d/hold-*.conf 2>/dev/null | sed -e 's|RPM::Hold {"^\(.*\)";};|\1|'
+}
+
+__dnf_assure_versionlock()
+{
+	epm assure /etc/dnf/plugins/versionlock.conf 'dnf-command(versionlock)'
+}
+
+epm_mark_hold()
 {
 
+case $DISTRNAME in
+	ALTLinux|ALTServer)
+		__alt_mark_hold "$@"
+		exit
+		;;
+esac
+
 case $PMTYPE in
-	apt-rpm|apt-dpkg)
-		sudocmd apt-mark "$@"
+	apt-dpkg)
+		sudocmd apt-mark hold "$@"
+		;;
+	yum-rpm|dnf-rpm)
+		__dnf_assure_versionlock
+		sudocmd dnf versionlock add "$@"
+		;;
+	zypper-rpm)
+		sudocmd zypper al "$@"
+		;;
+	emerge)
+		info "Check /etc/portage/package.mask"
+		;;
+	pacman)
+		info "Manually: edit /etc/pacman.conf modifying IgnorePkg array"
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+}
+
+
+epm_mark_unhold()
+{
+
+case $DISTRNAME in
+	ALTLinux|ALTServer)
+		__alt_mark_unhold "$@"
+		exit
+		;;
+esac
+
+case $PMTYPE in
+	apt-dpkg)
+		sudocmd apt-mark unhold "$@"
+		;;
+	yum-rpm|dnf-rpm)
+		__dnf_assure_versionlock
+		sudocmd dnf versionlock delete "$@"
+		;;
+	zypper-rpm)
+		sudocmd zypper rl "$@"
+		;;
+	emerge)
+		info "Check /etc/portage/package.mask (package.unmask)"
+		;;
+	pacman)
+		info "Manually: edit /etc/pacman.conf removing package from IgnorePkg line"
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+}
+
+
+epm_mark_showhold()
+{
+
+case $DISTRNAME in
+	ALTLinux|ALTServer)
+		__alt_mark_showhold "$@"
+		exit
+		;;
+esac
+
+case $PMTYPE in
+	apt-dpkg)
+		sudocmd apt-mark showhold "$@"
+		;;
+	yum-rpm|dnf-rpm)
+		__dnf_assure_versionlock
+		sudocmd dnf versionlock list
+		;;
+	zypper-rpm)
+		sudocmd zypper ll "$@"
+		;;
+	emerge)
+		cat /etc/portage/package.mask
+		;;
+	pacman)
+		cat /etc/pacman.conf
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+}
+
+
+epm_mark_auto()
+{
+
+case $DISTRNAME in
+	ALTLinux|ALTServer)
+		sudocmd apt-mark auto "$@"
+		exit
+		;;
+esac
+
+case $PMTYPE in
+	apt-dpkg)
+		sudocmd apt-mark auto "$@"
+		;;
+		pacman)
+			sudocmd pacman -D --asdeps "$@"
+		;;
+		emerge)
+			sudocmd emerge --oneshot "$@"
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+}
+
+
+epm_mark_manual()
+{
+
+case $DISTRNAME in
+	ALTLinux|ALTServer)
+		sudocmd apt-mark manual "$@"
+		exit
+		;;
+esac
+
+case $PMTYPE in
+	apt-dpkg)
+		sudocmd apt-mark manual "$@"
+		;;
+		pacman)
+			sudocmd pacman -D --asexplicit "$@"
+		;;
+		emerge)
+			sudocmd emerge --select "$@"
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+}
+
+
+epm_mark_showauto()
+{
+
+case $DISTRNAME in
+	ALTLinux|ALTServer)
+		sudocmd apt-mark showauto "$@"
+		exit
+		;;
+esac
+
+case $PMTYPE in
+	apt-dpkg)
+		sudocmd apt-mark showauto "$@"
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+}
+
+epm_mark_showmanual()
+{
+
+case $DISTRNAME in
+	ALTLinux|ALTServer)
+		sudocmd apt-mark showmanual "$@"
+		exit
+		;;
+esac
+
+case $PMTYPE in
+	apt-dpkg)
+		sudocmd apt-mark showmanual "$@"
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+}
+
+
+epm_mark()
+{
+	local CMD="$1"
+	[ -n "$CMD" ] && shift
+	case "$CMD" in
+	""|"-h"|"--help"|help)               # HELPCMD: help
+echo "mark is the interface for marking packages"
+		get_help HELPCMD $SHAREDIR/epm-mark
+cat <<EOF
+Examples:
+  epm mark hold mc
+  epm manual mc
+EOF
+		;;
+	hold)                             # HELPCMD: mark the given package(s) as held back
+		epm_mark_hold "$@"
+		;;
+	unhold)                           # HELPCMD: unset the given package(s) as held back
+		epm_mark_unhold "$@"
+		;;
+	showhold)                         # HELPCMD: print the list of packages on hold
+		epm_mark_showhold "$@"
+		;;
+	auto)                             # HELPCMD: mark the given package(s) as automatically installed
+		epm_mark_auto "$@"
+		;;
+	manual)                           # HELPCMD: mark the given package(s) as manually installed
+		epm_mark_manual "$@"
+		;;
+	showauto)                         # HELPCMD: print the list of automatically installed packages
+		epm_mark_showauto "$@"
+		;;
+	showmanual)                       # HELPCMD: print the list of manually installed packages
+		epm_mark_showmanual "$@"
+		;;
+	*)
+		fatal "Unknown command $ epm repo '$CMD'"
 		;;
 esac
 
@@ -4118,6 +4447,7 @@ __epm_play_list_installed()
 __epm_play_list()
 {
     local psdir="$1"
+    local extra="$2"
     local i
     local IGNOREi586
     local arch="$($DISTRVENDOR -a)"
@@ -4128,6 +4458,11 @@ __epm_play_list()
             local desc="$(__get_app_description $i $arch)"
             [ -n "$desc" ] || continue
             echo "$i"
+            if [ -n "$extra" ] ; then
+                for j in $(__run_script "$i" "--product-alternatives") ; do
+                    echo "  $i $j"
+                done
+            fi
         done
         exit
     fi
@@ -4137,6 +4472,11 @@ __epm_play_list()
         [ -n "$desc" ] || continue
         [ -n "$quiet" ] || echo -n "  "
         printf "%-20s - %s\n" "$i" "$desc"
+        if [ -n "$extra" ] ; then
+            for j in $(__run_script "$i" "--product-alternatives") ; do
+                printf "  %-20s - %s\n" "$i $j" "$desc"
+            done
+        fi
     done
 }
 
@@ -4241,6 +4581,12 @@ case "$1" in
         exit
         ;;
 esac
+
+if [ "$1" = "--full-list-all" ] ; then
+    [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $($DISTRVENDOR -a)):"
+    __epm_play_list $psdir extra
+    exit
+fi
 
 if [ "$1" = "--list-all" ] || [ "$1" = "list-all" ] || [ -z "$*" ] ; then
     [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $($DISTRVENDOR -a)):"
@@ -5048,8 +5394,8 @@ __epm_query_shortname()
 
 	case $PMTYPE in
 		*-rpm)
-			showcmd rpm -q --queryformat '%{name} \n' -- $@
-			a='' rpm -q --queryformat '%{name} \n' -- $@
+			showcmd rpm -q --queryformat '%{name}\n' -- $@
+			a='' rpm -q --queryformat '%{name}\n' -- $@
 			return
 			;;
 		*-dpkg)
@@ -5476,7 +5822,7 @@ epm_release_downgrade()
 	yum-rpm)
 		docmd epm install rpm yum
 		sudocmd yum clean all
-		# TODO
+		info "Try manually:"
 		showcmd rpm -Uvh http://mirror.yandex.ru/fedora/linux/releases/16/Fedora/x86_64/os/Packages/fedora-release-16-1.noarch.rpm
 		showcmd epm Upgrade
 		;;
@@ -5501,7 +5847,7 @@ epm_release_downgrade()
 		;;
 	urpm-rpm)
 		sudocmd urpmi.removemedia -av
-		# TODO
+		info "Try do manually:"
 		showcmd urpmi.addmedia --distrib http://mirror.yandex.ru/mandriva/devel/2010.2/i586/
 		sudocmd urpmi --auto-update --replacefiles
 		;;
@@ -5639,8 +5985,10 @@ get_fix_release_pkg()
 	if [ "$TO" = "Sisyphus" ] ; then
 		TO="sisyphus"
 		echo "apt-conf-$TO"
+		# apt-conf-sisyphus and apt-conf-branch conflicts
+		epm installed apt-conf-branch && echo "apt-conf-branch-"
 	else
-		epm installed apt-conf-branch && echo "apt-conf-branch"
+		epm installed apt-conf-branch && echo "apt-conf-branch apt-conf-sisyphus-"
 	fi
 
 	if [ "$FORCE" == "--force" ] ; then
@@ -5790,8 +6138,8 @@ __switch_alt_to_distro()
 			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
 			__switch_repo_to $TO
 			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
-			__do_upgrade
 			end_change_alt_repo
+			__do_upgrade
 			docmd epm update-kernel
 			info "Run epm release-upgrade again for update to p8"
 			;;
@@ -5800,8 +6148,8 @@ __switch_alt_to_distro()
 			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
 			__switch_repo_to $TO
 			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
-			__do_upgrade
 			end_change_alt_repo
+			__do_upgrade
 			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			info "Run epm release-upgrade again for update to p9"
@@ -5811,8 +6159,8 @@ __switch_alt_to_distro()
 			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
 			__switch_repo_to $TO
 			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
-			__do_upgrade
 			end_change_alt_repo
+			__do_upgrade
 			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			;;
@@ -5826,8 +6174,8 @@ __switch_alt_to_distro()
 				docmd epm downgrade apt pam pam0_passwdqc glibc-core libcrypt- || fatal
 			fi
 			docmd epm $non_interactive $force_yes downgrade || fatal
-			__do_upgrade
 			end_change_alt_repo
+			__do_upgrade
 			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			;;
@@ -5839,8 +6187,8 @@ __switch_alt_to_distro()
 				docmd epm remove gdb || fatal
 			fi
 			__switch_repo_to $TO
-			__do_upgrade
 			end_change_alt_repo
+			__do_upgrade
 			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			__check_system "$TO"
 			docmd epm update-kernel || fatal
@@ -5852,8 +6200,8 @@ __switch_alt_to_distro()
 			confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
 			docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
 			__switch_repo_to $TO
-			__do_upgrade
 			end_change_alt_repo
+			__do_upgrade
 			docmd epm install rpm apt $(get_fix_release_pkg "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			__check_system "$TO"
 			docmd epm update-kernel -t std-def || fatal
@@ -5915,13 +6263,14 @@ __switch_alt_to_distro()
 			__alt_repofix "alt"
 			[ -s /etc/rpm/macros.d/p10 ] && rm -fv /etc/rpm/macros.d/p10
 			__epm_ru_update || fatal
-			docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
+			docmd epm fix || fatal
+			docmd epm install $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
 			#local ADDPKG
 			#ADDPKG=$(epm -q --short make-initrd sssd-ad 2>/dev/null)
 			#docmd epm install librpm7 librpm rpm apt $ADDPKG $(get_fix_release_pkg --force "$TO") ConsoleKit2- || fatal "Check an error and run again"
+			end_change_alt_repo
 			docmd epm $force_yes $non_interactive upgrade || fatal "Check the error and run '# epm release-upgrade' again or just '# epm upgrade'"
 			docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
-			end_change_alt_repo
 			__check_system "$TO"
 			docmd epm update-kernel || fatal
 			;;
@@ -6004,7 +6353,7 @@ epm_release_upgrade()
 	yum-rpm)
 		docmd epm install rpm yum
 		sudocmd yum clean all
-		# TODO
+		info "Try do manually:"
 		showcmd rpm -Uvh http://mirror.yandex.ru/fedora/linux/releases/16/Fedora/x86_64/os/Packages/fedora-release-16-1.noarch.rpm
 		showcmd epm Upgrade
 		;;
@@ -6014,7 +6363,7 @@ epm_release_upgrade()
 				info "https://github.com/rocky-linux/rocky-tools/tree/main/migrate2rocky/"
 				confirm_info "Switch to Rocky Linux 8.x"
 				cd /tmp
-				showcmd epm install git
+				docmd epm install git
 				sudocmd git clone https://github.com/rocky-linux/rocky-tools.git || fatal
 				sudocmd bash rocky-tools/migrate2rocky/migrate2rocky.sh -r
 				exit
@@ -6024,7 +6373,7 @@ epm_release_upgrade()
 				info "Check https://t.me/srv_admin/1630"
 				confirm_info "Switch to Oracle Linux 8.x"
 				cd /tmp
-				showcmd epm install git
+				docmd epm install git
 				sudocmd sed -i -r \
 					-e 's!^mirrorlist=!#mirrorlist=!' \
 					-e 's!^#?baseurl=http://(mirror|vault).centos.org/\$contentdir/\$releasever/!baseurl=https://dl.rockylinux.org/vault/centos/8.5.2111/!i' \
@@ -6046,6 +6395,29 @@ epm_release_upgrade()
 			info "You can run '# epm autoorphans' to remove orphaned packages"
 			exit
 		fi
+
+		if [ "$1" = "RockyLinux" ] ; then
+			sudocmd dnf --refresh upgrade || fatal
+			sudocmd dnf clean all
+			info "Check https://www.centlinux.com/2022/07/upgrade-your-servers-from-rocky-linux-8-to-9.html"
+			info "For upgrading your yum repositories from Rocky Linux 8 to 9 ..."
+			epm install "https://download.rockylinux.org/pub/rocky/9/BaseOS/x86_64/os/Packages/r/rocky-gpg-keys*.rpm" || fatal
+			epm install "epmi https://download.rockylinux.org/pub/rocky/9/BaseOS/x86_64/os/Packages/r/rocky-repos*.rpm" "https://download.rockylinux.org/pub/rocky/9/BaseOS/x86_64/os/Packages/r/rocky-release*.rpm" || fatal
+
+			# hack (TODO)
+			DV=$(echo "$DISTRVERSION" | sed -e "s|\..*||")
+			local RELEASEVER="$1"
+			[ -n "$RELEASEVER" ] || RELEASEVER=$(($DV + 1))
+			confirm_info "Upgrade to $DISTRNAME/$RELEASEVER"
+
+			sudocmd dnf -y --releasever=$RELEASEVER --allowerasing --setopt=deltarpm=false distro-sync
+			sudocmd rpm --rebuilddb
+			epm upgrade
+			info "You can run '# epm autoorphans' to remove orphaned packages"
+			info "Use # dnf module reset <module> to resolve 'nothing provides module' error"
+			exit
+		fi
+
 		info "Check https://fedoraproject.org/wiki/DNF_system_upgrade for an additional info"
 		#docmd epm install epel-release yum-utils
 		sudocmd dnf --refresh upgrade || fatal
@@ -6065,7 +6437,7 @@ epm_release_upgrade()
 		;;
 	urpm-rpm)
 		sudocmd urpmi.removemedia -av
-		# TODO
+		info "Try do manually"
 		showcmd urpmi.addmedia --distrib http://mirror.yandex.ru/mandriva/devel/2010.2/i586/
 		sudocmd urpmi --auto-update --replacefiles
 		;;
@@ -6796,7 +7168,7 @@ __set_version_pkgname()
 __set_version_apppkgname()
 {
     local alpkg="$1"
-    VERSION="$(echo "$alpkg" | grep -o -P "[-_.a-zA-Z]([0-9])([0-9])*(\.[0-9])*" | head -n1 | sed -e 's|^[-_.a-zA-Z]||')" #"
+    VERSION="$(echo "$alpkg" | grep -o -P "[-_.a-zA-Z]([0-9])([0-9])*(\.[0-9])*" | head -n1 | sed -e 's|^[-_.a-zA-Z]||' -e 's|--|-|g' )"  #"
     [ -n "$VERSION" ] && PKGNAME="$(echo "$alpkg" | sed -e "s|$VERSION.*||")"
 }
 
@@ -8329,6 +8701,23 @@ LANG=C docmd $CMD $string
 epm play $short --list-all | sed -e 's|^ *||g' -e 's|[[:space:]]\+| |g' -e "s|\$| (use \'epm play\' to install it)|"
 }
 
+__convert_glob__to_regexp()
+{
+	# translate glob to regexp
+	echo "$1" | sed -e "s|\*|.*|g" -e "s|?|.|g"
+}
+
+_clean_from_regexp()
+{
+	sed -e "s/[?\^.*]/ /g"
+}
+
+__clean_from_glob()
+{
+	sed -e "s/[?*].*//" -e "s/[?\^.*]/ /g"
+}
+
+
 __epm_search_make_grep()
 {
 	local i
@@ -8351,7 +8740,7 @@ __epm_search_make_grep()
 	#list=$(strip_spaces $list | sed -e "s/ /|/g")
 	listN=$(strip_spaces $listN | sed -e "s/ /|/g" | sed -e "s/~//g")
 
-	# only apt supports regexps?
+	# TODO: only apt supports regexps?
 	case $PMTYPE in
 		apt-*)
 			;;
@@ -8360,6 +8749,9 @@ __epm_search_make_grep()
 				listN=$(echo "$listN" | sed -e "s/[?\^.]/ /g")
 			;;
 	esac
+
+	list=$(__convert_glob__to_regexp "$list")
+	listN=$(__convert_glob__to_regexp "$listN")
 
 	if [ -n "$short" ] ; then
 		echon " | sed -e \"s| .*||g\""
@@ -8418,11 +8810,14 @@ epm_search()
 
 	warmup_bases
 
+	echo "$*" | grep -q "\.[*?]" && warning "Only glob symbols * and ? are supported. Don't use regexp here!"
+
 	# FIXME: do it better
 	local MGS
 	MGS=$(eval __epm_search_make_grep $quoted_args)
 	EXTRA_SHOWDOCMD="$MGS"
-	eval "__epm_search_output \"$(eval get_firstarg $quoted_args)\" $MGS"
+	# TODO: use search args for more optimal output
+	eval "__epm_search_output \"$(eval get_firstarg $quoted_args | __clean_from_glob)\" $MGS"
 }
 
 # File bin/epm-search_file:
@@ -8559,6 +8954,9 @@ get_alt_repo_path()
 
 get_local_alt_mirror_path()
 {
+    # FIXME: by some reason missed in ALT docker image (no login?)
+    [ -n "$TMPDIR" ] || TMPDIR=/tmp
+
     # TODO: /var/cache/eepm
     echo "$TMPDIR/eepm/$(get_alt_repo_path "$1")"
 }
@@ -9097,21 +9495,24 @@ epm_tool()
             fatal "Use epm tool help to get help."
             ;;
         "-h"|"--help"|"help")
+            echo "Tools embedded in epm:"
+            get_help HELPCMD $SHAREDIR/epm-tool
+
 cat <<EOF
   Examples:
-    epm tool eget
-    epm tool estrlist
+    epm tool eget -U http://ya.ru
+    epm tool estrlist union a b a c
 EOF
             ;;
-        "eget")
+        "eget")                      # HELPCMD: downloading tool (simular to wget or curl)
             showcmd eget "$@"
             eget "$@"
             ;;
-        "estrlist")
+        "estrlist")                  # HELPCMD: string operations
             showcmd estrlist "$@"
             estrlist "$@"
             ;;
-        "json")
+        "json")                      # HELPCMD: json operations
             showcmd json "$@"
             internal_tools_json "$@"
             ;;
@@ -9587,7 +9988,7 @@ case $DISTRIB_ID in
 	PCLinux)
 		CMD="apt-rpm"
 		;;
-	Ubuntu|Debian|Mint|AstraLinux*|Elbrus)
+	Ubuntu|Debian|Mint|OSNovaLinux|AstraLinux*|Elbrus)
 		CMD="apt-dpkg"
 		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
 		#hascommand snappy && CMD=snappy
@@ -9655,17 +10056,23 @@ case $DISTRIB_ID in
 		;;
 	*)
 		# try detect firstly
-		if hascommand "rpm" ; then
+		if grep -q "ID_LIKE=debian" /etc/os-release 2>/dev/null ; then
+			echo "apt-dpkg" && return
+		fi
+
+		if hascommand "rpm" && [ -s /var/lib/rpm/Name ] ; then
 			hascommand "zypper" && echo "zypper-rpm" && return
-			hascommand "apt-get" && echo "apt-rpm" && return
 			hascommand "dnf" && echo "dnf-rpm" && return
+			hascommand "apt-get" && echo "apt-rpm" && return
 			hascommand "yum" && echo "yum-rpm" && return
 			hascommand "urpmi" && echo "urpmi-rpm" && return
 		fi
-		if hascommand "dpkg" ; then
+
+		if hascommand "dpkg" && [ -s /var/lib/dpkg/status ] ; then
 			hascommand "apt" && echo "apt-dpkg" && return
 			hascommand "apt-get" && echo "apt-dpkg" && return
 		fi
+
 		echo "We don't support yet DISTRIB_ID $DISTRIB_ID" >&2
 		;;
 esac
@@ -11421,7 +11828,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.28.7  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.29.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2022"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11431,7 +11838,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.28.7
+EPMVERSION=3.29.0
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
@@ -11537,7 +11944,7 @@ check_command()
     -e|-P|rm|del|remove|delete|uninstall|erase|purge|e)  # HELPCMD: remove (delete) package(s) from the database and the system
         epm_cmd=remove
         ;;
-    -s|search|s)                # HELPCMD: search in remote package repositories
+    -s|search|s|find)                # HELPCMD: search in remote package repositories
         epm_cmd=search
         ;;
     -qp|qp|query_package)     # HELPCMD: search in the list of installed packages
@@ -11595,7 +12002,7 @@ check_command()
     conflicts)                # HELPCMD: print package conflicts
         epm_cmd=conflicts
         ;;
-    -qa|qa|-l|list|packages)  # HELPCMD: print list of installed package(s)
+    -qa|qa|-l|list|ls|packages)  # HELPCMD: print list of installed package(s)
         epm_cmd=packages
         ;;
     programs)                 # HELPCMD: print list of installed GUI program(s) (they have .desktop files)
@@ -11667,8 +12074,11 @@ check_command()
         epm_cmd=autoremove
         direct_args=1
         ;;
-    mark)                     # HELPCMD: mark package as manually or automatically installed (see epm mark --help)
+    mark)                     # HELPCMD: mark package as manually or automatically installed or hold/unhold it (see epm mark --help)
         epm_cmd=mark
+        ;;
+    history)                  # HELPCMD: show a log of actions taken by the software management
+        epm_cmd=history
         ;;
     autoorphans|--orphans)    # HELPCMD: remove all packages not from the repository
         epm_cmd=autoorphans
