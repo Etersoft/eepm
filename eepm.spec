@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.28.7
+Version: 3.29.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -152,6 +152,34 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Wed Jan 25 2023 Vitaly Lipatov <lav@altlinux.ru> 3.29.0-alt1
+- epm repack vkteams: fix packing on Sisyphus (ALT bug 44851)
+- epm play vk: fix eget using (ALT bug 44866)
+- epm play wine: override wine-common install
+- epm-sh-altlinux-contents-index: use /tmp if TMPDIR is empty
+- epm play: add aimp
+- epm-addrepo: add crb support for Rocky Linux
+- epm release-upgrade: add support for RockyLinux
+- epm release-upgrade: don't restore repo if the final upgrade is failed
+- epm repack fix rustdesk (ALT bug 44888)
+- epm repack: fix getting version for AppImage
+- distr_info: improve checking for default package manager
+- epm release-upgrade: fix upgrade to Sisyphus
+- epm play: add vinteo.desktop support
+- epm-query: remove extra space after rpm package name in short mode
+- epm-mark: add support for hold/unhold
+- epm play: add --full-list-all
+- epm repack zoom: fix repack (ALT bug 44988)
+- epm search: switch to use glob symbols (not regexp)
+- epm mark hold/unhold: add support for glob symbols
+- epm-mark: add showhold
+- epm-mark: big refactoring, add support for deb and dnf based systems
+- add epm history command
+- epm mark: add support for dnf, zypper, merge, pacman
+- epm play librewolf: fix download URL
+- epm repack vkteams: improve packing (ALT bug 44851)
+- epm: add aliases: find->search, ls->packages
+
 * Sun Jan 08 2023 Vitaly Lipatov <lav@altlinux.ru> 3.28.7-alt1
 - epm repack librewolf: install required packages only on ALT
 - epm repack Telegram: hide locally created desktop file (ALT bug 42402)
