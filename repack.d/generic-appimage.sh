@@ -16,7 +16,30 @@ subst "s|\"/$ROOTDIR/|\"$PRODUCTDIR/|" $SPEC
 
 fix_chrome_sandbox
 
+
 cd $BUILDROOT$PRODUCTDIR
+
+# TODO
+if false ; then
+# on whatsapp-for-linux example
+epm assure patchelf || exit
+# hack for
+# ldd: ERROR: /var/tmp/tmp.kroKx0mR2G/whatsapp-for-linux-1.5.1-x86_64.AppImage.tmpdir/whatsapp-for-linux--1.5.1/opt/whatsapp-for-linux-/bin/systemd-hwdb: program interpreter /tmp/appimage-fcba8c70-fea2-41f2-8775-57ce8e19ffe9-ld-linux-x86-64.so.2 not found
+find -executable -type f | while read elf ; do
+    file $elf | grep -q "ELF 64-bit.*interpreter" || continue
+    file $elf | grep -q "interpreter /lib64/ld-linux-x86-64.so.2" && continue
+    a= patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 $elf
+done
+
+for i in usr/lib/x86_64-linux-gnu/*.so* lib/x86_64-linux-gnu/*.so* lib/x86_64-linux-gnu/security/*.so* opt/libc/lib/x86_64-linux-gnu/libc.so.6  ; do
+    [ -s "$i" ] || continue
+    a= patchelf --set-rpath '$ORIGIN:$ORIGIN/..:$ORIGIN/../../usr/lib/x86_64-linux-gnu:$ORIGIN/../../../usr/lib/x86_64-linux-gnu:' "$i"
+    file $i | grep -q "ELF 64-bit.*interpreter" || continue
+    file $i | grep -q "interpreter /lib64/ld-linux-x86-64.so.2" && continue
+    a= patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 $i
+done
+fi
+
 DESKTOPFILE="$(echo *.desktop | head -n1)"
 ICONFILE="$(cat $DESKTOPFILE | grep "^Icon" | head -n1 | sed -e 's|Icon=||').png"
 
