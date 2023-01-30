@@ -522,7 +522,9 @@ onefile_estrlist()
 # will replaced within eget() in packed version
 onefile_eget()
 {
-	assure_exists wget
+	# check for both
+	which curl 2>/dev/null >/dev/null || assure_exists wget
+	which wget 2>/dev/null >/dev/null || assure_exists curl
 	internal_tools_eget "$@"
 }
 
