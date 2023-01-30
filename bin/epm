@@ -551,12 +551,12 @@ pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
 
 # Just printout help if run without args
 if [ -z "$epm_cmd" ] ; then
-    print_version
-    echo
-    fatstr="Unknown command in $* arg(s)"
+    print_version >&2
+    echo >&2
+    fatstr="Unrecognized command in '$*' arg(s)"
     [ -n "$*" ] || fatstr="That program needs be running with some command"
-    echo "Run $ $PROGNAME --help  to get help." >&2
-    echo "Run $ epm print info  to get some system and distro info." >&2
+    echo "Run $(echocmd "$PROGNAME --help") to get help." >&2
+    echo "Run $(echocmd "epm print info") to get some system and distro info." >&2
     fatal "$fatstr."
 fi
 

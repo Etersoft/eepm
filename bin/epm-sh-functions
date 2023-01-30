@@ -129,6 +129,16 @@ showcmd()
 	fi >&2
 }
 
+# Print command
+echocmd()
+{
+	set_boldcolor $GREEN
+	local PROMTSIG="\$"
+	is_root && PROMTSIG="#"
+	echo -n "$PROMTSIG $*"
+	restore_color
+}
+
 # Print command line and run command line
 docmd()
 {
