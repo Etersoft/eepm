@@ -71,15 +71,19 @@ __epm_korinf_list() {
 
 
 __epm_korinf_install() {
-    # due Error: Can't use epm call from the piped script
-    #epm install $(__epm_korinf_site_mask "$PACKAGE")
-    [ -n "$non_interactive" ] || interactive="--interactive"
+
+    # skip interactive for install eepm from stdin
+    if inputisatty && [ -n "$PROGDIR" ] && [ "$1" != "eepm" ] ; then
+        [ -n "$non_interactive" ] || interactive="--interactive"
+    fi
 
     local pkg
     local pkg_urls=''
     for pkg in $* ; do
         pkg_urls="$pkg_urls $(__epm_korinf_site_mask "$pkg")"
     done
+    # due Error: Can't use epm call from the piped script
+    #epm install $(__epm_korinf_site_mask "$PACKAGE")
     pkg_names='' pkg_files='' epm_install
 }
 
