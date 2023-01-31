@@ -309,7 +309,7 @@ sudoepm()
 fatal()
 {
 	if [ -z "$TEXTDOMAIN" ] ; then
-		echo "Error: $*" >&2
+		echo "Error: $*  (you can discuss the problem in Telegram: https://t.me/useepm)" >&2
 #	else
 #		echog "Error in $0: $@" >&2
 	fi
