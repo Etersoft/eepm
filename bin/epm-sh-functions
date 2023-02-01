@@ -291,8 +291,7 @@ clean_store_output()
 epm()
 {
 	if [ -n "$PROGNAME" ] ; then
-		#|| fatal "Can't use epm call from the piped script"
-		$PROGDIR/$PROGNAME --inscript "$@"
+		/bin/sh $PROGDIR/$PROGNAME --inscript "$@"
 	else
 		epm_main --inscript "$@"
 	fi
@@ -301,8 +300,8 @@ epm()
 # run $SUDO epm, possible from side repo
 sudoepm()
 {
-	[ -n "$PROGNAME" ] || fatal "Can't use epm call from the piped script"
-	sudorun $PROGDIR/$PROGNAME --inscript "$@"
+	[ -n "$PROGNAME" ] || fatal "Can't use sudo epm call from the piped script"
+	sudorun /bin/sh $PROGDIR/$PROGNAME --inscript "$@"
 }
 
 # Print error message and stop the program
