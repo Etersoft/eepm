@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.29.0
+Version: 3.29.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -152,6 +152,16 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Wed Feb 01 2023 Vitaly Lipatov <lav@altlinux.ru> 3.29.1-alt1
+- epm-epm_install: allow install a few packages simultaneously
+- onefile_eget: add checking for curl too
+- epm: add echocmd (special for command print out) and use it in the empty arg error message
+- more intrusive advertising of the EPM channel in Telegram
+- epm prescription: rewrite all php install scripts
+- epm-epm_install: skip interactive for install from stdin
+- fix bug with run script in epm() (fix regression from bf3b0a0d1d8fe58a0e905a2d2e4eb7a3e7a35e05)
+- epm play teams: fix for other rpm based distro
+
 * Wed Jan 25 2023 Vitaly Lipatov <lav@altlinux.ru> 3.29.0-alt1
 - epm repack vkteams: fix packing on Sisyphus (ALT bug 44851)
 - epm play vk: fix eget using (ALT bug 44866)
