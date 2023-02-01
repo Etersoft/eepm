@@ -150,6 +150,15 @@ showcmd()
 	fi >&2
 }
 
+echocmd()
+{
+	set_boldcolor $GREEN
+	local PROMTSIG="\$"
+	is_root && PROMTSIG="#"
+	echo -n "$PROMTSIG $*"
+	restore_color
+}
+
 docmd()
 {
 	showcmd "$*$EXTRA_SHOWDOCMD"
@@ -287,8 +296,7 @@ clean_store_output()
 epm()
 {
 	if [ -n "$PROGNAME" ] ; then
-		#|| fatal "Can't use epm call from the piped script"
-		$PROGDIR/$PROGNAME --inscript "$@"
+		/bin/sh $PROGDIR/$PROGNAME --inscript "$@"
 	else
 		epm_main --inscript "$@"
 	fi
@@ -296,14 +304,14 @@ epm()
 
 sudoepm()
 {
-	[ -n "$PROGNAME" ] || fatal "Can't use epm call from the piped script"
-	sudorun $PROGDIR/$PROGNAME --inscript "$@"
+	[ -n "$PROGNAME" ] || fatal "Can't use sudo epm call from the piped script"
+	sudorun /bin/sh $PROGDIR/$PROGNAME --inscript "$@"
 }
 
 fatal()
 {
 	if [ -z "$TEXTDOMAIN" ] ; then
-		echo "Error: $*" >&2
+		echo "Error: $*  (you can discuss the problem in Telegram: https://t.me/useepm)" >&2
 	fi
 	exit 1
 }
@@ -510,7 +518,9 @@ estrlist()
 
 eget()
 {
-	assure_exists wget
+	# check for both
+	which curl 2>/dev/null >/dev/null || assure_exists wget
+	which wget 2>/dev/null >/dev/null || assure_exists curl
 	internal_tools_eget "$@"
 }
 
@@ -2594,11 +2604,20 @@ __epm_korinf_list() {
 
 
 __epm_korinf_install() {
-    local PACKAGE="$1"
+
+    # skip interactive for install eepm from stdin
+    if inputisatty && [ -n "$PROGDIR" ] && [ "$1" != "eepm" ] ; then
+        [ -n "$non_interactive" ] || interactive="--interactive"
+    fi
+
+    local pkg
+    local pkg_urls=''
+    for pkg in $* ; do
+        pkg_urls="$pkg_urls $(__epm_korinf_site_mask "$pkg")"
+    done
     # due Error: Can't use epm call from the piped script
     #epm install $(__epm_korinf_site_mask "$PACKAGE")
-    [ -n "$non_interactive" ] || interactive="--interactive"
-    pkg_names='' pkg_files='' pkg_urls="$(__epm_korinf_site_mask "$PACKAGE")" epm_install
+    pkg_names='' pkg_files='' epm_install
 }
 
 epm_epm_install() {
@@ -2618,9 +2637,7 @@ epm_epm_install() {
             ;;
     esac
 
-    for i in $pkglist ; do
-        __epm_korinf_install $i
-    done
+    __epm_korinf_install $pkglist
 }
 
 # File bin/epm-filelist:
@@ -11828,9 +11845,9 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.29.0  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.29.1  Telegram: https://t.me/useepm  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
-        echo "Copyright (c) Etersoft 2012-2022"
+        echo "Copyright (c) Etersoft 2012-2023"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 
@@ -11838,7 +11855,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.29.0
+EPMVERSION=3.29.1
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
@@ -12307,12 +12324,12 @@ pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
 
 # Just printout help if run without args
 if [ -z "$epm_cmd" ] ; then
-    print_version
-    echo
-    fatstr="Unknown command in $* arg(s)"
+    print_version >&2
+    echo >&2
+    fatstr="Unrecognized command in '$*' arg(s)"
     [ -n "$*" ] || fatstr="That program needs be running with some command"
-    echo "Run $ $PROGNAME --help  to get help." >&2
-    echo "Run $ epm print info  to get some system and distro info." >&2
+    echo "Run $(echocmd "$PROGNAME --help") to get help." >&2
+    echo "Run $(echocmd "epm print info") to get some system and distro info." >&2
     fatal "$fatstr."
 fi
 

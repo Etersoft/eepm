@@ -140,6 +140,15 @@ showcmd()
 	fi >&2
 }
 
+echocmd()
+{
+	set_boldcolor $GREEN
+	local PROMTSIG="\$"
+	is_root && PROMTSIG="#"
+	echo -n "$PROMTSIG $*"
+	restore_color
+}
+
 docmd()
 {
 	showcmd "$*$EXTRA_SHOWDOCMD"
@@ -277,8 +286,7 @@ clean_store_output()
 epm()
 {
 	if [ -n "$PROGNAME" ] ; then
-		#|| fatal "Can't use epm call from the piped script"
-		$PROGDIR/$PROGNAME --inscript "$@"
+		/bin/sh $PROGDIR/$PROGNAME --inscript "$@"
 	else
 		epm_main --inscript "$@"
 	fi
@@ -286,14 +294,14 @@ epm()
 
 sudoepm()
 {
-	[ -n "$PROGNAME" ] || fatal "Can't use epm call from the piped script"
-	sudorun $PROGDIR/$PROGNAME --inscript "$@"
+	[ -n "$PROGNAME" ] || fatal "Can't use sudo epm call from the piped script"
+	sudorun /bin/sh $PROGDIR/$PROGNAME --inscript "$@"
 }
 
 fatal()
 {
 	if [ -z "$TEXTDOMAIN" ] ; then
-		echo "Error: $*" >&2
+		echo "Error: $*  (you can discuss the problem in Telegram: https://t.me/useepm)" >&2
 	fi
 	exit 1
 }
@@ -500,7 +508,9 @@ estrlist()
 
 eget()
 {
-	assure_exists wget
+	# check for both
+	which curl 2>/dev/null >/dev/null || assure_exists wget
+	which wget 2>/dev/null >/dev/null || assure_exists curl
 	internal_tools_eget "$@"
 }
 
@@ -2361,7 +2371,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.29.0  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.29.1  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
