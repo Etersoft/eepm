@@ -362,11 +362,14 @@ __epm_repack_to_rpm()
         __apply_fix_code $pkgname $tmpbuilddir/$subdir $spec $pkgname
         # TODO: we need these dirs to be created
         to_remove_pkg_dirs="$to_remove_pkg_dirs $HOME/RPM/BUILD $HOME/RPM"
-        showcmd rpmbuild --buildroot $tmpbuilddir/$subdir -bb $spec
+
+        TARGETARCH=$(epm print info -a | sed -e 's|^x86$|i586|')
+
+        showcmd rpmbuild --buildroot $tmpbuilddir/$subdir --target $TARGETARCH -bb $spec
         if [ -n "$verbose" ] ; then
-            a='' rpmbuild --buildroot $tmpbuilddir/$subdir -bb $spec || fatal
+            a='' rpmbuild --buildroot $tmpbuilddir/$subdir --target $TARGETARCH -bb $spec || fatal
         else
-            a='' rpmbuild --buildroot $tmpbuilddir/$subdir -bb $spec >/dev/null || fatal
+            a='' rpmbuild --buildroot $tmpbuilddir/$subdir --target $TARGETARCH -bb $spec >/dev/null || fatal
         fi
         # remove copy of source binary package (don't mix with generated)
         rm -f $tmpbuilddir/../$alpkg
