@@ -105,6 +105,9 @@ case $DISTRIB_ID in
 		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
 		#hascommand snappy && CMD=snappy
 		;;
+	Solus)
+		CMD="eopkg"
+		;;
 	Mandriva)
 		CMD="urpm-rpm"
 		;;
@@ -208,6 +211,7 @@ pkgtype()
 		voidlinux) echo "xbps" ;;
 		openwrt) echo "ipk" ;;
 		cygwin) echo "tar.xz" ;;
+		solus) echo "eopkg" ;;
 		*)
 			case $(pkgmanager) in
 				*-dpkg)
