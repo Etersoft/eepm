@@ -56,6 +56,9 @@ case $PMTYPE in
 	aura)
 		CMD="aura -As --"
 		;;
+	eopkg)
+		CMD="eopkg search --"
+		;;
 	yum-rpm)
 		CMD="yum search --"
 		;;

@@ -235,6 +235,14 @@ __epm_query_name()
 		conary)
 			CMD="conary query"
 			;;
+		eopkg)
+			showcmd eopkg blame $1
+			local str
+			str="$(a= eopkg blame $1 | grep "^Name")"
+			[ -n "$str" ] || return 1
+			echo "$str" | sed -e "s|Name[[:space:]]*: \(.*\), version: \(.*\), release: \(.*\)|\1-\2-\3|"
+			return
+			;;
 		#homebrew)
 		#	showcmd "brew info $1"
 		#	local HBRESULT
@@ -286,6 +294,14 @@ __epm_query_shortname()
 			;;
 		conary)
 			CMD="conary query"
+			;;
+		eopkg)
+			showcmd eopkg blame $1
+			local str
+			str="$(a= eopkg blame $1 | grep "^Name")"
+			[ -n "$str" ] || return 1
+			echo "$str" | sed -e "s|Name[[:space:]]*: \(.*\), version: \(.*\), release: \(.*\)|\1|"
+			return
 			;;
 		homebrew)
 			docmd brew info "$1" >/dev/null 2>/dev/null && echo "$1" && return

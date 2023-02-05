@@ -29,6 +29,9 @@ case $PMTYPE in
 	dnf-rpm)
 		sudocmd dnf history
 		;;
+	eopkg)
+		sudocmd eopkg history
+		;;
 	zypper-rpm)
 		less /var/log/zypp/history
 		;;

@@ -88,6 +88,9 @@ EOF
     	urpm-rpm)
     		CMD="urpmi --test --auto"
     		;;
+    	eopkg)
+    		CMD="eopkg --dry-run install"
+    		;;
     	zypper-rpm)
     		if ! __use_zypper_dry_run >/dev/null ; then
     			fatal "zypper is too old: does not support --dry-run"

@@ -101,6 +101,10 @@ __epm_filelist_file()
 			assure_exists dpkg
 			CMD="dpkg --contents"
 			;;
+		eopkg)
+			assure_exists eopkg
+			CMD="eopkg --files info"
+			;;
 		*)
 			fatal "Have no suitable query command for $PMTYPE"
 			;;
@@ -149,6 +153,10 @@ __epm_filelist_name()
 			;;
 		opkg)
 			CMD="opkg files"
+			;;
+		eopkg)
+			docmd eopkg --files -s info $@ | grep "^/"
+			return
 			;;
 		xbps)
 			CMD="xbps-query -f"

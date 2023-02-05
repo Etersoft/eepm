@@ -182,13 +182,13 @@ check_command()
 
 # HELPCMD: PART: Base commands:
     case $1 in
-    -i|install|add|i)         # HELPCMD: install package(s) from remote repositories or from local file
+    -i|install|add|i|it)         # HELPCMD: install package(s) from remote repositories or from local file
         epm_cmd=install
         ;;
     -e|-P|rm|del|remove|delete|uninstall|erase|purge|e)  # HELPCMD: remove (delete) package(s) from the database and the system
         epm_cmd=remove
         ;;
-    -s|search|s|find)                # HELPCMD: search in remote package repositories
+    -s|search|s|find|sr)                # HELPCMD: search in remote package repositories
         epm_cmd=search
         ;;
     -qp|qp|query_package)     # HELPCMD: search in the list of installed packages
@@ -211,7 +211,7 @@ check_command()
     installed)                # HELPCMD: check presence of package(s) (like -q with --quiet)
         epm_cmd=installed
         ;;
-    -sf|sf|filesearch)        # HELPCMD: search in which package a file is included
+    -sf|sf|filesearch|search-file)        # HELPCMD: search in which package a file is included
         epm_cmd=search_file
         ;;
     -ql|ql|filelist|get-files)          # HELPCMD: print package file list
@@ -246,7 +246,7 @@ check_command()
     conflicts)                # HELPCMD: print package conflicts
         epm_cmd=conflicts
         ;;
-    -qa|qa|-l|list|ls|packages)  # HELPCMD: print list of installed package(s)
+    -qa|qa|-l|list|ls|packages|list-installed|li)  # HELPCMD: print list of installed package(s)
         epm_cmd=packages
         ;;
     programs)                 # HELPCMD: print list of installed GUI program(s) (they have .desktop files)
@@ -261,7 +261,7 @@ check_command()
         ;;
 
 # HELPCMD: PART: Repository control:
-    update)                   # HELPCMD: update remote package repository databases
+    update|update-repo|ur)                   # HELPCMD: update remote package repository databases
         epm_cmd=update
         direct_args=1
         ;;
@@ -269,7 +269,7 @@ check_command()
         epm_cmd=addrepo
         direct_args=1
         ;;
-    repolist|sl|rl|listrepo|repo-list)  # HELPCMD: print repo list
+    repolist|sl|rl|listrepo|repo-list|list-repo|lr)  # HELPCMD: print repo list
         epm_cmd=repolist
         direct_args=1
         ;;
@@ -277,7 +277,7 @@ check_command()
         epm_cmd=repofix
         direct_args=1
         ;;
-    removerepo|rr)            # HELPCMD: remove package repo (shortcut for epm repo remove)
+    removerepo|remove-repo|rr)            # HELPCMD: remove package repo (shortcut for epm repo remove)
         epm_cmd=removerepo
         direct_args=1
         ;;
@@ -307,7 +307,7 @@ check_command()
         ;;
 
 # HELPCMD: PART: Other commands:
-    clean)                    # HELPCMD: clean local package cache
+    clean|delete-cache|dc)                    # HELPCMD: clean local package cache
         epm_cmd=clean
         direct_args=1
         ;;
@@ -324,10 +324,10 @@ check_command()
     history)                  # HELPCMD: show a log of actions taken by the software management
         epm_cmd=history
         ;;
-    autoorphans|--orphans)    # HELPCMD: remove all packages not from the repository
+    autoorphans|--orphans|remove-orphans)    # HELPCMD: remove all packages not from the repository
         epm_cmd=autoorphans
         ;;
-    upgrade|dist-upgrade)     # HELPCMD: performs upgrades of package software distributions
+    upgrade|up|dist-upgrade)     # HELPCMD: performs upgrades of package software distributions
         epm_cmd=upgrade
         ;;
     Upgrade)                  # HELPCMD: force update package base, then run upgrade
@@ -337,7 +337,7 @@ check_command()
     downgrade)                # HELPCMD: downgrade [all] packages to the repo state
         epm_cmd=downgrade
         ;;
-    download)                 # HELPCMD: download package(s) file to the current dir
+    download|fetch|fc)        # HELPCMD: download package(s) file to the current dir
         epm_cmd=download
         ;;
 # TODO: replace with install --simulate

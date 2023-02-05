@@ -80,6 +80,12 @@ case $PMTYPE in
 	opkg)
 		CMD="opkg whatdepends"
 		;;
+	eopkg)
+		showcmd eopkg info $pkg
+		# eopkg info prints it only from repo info
+		a= eopkg info $pkg | grep "^Reverse Dependencies" | sed -e "s|Reverse Dependencies[[:space:]]*: ||" | grep -v "^$"
+		return
+		;;
 	xbps)
 		CMD="xbps-query -X"
 		;;

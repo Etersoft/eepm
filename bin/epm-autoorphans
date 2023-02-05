@@ -108,6 +108,9 @@ case $PMTYPE in
 		# clean-system removes non official packages
 		sudocmd slackpkg clean-system
 		;;
+	eopkg)
+		sudocmd eopkg remove-orphans
+		;;
 	#guix)
 	#	sudocmd guix gc
 	#	;;

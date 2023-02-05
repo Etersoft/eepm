@@ -66,6 +66,9 @@ epm_remove_low()
 		pacman)
 			sudocmd pacman -R $@
 			return ;;
+		eopkg)
+			sudocmd eopkg $(subst_option nodeps --ignore-dependency) remove $@
+			return ;;
 		appget|winget)
 			sudocmd $PMTYPE uninstall $@
 			return ;;
@@ -130,6 +133,9 @@ epm_remove_names()
 			return ;;
 		mpkg)
 			sudocmd mpkg remove $@
+			return ;;
+		eopkg)
+			sudocmd eopkg $(subst_option nodeps --ignore-dependency) remove $@
 			return ;;
 		conary)
 			sudocmd conary erase $@
@@ -219,6 +225,9 @@ epm_remove_nonint()
 		opkg)
 			sudocmd opkg -force-defaults remove $@
 			return ;;
+		eopkg)
+			sudocmd eopkg $(subst_option nodeps --ignore-dependency) --yes-all remove $@
+			return ;;
 		appget|winget)
 			sudocmd $PMTYPE uninstall -s $@
 			return ;;
@@ -258,6 +267,9 @@ epm_print_remove_command()
 			;;
 		opkg)
 			echo "opkg remove $*"
+			;;
+		eopkg)
+			echo "eopkg remove $*"
 			;;
 		aptcyg)
 			echo "apt-cyg remove $*"

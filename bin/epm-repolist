@@ -111,6 +111,9 @@ case $PMTYPE in
 	winget)
 		docmd winget source list
 		;;
+	eoget)
+		docmd eoget list-repo
+		;;
 	pacman)
 		docmd grep -v -- "^#\|^$" /etc/pacman.conf
 		;;

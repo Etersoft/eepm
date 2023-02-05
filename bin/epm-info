@@ -137,6 +137,9 @@ case $PMTYPE in
 	winget)
 		docmd winget show $pkg_names
 		;;
+	eopkg)
+		docmd eopkg info $pkg_files $pkg_names
+		;;
 	appget)
 		docmd appget view $pkg_names
 		;;

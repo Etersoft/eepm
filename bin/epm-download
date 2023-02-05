@@ -227,6 +227,9 @@ epm_download()
 	opkg)
 		docmd opkg $*
 		;;
+	eopkg)
+		docmd eopkg fetch $*
+		;;
 	homebrew)
 		docmd brew fetch $*
 		;;

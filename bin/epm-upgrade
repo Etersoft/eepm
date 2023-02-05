@@ -59,6 +59,12 @@ epm_upgrade()
 		fi
 	fi
 
+	# Solus supports upgrade for a package (with all dependencies)
+	if [ -n "$1" ] && [ "$DISTRNAME" = "Solus" ] ; then
+		sudocmd eopkg upgrade "$@"
+		return
+	fi
+
 	info "Running command for upgrade packages"
 
 	case $PMTYPE in
@@ -141,6 +147,9 @@ epm_upgrade()
 		;;
 	opkg)
 		CMD="opkg upgrade"
+		;;
+	eopkg)
+		CMD="eopkg upgrade"
 		;;
 	slackpkg)
 		CMD="/usr/sbin/slackpkg upgrade-all"

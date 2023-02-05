@@ -123,6 +123,9 @@ epm_install_names()
 		mpkg)
 			sudocmd mpkg install $@
 			return ;;
+		eopkg)
+			sudocmd eopkg $(subst_option nodeps --ignore-dependency) install $@
+			return ;;
 		conary)
 			sudocmd conary update $@
 			return ;;
@@ -226,6 +229,9 @@ epm_ni_install_names()
 			return ;;
 		opkg)
 			sudocmd opkg -force-defaults install $@
+			return ;;
+		eopkg)
+			sudocmd eopkg --yes-all install $@
 			return ;;
 		nix)
 			sudocmd nix-env --install $@
@@ -462,6 +468,9 @@ epm_install_files()
         android)
             sudocmd pm install $files
             return ;;
+        eopkg)
+            sudocmd eopkg install $files
+            return ;;
         emerge)
             load_helper epm-install-emerge
             sudocmd epm_install_emerge $files
@@ -517,6 +526,9 @@ epm_print_install_command()
             ;;
         opkg)
             echo "opkg install $*"
+            ;;
+        eopkg)
+            echo "eopkg install $*"
             ;;
         android)
             echo "pm install $*"
@@ -583,6 +595,9 @@ epm_print_install_names_command()
 			return ;;
 		nix)
 			echo "nix-env --install $*"
+			return ;;
+		eopkg)
+			echo "eopkg install $*"
 			return ;;
 		appget|winget)
 			echo "$PMTYPE install $*"

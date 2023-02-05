@@ -118,6 +118,9 @@ case $PMTYPE in
 	conary)
 		CMD="conary query"
 		;;
+	eopkg)
+		CMD="eopkg list-installed"
+		;;
 	chocolatey)
 		CMD="chocolatey list"
 		;;

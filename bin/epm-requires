@@ -51,6 +51,10 @@ epm_requires_files()
 			assure_exists dpkg >/dev/null
 			a='' docmd dpkg -I $pkg_files | grep "^ *Depends:" | sed "s|^ *Depends:||g"
 			;;
+		eopkg)
+			showcmd eopkg info $pkg_files
+			a= eopkg info $pkg_files | grep "^Dependencies" | head -n1 | sed -e "s|Dependencies[[:space:]]*: ||"
+			;;
 		*)
 			fatal "Have no suitable command for $PKGTYPE"
 			;;
@@ -137,6 +141,11 @@ case $PMTYPE in
 		;;
 	opkg)
 		CMD="opkg depends"
+		;;
+	eopkg)
+		showcmd eopkg info $pkg_names
+		a= eopkg info $pkg_names | grep "^Dependencies" | sed -e "s|Dependencies[[:space:]]*: ||"
+		return
 		;;
 	xbps)
 		CMD="xbps-query -x"

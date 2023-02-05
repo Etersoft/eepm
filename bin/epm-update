@@ -90,6 +90,9 @@ case $PMTYPE in
 	opkg)
 		sudocmd opkg update
 		;;
+	eopkg)
+		sudocmd eopkg update-repo
+		;;
 	apk)
 		sudocmd apk update
 		;;

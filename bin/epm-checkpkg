@@ -61,6 +61,13 @@ check_pkg_integrity()
 
 __epm_check_all_pkgs()
 {
+case $PMTYPE in
+	eopkg)
+		sudocmd eopkg check
+		return
+		;;
+esac
+
 	local j cl
 	#local play_installed="$(epm play --list-installed-packages)"
 	epm qa --short | xargs -n20 | while read cl ; do
@@ -88,6 +95,9 @@ case $PMTYPE in
 	emerge)
 		assure_exists equery
 		docmd equery check $@
+		;;
+	eopkg)
+		sudocmd eopkg check $@
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"

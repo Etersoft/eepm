@@ -145,6 +145,9 @@ case $PMTYPE in
 	winget)
 		sudocmd winget source remove "$@"
 		;;
+	eopkg)
+		sudocmd eopkg remove-repo "$@"
+		;;
 	slackpkg)
 		info "You need remove repo from /etc/slackpkg/mirrors"
 		;;
