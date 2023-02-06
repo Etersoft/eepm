@@ -13,13 +13,9 @@ subst '1iAutoProv:no' $SPEC
 # put service file to the normal place
 mkdir -p $BUILDROOT/etc/systemd/system/
 cp $BUILDROOT/usr/share/rustdesk/files/systemd/rustdesk.service $BUILDROOT/etc/systemd/system/$PRODUCT.service
-remove_file /usr/share/rustdesk/files/systemd/rustdesk.service
+remove_dir /usr/share/rustdesk/files/systemd
 pack_file /etc/systemd/system/$PRODUCT.service
 
-remove_dir /usr/share/rustdesk
-
-move_to_opt
-add_bin_link_command
 
 # TODO
 # if [[ "$parsedVersion" -gt "360" ]]; then
@@ -27,7 +23,18 @@ add_bin_link_command
 remove_file /usr/share/rustdesk/files/pynput_service.py
 # filter_from_requires "python3(pynput.*"
 
-echo "Categories=GNOME;GTK;Network;RemoteAccess;" >> $BUILDROOT/usr/share/applications/$PRODUCT.desktop
+subst "s|^Categories.*|Categories=GNOME;GTK;Network;RemoteAccess;|" $BUILDROOT/usr/share/applications/$PRODUCT.desktop
+subst "s|/usr/share/rustdesk/files/rustdesk.png|$PRODUCT|" $BUILDROOT/usr/share/applications/$PRODUCT.desktop
+
+ICONFILE=$PRODUCT.png
+mkdir -p $BUILDROOT/usr/share/pixmaps/
+cp $BUILDROOT/usr/share/rustdesk/files/rustdesk.png $BUILDROOT/usr/share/pixmaps/$ICONFILE
+pack_file /usr/share/pixmaps/$ICONFILE
+
+move_to_opt /usr/lib/rustdesk
+add_bin_link_command
+
+remove_dir /usr/lib
 
 epm assure patchelf || fatal
 for i in $BUILDROOT/$PRODUCTDIR/lib/*.so ; do
