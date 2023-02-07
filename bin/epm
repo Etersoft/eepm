@@ -26,9 +26,10 @@ if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
     PROGNAME=""
 fi
 
-# will replaced to /usr/share/eepm during install
+# will replaced with /usr/share/eepm during install
 SHAREDIR=$PROGDIR
-CONFIGDIR=$PROGDIR/..
+# will replaced with /etc/eepm during install
+CONFIGDIR=$PROGDIR/../etc
 
 load_helper()
 {
@@ -111,7 +112,7 @@ quoted_args=
 direct_args=
 
 # load system wide config
-[ -f /etc/eepm/eepm.conf ] && . /etc/eepm/eepm.conf
+[ -f $CONFIGDIR/eepm.conf ] && . $CONFIGDIR/eepm.conf
 
 
 case $PROGNAME in
