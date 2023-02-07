@@ -115,6 +115,7 @@ rm -v %buildroot%_bindir/yum
 %dir %_sysconfdir/eepm/prescription.d/
 %config(noreplace) %_sysconfdir/eepm/eepm.conf
 %config(noreplace) %_sysconfdir/eepm/serv.conf
+%config(noreplace) %_sysconfdir/eepm/*.list
 %config(noreplace) %_sysconfdir/eepm/repack.d/*
 %config(noreplace) %_sysconfdir/eepm/play.d/*
 %config(noreplace) %_sysconfdir/eepm/prescription.d/*

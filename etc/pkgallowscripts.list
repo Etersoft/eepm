@@ -1,0 +1,5 @@
+# Place here foreign packages with enough quality to relax with repacking
+# Packages with this names epm will install with scripts by default
+
+myoffice-*
+cprocsp-*

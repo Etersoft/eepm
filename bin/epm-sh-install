@@ -67,6 +67,31 @@ get_only_installed_packages()
     estrlist exclude "$(echo "$installlist" | (skip_installed='yes' filter_out_installed_packages))" "$installlist"
 }
 
+__convert_pkgallowscripts_to_regexp()
+{
+    local tmpalf=$(mktemp) || fatal
+    # copied from eget's filter_glob
+    # check man glob
+    # remove commentы and translate glob to regexp
+    grep -v "^[[:space:]]*#" "$1" | grep -v "^[[:space:]]*$" | sed -e "s|\*|.*|g" -e "s|?|.|g" -e "s|^|^|" -e "s|$|\$|" >$tmpalf
+    echo "$tmpalf"
+}
+
+__epm_package_ok_scripts()
+{
+    local pkg="$1"
+    local alf="$CONFIGDIR/pkgallowscripts.list"
+    [ -s "$alf" ] || return 1
+    local name
+    name="$(epm print field Name for "$pkg" 2>/dev/null)"
+    [ -n "$name" ] || return 1
+    local tmpalf=$(__convert_pkgallowscripts_to_regexp "$alf")
+    echo "$name" | grep -q -f $tmpalf
+    local res=$?
+    rm $tmpalf
+    return $res
+}
+
 # Args: package names. Set noscripts for outside packages.
 __epm_check_vendor()
 {
@@ -87,7 +112,11 @@ __epm_check_vendor()
         vendor="$(epm print field Vendor for "$i" 2>/dev/null)"
         # TODO: check GPG
         [ "$vendor" = "ALT Linux Team" ] && continue
-        warning "Scripts are disabled for package $i from outside vendor '$vendor'. Use --scripts if you need run scripts from such packages."
+        if __epm_package_ok_scripts "$i" ; then
+            warning "Scripts are ENABLED for package $i from outside vendor '$vendor' (the package is listed in $CONFIGDIR/pkgallowscripts.list).  Use --noscripts if you need disable scripts in such packages."
+            continue
+        fi
+        warning "Scripts are DISABLED for package $i from outside vendor '$vendor'. Use --scripts if you need run scripts from such packages."
         noscripts="--noscripts"
     done
 }
