@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.29.1
+Version: 3.30.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -29,6 +29,9 @@ Provides: epm = %EVR
 Requires: apt rpm
 # TODO: don't use at all
 Requires: apt-repo
+
+AutoProv:no
+AutoReq:no,shell
 %endif
 
 Requires: which
@@ -144,6 +147,20 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Wed Feb 08 2023 Vitaly Lipatov <lav@altlinux.ru> 3.30.0-alt1
+- epm-repack: fix rpm package arch (add --target to rpmbuild)
+- epm repack: add iwbdriver support (usable on 32 bit platform only)
+- distr_info: add Solus (eopkg) support
+- add eopkg package manager support (Solus system)
+- epm repack rustdesk: support repacking 1.1.9 and nightly 1.2.0
+- epm play rustdesk: allow install nigthly version (latest 1.1.9 as stable)
+- pack example eepm.conf
+- epm install: don't disable rpm scripts for packages from /etc/eepm/pkgallowscripts.list
+- epm install: don't disable rpm scripts for vendors from /etc/eepm/vendorallowscripts.list
+- epm play: add assistant, myoffice, r7-office to pkgallowscripts.list to use --scripts by default
+- disable AutoReq (exclude shell) and AutoProv
+- epm play mssql-server: fix changed download URL for ALT
+
 * Wed Feb 01 2023 Vitaly Lipatov <lav@altlinux.ru> 3.29.1-alt1
 - epm-epm_install: allow install a few packages simultaneously
 - onefile_eget: add checking for curl too
