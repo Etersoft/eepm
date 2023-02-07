@@ -76,17 +76,8 @@ This package contains yum like frontend for Etersoft EPM package manager.
 #install -m 0755 packed/epm.sh %buildroot/%_datadir/%name/epm-packed.sh
 #install -m 0755 packed/serv.sh %buildroot/%_datadir/%name/serv-packed.sh
 
-mkdir -p %buildroot%_sysconfdir/eepm/
-cat <<EOF >%buildroot%_sysconfdir/eepm/eepm.conf
-# EEPM config (will insource in epm shell script)
-# Not known variable yet
-
-#verbose=--verbose
-#quiet==--quiet
-EOF
-
 cat <<EOF >%buildroot%_sysconfdir/eepm/serv.conf
-# EEPM config (will insource in serv shell script)
+# serv config (will insource in serv shell script)
 EOF
 
 mkdir -p %buildroot%_sysconfdir/eepm/repack.d/

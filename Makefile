@@ -21,6 +21,9 @@ install:
 	install -m 644 `ls -1 bin/* | grep "[-_]"` $(DESTDIR)$(pkgdatadir)/
 	rm -f $(DESTDIR)$(pkgdatadir)/distr_info
 
+	mkdir -p $(DESTDIR)$(sysconfdir)/eepm/
+	cp -a etc/eepm.conf $(DESTDIR)$(sysconfdir)/eepm/
+
 	mkdir -p $(DESTDIR)$(mandir)/man1
 	cp -a `ls -1 man/*` $(DESTDIR)$(mandir)/man1/
 
