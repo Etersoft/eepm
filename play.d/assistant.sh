@@ -4,11 +4,8 @@ PKGNAME=assistant
 SUPPORTEDARCHES="x86_64 aarch64"
 DESCRIPTION="Assistant (Ассистент) from the official site"
 
-# Assistant reclaim their rpm package supports ALT
-repack="--scripts"
-
 if [ "$1" = "--remove" ] ; then
-    epm remove $repack $PKGNAME
+    epm remove $PKGNAME
     exit
 fi
 
@@ -62,14 +59,9 @@ esac
 #  assistant: Требует: /lib/init/vars.sh но пакет не может быть установлен
 #             Требует: libyuv.so()(64bit) но пакет не может быть установлен
 
-#repack=''
-#[ "$($DISTRVENDOR -p)" = "deb" ] || repack='--repack'
-
 [ "$($DISTRVENDOR -s)" = "alt" ] && epmi --skip-installed fontconfig-disable-type1-font-for-assistant
 
-LANG=ru_RU.UTF8 epm $repack install "$URL" || exit
-
-[ "$repack" = "--scripts" ] && echo "Warning! Privileged scripts from the vendor were running."
+LANG=ru_RU.UTF8 epm install "$URL" || exit
 
 # TODO:
 # after install:

@@ -5,8 +5,7 @@ SUPPORTEDARCHES="x86_64"
 DESCRIPTION="MyOffice Standart Home Edition for Linux from the official site"
 
 if [ "$1" = "--remove" ] ; then
-    # Allow scripts: MyOffice reclaims their rpm package supports ALT
-    epm remove --scripts $PKGNAME
+    epm remove $PKGNAME
     exit
 fi
 
@@ -24,4 +23,4 @@ PKGMASK="$(epm print constructname $PKGNAME "*" $arch)"
 PKG="$(epm tool eget --list --latest https://myoffice.ru/products/standard-home-edition/ $PKGMASK)" || fatal "Can't get package URL"
 
 
-epm --scripts install "$PKG"
+epm install "$PKG"

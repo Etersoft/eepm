@@ -6,7 +6,7 @@ DESCRIPTION="R7 Office for Linux from the official site"
 
 # remove with scripts (need for remove icons and associations)
 if [ "$1" = "--remove" ] ; then
-    epm remove --scripts $PKGNAME
+    epm remove $PKGNAME
     exit
 fi
 
@@ -38,4 +38,4 @@ esac
 
 # install with scripts (need for install icons and associations)
 # TODO: pack it into the package
-epm install --scripts "$PKG"
+epm install "$PKG"
