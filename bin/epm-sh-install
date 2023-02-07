@@ -92,6 +92,19 @@ __epm_package_ok_scripts()
     return $res
 }
 
+__epm_vendor_ok_scripts()
+{
+    local vendor="$1"
+    local alf="$CONFIGDIR/vendorallowscripts.list"
+    [ -s "$alf" ] || return 1
+    [ -n "$vendor" ] || return 1
+    local tmpalf=$(__convert_pkgallowscripts_to_regexp "$alf")
+    echo "$vendor" | grep -q -f $tmpalf
+    local res=$?
+    rm $tmpalf
+    return $res
+}
+
 # Args: package names. Set noscripts for outside packages.
 __epm_check_vendor()
 {
@@ -110,8 +123,16 @@ __epm_check_vendor()
         [ -n "$rpmversion" ] || continue
 
         vendor="$(epm print field Vendor for "$i" 2>/dev/null)"
+
         # TODO: check GPG
+        # check separately to be quiet
         [ "$vendor" = "ALT Linux Team" ] && continue
+
+        if __epm_vendor_ok_scripts "$vendor" ; then
+            warning "Scripts are ENABLED for package $i from outside vendor '$vendor' (this vendor is listed in $CONFIGDIR/vendorallowscripts.list).  Use --noscripts if you need disable scripts in such packages."
+            continue
+        fi
+
         if __epm_package_ok_scripts "$i" ; then
             warning "Scripts are ENABLED for package $i from outside vendor '$vendor' (the package is listed in $CONFIGDIR/pkgallowscripts.list).  Use --noscripts if you need disable scripts in such packages."
             continue

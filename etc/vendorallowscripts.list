@@ -1,0 +1,4 @@
+# Place here Vendor names who are allowed to use scripts in their rpm packages
+# Packages from these vendors will install with scripts by default
+
+ALT Linux Team
