@@ -1447,6 +1447,9 @@ case $DISTRIB_ID in
 		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
 		#hascommand snappy && CMD=snappy
 		;;
+	Solus)
+		CMD="eopkg"
+		;;
 	Mandriva)
 		CMD="urpm-rpm"
 		;;
@@ -1550,6 +1553,7 @@ pkgtype()
 		voidlinux) echo "xbps" ;;
 		openwrt) echo "ipk" ;;
 		cygwin) echo "tar.xz" ;;
+		solus) echo "eopkg" ;;
 		*)
 			case $(pkgmanager) in
 				*-dpkg)
@@ -2371,7 +2375,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.29.1  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.30.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

@@ -26,9 +26,10 @@ if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
     PROGNAME=""
 fi
 
-# will replaced to /usr/share/eepm during install
+# will replaced with /usr/share/eepm during install
 SHAREDIR=$PROGDIR
-CONFIGDIR=$PROGDIR/..
+# will replaced with /etc/eepm during install
+CONFIGDIR=$PROGDIR/../etc
 
 load_helper()
 {
@@ -1155,6 +1156,9 @@ case $PMTYPE in
 		# clean-system removes non official packages
 		sudocmd slackpkg clean-system
 		;;
+	eopkg)
+		sudocmd eopkg remove-orphans
+		;;
 	#guix)
 	#	sudocmd guix gc
 	#	;;
@@ -1734,6 +1738,13 @@ check_pkg_integrity()
 
 __epm_check_all_pkgs()
 {
+case $PMTYPE in
+	eopkg)
+		sudocmd eopkg check
+		return
+		;;
+esac
+
 	local j cl
 	#local play_installed="$(epm play --list-installed-packages)"
 	epm qa --short | xargs -n20 | while read cl ; do
@@ -1761,6 +1772,9 @@ case $PMTYPE in
 	emerge)
 		assure_exists equery
 		docmd equery check $@
+		;;
+	eopkg)
+		sudocmd eopkg check $@
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -1998,6 +2012,9 @@ case $PMTYPE in
 		sudocmd nix-collect-garbage
 		;;
 	slackpkg)
+		;;
+	eopkg)
+		sudocmd eopkg delete-cache
 		;;
 	pkgng)
 		sudocmd pkg clean -a
@@ -2542,6 +2559,9 @@ epm_download()
 	opkg)
 		docmd opkg $*
 		;;
+	eopkg)
+		docmd eopkg fetch $*
+		;;
 	homebrew)
 		docmd brew fetch $*
 		;;
@@ -2718,6 +2738,10 @@ __epm_filelist_file()
 			assure_exists dpkg
 			CMD="dpkg --contents"
 			;;
+		eopkg)
+			assure_exists eopkg
+			CMD="eopkg --files info"
+			;;
 		*)
 			fatal "Have no suitable query command for $PMTYPE"
 			;;
@@ -2766,6 +2790,10 @@ __epm_filelist_name()
 			;;
 		opkg)
 			CMD="opkg files"
+			;;
+		eopkg)
+			docmd eopkg --files -s info $@ | grep "^/"
+			return
 			;;
 		xbps)
 			CMD="xbps-query -f"
@@ -2844,6 +2872,9 @@ case $PMTYPE in
 		;;
 	dnf-rpm)
 		sudocmd dnf history
+		;;
+	eopkg)
+		sudocmd eopkg history
 		;;
 	zypper-rpm)
 		less /var/log/zypp/history
@@ -2982,6 +3013,9 @@ case $PMTYPE in
 	winget)
 		docmd winget show $pkg_names
 		;;
+	eopkg)
+		docmd eopkg info $pkg_files $pkg_names
+		;;
 	appget)
 		docmd appget view $pkg_names
 		;;
@@ -3108,6 +3142,9 @@ epm_install_names()
 		mpkg)
 			sudocmd mpkg install $@
 			return ;;
+		eopkg)
+			sudocmd eopkg $(subst_option nodeps --ignore-dependency) install $@
+			return ;;
 		conary)
 			sudocmd conary update $@
 			return ;;
@@ -3210,6 +3247,9 @@ epm_ni_install_names()
 			return ;;
 		opkg)
 			sudocmd opkg -force-defaults install $@
+			return ;;
+		eopkg)
+			sudocmd eopkg --yes-all install $@
 			return ;;
 		nix)
 			sudocmd nix-env --install $@
@@ -3443,6 +3483,9 @@ epm_install_files()
         android)
             sudocmd pm install $files
             return ;;
+        eopkg)
+            sudocmd eopkg install $files
+            return ;;
         emerge)
             sudocmd epm_install_emerge $files
             return ;;
@@ -3497,6 +3540,9 @@ epm_print_install_command()
             ;;
         opkg)
             echo "opkg install $*"
+            ;;
+        eopkg)
+            echo "eopkg install $*"
             ;;
         android)
             echo "pm install $*"
@@ -3563,6 +3609,9 @@ epm_print_install_names_command()
 			return ;;
 		nix)
 			echo "nix-env --install $*"
+			return ;;
+		eopkg)
+			echo "eopkg install $*"
 			return ;;
 		appget|winget)
 			echo "$PMTYPE install $*"
@@ -4229,6 +4278,9 @@ case $PMTYPE in
 		;;
 	conary)
 		CMD="conary query"
+		;;
+	eopkg)
+		CMD="eopkg list-installed"
 		;;
 	chocolatey)
 		CMD="chocolatey list"
@@ -5376,6 +5428,14 @@ __epm_query_name()
 		conary)
 			CMD="conary query"
 			;;
+		eopkg)
+			showcmd eopkg blame $1
+			local str
+			str="$(a= eopkg blame $1 | grep "^Name")"
+			[ -n "$str" ] || return 1
+			echo "$str" | sed -e "s|Name[[:space:]]*: \(.*\), version: \(.*\), release: \(.*\)|\1-\2-\3|"
+			return
+			;;
 		#homebrew)
 		#	showcmd "brew info $1"
 		#	local HBRESULT
@@ -5427,6 +5487,14 @@ __epm_query_shortname()
 			;;
 		conary)
 			CMD="conary query"
+			;;
+		eopkg)
+			showcmd eopkg blame $1
+			local str
+			str="$(a= eopkg blame $1 | grep "^Name")"
+			[ -n "$str" ] || return 1
+			echo "$str" | sed -e "s|Name[[:space:]]*: \(.*\), version: \(.*\), release: \(.*\)|\1|"
+			return
 			;;
 		homebrew)
 			docmd brew info "$1" >/dev/null 2>/dev/null && echo "$1" && return
@@ -5697,6 +5765,9 @@ epm_reinstall_names()
 			return ;;
 		opkg)
 			sudocmd opkg --force-reinstall install $@
+			return ;;
+		eopkg)
+			sudocmd eopkg --reinstall install $@
 			return ;;
 		slackpkg)
 			sudocmd_foreach "/usr/sbin/slackpkg reinstall" $@
@@ -6533,6 +6604,9 @@ epm_remove_low()
 		pacman)
 			sudocmd pacman -R $@
 			return ;;
+		eopkg)
+			sudocmd eopkg $(subst_option nodeps --ignore-dependency) remove $@
+			return ;;
 		appget|winget)
 			sudocmd $PMTYPE uninstall $@
 			return ;;
@@ -6597,6 +6671,9 @@ epm_remove_names()
 			return ;;
 		mpkg)
 			sudocmd mpkg remove $@
+			return ;;
+		eopkg)
+			sudocmd eopkg $(subst_option nodeps --ignore-dependency) remove $@
 			return ;;
 		conary)
 			sudocmd conary erase $@
@@ -6685,6 +6762,9 @@ epm_remove_nonint()
 		opkg)
 			sudocmd opkg -force-defaults remove $@
 			return ;;
+		eopkg)
+			sudocmd eopkg $(subst_option nodeps --ignore-dependency) --yes-all remove $@
+			return ;;
 		appget|winget)
 			sudocmd $PMTYPE uninstall -s $@
 			return ;;
@@ -6724,6 +6804,9 @@ epm_print_remove_command()
 			;;
 		opkg)
 			echo "opkg remove $*"
+			;;
+		eopkg)
+			echo "eopkg remove $*"
 			;;
 		aptcyg)
 			echo "apt-cyg remove $*"
@@ -6995,6 +7078,9 @@ case $PMTYPE in
 		;;
 	winget)
 		sudocmd winget source remove "$@"
+		;;
+	eopkg)
+		sudocmd eopkg remove-repo "$@"
 		;;
 	slackpkg)
 		info "You need remove repo from /etc/slackpkg/mirrors"
@@ -7334,11 +7420,14 @@ __epm_repack_to_rpm()
         __apply_fix_code $pkgname $tmpbuilddir/$subdir $spec $pkgname
         # TODO: we need these dirs to be created
         to_remove_pkg_dirs="$to_remove_pkg_dirs $HOME/RPM/BUILD $HOME/RPM"
-        showcmd rpmbuild --buildroot $tmpbuilddir/$subdir -bb $spec
+
+        TARGETARCH=$(epm print info -a | sed -e 's|^x86$|i586|')
+
+        showcmd rpmbuild --buildroot $tmpbuilddir/$subdir --target $TARGETARCH -bb $spec
         if [ -n "$verbose" ] ; then
-            a='' rpmbuild --buildroot $tmpbuilddir/$subdir -bb $spec || fatal
+            a='' rpmbuild --buildroot $tmpbuilddir/$subdir --target $TARGETARCH -bb $spec || fatal
         else
-            a='' rpmbuild --buildroot $tmpbuilddir/$subdir -bb $spec >/dev/null || fatal
+            a='' rpmbuild --buildroot $tmpbuilddir/$subdir --target $TARGETARCH -bb $spec >/dev/null || fatal
         fi
         # remove copy of source binary package (don't mix with generated)
         rm -f $tmpbuilddir/../$alpkg
@@ -7849,6 +7938,9 @@ case $PMTYPE in
 	winget)
 		docmd winget source list
 		;;
+	eoget)
+		docmd eoget list-repo
+		;;
 	pacman)
 		docmd grep -v -- "^#\|^$" /etc/pacman.conf
 		;;
@@ -8000,6 +8092,10 @@ epm_requires_files()
 			assure_exists dpkg >/dev/null
 			a='' docmd dpkg -I $pkg_files | grep "^ *Depends:" | sed "s|^ *Depends:||g"
 			;;
+		eopkg)
+			showcmd eopkg info $pkg_files
+			a= eopkg info $pkg_files | grep "^Dependencies" | head -n1 | sed -e "s|Dependencies[[:space:]]*: ||"
+			;;
 		*)
 			fatal "Have no suitable command for $PKGTYPE"
 			;;
@@ -8085,6 +8181,11 @@ case $PMTYPE in
 		;;
 	opkg)
 		CMD="opkg depends"
+		;;
+	eopkg)
+		showcmd eopkg info $pkg_names
+		a= eopkg info $pkg_names | grep "^Dependencies" | sed -e "s|Dependencies[[:space:]]*: ||"
+		return
 		;;
 	xbps)
 		CMD="xbps-query -x"
@@ -8650,6 +8751,9 @@ case $PMTYPE in
 	aura)
 		CMD="aura -As --"
 		;;
+	eopkg)
+		CMD="eopkg search --"
+		;;
 	yum-rpm)
 		CMD="yum search --"
 		;;
@@ -8903,6 +9007,9 @@ case $PMTYPE in
 	opkg)
 		CMD="opkg -A search"
 		;;
+	eopkg)
+		CMD="eopkg search-file"
+		;;
 	xbps)
 		CMD="xbps-query -Ro"
 		;;
@@ -9132,6 +9239,44 @@ get_only_installed_packages()
     estrlist exclude "$(echo "$installlist" | (skip_installed='yes' filter_out_installed_packages))" "$installlist"
 }
 
+__convert_pkgallowscripts_to_regexp()
+{
+    local tmpalf=$(mktemp) || fatal
+    # copied from eget's filter_glob
+    # check man glob
+    # remove commentы and translate glob to regexp
+    grep -v "^[[:space:]]*#" "$1" | grep -v "^[[:space:]]*$" | sed -e "s|\*|.*|g" -e "s|?|.|g" -e "s|^|^|" -e "s|$|\$|" >$tmpalf
+    echo "$tmpalf"
+}
+
+__epm_package_ok_scripts()
+{
+    local pkg="$1"
+    local alf="$CONFIGDIR/pkgallowscripts.list"
+    [ -s "$alf" ] || return 1
+    local name
+    name="$(epm print field Name for "$pkg" 2>/dev/null)"
+    [ -n "$name" ] || return 1
+    local tmpalf=$(__convert_pkgallowscripts_to_regexp "$alf")
+    echo "$name" | grep -q -f $tmpalf
+    local res=$?
+    rm $tmpalf
+    return $res
+}
+
+__epm_vendor_ok_scripts()
+{
+    local vendor="$1"
+    local alf="$CONFIGDIR/vendorallowscripts.list"
+    [ -s "$alf" ] || return 1
+    [ -n "$vendor" ] || return 1
+    local tmpalf=$(__convert_pkgallowscripts_to_regexp "$alf")
+    echo "$vendor" | grep -q -f $tmpalf
+    local res=$?
+    rm $tmpalf
+    return $res
+}
+
 __epm_check_vendor()
 {
     # don't check vendor if there are forced script options
@@ -9149,9 +9294,21 @@ __epm_check_vendor()
         [ -n "$rpmversion" ] || continue
 
         vendor="$(epm print field Vendor for "$i" 2>/dev/null)"
+
         # TODO: check GPG
+        # check separately to be quiet
         [ "$vendor" = "ALT Linux Team" ] && continue
-        warning "Scripts are disabled for package $i from outside vendor '$vendor'. Use --scripts if you need run scripts from such packages."
+
+        if __epm_vendor_ok_scripts "$vendor" ; then
+            warning "Scripts are ENABLED for package $i from outside vendor '$vendor' (this vendor is listed in $CONFIGDIR/vendorallowscripts.list).  Use --noscripts if you need disable scripts in such packages."
+            continue
+        fi
+
+        if __epm_package_ok_scripts "$i" ; then
+            warning "Scripts are ENABLED for package $i from outside vendor '$vendor' (the package is listed in $CONFIGDIR/pkgallowscripts.list).  Use --noscripts if you need disable scripts in such packages."
+            continue
+        fi
+        warning "Scripts are DISABLED for package $i from outside vendor '$vendor'. Use --scripts if you need run scripts from such packages."
         noscripts="--noscripts"
     done
 }
@@ -9297,6 +9454,9 @@ EOF
     		return $RES ;;
     	urpm-rpm)
     		CMD="urpmi --test --auto"
+    		;;
+    	eopkg)
+    		CMD="eopkg --dry-run install"
     		;;
     	zypper-rpm)
     		if ! __use_zypper_dry_run >/dev/null ; then
@@ -9612,6 +9772,9 @@ case $PMTYPE in
 	opkg)
 		sudocmd opkg update
 		;;
+	eopkg)
+		sudocmd eopkg update-repo
+		;;
 	apk)
 		sudocmd apk update
 		;;
@@ -9670,6 +9833,12 @@ epm_upgrade()
 
 			return
 		fi
+	fi
+
+	# Solus supports upgrade for a package (with all dependencies)
+	if [ -n "$1" ] && [ "$DISTRNAME" = "Solus" ] ; then
+		sudocmd eopkg upgrade "$@"
+		return
 	fi
 
 	info "Running command for upgrade packages"
@@ -9752,6 +9921,9 @@ epm_upgrade()
 		;;
 	opkg)
 		CMD="opkg upgrade"
+		;;
+	eopkg)
+		CMD="eopkg upgrade"
 		;;
 	slackpkg)
 		CMD="/usr/sbin/slackpkg upgrade-all"
@@ -9846,6 +10018,12 @@ case $PMTYPE in
 		;;
 	opkg)
 		CMD="opkg whatdepends"
+		;;
+	eopkg)
+		showcmd eopkg info $pkg
+		# eopkg info prints it only from repo info
+		a= eopkg info $pkg | grep "^Reverse Dependencies" | sed -e "s|Reverse Dependencies[[:space:]]*: ||" | grep -v "^$"
+		return
 		;;
 	xbps)
 		CMD="xbps-query -X"
@@ -10010,6 +10188,9 @@ case $DISTRIB_ID in
 		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
 		#hascommand snappy && CMD=snappy
 		;;
+	Solus)
+		CMD="eopkg"
+		;;
 	Mandriva)
 		CMD="urpm-rpm"
 		;;
@@ -10113,6 +10294,7 @@ pkgtype()
 		voidlinux) echo "xbps" ;;
 		openwrt) echo "ipk" ;;
 		cygwin) echo "tar.xz" ;;
+		solus) echo "eopkg" ;;
 		*)
 			case $(pkgmanager) in
 				*-dpkg)
@@ -11845,7 +12027,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.29.1  Telegram: https://t.me/useepm  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version 3.30.0  Telegram: https://t.me/useepm  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2023"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -11855,7 +12037,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.29.1
+EPMVERSION=3.30.0
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
@@ -11884,7 +12066,7 @@ quoted_args=
 direct_args=
 
 # load system wide config
-[ -f /etc/eepm/eepm.conf ] && . /etc/eepm/eepm.conf
+[ -f $CONFIGDIR/eepm.conf ] && . $CONFIGDIR/eepm.conf
 
 
 case $PROGNAME in
@@ -11955,13 +12137,13 @@ check_command()
 
 # HELPCMD: PART: Base commands:
     case $1 in
-    -i|install|add|i)         # HELPCMD: install package(s) from remote repositories or from local file
+    -i|install|add|i|it)         # HELPCMD: install package(s) from remote repositories or from local file
         epm_cmd=install
         ;;
     -e|-P|rm|del|remove|delete|uninstall|erase|purge|e)  # HELPCMD: remove (delete) package(s) from the database and the system
         epm_cmd=remove
         ;;
-    -s|search|s|find)                # HELPCMD: search in remote package repositories
+    -s|search|s|find|sr)                # HELPCMD: search in remote package repositories
         epm_cmd=search
         ;;
     -qp|qp|query_package)     # HELPCMD: search in the list of installed packages
@@ -11984,7 +12166,7 @@ check_command()
     installed)                # HELPCMD: check presence of package(s) (like -q with --quiet)
         epm_cmd=installed
         ;;
-    -sf|sf|filesearch)        # HELPCMD: search in which package a file is included
+    -sf|sf|filesearch|search-file)        # HELPCMD: search in which package a file is included
         epm_cmd=search_file
         ;;
     -ql|ql|filelist|get-files)          # HELPCMD: print package file list
@@ -12019,7 +12201,7 @@ check_command()
     conflicts)                # HELPCMD: print package conflicts
         epm_cmd=conflicts
         ;;
-    -qa|qa|-l|list|ls|packages)  # HELPCMD: print list of installed package(s)
+    -qa|qa|-l|list|ls|packages|list-installed|li)  # HELPCMD: print list of installed package(s)
         epm_cmd=packages
         ;;
     programs)                 # HELPCMD: print list of installed GUI program(s) (they have .desktop files)
@@ -12034,7 +12216,7 @@ check_command()
         ;;
 
 # HELPCMD: PART: Repository control:
-    update)                   # HELPCMD: update remote package repository databases
+    update|update-repo|ur)                   # HELPCMD: update remote package repository databases
         epm_cmd=update
         direct_args=1
         ;;
@@ -12042,7 +12224,7 @@ check_command()
         epm_cmd=addrepo
         direct_args=1
         ;;
-    repolist|sl|rl|listrepo|repo-list)  # HELPCMD: print repo list
+    repolist|sl|rl|listrepo|repo-list|list-repo|lr)  # HELPCMD: print repo list
         epm_cmd=repolist
         direct_args=1
         ;;
@@ -12050,7 +12232,7 @@ check_command()
         epm_cmd=repofix
         direct_args=1
         ;;
-    removerepo|rr)            # HELPCMD: remove package repo (shortcut for epm repo remove)
+    removerepo|remove-repo|rr)            # HELPCMD: remove package repo (shortcut for epm repo remove)
         epm_cmd=removerepo
         direct_args=1
         ;;
@@ -12080,7 +12262,7 @@ check_command()
         ;;
 
 # HELPCMD: PART: Other commands:
-    clean)                    # HELPCMD: clean local package cache
+    clean|delete-cache|dc)                    # HELPCMD: clean local package cache
         epm_cmd=clean
         direct_args=1
         ;;
@@ -12097,10 +12279,10 @@ check_command()
     history)                  # HELPCMD: show a log of actions taken by the software management
         epm_cmd=history
         ;;
-    autoorphans|--orphans)    # HELPCMD: remove all packages not from the repository
+    autoorphans|--orphans|remove-orphans)    # HELPCMD: remove all packages not from the repository
         epm_cmd=autoorphans
         ;;
-    upgrade|dist-upgrade)     # HELPCMD: performs upgrades of package software distributions
+    upgrade|up|dist-upgrade)     # HELPCMD: performs upgrades of package software distributions
         epm_cmd=upgrade
         ;;
     Upgrade)                  # HELPCMD: force update package base, then run upgrade
@@ -12110,7 +12292,7 @@ check_command()
     downgrade)                # HELPCMD: downgrade [all] packages to the repo state
         epm_cmd=downgrade
         ;;
-    download)                 # HELPCMD: download package(s) file to the current dir
+    download|fetch|fc)        # HELPCMD: download package(s) file to the current dir
         epm_cmd=download
         ;;
 # TODO: replace with install --simulate
