@@ -36,10 +36,11 @@ echo "Categories=GNOME;GTK;Network;RemoteAccess;" >> $BUILDROOT/usr/share/applic
 #add_bin_exec_command
 #remove_dir /usr/lib
 
-epm assure patchelf || fatal
-for i in $BUILDROOT/$PRODUCTDIR/$PRODUCT ; do
-    a= patchelf --set-rpath '$ORIGIN' $i || continue
-done
+# Works without this
+#epm assure patchelf || fatal
+#for i in $BUILDROOT/usr/bin/$PRODUCT ; do
+#    a= patchelf --set-rpath '$PRODUCTDIR' $i || continue
+#done
 
 epm install glib2 libappindicator-gtk3 libcairo libgdk-pixbuf libgtk+3 libpango libpulseaudio libuuid libX11 libXau libxcb libXdmcp libXfixes libXtst xdotool
 
