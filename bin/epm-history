@@ -23,6 +23,9 @@ epm_history()
 [ -z "$*" ] || fatal "No arguments are allowed here"
 
 case $PMTYPE in
+	apt-rpm)
+		docmd journalctl -t apt-get
+		;;
 	apt-dpkg)
 		docmd less /var/log/dpkg.log
 		;;
