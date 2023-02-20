@@ -92,7 +92,7 @@ case $PMTYPE in
 	apt-dpkg)
 		sudocmd apt-mark hold "$@"
 		;;
-	yum-rpm|dnf-rpm)
+	dnf-rpm)
 		__dnf_assure_versionlock
 		sudocmd dnf versionlock add "$@"
 		;;
@@ -127,7 +127,7 @@ case $PMTYPE in
 	apt-dpkg)
 		sudocmd apt-mark unhold "$@"
 		;;
-	yum-rpm|dnf-rpm)
+	dnf-rpm)
 		__dnf_assure_versionlock
 		sudocmd dnf versionlock delete "$@"
 		;;
@@ -162,7 +162,7 @@ case $PMTYPE in
 	apt-dpkg)
 		sudocmd apt-mark showhold "$@"
 		;;
-	yum-rpm|dnf-rpm)
+	dnf-rpm)
 		__dnf_assure_versionlock
 		sudocmd dnf versionlock list
 		;;
@@ -197,13 +197,13 @@ case $PMTYPE in
 	apt-dpkg)
 		sudocmd apt-mark auto "$@"
 		;;
-#	yum-rpm|dnf-rpm)
-#		sudocmd dnf mark remove "$@"
-#		;;
-		pacman)
+	dnf-rpm)
+		sudocmd dnf mark remove "$@"
+		;;
+	pacman)
 			sudocmd pacman -D --asdeps "$@"
 		;;
-		emerge)
+	emerge)
 			sudocmd emerge --oneshot "$@"
 		;;
 	*)
@@ -228,13 +228,13 @@ case $PMTYPE in
 	apt-dpkg)
 		sudocmd apt-mark manual "$@"
 		;;
-#	yum-rpm|dnf-rpm)
-#		sudocmd dnf mark install "$@"
-#		;;
-		pacman)
+	dnf-rpm)
+		sudocmd dnf mark install "$@"
+		;;
+	pacman)
 			sudocmd pacman -D --asexplicit "$@"
 		;;
-		emerge)
+	emerge)
 			sudocmd emerge --select "$@"
 		;;
 	*)
@@ -259,9 +259,9 @@ case $PMTYPE in
 	apt-dpkg)
 		sudocmd apt-mark showauto "$@"
 		;;
-#	yum-rpm|dnf-rpm)
-#		sudocmd dnf mark remove "$@"
-#		;;
+	dnf-rpm)
+		sudocmd dnf repoquery --unneeded
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
@@ -283,9 +283,9 @@ case $PMTYPE in
 	apt-dpkg)
 		sudocmd apt-mark showmanual "$@"
 		;;
-#	yum-rpm|dnf-rpm)
-#		sudocmd dnf mark install "$@"
-#		;;
+	dnf-rpm)
+		sudocmd dnf repoquery --userinstalled
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
