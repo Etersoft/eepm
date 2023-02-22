@@ -47,6 +47,15 @@ remove_dir()
     subst "s|.*$file$||" $SPEC
 }
 
+has_space()
+{
+    [ "${1/ /}" != "$1" ]
+}
+
+has_wildcard()
+{
+    [ "${1/\*/}" != "$1" ]
+}
 
 # Add file to spec (if missed)
 # Usage: pack_file <path_to_file>
@@ -56,6 +65,7 @@ pack_file()
     [ -n "$file" ] || return
     grep -q "^$file$" $SPEC && return
     grep -q "\"$file\"" $SPEC && return
+    has_space "$file" && file="\"$file\""
     subst "s|%files|%files\n$file|" $SPEC
 }
 
@@ -67,6 +77,7 @@ pack_dir()
     [ -n "$file" ] || return
     grep -q "^%dir[[:space:]]$file/*$" $SPEC && return
     grep -q "^%dir[[:space:]]\"$file/*\"$" $SPEC && return
+    has_space "$file" && file="\"$file\""
     subst "s|%files|%files\n%dir $file|" $SPEC
 }
 
@@ -77,11 +88,11 @@ add_bin_link_command()
     local target="$2"
     [ -n "$name" ] || name="$PRODUCT"
     [ -n "$target" ] || target="$PRODUCTDIR/$name"
-    [ -e $BUILDROOT/usr/bin/$name ] && return
+    [ -e "$BUILDROOT/usr/bin/$name" ] && return
 
     mkdir -p $BUILDROOT/usr/bin/
-    ln -s $target $BUILDROOT/usr/bin/$name
-    pack_file /usr/bin/$name
+    ln -s "$target" "$BUILDROOT/usr/bin/$name" || return
+    pack_file "/usr/bin/$name"
 }
 
 
@@ -91,41 +102,47 @@ add_bin_exec_command()
     local target="$2"
     [ -n "$name" ] || name="$PRODUCT"
     [ -n "$target" ] || target="$PRODUCTDIR/$name"
-    [ -e $BUILDROOT/usr/bin/$name ] && return
+    [ -e "$BUILDROOT/usr/bin/$name" ] && return
 
     mkdir -p $BUILDROOT/usr/bin/
-    cat <<EOF > $BUILDROOT/usr/bin/$name
+    cat <<EOF > "$BUILDROOT/usr/bin/$name"
 #!/bin/sh
-exec $target "\$@"
+exec "$target" "\$@"
 EOF
-    chmod 0755 $BUILDROOT/usr/bin/$name
-    pack_file /usr/bin/$name
+    chmod 0755 "$BUILDROOT/usr/bin/$name"
+    pack_file "/usr/bin/$name"
 }
 
 # move files to $PRODUCTDIR
 move_to_opt()
 {
-    local from="$*"
-    if [ -z "$from" ] ; then
+    local sdir rdir i
+    mkdir -p "$BUILDROOT$PRODUCTDIR/"
+
+    if [ -z "$1" ] ; then
+        local from
         from="/usr/share/$PRODUCTCUR"
         [ -d "$BUILDROOT$from" ] || from="/usr/share/$PRODUCT"
         [ -d "$BUILDROOT$from" ] || from="/usr/lib/$PRODUCT"
+        sdir="$BUILDROOT$from"
+    elif has_space "$1" ; then
+        sdir="$BUILDROOT$1"
+    else
+        sdir=''
+        for i in $* ; do
+            # workaround for wildcards in from
+            sdir="$(echo $BUILDROOT$i)"
+            [ -d "$sdir" ] && break
+        done
     fi
-    mkdir -p $BUILDROOT$PRODUCTDIR/
 
-    local sdir rdir i
-    for i in $from ; do
-        # workaround for wildcards in from
-        sdir="$(echo $BUILDROOT$i)"
-        [ -d "$sdir" ] || continue
-        rdir="$(echo $sdir | sed -e "s|^$BUILDROOT||")"
-        [ -n "$rdir" ] || return 1 #fatal "Can't resolve $from in $BUILDROOT"
-        [ -d "$BUILDROOT$rdir" ] || return 1 #fatal "Can't resolve $from in $BUILDROOT"
-        break
-    done
     [ -d "$sdir" ] || return 1 #fatal "Can't find any dir from $from list"
 
-    mv $BUILDROOT$rdir/* $BUILDROOT$PRODUCTDIR/
+    rdir="$(echo "$sdir" | sed -e "s|^$BUILDROOT||")"
+    [ -n "$rdir" ] || return 1 #fatal "Can't resolve $from in $BUILDROOT"
+    [ -d "$BUILDROOT$rdir" ] || return 1 #fatal "Can't resolve $from in $BUILDROOT"
+
+    mv "$BUILDROOT$rdir"/* "$BUILDROOT$PRODUCTDIR/"
     subst "s|$rdir|$PRODUCTDIR|g" $SPEC
 }
 
@@ -138,9 +155,9 @@ fix_chrome_sandbox()
     userns_path='/proc/sys/kernel/unprivileged_userns_clone'
     userns_val="$(cat $userns_path 2>/dev/null)"
     [ "$userns_val" = '1' ] && return
-    [ -n "$sandbox" ] || sandbox=$PRODUCTDIR/chrome-sandbox
+    [ -n "$sandbox" ] || sandbox="$PRODUCTDIR/chrome-sandbox"
     [ -e "$BUILDROOT$sandbox" ] || return 0
-    chmod -v 4711 $BUILDROOT$sandbox
+    chmod -v 4711 "$BUILDROOT$sandbox"
 }
 
 filter_from_requires()
@@ -161,5 +178,5 @@ if [ -n "$PRODUCT" ] ; then
     [ -n "$PRODUCTCUR" ] || PRODUCTCUR="$PRODUCT"
     [ -n "$PRODUCTDIR" ] || PRODUCTDIR="/opt/$PRODUCTCUR"
 
-    [ -d "$BUILDROOT$PRODUCTDIR" ] && pack_dir $PRODUCTDIR
+    [ -d "$BUILDROOT$PRODUCTDIR" ] && pack_dir "$PRODUCTDIR"
 fi
