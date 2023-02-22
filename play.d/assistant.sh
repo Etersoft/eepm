@@ -61,9 +61,8 @@ esac
 
 [ "$($DISTRVENDOR -s)" = "alt" ] && epmi --skip-installed fontconfig-disable-type1-font-for-assistant
 
+# TODO: disable scripts (see /etc/eepm/pkgallowscripts.list)
 LANG=ru_RU.UTF8 epm install "$URL" || exit
 
-# TODO:
-# after install:
-#/usr/share/assistantd/daemon.sh --install
-#/opt/assistant/scripts/fonts.sh --install
+echo "Note: original package runs /opt/assistant/scripts/setup.sh --install during install.."
+echo "It is dangerous. Use this package at your own risk."
