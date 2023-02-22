@@ -82,7 +82,7 @@ install_deps()
 # FIXME: too many heruistic due https://bugzilla.altlinux.org/42189
 add_bin_commands()
 {
-    mkdir -p $BUILDROOT/usr/bin
+    mkdir -p $BUILDROOT/usr/bin/
 
     if [ -L $BUILDROOT/usr/bin/$PRODUCTCUR ] ; then
         rm -fv $BUILDROOT/usr/bin/$PRODUCTCUR
@@ -103,6 +103,6 @@ add_bin_commands()
     fi
 
     # short command for run
-    add_bin_link_command $PRODUCT $PRODUCTCUR
+    [ "$PRODUCT" = "$PRODUCTDIR" ] || add_bin_link_command $PRODUCT $PRODUCTCUR
 }
 
