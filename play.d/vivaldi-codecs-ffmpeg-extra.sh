@@ -42,8 +42,8 @@ trap "rm -fr $SC $DDIR" EXIT
 a='' awk 'BEGIN{desk=0}{ if(/^.*--system.*/&&desk==0){desk++} ; if (desk==0) {print} }' < $PRODUCTDIR/update-ffmpeg > $SC
 . $SC
 cd $DDIR || fatal
-epm tool eget $FFMPEG_URL_DEB
+epm tool eget $FFMPEG_URL_DEB || exit
 SUITABLE_URLS=$FFMPEG_URL_DEB
-a='' ar -x *.deb
-a='' tar xf "data.tar.xz"
+a='' ar -x *.deb || exit
+a='' tar xf "data.tar.xz" || exit
 pack_ffmpeg
