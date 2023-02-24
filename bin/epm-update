@@ -21,6 +21,22 @@
 
 load_helper epm-sh-warmup
 
+# TODO: restore mirroring
+get_latest_version()
+{
+    URL="https://eepm.ru/app-versions"
+    #update_url_if_need_mirrored
+    epm tool eget -q -O- "$URL/$1"
+}
+
+__check_for_epm_version()
+{
+    local latest="$(get_latest_version "epm" 2>/dev/null)"
+    #[ -z "$latest" ] && return
+    local res="$(epm print compare "$EPMVERSION" "$latest")"
+    [ "$res" = "-1" ] && info "Latest EPM version in Korinf repository is $latest. You have version $EPMVERSION running."
+}
+
 epm_update()
 {
 	[ -z "$*" ] || fatal "No arguments are allowed here"
@@ -35,6 +51,7 @@ case $PMTYPE in
 		sudocmd apt-get update
 		local ret="$?"
 		cd - >/dev/null
+		__check_for_epm_version
 		return $ret
 		#sudocmd apt-get -f install || exit
 		;;
