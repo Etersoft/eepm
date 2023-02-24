@@ -2,7 +2,9 @@
 
 PKGNAME=teams
 SUPPORTEDARCHES="x86_64"
-DESCRIPTION="Microsoft Teams for Linux from the official site"
+# After April 12, 2023, Microsoft Teams Free (classic), the legacy free Teams app for business, will no longer be available.
+# https://www.microsoft.com/en-us/microsoft-teams/free-classic-retirement?rtc=1
+DESCRIPTION='' #"Microsoft Teams for Linux from the official site"
 
 . $(dirname $0)/common.sh
 
@@ -13,7 +15,7 @@ if [ "$pkgtype" = "deb" ] ; then
     URL="https://packages.microsoft.com/repos/ms-teams/pool/main/t/teams"
     arch=amd64
 else
-    URL="https://packages.microsoft.com/yumrepos/ms-teams/Packages/t"
+    URL="https://packages.microsoft.com/yumrepos/ms-teams"
     arch=x86_64
     pkgtype=rpm
 fi
