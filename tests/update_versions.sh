@@ -68,7 +68,7 @@ $EPM play --list-all --short | while read app ; do
 done
 
 # save eepm version
-version="$(grep "^Version: " $EPM/../eepm.spec | head -n1 | sed -e 's|Version: ||')"
+version="$(grep "^Version: " $(dirname $EPM)/../eepm.spec | head -n1 | sed -e 's|Version: ||')"
 echo "$version" > $TDIR/eepm
 
 commit_git()
