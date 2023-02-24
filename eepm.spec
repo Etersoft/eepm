@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.30.0
+Version: 3.31.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -147,6 +147,20 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Fri Feb 24 2023 Vitaly Lipatov <lav@altlinux.ru> 3.31.0-alt1
+- update_versions.sh: save eepm version too
+- epm history: use journalctl -t apt-get for ALT
+- epm-mark: fixes for mark auto/manual with dnf
+- epm repack: add domination-client support
+- epm play assistant: add warning about dangerous script
+- epm repack: fix duplicate links add_bin_commands
+- epm play vivaldi-codecs: add error checking
+- epm repack common.sh: fixes for paths with spaces
+- epm play teams: disabled (no longer be available)
+- epm play mssql-server: fix url for rpm
+- epm-update: check for available epm version
+- epm play: add rocketchat support
+
 * Wed Feb 08 2023 Vitaly Lipatov <lav@altlinux.ru> 3.30.0-alt1
 - epm-repack: fix rpm package arch (add --target to rpmbuild)
 - epm repack: add iwbdriver support (usable on 32 bit platform only)
