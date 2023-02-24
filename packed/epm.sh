@@ -31,6 +31,8 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
+EPMVERSION="3.31.0"
+
 load_helper()
 {
     local CMD="$SHAREDIR/$1"
@@ -2867,6 +2869,9 @@ epm_history()
 [ -z "$*" ] || fatal "No arguments are allowed here"
 
 case $PMTYPE in
+	apt-rpm)
+		docmd journalctl -t apt-get
+		;;
 	apt-dpkg)
 		docmd less /var/log/dpkg.log
 		;;
@@ -3916,7 +3921,7 @@ case $PMTYPE in
 	apt-dpkg)
 		sudocmd apt-mark hold "$@"
 		;;
-	yum-rpm|dnf-rpm)
+	dnf-rpm)
 		__dnf_assure_versionlock
 		sudocmd dnf versionlock add "$@"
 		;;
@@ -3951,7 +3956,7 @@ case $PMTYPE in
 	apt-dpkg)
 		sudocmd apt-mark unhold "$@"
 		;;
-	yum-rpm|dnf-rpm)
+	dnf-rpm)
 		__dnf_assure_versionlock
 		sudocmd dnf versionlock delete "$@"
 		;;
@@ -3986,7 +3991,7 @@ case $PMTYPE in
 	apt-dpkg)
 		sudocmd apt-mark showhold "$@"
 		;;
-	yum-rpm|dnf-rpm)
+	dnf-rpm)
 		__dnf_assure_versionlock
 		sudocmd dnf versionlock list
 		;;
@@ -4021,10 +4026,13 @@ case $PMTYPE in
 	apt-dpkg)
 		sudocmd apt-mark auto "$@"
 		;;
-		pacman)
+	dnf-rpm)
+		sudocmd dnf mark remove "$@"
+		;;
+	pacman)
 			sudocmd pacman -D --asdeps "$@"
 		;;
-		emerge)
+	emerge)
 			sudocmd emerge --oneshot "$@"
 		;;
 	*)
@@ -4049,10 +4057,13 @@ case $PMTYPE in
 	apt-dpkg)
 		sudocmd apt-mark manual "$@"
 		;;
-		pacman)
+	dnf-rpm)
+		sudocmd dnf mark install "$@"
+		;;
+	pacman)
 			sudocmd pacman -D --asexplicit "$@"
 		;;
-		emerge)
+	emerge)
 			sudocmd emerge --select "$@"
 		;;
 	*)
@@ -4077,6 +4088,9 @@ case $PMTYPE in
 	apt-dpkg)
 		sudocmd apt-mark showauto "$@"
 		;;
+	dnf-rpm)
+		sudocmd dnf repoquery --unneeded
+		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
 		;;
@@ -4097,6 +4111,9 @@ esac
 case $PMTYPE in
 	apt-dpkg)
 		sudocmd apt-mark showmanual "$@"
+		;;
+	dnf-rpm)
+		sudocmd dnf repoquery --userinstalled
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -9703,6 +9720,21 @@ EOF
 
 
 
+get_latest_version()
+{
+    URL="https://eepm.ru/app-versions"
+    #update_url_if_need_mirrored
+    epm tool eget -q -O- "$URL/$1"
+}
+
+__check_for_epm_version()
+{
+    local latest="$(get_latest_version "epm" 2>/dev/null)"
+    #[ -z "$latest" ] && return
+    local res="$(epm print compare "$EPMVERSION" "$latest")"
+    [ "$res" = "-1" ] && info "Latest EPM version in Korinf repository is $latest. You have version $EPMVERSION running."
+}
+
 epm_update()
 {
 	[ -z "$*" ] || fatal "No arguments are allowed here"
@@ -9717,6 +9749,7 @@ case $PMTYPE in
 		sudocmd apt-get update
 		local ret="$?"
 		cd - >/dev/null
+		__check_for_epm_version
 		return $ret
 		#sudocmd apt-get -f install || exit
 		;;
@@ -12027,7 +12060,7 @@ Examples:
 
 print_version()
 {
-        echo "EPM package manager version 3.30.0  Telegram: https://t.me/useepm  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version $EPMVERSION  Telegram: https://t.me/useepm  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2023"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
@@ -12037,7 +12070,6 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
-EPMVERSION=3.30.0
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
