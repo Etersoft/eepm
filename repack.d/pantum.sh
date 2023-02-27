@@ -8,7 +8,7 @@ PRODUCT=pantum
 
 . $(dirname $0)/common.sh
 
-if [ "$($DISTRVENDOR -b)" = "64" ] ; then
+if [ "$(epm print info -b)" = "64" ] ; then
     remove_dir /usr/lib/sane
     # keep /usr/lib64
 else

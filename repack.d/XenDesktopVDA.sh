@@ -6,7 +6,7 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
-if [ "$($DISTRVENDOR -a)" = "x86_64" ] ; then
+if [ "$(epm print info -a)" = "x86_64" ] ; then
     # 32 bit
     rm -rfv $BUILDROOT/opt/Citrix/VDA/lib32
     subst "s|.*/libctxXrandrhook.so.||" $SPEC

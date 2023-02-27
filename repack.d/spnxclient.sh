@@ -10,7 +10,7 @@ subst '1iAutoProv:no' $SPEC
 
 subst '1iRequires: libpcsclite libudev0' $SPEC
 
-if [ "$($DISTRVENDOR -a)" = "x86_64" ] ; then
+if [ "$(epm print info -a)" = "x86_64" ] ; then
     remove_file /usr/share/sphinx/gui/spnxreader/libspnxreader_i386.so
     remove_file /usr/share/sphinx/gui/lib/libguinative_i386.so
     subst "s|/usr/lib/i386-linux-gnu/libpcsclite.so|/usr/lib64/libpcsclite.so|" $BUILDROOT/usr/bin/spnxclient

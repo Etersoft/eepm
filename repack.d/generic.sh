@@ -32,5 +32,9 @@ if [ -n "$flag_python3" ] ; then
     epm install --skip-installed rpm-build-python3
 fi
 
+# hack:
+# TODO: check for tarball, detect root dir
+#echo $BUILDROOT | grep -q "tar.*tmpdir/" && move_to_opt /liteide
+
 # Set high Epoche to override repository package
 subst "s|^\(Name: .*\)$|# Override repository package\nEpoch: 100\n\1|g" $SPEC

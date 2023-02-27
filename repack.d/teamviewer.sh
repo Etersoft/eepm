@@ -8,7 +8,7 @@ PRODUCTDIR=/opt/teamviewer
 
 . $(dirname $0)/common.sh
 
-if [ "$($DISTRVENDOR -a)" = "x86_64" ] ; then
+if [ "$(epm print info -a)" = "x86_64" ] ; then
     # 32 bit
     rm -fv $BUILDROOT/opt/teamviewer/tv_bin/script/libdepend
     subst "s|.*script/libdepend.*||" $SPEC

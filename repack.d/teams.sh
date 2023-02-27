@@ -10,7 +10,7 @@ PRODUCTDIR=/opt/teams
 
 . $(dirname $0)/common-chromium-browser.sh
 
-if [ "$($DISTRVENDOR -e)" = "ALTLinux/p8" ] ; then
+if [ "$(epm print info -e)" = "ALTLinux/p8" ] ; then
     # drop unsupported binary
     #subst '1i%filter_from_requires /^libm.so.6(GLIBC_2.27).*/d' $SPEC
     rm -rf $BUILDROOT/usr/share/teams/resources/app.asar.unpacked/node_modules/@microsoft/fasttext-languagedetector/build/
