@@ -31,7 +31,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.31.0"
+EPMVERSION="3.31.1"
 
 load_helper()
 {
@@ -11384,8 +11384,10 @@ if echo "$1" | grep -q "^https://github.com/" && \
         return
     fi
 
+    ERROR=0
     for fn in $(get_github_urls "$1" | filter_glob "$MASK" | filter_order) ; do
-        sget "$fn" || ERROR=1
+        sget "$fn" "$TARGETFILE" || ERROR=1
+        [ -n "$TARGETFILE" ] && [ "$ERROR" = "0" ] && break
     done
     return
 fi
@@ -11470,7 +11472,8 @@ fi
 ERROR=0
 for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
     is_url "$fn" || fn="$(make_fileurl "$URL" "$(basename "$fn")" )" #"
-    sget "$fn" || ERROR=1
+    sget "$fn" "$TARGETFILE" || ERROR=1
+    [ -n "$TARGETFILE" ] && [ "$ERROR" = "0" ] && break
 done
  return $ERROR
 
