@@ -30,6 +30,25 @@ remove_file()
     subst "s|.*$file.*||" $SPEC
 }
 
+is_dir_empty()
+{
+    [ -z "$(ls -A "$1")" ]
+}
+
+# Move file to a new place
+move_file()
+{
+    local from="$1"
+    local to="$2"
+    [ -e "$BUILDROOT$from" ] || return
+    mkdir -p "$(dirname "$BUILDROOT$to")" || return
+    cp -av "$BUILDROOT$from" "$BUILDROOT$to" || return
+    remove_file "$from"
+    pack_file "$to"
+    # try remove dir if empty
+    is_dir_empty "$(dirname "$BUILDROOT$from")" && remove_dir "$(dirname" $from")"
+}
+
 # Remove dir (recursively) from the file system and from spec
 remove_dir()
 {
