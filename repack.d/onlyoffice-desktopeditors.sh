@@ -33,6 +33,7 @@ done
 # pack icons
 iconname=onlyoffice-desktopeditors
 for i in 16 22 24 32 48 64 128 256 ; do
+    [ -r $BUILDROOT/$PRODUCTDIR/desktopeditors/asc-de-$i.png ] || continue
     mkdir -p $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/
     cp $BUILDROOT/$PRODUCTDIR/desktopeditors/asc-de-$i.png $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png
 done
@@ -42,5 +43,5 @@ subst "s|%files|%files\n/usr/share/icons/hicolor/*x*/apps/$iconname.png|" $SPEC
 subst '1iAutoReq:no' $SPEC
 subst '1iAutoProv:no' $SPEC
 
-epm install --skip-installed bzlib fontconfig libalsa libcairo libcups libdrm libfreetype /usr/bin/perl zlib libXv glib2 libatk libcairo-gobject libEGL libgdk-pixbuf libgio libGL libgst-plugins1.0 libgstreamer1.0 libgtk+2 libgtk+3 libpango libpulseaudio libsqlite3 libX11 libxcb libxcb-render-util libXcomposite libXext libXfixes libxkbcommon libxkbcommon-x11 libXrender
+epm install --skip-installed bzlib fontconfig libalsa libcairo libcups libdrm libfreetype zlib libXv glib2 libatk libcairo-gobject libEGL libgdk-pixbuf libgio libGL libgst-plugins1.0 libgstreamer1.0 libgtk+2 libgtk+3 libpango libpulseaudio libsqlite3 libX11 libxcb libxcb-render-util libXcomposite libXext libXfixes libxkbcommon libxkbcommon-x11 libXrender
 
