@@ -37,5 +37,11 @@ epm install --skip-installed coreutils glib2 libdbus libfontconfig1 libfreetype 
 # epm install --skip-installed libnautilus libnautilus-extension-compat
 filter_from_requires libnautilus
 
+# fix ALT p10 install
+#   synology-drive: Depends: libc.so.6(GLIBC_2.33)(64bit) but it is not installable
+#                  Depends: libc.so.6(GLIBC_2.34)(64bit) but it is not installable
+#                  Depends: libstdc++.so.6(GLIBCXX_3.4.29)(64bit) but it is not installable
+remove_file $PRODUCTDIR/package/cloudstation/icon-overlay/14/lib/plugin-cb-4.so
+
 # TODO: parse
 # https://www.synology.com/api/support/findDownloadInfo?lang=ru-ru&product=DS2411%2B&major=6&minor=2
