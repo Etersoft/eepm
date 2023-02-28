@@ -215,7 +215,7 @@ __epm_play_list()
 }
 
 
-__epm_play_help()
+epm_play_help()
 {
     cat <<EOF
 Usage: epm play [options] [<app>]
@@ -237,7 +237,7 @@ local psdir="$(realpath $CONFIGDIR/play.d)"
 local prsdir="$(realpath $CONFIGDIR/prescription.d)"
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
-    __epm_play_help
+    epm_play_help
     exit
 fi
 

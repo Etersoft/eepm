@@ -17,7 +17,17 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+epm_tool_help()
+{
+    echo "Tools embedded in epm:"
+    get_help HELPCMD $SHAREDIR/epm-tool
 
+    cat <<EOF
+  Examples:
+    epm tool eget -U http://ya.ru
+    epm tool estrlist union a b a c
+EOF
+}
 
 epm_tool()
 {
@@ -29,14 +39,7 @@ epm_tool()
             fatal "Use epm tool help to get help."
             ;;
         "-h"|"--help"|"help")
-            echo "Tools embedded in epm:"
-            get_help HELPCMD $SHAREDIR/epm-tool
-
-cat <<EOF
-  Examples:
-    epm tool eget -U http://ya.ru
-    epm tool estrlist union a b a c
-EOF
+            epm_tool_help
             ;;
         "eget")                      # HELPCMD: downloading tool (simular to wget or curl)
             showcmd eget "$@"

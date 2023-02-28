@@ -19,20 +19,26 @@
 
 load_helper epm-sh-altlinux
 
-epm_repo()
+epm_repo_help()
 {
-	local CMD="$1"
-	[ -n "$CMD" ] && shift
-	case $CMD in
-	"-h"|"--help"|help)               # HELPCMD: help
-		get_help HELPCMD $SHAREDIR/epm-repo
-cat <<EOF
+	get_help HELPCMD $SHAREDIR/epm-repo
+	cat <<EOF
 Examples:
   epm repo set p9
   epm repo add autoimports
   epm repo list
   epm repo change yandex
 EOF
+}
+
+
+epm_repo()
+{
+	local CMD="$1"
+	[ -n "$CMD" ] && shift
+	case $CMD in
+	"-h"|"--help"|help)               # HELPCMD: help
+		epm_repo_help
 		;;
 	""|list)                          # HELPCMD: list packages
 		load_helper epm-repolist
