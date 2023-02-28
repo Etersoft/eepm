@@ -27,17 +27,23 @@ epm_full_upgrade()
 	[ -n "$quiet" ] || echo
 	docmd epm update-kernel || fatal "updating of the kernel is failed."
 
-	[ -n "$quiet" ] || echo
-	docmd epm play --update all || fatal "updating of applications installed via epm play is failed."
-
-	if which flatpak 2>/dev/null >/dev/null ; then
+	if [ -z "$full_upgrade_no_epm_play" ] ; then
 		[ -n "$quiet" ] || echo
-		docmd flatpak update
+		docmd epm play --update all || fatal "updating of applications installed via epm play is failed."
 	fi
 
-	if which snap 2>/dev/null >/dev/null ; then
-		[ -n "$quiet" ] || echo
-		sudocmd snap refresh
+	if [ -z "$full_upgrade_no_flatpack" ] ; then
+		if which flatpak 2>/dev/null >/dev/null ; then
+			[ -n "$quiet" ] || echo
+			docmd flatpak update
+		fi
+	fi
+
+	if [ -z "$full_upgrade_no_snap" ] ; then
+		if which snap 2>/dev/null >/dev/null ; then
+			[ -n "$quiet" ] || echo
+			sudocmd snap refresh
+		fi
 	fi
 
 	[ -n "$quiet" ] || echo
