@@ -241,8 +241,20 @@ print_srcpkgname()
 
 compare_version()
 {
-    which rpmevrcmp 2>/dev/null >/dev/null || fatal "rpmevrcmp exists in ALT Linux only"
-    a= rpmevrcmp "$@"
+    case $PMTYPE in
+        *-rpm)
+            which rpmevrcmp 2>/dev/null >/dev/null || fatal "rpmevrcmp exists in ALT Linux only"
+            a= rpmevrcmp "$@"
+            ;;
+        *-dpkg)
+            a= dpkg --compare-versions "$1" lt "$2" && echo "-1" && return
+            a= dpkg --compare-versions "$1" eq "$2" && echo "0" && return
+            echo "1"
+            ;;
+        *)
+            fatal "Not implemented for $PMTYPE"
+            ;;
+    esac
 }
 
 # construct package file name.
@@ -281,7 +293,7 @@ cat <<EOF
     epm print srcpkgname from [filename|package] NN    print source package name for the binary package file
     epm print specname from filename NN      print spec filename for the source package file
     epm print binpkgfilelist in DIR for NN   list binary package(s) filename(s) from DIR for the source package file
-    epm print compare [package] version N1 N2          compare (package) versions and print -1, 0, 1
+    epm print compare [package] version N1 N2          compare (package) versions and print -1 (N1 < N2), 0 (N1 == N2), 1 (N1 > N2)
     epm print constructname <name> <version> [arch] [ pkgtype]  print distro dependend package filename from args name version arch pkgtype
 EOF
 }
