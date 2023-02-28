@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.31.1
+Version: 3.32.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -147,6 +147,13 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Tue Feb 28 2023 Vitaly Lipatov <lav@altlinux.ru> 3.32.0-alt1
+- epm repack synology-drive: fix install on ALT p10 (try 2)
+- /etc/eepm/eepm.conf: add full_upgrade_no_{epm_play,flatpack,snap} to disable during full_upgrade
+- epm repack: fix pycharm-professional
+- epm print compare: add dpkg support
+- epm-history: add --installed/--removed/--updated
+
 * Mon Feb 27 2023 Vitaly Lipatov <lav@altlinux.ru> 3.31.1-alt1
 - epm play: add synology-drive support
 - epm play: add synology-chat support

@@ -1,5 +1,6 @@
 apt
 /bin/echo
+/bin/sh
 coreutils
 diffutils
 eepm
