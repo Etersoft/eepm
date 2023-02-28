@@ -17,8 +17,103 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+__alt_epm_history_uniq()
+{
+	a= journalctl -t apt-get | grep "apt-get\[[0-9][0-9]*\]:" | sed -e "s|.*apt-get\[\([0-9][0-9]*\)\]: .*|\1|" | uniq | tac
+}
+
+# args: pid, removed|installed
+__alt_epm_history_select()
+{
+	local pid="$1"
+	local verb="$2"
+	a= journalctl -t apt-get | grep "apt-get\[$pid\]: .*$verb" | sed -e "s|.*apt-get\[[0-9][0-9]*\]: ||" | cut -d" " -f 1
+}
+
+_alt_epm_history_date()
+{
+	local pid="$1"
+	a= journalctl -t apt-get | grep  "apt-get\[$pid\]: " | head -n1 | cut -d" " -f 1-3
+}
+
+__alt_epm_history_removed()
+{
+	echo "Removed packages history:"
+	__alt_epm_history_uniq | while read pid ; do
+		date="$(_alt_epm_history_date $pid)"
+		echo
+		echo "$date apt-get session $pid:"
+		removed="$(epm print shortname for $(__alt_epm_history_select $pid "removed") )"
+		installed="$(epm print shortname for $(__alt_epm_history_select $pid "installed") )"
+		epm tool --quiet estrlist exclude "$installed" "$removed" | xargs -n1 echo | sed -e "s|^|    |"
+	done
+}
+
+__alt_epm_history_installed()
+{
+	echo "Installed packages history:"
+	__alt_epm_history_uniq | while read pid ; do
+		echo
+		date="$(_alt_epm_history_date $pid)"
+		echo "$date apt-get session $pid:"
+		#epm print shortname for $(__alt_epm_history_select $pid "installed") | sed -e "s|^|    |"
+		removed="$(epm print shortname for $(__alt_epm_history_select $pid "removed") )"
+		installed="$(epm print shortname for $(__alt_epm_history_select $pid "installed") )"
+		epm tool --quiet estrlist exclude "$removed" "$installed" | xargs -n1 echo | sed -e "s|^|    |"
+	done
+}
+
+__alt_epm_history_updated()
+{
+	echo "Updated packages history:"
+	__alt_epm_history_uniq | while read pid ; do
+		echo
+		date="$(_alt_epm_history_date $pid)"
+		echo "$date apt-get session $pid:"
+		#epm print shortname for $(__alt_epm_history_select $pid "installed") | sed -e "s|^|    |"
+		removed="$(epm print shortname for $(__alt_epm_history_select $pid "removed") )"
+		installed="$(epm print shortname for $(__alt_epm_history_select $pid "installed") )"
+		epm tool --quiet estrlist intersection "$removed" "$installed" | xargs -n1 echo | sed -e "s|^|    |"
+	done
+}
+
+epm_history_help()
+{
+	echo "package management history"
+			get_help HELPCMD $SHAREDIR/epm-history
+	cat <<EOF
+Examples:
+  epm history
+  epm history --removed
+EOF
+}
+
+
 epm_history()
 {
+
+if [ $PMTYPE = "apt-rpm" ] ; then
+	case "$1" in
+		"-h"|"--help"|"help")      # HELPCMD: help
+			epm_history_help
+			return
+			;;
+		--installed)               # HELPCMD: print only new installed packages
+			__alt_epm_history_installed | less
+			return
+			;;
+		--removed)                 # HELPCMD: print only removed packages
+			__alt_epm_history_removed #| less
+			return
+			;;
+		--updated)                 # HELPCMD: print only updated packages
+			__alt_epm_history_updated | less
+			return
+			;;
+		*)
+			fatal "Unknown option $1"
+	esac
+fi
 
 [ -z "$*" ] || fatal "No arguments are allowed here"
 
