@@ -24,7 +24,7 @@ check_pkgfile()
 check_pkg()
 {
 	get_numdelim "$1"
-	check "$1" "$2" $(../bin/epm print name "$1")
+	check "$1" "$2" $(../bin/epm print shortname "$1")
 }
 
 echo "check_file"
@@ -66,6 +66,8 @@ check_pkg nx-libs-3.5.99.26.1-eter2astra:amd64 nx-libs
 check_pkg nx-libs-3.5.99.26.1-eter2astra nx-libs
 check_pkg nx-libs_3.5.99.26.1_eter2astra:amd64 nx-libs
 check_pkg nx-libs_3.5.99.26.1_eter2astra nx-libs
+check_pkg pngquant-2.17.0-alt1_0 pngquant
+check_pkg java-1.8.0-openjdk-headless-0:1.8.0.362.b09 java-1.8.0-openjdk-headless
 
 echo
 echo "check_pkg"
