@@ -52,8 +52,8 @@ serv_log()
 			sudocmd journalctl -b -u "$SERVICE" "$@"
 			;;
 		*)
-			case $DISTRNAME in
-			ALTLinux|ALTServer)
+			case $BASEDISTRNAME in
+			"alt")
 				FF="" ; [ "$1" = "-f" ] && FF="-f"
 				__serv_log_altlinux "$SERVICE" $FF
 				return ;;

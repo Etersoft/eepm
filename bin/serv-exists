@@ -28,8 +28,8 @@ serv_exists()
 			docmd systemctl cat "$SERVICE" "$@" >/dev/null 2>/dev/null
 			;;
 		*)
-			case $DISTRNAME in
-			ALTLinux|ALTServer)
+			case $BASEDISTRNAME in
+			"alt")
 				local INITFILE=/etc/init.d/$SERVICE
 				[ -r "$INITFILE" ] || return
 				return ;;

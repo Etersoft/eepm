@@ -195,8 +195,8 @@ __epm_addkey_deb()
 epm_addkey()
 {
 
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case $BASEDISTRNAME in
+	"alt")
 		__epm_addkey_altlinux "$@"
 		return
 		;;
@@ -265,8 +265,8 @@ epm_addrepo()
 {
 local repo="$*"
 
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case $BASEDISTRNAME in
+	"alt")
 		# Note! Don't use quotes here
 		__epm_addrepo_altlinux $repo
 		return

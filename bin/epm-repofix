@@ -234,8 +234,8 @@ __fix_repo_to_basealt()
 epm_repofix()
 {
 
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case $BASEDISTRNAME in
+	"alt")
 		assure_exists apt-repo
 		[ -n "$quiet" ] || docmd apt-repo list
 		assure_root

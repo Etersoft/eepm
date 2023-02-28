@@ -93,8 +93,8 @@ __epm_removerepo_alt()
 epm_removerepo()
 {
 
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case $BASEDISTRNAME in
+	"alt")
 		__epm_removerepo_alt "$@"
 		return
 		;;

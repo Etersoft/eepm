@@ -112,7 +112,7 @@ __epm_check_vendor()
     [ -n "$scripts$noscripts" ] && return
 
     # only ALT
-    [ "$DISTRNAME" = "ALTLinux" ] || [ "$DISTRNAME" = "ALTServer" ] || return
+    [ "$BASEDISTRNAME" = "alt" ] || return
 
     local i
     for i in $* ; do

@@ -273,8 +273,8 @@ __epm_check_if_rpm_already_installed()
 
 __handle_direct_install()
 {
-    case "$DISTRNAME" in
-        ALTLinux|ALTServer)
+    case "$BASEDISTRNAME" in
+        "alt")
             load_helper epm-download
             local pkg url
             for pkg in $pkg_names ; do
@@ -311,8 +311,8 @@ epm_install_files()
     # TODO: check read permissions
     # sudo test -r FILE
     # do not fallback to install_names if we have no permissions
-    case "$DISTRNAME" in
-        ALTLinux|ALTServer)
+    case "$BASEDISTRNAME" in
+        "alt")
 
             # do not use low-level for install by file path (f.i. epm install /usr/bin/git)
             if __epm_if_command_path $files ; then
@@ -611,7 +611,7 @@ epm_print_install_names_command()
 
 epm_install()
 {
-    if [ "$DISTRNAME" = "ALTLinux" ] || [ "$DISTRNAME" = "ALTServer" ] ; then
+    if [ "$BASEDISTRNAME" = "alt" ] ; then
         if tasknumber "$pkg_names" >/dev/null ; then
             assure_exists apt-repo
             # TODO: add --auto support

@@ -27,8 +27,8 @@ serv_cat()
 			docmd systemctl cat "$SERVICE" "$@"
 			;;
 		*)
-			case $DISTRNAME in
-			ALTLinux|ALTServer)
+			case $BASEDISTRNAME in
+			"alt")
 				local INITFILE=/etc/init.d/$SERVICE
 				[ -r "$INITFILE" ] || fatal "Can't find init file $INITFILE"
 				docmd cat $INITFILE

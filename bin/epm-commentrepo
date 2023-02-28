@@ -90,8 +90,8 @@ __epm_commentrepo_alt()
 epm_commentrepo()
 {
 
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case $BASEDISTRNAME in
+	"alt")
 		__epm_commentrepo_alt "$@"
 		return
 		;;

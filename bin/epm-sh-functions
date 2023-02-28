@@ -619,6 +619,7 @@ set_distro_info()
 		DISTRARCH=$($DISTRVENDOR --distro-arch)
 	fi
 	DISTRCONTROL="$($DISTRVENDOR -y)"
+	[ -n "$BASEDISTRNAME" ] || BASEDISTRNAME=$($DISTRVENDOR -s)
 
 	# TODO: improve BIGTMPDIR conception
 	# https://bugzilla.mozilla.org/show_bug.cgi?id=69938

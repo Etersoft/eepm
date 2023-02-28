@@ -447,8 +447,8 @@ epm_release_upgrade()
 	# TODO: it is possible eatmydata does not do his work
 	export EPMNOEATMYDATA=1
 
-	case $DISTRNAME in
-	ALTLinux|ALTServer)
+	case $BASEDISTRNAME in
+	"alt")
 		__epm_ru_update || fatal
 
 		# TODO: remove this hack (or move it to distro_info)

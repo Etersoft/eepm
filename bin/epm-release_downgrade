@@ -60,8 +60,8 @@ epm_release_downgrade()
 	# TODO: it is possible eatmydata does not do his work
 	export EPMNOEATMYDATA=1
 
-	case $DISTRNAME in
-	ALTLinux|ALTServer)
+	case $BASEDISTRNAME in
+	"alt")
 		__epm_ru_update || fatal
 
 		# try to detect current release by repo

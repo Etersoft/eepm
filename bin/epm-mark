@@ -81,8 +81,8 @@ __dnf_assure_versionlock()
 epm_mark_hold()
 {
 
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case $BASEDISTRNAME in
+	"alt")
 		__alt_mark_hold "$@"
 		exit
 		;;
@@ -116,8 +116,8 @@ esac
 epm_mark_unhold()
 {
 
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case $BASEDISTRNAME in
+	"alt")
 		__alt_mark_unhold "$@"
 		exit
 		;;
@@ -151,8 +151,8 @@ esac
 epm_mark_showhold()
 {
 
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case $BASEDISTRNAME in
+	"alt")
 		__alt_mark_showhold "$@"
 		exit
 		;;
@@ -186,8 +186,8 @@ esac
 epm_mark_auto()
 {
 
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case $BASEDISTRNAME in
+	"alt")
 		sudocmd apt-mark auto "$@"
 		exit
 		;;
@@ -217,8 +217,8 @@ esac
 epm_mark_manual()
 {
 
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case $BASEDISTRNAME in
+	"alt")
 		sudocmd apt-mark manual "$@"
 		exit
 		;;
@@ -248,8 +248,8 @@ esac
 epm_mark_showauto()
 {
 
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case $BASEDISTRNAME in
+	"alt")
 		sudocmd apt-mark showauto "$@"
 		exit
 		;;
@@ -272,8 +272,8 @@ esac
 epm_mark_showmanual()
 {
 
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case $BASEDISTRNAME in
+	"alt")
 		sudocmd apt-mark showmanual "$@"
 		exit
 		;;
