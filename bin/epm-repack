@@ -343,11 +343,11 @@ __epm_repack_to_rpm()
         fi
 
         local subdir="$(echo *)"
-        [ -d "$subdir" ] || fatal "can't find subdir"
+        [ -d "$subdir" ] || fatal "can't find subdir in $(pwd)"
 
         # detect spec and move to prev dir
         local spec="$(echo $tmpbuilddir/$subdir/*.spec)"
-        [ -s "$spec" ] || fatal "can't find spec"
+        [ -s "$spec" ] || fatal "Can't find spec $spec"
         mv $spec $tmpbuilddir || fatal
         spec="$tmpbuilddir/$(basename "$spec")"
         #__set_name_version $spec $PKGNAME $VERSION
@@ -454,7 +454,7 @@ epm_repack()
         __handle_pkg_urls_to_install
     fi
 
-    [ -n "$pkg_names" ] && warning "Can't find $pkg_names"
+    [ -n "$pkg_names" ] && warning "Can't find $pkg_names files"
     [ -z "$pkg_files" ] && info "Skip empty repack list" && return 22
 
     if __epm_repack $pkg_files && [ -n "$repacked_pkgs" ] ; then
