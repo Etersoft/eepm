@@ -31,7 +31,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.31.1"
+EPMVERSION="3.32.0"
 
 load_helper()
 {
@@ -605,6 +605,7 @@ set_distro_info()
 		DISTRARCH=$($DISTRVENDOR --distro-arch)
 	fi
 	DISTRCONTROL="$($DISTRVENDOR -y)"
+	[ -n "$BASEDISTRNAME" ] || BASEDISTRNAME=$($DISTRVENDOR -s)
 
 	# TODO: improve BIGTMPDIR conception
 	# https://bugzilla.mozilla.org/show_bug.cgi?id=69938
@@ -841,8 +842,8 @@ __epm_addkey_deb()
 epm_addkey()
 {
 
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case $BASEDISTRNAME in
+	"alt")
 		__epm_addkey_altlinux "$@"
 		return
 		;;
@@ -911,8 +912,8 @@ epm_addrepo()
 {
 local repo="$*"
 
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case $BASEDISTRNAME in
+	"alt")
 		# Note! Don't use quotes here
 		__epm_addrepo_altlinux $repo
 		return
@@ -1404,8 +1405,8 @@ EOF
 epm_autoremove()
 {
 
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case $BASEDISTRNAME in
+	"alt")
 		if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "help" ] ; then
 			epm_autoremove_print_help
 			return 0
@@ -1859,8 +1860,8 @@ case $PMTYPE in
 		;;
 esac
 
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case $BASEDISTRNAME in
+	"alt")
 		epm_checksystem_$DISTRNAME
 		;;
 	*)
@@ -2105,8 +2106,8 @@ __epm_commentrepo_alt()
 epm_commentrepo()
 {
 
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case $BASEDISTRNAME in
+	"alt")
 		__epm_commentrepo_alt "$@"
 		return
 		;;
@@ -2236,8 +2237,8 @@ try_fix_apt_rpm_dupls()
 
 epm_dedup()
 {
-case "$DISTRNAME" in
-	ALTLinux|ALTServer)
+case "$BASEDISTRNAME" in
+	"alt")
 		assure_exists /usr/share/apt/scripts/dedup.lua apt-scripts
 		if [ -z "$direct" ] && [ -f /usr/share/apt/scripts/dedup.lua ] ; then
 			info "Check for duplicates via apt-get dedup from apt-scripts (also you can use internal EPM dedup implementation with --direct option)"
@@ -2524,8 +2525,8 @@ epm_download()
 {
 	local CMD
 
-	case $DISTRNAME-$PMTYPE in
-		ALTLinux-apt-rpm|ALTServer-apt-rpm)
+	case "$BASEDISTRNAME" in
+		"alt")
 			__epm_download_alt $*
 			return
 			;;
@@ -2844,17 +2845,23 @@ epm_full_upgrade()
 	[ -n "$quiet" ] || echo
 	docmd epm update-kernel || fatal "updating of the kernel is failed."
 
-	[ -n "$quiet" ] || echo
-	docmd epm play --update all || fatal "updating of applications installed via epm play is failed."
-
-	if which flatpak 2>/dev/null >/dev/null ; then
+	if [ -z "$full_upgrade_no_epm_play" ] ; then
 		[ -n "$quiet" ] || echo
-		docmd flatpak update
+		docmd epm play --update all || fatal "updating of applications installed via epm play is failed."
 	fi
 
-	if which snap 2>/dev/null >/dev/null ; then
-		[ -n "$quiet" ] || echo
-		sudocmd snap refresh
+	if [ -z "$full_upgrade_no_flatpack" ] ; then
+		if which flatpak 2>/dev/null >/dev/null ; then
+			[ -n "$quiet" ] || echo
+			docmd flatpak update
+		fi
+	fi
+
+	if [ -z "$full_upgrade_no_snap" ] ; then
+		if which snap 2>/dev/null >/dev/null ; then
+			[ -n "$quiet" ] || echo
+			sudocmd snap refresh
+		fi
 	fi
 
 	[ -n "$quiet" ] || echo
@@ -2863,8 +2870,102 @@ epm_full_upgrade()
 
 # File bin/epm-history:
 
+__alt_epm_history_uniq()
+{
+	a= journalctl -t apt-get | grep "apt-get\[[0-9][0-9]*\]:" | sed -e "s|.*apt-get\[\([0-9][0-9]*\)\]: .*|\1|" | uniq | tac
+}
+
+__alt_epm_history_select()
+{
+	local pid="$1"
+	local verb="$2"
+	a= journalctl -t apt-get | grep "apt-get\[$pid\]: .*$verb" | sed -e "s|.*apt-get\[[0-9][0-9]*\]: ||" | cut -d" " -f 1
+}
+
+_alt_epm_history_date()
+{
+	local pid="$1"
+	a= journalctl -t apt-get | grep  "apt-get\[$pid\]: " | head -n1 | cut -d" " -f 1-3
+}
+
+__alt_epm_history_removed()
+{
+	echo "Removed packages history:"
+	__alt_epm_history_uniq | while read pid ; do
+		date="$(_alt_epm_history_date $pid)"
+		echo
+		echo "$date apt-get session $pid:"
+		removed="$(epm print shortname for $(__alt_epm_history_select $pid "removed") )"
+		installed="$(epm print shortname for $(__alt_epm_history_select $pid "installed") )"
+		epm tool --quiet estrlist exclude "$installed" "$removed" | xargs -n1 echo | sed -e "s|^|    |"
+	done
+}
+
+__alt_epm_history_installed()
+{
+	echo "Installed packages history:"
+	__alt_epm_history_uniq | while read pid ; do
+		echo
+		date="$(_alt_epm_history_date $pid)"
+		echo "$date apt-get session $pid:"
+		#epm print shortname for $(__alt_epm_history_select $pid "installed") | sed -e "s|^|    |"
+		removed="$(epm print shortname for $(__alt_epm_history_select $pid "removed") )"
+		installed="$(epm print shortname for $(__alt_epm_history_select $pid "installed") )"
+		epm tool --quiet estrlist exclude "$removed" "$installed" | xargs -n1 echo | sed -e "s|^|    |"
+	done
+}
+
+__alt_epm_history_updated()
+{
+	echo "Updated packages history:"
+	__alt_epm_history_uniq | while read pid ; do
+		echo
+		date="$(_alt_epm_history_date $pid)"
+		echo "$date apt-get session $pid:"
+		#epm print shortname for $(__alt_epm_history_select $pid "installed") | sed -e "s|^|    |"
+		removed="$(epm print shortname for $(__alt_epm_history_select $pid "removed") )"
+		installed="$(epm print shortname for $(__alt_epm_history_select $pid "installed") )"
+		epm tool --quiet estrlist intersection "$removed" "$installed" | xargs -n1 echo | sed -e "s|^|    |"
+	done
+}
+
+epm_history_help()
+{
+	echo "package management history"
+			get_help HELPCMD $SHAREDIR/epm-history
+	cat <<EOF
+Examples:
+  epm history
+  epm history --removed
+EOF
+}
+
+
 epm_history()
 {
+
+if [ $PMTYPE = "apt-rpm" ] ; then
+	case "$1" in
+		"-h"|"--help"|"help")      # HELPCMD: help
+			epm_history_help
+			return
+			;;
+		--installed)               # HELPCMD: print only new installed packages
+			__alt_epm_history_installed | less
+			return
+			;;
+		--removed)                 # HELPCMD: print only removed packages
+			__alt_epm_history_removed #| less
+			return
+			;;
+		--updated)                 # HELPCMD: print only updated packages
+			__alt_epm_history_updated | less
+			return
+			;;
+		*)
+			fatal "Unknown option $1"
+	esac
+fi
 
 [ -z "$*" ] || fatal "No arguments are allowed here"
 
@@ -3296,8 +3397,8 @@ __epm_check_if_rpm_already_installed()
 
 __handle_direct_install()
 {
-    case "$DISTRNAME" in
-        ALTLinux|ALTServer)
+    case "$BASEDISTRNAME" in
+        "alt")
             local pkg url
             for pkg in $pkg_names ; do
                 url=$(__epm_get_altpkg_url $pkg)
@@ -3332,8 +3433,8 @@ epm_install_files()
     # TODO: check read permissions
     # sudo test -r FILE
     # do not fallback to install_names if we have no permissions
-    case "$DISTRNAME" in
-        ALTLinux|ALTServer)
+    case "$BASEDISTRNAME" in
+        "alt")
 
             # do not use low-level for install by file path (f.i. epm install /usr/bin/git)
             if __epm_if_command_path $files ; then
@@ -3630,7 +3731,7 @@ epm_print_install_names_command()
 
 epm_install()
 {
-    if [ "$DISTRNAME" = "ALTLinux" ] || [ "$DISTRNAME" = "ALTServer" ] ; then
+    if [ "$BASEDISTRNAME" = "alt" ] ; then
         if tasknumber "$pkg_names" >/dev/null ; then
             assure_exists apt-repo
             # TODO: add --auto support
@@ -3822,8 +3923,8 @@ epm_kernel_update()
 
 	info "Updating system kernel to the latest version..."
 
-	case $DISTRNAME in
-	ALTLinux|ALTServer)
+	case $BASEDISTRNAME in
+	"alt")
 		if ! __epm_query_package kernel-image >/dev/null ; then
 			info "No installed kernel packages, skipping update"
 			return
@@ -3910,8 +4011,8 @@ __dnf_assure_versionlock()
 epm_mark_hold()
 {
 
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case $BASEDISTRNAME in
+	"alt")
 		__alt_mark_hold "$@"
 		exit
 		;;
@@ -3945,8 +4046,8 @@ esac
 epm_mark_unhold()
 {
 
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case $BASEDISTRNAME in
+	"alt")
 		__alt_mark_unhold "$@"
 		exit
 		;;
@@ -3980,8 +4081,8 @@ esac
 epm_mark_showhold()
 {
 
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case $BASEDISTRNAME in
+	"alt")
 		__alt_mark_showhold "$@"
 		exit
 		;;
@@ -4015,8 +4116,8 @@ esac
 epm_mark_auto()
 {
 
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case $BASEDISTRNAME in
+	"alt")
 		sudocmd apt-mark auto "$@"
 		exit
 		;;
@@ -4046,8 +4147,8 @@ esac
 epm_mark_manual()
 {
 
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case $BASEDISTRNAME in
+	"alt")
 		sudocmd apt-mark manual "$@"
 		exit
 		;;
@@ -4077,8 +4178,8 @@ esac
 epm_mark_showauto()
 {
 
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case $BASEDISTRNAME in
+	"alt")
 		sudocmd apt-mark showauto "$@"
 		exit
 		;;
@@ -4101,8 +4202,8 @@ esac
 epm_mark_showmanual()
 {
 
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case $BASEDISTRNAME in
+	"alt")
 		sudocmd apt-mark showmanual "$@"
 		exit
 		;;
@@ -4122,6 +4223,16 @@ esac
 
 }
 
+epm_mark_help()
+{
+	echo "mark is the interface for marking packages"
+			get_help HELPCMD $SHAREDIR/epm-mark
+	cat <<EOF
+Examples:
+  epm mark hold mc
+  epm manual mc
+EOF
+}
 
 epm_mark()
 {
@@ -4129,13 +4240,7 @@ epm_mark()
 	[ -n "$CMD" ] && shift
 	case "$CMD" in
 	""|"-h"|"--help"|help)               # HELPCMD: help
-echo "mark is the interface for marking packages"
-		get_help HELPCMD $SHAREDIR/epm-mark
-cat <<EOF
-Examples:
-  epm mark hold mc
-  epm manual mc
-EOF
+		epm_mark_help
 		;;
 	hold)                             # HELPCMD: mark the given package(s) as held back
 		epm_mark_hold "$@"
@@ -4567,7 +4672,7 @@ __epm_play_list()
 }
 
 
-__epm_play_help()
+epm_play_help()
 {
     cat <<EOF
 Usage: epm play [options] [<app>]
@@ -4589,7 +4694,7 @@ local psdir="$(realpath $CONFIGDIR/play.d)"
 local prsdir="$(realpath $CONFIGDIR/prescription.d)"
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
-    __epm_play_help
+    epm_play_help
     exit
 fi
 
@@ -4892,9 +4997,17 @@ PKGNAMEMASK="\(.*\)-\([0-9].*\)-\(.*[0-9].*\)\.\(.*\)\.\(.*\)"
 
 print_name()
 {
+    # FIXME:
     # don't change name (false cases)
     #echo "$@" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK4|\1-\2-\3|" -e "s|$PKGNAMEMASK3|\1|"
     echo "$@" | xargs -n1 echo
+}
+
+print_shortname()
+{
+    #if [ "$
+    #echo "$@" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK4|\1-\2-\3|" -e "s|$PKGNAMEMASK3|\1|"
+    echo "$@" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK3|\1|"
 }
 
 print_version()
@@ -4962,8 +5075,20 @@ print_srcpkgname()
 
 compare_version()
 {
-    which rpmevrcmp 2>/dev/null >/dev/null || fatal "rpmevrcmp exists in ALT Linux only"
-    a= rpmevrcmp "$@"
+    case $PMTYPE in
+        *-rpm)
+            which rpmevrcmp 2>/dev/null >/dev/null || fatal "rpmevrcmp exists in ALT Linux only"
+            a= rpmevrcmp "$@"
+            ;;
+        *-dpkg)
+            a= dpkg --compare-versions "$1" lt "$2" && echo "-1" && return
+            a= dpkg --compare-versions "$1" eq "$2" && echo "0" && return
+            echo "1"
+            ;;
+        *)
+            fatal "Not implemented for $PMTYPE"
+            ;;
+    esac
 }
 
 construct_name()
@@ -4982,6 +5107,27 @@ construct_name()
     [ "$pds" = "-" ] && pds="."
     [ -n "$version" ] && version="$ds$version"
     echo "${name}${version}${pds}$arch.$pkgtype"
+}
+
+epm_print_help()
+{
+cat <<EOF
+  Examples:
+    epm print info [args]                    print system and distro info (via distro_info command)
+    epm print name [from filename|for package] NN        print only name of package name or package file
+    epm print shortname [for package] NN        print only short name of package name
+    epm print version [from filename|for package] NN     print only version of package name or package file
+    epm print release [from filename|for package] NN     print only release of package name or package file
+    epm print version-release [from filename|for package] NN     print only release-release of package name or package file
+    epm print field FF for package NN        print field of the package
+    epm print pkgname from filename NN       print package name for the package file
+    epm print srcname from filename NN       print source name for the package file
+    epm print srcpkgname from [filename|package] NN    print source package name for the binary package file
+    epm print specname from filename NN      print spec filename for the source package file
+    epm print binpkgfilelist in DIR for NN   list binary package(s) filename(s) from DIR for the source package file
+    epm print compare [package] version N1 N2          compare (package) versions and print -1 (N1 < N2), 0 (N1 == N2), 1 (N1 > N2)
+    epm print constructname <name> <version> [arch] [ pkgtype]  print distro dependend package filename from args name version arch pkgtype
+EOF
 }
 
 epm_print()
@@ -5009,22 +5155,7 @@ epm_print()
             fatal "Use epm print help to get help."
             ;;
         "-h"|"--help"|"help")
-cat <<EOF
-  Examples:
-    epm print info [args]                    print system and distro info (via distro_info command)
-    epm print name [from filename|for package] NN        print only name of package name or package file
-    epm print version [from filename|for package] NN     print only version of package name or package file
-    epm print release [from filename|for package] NN     print only release of package name or package file
-    epm print version-release [from filename|for package] NN     print only release-release of package name or package file
-    epm print field FF for package NN        print field of the package
-    epm print pkgname from filename NN       print package name for the package file
-    epm print srcname from filename NN       print source name for the package file
-    epm print srcpkgname from [filename|package] NN    print source package name for the binary package file
-    epm print specname from filename NN      print spec filename for the source package file
-    epm print binpkgfilelist in DIR for NN   list binary package(s) filename(s) from DIR for the source package file
-    epm print compare [package] version N1 N2          compare (package) versions and print -1, 0, 1
-    epm print constructname <name> <version> [arch] [ pkgtype]  print distro dependend package filename from args name version arch pkgtype
-EOF
+            epm_print_help
             ;;
         "name")
             [ -n "$1" ] || fatal "Arg is missed"
@@ -5055,6 +5186,10 @@ EOF
             else
                 print_release "$@"
             fi
+            ;;
+        "shortname")
+            [ -n "$1" ] || exit 0 #fatal "Arg is missed"
+            print_shortname "$@"
             ;;
         "version-release")
             [ -n "$1" ] || fatal "Arg is missed"
@@ -5876,8 +6011,8 @@ epm_release_downgrade()
 	# TODO: it is possible eatmydata does not do his work
 	export EPMNOEATMYDATA=1
 
-	case $DISTRNAME in
-	ALTLinux|ALTServer)
+	case $BASEDISTRNAME in
+	"alt")
 		__epm_ru_update || fatal
 
 		# try to detect current release by repo
@@ -6406,8 +6541,8 @@ epm_release_upgrade()
 	# TODO: it is possible eatmydata does not do his work
 	export EPMNOEATMYDATA=1
 
-	case $DISTRNAME in
-	ALTLinux|ALTServer)
+	case $BASEDISTRNAME in
+	"alt")
 		__epm_ru_update || fatal
 
 		# TODO: remove this hack (or move it to distro_info)
@@ -6848,7 +6983,7 @@ epm_remove()
 		return
 	fi
 
-	if [ "$DISTRNAME" = "ALTLinux" ] || [ "$DISTRNAME" = "ALTServer" ] ; then
+	if [ "$BASEDISTRNAME" = "alt" ] ; then
 		if tasknumber "$pkg_names" >/dev/null ; then
 			assure_exists apt-repo
 			pkg_names="$(get_task_packages $pkg_names)"
@@ -6917,8 +7052,8 @@ epm_remove_old_kernels()
 
 	warmup_bases
 
-	case $DISTRNAME in
-	ALTLinux|ALTServer)
+	case $BASEDISTRNAME in
+	"alt")
 		if ! __epm_query_package kernel-image >/dev/null ; then
 			info "No installed kernel packages, skipping cleaning"
 			return
@@ -6936,6 +7071,9 @@ epm_remove_old_kernels()
 		fi
 
 		return ;;
+	esac
+
+	case $DISTRNAME in
 	Ubuntu)
 		if ! __epm_query_package linux-image >/dev/null ; then
 			info "No installed kernel packages, skipping cleaning"
@@ -7044,8 +7182,8 @@ __epm_removerepo_alt()
 epm_removerepo()
 {
 
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case $BASEDISTRNAME in
+	"alt")
 		__epm_removerepo_alt "$@"
 		return
 		;;
@@ -7418,11 +7556,11 @@ __epm_repack_to_rpm()
         fi
 
         local subdir="$(echo *)"
-        [ -d "$subdir" ] || fatal "can't find subdir"
+        [ -d "$subdir" ] || fatal "can't find subdir in $(pwd)"
 
         # detect spec and move to prev dir
         local spec="$(echo $tmpbuilddir/$subdir/*.spec)"
-        [ -s "$spec" ] || fatal "can't find spec"
+        [ -s "$spec" ] || fatal "Can't find spec $spec"
         mv $spec $tmpbuilddir || fatal
         spec="$tmpbuilddir/$(basename "$spec")"
         #__set_name_version $spec $PKGNAME $VERSION
@@ -7525,7 +7663,7 @@ epm_repack()
         __handle_pkg_urls_to_install
     fi
 
-    [ -n "$pkg_names" ] && warning "Can't find $pkg_names"
+    [ -n "$pkg_names" ] && warning "Can't find $pkg_names files"
     [ -z "$pkg_files" ] && info "Skip empty repack list" && return 22
 
     if __epm_repack $pkg_files && [ -n "$repacked_pkgs" ] ; then
@@ -7545,20 +7683,26 @@ epm_repack()
 # File bin/epm-repo:
 
 
-epm_repo()
+epm_repo_help()
 {
-	local CMD="$1"
-	[ -n "$CMD" ] && shift
-	case $CMD in
-	"-h"|"--help"|help)               # HELPCMD: help
-		get_help HELPCMD $SHAREDIR/epm-repo
-cat <<EOF
+	get_help HELPCMD $SHAREDIR/epm-repo
+	cat <<EOF
 Examples:
   epm repo set p9
   epm repo add autoimports
   epm repo list
   epm repo change yandex
 EOF
+}
+
+
+epm_repo()
+{
+	local CMD="$1"
+	[ -n "$CMD" ] && shift
+	case $CMD in
+	"-h"|"--help"|help)               # HELPCMD: help
+		epm_repo_help
 		;;
 	""|list)                          # HELPCMD: list packages
 		epm_repolist "$@"
@@ -7827,8 +7971,8 @@ __fix_repo_to_basealt()
 epm_repofix()
 {
 
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case $BASEDISTRNAME in
+	"alt")
 		assure_exists apt-repo
 		[ -n "$quiet" ] || docmd apt-repo list
 		assure_root
@@ -9300,7 +9444,7 @@ __epm_check_vendor()
     [ -n "$scripts$noscripts" ] && return
 
     # only ALT
-    [ "$DISTRNAME" = "ALTLinux" ] || [ "$DISTRNAME" = "ALTServer" ] || return
+    [ "$BASEDISTRNAME" = "alt" ] || return
 
     local i
     for i in $* ; do
@@ -9677,7 +9821,17 @@ done
 
 # File bin/epm-tool:
 
+epm_tool_help()
+{
+    echo "Tools embedded in epm:"
+    get_help HELPCMD $SHAREDIR/epm-tool
 
+    cat <<EOF
+  Examples:
+    epm tool eget -U http://ya.ru
+    epm tool estrlist union a b a c
+EOF
+}
 
 epm_tool()
 {
@@ -9689,14 +9843,7 @@ epm_tool()
             fatal "Use epm tool help to get help."
             ;;
         "-h"|"--help"|"help")
-            echo "Tools embedded in epm:"
-            get_help HELPCMD $SHAREDIR/epm-tool
-
-cat <<EOF
-  Examples:
-    epm tool eget -U http://ya.ru
-    epm tool estrlist union a b a c
-EOF
+            epm_tool_help
             ;;
         "eget")                      # HELPCMD: downloading tool (simular to wget or curl)
             showcmd eget "$@"
@@ -9843,7 +9990,7 @@ epm_upgrade()
 
 	warmup_bases
 
-	if [ "$DISTRNAME" = "ALTLinux" ] || [ "$DISTRNAME" = "ALTServer" ] ; then
+	if [ "$BASEDISTRNAME" = "alt" ] ; then
 		if tasknumber "$@" >/dev/null ; then
 
 			local installlist="$(get_task_packages $*)"

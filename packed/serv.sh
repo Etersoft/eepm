@@ -592,6 +592,7 @@ set_distro_info()
 		DISTRARCH=$($DISTRVENDOR --distro-arch)
 	fi
 	DISTRCONTROL="$($DISTRVENDOR -y)"
+	[ -n "$BASEDISTRNAME" ] || BASEDISTRNAME=$($DISTRVENDOR -s)
 
 	# TODO: improve BIGTMPDIR conception
 	# https://bugzilla.mozilla.org/show_bug.cgi?id=69938
@@ -667,8 +668,8 @@ serv_cat()
 			docmd systemctl cat "$SERVICE" "$@"
 			;;
 		*)
-			case $DISTRNAME in
-			ALTLinux|ALTServer)
+			case $BASEDISTRNAME in
+			"alt")
 				local INITFILE=/etc/init.d/$SERVICE
 				[ -r "$INITFILE" ] || fatal "Can't find init file $INITFILE"
 				docmd cat $INITFILE
@@ -820,8 +821,8 @@ serv_exists()
 			docmd systemctl cat "$SERVICE" "$@" >/dev/null 2>/dev/null
 			;;
 		*)
-			case $DISTRNAME in
-			ALTLinux|ALTServer)
+			case $BASEDISTRNAME in
+			"alt")
 				local INITFILE=/etc/init.d/$SERVICE
 				[ -r "$INITFILE" ] || return
 				return ;;
@@ -988,8 +989,8 @@ serv_log()
 			sudocmd journalctl -b -u "$SERVICE" "$@"
 			;;
 		*)
-			case $DISTRNAME in
-			ALTLinux|ALTServer)
+			case $BASEDISTRNAME in
+			"alt")
 				FF="" ; [ "$1" = "-f" ] && FF="-f"
 				__serv_log_altlinux "$SERVICE" $FF
 				return ;;
@@ -2375,7 +2376,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.31.1  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.32.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
