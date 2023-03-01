@@ -328,7 +328,7 @@ if [ "$1" = "--list-all" ] || [ "$1" = "list-all" ] || [ -z "$*" ] ; then
     [ -n "$quiet" ] || [ -n "$*" ] && exit
     echo
     #echo "Run epm play --help for help"
-    __epm_play_help
+    epm_play_help
     exit
 fi
 
