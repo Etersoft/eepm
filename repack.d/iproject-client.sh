@@ -25,3 +25,7 @@ filter_from_requires "mono(Microsoft.Threading.Tasks)"
 filter_from_requires "mono(Microsoft.Threading.Tasks.Extensions)"
 filter_from_requires "mono(System.Runtime)"
 filter_from_requires "mono(System.Threading.Tasks)"
+
+epm install --skip-installed coreutils libgdiplus liblame libnuma libopus libuuid libvorbis
+epm install --skip-installed mono-core mono-data mono-winforms zlib
+# mono-devel mono-extras mono-mvc mono-web
