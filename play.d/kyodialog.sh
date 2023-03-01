@@ -9,8 +9,7 @@ DESCRIPTION="KYOCERA Printing Package (Linux Universal Driver)"
 
 URL="https://www.kyoceradocumentsolutions.eu/content/download-center/eu/drivers/all/Linux_Universal_Driver_zip.download.zip"
 
-# FIXME: ALT Linux only
-epm assure erc || fatal
+epm assure erc || epm ei erc || fatal
 
 PKGDIR="$(mktemp -d)"
 trap "rm -fr $PKGDIR" EXIT
