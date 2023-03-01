@@ -129,6 +129,9 @@ case $PROGNAME in
     epmcl)                     # HELPSHORT: alias for epm changelog
         epm_cmd=changelog
         ;;
+    epmp)                      # HELPSHORT: alias for epm play
+        epm_cmd=play
+        ;;
     epms)                      # HELPSHORT: alias for epm search
         epm_cmd=search
         ;;
