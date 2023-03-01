@@ -17,8 +17,40 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+epm_full_upgrade_help()
+{
+			get_help HELPCMD $SHAREDIR/epm-full_upgrade
+	cat <<EOF
+Also you can comment out full_upgrade parts in /etc/eepm/eepm.conf config.
+Examples:
+  epm full-upgrade
+  epm full-upgrade --no-flatpack
+EOF
+}
+
+
 epm_full_upgrade()
 {
+
+	while [ -n "$1" ] ; do
+		case "$1" in
+			"-h"|"--help"|"help")      # HELPCMD: help
+				epm_full_upgrade_help
+				return
+				;;
+			"--no-epm-play")           # HELPCMD: skip epm play during full upgrade
+				full_upgrade_no_epm_play=1
+				;;
+			"--no-flatpack")           # HELPCMD: skip flatpack update during full upgrade
+				full_upgrade_no_flatpack=1
+				;;
+			"--no-snap")           # HELPCMD: skip snap update during full upgrade
+				full_upgrade_no_snap=1
+				;;
+		esac
+		shift
+	done
+
 	docmd epm update || fatal "repository updating is failed."
 
 	[ -n "$quiet" ] || echo
