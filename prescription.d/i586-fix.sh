@@ -2,16 +2,11 @@
 
 [ "$1" != "--run" ] && echo "Fix missed 32 bit package modules on 64 bit system" && exit
 
-vendor="$($DISTRVENDOR -s)" ; [ "$vendor" = "alt" ] || { echo "Only ALT distros is supported for now" ; exit 1 ; }
+[ "$(epm print info -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
-[ "$($DISTRVENDOR -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
+get_list_alt()
+{
 
-LIST=''
-
-# copied from
-
-echo
-echo "Checking for installed modules... "
 for i in glibc-nss glibc-gconv-modules \
          sssd-client \
          vulkan-amdgpu libvulkan1 \
@@ -20,7 +15,39 @@ for i in glibc-nss glibc-gconv-modules \
 do
     epm --quiet installed $i && LIST="$LIST i586-$i"
 done
+}
+
+get_list_fedora()
+{
+
+for i in \
+         sssd-client \
+         mesa-vulkan-drivers mesa-dri-drivers vulkan-loader
+do
+    epm --quiet installed $i && LIST="$LIST $i.i686"
+done
+}
+
+vendor="$(epm print info -s)"
+
+LIST=''
+echo
+echo "Checking for installed packages ... "
+
+case "$vendor" in
+    "alt")
+        get_list_alt
+        ;;
+    "fedora"|"centos"|"redos")
+        get_list_fedora
+        ;;
+    *)
+        info "Unsupported $(epm print info -e) system. Just skipping the operation."
+        exit
+        ;;
+esac
 
 echo
-echo "Installing all appropiate i586-* packages ..."
+echo "Installing all appropiate 32 bit packages ..."
 epm install $LIST
+
