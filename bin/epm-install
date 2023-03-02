@@ -341,6 +341,9 @@ epm_install_files()
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return $RES
 
+            # separate second output
+            info
+
             # try install via apt if we could't install package file via rpm (we guess we need install requirements firsly)
 
             # TODO: use it always (apt can install version from repo instead of a file package)
@@ -429,6 +432,11 @@ epm_install_files()
 
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return $RES
+
+            # fallback to install names
+
+            # separate second output
+            info
 
             case $PMTYPE in
                 yum-rpm|dnf-rpm)
