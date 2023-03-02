@@ -88,9 +88,11 @@ case $PMTYPE in
 		;;
 	yum-rpm)
 		docmd yum repolist $verbose
+		[ -n "$verbose" ] || info "Use --verbose if you need detail information."
 		;;
 	dnf-rpm)
 		docmd dnf repolist $verbose
+		[ -n "$verbose" ] || info "Use --verbose if you need detail information."
 		;;
 	urpm-rpm)
 		docmd urpmq --list-url
