@@ -2,8 +2,8 @@
 
 MAIN=wine
 
-vendor="$($DISTRVENDOR -s)" ; [ "$vendor" = "alt" ] || { echo "Only ALT distros is supported for now" ; exit 1 ; }
-arch="$($DISTRVENDOR -a)"
+vendor="$(epm print info -s)" ; [ "$vendor" = "alt" ] || { echo "Only ALT distros is supported for now" ; exit 1 ; }
+arch="$(epm print info -a)"
 
 PKGCOMMON="wine-mono wine-gecko winetricks"
 

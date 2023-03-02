@@ -2,7 +2,7 @@
 
 [ "$1" != "--run" ] && echo "Install php7 (or upgrade from php5)" && exit
 
-distrbase="$($DISTRVENDOR -s)" ; [ "$distrbase" = "alt" ] || { echo "Only ALTLinux is supported as for now" ; exit 1 ; }
+distrbase="$(epm print info -s)" ; [ "$distrbase" = "alt" ] || { echo "Only ALTLinux is supported as for now" ; exit 1 ; }
 
 if epmqp --quiet php5- ; then
     # Upgrade all installed php5
