@@ -59,6 +59,9 @@ epm_full_upgrade()
 	[ -n "$quiet" ] || echo
 	docmd epm update-kernel || fatal "updating of the kernel is failed."
 
+	# disable epm play --update for non ALT Systems
+	[ "$BASEDISTRNAME" = "alt" ] || full_upgrade_no_epm_play=1
+
 	if [ -z "$full_upgrade_no_epm_play" ] ; then
 		[ -n "$quiet" ] || echo
 		docmd epm play --update all || fatal "updating of applications installed via epm play is failed."
