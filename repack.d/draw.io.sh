@@ -4,12 +4,13 @@
 BUILDROOT="$1"
 SPEC="$2"
 
-PRODUCT=draw.io
-PRODUCTDIR=/opt/drawio/
+PRODUCT=drawio
+PRODUCTCUR=draw.io
+PRODUCTDIR=/opt/drawio
 
 . $(dirname $0)/common-chromium-browser.sh
 
-add_bin_link_command drawio
-add_bin_link_command $PRODUCT $PRODUCTDIR/drawio
+add_bin_link_command
+add_bin_link_command $PRODUCTCUR $PRODUCT
 
 fix_chrome_sandbox

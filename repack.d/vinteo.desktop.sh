@@ -9,7 +9,8 @@ PRODUCTDIR=/opt/VinteoDesktop
 
 . $(dirname $0)/common-chromium-browser.sh
 
-add_bin_link_command vinteo.desktop
+add_bin_link_command
+
 subst 's|/opt/VinteoDesktop/||' $BUILDROOT/usr/share/applications/vinteo.desktop.desktop
 
 fix_chrome_sandbox

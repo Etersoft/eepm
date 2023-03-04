@@ -108,6 +108,7 @@ add_bin_link_command()
     [ -n "$name" ] || name="$PRODUCT"
     [ -n "$target" ] || target="$PRODUCTDIR/$name"
     [ -e "$BUILDROOT/usr/bin/$name" ] && return
+    [ "$name" = "$target" ] && return
 
     mkdir -p $BUILDROOT/usr/bin/
     ln -s "$target" "$BUILDROOT/usr/bin/$name" || return
@@ -122,6 +123,7 @@ add_bin_exec_command()
     [ -n "$name" ] || name="$PRODUCT"
     [ -n "$target" ] || target="$PRODUCTDIR/$name"
     [ -e "$BUILDROOT/usr/bin/$name" ] && return
+    [ "$name" = "$target" ] && return
 
     mkdir -p $BUILDROOT/usr/bin/
     cat <<EOF > "$BUILDROOT/usr/bin/$name"
@@ -164,7 +166,6 @@ move_to_opt()
     mv "$BUILDROOT$rdir"/* "$BUILDROOT$PRODUCTDIR/"
     subst "s|$rdir|$PRODUCTDIR|g" $SPEC
 }
-
 
 fix_chrome_sandbox()
 {

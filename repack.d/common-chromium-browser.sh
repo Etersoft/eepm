@@ -103,6 +103,6 @@ add_bin_commands()
     fi
 
     # short command for run
-    [ "$PRODUCT" = "$PRODUCTDIR" ] || add_bin_link_command $PRODUCT $PRODUCTCUR
+    add_bin_link_command $PRODUCT $PRODUCTCUR
 }
 

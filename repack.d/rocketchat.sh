@@ -3,14 +3,14 @@
 BUILDROOT="$1"
 SPEC="$2"
 
-PRODUCT=rocketchat
-PRODUCTCUR=rocketchat-desktop
+PRODUCT=rocketchat-desktop
+PRODUCTCUR=rocketchat
 PRODUCTDIR=/opt/Rocket.Chat
 
 . $(dirname $0)/common-chromium-browser.sh
 
-add_bin_link_command $PRODUCTCUR $PRODUCTDIR/$PRODUCTCUR
-add_bin_link_command $PRODUCT $PRODUCTCUR
+add_bin_link_command
+add_bin_link_command $PRODUCTCUR $PRODUCT
 
 install_deps
 
