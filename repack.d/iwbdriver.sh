@@ -23,9 +23,7 @@ cd $BUILDROOT$PRODUCTDIR/
 
 chmod -R a+rX .
 
-mkdir -p $BUILDROOT/usr/share/pixmaps/
-cp icon.png $BUILDROOT/usr/share/pixmaps/$ICONFILE
-pack_file /usr/share/pixmaps/$ICONFILE
+install_file $PRODUCTDIR/icon.png /usr/share/pixmaps/$ICONFILE
 
 epm assure patchelf || exit
 for i in IWB_Driver libQt*.so.* ; do

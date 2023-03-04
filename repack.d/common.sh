@@ -1,5 +1,11 @@
 #!/bin/sh
 
+fatal()
+{
+    echo "FATAL: $*" >&2
+    exit 1
+}
+
 # compatibility layer
 # add realpath if missed
 if ! which realpath 2>/dev/null >/dev/null ; then
@@ -100,6 +106,14 @@ pack_dir()
     subst "s|%files|%files\n%dir $file|" $SPEC
 }
 
+install_file()
+{
+    local src="$1"
+    local dest="$2"
+    mkdir -p "$BUILDROOT/$(dirname "$dest")" || return
+    cp "$BUILDROOT/$src" "$BUILDROOT/$dest"
+    pack_file "$dest"
+}
 
 add_bin_link_command()
 {
@@ -165,6 +179,16 @@ move_to_opt()
 
     mv "$BUILDROOT$rdir"/* "$BUILDROOT$PRODUCTDIR/"
     subst "s|$rdir|$PRODUCTDIR|g" $SPEC
+}
+
+# remove absolute path from desktop file
+fix_desktop_file()
+{
+    local from="$1"
+    local to="$2"
+    [ -n "$from" ] || from="$PRODUCTDIR/$PRODUCT"
+    [ -n "$to" ] || to="$(basename "$from")"
+    subst "s|$from|$to|" $BUILDROOT/usr/share/applications/*.desktop
 }
 
 fix_chrome_sandbox()

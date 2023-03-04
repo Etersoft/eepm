@@ -11,7 +11,7 @@ subst '1iAutoReq:yes,noshell,nomonolib,nomono,nopython' $SPEC
 subst '1iAutoProv:no' $SPEC
 
 move_to_opt
-subst "s|/usr/share/$PRODUCT/$PRODUCT|$PRODUCT|" $BUILDROOT/usr/share/applications/start-$PRODUCT.desktop
+fix_desktop_file "/usr/share/$PRODUCT/$PRODUCT"
 
 rm -f $BUILDROOT/usr/bin/librewolf
 add_bin_link_command

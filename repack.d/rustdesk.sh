@@ -52,9 +52,7 @@ subst "s|^Categories.*|Categories=GNOME;GTK;Network;RemoteAccess;|" $BUILDROOT/u
 subst "s|/usr/share/rustdesk/files/rustdesk.png|$PRODUCT|" $BUILDROOT/usr/share/applications/$PRODUCT.desktop
 
 ICONFILE=$PRODUCT.png
-mkdir -p $BUILDROOT/usr/share/pixmaps/
-cp $BUILDROOT/usr/share/rustdesk/files/rustdesk.png $BUILDROOT/usr/share/pixmaps/$ICONFILE
-pack_file /usr/share/pixmaps/$ICONFILE
+install_file /usr/share/rustdesk/files/rustdesk.png /usr/share/pixmaps/$ICONFILE
 
 #move_to_opt /usr/lib/rustdesk
 add_bin_link_command

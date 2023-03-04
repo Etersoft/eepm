@@ -19,7 +19,5 @@ subst '1iRequires:/bin/sh' $SPEC
 add_bin_link_command $PRODUCT $PRODUCTDIR/aimp.bash
 subst "s|/usr/bin/sh|/bin/sh|" $BUILDROOT$PRODUCTDIR/aimp.bash
 
-mkdir -p $BUILDROOT/usr/share/applications/
-cp $BUILDROOT/opt/aimp/aimp.desktop $BUILDROOT/usr/share/applications/aimp.desktop
-pack_file /usr/share/applications/aimp.desktop
+install_file /opt/aimp/aimp.desktop /usr/share/applications/aimp.desktop
 

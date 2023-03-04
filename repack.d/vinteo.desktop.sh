@@ -11,6 +11,6 @@ PRODUCTDIR=/opt/VinteoDesktop
 
 add_bin_link_command
 
-subst 's|/opt/VinteoDesktop/||' $BUILDROOT/usr/share/applications/vinteo.desktop.desktop
+fix_desktop_file
 
 fix_chrome_sandbox
