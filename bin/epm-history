@@ -110,6 +110,12 @@ if [ $PMTYPE = "apt-rpm" ] ; then
 			__alt_epm_history_updated | less
 			return
 			;;
+		--list)                    # HELPCMD: (or empty) print all history entries
+			docmd journalctl -t apt-get
+			return
+			;;
+		"")
+			;;
 		*)
 			fatal "Unknown option $1"
 	esac
