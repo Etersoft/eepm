@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME=vkcalls
+PKGNAME=vk-calls
 SUPPORTEDARCHES="x86_64"
 DESCRIPTION="VK Calls for Linux from the official site"
 
