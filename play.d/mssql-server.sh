@@ -30,7 +30,7 @@ case "$($DISTRVENDOR -d)" in
     epm rr $DEBREPO ; epm update
     ;;
   ALTLinux|ALTServer)
-    epm install --repack https://packages.microsoft.com/rhel/8/mssql-server-2019/mssql-server-[0-9]*.x86_64.rpm || fatal
+    epm install --repack https://packages.microsoft.com/rhel/8/mssql-server-2019/Packages/m/mssql-server-[0-9]*.x86_64.rpm || fatal
     ;;
   Debian|Ubuntu)
     epm install https://packages.microsoft.com/$dname/$dversion/mssql-server-2019/pool/main/m/mssql-server/mssql-server_1*_amd64.deb
