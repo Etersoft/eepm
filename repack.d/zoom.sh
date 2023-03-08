@@ -32,8 +32,24 @@ done
 
 epm assure patchelf || exit
 
+for i in $BUILDROOT/opt/zoom/lib*.so.* $BUILDROOT/opt/zoom/lib*.so ; do
+    a= patchelf --set-rpath '$ORIGIN:$ORIGIN/Qt/lib' $i || continue
+done
+
 for i in $BUILDROOT/opt/zoom/Qt/lib/*.so.* ; do
     a= patchelf --set-rpath '$ORIGIN:$ORIGIN/../../' $i || continue
+done
+
+for i in $BUILDROOT/opt/zoom/Qt/plugins/*/lib*.so ; do
+    a= patchelf --set-rpath '$ORIGIN/../../lib' $i || continue
+done
+
+for i in $BUILDROOT/opt/zoom/Qt/qml/QtQuick/*/lib*.so.* $BUILDROOT/opt/zoom/Qt/qml/QtQuick/XmlListModel/lib* $BUILDROOT/opt/zoom/Qt/qml/QtQml/RemoteObjects/lib*.so ; do
+    a= patchelf --set-rpath '$ORIGIN/../../../lib' $i || continue
+done
+
+for i in $BUILDROOT/opt/zoom/Qt/qml/Qt/labs/*/lib*.so ; do
+    a= patchelf --set-rpath '$ORIGIN/../../../../lib' $i
 done
 
 #for i in $BUILDROOT/opt/zoom/cef/libcef.so ; do
@@ -44,22 +60,33 @@ for i in $BUILDROOT/opt/zoom/{zoom,zopen} ; do
     a= patchelf --set-rpath '$ORIGIN:$ORIGIN/Qt/lib:$ORIGIN/cef' $i
 done
 
-if [ -d $BUILDROOT/opt/zoom/QtQuick/Scene2D ] ; then
-    # qt5-3d libqt5-3dquickscene2d
-    remove_file /opt/zoom/QtQuick/Scene2D/libqtquickscene2dplugin.so
-    remove_file /opt/zoom/QtQuick/Scene3D/libqtquickscene3dplugin.so
-fi
+# missed Qt deps
+remove_file /opt/zoom/Qt/qml/QtQuick/XmlListModel/libqmlxmllistmodelplugin.so
+remove_file /opt/zoom/Qt/qml/QtQuick/Scene2D/libqtquickscene2dplugin.so
+remove_file /opt/zoom/Qt/qml/QtQuick/Scene3D/libqtquickscene3dplugin.so
 
-#for i in $BUILDROOT/opt/zoom/Qt/qml/Qt/labs/lottieqt/liblottieqtplugin.so ; do
-#    a= patchelf --set-rpath "$PRODUCTDIR/Qt/lib" $i
-#done
+echo "Fix for library libQt5Multimedia.so.5 not found"
+remove_file /opt/zoom/Qt/plugins/audio/libqtaudio_alsa.so
+remove_file /opt/zoom/Qt/plugins/audio/libqtmedia_pulse.so
+
+# library libQt5RemoteObjects.so.5 not found
+remove_file /opt/zoom/Qt/qml/QtQml/RemoteObjects/libqtqmlremoteobjects.so
+# library libQt5Sql.so.5 not found
+remove_file /opt/zoom/Qt/qml/QtQuick/LocalStorage/libqmllocalstorageplugin.so
+# library libQt5QuickParticles.so.5 not found
+remove_file /opt/zoom/Qt/qml/QtQuick/Particles.2/libparticlesplugin.so
+
 
 echo "Fix for /opt/zoom/Qt/qml/Qt/labs/lottieqt/liblottieqtplugin.so: library libQt5Bodymovin.so.5 not found"
 # qt5-qtlottie
 remove_file /opt/zoom/Qt/qml/Qt/labs/lottieqt/liblottieqtplugin.so
 
+# library libQt5EglFSDeviceIntegration.so.5 not found
+remove_file /opt/zoom/Qt/plugins/platforms/libqeglfs.so
+remove_dir /opt/zoom/Qt/plugins/egldeviceintegrations
+
 install_deps
 
-epm --skip-installed install libxkbcommon-x11 libxcbutil-image libxcbutil-keysyms
+epm --skip-installed install glib2 libalsa libatk libat-spi2-core libcairo libcairo-gobject libcups libdbus libdrm libEGL libexpat libgbm libgdk-pixbuf libgio libGL libgomp1 libgtk+3 libkrb5 libnspr libnss libpango libpulseaudio libwayland-client libwayland-cursor libwayland-egl libX11 libxcb libxcb-render-util libxcbutil-icccm libxcbutil-image libxcbutil-keysyms libXcomposite libXdamage libXext libXfixes libxkbcommon libxkbcommon-x11 libXrandr libXtst zlib
 
 fix_chrome_sandbox $PRODUCTDIR/cef/chrome-sandbox
