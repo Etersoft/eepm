@@ -24,3 +24,9 @@ for i in lib* $PRODUCT  ; do
 done
 
 epm install --skip-installed libmfx || epm install 316139 || fatal "Can't install libmfx"
+
+# if not Debian based
+if [ ! -s /etc/ssl/certs/ca-certificates.crt ] ; then
+    # ALT and Fedora based
+    subst "s|/etc/ssl/certs/ca-certificates.crt|/etc/pki/tls/certs/ca-bundle.crt\x0\x0|" $BUILDROOT$PRODUCTDIR/libsentry.so
+fi
