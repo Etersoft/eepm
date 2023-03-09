@@ -10,6 +10,7 @@ file
 findutils
 gawk
 grep
+gzip
 less
 sed
 termutils

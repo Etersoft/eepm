@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.32.0
+Version: 3.33.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -147,6 +147,23 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Thu Mar 09 2023 Vitaly Lipatov <lav@altlinux.ru> 3.33.0-alt1
+- epm repack iproject-client: add requires
+- epm: add epmp alias for epm play
+- epm-full_upgrade: add support for --no-{epm-play,flatpack,snap}
+- epm play yandex-browser: allow install native rpm for other rpm systems than ALT
+- add epm ei erc to assure erc
+- epm-repolist: add info about --verbose
+- epm repack i586-fix: add support for Fedora based distro
+- epm repack viber: rewrite
+- epm play: add vkcalls support
+- epm full-upgrade: disable epm play --update for non ALT Systems
+- epm-release_upgrade: fix RockyLinux upgrade
+- revert "epm play mssql-server: fix url for rpm"
+- epm-history: fix default list
+- epm repack zoom.sh: improve packing (ALT bug 44988)
+- epm play: add unigine-heaven support
+
 * Tue Feb 28 2023 Vitaly Lipatov <lav@altlinux.ru> 3.32.0-alt1
 - epm repack synology-drive: fix install on ALT p10 (try 2)
 - /etc/eepm/eepm.conf: add full_upgrade_no_{epm_play,flatpack,snap} to disable during full_upgrade
