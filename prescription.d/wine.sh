@@ -20,6 +20,11 @@ ONLY32=''
 [ "$2" == "--only-i586" ] && ONLY32=1 && shift
 [ -n "$2" ] && MAIN="$2"
 
+if [ "$MAIN" = "wine-etersoft" ] ; then
+    PKGCOMMON="wine-etersoft-mono wine-etersoft-gecko wine-etersoft-winetricks"
+    PKGNAMES32="wine32-etersoft"
+else
+
 # do some magic: if winetricks more than 20210206, we have new wine package naming
 epm install winetricks || exit 1
 WTVER="$(epm print version for package winetricks)"
@@ -31,6 +36,8 @@ else
     PKGNAMES="$MAIN lib$MAIN lib$MAIN-gl lib$MAIN-twain"
     PKGNAMES32="i586-$MAIN i586-lib$MAIN i586-lib$MAIN-gl i586-lib$MAIN-twain"
     echo "We recommend ask about more new wine from your vendor."
+fi
+
 fi
 
 case $arch in
