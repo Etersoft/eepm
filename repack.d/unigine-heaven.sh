@@ -47,19 +47,18 @@ EOF
 chmod a+x $BUILDROOT/usr/bin/heaven
 pack_file /usr/bin/heaven
 
-mkdir -p $BUILDROOT/usr/share/pixmaps/
-cp ../data/launcher/icon.png $BUILDROOT/usr/share/pixmaps/$PRODUCT.png
-pack_file /usr/share/pixmaps/$PRODUCT.png
+install_file $PRODUCTDIR/data/launcher/icon.png /usr/share/pixmaps/$PRODUCT.png
 
 # create desktop file
 mkdir -p $BUILDROOT/usr/share/applications/
 cat <<EOF >$BUILDROOT/usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]
 Version=1.0
-Name=Unigine Heaven 4.0
+Name=Unigine Heaven 2009
 Type=Application
 Icon=$PRODUCT
 Exec=heaven
 Terminal=false
 EOF
-subst "s|%files|%files\n/usr/share/applications/$PRODUCT.desktop|" $SPEC
+
+pack_file /usr/share/applications/$PRODUCT.desktop

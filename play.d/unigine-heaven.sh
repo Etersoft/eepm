@@ -2,7 +2,7 @@
 
 PKGNAME=unigine-heaven
 SUPPORTEDARCHES="x86_64"
-DESCRIPTION="Unigine Heaven (Unigine Benchmark) from the official site"
+DESCRIPTION="Unigine Heaven 2009 (Unigine Benchmark) from the official site"
 
 . $(dirname $0)/common.sh
 
