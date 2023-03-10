@@ -33,7 +33,8 @@ remove_file()
     [ -e "$BUILDROOT$file" ] || [ -L "$BUILDROOT$file" ] || return
 
     rm -v "$BUILDROOT$file"
-    subst "s|.*$file.*||" $SPEC
+    subst "s|^$file$||" $SPEC
+    subst "s|^\"$file\"$||" $SPEC
 }
 
 is_dir_empty()
