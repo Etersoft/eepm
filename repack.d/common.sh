@@ -178,7 +178,12 @@ move_to_opt()
     [ -d "$BUILDROOT$rdir" ] || return 1 #fatal "Can't resolve $from in $BUILDROOT"
 
     mv "$BUILDROOT$rdir"/* "$BUILDROOT$PRODUCTDIR/"
-    subst "s|$rdir|$PRODUCTDIR|g" $SPEC
+    subst "s|%dir $rdir|%dir $PRODUCTDIR|" $SPEC
+    subst "s|%dir \"$rdir|%dir \"$PRODUCTDIR|" $SPEC
+    subst "s|\(%config.*\) $rdir|\1 $PRODUCTDIR|" $SPEC
+    subst "s|\(%config.*\) \"$rdir|\1 \"$PRODUCTDIR|" $SPEC
+    subst "s|^$rdir|$PRODUCTDIR|" $SPEC
+    subst "s|^\"$rdir|\"$PRODUCTDIR|" $SPEC
 }
 
 # remove absolute path from desktop file
