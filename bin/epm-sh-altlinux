@@ -33,7 +33,7 @@ get_task_arepo_packages()
     info "TODO: please, improve apt-repo to support arepo (i586-) packages for apt-repo list task"
     showcmd "curl -s -f http://git.altlinux.org/tasks/$tn/plan/arepo-add-x86_64-i586 | cut -f1"
     # TODO: retrieve one time
-    res="$(a='' curl -s -f http://git.altlinux.org/tasks/$tn/plan/arepo-add-x86_64-i586 2>/dev/null)" || { warning "There is a download error for x86_64-i586 arepo." ; return ; }
+    res="$(a='' curl -s -f http://git.altlinux.org/tasks/$tn/plan/arepo-add-x86_64-i586 2>/dev/null)" || return #{ warning "There is a download error for x86_64-i586 arepo." ; return ; }
     echo "$res" | cut -f1
 }
 
