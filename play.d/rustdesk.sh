@@ -25,7 +25,7 @@ else
 fi
 
 URL=$(epm tool eget --list --latest https://github.com/rustdesk/rustdesk/releases "$MASK") || fatal "Can't get package URL"
-epm install $URL
+epm install $URL || exit
 
 cat <<EOF
 

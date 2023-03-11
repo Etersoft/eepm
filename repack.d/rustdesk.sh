@@ -18,12 +18,6 @@ cp $BUILDROOT/usr/share/rustdesk/files/systemd/rustdesk.service $BUILDROOT/etc/s
 remove_dir /usr/share/rustdesk/files/systemd
 pack_file /etc/systemd/system/$PRODUCT.service
 
-# TODO
-# if [[ "$parsedVersion" -gt "360" ]]; then
-# sudo -H pip3 install pynput
-remove_file /usr/share/rustdesk/files/pynput_service.py
-# filter_from_requires "python3(pynput.*"
-
 VERSION=$(grep "^Version:" $SPEC | sed -e "s|Version: ||")
 if [ "$VERSION" = "1.1.9" ] ; then
 echo "Note: use 1.1.9 compatibility script"
@@ -42,7 +36,8 @@ echo "Categories=GNOME;GTK;Network;RemoteAccess;" >> $BUILDROOT/usr/share/applic
 #    a= patchelf --set-rpath '$PRODUCTDIR' $i || continue
 #done
 
-epm install glib2 libappindicator-gtk3 libcairo libgdk-pixbuf libgtk+3 libpango libpulseaudio libuuid libX11 libXau libxcb libXdmcp libXfixes libXtst xdotool
+epm install --skip-installed glib2 libappindicator-gtk3 libcairo libgdk-pixbuf libgtk+3 libpango libpulseaudio libuuid libX11 libXau libxcb libXdmcp libXfixes libXtst xdotool
+epm install --skip-installed  python3-module-pynput || epm install 316570
 
 exit
 fi
@@ -62,5 +57,5 @@ for i in $BUILDROOT/$PRODUCTDIR/lib/*.so ; do
     a= patchelf --set-rpath '$ORIGIN/' $i || continue
 done
 
-epm install glib2 libappindicator-gtk3 libcairo libgdk-pixbuf libgtk+3 libpango libpulseaudio libuuid libX11 libXau libxcb libXdmcp libXfixes libXtst xdotool
-
+epm install --skip-installed glib2 libappindicator-gtk3 libcairo libgdk-pixbuf libgtk+3 libpango libpulseaudio libuuid libX11 libXau libxcb libXdmcp libXfixes libXtst xdotool
+epm install --skip-installed  python3-module-pynput || epm install 316570
