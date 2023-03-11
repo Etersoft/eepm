@@ -35,6 +35,8 @@ remove_file()
     rm -v "$BUILDROOT$file"
     subst "s|^$file$||" $SPEC
     subst "s|^\"$file\"$||" $SPEC
+    subst "s|^\(%config.*\) $file$||" $SPEC
+    subst "s|^\(%config.*\) \"$file\"$||" $SPEC
 }
 
 is_dir_empty()
