@@ -16,7 +16,7 @@ PKGDIR=$(mktemp -d)
 trap "rm -fr $PKGDIR" EXIT
 cd $PKGDIR || fatal
 
-name="$(basename "$PKGURL" | sed -e 's|liteidex|liteidex-|')"
+name="$(basename "$PKGURL" | sed -e 's|liteidex|liteide-|')"
 epm tool eget -O "$name" "$PKGURL"
 
 epm install --repack "$name"
