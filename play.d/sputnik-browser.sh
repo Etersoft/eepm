@@ -59,6 +59,9 @@ ERR=$?
 if [ "$ERR" = 0 ] ; then
     echo "Running # /opt/sputnik-browser/sputnik_client --generate_branding to get license in config.dat"
     a='' $SUDO /opt/sputnik-browser/sputnik_client --generate_branding
+    echo "Disable strange system service sputnik_client"
+    serv sputnik_client off
+    $SUDO killall sputnik_client
 fi
 
 exit $ERR
