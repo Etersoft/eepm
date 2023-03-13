@@ -31,7 +31,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.32.0"
+EPMVERSION="3.34.0"
 
 load_helper()
 {
@@ -1733,7 +1733,7 @@ check_pkg_integrity()
 		true
 		;;
 	*)
-		assure_exists erc
+		assure_exists erc || epm ei erc || fatal "erc is not available. can't check the package"
 		docmd erc test "$PKG" && return
 		;;
 	esac
@@ -2835,8 +2835,40 @@ epm_filelist()
 
 # File bin/epm-full_upgrade:
 
+epm_full_upgrade_help()
+{
+			get_help HELPCMD $SHAREDIR/epm-full_upgrade
+	cat <<EOF
+Also you can comment out full_upgrade parts in /etc/eepm/eepm.conf config.
+Examples:
+  epm full-upgrade
+  epm full-upgrade --no-flatpack
+EOF
+}
+
+
 epm_full_upgrade()
 {
+
+	while [ -n "$1" ] ; do
+		case "$1" in
+			"-h"|"--help"|"help")      # HELPCMD: help
+				epm_full_upgrade_help
+				return
+				;;
+			"--no-epm-play")           # HELPCMD: skip epm play during full upgrade
+				full_upgrade_no_epm_play=1
+				;;
+			"--no-flatpack")           # HELPCMD: skip flatpack update during full upgrade
+				full_upgrade_no_flatpack=1
+				;;
+			"--no-snap")           # HELPCMD: skip snap update during full upgrade
+				full_upgrade_no_snap=1
+				;;
+		esac
+		shift
+	done
+
 	docmd epm update || fatal "repository updating is failed."
 
 	[ -n "$quiet" ] || echo
@@ -2844,6 +2876,9 @@ epm_full_upgrade()
 
 	[ -n "$quiet" ] || echo
 	docmd epm update-kernel || fatal "updating of the kernel is failed."
+
+	# disable epm play --update for non ALT Systems
+	[ "$BASEDISTRNAME" = "alt" ] || full_upgrade_no_epm_play=1
 
 	if [ -z "$full_upgrade_no_epm_play" ] ; then
 		[ -n "$quiet" ] || echo
@@ -2961,6 +2996,12 @@ if [ $PMTYPE = "apt-rpm" ] ; then
 		--updated)                 # HELPCMD: print only updated packages
 			__alt_epm_history_updated | less
 			return
+			;;
+		--list)                    # HELPCMD: (or empty) print all history entries
+			docmd journalctl -t apt-get
+			return
+			;;
+		"")
 			;;
 		*)
 			fatal "Unknown option $1"
@@ -3463,6 +3504,9 @@ epm_install_files()
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return $RES
 
+            # separate second output
+            info
+
             # try install via apt if we could't install package file via rpm (we guess we need install requirements firsly)
 
             # TODO: use it always (apt can install version from repo instead of a file package)
@@ -3550,6 +3594,11 @@ epm_install_files()
 
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return $RES
+
+            # fallback to install names
+
+            # separate second output
+            info
 
             case $PMTYPE in
                 yum-rpm|dnf-rpm)
@@ -4785,7 +4834,7 @@ if [ "$1" = "--list-all" ] || [ "$1" = "list-all" ] || [ -z "$*" ] ; then
     [ -n "$quiet" ] || [ -n "$*" ] && exit
     echo
     #echo "Run epm play --help for help"
-    __epm_play_help
+    epm_play_help
     exit
 fi
 
@@ -6636,13 +6685,13 @@ epm_release_upgrade()
 			exit
 		fi
 
-		if [ "$1" = "RockyLinux" ] ; then
+		if [ "$DISTRNAME" = "RockyLinux" ] ; then
 			sudocmd dnf --refresh upgrade || fatal
 			sudocmd dnf clean all
 			info "Check https://www.centlinux.com/2022/07/upgrade-your-servers-from-rocky-linux-8-to-9.html"
 			info "For upgrading your yum repositories from Rocky Linux 8 to 9 ..."
 			epm install "https://download.rockylinux.org/pub/rocky/9/BaseOS/x86_64/os/Packages/r/rocky-gpg-keys*.rpm" || fatal
-			epm install "epmi https://download.rockylinux.org/pub/rocky/9/BaseOS/x86_64/os/Packages/r/rocky-repos*.rpm" "https://download.rockylinux.org/pub/rocky/9/BaseOS/x86_64/os/Packages/r/rocky-release*.rpm" || fatal
+			epm install "https://download.rockylinux.org/pub/rocky/9/BaseOS/x86_64/os/Packages/r/rocky-repos*.rpm" "https://download.rockylinux.org/pub/rocky/9/BaseOS/x86_64/os/Packages/r/rocky-release*.rpm" || fatal
 
 			# hack (TODO)
 			DV=$(echo "$DISTRVERSION" | sed -e "s|\..*||")
@@ -7459,7 +7508,7 @@ __prepare_source_package()
         [ -x "$alpkg" ] || docmd chmod u+x $verbose "$alpkg"
         ./$alpkg --appimage-extract || fatal
         alpkg=$PKGNAME-$VERSION.tar
-        assure_exists erc || fatal
+        assure_exists erc || epm ei erc || fatal
         # make a tar for alien
         a= erc a $alpkg squashfs-root
         return
@@ -7468,7 +7517,7 @@ __prepare_source_package()
     __set_version_pkgname $alpkg
     if [ -n "$VERSION" ] ; then
         # TODO: don't use erc for detect type? then we potentially can skip install it
-        assure_exists erc || fatal
+        assure_exists erc || epm ei erc || fatal
         pkgtype="$(a= erc type $alpkg)"
         local newalpkg
         newalpkg=$PKGNAME-$VERSION.$pkgtype
@@ -7479,7 +7528,7 @@ __prepare_source_package()
         else
             newalpkg=$PKGNAME-$VERSION.tar
             #newalpkg=$(basename $alpkg .$pkgtype).tar
-            assure_exists erc || fatal
+            assure_exists erc || epm ei erc || fatal
             a= erc repack $alpkg $newalpkg || fatal
         fi
         if [ "$alpkg" != "$newalpkg" ] ; then
@@ -8076,9 +8125,11 @@ case $PMTYPE in
 		;;
 	yum-rpm)
 		docmd yum repolist $verbose
+		[ -n "$verbose" ] || info "Use --verbose if you need detail information."
 		;;
 	dnf-rpm)
 		docmd dnf repolist $verbose
+		[ -n "$verbose" ] || info "Use --verbose if you need detail information."
 		;;
 	urpm-rpm)
 		docmd urpmq --list-url
@@ -9204,7 +9255,7 @@ get_task_arepo_packages()
     info "TODO: please, improve apt-repo to support arepo (i586-) packages for apt-repo list task"
     showcmd "curl -s -f http://git.altlinux.org/tasks/$tn/plan/arepo-add-x86_64-i586 | cut -f1"
     # TODO: retrieve one time
-    res="$(a='' curl -s -f http://git.altlinux.org/tasks/$tn/plan/arepo-add-x86_64-i586 2>/dev/null)" || { warning "There is a download error for x86_64-i586 arepo." ; return ; }
+    res="$(a='' curl -s -f http://git.altlinux.org/tasks/$tn/plan/arepo-add-x86_64-i586 2>/dev/null)" || return #{ warning "There is a download error for x86_64-i586 arepo." ; return ; }
     echo "$res" | cut -f1
 }
 
@@ -12263,6 +12314,9 @@ case $PROGNAME in
         ;;
     epmcl)                     # HELPSHORT: alias for epm changelog
         epm_cmd=changelog
+        ;;
+    epmp)                      # HELPSHORT: alias for epm play
+        epm_cmd=play
         ;;
     epms)                      # HELPSHORT: alias for epm search
         epm_cmd=search
