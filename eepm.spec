@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.33.0
+Version: 3.34.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -147,6 +147,16 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Mon Mar 13 2023 Vitaly Lipatov <lav@altlinux.ru> 3.34.0-alt1
+- epm prescription wine: fix wine-etersoft support
+- epm play: add liteide support
+- epm play: add unigine-valley support
+- epm play: add unigine-superposition support
+- epm play: add codium
+- epm play rustdesk: restore pynput-service.py (need python3-module-pynput since it)
+- epm play sputnik-browser: disable service
+- epm-sh-altlinux: disable warning about x86_64-i586 in task
+
 * Thu Mar 09 2023 Vitaly Lipatov <lav@altlinux.ru> 3.33.0-alt1
 - epm repack iproject-client: add requires
 - epm: add epmp alias for epm play
