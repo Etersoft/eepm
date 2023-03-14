@@ -36,11 +36,7 @@ echo "Categories=GNOME;GTK;Network;RemoteAccess;" >> $BUILDROOT/usr/share/applic
 #    a= patchelf --set-rpath '$PRODUCTDIR' $i || continue
 #done
 
-epm install --skip-installed glib2 libappindicator-gtk3 libcairo libgdk-pixbuf libgtk+3 libpango libpulseaudio libuuid libX11 libXau libxcb libXdmcp libXfixes libXtst xdotool
-epm install --skip-installed  python3-module-pynput || epm install 316570
-
-exit
-fi
+else
 
 #### 1.2.0 and above
 subst "s|^Categories.*|Categories=GNOME;GTK;Network;RemoteAccess;|" $BUILDROOT/usr/share/applications/$PRODUCT.desktop
@@ -57,5 +53,21 @@ for i in $BUILDROOT/$PRODUCTDIR/lib/*.so ; do
     a= patchelf --set-rpath '$ORIGIN/' $i || continue
 done
 
+fi
+
 epm install --skip-installed glib2 libappindicator-gtk3 libcairo libgdk-pixbuf libgtk+3 libpango libpulseaudio libuuid libX11 libXau libxcb libXdmcp libXfixes libXtst xdotool
-epm install --skip-installed  python3-module-pynput || epm install 316570
+if ! epm install --skip-installed  python3-module-pynput ; then
+    case "$(epm print info -e)" in
+        ALTLinux/p10|ALTServer/10)
+            epm install 316569
+            ;;
+        ALTLinux/p9)
+            epm install 316570
+            ;;
+        ALTLinux/c9f2)
+            epm install 316739
+            ;;
+   esac
+fi
+
+exit
