@@ -14,9 +14,9 @@ subst '1iAutoReq:yes,nomonolib,nomono' $SPEC
 subst '1iAutoProv:no' $SPEC
 
 remove_file /usr/bin/$PRODUCT
-add_bin_link_command $PRODUCT $PRODUCTDIR/bin/$PRODUCT
+add_bin_link_command
 
-fix_desktop_file /usr/share/codium/bin/codium
+fix_desktop_file /usr/share/codium/codium
 
 #fix_chrome_sandbox
 
