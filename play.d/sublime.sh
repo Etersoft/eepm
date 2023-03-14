@@ -6,7 +6,7 @@ DESCRIPTION='Sublime Text 4 from the official site'
 
 . $(dirname $0)/common.sh
 
-arch="$($DISTRVENDOR -a)"
+arch="$(epm print info -a)"
 case "$arch" in
     x86_64)
         arch=x64

@@ -8,8 +8,8 @@ DESCRIPTION="Codium from the official site"
 
 VERSION="$2"
 
-arch="$($DISTRVENDOR -a)"
-pkgtype="$($DISTRVENDOR -p)"
+arch="$(epm print info -a)"
+pkgtype="$(epm print info -p)"
 case "$arch-$pkgtype" in
     x86_64-deb)
         arch=amd64

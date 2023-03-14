@@ -39,7 +39,7 @@ exit
 else
 
 # they put all branch here (rpm only): https://rpm.opera.com/rpm/
-[ "$($DISTRVENDOR -s)" = "alt" ] && repack='--repack' || repack=''
+[ "$(epm print info -s)" = "alt" ] && repack='--repack' || repack=''
 epm install $repack https://rpm.opera.com/rpm/opera_$BRANCH-*-linux-release-x64-signed.rpm
 
 fi

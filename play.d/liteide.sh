@@ -6,7 +6,7 @@ DESCRIPTION="LiteIDE is a simple, open source, cross-platform Go IDE. From the o
 
 . $(dirname $0)/common.sh
 
-archbit="$($DISTRVENDOR -b)"
+archbit="$(epm print info -b)"
 
 PKGURL=$(epm tool eget --list --latest https://github.com/visualfc/liteide/releases "liteidex*.linux$archbit-qt5*-system.tar.gz") #"
 [ -n "$PKGURL" ] || fatal "Can't get package URL"

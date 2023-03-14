@@ -13,8 +13,8 @@ if epm installed chromium-gost ; then
     exit 0
 fi
 
-#arch=$($DISTRVENDOR --distro-arch)
-#pkgtype=$($DISTRVENDOR -p)
+#arch=$(epm print info --distro-arch)
+#pkgtype=$(epm print info -p)
 arch=amd64
 pkgtype=deb
 

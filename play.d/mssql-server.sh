@@ -21,7 +21,7 @@ serv mssql-server stop
 dname="$(epm print info -s)"
 dversion="$(epm print info -v)"
 
-case "$($DISTRVENDOR -d)" in
+case "$(epm print info -d)" in
   AstraLinux*)
     # we have libc++1-9, but this package requires libc++1
     epm ar $DEBREPO ; epm update
@@ -36,7 +36,7 @@ case "$($DISTRVENDOR -d)" in
     epm install https://packages.microsoft.com/$dname/$dversion/mssql-server-2019/pool/main/m/mssql-server/mssql-server_1*_amd64.deb
     ;;
   *)
-    fatal "$($DISTRVENDOR -d) is not supported yet."
+    fatal "$(epm print info -d) is not supported yet."
     ;;
 esac
 

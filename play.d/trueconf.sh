@@ -7,7 +7,7 @@ DESCRIPTION="TrueConf client for Linux from the official site"
 . $(dirname $0)/common.sh
 
 epmopt=''
-case "$($DISTRVENDOR -e)" in
+case "$(epm print info -e)" in
     ALTLinux/p10|ALTServer/10|ALTLinux/Sisyphus)
         URL="https://mirror.trueconf.ru/altlinux/p10/x86_64/RPMS.non-free/trueconf-[0-9]*.x86_64.rpm"
         epmopt='--direct --repack'
@@ -32,7 +32,7 @@ case "$($DISTRVENDOR -e)" in
         URL="https://mirror.trueconf.ru/rosa/R12/x86_64/testing/trueconf-[0-9].x86_64.rpm"
         ;;
     *)
-        fatal "$($DISTRVENDOR -e) is not supported"
+        fatal "$(epm print info -e) is not supported"
 esac
 
 # --repack includes --noscripts

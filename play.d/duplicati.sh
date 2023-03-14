@@ -5,7 +5,7 @@ DESCRIPTION="Duplicati from the official site"
 
 . $(dirname $0)/common.sh
 
-pkgtype="$($DISTRVENDOR -p)"
+pkgtype="$(epm print info -p)"
 
 # we have workaround for their postinstall script, so always repack rpm package
 [ "$pkgtype" = "deb" ] || repack='--repack'

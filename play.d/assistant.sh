@@ -12,8 +12,8 @@ fi
 . $(dirname $0)/common.sh
 
 
-arch="$($DISTRVENDOR -a)"
-pkg="$($DISTRVENDOR -p)"
+arch="$(epm print info -a)"
+pkg="$(epm print info -p)"
 
 # some locale depend troubles (ALT with bash 4 needs LANG=ru_RU.UTF-8, Ubuntu with bash 5 needs LANG=C.UTF-8)
 #URL="https://мойассистент.рф/скачать"
@@ -51,7 +51,7 @@ case $arch-$pkg in
         URL="$(url_by_text "Скачать DEB пакет для ARM устройств")"
         ;;
     *)
-        fatal "$($DISTRVENDOR -e) is not supported (arch $arch, package type is $pkg)"
+        fatal "$(epm print info -e) is not supported (arch $arch, package type is $pkg)"
         ;;
 esac
 
@@ -59,7 +59,7 @@ esac
 #  assistant: Требует: /lib/init/vars.sh но пакет не может быть установлен
 #             Требует: libyuv.so()(64bit) но пакет не может быть установлен
 
-[ "$($DISTRVENDOR -s)" = "alt" ] && epmi --skip-installed fontconfig-disable-type1-font-for-assistant
+[ "$(epm print info -s)" = "alt" ] && epmi --skip-installed fontconfig-disable-type1-font-for-assistant
 
 # TODO: disable scripts (see /etc/eepm/pkgallowscripts.list)
 LANG=ru_RU.UTF8 epm install "$URL" || exit

@@ -7,7 +7,7 @@ PRODUCTALT="stable nightly"
 
 . $(dirname $0)/common.sh
 
-arch=$($DISTRVENDOR -a)
+arch=$(epm print info -a)
 pkgtype=deb
 
 BRANCH=stable

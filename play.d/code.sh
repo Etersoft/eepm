@@ -9,7 +9,7 @@ TIPS="Run epm play code <version> to install specific version."
 
 VERSION="$2"
 
-arch="$($DISTRVENDOR -a)"
+arch="$(epm print info -a)"
 case "$arch" in
     x86_64)
         arch=x64
@@ -25,7 +25,7 @@ case "$arch" in
 esac
 
 
-pkgtype="$($DISTRVENDOR -p)"
+pkgtype="$(epm print info -p)"
 
 # we have workaround for their postinstall script, so always repack rpm package
 [ "$pkgtype" = "deb" ] || repack='--repack'

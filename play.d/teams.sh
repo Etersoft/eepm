@@ -9,7 +9,7 @@ DESCRIPTION='' #"Microsoft Teams for Linux from the official site"
 . $(dirname $0)/common.sh
 
 repack=''
-pkgtype="$($DISTRVENDOR -p)"
+pkgtype="$(epm print info -p)"
 
 if [ "$pkgtype" = "deb" ] ; then
     URL="https://packages.microsoft.com/repos/ms-teams/pool/main/t/teams"
@@ -20,7 +20,7 @@ else
     pkgtype=rpm
 fi
 
-if [ "$($DISTRVENDOR -s)" = "alt" ] ; then
+if [ "$(epm print info -s)" = "alt" ] ; then
     repack="--repack"
 fi
 

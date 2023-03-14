@@ -6,20 +6,20 @@ DESCRIPTION="Geogebra 6 from the official site"
 
 . $(dirname $0)/common.sh
 
-arch=$($DISTRVENDOR --distro-arch)
+arch=$(epm print info --distro-arch)
 case $arch in
     x86_64|amd64)
         arch=$arch ;;
     i686|i586|i386)
         arch=i386 ;;
     *)
-        fatal "Unsupported arch $arch for $($DISTRVENDOR -d)"
+        fatal "Unsupported arch $arch for $(epm print info -d)"
 esac
 
-pkgtype="$($DISTRVENDOR -p)"
+pkgtype="$(epm print info -p)"
 
 repack=''
-[ "$($DISTRVENDOR -s)" = "alt" ] && repack='--repack'
+[ "$(epm print info -s)" = "alt" ] && repack='--repack'
 
 case $pkgtype in
     deb)

@@ -6,8 +6,8 @@ DESCRIPTION='Gitlab runner'
 
 . $(dirname $0)/common.sh
 
-arch="$($DISTRVENDOR -a)"
-pkg="$($DISTRVENDOR -p)"
+arch="$(epm print info -a)"
+pkg="$(epm print info -p)"
 case "$arch" in
     x86_64)
         arch=amd64

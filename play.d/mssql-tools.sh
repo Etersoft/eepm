@@ -14,7 +14,7 @@ fi
 dname="$(epm print info -s)"
 dversion="$(epm print info -v)"
 
-case "$($DISTRVENDOR -d)" in
+case "$(epm print info -d)" in
   AstraLinux*)
     epm install --skip-installed unixodbc || fatal
     epm install https://packages.microsoft.com/debian/8/prod/pool/main/m/msodbcsql17/msodbcsql17_1*_amd64.deb
@@ -33,7 +33,7 @@ case "$($DISTRVENDOR -d)" in
     epm install https://packages.microsoft.com/$dname/$dversion/prod/pool/main/m/mssql-tools/mssql-tools_1*_amd64.deb
     ;;
   *)
-    fatal "$($DISTRVENDOR -d) is not supported yet."
+    fatal "$(epm print info -d) is not supported yet."
     ;;
 esac
 

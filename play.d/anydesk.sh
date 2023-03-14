@@ -7,7 +7,7 @@ DESCRIPTION="AnyDesk from the official site"
 . $(dirname $0)/common.sh
 
 
-arch=$($DISTRVENDOR --distro-arch)
+arch=$(epm print info --distro-arch)
 case $arch in
     x86_64|amd64)
         arch=$arch ;;
@@ -16,12 +16,12 @@ case $arch in
     i586)
         arch=i686 ;;
     *)
-        fatal "Unsupported arch $arch for $($DISTRVENDOR -d)"
+        fatal "Unsupported arch $arch for $(epm print info -d)"
 esac
 
 # we have workaround for their postinstall script, so always repack rpm package
 repack=''
-[ "$($DISTRVENDOR -p)" = "deb" ] || repack='--repack'
+[ "$(epm print info -p)" = "deb" ] || repack='--repack'
 
 # current links:
 # https://download.anydesk.com/rpm/anydesk_6.0.1-1_x86_64.rpm
@@ -29,13 +29,13 @@ repack=''
 # https://download.anydesk.com/deb/anydesk_6.0.1-1_amd64.deb
 
 # general msk
-#PKGMASK="$($DISTRVENDOR -p)/$(epm print constructname $PKGNAME "*" $arch '' '_')"
+#PKGMASK="$(epm print info -p)/$(epm print constructname $PKGNAME "*" $arch '' '_')"
 # TODO: hack with version, there are too many files
 PKGMASK="$(epm print constructname $PKGNAME "[6-9].[1-9]*" $arch '' '_')"
 
 # we miss obsoleted libpangox on ALT, so use RHEL8 build
 # lib.req: WARNING: /usr/bin/anydesk: library libpangox-1.0.so.0 not found
-#[ "$($DISTRVENDOR -s)" = "alt" ] && PKGMASK="os-specific/rhel8/$(epm print constructname $PKGNAME "*" $arch)"
+#[ "$(epm print info -s)" = "alt" ] && PKGMASK="os-specific/rhel8/$(epm print constructname $PKGNAME "*" $arch)"
 
 PKG="$(epm tool eget --list --latest https://download.anydesk.com/linux $PKGMASK)" || fatal "Can't get package URL"
 

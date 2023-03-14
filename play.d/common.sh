@@ -122,7 +122,7 @@ esac
 
 
 # legacy compatibility and support direct run the script
-if [ -z "$DISTRVENDOR" ] ; then
+if [ -z "epm print info" ] ; then
     export DISTRVENDOR="epm print info"
     if [ -x "../bin/epm" ] ; then
         export PATH="$(realpath ../bin):$PATH"

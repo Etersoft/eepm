@@ -7,7 +7,7 @@ DESCRIPTION="Sferum for Linux from the official site"
 . $(dirname $0)/common.sh
 
 
-arch=$($DISTRVENDOR --distro-arch)
+arch=$(epm print info --distro-arch)
 case $arch in
     x86_64|amd64)
         arch=$arch ;;
@@ -16,11 +16,11 @@ case $arch in
     i586)
         arch=i686 ;;
     *)
-        fatal "Unsupported arch $arch for $($DISTRVENDOR -d)"
+        fatal "Unsupported arch $arch for $(epm print info -d)"
 esac
 
 repack=''
-[ "$($DISTRVENDOR -s)" = "alt" ] && repack='--repack'
+[ "$(epm print info -s)" = "alt" ] && repack='--repack'
 
 #https://st.mycdn.me/static/sferum/latest/sferum-i386.deb
 #https://st.mycdn.me/static/sferum/latest/sferum-amd64.deb
@@ -29,4 +29,4 @@ repack=''
 
 # can't use constructname due '-' before arch
 #epm install "https://st.mycdn.me/static/sferum/latest/$(epm print constructname $PKGNAME '' $arch '' '-')"
-epm $repack install "https://st.mycdn.me/static/sferum/latest/$PKGNAME-$arch.$($DISTRVENDOR -p)"
+epm $repack install "https://st.mycdn.me/static/sferum/latest/$PKGNAME-$arch.$(epm print info -p)"

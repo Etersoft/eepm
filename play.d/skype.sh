@@ -7,8 +7,8 @@ DESCRIPTION="Skype for Linux - Stable/Release Version from the official site"
 . $(dirname $0)/common.sh
 
 
-#arch=$($DISTRVENDOR --distro-arch)
-#pkgtype=$($DISTRVENDOR -p)
+#arch=$(epm print info --distro-arch)
+#pkgtype=$(epm print info -p)
 pkgtype=deb
 
 # don't used

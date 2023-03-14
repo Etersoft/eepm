@@ -7,14 +7,14 @@ DESCRIPTION="The popular and trusted web browser by Google (Stable Channel) from
 . $(dirname $0)/common.sh
 
 
-#arch=$($DISTRVENDOR --distro-arch)
-#pkgtype=$($DISTRVENDOR -p)
+#arch=$(epm print info --distro-arch)
+#pkgtype=$(epm print info -p)
 repack=''
 arch=amd64
 pkgtype=deb
 
 # we have workaround for their postinstall script, so always repack rpm package
-[ "$($DISTRVENDOR -p)" = "deb" ] || repack='--repack'
+[ "$(epm print info -p)" = "deb" ] || repack='--repack'
 
 PKG="https://dl.google.com/linux/direct/google-chrome-stable_current_$arch.$pkgtype"
 

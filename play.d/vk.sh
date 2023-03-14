@@ -6,7 +6,7 @@ DESCRIPTION="VK Messenger from the official site"
 
 . $(dirname $0)/common.sh
 
-arch="$($DISTRVENDOR -a)"
+arch="$(epm print info -a)"
 case "$arch" in
     x86)
         arch="i686"

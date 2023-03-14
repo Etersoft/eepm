@@ -6,14 +6,14 @@ DESCRIPTION="AIMP (Wine based audio player) from the official site"
 
 . $(dirname $0)/common.sh
 
-pkgtype="$($DISTRVENDOR -p)"
+pkgtype="$(epm print info -p)"
 
 if ! which wine ; then
     epm play wine || fatal
 fi
 
 repack=''
-[ "$($DISTRVENDOR -s)" = "alt" ] && repack='--repack'
+[ "$(epm print info -s)" = "alt" ] && repack='--repack'
 
 case $pkgtype in
     deb)

@@ -22,7 +22,7 @@ arch=x86_64
 pkgtype=rpm
 repack=''
 # we have workaround for their postinstall script, so always repack rpm package
-[ "$($DISTRVENDOR -p)" = "deb" ] || repack='--repack'
+[ "$(epm print info -p)" = "deb" ] || repack='--repack'
 
 PKG=$(epm tool eget --list --latest https://github.com/brave/brave-browser/releases "$PKGNAME-[[:digit:]]*.$arch.$pkgtype")
 

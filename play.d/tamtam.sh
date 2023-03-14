@@ -7,7 +7,7 @@ DESCRIPTION="TamTam messenger from the official site"
 . $(dirname $0)/common.sh
 
 
-arch="$($DISTRVENDOR --debian-arch)"
+arch="$(epm print info --debian-arch)"
 case "$arch" in
     amd64)
         ;;

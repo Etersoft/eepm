@@ -20,7 +20,7 @@ url_by_id_content()
     epm tool eget -q -O- "$URL" | grep -A6 "$id_content" | tail -n1 | sed -e 's|.*"url": "||' -e 's|".*||'
 }
 
-case "$($DISTRVENDOR -e)" in
+case "$(epm print info -e)" in
     Ubuntu/20.04)
         id_content='ubuntu20-id'
         ;;
@@ -49,7 +49,7 @@ case "$($DISTRVENDOR -e)" in
         id_content='win-id'
         ;;
     *)
-        fatal "Unsupported system $($DISTRVENDOR -e)"
+        fatal "Unsupported system $(epm print info -e)"
         ;;
 esac
 

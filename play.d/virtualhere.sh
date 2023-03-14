@@ -8,7 +8,7 @@ DESCRIPTION='Generic VirtualHere USB Server from the official site'
 
 . $(dirname $0)/common.sh
 
-arch="$($DISTRVENDOR -a)"
+arch="$(epm print info -a)"
 case "$arch" in
     x86_64)
         file="vhusbdx86_64"
@@ -33,7 +33,7 @@ case "$arch" in
         ;;
 esac
 
-pkgtype="$($DISTRVENDOR -p)"
+pkgtype="$(epm print info -p)"
 
 tdir=$(mktemp -d)
 trap "rm -fr $tdir" EXIT

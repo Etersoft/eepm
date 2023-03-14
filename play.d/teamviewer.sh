@@ -7,7 +7,7 @@ DESCRIPTION="Teamviewer from the official site"
 . $(dirname $0)/common.sh
 
 
-arch="$($DISTRVENDOR -a)"
+arch="$(epm print info -a)"
 case "$arch" in
     x86_64|x86)
         ;;
@@ -23,7 +23,7 @@ esac
 # See https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=teamviewer
 
 repack=''
-[ "$($DISTRVENDOR -p)" = "deb" ] || repack='--repack'
+[ "$(epm print info -p)" = "deb" ] || repack='--repack'
 
 # epm uses eget to download * names
 epm $repack install "https://download.teamviewer.com/download/linux/$(epm print constructname $PKGNAME)" || exit
