@@ -18,7 +18,7 @@ trap "rm -fr $PKGDIR" EXIT
 
 cd $PKGDIR || fatal
 # https://assets.unigine.com/d/Unigine_valley-4.0.run
-eget --latest https://benchmark.unigine.com/valley "$OPKGNAME*.run"
+epm tool eget --latest https://benchmark.unigine.com/valley "$OPKGNAME*.run"
 
 mv $OPKGNAME*.run $(echo $OPKGNAME*.run | tr "[A-Z_]" "[a-z-]")
 

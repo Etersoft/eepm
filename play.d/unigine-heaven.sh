@@ -17,7 +17,7 @@ trap "rm -fr $PKGDIR" EXIT
 
 cd $PKGDIR || fatal
 # https://assets.unigine.com/d/Unigine_Heaven-4.0.run
-eget --latest https://benchmark.unigine.com/heaven "Unigine_Heaven*.run"
+epm tool eget --latest https://benchmark.unigine.com/heaven "Unigine_Heaven*.run"
 
 mv Unigine_Heaven*.run $(echo Unigine_Heaven*.run | tr "[A-Z_]" "[a-z-]")
 
