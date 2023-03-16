@@ -45,7 +45,7 @@ remove_file /uninstall.sh
 remove_file /version
 
 # lib.req: ERROR: .../opt/unigine-superposition/bin/qt/lib/libssl.so: library libcrypto.so.1.0.0 not found
-patchelf --remove-needed libcrypto.so.1.0.0 $BUILDROOT$PRODUCTDIR/bin/qt/lib/libssl.so
+a= patchelf --remove-needed libcrypto.so.1.0.0 $BUILDROOT$PRODUCTDIR/bin/qt/lib/libssl.so
 
 add_bin_exec_command superposition $PRODUCTDIR/bin/launcher
 add_bin_link_command $PRODUCT /usr/bin/superposition
