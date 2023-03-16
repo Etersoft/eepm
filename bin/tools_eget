@@ -164,13 +164,13 @@ sget()
     if [ "$2" = "/dev/stdout" ] || [ "$2" = "-" ] ; then
        scat "$1"
     elif [ -n "$2" ] ; then
-       docmd __wget -O "$2" "$1"
+       __wget -O "$2" "$1"
     else
 # TODO: поддержка rsync для известных хостов?
 # Не качать, если одинаковый размер и дата
 # -nc
 # TODO: overwrite always
-       docmd __wget $WGETNAMEOPTIONS "$1"
+       __wget $WGETNAMEOPTIONS "$1"
     fi
 }
 
