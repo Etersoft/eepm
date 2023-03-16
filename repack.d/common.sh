@@ -226,6 +226,8 @@ drop_embedded_reqs()
     filter_from_requires "libGLESv2.so()" "libEGL.so()" "libffmpeg.so()"
 }
 
+[ -d "$BUILDROOT" ] || fatal "Run me only with epm repack <package>"
+
 if [ -n "$PRODUCT" ] ; then
     [ -n "$PRODUCTCUR" ] || PRODUCTCUR="$PRODUCT"
     [ -n "$PRODUCTDIR" ] || PRODUCTDIR="/opt/$PRODUCTCUR"
