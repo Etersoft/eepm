@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.34.0
+Version: 3.34.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -147,6 +147,21 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Sat Mar 18 2023 Vitaly Lipatov <lav@altlinux.ru> 3.34.1-alt1
+- epm repack codium: fix path to binary
+- epm repack rustdesk: fix install pynput
+- epm play unigine: fix eget path
+- epm repack unigine-superposition: drop patchelf direct req
+- epm repack Telegram: fix autoupdate disable
+- epm-repack: fix version parsing
+- epm play telegram: add support for beta|version, install stable by default
+- epm play rstudio: use build according to the distro
+- epm play: add 64gram
+- epm repack yandex-browser: add require fonts-ttf-google-noto-emoji-color
+- epm play: add minecraft-launcher
+- add epm moo
+- epm-install: add non interactive install task (--auto support)
+
 * Mon Mar 13 2023 Vitaly Lipatov <lav@altlinux.ru> 3.34.0-alt1
 - epm prescription wine: fix wine-etersoft support
 - epm play: add liteide support
