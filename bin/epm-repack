@@ -196,8 +196,13 @@ EOF
 __set_version_pkgname()
 {
     local alpkg="$1"
-    VERSION="$(echo "$alpkg" | grep -o -P "[-_.]([0-9])([0-9])*(\.[0-9])*" | head -n1 | sed -e 's|^[-_.]||')" #"
+    VERSION="$(echo "$alpkg" | grep -o -P '[-_.][0-9][0-9]*([.]*[0-9])*' | head -n1 | sed -e 's|^[-_.]||')" #"
     [ -n "$VERSION" ] && PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
+    # set version as all between name and extension
+    #local woext="$(echo "alpkg" | sed -e 's|\.tar.*||')"
+    #if [ "$woext" != "$alpkg" ] ; then
+    #    VERSION="$(echo "$woext" " | sed -e "s|^$PKGNAME[-_.]||")"
+    #fi
 }
 
 
