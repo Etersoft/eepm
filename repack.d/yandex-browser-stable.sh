@@ -11,8 +11,9 @@ PRODUCTDIR=/opt/yandex/browser
 . $(dirname $0)/common-chromium-browser.sh
 
 subst '1iConflicts: yandex-browser-beta' $SPEC
-
 subst '10iProvides: yandex-browser = %version' $SPEC
+
+subst '1iRequires:fonts-ttf-google-noto-emoji-color' $SPEC
 
 set_alt_alternatives 65
 

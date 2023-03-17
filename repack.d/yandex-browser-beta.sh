@@ -13,6 +13,8 @@ PRODUCTDIR=/opt/yandex/browser-beta
 subst '1iConflicts: yandex-browser-stable' $SPEC
 subst '10iProvides: yandex-browser = %{version}' $SPEC
 
+subst '1iRequires:fonts-ttf-google-noto-emoji-color' $SPEC
+
 set_alt_alternatives 65
 
 copy_icons_to_share
