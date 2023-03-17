@@ -374,6 +374,10 @@ check_command()
     repack)                   # HELPCMD: repack rpm to local compatibility
         epm_cmd=repack
         ;;
+    moo)
+        epm_cmd=moo
+        direct_args=1
+        ;;
     prescription|recipe)      # HELPCMD: run prescription (a script to achieving the goal), run without args to get list
         epm_cmd=prescription
         direct_args=1
