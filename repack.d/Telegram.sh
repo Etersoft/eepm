@@ -14,6 +14,7 @@ PRODUCTDIR=/opt/Telegram
 subst '1iConflicts:telegram-desktop' $SPEC
 subst '1iConflicts:telegram-desktop-binary' $SPEC
 
+# installing from tar, so we need fill some fields here
 subst "s|^Group:.*|Group: Networking/Instant messaging|" $SPEC
 subst "s|^License: unknown$|License: GPLv2|" $SPEC
 subst "s|^URL:.*|URL: https://desktop.telegram.org/|" $SPEC
@@ -43,15 +44,18 @@ for i in 16 32 48 64 128 256 512 ; do
 done
 
 
-# Disable the official Telegram Desktop updater
+# Disable the official Telegram Desktop updater, creating menu entry (desktop file) and settings entries
+# See https://github.com/telegramdesktop/tdesktop/issues/25718
 mkdir -p "$BUILDROOT/etc/tdesktop"
-echo "$PRODUCTCUR" >"$BUILDROOT/etc/tdesktop/externalupdater"
+# telegram checks with real path to the binary
+echo "$PRODUCTDIR/$PRODUCT" >"$BUILDROOT/etc/tdesktop/externalupdater"
 pack_file /etc/tdesktop/externalupdater
 remove_file /opt/Telegram/Updater
 
+# fixed above
 # Hack against https://bugzilla.altlinux.org/42402
 # We can't forbit creating a desktop file, so just hide it
-subst "s|Terminal=false|NoDisplay=true|" $BUILDROOT$PRODUCTDIR/Telegram
+#subst "s|Terminal=false|NoDisplay=true|" $BUILDROOT$PRODUCTDIR/Telegram
 
 # TODO: tg.protocol
 # https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=telegram-desktop-bin
@@ -63,9 +67,8 @@ cat <<EOF >$BUILDROOT/usr/share/applications/$PRODUCT.desktop
 Version=1.0
 Name=Telegram Desktop
 Comment=Official desktop version of Telegram messaging app
-TryExec=$PRODUCTDIR/Telegram
-Exec=$PRODUCTDIR/Telegram -- %u
-Icon=$PRODUCT
+Exec=$PRODUCTCUR -- %u
+Icon=$iconname
 Terminal=false
 StartupWMClass=TelegramDesktop
 Type=Application
@@ -74,4 +77,4 @@ MimeType=x-scheme-handler/tg;
 Keywords=tg;chat;im;messaging;messenger;sms;tdesktop;
 X-GNOME-UsesNotifications=true
 EOF
-subst "s|%files|%files\n/usr/share/applications/$PRODUCT.desktop|" $SPEC
+pack_file /usr/share/applications/$PRODUCT.desktop
