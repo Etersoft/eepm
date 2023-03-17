@@ -265,9 +265,12 @@ __prepare_source_package()
         newalpkg=$PKGNAME-$VERSION.$pkgtype
         #[ -n "$PKGNAME" ] || PKGNAME=$(basename $alpkg .$pkgtype)
         if [ "$pkgtype" = "tar" ] || [ "$pkgtype" = "tar.gz" ] || [ "$pkgtype" = "tgz" ] ; then
-            mv $alpkg $newalpkg
-            :
+            # just rename supported formats
+            if [ "$alpkg" != "$newalpkg" ] ; then
+                mv $alpkg $newalpkg
+            fi
         else
+            # converts directly unsupported formats
             newalpkg=$PKGNAME-$VERSION.tar
             #newalpkg=$(basename $alpkg .$pkgtype).tar
             assure_exists erc || epm ei erc || fatal
