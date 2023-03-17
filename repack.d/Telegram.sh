@@ -6,6 +6,7 @@ SPEC="$2"
 
 PRODUCT=Telegram
 PRODUCTCUR=telegram-desktop
+PKGNAME=$(basename $0 .sh)
 PRODUCTDIR=/opt/Telegram
 
 . $(dirname $0)/common.sh
@@ -13,6 +14,11 @@ PRODUCTDIR=/opt/Telegram
 # /usr/bin/Telegram
 subst '1iConflicts:telegram-desktop' $SPEC
 subst '1iConflicts:telegram-desktop-binary' $SPEC
+
+for i in Telegram Telegram-beta ; do
+    [ "$i"  = "$PKGNAME" ] && continue
+    subst "1iConflicts:$i" $SPEC
+done
 
 # installing from tar, so we need fill some fields here
 subst "s|^Group:.*|Group: Networking/Instant messaging|" $SPEC
@@ -27,12 +33,8 @@ mkdir $BUILDROOT/opt
 mv $BUILDROOT/$ROOTDIR $BUILDROOT$PRODUCTDIR
 subst "s|\"/$ROOTDIR/|\"$PRODUCTDIR/|" $SPEC
 
-# add binary to the search path
-mkdir -p $BUILDROOT/usr/bin/
-ln -s $PRODUCTDIR/Telegram $BUILDROOT/usr/bin/$PRODUCT
-subst "s|%files|%files\n/usr/bin/$PRODUCT|" $SPEC
-ln -s $PRODUCTDIR/Telegram $BUILDROOT/usr/bin/$PRODUCTCUR
-subst "s|%files|%files\n/usr/bin/$PRODUCTCUR|" $SPEC
+add_bin_link_command
+add_bin_link_command $PRODUCTCUR $PRODUCT
 
 # Icons
 iconname=$PRODUCT
@@ -69,7 +71,6 @@ Name=Telegram Desktop
 Comment=Official desktop version of Telegram messaging app
 Exec=$PRODUCTCUR -- %u
 Icon=$iconname
-Terminal=false
 StartupWMClass=TelegramDesktop
 Type=Application
 Categories=Chat;Network;InstantMessaging;Qt;
