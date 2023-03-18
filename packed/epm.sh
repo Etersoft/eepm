@@ -31,7 +31,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.34.0"
+EPMVERSION="3.34.1"
 
 load_helper()
 {
@@ -3777,15 +3777,34 @@ epm_print_install_names_command()
 	esac
 }
 
+apt_repo_prepare()
+{
+    assure_exists apt-repo
+    [ -n "$non_interactive" ] || return
+
+    set_sudo
+    trap "$SUDO rm /etc/apt/apt.conf.d/eepm-apt-noninteractive.conf 2>/dev/null" EXIT
+    echo 'APT::Get::Assume-Yes "true";' | $SUDO tee /etc/apt/apt.conf.d/eepm-apt-noninteractive.conf >/dev/null
+}
+
+apt_repo_after()
+{
+    [ -n "$non_interactive" ] || return
+
+    $SUDO rm /etc/apt/apt.conf.d/eepm-apt-noninteractive.conf 2>/dev/null
+}
 
 epm_install()
 {
     if [ "$BASEDISTRNAME" = "alt" ] ; then
         if tasknumber "$pkg_names" >/dev/null ; then
-            assure_exists apt-repo
-            # TODO: add --auto support
+            local res
+            # TODO: don't use apt-repo
+            apt_repo_prepare
             sudocmd_foreach "apt-repo test" $(tasknumber $pkg_names)
-            return
+            res=$?
+            apt_repo_after
+            return $res
         fi
     fi
 
@@ -4316,6 +4335,22 @@ epm_mark()
 		fatal "Unknown command $ epm repo '$CMD'"
 		;;
 esac
+
+}
+
+# File bin/epm-moo:
+
+epm_moo()
+{
+
+    local figlet cowsay docmd
+    epm assure figlet && figlet="figlet"
+    epm assure cowsay cowsay-soft && cowsay="cowsay"
+
+    [ -n "$verbose" ] && docmd="docmd"
+    [ -n "$figlet" ] && $docmd $figlet "EPM"
+    [ -n "$cowsay" ] && $docmd $cowsay "EPM from Etersoft"
+    [ -n "$figlet" ] && $docmd $figlet "Etersoft"
 
 }
 
@@ -7467,8 +7502,13 @@ EOF
 __set_version_pkgname()
 {
     local alpkg="$1"
-    VERSION="$(echo "$alpkg" | grep -o -P "[-_.]([0-9])([0-9])*(\.[0-9])*" | head -n1 | sed -e 's|^[-_.]||')" #"
+    VERSION="$(echo "$alpkg" | grep -o -P '[-_.][0-9][0-9]*([.]*[0-9])*' | head -n1 | sed -e 's|^[-_.]||')" #"
     [ -n "$VERSION" ] && PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
+    # set version as all between name and extension
+    #local woext="$(echo "alpkg" | sed -e 's|\.tar.*||')"
+    #if [ "$woext" != "$alpkg" ] ; then
+    #    VERSION="$(echo "$woext" " | sed -e "s|^$PKGNAME[-_.]||")"
+    #fi
 }
 
 
@@ -7523,9 +7563,12 @@ __prepare_source_package()
         newalpkg=$PKGNAME-$VERSION.$pkgtype
         #[ -n "$PKGNAME" ] || PKGNAME=$(basename $alpkg .$pkgtype)
         if [ "$pkgtype" = "tar" ] || [ "$pkgtype" = "tar.gz" ] || [ "$pkgtype" = "tgz" ] ; then
-            mv $alpkg $newalpkg
-            :
+            # just rename supported formats
+            if [ "$alpkg" != "$newalpkg" ] ; then
+                mv $alpkg $newalpkg
+            fi
         else
+            # converts directly unsupported formats
             newalpkg=$PKGNAME-$VERSION.tar
             #newalpkg=$(basename $alpkg .$pkgtype).tar
             assure_exists erc || epm ei erc || fatal
@@ -11414,13 +11457,13 @@ sget()
     if [ "$2" = "/dev/stdout" ] || [ "$2" = "-" ] ; then
        scat "$1"
     elif [ -n "$2" ] ; then
-       docmd __wget -O "$2" "$1"
+       __wget -O "$2" "$1"
     else
 # TODO: поддержка rsync для известных хостов?
 # Не качать, если одинаковый размер и дата
 # -nc
 # TODO: overwrite always
-       docmd __wget $WGETNAMEOPTIONS "$1"
+       __wget $WGETNAMEOPTIONS "$1"
     fi
 }
 
@@ -12559,6 +12602,10 @@ check_command()
         ;;
     repack)                   # HELPCMD: repack rpm to local compatibility
         epm_cmd=repack
+        ;;
+    moo)
+        epm_cmd=moo
+        direct_args=1
         ;;
     prescription|recipe)      # HELPCMD: run prescription (a script to achieving the goal), run without args to get list
         epm_cmd=prescription
