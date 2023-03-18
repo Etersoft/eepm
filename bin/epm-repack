@@ -250,7 +250,7 @@ __prepare_source_package()
         [ -x "$alpkg" ] || docmd chmod u+x $verbose "$alpkg"
         ./$alpkg --appimage-extract || fatal
         alpkg=$PKGNAME-$VERSION.tar
-        assure_exists erc || epm ei erc || fatal
+        assure_exists_erc
         # make a tar for alien
         a= erc a $alpkg squashfs-root
         return
@@ -259,7 +259,7 @@ __prepare_source_package()
     __set_version_pkgname $alpkg
     if [ -n "$VERSION" ] ; then
         # TODO: don't use erc for detect type? then we potentially can skip install it
-        assure_exists erc || epm ei erc || fatal
+        assure_exists_erc
         pkgtype="$(a= erc type $alpkg)"
         local newalpkg
         newalpkg=$PKGNAME-$VERSION.$pkgtype
@@ -273,7 +273,7 @@ __prepare_source_package()
             # converts directly unsupported formats
             newalpkg=$PKGNAME-$VERSION.tar
             #newalpkg=$(basename $alpkg .$pkgtype).tar
-            assure_exists erc || epm ei erc || fatal
+            assure_exists_erc
             a= erc repack $alpkg $newalpkg || fatal
         fi
         if [ "$alpkg" != "$newalpkg" ] ; then

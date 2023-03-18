@@ -53,7 +53,7 @@ check_pkg_integrity()
 		true
 		;;
 	*)
-		assure_exists erc || epm ei erc || fatal "erc is not available. can't check the package"
+		assure_exists_erc
 		docmd erc test "$PKG" && return
 		;;
 	esac
