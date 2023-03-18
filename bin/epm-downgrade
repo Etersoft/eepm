@@ -23,7 +23,7 @@ __epm_add_alt_apt_downgrade_preferences()
 {
 	[ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists"
 	cat <<EOF | sudocmd tee /etc/apt/preferences
-# main repo
+# classic repo
 Package: *
 Pin: release c=classic
 Pin-Priority: 1001
@@ -33,10 +33,15 @@ Package: *
 Pin: release c=addon
 Pin-Priority: 1101
 
+# main repo
+Package: *
+Pin: release c=main
+Pin-Priority: 1201
+
 # overload with test (task) repo
 Package: *
 Pin: release c=task
-Pin-Priority: 1201
+Pin-Priority: 1301
 EOF
 }
 
