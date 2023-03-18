@@ -28,6 +28,10 @@ for i in *x86* ; do
     remove_file $PRODUCTDIR/bin/$i
 done
 
+pack_dir $PRODUCTDIR
+pack_dir $PRODUCTDIR/bin
+
+
 add_bin_link_command $PRODUCT /usr/bin/valley
 
 epm assure patchelf || exit
