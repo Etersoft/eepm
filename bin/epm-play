@@ -231,6 +231,92 @@ Options:
 EOF
 }
 
+
+__epm_play_remove()
+{
+    local prescription
+    for prescription in $* ; do
+        if __check_play_script "$prescription" ; then
+            __epm_play_run $prescription --remove
+            __remove_installed_app "$prescription"
+        else
+            psdir=$prsdir
+            __check_play_script "$prescription" || fatal "We have no idea how to remove $prescription (checked in $psdir and $prsdir)"
+            __epm_play_run "$prescription" --remove || fatal "There was some error during run the script."
+        fi
+    done
+}
+
+
+__epm_play_update()
+{
+    local i, RES
+    local CMDUPDATE="$1"
+    shift
+    RES=0
+    for i in $* ; do
+        echo
+        echo "$i"
+            if ! __is_app_installed "$i" ; then
+                warning "$i is not installed"
+                continue
+            fi
+        prescription="$i"
+        if ! __check_play_script $prescription ; then
+            warning "Can't find executable play script for $prescription. Try epm play --remove $prescription if you don't need it anymore."
+            RES=1
+            continue
+        fi
+        __epm_play_run $prescription $CMDUPDATE || RES=$?
+    done
+    return $RES
+}
+
+
+# name argument
+__epm_play_install_one()
+{
+    local prescription="$1"
+    shift
+
+    if __check_play_script "$prescription" ; then
+        #__is_app_installed "$prescription" && info "$$prescription is already installed (use --remove to remove)" && exit 1
+        __epm_play_run "$prescription" --run "$@" && __save_installed_app "$prescription" || fatal "There was some error during install the application."
+    else
+        opsdir=$psdir
+        psdir=$prsdir
+        __check_play_script "$prescription" || fatal "We have no idea how to play $prescription (checked in $opsdir and $prsdir)"
+        __epm_play_run "$prescription" --run "$@" || fatal "There was some error during run $prescription script."
+    fi
+}
+
+
+__epm_play_install()
+{
+   local i RES
+   RES=0
+
+   load_helper epm-check_updated_repo
+
+   update_repo_if_needed
+
+   while [ -n "$1" ] ; do
+       local p="$1"
+       local v=''
+       n="$(echo $2)"
+       if [ "$n" = "=" ] ; then
+           v="$3"
+           shift 3
+       else
+           shift
+       fi
+       __epm_play_install_one $p $v || RES=1
+   done
+
+   return $RES
+}
+
+
 epm_play()
 {
 local psdir="$(realpath $CONFIGDIR/play.d)"
@@ -244,16 +330,7 @@ fi
 
 if [ "$1" = "--remove" ] || [ "$1" = "remove" ]  ; then
     shift
-    prescription="$1"
-    shift
-    if __check_play_script "$prescription" ; then
-        __epm_play_run $prescription --remove "$@"
-        __remove_installed_app "$prescription"
-    else
-        psdir=$prsdir
-        __check_play_script "$prescription" || fatal "We have no idea how to remove $prescription (checked in $psdir and $prsdir)"
-        __epm_play_run "$prescription" --remove "$@" || fatal "There was some error during run the script."
-    fi
+    __epm_play_remove "$@"
     exit
 fi
 
@@ -262,30 +339,22 @@ if [ "$1" = "--update" ] ; then
     shift
     local CMDUPDATE="--update"
     [ -n "$force" ] && CMDUPDATE="--run"
-    if [ "$1" = "all" ] ; then
-        shift
-        RES=0
-        for i in $(__list_installed_app) ; do
-            echo
-            echo "$i"
-            prescription="$i"
-            if ! __check_play_script $prescription ; then
-                warning "Can't find executable play script for $prescription. Try epm play --remove $prescription if you don't need it anymore."
-                RES=1
-                continue
-            fi
-            __epm_play_run $prescription $CMDUPDATE "$@" || RES=$?
-        done
-        exit $RES
-    fi
+
     if [ -z "$1" ] ; then
         fatal "run --update with 'all' or a project name"
     fi
-    __is_app_installed "$1" || fatal "$1 is not installed"
-    prescription="$1"
-    shift
-    __epm_play_run $prescription $CMDUPDATE "$@"
+
+    local list
+    if [ "$1" = "all" ] ; then
+        shift
+        list="$(__list_installed_app)"
+    else
+        list="$*"
+    fi
+
+    __epm_play_update $CMDUPDATE $list
     exit
+
 fi
 
 if [ "$1" = "--installed" ] || [ "$1" = "installed" ]  ; then
@@ -338,20 +407,5 @@ if [ "$1" = "--list-scripts" ] || [ "$1" = "list-scripts" ] ; then
     exit
 fi
 
-prescription="$1"
-shift
-
-load_helper epm-check_updated_repo
-
-update_repo_if_needed
-
-if __check_play_script "$prescription" ; then
-    #__is_app_installed "$prescription" && info "$$prescription is already installed (use --remove to remove)" && exit 1
-    __epm_play_run "$prescription" --run "$@" && __save_installed_app "$prescription" || fatal "There was some error during install the application."
-else
-    opsdir=$psdir
-    psdir=$prsdir
-    __check_play_script "$prescription" || fatal "We have no idea how to play $prescription (checked in $opsdir and $prsdir)"
-    __epm_play_run "$prescription" --run "$@" || fatal "There was some error during run the script."
-fi
+__epm_play_install $(echo "$*" | sed -e 's|=| = |g')
 }
