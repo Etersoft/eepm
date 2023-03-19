@@ -4,7 +4,7 @@ PKGNAME=Telegram
 SUPPORTEDARCHES="x86_64"
 DESCRIPTION="Telegram client from the official site"
 PRODUCTALT="stable beta"
-TIPS="Run 'epm play telegram-desktop beta' to install beta version of the Telegram client. Run 'epm play telegram-desktop version' to install the version of the Telegram client."
+TIPS="Run 'epm play telegram-desktop=beta' to install beta version of the Telegram client. Run 'epm play telegram-desktop version' to install the version of the Telegram client."
 
 BRANCH="[0-9]"
 if echo "$2" | grep -q "beta" || epm installed Telegram-beta ; then

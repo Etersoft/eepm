@@ -1,7 +1,7 @@
 #!/bin/sh
 
 DESCRIPTION="Yandex browser from the official site"
-TIPS="Run 'epm play yandex-browser beta' to install beta version of the browser."
+TIPS="Run 'epm play yandex-browser=beta' to install beta version of the browser."
 
 PRODUCTALT="stable beta"
 BRANCH=stable
