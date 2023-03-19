@@ -300,7 +300,23 @@ __epm_play_install()
 
    update_repo_if_needed
 
+   # get all options
+   options=''
+   for i in  $* ; do
+       case "$i" in
+           --*)
+               options="$options $i"
+               ;;
+       esac
+   done
+
    while [ -n "$1" ] ; do
+       case "$1" in
+           --*)
+               shift
+               continue
+               ;;
+       esac
        local p="$1"
        local v=''
        n="$(echo $2)"
@@ -310,7 +326,7 @@ __epm_play_install()
        else
            shift
        fi
-       __epm_play_install_one $p $v || RES=1
+       __epm_play_install_one $p $v $options || RES=1
    done
 
    return $RES
