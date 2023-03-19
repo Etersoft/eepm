@@ -132,6 +132,7 @@ case $PROGNAME in
         ;;
     epmp)                      # HELPSHORT: alias for epm play
         epm_cmd=play
+        direct_args=1
         ;;
     epms)                      # HELPSHORT: alias for epm search
         epm_cmd=search
@@ -326,9 +327,11 @@ check_command()
         ;;
     mark)                     # HELPCMD: mark package as manually or automatically installed or hold/unhold it (see epm mark --help)
         epm_cmd=mark
+        direct_args=1
         ;;
     history)                  # HELPCMD: show a log of actions taken by the software management
         epm_cmd=history
+        direct_args=1
         ;;
     autoorphans|--orphans|remove-orphans)    # HELPCMD: remove all packages not from the repository
         epm_cmd=autoorphans
