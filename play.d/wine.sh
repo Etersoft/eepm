@@ -1,5 +1,10 @@
 #!/bin/sh
 
+PKGNAME=wine
+SUPPORTEDARCHES="x86_64 x86"
+DESCRIPTION='Wine 32/64 from the repo'
+TIPS="Run epm play wine=wine-vanilla to install wine-vanilla package"
+
 MAIN=wine
 
 vendor="$(epm print info -s)" ; [ "$vendor" = "alt" ] || { echo "Only ALT distros is supported for now" ; exit 1 ; }
@@ -7,23 +12,26 @@ arch="$(epm print info -a)"
 
 PKGCOMMON="wine-mono wine-gecko winetricks"
 
+[ -n "$2" ] && MAIN="$2"
+
+if [ "$MAIN" = "wine-etersoft" ] ; then
+    PKGCOMMON="wine-etersoft-mono wine-etersoft-gecko wine-etersoft-winetricks"
+    PKGNAMES32="wine32-etersoft"
+fi
+
 if [ "$1" = "--remove" ] ; then
     epm remove $(epmqp $MAIN-)
     epm remove $PKGCOMMON
     exit
 fi
 
-
-[ "$1" != "--run" ] && echo "Install $MAIN packages (add wine-vanilla if you need these packages)" && exit
+. $(dirname $0)/common.sh
 
 ONLY32=''
 [ "$2" == "--only-i586" ] && ONLY32=1 && shift
 [ -n "$2" ] && MAIN="$2"
 
-if [ "$MAIN" = "wine-etersoft" ] ; then
-    PKGCOMMON="wine-etersoft-mono wine-etersoft-gecko wine-etersoft-winetricks"
-    PKGNAMES32="wine32-etersoft"
-else
+if [ "$MAIN" != "wine-etersoft" ] ; then
 
 # do some magic: if winetricks more than 20210206, we have new wine package naming
 epm install winetricks || exit 1
