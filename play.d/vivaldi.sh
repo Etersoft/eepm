@@ -38,11 +38,12 @@ if [ "$BRANCH" = "snapshot" ] ; then
     # https://help.vivaldi.com/desktop/install-update/install-snapshots-on-non-deb-rpm-distros/
     DEBARCH=$arch
     VIVALDI_STREAM=vivaldi-snapshot
-    VIVALDI_VERSION=$(epm tool eget -O- "https://repo.vivaldi.com/archive/deb/dists/stable/main/binary-$DEBARCH/Packages.gz" | gzip -d | grep -A6 -x "Package: $VIVALDI_STREAM" | sed -n 's/^Version: \(\([0-9]\+\.\)\{3\}[0-9]\+-[0-9]\+\)/\1/p' | sort -t. -k 1,1n -k 2,2n -k 3,3n -k 4,4n | tail -n 1) #"
+    VIVALDI_VERSION=$(epm tool eget -O- "https://repo.vivaldi.com/archive/deb/dists/stable/main/binary-$DEBARCH/Packages.gz" | gzip -d | grep -A6 -x "Package: $VIVALDI_STREAM" | sed -n 's/^Version: \(\([0-9]\+\.\)\{3\}[0-9]\+-[0-9]\+\)/\1/p' | sort -t. -k 1,1n -k 2,2n -k 3,3n -k 4,4n | tail -n 1) #'
     PKGURL="https://downloads.vivaldi.com/snapshot/vivaldi-snapshot_${VIVALDI_VERSION}_$arch.deb"
 else
-    PKGURL="$(epm tool eget --list --latest https://vivaldi.com/ru/download "$(epm print constructname $PKGNAME "*" $arch deb)")" || fatal
+    PKGURL="$(epm tool eget --list --latest https://vivaldi.com/ru/download "$(epm print constructname $PKGNAME "*" $arch deb)")" #" || fatal
 fi
 epm install $PKGURL || fatal
 
-epm play vivaldi-codecs-ffmpeg-extra $BRANCH
+UPDATEFFMPEG=$(epm ql $PKGNAME | grep update-ffmpeg) || fatal
+epm pack --install $PKGNAME-codecs-ffmpeg-extra $UPDATEFFMPEG
