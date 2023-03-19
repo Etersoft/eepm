@@ -41,9 +41,11 @@ __epm_pack()
 	$repackcode $tarname $filefortarname || fatal
 	returntarname="$(cat $filefortarname)"
 
-	# TODO
-	cp $returntarname .
-	exit
+	if [ -n "$download_only" ] ; then
+		cp $returntarname .
+		return
+	fi
+
 
 	mv $returntarname $tmpdir/ || fatal
 	cd $tmpdir || fatal

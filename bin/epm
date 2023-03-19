@@ -100,6 +100,7 @@ short=
 direct=
 sort=
 non_interactive=$EPM_AUTO
+download_only=
 interactive=
 force_yes=
 skip_installed=
@@ -465,6 +466,9 @@ check_option()
         ;;
     --noscripts)           # HELPOPT: disable scripts in install packages
         noscripts="--noscripts"
+        ;;
+    --download-only)       # HELPOPT: download only the package
+        download_only="--download-only"
         ;;
     --sort)               # HELPOPT: sort output, f.i. --sort=size (supported only for packages command)
         # TODO: how to read arg?
