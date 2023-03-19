@@ -678,6 +678,11 @@ has_space()
     estrlist -- has_space "$@"
 }
 
+is_url()
+{
+    echo "$1" | grep -q "^[fhtps]*://"
+}
+
 # compatibility layer
 # add realpath if missed
 if ! which realpath 2>/dev/null >/dev/null ; then
