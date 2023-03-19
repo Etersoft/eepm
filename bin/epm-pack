@@ -38,18 +38,19 @@ __epm_pack()
 #TODO: --verbose support
 	set_sudo
 	export SUDO
-	$repackcode $tarname $filefortarname || fatal
-	returntarname="$(cat $filefortarname)"
+	$repackcode "$tarname" "$filefortarname" || fatal
+	returntarname="$(cat "$filefortarname")" || fatal "pack script $repackcode didn't set tarname"
 
 	if [ -n "$download_only" ] ; then
 		cp $returntarname .
 		return
 	fi
 
+	[ -s "$returntarname" ] || fatal "pack script $repackcode didn't return tarname"
 
 	mv $returntarname $tmpdir/ || fatal
 	cd $tmpdir || fatal
-	epm repack --quiet "$(basename "$returntarname")"
+	docmd epm repack --quiet "$(basename "$returntarname")"
 	packed_pkgs="$tmpdir/$(echo *.rpm)"
 }
 
@@ -89,16 +90,17 @@ epm_pack()
         pkg_urls="$tarname"
         load_helper epm-download
         __handle_pkg_urls_to_install
-        tarname="$pkg_files"
+        # drop spaces
+        tarname="$(echo $pkg_files)"
     elif [ -d "$tarname" ] ; then
-        fatal "FIXME"
+        fatal "FIXME: implement packing of the dir $tarname?"
         tarname=''
     fi
 
-    if __epm_pack $packname $tarname && [ -n "$packed_pkgs" ] ; then
+    if __epm_pack "$packname" "$tarname" && [ -n "$packed_pkgs" ] ; then
 #FIXME
         if [ -n "$install" ] ; then
-            epm install $packed_pkgs
+            docmd epm install $packed_pkgs
             return
         fi
 
