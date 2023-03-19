@@ -2,12 +2,17 @@
 
 PKGNAME=portproton
 SUPPORTEDARCHES="x86_64"
-DESCRIPTION='' #"PortProton from the official site"
+DESCRIPTION='PortProton (from the repo if exists or from the official site)'
 
 . $(dirname $0)/common.sh
 
-epm pack --install $PKGNAME https://github.com/Castro-Fidel/PortWINE/archive/refs/heads/master.tar.gz
-res=$?
+if ! epm install portproton ; then
+    PKGURL="https://github.com/Castro-Fidel/PortProton_dpkg/releases/download/portproton_1.0-2_amd64/portproton_1.0-2_amd64.deb"
+    epm install $PKGURL
+    res=$?
+fi
+
+#epm pack --install $PKGNAME https://github.com/Castro-Fidel/PortWINE/archive/refs/heads/master.tar.gz
 
 epm play i586-fix
 
