@@ -1,6 +1,5 @@
 #!/bin/sh
 
-PRODUCTDIR=/opt/yandex/browser
 DESCRIPTION="Yandex browser from the official site"
 TIPS="Run 'epm play yandex-browser beta' to install beta version of the browser."
 
@@ -8,7 +7,6 @@ PRODUCTALT="stable beta"
 BRANCH=stable
 if [ "$2" = "beta" ] || epm installed yandex-browser-beta ; then
     BRANCH=beta
-    PRODUCTDIR=/opt/yandex/browser-$BRANCH
 fi
 
 PKGNAME=yandex-browser-$BRANCH
