@@ -92,6 +92,7 @@ noremove=
 dryrun=
 force=
 repack=
+install=
 inscript=
 scripts=
 noscripts=
@@ -374,6 +375,10 @@ check_command()
     repack)                   # HELPCMD: repack rpm to local compatibility
         epm_cmd=repack
         ;;
+    pack)                   # HELPCMD: pack tarball or dir to a rpm package
+        epm_cmd=pack
+        direct_args=1
+        ;;
     moo)
         epm_cmd=moo
         direct_args=1
@@ -448,6 +453,9 @@ check_option()
         ;;
     --repack)              # HELPOPT: repack rpm package(s) before install
         repack="--repack"
+        ;;
+    --install)             # HELPOPT: install packed rpm package(s)
+        install="--install"
         ;;
     --scripts)             # HELPOPT: include scripts in repacked rpm package(s) (see --repack or repacking when foreign package is installed)
         scripts="--scripts"

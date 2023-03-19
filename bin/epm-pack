@@ -1,0 +1,112 @@
+#!/bin/sh
+#
+# Copyright (C) 2023  Etersoft
+# Copyright (C) 2023  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+load_helper epm-sh-altlinux
+load_helper epm-assure
+
+[ -n "$EPM_PACK_SCRIPTS_DIR" ] || EPM_PACK_SCRIPTS_DIR="$CONFIGDIR/pack.d"
+
+
+__epm_pack()
+{
+	local packname="$1"
+	local tarname="$2"
+	returntarname=''
+
+	local repackcode="$EPM_PACK_SCRIPTS_DIR/$packname.sh"
+	[ -x "$repackcode" ] || fatal "Can't find script $repackcode for packname $packname"
+
+	tmpdir=$(mktemp -d)
+	filefortarname="$tmpdir/filefortarname"
+	trap "rm -rf $tmpdir" EXIT
+#TODO: --verbose support
+	set_sudo
+	export SUDO
+	$repackcode $tarname $filefortarname || fatal
+	returntarname="$(cat $filefortarname)"
+
+	# TODO
+	cp $returntarname .
+	exit
+
+	mv $returntarname $tmpdir/ || fatal
+	cd $tmpdir || fatal
+	epm repack --quiet "$(basename "$returntarname")"
+	packed_pkgs="$tmpdir/$(echo *.rpm)"
+}
+
+epm_pack_help()
+{
+    cat <<EOF
+epm pack - create rpm package from files
+Usage: epm pack <packname> <tar|url|dir>
+Options:
+    <packname>            - receipt packanme
+    <dir>                 - create tarball from the dir before
+    <url>                 - download tar from url
+    --install             - install after create
+EOF
+}
+
+
+epm_pack()
+{
+
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
+        epm_pack_help
+        exit
+    fi
+
+#TODO
+    trap "__epm_remove_tmp_files" EXIT
+
+    local packname="$1"
+    local tarname="$2"
+
+    local CURDIR="$(pwd)"
+
+    [ -n "$packname" ] || fatal "run with packname, see --help"
+
+    if is_url "$tarname"; then
+        pkg_urls="$tarname"
+        load_helper epm-download
+        __handle_pkg_urls_to_install
+        tarname="$pkg_files"
+    elif [ -d "$tarname" ] ; then
+        fatal "FIXME"
+        tarname=''
+    fi
+
+    if __epm_pack $packname $tarname && [ -n "$packed_pkgs" ] ; then
+#FIXME
+        if [ -n "$install" ] ; then
+            epm install $packed_pkgs
+            return
+        fi
+
+        cp $packed_pkgs "$CURDIR"
+        if [ -z "$quiet" ] ; then
+            echo
+            echo "Packed packages:"
+            for i in $packed_pkgs ; do
+                echo "	$CURDIR/$(basename "$i")"
+            done
+        fi
+    fi
+}
