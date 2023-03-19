@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.34.1
+Version: 3.35.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -87,6 +87,10 @@ mkdir -p %buildroot%_sysconfdir/eepm/repack.d/
 cp repack.d/* %buildroot%_sysconfdir/eepm/repack.d/
 chmod 0755 %buildroot%_sysconfdir/eepm/repack.d/*.sh
 
+mkdir -p %buildroot%_sysconfdir/eepm/pack.d/
+cp pack.d/* %buildroot%_sysconfdir/eepm/pack.d/
+chmod 0755 %buildroot%_sysconfdir/eepm/pack.d/*.sh
+
 mkdir -p %buildroot%_sysconfdir/eepm/prescription.d/
 cp prescription.d/* %buildroot%_sysconfdir/eepm/prescription.d/
 chmod 0755 %buildroot%_sysconfdir/eepm/prescription.d/*.sh
@@ -114,12 +118,14 @@ rm -v %buildroot%_bindir/yum
 %doc README.md TODO LICENSE
 %dir %_sysconfdir/eepm/
 %dir %_sysconfdir/eepm/play.d/
+%dir %_sysconfdir/eepm/pack.d/
 %dir %_sysconfdir/eepm/repack.d/
 %dir %_sysconfdir/eepm/prescription.d/
 %config(noreplace) %_sysconfdir/eepm/eepm.conf
 %config(noreplace) %_sysconfdir/eepm/serv.conf
 %config(noreplace) %_sysconfdir/eepm/*.list
 %config(noreplace) %_sysconfdir/eepm/repack.d/*
+%config(noreplace) %_sysconfdir/eepm/pack.d/*
 %config(noreplace) %_sysconfdir/eepm/play.d/*
 %config(noreplace) %_sysconfdir/eepm/prescription.d/*
 %_bindir/epm*
@@ -147,6 +153,16 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Mon Mar 20 2023 Vitaly Lipatov <lav@altlinux.ru> 3.35.0-alt1
+- epm play: rewrite, add applications list support, use app=version form
+- add epm pack
+- epm play: add initial portproton support
+- epm pack: add 1c83-client support
+- rewrite all browser-codecs install via epm pack
+- epm play opera: rewrite, fix other systems install
+- epm play: move wine to play list
+- epm repack: add r7-office (with support for 7.3)
+
 * Sat Mar 18 2023 Vitaly Lipatov <lav@altlinux.ru> 3.34.1-alt1
 - epm repack codium: fix path to binary
 - epm repack rustdesk: fix install pynput
