@@ -32,16 +32,24 @@ remove_file $PRODUCTDIR/opera_autoupdate.version
 remove_file $PRODUCTDIR/opera_autoupdate
 remove_file $PRODUCTDIR/setup_repo.sh
 
+#if epm installed ffmpeg-plugin-browser ; then
+#    libffmpeg="$(epm -ql ffmpeg-plugin-browser | grep libfmpeg.so)" || fatal
+#fi
+# test with https://archive.org/details/H265_Test
 cat <<EOF >$BUILDROOT$PRODUCTDIR/resources/ffmpeg_preload_config.json
 [
-  "/opt/chromium-browser/libffmpeg.so"
+  "/usr/lib64/ffmpeg-plugin-browser/libffmpeg.so",
+  "/opt/chromium-browser/libffmpeg.so",
+  "../../../../chromium-ffmpeg/libffmpeg.so",
+  "/usr/lib/chromium-browser/libffmpeg.so",
+  "/usr/lib/chromium-browser/libs/libffmpeg.so"
 ]
 EOF
 
 # alternative way
-mkdir -p $BUILDROOT$PRODUCTDIR/lib_extra/
-ln -s /opt/chromium-browser/libffmpeg.so $BUILDROOT$PRODUCTDIR/lib_extra/libffmpeg.so
-pack_file $PRODUCTDIR/lib_extra/libffmpeg.so
+#mkdir -p $BUILDROOT$PRODUCTDIR/lib_extra/
+#ln -s /opt/chromium-browser/libffmpeg.so $BUILDROOT$PRODUCTDIR/lib_extra/libffmpeg.so
+#pack_file $PRODUCTDIR/lib_extra/libffmpeg.so
 
 #rm -fv $BUILDROOT/usr/bin/$PRODUCTCUR
 add_bin_commands
@@ -55,7 +63,7 @@ for i in $BUILDROOT$PRODUCTDIR/$PRODUCTCUR ; do
     a= patchelf --set-rpath "$PRODUCTDIR/lib_extra:$PRODUCTDIR" $i
 done
 
-subst '1iRequires: chromium-codecs-ffmpeg-extra >= 103' $SPEC
+#subst '1iRequires: chromium-codecs-ffmpeg-extra >= 103' $SPEC
 
 install_deps
 

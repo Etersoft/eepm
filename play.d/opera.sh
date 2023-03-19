@@ -19,27 +19,16 @@ SUPPORTEDARCHES="x86_64"
 
 arch="amd64"
 
-epm play chromium-codecs-ffmpeg-extra || fatal
+# will use libffmpeg.so (via config added in repack)
+epm install --skip-installed ffmpeg-plugin-browser || epm install --skip-installed chromium-codecs-ffmpeg-extra || epm play chromium-codecs-ffmpeg-extra
 
-# Stable branch here for deb too
-if [ "$BRANCH" = "stable" ] ; then
-
-URL="https://ftp.opera.com/pub/opera/desktop/"
-PKGBASEURL="$(epm tool eget --list --latest $URL/*)"linux
-
-if ! check_url_is_accessible $PKGBASEURL ; then
-    PKGBASEURL="$(epm tool eget --list --second-latest $URL/*)"linux
-    check_url_is_accessible $PKGBASEURL || fatal "Can't find Opera package for Linux at $URL"
+if [ "$(epm print info -p)" = "rpm" ] ; then
+    # they put all branch here (rpm only): https://rpm.opera.com/rpm/
+    [ "$(epm print info -s)" = "alt" ] && repack='--repack' || repack=''
+    PKGURL="https://rpm.opera.com/rpm/opera_$BRANCH-*-linux-release-x64-signed.rpm"
+    epm install $repack $PKGURL
+    exit
 fi
 
-PKGURL="$(epm tool eget --list --latest $PKGBASEURL "$(epm print constructname $PKGNAME "*" $arch deb)")" || fatal #"
-epm install "$PKGURL" || fatal
-exit
-
-else
-
-# they put all branch here (rpm only): https://rpm.opera.com/rpm/
-[ "$(epm print info -s)" = "alt" ] && repack='--repack' || repack=''
-epm install $repack https://rpm.opera.com/rpm/opera_$BRANCH-*-linux-release-x64-signed.rpm
-
-fi
+PKGURL="https://deb.opera.com/opera-developer/pool/non-free/o/opera-$BRANCH/$(epm print constructname $PKGNAME "*" $arch deb)"
+epm install "$PKGURL"
