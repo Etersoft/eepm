@@ -4,6 +4,7 @@ DESCRIPTION="Yandex browser from the official site"
 TIPS="Run 'epm play yandex-browser=beta' to install beta version of the browser."
 
 PRODUCTALT="stable beta"
+
 BRANCH=stable
 if [ "$2" = "beta" ] || epm installed yandex-browser-beta ; then
     BRANCH=beta
@@ -37,4 +38,5 @@ else
     epm install "$URL/rpm/stable/x86_64/$(epm print constructname $PKGNAME "*" x86_64 rpm)" || exit
 fi
 
-epm play yandex-browser-codecs-ffmpeg-extra $BRANCH
+UPDATEFFMPEG=$(epm ql $PKGNAME | grep update-ffmpeg) || fatal
+epm pack --install $PKGNAME-codecs-ffmpeg-extra $UPDATEFFMPEG

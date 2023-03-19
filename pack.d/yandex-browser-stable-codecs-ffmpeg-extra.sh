@@ -5,8 +5,10 @@ RETURNTARNAME="$2"
 
 . $(dirname $0)/common.sh
 
-CURDIR=$(pwd)
-PRODUCTDIR="$(dirname $UPDATEFFMPEG)"
+[ -x "$UPDATEFFMPEG" ] || fatal "$UPDATEFFMPEG is missed"
+
+CURDIR="$(pwd)"
+PRODUCTDIR="$(dirname "$UPDATEFFMPEG")"
 BASEPKGNAME=yandex-browser-stable
 
 PKGNAME=$(basename $0 .sh)
@@ -34,7 +36,6 @@ URL="https://browser-resources.s3.yandex.net/linux/codecs.json"
 update_url_if_need_mirrored
 
 # download ffmpeg with upstream script update-ffmpeg but with our pack_ffmpeg function
-[ -x $UPDATEFFMPEG ] || fatal "$UPDATEFFMPEG is missed"
 SC=$(mktemp)
 trap "rm -f $SC" EXIT
 sed -e 's|install_ffmpeg &&|pack_ffmpeg \&\&|' \
