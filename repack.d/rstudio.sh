@@ -19,6 +19,8 @@ subst '1iAutoReq:yes,nopython,nopython3,nomono,nomonolib' $SPEC
 
 remove_dir /usr/lib/.build-id
 
+fix_chrome_sandbox
+
 filter_from_requires libQt5 libicu "libpq.so.5(RHPG_9"
 
 #if [ "$(epm print info -e)" = "ALTLinux/p10" ] ; then
