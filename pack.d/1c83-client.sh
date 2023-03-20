@@ -11,10 +11,12 @@ INSTDIR="/opt/1cv8"
 VERSION="$(echo $FILENAME | sed 's|.*-8|8|' | sed 's|-.*||')"
 TARNAME="1c83-client-$VERSION.tar"
 
+[ -d "$INSTDIR" ] && fatal "Don't use the script if you have already installed 1C (or just remove $INSTDIR before)"
+
 chmod -v u+x $FILENAME
 # По умолчанию устанавливается только "client_full,langs,en,ru,advanced". Все остальные компоненты по умолчанию отключены.
 # Задана тихая установка.
-$SUDO $FILENAME --mode unattended || fatal "Can't install"
+$SUDO $(realpath $FILENAME) --mode unattended || fatal "Can't install"
 
 if echo "$FILENAME" | grep -q "x86_64.run$" ; then
     arch="x86_64"
@@ -26,16 +28,20 @@ fi
 
 # FIXME
 UNINSTFILE=$INSTDIR/$arch/$VERSION/uninstaller-full
-[ -s "$UNINSTFILE" ] || fatal "Can't detect $UNINSTFILE"
+[ -x "$UNINSTFILE" ] || fatal "Can't detect executable $UNINSTFILE"
 
 # 8.3.22.1851 -> 8*3*22*1851 (they use - in 1cv8-8.3.22-1851.desktop)
 ADDFILES="/usr/share/applications/1cv8*$(echo $VERSION| sed -e 's|\.|*|g').desktop"
+# icons
+ADDFILES="$ADDFILES /usr/share/pixmaps/1c* /usr/share/app-install/icons/1c* /usr/share/icons/hicolor/*/apps/1c*"
 
 # FIXME: erc?
 epm install --skip-installed tar || fatal
 a= tar cf $TARNAME $INSTDIR $ADDFILES
 
+$SUDO touch /opt/.placeholder
 # Задана тихая деинсталяция.
 $SUDO $UNINSTFILE --mode unattended
+$SUDO rm /opt/.placeholder
 
 return_tar $TARNAME

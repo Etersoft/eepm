@@ -18,6 +18,7 @@ subst "s|^URL:.*|URL: https://1c.ru|" $SPEC
 subst "s|^Summary:.*|Summary: 1C 8.3 Client|" $SPEC
 
 subst '1iAutoProv:no' $SPEC
+subst '1iAutoReq:no' $SPEC
 
 #remove_file /usr/local/bin/$PRODUCT
 #add_bin_link_command
@@ -32,7 +33,7 @@ fi
 
 VERSION="$(basename $(echo $BUILDROOT/opt/1cv8/$arch/8.3.*))"
 
-remove_dir /opt/1cv8/$arch/$VERSION/ExtDst
+#remove_dir /opt/1cv8/$arch/$VERSION/ExtDst
 
 epm assure patchelf || exit
 
@@ -44,5 +45,5 @@ for i in $BUILDROOT$PRODUCTDIR/common/lib* ; do
     a= patchelf --set-rpath '$ORIGIN' $i
 done
 
-#epm install --skip-installed libmfx || epm install 316139 || fatal "Can't install libmfx"
+epm install --skip-installed glib2 libatk libcairo libcairo-gobject libcom_err libcups libenchant libgdk-pixbuf libgio libGL libgst-plugins1.0 libgstreamer1.0 libgtk+3 libharfbuzz-icu libkrb5 libpango libSM libsoup libunwind libX11 libXcomposite libXdamage libXrender libXt libXxf86vm
 
