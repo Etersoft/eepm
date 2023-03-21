@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.35.0
+Version: 3.35.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -153,6 +153,11 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Tue Mar 21 2023 Vitaly Lipatov <lav@altlinux.ru> 3.35.1-alt1
+- epm pack 1c83-client: fixes
+- epm repack rstudio: fix chrome-sandbox
+- epm play steam: add install Steam from the repo
+
 * Mon Mar 20 2023 Vitaly Lipatov <lav@altlinux.ru> 3.35.0-alt1
 - epm play: rewrite, add applications list support, use app=version form
 - add epm pack
