@@ -105,11 +105,17 @@ epm_pack()
         pkg_urls="$tarname"
         load_helper epm-download
         __handle_pkg_urls_to_install
-        # drop spaces
-        tarname="$(echo $pkg_files)"
+        # drop spaces and get full path
+        tarname="$(realpath $pkg_files)"
     elif [ -d "$tarname" ] ; then
         fatal "FIXME: implement packing of the dir $tarname?"
         tarname=''
+    elif [ -s "$tarname" ] ; then
+        # get full path for real name
+        tarname="$(realpath "$tarname")"
+    else
+        # just pass name
+        true
     fi
 
     if __epm_pack "$packname" "$tarname" && [ -n "$packed_pkgs" ] ; then
