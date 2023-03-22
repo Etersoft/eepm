@@ -50,10 +50,14 @@ __epm_pack()
 	tmpdir=$(mktemp -d)
 	filefortarname="$tmpdir/filefortarname"
 	trap "rm -rf $tmpdir" EXIT
-#TODO: --verbose support
+
 	set_sudo
 	export SUDO
-	$repackcode "$tarname" "$filefortarname" || fatal
+
+    local bashopt=''
+    [ -n "$verbose" ] && bashopt='-x' && export EPM_VERBOSE="$verbose"
+    #info "Running $($script --description 2>/dev/null) ..."
+	docmd bash $bashopt $repackcode "$tarname" "$filefortarname" || fatal
 	returntarname="$(cat "$filefortarname")" || fatal "pack script $repackcode didn't set tarname"
 
 	if [ -n "$download_only" ] ; then
