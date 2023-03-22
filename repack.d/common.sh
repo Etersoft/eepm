@@ -151,6 +151,25 @@ EOF
     pack_file "/usr/bin/$name"
 }
 
+add_bin_cdexec_command()
+{
+    local name="$1"
+    local target="$2"
+    [ -n "$name" ] || name="$PRODUCT"
+    [ -n "$target" ] || target="$PRODUCTDIR/$name"
+    [ -e "$BUILDROOT/usr/bin/$name" ] && return
+    [ "$name" = "$target" ] && return
+
+    mkdir -p $BUILDROOT/usr/bin/
+    cat <<EOF > "$BUILDROOT/usr/bin/$name"
+#!/bin/sh
+cd "$(dirname "$target")" || exit
+exec ./"$(basename "$target")" "\$@"
+EOF
+    chmod 0755 "$BUILDROOT/usr/bin/$name"
+    pack_file "/usr/bin/$name"
+}
+
 # move files to $PRODUCTDIR
 move_to_opt()
 {
