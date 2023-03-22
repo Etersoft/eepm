@@ -5,7 +5,23 @@ RETURNTARNAME="$2"
 
 . $(dirname $0)/common.sh
 
+# unpack if something like server64_8_3_22_1851.tar.gz
+if echo "$(basename "$FILENAME")" | grep -q "^server.._8_3.*tar\.gz$" ; then
+    tdir=$(mktemp -d)
+    trap "rm -fr $tdir" EXIT
+
+    # FIXME: erc?
+    epm install --skip-installed tar || fatal
+
+    CURDIR="$(pwd)"
+    cd $tdir || fatal
+    a= tar xvfz $FILENAME || fatal
+    FILENAME="$(echo $tdir/setup-full-8.*.run)"
+fi
+
+# with run with setup-full.*.run file
 echo "$(basename "$FILENAME")" | grep -q "^setup-full-8\.3.*-.*.run$" || fatal "run with file looks like setup-full-8.3.22.1851-x86_64.run"
+
 
 INSTDIR="/opt/1cv8"
 VERSION="$(echo $FILENAME | sed 's|.*-8|8|' | sed 's|-.*||')"
