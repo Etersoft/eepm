@@ -269,7 +269,7 @@ construct_name()
     local pds
 
     [ -n "$arch" ] || arch="$($DISTRVENDOR --distro-arch)"
-    [ -n "$pkgtype" ] || pkgtype="$($DISTRVENDOR -p)"
+    [ -n "$pkgtype" ] || pkgtype="$PKGFORMAT"
     [ -n "$ds" ] || ds=$(get_pkg_name_delimiter $pkgtype)
     pds="$ds"
     [ "$pds" = "-" ] && pds="."

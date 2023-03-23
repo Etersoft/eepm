@@ -59,7 +59,7 @@ __epm_korinf_site_mask() {
     [ "$($DISTRVENDOR -a)" = "x86_64" ] && archprefix="x86_64/"
     URL="http://updates.etersoft.ru/pub/Korinf"
     update_url_if_need_mirrored
-    echo "$URL/$archprefix$($DISTRVENDOR -e)/$MASK*.$($DISTRVENDOR -p)"
+    echo "$URL/$archprefix$($DISTRVENDOR -e)/$MASK*.$PKGFORMAT"
 }
 
 __epm_korinf_list() {

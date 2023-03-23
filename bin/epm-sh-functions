@@ -675,7 +675,7 @@ assure_distr()
 get_pkg_name_delimiter()
 {
    local pkgtype="$1"
-   [ -n "$pkgtype" ] || pkgtype="$($DISTRVENDOR -p)"
+   [ -n "$pkgtype" ] || pkgtype="$PKGFORMAT"
 
    [ "$pkgtype" = "deb" ] && echo "_" && return
    echo "-"
