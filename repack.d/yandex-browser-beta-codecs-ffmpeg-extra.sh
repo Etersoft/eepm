@@ -6,4 +6,6 @@ SPEC="$2"
 
 PRODUCT=yandex-browser-stable-codecs-ffmpeg-extra
 
-subst '1iRequires:yandex-browser-beta' $SPEC
+. $(dirname $0)/common.sh
+
+add_requires yandex-browser-beta

@@ -6,7 +6,7 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
-subst '1iRequires: python3-module-PyPDF3' $SPEC
+add_requires python3-module-PyPDF3
 
 subst '1iAutoProv: no' $SPEC
 

@@ -231,6 +231,11 @@ fix_chrome_sandbox()
     chmod -v 4711 "$BUILDROOT$sandbox"
 }
 
+add_requires()
+{
+    subst "1iRequires: $*" $SPEC
+}
+
 filter_from_requires()
 {
     local i

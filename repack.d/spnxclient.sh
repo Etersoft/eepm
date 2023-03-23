@@ -8,7 +8,7 @@ SPEC="$2"
 
 subst '1iAutoProv:no' $SPEC
 
-subst '1iRequires: libpcsclite libudev0' $SPEC
+add_requires libpcsclite libudev0
 
 if [ "$(epm print info -a)" = "x86_64" ] ; then
     remove_file /usr/share/sphinx/gui/spnxreader/libspnxreader_i386.so

@@ -12,8 +12,8 @@ PRODUCTDIR=/opt/$PRODUCT
 subst '1iAutoReq:no' $SPEC
 subst '1iAutoProv:no' $SPEC
 
-subst '1iRequires:/usr/bin/wine' $SPEC
-subst '1iRequires:/bin/sh' $SPEC
+add_requires '/usr/bin/wine'
+add_requires '/bin/sh'
 
 
 add_bin_link_command $PRODUCT $PRODUCTDIR/aimp.bash

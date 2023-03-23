@@ -14,9 +14,8 @@ if [ "$(epm print info -a)" = "x86_64" ] ; then
     subst "s|.*script/libdepend.*||" $SPEC
 fi
 
-# comment out libexo (we have libexo-gtk3 only now)
-REQUIRES="xdg-utils,libdbus,libqt5-core,libqt5-dbus,libqt5-gui,libqt5-network,libqt5-qml,libqt5-quick,libqt5-webkit,libqt5-webkitwidgets,libqt5-widgets,libqt5-x11extras,libminizip"
-subst "s|^\(Name: .*\)$|# Converted from original package requires\nRequires:$REQUIRES\n\1|g" $SPEC
+# commented out libexo (we have libexo-gtk3 only now)
+add_requires xdg-utils libdbus libqt5-core libqt5-dbus libqt5-gui libqt5-network libqt5-qml libqt5-quick libqt5-webkit libqt5-webkitwidgets libqt5-widgets libqt5-x11extras libminizip
 
 # TODO: check if we missed something from it
 rm -rf $BUILDROOT/opt/teamviewer/tv_bin/script/teamviewer_setup

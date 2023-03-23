@@ -8,6 +8,6 @@ PRODUCTDIR=/opt/PortProton
 
 . $(dirname $0)/common.sh
 
-subst '1iRequires:bubblewrap cabextract curl gamemode icoutils libvulkan1 vulkan-tools wget zenity zstd libd3d libMesaOpenCL' $SPEC
+add_requires bubblewrap cabextract curl gamemode icoutils libvulkan1 vulkan-tools wget zenity zstd libd3d libMesaOpenCL
 
 filter_from_requires xneur

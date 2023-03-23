@@ -6,4 +6,6 @@ SPEC="$2"
 
 PRODUCT=vivaldi-snapshot-codecs-ffmpeg-extra
 
-subst '1iRequires:vivaldi-snapshot' $SPEC
+. $(dirname $0)/common.sh
+
+add_requires vivaldi-snapshot

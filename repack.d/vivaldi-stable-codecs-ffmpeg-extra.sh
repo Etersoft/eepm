@@ -6,4 +6,6 @@ SPEC="$2"
 
 PRODUCT=vivaldi-stable-codecs-ffmpeg-extra
 
-subst '1iRequires:vivaldi-stable' $SPEC
+. $(dirname $0)/common.sh
+
+add_requires vivaldi-stable

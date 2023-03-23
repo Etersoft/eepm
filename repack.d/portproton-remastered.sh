@@ -36,7 +36,7 @@ pack_file /usr/share/applications/$PRODUCT.desktop
 # https://github.com/Castro-Fidel/PortWINE/pull/36
 subst 's|elif|else|' $BUILDROOT$PRODUCTDIR/data_from_portwine/scripts/portwine_db/WorldOfTanksEnCoreLauncher
 
-subst '1iRequires:bubblewrap cabextract curl gamemode icoutils libvulkan1 vulkan-tools wget zenity zstd libd3d libMesaOpenCL' $SPEC
+add_requires bubblewrap cabextract curl gamemode icoutils libvulkan1 vulkan-tools wget zenity zstd libd3d libMesaOpenCL
 epm install -skip-installed vulkan-tools
 
 filter_from_requires xneur
