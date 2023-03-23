@@ -156,7 +156,7 @@ __epm_play_run()
     local bashopt=''
     [ -n "$verbose" ] && bashopt='-x' && export EPM_VERBOSE="$verbose"
     #info "Running $($script --description 2>/dev/null) ..."
-    docmd bash $bashopt $script "$@"
+    docmd $CMDSHELL $bashopt $script "$@"
 }
 
 __epm_play_list_installed()
