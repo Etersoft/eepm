@@ -101,8 +101,6 @@ epm_pack()
     local packname="$1"
     local tarname="$2"
 
-    local CURDIR="$(pwd)"
-
     [ -n "$packname" ] || fatal "run with packname, see --help"
 
     if is_url "$tarname"; then

@@ -455,7 +455,6 @@ __epm_repack_if_needed()
 
 epm_repack()
 {
-    local CURDIR="$(pwd)"
     # if possible, it will put pkg_urls into pkg_files and reconstruct pkg_filenames
     if [ -n "$pkg_urls" ] ; then
         load_helper epm-download
