@@ -56,7 +56,7 @@ __epm_pack()
 	mv $returntarname $tmpdir/ || fatal
 	cd $tmpdir || fatal
 	docmd epm repack --quiet "$(basename "$returntarname")"
-	packed_pkgs="$tmpdir/$(echo *.rpm)"
+	packed_pkgs="$tmpdir/$(echo *.$PKGFORMAT)"
 }
 
 epm_pack_help()
