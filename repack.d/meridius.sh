@@ -32,7 +32,7 @@ EOF
 pack_file /usr/share/applications/$DESKTOPFILE
 
 mkdir -p $BUILDROOT/usr/share/pixmaps/
-cp builder/icons/linux/256x256.png $BUILDROOT/usr/share/pixmaps/
+cp builder/icons/linux/256x256.png $BUILDROOT/usr/share/pixmaps/$PRODUCT.png
 pack_file /usr/share/pixmaps/$ICONFILE
 
 cd - >/dev/null
