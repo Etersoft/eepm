@@ -51,3 +51,27 @@ mkdir -p $BUILDROOT/usr/share/pixmaps/
 epm tool eget -O $BUILDROOT/usr/share/pixmaps/$PRODUCT.png https://dashboard.snapcraft.io/site_media/appmedia/2020/04/icq_copy.png
 [ -s $BUILDROOT/usr/share/pixmaps/$PRODUCT.png ] && pack_file /usr/share/pixmaps/$PRODUCT.png || echo "Can't download icon for the program."
 subst "s|.*/opt/icq/unittests.*||" $SPEC
+
+# ignore embedded libs
+filter_from_requires libQt5 libxcb "libX.*"
+
+epm assure patchelf || exit
+cd $BUILDROOT$PRODUCTDIR
+for i in $PRODUCT  ; do
+    a= patchelf --set-rpath '$ORIGIN/lib' $i
+done
+
+for i in lib/*.so.*  ; do
+    a= patchelf --set-rpath '$ORIGIN' $i
+done
+
+for i in QtQuick.2/lib*.so  ; do
+    a= patchelf --set-rpath '$ORIGIN/../lib' $i
+done
+
+for i in QtQuick/*/lib*.so  ; do
+    a= patchelf --set-rpath '$ORIGIN/../../lib' $i
+done
+
+
+epm install --skip-installed glib2 libdbus libexpat libgbm libgio libgpg-error libuuid zlib fontconfig libGL
