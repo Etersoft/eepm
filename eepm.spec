@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.36.0
+Version: 3.36.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -153,6 +153,13 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Thu Mar 23 2023 Vitaly Lipatov <lav@altlinux.ru> 3.36.1-alt1
+- epm-pack: install PKGFORMAT package after repack
+- replace --download-only with --save-only
+- epm repack generic.sh: add remove_dir /usr/lib/.build-id
+- epm repack: add portproton.sh (add needed requires)
+- epm-pack: reset EPMCURDIR as hack
+
 * Thu Mar 23 2023 Vitaly Lipatov <lav@altlinux.ru> 3.36.0-alt1
 - epm play: add far2l-portable
 - epm-pack: add --verbose support
