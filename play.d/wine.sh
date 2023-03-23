@@ -16,6 +16,7 @@ PKGCOMMON="wine-mono wine-gecko winetricks"
 
 if [ "$MAIN" = "wine-etersoft" ] ; then
     PKGCOMMON="wine-etersoft-mono wine-etersoft-gecko wine-etersoft-winetricks"
+    PKGNAMES="wine-etersoft"
     PKGNAMES32="wine32-etersoft"
 fi
 
