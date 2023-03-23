@@ -357,7 +357,8 @@ epm_install_files()
                 return
             fi
 
-            # common fallback
+            epm_install_names $files
+            return
             ;;
     esac
 
@@ -455,7 +456,14 @@ epm_install_files()
                     # use install_names
                     ;;
             esac
+
+            epm_install_names $files
+            return
             ;;
+    esac
+
+
+    case $PMTYPE in
         packagekit)
             docmd pkcon install-local $files
             return ;;
