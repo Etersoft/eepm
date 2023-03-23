@@ -151,10 +151,11 @@ __epm_play_run()
     set_sudo
     export SUDO
 
+    # keep EPM_AUTO for non epm code (epm uses EPM_OPTIONS now)
     [ -n "$non_interactive" ] && export EPM_AUTO="--auto"
 
     local bashopt=''
-    [ -n "$verbose" ] && bashopt='-x' && export EPM_VERBOSE="$verbose"
+    [ -n "$verbose" ] && bashopt='-x'
     #info "Running $($script --description 2>/dev/null) ..."
     docmd $CMDSHELL $bashopt $script "$@"
 }

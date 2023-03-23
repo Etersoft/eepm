@@ -40,12 +40,13 @@ __epm_pack()
 	export SUDO
 
     local bashopt=''
-    [ -n "$verbose" ] && bashopt='-x' && export EPM_VERBOSE="$verbose"
+    [ -n "$verbose" ] && bashopt='-x'
     #info "Running $($script --description 2>/dev/null) ..."
 	docmd $CMDSHELL $bashopt $repackcode "$tarname" "$filefortarname" || fatal
 	returntarname="$(cat "$filefortarname")" || fatal "pack script $repackcode didn't set tarname"
 
 	if [ -n "$download_only" ] ; then
+		echo
 		cp $returntarname .
 		return
 	fi
