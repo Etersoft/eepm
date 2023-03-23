@@ -26,7 +26,6 @@ remove_dir /usr/share/lintian
 remove_dir /usr/share/mime
 remove_dir /usr/lib
 
-remove_dir /usr/lib/.build-id
 remove_file $PRODUCTDIR/opera_autoupdate.licenses
 remove_file $PRODUCTDIR/opera_autoupdate.version
 remove_file $PRODUCTDIR/opera_autoupdate

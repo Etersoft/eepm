@@ -14,8 +14,6 @@ VER=9.2
 # remove embedded PyPDF3
 remove_dir /usr/share/kyocera$VER/Python
 
-remove_dir /usr/lib/.build-id
-
 # PRIMARY_PPD_DIRECTORY=/usr/share/ppd/kyocera/
 fromppd="/usr/share/kyocera$VER/ppd$VER"
 mkdir -p $BUILDROOT/usr/share/ppd/

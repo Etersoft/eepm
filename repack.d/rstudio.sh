@@ -17,8 +17,6 @@ subst 's|/usr/lib/rstudio/bin/rstudio|$PRODUCTDIR/$PRODUCT|' $BUILDROOT$PRODUCTD
 # https://bugzilla.altlinux.org/43794
 subst '1iAutoReq:yes,nopython,nopython3,nomono,nomonolib' $SPEC
 
-remove_dir /usr/lib/.build-id
-
 fix_chrome_sandbox
 
 filter_from_requires libQt5 libicu "libpq.so.5(RHPG_9"
