@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.35.1
+Version: 3.36.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -153,6 +153,16 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Thu Mar 23 2023 Vitaly Lipatov <lav@altlinux.ru> 3.36.0-alt1
+- epm play: add far2l-portable
+- epm-pack: add --verbose support
+- epm pack 1c83-client: add support for unpack downloaded tar.gz
+- epm install: add --download_only (save after repack) and --direct + --download_only (save before repack)
+- epm repack 64Gram: fix name
+- epm-sh-functions: hide direct /bin/echo using
+- epm repack Autodesk_EAGLE: drop internal libxcb-dri?.so.0 (ALT bug 44898)
+- remove CURDIR to EPMCURDIR and export it without override
+
 * Tue Mar 21 2023 Vitaly Lipatov <lav@altlinux.ru> 3.35.1-alt1
 - epm pack 1c83-client: fixes
 - epm repack rstudio: fix chrome-sandbox
