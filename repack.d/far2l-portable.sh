@@ -9,6 +9,12 @@ PRODUCTDIR=/opt/far2l-portable
 
 . $(dirname $0)/common.sh
 
+subst "s|^Group:.*|Group: File tools|" $SPEC
+#subst "s|^License: unknown$|License: GPLv2|" $SPEC
+subst "s|^URL:.*|URL: https://github.com/elfmz/far2l|" $SPEC
+subst "s|^Summary:.*|Summary: Linux port of FAR v2|" $SPEC
+
+
 subst '1iAutoReq:no' $SPEC
 subst '1iAutoProv:no' $SPEC
 
