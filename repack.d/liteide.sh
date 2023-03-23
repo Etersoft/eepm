@@ -26,13 +26,15 @@ mkdir -p $BUILDROOT/usr/share/applications/
 cat <<EOF >$BUILDROOT/usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]
 Type=Application
-Name=liteide
-Exec=liteide
-Icon=liteide
-Comment=LiteIDE is a simple, open source, cross-platform Go IDE.
+Name=LiteIDE
+Exec=$PRODUCT
+Icon=$PRODUCT
+Comment=LiteIDE is a simple, open source, cross-platform Go IDE
 Terminal=false
 Categories=Development;
-Name[zh_CN]=liteide
 EOF
 
 pack_file /usr/share/applications/$PRODUCT.desktop
+
+# https://bugzilla.altlinux.org/45635
+add_requires golang
