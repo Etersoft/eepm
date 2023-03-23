@@ -399,20 +399,6 @@ __epm_repack_to_rpm()
 }
 
 
-__epm_remove_tmp_files()
-{
-    # TODO: move it to exit handler
-    if [ -z "$DEBUG" ] ; then
-        # TODO: reinvent
-        [ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
-        # hack??
-        [ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
-        [ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
-        [ -n "$to_clean_tmp_dirs" ] && rm -rf $to_clean_tmp_dirs 2>/dev/null
-    fi
-    return 0
-}
-
 # FIXME: Нужно как-то обеспечить непродолжение выполнения.
 # used in epm install
 # fill repacked_pkgs
