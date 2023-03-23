@@ -47,6 +47,12 @@ StartupWMClass=eagle
 EOF
 subst "s|%files|%files\n/usr/share/applications/$PRODUCT.desktop|" $SPEC
 
+
+# https://bugzilla.altlinux.org/44898
+remove_file /opt/eagle/lib/libxcb-dri2.so.0
+remove_file /opt/eagle/lib/libxcb-dri3.so.0
+
+
 epm assure patchelf || exit
 for i in $BUILDROOT/$PRODUCTDIR/lib/{libssl.so,libssl.so.1.*} ; do
     a= patchelf --set-rpath '$ORIGIN/' $i
