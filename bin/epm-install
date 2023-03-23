@@ -326,7 +326,7 @@ epm_install_files()
                 files="$repacked_pkgs"
             fi
 
-            if [ -n "$download_only" ] ; then
+            if [ -n "$save_only" ] ; then
                 echo
                 cp -v $files "$EPMCURDIR"
                 return
@@ -382,7 +382,7 @@ epm_install_files()
                 #__epm_remove_tmp_files
             fi
 
-            if [ -n "$download_only" ] ; then
+            if [ -n "$save_only" ] ; then
                 echo
                 cp -v $files "$EPMCURDIR"
                 return
@@ -437,7 +437,7 @@ epm_install_files()
                 #__epm_remove_tmp_files
             fi
 
-            if [ -n "$download_only" ] ; then
+            if [ -n "$save_only" ] ; then
                 echo
                 cp -v $files "$EPMCURDIR"
                 return
@@ -482,8 +482,8 @@ epm_install_files()
     esac
 
 
-    # check download_only before commands without repack supporting
-    if [ -n "$download_only" ] ; then
+    # check save_only before commands without repack supporting
+    if [ -n "$save_only" ] ; then
         echo
         cp -v $files "$EPMCURDIR"
         return
@@ -733,7 +733,7 @@ epm_install()
     epm_install_names $names || return
 
     # save files before install and repack
-    if [ -n "$direct" ] && [ -n "$download_only" ] ; then
+    if [ -n "$download_only" ] ; then
         echo
         cp -v $files "$EPMCURDIR"
         return
