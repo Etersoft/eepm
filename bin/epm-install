@@ -268,7 +268,7 @@ epm_ni_install_names()
 __epm_check_if_rpm_already_installed()
 {
 	# Not: we can make optimize if just check version?
-	LANG=C sudorun rpm -Uvh $force $nodeps $@ 2>&1 | grep -q "is already installed"
+	LANG=C sudorun rpm -Uvh "$@" 2>&1 | grep -q "is already installed"
 }
 
 __handle_direct_install()
@@ -342,7 +342,7 @@ epm_install_files()
             sudocmd rpm -Uvh $force $noscripts $nodeps $files && save_installed_packages $files && return
             local RES=$?
             # TODO: check rpm result code and convert it to compatible format if possible
-            __epm_check_if_rpm_already_installed $files && return
+            __epm_check_if_rpm_already_installed $force $noscripts $nodeps $files && return
 
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return $RES
@@ -444,10 +444,11 @@ epm_install_files()
             fi
 
             __epm_check_if_src_rpm $files
+
             sudocmd rpm -Uvh $force $noscripts $nodeps $files && return
             local RES=$?
 
-            __epm_check_if_rpm_already_installed $files && return
+            __epm_check_if_rpm_already_installed $force $noscripts $nodeps $files && return
 
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return $RES
