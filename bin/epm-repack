@@ -451,12 +451,12 @@ epm_repack()
     [ -z "$pkg_files" ] && info "Skip empty repack list" && return 22
 
     if __epm_repack $pkg_files && [ -n "$repacked_pkgs" ] ; then
-        cp $repacked_pkgs "$CURDIR"
+        cp $repacked_pkgs "$EPMCURDIR"
         if [ -z "$quiet" ] ; then
             echo
             echo "Adapted packages:"
             for i in $repacked_pkgs ; do
-                echo "	$CURDIR/$(basename "$i")"
+                echo "	$EPMCURDIR/$(basename "$i")"
             done
         fi
     fi

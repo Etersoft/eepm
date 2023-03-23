@@ -328,7 +328,7 @@ epm_install_files()
 
             if [ -n "$download_only" ] ; then
                 echo
-                cp -v $files "$CURDIR"
+                cp -v $files "$EPMCURDIR"
                 return
             fi
 
@@ -384,7 +384,7 @@ epm_install_files()
 
             if [ -n "$download_only" ] ; then
                 echo
-                cp -v $files "$CURDIR"
+                cp -v $files "$EPMCURDIR"
                 return
             fi
 
@@ -439,7 +439,7 @@ epm_install_files()
 
             if [ -n "$download_only" ] ; then
                 echo
-                cp -v $files "$CURDIR"
+                cp -v $files "$EPMCURDIR"
                 return
             fi
 
@@ -485,7 +485,7 @@ epm_install_files()
     # check download_only before commands without repack supporting
     if [ -n "$download_only" ] ; then
         echo
-        cp -v $files "$CURDIR"
+        cp -v $files "$EPMCURDIR"
         return
     fi
 
@@ -735,7 +735,7 @@ epm_install()
     # save files before install and repack
     if [ -n "$direct" ] && [ -n "$download_only" ] ; then
         echo
-        cp -v $files "$CURDIR"
+        cp -v $files "$EPMCURDIR"
         return
     fi
 

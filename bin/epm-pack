@@ -113,12 +113,12 @@ epm_pack()
             return
         fi
 
-        cp $packed_pkgs "$CURDIR"
+        cp $packed_pkgs "$EPMCURDIR"
         if [ -z "$quiet" ] ; then
             echo
             echo "Packed packages:"
             for i in $packed_pkgs ; do
-                echo "	$CURDIR/$(basename "$i")"
+                echo "	$EPMCURDIR/$(basename "$i")"
             done
         fi
     fi
