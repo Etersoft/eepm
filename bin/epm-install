@@ -326,6 +326,12 @@ epm_install_files()
                 files="$repacked_pkgs"
             fi
 
+            if [ -n "$download_only" ] ; then
+                echo
+                cp -v $files "$CURDIR"
+                return
+            fi
+
             __epm_check_if_src_rpm $files
 
             if [ -z "$repacked_pkgs" ] ; then
@@ -374,6 +380,12 @@ epm_install_files()
                 files="$repacked_pkgs"
                 # TODO
                 #__epm_remove_tmp_files
+            fi
+
+            if [ -n "$download_only" ] ; then
+                echo
+                cp -v $files "$CURDIR"
+                return
             fi
 
             # TODO: if dpkg can't install due missed deps, trying with apt (as for now, --refuse-depends, --refuse-breaks don't help me)
@@ -425,6 +437,12 @@ epm_install_files()
                 #__epm_remove_tmp_files
             fi
 
+            if [ -n "$download_only" ] ; then
+                echo
+                cp -v $files "$CURDIR"
+                return
+            fi
+
             __epm_check_if_src_rpm $files
             sudocmd rpm -Uvh $force $noscripts $nodeps $files && return
             local RES=$?
@@ -461,6 +479,14 @@ epm_install_files()
             return
             ;;
     esac
+
+
+    # check download_only before commands without repack supporting
+    if [ -n "$download_only" ] ; then
+        echo
+        cp -v $files "$CURDIR"
+        return
+    fi
 
 
     case $PMTYPE in
@@ -704,6 +730,13 @@ epm_install()
 
     # FIXME: see to_remove below
     epm_install_names $names || return
+
+    # save files before install and repack
+    if [ -n "$direct" ] && [ -n "$download_only" ] ; then
+        echo
+        cp -v $files "$CURDIR"
+        return
+    fi
 
     # repack binary files
     if [ -n "$repack" ] ; then

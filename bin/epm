@@ -549,7 +549,7 @@ if [ -n "$quiet" ] ; then
 fi
 
 # fill
-export EPM_OPTIONS="$nodeps $force $verbose $quiet $non_interactive"
+export EPM_OPTIONS="$nodeps $direct $force $verbose $quiet $non_interactive $download_only"
 
 # if input is not console and run script from file, get pkgs from stdin too
 if [ ! -n "$inscript" ] && ! inputisatty && [ -n "$PROGDIR" ] ; then
