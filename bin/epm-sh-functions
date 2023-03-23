@@ -102,7 +102,7 @@ echover()
 echon()
 {
 	# default /bin/sh on MacOS does not recognize -n
-	/bin/echo -n "$*"
+	echo -n "$*" 2>/dev/null || a= /bin/echo -n "$*"
 }
 
 
