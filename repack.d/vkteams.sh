@@ -36,7 +36,7 @@ Type=Application
 Name=VK Teams
 Comment=Official desktop application for the VK Teams messaging service
 Icon=$PRODUCT.png
-Exec=vkteams -urlcommand %u
+Exec=$PRODUCT -urlcommand %u
 Categories=InstantMessaging;Social;Chat;Network;
 Terminal=false
 MimeType=x-scheme-handler/vkteams;x-scheme-handler/myteam-messenger;
@@ -54,9 +54,24 @@ subst "s|.*$PRODUCTDIR/unittests.*||" $SPEC
 
 epm assure patchelf || exit
 cd $BUILDROOT$PRODUCTDIR
+
+for i in $PRODUCT  ; do
+    a= patchelf --set-rpath '$ORIGIN/lib' $i
+done
+
+for i in lib/*.so.*  ; do
+    a= patchelf --set-rpath '$ORIGIN' $i
+done
+
+for i in QtQuick.2/lib*.so  ; do
+    a= patchelf --set-rpath '$ORIGIN/../lib' $i
+done
+
 for i in QtQuick/*/lib*.so  ; do
     a= patchelf --set-rpath '$ORIGIN/../../lib' $i
 done
 
 # FIXME: check the full list
-filter_from_requires libQt5 libxcb libGL "libX.*"
+filter_from_requires libQt5 libxcb "libX.*"
+
+epm install --skip-installed glib2 libdbus libexpat libgbm libgio libgpg-error libuuid zlib fontconfig libGL libalsa libnspr libnss
