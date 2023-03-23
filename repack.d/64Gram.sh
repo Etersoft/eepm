@@ -68,11 +68,11 @@ mkdir -p $BUILDROOT/usr/share/applications/
 cat <<EOF >$BUILDROOT/usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]
 Version=1.0
-Name=Telegram Desktop
+Name=64Gram
 Comment=64Gram (unofficial Telegram Desktop)
 Exec=$PRODUCTCUR -- %u
 Icon=$iconname
-StartupWMClass=TelegramDesktop
+StartupWMClass=64Gram
 Type=Application
 Categories=Chat;Network;InstantMessaging;Qt;
 MimeType=x-scheme-handler/tg;
