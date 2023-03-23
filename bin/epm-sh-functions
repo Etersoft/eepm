@@ -673,6 +673,16 @@ get_pkg_name_delimiter()
    echo "-"
 }
 
+
+# don't remove <arg> on exit
+__epm_remove_from_tmp_files()
+{
+   keep="$1"
+   [ -r "$keep" ] || return 0
+   [ -n "$to_remove_pkg_files" ] || return 0
+   to_remove_pkg_files="$(echo "$to_remove_pkg_files" | sed -e "s|$keep||")"
+}
+
 # usage: trap "__epm_remove_tmp_files" EXIT
 __epm_remove_tmp_files()
 {
