@@ -47,15 +47,16 @@ __epm_pack()
 
 	if [ -n "$download_only" ] ; then
 		echo
-		cp $returntarname .
+		mv -v $returntarname .
 		return
 	fi
 
 	[ -s "$returntarname" ] || fatal "pack script $repackcode didn't return tarname"
 
+	# FIXME: it is better use current dir, but there will troubles with epm install --download-only later
 	mv $returntarname $tmpdir/ || fatal
 	cd $tmpdir || fatal
-	docmd epm repack --quiet "$(basename "$returntarname")"
+	( unset EPMCURDIR ; docmd epm repack --quiet "$(basename "$returntarname")" )
 	packed_pkgs="$tmpdir/$(echo *.$PKGFORMAT)"
 }
 
