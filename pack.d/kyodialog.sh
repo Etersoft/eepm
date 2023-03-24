@@ -30,7 +30,7 @@ case "$(epm print info -p)" in
         PKG="kyodialog-*.x86_64.rpm"
         ;;
     *)
-        cd Debian/Global/kyodialog_amd64 || faal
+        cd Debian/Global/kyodialog_amd64 || fatal
         PKG="kyodialog_*_amd64.deb"
         ;;
     # Debian/Global/kyodialog_i386 kyodialog_9.2-0_i386.deb
