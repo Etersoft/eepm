@@ -14,3 +14,7 @@ add_bin_link_command
 fix_desktop_file
 
 fix_chrome_sandbox
+
+install_deps
+
+add_findreq_skiplist "/opt/VinteoDesktop/resources/app.asar.unpacked/node_modules/@serialport/bindings-cpp/prebuilds/*/*.node"
