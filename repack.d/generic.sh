@@ -4,7 +4,7 @@ BUILDROOT="$1"
 SPEC="$2"
 PRODUCT="$3"
 
-# firstly, pack /opt/$PRODUCT if used
+# firstly, pack $PRODUCTDIR if used
 . $(dirname $0)/common.sh
 
 flag_python3=''

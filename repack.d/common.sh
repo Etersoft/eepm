@@ -250,7 +250,7 @@ drop_embedded_reqs()
     filter_from_requires "libGLESv2.so()" "libEGL.so()" "libffmpeg.so()"
 }
 
-[ -d "$BUILDROOT" ] || fatal "Run me only with epm repack <package>"
+#[ -d "$BUILDROOT" ] || fatal "Run me only via epm repack <package>"
 
 if [ -n "$PRODUCT" ] ; then
     [ -n "$PRODUCTCUR" ] || PRODUCTCUR="$PRODUCT"
@@ -258,3 +258,10 @@ if [ -n "$PRODUCT" ] ; then
 
     [ -d "$BUILDROOT$PRODUCTDIR" ] && pack_dir "$PRODUCTDIR"
 fi
+
+# like /opt/yandex/browser
+if [ -n "$PRODUCTDIR" ] && [ "$(dirname "$PRODUCTDIR" )" != "/" ] && [ "$(dirname "$(dirname "$PRODUCTDIR" )" )" != "/" ] ; then
+   [ -n "$PRODUCTBASEDIR" ] || PRODUCTBASEDIR="$(dirname "$PRODUCTDIR")"
+fi
+
+[ -d "$BUILDROOT$PRODUCTBASEDIR" ] && pack_dir "$PRODUCTBASEDIR"
