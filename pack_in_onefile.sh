@@ -48,6 +48,10 @@ filter_out()
 	grep -v "^[ 	]*load_helper " | \
 		sed -e 's|^eget()|disabled_eget()|g' | \
 		sed -e 's|^onefile_eget()|eget()|g' | \
+		sed -e 's|^erc()|disabled_erc()|g' | \
+		sed -e 's|^onefile_erc()|erc()|g' | \
+		sed -e 's|^ercat()|disabled_ercat()|g' | \
+		sed -e 's|^onefile_ercat()|ercat()|g' | \
 		sed -e 's|^estrlist()|disabled_estrlist()|g' | \
 		sed -e 's|^onefile_estrlist()|estrlist()|g' | \
 		sed -e 's|$SHAREDIR/tools_json|internal_tools_json|g' | \
@@ -73,6 +77,8 @@ done | filter_out >>$OUTPUT
 incorporate_subfile bin/distr_info
 if [ "$PACKCOMMAND" = "epm" ] ; then
     incorporate_subfile bin/tools_eget
+    [ -f bin/tools_erc ] && incorporate_subfile bin/tools_erc
+    [ -f bin/tools_ercat ] && incorporate_subfile bin/tools_ercat
     incorporate_subfile bin/tools_estrlist
     incorporate_subfile bin/tools_json
 fi
