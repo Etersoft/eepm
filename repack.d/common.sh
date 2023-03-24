@@ -246,6 +246,14 @@ filter_from_requires()
     done
 }
 
+add_findreq_skiplist()
+{
+    local i
+    for i in "$@" ; do
+        subst "1i%add_findreq_skiplist $i" $SPEC
+    done
+}
+
 # ignore embedded libs
 drop_embedded_reqs()
 {
