@@ -15,4 +15,4 @@ VERSION=".*$BRANCH"
 PKGURL=$(epm tool eget --list --latest https://github.com/TDesktop-x64/tdesktop/releases "${PKGNAME}_${VERSION}_linux.zip") #"
 [ -n "$PKGURL" ] || fatal "Can't get package URL"
 
-epm install --repack "$PKGURL"
+epm --install pack $PKGNAME "$PKGURL"
