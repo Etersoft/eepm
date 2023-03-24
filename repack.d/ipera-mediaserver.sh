@@ -20,3 +20,4 @@ for i in bin/plugins_optional/lib*.so bin/plugins/lib*.so ; do
 done
 
 filter_from_requires "libldap_r-2.4.so.2(OPENLDAP_2.*)(64bit)" "liblber-2.4.so.2(OPENLDAP_2.*)(64bit)" "ld-linux-.*(GLIBC_PRIVATE)"
+filter_from_requires libQt5 libGL libicu
