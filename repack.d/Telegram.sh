@@ -26,13 +26,6 @@ subst "s|^License: unknown$|License: GPLv2|" $SPEC
 subst "s|^URL:.*|URL: https://desktop.telegram.org/|" $SPEC
 subst "s|^Summary:.*|Summary: Telegram Desktop messaging app|" $SPEC
 
-
-# move package to /opt
-ROOTDIR=$(basename $(find $BUILDROOT -mindepth 1 -maxdepth 1 -type d))
-mkdir $BUILDROOT/opt
-mv $BUILDROOT/$ROOTDIR $BUILDROOT$PRODUCTDIR
-subst "s|\"/$ROOTDIR/|\"$PRODUCTDIR/|" $SPEC
-
 add_bin_link_command
 add_bin_link_command $PRODUCTCUR $PRODUCT
 
@@ -51,8 +44,9 @@ done
 mkdir -p "$BUILDROOT/etc/tdesktop"
 # telegram checks with real path to the binary
 echo "$PRODUCTDIR/$PRODUCT" >"$BUILDROOT/etc/tdesktop/externalupdater"
+pack_dir /etc/tdesktop
 pack_file /etc/tdesktop/externalupdater
-remove_file /opt/Telegram/Updater
+#remove_file /opt/Telegram/Updater
 
 # fixed above
 # Hack against https://bugzilla.altlinux.org/42402

@@ -20,9 +20,5 @@ VERSION=".*$BRANCH"
 
 PKGURL=$(epm tool eget --list --latest https://github.com/telegramdesktop/tdesktop/releases "tsetup.$VERSION.tar.xz") #"
 [ -n "$PKGURL" ] || fatal "Can't get package URL"
-PKGDIR=$(mktemp -d)
-trap "rm -fr $PKGDIR" EXIT
-PKGFILE=$(echo $PKGDIR/$(basename $PKGURL) | sed -e "s|/tsetup|/$PKGNAME|")
-epm tool eget -O $PKGFILE $PKGURL || exit
 
-epm install --repack "$PKGFILE"
+epm --install pack $PKGNAME "$PKGURL"
