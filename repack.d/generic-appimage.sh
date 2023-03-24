@@ -41,15 +41,24 @@ done
 fi
 
 DESKTOPFILE="$(echo *.desktop | head -n1)"
-ICONFILE="$(cat $DESKTOPFILE | grep "^Icon" | head -n1 | sed -e 's|Icon=||').png"
+FROMICONFILE=''
 
-mkdir -p $BUILDROOT/usr/share/applications/
-cat $DESKTOPFILE | sed -e "s|AppRun|$PRODUCT|" > $BUILDROOT/usr/share/applications/$DESKTOPFILE
-pack_file /usr/share/applications/$DESKTOPFILE
+if [ -r "$DESKTOPFILE" ] ; then
+    mkdir -p $BUILDROOT/usr/share/applications/
+    cat $DESKTOPFILE | sed -e "s|AppRun|$PRODUCT|" -e 's|X-AppImage-Integrate.*||' > $BUILDROOT/usr/share/applications/$DESKTOPFILE
+    pack_file /usr/share/applications/$DESKTOPFILE
 
-mkdir -p $BUILDROOT/usr/share/pixmaps/
-cp $ICONFILE $BUILDROOT/usr/share/pixmaps/
-pack_file /usr/share/pixmaps/$ICONFILE
+    FROMICONFILE="$(cat $DESKTOPFILE | grep "^Icon" | head -n1 | sed -e 's|Icon=||').png"
+fi
+
+# it is strange, there is no icon file
+# https://docs.appimage.org/reference/appdir.html
+if [ ! -s "$FROMICONFILE" ] ; then
+    FROMICONFILE=".DirIcon"
+    ICONFILE="$PRODUCT.png"
+    grep -q "^<svg" $FROMICONFILE && ICONFILE="$PRODUCT.svg"
+fi
+install_file $PRODUCTDIR/$FROMICONFILE /usr/share/pixmaps/$ICONFILE
 
 # hack for remove MacOS only stuffs
 remove_dir $(find $BUILDROOT -type d -name "*catalina*" | sed -e "s|$BUILDROOT||")
@@ -61,7 +70,8 @@ add_bin_exec_command $PRODUCT $PRODUCTDIR/AppRun
 subst "2iexport APPDIR=$PRODUCTDIR" $BUILDROOT/usr/bin/$PRODUCT
 
 subst '1iAutoProv:no' $SPEC
-subst '1iAutoReq:yes,nopython,nomono,nomonolib' $SPEC
+#subst '1iAutoReq:yes,nopython,nomono,nomonolib' $SPEC
+subst '1iAutoReq:no' $SPEC
 
 # ignore embedded libs
 drop_embedded_reqs
