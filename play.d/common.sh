@@ -6,10 +6,17 @@ fatal()
     exit 1
 }
 
+eget()
+{
+    epm tool eget "$@"
+}
+
 check_url_is_accessible()
 {
     local res
-    epm tool eget --check "$1"
+    eget --check "$1"
+}
+
 }
 
 is_supported_arch()
