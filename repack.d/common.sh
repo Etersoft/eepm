@@ -206,6 +206,8 @@ move_to_opt()
     subst "s|\(%config.*\) \"$rdir|\1 \"$PRODUCTDIR|" $SPEC
     subst "s|^$rdir|$PRODUCTDIR|" $SPEC
     subst "s|^\"$rdir|\"$PRODUCTDIR|" $SPEC
+
+    pack_dir "$PRODUCTDIR"
 }
 
 # remove absolute path from desktop file

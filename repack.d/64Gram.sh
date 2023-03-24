@@ -29,6 +29,7 @@ else
     subst "s|^\"/|\"$PRODUCTDIR/|" $SPEC
 fi
 
+pack_dir $PRODUCTDIR
 move_file $PRODUCTDIR/Telegram $PRODUCTDIR/$PRODUCT
 
 add_bin_link_command

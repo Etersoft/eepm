@@ -16,6 +16,7 @@ subst "s|^Summary:.*|Summary: VK Teams|" $SPEC
 mkdir -p $BUILDROOT$PRODUCTDIR
 mv $BUILDROOT/* $BUILDROOT$PRODUCTDIR
 subst "s|\"/|\"$PRODUCTDIR/|" $SPEC
+pack_dir $PRODUCTDIR
 
 add_bin_exec_command $PRODUCT
 # Hack against https://bugzilla.altlinux.org/43779

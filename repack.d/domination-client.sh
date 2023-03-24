@@ -12,6 +12,8 @@ PRODUCTDIR="/opt/Domination/Client"
 move_to_opt "/opt/Domination Client"
 subst "s|/opt/Domination Client/||" $BUILDROOT/usr/share/applications/domination-client.desktop
 
+pack_dir $PRODUCTDIR
+
 add_bin_link_command
 
 install_deps
