@@ -17,6 +17,12 @@ check_url_is_accessible()
     eget --check "$1"
 }
 
+
+cd_to_temp_dir()
+{
+    PKGDIR=$(mktemp -d)
+    trap "rm -fr $PKGDIR" EXIT
+    cd $PKGDIR || fatal
 }
 
 is_supported_arch()
