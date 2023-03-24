@@ -30,11 +30,15 @@ Requires: apt rpm
 # TODO: don't use at all
 Requires: apt-repo
 
-AutoProv:no
-AutoReq:no,shell
 %endif
 
+AutoProv:no
+AutoReq:no
+
 Requires: which
+
+# TODO: drop gzip
+Requires: coreutils diffutils findutils file gawk grep gzip less sed sh termutils
 
 %description
 Etersoft EPM is the package manager for any platform
