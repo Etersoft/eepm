@@ -529,6 +529,13 @@ get_uname()
     tolower $(uname $1) | tr -d " \t\r\n"
 }
 
+get_glibc_version()
+{
+    for i in /lib/x86_64-linux-gnu /lib64 /lib/i386-linux-gnu /lib ; do
+        [ -x "$ROOTDIR$i/libc.so.6" ] && $ROOTDIR$i/libc.so.6 | head -n1 | grep "version" | sed -e 's|.*version ||' -e 's|\.$||' && return
+    done
+}
+
 get_base_os_name()
 {
 local DIST_OS
@@ -834,7 +841,8 @@ case "$1" in
 		echo " -y - print running service manager"
 		echo " --pretty - print pretty distro name"
 		echo " -v - print version of the distro"
-		echo " --full-version - print full version of the distro"
+		echo " --full-version  - print full version of the distro"
+		echo " --glibc-version - print system glibc version"
 		echo " -V - print the utility version"
 		echo "Run without args to print all information."
 		exit 0
@@ -861,6 +869,11 @@ case "$1" in
 	--debian-arch)
 		override_distrib "$2"
 		get_debian_arch
+		exit 0
+		;;
+	--glibc-version)
+		override_distrib "$2"
+		get_glibc_version
 		exit 0
 		;;
 	-d)
