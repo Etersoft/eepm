@@ -29,7 +29,7 @@ __epm_check_if_needed_repack()
     # FIXME: from вроде не существует и не работает
     local pkgname="$(epm print name from "$1")"
     local repackcode="$EPM_REPACK_SCRIPTS_DIR/$pkgname.sh"
-    [ -x "$repackcode" ] || return
+    [ -s "$repackcode" ] || return
     warning "There is repack rule for $pkgname package. It is better install this package via 'epm --repack install' or 'epm play'."
 }
 
@@ -166,7 +166,7 @@ EOF
 __apply_fix_code()
 {
     local repackcode="$EPM_REPACK_SCRIPTS_DIR/$1.sh"
-    [ -x "$repackcode" ] || return
+    [ -s "$repackcode" ] || return
     shift
     export PATH=$PROGDIR:$PATH
     local bashopt=''
