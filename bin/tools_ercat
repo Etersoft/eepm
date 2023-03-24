@@ -1,0 +1,132 @@
+#!/bin/bash
+#
+# Copyright (C) 2013, 2020  Etersoft
+# Copyright (C) 2013, 2020  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+PROGDIR=$(dirname $0)
+[ "$PROGDIR" = "." ] && PROGDIR=$(pwd)
+
+# will replaced to /usr/share/erc during install
+SHAREDIR=$(dirname $0)
+
+load_helper()
+{
+    local CMD="$SHAREDIR/$1"
+    [ -r "$CMD" ] || fatal "Have no $CMD helper file"
+    . $CMD
+}
+
+load_helper erc-sh-functions
+load_helper erc-sh-archive
+
+check_tty
+
+phelp()
+{
+	echo "$Descr
+$Usage
+ Commands:
+$(get_help HELPCMD)
+
+ Options:
+$(get_help HELPOPT)
+"
+}
+
+print_version()
+{
+        echo "Etersoft uncompressor version @VERSION@"
+        echo "Copyright (c) Etersoft 2013, 2020"
+        echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
+}
+
+regular_unpack()
+{
+    local file="$1"
+    local prg="$2"
+    local pkg="$3"
+    local opt="$4"
+
+    # instead of epm assure
+    if ! which "$prg" >/dev/null 2>/dev/null ; then
+        epm assure $prg $pkg || fatal "Try install $pkg package for $prg unpack command."
+    fi
+
+    docmd $prg $opt $file || fatal
+}
+
+
+progname="${0##*/}"
+
+Usage="Usage: $progname [options] file(s)..."
+Descr="ercat - universal uncompressor"
+
+cmd=$1
+
+# Just printout help if run without args
+if [ -z "$cmd" ] ; then
+    print_version
+    echo
+    fatal "Run $ $progname --help for get help"
+fi
+
+case $cmd in
+    -h|--help|help)       # HELPOPT: this help
+        phelp
+        exit
+        ;;
+    -v|--version)         # HELPOPT: print version
+        print_version
+        exit
+        ;;
+esac
+
+# TODO: check ext
+# TODO: check file existence
+# TODO: check by content
+for f in $@ ; do
+    TYPE=$(get_archive_ext $f) || TYPE=$(is_plain_text $f) || { warning "Skipping unrecognized $f" ; continue ; }
+    case $TYPE in
+        gz)
+            regular_unpack "$f" gunzip gzip -c
+            ;;
+        bz2)
+            regular_unpack "$f" bzcat bzip2
+            ;;
+        xz)
+            regular_unpack "$f" xzcat xz
+            ;;
+        Z|compress)
+            regular_unpack "$f" zcat gzip
+            ;;
+        lzma)
+            regular_unpack "$f" lzcat xz
+            ;;
+        zst|zstd)
+            regular_unpack "$f" zstdcat zstd
+            ;;
+        lz4)
+            regular_unpack "$f" lz4cat lz4
+            ;;
+        plain)
+            docmd cat "$f" || fatal
+            ;;
+        *)
+            fatal "Unsupported compression format $TYPE"
+            ;;
+    esac
+done

@@ -529,6 +529,42 @@ eget()
 	$EGET "$@"
 }
 
+# will replaced within disabled_erc in packaged version
+erc()
+{
+	local ERC
+	# use internal eget only if exists
+	if [ -s $SHAREDIR/tools_erc ] ; then
+		$SHAREDIR/tools_erc "$@"
+		return
+	fi
+	fatal "Internal error: missed tools_erc"
+
+	# FIXME: we need disable output here, ercat can be used for get output
+	assure_exists_erc >/dev/null
+	# run external command, not the function
+	ERC=$(which erc) || fatal "Missed command erc from installed package erc"
+	$ERC "$@"
+}
+
+# will replaced within disabled_ercat in packaged version
+ercat()
+{
+	local ERCAT
+	# use internal eget only if exists
+	if [ -s $SHAREDIR/tools_ercat ] ; then
+		$SHAREDIR/tools_ercat "$@"
+		return
+	fi
+	fatal "Internal error: missed tools_ercat"
+
+	# FIXME: we need disable output here, ercat can be used for get output
+	assure_exists_erc >/dev/null
+	# run external command, not the function
+	ERCAT=$(which ercat) || fatal "Missed command ercat from installed package erc"
+	$ERCAT "$@"
+}
+
 estrlist()
 {
 	if [ -s $SHAREDIR/tools_estrlist ] ; then

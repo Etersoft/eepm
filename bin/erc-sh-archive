@@ -1,0 +1,118 @@
+#!/bin/bash
+#
+# Copyright (C) 2013  Etersoft
+# Copyright (C) 2013  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+list_subformats()
+{
+	local i
+	for i in gz bz2 xz bzip2 lz4 lzma zst zstd ; do
+		echo "tar.$i"
+	done
+
+	for i in gz bz2 xz lz4 ; do
+		echo "cpio.$i"
+	done
+}
+
+list_extraformats()
+{
+	cat <<EOF
+bz2
+gz
+lz4
+Z
+tgz
+pax
+zst
+zstd
+exe
+EOF
+}
+
+# it is extension list really
+# list all supported formats: tar rar and so on
+list_formats()
+{
+	list_subformats
+	a='' patool formats | grep ".* files:" | sed "s/ .*//g"
+	# TODO: do not use patool formats in such case?
+	# See ArchiveCompressions in patool
+	list_extraformats
+}
+
+# returns true if arg is XXX: from list_formats
+is_target_format()
+{
+	[ "${1/:/}" = "$1" ] && return 1
+	local arc="$(echo "$1" | sed -e 's|:.*||g')"
+	list_formats | grep -q "^$arc$" && return 0
+	return 1
+}
+
+# TODO: detect by name, without comparing with existing?
+# 1.zip -> zip
+get_archive_ext()
+{
+	local i
+	for i in $(list_formats) ; do
+		[ -z "${1/*.$i/}" ] && echo "$i" && return
+	done
+	return 1
+}
+
+# 1.zip -> 1
+get_archive_name()
+{
+	local ext
+	ext=$(get_archive_ext "$1")
+	if [ -n "$ext" ] ; then
+		echo $(dirname "$1")/$(basename "$1" .$ext)
+	else
+		echo "$1"
+		return 1
+	fi
+}
+
+# FIXME
+is_plain_text()
+{
+	file --mime-type "$1" | grep -q "text/" && echo "plain" && return
+	file "$1" | grep -q "empty" && echo "plain" && return
+	return 1
+}
+
+
+# TODO: improve
+# TODO: detect by extension as default
+get_archive_type()
+{
+	local aext
+	if [ -r "$1" ] ; then
+		# TODO: rewrite with mime
+		file "$1" | grep -q "Zip archive data" && echo "zip" && return
+		file "$1" | grep -q "RAR archive data" && echo "rar" && return
+	else
+		warning "Couldn't read $1, skipping mime checking"
+	fi
+
+	if aext=$(get_archive_ext "$1") ; then
+		echo $aext
+		return
+	fi
+	return 1
+}

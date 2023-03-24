@@ -1,0 +1,234 @@
+#!/bin/bash
+#
+# Copyright (C) 2013-2015, 2017  Etersoft
+# Copyright (C) 2013-2015, 2017  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+PROGDIR=$(dirname $0)
+[ "$PROGDIR" = "." ] && PROGDIR=$(pwd)
+
+# will replaced to /usr/share/erc during install
+SHAREDIR=$(dirname $0)
+
+load_helper()
+{
+    local CMD="$SHAREDIR/$1"
+    [ -r "$CMD" ] || fatal "Have no $CMD helper file"
+    . $CMD
+}
+
+load_helper erc-sh-functions
+load_helper erc-sh-archive
+
+check_tty
+
+# 1.zip tar:  -> 1.tar
+build_target_name()
+{
+	is_target_format $2 && echo $(get_archive_name "$1").${2/:/} && return
+	echo "$1"
+        return 1
+}
+
+phelp()
+{
+	echo "$Descr
+$Usage
+ Commands:
+$(get_help HELPCMD)
+
+ Options:
+$(get_help HELPOPT)
+
+ Examples:
+    # erc dir - pack dir to dirname.zip
+    # erc a archive.zip file(s)... - pack files to archive.zip
+    # erc [x] archive.zip - unpack
+    # unerc archive.zip - unpack
+    # erc [repack] archive1.zip... archive2.rar 7z: - repack all to 7z
+    # erc -f [repack] archive.zip archive.7z - force repack zip to 7z (override target in anyway)
+    # erc file/dir zip: - pack file to zip
+"
+}
+
+print_version()
+{
+        echo "Etersoft archive manager version @VERSION@"
+        echo "Copyright (c) Etersoft 2013-2020"
+        echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
+}
+
+progname="${0##*/}"
+
+Usage="Usage: $progname [options] [<command>] [params]..."
+Descr="erc - universal archive manager"
+
+progname="${0##*/}"
+
+
+force=
+target=
+verbose=--verbose
+
+case "$1" in
+    -h|--help|help)       # HELPOPT: this help
+        phelp
+        exit
+        ;;
+    -V|--version)         # HELPOPT: print version
+        print_version
+        exit
+        ;;
+    -q|--quiet)           # HELPOPT: be silent
+        verbose=
+        shift
+        ;;
+    -f|--force)           # HELPOPT: override target
+        force=-f
+        shift
+        ;;
+esac
+
+cmd="$1"
+
+eval lastarg=\${$#}
+
+# if the first arg is some archive, suggest extract
+if get_archive_type "$cmd" 2>/dev/null >/dev/null ; then
+    if is_target_format $lastarg ; then
+        cmd=repack
+    else
+        cmd=extract
+    fi
+# erc dir (pack to zip by default)
+elif [ -d "$cmd" ] && [ -z "$2" ] ; then
+    cmd=pack
+    target=$(basename "$1").zip
+# erc dir zip:
+elif test -r "$cmd" && is_target_format "$2" ; then
+    cmd=pack
+elif [ "$progname" = "unerc" ] ; then
+    cmd=extract
+else
+    shift
+fi
+
+
+# Just printout help if run without args
+if [ -z "$cmd" ] ; then
+    print_version
+    echo
+    fatal "Run $ $progname --help for get help"
+fi
+
+# TODO: Если программа-архиватор не установлена, предлагать установку с помощью epm
+
+case $cmd in
+    a|-a|create|pack|add)        # HELPCMD: create archive / add file(s) to archive
+        # TODO: realize archive addition if already exist (and separate adding?)
+        if [ -z "$target" ] && is_target_format $lastarg ; then
+            [ $# = 2 ] || fatal "Need two args"
+            target="$(build_target_name "$1" "$2")"
+        fi
+        if [ -n "$target" ] ; then
+            [ -e "$target" ] && [ -n "$force" ] && docmd rm -f "$target"
+            docmd patool $verbose create "$target" "$1"
+            exit
+        fi
+        # erc archive.zip file(s)
+        [ -e "$1" ] && [ -n "$force" ] && docmd rm -f "$1"
+        docmd patool $verbose create "$@"
+        ;;
+    e|x|-e|-x|u|-u|extract|unpack)          # HELPCMD: extract files from archive
+        # TODO: move to patool
+        if [ "$(get_archive_type "$1" 2>/dev/null)" = "exe" ] ; then
+            docmd 7z x "$1"
+            exit
+        fi
+        docmd patool $verbose extract "$@"
+        ;;
+# TODO: implement deletion
+#    d|delete)             # HELPCMD: delete file(s) from archive
+#        docmd patool delete "$@"
+#        ;;
+    l|-l|list)               # HELPCMD: list archive contents
+        # TODO: move to patool
+        if [ "$(get_archive_type "$1" 2>/dev/null)" = "exe" ] ; then
+            docmd 7z l "$1"
+            exit
+        fi
+        docmd patool $verbose list "$@"
+        ;;
+    t|-t|test|check)         # HELPCMD: test for archive integrity
+        # TODO: move to patool
+        if [ "$(get_archive_type "$1" 2>/dev/null)" = "exe" ] ; then
+            docmd 7z t "$1"
+            exit
+        fi
+        docmd patool $verbose test "$@"
+        ;;
+    type)                 # HELPCMD: print type of archive
+        get_archive_type "$1" || fatal "Can't recognize $1 as archive"
+        ;;
+    diff)                 # HELPCMD: compare two archive
+        # check 2 arg
+        docmd patool $verbose diff "$@"
+        ;;
+    b|-b|bench|benchmark)    # HELPCMD: do CPU benchmark
+        #assure_cmd 7z
+        # TODO: can be 7za?
+        docmd 7z b
+        ;;
+    search|grep)               # HELPCMD: search in files from archive
+        docmd patool $verbose search "$@"
+        ;;
+    repack|conv)          # HELPCMD: convert source archive to target
+        # TODO: need repack remove source file?
+        # TODO: check for 2 arg
+        if ! is_target_format $lastarg ; then
+            [ $# = 2 ] || fatal "Need two args"
+            [ "$(realpath "$1")" = "$(realpath "$2")" ] && warning "Output file is the same as input" && exit
+            [ -e "$2" ] && [ -n "$force" ] && docmd rm -f "$2"
+            docmd patool $verbose repack "$1" "$2"
+            exit
+        fi
+
+        # add support for target zip:
+        for i in "$@" ; do
+            [ "$i" = "$lastarg" ] && continue
+            target="$(build_target_name "$i" "$lastarg")"
+            [ "$(realpath "$1")" = "$(realpath "$target")" ] && warning "Output file is the same as input" && exit
+            [ -e "$target" ] && [ -n "$force" ] && docmd rm -f "$target"
+            docmd patool $verbose repack "$i" "$target" || exit
+        done
+
+        ;;
+    formats)              # HELPCMD: lists supported archive formats
+        # TODO: print allowed with current programs separately
+        if [ -n "$verbose" ] ; then
+            docmd patool formats "$@"
+            echo "Also we supports:"
+            ( list_subformats ; list_extraformats ) | sed -e "s|^|  |"
+        else
+            list_formats
+        fi
+        ;;
+    *)
+        # TODO: If we have archive in parameter, just unpack it
+        fatal "Unknown command $1"
+        ;;
+esac
+
