@@ -24,6 +24,11 @@ subst()
 }
 fi
 
+erc()
+{
+    epm tool erc "$@"
+}
+
 is_dir_empty()
 {
     [ -z "$(ls -A "$1")" ]

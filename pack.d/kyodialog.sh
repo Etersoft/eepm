@@ -6,8 +6,6 @@ RETURNTARNAME="$2"
 
 . $(dirname $0)/common.sh
 
-epm assure erc || epm ei erc || fatal
-
 CURDIR="$(pwd)"
 
 PKGDIR="$(mktemp -d)"
@@ -15,12 +13,12 @@ trap "rm -fr $PKGDIR" EXIT
 cd $PKGDIR || fatal
 
 if echo "$TAR" | grep Linux_Universal_Driver.zip ; then
-    a= erc $TAR || fatal
+    erc $TAR || fatal
     TAR=$(echo KyoceraLinuxPackages-*.tar.gz)
 fi
 
 if echo "$TAR" | grep KyoceraLinuxPackages ; then
-    a= erc $TAR || fatal
+    erc $TAR || fatal
 else
     fatal "How no idea how to handle $TAR"
 fi

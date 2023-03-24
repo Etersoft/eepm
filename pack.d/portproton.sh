@@ -14,7 +14,6 @@ VERSION="$(epm tool eget -O- https://api.github.com/repos/Castro-Fidel/PortWINE/
 
 PKGNAME=portproton-$VERSION.tar
 
-epm assure erc || fatal
 erc repack "$TAR" "$PKGNAME" || fatal
 
 return_tar "$PKGNAME"

@@ -13,9 +13,6 @@ PKGDIR="$(mktemp -d)"
 trap "rm -fr $PKGDIR" EXIT
 cd $PKGDIR || fatal
 
-# TODO: embed erc to epm
-epm assure erc || epm ei erc || fatal
-
 # use version from tarball
 PKGNAME="$(basename $TAR .tar.gz)"
 

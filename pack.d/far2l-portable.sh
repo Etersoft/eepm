@@ -20,9 +20,6 @@ tdir=$(mktemp -d)
 trap "rm -fr $tdir" EXIT
 cd $tdir || fatal
 
-# TODO: embed erc to epm
-epm assure erc || epm ei erc || fatal
-
 if echo "$TAR" | grep -q "far2l_portable.*.tar.gz" ; then
     erc $TAR || fatal
     RUNFILE="$(echo $tdir/far2l*.run)"
