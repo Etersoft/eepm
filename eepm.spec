@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.36.2
+Version: 3.37.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -157,6 +157,14 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Fri Mar 24 2023 Vitaly Lipatov <lav@altlinux.ru> 3.37.0-alt1
+- epm play master-pdf-editor: get package name from site
+- epm play: add realvnc-server and realvnc-viewer
+- epm repack ipera-mediaserver: drom libQt5 libGL from reqs
+- epm tool: add erc and ercat
+- eepm.spec: disable AutoReq at all, use direct requires
+- epm play unigine-*: move unpacking to pack.d
+
 * Fri Mar 24 2023 Vitaly Lipatov <lav@altlinux.ru> 3.36.2-alt1
 - epm repack icq: fix requires (ALT bug 44899)
 - epm repack vkteams: fix requires
