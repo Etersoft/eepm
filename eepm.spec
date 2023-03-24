@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.36.1
+Version: 3.36.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -153,6 +153,18 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Fri Mar 24 2023 Vitaly Lipatov <lav@altlinux.ru> 3.36.2-alt1
+- epm repack icq: fix requires (ALT bug 44899)
+- epm repack vkteams: fix requires
+- epm repack far2l-portable: add package meta info
+- epm play wine: add missed wine-etersoft
+- epm repack meridius: fix icon name
+- epm repack: implement add_requires and use it
+- epm repack liteide: fix desktop, add golang requires (ALT bug 45635)
+- distro_info: add --glibc-version
+- epm play jetbrains-toolbox: rewrite with epm pack
+- epm play kyodialog: rewrite with epm pack
+
 * Thu Mar 23 2023 Vitaly Lipatov <lav@altlinux.ru> 3.36.1-alt1
 - epm-pack: install PKGFORMAT package after repack
 - replace --download-only with --save-only
