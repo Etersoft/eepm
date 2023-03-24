@@ -405,7 +405,7 @@ make_fileurl()
 get_urls()
 {
     # cat html, divide to lines by tags and cut off hrefs only
-    scat $URL | sed -e 's|<|<\n|g' | \
+    scat $URL | sed -e 's|<|<\n|g' -e 's|data-file=|href=|g' | \
          grep -i -o -E 'href="(.+)"' | cut -d'"' -f2
 }
 
