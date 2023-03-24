@@ -6,6 +6,18 @@ fatal()
     exit 1
 }
 
+is_root()
+{
+	local EFFUID="$(id -u)"
+	[ "$EFFUID" = "0" ]
+}
+
+assure_root()
+{
+	is_root || fatal "run me only under root"
+}
+
+
 if [ "$1" = "--remove" ] ; then
     epm remove $PKGNAME
     exit
