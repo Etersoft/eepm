@@ -6,24 +6,33 @@ DESCRIPTION="Master PDF Editor from the official site"
 
 . $(dirname $0)/common.sh
 
+PKG=''
 repack=''
 # Strict supported list
 case $(epm print info -e) in
-    AstraLinuxCE/*|Debian/*|Ubuntu/*)
-        PKG="master-pdf-editor-5.8.70-qt5.x86_64.deb"
+    AstraLinuxCE/*|Debian/9|Ubuntu/20)
+        PKG="master-pdf-editor-*-qt5.9.x86_64.deb"
         ;;
-    AstraLinuxSE/1.7*)
-        PKG="master-pdf-editor-5.8.70-qt5_astra.x86_64.deb"
+    AstraLinuxSE/1.7*|Debian/*|Ubuntu/*)
+        PKG="master-pdf-editor-*-qt5.x86_64.deb"
         ;;
     RedOS/*|AlterOS/*|ALTLinux/*|ALTServer/*|MOC/*)
-        PKG="master-pdf-editor-5.8.70-qt5.x86_64.rpm"
+        PKG="master-pdf-editor-*-qt5.x86_64.rpm"
         repack='--repack'
-        ;;
-    *)
-        fatal "Unsupported distro $(epm print info -e). Ask application vendor for a support."
         ;;
 esac
 
-URL="https://code-industry.ru/public/$PKG"
+if [ -z "$PKG" ] ; then
+    case $(epm print info -p) in
+        rpm)
+            PKG="master-pdf-editor-*-qt5.x86_64.rpm"
+            ;;
+        *)
+            PKG="master-pdf-editor-*-qt5.x86_64.deb"
+            ;;
+    esac
+fi
 
-epm $repack install "$URL"
+PKGURL=$(epm tool eget --list --latest https://code-industry.ru/free-pdf-editor/ $PKG)
+
+epm $repack install "$PKGURL"
