@@ -10,6 +10,7 @@ get_list_alt()
 for i in glibc-nss glibc-gconv-modules \
          sssd-client \
          vulkan-amdgpu libvulkan1 \
+         $(epmqp --short nvidia_glx | grep "^nvidia_glx") \
          $(epmqp --short libnss | grep "^libnss-") \
          $(epmqp --short xorg-dri | grep "^xorg-dri-")
 do
