@@ -43,7 +43,7 @@ has_wildcard()
 return_tar()
 {
     [ -n "$RETURNTARNAME" ] || fatal "RETURNTARNAME is empty"
-    echo "$1" >$RETURNTARNAME || fatal "Can't save tar name $1 to file $RETURNTARNAME"
+    echo $1 >$RETURNTARNAME || fatal "Can't save tar name $1 to file $RETURNTARNAME"
 }
 
 
