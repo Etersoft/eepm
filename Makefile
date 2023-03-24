@@ -18,7 +18,7 @@ install:
 	sed -e "s|SHAREDIR=.*|SHAREDIR=$(instpkgdatadir)|g" -e "s|@VERSION@|$(version)|g" <bin/serv >$(DESTDIR)$(bindir)/serv
 
 	mkdir -p $(DESTDIR)$(pkgdatadir)/
-	install -m 644 `ls -1 bin/* | grep "[-_]"` $(DESTDIR)$(pkgdatadir)/
+	cp -a `ls -1 bin/* | grep "[-_]"` $(DESTDIR)$(pkgdatadir)/
 	rm -f $(DESTDIR)$(pkgdatadir)/distr_info
 
 	mkdir -p $(DESTDIR)$(sysconfdir)/eepm/
