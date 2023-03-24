@@ -251,7 +251,7 @@ __epm_play_remove()
 
 __epm_play_update()
 {
-    local i, RES
+    local i RES
     local CMDUPDATE="$1"
     shift
     RES=0

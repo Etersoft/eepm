@@ -62,8 +62,13 @@ update_url_if_need_mirrored()
 
 get_latest_version()
 {
-    URL="https://eepm.ru/app-versions"
-    update_url_if_need_mirrored
+    local epmver="$(epm --short --version)"
+    # TODO: use check_url_is_accessible with more short URL (domain?)
+    URL="https://eepm.ru/releases/$epmver/app-versions"
+    if ! update_url_if_need_mirrored ; then
+        URL="https://eepm.ru/app-versions"
+        update_url_if_need_mirrored || return
+    fi
     epm tool eget -q -O- "$URL/$1"
 }
 
