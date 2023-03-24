@@ -15,11 +15,11 @@ subst "s|^Group:.*|Group: Development/C|" $SPEC
 subst "s|^URL:.*|URL: https://www.jetbrains.com/ru-ru/toolbox-app/|" $SPEC
 subst "s|^Summary:.*|Summary: JetBrains Toolbox App|" $SPEC
 
-move_to_opt "/$PRODUCT-*"
-add_bin_link_command $PRODUCT
+#move_to_opt "/$PRODUCT-*"
+#add_bin_link_command $PRODUCT
 
-subst '1iAutoProv:no' $SPEC
+#subst '1iAutoProv:no' $SPEC
 # ldd: ERROR: /tmp/jetbrains-toolbox-1.25.12627/jetbrains-toolbox: failed to find the program interpreter
-subst '1iAutoReq:no' $SPEC
+#subst 's|^AutoReq:.*|AutoReq:no|' $SPEC
 
 exit
