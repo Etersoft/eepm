@@ -733,7 +733,7 @@ epm_install()
     epm_install_names $names || return
 
     # save files before install and repack
-    if [ -n "$download_only" ] ; then
+    if [ -n "$download_only" ] && [ -n "$files" ] ; then
         echo
         cp -v $files "$EPMCURDIR"
         return

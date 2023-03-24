@@ -56,7 +56,7 @@ __run_script()
 	local script="$psdir/$1.sh"
 	[ -x "$script" ] || return
 	shift
-	$script "$@"
+	( unset EPMCURDIR ; $script "$@" )
 	return
 }
 
