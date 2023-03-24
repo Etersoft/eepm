@@ -45,6 +45,14 @@ epm_tool()
             showcmd eget "$@"
             eget "$@"
             ;;
+        "erc")                       # HELPCMD: universal archive manager
+            showcmd erc "$@"
+            erc "$@"
+            ;;
+        "ercat")                     # HELPCMD: universal file uncompressor
+            showcmd ercat "$@"
+            ercat "$@"
+            ;;
         "estrlist")                  # HELPCMD: string operations
             showcmd estrlist "$@"
             estrlist "$@"
