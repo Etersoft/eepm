@@ -93,6 +93,6 @@ case $PMTYPE in
 		fatal "Have no suitable command for $PMTYPE"
 		;;
 esac
-	info "It is recommend to run 'epm autoremove' also"
+	info "Note: Also you can try (with CAUTION) '# epm autoremove' and '# epm autoorphans' commands to remove obsoleted and unused packages."
 
 }
