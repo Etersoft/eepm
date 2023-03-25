@@ -9,6 +9,7 @@ get_list_alt()
 
 for i in glibc-nss glibc-gconv-modules \
          sssd-client \
+         primus \
          vulkan-amdgpu libvulkan1 \
          $(epmqp --short nvidia_glx | grep "^nvidia_glx") \
          $(epmqp --short libnss | grep "^libnss-") \
