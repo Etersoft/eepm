@@ -47,6 +47,9 @@ epm_full_upgrade()
 			"--no-snap")           # HELPCMD: skip snap update during full upgrade
 				full_upgrade_no_snap=1
 				;;
+			"--no-kernel-update")  # HELPCMD: skip kernel update during full upgrade
+				full_upgrade_no_kernel_update=1
+				;;
 		esac
 		shift
 	done
@@ -56,8 +59,10 @@ epm_full_upgrade()
 	[ -n "$quiet" ] || echo
 	docmd epm upgrade || fatal "upgrading of the system is failed."
 
-	[ -n "$quiet" ] || echo
-	docmd epm update-kernel || fatal "updating of the kernel is failed."
+	if [ -z "$full_upgrade_no_kernel_update" ] ; then
+		[ -n "$quiet" ] || echo
+		docmd epm update-kernel || fatal "updating of the kernel is failed."
+	fi
 
 	# disable epm play --update for non ALT Systems
 	[ "$BASEDISTRNAME" = "alt" ] || full_upgrade_no_epm_play=1
