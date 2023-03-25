@@ -26,7 +26,7 @@ Obsoletes: epm
 Provides: epm = %EVR
 
 # FIXHERE: Replace with target platform package manager
-Requires: apt rpm
+Requires: apt rpm apt-scripts
 # TODO: don't use at all
 Requires: apt-repo
 
