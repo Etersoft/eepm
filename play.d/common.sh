@@ -124,6 +124,10 @@ case "$1" in
             echo "Skipping update of $PKGNAME (package is not installed)"
             exit
         fi
+        if epm mark showhold | grep -q "^$PKGNAME$" ; then
+            echo "Skipping update of $PKGNAME (package is on hold, see '# epm mark showhold')"
+            exit
+        fi
         pkgver="$(epm print version for package $PKGNAME)"
         latestpkgver="$(get_latest_version $PKGNAME)"
         # ignore update if have no latest package version or the latest package version no more than installed one
