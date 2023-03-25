@@ -448,6 +448,11 @@ epm_repack()
     [ -z "$pkg_files" ] && info "Skip empty repack list" && return 22
 
     if __epm_repack $pkg_files && [ -n "$repacked_pkgs" ] ; then
+        if [ -n "$install" ] ; then
+            epm install $repacked_pkgs
+            return
+        fi
+
         cp $repacked_pkgs "$EPMCURDIR"
         if [ -z "$quiet" ] ; then
             echo
