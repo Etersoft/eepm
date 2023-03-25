@@ -125,9 +125,18 @@ case "$1" in
             exit
         fi
         pkgver="$(epm print version for package $PKGNAME)"
-        if [ -n "$pkgver" ] && [ "$(get_latest_version $PKGNAME)" = "$pkgver" ] ; then
-            echo "There is no newer version of $PKGNAME than installed version $pkgver."
-            exit
+        latestpkgver="$(get_latest_version $PKGNAME)"
+        # ignore update if have no latest package version or the latest package version no more than installed one
+        if [ -n "$pkgver" ] ; then
+            if [ -z "$latestpkgver" ] ; then
+                echo "Can't get info about latest version of $PKGNAME, so skip updating installed version $pkgver."
+                exit
+            fi
+            # latestpkgver < pkgver
+            if [ "$(epm print compare package version $latestpkgver $pkgver)" = "-1" ] ; then
+                echo "Latest available version of $PKGNAME: $latestpkgver. Installed installed version: $pkgver."
+                exit
+            fi
         fi
         ;;
     "--run")
