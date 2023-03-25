@@ -793,20 +793,20 @@ print_pretty_name()
 print_total_info()
 {
 cat <<EOF
-distro_info v$PROGVERSION : Copyright © 2007-2022 Etersoft
+distro_info v$PROGVERSION : Copyright © 2007-2023 Etersoft
 Total system information:
-    Pretty distro name (--pretty): $(print_pretty_name)
-     Distro name and version (-e): $(print_name_version)
-     Package manager/type (-g/-p): $(pkgmanager) / $(pkgtype)
-     Running service manager (-y): $(get_service_manager)
-              Virtualization (-i): $(get_virt)
-            CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_core_mhz) MHz
-            CPU Architecture (-a): $(get_arch)
-     CPU norm register size  (-b): $(get_bit_size)
-     System memory size (MB) (-m): $(get_memory_size)
-                Base OS name (-o): $(get_base_os_name)
-Base distro (vendor) name (-s|-n): $(pkgvendor)
-    Version codename (--codename): $(print_codename)
+         Pretty distro name (--pretty): $(print_pretty_name)
+Distro name (-d) and version (-v) (-e): $(print_name_version)
+          Package manager/type (-g/-p): $(pkgmanager) / $(pkgtype)
+          Running service manager (-y): $(get_service_manager)
+                   Virtualization (-i): $(get_virt)
+                 CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_core_mhz) MHz
+                 CPU Architecture (-a): $(get_arch)
+          CPU norm register size  (-b): $(get_bit_size)
+          System memory size (MB) (-m): $(get_memory_size)
+                     Base OS name (-o): $(get_base_os_name)
+     Base distro (vendor) name (-s|-n): $(pkgvendor)
+         Version codename (--codename): $(print_codename)
 
 (run with -h to get help)
 EOF
