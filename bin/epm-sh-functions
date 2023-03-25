@@ -23,6 +23,7 @@ check_core_commands()
 {
 	#which --help >/dev/null || fatal "Can't find which command (which package is missed?)"
 	# broken which on Debian systems
+	# TODO: use is_command and print_command_path instead of
 	which which >/dev/null || fatal "Can't find which command (which or debianutils package is missed?)"
 	which grep >/dev/null || fatal "Can't find grep command (coreutils package is missed?)"
 	which sed >/dev/null || fatal "Can't find sed command (sed package is missed?)"
@@ -753,7 +754,34 @@ is_url()
     echo "$1" | grep -q "^[fhtps]*://"
 }
 
+# print a path to the command if exists in $PATH
+if which which 2>/dev/null >/dev/null ; then
+    # the best case if we have which command (other ways needs checking)
+    # TODO: don't use which at all, it is binary, not builtin shell command
+print_command_path()
+{
+    which -- "$1" 2>/dev/null
+}
+elif type -a type 2>/dev/null >/dev/null ; then
+print_command_path()
+{
+    type -fpP -- "$1" 2>/dev/null
+}
+else
+print_command_path()
+{
+    type "$1" 2>/dev/null | sed -e 's|.* /|/|'
+}
+fi
+
+# check if <arg> is a real command
+is_command()
+{
+    print_command_path "$1" >/dev/null
+}
+
 # compatibility layer
+
 # add realpath if missed
 if ! which realpath 2>/dev/null >/dev/null ; then
 realpath()
