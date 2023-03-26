@@ -1,0 +1,88 @@
+#!/bin/sh
+#
+# Copyright (C) 2023  Etersoft
+# Copyright (C) 2023  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+load_helper epm-sh-altlinux
+
+
+epm_repoenable()
+{
+
+case $PMTYPE in
+	apt-rpm)
+		#assure_exists apt-repo
+		if tasknumber "$1" >/dev/null ; then
+			get_task_packages "$@"
+		else
+			print_apt_sources_list
+			#docmd apt-repo list
+		fi
+		;;
+	apt-dpkg|aptitude-dpkg)
+		print_apt_sources_list
+		;;
+	yum-rpm)
+		docmd yum repolist $verbose
+		[ -n "$verbose" ] || info "Use --verbose if you need detail information."
+		;;
+	dnf-rpm)
+		sudocmd dnf config-manager --disable $verbose "$@"
+		;;
+	eoget)
+		docmd eoget enable-repo "$@"
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+}
+
+
+epm_repodisable()
+{
+
+case $PMTYPE in
+	apt-rpm)
+		#assure_exists apt-repo
+		if tasknumber "$1" >/dev/null ; then
+			get_task_packages "$@"
+		else
+			print_apt_sources_list
+			#docmd apt-repo list
+		fi
+		;;
+	apt-dpkg|aptitude-dpkg)
+		print_apt_sources_list
+		;;
+	yum-rpm)
+		docmd yum repolist $verbose
+		[ -n "$verbose" ] || info "Use --verbose if you need detail information."
+		;;
+	dnf-rpm)
+		sudocmd dnf config-manager --enable $verbose "$@"
+		;;
+	eoget)
+		docmd eoget disable-repo "$@"
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+}

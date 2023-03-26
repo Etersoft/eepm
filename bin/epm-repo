@@ -60,6 +60,13 @@ epm_repo()
 		load_helper epm-repofix
 		epm_reposwitch "$@"
 		;;
+	enable)                           # HELPCMD: enable <repo>
+		load_helper epm-repoenable
+		epm_repoenable "$@"
+		;;
+	disable)                          # HELPCMD: disable <repo>
+		load_helper epm-repodisable
+		epm_repodisable "$@"
 	clean)                            # HELPCMD: remove temp. repos (tasks and CD-ROMs)
 		# TODO: check for ALT
 		sudocmd apt-repo $dryrun clean
