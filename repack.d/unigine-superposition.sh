@@ -24,7 +24,7 @@ done
 epm assure patchelf || exit
 
 cd $BUILDROOT/$PRODUCTDIR || fatal
-for i in bin/lib*.so ; do
+for i in bin/lib*.so bin/qt/lib/lib*.so*; do
     a= patchelf --set-rpath '$ORIGIN' $i
 done
 
@@ -49,6 +49,7 @@ pack_dir $PRODUCTDIR/bin
 
 # lib.req: ERROR: .../opt/unigine-superposition/bin/qt/lib/libssl.so: library libcrypto.so.1.0.0 not found
 a= patchelf --remove-needed libcrypto.so.1.0.0 $BUILDROOT$PRODUCTDIR/bin/qt/lib/libssl.so
+a= patchelf --add-needed libcrypto.so $BUILDROOT$PRODUCTDIR/bin/qt/lib/libssl.so
 
 add_bin_exec_command superposition $PRODUCTDIR/bin/launcher
 add_bin_link_command $PRODUCT /usr/bin/superposition
