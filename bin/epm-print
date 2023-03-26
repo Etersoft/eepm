@@ -77,6 +77,18 @@ query_package_field()
 }
 
 
+print_pkg_arch()
+{
+    case $PMTYPE in
+        *-dpkg)
+            dpkg_query_package_field "Arch" "$@" | sed -e "s|-.*||" -e "s|.*:||"
+            ;;
+        *-rpm)
+            rpm_query_package_field "arch" "$@"
+            ;;
+    esac
+}
+
 print_pkg_version()
 {
     case $PMTYPE in
@@ -287,6 +299,7 @@ cat <<EOF
     epm print version [from filename|for package] NN     print only version of package name or package file
     epm print release [from filename|for package] NN     print only release of package name or package file
     epm print version-release [from filename|for package] NN     print only release-release of package name or package file
+    epm print arch [from filename|for package] NN     print arch  of package name or package file
     epm print field FF for package NN        print field of the package
     epm print pkgname from filename NN       print package name for the package file
     epm print srcname from filename NN       print source name for the package file
@@ -333,6 +346,16 @@ epm_print()
                 print_pkg_name "$@"
             else
                 print_name "$@"
+            fi
+            ;;
+        "arch")
+            [ -n "$1" ] || fatal "Arg is missed"
+            if [ -n "$FNFLAG" ] ; then
+                print_pkg_arch "$@"
+            elif [ -n "$PKFLAG" ] ; then
+                print_pkg_arch "$@"
+            else
+                print_pkg_arch "$@"
             fi
             ;;
         "version")
