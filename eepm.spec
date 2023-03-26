@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.38.0
+Version: 3.38.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -157,6 +157,16 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Mon Mar 27 2023 Vitaly Lipatov <lav@altlinux.ru> 3.38.1-alt1
+- epm repack unigine-superposition: fix issue with libssl/libcrypto
+- epm repack: add initial cnrdrvcups-ufr2-uk
+- epm: fix epm version checking
+- epm play common.sh: fix checking for available version
+- epm repo: add enable/disable support
+- epm print: add arch
+- epm repo add: add support for dir
+- epm repo: implement initial support for create local repo (index,pkgadd,pkgdel,pkgupdate)
+
 * Sun Mar 26 2023 Vitaly Lipatov <lav@altlinux.ru> 3.38.0-alt1
 - epm prescription i586-fix: add missed nvidia_glx, primus
 - epm repack: many fixes
