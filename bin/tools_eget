@@ -141,6 +141,29 @@ if [ "$1" = "-U" ] || [ "$1" = "-A" ] || [ "$1" = "--user-agent" ] ; then
     shift
 fi
 
+# args: cmd <URL> <options>
+# will run cmd <options> <URL>
+download_with_mirroring()
+{
+    local CMD="$1"
+    shift
+    local URL="$1"
+    shift
+
+    local res
+    $CMD "$@" "$URL" && return
+    res=$?
+    [ -n "$CHECKMIRRORS" ] || return $res
+
+    MIRROR="https://mirror.eterfund.ru"
+    SECONDURL="$(echo "$URL" | sed -e "s|^.*://|$MIRROR/|")"
+    $CMD "$@" "$SECONDURL" && URL="$SECONDURL" && return
+
+    MIRROR="https://mirror.eterfund.org"
+    SECONDURL="$(echo "$URL" | sed -e "s|^.*://|$MIRROR/|")"
+    $CMD "$@" "$SECONDURL" && URL="$SECONDURL" && return
+}
+
 
 WGET="$(which wget 2>/dev/null)"
 
@@ -158,42 +181,24 @@ __wget()
 scat()
 {
     local URL="$1"
-    local res
-    __wget -O- "$URL" && return
-    res=$?
-    # TODO: move check mirrors to __wget (__curl) command (check via try download and print progress)
-    [ -n "$CHECKMIRRORS" ] || return $res
-
-    update_url_if_need_mirrored || return
-    __wget -O- "$URL"
+    download_with_mirroring __wget "$URL" -O-
 }
 # download to default name of to $2
 sget()
 {
     local URL="$1"
-    local res
     if [ "$2" = "/dev/stdout" ] || [ "$2" = "-" ] ; then
        scat "$URL"
        return
     elif [ -n "$2" ] ; then
-       __wget -O "$2" "$URL" && return
-       res=$?
-       [ -n "$CHECKMIRRORS" ] || return $res
-
-       update_url_if_need_mirrored || return
-       __wget -O "$2" "$URL"
+       download_with_mirroring __wget "$URL" -O "$2"
        return
     fi
 # TODO: поддержка rsync для известных хостов?
 # Не качать, если одинаковый размер и дата
 # -nc
 # TODO: overwrite always
-    __wget $WGETNAMEOPTIONS "$URL" && return
-    res=$?
-    [ -n "$CHECKMIRRORS" ] || return $res
-
-    update_url_if_need_mirrored || return
-    __wget $WGETNAMEOPTIONS "$URL"
+    download_with_mirroring __wget "$URL" $WGETNAMEOPTIONS
 }
 
 check_url_is_accessible()
@@ -208,22 +213,16 @@ CURL="$(which curl 2>/dev/null)"
 __curl()
 {
     if [ -n "$CURLUSERAGENT" ] ; then
-        docmd $CURL -L $CURLQ "$CURLUSERAGENT" $CURLNOSSLCHECK "$@"
+        docmd $CURL --fail -L $CURLQ "$CURLUSERAGENT" $CURLNOSSLCHECK "$@"
     else
-        docmd $CURL -L $CURLQ $CURLNOSSLCHECK "$@"
+        docmd $CURL --fail -L $CURLQ $CURLNOSSLCHECK "$@"
     fi
 }
 # put remote content to stdout
 scat()
 {
     local URL="$1"
-    local res
-    __curl "$URL" && return
-    res=$?
-    [ -n "$CHECKMIRRORS" ] || return $res
-
-    update_url_if_need_mirrored || return
-    __curl "$URL"
+    download_with_mirroring __curl "$URL" --output -
 }
 # download to default name of to $2
 sget()
@@ -234,52 +233,20 @@ sget()
        scat "$1"
        return
     elif [ -n "$2" ] ; then
-       __curl --output "$2" "$URL" || return
-       res=$?
-       [ -n "$CHECKMIRRORS" ] || return $res
-
-       update_url_if_need_mirrored || return
-       __curl --output "$2" "$URL"
+       download_with_mirroring __curl "$URL" --output "$2"
        return
     fi
 
-    __curl $CURLNAMEOPTIONS "$URL" || return
-    res=$?
-    [ -n "$CHECKMIRRORS" ] || return $res
-
-    update_url_if_need_mirrored || return
-    __curl $CURLNAMEOPTIONS "$URL"
+    download_with_mirroring __curl "$URL" $CURLNAMEOPTIONS
 }
 
 check_url_is_accessible()
 {
     local URL="$1"
-    __curl -LI "$URL" 2>&1 | grep "HTTP/" | tail -n1 | grep -q -w "200"
+    __curl -LI "$URL" 2>&1 | grep "HTTP/" | tail -n1 | grep -q -w "200\|404"
 }
 
 fi
-
-
-# update URL variable
-update_url_if_need_mirrored()
-{
-    local MIRROR="$1"
-    local SECONDURL
-    check_url_is_accessible "$URL" && return
-    if [ -n "$MIRROR" ] ; then
-        check_url_is_accessible "$MIRROR" && URL="$MIRROR"
-        return
-    fi
-
-    MIRROR="https://mirror.eterfund.ru"
-    SECONDURL="$(echo "$URL" | sed -e "s|^.*://|$MIRROR/|")"
-    check_url_is_accessible "$SECONDURL" && URL="$SECONDURL" && return
-
-    MIRROR="https://mirror.eterfund.org"
-    SECONDURL="$(echo "$URL" | sed -e "s|^.*://|$MIRROR/|")"
-    check_url_is_accessible "$SECONDURL" && URL="$SECONDURL" && return
-
-}
 
 
 LISTONLY=''
