@@ -51,11 +51,12 @@ if [ -r "$DESKTOPFILE" ] ; then
     FROMICONFILE="$(cat $DESKTOPFILE | grep "^Icon" | head -n1 | sed -e 's|Icon=||').png"
 fi
 
+ICONFILE="$PRODUCT.png"
+
 # it is strange, there is no icon file
 # https://docs.appimage.org/reference/appdir.html
 if [ ! -s "$FROMICONFILE" ] ; then
     FROMICONFILE=".DirIcon"
-    ICONFILE="$PRODUCT.png"
     grep -q "^<svg" $FROMICONFILE && ICONFILE="$PRODUCT.svg"
 fi
 install_file $PRODUCTDIR/$FROMICONFILE /usr/share/pixmaps/$ICONFILE
