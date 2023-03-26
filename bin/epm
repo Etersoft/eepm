@@ -35,7 +35,7 @@ CONFIGDIR=$PROGDIR/../etc
 
 EPMVERSION="@VERSION@"
 
-if [ "$EPMVERSION" = "@VERSION@" ] ; then
+if [ "$EPMVERSION" = "@""VERSION""@" ] ; then
     EPMVERSION=$(head $PROGDIR/../eepm.spec | grep "^Version: " | sed -e 's|Version: ||' )
 fi
 
