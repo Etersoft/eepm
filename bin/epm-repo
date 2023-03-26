@@ -60,6 +60,22 @@ epm_repo()
 		load_helper epm-repofix
 		epm_reposwitch "$@"
 		;;
+	index)                            # HELPCMD: index repo: [--init] [path] [name]
+		load_helper epm-repoindex
+		epm_repoindex "$@"
+		;;
+	pkgadd)                           # HELPCMD: add to <dir> applied <package-filename1> [<package-filename2>...]
+		load_helper epm-repopkg
+		epm_repo_pkgadd "$@"
+		;;
+	pkgupdate)                        # HELPCMD: replace in <dir> with new <package-filename1> [<package-filename2>...]
+		load_helper epm-repopkg
+		epm_repo_pkgupdate "$@"
+		;;
+	pkgdel)                           # HELPCMD: del from <dir> <package1> [<package2>...]
+		load_helper epm-repopkg
+		epm_repo_pkgdel "$@"
+		;;
 	enable)                           # HELPCMD: enable <repo>
 		load_helper epm-repoenable
 		epm_repoenable "$@"
@@ -67,6 +83,7 @@ epm_repo()
 	disable)                          # HELPCMD: disable <repo>
 		load_helper epm-repodisable
 		epm_repodisable "$@"
+		;;
 	clean)                            # HELPCMD: remove temp. repos (tasks and CD-ROMs)
 		# TODO: check for ALT
 		sudocmd apt-repo $dryrun clean

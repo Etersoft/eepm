@@ -1,0 +1,106 @@
+#!/bin/sh
+#
+# Copyright (C) 2023  Etersoft
+# Copyright (C) 2023  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+load_helper epm-sh-altlinux
+
+# https://www.altlinux.org/APT_%D0%B2_ALT_Linux/CreateRepository
+__epm_repoindex_alt()
+{
+	local archlist="i586 x86_64 aarch64 noarch"
+
+	local init=''
+	if [ "$1" = "--init" ] ; then
+		init='--init'
+		shift
+	fi
+
+	epm assure genbasedir apt-repo-tools
+	REPO_DIR="$1"
+	# TODO: check if we inside arch dir or RPMS.*
+	[ -n "$REPO_DIR" ] || REPO_DIR="$(pwd)"
+	[ -d "$REPO_DIR" ] || fatal "Repo dir $REPO_DIR does not exist"
+	REPO_NAME="$2"
+	if [ -z "$REPO_NAME" ] ; then
+		# default name
+		REPO_NAME="addon"
+		# detect if already exists
+		for arch in $archlist ; do
+			local rd="$(echo $REPO_DIR/$arch/RPMS.*)"
+			[ -d "$rd" ] && REPO_NAME="$(echo "$rd" | sed -e 's|.*\.||')" && break
+		done
+	fi
+
+	if [ -n "$init" ] ; then
+		for arch in $archlist; do
+			mkdir -pv "$REPO_DIR/$arch/base/" "$REPO_DIR/$arch/RPMS.$REPO_NAME"
+		done
+		return
+	fi
+
+	for arch in $archlist; do
+		mkdir -pv "$REPO_DIR/$arch/base/"
+		[ -d "$REPO_DIR/$arch/RPMS.$REPO_NAME" ] || continue
+		sudocmd genbasedir --bloat --progress --topdir=$REPO_DIR $arch $REPO_NAME
+	done
+}
+
+__epm_repoindex_deb()
+{
+	local init=''
+	if [ "$1" = "--init" ] ; then
+		init='--init'
+		shift
+	fi
+
+	local dir="$1"
+	sudocmd mkdir -pv "$dir" || fatal
+	sudocmd dpkg-scanpackages -t deb "$dir" | gzip | cat > "$dir/Packages.gz"
+}
+
+
+epm_repoindex()
+{
+
+case $PMTYPE in
+	apt-rpm)
+		__epm_repoindex_alt "$@"
+		;;
+	apt-dpkg|aptitude-dpkg)
+		__epm_repoindex_deb "$@"
+		;;
+	yum-rpm)
+		epm install --skip-installed yum-utils createrepo || fatal
+		sudocmd mkdir -pv "$@"
+		sudocmd createrepo -v -s md5 "$@"
+		sudocmd verifytree
+		;;
+	dnf-rpm)
+		docmd dnf repolist $verbose
+		[ -n "$verbose" ] || info "Use --verbose if you need detail information."
+		;;
+	eoget)
+		docmd eoget index "$@"
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+}
+
