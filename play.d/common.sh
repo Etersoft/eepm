@@ -11,9 +11,11 @@ eget()
     epm tool eget "$@"
 }
 
+[ -n "$BIGTMPDIR" ] || [ -d "/var/tmp" ] && BIGTMPDIR="/var/tmp" || BIGTMPDIR="/tmp"
+
 cd_to_temp_dir()
 {
-    PKGDIR=$(mktemp -d)
+    PKGDIR=$(mktemp -d --tmpdir=$BIGTMPDIR)
     trap "rm -fr $PKGDIR" EXIT
     cd $PKGDIR || fatal
 }
