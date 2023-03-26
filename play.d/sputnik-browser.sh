@@ -9,10 +9,6 @@ SUPPORTEDARCHES="x86_64"
 . $(dirname $0)/common.sh
 
 URL="https://sputnik-lab.com/api-updates/updates/apps/meta?channel=b2c-distrs-on-site"
-if ! check_url_is_accessible "$URL" ; then
-    epm tool eget -O- "$URL"
-    fatal "Please, check why $URL is not accessible"
-fi
 
 url_by_id_content()
 {

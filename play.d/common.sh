@@ -36,7 +36,6 @@ is_supported_arch()
 get_latest_version()
 {
     local epmver="$(epm --short --version)"
-    # TODO: use check_url_is_accessible with more short URL (domain?)
     local URL="https://eepm.ru/releases/$epmver/app-versions"
     if ! eget -q -O- "$URL/$1" ; then
         URL="https://eepm.ru/app-versions"

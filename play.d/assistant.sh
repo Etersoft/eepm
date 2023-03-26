@@ -18,10 +18,6 @@ pkg="$(epm print info -p)"
 # some locale depend troubles (ALT with bash 4 needs LANG=ru_RU.UTF-8, Ubuntu with bash 5 needs LANG=C.UTF-8)
 #URL="https://мойассистент.рф/скачать"
 URL="https://xn--80akicokc0aablc.xn--p1ai/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C"
-if ! LANG=ru_RU.UTF8 check_url_is_accessible "$URL" ; then
-    epm tool eget -O- "$URL"
-    fatal "Please, check why $URL is not accessible"
-fi
 
 # parse vendor site
 tmpfile=$(mktemp)
