@@ -114,7 +114,7 @@ install_file()
     local src="$1"
     local dest="$2"
     mkdir -p "$BUILDROOT/$(dirname "$dest")" || return
-    cp "$BUILDROOT/$src" "$BUILDROOT/$dest"
+    cp "$BUILDROOT/$src" "$BUILDROOT/$dest" || return
     pack_file "$dest"
 }
 
