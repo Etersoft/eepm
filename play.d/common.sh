@@ -11,13 +11,6 @@ eget()
     epm tool eget "$@"
 }
 
-check_url_is_accessible()
-{
-    local res
-    eget --check "$1"
-}
-
-
 cd_to_temp_dir()
 {
     PKGDIR=$(mktemp -d)
@@ -39,37 +32,16 @@ is_supported_arch()
     return 1
 }
 
-# update URL variable
-update_url_if_need_mirrored()
-{
-    local MIRROR="$1"
-    local SECONDURL
-    check_url_is_accessible "$URL" && return
-    if [ -n "$MIRROR" ] ; then
-        check_url_is_accessible "$MIRROR" && URL="$MIRROR"
-        return
-    fi
-
-    MIRROR="https://mirror.eterfund.ru"
-    SECONDURL="$(echo "$URL" | sed -e "s|^.*://|$MIRROR/|")"
-    check_url_is_accessible "$SECONDURL" && URL="$SECONDURL" && return
-
-    MIRROR="https://mirror.eterfund.org"
-    SECONDURL="$(echo "$URL" | sed -e "s|^.*://|$MIRROR/|")"
-    check_url_is_accessible "$SECONDURL" && URL="$SECONDURL" && return
-
-}
 
 get_latest_version()
 {
     local epmver="$(epm --short --version)"
     # TODO: use check_url_is_accessible with more short URL (domain?)
-    URL="https://eepm.ru/releases/$epmver/app-versions"
-    if ! update_url_if_need_mirrored ; then
+    local URL="https://eepm.ru/releases/$epmver/app-versions"
+    if ! eget -q -O- "$URL/$1" ; then
         URL="https://eepm.ru/app-versions"
-        update_url_if_need_mirrored || return
+        eget -q -O- "$URL/$1"
     fi
-    epm tool eget -q -O- "$URL/$1"
 }
 
 print_product_alt()

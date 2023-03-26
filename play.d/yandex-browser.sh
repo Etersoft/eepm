@@ -28,7 +28,6 @@ fi
 # See also https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=yandex-browser-beta
 
 URL="https://repo.yandex.ru/yandex-browser"
-update_url_if_need_mirrored || update_url_if_need_mirrored https://download.etersoft.ru/pub/download/yandex-browser
 
 if [ "$(epm print info -s)" = "alt" ] || [ "$(epm print info -p)" != "rpm" ] ; then
     # epm uses eget to download * names
