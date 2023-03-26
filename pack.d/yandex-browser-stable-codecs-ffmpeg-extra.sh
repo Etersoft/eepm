@@ -33,7 +33,6 @@ pack_ffmpeg() {
 }
 
 URL="https://browser-resources.s3.yandex.net/linux/codecs.json"
-update_url_if_need_mirrored
 
 # download ffmpeg with upstream script update-ffmpeg but with our pack_ffmpeg function
 SC=$(mktemp)
