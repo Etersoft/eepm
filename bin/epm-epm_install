@@ -1,8 +1,8 @@
 #!/bin/sh
 
-# Copyright (C) 2016, 2020  Etersoft
+# Copyright (C) 2016, 2020, 2023  Etersoft
 # Copyright (C) 2016  Danil Mikhailov <danil@etersoft.ru>
-# Copyright (C) 2016, 2020  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2016, 2020, 2023  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -20,35 +20,6 @@
 
 load_helper epm-install
 
-# copied from play.d/common.sh
-
-check_url_is_accessible()
-{
-    local res
-    eget --check "$1"
-}
-
-# update URL variable
-update_url_if_need_mirrored()
-{
-    local MIRROR="$1"
-    local SECONDURL
-    check_url_is_accessible "$URL" && return
-    if [ -n "$MIRROR" ] ; then
-        check_url_is_accessible "$MIRROR" && URL="$MIRROR"
-        return
-    fi
-
-    MIRROR="https://mirror.eterfund.ru"
-    SECONDURL="$(echo "$URL" | sed -e "s|^.*://|$MIRROR/|")"
-    check_url_is_accessible "$SECONDURL" && URL="$SECONDURL" && return
-
-    MIRROR="https://mirror.eterfund.org"
-    SECONDURL="$(echo "$URL" | sed -e "s|^.*://|$MIRROR/|")"
-    check_url_is_accessible "$SECONDURL" && URL="$SECONDURL" && return
-
-}
-
 
 __epm_korinf_site_mask() {
     local MASK="$1"
@@ -57,8 +28,7 @@ __epm_korinf_site_mask() {
     rhas "$MASK" "[-_]" || MASK="$MASK[-_][0-9]"
     # set arch for Korinf compatibility
     [ "$($DISTRVENDOR -a)" = "x86_64" ] && archprefix="x86_64/"
-    URL="http://updates.etersoft.ru/pub/Korinf"
-    update_url_if_need_mirrored
+    local URL="http://updates.etersoft.ru/pub/Korinf"
     echo "$URL/$archprefix$($DISTRVENDOR -e)/$MASK*.$PKGFORMAT"
 }
 
