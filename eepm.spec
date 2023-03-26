@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.37.0
+Version: 3.38.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -157,6 +157,30 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Sun Mar 26 2023 Vitaly Lipatov <lav@altlinux.ru> 3.38.0-alt1
+- epm prescription i586-fix: add missed nvidia_glx, primus
+- epm repack: many fixes
+- epm repack vinteo.desktop: skip lib.req for foreign binaries
+- epm prescription common.sh: add is_root, assure_root
+- epm play telegram: move repacking to pack.d
+- epm play 64Gram: move packing to pack.d
+- epm repack liteide.sh: add Conflicts to liteidex
+- epm play common.sh: check app version in versioned epm info firstly
+- epm repack: add --install support
+- epm play common.sh: fix checking if update is needed
+- epm full-upgrade: allow skip kernel update (via eepm.conf)
+- epm kernel-update: disable remove-old-kernels after update
+- eepm.spec: add Requires: apt-scripts (for emergencies)
+- print note about autoremove only after epm clean (with caution!)
+- epm play --update: skip updating if the package is on hold (see epm mark --help)
+- eget: implement --check-mirrors
+- epm ei: drop update_url_if_need_mirrored using, we hope eget will helps here
+- epm play: drop update_url_if_need_mirrored, we hope eget will helps us
+- epm pack: drop update_url_if_need_mirrored, we hope eget will help us
+- epm play: drop check_url_is_accessible using
+- set BIGTMPDIR and use in cd_to_temp_dir
+- epm play ktalk: rename to correct name
+
 * Fri Mar 24 2023 Vitaly Lipatov <lav@altlinux.ru> 3.37.0-alt1
 - epm play master-pdf-editor: get package name from site
 - epm play: add realvnc-server and realvnc-viewer
