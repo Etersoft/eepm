@@ -4,6 +4,8 @@ TAR="$1"
 #VERSION="$2"
 RETURNTARNAME="$2"
 PRODUCT="$(basename $0 .sh)"
+FPRODUCT="Telegram"
+TPRODUCT="Telegram"
 
 . $(dirname $0)/common.sh
 
@@ -20,11 +22,11 @@ erc $TAR || fatal
 PKGNAME="$(basename $TAR .tar.xz | sed -e "s|^tsetup|$PRODUCT|" )"
 #PKGNAME="$(basename $PKGNAME .zip | )"
 
-f=$PRODUCT
-[ -f "$PRODUCT/$PRODUCT" ] && f="$PRODUCT/$PRODUCT"
+f=$FPRODUCT
+[ -f "$(echo */$FPRODUCT)" ] && f="$(echo */$FPRODUCT)"
 
-mkdir -p opt/$PRODUCT || fatal
-cp $f opt/$PRODUCT || fatal
-erc pack $CURDIR/$PKGNAME.tar opt/$PRODUCT
+mkdir -p opt/$TPRODUCT || fatal
+cp $f opt/$TPRODUCT/$TPRODUCT || fatal
+erc pack $CURDIR/$PKGNAME.tar opt/$TPRODUCT
 
 return_tar $PKGNAME.tar
