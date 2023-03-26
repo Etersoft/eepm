@@ -76,6 +76,20 @@ __epm_addrepo_etersoft_addon()
 	echo "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/noarch addon" | sudocmd tee -a /etc/apt/sources.list
 }
 
+__epm_addrepo_altlinux_dir()
+{
+	local archlist="i586 x86_64 aarch64 noarch"
+	local dir="$1"
+	local arch
+	for arch in $archlist ; do
+		local rd="$(echo $dir/$arch/RPMS.*)"
+		[ -d "$rd" ] || continue
+		local REPO_NAME="$(echo "$rd" | sed -e 's|.*\.||')"
+		docmd epm repo add "rpm file:$dir $arch $REPO_NAME"
+	done
+}
+
+
 __epm_addrepo_altlinux()
 {
 	local repo="$*"
@@ -91,6 +105,12 @@ __epm_addrepo_altlinux()
 		echo "<task number>      - add task repo"
 		echo "archive 2018/02/09 - for archive from that date"
 		echo "autoimports        - for BaseALT autoimports repo"
+		echo "/dir/to/repo       - add repo dir generated with epm repo index --init"
+		return
+	fi
+
+	if [ -d "$1" ] ; then
+		__epm_addrepo_altlinux_dir "$1"
 		return
 	fi
 
@@ -253,6 +273,11 @@ __epm_addrepo_deb()
 	if echo "$repo" | grep -q "https://" ; then
 		assure_exists /usr/share/doc/apt-transport-https apt-transport-https
 		assure_exists /usr/sbin/update-ca-certificates ca-certificates 
+	fi
+
+	if [ -d "$repo" ] ; then
+		sudocmd epm repo add "deb file:$repo ./"
+		return
 	fi
 
 	# FIXME: quotes in showcmd/sudocmd
