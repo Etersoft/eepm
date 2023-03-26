@@ -109,11 +109,12 @@ case "$1" in
                 echo "Can't get info about latest version of $PKGNAME, so skip updating installed version $pkgver."
                 exit
             fi
-            # latestpkgver < pkgver
-            if [ "$(epm print compare package version $latestpkgver $pkgver)" = "-1" ] ; then
-                echo "Latest available version of $PKGNAME: $latestpkgver. Installed installed version: $pkgver."
+            # latestpkgver <= $pkgver
+            if [ "$(epm print compare package version $latestpkgver $pkgver)" != "1" ] ; then
+                echo "Latest available version of $PKGNAME: $latestpkgver. Installed version: $pkgver."
                 exit
             fi
+            echo "Updating $PKGNAME from $pkgver to available $latestpkgver version ..."
         fi
         ;;
     "--run")
