@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.39.0
+Version: 3.39.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -157,6 +157,11 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Tue Mar 28 2023 Vitaly Lipatov <lav@altlinux.ru> 3.39.1-alt1
+- distr_info: add --repo-name, --distro-name, --base-distro-name
+- distr_info: add full version for Astra
+- distr_info: add long options, rearrange default output
+
 * Mon Mar 27 2023 Vitaly Lipatov <lav@altlinux.ru> 3.39.0-alt1
 - epm repo implement enable/disable for ALT
 - epm repo list:  add (-a|--all) support (print commented out lines)
