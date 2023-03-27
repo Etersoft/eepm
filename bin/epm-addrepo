@@ -73,12 +73,22 @@ __epm_addrepo_etersoft_addon()
 	fi
 }
 
+get_archlist()
+{
+    echo "noarch"
+    echo "$DISTRARCH"
+    case $DISTRARCH in
+        x86_64)
+            echo "i586"
+            ;;
+    esac
+}
+
 __epm_addrepo_altlinux_dir()
 {
-	local archlist="i586 x86_64 aarch64 noarch"
 	local dir="$1"
 	local arch
-	for arch in $archlist ; do
+	for arch in $(get_archlist) ; do
 		local rd="$(echo $dir/$arch/RPMS.*)"
 		[ -d "$rd" ] || continue
 		local REPO_NAME="$(echo "$rd" | sed -e 's|.*\.||')"

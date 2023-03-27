@@ -19,6 +19,18 @@
 
 load_helper epm-sh-altlinux
 
+# copied from epm-addrepo
+get_archlist()
+{
+    echo "noarch"
+    echo "$DISTRARCH"
+    case $DISTRARCH in
+        x86_64)
+            echo "i586"
+            ;;
+    esac
+}
+
 # https://www.altlinux.org/APT_%D0%B2_ALT_Linux/CreateRepository
 __epm_repoindex_alt()
 {
@@ -30,7 +42,7 @@ __epm_repoindex_alt()
 		shift
 	fi
 
-	epm assure genbasedir apt-repo-tools
+	epm assure genbasedir apt-repo-tools || fatal
 	REPO_DIR="$1"
 	# TODO: check if we inside arch dir or RPMS.*
 	[ -n "$REPO_DIR" ] || REPO_DIR="$(pwd)"
@@ -39,7 +51,7 @@ __epm_repoindex_alt()
 	if [ -z "$REPO_NAME" ] ; then
 		# default name
 		REPO_NAME="addon"
-		# detect if already exists
+		# detect name if already exists
 		for arch in $archlist ; do
 			local rd="$(echo $REPO_DIR/$arch/RPMS.*)"
 			[ -d "$rd" ] && REPO_NAME="$(echo "$rd" | sed -e 's|.*\.||')" && break
@@ -47,15 +59,16 @@ __epm_repoindex_alt()
 	fi
 
 	if [ -n "$init" ] ; then
-		for arch in $archlist; do
-			mkdir -pv "$REPO_DIR/$arch/base/" "$REPO_DIR/$arch/RPMS.$REPO_NAME"
+		for arch in $(get_archlist); do
+			mkdir -pv "$REPO_DIR/$arch/base/"
+			mkdir -pv "$REPO_DIR/$arch/RPMS.$REPO_NAME/"
 		done
 		return
 	fi
 
 	for arch in $archlist; do
-		mkdir -pv "$REPO_DIR/$arch/base/"
 		[ -d "$REPO_DIR/$arch/RPMS.$REPO_NAME" ] || continue
+		mkdir -pv "$REPO_DIR/$arch/base/"
 		sudocmd genbasedir --bloat --progress --topdir=$REPO_DIR $arch $REPO_NAME
 	done
 }
@@ -91,8 +104,10 @@ case $PMTYPE in
 		sudocmd verifytree
 		;;
 	dnf-rpm)
-		docmd dnf repolist $verbose
-		[ -n "$verbose" ] || info "Use --verbose if you need detail information."
+		epm install --skip-installed yum-utils createrepo || fatal
+		sudocmd mkdir -pv "$@"
+		sudocmd createrepo -v -s md5 "$@"
+		sudocmd verifytree
 		;;
 	eoget)
 		docmd eoget index "$@"
