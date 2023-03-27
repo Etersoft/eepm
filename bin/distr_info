@@ -60,7 +60,7 @@ override_distrib()
 	DISTRO_NAME="$DISTRIB_ID"
 	DISTRIB_RELEASE="$(echo "$name" | sed -e 's|.*/||')"
 	[ "$DISTRIB_ID" = "$DISTRIB_RELEASE" ] && DISTRIB_RELEASE=''
-	DISTRIB_CODENAME=''
+	DISTRIB_CODENAME="$DISTRIB_RELEASE"
 	DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
 
 }
@@ -346,7 +346,7 @@ elif distro lsb-release ; then
 fi
 
 DISTRIB_RELEASE=$(normalize_version2 "$DISTRIB_RELEASE")
-
+[ -n "$DISTRIB_CODENAME" ] || DISTRIB_CODENAME=$DISTRIB_RELEASE
 
 case "$VENDOR_ID" in
 	"alt"|"altlinux")
