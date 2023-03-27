@@ -27,30 +27,30 @@ sed_quote()
 	echo "$*" | sed -e 's|\(\[\)|\\\1|g' -e 's|\(\]\)|\\\1|g' -e 's|\(\.\)|\\\1|g'
 }
 
-__epm_repoenable_alt()
+__epm_repodisable_alt()
 {
 	local rl
 	# ^rpm means full string
 	if rhas "$1" "\^rpm" ; then
 		rl="$(echo "$1" | sed -e 's|\^||')"
 	else
-		rl="$( (epm --quiet --all repolist) 2>/dev/null | grep -E "$(sed_quote "$1")")"
-		[ -z "$rl" ] && warning "Can't find commented '$1' in the repos (see '# epm repolist' output)" && return 1
+		rl="$( (epm --quiet repolist) 2>/dev/null | grep -E "$(sed_quote "$1")")"
+		[ -z "$rl" ] && warning "Can't find '$1' entries in the repos (see '# epm repolist' output)" && return 1
 	fi
 	echo "$rl" | while read rp ; do
-		[ -n "$dryrun" ] && echo "will uncomment $rp" && continue
-		sed -i -e "s|^[[:space:]]*#[[:space:]]*\($(sed_quote "$rl")\)|\1|" $alt_LISTS
+		[ -n "$dryrun" ] && echo "will comment $rp" && continue
+		sed -i -e "s|^\($(sed_quote "$rl")\)|#\1|" $alt_LISTS
 	done
 }
 
 
-epm_repoenable()
+epm_repodisable()
 {
 
 case $PMTYPE in
 	apt-rpm)
 		assure_root
-		__epm_repoenable_alt "$@"
+		__epm_repodisable_alt "$@"
 		;;
 	apt-dpkg|aptitude-dpkg)
 		print_apt_sources_list
@@ -60,10 +60,10 @@ case $PMTYPE in
 		[ -n "$verbose" ] || info "Use --verbose if you need detail information."
 		;;
 	dnf-rpm)
-		sudocmd dnf config-manager --disable $verbose "$@"
+		sudocmd dnf config-manager --enable $verbose "$@"
 		;;
 	eoget)
-		docmd eoget enable-repo "$@"
+		docmd eoget disable-repo "$@"
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
