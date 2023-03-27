@@ -66,14 +66,11 @@ __epm_addrepo_etersoft_addon()
 	# FIXME
 	[ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
 
-	# TODO: use apt-repo add ?
-	echo "" | sudocmd tee -a /etc/apt/sources.list
-	echo "# added with eepm addrepo etersoft" | sudocmd tee -a /etc/apt/sources.list
-	echo "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/$DISTRARCH addon" | sudocmd tee -a /etc/apt/sources.list
+	docmd epm repo add "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/noarch addon"
+	docmd epm repo add "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/$DISTRARCH addon"
 	if [ "$DISTRARCH" = "x86_64" ] ; then
-		echo "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/x86_64-i586 addon" | sudocmd tee -a /etc/apt/sources.list
+		docmd epm repo add "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/x86_64-i586 addon"
 	fi
-	echo "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/noarch addon" | sudocmd tee -a /etc/apt/sources.list
 }
 
 __epm_addrepo_altlinux_dir()
