@@ -88,11 +88,39 @@ __epm_addrepo_altlinux_dir()
 {
 	local dir="$1"
 	local arch
+	local base
+	local url
+
+	# path to path/RPMS.addon
+	base="$(basename "$dir")"
+	if echo "$base" | grep -q "^RPMS\." ; then
+		REPO_NAME="$(echo $base | sed -e 's|.*\.||')"
+		dir="$(dirname "$dir")"
+		arch="$(basename $dir)"
+		url="file:$(dirname $dir)"
+		docmd epm repo add "rpm $url $arch $REPO_NAME"
+		return
+	fi
+
+	# path to a path where RPMS.addon is exists
+	local baseurl="$(echo $dir/RPMS.*)"
+	base="$(basename "$baseurl")"
+	if echo "$base" | grep -q "^RPMS\." ; then
+		REPO_NAME="$(echo $base | sed -e 's|.*\.||')"
+		arch="$(basename $dir)"
+		url="file:$(dirname $dir)"
+		docmd epm repo add "rpm $url $arch $REPO_NAME"
+		return
+	fi
+
+
+	# path to {i586,x86_64,noarch}/RPMS.addon
 	for arch in $(get_archlist) ; do
 		local rd="$(echo $dir/$arch/RPMS.*)"
 		[ -d "$rd" ] || continue
 		local REPO_NAME="$(echo "$rd" | sed -e 's|.*\.||')"
-		docmd epm repo add "rpm file:$dir $arch $REPO_NAME"
+		url="file:$dir"
+		docmd epm repo add "rpm file:$url $arch $REPO_NAME"
 	done
 }
 
@@ -157,6 +185,12 @@ __epm_addrepo_altlinux()
 
 	if [ -d "$1" ] ; then
 		__epm_addrepo_altlinux_dir "$1"
+		return
+	fi
+
+	if echo "$1" | grep -q "^file:/" ; then
+		local dir="$(echo "$1" | sed -e 's|file://*|/|')"
+		__epm_addrepo_altlinux_dir "$dir"
 		return
 	fi
 
