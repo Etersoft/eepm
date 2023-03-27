@@ -354,6 +354,10 @@ case "$VENDOR_ID" in
 		else
 			DISTRIB_ID="AstraLinuxSE"
 		fi
+		if [ "$DISTRIB_ID" = "AstraLinuxSE" ] ; then
+			local fr="$(cat /etc/astra_version 2>/dev/null)"
+			[ -n "$fr" ] && echo "$fr" | grep -q "$DISTRIB_RELEASE" && DISTRIB_FULL_RELEASE="$fr"
+		fi
 		;;
 esac
 
