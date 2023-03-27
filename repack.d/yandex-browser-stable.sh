@@ -13,6 +13,7 @@ PRODUCTDIR=/opt/yandex/browser
 subst '1iConflicts: yandex-browser-beta' $SPEC
 subst '10iProvides: yandex-browser = %version' $SPEC
 
+add_findreq_skiplist $PRODUCTDIR/update-ffmpeg
 add_requires fonts-ttf-google-noto-emoji-color
 
 set_alt_alternatives 65

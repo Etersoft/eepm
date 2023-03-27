@@ -23,6 +23,8 @@ use_system_xdg
 
 install_deps
 
+add_findreq_skiplist $PRODUCTDIR/update-ffmpeg
+
 filter_from_requires '\\/opt\\/google\\/chrome\\/WidevineCdm'
 
 echo "You also can install chrome via epm play chrome to use WidevineCdm"
