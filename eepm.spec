@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.38.1
+Version: 3.39.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -157,6 +157,17 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Mon Mar 27 2023 Vitaly Lipatov <lav@altlinux.ru> 3.39.0-alt1
+- epm repo implement enable/disable for ALT
+- epm repo list:  add (-a|--all) support (print commented out lines)
+- epm repo index/add: big rewrite
+- epm repack: skip find requires for update_mpeg in yandex-browser and vivaldi
+- epm repack yandex-browser: add fonts-ttf-google-noto-emoji-color require only if it is exists
+- epm repo add: add support for various url and dir forms
+- epm repo add: add support for short form: 'rpm url component' and use it
+- eget: add support for URL in form file:/ or /path
+- epm install: add --replacepkgs (and --test for --dry-run case) to rpm -Uvh
+
 * Mon Mar 27 2023 Vitaly Lipatov <lav@altlinux.ru> 3.38.1-alt1
 - epm repack unigine-superposition: fix issue with libssl/libcrypto
 - epm repack: add initial cnrdrvcups-ufr2-uk
