@@ -55,6 +55,7 @@ override_distrib()
 	DISTRO_NAME="$DISTRIB_ID"
 	DISTRIB_RELEASE="$(echo "$name" | sed -e 's|.*/||')"
 	[ "$DISTRIB_ID" = "$DISTRIB_RELEASE" ] && DISTRIB_RELEASE=''
+	DISTRIB_CODENAME=''
 
 }
 
@@ -230,6 +231,11 @@ print_codename()
 	echo "$DISTRIB_CODENAME"
 }
 
+print_repo_name()
+{
+	echo "$DISTRIB_CODENAME"
+}
+
 get_var()
 {
 	# get first variable and print it out, drop quotes if exists
@@ -364,10 +370,14 @@ esac
 
 case "$DISTRIB_ID" in
 	"ALTLinux")
-		echo "$VERSION" | grep -q "c9f.* branch" && DISTRIB_RELEASE="c9"
-		# FIXME: fast hack for fallback: 10 -> p10 for /etc/os-release
+		echo "$VERSION" | grep -q "c9.* branch" && DISTRIB_RELEASE="c9"
+		DISTRIB_CODENAME="$DISTRIB_RELEASE"
+		echo "$VERSION" | grep -q "c9f1 branch" && DISTRIB_CODENAME="c9f1"
+		echo "$VERSION" | grep -q "c9f2 branch" && DISTRIB_CODENAME="c9f2"
+		# FIXME: fast hack for fallback: 10.1 -> p10 for /etc/os-release
 		if echo "$DISTRIB_RELEASE" | grep -q "^[0-9]" && echo "$DISTRIB_RELEASE" | grep -q -v "[0-9][0-9][0-9]"  ; then
 			DISTRIB_RELEASE="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
+			DISTRIB_CODENAME="$DISTRIB_RELEASE"
 		fi
 		;;
 #	"ALTServer")
@@ -388,11 +398,13 @@ case "$DISTRIB_ID" in
 				DISTRIB_RELEASE="c9f3"
 			;;
 		esac
+		DISTRIB_CODENAME="$DISTRIB_RELEASE"
 #		DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\..*//g")
 		;;
 	"Sisyphus")
 		DISTRIB_ID="ALTLinux"
 		DISTRIB_RELEASE="Sisyphus"
+		DISTRIB_CODENAME="$DISTRIB_RELEASE"
 		;;
 esac
 
@@ -926,6 +938,9 @@ case "$1" in
 		;;
 	-o|--os-name)
 		get_base_os_name
+		;;
+	-r|--repo-name)
+		print_repo_name
 		;;
 	--build-id)
 		echo "$BUILD_ID"
