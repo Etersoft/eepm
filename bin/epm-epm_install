@@ -28,8 +28,12 @@ __epm_korinf_site_mask() {
     rhas "$MASK" "[-_]" || MASK="$MASK[-_][0-9]"
     # set arch for Korinf compatibility
     [ "$($DISTRVENDOR -a)" = "x86_64" ] && archprefix="x86_64/"
-    local URL="http://updates.etersoft.ru/pub/Korinf"
-    echo "$URL/$archprefix$($DISTRVENDOR -e)/$MASK*.$PKGFORMAT"
+    local URL="http://updates.etersoft.ru/pub/Korinf/$archprefix$($DISTRVENDOR -e)"
+    if ! eget --check "$URL" ; then
+        tURL="http://updates.etersoft.ru/pub/Korinf/$archprefix$($DISTRVENDOR --vendor-name)/$($DISTRVENDOR --repo-name)"
+        docmd eget --check "$tURL" && URL="$tURL"
+    fi
+    echo "$URL/$MASK*.$PKGFORMAT"
 }
 
 __epm_korinf_list() {
