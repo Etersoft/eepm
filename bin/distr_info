@@ -304,6 +304,7 @@ DISTRIB_RELEASE=""
 DISTRIB_FULL_RELEASE=""
 DISTRIB_RELEASE_ORIG=""
 DISTRIB_CODENAME=""
+BUILD_ID=""
 
 # Default detection by /etc/os-release
 # https://www.freedesktop.org/software/systemd/man/os-release.html
@@ -857,6 +858,7 @@ case "$1" in
 		echo " --full-version         - print full version of the distro"
 		echo " --codename (obsoleted) - print distro codename (focal for Ubuntu 20.04)"
 		echo " --repo-name            - print repository name (focal for Ubuntu 20.04)"
+		echo " --build-id             - print a string uniquely identifying the system image originally used as the installation base"
 		echo " -V                     - print the utility version"
 		echo "Run without args to print all information."
 		exit 0
@@ -924,6 +926,9 @@ case "$1" in
 		;;
 	-o|--os-name)
 		get_base_os_name
+		;;
+	--build-id)
+		echo "$BUILD_ID"
 		;;
 	-v|--base-version)
 		override_distrib "$2"
