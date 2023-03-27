@@ -84,6 +84,14 @@ set_boldcolor()
 	} |tput -S
 }
 
+set_color()
+{
+	[ "$USETTY" = "1" ] || return
+	{
+		echo setaf $1
+	} |tput -S
+}
+
 restore_color()
 {
 	[ "$USETTY" = "1" ] || return
