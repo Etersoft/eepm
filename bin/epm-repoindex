@@ -46,7 +46,10 @@ __epm_repoindex_alt()
 	REPO_DIR="$1"
 	# TODO: check if we inside arch dir or RPMS.*
 	[ -n "$REPO_DIR" ] || REPO_DIR="$(pwd)"
-	[ -d "$REPO_DIR" ] || fatal "Repo dir $REPO_DIR does not exist"
+	if [ -z "$init" ] ; then
+		[ -d "$REPO_DIR" ] || fatal "Repo dir $REPO_DIR does not exist"
+	fi
+
 	REPO_NAME="$2"
 	if [ -z "$REPO_NAME" ] ; then
 		# default name
