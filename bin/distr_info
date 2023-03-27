@@ -787,6 +787,10 @@ print_pretty_name()
         PRETTY_NAME="$DISTRIB_ID $DISTRIB_RELEASE"
     fi
 
+    if ! echo "$PRETTY_NAME" | grep -q "$DISTRIB_FULL_RELEASE" ; then
+        PRETTY_NAME="$PRETTY_NAME ($DISTRIB_FULL_RELEASE)"
+    fi
+
     echo "$PRETTY_NAME"
 }
 
