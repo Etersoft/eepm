@@ -1,12 +1,12 @@
 #!/bin/sh
-# 2007-2022 (c) Vitaly Lipatov <lav@etersoft.ru>
-# 2007-2022 (c) Etersoft
-# 2007-2022 Public domain
+# 2007-2023 (c) Vitaly Lipatov <lav@etersoft.ru>
+# 2007-2023 (c) Etersoft
+# 2007-2023 Public domain
 
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
 
-PROGVERSION="20220812"
+PROGVERSION="20230328"
 
 # TODO: check /etc/system-release
 
@@ -56,6 +56,7 @@ override_distrib()
 	DISTRIB_RELEASE="$(echo "$name" | sed -e 's|.*/||')"
 	[ "$DISTRIB_ID" = "$DISTRIB_RELEASE" ] && DISTRIB_RELEASE=''
 	DISTRIB_CODENAME=''
+	DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
 
 }
 
@@ -816,21 +817,22 @@ print_pretty_name()
 
 print_total_info()
 {
+local orig=''
+[ -n "$BUILD_ID" ] && orig=" $BUILD_ID"
 cat <<EOF
 distro_info v$PROGVERSION : Copyright © 2007-2023 Etersoft
-Total system information:
+
          Pretty distro name (--pretty): $(print_pretty_name)
-Distro name (-d) and version (-v) (-e): $(print_name_version)
+                 Distro name / version: $DISTRO_NAME / $DISTRIB_FULL_RELEASE$orig
+  Base distro name (-d) / version (-v): $(print_name_version)
+Base distro name (-s) / Repo name (-r): $(pkgvendor) / $(print_repo_name)
           Package manager/type (-g/-p): $(pkgmanager) / $(pkgtype)
-          Running service manager (-y): $(get_service_manager)
+     Base OS name (-o) / CPU arch (-a): $(get_base_os_name) $(get_arch)
+          CPU norm register size  (-b): $(get_bit_size)
                    Virtualization (-i): $(get_virt)
                  CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_core_mhz) MHz
-                 CPU Architecture (-a): $(get_arch)
-          CPU norm register size  (-b): $(get_bit_size)
           System memory size (MB) (-m): $(get_memory_size)
-                     Base OS name (-o): $(get_base_os_name)
-     Base distro (vendor) name (-s|-n): $(pkgvendor)
-         Version codename (--codename): $(print_codename)
+          Running service manager (-y): $(get_service_manager)
 
 (run with -h to get help)
 EOF
@@ -858,7 +860,7 @@ case "$1" in
 		echo " -z                     - print current CPU MHz"
 		echo " --glibc-version        - print system glibc version"
 		echo
-		echo " -d | --distro-name     - print distro name"
+		echo " -d|--base-distro-name  - print distro id (short distro name)"
 		echo " -e                     - print full name of distro with version"
 		echo " -o | --os-name         - print base OS name"
 		echo " -p | package-type      - print type of the packaging system"
@@ -867,6 +869,7 @@ case "$1" in
 		echo " --pretty|--pretty-name - print pretty distro name"
 		echo " -v | --base-version    - print version of the distro"
 		echo " --distro-name          - print distro name"
+		echo " --distro-version       - print full version of the distro"
 		echo " --full-version         - print full version of the distro"
 		echo " --codename (obsoleted) - print distro codename (focal for Ubuntu 20.04)"
 		echo " --repo-name            - print repository name (focal for Ubuntu 20.04)"
@@ -904,7 +907,7 @@ case "$1" in
 		get_glibc_version
 		exit 0
 		;;
-	-d|--distro-name)
+	-d|--base-distro-name)
 		override_distrib "$2"
 		echo $DISTRIB_ID
 		;;
@@ -949,7 +952,7 @@ case "$1" in
 		override_distrib "$2"
 		echo "$DISTRIB_RELEASE"
 		;;
-	--full-version)
+	--full-version|--distro-version)
 		override_distrib "$2"
 		echo "$DISTRIB_FULL_RELEASE"
 		;;
