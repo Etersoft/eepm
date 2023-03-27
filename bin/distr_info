@@ -44,6 +44,11 @@ tolower()
 	echo "$*" | awk '{print tolower($0)}'
 }
 
+print_bug_report_url()
+{
+	echo "$BUG_REPORT_URL"
+}
+
 override_distrib()
 {
 	[ -n "$1" ] || return
@@ -311,6 +316,7 @@ DISTRIB_RELEASE=""
 DISTRIB_FULL_RELEASE=""
 DISTRIB_RELEASE_ORIG=""
 DISTRIB_CODENAME=""
+BUG_REPORT_URL=""
 BUILD_ID=""
 
 # Default detection by /etc/os-release
@@ -833,6 +839,7 @@ distro_info v$PROGVERSION : Copyright © 2007-2023 Etersoft
 Base distro name (-s) / Repo name (-r): $(pkgvendor) / $(print_repo_name)
           Package manager/type (-g/-p): $(pkgmanager) / $(pkgtype)
      Base OS name (-o) / CPU arch (-a): $(get_base_os_name) $(get_arch)
+     Bug report URL (--bug-report-url): $(print_bug_report_url)
           CPU norm register size  (-b): $(get_bit_size)
                    Virtualization (-i): $(get_virt)
                  CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_core_mhz) MHz
@@ -960,6 +967,10 @@ case "$1" in
 	--full-version|--distro-version)
 		override_distrib "$2"
 		echo "$DISTRIB_FULL_RELEASE"
+		;;
+	--bug-report-url)
+		print_bug_report_url
+		exit
 		;;
 	-s|-n|--vendor-name)
 		override_distrib "$2"
