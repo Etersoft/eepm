@@ -52,6 +52,7 @@ override_distrib()
 	local name="$(echo "$1" | sed -e 's|x86_64/||')"
 	[ "$name" = "$1" ] && DIST_ARCH="x86" || DIST_ARCH="x86_64"
 	DISTRIB_ID="$(echo "$name" | sed -e 's|/.*||')"
+	DISTRO_NAME="$DISTRIB_ID"
 	DISTRIB_RELEASE="$(echo "$name" | sed -e 's|.*/||')"
 	[ "$DISTRIB_ID" = "$DISTRIB_RELEASE" ] && DISTRIB_RELEASE=''
 
@@ -309,6 +310,7 @@ DISTRIB_CODENAME=""
 if distro os-release ; then
 	# shellcheck disable=SC1090
 	. $DISTROFILE
+	DISTRO_NAME="$NAME"
 	DISTRIB_ID="$(normalize_name "$NAME")"
 	DISTRIB_RELEASE_ORIG="$VERSION_ID"
 	DISTRIB_RELEASE="$VERSION_ID"
@@ -321,6 +323,7 @@ if distro os-release ; then
 
 elif distro lsb-release ; then
 	DISTRIB_ID=$(cat $DISTROFILE | get_var DISTRIB_ID)
+	DISTRO_NAME=$(cat $DISTROFILE | get_var DISTRIB_ID)
 	DISTRIB_RELEASE="$(cat $DISTROFILE | get_var DISTRIB_RELEASE)"
 	DISTRIB_RELEASE_ORIG="$DISTRIB_RELEASE"
 	DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
@@ -846,6 +849,7 @@ case "$1" in
 		echo " -s|-n|--vendor-name    - print base name of the distro (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (see _vendor macros in rpm)"
 		echo " --pretty|--pretty-name - print pretty distro name"
 		echo " -v | --base-version    - print version of the distro"
+		echo " --distro-name          - print distro name"
 		echo " --full-version         - print full version of the distro"
 		echo " --codename (obsoleted) - print distro codename (focal for Ubuntu 20.04)"
 		echo " --repo-name            - print repository name (focal for Ubuntu 20.04)"
@@ -885,6 +889,10 @@ case "$1" in
 	-d|--distro-name)
 		override_distrib "$2"
 		echo $DISTRIB_ID
+		;;
+	--distro-name)
+		override_distrib "$2"
+		echo $DISTRO_NAME
 		;;
 	--codename)
 		override_distrib "$2"
