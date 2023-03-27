@@ -160,6 +160,25 @@ filter_order()
     sort -V | tail -n1
 }
 
+
+is_fileurl()
+{
+    echo "$1" | grep -q "^/" && return
+    echo "$1" | grep -q "file:/"
+}
+
+dir_from_url()
+{
+    echo "$1" | sed -e 's|^file://*|/|'
+}
+
+is_url()
+{
+    echo "$1" | grep -q ":/"
+}
+
+
+
 # args: cmd <URL> <options>
 # will run cmd <options> <URL>
 download_with_mirroring()
@@ -232,7 +251,35 @@ fi
 
 WGET="$(which wget 2>/dev/null)"
 
-if [ -n "$WGET" ] ; then
+if is_fileurl "$1" ; then
+
+# put remote content to stdout
+scat()
+{
+    local URL="$1"
+    cat "$(dir_from_url "$URL")"
+}
+# download to default name of to $2
+sget()
+{
+    local URL="$1"
+    if [ "$2" = "/dev/stdout" ] || [ "$2" = "-" ] ; then
+       scat "$URL"
+       return
+    elif [ -n "$2" ] ; then
+       cp -av "$(dir_from_url "$URL")" "$2"
+       return
+    fi
+    cp -av "$(dir_from_url "$URL")" .
+}
+
+check_url_is_accessible()
+{
+    local URL="$1"
+    test -f "$(dir_from_url "$URL")"
+}
+
+elif [ -n "$WGET" ] ; then
 __wget()
 {
     if [ -n "$WGETUSERAGENT" ] ; then
@@ -411,14 +458,13 @@ fi
 
 # If have no wildcard symbol like asterisk, just download
 if echo "$MASK" | grep -qv "[*?]" || echo "$MASK" | grep -q "[?].*="; then
+    if is_fileurl "$1" ; then
+        cp -v "$(dir_from_url)" "$TARGEFILE"
+        exit
+    fi
     sget "$1" "$TARGETFILE"
     exit
 fi
-
-is_url()
-{
-    echo "$1" | grep -q "://"
-}
 
 # drop file path from URL
 get_host_only()
@@ -432,6 +478,10 @@ make_fileurl()
     local url="$1"
     local fn="$2"
     fn="$(echo "$fn" | sed -e 's|^./||' -e 's|^/+||')"
+    if is_fileurl "$url" ; then
+        echo "$url/$fn"
+        return
+    fi
     # if there is file path from the root of the site
     if echo "$fn" | grep -q "^/" ; then
         echo "$(get_host_only "$url")$fn"
@@ -443,6 +493,11 @@ make_fileurl()
 
 get_urls()
 {
+    if is_fileurl "$URL" ; then
+        ls -1 "$(dir_from_url "$URL")"
+        return
+    fi
+
     # cat html, divide to lines by tags and cut off hrefs only
     scat $URL | sed -e 's|<|<\n|g' -e 's|data-file=|href=|g' | \
          grep -i -o -E 'href="(.+)"' | cut -d'"' -f2
@@ -450,7 +505,7 @@ get_urls()
 
 if [ -n "$LISTONLY" ] ; then
     for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
-        is_url "$fn" && echo $fn && continue
+        is_url "$fn" && echo "$fn" && continue
         make_fileurl "$URL" "$fn"
     done
     exit
