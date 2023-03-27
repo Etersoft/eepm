@@ -759,7 +759,7 @@ has_space()
 
 is_url()
 {
-    echo "$1" | grep -q "^[fhtps]*://"
+    echo "$1" | grep -q "^[filehtps]*:/"
 }
 
 # print a path to the command if exists in $PATH
