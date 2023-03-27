@@ -71,14 +71,14 @@ __download_pkg_urls()
 		docmd chmod $verbose a+rX $tmppkg
 		showcmd cd $tmppkg
 		cd $tmppkg || fatal
-		if docmd eget --latest "$url" ; then
+		if docmd eget "$url" ; then
 			local i
-			# use downloaded file
-			i=$(echo *.*)
-			[ -s "$tmppkg/$i" ] || continue
-			docmd chmod $verbose a+r "$tmppkg/$i"
-			pkg_files="$pkg_files $tmppkg/$i"
-			to_remove_pkg_files="$to_remove_pkg_files $tmppkg/$i"
+			for i in *.* ; do
+				[ -s "$tmppkg/$i" ] || continue
+				chmod $verbose a+r "$tmppkg/$i"
+				pkg_files="$pkg_files $tmppkg/$i"
+				to_remove_pkg_files="$to_remove_pkg_files $tmppkg/$i"
+			done
 		else
 			warning "Failed to download $url, ignoring"
 		fi
