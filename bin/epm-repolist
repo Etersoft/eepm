@@ -28,6 +28,16 @@ __print_apt_sources_list()
     done | grep -v -- "^ *\$"
 }
 
+__print_apt_sources_list_full()
+{
+    local i
+    for i in $@ ; do
+        test -r "$i" || continue
+        grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i
+    done | grep -v -- "^ *\$"
+}
+
+# TODO: remove
 __print_apt_sources_list_list()
 {
     local i
@@ -54,9 +64,29 @@ __print_apt_sources_list_verbose()
     done
 }
 
+__print_apt_sources_list_verbose_full()
+{
+    local i
+    for i in $@ ; do
+        test -r "$i" || continue
+        grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i | grep -v -- "^ *\$" | grep -q . && echo && __info_cyan "$i:" || continue
+        grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i | grep -v -- "^ *\$" | sed -e 's|^|    |' -e "s|\(.*#.*\)|$(set_color $WHITE)\1$(restore_color)|"
+    done
+}
+
 print_apt_sources_list()
 {
     local LISTS='/etc/apt/sources.list /etc/apt/sources.list.d/*.list'
+
+    if [ "$1" = "-a" ] || [ "$1" = "--all" ] ; then
+        if [ -n "$quiet" ] ; then
+            __print_apt_sources_list_full $LISTS
+        else
+            __print_apt_sources_list_verbose_full $LISTS
+        fi
+        return
+    fi
+
     if [ -n "$quiet" ] ; then
         __print_apt_sources_list $LISTS
     else
@@ -76,7 +106,7 @@ case $PMTYPE in
 		if tasknumber "$1" >/dev/null ; then
 			get_task_packages "$@"
 		else
-			print_apt_sources_list
+			print_apt_sources_list "$@"
 			#docmd apt-repo list
 		fi
 		;;
