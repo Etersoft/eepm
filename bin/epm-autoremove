@@ -252,12 +252,12 @@ case $BASEDISTRNAME in
 			__epm_autoremove_altrpm "$@"
 		fi
 
-		[ -n "$dryrun" ] && return
+		#[ -n "$dryrun" ] && return
 
 		# remove old kernels only by a default way
 		[ -n "$1" ] && return
 
-		docmd epm remove-old-kernels $(subst_option non_interactive -y)
+		docmd epm remove-old-kernels $dryrun
 
 		if [ -z "$direct" ] ; then
 			echo

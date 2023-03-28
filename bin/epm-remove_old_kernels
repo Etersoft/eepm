@@ -32,7 +32,9 @@ epm_remove_old_kernels()
 			return
 		fi
 		assure_exists update-kernel update-kernel 0.9.9
-		sudocmd remove-old-kernels $(subst_option non_interactive -y) "$@"
+		sudocmd remove-old-kernels $dryrun $(subst_option non_interactive -y) "$@"
+
+		[ -n "$dryrun" ] && return
 
 		# remove unused nvidia drivers
 		if which nvidia-clean-driver 2>/dev/null ; then
