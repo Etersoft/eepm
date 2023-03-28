@@ -71,7 +71,11 @@ __download_pkg_urls()
 		docmd chmod $verbose a+rX $tmppkg
 		showcmd cd $tmppkg
 		cd $tmppkg || fatal
-		if docmd eget "$url" ; then
+		local latest='--latest'
+		# hack: download all if mask is *.something
+		basename "$url" | grep -q "^\*\." && latest=''
+		# download packages
+		if docmd eget $latest "$url" ; then
 			local i
 			for i in *.* ; do
 				[ -s "$tmppkg/$i" ] || continue
