@@ -265,6 +265,16 @@ strip_spaces()
         echo "$*" | filter_strip_spaces
 }
 
+
+# https://superuser.com/questions/422459/substitution-in-text-file-without-regular-expressions
+# http://stackoverflow.com/a/2705678/120999
+# use for subst complex string with symbols treating as regexp
+sed_escape()
+{
+	echo "$*" | sed -e 's/[]()$*.^|[]/\\&/g'
+}
+
+
 # param true false
 subst_option()
 {
@@ -798,6 +808,11 @@ realpath()
     readlink -f "$@"
 }
 fi
+
+# TODO: use perl if sed -i is not accessible
+# sed -i is only supported in GNU sed.
+#  sed -i "s/$find/$replace/g" "$@"
+#  perl -p -i -e "s/$find/$replace/g" "$@"
 
 # add subst if missed
 if ! which subst 2>/dev/null >/dev/null ; then
