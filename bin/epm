@@ -108,6 +108,7 @@ sort=
 non_interactive=$EPM_AUTO
 download=
 download_only=
+print_url=
 interactive=
 force_yes=
 skip_installed=
@@ -479,6 +480,9 @@ check_option()
         ;;
     --download-only)       # HELPOPT: download only the package/tarball (before any convertation)
         download_only="--download-only"
+        ;;
+    --url)                 # HELPOPT: print only URL instead of download package
+        print_url="--url"
         ;;
     --sort)               # HELPOPT: sort output, f.i. --sort=size (supported only for packages command)
         # TODO: how to read arg?

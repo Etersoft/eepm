@@ -198,7 +198,7 @@ __epm_download_alt()
 
 		try_change_alt_repo
 		epm_addrepo "$@"
-		docmd epm download "$installlist"
+		docmd epm download $print_url "$installlist"
 		epm_removerepo "$@"
 		end_change_alt_repo
 
@@ -209,6 +209,7 @@ __epm_download_alt()
 	for pkg in "$@" ; do
 		for i in $(sudocmd apt-get install -y --print-uris --reinstall "$pkg" | cut -f1 -d " " | grep ".rpm'$" | sed -e "s|^'||" -e "s|'$||") ; do
 			echo "$(basename "$i")" | grep -q "^$pkg" || continue
+			[ -n "$print_url" ] && echo "$i" && continue
 			eget $i
 		done
 	done
@@ -239,10 +240,14 @@ epm_download()
 
 	case $PMTYPE in
 	apt-dpkg)
+		if [ -n "$print_url" ] ; then
+			docmd apt-get download --print-uris $* | cut -f1 -d " " | grep ".deb'$" | sed -e "s|^'||" -e "s|'$||"
+			return
+		fi
 		docmd apt-get download $*
 		;;
 	dnf-rpm)
-		sudocmd dnf download $*
+		sudocmd dnf download $print_url $*
 		;;
 	aptcyg)
 		sudocmd apt-cyg download $*
