@@ -420,6 +420,7 @@ check_url_is_accessible()
 fi
 
 
+
 get_github_urls()
 {
     # https://github.com/OWNER/PROJECT
@@ -487,6 +488,8 @@ if [ -n "$CHECKURL" ] ; then
     exit
 fi
 
+
+# separate part for github downloads
 if echo "$1" | grep -q "^https://github.com/" && \
    echo "$1" | grep -q -v "/download/" && [ -n "$2" ] ; then
     MASK="$2"
@@ -505,9 +508,6 @@ if echo "$1" | grep -q "^https://github.com/" && \
 fi
 
 
-# mask allowed only in the last part of path
-MASK=$(basename "$1")
-
 # if mask is the second arg
 if [ -n "$2" ] ; then
     URL="$1"
@@ -520,6 +520,8 @@ else
 
     # drop mask part
     URL="$(dirname "$1")/"
+    # wildcards allowed only in the last part of path
+    MASK=$(basename "$1")
 fi
 
 if echo "$URL" | grep -q "[*?]" ; then
