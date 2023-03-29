@@ -211,12 +211,9 @@ if [ "$1" = "--list" ] ; then
 fi
 
 if [ "$1" = "--check" ] ; then
-    set_quiet
+    CHECKURL="$1"
     shift
-    check_url_is_accessible "$1"
-    exit
 fi
-
 
 LATEST=''
 if [ "$1" = "--latest" ] ; then
@@ -366,7 +363,7 @@ fi
 # -P support
 
 if [ -z "$1" ] ; then
-    echo "eget - wget like downloader wrapper with wildcard support" >&2
+    echo "eget - wget like downloader wrapper with wildcard support, uses wget or curl as backend" >&2
     fatal "Run $0 --help to get help"
 fi
 
@@ -408,6 +405,12 @@ get_github_urls()
     scat $URL | \
         grep -i -o -E '"browser_download_url": "https://.*"' | cut -d'"' -f4
 }
+
+if [ -n "$CHECKURL" ] ; then
+    set_quiet
+    check_url_is_accessible "$1"
+    exit
+fi
 
 if echo "$1" | grep -q "^https://github.com/" && \
    echo "$1" | grep -q -v "/download/" && [ -n "$2" ] ; then
