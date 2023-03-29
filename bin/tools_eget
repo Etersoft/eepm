@@ -207,23 +207,22 @@ CURLQ='' #-s
 WGETNAMEOPTIONS='--content-disposition'
 CURLNAMEOPTIONS='--remote-name --remote-header-name'
 
+LISTONLY=''
+CHECKURL=''
+LATEST=''
+SECONDLATEST=''
+CHECKMIRRORS=''
+TARGETFILE=''
+
 set_quiet()
 {
     WGETQ='-q'
     CURLQ='-s'
 }
 
-# TODO: parse options in a good way
 
-# TODO:
-# -P support
-
-if [ -z "$1" ] ; then
-    echo "eget - wget like downloader wrapper with wildcard support, uses wget or curl as backend" >&2
-    fatal "Run $0 --help to get help"
-fi
-
-if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
+eget_help()
+{
     echo "eget - wget like downloader wrapper with wildcard support in filename part of URL"
     echo "Usage: eget [-q] [-k] [-U] [-O target file] [--list] http://somesite.ru/dir/na*.log"
     echo
@@ -246,71 +245,66 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
     echo "  $ eget --check http://ftp.somesite.ru/test"
     echo "  $ eget --list http://download.somesite.ru 'package-*.tar.xz'"
     echo "  $ eget --list --latest https://github.com/telegramdesktop/tdesktop/releases 'tsetup.*.tar.xz'"
-#    echo "See $ wget --help for wget options you can use here"
-    exit
+}
+
+
+if [ -z "$1" ] ; then
+    echo "eget - wget like downloader wrapper with wildcard support, uses wget or curl as backend" >&2
+    echo "Run $0 --help to get help" >&2
+    exit 1
 fi
 
 
-# TODO: passthrou all wget options
-if [ "$1" = "-q" ] ; then
-    set_quiet
+while [ -n "$1" ] ; do
+
+    case "$1" in
+        -h|--help)
+            eget_help
+            exit
+            ;;
+        -q)
+            set_quiet
+            ;;
+        -k|--no-check-certificate)
+            WGETNOSSLCHECK='--no-check-certificate'
+            CURLNOSSLCHECK='-k'
+            ;;
+        -U|-A|--user-agent)
+            user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
+            WGETUSERAGENT="-U '$user_agent'"
+            CURLUSERAGENT="-A '$user_agent'"
+            ;;
+        --list)
+            LISTONLY="$1"
+            set_quiet
+            ;;
+        --check)
+            CHECKURL="$1"
+            set_quiet
+            ;;
+        --latest)
+            LATEST="$1"
+            ;;
+        --second-latest)
+            SECONDLATEST="$1"
+            ;;
+        --check-mirrors)
+            CHECKMIRRORS="$1"
+            ;;
+        -O)
+            shift
+            TARGETFILE="$1"
+            ;;
+        -O-)
+            TARGETFILE="-"
+            ;;
+        *)
+            break
+            ;;
+    esac
     shift
-fi
+done
 
-if [ "$1" = "-k" ] || [ "$1" = "--no-check-certificate" ] ; then
-    WGETNOSSLCHECK='--no-check-certificate'
-    CURLNOSSLCHECK='-k'
-    shift
-fi
-
-if [ "$1" = "-U" ] || [ "$1" = "-A" ] || [ "$1" = "--user-agent" ] ; then
-    user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
-    WGETUSERAGENT="-U '$user_agent'"
-    CURLUSERAGENT="-A '$user_agent'"
-    shift
-fi
-
-
-LISTONLY=''
-if [ "$1" = "--list" ] ; then
-    LISTONLY="$1"
-    set_quiet
-    shift
-fi
-
-if [ "$1" = "--check" ] ; then
-    CHECKURL="$1"
-    shift
-fi
-
-LATEST=''
-if [ "$1" = "--latest" ] ; then
-    LATEST="$1"
-    shift
-fi
-
-SECONDLATEST=''
-if [ "$1" = "--second-latest" ] ; then
-    SECONDLATEST="$1"
-    shift
-fi
-
-CHECKMIRRORS=''
-if [ "$1" = "--check-mirrors" ] ; then
-    CHECKMIRRORS="$1"
-    shift
-fi
-
-
-# download to this file
-TARGETFILE=''
-if [ "$1" = "-O" ] ; then
-    TARGETFILE="$2"
-    shift 2
-elif [ "$1" = "-O-" ] ; then
-    TARGETFILE="-"
-    shift 1
-fi
 
 
 
