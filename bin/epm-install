@@ -71,6 +71,11 @@ epm_install_names()
 
 	warmup_hibase
 
+	if [ -n "$download_only" ] ; then
+		epm download "$@"
+		return
+	fi
+
 	if [ -n "$non_interactive" ] ; then
 		epm_ni_install_names "$@"
 		return
