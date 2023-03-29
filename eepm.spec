@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.39.1
+Version: 3.39.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -157,6 +157,17 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Wed Mar 29 2023 Vitaly Lipatov <lav@altlinux.ru> 3.39.2-alt1
+- epm ei: add fallback to vendor/repo dir
+- distr_info: print bug report url
+- distr_info: add default repo name (the same like distro version)
+- epm download: use eget --latest if mask is not *.something
+- epm: allow --dry-run for kernel-update/remove-old-kernels
+- epm full-upgrade: skip snap if snap service is not running (ALT bug 45666)
+- epm install: add --download-only support for repository packages (via epm download)
+- epm download: implement package download for ALT via apt-get install --print-uris
+- add epm download --url for apt-rpm and apt-dpkg systems
+
 * Tue Mar 28 2023 Vitaly Lipatov <lav@altlinux.ru> 3.39.1-alt1
 - distr_info: add --repo-name, --distro-name, --base-distro-name
 - distr_info: add full version for Astra
