@@ -223,28 +223,34 @@ set_quiet()
 
 eget_help()
 {
-    echo "eget - wget like downloader wrapper with wildcard support in filename part of URL"
-    echo "Usage: eget [-q] [-k] [-U] [-O target file] [--list] http://somesite.ru/dir/na*.log"
-    echo
-    echo "Options:"
-    echo "    -q       - quiet mode"
-    echo "    -k|--no-check-certificate - skip SSL certificate chain support"
-    echo "    -U|-A|--user-agent - send browser like UserAgent"
-    echo "    -O file  - download to this file (use filename from server if missed)"
-    echo "    --list   - print files from url with mask"
-    echo "    --check  - check if URL is accessible (returns HTTP 200 OK)"
-    echo "    --latest - print only latest version of a file"
-    echo "    --second-latest - print only second to latest version of a file"
-    echo "    --allow-mirrors - check mirrors if url is not accessible"
-    echo
-    echo "eget supports --list and download for https://github.com/owner/project urls"
-    echo
-    echo "Examples:"
-    echo "  $ eget --list http://ftp.somesite.ru/package-*.tar"
-    echo "  $ eget http://ftp.somesite.ru/package-*.x64.tar"
-    echo "  $ eget --check http://ftp.somesite.ru/test"
-    echo "  $ eget --list http://download.somesite.ru 'package-*.tar.xz'"
-    echo "  $ eget --list --latest https://github.com/telegramdesktop/tdesktop/releases 'tsetup.*.tar.xz'"
+cat <<EOF
+
+eget - wget like downloader wrapper with wildcard support in filename part of URL
+Usage: eget [options] http://somesite.ru/dir/na*.log
+
+Options:
+    -q                        - quiet mode
+    -k|--no-check-certificate - skip SSL certificate chain support
+    -U|-A|--user-agent        - send browser like UserAgent
+    -O-|-O -                  - output downloaded file to stdout
+    -O file                   - download to this file
+    --latest                  - print only latest version of a file
+    --second-latest           - print only second to latest version of a file
+    --allow-mirrors           - check mirrors if url is not accessible
+
+    --list|--list-only        - print only URLs
+    --check URL               - check if the URL is accessible (returns HTTP 200 OK)
+
+Examples:
+  $ eget http://ftp.somesite.ru/package-*.x64.tar
+  $ eget http://ftp.somesite.ru/package *.tar
+  $ eget https://github.com/owner/project package*.ext
+  $ eget --list http://ftp.somesite.ru/package-*.tar
+  $ eget --check http://ftp.somesite.ru/test
+  $ eget --list http://download.somesite.ru 'package-*.tar.xz'
+  $ eget --list --latest https://github.com/telegramdesktop/tdesktop/releases 'tsetup.*.tar.xz'
+
+EOF
 }
 
 
@@ -274,7 +280,7 @@ while [ -n "$1" ] ; do
             WGETUSERAGENT="-U '$user_agent'"
             CURLUSERAGENT="-A '$user_agent'"
             ;;
-        --list)
+        --list|--list-only)
             LISTONLY="$1"
             set_quiet
             ;;
