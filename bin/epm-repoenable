@@ -22,10 +22,6 @@ load_helper epm-sh-altlinux
 
 alt_LISTS='/etc/apt/sources.list /etc/apt/sources.list.d/*.list'
 
-sed_quote()
-{
-	echo "$*" | sed -e 's|\(\[\)|\\\1|g' -e 's|\(\]\)|\\\1|g' -e 's|\(\.\)|\\\1|g'
-}
 
 __epm_repoenable_alt()
 {
@@ -34,12 +30,12 @@ __epm_repoenable_alt()
 	if rhas "$1" "\^rpm" ; then
 		rl="$(echo "$1" | sed -e 's|\^||')"
 	else
-		rl="$( (epm --quiet --all repolist) 2>/dev/null | grep -E "$(sed_quote "$1")")"
+		rl="$( epm --quiet --all repolist 2>/dev/null | grep -F "$1" | head -n1 | sed -e 's|[[:space:]]*#[[:space:]]*||' )"
 		[ -z "$rl" ] && warning "Can't find commented '$1' in the repos (see '# epm repolist' output)" && return 1
 	fi
 	echo "$rl" | while read rp ; do
 		[ -n "$dryrun" ] && echo "will uncomment $rp" && continue
-		sed -i -e "s|^[[:space:]]*#[[:space:]]*\($(sed_quote "$rl")\)|\1|" $alt_LISTS
+		sed -i -e "s|^[[:space:]]*#[[:space:]]*\($(sed_escape "$rl")\)|\1|" $alt_LISTS
 	done
 }
 
