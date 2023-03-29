@@ -37,7 +37,7 @@ PKGMASK="$(epm print constructname $PKGNAME "[6-9].[1-9]*" $arch '' '_')"
 # lib.req: WARNING: /usr/bin/anydesk: library libpangox-1.0.so.0 not found
 #[ "$(epm print info -s)" = "alt" ] && PKGMASK="os-specific/rhel8/$(epm print constructname $PKGNAME "*" $arch)"
 
-PKG="$(epm tool eget --list --latest https://download.anydesk.com/linux $PKGMASK)" || fatal "Can't get package URL"
+PKG="$(epm tool eget --list --latest https://download.anydesk.com/linux/ $PKGMASK)" || fatal "Can't get package URL"
 
 epm $repack install "$PKG" || exit
 
