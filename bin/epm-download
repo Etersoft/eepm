@@ -127,6 +127,7 @@ __handle_pkg_urls_to_checking()
 #	rm -fv $to_remove_pkg_files
 #}
 
+# obsoleted
 __epm_get_altpkg_url()
 {
 	info "TODO: https://packages.altlinux.org/api/branches"
@@ -143,6 +144,7 @@ __epm_get_altpkg_url()
 	echo "$alt_base_dist_url/$dv/$arch/RPMS.classic/$filename"
 }
 
+# obsoleted
 __epm_print_url_alt()
 {
 	local url="$1"
@@ -179,6 +181,40 @@ __epm_download_alt()
 		local checkflag="$1"
 		shift
 	fi
+
+	load_helper epm-sh-altlinux
+
+	# TODO: enable if install --download-only will works
+	if tasknumber "$@" >/dev/null ; then
+		load_helper epm-addrepo
+		load_helper epm-reposave
+		load_helper epm-removerepo
+		load_helper epm-Install
+
+		local installlist="$(get_task_packages $*)"
+		# hack: drop -devel packages to avoid package provided by multiple packages
+		installlist="$(estrlist reg_exclude ".*-devel .*-devel-static .*-checkinstall .*-debuginfo" "$installlist")"
+		[ -n "$verbose" ] && info "Packages from task(s): $installlist"
+
+		try_change_alt_repo
+		epm_addrepo "$@"
+		docmd epm download "$installlist"
+		epm_removerepo "$@"
+		end_change_alt_repo
+
+		return
+	fi
+
+    # old systems ignore reinstall ?
+	for pkg in "$@" ; do
+		for i in $(sudocmd apt-get install -y --print-uris --reinstall "$pkg" | cut -f1 -d " " | grep ".rpm'$" | sed -e "s|^'||" -e "s|'$||") ; do
+			echo "$(basename "$i")" | grep -q "^$pkg" || continue
+			eget $i
+		done
+	done
+	return
+
+	# old code:
 	for pkg in "$@" ; do
 		local url=$(__epm_get_altpkg_url $pkg)
 		[ -n "$url" ] || warning "Can't get URL for $pkg"
