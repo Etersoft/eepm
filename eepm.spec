@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.39.2
+Version: 3.39.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -157,6 +157,17 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Thu Mar 30 2023 Vitaly Lipatov <lav@altlinux.ru> 3.39.3-alt1
+- eget: make correct URL if file part parsed by mask separately
+- epm play: add vuescan
+- epm play: fix download url for anydesk (according to latest eget)
+- epm play: add cuda-z support
+- eget: big rewrite
+- epm play: add netbeans
+- epm ei: add help, rewrite parsing
+- epm ei: add support to set Korinf URL
+- epm addrepo: add support for AstraLinux
+
 * Wed Mar 29 2023 Vitaly Lipatov <lav@altlinux.ru> 3.39.2-alt1
 - epm ei: add fallback to vendor/repo dir
 - distr_info: print bug report url
