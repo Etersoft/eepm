@@ -61,26 +61,41 @@ __epm_korinf_install() {
     pkg_names='' pkg_files='' epm_install
 }
 
-epm_epm_install() {
-    local i
-    local pkglist="$*"
+epm_epm_install_help()
+{
+	echo "epm ei [packages] - install packages from EPM based Korinf repository"
+			get_help HELPCMD $SHAREDIR/epm-epm_install
+	cat <<EOF
 
-    # install epm by default
-    if [ -z "$pkglist" ] || [ "$pkglist" = "epm" ] || [ "$pkglist" = "eepm" ]; then
-#        if [ "$($DISTRVENDOR -s)" = "alt" ] ; then
-#            pkglist="distro_info eepm"
-#        else
-            pkglist="eepm"
-#        fi
+
+Examples:
+  epm ei [epm|eepm]                - install latest eepm (default action)
+  epm <package1> [<package2>...]   - install package(s) from default Korinf repo
+  epm http://someurl.ru <package>  - install package(s) from the URL
+  epm --list <package mask>        - list available packages by mask
+EOF
+}
+
+
+epm_epm_install() {
     fi
 
-    case "$pkglist" in
-        --list*)
+    case "$1" in
+        ""|epm|eepm)
+            # install epm by default
+            __epm_korinf_install "eepm"
+            return
+            ;;
+        -h|--help)                     # HELPCMD: help
+            epm_epm_install_help
+            return
+            ;;
+        --list)                        # HELPCMD: list only packages
             shift
             __epm_korinf_list "$1"
             return
             ;;
     esac
 
-    __epm_korinf_install $pkglist
+    __epm_korinf_install "$@"
 }
