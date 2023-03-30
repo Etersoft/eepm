@@ -222,6 +222,9 @@ __epm_addrepo_altlinux()
 		return
 	fi
 
+	# don't add again
+	epm repo list --quiet | grep -q -F "$repo" && return 0
+
 	sudocmd apt-repo $dryrun add "$repo"
 
 }
@@ -333,7 +336,8 @@ __epm_addrepo_astra()
 
 	echo "Use workaround for AstraLinux ..."
 	# aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
-    epm repo list --quiet | grep -q -F "$repo" && return 0
+	# don't add again
+	epm repo list --quiet | grep -q -F "$repo" && return 0
 	[ -z "$(tail -n1 /etc/apt/sources.list)" ] || echo "" | sudocmd tee -a /etc/apt/sources.list
 	echo "$repo" | sudocmd tee -a /etc/apt/sources.list
 	return
