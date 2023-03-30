@@ -44,6 +44,13 @@ is_dir_empty()
     [ -z "$(ls -A "$1")" ]
 }
 
+is_url()
+{
+    echo "$1" | grep -q "^[filehtps]*:/"
+}
+
+
+
 # Move file to a new place
 move_file()
 {
@@ -113,8 +120,15 @@ install_file()
 {
     local src="$1"
     local dest="$2"
+
     mkdir -p "$BUILDROOT/$(dirname "$dest")" || return
-    cp "$BUILDROOT/$src" "$BUILDROOT/$dest" || return
+
+    if is_url "$src" ; then
+        epm tool eget -O "$BUILDROOT$dest" "$src" || fatal "Can't download $src to install to $dest"
+    else
+        cp "$BUILDROOT/$src" "$BUILDROOT/$dest" || return
+    fi
+
     pack_file "$dest"
 }
 
