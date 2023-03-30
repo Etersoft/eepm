@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-# Copyright (C) 2013-2015, 2017  Etersoft
-# Copyright (C) 2013-2015, 2017  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2013-2015, 2017, 2020, 2023  Etersoft
+# Copyright (C) 2013-2015, 2017, 2020, 2023  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -43,6 +43,142 @@ build_target_name()
         return 1
 }
 
+have_patool()
+{
+	# TODO: optimize?
+	is_command patool
+}
+
+HAVE_7Z=''
+if ! have_patool ; then
+	# TODO: try install patool and p7zip
+	is_command 7za && HAVE_7Z="7za"
+	is_command 7z && HAVE_7Z="7z"
+fi
+
+# TODO: list of $HAVE_7Z supported (see list_formats)
+
+# target file1 [file2...]
+create_archive()
+{
+	local arc="$1"
+	shift
+	if have_patool ; then
+		docmd patool $verbose create "$arc" "$@"
+		return
+	fi
+
+	# FIXME: get type by ext only
+	local type="$(get_archive_type "$arc")"
+	case "$type" in
+		*)
+			docmd $HAVE_7Z a $arc "$@"
+			#fatal "Not yet supported creating of $type archives"
+			;;
+	esac
+}
+
+extract_archive()
+{
+	local arc="$1"
+	shift
+
+	if have_patool ; then
+        docmd patool $verbose extract "$arc" "$@"
+		return
+	fi
+
+	local type="$(get_archive_type "$arc")"
+	case "$type" in
+		*)
+			docmd $HAVE_7Z x $arc "$@"
+			#fatal "Not yet supported extracting of $type archives"
+			;;
+	esac
+
+}
+
+list_archive()
+{
+	local arc="$1"
+	shift
+
+	# TODO: move to patool
+	if [ "$(get_archive_type "$arc" 2>/dev/null)" = "exe" ] ; then
+		docmd $HAVE_7Z l "$arc" || fatal
+		return
+	fi
+
+	if have_patool ; then
+		docmd patool $verbose list "$arc" "$@"
+		return
+	fi
+
+	local type="$(get_archive_type "$arc")"
+	case "$type" in
+		*)
+			docmd $HAVE_7Z l $arc "$@"
+			#fatal "Not yet supported listing of $type archives"
+			;;
+	esac
+
+}
+
+test_archive()
+{
+	local arc="$1"
+	shift
+
+	# TODO: move to patool
+	if [ "$(get_archive_type "$arc" 2>/dev/null)" = "exe" ] ; then
+		docmd $HAVE_7Z t "$arc" || fatal
+		return
+	fi
+
+	if have_patool ; then
+		docmd patool $verbose test "$arc" "$@"
+		return
+	fi
+
+	local type="$(get_archive_type "$arc")"
+	case "$type" in
+		*)
+			docmd $HAVE_7Z t $arc "$@"
+			#fatal "Not yet supported test of $type archives"
+			;;
+	esac
+
+}
+
+repack_archive()
+{
+	if have_patool ; then
+		docmd patool $verbose repack "$1" "$2"
+		return
+	fi
+
+	# TODO: if both have tar, try unpack | pack
+
+	local ftype="$(get_archive_type "$1")"
+	local ttype="$(get_archive_type "$2")"
+	case "$ftype-$ttype" in
+		tar.*-tar)
+			docmd $HAVE_7Z x -so "$1" > "$2"
+			;;
+		tar-tar.*)
+			docmd $HAVE_7Z a -si "$2" < "$1"
+			;;
+		tar.*-tar.*)
+			docmd $HAVE_7Z x -so "$1" | $HAVE_7Z a -si "$2"
+			;;
+		*)
+			fatal "Not yet supported repack of $ftype-$ttype archives"
+			;;
+	esac
+
+}
+
+
 phelp()
 {
 	echo "$Descr
@@ -58,8 +194,8 @@ $(get_help HELPOPT)
     # erc a archive.zip file(s)... - pack files to archive.zip
     # erc [x] archive.zip - unpack
     # unerc archive.zip - unpack
-    # erc [repack] archive1.zip... archive2.rar 7z: - repack all to 7z
-    # erc -f [repack] archive.zip archive.7z - force repack zip to 7z (override target in anyway)
+    # erc [repack] archive1.zip... archive2.rar $HAVE_7Z: - repack all to $HAVE_7Z
+    # erc -f [repack] archive.zip archive.$HAVE_7Z - force repack zip to $HAVE_7Z (override target in anyway)
     # erc file/dir zip: - pack file to zip
 "
 }
@@ -67,7 +203,7 @@ $(get_help HELPOPT)
 print_version()
 {
         echo "Etersoft archive manager version @VERSION@"
-        echo "Copyright (c) Etersoft 2013-2020"
+        echo "Copyright (c) Etersoft 2013-2023"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 
@@ -84,6 +220,11 @@ target=
 verbose=--verbose
 
 case "$1" in
+    "")
+        echo "Etersoft archive manager version @VERSION@" >&2
+        echo "Run $0 --help to get help" >&2
+        exit 1
+        ;;
     -h|--help|help)       # HELPOPT: this help
         phelp
         exit
@@ -118,7 +259,7 @@ elif [ -d "$cmd" ] && [ -z "$2" ] ; then
     cmd=pack
     target=$(basename "$1").zip
 # erc dir zip:
-elif test -r "$cmd" && is_target_format "$2" ; then
+elif test -r "$1" && is_target_format "$2" ; then
     cmd=pack
 elif [ "$progname" = "unerc" ] ; then
     cmd=extract
@@ -142,43 +283,31 @@ case $cmd in
         if [ -z "$target" ] && is_target_format $lastarg ; then
             [ $# = 2 ] || fatal "Need two args"
             target="$(build_target_name "$1" "$2")"
+            # clear last arg
+            set -- "${@:1:$(($#-1))}"
         fi
-        if [ -n "$target" ] ; then
-            [ -e "$target" ] && [ -n "$force" ] && docmd rm -f "$target"
-            docmd patool $verbose create "$target" "$1"
-            exit
-        fi
-        # erc archive.zip file(s)
-        [ -e "$1" ] && [ -n "$force" ] && docmd rm -f "$1"
-        docmd patool $verbose create "$@"
+        [ -z "$target" ] && target="$1" && shift
+
+        [ -e "$target" ] && [ -n "$force" ] && docmd rm -f "$target"
+        create_archive "$target" "$@"
         ;;
     e|x|-e|-x|u|-u|extract|unpack)          # HELPCMD: extract files from archive
         # TODO: move to patool
         if [ "$(get_archive_type "$1" 2>/dev/null)" = "exe" ] ; then
-            docmd 7z x "$1"
+            docmd $HAVE_7Z x "$1"
             exit
         fi
-        docmd patool $verbose extract "$@"
+        extract_archive "$@"
         ;;
 # TODO: implement deletion
 #    d|delete)             # HELPCMD: delete file(s) from archive
 #        docmd patool delete "$@"
 #        ;;
     l|-l|list)               # HELPCMD: list archive contents
-        # TODO: move to patool
-        if [ "$(get_archive_type "$1" 2>/dev/null)" = "exe" ] ; then
-            docmd 7z l "$1"
-            exit
-        fi
-        docmd patool $verbose list "$@"
+        list_archive "$@"
         ;;
     t|-t|test|check)         # HELPCMD: test for archive integrity
-        # TODO: move to patool
-        if [ "$(get_archive_type "$1" 2>/dev/null)" = "exe" ] ; then
-            docmd 7z t "$1"
-            exit
-        fi
-        docmd patool $verbose test "$@"
+        test_archive "$@"
         ;;
     type)                 # HELPCMD: print type of archive
         get_archive_type "$1" || fatal "Can't recognize $1 as archive"
@@ -188,9 +317,9 @@ case $cmd in
         docmd patool $verbose diff "$@"
         ;;
     b|-b|bench|benchmark)    # HELPCMD: do CPU benchmark
-        #assure_cmd 7z
-        # TODO: can be 7za?
-        docmd 7z b
+        #assure_cmd $HAVE_7Z
+        # TODO: can be $HAVE_7Za?
+        docmd $HAVE_7Z b
         ;;
     search|grep)               # HELPCMD: search in files from archive
         docmd patool $verbose search "$@"
@@ -202,7 +331,7 @@ case $cmd in
             [ $# = 2 ] || fatal "Need two args"
             [ "$(realpath "$1")" = "$(realpath "$2")" ] && warning "Output file is the same as input" && exit
             [ -e "$2" ] && [ -n "$force" ] && docmd rm -f "$2"
-            docmd patool $verbose repack "$1" "$2"
+            repack_archive "$1" "$2"
             exit
         fi
 
@@ -212,13 +341,13 @@ case $cmd in
             target="$(build_target_name "$i" "$lastarg")"
             [ "$(realpath "$1")" = "$(realpath "$target")" ] && warning "Output file is the same as input" && exit
             [ -e "$target" ] && [ -n "$force" ] && docmd rm -f "$target"
-            docmd patool $verbose repack "$i" "$target" || exit
+            repack_archive "$i" "$target" || exit
         done
 
         ;;
     formats)              # HELPCMD: lists supported archive formats
         # TODO: print allowed with current programs separately
-        if [ -n "$verbose" ] ; then
+        if [ -n "$verbose" ] && have_patool ; then
             docmd patool formats "$@"
             echo "Also we supports:"
             ( list_subformats ; list_extraformats ) | sed -e "s|^|  |"
