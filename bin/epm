@@ -587,12 +587,31 @@ pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
 #echover "pkg_files=$pkg_files"
 #echover "pkg_names=$pkg_names"
 
+print_short_help()
+{
+cat <<EOF
+
+Popular commands:
+ epm search <name>          - search package by name
+ epm install <package>      - install package
+ epm full-upgrade           - do full upgrade (packages, kernel) of the system
+ epm Upgrade                - upgrade all installed packages (Upgrade = update + upgrade)
+ epm play [application]     - install the application (run without params to get list of available apps)
+ epm qf (<command>|<path>)  - print what package contains this command (file)
+ epm sf <name>              - search for the name in all files of all packages
+ epm cl <package name>      - pint changelog for the package
+EOF
+}
+
 # Just printout help if run without args
 if [ -z "$epm_cmd" ] ; then
     print_version >&2
     echo >&2
     fatstr="Unrecognized command in '$*' arg(s)"
-    [ -n "$*" ] || fatstr="That program needs be running with some command"
+    if [ -z "$*" ] ; then
+        fatstr="That program needs be running with some command"
+        print_short_help >&2
+    fi
     echo "Run $(echocmd "$PROGNAME --help") to get help." >&2
     echo "Run $(echocmd "epm print info") to get some system and distro info." >&2
     fatal "$fatstr."
