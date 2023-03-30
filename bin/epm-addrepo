@@ -289,6 +289,55 @@ esac
 
 }
 
+__epm_addrepo_astra()
+{
+	local repo="$*"
+
+	if [ -z "$repo" ] || [ "$repo" = "--help" ]; then
+		info "Add repo. You can use follow params:"
+		echo "  distribution component name"
+		echo "  full sources list line"
+		echo "  URL version component"
+		return
+	fi
+
+	local reponame="$(epm print info --repo-name)"
+
+	# keywords
+	# https://wiki.astralinux.ru/pages/viewpage.action?pageId=3276859
+	case "$1-$reponame" in
+		astra-1.7_x86_64)
+			# TODO epm repo change http / https
+			epm install --skip-installed apt-transport-https ca-certificates || fatal
+			# https://wiki.astralinux.ru/pages/viewpage.action?pageId=158598882
+			epm repo add "deb [arch=amd64] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-main/     1.7_x86-64 main contrib non-free"
+			epm repo add "deb [arch=amd64] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-update/   1.7_x86-64 main contrib non-free"
+			epm repo add "deb [arch=amd64] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-base/     1.7_x86-64 main contrib non-free"
+			epm repo add "deb [arch=amd64] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-extended/ 1.7_x86-64 main contrib non-free"
+			epm repo add "deb [arch=amd64] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-extended/ 1.7_x86-64 astra-ce"
+			return
+			;;
+		astra-orel)
+			# TODO epm repo change http / https
+			epm install --skip-installed apt-transport-https ca-certificates || fatal
+			# https://wiki.astralinux.ru/pages/viewpage.action?pageId=158605543
+			epm repo add "deb [arch=amd64] https://dl.astralinux.ru/astra/frozen/$(epm print info -v)_x86-64/$(epm print info --full-version)/repository stable main contrib non-free"
+			#epm repo add "deb https://download.astralinux.ru/astra/stable/orel/repository/ orel main contrib non-free"
+			return
+			;;
+		astra-*)
+			fatal "Unsupported distro version $reponame, see '# epm print info' output."
+			;;
+	esac
+
+	echo "Use workaround for AstraLinux ..."
+	# aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
+    epm repo list --quiet | grep -q -F "$repo" && return 0
+	[ -z "$(tail -n1 /etc/apt/sources.list)" ] || echo "" | sudocmd tee -a /etc/apt/sources.list
+	echo "$repo" | sudocmd tee -a /etc/apt/sources.list
+	return
+}
+
 __epm_addrepo_deb()
 {
 	assure_exists apt-add-repository software-properties-common
@@ -306,15 +355,6 @@ __epm_addrepo_deb()
 		echo "  URL version component"
 		return
 	fi
-
-	if [ "$DISTRNAME" = "AstraLinuxCE" ] || [ "$DISTRNAME" = "AstraLinuxSE" ] ; then
-		echo "Use workaround for AstraLinux"
-		# aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
-		echo "" | sudocmd tee -a /etc/apt/sources.list
-		echo "$repo" | sudocmd tee -a /etc/apt/sources.list
-		return
-	fi
-
 
 	# keywords
 	case "$1" in
@@ -355,6 +395,9 @@ case $BASEDISTRNAME in
 		__epm_addrepo_altlinux $repo
 		return
 		;;
+	"astra")
+		__epm_addrepo_astra $repo
+		return
 esac
 
 case $PMTYPE in
