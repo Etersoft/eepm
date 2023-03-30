@@ -534,6 +534,8 @@ if echo "$URL" | grep -q "[*?]" ; then
     fatal "Error: there are globbing symbols (*?) in $URL. It is allowed only for mask part"
 fi
 
+is_url "$MASK" && fatal "eget supports only one URL as argument"
+[ -n "$3" ] && fatal "too many args: extra '$3'. May be you need use quotes for arg with wildcards."
 
 # TODO: curl?
 # If ftp protocol, just download
