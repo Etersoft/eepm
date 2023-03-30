@@ -544,6 +544,14 @@ if echo "$URL" | grep -q "^ftp://" ; then
 fi
 
 
+if [ -n "$LISTONLY" ] ; then
+    for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
+        is_url "$fn" && echo "$fn" && continue
+        make_fileurl "$URL" "$fn"
+    done
+    exit
+fi
+
 # If there is no wildcard symbol like asterisk, just download
 if echo "$MASK" | grep -qv "[*?]" || echo "$MASK" | grep -q "[?].*="; then
     if is_fileurl "$1" ; then
@@ -551,15 +559,6 @@ if echo "$MASK" | grep -qv "[*?]" || echo "$MASK" | grep -q "[?].*="; then
         exit
     fi
     sget "$1" "$TARGETFILE"
-    exit
-fi
-
-
-if [ -n "$LISTONLY" ] ; then
-    for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
-        is_url "$fn" && echo "$fn" && continue
-        make_fileurl "$URL" "$fn"
-    done
     exit
 fi
 
