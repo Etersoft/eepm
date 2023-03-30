@@ -73,7 +73,7 @@ regular_unpack()
 progname="${0##*/}"
 
 Usage="Usage: $progname [options] file(s)..."
-Descr="ercat - universal uncompressor"
+Descr="ercat - universal file uncompressor"
 
 cmd=$1
 
