@@ -20,6 +20,8 @@
 
 load_helper epm-install
 
+# default repo
+EPM_KORINF_REPO_URL="https://updates.etersoft.ru/pub/Korinf"
 
 __epm_korinf_site_mask() {
     local MASK="$1"
@@ -28,9 +30,9 @@ __epm_korinf_site_mask() {
     rhas "$MASK" "[-_]" || MASK="$MASK[-_][0-9]"
     # set arch for Korinf compatibility
     [ "$($DISTRVENDOR -a)" = "x86_64" ] && archprefix="x86_64/"
-    local URL="http://updates.etersoft.ru/pub/Korinf/$archprefix$($DISTRVENDOR -e)"
+    local URL="$EPM_KORINF_REPO_URL/$archprefix$($DISTRVENDOR -e)"
     if ! eget --check "$URL" ; then
-        tURL="http://updates.etersoft.ru/pub/Korinf/$archprefix$($DISTRVENDOR --vendor-name)/$($DISTRVENDOR --repo-name)"
+        tURL="$EPM_KORINF_REPO_URL/$archprefix$($DISTRVENDOR --vendor-name)/$($DISTRVENDOR --repo-name)"
         docmd eget --check "$tURL" && URL="$tURL"
     fi
     echo "$URL/$MASK*.$PKGFORMAT"
@@ -67,6 +69,7 @@ epm_epm_install_help()
 			get_help HELPCMD $SHAREDIR/epm-epm_install
 	cat <<EOF
 
+Default Korinf repository: $EPM_KORINF_REPO_URL
 
 Examples:
   epm ei [epm|eepm]                - install latest eepm (default action)
@@ -78,6 +81,11 @@ EOF
 
 
 epm_epm_install() {
+
+    if is_url "$1" ; then
+        EPM_KORINF_REPO_URL="$1"
+        info "Using $EPM_KORINF_REPO_URL repo ..."
+        shift
     fi
 
     case "$1" in
