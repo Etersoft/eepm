@@ -547,7 +547,7 @@ fi
 # If there is no wildcard symbol like asterisk, just download
 if echo "$MASK" | grep -qv "[*?]" || echo "$MASK" | grep -q "[?].*="; then
     if is_fileurl "$1" ; then
-        cp -v "$(dir_from_url)" "$TARGEFILE"
+        sget "$(dir_from_url "$1")" "$TARGEFILE"
         exit
     fi
     sget "$1" "$TARGETFILE"
