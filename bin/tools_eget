@@ -529,8 +529,9 @@ else
     MASK=$(basename "$1")
 fi
 
-if echo "$URL" | grep -q "[*?]" ; then
-    fatal "Error: there are globbing symbols (*?) in $URL. It is allowed only for mask part"
+# https://www.freeoffice.com/download.php?filename=freeoffice-2021-1062.x86_64.rpm
+if echo "$URL" | grep -q "[*]" ; then
+    fatal "Error: there are globbing symbol (*) in $URL. It is allowed only for mask part"
 fi
 
 is_url "$MASK" && fatal "eget supports only one URL as argument"
