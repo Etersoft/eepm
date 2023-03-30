@@ -47,9 +47,8 @@ EOF
 
 pack_file /usr/share/applications/$PRODUCT.desktop
 
-mkdir -p $BUILDROOT/usr/share/pixmaps/
-epm tool eget -O $BUILDROOT/usr/share/pixmaps/$PRODUCT.png https://dashboard.snapcraft.io/site_media/appmedia/2020/04/icq_copy.png
-[ -s $BUILDROOT/usr/share/pixmaps/$PRODUCT.png ] && pack_file /usr/share/pixmaps/$PRODUCT.png || echo "Can't download icon for the program."
+install_file https://dashboard.snapcraft.io/site_media/appmedia/2020/04/icq_copy.png /usr/share/pixmaps/$PRODUCT.png
+
 subst "s|.*/opt/icq/unittests.*||" $SPEC
 
 # ignore embedded libs

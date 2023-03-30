@@ -11,7 +11,8 @@ PRODUCTCUR=$PRODUCT$VER
 
 . $(dirname $0)/common.sh
 
-add_requires python3-module-PyPDF3
+# embedded
+filter_from_requires "python3(PyPDF3)"
 
 subst '1iAutoProv: no' $SPEC
 

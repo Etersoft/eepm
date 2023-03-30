@@ -39,11 +39,8 @@ EOF
 
 pack_file /usr/share/applications/$PRODUCT.desktop
 
-mkdir -p $BUILDROOT/usr/share/pixmaps/
-cp -a $BUILDROOT$PRODUCTDIR/bin/$PRODUCT.png $BUILDROOT/usr/share/pixmaps/
-cp -a $BUILDROOT$PRODUCTDIR/bin/$PRODUCT.svg $BUILDROOT/usr/share/pixmaps/
-pack_file /usr/share/pixmaps/$PRODUCT.png
-pack_file /usr/share/pixmaps/$PRODUCT.svg
+install_file $PRODUCTDIR/bin/$PRODUCT.png /usr/share/pixmaps/
+install_file $PRODUCTDIR/bin/$PRODUCT.svg /usr/share/pixmaps/
 
 # TODO: support other arch
 for i in arm aarch64 mips64el ppc64le x86 x86-64 ; do
