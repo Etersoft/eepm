@@ -114,7 +114,7 @@ case $PMTYPE in
 		docmd ds-conf
 		;;
 	apt-dpkg|aptitude-dpkg)
-		print_apt_sources_list
+		print_apt_sources_list "$@"
 		;;
 	yum-rpm)
 		docmd yum repolist $verbose
