@@ -63,7 +63,12 @@ EOF
 list_formats()
 {
 	list_subformats
-	a='' patool formats | grep ".* files:" | sed "s/ .*//g"
+	if have_patool ; then
+		a='' patool formats | grep ".* files:" | sed "s/ .*//g"
+	else
+		echo "tar zip 7z tar.7z"
+		list_subformats
+	fi
 	# TODO: do not use patool formats in such case?
 	# See ArchiveCompressions in patool
 	list_extraformats

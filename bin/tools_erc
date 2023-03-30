@@ -78,6 +78,9 @@ extract_archive()
 
 	local type="$(get_archive_type "$arc")"
 	case "$type" in
+		tar.*)
+			docmd $HAVE_7Z x -so $arc | docmd $HAVE_7Z x -si -ttar
+			;;
 		*)
 			docmd $HAVE_7Z x $arc "$@"
 			#fatal "Not yet supported extracting of $type archives"
