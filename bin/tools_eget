@@ -156,7 +156,7 @@ filter_order()
 is_fileurl()
 {
     echo "$1" | grep -q "^/" && return
-    echo "$1" | grep -q "file:/"
+    echo "$1" | grep -q "^file:/"
 }
 
 dir_from_url()
@@ -166,9 +166,8 @@ dir_from_url()
 
 is_url()
 {
-    echo "$1" | grep -q ":/"
+    echo "$1" | grep -q "^[filehtps]*:/"
 }
-
 
 
 # args: cmd <URL> <options>
