@@ -20,15 +20,22 @@
 have_patool()
 {
 	# TODO: optimize?
-	is_command patool
+	[ -n "$use_7z" ] && return 1
+	[ -n "$use_patool" ] || is_command patool
 }
 
-HAVE_7Z=''
-if ! have_patool ; then
-	# TODO: try install patool and p7zip
-	is_command 7za && HAVE_7Z="7za"
-	is_command 7z && HAVE_7Z="7z"
-fi
+set_backend()
+{
+	HAVE_7Z='7z'
+	[ -n "$use_patool" ] && [ -n "$use_7z" ] && fatal "Don't use --use-7z and --use-tool simulateously."
+
+	if [ -n "$use_7z" ] || ! have_patool ; then
+		# TODO: try install patool and p7zip
+		is_command 7za && HAVE_7Z='7za'
+		#is_command 7z && HAVE_7Z='7z'
+	fi
+	[ -z "$force" ] || HAVE_7Z="$HAVE_7Z -y"
+}
 
 
 list_subformats()

@@ -209,6 +209,8 @@ progname="${0##*/}"
 force=
 target=
 verbose=--verbose
+use_7z=
+use_patool=
 
 if [ -z "$" ] ; then
     echo "Etersoft archive manager version @VERSION@" >&2
@@ -232,6 +234,12 @@ case "$1" in
     -f|--force)           # HELPOPT: override target
         force=-f
         ;;
+    --use-patool)         # HELPOPT: force use patool as backend
+        use_patool=1
+        ;;
+    --use-7z)             # HELPOPT: force use 7z as backend
+        use_7z=1
+        ;;
     -*)
         fatal "Unknown option '$1'"
         ;;
@@ -241,6 +249,8 @@ case "$1" in
 esac
 shift
 done
+
+set_backend
 
 cmd="$1"
 
