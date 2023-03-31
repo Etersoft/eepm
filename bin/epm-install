@@ -345,10 +345,13 @@ epm_install_files()
             fi
 
             # --replacepkgs: Install the Package Even If Already Installed
-            sudocmd rpm -Uvh --replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && save_installed_packages $files && return
+            local replacepkgs='--replacepkgs'
+            # don't use --replacepkgs when install only one file
+            [ -f "$files" ] && replacepkgs=''
+            sudocmd rpm -Uvh $replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && save_installed_packages $files && return
             local RES=$?
             # TODO: check rpm result code and convert it to compatible format if possible
-            #__epm_check_if_rpm_already_installed $force $noscripts $nodeps $files && return
+            __epm_check_if_rpm_already_installed $force $replacepkgs $noscripts $nodeps $files && return
 
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return $RES
@@ -366,7 +369,10 @@ epm_install_files()
                 epm install $(epm req --short $files) || return
                 # retry with rpm
                 # --replacepkgs: Install the Package Even If Already Installed
-                sudocmd rpm -Uvh --replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && save_installed_packages $files
+                local replacepkgs='--replacepkgs'
+                # don't use --replacepkgs when install only one file
+                [ -f "$files" ] && replacepkgs=''
+                sudocmd rpm -Uvh $replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && save_installed_packages $files
                 return
             fi
 
@@ -453,10 +459,13 @@ epm_install_files()
             __epm_check_if_src_rpm $files
 
             # --replacepkgs: Install the Package Even If Already Installed
-            sudocmd rpm -Uvh --replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && return
+            local replacepkgs='--replacepkgs'
+            # don't use --replacepkgs when install only one file
+            [ -f "$files" ] && replacepkgs=''
+            sudocmd rpm -Uvh $replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && return
             local RES=$?
 
-            #__epm_check_if_rpm_already_installed $force $noscripts $nodeps $files && return
+            __epm_check_if_rpm_already_installed $force $replacepkgs $noscripts $nodeps $files && return
 
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return $RES
