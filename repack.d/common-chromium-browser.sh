@@ -59,15 +59,6 @@ cleanup()
 }
 
 
-use_system_xdg()
-{
-    # replace embedded xdg tools
-    for i in $PRODUCTDIR/{xdg-mime,xdg-settings} ; do
-        [ -s $BUILDROOT$i ] || continue
-        rm -v $BUILDROOT$i
-        ln -s /usr/bin/$(basename $i) $BUILDROOT$i
-    done
-}
 
 
 install_deps()

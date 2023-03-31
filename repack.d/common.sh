@@ -274,6 +274,20 @@ drop_embedded_reqs()
     filter_from_requires "libGLESv2.so()" "libEGL.so()" "libffmpeg.so()"
 }
 
+# by default check in $PRODUCTDIR
+use_system_xdg()
+{
+    local prod="$1"
+    [ -n "$prod" ] || prod="$PRODUCTDIR"
+    # replace embedded xdg tools
+    for i in $prod/{xdg-mime,xdg-settings} ; do
+        [ -s $BUILDROOT$i ] || continue
+        rm -v $BUILDROOT$i
+        ln -s /usr/bin/$(basename $i) $BUILDROOT$i
+    done
+}
+
+
 #[ -d "$BUILDROOT" ] || fatal "Run me only via epm repack <package>"
 
 if [ -n "$PRODUCT" ] ; then
