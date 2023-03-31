@@ -98,6 +98,7 @@ noremove=
 dryrun=
 force=
 repack=
+norepack=
 install=
 inscript=
 scripts=
@@ -465,6 +466,9 @@ check_option()
         ;;
     --repack)              # HELPOPT: repack rpm package(s) before install
         repack="--repack"
+        ;;
+    --norepack)              # HELPOPT: don't repack rpm package(s) if it is by default before install
+        repack="--norepack"
         ;;
     --install)             # HELPOPT: install packed rpm package(s)
         install="--install"
