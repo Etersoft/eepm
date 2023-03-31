@@ -69,16 +69,13 @@ __set_name_version()
 }
 
 
-# TODO: move this list from external file
 __check_stoplist()
 {
-    cat <<EOF | grep -q "^$1$"
-kesl
-kesl-astra
-klnagent
-klnagent64
-klnagent64-astra
-EOF
+    local pkg="$1"
+    local alf="$CONFIGDIR/repackstoplist.list"
+    [ -s "$alf" ] || return 1
+    [ -n "$pkg" ] || return 1
+    grep -E -q "^$1$" $alf
 }
 
 
