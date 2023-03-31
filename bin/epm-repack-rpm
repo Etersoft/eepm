@@ -198,7 +198,7 @@ __epm_repack_to_rpm()
         else
             warning "Can't find converted rpm for source binary package '$pkg'"
         fi
-        cd - >/dev/null
+        cd $EPMCURDIR >/dev/null
         rm -rf $tmpbuilddir/$subdir/
         rm -rf $spec
     done
