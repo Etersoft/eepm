@@ -125,8 +125,10 @@ install_file()
 
     if is_url "$src" ; then
         epm tool eget -O "$BUILDROOT$dest" "$src" || fatal "Can't download $src to install to $dest"
-    else
+    elif echo "$src" | grep -q "^/" ; then
         cp "$BUILDROOT/$src" "$BUILDROOT/$dest" || return
+    else
+        cp "$src" "$BUILDROOT/$dest" || return
     fi
 
     pack_file "$dest"
