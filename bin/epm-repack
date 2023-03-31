@@ -51,46 +51,6 @@ __epm_split_by_pkg_type()
 	[ -n "$split_replaced_pkgs" ]
 }
 
-# fills repacked_pkgs
-__epm_repack_to_deb()
-{
-	local pkg
-	local pkgs="$*"
-
-	assure_exists alien
-	assure_exists fakeroot
-	assure_exists rpm
-
-	repacked_pkgs=''
-
-	local TDIR=$(mktemp -d --tmpdir=$BIGTMPDIR)
-	to_clean_tmp_dirs="$to_clean_tmp_dirs $TDIR"
-	trap "__epm_remove_tmp_files" EXIT
-
-	for pkg in $pkgs ; do
-		abspkg="$(realpath "$pkg")"
-		info "Repacking $abspkg to local deb format (inside $TDIR) ..."
-
-		alpkg=$(basename $pkg)
-		# don't use abs package path: copy package to temp dir and use there
-		cp $verbose $pkg $TDIR/$alpkg
-
-		cd $TDIR || fatal
-		__prepare_source_package "$pkg"
-
-		showcmd_store_output fakeroot alien -d -k $scripts "$alpkg"
-		local DEBCONVERTED=$(grep "deb generated" $RC_STDOUT | sed -e "s| generated||g")
-		if [ -n "$DEBCONVERTED" ] ; then
-			repacked_pkgs="$repacked_pkgs $(realpath $DEBCONVERTED)"
-			to_remove_pkg_files="$to_remove_pkg_files $(realpath $DEBCONVERTED)"
-		fi
-		clean_store_output
-		cd - >/dev/null
-	done
-
-	return 0
-}
-
 
 # $spec $PKGNAME $VERSION
 __set_name_version()
@@ -102,52 +62,6 @@ __set_name_version()
     [ -n "$VERSION" ] && subst "s|^Version:.*|Version: $VERSION|" $SPEC
 }
 
-# args: pkgname buildroot spec
-__fix_spec()
-{
-    local pkgname="$1"
-    local buildroot="$2"
-    local spec="$3"
-    local i
-
-    # drop forbidded paths
-    # https://bugzilla.altlinux.org/show_bug.cgi?id=38842
-    for i in / /etc /etc/init.d /etc/systemd /bin /opt /usr /usr/bin /usr/share /usr/share/doc /var /var/log /var/run \
-            /etc/cron.daily /usr/share/icons /usr/share/pixmaps /usr/share/man /usr/share/man/man1 /usr/share/appdata /usr/share/applications /usr/share/menu ; do
-        sed -i \
-            -e "s|/\./|/|" \
-            -e "s|^%dir[[:space:]]\"$i/*\"$||" \
-            -e "s|^%dir[[:space:]]$i/*$||" \
-            -e "s|^\"$i/*\"$||" \
-            -e "s|^$i/*$||" \
-            $spec
-    done
-
-    # commented out: conflicts with already installed package
-    # drop %dir for existed system dirs
-    #for i in $(grep '^%dir "' $spec | sed -e 's|^%dir  *"\(.*\)".*|\1|' ) ; do #"
-    #    echo "$i" | grep -q '^/opt/' && continue
-    #    [ -d "$i" ] && [ -n "$verbose" ] && echo "drop dir $i from packing, it exists in the system"
-    #done
-
-    # replace dir "/path/dir" -> %dir /path/dir
-    grep '^"/' $spec | sed -e 's|^"\(/.*\)"$|\1|' | while read i ; do
-        # add dir as %dir in the filelist
-        if [ -d "$buildroot$i" ] ; then
-            subst "s|^\(\"$i\"\)$|%dir \1|" $spec
-        #else
-        #    subst 's|^\("'$i'"\)$|\1|' $spec
-        fi
-    done
-
-    # FIXME: where is a source of the bug with empty Summary?
-    subst "s|Summary: *$|Summary: $pkgname (was empty Summary after alien)|" $spec
-    subst "s|^\(Version: .*\)~.*|\1|" $spec
-    subst "s|^Release: |Release: alt1.repacked.with.epm.|" $spec
-    subst "s|^Distribution:.*||" $spec
-    subst "s|^\((Converted from a\) \(.*\) \(package.*\)|(Repacked from binary \2 package with epm $EPMVERSION)\n\1 \2 \3|" $spec
-    #" hack for highlight
-}
 
 # TODO: move this list from external file
 __check_stoplist()
@@ -159,37 +73,6 @@ klnagent
 klnagent64
 klnagent64-astra
 EOF
-}
-
-
-# args: pkgname buildroot spec
-__apply_fix_code()
-{
-    local repackcode="$EPM_REPACK_SCRIPTS_DIR/$1.sh"
-    [ -s "$repackcode" ] || return
-    shift
-    export PATH=$PROGDIR:$PATH
-    local bashopt=''
-    [ -n "$verbose" ] && bashopt='-x'
-    ( unset EPMCURDIR ; docmd $CMDSHELL $bashopt $repackcode "$1" "$2" "$3" ) || fatal "There is an error from $repackcode script"
-}
-
-__create_rpmmacros()
-{
-# FIXME:
-[ -n "$TMPDIR" ] || TMPDIR=/tmp
-
-    cat <<EOF >$HOME/.rpmmacros
-%_topdir	$HOME/RPM
-%_tmppath	$TMPDIR
-
-%packager	EPM <support@etersoft.ru>
-%_vendor	EEPM
-%_gpg_name	support@etersoft.ru
-
-%_allow_root_build	1
-EOF
-    to_remove_pkg_files="$to_remove_pkg_files $HOME/.rpmmacros"
 }
 
 
@@ -283,117 +166,6 @@ __prepare_source_package()
 }
 
 
-# will fill repacked_pkgs var
-__epm_repack_to_rpm()
-{
-    local pkgs="$*"
-    #case $DISTRNAME in
-    #    ALTLinux|ALTServer)
-    #        ;;
-    #    *)
-    #        assure_distr ALTLinux "install --repack for rpm target"
-    #        ;;
-    #esac
-
-    # Note: install epm-repack for static (package based) dependencies
-    assure_exists alien || fatal
-
-    # TODO: check for all systems
-	case $PKGFORMAT in
-		rpm)
-			assure_exists /usr/bin/rpmbuild rpm-build || fatal
-			;;
-		deb)
-			assure_exists /usr/bin/rpmbuild rpm || fatal
-			;;
-	esac
-
-    # TODO: improve
-    if echo "$pkgs" | grep -q "\.deb" ; then
-        assure_exists dpkg || fatal
-        # TODO: Для установки требует: /usr/share/debconf/confmodule но пакет не может быть установлен
-        # assure_exists debconf
-    fi
-
-    local pkg
-    export HOME=$(mktemp -d --tmpdir=$BIGTMPDIR)
-    to_clean_tmp_dirs="$to_clean_tmp_dirs $HOME"
-    trap "__epm_remove_tmp_files" EXIT
-    __create_rpmmacros
-
-    local alpkg
-    local abspkg
-    local tmpbuilddir
-    repacked_pkgs=''
-    for pkg in $pkgs ; do
-        tmpbuilddir=$HOME/$(basename $pkg).tmpdir
-        mkdir $tmpbuilddir
-        abspkg="$(realpath $pkg)"
-        info ""
-        info "Repacking $abspkg to local rpm format (inside $tmpbuilddir) ..."
-
-        alpkg=$(basename $pkg)
-        # don't use abs package path: copy package to temp dir and use there
-        cp $verbose $pkg $tmpbuilddir/../$alpkg
-
-        cd $tmpbuilddir/../ || fatal
-        __prepare_source_package "$pkg"
-        cd $tmpbuilddir/ || fatal
-
-        if [ -n "$verbose" ] ; then
-            docmd alien --generate --to-rpm $verbose $scripts "../$alpkg" || fatal
-        else
-            showcmd alien --generate --to-rpm $scripts "../$alpkg"
-            a='' alien --generate --to-rpm $scripts "../$alpkg" >/dev/null || fatal
-        fi
-
-        local subdir="$(echo *)"
-        [ -d "$subdir" ] || fatal "can't find subdir in $(pwd)"
-
-        # detect spec and move to prev dir
-        local spec="$(echo $tmpbuilddir/$subdir/*.spec)"
-        [ -s "$spec" ] || fatal "Can't find spec $spec"
-        mv $spec $tmpbuilddir || fatal
-        spec="$tmpbuilddir/$(basename "$spec")"
-        #__set_name_version $spec $PKGNAME $VERSION
-        local pkgname="$(grep "^Name: " $spec | sed -e "s|Name: ||g" | head -n1)"
-
-        # for tarballs fix permissions
-        [ -n "$VERSION" ] && chmod $verbose -R a+rX $tmpbuilddir/$subdir/*
-
-        __fix_spec $pkgname $tmpbuilddir/$subdir $spec
-        __apply_fix_code "generic" $tmpbuilddir/$subdir $spec $pkgname
-        [ -n "$SUBGENERIC" ] && __apply_fix_code "generic-$SUBGENERIC" $tmpbuilddir/$subdir $spec
-        __apply_fix_code $pkgname $tmpbuilddir/$subdir $spec $pkgname
-        # TODO: we need these dirs to be created
-        to_remove_pkg_dirs="$to_remove_pkg_dirs $HOME/RPM/BUILD $HOME/RPM"
-
-        TARGETARCH=$(epm print info -a | sed -e 's|^x86$|i586|')
-
-        showcmd rpmbuild --buildroot $tmpbuilddir/$subdir --target $TARGETARCH -bb $spec
-        if [ -n "$verbose" ] ; then
-            a='' rpmbuild --buildroot $tmpbuilddir/$subdir --target $TARGETARCH -bb $spec || fatal
-        else
-            a='' rpmbuild --buildroot $tmpbuilddir/$subdir --target $TARGETARCH -bb $spec >/dev/null || fatal
-        fi
-        # remove copy of source binary package (don't mix with generated)
-        rm -f $tmpbuilddir/../$alpkg
-        local repacked_rpm="$(realpath $tmpbuilddir/../*.rpm)"
-        if [ -s "$repacked_rpm" ] ; then
-            repacked_pkgs="$repacked_pkgs $repacked_rpm"
-            to_remove_pkg_files="$to_remove_pkg_files $repacked_rpm"
-        else
-            warning "Can't find converted rpm for source binary package '$pkg'"
-        fi
-        cd - >/dev/null
-        rm -rf $tmpbuilddir/$subdir/
-        rm -rf $spec
-    done
-
-    rmdir $tmpbuilddir
-    #rmdir $tmpbuilddir/..
-    true
-}
 
 
 # FIXME: Нужно как-то обеспечить непродолжение выполнения.
@@ -404,6 +176,7 @@ __epm_repack()
 	repacked_pkgs=''
 	case $PKGFORMAT in
 		rpm)
+			load_helper epm-repack-rpm
 			__epm_repack_to_rpm "$@" || return
 			;;
 		deb)
@@ -412,10 +185,13 @@ __epm_repack()
 			__set_version_pkgname "$1"
 			local repackcode="$EPM_REPACK_SCRIPTS_DIR/$PKGNAME.sh"
 			if [ -x "$repackcode" ] ; then
+				load_helper epm-repack-rpm
+				load_helper epm-repack-deb
 				__epm_repack_to_rpm "$@" || return
 				[ -n "$repacked_pkgs" ] || return
 				__epm_repack_to_deb $repacked_pkgs
 			else
+				load_helper epm-repack-deb
 				__epm_repack_to_deb "$@" || return
 			fi
 			;;
