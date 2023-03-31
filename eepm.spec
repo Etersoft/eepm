@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.39.3
+Version: 3.40.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -157,6 +157,26 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Fri Mar 31 2023 Vitaly Lipatov <lav@altlinux.ru> 3.40.0-alt1
+- epm play: add alivecolors support
+- epm play: add freeoffice
+- epm addrepo: add astra repos with [arch-=i386]
+- erc: use 7z if patool is missed
+- erc: add --use-7z and --use-patool
+- add prepare_to_eepm.sh
+- eget: improve is_url checking
+- eget: disable checking for globbing symbol ? in URL
+- epm: add -y as --auto alias
+- epm: print short help when run without params
+- epm prescription: add i586-support
+- epm install: don't use --replacepkgs when install only one package
+- epm prescription: add nvidia-remove
+- epm: add --norepack option
+- epm pack: rewrite
+- epm repack: move repack stoplist to /etc/eepm/repackstoplist.list
+- epm repack generic.sh: skip links
+- epm release-upgrade: print info about ALT wiki when update to ALT Sisyphus
+
 * Thu Mar 30 2023 Vitaly Lipatov <lav@altlinux.ru> 3.39.3-alt1
 - eget: make correct URL if file part parsed by mask separately
 - epm play: add vuescan
