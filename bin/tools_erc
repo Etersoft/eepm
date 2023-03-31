@@ -210,12 +210,14 @@ force=
 target=
 verbose=--verbose
 
+if [ -z "$" ] ; then
+    echo "Etersoft archive manager version @VERSION@" >&2
+    echo "Run $0 --help to get help" >&2
+    exit 1
+fi
+
+while [ -n "$1" ] ; do
 case "$1" in
-    "")
-        echo "Etersoft archive manager version @VERSION@" >&2
-        echo "Run $0 --help to get help" >&2
-        exit 1
-        ;;
     -h|--help|help)       # HELPOPT: this help
         phelp
         exit
@@ -226,13 +228,19 @@ case "$1" in
         ;;
     -q|--quiet)           # HELPOPT: be silent
         verbose=
-        shift
         ;;
     -f|--force)           # HELPOPT: override target
         force=-f
-        shift
+        ;;
+    -*)
+        fatal "Unknown option '$1'"
+        ;;
+    *)
+        break
         ;;
 esac
+shift
+done
 
 cmd="$1"
 
