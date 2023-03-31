@@ -471,6 +471,8 @@ epm_release_upgrade()
 			TARGET="$1"
 		fi
 
+		[ "$TARGET" = "Sisyphus" && info "Check also https://www.altlinux.org/Update/Sisyphus"
+
 		[ -n "$TARGET" ] || TARGET="$(get_next_release $DISTRVERSION)"
 
 		__alt_repofix
