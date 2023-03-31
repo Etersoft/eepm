@@ -38,6 +38,7 @@ check_core_commands()
 {
 	#which --help >/dev/null || fatal "Can't find which command (which package is missed?)"
 	# broken which on Debian systems
+	# TODO: use is_command and print_command_path instead of
 	which which >/dev/null || fatal "Can't find which command (which or debianutils package is missed?)"
 	which grep >/dev/null || fatal "Can't find grep command (coreutils package is missed?)"
 	which sed >/dev/null || fatal "Can't find sed command (sed package is missed?)"
@@ -97,6 +98,14 @@ set_boldcolor()
 	} |tput -S
 }
 
+set_color()
+{
+	[ "$USETTY" = "1" ] || return
+	{
+		echo setaf $1
+	} |tput -S
+}
+
 restore_color()
 {
 	[ "$USETTY" = "1" ] || return
@@ -115,7 +124,7 @@ echover()
 echon()
 {
 	# default /bin/sh on MacOS does not recognize -n
-	/bin/echo -n "$*"
+	echo -n "$*" 2>/dev/null || a= /bin/echo -n "$*"
 }
 
 
@@ -253,6 +262,13 @@ strip_spaces()
         echo "$*" | filter_strip_spaces
 }
 
+
+sed_escape()
+{
+	echo "$*" | sed -e 's/[]()$*.^|[]/\\&/g'
+}
+
+
 subst_option()
 {
 	eval "[ -n \"\$$1\" ]" && echo "$2" || echo "$3"
@@ -286,7 +302,11 @@ clean_store_output()
 epm()
 {
 	if [ -n "$PROGNAME" ] ; then
-		/bin/sh $PROGDIR/$PROGNAME --inscript "$@"
+
+		local bashopt=''
+		[ -n "$verbose" ] && bashopt='-x'
+
+		$CMDSHELL $bashopt $PROGDIR/$PROGNAME --inscript "$@"
 	else
 		epm_main --inscript "$@"
 	fi
@@ -295,7 +315,11 @@ epm()
 sudoepm()
 {
 	[ -n "$PROGNAME" ] || fatal "Can't use sudo epm call from the piped script"
-	sudorun /bin/sh $PROGDIR/$PROGNAME --inscript "$@"
+
+	local bashopt=''
+	[ -n "$verbose" ] && bashopt='-x'
+
+	sudorun $CMDSHELL $bashopt $PROGDIR/$PROGNAME --inscript "$@"
 }
 
 fatal()
@@ -475,6 +499,12 @@ assure_exists()
 	( direct='' epm_assure "$1" $package $3 ) || fatal "Can't assure in '$1' command from $package$textpackage package"
 }
 
+assure_exists_erc()
+{
+	local package="erc"
+	( direct='' epm_assure "$package" ) || epm ei erc || fatal "erc is not available to install."
+}
+
 disabled_eget()
 {
 	local EGET
@@ -490,6 +520,40 @@ disabled_eget()
 	# run external command, not the function
 	EGET=$(which eget) || fatal "Missed command eget from installed package eget"
 	$EGET "$@"
+}
+
+disabled_erc()
+{
+	local ERC
+	# use internal eget only if exists
+	if [ -s $SHAREDIR/tools_erc ] ; then
+		$SHAREDIR/tools_erc "$@"
+		return
+	fi
+	fatal "Internal error: missed tools_erc"
+
+	# FIXME: we need disable output here, ercat can be used for get output
+	assure_exists_erc >/dev/null
+	# run external command, not the function
+	ERC=$(which erc) || fatal "Missed command erc from installed package erc"
+	$ERC "$@"
+}
+
+disabled_ercat()
+{
+	local ERCAT
+	# use internal eget only if exists
+	if [ -s $SHAREDIR/tools_ercat ] ; then
+		$SHAREDIR/tools_ercat "$@"
+		return
+	fi
+	fatal "Internal error: missed tools_ercat"
+
+	# FIXME: we need disable output here, ercat can be used for get output
+	assure_exists_erc >/dev/null
+	# run external command, not the function
+	ERCAT=$(which ercat) || fatal "Missed command ercat from installed package erc"
+	$ERCAT "$@"
 }
 
 disabled_estrlist()
@@ -630,16 +694,70 @@ assure_distr()
 get_pkg_name_delimiter()
 {
    local pkgtype="$1"
-   [ -n "$pkgtype" ] || pkgtype="$($DISTRVENDOR -p)"
+   [ -n "$pkgtype" ] || pkgtype="$PKGFORMAT"
 
    [ "$pkgtype" = "deb" ] && echo "_" && return
    echo "-"
 }
 
+
+__epm_remove_from_tmp_files()
+{
+   keep="$1"
+   [ -r "$keep" ] || return 0
+   [ -n "$to_remove_pkg_files" ] || return 0
+   to_remove_pkg_files="$(echo "$to_remove_pkg_files" | sed -e "s|$keep||")"
+}
+
+__epm_remove_tmp_files()
+{
+    # TODO: move it to exit handler
+    if [ -z "$DEBUG" ] ; then
+        # TODO: reinvent
+        [ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
+        # hack??
+        [ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
+        [ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
+        [ -n "$to_clean_tmp_dirs" ] && rm -rf $to_clean_tmp_dirs 2>/dev/null
+    fi
+    return 0
+}
+
+
 has_space()
 {
     estrlist -- has_space "$@"
 }
+
+is_url()
+{
+    echo "$1" | grep -q "^[filehtps]*:/"
+}
+
+if which which 2>/dev/null >/dev/null ; then
+    # the best case if we have which command (other ways needs checking)
+    # TODO: don't use which at all, it is binary, not builtin shell command
+print_command_path()
+{
+    which -- "$1" 2>/dev/null
+}
+elif type -a type 2>/dev/null >/dev/null ; then
+print_command_path()
+{
+    type -fpP -- "$1" 2>/dev/null
+}
+else
+print_command_path()
+{
+    type "$1" 2>/dev/null | sed -e 's|.* /|/|'
+}
+fi
+
+is_command()
+{
+    print_command_path "$1" >/dev/null
+}
+
 
 if ! which realpath 2>/dev/null >/dev/null ; then
 realpath()
@@ -648,6 +766,7 @@ realpath()
     readlink -f "$@"
 }
 fi
+
 
 if ! which subst 2>/dev/null >/dev/null ; then
 subst()
@@ -1342,14 +1461,14 @@ _print_additional_usage
 ################# incorporate bin/distr_info #################
 internal_distr_info()
 {
-# 2007-2022 (c) Vitaly Lipatov <lav@etersoft.ru>
-# 2007-2022 (c) Etersoft
-# 2007-2022 Public domain
+# 2007-2023 (c) Vitaly Lipatov <lav@etersoft.ru>
+# 2007-2023 (c) Etersoft
+# 2007-2023 Public domain
 
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
 
-PROGVERSION="20220812"
+PROGVERSION="20230328"
 
 # TODO: check /etc/system-release
 
@@ -1387,6 +1506,11 @@ tolower()
 	echo "$*" | awk '{print tolower($0)}'
 }
 
+print_bug_report_url()
+{
+	echo "$BUG_REPORT_URL"
+}
+
 override_distrib()
 {
 	[ -n "$1" ] || return
@@ -1395,8 +1519,11 @@ override_distrib()
 	local name="$(echo "$1" | sed -e 's|x86_64/||')"
 	[ "$name" = "$1" ] && DIST_ARCH="x86" || DIST_ARCH="x86_64"
 	DISTRIB_ID="$(echo "$name" | sed -e 's|/.*||')"
+	DISTRO_NAME="$DISTRIB_ID"
 	DISTRIB_RELEASE="$(echo "$name" | sed -e 's|.*/||')"
 	[ "$DISTRIB_ID" = "$DISTRIB_RELEASE" ] && DISTRIB_RELEASE=''
+	DISTRIB_CODENAME="$DISTRIB_RELEASE"
+	DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
 
 }
 
@@ -1572,6 +1699,11 @@ print_codename()
 	echo "$DISTRIB_CODENAME"
 }
 
+print_repo_name()
+{
+	echo "$DISTRIB_CODENAME"
+}
+
 get_var()
 {
 	# get first variable and print it out, drop quotes if exists
@@ -1646,12 +1778,15 @@ DISTRIB_RELEASE=""
 DISTRIB_FULL_RELEASE=""
 DISTRIB_RELEASE_ORIG=""
 DISTRIB_CODENAME=""
+BUG_REPORT_URL=""
+BUILD_ID=""
 
 # Default detection by /etc/os-release
 # https://www.freedesktop.org/software/systemd/man/os-release.html
 if distro os-release ; then
 	# shellcheck disable=SC1090
 	. $DISTROFILE
+	DISTRO_NAME="$NAME"
 	DISTRIB_ID="$(normalize_name "$NAME")"
 	DISTRIB_RELEASE_ORIG="$VERSION_ID"
 	DISTRIB_RELEASE="$VERSION_ID"
@@ -1664,6 +1799,7 @@ if distro os-release ; then
 
 elif distro lsb-release ; then
 	DISTRIB_ID=$(cat $DISTROFILE | get_var DISTRIB_ID)
+	DISTRO_NAME=$(cat $DISTROFILE | get_var DISTRIB_ID)
 	DISTRIB_RELEASE="$(cat $DISTROFILE | get_var DISTRIB_RELEASE)"
 	DISTRIB_RELEASE_ORIG="$DISTRIB_RELEASE"
 	DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
@@ -1672,7 +1808,7 @@ elif distro lsb-release ; then
 fi
 
 DISTRIB_RELEASE=$(normalize_version2 "$DISTRIB_RELEASE")
-
+[ -n "$DISTRIB_CODENAME" ] || DISTRIB_CODENAME=$DISTRIB_RELEASE
 
 case "$VENDOR_ID" in
 	"alt"|"altlinux")
@@ -1694,15 +1830,23 @@ case "$VENDOR_ID" in
 		else
 			DISTRIB_ID="AstraLinuxSE"
 		fi
+		if [ "$DISTRIB_ID" = "AstraLinuxSE" ] ; then
+			local fr="$(cat /etc/astra_version 2>/dev/null)"
+			[ -n "$fr" ] && echo "$fr" | grep -q "$DISTRIB_RELEASE" && DISTRIB_FULL_RELEASE="$fr"
+		fi
 		;;
 esac
 
 case "$DISTRIB_ID" in
 	"ALTLinux")
-		echo "$VERSION" | grep -q "c9f.* branch" && DISTRIB_RELEASE="c9"
-		# FIXME: fast hack for fallback: 10 -> p10 for /etc/os-release
+		echo "$VERSION" | grep -q "c9.* branch" && DISTRIB_RELEASE="c9"
+		DISTRIB_CODENAME="$DISTRIB_RELEASE"
+		echo "$VERSION" | grep -q "c9f1 branch" && DISTRIB_CODENAME="c9f1"
+		echo "$VERSION" | grep -q "c9f2 branch" && DISTRIB_CODENAME="c9f2"
+		# FIXME: fast hack for fallback: 10.1 -> p10 for /etc/os-release
 		if echo "$DISTRIB_RELEASE" | grep -q "^[0-9]" && echo "$DISTRIB_RELEASE" | grep -q -v "[0-9][0-9][0-9]"  ; then
 			DISTRIB_RELEASE="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
+			DISTRIB_CODENAME="$DISTRIB_RELEASE"
 		fi
 		;;
 #	"ALTServer")
@@ -1723,11 +1867,13 @@ case "$DISTRIB_ID" in
 				DISTRIB_RELEASE="c9f3"
 			;;
 		esac
+		DISTRIB_CODENAME="$DISTRIB_RELEASE"
 #		DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\..*//g")
 		;;
 	"Sisyphus")
 		DISTRIB_ID="ALTLinux"
 		DISTRIB_RELEASE="Sisyphus"
+		DISTRIB_CODENAME="$DISTRIB_RELEASE"
 		;;
 esac
 
@@ -1870,6 +2016,13 @@ fill_distr_info
 get_uname()
 {
     tolower $(uname $1) | tr -d " \t\r\n"
+}
+
+get_glibc_version()
+{
+    for i in /lib/x86_64-linux-gnu /lib64 /lib/i386-linux-gnu /lib ; do
+        [ -x "$ROOTDIR$i/libc.so.6" ] && $ROOTDIR$i/libc.so.6 | head -n1 | grep "version" | sed -e 's|.*version ||' -e 's|\.$||' && return
+    done
 }
 
 get_base_os_name()
@@ -2029,7 +2182,7 @@ get_memory_size()
             [ -r /proc/meminfo ] && detected=$((`cat /proc/meminfo | grep MemTotal | awk '{print $2}'`/1024))
             ;;
         solaris)
-            detected=$(prtconf | grep Memory | sed -e "s|Memory size: \([0-9][0-9]*\) Megabyte.*|\1|")
+            detected=$(prtconf | grep Memory | sed -e "s|Memory size: \([0-9][0-9]*\) Megabyte.*|\1|") #"
             ;;
 #        *)
 #            fatal "Unsupported OS $DIST_OS"
@@ -2117,32 +2270,43 @@ get_service_manager()
     echo "(unknown)"
 }
 
+filter_duplicated_words()
+{
+    echo "$*" | xargs -n1 echo | uniq | xargs -n100 echo
+}
+
 print_pretty_name()
 {
     if [ -z "$PRETTY_NAME" ] ; then
         PRETTY_NAME="$DISTRIB_ID $DISTRIB_RELEASE"
     fi
 
-    echo "$PRETTY_NAME"
+    if ! echo "$PRETTY_NAME" | grep -q "$DISTRIB_FULL_RELEASE" ; then
+        PRETTY_NAME="$PRETTY_NAME ($DISTRIB_FULL_RELEASE)"
+    fi
+
+    echo "$(filter_duplicated_words "$PRETTY_NAME")"
 }
 
 print_total_info()
 {
+local orig=''
+[ -n "$BUILD_ID" ] && orig=" (orig. $BUILD_ID)"
 cat <<EOF
-distro_info v$PROGVERSION : Copyright © 2007-2022 Etersoft
-Total system information:
-    Pretty distro name (--pretty): $(print_pretty_name)
-     Distro name and version (-e): $(print_name_version)
-     Package manager/type (-g/-p): $(pkgmanager) / $(pkgtype)
-     Running service manager (-y): $(get_service_manager)
-              Virtualization (-i): $(get_virt)
-            CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_core_mhz) MHz
-            CPU Architecture (-a): $(get_arch)
-     CPU norm register size  (-b): $(get_bit_size)
-     System memory size (MB) (-m): $(get_memory_size)
-                Base OS name (-o): $(get_base_os_name)
-Base distro (vendor) name (-s|-n): $(pkgvendor)
-    Version codename (--codename): $(print_codename)
+distro_info v$PROGVERSION : Copyright © 2007-2023 Etersoft
+
+         Pretty distro name (--pretty): $(print_pretty_name)
+                 Distro name / version: $DISTRO_NAME / $DISTRIB_FULL_RELEASE$orig
+  Base distro name (-d) / version (-v): $(print_name_version)
+Base distro name (-s) / Repo name (-r): $(pkgvendor) / $(print_repo_name)
+          Package manager/type (-g/-p): $(pkgmanager) / $(pkgtype)
+     Base OS name (-o) / CPU arch (-a): $(get_base_os_name) $(get_arch)
+     Bug report URL (--bug-report-url): $(print_bug_report_url)
+          CPU norm register size  (-b): $(get_bit_size)
+                   Virtualization (-i): $(get_virt)
+                 CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_core_mhz) MHz
+          System memory size (MB) (-m): $(get_memory_size)
+          Running service manager (-y): $(get_service_manager)
 
 (run with -h to get help)
 EOF
@@ -2160,29 +2324,35 @@ case "$1" in
 		echo "distro_info v$PROGVERSION - distro information retriever"
 		echo "Usage: distro_info [options] [SystemName/Version]"
 		echo "Options:"
-		echo " -a - print hardware architecture (--distro-arch for distro depended name)"
-		echo " -b - print size of arch bit (32/64)"
-		echo " -c - print number of CPU cores"
-		echo " --codename - print distro codename (focal for Ubuntu 20.04)"
-		echo " -z - print current CPU MHz"
-		echo " -d - print distro name"
-		echo " -e - print full name of distro with version"
-		echo " -i - print virtualization type"
-		echo " -h - this help"
-		echo " -m - print system memory size (in MB)"
-		echo " -o - print base OS name"
-		echo " -p - print type of the packaging system"
-		echo " -g - print name of the packaging system"
-		echo " -s|-n - print base name of the distro (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (see _vendor macros in rpm)"
-		echo " -y - print running service manager"
-		echo " --pretty - print pretty distro name"
-		echo " -v - print version of the distro"
-		echo " --full-version - print full version of the distro"
-		echo " -V - print the utility version"
+		echo " -h | --help            - this help"
+		echo " -a                     - print hardware architecture (--distro-arch for distro depended name)"
+		echo " -b                     - print size of arch bit (32/64)"
+		echo " -c                     - print number of CPU cores"
+		echo " -i                     - print virtualization type"
+		echo " -m                     - print system memory size (in MB)"
+		echo " -y                     - print running service manager"
+		echo " -z                     - print current CPU MHz"
+		echo " --glibc-version        - print system glibc version"
+		echo
+		echo " -d|--base-distro-name  - print distro id (short distro name)"
+		echo " -e                     - print full name of distro with version"
+		echo " -o | --os-name         - print base OS name"
+		echo " -p | package-type      - print type of the packaging system"
+		echo " -g                     - print name of the packaging system"
+		echo " -s|-n|--vendor-name    - print base name of the distro (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (see _vendor macros in rpm)"
+		echo " --pretty|--pretty-name - print pretty distro name"
+		echo " -v | --base-version    - print version of the distro"
+		echo " --distro-name          - print distro name"
+		echo " --distro-version       - print full version of the distro"
+		echo " --full-version         - print full version of the distro"
+		echo " --codename (obsoleted) - print distro codename (focal for Ubuntu 20.04)"
+		echo " --repo-name            - print repository name (focal for Ubuntu 20.04)"
+		echo " --build-id             - print a string uniquely identifying the system image originally used as the installation base"
+		echo " -V                     - print the utility version"
 		echo "Run without args to print all information."
 		exit 0
 		;;
-	-p)
+	-p|--package-type)
 		override_distrib "$2"
 		pkgtype
 		exit 0
@@ -2192,7 +2362,7 @@ case "$1" in
 		pkgmanager
 		exit 0
 		;;
-	--pretty)
+	--pretty|--pretty-name)
 		override_distrib "$2"
 		print_pretty_name
 		;;
@@ -2206,9 +2376,18 @@ case "$1" in
 		get_debian_arch
 		exit 0
 		;;
-	-d)
+	--glibc-version)
+		override_distrib "$2"
+		get_glibc_version
+		exit 0
+		;;
+	-d|--base-distro-name)
 		override_distrib "$2"
 		echo $DISTRIB_ID
+		;;
+	--distro-name)
+		override_distrib "$2"
+		echo $DISTRO_NAME
 		;;
 	--codename)
 		override_distrib "$2"
@@ -2234,18 +2413,28 @@ case "$1" in
 	-m)
 		get_memory_size
 		;;
-	-o)
+	-o|--os-name)
 		get_base_os_name
 		;;
-	-v)
+	-r|--repo-name)
+		print_repo_name
+		;;
+	--build-id)
+		echo "$BUILD_ID"
+		;;
+	-v|--base-version)
 		override_distrib "$2"
 		echo "$DISTRIB_RELEASE"
 		;;
-	--full-version)
+	--full-version|--distro-version)
 		override_distrib "$2"
 		echo "$DISTRIB_FULL_RELEASE"
 		;;
-	-s|-n)
+	--bug-report-url)
+		print_bug_report_url
+		exit
+		;;
+	-s|-n|--vendor-name)
 		override_distrib "$2"
 		pkgvendor
 		exit 0
@@ -2376,7 +2565,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.34.1  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.40.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

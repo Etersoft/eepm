@@ -19,8 +19,10 @@
 
 PROGDIR=$(dirname "$0")
 PROGNAME=$(basename "$0")
+[ -n "$EPMCURDIR" ] || export EPMCURDIR="$(pwd)"
+CMDSHELL="/bin/sh"
 # TODO: pwd for ./epm and which for epm
-[ "$PROGDIR" = "." ] && PROGDIR=$(pwd)
+[ "$PROGDIR" = "." ] && PROGDIR="$EPMCURDIR"
 if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
     PROGDIR=""
     PROGNAME=""
@@ -31,7 +33,11 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.34.1"
+EPMVERSION="3.40.0"
+
+if [ "$EPMVERSION" = "@""VERSION""@" ] ; then
+    EPMVERSION=$(head $PROGDIR/../eepm.spec | grep "^Version: " | sed -e 's|Version: ||' )
+fi
 
 load_helper()
 {
@@ -51,6 +57,7 @@ check_core_commands()
 {
 	#which --help >/dev/null || fatal "Can't find which command (which package is missed?)"
 	# broken which on Debian systems
+	# TODO: use is_command and print_command_path instead of
 	which which >/dev/null || fatal "Can't find which command (which or debianutils package is missed?)"
 	which grep >/dev/null || fatal "Can't find grep command (coreutils package is missed?)"
 	which sed >/dev/null || fatal "Can't find sed command (sed package is missed?)"
@@ -110,6 +117,14 @@ set_boldcolor()
 	} |tput -S
 }
 
+set_color()
+{
+	[ "$USETTY" = "1" ] || return
+	{
+		echo setaf $1
+	} |tput -S
+}
+
 restore_color()
 {
 	[ "$USETTY" = "1" ] || return
@@ -128,7 +143,7 @@ echover()
 echon()
 {
 	# default /bin/sh on MacOS does not recognize -n
-	/bin/echo -n "$*"
+	echo -n "$*" 2>/dev/null || a= /bin/echo -n "$*"
 }
 
 
@@ -266,6 +281,13 @@ strip_spaces()
         echo "$*" | filter_strip_spaces
 }
 
+
+sed_escape()
+{
+	echo "$*" | sed -e 's/[]()$*.^|[]/\\&/g'
+}
+
+
 subst_option()
 {
 	eval "[ -n \"\$$1\" ]" && echo "$2" || echo "$3"
@@ -299,7 +321,11 @@ clean_store_output()
 epm()
 {
 	if [ -n "$PROGNAME" ] ; then
-		/bin/sh $PROGDIR/$PROGNAME --inscript "$@"
+
+		local bashopt=''
+		[ -n "$verbose" ] && bashopt='-x'
+
+		$CMDSHELL $bashopt $PROGDIR/$PROGNAME --inscript "$@"
 	else
 		epm_main --inscript "$@"
 	fi
@@ -308,7 +334,11 @@ epm()
 sudoepm()
 {
 	[ -n "$PROGNAME" ] || fatal "Can't use sudo epm call from the piped script"
-	sudorun /bin/sh $PROGDIR/$PROGNAME --inscript "$@"
+
+	local bashopt=''
+	[ -n "$verbose" ] && bashopt='-x'
+
+	sudorun $CMDSHELL $bashopt $PROGDIR/$PROGNAME --inscript "$@"
 }
 
 fatal()
@@ -488,6 +518,12 @@ assure_exists()
 	( direct='' epm_assure "$1" $package $3 ) || fatal "Can't assure in '$1' command from $package$textpackage package"
 }
 
+assure_exists_erc()
+{
+	local package="erc"
+	( direct='' epm_assure "$package" ) || epm ei erc || fatal "erc is not available to install."
+}
+
 disabled_eget()
 {
 	local EGET
@@ -503,6 +539,40 @@ disabled_eget()
 	# run external command, not the function
 	EGET=$(which eget) || fatal "Missed command eget from installed package eget"
 	$EGET "$@"
+}
+
+disabled_erc()
+{
+	local ERC
+	# use internal eget only if exists
+	if [ -s $SHAREDIR/tools_erc ] ; then
+		$SHAREDIR/tools_erc "$@"
+		return
+	fi
+	fatal "Internal error: missed tools_erc"
+
+	# FIXME: we need disable output here, ercat can be used for get output
+	assure_exists_erc >/dev/null
+	# run external command, not the function
+	ERC=$(which erc) || fatal "Missed command erc from installed package erc"
+	$ERC "$@"
+}
+
+disabled_ercat()
+{
+	local ERCAT
+	# use internal eget only if exists
+	if [ -s $SHAREDIR/tools_ercat ] ; then
+		$SHAREDIR/tools_ercat "$@"
+		return
+	fi
+	fatal "Internal error: missed tools_ercat"
+
+	# FIXME: we need disable output here, ercat can be used for get output
+	assure_exists_erc >/dev/null
+	# run external command, not the function
+	ERCAT=$(which ercat) || fatal "Missed command ercat from installed package erc"
+	$ERCAT "$@"
 }
 
 disabled_estrlist()
@@ -643,16 +713,70 @@ assure_distr()
 get_pkg_name_delimiter()
 {
    local pkgtype="$1"
-   [ -n "$pkgtype" ] || pkgtype="$($DISTRVENDOR -p)"
+   [ -n "$pkgtype" ] || pkgtype="$PKGFORMAT"
 
    [ "$pkgtype" = "deb" ] && echo "_" && return
    echo "-"
 }
 
+
+__epm_remove_from_tmp_files()
+{
+   keep="$1"
+   [ -r "$keep" ] || return 0
+   [ -n "$to_remove_pkg_files" ] || return 0
+   to_remove_pkg_files="$(echo "$to_remove_pkg_files" | sed -e "s|$keep||")"
+}
+
+__epm_remove_tmp_files()
+{
+    # TODO: move it to exit handler
+    if [ -z "$DEBUG" ] ; then
+        # TODO: reinvent
+        [ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
+        # hack??
+        [ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
+        [ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
+        [ -n "$to_clean_tmp_dirs" ] && rm -rf $to_clean_tmp_dirs 2>/dev/null
+    fi
+    return 0
+}
+
+
 has_space()
 {
     estrlist -- has_space "$@"
 }
+
+is_url()
+{
+    echo "$1" | grep -q "^[filehtps]*:/"
+}
+
+if which which 2>/dev/null >/dev/null ; then
+    # the best case if we have which command (other ways needs checking)
+    # TODO: don't use which at all, it is binary, not builtin shell command
+print_command_path()
+{
+    which -- "$1" 2>/dev/null
+}
+elif type -a type 2>/dev/null >/dev/null ; then
+print_command_path()
+{
+    type -fpP -- "$1" 2>/dev/null
+}
+else
+print_command_path()
+{
+    type "$1" 2>/dev/null | sed -e 's|.* /|/|'
+}
+fi
+
+is_command()
+{
+    print_command_path "$1" >/dev/null
+}
+
 
 if ! which realpath 2>/dev/null >/dev/null ; then
 realpath()
@@ -661,6 +785,7 @@ realpath()
     readlink -f "$@"
 }
 fi
+
 
 if ! which subst 2>/dev/null >/dev/null ; then
 subst()
@@ -719,15 +844,74 @@ __epm_addrepo_etersoft_addon()
 	# FIXME
 	[ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
 
-	# TODO: use apt-repo add ?
-	echo "" | sudocmd tee -a /etc/apt/sources.list
-	echo "# added with eepm addrepo etersoft" | sudocmd tee -a /etc/apt/sources.list
-	echo "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/$DISTRARCH addon" | sudocmd tee -a /etc/apt/sources.list
+	docmd epm repo add "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/noarch addon"
+	docmd epm repo add "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/$DISTRARCH addon"
 	if [ "$DISTRARCH" = "x86_64" ] ; then
-		echo "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/x86_64-i586 addon" | sudocmd tee -a /etc/apt/sources.list
+		docmd epm repo add "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/x86_64-i586 addon"
 	fi
-	echo "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/noarch addon" | sudocmd tee -a /etc/apt/sources.list
 }
+
+get_archlist()
+{
+    echo "noarch"
+    echo "$DISTRARCH"
+    case $DISTRARCH in
+        x86_64)
+            echo "i586"
+            ;;
+    esac
+}
+
+__epm_addrepo_altlinux_short()
+{
+	[ -n "$1" ] || fatal "only for rpm repo"
+	local url="$2"
+	local REPO_NAME="$3"
+	local arch
+
+	arch="$(basename "$url")"
+	url="$(dirname "$url")"
+	docmd epm repo add "rpm $url $arch $REPO_NAME"
+}
+
+
+__epm_addrepo_altlinux_url()
+{
+	local url="$1"
+	local arch
+	local base
+
+	# URL to path/RPMS.addon
+	base="$(basename "$url")"
+	if echo "$base" | grep -q "^RPMS\." ; then
+		REPO_NAME="$(echo $base | sed -e 's|.*\.||')"
+		url="$(dirname $url)"
+		docmd epm repo add "rpm $url $REPO_NAME"
+		return
+	fi
+
+	# TODO: add to eget file:/ support and use here
+	# URL to path (where RPMS.addon is exists)
+	local baseurl="$(eget --list "$url/RPMS.*")"
+	base="$(basename "$baseurl")"
+	if echo "$base" | grep -q "^RPMS\." ; then
+		REPO_NAME="$(echo $base | sed -e 's|.*\.||')"
+		docmd epm repo add "rpm $url $REPO_NAME"
+		return
+	fi
+
+	# URL to {i586,x86_64,noarch}/RPMS.addon
+	local res=''
+	for arch in $(get_archlist) ; do
+		local rd="$(eget --list $url/$arch/RPMS.*)"
+		[ -d "$rd" ] || continue
+		local REPO_NAME="$(echo "$rd" | sed -e 's|.*\.||')"
+		docmd epm repo add "rpm $url $arch $REPO_NAME"
+		res='1'
+	done
+	[ -n "$res" ] || warning "There is no arch repos in $url"
+}
+
 
 __epm_addrepo_altlinux()
 {
@@ -738,12 +922,32 @@ __epm_addrepo_altlinux()
 	if [ -z "$repo" ] || [ "$repo" == "--help" ] ; then
 		info "Add branch repo. Use follow params:"
 		sudocmd apt-repo $dryrun add branch
-		echo "etersoft           - for LINUX@Etersoft repo"
-		echo "basealt            - for BaseALT repo"
-		echo "yandex             - for BaseALT repo mirror on yandex (recommended)"
-		echo "<task number>      - add task repo"
-		echo "archive 2018/02/09 - for archive from that date"
-		echo "autoimports        - for BaseALT autoimports repo"
+		echo "etersoft                 - for LINUX@Etersoft repo"
+		echo "basealt                  - for BaseALT repo"
+		echo "yandex                   - for BaseALT repo mirror on yandex (recommended)"
+		echo "<task number>            - add task repo"
+		echo "archive 2018/02/09       - for archive from that date"
+		echo "autoimports              - for BaseALT autoimports repo"
+		echo "/dir/to/repo [component] - add repo dir generated with epm repo index --init"
+		echo "URL [arch] [component]   - add repo by URL"
+		return
+	fi
+
+	# 'rpm protocol:/path/to/repo component'
+	if [ "$1" = "rpm" ] && [ -n "$2" ] && [ -n "$3" ] && [ -z "$4" ] ; then
+		__epm_addrepo_altlinux_short "$@"
+		return
+	fi
+
+	# /path/to/repo
+	if [ -d "$1" ] ; then
+		__epm_addrepo_altlinux_url "file:$1"
+		return
+	fi
+
+	# file:/path/to/repo or http://path/to/repo
+	if is_url "$1" ; then
+		__epm_addrepo_altlinux_url "$1"
 		return
 	fi
 
@@ -794,6 +998,9 @@ __epm_addrepo_altlinux()
 		sudocmd_foreach "apt-repo $dryrun add" $(tasknumber "$repo")
 		return
 	fi
+
+	# don't add again
+	epm repo list --quiet | grep -q -F "$repo" && return 0
 
 	sudocmd apt-repo $dryrun add "$repo"
 
@@ -857,6 +1064,56 @@ esac
 
 }
 
+__epm_addrepo_astra()
+{
+	local repo="$*"
+
+	if [ -z "$repo" ] || [ "$repo" = "--help" ]; then
+		info "Add repo. You can use follow params:"
+		echo "  distribution component name"
+		echo "  full sources list line"
+		echo "  URL version component"
+		return
+	fi
+
+	local reponame="$(epm print info --repo-name)"
+
+	# keywords
+	# https://wiki.astralinux.ru/pages/viewpage.action?pageId=3276859
+	case "$1-$reponame" in
+		astra-1.7_x86_64)
+			# TODO epm repo change http / https
+			epm install --skip-installed apt-transport-https ca-certificates || fatal
+			# https://wiki.astralinux.ru/pages/viewpage.action?pageId=158598882
+			epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-main/     1.7_x86-64 main contrib non-free"
+			epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-update/   1.7_x86-64 main contrib non-free"
+			epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-base/     1.7_x86-64 main contrib non-free"
+			epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-extended/ 1.7_x86-64 main contrib non-free"
+			epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-extended/ 1.7_x86-64 astra-ce"
+			return
+			;;
+		astra-orel)
+			# TODO epm repo change http / https
+			epm install --skip-installed apt-transport-https ca-certificates || fatal
+			# https://wiki.astralinux.ru/pages/viewpage.action?pageId=158605543
+			epm repo add "deb [arch=amd64] https://dl.astralinux.ru/astra/frozen/$(epm print info -v)_x86-64/$(epm print info --full-version)/repository stable main contrib non-free"
+			#epm repo add "deb https://download.astralinux.ru/astra/stable/orel/repository/ orel main contrib non-free"
+			return
+			;;
+		astra-*)
+			fatal "Unsupported distro version $reponame, see '# epm print info' output."
+			;;
+	esac
+
+	echo "Use workaround for AstraLinux ..."
+	# aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
+	# don't add again
+	epm repo list --quiet | grep -q -F "$repo" && return 0
+	[ -z "$(tail -n1 /etc/apt/sources.list)" ] || echo "" | sudocmd tee -a /etc/apt/sources.list
+	echo "$repo" | sudocmd tee -a /etc/apt/sources.list
+	return
+}
+
 __epm_addrepo_deb()
 {
 	assure_exists apt-add-repository software-properties-common
@@ -874,15 +1131,6 @@ __epm_addrepo_deb()
 		echo "  URL version component"
 		return
 	fi
-
-	if [ "$DISTRNAME" = "AstraLinuxCE" ] || [ "$DISTRNAME" = "AstraLinuxSE" ] ; then
-		echo "Use workaround for AstraLinux"
-		# aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
-		echo "" | sudocmd tee -a /etc/apt/sources.list
-		echo "$repo" | sudocmd tee -a /etc/apt/sources.list
-		return
-	fi
-
 
 	# keywords
 	case "$1" in
@@ -902,6 +1150,11 @@ __epm_addrepo_deb()
 		assure_exists /usr/sbin/update-ca-certificates ca-certificates 
 	fi
 
+	if [ -d "$repo" ] ; then
+		sudocmd epm repo add "deb file:$repo ./"
+		return
+	fi
+
 	# FIXME: quotes in showcmd/sudocmd
 	showcmd apt-add-repository "$repo"
 	sudorun apt-add-repository "$repo"
@@ -918,6 +1171,9 @@ case $BASEDISTRNAME in
 		__epm_addrepo_altlinux $repo
 		return
 		;;
+	"astra")
+		__epm_addrepo_astra $repo
+		return
 esac
 
 case $PMTYPE in
@@ -1425,12 +1681,12 @@ case $BASEDISTRNAME in
 			__epm_autoremove_altrpm "$@"
 		fi
 
-		[ -n "$dryrun" ] && return
+		#[ -n "$dryrun" ] && return
 
 		# remove old kernels only by a default way
 		[ -n "$1" ] && return
 
-		docmd epm remove-old-kernels $(subst_option non_interactive -y)
+		docmd epm remove-old-kernels $dryrun
 
 		if [ -z "$direct" ] ; then
 			echo
@@ -1733,7 +1989,6 @@ check_pkg_integrity()
 		true
 		;;
 	*)
-		assure_exists erc || epm ei erc || fatal "erc is not available. can't check the package"
 		docmd erc test "$PKG" && return
 		;;
 	esac
@@ -2032,7 +2287,7 @@ case $PMTYPE in
 		fatal "Have no suitable command for $PMTYPE"
 		;;
 esac
-	info "It is recommend to run 'epm autoremove' also"
+	info "Note: Also you can try (with CAUTION) '# epm autoremove' and '# epm autoorphans' commands to remove obsoleted and unused packages."
 
 }
 
@@ -2271,8 +2526,12 @@ Pin: release c=addon
 Pin-Priority: 1101
 
 Package: *
-Pin: release c=task
+Pin: release c=main
 Pin-Priority: 1201
+
+Package: *
+Pin: release c=task
+Pin-Priority: 1301
 EOF
 }
 
@@ -2414,14 +2673,18 @@ __download_pkg_urls()
 		docmd chmod $verbose a+rX $tmppkg
 		showcmd cd $tmppkg
 		cd $tmppkg || fatal
-		if docmd eget --latest "$url" ; then
+		local latest='--latest'
+		# hack: download all if mask is *.something
+		basename "$url" | grep -q "^\*\." && latest=''
+		# download packages
+		if docmd eget $latest "$url" ; then
 			local i
-			# use downloaded file
-			i=$(echo *.*)
-			[ -s "$tmppkg/$i" ] || continue
-			docmd chmod $verbose a+r "$tmppkg/$i"
-			pkg_files="$pkg_files $tmppkg/$i"
-			to_remove_pkg_files="$to_remove_pkg_files $tmppkg/$i"
+			for i in *.* ; do
+				[ -s "$tmppkg/$i" ] || continue
+				chmod $verbose a+r "$tmppkg/$i"
+				pkg_files="$pkg_files $tmppkg/$i"
+				to_remove_pkg_files="$to_remove_pkg_files $tmppkg/$i"
+			done
 		else
 			warning "Failed to download $url, ignoring"
 		fi
@@ -2510,6 +2773,36 @@ __epm_download_alt()
 		local checkflag="$1"
 		shift
 	fi
+
+
+	# TODO: enable if install --download-only will works
+	if tasknumber "$@" >/dev/null ; then
+
+		local installlist="$(get_task_packages $*)"
+		# hack: drop -devel packages to avoid package provided by multiple packages
+		installlist="$(estrlist reg_exclude ".*-devel .*-devel-static .*-checkinstall .*-debuginfo" "$installlist")"
+		[ -n "$verbose" ] && info "Packages from task(s): $installlist"
+
+		try_change_alt_repo
+		epm_addrepo "$@"
+		docmd epm download $print_url "$installlist"
+		epm_removerepo "$@"
+		end_change_alt_repo
+
+		return
+	fi
+
+    # old systems ignore reinstall ?
+	for pkg in "$@" ; do
+		for i in $(sudocmd apt-get install -y --print-uris --reinstall "$pkg" | cut -f1 -d " " | grep ".rpm'$" | sed -e "s|^'||" -e "s|'$||") ; do
+			echo "$(basename "$i")" | grep -q "^$pkg" || continue
+			[ -n "$print_url" ] && echo "$i" && continue
+			eget $i
+		done
+	done
+	return
+
+	# old code:
 	for pkg in "$@" ; do
 		local url=$(__epm_get_altpkg_url $pkg)
 		[ -n "$url" ] || warning "Can't get URL for $pkg"
@@ -2534,10 +2827,14 @@ epm_download()
 
 	case $PMTYPE in
 	apt-dpkg)
+		if [ -n "$print_url" ] ; then
+			docmd apt-get download --print-uris $* | cut -f1 -d " " | grep ".deb'$" | sed -e "s|^'||" -e "s|'$||"
+			return
+		fi
 		docmd apt-get download $*
 		;;
 	dnf-rpm)
-		sudocmd dnf download $*
+		sudocmd dnf download $print_url $*
 		;;
 	aptcyg)
 		sudocmd apt-cyg download $*
@@ -2578,33 +2875,7 @@ epm_download()
 
 
 
-
-check_url_is_accessible()
-{
-    local res
-    eget --check "$1"
-}
-
-update_url_if_need_mirrored()
-{
-    local MIRROR="$1"
-    local SECONDURL
-    check_url_is_accessible "$URL" && return
-    if [ -n "$MIRROR" ] ; then
-        check_url_is_accessible "$MIRROR" && URL="$MIRROR"
-        return
-    fi
-
-    MIRROR="https://mirror.eterfund.ru"
-    SECONDURL="$(echo "$URL" | sed -e "s|^.*://|$MIRROR/|")"
-    check_url_is_accessible "$SECONDURL" && URL="$SECONDURL" && return
-
-    MIRROR="https://mirror.eterfund.org"
-    SECONDURL="$(echo "$URL" | sed -e "s|^.*://|$MIRROR/|")"
-    check_url_is_accessible "$SECONDURL" && URL="$SECONDURL" && return
-
-}
-
+EPM_KORINF_REPO_URL="https://updates.etersoft.ru/pub/Korinf"
 
 __epm_korinf_site_mask() {
     local MASK="$1"
@@ -2613,9 +2884,12 @@ __epm_korinf_site_mask() {
     rhas "$MASK" "[-_]" || MASK="$MASK[-_][0-9]"
     # set arch for Korinf compatibility
     [ "$($DISTRVENDOR -a)" = "x86_64" ] && archprefix="x86_64/"
-    URL="http://updates.etersoft.ru/pub/Korinf"
-    update_url_if_need_mirrored
-    echo "$URL/$archprefix$($DISTRVENDOR -e)/$MASK*.$($DISTRVENDOR -p)"
+    local URL="$EPM_KORINF_REPO_URL/$archprefix$($DISTRVENDOR -e)"
+    if ! eget --check "$URL" ; then
+        tURL="$EPM_KORINF_REPO_URL/$archprefix$($DISTRVENDOR --vendor-name)/$($DISTRVENDOR --repo-name)"
+        docmd eget --check "$tURL" && URL="$tURL"
+    fi
+    echo "$URL/$MASK*.$PKGFORMAT"
 }
 
 __epm_korinf_list() {
@@ -2643,24 +2917,49 @@ __epm_korinf_install() {
     pkg_names='' pkg_files='' epm_install
 }
 
-epm_epm_install() {
-    local i
-    local pkglist="$*"
+epm_epm_install_help()
+{
+	echo "epm ei [packages] - install packages from EPM based Korinf repository"
+			get_help HELPCMD $SHAREDIR/epm-epm_install
+	cat <<EOF
 
-    # install epm by default
-    if [ -z "$pkglist" ] || [ "$pkglist" = "epm" ] || [ "$pkglist" = "eepm" ]; then
-            pkglist="eepm"
+Default Korinf repository: $EPM_KORINF_REPO_URL
+
+Examples:
+  epm ei [epm|eepm]                - install latest eepm (default action)
+  epm <package1> [<package2>...]   - install package(s) from default Korinf repo
+  epm http://someurl.ru <package>  - install package(s) from the URL
+  epm --list <package mask>        - list available packages by mask
+EOF
+}
+
+
+epm_epm_install() {
+
+    if is_url "$1" ; then
+        EPM_KORINF_REPO_URL="$1"
+        info "Using $EPM_KORINF_REPO_URL repo ..."
+        shift
     fi
 
-    case "$pkglist" in
-        --list*)
+    case "$1" in
+        ""|epm|eepm)
+            # install epm by default
+            __epm_korinf_install "eepm"
+            return
+            ;;
+        -h|--help)                     # HELPCMD: help
+            epm_epm_install_help
+            return
+            ;;
+        --list)                        # HELPCMD: list only packages
             shift
             __epm_korinf_list "$1"
             return
             ;;
     esac
 
-    __epm_korinf_install $pkglist
+    __epm_korinf_install "$@"
 }
 
 # File bin/epm-filelist:
@@ -2865,6 +3164,9 @@ epm_full_upgrade()
 			"--no-snap")           # HELPCMD: skip snap update during full upgrade
 				full_upgrade_no_snap=1
 				;;
+			"--no-kernel-update")  # HELPCMD: skip kernel update during full upgrade
+				full_upgrade_no_kernel_update=1
+				;;
 		esac
 		shift
 	done
@@ -2874,8 +3176,10 @@ epm_full_upgrade()
 	[ -n "$quiet" ] || echo
 	docmd epm upgrade || fatal "upgrading of the system is failed."
 
-	[ -n "$quiet" ] || echo
-	docmd epm update-kernel || fatal "updating of the kernel is failed."
+	if [ -z "$full_upgrade_no_kernel_update" ] ; then
+		[ -n "$quiet" ] || echo
+		docmd epm update-kernel || fatal "updating of the kernel is failed."
+	fi
 
 	# disable epm play --update for non ALT Systems
 	[ "$BASEDISTRNAME" = "alt" ] || full_upgrade_no_epm_play=1
@@ -2893,7 +3197,7 @@ epm_full_upgrade()
 	fi
 
 	if [ -z "$full_upgrade_no_snap" ] ; then
-		if which snap 2>/dev/null >/dev/null ; then
+		if which snap 2>/dev/null >/dev/null && serv snapd exists && serv snapd status ; then
 			[ -n "$quiet" ] || echo
 			sudocmd snap refresh
 		fi
@@ -3237,6 +3541,11 @@ epm_install_names()
 
 	warmup_hibase
 
+	if [ -n "$download_only" ] ; then
+		epm download "$@"
+		return
+	fi
+
 	if [ -n "$non_interactive" ] ; then
 		epm_ni_install_names "$@"
 		return
@@ -3433,7 +3742,7 @@ epm_ni_install_names()
 __epm_check_if_rpm_already_installed()
 {
 	# Not: we can make optimize if just check version?
-	LANG=C sudorun rpm -Uvh $force $nodeps $@ 2>&1 | grep -q "is already installed"
+	LANG=C sudorun rpm -Uvh --test "$@" 2>&1 | grep -q "is already installed"
 }
 
 __handle_direct_install()
@@ -3489,6 +3798,12 @@ epm_install_files()
                 files="$repacked_pkgs"
             fi
 
+            if [ -n "$save_only" ] ; then
+                echo
+                cp -v $files "$EPMCURDIR"
+                return
+            fi
+
             __epm_check_if_src_rpm $files
 
             if [ -z "$repacked_pkgs" ] ; then
@@ -3496,10 +3811,14 @@ epm_install_files()
                 __epm_check_if_needed_repack $files
             fi
 
-            sudocmd rpm -Uvh $force $noscripts $nodeps $files && save_installed_packages $files && return
+            # --replacepkgs: Install the Package Even If Already Installed
+            local replacepkgs='--replacepkgs'
+            # don't use --replacepkgs when install only one file
+            [ -f "$files" ] && replacepkgs=''
+            sudocmd rpm -Uvh $replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && save_installed_packages $files && return
             local RES=$?
             # TODO: check rpm result code and convert it to compatible format if possible
-            __epm_check_if_rpm_already_installed $files && return
+            __epm_check_if_rpm_already_installed $force $replacepkgs $noscripts $nodeps $files && return
 
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return $RES
@@ -3516,11 +3835,16 @@ epm_install_files()
                 # TODO: can we install only requires via apt?
                 epm install $(epm req --short $files) || return
                 # retry with rpm
-                sudocmd rpm -Uvh $force $noscripts $nodeps $files && save_installed_packages $files
+                # --replacepkgs: Install the Package Even If Already Installed
+                local replacepkgs='--replacepkgs'
+                # don't use --replacepkgs when install only one file
+                [ -f "$files" ] && replacepkgs=''
+                sudocmd rpm -Uvh $replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && save_installed_packages $files
                 return
             fi
 
-            # common fallback
+            epm_install_names $files
+            return
             ;;
     esac
 
@@ -3536,6 +3860,12 @@ epm_install_files()
                 files="$repacked_pkgs"
                 # TODO
                 #__epm_remove_tmp_files
+            fi
+
+            if [ -n "$save_only" ] ; then
+                echo
+                cp -v $files "$EPMCURDIR"
+                return
             fi
 
             # TODO: if dpkg can't install due missed deps, trying with apt (as for now, --refuse-depends, --refuse-breaks don't help me)
@@ -3586,11 +3916,22 @@ epm_install_files()
                 #__epm_remove_tmp_files
             fi
 
+            if [ -n "$save_only" ] ; then
+                echo
+                cp -v $files "$EPMCURDIR"
+                return
+            fi
+
             __epm_check_if_src_rpm $files
-            sudocmd rpm -Uvh $force $noscripts $nodeps $files && return
+
+            # --replacepkgs: Install the Package Even If Already Installed
+            local replacepkgs='--replacepkgs'
+            # don't use --replacepkgs when install only one file
+            [ -f "$files" ] && replacepkgs=''
+            sudocmd rpm -Uvh $replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && return
             local RES=$?
 
-            __epm_check_if_rpm_already_installed $files && return
+            __epm_check_if_rpm_already_installed $force $replacepkgs $noscripts $nodeps $files && return
 
             # if run with --nodeps, do not fallback on hi level
             [ -n "$nodeps" ] && return $RES
@@ -3617,7 +3958,22 @@ epm_install_files()
                     # use install_names
                     ;;
             esac
+
+            epm_install_names $files
+            return
             ;;
+    esac
+
+
+    # check save_only before commands without repack supporting
+    if [ -n "$save_only" ] ; then
+        echo
+        cp -v $files "$EPMCURDIR"
+        return
+    fi
+
+
+    case $PMTYPE in
         packagekit)
             docmd pkcon install-local $files
             return ;;
@@ -3856,6 +4212,13 @@ epm_install()
     # FIXME: see to_remove below
     epm_install_names $names || return
 
+    # save files before install and repack
+    if [ -n "$download_only" ] && [ -n "$files" ] ; then
+        echo
+        cp -v $files "$EPMCURDIR"
+        return
+    fi
+
     # repack binary files
     if [ -n "$repack" ] ; then
         __epm_repack $files || return
@@ -3999,8 +4362,8 @@ epm_kernel_update()
 		fi
 		assure_exists update-kernel update-kernel 0.9.9
 		update_repo_if_needed
-		sudocmd update-kernel $(subst_option non_interactive -y) "$@" || return
-		docmd epm remove-old-kernels "$@" || fatal
+		sudocmd update-kernel $dryrun $(subst_option non_interactive -y) "$@" || return
+		#docmd epm remove-old-kernels "$@" || fatal
 		return ;;
 	esac
 
@@ -4385,6 +4748,135 @@ esac
 
 }
 
+# File bin/epm-pack:
+
+
+[ -n "$EPM_PACK_SCRIPTS_DIR" ] || EPM_PACK_SCRIPTS_DIR="$CONFIGDIR/pack.d"
+
+
+__epm_pack()
+{
+	local packname="$1"
+	local tarname="$2"
+	returntarname=''
+
+	local repackcode="$EPM_PACK_SCRIPTS_DIR/$packname.sh"
+	[ -x "$repackcode" ] || fatal "Can't find script $repackcode for packname $packname"
+
+	tmpdir=$(mktemp -d)
+	filefortarname="$tmpdir/filefortarname"
+	trap "rm -rf $tmpdir" EXIT
+
+	set_sudo
+	export SUDO
+
+	# TODO: inside () ?
+	export PATH=$PROGDIR:$PATH
+
+	local bashopt=''
+	[ -n "$verbose" ] && bashopt='-x'
+	#info "Running $($script --description 2>/dev/null) ..."
+	( unset EPMCURDIR ; docmd $CMDSHELL $bashopt $repackcode "$tarname" "$filefortarname" ) || fatal
+	returntarname="$(cat "$filefortarname")" || fatal "pack script $repackcode didn't set tarname"
+	rm -rf $tmpdir
+
+	[ -s "$returntarname" ] || fatal "pack script $repackcode didn't return tarname"
+
+	#local newname="$(basename "$returntarname")"
+
+	# now it is by default in the current dir
+	#if [ "$returntarname" != "$(realpath $newname)" ; then
+	#	# repack put its result to the current dir
+	#	mv -v $returntarname . || fatal
+	#fi
+
+	if [ -n "$download_only" ] ; then
+		return
+	fi
+
+	trap "rm -v $returntarname" EXIT
+
+	# FIXME: __epm_repack will drop trap
+	repacked_pkgs=''
+	# repack to our target
+	if __epm_repack_if_needed $returntarname ; then
+		[ -n "$repacked_pkgs" ] || fatal "Can't repack $returntarname"
+	# if repack is forced or repack rule (not disabled) is exists
+	elif [ -n "$repack" ] || [ -z "$norepack" ] && __epm_have_repack_rule $returntarname ; then
+		__epm_repack "$returntarname"
+		[ -n "$repacked_pkgs" ] || fatal "Can't repack $returntarname"
+	fi
+
+	if [ -n "$repacked_pkgs" ] ; then
+		rm -v $returntarname
+		mv -v $repacked_pkgs . || fatal
+		pkgname=$(pwd)/"$(basename $repacked_pkgs)"
+	else
+		pkgname="$returntarname"
+	fi
+
+	if [ -n "$install" ] ; then
+		trap "rm -v $pkgname" EXIT
+		docmd epm install $pkgname
+		return
+	fi
+
+	trap "" EXIT
+
+}
+
+epm_pack_help()
+{
+    cat <<EOF
+epm pack - create rpm package from files
+Usage: epm pack [options] <packname> <tar|url|dir>
+Options:
+    <packname>            - receipt
+    <dir>                 - create tarball from the dir before
+    <url>                 - download tar from url
+    --install             - install after pack result
+    --repack              - force repack ever if returned package can be installed without repack
+    --download-only       - save pack result and exit
+    --save-only           - save repacked packages and exit (this is default behaviour)
+EOF
+}
+
+
+epm_pack()
+{
+
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
+        epm_pack_help
+        exit
+    fi
+
+    trap "__epm_remove_tmp_files" EXIT
+
+    local packname="$1"
+    local tarname="$2"
+
+    [ -n "$packname" ] || fatal "run with packname, see --help"
+
+    if is_url "$tarname"; then
+        pkg_urls="$tarname"
+        __handle_pkg_urls_to_install
+        # drop spaces and get full path
+        tarname="$(realpath $pkg_files)"
+    elif [ -d "$tarname" ] ; then
+        fatal "FIXME: implement packing of the dir $tarname?"
+        tarname=''
+    elif [ -s "$tarname" ] ; then
+        # get full path for real name
+        tarname="$(realpath "$tarname")"
+    else
+        # just pass name
+        true
+    fi
+
+    __epm_pack "$packname" "$tarname"
+
+}
+
 # File bin/epm-packages:
 
 
@@ -4599,7 +5091,7 @@ __run_script()
 	local script="$psdir/$1.sh"
 	[ -x "$script" ] || return
 	shift
-	$script "$@"
+	( unset EPMCURDIR ; $script "$@" )
 	return
 }
 
@@ -4692,12 +5184,13 @@ __epm_play_run()
     set_sudo
     export SUDO
 
+    # keep EPM_AUTO for non epm code (epm uses EPM_OPTIONS now)
     [ -n "$non_interactive" ] && export EPM_AUTO="--auto"
 
     local bashopt=''
-    [ -n "$verbose" ] && bashopt='-x' && export EPM_VERBOSE="$verbose"
+    [ -n "$verbose" ] && bashopt='-x'
     #info "Running $($script --description 2>/dev/null) ..."
-    docmd bash $bashopt $script "$@"
+    docmd $CMDSHELL $bashopt $script "$@"
 }
 
 __epm_play_list_installed()
@@ -4772,6 +5265,106 @@ Options:
 EOF
 }
 
+
+__epm_play_remove()
+{
+    local prescription
+    for prescription in $* ; do
+        if __check_play_script "$prescription" ; then
+            __epm_play_run $prescription --remove
+            __remove_installed_app "$prescription"
+        else
+            psdir=$prsdir
+            __check_play_script "$prescription" || fatal "We have no idea how to remove $prescription (checked in $psdir and $prsdir)"
+            __epm_play_run "$prescription" --remove || fatal "There was some error during run the script."
+        fi
+    done
+}
+
+
+__epm_play_update()
+{
+    local i RES
+    local CMDUPDATE="$1"
+    shift
+    RES=0
+    for i in $* ; do
+        echo
+        echo "$i"
+            if ! __is_app_installed "$i" ; then
+                warning "$i is not installed"
+                continue
+            fi
+        prescription="$i"
+        if ! __check_play_script $prescription ; then
+            warning "Can't find executable play script for $prescription. Try epm play --remove $prescription if you don't need it anymore."
+            RES=1
+            continue
+        fi
+        __epm_play_run $prescription $CMDUPDATE || RES=$?
+    done
+    return $RES
+}
+
+
+__epm_play_install_one()
+{
+    local prescription="$1"
+    shift
+
+    if __check_play_script "$prescription" ; then
+        #__is_app_installed "$prescription" && info "$$prescription is already installed (use --remove to remove)" && exit 1
+        __epm_play_run "$prescription" --run "$@" && __save_installed_app "$prescription" || fatal "There was some error during install the application."
+    else
+        opsdir=$psdir
+        psdir=$prsdir
+        __check_play_script "$prescription" || fatal "We have no idea how to play $prescription (checked in $opsdir and $prsdir)"
+        __epm_play_run "$prescription" --run "$@" || fatal "There was some error during run $prescription script."
+    fi
+}
+
+
+__epm_play_install()
+{
+   local i RES
+   RES=0
+
+
+   update_repo_if_needed
+
+   # get all options
+   options=''
+   for i in  $* ; do
+       case "$i" in
+           --*)
+               options="$options $i"
+               ;;
+       esac
+   done
+
+   while [ -n "$1" ] ; do
+       case "$1" in
+           --*)
+               shift
+               continue
+               ;;
+       esac
+       local p="$1"
+       local v=''
+       n="$(echo $2)"
+       if [ "$n" = "=" ] ; then
+           v="$3"
+           shift 3
+       else
+           shift
+       fi
+       __epm_play_install_one $p $v $options || RES=1
+   done
+
+   return $RES
+}
+
+
 epm_play()
 {
 local psdir="$(realpath $CONFIGDIR/play.d)"
@@ -4785,16 +5378,7 @@ fi
 
 if [ "$1" = "--remove" ] || [ "$1" = "remove" ]  ; then
     shift
-    prescription="$1"
-    shift
-    if __check_play_script "$prescription" ; then
-        __epm_play_run $prescription --remove "$@"
-        __remove_installed_app "$prescription"
-    else
-        psdir=$prsdir
-        __check_play_script "$prescription" || fatal "We have no idea how to remove $prescription (checked in $psdir and $prsdir)"
-        __epm_play_run "$prescription" --remove "$@" || fatal "There was some error during run the script."
-    fi
+    __epm_play_remove "$@"
     exit
 fi
 
@@ -4803,30 +5387,22 @@ if [ "$1" = "--update" ] ; then
     shift
     local CMDUPDATE="--update"
     [ -n "$force" ] && CMDUPDATE="--run"
-    if [ "$1" = "all" ] ; then
-        shift
-        RES=0
-        for i in $(__list_installed_app) ; do
-            echo
-            echo "$i"
-            prescription="$i"
-            if ! __check_play_script $prescription ; then
-                warning "Can't find executable play script for $prescription. Try epm play --remove $prescription if you don't need it anymore."
-                RES=1
-                continue
-            fi
-            __epm_play_run $prescription $CMDUPDATE "$@" || RES=$?
-        done
-        exit $RES
-    fi
+
     if [ -z "$1" ] ; then
         fatal "run --update with 'all' or a project name"
     fi
-    __is_app_installed "$1" || fatal "$1 is not installed"
-    prescription="$1"
-    shift
-    __epm_play_run $prescription $CMDUPDATE "$@"
+
+    local list
+    if [ "$1" = "all" ] ; then
+        shift
+        list="$(__list_installed_app)"
+    else
+        list="$*"
+    fi
+
+    __epm_play_update $CMDUPDATE $list
     exit
+
 fi
 
 if [ "$1" = "--installed" ] || [ "$1" = "installed" ]  ; then
@@ -4879,21 +5455,7 @@ if [ "$1" = "--list-scripts" ] || [ "$1" = "list-scripts" ] ; then
     exit
 fi
 
-prescription="$1"
-shift
-
-
-update_repo_if_needed
-
-if __check_play_script "$prescription" ; then
-    #__is_app_installed "$prescription" && info "$$prescription is already installed (use --remove to remove)" && exit 1
-    __epm_play_run "$prescription" --run "$@" && __save_installed_app "$prescription" || fatal "There was some error during install the application."
-else
-    opsdir=$psdir
-    psdir=$prsdir
-    __check_play_script "$prescription" || fatal "We have no idea how to play $prescription (checked in $opsdir and $prsdir)"
-    __epm_play_run "$prescription" --run "$@" || fatal "There was some error during run the script."
-fi
+__epm_play_install $(echo "$*" | sed -e 's|=| = |g')
 }
 
 # File bin/epm-policy:
@@ -5012,6 +5574,18 @@ query_package_field()
     esac
 }
 
+
+print_pkg_arch()
+{
+    case $PMTYPE in
+        *-dpkg)
+            dpkg_query_package_field "Arch" "$@" | sed -e "s|-.*||" -e "s|.*:||"
+            ;;
+        *-rpm)
+            rpm_query_package_field "arch" "$@"
+            ;;
+    esac
+}
 
 print_pkg_version()
 {
@@ -5185,7 +5759,7 @@ construct_name()
     local pds
 
     [ -n "$arch" ] || arch="$($DISTRVENDOR --distro-arch)"
-    [ -n "$pkgtype" ] || pkgtype="$($DISTRVENDOR -p)"
+    [ -n "$pkgtype" ] || pkgtype="$PKGFORMAT"
     [ -n "$ds" ] || ds=$(get_pkg_name_delimiter $pkgtype)
     pds="$ds"
     [ "$pds" = "-" ] && pds="."
@@ -5203,6 +5777,7 @@ cat <<EOF
     epm print version [from filename|for package] NN     print only version of package name or package file
     epm print release [from filename|for package] NN     print only release of package name or package file
     epm print version-release [from filename|for package] NN     print only release-release of package name or package file
+    epm print arch [from filename|for package] NN     print arch  of package name or package file
     epm print field FF for package NN        print field of the package
     epm print pkgname from filename NN       print package name for the package file
     epm print srcname from filename NN       print source name for the package file
@@ -5249,6 +5824,16 @@ epm_print()
                 print_pkg_name "$@"
             else
                 print_name "$@"
+            fi
+            ;;
+        "arch")
+            [ -n "$1" ] || fatal "Arg is missed"
+            if [ -n "$FNFLAG" ] ; then
+                print_pkg_arch "$@"
+            elif [ -n "$PKFLAG" ] ; then
+                print_pkg_arch "$@"
+            else
+                print_pkg_arch "$@"
             fi
             ;;
         "version")
@@ -6611,7 +7196,6 @@ __switch_alt_to_distro()
 	esac
 	docmd epm clean
 	docmd epm update
-	info "Note: Also you can try '# epm autoremove' and '# epm autoorphans' commands to remove obsoleted and unused packages."
 }
 
 epm_release_upgrade()
@@ -6649,6 +7233,8 @@ epm_release_upgrade()
 		elif [ -n "$1" ] ; then
 			TARGET="$1"
 		fi
+
+		[ "$TARGET" = "Sisyphus" && info "Check also https://www.altlinux.org/Update/Sisyphus"
 
 		[ -n "$TARGET" ] || TARGET="$(get_next_release $DISTRVERSION)"
 
@@ -7143,7 +7729,9 @@ epm_remove_old_kernels()
 			return
 		fi
 		assure_exists update-kernel update-kernel 0.9.9
-		sudocmd remove-old-kernels $(subst_option non_interactive -y) "$@"
+		sudocmd remove-old-kernels $dryrun $(subst_option non_interactive -y) "$@"
+
+		[ -n "$dryrun" ] && return
 
 		# remove unused nvidia drivers
 		if which nvidia-clean-driver 2>/dev/null ; then
@@ -7202,7 +7790,7 @@ __epm_removerepo_alt_grepremove()
 	if [ "$1" = "all" ] || rhas "$1" "^rpm" ; then
 		rl="$1"
 	else
-		rl="$( (epm --quiet repolist) 2>/dev/null | grep -E "$1")"
+		rl="$( epm --quiet repolist 2>/dev/null | grep -F "$1" | head -n1 )"
 		[ -z "$rl" ] && warning "Can't find '$1' in the repos (see '# epm repolist' output)" && return 1
 	fi
 	echo "$rl" | while read rp ; do
@@ -7336,14 +7924,20 @@ esac
 
 [ -n "$EPM_REPACK_SCRIPTS_DIR" ] || EPM_REPACK_SCRIPTS_DIR="$CONFIGDIR/repack.d"
 
+__epm_have_repack_rule()
+{
+    # skip repacking on non ALT systems
+    [ "$BASEDISTRNAME" = "alt" ] || return 1
+
+    # FIXME: use real way (for any archive)
+    local pkgname="$(epm print name for package "$1")"
+    local repackcode="$EPM_REPACK_SCRIPTS_DIR/$pkgname.sh"
+    [ -s "$repackcode" ]
+}
 
 __epm_check_if_needed_repack()
 {
-    # FIXME: use real way (for any archive)
-    # FIXME: from вроде не существует и не работает
-    local pkgname="$(epm print name from "$1")"
-    local repackcode="$EPM_REPACK_SCRIPTS_DIR/$pkgname.sh"
-    [ -x "$repackcode" ] || return
+    __epm_have_repack_rule "$@" || return
     warning "There is repack rule for $pkgname package. It is better install this package via 'epm --repack install' or 'epm play'."
 }
 
@@ -7362,6 +7956,180 @@ __epm_split_by_pkg_type()
 
 	[ -n "$split_replaced_pkgs" ]
 }
+
+
+__set_name_version()
+{
+    SPEC="$1"
+    PKGNAME="$2"
+    VERSION="$3"
+    [ -n "$PKGNAME" ] && subst "s|^Name:.*|Name: $PKGNAME|" $SPEC
+    [ -n "$VERSION" ] && subst "s|^Version:.*|Version: $VERSION|" $SPEC
+}
+
+
+__check_stoplist()
+{
+    local pkg="$1"
+    local alf="$CONFIGDIR/repackstoplist.list"
+    [ -s "$alf" ] || return 1
+    [ -n "$pkg" ] || return 1
+    grep -E -q "^$1$" $alf
+}
+
+
+__set_version_pkgname()
+{
+    local alpkg="$1"
+    VERSION="$(echo "$alpkg" | grep -o -P '[-_.][0-9][0-9]*([.]*[0-9])*' | head -n1 | sed -e 's|^[-_.]||')" #"
+    [ -n "$VERSION" ] && PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
+    # set version as all between name and extension
+    #local woext="$(echo "alpkg" | sed -e 's|\.tar.*||')"
+    #if [ "$woext" != "$alpkg" ] ; then
+    #    VERSION="$(echo "$woext" " | sed -e "s|^$PKGNAME[-_.]||")"
+    #fi
+}
+
+
+__set_version_apppkgname()
+{
+    local alpkg="$1"
+    VERSION="$(echo "$alpkg" | grep -o -P "[-_.a-zA-Z]([0-9])([0-9])*([.]*[0-9])*" | head -n1 | sed -e 's|^[-_.a-zA-Z]||' -e 's|--|-|g' )"  #"
+    [ -n "$VERSION" ] && PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
+}
+
+
+__prepare_source_package()
+{
+    local pkg="$1"
+
+    alpkg=$(basename $pkg)
+
+    # TODO: use func for get name from deb pkg
+    # TODO: epm print name from deb package
+    # TODO: use stoplist only for deb?
+    [ -z "$force" ] && __check_stoplist $(echo $alpkg | sed -e "s|_.*||") && fatal "Please use official package instead of $alpkg repacking (It is not recommended to use --force to skip this checking."
+
+    PKGNAME=''
+    VERSION=''
+    SUBGENERIC=''
+
+    # convert tarballs to tar (for alien)
+    if rhas "$alpkg" "\.(rpm|deb)$" ; then
+        return
+    fi
+
+    if rhas "$alpkg" "\.AppImage$" ; then
+        __set_version_apppkgname $alpkg
+        [ -n "$VERSION" ] || fatal "Can't get version from $alpkg."
+        SUBGENERIC='appimage'
+        # TODO: move repack archive to erc?
+        [ -x "$alpkg" ] || docmd chmod u+x $verbose "$alpkg"
+        ./$alpkg --appimage-extract || fatal
+        alpkg=$PKGNAME-$VERSION.tar
+        # make a tar for alien
+        erc a $alpkg squashfs-root
+        return
+    fi
+
+    __set_version_pkgname $alpkg
+    if [ -n "$VERSION" ] ; then
+        # TODO: don't use erc for detect type? then we potentially can skip install it
+        pkgtype="$(erc type $alpkg)"
+        local newalpkg
+        newalpkg=$PKGNAME-$VERSION.$pkgtype
+        #[ -n "$PKGNAME" ] || PKGNAME=$(basename $alpkg .$pkgtype)
+        if [ "$pkgtype" = "tar" ] || [ "$pkgtype" = "tar.gz" ] || [ "$pkgtype" = "tgz" ] ; then
+            # just rename supported formats
+            if [ "$alpkg" != "$newalpkg" ] ; then
+                mv $alpkg $newalpkg
+            fi
+        else
+            # converts directly unsupported formats
+            newalpkg=$PKGNAME-$VERSION.tar
+            #newalpkg=$(basename $alpkg .$pkgtype).tar
+            erc repack $alpkg $newalpkg || fatal
+        fi
+        if [ "$alpkg" != "$newalpkg" ] ; then
+            rm -f $verbose $alpkg
+            alpkg=$newalpkg
+        fi
+    else
+        warning "Can't detect version in $alpkg. We have almost no chance it will supported in alien."
+    fi
+}
+
+
+
+
+__epm_repack()
+{
+	repacked_pkgs=''
+	case $PKGFORMAT in
+		rpm)
+			__epm_repack_to_rpm "$@" || return
+			;;
+		deb)
+			# FIXME: only one package in $@ is supported
+			#local pkgname="$(epm print name from "$@")"
+			__set_version_pkgname "$1"
+			local repackcode="$EPM_REPACK_SCRIPTS_DIR/$PKGNAME.sh"
+			if [ -x "$repackcode" ] ; then
+				__epm_repack_to_rpm "$@" || return
+				[ -n "$repacked_pkgs" ] || return
+				__epm_repack_to_deb $repacked_pkgs
+			else
+				__epm_repack_to_deb "$@" || return
+			fi
+			;;
+		*)
+			fatal "$PKGFORMAT is not supported for repack yet"
+			;;
+	esac
+
+	return 0
+}
+
+__epm_repack_if_needed()
+{
+	# return 1 if there is a package in host package format
+	__epm_split_by_pkg_type $PKGFORMAT "$@" && return 1
+
+	__epm_repack "$@"
+	return 0
+}
+
+epm_repack()
+{
+    # if possible, it will put pkg_urls into pkg_files and reconstruct pkg_filenames
+    if [ -n "$pkg_urls" ] ; then
+        __handle_pkg_urls_to_install
+    fi
+
+    [ -n "$pkg_names" ] && warning "Can't find $pkg_names files"
+    [ -z "$pkg_files" ] && info "Skip empty repack list" && return 22
+
+    if __epm_repack $pkg_files && [ -n "$repacked_pkgs" ] ; then
+        if [ -n "$install" ] ; then
+            epm install $repacked_pkgs
+            return
+        fi
+
+        cp $repacked_pkgs "$EPMCURDIR"
+        if [ -z "$quiet" ] ; then
+            echo
+            echo "Adapted packages:"
+            for i in $repacked_pkgs ; do
+                echo "	$EPMCURDIR/$(basename "$i")"
+            done
+        fi
+    fi
+
+    __epm_remove_tmp_files
+}
+
+# File bin/epm-repack-deb:
+
 
 __epm_repack_to_deb()
 {
@@ -7403,14 +8171,7 @@ __epm_repack_to_deb()
 }
 
 
-__set_name_version()
-{
-    SPEC="$1"
-    PKGNAME="$2"
-    VERSION="$3"
-    [ -n "$PKGNAME" ] && subst "s|^Name:.*|Name: $PKGNAME|" $SPEC
-    [ -n "$VERSION" ] && subst "s|^Version:.*|Version: $VERSION|" $SPEC
-}
+# File bin/epm-repack-rpm:
 
 __fix_spec()
 {
@@ -7458,27 +8219,16 @@ __fix_spec()
     #" hack for highlight
 }
 
-__check_stoplist()
-{
-    cat <<EOF | grep -q "^$1$"
-kesl
-kesl-astra
-klnagent
-klnagent64
-klnagent64-astra
-EOF
-}
-
 
 __apply_fix_code()
 {
     local repackcode="$EPM_REPACK_SCRIPTS_DIR/$1.sh"
-    [ -x "$repackcode" ] || return
+    [ -s "$repackcode" ] || return
     shift
     export PATH=$PROGDIR:$PATH
     local bashopt=''
     [ -n "$verbose" ] && bashopt='-x'
-    docmd bash $bashopt $repackcode "$1" "$2" "$3" || fatal "There is an error from $repackcode script"
+    ( unset EPMCURDIR ; docmd $CMDSHELL $bashopt $repackcode "$1" "$2" "$3" ) || fatal "There is an error from $repackcode script"
 }
 
 __create_rpmmacros()
@@ -7496,91 +8246,6 @@ __create_rpmmacros()
 %_allow_root_build	1
 EOF
     to_remove_pkg_files="$to_remove_pkg_files $HOME/.rpmmacros"
-}
-
-
-__set_version_pkgname()
-{
-    local alpkg="$1"
-    VERSION="$(echo "$alpkg" | grep -o -P '[-_.][0-9][0-9]*([.]*[0-9])*' | head -n1 | sed -e 's|^[-_.]||')" #"
-    [ -n "$VERSION" ] && PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
-    # set version as all between name and extension
-    #local woext="$(echo "alpkg" | sed -e 's|\.tar.*||')"
-    #if [ "$woext" != "$alpkg" ] ; then
-    #    VERSION="$(echo "$woext" " | sed -e "s|^$PKGNAME[-_.]||")"
-    #fi
-}
-
-
-__set_version_apppkgname()
-{
-    local alpkg="$1"
-    VERSION="$(echo "$alpkg" | grep -o -P "[-_.a-zA-Z]([0-9])([0-9])*(\.[0-9])*" | head -n1 | sed -e 's|^[-_.a-zA-Z]||' -e 's|--|-|g' )"  #"
-    [ -n "$VERSION" ] && PKGNAME="$(echo "$alpkg" | sed -e "s|$VERSION.*||")"
-}
-
-
-__prepare_source_package()
-{
-    local pkg="$1"
-
-    alpkg=$(basename $pkg)
-
-    # TODO: use func for get name from deb pkg
-    # TODO: epm print name from deb package
-    # TODO: use stoplist only for deb?
-    [ -z "$force" ] && __check_stoplist $(echo $alpkg | sed -e "s|_.*||") && fatal "Please use official package instead of $alpkg repacking (It is not recommended to use --force to skip this checking."
-
-    PKGNAME=''
-    VERSION=''
-    SUBGENERIC=''
-
-    # convert tarballs to tar (for alien)
-    if rhas "$alpkg" "\.(rpm|deb)$" ; then
-        return
-    fi
-
-    if rhas "$alpkg" "\.AppImage$" ; then
-        __set_version_apppkgname $alpkg
-        [ -n "$VERSION" ] || fatal "Can't get version from $alpkg."
-        SUBGENERIC='appimage'
-        # TODO: move repack archive to erc?
-        [ -x "$alpkg" ] || docmd chmod u+x $verbose "$alpkg"
-        ./$alpkg --appimage-extract || fatal
-        alpkg=$PKGNAME-$VERSION.tar
-        assure_exists erc || epm ei erc || fatal
-        # make a tar for alien
-        a= erc a $alpkg squashfs-root
-        return
-    fi
-
-    __set_version_pkgname $alpkg
-    if [ -n "$VERSION" ] ; then
-        # TODO: don't use erc for detect type? then we potentially can skip install it
-        assure_exists erc || epm ei erc || fatal
-        pkgtype="$(a= erc type $alpkg)"
-        local newalpkg
-        newalpkg=$PKGNAME-$VERSION.$pkgtype
-        #[ -n "$PKGNAME" ] || PKGNAME=$(basename $alpkg .$pkgtype)
-        if [ "$pkgtype" = "tar" ] || [ "$pkgtype" = "tar.gz" ] || [ "$pkgtype" = "tgz" ] ; then
-            # just rename supported formats
-            if [ "$alpkg" != "$newalpkg" ] ; then
-                mv $alpkg $newalpkg
-            fi
-        else
-            # converts directly unsupported formats
-            newalpkg=$PKGNAME-$VERSION.tar
-            #newalpkg=$(basename $alpkg .$pkgtype).tar
-            assure_exists erc || epm ei erc || fatal
-            a= erc repack $alpkg $newalpkg || fatal
-        fi
-        if [ "$alpkg" != "$newalpkg" ] ; then
-            rm -f $verbose $alpkg
-            alpkg=$newalpkg
-        fi
-    else
-        warning "Can't detect version in $alpkg. We have almost no chance it will supported in alien."
-    fi
 }
 
 
@@ -7685,7 +8350,7 @@ __epm_repack_to_rpm()
         else
             warning "Can't find converted rpm for source binary package '$pkg'"
         fi
-        cd - >/dev/null
+        cd $EPMCURDIR >/dev/null
         rm -rf $tmpbuilddir/$subdir/
         rm -rf $spec
     done
@@ -7695,82 +8360,6 @@ __epm_repack_to_rpm()
     true
 }
 
-
-__epm_remove_tmp_files()
-{
-    # TODO: move it to exit handler
-    if [ -z "$DEBUG" ] ; then
-        # TODO: reinvent
-        [ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
-        # hack??
-        [ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
-        [ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
-        [ -n "$to_clean_tmp_dirs" ] && rm -rf $to_clean_tmp_dirs 2>/dev/null
-    fi
-    return 0
-}
-
-__epm_repack()
-{
-	repacked_pkgs=''
-	case $PKGFORMAT in
-		rpm)
-			__epm_repack_to_rpm "$@" || return
-			;;
-		deb)
-			# FIXME: only one package in $@ is supported
-			#local pkgname="$(epm print name from "$@")"
-			__set_version_pkgname "$1"
-			local repackcode="$EPM_REPACK_SCRIPTS_DIR/$PKGNAME.sh"
-			if [ -x "$repackcode" ] ; then
-				__epm_repack_to_rpm "$@" || return
-				[ -n "$repacked_pkgs" ] || return
-				__epm_repack_to_deb $repacked_pkgs
-			else
-				__epm_repack_to_deb "$@" || return
-			fi
-			;;
-		*)
-			fatal "$PKGFORMAT is not supported for repack yet"
-			;;
-	esac
-
-	return 0
-}
-
-__epm_repack_if_needed()
-{
-	# return 1 if there is a package in host package format
-	__epm_split_by_pkg_type $PKGFORMAT "$@" && return 1
-
-	__epm_repack "$@"
-	return 0
-}
-
-epm_repack()
-{
-    local CURDIR="$(pwd)"
-    # if possible, it will put pkg_urls into pkg_files and reconstruct pkg_filenames
-    if [ -n "$pkg_urls" ] ; then
-        __handle_pkg_urls_to_install
-    fi
-
-    [ -n "$pkg_names" ] && warning "Can't find $pkg_names files"
-    [ -z "$pkg_files" ] && info "Skip empty repack list" && return 22
-
-    if __epm_repack $pkg_files && [ -n "$repacked_pkgs" ] ; then
-        cp $repacked_pkgs "$CURDIR"
-        if [ -z "$quiet" ] ; then
-            echo
-            echo "Adapted packages:"
-            for i in $repacked_pkgs ; do
-                echo "	$CURDIR/$(basename "$i")"
-            done
-        fi
-    fi
-
-    __epm_remove_tmp_files
-}
 
 # File bin/epm-repo:
 
@@ -7812,6 +8401,24 @@ epm_repo()
 	switch)                           # HELPCMD: switch repo to <repo>: rewrite URLs to the repo
 		epm_reposwitch "$@"
 		;;
+	index)                            # HELPCMD: index repo: [--init] [path] [name]
+		epm_repoindex "$@"
+		;;
+	pkgadd)                           # HELPCMD: add to <dir> applied <package-filename1> [<package-filename2>...]
+		epm_repo_pkgadd "$@"
+		;;
+	pkgupdate)                        # HELPCMD: replace in <dir> with new <package-filename1> [<package-filename2>...]
+		epm_repo_pkgupdate "$@"
+		;;
+	pkgdel)                           # HELPCMD: del from <dir> <package1> [<package2>...]
+		epm_repo_pkgdel "$@"
+		;;
+	enable)                           # HELPCMD: enable <repo>
+		epm_repoenable "$@"
+		;;
+	disable)                          # HELPCMD: disable <repo>
+		epm_repodisable "$@"
+		;;
 	clean)                            # HELPCMD: remove temp. repos (tasks and CD-ROMs)
 		# TODO: check for ALT
 		sudocmd apt-repo $dryrun clean
@@ -7843,6 +8450,108 @@ epm_repo()
 		;;
 	*)
 		fatal "Unknown command $ epm repo '$CMD'"
+		;;
+esac
+
+}
+
+# File bin/epm-repodisable:
+
+
+alt_LISTS='/etc/apt/sources.list /etc/apt/sources.list.d/*.list'
+
+
+__epm_repodisable_alt()
+{
+	local rl
+	# ^rpm means full string
+	if rhas "$1" "\^rpm" ; then
+		rl="$(echo "$1" | sed -e 's|\^||')"
+	else
+		rl="$( (epm --quiet repolist) 2>/dev/null | grep -F "$1" | head -n1 )"
+		[ -z "$rl" ] && warning "Can't find '$1' entries in the repos (see '# epm repolist' output)" && return 1
+	fi
+	echo "$rl" | while read rp ; do
+		[ -n "$dryrun" ] && echo "will comment $rp" && continue
+		sed -i -e "s|^\($(sed_escape "$rl")\)|#\1|" $alt_LISTS
+	done
+}
+
+
+epm_repodisable()
+{
+
+case $PMTYPE in
+	apt-rpm)
+		assure_root
+		__epm_repodisable_alt "$@"
+		;;
+	apt-dpkg|aptitude-dpkg)
+		print_apt_sources_list
+		;;
+	yum-rpm)
+		docmd yum repolist $verbose
+		[ -n "$verbose" ] || info "Use --verbose if you need detail information."
+		;;
+	dnf-rpm)
+		sudocmd dnf config-manager --enable $verbose "$@"
+		;;
+	eoget)
+		docmd eoget disable-repo "$@"
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+}
+
+# File bin/epm-repoenable:
+
+
+alt_LISTS='/etc/apt/sources.list /etc/apt/sources.list.d/*.list'
+
+
+__epm_repoenable_alt()
+{
+	local rl
+	# ^rpm means full string
+	if rhas "$1" "\^rpm" ; then
+		rl="$(echo "$1" | sed -e 's|\^||')"
+	else
+		rl="$( epm --quiet --all repolist 2>/dev/null | grep -F "$1" | head -n1 | sed -e 's|[[:space:]]*#[[:space:]]*||' )"
+		[ -z "$rl" ] && warning "Can't find commented '$1' in the repos (see '# epm repolist' output)" && return 1
+	fi
+	echo "$rl" | while read rp ; do
+		[ -n "$dryrun" ] && echo "will uncomment $rp" && continue
+		sed -i -e "s|^[[:space:]]*#[[:space:]]*\($(sed_escape "$rl")\)|\1|" $alt_LISTS
+	done
+}
+
+
+epm_repoenable()
+{
+
+case $PMTYPE in
+	apt-rpm)
+		assure_root
+		__epm_repoenable_alt "$@"
+		;;
+	apt-dpkg|aptitude-dpkg)
+		print_apt_sources_list
+		;;
+	yum-rpm)
+		docmd yum repolist $verbose
+		[ -n "$verbose" ] || info "Use --verbose if you need detail information."
+		;;
+	dnf-rpm)
+		sudocmd dnf config-manager --disable $verbose "$@"
+		;;
+	eoget)
+		docmd eoget enable-repo "$@"
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
 		;;
 esac
 
@@ -8096,6 +8805,111 @@ esac
 
 }
 
+# File bin/epm-repoindex:
+
+
+get_archlist()
+{
+    echo "noarch"
+    echo "$DISTRARCH"
+    case $DISTRARCH in
+        x86_64)
+            echo "i586"
+            ;;
+    esac
+}
+
+__epm_repoindex_alt()
+{
+	local archlist="i586 x86_64 aarch64 noarch"
+
+	local init=''
+	if [ "$1" = "--init" ] ; then
+		init='--init'
+		shift
+	fi
+
+	epm assure genbasedir apt-repo-tools || fatal
+	REPO_DIR="$1"
+	# TODO: check if we inside arch dir or RPMS.*
+	[ -n "$REPO_DIR" ] || REPO_DIR="$(pwd)"
+	if [ -z "$init" ] ; then
+		[ -d "$REPO_DIR" ] || fatal "Repo dir $REPO_DIR does not exist"
+	fi
+
+	REPO_NAME="$2"
+	if [ -z "$REPO_NAME" ] ; then
+		# default name
+		REPO_NAME="addon"
+		# detect name if already exists
+		for arch in $archlist ; do
+			local rd="$(echo $REPO_DIR/$arch/RPMS.*)"
+			[ -d "$rd" ] && REPO_NAME="$(echo "$rd" | sed -e 's|.*\.||')" && break
+		done
+	fi
+
+	if [ -n "$init" ] ; then
+		for arch in $(get_archlist); do
+			mkdir -pv "$REPO_DIR/$arch/base/"
+			mkdir -pv "$REPO_DIR/$arch/RPMS.$REPO_NAME/"
+		done
+		return
+	fi
+
+	for arch in $archlist; do
+		[ -d "$REPO_DIR/$arch/RPMS.$REPO_NAME" ] || continue
+		mkdir -pv "$REPO_DIR/$arch/base/"
+		sudocmd genbasedir --bloat --progress --topdir=$REPO_DIR $arch $REPO_NAME
+	done
+}
+
+__epm_repoindex_deb()
+{
+	local init=''
+	if [ "$1" = "--init" ] ; then
+		init='--init'
+		shift
+	fi
+
+	local dir="$1"
+	sudocmd mkdir -pv "$dir" || fatal
+	sudocmd dpkg-scanpackages -t deb "$dir" | gzip | cat > "$dir/Packages.gz"
+}
+
+
+epm_repoindex()
+{
+
+case $PMTYPE in
+	apt-rpm)
+		__epm_repoindex_alt "$@"
+		;;
+	apt-dpkg|aptitude-dpkg)
+		__epm_repoindex_deb "$@"
+		;;
+	yum-rpm)
+		epm install --skip-installed yum-utils createrepo || fatal
+		sudocmd mkdir -pv "$@"
+		sudocmd createrepo -v -s md5 "$@"
+		sudocmd verifytree
+		;;
+	dnf-rpm)
+		epm install --skip-installed yum-utils createrepo || fatal
+		sudocmd mkdir -pv "$@"
+		sudocmd createrepo -v -s md5 "$@"
+		sudocmd verifytree
+		;;
+	eoget)
+		docmd eoget index "$@"
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+}
+
+
 # File bin/epm-repolist:
 
 
@@ -8105,6 +8919,15 @@ __print_apt_sources_list()
     for i in $@ ; do
         test -r "$i" || continue
         grep -v -- "^.*#" $i
+    done | grep -v -- "^ *\$"
+}
+
+__print_apt_sources_list_full()
+{
+    local i
+    for i in $@ ; do
+        test -r "$i" || continue
+        grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i
     done | grep -v -- "^ *\$"
 }
 
@@ -8134,9 +8957,29 @@ __print_apt_sources_list_verbose()
     done
 }
 
+__print_apt_sources_list_verbose_full()
+{
+    local i
+    for i in $@ ; do
+        test -r "$i" || continue
+        grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i | grep -v -- "^ *\$" | grep -q . && echo && __info_cyan "$i:" || continue
+        grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i | grep -v -- "^ *\$" | sed -e 's|^|    |' -e "s|\(.*#.*\)|$(set_color $WHITE)\1$(restore_color)|"
+    done
+}
+
 print_apt_sources_list()
 {
     local LISTS='/etc/apt/sources.list /etc/apt/sources.list.d/*.list'
+
+    if [ "$1" = "-a" ] || [ "$1" = "--all" ] ; then
+        if [ -n "$quiet" ] ; then
+            __print_apt_sources_list_full $LISTS
+        else
+            __print_apt_sources_list_verbose_full $LISTS
+        fi
+        return
+    fi
+
     if [ -n "$quiet" ] ; then
         __print_apt_sources_list $LISTS
     else
@@ -8156,7 +8999,7 @@ case $PMTYPE in
 		if tasknumber "$1" >/dev/null ; then
 			get_task_packages "$@"
 		else
-			print_apt_sources_list
+			print_apt_sources_list "$@"
 			#docmd apt-repo list
 		fi
 		;;
@@ -8164,7 +9007,7 @@ case $PMTYPE in
 		docmd ds-conf
 		;;
 	apt-dpkg|aptitude-dpkg)
-		print_apt_sources_list
+		print_apt_sources_list "$@"
 		;;
 	yum-rpm)
 		docmd yum repolist $verbose
@@ -8208,6 +9051,127 @@ case $PMTYPE in
 esac
 
 }
+
+# File bin/epm-repopkg:
+
+
+__epm_repo_pkgadd_alt()
+{
+	local archlist="i586 x86_64 aarch64 noarch"
+
+	local REPO_DIR="$1"
+	shift
+	[ -d "$REPO_DIR" ] || fatal "Can't find repo dir $REPO_DIR."
+
+	# default name
+	REPO_NAME="addon"
+	# detect if already exists
+	for arch in $archlist ; do
+		local rd="$(echo $REPO_DIR/$arch/RPMS.*)"
+		[ -d "$rd" ] && REPO_NAME="$(echo "$rd" | sed -e 's|.*\.||')" && break
+	done
+
+	[ -n "$1" ] || fatal "Missed package name"
+
+	while [ -s "$1" ] ; do
+		arch="$(epm print arch from filename "$1")" || fatal
+		epm checkpkg "$1" || fatal
+		cp -v "$1" $REPO_DIR/$arch/RPMS.$REPO_NAME || fatal
+		shift
+	done
+
+}
+
+
+__epm_repo_pkgdel_alt()
+{
+	local archlist="i586 x86_64 aarch64 noarch"
+
+	local REPO_DIR="$1"
+	shift
+	[ -d "$REPO_DIR" ] || fatal "Can't find repo dir $REPO_DIR."
+
+	[ -n "$1" ] || fatal "Missed package name"
+
+	# default name
+	REPO_NAME="addon"
+	# detect if already exists
+	for arch in $archlist ; do
+		local rd="$(echo $REPO_DIR/$arch/RPMS.*)"
+		[ -d "$rd" ] && REPO_NAME="$(echo "$rd" | sed -e 's|.*\.||')" && break
+	done
+
+	while [ -s "$1" ] ; do
+		for arch in $archlist ; do
+			local rd="$REPO_DIR/$arch/RPMS.$REPO_NAME"
+			for i in $rd/$1* ; do
+				[ "$1" = "$(epm print name for package $i)" || continue
+				rm -v $rd/$1*
+			done
+		done
+		shift
+	done
+
+}
+
+
+__epm_repo_pkgupdate_alt()
+{
+	local dir="$1"
+	shift
+	for i in "$@" ; do
+		pkg="$(epm print name for package $i)" || fatal
+		__epm_repo_pkgdel_alt "$dir" $pkg
+	done
+	__epm_repo_pkgadd_alt "$dir" "$@"
+}
+
+
+
+epm_repo_pkgadd()
+{
+
+case $PMTYPE in
+	apt-rpm)
+		__epm_repo_pkgadd_alt "$@"
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+}
+
+
+epm_repo_pkgupdate()
+{
+
+case $PMTYPE in
+	apt-rpm)
+		__epm_repo_pkgupdate_alt "$@"
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+}
+
+
+epm_repo_pkgdel()
+{
+
+case $PMTYPE in
+	apt-rpm)
+		__epm_repo_pkgdel_alt "$@"
+		;;
+	*)
+		fatal "Have no suitable command for $PMTYPE"
+		;;
+esac
+
+}
+
 
 # File bin/epm-reposave:
 
@@ -9943,6 +10907,14 @@ epm_tool()
             showcmd eget "$@"
             eget "$@"
             ;;
+        "erc")                       # HELPCMD: universal archive manager
+            showcmd erc "$@"
+            erc "$@"
+            ;;
+        "ercat")                     # HELPCMD: universal file uncompressor
+            showcmd ercat "$@"
+            ercat "$@"
+            ;;
         "estrlist")                  # HELPCMD: string operations
             showcmd estrlist "$@"
             estrlist "$@"
@@ -10356,14 +11328,14 @@ docmd $CMD $pkg
 ################# incorporate bin/distr_info #################
 internal_distr_info()
 {
-# 2007-2022 (c) Vitaly Lipatov <lav@etersoft.ru>
-# 2007-2022 (c) Etersoft
-# 2007-2022 Public domain
+# 2007-2023 (c) Vitaly Lipatov <lav@etersoft.ru>
+# 2007-2023 (c) Etersoft
+# 2007-2023 Public domain
 
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
 
-PROGVERSION="20220812"
+PROGVERSION="20230328"
 
 # TODO: check /etc/system-release
 
@@ -10401,6 +11373,11 @@ tolower()
 	echo "$*" | awk '{print tolower($0)}'
 }
 
+print_bug_report_url()
+{
+	echo "$BUG_REPORT_URL"
+}
+
 override_distrib()
 {
 	[ -n "$1" ] || return
@@ -10409,8 +11386,11 @@ override_distrib()
 	local name="$(echo "$1" | sed -e 's|x86_64/||')"
 	[ "$name" = "$1" ] && DIST_ARCH="x86" || DIST_ARCH="x86_64"
 	DISTRIB_ID="$(echo "$name" | sed -e 's|/.*||')"
+	DISTRO_NAME="$DISTRIB_ID"
 	DISTRIB_RELEASE="$(echo "$name" | sed -e 's|.*/||')"
 	[ "$DISTRIB_ID" = "$DISTRIB_RELEASE" ] && DISTRIB_RELEASE=''
+	DISTRIB_CODENAME="$DISTRIB_RELEASE"
+	DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
 
 }
 
@@ -10586,6 +11566,11 @@ print_codename()
 	echo "$DISTRIB_CODENAME"
 }
 
+print_repo_name()
+{
+	echo "$DISTRIB_CODENAME"
+}
+
 get_var()
 {
 	# get first variable and print it out, drop quotes if exists
@@ -10660,12 +11645,15 @@ DISTRIB_RELEASE=""
 DISTRIB_FULL_RELEASE=""
 DISTRIB_RELEASE_ORIG=""
 DISTRIB_CODENAME=""
+BUG_REPORT_URL=""
+BUILD_ID=""
 
 # Default detection by /etc/os-release
 # https://www.freedesktop.org/software/systemd/man/os-release.html
 if distro os-release ; then
 	# shellcheck disable=SC1090
 	. $DISTROFILE
+	DISTRO_NAME="$NAME"
 	DISTRIB_ID="$(normalize_name "$NAME")"
 	DISTRIB_RELEASE_ORIG="$VERSION_ID"
 	DISTRIB_RELEASE="$VERSION_ID"
@@ -10678,6 +11666,7 @@ if distro os-release ; then
 
 elif distro lsb-release ; then
 	DISTRIB_ID=$(cat $DISTROFILE | get_var DISTRIB_ID)
+	DISTRO_NAME=$(cat $DISTROFILE | get_var DISTRIB_ID)
 	DISTRIB_RELEASE="$(cat $DISTROFILE | get_var DISTRIB_RELEASE)"
 	DISTRIB_RELEASE_ORIG="$DISTRIB_RELEASE"
 	DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
@@ -10686,7 +11675,7 @@ elif distro lsb-release ; then
 fi
 
 DISTRIB_RELEASE=$(normalize_version2 "$DISTRIB_RELEASE")
-
+[ -n "$DISTRIB_CODENAME" ] || DISTRIB_CODENAME=$DISTRIB_RELEASE
 
 case "$VENDOR_ID" in
 	"alt"|"altlinux")
@@ -10708,15 +11697,23 @@ case "$VENDOR_ID" in
 		else
 			DISTRIB_ID="AstraLinuxSE"
 		fi
+		if [ "$DISTRIB_ID" = "AstraLinuxSE" ] ; then
+			local fr="$(cat /etc/astra_version 2>/dev/null)"
+			[ -n "$fr" ] && echo "$fr" | grep -q "$DISTRIB_RELEASE" && DISTRIB_FULL_RELEASE="$fr"
+		fi
 		;;
 esac
 
 case "$DISTRIB_ID" in
 	"ALTLinux")
-		echo "$VERSION" | grep -q "c9f.* branch" && DISTRIB_RELEASE="c9"
-		# FIXME: fast hack for fallback: 10 -> p10 for /etc/os-release
+		echo "$VERSION" | grep -q "c9.* branch" && DISTRIB_RELEASE="c9"
+		DISTRIB_CODENAME="$DISTRIB_RELEASE"
+		echo "$VERSION" | grep -q "c9f1 branch" && DISTRIB_CODENAME="c9f1"
+		echo "$VERSION" | grep -q "c9f2 branch" && DISTRIB_CODENAME="c9f2"
+		# FIXME: fast hack for fallback: 10.1 -> p10 for /etc/os-release
 		if echo "$DISTRIB_RELEASE" | grep -q "^[0-9]" && echo "$DISTRIB_RELEASE" | grep -q -v "[0-9][0-9][0-9]"  ; then
 			DISTRIB_RELEASE="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
+			DISTRIB_CODENAME="$DISTRIB_RELEASE"
 		fi
 		;;
 #	"ALTServer")
@@ -10737,11 +11734,13 @@ case "$DISTRIB_ID" in
 				DISTRIB_RELEASE="c9f3"
 			;;
 		esac
+		DISTRIB_CODENAME="$DISTRIB_RELEASE"
 #		DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\..*//g")
 		;;
 	"Sisyphus")
 		DISTRIB_ID="ALTLinux"
 		DISTRIB_RELEASE="Sisyphus"
+		DISTRIB_CODENAME="$DISTRIB_RELEASE"
 		;;
 esac
 
@@ -10884,6 +11883,13 @@ fill_distr_info
 get_uname()
 {
     tolower $(uname $1) | tr -d " \t\r\n"
+}
+
+get_glibc_version()
+{
+    for i in /lib/x86_64-linux-gnu /lib64 /lib/i386-linux-gnu /lib ; do
+        [ -x "$ROOTDIR$i/libc.so.6" ] && $ROOTDIR$i/libc.so.6 | head -n1 | grep "version" | sed -e 's|.*version ||' -e 's|\.$||' && return
+    done
 }
 
 get_base_os_name()
@@ -11043,7 +12049,7 @@ get_memory_size()
             [ -r /proc/meminfo ] && detected=$((`cat /proc/meminfo | grep MemTotal | awk '{print $2}'`/1024))
             ;;
         solaris)
-            detected=$(prtconf | grep Memory | sed -e "s|Memory size: \([0-9][0-9]*\) Megabyte.*|\1|")
+            detected=$(prtconf | grep Memory | sed -e "s|Memory size: \([0-9][0-9]*\) Megabyte.*|\1|") #"
             ;;
 #        *)
 #            fatal "Unsupported OS $DIST_OS"
@@ -11131,32 +12137,43 @@ get_service_manager()
     echo "(unknown)"
 }
 
+filter_duplicated_words()
+{
+    echo "$*" | xargs -n1 echo | uniq | xargs -n100 echo
+}
+
 print_pretty_name()
 {
     if [ -z "$PRETTY_NAME" ] ; then
         PRETTY_NAME="$DISTRIB_ID $DISTRIB_RELEASE"
     fi
 
-    echo "$PRETTY_NAME"
+    if ! echo "$PRETTY_NAME" | grep -q "$DISTRIB_FULL_RELEASE" ; then
+        PRETTY_NAME="$PRETTY_NAME ($DISTRIB_FULL_RELEASE)"
+    fi
+
+    echo "$(filter_duplicated_words "$PRETTY_NAME")"
 }
 
 print_total_info()
 {
+local orig=''
+[ -n "$BUILD_ID" ] && orig=" (orig. $BUILD_ID)"
 cat <<EOF
-distro_info v$PROGVERSION : Copyright © 2007-2022 Etersoft
-Total system information:
-    Pretty distro name (--pretty): $(print_pretty_name)
-     Distro name and version (-e): $(print_name_version)
-     Package manager/type (-g/-p): $(pkgmanager) / $(pkgtype)
-     Running service manager (-y): $(get_service_manager)
-              Virtualization (-i): $(get_virt)
-            CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_core_mhz) MHz
-            CPU Architecture (-a): $(get_arch)
-     CPU norm register size  (-b): $(get_bit_size)
-     System memory size (MB) (-m): $(get_memory_size)
-                Base OS name (-o): $(get_base_os_name)
-Base distro (vendor) name (-s|-n): $(pkgvendor)
-    Version codename (--codename): $(print_codename)
+distro_info v$PROGVERSION : Copyright © 2007-2023 Etersoft
+
+         Pretty distro name (--pretty): $(print_pretty_name)
+                 Distro name / version: $DISTRO_NAME / $DISTRIB_FULL_RELEASE$orig
+  Base distro name (-d) / version (-v): $(print_name_version)
+Base distro name (-s) / Repo name (-r): $(pkgvendor) / $(print_repo_name)
+          Package manager/type (-g/-p): $(pkgmanager) / $(pkgtype)
+     Base OS name (-o) / CPU arch (-a): $(get_base_os_name) $(get_arch)
+     Bug report URL (--bug-report-url): $(print_bug_report_url)
+          CPU norm register size  (-b): $(get_bit_size)
+                   Virtualization (-i): $(get_virt)
+                 CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_core_mhz) MHz
+          System memory size (MB) (-m): $(get_memory_size)
+          Running service manager (-y): $(get_service_manager)
 
 (run with -h to get help)
 EOF
@@ -11174,29 +12191,35 @@ case "$1" in
 		echo "distro_info v$PROGVERSION - distro information retriever"
 		echo "Usage: distro_info [options] [SystemName/Version]"
 		echo "Options:"
-		echo " -a - print hardware architecture (--distro-arch for distro depended name)"
-		echo " -b - print size of arch bit (32/64)"
-		echo " -c - print number of CPU cores"
-		echo " --codename - print distro codename (focal for Ubuntu 20.04)"
-		echo " -z - print current CPU MHz"
-		echo " -d - print distro name"
-		echo " -e - print full name of distro with version"
-		echo " -i - print virtualization type"
-		echo " -h - this help"
-		echo " -m - print system memory size (in MB)"
-		echo " -o - print base OS name"
-		echo " -p - print type of the packaging system"
-		echo " -g - print name of the packaging system"
-		echo " -s|-n - print base name of the distro (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (see _vendor macros in rpm)"
-		echo " -y - print running service manager"
-		echo " --pretty - print pretty distro name"
-		echo " -v - print version of the distro"
-		echo " --full-version - print full version of the distro"
-		echo " -V - print the utility version"
+		echo " -h | --help            - this help"
+		echo " -a                     - print hardware architecture (--distro-arch for distro depended name)"
+		echo " -b                     - print size of arch bit (32/64)"
+		echo " -c                     - print number of CPU cores"
+		echo " -i                     - print virtualization type"
+		echo " -m                     - print system memory size (in MB)"
+		echo " -y                     - print running service manager"
+		echo " -z                     - print current CPU MHz"
+		echo " --glibc-version        - print system glibc version"
+		echo
+		echo " -d|--base-distro-name  - print distro id (short distro name)"
+		echo " -e                     - print full name of distro with version"
+		echo " -o | --os-name         - print base OS name"
+		echo " -p | package-type      - print type of the packaging system"
+		echo " -g                     - print name of the packaging system"
+		echo " -s|-n|--vendor-name    - print base name of the distro (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (see _vendor macros in rpm)"
+		echo " --pretty|--pretty-name - print pretty distro name"
+		echo " -v | --base-version    - print version of the distro"
+		echo " --distro-name          - print distro name"
+		echo " --distro-version       - print full version of the distro"
+		echo " --full-version         - print full version of the distro"
+		echo " --codename (obsoleted) - print distro codename (focal for Ubuntu 20.04)"
+		echo " --repo-name            - print repository name (focal for Ubuntu 20.04)"
+		echo " --build-id             - print a string uniquely identifying the system image originally used as the installation base"
+		echo " -V                     - print the utility version"
 		echo "Run without args to print all information."
 		exit 0
 		;;
-	-p)
+	-p|--package-type)
 		override_distrib "$2"
 		pkgtype
 		exit 0
@@ -11206,7 +12229,7 @@ case "$1" in
 		pkgmanager
 		exit 0
 		;;
-	--pretty)
+	--pretty|--pretty-name)
 		override_distrib "$2"
 		print_pretty_name
 		;;
@@ -11220,9 +12243,18 @@ case "$1" in
 		get_debian_arch
 		exit 0
 		;;
-	-d)
+	--glibc-version)
+		override_distrib "$2"
+		get_glibc_version
+		exit 0
+		;;
+	-d|--base-distro-name)
 		override_distrib "$2"
 		echo $DISTRIB_ID
+		;;
+	--distro-name)
+		override_distrib "$2"
+		echo $DISTRO_NAME
 		;;
 	--codename)
 		override_distrib "$2"
@@ -11248,18 +12280,28 @@ case "$1" in
 	-m)
 		get_memory_size
 		;;
-	-o)
+	-o|--os-name)
 		get_base_os_name
 		;;
-	-v)
+	-r|--repo-name)
+		print_repo_name
+		;;
+	--build-id)
+		echo "$BUILD_ID"
+		;;
+	-v|--base-version)
 		override_distrib "$2"
 		echo "$DISTRIB_RELEASE"
 		;;
-	--full-version)
+	--full-version|--distro-version)
 		override_distrib "$2"
 		echo "$DISTRIB_FULL_RELEASE"
 		;;
-	-s|-n)
+	--bug-report-url)
+		print_bug_report_url
+		exit
+		;;
+	-s|-n|--vendor-name)
 		override_distrib "$2"
 		pkgvendor
 		exit 0
@@ -11319,6 +12361,7 @@ fatal()
     echo "FATAL: $*" >&2
     exit 1
 }
+
 
 # TODO:
 arch="$(uname -m)"
@@ -11396,151 +12439,35 @@ docmd()
 	"$@"
 }
 
-check_tty
 
-WGETNOSSLCHECK=''
-CURLNOSSLCHECK=''
-WGETUSERAGENT=''
-CURLUSERAGENT=''
-WGETQ='' #-q
-CURLQ='' #-s
-WGETNAMEOPTIONS='--content-disposition'
-CURLNAMEOPTIONS='--remote-name --remote-header-name'
-
-set_quiet()
+# copied from epm
+# print a path to the command if exists in $PATH
+if which which 2>/dev/null >/dev/null ; then
+    # the best case if we have which command (other ways needs checking)
+    # TODO: don't use which at all, it is binary, not builtin shell command
+print_command_path()
 {
-    WGETQ='-q'
-    CURLQ='-s'
+    which -- "$1" 2>/dev/null
 }
-
-# TODO: parse options in a good way
-
-# TODO: passthrou all wget options
-if [ "$1" = "-q" ] ; then
-    set_quiet
-    shift
-fi
-
-if [ "$1" = "-k" ] || [ "$1" = "--no-check-certificate" ] ; then
-    WGETNOSSLCHECK='--no-check-certificate'
-    CURLNOSSLCHECK='-k'
-    shift
-fi
-
-if [ "$1" = "-U" ] || [ "$1" = "-A" ] || [ "$1" = "--user-agent" ] ; then
-    user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
-    WGETUSERAGENT="-U '$user_agent'"
-    CURLUSERAGENT="-A '$user_agent'"
-    shift
-fi
-
-
-WGET="$(which wget 2>/dev/null)"
-
-if [ -n "$WGET" ] ; then
-__wget()
+elif type -a type 2>/dev/null >/dev/null ; then
+print_command_path()
 {
-    if [ -n "$WGETUSERAGENT" ] ; then
-        docmd $WGET $WGETQ $WGETNOSSLCHECK "$WGETUSERAGENT" "$@"
-    else
-        docmd $WGET $WGETQ $WGETNOSSLCHECK "$@"
-    fi
+    type -fpP -- "$1" 2>/dev/null
 }
-# put remote content to stdout
-scat()
-{
-    __wget -O- "$1"
-}
-# download to default name of to $2
-sget()
-{
-    if [ "$2" = "/dev/stdout" ] || [ "$2" = "-" ] ; then
-       scat "$1"
-    elif [ -n "$2" ] ; then
-       __wget -O "$2" "$1"
-    else
-# TODO: поддержка rsync для известных хостов?
-# Не качать, если одинаковый размер и дата
-# -nc
-# TODO: overwrite always
-       __wget $WGETNAMEOPTIONS "$1"
-    fi
-}
-
-check_url_http()
-{
-    local URL="$1"
-    __wget --spider -S "$URL" 2>&1 | grep "HTTP" | tail -n1 | grep -q -w "200\|301"
-}
-
 else
-CURL="$(which curl 2>/dev/null)"
-[ -n "$CURL" ] || fatal "There are no wget nor curl in the system. Install it with $ epm install curl"
-__curl()
+print_command_path()
 {
-    if [ -n "$CURLUSERAGENT" ] ; then
-        docmd $CURL -L $CURLQ "$CURLUSERAGENT" $CURLNOSSLCHECK "$@"
-    else
-        docmd $CURL -L $CURLQ $CURLNOSSLCHECK "$@"
-    fi
+    type "$1" 2>/dev/null | sed -e 's|.* /|/|'
 }
-# put remote content to stdout
-scat()
-{
-    __curl "$1"
-}
-# download to default name of to $2
-sget()
-{
-    if [ "$2" = "/dev/stdout" ] || [ "$2" = "-" ] ; then
-       scat "$1"
-    elif [ -n "$2" ] ; then
-       __curl --output "$2" "$1"
-    else
-       __curl $CURLNAMEOPTIONS "$1"
-    fi
-}
-
-check_url_http()
-{
-    local URL="$1"
-    __curl -I "$URL" 2>&1 | grep "HTTP" | tail -n1 | grep -q -w "200\|301"
-}
-
 fi
 
-LISTONLY=''
-if [ "$1" = "--list" ] ; then
-    LISTONLY="$1"
-    set_quiet
-    shift
-fi
-
-if [ "$1" = "--check" ] ; then
-    set_quiet
-    shift
-    check_url_http "$1"
-    return
-fi
-
-
-LATEST=''
-if [ "$1" = "--latest" ] ; then
-    LATEST="$1"
-    shift
-fi
-
-SECONDLATEST=''
-if [ "$1" = "--second-latest" ] ; then
-    SECONDLATEST="$1"
-    shift
-fi
-
-fatal()
+# check if <arg> is a real command
+is_command()
 {
-    echo "$*" >&2
-    exit 1
+    print_command_path "$1" >/dev/null
 }
+
+
 
 # check man glob
 filter_glob()
@@ -11560,49 +12487,279 @@ filter_order()
     sort -V | tail -n1
 }
 
-# download to this file
-TARGETFILE=''
-if [ "$1" = "-O" ] ; then
-    TARGETFILE="$2"
-    shift 2
-elif [ "$1" = "-O-" ] ; then
-    TARGETFILE="-"
-    shift 1
-fi
 
-# TODO:
-# -P support
+is_fileurl()
+{
+    echo "$1" | grep -q "^/" && return
+    echo "$1" | grep -q "^file:/"
+}
+
+dir_from_url()
+{
+    echo "$1" | sed -e 's|^file://*|/|'
+}
+
+is_url()
+{
+    echo "$1" | grep -q "^[filehtps]*:/"
+}
+
+
+# args: cmd <URL> <options>
+# will run cmd <options> <URL>
+download_with_mirroring()
+{
+    local CMD="$1"
+    shift
+    local URL="$1"
+    shift
+
+    local res
+    $CMD "$@" "$URL" && return
+    res=$?
+    [ -n "$CHECKMIRRORS" ] || return $res
+
+    MIRROR="https://mirror.eterfund.ru"
+    SECONDURL="$(echo "$URL" | sed -e "s|^.*://|$MIRROR/|")"
+    $CMD "$@" "$SECONDURL" && URL="$SECONDURL" && return
+
+    MIRROR="https://mirror.eterfund.org"
+    SECONDURL="$(echo "$URL" | sed -e "s|^.*://|$MIRROR/|")"
+    $CMD "$@" "$SECONDURL" && URL="$SECONDURL" && return
+}
+
+
+
+check_tty
+
+WGETNOSSLCHECK=''
+CURLNOSSLCHECK=''
+WGETUSERAGENT=''
+CURLUSERAGENT=''
+WGETQ='' #-q
+CURLQ='' #-s
+WGETNAMEOPTIONS='--content-disposition'
+CURLNAMEOPTIONS='--remote-name --remote-header-name'
+
+LISTONLY=''
+CHECKURL=''
+LATEST=''
+SECONDLATEST=''
+CHECKMIRRORS=''
+TARGETFILE=''
+
+set_quiet()
+{
+    WGETQ='-q'
+    CURLQ='-s'
+}
+
+
+eget_help()
+{
+cat <<EOF
+
+eget - wget like downloader wrapper with wildcard support in filename part of URL
+Usage: eget [options] http://somesite.ru/dir/na*.log
+
+Options:
+    -q                        - quiet mode
+    -k|--no-check-certificate - skip SSL certificate chain support
+    -U|-A|--user-agent        - send browser like UserAgent
+    -O-|-O -                  - output downloaded file to stdout
+    -O file                   - download to this file
+    --latest                  - print only latest version of a file
+    --second-latest           - print only second to latest version of a file
+    --allow-mirrors           - check mirrors if url is not accessible
+
+    --list|--list-only        - print only URLs
+    --check URL               - check if the URL is accessible (returns HTTP 200 OK)
+
+Examples:
+  $ eget http://ftp.somesite.ru/package-*.x64.tar
+  $ eget http://ftp.somesite.ru/package *.tar
+  $ eget https://github.com/owner/project package*.ext
+  $ eget --list http://ftp.somesite.ru/package-*.tar
+  $ eget --check http://ftp.somesite.ru/test
+  $ eget --list http://download.somesite.ru 'package-*.tar.xz'
+  $ eget --list --latest https://github.com/telegramdesktop/tdesktop/releases 'tsetup.*.tar.xz'
+
+EOF
+}
+
 
 if [ -z "$1" ] ; then
-    echo "eget - wget like downloader wrapper with wildcard support" >&2
-    fatal "Run $0 --help to get help"
+    echo "eget - wget like downloader wrapper with wildcard support, uses wget or curl as backend" >&2
+    echo "Run $0 --help to get help" >&2
+    exit 1
 fi
 
-if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
-    echo "eget - wget like downloader wrapper with wildcard support in filename part of URL"
-    echo "Usage: eget [-q] [-k] [-U] [-O target file] [--list] http://somesite.ru/dir/na*.log"
-    echo
-    echo "Options:"
-    echo "    -q       - quiet mode"
-    echo "    -k|--no-check-certificate - skip SSL certificate chain support"
-    echo "    -U|-A|--user-agent - send browser like UserAgent"
-    echo "    -O file  - download to this file (use filename from server if missed)"
-    echo "    --list   - print files from url with mask"
-    echo "    --check  - check if URL is accessible (returns HTTP 200 OK)"
-    echo "    --latest - print only latest version of a file"
-    echo "    --second-latest - print only second to latest version of a file"
-    echo
-    echo "eget supports --list and download for https://github.com/owner/project urls"
-    echo
-    echo "Examples:"
-    echo "  $ eget --list http://ftp.somesite.ru/package-*.tar"
-    echo "  $ eget http://ftp.somesite.ru/package-*.x64.tar"
-    echo "  $ eget --check http://ftp.somesite.ru/test"
-    echo "  $ eget --list http://download.somesite.ru 'package-*.tar.xz'"
-    echo "  $ eget --list --latest https://github.com/telegramdesktop/tdesktop/releases 'tsetup.*.tar.xz'"
-#    echo "See $ wget --help for wget options you can use here"
-    return
+
+while [ -n "$1" ] ; do
+
+    case "$1" in
+        -h|--help)
+            eget_help
+            return
+            ;;
+        -q)
+            set_quiet
+            ;;
+        -k|--no-check-certificate)
+            WGETNOSSLCHECK='--no-check-certificate'
+            CURLNOSSLCHECK='-k'
+            ;;
+        -U|-A|--user-agent)
+            user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
+            WGETUSERAGENT="-U '$user_agent'"
+            CURLUSERAGENT="-A '$user_agent'"
+            ;;
+        --list|--list-only)
+            LISTONLY="$1"
+            set_quiet
+            ;;
+        --check)
+            CHECKURL="$1"
+            set_quiet
+            ;;
+        --latest)
+            LATEST="$1"
+            ;;
+        --second-latest)
+            SECONDLATEST="$1"
+            ;;
+        --check-mirrors)
+            CHECKMIRRORS="$1"
+            ;;
+        -O)
+            shift
+            TARGETFILE="$1"
+            ;;
+        -O-)
+            TARGETFILE="-"
+            ;;
+        *)
+            break
+            ;;
+    esac
+    shift
+done
+
+
+
+
+WGET="$(print_command_path wget)"
+
+if is_fileurl "$1" ; then
+
+# put remote content to stdout
+scat()
+{
+    local URL="$1"
+    cat "$(dir_from_url "$URL")"
+}
+# download to default name of to $2
+sget()
+{
+    local URL="$1"
+    if [ "$2" = "/dev/stdout" ] || [ "$2" = "-" ] ; then
+       scat "$URL"
+       return
+    elif [ -n "$2" ] ; then
+       cp -av "$(dir_from_url "$URL")" "$2"
+       return
+    fi
+    cp -av "$(dir_from_url "$URL")" .
+}
+
+check_url_is_accessible()
+{
+    local URL="$1"
+    test -f "$(dir_from_url "$URL")"
+}
+
+elif [ -n "$WGET" ] ; then
+__wget()
+{
+    if [ -n "$WGETUSERAGENT" ] ; then
+        docmd $WGET $WGETQ $WGETNOSSLCHECK "$WGETUSERAGENT" "$@"
+    else
+        docmd $WGET $WGETQ $WGETNOSSLCHECK "$@"
+    fi
+}
+
+# put remote content to stdout
+scat()
+{
+    local URL="$1"
+    download_with_mirroring __wget "$URL" -O-
+}
+# download to default name of to $2
+sget()
+{
+    local URL="$1"
+    if [ "$2" = "/dev/stdout" ] || [ "$2" = "-" ] ; then
+       scat "$URL"
+       return
+    elif [ -n "$2" ] ; then
+       download_with_mirroring __wget "$URL" -O "$2"
+       return
+    fi
+# TODO: поддержка rsync для известных хостов?
+# Не качать, если одинаковый размер и дата
+# -nc
+# TODO: overwrite always
+    download_with_mirroring __wget "$URL" $WGETNAMEOPTIONS
+}
+
+check_url_is_accessible()
+{
+    local URL="$1"
+    __wget --spider -S "$URL" 2>&1 | grep "HTTP/" | tail -n1 | grep -q "200"
+}
+
+else
+CURL="$(print_command_path curl)"
+[ -n "$CURL" ] || fatal "There are no wget nor curl in the system. Install it with $ epm install curl"
+__curl()
+{
+    if [ -n "$CURLUSERAGENT" ] ; then
+        docmd $CURL --fail -L $CURLQ "$CURLUSERAGENT" $CURLNOSSLCHECK "$@"
+    else
+        docmd $CURL --fail -L $CURLQ $CURLNOSSLCHECK "$@"
+    fi
+}
+# put remote content to stdout
+scat()
+{
+    local URL="$1"
+    download_with_mirroring __curl "$URL" --output -
+}
+# download to default name of to $2
+sget()
+{
+    local URL="$1"
+    local res
+    if [ "$2" = "/dev/stdout" ] || [ "$2" = "-" ] ; then
+       scat "$1"
+       return
+    elif [ -n "$2" ] ; then
+       download_with_mirroring __curl "$URL" --output "$2"
+       return
+    fi
+
+    download_with_mirroring __curl "$URL" $CURLNAMEOPTIONS
+}
+
+check_url_is_accessible()
+{
+    local URL="$1"
+    __curl -LI "$URL" 2>&1 | grep "HTTP/" | tail -n1 | grep -q -w "200\|404"
+}
+
 fi
+
+
 
 get_github_urls()
 {
@@ -11616,6 +12773,63 @@ get_github_urls()
         grep -i -o -E '"browser_download_url": "https://.*"' | cut -d'"' -f4
 }
 
+# drop file path from URL
+get_host_only()
+{
+    echo "$1/" | grep -Eo '(.*://[^/]+)'
+}
+
+# Args: URL filename
+make_fileurl()
+{
+    local url="$1"
+    local fn="$2"
+
+    fn="$(echo "$fn" | sed -e 's|^./||' -e 's|^/+||')"
+
+    if is_fileurl "$url" ; then
+        echo "$url/$fn"
+        return
+    fi
+
+    # if there is file path from the root of the site
+    if echo "$fn" | grep -q "^/" ; then
+        echo "$(get_host_only "$url")$fn"
+        return
+    fi
+
+    # if there is no slash in the end of URL
+    if echo "$url" | grep -q -v "/$" ; then
+        echo "$(dirname "$url" | sed -e 's|/*$||')/$fn"
+        return
+    fi
+
+    # workaround for a slash in the end of URL
+    echo "$(echo "$url" | sed -e 's|/*$||')/$fn"
+}
+
+get_urls()
+{
+    if is_fileurl "$URL" ; then
+        ls -1 "$(dir_from_url "$URL")"
+        return
+    fi
+
+    # cat html, divide to lines by tags and cut off hrefs only
+    scat $URL | sed -e 's|<|<\n|g' -e 's|data-file=|href=|g' | \
+         grep -i -o -E 'href="(.+)"' | cut -d'"' -f2
+}
+
+
+
+if [ -n "$CHECKURL" ] ; then
+    set_quiet
+    check_url_is_accessible "$1"
+    return
+fi
+
+
+# separate part for github downloads
 if echo "$1" | grep -q "^https://github.com/" && \
    echo "$1" | grep -q -v "/download/" && [ -n "$2" ] ; then
     MASK="$2"
@@ -11634,85 +12848,60 @@ if echo "$1" | grep -q "^https://github.com/" && \
 fi
 
 
-# do not support /
-if echo "$1" | grep -q "/$" && [ -z "$2" ] ; then
-    fatal "Use http://example.com/e/* to download all files in dir"
-fi
-
-# TODO: curl?
-# If ftp protocol, just download
-if echo "$1" | grep -q "^ftp://" ; then
-    [ -n "$LISTONLY" ] && fatal "TODO: list files for ftp:// do not supported yet"
-    sget "$1" "$TARGETFILE"
-    return
-fi
-
-# mask allowed only in the last part of path
-MASK=$(basename "$1")
-
-# if mask are second arg
+# if mask is the second arg
 if [ -n "$2" ] ; then
     URL="$1"
     MASK="$2"
 else
+    # do not support / at the end without separately specified mask
+    if echo "$1" | grep -q "/$" ; then
+        fatal "Use http://example.com/e/* to download all files in dir"
+    fi
+
     # drop mask part
-    URL="$(dirname "$1")"
+    URL="$(dirname "$1")/"
+    # wildcards allowed only in the last part of path
+    MASK=$(basename "$1")
 fi
 
-if [ -z "$MASK" ] && echo "$URL" | grep -q "[*?]" ; then
-    fatal "Error: there are globbing symbols (*?) in $URL"
+# https://www.freeoffice.com/download.php?filename=freeoffice-2021-1062.x86_64.rpm
+if echo "$URL" | grep -q "[*]" ; then
+    fatal "Error: there are globbing symbol (*) in $URL. It is allowed only for mask part"
 fi
 
-# If have no wildcard symbol like asterisk, just download
-if echo "$MASK" | grep -qv "[*?]" || echo "$MASK" | grep -q "[?].*="; then
+is_url "$MASK" && fatal "eget supports only one URL as argument"
+[ -n "$3" ] && fatal "too many args: extra '$3'. May be you need use quotes for arg with wildcards."
+
+# TODO: curl?
+# If ftp protocol, just download
+if echo "$URL" | grep -q "^ftp://" ; then
+    [ -n "$LISTONLY" ] && fatal "TODO: list files for ftp:// is not supported yet"
     sget "$1" "$TARGETFILE"
     return
 fi
 
-is_url()
-{
-    echo "$1" | grep -q "://"
-}
-
-# drop file path from URL
-get_host_only()
-{
-    echo "$1/" | grep -Eo '(.*://[^/]+)'
-}
-
-# Args: URL filename
-make_fileurl()
-{
-    local url="$1"
-    local fn="$2"
-    fn="$(echo "$fn" | sed -e 's|^./||' -e 's|^/+||')"
-    # if there is file path from the root of the site
-    if echo "$fn" | grep -q "^/" ; then
-        echo "$(get_host_only "$url")$fn"
-        return
-    fi
-    # workaround for a slash in the end of URL
-    echo "$(echo "$url" | sed -e 's|/*$||')/$fn"
-}
-
-get_urls()
-{
-    # cat html, divide to lines by tags and cut off hrefs only
-    scat $URL | sed -e 's|<|<\n|g' | \
-         grep -i -o -E 'href="(.+)"' | cut -d'"' -f2
-}
 
 if [ -n "$LISTONLY" ] ; then
     for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
-        is_url "$fn" && echo $fn && continue
+        is_url "$fn" && echo "$fn" && continue
         make_fileurl "$URL" "$fn"
     done
     return
 fi
 
+# If there is no wildcard symbol like asterisk, just download
+if echo "$MASK" | grep -qv "[*?]" || echo "$MASK" | grep -q "[?].*="; then
+    if is_fileurl "$1" ; then
+        sget "$(dir_from_url "$1")" "$TARGEFILE"
+        return
+    fi
+    sget "$1" "$TARGETFILE"
+    return
+fi
+
 ERROR=0
 for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
-    is_url "$fn" || fn="$(make_fileurl "$URL" "$(basename "$fn")" )" #"
+    is_url "$fn" || fn="$(make_fileurl "$URL" "$fn" )" #"
     sget "$fn" "$TARGETFILE" || ERROR=1
     [ -n "$TARGETFILE" ] && [ "$ERROR" = "0" ] && break
 done
@@ -11720,6 +12909,541 @@ done
 
 }
 ################# end of incorporated bin/tools_eget #################
+
+
+################# incorporate bin/tools_erc #################
+internal_tools_erc()
+{
+#!/bin/bash
+#
+# Copyright (C) 2013-2015, 2017, 2020, 2023  Etersoft
+# Copyright (C) 2013-2015, 2017, 2020, 2023  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+PROGDIR=$(dirname $0)
+[ "$PROGDIR" = "." ] && PROGDIR=$(pwd)
+
+# will replaced to /usr/share/erc during install
+SHAREDIR=$(dirname $0)
+
+load_helper()
+{
+    local CMD="$SHAREDIR/$1"
+    [ -r "$CMD" ] || fatal "Have no $CMD helper file"
+    . $CMD
+}
+
+load_helper erc-sh-functions
+load_helper erc-sh-archive
+
+check_tty
+
+# 1.zip tar:  -> 1.tar
+build_target_name()
+{
+	is_target_format $2 && echo $(get_archive_name "$1").${2/:/} && return
+	echo "$1"
+        return 1
+}
+
+
+# TODO: list of $HAVE_7Z supported (see list_formats)
+
+# target file1 [file2...]
+create_archive()
+{
+	local arc="$1"
+	shift
+	if have_patool ; then
+		docmd patool $verbose create "$arc" "$@"
+		return
+	fi
+
+	# FIXME: get type by ext only
+	local type="$(get_archive_type "$arc")"
+	case "$type" in
+		*)
+			docmd $HAVE_7Z a $arc "$@"
+			#fatal "Not yet supported creating of $type archives"
+			;;
+	esac
+}
+
+extract_archive()
+{
+	local arc="$1"
+	shift
+
+	if have_patool ; then
+        docmd patool $verbose extract "$arc" "$@"
+		return
+	fi
+
+	local type="$(get_archive_type "$arc")"
+
+	arc="$(realpath "$arc")"
+	tdir=$(mktemp -d $(pwd)/UXXXXXXXX) && cd "$tdir" || fatal
+
+	local TSUBDIR="$(basename "$arc" .$type)"
+
+	case "$type" in
+		tar.*)
+			# TODO: check if there is only one file?
+			# use subdir if there is no subdir in archive
+			TSUBDIR="$(basename "$arc" $(echo $type | sed -e 's|^tar||') )"
+			docmd $HAVE_7Z x -so $arc | docmd $HAVE_7Z x -si -ttar
+			;;
+		*)
+			docmd $HAVE_7Z x $arc "$@"
+			#fatal "Not yet supported extracting of $type archives"
+			;;
+	esac
+
+	cd - >/dev/null
+	# if only one dir in the subdir
+	if [ -e "$(echo $tdir/*)" ] ; then
+		mv $tdir/* .
+		rmdir $tdir
+	else
+		mv $tdir "$TSUBDIR"
+	fi
+}
+
+list_archive()
+{
+	local arc="$1"
+	shift
+
+	# TODO: move to patool
+	if [ "$(get_archive_type "$arc" 2>/dev/null)" = "exe" ] ; then
+		docmd $HAVE_7Z l "$arc" || fatal
+		return
+	fi
+
+	if have_patool ; then
+		docmd patool $verbose list "$arc" "$@"
+		return
+	fi
+
+	local type="$(get_archive_type "$arc")"
+	case "$type" in
+		*)
+			docmd $HAVE_7Z l $arc "$@"
+			#fatal "Not yet supported listing of $type archives"
+			;;
+	esac
+
+}
+
+test_archive()
+{
+	local arc="$1"
+	shift
+
+	# TODO: move to patool
+	if [ "$(get_archive_type "$arc" 2>/dev/null)" = "exe" ] ; then
+		docmd $HAVE_7Z t "$arc" || fatal
+		return
+	fi
+
+	if have_patool ; then
+		docmd patool $verbose test "$arc" "$@"
+		return
+	fi
+
+	local type="$(get_archive_type "$arc")"
+	case "$type" in
+		*)
+			docmd $HAVE_7Z t $arc "$@"
+			#fatal "Not yet supported test of $type archives"
+			;;
+	esac
+
+}
+
+repack_archive()
+{
+	if have_patool ; then
+		docmd patool $verbose repack "$1" "$2"
+		return
+	fi
+
+	# TODO: if both have tar, try unpack | pack
+
+	local ftype="$(get_archive_type "$1")"
+	local ttype="$(get_archive_type "$2")"
+	case "$ftype-$ttype" in
+		tar.*-tar)
+			docmd $HAVE_7Z x -so "$1" > "$2"
+			;;
+		tar-tar.*)
+			docmd $HAVE_7Z a -si "$2" < "$1"
+			;;
+		tar.*-tar.*)
+			docmd $HAVE_7Z x -so "$1" | $HAVE_7Z a -si "$2"
+			;;
+		*)
+			fatal "Not yet supported repack of $ftype-$ttype archives"
+			;;
+	esac
+
+}
+
+
+phelp()
+{
+	echo "$Descr
+$Usage
+ Commands:
+$(get_help HELPCMD)
+
+ Options:
+$(get_help HELPOPT)
+
+ Examples:
+    # erc dir - pack dir to dirname.zip
+    # erc a archive.zip file(s)... - pack files to archive.zip
+    # erc [x] archive.zip - unpack
+    # unerc archive.zip - unpack
+    # erc [repack] archive1.zip... archive2.rar $HAVE_7Z: - repack all to $HAVE_7Z
+    # erc -f [repack] archive.zip archive.$HAVE_7Z - force repack zip to $HAVE_7Z (override target in anyway)
+    # erc file/dir zip: - pack file to zip
+"
+}
+
+print_version()
+{
+        echo "Etersoft archive manager version @VERSION@"
+        echo "Copyright (c) Etersoft 2013-2023"
+        echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
+}
+
+progname="${0##*/}"
+
+Usage="Usage: $progname [options] [<command>] [params]..."
+Descr="erc - universal archive manager"
+
+progname="${0##*/}"
+
+
+force=
+target=
+verbose=--verbose
+use_7z=
+use_patool=
+
+if [ -z "$" ] ; then
+    echo "Etersoft archive manager version @VERSION@" >&2
+    echo "Run $0 --help to get help" >&2
+    exit 1
+fi
+
+while [ -n "$1" ] ; do
+case "$1" in
+    -h|--help|help)       # HELPOPT: this help
+        phelp
+        return
+        ;;
+    -V|--version)         # HELPOPT: print version
+        print_version
+        return
+        ;;
+    -q|--quiet)           # HELPOPT: be silent
+        verbose=
+        ;;
+    -f|--force)           # HELPOPT: override target
+        force=-f
+        ;;
+    --use-patool)         # HELPOPT: force use patool as backend
+        use_patool=1
+        ;;
+    --use-7z)             # HELPOPT: force use 7z as backend
+        use_7z=1
+        ;;
+    -*)
+        fatal "Unknown option '$1'"
+        ;;
+    *)
+        break
+        ;;
+esac
+shift
+done
+
+set_backend
+
+cmd="$1"
+
+eval lastarg=\${$#}
+
+# if the first arg is some archive, suggest extract
+if get_archive_type "$cmd" 2>/dev/null >/dev/null ; then
+    if is_target_format $lastarg ; then
+        cmd=repack
+    else
+        cmd=extract
+    fi
+# erc dir (pack to zip by default)
+elif [ -d "$cmd" ] && [ -z "$2" ] ; then
+    cmd=pack
+    target=$(basename "$1").zip
+# erc dir zip:
+elif test -r "$1" && is_target_format "$2" ; then
+    cmd=pack
+elif [ "$progname" = "unerc" ] ; then
+    cmd=extract
+else
+    shift
+fi
+
+
+# Just printout help if run without args
+if [ -z "$cmd" ] ; then
+    print_version
+    echo
+    fatal "Run $ $progname --help for get help"
+fi
+
+# TODO: Если программа-архиватор не установлена, предлагать установку с помощью epm
+
+case $cmd in
+    a|-a|create|pack|add)        # HELPCMD: create archive / add file(s) to archive
+        # TODO: realize archive addition if already exist (and separate adding?)
+        if [ -z "$target" ] && is_target_format $lastarg ; then
+            [ $# = 2 ] || fatal "Need two args"
+            target="$(build_target_name "$1" "$2")"
+            # clear last arg
+            set -- "${@:1:$(($#-1))}"
+        fi
+        [ -z "$target" ] && target="$1" && shift
+
+        [ -e "$target" ] && [ -n "$force" ] && docmd rm -f "$target"
+        create_archive "$target" "$@"
+        ;;
+    e|x|-e|-x|u|-u|extract|unpack)          # HELPCMD: extract files from archive
+        # TODO: move to patool
+        if [ "$(get_archive_type "$1" 2>/dev/null)" = "exe" ] ; then
+            docmd $HAVE_7Z x "$1"
+            return
+        fi
+        extract_archive "$@"
+        ;;
+# TODO: implement deletion
+#    d|delete)             # HELPCMD: delete file(s) from archive
+#        docmd patool delete "$@"
+#        ;;
+    l|-l|list)               # HELPCMD: list archive contents
+        list_archive "$@"
+        ;;
+    t|-t|test|check)         # HELPCMD: test for archive integrity
+        test_archive "$@"
+        ;;
+    type)                 # HELPCMD: print type of archive
+        get_archive_type "$1" || fatal "Can't recognize $1 as archive"
+        ;;
+    diff)                 # HELPCMD: compare two archive
+        # check 2 arg
+        docmd patool $verbose diff "$@"
+        ;;
+    b|-b|bench|benchmark)    # HELPCMD: do CPU benchmark
+        #assure_cmd $HAVE_7Z
+        # TODO: can be $HAVE_7Za?
+        docmd $HAVE_7Z b
+        ;;
+    search|grep)               # HELPCMD: search in files from archive
+        docmd patool $verbose search "$@"
+        ;;
+    repack|conv)          # HELPCMD: convert source archive to target
+        # TODO: need repack remove source file?
+        # TODO: check for 2 arg
+        if ! is_target_format $lastarg ; then
+            [ $# = 2 ] || fatal "Need two args"
+            [ "$(realpath "$1")" = "$(realpath "$2")" ] && warning "Output file is the same as input" && return
+            [ -e "$2" ] && [ -n "$force" ] && docmd rm -f "$2"
+            repack_archive "$1" "$2"
+            return
+        fi
+
+        # add support for target zip:
+        for i in "$@" ; do
+            [ "$i" = "$lastarg" ] && continue
+            target="$(build_target_name "$i" "$lastarg")"
+            [ "$(realpath "$1")" = "$(realpath "$target")" ] && warning "Output file is the same as input" && return
+            [ -e "$target" ] && [ -n "$force" ] && docmd rm -f "$target"
+            repack_archive "$i" "$target" || return
+        done
+
+        ;;
+    formats)              # HELPCMD: lists supported archive formats
+        # TODO: print allowed with current programs separately
+        if [ -n "$verbose" ] && have_patool ; then
+            docmd patool formats "$@"
+            echo "Also we supports:"
+            ( list_subformats ; list_extraformats ) | sed -e "s|^|  |"
+        else
+            list_formats
+        fi
+        ;;
+    *)
+        # TODO: If we have archive in parameter, just unpack it
+        fatal "Unknown command $1"
+        ;;
+esac
+
+}
+################# end of incorporated bin/tools_erc #################
+
+
+################# incorporate bin/tools_ercat #################
+internal_tools_ercat()
+{
+#!/bin/bash
+#
+# Copyright (C) 2013, 2020  Etersoft
+# Copyright (C) 2013, 2020  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+PROGDIR=$(dirname $0)
+[ "$PROGDIR" = "." ] && PROGDIR=$(pwd)
+
+# will replaced to /usr/share/erc during install
+SHAREDIR=$(dirname $0)
+
+load_helper()
+{
+    local CMD="$SHAREDIR/$1"
+    [ -r "$CMD" ] || fatal "Have no $CMD helper file"
+    . $CMD
+}
+
+load_helper erc-sh-functions
+load_helper erc-sh-archive
+
+check_tty
+
+phelp()
+{
+	echo "$Descr
+$Usage
+ Commands:
+$(get_help HELPCMD)
+
+ Options:
+$(get_help HELPOPT)
+"
+}
+
+print_version()
+{
+        echo "Etersoft uncompressor version @VERSION@"
+        echo "Copyright (c) Etersoft 2013, 2020"
+        echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
+}
+
+regular_unpack()
+{
+    local file="$1"
+    local prg="$2"
+    local pkg="$3"
+    local opt="$4"
+
+    # instead of epm assure
+    if ! which "$prg" >/dev/null 2>/dev/null ; then
+        epm assure $prg $pkg || fatal "Try install $pkg package for $prg unpack command."
+    fi
+
+    docmd $prg $opt $file || fatal
+}
+
+
+progname="${0##*/}"
+
+Usage="Usage: $progname [options] file(s)..."
+Descr="ercat - universal file uncompressor"
+
+cmd=$1
+
+# Just printout help if run without args
+if [ -z "$cmd" ] ; then
+    print_version
+    echo
+    fatal "Run $ $progname --help for get help"
+fi
+
+case $cmd in
+    -h|--help|help)       # HELPOPT: this help
+        phelp
+        return
+        ;;
+    -v|--version)         # HELPOPT: print version
+        print_version
+        return
+        ;;
+esac
+
+# TODO: check ext
+# TODO: check file existence
+# TODO: check by content
+for f in $@ ; do
+    TYPE=$(get_archive_ext $f) || TYPE=$(is_plain_text $f) || { warning "Skipping unrecognized $f" ; continue ; }
+    case $TYPE in
+        gz)
+            regular_unpack "$f" gunzip gzip -c
+            ;;
+        bz2)
+            regular_unpack "$f" bzcat bzip2
+            ;;
+        xz)
+            regular_unpack "$f" xzcat xz
+            ;;
+        Z|compress)
+            regular_unpack "$f" zcat gzip
+            ;;
+        lzma)
+            regular_unpack "$f" lzcat xz
+            ;;
+        zst|zstd)
+            regular_unpack "$f" zstdcat zstd
+            ;;
+        lz4)
+            regular_unpack "$f" lz4cat lz4
+            ;;
+        plain)
+            docmd cat "$f" || fatal
+            ;;
+        *)
+            fatal "Unsupported compression format $TYPE"
+            ;;
+    esac
+done
+}
+################# end of incorporated bin/tools_ercat #################
 
 
 ################# incorporate bin/tools_estrlist #################
@@ -12321,6 +14045,8 @@ noremove=
 dryrun=
 force=
 repack=
+norepack=
+install=
 inscript=
 scripts=
 noscripts=
@@ -12328,6 +14054,9 @@ short=
 direct=
 sort=
 non_interactive=$EPM_AUTO
+download=
+download_only=
+print_url=
 interactive=
 force_yes=
 skip_installed=
@@ -12360,6 +14089,7 @@ case $PROGNAME in
         ;;
     epmp)                      # HELPSHORT: alias for epm play
         epm_cmd=play
+        direct_args=1
         ;;
     epms)                      # HELPSHORT: alias for epm search
         epm_cmd=search
@@ -12554,9 +14284,11 @@ check_command()
         ;;
     mark)                     # HELPCMD: mark package as manually or automatically installed or hold/unhold it (see epm mark --help)
         epm_cmd=mark
+        direct_args=1
         ;;
     history)                  # HELPCMD: show a log of actions taken by the software management
         epm_cmd=history
+        direct_args=1
         ;;
     autoorphans|--orphans|remove-orphans)    # HELPCMD: remove all packages not from the repository
         epm_cmd=autoorphans
@@ -12602,6 +14334,10 @@ check_command()
         ;;
     repack)                   # HELPCMD: repack rpm to local compatibility
         epm_cmd=repack
+        ;;
+    pack)                   # HELPCMD: pack tarball or dir to a rpm package
+        epm_cmd=pack
+        direct_args=1
         ;;
     moo)
         epm_cmd=moo
@@ -12678,17 +14414,32 @@ check_option()
     --repack)              # HELPOPT: repack rpm package(s) before install
         repack="--repack"
         ;;
+    --norepack)              # HELPOPT: don't repack rpm package(s) if it is by default before install
+        repack="--norepack"
+        ;;
+    --install)             # HELPOPT: install packed rpm package(s)
+        install="--install"
+        ;;
     --scripts)             # HELPOPT: include scripts in repacked rpm package(s) (see --repack or repacking when foreign package is installed)
         scripts="--scripts"
         ;;
     --noscripts)           # HELPOPT: disable scripts in install packages
         noscripts="--noscripts"
         ;;
+    --save-only)            # HELPOPT: save the package/tarball after all convertations (instead of install it)
+        save_only="--save-only"
+        ;;
+    --download-only)       # HELPOPT: download only the package/tarball (before any convertation)
+        download_only="--download-only"
+        ;;
+    --url)                 # HELPOPT: print only URL instead of download package
+        print_url="--url"
+        ;;
     --sort)               # HELPOPT: sort output, f.i. --sort=size (supported only for packages command)
         # TODO: how to read arg?
         sort="$1"
         ;;
-    --auto|--assumeyes|--non-interactive)  # HELPOPT: non interactive mode
+    -y|--auto|--assumeyes|--non-interactive)  # HELPOPT: non interactive mode
         non_interactive="--auto"
         interactive=""
         ;;
@@ -12719,7 +14470,7 @@ check_filenames()
         elif [ -d "$opt" ] ; then
             has_space "$opt" && warning "There are space(s) in directory path '$opt', it is not supported. Skipped" && continue
             pkg_dirs="$pkg_dirs $opt"
-        elif echo "$opt" | grep -q "^[fhtps]*://" ; then
+        elif is_url "$opt" ; then
             has_space "$opt" && warning "There are space(s) in URL '$opt', it is not supported. Skipped" && continue
             pkg_urls="$pkg_urls $opt"
         else
@@ -12761,7 +14512,7 @@ if [ -n "$quiet" ] ; then
 fi
 
 # fill
-export EPM_OPTIONS="$nodeps $force $non_interactive"
+export EPM_OPTIONS="$nodeps $force $verbose $quiet $non_interactive $save_only $download_only"
 
 # if input is not console and run script from file, get pkgs from stdin too
 if [ ! -n "$inscript" ] && ! inputisatty && [ -n "$PROGDIR" ] ; then
@@ -12787,12 +14538,31 @@ pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
 #echover "pkg_files=$pkg_files"
 #echover "pkg_names=$pkg_names"
 
+print_short_help()
+{
+cat <<EOF
+
+Popular commands:
+ epm search <name>          - search package by name
+ epm install <package>      - install package
+ epm full-upgrade           - do full upgrade (packages, kernel) of the system
+ epm Upgrade                - upgrade all installed packages (Upgrade = update + upgrade)
+ epm play [application]     - install the application (run without params to get list of available apps)
+ epm qf (<command>|<path>)  - print what package contains this command (file)
+ epm sf <name>              - search for the name in all files of all packages
+ epm cl <package name>      - pint changelog for the package
+EOF
+}
+
 # Just printout help if run without args
 if [ -z "$epm_cmd" ] ; then
     print_version >&2
     echo >&2
     fatstr="Unrecognized command in '$*' arg(s)"
-    [ -n "$*" ] || fatstr="That program needs be running with some command"
+    if [ -z "$*" ] ; then
+        fatstr="That program needs be running with some command"
+        print_short_help >&2
+    fi
     echo "Run $(echocmd "$PROGNAME --help") to get help." >&2
     echo "Run $(echocmd "epm print info") to get some system and distro info." >&2
     fatal "$fatstr."
