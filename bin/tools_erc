@@ -77,8 +77,17 @@ extract_archive()
 	fi
 
 	local type="$(get_archive_type "$arc")"
+
+	arc="$(realpath "$arc")"
+	tdir=$(mktemp -d $(pwd)/UXXXXXXXX) && cd "$tdir" || fatal
+
+	local TSUBDIR="$(basename "$arc" .$type)"
+
 	case "$type" in
 		tar.*)
+			# TODO: check if there is only one file?
+			# use subdir if there is no subdir in archive
+			TSUBDIR="$(basename "$arc" $(echo $type | sed -e 's|^tar||') )"
 			docmd $HAVE_7Z x -so $arc | docmd $HAVE_7Z x -si -ttar
 			;;
 		*)
@@ -87,6 +96,14 @@ extract_archive()
 			;;
 	esac
 
+	cd - >/dev/null
+	# if only one dir in the subdir
+	if [ -e "$(echo $tdir/*)" ] ; then
+		mv $tdir/* .
+		rmdir $tdir
+	else
+		mv $tdir "$TSUBDIR"
+	fi
 }
 
 list_archive()
