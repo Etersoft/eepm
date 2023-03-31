@@ -2,6 +2,8 @@
 
 [ "$1" != "--run" ] && echo "Switch to using open source driver nouveau for NVIDIA cards" && exit
 
+. $(dirname $0)/common.sh
+
 assure_root
 exit
 

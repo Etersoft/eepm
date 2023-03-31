@@ -2,6 +2,8 @@
 
 [ "$1" != "--run" ] && echo "Switch to using nVidia proprietary driver" && exit
 
+. $(dirname $0)/common.sh
+
 assure_root
 exit
 
@@ -25,6 +27,7 @@ epm install --skip-installed nvidia_glx_common || exit
 # epm assure /usr/bin/nvidia-install-driver nvidia_glx_common
 
 epm update || exit
+epm install --skip-installed apt-scripts-nvidia
 a= apt-get install-nvidia || exit
 
 a= x11presetdrv
