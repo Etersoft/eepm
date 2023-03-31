@@ -69,7 +69,7 @@ __epm_repo_pkgdel_alt()
 		for arch in $archlist ; do
 			local rd="$REPO_DIR/$arch/RPMS.$REPO_NAME"
 			for i in $rd/$1* ; do
-				[ "$1" = "$(epm print pkgname from $i)" || continue
+				[ "$1" = "$(epm print name for package $i)" || continue
 				rm -v $rd/$1*
 			done
 		done
@@ -84,7 +84,7 @@ __epm_repo_pkgupdate_alt()
 	local dir="$1"
 	shift
 	for i in "$@" ; do
-		pkg="$(epm print pkgname from $i)" || fatal
+		pkg="$(epm print name for package $i)" || fatal
 		__epm_repo_pkgdel_alt "$dir" $pkg
 	done
 	__epm_repo_pkgadd_alt "$dir" "$@"
