@@ -18,6 +18,7 @@ for i in lib/python3 lib/python2.7 ; do
 done
 
 for i in $BUILDROOT/usr/bin/* ; do
+    [ -L "$i" ] && continue
     [ -f "$i" ] || continue
     grep -Eq '^#!/usr/bin/python|^#!/usr/bin/env python' $i && flag_python3=1
     subst 's|^#!/usr/bin/python$|#!/usr/bin/python3|' $i
