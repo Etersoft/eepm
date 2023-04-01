@@ -38,7 +38,7 @@ AutoReq:no
 Requires: which
 
 # TODO: drop gzip
-Requires: coreutils diffutils findutils file gawk grep gzip less sed sh termutils
+Requires: coreutils diffutils findutils file gawk grep gzip less sed bash termutils
 
 %description
 Etersoft EPM is the package manager for any platform
