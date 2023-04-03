@@ -77,7 +77,7 @@ done
 install_file $PRODUCTDIR/mime/softmaker-freeoffice21.xml /usr/share/mime/application/softmaker-freeoffice21.xml
 install_file $PRODUCTDIR/mime/softmaker-freeoffice21.mime /usr/share/mime-info/softmaker-freeoffice21.mime
 
-erc dwr.tar.lzma || fatal
+epm tool erc dwr.tar.lzma || fatal
 # override stub files
 mv -v dwr.tar/* . || fatal
 remove_file dwr.tar.lzma
