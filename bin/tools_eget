@@ -444,6 +444,14 @@ get_host_only()
     echo "$1/" | grep -Eo '(.*://[^/]+)'
 }
 
+concatenate_url_and_filename()
+{
+    local url="$1"
+    local fn="$2"
+    # workaround for a slash in the end of URL
+    echo "$(echo "$url" | sed -e 's|/*$||' )/$fn"
+}
+
 # Args: URL filename
 make_fileurl()
 {
@@ -453,24 +461,17 @@ make_fileurl()
     fn="$(echo "$fn" | sed -e 's|^./||' -e 's|^/+||')"
 
     if is_fileurl "$url" ; then
-        echo "$url/$fn"
-        return
+        # if it is url
+        :
+    elif echo "$fn" | grep -q "^/" ; then
+        # if there is file path from the root of the site
+        url="$(get_host_only "$url")"
+    elif echo "$url" | grep -q -v "/$" ; then
+        # if there is no slash in the end of URL
+        url="$(dirname "$url")"
     fi
 
-    # if there is file path from the root of the site
-    if echo "$fn" | grep -q "^/" ; then
-        echo "$(get_host_only "$url")$fn"
-        return
-    fi
-
-    # if there is no slash in the end of URL
-    if echo "$url" | grep -q -v "/$" ; then
-        echo "$(dirname "$url" | sed -e 's|/*$||')/$fn"
-        return
-    fi
-
-    # workaround for a slash in the end of URL
-    echo "$(echo "$url" | sed -e 's|/*$||')/$fn"
+    concatenate_url_and_filename "$url" "$fn"
 }
 
 get_urls()
