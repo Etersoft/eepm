@@ -44,13 +44,14 @@ run_command_if_exists()
 {
 	local CMD="$1"
 	shift
-	if which "$CMD" 2>/dev/null >/dev/null ; then
+	if is_command "$CMD" ; then
 		docmd $CMD "$@"
 		return 0
 	fi
 	return 1
 }
 
+# TODO: use something like xdg-browser
 open_browser()
 {
 	local i

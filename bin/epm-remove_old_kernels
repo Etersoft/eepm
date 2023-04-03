@@ -37,7 +37,7 @@ epm_remove_old_kernels()
 		[ -n "$dryrun" ] && return
 
 		# remove unused nvidia drivers
-		if which nvidia-clean-driver 2>/dev/null ; then
+		if is_command nvidia-clean-driver ; then
 			if [ -n "$non_interactive" ] ; then
 				yes | sudocmd nvidia-clean-driver
 			else

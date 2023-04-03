@@ -19,16 +19,6 @@
 
 # copied from /etc/init.d/outformat (ALT Linux)
 
-check_core_commands()
-{
-	#which --help >/dev/null || fatal "Can't find which command (which package is missed?)"
-	# broken which on Debian systems
-	# TODO: use is_command and print_command_path instead of
-	which which >/dev/null || fatal "Can't find which command (which or debianutils package is missed?)"
-	which grep >/dev/null || fatal "Can't find grep command (coreutils package is missed?)"
-	which sed >/dev/null || fatal "Can't find sed command (sed package is missed?)"
-}
-
 
 # FIXME on Android: FIX ME! implement ttyname_r() bionic/libc/bionic/stubs.c:366
 inputisatty()
@@ -66,7 +56,7 @@ check_tty()
 		export EGREPCOLOR="--color"
 	fi
 
-	which tput >/dev/null 2>/dev/null || return
+	is_command tput || return
 	# FreeBSD does not support tput -S
 	echo | tput -S >/dev/null 2>/dev/null || return
 	[ -z "$USETTY" ] || return
@@ -199,14 +189,6 @@ sudocmd_foreach()
 		sudocmd $cmd $pkg || return
 	done
 }
-
-# add realpath if missed
-if ! which realpath 2>/dev/null >/dev/null ; then
-realpath()
-{
-	readlink -f "$@"
-}
-fi
 
 # print full path to files
 make_filepath()
@@ -391,7 +373,7 @@ set_sudo()
 	# start error section
 	SUDO_TESTED="1"
 
-	if ! which $SUDO_CMD >/dev/null 2>/dev/null ; then
+	if ! is_command $SUDO_CMD ; then
 		[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't find sudo. Please install and tune sudo ('# epm install sudo') or run epm under root.'"
 		return "$SUDO_TESTED"
 	fi
@@ -429,7 +411,7 @@ sudo_allowed()
 # args: seconds command
 withtimeout()
 {
-	local TO=$(which timeout 2>/dev/null || which gtimeout 2>/dev/null)
+	local TO=$(print_command_path timeout || print_command_path gtimeout)
 	if [ -x "$TO" ] ; then
 		$TO "$@"
 		return
@@ -447,7 +429,7 @@ set_eatmydata()
 	# skip if disabled
 	[ -n "$EPMNOEATMYDATA" ] && return
 	# use if possible
-	which eatmydata >/dev/null 2>/dev/null || return
+	is_command eatmydata || return
 	set_sudo
 	# FIXME: check if SUDO already has eatmydata
 	[ -n "$SUDO" ] && SUDO="$SUDO eatmydata" || SUDO="eatmydata"
@@ -544,7 +526,7 @@ eget()
 	# FIXME: we need disable output here, eget can be used for get output
 	assure_exists eget eget 3.3 >/dev/null
 	# run external command, not the function
-	EGET=$(which eget) || fatal "Missed command eget from installed package eget"
+	EGET=$(print_command_path eget) || fatal "Missed command eget from installed package eget"
 	$EGET "$@"
 }
 
@@ -562,7 +544,7 @@ erc()
 	# FIXME: we need disable output here, ercat can be used for get output
 	assure_exists_erc >/dev/null
 	# run external command, not the function
-	ERC=$(which erc) || fatal "Missed command erc from installed package erc"
+	ERC=$(print_command_path erc) || fatal "Missed command erc from installed package erc"
 	$ERC "$@"
 }
 
@@ -580,7 +562,7 @@ ercat()
 	# FIXME: we need disable output here, ercat can be used for get output
 	assure_exists_erc >/dev/null
 	# run external command, not the function
-	ERCAT=$(which ercat) || fatal "Missed command ercat from installed package erc"
+	ERCAT=$(print_command_path ercat) || fatal "Missed command ercat from installed package erc"
 	$ERCAT "$@"
 }
 
@@ -602,8 +584,9 @@ onefile_estrlist()
 onefile_eget()
 {
 	# check for both
-	which curl 2>/dev/null >/dev/null || assure_exists wget
-	which wget 2>/dev/null >/dev/null || assure_exists curl
+	# we really need that cross here,
+	is_command curl || assure_exists wget
+	is_command wget || assure_exists curl
 	internal_tools_eget "$@"
 }
 
@@ -801,7 +784,7 @@ is_command()
 # compatibility layer
 
 # add realpath if missed
-if ! which realpath 2>/dev/null >/dev/null ; then
+if ! is_command realpath ; then
 realpath()
 {
     [ -n "$*" ] || return
@@ -809,15 +792,28 @@ realpath()
 }
 fi
 
+
 # TODO: use perl if sed -i is not accessible
 # sed -i is only supported in GNU sed.
 #  sed -i "s/$find/$replace/g" "$@"
 #  perl -p -i -e "s/$find/$replace/g" "$@"
 
 # add subst if missed
-if ! which subst 2>/dev/null >/dev/null ; then
+if ! is_command subst ; then
 subst()
 {
     sed -i -e "$@"
 }
 fi
+
+
+check_core_commands()
+{
+	#which --help >/dev/null || fatal "Can't find which command (which package is missed?)"
+	# broken which on Debian systems
+	# TODO: use is_command and print_command_path instead of
+	which which >/dev/null || fatal "Can't find which command (which or debianutils package is missed?)"
+	is_command grep || fatal "Can't find grep command (coreutils package is missed?)"
+	is_command sed || fatal "Can't find sed command (sed package is missed?)"
+}
+

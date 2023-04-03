@@ -41,7 +41,7 @@ __do_query_real_file()
 	if [ -e "$1" ] ; then
 		TOFILE="$(__abs_filename "$1")"
 	else
-		TOFILE=$(which -- "$1" 2>/dev/null || echo "$1")
+		TOFILE=$(print_command_path "$1" || echo "$1")
 		if [ "$TOFILE" != "$1" ] ; then
 			info " > $1 is placed as $TOFILE"
 		fi

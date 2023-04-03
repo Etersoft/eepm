@@ -255,7 +255,7 @@ compare_version()
 {
     case $PMTYPE in
         *-rpm)
-            which rpmevrcmp 2>/dev/null >/dev/null || fatal "rpmevrcmp exists in ALT Linux only"
+            is_command rpmevrcmp || fatal "rpmevrcmp exists in ALT Linux only"
             a= rpmevrcmp "$@"
             ;;
         *-dpkg)

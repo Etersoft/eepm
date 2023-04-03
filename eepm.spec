@@ -35,8 +35,6 @@ Requires: apt-repo
 AutoProv:no
 AutoReq:no
 
-Requires: which
-
 # TODO: drop gzip
 Requires: coreutils diffutils findutils file gawk grep gzip less sed bash termutils
 

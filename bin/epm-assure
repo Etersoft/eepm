@@ -19,7 +19,7 @@
 
 __check_command_in_path()
 {
-    PATH=$PATH:/sbin:/usr/sbin which "$1" 2>/dev/null
+    PATH=$PATH:/sbin:/usr/sbin print_command_path "$1"
 }
 
 # returns TRUE if package version is omitted, or package is not installed, or version is too old
