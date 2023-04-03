@@ -2,7 +2,7 @@
 
 PKGNAME=DJV2
 SUPPORTEDARCHES="x86_64"
-DESCRIPTION="DVJ - Professional media review software for VFX, animation, and film production"
+DESCRIPTION="DJV2 - Professional media review software for VFX, animation, and film production"
 
 
 . $(dirname $0)/common.sh

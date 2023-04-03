@@ -156,7 +156,7 @@ rm -v %buildroot%_bindir/yum
 
 %changelog
 * Mon Apr 03 2023 Vitaly Lipatov <lav@altlinux.ru> 3.40.1-alt1
-- epm play: add DVJ2
+- epm play: add DJV2
 - epm.spec: require bash instead of sh
 
 * Fri Mar 31 2023 Vitaly Lipatov <lav@altlinux.ru> 3.40.0-alt1
