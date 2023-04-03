@@ -26,6 +26,7 @@ epm_tool_help()
   Examples:
     epm tool eget -U http://ya.ru
     epm tool estrlist union a b a c
+    epm tool erc archive.zip
 EOF
 }
 
@@ -36,7 +37,7 @@ epm_tool()
 
     case "$WHAT" in
         "")
-            fatal "Use epm tool help to get help."
+            fatal "Use epm tool --help to get help."
             ;;
         "-h"|"--help"|"help")
             epm_tool_help
