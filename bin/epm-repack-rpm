@@ -70,6 +70,8 @@ __apply_fix_code()
 {
     local repackcode="$EPM_REPACK_SCRIPTS_DIR/$1.sh"
     [ -s "$repackcode" ] || return
+    [ -f "$repackcode.rpmnew" ] && warning "There is .rpmnew file(s) in $EPM_REPACK_SCRIPTS_DIR dir. The pack script can be outdated."
+
     shift
     export PATH=$PROGDIR:$PATH
     local bashopt=''
