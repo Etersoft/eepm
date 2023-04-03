@@ -86,6 +86,7 @@ __epm_repoindex_deb()
 
 	local dir="$1"
 	sudocmd mkdir -pv "$dir" || fatal
+	assure_exists gzip
 	sudocmd dpkg-scanpackages -t deb "$dir" | gzip | cat > "$dir/Packages.gz"
 }
 
