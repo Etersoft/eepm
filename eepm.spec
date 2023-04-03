@@ -35,7 +35,7 @@ Requires: apt-repo
 AutoProv:no
 AutoReq:no
 
-# TODO: drop gzip
+# TODO: drop gzip (used in some pack.d/repack.d/play.d)
 Requires: coreutils diffutils findutils file gawk grep gzip less sed bash termutils
 
 %description
@@ -51,7 +51,7 @@ See detailed description here: http://wiki.etersoft.ru/EPM
 Summary: Etersoft EPM package manager (repack requirements)
 Group: System/Configuration/Packaging
 Requires: %name = %EVR
-Requires: erc alien dpkg patchelf
+Requires: alien dpkg patchelf
 Requires: /usr/bin/rpmbuild
 
 %description repack
