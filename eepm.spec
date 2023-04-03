@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.40.0
+Version: 3.40.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -157,6 +157,10 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Mon Apr 03 2023 Vitaly Lipatov <lav@altlinux.ru> 3.40.1-alt1
+- epm play: add DVJ2
+- epm.spec: require bash instead of sh
+
 * Fri Mar 31 2023 Vitaly Lipatov <lav@altlinux.ru> 3.40.0-alt1
 - epm play: add alivecolors support
 - epm play: add freeoffice
