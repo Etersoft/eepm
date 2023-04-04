@@ -53,6 +53,8 @@ for i in $BUILDROOT/$PRODUCTDIR/lib/*.so ; do
     a= patchelf --set-rpath '$ORIGIN/' $i || continue
 done
 
+filter_from_requires /etc/X11/xinit/Xsession /etc/default/locale /usr/etc/X11/xdm/Xsession
+
 fi
 
 epm install --skip-installed glib2 libappindicator-gtk3 libcairo libgdk-pixbuf libgtk+3 libpango libpulseaudio libuuid libX11 libXau libxcb libXdmcp libXfixes libXtst xdotool
