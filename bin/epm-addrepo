@@ -162,23 +162,38 @@ __epm_addrepo_altlinux_url()
 }
 
 
+__epm_addrepo_altlinux_help()
+{
+	#sudocmd apt-repo $dryrun add branch
+cat <<EOF
+
+epm repo add - add branch repo. Use follow params:
+	etersoft                 - for LINUX@Etersoft repo"
+	basealt                  - for BaseALT repo"
+	yandex                   - for BaseALT repo mirror hosted by Yandex (recommended)"
+	altsp                    - add ALT SP repo"
+	autoimports              - for BaseALT autoimports repo"
+	altlinuxclub             - for altlinuxclub repo (http://altlinuxclub.ru/)"
+	<task number>            - add task repo"
+	archive 2018/02/09       - add archive of the repo from that date"
+	/dir/to/repo [component] - add repo dir generated with epm repo index --init"
+	URL [arch] [component]   - add repo by URL"
+
+Examples:
+	# epm repo add yandex
+	# epm repo add "rpm http://somesite/pub/product x86_64 addon"
+	# epm repo add /var/ftp/pub/altlinux/p10
+
+EOF
+	return
+}
+
 __epm_addrepo_altlinux()
 {
 	local repo="$*"
-	local branch="$(echo "$DISTRVERSION" | tr "[:upper:]" "[:lower:]")"
-	[ -n "$branch" ] || fatal "Empty DISTRVERSION"
 
-	if [ -z "$repo" ] || [ "$repo" == "--help" ] ; then
-		info "Add branch repo. Use follow params:"
-		sudocmd apt-repo $dryrun add branch
-		echo "etersoft                 - for LINUX@Etersoft repo"
-		echo "basealt                  - for BaseALT repo"
-		echo "yandex                   - for BaseALT repo mirror on yandex (recommended)"
-		echo "<task number>            - add task repo"
-		echo "archive 2018/02/09       - for archive from that date"
-		echo "autoimports              - for BaseALT autoimports repo"
-		echo "/dir/to/repo [component] - add repo dir generated with epm repo index --init"
-		echo "URL [arch] [component]   - add repo by URL"
+	if [ -z "$repo" ] || [ "$repo" == "-h" ] || [ "$repo" == "--list" ] || [ "$repo" == "--help" ] ; then
+		__epm_addrepo_altlinux_help
 		return
 	fi
 
