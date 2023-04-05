@@ -378,9 +378,9 @@ esac
 case "$DISTRIB_ID" in
 	"ALTLinux")
 		echo "$VERSION" | grep -q "c9.* branch" && DISTRIB_RELEASE="c9"
+		echo "$VERSION" | grep -q "c9f1 branch" && DISTRIB_RELEASE="c9f1"
+		echo "$VERSION" | grep -q "c9f2 branch" && DISTRIB_RELEASE="c9f2"
 		DISTRIB_CODENAME="$DISTRIB_RELEASE"
-		echo "$VERSION" | grep -q "c9f1 branch" && DISTRIB_CODENAME="c9f1"
-		echo "$VERSION" | grep -q "c9f2 branch" && DISTRIB_CODENAME="c9f2"
 		# FIXME: fast hack for fallback: 10.1 -> p10 for /etc/os-release
 		if echo "$DISTRIB_RELEASE" | grep -q "^[0-9]" && echo "$DISTRIB_RELEASE" | grep -q -v "[0-9][0-9][0-9]"  ; then
 			DISTRIB_RELEASE="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
