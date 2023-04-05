@@ -127,6 +127,10 @@ case $PMTYPE in
 		sudocmd yum-config-manager --disable "$@"
 		;;
 	urpm-rpm)
+		if [ "$1" = "all" ] ; then
+			sudocmd urpmi.removemedia -av
+			return
+		fi
 		sudocmd urpmi.removemedia "$@"
 		;;
 	zypper-rpm)
