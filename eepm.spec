@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.40.1
+Version: 3.41.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -155,6 +155,23 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Thu Apr 06 2023 Vitaly Lipatov <lav@altlinux.ru> 3.41.0-alt1
+- remove direct which command using
+- epm repack.d/example.sh: improve example
+- repack.d/softmaker-freeoffice-2012.sh: don't use erc directly
+- repack.d/portproton.sh: add some missed requires (gawk, tar, /usr/bin/convert)
+- add compatibility layer (print_command_path, is_command, subst) to pack.d and repack.d
+- epm pack/play/repack: add warning about .rpmnew files
+- epm repack rustdesk.sh: fix for build nightly release
+- epm history: print rpm sessions too
+- epm download: fix for download several packages
+- epm addrepo: add support for c9f*
+- epm repo: add create command (epm repo index --init)
+- epm repo comment: remove in favour epm repo disable
+- epm play portproton: get latest release from github, not fixed version
+- distr_info: print correct version for c9f*
+- distr_info fix support for ROSAFresh
+
 * Mon Apr 03 2023 Vitaly Lipatov <lav@altlinux.ru> 3.40.1-alt1
 - epm play: add DJV2
 - epm.spec: require bash instead of sh
