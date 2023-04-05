@@ -125,7 +125,7 @@ case $PMTYPE in
 		[ -n "$verbose" ] || info "Use --verbose if you need detail information."
 		;;
 	urpm-rpm)
-		docmd urpmq --list-url
+		docmd urpmq --list-media active --list-url
 		;;
 	zypper-rpm)
 		docmd zypper sl -d

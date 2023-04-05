@@ -477,7 +477,7 @@ case $PMTYPE in
 		sudocmd dnf config-manager --add-repo "$repo"
 		;;
 	urpm-rpm)
-		sudocmd urpmi.addmedia "$repo"
+		sudocmd urpmi.addmedia "$@"
 		;;
 	zypper-rpm)
 		sudocmd zypper ar "$repo"
