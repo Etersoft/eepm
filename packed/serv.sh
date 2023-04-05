@@ -34,16 +34,6 @@ load_helper()
 # File bin/epm-sh-functions:
 
 
-check_core_commands()
-{
-	#which --help >/dev/null || fatal "Can't find which command (which package is missed?)"
-	# broken which on Debian systems
-	# TODO: use is_command and print_command_path instead of
-	which which >/dev/null || fatal "Can't find which command (which or debianutils package is missed?)"
-	which grep >/dev/null || fatal "Can't find grep command (coreutils package is missed?)"
-	which sed >/dev/null || fatal "Can't find sed command (sed package is missed?)"
-}
-
 
 inputisatty()
 {
@@ -80,7 +70,7 @@ check_tty()
 		export EGREPCOLOR="--color"
 	fi
 
-	which tput >/dev/null 2>/dev/null || return
+	is_command tput || return
 	# FreeBSD does not support tput -S
 	echo | tput -S >/dev/null 2>/dev/null || return
 	[ -z "$USETTY" ] || return
@@ -203,13 +193,6 @@ sudocmd_foreach()
 		sudocmd $cmd $pkg || return
 	done
 }
-
-if ! which realpath 2>/dev/null >/dev/null ; then
-realpath()
-{
-	readlink -f "$@"
-}
-fi
 
 make_filepath()
 {
@@ -374,7 +357,7 @@ set_sudo()
 	# start error section
 	SUDO_TESTED="1"
 
-	if ! which $SUDO_CMD >/dev/null 2>/dev/null ; then
+	if ! is_command $SUDO_CMD ; then
 		[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't find sudo. Please install and tune sudo ('# epm install sudo') or run epm under root.'"
 		return "$SUDO_TESTED"
 	fi
@@ -409,7 +392,7 @@ sudo_allowed()
 
 withtimeout()
 {
-	local TO=$(which timeout 2>/dev/null || which gtimeout 2>/dev/null)
+	local TO=$(print_command_path timeout || print_command_path gtimeout)
 	if [ -x "$TO" ] ; then
 		$TO "$@"
 		return
@@ -427,7 +410,7 @@ set_eatmydata()
 	# skip if disabled
 	[ -n "$EPMNOEATMYDATA" ] && return
 	# use if possible
-	which eatmydata >/dev/null 2>/dev/null || return
+	is_command eatmydata || return
 	set_sudo
 	# FIXME: check if SUDO already has eatmydata
 	[ -n "$SUDO" ] && SUDO="$SUDO eatmydata" || SUDO="eatmydata"
@@ -518,7 +501,7 @@ disabled_eget()
 	# FIXME: we need disable output here, eget can be used for get output
 	assure_exists eget eget 3.3 >/dev/null
 	# run external command, not the function
-	EGET=$(which eget) || fatal "Missed command eget from installed package eget"
+	EGET=$(print_command_path eget) || fatal "Missed command eget from installed package eget"
 	$EGET "$@"
 }
 
@@ -535,7 +518,7 @@ disabled_erc()
 	# FIXME: we need disable output here, ercat can be used for get output
 	assure_exists_erc >/dev/null
 	# run external command, not the function
-	ERC=$(which erc) || fatal "Missed command erc from installed package erc"
+	ERC=$(print_command_path erc) || fatal "Missed command erc from installed package erc"
 	$ERC "$@"
 }
 
@@ -552,7 +535,7 @@ disabled_ercat()
 	# FIXME: we need disable output here, ercat can be used for get output
 	assure_exists_erc >/dev/null
 	# run external command, not the function
-	ERCAT=$(which ercat) || fatal "Missed command ercat from installed package erc"
+	ERCAT=$(print_command_path ercat) || fatal "Missed command ercat from installed package erc"
 	$ERCAT "$@"
 }
 
@@ -573,8 +556,9 @@ estrlist()
 eget()
 {
 	# check for both
-	which curl 2>/dev/null >/dev/null || assure_exists wget
-	which wget 2>/dev/null >/dev/null || assure_exists curl
+	# we really need that cross here,
+	is_command curl || assure_exists wget
+	is_command wget || assure_exists curl
 	internal_tools_eget "$@"
 }
 
@@ -759,7 +743,7 @@ is_command()
 }
 
 
-if ! which realpath 2>/dev/null >/dev/null ; then
+if ! is_command realpath ; then
 realpath()
 {
     [ -n "$*" ] || return
@@ -768,12 +752,25 @@ realpath()
 fi
 
 
-if ! which subst 2>/dev/null >/dev/null ; then
+
+if ! is_command subst ; then
 subst()
 {
     sed -i -e "$@"
 }
 fi
+
+
+check_core_commands()
+{
+	#which --help >/dev/null || fatal "Can't find which command (which package is missed?)"
+	# broken which on Debian systems
+	# TODO: use is_command and print_command_path instead of
+	which which >/dev/null || fatal "Can't find which command (which or debianutils package is missed?)"
+	is_command grep || fatal "Can't find grep command (coreutils package is missed?)"
+	is_command sed || fatal "Can't find sed command (sed package is missed?)"
+}
+
 
 # File bin/serv-cat:
 
@@ -1582,9 +1579,17 @@ case $DISTRIB_ID in
 		CMD="urpm-rpm"
 		;;
 	ROSA)
-		CMD="dnf-rpm"
-		hascommand dnf || CMD="yum-rpm"
-		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "ROSA/2020" ] && CMD="urpm-rpm"
+		CMD="urpm-rpm"
+		hascommand yum && CMD="yum-rpm"
+		hascommand dnf && CMD="dnf-rpm"
+		#[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "ROSA/2020" ] && CMD="urpm-rpm"
+		;;
+	ROSAFresh)
+		CMD="urpm-rpm"
+		hascommand yum && CMD="yum-rpm"
+		hascommand dnf && CMD="dnf-rpm"
+		# use dnf since 2020
+		#[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "ROSA/2020" ] && CMD="urpm-rpm"
 		;;
 	FreeBSD|NetBSD|OpenBSD|Solaris)
 		CMD="pkgsrc"
@@ -1645,12 +1650,12 @@ case $DISTRIB_ID in
 			echo "apt-dpkg" && return
 		fi
 
-		if hascommand "rpm" && [ -s /var/lib/rpm/Name ] ; then
+		if hascommand "rpm" && [ -s /var/lib/rpm/Name ] || [ -s /var/lib/rpm/rpmdb.sqlite ] ; then
 			hascommand "zypper" && echo "zypper-rpm" && return
 			hascommand "dnf" && echo "dnf-rpm" && return
 			hascommand "apt-get" && echo "apt-rpm" && return
 			hascommand "yum" && echo "yum-rpm" && return
-			hascommand "urpmi" && echo "urpmi-rpm" && return
+			hascommand "urpmi" && echo "urpm-rpm" && return
 		fi
 
 		if hascommand "dpkg" && [ -s /var/lib/dpkg/status ] ; then
@@ -1733,6 +1738,9 @@ normalize_name()
 			;;
 		"Red Hat Enterprise Linux Server")
 			echo "RHEL"
+			;;
+		"ROSA Fresh"*|"ROSA Desktop Fresh"*)
+			echo "ROSAFresh"
 			;;
 		"ROSA Chrome Desktop")
 			echo "ROSA"
@@ -1840,9 +1848,9 @@ esac
 case "$DISTRIB_ID" in
 	"ALTLinux")
 		echo "$VERSION" | grep -q "c9.* branch" && DISTRIB_RELEASE="c9"
+		echo "$VERSION" | grep -q "c9f1 branch" && DISTRIB_RELEASE="c9f1"
+		echo "$VERSION" | grep -q "c9f2 branch" && DISTRIB_RELEASE="c9f2"
 		DISTRIB_CODENAME="$DISTRIB_RELEASE"
-		echo "$VERSION" | grep -q "c9f1 branch" && DISTRIB_CODENAME="c9f1"
-		echo "$VERSION" | grep -q "c9f2 branch" && DISTRIB_CODENAME="c9f2"
 		# FIXME: fast hack for fallback: 10.1 -> p10 for /etc/os-release
 		if echo "$DISTRIB_RELEASE" | grep -q "^[0-9]" && echo "$DISTRIB_RELEASE" | grep -q -v "[0-9][0-9][0-9]"  ; then
 			DISTRIB_RELEASE="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
@@ -1873,6 +1881,9 @@ case "$DISTRIB_ID" in
 	"Sisyphus")
 		DISTRIB_ID="ALTLinux"
 		DISTRIB_RELEASE="Sisyphus"
+		DISTRIB_CODENAME="$DISTRIB_RELEASE"
+		;;
+	"ROSAFresh")
 		DISTRIB_CODENAME="$DISTRIB_RELEASE"
 		;;
 esac
@@ -2295,14 +2306,14 @@ local orig=''
 cat <<EOF
 distro_info v$PROGVERSION : Copyright © 2007-2023 Etersoft
 
-         Pretty distro name (--pretty): $(print_pretty_name)
-                 Distro name / version: $DISTRO_NAME / $DISTRIB_FULL_RELEASE$orig
-  Base distro name (-d) / version (-v): $(print_name_version)
-Base distro name (-s) / Repo name (-r): $(pkgvendor) / $(print_repo_name)
-          Package manager/type (-g/-p): $(pkgmanager) / $(pkgtype)
-     Base OS name (-o) / CPU arch (-a): $(get_base_os_name) $(get_arch)
-     Bug report URL (--bug-report-url): $(print_bug_report_url)
-          CPU norm register size  (-b): $(get_bit_size)
+                Pretty distro name (--pretty): $(print_pretty_name)
+Distro name / version (--distro-name/version): $DISTRO_NAME / $DISTRIB_FULL_RELEASE$orig
+         Base distro name (-d) / version (-v): $(print_name_version)
+     Vendor distro name (-s) / Repo name (-r): $(pkgvendor) / $(print_repo_name)
+                 Package manager/type (-g/-p): $(pkgmanager) / $(pkgtype)
+            Base OS name (-o) / CPU arch (-a): $(get_base_os_name) $(get_arch)
+            Bug report URL (--bug-report-url): $(print_bug_report_url)
+                 CPU norm register size  (-b): $(get_bit_size)
                    Virtualization (-i): $(get_virt)
                  CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_core_mhz) MHz
           System memory size (MB) (-m): $(get_memory_size)
@@ -2339,14 +2350,14 @@ case "$1" in
 		echo " -o | --os-name         - print base OS name"
 		echo " -p | package-type      - print type of the packaging system"
 		echo " -g                     - print name of the packaging system"
-		echo " -s|-n|--vendor-name    - print base name of the distro (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (see _vendor macros in rpm)"
+		echo " -s|-n|--vendor-name    - print name of the distro family (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (see _vendor macros in rpm)"
 		echo " --pretty|--pretty-name - print pretty distro name"
 		echo " -v | --base-version    - print version of the distro"
 		echo " --distro-name          - print distro name"
 		echo " --distro-version       - print full version of the distro"
 		echo " --full-version         - print full version of the distro"
 		echo " --codename (obsoleted) - print distro codename (focal for Ubuntu 20.04)"
-		echo " --repo-name            - print repository name (focal for Ubuntu 20.04)"
+		echo " -r|--repo-name         - print repository name (focal for Ubuntu 20.04)"
 		echo " --build-id             - print a string uniquely identifying the system image originally used as the installation base"
 		echo " -V                     - print the utility version"
 		echo "Run without args to print all information."
@@ -2565,7 +2576,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.40.1  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.41.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
