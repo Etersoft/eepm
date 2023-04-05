@@ -73,6 +73,32 @@ __epm_addrepo_etersoft_addon()
 	fi
 }
 
+__epm_addrepo_altsp()
+{
+	local comp
+	local repo="$1"
+	case "$repo" in
+		c9f2)
+			comp="CF2"
+			;;
+		c9f1)
+			comp="CF1"
+			;;
+		c9)
+			comp="cf"
+			;;
+		*)
+			fatal "Uknown CF comp $repo"
+			;;
+	esac
+
+	epm repo add "rpm [cert8] http://update.altsp.su/pub/distributions/ALTLinux $comp/branch/$DISTRARCH classic" || return
+	if [ "$DISTRARCH" = "x86_64" ] ; then
+		epm repo add "rpm [cert8] http://update.altsp.su/pub/distributions/ALTLinux $comp/branch/x86_64-i586 classic" || return
+	fi
+	epm repo add "rpm [cert8] http://update.altsp.su/pub/distributions/ALTLinux $comp/branch/noarch classic" || return
+}
+
 get_archlist()
 {
     echo "noarch"
@@ -221,6 +247,14 @@ __epm_addrepo_altlinux()
 		sudocmd_foreach "apt-repo $dryrun add" $(tasknumber "$repo")
 		return
 	fi
+
+	case "$repo" in
+		c9f2|c9f1|c9)
+			__epm_addrepo_altsp "$repo"
+			return
+			;;
+	esac
+
 
 	# don't add again
 	epm repo list --quiet | grep -q -F "$repo" && return 0
