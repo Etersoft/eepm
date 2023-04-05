@@ -833,14 +833,14 @@ local orig=''
 cat <<EOF
 distro_info v$PROGVERSION : Copyright © 2007-2023 Etersoft
 
-         Pretty distro name (--pretty): $(print_pretty_name)
-                 Distro name / version: $DISTRO_NAME / $DISTRIB_FULL_RELEASE$orig
-  Base distro name (-d) / version (-v): $(print_name_version)
-Base distro name (-s) / Repo name (-r): $(pkgvendor) / $(print_repo_name)
-          Package manager/type (-g/-p): $(pkgmanager) / $(pkgtype)
-     Base OS name (-o) / CPU arch (-a): $(get_base_os_name) $(get_arch)
-     Bug report URL (--bug-report-url): $(print_bug_report_url)
-          CPU norm register size  (-b): $(get_bit_size)
+                Pretty distro name (--pretty): $(print_pretty_name)
+Distro name / version (--distro-name/version): $DISTRO_NAME / $DISTRIB_FULL_RELEASE$orig
+         Base distro name (-d) / version (-v): $(print_name_version)
+     Vendor distro name (-s) / Repo name (-r): $(pkgvendor) / $(print_repo_name)
+                 Package manager/type (-g/-p): $(pkgmanager) / $(pkgtype)
+            Base OS name (-o) / CPU arch (-a): $(get_base_os_name) $(get_arch)
+            Bug report URL (--bug-report-url): $(print_bug_report_url)
+                 CPU norm register size  (-b): $(get_bit_size)
                    Virtualization (-i): $(get_virt)
                  CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_core_mhz) MHz
           System memory size (MB) (-m): $(get_memory_size)
@@ -877,14 +877,14 @@ case "$1" in
 		echo " -o | --os-name         - print base OS name"
 		echo " -p | package-type      - print type of the packaging system"
 		echo " -g                     - print name of the packaging system"
-		echo " -s|-n|--vendor-name    - print base name of the distro (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (see _vendor macros in rpm)"
+		echo " -s|-n|--vendor-name    - print name of the distro family (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (see _vendor macros in rpm)"
 		echo " --pretty|--pretty-name - print pretty distro name"
 		echo " -v | --base-version    - print version of the distro"
 		echo " --distro-name          - print distro name"
 		echo " --distro-version       - print full version of the distro"
 		echo " --full-version         - print full version of the distro"
 		echo " --codename (obsoleted) - print distro codename (focal for Ubuntu 20.04)"
-		echo " --repo-name            - print repository name (focal for Ubuntu 20.04)"
+		echo " -r|--repo-name         - print repository name (focal for Ubuntu 20.04)"
 		echo " --build-id             - print a string uniquely identifying the system image originally used as the installation base"
 		echo " -V                     - print the utility version"
 		echo "Run without args to print all information."
