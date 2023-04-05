@@ -604,7 +604,7 @@ epm_release_upgrade()
 		;;
 	zypper-rpm)
 		docmd epm repolist
-		# TODO
+		# TODO: move to distro related upgrade
 		# sudocmd zypper rr <номер_репозитория>
 		showcmd rr N
 		showcmd epm ar http://mirror.yandex.ru/opensuse/distribution/11.1/repo/oss 11.1oss
@@ -614,13 +614,13 @@ epm_release_upgrade()
 		docmd epm upgrade
 		;;
 	pacman)
-		epm Upgrade
+		docmd epm Upgrade
 		;;
 	conary)
-		epm Upgrade
+		docmd epm Upgrade
 		;;
 	emerge)
-		epm Upgrade
+		docmd epm Upgrade
 		;;
 	guix)
 		sudocmd guix pull --verbose

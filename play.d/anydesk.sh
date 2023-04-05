@@ -19,6 +19,7 @@ case $arch in
         fatal "Unsupported arch $arch for $(epm print info -d)"
 esac
 
+# FIXME: alt, not deb!
 # we have workaround for their postinstall script, so always repack rpm package
 repack=''
 [ "$(epm print info -p)" = "deb" ] || repack='--repack'
