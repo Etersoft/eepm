@@ -98,24 +98,21 @@ case $BASEDISTRNAME in
 		__epm_removerepo_alt "$@"
 		return
 		;;
+	"astra")
+		echo "Use workaround for AstraLinux"
+		[ -n "$*" ] || fatal "empty repo name"
+		# aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
+		sudocmd sed -i -e "s|.*$*.*||" /etc/apt/sources.list
+		if [ -d /etc/apt/sources.list.d ] && ls /etc/apt/sources.list.d/*.list >/dev/null 2>/dev/null ; then
+			sudocmd sed -i -e "s|.*$*.*||" /etc/apt/sources.list.d/*.list
+		fi
+		return
+		;;
 esac;
 
 case $PMTYPE in
 	apt-dpkg)
 		assure_exists apt-add-repository software-properties-common
-		set_sudo
-
-		if [ "$DISTRNAME" = "AstraLinuxCE" ] || [ "$DISTRNAME" = "AstraLinuxSE" ] ; then
-			echo "Use workaround for AstraLinux"
-			[ -n "$*" ] || fatal "empty repo name"
-			# aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
-			sudocmd sed -i -e "s|.*$*.*||" /etc/apt/sources.list
-			if [ -d /etc/apt/sources.list.d ] && ls /etc/apt/sources.list.d/*.list >/dev/null 2>/dev/null ; then
-				sudocmd sed -i -e "s|.*$*.*||" /etc/apt/sources.list.d/*.list
-			fi
-			exit
-		fi
-
 		# FIXME: it is possible there is troubles to pass the args
 		sudocmd apt-add-repository --remove "$*"
 		info "Check file /etc/apt/sources.list if needed"
