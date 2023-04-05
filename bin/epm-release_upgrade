@@ -485,6 +485,26 @@ epm_release_upgrade()
 		;;
 	esac
 
+	case $DISTRNAME in
+	"Mageia")
+		epm repo remove all
+		sudocmd urpmi.addmedia --distrib --mirrorlist 'http://mirrors.mageia.org/api/mageia.8.$DISTRARCH.list'
+		sudocmd urpmi --auto-update $non_interactive $force
+		return
+		;;
+	"ROSA")
+	urpm-rpm)
+		# TODO: move to distro related upgrade
+		#epm repo remove all
+		# FIXME: don't work:
+		#epm repo add "http://mirror.rosalinux.ru/rosa/rosa2021.1/repository/$DISTRARCH"
+		#showcmd urpmi.addmedia --distrib http://mirror.yandex.ru/mandriva/devel/2010.2/i586/
+		#sudocmd urpmi --auto-update --replacefiles
+		return
+	*)
+		;;
+	esac
+
 	case $PMTYPE in
 	apt-rpm)
 		#docmd epm update
@@ -581,12 +601,6 @@ epm_release_upgrade()
 		# FIXME: download all packages again
 		sudocmd dnf distro-sync --releasever=$RELEASEVER
 		info "You can run '# epm autoorphans' to remove orphaned packages"
-		;;
-	urpm-rpm)
-		sudocmd urpmi.removemedia -av
-		info "Try do manually"
-		showcmd urpmi.addmedia --distrib http://mirror.yandex.ru/mandriva/devel/2010.2/i586/
-		sudocmd urpmi --auto-update --replacefiles
 		;;
 	zypper-rpm)
 		docmd epm repolist
