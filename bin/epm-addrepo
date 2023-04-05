@@ -215,43 +215,48 @@ __epm_addrepo_altlinux()
 		return
 	fi
 
+	local branch="$(echo "$DISTRVERSION" | tr "[:upper:]" "[:lower:]")"
+	[ -n "$branch" ] || fatal "Empty DISTRVERSION"
+
 	case "$1" in
 		etersoft)
-			info "add Etersoft's addon repo"
-			assure_exists apt-repo
-			__epm_addrepo_etersoft_addon
-			sudocmd apt-repo add $branch
+			# TODO: return when Etersoft improved its repos
+			#info "add Etersoft's addon repo"
+			#__epm_addrepo_etersoft_addon
+			epm repo add $branch
 			epm repofix etersoft
 			return 0
 			;;
-		basealt|ALTLinux|ALTServer)
-			# TODO: setrepo?
-			assure_exists apt-repo
-			sudocmd apt-repo add $branch
-			return 0
+		basealt|alt|altsp)
+			repo="$branch"
 			;;
 		yandex)
-			assure_exists apt-repo
-			sudocmd apt-repo add $branch
+			epm repo add $branch
 			epm repofix yandex
 			return 0
 			;;
 		autoimports)
 			repo="autoimports.$branch"
 			;;
+		altlinuxclub)
+			repo="altlinuxclub.$branch"
+			;;
+		autoimports.*|altlinuxclub.*)
+			repo="$1"
+			;;
 		archive)
 			datestr="$2"
 			echo "$datestr" | grep -Eq "^20[0-2][0-9]/[01][0-9]/[0-3][0-9]$" || fatal "use follow date format: 2017/12/31"
 
-			echo "" | sudocmd tee -a /etc/apt/sources.list
-			local distrversion="$(echo "$DISTRVERSION" | tr "[:upper:]" "[:lower:]")"
 			local rpmsign='[alt]'
-			[ "$distrversion" != "sisyphus" ] && rpmsign="[$distrversion]"
-			echo "rpm $rpmsign $ALTLINUXPUBURL archive/$distrversion/date/$datestr/$DISTRARCH classic" | sudocmd tee -a /etc/apt/sources.list
+			[ "$branch" != "sisyphus" ] && rpmsign="[$branch]"
+
+			epm repo add "rpm $rpmsign $ALTLINUXPUBURL archive/$branch/date/$datestr/$DISTRARCH classic"
 			if [ "$DISTRARCH" = "x86_64" ] ; then
-				echo "rpm $rpmsign $ALTLINUXPUBURL archive/$distrversion/date/$datestr/x86_64-i586 classic" | sudocmd tee -a /etc/apt/sources.list
+				epm repo add "rpm $rpmsign $ALTLINUXPUBURL archive/$branch/date/$datestr/x86_64-i586 classic"
 			fi
-			echo "rpm $rpmsign $ALTLINUXPUBURL archive/$distrversion/date/$datestr/noarch classic" | sudocmd tee -a /etc/apt/sources.list
+			epm repo add "rpm $rpmsign $ALTLINUXPUBURL archive/$branch/date/$datestr/noarch classic"
+
 			return 0
 			;;
 	esac
