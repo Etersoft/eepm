@@ -123,3 +123,8 @@ esac
 
 }
 
+
+epm_repocreate()
+{
+    epm_repoindex --init "$@"
+}

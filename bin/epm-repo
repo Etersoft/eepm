@@ -105,6 +105,10 @@ epm_repo()
 		load_helper epm-commentrepo
 		epm_commentrepo "$@"
 
+	create)                            # HELPCMD: create (initialize) repo: [path] [name]
+		load_helper epm-repoindex
+		epm_repocreate "$@"
+		;;
 	index)                            # HELPCMD: index repo: [--init] [path] [name]
 		load_helper epm-repoindex
 		epm_repoindex "$@"
