@@ -120,9 +120,17 @@ case $DISTRIB_ID in
 		CMD="urpm-rpm"
 		;;
 	ROSA)
-		CMD="dnf-rpm"
-		hascommand dnf || CMD="yum-rpm"
-		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "ROSA/2020" ] && CMD="urpm-rpm"
+		CMD="urpm-rpm"
+		hascommand yum && CMD="yum-rpm"
+		hascommand dnf && CMD="dnf-rpm"
+		#[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "ROSA/2020" ] && CMD="urpm-rpm"
+		;;
+	ROSAFresh)
+		CMD="urpm-rpm"
+		hascommand yum && CMD="yum-rpm"
+		hascommand dnf && CMD="dnf-rpm"
+		# use dnf since 2020
+		#[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "ROSA/2020" ] && CMD="urpm-rpm"
 		;;
 	FreeBSD|NetBSD|OpenBSD|Solaris)
 		CMD="pkgsrc"
@@ -183,12 +191,12 @@ case $DISTRIB_ID in
 			echo "apt-dpkg" && return
 		fi
 
-		if hascommand "rpm" && [ -s /var/lib/rpm/Name ] ; then
+		if hascommand "rpm" && [ -s /var/lib/rpm/Name ] || [ -s /var/lib/rpm/rpmdb.sqlite ] ; then
 			hascommand "zypper" && echo "zypper-rpm" && return
 			hascommand "dnf" && echo "dnf-rpm" && return
 			hascommand "apt-get" && echo "apt-rpm" && return
 			hascommand "yum" && echo "yum-rpm" && return
-			hascommand "urpmi" && echo "urpmi-rpm" && return
+			hascommand "urpmi" && echo "urpm-rpm" && return
 		fi
 
 		if hascommand "dpkg" && [ -s /var/lib/dpkg/status ] ; then
@@ -271,6 +279,9 @@ normalize_name()
 			;;
 		"Red Hat Enterprise Linux Server")
 			echo "RHEL"
+			;;
+		"ROSA Fresh"*|"ROSA Desktop Fresh"*)
+			echo "ROSAFresh"
 			;;
 		"ROSA Chrome Desktop")
 			echo "ROSA"
@@ -411,6 +422,9 @@ case "$DISTRIB_ID" in
 	"Sisyphus")
 		DISTRIB_ID="ALTLinux"
 		DISTRIB_RELEASE="Sisyphus"
+		DISTRIB_CODENAME="$DISTRIB_RELEASE"
+		;;
+	"ROSAFresh")
 		DISTRIB_CODENAME="$DISTRIB_RELEASE"
 		;;
 esac
