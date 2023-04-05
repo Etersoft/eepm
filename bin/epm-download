@@ -198,7 +198,9 @@ __epm_download_alt()
 
 		try_change_alt_repo
 		epm_addrepo "$@"
-		docmd epm download $print_url "$installlist"
+		epm update
+		[ -n "$verbose" ] && epm repo list
+		docmd epm download $print_url $installlist
 		epm_removerepo "$@"
 		end_change_alt_repo
 
@@ -210,7 +212,7 @@ __epm_download_alt()
 		for i in $(sudocmd apt-get install -y --print-uris --reinstall "$pkg" | cut -f1 -d " " | grep ".rpm'$" | sed -e "s|^'||" -e "s|'$||") ; do
 			echo "$(basename "$i")" | grep -q "^$pkg" || continue
 			[ -n "$print_url" ] && echo "$i" && continue
-			eget $i
+			eget "$i"
 		done
 	done
 	return
