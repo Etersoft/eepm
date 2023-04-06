@@ -287,7 +287,8 @@ filter_from_requires()
 {
     local i
     for i in "$@" ; do
-        subst "1i%filter_from_requires /^$i.*/d" $SPEC
+        local ti="$(echo "$i" | sed -e 's|^/|\\\\/|' -e 's|\([^\]\)/|\1\\\\/|g')"
+        subst "1i%filter_from_requires /^$ti.*/d" $SPEC
     done
 }
 
