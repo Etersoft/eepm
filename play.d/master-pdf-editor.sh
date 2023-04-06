@@ -33,6 +33,6 @@ if [ -z "$PKG" ] ; then
     esac
 fi
 
-PKGURL=$(epm tool eget --list --latest https://code-industry.ru/free-pdf-editor/ $PKG)
+PKGURL=$(epm tool eget --list --latest https://code-industry.ru/get-master-pdf-editor-for-linux/ $PKG)
 
 epm $repack install "$PKGURL"
