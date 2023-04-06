@@ -493,7 +493,6 @@ epm_release_upgrade()
 		return
 		;;
 	"ROSA")
-	urpm-rpm)
 		# TODO: move to distro related upgrade
 		#epm repo remove all
 		# FIXME: don't work:
@@ -501,6 +500,7 @@ epm_release_upgrade()
 		#showcmd urpmi.addmedia --distrib http://mirror.yandex.ru/mandriva/devel/2010.2/i586/
 		#sudocmd urpmi --auto-update --replacefiles
 		return
+		;;
 	*)
 		;;
 	esac
