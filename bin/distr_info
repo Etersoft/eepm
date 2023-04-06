@@ -399,9 +399,9 @@ case "$DISTRIB_ID" in
 			DISTRIB_CODENAME="$DISTRIB_RELEASE"
 		fi
 		;;
-#	"ALTServer")
-#		DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\..*//g")
-#		;;
+	"ALTServer")
+		DISTRIB_CODENAME="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
+		;;
 	"ALTSPWorkstation")
 		DISTRIB_ID="ALTLinux"
 		case "$DISTRIB_RELEASE_ORIG" in
@@ -973,9 +973,11 @@ case "$1" in
 		get_memory_size
 		;;
 	-o|--os-name)
+		override_distrib "$2"
 		get_base_os_name
 		;;
 	-r|--repo-name)
+		override_distrib "$2"
 		print_repo_name
 		;;
 	--build-id)
