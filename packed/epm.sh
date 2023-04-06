@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.41.0"
+EPMVERSION="3.41.1"
 
 if [ "$EPMVERSION" = "@""VERSION""@" ] ; then
     EPMVERSION=$(head $PROGDIR/../eepm.spec | grep "^Version: " | sed -e 's|Version: ||' )
@@ -7250,7 +7250,6 @@ epm_release_upgrade()
 		return
 		;;
 	"ROSA")
-	urpm-rpm)
 		# TODO: move to distro related upgrade
 		#epm repo remove all
 		# FIXME: don't work:
@@ -7258,6 +7257,7 @@ epm_release_upgrade()
 		#showcmd urpmi.addmedia --distrib http://mirror.yandex.ru/mandriva/devel/2010.2/i586/
 		#sudocmd urpmi --auto-update --replacefiles
 		return
+		;;
 	*)
 		;;
 	esac
@@ -11427,6 +11427,7 @@ pkgvendor()
 	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
 	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
 	[ "$DISTRIB_ID" = "VoidLinux" ] && echo "void" && return
+	[ "$DISTRIB_ID" = "ROSAFresh" ] && echo "rosafresh" && return
 	[ "$DISTRIB_ID" = "OpenSUSE" ] && echo "suse" && return
 	[ "$DISTRIB_ID" = "openSUSETumbleweed" ] && echo "suse" && return
 	[ "$DISTRIB_ID" = "openSUSELeap" ] && echo "suse" && return
