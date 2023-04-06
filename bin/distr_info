@@ -135,7 +135,7 @@ case $DISTRIB_ID in
 		;;
 	FreeBSD|NetBSD|OpenBSD|Solaris)
 		CMD="pkgsrc"
-		which pkg 2>/dev/null >/dev/null && CMD=pkgng
+		hascommand pkg && CMD=pkgng
 		;;
 	Gentoo)
 		CMD="emerge"
@@ -640,7 +640,7 @@ case "$DIST_ARCH" in
     armv7*)
         # TODO: use uname only
         # uses binutils package
-        if which readelf >/dev/null 2>/dev/null && [ -z "$(readelf -A /proc/self/exe | grep Tag_ABI_VFP_args)" ] ; then
+        if hascommand readelf && [ -z "$(readelf -A /proc/self/exe | grep Tag_ABI_VFP_args)" ] ; then
             DIST_ARCH="armel"
         else
             DIST_ARCH="armhf"
@@ -819,6 +819,7 @@ get_service_manager()
     [ -d /run/systemd/system ] && echo "systemd" && return
     # TODO
     #[ -d /usr/share/upstart ] && echo "upstart" && return
+    hascommand systemctl && echo "systemd" && return
     [ -d /etc/init.d ] && echo "sysvinit" && return
     echo "(unknown)"
 }
