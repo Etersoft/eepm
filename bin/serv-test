@@ -33,9 +33,9 @@ serv_test()
 			docmd sshd -t
 			;;
 		httpd2|httpd|apache|apache2)
-			if which httpd2 >/dev/null 2>/dev/null ; then
+			if is_command httpd2 ; then
 				docmd httpd2 -t
-			elif which apache2 >/dev/null 2>/dev/null ; then
+			elif is_command apache2 ; then
 				docmd apache2 -t
 			fi
 			;;
