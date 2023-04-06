@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.41.0
+Version: 3.41.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -155,6 +155,12 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Thu Apr 06 2023 Vitaly Lipatov <lav@altlinux.ru> 3.41.1-alt1
+- epm play master-pdf-editor: fix download url
+- distr_info: vendor rosafresh for ROSAFresh
+- epm repack common.sh: implement file path support in filter_from_requires
+- epm release-upgrade: fix syntax error
+
 * Thu Apr 06 2023 Vitaly Lipatov <lav@altlinux.ru> 3.41.0-alt1
 - remove direct which command using
 - epm repack.d/example.sh: improve example
