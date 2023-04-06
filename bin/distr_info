@@ -426,6 +426,7 @@ case "$DISTRIB_ID" in
 		DISTRIB_CODENAME="$DISTRIB_RELEASE"
 		;;
 	"ROSAFresh")
+		DISTRIB_FULL_RELEASE="$DISTRIB_CODENAME"
 		DISTRIB_CODENAME="$DISTRIB_RELEASE"
 		;;
 esac
@@ -837,6 +838,10 @@ print_pretty_name()
 
     if ! echo "$PRETTY_NAME" | grep -q "$DISTRIB_FULL_RELEASE" ; then
         PRETTY_NAME="$PRETTY_NAME ($DISTRIB_FULL_RELEASE)"
+    fi
+
+    if ! echo "$PRETTY_NAME" | grep -q "$DISTRIB_RELEASE" ; then
+        PRETTY_NAME="$PRETTY_NAME ($DISTRIB_RELEASE)"
     fi
 
     echo "$(filter_duplicated_words "$PRETTY_NAME")"
