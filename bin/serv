@@ -51,53 +51,19 @@ set_service_type()
 	set_distro_info
 	set_target_pkg_env
 
-# TODO: see Running in distro_info, check is_aсtive_systemd
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case "$DISTRCONTROL" in
+	sysvinit)
 		CMD="service-chkconfig"
 		;;
-	Ubuntu|Debian|Mint|AstraLinux*)
-		CMD="service-update"
+	systemd)
+		CMD="systemd"
 		;;
-	Mandriva|ROSA)
-		CMD="service-chkconfig"
-		;;
-#	FreeBSD)
-#		CMD="pkg_add"
-#		;;
-#	Gentoo)
-#		CMD="eselect"
-#		;;
-#	ArchLinux)
-#		CMD="pacman"
-#		;;
-	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific|GosLinux|Amzn)
-		CMD="service-chkconfig"
-		;;
-	VoidLinux)
-		CMD="runit"
-		;;
-	Slackware)
-		CMD="service-initd"
-		;;
-	SUSE|SLED|SLES)
-		CMD="service-chkconfig"
-		;;
-#	Windows)
-#		CMD="chocolatey"
-#		;;
-#	*)
-#		fatal "Have no suitable DISTRNAME $DISTRNAME yet"
-#		;;
 esac
 
-# Note: force systemd using if active
-is_active_systemd && CMD="systemd"
-
 # override system control detection result
-[ -n "$FORCESERVICE" ] && CMD=$FORCESERVICE
+[ -n "$FORCESERVICE" ] && CMD="$FORCESERVICE"
 
-SERVICETYPE=$CMD
+SERVICETYPE="$CMD"
 
 ANYSERVICE=$(print_command_path anyservice)
 
