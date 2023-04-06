@@ -6,7 +6,7 @@
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
 
-PROGVERSION="20230328"
+PROGVERSION="20230406"
 
 # TODO: check /etc/system-release
 
@@ -857,10 +857,10 @@ Distro name / version (--distro-name/version): $DISTRO_NAME / $DISTRIB_FULL_RELE
             Base OS name (-o) / CPU arch (-a): $(get_base_os_name) $(get_arch)
             Bug report URL (--bug-report-url): $(print_bug_report_url)
                  CPU norm register size  (-b): $(get_bit_size)
-                   Virtualization (-i): $(get_virt)
-                 CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_core_mhz) MHz
-          System memory size (MB) (-m): $(get_memory_size)
-          Running service manager (-y): $(get_service_manager)
+                          Virtualization (-i): $(get_virt)
+                        CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_core_mhz) MHz
+                 System memory size (MB) (-m): $(get_memory_size)
+                 Running service manager (-y): $(get_service_manager)
 
 (run with -h to get help)
 EOF
@@ -884,7 +884,7 @@ case "$1" in
 		echo " -c                     - print number of CPU cores"
 		echo " -i                     - print virtualization type"
 		echo " -m                     - print system memory size (in MB)"
-		echo " -y                     - print running service manager"
+		echo " -y|--service-manager   - print running service manager"
 		echo " -z                     - print current CPU MHz"
 		echo " --glibc-version        - print system glibc version"
 		echo
@@ -993,7 +993,8 @@ case "$1" in
 		pkgvendor
 		exit 0
 		;;
-	-y)
+	-y|--service-manager)
+		override_distrib "$2"
 		get_service_manager
 		;;
 	-V)
