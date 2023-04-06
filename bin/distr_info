@@ -77,6 +77,7 @@ pkgvendor()
 	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
 	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
 	[ "$DISTRIB_ID" = "VoidLinux" ] && echo "void" && return
+	[ "$DISTRIB_ID" = "ROSAFresh" ] && echo "rosafresh" && return
 	[ "$DISTRIB_ID" = "OpenSUSE" ] && echo "suse" && return
 	[ "$DISTRIB_ID" = "openSUSETumbleweed" ] && echo "suse" && return
 	[ "$DISTRIB_ID" = "openSUSELeap" ] && echo "suse" && return
