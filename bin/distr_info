@@ -77,7 +77,6 @@ pkgvendor()
 	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
 	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
 	[ "$DISTRIB_ID" = "VoidLinux" ] && echo "void" && return
-	[ "$DISTRIB_ID" = "ROSAFresh" ] && echo "rosafresh" && return
 	[ "$DISTRIB_ID" = "OpenSUSE" ] && echo "suse" && return
 	[ "$DISTRIB_ID" = "openSUSETumbleweed" ] && echo "suse" && return
 	[ "$DISTRIB_ID" = "openSUSELeap" ] && echo "suse" && return
@@ -121,12 +120,6 @@ case $DISTRIB_ID in
 		CMD="urpm-rpm"
 		;;
 	ROSA)
-		CMD="urpm-rpm"
-		hascommand yum && CMD="yum-rpm"
-		hascommand dnf && CMD="dnf-rpm"
-		#[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "ROSA/2020" ] && CMD="urpm-rpm"
-		;;
-	ROSAFresh)
 		CMD="urpm-rpm"
 		hascommand yum && CMD="yum-rpm"
 		hascommand dnf && CMD="dnf-rpm"
@@ -282,7 +275,7 @@ normalize_name()
 			echo "RHEL"
 			;;
 		"ROSA Fresh"*|"ROSA Desktop Fresh"*)
-			echo "ROSAFresh"
+			echo "ROSA"
 			;;
 		"ROSA Chrome Desktop")
 			echo "ROSA"
@@ -425,7 +418,7 @@ case "$DISTRIB_ID" in
 		DISTRIB_RELEASE="Sisyphus"
 		DISTRIB_CODENAME="$DISTRIB_RELEASE"
 		;;
-	"ROSAFresh")
+	"ROSA")
 		DISTRIB_FULL_RELEASE="$DISTRIB_CODENAME"
 		DISTRIB_CODENAME="$DISTRIB_RELEASE"
 		;;
