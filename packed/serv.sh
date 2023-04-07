@@ -1387,9 +1387,9 @@ serv_test()
 			docmd sshd -t
 			;;
 		httpd2|httpd|apache|apache2)
-			if which httpd2 >/dev/null 2>/dev/null ; then
+			if is_command httpd2 ; then
 				docmd httpd2 -t
-			elif which apache2 >/dev/null 2>/dev/null ; then
+			elif is_command apache2 ; then
 				docmd apache2 -t
 			fi
 			;;
@@ -1465,7 +1465,7 @@ internal_distr_info()
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
 
-PROGVERSION="20230328"
+PROGVERSION="20230406"
 
 # TODO: check /etc/system-release
 
@@ -1536,7 +1536,6 @@ pkgvendor()
 	[ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
 	[ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
 	[ "$DISTRIB_ID" = "VoidLinux" ] && echo "void" && return
-	[ "$DISTRIB_ID" = "ROSAFresh" ] && echo "rosafresh" && return
 	[ "$DISTRIB_ID" = "OpenSUSE" ] && echo "suse" && return
 	[ "$DISTRIB_ID" = "openSUSETumbleweed" ] && echo "suse" && return
 	[ "$DISTRIB_ID" = "openSUSELeap" ] && echo "suse" && return
@@ -1583,18 +1582,12 @@ case $DISTRIB_ID in
 		CMD="urpm-rpm"
 		hascommand yum && CMD="yum-rpm"
 		hascommand dnf && CMD="dnf-rpm"
-		#[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "ROSA/2020" ] && CMD="urpm-rpm"
-		;;
-	ROSAFresh)
-		CMD="urpm-rpm"
-		hascommand yum && CMD="yum-rpm"
-		hascommand dnf && CMD="dnf-rpm"
 		# use dnf since 2020
 		#[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "ROSA/2020" ] && CMD="urpm-rpm"
 		;;
 	FreeBSD|NetBSD|OpenBSD|Solaris)
 		CMD="pkgsrc"
-		which pkg 2>/dev/null >/dev/null && CMD=pkgng
+		hascommand pkg && CMD=pkgng
 		;;
 	Gentoo)
 		CMD="emerge"
@@ -1741,7 +1734,7 @@ normalize_name()
 			echo "RHEL"
 			;;
 		"ROSA Fresh"*|"ROSA Desktop Fresh"*)
-			echo "ROSAFresh"
+			echo "ROSA"
 			;;
 		"ROSA Chrome Desktop")
 			echo "ROSA"
@@ -1858,9 +1851,9 @@ case "$DISTRIB_ID" in
 			DISTRIB_CODENAME="$DISTRIB_RELEASE"
 		fi
 		;;
-#	"ALTServer")
-#		DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\..*//g")
-#		;;
+	"ALTServer")
+		DISTRIB_CODENAME="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
+		;;
 	"ALTSPWorkstation")
 		DISTRIB_ID="ALTLinux"
 		case "$DISTRIB_RELEASE_ORIG" in
@@ -1884,7 +1877,8 @@ case "$DISTRIB_ID" in
 		DISTRIB_RELEASE="Sisyphus"
 		DISTRIB_CODENAME="$DISTRIB_RELEASE"
 		;;
-	"ROSAFresh")
+	"ROSA")
+		DISTRIB_FULL_RELEASE="$DISTRIB_CODENAME"
 		DISTRIB_CODENAME="$DISTRIB_RELEASE"
 		;;
 esac
@@ -2099,7 +2093,7 @@ case "$DIST_ARCH" in
     armv7*)
         # TODO: use uname only
         # uses binutils package
-        if which readelf >/dev/null 2>/dev/null && [ -z "$(readelf -A /proc/self/exe | grep Tag_ABI_VFP_args)" ] ; then
+        if hascommand readelf && [ -z "$(readelf -A /proc/self/exe | grep Tag_ABI_VFP_args)" ] ; then
             DIST_ARCH="armel"
         else
             DIST_ARCH="armhf"
@@ -2278,6 +2272,7 @@ get_service_manager()
     [ -d /run/systemd/system ] && echo "systemd" && return
     # TODO
     #[ -d /usr/share/upstart ] && echo "upstart" && return
+    hascommand systemctl && echo "systemd" && return
     [ -d /etc/init.d ] && echo "sysvinit" && return
     echo "(unknown)"
 }
@@ -2295,6 +2290,10 @@ print_pretty_name()
 
     if ! echo "$PRETTY_NAME" | grep -q "$DISTRIB_FULL_RELEASE" ; then
         PRETTY_NAME="$PRETTY_NAME ($DISTRIB_FULL_RELEASE)"
+    fi
+
+    if ! echo "$PRETTY_NAME" | grep -q "$DISTRIB_RELEASE" ; then
+        PRETTY_NAME="$PRETTY_NAME ($DISTRIB_RELEASE)"
     fi
 
     echo "$(filter_duplicated_words "$PRETTY_NAME")"
@@ -2315,10 +2314,10 @@ Distro name / version (--distro-name/version): $DISTRO_NAME / $DISTRIB_FULL_RELE
             Base OS name (-o) / CPU arch (-a): $(get_base_os_name) $(get_arch)
             Bug report URL (--bug-report-url): $(print_bug_report_url)
                  CPU norm register size  (-b): $(get_bit_size)
-                   Virtualization (-i): $(get_virt)
-                 CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_core_mhz) MHz
-          System memory size (MB) (-m): $(get_memory_size)
-          Running service manager (-y): $(get_service_manager)
+                          Virtualization (-i): $(get_virt)
+                        CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_core_mhz) MHz
+                 System memory size (MB) (-m): $(get_memory_size)
+                 Running service manager (-y): $(get_service_manager)
 
 (run with -h to get help)
 EOF
@@ -2342,7 +2341,7 @@ case "$1" in
 		echo " -c                     - print number of CPU cores"
 		echo " -i                     - print virtualization type"
 		echo " -m                     - print system memory size (in MB)"
-		echo " -y                     - print running service manager"
+		echo " -y|--service-manager   - print running service manager"
 		echo " -z                     - print current CPU MHz"
 		echo " --glibc-version        - print system glibc version"
 		echo
@@ -2426,9 +2425,11 @@ case "$1" in
 		get_memory_size
 		;;
 	-o|--os-name)
+		override_distrib "$2"
 		get_base_os_name
 		;;
 	-r|--repo-name)
+		override_distrib "$2"
 		print_repo_name
 		;;
 	--build-id)
@@ -2451,7 +2452,8 @@ case "$1" in
 		pkgvendor
 		exit 0
 		;;
-	-y)
+	-y|--service-manager)
+		override_distrib "$2"
 		get_service_manager
 		;;
 	-V)
@@ -2498,55 +2500,21 @@ set_service_type()
 	set_distro_info
 	set_target_pkg_env
 
-# TODO: see Running in distro_info, check is_aсtive_systemd
-case $DISTRNAME in
-	ALTLinux|ALTServer)
+case "$DISTRCONTROL" in
+	sysvinit)
 		CMD="service-chkconfig"
 		;;
-	Ubuntu|Debian|Mint|AstraLinux*)
-		CMD="service-update"
+	systemd)
+		CMD="systemd"
 		;;
-	Mandriva|ROSA)
-		CMD="service-chkconfig"
-		;;
-#	FreeBSD)
-#		CMD="pkg_add"
-#		;;
-#	Gentoo)
-#		CMD="eselect"
-#		;;
-#	ArchLinux)
-#		CMD="pacman"
-#		;;
-	Fedora|LinuxXP|ASPLinux|CentOS|RHEL|Scientific|GosLinux|Amzn)
-		CMD="service-chkconfig"
-		;;
-	VoidLinux)
-		CMD="runit"
-		;;
-	Slackware)
-		CMD="service-initd"
-		;;
-	SUSE|SLED|SLES)
-		CMD="service-chkconfig"
-		;;
-#	Windows)
-#		CMD="chocolatey"
-#		;;
-#	*)
-#		fatal "Have no suitable DISTRNAME $DISTRNAME yet"
-#		;;
 esac
 
-# Note: force systemd using if active
-is_active_systemd && CMD="systemd"
-
 # override system control detection result
-[ -n "$FORCESERVICE" ] && CMD=$FORCESERVICE
+[ -n "$FORCESERVICE" ] && CMD="$FORCESERVICE"
 
-SERVICETYPE=$CMD
+SERVICETYPE="$CMD"
 
-ANYSERVICE=$(which anyservice 2>/dev/null)
+ANYSERVICE=$(print_command_path anyservice)
 
 }
 
@@ -2577,7 +2545,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.41.1  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.41.2  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
