@@ -35,7 +35,7 @@ __epm_korinf_site_mask() {
         tURL="$EPM_KORINF_REPO_URL/$archprefix$($DISTRVENDOR --vendor-name)/$($DISTRVENDOR --repo-name)"
         docmd eget --check "$tURL" && URL="$tURL"
     fi
-    echo "$URL/$MASK*.$PKGFORMAT"
+    eget --list --latest "$URL/$MASK*.$PKGFORMAT"
 }
 
 __epm_korinf_list() {
