@@ -50,7 +50,7 @@ $(get_help HELPOPT)
 print_version()
 {
         echo "Etersoft uncompressor version @VERSION@"
-        echo "Copyright (c) Etersoft 2013, 2020"
+        echo "Copyright (c) Etersoft 2013, 2020, 2023"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 
@@ -62,7 +62,7 @@ regular_unpack()
     local opt="$4"
 
     # instead of epm assure
-    if ! which "$prg" >/dev/null 2>/dev/null ; then
+    if ! is_command "$prg" ; then
         epm assure $prg $pkg || fatal "Try install $pkg package for $prg unpack command."
     fi
 
