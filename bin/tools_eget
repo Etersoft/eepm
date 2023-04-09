@@ -212,6 +212,7 @@ LATEST=''
 SECONDLATEST=''
 CHECKMIRRORS=''
 TARGETFILE=''
+FORCEIPV=''
 
 set_quiet()
 {
@@ -231,6 +232,8 @@ Options:
     -q                        - quiet mode
     -k|--no-check-certificate - skip SSL certificate chain support
     -U|-A|--user-agent        - send browser like UserAgent
+    -4|--ipv4|--inet4-only    - use only IPV4
+    -6|--ipv6|--inet6-only    - use only IPV6
     -O-|-O -                  - output downloaded file to stdout
     -O file                   - download to this file
     --latest                  - print only latest version of a file
@@ -278,6 +281,12 @@ while [ -n "$1" ] ; do
             user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
             WGETUSERAGENT="-U '$user_agent'"
             CURLUSERAGENT="-A '$user_agent'"
+            ;;
+        -4|--ipv4|--inet4-only)
+            FORCEIPV="-4"
+            ;;
+        -6|--ipv6|--inet6-only)
+            FORCEIPV="-6"
             ;;
         --list|--list-only)
             LISTONLY="$1"
@@ -347,9 +356,9 @@ elif [ -n "$WGET" ] ; then
 __wget()
 {
     if [ -n "$WGETUSERAGENT" ] ; then
-        docmd $WGET $WGETQ $WGETNOSSLCHECK "$WGETUSERAGENT" "$@"
+        docmd $WGET $FORCEIPV $WGETQ $WGETNOSSLCHECK "$WGETUSERAGENT" "$@"
     else
-        docmd $WGET $WGETQ $WGETNOSSLCHECK "$@"
+        docmd $WGET $FORCEIPV $WGETQ $WGETNOSSLCHECK "$@"
     fi
 }
 
@@ -389,9 +398,9 @@ CURL="$(print_command_path curl)"
 __curl()
 {
     if [ -n "$CURLUSERAGENT" ] ; then
-        docmd $CURL --fail -L $CURLQ "$CURLUSERAGENT" $CURLNOSSLCHECK "$@"
+        docmd $CURL $FORCEIPV --fail -L $CURLQ "$CURLUSERAGENT" $CURLNOSSLCHECK "$@"
     else
-        docmd $CURL --fail -L $CURLQ $CURLNOSSLCHECK "$@"
+        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLNOSSLCHECK "$@"
     fi
 }
 # put remote content to stdout
