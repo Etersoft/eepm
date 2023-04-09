@@ -107,22 +107,22 @@ docmd()
 
 # copied from epm
 # print a path to the command if exists in $PATH
-if which which 2>/dev/null >/dev/null ; then
+if a= which which 2>/dev/null >/dev/null ; then
     # the best case if we have which command (other ways needs checking)
     # TODO: don't use which at all, it is binary, not builtin shell command
 print_command_path()
 {
-    which -- "$1" 2>/dev/null
+    a= which -- "$1" 2>/dev/null
 }
-elif type -a type 2>/dev/null >/dev/null ; then
+elif a= type -a type 2>/dev/null >/dev/null ; then
 print_command_path()
 {
-    type -fpP -- "$1" 2>/dev/null
+    a= type -fpP -- "$1" 2>/dev/null
 }
 else
 print_command_path()
 {
-    type "$1" 2>/dev/null | sed -e 's|.* /|/|'
+    a= type "$1" 2>/dev/null | sed -e 's|.* /|/|'
 }
 fi
 
@@ -131,7 +131,6 @@ is_command()
 {
     print_command_path "$1" >/dev/null
 }
-
 
 
 # check man glob
