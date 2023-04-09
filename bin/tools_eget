@@ -294,7 +294,7 @@ while [ -n "$1" ] ; do
             ;;
         --check)
             CHECKURL="$1"
-            set_quiet
+            #set_quiet
             ;;
         --latest)
             LATEST="$1"
@@ -498,7 +498,7 @@ get_urls()
 
 
 if [ -n "$CHECKURL" ] ; then
-    set_quiet
+    #set_quiet
     check_url_is_accessible "$1"
     exit
 fi
