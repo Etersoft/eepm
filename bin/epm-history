@@ -148,7 +148,7 @@ case $PMTYPE in
 		docmd journalctl $JCHAN -r
 		;;
 	apt-dpkg)
-		docmd less /var/log/dpkg.log
+		docmd cat /var/log/dpkg.log
 		;;
 	dnf-rpm)
 		sudocmd dnf history
@@ -157,13 +157,13 @@ case $PMTYPE in
 		sudocmd eopkg history
 		;;
 	zypper-rpm)
-		less /var/log/zypp/history
+		docmd cat /var/log/zypp/history
 		;;
 	pacman)
-		docmd less /var/log/pacman.log
+		docmd cat /var/log/pacman.log
 		;;
 	emerge)
-		docmd less /var/log/portage
+		docmd cat /var/log/portage
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
