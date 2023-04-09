@@ -52,32 +52,40 @@ isatty2()
 check_tty()
 {
 	isatty || return
-	which tput >/dev/null 2>/dev/null || return
+	is_command tput >/dev/null 2>/dev/null || return
 	# FreeBSD does not support tput -S
-	echo | tput -S >/dev/null 2>/dev/null || return
-	[ -z "$USETTY" ] || return
-	export USETTY=1
+	echo | a= tput -S >/dev/null 2>/dev/null || return
+	export USETTY="tput -S"
 }
 
 : ${BLACK:=0} ${RED:=1} ${GREEN:=2} ${YELLOW:=3} ${BLUE:=4} ${MAGENTA:=5} ${CYAN:=6} ${WHITE:=7}
 
 set_boldcolor()
 {
-	[ "$USETTY" = "1" ] || return
+	[ -n "$USETTY" ] || return
 	{
 		echo bold
 		echo setaf $1
-	} |tput -S
+	} | $USETTY
+}
+
+set_color()
+{
+	[ -n "$USETTY" ] || return
+	{
+		echo setaf $1
+	} | $USETTY
 }
 
 restore_color()
 {
-	[ "$USETTY" = "1" ] || return
+	[ -n "$USETTY" ] || return
 	{
 		echo op; # set Original color Pair.
 		echo sgr0; # turn off all special graphics mode (bold in our case).
-	} |tput -S
+	} | $USETTY
 }
+
 
 echover()
 {
