@@ -136,7 +136,7 @@ if [ $PMTYPE = "apt-rpm" ] ; then
 		"")
 			;;
 		*)
-			fatal "Unknown option $1"
+			fatal "Unknown option $1. Use epm history --help to get help."
 	esac
 fi
 
