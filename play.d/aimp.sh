@@ -8,7 +8,7 @@ DESCRIPTION="AIMP (Wine based audio player) from the official site"
 
 pkgtype="$(epm print info -p)"
 
-if ! which wine ; then
+if ! is_command wine ; then
     epm play wine || fatal
 fi
 
