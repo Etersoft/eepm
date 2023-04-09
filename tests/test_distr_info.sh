@@ -7,7 +7,8 @@ for ROOTDIR in $(ls -1d etc/*) ; do
     export ROOTDIR
     e=$(../bin/distr_info -e)
     s=$(../bin/distr_info -s)
-    idstr="$e $s"
+    r=$(../bin/distr_info --repo-name)
+    idstr="$e $s/$r"
     if [ -n "$WRITE" ] ; then
         echo "$idstr" > $ROOTDIR/etalon.txt
         continue

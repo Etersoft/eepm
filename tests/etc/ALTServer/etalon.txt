@@ -1,1 +1,1 @@
-ALTServer/10
+ALTServer/10 alt/p10

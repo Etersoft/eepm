@@ -1,1 +1,1 @@
-AstraLinuxSE/1.7
+AstraLinuxSE/1.7 astra/1.7_x86-64

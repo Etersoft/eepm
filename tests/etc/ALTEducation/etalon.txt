@@ -1,1 +1,1 @@
-ALTLinux/p9
+ALTLinux/p9 alt/p9

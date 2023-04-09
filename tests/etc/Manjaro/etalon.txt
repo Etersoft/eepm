@@ -1,1 +1,1 @@
-ManjaroLinux/CUR
+ManjaroLinux/CUR manjaro/CUR

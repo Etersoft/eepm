@@ -1,1 +1,1 @@
-ALTLinux/p8
+ALTLinux/p8 alt/p8
