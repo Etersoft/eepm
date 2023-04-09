@@ -809,10 +809,7 @@ fi
 
 check_core_commands()
 {
-	#which --help >/dev/null || fatal "Can't find which command (which package is missed?)"
-	# broken which on Debian systems
-	# TODO: use is_command and print_command_path instead of
-	which which >/dev/null || fatal "Can't find which command (which or debianutils package is missed?)"
+	#which which >/dev/null || fatal "Can't find which command (which or debianutils package is missed?)"
 	is_command grep || fatal "Can't find grep command (coreutils package is missed?)"
 	is_command sed || fatal "Can't find sed command (sed package is missed?)"
 }
