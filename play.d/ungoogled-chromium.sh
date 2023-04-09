@@ -2,7 +2,7 @@
 
 PKGNAME=ungoogled-chromium
 SUPPORTEDARCHES="x86_64"
-DESCRIPTION='' #"Google Chromium, sans integration with Google from the official site"
+DESCRIPTION="Google Chromium, sans integration with Google from the official site"
 
 . $(dirname $0)/common.sh
 
