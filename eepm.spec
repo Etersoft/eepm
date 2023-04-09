@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.41.2
+Version: 3.42.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -155,6 +155,13 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Mon Apr 10 2023 Vitaly Lipatov <lav@altlinux.ru> 3.42.0-alt1
+- epm play trueconf: fix libicu require
+- epm ei: get real path before epm install (to fix ask about install)
+- epm play: add mobirise, lunacy, ungoogled-chromium
+- epm: drop less using
+- epm play sweethome3d: support for latest version, rewrite repack
+
 * Fri Apr 07 2023 Vitaly Lipatov <lav@altlinux.ru> 3.41.2-alt1
 - serv: use is_command instead of direct which
 - serv: use service type detection from epm print info --service-manager

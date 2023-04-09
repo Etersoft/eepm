@@ -3,13 +3,9 @@ coreutils
 diffutils
 eepm
 /etc/bashrc
-/etc/eepm/eepm.conf
 file
 findutils
 gawk
 grep
 gzip
-less
 sed
-termutils
-which
