@@ -18,10 +18,11 @@
 #
 
 EHOG='\(apt-get\|rpm\)'
+JCHAN='-t apt-get -t rpm'
 
 __alt_epm_history_journal()
 {
-	a= journalctl -t apt-get -t rpm
+	a= journalctl $JCHAN
 }
 
 __alt_epm_history_uniq()
@@ -144,7 +145,7 @@ fi
 
 case $PMTYPE in
 	apt-rpm)
-		docmd journalctl -t apt-get -t rpm -r
+		docmd journalctl $JCHAN -r
 		;;
 	apt-dpkg)
 		docmd less /var/log/dpkg.log
