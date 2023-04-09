@@ -32,7 +32,7 @@ __alt_local_content_filelist()
     update_alt_contents_index
     local CI="$(cat $ALT_CONTENTS_INDEX_LIST)"
 
-    # TODO: safe way to use less
+    # TODO: safe way to use less or bat
     #local OUTCMD="less"
     #[ -n "$USETTY" ] || OUTCMD="cat"
     OUTCMD="cat"
@@ -110,7 +110,8 @@ __epm_filelist_file()
 			;;
 	esac
 
-	docmd $CMD $@ | less
+	# TODO: add less
+	docmd $CMD $@
 }
 
 __epm_filelist_name()
@@ -138,7 +139,7 @@ __epm_filelist_name()
 			CMD="conary query --ls"
 			;;
 		pacman)
-			docmd pacman -Ql $@ | sed -e "s|.* ||g" | less
+			docmd pacman -Ql $@ | sed -e "s|.* ||g"
 			return
 			;;
 		emerge)
@@ -167,7 +168,7 @@ __epm_filelist_name()
 			;;
 		slackpkg)
 			is_installed $@ || fatal "Query filelist for non installed packages is not implemented yet"
-			docmd awk 'BEGIN{desk=1}{if(/^FILE LIST:$/){desk=0} else if (desk==0) {print}}' /var/log/packages/${pkg_filenames}* | less
+			docmd awk 'BEGIN{desk=1}{if(/^FILE LIST:$/){desk=0} else if (desk==0) {print}}' /var/log/packages/${pkg_filenames}*
 			return
 			;;
 		*)
@@ -175,7 +176,7 @@ __epm_filelist_name()
 			;;
 	esac
 
-	# TODO: add less
+	# TODO: add less or bat (for any output in the function)
 	docmd $CMD $@ && return
 	# TODO: may be we need check is installed before prev. line?
 	is_installed $@ || __epm_filelist_remote $@

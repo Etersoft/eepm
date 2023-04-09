@@ -35,7 +35,7 @@ __epm_changelog_files()
 	case $(get_package_type $1) in
 		rpm)
 			assure_exists rpm
-			docmd_foreach "rpm -q -p --changelog" $@ | less
+			docmd_foreach "rpm -q -p --changelog" $@
 			;;
 #		deb)
 #			
@@ -52,17 +52,17 @@ __epm_changelog_local_names()
 
 	case $PMTYPE in
 		apt-rpm|yum-rpm|dnf-rpm|urpm-rpm|zypper-rpm)
-			docmd_foreach "rpm -q --changelog" $@ | less
+			docmd_foreach "rpm -q --changelog" $@
 			;;
 		apt-dpkg|aptitude-dpkg)
-			docmd zcat /usr/share/doc/$1/changelog.Debian.gz | less
+			docmd zcat /usr/share/doc/$1/changelog.Debian.gz
 			;;
 		emerge)
 			assure_exists equery
-			docmd equery changes -f $1 | less
+			docmd equery changes -f $1
 			;;
 		pacman)
-			docmd pacman -Qc $1 | less
+			docmd pacman -Qc $1
 			;;
 		*)
 			fatal "Have no suitable command for $PMTYPE"
@@ -76,7 +76,7 @@ __epm_changelog_unlocal_names()
 
 	case $PMTYPE in
 		apt-rpm)
-			__epm_changelog_apt $@ | less
+			__epm_changelog_apt "$1"
 			;;
 		#apt-dpkg)
 		#	# FIXME: only first pkg
@@ -86,14 +86,14 @@ __epm_changelog_unlocal_names()
 		#	sudocmd yum clean all
 		#	;;
 		urpm-rpm)
-			docmd urpmq --changelog $@ | less
+			docmd urpmq --changelog "$1"
 			;;
 		#zypper-rpm)
 		#	sudocmd zypper clean
 		#	;;
 		emerge)
 			assure_exists equery
-			docmd equery changes -f $1 | less
+			docmd equery changes -f "$1"
 			;;
 		*)
 			fatal "Have no suitable command for $PMTYPE. Try install the package firstly."
@@ -109,6 +109,7 @@ epm_changelog()
 
 	__epm_changelog_files $pkg_files
 
+	# TODO: add less or bat
 	local pkg
 	for pkg in $pkg_names ; do
 		if is_installed $pkg ; then

@@ -118,19 +118,19 @@ if [ $PMTYPE = "apt-rpm" ] ; then
 			return
 			;;
 		--installed)               # HELPCMD: print only new installed packages
-			__alt_epm_history_installed | less
+			__alt_epm_history_installed
 			return
 			;;
 		--removed)                 # HELPCMD: print only removed packages
-			__alt_epm_history_removed #| less
+			__alt_epm_history_removed
 			return
 			;;
 		--updated)                 # HELPCMD: print only updated packages
-			__alt_epm_history_updated | less
+			__alt_epm_history_updated
 			return
 			;;
 		--list)                    # HELPCMD: (or empty) print all history entries
-			docmd journalctl -t apt-get
+			docmd journalctl $JCHAN
 			return
 			;;
 		"")
