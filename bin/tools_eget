@@ -938,6 +938,10 @@ sget()
     local URL="$1"
     local TARGET="$2"
     [ "$TARGET" = "-" ] && TARGET="/dev/stdout"
+
+    if [ -n "$GETFILENAME" ] ; then
+        get_filename "$URL"
+        exit
     fi
 
     local REALURL="$(get_real_url "$URL")" || return
