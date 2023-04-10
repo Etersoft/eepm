@@ -168,6 +168,15 @@ is_command()
     print_command_path "$1" >/dev/null
 }
 
+# add realpath if missed
+if ! is_command realpath ; then
+realpath()
+{
+    [ -n "$*" ] || return
+    readlink -f "$@"
+}
+fi
+
 
 # check man glob
 filter_glob()
