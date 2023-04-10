@@ -987,7 +987,6 @@ sget()
 {
     local URL="$1"
     local TARGET="$2"
-    [ "$TARGET" = "-" ] && TARGET="/dev/stdout"
 
     if [ -n "$GETFILENAME" ] ; then
         get_filename "$URL"
@@ -1000,6 +999,13 @@ sget()
         echo "$REALURL"
         exit
     fi
+
+    # skip ipfs for cat
+    if [ "$TARGET" = "/dev/stdout" ] || [ "$TARGET" = "-" ] ; then
+       url_scat "$URL"
+       return
+    fi
+
 
     #if is_strange_url "$REALURL" ; then
     #    info "Just download strange URL $REALURL, skipping IPFS"
