@@ -45,4 +45,6 @@ pack_file /usr/share/applications/$PRODUCT.desktop
 
 set_alt_alternatives 65
 
+fix_chrome_sandbox $PRODUCTDIR/chrome_sandbox
+
 install_deps
