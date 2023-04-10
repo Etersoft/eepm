@@ -769,6 +769,9 @@ url_get_real_url()
 url_get_filename()
 {
     local URL="$1"
+
+    ! is_httpurl "$URL" && basename "$URL" && return
+
     # FIXME with wget
     local cd="$(url_get_header "$URL" "Content-Disposition")"
     if echo "$cd" | grep -q "filename=" ; then
@@ -777,13 +780,7 @@ url_get_filename()
         return
     fi
 
-   local loc="$(url_get_header "$URL" "Location" | tail -n1)"
-    if is_url "$loc" ; then
-        basename "$loc"
-        return
-    fi
-
-    basename "$URL"
+    basename "$(url_get_real_url "$URL")"
 }
 
 else
@@ -860,6 +857,9 @@ url_get_real_url()
 url_get_filename()
 {
     local URL="$1"
+
+    ! is_httpurl "$URL" && basename "$URL" && return
+
     # FIXME with wget
     local cd="$(url_get_header "$URL" "content-disposition")"
     if echo "$cd" | grep -q "filename=" ; then
@@ -868,13 +868,7 @@ url_get_filename()
         return
     fi
 
-   local loc="$(url_get_header "$URL" "location" | tail -n1)"
-    if is_url "$loc" ; then
-        basename "$loc"
-        return
-    fi
-
-    basename "$URL"
+    basename "$(url_get_real_url "$URL")"
 }
 
 
