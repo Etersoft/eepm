@@ -932,13 +932,11 @@ scat()
 sget()
 {
     local URL="$1"
-    if [ "$2" = "/dev/stdout" ] || [ "$2" = "-" ] ; then
-       scat "$URL"
-       return
+    local TARGET="$2"
+    [ "$TARGET" = "-" ] && TARGET="/dev/stdout"
     fi
 
     local REALURL="$(get_real_url "$URL")" || return
-    local TARGET="$2"
 
     if [ -n "$GETREALURL" ] ; then
         echo "$REALURL"
