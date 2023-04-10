@@ -924,9 +924,16 @@ sget()
        return
     fi
 
+    local REALURL="$(get_real_url "$URL")" || return
     local TARGET="$2"
 
-    local CID="$(get_cid_by_url "$URL")"
+    if [ -n "$GETREALURL" ] ; then
+        echo "$REALURL"
+        exit
+    fi
+
+
+    local CID="$(get_cid_by_url "$REALURL")"
     if [ -n "$CID" ] ; then
 
         if [ -n "$GETFILENAME" ] ; then
@@ -940,12 +947,12 @@ sget()
                 TARGET="$CID"
             fi
         fi
-        info "$URL -> $CID -> $TARGET"
+        [ "$URL" = "$REALURL" ] && info "$URL -> $CID -> $TARGET" || info "$URL -> $REALURL -> $CID -> $TARGET"
         ipfs_get "$CID" "$TARGET"
         return
     fi
 
-    local FN="$(url_get_filename "$URL")" || return
+    local FN="$(url_get_filename "$REALURL")" || return
     if [ -z "$TARGET" ] ; then
         TARGET="$FN"
     fi
@@ -953,24 +960,25 @@ sget()
     CID="$(download_to_ipfs "$REALURL")" || return
 
     ipfs_get "$CID" "$TARGET" || return
-    put_cid_and_url "$URL" "$CID" "$FN"
+    put_cid_and_url "$REALURL" "$CID" "$FN"
 }
 
 check_url_is_accessible()
 {
     local URL="$1"
-    local CID="$(get_cid_by_url "$URL")"
+    local REALURL="$(get_real_url "$URL")" || return
+    local CID="$(get_cid_by_url "$REALURL")"
     if [ -n "$CID" ] ; then
-        info "$URL -> $CID"
+        [ "$URL" = "$REALURL" ] && info "$URL -> $CID" || info "$URL -> $REALURL -> $CID"
         ipfs_check "$CID"
         return
     fi
 
     CID="$(download_to_ipfs "$REALURL")" || return
 
+    local FN="$(url_get_filename "$REALURL")" || return
     ipfs_cat "$CID" >/dev/null || return
-    local FN="$(url_get_filename "$URL")" || return
-    put_cid_and_url "$URL" "$CID" "$FN"
+    put_cid_and_url "$REALURL" "$CID" "$FN"
 }
 
 get_filename()
