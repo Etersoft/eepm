@@ -406,8 +406,56 @@ ipfs_check()
 
 
 
+select_ipfs_mode()
+{
+    IPFS_CMD="$(get_ipfs_brave)"
+    if [ -n "$IPFS_CMD" ] ; then
+        IPFS_API="$ipfs_api_brave"
+        if ipfs_access ; then
+            if ipfs_check "$ipfs_checkQm" ; then
+                ipfs_mode="brave" && return
+            else
+                info "Skipped Brave: it is accesible via $IPFS_CMD --api $IPFS_API, but can't return shared $ipfs_checkQm"
+            fi
+        fi
+    fi
+
+    IPFS_CMD="$(print_command_path ipfs)"
+    if [ -n "$IPFS_CMD" ] ; then
+        IPFS_API="$ipfs_api_local"
+        if ipfs_access ; then
+            if ipfs_check "$ipfs_checkQm" ; then
+                ipfs_mode="local" && return
+            else
+                info "Skipped local: it is accesible via $IPFS_CMD --api $IPFS_API, but can't return shared $ipfs_checkQm"
+            fi
+        fi
+    fi
+
+    # TODO: check checksum
+    if docmd eget --check "$ipfs_gateway/$ipfs_checkQm" ; then
+        ipfs_mode="gateway"
+        return
+    else
+        IPFS_GATEWAY=''
+        if docmd eget --check "$(dirname $ipfs_gateway)" ; then
+            info "IPFS gateway $ipfs_gateway is accessible, but can't return shared $ipfs_checkQm"
+        else
+            info "IPFS gateway $(dirname ipfs_gateway) is not accessible"
+        fi
+    fi
+
+    ipfs_mode="disabled"
+}
 ipfs_mode="$EGET_IPFS"
+# detect if we run with ipfs:// or with auto
+if is_ipfsurl "$1" && [ -z "$ipfs_mode" ] || [ "$ipfs_mode" = "auto" ] || [ -n "$EGET_IPFS_DB" ]  ; then
+    select_ipfs_mode
+    info "Auto selected IPFS mode: $ipfs_mode"
+else
     [ -n "$ipfs_mode" ] && info "Use IPFS mode: $ipfs_mode"
+fi
+
 IPFS_CMD=''
 
 if [ "$ipfs_mode" = "disabled" ] ; then
