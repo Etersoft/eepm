@@ -313,8 +313,8 @@ Options:
 Supported URLs:
   ftp:// http:// https:// file:/ ipfs://
 
-Supported backends:
-  wget curl ipfs (todo: aria2c)
+Supported backends (set like EGET_BACKEND=curl)
+  wget curl (todo: aria2c)
 
 Examples:
   $ eget http://ftp.somesite.ru/package-*.x64.tar
@@ -626,7 +626,7 @@ fi
 
 
 WGET="$(print_command_path wget)"
-
+CURL="$(print_command_path curl)"
 
 if is_fileurl "$1" ; then
 
@@ -710,7 +710,8 @@ url_get_real_url()
 }
 
 
-elif [ -n "$WGET" ] && [ "$EGET_BACKEND" != "curl" ] ; then
+elif [ -n "$WGET" ] && [ "$EGET_BACKEND" != "curl" ] || [ "$EGET_BACKEND" = "wget" ] ; then
+[ -n "$WGET" ] || fatal "There are no wget in the system but you forced using it via EGET_BACKEND. Install it with $ epm install wget"
 __wget()
 {
     if [ -n "$WGETUSERAGENT" ] ; then
@@ -799,9 +800,8 @@ url_get_filename()
 }
 
 
-else
-CURL="$(print_command_path curl)"
-[ -n "$CURL" ] || fatal "There are no wget nor curl in the system. Install it with $ epm install curl"
+elif [ -n "$CURL" ] && [ "$EGET_BACKEND" != "wget" ] || [ "$EGET_BACKEND" = "curl" ] ; then
+[ -n "$CURL" ] || fatal "There are no curl in the system but you forced using it via EGET_BACKEND. Install it with $ epm install curl"
 __curl()
 {
     if [ -n "$CURLUSERAGENT" ] ; then
@@ -887,7 +887,8 @@ url_get_filename()
     basename "$(url_get_real_url "$URL")"
 }
 
-
+else
+    fatal "There are no wget nor curl in the system. Install something with $ epm install wget"
 fi
 
 
