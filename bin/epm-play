@@ -358,6 +358,10 @@ if [ "$1" = "--ipfs" ]  ; then
         if [ ! -r "$EGET_IPFS_DB" ] ; then
             sudorun touch "$EGET_IPFS_DB" >&2
             sudorun chmod -v a+rw "$EGET_IPFS_DB" >&2
+            # get initial db from server
+            local URL="https://eepm.ru/app-versions"
+            info "Initialize IPFS DB in $EGET_IPFS_DB file and fill it with data from $URL/eget-ipfs-db.txt"
+            docmd eget -q -O $EGET_IPFS_DB "$URL/eget-ipfs-db.txt"
         fi
     else
         warning "ipfs db dir $eget_ipfs_db is not exists, skipping --ipfs"
