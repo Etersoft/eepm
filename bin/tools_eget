@@ -951,7 +951,7 @@ url_get_filename()
     if echo "$cd" | grep -q "filename=" ; then
         #Content-Disposition: attachment; filename=postman-linux-x64.tar.gz
         #content-disposition: attachment; filename="code-1.77.1-1680651749.el7.x86_64.rpm"
-        echo "$cd" | sed -e 's|.*filename=||' -e 's|^"||' -e 's|"$||'
+        echo "$cd" | sed -e 's|.*filename=||' -e 's|^"||' -e 's|";$||' -e 's|"$||'
         return
     fi
 
