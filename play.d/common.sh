@@ -6,32 +6,11 @@ fatal()
     exit 1
 }
 
-# print a path to the command if exists in $PATH
-if a= which which 2>/dev/null >/dev/null ; then
-    # the best case if we have which command (other ways needs checking)
-    # TODO: don't use which at all, it is binary, not builtin shell command
-print_command_path()
-{
-    a= which -- "$1" 2>/dev/null
-}
-elif a= type -a type 2>/dev/null >/dev/null ; then
-print_command_path()
-{
-    a= type -fpP -- "$1" 2>/dev/null
-}
-else
-print_command_path()
-{
-    a= type "$1" 2>/dev/null | sed -e 's|.* /|/|'
-}
-fi
-
 # check if <arg> is a real command
 is_command()
 {
-    print_command_path "$1" >/dev/null
+    epm tool which "$1" >/dev/null
 }
-
 
 eget()
 {
