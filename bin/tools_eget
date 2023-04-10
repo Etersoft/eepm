@@ -878,6 +878,19 @@ fi
 
 if [ -n "$EGET_IPFS_DB" ] &&  ! is_ipfsurl "$1"  ; then
 
+download_to_ipfs()
+{
+    local URL="$1"
+    local res
+    #res="$(url_scat "$URL" | ipfs_put )" || return
+    #res="$(echo "$res" | grep "^added Qm")" || return 1
+    #CID="$(echo "$res" | cut -f2 -d" ")"
+    # with -q to disable progress (mixed with download progress)
+    res="$(url_scat "$URL" | ipfs_put -q)" || return
+    is_ipfs_hash "$res" || return 1
+    echo "$res"
+}
+
 # put remote content to stdout
 scat()
 {
@@ -894,10 +907,7 @@ scat()
         return
     fi
 
-    local res
-    res="$(url_scat "$URL" | ipfs_put )" || return
-    res="$(echo "$res" | grep "^added Qm")" || return 1
-    CID="$(echo "$res" | cut -f2 -d" ")"
+    CID="$(download_to_ipfs "$URL")" || return
 
     ipfs_cat "$CID" || return
 
@@ -940,10 +950,7 @@ sget()
         TARGET="$FN"
     fi
 
-    local res
-    res="$(url_scat "$URL" | ipfs_put )" || return
-    res="$(echo "$res" | grep "^added Qm")" || return 1
-    CID="$(echo "$res" | cut -f2 -d" ")"
+    CID="$(download_to_ipfs "$REALURL")" || return
 
     ipfs_get "$CID" "$TARGET" || return
     put_cid_and_url "$URL" "$CID" "$FN"
@@ -959,10 +966,7 @@ check_url_is_accessible()
         return
     fi
 
-    local res
-    res="$(url_scat "$URL" | ipfs_put )" || return
-    res="$(echo "$res" | grep "^added Qm")" || return 1
-    CID="$(echo "$res" | cut -f2 -d" ")"
+    CID="$(download_to_ipfs "$REALURL")" || return
 
     ipfs_cat "$CID" >/dev/null || return
     local FN="$(url_get_filename "$URL")" || return
