@@ -622,8 +622,23 @@ ipfs_get()
 ipfs_put()
 {
     [ -n "$IPFS_CMD" ] || fatal "ipfs api is not usable"
+
+    # detect if -q is used (will output Qm instead of addded Qm)
+    local qu="$1"
+    [ "$qu" = "-q" ] || qu=''
+
     showcmd $IPFS_PRETTY_CMD --api $IPFS_API add "$@"
-    $IPFS_CMD --api $IPFS_API add "$@"
+
+    local res
+    res="$($IPFS_CMD --api $IPFS_API add "$@")" || return
+
+    if [ -z "$qu" ] ; then
+        res="$(echo "$res" | grep "^added Qm")" || return
+        res="$(echo "$res" | cut -f2 -d" ")"
+    fi
+
+    is_ipfs_hash "$res" && echo "$res" && return
+    fatal "Can't recognize $res IPFS hash"
 }
 
 ipfs_cat()
@@ -996,30 +1011,39 @@ sget()
         fi
 
         if [ -z "$TARGET" ] ; then
+            # TODO: in some cases we can get name from URL...
             TARGET="$(get_filename_by_cid "$CID")"
             if [ -z "$TARGET" ] ; then
                 TARGET="$CID"
             fi
         fi
         [ "$URL" = "$REALURL" ] && info "$URL -> $CID -> $TARGET" || info "$URL -> $REALURL -> $CID -> $TARGET"
-        ipfs_get "$CID" "$TARGET"
+        ipfs_get "$CID" "$TARGET" && return
+
+        # fail get from IPFS, fallback
+        url_sget "$REALURL" "$TARGET"
         return
     fi
 
+
+    # download and put to IPFS
     local FN="$(url_get_filename "$REALURL")" || return
     if [ -z "$TARGET" ] ; then
         TARGET="$FN"
     fi
 
-    CID="$(download_to_ipfs "$REALURL")" || return
-
     if [ -n "$GETIPFSCID" ] ; then
-        put_cid_and_url "$REALURL" "$CID" "$FN"
-        echo "$CID"
-        exit
+         # add to IPFS and print out CID
+         CID="$(ipfs_put "$REALURL")" || return
+         echo "$CID"
+         exit
     fi
 
-    ipfs_get "$CID" "$TARGET" || return
+    # download file and add to IPFS
+    url_sget "$REALURL" "$TARGET" || return
+    CID="$(ipfs_put "$TARGET")" || return
+    is_ipfs_hash "$CID" || return
+
     put_cid_and_url "$REALURL" "$CID" "$FN"
 }
 
