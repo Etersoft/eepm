@@ -375,16 +375,17 @@ done
 
 WGET="$(print_command_path wget)"
 
+
 if is_fileurl "$1" ; then
 
 # put remote content to stdout
-scat()
+url_scat()
 {
     local URL="$1"
     cat "$(path_from_url "$URL")"
 }
 # download to default name of to $2
-sget()
+url_sget()
 {
     local URL="$1"
     if [ "$2" = "/dev/stdout" ] || [ "$2" = "-" ] ; then
@@ -397,7 +398,7 @@ sget()
     cp -av "$(path_from_url "$URL")" .
 }
 
-check_url_is_accessible()
+url_check()
 {
     local URL="$1"
     test -f "$(path_from_url "$URL")"
@@ -406,13 +407,13 @@ check_url_is_accessible()
 elif is_ipfsurl "$1" ; then
 
 # put remote content to stdout
-scat()
+url_scat()
 {
     local URL="$1"
     a= ipfs cat "$(cid_from_url "$URL")"
 }
 # download to default name of to $2
-sget()
+url_sget()
 {
     local URL="$1"
     if [ "$2" = "/dev/stdout" ] || [ "$2" = "-" ] ; then
@@ -425,7 +426,7 @@ sget()
     a= ipfs get "$(path_from_url "$URL")"
 }
 
-check_url_is_accessible()
+url_check()
 {
     local URL="$1"
     # TODO: improve me
@@ -443,13 +444,13 @@ __wget()
 }
 
 # put remote content to stdout
-scat()
+url_scat()
 {
     local URL="$1"
     download_with_mirroring __wget "$URL" -O-
 }
 # download to default name of to $2
-sget()
+url_sget()
 {
     local URL="$1"
     if [ "$2" = "/dev/stdout" ] || [ "$2" = "-" ] ; then
@@ -466,7 +467,7 @@ sget()
     download_with_mirroring __wget "$URL" $WGETNAMEOPTIONS
 }
 
-check_url_is_accessible()
+url_check()
 {
     local URL="$1"
     __wget --spider -S "$URL" 2>&1 | grep "HTTP/" | tail -n1 | grep -q "200"
@@ -484,13 +485,13 @@ __curl()
     fi
 }
 # put remote content to stdout
-scat()
+url_scat()
 {
     local URL="$1"
     download_with_mirroring __curl "$URL" --output -
 }
 # download to default name of to $2
-sget()
+url_sget()
 {
     local URL="$1"
     local res
@@ -505,7 +506,7 @@ sget()
     download_with_mirroring __curl "$URL" $CURLNAMEOPTIONS
 }
 
-check_url_is_accessible()
+url_check()
 {
     local URL="$1"
     __curl -LI "$URL" 2>&1 | grep "HTTP/" | tail -n1 | grep -q -w "200\|404"
@@ -515,6 +516,20 @@ fi
 
 
 
+scat()
+{
+    url_scat "$@"
+}
+
+sget()
+{
+    url_sget "$@"
+}
+
+check_url_is_accessible()
+{
+    url_check "$@"
+}
 get_github_urls()
 {
     # https://github.com/OWNER/PROJECT
