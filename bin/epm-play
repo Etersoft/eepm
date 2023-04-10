@@ -356,8 +356,8 @@ if [ "$1" = "--ipfs" ]  ; then
     if [ -d "$(dirname "$epm_ipfs_db")" ] ; then
         export EGET_IPFS_DB="$eget_ipfs_db"
         if [ ! -r "$EGET_IPFS_DB" ] ; then
-            sudorun touch "$EGET_IPFS_DB"
-            sudorun chmod -v a+rw "$EGET_IPFS_DB"
+            sudorun touch "$EGET_IPFS_DB" >&2
+            sudorun chmod -v a+rw "$EGET_IPFS_DB" >&2
         fi
     else
         warning "ipfs db dir $eget_ipfs_db is not exists, skipping --ipfs"
