@@ -546,6 +546,11 @@ ipfs_mode="$EGET_IPFS"
 # enable auto mode when set $EGET_IPFS_DB
 [ -z "$ipfs_mode" ] && [ -n "$EGET_IPFS_DB" ] && ipfs_mode="auto"
 
+if [ -n "$LISTONLY$CHECKURL" ] ; then
+    ipfs_mode="disabled"
+    EGET_IPFS_DB=''
+fi
+
 
 if [ "$ipfs_mode" != "disabled" ] && [ -n "$EGET_IPFS_DB" ] ; then
     ddb="$(dirname "$EGET_IPFS_DB")"
