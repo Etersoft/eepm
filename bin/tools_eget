@@ -685,7 +685,36 @@ fi
 WGET="$(print_command_path wget)"
 CURL="$(print_command_path curl)"
 
+
 if is_fileurl "$1" ; then
+    EGET_BACKEND="file"
+elif is_ipfsurl "$1" ; then
+    EGET_BACKEND="ipfs"
+fi
+
+
+case "$EGET_BACKEND" in
+    file|ipfs)
+        ;;
+    wget)
+        [ -n "$WGET" ] || fatal "There are no wget in the system but you forced using it via EGET_BACKEND. Install it with $ epm install wget"
+        ;;
+    curl)
+        [ -n "$CURL" ] || fatal "There are no curl in the system but you forced using it via EGET_BACKEND. Install it with $ epm install curl"
+        ;;
+    '')
+        [ -n "$WGET" ] && EGET_BACKEND="wget"
+        [ -z "$EGET_BACKEND" ] && [ -n "$CURL" ] && EGET_BACKEND="curl"
+        [ -n "$EGET_BACKEND" ] || fatal "There are no wget nor curl in the system. Install something with $ epm install wget"
+        ;;
+    *)
+        fatal "Uknown EGET_BACKEND $EGET_BACKEND"
+        ;;
+esac
+
+
+
+if [ "$EGET_BACKEND" = "file" ] ; then
 
 # put remote content to stdout
 url_scat()
@@ -723,7 +752,7 @@ url_get_real_url()
     echo "$1"
 }
 
-elif is_ipfsurl "$1" ; then
+elif [ "$EGET_BACKEND" = "ipfs" ] ; then
 
 # put remote content to stdout
 url_scat()
@@ -767,8 +796,7 @@ url_get_real_url()
 }
 
 
-elif [ -n "$WGET" ] && [ "$EGET_BACKEND" != "curl" ] || [ "$EGET_BACKEND" = "wget" ] ; then
-[ -n "$WGET" ] || fatal "There are no wget in the system but you forced using it via EGET_BACKEND. Install it with $ epm install wget"
+elif [ "$EGET_BACKEND" = "wget" ] ; then
 __wget()
 {
     if [ -n "$WGETUSERAGENT" ] ; then
@@ -818,7 +846,7 @@ url_get_header()
 {
     local URL="$1"
     local HEADER="$2"
-    url_get_headers "$URL" | grep "^$HEADER: " | sed -e "s|^$HEADER: ||"
+    url_get_headers "$URL" | grep -i "^$HEADER: " | sed -e "s|^$HEADER: ||i"
 }
 
 url_get_real_url()
@@ -858,9 +886,8 @@ url_get_filename()
     basename "$(url_get_real_url "$URL")"
 }
 
+elif [ "$EGET_BACKEND" = "curl" ] ; then
 
-elif [ -n "$CURL" ] && [ "$EGET_BACKEND" != "wget" ] || [ "$EGET_BACKEND" = "curl" ] ; then
-[ -n "$CURL" ] || fatal "There are no curl in the system but you forced using it via EGET_BACKEND. Install it with $ epm install curl"
 __curl()
 {
     if [ -n "$CURLUSERAGENT" ] ; then
@@ -948,8 +975,6 @@ url_get_filename()
     basename "$(url_get_real_url "$URL")"
 }
 
-else
-    fatal "There are no wget nor curl in the system. Install something with $ epm install wget"
 fi
 
 
