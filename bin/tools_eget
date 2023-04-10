@@ -271,6 +271,7 @@ LISTONLY=''
 CHECKURL=''
 GETFILENAME=''
 GETREALURL=''
+GETIPFSCID=''
 LATEST=''
 SECONDLATEST=''
 CHECKMIRRORS=''
@@ -374,6 +375,9 @@ while [ -n "$1" ] ; do
             ;;
         --get-real-url)
             GETREALURL="$1"
+            ;;
+        --get-ipfs-cid)
+            GETIPFSCID="$1"
             ;;
         --latest)
             LATEST="$1"
@@ -936,6 +940,11 @@ sget()
     local CID="$(get_cid_by_url "$REALURL")"
     if [ -n "$CID" ] ; then
 
+        if [ -n "$GETIPFSCID" ] ; then
+            echo "$CID"
+            exit
+        fi
+
         if [ -n "$GETFILENAME" ] ; then
             get_filename_by_cid "$CID"
             exit
@@ -958,6 +967,12 @@ sget()
     fi
 
     CID="$(download_to_ipfs "$REALURL")" || return
+
+    if [ -n "$GETIPFSCID" ] ; then
+        put_cid_and_url "$REALURL" "$CID" "$FN"
+        echo "$CID"
+        exit
+    fi
 
     ipfs_get "$CID" "$TARGET" || return
     put_cid_and_url "$REALURL" "$CID" "$FN"
