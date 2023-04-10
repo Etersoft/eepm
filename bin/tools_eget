@@ -539,10 +539,11 @@ fi
 
 
 
-
 ipfs_mode="$EGET_IPFS"
+[ -z "$ipfs_mode" ] && [ -n "$EGET_IPFS_DB" ] && ipfs_mode="auto"
+
 # detect if we run with ipfs:// or with auto
-if is_ipfsurl "$1" && [ -z "$ipfs_mode" ] || [ "$ipfs_mode" = "auto" ] || [ -n "$EGET_IPFS_DB" ]  ; then
+if is_ipfsurl "$1" && [ -z "$ipfs_mode" ] || [ "$ipfs_mode" = "auto" ] ; then
     select_ipfs_mode
     info "Auto selected IPFS mode: $ipfs_mode"
 else
