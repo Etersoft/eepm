@@ -132,12 +132,9 @@ case "$1" in
 esac
 
 
-# legacy compatibility and support direct run the script
-if [ -z "epm print info" ] ; then
-    export DISTRVENDOR="epm print info"
-    if [ -x "../bin/epm" ] ; then
-        export PATH="$(realpath ../bin):$PATH"
-    fi
+# support direct run the script
+if [ -x "../bin/epm" ] ; then
+    export PATH="$(realpath ../bin):$PATH"
 fi
 
 if [ -z "$SUDO" ] && [ "$UID" != "0" ] ; then
