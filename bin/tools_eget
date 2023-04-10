@@ -285,6 +285,7 @@ CURLNAMEOPTIONS='--remote-name --remote-time --remote-header-name'
 
 LISTONLY=''
 CHECKURL=''
+GETRESPONSE=''
 GETFILENAME=''
 GETREALURL=''
 GETIPFSCID=''
@@ -323,6 +324,7 @@ Options:
 
     --list|--list-only        - print only URLs
     --check URL               - check if the URL is accessible (returns HTTP 200 OK)
+    --get-response URL        - get response with all headers (ever if HEAD is not acceptable)
     --get-filename URL        - print filename for the URL (via Content-Disposition if applicable)
     --get-real-url URL        - print URL after all redirects
 
@@ -388,6 +390,9 @@ while [ -n "$1" ] ; do
             ;;
         --get-filename)
             GETFILENAME="$1"
+            ;;
+        --get-response)
+            GETRESPONSE="$1"
             ;;
         --get-real-url)
             GETREALURL="$1"
@@ -1217,6 +1222,11 @@ get_urls()
 if [ -n "$CHECKURL" ] ; then
     #set_quiet
     check_url_is_accessible "$1"
+    exit
+fi
+
+if [ -n "$GETRESPONSE" ] ; then
+    url_get_response "$1"
     exit
 fi
 
