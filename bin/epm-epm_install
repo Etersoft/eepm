@@ -48,8 +48,8 @@ __epm_korinf_list() {
 
 __epm_korinf_install() {
 
-    # skip interactive for install eepm from stdin
-    if inputisatty && [ -n "$PROGDIR" ] && [ "$1" != "eepm" ] ; then
+    # enable interactive for install eepm from console
+    if inputisatty && [ -n "$PROGDIR" ] && [ "$1" = "eepm" ] ; then
         [ -n "$non_interactive" ] || interactive="--interactive"
     fi
 
