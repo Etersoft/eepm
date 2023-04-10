@@ -166,7 +166,7 @@ is_fileurl()
     echo "$1" | grep -q "^file:/"
 }
 
-dir_from_url()
+path_from_url()
 {
     echo "$1" | sed -e 's|^file://*|/|'
 }
@@ -337,7 +337,7 @@ if is_fileurl "$1" ; then
 scat()
 {
     local URL="$1"
-    cat "$(dir_from_url "$URL")"
+    cat "$(path_from_url "$URL")"
 }
 # download to default name of to $2
 sget()
@@ -347,16 +347,16 @@ sget()
        scat "$URL"
        return
     elif [ -n "$2" ] ; then
-       cp -av "$(dir_from_url "$URL")" "$2"
+       cp -av "$(path_from_url "$URL")" "$2"
        return
     fi
-    cp -av "$(dir_from_url "$URL")" .
+    cp -av "$(path_from_url "$URL")" .
 }
 
 check_url_is_accessible()
 {
     local URL="$1"
-    test -f "$(dir_from_url "$URL")"
+    test -f "$(path_from_url "$URL")"
 }
 
 elif [ -n "$WGET" ] ; then
@@ -493,7 +493,7 @@ make_fileurl()
 get_urls()
 {
     if is_fileurl "$URL" ; then
-        ls -1 "$(dir_from_url "$URL")"
+        ls -1 "$(path_from_url "$URL")"
         return
     fi
 
