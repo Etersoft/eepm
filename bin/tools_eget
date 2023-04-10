@@ -21,12 +21,40 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+PROGDIR=$(dirname "$0")
+PROGNAME=$(basename "$0")
+CMDSHELL="/bin/sh"
+[ "$PROGDIR" = "." ] && PROGDIR="$(pwd)"
+if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
+    PROGDIR=""
+    PROGNAME=""
+fi
+
+
 fatal()
 {
     echo "FATAL: $*" >&2
     exit 1
 }
 
+info()
+{
+    echo "$*" >&2
+}
+
+eget()
+{
+	if [ -n "$PROGNAME" ] ; then
+
+		local bashopt=''
+		[ -n "$verbose" ] && bashopt='-x'
+
+		$CMDSHELL $bashopt $PROGDIR/$PROGNAME "$@"
+	else
+		#epm_main --inscript "$@"
+		fatal "Improve me"
+	fi
+}
 
 # TODO:
 arch="$(uname -m)"
