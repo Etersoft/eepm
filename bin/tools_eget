@@ -215,6 +215,13 @@ is_ipfsurl()
     echo "$1" | grep -q "^ipfs://"
 }
 
+is_httpurl()
+{
+    # TODO: improve
+    echo "$1" | grep -q "^https://" & return
+    echo "$1" | grep -q "^http://" & return
+}
+
 cid_from_url()
 {
     echo "$1" | sed -e 's|^ipfs://*||'
@@ -263,6 +270,7 @@ CURLNAMEOPTIONS='--remote-name --remote-time --remote-header-name'
 LISTONLY=''
 CHECKURL=''
 GETFILENAME=''
+GETREALURL=''
 LATEST=''
 SECONDLATEST=''
 CHECKMIRRORS=''
@@ -299,6 +307,7 @@ Options:
     --list|--list-only        - print only URLs
     --check URL               - check if the URL is accessible (returns HTTP 200 OK)
     --get-filename URL        - print filename for the URL (via Content-Disposition if applicable)
+    --get-real-url URL        - print URL after all redirects
 
 Supported URLs:
   ftp:// http:// https:// file:/ ipfs://
@@ -362,6 +371,9 @@ while [ -n "$1" ] ; do
             ;;
         --get-filename)
             GETFILENAME="$1"
+            ;;
+        --get-real-url)
+            GETREALURL="$1"
             ;;
         --latest)
             LATEST="$1"
@@ -634,6 +646,11 @@ url_get_filename()
     basename "$1"
 }
 
+url_get_real_url()
+{
+    echo "$1"
+}
+
 elif is_ipfsurl "$1" ; then
 
 # put remote content to stdout
@@ -665,8 +682,16 @@ url_check()
 
 url_get_filename()
 {
+    local URL="$1"
     local CID="$(cid_from_url "$URL")"
     get_filename_by_cid "$CID"
+}
+
+url_get_real_url()
+{
+    local URL="$1"
+    local CID="$(cid_from_url "$URL")"
+    get_url_by_cid "$CID"
 }
 
 
@@ -721,6 +746,24 @@ url_get_header()
     local URL="$1"
     local HEADER="$2"
     url_get_headers "$URL" | grep "^$HEADER: " | sed -e "s|^$HEADER: ||"
+}
+
+url_get_real_url()
+{
+    local URL="$1"
+
+    ! is_httpurl "$URL" && echo "$URL" && return
+
+    # don't check location if we have made form of the URL
+    [ -n "$MADEURL" ] && [ "$MADEURL" = "$URL" ] && echo "$URL" && return
+
+    local loc="$(url_get_header "$URL" "Location" | tail -n1)"
+    if is_url "$loc" ; then
+        echo "$loc"
+        return
+    fi
+
+    echo "$URL"
 }
 
 url_get_filename()
@@ -794,6 +837,24 @@ url_get_header()
     local URL="$1"
     local HEADER="$2"
     url_get_headers "$URL" | grep "^$HEADER: " | sed -e "s|^$HEADER: ||"
+}
+
+url_get_real_url()
+{
+    local URL="$1"
+
+    ! is_httpurl "$URL" && echo "$URL" && return
+
+    # don't check location if we have made form of the URL
+    [ -n "$MADEURL" ] && [ "$MADEURL" = "$URL" ] && echo "$URL" && return
+
+    local loc="$(url_get_header "$URL" "location" | tail -n1)"
+    if is_url "$loc" ; then
+        echo "$loc"
+        return
+    fi
+
+    echo "$URL"
 }
 
 url_get_filename()
@@ -906,6 +967,11 @@ check_url_is_accessible()
 get_filename()
 {
     url_get_filename "$1"
+}
+
+get_real_url()
+{
+    url_get_real_url "$1"
 }
 
 else
