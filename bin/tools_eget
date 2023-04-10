@@ -452,6 +452,45 @@ select_ipfs_mode()
 
     ipfs_mode="disabled"
 }
+
+if [ -n "$EGET_IPFS_DB" ] ; then
+    ddb="$(dirname "$EGET_IPFS_DB")"
+    if [ -d "$ddb" ] ; then
+        info "Using eget IPFS db $EGET_IPFS_DB"
+        [ -r "$EGET_IPFS_DB" ] || touch "$EGET_IPFS_DB"
+
+get_cid_by_url()
+{
+    local URL="$1"
+    [ -r "$EGET_IPFS_DB" ] || return
+    grep -F "$URL Qm" "$EGET_IPFS_DB" | head -n1 | cut -f2 -d" "
+}
+
+put_cid_and_url()
+{
+    local URL="$1"
+    local CID="$2"
+    local FN="$3"
+    [ -w "$EGET_IPFS_DB" ] || return
+    echo "$URL $CID $FN" >> "$EGET_IPFS_DB"
+}
+
+get_filename_by_cid()
+{
+    local CID="$1"
+    [ -z "$EGET_IPFS_DB" ] && echo "$CID" && return
+    grep -F " $CID " "$EGET_IPFS_DB" | head -n1 | cut -f3 -d" "
+}
+
+
+    else
+        EGET_IPFS_DB=''
+    fi
+fi
+
+
+
+
 ipfs_mode="$EGET_IPFS"
 # detect if we run with ipfs:// or with auto
 if is_ipfsurl "$1" && [ -z "$ipfs_mode" ] || [ "$ipfs_mode" = "auto" ] || [ -n "$EGET_IPFS_DB" ]  ; then
@@ -614,6 +653,13 @@ url_check()
     scat "$URL" >/dev/null
 }
 
+url_get_filename()
+{
+    local CID="$(cid_from_url "$URL")"
+    get_filename_by_cid "$CID"
+}
+
+
 elif [ -n "$WGET" ] ; then
 __wget()
 {
@@ -710,6 +756,94 @@ fi
 
 
 
+if [ -n "$EGET_IPFS_DB" ] &&  ! is_ipfsurl "$1"  ; then
+
+# put remote content to stdout
+scat()
+{
+    local URL="$1"
+    local CID="$(get_cid_by_url "$URL")"
+    if [ -n "$CID" ] ; then
+        info "$URL -> $CID"
+        ipfs_cat "$CID"
+        return
+    fi
+
+    local res
+    res="$(url_scat "$URL" | ipfs_put )" || return
+    res="$(echo "$res" | grep "^added Qm")" || return 1
+    CID="$(echo "$res" | cut -f2 -d" ")"
+
+    ipfs_cat "$CID" || return
+
+    local FN="$(url_get_filename "$URL")" || return
+
+    put_cid_and_url "$URL" "$CID" "$FN"
+}
+# download to default name of to $2
+sget()
+{
+    local URL="$1"
+    if [ "$2" = "/dev/stdout" ] || [ "$2" = "-" ] ; then
+       scat "$URL"
+       return
+    fi
+
+    local TARGET="$2"
+
+    local CID="$(get_cid_by_url "$URL")"
+    if [ -n "$CID" ] ; then
+        if [ -z "$TARGET" ] ; then
+            TARGET="$(get_filename_by_cid "$CID")"
+            if [ -z "$TARGET" ] ; then
+                TARGET="$CID"
+            fi
+        fi
+        info "$URL -> $CID -> $TARGET"
+        ipfs_get "$CID" "$TARGET"
+        return
+    fi
+
+    local FN="$(url_get_filename "$URL")" || return
+    if [ -z "$TARGET" ] ; then
+        TARGET="$FN"
+    fi
+
+    local res
+    res="$(url_scat "$URL" | ipfs_put )" || return
+    res="$(echo "$res" | grep "^added Qm")" || return 1
+    CID="$(echo "$res" | cut -f2 -d" ")"
+
+    ipfs_get "$CID" "$TARGET" || return
+    put_cid_and_url "$URL" "$CID" "$FN"
+}
+
+check_url_is_accessible()
+{
+    local URL="$1"
+    local CID="$(get_cid_by_url "$URL")"
+    if [ -n "$CID" ] ; then
+        info "$URL -> $CID"
+        ipfs_check "$CID"
+        return
+    fi
+
+    local res
+    res="$(url_scat "$URL" | ipfs_put )" || return
+    res="$(echo "$res" | grep "^added Qm")" || return 1
+    CID="$(echo "$res" | cut -f2 -d" ")"
+
+    ipfs_cat "$CID" >/dev/null || return
+    local FN="$(url_get_filename "$URL")" || return
+    put_cid_and_url "$URL" "$CID" "$FN"
+}
+
+get_filename()
+{
+    url_get_filename "$1"
+}
+
+else
 scat()
 {
     url_scat "$@"
