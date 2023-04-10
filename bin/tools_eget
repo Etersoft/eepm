@@ -509,6 +509,13 @@ get_filename_by_cid()
     grep -F " $CID " "$EGET_IPFS_DB" | head -n1 | cut -f3 -d" "
 }
 
+get_url_by_cid()
+{
+    local CID="$1"
+    [ -z "$EGET_IPFS_DB" ] && echo "$CID" && return
+    grep -F " $CID " "$EGET_IPFS_DB" | head -n1 | cut -f1 -d" "
+}
+
 
     else
         EGET_IPFS_DB=''
@@ -787,6 +794,7 @@ url_get_filename()
     basename "$(url_get_real_url "$URL")"
 }
 
+
 else
 CURL="$(print_command_path curl)"
 [ -n "$CURL" ] || fatal "There are no wget nor curl in the system. Install it with $ epm install curl"
@@ -919,6 +927,7 @@ scat()
 
     put_cid_and_url "$URL" "$CID" "$FN"
 }
+
 # download to default name of to $2
 sget()
 {
@@ -947,6 +956,11 @@ sget()
 
         if [ -n "$GETFILENAME" ] ; then
             get_filename_by_cid "$CID"
+            exit
+        fi
+
+        if [ -n "$GETREALURL" ] ; then
+            get_url_by_cid "$CID"
             exit
         fi
 
@@ -1016,6 +1030,11 @@ sget()
 {
     if [ -n "$GETFILENAME" ] ; then
         get_filename "$1"
+        exit
+    fi
+
+    if [ -n "$GETREALURL" ] ; then
+        get_real_url "$1"
         exit
     fi
 
