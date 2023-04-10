@@ -412,6 +412,10 @@ done
 
 #############################3
 # defaults
+
+# https://github.com/ipfs/kubo/issues/5541
+ipfs_timeout='--timeout 10s'
+
 ipfs_api_local="/ip4/127.0.0.1/tcp/5001"
 [ -n "$EGET_IPFS_API" ] && ipfs_api_local="$EGET_IPFS_API"
 
@@ -426,21 +430,21 @@ ipfs_checkQm="QmYwf2GAMvHxfFiUFL2Mr6KUG6QrDiupqGc8ms785ktaYw"
 
 get_ipfs_brave()
 {
-    local ipfs_brave="$(ls ~/.config/BraveSoftware/Brave-Browser/*/*/go-ipfs_*)"
+    local ipfs_brave="$(ls ~/.config/BraveSoftware/Brave-Browser/*/*/go-ipfs_* 2>/dev/null)"
     [ -n "$ipfs_brave" ] && [ -x "$ipfs_brave" ] || return
     echo "$ipfs_brave"
 }
 
 ipfs_access()
 {
-    [ -n "$IPFS_CMD" ] || fatal "disabled"
-    $IPFS_CMD --api $IPFS_API diag sys >/dev/null 2>/dev/null
+    [ -n "$IPFS_CMD" ] || fatal "IPFS is disabled"
+    $IPFS_CMD --api $IPFS_API $ipfs_timeout diag sys >/dev/null 2>/dev/null
 }
 
 ipfs_check()
 {
-    [ -n "$IPFS_CMD" ] || fatal "disabled"
-    $IPFS_CMD --api $IPFS_API cat "$1" >/dev/null
+    [ -n "$IPFS_CMD" ] || fatal "IPFS is disabled"
+    $IPFS_CMD --api $IPFS_API $ipfs_timeout cat "$1" >/dev/null
 }
 
 
@@ -611,11 +615,11 @@ ipfs_get()
 {
     [ -n "$IPFS_CMD" ] || fatal "ipfs api is not usable"
     if [ -n "$2" ] ; then
-        showcmd $IPFS_PRETTY_CMD --api $IPFS_API get -o "$2" "$1"
-        $IPFS_CMD --api $IPFS_API get -o "$2" "$1"
+        showcmd $IPFS_PRETTY_CMD --api $IPFS_API $ipfs_timeout get -o "$2" "$1"
+        $IPFS_CMD --api $IPFS_API $ipfs_timeout get -o "$2" "$1"
     else
-        showcmd $IPFS_PRETTY_CMD --api $IPFS_API get "$1"
-        $IPFS_CMD --api $IPFS_API get "$1"
+        showcmd $IPFS_PRETTY_CMD --api $IPFS_API $ipfs_timeout get "$1"
+        $IPFS_CMD --api $IPFS_API $ipfs_timeout get "$1"
     fi
 }
 
@@ -644,8 +648,8 @@ ipfs_put()
 ipfs_cat()
 {
     [ -n "$IPFS_CMD" ] || fatal "ipfs api is not usable"
-    showcmd $IPFS_PRETTY_CMD --api $IPFS_API cat "$1"
-    $IPFS_CMD --api $IPFS_API cat "$1"
+    showcmd $IPFS_PRETTY_CMD --api $IPFS_API $ipfs_timeout cat "$1"
+    $IPFS_CMD --api $IPFS_API $ipfs_timeout cat "$1"
 }
 
 fi
