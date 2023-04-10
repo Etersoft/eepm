@@ -560,11 +560,13 @@ ipfs_cat()
 
 elif [ "$ipfs_mode" = "brave" ] ; then
     IPFS_CMD="$(get_ipfs_brave)" || fatal "Can't find ipfs command in Brave"
+    IPFS_PRETTY_CMD="~Brave-Browser/$(basename $IPFS_CMD)"
     IPFS_API="$ipfs_api_brave"
     ipfs_access || fatal "Can't access to Brave IPFS API (Brave browser is not running and IPFS is not activated?)"
 
 elif [ "$ipfs_mode" = "local" ] ; then
     IPFS_CMD="$(print_command_path ipfs)" || fatal "Can't find ipfs command"
+    IPFS_PRETTY_CMD="$IPFS_CMD"
     IPFS_API="$ipfs_api_local"
     ipfs_access || fatal "Can't access to IPFS API (ipfs daemon is not running?)"
 
@@ -602,22 +604,26 @@ ipfs_get()
 {
     [ -n "$IPFS_CMD" ] || fatal "ipfs api is not usable"
     if [ -n "$2" ] ; then
-        docmd $IPFS_CMD --api $IPFS_API get -o "$2" "$1"
+        showcmd $IPFS_PRETTY_CMD --api $IPFS_API get -o "$2" "$1"
+        $IPFS_CMD --api $IPFS_API get -o "$2" "$1"
     else
-        docmd $IPFS_CMD --api $IPFS_API get "$1"
+        showcmd $IPFS_PRETTY_CMD --api $IPFS_API get "$1"
+        $IPFS_CMD --api $IPFS_API get "$1"
     fi
 }
 
 ipfs_put()
 {
     [ -n "$IPFS_CMD" ] || fatal "ipfs api is not usable"
-    docmd $IPFS_CMD --api $IPFS_API add "$@"
+    showcmd $IPFS_PRETTY_CMD --api $IPFS_API add "$@"
+    $IPFS_CMD --api $IPFS_API add "$@"
 }
 
 ipfs_cat()
 {
     [ -n "$IPFS_CMD" ] || fatal "ipfs api is not usable"
-    docmd $IPFS_CMD --api $IPFS_API cat "$1"
+    showcmd $IPFS_PRETTY_CMD --api $IPFS_API cat "$1"
+    $IPFS_CMD --api $IPFS_API cat "$1"
 }
 
 fi
