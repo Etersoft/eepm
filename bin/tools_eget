@@ -371,6 +371,128 @@ while [ -n "$1" ] ; do
 done
 
 
+#############################3
+# defaults
+ipfs_api_local="/ip4/127.0.0.1/tcp/5001"
+[ -n "$EGET_IPFS_API" ] && ipfs_api_local="$EGET_IPFS_API"
+
+ipfs_api_brave="/ip4/127.0.0.1/tcp/45005"
+
+ipfs_gateway="https://cloudflare-ipfs.com/ipfs"
+[ -n "$EGET_IPFS_GATEWAY" ] && ipfs_gateway="$EGET_IPFS_GATEWAY"
+IPFS_GATEWAY="$ipfs_gateway"
+
+# Test data: https://etersoft.ru/templates/etersoft/images/logo.png
+ipfs_checkQm="QmYwf2GAMvHxfFiUFL2Mr6KUG6QrDiupqGc8ms785ktaYw"
+
+get_ipfs_brave()
+{
+    local ipfs_brave="$(ls ~/.config/BraveSoftware/Brave-Browser/*/*/go-ipfs_*)"
+    [ -n "$ipfs_brave" ] && [ -x "$ipfs_brave" ] || return
+    echo "$ipfs_brave"
+}
+
+ipfs_access()
+{
+    [ -n "$IPFS_CMD" ] || fatal "disabled"
+    $IPFS_CMD --api $IPFS_API diag sys >/dev/null 2>/dev/null
+}
+
+ipfs_check()
+{
+    [ -n "$IPFS_CMD" ] || fatal "disabled"
+    $IPFS_CMD --api $IPFS_API cat "$1" >/dev/null
+}
+
+
+
+ipfs_mode="$EGET_IPFS"
+    [ -n "$ipfs_mode" ] && info "Use IPFS mode: $ipfs_mode"
+IPFS_CMD=''
+
+if [ "$ipfs_mode" = "disabled" ] ; then
+
+ipfs_get()
+{
+    fatal "disabled"
+}
+
+ipfs_put()
+{
+    fatal "disabled"
+}
+
+ipfs_cat()
+{
+    fatal "disabled"
+}
+
+
+elif [ "$ipfs_mode" = "brave" ] ; then
+    IPFS_CMD="$(get_ipfs_brave)" || fatal "Can't find ipfs command in Brave"
+    IPFS_API="$ipfs_api_brave"
+    ipfs_access || fatal "Can't access to Brave IPFS API (Brave browser is not running and IPFS is not activated?)"
+
+elif [ "$ipfs_mode" = "local" ] ; then
+    IPFS_CMD="$(print_command_path ipfs)" || fatal "Can't find ipfs command"
+    IPFS_API="$ipfs_api_local"
+    ipfs_access || fatal "Can't access to IPFS API (ipfs daemon is not running?)"
+
+elif [ "$ipfs_mode" = "gateway" ] ; then
+ipfs_get()
+{
+    [ -n "$IPFS_GATEWAY" ] || fatal "ipfs http gateway is not set"
+    # FIXME:
+    if [ -n "$2" ] ; then
+        docmd eget -O "$2" "$IPFS_GATEWAY/$1"
+    else
+        docmd eget "$IPFS_GATEWAY/$1"
+    fi
+}
+
+ipfs_cat()
+{
+    # FIXME:
+    ipfs_get "$1" "-"
+}
+
+ipfs_put()
+{
+    fatal "disabled"
+}
+elif [ -z "$ipfs_mode" ] ; then
+    :
+else
+    fatal "Unsupported eget ipfs mode $ipfs_mode"
+fi
+
+if [ -n "$IPFS_CMD" ] ; then
+
+ipfs_get()
+{
+    [ -n "$IPFS_CMD" ] || fatal "ipfs api is not usable"
+    if [ -n "$2" ] ; then
+        docmd $IPFS_CMD --api $IPFS_API get -o "$2" "$1"
+    else
+        docmd $IPFS_CMD --api $IPFS_API get "$1"
+    fi
+}
+
+ipfs_put()
+{
+    [ -n "$IPFS_CMD" ] || fatal "ipfs api is not usable"
+    docmd $IPFS_CMD --api $IPFS_API add "$@"
+}
+
+ipfs_cat()
+{
+    [ -n "$IPFS_CMD" ] || fatal "ipfs api is not usable"
+    docmd $IPFS_CMD --api $IPFS_API cat "$1"
+}
+
+fi
+###############################
+
 
 
 WGET="$(print_command_path wget)"
@@ -410,7 +532,7 @@ elif is_ipfsurl "$1" ; then
 url_scat()
 {
     local URL="$1"
-    a= ipfs cat "$(cid_from_url "$URL")"
+    ipfs_cat "$(cid_from_url "$URL")"
 }
 # download to default name of to $2
 url_sget()
@@ -420,10 +542,10 @@ url_sget()
        scat "$URL"
        return
     elif [ -n "$2" ] ; then
-       a= ipfs get -o "$2" "$(cid_from_url "$URL")"
+       ipfs_get "$(cid_from_url "$URL")" "$2"
        return
     fi
-    a= ipfs get "$(path_from_url "$URL")"
+    ipfs_get "$(cid_from_url "$URL")"
 }
 
 url_check()
