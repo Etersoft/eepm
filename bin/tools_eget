@@ -489,24 +489,20 @@ select_ipfs_mode()
     if docmd eget --check "$ipfs_gateway/$ipfs_checkQm" ; then
         ipfs_mode="gateway"
         return
+    fi
+
+    IPFS_GATEWAY=''
+    if docmd eget --check "$(dirname $ipfs_gateway)" ; then
+       info "IPFS gateway $ipfs_gateway is accessible, but can't return shared $ipfs_checkQm"
     else
-        IPFS_GATEWAY=''
-        if docmd eget --check "$(dirname $ipfs_gateway)" ; then
-            info "IPFS gateway $ipfs_gateway is accessible, but can't return shared $ipfs_checkQm"
-        else
-            info "IPFS gateway $(dirname $ipfs_gateway) is not accessible"
-        fi
+       info "IPFS gateway $(dirname $ipfs_gateway) is not accessible"
     fi
 
     ipfs_mode="disabled"
 }
 
-if [ "$ipfs_mode" != "disabled" ] && [ -n "$EGET_IPFS_DB" ] ; then
-    ddb="$(dirname "$EGET_IPFS_DB")"
-    if [ -d "$ddb" ] ; then
-        info "Using eget IPFS db $EGET_IPFS_DB"
-        [ -r "$EGET_IPFS_DB" ] || touch "$EGET_IPFS_DB"
 
+# Functions for work with eget ipfs db
 get_cid_by_url()
 {
     local URL="$1"
@@ -542,23 +538,32 @@ get_url_by_cid()
     grep -F " $CID " "$EGET_IPFS_DB" | head -n1 | cut -f1 -d" "
 }
 
+###################
 
+
+ipfs_mode="$EGET_IPFS"
+
+# enable auto mode when set $EGET_IPFS_DB
+[ -z "$ipfs_mode" ] && [ -n "$EGET_IPFS_DB" ] && ipfs_mode="auto"
+
+
+if [ "$ipfs_mode" != "disabled" ] && [ -n "$EGET_IPFS_DB" ] ; then
+    ddb="$(dirname "$EGET_IPFS_DB")"
+    if [ -d "$ddb" ] ; then
+        info "Using eget IPFS db $EGET_IPFS_DB"
+        [ -r "$EGET_IPFS_DB" ] || touch "$EGET_IPFS_DB"
     else
         EGET_IPFS_DB=''
     fi
 fi
 
 
-
-ipfs_mode="$EGET_IPFS"
-[ -z "$ipfs_mode" ] && [ -n "$EGET_IPFS_DB" ] && ipfs_mode="auto"
-
 # detect if we run with ipfs:// or with auto
 if is_ipfsurl "$1" && [ -z "$ipfs_mode" ] || [ "$ipfs_mode" = "auto" ] ; then
     select_ipfs_mode
     info "Auto selected IPFS mode: $ipfs_mode"
 else
-    [ -n "$ipfs_mode" ] && info "Use IPFS mode: $ipfs_mode"
+    [ -n "$ipfs_mode" ] && info "IPFS mode: $ipfs_mode"
 fi
 
 IPFS_CMD=''
