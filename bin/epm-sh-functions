@@ -517,7 +517,7 @@ eget()
 	local EGET
 	# use internal eget only if exists
 	if [ -s $SHAREDIR/tools_eget ] ; then
-		$SHAREDIR/tools_eget "$@"
+		( EGET_BACKEND=$eget_backend $SHAREDIR/tools_eget "$@" )
 		return
 	fi
 	fatal "Internal error: missed tools_eget"
