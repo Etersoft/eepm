@@ -36,7 +36,8 @@ __epm_have_repack_rule()
 __epm_check_if_needed_repack()
 {
     __epm_have_repack_rule "$@" || return
-    warning "There is repack rule for $pkgname package. It is better install this package via 'epm --repack install' or 'epm play'."
+    local pkgname="$(epm print name for package "$1")"
+    warning "There is repack rule for '$pkgname' package. It is better install this package via 'epm --repack install' or 'epm play'."
 }
 
 # arg: rpm or deb
