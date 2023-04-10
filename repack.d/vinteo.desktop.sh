@@ -18,3 +18,11 @@ fix_chrome_sandbox
 install_deps
 
 add_findreq_skiplist "/opt/VinteoDesktop/resources/app.asar.unpacked/node_modules/@serialport/bindings-cpp/prebuilds/*/*.node"
+
+case "$(epm print info -e)" in
+    ALTLinux/p9)
+        # bindings.node: /lib64/libc.so.6: version `GLIBC_2.28' not found
+        echo "TODO: build node-serialport package if needed"
+        remove_dir $PRODUCTDIR/resources/app.asar.unpacked/node_modules/@serialport
+        ;;
+esac
