@@ -830,16 +830,17 @@ url_sget()
     download_with_mirroring __wget "$URL" $WGETNAMEOPTIONS
 }
 
-url_check()
+url_get_response()
 {
     local URL="$1"
-    __wget --spider -S "$URL" 2>&1 | grep "HTTP/" | tail -n1 | grep -q "200"
-}
-
-url_get_headers()
-{
-    local URL="$1"
-    __wget --spider -S "$URL" 2>&1 | grep -i "^ *[[:alpha:]].*: " | sed -e 's|^ *||'
+    local answer
+    answer="$(__wget --spider -S "$URL" 2>&1)"
+    # HTTP/1.1 405 Method Not Allowed
+    if echo "$answer" | grep -q "^ *HTTP/[12.]* 405" ; then
+        __wget --start-pos=5000G -S "$URL" 2>&1
+        return
+    fi
+    echo "$answer"
 }
 
 
@@ -875,23 +876,37 @@ url_sget()
     download_with_mirroring __curl "$URL" $CURLNAMEOPTIONS
 }
 
-url_check()
+url_get_response()
 {
     local URL="$1"
-    __curl -LI "$URL" 2>&1 | grep "HTTP/" | tail -n1 | grep -q -w "200\|404"
+    local answer
+    answer="$(__curl -LI "$URL" 2>&1)"
+    # HTTP/1.1 405 Method Not Allowed
+    if echo "$answer" | grep -q "^ *HTTP/[12.]* 405" ; then
+        __curl -L -i -r0-0 "$URL" 2>&1
+        return
+    fi
+    echo "$answer"
 }
 
-url_get_headers()
-{
-    local URL="$1"
-    __curl -LI "$URL" 2>&1 | grep -i "^ *[[:alpha:]].*: " | sed -e 's|\r$||'
-}
 
 fi
 
 
 # Common code for both wget and curl (http related)
 if [ "$EGET_BACKEND" = "wget" ] || [ "$EGET_BACKEND" = "curl" ] ; then
+
+url_get_headers()
+{
+    local URL="$1"
+    url_get_response "$URL" | grep -i "^ *[[:alpha:]].*: " | sed -e 's|^ *||' -e 's|\r$||'
+}
+
+url_check()
+{
+    local URL="$1"
+    url_get_response | grep "HTTP/" | tail -n1 | grep -q -w "200\|404"
+}
 
 url_get_header()
 {
