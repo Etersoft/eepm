@@ -500,7 +500,7 @@ select_ipfs_mode()
     ipfs_mode="disabled"
 }
 
-if [ -n "$EGET_IPFS_DB" ] ; then
+if [ "$ipfs_mode" != "disabled" ] && [ -n "$EGET_IPFS_DB" ] ; then
     ddb="$(dirname "$EGET_IPFS_DB")"
     if [ -d "$ddb" ] ; then
         info "Using eget IPFS db $EGET_IPFS_DB"
@@ -939,7 +939,7 @@ fi
 
 
 
-if [ -n "$EGET_IPFS_DB" ] &&  ! is_ipfsurl "$1"  ; then
+if [ "$ipfs_mode" != "disabled" ] && [ -n "$EGET_IPFS_DB" ] &&  ! is_ipfsurl "$1"  ; then
 
 download_to_ipfs()
 {
