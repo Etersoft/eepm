@@ -123,6 +123,9 @@ pkg_urls=
 quoted_args=
 direct_args=
 
+eget_backend=$EGET_BACKEND
+eget_ipfs_db=/var/lib/eepm/eget-ipfs-db.txt
+
 # load system wide config
 [ -f $CONFIGDIR/eepm.conf ] && . $CONFIGDIR/eepm.conf
 

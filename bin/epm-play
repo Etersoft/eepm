@@ -351,6 +351,19 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
     exit
 fi
 
+if [ "$1" = "--ipfs" ]  ; then
+    shift
+    if [ -d "$(dirname "$epm_ipfs_db")" ] ; then
+        export EGET_IPFS_DB="$eget_ipfs_db"
+        if [ ! -r "$EGET_IPFS_DB" ] ; then
+            sudorun touch "$EGET_IPFS_DB"
+            sudorun chmod -v a+rw "$EGET_IPFS_DB"
+        fi
+    else
+        warning "ipfs db dir $eget_ipfs_db is not exists, skipping --ipfs"
+    fi
+fi
+
 
 if [ "$1" = "--remove" ] || [ "$1" = "remove" ]  ; then
     shift
