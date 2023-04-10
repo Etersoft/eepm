@@ -839,52 +839,9 @@ url_check()
 url_get_headers()
 {
     local URL="$1"
-    __wget --spider -S "$URL" 2>&1 | grep "^  [A-Z].*: " | sed -e 's|^  ||'
+    __wget --spider -S "$URL" 2>&1 | grep -i "^ *[[:alpha:]].*: " | sed -e 's|^ *||'
 }
 
-url_get_header()
-{
-    local URL="$1"
-    local HEADER="$2"
-    url_get_headers "$URL" | grep -i "^$HEADER: " | sed -e "s|^$HEADER: ||i"
-}
-
-url_get_real_url()
-{
-    local URL="$1"
-
-    ! is_httpurl "$URL" && echo "$URL" && return
-
-    # don't check location if we have made form of the URL
-    [ -n "$MADEURL" ] && [ "$MADEURL" = "$URL" ] && echo "$URL" && return
-
-    local loc
-    for loc in $(url_get_header "$URL" "Location" | tac) ; do
-        if ! is_strange_url "$loc" ; then
-            echo "$loc"
-            return
-        fi
-    done
-
-    echo "$URL"
-}
-
-url_get_filename()
-{
-    local URL="$1"
-
-    ! is_httpurl "$URL" && basename "$URL" && return
-
-    # FIXME with wget
-    local cd="$(url_get_header "$URL" "Content-Disposition")"
-    if echo "$cd" | grep -q "filename=" ; then
-        #Content-Disposition: attachment; filename=postman-linux-x64.tar.gz
-        echo "$cd" | sed -e 's|.*filename=||'
-        return
-    fi
-
-    basename "$(url_get_real_url "$URL")"
-}
 
 elif [ "$EGET_BACKEND" = "curl" ] ; then
 
@@ -927,15 +884,20 @@ url_check()
 url_get_headers()
 {
     local URL="$1"
-    __curl -LI "$URL" 2>&1 | grep "^[a-z].*: " | sed -e 's|\r$||'
+    __curl -LI "$URL" 2>&1 | grep -i "^ *[[:alpha:]].*: " | sed -e 's|\r$||'
 }
 
-# TODO: the same code in wget case, but there other header names
+fi
+
+
+# Common code for both wget and curl (http related)
+if [ "$EGET_BACKEND" = "wget" ] || [ "$EGET_BACKEND" = "curl" ] ; then
+
 url_get_header()
 {
     local URL="$1"
     local HEADER="$2"
-    url_get_headers "$URL" | grep "^$HEADER: " | sed -e "s|^$HEADER: ||"
+    url_get_headers "$URL" | grep -i "^ *$HEADER: " | sed -e "s|^ *$HEADER: ||i"
 }
 
 url_get_real_url()
@@ -948,7 +910,7 @@ url_get_real_url()
     [ -n "$MADEURL" ] && [ "$MADEURL" = "$URL" ] && echo "$URL" && return
 
     local loc
-    for loc in $(url_get_header "$URL" "location" | tac) ; do
+    for loc in $(url_get_header "$URL" "Location" | tac) ; do
         if ! is_strange_url "$loc" ; then
             echo "$loc"
             return
@@ -965,7 +927,7 @@ url_get_filename()
     ! is_httpurl "$URL" && basename "$URL" && return
 
     # FIXME with wget
-    local cd="$(url_get_header "$URL" "content-disposition")"
+    local cd="$(url_get_header "$URL" "Content-Disposition")"
     if echo "$cd" | grep -q "filename=" ; then
         #Content-Disposition: attachment; filename=postman-linux-x64.tar.gz
         echo "$cd" | sed -e 's|.*filename=||'
@@ -976,7 +938,6 @@ url_get_filename()
 }
 
 fi
-
 
 
 if [ "$ipfs_mode" != "disabled" ] && [ -n "$EGET_IPFS_DB" ] &&  ! is_ipfsurl "$1"  ; then
