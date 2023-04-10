@@ -49,7 +49,7 @@ eget()
 		local bashopt=''
 		[ -n "$verbose" ] && bashopt='-x'
 
-		$CMDSHELL $bashopt $PROGDIR/$PROGNAME "$@"
+		(unset EGET_IPFS_GATEWAY; unset EGET_IPFS_API ; unset EGET_IPFS_DB ; $CMDSHELL $bashopt $PROGDIR/$PROGNAME "$@" )
 	else
 		#epm_main --inscript "$@"
 		fatal "Improve me"
