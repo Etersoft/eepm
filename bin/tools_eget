@@ -913,6 +913,12 @@ sget()
 
     local CID="$(get_cid_by_url "$URL")"
     if [ -n "$CID" ] ; then
+
+        if [ -n "$GETFILENAME" ] ; then
+            get_filename_by_cid "$CID"
+            exit
+        fi
+
         if [ -z "$TARGET" ] ; then
             TARGET="$(get_filename_by_cid "$CID")"
             if [ -z "$TARGET" ] ; then
@@ -976,6 +982,11 @@ scat()
 
 sget()
 {
+    if [ -n "$GETFILENAME" ] ; then
+        get_filename "$1"
+        exit
+    fi
+
     url_sget "$@"
 }
 
@@ -1065,11 +1076,6 @@ get_urls()
 if [ -n "$CHECKURL" ] ; then
     #set_quiet
     check_url_is_accessible "$1"
-    exit
-fi
-
-if [ -n "$GETFILENAME" ] ; then
-    get_filename "$1"
     exit
 fi
 
