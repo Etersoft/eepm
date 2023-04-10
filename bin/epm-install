@@ -308,6 +308,12 @@ __epm_if_command_path()
     is_dirpath "$1" && rhas "$1" "bin/"
 }
 
+__epm_get_replacepkgs()
+{
+    [ -n "$2" ] && echo '--replacepkgs' && return
+    # don't use --replacepkgs when install only one file
+}
+
 epm_install_files()
 {
     local files="$*"
@@ -345,9 +351,7 @@ epm_install_files()
             fi
 
             # --replacepkgs: Install the Package Even If Already Installed
-            local replacepkgs='--replacepkgs'
-            # don't use --replacepkgs when install only one file
-            [ -f "$files" ] && replacepkgs=''
+            local replacepkgs="$(__epm_get_replacepkgs $files)"
             sudocmd rpm -Uvh $replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && save_installed_packages $files && return
             local RES=$?
             # TODO: check rpm result code and convert it to compatible format if possible
@@ -369,9 +373,7 @@ epm_install_files()
                 epm install $(epm req --short $files) || return
                 # retry with rpm
                 # --replacepkgs: Install the Package Even If Already Installed
-                local replacepkgs='--replacepkgs'
-                # don't use --replacepkgs when install only one file
-                [ -f "$files" ] && replacepkgs=''
+                local replacepkgs="$(__epm_get_replacepkgs $files)"
                 sudocmd rpm -Uvh $replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && save_installed_packages $files
                 return
             fi
@@ -459,9 +461,7 @@ epm_install_files()
             __epm_check_if_src_rpm $files
 
             # --replacepkgs: Install the Package Even If Already Installed
-            local replacepkgs='--replacepkgs'
-            # don't use --replacepkgs when install only one file
-            [ -f "$files" ] && replacepkgs=''
+            local replacepkgs="$(__epm_get_replacepkgs $files)"
             sudocmd rpm -Uvh $replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && return
             local RES=$?
 
