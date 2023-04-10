@@ -454,7 +454,7 @@ select_ipfs_mode()
             if ipfs_check "$ipfs_checkQm" ; then
                 ipfs_mode="brave" && return
             else
-                info "Skipped Brave: it is accesible via $IPFS_CMD --api $IPFS_API, but can't return shared $ipfs_checkQm"
+                info "Skipped Brave: it is accessible via $IPFS_CMD --api $IPFS_API, but can't return shared $ipfs_checkQm"
             fi
         fi
     fi
@@ -466,7 +466,7 @@ select_ipfs_mode()
             if ipfs_check "$ipfs_checkQm" ; then
                 ipfs_mode="local" && return
             else
-                info "Skipped local: it is accesible via $IPFS_CMD --api $IPFS_API, but can't return shared $ipfs_checkQm"
+                info "Skipped local: it is accessible via $IPFS_CMD --api $IPFS_API, but can't return shared $ipfs_checkQm"
             fi
         fi
     fi
@@ -480,7 +480,7 @@ select_ipfs_mode()
         if docmd eget --check "$(dirname $ipfs_gateway)" ; then
             info "IPFS gateway $ipfs_gateway is accessible, but can't return shared $ipfs_checkQm"
         else
-            info "IPFS gateway $(dirname ipfs_gateway) is not accessible"
+            info "IPFS gateway $(dirname $ipfs_gateway) is not accessible"
         fi
     fi
 
@@ -551,17 +551,17 @@ if [ "$ipfs_mode" = "disabled" ] ; then
 
 ipfs_get()
 {
-    fatal "disabled"
+    fatal "IPFS is disabled"
 }
 
 ipfs_put()
 {
-    fatal "disabled"
+    fatal "IPFS is disabled"
 }
 
 ipfs_cat()
 {
-    fatal "disabled"
+    fatal "IPFS is disabled"
 }
 
 
@@ -597,7 +597,7 @@ ipfs_cat()
 
 ipfs_put()
 {
-    fatal "disabled"
+    fatal "IPFS add disabled if a gateway is used"
 }
 elif [ -z "$ipfs_mode" ] ; then
     :
