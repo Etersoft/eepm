@@ -882,6 +882,11 @@ if [ -n "$EGET_IPFS_DB" ] &&  ! is_ipfsurl "$1"  ; then
 scat()
 {
     local URL="$1"
+    url_scat "$URL"
+
+    # It is list only function. Don't save to IPFS
+    exit
+
     local CID="$(get_cid_by_url "$URL")"
     if [ -n "$CID" ] ; then
         info "$URL -> $CID"
