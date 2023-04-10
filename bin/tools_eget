@@ -499,6 +499,10 @@ put_cid_and_url()
     local CID="$2"
     local FN="$3"
     [ -w "$EGET_IPFS_DB" ] || return
+
+    is_fileurl "$URL" && return
+
+    echo "Put in $EGET_IPFS_DB: $URL $CID $FN"
     echo "$URL $CID $FN" >> "$EGET_IPFS_DB"
 }
 
