@@ -989,6 +989,11 @@ get_filename()
     url_get_filename "$1"
 }
 
+get_real_url()
+{
+    url_get_real_url "$1"
+}
+
 fi
 
 
