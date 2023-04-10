@@ -523,8 +523,8 @@ put_cid_and_url()
 
     is_fileurl "$URL" && return
 
-    echo "Put in $EGET_IPFS_DB: $URL $CID $FN"
     echo "$URL $CID $FN" >> "$EGET_IPFS_DB"
+    echo "Placed in $EGET_IPFS_DB: $URL $CID $FN"
 }
 
 get_filename_by_cid()
@@ -1049,15 +1049,14 @@ sget()
 
     if [ -n "$GETIPFSCID" ] ; then
          # add to IPFS and print out CID
-         CID="$(ipfs_put "$REALURL")" || return
+         CID="$(ipfs_put --progress "$REALURL")" || return
          echo "$CID"
          exit
     fi
 
     # download file and add to IPFS
     url_sget "$REALURL" "$TARGET" || return
-    CID="$(ipfs_put "$TARGET")" || return
-    is_ipfs_hash "$CID" || return
+    CID="$(ipfs_put --progress "$TARGET")" || return
 
     put_cid_and_url "$REALURL" "$CID" "$FN"
 }
