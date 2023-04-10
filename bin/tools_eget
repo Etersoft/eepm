@@ -259,6 +259,7 @@ CURLNAMEOPTIONS='--remote-name --remote-header-name'
 
 LISTONLY=''
 CHECKURL=''
+GETFILENAME=''
 LATEST=''
 SECONDLATEST=''
 CHECKMIRRORS=''
@@ -293,6 +294,7 @@ Options:
 
     --list|--list-only        - print only URLs
     --check URL               - check if the URL is accessible (returns HTTP 200 OK)
+    --get-filename URL        - print filename for the URL (via Content-Disposition if applicable)
 
 Examples:
   $ eget http://ftp.somesite.ru/package-*.x64.tar
@@ -346,6 +348,9 @@ while [ -n "$1" ] ; do
         --check)
             CHECKURL="$1"
             #set_quiet
+            ;;
+        --get-filename)
+            GETFILENAME="$1"
             ;;
         --latest)
             LATEST="$1"
@@ -574,6 +579,12 @@ url_check()
     test -f "$(path_from_url "$URL")"
 }
 
+url_get_filename()
+{
+    # FIXME
+    basename "$1"
+}
+
 elif is_ipfsurl "$1" ; then
 
 # put remote content to stdout
@@ -643,6 +654,12 @@ url_check()
     __wget --spider -S "$URL" 2>&1 | grep "HTTP/" | tail -n1 | grep -q "200"
 }
 
+url_get_filename()
+{
+    # FIXME
+    basename "$1"
+}
+
 else
 CURL="$(print_command_path curl)"
 [ -n "$CURL" ] || fatal "There are no wget nor curl in the system. Install it with $ epm install curl"
@@ -682,6 +699,13 @@ url_check()
     __curl -LI "$URL" 2>&1 | grep "HTTP/" | tail -n1 | grep -q -w "200\|404"
 }
 
+url_get_filename()
+{
+    # FIXME
+    basename "$1"
+}
+
+
 fi
 
 
@@ -700,6 +724,15 @@ check_url_is_accessible()
 {
     url_check "$@"
 }
+
+get_filename()
+{
+    url_get_filename "$1"
+}
+
+fi
+
+
 get_github_urls()
 {
     # https://github.com/OWNER/PROJECT
@@ -765,6 +798,11 @@ get_urls()
 if [ -n "$CHECKURL" ] ; then
     #set_quiet
     check_url_is_accessible "$1"
+    exit
+fi
+
+if [ -n "$GETFILENAME" ] ; then
+    get_filename "$1"
     exit
 fi
 
