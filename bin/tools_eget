@@ -958,6 +958,11 @@ sget()
         exit
     fi
 
+    if echo "$REALURL" | grep -q "[?&]" ; then
+        info "Just download strange URL, skipping IPFS"
+        url_sget "$REALURL" "$TARGET"
+        return
+    fi
 
     local CID="$(get_cid_by_url "$REALURL")"
     if [ -n "$CID" ] ; then
