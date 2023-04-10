@@ -204,6 +204,13 @@ is_url()
     echo "$1" | grep -q "^[filehtps]*:/"
 }
 
+is_strange_url()
+{
+    local URL="$1"
+    is_url "$URL" || return
+    echo "$URL" | grep -q "[?&]"
+}
+
 is_ipfs_hash()
 {
     echo "$1" | grep -q -E "^Qm[[:alnum:]]{44}$"
@@ -779,11 +786,13 @@ url_get_real_url()
     # don't check location if we have made form of the URL
     [ -n "$MADEURL" ] && [ "$MADEURL" = "$URL" ] && echo "$URL" && return
 
-    local loc="$(url_get_header "$URL" "Location" | tail -n1)"
-    if is_url "$loc" ; then
-        echo "$loc"
-        return
-    fi
+    local loc
+    for loc in $(url_get_header "$URL" "Location" | tac) ; do
+        if ! is_strange_url "$loc" ; then
+            echo "$loc"
+            return
+        fi
+    done
 
     echo "$URL"
 }
@@ -867,11 +876,13 @@ url_get_real_url()
     # don't check location if we have made form of the URL
     [ -n "$MADEURL" ] && [ "$MADEURL" = "$URL" ] && echo "$URL" && return
 
-    local loc="$(url_get_header "$URL" "location" | tail -n1)"
-    if is_url "$loc" ; then
-        echo "$loc"
-        return
-    fi
+    local loc
+    for loc in $(url_get_header "$URL" "location" | tac) ; do
+        if ! is_strange_url "$loc" ; then
+            echo "$loc"
+            return
+        fi
+    done
 
     echo "$URL"
 }
@@ -921,7 +932,9 @@ scat()
     url_scat "$URL"
 
     # It is list only function. Don't save to IPFS
-    exit
+    return
+
+    ###################
 
     local CID="$(get_cid_by_url "$URL")"
     if [ -n "$CID" ] ; then
@@ -958,11 +971,11 @@ sget()
         exit
     fi
 
-    if echo "$REALURL" | grep -q "[?&]" ; then
-        info "Just download strange URL, skipping IPFS"
-        url_sget "$REALURL" "$TARGET"
-        return
-    fi
+    #if is_strange_url "$REALURL" ; then
+    #    info "Just download strange URL $REALURL, skipping IPFS"
+    #    url_sget "$REALURL" "$TARGET"
+    #    return
+    #fi
 
     local CID="$(get_cid_by_url "$REALURL")"
     if [ -n "$CID" ] ; then
