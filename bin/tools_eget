@@ -176,6 +176,22 @@ is_url()
     echo "$1" | grep -q "^[filehtps]*:/"
 }
 
+is_ipfs_hash()
+{
+    echo "$1" | grep -q -E "^Qm[[:alnum:]]{44}$"
+}
+
+is_ipfsurl()
+{
+    is_ipfs_hash "$1" && return
+    echo "$1" | grep -q "^ipfs://"
+}
+
+cid_from_url()
+{
+    echo "$1" | sed -e 's|^ipfs://*||'
+}
+
 
 # args: cmd <URL> <options>
 # will run cmd <options> <URL>
@@ -359,6 +375,35 @@ check_url_is_accessible()
     test -f "$(path_from_url "$URL")"
 }
 
+elif is_ipfsurl "$1" ; then
+
+# put remote content to stdout
+scat()
+{
+    local URL="$1"
+    a= ipfs cat "$(cid_from_url "$URL")"
+}
+# download to default name of to $2
+sget()
+{
+    local URL="$1"
+    if [ "$2" = "/dev/stdout" ] || [ "$2" = "-" ] ; then
+       scat "$URL"
+       return
+    elif [ -n "$2" ] ; then
+       a= ipfs get -o "$2" "$(cid_from_url "$URL")"
+       return
+    fi
+    a= ipfs get "$(path_from_url "$URL")"
+}
+
+check_url_is_accessible()
+{
+    local URL="$1"
+    # TODO: improve me
+    scat "$URL" >/dev/null
+}
+
 elif [ -n "$WGET" ] ; then
 __wget()
 {
@@ -529,6 +574,11 @@ if echo "$1" | grep -q "^https://github.com/" && \
     exit
 fi
 
+if is_ipfsurl "$1" ; then
+    [ -n "$2" ] && fatal "too many args when ipfs://Qm... used: extra '$2' arg"
+    sget "$1" "$TARGETFILE"
+    exit
+fi
 
 # if mask is the second arg
 if [ -n "$2" ] ; then
