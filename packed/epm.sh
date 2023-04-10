@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.41.2"
+EPMVERSION="3.42.0"
 
 if [ "$EPMVERSION" = "@""VERSION""@" ] ; then
     EPMVERSION=$(head $PROGDIR/../eepm.spec | grep "^Version: " | sed -e 's|Version: ||' )
@@ -91,37 +91,36 @@ check_tty()
 
 	is_command tput || return
 	# FreeBSD does not support tput -S
-	echo | tput -S >/dev/null 2>/dev/null || return
-	[ -z "$USETTY" ] || return
-	export USETTY=1
+	echo | a= tput -S >/dev/null 2>/dev/null || return
+	USETTY="tput -S"
 }
 
 : ${BLACK:=0} ${RED:=1} ${GREEN:=2} ${YELLOW:=3} ${BLUE:=4} ${MAGENTA:=5} ${CYAN:=6} ${WHITE:=7}
 
 set_boldcolor()
 {
-	[ "$USETTY" = "1" ] || return
+	[ -n "$USETTY" ] || return
 	{
 		echo bold
 		echo setaf $1
-	} |tput -S
+	} | $USETTY
 }
 
 set_color()
 {
-	[ "$USETTY" = "1" ] || return
+	[ -n "$USETTY" ] || return
 	{
 		echo setaf $1
-	} |tput -S
+	} | $USETTY
 }
 
 restore_color()
 {
-	[ "$USETTY" = "1" ] || return
+	[ -n "$USETTY" ] || return
 	{
 		echo op; # set Original color Pair.
 		echo sgr0; # turn off all special graphics mode (bold in our case).
-	} |tput -S
+	} | $USETTY
 }
 
 echover()
@@ -737,22 +736,22 @@ is_url()
     echo "$1" | grep -q "^[filehtps]*:/"
 }
 
-if which which 2>/dev/null >/dev/null ; then
+if a= which which 2>/dev/null >/dev/null ; then
     # the best case if we have which command (other ways needs checking)
     # TODO: don't use which at all, it is binary, not builtin shell command
 print_command_path()
 {
-    which -- "$1" 2>/dev/null
+    a= which -- "$1" 2>/dev/null
 }
-elif type -a type 2>/dev/null >/dev/null ; then
+elif a= type -a type 2>/dev/null >/dev/null ; then
 print_command_path()
 {
-    type -fpP -- "$1" 2>/dev/null
+    a= type -fpP -- "$1" 2>/dev/null
 }
 else
 print_command_path()
 {
-    type "$1" 2>/dev/null | sed -e 's|.* /|/|'
+    a= type "$1" 2>/dev/null | sed -e 's|.* /|/|'
 }
 fi
 
@@ -782,10 +781,7 @@ fi
 
 check_core_commands()
 {
-	#which --help >/dev/null || fatal "Can't find which command (which package is missed?)"
-	# broken which on Debian systems
-	# TODO: use is_command and print_command_path instead of
-	which which >/dev/null || fatal "Can't find which command (which or debianutils package is missed?)"
+	#which which >/dev/null || fatal "Can't find which command (which or debianutils package is missed?)"
 	is_command grep || fatal "Can't find grep command (coreutils package is missed?)"
 	is_command sed || fatal "Can't find sed command (sed package is missed?)"
 }
@@ -1855,7 +1851,7 @@ __epm_changelog_files()
 	case $(get_package_type $1) in
 		rpm)
 			assure_exists rpm
-			docmd_foreach "rpm -q -p --changelog" $@ | less
+			docmd_foreach "rpm -q -p --changelog" $@
 			;;
 		*)
 			fatal "Have no suitable command for $1"
@@ -1869,17 +1865,17 @@ __epm_changelog_local_names()
 
 	case $PMTYPE in
 		apt-rpm|yum-rpm|dnf-rpm|urpm-rpm|zypper-rpm)
-			docmd_foreach "rpm -q --changelog" $@ | less
+			docmd_foreach "rpm -q --changelog" $@
 			;;
 		apt-dpkg|aptitude-dpkg)
-			docmd zcat /usr/share/doc/$1/changelog.Debian.gz | less
+			docmd zcat /usr/share/doc/$1/changelog.Debian.gz
 			;;
 		emerge)
 			assure_exists equery
-			docmd equery changes -f $1 | less
+			docmd equery changes -f $1
 			;;
 		pacman)
-			docmd pacman -Qc $1 | less
+			docmd pacman -Qc $1
 			;;
 		*)
 			fatal "Have no suitable command for $PMTYPE"
@@ -1893,7 +1889,7 @@ __epm_changelog_unlocal_names()
 
 	case $PMTYPE in
 		apt-rpm)
-			__epm_changelog_apt $@ | less
+			__epm_changelog_apt "$1"
 			;;
 		#apt-dpkg)
 		#	# FIXME: only first pkg
@@ -1903,14 +1899,14 @@ __epm_changelog_unlocal_names()
 		#	sudocmd yum clean all
 		#	;;
 		urpm-rpm)
-			docmd urpmq --changelog $@ | less
+			docmd urpmq --changelog "$1"
 			;;
 		#zypper-rpm)
 		#	sudocmd zypper clean
 		#	;;
 		emerge)
 			assure_exists equery
-			docmd equery changes -f $1 | less
+			docmd equery changes -f "$1"
 			;;
 		*)
 			fatal "Have no suitable command for $PMTYPE. Try install the package firstly."
@@ -1926,6 +1922,7 @@ epm_changelog()
 
 	__epm_changelog_files $pkg_files
 
+	# TODO: add less or bat
 	local pkg
 	for pkg in $pkg_names ; do
 		if is_installed $pkg ; then
@@ -2861,7 +2858,7 @@ __epm_korinf_site_mask() {
         tURL="$EPM_KORINF_REPO_URL/$archprefix$($DISTRVENDOR --vendor-name)/$($DISTRVENDOR --repo-name)"
         docmd eget --check "$tURL" && URL="$tURL"
     fi
-    echo "$URL/$MASK*.$PKGFORMAT"
+    eget --list --latest "$URL/$MASK*.$PKGFORMAT"
 }
 
 __epm_korinf_list() {
@@ -2943,7 +2940,7 @@ __alt_local_content_filelist()
     update_alt_contents_index
     local CI="$(cat $ALT_CONTENTS_INDEX_LIST)"
 
-    # TODO: safe way to use less
+    # TODO: safe way to use less or bat
     #local OUTCMD="less"
     #[ -n "$USETTY" ] || OUTCMD="cat"
     OUTCMD="cat"
@@ -3021,7 +3018,8 @@ __epm_filelist_file()
 			;;
 	esac
 
-	docmd $CMD $@ | less
+	# TODO: add less
+	docmd $CMD $@
 }
 
 __epm_filelist_name()
@@ -3049,7 +3047,7 @@ __epm_filelist_name()
 			CMD="conary query --ls"
 			;;
 		pacman)
-			docmd pacman -Ql $@ | sed -e "s|.* ||g" | less
+			docmd pacman -Ql $@ | sed -e "s|.* ||g"
 			return
 			;;
 		emerge)
@@ -3078,7 +3076,7 @@ __epm_filelist_name()
 			;;
 		slackpkg)
 			is_installed $@ || fatal "Query filelist for non installed packages is not implemented yet"
-			docmd awk 'BEGIN{desk=1}{if(/^FILE LIST:$/){desk=0} else if (desk==0) {print}}' /var/log/packages/${pkg_filenames}* | less
+			docmd awk 'BEGIN{desk=1}{if(/^FILE LIST:$/){desk=0} else if (desk==0) {print}}' /var/log/packages/${pkg_filenames}*
 			return
 			;;
 		*)
@@ -3086,7 +3084,7 @@ __epm_filelist_name()
 			;;
 	esac
 
-	# TODO: add less
+	# TODO: add less or bat (for any output in the function)
 	docmd $CMD $@ && return
 	# TODO: may be we need check is installed before prev. line?
 	is_installed $@ || __epm_filelist_remote $@
@@ -3182,10 +3180,11 @@ epm_full_upgrade()
 # File bin/epm-history:
 
 EHOG='\(apt-get\|rpm\)'
+JCHAN='-t apt-get -t rpm'
 
 __alt_epm_history_journal()
 {
-	a= journalctl -t apt-get -t rpm
+	a= journalctl $JCHAN
 }
 
 __alt_epm_history_uniq()
@@ -3281,25 +3280,25 @@ if [ $PMTYPE = "apt-rpm" ] ; then
 			return
 			;;
 		--installed)               # HELPCMD: print only new installed packages
-			__alt_epm_history_installed | less
+			__alt_epm_history_installed
 			return
 			;;
 		--removed)                 # HELPCMD: print only removed packages
-			__alt_epm_history_removed #| less
+			__alt_epm_history_removed
 			return
 			;;
 		--updated)                 # HELPCMD: print only updated packages
-			__alt_epm_history_updated | less
+			__alt_epm_history_updated
 			return
 			;;
 		--list)                    # HELPCMD: (or empty) print all history entries
-			docmd journalctl -t apt-get
+			docmd journalctl $JCHAN
 			return
 			;;
 		"")
 			;;
 		*)
-			fatal "Unknown option $1"
+			fatal "Unknown option $1. Use epm history --help to get help."
 	esac
 fi
 
@@ -3307,10 +3306,10 @@ fi
 
 case $PMTYPE in
 	apt-rpm)
-		docmd journalctl -t apt-get -t rpm -r
+		docmd journalctl $JCHAN -r
 		;;
 	apt-dpkg)
-		docmd less /var/log/dpkg.log
+		docmd cat /var/log/dpkg.log
 		;;
 	dnf-rpm)
 		sudocmd dnf history
@@ -3319,13 +3318,13 @@ case $PMTYPE in
 		sudocmd eopkg history
 		;;
 	zypper-rpm)
-		less /var/log/zypp/history
+		docmd cat /var/log/zypp/history
 		;;
 	pacman)
-		docmd less /var/log/pacman.log
+		docmd cat /var/log/pacman.log
 		;;
 	emerge)
-		docmd less /var/log/portage
+		docmd cat /var/log/portage
 		;;
 	*)
 		fatal "Have no suitable command for $PMTYPE"
@@ -5254,8 +5253,15 @@ Options:
     --list                - list all installed apps
     --list-all            - list all available apps
     --list-scripts        - list all available scripts
-    --short (with --list) - list names only"
-    --installed <app>     - check if the app is installed"
+    --short (with --list) - list names only
+    --installed <app>     - check if the app is installed
+    --product-alternatives- list alternatives (use like epm play app=beta)
+
+Examples:
+    epm play --remove opera
+    epm play yandex-browser = beta
+    epm play telegram = beta
+    epm play telegram = 4.7.1
 EOF
 }
 
@@ -11376,11 +11382,34 @@ has()
 	grep "$*" "$DISTROFILE" >/dev/null 2>&1
 }
 
-# Has a system the specified command?
-hascommand()
+# copied from epm-sh-functions
+# print a path to the command if exists in $PATH
+if a= which which 2>/dev/null >/dev/null ; then
+    # the best case if we have which command (other ways needs checking)
+    # TODO: don't use which at all, it is binary, not builtin shell command
+print_command_path()
 {
-	which "$1" 2>/dev/null >/dev/null
+    a= which -- "$1" 2>/dev/null
 }
+elif a= type -a type 2>/dev/null >/dev/null ; then
+print_command_path()
+{
+    a= type -fpP -- "$1" 2>/dev/null
+}
+else
+print_command_path()
+{
+    a= type "$1" 2>/dev/null | sed -e 's|.* /|/|'
+}
+fi
+
+# check if <arg> is a real command
+is_command()
+{
+    print_command_path "$1" >/dev/null
+}
+##########################3
+
 
 firstupper()
 {
@@ -11461,7 +11490,7 @@ case $DISTRIB_ID in
 	Ubuntu|Debian|Mint|OSNovaLinux|AstraLinux*|Elbrus)
 		CMD="apt-dpkg"
 		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
-		#hascommand snappy && CMD=snappy
+		#is_command snappy && CMD=snappy
 		;;
 	Solus)
 		CMD="eopkg"
@@ -11471,14 +11500,14 @@ case $DISTRIB_ID in
 		;;
 	ROSA)
 		CMD="urpm-rpm"
-		hascommand yum && CMD="yum-rpm"
-		hascommand dnf && CMD="dnf-rpm"
+		is_command yum && CMD="yum-rpm"
+		is_command dnf && CMD="dnf-rpm"
 		# use dnf since 2020
 		#[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "ROSA/2020" ] && CMD="urpm-rpm"
 		;;
 	FreeBSD|NetBSD|OpenBSD|Solaris)
 		CMD="pkgsrc"
-		hascommand pkg && CMD=pkgng
+		is_command pkg && CMD=pkgng
 		;;
 	Gentoo)
 		CMD="emerge"
@@ -11488,7 +11517,7 @@ case $DISTRIB_ID in
 		;;
 	Fedora|CentOS|OracleLinux|RockyLinux|AlmaLinux|RHEL|RELS|Scientific|GosLinux|Amzn|RedOS)
 		CMD="dnf-rpm"
-		hascommand dnf || CMD="yum-rpm"
+		is_command dnf || CMD="yum-rpm"
 		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "CentOS/7" ] && CMD="yum-rpm"
 		;;
 	Slackware)
@@ -11502,8 +11531,8 @@ case $DISTRIB_ID in
 		;;
 	Windows)
 		CMD="appget"
-		hascommand $CMD || CMD="chocolatey"
-		hascommand $CMD || CMD="winget"
+		is_command $CMD || CMD="chocolatey"
+		is_command $CMD || CMD="winget"
 		;;
 	MacOS)
 		CMD="homebrew"
@@ -11535,17 +11564,17 @@ case $DISTRIB_ID in
 			echo "apt-dpkg" && return
 		fi
 
-		if hascommand "rpm" && [ -s /var/lib/rpm/Name ] || [ -s /var/lib/rpm/rpmdb.sqlite ] ; then
-			hascommand "zypper" && echo "zypper-rpm" && return
-			hascommand "dnf" && echo "dnf-rpm" && return
-			hascommand "apt-get" && echo "apt-rpm" && return
-			hascommand "yum" && echo "yum-rpm" && return
-			hascommand "urpmi" && echo "urpm-rpm" && return
+		if is_command "rpm" && [ -s /var/lib/rpm/Name ] || [ -s /var/lib/rpm/rpmdb.sqlite ] ; then
+			is_command "zypper" && echo "zypper-rpm" && return
+			is_command "dnf" && echo "dnf-rpm" && return
+			is_command "apt-get" && echo "apt-rpm" && return
+			is_command "yum" && echo "yum-rpm" && return
+			is_command "urpmi" && echo "urpm-rpm" && return
 		fi
 
-		if hascommand "dpkg" && [ -s /var/lib/dpkg/status ] ; then
-			hascommand "apt" && echo "apt-dpkg" && return
-			hascommand "apt-get" && echo "apt-dpkg" && return
+		if is_command "dpkg" && [ -s /var/lib/dpkg/status ] ; then
+			is_command "apt" && echo "apt-dpkg" && return
+			is_command "apt-get" && echo "apt-dpkg" && return
 		fi
 
 		echo "We don't support yet DISTRIB_ID $DISTRIB_ID" >&2
@@ -11831,13 +11860,13 @@ elif distro slackware-version ; then
 	DISTRIB_ID="Slackware"
 	DISTRIB_RELEASE="$(grep -Eo '[0-9]+\.[0-9]+' $DISTROFILE)"
 
-elif distro os-release && hascommand tce-ab ; then
+elif distro os-release && is_command tce-ab ; then
 	# shellcheck disable=SC1090
 	. $ROOTDIR/etc/os-release
 	DISTRIB_ID="TinyCoreLinux"
 	DISTRIB_RELEASE="$VERSION_ID"
 
-elif distro os-release && hascommand xbps-query ; then
+elif distro os-release && is_command xbps-query ; then
 	# shellcheck disable=SC1090
 	. $ROOTDIR/etc/os-release
 	DISTRIB_ID="VoidLinux"
@@ -11891,7 +11920,7 @@ elif [ "$(uname -s 2>/dev/null)" = "Darwin" ] ; then
 	DISTRIB_RELEASE=$(uname -r)
 
 # fixme: move to up
-elif [ "$(uname)" = "Linux" ] && hascommand guix ; then
+elif [ "$(uname)" = "Linux" ] && is_command guix ; then
 	DISTRIB_ID="GNU/Linux/Guix"
 	DISTRIB_RELEASE=$(uname -r)
 
@@ -11984,7 +12013,7 @@ case "$DIST_ARCH" in
     armv7*)
         # TODO: use uname only
         # uses binutils package
-        if hascommand readelf && [ -z "$(readelf -A /proc/self/exe | grep Tag_ABI_VFP_args)" ] ; then
+        if is_command readelf && [ -z "$(readelf -A /proc/self/exe | grep Tag_ABI_VFP_args)" ] ; then
             DIST_ARCH="armel"
         else
             DIST_ARCH="armhf"
@@ -12128,10 +12157,8 @@ get_core_mhz()
 get_virt()
 {
     local VIRT
-    local SDCMD
-    SDCMD=$(which systemd-detect-virt 2>/dev/null)
-    if [ -n "$SDCMD" ] ; then
-        VIRT="$($SDCMD)"
+    if is_command systemd-detect-virt ; then
+        VIRT="$(systemd-detect-virt)"
         [ "$VIRT" = "none" ] && echo "(host system)" && return
         [ -z "$VIRT" ] && echo "(unknown)" && return
         echo "$VIRT" && return
@@ -12163,7 +12190,7 @@ get_service_manager()
     [ -d /run/systemd/system ] && echo "systemd" && return
     # TODO
     #[ -d /usr/share/upstart ] && echo "upstart" && return
-    hascommand systemctl && echo "systemd" && return
+    is_command systemctl && echo "systemd" && return
     [ -d /etc/init.d ] && echo "sysvinit" && return
     echo "(unknown)"
 }
@@ -12425,32 +12452,40 @@ isatty2()
 check_tty()
 {
 	isatty || return
-	which tput >/dev/null 2>/dev/null || return
+	is_command tput >/dev/null 2>/dev/null || return
 	# FreeBSD does not support tput -S
-	echo | tput -S >/dev/null 2>/dev/null || return
-	[ -z "$USETTY" ] || return
-	export USETTY=1
+	echo | a= tput -S >/dev/null 2>/dev/null || return
+	export USETTY="tput -S"
 }
 
 : ${BLACK:=0} ${RED:=1} ${GREEN:=2} ${YELLOW:=3} ${BLUE:=4} ${MAGENTA:=5} ${CYAN:=6} ${WHITE:=7}
 
 set_boldcolor()
 {
-	[ "$USETTY" = "1" ] || return
+	[ -n "$USETTY" ] || return
 	{
 		echo bold
 		echo setaf $1
-	} |tput -S
+	} | $USETTY
+}
+
+set_color()
+{
+	[ -n "$USETTY" ] || return
+	{
+		echo setaf $1
+	} | $USETTY
 }
 
 restore_color()
 {
-	[ "$USETTY" = "1" ] || return
+	[ -n "$USETTY" ] || return
 	{
 		echo op; # set Original color Pair.
 		echo sgr0; # turn off all special graphics mode (bold in our case).
-	} |tput -S
+	} | $USETTY
 }
+
 
 echover()
 {
@@ -12480,22 +12515,22 @@ docmd()
 
 # copied from epm
 # print a path to the command if exists in $PATH
-if which which 2>/dev/null >/dev/null ; then
+if a= which which 2>/dev/null >/dev/null ; then
     # the best case if we have which command (other ways needs checking)
     # TODO: don't use which at all, it is binary, not builtin shell command
 print_command_path()
 {
-    which -- "$1" 2>/dev/null
+    a= which -- "$1" 2>/dev/null
 }
-elif type -a type 2>/dev/null >/dev/null ; then
+elif a= type -a type 2>/dev/null >/dev/null ; then
 print_command_path()
 {
-    type -fpP -- "$1" 2>/dev/null
+    a= type -fpP -- "$1" 2>/dev/null
 }
 else
 print_command_path()
 {
-    type "$1" 2>/dev/null | sed -e 's|.* /|/|'
+    a= type "$1" 2>/dev/null | sed -e 's|.* /|/|'
 }
 fi
 
@@ -12504,7 +12539,6 @@ is_command()
 {
     print_command_path "$1" >/dev/null
 }
-
 
 
 # check man glob
@@ -12585,6 +12619,7 @@ LATEST=''
 SECONDLATEST=''
 CHECKMIRRORS=''
 TARGETFILE=''
+FORCEIPV=''
 
 set_quiet()
 {
@@ -12604,6 +12639,8 @@ Options:
     -q                        - quiet mode
     -k|--no-check-certificate - skip SSL certificate chain support
     -U|-A|--user-agent        - send browser like UserAgent
+    -4|--ipv4|--inet4-only    - use only IPV4
+    -6|--ipv6|--inet6-only    - use only IPV6
     -O-|-O -                  - output downloaded file to stdout
     -O file                   - download to this file
     --latest                  - print only latest version of a file
@@ -12652,13 +12689,19 @@ while [ -n "$1" ] ; do
             WGETUSERAGENT="-U '$user_agent'"
             CURLUSERAGENT="-A '$user_agent'"
             ;;
+        -4|--ipv4|--inet4-only)
+            FORCEIPV="-4"
+            ;;
+        -6|--ipv6|--inet6-only)
+            FORCEIPV="-6"
+            ;;
         --list|--list-only)
             LISTONLY="$1"
             set_quiet
             ;;
         --check)
             CHECKURL="$1"
-            set_quiet
+            #set_quiet
             ;;
         --latest)
             LATEST="$1"
@@ -12720,9 +12763,9 @@ elif [ -n "$WGET" ] ; then
 __wget()
 {
     if [ -n "$WGETUSERAGENT" ] ; then
-        docmd $WGET $WGETQ $WGETNOSSLCHECK "$WGETUSERAGENT" "$@"
+        docmd $WGET $FORCEIPV $WGETQ $WGETNOSSLCHECK "$WGETUSERAGENT" "$@"
     else
-        docmd $WGET $WGETQ $WGETNOSSLCHECK "$@"
+        docmd $WGET $FORCEIPV $WGETQ $WGETNOSSLCHECK "$@"
     fi
 }
 
@@ -12762,9 +12805,9 @@ CURL="$(print_command_path curl)"
 __curl()
 {
     if [ -n "$CURLUSERAGENT" ] ; then
-        docmd $CURL --fail -L $CURLQ "$CURLUSERAGENT" $CURLNOSSLCHECK "$@"
+        docmd $CURL $FORCEIPV --fail -L $CURLQ "$CURLUSERAGENT" $CURLNOSSLCHECK "$@"
     else
-        docmd $CURL --fail -L $CURLQ $CURLNOSSLCHECK "$@"
+        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLNOSSLCHECK "$@"
     fi
 }
 # put remote content to stdout
@@ -12855,14 +12898,14 @@ get_urls()
     fi
 
     # cat html, divide to lines by tags and cut off hrefs only
-    scat $URL | sed -e 's|<|<\n|g' -e 's|data-file=|href=|g' | \
+    scat $URL | sed -e 's|<|<\n|g' -e 's|data-file=|href=|g' -e "s|'|\"|g" | \
          grep -i -o -E 'href="(.+)"' | cut -d'"' -f2
 }
 
 
 
 if [ -n "$CHECKURL" ] ; then
-    set_quiet
+    #set_quiet
     check_url_is_accessible "$1"
     return
 fi
@@ -13401,7 +13444,7 @@ $(get_help HELPOPT)
 print_version()
 {
         echo "Etersoft uncompressor version @VERSION@"
-        echo "Copyright (c) Etersoft 2013, 2020"
+        echo "Copyright (c) Etersoft 2013, 2020, 2023"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 
@@ -13413,7 +13456,7 @@ regular_unpack()
     local opt="$4"
 
     # instead of epm assure
-    if ! which "$prg" >/dev/null 2>/dev/null ; then
+    if ! is_command "$prg" ; then
         epm assure $prg $pkg || fatal "Try install $pkg package for $prg unpack command."
     fi
 

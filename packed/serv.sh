@@ -72,37 +72,36 @@ check_tty()
 
 	is_command tput || return
 	# FreeBSD does not support tput -S
-	echo | tput -S >/dev/null 2>/dev/null || return
-	[ -z "$USETTY" ] || return
-	export USETTY=1
+	echo | a= tput -S >/dev/null 2>/dev/null || return
+	USETTY="tput -S"
 }
 
 : ${BLACK:=0} ${RED:=1} ${GREEN:=2} ${YELLOW:=3} ${BLUE:=4} ${MAGENTA:=5} ${CYAN:=6} ${WHITE:=7}
 
 set_boldcolor()
 {
-	[ "$USETTY" = "1" ] || return
+	[ -n "$USETTY" ] || return
 	{
 		echo bold
 		echo setaf $1
-	} |tput -S
+	} | $USETTY
 }
 
 set_color()
 {
-	[ "$USETTY" = "1" ] || return
+	[ -n "$USETTY" ] || return
 	{
 		echo setaf $1
-	} |tput -S
+	} | $USETTY
 }
 
 restore_color()
 {
-	[ "$USETTY" = "1" ] || return
+	[ -n "$USETTY" ] || return
 	{
 		echo op; # set Original color Pair.
 		echo sgr0; # turn off all special graphics mode (bold in our case).
-	} |tput -S
+	} | $USETTY
 }
 
 echover()
@@ -718,22 +717,22 @@ is_url()
     echo "$1" | grep -q "^[filehtps]*:/"
 }
 
-if which which 2>/dev/null >/dev/null ; then
+if a= which which 2>/dev/null >/dev/null ; then
     # the best case if we have which command (other ways needs checking)
     # TODO: don't use which at all, it is binary, not builtin shell command
 print_command_path()
 {
-    which -- "$1" 2>/dev/null
+    a= which -- "$1" 2>/dev/null
 }
-elif type -a type 2>/dev/null >/dev/null ; then
+elif a= type -a type 2>/dev/null >/dev/null ; then
 print_command_path()
 {
-    type -fpP -- "$1" 2>/dev/null
+    a= type -fpP -- "$1" 2>/dev/null
 }
 else
 print_command_path()
 {
-    type "$1" 2>/dev/null | sed -e 's|.* /|/|'
+    a= type "$1" 2>/dev/null | sed -e 's|.* /|/|'
 }
 fi
 
@@ -763,10 +762,7 @@ fi
 
 check_core_commands()
 {
-	#which --help >/dev/null || fatal "Can't find which command (which package is missed?)"
-	# broken which on Debian systems
-	# TODO: use is_command and print_command_path instead of
-	which which >/dev/null || fatal "Can't find which command (which or debianutils package is missed?)"
+	#which which >/dev/null || fatal "Can't find which command (which or debianutils package is missed?)"
 	is_command grep || fatal "Can't find grep command (coreutils package is missed?)"
 	is_command sed || fatal "Can't find sed command (sed package is missed?)"
 }
@@ -1485,11 +1481,34 @@ has()
 	grep "$*" "$DISTROFILE" >/dev/null 2>&1
 }
 
-# Has a system the specified command?
-hascommand()
+# copied from epm-sh-functions
+# print a path to the command if exists in $PATH
+if a= which which 2>/dev/null >/dev/null ; then
+    # the best case if we have which command (other ways needs checking)
+    # TODO: don't use which at all, it is binary, not builtin shell command
+print_command_path()
 {
-	which "$1" 2>/dev/null >/dev/null
+    a= which -- "$1" 2>/dev/null
 }
+elif a= type -a type 2>/dev/null >/dev/null ; then
+print_command_path()
+{
+    a= type -fpP -- "$1" 2>/dev/null
+}
+else
+print_command_path()
+{
+    a= type "$1" 2>/dev/null | sed -e 's|.* /|/|'
+}
+fi
+
+# check if <arg> is a real command
+is_command()
+{
+    print_command_path "$1" >/dev/null
+}
+##########################3
+
 
 firstupper()
 {
@@ -1570,7 +1589,7 @@ case $DISTRIB_ID in
 	Ubuntu|Debian|Mint|OSNovaLinux|AstraLinux*|Elbrus)
 		CMD="apt-dpkg"
 		#which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
-		#hascommand snappy && CMD=snappy
+		#is_command snappy && CMD=snappy
 		;;
 	Solus)
 		CMD="eopkg"
@@ -1580,14 +1599,14 @@ case $DISTRIB_ID in
 		;;
 	ROSA)
 		CMD="urpm-rpm"
-		hascommand yum && CMD="yum-rpm"
-		hascommand dnf && CMD="dnf-rpm"
+		is_command yum && CMD="yum-rpm"
+		is_command dnf && CMD="dnf-rpm"
 		# use dnf since 2020
 		#[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "ROSA/2020" ] && CMD="urpm-rpm"
 		;;
 	FreeBSD|NetBSD|OpenBSD|Solaris)
 		CMD="pkgsrc"
-		hascommand pkg && CMD=pkgng
+		is_command pkg && CMD=pkgng
 		;;
 	Gentoo)
 		CMD="emerge"
@@ -1597,7 +1616,7 @@ case $DISTRIB_ID in
 		;;
 	Fedora|CentOS|OracleLinux|RockyLinux|AlmaLinux|RHEL|RELS|Scientific|GosLinux|Amzn|RedOS)
 		CMD="dnf-rpm"
-		hascommand dnf || CMD="yum-rpm"
+		is_command dnf || CMD="yum-rpm"
 		[ "$DISTRIB_ID/$DISTRIB_RELEASE" = "CentOS/7" ] && CMD="yum-rpm"
 		;;
 	Slackware)
@@ -1611,8 +1630,8 @@ case $DISTRIB_ID in
 		;;
 	Windows)
 		CMD="appget"
-		hascommand $CMD || CMD="chocolatey"
-		hascommand $CMD || CMD="winget"
+		is_command $CMD || CMD="chocolatey"
+		is_command $CMD || CMD="winget"
 		;;
 	MacOS)
 		CMD="homebrew"
@@ -1644,17 +1663,17 @@ case $DISTRIB_ID in
 			echo "apt-dpkg" && return
 		fi
 
-		if hascommand "rpm" && [ -s /var/lib/rpm/Name ] || [ -s /var/lib/rpm/rpmdb.sqlite ] ; then
-			hascommand "zypper" && echo "zypper-rpm" && return
-			hascommand "dnf" && echo "dnf-rpm" && return
-			hascommand "apt-get" && echo "apt-rpm" && return
-			hascommand "yum" && echo "yum-rpm" && return
-			hascommand "urpmi" && echo "urpm-rpm" && return
+		if is_command "rpm" && [ -s /var/lib/rpm/Name ] || [ -s /var/lib/rpm/rpmdb.sqlite ] ; then
+			is_command "zypper" && echo "zypper-rpm" && return
+			is_command "dnf" && echo "dnf-rpm" && return
+			is_command "apt-get" && echo "apt-rpm" && return
+			is_command "yum" && echo "yum-rpm" && return
+			is_command "urpmi" && echo "urpm-rpm" && return
 		fi
 
-		if hascommand "dpkg" && [ -s /var/lib/dpkg/status ] ; then
-			hascommand "apt" && echo "apt-dpkg" && return
-			hascommand "apt-get" && echo "apt-dpkg" && return
+		if is_command "dpkg" && [ -s /var/lib/dpkg/status ] ; then
+			is_command "apt" && echo "apt-dpkg" && return
+			is_command "apt-get" && echo "apt-dpkg" && return
 		fi
 
 		echo "We don't support yet DISTRIB_ID $DISTRIB_ID" >&2
@@ -1940,13 +1959,13 @@ elif distro slackware-version ; then
 	DISTRIB_ID="Slackware"
 	DISTRIB_RELEASE="$(grep -Eo '[0-9]+\.[0-9]+' $DISTROFILE)"
 
-elif distro os-release && hascommand tce-ab ; then
+elif distro os-release && is_command tce-ab ; then
 	# shellcheck disable=SC1090
 	. $ROOTDIR/etc/os-release
 	DISTRIB_ID="TinyCoreLinux"
 	DISTRIB_RELEASE="$VERSION_ID"
 
-elif distro os-release && hascommand xbps-query ; then
+elif distro os-release && is_command xbps-query ; then
 	# shellcheck disable=SC1090
 	. $ROOTDIR/etc/os-release
 	DISTRIB_ID="VoidLinux"
@@ -2000,7 +2019,7 @@ elif [ "$(uname -s 2>/dev/null)" = "Darwin" ] ; then
 	DISTRIB_RELEASE=$(uname -r)
 
 # fixme: move to up
-elif [ "$(uname)" = "Linux" ] && hascommand guix ; then
+elif [ "$(uname)" = "Linux" ] && is_command guix ; then
 	DISTRIB_ID="GNU/Linux/Guix"
 	DISTRIB_RELEASE=$(uname -r)
 
@@ -2093,7 +2112,7 @@ case "$DIST_ARCH" in
     armv7*)
         # TODO: use uname only
         # uses binutils package
-        if hascommand readelf && [ -z "$(readelf -A /proc/self/exe | grep Tag_ABI_VFP_args)" ] ; then
+        if is_command readelf && [ -z "$(readelf -A /proc/self/exe | grep Tag_ABI_VFP_args)" ] ; then
             DIST_ARCH="armel"
         else
             DIST_ARCH="armhf"
@@ -2237,10 +2256,8 @@ get_core_mhz()
 get_virt()
 {
     local VIRT
-    local SDCMD
-    SDCMD=$(which systemd-detect-virt 2>/dev/null)
-    if [ -n "$SDCMD" ] ; then
-        VIRT="$($SDCMD)"
+    if is_command systemd-detect-virt ; then
+        VIRT="$(systemd-detect-virt)"
         [ "$VIRT" = "none" ] && echo "(host system)" && return
         [ -z "$VIRT" ] && echo "(unknown)" && return
         echo "$VIRT" && return
@@ -2272,7 +2289,7 @@ get_service_manager()
     [ -d /run/systemd/system ] && echo "systemd" && return
     # TODO
     #[ -d /usr/share/upstart ] && echo "upstart" && return
-    hascommand systemctl && echo "systemd" && return
+    is_command systemctl && echo "systemd" && return
     [ -d /etc/init.d ] && echo "sysvinit" && return
     echo "(unknown)"
 }
@@ -2545,7 +2562,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.41.2  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.42.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
