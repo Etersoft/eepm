@@ -343,6 +343,7 @@ __epm_play_install()
 
 epm_play()
 {
+[ "$EPMMODE" = "package" -o "$EPMMODE" = "git" ] || fatal "epm play is not supported in single file mode"
 local psdir="$(realpath $CONFIGDIR/play.d)"
 local prsdir="$(realpath $CONFIGDIR/prescription.d)"
 

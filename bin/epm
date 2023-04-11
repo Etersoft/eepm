@@ -35,7 +35,13 @@ CONFIGDIR=$PROGDIR/../etc
 
 EPMVERSION="@VERSION@"
 
-if [ "$EPMVERSION" = "@""VERSION""@" ] ; then
+# package, single (file), pipe, git
+EPMMODE="package"
+[ "$SHAREDIR" = "$PROGDIR" ] && EPMMODE="single"
+[ "$EPMVERSION" = "@""VERSION""@" ] && EPMMODE="git"
+[ "$PROGNAME" = "" ] && EPMMODE="pipe"
+
+if [ "$EPMMODE" = "git" ] ; then
     EPMVERSION=$(head $PROGDIR/../eepm.spec | grep "^Version: " | sed -e 's|Version: ||' )
 fi
 
