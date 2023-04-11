@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.42.0
+Version: 3.50.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -155,6 +155,33 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Wed Apr 12 2023 Vitaly Lipatov <lav@altlinux.ru> 3.50.0-alt1
+- epm tool: add which command
+- play/repack/pack common.sh: use epm tool which for is_command
+- ungoogled-chromium: fix sandbox
+- epm play: add --ipfs support
+- epm install: fix --replacepkgs again
+- epm repack: fix warning when we have repacking rule
+- epm ei: fix checking for interactive mode
+- epm repack vinteo.desktop: fix repacking on ALT/p9
+- epm-update: fix checking for new eepm package
+- epm play --ipfs: initialize db with site prepared data
+- distr_info: don't use GNU sed extension
+- epm: add EPMMODE: package, single, pipe, git
+- epm repack: use EPM <support@eepm.ru> packager and skip warning if a package packaged by one
+- epm play unigine*: skip temp dir
+- epm: improve AlpineLinux support
+- epm: add stats command
+- epm play okular: improve message about CryptoPro
+- eget: big rewrite to support IPFS mode (EGET_IPFS=disabled,auto,brave,local,gateway)
+- eget: add EGET_IPFS_DB file support (save after download, get when download)
+- eget: add --get-filename, --get-real-url, --get-response, --get-ipfs-cid
+- eget: use scat only for get remote content
+- eget: refactoring wget/curl detection
+- eget: add support for EGET_BACKEND=curl,wget
+- eget: add hack to get headers ever if HEAD is not allowed
+- eget: stop recursion with EGET_ vars
+
 * Mon Apr 10 2023 Vitaly Lipatov <lav@altlinux.ru> 3.42.0-alt1
 - epm play trueconf: fix libicu require
 - epm ei: get real path before epm install (to fix ask about install)
