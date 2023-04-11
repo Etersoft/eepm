@@ -331,6 +331,10 @@ check_command()
         epm_cmd=remove_old_kernels
         direct_args=1
         ;;
+    stats)                                      # HELPCMD: show statistics about repositories and installations
+        epm_cmd=stats
+        direct_args=1
+        ;;
 
 # HELPCMD: PART: Other commands:
     clean|delete-cache|dc)                    # HELPCMD: clean local package cache
@@ -574,7 +578,7 @@ if [ -n "$quiet" ] ; then
 fi
 
 # fill
-export EPM_OPTIONS="$nodeps $force $verbose $quiet $non_interactive $save_only $download_only"
+export EPM_OPTIONS="$nodeps $force $verbose $quiet $interactive $non_interactive $save_only $download_only"
 
 # if input is not console and run script from file, get pkgs from stdin too
 if [ ! -n "$inscript" ] && ! inputisatty && [ -n "$PROGDIR" ] ; then
