@@ -910,7 +910,7 @@ url_get_headers()
 url_check()
 {
     local URL="$1"
-    url_get_response | grep "HTTP/" | tail -n1 | grep -q -w "200\|404"
+    url_get_response "$URL" | grep "HTTP/" | tail -n1 | grep -q -w "200\|404"
 }
 
 url_get_header()
