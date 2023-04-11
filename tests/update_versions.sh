@@ -24,8 +24,8 @@ install_app()
     local alt="$2"
     [ -n "$alt" ] && applog="$applog.$alt" && alt=" = $alt"
 
-    echo -n "epm play $app $alt ..."
-    $EPM play --verbose --auto $app $alt >$EDIR/$applog 2>&1
+    echo -n "epm play $playopt $app $alt ..."
+    $EPM play $playopt --verbose --auto $app $alt >$EDIR/$applog 2>&1
     local RES=$?
     [ "$RES" = 0 ] && echo "OK" || echo "FAILED"
     [ "$RES" = 0 ] || return $RES
@@ -40,7 +40,7 @@ install_app()
 install_app_alt()
 {
     local app="$1"
-    local productalt="$($EPM play --product-alternatives $app)"
+    local productalt="$($EPM play $playopt --product-alternatives $app)"
 
     if [ -z "$productalt" ] ; then
         install_app $app
@@ -49,10 +49,15 @@ install_app_alt()
 
     # оставляем дефолтный вариант в конце в системе
     for i in $productalt "" ; do
-        $EPM play --remove --auto $app
+        $EPM play $playopt --remove --auto $app
         install_app $app $i
     done
 }
+
+if [ "$1" = "--ipfs" ] ; then
+    playopt="$1"
+    shift
+fi
 
 if [ -n "$1" ] ; then
     install_app_alt "$1"
@@ -61,7 +66,7 @@ fi
 
 distr="$($EPM print info -s)"
 # install/update all
-$EPM play --list-all --short | while read app ; do
+$EPM play $playopt --list-all --short | while read app ; do
     # hack for broken gitlab-runner
     [ "$distr" != "alt" ] && [ "$app" = "gitlab-runner" ] && continue
     install_app_alt $app </dev/null
