@@ -6,9 +6,6 @@ DESCRIPTION="Unigine Heaven 2009 (Unigine Benchmark) from the official site"
 
 . $(dirname $0)/common.sh
 
-cd_to_temp_dir
+PKGURL="$(eget --list --latest https://benchmark.unigine.com/heaven "Unigine_Heaven*.run")"
 
-# https://assets.unigine.com/d/Unigine_Heaven-4.0.run
-epm tool eget --latest https://benchmark.unigine.com/heaven "Unigine_Heaven*.run"
-
-epm pack --install $PKGNAME *.run
+epm pack --install $PKGNAME $PKGURL
