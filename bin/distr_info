@@ -57,6 +57,7 @@ is_command()
 
 firstupper()
 {
+	# FIXME: works with GNU sed only
 	echo "$*" | sed 's/.*/\u&/'
 }
 
@@ -311,7 +312,8 @@ normalize_name()
 			;;
 		*)
 			#echo "${1// /}"
-			firstupper "$1" | sed -e "s/ //g" -e 's|(.*||'
+			#firstupper "$1" | sed -e "s/ //g" -e 's|(.*||'
+			echo "$1" | sed -e "s/ //g" -e 's|(.*||'
 			;;
 	esac
 }
