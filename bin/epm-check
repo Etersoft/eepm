@@ -76,6 +76,9 @@ case $PMTYPE in
     xbps)
         sudocmd xbps-pkgdb -a
         ;;
+    apk)
+        sudocmd apk fix
+        ;;
     *)
         fatal "Have no suitable command for $PMTYPE"
         ;;

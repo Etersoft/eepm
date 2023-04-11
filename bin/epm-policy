@@ -37,6 +37,9 @@ case $PMTYPE in
     packagekit)
         docmd pkcon resolve $pkg_names
         ;;
+    apk)
+        docmd apk policy $pkg_names
+        ;;
     *)
         fatal "Have no suitable command for $PMTYPE"
         ;;

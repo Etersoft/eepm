@@ -40,6 +40,9 @@ check_pkg_integrity()
         # FIXME: debsums -ca package ?
         docmd dpkg --contents $PKG >/dev/null && echo "Package $PKG is correct."
         ;;
+    apk)
+        docmd apkg verify $PKG
+        ;;
     exe)
         file $PKG | grep -q "executable for MS Windows"
         ;;

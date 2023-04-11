@@ -26,6 +26,9 @@ case $PMTYPE in
     pkgng)
         sudocmd pkg audit -F
         ;;
+    apk)
+        sudocmd apk audit
+        ;;
     *)
         fatal "Have no suitable command for $PMTYPE"
         ;;

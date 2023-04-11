@@ -155,6 +155,10 @@ __epm_filelist_name()
         opkg)
             CMD="opkg files"
             ;;
+        apk)
+            docmd apk manifest $@ | sed -e 's|^sha1.* |/|'
+            return
+            ;;
         eopkg)
             docmd eopkg --files -s info $@ | grep "^/"
             return

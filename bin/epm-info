@@ -122,6 +122,9 @@ case $PMTYPE in
     opkg)
         docmd opkg info $pkg_names
         ;;
+    apk)
+        docmd apk info $pkg_names
+        ;;
     pkgng)
         docmd pkg info $pkg_names
         ;;
