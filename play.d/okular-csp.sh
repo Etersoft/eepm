@@ -40,7 +40,8 @@ esac
 
 # CryptoPro needed for install
 if ! epmqp "cprocsp-" >/dev/null ; then
-    fatal "Install CryptoPro before (via ecryptomgr package or manually)"
+    # TODO: install ecryptomgr here and check ecryptomgr status cryptopro
+    fatal "Install CryptoPro before (install ecryptomgr package and check https://github.com/Etersoft/ecryptomgr )"
 fi
 
 
