@@ -240,7 +240,7 @@ is_httpurl()
 
 cid_from_url()
 {
-    echo "$1" | sed -e 's|^ipfs://*||'
+    echo "$1" | sed -e 's|^ipfs://*||' -e 's|\?.*||'
 }
 
 
@@ -776,6 +776,13 @@ url_sget()
        ipfs_get "$(cid_from_url "$URL")" "$2"
        return
     fi
+
+    local fn="$(url_print_filename_from_url "$URL")"
+    if [ -n "$fn" ] ; then
+       ipfs_get "$(cid_from_url "$URL")" "$fn"
+       return
+    fi
+
     ipfs_get "$(cid_from_url "$URL")"
 }
 
@@ -786,9 +793,17 @@ url_check()
     scat "$URL" >/dev/null
 }
 
+url_print_filename_from_url()
+{
+    local URL="$1"
+    local fn="$(echo "$URL" | sed -e 's|ipfs://.*\?filename=||')"
+    [ "$URL" != "$fn" ] && echo "$fn" && return
+}
+
 url_get_filename()
 {
     local URL="$1"
+    url_print_filename_from_url "$URL" && return
     local CID="$(cid_from_url "$URL")"
     get_filename_by_cid "$CID"
 }
