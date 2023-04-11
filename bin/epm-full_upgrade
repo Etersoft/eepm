@@ -19,8 +19,8 @@
 
 epm_full_upgrade_help()
 {
-			get_help HELPCMD $SHAREDIR/epm-full_upgrade
-	cat <<EOF
+            get_help HELPCMD $SHAREDIR/epm-full_upgrade
+    cat <<EOF
 Also you can comment out full_upgrade parts in /etc/eepm/eepm.conf config.
 Examples:
   epm full-upgrade
@@ -32,60 +32,60 @@ EOF
 epm_full_upgrade()
 {
 
-	while [ -n "$1" ] ; do
-		case "$1" in
-			"-h"|"--help"|"help")      # HELPCMD: help
-				epm_full_upgrade_help
-				return
-				;;
-			"--no-epm-play")           # HELPCMD: skip epm play during full upgrade
-				full_upgrade_no_epm_play=1
-				;;
-			"--no-flatpack")           # HELPCMD: skip flatpack update during full upgrade
-				full_upgrade_no_flatpack=1
-				;;
-			"--no-snap")           # HELPCMD: skip snap update during full upgrade
-				full_upgrade_no_snap=1
-				;;
-			"--no-kernel-update")  # HELPCMD: skip kernel update during full upgrade
-				full_upgrade_no_kernel_update=1
-				;;
-		esac
-		shift
-	done
+    while [ -n "$1" ] ; do
+        case "$1" in
+            "-h"|"--help"|"help")      # HELPCMD: help
+                epm_full_upgrade_help
+                return
+                ;;
+            "--no-epm-play")           # HELPCMD: skip epm play during full upgrade
+                full_upgrade_no_epm_play=1
+                ;;
+            "--no-flatpack")           # HELPCMD: skip flatpack update during full upgrade
+                full_upgrade_no_flatpack=1
+                ;;
+            "--no-snap")           # HELPCMD: skip snap update during full upgrade
+                full_upgrade_no_snap=1
+                ;;
+            "--no-kernel-update")  # HELPCMD: skip kernel update during full upgrade
+                full_upgrade_no_kernel_update=1
+                ;;
+        esac
+        shift
+    done
 
-	docmd epm update || fatal "repository updating is failed."
+    docmd epm update || fatal "repository updating is failed."
 
-	[ -n "$quiet" ] || echo
-	docmd epm upgrade || fatal "upgrading of the system is failed."
+    [ -n "$quiet" ] || echo
+    docmd epm upgrade || fatal "upgrading of the system is failed."
 
-	if [ -z "$full_upgrade_no_kernel_update" ] ; then
-		[ -n "$quiet" ] || echo
-		docmd epm update-kernel || fatal "updating of the kernel is failed."
-	fi
+    if [ -z "$full_upgrade_no_kernel_update" ] ; then
+        [ -n "$quiet" ] || echo
+        docmd epm update-kernel || fatal "updating of the kernel is failed."
+    fi
 
-	# disable epm play --update for non ALT Systems
-	[ "$BASEDISTRNAME" = "alt" ] || full_upgrade_no_epm_play=1
+    # disable epm play --update for non ALT Systems
+    [ "$BASEDISTRNAME" = "alt" ] || full_upgrade_no_epm_play=1
 
-	if [ -z "$full_upgrade_no_epm_play" ] ; then
-		[ -n "$quiet" ] || echo
-		docmd epm play --update all || fatal "updating of applications installed via epm play is failed."
-	fi
+    if [ -z "$full_upgrade_no_epm_play" ] ; then
+        [ -n "$quiet" ] || echo
+        docmd epm play --update all || fatal "updating of applications installed via epm play is failed."
+    fi
 
-	if [ -z "$full_upgrade_no_flatpack" ] ; then
-		if is_command flatpak ; then
-			[ -n "$quiet" ] || echo
-			docmd flatpak update
-		fi
-	fi
+    if [ -z "$full_upgrade_no_flatpack" ] ; then
+        if is_command flatpak ; then
+            [ -n "$quiet" ] || echo
+            docmd flatpak update
+        fi
+    fi
 
-	if [ -z "$full_upgrade_no_snap" ] ; then
-		if is_command snap && serv snapd exists && serv snapd status >/dev/null ; then
-			[ -n "$quiet" ] || echo
-			sudocmd snap refresh
-		fi
-	fi
+    if [ -z "$full_upgrade_no_snap" ] ; then
+        if is_command snap && serv snapd exists && serv snapd status >/dev/null ; then
+            [ -n "$quiet" ] || echo
+            sudocmd snap refresh
+        fi
+    fi
 
-	[ -n "$quiet" ] || echo
-	docmd epm clean
+    [ -n "$quiet" ] || echo
+    docmd epm clean
 }

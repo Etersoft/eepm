@@ -23,15 +23,15 @@ load_helper epm-query
 # fill pkg_installed and pkg_noninstalled
 separate_installed()
 {
-	pkg_installed=
-	pkg_noninstalled=
-	for i in "$@" ; do
-		is_installed $i && pkg_installed="$pkg_installed $i" || pkg_noninstalled="$pkg_noninstalled $i"
-	done
+    pkg_installed=
+    pkg_noninstalled=
+    for i in "$@" ; do
+        is_installed $i && pkg_installed="$pkg_installed $i" || pkg_noninstalled="$pkg_noninstalled $i"
+    done
 }
 
 epm_installed()
 {
-	[ -n "$pkg_names" ] || fatal "is_installed: package name is missed"
-	is_installed "$pkg_names"
+    [ -n "$pkg_names" ] || fatal "is_installed: package name is missed"
+    is_installed "$pkg_names"
 }

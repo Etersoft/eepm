@@ -21,38 +21,38 @@ load_helper epm-print
 
 epm_whatprovides()
 {
-	local CMD
-	[ -n "$pkg_files" ] && fatal "whatprovides does not handle files"
-	[ -n "$pkg_names" ] || fatal "whatprovides: package name is missed"
-	local pkg=$(print_name $pkg_names)
+    local CMD
+    [ -n "$pkg_files" ] && fatal "whatprovides does not handle files"
+    [ -n "$pkg_names" ] || fatal "whatprovides: package name is missed"
+    local pkg=$(print_name $pkg_names)
 
 # by package name
 case $PMTYPE in
-	conary)
-		CMD="conary repquery --what-provides"
-		;;
-	apt-rpm|apt-dpkg|aptitude-dpkg)
-		LANG=C docmd apt-get install --print-uris $pkg | grep "^Selecting" | cut -f2 -d" "
-		return
-		;;
-	yum-rpm)
-		CMD="yum whatprovides"
-		;;
-	urpm-rpm)
-		CMD="urpmq --whatprovides"
-		;;
-	dnf-rpm)
-		CMD="yum provides"
-		;;
-	zypper-rpm)
-		CMD="zypper what-provides"
-		;;
-	opkg)
-		CMD="opkg whatprovides"
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
+    conary)
+        CMD="conary repquery --what-provides"
+        ;;
+    apt-rpm|apt-dpkg|aptitude-dpkg)
+        LANG=C docmd apt-get install --print-uris $pkg | grep "^Selecting" | cut -f2 -d" "
+        return
+        ;;
+    yum-rpm)
+        CMD="yum whatprovides"
+        ;;
+    urpm-rpm)
+        CMD="urpmq --whatprovides"
+        ;;
+    dnf-rpm)
+        CMD="yum provides"
+        ;;
+    zypper-rpm)
+        CMD="zypper what-provides"
+        ;;
+    opkg)
+        CMD="opkg whatprovides"
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
 esac
 
 docmd $CMD $pkg

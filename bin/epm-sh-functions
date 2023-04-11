@@ -23,71 +23,71 @@
 # FIXME on Android: FIX ME! implement ttyname_r() bionic/libc/bionic/stubs.c:366
 inputisatty()
 {
-	# check stdin
-	#tty -s 2>/dev/null
-	test -t 0
+    # check stdin
+    #tty -s 2>/dev/null
+    test -t 0
 }
 
 isatty()
 {
-	# check stdout
-	test -t 1
+    # check stdout
+    test -t 1
 }
 
 isatty2()
 {
-	# check stderr
-	test -t 2
+    # check stderr
+    test -t 2
 }
 
 check_tty()
 {
-	isatty2 || return
+    isatty2 || return
 
-	# Set a sane TERM required for tput
-	[ -n "$TERM" ] || TERM=dumb
-	export TERM
+    # Set a sane TERM required for tput
+    [ -n "$TERM" ] || TERM=dumb
+    export TERM
 
-	check_core_commands
+    check_core_commands
 
-	# grep -E from busybox may not --color
-	# grep -E from MacOS print help to stderr
-	if grep -E --help 2>&1 | grep -q -- "--color" ; then
-		export EGREPCOLOR="--color"
-	fi
+    # grep -E from busybox may not --color
+    # grep -E from MacOS print help to stderr
+    if grep -E --help 2>&1 | grep -q -- "--color" ; then
+        export EGREPCOLOR="--color"
+    fi
 
-	is_command tput || return
-	# FreeBSD does not support tput -S
-	echo | a= tput -S >/dev/null 2>/dev/null || return
-	USETTY="tput -S"
+    is_command tput || return
+    # FreeBSD does not support tput -S
+    echo | a= tput -S >/dev/null 2>/dev/null || return
+    USETTY="tput -S"
 }
 
 : ${BLACK:=0} ${RED:=1} ${GREEN:=2} ${YELLOW:=3} ${BLUE:=4} ${MAGENTA:=5} ${CYAN:=6} ${WHITE:=7}
 
 set_boldcolor()
 {
-	[ -n "$USETTY" ] || return
-	{
-		echo bold
-		echo setaf $1
-	} | $USETTY
+    [ -n "$USETTY" ] || return
+    {
+        echo bold
+        echo setaf $1
+    } | $USETTY
 }
 
 set_color()
 {
-	[ -n "$USETTY" ] || return
-	{
-		echo setaf $1
-	} | $USETTY
+    [ -n "$USETTY" ] || return
+    {
+        echo setaf $1
+    } | $USETTY
 }
 
 restore_color()
 {
-	[ -n "$USETTY" ] || return
-	{
-		echo op; # set Original color Pair.
-		echo sgr0; # turn off all special graphics mode (bold in our case).
-	} | $USETTY
+    [ -n "$USETTY" ] || return
+    {
+        echo op; # set Original color Pair.
+        echo sgr0; # turn off all special graphics mode (bold in our case).
+    } | $USETTY
 }
 
 echover()
@@ -99,123 +99,123 @@ echover()
 # echo string without EOL
 echon()
 {
-	# default /bin/sh on MacOS does not recognize -n
-	echo -n "$*" 2>/dev/null || a= /bin/echo -n "$*"
+    # default /bin/sh on MacOS does not recognize -n
+    echo -n "$*" 2>/dev/null || a= /bin/echo -n "$*"
 }
 
 
 # Used DISTRNAME
 set_target_pkg_env()
 {
-	[ -n "$DISTRNAME" ] || fatal "Missing DISTRNAME in set_target_pkg_env."
-	local ver="$DISTRVERSION"
-	[ -n "$ver" ] && ver="/$ver"
-	PKGFORMAT=$($DISTRVENDOR -p "$DISTRNAME$ver")
-	PKGVENDOR=$($DISTRVENDOR -s "$DISTRNAME$ver")
-	RPMVENDOR=$($DISTRVENDOR -n "$DISTRNAME$ver")
+    [ -n "$DISTRNAME" ] || fatal "Missing DISTRNAME in set_target_pkg_env."
+    local ver="$DISTRVERSION"
+    [ -n "$ver" ] && ver="/$ver"
+    PKGFORMAT=$($DISTRVENDOR -p "$DISTRNAME$ver")
+    PKGVENDOR=$($DISTRVENDOR -s "$DISTRNAME$ver")
+    RPMVENDOR=$($DISTRVENDOR -n "$DISTRNAME$ver")
 }
 
 # Print command line and run command line
 showcmd()
 {
-	if [ -z "$quiet" ] ; then
-		set_boldcolor $GREEN
-		local PROMTSIG="\$"
-		is_root && PROMTSIG="#"
-		echo " $PROMTSIG $*"
-		restore_color
-	fi >&2
+    if [ -z "$quiet" ] ; then
+        set_boldcolor $GREEN
+        local PROMTSIG="\$"
+        is_root && PROMTSIG="#"
+        echo " $PROMTSIG $*"
+        restore_color
+    fi >&2
 }
 
 # Print command
 echocmd()
 {
-	set_boldcolor $GREEN
-	local PROMTSIG="\$"
-	is_root && PROMTSIG="#"
-	echo -n "$PROMTSIG $*"
-	restore_color
+    set_boldcolor $GREEN
+    local PROMTSIG="\$"
+    is_root && PROMTSIG="#"
+    echo -n "$PROMTSIG $*"
+    restore_color
 }
 
 # Print command line and run command line
 docmd()
 {
-	showcmd "$*$EXTRA_SHOWDOCMD"
-	"$@"
+    showcmd "$*$EXTRA_SHOWDOCMD"
+    "$@"
 }
 
 # Run every arg with docmd
 docmd_foreach()
 {
-	local cmd pkg
-	cmd="$1"
-	#showcmd "$@"
-	shift
-	for pkg in "$@" ; do
-		docmd $cmd $pkg
-	done
+    local cmd pkg
+    cmd="$1"
+    #showcmd "$@"
+    shift
+    for pkg in "$@" ; do
+        docmd $cmd $pkg
+    done
 }
 
 # run command line with SUDO
 sudorun()
 {
-	set_sudo
-	if [ -z "$SUDO" ] ; then
-		"$@"
-		return
-	fi
-	$SUDO "$@"
+    set_sudo
+    if [ -z "$SUDO" ] ; then
+        "$@"
+        return
+    fi
+    $SUDO "$@"
 }
 
 # Print command line and run command line with SUDO
 sudocmd()
 {
-	set_sudo
-	[ -n "$SUDO" ] && showcmd "$SUDO $*" || showcmd "$*"
-	sudorun "$@"
+    set_sudo
+    [ -n "$SUDO" ] && showcmd "$SUDO $*" || showcmd "$*"
+    sudorun "$@"
 }
 
 # Run every arg with sudocmd
 # Returns on any error
 sudocmd_foreach()
 {
-	local cmd pkg
-	cmd="$1"
-	#showcmd "$@"
-	shift
-	for pkg in "$@" ; do
-		# don't quote $cmd here: it can be a command with an args
-		sudocmd $cmd $pkg || return
-	done
+    local cmd pkg
+    cmd="$1"
+    #showcmd "$@"
+    shift
+    for pkg in "$@" ; do
+        # don't quote $cmd here: it can be a command with an args
+        sudocmd $cmd $pkg || return
+    done
 }
 
 # print full path to files
 make_filepath()
 {
-	local i
-	for i in "$@" ; do
-		[ -f "$i" ] || continue
-		echo "$i" | grep -q "/" && echo "$i" && continue
-		echo "./$i"
-	done
+    local i
+    for i in "$@" ; do
+        [ -f "$i" ] || continue
+        echo "$i" | grep -q "/" && echo "$i" && continue
+        echo "./$i"
+    done
 }
 
 get_firstarg()
 {
-	echon "$1"
+    echon "$1"
 }
 
 get_lastarg()
 {
-	local lastarg
-	eval "lastarg=\${$#}"
-	echon "$lastarg"
+    local lastarg
+    eval "lastarg=\${$#}"
+    echon "$lastarg"
 }
 
 # TODO: see etersoft-build-utils/tests/test_isnumber.sh
 isnumber()
 {
-	echo "$*" | filter_strip_spaces | grep -q "^[0-9]\+$"
+    echo "$*" | filter_strip_spaces | grep -q "^[0-9]\+$"
 }
 
 # copied from strings
@@ -223,7 +223,7 @@ isnumber()
 # Note: used grep -E! write '[0-9]+(first|two)', not '[0-9]\+...'
 rhas()
 {
-	echo "$1" | grep -E -q -- "$2"
+    echo "$1" | grep -E -q -- "$2"
 }
 
 # copied from strings
@@ -252,14 +252,14 @@ strip_spaces()
 # use for subst complex string with symbols treating as regexp
 sed_escape()
 {
-	echo "$*" | sed -e 's/[]()$*.^|[]/\\&/g'
+    echo "$*" | sed -e 's/[]()$*.^|[]/\\&/g'
 }
 
 
 # param true false
 subst_option()
 {
-	eval "[ -n \"\$$1\" ]" && echo "$2" || echo "$3"
+    eval "[ -n \"\$$1\" ]" && echo "$2" || echo "$3"
 }
 
 store_output()
@@ -290,61 +290,61 @@ clean_store_output()
 # run epm, possible from side repo
 epm()
 {
-	if [ -n "$PROGNAME" ] ; then
+    if [ -n "$PROGNAME" ] ; then
 
-		local bashopt=''
-		[ -n "$verbose" ] && bashopt='-x'
+        local bashopt=''
+        [ -n "$verbose" ] && bashopt='-x'
 
-		$CMDSHELL $bashopt $PROGDIR/$PROGNAME --inscript "$@"
-	else
-		epm_main --inscript "$@"
-	fi
+        $CMDSHELL $bashopt $PROGDIR/$PROGNAME --inscript "$@"
+    else
+        epm_main --inscript "$@"
+    fi
 }
 
 # run $SUDO epm, possible from side repo
 sudoepm()
 {
-	[ -n "$PROGNAME" ] || fatal "Can't use sudo epm call from the piped script"
+    [ -n "$PROGNAME" ] || fatal "Can't use sudo epm call from the piped script"
 
-	local bashopt=''
-	[ -n "$verbose" ] && bashopt='-x'
+    local bashopt=''
+    [ -n "$verbose" ] && bashopt='-x'
 
-	sudorun $CMDSHELL $bashopt $PROGDIR/$PROGNAME --inscript "$@"
+    sudorun $CMDSHELL $bashopt $PROGDIR/$PROGNAME --inscript "$@"
 }
 
 # Print error message and stop the program
 fatal()
 {
-	if [ -z "$TEXTDOMAIN" ] ; then
-		echo "Error: $*  (you can discuss the problem in Telegram: https://t.me/useepm)" >&2
-#	else
-#		echog "Error in $0: $@" >&2
-	fi
-#	[ "$TERM" = "screen" ] && echo "(screen detected: waiting ten seconds to exit ...)" >&2 && sleep 10
-	exit 1
+    if [ -z "$TEXTDOMAIN" ] ; then
+        echo "Error: $*  (you can discuss the problem in Telegram: https://t.me/useepm)" >&2
+#    else
+#        echog "Error in $0: $@" >&2
+    fi
+#    [ "$TERM" = "screen" ] && echo "(screen detected: waiting ten seconds to exit ...)" >&2 && sleep 10
+    exit 1
 }
 
 # Print warning message
 warning()
 {
-	if [ -z "$TEXTDOMAIN" ] ; then
-		echo "Warning: $*" >&2
-#	else
-#		echog "Error in $0: $@" >&2
-	fi
+    if [ -z "$TEXTDOMAIN" ] ; then
+        echo "Warning: $*" >&2
+#    else
+#        echog "Error in $0: $@" >&2
+    fi
 }
 
 info()
 {
-	[ -n "$quiet" ] && return
+    [ -n "$quiet" ] && return
 
-	# print message to stderr if stderr forwarded to (a file)
-	if isatty2 ; then
-		isatty || return 0
-		echo "$*"
-	else
-		echo "$*" >&2
-	fi
+    # print message to stderr if stderr forwarded to (a file)
+    if isatty2 ; then
+        isatty || return 0
+        echo "$*"
+    else
+        echo "$*" >&2
+    fi
 }
 
 # if we have not sudo, returns 1 and set SUDO variable to fatal
@@ -352,101 +352,101 @@ SUDO_TESTED=''
 SUDO_CMD='sudo'
 set_sudo()
 {
-	local nofail="$1"
+    local nofail="$1"
 
-	# cache the result
-	[ -n "$SUDO_TESTED" ] && return "$SUDO_TESTED"
-	SUDO_TESTED="0"
+    # cache the result
+    [ -n "$SUDO_TESTED" ] && return "$SUDO_TESTED"
+    SUDO_TESTED="0"
 
-	SUDO=""
-	# skip SUDO if disabled
-	[ -n "$EPMNOSUDO" ] && return
-	if [ "$DISTRNAME" = "Cygwin" ] || [ "$DISTRNAME" = "Windows" ] ; then
-		# skip sudo using on Windows
-		return
-	fi
+    SUDO=""
+    # skip SUDO if disabled
+    [ -n "$EPMNOSUDO" ] && return
+    if [ "$DISTRNAME" = "Cygwin" ] || [ "$DISTRNAME" = "Windows" ] ; then
+        # skip sudo using on Windows
+        return
+    fi
 
-	# if we are root, do not need sudo
-	is_root && return
+    # if we are root, do not need sudo
+    is_root && return
 
-	# start error section
-	SUDO_TESTED="1"
+    # start error section
+    SUDO_TESTED="1"
 
-	if ! is_command $SUDO_CMD ; then
-		[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't find sudo. Please install and tune sudo ('# epm install sudo') or run epm under root.'"
-		return "$SUDO_TESTED"
-	fi
+    if ! is_command $SUDO_CMD ; then
+        [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't find sudo. Please install and tune sudo ('# epm install sudo') or run epm under root.'"
+        return "$SUDO_TESTED"
+    fi
 
-	# if input is a console
-	if inputisatty && isatty && isatty2 ; then
-		if ! $SUDO_CMD -l >/dev/null ; then
-			[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported in non interactive using). Please run epm under root.'"
-			return "$SUDO_TESTED"
-		fi
-	else
-		# use sudo if one is tuned and tuned without password
-		if ! $SUDO_CMD -l -n >/dev/null 2>/dev/null ; then
-			[ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported). Please run epm under root or check http://altlinux.org/sudo '"
-			return "$SUDO_TESTED"
-		fi
-	fi
+    # if input is a console
+    if inputisatty && isatty && isatty2 ; then
+        if ! $SUDO_CMD -l >/dev/null ; then
+            [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported in non interactive using). Please run epm under root.'"
+            return "$SUDO_TESTED"
+        fi
+    else
+        # use sudo if one is tuned and tuned without password
+        if ! $SUDO_CMD -l -n >/dev/null 2>/dev/null ; then
+            [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported). Please run epm under root or check http://altlinux.org/sudo '"
+            return "$SUDO_TESTED"
+        fi
+    fi
 
-	SUDO_TESTED="0"
-	# FIXME: does not work: sudo -- VARIABLE=some command
-	SUDO="$SUDO_CMD"
-	#SUDO="$SUDO_CMD --"
-	# check for < 1.7 version which do not support -- (and --help possible too)
-	#$SUDO_CMD -h 2>/dev/null | grep -q "  --" || SUDO="$SUDO_CMD"
+    SUDO_TESTED="0"
+    # FIXME: does not work: sudo -- VARIABLE=some command
+    SUDO="$SUDO_CMD"
+    #SUDO="$SUDO_CMD --"
+    # check for < 1.7 version which do not support -- (and --help possible too)
+    #$SUDO_CMD -h 2>/dev/null | grep -q "  --" || SUDO="$SUDO_CMD"
 
 }
 
 # return TRUE if we can run privileged command
 sudo_allowed()
 {
-	set_sudo nofail
+    set_sudo nofail
 }
 
 # wait for n seconds (if possible) during executing command
 # args: seconds command
 withtimeout()
 {
-	local TO=$(print_command_path timeout || print_command_path gtimeout)
-	if [ -x "$TO" ] ; then
-		$TO "$@"
-		return
-	fi
-	fatal "Possible indefinite wait due timeout command is missed"
-	# fallback: drop time arg and run without timeout
-	#shift
-	#"$@"
+    local TO=$(print_command_path timeout || print_command_path gtimeout)
+    if [ -x "$TO" ] ; then
+        $TO "$@"
+        return
+    fi
+    fatal "Possible indefinite wait due timeout command is missed"
+    # fallback: drop time arg and run without timeout
+    #shift
+    #"$@"
 }
 
 set_eatmydata()
 {
-	# don't use eatmydata (useless)
-	return 0
-	# skip if disabled
-	[ -n "$EPMNOEATMYDATA" ] && return
-	# use if possible
-	is_command eatmydata || return
-	set_sudo
-	# FIXME: check if SUDO already has eatmydata
-	[ -n "$SUDO" ] && SUDO="$SUDO eatmydata" || SUDO="eatmydata"
-	[ -n "$verbose" ] && info "Uwaga! eatmydata is installed, we will use it for disable all sync operations."
-	return 0
+    # don't use eatmydata (useless)
+    return 0
+    # skip if disabled
+    [ -n "$EPMNOEATMYDATA" ] && return
+    # use if possible
+    is_command eatmydata || return
+    set_sudo
+    # FIXME: check if SUDO already has eatmydata
+    [ -n "$SUDO" ] && SUDO="$SUDO eatmydata" || SUDO="eatmydata"
+    [ -n "$verbose" ] && info "Uwaga! eatmydata is installed, we will use it for disable all sync operations."
+    return 0
 }
 
 # 
 __get_package_for_command()
 {
-	case "$1" in
-		equery|revdep-rebuild)
-			echo 'gentoolkit'
-			;;
-		update-kernel|remove-old-kernels)
-			echo 'update-kernel'
-			;;
-	esac
+    case "$1" in
+        equery|revdep-rebuild)
+            echo 'gentoolkit'
+            ;;
+        update-kernel|remove-old-kernels)
+            echo 'update-kernel'
+            ;;
+    esac
 }
 
 # TODO:
@@ -467,168 +467,168 @@ confirm() {
 
 confirm_info()
 {
-	info "$*"
-	if [ -z "$non_interactive" ] ; then
-		confirm "Are you sure? [y/N]" || fatal "Exiting"
-	fi
+    info "$*"
+    if [ -z "$non_interactive" ] ; then
+        confirm "Are you sure? [y/N]" || fatal "Exiting"
+    fi
 
 }
 
 
 is_root()
 {
-	local EFFUID="$(id -u)"
-	[ "$EFFUID" = "0" ]
+    local EFFUID="$(id -u)"
+    [ "$EFFUID" = "0" ]
 }
 
 assure_root()
 {
-	is_root || fatal "run me only under root"
+    is_root || fatal "run me only under root"
 }
 
 regexp_subst()
 {
-	local expression="$1"
-	shift
-	sed -i -r -e "$expression" "$@"
+    local expression="$1"
+    shift
+    sed -i -r -e "$expression" "$@"
 }
 
 # TODO: we we can't use epm directly?
 assure_exists()
 {
-	load_helper epm-assure
-	local package="$2"
-	local textpackage=
-	[ -n "$package" ] || package="$(__get_package_for_command "$1")"
-	[ -n "$3" ] && textpackage=" >= $3"
-	( direct='' epm_assure "$1" $package $3 ) || fatal "Can't assure in '$1' command from $package$textpackage package"
+    load_helper epm-assure
+    local package="$2"
+    local textpackage=
+    [ -n "$package" ] || package="$(__get_package_for_command "$1")"
+    [ -n "$3" ] && textpackage=" >= $3"
+    ( direct='' epm_assure "$1" $package $3 ) || fatal "Can't assure in '$1' command from $package$textpackage package"
 }
 
 assure_exists_erc()
 {
-	load_helper epm-assure
-	local package="erc"
-	( direct='' epm_assure "$package" ) || epm ei erc || fatal "erc is not available to install."
+    load_helper epm-assure
+    local package="erc"
+    ( direct='' epm_assure "$package" ) || epm ei erc || fatal "erc is not available to install."
 }
 
 # will replaced within disabled_eget in packaged version
 eget()
 {
-	local EGET
-	# use internal eget only if exists
-	if [ -s $SHAREDIR/tools_eget ] ; then
-		( EGET_BACKEND=$eget_backend $SHAREDIR/tools_eget "$@" )
-		return
-	fi
-	fatal "Internal error: missed tools_eget"
+    local EGET
+    # use internal eget only if exists
+    if [ -s $SHAREDIR/tools_eget ] ; then
+        ( EGET_BACKEND=$eget_backend $SHAREDIR/tools_eget "$@" )
+        return
+    fi
+    fatal "Internal error: missed tools_eget"
 
-	# FIXME: we need disable output here, eget can be used for get output
-	assure_exists eget eget 3.3 >/dev/null
-	# run external command, not the function
-	EGET=$(print_command_path eget) || fatal "Missed command eget from installed package eget"
-	$EGET "$@"
+    # FIXME: we need disable output here, eget can be used for get output
+    assure_exists eget eget 3.3 >/dev/null
+    # run external command, not the function
+    EGET=$(print_command_path eget) || fatal "Missed command eget from installed package eget"
+    $EGET "$@"
 }
 
 # will replaced within disabled_erc in packaged version
 erc()
 {
-	local ERC
-	# use internal eget only if exists
-	if [ -s $SHAREDIR/tools_erc ] ; then
-		$SHAREDIR/tools_erc "$@"
-		return
-	fi
-	fatal "Internal error: missed tools_erc"
+    local ERC
+    # use internal eget only if exists
+    if [ -s $SHAREDIR/tools_erc ] ; then
+        $SHAREDIR/tools_erc "$@"
+        return
+    fi
+    fatal "Internal error: missed tools_erc"
 
-	# FIXME: we need disable output here, ercat can be used for get output
-	assure_exists_erc >/dev/null
-	# run external command, not the function
-	ERC=$(print_command_path erc) || fatal "Missed command erc from installed package erc"
-	$ERC "$@"
+    # FIXME: we need disable output here, ercat can be used for get output
+    assure_exists_erc >/dev/null
+    # run external command, not the function
+    ERC=$(print_command_path erc) || fatal "Missed command erc from installed package erc"
+    $ERC "$@"
 }
 
 # will replaced within disabled_ercat in packaged version
 ercat()
 {
-	local ERCAT
-	# use internal eget only if exists
-	if [ -s $SHAREDIR/tools_ercat ] ; then
-		$SHAREDIR/tools_ercat "$@"
-		return
-	fi
-	fatal "Internal error: missed tools_ercat"
+    local ERCAT
+    # use internal eget only if exists
+    if [ -s $SHAREDIR/tools_ercat ] ; then
+        $SHAREDIR/tools_ercat "$@"
+        return
+    fi
+    fatal "Internal error: missed tools_ercat"
 
-	# FIXME: we need disable output here, ercat can be used for get output
-	assure_exists_erc >/dev/null
-	# run external command, not the function
-	ERCAT=$(print_command_path ercat) || fatal "Missed command ercat from installed package erc"
-	$ERCAT "$@"
+    # FIXME: we need disable output here, ercat can be used for get output
+    assure_exists_erc >/dev/null
+    # run external command, not the function
+    ERCAT=$(print_command_path ercat) || fatal "Missed command ercat from installed package erc"
+    $ERCAT "$@"
 }
 
 estrlist()
 {
-	if [ -s $SHAREDIR/tools_estrlist ] ; then
-		$SHAREDIR/tools_estrlist "$@"
-		return
-	fi
-	fatal "missed tools_estrlist"
+    if [ -s $SHAREDIR/tools_estrlist ] ; then
+        $SHAREDIR/tools_estrlist "$@"
+        return
+    fi
+    fatal "missed tools_estrlist"
 }
 
 onefile_estrlist()
 {
-	internal_tools_estrlist "$@"
+    internal_tools_estrlist "$@"
 }
 
 # will replaced within eget() in packed version
 onefile_eget()
 {
-	# check for both
-	# we really need that cross here,
-	is_command curl || assure_exists wget
-	is_command wget || assure_exists curl
-	internal_tools_eget "$@"
+    # check for both
+    # we really need that cross here,
+    is_command curl || assure_exists wget
+    is_command wget || assure_exists curl
+    internal_tools_eget "$@"
 }
 
 # TODO: improve and drop!
 get_package_type()
 {
-	local i
-	case $1 in
-		*.deb)
-			echo "deb"
-			return
-			;;
-		*.rpm)
-			echo "rpm"
-			return
-			;;
-		*.txz)
-			echo "txz"
-			return
-			;;
-		*.tbz)
-			echo "tbz"
-			return
-			;;
-		*.exe)
-			echo "exe"
-			return
-			;;
-		*.msi)
-			echo "msi"
-			return
-			;;
-		*.AppImage)
-			echo "AppImage"
-			return
-			;;
-		*)
-			#fatal "Don't know type of $1"
-			# return package name for info
-			echo "$1"
-			return 1
-			;;
-	esac
+    local i
+    case $1 in
+        *.deb)
+            echo "deb"
+            return
+            ;;
+        *.rpm)
+            echo "rpm"
+            return
+            ;;
+        *.txz)
+            echo "txz"
+            return
+            ;;
+        *.tbz)
+            echo "tbz"
+            return
+            ;;
+        *.exe)
+            echo "exe"
+            return
+            ;;
+        *.msi)
+            echo "msi"
+            return
+            ;;
+        *.AppImage)
+            echo "AppImage"
+            return
+            ;;
+        *)
+            #fatal "Don't know type of $1"
+            # return package name for info
+            echo "$1"
+            return 1
+            ;;
+    esac
 }
 
 
@@ -660,52 +660,52 @@ get_help()
 # TODO: get all info by one request (too slow)
 set_distro_info()
 {
-	# use external distro_info if internal one is missed
-	DISTRVENDOR=$PROGDIR/distr_info
-	[ -x $DISTRVENDOR ] || DISTRVENDOR=distro_info
-	export DISTRVENDOR
+    # use external distro_info if internal one is missed
+    DISTRVENDOR=$PROGDIR/distr_info
+    [ -x $DISTRVENDOR ] || DISTRVENDOR=distro_info
+    export DISTRVENDOR
 
-	[ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d) || fatal "Can't get distro name."
-	[ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
-	if [ -z "$DISTRARCH" ] ; then
-		DISTRARCH=$($DISTRVENDOR --distro-arch)
-	fi
-	DISTRCONTROL="$($DISTRVENDOR -y)"
-	[ -n "$BASEDISTRNAME" ] || BASEDISTRNAME=$($DISTRVENDOR -s)
+    [ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d) || fatal "Can't get distro name."
+    [ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
+    if [ -z "$DISTRARCH" ] ; then
+        DISTRARCH=$($DISTRVENDOR --distro-arch)
+    fi
+    DISTRCONTROL="$($DISTRVENDOR -y)"
+    [ -n "$BASEDISTRNAME" ] || BASEDISTRNAME=$($DISTRVENDOR -s)
 
-	# TODO: improve BIGTMPDIR conception
-	# https://bugzilla.mozilla.org/show_bug.cgi?id=69938
-	# https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s15.html
-	# https://geekpeach.net/ru/%D0%BA%D0%B0%D0%BA-systemd-tmpfiles-%D0%BE%D1%87%D0%B8%D1%89%D0%B0%D0%B5%D1%82-tmp-%D0%B8%D0%BB%D0%B8-var-tmp-%D0%B7%D0%B0%D0%BC%D0%B5%D0%BD%D0%B0-tmpwatch-%D0%B2-centos-rhel-7
-	[ -n "$BIGTMPDIR" ] || [ -d "/var/tmp" ] && BIGTMPDIR="/var/tmp" || BIGTMPDIR="/tmp"
+    # TODO: improve BIGTMPDIR conception
+    # https://bugzilla.mozilla.org/show_bug.cgi?id=69938
+    # https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s15.html
+    # https://geekpeach.net/ru/%D0%BA%D0%B0%D0%BA-systemd-tmpfiles-%D0%BE%D1%87%D0%B8%D1%89%D0%B0%D0%B5%D1%82-tmp-%D0%B8%D0%BB%D0%B8-var-tmp-%D0%B7%D0%B0%D0%BC%D0%B5%D0%BD%D0%B0-tmpwatch-%D0%B2-centos-rhel-7
+    [ -n "$BIGTMPDIR" ] || [ -d "/var/tmp" ] && BIGTMPDIR="/var/tmp" || BIGTMPDIR="/tmp"
 }
 
 # FIXME: detect if not recognized
 set_pm_type()
 {
-	local CMD
-	set_distro_info
-	set_target_pkg_env
+    local CMD
+    set_distro_info
+    set_target_pkg_env
 
 # override package manager detection result
 if [ -n "$FORCEPM" ] ; then
-	PMTYPE=$FORCEPM
-	return
+    PMTYPE=$FORCEPM
+    return
 fi
 
-	PMTYPE="$($DISTRVENDOR -g $DISTRNAME/$DISTRVERSION)"
+    PMTYPE="$($DISTRVENDOR -g $DISTRNAME/$DISTRVERSION)"
 }
 
 is_active_systemd()
 {
-	[ "$DISTRCONTROL" = "systemd" ]
+    [ "$DISTRCONTROL" = "systemd" ]
 }
 
 assure_distr()
 {
-	local TEXT="this option"
-	[ -n "$2" ] && TEXT="$2"
-	[ "$DISTRNAME" = "$1" ] || fatal "$TEXT supported only for $1 distro"
+    local TEXT="this option"
+    [ -n "$2" ] && TEXT="$2"
+    [ "$DISTRNAME" = "$1" ] || fatal "$TEXT supported only for $1 distro"
 }
 
 # return delimiter sign in depend of package type
@@ -808,8 +808,8 @@ fi
 
 check_core_commands()
 {
-	#which which >/dev/null || fatal "Can't find which command (which or debianutils package is missed?)"
-	is_command grep || fatal "Can't find grep command (coreutils package is missed?)"
-	is_command sed || fatal "Can't find sed command (sed package is missed?)"
+    #which which >/dev/null || fatal "Can't find which command (which or debianutils package is missed?)"
+    is_command grep || fatal "Can't find grep command (coreutils package is missed?)"
+    is_command sed || fatal "Can't find sed command (sed package is missed?)"
 }
 

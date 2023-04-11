@@ -48,18 +48,18 @@ __epm_check_if_needed_repack()
 # fills split_replaced_pkgs with packages of that type
 __epm_split_by_pkg_type()
 {
-	local type="$1"
-	shift
+    local type="$1"
+    shift
 
-	split_replaced_pkgs=''
+    split_replaced_pkgs=''
 
-	for pkg in "$@" ; do
-		[ "$(get_package_type "$pkg")" = "$type" ] || return 1
-		[ -e "$pkg" ] || fatal "Can't read $pkg"
-		split_replaced_pkgs="$split_replaced_pkgs $pkg"
-	done
+    for pkg in "$@" ; do
+        [ "$(get_package_type "$pkg")" = "$type" ] || return 1
+        [ -e "$pkg" ] || fatal "Can't read $pkg"
+        split_replaced_pkgs="$split_replaced_pkgs $pkg"
+    done
 
-	[ -n "$split_replaced_pkgs" ]
+    [ -n "$split_replaced_pkgs" ]
 }
 
 
@@ -181,43 +181,43 @@ __prepare_source_package()
 # fill repacked_pkgs
 __epm_repack()
 {
-	repacked_pkgs=''
-	case $PKGFORMAT in
-		rpm)
-			load_helper epm-repack-rpm
-			__epm_repack_to_rpm "$@" || return
-			;;
-		deb)
-			# FIXME: only one package in $@ is supported
-			#local pkgname="$(epm print name from "$@")"
-			__set_version_pkgname "$1"
-			local repackcode="$EPM_REPACK_SCRIPTS_DIR/$PKGNAME.sh"
-			if [ -x "$repackcode" ] ; then
-				load_helper epm-repack-rpm
-				load_helper epm-repack-deb
-				__epm_repack_to_rpm "$@" || return
-				[ -n "$repacked_pkgs" ] || return
-				__epm_repack_to_deb $repacked_pkgs
-			else
-				load_helper epm-repack-deb
-				__epm_repack_to_deb "$@" || return
-			fi
-			;;
-		*)
-			fatal "$PKGFORMAT is not supported for repack yet"
-			;;
-	esac
+    repacked_pkgs=''
+    case $PKGFORMAT in
+        rpm)
+            load_helper epm-repack-rpm
+            __epm_repack_to_rpm "$@" || return
+            ;;
+        deb)
+            # FIXME: only one package in $@ is supported
+            #local pkgname="$(epm print name from "$@")"
+            __set_version_pkgname "$1"
+            local repackcode="$EPM_REPACK_SCRIPTS_DIR/$PKGNAME.sh"
+            if [ -x "$repackcode" ] ; then
+                load_helper epm-repack-rpm
+                load_helper epm-repack-deb
+                __epm_repack_to_rpm "$@" || return
+                [ -n "$repacked_pkgs" ] || return
+                __epm_repack_to_deb $repacked_pkgs
+            else
+                load_helper epm-repack-deb
+                __epm_repack_to_deb "$@" || return
+            fi
+            ;;
+        *)
+            fatal "$PKGFORMAT is not supported for repack yet"
+            ;;
+    esac
 
-	return 0
+    return 0
 }
 
 __epm_repack_if_needed()
 {
-	# return 1 if there is a package in host package format
-	__epm_split_by_pkg_type $PKGFORMAT "$@" && return 1
+    # return 1 if there is a package in host package format
+    __epm_split_by_pkg_type $PKGFORMAT "$@" && return 1
 
-	__epm_repack "$@"
-	return 0
+    __epm_repack "$@"
+    return 0
 }
 
 epm_repack()
@@ -242,7 +242,7 @@ epm_repack()
             echo
             echo "Adapted packages:"
             for i in $repacked_pkgs ; do
-                echo "	$EPMCURDIR/$(basename "$i")"
+                echo "    $EPMCURDIR/$(basename "$i")"
             done
         fi
     fi

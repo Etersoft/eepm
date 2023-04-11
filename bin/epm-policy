@@ -31,15 +31,15 @@ warmup_bases
 pkg_names=$(__epm_get_hilevel_name $pkg_names)
 
 case $PMTYPE in
-	apt-*)
-		docmd apt-cache policy $pkg_names
-		;;
-	packagekit)
-		docmd pkcon resolve $pkg_names
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
+    apt-*)
+        docmd apt-cache policy $pkg_names
+        ;;
+    packagekit)
+        docmd pkcon resolve $pkg_names
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
 esac
 
 }

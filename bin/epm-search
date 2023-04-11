@@ -25,102 +25,102 @@ __epm_search_output()
 local CMD
 local string="$*"
 case $PMTYPE in
-	apt-rpm|apt-dpkg)
-		CMD="apt-cache search --"
-		;;
-	aptitude-dpkg)
-		CMD="aptitude search --"
-		;;
-	deepsolver-rpm)
-		CMD="ds-require --"
-		;;
-	packagekit)
-		CMD="pkcon search name"
-		;;
-	urpm-rpm)
-		# urpmq does not support --
-		CMD="urpmq -y"
-		;;
-	pkgsrc)
-		CMD="pkg_info -x --"
-		;;
-	pkgng)
-		CMD="pkg search -i --"
-		;;
-	emerge)
-		CMD="emerge --search --"
-		;;
-	pacman)
-		CMD="pacman -Ss --"
-		;;
-	aura)
-		CMD="aura -As --"
-		;;
-	eopkg)
-		CMD="eopkg search --"
-		;;
-	yum-rpm)
-		CMD="yum search --"
-		;;
-	dnf-rpm)
-		CMD="dnf search --"
-		;;
-	zypper-rpm)
-		CMD="zypper search -d --"
-		;;
-	mpkg)
-		CMD="mpkg search"
-		;;
-	apk)
-		CMD="apk search"
-		;;
-	tce)
-		CMD="tce-ab"
-		;;
-	conary)
-		CMD="conary repquery"
-		;;
-	npackd)
-		docmd npackdcl search --query="$string" --status=all
-		return
-		;;
-	chocolatey)
-		CMD="chocolatey list"
-		;;
-	slackpkg)
-		# FIXME
-		echo "Note: case sensitive search"
-		if [ -n "$verbose" ] ; then
-			CMD="/usr/sbin/slackpkg search"
-		else
-			LANG=C docmd /usr/sbin/slackpkg search $string | grep " - " | sed -e 's|.* - ||g'
-			return
-		fi
-		;;
-	opkg)
-		CMD="opkg find"
-		;;
-	homebrew)
-		CMD="brew search"
-		;;
-	guix)
-		CMD="guix package -A"
-		;;
-	android)
-		CMD="pm list packages"
-		;;
-	aptcyg)
-		CMD="apt-cyg searchall"
-		;;
-	xbps)
-		CMD="xbps-query -s"
-		;;
-	appget|winget)
-		CMD="$PMTYPE search"
-		;;
-	*)
-		fatal "Have no suitable search command for $PMTYPE"
-		;;
+    apt-rpm|apt-dpkg)
+        CMD="apt-cache search --"
+        ;;
+    aptitude-dpkg)
+        CMD="aptitude search --"
+        ;;
+    deepsolver-rpm)
+        CMD="ds-require --"
+        ;;
+    packagekit)
+        CMD="pkcon search name"
+        ;;
+    urpm-rpm)
+        # urpmq does not support --
+        CMD="urpmq -y"
+        ;;
+    pkgsrc)
+        CMD="pkg_info -x --"
+        ;;
+    pkgng)
+        CMD="pkg search -i --"
+        ;;
+    emerge)
+        CMD="emerge --search --"
+        ;;
+    pacman)
+        CMD="pacman -Ss --"
+        ;;
+    aura)
+        CMD="aura -As --"
+        ;;
+    eopkg)
+        CMD="eopkg search --"
+        ;;
+    yum-rpm)
+        CMD="yum search --"
+        ;;
+    dnf-rpm)
+        CMD="dnf search --"
+        ;;
+    zypper-rpm)
+        CMD="zypper search -d --"
+        ;;
+    mpkg)
+        CMD="mpkg search"
+        ;;
+    apk)
+        CMD="apk search"
+        ;;
+    tce)
+        CMD="tce-ab"
+        ;;
+    conary)
+        CMD="conary repquery"
+        ;;
+    npackd)
+        docmd npackdcl search --query="$string" --status=all
+        return
+        ;;
+    chocolatey)
+        CMD="chocolatey list"
+        ;;
+    slackpkg)
+        # FIXME
+        echo "Note: case sensitive search"
+        if [ -n "$verbose" ] ; then
+            CMD="/usr/sbin/slackpkg search"
+        else
+            LANG=C docmd /usr/sbin/slackpkg search $string | grep " - " | sed -e 's|.* - ||g'
+            return
+        fi
+        ;;
+    opkg)
+        CMD="opkg find"
+        ;;
+    homebrew)
+        CMD="brew search"
+        ;;
+    guix)
+        CMD="guix package -A"
+        ;;
+    android)
+        CMD="pm list packages"
+        ;;
+    aptcyg)
+        CMD="apt-cyg searchall"
+        ;;
+    xbps)
+        CMD="xbps-query -s"
+        ;;
+    appget|winget)
+        CMD="$PMTYPE search"
+        ;;
+    *)
+        fatal "Have no suitable search command for $PMTYPE"
+        ;;
 esac
 
 LANG=C docmd $CMD $string
@@ -131,123 +131,123 @@ epm play $short --list-all | sed -e 's|^ *||g' -e 's|[[:space:]]\+| |g' -e "s|\$
 # check man glob
 __convert_glob__to_regexp()
 {
-	# translate glob to regexp
-	echo "$1" | sed -e "s|\*|.*|g" -e "s|?|.|g"
+    # translate glob to regexp
+    echo "$1" | sed -e "s|\*|.*|g" -e "s|?|.|g"
 }
 
 # ^mc.*ext -> mc
 _clean_from_regexp()
 {
-	sed -e "s/[?\^.*]/ /g"
+    sed -e "s/[?\^.*]/ /g"
 }
 
 # ^mc*e?t -> mc
 __clean_from_glob()
 {
-	sed -e "s/[?*].*//" -e "s/[?\^.*]/ /g"
+    sed -e "s/[?*].*//" -e "s/[?\^.*]/ /g"
 }
 
 
 # produce grep sequence
 __epm_search_make_grep()
 {
-	local i
-	[ -z "$*" ] && return
+    local i
+    [ -z "$*" ] && return
 
-	local list=
-	local listN=
-	for i in $@ ; do
-		case "$i" in
-			~*)
-				# will clean from ~ later (and have the bug here with empty arg if run with one ~ only)
-				listN="$listN $i"
-				;;
-			*)
-				list="$list $i"
-				;;
-		esac
-	done
+    local list=
+    local listN=
+    for i in $@ ; do
+        case "$i" in
+            ~*)
+                # will clean from ~ later (and have the bug here with empty arg if run with one ~ only)
+                listN="$listN $i"
+                ;;
+            *)
+                list="$list $i"
+                ;;
+        esac
+    done
 
-	#list=$(strip_spaces $list | sed -e "s/ /|/g")
-	listN=$(strip_spaces $listN | sed -e "s/ /|/g" | sed -e "s/~//g")
+    #list=$(strip_spaces $list | sed -e "s/ /|/g")
+    listN=$(strip_spaces $listN | sed -e "s/ /|/g" | sed -e "s/~//g")
 
-	# TODO: only apt supports regexps?
-	case $PMTYPE in
-		apt-*)
-			;;
-		*)
-				list=$(echo "$list" | sed -e "s/[?\^.]/ /g")
-				listN=$(echo "$listN" | sed -e "s/[?\^.]/ /g")
-			;;
-	esac
+    # TODO: only apt supports regexps?
+    case $PMTYPE in
+        apt-*)
+            ;;
+        *)
+                list=$(echo "$list" | sed -e "s/[?\^.]/ /g")
+                listN=$(echo "$listN" | sed -e "s/[?\^.]/ /g")
+            ;;
+    esac
 
-	list=$(__convert_glob__to_regexp "$list")
-	listN=$(__convert_glob__to_regexp "$listN")
+    list=$(__convert_glob__to_regexp "$list")
+    listN=$(__convert_glob__to_regexp "$listN")
 
-	if [ -n "$short" ] ; then
-		echon " | sed -e \"s| .*||g\""
-	fi
+    if [ -n "$short" ] ; then
+        echon " | sed -e \"s| .*||g\""
+    fi
 
-	[ -n "$listN" ] && echon " | grep -E -i -v -- \"$listN\""
+    [ -n "$listN" ] && echon " | grep -E -i -v -- \"$listN\""
 
-	# FIXME: The World has not idea how to do grep both string
-	# http://stackoverflow.com/questions/10110051/grep-with-two-strings-logical-and-in-regex?rq=1
+    # FIXME: The World has not idea how to do grep both string
+    # http://stackoverflow.com/questions/10110051/grep-with-two-strings-logical-and-in-regex?rq=1
 
-	# Need only if we have more than one word (with one word we will grep for colorify)
-	if [ "$(echo "$list" | wc -w)" -gt 1 ] ; then
-		for i in $list ; do
-			# FIXME -n on MacOS?
-			echon " | grep -E -i -- \"$i\""
-		done
-	fi
+    # Need only if we have more than one word (with one word we will grep for colorify)
+    if [ "$(echo "$list" | wc -w)" -gt 1 ] ; then
+        for i in $list ; do
+            # FIXME -n on MacOS?
+            echon " | grep -E -i -- \"$i\""
+        done
+    fi
 
-	# FIXME: move from it
-	#isatty || return
+    # FIXME: move from it
+    #isatty || return
 
-	# TODO: sorts word by length from large to short
+    # TODO: sorts word by length from large to short
 
-	local COLO=""
-	# rule for colorife
-	for i in $list $listN; do
-		[ -n "$COLO" ] && COLO="$COLO|"
-		COLO="$COLO$i"
-	done
+    local COLO=""
+    # rule for colorife
+    for i in $list $listN; do
+        [ -n "$COLO" ] && COLO="$COLO|"
+        COLO="$COLO$i"
+    done
 
-	# TODO: use some colorifer instead grep (check grep adove too)
-	if [ -n "$list" ] ; then
-		echon " | grep -E -i $EGREPCOLOR -- \"($COLO)\""
-	fi
+    # TODO: use some colorifer instead grep (check grep adove too)
+    if [ -n "$list" ] ; then
+        echon " | grep -E -i $EGREPCOLOR -- \"($COLO)\""
+    fi
 }
 
 __epm_search_internal()
 {
-	[ -n "$pkg_filenames" ] || fatal "Search: search argument(s) is missed"
+    [ -n "$pkg_filenames" ] || fatal "Search: search argument(s) is missed"
 
-	# it is useful for first time running
-	update_repo_if_needed soft
+    # it is useful for first time running
+    update_repo_if_needed soft
 
-	warmup_bases
+    warmup_bases
 
-	__epm_search_output $(get_firstarg $pkg_filenames) | grep "$pkg_filenames"
+    __epm_search_output $(get_firstarg $pkg_filenames) | grep "$pkg_filenames"
 }
 
 # copied from korinf/tools/run-script/scripts/search
 
 epm_search()
 {
-	[ -n "$pkg_filenames" ] || fatal "Search: search argument(s) is missed"
+    [ -n "$pkg_filenames" ] || fatal "Search: search argument(s) is missed"
 
-	# it is useful for first time running
-	update_repo_if_needed soft
+    # it is useful for first time running
+    update_repo_if_needed soft
 
-	warmup_bases
+    warmup_bases
 
-	echo "$*" | grep -q "\.[*?]" && warning "Only glob symbols * and ? are supported. Don't use regexp here!"
+    echo "$*" | grep -q "\.[*?]" && warning "Only glob symbols * and ? are supported. Don't use regexp here!"
 
-	# FIXME: do it better
-	local MGS
-	MGS=$(eval __epm_search_make_grep $quoted_args)
-	EXTRA_SHOWDOCMD="$MGS"
-	# TODO: use search args for more optimal output
-	eval "__epm_search_output \"$(eval get_firstarg $quoted_args | __clean_from_glob)\" $MGS"
+    # FIXME: do it better
+    local MGS
+    MGS=$(eval __epm_search_make_grep $quoted_args)
+    EXTRA_SHOWDOCMD="$MGS"
+    # TODO: use search args for more optimal output
+    eval "__epm_search_output \"$(eval get_firstarg $quoted_args | __clean_from_glob)\" $MGS"
 }

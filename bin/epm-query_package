@@ -22,16 +22,16 @@ load_helper epm-search
 
 __epm_query_package()
 {
-	(pkg_filenames="$*" quoted_args="$*" quiet=1 epm_query_package)
+    (pkg_filenames="$*" quoted_args="$*" quiet=1 epm_query_package)
 }
 
 epm_query_package()
 {
-	[ -n "$pkg_filenames" ] || fatal "Please, use search with some argument or run epmqa for get all packages."
-	# FIXME: do it better
-	local MGS
-	MGS=$(eval __epm_search_make_grep $quoted_args)
-	EXTRA_SHOWDOCMD=$MGS
-	# Note: get all packages list and do grep
-	(eval "pkg_filenames='' epm_packages \"$(eval get_firstarg $quoted_args)\" $MGS")
+    [ -n "$pkg_filenames" ] || fatal "Please, use search with some argument or run epmqa for get all packages."
+    # FIXME: do it better
+    local MGS
+    MGS=$(eval __epm_search_make_grep $quoted_args)
+    EXTRA_SHOWDOCMD=$MGS
+    # Note: get all packages list and do grep
+    (eval "pkg_filenames='' epm_packages \"$(eval get_firstarg $quoted_args)\" $MGS")
 }

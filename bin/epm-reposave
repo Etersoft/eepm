@@ -24,54 +24,54 @@ load_helper epm-sh-altlinux
 SAVELISTDIR=/tmp/eepm-etc-save
 __save_alt_repo_lists()
 {
-	assure_root
-	info "Creating copy of all sources lists to $SAVELISTDIR ..."
-	local i
-	rm -rf $verbose $SAVELISTDIR 2>/dev/null
-	mkdir -p $SAVELISTDIR/apt/ $SAVELISTDIR/apt/sources.list.d/
-	for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
-		[ -s "$i" ] || continue
-		local DD="$(echo "$i" | sed -e "s|/etc|$SAVELISTDIR|")"
-		cp -af $verbose "$i" "$DD" || fatal "Can't save apt source list files to $SAVELISTDIR"
-	done
+    assure_root
+    info "Creating copy of all sources lists to $SAVELISTDIR ..."
+    local i
+    rm -rf $verbose $SAVELISTDIR 2>/dev/null
+    mkdir -p $SAVELISTDIR/apt/ $SAVELISTDIR/apt/sources.list.d/
+    for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
+        [ -s "$i" ] || continue
+        local DD="$(echo "$i" | sed -e "s|/etc|$SAVELISTDIR|")"
+        cp -af $verbose "$i" "$DD" || fatal "Can't save apt source list files to $SAVELISTDIR"
+    done
 }
 
 # under root only
 __restore_alt_repo_lists()
 {
-	assure_root
-	info "Restoring copy of all sources lists from $SAVELISTDIR ..."
-	local i
-	[ -d "$SAVELISTDIR/apt" ] || return 0
-	mkdir -p $SAVELISTDIR/apt/ $SAVELISTDIR/apt/sources.list.d/
-	for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
-		[ -s "$i" ] || continue
-		local DD="$(echo "$i" | sed -e "s|/etc|$SAVELISTDIR|")"
-		# restore only if there are differences
-		if diff -q "$DD" "$i" >/dev/null ; then
-			rm -f $verbose "$DD"
-		else
-			mv $verbose "$DD" "$i" || warning "Can't restore $i file"
-		fi
-	done
+    assure_root
+    info "Restoring copy of all sources lists from $SAVELISTDIR ..."
+    local i
+    [ -d "$SAVELISTDIR/apt" ] || return 0
+    mkdir -p $SAVELISTDIR/apt/ $SAVELISTDIR/apt/sources.list.d/
+    for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
+        [ -s "$i" ] || continue
+        local DD="$(echo "$i" | sed -e "s|/etc|$SAVELISTDIR|")"
+        # restore only if there are differences
+        if diff -q "$DD" "$i" >/dev/null ; then
+            rm -f $verbose "$DD"
+        else
+            mv $verbose "$DD" "$i" || warning "Can't restore $i file"
+        fi
+    done
 }
 
 # save and restore repo lists
 __on_error_restore_alt_repo_lists()
 {
-	warning "An error occurred..."
-	epm repo restore
+    warning "An error occurred..."
+    epm repo restore
 }
 
 try_change_alt_repo()
 {
-	epm repo save
-	trap __on_error_restore_alt_repo_lists EXIT
+    epm repo save
+    trap __on_error_restore_alt_repo_lists EXIT
 }
 
 end_change_alt_repo()
 {
-	trap - EXIT
+    trap - EXIT
 }
 
 
@@ -79,16 +79,16 @@ end_change_alt_repo()
 epm_reposave()
 {
 case $PMTYPE in
-	apt-*)
-		if ! is_root ; then
-			sudoepm repo save
-			return
-		fi
-		__save_alt_repo_lists
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
+    apt-*)
+        if ! is_root ; then
+            sudoepm repo save
+            return
+        fi
+        __save_alt_repo_lists
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
 esac
 
 }
@@ -96,16 +96,16 @@ esac
 epm_reporestore()
 {
 case $PMTYPE in
-	apt-*)
-		if ! is_root ; then
-			sudoepm repo restore
-			return
-		fi
-		__restore_alt_repo_lists
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
+    apt-*)
+        if ! is_root ; then
+            sudoepm repo restore
+            return
+        fi
+        __restore_alt_repo_lists
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
 esac
 
 }
@@ -113,12 +113,12 @@ esac
 epm_reporeset()
 {
 case $PMTYPE in
-	winget)
-		sudocmd winget source reset
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
+    winget)
+        sudocmd winget source reset
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
 esac
 
 }

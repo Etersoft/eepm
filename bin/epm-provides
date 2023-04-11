@@ -22,79 +22,79 @@ load_helper epm-print
 
 epm_provides_files()
 {
-	local pkg_files="$*"
-	[ -n "$pkg_files" ] || return
+    local pkg_files="$*"
+    [ -n "$pkg_files" ] || return
 
-	local PKGTYPE="$(get_package_type $pkg_files)"
+    local PKGTYPE="$(get_package_type $pkg_files)"
 
-	case $PKGTYPE in
-		rpm)
-			assure_exists rpm
-			docmd rpm -q --provides -p $pkg_files
-			;;
-		deb)
-			assure_exists dpkg
-			# FIXME: will we provide ourself?
-			docmd dpkg -I $pkg_files | grep "^ *Provides:" | sed "s|^ *Provides:||g"
-			;;
-		*)
-			fatal "Have no suitable command for $PMTYPE"
-			;;
-	esac
+    case $PKGTYPE in
+        rpm)
+            assure_exists rpm
+            docmd rpm -q --provides -p $pkg_files
+            ;;
+        deb)
+            assure_exists dpkg
+            # FIXME: will we provide ourself?
+            docmd dpkg -I $pkg_files | grep "^ *Provides:" | sed "s|^ *Provides:||g"
+            ;;
+        *)
+            fatal "Have no suitable command for $PMTYPE"
+            ;;
+    esac
 }
 
 
 epm_provides_names()
 {
-	local pkg_names="$*"
-	local CMD
-	[ -n "$pkg_names" ] || return
+    local pkg_names="$*"
+    local CMD
+    [ -n "$pkg_names" ] || return
 
 # by package name
 case $PMTYPE in
-	apt-rpm)
-		# FIXME: need fix for a few names case
-		# TODO: separate this function to two section
-		if is_installed $pkg_names ; then
-			CMD="rpm -q --provides"
-		else
-			EXTRA_SHOWDOCMD=' | grep "Provides:"'
-			docmd apt-cache show $pkg_names | grep "Provides:"
-			return
-		fi
-		;;
-	urpm-rpm|zypper-rpm|yum-rpm|dnf-rpm)
-		if is_installed $pkg_names ; then
-			CMD="rpm -q --provides"
-		else
-			fatal "FIXME: use hi level commands"
-		fi
-		;;
-	emerge)
-		assure_exists equery
-		CMD="equery files"
-		;;
-#	yum-rpm)
-#		CMD="yum deplist"
-#		;;
-	pkgng)
-		CMD="pkg info -b"
-		;;
-	apt-dpkg)
-		# FIXME: need fix for a few names case
-		if is_installed $pkg_names ; then
-			showcmd dpkg -s $pkg_names
-			a='' dpkg -s $pkg_names | grep "^Provides:" | sed "s|^Provides:||g"
-			return
-		else
-			EXTRA_SHOWDOCMD=' | grep "Provides:"'
-			docmd apt-cache show $pkg_names | grep "Provides:" | sed -e 's|, |\n|g' | grep -v "^Provides:"
-			return
-		fi
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
+    apt-rpm)
+        # FIXME: need fix for a few names case
+        # TODO: separate this function to two section
+        if is_installed $pkg_names ; then
+            CMD="rpm -q --provides"
+        else
+            EXTRA_SHOWDOCMD=' | grep "Provides:"'
+            docmd apt-cache show $pkg_names | grep "Provides:"
+            return
+        fi
+        ;;
+    urpm-rpm|zypper-rpm|yum-rpm|dnf-rpm)
+        if is_installed $pkg_names ; then
+            CMD="rpm -q --provides"
+        else
+            fatal "FIXME: use hi level commands"
+        fi
+        ;;
+    emerge)
+        assure_exists equery
+        CMD="equery files"
+        ;;
+#    yum-rpm)
+#        CMD="yum deplist"
+#        ;;
+    pkgng)
+        CMD="pkg info -b"
+        ;;
+    apt-dpkg)
+        # FIXME: need fix for a few names case
+        if is_installed $pkg_names ; then
+            showcmd dpkg -s $pkg_names
+            a='' dpkg -s $pkg_names | grep "^Provides:" | sed "s|^Provides:||g"
+            return
+        else
+            EXTRA_SHOWDOCMD=' | grep "Provides:"'
+            docmd apt-cache show $pkg_names | grep "Provides:" | sed -e 's|, |\n|g' | grep -v "^Provides:"
+            return
+        fi
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
 esac
 
 docmd $CMD $pkg_names
@@ -103,9 +103,9 @@ docmd $CMD $pkg_names
 
 epm_provides()
 {
-	[ -n "$pkg_filenames" ] || fatal "Provides: package name is missed"
+    [ -n "$pkg_filenames" ] || fatal "Provides: package name is missed"
 
-	epm_provides_files $pkg_files
-	# shellcheck disable=SC2046
-	epm_provides_names $(print_name $pkg_names)
+    epm_provides_files $pkg_files
+    # shellcheck disable=SC2046
+    epm_provides_names $(print_name $pkg_names)
 }

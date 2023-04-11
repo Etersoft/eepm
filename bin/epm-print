@@ -22,21 +22,21 @@
 # TODO: rpm only
 rpm_query_package_format_field()
 {
-	local FORMAT="$1\n"
-	shift
-	local INSTALLED=""
-	# if a file, ad -p for get from rpm base
-	if [ -f "$1" ] ; then
-		INSTALLED="-p"
-	fi
-	a= rpmquery $INSTALLED --queryformat "$FORMAT" "$@"
+    local FORMAT="$1\n"
+    shift
+    local INSTALLED=""
+    # if a file, ad -p for get from rpm base
+    if [ -f "$1" ] ; then
+        INSTALLED="-p"
+    fi
+    a= rpmquery $INSTALLED --queryformat "$FORMAT" "$@"
 }
 
 rpm_query_package_field()
 {
-	local FORMAT="%{$1}"
-	shift
-	rpm_query_package_format_field "$FORMAT" "$@"
+    local FORMAT="%{$1}"
+    shift
+    rpm_query_package_format_field "$FORMAT" "$@"
 }
 
 dpkg_query_package_format_field()
@@ -141,13 +141,13 @@ print_pkg_name()
 # algorithm: list all files in PKGDIR, print packages with our source pkg name
 print_binpkgfilelist()
 {
-	local PKGDIR=$1
-	local PKGNAME=$(basename $2)
-	find "$PKGDIR" ! -name '*\.src\.rpm' -name '*\.rpm' -execdir \
-		rpmquery -p --qf='%{sourcerpm}\t%{name}-%{version}-%{release}.%{arch}.rpm\n' "{}" \; \
-		| grep "^$PKGNAME[[:space:]].*" \
-		| cut -f2 \
-		| xargs -n1 -I "{}" echo -n "$PKGDIR/{} "
+    local PKGDIR=$1
+    local PKGNAME=$(basename $2)
+    find "$PKGDIR" ! -name '*\.src\.rpm' -name '*\.rpm' -execdir \
+        rpmquery -p --qf='%{sourcerpm}\t%{name}-%{version}-%{release}.%{arch}.rpm\n' "{}" \; \
+        | grep "^$PKGNAME[[:space:]].*" \
+        | cut -f2 \
+        | xargs -n1 -I "{}" echo -n "$PKGDIR/{} "
 }
 
 # TODO: need try detect more strict

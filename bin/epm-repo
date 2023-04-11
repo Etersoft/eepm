@@ -21,8 +21,8 @@ load_helper epm-sh-altlinux
 
 epm_repo_help()
 {
-	get_help HELPCMD $SHAREDIR/epm-repo
-	cat <<EOF
+    get_help HELPCMD $SHAREDIR/epm-repo
+    cat <<EOF
 Examples:
   epm repo set p9
   epm repo add autoimports
@@ -34,97 +34,97 @@ EOF
 
 epm_repo()
 {
-	local CMD="$1"
-	[ -n "$CMD" ] && shift
-	case $CMD in
-	"-h"|"--help"|help)               # HELPCMD: help
-		epm_repo_help
-		;;
-	""|list)                          # HELPCMD: list packages
-		load_helper epm-repolist
-		epm_repolist "$@"
-		;;
-	fix)                              # HELPCMD: fix paths in sources lists (ALT Linux only)
-		load_helper epm-repofix
-		epm_repofix "$@"
-		;;
-	change)                           # HELPCMD: <mirror>: switch sources to the mirror (supports etersoft/yandex/basealt): rewrite URLs to the specified server
-		load_helper epm-repofix
-		epm_repofix "$@"
-		;;
-	set)                              # HELPCMD: <mirror>: remove all existing sources and add mirror for the branch
-		epm repo rm all
-		epm addrepo "$@"
-		;;
-	switch)                           # HELPCMD: switch repo to <repo>: rewrite URLs to the repo
-		load_helper epm-repofix
-		epm_reposwitch "$@"
-		;;
-	enable)                           # HELPCMD: enable <repo>
-		load_helper epm-repoenable
-		epm_repoenable "$@"
-		;;
-	disable)                          # HELPCMD: disable <repo>
-		load_helper epm-repodisable
-		epm_repodisable "$@"
-		;;
-	addkey)                              # HELPCMD: add repository gpg key
-		load_helper epm-addrepo
-		epm_addkey "$@"
-		;;
-	clean)                            # HELPCMD: remove temp. repos (tasks and CD-ROMs)
-		# TODO: check for ALT
-		sudocmd apt-repo $dryrun clean
-		;;
-	save)
-		load_helper epm-reposave
-		epm_reposave "$@"
-		;;
-	restore)
-		load_helper epm-reposave
-		epm_reporestore "$@"
-		;;
-	reset)
-		load_helper epm-reposave
-		epm_reporeset "$@"
-		;;
-	add)                              # HELPCMD: add package repo (etersoft, autoimports, archive 2017/12/31); run with param to get list
-		load_helper epm-addrepo
-		epm_addrepo "$@"
-		;;
-	Add)                              # HELPCMD: like add, but do update after add
-		load_helper epm-addrepo
-		epm_addrepo "$@"
-		epm update
-		;;
-	rm|remove)                           # HELPCMD: remove repository from the sources lists (epm repo remove all for all)
-		load_helper epm-removerepo
-		epm_removerepo "$@"
-		;;
+    local CMD="$1"
+    [ -n "$CMD" ] && shift
+    case $CMD in
+    "-h"|"--help"|help)               # HELPCMD: help
+        epm_repo_help
+        ;;
+    ""|list)                          # HELPCMD: list packages
+        load_helper epm-repolist
+        epm_repolist "$@"
+        ;;
+    fix)                              # HELPCMD: fix paths in sources lists (ALT Linux only)
+        load_helper epm-repofix
+        epm_repofix "$@"
+        ;;
+    change)                           # HELPCMD: <mirror>: switch sources to the mirror (supports etersoft/yandex/basealt): rewrite URLs to the specified server
+        load_helper epm-repofix
+        epm_repofix "$@"
+        ;;
+    set)                              # HELPCMD: <mirror>: remove all existing sources and add mirror for the branch
+        epm repo rm all
+        epm addrepo "$@"
+        ;;
+    switch)                           # HELPCMD: switch repo to <repo>: rewrite URLs to the repo
+        load_helper epm-repofix
+        epm_reposwitch "$@"
+        ;;
+    enable)                           # HELPCMD: enable <repo>
+        load_helper epm-repoenable
+        epm_repoenable "$@"
+        ;;
+    disable)                          # HELPCMD: disable <repo>
+        load_helper epm-repodisable
+        epm_repodisable "$@"
+        ;;
+    addkey)                              # HELPCMD: add repository gpg key
+        load_helper epm-addrepo
+        epm_addkey "$@"
+        ;;
+    clean)                            # HELPCMD: remove temp. repos (tasks and CD-ROMs)
+        # TODO: check for ALT
+        sudocmd apt-repo $dryrun clean
+        ;;
+    save)
+        load_helper epm-reposave
+        epm_reposave "$@"
+        ;;
+    restore)
+        load_helper epm-reposave
+        epm_reporestore "$@"
+        ;;
+    reset)
+        load_helper epm-reposave
+        epm_reporeset "$@"
+        ;;
+    add)                              # HELPCMD: add package repo (etersoft, autoimports, archive 2017/12/31); run with param to get list
+        load_helper epm-addrepo
+        epm_addrepo "$@"
+        ;;
+    Add)                              # HELPCMD: like add, but do update after add
+        load_helper epm-addrepo
+        epm_addrepo "$@"
+        epm update
+        ;;
+    rm|remove)                           # HELPCMD: remove repository from the sources lists (epm repo remove all for all)
+        load_helper epm-removerepo
+        epm_removerepo "$@"
+        ;;
 
-	create)                            # HELPCMD: create (initialize) repo: [path] [name]
-		load_helper epm-repoindex
-		epm_repocreate "$@"
-		;;
-	index)                            # HELPCMD: index repo: [--init] [path] [name]
-		load_helper epm-repoindex
-		epm_repoindex "$@"
-		;;
-	pkgadd)                           # HELPCMD: add to <dir> applied <package-filename1> [<package-filename2>...]
-		load_helper epm-repopkg
-		epm_repo_pkgadd "$@"
-		;;
-	pkgupdate)                        # HELPCMD: replace in <dir> with new <package-filename1> [<package-filename2>...]
-		load_helper epm-repopkg
-		epm_repo_pkgupdate "$@"
-		;;
-	pkgdel)                           # HELPCMD: del from <dir> <package1> [<package2>...]
-		load_helper epm-repopkg
-		epm_repo_pkgdel "$@"
-		;;
-	*)
-		fatal "Unknown command $ epm repo '$CMD'"
-		;;
+    create)                            # HELPCMD: create (initialize) repo: [path] [name]
+        load_helper epm-repoindex
+        epm_repocreate "$@"
+        ;;
+    index)                            # HELPCMD: index repo: [--init] [path] [name]
+        load_helper epm-repoindex
+        epm_repoindex "$@"
+        ;;
+    pkgadd)                           # HELPCMD: add to <dir> applied <package-filename1> [<package-filename2>...]
+        load_helper epm-repopkg
+        epm_repo_pkgadd "$@"
+        ;;
+    pkgupdate)                        # HELPCMD: replace in <dir> with new <package-filename1> [<package-filename2>...]
+        load_helper epm-repopkg
+        epm_repo_pkgupdate "$@"
+        ;;
+    pkgdel)                           # HELPCMD: del from <dir> <package1> [<package2>...]
+        load_helper epm-repopkg
+        epm_repo_pkgdel "$@"
+        ;;
+    *)
+        fatal "Unknown command $ epm repo '$CMD'"
+        ;;
 esac
 
 }

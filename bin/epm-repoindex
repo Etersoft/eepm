@@ -34,60 +34,60 @@ get_archlist()
 # https://www.altlinux.org/APT_%D0%B2_ALT_Linux/CreateRepository
 __epm_repoindex_alt()
 {
-	local archlist="i586 x86_64 aarch64 noarch"
+    local archlist="i586 x86_64 aarch64 noarch"
 
-	local init=''
-	if [ "$1" = "--init" ] ; then
-		init='--init'
-		shift
-	fi
+    local init=''
+    if [ "$1" = "--init" ] ; then
+        init='--init'
+        shift
+    fi
 
-	epm assure genbasedir apt-repo-tools || fatal
-	REPO_DIR="$1"
-	# TODO: check if we inside arch dir or RPMS.*
-	[ -n "$REPO_DIR" ] || REPO_DIR="$(pwd)"
-	if [ -z "$init" ] ; then
-		[ -d "$REPO_DIR" ] || fatal "Repo dir $REPO_DIR does not exist"
-	fi
+    epm assure genbasedir apt-repo-tools || fatal
+    REPO_DIR="$1"
+    # TODO: check if we inside arch dir or RPMS.*
+    [ -n "$REPO_DIR" ] || REPO_DIR="$(pwd)"
+    if [ -z "$init" ] ; then
+        [ -d "$REPO_DIR" ] || fatal "Repo dir $REPO_DIR does not exist"
+    fi
 
-	REPO_NAME="$2"
-	if [ -z "$REPO_NAME" ] ; then
-		# default name
-		REPO_NAME="addon"
-		# detect name if already exists
-		for arch in $archlist ; do
-			local rd="$(echo $REPO_DIR/$arch/RPMS.*)"
-			[ -d "$rd" ] && REPO_NAME="$(echo "$rd" | sed -e 's|.*\.||')" && break
-		done
-	fi
+    REPO_NAME="$2"
+    if [ -z "$REPO_NAME" ] ; then
+        # default name
+        REPO_NAME="addon"
+        # detect name if already exists
+        for arch in $archlist ; do
+            local rd="$(echo $REPO_DIR/$arch/RPMS.*)"
+            [ -d "$rd" ] && REPO_NAME="$(echo "$rd" | sed -e 's|.*\.||')" && break
+        done
+    fi
 
-	if [ -n "$init" ] ; then
-		for arch in $(get_archlist); do
-			mkdir -pv "$REPO_DIR/$arch/base/"
-			mkdir -pv "$REPO_DIR/$arch/RPMS.$REPO_NAME/"
-		done
-		return
-	fi
+    if [ -n "$init" ] ; then
+        for arch in $(get_archlist); do
+            mkdir -pv "$REPO_DIR/$arch/base/"
+            mkdir -pv "$REPO_DIR/$arch/RPMS.$REPO_NAME/"
+        done
+        return
+    fi
 
-	for arch in $archlist; do
-		[ -d "$REPO_DIR/$arch/RPMS.$REPO_NAME" ] || continue
-		mkdir -pv "$REPO_DIR/$arch/base/"
-		sudocmd genbasedir --bloat --progress --topdir=$REPO_DIR $arch $REPO_NAME
-	done
+    for arch in $archlist; do
+        [ -d "$REPO_DIR/$arch/RPMS.$REPO_NAME" ] || continue
+        mkdir -pv "$REPO_DIR/$arch/base/"
+        sudocmd genbasedir --bloat --progress --topdir=$REPO_DIR $arch $REPO_NAME
+    done
 }
 
 __epm_repoindex_deb()
 {
-	local init=''
-	if [ "$1" = "--init" ] ; then
-		init='--init'
-		shift
-	fi
+    local init=''
+    if [ "$1" = "--init" ] ; then
+        init='--init'
+        shift
+    fi
 
-	local dir="$1"
-	sudocmd mkdir -pv "$dir" || fatal
-	assure_exists gzip
-	sudocmd dpkg-scanpackages -t deb "$dir" | gzip | cat > "$dir/Packages.gz"
+    local dir="$1"
+    sudocmd mkdir -pv "$dir" || fatal
+    assure_exists gzip
+    sudocmd dpkg-scanpackages -t deb "$dir" | gzip | cat > "$dir/Packages.gz"
 }
 
 
@@ -95,30 +95,30 @@ epm_repoindex()
 {
 
 case $PMTYPE in
-	apt-rpm)
-		__epm_repoindex_alt "$@"
-		;;
-	apt-dpkg|aptitude-dpkg)
-		__epm_repoindex_deb "$@"
-		;;
-	yum-rpm)
-		epm install --skip-installed yum-utils createrepo || fatal
-		sudocmd mkdir -pv "$@"
-		sudocmd createrepo -v -s md5 "$@"
-		sudocmd verifytree
-		;;
-	dnf-rpm)
-		epm install --skip-installed yum-utils createrepo || fatal
-		sudocmd mkdir -pv "$@"
-		sudocmd createrepo -v -s md5 "$@"
-		sudocmd verifytree
-		;;
-	eoget)
-		docmd eoget index "$@"
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
+    apt-rpm)
+        __epm_repoindex_alt "$@"
+        ;;
+    apt-dpkg|aptitude-dpkg)
+        __epm_repoindex_deb "$@"
+        ;;
+    yum-rpm)
+        epm install --skip-installed yum-utils createrepo || fatal
+        sudocmd mkdir -pv "$@"
+        sudocmd createrepo -v -s md5 "$@"
+        sudocmd verifytree
+        ;;
+    dnf-rpm)
+        epm install --skip-installed yum-utils createrepo || fatal
+        sudocmd mkdir -pv "$@"
+        sudocmd createrepo -v -s md5 "$@"
+        sudocmd verifytree
+        ;;
+    eoget)
+        docmd eoget index "$@"
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
 esac
 
 }

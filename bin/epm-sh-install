@@ -22,43 +22,43 @@ load_helper epm-query
 
 __fast_hack_for_filter_out_installed_rpm()
 {
-	LANG=C LC_ALL=C xargs -n1 rpm -q 2>&1 | grep 'is not installed' |
-		sed -e 's|^.*package \(.*\) is not installed.*|\1|g'
+    LANG=C LC_ALL=C xargs -n1 rpm -q 2>&1 | grep 'is not installed' |
+        sed -e 's|^.*package \(.*\) is not installed.*|\1|g'
 }
 
 # pass only uninstalled packages
 filter_out_installed_packages()
 {
-	[ -z "$skip_installed" ] && cat && return
+    [ -z "$skip_installed" ] && cat && return
 
-	case $PMTYPE in
-		yum-rpm|dnf-rpm)
-			if [ "$($DISTRVENDOR -a)" = "x86_64" ] && [ "$DISTRNAME" != "ROSA" ] ; then
-				# shellcheck disable=SC2013
-				for i in $(cat) ; do
-					is_installed "$(__print_with_arch_suffix $i .x86_64)" && continue
-					is_installed "$(__print_with_arch_suffix $i .noarch)" && continue
-					echo $i
-				done
-			else
-				__fast_hack_for_filter_out_installed_rpm
-			fi
-			;;
-		*-rpm)
-			__fast_hack_for_filter_out_installed_rpm
-			;;
-		# dpkg -l lists some non ii status (un, etc)
-		#"deb")
-		#	LANG=C LC_ALL=C xargs -n1 dpkg -l 2>&1 | grep -i 'no packages found matching' |
-		#		sed -e 's|\.\+$||g' -e 's|^.*[Nn]o packages found matching \(.*\)|\1|g'
-		#	;;
-		*)
-			# shellcheck disable=SC2013
-			for i in $(cat) ; do
-				is_installed $i || echo $i
-			done
-			;;
-	esac | sed -e "s|rpm-build-altlinux-compat[^ ]*||g" | filter_strip_spaces
+    case $PMTYPE in
+        yum-rpm|dnf-rpm)
+            if [ "$($DISTRVENDOR -a)" = "x86_64" ] && [ "$DISTRNAME" != "ROSA" ] ; then
+                # shellcheck disable=SC2013
+                for i in $(cat) ; do
+                    is_installed "$(__print_with_arch_suffix $i .x86_64)" && continue
+                    is_installed "$(__print_with_arch_suffix $i .noarch)" && continue
+                    echo $i
+                done
+            else
+                __fast_hack_for_filter_out_installed_rpm
+            fi
+            ;;
+        *-rpm)
+            __fast_hack_for_filter_out_installed_rpm
+            ;;
+        # dpkg -l lists some non ii status (un, etc)
+        #"deb")
+        #    LANG=C LC_ALL=C xargs -n1 dpkg -l 2>&1 | grep -i 'no packages found matching' |
+        #        sed -e 's|\.\+$||g' -e 's|^.*[Nn]o packages found matching \(.*\)|\1|g'
+        #    ;;
+        *)
+            # shellcheck disable=SC2013
+            for i in $(cat) ; do
+                is_installed $i || echo $i
+            done
+            ;;
+    esac | sed -e "s|rpm-build-altlinux-compat[^ ]*||g" | filter_strip_spaces
 }
 
 get_only_installed_packages()

@@ -22,73 +22,73 @@ load_helper epm-sh-altlinux
 # remove grepped lines
 __epm_removerepo_alt_grepremove()
 {
-	local rl
-	# ^rpm means full string
-	if [ "$1" = "all" ] || rhas "$1" "^rpm" ; then
-		rl="$1"
-	else
-		rl="$( epm --quiet repolist 2>/dev/null | grep -F "$1")"
-		[ -z "$rl" ] && warning "Can't find '$1' in the repos (see '# epm repolist' output)" && return 1
-	fi
-	echo "$rl" | while read rp ; do
-		# TODO: print removed lines
-		if [ -n "$dryrun" ] ; then
-			docmd apt-repo $dryrun rm "$rp"
-			continue
-		fi
-		if [ -z "$quiet" ] ; then
-			sudocmd apt-repo $dryrun rm "$rp"
-		else
-			sudorun apt-repo $dryrun rm "$rp"
-		fi
-	done
+    local rl
+    # ^rpm means full string
+    if [ "$1" = "all" ] || rhas "$1" "^rpm" ; then
+        rl="$1"
+    else
+        rl="$( epm --quiet repolist 2>/dev/null | grep -F "$1")"
+        [ -z "$rl" ] && warning "Can't find '$1' in the repos (see '# epm repolist' output)" && return 1
+    fi
+    echo "$rl" | while read rp ; do
+        # TODO: print removed lines
+        if [ -n "$dryrun" ] ; then
+            docmd apt-repo $dryrun rm "$rp"
+            continue
+        fi
+        if [ -z "$quiet" ] ; then
+            sudocmd apt-repo $dryrun rm "$rp"
+        else
+            sudorun apt-repo $dryrun rm "$rp"
+        fi
+    done
 }
 
 __epm_removerepo_alt()
 {
-	local repo="$*"
-	[ -n "$repo" ] || fatal "No such repo or task. Use epm repo remove <regexp|autoimports|archive|tasks|TASKNUMBER>"
+    local repo="$*"
+    [ -n "$repo" ] || fatal "No such repo or task. Use epm repo remove <regexp|autoimports|archive|tasks|TASKNUMBER>"
 
-	assure_exists apt-repo
+    assure_exists apt-repo
 
-	if tasknumber "$repo" >/dev/null ; then
-		local tn
-		for tn in $(tasknumber "$repo") ; do
-			__epm_removerepo_alt_grepremove " repo/$tn/"
-		done
-		return
-	fi
+    if tasknumber "$repo" >/dev/null ; then
+        local tn
+        for tn in $(tasknumber "$repo") ; do
+            __epm_removerepo_alt_grepremove " repo/$tn/"
+        done
+        return
+    fi
 
-	local branch="$(echo "$DISTRVERSION" | tr "[:upper:]" "[:lower:]")"
+    local branch="$(echo "$DISTRVERSION" | tr "[:upper:]" "[:lower:]")"
 
-	case "$1" in
-		autoimports)
-			info "remove autoimports repo"
-			[ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
-			repo="autoimports.$branch"
-			sudocmd apt-repo $dryrun rm "$repo"
-			;;
-		archive)
-			info "remove archive repos"
-			__epm_removerepo_alt_grepremove "archive/"
-			;;
-		tasks)
-			info "remove task repos"
-			__epm_removerepo_alt_grepremove " repo/[0-9]+/"
-			;;
-		task)
-			shift
-			__epm_removerepo_alt_grepremove " repo/$1/"
-			;;
-		-*)
-			fatal "epm removerepo: no options are supported"
-			;;
-		*)
+    case "$1" in
+        autoimports)
+            info "remove autoimports repo"
+            [ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
+            repo="autoimports.$branch"
+            sudocmd apt-repo $dryrun rm "$repo"
+            ;;
+        archive)
+            info "remove archive repos"
+            __epm_removerepo_alt_grepremove "archive/"
+            ;;
+        tasks)
+            info "remove task repos"
+            __epm_removerepo_alt_grepremove " repo/[0-9]+/"
+            ;;
+        task)
+            shift
+            __epm_removerepo_alt_grepremove " repo/$1/"
+            ;;
+        -*)
+            fatal "epm removerepo: no options are supported"
+            ;;
+        *)
 # TODO: if return empty for whole line, use grep
-#			sudocmd apt-repo $dryrun rm "$*"
-			__epm_removerepo_alt_grepremove "$*"
-			;;
-	esac
+#            sudocmd apt-repo $dryrun rm "$*"
+            __epm_removerepo_alt_grepremove "$*"
+            ;;
+    esac
 
 }
 
@@ -96,67 +96,67 @@ epm_removerepo()
 {
 
 case $BASEDISTRNAME in
-	"alt")
-		__epm_removerepo_alt "$@"
-		return
-		;;
-	"astra")
-		echo "Use workaround for AstraLinux"
-		[ -n "$*" ] || fatal "empty repo name"
-		# aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
-		sudocmd sed -i -e "s|.*$*.*||" /etc/apt/sources.list
-		if [ -d /etc/apt/sources.list.d ] && ls /etc/apt/sources.list.d/*.list >/dev/null 2>/dev/null ; then
-			sudocmd sed -i -e "s|.*$*.*||" /etc/apt/sources.list.d/*.list
-		fi
-		return
-		;;
+    "alt")
+        __epm_removerepo_alt "$@"
+        return
+        ;;
+    "astra")
+        echo "Use workaround for AstraLinux"
+        [ -n "$*" ] || fatal "empty repo name"
+        # aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
+        sudocmd sed -i -e "s|.*$*.*||" /etc/apt/sources.list
+        if [ -d /etc/apt/sources.list.d ] && ls /etc/apt/sources.list.d/*.list >/dev/null 2>/dev/null ; then
+            sudocmd sed -i -e "s|.*$*.*||" /etc/apt/sources.list.d/*.list
+        fi
+        return
+        ;;
 esac;
 
 case $PMTYPE in
-	apt-dpkg)
-		assure_exists apt-add-repository software-properties-common
-		# FIXME: it is possible there is troubles to pass the args
-		sudocmd apt-add-repository --remove "$*"
-		info "Check file /etc/apt/sources.list if needed"
-		;;
-	aptitude-dpkg)
-		info "You need remove repo from /etc/apt/sources.list"
-		;;
-	yum-rpm)
-		assure_exists yum-utils
-		sudocmd yum-config-manager --disable "$@"
-		;;
-	urpm-rpm)
-		if [ "$1" = "all" ] ; then
-			sudocmd urpmi.removemedia -av
-			return
-		fi
-		sudocmd urpmi.removemedia "$@"
-		;;
-	zypper-rpm)
-		sudocmd zypper removerepo "$@"
-		;;
-	emerge)
-		sudocmd layman "-d$@"
-		;;
-	pacman)
-		info "You need remove repo from /etc/pacman.conf"
-		;;
-	npackd)
-		sudocmd npackdcl remove-repo --url="$*"
-		;;
-	winget)
-		sudocmd winget source remove "$@"
-		;;
-	eopkg)
-		sudocmd eopkg remove-repo "$@"
-		;;
-	slackpkg)
-		info "You need remove repo from /etc/slackpkg/mirrors"
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
+    apt-dpkg)
+        assure_exists apt-add-repository software-properties-common
+        # FIXME: it is possible there is troubles to pass the args
+        sudocmd apt-add-repository --remove "$*"
+        info "Check file /etc/apt/sources.list if needed"
+        ;;
+    aptitude-dpkg)
+        info "You need remove repo from /etc/apt/sources.list"
+        ;;
+    yum-rpm)
+        assure_exists yum-utils
+        sudocmd yum-config-manager --disable "$@"
+        ;;
+    urpm-rpm)
+        if [ "$1" = "all" ] ; then
+            sudocmd urpmi.removemedia -av
+            return
+        fi
+        sudocmd urpmi.removemedia "$@"
+        ;;
+    zypper-rpm)
+        sudocmd zypper removerepo "$@"
+        ;;
+    emerge)
+        sudocmd layman "-d$@"
+        ;;
+    pacman)
+        info "You need remove repo from /etc/pacman.conf"
+        ;;
+    npackd)
+        sudocmd npackdcl remove-repo --url="$*"
+        ;;
+    winget)
+        sudocmd winget source remove "$@"
+        ;;
+    eopkg)
+        sudocmd eopkg remove-repo "$@"
+        ;;
+    slackpkg)
+        info "You need remove repo from /etc/slackpkg/mirrors"
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
 esac
 
 }

@@ -21,23 +21,23 @@
 
 __alt_fix_triggers()
 {
-	local TDIR=$(mktemp -d)
-	assure_exists time
-	touch $TDIR/added
-	for ft in $(ls /usr/lib/rpm/*.filetrigger | sort) ; do
-		echo "Try run $ft ..."
-		echo $TDIR/added $TDIR/removed | a='' time $ft
-	done
-	rm -f $TDIR/added fatal
-	rmdir $TDIR || fatal
-	echo "Count lines:"
-	wc -l /var/lib/rpm/files-awaiting-filetriggers
+    local TDIR=$(mktemp -d)
+    assure_exists time
+    touch $TDIR/added
+    for ft in $(ls /usr/lib/rpm/*.filetrigger | sort) ; do
+        echo "Try run $ft ..."
+        echo $TDIR/added $TDIR/removed | a='' time $ft
+    done
+    rm -f $TDIR/added fatal
+    rmdir $TDIR || fatal
+    echo "Count lines:"
+    wc -l /var/lib/rpm/files-awaiting-filetriggers
 }
 
 epm_checksystem_ALTLinux()
 {
-	fatal "Not yet implemented"
-	#__alt_fix_triggers
+    fatal "Not yet implemented"
+    #__alt_fix_triggers
 }
 
 
@@ -47,27 +47,27 @@ epm_checksystem()
 is_root && fatal "Do not use checksystem under root"
 
 case $PMTYPE in
-	homebrew)
-		sudocmd brew doctor
-		return
-		;;
+    homebrew)
+        sudocmd brew doctor
+        return
+        ;;
 esac
 
 case $BASEDISTRNAME in
-	"alt")
-		epm_checksystem_$DISTRNAME
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
+    "alt")
+        epm_checksystem_$DISTRNAME
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
 esac
 
 }
 
 # direct debug run
 if [ "$1" = "--debug" ] ; then
-	shift
-	SUDO=sudo
-	DISTRNAME=ALTLinux
-	epm_checksystem
+    shift
+    SUDO=sudo
+    DISTRNAME=ALTLinux
+    epm_checksystem
 fi

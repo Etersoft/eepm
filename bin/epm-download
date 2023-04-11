@@ -21,267 +21,267 @@ alt_base_dist_url="http://ftp.basealt.ru/pub/distributions"
 
 __use_url_install()
 {
-	# force download if wildcard is used
-	echo "$pkg_urls" | grep -q "[?*]" && return 1
+    # force download if wildcard is used
+    echo "$pkg_urls" | grep -q "[?*]" && return 1
 
-	# install of remote files has a side affect
-	# (more fresh package from a repo can be installed instead of the file)
-	#case $DISTRNAME in
-	#	"ALTLinux")
-	#		# do not support https yet
-	#		echo "$pkg_urls" | grep -q "https://" && return 1
-	#		pkg_names="$pkg_names $pkg_urls"
-	#		return 0
-	#		;;
-	#esac
+    # install of remote files has a side affect
+    # (more fresh package from a repo can be installed instead of the file)
+    #case $DISTRNAME in
+    #    "ALTLinux")
+    #        # do not support https yet
+    #        echo "$pkg_urls" | grep -q "https://" && return 1
+    #        pkg_names="$pkg_names $pkg_urls"
+    #        return 0
+    #        ;;
+    #esac
 
-	case $PMTYPE in
-		#apt-rpm)
-		#	pkg_names="$pkg_names $pkg_urls"
-		#	;;
-		#deepsolver-rpm)
-		#	pkg_names="$pkg_names $pkg_urls"
-		#	;;
-		#urpm-rpm)
-		#	pkg_names="$pkg_names $pkg_urls"
-		#	;;
-		pacman)
-			pkg_names="$pkg_names $pkg_urls"
-			;;
-		yum-rpm|dnf-rpm)
-			pkg_names="$pkg_names $pkg_urls"
-			;;
-		#zypper-rpm)
-		#	pkg_names="$pkg_names $pkg_urls"
-		#	;;
-		*)
-			return 1
-			;;
-	esac
-	return 0
+    case $PMTYPE in
+        #apt-rpm)
+        #    pkg_names="$pkg_names $pkg_urls"
+        #    ;;
+        #deepsolver-rpm)
+        #    pkg_names="$pkg_names $pkg_urls"
+        #    ;;
+        #urpm-rpm)
+        #    pkg_names="$pkg_names $pkg_urls"
+        #    ;;
+        pacman)
+            pkg_names="$pkg_names $pkg_urls"
+            ;;
+        yum-rpm|dnf-rpm)
+            pkg_names="$pkg_names $pkg_urls"
+            ;;
+        #zypper-rpm)
+        #    pkg_names="$pkg_names $pkg_urls"
+        #    ;;
+        *)
+            return 1
+            ;;
+    esac
+    return 0
 }
 
 # for download before install / checking
 __download_pkg_urls()
 {
-	local url
-	[ -z "$pkg_urls" ] && return
-	for url in $pkg_urls ; do
-		local tmppkg=$(mktemp -d) || fatal "failed mktemp -d"
-		docmd chmod $verbose a+rX $tmppkg
-		showcmd cd $tmppkg
-		cd $tmppkg || fatal
-		local latest='--latest'
-		# hack: download all if mask is *.something
-		basename "$url" | grep -q "^\*\." && latest=''
-		# download packages
-		if docmd eget $latest "$url" ; then
-			local i
-			for i in *.* ; do
-				[ -s "$tmppkg/$i" ] || continue
-				chmod $verbose a+r "$tmppkg/$i"
-				pkg_files="$pkg_files $tmppkg/$i"
-				to_remove_pkg_files="$to_remove_pkg_files $tmppkg/$i"
-			done
-		else
-			warning "Failed to download $url, ignoring"
-		fi
-		cd - >/dev/null
-	done
-	# reconstruct
-	pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
+    local url
+    [ -z "$pkg_urls" ] && return
+    for url in $pkg_urls ; do
+        local tmppkg=$(mktemp -d) || fatal "failed mktemp -d"
+        docmd chmod $verbose a+rX $tmppkg
+        showcmd cd $tmppkg
+        cd $tmppkg || fatal
+        local latest='--latest'
+        # hack: download all if mask is *.something
+        basename "$url" | grep -q "^\*\." && latest=''
+        # download packages
+        if docmd eget $latest "$url" ; then
+            local i
+            for i in *.* ; do
+                [ -s "$tmppkg/$i" ] || continue
+                chmod $verbose a+r "$tmppkg/$i"
+                pkg_files="$pkg_files $tmppkg/$i"
+                to_remove_pkg_files="$to_remove_pkg_files $tmppkg/$i"
+            done
+        else
+            warning "Failed to download $url, ignoring"
+        fi
+        cd - >/dev/null
+    done
+    # reconstruct
+    pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
 }
 
 # NOTE: call __clean_downloaded_pkg_files after
 __handle_pkg_urls_to_install()
 {
-	#[ -n "$pkg_urls" ] || return
+    #[ -n "$pkg_urls" ] || return
 
-	# TODO: do it correctly
-	to_remove_pkg_files=
-	# FIXME: check type of pkg_urls separately?
-	if [ "$(get_package_type "$pkg_urls")" != $PKGFORMAT ] || ! __use_url_install ; then
-		# use workaround with eget: download and put in pkg_files
-		__download_pkg_urls
-	fi
+    # TODO: do it correctly
+    to_remove_pkg_files=
+    # FIXME: check type of pkg_urls separately?
+    if [ "$(get_package_type "$pkg_urls")" != $PKGFORMAT ] || ! __use_url_install ; then
+        # use workaround with eget: download and put in pkg_files
+        __download_pkg_urls
+    fi
 
-	pkg_urls=
+    pkg_urls=
 }
 
 __handle_pkg_urls_to_checking()
 {
-	#[ -n "$pkg_urls" ] || return
+    #[ -n "$pkg_urls" ] || return
 
-	# TODO: do it correctly
-	to_remove_pkg_files=
-	
-	# use workaround with eget: download and put in pkg_files
-	__download_pkg_urls
+    # TODO: do it correctly
+    to_remove_pkg_files=
+    
+    # use workaround with eget: download and put in pkg_files
+    __download_pkg_urls
 
-	pkg_urls=
+    pkg_urls=
 }
 
 #__clean_downloaded_pkg_files()
 #{
-#	[ -z "$to_remove_pkg_files" ] && return
-#	rm -fv $to_remove_pkg_files
+#    [ -z "$to_remove_pkg_files" ] && return
+#    rm -fv $to_remove_pkg_files
 #}
 
 # obsoleted
 __epm_get_altpkg_url()
 {
-	info "TODO: https://packages.altlinux.org/api/branches"
-	load_helper epm-site
-	local arch=$(paoapi packages/$1 | get_pao_var arch)
-	# FIXME: arch can be list
-	[ "$arch" = "noarch" ] || arch=$(arch)
-	# HACK: filename can be list
-	local filename=$(paoapi packages/$1 | get_pao_var filename | grep $arch)
-	[ -n "$filename" ] || fatal "Can't get filename"
-	# fixme: get from /branches
-	local dv=$DISTRNAME/$DISTRVERSION/branch
-	[ "$DISTRVERSION" = "Sisyphus" ] && dv=$DISTRNAME/$DISTRVERSION
-	echo "$alt_base_dist_url/$dv/$arch/RPMS.classic/$filename"
+    info "TODO: https://packages.altlinux.org/api/branches"
+    load_helper epm-site
+    local arch=$(paoapi packages/$1 | get_pao_var arch)
+    # FIXME: arch can be list
+    [ "$arch" = "noarch" ] || arch=$(arch)
+    # HACK: filename can be list
+    local filename=$(paoapi packages/$1 | get_pao_var filename | grep $arch)
+    [ -n "$filename" ] || fatal "Can't get filename"
+    # fixme: get from /branches
+    local dv=$DISTRNAME/$DISTRVERSION/branch
+    [ "$DISTRVERSION" = "Sisyphus" ] && dv=$DISTRNAME/$DISTRVERSION
+    echo "$alt_base_dist_url/$dv/$arch/RPMS.classic/$filename"
 }
 
 # obsoleted
 __epm_print_url_alt()
 {
-	local url="$1"
-	echo "$url"
-	echo "$url" | sed -e "s|$alt_base_dist_url/$DISTRNAME|http://mirror.yandex.ru/altlinux|g"
-	echo "$url" | sed -e "s|$alt_base_dist_url/$DISTRNAME|http://download.etersoft.ru/pub/ALTLinux|g"
+    local url="$1"
+    echo "$url"
+    echo "$url" | sed -e "s|$alt_base_dist_url/$DISTRNAME|http://mirror.yandex.ru/altlinux|g"
+    echo "$url" | sed -e "s|$alt_base_dist_url/$DISTRNAME|http://download.etersoft.ru/pub/ALTLinux|g"
 }
 
 __epm_print_url_alt_check()
 {
-	local pkg=$1
-	shift
-	local tm=$(mktemp)
-	assure_exists curl
-	load_helper epm-site
-	quiet=1
-	local buildtime=$(paoapi packages/$pkg | get_pao_var buildtime)
-	echo
-	echo "Latest release: $(paoapi packages/$pkg | get_pao_var sourcepackage) $buildtime"
-	__epm_print_url_alt "$1" | while read url ; do
-		a='' curl -s --head $url >$tm || { echo "$url: missed" ; continue ; }
-		local http=$(cat $tm | grep "^HTTP" | sed -e "s|\r||g")
-		local lastdate=$(cat $tm | grep "^Last-Modified:" | sed -e "s|\r||g")
-		local size=$(cat $tm | grep "^Content-Length:" | sed -e "s|^Content-Length: ||g"  | sed -e "s|\r||g")
-		echo "$url ($http $lastdate) Size: $size"
-	done
-	rm -f $tm
+    local pkg=$1
+    shift
+    local tm=$(mktemp)
+    assure_exists curl
+    load_helper epm-site
+    quiet=1
+    local buildtime=$(paoapi packages/$pkg | get_pao_var buildtime)
+    echo
+    echo "Latest release: $(paoapi packages/$pkg | get_pao_var sourcepackage) $buildtime"
+    __epm_print_url_alt "$1" | while read url ; do
+        a='' curl -s --head $url >$tm || { echo "$url: missed" ; continue ; }
+        local http=$(cat $tm | grep "^HTTP" | sed -e "s|\r||g")
+        local lastdate=$(cat $tm | grep "^Last-Modified:" | sed -e "s|\r||g")
+        local size=$(cat $tm | grep "^Content-Length:" | sed -e "s|^Content-Length: ||g"  | sed -e "s|\r||g")
+        echo "$url ($http $lastdate) Size: $size"
+    done
+    rm -f $tm
 }
 
 __epm_download_alt()
 {
-	local pkg
-	if [ "$1" = "--check" ] ; then
-		local checkflag="$1"
-		shift
-	fi
+    local pkg
+    if [ "$1" = "--check" ] ; then
+        local checkflag="$1"
+        shift
+    fi
 
-	load_helper epm-sh-altlinux
+    load_helper epm-sh-altlinux
 
-	# TODO: enable if install --download-only will works
-	if tasknumber "$@" >/dev/null ; then
-		load_helper epm-addrepo
-		load_helper epm-reposave
-		load_helper epm-removerepo
-		load_helper epm-Install
+    # TODO: enable if install --download-only will works
+    if tasknumber "$@" >/dev/null ; then
+        load_helper epm-addrepo
+        load_helper epm-reposave
+        load_helper epm-removerepo
+        load_helper epm-Install
 
-		local installlist="$(get_task_packages $*)"
-		# hack: drop -devel packages to avoid package provided by multiple packages
-		installlist="$(estrlist reg_exclude ".*-devel .*-devel-static .*-checkinstall .*-debuginfo" "$installlist")"
-		[ -n "$verbose" ] && info "Packages from task(s): $installlist"
+        local installlist="$(get_task_packages $*)"
+        # hack: drop -devel packages to avoid package provided by multiple packages
+        installlist="$(estrlist reg_exclude ".*-devel .*-devel-static .*-checkinstall .*-debuginfo" "$installlist")"
+        [ -n "$verbose" ] && info "Packages from task(s): $installlist"
 
-		try_change_alt_repo
-		epm_addrepo "$@"
-		epm update
-		[ -n "$verbose" ] && epm repo list
-		docmd epm download $print_url $installlist
-		epm_removerepo "$@"
-		end_change_alt_repo
+        try_change_alt_repo
+        epm_addrepo "$@"
+        epm update
+        [ -n "$verbose" ] && epm repo list
+        docmd epm download $print_url $installlist
+        epm_removerepo "$@"
+        end_change_alt_repo
 
-		return
-	fi
+        return
+    fi
 
     # old systems ignore reinstall ?
-	for pkg in "$@" ; do
-		for i in $(sudocmd apt-get install -y --print-uris --reinstall "$pkg" | cut -f1 -d " " | grep ".rpm'$" | sed -e "s|^'||" -e "s|'$||") ; do
-			echo "$(basename "$i")" | grep -q "^$pkg" || continue
-			[ -n "$print_url" ] && echo "$i" && continue
-			eget "$i"
-		done
-	done
-	return
+    for pkg in "$@" ; do
+        for i in $(sudocmd apt-get install -y --print-uris --reinstall "$pkg" | cut -f1 -d " " | grep ".rpm'$" | sed -e "s|^'||" -e "s|'$||") ; do
+            echo "$(basename "$i")" | grep -q "^$pkg" || continue
+            [ -n "$print_url" ] && echo "$i" && continue
+            eget "$i"
+        done
+    done
+    return
 
-	# old code:
-	for pkg in "$@" ; do
-		local url=$(__epm_get_altpkg_url $pkg)
-		[ -n "$url" ] || warning "Can't get URL for $pkg"
-		if [ -n "$checkflag" ] ; then
-			__epm_print_url_alt_check "$pkg" "$url"
-		else
-			docmd eget $url || return
-		fi
-	done
+    # old code:
+    for pkg in "$@" ; do
+        local url=$(__epm_get_altpkg_url $pkg)
+        [ -n "$url" ] || warning "Can't get URL for $pkg"
+        if [ -n "$checkflag" ] ; then
+            __epm_print_url_alt_check "$pkg" "$url"
+        else
+            docmd eget $url || return
+        fi
+    done
 }
 
 epm_download()
 {
-	local CMD
+    local CMD
 
-	case "$BASEDISTRNAME" in
-		"alt")
-			__epm_download_alt $*
-			return
-			;;
-	esac
+    case "$BASEDISTRNAME" in
+        "alt")
+            __epm_download_alt $*
+            return
+            ;;
+    esac
 
-	case $PMTYPE in
-	apt-dpkg)
-		if [ -n "$print_url" ] ; then
-			docmd apt-get download --print-uris $* | cut -f1 -d " " | grep ".deb'$" | sed -e "s|^'||" -e "s|'$||"
-			return
-		fi
-		docmd apt-get download $*
-		;;
-	dnf-rpm)
-		sudocmd dnf download $print_url $*
-		;;
-	aptcyg)
-		sudocmd apt-cyg download $*
-		;;
-	packagekit)
-		docmd pkcon download $*
-		;;
-	yum-rpm)
-		# TODO: check yum install --downloadonly --downloaddir=/tmp <package-name>
-		assure_exists yumdownloader yum-utils
-		sudocmd yumdownloader $*
-		;;
-	dnf-rpm)
-		sudocmd dnf download $*
-		;;
-	urpm-rpm)
-		sudocmd urpmi --no-install $URPMOPTIONS $@
-		;;
-	tce)
-		sudocmd tce-load -w $*
-		;;
-	opkg)
-		docmd opkg $*
-		;;
-	eopkg)
-		docmd eopkg fetch $*
-		;;
-	homebrew)
-		docmd brew fetch $*
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
-	esac
+    case $PMTYPE in
+    apt-dpkg)
+        if [ -n "$print_url" ] ; then
+            docmd apt-get download --print-uris $* | cut -f1 -d " " | grep ".deb'$" | sed -e "s|^'||" -e "s|'$||"
+            return
+        fi
+        docmd apt-get download $*
+        ;;
+    dnf-rpm)
+        sudocmd dnf download $print_url $*
+        ;;
+    aptcyg)
+        sudocmd apt-cyg download $*
+        ;;
+    packagekit)
+        docmd pkcon download $*
+        ;;
+    yum-rpm)
+        # TODO: check yum install --downloadonly --downloaddir=/tmp <package-name>
+        assure_exists yumdownloader yum-utils
+        sudocmd yumdownloader $*
+        ;;
+    dnf-rpm)
+        sudocmd dnf download $*
+        ;;
+    urpm-rpm)
+        sudocmd urpmi --no-install $URPMOPTIONS $@
+        ;;
+    tce)
+        sudocmd tce-load -w $*
+        ;;
+    opkg)
+        docmd opkg $*
+        ;;
+    eopkg)
+        docmd eopkg fetch $*
+        ;;
+    homebrew)
+        docmd brew fetch $*
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
+    esac
 }

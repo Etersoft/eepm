@@ -24,79 +24,79 @@ ALTLINUXPUBURL=http://ftp.altlinux.org/pub/distributions
 
 __epm_addrepo_rhel()
 {
-	local repo="$*"
-	if [ -z "$repo" ] ; then
-		echo "Add repo."
-		echo "1. Use with repository URL, f.i. http://www.example.com/example.repo"
-		echo "2. Use with epel to add EPEL repository"
-		echo "3. Use with powertools to add PowerTools repository"
-		echo "4. Use with crb to add Rocky Linux CRB repository"
-		return 1
-	fi
-	case "$1" in
-		epel)
-			# dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
-			epm install epel-release
-			return 1
-			;;
-		powertools)
-			# https://serverfault.com/questions/997896/how-to-enable-powertools-repository-in-centos-8
-			epm install --skip-installed dnf-plugins-core
-			sudocmd dnf config-manager --set-enabled powertools
-			return 1
-			;;
-		crb)
-			# https://wiki.rockylinux.org/rocky/repo/
-			epm install --skip-installed dnf-plugins-core
-			sudocmd dnf config-manager --set-enabled crb
-			return 1
-			;;
-	esac
-	return 0
+    local repo="$*"
+    if [ -z "$repo" ] ; then
+        echo "Add repo."
+        echo "1. Use with repository URL, f.i. http://www.example.com/example.repo"
+        echo "2. Use with epel to add EPEL repository"
+        echo "3. Use with powertools to add PowerTools repository"
+        echo "4. Use with crb to add Rocky Linux CRB repository"
+        return 1
+    fi
+    case "$1" in
+        epel)
+            # dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+            epm install epel-release
+            return 1
+            ;;
+        powertools)
+            # https://serverfault.com/questions/997896/how-to-enable-powertools-repository-in-centos-8
+            epm install --skip-installed dnf-plugins-core
+            sudocmd dnf config-manager --set-enabled powertools
+            return 1
+            ;;
+        crb)
+            # https://wiki.rockylinux.org/rocky/repo/
+            epm install --skip-installed dnf-plugins-core
+            sudocmd dnf config-manager --set-enabled crb
+            return 1
+            ;;
+    esac
+    return 0
 }
 
 __epm_addrepo_etersoft_addon()
 {
-	epm install --skip-installed apt-conf-etersoft-common apt-conf-etersoft-hold || fatal
-	# TODO: ignore only error code 22 (skipped) || fatal
+    epm install --skip-installed apt-conf-etersoft-common apt-conf-etersoft-hold || fatal
+    # TODO: ignore only error code 22 (skipped) || fatal
 
-	local pb="$DISTRVERSION/branch"
-	[ "$DISTRVERSION" = "Sisyphus" ] && pb="$DISTRVERSION"
+    local pb="$DISTRVERSION/branch"
+    [ "$DISTRVERSION" = "Sisyphus" ] && pb="$DISTRVERSION"
 
-	# FIXME
-	[ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
+    # FIXME
+    [ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
 
-	docmd epm repo add "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/noarch addon"
-	docmd epm repo add "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/$DISTRARCH addon"
-	if [ "$DISTRARCH" = "x86_64" ] ; then
-		docmd epm repo add "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/x86_64-i586 addon"
-	fi
+    docmd epm repo add "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/noarch addon"
+    docmd epm repo add "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/$DISTRARCH addon"
+    if [ "$DISTRARCH" = "x86_64" ] ; then
+        docmd epm repo add "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/x86_64-i586 addon"
+    fi
 }
 
 __epm_addrepo_altsp()
 {
-	local comp
-	local repo="$1"
-	case "$repo" in
-		c9f2)
-			comp="CF2"
-			;;
-		c9f1)
-			comp="CF1"
-			;;
-		c9)
-			comp="cf"
-			;;
-		*)
-			fatal "Uknown CF comp $repo"
-			;;
-	esac
+    local comp
+    local repo="$1"
+    case "$repo" in
+        c9f2)
+            comp="CF2"
+            ;;
+        c9f1)
+            comp="CF1"
+            ;;
+        c9)
+            comp="cf"
+            ;;
+        *)
+            fatal "Uknown CF comp $repo"
+            ;;
+    esac
 
-	epm repo add "rpm [cert8] http://update.altsp.su/pub/distributions/ALTLinux $comp/branch/$DISTRARCH classic" || return
-	if [ "$DISTRARCH" = "x86_64" ] ; then
-		epm repo add "rpm [cert8] http://update.altsp.su/pub/distributions/ALTLinux $comp/branch/x86_64-i586 classic" || return
-	fi
-	epm repo add "rpm [cert8] http://update.altsp.su/pub/distributions/ALTLinux $comp/branch/noarch classic" || return
+    epm repo add "rpm [cert8] http://update.altsp.su/pub/distributions/ALTLinux $comp/branch/$DISTRARCH classic" || return
+    if [ "$DISTRARCH" = "x86_64" ] ; then
+        epm repo add "rpm [cert8] http://update.altsp.su/pub/distributions/ALTLinux $comp/branch/x86_64-i586 classic" || return
+    fi
+    epm repo add "rpm [cert8] http://update.altsp.su/pub/distributions/ALTLinux $comp/branch/noarch classic" || return
 }
 
 get_archlist()
@@ -113,173 +113,173 @@ get_archlist()
 # 'rpm protocol:/path/to/repo component'
 __epm_addrepo_altlinux_short()
 {
-	[ -n "$1" ] || fatal "only for rpm repo"
-	local url="$2"
-	local REPO_NAME="$3"
-	local arch
+    [ -n "$1" ] || fatal "only for rpm repo"
+    local url="$2"
+    local REPO_NAME="$3"
+    local arch
 
-	arch="$(basename "$url")"
-	url="$(dirname "$url")"
-	docmd epm repo add "rpm $url $arch $REPO_NAME"
+    arch="$(basename "$url")"
+    url="$(dirname "$url")"
+    docmd epm repo add "rpm $url $arch $REPO_NAME"
 }
 
 
 __epm_addrepo_altlinux_url()
 {
-	local url="$1"
-	local arch
-	local base
+    local url="$1"
+    local arch
+    local base
 
-	# URL to path/RPMS.addon
-	base="$(basename "$url")"
-	if echo "$base" | grep -q "^RPMS\." ; then
-		REPO_NAME="$(echo $base | sed -e 's|.*\.||')"
-		url="$(dirname $url)"
-		docmd epm repo add "rpm $url $REPO_NAME"
-		return
-	fi
+    # URL to path/RPMS.addon
+    base="$(basename "$url")"
+    if echo "$base" | grep -q "^RPMS\." ; then
+        REPO_NAME="$(echo $base | sed -e 's|.*\.||')"
+        url="$(dirname $url)"
+        docmd epm repo add "rpm $url $REPO_NAME"
+        return
+    fi
 
-	# TODO: add to eget file:/ support and use here
-	# URL to path (where RPMS.addon is exists)
-	local baseurl="$(eget --list "$url/RPMS.*")"
-	base="$(basename "$baseurl")"
-	if echo "$base" | grep -q "^RPMS\." ; then
-		REPO_NAME="$(echo $base | sed -e 's|.*\.||')"
-		docmd epm repo add "rpm $url $REPO_NAME"
-		return
-	fi
+    # TODO: add to eget file:/ support and use here
+    # URL to path (where RPMS.addon is exists)
+    local baseurl="$(eget --list "$url/RPMS.*")"
+    base="$(basename "$baseurl")"
+    if echo "$base" | grep -q "^RPMS\." ; then
+        REPO_NAME="$(echo $base | sed -e 's|.*\.||')"
+        docmd epm repo add "rpm $url $REPO_NAME"
+        return
+    fi
 
-	# URL to {i586,x86_64,noarch}/RPMS.addon
-	local res=''
-	for arch in $(get_archlist) ; do
-		local rd="$(eget --list $url/$arch/RPMS.*)"
-		[ -d "$rd" ] || continue
-		local REPO_NAME="$(echo "$rd" | sed -e 's|.*\.||')"
-		docmd epm repo add "rpm $url $arch $REPO_NAME"
-		res='1'
-	done
-	[ -n "$res" ] || warning "There is no arch repos in $url"
+    # URL to {i586,x86_64,noarch}/RPMS.addon
+    local res=''
+    for arch in $(get_archlist) ; do
+        local rd="$(eget --list $url/$arch/RPMS.*)"
+        [ -d "$rd" ] || continue
+        local REPO_NAME="$(echo "$rd" | sed -e 's|.*\.||')"
+        docmd epm repo add "rpm $url $arch $REPO_NAME"
+        res='1'
+    done
+    [ -n "$res" ] || warning "There is no arch repos in $url"
 }
 
 
 __epm_addrepo_altlinux_help()
 {
-	#sudocmd apt-repo $dryrun add branch
+    #sudocmd apt-repo $dryrun add branch
 cat <<EOF
 
 epm repo add - add branch repo. Use follow params:
-	etersoft                 - for LINUX@Etersoft repo"
-	basealt                  - for BaseALT repo"
-	yandex                   - for BaseALT repo mirror hosted by Yandex (recommended)"
-	altsp                    - add ALT SP repo"
-	autoimports              - for BaseALT autoimports repo"
-	altlinuxclub             - for altlinuxclub repo (http://altlinuxclub.ru/)"
-	<task number>            - add task repo"
-	archive 2018/02/09       - add archive of the repo from that date"
-	/dir/to/repo [component] - add repo dir generated with epm repo index --init"
-	URL [arch] [component]   - add repo by URL"
+    etersoft                 - for LINUX@Etersoft repo"
+    basealt                  - for BaseALT repo"
+    yandex                   - for BaseALT repo mirror hosted by Yandex (recommended)"
+    altsp                    - add ALT SP repo"
+    autoimports              - for BaseALT autoimports repo"
+    altlinuxclub             - for altlinuxclub repo (http://altlinuxclub.ru/)"
+    <task number>            - add task repo"
+    archive 2018/02/09       - add archive of the repo from that date"
+    /dir/to/repo [component] - add repo dir generated with epm repo index --init"
+    URL [arch] [component]   - add repo by URL"
 
 Examples:
-	# epm repo add yandex
-	# epm repo add "rpm http://somesite/pub/product x86_64 addon"
-	# epm repo add /var/ftp/pub/altlinux/p10
+    # epm repo add yandex
+    # epm repo add "rpm http://somesite/pub/product x86_64 addon"
+    # epm repo add /var/ftp/pub/altlinux/p10
 
 EOF
-	return
+    return
 }
 
 __epm_addrepo_altlinux()
 {
-	local repo="$*"
+    local repo="$*"
 
-	if [ -z "$repo" ] || [ "$repo" == "-h" ] || [ "$repo" == "--list" ] || [ "$repo" == "--help" ] ; then
-		__epm_addrepo_altlinux_help
-		return
-	fi
+    if [ -z "$repo" ] || [ "$repo" == "-h" ] || [ "$repo" == "--list" ] || [ "$repo" == "--help" ] ; then
+        __epm_addrepo_altlinux_help
+        return
+    fi
 
-	# 'rpm protocol:/path/to/repo component'
-	if [ "$1" = "rpm" ] && [ -n "$2" ] && [ -n "$3" ] && [ -z "$4" ] ; then
-		__epm_addrepo_altlinux_short "$@"
-		return
-	fi
+    # 'rpm protocol:/path/to/repo component'
+    if [ "$1" = "rpm" ] && [ -n "$2" ] && [ -n "$3" ] && [ -z "$4" ] ; then
+        __epm_addrepo_altlinux_short "$@"
+        return
+    fi
 
-	# /path/to/repo
-	if [ -d "$1" ] ; then
-		__epm_addrepo_altlinux_url "file:$1"
-		return
-	fi
+    # /path/to/repo
+    if [ -d "$1" ] ; then
+        __epm_addrepo_altlinux_url "file:$1"
+        return
+    fi
 
-	# file:/path/to/repo or http://path/to/repo
-	if is_url "$1" ; then
-		__epm_addrepo_altlinux_url "$1"
-		return
-	fi
+    # file:/path/to/repo or http://path/to/repo
+    if is_url "$1" ; then
+        __epm_addrepo_altlinux_url "$1"
+        return
+    fi
 
-	local branch="$(echo "$DISTRVERSION" | tr "[:upper:]" "[:lower:]")"
-	[ -n "$branch" ] || fatal "Empty DISTRVERSION"
+    local branch="$(echo "$DISTRVERSION" | tr "[:upper:]" "[:lower:]")"
+    [ -n "$branch" ] || fatal "Empty DISTRVERSION"
 
-	case "$1" in
-		etersoft)
-			# TODO: return when Etersoft improved its repos
-			#info "add Etersoft's addon repo"
-			#__epm_addrepo_etersoft_addon
-			epm repo add $branch
-			epm repofix etersoft
-			return 0
-			;;
-		basealt|alt|altsp)
-			repo="$branch"
-			;;
-		yandex)
-			epm repo add $branch
-			epm repofix yandex
-			return 0
-			;;
-		autoimports)
-			repo="autoimports.$branch"
-			;;
-		altlinuxclub)
-			repo="altlinuxclub.$branch"
-			;;
-		autoimports.*|altlinuxclub.*)
-			repo="$1"
-			;;
-		archive)
-			datestr="$2"
-			echo "$datestr" | grep -Eq "^20[0-2][0-9]/[01][0-9]/[0-3][0-9]$" || fatal "use follow date format: 2017/12/31"
+    case "$1" in
+        etersoft)
+            # TODO: return when Etersoft improved its repos
+            #info "add Etersoft's addon repo"
+            #__epm_addrepo_etersoft_addon
+            epm repo add $branch
+            epm repofix etersoft
+            return 0
+            ;;
+        basealt|alt|altsp)
+            repo="$branch"
+            ;;
+        yandex)
+            epm repo add $branch
+            epm repofix yandex
+            return 0
+            ;;
+        autoimports)
+            repo="autoimports.$branch"
+            ;;
+        altlinuxclub)
+            repo="altlinuxclub.$branch"
+            ;;
+        autoimports.*|altlinuxclub.*)
+            repo="$1"
+            ;;
+        archive)
+            datestr="$2"
+            echo "$datestr" | grep -Eq "^20[0-2][0-9]/[01][0-9]/[0-3][0-9]$" || fatal "use follow date format: 2017/12/31"
 
-			local rpmsign='[alt]'
-			[ "$branch" != "sisyphus" ] && rpmsign="[$branch]"
+            local rpmsign='[alt]'
+            [ "$branch" != "sisyphus" ] && rpmsign="[$branch]"
 
-			epm repo add "rpm $rpmsign $ALTLINUXPUBURL archive/$branch/date/$datestr/$DISTRARCH classic"
-			if [ "$DISTRARCH" = "x86_64" ] ; then
-				epm repo add "rpm $rpmsign $ALTLINUXPUBURL archive/$branch/date/$datestr/x86_64-i586 classic"
-			fi
-			epm repo add "rpm $rpmsign $ALTLINUXPUBURL archive/$branch/date/$datestr/noarch classic"
+            epm repo add "rpm $rpmsign $ALTLINUXPUBURL archive/$branch/date/$datestr/$DISTRARCH classic"
+            if [ "$DISTRARCH" = "x86_64" ] ; then
+                epm repo add "rpm $rpmsign $ALTLINUXPUBURL archive/$branch/date/$datestr/x86_64-i586 classic"
+            fi
+            epm repo add "rpm $rpmsign $ALTLINUXPUBURL archive/$branch/date/$datestr/noarch classic"
 
-			return 0
-			;;
-	esac
+            return 0
+            ;;
+    esac
 
-	assure_exists apt-repo
+    assure_exists apt-repo
 
-	if tasknumber "$repo" >/dev/null ; then
-		sudocmd_foreach "apt-repo $dryrun add" $(tasknumber "$repo")
-		return
-	fi
+    if tasknumber "$repo" >/dev/null ; then
+        sudocmd_foreach "apt-repo $dryrun add" $(tasknumber "$repo")
+        return
+    fi
 
-	case "$repo" in
-		c9f2|c9f1|c9)
-			__epm_addrepo_altsp "$repo"
-			return
-			;;
-	esac
+    case "$repo" in
+        c9f2|c9f1|c9)
+            __epm_addrepo_altsp "$repo"
+            return
+            ;;
+    esac
 
 
-	# don't add again
-	epm repo list --quiet | grep -q -F "$repo" && return 0
+    # don't add again
+    epm repo list --quiet | grep -q -F "$repo" && return 0
 
-	sudocmd apt-repo $dryrun add "$repo"
+    sudocmd apt-repo $dryrun add "$repo"
 
 }
 
@@ -333,115 +333,115 @@ epm_addkey()
 {
 
 case $BASEDISTRNAME in
-	"alt")
-		__epm_addkey_altlinux "$@"
-		return
-		;;
+    "alt")
+        __epm_addkey_altlinux "$@"
+        return
+        ;;
 esac
 
 case $PMTYPE in
-	apt-dpkg)
-		__epm_addkey_deb "$@"
-		;;
+    apt-dpkg)
+        __epm_addkey_deb "$@"
+        ;;
 esac
 
 }
 
 __epm_addrepo_astra()
 {
-	local repo="$*"
+    local repo="$*"
 
-	if [ -z "$repo" ] || [ "$repo" = "--help" ]; then
-		info "Add repo. You can use follow params:"
-		echo "  distribution component name"
-		echo "  full sources list line"
-		echo "  URL version component"
-		return
-	fi
+    if [ -z "$repo" ] || [ "$repo" = "--help" ]; then
+        info "Add repo. You can use follow params:"
+        echo "  distribution component name"
+        echo "  full sources list line"
+        echo "  URL version component"
+        return
+    fi
 
-	local reponame="$(epm print info --repo-name)"
+    local reponame="$(epm print info --repo-name)"
 
-	# keywords
-	# https://wiki.astralinux.ru/pages/viewpage.action?pageId=3276859
-	case "$1-$reponame" in
-		astra-1.7_x86_64)
-			# TODO epm repo change http / https
-			epm install --skip-installed apt-transport-https ca-certificates || fatal
-			# https://wiki.astralinux.ru/pages/viewpage.action?pageId=158598882
-			epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-main/     1.7_x86-64 main contrib non-free"
-			epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-update/   1.7_x86-64 main contrib non-free"
-			epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-base/     1.7_x86-64 main contrib non-free"
-			epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-extended/ 1.7_x86-64 main contrib non-free"
-			epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-extended/ 1.7_x86-64 astra-ce"
-			return
-			;;
-		astra-orel)
-			# TODO epm repo change http / https
-			epm install --skip-installed apt-transport-https ca-certificates || fatal
-			# https://wiki.astralinux.ru/pages/viewpage.action?pageId=158605543
-			epm repo add "deb [arch=amd64] https://dl.astralinux.ru/astra/frozen/$(epm print info -v)_x86-64/$(epm print info --full-version)/repository stable main contrib non-free"
-			#epm repo add "deb https://download.astralinux.ru/astra/stable/orel/repository/ orel main contrib non-free"
-			return
-			;;
-		astra-*)
-			fatal "Unsupported distro version $reponame, see '# epm print info' output."
-			;;
-	esac
+    # keywords
+    # https://wiki.astralinux.ru/pages/viewpage.action?pageId=3276859
+    case "$1-$reponame" in
+        astra-1.7_x86_64)
+            # TODO epm repo change http / https
+            epm install --skip-installed apt-transport-https ca-certificates || fatal
+            # https://wiki.astralinux.ru/pages/viewpage.action?pageId=158598882
+            epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-main/     1.7_x86-64 main contrib non-free"
+            epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-update/   1.7_x86-64 main contrib non-free"
+            epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-base/     1.7_x86-64 main contrib non-free"
+            epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-extended/ 1.7_x86-64 main contrib non-free"
+            epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-extended/ 1.7_x86-64 astra-ce"
+            return
+            ;;
+        astra-orel)
+            # TODO epm repo change http / https
+            epm install --skip-installed apt-transport-https ca-certificates || fatal
+            # https://wiki.astralinux.ru/pages/viewpage.action?pageId=158605543
+            epm repo add "deb [arch=amd64] https://dl.astralinux.ru/astra/frozen/$(epm print info -v)_x86-64/$(epm print info --full-version)/repository stable main contrib non-free"
+            #epm repo add "deb https://download.astralinux.ru/astra/stable/orel/repository/ orel main contrib non-free"
+            return
+            ;;
+        astra-*)
+            fatal "Unsupported distro version $reponame, see '# epm print info' output."
+            ;;
+    esac
 
-	echo "Use workaround for AstraLinux ..."
-	# aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
-	# don't add again
-	epm repo list --quiet | grep -q -F "$repo" && return 0
-	[ -z "$(tail -n1 /etc/apt/sources.list)" ] || echo "" | sudocmd tee -a /etc/apt/sources.list
-	echo "$repo" | sudocmd tee -a /etc/apt/sources.list
-	return
+    echo "Use workaround for AstraLinux ..."
+    # aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
+    # don't add again
+    epm repo list --quiet | grep -q -F "$repo" && return 0
+    [ -z "$(tail -n1 /etc/apt/sources.list)" ] || echo "" | sudocmd tee -a /etc/apt/sources.list
+    echo "$repo" | sudocmd tee -a /etc/apt/sources.list
+    return
 }
 
 __epm_addrepo_deb()
 {
-	assure_exists apt-add-repository software-properties-common
-	local ad="$($DISTRVENDOR --distro-arch)"
-	# TODO: move to distro_info
-	local nd="$(lsb_release -cs)"
-	local repo="$*"
+    assure_exists apt-add-repository software-properties-common
+    local ad="$($DISTRVENDOR --distro-arch)"
+    # TODO: move to distro_info
+    local nd="$(lsb_release -cs)"
+    local repo="$*"
 
-	if [ -z "$repo" ] || [ "$repo" = "--help" ]; then
-		info "Add repo. You can use follow params:"
-		echo "  docker - add official docker repo"
-		echo "  ppa:<user>/<ppa-name> - add PPA repo"
-		echo "  distribution component name"
-		echo "  full sources list line"
-		echo "  URL version component"
-		return
-	fi
+    if [ -z "$repo" ] || [ "$repo" = "--help" ]; then
+        info "Add repo. You can use follow params:"
+        echo "  docker - add official docker repo"
+        echo "  ppa:<user>/<ppa-name> - add PPA repo"
+        echo "  distribution component name"
+        echo "  full sources list line"
+        echo "  URL version component"
+        return
+    fi
 
-	# keywords
-	case "$1" in
-		docker)
-			__epm_addkey_deb https://download.docker.com/linux/$PKGVENDOR/gpg "9DC858229FC7DD38854AE2D88D81803C0EBFCD88"
-			repo="https://download.docker.com/linux/$PKGVENDOR $nd stable"
-			;;
-	esac
+    # keywords
+    case "$1" in
+        docker)
+            __epm_addkey_deb https://download.docker.com/linux/$PKGVENDOR/gpg "9DC858229FC7DD38854AE2D88D81803C0EBFCD88"
+            repo="https://download.docker.com/linux/$PKGVENDOR $nd stable"
+            ;;
+    esac
 
-	# if started from url, use heroistic
-	if echo "$repo" | grep -E -q "^https?://" ; then
-		repo="deb [arch=$ad] $repo"
-	fi
+    # if started from url, use heroistic
+    if echo "$repo" | grep -E -q "^https?://" ; then
+        repo="deb [arch=$ad] $repo"
+    fi
 
-	if echo "$repo" | grep -q "https://" ; then
-		assure_exists /usr/share/doc/apt-transport-https apt-transport-https
-		assure_exists /usr/sbin/update-ca-certificates ca-certificates 
-	fi
+    if echo "$repo" | grep -q "https://" ; then
+        assure_exists /usr/share/doc/apt-transport-https apt-transport-https
+        assure_exists /usr/sbin/update-ca-certificates ca-certificates 
+    fi
 
-	if [ -d "$repo" ] ; then
-		sudocmd epm repo add "deb file:$repo ./"
-		return
-	fi
+    if [ -d "$repo" ] ; then
+        sudocmd epm repo add "deb file:$repo ./"
+        return
+    fi
 
-	# FIXME: quotes in showcmd/sudocmd
-	showcmd apt-add-repository "$repo"
-	sudorun apt-add-repository "$repo"
-	info "Check file /etc/apt/sources.list if needed"
+    # FIXME: quotes in showcmd/sudocmd
+    showcmd apt-add-repository "$repo"
+    sudorun apt-add-repository "$repo"
+    info "Check file /etc/apt/sources.list if needed"
 }
 
 epm_addrepo()
@@ -449,59 +449,59 @@ epm_addrepo()
 local repo="$*"
 
 case $BASEDISTRNAME in
-	"alt")
-		# Note! Don't use quotes here
-		__epm_addrepo_altlinux $repo
-		return
-		;;
-	"astra")
-		__epm_addrepo_astra $repo
-		return
+    "alt")
+        # Note! Don't use quotes here
+        __epm_addrepo_altlinux $repo
+        return
+        ;;
+    "astra")
+        __epm_addrepo_astra $repo
+        return
 esac
 
 case $PMTYPE in
-	apt-dpkg)
-		# Note! Don't use quotes here
-		__epm_addrepo_deb $repo
-		;;
-	aptitude-dpkg)
-		info "You need manually add repo to /etc/apt/sources.list (TODO)"
-		;;
-	yum-rpm)
-		assure_exists yum-utils
-		__epm_addrepo_rhel "$repo" || return
-		sudocmd yum-config-manager --add-repo "$repo"
-		;;
-	dnf-rpm)
-		__epm_addrepo_rhel "$repo" || return
-		sudocmd dnf config-manager --add-repo "$repo"
-		;;
-	urpm-rpm)
-		sudocmd urpmi.addmedia "$@"
-		;;
-	zypper-rpm)
-		sudocmd zypper ar "$repo"
-		;;
-	emerge)
-		sudocmd layman -a "$repo"
-		;;
-	pacman)
-		info "You need manually add repo to /etc/pacman.conf"
-		# Only for alone packages:
-		#sudocmd repo-add $pkg_filenames
-		;;
-	npackd)
-		sudocmd npackdcl add-repo --url="$repo"
-		;;
-	winget)
-		sudocmd winget source add "$repo"
-		;;
-	slackpkg)
-		info "You need manually add repo to /etc/slackpkg/mirrors"
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
+    apt-dpkg)
+        # Note! Don't use quotes here
+        __epm_addrepo_deb $repo
+        ;;
+    aptitude-dpkg)
+        info "You need manually add repo to /etc/apt/sources.list (TODO)"
+        ;;
+    yum-rpm)
+        assure_exists yum-utils
+        __epm_addrepo_rhel "$repo" || return
+        sudocmd yum-config-manager --add-repo "$repo"
+        ;;
+    dnf-rpm)
+        __epm_addrepo_rhel "$repo" || return
+        sudocmd dnf config-manager --add-repo "$repo"
+        ;;
+    urpm-rpm)
+        sudocmd urpmi.addmedia "$@"
+        ;;
+    zypper-rpm)
+        sudocmd zypper ar "$repo"
+        ;;
+    emerge)
+        sudocmd layman -a "$repo"
+        ;;
+    pacman)
+        info "You need manually add repo to /etc/pacman.conf"
+        # Only for alone packages:
+        #sudocmd repo-add $pkg_filenames
+        ;;
+    npackd)
+        sudocmd npackdcl add-repo --url="$repo"
+        ;;
+    winget)
+        sudocmd winget source add "$repo"
+        ;;
+    slackpkg)
+        info "You need manually add repo to /etc/slackpkg/mirrors"
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
 esac
 
 }

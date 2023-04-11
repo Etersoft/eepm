@@ -22,64 +22,64 @@ load_helper epm-sh-warmup
 epm_remove_old_kernels()
 {
 
-	warmup_bases
+    warmup_bases
 
-	case $BASEDISTRNAME in
-	"alt")
-		load_helper epm-query_package
-		if ! __epm_query_package kernel-image >/dev/null ; then
-			info "No installed kernel packages, skipping cleaning"
-			return
-		fi
-		assure_exists update-kernel update-kernel 0.9.9
-		sudocmd remove-old-kernels $dryrun $(subst_option non_interactive -y) "$@"
+    case $BASEDISTRNAME in
+    "alt")
+        load_helper epm-query_package
+        if ! __epm_query_package kernel-image >/dev/null ; then
+            info "No installed kernel packages, skipping cleaning"
+            return
+        fi
+        assure_exists update-kernel update-kernel 0.9.9
+        sudocmd remove-old-kernels $dryrun $(subst_option non_interactive -y) "$@"
 
-		[ -n "$dryrun" ] && return
+        [ -n "$dryrun" ] && return
 
-		# remove unused nvidia drivers
-		if is_command nvidia-clean-driver ; then
-			if [ -n "$non_interactive" ] ; then
-				yes | sudocmd nvidia-clean-driver
-			else
-				sudocmd nvidia-clean-driver
-			fi
-		fi
+        # remove unused nvidia drivers
+        if is_command nvidia-clean-driver ; then
+            if [ -n "$non_interactive" ] ; then
+                yes | sudocmd nvidia-clean-driver
+            else
+                sudocmd nvidia-clean-driver
+            fi
+        fi
 
-		return ;;
-	esac
+        return ;;
+    esac
 
-	case $DISTRNAME in
-	Ubuntu)
-		load_helper epm-query_package
-		if ! __epm_query_package linux-image >/dev/null ; then
-			info "No installed kernel packages, skipping cleaning"
-			return
-		fi
-		info "Note: it is enough to use eepm autoremove for old kernel removing..."
-		info "Check also http://ubuntuhandbook.org/index.php/2016/05/remove-old-kernels-ubuntu-16-04/"
-		# http://www.opennet.ru/tips/2980_ubuntu_apt_clean_kernel_packet.shtml
-		case $DISTRVERSION in
-		10.04|12.04|14.04|15.04|15.10)
-			assure_exists purge-old-kernels bikeshed
-			;;
-		*)
-			# since Ubuntu 16.04
-			assure_exists purge-old-kernels byobu
-			;;
-		esac
-		sudocmd purge-old-kernels "$@"
-		return ;;
-	Gentoo)
-		sudocmd emerge -P gentoo-sources
-		return ;;
-	VoidLinux)
-		sudocmd vkpurge rm all
-		return ;;
-	esac
+    case $DISTRNAME in
+    Ubuntu)
+        load_helper epm-query_package
+        if ! __epm_query_package linux-image >/dev/null ; then
+            info "No installed kernel packages, skipping cleaning"
+            return
+        fi
+        info "Note: it is enough to use eepm autoremove for old kernel removing..."
+        info "Check also http://ubuntuhandbook.org/index.php/2016/05/remove-old-kernels-ubuntu-16-04/"
+        # http://www.opennet.ru/tips/2980_ubuntu_apt_clean_kernel_packet.shtml
+        case $DISTRVERSION in
+        10.04|12.04|14.04|15.04|15.10)
+            assure_exists purge-old-kernels bikeshed
+            ;;
+        *)
+            # since Ubuntu 16.04
+            assure_exists purge-old-kernels byobu
+            ;;
+        esac
+        sudocmd purge-old-kernels "$@"
+        return ;;
+    Gentoo)
+        sudocmd emerge -P gentoo-sources
+        return ;;
+    VoidLinux)
+        sudocmd vkpurge rm all
+        return ;;
+    esac
 
-	case $PMTYPE in
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
-	esac
+    case $PMTYPE in
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
+    esac
 }

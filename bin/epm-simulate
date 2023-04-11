@@ -60,84 +60,84 @@ _epm_do_simulate()
     local filenames="$*"
 
     case $PMTYPE in
-    	apt-rpm|apt-dpkg)
-    		CMD="apt-get --simulate install"
-    		;;
-    	aptitude-dpkg)
-    		CMD="aptitude -s install"
-    		;;
-    	yum-rpm)
-    		if __use_yum_assumeno ; then
-    			store_output sudocmd yum --assumeno install $filenames
-    			__check_yum_result $RC_STDOUT $?
-    		else
-    			store_output sudocmd yum install $filenames <<EOF
+        apt-rpm|apt-dpkg)
+            CMD="apt-get --simulate install"
+            ;;
+        aptitude-dpkg)
+            CMD="aptitude -s install"
+            ;;
+        yum-rpm)
+            if __use_yum_assumeno ; then
+                store_output sudocmd yum --assumeno install $filenames
+                __check_yum_result $RC_STDOUT $?
+            else
+                store_output sudocmd yum install $filenames <<EOF
 n
 EOF
-    			__check_yum_result $RC_STDOUT $?
-    		fi
-    		RES=$?
-    		clean_store_output
-    		return $RES ;;
-    	dnf-rpm)
-    		store_output sudocmd dnf --assumeno install $filenames
-    		__check_yum_result $RC_STDOUT $?
-    		RES=$?
-    		clean_store_output
-    		return $RES ;;
-    	urpm-rpm)
-    		CMD="urpmi --test --auto"
-    		;;
-    	eopkg)
-    		CMD="eopkg --dry-run install"
-    		;;
-    	zypper-rpm)
-    		if ! __use_zypper_dry_run >/dev/null ; then
-    			fatal "zypper is too old: does not support --dry-run"
-    		fi
-    		CMD="zypper --non-interactive install --dry-run"
-    		;;
-    	emerge)
-    		local res=0
-    		for pkg in $filenames ; do
-			is_installed $pkg && continue
-			docmd emerge --pretend $pkg && continue
-			pkg=1
-			break
-    		done
-    		return $res ;;
-    	opkg)
-    		docmd --noaction install $filenames
-    		return $res ;;
-    	pacman)
-    		store_output sudocmd pacman -v -S $filenames <<EOF
+                __check_yum_result $RC_STDOUT $?
+            fi
+            RES=$?
+            clean_store_output
+            return $RES ;;
+        dnf-rpm)
+            store_output sudocmd dnf --assumeno install $filenames
+            __check_yum_result $RC_STDOUT $?
+            RES=$?
+            clean_store_output
+            return $RES ;;
+        urpm-rpm)
+            CMD="urpmi --test --auto"
+            ;;
+        eopkg)
+            CMD="eopkg --dry-run install"
+            ;;
+        zypper-rpm)
+            if ! __use_zypper_dry_run >/dev/null ; then
+                fatal "zypper is too old: does not support --dry-run"
+            fi
+            CMD="zypper --non-interactive install --dry-run"
+            ;;
+        emerge)
+            local res=0
+            for pkg in $filenames ; do
+            is_installed $pkg && continue
+            docmd emerge --pretend $pkg && continue
+            pkg=1
+            break
+            done
+            return $res ;;
+        opkg)
+            docmd --noaction install $filenames
+            return $res ;;
+        pacman)
+            store_output sudocmd pacman -v -S $filenames <<EOF
 no
 EOF
-    		__check_pacman_result $RC_STDOUT $?
-    		RES=$?
-    		clean_store_output
-    		return $RES ;;
-    	slackpkg)
-    		#docmd /usr/sbin/slackpkg -batch=on -default_answer=yes download
-    		# just try search every package
-    		# FIXME: epm_search have to return false status code if the package does not found
-    		local pkg res
-    		res=0
-    		for pkg in $filenames ; do
-    			# FIXME: -[0-0] does not work in search!
-    			# FIXME: we need strict search here (not find gst-plugins-base if search for gst-plugins
-    			# TODO: use short?
-    			# use verbose for get package status
-    			#pkg_filenames="$pkg-[0-9]" verbose=--verbose __epm_search_internal | grep -E "(installed|upgrade)" && continue
-    			#pkg_filenames="$pkg" verbose=--verbose __epm_search_internal | grep -E "(installed|upgrade)" && continue
-    			(pkg_filenames="$pkg" __epm_search_internal) | grep -q "^$pkg-[0-9]" && continue
-    			res=1
-    			info "Package '$pkg' does not found in repository."
-    		done
-    		return $res ;;
-    	*)
-    		fatal "Have no suitable simulate command for $PMTYPE"
-    		;;
+            __check_pacman_result $RC_STDOUT $?
+            RES=$?
+            clean_store_output
+            return $RES ;;
+        slackpkg)
+            #docmd /usr/sbin/slackpkg -batch=on -default_answer=yes download
+            # just try search every package
+            # FIXME: epm_search have to return false status code if the package does not found
+            local pkg res
+            res=0
+            for pkg in $filenames ; do
+                # FIXME: -[0-0] does not work in search!
+                # FIXME: we need strict search here (not find gst-plugins-base if search for gst-plugins
+                # TODO: use short?
+                # use verbose for get package status
+                #pkg_filenames="$pkg-[0-9]" verbose=--verbose __epm_search_internal | grep -E "(installed|upgrade)" && continue
+                #pkg_filenames="$pkg" verbose=--verbose __epm_search_internal | grep -E "(installed|upgrade)" && continue
+                (pkg_filenames="$pkg" __epm_search_internal) | grep -q "^$pkg-[0-9]" && continue
+                res=1
+                info "Package '$pkg' does not found in repository."
+            done
+            return $res ;;
+        *)
+            fatal "Have no suitable simulate command for $PMTYPE"
+            ;;
     esac
 
     sudocmd $CMD $filenames

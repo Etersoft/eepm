@@ -19,19 +19,19 @@
 
 __remove_alt_apt_cache_file()
 {
-	sudocmd rm -vf /var/cache/apt/*.bin
-	sudocmd rm -vf /var/cache/apt/partial/*
-	sudocmd rm -vf /var/lib/apt/lists/*pkglist*
-	sudocmd rm -vf /var/lib/apt/lists/*release*
+    sudocmd rm -vf /var/cache/apt/*.bin
+    sudocmd rm -vf /var/cache/apt/partial/*
+    sudocmd rm -vf /var/lib/apt/lists/*pkglist*
+    sudocmd rm -vf /var/lib/apt/lists/*release*
 }
 
 __remove_deb_apt_cache_file()
 {
-	sudocmd rm -vf /var/cache/apt/*.bin
-	sudocmd rm -vf /var/cache/apt/archives/partial/*
-	sudocmd rm -vf /var/lib/apt/lists/*Packages*
-	sudocmd rm -vf /var/lib/apt/lists/*Release*
-	sudocmd rm -vf /var/lib/apt/lists/*Translation*
+    sudocmd rm -vf /var/cache/apt/*.bin
+    sudocmd rm -vf /var/cache/apt/archives/partial/*
+    sudocmd rm -vf /var/lib/apt/lists/*Packages*
+    sudocmd rm -vf /var/lib/apt/lists/*Release*
+    sudocmd rm -vf /var/lib/apt/lists/*Translation*
 }
 
 epm_clean()
@@ -41,58 +41,58 @@ epm_clean()
 
 
 case $PMTYPE in
-	apt-rpm)
-		sudocmd apt-get clean
-		[ -n "$force" ] && __remove_alt_apt_cache_file
-		;;
-	apt-dpkg)
-		sudocmd apt-get clean
-		[ -n "$force" ] && __remove_deb_apt_cache_file
-		;;
-	aptitude-dpkg)
-		sudocmd aptitude clean
-		[ -n "$force" ] && __remove_deb_apt_cache_file
-		;;
-	yum-rpm)
-		sudocmd yum clean all
-		#sudocmd yum makecache
-		;;
-	dnf-rpm)
-		sudocmd dnf clean all
-		;;
-	urpm-rpm)
-		sudocmd urpmi --clean
-		;;
-	homebrew)
-		sudocmd brew cleanup -s
-		;;
-	pacman)
-		sudocmd pacman -Sc --noconfirm
-		;;
-	zypper-rpm)
-		sudocmd zypper clean
-		;;
-	nix)
-		sudocmd nix-collect-garbage
-		;;
-	slackpkg)
-		;;
-	eopkg)
-		sudocmd eopkg delete-cache
-		;;
-	pkgng)
-		sudocmd pkg clean -a
-		;;
-	appget|winget)
-		sudocmd $PMTYPE clean
-		;;
-	xbps)
-		sudocmd xbps-remove -O
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
+    apt-rpm)
+        sudocmd apt-get clean
+        [ -n "$force" ] && __remove_alt_apt_cache_file
+        ;;
+    apt-dpkg)
+        sudocmd apt-get clean
+        [ -n "$force" ] && __remove_deb_apt_cache_file
+        ;;
+    aptitude-dpkg)
+        sudocmd aptitude clean
+        [ -n "$force" ] && __remove_deb_apt_cache_file
+        ;;
+    yum-rpm)
+        sudocmd yum clean all
+        #sudocmd yum makecache
+        ;;
+    dnf-rpm)
+        sudocmd dnf clean all
+        ;;
+    urpm-rpm)
+        sudocmd urpmi --clean
+        ;;
+    homebrew)
+        sudocmd brew cleanup -s
+        ;;
+    pacman)
+        sudocmd pacman -Sc --noconfirm
+        ;;
+    zypper-rpm)
+        sudocmd zypper clean
+        ;;
+    nix)
+        sudocmd nix-collect-garbage
+        ;;
+    slackpkg)
+        ;;
+    eopkg)
+        sudocmd eopkg delete-cache
+        ;;
+    pkgng)
+        sudocmd pkg clean -a
+        ;;
+    appget|winget)
+        sudocmd $PMTYPE clean
+        ;;
+    xbps)
+        sudocmd xbps-remove -O
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
 esac
-	info "Note: Also you can try (with CAUTION) '# epm autoremove' and '# epm autoorphans' commands to remove obsoleted and unused packages."
+    info "Note: Also you can try (with CAUTION) '# epm autoremove' and '# epm autoorphans' commands to remove obsoleted and unused packages."
 
 }

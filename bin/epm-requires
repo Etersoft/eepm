@@ -22,143 +22,143 @@ load_helper epm-print
 
 __epm_filter_out_base_alt_reqs()
 {
-	grep -E -v "(^rpmlib\(|^/bin/sh|^/bin/bash|^rtld\(GNU_HASH\)|ld-linux)"
+    grep -E -v "(^rpmlib\(|^/bin/sh|^/bin/bash|^rtld\(GNU_HASH\)|ld-linux)"
 }
 
 __epm_alt_rpm_requires()
 {
-	if [ -n "$short" ] ; then
-		# TODO see also rpmreqs from etersoft-build-utils
-		docmd rpm -q --requires "$@" | __epm_filter_out_base_alt_reqs | sed -e "s| .*||"
-	else
-		docmd rpm -q --requires "$@" | __epm_filter_out_base_alt_reqs
-	fi
+    if [ -n "$short" ] ; then
+        # TODO see also rpmreqs from etersoft-build-utils
+        docmd rpm -q --requires "$@" | __epm_filter_out_base_alt_reqs | sed -e "s| .*||"
+    else
+        docmd rpm -q --requires "$@" | __epm_filter_out_base_alt_reqs
+    fi
 }
 
 epm_requires_files()
 {
-	local pkg_files="$*"
-	[ -n "$pkg_files" ] || return
+    local pkg_files="$*"
+    [ -n "$pkg_files" ] || return
 
-	local PKGTYPE="$(get_package_type $pkg_files)"
+    local PKGTYPE="$(get_package_type $pkg_files)"
 
-	case "$PKGTYPE" in
-		rpm)
-			assure_exists rpm >/dev/null
-			__epm_alt_rpm_requires -p $pkg_files
-			;;
-		deb)
-			assure_exists dpkg >/dev/null
-			a='' docmd dpkg -I $pkg_files | grep "^ *Depends:" | sed "s|^ *Depends:||g"
-			;;
-		eopkg)
-			showcmd eopkg info $pkg_files
-			a= eopkg info $pkg_files | grep "^Dependencies" | head -n1 | sed -e "s|Dependencies[[:space:]]*: ||"
-			;;
-		*)
-			fatal "Have no suitable command for $PKGTYPE"
-			;;
-	esac
+    case "$PKGTYPE" in
+        rpm)
+            assure_exists rpm >/dev/null
+            __epm_alt_rpm_requires -p $pkg_files
+            ;;
+        deb)
+            assure_exists dpkg >/dev/null
+            a='' docmd dpkg -I $pkg_files | grep "^ *Depends:" | sed "s|^ *Depends:||g"
+            ;;
+        eopkg)
+            showcmd eopkg info $pkg_files
+            a= eopkg info $pkg_files | grep "^Dependencies" | head -n1 | sed -e "s|Dependencies[[:space:]]*: ||"
+            ;;
+        *)
+            fatal "Have no suitable command for $PKGTYPE"
+            ;;
+    esac
 }
 
 epm_requires_names()
 {
-	local pkg_names="$*"
-	local CMD
-	[ -n "$pkg_names" ] || return
+    local pkg_names="$*"
+    local CMD
+    [ -n "$pkg_names" ] || return
 
 # by package name
 case $PMTYPE in
-	apt-rpm)
-		# FIXME: need fix for a few names case
-		# FIXME: too low level of requires name (libSOME.so)
-		if is_installed $pkg_names ; then
-			assure_exists rpm >/dev/null
-			__epm_alt_rpm_requires $pkg_names
-			return
-		else
-			if [ -n "$verbose" ] ; then
-				CMD="apt-cache depends"
-			else
-				if [ -n "$short" ] ; then
-					LANG=C docmd apt-cache depends $pkg_names | grep "Depends:" | sed -e "s|.*Depends: ||" -e "s|<\(.*\)>|\1|" | __epm_filter_out_base_alt_reqs | sed -e "s| .*||"
-				else
-					LANG=C docmd apt-cache depends $pkg_names | grep "Depends:" | sed -e "s|.*Depends: ||" -e "s|<\(.*\)>|\1|" | __epm_filter_out_base_alt_reqs
-				fi
-				return
-			fi
-		fi
-		;;
-	packagekit)
-		CMD="pkcon required-by"
-		;;
-	#zypper-rpm)
-	#	# FIXME: use hi level commands
-	#	CMD="rpm -q --requires"
-	#	;;
-	urpm-rpm)
-		CMD="urpmq --requires"
-		;;
-	yum-rpm)
-		if is_installed $pkg_names ; then
-			CMD="rpm -q --requires"
-		else
-			CMD="yum deplist"
-		fi
-		;;
-	dnf-rpm)
-		if is_installed $pkg_names ; then
-			CMD="rpm -q --requires"
-		else
-			CMD="dnf repoquery --requires"
-		fi
-		;;
-	pacman)
-		CMD="pactree"
-		;;
-	apt-dpkg|aptitude-dpkg)
-		# FIXME: need fix for a few names case
-		if is_installed $pkg_names ; then
-			showcmd dpkg -s $pkg_names
-			a='' dpkg -s $pkg_names | grep "^Depends:" | sed "s|^Depends:||g"
-			return
-		else
-			CMD="apt-cache depends"
-		fi
-		;;
-	emerge)
-		assure_exists equery
-		CMD="equery depgraph"
-		;;
-	homebrew)
-		#docmd brew info $pkg_names | grep "^Required: " | sed -s "|s|^Requires: ||"
-		docmd brew deps $pkg_names
-		return
-		;;
-	pkgng)
-		#CMD="pkg rquery '%dn-%dv'"
-		CMD="pkg info -d"
-		;;
-	opkg)
-		CMD="opkg depends"
-		;;
-	eopkg)
-		showcmd eopkg info $pkg_names
-		a= eopkg info $pkg_names | grep "^Dependencies" | sed -e "s|Dependencies[[:space:]]*: ||"
-		return
-		;;
-	xbps)
-		CMD="xbps-query -x"
-		;;
-	aptcyg)
-		#CMD="apt-cyg depends"
-		# print show version
-		docmd apt-cyg show $pkg_names | grep "^requires: " | sed "s|^requires: ||g"
-		return
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
+    apt-rpm)
+        # FIXME: need fix for a few names case
+        # FIXME: too low level of requires name (libSOME.so)
+        if is_installed $pkg_names ; then
+            assure_exists rpm >/dev/null
+            __epm_alt_rpm_requires $pkg_names
+            return
+        else
+            if [ -n "$verbose" ] ; then
+                CMD="apt-cache depends"
+            else
+                if [ -n "$short" ] ; then
+                    LANG=C docmd apt-cache depends $pkg_names | grep "Depends:" | sed -e "s|.*Depends: ||" -e "s|<\(.*\)>|\1|" | __epm_filter_out_base_alt_reqs | sed -e "s| .*||"
+                else
+                    LANG=C docmd apt-cache depends $pkg_names | grep "Depends:" | sed -e "s|.*Depends: ||" -e "s|<\(.*\)>|\1|" | __epm_filter_out_base_alt_reqs
+                fi
+                return
+            fi
+        fi
+        ;;
+    packagekit)
+        CMD="pkcon required-by"
+        ;;
+    #zypper-rpm)
+    #    # FIXME: use hi level commands
+    #    CMD="rpm -q --requires"
+    #    ;;
+    urpm-rpm)
+        CMD="urpmq --requires"
+        ;;
+    yum-rpm)
+        if is_installed $pkg_names ; then
+            CMD="rpm -q --requires"
+        else
+            CMD="yum deplist"
+        fi
+        ;;
+    dnf-rpm)
+        if is_installed $pkg_names ; then
+            CMD="rpm -q --requires"
+        else
+            CMD="dnf repoquery --requires"
+        fi
+        ;;
+    pacman)
+        CMD="pactree"
+        ;;
+    apt-dpkg|aptitude-dpkg)
+        # FIXME: need fix for a few names case
+        if is_installed $pkg_names ; then
+            showcmd dpkg -s $pkg_names
+            a='' dpkg -s $pkg_names | grep "^Depends:" | sed "s|^Depends:||g"
+            return
+        else
+            CMD="apt-cache depends"
+        fi
+        ;;
+    emerge)
+        assure_exists equery
+        CMD="equery depgraph"
+        ;;
+    homebrew)
+        #docmd brew info $pkg_names | grep "^Required: " | sed -s "|s|^Requires: ||"
+        docmd brew deps $pkg_names
+        return
+        ;;
+    pkgng)
+        #CMD="pkg rquery '%dn-%dv'"
+        CMD="pkg info -d"
+        ;;
+    opkg)
+        CMD="opkg depends"
+        ;;
+    eopkg)
+        showcmd eopkg info $pkg_names
+        a= eopkg info $pkg_names | grep "^Dependencies" | sed -e "s|Dependencies[[:space:]]*: ||"
+        return
+        ;;
+    xbps)
+        CMD="xbps-query -x"
+        ;;
+    aptcyg)
+        #CMD="apt-cyg depends"
+        # print show version
+        docmd apt-cyg show $pkg_names | grep "^requires: " | sed "s|^requires: ||g"
+        return
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
 esac
 
 
@@ -168,8 +168,8 @@ docmd $CMD $pkg_names
 
 epm_requires()
 {
-	[ -n "$pkg_filenames" ] || fatal "Requires: package name is missed"
-	epm_requires_files $pkg_files
-	# shellcheck disable=SC2046
-	epm_requires_names $(print_name $pkg_names)
+    [ -n "$pkg_filenames" ] || fatal "Requires: package name is missed"
+    epm_requires_files $pkg_files
+    # shellcheck disable=SC2046
+    epm_requires_names $(print_name $pkg_names)
 }

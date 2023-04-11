@@ -22,6 +22,6 @@ load_helper epm-upgrade
 
 epm_Upgrade()
 {
-	epm_update
-	epm_upgrade "$@"
+    epm_update
+    epm_upgrade "$@"
 }

@@ -49,9 +49,9 @@ __print_apt_sources_list_list()
 
 __info_cyan()
 {
-		set_boldcolor $CYAN
-		echo "$*" >&2
-		restore_color
+        set_boldcolor $CYAN
+        echo "$*" >&2
+        restore_color
 }
 
 __print_apt_sources_list_verbose()
@@ -101,60 +101,60 @@ epm_repolist()
 [ -z "$*" ] || [ "$PMTYPE" = "apt-rpm" ] || fatal "No arguments are allowed here"
 
 case $PMTYPE in
-	apt-rpm)
-		#assure_exists apt-repo
-		if tasknumber "$1" >/dev/null ; then
-			get_task_packages "$@"
-		else
-			print_apt_sources_list "$@"
-			#docmd apt-repo list
-		fi
-		;;
-	deepsolver-rpm)
-		docmd ds-conf
-		;;
-	apt-dpkg|aptitude-dpkg)
-		print_apt_sources_list "$@"
-		;;
-	yum-rpm)
-		docmd yum repolist $verbose
-		[ -n "$verbose" ] || info "Use --verbose if you need detail information."
-		;;
-	dnf-rpm)
-		docmd dnf repolist $verbose
-		[ -n "$verbose" ] || info "Use --verbose if you need detail information."
-		;;
-	urpm-rpm)
-		docmd urpmq --list-media active --list-url
-		;;
-	zypper-rpm)
-		docmd zypper sl -d
-		;;
-	packagekit)
-		docmd pkcon repo-list
-		;;
-	emerge)
-		docmd eselect profile list
-		docmd layman -L
-		;;
-	xbps)
-		docmd xbps-query -L
-		;;
-	winget)
-		docmd winget source list
-		;;
-	eoget)
-		docmd eoget list-repo
-		;;
-	pacman)
-		docmd grep -v -- "^#\|^$" /etc/pacman.conf
-		;;
-	slackpkg)
-		docmd grep -v -- "^#\|^$" /etc/slackpkg/mirrors
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
+    apt-rpm)
+        #assure_exists apt-repo
+        if tasknumber "$1" >/dev/null ; then
+            get_task_packages "$@"
+        else
+            print_apt_sources_list "$@"
+            #docmd apt-repo list
+        fi
+        ;;
+    deepsolver-rpm)
+        docmd ds-conf
+        ;;
+    apt-dpkg|aptitude-dpkg)
+        print_apt_sources_list "$@"
+        ;;
+    yum-rpm)
+        docmd yum repolist $verbose
+        [ -n "$verbose" ] || info "Use --verbose if you need detail information."
+        ;;
+    dnf-rpm)
+        docmd dnf repolist $verbose
+        [ -n "$verbose" ] || info "Use --verbose if you need detail information."
+        ;;
+    urpm-rpm)
+        docmd urpmq --list-media active --list-url
+        ;;
+    zypper-rpm)
+        docmd zypper sl -d
+        ;;
+    packagekit)
+        docmd pkcon repo-list
+        ;;
+    emerge)
+        docmd eselect profile list
+        docmd layman -L
+        ;;
+    xbps)
+        docmd xbps-query -L
+        ;;
+    winget)
+        docmd winget source list
+        ;;
+    eoget)
+        docmd eoget list-repo
+        ;;
+    pacman)
+        docmd grep -v -- "^#\|^$" /etc/pacman.conf
+        ;;
+    slackpkg)
+        docmd grep -v -- "^#\|^$" /etc/slackpkg/mirrors
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
 esac
 
 }

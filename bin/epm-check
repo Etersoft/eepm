@@ -25,60 +25,60 @@ update_repo_if_needed
 local APTOPTIONS="$(subst_option non_interactive -y)"
 local DNFOPTIONS="$(subst_option non_interactive -y) $(subst_option verbose --verbose) "
 case $PMTYPE in
-	apt-rpm)
-		#sudocmd apt-get check || exit
-		#sudocmd apt-get update || exit
-		sudocmd apt-get -f $APTOPTIONS install || return
-		info "You can use epm dedup also"
-		;;
-	apt-dpkg)
-		#sudocmd apt-get check || exit
-		#sudocmd apt-get update || exit
-		sudocmd apt-get -f $APTOPTIONS install || return
-		;;
-	packagekit)
-		docmd pkcon repair
-		;;
-	aptitude-dpkg)
-		sudocmd aptitude -f $APTOPTIONS install || return
-		#sudocmd apt-get autoremove
-		;;
-	yum-rpm)
-		docmd yum check $DNFOPTIONS
-		docmd package-cleanup --problems
+    apt-rpm)
+        #sudocmd apt-get check || exit
+        #sudocmd apt-get update || exit
+        sudocmd apt-get -f $APTOPTIONS install || return
+        info "You can use epm dedup also"
+        ;;
+    apt-dpkg)
+        #sudocmd apt-get check || exit
+        #sudocmd apt-get update || exit
+        sudocmd apt-get -f $APTOPTIONS install || return
+        ;;
+    packagekit)
+        docmd pkcon repair
+        ;;
+    aptitude-dpkg)
+        sudocmd aptitude -f $APTOPTIONS install || return
+        #sudocmd apt-get autoremove
+        ;;
+    yum-rpm)
+        docmd yum check $DNFOPTIONS
+        docmd package-cleanup --problems
 
-		#docmd package-cleanup --dupes
-		sudocmd package-cleanup --cleandupes
+        #docmd package-cleanup --dupes
+        sudocmd package-cleanup --cleandupes
 
-		docmd rpm -Va --nofiles --nodigest
-		;;
-	dnf-rpm)
-		sudocmd dnf check $DNFOPTIONS
-		;;
-	emerge)
-		sudocmd revdep-rebuild
-		;;
-	#urpm-rpm)
-	#	sudocmd urpme --auto-orphans
-	#	;;
-	zypper-rpm)
-		sudocmd zypper $(subst_option non_interactive --non-interactive) verify
-		;;
-	conary)
-		sudocmd conary verify
-		;;
-	pkgng)
-		sudocmd pkg check -d -a
-		;;
-	homebrew)
-		docmd brew doctor
-		;;
-	xbps)
-		sudocmd xbps-pkgdb -a
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
+        docmd rpm -Va --nofiles --nodigest
+        ;;
+    dnf-rpm)
+        sudocmd dnf check $DNFOPTIONS
+        ;;
+    emerge)
+        sudocmd revdep-rebuild
+        ;;
+    #urpm-rpm)
+    #    sudocmd urpme --auto-orphans
+    #    ;;
+    zypper-rpm)
+        sudocmd zypper $(subst_option non_interactive --non-interactive) verify
+        ;;
+    conary)
+        sudocmd conary verify
+        ;;
+    pkgng)
+        sudocmd pkg check -d -a
+        ;;
+    homebrew)
+        docmd brew doctor
+        ;;
+    xbps)
+        sudocmd xbps-pkgdb -a
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
 esac
 
 }

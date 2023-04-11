@@ -39,96 +39,96 @@ __check_for_epm_version()
 
 epm_update()
 {
-	[ -z "$*" ] || fatal "No arguments are allowed here"
-	info "Running command for update remote package repository database"
+    [ -z "$*" ] || fatal "No arguments are allowed here"
+    info "Running command for update remote package repository database"
 
 warmup_hibase
 
 case $PMTYPE in
-	apt-rpm)
-		# TODO: hack against cd to cwd in apt-get on ALT
-		cd /
-		sudocmd apt-get update
-		local ret="$?"
-		cd - >/dev/null
-		__check_for_epm_version
-		return $ret
-		#sudocmd apt-get -f install || exit
-		;;
-	apt-dpkg)
-		sudocmd apt-get update || return
-		#sudocmd apt-get -f install || exit
-		#sudocmd apt-get autoremove
-		;;
-	packagekit)
-		docmd pkcon refresh
-		;;
-	#snappy)
-	#	sudocmd snappy
-	#	;;
-	aptitude-dpkg)
-		sudocmd aptitude update || return
-		;;
-	yum-rpm)
-		# just skipped
-		[ -z "$verbose" ] || info "update command is stubbed for yum"
-		;;
-	dnf-rpm)
-		# just skipped
-		[ -z "$verbose" ] || info "update command is stubbed for dnf"
-		;;
-	urpm-rpm)
-		sudocmd urpmi.update -a
-		;;
-	pacman)
-		sudocmd pacman -S -y
-		;;
-	aura)
-		sudocmd aura -A -y
-		;;
-	zypper-rpm)
-		sudocmd zypper $(subst_option non_interactive --non-interactive) refresh
-		;;
-	emerge)
-		sudocmd emerge --sync
-		;;
-	slackpkg)
-		sudocmd /usr/sbin/slackpkg -batch=on update
-		;;
-	deepsolver-rpm)
-		sudocmd ds-update
-		;;
-	npackd)
-		sudocmd packdcl detect # get packages from MSI database
-		;;
-	homebrew)
-		docmd brew update
-		;;
-	opkg)
-		sudocmd opkg update
-		;;
-	eopkg)
-		sudocmd eopkg update-repo
-		;;
-	apk)
-		sudocmd apk update
-		;;
-	pkgsrc)
-		# portsnap extract for the first time?
-		sudocmd portsnap fetch update
-		;;
-	aptcyg)
-		sudocmd apt-cyg update
-		;;
-	xbps)
-		sudocmd xbps-install -S
-		;;
-	winget)
-		sudocmd winget source update
-		;;
-	*)
-		fatal "Have no suitable update command for $PMTYPE"
-		;;
+    apt-rpm)
+        # TODO: hack against cd to cwd in apt-get on ALT
+        cd /
+        sudocmd apt-get update
+        local ret="$?"
+        cd - >/dev/null
+        __check_for_epm_version
+        return $ret
+        #sudocmd apt-get -f install || exit
+        ;;
+    apt-dpkg)
+        sudocmd apt-get update || return
+        #sudocmd apt-get -f install || exit
+        #sudocmd apt-get autoremove
+        ;;
+    packagekit)
+        docmd pkcon refresh
+        ;;
+    #snappy)
+    #    sudocmd snappy
+    #    ;;
+    aptitude-dpkg)
+        sudocmd aptitude update || return
+        ;;
+    yum-rpm)
+        # just skipped
+        [ -z "$verbose" ] || info "update command is stubbed for yum"
+        ;;
+    dnf-rpm)
+        # just skipped
+        [ -z "$verbose" ] || info "update command is stubbed for dnf"
+        ;;
+    urpm-rpm)
+        sudocmd urpmi.update -a
+        ;;
+    pacman)
+        sudocmd pacman -S -y
+        ;;
+    aura)
+        sudocmd aura -A -y
+        ;;
+    zypper-rpm)
+        sudocmd zypper $(subst_option non_interactive --non-interactive) refresh
+        ;;
+    emerge)
+        sudocmd emerge --sync
+        ;;
+    slackpkg)
+        sudocmd /usr/sbin/slackpkg -batch=on update
+        ;;
+    deepsolver-rpm)
+        sudocmd ds-update
+        ;;
+    npackd)
+        sudocmd packdcl detect # get packages from MSI database
+        ;;
+    homebrew)
+        docmd brew update
+        ;;
+    opkg)
+        sudocmd opkg update
+        ;;
+    eopkg)
+        sudocmd eopkg update-repo
+        ;;
+    apk)
+        sudocmd apk update
+        ;;
+    pkgsrc)
+        # portsnap extract for the first time?
+        sudocmd portsnap fetch update
+        ;;
+    aptcyg)
+        sudocmd apt-cyg update
+        ;;
+    xbps)
+        sudocmd xbps-install -S
+        ;;
+    winget)
+        sudocmd winget source update
+        ;;
+    *)
+        fatal "Have no suitable update command for $PMTYPE"
+        ;;
 esac
 
 }

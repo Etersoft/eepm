@@ -67,213 +67,213 @@ __separate_sudocmd()
 # copied from etersoft-build-utils/share/eterbuild/functions/rpmpkg
 epm_install_names()
 {
-	[ -z "$1" ] && return
+    [ -z "$1" ] && return
 
-	warmup_hibase
+    warmup_hibase
 
-	if [ -n "$download_only" ] ; then
-		epm download "$@"
-		return
-	fi
+    if [ -n "$download_only" ] ; then
+        epm download "$@"
+        return
+    fi
 
-	if [ -n "$non_interactive" ] ; then
-		epm_ni_install_names "$@"
-		return
-	fi
+    if [ -n "$non_interactive" ] ; then
+        epm_ni_install_names "$@"
+        return
+    fi
 
-	case $PMTYPE in
-		apt-rpm|apt-dpkg)
-			APTOPTIONS="$APTOPTIONS $(subst_option verbose "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
-			sudocmd apt-get $APTOPTIONS $noremove install $@ && save_installed_packages $@
-			return ;;
-		aptitude-dpkg)
-			sudocmd aptitude install $@
-			return ;;
-		deepsolver-rpm)
-			sudocmd ds-install $@
-			return ;;
-		urpm-rpm)
-			sudocmd urpmi $URPMOPTIONS $@
-			return ;;
-		packagekit)
-			docmd pkcon install $@
-			return ;;
-		pkgsrc)
-			sudocmd pkg_add -r $@
-			return ;;
-		pkgng)
-			sudocmd pkg install $@
-			return ;;
-		emerge)
-			sudocmd emerge -uD $@
-			return ;;
-		pacman)
-			sudocmd pacman -S $nodeps $@
-			return ;;
-		aura)
-			sudocmd aura -A $force $nodeps $@
-			return ;;
-		yum-rpm)
-			sudocmd yum $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
-			return ;;
-		dnf-rpm)
-			sudocmd dnf install $(echo "$*" | exp_with_arch_suffix)
-			return ;;
-		snappy)
-			sudocmd snappy install $@
-			return ;;
-		zypper-rpm)
-			sudocmd zypper install $ZYPPEROPTIONS $@
-			return ;;
-		mpkg)
-			sudocmd mpkg install $@
-			return ;;
-		eopkg)
-			sudocmd eopkg $(subst_option nodeps --ignore-dependency) install $@
-			return ;;
-		conary)
-			sudocmd conary update $@
-			return ;;
-		npackd)
-			# FIXME: correct arg
-			__separate_sudocmd_foreach "npackdcl add --package=" "npackdcl update --package=" $@
-			return ;;
-		slackpkg)
-			__separate_sudocmd_foreach "/usr/sbin/slackpkg install" "/usr/sbin/slackpkg upgrade" $@
-			return ;;
-		homebrew)
-			# FIXME: sudo and quote
-			SUDO='' __separate_sudocmd "brew install" "brew upgrade" "$@"
-			return ;;
-		opkg)
-			[ -n "$force" ] && force=-force-depends
-			sudocmd opkg $force install $@
-			return ;;
-		nix)
-			__separate_sudocmd "nix-env --install" "nix-env --upgrade" "$@"
-			return ;;
-		apk)
-			sudocmd apk add $@
-			return ;;
-		tce)
-			sudocmd tce-load -wi $@
-			return ;;
-		guix)
-			__separate_sudocmd "guix package -i" "guix package -i" $@
-			return ;;
-		android)
-			fatal "We still have no idea how to use package repository, ever if it is F-Droid."
-			return ;;
-		aptcyg)
-			sudocmd apt-cyg install $@
-			return ;;
-		xbps)
-			sudocmd xbps-install $@
-			return ;;
-		appget|winget)
-			sudocmd $PMTYPE install $@
-			return ;;
-		*)
-			fatal "Have no suitable install command for $PMTYPE"
-			;;
-	esac
+    case $PMTYPE in
+        apt-rpm|apt-dpkg)
+            APTOPTIONS="$APTOPTIONS $(subst_option verbose "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
+            sudocmd apt-get $APTOPTIONS $noremove install $@ && save_installed_packages $@
+            return ;;
+        aptitude-dpkg)
+            sudocmd aptitude install $@
+            return ;;
+        deepsolver-rpm)
+            sudocmd ds-install $@
+            return ;;
+        urpm-rpm)
+            sudocmd urpmi $URPMOPTIONS $@
+            return ;;
+        packagekit)
+            docmd pkcon install $@
+            return ;;
+        pkgsrc)
+            sudocmd pkg_add -r $@
+            return ;;
+        pkgng)
+            sudocmd pkg install $@
+            return ;;
+        emerge)
+            sudocmd emerge -uD $@
+            return ;;
+        pacman)
+            sudocmd pacman -S $nodeps $@
+            return ;;
+        aura)
+            sudocmd aura -A $force $nodeps $@
+            return ;;
+        yum-rpm)
+            sudocmd yum $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
+            return ;;
+        dnf-rpm)
+            sudocmd dnf install $(echo "$*" | exp_with_arch_suffix)
+            return ;;
+        snappy)
+            sudocmd snappy install $@
+            return ;;
+        zypper-rpm)
+            sudocmd zypper install $ZYPPEROPTIONS $@
+            return ;;
+        mpkg)
+            sudocmd mpkg install $@
+            return ;;
+        eopkg)
+            sudocmd eopkg $(subst_option nodeps --ignore-dependency) install $@
+            return ;;
+        conary)
+            sudocmd conary update $@
+            return ;;
+        npackd)
+            # FIXME: correct arg
+            __separate_sudocmd_foreach "npackdcl add --package=" "npackdcl update --package=" $@
+            return ;;
+        slackpkg)
+            __separate_sudocmd_foreach "/usr/sbin/slackpkg install" "/usr/sbin/slackpkg upgrade" $@
+            return ;;
+        homebrew)
+            # FIXME: sudo and quote
+            SUDO='' __separate_sudocmd "brew install" "brew upgrade" "$@"
+            return ;;
+        opkg)
+            [ -n "$force" ] && force=-force-depends
+            sudocmd opkg $force install $@
+            return ;;
+        nix)
+            __separate_sudocmd "nix-env --install" "nix-env --upgrade" "$@"
+            return ;;
+        apk)
+            sudocmd apk add $@
+            return ;;
+        tce)
+            sudocmd tce-load -wi $@
+            return ;;
+        guix)
+            __separate_sudocmd "guix package -i" "guix package -i" $@
+            return ;;
+        android)
+            fatal "We still have no idea how to use package repository, ever if it is F-Droid."
+            return ;;
+        aptcyg)
+            sudocmd apt-cyg install $@
+            return ;;
+        xbps)
+            sudocmd xbps-install $@
+            return ;;
+        appget|winget)
+            sudocmd $PMTYPE install $@
+            return ;;
+        *)
+            fatal "Have no suitable install command for $PMTYPE"
+            ;;
+    esac
 }
 
 # Non interactive install
 epm_ni_install_names()
 {
-	[ -z "$1" ] && return
+    [ -z "$1" ] && return
 
-	case $PMTYPE in
-		apt-rpm)
-			sudocmd apt-get -y $noremove --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
-			return ;;
-		apt-dpkg)
-			sudocmd env ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive apt-get -y $noremove --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
-			return ;;
-		aptitude-dpkg)
-			sudocmd env ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive aptitude -y install $@
-			return ;;
-		yum-rpm)
-			sudocmd yum -y $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
-			return ;;
-		dnf-rpm)
-			sudocmd dnf -y --allowerasing $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
-			return ;;
-		urpm-rpm)
-			sudocmd urpmi --auto $URPMOPTIONS $@
-			return ;;
-		zypper-rpm)
-			# FIXME: returns true ever no package found, need check for "no found", "Nothing to do."
-			yes | sudocmd zypper --non-interactive $ZYPPEROPTIONS install $@
-			return ;;
-		packagekit)
-			docmd pkcon install --noninteractive $@
-			return ;;
-		pkgsrc)
-			sudocmd pkg_add -r $@
-			return ;;
-		pkgng)
-			sudocmd pkg install -y $@
-			return ;;
-		emerge)
-			sudocmd emerge -uD $@
-			return ;;
-		pacman)
-			sudocmd pacman -S --noconfirm $nodeps $@
-			return ;;
-		aura)
-			sudocmd aura -A $force $nodeps $@
-			return ;;
-		npackd)
-			#  npackdcl update --package=<package> (remove old and install new)
-			sudocmd npackdcl add --package="$*"
-			return ;;
-		chocolatey)
-			docmd chocolatey install $@
-			return ;;
-		opkg)
-			sudocmd opkg -force-defaults install $@
-			return ;;
-		eopkg)
-			sudocmd eopkg --yes-all install $@
-			return ;;
-		nix)
-			sudocmd nix-env --install $@
-			return ;;
-		apk)
-			sudocmd apk add $@
-			return ;;
-		tce)
-			sudocmd tce-load -wi $@
-			return ;;
-		xbps)
-			sudocmd xbps-install -y $@
-			return ;;
-		appget|winget)
-			sudocmd $PMTYPE -s install $@
-			return ;;
-		homebrew)
-			# FIXME: sudo and quote
-			SUDO='' __separate_sudocmd "brew install" "brew upgrade" $@
-			return ;;
-		#android)
-		#	sudocmd pm install $@
-		#	return ;;
-		slackpkg)
-			# FIXME: broken status when use batch and default answer
-			__separate_sudocmd_foreach "/usr/sbin/slackpkg -batch=on -default_answer=yes install" "/usr/sbin/slackpkg -batch=on -default_answer=yes upgrade" $@
-			return ;;
-		*)
-			fatal "Have no suitable appropriate install command for $PMTYPE"
-			;;
-	esac
+    case $PMTYPE in
+        apt-rpm)
+            sudocmd apt-get -y $noremove --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
+            return ;;
+        apt-dpkg)
+            sudocmd env ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive apt-get -y $noremove --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
+            return ;;
+        aptitude-dpkg)
+            sudocmd env ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive aptitude -y install $@
+            return ;;
+        yum-rpm)
+            sudocmd yum -y $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
+            return ;;
+        dnf-rpm)
+            sudocmd dnf -y --allowerasing $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
+            return ;;
+        urpm-rpm)
+            sudocmd urpmi --auto $URPMOPTIONS $@
+            return ;;
+        zypper-rpm)
+            # FIXME: returns true ever no package found, need check for "no found", "Nothing to do."
+            yes | sudocmd zypper --non-interactive $ZYPPEROPTIONS install $@
+            return ;;
+        packagekit)
+            docmd pkcon install --noninteractive $@
+            return ;;
+        pkgsrc)
+            sudocmd pkg_add -r $@
+            return ;;
+        pkgng)
+            sudocmd pkg install -y $@
+            return ;;
+        emerge)
+            sudocmd emerge -uD $@
+            return ;;
+        pacman)
+            sudocmd pacman -S --noconfirm $nodeps $@
+            return ;;
+        aura)
+            sudocmd aura -A $force $nodeps $@
+            return ;;
+        npackd)
+            #  npackdcl update --package=<package> (remove old and install new)
+            sudocmd npackdcl add --package="$*"
+            return ;;
+        chocolatey)
+            docmd chocolatey install $@
+            return ;;
+        opkg)
+            sudocmd opkg -force-defaults install $@
+            return ;;
+        eopkg)
+            sudocmd eopkg --yes-all install $@
+            return ;;
+        nix)
+            sudocmd nix-env --install $@
+            return ;;
+        apk)
+            sudocmd apk add $@
+            return ;;
+        tce)
+            sudocmd tce-load -wi $@
+            return ;;
+        xbps)
+            sudocmd xbps-install -y $@
+            return ;;
+        appget|winget)
+            sudocmd $PMTYPE -s install $@
+            return ;;
+        homebrew)
+            # FIXME: sudo and quote
+            SUDO='' __separate_sudocmd "brew install" "brew upgrade" $@
+            return ;;
+        #android)
+        #    sudocmd pm install $@
+        #    return ;;
+        slackpkg)
+            # FIXME: broken status when use batch and default answer
+            __separate_sudocmd_foreach "/usr/sbin/slackpkg -batch=on -default_answer=yes install" "/usr/sbin/slackpkg -batch=on -default_answer=yes upgrade" $@
+            return ;;
+        *)
+            fatal "Have no suitable appropriate install command for $PMTYPE"
+            ;;
+    esac
 }
 
 __epm_check_if_rpm_already_installed()
 {
-	# Not: we can make optimize if just check version?
-	LANG=C sudorun rpm -Uvh --test "$@" 2>&1 | grep -q "is already installed"
+    # Not: we can make optimize if just check version?
+    LANG=C sudorun rpm -Uvh --test "$@" 2>&1 | grep -q "is already installed"
 }
 
 __handle_direct_install()
@@ -618,54 +618,54 @@ epm_print_install_command()
 
 epm_print_install_names_command()
 {
-	# check for pkg_files to support print out command without pkg names in args
-	#[ -z "$1" ] && [ -n "$pkg_files" ] && return
-	[ -z "$1" ] && return
-	case $PMTYPE in
-		apt-rpm)
-			echo "apt-get -y --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true $APTOPTIONS install $*"
-			return ;;
-		apt-dpkg)
-			# this command  not for complex use. ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive
-			echo "apt-get -y --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true $APTOPTIONS install $*"
-			return ;;
-		aptitude-dpkg)
-			echo "aptitude -y install $*"
-			return ;;
-		yum-rpm)
-			echo "yum -y $YUMOPTIONS install $*"
-			return ;;
-		dnf-rpm)
-			echo "dnf -y $YUMOPTIONS --allowerasing install $*"
-			return ;;
-		urpm-rpm)
-			echo "urpmi --auto $URPMOPTIONS $*"
-			return ;;
-		zypper-rpm)
-			echo "zypper --non-interactive $ZYPPEROPTIONS install $*"
-			return ;;
-		packagekit)
-			echo "pkcon --noninteractive $*"
-			return ;;
-		pacman)
-			echo "pacman -S --noconfirm $*"
-			return ;;
-		chocolatey)
-			echo "chocolatey install $*"
-			return ;;
-		nix)
-			echo "nix-env --install $*"
-			return ;;
-		eopkg)
-			echo "eopkg install $*"
-			return ;;
-		appget|winget)
-			echo "$PMTYPE install $*"
-			return ;;
-		*)
-			fatal "Have no suitable appropriate install command for $PMTYPE"
-			;;
-	esac
+    # check for pkg_files to support print out command without pkg names in args
+    #[ -z "$1" ] && [ -n "$pkg_files" ] && return
+    [ -z "$1" ] && return
+    case $PMTYPE in
+        apt-rpm)
+            echo "apt-get -y --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true $APTOPTIONS install $*"
+            return ;;
+        apt-dpkg)
+            # this command  not for complex use. ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive
+            echo "apt-get -y --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true $APTOPTIONS install $*"
+            return ;;
+        aptitude-dpkg)
+            echo "aptitude -y install $*"
+            return ;;
+        yum-rpm)
+            echo "yum -y $YUMOPTIONS install $*"
+            return ;;
+        dnf-rpm)
+            echo "dnf -y $YUMOPTIONS --allowerasing install $*"
+            return ;;
+        urpm-rpm)
+            echo "urpmi --auto $URPMOPTIONS $*"
+            return ;;
+        zypper-rpm)
+            echo "zypper --non-interactive $ZYPPEROPTIONS install $*"
+            return ;;
+        packagekit)
+            echo "pkcon --noninteractive $*"
+            return ;;
+        pacman)
+            echo "pacman -S --noconfirm $*"
+            return ;;
+        chocolatey)
+            echo "chocolatey install $*"
+            return ;;
+        nix)
+            echo "nix-env --install $*"
+            return ;;
+        eopkg)
+            echo "eopkg install $*"
+            return ;;
+        appget|winget)
+            echo "$PMTYPE install $*"
+            return ;;
+        *)
+            fatal "Have no suitable appropriate install command for $PMTYPE"
+            ;;
+    esac
 }
 
 # apt-repo with non_interactive support

@@ -85,14 +85,14 @@ __create_rpmmacros()
 [ -n "$TMPDIR" ] || TMPDIR=/tmp
 
     cat <<EOF >$HOME/.rpmmacros
-%_topdir	$HOME/RPM
-%_tmppath	$TMPDIR
+%_topdir    $HOME/RPM
+%_tmppath    $TMPDIR
 
-%packager	EPM <support@eepm.ru>
-%_vendor	EEPM
-%_gpg_name	support@etersoft.ru
+%packager    EPM <support@eepm.ru>
+%_vendor    EEPM
+%_gpg_name    support@etersoft.ru
 
-%_allow_root_build	1
+%_allow_root_build    1
 EOF
     to_remove_pkg_files="$to_remove_pkg_files $HOME/.rpmmacros"
 }
@@ -114,14 +114,14 @@ __epm_repack_to_rpm()
     assure_exists alien || fatal
 
     # TODO: check for all systems
-	case $PKGFORMAT in
-		rpm)
-			assure_exists /usr/bin/rpmbuild rpm-build || fatal
-			;;
-		deb)
-			assure_exists /usr/bin/rpmbuild rpm || fatal
-			;;
-	esac
+    case $PKGFORMAT in
+        rpm)
+            assure_exists /usr/bin/rpmbuild rpm-build || fatal
+            ;;
+        deb)
+            assure_exists /usr/bin/rpmbuild rpm || fatal
+            ;;
+    esac
 
     # TODO: improve
     if echo "$pkgs" | grep -q "\.deb" ; then

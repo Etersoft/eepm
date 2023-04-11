@@ -22,67 +22,67 @@
 # TODO: check for lib64/name situations
 __abs_filename()
 {
-	if echo "$1" | grep -q "/" ; then
-		echo "$1"
-		return
-	fi
-	if [ -e "$1" ] ; then
-		echo "$(pwd)/$1"
-		return
-	fi
-	echo "$1"
+    if echo "$1" | grep -q "/" ; then
+        echo "$1"
+        return
+    fi
+    if [ -e "$1" ] ; then
+        echo "$(pwd)/$1"
+        return
+    fi
+    echo "$1"
 }
 
 __do_query_real_file()
 {
-	local TOFILE
-	
-	# get canonical path
-	if [ -e "$1" ] ; then
-		TOFILE="$(__abs_filename "$1")"
-	else
-		TOFILE=$(print_command_path "$1" || echo "$1")
-		if [ "$TOFILE" != "$1" ] ; then
-			info " > $1 is placed as $TOFILE"
-		fi
-	fi
+    local TOFILE
+    
+    # get canonical path
+    if [ -e "$1" ] ; then
+        TOFILE="$(__abs_filename "$1")"
+    else
+        TOFILE=$(print_command_path "$1" || echo "$1")
+        if [ "$TOFILE" != "$1" ] ; then
+            info " > $1 is placed as $TOFILE"
+        fi
+    fi
 
-	[ -n "$TOFILE" ] || return
+    [ -n "$TOFILE" ] || return
 
-	local RES
-	if [ -n "$short" ] ; then
-		__do_short_query "$TOFILE"
-		RES=$?
-	else
-		__do_query "$TOFILE"
-		RES=$?
-	fi
+    local RES
+    if [ -n "$short" ] ; then
+        __do_short_query "$TOFILE"
+        RES=$?
+    else
+        __do_query "$TOFILE"
+        RES=$?
+    fi
 
-	# get value of symbolic link
-	if [ -L "$TOFILE" ] ; then
-		local LINKTO
-		LINKTO=$(readlink -- "$TOFILE")
-		info " > $TOFILE is link to $LINKTO"
-		LINKTO=$(readlink -f -- "$TOFILE")
-		__do_query_real_file "$LINKTO"
-		return
-	else
-		return $RES
-	fi
+    # get value of symbolic link
+    if [ -L "$TOFILE" ] ; then
+        local LINKTO
+        LINKTO=$(readlink -- "$TOFILE")
+        info " > $TOFILE is link to $LINKTO"
+        LINKTO=$(readlink -f -- "$TOFILE")
+        __do_query_real_file "$LINKTO"
+        return
+    else
+        return $RES
+    fi
 }
 
 dpkg_print_name_version()
 {
-	local ver i
-	for i in "$@" ; do
-		[ -n "$i" ] || continue
-		ver=$(dpkg -s "$i" 2>/dev/null | grep "Version:" | sed -e "s|Version: ||g")
-		if [ -z "$ver" ] ; then
-			echo "$i"
-		else
-			echo "$i-$ver"
-		fi
-	done
+    local ver i
+    for i in "$@" ; do
+        [ -n "$i" ] || continue
+        ver=$(dpkg -s "$i" 2>/dev/null | grep "Version:" | sed -e "s|Version: ||g")
+        if [ -z "$ver" ] ; then
+            echo "$i"
+        else
+            echo "$i-$ver"
+        fi
+    done
 }
 
 

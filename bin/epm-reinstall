@@ -23,45 +23,45 @@ load_helper epm-sh-warmup
 # copied from etersoft-build-utils/share/eterbuild/functions/rpmpkg
 epm_reinstall_names()
 {
-	[ -n "$1" ] || return
+    [ -n "$1" ] || return
 
-	case $PMTYPE in
-		apt-rpm|apt-dpkg)
-			local APTOPTIONS="$(subst_option non_interactive -y)"
-			sudocmd apt-get --reinstall $APTOPTIONS install $@
-			return ;;
-		aptitude-dpkg)
-			sudocmd aptitude reinstall $@
-			return ;;
-		packagekit)
-			warning "Please send me the correct command form for it"
-			docmd pkcon install --allow-reinstall $@
-			return ;;
-		yum-rpm)
-			sudocmd yum reinstall $@
-			return ;;
-		dnf-rpm)
-			sudocmd dnf reinstall $@
-			return ;;
-		homebrew)
-			sudocmd brew reinstall $@
-			return ;;
-		pkgng)
-			sudocmd pkg install -f $@
-			return ;;
-		opkg)
-			sudocmd opkg --force-reinstall install $@
-			return ;;
-		eopkg)
-			sudocmd eopkg --reinstall install $@
-			return ;;
-		slackpkg)
-			sudocmd_foreach "/usr/sbin/slackpkg reinstall" $@
-			return ;;
-	esac
+    case $PMTYPE in
+        apt-rpm|apt-dpkg)
+            local APTOPTIONS="$(subst_option non_interactive -y)"
+            sudocmd apt-get --reinstall $APTOPTIONS install $@
+            return ;;
+        aptitude-dpkg)
+            sudocmd aptitude reinstall $@
+            return ;;
+        packagekit)
+            warning "Please send me the correct command form for it"
+            docmd pkcon install --allow-reinstall $@
+            return ;;
+        yum-rpm)
+            sudocmd yum reinstall $@
+            return ;;
+        dnf-rpm)
+            sudocmd dnf reinstall $@
+            return ;;
+        homebrew)
+            sudocmd brew reinstall $@
+            return ;;
+        pkgng)
+            sudocmd pkg install -f $@
+            return ;;
+        opkg)
+            sudocmd opkg --force-reinstall install $@
+            return ;;
+        eopkg)
+            sudocmd eopkg --reinstall install $@
+            return ;;
+        slackpkg)
+            sudocmd_foreach "/usr/sbin/slackpkg reinstall" $@
+            return ;;
+    esac
 
-	# fallback to generic install
-	epm_install_names $@
+    # fallback to generic install
+    epm_install_names $@
 }
 
 epm_reinstall_files()

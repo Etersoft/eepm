@@ -21,73 +21,73 @@ load_helper epm-sh-altlinux
 
 __epm_repo_pkgadd_alt()
 {
-	local archlist="i586 x86_64 aarch64 noarch"
+    local archlist="i586 x86_64 aarch64 noarch"
 
-	local REPO_DIR="$1"
-	shift
-	[ -d "$REPO_DIR" ] || fatal "Can't find repo dir $REPO_DIR."
+    local REPO_DIR="$1"
+    shift
+    [ -d "$REPO_DIR" ] || fatal "Can't find repo dir $REPO_DIR."
 
-	# default name
-	REPO_NAME="addon"
-	# detect if already exists
-	for arch in $archlist ; do
-		local rd="$(echo $REPO_DIR/$arch/RPMS.*)"
-		[ -d "$rd" ] && REPO_NAME="$(echo "$rd" | sed -e 's|.*\.||')" && break
-	done
+    # default name
+    REPO_NAME="addon"
+    # detect if already exists
+    for arch in $archlist ; do
+        local rd="$(echo $REPO_DIR/$arch/RPMS.*)"
+        [ -d "$rd" ] && REPO_NAME="$(echo "$rd" | sed -e 's|.*\.||')" && break
+    done
 
-	[ -n "$1" ] || fatal "Missed package name"
+    [ -n "$1" ] || fatal "Missed package name"
 
-	while [ -s "$1" ] ; do
-		arch="$(epm print arch from filename "$1")" || fatal
-		epm checkpkg "$1" || fatal
-		cp -v "$1" $REPO_DIR/$arch/RPMS.$REPO_NAME || fatal
-		shift
-	done
+    while [ -s "$1" ] ; do
+        arch="$(epm print arch from filename "$1")" || fatal
+        epm checkpkg "$1" || fatal
+        cp -v "$1" $REPO_DIR/$arch/RPMS.$REPO_NAME || fatal
+        shift
+    done
 
 }
 
 
 __epm_repo_pkgdel_alt()
 {
-	local archlist="i586 x86_64 aarch64 noarch"
+    local archlist="i586 x86_64 aarch64 noarch"
 
-	local REPO_DIR="$1"
-	shift
-	[ -d "$REPO_DIR" ] || fatal "Can't find repo dir $REPO_DIR."
+    local REPO_DIR="$1"
+    shift
+    [ -d "$REPO_DIR" ] || fatal "Can't find repo dir $REPO_DIR."
 
-	[ -n "$1" ] || fatal "Missed package name"
+    [ -n "$1" ] || fatal "Missed package name"
 
-	# default name
-	REPO_NAME="addon"
-	# detect if already exists
-	for arch in $archlist ; do
-		local rd="$(echo $REPO_DIR/$arch/RPMS.*)"
-		[ -d "$rd" ] && REPO_NAME="$(echo "$rd" | sed -e 's|.*\.||')" && break
-	done
+    # default name
+    REPO_NAME="addon"
+    # detect if already exists
+    for arch in $archlist ; do
+        local rd="$(echo $REPO_DIR/$arch/RPMS.*)"
+        [ -d "$rd" ] && REPO_NAME="$(echo "$rd" | sed -e 's|.*\.||')" && break
+    done
 
-	while [ -s "$1" ] ; do
-		for arch in $archlist ; do
-			local rd="$REPO_DIR/$arch/RPMS.$REPO_NAME"
-			for i in $rd/$1* ; do
-				[ "$1" = "$(epm print name for package $i)" || continue
-				rm -v $rd/$1*
-			done
-		done
-		shift
-	done
+    while [ -s "$1" ] ; do
+        for arch in $archlist ; do
+            local rd="$REPO_DIR/$arch/RPMS.$REPO_NAME"
+            for i in $rd/$1* ; do
+                [ "$1" = "$(epm print name for package $i)" || continue
+                rm -v $rd/$1*
+            done
+        done
+        shift
+    done
 
 }
 
 
 __epm_repo_pkgupdate_alt()
 {
-	local dir="$1"
-	shift
-	for i in "$@" ; do
-		pkg="$(epm print name for package $i)" || fatal
-		__epm_repo_pkgdel_alt "$dir" $pkg
-	done
-	__epm_repo_pkgadd_alt "$dir" "$@"
+    local dir="$1"
+    shift
+    for i in "$@" ; do
+        pkg="$(epm print name for package $i)" || fatal
+        __epm_repo_pkgdel_alt "$dir" $pkg
+    done
+    __epm_repo_pkgadd_alt "$dir" "$@"
 }
 
 
@@ -96,12 +96,12 @@ epm_repo_pkgadd()
 {
 
 case $PMTYPE in
-	apt-rpm)
-		__epm_repo_pkgadd_alt "$@"
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
+    apt-rpm)
+        __epm_repo_pkgadd_alt "$@"
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
 esac
 
 }
@@ -111,12 +111,12 @@ epm_repo_pkgupdate()
 {
 
 case $PMTYPE in
-	apt-rpm)
-		__epm_repo_pkgupdate_alt "$@"
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
+    apt-rpm)
+        __epm_repo_pkgupdate_alt "$@"
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
 esac
 
 }
@@ -126,12 +126,12 @@ epm_repo_pkgdel()
 {
 
 case $PMTYPE in
-	apt-rpm)
-		__epm_repo_pkgdel_alt "$@"
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
+    apt-rpm)
+        __epm_repo_pkgdel_alt "$@"
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
 esac
 
 }

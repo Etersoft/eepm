@@ -23,48 +23,48 @@ epm_vardir=/var/lib/eepm
 
 __check_installed_app()
 {
-	[ -s $epm_vardir/installed-app ] || return 1
-	grep -q -- "^$1\$" $epm_vardir/installed-app
+    [ -s $epm_vardir/installed-app ] || return 1
+    grep -q -- "^$1\$" $epm_vardir/installed-app
 }
 
 __save_installed_app()
 {
-	[ -d "$epm_vardir" ] || return 0
-	__check_installed_app "$1" && return 0
-	echo "$1" | sudorun tee -a $epm_vardir/installed-app >/dev/null
+    [ -d "$epm_vardir" ] || return 0
+    __check_installed_app "$1" && return 0
+    echo "$1" | sudorun tee -a $epm_vardir/installed-app >/dev/null
 }
 
 __remove_installed_app()
 {
-	[ -s $epm_vardir/installed-app ] || return 0
-	local i
-	for i in $* ; do
-		sudorun sed -i "/^$i$/d" $epm_vardir/installed-app
-	done
-	return 0
+    [ -s $epm_vardir/installed-app ] || return 0
+    local i
+    for i in $* ; do
+        sudorun sed -i "/^$i$/d" $epm_vardir/installed-app
+    done
+    return 0
 }
 
 
 __is_app_installed()
 {
-	__run_script "$1" --installed "$2"
-	return
+    __run_script "$1" --installed "$2"
+    return
 }
 
 __run_script()
 {
-	local script="$psdir/$1.sh"
-	[ -x "$script" ] || return
-	[ -f "$script.rpmnew" ] && warning "There is .rpmnew file(s) in $psdir dir. The play script can be outdated."
+    local script="$psdir/$1.sh"
+    [ -x "$script" ] || return
+    [ -f "$script.rpmnew" ] && warning "There is .rpmnew file(s) in $psdir dir. The play script can be outdated."
 
-	shift
-	( unset EPMCURDIR ; export PATH=$PROGDIR:$PATH ; $script "$@" )
-	return
+    shift
+    ( unset EPMCURDIR ; export PATH=$PROGDIR:$PATH ; $script "$@" )
+    return
 }
 
 __get_app_package()
 {
-	__run_script "$1" --package-name "$2" 2>/dev/null
+    __run_script "$1" --package-name "$2" 2>/dev/null
 }
 
 

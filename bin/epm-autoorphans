@@ -19,7 +19,7 @@
 
 __epm_orphan_altrpm()
 {
-	docmd apt-cache list-extras
+    docmd apt-cache list-extras
 }
 
 epm_autoorphans()
@@ -29,113 +29,113 @@ epm_autoorphans()
 
 
 case $PMTYPE in
-	apt-rpm)
-		# ALT Linux only
-		assure_exists /usr/share/apt/scripts/list-extras.lua apt-scripts
-		if [ -z "$dryrun" ] ; then
-			echo "We will try remove all installed packages which are missed in repositories"
-			warning "Use with caution!"
-		fi
-		epm Upgrade || fatal
-		local PKGLIST=$(__epm_orphan_altrpm \
-			| sed -e "s/\.32bit//g" \
-			| grep -v -- "^eepm$" \
-			| grep -v -- "^distro_info$" \
-			| grep -v -- "^kernel")
+    apt-rpm)
+        # ALT Linux only
+        assure_exists /usr/share/apt/scripts/list-extras.lua apt-scripts
+        if [ -z "$dryrun" ] ; then
+            echo "We will try remove all installed packages which are missed in repositories"
+            warning "Use with caution!"
+        fi
+        epm Upgrade || fatal
+        local PKGLIST=$(__epm_orphan_altrpm \
+            | sed -e "s/\.32bit//g" \
+            | grep -v -- "^eepm$" \
+            | grep -v -- "^distro_info$" \
+            | grep -v -- "^kernel")
 
-		local play_installed="$(epm play --list-installed-packages)"
-		if [ -n "$play_installed" ] ; then
-			echo "Skip follow packages installed via epm play: $play_installed"
-		fi
-		PKGLIST="$(estrlist exclude "$play_installed" "$PKGLIST")"
+        local play_installed="$(epm play --list-installed-packages)"
+        if [ -n "$play_installed" ] ; then
+            echo "Skip follow packages installed via epm play: $play_installed"
+        fi
+        PKGLIST="$(estrlist exclude "$play_installed" "$PKGLIST")"
 
-		if [ -z "$dryrun" ] && [ -n "$PKGLIST" ] ; then
-			showcmd epm remove $dryrun $force $PKGLIST
-			confirm_info "We will remove packages above."
-		fi
+        if [ -z "$dryrun" ] && [ -n "$PKGLIST" ] ; then
+            showcmd epm remove $dryrun $force $PKGLIST
+            confirm_info "We will remove packages above."
+        fi
 
-#		if [ -n "$dryrun" ] ; then
-#			echo "$PKGLIST"
-#		else
-			docmd epm remove $dryrun $force $(subst_option non_interactive --auto) $PKGLIST
-#		fi
-		;;
-	apt-dpkg|aptitude-dpkg)
-		assure_exists deborphan
-		showcmd deborphan
-		a='' deborphan | docmd epm remove $dryrun
-		;;
-	#aura)
-	#	sudocmd aura -Oj
-	#	;;
-	yum-rpm)
-		docmd epm upgrade
-		assure_exists package-cleanup yum-utils
-		showcmd package-cleanup --orphans
-		local PKGLIST=$(package-cleanup -q --orphans | grep -v "^eepm-")
-		docmd epm remove $dryrun $PKGLIST
-		;;
-	dnf-rpm)
-		# TODO: dnf list extras
-		docmd epm upgrade
-		assure_exists package-cleanup dnf-utils
-		showcmd package-cleanup --orphans
-		local PKGLIST=$(package-cleanup -q --orphans | grep -v "^eepm-")
-		docmd epm remove $dryrun $PKGLIST
-		;;
-	urpm-rpm)
-		if [ -n "$dryrun" ] ; then
-			fatal "--dry-run is not supported yet"
-		else
-			showcmd urpme --report-orphans
-			sudocmd urpme --auto-orphans
-		fi
-		;;
-	#emerge)
-	#	sudocmd emerge --depclean
-	#	assure_exists revdep-rebuild
-	#	sudocmd revdep-rebuild
-	#	;;
-	pacman)
-		if [ -n "$dryrun" ] ; then
-			info "Autoorphans packages list:"
-			sudocmd pacman -Qdtq
-		else
-			sudocmd pacman -Qdtq | sudocmd pacman -Rs -
-		fi
-		;;
-	slackpkg)
-		# clean-system removes non official packages
-		sudocmd slackpkg clean-system
-		;;
-	eopkg)
-		sudocmd eopkg remove-orphans
-		;;
-	#guix)
-	#	sudocmd guix gc
-	#	;;
-	#pkgng)
-	#	sudocmd pkg autoremove
-	#	;;
-	zypper-rpm)
-		# https://www.linux.org.ru/forum/desktop/11931830
-		assure_exists zypper zypper 1.9.2
-		# For zypper < 1.9.2: zypper se -si | grep 'System Packages'
-		sudocmd zypper packages --orphaned
-		# FIXME: x86_64/i586 are duplicated
-		local PKGLIST=$(zypper packages --orphaned | tail -n +5 | cut -d \| -f 3 | sort -u)
-		docmd epm remove $dryrun --clean-deps $PKGLIST
-		;;
-	xbps)
-		if [ -n "$dryrun" ] ; then
-			fatal "--dry-run is not supported yet"
-		else
-			sudocmd xbps-remove -o
-		fi
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
+#        if [ -n "$dryrun" ] ; then
+#            echo "$PKGLIST"
+#        else
+            docmd epm remove $dryrun $force $(subst_option non_interactive --auto) $PKGLIST
+#        fi
+        ;;
+    apt-dpkg|aptitude-dpkg)
+        assure_exists deborphan
+        showcmd deborphan
+        a='' deborphan | docmd epm remove $dryrun
+        ;;
+    #aura)
+    #    sudocmd aura -Oj
+    #    ;;
+    yum-rpm)
+        docmd epm upgrade
+        assure_exists package-cleanup yum-utils
+        showcmd package-cleanup --orphans
+        local PKGLIST=$(package-cleanup -q --orphans | grep -v "^eepm-")
+        docmd epm remove $dryrun $PKGLIST
+        ;;
+    dnf-rpm)
+        # TODO: dnf list extras
+        docmd epm upgrade
+        assure_exists package-cleanup dnf-utils
+        showcmd package-cleanup --orphans
+        local PKGLIST=$(package-cleanup -q --orphans | grep -v "^eepm-")
+        docmd epm remove $dryrun $PKGLIST
+        ;;
+    urpm-rpm)
+        if [ -n "$dryrun" ] ; then
+            fatal "--dry-run is not supported yet"
+        else
+            showcmd urpme --report-orphans
+            sudocmd urpme --auto-orphans
+        fi
+        ;;
+    #emerge)
+    #    sudocmd emerge --depclean
+    #    assure_exists revdep-rebuild
+    #    sudocmd revdep-rebuild
+    #    ;;
+    pacman)
+        if [ -n "$dryrun" ] ; then
+            info "Autoorphans packages list:"
+            sudocmd pacman -Qdtq
+        else
+            sudocmd pacman -Qdtq | sudocmd pacman -Rs -
+        fi
+        ;;
+    slackpkg)
+        # clean-system removes non official packages
+        sudocmd slackpkg clean-system
+        ;;
+    eopkg)
+        sudocmd eopkg remove-orphans
+        ;;
+    #guix)
+    #    sudocmd guix gc
+    #    ;;
+    #pkgng)
+    #    sudocmd pkg autoremove
+    #    ;;
+    zypper-rpm)
+        # https://www.linux.org.ru/forum/desktop/11931830
+        assure_exists zypper zypper 1.9.2
+        # For zypper < 1.9.2: zypper se -si | grep 'System Packages'
+        sudocmd zypper packages --orphaned
+        # FIXME: x86_64/i586 are duplicated
+        local PKGLIST=$(zypper packages --orphaned | tail -n +5 | cut -d \| -f 3 | sort -u)
+        docmd epm remove $dryrun --clean-deps $PKGLIST
+        ;;
+    xbps)
+        if [ -n "$dryrun" ] ; then
+            fatal "--dry-run is not supported yet"
+        else
+            sudocmd xbps-remove -o
+        fi
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
 esac
 
 }

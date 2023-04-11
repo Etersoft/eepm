@@ -52,144 +52,144 @@ __deb_local_content_filelist()
 
 __epm_filelist_remote()
 {
-	[ -z "$*" ] && return
+    [ -z "$*" ] && return
 
-	case $PMTYPE in
-		apt-rpm)
-			# TODO: use RESTful interface to prometeus? See ALT bug #29496
-			docmd_foreach __alt_local_content_filelist "$@"
-			;;
-		apt-dpkg)
-			assure_exists apt-file || return
-			if sudo_allowed ; then
-				sudocmd apt-file update
-			else
-				info "sudo requires a password, skip apt-file update"
-			fi
-			docmd_foreach __deb_local_content_filelist "$@"
-			;;
-		packagekit)
-			docmd pkcon get-files "$@"
-			;;
-		yum-rpm)
-			assure_exists yum-utils || return
-			docmd repoquery -q -l "$@"
-			;;
-		dnf-rpm)
-			assure_exists dnf-plugins-core || return
-			docmd dnf repoquery -l "$@"
-			;;
-		*)
-			fatal "Query filelist for non installed packages is not implemented yet."
-			;;
-	esac
+    case $PMTYPE in
+        apt-rpm)
+            # TODO: use RESTful interface to prometeus? See ALT bug #29496
+            docmd_foreach __alt_local_content_filelist "$@"
+            ;;
+        apt-dpkg)
+            assure_exists apt-file || return
+            if sudo_allowed ; then
+                sudocmd apt-file update
+            else
+                info "sudo requires a password, skip apt-file update"
+            fi
+            docmd_foreach __deb_local_content_filelist "$@"
+            ;;
+        packagekit)
+            docmd pkcon get-files "$@"
+            ;;
+        yum-rpm)
+            assure_exists yum-utils || return
+            docmd repoquery -q -l "$@"
+            ;;
+        dnf-rpm)
+            assure_exists dnf-plugins-core || return
+            docmd dnf repoquery -l "$@"
+            ;;
+        *)
+            fatal "Query filelist for non installed packages is not implemented yet."
+            ;;
+    esac
 }
 
 __epm_filelist_file()
 {
-	local CMD
+    local CMD
 
-	[ -z "$*" ] && return
+    [ -z "$*" ] && return
 
-	# TODO: allow a new packages
-	case $(get_package_type $1) in
-		rpm)
-			assure_exists rpm
-			CMD="rpm -qlp"
-			;;
-		deb)
-			assure_exists dpkg
-			CMD="dpkg --contents"
-			;;
-		eopkg)
-			assure_exists eopkg
-			CMD="eopkg --files info"
-			;;
-		*)
-			fatal "Have no suitable query command for $PMTYPE"
-			;;
-	esac
+    # TODO: allow a new packages
+    case $(get_package_type $1) in
+        rpm)
+            assure_exists rpm
+            CMD="rpm -qlp"
+            ;;
+        deb)
+            assure_exists dpkg
+            CMD="dpkg --contents"
+            ;;
+        eopkg)
+            assure_exists eopkg
+            CMD="eopkg --files info"
+            ;;
+        *)
+            fatal "Have no suitable query command for $PMTYPE"
+            ;;
+    esac
 
-	# TODO: add less
-	docmd $CMD $@
+    # TODO: add less
+    docmd $CMD $@
 }
 
 __epm_filelist_name()
 {
-	local CMD
+    local CMD
 
-	[ -z "$*" ] && return
+    [ -z "$*" ] && return
 
-	warmup_lowbase
+    warmup_lowbase
 
-	case $PMTYPE in
-		*-rpm)
-			CMD="rpm -ql"
-			;;
-		*-dpkg)
-			CMD="dpkg -L"
-			;;
-		packagekit)
-			CMD="pkcon get-files"
-			;;
-		android)
-			CMD="pm list packages -f"
-			;;
-		conary)
-			CMD="conary query --ls"
-			;;
-		pacman)
-			docmd pacman -Ql $@ | sed -e "s|.* ||g"
-			return
-			;;
-		emerge)
-			assure_exists equery
-			CMD="equery files"
-			;;
-		homebrew)
-			CMD="brew list"
-			;;
-		pkgng)
-			CMD="pkg info -l"
-			;;
-		opkg)
-			CMD="opkg files"
-			;;
-		eopkg)
-			docmd eopkg --files -s info $@ | grep "^/"
-			return
-			;;
-		xbps)
-			CMD="xbps-query -f"
-			;;
-		aptcyg)
-			docmd apt-cyg listfiles $@ | sed -e "s|^|/|g"
-			return
-			;;
-		slackpkg)
-			is_installed $@ || fatal "Query filelist for non installed packages is not implemented yet"
-			docmd awk 'BEGIN{desk=1}{if(/^FILE LIST:$/){desk=0} else if (desk==0) {print}}' /var/log/packages/${pkg_filenames}*
-			return
-			;;
-		*)
-			fatal "Have no suitable query command for $PMTYPE"
-			;;
-	esac
+    case $PMTYPE in
+        *-rpm)
+            CMD="rpm -ql"
+            ;;
+        *-dpkg)
+            CMD="dpkg -L"
+            ;;
+        packagekit)
+            CMD="pkcon get-files"
+            ;;
+        android)
+            CMD="pm list packages -f"
+            ;;
+        conary)
+            CMD="conary query --ls"
+            ;;
+        pacman)
+            docmd pacman -Ql $@ | sed -e "s|.* ||g"
+            return
+            ;;
+        emerge)
+            assure_exists equery
+            CMD="equery files"
+            ;;
+        homebrew)
+            CMD="brew list"
+            ;;
+        pkgng)
+            CMD="pkg info -l"
+            ;;
+        opkg)
+            CMD="opkg files"
+            ;;
+        eopkg)
+            docmd eopkg --files -s info $@ | grep "^/"
+            return
+            ;;
+        xbps)
+            CMD="xbps-query -f"
+            ;;
+        aptcyg)
+            docmd apt-cyg listfiles $@ | sed -e "s|^|/|g"
+            return
+            ;;
+        slackpkg)
+            is_installed $@ || fatal "Query filelist for non installed packages is not implemented yet"
+            docmd awk 'BEGIN{desk=1}{if(/^FILE LIST:$/){desk=0} else if (desk==0) {print}}' /var/log/packages/${pkg_filenames}*
+            return
+            ;;
+        *)
+            fatal "Have no suitable query command for $PMTYPE"
+            ;;
+    esac
 
-	# TODO: add less or bat (for any output in the function)
-	docmd $CMD $@ && return
-	# TODO: may be we need check is installed before prev. line?
-	is_installed $@ || __epm_filelist_remote $@
+    # TODO: add less or bat (for any output in the function)
+    docmd $CMD $@ && return
+    # TODO: may be we need check is installed before prev. line?
+    is_installed $@ || __epm_filelist_remote $@
 }
 
 
 epm_filelist()
 {
-	[ -n "$pkg_filenames" ] || fatal "Filelist: package name is missed"
+    [ -n "$pkg_filenames" ] || fatal "Filelist: package name is missed"
 
 
-	__epm_filelist_file $pkg_files || return
-	# shellcheck disable=SC2046
-	__epm_filelist_name $(print_name $pkg_names) || return
+    __epm_filelist_file $pkg_files || return
+    # shellcheck disable=SC2046
+    __epm_filelist_name $(print_name $pkg_names) || return
 
 }

@@ -21,131 +21,131 @@ load_helper epm-query
 
 __epm_info_rpm_low()
 {
-	if [ -n "$pkg_files" ] ; then
-		docmd rpm -qip $pkg_files
-	fi
-	[ -z "$pkg_names" ] && return
-	is_installed $pkg_names && docmd rpm -qi $pkg_names && return
+    if [ -n "$pkg_files" ] ; then
+        docmd rpm -qip $pkg_files
+    fi
+    [ -z "$pkg_names" ] && return
+    is_installed $pkg_names && docmd rpm -qi $pkg_names && return
 }
 
 __epm_info_by_pkgtype()
 {
-	[ -n "$pkg_files" ] || return 1
+    [ -n "$pkg_files" ] || return 1
 
-	case $(get_package_type $pkg_files) in
-		rpm)
-			__epm_info_rpm_low && return
-			;;
-		deb)
-			docmd dpkg -I $pkg_files
-			;;
-		*)
-			return 1
-			;;
-	esac
+    case $(get_package_type $pkg_files) in
+        rpm)
+            __epm_info_rpm_low && return
+            ;;
+        deb)
+            docmd dpkg -I $pkg_files
+            ;;
+        *)
+            return 1
+            ;;
+    esac
 }
 
 __epm_info_by_pmtype()
 {
 case $PMTYPE in
-	apt-dpkg)
-		if [ -n "$pkg_files" ] ; then
-			docmd dpkg -I $pkg_files
-		fi
-		[ -z "$pkg_names" ] && return
-		is_installed $pkg_names && docmd dpkg -p $pkg_names && return
-		docmd apt-cache show $pkg_names
-		;;
-	aptitude-dpkg)
-		if [ -n "$pkg_files" ] ; then
-			docmd dpkg -I $pkg_files
-		fi
-		[ -z "$pkg_names" ] && return
-		docmd aptitude show $pkg_names
-		;;
-	*-rpm)
-		__epm_info_rpm_low && return
-		case $PMTYPE in
-			apt-rpm)
-				docmd apt-cache show $pkg_names
-				;;
-			packagekit)
-				docmd pkcon get-details $pkg_names
-				;;
-			yum-rpm)
-				docmd yum info $pkg_names
-				;;
-			urpmi-rpm)
-				docmd urpmq -i $pkg_names
-				;;
-			dnf-rpm)
-				docmd dnf info $pkg_names
-				;;
-			zypper-rpm)
-				docmd zypper info $pkg_names
-				;;
-			*)
-				warning "Unknown command for $PMTYPE"
-				;;
-		esac
-		;;
-	packagekit)
-		# TODO: get-details-local
-		docmd pkcon get-details $pkg_names
-		;;
-	pacman)
-		is_installed $pkg_names && docmd pacman -Qi $pkg_names && return
-		docmd pacman -Si $pkg_names
-		;;
-	aura)
-		is_installed $pkg_names && docmd pacman -Qi $pkg_names && return
-		docmd aura -Ai $pkg_names
-		;;
-	npackd)
-		# FIXME: --version=
-		docmd npackdcl info --package=$pkg_names
-		;;
-	conary)
-		is_installed $pkg_names && docmd conary query $pkg_names --info && return
-		docmd conary repquery $pkg_names --info
-		;;
-	emerge)
-		assure_exists equery
-		docmd equery meta $pkg_names
-		docmd equery which $pkg_names
-		docmd equery uses $pkg_names
-		docmd equery size $pkg_names
-		;;
-	slackpkg)
-		docmd /usr/sbin/slackpkg info $pkg_names
-		;;
-	opkg)
-		docmd opkg info $pkg_names
-		;;
-	pkgng)
-		docmd pkg info $pkg_names
-		;;
-	xbps)
-		docmd xbps-query --show $pkg_names
-		;;
-	homebrew)
-		docmd brew info $pkg_names
-		;;
-	aptcyg)
-		docmd apt-cyg show $pkg_names
-		;;
-	winget)
-		docmd winget show $pkg_names
-		;;
-	eopkg)
-		docmd eopkg info $pkg_files $pkg_names
-		;;
-	appget)
-		docmd appget view $pkg_names
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
+    apt-dpkg)
+        if [ -n "$pkg_files" ] ; then
+            docmd dpkg -I $pkg_files
+        fi
+        [ -z "$pkg_names" ] && return
+        is_installed $pkg_names && docmd dpkg -p $pkg_names && return
+        docmd apt-cache show $pkg_names
+        ;;
+    aptitude-dpkg)
+        if [ -n "$pkg_files" ] ; then
+            docmd dpkg -I $pkg_files
+        fi
+        [ -z "$pkg_names" ] && return
+        docmd aptitude show $pkg_names
+        ;;
+    *-rpm)
+        __epm_info_rpm_low && return
+        case $PMTYPE in
+            apt-rpm)
+                docmd apt-cache show $pkg_names
+                ;;
+            packagekit)
+                docmd pkcon get-details $pkg_names
+                ;;
+            yum-rpm)
+                docmd yum info $pkg_names
+                ;;
+            urpmi-rpm)
+                docmd urpmq -i $pkg_names
+                ;;
+            dnf-rpm)
+                docmd dnf info $pkg_names
+                ;;
+            zypper-rpm)
+                docmd zypper info $pkg_names
+                ;;
+            *)
+                warning "Unknown command for $PMTYPE"
+                ;;
+        esac
+        ;;
+    packagekit)
+        # TODO: get-details-local
+        docmd pkcon get-details $pkg_names
+        ;;
+    pacman)
+        is_installed $pkg_names && docmd pacman -Qi $pkg_names && return
+        docmd pacman -Si $pkg_names
+        ;;
+    aura)
+        is_installed $pkg_names && docmd pacman -Qi $pkg_names && return
+        docmd aura -Ai $pkg_names
+        ;;
+    npackd)
+        # FIXME: --version=
+        docmd npackdcl info --package=$pkg_names
+        ;;
+    conary)
+        is_installed $pkg_names && docmd conary query $pkg_names --info && return
+        docmd conary repquery $pkg_names --info
+        ;;
+    emerge)
+        assure_exists equery
+        docmd equery meta $pkg_names
+        docmd equery which $pkg_names
+        docmd equery uses $pkg_names
+        docmd equery size $pkg_names
+        ;;
+    slackpkg)
+        docmd /usr/sbin/slackpkg info $pkg_names
+        ;;
+    opkg)
+        docmd opkg info $pkg_names
+        ;;
+    pkgng)
+        docmd pkg info $pkg_names
+        ;;
+    xbps)
+        docmd xbps-query --show $pkg_names
+        ;;
+    homebrew)
+        docmd brew info $pkg_names
+        ;;
+    aptcyg)
+        docmd apt-cyg show $pkg_names
+        ;;
+    winget)
+        docmd winget show $pkg_names
+        ;;
+    eopkg)
+        docmd eopkg info $pkg_files $pkg_names
+        ;;
+    appget)
+        docmd appget view $pkg_names
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
 esac
 }
 

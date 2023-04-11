@@ -67,7 +67,7 @@ check_tty
 
 phelp()
 {
-	echo "$Descr
+    echo "$Descr
 $Usage
 
 Options:

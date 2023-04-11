@@ -25,18 +25,18 @@ alt_LISTS='/etc/apt/sources.list /etc/apt/sources.list.d/*.list'
 
 __epm_repoenable_alt()
 {
-	local rl
-	# ^rpm means full string
-	if rhas "$1" "\^rpm" ; then
-		rl="$(echo "$1" | sed -e 's|\^||')"
-	else
-		rl="$( epm --quiet --all repolist 2>/dev/null | grep -F "$1" | head -n1 | sed -e 's|[[:space:]]*#[[:space:]]*||' )"
-		[ -z "$rl" ] && warning "Can't find commented '$1' in the repos (see '# epm repolist' output)" && return 1
-	fi
-	echo "$rl" | while read rp ; do
-		[ -n "$dryrun" ] && echo "will uncomment $rp" && continue
-		sed -i -e "s|^[[:space:]]*#[[:space:]]*\($(sed_escape "$rl")\)|\1|" $alt_LISTS
-	done
+    local rl
+    # ^rpm means full string
+    if rhas "$1" "\^rpm" ; then
+        rl="$(echo "$1" | sed -e 's|\^||')"
+    else
+        rl="$( epm --quiet --all repolist 2>/dev/null | grep -F "$1" | head -n1 | sed -e 's|[[:space:]]*#[[:space:]]*||' )"
+        [ -z "$rl" ] && warning "Can't find commented '$1' in the repos (see '# epm repolist' output)" && return 1
+    fi
+    echo "$rl" | while read rp ; do
+        [ -n "$dryrun" ] && echo "will uncomment $rp" && continue
+        sed -i -e "s|^[[:space:]]*#[[:space:]]*\($(sed_escape "$rl")\)|\1|" $alt_LISTS
+    done
 }
 
 
@@ -44,26 +44,26 @@ epm_repoenable()
 {
 
 case $PMTYPE in
-	apt-rpm)
-		assure_root
-		__epm_repoenable_alt "$@"
-		;;
-	apt-dpkg|aptitude-dpkg)
-		print_apt_sources_list
-		;;
-	yum-rpm)
-		docmd yum repolist $verbose
-		[ -n "$verbose" ] || info "Use --verbose if you need detail information."
-		;;
-	dnf-rpm)
-		sudocmd dnf config-manager --disable $verbose "$@"
-		;;
-	eoget)
-		docmd eoget enable-repo "$@"
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
+    apt-rpm)
+        assure_root
+        __epm_repoenable_alt "$@"
+        ;;
+    apt-dpkg|aptitude-dpkg)
+        print_apt_sources_list
+        ;;
+    yum-rpm)
+        docmd yum repolist $verbose
+        [ -n "$verbose" ] || info "Use --verbose if you need detail information."
+        ;;
+    dnf-rpm)
+        sudocmd dnf config-manager --disable $verbose "$@"
+        ;;
+    eoget)
+        docmd eoget enable-repo "$@"
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
 esac
 
 }

@@ -23,75 +23,75 @@ load_helper epm-print
 
 epm_whatdepends()
 {
-	local CMD
-	[ -n "$pkg_files" ] && fatal "whatdepends does not handle files"
-	[ -n "$pkg_names" ] || fatal "whatdepends: package name is missed"
-	local pkg=$(print_name $pkg_names)
+    local CMD
+    [ -n "$pkg_files" ] && fatal "whatdepends does not handle files"
+    [ -n "$pkg_names" ] || fatal "whatdepends: package name is missed"
+    local pkg=$(print_name $pkg_names)
 
 # by package name
 case $PMTYPE in
-	apt-rpm)
-		if [ -z "$verbose" ] ; then
-			showcmd apt-cache whatdepends $pkg
-			if [ -n "$short" ] ; then
+    apt-rpm)
+        if [ -z "$verbose" ] ; then
+            showcmd apt-cache whatdepends $pkg
+            if [ -n "$short" ] ; then
 # TODO: use common converter from full name to short name
 # TODO: see print_pkgname
-				a= apt-cache whatdepends $pkg | grep "^  [^ ]" | sed -e "s|[0-9]*:||" | grep -E -v "(i586-|-debuginfo)" | sed -e 's|[@:].*||' -e "s|-[0-9].*||g" -e 's|^ *||' -e 's/\.32bit//g'
-			else
-				load_helper epm-query
-				a= apt-cache whatdepends $pkg | grep "^  [^ ]" | sed -e "s|[0-9]*:||" | grep -E -v "(i586-|-debuginfo)"
-			fi
-			return
-		fi
-		CMD="apt-cache whatdepends"
-		;;
-	apt-dpkg|aptitude-dpkg)
-		CMD="apt-cache rdepends"
-		;;
-	aptitude-dpkg)
-		CMD="aptitude why"
-		;;
-	packagekit)
-		CMD="pkcon depends-on"
-		;;
-	yum-rpm)
-		CMD="repoquery --whatrequires"
-		;;
-	urpm-rpm)
-		CMD="urpmq --whatrequires"
-		;;
-	dnf-rpm)
-		# check command: dnf repoquery --whatrequires
-		CMD="repoquery --whatrequires"
-		;;
-	emerge)
-		assure_exists equery
-		CMD="equery depends -a"
-		;;
-	homebrew)
-		CMD="brew uses"
-		;;
-	pkgng)
-		CMD="pkg info -r"
-		;;
-	aptcyg)
-		CMD="apt-cyg rdepends"
-		;;
-	opkg)
-		CMD="opkg whatdepends"
-		;;
-	eopkg)
-		showcmd eopkg info $pkg
-		# eopkg info prints it only from repo info
-		a= eopkg info $pkg | grep "^Reverse Dependencies" | sed -e "s|Reverse Dependencies[[:space:]]*: ||" | grep -v "^$"
-		return
-		;;
-	xbps)
-		CMD="xbps-query -X"
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
+                a= apt-cache whatdepends $pkg | grep "^  [^ ]" | sed -e "s|[0-9]*:||" | grep -E -v "(i586-|-debuginfo)" | sed -e 's|[@:].*||' -e "s|-[0-9].*||g" -e 's|^ *||' -e 's/\.32bit//g'
+            else
+                load_helper epm-query
+                a= apt-cache whatdepends $pkg | grep "^  [^ ]" | sed -e "s|[0-9]*:||" | grep -E -v "(i586-|-debuginfo)"
+            fi
+            return
+        fi
+        CMD="apt-cache whatdepends"
+        ;;
+    apt-dpkg|aptitude-dpkg)
+        CMD="apt-cache rdepends"
+        ;;
+    aptitude-dpkg)
+        CMD="aptitude why"
+        ;;
+    packagekit)
+        CMD="pkcon depends-on"
+        ;;
+    yum-rpm)
+        CMD="repoquery --whatrequires"
+        ;;
+    urpm-rpm)
+        CMD="urpmq --whatrequires"
+        ;;
+    dnf-rpm)
+        # check command: dnf repoquery --whatrequires
+        CMD="repoquery --whatrequires"
+        ;;
+    emerge)
+        assure_exists equery
+        CMD="equery depends -a"
+        ;;
+    homebrew)
+        CMD="brew uses"
+        ;;
+    pkgng)
+        CMD="pkg info -r"
+        ;;
+    aptcyg)
+        CMD="apt-cyg rdepends"
+        ;;
+    opkg)
+        CMD="opkg whatdepends"
+        ;;
+    eopkg)
+        showcmd eopkg info $pkg
+        # eopkg info prints it only from repo info
+        a= eopkg info $pkg | grep "^Reverse Dependencies" | sed -e "s|Reverse Dependencies[[:space:]]*: ||" | grep -v "^$"
+        return
+        ;;
+    xbps)
+        CMD="xbps-query -X"
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
 esac
 
 docmd $CMD $pkg

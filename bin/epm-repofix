@@ -22,104 +22,104 @@ load_helper epm-query
 
 __replace_text_in_alt_repo()
 {
-	local i
-	for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
-		[ -s "$i" ] || continue
-		# TODO: don't change file if untouched
-		#grep -q -- "$1" "$i" || continue
-		regexp_subst "$1" "$i"
-	done
+    local i
+    for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
+        [ -s "$i" ] || continue
+        # TODO: don't change file if untouched
+        #grep -q -- "$1" "$i" || continue
+        regexp_subst "$1" "$i"
+    done
 }
 
 __repofix_check_vendor()
 {
-	local i
-	for i in /etc/apt/vendors.list.d/*.list; do
-		[ -e "$i" ] || continue
-		grep -q "^simple-key \"$1\"" $i && return
-	done
-	return 1
+    local i
+    for i in /etc/apt/vendors.list.d/*.list; do
+        [ -e "$i" ] || continue
+        grep -q "^simple-key \"$1\"" $i && return
+    done
+    return 1
 }
 
 __repofix_filter_vendor()
 {
-	local br="$1"
-	br="$(echo "$br" | sed -e "s|\..*||")"
-	case $br in
-		c8*)
-			br="cert8"
-			;;
-		c9*)
-			br="cert9"
-			;;
-		Sisyphus)
-			br="alt"
-			;;
-	esac
-	echo "$br"
+    local br="$1"
+    br="$(echo "$br" | sed -e "s|\..*||")"
+    case $br in
+        c8*)
+            br="cert8"
+            ;;
+        c9*)
+            br="cert9"
+            ;;
+        Sisyphus)
+            br="alt"
+            ;;
+    esac
+    echo "$br"
 }
 
 
 __replace_alt_version_in_repo()
 {
-	local i
-	assure_exists apt-repo
-	#echo "Upgrading $DISTRNAME from $1 to $2 ..."
-	a='' apt-repo list | sed -E -e "s|($1)|{\1}->{$2}|g" | grep -E --color -- "$1"
-	# ask and replace only we will have changes
-	if a='' apt-repo list | grep -E -q -- "$1" ; then
-		__replace_text_in_alt_repo "/^ *#/! s!$1!$2!g"
-	fi
-	#docmd apt-repo list
+    local i
+    assure_exists apt-repo
+    #echo "Upgrading $DISTRNAME from $1 to $2 ..."
+    a='' apt-repo list | sed -E -e "s|($1)|{\1}->{$2}|g" | grep -E --color -- "$1"
+    # ask and replace only we will have changes
+    if a='' apt-repo list | grep -E -q -- "$1" ; then
+        __replace_text_in_alt_repo "/^ *#/! s!$1!$2!g"
+    fi
+    #docmd apt-repo list
 }
 
 __alt_replace_sign_name()
 {
-	local TO="$1"
-	__replace_text_in_alt_repo "/^ *#/! s!\[alt\]!$TO!g"
-	__replace_text_in_alt_repo "/^ *#/! s!\[sisyphus\]!$TO!g"
-	__replace_text_in_alt_repo "/^ *#/! s!\[updates\]!$TO!g"
-	__replace_text_in_alt_repo "/^ *#/! s!\[cert[789]\]!$TO!g"
-	__replace_text_in_alt_repo "/^ *#/! s!\[p10\.?[0-9]?\]!$TO!g"
-	__replace_text_in_alt_repo "/^ *#/! s!\[[tpc][6-9]\.?[0-9]?\]!$TO!g"
+    local TO="$1"
+    __replace_text_in_alt_repo "/^ *#/! s!\[alt\]!$TO!g"
+    __replace_text_in_alt_repo "/^ *#/! s!\[sisyphus\]!$TO!g"
+    __replace_text_in_alt_repo "/^ *#/! s!\[updates\]!$TO!g"
+    __replace_text_in_alt_repo "/^ *#/! s!\[cert[789]\]!$TO!g"
+    __replace_text_in_alt_repo "/^ *#/! s!\[p10\.?[0-9]?\]!$TO!g"
+    __replace_text_in_alt_repo "/^ *#/! s!\[[tpc][6-9]\.?[0-9]?\]!$TO!g"
 }
 
 __alt_repofix()
 {
-	local TO="$1"
-	epm --quiet repo fix >/dev/null
-	if [ -n "$TO" ] ; then
-		# TODO: switch it in repo code
-		TO="$(__repofix_filter_vendor "$TO")"
-		__alt_replace_sign_name "[$TO]"
-	fi
+    local TO="$1"
+    epm --quiet repo fix >/dev/null
+    if [ -n "$TO" ] ; then
+        # TODO: switch it in repo code
+        TO="$(__repofix_filter_vendor "$TO")"
+        __alt_replace_sign_name "[$TO]"
+    fi
 }
 
 #__switch_repo_to()
 epm_reposwitch()
 {
-	local TO="$1"
-	[ -n "$TO" ] || fatal "run repo switch with arg (p9, p10, Sisyphus)"
-	[ "$TO" = "sisyphus" ] && TO="Sisyphus"
-	if [ "$TO" = "Sisyphus" ] ; then
-		__replace_alt_version_in_repo "[tpc][5-9]\.?[0-9]?/branch/" "$TO/"
-		__replace_alt_version_in_repo "p10\.?[0-9]?/branch/" "$TO/"
-	else
-		__replace_alt_version_in_repo "Sisyphus/" "$TO/branch/"
-		__replace_alt_version_in_repo "[tpc][5-9]\.?[0-9]?/branch/" "$TO/branch/"
-		if [ "$TO" != "p10" ] ; then
-			__replace_alt_version_in_repo "p10\.?[0-9]?/branch/" "$TO/branch/"
-		fi
-	fi
+    local TO="$1"
+    [ -n "$TO" ] || fatal "run repo switch with arg (p9, p10, Sisyphus)"
+    [ "$TO" = "sisyphus" ] && TO="Sisyphus"
+    if [ "$TO" = "Sisyphus" ] ; then
+        __replace_alt_version_in_repo "[tpc][5-9]\.?[0-9]?/branch/" "$TO/"
+        __replace_alt_version_in_repo "p10\.?[0-9]?/branch/" "$TO/"
+    else
+        __replace_alt_version_in_repo "Sisyphus/" "$TO/branch/"
+        __replace_alt_version_in_repo "[tpc][5-9]\.?[0-9]?/branch/" "$TO/branch/"
+        if [ "$TO" != "p10" ] ; then
+            __replace_alt_version_in_repo "p10\.?[0-9]?/branch/" "$TO/branch/"
+        fi
+    fi
 
-	__alt_repofix "$TO"
+    __alt_repofix "$TO"
 
-	if [ "$TO" = "p10" ] ; then
-		echo '%_priority_distbranch p10' >/etc/rpm/macros.d/p10
-	else
-		rm -fv /etc/rpm/macros.d/p10
-	fi
-	#epm repo list
+    if [ "$TO" = "p10" ] ; then
+        echo '%_priority_distbranch p10' >/etc/rpm/macros.d/p10
+    else
+        rm -fv /etc/rpm/macros.d/p10
+    fi
+    #epm repo list
 }
 
 
@@ -127,107 +127,107 @@ epm_reposwitch()
 # example: /etc/apt/source.list p7 ALTLinux\/Sisyphus
 __try_fix_apt_source_list()
 {
-	local list="$1"
-	local br="$(__repofix_filter_vendor "$2")"
-	local path="$3"
-	if grep -q -e "^[^#].*$path" $list ; then
-		if __repofix_check_vendor $br ; then
-			regexp_subst "/$path/s/^rpm[[:space:]]*([fhr])/rpm [$br] \1/" $list
-		else
-			warning "Skip set $br vendor key (it is missed) for $list"
-			regexp_subst "/$path/s/^rpm[[:space:]]*\[$br\][[:space:]]*([fhr])/rpm \1/" $list
-		fi
-	fi
+    local list="$1"
+    local br="$(__repofix_filter_vendor "$2")"
+    local path="$3"
+    if grep -q -e "^[^#].*$path" $list ; then
+        if __repofix_check_vendor $br ; then
+            regexp_subst "/$path/s/^rpm[[:space:]]*([fhr])/rpm [$br] \1/" $list
+        else
+            warning "Skip set $br vendor key (it is missed) for $list"
+            regexp_subst "/$path/s/^rpm[[:space:]]*\[$br\][[:space:]]*([fhr])/rpm \1/" $list
+        fi
+    fi
 }
 
 __fix_alt_sources_list()
 {
-	# for beauty spaces
-	local SUBST_ALT_RULE1='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ]*(Sisyphus)[/ ](x86_64|i586|x86_64-i586|noarch|aarch64) !\1 \2/\3/\4 !gi'
-	local SUBST_ALT_RULE2='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ]*([tcp][6-9]\.?[0-9]?[/ ]branch|[tcp]1[012][/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch|aarch64) !\1 \2/\3/\4 !gi'
-	local i
+    # for beauty spaces
+    local SUBST_ALT_RULE1='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ]*(Sisyphus)[/ ](x86_64|i586|x86_64-i586|noarch|aarch64) !\1 \2/\3/\4 !gi'
+    local SUBST_ALT_RULE2='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ]*([tcp][6-9]\.?[0-9]?[/ ]branch|[tcp]1[012][/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch|aarch64) !\1 \2/\3/\4 !gi'
+    local i
 
-	for i in "$@" ; do
-		[ -s "$i" ] || continue
-		#perl -i.bak -pe "$SUBST_ALT_RULE" $i
-		# TODO: only for uncommented strings
-		#sed -i -r -e "$SUBST_ALT_RULE" $i
-		regexp_subst "/^ *#/! s| pub|/pub|" $i
-		regexp_subst "/^ *#/! $SUBST_ALT_RULE1" $i
-		regexp_subst "/^ *#/! $SUBST_ALT_RULE2" $i
+    for i in "$@" ; do
+        [ -s "$i" ] || continue
+        #perl -i.bak -pe "$SUBST_ALT_RULE" $i
+        # TODO: only for uncommented strings
+        #sed -i -r -e "$SUBST_ALT_RULE" $i
+        regexp_subst "/^ *#/! s| pub|/pub|" $i
+        regexp_subst "/^ *#/! $SUBST_ALT_RULE1" $i
+        regexp_subst "/^ *#/! $SUBST_ALT_RULE2" $i
 
-		# Sisyphus uses 'alt' vendor key
-		__try_fix_apt_source_list $i alt "ALTLinux\/Sisyphus"
-		__try_fix_apt_source_list $i etersoft "Etersoft\/Sisyphus"
+        # Sisyphus uses 'alt' vendor key
+        __try_fix_apt_source_list $i alt "ALTLinux\/Sisyphus"
+        __try_fix_apt_source_list $i etersoft "Etersoft\/Sisyphus"
 
-		# skip branch replacement for ALT Linux Sisyphus
-		[ "$DISTRVERSION" = "Sisyphus" ] && continue
+        # skip branch replacement for ALT Linux Sisyphus
+        [ "$DISTRVERSION" = "Sisyphus" ] && continue
 
-		# add signs for branches
-		__try_fix_apt_source_list $i $DISTRVERSION "ALTLinux\/$DISTRVERSION\/branch"
-		__try_fix_apt_source_list $i etersoft "Etersoft\/$DISTRVERSION\/branch"
-	done
+        # add signs for branches
+        __try_fix_apt_source_list $i $DISTRVERSION "ALTLinux\/$DISTRVERSION\/branch"
+        __try_fix_apt_source_list $i etersoft "Etersoft\/$DISTRVERSION\/branch"
+    done
 }
 
 __subst_with_etersoft_url()
 {
-	local NURL="http://download.etersoft.ru/pub ALTLinux"
-	echo "$1" | sed \
-		-e "s|h\?f\?t\?tp://ftp.altlinux.org/pub/distributions/* ALTLinux|$NURL|" \
-		-e "s|h\?f\?t\?tp://ftp.basealt.ru/pub/distributions/* ALTLinux|$NURL|" \
-		-e "s|h\?f\?t\?tp://mirror.yandex.ru/* altlinux|$NURL|"
+    local NURL="http://download.etersoft.ru/pub ALTLinux"
+    echo "$1" | sed \
+        -e "s|h\?f\?t\?tp://ftp.altlinux.org/pub/distributions/* ALTLinux|$NURL|" \
+        -e "s|h\?f\?t\?tp://ftp.basealt.ru/pub/distributions/* ALTLinux|$NURL|" \
+        -e "s|h\?f\?t\?tp://mirror.yandex.ru/* altlinux|$NURL|"
 }
 
 __subst_with_yandex_url()
 {
-	local NURL="http://mirror.yandex.ru altlinux"
-	echo "$1" | sed \
-		-e "s|h\?f\?t\?tp://ftp.altlinux.org/pub/distributions/* ALTLinux|$NURL|" \
-		-e "s|h\?f\?t\?tp://ftp.basealt.ru/pub/distributions/* ALTLinux|$NURL|" \
-		-e "s|h\?f\?t\?tp://ftp.etersoft.ru/pub/* ALTLinux|$NURL|" \
-		-e "s|h\?f\?t\?tp://download.etersoft.ru/pub/* ALTLinux|$NURL|"
+    local NURL="http://mirror.yandex.ru altlinux"
+    echo "$1" | sed \
+        -e "s|h\?f\?t\?tp://ftp.altlinux.org/pub/distributions/* ALTLinux|$NURL|" \
+        -e "s|h\?f\?t\?tp://ftp.basealt.ru/pub/distributions/* ALTLinux|$NURL|" \
+        -e "s|h\?f\?t\?tp://ftp.etersoft.ru/pub/* ALTLinux|$NURL|" \
+        -e "s|h\?f\?t\?tp://download.etersoft.ru/pub/* ALTLinux|$NURL|"
 }
 
 __subst_with_basealt_url()
 {
-	local NURL="http://ftp.basealt.ru/pub/distributions ALTLinux"
-	echo "$1" | sed \
-		-e "s|h\?f\?t\?tp://mirror.yandex.ru/* altlinux|$NURL|" \
-		-e "s|h\?f\?t\?tp://ftp.etersoft.ru/pub/* ALTLinux|$NURL|" \
-		-e "s|h\?f\?t\?tp://download.etersoft.ru/pub/* ALTLinux|$NURL|"
+    local NURL="http://ftp.basealt.ru/pub/distributions ALTLinux"
+    echo "$1" | sed \
+        -e "s|h\?f\?t\?tp://mirror.yandex.ru/* altlinux|$NURL|" \
+        -e "s|h\?f\?t\?tp://ftp.etersoft.ru/pub/* ALTLinux|$NURL|" \
+        -e "s|h\?f\?t\?tp://download.etersoft.ru/pub/* ALTLinux|$NURL|"
 }
 
 __fix_repo_to_etersoft()
 {
-	local NN
-	a="" apt-repo list | grep -v debuginfo | grep -v etersoft | grep -v "file:/" | while read nn ; do
-		NN="$(__subst_with_etersoft_url "$nn")"
-		[ "$NN" = "$nn" ] && continue
-		epm removerepo "$nn"
-		epm addrepo "$NN"
-	done
+    local NN
+    a="" apt-repo list | grep -v debuginfo | grep -v etersoft | grep -v "file:/" | while read nn ; do
+        NN="$(__subst_with_etersoft_url "$nn")"
+        [ "$NN" = "$nn" ] && continue
+        epm removerepo "$nn"
+        epm addrepo "$NN"
+    done
 }
 
 __fix_repo_to_yandex()
 {
-	local NN
-	a="" apt-repo list | grep -v debuginfo | grep -v mirror\.yandex | grep -v "file:/" | while read nn ; do
-		NN="$(__subst_with_yandex_url "$nn")"
-		[ "$NN" = "$nn" ] && continue
-		epm removerepo "$nn"
-		epm addrepo "$NN"
-	done
+    local NN
+    a="" apt-repo list | grep -v debuginfo | grep -v mirror\.yandex | grep -v "file:/" | while read nn ; do
+        NN="$(__subst_with_yandex_url "$nn")"
+        [ "$NN" = "$nn" ] && continue
+        epm removerepo "$nn"
+        epm addrepo "$NN"
+    done
 }
 
 __fix_repo_to_basealt()
 {
-	local NN
-	a="" apt-repo list | grep -v debuginfo | grep -v ftp.basealt | grep -v "file:/" | while read nn ; do
-		NN="$(__subst_with_basealt_url "$nn")"
-		[ "$NN" = "$nn" ] && continue
-		epm removerepo "$nn"
-		epm addrepo "$NN"
-	done
+    local NN
+    a="" apt-repo list | grep -v debuginfo | grep -v ftp.basealt | grep -v "file:/" | while read nn ; do
+        NN="$(__subst_with_basealt_url "$nn")"
+        [ "$NN" = "$nn" ] && continue
+        epm removerepo "$nn"
+        epm addrepo "$NN"
+    done
 }
 
 
@@ -235,38 +235,38 @@ epm_repofix()
 {
 
 case $BASEDISTRNAME in
-	"alt")
-		assure_exists apt-repo
-		[ -n "$quiet" ] || docmd apt-repo list
-		assure_root
-		__fix_alt_sources_list /etc/apt/sources.list
-		__fix_alt_sources_list /etc/apt/sources.list.d/*.list
+    "alt")
+        assure_exists apt-repo
+        [ -n "$quiet" ] || docmd apt-repo list
+        assure_root
+        __fix_alt_sources_list /etc/apt/sources.list
+        __fix_alt_sources_list /etc/apt/sources.list.d/*.list
         # TODO: move to repo change
-		if [ "$1" = "etersoft" ] ; then
-			__fix_repo_to_etersoft /etc/apt/sources.list
-			__fix_repo_to_etersoft /etc/apt/sources.list.d/*.list
-		fi
-		if [ "$1" = "yandex" ] ; then
-			__fix_repo_to_yandex /etc/apt/sources.list
-			__fix_repo_to_yandex /etc/apt/sources.list.d/*.list
-		fi
-		if [ "$1" = "basealt" ] ; then
-			__fix_repo_to_basealt /etc/apt/sources.list
-			__fix_repo_to_basealt /etc/apt/sources.list.d/*.list
-		fi
-		docmd apt-repo list
-		return
-		;;
+        if [ "$1" = "etersoft" ] ; then
+            __fix_repo_to_etersoft /etc/apt/sources.list
+            __fix_repo_to_etersoft /etc/apt/sources.list.d/*.list
+        fi
+        if [ "$1" = "yandex" ] ; then
+            __fix_repo_to_yandex /etc/apt/sources.list
+            __fix_repo_to_yandex /etc/apt/sources.list.d/*.list
+        fi
+        if [ "$1" = "basealt" ] ; then
+            __fix_repo_to_basealt /etc/apt/sources.list
+            __fix_repo_to_basealt /etc/apt/sources.list.d/*.list
+        fi
+        docmd apt-repo list
+        return
+        ;;
 esac
 
 case $PMTYPE in
-#	apt-rpm)
-#		;;
-#	yum-rpm|dnf-rpm)
-#		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
+#    apt-rpm)
+#        ;;
+#    yum-rpm|dnf-rpm)
+#        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
 esac
 
 }

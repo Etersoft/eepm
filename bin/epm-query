@@ -23,309 +23,309 @@ load_helper epm-print
 # pkg suffix
 __print_with_arch_suffix()
 {
-	local pkg="$1"
-	local suffix="$2"
-	[ -n "$pkg" ] || return 1
-	# do not change if some suffix already exists
-	echo "$pkg" | grep -q "(x86-32)$" && echo "$pkg" | sed -e "s|(x86-32)$|.i686|" && return 1
-	echo "$pkg" | grep "\.x86_64$" && return 1
-	echo "$pkg" | grep "\.noarch$" && return 1
-	echo "$pkg" | grep "\.i[56]86$" && return 1
-	echo "$pkg$suffix"
+    local pkg="$1"
+    local suffix="$2"
+    [ -n "$pkg" ] || return 1
+    # do not change if some suffix already exists
+    echo "$pkg" | grep -q "(x86-32)$" && echo "$pkg" | sed -e "s|(x86-32)$|.i686|" && return 1
+    echo "$pkg" | grep "\.x86_64$" && return 1
+    echo "$pkg" | grep "\.noarch$" && return 1
+    echo "$pkg" | grep "\.i[56]86$" && return 1
+    echo "$pkg$suffix"
 }
 
 # add suffix .x86_64 if we have 64 arch
 exp_with_arch_suffix()
 {
-	local suffix
+    local suffix
 
-	[ "$($DISTRVENDOR -a)" = "x86_64" ] || { cat ; return ; }
-	[ "$DISTRNAME" = "ROSA" ] &&  { cat ; return ; }
+    [ "$($DISTRVENDOR -a)" = "x86_64" ] || { cat ; return ; }
+    [ "$DISTRNAME" = "ROSA" ] &&  { cat ; return ; }
 
-	# TODO: it is ok for ALT rpm to remove with this suffix
-	# TODO: separate install and remove?
-	case $PMTYPE in
-		yum-rpm|dnf-rpm)
-			suffix=".x86_64"
-			;;
-		*)
-			cat
-			return
-			;;
-	esac
+    # TODO: it is ok for ALT rpm to remove with this suffix
+    # TODO: separate install and remove?
+    case $PMTYPE in
+        yum-rpm|dnf-rpm)
+            suffix=".x86_64"
+            ;;
+        *)
+            cat
+            return
+            ;;
+    esac
 
-	# TODO: use estrlist or some function to do it
-	local pkg
-	for pkg in $(cat) ; do
-		local p
-		# check only packages without arch
-		p="$(__print_with_arch_suffix "$pkg" .i686)" || { echo "$pkg" ; continue ; }
-		# add arch suffix only if arch package already installed (otherwise we don't know package arch)
-		is_installed "$p" || { echo "$pkg" ; continue ; }
-		echo "$pkg.x86_64"
-	done
+    # TODO: use estrlist or some function to do it
+    local pkg
+    for pkg in $(cat) ; do
+        local p
+        # check only packages without arch
+        p="$(__print_with_arch_suffix "$pkg" .i686)" || { echo "$pkg" ; continue ; }
+        # add arch suffix only if arch package already installed (otherwise we don't know package arch)
+        is_installed "$p" || { echo "$pkg" ; continue ; }
+        echo "$pkg.x86_64"
+    done
 }
 
 
 _get_grep_exp()
 {
-	local def="^$1$"
-	[ "$PMTYPE" != "emerge" ] && echo "$def" && return
-	# Gentoo hack: support for short package form
-	echo "$1" | grep -q "/" && echo "$def" && return
-	echo "/$1$"
+    local def="^$1$"
+    [ "$PMTYPE" != "emerge" ] && echo "$def" && return
+    # Gentoo hack: support for short package form
+    echo "$1" | grep -q "/" && echo "$def" && return
+    echo "/$1$"
 }
 
 # TODO: combine with -qa (the difference only in return status now)
 _shortquery_via_packages_list()
 {
-	local res=1
-	local grepexp
-	local firstpkg=$1
-	shift
+    local res=1
+    local grepexp
+    local firstpkg=$1
+    shift
 
-	grepexp=$(_get_grep_exp $firstpkg)
+    grepexp=$(_get_grep_exp $firstpkg)
 
-	# TODO: we miss status due grep
-	# Note: double call due stderr redirect
-	# Note: we use short=1 here due grep by ^name$
-	# separate first line for print out command
-	(short=1 pkg_filenames=$firstpkg epm_packages | grep -- "$grepexp") && res=0 || res=1
+    # TODO: we miss status due grep
+    # Note: double call due stderr redirect
+    # Note: we use short=1 here due grep by ^name$
+    # separate first line for print out command
+    (short=1 pkg_filenames=$firstpkg epm_packages | grep -- "$grepexp") && res=0 || res=1
 
-	local pkg
-	for pkg in "$@" ; do
-		grepexp=$(_get_grep_exp $pkg)
-		(short=1 pkg_filenames=$pkg epm_packages 2>/dev/null) | grep -- "$grepexp" || res=1
-	done
+    local pkg
+    for pkg in "$@" ; do
+        grepexp=$(_get_grep_exp $pkg)
+        (short=1 pkg_filenames=$pkg epm_packages 2>/dev/null) | grep -- "$grepexp" || res=1
+    done
 
-	# TODO: print in query (for user): 'warning: package $pkg is not installed'
-	return $res
+    # TODO: print in query (for user): 'warning: package $pkg is not installed'
+    return $res
 }
 
 # Note: modified from _shortquery_via_packages_list
 # TODO: non optimal double epm packages call
 _query_via_packages_list()
 {
-	local res=1
-	local grepexp
-	local firstpkg=$1
-	shift
+    local res=1
+    local grepexp
+    local firstpkg=$1
+    shift
 
-	grepexp=$(_get_grep_exp $firstpkg)
+    grepexp=$(_get_grep_exp $firstpkg)
 
-	# TODO: we miss status due grep
-	# TODO: grep correctly
-	# Note: double call due stderr redirect
-	# Note: we use short=1 here due grep by ^name$
-	# separate first line for print out command
-	(short=1 pkg_filenames=$firstpkg epm_packages) | grep -q -- "$grepexp" && (quiet=1 pkg_filenames=$firstpkg epm_packages) && res=0 || res=1
+    # TODO: we miss status due grep
+    # TODO: grep correctly
+    # Note: double call due stderr redirect
+    # Note: we use short=1 here due grep by ^name$
+    # separate first line for print out command
+    (short=1 pkg_filenames=$firstpkg epm_packages) | grep -q -- "$grepexp" && (quiet=1 pkg_filenames=$firstpkg epm_packages) && res=0 || res=1
 
-	local pkg
-	for pkg in "$@" ; do
-		grepexp=$(_get_grep_exp $pkg)
-		(short=1 pkg_filenames=$pkg epm_packages 2>/dev/null) | grep -q -- "$grepexp" && (quiet=1 pkg_filenames=$pkg epm_packages) || res=1
-	done
+    local pkg
+    for pkg in "$@" ; do
+        grepexp=$(_get_grep_exp $pkg)
+        (short=1 pkg_filenames=$pkg epm_packages 2>/dev/null) | grep -q -- "$grepexp" && (quiet=1 pkg_filenames=$pkg epm_packages) || res=1
+    done
 
-	return $res
+    return $res
 }
 
 # internal use only, for installed package
 __epm_get_hilevel_nameform()
 {
-	[ -n "$*" ] || return
+    [ -n "$*" ] || return
 
-	case $PMTYPE in
-		apt-rpm)
-			# use # as delimeter for apt
-			local pkg
-			pkg=$(rpm -q --queryformat "%{NAME}=%{SERIAL}:%{VERSION}-%{RELEASE}\n" -- $1)
-			# for case if serial is missed
-			echo $pkg | grep -q "(none)" && pkg=$(rpm -q --queryformat "%{NAME}#%{VERSION}-%{RELEASE}\n" -- $1)
-			# HACK: can use only for multiple install packages like kernel
-			echo $pkg | grep -q kernel || return 1
-			echo $pkg
-			return
-			;;
-		yum-rpm|dnf-rpm)
-			# just use strict version with Epoch and Serial
-			local pkg
-			#pkg=$(rpm -q --queryformat "%{EPOCH}:%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" -- $1)
-			#echo $pkg | grep -q "(none)" && pkg=$(rpm -q --queryformat "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" -- $1)
-			pkg=$(rpm -q --queryformat "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" -- $1)
-			echo $pkg
-			return
-			;;
-		*)
-			return 1
-			;;
-	esac
+    case $PMTYPE in
+        apt-rpm)
+            # use # as delimeter for apt
+            local pkg
+            pkg=$(rpm -q --queryformat "%{NAME}=%{SERIAL}:%{VERSION}-%{RELEASE}\n" -- $1)
+            # for case if serial is missed
+            echo $pkg | grep -q "(none)" && pkg=$(rpm -q --queryformat "%{NAME}#%{VERSION}-%{RELEASE}\n" -- $1)
+            # HACK: can use only for multiple install packages like kernel
+            echo $pkg | grep -q kernel || return 1
+            echo $pkg
+            return
+            ;;
+        yum-rpm|dnf-rpm)
+            # just use strict version with Epoch and Serial
+            local pkg
+            #pkg=$(rpm -q --queryformat "%{EPOCH}:%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" -- $1)
+            #echo $pkg | grep -q "(none)" && pkg=$(rpm -q --queryformat "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" -- $1)
+            pkg=$(rpm -q --queryformat "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" -- $1)
+            echo $pkg
+            return
+            ;;
+        *)
+            return 1
+            ;;
+    esac
 }
 
 # for local installed packages only
 # used from epm remove
 __epm_get_hilevel_name()
 {
-	local i
-	for i in $@ ; do
-		local pkg
-		# get short form in pkg
-		# FIXME: where we use it? continue or pkg=$i?
-		quiet=1 pkg=$(__epm_query_shortname "$i") || pkg="$i" #continue # drop not installed packages
-		# if already short form, skipped
-		[ "$pkg" = "$i" ] && echo "$i" && continue
-		# try get long form or use short form
-		__epm_get_hilevel_nameform "$i" || echo $pkg
-	done
+    local i
+    for i in $@ ; do
+        local pkg
+        # get short form in pkg
+        # FIXME: where we use it? continue or pkg=$i?
+        quiet=1 pkg=$(__epm_query_shortname "$i") || pkg="$i" #continue # drop not installed packages
+        # if already short form, skipped
+        [ "$pkg" = "$i" ] && echo "$i" && continue
+        # try get long form or use short form
+        __epm_get_hilevel_nameform "$i" || echo $pkg
+    done
 }
 
 __epm_query_file()
 {
-	local CMD
+    local CMD
 
-	[ -z "$*" ] && return
+    [ -z "$*" ] && return
 
-	case $PMTYPE in
-		*-rpm)
-			CMD="rpm -qp"
-			[ -n "$short" ] && CMD="rpm -qp --queryformat %{name}\n"
-			;;
-		*-dpkg)
-			CMD="dpkg-deb --show --showformat=\${Package}-\${Version}\n"
-			[ -n "$short" ] && CMD="dpkg-query --show --showformat=\${Package}\n"
-			;;
-		*)
-			fatal "Do not know command for query file package"
-			;;
-	esac
+    case $PMTYPE in
+        *-rpm)
+            CMD="rpm -qp"
+            [ -n "$short" ] && CMD="rpm -qp --queryformat %{name}\n"
+            ;;
+        *-dpkg)
+            CMD="dpkg-deb --show --showformat=\${Package}-\${Version}\n"
+            [ -n "$short" ] && CMD="dpkg-query --show --showformat=\${Package}\n"
+            ;;
+        *)
+            fatal "Do not know command for query file package"
+            ;;
+    esac
 
-	docmd $CMD -- $@
+    docmd $CMD -- $@
 }
 
 # hack: dpkg -W will print names for removed packages too (until newest Ubuntu)
 __epm_query_dpkg_check()
 {
-	local i
-	for i in $@ ; do
-		a='' dpkg -s $i >/dev/null 2>/dev/null || return
-	done
-	return 0
+    local i
+    for i in $@ ; do
+        a='' dpkg -s $i >/dev/null 2>/dev/null || return
+    done
+    return 0
 }
 
 __epm_query_name()
 {
-	local CMD
+    local CMD
 
-	[ -z "$*" ] && return
+    [ -z "$*" ] && return
 
-	case $PMTYPE in
-		*-rpm)
-			CMD="rpm -q"
-			;;
-		*-dpkg)
-			#docmd dpkg -l $@ | grep "^ii"
-			#CMD="dpkg-query -W --showformat=\${Package}-\${Version}\n"
-			docmd dpkg-query -W "--showformat=\${Package}-\${Version}\n" -- $@ || return
-			__epm_query_dpkg_check $@ || return
-			return
-			;;
-		npackd)
-			docmd npackdcl path --package=$1
-			return
-			;;
-		conary)
-			CMD="conary query"
-			;;
-		eopkg)
-			showcmd eopkg blame $1
-			local str
-			str="$(a= eopkg blame $1 | grep "^Name")"
-			[ -n "$str" ] || return 1
-			echo "$str" | sed -e "s|Name[[:space:]]*: \(.*\), version: \(.*\), release: \(.*\)|\1-\2-\3|"
-			return
-			;;
-		#homebrew)
-		#	showcmd "brew info $1"
-		#	local HBRESULT
-		#	HBRESULT="$(brew info "$1" 2>/dev/null)" || return
-		#	echo "$HBRESULT" | grep -q "Not installed" && return 1
-		#	echo "$1"
-		#	return 0
-		#	;;
-		pacman)
-			docmd pacman -Q $@
-			return
-			;;
-		# TODO: need to print name if exists
-		#pkgng)
-		#	CMD="pkg info -e"
-		#	;;
-		# Note: slackpkg info pkgname
-		*)
-			# default slow workaround
-			_query_via_packages_list $@
-			return
-			;;
-	esac
+    case $PMTYPE in
+        *-rpm)
+            CMD="rpm -q"
+            ;;
+        *-dpkg)
+            #docmd dpkg -l $@ | grep "^ii"
+            #CMD="dpkg-query -W --showformat=\${Package}-\${Version}\n"
+            docmd dpkg-query -W "--showformat=\${Package}-\${Version}\n" -- $@ || return
+            __epm_query_dpkg_check $@ || return
+            return
+            ;;
+        npackd)
+            docmd npackdcl path --package=$1
+            return
+            ;;
+        conary)
+            CMD="conary query"
+            ;;
+        eopkg)
+            showcmd eopkg blame $1
+            local str
+            str="$(a= eopkg blame $1 | grep "^Name")"
+            [ -n "$str" ] || return 1
+            echo "$str" | sed -e "s|Name[[:space:]]*: \(.*\), version: \(.*\), release: \(.*\)|\1-\2-\3|"
+            return
+            ;;
+        #homebrew)
+        #    showcmd "brew info $1"
+        #    local HBRESULT
+        #    HBRESULT="$(brew info "$1" 2>/dev/null)" || return
+        #    echo "$HBRESULT" | grep -q "Not installed" && return 1
+        #    echo "$1"
+        #    return 0
+        #    ;;
+        pacman)
+            docmd pacman -Q $@
+            return
+            ;;
+        # TODO: need to print name if exists
+        #pkgng)
+        #    CMD="pkg info -e"
+        #    ;;
+        # Note: slackpkg info pkgname
+        *)
+            # default slow workaround
+            _query_via_packages_list $@
+            return
+            ;;
+    esac
 
-	docmd $CMD $@
+    docmd $CMD $@
 }
 
 __epm_query_shortname()
 {
-	local CMD
+    local CMD
 
-	[ -z "$*" ] && return
+    [ -z "$*" ] && return
 
-	case $PMTYPE in
-		*-rpm)
-			showcmd rpm -q --queryformat '%{name}\n' -- $@
-			a='' rpm -q --queryformat '%{name}\n' -- $@
-			return
-			;;
-		*-dpkg)
-			#CMD="dpkg-query -W --showformat=\${Package}\n"
-			docmd dpkg-query -W "--showformat=\${Package}\n" -- $@ || return
-			__epm_query_dpkg_check $@ || return
-			return
-			;;
-		npackd)
-			docmd npackdcl path --package=$1
-			return
-			;;
-		conary)
-			CMD="conary query"
-			;;
-		eopkg)
-			showcmd eopkg blame $1
-			local str
-			str="$(a= eopkg blame $1 | grep "^Name")"
-			[ -n "$str" ] || return 1
-			echo "$str" | sed -e "s|Name[[:space:]]*: \(.*\), version: \(.*\), release: \(.*\)|\1|"
-			return
-			;;
-		homebrew)
-			docmd brew info "$1" >/dev/null 2>/dev/null && echo "$1" && return
-			return 1
-			;;
-		# TODO: check status
-		#pacman)
-		#	docmd pacman -Q $@ | sed -e "s| .*||g"
-		#	return
-		#	;;
+    case $PMTYPE in
+        *-rpm)
+            showcmd rpm -q --queryformat '%{name}\n' -- $@
+            a='' rpm -q --queryformat '%{name}\n' -- $@
+            return
+            ;;
+        *-dpkg)
+            #CMD="dpkg-query -W --showformat=\${Package}\n"
+            docmd dpkg-query -W "--showformat=\${Package}\n" -- $@ || return
+            __epm_query_dpkg_check $@ || return
+            return
+            ;;
+        npackd)
+            docmd npackdcl path --package=$1
+            return
+            ;;
+        conary)
+            CMD="conary query"
+            ;;
+        eopkg)
+            showcmd eopkg blame $1
+            local str
+            str="$(a= eopkg blame $1 | grep "^Name")"
+            [ -n "$str" ] || return 1
+            echo "$str" | sed -e "s|Name[[:space:]]*: \(.*\), version: \(.*\), release: \(.*\)|\1|"
+            return
+            ;;
+        homebrew)
+            docmd brew info "$1" >/dev/null 2>/dev/null && echo "$1" && return
+            return 1
+            ;;
+        # TODO: check status
+        #pacman)
+        #    docmd pacman -Q $@ | sed -e "s| .*||g"
+        #    return
+        #    ;;
 
-		# TODO: need to print name if exists
-		#pkgng)
-		#	CMD="pkg info -e"
-		#	;;
-		# Note: slackpkg info pkgname
-		*)
-			# default slow workaround
-			_shortquery_via_packages_list $@
-			return
-			;;
-	esac
+        # TODO: need to print name if exists
+        #pkgng)
+        #    CMD="pkg info -e"
+        #    ;;
+        # Note: slackpkg info pkgname
+        *)
+            # default slow workaround
+            _shortquery_via_packages_list $@
+            return
+            ;;
+    esac
 
-	docmd $CMD $@
+    docmd $CMD $@
 }
 
 
@@ -335,21 +335,21 @@ __epm_query_shortname()
 # check if pkg is installed
 is_installed()
 {
-	(quiet=1 __epm_query_name "$@") >/dev/null 2>/dev/null
+    (quiet=1 __epm_query_name "$@") >/dev/null 2>/dev/null
 }
 
 
 epm_query()
 {
-	[ -n "$pkg_filenames" ] || fatal "Query: package name is missed"
+    [ -n "$pkg_filenames" ] || fatal "Query: package name is missed"
 
-	__epm_query_file $pkg_files || return
+    __epm_query_file $pkg_files || return
 
-	if [ -n "$short" ] ; then
-		# shellcheck disable=SC2046
-		__epm_query_shortname $(print_name $pkg_names) || return
-	else
-		# shellcheck disable=SC2046
-		__epm_query_name $(print_name $pkg_names) || return
-	fi
+    if [ -n "$short" ] ; then
+        # shellcheck disable=SC2046
+        __epm_query_shortname $(print_name $pkg_names) || return
+    else
+        # shellcheck disable=SC2046
+        __epm_query_name $(print_name $pkg_names) || return
+    fi
 }

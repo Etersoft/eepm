@@ -26,73 +26,73 @@ load_helper epm-repack
 
 __epm_pack()
 {
-	local packname="$1"
-	local tarname="$2"
-	returntarname=''
+    local packname="$1"
+    local tarname="$2"
+    returntarname=''
 
-	local repackcode="$EPM_PACK_SCRIPTS_DIR/$packname.sh"
-	[ -x "$repackcode" ] || fatal "Can't find script $repackcode for packname $packname"
-	[ -f "$repackcode.rpmnew" ] && warning "There is .rpmnew file(s) in $EPM_PACK_SCRIPTS_DIR dir. The pack script can be outdated."
+    local repackcode="$EPM_PACK_SCRIPTS_DIR/$packname.sh"
+    [ -x "$repackcode" ] || fatal "Can't find script $repackcode for packname $packname"
+    [ -f "$repackcode.rpmnew" ] && warning "There is .rpmnew file(s) in $EPM_PACK_SCRIPTS_DIR dir. The pack script can be outdated."
 
-	tmpdir=$(mktemp -d)
-	filefortarname="$tmpdir/filefortarname"
-	trap "rm -rf $tmpdir" EXIT
+    tmpdir=$(mktemp -d)
+    filefortarname="$tmpdir/filefortarname"
+    trap "rm -rf $tmpdir" EXIT
 
-	set_sudo
-	export SUDO
+    set_sudo
+    export SUDO
 
-	# TODO: inside () ?
-	export PATH=$PROGDIR:$PATH
+    # TODO: inside () ?
+    export PATH=$PROGDIR:$PATH
 
-	local bashopt=''
-	[ -n "$verbose" ] && bashopt='-x'
-	#info "Running $($script --description 2>/dev/null) ..."
-	( unset EPMCURDIR ; docmd $CMDSHELL $bashopt $repackcode "$tarname" "$filefortarname" ) || fatal
-	returntarname="$(cat "$filefortarname")" || fatal "pack script $repackcode didn't set tarname"
-	rm -rf $tmpdir
+    local bashopt=''
+    [ -n "$verbose" ] && bashopt='-x'
+    #info "Running $($script --description 2>/dev/null) ..."
+    ( unset EPMCURDIR ; docmd $CMDSHELL $bashopt $repackcode "$tarname" "$filefortarname" ) || fatal
+    returntarname="$(cat "$filefortarname")" || fatal "pack script $repackcode didn't set tarname"
+    rm -rf $tmpdir
 
-	[ -s "$returntarname" ] || fatal "pack script $repackcode didn't return tarname"
+    [ -s "$returntarname" ] || fatal "pack script $repackcode didn't return tarname"
 
-	#local newname="$(basename "$returntarname")"
+    #local newname="$(basename "$returntarname")"
 
-	# now it is by default in the current dir
-	#if [ "$returntarname" != "$(realpath $newname)" ; then
-	#	# repack put its result to the current dir
-	#	mv -v $returntarname . || fatal
-	#fi
+    # now it is by default in the current dir
+    #if [ "$returntarname" != "$(realpath $newname)" ; then
+    #    # repack put its result to the current dir
+    #    mv -v $returntarname . || fatal
+    #fi
 
-	if [ -n "$download_only" ] ; then
-		return
-	fi
+    if [ -n "$download_only" ] ; then
+        return
+    fi
 
-	trap "rm -v $returntarname" EXIT
+    trap "rm -v $returntarname" EXIT
 
-	# FIXME: __epm_repack will drop trap
-	repacked_pkgs=''
-	# repack to our target
-	if __epm_repack_if_needed $returntarname ; then
-		[ -n "$repacked_pkgs" ] || fatal "Can't repack $returntarname"
-	# if repack is forced or repack rule (not disabled) is exists
-	elif [ -n "$repack" ] || [ -z "$norepack" ] && __epm_have_repack_rule $returntarname ; then
-		__epm_repack "$returntarname"
-		[ -n "$repacked_pkgs" ] || fatal "Can't repack $returntarname"
-	fi
+    # FIXME: __epm_repack will drop trap
+    repacked_pkgs=''
+    # repack to our target
+    if __epm_repack_if_needed $returntarname ; then
+        [ -n "$repacked_pkgs" ] || fatal "Can't repack $returntarname"
+    # if repack is forced or repack rule (not disabled) is exists
+    elif [ -n "$repack" ] || [ -z "$norepack" ] && __epm_have_repack_rule $returntarname ; then
+        __epm_repack "$returntarname"
+        [ -n "$repacked_pkgs" ] || fatal "Can't repack $returntarname"
+    fi
 
-	if [ -n "$repacked_pkgs" ] ; then
-		rm -v $returntarname
-		mv -v $repacked_pkgs . || fatal
-		pkgname=$(pwd)/"$(basename $repacked_pkgs)"
-	else
-		pkgname="$returntarname"
-	fi
+    if [ -n "$repacked_pkgs" ] ; then
+        rm -v $returntarname
+        mv -v $repacked_pkgs . || fatal
+        pkgname=$(pwd)/"$(basename $repacked_pkgs)"
+    else
+        pkgname="$returntarname"
+    fi
 
-	if [ -n "$install" ] ; then
-		trap "rm -v $pkgname" EXIT
-		docmd epm install $pkgname
-		return
-	fi
+    if [ -n "$install" ] ; then
+        trap "rm -v $pkgname" EXIT
+        docmd epm install $pkgname
+        return
+    fi
 
-	trap "" EXIT
+    trap "" EXIT
 
 }
 

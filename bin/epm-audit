@@ -23,12 +23,12 @@ epm_audit()
 [ -z "$pkg_filenames" ] || fatal "No arguments are allowed here"
 
 case $PMTYPE in
-	pkgng)
-		sudocmd pkg audit -F
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
+    pkgng)
+        sudocmd pkg audit -F
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
 esac
 
 }

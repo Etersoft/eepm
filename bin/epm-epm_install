@@ -65,9 +65,9 @@ __epm_korinf_install() {
 
 epm_epm_install_help()
 {
-	echo "epm ei [packages] - install packages from EPM based Korinf repository"
-			get_help HELPCMD $SHAREDIR/epm-epm_install
-	cat <<EOF
+    echo "epm ei [packages] - install packages from EPM based Korinf repository"
+            get_help HELPCMD $SHAREDIR/epm-epm_install
+    cat <<EOF
 
 Default Korinf repository: $EPM_KORINF_REPO_URL
 

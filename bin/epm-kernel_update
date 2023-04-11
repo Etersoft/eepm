@@ -22,30 +22,30 @@ load_helper epm-sh-warmup
 
 epm_kernel_update()
 {
-	warmup_bases
+    warmup_bases
 
-	info "Updating system kernel to the latest version..."
+    info "Updating system kernel to the latest version..."
 
-	case $BASEDISTRNAME in
-	"alt")
-		load_helper epm-query_package
-		if ! __epm_query_package kernel-image >/dev/null ; then
-			info "No installed kernel packages, skipping update"
-			return
-		fi
-		assure_exists update-kernel update-kernel 0.9.9
-		update_repo_if_needed
-		sudocmd update-kernel $dryrun $(subst_option non_interactive -y) "$@" || return
-		#docmd epm remove-old-kernels "$@" || fatal
-		return ;;
-	esac
+    case $BASEDISTRNAME in
+    "alt")
+        load_helper epm-query_package
+        if ! __epm_query_package kernel-image >/dev/null ; then
+            info "No installed kernel packages, skipping update"
+            return
+        fi
+        assure_exists update-kernel update-kernel 0.9.9
+        update_repo_if_needed
+        sudocmd update-kernel $dryrun $(subst_option non_interactive -y) "$@" || return
+        #docmd epm remove-old-kernels "$@" || fatal
+        return ;;
+    esac
 
-	case $PMTYPE in
-	dnf-rpm)
-		docmd epm install kernel
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
-	esac
+    case $PMTYPE in
+    dnf-rpm)
+        docmd epm install kernel
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
+    esac
 }

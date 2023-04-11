@@ -46,59 +46,59 @@ __alt_local_content_search()
 
 epm_search_file()
 {
-	local CMD
-	[ -n "$pkg_filenames" ] || fatal "Search file: file name is missed"
+    local CMD
+    [ -n "$pkg_filenames" ] || fatal "Search file: file name is missed"
 
 case $PMTYPE in
-	apt-rpm)
-		__alt_local_content_search $pkg_filenames
-		return ;;
-	apt-dpkg|aptitude-dpkg)
-		assure_exists apt-file
-		sudocmd apt-file update
-		docmd apt-file search $pkg_filenames
-		return ;;
-	packagekit)
-		CMD="pkcon search file"
-		;;
-	yum-rpm)
-		# TODO
-		info "Search by full packages list is not implemented yet"
-		CMD="yum provides"
-		;;
-	dnf-rpm)
-		# TODO
-		info "Search by full packages list is not implemented yet"
-		CMD="dnf provides"
-		;;
-	urpm-rpm)
-		CMD="urpmf"
-		;;
-	zypper-rpm)
-		CMD="zypper search --file-list"
-		;;
-	pacman)
-		CMD="pacman -Qo"
-		;;
-	slackpkg)
-		CMD="/usr/sbin/slackpkg file-search"
-		;;
-	opkg)
-		CMD="opkg -A search"
-		;;
-	eopkg)
-		CMD="eopkg search-file"
-		;;
-	xbps)
-		CMD="xbps-query -Ro"
-		;;
-	aptcyg)
-		docmd apt-cyg searchall $(echo " $pkg_filenames" | sed -e "s| /| |g")
-		return
-		;;
-	*)
-		fatal "Have no suitable search file command for $PMTYPE"
-		;;
+    apt-rpm)
+        __alt_local_content_search $pkg_filenames
+        return ;;
+    apt-dpkg|aptitude-dpkg)
+        assure_exists apt-file
+        sudocmd apt-file update
+        docmd apt-file search $pkg_filenames
+        return ;;
+    packagekit)
+        CMD="pkcon search file"
+        ;;
+    yum-rpm)
+        # TODO
+        info "Search by full packages list is not implemented yet"
+        CMD="yum provides"
+        ;;
+    dnf-rpm)
+        # TODO
+        info "Search by full packages list is not implemented yet"
+        CMD="dnf provides"
+        ;;
+    urpm-rpm)
+        CMD="urpmf"
+        ;;
+    zypper-rpm)
+        CMD="zypper search --file-list"
+        ;;
+    pacman)
+        CMD="pacman -Qo"
+        ;;
+    slackpkg)
+        CMD="/usr/sbin/slackpkg file-search"
+        ;;
+    opkg)
+        CMD="opkg -A search"
+        ;;
+    eopkg)
+        CMD="eopkg search-file"
+        ;;
+    xbps)
+        CMD="xbps-query -Ro"
+        ;;
+    aptcyg)
+        docmd apt-cyg searchall $(echo " $pkg_filenames" | sed -e "s| /| |g")
+        return
+        ;;
+    *)
+        fatal "Have no suitable search file command for $PMTYPE"
+        ;;
 esac
 
 docmd $CMD $pkg_filenames

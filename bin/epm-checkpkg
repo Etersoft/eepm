@@ -25,82 +25,82 @@ __rpm_allows_nosignature()
 
 check_pkg_integrity()
 {
-	local PKG="$1"
-	local RET
-	local NOSIGNATURE
+    local PKG="$1"
+    local RET
+    local NOSIGNATURE
 
-	case $(get_package_type $PKG) in
-	rpm)
-		assure_exists rpm
-		__rpm_allows_nosignature && NOSIGNATURE="--nosignature" || NOSIGNATURE="--nogpg"
-		docmd rpm --checksig $NOSIGNATURE $PKG
-		;;
-	deb)
-		assure_exists dpkg
-		# FIXME: debsums -ca package ?
-		docmd dpkg --contents $PKG >/dev/null && echo "Package $PKG is correct."
-		;;
-	exe)
-		file $PKG | grep -q "executable for MS Windows"
-		;;
-	msi)
-		# TODO: add to patool via cabextract
-		assure_exists cabextract
-		#file $PKG | grep -q "Microsoft Office Document"
-		docmd cabextract -t $PKG
-		;;
-	ebuild)
-		true
-		;;
-	*)
-		docmd erc test "$PKG" && return
-		;;
-	esac
+    case $(get_package_type $PKG) in
+    rpm)
+        assure_exists rpm
+        __rpm_allows_nosignature && NOSIGNATURE="--nosignature" || NOSIGNATURE="--nogpg"
+        docmd rpm --checksig $NOSIGNATURE $PKG
+        ;;
+    deb)
+        assure_exists dpkg
+        # FIXME: debsums -ca package ?
+        docmd dpkg --contents $PKG >/dev/null && echo "Package $PKG is correct."
+        ;;
+    exe)
+        file $PKG | grep -q "executable for MS Windows"
+        ;;
+    msi)
+        # TODO: add to patool via cabextract
+        assure_exists cabextract
+        #file $PKG | grep -q "Microsoft Office Document"
+        docmd cabextract -t $PKG
+        ;;
+    ebuild)
+        true
+        ;;
+    *)
+        docmd erc test "$PKG" && return
+        ;;
+    esac
 }
 
 __epm_check_all_pkgs()
 {
 case $PMTYPE in
-	eopkg)
-		sudocmd eopkg check
-		return
-		;;
+    eopkg)
+        sudocmd eopkg check
+        return
+        ;;
 esac
 
-	local j cl
-	#local play_installed="$(epm play --list-installed-packages)"
-	epm qa --short | xargs -n20 | while read cl ; do
-		#cl="$(estrlist exclude "$play_installed" "$i")"
-		__epm_check_installed_pkg $cl && continue
-		# check each package
-		for j in $cl ; do
-			__epm_check_installed_pkg $j && continue
-			# TODO: check play installed too
-			epm --auto reinstall $j </dev/null || exit
-		done
-	done
+    local j cl
+    #local play_installed="$(epm play --list-installed-packages)"
+    epm qa --short | xargs -n20 | while read cl ; do
+        #cl="$(estrlist exclude "$play_installed" "$i")"
+        __epm_check_installed_pkg $cl && continue
+        # check each package
+        for j in $cl ; do
+            __epm_check_installed_pkg $j && continue
+            # TODO: check play installed too
+            epm --auto reinstall $j </dev/null || exit
+        done
+    done
 }
 
 __epm_check_installed_pkg()
 {
 case $PMTYPE in
-	*-rpm)
-		docmd rpm -V $@
-		;;
-	*-dpkg)
-		assure_exists debsums
-		docmd debsums $@
-		;;
-	emerge)
-		assure_exists equery
-		docmd equery check $@
-		;;
-	eopkg)
-		sudocmd eopkg check $@
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
+    *-rpm)
+        docmd rpm -V $@
+        ;;
+    *-dpkg)
+        assure_exists debsums
+        docmd debsums $@
+        ;;
+    emerge)
+        assure_exists equery
+        docmd equery check $@
+        ;;
+    eopkg)
+        sudocmd eopkg check $@
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
 esac
 
 }
@@ -108,37 +108,37 @@ esac
 
 epm_checkpkg()
 {
-	if [ "$1" = "--all" ] ; then
-		__epm_check_all_pkgs
-		return
-	fi
+    if [ "$1" = "--all" ] ; then
+        __epm_check_all_pkgs
+        return
+    fi
 
-	if [ -n "$pkg_names" ] ; then
-		# TODO: если есть / или расширение, это отсутствующий файл
-		info "Suggest $pkg_names are name(s) of installed package(s)"
-		__epm_check_installed_pkg $pkg_names
-		return
-	fi
+    if [ -n "$pkg_names" ] ; then
+        # TODO: если есть / или расширение, это отсутствующий файл
+        info "Suggest $pkg_names are name(s) of installed package(s)"
+        __epm_check_installed_pkg $pkg_names
+        return
+    fi
 
-	# if possible, it will put pkg_urls into pkg_files or pkg_names
-	if [ -n "$pkg_urls" ] ; then
-		load_helper epm-download
-		__handle_pkg_urls_to_checking
-	fi
+    # if possible, it will put pkg_urls into pkg_files or pkg_names
+    if [ -n "$pkg_urls" ] ; then
+        load_helper epm-download
+        __handle_pkg_urls_to_checking
+    fi
 
-	[ -n "$pkg_files" ] || fatal "Checkpkg: filename(s) is missed"
+    [ -n "$pkg_files" ] || fatal "Checkpkg: filename(s) is missed"
 
-	local RETVAL=0
+    local RETVAL=0
 
-	local pkg
-	for pkg in $pkg_files ; do
-		check_pkg_integrity $pkg || RETVAL=1
-	done
+    local pkg
+    for pkg in $pkg_files ; do
+        check_pkg_integrity $pkg || RETVAL=1
+    done
 
-	# TODO: reinvent
-	[ -n "$to_remove_pkg_files" ] && rm -fv $to_remove_pkg_files
-	[ -n "$to_remove_pkg_files" ] && rmdir -v $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
+    # TODO: reinvent
+    [ -n "$to_remove_pkg_files" ] && rm -fv $to_remove_pkg_files
+    [ -n "$to_remove_pkg_files" ] && rmdir -v $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
 
-	#fatal "Broken package $pkg"
-	return $RETVAL
+    #fatal "Broken package $pkg"
+    return $RETVAL
 }

@@ -21,8 +21,8 @@ load_helper epm-check_updated_repo
 
 __epm_add_alt_apt_downgrade_preferences()
 {
-	[ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists"
-	cat <<EOF | sudocmd tee /etc/apt/preferences
+    [ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists"
+    cat <<EOF | sudocmd tee /etc/apt/preferences
 # classic repo
 Package: *
 Pin: release c=classic
@@ -48,9 +48,9 @@ EOF
 # See https://wiki.debian.org/ru/AptPreferences
 __epm_add_deb_apt_downgrade_preferences()
 {
-	[ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists"
-	info "Running with /etc/apt/preferences:"
-	cat <<EOF | sudorun tee /etc/apt/preferences
+    [ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists"
+    info "Running with /etc/apt/preferences:"
+    cat <<EOF | sudorun tee /etc/apt/preferences
 Package: *
 Pin: release a=stable
 Pin-Priority: 1001
@@ -67,67 +67,67 @@ EOF
 
 __epm_remove_apt_downgrade_preferences()
 {
-	sudocmd rm -f /etc/apt/preferences
+    sudocmd rm -f /etc/apt/preferences
 }
 
 epm_downgrade()
 {
-	local CMD
+    local CMD
 
-	# it is useful for first time running
-	update_repo_if_needed
+    # it is useful for first time running
+    update_repo_if_needed
 
-	info "Running command for downgrade packages"
+    info "Running command for downgrade packages"
 
-	case $PMTYPE in
-	apt-rpm)
-		# pass pkg_filenames too
-		if [ -n "$pkg_names" ] ; then
-			__epm_add_alt_apt_downgrade_preferences || return
-			load_helper epm-install
-			(pkg_names=$(get_only_installed_packages $pkg_names) epm_install)
-			__epm_remove_apt_downgrade_preferences
-		elif [ -n "$pkg_files" ] ; then
-			load_helper epm-install
-			(pkg_files=$pkg_files force="$force -F --oldpackage" epm_install)
-		else
-			__epm_add_alt_apt_downgrade_preferences || return
-			load_helper epm-upgrade
-			epm_upgrade "$@"
-			__epm_remove_apt_downgrade_preferences
-		fi
-		;;
-	apt-dpkg)
-		local APTOPTIONS="$(subst_option non_interactive -y) $force_yes"
-		__epm_add_deb_apt_downgrade_preferences || return
-		if [ -n "$pkg_filenames" ] ; then
-			sudocmd apt-get $APTOPTIONS install $pkg_filenames
-		else
-			sudocmd apt-get $APTOPTIONS dist-upgrade
-		fi
-		__epm_remove_apt_downgrade_preferences
-		;;
-	yum-rpm)
-		# can do update repobase automagically
-		if [ -n "$pkg_filenames" ] ; then
-			sudocmd yum downgrade $pkg_filenames
-		else
-			sudocmd yum distro-sync
-		fi
-		;;
-	dnf-rpm)
-		if [ -n "$pkg_filenames" ] ; then
-			sudocmd dnf downgrade $pkg_filenames
-		else
-			sudocmd dnf distro-sync
-		fi
-		;;
-	urpm-rpm)
-		assure_exists urpm-reposync urpm-tools
-		sudocmd urpm-reposync -v
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
-	esac
+    case $PMTYPE in
+    apt-rpm)
+        # pass pkg_filenames too
+        if [ -n "$pkg_names" ] ; then
+            __epm_add_alt_apt_downgrade_preferences || return
+            load_helper epm-install
+            (pkg_names=$(get_only_installed_packages $pkg_names) epm_install)
+            __epm_remove_apt_downgrade_preferences
+        elif [ -n "$pkg_files" ] ; then
+            load_helper epm-install
+            (pkg_files=$pkg_files force="$force -F --oldpackage" epm_install)
+        else
+            __epm_add_alt_apt_downgrade_preferences || return
+            load_helper epm-upgrade
+            epm_upgrade "$@"
+            __epm_remove_apt_downgrade_preferences
+        fi
+        ;;
+    apt-dpkg)
+        local APTOPTIONS="$(subst_option non_interactive -y) $force_yes"
+        __epm_add_deb_apt_downgrade_preferences || return
+        if [ -n "$pkg_filenames" ] ; then
+            sudocmd apt-get $APTOPTIONS install $pkg_filenames
+        else
+            sudocmd apt-get $APTOPTIONS dist-upgrade
+        fi
+        __epm_remove_apt_downgrade_preferences
+        ;;
+    yum-rpm)
+        # can do update repobase automagically
+        if [ -n "$pkg_filenames" ] ; then
+            sudocmd yum downgrade $pkg_filenames
+        else
+            sudocmd yum distro-sync
+        fi
+        ;;
+    dnf-rpm)
+        if [ -n "$pkg_filenames" ] ; then
+            sudocmd dnf downgrade $pkg_filenames
+        else
+            sudocmd dnf distro-sync
+        fi
+        ;;
+    urpm-rpm)
+        assure_exists urpm-reposync urpm-tools
+        sudocmd urpm-reposync -v
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
+    esac
 }

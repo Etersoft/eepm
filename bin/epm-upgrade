@@ -22,157 +22,160 @@ load_helper epm-sh-warmup
 
 epm_upgrade()
 {
-	local CMD
+    local CMD
 
-	# it is useful for first time running
-	update_repo_if_needed
+    # it is useful for first time running
+    update_repo_if_needed
 
-	warmup_bases
+    warmup_bases
 
-	if [ "$BASEDISTRNAME" = "alt" ] ; then
-		load_helper epm-sh-altlinux
-		if tasknumber "$@" >/dev/null ; then
-			load_helper epm-addrepo
-			load_helper epm-reposave
-			load_helper epm-removerepo
-			load_helper epm-Install
+    if [ "$BASEDISTRNAME" = "alt" ] ; then
+        load_helper epm-sh-altlinux
+        if tasknumber "$@" >/dev/null ; then
+            load_helper epm-addrepo
+            load_helper epm-reposave
+            load_helper epm-removerepo
+            load_helper epm-Install
 
-			local installlist="$(get_task_packages $*)"
-			# hack: drop -devel packages to avoid package provided by multiple packages
-			installlist="$(estrlist reg_exclude ".*-devel .*-devel-static" "$installlist")"
-			[ -n "$verbose" ] && info "Packages from task(s): $installlist"
-			# install only installed packages (simulate upgrade packages)
-			installlist="$(get_only_installed_packages "$installlist")"
-			[ -n "$verbose" ] && info "Packages to upgrade: $installlist"
-			if [ -z "$installlist" ] ; then
-				warning "There is no installed packages for upgrade from task $*"
-				return 22
-			fi
+            local installlist="$(get_task_packages $*)"
+            # hack: drop -devel packages to avoid package provided by multiple packages
+            installlist="$(estrlist reg_exclude ".*-devel .*-devel-static" "$installlist")"
+            [ -n "$verbose" ] && info "Packages from task(s): $installlist"
+            # install only installed packages (simulate upgrade packages)
+            installlist="$(get_only_installed_packages "$installlist")"
+            [ -n "$verbose" ] && info "Packages to upgrade: $installlist"
+            if [ -z "$installlist" ] ; then
+                warning "There is no installed packages for upgrade from task $*"
+                return 22
+            fi
 
-			try_change_alt_repo
-			epm_addrepo "$@"
-			(pkg_names="$installlist" epm_Install) || fatal "Can't update repo"
-			epm_removerepo "$@"
-			end_change_alt_repo
+            try_change_alt_repo
+            epm_addrepo "$@"
+            (pkg_names="$installlist" epm_Install) || fatal "Can't update repo"
+            epm_removerepo "$@"
+            end_change_alt_repo
 
-			return
-		fi
-	fi
+            return
+        fi
+    fi
 
-	# Solus supports upgrade for a package (with all dependencies)
-	if [ -n "$1" ] && [ "$DISTRNAME" = "Solus" ] ; then
-		sudocmd eopkg upgrade "$@"
-		return
-	fi
+    # Solus supports upgrade for a package (with all dependencies)
+    if [ -n "$1" ] && [ "$DISTRNAME" = "Solus" ] ; then
+        sudocmd eopkg upgrade "$@"
+        return
+    fi
 
-	info "Running command for upgrade packages"
+    info "Running command for upgrade packages"
 
-	case $PMTYPE in
-		*-rpm)
-			# upgrade only install files from the list
-			if [ -n "$pkg_files" ] ; then
-				load_helper epm-install
-				#sudocmd rpm -Fvh $pkg_files
-				(pkg_files=$pkg_files force="$force -F" epm_install)
-				return
-			elif [ -n "$pkg_names" ] ; then
-				# hack for https://bugzilla.altlinux.org/41225
-				case "$pkg_names" in
-					-*)
-						fatal "Option $pkg_names is not allowed here"
-				esac
-				load_helper epm-install
-				(pkg_names=$(get_only_installed_packages $pkg_names) epm_install)
-				return
-			fi
-		;;
-	esac
+    case $PMTYPE in
+        *-rpm)
+            # upgrade only install files from the list
+            if [ -n "$pkg_files" ] ; then
+                load_helper epm-install
+                #sudocmd rpm -Fvh $pkg_files
+                (pkg_files=$pkg_files force="$force -F" epm_install)
+                return
+            elif [ -n "$pkg_names" ] ; then
+                # hack for https://bugzilla.altlinux.org/41225
+                case "$pkg_names" in
+                    -*)
+                        fatal "Option $pkg_names is not allowed here"
+                esac
+                load_helper epm-install
+                (pkg_names=$(get_only_installed_packages $pkg_names) epm_install)
+                return
+            fi
+        ;;
+    esac
 
-	case $PMTYPE in
-	apt-rpm|apt-dpkg)
-		local APTOPTIONS="$(subst_option non_interactive -y) $(subst_option verbose "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
-		CMD="apt-get $APTOPTIONS $noremove $force_yes dist-upgrade"
-		;;
-	aptitude-dpkg)
-		CMD="aptitude dist-upgrade"
-		;;
-	packagekit)
-		docmd pkcon update
-		return
-		;;
-	yum-rpm)
-		local OPTIONS="$(subst_option non_interactive -y)"
-		# can do update repobase automagically
-		CMD="yum $OPTIONS update $*"
-		;;
-	dnf-rpm)
-		local OPTIONS="$(subst_option non_interactive -y)"
-		CMD="dnf $OPTIONS distro-sync $*"
-		;;
-	snappy)
-		CMD="snappy update"
-		;;
-	urpm-rpm)
-		# or --auto-select --replace-files
-		CMD="urpmi --update --auto-select $*"
-		;;
-	zypper-rpm)
-		CMD="zypper $(subst_option non_interactive --non-interactive) dist-upgrade"
-		;;
-	pacman)
-		CMD="pacman -S -u $force"
-		;;
-	aura)
-		CMD="aura -A -u"
-		;;
-	emerge)
-		CMD="emerge -NuDa world"
-		;;
-	conary)
-		CMD="conary updateall"
-		;;
-	pkgsrc)
-		CMD="freebsd-update fetch install"
-		;;
-	pkgng)
-		CMD="pkg upgrade"
-		;;
-	chocolatey)
-		CMD="chocolatey update all"
-		;;
-	homebrew)
-		#CMD="brew upgrade"
-		docmd brew upgrade $(brew outdated)
-		return
-		;;
-	opkg)
-		CMD="opkg upgrade"
-		;;
-	eopkg)
-		CMD="eopkg upgrade"
-		;;
-	slackpkg)
-		CMD="/usr/sbin/slackpkg upgrade-all"
-		;;
-	guix)
-		CMD="guix package -u"
-		;;
-	appget|winget)
-		CMD="$PMTYPE update-all"
-		;;
-	aptcyg)
-		# shellcheck disable=SC2046
-		docmd_foreach "epm install" $(short=1 epm packages)
-		return
-		;;
-	xbps)
-		CMD="xbps-install -Su"
-		;;
-	*)
-		fatal "Have no suitable command for $PMTYPE"
-		;;
-	esac
+    case $PMTYPE in
+    apt-rpm|apt-dpkg)
+        local APTOPTIONS="$(subst_option non_interactive -y) $(subst_option verbose "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
+        CMD="apt-get $APTOPTIONS $noremove $force_yes dist-upgrade"
+        ;;
+    aptitude-dpkg)
+        CMD="aptitude dist-upgrade"
+        ;;
+    packagekit)
+        docmd pkcon update
+        return
+        ;;
+    yum-rpm)
+        local OPTIONS="$(subst_option non_interactive -y)"
+        # can do update repobase automagically
+        CMD="yum $OPTIONS update $*"
+        ;;
+    dnf-rpm)
+        local OPTIONS="$(subst_option non_interactive -y)"
+        CMD="dnf $OPTIONS distro-sync $*"
+        ;;
+    snappy)
+        CMD="snappy update"
+        ;;
+    urpm-rpm)
+        # or --auto-select --replace-files
+        CMD="urpmi --update --auto-select $*"
+        ;;
+    zypper-rpm)
+        CMD="zypper $(subst_option non_interactive --non-interactive) dist-upgrade"
+        ;;
+    pacman)
+        CMD="pacman -S -u $force"
+        ;;
+    aura)
+        CMD="aura -A -u"
+        ;;
+    emerge)
+        CMD="emerge -NuDa world"
+        ;;
+    conary)
+        CMD="conary updateall"
+        ;;
+    pkgsrc)
+        CMD="freebsd-update fetch install"
+        ;;
+    pkgng)
+        CMD="pkg upgrade"
+        ;;
+    apk)
+        CMD="apk upgrade"
+        ;;
+    chocolatey)
+        CMD="chocolatey update all"
+        ;;
+    homebrew)
+        #CMD="brew upgrade"
+        docmd brew upgrade $(brew outdated)
+        return
+        ;;
+    opkg)
+        CMD="opkg upgrade"
+        ;;
+    eopkg)
+        CMD="eopkg upgrade"
+        ;;
+    slackpkg)
+        CMD="/usr/sbin/slackpkg upgrade-all"
+        ;;
+    guix)
+        CMD="guix package -u"
+        ;;
+    appget|winget)
+        CMD="$PMTYPE update-all"
+        ;;
+    aptcyg)
+        # shellcheck disable=SC2046
+        docmd_foreach "epm install" $(short=1 epm packages)
+        return
+        ;;
+    xbps)
+        CMD="xbps-install -Su"
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
+    esac
 
-	sudocmd $CMD "$@"
+    sudocmd $CMD "$@"
 
 }
