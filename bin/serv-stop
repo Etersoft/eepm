@@ -20,31 +20,31 @@
 # Stop service
 serv_stop()
 {
-	local SERVICE="$1"
-	shift
+    local SERVICE="$1"
+    shift
 
-	case $SERVICETYPE in
-		service-chkconfig|service-upstart)
-			if is_anyservice $SERVICE ; then
-				sudocmd anyservice $SERVICE stop
-				return
-			fi
-			sudocmd service $SERVICE stop "$@"
-			;;
-		service-initd|service-update)
-			sudocmd $INITDIR/$SERVICE stop "$@"
-			;;
-		systemd)
-			sudocmd systemctl stop $SERVICE "$@"
-			;;
-		runit)
-			sudocmd sv down "$SERVICE"
-			;;
-		openrc)
-			sudocmd rc-service stop "$SERVICE"
-			;;
-		*)
-			fatal "Have no suitable command for $SERVICETYPE"
-			;;
-	esac
+    case $SERVICETYPE in
+        service-chkconfig|service-upstart)
+            if is_anyservice $SERVICE ; then
+                sudocmd anyservice $SERVICE stop
+                return
+            fi
+            sudocmd service $SERVICE stop "$@"
+            ;;
+        service-initd|service-update)
+            sudocmd $INITDIR/$SERVICE stop "$@"
+            ;;
+        systemd)
+            sudocmd systemctl stop $SERVICE "$@"
+            ;;
+        runit)
+            sudocmd sv down "$SERVICE"
+            ;;
+        openrc)
+            sudocmd rc-service stop "$SERVICE"
+            ;;
+        *)
+            fatal "Have no suitable command for $SERVICETYPE"
+            ;;
+    esac
 }

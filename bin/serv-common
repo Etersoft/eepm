@@ -20,31 +20,31 @@
 # Common call service
 serv_common()
 {
-	local SERVICE="$1"
-	shift
-	case $SERVICETYPE in
-		service-chkconfig|service-upstart)
-			if is_anyservice $SERVICE ; then
-				fatal "Have no idea how to call anyservice service with args"
-			fi
-			sudocmd service $SERVICE "$@"
-			;;
-		service-initd|service-update)
-			sudocmd $INITDIR/$SERVICE "$@"
-			;;
-		systemd)
-			# run init script directly (for nonstandart commands)
-			if [ -x $INITDIR/$SERVICE ] ; then
-				sudocmd $INITDIR/$SERVICE "$@"
-			else
-				sudocmd systemctl "$@" $SERVICE
-			fi
-			;;
-		runit)
-			sudocmd sv $SERVICE "$@"
-			;;
-		*)
-			fatal "Have no suitable command for $SERVICETYPE"
-			;;
-	esac
+    local SERVICE="$1"
+    shift
+    case $SERVICETYPE in
+        service-chkconfig|service-upstart)
+            if is_anyservice $SERVICE ; then
+                fatal "Have no idea how to call anyservice service with args"
+            fi
+            sudocmd service $SERVICE "$@"
+            ;;
+        service-initd|service-update)
+            sudocmd $INITDIR/$SERVICE "$@"
+            ;;
+        systemd)
+            # run init script directly (for nonstandart commands)
+            if [ -x $INITDIR/$SERVICE ] ; then
+                sudocmd $INITDIR/$SERVICE "$@"
+            else
+                sudocmd systemctl "$@" $SERVICE
+            fi
+            ;;
+        runit)
+            sudocmd sv $SERVICE "$@"
+            ;;
+        *)
+            fatal "Have no suitable command for $SERVICETYPE"
+            ;;
+    esac
 }

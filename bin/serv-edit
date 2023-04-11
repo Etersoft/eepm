@@ -19,15 +19,15 @@
 
 serv_edit()
 {
-	local SERVICE="$1"
-	shift
+    local SERVICE="$1"
+    shift
 
-	case $SERVICETYPE in
-		systemd)
-			sudocmd systemctl edit "$@" "$SERVICE"
-			;;
-		*)
-			fatal "Have no suitable for $DISTRNAME command for $SERVICETYPE"
-			;;
-	esac
+    case $SERVICETYPE in
+        systemd)
+            sudocmd systemctl edit "$@" "$SERVICE"
+            ;;
+        *)
+            fatal "Have no suitable for $DISTRNAME command for $SERVICETYPE"
+            ;;
+    esac
 }

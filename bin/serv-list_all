@@ -20,47 +20,47 @@
 # List all available services
 serv_list_all()
 {
-	case $SERVICETYPE in
-		service-chkconfig|service-upstart)
-			if [ -n "$short" ] ; then
-				# service --status-all for Ubuntu/Fedora
-				sudocmd chkconfig --list | cut -f1 | grep -v "^$" | grep -v "xinetd:$" | cut -f 1 -d" "
-			else
-				# service --status-all for Ubuntu/Fedora
-				sudocmd chkconfig --list | cut -f1 | grep -v "^$" | grep -v "xinetd:$"
-			fi
-			if [ -n "$ANYSERVICE" ] ; then
-				if [ -n "$short" ] ; then
-					sudocmd anyservice --quiet list | cut -f 1 -d" "
-				else
-					sudocmd anyservice --quiet list
-				fi
-				return
-			fi
-			;;
-		service-initd|service-update)
-			if [ -n "$short" ] ; then
-				sudocmd ls $INITDIR/ | grep -v README | cut -f 1 -d" "
-			else
-				sudocmd ls $INITDIR/ | grep -v README
-			fi
-			;;
-		systemd)
-			if [ -n "$short" ] ; then
-				docmd systemctl list-unit-files --type=service "$@" | sed -e 's|\.service.*||' | grep -v 'unit files listed' | grep -v '^$'
-			else
-				docmd systemctl list-unit-files --type=service "$@"
-			fi
-			;;
-		openrc)
-			if [ -n "$short" ] ; then
-				sudocmd rc-service -l | cut -f 1 -d" "
-			else
-				sudocmd rc-service -l
-			fi
-			;;
-		*)
-			fatal "Have no suitable command for $SERVICETYPE"
-			;;
-	esac
+    case $SERVICETYPE in
+        service-chkconfig|service-upstart)
+            if [ -n "$short" ] ; then
+                # service --status-all for Ubuntu/Fedora
+                sudocmd chkconfig --list | cut -f1 | grep -v "^$" | grep -v "xinetd:$" | cut -f 1 -d" "
+            else
+                # service --status-all for Ubuntu/Fedora
+                sudocmd chkconfig --list | cut -f1 | grep -v "^$" | grep -v "xinetd:$"
+            fi
+            if [ -n "$ANYSERVICE" ] ; then
+                if [ -n "$short" ] ; then
+                    sudocmd anyservice --quiet list | cut -f 1 -d" "
+                else
+                    sudocmd anyservice --quiet list
+                fi
+                return
+            fi
+            ;;
+        service-initd|service-update)
+            if [ -n "$short" ] ; then
+                sudocmd ls $INITDIR/ | grep -v README | cut -f 1 -d" "
+            else
+                sudocmd ls $INITDIR/ | grep -v README
+            fi
+            ;;
+        systemd)
+            if [ -n "$short" ] ; then
+                docmd systemctl list-unit-files --type=service "$@" | sed -e 's|\.service.*||' | grep -v 'unit files listed' | grep -v '^$'
+            else
+                docmd systemctl list-unit-files --type=service "$@"
+            fi
+            ;;
+        openrc)
+            if [ -n "$short" ] ; then
+                sudocmd rc-service -l | cut -f 1 -d" "
+            else
+                sudocmd rc-service -l
+            fi
+            ;;
+        *)
+            fatal "Have no suitable command for $SERVICETYPE"
+            ;;
+    esac
 }

@@ -23,8 +23,8 @@ load_helper serv-status
 
 serv_on()
 {
-	serv_enable "$1" || return
-	# start if need
-	is_service_running $1 && info "Service $1 is already running" && return
-	serv_start $1
+    serv_enable "$1" || return
+    # start if need
+    is_service_running $1 && info "Service $1 is already running" && return
+    serv_start $1
 }

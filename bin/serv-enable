@@ -23,39 +23,39 @@ load_helper serv-status
 # Enable service by default
 serv_enable()
 {
-	local SERVICE="$1"
+    local SERVICE="$1"
 
-	is_service_autostart $1 && info "Service $1 is already enabled for startup" && return
+    is_service_autostart $1 && info "Service $1 is already enabled for startup" && return
 
-	case $SERVICETYPE in
-		service-chkconfig)
-			if is_anyservice $SERVICE ; then
-				sudocmd anyservice $SERVICE on
-				return
-			fi
-			sudocmd chkconfig --add $1 || return
-			sudocmd chkconfig $1 on
-			;;
-		service-upstart)
-			sudocmd chkconfig --add $1 || return
-			sudocmd chkconfig $1 on
-			;;
-		service-initd|service-update)
-			sudocmd update-rc.d $1 defaults
-			;;
-		systemd)
-			sudocmd systemctl enable $1
-			;;
-		openrc)
-			sudocmd rc-update add $1 default
-			;;
-		runit)
-			assure_exists $SERVICE
-			[ -r "/etc/sv/$SERVICE" ] || fatal "Can't find /etc/sv/$SERVICE"
-			sudocmd ln -s /etc/sv/$SERVICE /var/service/
-			;;
-		*)
-			fatal "Have no suitable command for $SERVICETYPE"
-			;;
-	esac
+    case $SERVICETYPE in
+        service-chkconfig)
+            if is_anyservice $SERVICE ; then
+                sudocmd anyservice $SERVICE on
+                return
+            fi
+            sudocmd chkconfig --add $1 || return
+            sudocmd chkconfig $1 on
+            ;;
+        service-upstart)
+            sudocmd chkconfig --add $1 || return
+            sudocmd chkconfig $1 on
+            ;;
+        service-initd|service-update)
+            sudocmd update-rc.d $1 defaults
+            ;;
+        systemd)
+            sudocmd systemctl enable $1
+            ;;
+        openrc)
+            sudocmd rc-update add $1 default
+            ;;
+        runit)
+            assure_exists $SERVICE
+            [ -r "/etc/sv/$SERVICE" ] || fatal "Can't find /etc/sv/$SERVICE"
+            sudocmd ln -s /etc/sv/$SERVICE /var/service/
+            ;;
+        *)
+            fatal "Have no suitable command for $SERVICETYPE"
+            ;;
+    esac
 }

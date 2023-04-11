@@ -19,23 +19,23 @@
 
 serv_exists()
 {
-	local SERVICE="$1"
-	shift
+    local SERVICE="$1"
+    shift
 
-	case $SERVICETYPE in
-		systemd)
-			# too direct way: test -s /lib/systemd/system/dm.service
-			docmd systemctl cat "$SERVICE" "$@" >/dev/null 2>/dev/null
-			;;
-		*)
-			case $BASEDISTRNAME in
-			"alt")
-				local INITFILE=/etc/init.d/$SERVICE
-				[ -r "$INITFILE" ] || return
-				return ;;
-			*)
-				fatal "Have no suitable for $DISTRNAME command for $SERVICETYPE"
-				;;
-			esac
-	esac
+    case $SERVICETYPE in
+        systemd)
+            # too direct way: test -s /lib/systemd/system/dm.service
+            docmd systemctl cat "$SERVICE" "$@" >/dev/null 2>/dev/null
+            ;;
+        *)
+            case $BASEDISTRNAME in
+            "alt")
+                local INITFILE=/etc/init.d/$SERVICE
+                [ -r "$INITFILE" ] || return
+                return ;;
+            *)
+                fatal "Have no suitable for $DISTRNAME command for $SERVICETYPE"
+                ;;
+            esac
+    esac
 }

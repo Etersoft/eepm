@@ -20,31 +20,31 @@
 # Start service
 serv_start()
 {
-	local SERVICE="$1"
-	shift
+    local SERVICE="$1"
+    shift
 
-	case $SERVICETYPE in
-		service-chkconfig|service-upstart)
-			if is_anyservice $SERVICE ; then
-				sudocmd anyservice $SERVICE start
-				return
-			fi
-			sudocmd service $SERVICE start "$@"
-			;;
-		service-initd|service-update)
-			sudocmd $INITDIR/$SERVICE start "$@"
-			;;
-		systemd)
-			sudocmd systemctl start "$SERVICE" "$@"
-			;;
-		runit)
-			sudocmd sv up "$SERVICE"
-			;;
-		openrc)
-			sudocmd rc-service start "$SERVICE"
-			;;
-		*)
-			fatal "Have no suitable command for $SERVICETYPE"
-			;;
-	esac
+    case $SERVICETYPE in
+        service-chkconfig|service-upstart)
+            if is_anyservice $SERVICE ; then
+                sudocmd anyservice $SERVICE start
+                return
+            fi
+            sudocmd service $SERVICE start "$@"
+            ;;
+        service-initd|service-update)
+            sudocmd $INITDIR/$SERVICE start "$@"
+            ;;
+        systemd)
+            sudocmd systemctl start "$SERVICE" "$@"
+            ;;
+        runit)
+            sudocmd sv up "$SERVICE"
+            ;;
+        openrc)
+            sudocmd rc-service start "$SERVICE"
+            ;;
+        *)
+            fatal "Have no suitable command for $SERVICETYPE"
+            ;;
+    esac
 }

@@ -22,18 +22,18 @@ load_helper serv-status
 # Try restart service (if it is running)
 serv_try_restart()
 {
-	local SERVICE="$1"
-	shift
+    local SERVICE="$1"
+    shift
 
-	case $SERVICETYPE in
-		systemd)
-			sudocmd systemctl try-restart $SERVICE "$@"
-			;;
-		*)
-			info "Fallback to restart..."
-			is_service_running $SERVICE || { info "Service $SERVICE is not running, restart skipping…" ; return 0 ; }
-			load_helper serv-restart
-			serv_restart "$SERVICE" "$@"
-			;;
-	esac
+    case $SERVICETYPE in
+        systemd)
+            sudocmd systemctl try-restart $SERVICE "$@"
+            ;;
+        *)
+            info "Fallback to restart..."
+            is_service_running $SERVICE || { info "Service $SERVICE is not running, restart skipping…" ; return 0 ; }
+            load_helper serv-restart
+            serv_restart "$SERVICE" "$@"
+            ;;
+    esac
 }

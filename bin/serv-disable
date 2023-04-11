@@ -23,32 +23,32 @@ load_helper serv-status
 # Enable service by default
 serv_disable()
 {
-	local SERVICE="$1"
+    local SERVICE="$1"
 
-	is_service_autostart $1 || { info "Service $1 already disabled for startup" && return ; }
+    is_service_autostart $1 || { info "Service $1 already disabled for startup" && return ; }
 
-	case $SERVICETYPE in
-		service-chkconfig|service-upstart)
-			if is_anyservice $SERVICE ; then
-				sudocmd anyservice $SERVICE off
-				return
-			fi
-			sudocmd chkconfig $1 off
-			;;
-		service-initd|service-update)
-			sudocmd update-rc.d $1 remove
-			;;
-		systemd)
-			sudocmd systemctl disable $1
-			;;
-		openrc)
-			sudocmd rc-update del $1 default
-			;;
-		runit)
-			sudocmd rm -fv /var/service/$SERVICE
-			;;
-		*)
-			fatal "Have no suitable command for $SERVICETYPE"
-			;;
-	esac
+    case $SERVICETYPE in
+        service-chkconfig|service-upstart)
+            if is_anyservice $SERVICE ; then
+                sudocmd anyservice $SERVICE off
+                return
+            fi
+            sudocmd chkconfig $1 off
+            ;;
+        service-initd|service-update)
+            sudocmd update-rc.d $1 remove
+            ;;
+        systemd)
+            sudocmd systemctl disable $1
+            ;;
+        openrc)
+            sudocmd rc-update del $1 default
+            ;;
+        runit)
+            sudocmd rm -fv /var/service/$SERVICE
+            ;;
+        *)
+            fatal "Have no suitable command for $SERVICETYPE"
+            ;;
+    esac
 }

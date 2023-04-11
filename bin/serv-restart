@@ -22,31 +22,31 @@ load_helper serv-status
 # Restart service (start if it was not running)
 serv_restart()
 {
-	local SERVICE="$1"
-	shift
+    local SERVICE="$1"
+    shift
 
-	case $SERVICETYPE in
-		service-chkconfig|service-upstart)
-			if is_anyservice $SERVICE ; then
-				sudocmd anyservice $SERVICE restart
-				return
-			fi
-			sudocmd service $SERVICE restart "$@"
-			;;
-		service-initd|service-update)
-			sudocmd $INITDIR/$SERVICE restart "$@"
-			;;
-		systemd)
-			sudocmd systemctl restart $SERVICE "$@"
-			;;
-		runit)
-			sudocmd sv restart "$SERVICE"
-			;;
-		openrc)
-			sudocmd rc-service restart "$SERVICE"
-			;;
-		*)
-			fatal "Have no suitable command for $SERVICETYPE"
-			;;
-	esac
+    case $SERVICETYPE in
+        service-chkconfig|service-upstart)
+            if is_anyservice $SERVICE ; then
+                sudocmd anyservice $SERVICE restart
+                return
+            fi
+            sudocmd service $SERVICE restart "$@"
+            ;;
+        service-initd|service-update)
+            sudocmd $INITDIR/$SERVICE restart "$@"
+            ;;
+        systemd)
+            sudocmd systemctl restart $SERVICE "$@"
+            ;;
+        runit)
+            sudocmd sv restart "$SERVICE"
+            ;;
+        openrc)
+            sudocmd rc-service restart "$SERVICE"
+            ;;
+        *)
+            fatal "Have no suitable command for $SERVICETYPE"
+            ;;
+    esac
 }

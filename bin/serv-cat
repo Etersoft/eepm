@@ -19,23 +19,23 @@
 
 serv_cat()
 {
-	local SERVICE="$1"
-	shift
+    local SERVICE="$1"
+    shift
 
-	case $SERVICETYPE in
-		systemd)
-			docmd systemctl cat "$SERVICE" "$@"
-			;;
-		*)
-			case $BASEDISTRNAME in
-			"alt")
-				local INITFILE=/etc/init.d/$SERVICE
-				[ -r "$INITFILE" ] || fatal "Can't find init file $INITFILE"
-				docmd cat $INITFILE
-				return ;;
-			*)
-				fatal "Have no suitable for $DISTRNAME command for $SERVICETYPE"
-				;;
-			esac
-	esac
+    case $SERVICETYPE in
+        systemd)
+            docmd systemctl cat "$SERVICE" "$@"
+            ;;
+        *)
+            case $BASEDISTRNAME in
+            "alt")
+                local INITFILE=/etc/init.d/$SERVICE
+                [ -r "$INITFILE" ] || fatal "Can't find init file $INITFILE"
+                docmd cat $INITFILE
+                return ;;
+            *)
+                fatal "Have no suitable for $DISTRNAME command for $SERVICETYPE"
+                ;;
+            esac
+    esac
 }

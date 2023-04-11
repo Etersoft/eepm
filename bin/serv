@@ -46,18 +46,18 @@ check_tty
 # FIXME: add upstart support (Ubuntu?)
 set_service_type()
 {
-	local CMD
+    local CMD
 
-	set_distro_info
-	set_target_pkg_env
+    set_distro_info
+    set_target_pkg_env
 
 case "$DISTRCONTROL" in
-	sysvinit)
-		CMD="service-chkconfig"
-		;;
-	systemd)
-		CMD="systemd"
-		;;
+    sysvinit)
+        CMD="service-chkconfig"
+        ;;
+    systemd)
+        CMD="systemd"
+        ;;
 esac
 
 # override system control detection result
@@ -72,16 +72,16 @@ ANYSERVICE=$(print_command_path anyservice)
 # TODO: done it on anyservice part
 is_anyservice()
 {
-	[ -n "$ANYSERVICE" ] || return
-	[ -n "$1" ] || return
-	# check if anyservice is exists and checkd returns true
-	$ANYSERVICE "$1" checkd 2>/dev/null
+    [ -n "$ANYSERVICE" ] || return
+    [ -n "$1" ] || return
+    # check if anyservice is exists and checkd returns true
+    $ANYSERVICE "$1" checkd 2>/dev/null
 }
 
 
 phelp()
 {
-	echo "$Descr
+    echo "$Descr
 $Usage
  Commands:
 $(get_help HELPCMD)

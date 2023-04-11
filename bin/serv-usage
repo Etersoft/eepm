@@ -19,31 +19,31 @@
 
 _print_additional_usage()
 {
-	echo "serv addition usage: {on|off|try-restart|usage}"
+    echo "serv addition usage: {on|off|try-restart|usage}"
 }
 
 # Print usage of the service
 serv_usage()
 {
-	local SERVICE="$1"
-	shift
-	case $SERVICETYPE in
-		service-chkconfig|service-upstart)
-			# CHECKME: many services print out usage in stderr, it conflicts with printout command
-			#sudocmd service $SERVICE 2>&1
-			sudorun service $SERVICE 2>&1
-			;;
-		service-initd|service-update)
-			#sudocmd /etc/init.d/$SERVICE 2>&1
-			sudorun service $SERVICE 2>&1
-			;;
-		systemd)
-			sudocmd systemctl $SERVICE 2>&1
-			;;
-		*)
-			fatal "Have no suitable command for $SERVICETYPE"
-			;;
-	esac
+    local SERVICE="$1"
+    shift
+    case $SERVICETYPE in
+        service-chkconfig|service-upstart)
+            # CHECKME: many services print out usage in stderr, it conflicts with printout command
+            #sudocmd service $SERVICE 2>&1
+            sudorun service $SERVICE 2>&1
+            ;;
+        service-initd|service-update)
+            #sudocmd /etc/init.d/$SERVICE 2>&1
+            sudorun service $SERVICE 2>&1
+            ;;
+        systemd)
+            sudocmd systemctl $SERVICE 2>&1
+            ;;
+        *)
+            fatal "Have no suitable command for $SERVICETYPE"
+            ;;
+    esac
 
 _print_additional_usage
 

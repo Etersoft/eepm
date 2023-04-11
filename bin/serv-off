@@ -24,9 +24,9 @@ load_helper serv-status
 # Enable service by default
 serv_off()
 {
-	local SERVICE="$1"
+    local SERVICE="$1"
 
-	is_service_running $1 && { serv_stop $1 || return ; }
-	is_service_autostart $1 || { info "Service $1 already disabled for startup" && return ; }
-	serv_disable $SERVICE
+    is_service_running $1 && { serv_stop $1 || return ; }
+    is_service_autostart $1 || { info "Service $1 already disabled for startup" && return ; }
+    serv_disable $SERVICE
 }

@@ -22,27 +22,27 @@ load_helper serv-status
 # Reload service (try send SIGHUP or so on to reread config)
 serv_reload()
 {
-	local SERVICE="$1"
-	shift
+    local SERVICE="$1"
+    shift
 
-	case $SERVICETYPE in
-		service-chkconfig|service-upstart)
-			if is_anyservice $SERVICE ; then
-				sudocmd anyservice $SERVICE reload
-				return
-			fi
-			sudocmd service $SERVICE reload "$@"
-			;;
-		service-initd|service-update)
-			sudocmd $INITDIR/$SERVICE reload "$@"
-			;;
-		systemd)
-			sudocmd systemctl reload $SERVICE "$@"
-			;;
-		*)
-			info "Fallback to restart..."
-			load_helper serv-restart
-			serv_restart "$SERVICE" "$@"
-			;;
-	esac
+    case $SERVICETYPE in
+        service-chkconfig|service-upstart)
+            if is_anyservice $SERVICE ; then
+                sudocmd anyservice $SERVICE reload
+                return
+            fi
+            sudocmd service $SERVICE reload "$@"
+            ;;
+        service-initd|service-update)
+            sudocmd $INITDIR/$SERVICE reload "$@"
+            ;;
+        systemd)
+            sudocmd systemctl reload $SERVICE "$@"
+            ;;
+        *)
+            info "Fallback to restart..."
+            load_helper serv-restart
+            serv_restart "$SERVICE" "$@"
+            ;;
+    esac
 }

@@ -19,31 +19,31 @@
 
 serv_test()
 {
-	local SERVICE="$1"
-	shift
+    local SERVICE="$1"
+    shift
 
-	case $SERVICE in
-		cups|cupsd)
-			docmd cupsd -t
-			;;
-		nginx)
-			docmd nginx -t
-			;;
-		sshd)
-			docmd sshd -t
-			;;
-		httpd2|httpd|apache|apache2)
-			if is_command httpd2 ; then
-				docmd httpd2 -t
-			elif is_command apache2 ; then
-				docmd apache2 -t
-			fi
-			;;
-		postfix)
-			docmd /etc/init.d/postfix check
-			;;
-		*)
-			fatal "$SERVICE is not supported yet. Please report if you know how to test"
-			;;
-	esac
+    case $SERVICE in
+        cups|cupsd)
+            docmd cupsd -t
+            ;;
+        nginx)
+            docmd nginx -t
+            ;;
+        sshd)
+            docmd sshd -t
+            ;;
+        httpd2|httpd|apache|apache2)
+            if is_command httpd2 ; then
+                docmd httpd2 -t
+            elif is_command apache2 ; then
+                docmd apache2 -t
+            fi
+            ;;
+        postfix)
+            docmd /etc/init.d/postfix check
+            ;;
+        *)
+            fatal "$SERVICE is not supported yet. Please report if you know how to test"
+            ;;
+    esac
 }

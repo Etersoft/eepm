@@ -19,47 +19,47 @@
 
 __serv_log_altlinux()
 {
-	local SERVICE="$1"
-	local PRG="less"
-	[ "$2" = "-f" ] && PRG="tail -f"
+    local SERVICE="$1"
+    local PRG="less"
+    [ "$2" = "-f" ] && PRG="tail -f"
 
-	case "$SERVICE" in
-		postfix)
-			sudocmd $PRG /var/log/mail/all /var/log/mail/errors
-			;;
-		sshd)
-			sudocmd $PRG /var/log/auth/all
-			;;
-		cups)
-			sudocmd $PRG /var/log/cups/access_log /var/log/cups/error_log
-			;;
-		fail2ban)
-			sudocmd $PRG /var/log/$SERVICE.log
-			;;
-		*)
-			fatal "Have no suitable for $SERVICE service"
-			;;
-	esac
+    case "$SERVICE" in
+        postfix)
+            sudocmd $PRG /var/log/mail/all /var/log/mail/errors
+            ;;
+        sshd)
+            sudocmd $PRG /var/log/auth/all
+            ;;
+        cups)
+            sudocmd $PRG /var/log/cups/access_log /var/log/cups/error_log
+            ;;
+        fail2ban)
+            sudocmd $PRG /var/log/$SERVICE.log
+            ;;
+        *)
+            fatal "Have no suitable for $SERVICE service"
+            ;;
+    esac
 }
 
 serv_log()
 {
-	local SERVICE="$1"
-	shift
+    local SERVICE="$1"
+    shift
 
-	case $SERVICETYPE in
-		systemd)
-			sudocmd journalctl -b -u "$SERVICE" "$@"
-			;;
-		*)
-			case $BASEDISTRNAME in
-			"alt")
-				FF="" ; [ "$1" = "-f" ] && FF="-f"
-				__serv_log_altlinux "$SERVICE" $FF
-				return ;;
-			*)
-				fatal "Have no suitable for $DISTRNAME command for $SERVICETYPE"
-				;;
-			esac
-	esac
+    case $SERVICETYPE in
+        systemd)
+            sudocmd journalctl -b -u "$SERVICE" "$@"
+            ;;
+        *)
+            case $BASEDISTRNAME in
+            "alt")
+                FF="" ; [ "$1" = "-f" ] && FF="-f"
+                __serv_log_altlinux "$SERVICE" $FF
+                return ;;
+            *)
+                fatal "Have no suitable for $DISTRNAME command for $SERVICETYPE"
+                ;;
+            esac
+    esac
 }
