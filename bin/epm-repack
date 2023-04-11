@@ -27,6 +27,10 @@ __epm_have_repack_rule()
     # skip repacking on non ALT systems
     [ "$BASEDISTRNAME" = "alt" ] || return 1
 
+    local packager="$(epm print field Packager for "$1" 2>/dev/null)"
+    [ "$packager" = "EPM <support@etersoft.ru>" ] && return 1
+    [ "$packager" = "EPM <support@eepm.ru>" ] && return 1
+
     # FIXME: use real way (for any archive)
     local pkgname="$(epm print name for package "$1")"
     local repackcode="$EPM_REPACK_SCRIPTS_DIR/$pkgname.sh"
@@ -37,7 +41,7 @@ __epm_check_if_needed_repack()
 {
     __epm_have_repack_rule "$@" || return
     local pkgname="$(epm print name for package "$1")"
-    warning "There is repack rule for '$pkgname' package. It is better install this package via 'epm --repack install' or 'epm play'."
+    warning "There is repack rule for '$pkgname' package. It is better install this package via 'epm install --repack' or 'epm play'."
 }
 
 # arg: rpm or deb

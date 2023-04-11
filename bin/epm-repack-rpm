@@ -88,7 +88,7 @@ __create_rpmmacros()
 %_topdir	$HOME/RPM
 %_tmppath	$TMPDIR
 
-%packager	EPM <support@etersoft.ru>
+%packager	EPM <support@eepm.ru>
 %_vendor	EEPM
 %_gpg_name	support@etersoft.ru
 
