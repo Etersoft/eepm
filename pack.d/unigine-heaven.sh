@@ -15,7 +15,7 @@ convert_makeself_to_tar()
     dd if="$1" ibs=$offset skip=1 obs=1024 conv=sync | gzip -cd > "$2"
 }
 
-BASENAME="$(basename $(echo $OPKGNAME*.run | tr "[A-Z_]" "[a-z-]") .run)"
+BASENAME="$(basename $TAR .run | tr "[A-Z_]" "[a-z-]")"
 
 convert_makeself_to_tar $TAR $BASENAME.tar
 
