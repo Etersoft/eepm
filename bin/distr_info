@@ -495,6 +495,9 @@ if distro altlinux-release ; then
     elif has Citron   ; then DISTRIB_RELEASE="2.4"
     fi
     PRETTY_NAME="$(cat /etc/altlinux-release)"
+    DISTRIB_CODENAME="$DISTRIB_RELEASE"
+    DISTRO_NAME="$DISTRIB_ID"
+    DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
 
 elif distro gentoo-release ; then
     DISTRIB_ID="Gentoo"
