@@ -140,6 +140,12 @@ docmd()
 	"$@"
 }
 
+verdocmd()
+{
+	[ -n "$verbose" ] && showcmd "$@"
+	"$@"
+}
+
 
 # copied from epm
 # print a path to the command if exists in $PATH
@@ -460,13 +466,13 @@ get_ipfs_brave()
 ipfs_access()
 {
     [ -n "$IPFS_CMD" ] || fatal "IPFS is disabled"
-    $IPFS_CMD --api $IPFS_API $ipfs_diag_timeout diag sys >/dev/null 2>/dev/null
+    verdocmd $IPFS_CMD --api $IPFS_API $ipfs_diag_timeout diag sys >/dev/null
 }
 
 ipfs_check()
 {
     [ -n "$IPFS_CMD" ] || fatal "IPFS is disabled"
-    $IPFS_CMD --api $IPFS_API $ipfs_diag_timeout cat "$1" >/dev/null
+    verdocmd $IPFS_CMD --api $IPFS_API $ipfs_diag_timeout cat "$1" >/dev/null
 }
 
 
