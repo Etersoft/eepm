@@ -626,14 +626,19 @@ elif [ "$ipfs_mode" = "local" ] ; then
 
 elif [ "$ipfs_mode" = "gateway" ] ; then
     info "Will use eget $IPFS_GATEWAY/HASH"
-ipfs_get()
+
+ipfs_get_real_url()
 {
     [ -n "$IPFS_GATEWAY" ] || fatal "ipfs http gateway is not set"
-    # FIXME:
+    echo "$IPFS_GATEWAY/$1"
+}
+
+ipfs_get()
+{
     if [ -n "$2" ] ; then
-        docmd eget -O "$2" "$IPFS_GATEWAY/$1"
+        docmd eget -O "$2" "$(ipfs_get_real_url "$1")"
     else
-        docmd eget "$IPFS_GATEWAY/$1"
+        docmd eget "$(ipfs_get_real_url "$1")"
     fi
 }
 
@@ -654,6 +659,11 @@ else
 fi
 
 if [ -n "$IPFS_CMD" ] ; then
+
+ipfs_get_real_url()
+{
+    return 1
+}
 
 ipfs_get()
 {
@@ -826,6 +836,8 @@ url_get_real_url()
 {
     local URL="$1"
     local CID="$(cid_from_url "$URL")"
+    # if we use gateway, return URL with gateway
+    ipfs_get_real_url "$URL" && return
     get_url_by_cid "$CID"
 }
 
