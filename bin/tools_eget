@@ -573,7 +573,7 @@ if is_ipfsurl "$1" && [ -z "$ipfs_mode" ] || [ "$ipfs_mode" = "auto" ] ; then
     select_ipfs_mode
     info "Auto selected IPFS mode: $ipfs_mode"
 else
-    [ -n "$ipfs_mode" ] && info "IPFS mode: $ipfs_mode"
+    [ -n "$ipfs_mode" ] && [ "$ipfs_mode" != "disabled" ] && info "IPFS mode: $ipfs_mode"
 fi
 
 IPFS_CMD=''
