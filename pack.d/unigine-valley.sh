@@ -12,7 +12,7 @@ OPKGNAME="Unigine_Valley"
 convert_makeself_to_tar()
 {
     offset=`head -n 403 "$1" | wc -c | tr -d " "`
-    dd if="$1" ibs=$offset skip=1 obs=1024 conv=sync | gzip -cd > "$2"
+    dd if="$1" ibs=$offset skip=1 obs=1024 conv=sync status=progress | gzip -cd > "$2"
 }
 
 BASENAME="$(basename $TAR .run | tr "[A-Z_]" "[a-z-]")"
