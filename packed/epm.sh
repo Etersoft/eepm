@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.50.0"
+EPMVERSION="3.50.1"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -12509,6 +12509,7 @@ fatal()
 
 info()
 {
+    [ -n "$quiet" ] && return
     echo "$*" >&2
 }
 
@@ -12517,7 +12518,7 @@ eget()
 	if [ -n "$PROGNAME" ] ; then
 
 		local bashopt=''
-		[ -n "$verbose" ] && bashopt='-x'
+		#[ -n "$verbose" ] && bashopt='-x'
 
 		(unset EGET_IPFS_GATEWAY; unset EGET_IPFS_API ; unset EGET_IPFS_DB ; $CMDSHELL $bashopt $PROGDIR/$PROGNAME "$@" )
 	else
@@ -12610,6 +12611,12 @@ docmd()
 	"$@"
 }
 
+verdocmd()
+{
+	[ -n "$verbose" ] && showcmd "$@"
+	"$@"
+}
+
 
 # copied from epm
 # print a path to the command if exists in $PATH
@@ -12692,7 +12699,10 @@ is_strange_url()
 
 is_ipfs_hash()
 {
-    echo "$1" | grep -q -E "^Qm[[:alnum:]]{44}$"
+    # If a CID is 46 characters starting with "Qm", it's a CIDv0
+    echo "$1" | grep -q -E "^Qm[[:alnum:]]{44}$" && return
+    # TODO: CIDv1 support, see https://github.com/multiformats/cid
+    return 1
 }
 
 is_ipfsurl()
@@ -12710,7 +12720,7 @@ is_httpurl()
 
 cid_from_url()
 {
-    echo "$1" | sed -e 's|^ipfs://*||'
+    echo "$1" | sed -e 's|^ipfs://*||' -e 's|\?.*||'
 }
 
 
@@ -12741,6 +12751,8 @@ download_with_mirroring()
 
 check_tty
 
+quiet=''
+verbose=''
 WGETNOSSLCHECK=''
 CURLNOSSLCHECK=''
 WGETUSERAGENT=''
@@ -12770,6 +12782,7 @@ set_quiet()
 {
     WGETQ='-q'
     CURLQ='-s'
+    quiet=1
 }
 
 
@@ -12781,7 +12794,8 @@ eget - wget like downloader wrapper with wildcard support in filename part of UR
 Usage: eget [options] http://somesite.ru/dir/na*.log
 
 Options:
-    -q                        - quiet mode
+    -q|--quiet                - quiet mode
+    --verbose                 - verbose mode
     -k|--no-check-certificate - skip SSL certificate chain support
     -U|-A|--user-agent        - send browser like UserAgent
     -4|--ipv4|--inet4-only    - use only IPV4
@@ -12832,8 +12846,11 @@ while [ -n "$1" ] ; do
             eget_help
             return
             ;;
-        -q)
+        -q|--quiet)
             set_quiet
+            ;;
+        --verbose)
+            verbose="$1"
             ;;
         -k|--no-check-certificate)
             WGETNOSSLCHECK='--no-check-certificate'
@@ -12922,13 +12939,13 @@ get_ipfs_brave()
 ipfs_access()
 {
     [ -n "$IPFS_CMD" ] || fatal "IPFS is disabled"
-    $IPFS_CMD --api $IPFS_API $ipfs_diag_timeout diag sys >/dev/null 2>/dev/null
+    verdocmd $IPFS_CMD --api $IPFS_API $ipfs_diag_timeout diag sys >/dev/null
 }
 
 ipfs_check()
 {
     [ -n "$IPFS_CMD" ] || fatal "IPFS is disabled"
-    $IPFS_CMD --api $IPFS_API $ipfs_diag_timeout cat "$1" >/dev/null
+    verdocmd $IPFS_CMD --api $IPFS_API $ipfs_diag_timeout cat "$1" >/dev/null
 }
 
 
@@ -13002,7 +13019,7 @@ put_cid_and_url()
 get_filename_by_cid()
 {
     local CID="$1"
-    [ -z "$EGET_IPFS_DB" ] && echo "$CID" && return
+    [ -z "$EGET_IPFS_DB" ] && basename "$CID" && return
     grep -F " $CID " "$EGET_IPFS_DB" | head -n1 | cut -f3 -d" "
 }
 
@@ -13040,10 +13057,11 @@ fi
 
 # detect if we run with ipfs:// or with auto
 if is_ipfsurl "$1" && [ -z "$ipfs_mode" ] || [ "$ipfs_mode" = "auto" ] ; then
+    info "Autodetecting for available IPFS relay..."
     select_ipfs_mode
     info "Auto selected IPFS mode: $ipfs_mode"
 else
-    [ -n "$ipfs_mode" ] && info "IPFS mode: $ipfs_mode"
+    [ -n "$ipfs_mode" ] && [ "$ipfs_mode" != "disabled" ] && info "IPFS mode: $ipfs_mode"
 fi
 
 IPFS_CMD=''
@@ -13082,14 +13100,19 @@ elif [ "$ipfs_mode" = "local" ] ; then
 
 elif [ "$ipfs_mode" = "gateway" ] ; then
     info "Will use eget $IPFS_GATEWAY/HASH"
-ipfs_get()
+
+ipfs_get_real_url()
 {
     [ -n "$IPFS_GATEWAY" ] || fatal "ipfs http gateway is not set"
-    # FIXME:
+    echo "$IPFS_GATEWAY/$1"
+}
+
+ipfs_get()
+{
     if [ -n "$2" ] ; then
-        docmd eget -O "$2" "$IPFS_GATEWAY/$1"
+        docmd eget -O "$2" "$(ipfs_get_real_url "$1")"
     else
-        docmd eget "$IPFS_GATEWAY/$1"
+        docmd eget "$(ipfs_get_real_url "$1")"
     fi
 }
 
@@ -13110,6 +13133,11 @@ else
 fi
 
 if [ -n "$IPFS_CMD" ] ; then
+
+ipfs_get_real_url()
+{
+    return 1
+}
 
 ipfs_get()
 {
@@ -13246,6 +13274,13 @@ url_sget()
        ipfs_get "$(cid_from_url "$URL")" "$2"
        return
     fi
+
+    local fn="$(url_print_filename_from_url "$URL")"
+    if [ -n "$fn" ] ; then
+       ipfs_get "$(cid_from_url "$URL")" "$fn"
+       return
+    fi
+
     ipfs_get "$(cid_from_url "$URL")"
 }
 
@@ -13256,9 +13291,17 @@ url_check()
     scat "$URL" >/dev/null
 }
 
+url_print_filename_from_url()
+{
+    local URL="$1"
+    local fn="$(echo "$URL" | sed -e 's|ipfs://.*\?filename=||')"
+    [ "$URL" != "$fn" ] && echo "$fn" && return
+}
+
 url_get_filename()
 {
     local URL="$1"
+    url_print_filename_from_url "$URL" && return
     local CID="$(cid_from_url "$URL")"
     get_filename_by_cid "$CID"
 }
@@ -13267,6 +13310,8 @@ url_get_real_url()
 {
     local URL="$1"
     local CID="$(cid_from_url "$URL")"
+    # if we use gateway, return URL with gateway
+    ipfs_get_real_url "$URL" && return
     get_url_by_cid "$CID"
 }
 
@@ -13309,10 +13354,10 @@ url_get_response()
 {
     local URL="$1"
     local answer
-    answer="$(__wget --spider -S "$URL" 2>&1)"
+    answer="$(quiet=1 __wget --spider -S "$URL" 2>&1)"
     # HTTP/1.1 405 Method Not Allowed
     if echo "$answer" | grep -q "^ *HTTP/[12.]* 405" ; then
-        __wget --start-pos=5000G -S "$URL" 2>&1
+        (quiet=1 __wget --start-pos=5000G -S "$URL" 2>&1)
         return
     fi
     echo "$answer"
@@ -13355,10 +13400,10 @@ url_get_response()
 {
     local URL="$1"
     local answer
-    answer="$(__curl -LI "$URL" 2>&1)"
+    answer="$(quiet=1 __curl -LI "$URL" 2>&1)"
     # HTTP/1.1 405 Method Not Allowed
     if echo "$answer" | grep -q "^ *HTTP/[12.]* 405" ; then
-        __curl -L -i -r0-0 "$URL" 2>&1
+        (quiet=1 __curl -L -i -r0-0 "$URL" 2>&1)
         return
     fi
     echo "$answer"
@@ -13380,7 +13425,7 @@ url_get_headers()
 url_check()
 {
     local URL="$1"
-    url_get_response | grep "HTTP/" | tail -n1 | grep -q -w "200\|404"
+    url_get_response "$URL" | grep "HTTP/" | tail -n1 | grep -q -w "200\|404"
 }
 
 url_get_header()
@@ -13400,7 +13445,7 @@ url_get_real_url()
     [ -n "$MADEURL" ] && [ "$MADEURL" = "$URL" ] && echo "$URL" && return
 
     local loc
-    for loc in $(url_get_header "$URL" "Location" | tac) ; do
+    for loc in $(url_get_header "$URL" "Location" | tac | sed -e 's| ||') ; do
         if ! is_strange_url "$loc" ; then
             echo "$loc"
             return
@@ -13692,8 +13737,13 @@ get_urls()
 
 if [ -n "$CHECKURL" ] ; then
     #set_quiet
-    check_url_is_accessible "$1"
-    return
+    URL="$1"
+    check_url_is_accessible "$URL"
+    res=$?
+    if [ -n "$verbose" ] ; then
+        [ "$res" = "0" ] && echo "$URL is accessible via network" || echo "$URL is NOT accessible via network"
+    fi
+     return $res
 fi
 
 if [ -n "$GETRESPONSE" ] ; then
