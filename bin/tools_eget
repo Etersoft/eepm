@@ -311,7 +311,7 @@ eget - wget like downloader wrapper with wildcard support in filename part of UR
 Usage: eget [options] http://somesite.ru/dir/na*.log
 
 Options:
-    -q                        - quiet mode
+    -q|--quiet                - quiet mode
     -k|--no-check-certificate - skip SSL certificate chain support
     -U|-A|--user-agent        - send browser like UserAgent
     -4|--ipv4|--inet4-only    - use only IPV4
@@ -362,7 +362,7 @@ while [ -n "$1" ] ; do
             eget_help
             exit
             ;;
-        -q)
+        -q|--quiet)
             set_quiet
             ;;
         -k|--no-check-certificate)
