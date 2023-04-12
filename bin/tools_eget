@@ -1242,8 +1242,13 @@ get_urls()
 
 if [ -n "$CHECKURL" ] ; then
     #set_quiet
-    check_url_is_accessible "$1"
-    exit
+    URL="$1"
+    check_url_is_accessible "$URL"
+    res=$?
+    if [ -n "$verbose" ] ; then
+        [ "$res" = "0" ] && echo "$URL is accessible via network" || echo "$URL is NOT accessible via network"
+    fi
+    exit $res
 fi
 
 if [ -n "$GETRESPONSE" ] ; then
