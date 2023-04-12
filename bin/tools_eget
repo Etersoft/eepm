@@ -47,7 +47,7 @@ eget()
 	if [ -n "$PROGNAME" ] ; then
 
 		local bashopt=''
-		[ -n "$verbose" ] && bashopt='-x'
+		#[ -n "$verbose" ] && bashopt='-x'
 
 		(unset EGET_IPFS_GATEWAY; unset EGET_IPFS_API ; unset EGET_IPFS_DB ; $CMDSHELL $bashopt $PROGDIR/$PROGNAME "$@" )
 	else
@@ -271,6 +271,7 @@ download_with_mirroring()
 
 check_tty
 
+verbose=''
 WGETNOSSLCHECK=''
 CURLNOSSLCHECK=''
 WGETUSERAGENT=''
@@ -312,6 +313,7 @@ Usage: eget [options] http://somesite.ru/dir/na*.log
 
 Options:
     -q|--quiet                - quiet mode
+    --verbose                 - verbose mode
     -k|--no-check-certificate - skip SSL certificate chain support
     -U|-A|--user-agent        - send browser like UserAgent
     -4|--ipv4|--inet4-only    - use only IPV4
@@ -364,6 +366,9 @@ while [ -n "$1" ] ; do
             ;;
         -q|--quiet)
             set_quiet
+            ;;
+        --verbose)
+            verbose="$1"
             ;;
         -k|--no-check-certificate)
             WGETNOSSLCHECK='--no-check-certificate'
