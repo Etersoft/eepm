@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.50.0
+Version: 3.50.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -155,6 +155,13 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Wed Apr 12 2023 Vitaly Lipatov <lav@altlinux.ru> 3.50.1-alt1
+- eget: fix --check
+- eget: add filename support in ipfs://Qm...filename=real.name
+- epm play unigine: fix name producing, fix url
+- eget: hide IPFS mode status when IPFS mode is disabled
+- eget: fix quiet mode, add --quiet alias for -q
+
 * Wed Apr 12 2023 Vitaly Lipatov <lav@altlinux.ru> 3.50.0-alt1
 - epm tool: add which command
 - play/repack/pack common.sh: use epm tool which for is_command
