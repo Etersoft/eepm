@@ -222,7 +222,10 @@ is_strange_url()
 
 is_ipfs_hash()
 {
-    echo "$1" | grep -q -E "^Qm[[:alnum:]]{44}$"
+    # If a CID is 46 characters starting with "Qm", it's a CIDv0
+    echo "$1" | grep -q -E "^Qm[[:alnum:]]{44}$" && return
+    # TODO: CIDv1 support, see https://github.com/multiformats/cid
+    return 1
 }
 
 is_ipfsurl()
