@@ -546,7 +546,7 @@ put_cid_and_url()
 get_filename_by_cid()
 {
     local CID="$1"
-    [ -z "$EGET_IPFS_DB" ] && echo "$CID" && return
+    [ -z "$EGET_IPFS_DB" ] && basename "$CID" && return
     grep -F " $CID " "$EGET_IPFS_DB" | head -n1 | cut -f3 -d" "
 }
 
