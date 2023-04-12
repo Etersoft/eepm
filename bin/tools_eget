@@ -39,6 +39,7 @@ fatal()
 
 info()
 {
+    [ -n "$quiet" ] && return
     echo "$*" >&2
 }
 
@@ -280,6 +281,7 @@ download_with_mirroring()
 
 check_tty
 
+quiet=''
 verbose=''
 WGETNOSSLCHECK=''
 CURLNOSSLCHECK=''
@@ -310,6 +312,7 @@ set_quiet()
 {
     WGETQ='-q'
     CURLQ='-s'
+    quiet=1
 }
 
 
@@ -584,6 +587,7 @@ fi
 
 # detect if we run with ipfs:// or with auto
 if is_ipfsurl "$1" && [ -z "$ipfs_mode" ] || [ "$ipfs_mode" = "auto" ] ; then
+    info "Autodetecting for available IPFS relay..."
     select_ipfs_mode
     info "Auto selected IPFS mode: $ipfs_mode"
 else
