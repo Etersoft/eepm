@@ -945,7 +945,7 @@ url_get_real_url()
     [ -n "$MADEURL" ] && [ "$MADEURL" = "$URL" ] && echo "$URL" && return
 
     local loc
-    for loc in $(url_get_header "$URL" "Location" | tac) ; do
+    for loc in $(url_get_header "$URL" "Location" | tac | sed -e 's| ||') ; do
         if ! is_strange_url "$loc" ; then
             echo "$loc"
             return
