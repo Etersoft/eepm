@@ -19,6 +19,10 @@ cd $BUILDROOT$PRODUCTDIR
 
 # TODO
 if false ; then
+
+# /opt/whatsapp-for-linux/usr/lib/ssl/certs -> /etc/ssl/certs
+# /opt/whatsapp-for-linux/usr/lib/ssl/private -> /etc/ssl/private
+
 # on whatsapp-for-linux example
 epm assure patchelf || exit
 # hack for
@@ -77,8 +81,6 @@ done
 # hack for remove MacOS only stuffs
 remove_dir $(find $BUILDROOT -type d -name "*catalina*" | sed -e "s|$BUILDROOT||")
 
-cd - >/dev/null
-
 add_bin_exec_command $PRODUCT $PRODUCTDIR/AppRun
 # Strange AppRun script uses args as path, so override path detection
 subst "2iexport APPDIR=$PRODUCTDIR" $BUILDROOT/usr/bin/$PRODUCT
@@ -86,6 +88,13 @@ subst "2iexport APPDIR=$PRODUCTDIR" $BUILDROOT/usr/bin/$PRODUCT
 subst '1iAutoProv:no' $SPEC
 #subst '1iAutoReq:yes,nopython,nomono,nomonolib' $SPEC
 subst '1iAutoReq:no' $SPEC
+
+if [ -f v8_context_snapshot.bin ] ; then
+    "electron based application detected, install requires"
+    . $(dirname $0)/common-chromium-browser.sh
+    # don't use install: we disabled AutoReq before
+    add_deps
+fi
 
 # ignore embedded libs
 drop_embedded_reqs
