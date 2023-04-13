@@ -68,6 +68,12 @@ if [ ! -s "$FROMICONFILE" ] ; then
 fi
 install_file $PRODUCTDIR/$FROMICONFILE /usr/share/pixmaps/$ICONFILE
 
+# copy icons if possible
+for i in usr/share/icons/hicolor/*x*/apps/* ; do
+    [ -f "$i" ] || continue
+    install_file $PRODUCTDIR/$i /$i
+done
+
 # hack for remove MacOS only stuffs
 remove_dir $(find $BUILDROOT -type d -name "*catalina*" | sed -e "s|$BUILDROOT||")
 
