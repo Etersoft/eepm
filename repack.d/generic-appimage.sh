@@ -39,6 +39,13 @@ done
 fi
 
 DESKTOPFILE="$(echo *.desktop | head -n1)"
+PRODUCTCUR="$(basename $DESKTOPFILE .desktop)"
+if [ "$PRODUCT" = "$PRODUCTCUR" ] ; then
+    PRODUCTCUR=''
+else
+    add_bin_link_command $PRODUCTCUR $PRODUCT
+fi
+
 FROMICONFILE=''
 ICONNAME=$PRODUCT
 
