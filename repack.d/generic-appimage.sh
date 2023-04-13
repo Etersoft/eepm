@@ -10,9 +10,7 @@ PRODUCTDIR=/opt/$PRODUCT
 
 # move package to /opt
 ROOTDIR=$(basename $(find $BUILDROOT -mindepth 1 -maxdepth 1 -type d))
-mkdir -p $BUILDROOT/opt
-mv $BUILDROOT/$ROOTDIR $BUILDROOT$PRODUCTDIR
-subst "s|\"/$ROOTDIR/|\"$PRODUCTDIR/|" $SPEC
+move_to_opt /$ROOTDIR
 
 fix_chrome_sandbox
 
