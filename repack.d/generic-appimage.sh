@@ -40,16 +40,18 @@ fi
 
 DESKTOPFILE="$(echo *.desktop | head -n1)"
 FROMICONFILE=''
+ICONNAME=$PRODUCT
 
 if [ -r "$DESKTOPFILE" ] ; then
     mkdir -p $BUILDROOT/usr/share/applications/
     cat $DESKTOPFILE | sed -e "s|AppRun|$PRODUCT|" -e 's|X-AppImage-Integrate.*||' > $BUILDROOT/usr/share/applications/$DESKTOPFILE
     pack_file /usr/share/applications/$DESKTOPFILE
 
-    FROMICONFILE="$(cat $DESKTOPFILE | grep "^Icon" | head -n1 | sed -e 's|Icon=||').png"
+    ICONNAME="$(cat $DESKTOPFILE | grep "^Icon" | head -n1 | sed -e 's|Icon=||')"
+    FROMICONFILE="$ICONNAME.png"
 fi
 
-ICONFILE="$PRODUCT.png"
+ICONFILE=$ICONNAME.png
 
 # it is strange, there is no icon file
 # https://docs.appimage.org/reference/appdir.html
