@@ -198,7 +198,6 @@ EOF
 move_to_opt()
 {
     local sdir rdir i
-    mkdir -p "$BUILDROOT$PRODUCTDIR/"
 
     if [ -z "$1" ] ; then
         local from
@@ -223,7 +222,9 @@ move_to_opt()
     [ -n "$rdir" ] || return 1 #fatal "Can't resolve $from in $BUILDROOT"
     [ -d "$BUILDROOT$rdir" ] || return 1 #fatal "Can't resolve $from in $BUILDROOT"
 
-    mv "$BUILDROOT$rdir"/* "$BUILDROOT$PRODUCTDIR/"
+    [ -d "$BUILDROOT$PRODUCTDIR/" ] && return 1
+    mkdir -p "$BUILDROOT$(dirname "$PRODUCTDIR")/"
+    mv "$BUILDROOT$rdir" "$BUILDROOT$PRODUCTDIR/"
     subst "s|%dir $rdir|%dir $PRODUCTDIR|" $SPEC
     subst "s|%dir \"$rdir|%dir \"$PRODUCTDIR|" $SPEC
     subst "s|\(%config.*\) $rdir|\1 $PRODUCTDIR|" $SPEC
