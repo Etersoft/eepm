@@ -518,7 +518,7 @@ check_option()
         # TODO: how to read arg?
         sort="$1"
         ;;
-    -y|--auto|--assumeyes|--non-interactive)  # HELPOPT: non interactive mode
+    -y|--auto|--assumeyes|--non-interactive|--disable-interactivity)  # HELPOPT: non interactive mode
         non_interactive="--auto"
         interactive=""
         ;;
