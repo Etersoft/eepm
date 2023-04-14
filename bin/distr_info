@@ -28,22 +28,22 @@ has()
 
 # copied from epm-sh-functions
 # print a path to the command if exists in $PATH
-if a= which which 2>/dev/null >/dev/null ; then
+if a='' which which 2>/dev/null >/dev/null ; then
     # the best case if we have which command (other ways needs checking)
     # TODO: don't use which at all, it is binary, not builtin shell command
 print_command_path()
 {
-    a= which -- "$1" 2>/dev/null
+    a='' which -- "$1" 2>/dev/null
 }
-elif a= type -a type 2>/dev/null >/dev/null ; then
+elif a='' type -a type 2>/dev/null >/dev/null ; then
 print_command_path()
 {
-    a= type -fpP -- "$1" 2>/dev/null
+    a='' type -fpP -- "$1" 2>/dev/null
 }
 else
 print_command_path()
 {
-    a= type "$1" 2>/dev/null | sed -e 's|.* /|/|'
+    a='' type "$1" 2>/dev/null | sed -e 's|.* /|/|'
 }
 fi
 
@@ -592,7 +592,7 @@ fill_distr_info
 
 get_uname()
 {
-    tolower $(uname $1) | tr -d " \t\r\n"
+    tolower "$(uname $1)" | tr -d " \t\r\n"
 }
 
 get_glibc_version()
