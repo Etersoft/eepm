@@ -79,8 +79,8 @@ epm_downgrade()
 
     info "Running command for downgrade packages"
 
-    case $PMTYPE in
-    apt-rpm)
+    case $BASEDISTRNAME in
+    alt)
         # pass pkg_filenames too
         if [ -n "$pkg_names" ] ; then
             __epm_add_alt_apt_downgrade_preferences || return
@@ -96,7 +96,13 @@ epm_downgrade()
             epm_upgrade "$@"
             __epm_remove_apt_downgrade_preferences
         fi
+        return
         ;;
+    esac
+
+    case $PMTYPE in
+    #apt-rpm)
+    #    ;;
     apt-dpkg)
         local APTOPTIONS="$(subst_option non_interactive -y) $force_yes"
         __epm_add_deb_apt_downgrade_preferences || return
