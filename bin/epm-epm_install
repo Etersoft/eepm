@@ -48,11 +48,6 @@ __epm_korinf_list() {
 
 __epm_korinf_install() {
 
-    # enable interactive for install eepm from console
-    if inputisatty && [ -n "$PROGDIR" ] && [ "$1" = "eepm" ] ; then
-        [ -n "$non_interactive" ] || interactive="--interactive"
-    fi
-
     local pkg
     local pkg_urls=''
     for pkg in $* ; do
@@ -61,6 +56,27 @@ __epm_korinf_install() {
     # due Error: Can't use epm call from the piped script
     #epm install $(__epm_korinf_site_mask "$PACKAGE")
     pkg_names='' pkg_files='' epm_install
+}
+
+__epm_korinf_install_eepm() {
+
+    # enable interactive for install eepm from console
+    if inputisatty && [ "$EPMMODE" != "pipe" ] && [ "$1" = "eepm" ] ; then
+        [ -n "$non_interactive" ] || interactive="--interactive"
+    fi
+
+    # as now, can't install one package from task (and old apt-repo can't install one package)
+    if false && [ "$BASEDISTRNAME" = "alt" ] && [ -z "$direct" ] ; then
+        local task="$(docmd eget -O- https://eepm.ru/vendor/alt/task)"
+        if [ -n "$task" ] ; then
+            docmd epm install $task
+            return
+        else
+            info "Can't get actual task for ALT, fallback to Korinf"
+        fi
+    fi
+
+    __epm_korinf_install eepm
 }
 
 epm_epm_install_help()
@@ -91,7 +107,7 @@ epm_epm_install() {
     case "$1" in
         ""|epm|eepm)
             # install epm by default
-            __epm_korinf_install "eepm"
+            __epm_korinf_install_eepm
             return
             ;;
         -h|--help)                     # HELPCMD: help
