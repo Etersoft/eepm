@@ -496,6 +496,9 @@ case $PMTYPE in
     winget)
         sudocmd winget source add "$repo"
         ;;
+    termux-pkg)
+        sudocmd pkg install "$repo"
+        ;;
     slackpkg)
         info "You need manually add repo to /etc/slackpkg/mirrors"
         ;;

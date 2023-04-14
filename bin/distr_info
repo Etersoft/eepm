@@ -190,6 +190,7 @@ case $DISTRIB_ID in
         ;;
     Android)
         CMD="android"
+        # TODO: CMD="termux-pkg"
         ;;
     Cygwin)
         CMD="aptcyg"

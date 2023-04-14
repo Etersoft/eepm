@@ -89,6 +89,9 @@ case $PMTYPE in
     xbps)
         sudocmd xbps-remove -O
         ;;
+    termux-pkg)
+        sudocmd pkg clean
+        ;;
     *)
         fatal "Have no suitable command for $PMTYPE"
         ;;

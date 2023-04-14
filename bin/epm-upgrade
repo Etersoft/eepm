@@ -171,6 +171,9 @@ epm_upgrade()
     xbps)
         CMD="xbps-install -Su"
         ;;
+    termux-pkg)
+        CMD="pkg upgrade"
+        ;;
     *)
         fatal "Have no suitable command for $PMTYPE"
         ;;

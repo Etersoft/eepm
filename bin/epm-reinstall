@@ -49,6 +49,9 @@ epm_reinstall_names()
         pkgng)
             sudocmd pkg install -f $@
             return ;;
+        termux-pkg)
+            sudocmd pkg reinstall $@
+            return ;;
         opkg)
             sudocmd opkg --force-reinstall install $@
             return ;;

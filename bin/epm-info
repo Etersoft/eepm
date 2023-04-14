@@ -146,6 +146,9 @@ case $PMTYPE in
     appget)
         docmd appget view $pkg_names
         ;;
+    termux-pkg)
+        docmd pkg show $pkg_names
+        ;;
     *)
         fatal "Have no suitable command for $PMTYPE"
         ;;

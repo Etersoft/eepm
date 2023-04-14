@@ -156,6 +156,9 @@ case $PMTYPE in
             info "Use appget instead of winget"
         return 0
         ;;
+    termux-pkg)
+        docmd pkg list-installed
+        ;;
     xbps)
         CMD="xbps-query -l"
         showcmd $CMD

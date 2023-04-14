@@ -161,6 +161,9 @@ epm_install_names()
         guix)
             __separate_sudocmd "guix package -i" "guix package -i" $@
             return ;;
+        termux-pkg)
+            sudocmd pkg install $@
+            return ;;
         android)
             fatal "We still have no idea how to use package repository, ever if it is F-Droid."
             return ;;
@@ -257,9 +260,9 @@ epm_ni_install_names()
             # FIXME: sudo and quote
             SUDO='' __separate_sudocmd "brew install" "brew upgrade" $@
             return ;;
-        #android)
-        #    sudocmd pm install $@
-        #    return ;;
+        termux-pkg)
+            sudocmd pkg install $@
+            return ;;
         slackpkg)
             # FIXME: broken status when use batch and default answer
             __separate_sudocmd_foreach "/usr/sbin/slackpkg -batch=on -default_answer=yes install" "/usr/sbin/slackpkg -batch=on -default_answer=yes upgrade" $@
@@ -593,6 +596,9 @@ epm_print_install_command()
         android)
             echo "pm install $*"
             ;;
+        termux-pkg)
+            echo "pkg install $*"
+            ;;
         aptcyg)
             echo "apt-cyg install $*"
             ;;
@@ -658,6 +664,9 @@ epm_print_install_names_command()
             return ;;
         eopkg)
             echo "eopkg install $*"
+            return ;;
+        termux-pkg)
+            echo "pkg install $*"
             return ;;
         appget|winget)
             echo "$PMTYPE install $*"

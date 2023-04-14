@@ -155,6 +155,9 @@ epm_remove_names()
         android)
             sudocmd pm uninstall $@
             return ;;
+        termux-pkg)
+            sudocmd pkg uninstall $@
+            return ;;
         chocolatey)
             sudocmd chocolatey uninstall $@
             return ;;

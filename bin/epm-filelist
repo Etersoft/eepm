@@ -135,6 +135,9 @@ __epm_filelist_name()
         android)
             CMD="pm list packages -f"
             ;;
+        termux-pkg)
+            CMD="pkg files"
+            ;;
         conary)
             CMD="conary query --ls"
             ;;

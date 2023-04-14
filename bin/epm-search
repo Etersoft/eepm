@@ -109,6 +109,9 @@ case $PMTYPE in
     android)
         CMD="pm list packages"
         ;;
+    termux-pkg)
+        CMD="pkg search"
+        ;;
     aptcyg)
         CMD="apt-cyg searchall"
         ;;
