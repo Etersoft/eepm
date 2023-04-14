@@ -8,6 +8,7 @@ get_list_alt()
 {
 
 for i in glibc-nss glibc-gconv-modules \
+         libnm \
          sssd-client \
          primus \
          vulkan-amdgpu libvulkan1 \
@@ -23,6 +24,7 @@ get_list_fedora()
 {
 
 for i in \
+         NetworkManager-libnm \
          sssd-client \
          mesa-vulkan-drivers mesa-dri-drivers vulkan-loader
 do
