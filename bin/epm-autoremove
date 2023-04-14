@@ -241,6 +241,9 @@ case $BASEDISTRNAME in
 
         if [ -z "$direct" ] ; then
             [ -n "$1" ] && fatal "Run autoremove without args or with --direct. Check epm autoremove --help to available commands."
+            if epm installed sudo ; then
+                epm mark manual sudo || fatal
+            fi
             sudocmd apt-get $(subst_option non_interactive -y) autoremove $dryrun
             local RET=$?
             if [ "$RET" != 0 ] ; then
