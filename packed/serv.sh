@@ -283,20 +283,21 @@ clean_store_output()
 
 epm()
 {
-    if [ -n "$PROGNAME" ] ; then
-
-        local bashopt=''
-        [ -n "$verbose" ] && bashopt='-x'
-
-        $CMDSHELL $bashopt $PROGDIR/$PROGNAME --inscript "$@"
-    else
+    if [ "$EPMMODE" = "pipe" ] ; then
         epm_main --inscript "$@"
+        return
     fi
+
+    # run epm again to full initialization
+    local bashopt=''
+    [ -n "$verbose" ] && bashopt='-x'
+
+    $CMDSHELL $bashopt $PROGDIR/$PROGNAME --inscript "$@"
 }
 
 sudoepm()
 {
-    [ -n "$PROGNAME" ] || fatal "Can't use sudo epm call from the piped script"
+    [ "$EPMMODE" = "pipe" ] && fatal "Can't use sudo epm call from the piped script"
 
     local bashopt=''
     [ -n "$verbose" ] && bashopt='-x'
@@ -1630,9 +1631,10 @@ case $DISTRIB_ID in
         CMD="conary"
         ;;
     Windows)
-        CMD="appget"
-        is_command $CMD || CMD="chocolatey"
-        is_command $CMD || CMD="winget"
+        is_command winget && echo "winget" && return
+        is_command appget && CMD="appget"
+        is_command chocolatey && CMD="chocolatey"
+        is_command npackdcl && CMD="npackd"
         ;;
     MacOS)
         CMD="homebrew"
@@ -1645,6 +1647,7 @@ case $DISTRIB_ID in
         ;;
     Android)
         CMD="android"
+        # TODO: CMD="termux-pkg"
         ;;
     Cygwin)
         CMD="aptcyg"
@@ -1950,6 +1953,9 @@ if distro altlinux-release ; then
     elif has Citron   ; then DISTRIB_RELEASE="2.4"
     fi
     PRETTY_NAME="$(cat /etc/altlinux-release)"
+    DISTRIB_CODENAME="$DISTRIB_RELEASE"
+    DISTRO_NAME="$DISTRIB_ID"
+    DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
 
 elif distro gentoo-release ; then
     DISTRIB_ID="Gentoo"
@@ -2564,7 +2570,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.50.1  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.51.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

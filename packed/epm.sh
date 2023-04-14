@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.50.1"
+EPMVERSION="3.51.0"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -308,20 +308,21 @@ clean_store_output()
 
 epm()
 {
-    if [ -n "$PROGNAME" ] ; then
-
-        local bashopt=''
-        [ -n "$verbose" ] && bashopt='-x'
-
-        $CMDSHELL $bashopt $PROGDIR/$PROGNAME --inscript "$@"
-    else
+    if [ "$EPMMODE" = "pipe" ] ; then
         epm_main --inscript "$@"
+        return
     fi
+
+    # run epm again to full initialization
+    local bashopt=''
+    [ -n "$verbose" ] && bashopt='-x'
+
+    $CMDSHELL $bashopt $PROGDIR/$PROGNAME --inscript "$@"
 }
 
 sudoepm()
 {
-    [ -n "$PROGNAME" ] || fatal "Can't use sudo epm call from the piped script"
+    [ "$EPMMODE" = "pipe" ] && fatal "Can't use sudo epm call from the piped script"
 
     local bashopt=''
     [ -n "$verbose" ] && bashopt='-x'
@@ -1266,6 +1267,9 @@ case $PMTYPE in
     winget)
         sudocmd winget source add "$repo"
         ;;
+    termux-pkg)
+        sudocmd pkg install "$repo"
+        ;;
     slackpkg)
         info "You need manually add repo to /etc/slackpkg/mirrors"
         ;;
@@ -1726,6 +1730,9 @@ case $BASEDISTRNAME in
 
         if [ -z "$direct" ] ; then
             [ -n "$1" ] && fatal "Run autoremove without args or with --direct. Check epm autoremove --help to available commands."
+            if epm installed sudo ; then
+                epm mark manual sudo || fatal
+            fi
             sudocmd apt-get $(subst_option non_interactive -y) autoremove $dryrun
             local RET=$?
             if [ "$RET" != 0 ] ; then
@@ -2340,11 +2347,14 @@ case $PMTYPE in
     pkgng)
         sudocmd pkg clean -a
         ;;
-    appget|winget)
-        sudocmd $PMTYPE clean
+    appget)
+        sudocmd appget clean
         ;;
     xbps)
         sudocmd xbps-remove -O
+        ;;
+    termux-pkg)
+        sudocmd pkg clean
         ;;
     *)
         fatal "Have no suitable command for $PMTYPE"
@@ -2550,8 +2560,8 @@ epm_downgrade()
 
     info "Running command for downgrade packages"
 
-    case $PMTYPE in
-    apt-rpm)
+    case $BASEDISTRNAME in
+    alt)
         # pass pkg_filenames too
         if [ -n "$pkg_names" ] ; then
             __epm_add_alt_apt_downgrade_preferences || return
@@ -2564,7 +2574,13 @@ epm_downgrade()
             epm_upgrade "$@"
             __epm_remove_apt_downgrade_preferences
         fi
+        return
         ;;
+    esac
+
+    case $PMTYPE in
+    #apt-rpm)
+    #    ;;
     apt-dpkg)
         local APTOPTIONS="$(subst_option non_interactive -y) $force_yes"
         __epm_add_deb_apt_downgrade_preferences || return
@@ -2739,7 +2755,7 @@ __epm_print_url_alt_check()
     echo
     echo "Latest release: $(paoapi packages/$pkg | get_pao_var sourcepackage) $buildtime"
     __epm_print_url_alt "$1" | while read url ; do
-        a='' curl -s --head $url >$tm || { echo "$url: missed" ; continue ; }
+        eget --get-response $url >$tm || { echo "$url: missed" ; continue ; }
         local http=$(cat $tm | grep "^HTTP" | sed -e "s|\r||g")
         local lastdate=$(cat $tm | grep "^Last-Modified:" | sed -e "s|\r||g")
         local size=$(cat $tm | grep "^Content-Length:" | sed -e "s|^Content-Length: ||g"  | sed -e "s|\r||g")
@@ -2886,11 +2902,6 @@ __epm_korinf_list() {
 
 __epm_korinf_install() {
 
-    # enable interactive for install eepm from console
-    if inputisatty && [ -n "$PROGDIR" ] && [ "$1" = "eepm" ] ; then
-        [ -n "$non_interactive" ] || interactive="--interactive"
-    fi
-
     local pkg
     local pkg_urls=''
     for pkg in $* ; do
@@ -2899,6 +2910,27 @@ __epm_korinf_install() {
     # due Error: Can't use epm call from the piped script
     #epm install $(__epm_korinf_site_mask "$PACKAGE")
     pkg_names='' pkg_files='' epm_install
+}
+
+__epm_korinf_install_eepm() {
+
+    # enable interactive for install eepm from console
+    if inputisatty && [ "$EPMMODE" != "pipe" ] && [ "$1" = "eepm" ] ; then
+        [ -n "$non_interactive" ] || interactive="--interactive"
+    fi
+
+    # as now, can't install one package from task (and old apt-repo can't install one package)
+    if false && [ "$BASEDISTRNAME" = "alt" ] && [ -z "$direct" ] ; then
+        local task="$(docmd eget -O- https://eepm.ru/vendor/alt/task)"
+        if [ -n "$task" ] ; then
+            docmd epm install $task
+            return
+        else
+            info "Can't get actual task for ALT, fallback to Korinf"
+        fi
+    fi
+
+    __epm_korinf_install eepm
 }
 
 epm_epm_install_help()
@@ -2929,7 +2961,7 @@ epm_epm_install() {
     case "$1" in
         ""|epm|eepm)
             # install epm by default
-            __epm_korinf_install "eepm"
+            __epm_korinf_install_eepm
             return
             ;;
         -h|--help)                     # HELPCMD: help
@@ -3057,6 +3089,9 @@ __epm_filelist_name()
             ;;
         android)
             CMD="pm list packages -f"
+            ;;
+        termux-pkg)
+            CMD="pkg files"
             ;;
         conary)
             CMD="conary query --ls"
@@ -3473,14 +3508,17 @@ case $PMTYPE in
     aptcyg)
         docmd apt-cyg show $pkg_names
         ;;
-    winget)
-        docmd winget show $pkg_names
-        ;;
     eopkg)
         docmd eopkg info $pkg_files $pkg_names
         ;;
     appget)
         docmd appget view $pkg_names
+        ;;
+    winget)
+        docmd winget show $pkg_names
+        ;;
+    termux-pkg)
+        docmd pkg show $pkg_names
         ;;
     *)
         fatal "Have no suitable command for $PMTYPE"
@@ -3643,6 +3681,9 @@ epm_install_names()
         guix)
             __separate_sudocmd "guix package -i" "guix package -i" $@
             return ;;
+        termux-pkg)
+            sudocmd pkg install $@
+            return ;;
         android)
             fatal "We still have no idea how to use package repository, ever if it is F-Droid."
             return ;;
@@ -3738,9 +3779,9 @@ epm_ni_install_names()
             # FIXME: sudo and quote
             SUDO='' __separate_sudocmd "brew install" "brew upgrade" $@
             return ;;
-        #android)
-        #    sudocmd pm install $@
-        #    return ;;
+        termux-pkg)
+            sudocmd pkg install $@
+            return ;;
         slackpkg)
             # FIXME: broken status when use batch and default answer
             __separate_sudocmd_foreach "/usr/sbin/slackpkg -batch=on -default_answer=yes install" "/usr/sbin/slackpkg -batch=on -default_answer=yes upgrade" $@
@@ -4070,6 +4111,9 @@ epm_print_install_command()
         android)
             echo "pm install $*"
             ;;
+        termux-pkg)
+            echo "pkg install $*"
+            ;;
         aptcyg)
             echo "apt-cyg install $*"
             ;;
@@ -4135,6 +4179,9 @@ epm_print_install_names_command()
             return ;;
         eopkg)
             echo "eopkg install $*"
+            return ;;
+        termux-pkg)
+            echo "pkg install $*"
             return ;;
         appget|winget)
             echo "$PMTYPE install $*"
@@ -4387,6 +4434,179 @@ epm_kernel_update()
         fatal "Have no suitable command for $PMTYPE"
         ;;
     esac
+}
+
+# File bin/epm-list:
+
+epm_list_help()
+{
+    cat <<EOF
+epm list - list packages
+Usage: epm list [options] [package]
+
+Options:
+  --available           list only available packages
+  --installed           list only installed packages
+EOF
+}
+
+epm_list()
+{
+    local option="$1"
+
+    if [ -z "$1" ] ; then
+        # locally installed packages by default
+        epm_packages "$@"
+        return
+    fi
+
+    shift
+
+    case "$option" in
+        -h|--help)
+            epm_list_help
+            return
+            ;;
+        #--all)
+        #    # TODO: exclude locally installed?
+        #    epm_list_available
+        #    return
+        #    ;;
+        --available)
+            # TODO: exclude locally installed?
+            epm_list_available "$@"
+            return
+            ;;
+        --installed)
+            epm_packages "$@"
+            return
+            ;;
+        *)
+            fatal "Unknown option $option, use epm list --help to get info"
+            ;;
+    esac
+
+    epm_list_help >&2
+    fatal "Run with appropriate option"
+}
+
+# File bin/epm-list_available:
+
+
+__aptcyg_print_full()
+{
+    #showcmd apt-cyg show
+    local VERSION=$(apt-cyg show "$1" | grep -m1 "^version: " | sed -e "s|^version: ||g")
+    echo "$1-$VERSION"
+}
+
+__fo_pfn()
+{
+    grep -v "^$" | grep -- "$pkg_filenames"
+}
+
+epm_list_available()
+{
+
+    if [ -n "$1" ] ; then
+        # list --available with args is the same as search
+        epm_search "$@"
+        return
+    fi
+
+case $PMTYPE in
+    apt-*)
+        warmup_dpkgbase
+        # TODO: use apt list
+        if [ -n "$short" ] ; then
+            docmd apt-cache search . | sed -e "s| .*||g"
+        else
+            docmd apt-cache search .
+        fi
+        ;;
+    dnf-*)
+        warmup_rpmbase
+        if [ -n "$short" ] ; then
+            docmd dnf list --available | sed -e "s| .*||g"
+        else
+            docmd dnf list --available
+        fi
+        ;;
+    yum-*)
+        warmup_rpmbase
+        if [ -n "$short" ] ; then
+            docmd yum list --available | sed -e "s| .*||g"
+        else
+            docmd yum list --available
+        fi
+        ;;
+    packagekit)
+        # see for filter list: pkcon get-filters
+        # TODO: implement --short
+        docmd pkcon get-packages -p | sed -e "s| (.*||g" -e "s|.* ||"
+        ;;
+    snappy)
+        docmd snappy find .
+        ;;
+    snap)
+        docmd snap find .
+        ;;
+    appget)
+        docmd appget search .
+        ;;
+    winget)
+        docmd winget search .
+        ;;
+    emerge)
+        docmd eix --world
+        ;;
+    termux-pkg)
+        docmd pkg list-all
+        ;;
+    npackd)
+        CMD="npackdcl list"
+        ;;
+    eopkg)
+        CMD="eopkg list-available"
+        ;;
+    chocolatey)
+        CMD="chocolatey search ."
+        ;;
+    slackpkg)
+        CMD="slackpkg search ."
+        ;;
+    homebrew)
+        docmd brew search .
+        ;;
+    opkg)
+        CMD="opkg list-available"
+        ;;
+    apk)
+        CMD="apk list --available"
+        ;;
+    appget)
+        CMD="appget search"
+        ;;
+    winget)
+        CMD="winget search"
+        ;;
+    xbps)
+        CMD="xbps-query -l -R"
+        showcmd $CMD
+        if [ -n "$short" ] ; then
+            $CMD | sed -e "s|^ii ||g" -e "s| .*||g" -e "s|\(.*\)-.*|\1|g" | __fo_pfn
+        else
+            $CMD | sed -e "s|^ii ||g" -e "s| .*||g" | __fo_pfn
+        fi
+        return 0
+        ;;
+    *)
+        fatal "Have no suitable query command for $PMTYPE"
+        ;;
+esac
+
+docmd $CMD | __fo_pfn
+
 }
 
 # File bin/epm-mark:
@@ -4899,11 +5119,11 @@ case $PMTYPE in
     *-rpm)
         # FIXME: space with quotes problems, use point instead
         warmup_rpmbase
-        docmd rpm -qa --queryformat "%{size}@%{name}-%{version}-%{release}\n" $pkg_filenames | sed -e "s|@| |g" | sort -n -k1
+        docmd rpm -qa --queryformat "%{size}@%{name}-%{version}-%{release}\n" "$@" | sed -e "s|@| |g" | sort -n -k1
         ;;
     *-dpkg)
         warmup_dpkgbase
-        docmd dpkg-query -W --showformat="\${Installed-Size}@\${Package}-\${Version}:\${Architecture}\n" $pkg_filenames | sed -e "s|@| |g" | sort -n -k1
+        docmd dpkg-query -W --showformat="\${Installed-Size}@\${Package}-\${Version}:\${Architecture}\n" "$@" | sed -e "s|@| |g" | sort -n -k1
         ;;
     *)
         fatal "Sorted package list function is not implemented for $PMTYPE"
@@ -4920,37 +5140,43 @@ __aptcyg_print_full()
 
 __fo_pfn()
 {
-    grep -v "^$" | grep -- "$pkg_filenames"
+    grep -v "^$" | grep -- "$*"
 }
 
 epm_packages()
 {
     local CMD
-    [ -n "$sort" ] && __epm_packages_sort && return
+    [ -n "$sort" ] && __epm_packages_sort "$@" && return
 
 case $PMTYPE in
     *-dpkg)
         warmup_dpkgbase
         # FIXME: strong equal
         #CMD="dpkg -l $pkg_filenames"
-        CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}-\${Version}:\${Architecture}\n $pkg_filenames"
+        CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}-\${Version}:\${Architecture}\n"
         # TODO: ${Architecture}
-        [ -n "$short" ] && CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}\n $pkg_filenames"
-        showcmd $CMD
-        $CMD | grep "^i" | sed -e "s|.* ||g" | __fo_pfn
+        [ -n "$short" ] && CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}\n"
+        showcmd $CMD "$@"
+        $CMD "$@" | grep "^i" | sed -e "s|.* ||g" | __fo_pfn "$@"
         return ;;
     *-rpm)
         warmup_rpmbase
         # FIXME: strong equal
-        CMD="rpm -qa $pkg_filenames"
-        [ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n $pkg_filenames"
-        docmd $CMD
+        CMD="rpm -qa"
+        [ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n"
+        docmd $CMD "$@"
         return ;;
     packagekit)
         docmd pkcon get-packages --filter installed
         ;;
     snappy)
         CMD="snappy info"
+        ;;
+    snap)
+        CMD="snap list"
+        ;;
+    flatpak)
+        CMD="flatpak list --app"
         ;;
     emerge)
         CMD="qlist -I -C"
@@ -4960,26 +5186,26 @@ case $PMTYPE in
     pkgsrc)
         CMD="pkg_info"
         showcmd $CMD
-        $CMD | sed -e "s| .*||g" | __fo_pfn
+        $CMD | sed -e "s| .*||g" | __fo_pfn "$@"
         return ;;
     pkgng)
-        if [ -n "$pkg_filenames" ] ; then
-            CMD="pkg info -E $pkg_filenames"
+        if [ -n "$@" ] ; then
+            CMD="pkg info -E $@"
         else
             CMD="pkg info"
         fi
         showcmd $CMD
         if [ -n "$short" ] ; then
-            $CMD | sed -e "s| .*||g" | sed -e "s|-[0-9].*||g" | __fo_pfn
+            $CMD | sed -e "s| .*||g" | sed -e "s|-[0-9].*||g" | __fo_pfn "$@"
         else
-            $CMD | sed -e "s| .*||g" | __fo_pfn
+            $CMD | sed -e "s| .*||g" | __fo_pfn "$@"
         fi
         return ;;
     pacman)
-        CMD="pacman -Qs $pkg_filenames"
+        CMD="pacman -Qs $@"
         showcmd $CMD
         if [ -n "$short" ] ; then
-            $CMD | sed -e "s| .*||g" -e "s|.*/||g" | __fo_pfn
+            $CMD | sed -e "s| .*||g" -e "s|.*/||g" | __fo_pfn "$@"
             return
         fi
         ;;
@@ -5002,7 +5228,7 @@ case $PMTYPE in
             # FIXME: does not work for libjpeg-v8a
             # TODO: remove last 3 elements (if arch is second from the last?)
             # FIXME this hack
-            docmd ls -1 /var/log/packages/ | sed -e "s|-[0-9].*||g" | sed -e "s|libjpeg-v8a.*|libjpeg|g" | __fo_pfn
+            docmd ls -1 /var/log/packages/ | sed -e "s|-[0-9].*||g" | sed -e "s|libjpeg-v8a.*|libjpeg|g" | __fo_pfn "$@"
             return
         fi
         ;;
@@ -5013,7 +5239,7 @@ case $PMTYPE in
         CMD="opkg list-installed"
         ;;
     apk)
-        CMD="apk info"
+        CMD="apk list --installed"
         ;;
     tce)
         CMD="ls -1 /usr/local/tce.installed"
@@ -5025,27 +5251,29 @@ case $PMTYPE in
         CMD="appget list"
         ;;
     winget)
-            info "Use appget instead of winget"
-        return 0
+        CMD="winget list"
+        ;;
+    termux-pkg)
+        docmd pkg list-installed
         ;;
     xbps)
         CMD="xbps-query -l"
         showcmd $CMD
         if [ -n "$short" ] ; then
-            $CMD | sed -e "s|^ii ||g" -e "s| .*||g" -e "s|\(.*\)-.*|\1|g" | __fo_pfn
+            $CMD | sed -e "s|^ii ||g" -e "s| .*||g" -e "s|\(.*\)-.*|\1|g" | __fo_pfn "$@"
         else
-            $CMD | sed -e "s|^ii ||g" -e "s| .*||g" | __fo_pfn
+            $CMD | sed -e "s|^ii ||g" -e "s| .*||g" | __fo_pfn "$@"
         fi
         return 0
         ;;
     android)
         CMD="pm list packages"
         showcmd $CMD
-        $CMD | sed -e "s|^package:||g" | __fo_pfn
+        $CMD | sed -e "s|^package:||g" | __fo_pfn "$@"
         return
         ;;
     aptcyg)
-        CMD="apt-cyg list $pkg_filenames"
+        CMD="apt-cyg list $@"
         if [ -z "$short" ] ; then
             showcmd $CMD
             # TODO: fix this slow way
@@ -5060,7 +5288,7 @@ case $PMTYPE in
         ;;
 esac
 
-docmd $CMD | __fo_pfn
+docmd $CMD | __fo_pfn "$@"
 
 }
 
@@ -5384,20 +5612,8 @@ __epm_play_install()
    return $RES
 }
 
-
-epm_play()
+__epm_play_initialize_ipfs()
 {
-[ "$EPMMODE" = "package" -o "$EPMMODE" = "git" ] || fatal "epm play is not supported in single file mode"
-local psdir="$(realpath $CONFIGDIR/play.d)"
-local prsdir="$(realpath $CONFIGDIR/prescription.d)"
-
-if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
-    epm_play_help
-    exit
-fi
-
-if [ "$1" = "--ipfs" ]  ; then
-    shift
     if [ -d "$(dirname "$epm_ipfs_db")" ] ; then
         export EGET_IPFS_DB="$eget_ipfs_db"
         if [ ! -r "$EGET_IPFS_DB" ] ; then
@@ -5411,87 +5627,111 @@ if [ "$1" = "--ipfs" ]  ; then
     else
         warning "ipfs db dir $eget_ipfs_db is not exists, skipping --ipfs"
     fi
-fi
+}
 
+epm_play()
+{
+[ "$EPMMODE" = "package" -o "$EPMMODE" = "git" ] || fatal "epm play is not supported in single file mode"
+local psdir="$(realpath $CONFIGDIR/play.d)"
+local prsdir="$(realpath $CONFIGDIR/prescription.d)"
 
-if [ "$1" = "--remove" ] || [ "$1" = "remove" ]  ; then
-    shift
-    __epm_play_remove "$@"
+if [ -z "$1" ] ; then
+    [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $($DISTRVENDOR -a)):"
+    __epm_play_list $psdir
     exit
 fi
 
 
-if [ "$1" = "--update" ] ; then
-    shift
-    local CMDUPDATE="--update"
-    [ -n "$force" ] && CMDUPDATE="--run"
-
-    if [ -z "$1" ] ; then
-        fatal "run --update with 'all' or a project name"
-    fi
-
-    local list
-    if [ "$1" = "all" ] ; then
-        shift
-        list="$(__list_installed_app)"
-    else
-        list="$*"
-    fi
-
-    __epm_play_update $CMDUPDATE $list
-    exit
-
-fi
-
-if [ "$1" = "--installed" ] || [ "$1" = "installed" ]  ; then
-    shift
-    __is_app_installed "$1" "$2"
-    #[ -n "$quiet" ] && exit
-    exit
-fi
-
+while [ -n "$1" ] ; do
 case "$1" in
+    -h|--help)
+        epm_play_help
+        exit
+        ;;
+
+    --ipfs)
+        shift
+        __epm_play_initialize_ipfs
+        ;;
+
+    --remove|remove)
+        shift
+        __epm_play_remove "$@"
+        exit
+        ;;
+
+    --update)
+        shift
+        local CMDUPDATE="--update"
+        [ -n "$force" ] && CMDUPDATE="--run"
+
+        if [ -z "$1" ] ; then
+            fatal "run --update with 'all' or a project name"
+        fi
+
+        local list
+        if [ "$1" = "all" ] ; then
+            shift
+            list="$(__list_installed_app)"
+        else
+            list="$*"
+        fi
+
+        __epm_play_update $CMDUPDATE $list
+        exit
+        ;;
+
+    --installed|installed)
+        shift
+        __is_app_installed "$1" "$2"
+        #[ -n "$quiet" ] && exit
+        exit
+        ;;
+
     # internal options
-    "--installed-version"|"--package-name"|"--product-alternatives")
+    --installed-version|--package-name|--product-alternatives|--info)
         __run_script "$2" "$1" "$3"
         exit
         ;;
-    "--list-installed-packages")
+    --list-installed-packages)
         __list_installed_packages
         exit
         ;;
-    "--list"|"--list-installed"|"list"|"list-installed")
+    --list|--list-installed|list|list-installed)
         __epm_play_list_installed
         exit
         ;;
-    # internal options
-    "--help"|"help")
-        __run_script "$2" "$1" "$3"
+
+    --full-list-all)
+        [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $($DISTRVENDOR -a)):"
+        __epm_play_list $psdir extra
         exit
         ;;
+
+    --list-all|list-all)
+        [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $($DISTRVENDOR -a)):"
+        __epm_play_list $psdir
+        [ -n "$quiet" ] || [ -n "$*" ] && exit
+        echo
+        #echo "Run epm play --help for help"
+        epm_play_help
+        exit
+        ;;
+
+    --list-scripts|list-scripts)
+        [ -n "$short" ] || [ -n "$quiet" ] || echo "Run with a name of a play script to run:"
+        __epm_play_list $prsdir
+        exit
+        ;;
+    -*)
+        fatal "Unknown option $1"
+        ;;
+     *)
+        break
+        ;;
 esac
-
-if [ "$1" = "--full-list-all" ] ; then
-    [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $($DISTRVENDOR -a)):"
-    __epm_play_list $psdir extra
-    exit
-fi
-
-if [ "$1" = "--list-all" ] || [ "$1" = "list-all" ] || [ -z "$*" ] ; then
-    [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $($DISTRVENDOR -a)):"
-    __epm_play_list $psdir
-    [ -n "$quiet" ] || [ -n "$*" ] && exit
-    echo
-    #echo "Run epm play --help for help"
-    epm_play_help
-    exit
-fi
-
-if [ "$1" = "--list-scripts" ] || [ "$1" = "list-scripts" ] ; then
-    [ -n "$short" ] || [ -n "$quiet" ] || echo "Run with a name of a play script to run:"
-    __epm_play_list $prsdir
-    exit
-fi
+shift
+done
 
 __epm_play_install $(echo "$*" | sed -e 's|=| = |g')
 }
@@ -6625,6 +6865,9 @@ epm_reinstall_names()
         pkgng)
             sudocmd pkg install -f $@
             return ;;
+        termux-pkg)
+            sudocmd pkg reinstall $@
+            return ;;
         opkg)
             sudocmd opkg --force-reinstall install $@
             return ;;
@@ -7275,7 +7518,7 @@ epm_release_upgrade()
             TARGET="$1"
         fi
 
-        [ "$TARGET" = "Sisyphus" && info "Check also https://www.altlinux.org/Update/Sisyphus"
+        [ "$TARGET" = "Sisyphus" ] && info "Check also https://www.altlinux.org/Update/Sisyphus"
 
         [ -n "$TARGET" ] || TARGET="$(get_next_release $DISTRVERSION)"
 
@@ -7569,6 +7812,9 @@ epm_remove_names()
             return ;;
         android)
             sudocmd pm uninstall $@
+            return ;;
+        termux-pkg)
+            sudocmd pkg uninstall $@
             return ;;
         chocolatey)
             sudocmd chocolatey uninstall $@
@@ -10095,6 +10341,9 @@ case $PMTYPE in
     android)
         CMD="pm list packages"
         ;;
+    termux-pkg)
+        CMD="pkg search"
+        ;;
     aptcyg)
         CMD="apt-cyg searchall"
         ;;
@@ -10202,20 +10451,20 @@ __epm_search_make_grep()
 
 __epm_search_internal()
 {
-    [ -n "$pkg_filenames" ] || fatal "Search: search argument(s) is missed"
+    [ -n "$1" ] || fatal "Search: search argument(s) is missed"
 
     # it is useful for first time running
     update_repo_if_needed soft
 
     warmup_bases
 
-    __epm_search_output $(get_firstarg $pkg_filenames) | grep "$pkg_filenames"
+    __epm_search_output $(get_firstarg $@) | grep "$*"
 }
 
 
 epm_search()
 {
-    [ -n "$pkg_filenames" ] || fatal "Search: search argument(s) is missed"
+    [ -n "$1" ] || fatal "Search: search argument(s) is missed"
 
     # it is useful for first time running
     update_repo_if_needed soft
@@ -10329,12 +10578,11 @@ get_task_arepo_packages()
 {
     local res
     assure_exists apt-repo
-    assure_exists curl
 
     info "TODO: please, improve apt-repo to support arepo (i586-) packages for apt-repo list task"
-    showcmd "curl -s -f http://git.altlinux.org/tasks/$tn/plan/arepo-add-x86_64-i586 | cut -f1"
+    showcmd "eget -q -O- http://git.altlinux.org/tasks/$tn/plan/arepo-add-x86_64-i586 | cut -f1"
     # TODO: retrieve one time
-    res="$(a='' curl -s -f http://git.altlinux.org/tasks/$tn/plan/arepo-add-x86_64-i586 2>/dev/null)" || return #{ warning "There is a download error for x86_64-i586 arepo." ; return ; }
+    res="$(eget -q -O- http://git.altlinux.org/tasks/$tn/plan/arepo-add-x86_64-i586 2>/dev/null)" || return #{ warning "There is a download error for x86_64-i586 arepo." ; return ; }
     echo "$res" | cut -f1
 }
 
@@ -10609,8 +10857,8 @@ __epm_check_vendor()
 is_warmup_allowed()
 {
     local MEM
-    # disable warming up until set EPM_WARNUP in /etc/eepm/eepm.conf
-    [ -n "$EPM_WARMUP" ] || return 1
+    # disable warming up until set warmup in /etc/eepm/eepm.conf
+    [ -n "$warmup" ] || return 1
     MEM="$($DISTRVENDOR -m)"
     # disable warm if have no enough memory
     [ "$MEM" -le 1024 ] && return 1
@@ -10629,7 +10877,7 @@ __warmup_files()
 
 warmup_rpmbase()
 {
-    is_warmup_allowed || return
+    is_warmup_allowed || { warning "Skipping warmup bases due low memory size" ; return ; }
     __warmup_files "rpm" "/var/lib/rpm/*"
 }
 
@@ -10788,7 +11036,7 @@ EOF
                 # use verbose for get package status
                 #pkg_filenames="$pkg-[0-9]" verbose=--verbose __epm_search_internal | grep -E "(installed|upgrade)" && continue
                 #pkg_filenames="$pkg" verbose=--verbose __epm_search_internal | grep -E "(installed|upgrade)" && continue
-                (pkg_filenames="$pkg" __epm_search_internal) | grep -q "^$pkg-[0-9]" && continue
+                __epm_search_internal "$pkg" | grep -q "^$pkg-[0-9]" && continue
                 res=1
                 info "Package '$pkg' does not found in repository."
             done
@@ -11257,7 +11505,7 @@ epm_upgrade()
         ;;
     homebrew)
         #CMD="brew upgrade"
-        docmd brew upgrade $(brew outdated)
+        sudocmd brew upgrade $(brew outdated)
         return
         ;;
     opkg)
@@ -11272,8 +11520,15 @@ epm_upgrade()
     guix)
         CMD="guix package -u"
         ;;
-    appget|winget)
+    appget)
         CMD="$PMTYPE update-all"
+        ;;
+    winget)
+        if [ -z "$1" ] ; then
+            sudocmd winget upgrade --all
+            return
+        fi
+        CMD="winget upgrade"
         ;;
     aptcyg)
         # shellcheck disable=SC2046
@@ -11282,6 +11537,9 @@ epm_upgrade()
         ;;
     xbps)
         CMD="xbps-install -Su"
+        ;;
+    termux-pkg)
+        CMD="pkg upgrade"
         ;;
     *)
         fatal "Have no suitable command for $PMTYPE"
@@ -11599,9 +11857,10 @@ case $DISTRIB_ID in
         CMD="conary"
         ;;
     Windows)
-        CMD="appget"
-        is_command $CMD || CMD="chocolatey"
-        is_command $CMD || CMD="winget"
+        is_command winget && echo "winget" && return
+        is_command appget && CMD="appget"
+        is_command chocolatey && CMD="chocolatey"
+        is_command npackdcl && CMD="npackd"
         ;;
     MacOS)
         CMD="homebrew"
@@ -11614,6 +11873,7 @@ case $DISTRIB_ID in
         ;;
     Android)
         CMD="android"
+        # TODO: CMD="termux-pkg"
         ;;
     Cygwin)
         CMD="aptcyg"
@@ -11919,6 +12179,9 @@ if distro altlinux-release ; then
     elif has Citron   ; then DISTRIB_RELEASE="2.4"
     fi
     PRETTY_NAME="$(cat /etc/altlinux-release)"
+    DISTRIB_CODENAME="$DISTRIB_RELEASE"
+    DISTRO_NAME="$DISTRIB_ID"
+    DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
 
 elif distro gentoo-release ; then
     DISTRIB_ID="Gentoo"
@@ -12515,16 +12778,18 @@ info()
 
 eget()
 {
-	if [ -n "$PROGNAME" ] ; then
-
-		local bashopt=''
-		#[ -n "$verbose" ] && bashopt='-x'
-
-		(unset EGET_IPFS_GATEWAY; unset EGET_IPFS_API ; unset EGET_IPFS_DB ; $CMDSHELL $bashopt $PROGDIR/$PROGNAME "$@" )
-	else
-		#epm_main --inscript "$@"
-		fatal "Improve me"
+	if [ -n "$EPMMODE" ] ; then
+		# if embedded in epm
+		(unset EGET_IPFS_GATEWAY; unset EGET_IPFS_API ; unset EGET_IPFS_DB ; internal_eget "$@" )
+		return
 	fi
+
+	[ -n "$PROGNAME" ] || fatal "pipe mode is not supported"
+
+	local bashopt=''
+	#[ -n "$verbose" ] && bashopt='-x'
+
+	(unset EGET_IPFS_GATEWAY; unset EGET_IPFS_API ; unset EGET_IPFS_DB ; $CMDSHELL $bashopt $PROGDIR/$PROGNAME "$@" )
 }
 
 # TODO:
@@ -13445,7 +13710,7 @@ url_get_real_url()
     [ -n "$MADEURL" ] && [ "$MADEURL" = "$URL" ] && echo "$URL" && return
 
     local loc
-    for loc in $(url_get_header "$URL" "Location" | tac | sed -e 's| ||') ; do
+    for loc in $(url_get_header "$URL" "Location" | tac | sed -e 's| .*||') ; do
         if ! is_strange_url "$loc" ; then
             echo "$loc"
             return
@@ -14988,6 +15253,7 @@ skip_installed=
 skip_missed=
 show_command_only=
 epm_cmd=
+warmup=
 pkg_files=
 pkg_dirs=
 pkg_names=
@@ -15021,6 +15287,7 @@ case $PROGNAME in
         ;;
     epms)                      # HELPSHORT: alias for epm search
         epm_cmd=search
+        direct_args=1
         ;;
     epmsf)                     # HELPSHORT: alias for epm search file
         epm_cmd=search_file
@@ -15082,6 +15349,7 @@ check_command()
         ;;
     -s|search|s|find|sr)                # HELPCMD: search in remote package repositories
         epm_cmd=search
+        direct_args=1
         ;;
     -qp|qp|query_package)     # HELPCMD: search in the list of installed packages
         epm_cmd=query_package
@@ -15138,8 +15406,18 @@ check_command()
     conflicts)                # HELPCMD: print package conflicts
         epm_cmd=conflicts
         ;;
-    -qa|qa|-l|list|ls|packages|list-installed|li)  # HELPCMD: print list of installed package(s)
+    -qa|qa|ls|packages|list-installed|li)  # HELPCMD: print list of all installed packages
         epm_cmd=packages
+        direct_args=1
+        ;;
+    list)                     # HELPCMD: print list of packages
+        epm_cmd=list
+        direct_args=1
+        ;;
+    # it is too hard operation, so just list name is very short for it
+    list-available)           # HELPCMD: print list of all available packages
+        epm_cmd=list_available
+        direct_args=1
         ;;
     programs)                 # HELPCMD: print list of installed GUI program(s) (they have .desktop files)
         epm_cmd=programs
@@ -15371,7 +15649,7 @@ check_option()
         # TODO: how to read arg?
         sort="$1"
         ;;
-    -y|--auto|--assumeyes|--non-interactive)  # HELPOPT: non interactive mode
+    -y|--auto|--assumeyes|--non-interactive|--disable-interactivity)  # HELPOPT: non interactive mode
         non_interactive="--auto"
         interactive=""
         ;;
