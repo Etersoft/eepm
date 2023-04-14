@@ -145,7 +145,7 @@ epm_upgrade()
         ;;
     homebrew)
         #CMD="brew upgrade"
-        docmd brew upgrade $(brew outdated)
+        sudocmd brew upgrade $(brew outdated)
         return
         ;;
     opkg)
@@ -160,8 +160,15 @@ epm_upgrade()
     guix)
         CMD="guix package -u"
         ;;
-    appget|winget)
+    appget)
         CMD="$PMTYPE update-all"
+        ;;
+    winget)
+        if [ -z "$1" ] ; then
+            sudocmd winget upgrade --all
+            return
+        fi
+        CMD="winget upgrade"
         ;;
     aptcyg)
         # shellcheck disable=SC2046
