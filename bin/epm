@@ -278,6 +278,10 @@ check_command()
         epm_cmd=packages
         direct_args=1
         ;;
+    list)                     # HELPCMD: print list of packages
+        epm_cmd=list
+        direct_args=1
+        ;;
     # it is too hard operation, so just list name is very short for it
     list-available)           # HELPCMD: print list of all available packages
         epm_cmd=list_available
