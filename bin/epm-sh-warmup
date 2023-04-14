@@ -20,8 +20,8 @@
 is_warmup_allowed()
 {
     local MEM
-    # disable warming up until set EPM_WARNUP in /etc/eepm/eepm.conf
-    [ -n "$EPM_WARMUP" ] || return 1
+    # disable warming up until set warmup in /etc/eepm/eepm.conf
+    [ -n "$warmup" ] || return 1
     MEM="$($DISTRVENDOR -m)"
     # disable warm if have no enough memory
     [ "$MEM" -le 1024 ] && return 1
@@ -40,7 +40,7 @@ __warmup_files()
 
 warmup_rpmbase()
 {
-    is_warmup_allowed || return
+    is_warmup_allowed || { warning "Skipping warmup bases due low memory size" ; return ; }
     __warmup_files "rpm" "/var/lib/rpm/*"
 }
 

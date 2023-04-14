@@ -122,6 +122,7 @@ skip_installed=
 skip_missed=
 show_command_only=
 epm_cmd=
+warmup=
 pkg_files=
 pkg_dirs=
 pkg_names=
