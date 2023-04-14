@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.50.1
+Version: 3.51.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -155,6 +155,31 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Sat Apr 15 2023 Vitaly Lipatov <lav@altlinux.ru> 3.51.0-alt1
+- distr_info: add missed fields for old ALT distro
+- epm repack: add support for remotedesktopmanager
+- epm repack.d/generic-appimage.sh: use correct icon name
+- epm repack.d/generic-appimage.sh: add alternative link too
+- epm repack.d/generic-appimage.sh: install /usr/share/icons/hicolor... if exists
+- epm repack.d/common-chromium-browser.sh: add add_deps()
+- epm repack.d/generic-appimage.sh: add predefined deps for electron based apps
+- epm play: add todoist support
+- epm repack.d/common-chromium-browser.sh: install/add deps only on ALT
+- eget: fix get real url again
+- epm-autoremove: force mark sudo as manual (some bug in a distro?)
+- epm prescription i586-fix.sh: add libnm (needed for Steam)
+- add support for termux-pkg
+- epm search: use direct args
+- epm: implement list-available
+- epm packages: use direct args
+- drop epm list, epm -l aliases for epm packages
+- epm: implement list (with --available and --installed options)
+- epm: improve winget support
+- epm play: refactoring
+- epm: add --disable-interactivity alias for --non-interactive
+- epm ei: add special case for eepm install
+- eget: fix embedded mode
+
 * Wed Apr 12 2023 Vitaly Lipatov <lav@altlinux.ru> 3.50.1-alt1
 - eget: fix --check
 - eget: add filename support in ipfs://Qm...filename=real.name
