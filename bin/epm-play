@@ -340,20 +340,8 @@ __epm_play_install()
    return $RES
 }
 
-
-epm_play()
+__epm_play_initialize_ipfs()
 {
-[ "$EPMMODE" = "package" -o "$EPMMODE" = "git" ] || fatal "epm play is not supported in single file mode"
-local psdir="$(realpath $CONFIGDIR/play.d)"
-local prsdir="$(realpath $CONFIGDIR/prescription.d)"
-
-if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
-    epm_play_help
-    exit
-fi
-
-if [ "$1" = "--ipfs" ]  ; then
-    shift
     if [ -d "$(dirname "$epm_ipfs_db")" ] ; then
         export EGET_IPFS_DB="$eget_ipfs_db"
         if [ ! -r "$EGET_IPFS_DB" ] ; then
@@ -367,87 +355,111 @@ if [ "$1" = "--ipfs" ]  ; then
     else
         warning "ipfs db dir $eget_ipfs_db is not exists, skipping --ipfs"
     fi
-fi
+}
 
+epm_play()
+{
+[ "$EPMMODE" = "package" -o "$EPMMODE" = "git" ] || fatal "epm play is not supported in single file mode"
+local psdir="$(realpath $CONFIGDIR/play.d)"
+local prsdir="$(realpath $CONFIGDIR/prescription.d)"
 
-if [ "$1" = "--remove" ] || [ "$1" = "remove" ]  ; then
-    shift
-    __epm_play_remove "$@"
+if [ -z "$1" ] ; then
+    [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $($DISTRVENDOR -a)):"
+    __epm_play_list $psdir
     exit
 fi
 
 
-if [ "$1" = "--update" ] ; then
-    shift
-    local CMDUPDATE="--update"
-    [ -n "$force" ] && CMDUPDATE="--run"
-
-    if [ -z "$1" ] ; then
-        fatal "run --update with 'all' or a project name"
-    fi
-
-    local list
-    if [ "$1" = "all" ] ; then
-        shift
-        list="$(__list_installed_app)"
-    else
-        list="$*"
-    fi
-
-    __epm_play_update $CMDUPDATE $list
-    exit
-
-fi
-
-if [ "$1" = "--installed" ] || [ "$1" = "installed" ]  ; then
-    shift
-    __is_app_installed "$1" "$2"
-    #[ -n "$quiet" ] && exit
-    exit
-fi
-
+while [ -n "$1" ] ; do
 case "$1" in
+    -h|--help)
+        epm_play_help
+        exit
+        ;;
+
+    --ipfs)
+        shift
+        __epm_play_initialize_ipfs
+        ;;
+
+    --remove|remove)
+        shift
+        __epm_play_remove "$@"
+        exit
+        ;;
+
+    --update)
+        shift
+        local CMDUPDATE="--update"
+        [ -n "$force" ] && CMDUPDATE="--run"
+
+        if [ -z "$1" ] ; then
+            fatal "run --update with 'all' or a project name"
+        fi
+
+        local list
+        if [ "$1" = "all" ] ; then
+            shift
+            list="$(__list_installed_app)"
+        else
+            list="$*"
+        fi
+
+        __epm_play_update $CMDUPDATE $list
+        exit
+        ;;
+
+    --installed|installed)
+        shift
+        __is_app_installed "$1" "$2"
+        #[ -n "$quiet" ] && exit
+        exit
+        ;;
+
     # internal options
-    "--installed-version"|"--package-name"|"--product-alternatives")
+    --installed-version|--package-name|--product-alternatives|--info)
         __run_script "$2" "$1" "$3"
         exit
         ;;
-    "--list-installed-packages")
+    --list-installed-packages)
         __list_installed_packages
         exit
         ;;
-    "--list"|"--list-installed"|"list"|"list-installed")
+    --list|--list-installed|list|list-installed)
         __epm_play_list_installed
         exit
         ;;
-    # internal options
-    "--help"|"help")
-        __run_script "$2" "$1" "$3"
+
+    --full-list-all)
+        [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $($DISTRVENDOR -a)):"
+        __epm_play_list $psdir extra
         exit
         ;;
+
+    --list-all|list-all)
+        [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $($DISTRVENDOR -a)):"
+        __epm_play_list $psdir
+        [ -n "$quiet" ] || [ -n "$*" ] && exit
+        echo
+        #echo "Run epm play --help for help"
+        epm_play_help
+        exit
+        ;;
+
+    --list-scripts|list-scripts)
+        [ -n "$short" ] || [ -n "$quiet" ] || echo "Run with a name of a play script to run:"
+        __epm_play_list $prsdir
+        exit
+        ;;
+    -*)
+        fatal "Unknown option $1"
+        ;;
+     *)
+        break
+        ;;
 esac
-
-if [ "$1" = "--full-list-all" ] ; then
-    [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $($DISTRVENDOR -a)):"
-    __epm_play_list $psdir extra
-    exit
-fi
-
-if [ "$1" = "--list-all" ] || [ "$1" = "list-all" ] || [ -z "$*" ] ; then
-    [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $($DISTRVENDOR -a)):"
-    __epm_play_list $psdir
-    [ -n "$quiet" ] || [ -n "$*" ] && exit
-    echo
-    #echo "Run epm play --help for help"
-    epm_play_help
-    exit
-fi
-
-if [ "$1" = "--list-scripts" ] || [ "$1" = "list-scripts" ] ; then
-    [ -n "$short" ] || [ -n "$quiet" ] || echo "Run with a name of a play script to run:"
-    __epm_play_list $prsdir
-    exit
-fi
+shift
+done
 
 __epm_play_install $(echo "$*" | sed -e 's|=| = |g')
 }

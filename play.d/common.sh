@@ -68,12 +68,13 @@ case "$1" in
         epm remove $PKGNAME
         exit
         ;;
-    "--help")
+    "--info")
         if [ -n "$PRODUCTALT" ] ; then
             echo "Help about additional parameters."
-            echo "Use epm play $(basename $0 .sh) [$(echo "$PRODUCTALT" | sed -e 's@ @|@g')]"
+            echo "Use epm play $(basename $0 .sh) [= $(echo "$PRODUCTALT" | sed -e 's@ @|@g')]"
         fi
         [ -n "$TIPS" ] && echo "$TIPS"
+        [ -n "$URL" ] && echo "Url: $URL"
         exit
         ;;
     "--package-name")
