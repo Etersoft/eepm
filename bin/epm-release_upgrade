@@ -113,7 +113,7 @@ get_fix_release_pkg()
     local TOINSTALL=''
 
     local FORCE=''
-    if [ "$1" == "--force" ] ; then
+    if [ "$1" = "--force" ] ; then
         FORCE="$1"
         shift
     fi
@@ -129,7 +129,7 @@ get_fix_release_pkg()
         epm installed apt-conf-branch && echo "apt-conf-branch apt-conf-sisyphus-"
     fi
 
-    if [ "$FORCE" == "--force" ] ; then
+    if [ "$FORCE" = "--force" ] ; then
         # assure we have set needed release
         TOINSTALL="altlinux-release-$TO"
     else

@@ -192,7 +192,7 @@ __epm_addrepo_altlinux()
 {
     local repo="$*"
 
-    if [ -z "$repo" ] || [ "$repo" == "-h" ] || [ "$repo" == "--list" ] || [ "$repo" == "--help" ] ; then
+    if [ -z "$repo" ] || [ "$repo" = "-h" ] || [ "$repo" = "--list" ] || [ "$repo" = "--help" ] ; then
         __epm_addrepo_altlinux_help
         return
     fi
