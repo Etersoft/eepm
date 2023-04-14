@@ -26,11 +26,11 @@ case $PMTYPE in
     *-rpm)
         # FIXME: space with quotes problems, use point instead
         warmup_rpmbase
-        docmd rpm -qa --queryformat "%{size}@%{name}-%{version}-%{release}\n" $pkg_filenames | sed -e "s|@| |g" | sort -n -k1
+        docmd rpm -qa --queryformat "%{size}@%{name}-%{version}-%{release}\n" "$@" | sed -e "s|@| |g" | sort -n -k1
         ;;
     *-dpkg)
         warmup_dpkgbase
-        docmd dpkg-query -W --showformat="\${Installed-Size}@\${Package}-\${Version}:\${Architecture}\n" $pkg_filenames | sed -e "s|@| |g" | sort -n -k1
+        docmd dpkg-query -W --showformat="\${Installed-Size}@\${Package}-\${Version}:\${Architecture}\n" "$@" | sed -e "s|@| |g" | sort -n -k1
         ;;
     *)
         fatal "Sorted package list function is not implemented for $PMTYPE"
@@ -47,38 +47,44 @@ __aptcyg_print_full()
 
 __fo_pfn()
 {
-    grep -v "^$" | grep -- "$pkg_filenames"
+    grep -v "^$" | grep -- "$*"
 }
 
 # TODO: we have a problem with error status here
 epm_packages()
 {
     local CMD
-    [ -n "$sort" ] && __epm_packages_sort && return
+    [ -n "$sort" ] && __epm_packages_sort "$@" && return
 
 case $PMTYPE in
     *-dpkg)
         warmup_dpkgbase
         # FIXME: strong equal
         #CMD="dpkg -l $pkg_filenames"
-        CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}-\${Version}:\${Architecture}\n $pkg_filenames"
+        CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}-\${Version}:\${Architecture}\n"
         # TODO: ${Architecture}
-        [ -n "$short" ] && CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}\n $pkg_filenames"
-        showcmd $CMD
-        $CMD | grep "^i" | sed -e "s|.* ||g" | __fo_pfn
+        [ -n "$short" ] && CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}\n"
+        showcmd $CMD "$@"
+        $CMD "$@" | grep "^i" | sed -e "s|.* ||g" | __fo_pfn "$@"
         return ;;
     *-rpm)
         warmup_rpmbase
         # FIXME: strong equal
-        CMD="rpm -qa $pkg_filenames"
-        [ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n $pkg_filenames"
-        docmd $CMD
+        CMD="rpm -qa"
+        [ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n"
+        docmd $CMD "$@"
         return ;;
     packagekit)
         docmd pkcon get-packages --filter installed
         ;;
     snappy)
         CMD="snappy info"
+        ;;
+    snap)
+        CMD="snap list"
+        ;;
+    flatpak)
+        CMD="flatpak list --app"
         ;;
     emerge)
         CMD="qlist -I -C"
@@ -88,26 +94,26 @@ case $PMTYPE in
     pkgsrc)
         CMD="pkg_info"
         showcmd $CMD
-        $CMD | sed -e "s| .*||g" | __fo_pfn
+        $CMD | sed -e "s| .*||g" | __fo_pfn "$@"
         return ;;
     pkgng)
-        if [ -n "$pkg_filenames" ] ; then
-            CMD="pkg info -E $pkg_filenames"
+        if [ -n "$@" ] ; then
+            CMD="pkg info -E $@"
         else
             CMD="pkg info"
         fi
         showcmd $CMD
         if [ -n "$short" ] ; then
-            $CMD | sed -e "s| .*||g" | sed -e "s|-[0-9].*||g" | __fo_pfn
+            $CMD | sed -e "s| .*||g" | sed -e "s|-[0-9].*||g" | __fo_pfn "$@"
         else
-            $CMD | sed -e "s| .*||g" | __fo_pfn
+            $CMD | sed -e "s| .*||g" | __fo_pfn "$@"
         fi
         return ;;
     pacman)
-        CMD="pacman -Qs $pkg_filenames"
+        CMD="pacman -Qs $@"
         showcmd $CMD
         if [ -n "$short" ] ; then
-            $CMD | sed -e "s| .*||g" -e "s|.*/||g" | __fo_pfn
+            $CMD | sed -e "s| .*||g" -e "s|.*/||g" | __fo_pfn "$@"
             return
         fi
         ;;
@@ -130,7 +136,7 @@ case $PMTYPE in
             # FIXME: does not work for libjpeg-v8a
             # TODO: remove last 3 elements (if arch is second from the last?)
             # FIXME this hack
-            docmd ls -1 /var/log/packages/ | sed -e "s|-[0-9].*||g" | sed -e "s|libjpeg-v8a.*|libjpeg|g" | __fo_pfn
+            docmd ls -1 /var/log/packages/ | sed -e "s|-[0-9].*||g" | sed -e "s|libjpeg-v8a.*|libjpeg|g" | __fo_pfn "$@"
             return
         fi
         ;;
@@ -141,7 +147,7 @@ case $PMTYPE in
         CMD="opkg list-installed"
         ;;
     apk)
-        CMD="apk info"
+        CMD="apk list --installed"
         ;;
     tce)
         CMD="ls -1 /usr/local/tce.installed"
@@ -153,8 +159,7 @@ case $PMTYPE in
         CMD="appget list"
         ;;
     winget)
-            info "Use appget instead of winget"
-        return 0
+        CMD="winget list"
         ;;
     termux-pkg)
         docmd pkg list-installed
@@ -163,20 +168,20 @@ case $PMTYPE in
         CMD="xbps-query -l"
         showcmd $CMD
         if [ -n "$short" ] ; then
-            $CMD | sed -e "s|^ii ||g" -e "s| .*||g" -e "s|\(.*\)-.*|\1|g" | __fo_pfn
+            $CMD | sed -e "s|^ii ||g" -e "s| .*||g" -e "s|\(.*\)-.*|\1|g" | __fo_pfn "$@"
         else
-            $CMD | sed -e "s|^ii ||g" -e "s| .*||g" | __fo_pfn
+            $CMD | sed -e "s|^ii ||g" -e "s| .*||g" | __fo_pfn "$@"
         fi
         return 0
         ;;
     android)
         CMD="pm list packages"
         showcmd $CMD
-        $CMD | sed -e "s|^package:||g" | __fo_pfn
+        $CMD | sed -e "s|^package:||g" | __fo_pfn "$@"
         return
         ;;
     aptcyg)
-        CMD="apt-cyg list $pkg_filenames"
+        CMD="apt-cyg list $@"
         if [ -z "$short" ] ; then
             showcmd $CMD
             # TODO: fix this slow way
@@ -191,7 +196,7 @@ case $PMTYPE in
         ;;
 esac
 
-docmd $CMD | __fo_pfn
+docmd $CMD | __fo_pfn "$@"
 # FIXME: we print empty lines, but will lost error status
 
 }

@@ -274,8 +274,10 @@ check_command()
     conflicts)                # HELPCMD: print package conflicts
         epm_cmd=conflicts
         ;;
-    -qa|qa|-l|list|ls|packages|list-installed|li)  # HELPCMD: print list of installed package(s)
+    -qa|qa|ls|packages|list-installed|li)  # HELPCMD: print list of all installed packages
         epm_cmd=packages
+        direct_args=1
+        ;;
     # it is too hard operation, so just list name is very short for it
     list-available)           # HELPCMD: print list of all available packages
         epm_cmd=list_available
