@@ -137,7 +137,7 @@ case $PMTYPE in
         sudocmd zypper removerepo "$@"
         ;;
     emerge)
-        sudocmd layman "-d$@"
+        sudocmd layman "-d$1"
         ;;
     pacman)
         info "You need remove repo from /etc/pacman.conf"

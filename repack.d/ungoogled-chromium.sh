@@ -23,7 +23,7 @@ use_system_xdg
 
 install_file $PRODUCTDIR/product_logo_48.png /usr/share/pixmaps/$PRODUCT.png
 
- create desktop file
+# create desktop file
 mkdir -p $BUILDROOT/usr/share/applications/
 cat <<EOF >$BUILDROOT/usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]

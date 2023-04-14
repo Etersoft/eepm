@@ -144,8 +144,7 @@ __do_short_query()
             CMD="rpm -qf --queryformat %{NAME}\n"
             ;;
         apt-dpkg)
-            showcmd dpkg -S "$1"
-            a= dpkg -S $1 | sed -e "s|:.*||"
+            docmd dpkg -S "$1" | sed -e "s|:.*||"
             return ;;
         NOemerge)
             assure_exists equery

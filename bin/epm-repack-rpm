@@ -131,7 +131,7 @@ __epm_repack_to_rpm()
     fi
 
     local pkg
-    export HOME=$(mktemp -d --tmpdir=$BIGTMPDIR)
+    export HOME="$(mktemp -d --tmpdir=$BIGTMPDIR)"
     to_clean_tmp_dirs="$to_clean_tmp_dirs $HOME"
     trap "__epm_remove_tmp_files" EXIT
     __create_rpmmacros

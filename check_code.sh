@@ -3,7 +3,7 @@
 # http://mywiki.wooledge.org/Bashism
 # https://wiki.ubuntu.com/DashAsBinSh
 
-EXCL=-eSC2086,SC2039,SC2034,SC2068,SC2155
+EXCL=-eSC2086,SC2039,SC2034,SC2068,SC2155,SC3043
 
 # TODO:
 # SC2154: pkg_filenames is referenced but not assigned.
@@ -20,4 +20,4 @@ checkbashisms -f bin/*
 checkbashisms -f Makefile
 
 shellcheck $EXCL \
-	bin/epm bin/distro_info bin/epm-* bin/serv-* bin/tools_*
+	bin/epm bin/distr_info bin/epm-* bin/serv-* bin/tools_*

@@ -101,7 +101,7 @@ __list_app_packages_table()
 __list_installed_app()
 {
     local i
-    local tapt=$(mktemp) || fatal
+    local tapt="$(mktemp)" || fatal
     __list_app_packages_table >$tapt
     # get all installed packages and convert it to a apps list
     for i in $(epm query --short $(cat $tapt | sed -e 's| .*$||') 2>/dev/null) ; do
@@ -116,7 +116,7 @@ __list_installed_app()
 __list_installed_packages()
 {
     local i
-    local tapt=$(mktemp) || fatal
+    local tapt="$(mktemp)" || fatal
     __list_app_packages_table >$tapt
     # get all installed packages and convert it to a apps list
     for i in $(epm query --short $(cat $tapt | sed -e 's| .*$||') 2>/dev/null) ; do
@@ -327,6 +327,7 @@ __epm_play_install()
        esac
        local p="$1"
        local v=''
+       # drop spaces
        n="$(echo $2)"
        if [ "$n" = "=" ] ; then
            v="$3"

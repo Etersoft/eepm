@@ -30,7 +30,7 @@ __epm_repack_to_deb()
 
     repacked_pkgs=''
 
-    local TDIR=$(mktemp -d --tmpdir=$BIGTMPDIR)
+    local TDIR="$(mktemp -d --tmpdir=$BIGTMPDIR)"
     to_clean_tmp_dirs="$to_clean_tmp_dirs $TDIR"
     trap "__epm_remove_tmp_files" EXIT
 

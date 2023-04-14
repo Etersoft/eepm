@@ -27,7 +27,7 @@ __epm_korinf_site_mask() {
     local MASK="$1"
     local archprefix=""
     # short hack to install needed package
-    rhas "$MASK" "[-_]" || MASK="$MASK[-_][0-9]"
+    rhas "$MASK" "[-_]" || MASK="${MASK}[-_][0-9]"
     # set arch for Korinf compatibility
     [ "$($DISTRVENDOR -a)" = "x86_64" ] && archprefix="x86_64/"
     local URL="$EPM_KORINF_REPO_URL/$archprefix$($DISTRVENDOR -e)"
@@ -61,7 +61,7 @@ __epm_korinf_install() {
 __epm_korinf_install_eepm() {
 
     # enable interactive for install eepm from console
-    if inputisatty && [ "$EPMMODE" != "pipe" ] && [ "$1" = "eepm" ] ; then
+    if inputisatty && [ "$EPMMODE" != "pipe" ] ; then
         [ -n "$non_interactive" ] || interactive="--interactive"
     fi
 

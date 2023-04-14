@@ -251,8 +251,8 @@ get_next_release()
         echo "c7" ;;
     "c7")
         echo "c8" ;;
-    "c8")
-        echo "c8.1" ;;
+#    "c8")
+#        echo "c8.1" ;;
     "c8.1")
         echo "c8.2" ;;
     "c8")

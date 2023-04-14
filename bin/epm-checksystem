@@ -21,7 +21,7 @@
 
 __alt_fix_triggers()
 {
-    local TDIR=$(mktemp -d)
+    local TDIR="$(mktemp -d)"
     assure_exists time
     touch $TDIR/added
     for ft in $(ls /usr/lib/rpm/*.filetrigger | sort) ; do

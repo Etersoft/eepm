@@ -34,7 +34,7 @@ __epm_pack()
     [ -x "$repackcode" ] || fatal "Can't find script $repackcode for packname $packname"
     [ -f "$repackcode.rpmnew" ] && warning "There is .rpmnew file(s) in $EPM_PACK_SCRIPTS_DIR dir. The pack script can be outdated."
 
-    tmpdir=$(mktemp -d)
+    tmpdir="$(mktemp -d)"
     filefortarname="$tmpdir/filefortarname"
     trap "rm -rf $tmpdir" EXIT
 
