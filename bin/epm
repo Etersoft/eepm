@@ -276,6 +276,10 @@ check_command()
         ;;
     -qa|qa|-l|list|ls|packages|list-installed|li)  # HELPCMD: print list of installed package(s)
         epm_cmd=packages
+    # it is too hard operation, so just list name is very short for it
+    list-available)           # HELPCMD: print list of all available packages
+        epm_cmd=list_available
+        direct_args=1
         ;;
     programs)                 # HELPCMD: print list of installed GUI program(s) (they have .desktop files)
         epm_cmd=programs

@@ -1,0 +1,138 @@
+#!/bin/sh
+#
+# Copyright (C) 2023  Etersoft
+# Copyright (C) 2023  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+load_helper epm-sh-warmup
+
+__aptcyg_print_full()
+{
+    #showcmd apt-cyg show
+    local VERSION=$(apt-cyg show "$1" | grep -m1 "^version: " | sed -e "s|^version: ||g")
+    echo "$1-$VERSION"
+}
+
+__fo_pfn()
+{
+    grep -v "^$" | grep -- "$pkg_filenames"
+}
+
+epm_list_available()
+{
+
+    if [ -n "$1" ] ; then
+        # list --available with args is the same as search
+        load_helper epm-search
+        epm_search "$@"
+        return
+    fi
+
+case $PMTYPE in
+    apt-*)
+        warmup_dpkgbase
+        # TODO: use apt list
+        if [ -n "$short" ] ; then
+            docmd apt-cache search . | sed -e "s| .*||g"
+        else
+            docmd apt-cache search .
+        fi
+        ;;
+    dnf-*)
+        warmup_rpmbase
+        if [ -n "$short" ] ; then
+            docmd dnf list --available | sed -e "s| .*||g"
+        else
+            docmd dnf list --available
+        fi
+        ;;
+    yum-*)
+        warmup_rpmbase
+        if [ -n "$short" ] ; then
+            docmd yum list --available | sed -e "s| .*||g"
+        else
+            docmd yum list --available
+        fi
+        ;;
+    packagekit)
+        # see for filter list: pkcon get-filters
+        # TODO: implement --short
+        docmd pkcon get-packages -p | sed -e "s| (.*||g" -e "s|.* ||"
+        ;;
+    snappy)
+        docmd snappy find .
+        ;;
+    snap)
+        docmd snap find .
+        ;;
+    appget)
+        docmd appget search .
+        ;;
+    winget)
+        docmd winget search .
+        ;;
+    emerge)
+        docmd eix --world
+        ;;
+    termux-pkg)
+        docmd pkg list-all
+        ;;
+    npackd)
+        CMD="npackdcl list"
+        ;;
+    eopkg)
+        CMD="eopkg list-available"
+        ;;
+    chocolatey)
+        CMD="chocolatey search ."
+        ;;
+    slackpkg)
+        CMD="slackpkg search ."
+        ;;
+    homebrew)
+        docmd brew search .
+        ;;
+    opkg)
+        CMD="opkg list-available"
+        ;;
+    apk)
+        CMD="apk list --available"
+        ;;
+    appget)
+        CMD="appget search"
+        ;;
+    winget)
+        CMD="winget search"
+        ;;
+    xbps)
+        CMD="xbps-query -l -R"
+        showcmd $CMD
+        if [ -n "$short" ] ; then
+            $CMD | sed -e "s|^ii ||g" -e "s| .*||g" -e "s|\(.*\)-.*|\1|g" | __fo_pfn
+        else
+            $CMD | sed -e "s|^ii ||g" -e "s| .*||g" | __fo_pfn
+        fi
+        return 0
+        ;;
+    *)
+        fatal "Have no suitable query command for $PMTYPE"
+        ;;
+esac
+
+docmd $CMD | __fo_pfn
+# FIXME: we print empty lines, but will lost error status
+
+}
