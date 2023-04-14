@@ -45,16 +45,18 @@ info()
 
 eget()
 {
-	if [ -n "$PROGNAME" ] ; then
-
-		local bashopt=''
-		#[ -n "$verbose" ] && bashopt='-x'
-
-		(unset EGET_IPFS_GATEWAY; unset EGET_IPFS_API ; unset EGET_IPFS_DB ; $CMDSHELL $bashopt $PROGDIR/$PROGNAME "$@" )
-	else
-		#epm_main --inscript "$@"
-		fatal "Improve me"
+	if [ -n "$EPMMODE" ] ; then
+		# if embedded in epm
+		(unset EGET_IPFS_GATEWAY; unset EGET_IPFS_API ; unset EGET_IPFS_DB ; internal_eget "$@" )
+		return
 	fi
+
+	[ -n "$PROGNAME" ] || fatal "pipe mode is not supported"
+
+	local bashopt=''
+	#[ -n "$verbose" ] && bashopt='-x'
+
+	(unset EGET_IPFS_GATEWAY; unset EGET_IPFS_API ; unset EGET_IPFS_DB ; $CMDSHELL $bashopt $PROGDIR/$PROGNAME "$@" )
 }
 
 # TODO:
