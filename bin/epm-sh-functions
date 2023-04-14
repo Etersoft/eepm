@@ -290,21 +290,22 @@ clean_store_output()
 # run epm, possible from side repo
 epm()
 {
-    if [ -n "$PROGNAME" ] ; then
-
-        local bashopt=''
-        [ -n "$verbose" ] && bashopt='-x'
-
-        $CMDSHELL $bashopt $PROGDIR/$PROGNAME --inscript "$@"
-    else
+    if [ "$EPMMODE" = "pipe" ] ; then
         epm_main --inscript "$@"
+        return
     fi
+
+    # run epm again to full initialization
+    local bashopt=''
+    [ -n "$verbose" ] && bashopt='-x'
+
+    $CMDSHELL $bashopt $PROGDIR/$PROGNAME --inscript "$@"
 }
 
 # run $SUDO epm, possible from side repo
 sudoepm()
 {
-    [ -n "$PROGNAME" ] || fatal "Can't use sudo epm call from the piped script"
+    [ "$EPMMODE" = "pipe" ] && fatal "Can't use sudo epm call from the piped script"
 
     local bashopt=''
     [ -n "$verbose" ] && bashopt='-x'
