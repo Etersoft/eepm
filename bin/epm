@@ -155,6 +155,7 @@ case $PROGNAME in
         ;;
     epms)                      # HELPSHORT: alias for epm search
         epm_cmd=search
+        direct_args=1
         ;;
     epmsf)                     # HELPSHORT: alias for epm search file
         epm_cmd=search_file
@@ -216,6 +217,7 @@ check_command()
         ;;
     -s|search|s|find|sr)                # HELPCMD: search in remote package repositories
         epm_cmd=search
+        direct_args=1
         ;;
     -qp|qp|query_package)     # HELPCMD: search in the list of installed packages
         epm_cmd=query_package
