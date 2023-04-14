@@ -9,4 +9,4 @@ DESCRIPTION="Unigine Superposition 2017 (Unigine Benchmark) from the official si
 # https://assets.unigine.com/d/Unigine_superposition-4.0.run
 PKGURL=$(eget --list --latest https://benchmark.unigine.com/superposition "Unigine_Superposition*.run")
 
-epm pack --install $PKGNAME $PKURL
+epm pack --install $PKGNAME $PKGURL
