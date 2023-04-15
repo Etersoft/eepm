@@ -289,6 +289,8 @@ WGETNOSSLCHECK=''
 CURLNOSSLCHECK=''
 WGETUSERAGENT=''
 CURLUSERAGENT=''
+WGETCOMPRESSED=''
+CURLCOMPRESSED=''
 WGETQ='' #-q
 CURLQ='' #-s
 # TODO: aria2c
@@ -330,6 +332,7 @@ Options:
     --verbose                 - verbose mode
     -k|--no-check-certificate - skip SSL certificate chain support
     -U|-A|--user-agent        - send browser like UserAgent
+    --compressed              - request a compressed response and automatically decompress the content
     -4|--ipv4|--inet4-only    - use only IPV4
     -6|--ipv6|--inet6-only    - use only IPV6
     -O-|-O -                  - output downloaded file to stdout
@@ -392,6 +395,10 @@ while [ -n "$1" ] ; do
             user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
             WGETUSERAGENT="-U '$user_agent'"
             CURLUSERAGENT="-A '$user_agent'"
+            ;;
+        --compressed)
+            CURLCOMPRESSED='--compressed'
+            WGETCOMPRESSED='--compression=auto'
             ;;
         -4|--ipv4|--inet4-only)
             FORCEIPV="-4"
@@ -853,9 +860,9 @@ elif [ "$EGET_BACKEND" = "wget" ] ; then
 __wget()
 {
     if [ -n "$WGETUSERAGENT" ] ; then
-        docmd $WGET $FORCEIPV $WGETQ $WGETNOSSLCHECK "$WGETUSERAGENT" "$@"
+        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETNOSSLCHECK "$WGETUSERAGENT" "$@"
     else
-        docmd $WGET $FORCEIPV $WGETQ $WGETNOSSLCHECK "$@"
+        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETNOSSLCHECK "$@"
     fi
 }
 
@@ -902,9 +909,9 @@ elif [ "$EGET_BACKEND" = "curl" ] ; then
 __curl()
 {
     if [ -n "$CURLUSERAGENT" ] ; then
-        docmd $CURL $FORCEIPV --fail -L $CURLQ "$CURLUSERAGENT" $CURLNOSSLCHECK "$@"
+        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED "$CURLUSERAGENT" $CURLNOSSLCHECK "$@"
     else
-        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLNOSSLCHECK "$@"
+        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLNOSSLCHECK "$@"
     fi
 }
 # put remote content to stdout
