@@ -115,6 +115,27 @@ __epm_get_pkgvendor()
 
     epm print field Vendor for "$pkg" 2>/dev/null
 }
+
+__epm_print_warning_for_nonalt_packages()
+{
+    # only ALT
+    [ "$BASEDISTRNAME" = "alt" ] || return 0
+
+    local i
+    for i in $* ; do
+        local vendor
+        # TODO: check only for rpm
+        vendor="$(__epm_get_pkgvendor "$i")"
+
+        local packager="$(epm print field Packager for "$i" 2>/dev/null)"
+
+        # TODO: check GPG or some other mark
+        echo "$packager" | grep -q "@altlinux" && [ "$vendor" = "ALT Linux Team" ] && return 0
+
+        warning "%%% You are trying install package $i not from ALT repository. Be careful! %%%"
+    done
+}
+
 # Args: package names. Set noscripts for outside packages.
 __epm_check_vendor()
 {

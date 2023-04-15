@@ -328,13 +328,16 @@ epm_install_files()
     case "$BASEDISTRNAME" in
         "alt")
 
+            # on ALT install target can be a real path
             # do not use low-level for install by file path (f.i. epm install /usr/bin/git)
             if __epm_if_command_path $files ; then
                 epm_install_names $files
                 return
             fi
 
-            # on ALT install target can be a real path
+            __epm_print_warning_for_nonalt_packages $files
+
+            # do repack if needed
             if __epm_repack_if_needed $files ; then
                 [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
                 files="$repacked_pkgs"
