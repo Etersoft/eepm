@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.51.0"
+EPMVERSION="3.51.1"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -284,7 +284,7 @@ subst_option()
 store_output()
 {
     # use make_temp_file from etersoft-build-utils
-    RC_STDOUT=$(mktemp)
+    RC_STDOUT="$(mktemp)"
     local CMDSTATUS=$RC_STDOUT.pipestatus
     echo 1 >$CMDSTATUS
     #RC_STDERR=$(mktemp)
@@ -969,7 +969,7 @@ __epm_addrepo_altlinux()
 {
     local repo="$*"
 
-    if [ -z "$repo" ] || [ "$repo" == "-h" ] || [ "$repo" == "--list" ] || [ "$repo" == "--help" ] ; then
+    if [ -z "$repo" ] || [ "$repo" = "-h" ] || [ "$repo" = "--list" ] || [ "$repo" = "--help" ] ; then
         __epm_addrepo_altlinux_help
         return
     fi
@@ -2153,7 +2153,7 @@ epm_checkpkg()
 
 __alt_fix_triggers()
 {
-    local TDIR=$(mktemp -d)
+    local TDIR="$(mktemp -d)"
     assure_exists time
     touch $TDIR/added
     for ft in $(ls /usr/lib/rpm/*.filetrigger | sort) ; do
@@ -2667,7 +2667,7 @@ __download_pkg_urls()
     local url
     [ -z "$pkg_urls" ] && return
     for url in $pkg_urls ; do
-        local tmppkg=$(mktemp -d) || fatal "failed mktemp -d"
+        local tmppkg="$(mktemp -d)" || fatal "failed mktemp -d"
         docmd chmod $verbose a+rX $tmppkg
         showcmd cd $tmppkg
         cd $tmppkg || fatal
@@ -2748,7 +2748,7 @@ __epm_print_url_alt_check()
 {
     local pkg=$1
     shift
-    local tm=$(mktemp)
+    local tm="$(mktemp)"
     assure_exists curl
     quiet=1
     local buildtime=$(paoapi packages/$pkg | get_pao_var buildtime)
@@ -2881,7 +2881,7 @@ __epm_korinf_site_mask() {
     local MASK="$1"
     local archprefix=""
     # short hack to install needed package
-    rhas "$MASK" "[-_]" || MASK="$MASK[-_][0-9]"
+    rhas "$MASK" "[-_]" || MASK="${MASK}[-_][0-9]"
     # set arch for Korinf compatibility
     [ "$($DISTRVENDOR -a)" = "x86_64" ] && archprefix="x86_64/"
     local URL="$EPM_KORINF_REPO_URL/$archprefix$($DISTRVENDOR -e)"
@@ -2915,7 +2915,7 @@ __epm_korinf_install() {
 __epm_korinf_install_eepm() {
 
     # enable interactive for install eepm from console
-    if inputisatty && [ "$EPMMODE" != "pipe" ] && [ "$1" = "eepm" ] ; then
+    if inputisatty && [ "$EPMMODE" != "pipe" ] ; then
         [ -n "$non_interactive" ] || interactive="--interactive"
     fi
 
@@ -4996,7 +4996,7 @@ __epm_pack()
     [ -x "$repackcode" ] || fatal "Can't find script $repackcode for packname $packname"
     [ -f "$repackcode.rpmnew" ] && warning "There is .rpmnew file(s) in $EPM_PACK_SCRIPTS_DIR dir. The pack script can be outdated."
 
-    tmpdir=$(mktemp -d)
+    tmpdir="$(mktemp -d)"
     filefortarname="$tmpdir/filefortarname"
     trap "rm -rf $tmpdir" EXIT
 
@@ -5376,7 +5376,7 @@ __list_app_packages_table()
 __list_installed_app()
 {
     local i
-    local tapt=$(mktemp) || fatal
+    local tapt="$(mktemp)" || fatal
     __list_app_packages_table >$tapt
     # get all installed packages and convert it to a apps list
     for i in $(epm query --short $(cat $tapt | sed -e 's| .*$||') 2>/dev/null) ; do
@@ -5391,7 +5391,7 @@ __list_installed_app()
 __list_installed_packages()
 {
     local i
-    local tapt=$(mktemp) || fatal
+    local tapt="$(mktemp)" || fatal
     __list_app_packages_table >$tapt
     # get all installed packages and convert it to a apps list
     for i in $(epm query --short $(cat $tapt | sed -e 's| .*$||') 2>/dev/null) ; do
@@ -5599,6 +5599,7 @@ __epm_play_install()
        esac
        local p="$1"
        local v=''
+       # drop spaces
        n="$(echo $2)"
        if [ "$n" = "=" ] ; then
            v="$3"
@@ -5730,7 +5731,7 @@ case "$1" in
         break
         ;;
 esac
-shift
+
 done
 
 __epm_play_install $(echo "$*" | sed -e 's|=| = |g')
@@ -5782,7 +5783,7 @@ EOF
     exit
 fi
 
-if [ "$1" == "--list-all" ] || [ -z "$*" ] ; then
+if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
     [ -n "$short" ] || [ -n "$quiet" ] || echo "Run with a name of a prescription to run:"
     __epm_play_list $psdir
     exit
@@ -6773,8 +6774,7 @@ __do_short_query()
             CMD="rpm -qf --queryformat %{NAME}\n"
             ;;
         apt-dpkg)
-            showcmd dpkg -S "$1"
-            a= dpkg -S $1 | sed -e "s|:.*||"
+            docmd dpkg -S "$1" | sed -e "s|:.*||"
             return ;;
         NOemerge)
             assure_exists equery
@@ -7168,7 +7168,7 @@ get_fix_release_pkg()
     local TOINSTALL=''
 
     local FORCE=''
-    if [ "$1" == "--force" ] ; then
+    if [ "$1" = "--force" ] ; then
         FORCE="$1"
         shift
     fi
@@ -7184,7 +7184,7 @@ get_fix_release_pkg()
         epm installed apt-conf-branch && echo "apt-conf-branch apt-conf-sisyphus-"
     fi
 
-    if [ "$FORCE" == "--force" ] ; then
+    if [ "$FORCE" = "--force" ] ; then
         # assure we have set needed release
         TOINSTALL="altlinux-release-$TO"
     else
@@ -7299,8 +7299,6 @@ get_next_release()
         echo "c7" ;;
     "c7")
         echo "c8" ;;
-    "c8")
-        echo "c8.1" ;;
     "c8.1")
         echo "c8.2" ;;
     "c8")
@@ -8199,7 +8197,7 @@ case $PMTYPE in
         sudocmd zypper removerepo "$@"
         ;;
     emerge)
-        sudocmd layman "-d$@"
+        sudocmd layman "-d$1"
         ;;
     pacman)
         info "You need remove repo from /etc/pacman.conf"
@@ -8451,7 +8449,7 @@ __epm_repack_to_deb()
 
     repacked_pkgs=''
 
-    local TDIR=$(mktemp -d --tmpdir=$BIGTMPDIR)
+    local TDIR="$(mktemp -d --tmpdir=$BIGTMPDIR)"
     to_clean_tmp_dirs="$to_clean_tmp_dirs $TDIR"
     trap "__epm_remove_tmp_files" EXIT
 
@@ -8592,7 +8590,7 @@ __epm_repack_to_rpm()
     fi
 
     local pkg
-    export HOME=$(mktemp -d --tmpdir=$BIGTMPDIR)
+    export HOME="$(mktemp -d --tmpdir=$BIGTMPDIR)"
     to_clean_tmp_dirs="$to_clean_tmp_dirs $HOME"
     trap "__epm_remove_tmp_files" EXIT
     __create_rpmmacros
@@ -10780,7 +10778,7 @@ get_only_installed_packages()
 
 __convert_pkgallowscripts_to_regexp()
 {
-    local tmpalf=$(mktemp) || fatal
+    local tmpalf="$(mktemp)" || fatal
     # copied from eget's filter_glob
     # check man glob
     # remove commentы and translate glob to regexp
@@ -11710,22 +11708,22 @@ has()
 
 # copied from epm-sh-functions
 # print a path to the command if exists in $PATH
-if a= which which 2>/dev/null >/dev/null ; then
+if a='' which which 2>/dev/null >/dev/null ; then
     # the best case if we have which command (other ways needs checking)
     # TODO: don't use which at all, it is binary, not builtin shell command
 print_command_path()
 {
-    a= which -- "$1" 2>/dev/null
+    a='' which -- "$1" 2>/dev/null
 }
-elif a= type -a type 2>/dev/null >/dev/null ; then
+elif a='' type -a type 2>/dev/null >/dev/null ; then
 print_command_path()
 {
-    a= type -fpP -- "$1" 2>/dev/null
+    a='' type -fpP -- "$1" 2>/dev/null
 }
 else
 print_command_path()
 {
-    a= type "$1" 2>/dev/null | sed -e 's|.* /|/|'
+    a='' type "$1" 2>/dev/null | sed -e 's|.* /|/|'
 }
 fi
 
@@ -12274,7 +12272,7 @@ fill_distr_info
 
 get_uname()
 {
-    tolower $(uname $1) | tr -d " \t\r\n"
+    tolower "$(uname $1)" | tr -d " \t\r\n"
 }
 
 get_glibc_version()
@@ -12780,7 +12778,7 @@ eget()
 {
 	if [ -n "$EPMMODE" ] ; then
 		# if embedded in epm
-		(unset EGET_IPFS_GATEWAY; unset EGET_IPFS_API ; unset EGET_IPFS_DB ; internal_eget "$@" )
+		(unset EGET_IPFS_GATEWAY; unset EGET_IPFS_API ; unset EGET_IPFS_DB ; internal_tools_eget "$@" )
 		return
 	fi
 
@@ -13389,7 +13387,8 @@ ipfs_cat()
 
 ipfs_put()
 {
-    fatal "IPFS add disabled if a gateway is used"
+    info "IPFS put skipped when a gateway is used"
+    return 1
 }
 elif [ -z "$ipfs_mode" ] ; then
     :
@@ -13863,6 +13862,10 @@ sget()
 
     # download file and add to IPFS
     url_sget "$REALURL" "$TARGET" || return
+
+    # don't do ipfs put when gateway is using
+    [ "$ipfs_mode" = "gateway" ] && return
+
     CID="$(ipfs_put --progress "$TARGET")" || return
 
     put_cid_and_url "$REALURL" "$CID" "$FN"

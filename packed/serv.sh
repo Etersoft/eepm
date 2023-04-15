@@ -259,7 +259,7 @@ subst_option()
 store_output()
 {
     # use make_temp_file from etersoft-build-utils
-    RC_STDOUT=$(mktemp)
+    RC_STDOUT="$(mktemp)"
     local CMDSTATUS=$RC_STDOUT.pipestatus
     echo 1 >$CMDSTATUS
     #RC_STDERR=$(mktemp)
@@ -1484,22 +1484,22 @@ has()
 
 # copied from epm-sh-functions
 # print a path to the command if exists in $PATH
-if a= which which 2>/dev/null >/dev/null ; then
+if a='' which which 2>/dev/null >/dev/null ; then
     # the best case if we have which command (other ways needs checking)
     # TODO: don't use which at all, it is binary, not builtin shell command
 print_command_path()
 {
-    a= which -- "$1" 2>/dev/null
+    a='' which -- "$1" 2>/dev/null
 }
-elif a= type -a type 2>/dev/null >/dev/null ; then
+elif a='' type -a type 2>/dev/null >/dev/null ; then
 print_command_path()
 {
-    a= type -fpP -- "$1" 2>/dev/null
+    a='' type -fpP -- "$1" 2>/dev/null
 }
 else
 print_command_path()
 {
-    a= type "$1" 2>/dev/null | sed -e 's|.* /|/|'
+    a='' type "$1" 2>/dev/null | sed -e 's|.* /|/|'
 }
 fi
 
@@ -2048,7 +2048,7 @@ fill_distr_info
 
 get_uname()
 {
-    tolower $(uname $1) | tr -d " \t\r\n"
+    tolower "$(uname $1)" | tr -d " \t\r\n"
 }
 
 get_glibc_version()
@@ -2570,7 +2570,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.51.0  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.51.1  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
