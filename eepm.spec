@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.51.0
+Version: 3.51.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -155,6 +155,10 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Sat Apr 15 2023 Vitaly Lipatov <lav@altlinux.ru> 3.51.1-alt1
+- epm play: fix shift when --ipfs
+- eget: don't return put error in gateway mode
+
 * Sat Apr 15 2023 Vitaly Lipatov <lav@altlinux.ru> 3.51.0-alt1
 - distr_info: add missed fields for old ALT distro
 - epm repack: add support for remotedesktopmanager
