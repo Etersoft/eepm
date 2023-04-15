@@ -192,7 +192,7 @@ filter_glob()
 {
 	[ -z "$1" ] && cat && return
 	# translate glob to regexp
-	grep "$(echo "$1" | sed -e "s|\*|.*|g" -e "s|?|.|g")$"
+	grep "$(echo "$1" | sed -e 's|\.|\\.|g' -e 's|\*|.*|g' -e 's|\?|.|g' )$"
 }
 
 filter_order()
