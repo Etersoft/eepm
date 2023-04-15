@@ -140,8 +140,8 @@ epm_upgrade()
     apk)
         CMD="apk upgrade"
         ;;
-    chocolatey)
-        CMD="chocolatey update all"
+    choco)
+        CMD="choco update all"
         ;;
     homebrew)
         #CMD="brew upgrade"

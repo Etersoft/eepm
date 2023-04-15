@@ -177,7 +177,7 @@ case $DISTRIB_ID in
     Windows)
         is_command winget && echo "winget" && return
         is_command appget && CMD="appget"
-        is_command chocolatey && CMD="chocolatey"
+        is_command choco && CMD="choco"
         is_command npackdcl && CMD="npackd"
         ;;
     MacOS)

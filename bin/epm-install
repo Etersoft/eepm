@@ -232,8 +232,8 @@ epm_ni_install_names()
             #  npackdcl update --package=<package> (remove old and install new)
             sudocmd npackdcl add --package="$*"
             return ;;
-        chocolatey)
-            docmd chocolatey install $@
+        choco)
+            docmd choco install $@
             return ;;
         opkg)
             sudocmd opkg -force-defaults install $@
@@ -659,8 +659,8 @@ epm_print_install_names_command()
         pacman)
             echo "pacman -S --noconfirm $*"
             return ;;
-        chocolatey)
-            echo "chocolatey install $*"
+        choco)
+            echo "choco install $*"
             return ;;
         nix)
             echo "nix-env --install $*"

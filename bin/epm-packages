@@ -127,8 +127,8 @@ case $PMTYPE in
     eopkg)
         CMD="eopkg list-installed"
         ;;
-    chocolatey)
-        CMD="chocolatey list"
+    choco)
+        CMD="choco list"
         ;;
     slackpkg)
         CMD="ls -1 /var/log/packages/"

@@ -84,8 +84,8 @@ case $PMTYPE in
         docmd npackdcl search --query="$string" --status=all
         return
         ;;
-    chocolatey)
-        CMD="chocolatey list"
+    choco)
+        CMD="choco list"
         ;;
     slackpkg)
         # FIXME

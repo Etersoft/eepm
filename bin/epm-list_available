@@ -96,8 +96,8 @@ case $PMTYPE in
     eopkg)
         CMD="eopkg list-available"
         ;;
-    chocolatey)
-        CMD="chocolatey search ."
+    choco)
+        CMD="choco search ."
         ;;
     slackpkg)
         CMD="slackpkg search ."

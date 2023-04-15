@@ -158,8 +158,8 @@ epm_remove_names()
         termux-pkg)
             sudocmd pkg uninstall $@
             return ;;
-        chocolatey)
-            sudocmd chocolatey uninstall $@
+        choco)
+            sudocmd choco uninstall $@
             return ;;
         slackpkg)
             sudocmd /usr/sbin/slackpkg remove $@
