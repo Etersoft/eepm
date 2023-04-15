@@ -47,7 +47,7 @@ eget()
 {
 	if [ -n "$EPMMODE" ] ; then
 		# if embedded in epm
-		(unset EGET_IPFS_GATEWAY; unset EGET_IPFS_API ; unset EGET_IPFS_DB ; internal_eget "$@" )
+		(unset EGET_IPFS_GATEWAY; unset EGET_IPFS_API ; unset EGET_IPFS_DB ; internal_tools_eget "$@" )
 		return
 	fi
 
