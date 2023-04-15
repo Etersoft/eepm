@@ -459,7 +459,7 @@ case "$1" in
         break
         ;;
 esac
-shift
+
 done
 
 __epm_play_install $(echo "$*" | sed -e 's|=| = |g')
