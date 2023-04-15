@@ -90,12 +90,12 @@ _shortquery_via_packages_list()
     # Note: double call due stderr redirect
     # Note: we use short=1 here due grep by ^name$
     # separate first line for print out command
-    (short=1 pkg_filenames=$firstpkg epm_packages | grep -- "$grepexp") && res=0 || res=1
+    (short=1 epm_packages $firstpkg | grep -- "$grepexp") && res=0 || res=1
 
     local pkg
     for pkg in "$@" ; do
         grepexp=$(_get_grep_exp $pkg)
-        (short=1 pkg_filenames=$pkg epm_packages 2>/dev/null) | grep -- "$grepexp" || res=1
+        (short=1 epm_packages $pkg 2>/dev/null) | grep -- "$grepexp" || res=1
     done
 
     # TODO: print in query (for user): 'warning: package $pkg is not installed'
@@ -118,12 +118,12 @@ _query_via_packages_list()
     # Note: double call due stderr redirect
     # Note: we use short=1 here due grep by ^name$
     # separate first line for print out command
-    (short=1 pkg_filenames=$firstpkg epm_packages) | grep -q -- "$grepexp" && (quiet=1 pkg_filenames=$firstpkg epm_packages) && res=0 || res=1
+    (short=1 epm_packages $firstpkg) | grep -q -- "$grepexp" && (quiet=1 epm_packages $firstpkg) && res=0 || res=1
 
     local pkg
     for pkg in "$@" ; do
         grepexp=$(_get_grep_exp $pkg)
-        (short=1 pkg_filenames=$pkg epm_packages 2>/dev/null) | grep -q -- "$grepexp" && (quiet=1 pkg_filenames=$pkg epm_packages) || res=1
+        (short=1 epm_packages $pkg 2>/dev/null) | grep -q -- "$grepexp" && (quiet=1 epm_packages $pkg) || res=1
     done
 
     return $res

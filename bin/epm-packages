@@ -72,7 +72,7 @@ case $PMTYPE in
         # FIXME: strong equal
         CMD="rpm -qa"
         [ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n"
-        docmd $CMD "$@"
+        docmd $CMD "$@" | __fo_pfn "$@"
         return ;;
     packagekit)
         docmd pkcon get-packages --filter installed
