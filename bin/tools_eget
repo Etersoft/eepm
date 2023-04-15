@@ -656,7 +656,8 @@ ipfs_cat()
 
 ipfs_put()
 {
-    fatal "IPFS add disabled if a gateway is used"
+    info "IPFS put skipped when a gateway is used"
+    return 1
 }
 elif [ -z "$ipfs_mode" ] ; then
     :
@@ -1130,6 +1131,10 @@ sget()
 
     # download file and add to IPFS
     url_sget "$REALURL" "$TARGET" || return
+
+    # don't do ipfs put when gateway is using
+    [ "$ipfs_mode" = "gateway" ] && return
+
     CID="$(ipfs_put --progress "$TARGET")" || return
 
     put_cid_and_url "$REALURL" "$CID" "$FN"
