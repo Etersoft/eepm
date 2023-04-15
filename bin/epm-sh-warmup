@@ -24,8 +24,9 @@ is_warmup_allowed()
     [ -n "$warmup" ] || return 1
     MEM="$($DISTRVENDOR -m)"
     # disable warm if have no enough memory
-    [ "$MEM" -le 1024 ] && return 1
-    return 0
+    [ "$MEM" -ge 1024 ] && return 0
+    warning "Skipping warmup bases due low memory size"
+    return 1
 }
 
 __warmup_files()
@@ -40,13 +41,13 @@ __warmup_files()
 
 warmup_rpmbase()
 {
-    is_warmup_allowed || { warning "Skipping warmup bases due low memory size" ; return ; }
+    is_warmup_allowed || return 0
     __warmup_files "rpm" "/var/lib/rpm/*"
 }
 
 warmup_dpkgbase()
 {
-    is_warmup_allowed || { warning "Skipping warmup bases due low memory size" ; return ; }
+    is_warmup_allowed || return 0
     __warmup_files "dpkg" "/var/lib/dpkg/*"
 }
 
