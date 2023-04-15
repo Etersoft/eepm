@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.51.1"
+EPMVERSION="3.51.2"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -5164,7 +5164,7 @@ case $PMTYPE in
         # FIXME: strong equal
         CMD="rpm -qa"
         [ -n "$short" ] && CMD="rpm -qa --queryformat %{name}\n"
-        docmd $CMD "$@"
+        docmd $CMD "$@" | __fo_pfn "$@"
         return ;;
     packagekit)
         docmd pkcon get-packages --filter installed
@@ -6392,12 +6392,12 @@ _shortquery_via_packages_list()
     # Note: double call due stderr redirect
     # Note: we use short=1 here due grep by ^name$
     # separate first line for print out command
-    (short=1 pkg_filenames=$firstpkg epm_packages | grep -- "$grepexp") && res=0 || res=1
+    (short=1 epm_packages $firstpkg | grep -- "$grepexp") && res=0 || res=1
 
     local pkg
     for pkg in "$@" ; do
         grepexp=$(_get_grep_exp $pkg)
-        (short=1 pkg_filenames=$pkg epm_packages 2>/dev/null) | grep -- "$grepexp" || res=1
+        (short=1 epm_packages $pkg 2>/dev/null) | grep -- "$grepexp" || res=1
     done
 
     # TODO: print in query (for user): 'warning: package $pkg is not installed'
@@ -6418,12 +6418,12 @@ _query_via_packages_list()
     # Note: double call due stderr redirect
     # Note: we use short=1 here due grep by ^name$
     # separate first line for print out command
-    (short=1 pkg_filenames=$firstpkg epm_packages) | grep -q -- "$grepexp" && (quiet=1 pkg_filenames=$firstpkg epm_packages) && res=0 || res=1
+    (short=1 epm_packages $firstpkg) | grep -q -- "$grepexp" && (quiet=1 epm_packages $firstpkg) && res=0 || res=1
 
     local pkg
     for pkg in "$@" ; do
         grepexp=$(_get_grep_exp $pkg)
-        (short=1 pkg_filenames=$pkg epm_packages 2>/dev/null) | grep -q -- "$grepexp" && (quiet=1 pkg_filenames=$pkg epm_packages) || res=1
+        (short=1 epm_packages $pkg 2>/dev/null) | grep -q -- "$grepexp" && (quiet=1 epm_packages $pkg) || res=1
     done
 
     return $res
@@ -6831,7 +6831,7 @@ epm_query_package()
     MGS=$(eval __epm_search_make_grep $quoted_args)
     EXTRA_SHOWDOCMD=$MGS
     # Note: get all packages list and do grep
-    (eval "pkg_filenames='' epm_packages \"$(eval get_firstarg $quoted_args)\" $MGS")
+    eval "epm_packages $MGS"
 }
 
 # File bin/epm-reinstall:
@@ -10859,8 +10859,9 @@ is_warmup_allowed()
     [ -n "$warmup" ] || return 1
     MEM="$($DISTRVENDOR -m)"
     # disable warm if have no enough memory
-    [ "$MEM" -le 1024 ] && return 1
-    return 0
+    [ "$MEM" -ge 1024 ] && return 0
+    warning "Skipping warmup bases due low memory size"
+    return 1
 }
 
 __warmup_files()
@@ -10875,13 +10876,13 @@ __warmup_files()
 
 warmup_rpmbase()
 {
-    is_warmup_allowed || { warning "Skipping warmup bases due low memory size" ; return ; }
+    is_warmup_allowed || return 0
     __warmup_files "rpm" "/var/lib/rpm/*"
 }
 
 warmup_dpkgbase()
 {
-    is_warmup_allowed || { warning "Skipping warmup bases due low memory size" ; return ; }
+    is_warmup_allowed || return 0
     __warmup_files "dpkg" "/var/lib/dpkg/*"
 }
 
@@ -13020,6 +13021,8 @@ WGETNOSSLCHECK=''
 CURLNOSSLCHECK=''
 WGETUSERAGENT=''
 CURLUSERAGENT=''
+WGETCOMPRESSED=''
+CURLCOMPRESSED=''
 WGETQ='' #-q
 CURLQ='' #-s
 # TODO: aria2c
@@ -13061,6 +13064,7 @@ Options:
     --verbose                 - verbose mode
     -k|--no-check-certificate - skip SSL certificate chain support
     -U|-A|--user-agent        - send browser like UserAgent
+    --compressed              - request a compressed response and automatically decompress the content
     -4|--ipv4|--inet4-only    - use only IPV4
     -6|--ipv6|--inet6-only    - use only IPV6
     -O-|-O -                  - output downloaded file to stdout
@@ -13123,6 +13127,10 @@ while [ -n "$1" ] ; do
             user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
             WGETUSERAGENT="-U '$user_agent'"
             CURLUSERAGENT="-A '$user_agent'"
+            ;;
+        --compressed)
+            CURLCOMPRESSED='--compressed'
+            WGETCOMPRESSED='--compression=auto'
             ;;
         -4|--ipv4|--inet4-only)
             FORCEIPV="-4"
@@ -13584,9 +13592,9 @@ elif [ "$EGET_BACKEND" = "wget" ] ; then
 __wget()
 {
     if [ -n "$WGETUSERAGENT" ] ; then
-        docmd $WGET $FORCEIPV $WGETQ $WGETNOSSLCHECK "$WGETUSERAGENT" "$@"
+        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETNOSSLCHECK "$WGETUSERAGENT" "$@"
     else
-        docmd $WGET $FORCEIPV $WGETQ $WGETNOSSLCHECK "$@"
+        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETNOSSLCHECK "$@"
     fi
 }
 
@@ -13633,9 +13641,9 @@ elif [ "$EGET_BACKEND" = "curl" ] ; then
 __curl()
 {
     if [ -n "$CURLUSERAGENT" ] ; then
-        docmd $CURL $FORCEIPV --fail -L $CURLQ "$CURLUSERAGENT" $CURLNOSSLCHECK "$@"
+        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED "$CURLUSERAGENT" $CURLNOSSLCHECK "$@"
     else
-        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLNOSSLCHECK "$@"
+        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLNOSSLCHECK "$@"
     fi
 }
 # put remote content to stdout
