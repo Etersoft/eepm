@@ -105,6 +105,16 @@ __epm_vendor_ok_scripts()
     return $res
 }
 
+__epm_get_pkgvendor()
+{
+    local pkg="$1"
+
+    # skip checking if the package is unaccessible
+    local rpmversion="$(epm print field Version for "$pkg" 2>/dev/null)"
+    [ -n "$rpmversion" ] || return
+
+    epm print field Vendor for "$pkg" 2>/dev/null
+}
 # Args: package names. Set noscripts for outside packages.
 __epm_check_vendor()
 {
@@ -112,17 +122,18 @@ __epm_check_vendor()
     [ -n "$scripts$noscripts" ] && return
 
     # only ALT
-    [ "$BASEDISTRNAME" = "alt" ] || return
+    [ "$BASEDISTRNAME" = "alt" ] || return 0
 
     local i
     for i in $* ; do
-        local vendor rpmversion
+        local vendor
+        vendor="$(__epm_get_pkgvendor "$i")"
 
-        # skip checking if the package is unaccessible
-        rpmversion="$(epm print field Version for "$i" 2>/dev/null)"
-        [ -n "$rpmversion" ] || continue
-
-        vendor="$(epm print field Vendor for "$i" 2>/dev/null)"
+        if [ -z "$vendor" ] ; then
+            warning "Can't get info about vendor for $i package. Scripts are DISABLED for package $i. Use --scripts if you need run scripts from such packages."
+            noscripts="--noscripts"
+            continue
+        fi
 
         # TODO: check GPG
         # check separately to be quiet
