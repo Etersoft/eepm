@@ -72,3 +72,4 @@ return_tar()
     echo $1 >$RETURNTARNAME || fatal "Can't save tar name $1 to file $RETURNTARNAME"
 }
 
+[ -n "$PRODUCT" ] || PRODUCT="$(basename $0 .sh)"
