@@ -322,18 +322,19 @@ epm_install_files()
     local files="$*"
     [ -z "$files" ] && return
 
+    # on some systems install target can be a real path
+    # use hi-level for install by file path (f.i. epm install /usr/bin/git)
+    if __epm_if_command_path $files ; then
+        epm_install_names $files
+        return
+    fi
+
     # TODO: check read permissions
     # sudo test -r FILE
     # do not fallback to install_names if we have no permissions
     case "$BASEDISTRNAME" in
         "alt")
 
-            # on ALT install target can be a real path
-            # do not use low-level for install by file path (f.i. epm install /usr/bin/git)
-            if __epm_if_command_path $files ; then
-                epm_install_names $files
-                return
-            fi
 
             __epm_print_warning_for_nonalt_packages $files
 
