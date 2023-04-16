@@ -454,7 +454,7 @@ done
 # defaults
 
 # https://github.com/ipfs/kubo/issues/5541
-ipfs_diag_timeout='--timeout 10s'
+ipfs_diag_timeout='--timeout 60s'
 
 ipfs_api_local="/ip4/127.0.0.1/tcp/5001"
 [ -n "$EGET_IPFS_API" ] && ipfs_api_local="$EGET_IPFS_API"
