@@ -132,7 +132,7 @@ __epm_print_warning_for_nonalt_packages()
         # TODO: check GPG or some other mark
         echo "$packager" | grep -q "@altlinux" && [ "$vendor" = "ALT Linux Team" ] && return 0
 
-        warning "%%% You are trying install package $i not from ALT repository. Be careful! %%%"
+        warning "%%% You are trying install package $i from third-party software source. Use it at your own discretion. %%%"
     done
 }
 
