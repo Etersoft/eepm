@@ -308,7 +308,9 @@ sudoepm()
 fatal()
 {
     if [ -z "$TEXTDOMAIN" ] ; then
+        set_color $RED
         echo "Error: $*  (you can discuss the problem in Telegram: https://t.me/useepm)" >&2
+        restore_color
     fi
     exit 1
 }
@@ -316,7 +318,9 @@ fatal()
 warning()
 {
     if [ -z "$TEXTDOMAIN" ] ; then
+        set_color $YELLOW
         echo "Warning: $*" >&2
+        restore_color
     fi
 }
 
@@ -1633,7 +1637,7 @@ case $DISTRIB_ID in
     Windows)
         is_command winget && echo "winget" && return
         is_command appget && CMD="appget"
-        is_command chocolatey && CMD="chocolatey"
+        is_command choco && CMD="choco"
         is_command npackdcl && CMD="npackd"
         ;;
     MacOS)
@@ -2570,7 +2574,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.51.2  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.52.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

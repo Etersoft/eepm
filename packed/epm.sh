@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.51.2"
+EPMVERSION="3.52.0"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -333,7 +333,9 @@ sudoepm()
 fatal()
 {
     if [ -z "$TEXTDOMAIN" ] ; then
+        set_color $RED
         echo "Error: $*  (you can discuss the problem in Telegram: https://t.me/useepm)" >&2
+        restore_color
     fi
     exit 1
 }
@@ -341,7 +343,9 @@ fatal()
 warning()
 {
     if [ -z "$TEXTDOMAIN" ] ; then
+        set_color $YELLOW
         echo "Warning: $*" >&2
+        restore_color
     fi
 }
 
@@ -3751,8 +3755,8 @@ epm_ni_install_names()
             #  npackdcl update --package=<package> (remove old and install new)
             sudocmd npackdcl add --package="$*"
             return ;;
-        chocolatey)
-            docmd chocolatey install $@
+        choco)
+            docmd choco install $@
             return ;;
         opkg)
             sudocmd opkg -force-defaults install $@
@@ -3839,19 +3843,23 @@ epm_install_files()
     local files="$*"
     [ -z "$files" ] && return
 
+    # on some systems install target can be a real path
+    # use hi-level for install by file path (f.i. epm install /usr/bin/git)
+    if __epm_if_command_path $files ; then
+        epm_install_names $files
+        return
+    fi
+
     # TODO: check read permissions
     # sudo test -r FILE
     # do not fallback to install_names if we have no permissions
     case "$BASEDISTRNAME" in
         "alt")
 
-            # do not use low-level for install by file path (f.i. epm install /usr/bin/git)
-            if __epm_if_command_path $files ; then
-                epm_install_names $files
-                return
-            fi
 
-            # on ALT install target can be a real path
+            __epm_print_warning_for_nonalt_packages $files
+
+            # do repack if needed
             if __epm_repack_if_needed $files ; then
                 [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
                 files="$repacked_pkgs"
@@ -4171,8 +4179,8 @@ epm_print_install_names_command()
         pacman)
             echo "pacman -S --noconfirm $*"
             return ;;
-        chocolatey)
-            echo "chocolatey install $*"
+        choco)
+            echo "choco install $*"
             return ;;
         nix)
             echo "nix-env --install $*"
@@ -4569,8 +4577,8 @@ case $PMTYPE in
     eopkg)
         CMD="eopkg list-available"
         ;;
-    chocolatey)
-        CMD="chocolatey search ."
+    choco)
+        CMD="choco search ."
         ;;
     slackpkg)
         CMD="slackpkg search ."
@@ -5219,8 +5227,8 @@ case $PMTYPE in
     eopkg)
         CMD="eopkg list-installed"
         ;;
-    chocolatey)
-        CMD="chocolatey list"
+    choco)
+        CMD="choco list"
         ;;
     slackpkg)
         CMD="ls -1 /var/log/packages/"
@@ -6038,13 +6046,12 @@ construct_name()
     local arch="$3"
     local pkgtype="$4"
     local ds="$5"
-    local pds
+    local pds="$6"
 
     [ -n "$arch" ] || arch="$($DISTRVENDOR --distro-arch)"
     [ -n "$pkgtype" ] || pkgtype="$PKGFORMAT"
     [ -n "$ds" ] || ds=$(get_pkg_name_delimiter $pkgtype)
-    pds="$ds"
-    [ "$pds" = "-" ] && pds="."
+    [ -z "$pds" ] && pds="$ds" && [ "$pds" = "-" ] && pds="."
     [ -n "$version" ] && version="$ds$version"
     echo "${name}${version}${pds}$arch.$pkgtype"
 }
@@ -6067,7 +6074,7 @@ cat <<EOF
     epm print specname from filename NN      print spec filename for the source package file
     epm print binpkgfilelist in DIR for NN   list binary package(s) filename(s) from DIR for the source package file
     epm print compare [package] version N1 N2          compare (package) versions and print -1 (N1 < N2), 0 (N1 == N2), 1 (N1 > N2)
-    epm print constructname <name> <version> [arch] [ pkgtype]  print distro dependend package filename from args name version arch pkgtype
+    epm print constructname <name> <version> [arch] [pkgtype] [delimiter1] [delimiter2]  print distro dependend package filename from args name version arch pkgtype
 EOF
 }
 
@@ -6093,7 +6100,7 @@ epm_print()
 
     case "$WHAT" in
         "")
-            fatal "Use epm print help to get help."
+            fatal "Use epm print --help to get help."
             ;;
         "-h"|"--help"|"help")
             epm_print_help
@@ -7814,8 +7821,8 @@ epm_remove_names()
         termux-pkg)
             sudocmd pkg uninstall $@
             return ;;
-        chocolatey)
-            sudocmd chocolatey uninstall $@
+        choco)
+            sudocmd choco uninstall $@
             return ;;
         slackpkg)
             sudocmd /usr/sbin/slackpkg remove $@
@@ -10314,8 +10321,8 @@ case $PMTYPE in
         docmd npackdcl search --query="$string" --status=all
         return
         ;;
-    chocolatey)
-        CMD="chocolatey list"
+    choco)
+        CMD="choco list"
         ;;
     slackpkg)
         # FIXME
@@ -10814,23 +10821,55 @@ __epm_vendor_ok_scripts()
     return $res
 }
 
+__epm_get_pkgvendor()
+{
+    local pkg="$1"
+
+    # skip checking if the package is unaccessible
+    local rpmversion="$(epm print field Version for "$pkg" 2>/dev/null)"
+    [ -n "$rpmversion" ] || return
+
+    epm print field Vendor for "$pkg" 2>/dev/null
+}
+
+__epm_print_warning_for_nonalt_packages()
+{
+    # only ALT
+    [ "$BASEDISTRNAME" = "alt" ] || return 0
+
+    local i
+    for i in $* ; do
+        local vendor
+        # TODO: check only for rpm
+        vendor="$(__epm_get_pkgvendor "$i")"
+
+        local packager="$(epm print field Packager for "$i" 2>/dev/null)"
+
+        # TODO: check GPG or some other mark
+        echo "$packager" | grep -q "@altlinux" && [ "$vendor" = "ALT Linux Team" ] && return 0
+
+        warning "%%% You are trying install package $i from third-party software source. Use it at your own discretion. %%%"
+    done
+}
+
 __epm_check_vendor()
 {
     # don't check vendor if there are forced script options
     [ -n "$scripts$noscripts" ] && return
 
     # only ALT
-    [ "$BASEDISTRNAME" = "alt" ] || return
+    [ "$BASEDISTRNAME" = "alt" ] || return 0
 
     local i
     for i in $* ; do
-        local vendor rpmversion
+        local vendor
+        vendor="$(__epm_get_pkgvendor "$i")"
 
-        # skip checking if the package is unaccessible
-        rpmversion="$(epm print field Version for "$i" 2>/dev/null)"
-        [ -n "$rpmversion" ] || continue
-
-        vendor="$(epm print field Vendor for "$i" 2>/dev/null)"
+        if [ -z "$vendor" ] ; then
+            warning "Can't get info about vendor for $i package. Scripts are DISABLED for package $i. Use --scripts if you need run scripts from such packages."
+            noscripts="--noscripts"
+            continue
+        fi
 
         # TODO: check GPG
         # check separately to be quiet
@@ -11499,8 +11538,8 @@ epm_upgrade()
     apk)
         CMD="apk upgrade"
         ;;
-    chocolatey)
-        CMD="chocolatey update all"
+    choco)
+        CMD="choco update all"
         ;;
     homebrew)
         #CMD="brew upgrade"
@@ -11858,7 +11897,7 @@ case $DISTRIB_ID in
     Windows)
         is_command winget && echo "winget" && return
         is_command appget && CMD="appget"
-        is_command chocolatey && CMD="chocolatey"
+        is_command choco && CMD="choco"
         is_command npackdcl && CMD="npackd"
         ;;
     MacOS)
@@ -12924,7 +12963,7 @@ filter_glob()
 {
 	[ -z "$1" ] && cat && return
 	# translate glob to regexp
-	grep "$(echo "$1" | sed -e "s|\*|.*|g" -e "s|?|.|g")$"
+	grep "$(echo "$1" | sed -e 's|\.|\\.|g' -e 's|\*|.*|g' -e 's|\?|.|g' )$"
 }
 
 filter_order()
@@ -13186,7 +13225,7 @@ done
 # defaults
 
 # https://github.com/ipfs/kubo/issues/5541
-ipfs_diag_timeout='--timeout 10s'
+ipfs_diag_timeout='--timeout 60s'
 
 ipfs_api_local="/ip4/127.0.0.1/tcp/5001"
 [ -n "$EGET_IPFS_API" ] && ipfs_api_local="$EGET_IPFS_API"
@@ -13207,7 +13246,7 @@ get_ipfs_brave()
     echo "$ipfs_brave"
 }
 
-ipfs_access()
+ipfs_api_access()
 {
     [ -n "$IPFS_CMD" ] || fatal "IPFS is disabled"
     verdocmd $IPFS_CMD --api $IPFS_API $ipfs_diag_timeout diag sys >/dev/null
@@ -13223,28 +13262,30 @@ ipfs_check()
 
 select_ipfs_mode()
 {
+    IPFS_CMD="$(print_command_path ipfs)"
+    if [ -n "$IPFS_CMD" ] ; then
+        IPFS_API="$ipfs_api_local"
+        if ipfs_api_access ; then
+            ipfs_mode="local" && return
+            #if ipfs_check "$ipfs_checkQm" ; then
+            #    ipfs_mode="local" && return
+            #else
+            #    info "Skipped local: it is accessible via $IPFS_CMD --api $IPFS_API, but can't return shared $ipfs_checkQm"
+            #fi
+        fi
+    fi
+
     IPFS_CMD="$(get_ipfs_brave)"
     # if no EGET_IPFS_API, check brave
     if [ -z "$EGET_IPFS_API" ] && [ -n "$IPFS_CMD" ] ; then
         IPFS_API="$ipfs_api_brave"
-        if ipfs_access ; then
-            if ipfs_check "$ipfs_checkQm" ; then
-                ipfs_mode="brave" && return
-            else
-                info "Skipped Brave: it is accessible via $IPFS_CMD --api $IPFS_API, but can't return shared $ipfs_checkQm"
-            fi
-        fi
-    fi
-
-    IPFS_CMD="$(print_command_path ipfs)"
-    if [ -n "$IPFS_CMD" ] ; then
-        IPFS_API="$ipfs_api_local"
-        if ipfs_access ; then
-            if ipfs_check "$ipfs_checkQm" ; then
-                ipfs_mode="local" && return
-            else
-                info "Skipped local: it is accessible via $IPFS_CMD --api $IPFS_API, but can't return shared $ipfs_checkQm"
-            fi
+        if ipfs_api_access ; then
+            ipfs_mode="brave" && return
+            #if ipfs_check "$ipfs_checkQm" ; then
+            #    ipfs_mode="brave" && return
+            #else
+            #    info "Skipped Brave: it is accessible via $IPFS_CMD --api $IPFS_API, but can't return shared $ipfs_checkQm"
+            #fi
         fi
     fi
 
@@ -13328,7 +13369,7 @@ fi
 
 # detect if we run with ipfs:// or with auto
 if is_ipfsurl "$1" && [ -z "$ipfs_mode" ] || [ "$ipfs_mode" = "auto" ] ; then
-    info "Autodetecting for available IPFS relay..."
+    info "Autodetecting available IPFS relay..."
     select_ipfs_mode
     info "Auto selected IPFS mode: $ipfs_mode"
 else
@@ -13359,14 +13400,14 @@ elif [ "$ipfs_mode" = "brave" ] ; then
     IPFS_CMD="$(get_ipfs_brave)" || fatal "Can't find ipfs command in Brave"
     IPFS_PRETTY_CMD="~Brave-Browser/$(basename $IPFS_CMD)"
     IPFS_API="$ipfs_api_brave"
-    ipfs_access || fatal "Can't access to Brave IPFS API (Brave browser is not running and IPFS is not activated?)"
+    ipfs_api_access || fatal "Can't access to Brave IPFS API (Brave browser is not running and IPFS is not activated?)"
     info "Will use $IPFS_PRETTY_CMD --api $IPFS_API"
 
 elif [ "$ipfs_mode" = "local" ] ; then
     IPFS_CMD="$(print_command_path ipfs)" || fatal "Can't find ipfs command"
     IPFS_PRETTY_CMD="$IPFS_CMD"
     IPFS_API="$ipfs_api_local"
-    ipfs_access || fatal "Can't access to IPFS API (ipfs daemon is not running?)"
+    ipfs_api_access || fatal "Can't access to IPFS API (ipfs daemon is not running?)"
     info "Will use $IPFS_PRETTY_CMD --api $IPFS_API"
 
 elif [ "$ipfs_mode" = "gateway" ] ; then
