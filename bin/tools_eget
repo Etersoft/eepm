@@ -475,7 +475,7 @@ get_ipfs_brave()
     echo "$ipfs_brave"
 }
 
-ipfs_access()
+ipfs_api_access()
 {
     [ -n "$IPFS_CMD" ] || fatal "IPFS is disabled"
     verdocmd $IPFS_CMD --api $IPFS_API $ipfs_diag_timeout diag sys >/dev/null
@@ -495,24 +495,26 @@ select_ipfs_mode()
     # if no EGET_IPFS_API, check brave
     if [ -z "$EGET_IPFS_API" ] && [ -n "$IPFS_CMD" ] ; then
         IPFS_API="$ipfs_api_brave"
-        if ipfs_access ; then
-            if ipfs_check "$ipfs_checkQm" ; then
-                ipfs_mode="brave" && return
-            else
-                info "Skipped Brave: it is accessible via $IPFS_CMD --api $IPFS_API, but can't return shared $ipfs_checkQm"
-            fi
+        if ipfs_api_access ; then
+            ipfs_mode="brave" && return
+            #if ipfs_check "$ipfs_checkQm" ; then
+            #    ipfs_mode="brave" && return
+            #else
+            #    info "Skipped Brave: it is accessible via $IPFS_CMD --api $IPFS_API, but can't return shared $ipfs_checkQm"
+            #fi
         fi
     fi
 
     IPFS_CMD="$(print_command_path ipfs)"
     if [ -n "$IPFS_CMD" ] ; then
         IPFS_API="$ipfs_api_local"
-        if ipfs_access ; then
-            if ipfs_check "$ipfs_checkQm" ; then
-                ipfs_mode="local" && return
-            else
-                info "Skipped local: it is accessible via $IPFS_CMD --api $IPFS_API, but can't return shared $ipfs_checkQm"
-            fi
+        if ipfs_api_access ; then
+            ipfs_mode="local" && return
+            #if ipfs_check "$ipfs_checkQm" ; then
+            #    ipfs_mode="local" && return
+            #else
+            #    info "Skipped local: it is accessible via $IPFS_CMD --api $IPFS_API, but can't return shared $ipfs_checkQm"
+            #fi
         fi
     fi
 
@@ -596,7 +598,7 @@ fi
 
 # detect if we run with ipfs:// or with auto
 if is_ipfsurl "$1" && [ -z "$ipfs_mode" ] || [ "$ipfs_mode" = "auto" ] ; then
-    info "Autodetecting for available IPFS relay..."
+    info "Autodetecting available IPFS relay..."
     select_ipfs_mode
     info "Auto selected IPFS mode: $ipfs_mode"
 else
@@ -627,14 +629,14 @@ elif [ "$ipfs_mode" = "brave" ] ; then
     IPFS_CMD="$(get_ipfs_brave)" || fatal "Can't find ipfs command in Brave"
     IPFS_PRETTY_CMD="~Brave-Browser/$(basename $IPFS_CMD)"
     IPFS_API="$ipfs_api_brave"
-    ipfs_access || fatal "Can't access to Brave IPFS API (Brave browser is not running and IPFS is not activated?)"
+    ipfs_api_access || fatal "Can't access to Brave IPFS API (Brave browser is not running and IPFS is not activated?)"
     info "Will use $IPFS_PRETTY_CMD --api $IPFS_API"
 
 elif [ "$ipfs_mode" = "local" ] ; then
     IPFS_CMD="$(print_command_path ipfs)" || fatal "Can't find ipfs command"
     IPFS_PRETTY_CMD="$IPFS_CMD"
     IPFS_API="$ipfs_api_local"
-    ipfs_access || fatal "Can't access to IPFS API (ipfs daemon is not running?)"
+    ipfs_api_access || fatal "Can't access to IPFS API (ipfs daemon is not running?)"
     info "Will use $IPFS_PRETTY_CMD --api $IPFS_API"
 
 elif [ "$ipfs_mode" = "gateway" ] ; then
