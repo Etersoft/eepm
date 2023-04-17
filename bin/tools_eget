@@ -491,6 +491,19 @@ ipfs_check()
 
 select_ipfs_mode()
 {
+    IPFS_CMD="$(print_command_path ipfs)"
+    if [ -n "$IPFS_CMD" ] ; then
+        IPFS_API="$ipfs_api_local"
+        if ipfs_api_access ; then
+            ipfs_mode="local" && return
+            #if ipfs_check "$ipfs_checkQm" ; then
+            #    ipfs_mode="local" && return
+            #else
+            #    info "Skipped local: it is accessible via $IPFS_CMD --api $IPFS_API, but can't return shared $ipfs_checkQm"
+            #fi
+        fi
+    fi
+
     IPFS_CMD="$(get_ipfs_brave)"
     # if no EGET_IPFS_API, check brave
     if [ -z "$EGET_IPFS_API" ] && [ -n "$IPFS_CMD" ] ; then
@@ -501,19 +514,6 @@ select_ipfs_mode()
             #    ipfs_mode="brave" && return
             #else
             #    info "Skipped Brave: it is accessible via $IPFS_CMD --api $IPFS_API, but can't return shared $ipfs_checkQm"
-            #fi
-        fi
-    fi
-
-    IPFS_CMD="$(print_command_path ipfs)"
-    if [ -n "$IPFS_CMD" ] ; then
-        IPFS_API="$ipfs_api_local"
-        if ipfs_api_access ; then
-            ipfs_mode="local" && return
-            #if ipfs_check "$ipfs_checkQm" ; then
-            #    ipfs_mode="local" && return
-            #else
-            #    info "Skipped local: it is accessible via $IPFS_CMD --api $IPFS_API, but can't return shared $ipfs_checkQm"
             #fi
         fi
     fi
