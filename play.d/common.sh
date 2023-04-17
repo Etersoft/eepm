@@ -148,11 +148,21 @@ is_supported_arch "$(epm print info -a)" || fatal "Only '$SUPPORTEDARCHES' archi
 
 check_tty
 
+__showcmd_shifted()
+{
+    local s="$1"
+    shift
+    shift $s
+    showcmd "$*"
+}
+
 # add to all epm calls
 EPM="$(epm tool which epm)" || fatal
 epm()
 {
-    if [ "$1" != "print" ] ; then
+    #if [ "$1" = "tool" ] ; then
+    #    __showcmd_shifted 1 "$@"
+    if [ "$1" != "print" ] && [ "$1" != "tool" ] ; then
         showcmd "$(basename $EPM) $*"
     fi
     $EPM "$@"
