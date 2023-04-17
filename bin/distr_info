@@ -255,7 +255,7 @@ pkgtype()
                 *-rpm)
                     echo "rpm" ;;
                 *)
-                    echo "rpm" ;;
+                    echo "" ;;
             esac
     esac
 }
