@@ -143,3 +143,17 @@ if [ -z "$SUDO" ] && [ "$UID" != "0" ] ; then
 fi
 
 is_supported_arch "$(epm print info -a)" || fatal "Only '$SUPPORTEDARCHES' architectures is supported"
+
+. $(dirname $0)/common-outformat.sh
+
+check_tty
+
+# add to all epm calls
+EPM="$(epm tool which epm)" || fatal
+epm()
+{
+    if [ "$1" != "print" ] ; then
+        showcmd "$(basename $EPM) $*"
+    fi
+    $EPM "$@"
+}
