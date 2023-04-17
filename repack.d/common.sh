@@ -302,12 +302,13 @@ use_system_xdg()
 
 #[ -d "$BUILDROOT" ] || fatal "Run me only via epm repack <package>"
 
-if [ -n "$PRODUCT" ] ; then
-    [ -n "$PRODUCTCUR" ] || PRODUCTCUR="$PRODUCT"
-    [ -n "$PRODUCTDIR" ] || PRODUCTDIR="/opt/$PRODUCTCUR"
+[ -n "$PRODUCT" ] || PRODUCT="$(basename $0 .sh)"
 
-    [ -d "$BUILDROOT$PRODUCTDIR" ] && pack_dir "$PRODUCTDIR"
-fi
+[ -n "$PRODUCTCUR" ] || PRODUCTCUR="$PRODUCT"
+[ -n "$PRODUCTDIR" ] || PRODUCTDIR="/opt/$PRODUCTCUR"
+
+[ -d "$BUILDROOT$PRODUCTDIR" ] && pack_dir "$PRODUCTDIR"
+
 
 # like /opt/yandex/browser
 if [ -n "$PRODUCTDIR" ] && [ "$(dirname "$PRODUCTDIR" )" != "/" ] && [ "$(dirname "$(dirname "$PRODUCTDIR" )" )" != "/" ] ; then
