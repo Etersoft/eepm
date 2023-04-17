@@ -12,7 +12,7 @@ if echo "$2" | grep -q "beta" || epm installed Telegram-beta ; then
     PKGNAME=$PKGNAME-$BRANCH
 fi
 
-VERSION=".*$BRANCH"
+VERSION="*$BRANCH"
 [ -n "$2" ] && [ "$2" != "beta" ] && VERSION="$2"
 
 . $(dirname $0)/common.sh

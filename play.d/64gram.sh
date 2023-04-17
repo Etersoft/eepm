@@ -5,8 +5,7 @@ SUPPORTEDARCHES="x86_64"
 DESCRIPTION="64Gram (unofficial Telegram Desktop)"
 TIPS="Run 'epm play 64gram=<version>' to install the version of the 64Gram Telegram client."
 
-BRANCH="[0-9]"
-VERSION=".*$BRANCH"
+VERSION="*[0-9]"
 [ -n "$2" ] && [ "$2" != "beta" ] && VERSION="$2"
 
 . $(dirname $0)/common.sh

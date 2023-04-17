@@ -35,7 +35,7 @@ case $(epm print info -e) in
         ;;
 esac
 
-PKGMASK="$(epm print constructname $PKGNAME "*" $arch $pkgtype)"
+PKGMASK="$(epm print constructname $PKGNAME "*" $arch $pkgtype "-" "-")"
 PKG="$(epm tool eget --list https://www.rstudio.com/products/rstudio/download/ $PKGMASK | grep $PKGFILTER)" || fatal "Can't get package URL"
 [ -n "$PKG" ] || fatal "Can't get package URL"
 

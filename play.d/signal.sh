@@ -7,6 +7,6 @@ DOWNURL="https://updates.signal.org/desktop/apt/pool/main/s/signal-desktop"
 
 . $(dirname $0)/common.sh
 
-URL=$(epm tool eget --list --latest http://mirror.cs.uchicago.edu/signal/pool/main/s/signal-desktop/ '*.amd64.deb')
+URL=$(epm tool eget --list --latest http://mirror.cs.uchicago.edu/signal/pool/main/s/signal-desktop/ '${PKGNAME}_*_amd64.deb')
 URL=$(echo "$URL" | sed -e "s|\(.*/\)|$DOWNURL/|")
 epm install "$URL"
