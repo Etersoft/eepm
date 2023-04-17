@@ -9,7 +9,7 @@ SPEC="$2"
 # add conflicts to all alternatives
 for i in kubo kubo-beta ; do
     [ "$i" = "$PRODUCT" ] && continue
-    subst '1iConflicts: $i' $SPEC
+    subst "1iConflicts: $i" $SPEC
 done
 
 
