@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.51.2
+Version: 3.52.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -155,6 +155,21 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Mon Apr 17 2023 Vitaly Lipatov <lav@altlinux.ru> 3.52.0-alt1
+- epm-sh_functions: add colors to fatal() and warning()
+- epm install: add warning when install third-party software
+- rename chocolatey -> choco
+- eget: improve globbing symbol translation
+- epm play: add kubo support
+- epm install: redirect install by path (/usr/bin/git) to install via hi-level commands for all distro
+- epm play: add sane-panakvs (Panasonic Scanner Driver for Linux)
+- epm play: add print out for all epm commands
+- epm play okular-csp: some improvements
+- epm print contructname: improve delimiter issue
+- epm play: fix URLs with fixed eget wildcards
+- eget: disable checking for magic CID if IPFS is used
+- eget: check Brave IPFS after local ipfs in IPFS auto mode
+
 * Sat Apr 15 2023 Vitaly Lipatov <lav@altlinux.ru> 3.51.2-alt1
 - epm play: add zerotier-one
 - epm: fix warmup issue again
