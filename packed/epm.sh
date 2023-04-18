@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.52.0"
+EPMVERSION="3.52.1"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1270,6 +1270,9 @@ case $PMTYPE in
         ;;
     winget)
         sudocmd winget source add "$repo"
+        ;;
+    nix)
+        sudocmd nix-channel --add "$repo"
         ;;
     termux-pkg)
         sudocmd pkg install "$repo"
@@ -3697,6 +3700,10 @@ epm_install_names()
         xbps)
             sudocmd xbps-install $@
             return ;;
+        nix)
+            info "When you ask Nix to install a package, it will first try to get it in pre-compiled form from a binary cache. By default, Nix will use the binary cache https://cache.nixos.org; it contains binaries for most packages in Nixpkgs. Only if no binary is available in the binary cache, Nix will build the package from source."
+            sudocmd nix-env -iA $@
+            return ;;
         appget|winget)
             sudocmd $PMTYPE install $@
             return ;;
@@ -4592,6 +4599,9 @@ case $PMTYPE in
     apk)
         CMD="apk list --available"
         ;;
+    nix)
+        CMD="nix-env -qaP"
+        ;;
     appget)
         CMD="appget search"
         ;;
@@ -4998,6 +5008,7 @@ __epm_pack()
 {
     local packname="$1"
     local tarname="$2"
+    local packversion="$3"
     returntarname=''
 
     local repackcode="$EPM_PACK_SCRIPTS_DIR/$packname.sh"
@@ -5017,7 +5028,7 @@ __epm_pack()
     local bashopt=''
     [ -n "$verbose" ] && bashopt='-x'
     #info "Running $($script --description 2>/dev/null) ..."
-    ( unset EPMCURDIR ; docmd $CMDSHELL $bashopt $repackcode "$tarname" "$filefortarname" ) || fatal
+    ( unset EPMCURDIR ; docmd $CMDSHELL $bashopt $repackcode "$tarname" "$filefortarname" "$packversion" ) || fatal
     returntarname="$(cat "$filefortarname")" || fatal "pack script $repackcode didn't set tarname"
     rm -rf $tmpdir
 
@@ -5070,11 +5081,12 @@ epm_pack_help()
 {
     cat <<EOF
 epm pack - create rpm package from files
-Usage: epm pack [options] <packname> <tar|url|dir>
+Usage: epm pack [options] <packname> <tar|url|dir> [version]
 Options:
     <packname>            - receipt
     <dir>                 - create tarball from the dir before
     <url>                 - download tar from url
+    [version]             - force version for unversioned sources
     --install             - install after pack result
     --repack              - force repack ever if returned package can be installed without repack
     --download-only       - save pack result and exit
@@ -5095,6 +5107,7 @@ epm_pack()
 
     local packname="$1"
     local tarname="$2"
+    local packversion="$3"
 
     [ -n "$packname" ] || fatal "run with packname, see --help"
 
@@ -5114,7 +5127,7 @@ epm_pack()
         true
     fi
 
-    __epm_pack "$packname" "$tarname"
+    __epm_pack "$packname" "$tarname" "$packversion"
 
 }
 
@@ -5248,6 +5261,9 @@ case $PMTYPE in
         ;;
     apk)
         CMD="apk list --installed"
+        ;;
+    nix)
+        CMD="nix-env -q"
         ;;
     tce)
         CMD="ls -1 /usr/local/tce.installed"
@@ -11402,6 +11418,9 @@ case $PMTYPE in
     apk)
         sudocmd apk update
         ;;
+    nix)
+        sudocmd nix-channel --update
+        ;;
     pkgsrc)
         # portsnap extract for the first time?
         sudocmd portsnap fetch update
@@ -11575,6 +11594,9 @@ epm_upgrade()
         ;;
     xbps)
         CMD="xbps-install -Su"
+        ;;
+    nix)
+        CMD="nix-env -u $dryrun"
         ;;
     termux-pkg)
         CMD="pkg upgrade"
@@ -11909,6 +11931,9 @@ case $DISTRIB_ID in
     GNU/Linux/Guix)
         CMD="guix"
         ;;
+    NixOS)
+        CMD="nix"
+        ;;
     Android)
         CMD="android"
         # TODO: CMD="termux-pkg"
@@ -11944,7 +11969,7 @@ case $DISTRIB_ID in
             is_command "apt-get" && echo "apt-dpkg" && return
         fi
 
-        echo "We don't support yet DISTRIB_ID $DISTRIB_ID" >&2
+        echo "pkgmanager(): We don't support yet DISTRIB_ID $DISTRIB_ID" >&2
         ;;
 esac
 echo "$CMD"
@@ -11975,7 +12000,7 @@ pkgtype()
                 *-rpm)
                     echo "rpm" ;;
                 *)
-                    echo "rpm" ;;
+                    echo "" ;;
             esac
     esac
 }

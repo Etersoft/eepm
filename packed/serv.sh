@@ -1649,6 +1649,9 @@ case $DISTRIB_ID in
     GNU/Linux/Guix)
         CMD="guix"
         ;;
+    NixOS)
+        CMD="nix"
+        ;;
     Android)
         CMD="android"
         # TODO: CMD="termux-pkg"
@@ -1684,7 +1687,7 @@ case $DISTRIB_ID in
             is_command "apt-get" && echo "apt-dpkg" && return
         fi
 
-        echo "We don't support yet DISTRIB_ID $DISTRIB_ID" >&2
+        echo "pkgmanager(): We don't support yet DISTRIB_ID $DISTRIB_ID" >&2
         ;;
 esac
 echo "$CMD"
@@ -1715,7 +1718,7 @@ pkgtype()
                 *-rpm)
                     echo "rpm" ;;
                 *)
-                    echo "rpm" ;;
+                    echo "" ;;
             esac
     esac
 }
@@ -2574,7 +2577,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.52.0  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.52.1  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
