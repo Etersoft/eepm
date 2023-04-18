@@ -1,12 +1,11 @@
 #!/bin/sh
 
 TAR="$1"
-#VERSION="$2"
 RETURNTARNAME="$2"
+VERSION="$3"
 
 . $(dirname $0)/common.sh
 
-VERSION="2.4"
 
 [ -n "$VERSION" ] || fatal "Missed archive version"
 

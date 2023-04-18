@@ -1,7 +1,6 @@
 #!/bin/sh
 
 TAR="$1"
-#VERSION="$2"
 RETURNTARNAME="$2"
 
 . $(dirname $0)/common.sh

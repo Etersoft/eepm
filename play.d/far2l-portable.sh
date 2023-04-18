@@ -20,4 +20,4 @@ esac
 
 
 PKGURL="https://github.com/unxed/far2l-deb/raw/master/portable/far2l_portable_$arch.tar.gz"
-epm pack --install $PKGNAME "$PKGURL"
+epm pack --install $PKGNAME "$PKGURL" "2.4"

@@ -1,7 +1,6 @@
 #!/bin/sh
 
 TAR="$1"
-#VERSION="$2"
 RETURNTARNAME="$2"
 
 OPKGNAME="Unigine_Valley"
