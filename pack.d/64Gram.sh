@@ -2,7 +2,6 @@
 
 TAR="$1"
 RETURNTARNAME="$2"
-PRODUCT="$(basename $0 .sh)"
 FPRODUCT="Telegram"
 
 . $(dirname $0)/common.sh

@@ -8,7 +8,7 @@ VERSION="$3"
 
 [ -n "$VERSION" ] || fatal "Missed archive version"
 
-PKGNAME=portproton-$VERSION.tar
+PKGNAME=$PRODUCT-$VERSION.tar
 
 erc repack "$TAR" "$PKGNAME" || fatal
 

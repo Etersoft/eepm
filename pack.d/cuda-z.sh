@@ -2,7 +2,6 @@
 
 TAR="$1"
 RETURNTARNAME="$2"
-PRODUCT="cuda-z"
 
 . $(dirname $0)/common.sh
 

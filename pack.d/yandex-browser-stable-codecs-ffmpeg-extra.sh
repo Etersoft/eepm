@@ -11,8 +11,7 @@ CURDIR="$(pwd)"
 PRODUCTDIR="$(dirname "$UPDATEFFMPEG")"
 BASEPKGNAME=yandex-browser-stable
 
-PKGNAME=$(basename $0 .sh)
-if echo "$PKGNAME" | grep -q "yandex-browser-beta" ; then
+if echo "$PRODUCT" | grep -q "yandex-browser-beta" ; then
     BASEPKGNAME=yandex-browser-beta
 fi
 

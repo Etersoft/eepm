@@ -2,7 +2,6 @@
 
 TAR="$1"
 RETURNTARNAME="$2"
-PRODUCT=jetbrains-toolbox
 
 . $(dirname $0)/common.sh
 

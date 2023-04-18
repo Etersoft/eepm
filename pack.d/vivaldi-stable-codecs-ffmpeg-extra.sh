@@ -11,8 +11,7 @@ CURDIR=$(pwd)
 PRODUCTDIR="$(dirname $UPDATEFFMPEG)"
 BASEPKGNAME=vivaldi-stable
 
-PKGNAME=$(basename $0 .sh)
-if echo "$PKGNAME" | grep -q "vivaldi-snapshot" ; then
+if echo "$PRODUCT" | grep -q "vivaldi-snapshot" ; then
     BASEPKGNAME=vivaldi-snapshot
 fi
 
