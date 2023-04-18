@@ -7,8 +7,7 @@ DESCRIPTION="Chromium with GOST support from the official site"
 
 . $(dirname $0)/common.sh
 
-# TODO: use get_pkgvendor = "ALT Linux Team"
-if epm installed chromium-gost ; then
+if epm installed chromium-gost && [ "$(get_pkgvendor chromium-gost)" = "ALT Linux Team" ]  ; then
     echo "Package chromium-gost is already installed from ALT repository."
     exit 0
 fi

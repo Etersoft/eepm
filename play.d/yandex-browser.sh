@@ -16,7 +16,7 @@ SUPPORTEDARCHES="x86_64"
 . $(dirname $0)/common.sh
 
 if epm installed $PKGNAME && [ "$(get_pkgvendor $PKGNAME)" = "YANDEX LLC" ] ; then
-    if [ "$(epm print field Vendor for package $PKGNAME)" = "Yandex Browser Team <browser@support.yandex.ru>" ] ; then
+    if [ "$(epm print field Packager for package $PKGNAME)" = "Yandex Browser Team <browser@support.yandex.ru>" ] ; then
         echo "Package $PKGNAME is already installed manually from https://browser.yandex.ru/."
     else
         echo "Package $PKGNAME is already installed from ALT repository."
