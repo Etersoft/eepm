@@ -312,7 +312,7 @@ __epm_check_if_src_rpm()
 
 __epm_if_command_path()
 {
-    is_dirpath "$1" && rhas "$1" "bin/"
+    is_dirpath "$1" && rhas "$1" "bin/" && ! rhas "$1" "/home"
 }
 
 __epm_get_replacepkgs()
