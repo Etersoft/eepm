@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.52.0
+Version: 3.52.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -155,6 +155,16 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Wed Apr 19 2023 Vitaly Lipatov <lav@altlinux.ru> 3.52.1-alt1
+- distr_info: print empty package type if unknown
+- distr_info: add NixOS support
+- epm repack kubo: fix conflicts
+- epm play codium: check if the package is already installed from repo
+- epm play chromium-gost and yandex-browser: fix checking for the package from repo
+- epm: add some nix support
+- epm pack: add support for version as third arg
+- epm play: add initial support for cascadeur
+
 * Mon Apr 17 2023 Vitaly Lipatov <lav@altlinux.ru> 3.52.0-alt1
 - epm-sh_functions: add colors to fatal() and warning()
 - epm install: add warning when install third-party software
