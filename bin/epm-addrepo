@@ -496,6 +496,9 @@ case $PMTYPE in
     winget)
         sudocmd winget source add "$repo"
         ;;
+    nix)
+        sudocmd nix-channel --add "$repo"
+        ;;
     termux-pkg)
         sudocmd pkg install "$repo"
         ;;

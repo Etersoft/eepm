@@ -178,6 +178,9 @@ epm_upgrade()
     xbps)
         CMD="xbps-install -Su"
         ;;
+    nix)
+        CMD="nix-env -u $dryrun"
+        ;;
     termux-pkg)
         CMD="pkg upgrade"
         ;;

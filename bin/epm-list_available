@@ -111,6 +111,9 @@ case $PMTYPE in
     apk)
         CMD="apk list --available"
         ;;
+    nix)
+        CMD="nix-env -qaP"
+        ;;
     appget)
         CMD="appget search"
         ;;

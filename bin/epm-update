@@ -113,6 +113,9 @@ case $PMTYPE in
     apk)
         sudocmd apk update
         ;;
+    nix)
+        sudocmd nix-channel --update
+        ;;
     pkgsrc)
         # portsnap extract for the first time?
         sudocmd portsnap fetch update

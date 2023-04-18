@@ -149,6 +149,9 @@ case $PMTYPE in
     apk)
         CMD="apk list --installed"
         ;;
+    nix)
+        CMD="nix-env -q"
+        ;;
     tce)
         CMD="ls -1 /usr/local/tce.installed"
         ;;

@@ -173,6 +173,10 @@ epm_install_names()
         xbps)
             sudocmd xbps-install $@
             return ;;
+        nix)
+            info "When you ask Nix to install a package, it will first try to get it in pre-compiled form from a binary cache. By default, Nix will use the binary cache https://cache.nixos.org; it contains binaries for most packages in Nixpkgs. Only if no binary is available in the binary cache, Nix will build the package from source."
+            sudocmd nix-env -iA $@
+            return ;;
         appget|winget)
             sudocmd $PMTYPE install $@
             return ;;
