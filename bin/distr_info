@@ -189,6 +189,9 @@ case $DISTRIB_ID in
     GNU/Linux/Guix)
         CMD="guix"
         ;;
+    NixOS)
+        CMD="nix"
+        ;;
     Android)
         CMD="android"
         # TODO: CMD="termux-pkg"
@@ -224,7 +227,7 @@ case $DISTRIB_ID in
             is_command "apt-get" && echo "apt-dpkg" && return
         fi
 
-        echo "We don't support yet DISTRIB_ID $DISTRIB_ID" >&2
+        echo "pkgmanager(): We don't support yet DISTRIB_ID $DISTRIB_ID" >&2
         ;;
 esac
 echo "$CMD"
