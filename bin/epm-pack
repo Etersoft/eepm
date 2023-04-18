@@ -28,6 +28,7 @@ __epm_pack()
 {
     local packname="$1"
     local tarname="$2"
+    local packversion="$3"
     returntarname=''
 
     local repackcode="$EPM_PACK_SCRIPTS_DIR/$packname.sh"
@@ -47,7 +48,7 @@ __epm_pack()
     local bashopt=''
     [ -n "$verbose" ] && bashopt='-x'
     #info "Running $($script --description 2>/dev/null) ..."
-    ( unset EPMCURDIR ; docmd $CMDSHELL $bashopt $repackcode "$tarname" "$filefortarname" ) || fatal
+    ( unset EPMCURDIR ; docmd $CMDSHELL $bashopt $repackcode "$tarname" "$filefortarname" "$packversion" ) || fatal
     returntarname="$(cat "$filefortarname")" || fatal "pack script $repackcode didn't set tarname"
     rm -rf $tmpdir
 
@@ -100,11 +101,12 @@ epm_pack_help()
 {
     cat <<EOF
 epm pack - create rpm package from files
-Usage: epm pack [options] <packname> <tar|url|dir>
+Usage: epm pack [options] <packname> <tar|url|dir> [version]
 Options:
     <packname>            - receipt
     <dir>                 - create tarball from the dir before
     <url>                 - download tar from url
+    [version]             - force version for unversioned sources
     --install             - install after pack result
     --repack              - force repack ever if returned package can be installed without repack
     --download-only       - save pack result and exit
@@ -126,6 +128,7 @@ epm_pack()
 
     local packname="$1"
     local tarname="$2"
+    local packversion="$3"
 
     [ -n "$packname" ] || fatal "run with packname, see --help"
 
@@ -146,6 +149,6 @@ epm_pack()
         true
     fi
 
-    __epm_pack "$packname" "$tarname"
+    __epm_pack "$packname" "$tarname" "$packversion"
 
 }
