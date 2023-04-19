@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.52.1"
+EPMVERSION="3.52.2"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -3836,7 +3836,7 @@ __epm_check_if_src_rpm()
 
 __epm_if_command_path()
 {
-    is_dirpath "$1" && rhas "$1" "bin/"
+    is_dirpath "$1" && rhas "$1" "bin/" && ! rhas "$1" "/home"
 }
 
 __epm_get_replacepkgs()
@@ -5644,6 +5644,7 @@ __epm_play_initialize_ipfs()
         if [ ! -r "$EGET_IPFS_DB" ] ; then
             sudorun touch "$EGET_IPFS_DB" >&2
             sudorun chmod -v a+rw "$EGET_IPFS_DB" >&2
+            # TODO: update this DB every time when changed (and get from IPFS as sign it works.)
             # get initial db from server
             local URL="https://eepm.ru/app-versions"
             info "Initialize IPFS DB in $EGET_IPFS_DB file and fill it with data from $URL/eget-ipfs-db.txt"
@@ -7203,6 +7204,10 @@ get_fix_release_pkg()
         echo "apt-conf-$TO"
         # apt-conf-sisyphus and apt-conf-branch conflicts
         epm installed apt-conf-branch && echo "apt-conf-branch-"
+        #for i in apt apt-rsync libapt libpackagekit-glib librpm7 packagekit rpm synaptic realmd libldap2 ; do
+        #    epm installed $i && echo "$i"
+        #done
+
     else
         epm installed apt-conf-branch && echo "apt-conf-branch apt-conf-sisyphus-"
     fi
@@ -14072,7 +14077,7 @@ get_urls()
     fi
 
     # cat html, divide to lines by tags and cut off hrefs only
-    scat $URL | sed -e 's|<|<\n|g' -e 's|data-file=|href=|g' -e "s|'|\"|g" | \
+    scat $URL | sed -e 's|<|<\n|g' -e 's|data-file=|href=|g' -e "s|href=http|href=\"http|g" -e "s|>|\">|g" -e "s|'|\"|g" | \
          grep -i -o -E 'href="(.+)"' | cut -d'"' -f2
 }
 
