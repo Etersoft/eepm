@@ -12,6 +12,11 @@ fatal()
 
 EPM=$(realpath $(dirname $0)/../bin/epm)
 
+if [ "$1" == "--ipfs" ] ; then
+    ipfs="--ipfs"
+    shift
+fi
+
 
 if [ "$1" == "--hasher" ] ; then
     shift
@@ -25,7 +30,7 @@ if [ "$1" == "--hasher" ] ; then
 
     if [ "$APP" == "all" ] ; then
         $EPM play --list-all --short | while read app ; do
-            $0 --hasher $B $app </dev/null || fatal
+            $0 $ipfs --hasher $B $app </dev/null || fatal
         done
         exit
     fi
@@ -35,7 +40,7 @@ if [ "$1" == "--hasher" ] ; then
 
     HDIR=$(loginhsh -q -t -d -p epm $B)
     cp -afv ../* $HDIR/chroot/.in
-    loginhsh -t -p epm $B -o -r "bash -x /.in/tests/test_play.sh --local $APP" || exit
+    loginhsh -t -p epm $B -o -r "bash -x /.in/tests/test_play.sh $ipfs --local $APP" || exit
     loginhsh -c -t -p epm $B
     exit
 fi
@@ -63,11 +68,11 @@ $EPM --version
 $EPM print info
 
 if [ -n "$SILENT" ] ; then
-    $EPM play --list-all --short | while read app ; do
+    $EPM play $ipfs --list-all --short | while read app ; do
         echo -n "Silent installing $app ... "
-        $EPM --auto play $app </dev/null >/dev/null 2>/dev/null && echo -n "DONE" || { echo "ERROR" ; continue ; }
+        $EPM --auto play $ipfs $app </dev/null >/dev/null 2>/dev/null && echo -n "DONE" || { echo "ERROR" ; continue ; }
         echo -n "  Removing $app ... "
-        $EPM --auto play --remove $app </dev/null >/dev/null 2>/dev/null && echo -n "DONE" || { echo "ERROR" ; continue ; }
+        $EPM --auto play $ipfs --remove $app </dev/null >/dev/null 2>/dev/null && echo -n "DONE" || { echo "ERROR" ; continue ; }
     done
     exit
 fi
@@ -76,18 +81,20 @@ if [ -n "$APP" ] ; then
     app="$APP"
     echo
     echo "Installing $app ... "
-    $EPM --auto play --verbose $app </dev/null || exit
+    $EPM --auto play --verbose $ipfs $app </dev/null || exit
+    bash
     echo "  Removing $app ... "
-    $EPM --auto play --remove $app </dev/null
+    $EPM --auto play $ipfs --remove $app </dev/null
     exit
 fi
 
 $EPM play --list-all --short | while read app ; do
     echo
     echo "Installing $app ... "
-    $EPM --auto play --verbose $app </dev/null || exit
+    $EPM --auto play --verbose $ipfs $app </dev/null || exit
+    bash
     echo "  Removing $app ... "
-    $EPM --auto play --remove $app </dev/null
+    $EPM --auto play $ipfs --remove $app </dev/null
 done
 
 exit
