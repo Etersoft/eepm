@@ -11,8 +11,30 @@ PKGDIR="$(mktemp -d)"
 trap "rm -fr $PKGDIR" EXIT
 cd $PKGDIR || fatal
 
-erc $TAR || fatal
+if echo "$TAR" | grep "Sentinel_LDK_Linux_Run-time_Installer_script.tar.gz" ; then
+    erc $TAR || fatal
+    TAR="Sentinel_LDK_Linux_Run-time_Installer_script/aksusbd-*.tar.gz"
+fi
 
-cp -v $PRODUCT*/pkg/aksusbd-*.x86_64.rpm $CURDIR || fatal
+if echo "$TAR" | grep "aksusbd" ; then
+    erc $TAR || fatal
+else
+    fatal "How no idea how to handle $TAR"
+fi
 
-return_tar $CURDIR/$PRODUCT*.rpm
+pkgtype="$(epm print info -p)"
+case $pkgtype in
+    rpm)
+        pkg="aksusbd-*.x86_64.rpm"
+        ;;
+    deb)
+        pkg="aksusbd_*_amd64.deb"
+        ;;
+    *)
+        pkg="aksusbd_*_amd64.deb"
+        ;;
+esac
+
+cp -v $PRODUCT*/pkg/$pkg $CURDIR || fatal
+
+return_tar $CURDIR/$pkg
