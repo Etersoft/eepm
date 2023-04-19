@@ -12,5 +12,7 @@ subst '1i%filter_from_requires /^libcurl-gnutls.so.4(CURL_GNUTLS_.*/d' $SPEC
 REQUIRES="libcurl-gnutls-compat postgresql"
 subst "1iRequires:$REQUIRES" $SPEC
 
-# install all requires packages before packing (the list have got with rpmreqs anydesk)
-epm install --skip-installed libcurl libsqlite3 libX11 libxml2 zlib $REQUIRES
+if [ "$(epm print info -s)" = "alt" ] ; then
+    # install all requires packages before packing (the list have got with rpmreqs anydesk)
+    epm install --skip-installed libcurl libsqlite3 libX11 libxml2 zlib $REQUIRES
+fi

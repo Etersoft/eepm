@@ -74,4 +74,6 @@ done
 # FIXME: check the full list
 filter_from_requires libQt5 libxcb "libX.*"
 
-epm install --skip-installed glib2 libdbus libexpat libgbm libgio libgpg-error libuuid zlib fontconfig libGL libalsa libnspr libnss
+if [ "$(epm print info -s)" = "alt" ] ; then
+    epm install --skip-installed glib2 libdbus libexpat libgbm libgio libgpg-error libuuid zlib fontconfig libGL libalsa libnspr libnss
+fi

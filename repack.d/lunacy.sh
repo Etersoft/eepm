@@ -20,4 +20,6 @@ install_file /opt/icons8/lunacy/Assets/LunacyLogo.png /usr/share/pixmaps/$PRODUC
 subst '1iAutoProv:no' $SPEC
 subst '1iAutoReq:yes,nomono,nomonolib' $SPEC
 
-epm install --skip-installed liblttng-ust libX11 fontconfig zlib
+if [ "$(epm print info -s)" = "alt" ] ; then
+    epm install --skip-installed liblttng-ust libX11 fontconfig zlib
+fi

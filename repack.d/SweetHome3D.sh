@@ -74,4 +74,6 @@ add_findreq_skiplist "$PRODUCTDIR/runtime/lib/amd64/libav*.so"
 
 subst '1iAutoProv:no' $SPEC
 
-epm install --skip-installed coreutils glib2 libalsa libatk libcairo libcairo-gobject fontconfig libfreetype libgdk-pixbuf libgio libGL libgtk+2 libgtk+3 libnsl1 libpango libX11 libXext libXi libXrender libXtst
+if [ "$(epm print info -s)" = "alt" ] ; then
+    epm install --skip-installed coreutils glib2 libalsa libatk libcairo libcairo-gobject fontconfig libfreetype libgdk-pixbuf libgio libGL libgtk+2 libgtk+3 libnsl1 libpango libX11 libXext libXi libXrender libXtst
+fi

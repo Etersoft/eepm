@@ -36,6 +36,8 @@ done
 
 filter_from_requires libav libswresample libswscale
 
-# install all requires packages before packing (the list have got with rpmreqs package | xargs echo)
-epm install --skip-installed libalsa libGLX libOpenGL libX11 libxcb libXext zlib
+if [ "$(epm print info -s)" = "alt" ] ; then
+    # install all requires packages before packing (the list have got with rpmreqs package | xargs echo)
+    epm install --skip-installed libalsa libGLX libOpenGL libX11 libxcb libXext zlib
+fi
 

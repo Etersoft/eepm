@@ -82,5 +82,7 @@ epm tool erc dwr.tar.lzma || fatal
 mv -v dwr.tar/* . || fatal
 remove_file dwr.tar.lzma
 
-epm install --skip-installed coreutils file gawk grep libcurl libGL libX11 libXext libXmu libXrandr libXrender sed xprop
+if [ "$(epm print info -s)" = "alt" ] ; then
+    epm install --skip-installed coreutils file gawk grep libcurl libGL libX11 libXext libXmu libXrandr libXrender sed xprop
+fi
 

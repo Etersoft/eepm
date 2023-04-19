@@ -45,5 +45,8 @@ for i in $BUILDROOT$PRODUCTDIR/common/lib* ; do
     a= patchelf --set-rpath '$ORIGIN' $i
 done
 
-epm install --skip-installed glib2 libatk libcairo libcairo-gobject libcom_err libcups libenchant libgdk-pixbuf libgio libGL libgst-plugins1.0 libgstreamer1.0 libgtk+3 libharfbuzz-icu libkrb5 libpango libSM libsoup libunwind libX11 libXcomposite libXdamage libXrender libXt libXxf86vm
+if [ "$(epm print info -s)" = "alt" ] ; then
+    epm install --skip-installed glib2 libatk libcairo libcairo-gobject libcom_err libcups libenchant libgdk-pixbuf libgio libGL libgst-plugins1.0 libgstreamer1.0 libgtk+3 libharfbuzz-icu libkrb5 libpango libSM libsoup libunwind libX11 libXcomposite libXdamage libXrender libXt libXxf86vm
+fi
+
 

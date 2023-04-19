@@ -27,4 +27,6 @@ filter_from_requires libQt5 libicu "libpq.so.5(RHPG_9"
 #    rm -v $BUILDROOT/usr/lib/rstudio/resources/app/bin/{diagnostics,rpostback,rsession}
 #fi
 
-epm install --skip-installed libpq5 libsqlite sqlite R-base R-doc-html
+if [ "$(epm print info -s)" = "alt" ] ; then
+    epm install --skip-installed libpq5 libsqlite sqlite R-base R-doc-html
+fi

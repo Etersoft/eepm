@@ -70,4 +70,6 @@ EOF
 
 pack_file /usr/share/applications/$PRODUCT.desktop
 
-epm install --skip-installed glib2 libdbus libEGL libGL libICE libqt5-test libSM libX11 libxcb libXext libXi libXinerama libXrandr libXrender zlib
+if [ "$(epm print info -s)" = "alt" ] ; then
+    epm install --skip-installed glib2 libdbus libEGL libGL libICE libqt5-test libSM libX11 libxcb libXext libXi libXinerama libXrandr libXrender zlib
+fi

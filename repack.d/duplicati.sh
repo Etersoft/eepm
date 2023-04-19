@@ -17,4 +17,7 @@ subst '1iAutoReq: yes,nomonolib,nomono' $SPEC
 subst 's|env python.*|env python3|' $BUILDROOT/usr/lib/duplicati/utility-scripts/DuplicatiVerify.py
 subst 's|/usr/bin/bash|/bin/bash|' $BUILDROOT/usr/lib/duplicati/{lvm-scripts/*.sh,run-script-example.sh} $BUILDROOT/usr/bin/{duplicati-server,duplicati-cli,duplicati}
 
-epm install --skip-installed rpm-build-python3 mono-full libgtk-sharp2
+if [ "$(epm print info -s)" = "alt" ] ; then
+    epm install --skip-installed rpm-build-python3 mono-full libgtk-sharp2
+fi
+

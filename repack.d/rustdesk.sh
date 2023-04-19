@@ -57,7 +57,10 @@ filter_from_requires /etc/X11/xinit/Xsession /etc/default/locale /usr/etc/X11/xd
 
 fi
 
+[ "$(epm print info -s)" = "alt" ] || exit 0
+
 epm install --skip-installed glib2 libappindicator-gtk3 libcairo libgdk-pixbuf libgtk+3 libpango libpulseaudio libuuid libX11 libXau libxcb libXdmcp libXfixes libXtst xdotool
+
 if ! epm install --skip-installed  python3-module-pynput ; then
     case "$(epm print info -e)" in
         ALTLinux/p10|ALTServer/10)

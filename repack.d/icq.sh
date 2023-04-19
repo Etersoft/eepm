@@ -72,5 +72,6 @@ for i in QtQuick/*/lib*.so  ; do
     a= patchelf --set-rpath '$ORIGIN/../../lib' $i
 done
 
-
-epm install --skip-installed glib2 libdbus libexpat libgbm libgio libgpg-error libuuid zlib fontconfig libGL
+if [ "$(epm print info -s)" = "alt" ] ; then
+    epm install --skip-installed glib2 libdbus libexpat libgbm libgio libgpg-error libuuid zlib fontconfig libGL
+fi

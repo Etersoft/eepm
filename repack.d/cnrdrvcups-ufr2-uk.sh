@@ -6,4 +6,6 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
-epm install --skip-installed glib2 libatk libcairo libcairo-gobject libcups libgdk-pixbuf libgio libgtk+3 libpango libxml2 libjbig
+if [ "$(epm print info -s)" = "alt" ] ; then
+    epm install --skip-installed glib2 libatk libcairo libcairo-gobject libcups libgdk-pixbuf libgio libgtk+3 libpango libxml2 libjbig
+fi

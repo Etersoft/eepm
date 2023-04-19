@@ -22,4 +22,6 @@ cleanup
 fix_chrome_sandbox
 
 install_deps
-epm install --skip-installed python3 rpm-build-python3
+if [ "$(epm print info -s)" = "alt" ] ; then
+    epm install --skip-installed python3 rpm-build-python3
+fi

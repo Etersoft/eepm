@@ -17,10 +17,6 @@ PRODUCT=anydesk
 #subst "s|.*/etc/default/NetworkManager.*||" $BUILDROOT/etc/rc.d/init.d/anydesk
 #subst "s|/usr/share/anydesk/files/init/anydesk|/etc/rc.d/init.d/anydesk|" $SPEC
 
-# install all requires packages before packing (the list have got with rpmreqs anydesk)
-epm install --skip-installed fontconfig glib2 libatk libcairo libfreetype libgdk-pixbuf libgio libGL libGLU libgtk+2 libICE libpango libpolkit \
-    libSM libX11 libxcb libXdamage libXext libXfixes libXi libxkbfile libXmu libXrandr libXrender libXt libXtst polkit \
-    libminizip libgtkglext libpangox1.0-compat
 
 subst '1iAutoProv:no' $SPEC
 
@@ -52,3 +48,9 @@ done
 # preloaded from /usr/lib64/anydesk/, drop external requires
 filter_from_requires libpangox-1.0.so.0 libgdkglext-x11-1.0.so.0 libgtkglext-x11-1.0.so.0
 
+if [ "$(epm print info -s)" = "alt" ] ; then
+    # install all requires packages before packing (the list have got with rpmreqs anydesk)
+    epm install --skip-installed fontconfig glib2 libatk libcairo libfreetype libgdk-pixbuf libgio libGL libGLU libgtk+2 libICE libpango libpolkit \
+        libSM libX11 libxcb libXdamage libXext libXfixes libXi libxkbfile libXmu libXrandr libXrender libXt libXtst polkit \
+        libminizip libgtkglext libpangox1.0-compat
+fi
