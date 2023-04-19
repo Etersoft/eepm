@@ -209,7 +209,7 @@ move_to_opt()
         sdir="$BUILDROOT$1"
     else
         sdir=''
-        for i in $* ; do
+        for i in "$@" ; do
             # workaround for wildcards in from
             sdir="$(echo $BUILDROOT$i)"
             [ -d "$sdir" ] && break
