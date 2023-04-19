@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.52.1
+Version: 3.52.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -155,6 +155,15 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Thu Apr 20 2023 Vitaly Lipatov <lav@altlinux.ru> 3.52.2-alt1
+- epm play: add lithium support
+- epm play: add aksusbd
+- epm play cascadeur: get build-id and version from the site
+- epm repack: install packages only on ALT
+- epm repack softmaker-freeoffice-2021: fix
+- epm install: ignore /home dir as possible bin dir
+- eget: restore missed quotes after href
+
 * Wed Apr 19 2023 Vitaly Lipatov <lav@altlinux.ru> 3.52.1-alt1
 - distr_info: print empty package type if unknown
 - distr_info: add NixOS support
