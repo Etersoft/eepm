@@ -16,12 +16,13 @@ subst '1iAutoProv:no' $SPEC
 remove_file /usr/local/bin/$PRODUCT
 add_bin_link_command
 
-epm assure patchelf || exit
-
 cd $BUILDROOT$PRODUCTDIR
+
+if epm assure patchelf ; then
 for i in lib* $PRODUCT  ; do
     a= patchelf --set-rpath '$ORIGIN' $i
 done
+fi
 
 epm install --skip-installed libmfx || epm install 316139 || fatal "Can't install libmfx"
 

@@ -24,8 +24,8 @@ subst "s|Руѝѝкий|Русский|" $BUILDROOT/opt/mssql/lib/mssql-conf/mss
 subst 's|sysctl|/sbin/sysctl|' $BUILDROOT/opt/mssql/bin/crash-support-functions.sh
 subst 's|/usr/bin/basename|/bin/basename|' $BUILDROOT/opt/mssql/bin/*.sh
 
-epm assure patchelf || exit
+if epm assure patchelf ; then
 for i in $BUILDROOT/opt/mssql/lib/libunwind-x86_64.so.8 ; do
     a= patchelf --set-rpath '$ORIGIN/' $i
 done
-
+fi

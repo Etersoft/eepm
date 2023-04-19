@@ -14,7 +14,7 @@ PREINSTALL_PACKAGES="libQt5MultimediaGstTools libQt5WaylandClient libqt5-multime
 subst '1iAutoReq:yes,noperl' $SPEC
 subst '1iAutoProv:no' $SPEC
 
-epm assure patchelf || exit
+if epm assure patchelf ; then
 for i in $BUILDROOT/opt/XnView/lib/{*.so.*,*.so} ; do
     a= patchelf --set-rpath '$ORIGIN/' $i || continue
 done
@@ -27,4 +27,4 @@ done
 for i in $BUILDROOT/opt/XnView/XnView ; do
     a= patchelf --set-rpath '$ORIGIN/lib/' $i || continue
 done
-
+fi

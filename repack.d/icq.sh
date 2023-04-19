@@ -56,7 +56,7 @@ subst "s|.*/opt/icq/unittests.*||" $SPEC
 # ignore embedded libs
 filter_from_requires libQt5 libxcb "libX.*"
 
-epm assure patchelf || exit
+if epm assure patchelf ; then
 cd $BUILDROOT$PRODUCTDIR
 for i in $PRODUCT  ; do
     a= patchelf --set-rpath '$ORIGIN/lib' $i
@@ -73,4 +73,4 @@ done
 for i in QtQuick/*/lib*.so  ; do
     a= patchelf --set-rpath '$ORIGIN/../../lib' $i
 done
-
+fi

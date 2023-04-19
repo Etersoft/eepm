@@ -71,11 +71,11 @@ done
 
 cd $BUILDROOT$PRODUCTDIR/ || exit
 
-epm assure patchelf || exit
+if epm assure patchelf ; then
 for i in jbr/lib/lib*.so  ; do
     a= patchelf --set-rpath '$ORIGIN/server:$ORIGIN' $i
 done
-
+fi
 
 subst 's|%dir "'$PRODUCTDIR'/"||' $SPEC
 subst 's|%dir "'$PRODUCTDIR'/bin/"||' $SPEC

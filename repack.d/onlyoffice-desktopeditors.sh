@@ -22,7 +22,7 @@ for i in $BUILDROOT/opt/onlyoffice/desktopeditors/lib* ; do
     filter_from_requires $di
 done
 
-epm assure patchelf || exit
+if epm assure patchelf ; then
 for i in $BUILDROOT/opt/onlyoffice/desktopeditors/{libQt5Core.so.*,libicui18n.so,libicui18n.so.*,libicuuc.so,libicuuc.so.*} ; do
     a= patchelf --set-rpath '$ORIGIN/' $i || continue
 done
@@ -30,6 +30,7 @@ done
 for i in $BUILDROOT/opt/onlyoffice/desktopeditors/converter/*.so ; do
     a= patchelf --set-rpath '$ORIGIN/:$ORIGIN/../' $i || continue
 done
+fi
 
 # pack icons
 iconname=onlyoffice-desktopeditors

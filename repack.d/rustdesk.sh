@@ -48,10 +48,11 @@ install_file /usr/share/rustdesk/files/rustdesk.png /usr/share/pixmaps/$ICONFILE
 #move_to_opt /usr/lib/rustdesk
 add_bin_link_command
 
-epm assure patchelf || fatal
+if epm assure patchelf ; then
 for i in $BUILDROOT/$PRODUCTDIR/lib/*.so ; do
     a= patchelf --set-rpath '$ORIGIN/' $i || continue
 done
+fi
 
 filter_from_requires /etc/X11/xinit/Xsession /etc/default/locale /usr/etc/X11/xdm/Xsession
 

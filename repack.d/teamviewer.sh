@@ -58,10 +58,11 @@ filter_from_requires '\\/bin\\/ip'
 # ignore embedded libs
 filter_from_requires libQt5
 
-epm assure patchelf || exit
+if epm assure patchelf ; then
 for i in $BUILDROOT$PRODUCTDIR/tv_bin/RTlib/{libicui18n.so.*,libicuuc.so.*} ; do
     a= patchelf --set-rpath '$ORIGIN/' $i
 done
+fi
 
 remove_file $PRODUCTDIR/tv_bin/RTlib/qt/qml/QtWebEngine/libqtwebengineplugin.so.debug
 remove_file $PRODUCTDIR/tv_bin/RTlib/qt/qml/QtWebChannel/libdeclarative_webchannel.so.debug

@@ -28,7 +28,7 @@ remove_file $PRODUCTDIR/etc/Color/nuke-default/make.py
 remove_file $PRODUCTDIR/etc/Color/spi-anim/makeconfig_anim.py
 remove_file $PRODUCTDIR/etc/Color/spi-vfx/make_vfx_ocio.py
 
-epm assure patchelf || exit
+if epm assure patchelf ; then
 for i in $BUILDROOT$PRODUCTDIR/bin/{djv,djv_*} ; do
     a= patchelf --set-rpath '$ORIGIN/../lib' $i
 done
@@ -36,5 +36,6 @@ done
 for i in $BUILDROOT$PRODUCTDIR/lib/lib*.so* ; do
     a= patchelf --set-rpath '$ORIGIN' $i
 done
+fi
 
 filter_from_requires libav libswresample libswscale

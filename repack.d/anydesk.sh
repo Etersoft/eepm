@@ -38,7 +38,7 @@ LIBDIR=/usr/lib64
 # don't check lib if missed
 [ ! -d $BUILDROOT$LIBDIR ] && exit
 
-epm assure patchelf || exit
+if epm assure patchelf ; then
 for i in $BUILDROOT$LIBDIR/anydesk/{libgdkglext-x11-1.0.*,libgtkglext-x11-1.0.*} ; do
     a= patchelf --set-rpath '$ORIGIN/' $i
 done
@@ -47,6 +47,7 @@ done
 for i in $BUILDROOT/usr/libexec/anydesk ; do
     a= patchelf --set-rpath "$LIBDIR/anydesk" $i
 done
+fi
 
 # preloaded from /usr/lib64/anydesk/, drop external requires
 filter_from_requires libpangox-1.0.so.0 libgdkglext-x11-1.0.so.0 libgtkglext-x11-1.0.so.0

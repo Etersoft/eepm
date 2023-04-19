@@ -32,7 +32,7 @@ for i in libQt5 libav libswresample libfdkaac libmpg123 libquazip libturbojpeg l
     subst "1i%filter_from_requires /^$i.*/d" $SPEC
 done
 
-epm assure patchelf || exit
+if epm assure patchelf ; then
 
 for i in $BUILDROOT/opt/zoom/lib*.so.* $BUILDROOT/opt/zoom/lib*.so ; do
     a= patchelf --set-rpath '$ORIGIN:$ORIGIN/Qt/lib' $i || continue
@@ -61,6 +61,8 @@ done
 for i in $BUILDROOT/opt/zoom/{zoom,zopen} ; do
     a= patchelf --set-rpath '$ORIGIN:$ORIGIN/Qt/lib:$ORIGIN/cef' $i
 done
+
+fi
 
 # missed Qt deps
 remove_file /opt/zoom/Qt/qml/QtQuick/XmlListModel/libqmlxmllistmodelplugin.so

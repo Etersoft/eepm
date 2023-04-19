@@ -25,7 +25,8 @@ chmod -R a+rX .
 
 install_file $PRODUCTDIR/icon.png /usr/share/pixmaps/$ICONFILE
 
-epm assure patchelf || exit
-for i in IWB_Driver libQt*.so.* ; do
-    a= patchelf --set-rpath '$ORIGIN' $i
-done
+if epm assure patchelf ; then
+    for i in IWB_Driver libQt*.so.* ; do
+        a= patchelf --set-rpath '$ORIGIN' $i
+    done
+fi

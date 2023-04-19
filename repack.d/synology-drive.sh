@@ -15,7 +15,7 @@ cd $BUILDROOT/$PRODUCTDIR || exit
 # disable autoupdate
 remove_file $PRODUCTDIR/package/cloudstation/bin/cloud-drive-auto-updater
 
-epm assure patchelf || exit
+if epm assure patchelf ; then
 for i in lib/lib*.so.* package/cloudstation/lib/lib*.so.* ; do
     a= patchelf --set-rpath '$ORIGIN' $i
 done
@@ -28,6 +28,7 @@ done
 for i in bin/launcher package/cloudstation/bin/cloud-drive-* ; do
     a= patchelf --set-rpath '$ORIGIN/../lib' $i
 done
+fi
 
 # TODO: some dependency leak?
 # ignore embedded libs

@@ -10,11 +10,12 @@ PRODUCTDIR=/opt/ipera
 LIBDIR=$(echo $BUILDROOT/opt/ipera/client/*/lib)
 [ -d "$LIBDIR" ] || exit
 
-epm assure patchelf || exit
+if epm assure patchelf ; then
 cd $LIBDIR
 for i in lib*.so.* gstreamer-0.10/lib*.so.*  ; do
     a= patchelf --set-rpath '$ORIGIN' $i
 done
+fi
 
 #for i in ../bin/qml/QtQuick/Particles.2/libparticlesplugin.so ; do
 #    a= patchelf --set-rpath "$LIBDIR" $i

@@ -12,7 +12,7 @@ add_bin_link_command
 chmod a+x $BUILDROOT/opt/trueconf/trueconf
 chmod a+x $BUILDROOT/opt/trueconf/trueconf-autostart
 
-epm assure patchelf || exit
+if epm assure patchelf ; then
 for i in lib/lib*.so  ; do
     a= patchelf --set-rpath '$ORIGIN' $BUILDROOT$PRODUCTDIR/$i
 done
@@ -20,6 +20,7 @@ done
 for i in TrueConf ; do
     a= patchelf --set-rpath '$ORIGIN/lib' $BUILDROOT$PRODUCTDIR/$i
 done
+fi
 
 # libhwloc.so.5 => not found (we have only libhwloc.so.15)
 remove_file $PRODUCTDIR/lib/libtbbbind.so

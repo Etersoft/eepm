@@ -57,10 +57,11 @@ fix_chrome_sandbox $PRODUCTDIR/opera_sandbox
 
 # TODO: it is possible we will not require this if link bin->/opt/dir/name is relative
 # fix to support pack links in /usr/bin (may be this is a bug?)
-epm assure patchelf || exit
+if epm assure patchelf ; then
 for i in $BUILDROOT$PRODUCTDIR/$PRODUCTCUR ; do
     a= patchelf --set-rpath "$PRODUCTDIR/lib_extra:$PRODUCTDIR" $i
 done
+fi
 
 #subst '1iRequires: chromium-codecs-ffmpeg-extra >= 103' $SPEC
 

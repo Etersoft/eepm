@@ -55,7 +55,7 @@ pack_file /usr/share/applications/$PRODUCT.desktop
 install_file $PRODUCTDIR/SweetHome3DIcon.png /usr/share/pixmaps/$PRODUCT.png
 
 cd $BUILDROOT$PRODUCTDIR/ || fatal
-epm assure patchelf || exit
+if epm assure patchelf ; then
 for i in runtime/lib/amd64/lib*.so ; do
     a= patchelf --set-rpath '$ORIGIN:$ORIGIN/server:$ORIGIN/jli' $i
 done
@@ -69,6 +69,7 @@ for i in lib/java3d-1.6/lib*.so lib/yafaray/lib*.so  ; do
     [ -r "$i" ] || continue
     a= patchelf --set-rpath '$ORIGIN:$ORIGIN/../../runtime/lib/amd64' $i
 done
+fi
 
 chmod -v a+x runtime/bin/*
 

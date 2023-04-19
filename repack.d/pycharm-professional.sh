@@ -78,7 +78,7 @@ cd $BUILDROOT$PRODUCTDIR/ || exit
 file=$(basename $(ls $BUILDROOT$PRODUCTDIR/plugins/tailwindcss/server/node.napi.musl-*.node))
 [ -n "$file" ] && remove_file $PRODUCTDIR/plugins/tailwindcss/server/$file
 
-epm assure patchelf || exit
+if epm assure patchelf ; then
 for i in jbr/lib/lib*.so  ; do
     a= patchelf --set-rpath '$ORIGIN/server:$ORIGIN' $i
 done
@@ -86,6 +86,7 @@ done
 for i in plugins/remote-dev-server/selfcontained/lib/lib*.so*  ; do
     a= patchelf --set-rpath '$ORIGIN' $i
 done
+fi
 
 
 subst 's|%dir "'$PRODUCTDIR'/"||' $SPEC

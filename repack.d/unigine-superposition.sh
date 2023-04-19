@@ -21,12 +21,13 @@ for i in bin data docs ; do
     subst "s|\"/$i/|\"$PRODUCTDIR/$i/|" $SPEC
 done
 
-epm assure patchelf || exit
-
 cd $BUILDROOT/$PRODUCTDIR || fatal
+
+if epm assure patchelf ; then
 for i in bin/lib*.so bin/qt/lib/lib*.so*; do
     a= patchelf --set-rpath '$ORIGIN' $i
 done
+fi
 
 # pack icons
 for i in 16 24 32 48 64 128 256 ; do

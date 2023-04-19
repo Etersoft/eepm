@@ -19,7 +19,7 @@ PRODUCTDIR=/opt/r7-office
 
 filter_from_requires ".*libQt5"
 
-epm assure patchelf || exit
+if epm assure patchelf ; then
 for i in $BUILDROOT$PRODUCTDIR/{desktopeditors,mediaviewer}/{libQt5Core.so.*,libicui18n.so,libicui18n.so.*,libicuuc.so,libicuuc.so.*} ; do
     a= patchelf --set-rpath '$ORIGIN/' $i || continue
 done
@@ -27,6 +27,7 @@ done
 for i in $BUILDROOT$PRODUCTDIR/desktopeditors/{converter,platforms,platforminputcontexts}/lib*.so ; do
     a= patchelf --set-rpath '$ORIGIN/:$ORIGIN/../' $i || continue
 done
+fi
 
 #subst '1iAutoReq:no' $SPEC
 subst '1iAutoProv:no' $SPEC

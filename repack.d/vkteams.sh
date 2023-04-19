@@ -53,9 +53,9 @@ install_file $ICONURL /usr/share/pixmaps/$PRODUCT.png
 
 subst "s|.*$PRODUCTDIR/unittests.*||" $SPEC
 
-
-epm assure patchelf || exit
 cd $BUILDROOT$PRODUCTDIR
+
+if epm assure patchelf ; then
 
 for i in $PRODUCT  ; do
     a= patchelf --set-rpath '$ORIGIN/lib' $i
@@ -72,6 +72,8 @@ done
 for i in QtQuick/*/lib*.so  ; do
     a= patchelf --set-rpath '$ORIGIN/../../lib' $i
 done
+
+fi
 
 # FIXME: check the full list
 filter_from_requires libQt5 libxcb "libX.*"
