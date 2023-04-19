@@ -263,6 +263,13 @@ add_requires()
     subst "1iRequires: $*" $SPEC
 }
 
+install_requires()
+{
+    if [ "$(epm print info -s)" = "alt" ] ; then
+        epm install --skip-installed "$@"
+    fi
+}
+
 filter_from_requires()
 {
     local i
@@ -316,3 +323,5 @@ if [ -n "$PRODUCTDIR" ] && [ "$(dirname "$PRODUCTDIR" )" != "/" ] && [ "$(dirnam
 fi
 
 [ -d "$BUILDROOT$PRODUCTBASEDIR" ] && pack_dir "$PRODUCTBASEDIR"
+
+[ -n "$PREINSTALL_PACKAGES" ] && install_requires $PREINSTALL_PACKAGES
