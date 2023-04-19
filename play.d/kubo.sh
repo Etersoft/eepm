@@ -6,6 +6,7 @@ SUPPORTEDARCHES="x86_64 x86 aarch64 armhf"
 BASEPKGNAME=kubo
 PRODUCTALT="stable beta"
 
+
 # kubo or kubo-beta
 if [ "$2" = "beta" ] || epm installed $BASEPKGNAME-beta ; then
     PKGNAME=$BASEPKGNAME-beta
@@ -20,6 +21,11 @@ else
 fi
 
 . $(dirname $0)/common.sh
+
+if epm installed $PKGNAME && [ "$(get_pkgvendor $PKGNAME)" = "ALT Linux Team" ]  ; then
+    echo "Package $PKGNAME is already installed from ALT repository."
+    exit 0
+fi
 
 arch="$(epm print info -a)"
 case "$arch" in
