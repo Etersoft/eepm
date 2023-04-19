@@ -21,4 +21,7 @@ subst "s|aksusbd_x86_64|aksusbd|g" $BUILDROOT/etc/udev/rules.d/80-hasp.rules
 mkdir -p $BUILDROOT/etc/init.d/
 remove_dir /etc/init.d
 
+touch $BUILDROOT/etc/hasplm/nethasp.ini
+pack_file /etc/hasplm/nethasp.ini
+
 remove_dir /var/hasplm/init
