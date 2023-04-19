@@ -3,6 +3,8 @@
 BUILDROOT="$1"
 SPEC="$2"
 
+PREINSTALL_PACKAGES="libQt5MultimediaGstTools libQt5WaylandClient libqt5-multimedia libqt5-waylandclient fontconfig glib2 libalsa libatk libcairo libcairo-gobject libcups libdbus libdrm libEGL libexpat libfreetype libgbm libgdk-pixbuf libgio libGL libgst-plugins1.0 libgstreamer1.0 libgtk+2 libgtk+3 libkrb5 liblzma libnspr libnss libpango libpulseaudio libwayland-client libwayland-cursor libwayland-egl libX11 libxcb libxcb-render-util libxcbutil-icccm libxcbutil-image libxcbutil-keysyms libXcomposite libXdamage libXext libXfixes libxkbcommon libxkbcommon-x11 libXrandr libXrender libXtst perl-base zlib"
+
 . $(dirname $0)/common.sh
 
 #ln -s /lib64/libbz2.so.1 $BUILDROOT/opt/XnView/lib/libbz2.so.1.0
@@ -26,10 +28,3 @@ for i in $BUILDROOT/opt/XnView/XnView ; do
     a= patchelf --set-rpath '$ORIGIN/lib/' $i || continue
 done
 
-if [ "$(epm print info -s)" = "alt" ] ; then
-    # FIXME: missed in the package
-    #filter_from_requires libQt5MultimediaGstTools libQt5WaylandClient
-    epm install --skip-installed libqt5-multimedia libqt5-waylandclient
-
-    epm install --skip-installed fontconfig glib2 libalsa libatk libcairo libcairo-gobject libcups libdbus libdrm libEGL libexpat libfreetype libgbm libgdk-pixbuf libgio libGL libgst-plugins1.0 libgstreamer1.0 libgtk+2 libgtk+3 libkrb5 liblzma libnspr libnss libpango libpulseaudio libwayland-client libwayland-cursor libwayland-egl libX11 libxcb libxcb-render-util libxcbutil-icccm libxcbutil-image libxcbutil-keysyms libXcomposite libXdamage libXext libXfixes libxkbcommon libxkbcommon-x11 libXrandr libXrender libXtst perl-base zlib
-fi

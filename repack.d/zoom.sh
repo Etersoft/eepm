@@ -6,6 +6,8 @@ SPEC="$2"
 PRODUCT=zoom
 PRODUCTDIR=/opt/zoom
 
+PREINSTALL_PACKAGES="glib2 libalsa libatk libat-spi2-core libcairo libcairo-gobject libcups libdbus libdrm libEGL libexpat libgbm libgdk-pixbuf libgio libGL libgomp1 libgtk+3 libkrb5 libnspr libnss libpango libpulseaudio libwayland-client libwayland-cursor libwayland-egl libX11 libxcb libxcb-render-util libxcbutil-icccm libxcbutil-image libxcbutil-keysyms libXcomposite libXdamage libXext libXfixes libxkbcommon libxkbcommon-x11 libXrandr libXtst zlib"
+
 . $(dirname $0)/common-chromium-browser.sh
 
 # TODO: s/freetype/libfreetype/
@@ -89,6 +91,3 @@ install_deps
 
 fix_chrome_sandbox $PRODUCTDIR/cef/chrome-sandbox
 
-if [ "$(epm print info -s)" = "alt" ] ; then
-    epm --skip-installed install glib2 libalsa libatk libat-spi2-core libcairo libcairo-gobject libcups libdbus libdrm libEGL libexpat libgbm libgdk-pixbuf libgio libGL libgomp1 libgtk+3 libkrb5 libnspr libnss libpango libpulseaudio libwayland-client libwayland-cursor libwayland-egl libX11 libxcb libxcb-render-util libxcbutil-icccm libxcbutil-image libxcbutil-keysyms libXcomposite libXdamage libXext libXfixes libxkbcommon libxkbcommon-x11 libXrandr libXtst zlib
-fi

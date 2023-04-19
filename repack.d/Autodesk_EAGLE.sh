@@ -7,6 +7,10 @@ SPEC="$2"
 PRODUCT=eagle
 PRODUCTDIR=/opt/$PRODUCT
 
+INSTALL_PACKAGES="coreutils fontconfig glib2 libalsa libcom_err libcups libdrm libexpat libfreetype libGL libkeyutils libkrb5 libnspr libnss libX11 libxcb libXrandr zlib"
+
+. $(dirname $0)/common.sh
+
 #subst '1iAutoProv:no' $SPEC
 
 # move package to /opt
@@ -58,6 +62,4 @@ for i in $BUILDROOT/$PRODUCTDIR/lib/{libssl.so,libssl.so.1.*} ; do
     a= patchelf --set-rpath '$ORIGIN/' $i
 done
 
-if [ "$(epm print info -s)" = "alt" ] ; then
-    epm install --skip-installed coreutils fontconfig glib2 libalsa libcom_err libcups libdrm libexpat libfreetype libGL libkeyutils libkrb5 libnspr libnss libX11 libxcb libXrandr zlib
 fi

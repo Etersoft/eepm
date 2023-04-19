@@ -5,6 +5,8 @@ SPEC="$2"
 
 PRODUCT=vkteams
 
+PREINSTALL_PACKAGES="glib2 libdbus libexpat libgbm libgio libgpg-error libuuid zlib fontconfig libGL libalsa libnspr libnss"
+
 . $(dirname $0)/common.sh
 
 subst "s|^Group:.*|Group: Networking/Instant messaging|" $SPEC
@@ -74,6 +76,3 @@ done
 # FIXME: check the full list
 filter_from_requires libQt5 libxcb "libX.*"
 
-if [ "$(epm print info -s)" = "alt" ] ; then
-    epm install --skip-installed glib2 libdbus libexpat libgbm libgio libgpg-error libuuid zlib fontconfig libGL libalsa libnspr libnss
-fi

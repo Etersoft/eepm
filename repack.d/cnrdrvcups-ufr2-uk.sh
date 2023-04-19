@@ -4,8 +4,7 @@ BUILDROOT="$1"
 
 SPEC="$2"
 
+PREINSTALL_PACKAGES="glib2 libatk libcairo libcairo-gobject libcups libgdk-pixbuf libgio libgtk+3 libpango libxml2 libjbig"
+
 . $(dirname $0)/common.sh
 
-if [ "$(epm print info -s)" = "alt" ] ; then
-    epm install --skip-installed glib2 libatk libcairo libcairo-gobject libcups libgdk-pixbuf libgio libgtk+3 libpango libxml2 libjbig
-fi

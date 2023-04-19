@@ -6,6 +6,7 @@ SPEC="$2"
 PRODUCT=synology-drive
 PRODUCTDIR=/opt/Synology/SynologyDrive
 
+PREINSTALL_PACKAGES="coreutils glib2 libdbus libgtk+3 libICE libpango libSM libX11 libxcb libxkbcommon libXrender fontconfig libfreetype"
 
 . $(dirname $0)/common.sh
 
@@ -49,6 +50,3 @@ remove_file $PRODUCTDIR/package/cloudstation/icon-overlay/14/lib/plugin-cb.so
 # TODO: parse
 # https://www.synology.com/api/support/findDownloadInfo?lang=ru-ru&product=DS2411%2B&major=6&minor=2
 
-if [ "$(epm print info -s)" = "alt" ] ; then
-    epm install --skip-installed coreutils glib2 libdbus libgtk+3 libICE libpango libSM libX11 libxcb libxkbcommon libXrender fontconfig libfreetype
-fi

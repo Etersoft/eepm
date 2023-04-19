@@ -6,6 +6,8 @@ SPEC="$2"
 PRODUCT=icq
 PRODUCTCUR=icq
 
+PREINSTALL_PACKAGES="glib2 libdbus libexpat libgbm libgio libgpg-error libuuid zlib fontconfig libGL"
+
 . $(dirname $0)/common.sh
 
 subst "s|^Group:.*|Group: Networking/Instant messaging|" $SPEC
@@ -72,6 +74,3 @@ for i in QtQuick/*/lib*.so  ; do
     a= patchelf --set-rpath '$ORIGIN/../../lib' $i
 done
 
-if [ "$(epm print info -s)" = "alt" ] ; then
-    epm install --skip-installed glib2 libdbus libexpat libgbm libgio libgpg-error libuuid zlib fontconfig libGL
-fi

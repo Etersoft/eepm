@@ -6,6 +6,8 @@ SPEC="$2"
 PRODUCT=iproject-client
 PRODUCTDIR="/opt/iproject-client"
 
+PREINSTALL_PACKAGES="coreutils libgdiplus liblame libnuma libopus libuuid libvorbis mono-core mono-data mono-winforms zlib mono-devel mono-extras mono-mvc mono-web"
+
 . $(dirname $0)/common.sh
 
 mkdir -p $BUILDROOT/usr/bin/
@@ -26,8 +28,3 @@ filter_from_requires "mono(Microsoft.Threading.Tasks.Extensions)"
 filter_from_requires "mono(System.Runtime)"
 filter_from_requires "mono(System.Threading.Tasks)"
 
-if [ "$(epm print info -s)" = "alt" ] ; then
-    epm install --skip-installed coreutils libgdiplus liblame libnuma libopus libuuid libvorbis
-    epm install --skip-installed mono-core mono-data mono-winforms zlib
-    # mono-devel mono-extras mono-mvc mono-web
-fi

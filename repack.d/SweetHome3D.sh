@@ -8,6 +8,8 @@ PRODUCT=SweetHome3D
 PRODUCTCUR=sweethome3d
 PRODUCTDIR=/opt/$PRODUCT
 
+PREINSTALL_PACKAGES="coreutils glib2 libalsa libatk libcairo libcairo-gobject fontconfig libfreetype libgdk-pixbuf libgio libGL libgtk+2 libgtk+3 libnsl1 libpango libX11 libXext libXi libXrender libXtst"
+
 . $(dirname $0)/common.sh
 
 
@@ -74,6 +76,3 @@ add_findreq_skiplist "$PRODUCTDIR/runtime/lib/amd64/libav*.so"
 
 subst '1iAutoProv:no' $SPEC
 
-if [ "$(epm print info -s)" = "alt" ] ; then
-    epm install --skip-installed coreutils glib2 libalsa libatk libcairo libcairo-gobject fontconfig libfreetype libgdk-pixbuf libgio libGL libgtk+2 libgtk+3 libnsl1 libpango libX11 libXext libXi libXrender libXtst
-fi

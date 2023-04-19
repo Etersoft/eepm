@@ -5,6 +5,9 @@ SPEC="$2"
 
 PRODUCT=librewolf
 
+PREINSTALL_PACKAGES="fontconfig glib2 libalsa libatk libcairo libcairo-gobject libdbus libdbus-glib libfreetype libgdk-pixbuf libgio libgtk+3 libharfbuzz libpango libX11 libxcb libXcomposite libXcursor libXdamage libXext libXfixes libXi libXrandr libXrender libXtst"
+
+
 . $(dirname $0)/common.sh
 
 subst '1iAutoReq:yes,noshell,nomonolib,nomono,nopython' $SPEC
@@ -25,6 +28,3 @@ for i in $BUILDROOT/$PRODUCTDIR/gmp-clearkey/0.1/lib*.so ; do
     a= patchelf --set-rpath '$ORIGIN/../../' $i || continue
 done
 
-if [ "$(epm print info -s)" = "alt" ] ; then
-    epm --skip-installed install fontconfig glib2 libalsa libatk libcairo libcairo-gobject libdbus libdbus-glib libfreetype libgdk-pixbuf libgio libgtk+3 libharfbuzz libpango libX11 libxcb libXcomposite libXcursor libXdamage libXext libXfixes libXi libXrandr libXrender libXtst
-fi

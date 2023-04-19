@@ -14,6 +14,13 @@ for i in atom atom-beta ; do
     subst "1iConflicts:$i" $SPEC
 done
 
+# install all requires packages before packing (the list have got with rpmreqs package | xargs echo)
+PREINSTALL_PACKAGES="coreutils findutils git-core glib2 grep libalsa libatk libat-spi2-core \
+            libcairo libcups libdbus libdrm libexpat libgbm libgdk-pixbuf libgio libgtk+3 libnspr libnss libpango libsecret \
+            libX11 libxcb libXcomposite libXdamage libXext libXfixes libxkbcommon libxkbfile libXrandr \
+            sed /usr/bin/git /usr/bin/node /usr/bin/npm /usr/bin/npx util-linux which xprop \
+            node python3 rpm-build-python3"
+
 . $(dirname $0)/common-chromium-browser.sh
 
 subst '1iAutoReq:yes,nomonolib,nomono,nopython' $SPEC
@@ -60,12 +67,3 @@ done
 # TODO use separated chromium-sandbox
 # TODO for other distros?
 
-if [ "$(epm print info -s)" = "alt" ] ; then
-# install all requires packages before packing (the list have got with rpmreqs package | xargs echo)
-epm install --skip-installed coreutils findutils git-core glib2 grep libalsa libatk libat-spi2-core \
-            libcairo libcups libdbus libdrm libexpat libgbm libgdk-pixbuf libgio libgtk+3 libnspr libnss libpango libsecret \
-            libX11 libxcb libXcomposite libXdamage libXext libXfixes libxkbcommon libxkbfile libXrandr \
-            sed /usr/bin/git /usr/bin/node /usr/bin/npm /usr/bin/npx util-linux which xprop \
-            node python3 rpm-build-python3
-# enlightenment exo-utils seamonkey
-fi

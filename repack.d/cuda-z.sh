@@ -5,6 +5,11 @@ SPEC="$2"
 
 PRODUCT=cuda-z
 
+# static linked
+# strace -f cuda-z 2>&1 | grep \.so | grep lib64/lib | grep fstat | sed -e 's|.*<||' -e 's|>.*||' | sort -u | epm --quiet --short qf | sort -u | xargs -n100
+# glibc-core glibc-pthread libgcc1 libstdc++6 libX11 libXau libxcb libXcursor libXdmcp libXext libXfixes libXrender
+PREINSTALL_PACKAGES="glibc-core glibc-pthread libgcc1 libstdc++6 libX11 libXau libxcb libXcursor libXdmcp libXext libXfixes libXrender"
+
 . $(dirname $0)/common.sh
 
 subst "s|^Group:.*|Group: Graphics|" $SPEC
@@ -34,9 +39,3 @@ install_file "https://cuda-z.sourceforge.net/img/web-download-detect.png" /usr/s
 # libc6:i386 libstdc++6:i386 zlib1g:i386 libx11-6:i386 libxext6:i386 libxrender1:i386
 # http://blog.redscorp.net/?p=94
 
-# static linked
-# strace -f cuda-z 2>&1 | grep \.so | grep lib64/lib | grep fstat | sed -e 's|.*<||' -e 's|>.*||' | sort -u | epm --quiet --short qf | sort -u | xargs -n100
-# glibc-core glibc-pthread libgcc1 libstdc++6 libX11 libXau libxcb libXcursor libXdmcp libXext libXfixes libXrender
-if [ "$(epm print info -s)" = "alt" ] ; then
-    add_requires glibc-core glibc-pthread libgcc1 libstdc++6 libX11 libXau libxcb libXcursor libXdmcp libXext libXfixes libXrender
-fi

@@ -5,6 +5,8 @@ BUILDROOT="$1"
 SPEC="$2"
 PRODUCTDIR=/opt/mssql
 
+PREINSTALL_PACKAGES="libnuma libsss_nss_idmap bzip2 cyrus-sasl2 libcom_err libkrb5 libldap libsasl2-plugin-gssapi python3 su glibc-utils liblzma"
+
 . $(dirname $0)/common.sh
 
 # we need libssl/libcrypto-devel due libssl.so/libcrypto.so using (ALT bug 35559)
@@ -27,5 +29,3 @@ for i in $BUILDROOT/opt/mssql/lib/libunwind-x86_64.so.8 ; do
     a= patchelf --set-rpath '$ORIGIN/' $i
 done
 
-epm install libnuma libsss_nss_idmap bzip2 cyrus-sasl2 libcom_err libkrb5 libldap libsasl2-plugin-gssapi python3 su glibc-utils liblzma
-# sudo

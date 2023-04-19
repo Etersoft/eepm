@@ -8,6 +8,9 @@ PRODUCT=djv
 PRODUCTCUR=DVJ2
 PRODUCTDIR=/opt/DVJ2
 
+# install all requires packages before packing (the list have got with rpmreqs package | xargs echo)
+PREINSTALL_PACKAGES="libalsa libGLX libOpenGL libX11 libxcb libXext zlib"
+
 . $(dirname $0)/common.sh
 
 move_to_opt /usr/local/DJV2
@@ -35,9 +38,3 @@ for i in $BUILDROOT$PRODUCTDIR/lib/lib*.so* ; do
 done
 
 filter_from_requires libav libswresample libswscale
-
-if [ "$(epm print info -s)" = "alt" ] ; then
-    # install all requires packages before packing (the list have got with rpmreqs package | xargs echo)
-    epm install --skip-installed libalsa libGLX libOpenGL libX11 libxcb libXext zlib
-fi
-

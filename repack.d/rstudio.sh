@@ -7,6 +7,8 @@ SPEC="$2"
 PRODUCT=rstudio
 PRODUCTDIR=/usr/lib/$PRODUCT
 
+PREINSTALL_PACKAGES="libpq5 libsqlite sqlite R-base R-doc-html"
+
 . $(dirname $0)/common.sh
 
 add_bin_exec_command $PRODUCT
@@ -27,6 +29,3 @@ filter_from_requires libQt5 libicu "libpq.so.5(RHPG_9"
 #    rm -v $BUILDROOT/usr/lib/rstudio/resources/app/bin/{diagnostics,rpostback,rsession}
 #fi
 
-if [ "$(epm print info -s)" = "alt" ] ; then
-    epm install --skip-installed libpq5 libsqlite sqlite R-base R-doc-html
-fi

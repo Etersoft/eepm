@@ -23,6 +23,8 @@ case "$(epm print info -e)" in
     ALTLinux/p9)
         # bindings.node: /lib64/libc.so.6: version `GLIBC_2.28' not found
         echo "TODO: build node-serialport package if needed"
-        remove_dir $PRODUCTDIR/resources/app.asar.unpacked/node_modules/@serialport
+        remove_dir $PRODUCTDIR/resources/app.asar.unpacked/node_modules/@serialport/bindings-cpp/prebuilds/
+        remove_dir $PRODUCTDIR/resources/app.asar.unpacked/node_modules/@serialport/bindings-cpp/build/
+        remove_dir $PRODUCTDIR/resources/app.asar.unpacked/node_modules/@serialport/bindings-cpp/bin/
         ;;
 esac

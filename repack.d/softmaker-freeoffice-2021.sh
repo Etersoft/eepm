@@ -7,6 +7,8 @@ PRODUCT=freeoffice2021
 PRODUCTDIR=/usr/share/freeoffice2021
 VERSION=free21
 
+PREINSTALL_PACKAGES="coreutils file gawk grep libcurl libGL libX11 libXext libXmu libXrandr libXrender sed xprop"
+
 . $(dirname $0)/common.sh
 
 
@@ -81,8 +83,4 @@ epm tool erc dwr.tar.lzma || fatal
 # override stub files
 mv -v dwr.tar/* . || fatal
 remove_file dwr.tar.lzma
-
-if [ "$(epm print info -s)" = "alt" ] ; then
-    epm install --skip-installed coreutils file gawk grep libcurl libGL libX11 libXext libXmu libXrandr libXrender sed xprop
-fi
 
