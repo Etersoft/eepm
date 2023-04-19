@@ -1,5 +1,7 @@
 # Etersoft EPM package manager
 
+[![Packaging status](https://repology.org/badge/vertical-allrepos/eepm.svg)](https://repology.org/project/eepm/versions)
+
 Really, EPM is a wrapper for any package manager used in your operating system.
 
 Run
