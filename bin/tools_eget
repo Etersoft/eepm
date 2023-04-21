@@ -289,6 +289,9 @@ WGETNOSSLCHECK=''
 CURLNOSSLCHECK=''
 WGETUSERAGENT=''
 CURLUSERAGENT=''
+WGETHEADER=''
+CURLHEADER=''
+AXELHEADER=''
 WGETCOMPRESSED=''
 CURLCOMPRESSED=''
 WGETQ='' #-q
@@ -331,6 +334,7 @@ Options:
     -q|--quiet                - quiet mode
     --verbose                 - verbose mode
     -k|--no-check-certificate - skip SSL certificate chain support
+    -H|--header               - use <header> (X-Cache:1 for example)
     -U|-A|--user-agent        - send browser like UserAgent
     --compressed              - request a compressed response and automatically decompress the content
     -4|--ipv4|--inet4-only    - use only IPV4
@@ -390,6 +394,12 @@ while [ -n "$1" ] ; do
         -k|--no-check-certificate)
             WGETNOSSLCHECK='--no-check-certificate'
             CURLNOSSLCHECK='-k'
+            ;;
+        -H|--header)
+            shift
+            WGETHEADER="--header=$1"
+            CURLHEADER="--header $1"
+            AXELHEADER="--header=$1"
             ;;
         -U|-A|--user-agent)
             user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
@@ -862,9 +872,9 @@ elif [ "$EGET_BACKEND" = "wget" ] ; then
 __wget()
 {
     if [ -n "$WGETUSERAGENT" ] ; then
-        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETNOSSLCHECK "$WGETUSERAGENT" "$@"
+        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETHEADER $WGETNOSSLCHECK "$WGETUSERAGENT" "$@"
     else
-        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETNOSSLCHECK "$@"
+        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETHEADER $WGETNOSSLCHECK "$@"
     fi
 }
 
@@ -911,9 +921,9 @@ elif [ "$EGET_BACKEND" = "curl" ] ; then
 __curl()
 {
     if [ -n "$CURLUSERAGENT" ] ; then
-        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED "$CURLUSERAGENT" $CURLNOSSLCHECK "$@"
+        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER "$CURLUSERAGENT" $CURLNOSSLCHECK "$@"
     else
-        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLNOSSLCHECK "$@"
+        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER $CURLNOSSLCHECK "$@"
     fi
 }
 # put remote content to stdout
