@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.52.3
+Version: 3.52.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -155,6 +155,16 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Sat Apr 22 2023 Vitaly Lipatov <lav@altlinux.ru> 3.52.4-alt1
+- epm play: add cnrdrvcups-ufr2 support
+- epm repo add/remove: add korinf support
+- erc-sh-archive: add diag message if backend is missed
+- erc-sh-archive: add checking for 7zr and 7zz
+- epm-sh-functions erc(): check if some erc backend is installed and install p7zip if missed
+- epm-repack: add p7zip require
+- allow EPM_BACKEND and SERV_BACKEND to force backend to use
+- epm-release_upgrade: remove apt-conf-sisyphus only if installed
+
 * Fri Apr 21 2023 Vitaly Lipatov <lav@altlinux.ru> 3.52.3-alt1
 - epm repack aksusbd: create empty /etc/hasplm/nethasp.ini (ALT bug 44480)
 - epm play: net.downloadhelper.coapp
