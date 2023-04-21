@@ -511,7 +511,15 @@ disabled_eget()
 
 disabled_erc()
 {
-    local ERC
+
+    if ! is_command patool ; then
+        if is_command 7z || is_command 7za || is_command 7zr || is_command 7zz ; then
+            :
+        else
+            epm install p7zip
+        fi
+    fi
+
     # use internal eget only if exists
     if [ -s $SHAREDIR/tools_erc ] ; then
         $SHAREDIR/tools_erc "$@"
@@ -522,6 +530,7 @@ disabled_erc()
     # FIXME: we need disable output here, ercat can be used for get output
     assure_exists_erc >/dev/null
     # run external command, not the function
+    local ERC
     ERC=$(print_command_path erc) || fatal "Missed command erc from installed package erc"
     $ERC "$@"
 }
@@ -658,6 +667,10 @@ set_pm_type()
     set_distro_info
     set_target_pkg_env
 
+if [ -n "$EPM_BACKEND" ] ; then
+    PMTYPE=$EPM_BACKEND
+    return
+fi
 if [ -n "$FORCEPM" ] ; then
     PMTYPE=$FORCEPM
     return
@@ -2563,6 +2576,8 @@ case "$DISTRCONTROL" in
 esac
 
 # override system control detection result
+[ -n "$SERV_BACKEND" ] && CMD="$SERV_BACKEND"
+# obsoleted
 [ -n "$FORCESERVICE" ] && CMD="$FORCESERVICE"
 
 SERVICETYPE="$CMD"
@@ -2598,7 +2613,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.52.3  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.52.4  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

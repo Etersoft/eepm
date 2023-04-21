@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.52.3"
+EPMVERSION="3.52.4"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -536,7 +536,15 @@ disabled_eget()
 
 disabled_erc()
 {
-    local ERC
+
+    if ! is_command patool ; then
+        if is_command 7z || is_command 7za || is_command 7zr || is_command 7zz ; then
+            :
+        else
+            epm install p7zip
+        fi
+    fi
+
     # use internal eget only if exists
     if [ -s $SHAREDIR/tools_erc ] ; then
         $SHAREDIR/tools_erc "$@"
@@ -547,6 +555,7 @@ disabled_erc()
     # FIXME: we need disable output here, ercat can be used for get output
     assure_exists_erc >/dev/null
     # run external command, not the function
+    local ERC
     ERC=$(print_command_path erc) || fatal "Missed command erc from installed package erc"
     $ERC "$@"
 }
@@ -683,6 +692,10 @@ set_pm_type()
     set_distro_info
     set_target_pkg_env
 
+if [ -n "$EPM_BACKEND" ] ; then
+    PMTYPE=$EPM_BACKEND
+    return
+fi
 if [ -n "$FORCEPM" ] ; then
     PMTYPE=$FORCEPM
     return
@@ -970,12 +983,13 @@ __epm_addrepo_altlinux_help()
 cat <<EOF
 
 epm repo add - add branch repo. Use follow params:
-    etersoft                 - for LINUX@Etersoft repo"
     basealt                  - for BaseALT repo"
     yandex                   - for BaseALT repo mirror hosted by Yandex (recommended)"
     altsp                    - add ALT SP repo"
     autoimports              - for BaseALT autoimports repo"
     altlinuxclub             - for altlinuxclub repo (http://altlinuxclub.ru/)"
+    etersoft                 - for LINUX@Etersoft repo"
+    korinf                   - for Korinf repo"
     <task number>            - add task repo"
     archive 2018/02/09       - add archive of the repo from that date"
     /dir/to/repo [component] - add repo dir generated with epm repo index --init"
@@ -1045,6 +1059,12 @@ __epm_addrepo_altlinux()
             ;;
         autoimports.*|altlinuxclub.*)
             repo="$1"
+            ;;
+        korinf)
+            local http="http"
+            epm installed apt-https && http="https"
+            epm repo add "rpm $http://download.etersoft.ru/pub Korinf/ALTLinux/$DISTRVERSION main"
+            return 0
             ;;
         archive)
             datestr="$2"
@@ -7242,7 +7262,7 @@ get_fix_release_pkg()
         # apt-conf-sisyphus and apt-conf-branch conflicts
         epm installed apt-conf-branch && echo "apt-conf-branch-"
     else
-        epm installed apt-conf-branch && echo "apt-conf-branch apt-conf-sisyphus-"
+        epm installed apt-conf-branch && echo "apt-conf-branch" && epm installed apt-conf-sisyphus && echo "apt-conf-sisyphus-"
     fi
 
     if [ "$FORCE" = "--force" ] ; then
@@ -8195,6 +8215,10 @@ __epm_removerepo_alt()
             info "remove archive repos"
             __epm_removerepo_alt_grepremove "archive/"
             ;;
+        korinf)
+            info "remove korinf repo"
+            __epm_removerepo_alt_grepremove "Korinf/"
+            ;;
         tasks)
             info "remove task repos"
             __epm_removerepo_alt_grepremove " repo/[0-9]+/"
@@ -8800,7 +8824,7 @@ epm_repo()
         epm_addrepo "$@"
         epm update
         ;;
-    rm|remove)                           # HELPCMD: remove repository from the sources lists (epm repo remove all for all)
+    rm|del|remove)                     # HELPCMD: remove repository from the sources lists (epm repo remove all for all)
         epm_removerepo "$@"
         ;;
 
@@ -14497,6 +14521,15 @@ cmd="$1"
 
 eval lastarg=\${$#}
 
+# Just printout help if run without args
+if [ -z "$cmd" ] ; then
+    print_version
+    echo
+    fatal "Run $ $progname --help for get help"
+fi
+
+
+
 # if the first arg is some archive, suggest extract
 if get_archive_type "$cmd" 2>/dev/null >/dev/null ; then
     if is_target_format $lastarg ; then
@@ -14517,13 +14550,6 @@ else
     shift
 fi
 
-
-# Just printout help if run without args
-if [ -z "$cmd" ] ; then
-    print_version
-    echo
-    fatal "Run $ $progname --help for get help"
-fi
 
 # TODO: Если программа-архиватор не установлена, предлагать установку с помощью epm
 
@@ -15528,7 +15554,7 @@ check_command()
         epm_cmd=packages
         direct_args=1
         ;;
-    list)                     # HELPCMD: print list of packages
+    list)                     # HELPCMD: print list of packages (see epm list --help)
         epm_cmd=list
         direct_args=1
         ;;
@@ -15569,7 +15595,7 @@ check_command()
         epm_cmd=removerepo
         direct_args=1
         ;;
-    repo)                     # HELPCMD: manipulate with repository list (run epm repo --help to help)
+    repo)                     # HELPCMD: manipulate with repository list (see epm repo --help)
         epm_cmd=repo
         direct_args=1
         ;;
@@ -15614,7 +15640,7 @@ check_command()
         epm_cmd=mark
         direct_args=1
         ;;
-    history)                  # HELPCMD: show a log of actions taken by the software management
+    history)                  # HELPCMD: show a log of actions taken by the software management (see epm history --help)
         epm_cmd=history
         direct_args=1
         ;;
@@ -15656,14 +15682,14 @@ check_command()
         epm_cmd=print
         direct_args=1
         ;;
-    tool)                     # HELPCMD: run embedded tool (f.i., epm tool eget)
+    tool)                     # HELPCMD: run embedded tool (see epm tool --help)
         epm_cmd=tool
         direct_args=1
         ;;
     repack)                   # HELPCMD: repack rpm to local compatibility
         epm_cmd=repack
         ;;
-    pack)                   # HELPCMD: pack tarball or dir to a rpm package
+    pack)                     # HELPCMD: pack tarball or dir to a rpm package
         epm_cmd=pack
         direct_args=1
         ;;
