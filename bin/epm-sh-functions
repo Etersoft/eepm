@@ -701,6 +701,11 @@ set_pm_type()
     set_target_pkg_env
 
 # override package manager detection result
+if [ -n "$EPM_BACKEND" ] ; then
+    PMTYPE=$EPM_BACKEND
+    return
+fi
+# obsoleted
 if [ -n "$FORCEPM" ] ; then
     PMTYPE=$FORCEPM
     return

@@ -61,6 +61,8 @@ case "$DISTRCONTROL" in
 esac
 
 # override system control detection result
+[ -n "$SERV_BACKEND" ] && CMD="$SERV_BACKEND"
+# obsoleted
 [ -n "$FORCESERVICE" ] && CMD="$FORCESERVICE"
 
 SERVICETYPE="$CMD"
