@@ -49,6 +49,7 @@ EOF
 
 pack_file /usr/share/applications/$PRODUCT.desktop
 
+# https://hb.bizmrg.com/icq-www/linux/x64/packages/10.0.13286/icq.png
 install_file https://dashboard.snapcraft.io/site_media/appmedia/2020/04/icq_copy.png /usr/share/pixmaps/$PRODUCT.png
 
 subst "s|.*/opt/icq/unittests.*||" $SPEC
