@@ -599,9 +599,8 @@ get_package_type()
             return
             ;;
         *)
-            #fatal "Don't know type of $1"
-            # return package name for info
-            echo "$1"
+            # print extension by default
+            echo "$1" | sed -e 's|.*\.||'
             return 1
             ;;
     esac
@@ -708,6 +707,28 @@ __epm_remove_tmp_files()
         [ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
         [ -n "$to_clean_tmp_dirs" ] && rm -rf $to_clean_tmp_dirs 2>/dev/null
     fi
+    return 0
+}
+
+
+__epm_check_if_package_from_repo()
+{
+    local pkg="$1"
+    # only ALT
+    [ "$BASEDISTRNAME" = "alt" ] || return 0
+
+    local vendor
+    # TODO: check only for rpm
+    #vendor="$(epm print field Vendor for "$pkg" 2>/dev/null))"
+    #[ "$vendor" = "ALT Linux Team" ] || return
+
+    local distribution="$(epm print field Distribution for "$pkg" 2>/dev/null))"
+    echo "$distribution" | grep -q "^ALT" || return
+
+    # FIXME: how to check if the package is from ALT repo (verified)?
+    local release="$(epm print release from package "$pkg" 2>/dev/null)"
+    echo "$release" | grep -q "^alt" || return
+
     return 0
 }
 
@@ -2577,7 +2598,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.52.2  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.52.3  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

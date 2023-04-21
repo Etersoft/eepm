@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.52.2"
+EPMVERSION="3.52.3"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -624,9 +624,8 @@ get_package_type()
             return
             ;;
         *)
-            #fatal "Don't know type of $1"
-            # return package name for info
-            echo "$1"
+            # print extension by default
+            echo "$1" | sed -e 's|.*\.||'
             return 1
             ;;
     esac
@@ -733,6 +732,28 @@ __epm_remove_tmp_files()
         [ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
         [ -n "$to_clean_tmp_dirs" ] && rm -rf $to_clean_tmp_dirs 2>/dev/null
     fi
+    return 0
+}
+
+
+__epm_check_if_package_from_repo()
+{
+    local pkg="$1"
+    # only ALT
+    [ "$BASEDISTRNAME" = "alt" ] || return 0
+
+    local vendor
+    # TODO: check only for rpm
+    #vendor="$(epm print field Vendor for "$pkg" 2>/dev/null))"
+    #[ "$vendor" = "ALT Linux Team" ] || return
+
+    local distribution="$(epm print field Distribution for "$pkg" 2>/dev/null))"
+    echo "$distribution" | grep -q "^ALT" || return
+
+    # FIXME: how to check if the package is from ALT repo (verified)?
+    local release="$(epm print release from package "$pkg" 2>/dev/null)"
+    echo "$release" | grep -q "^alt" || return
+
     return 0
 }
 
@@ -2942,22 +2963,32 @@ __epm_korinf_install_eepm() {
 
 epm_epm_install_help()
 {
-    echo "epm ei [packages] - install packages from EPM based Korinf repository"
+    echo "epm ei [URL] [packages] - install packages from EPM based Korinf repository"
             get_help HELPCMD $SHAREDIR/epm-epm_install
     cat <<EOF
 
 Default Korinf repository: $EPM_KORINF_REPO_URL
 
 Examples:
-  epm ei [epm|eepm]                - install latest eepm (default action)
-  epm <package1> [<package2>...]   - install package(s) from default Korinf repo
-  epm http://someurl.ru <package>  - install package(s) from the URL
-  epm --list <package mask>        - list available packages by mask
+  epm ei [epm|eepm]                 - install latest eepm (default action)
+  epm ei <package1> [<package2>...] - install package(s) from default Korinf repo
+  epm http://someurl.ru <package>   - install package(s) from a repo defined by URL
+  epm --list <package mask>         - list available packages by mask
 EOF
 }
 
 
-epm_epm_install() {
+epm_epm_install()
+{
+
+    if [ "$BASEDISTRNAME" = "alt" ] && [ "$DISTRVERSION" != "Sisyphus" ] && [ "$EPMMODE" = "package" ] ; then
+        if __epm_check_if_package_from_repo eepm ; then
+            warning "Using external (Korinf) repo is forbidden for stable ALT branch $DISTRVERSION."
+            info "Check https://bugzilla.altlinux.org/44314 for reasons."
+            info "You can install eepm package from Korinf manually, check instruction at https://eepm.ru"
+            fatal "Do nothing."
+        fi
+    fi
 
     if is_url "$1" ; then
         EPM_KORINF_REPO_URL="$1"
@@ -4246,7 +4277,7 @@ epm_install()
     fi
 
     if [ -n "$interactive" ] ; then
-        confirm_info "You are about to install $pkg_names $pkg_files $pkg_urls package(s)."
+        confirm_info "You are about to install $(echo $pkg_names $pkg_files $pkg_urls) package(s)."
         # TODO: for some packages with dependencies apt will ask later again
     fi
 
@@ -5644,7 +5675,6 @@ __epm_play_initialize_ipfs()
         if [ ! -r "$EGET_IPFS_DB" ] ; then
             sudorun touch "$EGET_IPFS_DB" >&2
             sudorun chmod -v a+rw "$EGET_IPFS_DB" >&2
-            # TODO: update this DB every time when changed (and get from IPFS as sign it works.)
             # get initial db from server
             local URL="https://eepm.ru/app-versions"
             info "Initialize IPFS DB in $EGET_IPFS_DB file and fill it with data from $URL/eget-ipfs-db.txt"
@@ -5824,14 +5854,21 @@ __epm_play_run "$prescription" --run "$@" || fatal "There was some error during 
 
 # File bin/epm-print:
 
+is_pkgfile()
+{
+     [ -f "$1" ] || return
+     echo "$1" | grep -q "\.rpm$" && return
+     echo "$1" | grep -q "\.deb$" && return
+     return 1
+}
 
 rpm_query_package_format_field()
 {
     local FORMAT="$1\n"
     shift
     local INSTALLED=""
-    # if a file, ad -p for get from rpm base
-    if [ -f "$1" ] ; then
+    # if a file, add -p for get from rpm base
+    if is_pkgfile "$1" ; then
         INSTALLED="-p"
     fi
     a= rpmquery $INSTALLED --queryformat "$FORMAT" "$@"
@@ -5848,7 +5885,7 @@ dpkg_query_package_format_field()
 {
         local field="$1"
         shift
-        if [ -f "$1" ] ; then
+        if is_pkgfile "$1" ; then
             a= dpkg-deb --show --showformat="$field\n" "$@"
         else
             #a= dpkg -s "$1" | grep "^$field: " | sed -e "s|^$field: ||"
@@ -7204,10 +7241,6 @@ get_fix_release_pkg()
         echo "apt-conf-$TO"
         # apt-conf-sisyphus and apt-conf-branch conflicts
         epm installed apt-conf-branch && echo "apt-conf-branch-"
-        #for i in apt apt-rsync libapt libpackagekit-glib librpm7 packagekit rpm synaptic realmd libldap2 ; do
-        #    epm installed $i && echo "$i"
-        #done
-
     else
         epm installed apt-conf-branch && echo "apt-conf-branch apt-conf-sisyphus-"
     fi
@@ -10842,7 +10875,7 @@ __epm_vendor_ok_scripts()
     return $res
 }
 
-__epm_get_pkgvendor()
+__epm_get_rpm_pkgvendor()
 {
     local pkg="$1"
 
@@ -10862,7 +10895,7 @@ __epm_print_warning_for_nonalt_packages()
     for i in $* ; do
         local vendor
         # TODO: check only for rpm
-        vendor="$(__epm_get_pkgvendor "$i")"
+        vendor="$(__epm_get_rpm_pkgvendor "$i")"
 
         local packager="$(epm print field Packager for "$i" 2>/dev/null)"
 
@@ -10884,7 +10917,7 @@ __epm_check_vendor()
     local i
     for i in $* ; do
         local vendor
-        vendor="$(__epm_get_pkgvendor "$i")"
+        vendor="$(__epm_get_rpm_pkgvendor "$i")"
 
         if [ -z "$vendor" ] ; then
             warning "Can't get info about vendor for $i package. Scripts are DISABLED for package $i. Use --scripts if you need run scripts from such packages."
@@ -11341,10 +11374,13 @@ get_latest_version()
 
 __check_for_epm_version()
 {
+    # skip update checking for eepm from repo (ALT bug #44314)
+    [ "$BASEDISTRNAME" = "alt" ] &&  [ "$DISTRVERSION" != "Sisyphus" ] && __epm_check_if_package_from_repo eepm && return
+
     local latest="$(get_latest_version eepm)"
     #[ -z "$latest" ] && return
     local res="$(epm print compare "$EPMVERSION" "$latest")"
-    [ "$res" = "-1" ] && info "Latest EPM version in Korinf repository is $latest. You have version $EPMVERSION running."
+    [ "$res" = "-1" ] && info "Latest EPM version in Korinf repository is $latest. You have version $EPMVERSION running." && info "You can update eepm with \$ epm ei command."
 }
 
 epm_update()
