@@ -126,7 +126,7 @@ get_fix_release_pkg()
         # apt-conf-sisyphus and apt-conf-branch conflicts
         epm installed apt-conf-branch && echo "apt-conf-branch-"
     else
-        epm installed apt-conf-branch && echo "apt-conf-branch apt-conf-sisyphus-"
+        epm installed apt-conf-branch && echo "apt-conf-branch" && epm installed apt-conf-sisyphus && echo "apt-conf-sisyphus-"
     fi
 
     if [ "$FORCE" = "--force" ] ; then
