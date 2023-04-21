@@ -628,9 +628,8 @@ get_package_type()
             return
             ;;
         *)
-            #fatal "Don't know type of $1"
-            # return package name for info
-            echo "$1"
+            # print extension by default
+            echo "$1" | sed -e 's|.*\.||'
             return 1
             ;;
     esac
