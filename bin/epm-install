@@ -725,7 +725,7 @@ epm_install()
     fi
 
     if [ -n "$interactive" ] ; then
-        confirm_info "You are about to install $pkg_names $pkg_files $pkg_urls package(s)."
+        confirm_info "You are about to install $(echo $pkg_names $pkg_files $pkg_urls) package(s)."
         # TODO: for some packages with dependencies apt will ask later again
     fi
 
