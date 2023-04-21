@@ -2,7 +2,7 @@
 %define pkgsystem apt-rpm
 
 Name: eepm
-Version: 3.52.2
+Version: 3.52.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -155,6 +155,13 @@ rm -v %buildroot%_bindir/yum
 %endif
 
 %changelog
+* Fri Apr 21 2023 Vitaly Lipatov <lav@altlinux.ru> 3.52.3-alt1
+- epm repack aksusbd: create empty /etc/hasplm/nethasp.ini (ALT bug 44480)
+- epm play: net.downloadhelper.coapp
+- epm print: fix: check if file is real package
+- epm update: check for new Korinf version not with eepm from stable ALT branches
+- epm ei: do nothing on stable ALT branches
+
 * Thu Apr 20 2023 Vitaly Lipatov <lav@altlinux.ru> 3.52.2-alt1
 - epm play: add lithium support
 - epm play: add aksusbd
