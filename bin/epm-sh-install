@@ -105,7 +105,7 @@ __epm_vendor_ok_scripts()
     return $res
 }
 
-__epm_get_pkgvendor()
+__epm_get_rpm_pkgvendor()
 {
     local pkg="$1"
 
@@ -125,7 +125,7 @@ __epm_print_warning_for_nonalt_packages()
     for i in $* ; do
         local vendor
         # TODO: check only for rpm
-        vendor="$(__epm_get_pkgvendor "$i")"
+        vendor="$(__epm_get_rpm_pkgvendor "$i")"
 
         local packager="$(epm print field Packager for "$i" 2>/dev/null)"
 
@@ -148,7 +148,7 @@ __epm_check_vendor()
     local i
     for i in $* ; do
         local vendor
-        vendor="$(__epm_get_pkgvendor "$i")"
+        vendor="$(__epm_get_rpm_pkgvendor "$i")"
 
         if [ -z "$vendor" ] ; then
             warning "Can't get info about vendor for $i package. Scripts are DISABLED for package $i. Use --scripts if you need run scripts from such packages."
