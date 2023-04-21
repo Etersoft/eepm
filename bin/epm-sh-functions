@@ -537,7 +537,15 @@ eget()
 # will replaced within disabled_erc in packaged version
 erc()
 {
-    local ERC
+
+    if ! is_command patool ; then
+        if is_command 7z || is_command 7za || is_command 7zr || is_command 7zz ; then
+            :
+        else
+            epm install p7zip
+        fi
+    fi
+
     # use internal eget only if exists
     if [ -s $SHAREDIR/tools_erc ] ; then
         $SHAREDIR/tools_erc "$@"
@@ -548,6 +556,7 @@ erc()
     # FIXME: we need disable output here, ercat can be used for get output
     assure_exists_erc >/dev/null
     # run external command, not the function
+    local ERC
     ERC=$(print_command_path erc) || fatal "Missed command erc from installed package erc"
     $ERC "$@"
 }
