@@ -273,6 +273,15 @@ cmd="$1"
 
 eval lastarg=\${$#}
 
+# Just printout help if run without args
+if [ -z "$cmd" ] ; then
+    print_version
+    echo
+    fatal "Run $ $progname --help for get help"
+fi
+
+
+
 # if the first arg is some archive, suggest extract
 if get_archive_type "$cmd" 2>/dev/null >/dev/null ; then
     if is_target_format $lastarg ; then
@@ -293,13 +302,6 @@ else
     shift
 fi
 
-
-# Just printout help if run without args
-if [ -z "$cmd" ] ; then
-    print_version
-    echo
-    fatal "Run $ $progname --help for get help"
-fi
 
 # TODO: Если программа-архиватор не установлена, предлагать установку с помощью epm
 
