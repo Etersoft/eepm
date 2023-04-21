@@ -72,6 +72,10 @@ __epm_removerepo_alt()
             info "remove archive repos"
             __epm_removerepo_alt_grepremove "archive/"
             ;;
+        korinf)
+            info "remove korinf repo"
+            __epm_removerepo_alt_grepremove "Korinf/"
+            ;;
         tasks)
             info "remove task repos"
             __epm_removerepo_alt_grepremove " repo/[0-9]+/"

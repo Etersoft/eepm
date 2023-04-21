@@ -168,12 +168,13 @@ __epm_addrepo_altlinux_help()
 cat <<EOF
 
 epm repo add - add branch repo. Use follow params:
-    etersoft                 - for LINUX@Etersoft repo"
     basealt                  - for BaseALT repo"
     yandex                   - for BaseALT repo mirror hosted by Yandex (recommended)"
     altsp                    - add ALT SP repo"
     autoimports              - for BaseALT autoimports repo"
     altlinuxclub             - for altlinuxclub repo (http://altlinuxclub.ru/)"
+    etersoft                 - for LINUX@Etersoft repo"
+    korinf                   - for Korinf repo"
     <task number>            - add task repo"
     archive 2018/02/09       - add archive of the repo from that date"
     /dir/to/repo [component] - add repo dir generated with epm repo index --init"
@@ -243,6 +244,12 @@ __epm_addrepo_altlinux()
             ;;
         autoimports.*|altlinuxclub.*)
             repo="$1"
+            ;;
+        korinf)
+            local http="http"
+            epm installed apt-https && http="https"
+            epm repo add "rpm $http://download.etersoft.ru/pub Korinf/ALTLinux/$DISTRVERSION main"
+            return 0
             ;;
         archive)
             datestr="$2"
