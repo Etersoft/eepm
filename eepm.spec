@@ -51,7 +51,7 @@ See detailed description here: http://wiki.etersoft.ru/EPM
 Summary: Etersoft EPM package manager (repack requirements)
 Group: System/Configuration/Packaging
 Requires: %name = %EVR
-Requires: alien dpkg patchelf
+Requires: alien dpkg patchelf p7zip
 Requires: /usr/bin/rpmbuild
 
 %description repack
