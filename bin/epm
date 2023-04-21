@@ -279,7 +279,7 @@ check_command()
         epm_cmd=packages
         direct_args=1
         ;;
-    list)                     # HELPCMD: print list of packages
+    list)                     # HELPCMD: print list of packages (see epm list --help)
         epm_cmd=list
         direct_args=1
         ;;
@@ -320,7 +320,7 @@ check_command()
         epm_cmd=removerepo
         direct_args=1
         ;;
-    repo)                     # HELPCMD: manipulate with repository list (run epm repo --help to help)
+    repo)                     # HELPCMD: manipulate with repository list (see epm repo --help)
         epm_cmd=repo
         direct_args=1
         ;;
@@ -365,7 +365,7 @@ check_command()
         epm_cmd=mark
         direct_args=1
         ;;
-    history)                  # HELPCMD: show a log of actions taken by the software management
+    history)                  # HELPCMD: show a log of actions taken by the software management (see epm history --help)
         epm_cmd=history
         direct_args=1
         ;;
@@ -407,14 +407,14 @@ check_command()
         epm_cmd=print
         direct_args=1
         ;;
-    tool)                     # HELPCMD: run embedded tool (f.i., epm tool eget)
+    tool)                     # HELPCMD: run embedded tool (see epm tool --help)
         epm_cmd=tool
         direct_args=1
         ;;
     repack)                   # HELPCMD: repack rpm to local compatibility
         epm_cmd=repack
         ;;
-    pack)                   # HELPCMD: pack tarball or dir to a rpm package
+    pack)                     # HELPCMD: pack tarball or dir to a rpm package
         epm_cmd=pack
         direct_args=1
         ;;
