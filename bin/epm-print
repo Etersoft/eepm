@@ -17,6 +17,14 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+# TODO: improve file
+is_pkgfile()
+{
+     [ -f "$1" ] || return
+     echo "$1" | grep -q "\.rpm$" && return
+     echo "$1" | grep -q "\.deb$" && return
+     return 1
+}
 
 # Query variables from rpm package
 # TODO: rpm only
@@ -25,8 +33,8 @@ rpm_query_package_format_field()
     local FORMAT="$1\n"
     shift
     local INSTALLED=""
-    # if a file, ad -p for get from rpm base
-    if [ -f "$1" ] ; then
+    # if a file, add -p for get from rpm base
+    if is_pkgfile "$1" ; then
         INSTALLED="-p"
     fi
     a= rpmquery $INSTALLED --queryformat "$FORMAT" "$@"
@@ -43,7 +51,7 @@ dpkg_query_package_format_field()
 {
         local field="$1"
         shift
-        if [ -f "$1" ] ; then
+        if is_pkgfile "$1" ; then
             a= dpkg-deb --show --showformat="$field\n" "$@"
         else
             #a= dpkg -s "$1" | grep "^$field: " | sed -e "s|^$field: ||"
