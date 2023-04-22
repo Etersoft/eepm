@@ -31,7 +31,8 @@ install_common:
 	install -m 0644 bash_completion/serv $(DESTDIR)$(sysconfdir)/bash_completion.d/serv
 
 	# shebang.req.files
-	chmod a+x $(DESTDIR)$(pkgdatadir)/{serv-,epm-}*
+	chmod a+x $(DESTDIR)$(pkgdatadir)/serv-*
+	chmod a+x $(DESTDIR)$(pkgdatadir)/epm-*
 	chmod a+x $(DESTDIR)$(pkgdatadir)/tools_*
 
 	mkdir -p $(DESTDIR)/var/lib/eepm/
@@ -41,6 +42,7 @@ $(cmd_list):
 	sed -e "s|SHAREDIR=.*|SHAREDIR=$(pkgdatadir)|g" \
 		-e "s|CONFIGDIR=.*|CONFIGDIR=$(sysconfdir)/eepm|g" \
 		-e "s|@VERSION@|$(version)|g" <bin/$@ >$(DESTDIR)$(bindir)/$@
+	chmod 0755 $(DESTDIR)$(bindir)/$@
 
 $(installd_list):
 	mkdir -p $(DESTDIR)$(sysconfdir)/eepm/$@/
