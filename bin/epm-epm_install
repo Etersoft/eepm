@@ -63,6 +63,8 @@ __epm_korinf_install_eepm() {
     # enable interactive for install eepm from console
     if inputisatty && [ "$EPMMODE" != "pipe" ] ; then
         [ -n "$non_interactive" ] || interactive="--interactive"
+    else
+        [ -n "$interactive" ] || non_interactive="--auto"
     fi
 
     # as now, can't install one package from task (and old apt-repo can't install one package)
