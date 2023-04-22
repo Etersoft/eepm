@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.52.4
+Version: 3.52.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -97,6 +97,18 @@ a discussion about extra requirements.
 
 
 %changelog
+* Sat Apr 22 2023 Vitaly Lipatov <lav@altlinux.ru> 3.52.5-alt1
+- tools_json: replace egrep with grep -E
+- eget: add -H (--header) support
+- epm play icq: get latest version from snapcraft.io
+- distr_info: fix Manjaro support
+- epm ei: use --auto in pipe mode
+- generic-appimage.sh: use cd & run (some progs runs only relative to current dir)
+- epm play: add clibgrab
+- eepm.spec: move install code to Makefile
+- eepm.spec: update Source URL
+- remove yum subpackage (will pack separately)
+
 * Sat Apr 22 2023 Vitaly Lipatov <lav@altlinux.ru> 3.52.4-alt1
 - epm play: add cnrdrvcups-ufr2 support
 - epm repo add/remove: add korinf support
