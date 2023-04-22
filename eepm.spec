@@ -1,6 +1,3 @@
-# redefined during rpmbps (originally set from rpm-build-intro)
-%define pkgsystem apt-rpm
-
 Name: eepm
 Version: 3.52.4
 Release: alt1
@@ -61,16 +58,6 @@ This package has requirements needed for using epm repack on ALT
 See https://bugzilla.altlinux.org/show_bug.cgi?id=34308 for
 a discussion about extra requirements.
 
-%package yum
-Summary: yum like frontend for Etersoft EPM package manager
-Group: System/Configuration/Packaging
-Requires: %name = %EVR
-Conflicts: yum
-
-%description yum
-This package contains yum like frontend for Etersoft EPM package manager.
-
-
 %prep
 %setup
 
@@ -80,15 +67,6 @@ This package contains yum like frontend for Etersoft EPM package manager.
 %make_install install DESTDIR=%buildroot \
 	datadir=%_datadir bindir=%_bindir mandir=%_mandir \
 	sysconfdir=%_sysconfdir version=%version-%release
-
-%if "%pkgsystem" == "yum-rpm"
-rm -v %buildroot%_bindir/yum
-%endif
-
-%if "%pkgsystem" == "dnf-rpm"
-rm -v %buildroot%_bindir/yum
-%endif
-
 
 %files
 %doc README.md TODO LICENSE
@@ -117,11 +95,6 @@ rm -v %buildroot%_bindir/yum
 %files repack
 %endif
 
-%if "%pkgsystem" != "yum-rpm" && "%pkgsystem" != "dnf-rpm"
-# not for yum based system
-%files yum
-%_bindir/yum
-%endif
 
 %changelog
 * Sat Apr 22 2023 Vitaly Lipatov <lav@altlinux.ru> 3.52.4-alt1

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-LIST="bin/epm-* bin/distr_info bin/serv-* bin/tools* bin/yum play.d/*.sh prescription.d/*.sh repack.d/*.sh"
+LIST="bin/epm-* bin/distr_info bin/serv-* bin/tools* play.d/*.sh prescription.d/*.sh repack.d/*.sh"
 
 if [ "$1" = "--detail" ] ; then
     if [ -n "$2" ] ; then

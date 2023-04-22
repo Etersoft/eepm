@@ -1,5 +1,5 @@
 installd_list = pack.d repack.d prescription.d play.d
-cmd_list = epm serv yum
+cmd_list = epm serv
 
 .PHONY: all clean install check install_common $(installd_list) $(cmd_list)
 
