@@ -1,8 +1,11 @@
-.PHONY: all clean install check install_common install_epm install_serv install_yum
+installd_list = pack.d repack.d prescription.d play.d
+cmd_list = epm serv yum
+
+.PHONY: all clean install check install_common install_epm install_serv install_yum $(installd_list) $(cmd_list)
 
 pkgdatadir=$(datadir)/eepm
 
-install: install_common install_epm install_serv install_yum
+install: install_common install_epm install_serv install_yum $(installd_list) $(cmd_list)
 
 install_common:
 	mkdir -p $(DESTDIR)$(bindir)/
@@ -23,21 +26,15 @@ install_common:
 	mkdir -p $(DESTDIR)$(mandir)/man1
 	cp -a `ls -1 man/*` $(DESTDIR)$(mandir)/man1/
 
-
-install_epm:
+$(cmd_list):
 	sed -e "s|SHAREDIR=.*|SHAREDIR=$(pkgdatadir)|g" \
 		-e "s|CONFIGDIR=.*|CONFIGDIR=$(sysconfdir)/eepm|g" \
-		-e "s|@VERSION@|$(version)|g" <bin/epm >$(DESTDIR)$(bindir)/epm
+		-e "s|@VERSION@|$(version)|g" <bin/$@ >$(DESTDIR)$(bindir)/$@
 
-install_serv:
-	sed -e "s|SHAREDIR=.*|SHAREDIR=$(pkgdatadir)|g" \
-		-e "s|CONFIGDIR=.*|CONFIGDIR=$(sysconfdir)/eepm|g" \
-		-e "s|@VERSION@|$(version)|g" <bin/serv >$(DESTDIR)$(bindir)/serv
-
-install_yum:
-	sed -e "s|SHAREDIR=.*|SHAREDIR=$(pkgdatadir)|g" \
-		-e "s|CONFIGDIR=.*|CONFIGDIR=$(sysconfdir)/eepm|g" \
-		-e "s|@VERSION@|$(version)|g" <bin/yum >$(DESTDIR)$(bindir)/yum
+$(installd_list):
+	mkdir -p $(DESTDIR)$(sysconfdir)/eepm/$@/
+	cp repack.d/* $(DESTDIR)$(sysconfdir)/eepm/$@/
+	chmod 0755 $(DESTDIR)$(sysconfdir)/eepm/$@/*.sh
 
 
 check:

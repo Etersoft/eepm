@@ -77,29 +77,13 @@ This package contains yum like frontend for Etersoft EPM package manager.
 %install
 # install to datadir and so on
 # do not use uncommon makeinstall_std here
-%make_install install DESTDIR=%buildroot datadir=%_datadir bindir=%_bindir mandir=%_mandir sysconfdir=%_sysconfdir version=%version-%release
-#install -m 0755 packed/epm.sh %buildroot/%_datadir/%name/epm-packed.sh
-#install -m 0755 packed/serv.sh %buildroot/%_datadir/%name/serv-packed.sh
+%make_install install DESTDIR=%buildroot \
+	datadir=%_datadir bindir=%_bindir mandir=%_mandir \
+	sysconfdir=%_sysconfdir version=%version-%release
 
 cat <<EOF >%buildroot%_sysconfdir/eepm/serv.conf
 # serv config (will insource in serv shell script)
 EOF
-
-mkdir -p %buildroot%_sysconfdir/eepm/repack.d/
-cp repack.d/* %buildroot%_sysconfdir/eepm/repack.d/
-chmod 0755 %buildroot%_sysconfdir/eepm/repack.d/*.sh
-
-mkdir -p %buildroot%_sysconfdir/eepm/pack.d/
-cp pack.d/* %buildroot%_sysconfdir/eepm/pack.d/
-chmod 0755 %buildroot%_sysconfdir/eepm/pack.d/*.sh
-
-mkdir -p %buildroot%_sysconfdir/eepm/prescription.d/
-cp prescription.d/* %buildroot%_sysconfdir/eepm/prescription.d/
-chmod 0755 %buildroot%_sysconfdir/eepm/prescription.d/*.sh
-
-mkdir -p %buildroot%_sysconfdir/eepm/play.d/
-cp play.d/* %buildroot%_sysconfdir/eepm/play.d/
-chmod 0755 %buildroot%_sysconfdir/eepm/play.d/*.sh
 
 mkdir -p %buildroot%_sysconfdir/bash_completion.d/
 install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/serv
