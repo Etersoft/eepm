@@ -44,7 +44,7 @@ $(cmd_list):
 
 $(installd_list):
 	mkdir -p $(DESTDIR)$(sysconfdir)/eepm/$@/
-	cp repack.d/* $(DESTDIR)$(sysconfdir)/eepm/$@/
+	cp $@/* $(DESTDIR)$(sysconfdir)/eepm/$@/
 	chmod 0755 $(DESTDIR)$(sysconfdir)/eepm/$@/*.sh
 
 
