@@ -117,7 +117,7 @@ epm_install_names()
             sudocmd yum $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
             return ;;
         dnf-rpm)
-            sudocmd dnf install $(echo "$*" | exp_with_arch_suffix)
+            sudocmd dnf -y install $(echo "$*" | exp_with_arch_suffix)
             return ;;
         snappy)
             sudocmd snappy install $@
