@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012-2021  Etersoft
-# Copyright (C) 2012-2021  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2023  Etersoft
+# Copyright (C) 2012-2023  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -19,17 +19,30 @@
 
 PROGDIR=$(dirname "$0")
 PROGNAME=$(basename "$0")
-[ "$PROGDIR" = "." ] && PROGDIR=$(pwd)
+[ -n "$EPMCURDIR" ] || export EPMCURDIR="$(pwd)"
+CMDSHELL="/bin/sh"
+[ "$PROGDIR" = "." ] && PROGDIR="$EPMCURDIR"
 if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
     PROGDIR=""
     PROGNAME=""
 fi
 
-
 # will replaced with /usr/share/eepm during install
 SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
+
+EPMVERSION="@VERSION@"
+
+# package, single (file), pipe, git
+EPMMODE="package"
+[ "$SHAREDIR" = "$PROGDIR" ] && EPMMODE="single"
+[ "$EPMVERSION" = "@""VERSION""@" ] && EPMMODE="git"
+[ "$PROGNAME" = "" ] && EPMMODE="pipe"
+
+if [ "$EPMMODE" = "git" ] ; then
+    EPMVERSION=$(head $PROGDIR/../eepm.spec | grep "^Version: " | sed -e 's|Version: ||' )
+fi
 
 load_helper()
 {
@@ -46,8 +59,6 @@ load_helper epm-sh-functions
 #PATH=$PATH:/sbin:/usr/sbin
 
 set_pm_type
-
-#set_sudo
 
 check_tty
 
@@ -70,14 +81,13 @@ $(get_help HELPOPT | sed -e 's@|@,@g')
 
 print_version()
 {
-        echo "EPM package manager version @VERSION@  https://wiki.etersoft.ru/Epm"
+        echo "EPM package manager version $EPMVERSION  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
-        echo "Copyright (c) Etersoft 2012-2021"
+        echo "Copyright (c) Etersoft 2012-2023"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 
 
-EPMVERSION=@VERSION@
 verbose=
 quiet=
 nodeps=
@@ -285,7 +295,7 @@ check_filenames()
         elif [ -d "$opt" ] ; then
             has_space "$opt" && warning "There are space(s) in directory path '$opt', it is not supported. Skipped" && continue
             pkg_dirs="$pkg_dirs $opt"
-        elif echo "$opt" | grep -q "^[fhtps]*://" ; then
+        elif is_url "$opt" ; then
             has_space "$opt" && warning "There are space(s) in URL '$opt', it is not supported. Skipped" && continue
             pkg_urls="$pkg_urls $opt"
         else
