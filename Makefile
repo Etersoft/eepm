@@ -1,11 +1,11 @@
 installd_list = pack.d repack.d prescription.d play.d
 cmd_list = epm serv yum
 
-.PHONY: all clean install check install_common install_epm install_serv install_yum $(installd_list) $(cmd_list)
+.PHONY: all clean install check install_common $(installd_list) $(cmd_list)
 
 pkgdatadir=$(datadir)/eepm
 
-install: install_common install_epm install_serv install_yum $(installd_list) $(cmd_list)
+install: install_common $(installd_list) $(cmd_list)
 
 install_common:
 	mkdir -p $(DESTDIR)$(bindir)/
@@ -26,6 +26,16 @@ install_common:
 
 	mkdir -p $(DESTDIR)$(mandir)/man1
 	cp -a `ls -1 man/*` $(DESTDIR)$(mandir)/man1/
+
+	mkdir -p $(DESTDIR)$(sysconfdir)/bash_completion.d/
+	install -m 0644 bash_completion/serv $(DESTDIR)$(sysconfdir)/bash_completion.d/serv
+
+	# shebang.req.files
+	chmod a+x $(DESTDIR)$(pkgdatadir)/{serv-,epm-}*
+	chmod a+x $(DESTDIR)$(pkgdatadir)/tools_*
+
+	mkdir -p $(DESTDIR)/var/lib/eepm/
+
 
 $(cmd_list):
 	sed -e "s|SHAREDIR=.*|SHAREDIR=$(pkgdatadir)|g" \

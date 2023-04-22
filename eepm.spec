@@ -81,16 +81,6 @@ This package contains yum like frontend for Etersoft EPM package manager.
 	datadir=%_datadir bindir=%_bindir mandir=%_mandir \
 	sysconfdir=%_sysconfdir version=%version-%release
 
-mkdir -p %buildroot%_sysconfdir/bash_completion.d/
-install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/serv
-install -m 0644 bash_completion/cerv %buildroot%_sysconfdir/bash_completion.d/cerv
-
-# shebang.req.files
-chmod a+x %buildroot%_datadir/%name/{serv-,epm-}*
-chmod a+x %buildroot%_datadir/%name/tools_*
-
-mkdir -p %buildroot/var/lib/eepm/
-
 %if "%pkgsystem" == "yum-rpm"
 rm -v %buildroot%_bindir/yum
 %endif
@@ -113,7 +103,6 @@ rm -v %buildroot%_bindir/yum
 %_bindir/epm*
 %_bindir/eepm
 %_bindir/serv
-%_bindir/cerv
 %if "%pkgsystem" != "yum-rpm"
 %exclude %_bindir/yum
 %endif
@@ -122,7 +111,6 @@ rm -v %buildroot%_bindir/yum
 %_man1dir/*
 %_datadir/%name/
 %_sysconfdir/bash_completion.d/serv
-%_sysconfdir/bash_completion.d/cerv
 
 %if "%_vendor" == "alt"
 %files repack
