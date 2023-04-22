@@ -81,7 +81,7 @@ done
 # hack for remove MacOS only stuffs
 remove_dir $(find $BUILDROOT -type d -name "*catalina*" | sed -e "s|$BUILDROOT||")
 
-add_bin_exec_command $PRODUCT $PRODUCTDIR/AppRun
+add_bin_cdexec_command $PRODUCT $PRODUCTDIR/AppRun
 # Strange AppRun script uses args as path, so override path detection
 subst "2iexport APPDIR=$PRODUCTDIR" $BUILDROOT/usr/bin/$PRODUCT
 
