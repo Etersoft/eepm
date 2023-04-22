@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.52.5
+Version: 3.52.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -97,6 +97,9 @@ a discussion about extra requirements.
 
 
 %changelog
+* Sun Apr 23 2023 Vitaly Lipatov <lav@altlinux.ru> 3.52.6-alt1
+- makefile: fix install play.d
+
 * Sat Apr 22 2023 Vitaly Lipatov <lav@altlinux.ru> 3.52.5-alt1
 - tools_json: replace egrep with grep -E
 - eget: add -H (--header) support
