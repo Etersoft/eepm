@@ -81,10 +81,6 @@ This package contains yum like frontend for Etersoft EPM package manager.
 	datadir=%_datadir bindir=%_bindir mandir=%_mandir \
 	sysconfdir=%_sysconfdir version=%version-%release
 
-cat <<EOF >%buildroot%_sysconfdir/eepm/serv.conf
-# serv config (will insource in serv shell script)
-EOF
-
 mkdir -p %buildroot%_sysconfdir/bash_completion.d/
 install -m 0644 bash_completion/serv %buildroot%_sysconfdir/bash_completion.d/serv
 install -m 0644 bash_completion/cerv %buildroot%_sysconfdir/bash_completion.d/cerv

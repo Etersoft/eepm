@@ -21,6 +21,7 @@ install_common:
 
 	mkdir -p $(DESTDIR)$(sysconfdir)/eepm/
 	cp -a etc/eepm.conf $(DESTDIR)$(sysconfdir)/eepm/
+	cp -a etc/serv.conf $(DESTDIR)$(sysconfdir)/eepm/
 	cp -a etc/*.list $(DESTDIR)$(sysconfdir)/eepm/
 
 	mkdir -p $(DESTDIR)$(mandir)/man1
