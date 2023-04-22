@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.52.4"
+EPMVERSION="3.52.5"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -2965,6 +2965,8 @@ __epm_korinf_install_eepm() {
     # enable interactive for install eepm from console
     if inputisatty && [ "$EPMMODE" != "pipe" ] ; then
         [ -n "$non_interactive" ] || interactive="--interactive"
+    else
+        [ -n "$interactive" ] || non_interactive="--auto"
     fi
 
     # as now, can't install one package from task (and old apt-repo can't install one package)
@@ -11908,6 +11910,7 @@ pkgvendor()
     [ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
     [ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
     [ "$DISTRIB_ID" = "VoidLinux" ] && echo "void" && return
+    [ "$DISTRIB_ID" = "ManjaroLinux" ] && echo "manjaro" && return
     [ "$DISTRIB_ID" = "OpenSUSE" ] && echo "suse" && return
     [ "$DISTRIB_ID" = "openSUSETumbleweed" ] && echo "suse" && return
     [ "$DISTRIB_ID" = "openSUSELeap" ] && echo "suse" && return
@@ -11964,7 +11967,7 @@ case $DISTRIB_ID in
     Gentoo)
         CMD="emerge"
         ;;
-    ArchLinux)
+    ArchLinux|ManjaroLinux)
         CMD="pacman"
         ;;
     Fedora|CentOS|OracleLinux|RockyLinux|AlmaLinux|RHEL|RELS|Scientific|GosLinux|Amzn|RedOS)
@@ -13150,6 +13153,9 @@ WGETNOSSLCHECK=''
 CURLNOSSLCHECK=''
 WGETUSERAGENT=''
 CURLUSERAGENT=''
+WGETHEADER=''
+CURLHEADER=''
+AXELHEADER=''
 WGETCOMPRESSED=''
 CURLCOMPRESSED=''
 WGETQ='' #-q
@@ -13192,6 +13198,7 @@ Options:
     -q|--quiet                - quiet mode
     --verbose                 - verbose mode
     -k|--no-check-certificate - skip SSL certificate chain support
+    -H|--header               - use <header> (X-Cache:1 for example)
     -U|-A|--user-agent        - send browser like UserAgent
     --compressed              - request a compressed response and automatically decompress the content
     -4|--ipv4|--inet4-only    - use only IPV4
@@ -13251,6 +13258,12 @@ while [ -n "$1" ] ; do
         -k|--no-check-certificate)
             WGETNOSSLCHECK='--no-check-certificate'
             CURLNOSSLCHECK='-k'
+            ;;
+        -H|--header)
+            shift
+            WGETHEADER="--header=$1"
+            CURLHEADER="--header $1"
+            AXELHEADER="--header=$1"
             ;;
         -U|-A|--user-agent)
             user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
@@ -13723,9 +13736,9 @@ elif [ "$EGET_BACKEND" = "wget" ] ; then
 __wget()
 {
     if [ -n "$WGETUSERAGENT" ] ; then
-        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETNOSSLCHECK "$WGETUSERAGENT" "$@"
+        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETHEADER $WGETNOSSLCHECK "$WGETUSERAGENT" "$@"
     else
-        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETNOSSLCHECK "$@"
+        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETHEADER $WGETNOSSLCHECK "$@"
     fi
 }
 
@@ -13772,9 +13785,9 @@ elif [ "$EGET_BACKEND" = "curl" ] ; then
 __curl()
 {
     if [ -n "$CURLUSERAGENT" ] ; then
-        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED "$CURLUSERAGENT" $CURLNOSSLCHECK "$@"
+        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER "$CURLUSERAGENT" $CURLNOSSLCHECK "$@"
     else
-        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLNOSSLCHECK "$@"
+        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER $CURLNOSSLCHECK "$@"
     fi
 }
 # put remote content to stdout
@@ -15192,14 +15205,14 @@ tokenize () {
   local ESCAPE
   local CHAR
 
-  if echo "test string" | egrep -ao --color=never "test" >/dev/null 2>&1
+  if echo "test string" | grep -E -ao --color=never "test" >/dev/null 2>&1
   then
-    GREP='egrep -ao --color=never'
+    GREP='grep -E -ao --color=never'
   else
-    GREP='egrep -ao'
+    GREP='grep -E -ao'
   fi
 
-  if echo "test string" | egrep -o "test" >/dev/null 2>&1
+  if echo "test string" | grep -E -o "test" >/dev/null 2>&1
   then
     ESCAPE='(\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
     CHAR='[^[:cntrl:]"\\]'
@@ -15217,7 +15230,7 @@ tokenize () {
   # Force zsh to expand $A into multiple words
   local is_wordsplit_disabled=$(unsetopt 2>/dev/null | grep -c '^shwordsplit$')
   if [ $is_wordsplit_disabled != 0 ]; then setopt shwordsplit; fi
-  $GREP "$STRING|$NUMBER|$KEYWORD|$SPACE|." | egrep -v "^$SPACE$"
+  $GREP "$STRING|$NUMBER|$KEYWORD|$SPACE|." | grep -E -v "^$SPACE$"
   if [ $is_wordsplit_disabled != 0 ]; then unsetopt shwordsplit; fi
 }
 

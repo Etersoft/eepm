@@ -1595,6 +1595,7 @@ pkgvendor()
     [ "$DISTRIB_ID" = "LinuxXP" ] && echo "lxp" && return
     [ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
     [ "$DISTRIB_ID" = "VoidLinux" ] && echo "void" && return
+    [ "$DISTRIB_ID" = "ManjaroLinux" ] && echo "manjaro" && return
     [ "$DISTRIB_ID" = "OpenSUSE" ] && echo "suse" && return
     [ "$DISTRIB_ID" = "openSUSETumbleweed" ] && echo "suse" && return
     [ "$DISTRIB_ID" = "openSUSELeap" ] && echo "suse" && return
@@ -1651,7 +1652,7 @@ case $DISTRIB_ID in
     Gentoo)
         CMD="emerge"
         ;;
-    ArchLinux)
+    ArchLinux|ManjaroLinux)
         CMD="pacman"
         ;;
     Fedora|CentOS|OracleLinux|RockyLinux|AlmaLinux|RHEL|RELS|Scientific|GosLinux|Amzn|RedOS)
@@ -2613,7 +2614,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.52.4  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.52.5  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
