@@ -15,7 +15,8 @@ mkdir -p $TDIR/ $EDIR/ $LDIR/
 
 rm -f $EDIR/errors.txt
 
-EPM=$(realpath $(dirname $0)/../bin/epm)
+# run with EPM=/usr/bin/epm to test package
+[ -n "$EPM" ] || EPM=$(realpath $(dirname $0)/../bin/epm)
 
 install_app()
 {
