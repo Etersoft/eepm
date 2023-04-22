@@ -85,6 +85,10 @@ This package contains yum like frontend for Etersoft EPM package manager.
 rm -v %buildroot%_bindir/yum
 %endif
 
+%if "%pkgsystem" == "dnf-rpm"
+rm -v %buildroot%_bindir/yum
+%endif
+
 
 %files
 %doc README.md TODO LICENSE
@@ -103,11 +107,8 @@ rm -v %buildroot%_bindir/yum
 %_bindir/epm*
 %_bindir/eepm
 %_bindir/serv
-%if "%pkgsystem" != "yum-rpm"
-%exclude %_bindir/yum
-%endif
-%dir /var/lib/eepm/
 %_bindir/distr_info
+%dir /var/lib/eepm/
 %_man1dir/*
 %_datadir/%name/
 %_sysconfdir/bash_completion.d/serv
@@ -116,7 +117,7 @@ rm -v %buildroot%_bindir/yum
 %files repack
 %endif
 
-%if "%pkgsystem" != "yum-rpm"
+%if "%pkgsystem" != "yum-rpm" && "%pkgsystem" != "dnf-rpm"
 # not for yum based system
 %files yum
 %_bindir/yum
