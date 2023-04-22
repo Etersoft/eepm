@@ -13,8 +13,8 @@ Url: http://wiki.etersoft.ru/EPM
 
 Packager: Vitaly Lipatov <lav@altlinux.ru>
 
-# git clone https://github.com/Etersoft/eepm.git
-Source: ftp://updates.etersoft.ru/pub/Etersoft/Sisyphus/sources/tarball/%name-%version.tar
+# Source-url: https://github.com/Etersoft/eepm/archive/refs/tags/%version.tar.gz
+Source: %name-%version.tar
 
 BuildArchitectures: noarch
 
