@@ -1,3 +1,4 @@
+.PHONY: all clean install check install_common install_epm install_serv install_yum
 
 pkgdatadir=$(datadir)/eepm
 
