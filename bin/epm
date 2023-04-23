@@ -249,14 +249,6 @@ check_command()
     -ql|ql|filelist|get-files)          # HELPCMD: print package file list
         epm_cmd=filelist
         ;;
-    check|fix|verify)         # HELPCMD: check local package base integrity and fix it
-        epm_cmd=check
-        direct_args=1
-        ;;
-    dedup)                    # HELPCMD: remove unallowed duplicated pkgs (after upgrade crash)
-        epm_cmd=dedup
-        direct_args=1
-        ;;
     -cl|cl|changelog)         # HELPCMD: show changelog for package
         epm_cmd=changelog
         ;;
@@ -325,6 +317,14 @@ check_command()
         ;;
     repo)                     # HELPCMD: manipulate with repository list (see epm repo --help)
         epm_cmd=repo
+        direct_args=1
+        ;;
+    check|fix|verify)         # HELPCMD: check local package base integrity and fix it
+        epm_cmd=check
+        direct_args=1
+        ;;
+    dedup)                    # HELPCMD: remove unallowed duplicated pkgs (after upgrade crash)
+        epm_cmd=dedup
         direct_args=1
         ;;
     full-upgrade)              # HELPCMD: update all system packages and kernel
