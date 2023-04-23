@@ -11,9 +11,6 @@ pkg="$(epm print info -p)"
 arch="$(epm print info -a)"
 [ "$pkg" = "deb" ] && arch="$(epm print info --distro-arch)"
 
-# TODO
-version=1.10.6
-
 distr="$(epm print info -s)"
 repo="$(epm print info -r)"
 
@@ -43,7 +40,11 @@ esac
 
 dv=$distr/$repo
 
-# hack due broken answer from the server
-PKGURL="$(eget --compressed --list --latest https://download.zerotier.com/RELEASES/$version/dist/$dv/${PKGNAME}[-_]$version*$arch.$pkg)"
+# hack with --compressed due broken answer from the server
+RELEASEURL=$(eget --compressed --list --latest http://download.zerotier.com/RELEASES/*) || fatal
+VERSION=$(basename $RELEASEURL)
+
+# hack with --compressed due broken answer from the server
+PKGURL="$(eget --compressed --list --latest https://download.zerotier.com/RELEASES/$VERSION/dist/$dv/${PKGNAME}[-_]$VERSION*$arch.$pkg)"
 
 epm install --scripts $PKGURL
