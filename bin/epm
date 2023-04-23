@@ -240,6 +240,9 @@ check_command()
     installed)                # HELPCMD: check presence of package(s) (like -q with --quiet)
         epm_cmd=installed
         ;;
+    status)                   # HELPCMD: get status of package(s) (see epm status --help)
+        epm_cmd=status
+        ;;
     -sf|sf|filesearch|search-file)        # HELPCMD: search in which package a file is included
         epm_cmd=search_file
         ;;

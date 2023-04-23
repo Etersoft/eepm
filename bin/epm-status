@@ -1,0 +1,143 @@
+#!/bin/sh
+#
+# Copyright (C) 2023  Etersoft
+# Copyright (C) 2023  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+load_helper epm-query
+
+
+epm_status_original()
+{
+    local pkg="$1"
+
+    #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
+
+    case $DISTRNAME in
+        ALTLinux|ALTServer)
+            #[ "$(epm print field Vendor for package $pkg)" = "ALT Linux Team" ] && return
+            epm_status_repacked $pkg && return 1
+            __epm_check_if_package_from_repo $pkg && return
+            ;;
+        *)
+            fatal "Unsupported $DISTRNAME"
+            ;;
+    esac
+    return 1
+}
+
+epm_status_repacked()
+{
+    local pkg="$1"
+
+    #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
+
+    case $BASEDISTRNAME in
+        alt)
+            local packager="$(epm print field Packager for "$1" 2>/dev/null)"
+            [ "$packager" = "EPM <support@etersoft.ru>" ] && return 0
+            [ "$packager" = "EPM <support@eepm.ru>" ] && return 0
+            ;;
+        *)
+            fatal "Unsupported $DISTRNAME"
+            ;;
+    esac
+    return 1
+}
+
+
+epm_status_thirdpart()
+{
+    local pkg="$1"
+
+    #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
+
+    case $BASEDISTRNAME in
+        alt)
+            ## FIXME: some repo packages have wrong Packager
+            #local packager="$(epm print field Packager for "$1" 2>/dev/null)"
+            #echo "$packager" && grep -q "altlinux" && return 0
+            #echo "$packager" && grep -q "basealt" && return 0
+
+            local distribution
+            distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
+            echo "$distribution" | grep -q "^ALT" || return 0
+            ;;
+        *)
+            fatal "Unsupported $DISTRNAME"
+            ;;
+    esac
+    return 1
+}
+
+
+epm_status_help()
+{
+    cat <<EOF
+
+epm status - check status of the package and return result via exit code
+Usage: epm status [options] <package>
+
+Options:
+  --installed           check if <package> is installed
+  --original            check if <package> is from distro repo
+  --thirdpart           check if <package> from a third part source (didn't packed for this distro)
+  --repacked            check if <package> was repacked with epm repack
+
+EOF
+}
+
+epm_status()
+{
+    local option="$1"
+
+    if [ -z "$1" ] ; then
+        epm_status_help >&2
+        exit 1
+    fi
+
+    shift
+
+    # TODO: allow both option
+    case "$option" in
+        -h|--help)
+            epm_status_help
+            return
+            ;;
+        --installed)
+            is_installed "$@"
+            return
+            ;;
+        --original)
+            epm_status_original "$@"
+            return
+            ;;
+        --thirdpart)
+            epm_status_thirdpart "$@"
+            return
+            ;;
+        --repacked)
+            epm_status_repacked "$@"
+            return
+            ;;
+        *)
+            fatal "Unknown option $option, use epm status --help to get info"
+            ;;
+    esac
+
+    epm_status_help >&2
+    fatal "Run with appropriate option"
+}

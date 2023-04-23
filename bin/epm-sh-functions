@@ -776,11 +776,12 @@ __epm_check_if_package_from_repo()
     #vendor="$(epm print field Vendor for "$pkg" 2>/dev/null))"
     #[ "$vendor" = "ALT Linux Team" ] || return
 
-    local distribution="$(epm print field Distribution for "$pkg" 2>/dev/null))"
+    local distribution
+    distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
     echo "$distribution" | grep -q "^ALT" || return
 
     # FIXME: how to check if the package is from ALT repo (verified)?
-    local release="$(epm print release from package "$pkg" 2>/dev/null)"
+    local release="$(epm print release from package "$pkg" 2>/dev/null )"
     echo "$release" | grep -q "^alt" || return
 
     return 0
