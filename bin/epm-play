@@ -195,7 +195,7 @@ __epm_play_list()
             echo "$i"
             if [ -n "$extra" ] ; then
                 for j in $(__run_script "$i" "--product-alternatives") ; do
-                    echo "  $i $j"
+                    echo "  $i=$j"
                 done
             fi
         done
@@ -209,7 +209,7 @@ __epm_play_list()
         printf "%-20s - %s\n" "$i" "$desc"
         if [ -n "$extra" ] ; then
             for j in $(__run_script "$i" "--product-alternatives") ; do
-                printf "  %-20s - %s\n" "$i $j" "$desc"
+                printf "  %-20s - %s\n" "$i=$j" "$desc"
             done
         fi
     done
