@@ -365,6 +365,58 @@ __epm_restore_nupkg()
     docmd epm install $ilist
 }
 
+__epm_print_meson_list()
+{
+    local reqmacro="$1"
+    local req_file="$2"
+    local l
+    while read name sign ver other ; do
+        # gtk4-wayland
+        # gtk4 >= 4.6
+        [ -n "$other" ] && continue
+        if [ -n "$dryrun" ] ; then
+            local pi=''
+            pi="$reqmacro pkgconfig($name)"
+            [ -n "$sign" ] && pi="$pi $sign $ver"
+            echo "$pi"
+            continue
+        else
+            local pi="pkgconfig($name)"
+        fi
+        [ -n "$name" ] || continue
+        ilist="$ilist $pi"
+    done < $req_file
+
+    [ -n "$dryrun" ] || echo "$ilist"
+}
+
+__epm_restore_meson()
+{
+    local req_file="$1"
+# gtk_dep = dependency('gtk4', version: '>= 4.6')
+# gtk_wayland_dep = dependency('gtk4-wayland', required: false)
+# packagekit_dep = dependency('packagekit-glib2', version: '>= 1.2', required: get_option('packagekit'))
+    if [ -n "$dryrun" ] ; then
+        local lt=$(mktemp)
+        echo
+        __epm_restore_print_comment "$req_file" " dependency"
+        grep "dependency(" $req_file | sed -e 's|.*dependency(||' -e 's|).*||' -e 's|, required.*||' -e 's|, version:||' -e "s|'||g" >$lt
+        __epm_print_meson_list "BuildRequires:" $lt
+        rm -f $lt
+        return
+    fi
+
+    info "Install requirements from $req_file ..."
+    local lt=$(mktemp)
+    grep "dependency(" $req_file | sed -e 's|.*dependency(||' -e 's|).*||' -e 's|, required.*||' -e 's|, version:||' -e "s|'||g" >$lt
+    ilist="$ilist $(__epm_print_meson_list "" $lt)"
+
+    rm -f $lt
+    docmd epm install $ilist
+
+}
+
+
 __epm_restore_npm()
 {
     local req_file="$1"
@@ -487,6 +539,9 @@ __epm_restore_by()
         package.json)
             [ -s "$req_file" ] && __epm_restore_npm "$req_file"
             ;;
+        meson.build)
+            [ -s "$req_file" ] && __epm_restore_meson "$req_file"
+            ;;
 #        META.yml)
 #            [ -s "$req_file" ] && __epm_restore_perl "$req_file"
 #            ;;
@@ -525,7 +580,7 @@ epm_restore()
     # if run with empty args
     for i in requirements.txt requirements/default.txt requirements_dev.txt requirements-dev.txt requirements/dev.txt dev-requirements.txt \
              requirements-test.txt requirements_test.txt requirements/test.txt test-requirements.txt requirements/coverage.txt \
-             Gemfile requires.txt package.json setup.py python_dependencies.py Makefile.PL \
+             Gemfile requires.txt package.json setup.py python_dependencies.py Makefile.PL meson.build \
              *.sln *.csproj ; do
         __epm_restore_by $i
     done
