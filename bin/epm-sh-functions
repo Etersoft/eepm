@@ -384,9 +384,12 @@ set_sudo()
 
     # if input is a console
     if inputisatty && isatty && isatty2 ; then
-        if ! $SUDO_CMD -l >/dev/null ; then
-            [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported in non interactive using). Please run epm under root.'"
-            return "$SUDO_TESTED"
+        if ! $SUDO_CMD -n true ; then
+            info "Please enter sudo user password to use sudo in the current session."
+            if ! $SUDO_CMD -l >/dev/null ; then
+                [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported in non interactive using). Please run epm under root.'"
+                return "$SUDO_TESTED"
+            fi
         fi
     else
         # use sudo if one is tuned and tuned without password
