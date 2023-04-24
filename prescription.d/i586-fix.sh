@@ -23,8 +23,10 @@ done
 get_list_fedora()
 {
 
+# /usr/share/locale/de/LC_MESSAGES/NetworkManager.mo from NetworkManager-libnm conflicts
+#         NetworkManager-libnm 
+
 for i in \
-         NetworkManager-libnm \
          sssd-client \
          mesa-vulkan-drivers mesa-dri-drivers vulkan-loader
 do
