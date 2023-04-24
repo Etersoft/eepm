@@ -135,7 +135,9 @@ __epm_check_vendor()
     for i in $* ; do
         if ! epm_status_validate "$i" ; then
             # it is missed package probably (package remove case)
-            #warning "Can't get any info for $i package. Scripts are DISABLED for package $i. Use --scripts if you need run scripts from such packages."
+            if is_installed "$i" ; then
+                warning "Can't get any info for $i package. Scripts are DISABLED for package $i. Use --scripts if you need run scripts from such packages."
+            fi
             noscripts="--noscripts"
             continue
         fi
