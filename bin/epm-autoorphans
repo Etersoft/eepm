@@ -27,9 +27,8 @@ epm_autoorphans()
 
 [ -z "$*" ] || fatal "No arguments are allowed here"
 
-
-case $PMTYPE in
-    apt-rpm)
+case $BASEDISTRNAME in
+    alt)
         # ALT Linux only
         assure_exists /usr/share/apt/scripts/list-extras.lua apt-scripts
         if [ -z "$dryrun" ] ; then
@@ -58,7 +57,11 @@ case $PMTYPE in
         else
             echo "There are no orphan packages in the system."
         fi
+        return 0
         ;;
+esac
+
+case $PMTYPE in
     apt-dpkg|aptitude-dpkg)
         assure_exists deborphan
         showcmd deborphan
