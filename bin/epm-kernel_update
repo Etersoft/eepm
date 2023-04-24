@@ -44,6 +44,9 @@ epm_kernel_update()
     dnf-rpm)
         docmd epm install kernel
         ;;
+    apt-*)
+        echo "Skipping: kernel package will update during dist-upgrade"
+        ;;
     *)
         fatal "Have no suitable command for $PMTYPE"
         ;;
