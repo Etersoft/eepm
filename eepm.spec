@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.52.6
+Version: 3.52.7
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -97,6 +97,17 @@ a discussion about extra requirements.
 
 
 %changelog
+* Mon Apr 24 2023 Vitaly Lipatov <lav@altlinux.ru> 3.52.7-alt1
+- makefile: drop bashisms
+- epm restore: add meson.build support
+- epm-sh-functions: set_sudo: improve sudo checking
+- epm play zerotier-one: get latest version from the site
+- implement epm status [--installed|--original|--thirdpart|--repacked]
+- epm repack: save repacked packages with epm release
+- epm-sh-functions: __epm_check_if_package_from_repo(): add check for empty Signature field
+- epm play: check already installed package with is_repacked_package (implemented via epm status)
+- epm play: add pencil support
+
 * Sun Apr 23 2023 Vitaly Lipatov <lav@altlinux.ru> 3.52.6-alt1
 - makefile: fix install play.d
 
