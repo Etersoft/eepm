@@ -105,32 +105,16 @@ __epm_vendor_ok_scripts()
     return $res
 }
 
-__epm_get_rpm_pkgvendor()
-{
-    local pkg="$1"
-
-    # skip checking if the package is unaccessible
-    local rpmversion="$(epm print field Version for "$pkg" 2>/dev/null)"
-    [ -n "$rpmversion" ] || return
-
-    epm print field Vendor for "$pkg" 2>/dev/null
-}
-
 __epm_print_warning_for_nonalt_packages()
 {
     # only ALT
     [ "$BASEDISTRNAME" = "alt" ] || return 0
 
+    load_helper epm-status
+
     local i
     for i in $* ; do
-        local vendor
-        # TODO: check only for rpm
-        vendor="$(__epm_get_rpm_pkgvendor "$i")"
-
-        local packager="$(epm print field Packager for "$i" 2>/dev/null)"
-
-        # TODO: check GPG or some other mark
-        echo "$packager" | grep -q "@altlinux" && [ "$vendor" = "ALT Linux Team" ] && return 0
+        epm_status_thirdpart "$i" || continue
 
         warning "%%% You are trying install package $i from third-party software source. Use it at your own discretion. %%%"
     done
@@ -145,10 +129,18 @@ __epm_check_vendor()
     # only ALT
     [ "$BASEDISTRNAME" = "alt" ] || return 0
 
+    load_helper epm-status
+
     local i
     for i in $* ; do
+        if ! epm_status_validate "$i" ; then
+            warning "Can't get any info for $i package. Scripts are DISABLED for package $i. Use --scripts if you need run scripts from such packages."
+            noscripts="--noscripts"
+            continue
+        fi
+
         local vendor
-        vendor="$(__epm_get_rpm_pkgvendor "$i")"
+        vendor="$(epm print field Vendor for "$i")"
 
         if [ -z "$vendor" ] ; then
             warning "Can't get info about vendor for $i package. Scripts are DISABLED for package $i. Use --scripts if you need run scripts from such packages."
@@ -156,9 +148,7 @@ __epm_check_vendor()
             continue
         fi
 
-        # TODO: check GPG
-        # check separately to be quiet
-        [ "$vendor" = "ALT Linux Team" ] && continue
+        epm_status_original "$i" && continue
 
         if __epm_vendor_ok_scripts "$vendor" ; then
             warning "Scripts are ENABLED for package $i from outside vendor '$vendor' (this vendor is listed in $CONFIGDIR/vendorallowscripts.list).  Use --noscripts if you need disable scripts in such packages."
