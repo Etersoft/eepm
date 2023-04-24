@@ -35,7 +35,7 @@ epm_status_original()
 
     case $DISTRNAME in
         ALTLinux|ALTServer)
-            epm_status_validate $pkg || return
+            epm_status_validate $pkg || return 1
             epm_status_repacked $pkg && return 1
 
             # not for all packages
@@ -43,7 +43,7 @@ epm_status_original()
 
             local distribution
             distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
-            echo "$distribution" | grep -q "^ALT" || return
+            echo "$distribution" | grep -q "^ALT" || return 1
 
             # mc in Sisyphus has not a signature
             #local sig
@@ -52,7 +52,7 @@ epm_status_original()
 
             # FIXME: how to check if the package is from ALT repo (verified)?
             local release="$(epm print release from package "$pkg" 2>/dev/null )"
-            echo "$release" | grep -q "^alt" || return
+            echo "$release" | grep -q "^alt" || return 1
             return 0
             ;;
         *)
@@ -95,7 +95,7 @@ epm_status_thirdpart()
             #local packager="$(epm print field Packager for "$1" 2>/dev/null)"
             #echo "$packager" && grep -q "altlinux" && return 0
             #echo "$packager" && grep -q "basealt" && return 0
-            epm_status_validate $pkg || return
+            epm_status_validate $pkg || return 1
 
             local distribution
             distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
