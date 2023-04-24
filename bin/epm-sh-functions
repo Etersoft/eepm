@@ -765,33 +765,6 @@ __epm_remove_tmp_files()
 }
 
 
-__epm_check_if_package_from_repo()
-{
-    local pkg="$1"
-    # only ALT
-    [ "$BASEDISTRNAME" = "alt" ] || return 0
-
-    local vendor
-    # TODO: check only for rpm
-    #vendor="$(epm print field Vendor for "$pkg" 2>/dev/null))"
-    #[ "$vendor" = "ALT Linux Team" ] || return
-
-    local distribution
-    distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
-    echo "$distribution" | grep -q "^ALT" || return
-
-    local sig
-    sig="$(epm print field sigpgp for "$pkg" 2>/dev/null )"
-    [ "$sig" = "(none)" ] && return 1
-
-    # FIXME: how to check if the package is from ALT repo (verified)?
-    local release="$(epm print release from package "$pkg" 2>/dev/null )"
-    echo "$release" | grep -q "^alt" || return
-
-    return 0
-}
-
-
 has_space()
 {
     estrlist -- has_space "$@"

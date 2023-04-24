@@ -36,9 +36,23 @@ epm_status_original()
     case $DISTRNAME in
         ALTLinux|ALTServer)
             epm_status_validate $pkg || return
-            #[ "$(epm print field Vendor for package $pkg)" = "ALT Linux Team" ] && return
             epm_status_repacked $pkg && return 1
-            __epm_check_if_package_from_repo $pkg && return
+
+            # not for all packages
+            #[ "$(epm print field Vendor for package $pkg)" = "ALT Linux Team" ] || return
+
+            local distribution
+            distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
+            echo "$distribution" | grep -q "^ALT" || return
+
+            local sig
+            sig="$(epm print field sigpgp for "$pkg" 2>/dev/null )"
+            [ "$sig" = "(none)" ] && return 1
+
+            # FIXME: how to check if the package is from ALT repo (verified)?
+            local release="$(epm print release from package "$pkg" 2>/dev/null )"
+            echo "$release" | grep -q "^alt" || return
+            return 0
             ;;
         *)
             fatal "Unsupported $DISTRNAME"

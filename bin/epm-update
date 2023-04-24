@@ -32,7 +32,7 @@ get_latest_version()
 __check_for_epm_version()
 {
     # skip update checking for eepm from repo (ALT bug #44314)
-    [ "$BASEDISTRNAME" = "alt" ] &&  [ "$DISTRVERSION" != "Sisyphus" ] && __epm_check_if_package_from_repo eepm && return
+    [ "$BASEDISTRNAME" = "alt" ] &&  [ "$DISTRVERSION" != "Sisyphus" ] && epm status --original eepm && return
 
     local latest="$(get_latest_version eepm)"
     #[ -z "$latest" ] && return
