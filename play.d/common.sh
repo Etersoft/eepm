@@ -162,8 +162,38 @@ epm()
 {
     #if [ "$1" = "tool" ] ; then
     #    __showcmd_shifted 1 "$@"
-    if [ "$1" != "print" ] && [ "$1" != "tool" ] ; then
+    if [ "$1" != "print" ] && [ "$1" != "tool" ] && [ "$1" != "status" ] ; then
         showcmd "$(basename $EPM) $*"
     fi
     $EPM "$@"
 }
+
+is_repacked_package()
+{
+    local pkg="$1"
+    [ -n "$pkg" ] || pkg="$PKGNAME"
+    [ -n "$pkg" ] || fatal "is_repacked_package() is called without package name"
+
+    epm status --installed $pkg || return 0
+
+    # kind of hack
+    echo "$EPM_OPTIONS" | grep -q -- "--force" && return
+
+    if epm status --original $pkg ; then
+       echo "Package $pkg is already installed from ALT repository."
+       return 1
+    fi
+
+    if epm status --thirdpart $pkg ; then
+       echo "Package $pkg is already installed, packaged by vendor $(epm print field Distribution for $pkg)."
+       return 1
+    fi
+
+    if ! epm status --repacked $pkg ; then
+       echo "Package $pkg is already installed (possible, manually packed)."
+       return 1
+    fi
+
+    return 0
+}
+
