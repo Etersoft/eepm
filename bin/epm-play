@@ -344,15 +344,26 @@ __epm_play_install()
 __epm_play_initialize_ipfs()
 {
     if [ -d "$(dirname "$epm_ipfs_db")" ] ; then
-        export EGET_IPFS_DB="$eget_ipfs_db"
-        if [ ! -r "$EGET_IPFS_DB" ] ; then
-            sudorun touch "$EGET_IPFS_DB" >&2
-            sudorun chmod -v a+rw "$EGET_IPFS_DB" >&2
+        local URL="https://eepm.ru/app-versions"
+        if [ ! -r "$eget_ipfs_db" ] ; then
+            sudorun touch "$eget_ipfs_db" >&2
+            sudorun chmod -v a+rw "$eget_ipfs_db" >&2
+            # TODO: update this DB every time when changed (and get from IPFS as sign it works.)
             # get initial db from server
-            local URL="https://eepm.ru/app-versions"
-            info "Initialize IPFS DB in $EGET_IPFS_DB file and fill it with data from $URL/eget-ipfs-db.txt"
-            docmd eget -q -O $EGET_IPFS_DB "$URL/eget-ipfs-db.txt"
+            info "Initialize local IPFS DB in $eget_ipfs_db file and fill it with data from $URL/eget-ipfs-db.txt"
+            docmd eget -q -O $eget_ipfs_db "$URL/eget-ipfs-db.txt"
+        else
+            # update
+            local t=$(mktemp) || fatal
+            info "Updating local IPFS DB in $eget_ipfs_db file from $URL/eget-ipfs-db.txt"
+            docmd eget -q -O $t "$URL/eget-ipfs-db.txt" || warning "Can't update IPFS DB"
+            if [ -s "$t" ] ; then
+                echo >>$t
+                cat $eget_ipfs_db >>$t
+                sort -u < $t | grep -v "^$" > $eget_ipfs_db
+            fi
         fi
+        export EGET_IPFS_DB="$eget_ipfs_db"
     else
         warning "ipfs db dir $eget_ipfs_db is not exists, skipping --ipfs"
     fi
