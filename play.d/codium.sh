@@ -6,11 +6,7 @@ DESCRIPTION="Codium from the official site"
 
 . $(dirname $0)/common.sh
 
-if epm installed $PKGNAME && [ "$(get_pkgvendor $PKGNAME)" = "ALT Linux Team" ]  ; then
-    echo "Package $PKGNAME is already installed from ALT repository."
-    exit 0
-fi
-
+is_repacked_package || exit 0
 
 VERSION="$2"
 
