@@ -318,7 +318,7 @@ fatal()
 {
     if [ -z "$TEXTDOMAIN" ] ; then
         set_color $RED
-        echo "Error: $*  (you can discuss the problem in Telegram: https://t.me/useepm)" >&2
+        echo "Error: $*  (you can discuss the epm $EPMVERSION problem in Telegram: https://t.me/useepm)" >&2
         restore_color
 #    else
 #        echog "Error in $0: $@" >&2
