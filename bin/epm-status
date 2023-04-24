@@ -45,9 +45,10 @@ epm_status_original()
             distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
             echo "$distribution" | grep -q "^ALT" || return
 
-            local sig
-            sig="$(epm print field sigpgp for "$pkg" 2>/dev/null )"
-            [ "$sig" = "(none)" ] && return 1
+            # mc in Sisyphus has not a signature
+            #local sig
+            #sig="$(epm print field sigpgp for "$pkg" 2>/dev/null )"
+            #[ "$sig" = "(none)" ] && return 1
 
             # FIXME: how to check if the package is from ALT repo (verified)?
             local release="$(epm print release from package "$pkg" 2>/dev/null )"
