@@ -114,9 +114,20 @@ __epm_print_warning_for_nonalt_packages()
 
     local i
     for i in $* ; do
-        epm_status_thirdpart "$i" || continue
+        if epm_status_repacked "$i" ; then
+            warning "%%% You are trying install package $i repacked from third-party software source. Use it at your own discretion. %%%"
+            continue
+        fi
 
-        warning "%%% You are trying install package $i from third-party software source. Use it at your own discretion. %%%"
+        if epm_status_thirdpart "$i" ; then
+            warning "%%% You are trying install package $i from third-party software source. Use it at your own discretion. %%%"
+            continue
+        fi
+
+        if ! epm_status_original "$i" ; then
+            warning "%%% You are trying install package $i not from official $DISTROVENDOR/$DISTROVERSION repository. Use it at your own discretion. %%%"
+            continue
+        fi
     done
 }
 
