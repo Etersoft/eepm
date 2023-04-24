@@ -134,7 +134,8 @@ __epm_check_vendor()
     local i
     for i in $* ; do
         if ! epm_status_validate "$i" ; then
-            warning "Can't get any info for $i package. Scripts are DISABLED for package $i. Use --scripts if you need run scripts from such packages."
+            # it is missed package probably (package remove case)
+            #warning "Can't get any info for $i package. Scripts are DISABLED for package $i. Use --scripts if you need run scripts from such packages."
             noscripts="--noscripts"
             continue
         fi
@@ -149,6 +150,7 @@ __epm_check_vendor()
         fi
 
         epm_status_original "$i" && continue
+        epm_status_repacked "$i" && continue
 
         if __epm_vendor_ok_scripts "$vendor" ; then
             warning "Scripts are ENABLED for package $i from outside vendor '$vendor' (this vendor is listed in $CONFIGDIR/vendorallowscripts.list).  Use --noscripts if you need disable scripts in such packages."
