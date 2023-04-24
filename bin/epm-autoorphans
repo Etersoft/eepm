@@ -49,16 +49,15 @@ case $PMTYPE in
         fi
         PKGLIST="$(estrlist exclude "$play_installed" "$PKGLIST")"
 
-        if [ -z "$dryrun" ] && [ -n "$PKGLIST" ] ; then
-            showcmd epm remove $dryrun $force $PKGLIST
-            confirm_info "We will remove packages above."
-        fi
-
-#        if [ -n "$dryrun" ] ; then
-#            echo "$PKGLIST"
-#        else
+        if [ -n "$PKGLIST" ] ; then
+            if [ -z "$dryrun" ] ; then
+                showcmd epm remove $dryrun $force $PKGLIST
+                confirm_info "We will remove packages above."
+            fi
             docmd epm remove $dryrun $force $(subst_option non_interactive --auto) $PKGLIST
-#        fi
+        else
+            echo "There are no orphan packages in the system."
+        fi
         ;;
     apt-dpkg|aptitude-dpkg)
         assure_exists deborphan
