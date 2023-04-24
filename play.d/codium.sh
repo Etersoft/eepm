@@ -6,8 +6,6 @@ DESCRIPTION="Codium from the official site"
 
 . $(dirname $0)/common.sh
 
-is_repacked_package || exit 0
-
 VERSION="$2"
 
 arch="$(epm print info -a)"

@@ -197,3 +197,5 @@ is_repacked_package()
     return 0
 }
 
+# skip install if there is package installed not via epm play
+is_repacked_package $REPOPKGNAME || exit 0

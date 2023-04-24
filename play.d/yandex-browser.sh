@@ -15,8 +15,6 @@ SUPPORTEDARCHES="x86_64"
 
 . $(dirname $0)/common.sh
 
-is_repacked_package || exit 0
-
 # See also https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=yandex-browser-beta
 
 URL="https://repo.yandex.ru/yandex-browser"

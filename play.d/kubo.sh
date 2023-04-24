@@ -22,8 +22,6 @@ fi
 
 . $(dirname $0)/common.sh
 
-is_repacked_package || exit 0
-
 
 arch="$(epm print info -a)"
 case "$arch" in

@@ -2,12 +2,11 @@
 
 # filename does not contain -stable, but package name with -stable
 PKGNAME=chromium-gost-stable
+REPOPKGNAME=chromium-gost
 SUPPORTEDARCHES="x86_64"
 DESCRIPTION="Chromium with GOST support from the official site"
 
 . $(dirname $0)/common.sh
-
-is_repacked_package chromium-gost || exit 0
 
 #arch=$(epm print info --distro-arch)
 #pkgtype=$(epm print info -p)

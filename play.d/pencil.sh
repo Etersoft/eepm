@@ -1,13 +1,12 @@
 #!/bin/sh
 
 PKGNAME=Pencil
+REPOPKGNAME=pencil
 SUPPORTEDARCHES="x86_64 x86"
 DESCRIPTION="Pencil from the official site"
 URL="https://pencil.evolus.vn/"
 
 . $(dirname $0)/common.sh
-
-is_repacked_package pencil || exit 0
 
 arch=$(epm print info --distro-arch)
 case $arch in

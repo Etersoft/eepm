@@ -10,8 +10,6 @@ epm installed $REPOPKGNAME && PKGNAME=$REPOPKGNAME
 
 . $(dirname $0)/common.sh
 
-is_repacked_package $REPOPKGNAME || exit 0
-
 res=0
 if ! epm install $REPOPKGNAME ; then
     PKGURL="https://cdn.akamai.steamstatic.com/client/installer/steam.deb"
