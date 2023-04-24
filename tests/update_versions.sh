@@ -23,7 +23,7 @@ install_app()
     local app="$1"
     local applog="$1"
     local alt="$2"
-    [ -n "$alt" ] && applog="$applog.$alt" && alt=" = $alt"
+    [ -n "$alt" ] && applog="$applog=$alt" && alt=" = $alt"
 
     echo -n "epm play $playopt $app $alt ..."
     $EPM play $playopt --verbose --auto $app $alt >$EDIR/$applog 2>&1
