@@ -488,7 +488,11 @@ get_ipfs_brave()
 ipfs_api_access()
 {
     [ -n "$IPFS_CMD" ] || fatal "IPFS is disabled"
-    verdocmd $IPFS_CMD --api $IPFS_API $ipfs_diag_timeout diag sys >/dev/null
+    if [ -n "$verbose" ] ; then
+         verdocmd $IPFS_CMD --api $IPFS_API $ipfs_diag_timeout diag sys >/dev/null
+    else
+         verdocmd $IPFS_CMD --api $IPFS_API $ipfs_diag_timeout diag sys >/dev/null 2>/dev/null
+    fi
 }
 
 ipfs_check()
