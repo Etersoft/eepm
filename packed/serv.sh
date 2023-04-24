@@ -368,9 +368,12 @@ set_sudo()
 
     # if input is a console
     if inputisatty && isatty && isatty2 ; then
-        if ! $SUDO_CMD -l >/dev/null ; then
-            [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported in non interactive using). Please run epm under root.'"
-            return "$SUDO_TESTED"
+        if ! $SUDO_CMD -n true ; then
+            info "Please enter sudo user password to use sudo in the current session."
+            if ! $SUDO_CMD -l >/dev/null ; then
+                [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported in non interactive using). Please run epm under root.'"
+                return "$SUDO_TESTED"
+            fi
         fi
     else
         # use sudo if one is tuned and tuned without password
@@ -735,11 +738,16 @@ __epm_check_if_package_from_repo()
     #vendor="$(epm print field Vendor for "$pkg" 2>/dev/null))"
     #[ "$vendor" = "ALT Linux Team" ] || return
 
-    local distribution="$(epm print field Distribution for "$pkg" 2>/dev/null))"
+    local distribution
+    distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
     echo "$distribution" | grep -q "^ALT" || return
 
+    local sig
+    sig="$(epm print field sigpgp for "$pkg" 2>/dev/null )"
+    [ "$sig" = "(none)" ] && return 1
+
     # FIXME: how to check if the package is from ALT repo (verified)?
-    local release="$(epm print release from package "$pkg" 2>/dev/null)"
+    local release="$(epm print release from package "$pkg" 2>/dev/null )"
     echo "$release" | grep -q "^alt" || return
 
     return 0
@@ -2614,7 +2622,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.52.6  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.52.7  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

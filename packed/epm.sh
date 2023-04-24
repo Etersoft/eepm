@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.52.6"
+EPMVERSION="3.52.7"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -393,9 +393,12 @@ set_sudo()
 
     # if input is a console
     if inputisatty && isatty && isatty2 ; then
-        if ! $SUDO_CMD -l >/dev/null ; then
-            [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported in non interactive using). Please run epm under root.'"
-            return "$SUDO_TESTED"
+        if ! $SUDO_CMD -n true ; then
+            info "Please enter sudo user password to use sudo in the current session."
+            if ! $SUDO_CMD -l >/dev/null ; then
+                [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported in non interactive using). Please run epm under root.'"
+                return "$SUDO_TESTED"
+            fi
         fi
     else
         # use sudo if one is tuned and tuned without password
@@ -760,11 +763,16 @@ __epm_check_if_package_from_repo()
     #vendor="$(epm print field Vendor for "$pkg" 2>/dev/null))"
     #[ "$vendor" = "ALT Linux Team" ] || return
 
-    local distribution="$(epm print field Distribution for "$pkg" 2>/dev/null))"
+    local distribution
+    distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
     echo "$distribution" | grep -q "^ALT" || return
 
+    local sig
+    sig="$(epm print field sigpgp for "$pkg" 2>/dev/null )"
+    [ "$sig" = "(none)" ] && return 1
+
     # FIXME: how to check if the package is from ALT repo (verified)?
-    local release="$(epm print release from package "$pkg" 2>/dev/null)"
+    local release="$(epm print release from package "$pkg" 2>/dev/null )"
     echo "$release" | grep -q "^alt" || return
 
     return 0
@@ -5546,7 +5554,7 @@ __epm_play_list()
             echo "$i"
             if [ -n "$extra" ] ; then
                 for j in $(__run_script "$i" "--product-alternatives") ; do
-                    echo "  $i $j"
+                    echo "  $i=$j"
                 done
             fi
         done
@@ -5560,7 +5568,7 @@ __epm_play_list()
         printf "%-20s - %s\n" "$i" "$desc"
         if [ -n "$extra" ] ; then
             for j in $(__run_script "$i" "--product-alternatives") ; do
-                printf "  %-20s - %s\n" "$i $j" "$desc"
+                printf "  %-20s - %s\n" "$i=$j" "$desc"
             done
         fi
     done
@@ -5697,6 +5705,7 @@ __epm_play_initialize_ipfs()
         if [ ! -r "$EGET_IPFS_DB" ] ; then
             sudorun touch "$EGET_IPFS_DB" >&2
             sudorun chmod -v a+rw "$EGET_IPFS_DB" >&2
+            # TODO: update this DB every time when changed (and get from IPFS as sign it works.)
             # get initial db from server
             local URL="https://eepm.ru/app-versions"
             info "Initialize IPFS DB in $EGET_IPFS_DB file and fill it with data from $URL/eget-ipfs-db.txt"
@@ -7263,6 +7272,10 @@ get_fix_release_pkg()
         echo "apt-conf-$TO"
         # apt-conf-sisyphus and apt-conf-branch conflicts
         epm installed apt-conf-branch && echo "apt-conf-branch-"
+        #for i in apt apt-rsync libapt libpackagekit-glib librpm7 packagekit rpm synaptic realmd libldap2 ; do
+        #    epm installed $i && echo "$i"
+        #done
+
     else
         epm installed apt-conf-branch && echo "apt-conf-branch" && epm installed apt-conf-sisyphus && echo "apt-conf-sisyphus-"
     fi
@@ -8318,6 +8331,7 @@ __epm_have_repack_rule()
     # skip repacking on non ALT systems
     [ "$BASEDISTRNAME" = "alt" ] || return 1
 
+    # skip for packages built with repack
     local packager="$(epm print field Packager for "$1" 2>/dev/null)"
     [ "$packager" = "EPM <support@etersoft.ru>" ] && return 1
     [ "$packager" = "EPM <support@eepm.ru>" ] && return 1
@@ -8607,7 +8621,7 @@ __fix_spec()
     # FIXME: where is a source of the bug with empty Summary?
     subst "s|Summary: *$|Summary: $pkgname (was empty Summary after alien)|" $spec
     subst "s|^\(Version: .*\)~.*|\1|" $spec
-    subst "s|^Release: |Release: alt1.repacked.with.epm.|" $spec
+    subst "s|^Release: |Release: epm1.repacked.|" $spec
     subst "s|^Distribution:.*||" $spec
     subst "s|^\((Converted from a\) \(.*\) \(package.*\)|(Repacked from binary \2 package with epm $EPMVERSION)\n\1 \2 \3|" $spec
     #" hack for highlight
@@ -10173,6 +10187,55 @@ __epm_restore_nupkg()
     docmd epm install $ilist
 }
 
+__epm_print_meson_list()
+{
+    local reqmacro="$1"
+    local req_file="$2"
+    local l
+    while read name sign ver other ; do
+        # gtk4-wayland
+        # gtk4 >= 4.6
+        [ -n "$other" ] && continue
+        if [ -n "$dryrun" ] ; then
+            local pi=''
+            pi="$reqmacro pkgconfig($name)"
+            [ -n "$sign" ] && pi="$pi $sign $ver"
+            echo "$pi"
+            continue
+        else
+            local pi="pkgconfig($name)"
+        fi
+        [ -n "$name" ] || continue
+        ilist="$ilist $pi"
+    done < $req_file
+
+    [ -n "$dryrun" ] || echo "$ilist"
+}
+
+__epm_restore_meson()
+{
+    local req_file="$1"
+    if [ -n "$dryrun" ] ; then
+        local lt=$(mktemp)
+        echo
+        __epm_restore_print_comment "$req_file" " dependency"
+        grep "dependency(" $req_file | sed -e 's|.*dependency(||' -e 's|).*||' -e 's|, required.*||' -e 's|, version:||' -e "s|'||g" >$lt
+        __epm_print_meson_list "BuildRequires:" $lt
+        rm -f $lt
+        return
+    fi
+
+    info "Install requirements from $req_file ..."
+    local lt=$(mktemp)
+    grep "dependency(" $req_file | sed -e 's|.*dependency(||' -e 's|).*||' -e 's|, required.*||' -e 's|, version:||' -e "s|'||g" >$lt
+    ilist="$ilist $(__epm_print_meson_list "" $lt)"
+
+    rm -f $lt
+    docmd epm install $ilist
+
+}
+
+
 __epm_restore_npm()
 {
     local req_file="$1"
@@ -10293,6 +10356,9 @@ __epm_restore_by()
         package.json)
             [ -s "$req_file" ] && __epm_restore_npm "$req_file"
             ;;
+        meson.build)
+            [ -s "$req_file" ] && __epm_restore_meson "$req_file"
+            ;;
         Makefile.PL)
             [ -s "$req_file" ] && __epm_restore_perl "$req_file"
             ;;
@@ -10327,7 +10393,7 @@ epm_restore()
     # if run with empty args
     for i in requirements.txt requirements/default.txt requirements_dev.txt requirements-dev.txt requirements/dev.txt dev-requirements.txt \
              requirements-test.txt requirements_test.txt requirements/test.txt test-requirements.txt requirements/coverage.txt \
-             Gemfile requires.txt package.json setup.py python_dependencies.py Makefile.PL \
+             Gemfile requires.txt package.json setup.py python_dependencies.py Makefile.PL meson.build \
              *.sln *.csproj ; do
         __epm_restore_by $i
     done
@@ -11329,6 +11395,132 @@ epm_stats()
         esac
 
     docmd $CMD "$@"
+}
+
+# File bin/epm-status:
+
+
+
+epm_status_original()
+{
+    local pkg="$1"
+
+    #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
+
+    case $DISTRNAME in
+        ALTLinux|ALTServer)
+            #[ "$(epm print field Vendor for package $pkg)" = "ALT Linux Team" ] && return
+            epm_status_repacked $pkg && return 1
+            __epm_check_if_package_from_repo $pkg && return
+            ;;
+        *)
+            fatal "Unsupported $DISTRNAME"
+            ;;
+    esac
+    return 1
+}
+
+epm_status_repacked()
+{
+    local pkg="$1"
+
+    #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
+
+    case $BASEDISTRNAME in
+        alt)
+            local packager="$(epm print field Packager for "$1" 2>/dev/null)"
+            [ "$packager" = "EPM <support@etersoft.ru>" ] && return 0
+            [ "$packager" = "EPM <support@eepm.ru>" ] && return 0
+            ;;
+        *)
+            fatal "Unsupported $DISTRNAME"
+            ;;
+    esac
+    return 1
+}
+
+
+epm_status_thirdpart()
+{
+    local pkg="$1"
+
+    #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
+
+    case $BASEDISTRNAME in
+        alt)
+            ## FIXME: some repo packages have wrong Packager
+            #local packager="$(epm print field Packager for "$1" 2>/dev/null)"
+            #echo "$packager" && grep -q "altlinux" && return 0
+            #echo "$packager" && grep -q "basealt" && return 0
+
+            local distribution
+            distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
+            echo "$distribution" | grep -q "^ALT" || return 0
+            ;;
+        *)
+            fatal "Unsupported $DISTRNAME"
+            ;;
+    esac
+    return 1
+}
+
+
+epm_status_help()
+{
+    cat <<EOF
+
+epm status - check status of the package and return result via exit code
+Usage: epm status [options] <package>
+
+Options:
+  --installed           check if <package> is installed
+  --original            check if <package> is from distro repo
+  --thirdpart           check if <package> from a third part source (didn't packed for this distro)
+  --repacked            check if <package> was repacked with epm repack
+
+EOF
+}
+
+epm_status()
+{
+    local option="$1"
+
+    if [ -z "$1" ] ; then
+        epm_status_help >&2
+        exit 1
+    fi
+
+    shift
+
+    # TODO: allow both option
+    case "$option" in
+        -h|--help)
+            epm_status_help
+            return
+            ;;
+        --installed)
+            is_installed "$@"
+            return
+            ;;
+        --original)
+            epm_status_original "$@"
+            return
+            ;;
+        --thirdpart)
+            epm_status_thirdpart "$@"
+            return
+            ;;
+        --repacked)
+            epm_status_repacked "$@"
+            return
+            ;;
+        *)
+            fatal "Unknown option $option, use epm status --help to get info"
+            ;;
+    esac
+
+    epm_status_help >&2
+    fatal "Run with appropriate option"
 }
 
 # File bin/epm-tool:
@@ -15528,19 +15720,14 @@ check_command()
     installed)                # HELPCMD: check presence of package(s) (like -q with --quiet)
         epm_cmd=installed
         ;;
+    status)                   # HELPCMD: get status of package(s) (see epm status --help)
+        epm_cmd=status
+        ;;
     -sf|sf|filesearch|search-file)        # HELPCMD: search in which package a file is included
         epm_cmd=search_file
         ;;
     -ql|ql|filelist|get-files)          # HELPCMD: print package file list
         epm_cmd=filelist
-        ;;
-    check|fix|verify)         # HELPCMD: check local package base integrity and fix it
-        epm_cmd=check
-        direct_args=1
-        ;;
-    dedup)                    # HELPCMD: remove unallowed duplicated pkgs (after upgrade crash)
-        epm_cmd=dedup
-        direct_args=1
         ;;
     -cl|cl|changelog)         # HELPCMD: show changelog for package
         epm_cmd=changelog
@@ -15610,6 +15797,14 @@ check_command()
         ;;
     repo)                     # HELPCMD: manipulate with repository list (see epm repo --help)
         epm_cmd=repo
+        direct_args=1
+        ;;
+    check|fix|verify)         # HELPCMD: check local package base integrity and fix it
+        epm_cmd=check
+        direct_args=1
+        ;;
+    dedup)                    # HELPCMD: remove unallowed duplicated pkgs (after upgrade crash)
+        epm_cmd=dedup
         direct_args=1
         ;;
     full-upgrade)              # HELPCMD: update all system packages and kernel
