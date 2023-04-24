@@ -19,6 +19,13 @@
 
 load_helper epm-query
 
+# check if the package is really package (check accessibility)
+epm_status_validate()
+{
+    local pkg="$1"
+    local rpmversion="$(epm print field Version for "$pkg" 2>/dev/null)"
+    [ -n "$rpmversion" ]
+}
 
 epm_status_original()
 {
@@ -28,6 +35,7 @@ epm_status_original()
 
     case $DISTRNAME in
         ALTLinux|ALTServer)
+            epm_status_validate $pkg || return
             #[ "$(epm print field Vendor for package $pkg)" = "ALT Linux Team" ] && return
             epm_status_repacked $pkg && return 1
             __epm_check_if_package_from_repo $pkg && return
@@ -47,6 +55,7 @@ epm_status_repacked()
 
     case $BASEDISTRNAME in
         alt)
+            epm_status_validate $pkg || return
             local packager="$(epm print field Packager for "$1" 2>/dev/null)"
             [ "$packager" = "EPM <support@etersoft.ru>" ] && return 0
             [ "$packager" = "EPM <support@eepm.ru>" ] && return 0
@@ -71,6 +80,7 @@ epm_status_thirdpart()
             #local packager="$(epm print field Packager for "$1" 2>/dev/null)"
             #echo "$packager" && grep -q "altlinux" && return 0
             #echo "$packager" && grep -q "basealt" && return 0
+            epm_status_validate $pkg || return
 
             local distribution
             distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
@@ -96,6 +106,7 @@ Options:
   --original            check if <package> is from distro repo
   --thirdpart           check if <package> from a third part source (didn't packed for this distro)
   --repacked            check if <package> was repacked with epm repack
+  --validate            check if <package> is accessible (we can get a fields from it)
 
 EOF
 }
@@ -131,6 +142,10 @@ epm_status()
             ;;
         --repacked)
             epm_status_repacked "$@"
+            return
+            ;;
+        --validate)
+            epm_status_validate "$@"
             return
             ;;
         *)
