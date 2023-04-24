@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# kind of hack: inheritance --force from main epm
+echo "$EPM_OPTIONS" | grep -q -- "--force" && force="--force"
+
 fatal()
 {
     echo "FATAL: $*" >&2
@@ -119,28 +122,29 @@ case "$1" in
                 exit
             fi
             # latestpkgver <= $pkgver
-            if [ "$(epm print compare package version $latestpkgver $pkgver)" != "1" ] ; then
+            if [ -z "$force" ] && [ "$(epm print compare package version $latestpkgver $pkgver)" != "1" ] ; then
                 echo "Latest available version of $PKGNAME: $latestpkgver. Installed version: $pkgver."
                 exit
             fi
 
-            # kind of hack
-            if echo "$EPM_OPTIONS" | grep -q -- "--force" ; then
+            if [ -n "$force" ] ; then
                 echo "Updating $PKGNAME from $pkgver to latest available version ..."
             else
                 echo "Updating $PKGNAME from $pkgver to $latestpkgver version ..."
                 VERSION="$latestpkgver"
             fi
         fi
+        # pass to run play code
         ;;
     "--run")
-        # just pass
+        # just pass to run play code
         ;;
     *)
         fatal "Unknown command '$1'. Use this script only via epm play."
         ;;
 esac
 
+# --update/--run
 
 # support direct run the script
 if [ -x "../bin/epm" ] ; then
@@ -185,8 +189,7 @@ is_repacked_package()
 
     epm status --installed $pkg || return 0
 
-    # kind of hack
-    echo "$EPM_OPTIONS" | grep -q -- "--force" && return
+    [ -n "$force" ] && return 0
 
     if epm status --original $pkg ; then
        echo "Package $pkg is already installed from ALT repository."
