@@ -104,10 +104,12 @@ case "$1" in
             echo "Skipping update of $PKGNAME (package is not installed)"
             exit
         fi
+
         if epm mark showhold | grep -q "^$PKGNAME$" ; then
             echo "Skipping update of $PKGNAME (package is on hold, see '# epm mark showhold')"
             exit
         fi
+
         pkgver="$(epm print version for package $PKGNAME)"
         latestpkgver="$(get_latest_version $PKGNAME)"
         # ignore update if have no latest package version or the latest package version no more than installed one
@@ -121,7 +123,14 @@ case "$1" in
                 echo "Latest available version of $PKGNAME: $latestpkgver. Installed version: $pkgver."
                 exit
             fi
-            echo "Updating $PKGNAME from $pkgver to available $latestpkgver version ..."
+
+            # kind of hack
+            if echo "$EPM_OPTIONS" | grep -q -- "--force" ; then
+                echo "Updating $PKGNAME from $pkgver to latest available version ..."
+            else
+                echo "Updating $PKGNAME from $pkgver to $latestpkgver version ..."
+                VERSION="$latestpkgver"
+            fi
         fi
         ;;
     "--run")
@@ -199,3 +208,8 @@ is_repacked_package()
 
 # skip install if there is package installed not via epm play
 is_repacked_package $REPOPKGNAME || exit 0
+
+# set version when update
+if [ -z "$VERSION" ] ; then
+    [ -z "$2" ] || VERSION="$2"
+fi
