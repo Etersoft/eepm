@@ -4,11 +4,18 @@ BUILDROOT="$1"
 SPEC="$2"
 
 PRODUCT=microsoft-edge
-PRODUCTCUR=microsoft-edge-stable
+PRODUCTCUR=$(basename $0 .sh)
 PRODUCTDIR=/opt/microsoft/msedge
-
+[ "$PRODUCTCUR" = "microsoft-edge-beta" ] && PRODUCTDIR=/opt/microsoft/msedge-beta
+[ "$PRODUCTCUR" = "microsoft-edge-dev" ] && PRODUCTDIR=/opt/microsoft/msedge-dev
 
 . $(dirname $0)/common-chromium-browser.sh
+
+for i in microsoft-edge-stable microsoft-edge-beta microsoft-edge-dev ; do
+    [ "$i"  = "$PRODUCTCUR" ] && continue
+    subst "1iConflicts:$i" $SPEC
+done
+
 
 set_alt_alternatives 65
 
