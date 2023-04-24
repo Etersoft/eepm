@@ -403,7 +403,8 @@ case "$1" in
     --update)
         shift
         local CMDUPDATE="--update"
-        [ -n "$force" ] && CMDUPDATE="--run"
+        # check --force on common.sh side
+        #[ -n "$force" ] && CMDUPDATE="--run"
 
         if [ -z "$1" ] ; then
             fatal "run --update with 'all' or a project name"
