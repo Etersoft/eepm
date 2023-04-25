@@ -119,7 +119,7 @@ __epm_print_warning_for_nonalt_packages()
             continue
         fi
 
-        if epm_status_thirdpart "$i" ; then
+        if epm_status_thirdparty "$i" ; then
             warning "%%% You are trying install package $i from third-party software source. Use it at your own discretion. %%%"
             continue
         fi

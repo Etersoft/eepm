@@ -83,7 +83,7 @@ epm_status_repacked()
 }
 
 
-epm_status_thirdpart()
+epm_status_thirdparty()
 {
     local pkg="$1"
 
@@ -119,7 +119,7 @@ Usage: epm status [options] <package>
 Options:
   --installed           check if <package> is installed
   --original            check if <package> is from distro repo
-  --thirdpart           check if <package> from a third part source (didn't packed for this distro)
+  --thirdparty          check if <package> from a third-party source (didn't packed for this distro)
   --repacked            check if <package> was repacked with epm repack
   --validate            check if <package> is accessible (we can get a fields from it)
 
@@ -151,8 +151,8 @@ epm_status()
             epm_status_original "$@"
             return
             ;;
-        --thirdpart)
-            epm_status_thirdpart "$@"
+         --third-party|--thirdparty|--thirdpart)
+            epm_status_thirdparty "$@"
             return
             ;;
         --repacked)
