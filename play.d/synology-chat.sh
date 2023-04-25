@@ -2,12 +2,15 @@
 
 PKGNAME=synology-chat
 SUPPORTEDARCHES="x86_64"
+VERSION="$2"
 DESCRIPTION='Synology Chat Client from the official site'
 
 . $(dirname $0)/common.sh
 
-urldir="$(epm tool eget --list https://archive.synology.com/download/Utility/ChatClient '/[0-9]*' | head -n1)"
-[ -n "$urldir" ] || exit
+[ "$VERSION" = "*" ] && VERSION="[0-9]*"
+
+urldir="$(epm tool eget --list https://archive.synology.com/download/Utility/ChatClient "/$VERSION-"' | head -n1)"
+[ -n "$urldir" ] || fatal "Can't get dir for $VERSION version on https://archive.synology.com/download/Utility/ChatClient"
 
 # use temp dir
 PKGDIR="$(mktemp -d)"
