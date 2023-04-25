@@ -66,10 +66,19 @@ get_pkgvendor()
     epm print field Vendor for package $1
 }
 
+get_first()
+{
+    echo "$1"
+}
+
 check_alternative_pkgname()
 {
     [ -n "$BASEPKGNAME" ] || BASEPKGNAME="$PKGNAME"
 
+    # default: with first entry in $PEODUCTALT
+    PKGNAME="$BASEPKGNAME-$(get_first $PRODUCTALT)"
+
+    # override with VERSION
     local i
     for i in $PRODUCTALT ; do
         if [ "$i" = "''" ] ; then
@@ -82,9 +91,12 @@ check_alternative_pkgname()
             return
         fi
     done
-    # when VERSION is not in PRODUCTALT
+
+    # when VERSION is not in PRODUCTALT, check installed package
     for i in $PRODUCTALT ; do
-        [ "$i" = "''" ] && continue
+        if [ "$i" = "''" ] ; then
+            continue
+        fi
         if epm installed $BASEPKGNAME-$i ; then
             PKGNAME=$BASEPKGNAME-$i
             break
