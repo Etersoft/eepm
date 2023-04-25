@@ -15,16 +15,7 @@ case "$(epm print info -s)" in
         ;;
 esac
 
-STDCPKG="libstdc++"
-epm installed $STDCPKG || STDCPKG="libstdc++6"
-
-if epm installed $STDCPKG ; then
-    stdcver=$(epm print version for package "$STDCPKG" | head -n1)
-    if [ -n "$stdcver" ] && [ "$(epm print compare version "$stdcver" "11.0")" = "-1" ] ; then
-           # all next versions require libstdc++ >= 11 (libstdc++.so.6(GLIBCXX_3.4.29)(64bit))
-           VERSION="4.1.0"
-    fi
-fi
+is_stdcpp_enough "11.0" || VERSION="4.1.0"
 
 PKGURL="$(eget --list --latest https://mango3d.io/downloads/ "LycheeSlicer-$VERSION.deb")"
 

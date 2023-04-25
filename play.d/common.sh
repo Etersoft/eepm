@@ -66,6 +66,25 @@ get_pkgvendor()
     epm print field Vendor for package $1
 }
 
+# arg: minimal require of libstdc++ version
+# return true is we have such version
+is_stdcpp_enough()
+{
+    local needed="$1"
+    local STDCPKG="libstdc++"
+    epm installed $STDCPKG || STDCPKG="libstdc++6"
+
+    if epm installed $STDCPKG ; then
+        local stdcver
+        stdcver=$(epm print version for package "$STDCPKG" | head -n1)
+        if [ -n "$stdcver" ] && [ "$(epm print compare version "$stdcver" "$needed")" = "-1" ] ; then
+            return 1
+        fi
+    fi
+    return 0
+}
+
+
 get_first()
 {
     echo "$1"
