@@ -217,6 +217,9 @@ is_repacked_package()
     [ -n "$pkg" ] || pkg="$PKGNAME"
     [ -n "$pkg" ] || fatal "is_repacked_package() is called without package name"
 
+    # actually only for ALT
+    [ "$(epm print info -s)" = "alt" ] || return 0
+
     epm status --installed $pkg || return 0
 
     [ -n "$force" ] && return 0
