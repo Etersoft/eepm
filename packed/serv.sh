@@ -309,7 +309,7 @@ fatal()
 {
     if [ -z "$TEXTDOMAIN" ] ; then
         set_color $RED
-        echo "Error: $*  (you can discuss the problem in Telegram: https://t.me/useepm)" >&2
+        echo "Error: $*  (you can discuss the epm $EPMVERSION problem in Telegram: https://t.me/useepm)" >&2
         restore_color
     fi
     exit 1
@@ -723,33 +723,6 @@ __epm_remove_tmp_files()
         [ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
         [ -n "$to_clean_tmp_dirs" ] && rm -rf $to_clean_tmp_dirs 2>/dev/null
     fi
-    return 0
-}
-
-
-__epm_check_if_package_from_repo()
-{
-    local pkg="$1"
-    # only ALT
-    [ "$BASEDISTRNAME" = "alt" ] || return 0
-
-    local vendor
-    # TODO: check only for rpm
-    #vendor="$(epm print field Vendor for "$pkg" 2>/dev/null))"
-    #[ "$vendor" = "ALT Linux Team" ] || return
-
-    local distribution
-    distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
-    echo "$distribution" | grep -q "^ALT" || return
-
-    local sig
-    sig="$(epm print field sigpgp for "$pkg" 2>/dev/null )"
-    [ "$sig" = "(none)" ] && return 1
-
-    # FIXME: how to check if the package is from ALT repo (verified)?
-    local release="$(epm print release from package "$pkg" 2>/dev/null )"
-    echo "$release" | grep -q "^alt" || return
-
     return 0
 }
 
@@ -2622,7 +2595,7 @@ print_version()
         local on_text="(host system)"
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
-        echo "Service manager version 3.52.7  https://wiki.etersoft.ru/Epm"
+        echo "Service manager version 3.53.0  https://wiki.etersoft.ru/Epm"
         echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2021"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."

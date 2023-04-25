@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.52.7"
+EPMVERSION="3.53.0"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -334,7 +334,7 @@ fatal()
 {
     if [ -z "$TEXTDOMAIN" ] ; then
         set_color $RED
-        echo "Error: $*  (you can discuss the problem in Telegram: https://t.me/useepm)" >&2
+        echo "Error: $*  (you can discuss the epm $EPMVERSION problem in Telegram: https://t.me/useepm)" >&2
         restore_color
     fi
     exit 1
@@ -748,33 +748,6 @@ __epm_remove_tmp_files()
         [ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
         [ -n "$to_clean_tmp_dirs" ] && rm -rf $to_clean_tmp_dirs 2>/dev/null
     fi
-    return 0
-}
-
-
-__epm_check_if_package_from_repo()
-{
-    local pkg="$1"
-    # only ALT
-    [ "$BASEDISTRNAME" = "alt" ] || return 0
-
-    local vendor
-    # TODO: check only for rpm
-    #vendor="$(epm print field Vendor for "$pkg" 2>/dev/null))"
-    #[ "$vendor" = "ALT Linux Team" ] || return
-
-    local distribution
-    distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
-    echo "$distribution" | grep -q "^ALT" || return
-
-    local sig
-    sig="$(epm print field sigpgp for "$pkg" 2>/dev/null )"
-    [ "$sig" = "(none)" ] && return 1
-
-    # FIXME: how to check if the package is from ALT repo (verified)?
-    local release="$(epm print release from package "$pkg" 2>/dev/null )"
-    echo "$release" | grep -q "^alt" || return
-
     return 0
 }
 
@@ -1454,9 +1427,8 @@ epm_autoorphans()
 
 [ -z "$*" ] || fatal "No arguments are allowed here"
 
-
-case $PMTYPE in
-    apt-rpm)
+case $BASEDISTRNAME in
+    alt)
         # ALT Linux only
         assure_exists /usr/share/apt/scripts/list-extras.lua apt-scripts
         if [ -z "$dryrun" ] ; then
@@ -1476,13 +1448,20 @@ case $PMTYPE in
         fi
         PKGLIST="$(estrlist exclude "$play_installed" "$PKGLIST")"
 
-        if [ -z "$dryrun" ] && [ -n "$PKGLIST" ] ; then
-            showcmd epm remove $dryrun $force $PKGLIST
-            confirm_info "We will remove packages above."
-        fi
-
+        if [ -n "$PKGLIST" ] ; then
+            if [ -z "$dryrun" ] ; then
+                showcmd epm remove $dryrun $force $PKGLIST
+                confirm_info "We will remove packages above."
+            fi
             docmd epm remove $dryrun $force $(subst_option non_interactive --auto) $PKGLIST
+        else
+            echo "There are no orphan packages in the system."
+        fi
+        return 0
         ;;
+esac
+
+case $PMTYPE in
     apt-dpkg|aptitude-dpkg)
         assure_exists deborphan
         showcmd deborphan
@@ -3012,7 +2991,7 @@ epm_epm_install()
 {
 
     if [ "$BASEDISTRNAME" = "alt" ] && [ "$DISTRVERSION" != "Sisyphus" ] && [ "$EPMMODE" = "package" ] ; then
-        if __epm_check_if_package_from_repo eepm ; then
+        if epm status --original eepm ; then
             warning "Using external (Korinf) repo is forbidden for stable ALT branch $DISTRVERSION."
             info "Check https://bugzilla.altlinux.org/44314 for reasons."
             info "You can install eepm package from Korinf manually, check instruction at https://eepm.ru"
@@ -4506,6 +4485,9 @@ epm_kernel_update()
     dnf-rpm)
         docmd epm install kernel
         ;;
+    apt-*)
+        echo "Skipping: kernel package will update during dist-upgrade"
+        ;;
     *)
         fatal "Have no suitable command for $PMTYPE"
         ;;
@@ -5701,16 +5683,26 @@ __epm_play_install()
 __epm_play_initialize_ipfs()
 {
     if [ -d "$(dirname "$epm_ipfs_db")" ] ; then
-        export EGET_IPFS_DB="$eget_ipfs_db"
-        if [ ! -r "$EGET_IPFS_DB" ] ; then
-            sudorun touch "$EGET_IPFS_DB" >&2
-            sudorun chmod -v a+rw "$EGET_IPFS_DB" >&2
+        local URL="https://eepm.ru/app-versions"
+        if [ ! -r "$eget_ipfs_db" ] ; then
+            sudorun touch "$eget_ipfs_db" >&2
+            sudorun chmod -v a+rw "$eget_ipfs_db" >&2
             # TODO: update this DB every time when changed (and get from IPFS as sign it works.)
             # get initial db from server
-            local URL="https://eepm.ru/app-versions"
-            info "Initialize IPFS DB in $EGET_IPFS_DB file and fill it with data from $URL/eget-ipfs-db.txt"
-            docmd eget -q -O $EGET_IPFS_DB "$URL/eget-ipfs-db.txt"
+            info "Initialize local IPFS DB in $eget_ipfs_db file and fill it with data from $URL/eget-ipfs-db.txt"
+            docmd eget -q -O $eget_ipfs_db "$URL/eget-ipfs-db.txt"
+        else
+            # update
+            local t=$(mktemp) || fatal
+            info "Updating local IPFS DB in $eget_ipfs_db file from $URL/eget-ipfs-db.txt"
+            docmd eget -q -O $t "$URL/eget-ipfs-db.txt" || warning "Can't update IPFS DB"
+            if [ -s "$t" ] ; then
+                echo >>$t
+                cat $eget_ipfs_db >>$t
+                sort -u < $t | grep -v "^$" > $eget_ipfs_db
+            fi
         fi
+        export EGET_IPFS_DB="$eget_ipfs_db"
     else
         warning "ipfs db dir $eget_ipfs_db is not exists, skipping --ipfs"
     fi
@@ -5750,7 +5742,8 @@ case "$1" in
     --update)
         shift
         local CMDUPDATE="--update"
-        [ -n "$force" ] && CMDUPDATE="--run"
+        # check --force on common.sh side
+        #[ -n "$force" ] && CMDUPDATE="--run"
 
         if [ -z "$1" ] ; then
             fatal "run --update with 'all' or a project name"
@@ -7272,10 +7265,6 @@ get_fix_release_pkg()
         echo "apt-conf-$TO"
         # apt-conf-sisyphus and apt-conf-branch conflicts
         epm installed apt-conf-branch && echo "apt-conf-branch-"
-        #for i in apt apt-rsync libapt libpackagekit-glib librpm7 packagekit rpm synaptic realmd libldap2 ; do
-        #    epm installed $i && echo "$i"
-        #done
-
     else
         epm installed apt-conf-branch && echo "apt-conf-branch" && epm installed apt-conf-sisyphus && echo "apt-conf-sisyphus-"
     fi
@@ -8331,7 +8320,6 @@ __epm_have_repack_rule()
     # skip repacking on non ALT systems
     [ "$BASEDISTRNAME" = "alt" ] || return 1
 
-    # skip for packages built with repack
     local packager="$(epm print field Packager for "$1" 2>/dev/null)"
     [ "$packager" = "EPM <support@etersoft.ru>" ] && return 1
     [ "$packager" = "EPM <support@eepm.ru>" ] && return 1
@@ -10967,34 +10955,28 @@ __epm_vendor_ok_scripts()
     return $res
 }
 
-__epm_get_rpm_pkgvendor()
-{
-    local pkg="$1"
-
-    # skip checking if the package is unaccessible
-    local rpmversion="$(epm print field Version for "$pkg" 2>/dev/null)"
-    [ -n "$rpmversion" ] || return
-
-    epm print field Vendor for "$pkg" 2>/dev/null
-}
-
 __epm_print_warning_for_nonalt_packages()
 {
     # only ALT
     [ "$BASEDISTRNAME" = "alt" ] || return 0
 
+
     local i
     for i in $* ; do
-        local vendor
-        # TODO: check only for rpm
-        vendor="$(__epm_get_rpm_pkgvendor "$i")"
+        if epm_status_repacked "$i" ; then
+            warning "%%% You are trying install package $i repacked from third-party software source. Use it at your own discretion. %%%"
+            continue
+        fi
 
-        local packager="$(epm print field Packager for "$i" 2>/dev/null)"
+        if epm_status_thirdparty "$i" ; then
+            warning "%%% You are trying install package $i from third-party software source. Use it at your own discretion. %%%"
+            continue
+        fi
 
-        # TODO: check GPG or some other mark
-        echo "$packager" | grep -q "@altlinux" && [ "$vendor" = "ALT Linux Team" ] && return 0
-
-        warning "%%% You are trying install package $i from third-party software source. Use it at your own discretion. %%%"
+        if ! epm_status_original "$i" ; then
+            warning "%%% You are trying install package $i not from official $DISTRNAME/$DISTRVERSION repository. Use it at your own discretion. %%%"
+            continue
+        fi
     done
 }
 
@@ -11006,10 +10988,20 @@ __epm_check_vendor()
     # only ALT
     [ "$BASEDISTRNAME" = "alt" ] || return 0
 
+
     local i
     for i in $* ; do
+        if ! epm_status_validate "$i" ; then
+            # it is missed package probably (package remove case)
+            if is_installed "$i" ; then
+                warning "Can't get any info for $i package. Scripts are DISABLED for package $i. Use --scripts if you need run scripts from such packages."
+            fi
+            noscripts="--noscripts"
+            continue
+        fi
+
         local vendor
-        vendor="$(__epm_get_rpm_pkgvendor "$i")"
+        vendor="$(epm print field Vendor for "$i")"
 
         if [ -z "$vendor" ] ; then
             warning "Can't get info about vendor for $i package. Scripts are DISABLED for package $i. Use --scripts if you need run scripts from such packages."
@@ -11017,9 +11009,8 @@ __epm_check_vendor()
             continue
         fi
 
-        # TODO: check GPG
-        # check separately to be quiet
-        [ "$vendor" = "ALT Linux Team" ] && continue
+        epm_status_original "$i" && continue
+        epm_status_repacked "$i" && continue
 
         if __epm_vendor_ok_scripts "$vendor" ; then
             warning "Scripts are ENABLED for package $i from outside vendor '$vendor' (this vendor is listed in $CONFIGDIR/vendorallowscripts.list).  Use --noscripts if you need disable scripts in such packages."
@@ -11400,6 +11391,12 @@ epm_stats()
 # File bin/epm-status:
 
 
+epm_status_validate()
+{
+    local pkg="$1"
+    local rpmversion="$(epm print field Version for "$pkg" 2>/dev/null)"
+    [ -n "$rpmversion" ]
+}
 
 epm_status_original()
 {
@@ -11409,9 +11406,25 @@ epm_status_original()
 
     case $DISTRNAME in
         ALTLinux|ALTServer)
-            #[ "$(epm print field Vendor for package $pkg)" = "ALT Linux Team" ] && return
+            epm_status_validate $pkg || return 1
             epm_status_repacked $pkg && return 1
-            __epm_check_if_package_from_repo $pkg && return
+
+            # not for all packages
+            #[ "$(epm print field Vendor for package $pkg)" = "ALT Linux Team" ] || return
+
+            local distribution
+            distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
+            echo "$distribution" | grep -q "^ALT" || return 1
+
+            # mc in Sisyphus has not a signature
+            #local sig
+            #sig="$(epm print field sigpgp for "$pkg" 2>/dev/null )"
+            #[ "$sig" = "(none)" ] && return 1
+
+            # FIXME: how to check if the package is from ALT repo (verified)?
+            local release="$(epm print release from package "$pkg" 2>/dev/null )"
+            echo "$release" | grep -q "^alt" || return 1
+            return 0
             ;;
         *)
             fatal "Unsupported $DISTRNAME"
@@ -11428,6 +11441,7 @@ epm_status_repacked()
 
     case $BASEDISTRNAME in
         alt)
+            epm_status_validate $pkg || return
             local packager="$(epm print field Packager for "$1" 2>/dev/null)"
             [ "$packager" = "EPM <support@etersoft.ru>" ] && return 0
             [ "$packager" = "EPM <support@eepm.ru>" ] && return 0
@@ -11440,7 +11454,7 @@ epm_status_repacked()
 }
 
 
-epm_status_thirdpart()
+epm_status_thirdparty()
 {
     local pkg="$1"
 
@@ -11452,6 +11466,7 @@ epm_status_thirdpart()
             #local packager="$(epm print field Packager for "$1" 2>/dev/null)"
             #echo "$packager" && grep -q "altlinux" && return 0
             #echo "$packager" && grep -q "basealt" && return 0
+            epm_status_validate $pkg || return 1
 
             local distribution
             distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
@@ -11475,8 +11490,9 @@ Usage: epm status [options] <package>
 Options:
   --installed           check if <package> is installed
   --original            check if <package> is from distro repo
-  --thirdpart           check if <package> from a third part source (didn't packed for this distro)
+  --thirdparty          check if <package> from a third-party source (didn't packed for this distro)
   --repacked            check if <package> was repacked with epm repack
+  --validate            check if <package> is accessible (we can get a fields from it)
 
 EOF
 }
@@ -11506,12 +11522,16 @@ epm_status()
             epm_status_original "$@"
             return
             ;;
-        --thirdpart)
-            epm_status_thirdpart "$@"
+         --third-party|--thirdparty|--thirdpart)
+            epm_status_thirdparty "$@"
             return
             ;;
         --repacked)
             epm_status_repacked "$@"
+            return
+            ;;
+        --validate)
+            epm_status_validate "$@"
             return
             ;;
         *)
@@ -11593,7 +11613,7 @@ get_latest_version()
 __check_for_epm_version()
 {
     # skip update checking for eepm from repo (ALT bug #44314)
-    [ "$BASEDISTRNAME" = "alt" ] &&  [ "$DISTRVERSION" != "Sisyphus" ] && __epm_check_if_package_from_repo eepm && return
+    [ "$BASEDISTRNAME" = "alt" ] &&  [ "$DISTRVERSION" != "Sisyphus" ] && epm status --original eepm && return
 
     local latest="$(get_latest_version eepm)"
     #[ -z "$latest" ] && return
@@ -13544,7 +13564,11 @@ get_ipfs_brave()
 ipfs_api_access()
 {
     [ -n "$IPFS_CMD" ] || fatal "IPFS is disabled"
-    verdocmd $IPFS_CMD --api $IPFS_API $ipfs_diag_timeout diag sys >/dev/null
+    if [ -n "$verbose" ] ; then
+         verdocmd $IPFS_CMD --api $IPFS_API $ipfs_diag_timeout diag sys >/dev/null
+    else
+         verdocmd $IPFS_CMD --api $IPFS_API $ipfs_diag_timeout diag sys >/dev/null 2>/dev/null
+    fi
 }
 
 ipfs_check()
