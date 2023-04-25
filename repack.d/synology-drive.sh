@@ -45,9 +45,9 @@ remove_file /usr/lib/nautilus/extensions-4/libnautilus-drive-extension-4.so
 #   synology-drive: Depends: libc.so.6(GLIBC_2.33)(64bit) but it is not installable
 #                  Depends: libc.so.6(GLIBC_2.34)(64bit) but it is not installable
 #                  Depends: libstdc++.so.6(GLIBCXX_3.4.29)(64bit) but it is not installable
-remove_file $PRODUCTDIR/package/cloudstation/icon-overlay/14/lib/plugin-cb-4.so
+remove_file $PRODUCTDIR/package/cloudstation/icon-overlay/14/lib/plugin-cb-4.so || :
 # skip nautilus support
-remove_file $PRODUCTDIR/package/cloudstation/icon-overlay/14/lib/plugin-cb.so
+remove_file $PRODUCTDIR/package/cloudstation/icon-overlay/14/lib/plugin-cb.so || :
 # TODO: parse
 # https://www.synology.com/api/support/findDownloadInfo?lang=ru-ru&product=DS2411%2B&major=6&minor=2
 
