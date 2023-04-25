@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.52.7
+Version: 3.53.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -97,6 +97,22 @@ a discussion about extra requirements.
 
 
 %changelog
+* Tue Apr 25 2023 Vitaly Lipatov <lav@altlinux.ru> 3.53.0-alt1
+- epm repack microsoft-edge: use one file, add conflicts
+- epm play: update IPFS DB every time (and merge with sort)
+- epm status: add --validate (check for package correctness)
+- epm play: add check for origin of install repo for all targets
+- epm play: fix --force handling
+- fatal(): add epm version to error message
+- epm status --original: don't check Signature field
+- epm autoorphans: don't call epm remove without packages
+- pkgallowscripts.list: add lsb-cprocsp exclude
+- i586-fix.sh: comment out NetworkManager-libnm
+- make epm update-kernel no fatal on apt systems
+- epm play: rewrite to support set version where possible
+- rewrite check for package vendor and package source
+- rename --thirdpart to --thirdparty
+
 * Mon Apr 24 2023 Vitaly Lipatov <lav@altlinux.ru> 3.52.7-alt1
 - makefile: drop bashisms
 - epm restore: add meson.build support
