@@ -15,9 +15,6 @@ Source: %name-%version.tar
 
 BuildArchitectures: noarch
 
-# use distr_vendor from it
-BuildRequires: rpm-build-intro
-
 %if "%_vendor" == "alt"
 Obsoletes: epm
 Provides: epm = %EVR
@@ -62,8 +59,6 @@ a discussion about extra requirements.
 %setup
 
 %install
-# install to datadir and so on
-# do not use uncommon makeinstall_std here
 %make_install install DESTDIR=%buildroot \
 	datadir=%_datadir bindir=%_bindir mandir=%_mandir \
 	sysconfdir=%_sysconfdir version=%version-%release
