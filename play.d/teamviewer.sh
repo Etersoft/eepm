@@ -2,7 +2,6 @@
 
 PKGNAME="teamviewer"
 SUPPORTEDARCHES="x86_64 armhf"
-VERSION="$2"
 DESCRIPTION="Teamviewer from the official site"
 
 . $(dirname $0)/common.sh
@@ -27,7 +26,7 @@ repack=''
 [ "$(epm print info -p)" = "deb" ] || repack='--repack'
 
 # epm uses eget to download * names
-epm $repack install "https://download.teamviewer.com/download/linux/$(epm print constructname $PKGNAME "$VERSION")" || exit
+epm $repack install "https://download.teamviewer.com/download/linux/$(epm print constructname $PKGNAME)" || exit
 
 cat <<EOF
 

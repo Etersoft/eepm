@@ -13,5 +13,7 @@ esac
 
 . $(dirname $0)/common.sh
 
+[ "$VERSION" = "*" ] && VERSION="[0-9]*"
+
 PKGURL=$(epm tool eget --list --latest https://rudesktop.ru/ $PKGNAME-$VERSION.deb)
 epm install $PKGURL
