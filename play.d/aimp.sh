@@ -3,6 +3,7 @@
 PKGNAME=aimp
 SUPPORTEDARCHES="x86_64"
 DESCRIPTION="AIMP (Wine based audio player) from the official site"
+URL="https://www.aimp.ru/?do=download&os=linux"
 
 . $(dirname $0)/common.sh
 

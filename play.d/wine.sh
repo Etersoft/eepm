@@ -7,8 +7,21 @@ TIPS="Run epm play wine=wine-vanilla to install wine-vanilla package"
 
 MAIN=wine
 
-vendor="$(epm print info -s)" ; [ "$vendor" = "alt" ] || { echo "Only ALT distros is supported for now" ; exit 1 ; }
+vendor="$(epm print info -s)"
 arch="$(epm print info -a)"
+
+if [ "$vendor" != "alt" ] ; then
+    # Устанавливаем wine
+    epm install $PKGNAME || exit
+
+    case $arch in
+        x86_64)
+            # Доставляем пропущенные модули (подпакеты) для установленных 64-битных
+            epm prescription i586-fix
+            ;;
+        esac
+    exit
+fi
 
 PKGCOMMON="wine-mono wine-gecko winetricks"
 

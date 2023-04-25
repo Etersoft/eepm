@@ -3,6 +3,7 @@
 PKGNAME=Pencil
 REPOPKGNAME=pencil
 SUPPORTEDARCHES="x86_64 x86"
+VERSION="$2"
 DESCRIPTION="Pencil from the official site"
 URL="https://pencil.evolus.vn/"
 
@@ -30,7 +31,7 @@ repack=''
 # https://pencil.evolus.vn/dl/V3.1.1.ga/Pencil_3.1.1.ga_amd64.deb
 # https://pencil.evolus.vn/dl/V3.1.1.ga/Pencil_3.1.1.ga_i386.deb
 
-PKGMASK="$(epm print constructname $PKGNAME "*.ga" $arch)"
+PKGMASK="$(epm print constructname $PKGNAME "$VERSION.ga" $arch)"
 
 PKGURL="$(epm tool eget --list --latest https://pencil.evolus.vn/Downloads.html $PKGMASK)" || fatal "Can't get package URL"
 epm $repack install "$PKGURL"

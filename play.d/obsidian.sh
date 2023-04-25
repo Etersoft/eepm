@@ -2,6 +2,7 @@
 
 PKGNAME=obsidian
 SUPPORTEDARCHES="x86_64"
+VERSION="$2"
 DESCRIPTION='Obsidian from the official site'
 
 . $(dirname $0)/common.sh
@@ -9,7 +10,6 @@ DESCRIPTION='Obsidian from the official site'
 arch=amd64
 pkgtype=deb
 
-PKG=$(epm tool eget --list --latest https://github.com/obsidianmd/obsidian-releases/releases/ "$PKGNAME*$arch.$pkgtype") || fatal "Can't get package URL"
-[ -n "$PKG" ] || fatal "Can't get package URL"
+PKGURL=$(epm tool eget --list --latest https://github.com/obsidianmd/obsidian-releases/releases/ "$PKGNAME*$VERSION*$arch.$pkgtype") || fatal "Can't get package URL"
 
-epm install "$PKG"
+epm install "$PKGURL"

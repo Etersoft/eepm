@@ -4,6 +4,7 @@ PKGNAME=virtualhere
 PRODUCTDIR=/opt/$PKGNAME
 BINNAME=vhusbd
 SUPPORTEDARCHES="x86_64 armhf mips mipsel aarch64 x86"
+VERSION="$2"
 DESCRIPTION='Generic VirtualHere USB Server from the official site'
 
 . $(dirname $0)/common.sh
@@ -55,8 +56,13 @@ pack_tar() {
     a='' tar cf $tarname .$(dirname $dest)
 }
 
-VERSION="$(epm tool eget -O- https://virtualhere.com/usb_server_software | grep "<b>Version [0-9.]*</b>" | sed -e 's|.*<b>Version \([0-9.]*\)</b>.*|\1|')"
-[ -n "$VERSION" ] || fatal "Can't get version for $PKGNAME"
+# FIXME
+VERSION="*"
+if [ "$VERSION" = "*" ] ; then
+    VERSION="$(epm tool eget -O- https://virtualhere.com/usb_server_software | grep "<b>Version [0-9.]*</b>" | sed -e 's|.*<b>Version \([0-9.]*\)</b>.*|\1|')"
+    [ -n "$VERSION" ] || fatal "Can't get version for $PKGNAME"
+fi
+
 PKG=$PKGNAME-$VERSION.tar
 pack_tar $PKG opt/$PKGNAME/$BINNAME
 

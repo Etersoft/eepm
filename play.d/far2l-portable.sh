@@ -18,6 +18,6 @@ case $arch in
         fatal "Unsupported arch $arch for $(epm print info -d)"
 esac
 
-
+VERSION="2.4"
 PKGURL="https://github.com/unxed/far2l-deb/raw/master/portable/far2l_portable_$arch.tar.gz"
-epm pack --install $PKGNAME "$PKGURL" "2.4"
+epm pack --install $PKGNAME "$PKGURL" "$VERSION"

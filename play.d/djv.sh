@@ -2,18 +2,18 @@
 
 PKGNAME=DJV2
 SUPPORTEDARCHES="x86_64"
+VERSION="$2"
 DESCRIPTION="DJV2 - Professional media review software for VFX, animation, and film production"
-
 
 . $(dirname $0)/common.sh
 
 pkgtype=$(epm print info -p)
 case $pkgtype in
     rpm)
-        mask="DJV2-*.x86_64.rpm"
+        mask="DJV2-${VERSION}.x86_64.rpm"
         ;;
     deb)
-        mask="DJV2_*_amd64.deb"
+        mask="DJV2_${VERSION}_amd64.deb"
         ;;
 esac
 

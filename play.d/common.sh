@@ -66,6 +66,45 @@ get_pkgvendor()
     epm print field Vendor for package $1
 }
 
+check_alternative_pkgname()
+{
+    [ -n "$BASEPKGNAME" ] || BASEPKGNAME="$PKGNAME"
+
+    local i
+    for i in $PRODUCTALT ; do
+        if [ "$i" = "''" ] ; then
+            PKGNAME=$BASEPKGNAME
+            continue
+        fi
+        if [ "$VERSION" = "$i" ] ; then
+            PKGNAME=$BASEPKGNAME-$i
+            VERSION=""
+            return
+        fi
+    done
+    # when VERSION is not in PRODUCTALT
+    for i in $PRODUCTALT ; do
+        [ "$i" = "''" ] && continue
+        if epm installed $BASEPKGNAME-$i ; then
+            PKGNAME=$BASEPKGNAME-$i
+            break
+        fi
+    done
+}
+
+# support direct run the script
+if [ -x "../bin/epm" ] ; then
+    export PATH="$(realpath ../bin):$PATH"
+fi
+
+if [ -z "$SUDO" ] && [ "$UID" != "0" ] ; then
+    SUDO="sudo"
+fi
+
+
+# set PKGNAME to $BASEPKGNAME-$VERSION if $VERSION is found in PRODUCTALT
+[ -n "$PRODUCTALT" ] && check_alternative_pkgname
+
 case "$1" in
     "--remove")
         epm remove $PKGNAME
@@ -146,15 +185,6 @@ esac
 
 # --update/--run
 
-# support direct run the script
-if [ -x "../bin/epm" ] ; then
-    export PATH="$(realpath ../bin):$PATH"
-fi
-
-if [ -z "$SUDO" ] && [ "$UID" != "0" ] ; then
-    SUDO="sudo"
-fi
-
 is_supported_arch "$(epm print info -a)" || fatal "Only '$SUPPORTEDARCHES' architectures is supported"
 
 . $(dirname $0)/common-outformat.sh
@@ -209,10 +239,9 @@ is_repacked_package()
     return 0
 }
 
+
 # skip install if there is package installed not via epm play
 is_repacked_package $REPOPKGNAME || exit 0
 
-# set version when update
-if [ -z "$VERSION" ] ; then
-    [ -z "$2" ] || VERSION="$2"
-fi
+# default version value (can be overrided with arg $2 or by update)
+[ -n "$VERSION" ] || VERSION="*"

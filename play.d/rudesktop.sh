@@ -2,9 +2,8 @@
 
 PKGNAME=rudesktop
 SUPPORTEDARCHES="x86_64"
+VERSION="$2"
 DESCRIPTION="RuDesktop for Linux from the official site"
-
-. $(dirname $0)/common.sh
 
 case "$(epm print info -d)" in
   AstraLinux*)
@@ -12,5 +11,7 @@ case "$(epm print info -d)" in
       ;;
 esac
 
-URL=$(epm tool eget --list --latest https://rudesktop.ru/ $PKGNAME-1*.deb)
-epm install $URL
+. $(dirname $0)/common.sh
+
+PKGURL=$(epm tool eget --list --latest https://rudesktop.ru/ $PKGNAME-$VERSION.deb)
+epm install $PKGURL

@@ -2,6 +2,7 @@
 
 PKGNAME=whatsapp-for-linux
 SUPPORTEDARCHES="x86_64"
+VERSION="$2"
 DESCRIPTION='' #"An unofficial WhatsApp desktop application for Linux"
 
 . $(dirname $0)/common.sh
@@ -13,6 +14,6 @@ DESCRIPTION='' #"An unofficial WhatsApp desktop application for Linux"
 #        ;;
 #esac
 arch=x86_64
-URL=$(epm tool eget --list --latest https://github.com/eneshecan/whatsapp-for-linux/releases "$PKGNAME-*-$arch.AppImage") || fatal "Can't get package URL"
+URL=$(epm tool eget --list --latest https://github.com/eneshecan/whatsapp-for-linux/releases "$PKGNAME-$VERSION-$arch.AppImage") || fatal "Can't get package URL"
 epm install $URL
 

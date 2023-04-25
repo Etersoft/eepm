@@ -2,13 +2,14 @@
 
 PKGNAME=liteide
 SUPPORTEDARCHES="x86_64 x86"
+VERSION="$2"
 DESCRIPTION="LiteIDE is a simple, open source, cross-platform Go IDE. From the official site"
 
 . $(dirname $0)/common.sh
 
 archbit="$(epm print info -b)"
 
-PKGURL=$(epm tool eget --list --latest https://github.com/visualfc/liteide/releases "liteidex*.linux$archbit-qt5*-system.tar.gz") #"
+PKGURL=$(epm tool eget --list --latest https://github.com/visualfc/liteide/releases "liteidex$VERSION.linux$archbit-qt5*-system.tar.gz") #"
 [ -n "$PKGURL" ] || fatal "Can't get package URL"
 
 # cd to tmp dir

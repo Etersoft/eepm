@@ -2,6 +2,7 @@
 
 PKGNAME=iptvnator
 SUPPORTEDARCHES="x86_64 aarch64"
+VERSION="$2"
 DESCRIPTION='IPTV player from the official site'
 
 . $(dirname $0)/common.sh
@@ -18,7 +19,7 @@ esac
 
 pkgtype=deb
 
-PKG=$(epm tool eget --list --latest https://github.com/4gray/iptvnator/releases/ "$PKGNAME*$arch.$pkgtype") || fatal "Can't get package URL"
+PKG=$(epm tool eget --list --latest https://github.com/4gray/iptvnator/releases/ "$PKGNAME*$VERSION*$arch.$pkgtype") || fatal "Can't get package URL"
 [ -n "$PKG" ] || fatal "Can't get package URL"
 
 epm install "$PKG"

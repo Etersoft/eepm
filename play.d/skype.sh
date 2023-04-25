@@ -2,6 +2,7 @@
 
 PKGNAME=skypeforlinux
 SUPPORTEDARCHES="x86_64"
+VERSION="$2"
 DESCRIPTION="Skype for Linux - Stable/Release Version from the official site"
 
 . $(dirname $0)/common.sh
@@ -11,16 +12,11 @@ DESCRIPTION="Skype for Linux - Stable/Release Version from the official site"
 #pkgtype=$(epm print info -p)
 pkgtype=deb
 
-# don't used
-complex_get()
-{
-    pkgtype=deb
+if [ "$VERSION" != "*" ] ; then
     # https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=skypeforlinux-stable-bin
-    _pkgname=skypeforlinux
-    pkgver=8.65.0.78
-    PKG= "https://repo.skype.com/deb/pool/main/s/${_pkgname}/${_pkgname}_${pkgver}_amd64.deb"
-}
+    PKGURL="https://repo.skype.com/deb/pool/main/s/${PKGNAME}/${PKGNAME}_${VERSION}_amd64.deb"
+else
+    PKGURL="https://repo.skype.com/latest/$PKGNAME-64.$pkgtype"
+fi
 
-PKG="https://repo.skype.com/latest/skypeforlinux-64.$pkgtype"
-
-epm install "$PKG"
+epm install "$PKGURL"

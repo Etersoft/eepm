@@ -2,13 +2,14 @@
 
 PKGNAME=portproton
 SUPPORTEDARCHES="x86_64"
+VERSION="$2"
 DESCRIPTION='PortProton (from the repository if the package is there, or from the official site)'
 
 . $(dirname $0)/common.sh
 
 res=0
 if ! epm install portproton ; then
-    PKGURL="$(eget --list --latest https://github.com/Castro-Fidel/PortProton_dpkg/releases portproton_*amd64.deb)"
+    PKGURL="$(eget --list --latest https://github.com/Castro-Fidel/PortProton_dpkg/releases portproton_${VERSION}amd64.deb)"
     epm install $PKGURL
     res=$?
 fi

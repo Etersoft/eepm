@@ -2,6 +2,7 @@
 
 PKGNAME=realvnc-vnc-server
 SUPPORTEDARCHES="x86_64"
+VERSION="$2"
 DESCRIPTION="Real VNC Server from the official site"
 
 . $(dirname $0)/common.sh
@@ -14,10 +15,10 @@ repack=''
 
 case $pkgtype-$arch in
     rpm-x86_64)
-        PKG="VNC-Server-*-Linux-x64.rpm"
+        PKG="VNC-Server-$VERSION-Linux-x64.rpm"
         ;;
     *-x86_64)
-        PKG="VNC-Server-*-Linux-x64.deb"
+        PKG="VNC-Server-$VERSION-Linux-x64.deb"
         ;;
     *)
         fatal "Unsupported arch"

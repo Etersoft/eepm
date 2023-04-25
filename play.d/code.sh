@@ -2,12 +2,11 @@
 
 PKGNAME=code
 SUPPORTEDARCHES="x86_64 armhf aarch64"
+VERSION="$2"
 DESCRIPTION="Visual Studio Code from the official site"
 TIPS="Run epm play code=<version> to install specific version."
 
 . $(dirname $0)/common.sh
-
-VERSION="$2"
 
 arch="$(epm print info -a)"
 case "$arch" in
@@ -30,7 +29,7 @@ pkgtype="$(epm print info -p)"
 # we have workaround for their postinstall script, so always repack rpm package
 [ "$pkgtype" = "deb" ] || repack='--repack'
 
-if [ -n "$VERSION" ] ; then
+if [ "$VERSION" != "*" ] ; then
     URL="https://update.code.visualstudio.com/$VERSION/linux-$pkgtype-$arch/stable"
 else
     URL="https://code.visualstudio.com/sha/download?build=stable&os=linux-$pkgtype-$arch"

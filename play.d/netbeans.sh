@@ -2,6 +2,7 @@
 
 PKGNAME=apache-netbeans
 #SUPPORTEDARCHES="x86_64"
+VERSION="$2"
 DESCRIPTION="Apache NetBeans 17 from the official site"
 
 . $(dirname $0)/common.sh
@@ -9,10 +10,10 @@ DESCRIPTION="Apache NetBeans 17 from the official site"
 pkgtype=$(epm print info -p)
 case $pkgtype in
     rpm)
-        mask="apache-netbeans-*.noarch.rpm"
+        mask="apache-netbeans-$VERSION.noarch.rpm"
         ;;
     *)
-        mask="apache-netbeans_*_all.deb"
+        mask="apache-netbeans_$VERSION_all.deb"
         ;;
 esac
 

@@ -2,6 +2,7 @@
 
 PKGNAME=geogebra-classic
 SUPPORTEDARCHES="x86_64 x86"
+VERSION="$2"
 DESCRIPTION="Geogebra 6 from the official site"
 
 . $(dirname $0)/common.sh
@@ -23,10 +24,10 @@ repack=''
 
 case $pkgtype in
     deb)
-        epm install "http://www.geogebra.net/linux/pool/main/g/geogebra-classic/$(epm print constructname $PKGNAME "*" $arch)"
+        epm install "http://www.geogebra.net/linux/pool/main/g/geogebra-classic/$(epm print constructname $PKGNAME "$VERSION" $arch)"
         ;;
     rpm)
-        epm $repack install "http://www.geogebra.net/linux/rpm/$arch/$(epm print constructname $PKGNAME "*" $arch)"
+        epm $repack install "http://www.geogebra.net/linux/rpm/$arch/$(epm print constructname $PKGNAME "$VERSION" $arch)"
         ;;
     *)
         fatal "Unsupported $pkgtype"

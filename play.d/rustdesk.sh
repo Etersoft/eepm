@@ -2,6 +2,7 @@
 
 PKGNAME=rustdesk
 SUPPORTEDARCHES="x86_64 armhf"
+VERSION="$2"
 DESCRIPTION="RustDesk — Display and control your PC and Android devices"
 PRODUCTALT="stable nightly"
 
@@ -11,7 +12,7 @@ arch=$(epm print info -a)
 pkgtype=deb
 
 BRANCH=stable
-if [ "$2" = "nightly" ] ; then
+if [ "$VERSION" = "nightly" ] ; then
     BRANCH=nightly
     SUPPORTEDARCHES="x86_64 aarch64"
     MASK="$PKGNAME-*$arch*.$pkgtype"

@@ -2,6 +2,7 @@
 
 PKGNAME=vk
 SUPPORTEDARCHES="x86_64 x86"
+VERSION="$2"
 DESCRIPTION="VK Messenger from the official site"
 
 . $(dirname $0)/common.sh
@@ -13,6 +14,6 @@ case "$arch" in
         ;;
 esac
 
-URL=$(epm tool eget --list --latest https://desktop.userapi.com/rpm/master/ "*.$arch.rpm")
+PKGURL=$(epm tool eget --list --latest https://desktop.userapi.com/rpm/master/ "$PKGNAME-$VERSION.$arch.rpm")
 
-epm --repack install $URL
+epm --repack install $PKGURL

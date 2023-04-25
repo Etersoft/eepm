@@ -4,6 +4,7 @@
 PKGNAME=chromium-gost-stable
 REPOPKGNAME=chromium-gost
 SUPPORTEDARCHES="x86_64"
+VERSION="$2"
 DESCRIPTION="Chromium with GOST support from the official site"
 
 . $(dirname $0)/common.sh
@@ -13,6 +14,6 @@ DESCRIPTION="Chromium with GOST support from the official site"
 arch=amd64
 pkgtype=deb
 
-PKG=$(epm tool eget --list --latest https://github.com/deemru/chromium-gost/releases "chromium-gost-*linux-$arch.$pkgtype") || fatal "Can't get package URL"
+PKGURL=$(epm tool eget --list --latest https://github.com/deemru/chromium-gost/releases "chromium-gost-$VERSION-linux-$arch.$pkgtype") || fatal "Can't get package URL"
 
-epm install "$PKG"
+epm install "$PKGURL"

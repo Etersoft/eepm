@@ -2,6 +2,7 @@
 
 PKGNAME=rstudio
 SUPPORTEDARCHES="x86_64"
+VERSION="$2"
 DESCRIPTION='RStudio from the official site'
 
 . $(dirname $0)/common.sh
@@ -35,8 +36,7 @@ case $(epm print info -e) in
         ;;
 esac
 
-PKGMASK="$(epm print constructname $PKGNAME "*" $arch $pkgtype "-" "-")"
-PKG="$(epm tool eget --list https://www.rstudio.com/products/rstudio/download/ $PKGMASK | grep $PKGFILTER)" || fatal "Can't get package URL"
-[ -n "$PKG" ] || fatal "Can't get package URL"
+PKGMASK="$(epm print constructname $PKGNAME "$VERSION" $arch $pkgtype "-" "-")"
+PKGURL="$(epm tool eget --list https://www.rstudio.com/products/rstudio/download/ $PKGMASK | grep $PKGFILTER)" || fatal "Can't get package URL"
 
-epm install $repack "$PKG"
+epm install $repack "$PKGURL"

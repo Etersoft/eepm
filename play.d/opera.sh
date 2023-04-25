@@ -1,19 +1,10 @@
 #!/bin/sh
 
-DESCRIPTION="Opera browser from the official site"
-
-PRODUCTALT="stable beta developer"
-
-BRANCH=stable
-if [ "$2" = "beta" ] || epm installed opera-beta ; then
-    BRANCH=beta
-fi
-if [ "$2" = "developer" ] || epm installed opera-developer ; then
-    BRANCH=developer
-fi
-PKGNAME=opera-$BRANCH
-
+BASEPKGNAME=opera
 SUPPORTEDARCHES="x86_64"
+PRODUCTALT="stable beta developer"
+VERSION="$2"
+DESCRIPTION="Opera browser from the official site"
 
 . $(dirname $0)/common.sh
 
@@ -25,10 +16,10 @@ epm install --skip-installed ffmpeg-plugin-browser || epm install --skip-install
 if [ "$(epm print info -p)" = "rpm" ] ; then
     # they put all branch here (rpm only): https://rpm.opera.com/rpm/
     [ "$(epm print info -s)" = "alt" ] && repack='--repack' || repack=''
-    PKGURL="https://rpm.opera.com/rpm/opera_$BRANCH-*-linux-release-x64-signed.rpm"
+    PKGURL="https://rpm.opera.com/rpm/opera_$BRANCH-$VERSION-linux-release-x64-signed.rpm"
     epm install $repack $PKGURL
     exit
 fi
 
-PKGURL="https://deb.opera.com/opera-developer/pool/non-free/o/opera-$BRANCH/$(epm print constructname $PKGNAME "*" $arch deb)"
+PKGURL="https://deb.opera.com/opera-developer/pool/non-free/o/opera-$BRANCH/$(epm print constructname $PKGNAME "$VERSION" $arch deb)"
 epm install "$PKGURL"

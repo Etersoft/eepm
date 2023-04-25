@@ -2,21 +2,19 @@
 
 PKGNAME=softmaker-freeoffice-2021
 SUPPORTEDARCHES="x86_64"
+VERSION="$2"
 DESCRIPTION="SoftMaker Free Office from the official site"
 TIPS="Run epm play freeoffice=<version> to install some specific version"
 
 . $(dirname $0)/common.sh
 
-pkgver="*"
-[ -n "$2" ] && pkgver="$2"
-
 pkgtype=$(epm print info -p)
 case $pkgtype in
     rpm)
-        file="softmaker-freeoffice-$pkgver*.x86_64.rpm"
+        file="softmaker-freeoffice-$VERSION*.x86_64.rpm"
         ;;
     *)
-        file="softmaker-freeoffice-$pkgver*_amd64.deb"
+        file="softmaker-freeoffice-$VERSION*_amd64.deb"
         ;;
 esac
 

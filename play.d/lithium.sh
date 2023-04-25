@@ -11,6 +11,7 @@ case $pkgtype in
 esac
 
 SUPPORTEDARCHES="x86_64"
+VERSION="$2"
 DESCRIPTION="CAD of printed circuit boards"
 
 . $(dirname $0)/common.sh
@@ -18,10 +19,10 @@ DESCRIPTION="CAD of printed circuit boards"
 
 case $pkgtype in
     rpm)
-        mask="$PKGNAME-*.x86_64.rpm"
+        mask="$PKGNAME-$VERSION*.x86_64.rpm"
         ;;
     *)
-        mask="$PKGNAME_*_amd64.deb"
+        mask="$PKGNAME_$VERSION*_amd64.deb"
         ;;
 esac
 
