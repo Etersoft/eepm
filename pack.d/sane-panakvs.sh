@@ -5,12 +5,6 @@ RETURNTARNAME="$2"
 
 . $(dirname $0)/common.sh
 
-CURDIR="$(pwd)"
-
-PKGDIR="$(mktemp -d)"
-trap "rm -fr $PKGDIR" EXIT
-cd $PKGDIR || fatal
-
 erc unpack $TAR && cd libsane* || fatal
 
 mkdir -vp usr/share/doc/$PRODUCT
@@ -39,6 +33,6 @@ done
 
 PKGNAME="$(basename $TAR | sed -e "s|libsane-panakvs|$PRODUCT|")"
 
-erc pack $CURDIR/$PKGNAME.tar etc usr
+erc pack $PKGNAME.tar etc usr
 
 return_tar $PKGNAME.tar

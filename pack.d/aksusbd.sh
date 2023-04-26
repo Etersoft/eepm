@@ -5,12 +5,6 @@ RETURNTARNAME="$2"
 
 . $(dirname $0)/common.sh
 
-CURDIR="$(pwd)"
-
-PKGDIR="$(mktemp -d)"
-trap "rm -fr $PKGDIR" EXIT
-cd $PKGDIR || fatal
-
 if echo "$TAR" | grep "Sentinel_LDK_Linux_Run-time_Installer_script.tar.gz" ; then
     erc $TAR || fatal
     TAR="Sentinel_LDK_Linux_Run-time_Installer_script/aksusbd-*.tar.gz"
@@ -35,6 +29,6 @@ case $pkgtype in
         ;;
 esac
 
-cp -v $PRODUCT*/pkg/$pkg $CURDIR || fatal
+mv -v $PRODUCT*/pkg/$pkg . || fatal
 
-return_tar $CURDIR/$pkg
+return_tar $pkg

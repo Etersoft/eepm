@@ -24,6 +24,7 @@ load_helper epm-repack
 [ -n "$EPM_PACK_SCRIPTS_DIR" ] || EPM_PACK_SCRIPTS_DIR="$CONFIGDIR/pack.d"
 
 
+# we run this function in a tmpdir
 __epm_pack()
 {
     local packname="$1"
@@ -35,9 +36,8 @@ __epm_pack()
     [ -x "$repackcode" ] || fatal "Can't find script $repackcode for packname $packname"
     [ -f "$repackcode.rpmnew" ] && warning "There is .rpmnew file(s) in $EPM_PACK_SCRIPTS_DIR dir. The pack script can be outdated."
 
-    tmpdir="$(mktemp -d)"
-    filefortarname="$tmpdir/filefortarname"
-    trap "rm -rf $tmpdir" EXIT
+    # a file to keep filename of generated tarball
+    filefortarname="$(pwd)/filefortarname"
 
     set_sudo
     export SUDO
@@ -50,25 +50,15 @@ __epm_pack()
     #info "Running $($script --description 2>/dev/null) ..."
     ( unset EPMCURDIR ; docmd $CMDSHELL $bashopt $repackcode "$tarname" "$filefortarname" "$packversion" ) || fatal
     returntarname="$(cat "$filefortarname")" || fatal "pack script $repackcode didn't set tarname"
-    rm -rf $tmpdir
 
-    [ -s "$returntarname" ] || fatal "pack script $repackcode didn't return tarname"
-
-    #local newname="$(basename "$returntarname")"
-
-    # now it is by default in the current dir
-    #if [ "$returntarname" != "$(realpath $newname)" ; then
-    #    # repack put its result to the current dir
-    #    mv -v $returntarname . || fatal
-    #fi
+    [ -s "$returntarname" ] || fatal "pack script $repackcode return unexist $returntarname file"
 
     if [ -n "$download_only" ] ; then
+        mv $returntarname $EPMCURDIR
         return
     fi
 
-    trap "rm -v $returntarname" EXIT
-
-    # FIXME: __epm_repack will drop trap
+    # repack if needed
     repacked_pkgs=''
     # repack to our target
     if __epm_repack_if_needed $returntarname ; then
@@ -80,20 +70,21 @@ __epm_pack()
     fi
 
     if [ -n "$repacked_pkgs" ] ; then
-        rm -v $returntarname
-        mv -v $repacked_pkgs . || fatal
-        pkgname=$(pwd)/"$(basename $repacked_pkgs)"
+        # remove packed file if we have repacked one
+        rm -v "$returntarname"
+        # also drop spaces
+        pkgname="$(echo $repacked_pkgs)"
     else
         pkgname="$returntarname"
     fi
 
     if [ -n "$install" ] ; then
-        trap "rm -v $pkgname" EXIT
-        docmd epm install $pkgname
+        docmd epm install "$pkgname"
         return
     fi
 
-    trap "" EXIT
+    # we need put result in the cur dir
+    mv -v "$pkgname" $EPMCURDIR || fatal
 
 }
 
@@ -123,8 +114,9 @@ epm_pack()
         exit
     fi
 
-#TODO
     trap "__epm_remove_tmp_files" EXIT
+    local tmpdir="$(mktemp -d --tmpdir=$BIGTMPDIR)"
+    to_clean_tmp_dirs="$to_clean_tmp_dirs $tmpdir"
 
     local packname="$1"
     local tarname="$2"
@@ -135,15 +127,17 @@ epm_pack()
     if is_url "$tarname"; then
         pkg_urls="$tarname"
         load_helper epm-download
+        cd $tmpdir || fatal
         __handle_pkg_urls_to_install
         # drop spaces and get full path
         tarname="$(realpath $pkg_files)"
     elif [ -d "$tarname" ] ; then
-        fatal "FIXME: implement packing of the dir $tarname?"
-        tarname=''
+        tarname="$(realpath "$tarname")"
+        cd $tmpdir || fatal
     elif [ -s "$tarname" ] ; then
         # get full path for real name
         tarname="$(realpath "$tarname")"
+        cd $tmpdir || fatal
     else
         # just pass name
         true

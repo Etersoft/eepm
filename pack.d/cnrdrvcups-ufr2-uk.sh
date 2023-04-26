@@ -5,12 +5,6 @@ RETURNTARNAME="$2"
 
 . $(dirname $0)/common.sh
 
-CURDIR="$(pwd)"
-
-PKGDIR="$(mktemp -d)"
-trap "rm -fr $PKGDIR" EXIT
-cd $PKGDIR || fatal
-
 if ! echo "$TAR" | grep "linux-UFRII-drv" ; then
     fatal "How no idea how to handle $TAR"
 fi
@@ -42,7 +36,4 @@ case "$(epm print info -p)" in
         ;;
 esac
 
-PKG="$(echo $PKG)"
-cp $PKG $CURDIR || fatal
-
-return_tar $(basename $PKG)
+return_tar $PKG

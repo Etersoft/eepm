@@ -7,9 +7,8 @@ RETURNTARNAME="$2"
 
 [ -s "$FFMPEGDEB" ] || fatal "$FFMPEGDEB is missed"
 
-CURDIR=$(pwd)
-
 # TODO: set via args?
+CURDIR=$(pwd)
 PRODUCTDIR=/opt/chromium-browser
 PKGNAME=chromium-codecs-ffmpeg-extra
 BASEPKGNAME="chromium"
@@ -29,9 +28,7 @@ pack_ffmpeg() {
   exit
 }
 
-DDIR=$(mktemp -d)
-trap "rm -fr $DDIR" EXIT
-cd $DDIR || fatal
+# TODO: use erc
 # direct unpack deb
 a='' ar -x $FFMPEGDEB
 a='' tar xf "data.tar.xz"

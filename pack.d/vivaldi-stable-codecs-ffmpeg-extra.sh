@@ -27,20 +27,17 @@ pack_ffmpeg() {
   DEST="$PRODUCTDIR"
   mkdir -p .$DEST
   cp $SOURCE .$DEST/libffmpeg.so.${VIVALDI_VERSION%\.*\.*}
-  CNAME=$CURDIR/"$(echo "$(basename $SUITABLE_URLS)" | sed -e "s|chromium|$BASEPKGNAME|" -e "s|-0ubuntu.*|-1.tar|")" #"
+  CNAME="$CURDIR/$(echo "$(basename $SUITABLE_URLS)" | sed -e "s|chromium|$BASEPKGNAME|" -e "s|-0ubuntu.*|-1.tar|")" #"
   a='' tar cf $CNAME .$(dirname $DEST)
   return_tar $CNAME
   exit
 }
 
 
-SC=$(mktemp)
-DDIR=$(mktemp -d)
-trap "rm -fr $SC $DDIR" EXIT
-
+SC=tmp_updateffmpeg
 a='' awk 'BEGIN{desk=0}{ if(/^.*--system.*/&&desk==0){desk++} ; if (desk==0) {print} }' < $UPDATEFFMPEG > $SC
 . $SC
-cd $DDIR || fatal
+
 epm tool eget $FFMPEG_URL_DEB || exit
 SUITABLE_URLS=$FFMPEG_URL_DEB
 a='' ar -x *.deb || exit

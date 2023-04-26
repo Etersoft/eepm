@@ -7,12 +7,6 @@ TPRODUCT="Telegram"
 
 . $(dirname $0)/common.sh
 
-CURDIR="$(pwd)"
-
-PKGDIR="$(mktemp -d)"
-trap "rm -fr $PKGDIR" EXIT
-cd $PKGDIR || fatal
-
 erc $TAR || fatal
 
 # use version from tarball
@@ -25,6 +19,6 @@ f=$FPRODUCT
 
 mkdir -p opt/$TPRODUCT || fatal
 cp $f opt/$TPRODUCT/$TPRODUCT || fatal
-erc pack $CURDIR/$PKGNAME.tar opt/$TPRODUCT
+erc pack $PKGNAME.tar opt/$TPRODUCT
 
 return_tar $PKGNAME.tar

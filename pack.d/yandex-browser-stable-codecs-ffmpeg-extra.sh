@@ -7,7 +7,7 @@ RETURNTARNAME="$2"
 
 [ -x "$UPDATEFFMPEG" ] || fatal "$UPDATEFFMPEG is missed"
 
-CURDIR="$(pwd)"
+CURDIR=$(pwd)
 PRODUCTDIR="$(dirname "$UPDATEFFMPEG")"
 BASEPKGNAME=yandex-browser-stable
 
@@ -34,8 +34,7 @@ pack_ffmpeg() {
 URL="https://browser-resources.s3.yandex.net/linux/codecs.json"
 
 # download ffmpeg with upstream script update-ffmpeg but with our pack_ffmpeg function
-SC=$(mktemp)
-trap "rm -f $SC" EXIT
+SC=tmp_updateffmpeg
 sed -e 's|install_ffmpeg &&|pack_ffmpeg \&\&|' \
     -e 's|wget -q-O|epm tool eget -q -O|' \
     -e 's|wget -O|epm tool eget -O |' \
