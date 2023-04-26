@@ -127,6 +127,9 @@ case $PMTYPE in
     urpm-rpm)
         docmd urpmq --list-media active --list-url
         ;;
+    apk)
+        cat /etc/apk/repositories
+        ;;
     zypper-rpm)
         docmd zypper sl -d
         ;;
