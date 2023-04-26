@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.53.1
+Version: 3.54.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -92,6 +92,25 @@ a discussion about extra requirements.
 
 
 %changelog
+* Thu Apr 27 2023 Vitaly Lipatov <lav@altlinux.ru> 3.54.0-alt1
+- epm play: fix synology-chat
+- epm play: add youtube-music
+- epm play: add angie support
+- epm play/pack: add install some Pantum drivers
+- epm play brave: rewrite
+- epm pack: improve working with tmpdir, simplify
+- epm fatal/warning: colorify only key word
+- epm repo add: add Alpine support
+- epm repo addkey: add Alpine support
+- epm repo addkey: add dnf/yum support
+- epm repo addkey: improve ALT support
+- epm pack.d/common.sh: add exit to return_tar()
+- epm play: fix version as second arg
+- epm play wine: fix install with --only-i586
+- epm upgrade: pass -V when --verbose (for apt based systems)
+- epm install: improve --noscripts workaround
+- epm-sh-functions erc(): install p7zip in any case
+
 * Wed Apr 26 2023 Vitaly Lipatov <lav@altlinux.ru> 3.53.1-alt1
 - epm play: add yaradio-yamusic
 - epm play: add lycheeslicer support
