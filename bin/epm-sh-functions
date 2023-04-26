@@ -317,9 +317,10 @@ sudoepm()
 fatal()
 {
     if [ -z "$TEXTDOMAIN" ] ; then
-        set_color $RED
-        echo "Error: $*  (you can discuss the epm $EPMVERSION problem in Telegram: https://t.me/useepm)" >&2
-        restore_color
+        set_color $RED >&2
+        echo -n "ERROR: " >&2
+        restore_color >&2
+        echo "$*  (you can discuss the epm $EPMVERSION problem in Telegram: https://t.me/useepm)" >&2
 #    else
 #        echog "Error in $0: $@" >&2
     fi
@@ -331,9 +332,10 @@ fatal()
 warning()
 {
     if [ -z "$TEXTDOMAIN" ] ; then
-        set_color $YELLOW
-        echo "Warning: $*" >&2
-        restore_color
+        set_color $YELLOW >&2
+        echo -n "WARNING: " >&2
+        restore_color >&2
+        echo "$*" >&2
 #    else
 #        echog "Error in $0: $@" >&2
     fi
