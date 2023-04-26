@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.53.1"
+EPMVERSION="3.54.0"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -333,9 +333,10 @@ sudoepm()
 fatal()
 {
     if [ -z "$TEXTDOMAIN" ] ; then
-        set_color $RED
-        echo "Error: $*  (you can discuss the epm $EPMVERSION problem in Telegram: https://t.me/useepm)" >&2
-        restore_color
+        set_color $RED >&2
+        echo -n "ERROR: " >&2
+        restore_color >&2
+        echo "$*  (you can discuss the epm $EPMVERSION problem in Telegram: https://t.me/useepm)" >&2
     fi
     exit 1
 }
@@ -343,9 +344,10 @@ fatal()
 warning()
 {
     if [ -z "$TEXTDOMAIN" ] ; then
-        set_color $YELLOW
-        echo "Warning: $*" >&2
-        restore_color
+        set_color $YELLOW >&2
+        echo -n "WARNING: " >&2
+        restore_color >&2
+        echo "$*" >&2
     fi
 }
 
@@ -540,12 +542,11 @@ disabled_eget()
 disabled_erc()
 {
 
-    if ! is_command patool ; then
-        if is_command 7z || is_command 7za || is_command 7zr || is_command 7zz ; then
-            :
-        else
-            epm install p7zip
-        fi
+    # install 7zip in any case (can be used)
+    if is_command 7z || is_command 7za || is_command 7zr || is_command 7zz ; then
+        :
+    else
+        epm install p7zip
     fi
 
     # use internal eget only if exists
@@ -733,8 +734,12 @@ __epm_remove_from_tmp_files()
 {
    keep="$1"
    [ -r "$keep" ] || return 0
-   [ -n "$to_remove_pkg_files" ] || return 0
-   to_remove_pkg_files="$(echo "$to_remove_pkg_files" | sed -e "s|$keep||")"
+   if [ -n "$to_remove_pkg_files" ] ; then
+       to_remove_pkg_files="$(echo "$to_remove_pkg_files" | sed -e "s|$keep||")"
+   fi
+   if [ -n "$to_remove_tmp_files" ] ; then
+       to_remove_tmp_files="$(echo "$to_remove_tmp_files" | sed -e "s|$keep||")"
+   fi
 }
 
 __epm_remove_tmp_files()
@@ -743,6 +748,7 @@ __epm_remove_tmp_files()
     if [ -z "$DEBUG" ] ; then
         # TODO: reinvent
         [ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
+        [ -n "$to_remove_tmp_files" ] && rm -f $to_remove_tmp_files
         # hack??
         [ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
         [ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
@@ -751,6 +757,19 @@ __epm_remove_tmp_files()
     return 0
 }
 
+
+remove_on_exit()
+{
+    trap "__epm_remove_tmp_files" EXIT
+    while [ -n "$1" ] ; do
+        if [ -d "$1" ] ; then
+            to_clean_tmp_dirs="$to_clean_tmp_dirs $1"
+        elif [ -f "$1" ] ; then
+            to_clean_tmp_files="$to_clean_tmp_files $1"
+        fi
+        shift
+    done
+}
 
 has_space()
 {
@@ -1086,63 +1105,6 @@ __epm_addrepo_altlinux()
 
 }
 
-__epm_addkey_altlinux()
-{
-    local url="$1"
-    local fingerprint="$2"
-    local comment="$3"
-
-    local name="$(basename "$url" .gpg)"
-
-    [ -s /etc/apt/vendors.list.d/$name.list ] && return
-
-    cat << EOF | sudorun tee /etc/apt/vendors.list.d/$name.list
-simple-key "$name" {
-        FingerPrint "$fingerprint";
-        Name "$comment";
-}
-EOF
-        eget -q -O /tmp/$name.gpg $url || fatal
-        sudorun gpg --no-default-keyring --keyring /usr/lib/alt-gpgkeys/pubring.gpg --import /tmp/$name.gpg
-        rm -f /tmp/$name.gpg
-}
-
-__epm_addkey_deb()
-{
-    local url="$1"
-    local fingerprint="$2"
-    local comment="$3"
-
-    local name="$(basename $url .gpg)"
-
-    [ -s /etc/apt/trusted.gpg.d/$name.gpg ] && return
-
-    if [ -z "$fingerprint" ] ; then
-        set_sudo
-        eget -q -O- "$url" | sudorun apt-key add -
-
-        return
-    fi
-    sudocmd apt-key adv --keyserver "$url" --recv "$fingerprint"
-}
-
-epm_addkey()
-{
-
-case $BASEDISTRNAME in
-    "alt")
-        __epm_addkey_altlinux "$@"
-        return
-        ;;
-esac
-
-case $PMTYPE in
-    apt-dpkg)
-        __epm_addkey_deb "$@"
-        ;;
-esac
-
-}
 
 __epm_addrepo_astra()
 {
@@ -1192,6 +1154,15 @@ __epm_addrepo_astra()
     [ -z "$(tail -n1 /etc/apt/sources.list)" ] || echo "" | sudocmd tee -a /etc/apt/sources.list
     echo "$repo" | sudocmd tee -a /etc/apt/sources.list
     return
+}
+
+__epm_addrepo_alpine()
+{
+    local repo="$1"
+    is_url "$repo" || fatal "Only URL is supported"
+    epm repo list --quiet | grep -q -F "$repo" && return 0
+
+    echo "$repo" | sudocmd tee -a /etc/apk/repositories
 }
 
 __epm_addrepo_deb()
@@ -1254,6 +1225,10 @@ case $BASEDISTRNAME in
     "astra")
         __epm_addrepo_astra $repo
         return
+        ;;
+    "apk")
+        __epm_addrepo_alpine "$repo" || return
+        ;;
 esac
 
 case $PMTYPE in
@@ -3944,8 +3919,14 @@ epm_install_files()
             if [ -n "$noscripts" ] ; then
                 info "Workaround for install packages via apt with --noscripts (see https://bugzilla.altlinux.org/44670)"
                 info "Firstly install package requrements …"
+                # names of packages to be installed
+                local fl="$(epm print name for package $files)"
+                local req="$(docmd epm req --short $files)" || return
+                # exclude package names from requires (req - fl)
+                req="$(estrlist exclude "$fl" "$req")"
                 # TODO: can we install only requires via apt?
-                epm install $(epm req --short $files) || return
+                docmd epm install $req || return
+
                 # retry with rpm
                 # --replacepkgs: Install the Package Even If Already Installed
                 local replacepkgs="$(__epm_get_replacepkgs $files)"
@@ -5063,9 +5044,8 @@ __epm_pack()
     [ -x "$repackcode" ] || fatal "Can't find script $repackcode for packname $packname"
     [ -f "$repackcode.rpmnew" ] && warning "There is .rpmnew file(s) in $EPM_PACK_SCRIPTS_DIR dir. The pack script can be outdated."
 
-    tmpdir="$(mktemp -d)"
-    filefortarname="$tmpdir/filefortarname"
-    trap "rm -rf $tmpdir" EXIT
+    # a file to keep filename of generated tarball
+    filefortarname="$(pwd)/filefortarname"
 
     set_sudo
     export SUDO
@@ -5078,25 +5058,15 @@ __epm_pack()
     #info "Running $($script --description 2>/dev/null) ..."
     ( unset EPMCURDIR ; docmd $CMDSHELL $bashopt $repackcode "$tarname" "$filefortarname" "$packversion" ) || fatal
     returntarname="$(cat "$filefortarname")" || fatal "pack script $repackcode didn't set tarname"
-    rm -rf $tmpdir
 
-    [ -s "$returntarname" ] || fatal "pack script $repackcode didn't return tarname"
-
-    #local newname="$(basename "$returntarname")"
-
-    # now it is by default in the current dir
-    #if [ "$returntarname" != "$(realpath $newname)" ; then
-    #    # repack put its result to the current dir
-    #    mv -v $returntarname . || fatal
-    #fi
+    [ -s "$returntarname" ] || fatal "pack script $repackcode return unexist $returntarname file"
 
     if [ -n "$download_only" ] ; then
+        mv $returntarname $EPMCURDIR
         return
     fi
 
-    trap "rm -v $returntarname" EXIT
-
-    # FIXME: __epm_repack will drop trap
+    # repack if needed
     repacked_pkgs=''
     # repack to our target
     if __epm_repack_if_needed $returntarname ; then
@@ -5108,20 +5078,21 @@ __epm_pack()
     fi
 
     if [ -n "$repacked_pkgs" ] ; then
-        rm -v $returntarname
-        mv -v $repacked_pkgs . || fatal
-        pkgname=$(pwd)/"$(basename $repacked_pkgs)"
+        # remove packed file if we have repacked one
+        rm -v "$returntarname"
+        # also drop spaces
+        pkgname="$(echo $repacked_pkgs)"
     else
         pkgname="$returntarname"
     fi
 
     if [ -n "$install" ] ; then
-        trap "rm -v $pkgname" EXIT
-        docmd epm install $pkgname
+        docmd epm install "$pkgname"
         return
     fi
 
-    trap "" EXIT
+    # we need put result in the cur dir
+    mv -v "$pkgname" $EPMCURDIR || fatal
 
 }
 
@@ -5152,6 +5123,8 @@ epm_pack()
     fi
 
     trap "__epm_remove_tmp_files" EXIT
+    local tmpdir="$(mktemp -d --tmpdir=$BIGTMPDIR)"
+    to_clean_tmp_dirs="$to_clean_tmp_dirs $tmpdir"
 
     local packname="$1"
     local tarname="$2"
@@ -5161,15 +5134,17 @@ epm_pack()
 
     if is_url "$tarname"; then
         pkg_urls="$tarname"
+        cd $tmpdir || fatal
         __handle_pkg_urls_to_install
         # drop spaces and get full path
         tarname="$(realpath $pkg_files)"
     elif [ -d "$tarname" ] ; then
-        fatal "FIXME: implement packing of the dir $tarname?"
-        tarname=''
+        tarname="$(realpath "$tarname")"
+        cd $tmpdir || fatal
     elif [ -s "$tarname" ] ; then
         # get full path for real name
         tarname="$(realpath "$tarname")"
+        cd $tmpdir || fatal
     else
         # just pass name
         true
@@ -5412,7 +5387,7 @@ __run_script()
 
 __get_app_package()
 {
-    __run_script "$1" --package-name "$2" 2>/dev/null
+    __run_script "$1" --package-name "$2" "$3" 2>/dev/null
 }
 
 
@@ -5679,7 +5654,7 @@ __epm_play_install()
        else
            shift
        fi
-       __epm_play_install_one $p $v $options || RES=1
+       __epm_play_install_one "$p" "$v" $options || RES=1
    done
 
    return $RES
@@ -7270,10 +7245,6 @@ get_fix_release_pkg()
         echo "apt-conf-$TO"
         # apt-conf-sisyphus and apt-conf-branch conflicts
         epm installed apt-conf-branch && echo "apt-conf-branch-"
-        #for i in apt apt-rsync libapt libpackagekit-glib librpm7 packagekit rpm synaptic realmd libldap2 ; do
-        #    epm installed $i && echo "$i"
-        #done
-
     else
         epm installed apt-conf-branch && echo "apt-conf-branch" && epm installed apt-conf-sisyphus && echo "apt-conf-sisyphus-"
     fi
@@ -8329,7 +8300,6 @@ __epm_have_repack_rule()
     # skip repacking on non ALT systems
     [ "$BASEDISTRNAME" = "alt" ] || return 1
 
-    # skip for packages built with repack
     local packager="$(epm print field Packager for "$1" 2>/dev/null)"
     [ "$packager" = "EPM <support@etersoft.ru>" ] && return 1
     [ "$packager" = "EPM <support@eepm.ru>" ] && return 1
@@ -8815,7 +8785,7 @@ epm_repo()
     disable)                          # HELPCMD: disable <repo>
         epm_repodisable "$@"
         ;;
-    addkey)                              # HELPCMD: add repository gpg key
+    addkey)                              # HELPCMD: add repository gpg key (by URL or file)
         epm_addkey "$@"
         ;;
     clean)                            # HELPCMD: remove temp. repos (tasks and CD-ROMs)
@@ -8863,6 +8833,129 @@ epm_repo()
 esac
 
 }
+
+# File bin/epm-repo-addkey:
+
+
+
+__epm_get_file_from_url()
+{
+    local tmpfile=$(mktemp)
+    remove_on_exit $tmpfile
+    eget -O $tmpfile $url >/dev/null
+    echo "$tmpfile"
+}
+
+__epm_addkey_altlinux()
+{
+    local url="$1"
+    local fingerprint="$2"
+    local comment="$3"
+    local name="$4"
+    [ -n "$name" ] || name="$(basename "$url" .gpg)"
+
+    [ -s /etc/apt/vendors.list.d/$name.list ] && return
+
+    cat << EOF | sudorun tee /etc/apt/vendors.list.d/$name.list
+simple-key "$name" {
+        FingerPrint "$fingerprint";
+        Name "$comment";
+}
+EOF
+        local tmpfile=$(__epm_get_file_from_url $url) || fatal
+
+        sudocmd gpg --no-default-keyring --keyring /usr/lib/alt-gpgkeys/pubring.gpg --import $tmpfile
+}
+
+
+__epm_addkey_alpine()
+{
+    local url="$1"
+
+    local name="$(basename $url .rsa)"
+
+    local target="/etc/apk/keys/$name.rsa"
+
+    [ -s $target ] && return
+
+    local tmpfile=$(__epm_get_file_from_url $url) || fatal
+    sudocmd cp $tmpfile $target
+}
+
+
+__epm_addkey_dnf()
+{
+    local url="$1"
+    local gpgkeyurl="$2"
+    local nametext="$3"
+    local name="$4"
+
+    # TODO: missed name, nametext, gpgkeyurl (disable gpgcheck=1)
+
+    local target="/etc/yum.repos.d/$name.repo"
+    [ -s $target ] && return
+
+    local tmpfile=$(mktemp)
+    remove_on_exit $tmpfile
+    cat >$tmpfile <<EOF
+[$name]
+name=$nametext
+baseurl=$url
+gpgcheck=1
+enabled=1
+gpgkey=$gpgkeyurl
+EOF
+    chmod 644 $tmpfile
+    sudocmd cp $tmpfile $target
+}
+
+
+__epm_addkey_deb()
+{
+    local url="$1"
+    local fingerprint="$2"
+    local comment="$3"
+    local name="$4"
+    [ -n "$name" ] || name="$(basename "$url" .gpg)"
+
+    [ -s /etc/apt/trusted.gpg.d/$name.gpg ] && return
+
+    if [ -z "$fingerprint" ] ; then
+        local tmpfile=$(__epm_get_file_from_url $url) || fatal
+        sudocmd apt-key add $tmpfile
+
+        return
+    fi
+    sudocmd apt-key adv --keyserver "$url" --recv "$fingerprint"
+}
+
+
+
+epm_addkey()
+{
+
+case $BASEDISTRNAME in
+    "alt")
+        __epm_addkey_altlinux "$@"
+        return
+        ;;
+    "alpine")
+        __epm_addkey_alpine "$@"
+        return
+        ;;
+esac
+
+case $PMTYPE in
+    apt-dpkg)
+        __epm_addkey_deb "$@"
+        ;;
+    dnf-*|yum-*)
+        __epm_addkey_dnf "$@"
+        ;;
+esac
+
+}
+
 
 # File bin/epm-repodisable:
 
@@ -9434,6 +9527,9 @@ case $PMTYPE in
         ;;
     urpm-rpm)
         docmd urpmq --list-media active --list-url
+        ;;
+    apk)
+        cat /etc/apk/repositories
         ;;
     zypper-rpm)
         docmd zypper sl -d
@@ -11796,7 +11892,7 @@ epm_upgrade()
 
     case $PMTYPE in
     apt-rpm|apt-dpkg)
-        local APTOPTIONS="$(subst_option non_interactive -y) $(subst_option verbose "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
+        local APTOPTIONS="$(subst_option non_interactive -y) $(subst_option verbose "-V -o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
         CMD="apt-get $APTOPTIONS $noremove $force_yes dist-upgrade"
         ;;
     aptitude-dpkg)
@@ -13373,20 +13469,26 @@ quiet=''
 verbose=''
 WGETNOSSLCHECK=''
 CURLNOSSLCHECK=''
+AXELNOSSLCHECK=''
 WGETUSERAGENT=''
 CURLUSERAGENT=''
+AXELUSERAGENT=''
 WGETHEADER=''
 CURLHEADER=''
 AXELHEADER=''
 WGETCOMPRESSED=''
 CURLCOMPRESSED=''
+AXELCOMPRESSED=''
 WGETQ='' #-q
 CURLQ='' #-s
+AXELQ='' #-q
 # TODO: aria2c
 # TODO: wget --trust-server-names
 # TODO: 
 WGETNAMEOPTIONS='--content-disposition'
 CURLNAMEOPTIONS='--remote-name --remote-time --remote-header-name'
+AXELNAMEOPTIONS=''
+
 
 LISTONLY=''
 CHECKURL=''
@@ -13405,6 +13507,7 @@ set_quiet()
 {
     WGETQ='-q'
     CURLQ='-s'
+    AXELQ='-q'
     quiet=1
 }
 
@@ -13480,6 +13583,7 @@ while [ -n "$1" ] ; do
         -k|--no-check-certificate)
             WGETNOSSLCHECK='--no-check-certificate'
             CURLNOSSLCHECK='-k'
+            AXELNOSSLCHECK='--insecure'
             ;;
         -H|--header)
             shift
@@ -13491,6 +13595,7 @@ while [ -n "$1" ] ; do
             user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
             WGETUSERAGENT="-U '$user_agent'"
             CURLUSERAGENT="-A '$user_agent'"
+            AXELUSERAGENT="--user-agent='$user_agent'"
             ;;
         --compressed)
             CURLCOMPRESSED='--compressed'
@@ -13654,7 +13759,7 @@ put_cid_and_url()
     is_fileurl "$URL" && return
 
     echo "$URL $CID $FN" >> "$EGET_IPFS_DB"
-    echo "Placed in $EGET_IPFS_DB: $URL $CID $FN"
+    info "Placed in $EGET_IPFS_DB: $URL $CID $FN"
 }
 
 get_filename_by_cid()
@@ -15315,7 +15420,7 @@ help()
 
 COMMAND="$1"
 if [ -z "$COMMAND" ] ; then
-        echo "Run with --help for get command description."
+        echo "Run with --help for get command description." >&2
         exit 1
 fi
 
