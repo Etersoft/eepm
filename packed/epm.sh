@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Copyright (C) 2012-2021  Etersoft
 # Copyright (C) 2012-2021  Vitaly Lipatov <lav@etersoft.ru>
@@ -20,7 +20,7 @@
 PROGDIR=$(dirname "$0")
 PROGNAME=$(basename "$0")
 [ -n "$EPMCURDIR" ] || export EPMCURDIR="$(pwd)"
-CMDSHELL="/bin/sh"
+CMDSHELL="/bin/bash"
 # TODO: pwd for ./epm and which for epm
 [ "$PROGDIR" = "." ] && PROGDIR="$EPMCURDIR"
 if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.53.0"
+EPMVERSION="3.53.1"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1161,7 +1161,7 @@ __epm_addrepo_astra()
     # keywords
     # https://wiki.astralinux.ru/pages/viewpage.action?pageId=3276859
     case "$1-$reponame" in
-        astra-1.7_x86_64)
+        astra-1.7_x86-64)
             # TODO epm repo change http / https
             epm install --skip-installed apt-transport-https ca-certificates || fatal
             # https://wiki.astralinux.ru/pages/viewpage.action?pageId=158598882
@@ -1181,7 +1181,7 @@ __epm_addrepo_astra()
             return
             ;;
         astra-*)
-            fatal "Unsupported distro version $reponame, see '# epm print info' output."
+            fatal "Unsupported distro version $1-$reponame, see '# epm print info' output."
             ;;
     esac
 
@@ -4126,126 +4126,6 @@ epm_install_files()
     epm_install_names $files
 }
 
-epm_print_install_command()
-{
-    # print out low level command by default (wait --low-level for control it)
-    #[ -z "$1" ] && return
-    [ -z "$1" ] && [ -n "$pkg_names" ] && return
-    case $PMTYPE in
-        *-rpm)
-            echo "rpm -Uvh --force $nodeps $*"
-            ;;
-        *-dpkg)
-            echo "dpkg -i $*"
-            ;;
-        pkgsrc)
-            echo "pkg_add $*"
-            ;;
-        pkgng)
-            echo "pkg add $*"
-            ;;
-        emerge)
-            # need be placed in /usr/portage/packages/somewhere
-            echo "emerge --usepkg $*"
-            ;;
-        pacman)
-            echo "pacman -U --noconfirm $nodeps $*"
-            ;;
-        slackpkg)
-            echo "/sbin/installpkg $*"
-            ;;
-        npackd)
-            echo "npackdcl add --package=$*"
-            ;;
-        opkg)
-            echo "opkg install $*"
-            ;;
-        eopkg)
-            echo "eopkg install $*"
-            ;;
-        android)
-            echo "pm install $*"
-            ;;
-        termux-pkg)
-            echo "pkg install $*"
-            ;;
-        aptcyg)
-            echo "apt-cyg install $*"
-            ;;
-        tce)
-            echo "tce-load -wi $*"
-            ;;
-        xbps)
-            echo "xbps-install -y $*"
-            ;;
-        appget|winget)
-            echo "$PMTYPE install -s $*"
-            ;;
-        homebrew)
-            # FIXME: sudo and quote
-            echo "brew install $*"
-            ;;
-
-        *)
-            fatal "Have no suitable appropriate install command for $PMTYPE"
-            ;;
-    esac
-}
-
-epm_print_install_names_command()
-{
-    # check for pkg_files to support print out command without pkg names in args
-    #[ -z "$1" ] && [ -n "$pkg_files" ] && return
-    [ -z "$1" ] && return
-    case $PMTYPE in
-        apt-rpm)
-            echo "apt-get -y --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true $APTOPTIONS install $*"
-            return ;;
-        apt-dpkg)
-            # this command  not for complex use. ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive
-            echo "apt-get -y --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true $APTOPTIONS install $*"
-            return ;;
-        aptitude-dpkg)
-            echo "aptitude -y install $*"
-            return ;;
-        yum-rpm)
-            echo "yum -y $YUMOPTIONS install $*"
-            return ;;
-        dnf-rpm)
-            echo "dnf -y $YUMOPTIONS --allowerasing install $*"
-            return ;;
-        urpm-rpm)
-            echo "urpmi --auto $URPMOPTIONS $*"
-            return ;;
-        zypper-rpm)
-            echo "zypper --non-interactive $ZYPPEROPTIONS install $*"
-            return ;;
-        packagekit)
-            echo "pkcon --noninteractive $*"
-            return ;;
-        pacman)
-            echo "pacman -S --noconfirm $*"
-            return ;;
-        choco)
-            echo "choco install $*"
-            return ;;
-        nix)
-            echo "nix-env --install $*"
-            return ;;
-        eopkg)
-            echo "eopkg install $*"
-            return ;;
-        termux-pkg)
-            echo "pkg install $*"
-            return ;;
-        appget|winget)
-            echo "$PMTYPE install $*"
-            return ;;
-        *)
-            fatal "Have no suitable appropriate install command for $PMTYPE"
-            ;;
-    esac
-}
 
 apt_repo_prepare()
 {
@@ -4280,7 +4160,7 @@ epm_install()
 
     if [ -n "$show_command_only" ] ; then
         # TODO: handle pkg_urls too
-        epm_print_install_command $pkg_files
+        epm_print_install_files_command $pkg_files
         epm_print_install_names_command $pkg_names
         return
     fi
@@ -4458,6 +4338,131 @@ epm_install_emerge()
         fi
     done
 }
+
+# File bin/epm-install-print-command:
+
+
+epm_print_install_files_command()
+{
+    # print out low level command by default (wait --low-level for control it)
+    #[ -z "$1" ] && return
+    [ -z "$1" ] && [ -n "$pkg_names" ] && return
+    case $PMTYPE in
+        *-rpm)
+            echo "rpm -Uvh --force $nodeps $*"
+            ;;
+        *-dpkg)
+            echo "dpkg -i $*"
+            ;;
+        pkgsrc)
+            echo "pkg_add $*"
+            ;;
+        pkgng)
+            echo "pkg add $*"
+            ;;
+        emerge)
+            # need be placed in /usr/portage/packages/somewhere
+            echo "emerge --usepkg $*"
+            ;;
+        pacman)
+            echo "pacman -U --noconfirm $nodeps $*"
+            ;;
+        slackpkg)
+            echo "/sbin/installpkg $*"
+            ;;
+        npackd)
+            echo "npackdcl add --package=$*"
+            ;;
+        opkg)
+            echo "opkg install $*"
+            ;;
+        eopkg)
+            echo "eopkg install $*"
+            ;;
+        android)
+            echo "pm install $*"
+            ;;
+        termux-pkg)
+            echo "pkg install $*"
+            ;;
+        aptcyg)
+            echo "apt-cyg install $*"
+            ;;
+        tce)
+            echo "tce-load -wi $*"
+            ;;
+        xbps)
+            echo "xbps-install -y $*"
+            ;;
+        appget|winget)
+            echo "$PMTYPE install -s $*"
+            ;;
+        homebrew)
+            # FIXME: sudo and quote
+            echo "brew install $*"
+            ;;
+
+        *)
+            fatal "Have no suitable appropriate install command for $PMTYPE"
+            ;;
+    esac
+}
+
+epm_print_install_names_command()
+{
+    # check for pkg_files to support print out command without pkg names in args
+    #[ -z "$1" ] && [ -n "$pkg_files" ] && return
+    [ -z "$1" ] && return
+    case $PMTYPE in
+        apt-rpm)
+            echo "apt-get -y --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true $APTOPTIONS install $*"
+            return ;;
+        apt-dpkg)
+            # this command  not for complex use. ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive
+            echo "apt-get -y --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true $APTOPTIONS install $*"
+            return ;;
+        aptitude-dpkg)
+            echo "aptitude -y install $*"
+            return ;;
+        yum-rpm)
+            echo "yum -y $YUMOPTIONS install $*"
+            return ;;
+        dnf-rpm)
+            echo "dnf -y $YUMOPTIONS --allowerasing install $*"
+            return ;;
+        urpm-rpm)
+            echo "urpmi --auto $URPMOPTIONS $*"
+            return ;;
+        zypper-rpm)
+            echo "zypper --non-interactive $ZYPPEROPTIONS install $*"
+            return ;;
+        packagekit)
+            echo "pkcon --noninteractive $*"
+            return ;;
+        pacman)
+            echo "pacman -S --noconfirm $*"
+            return ;;
+        choco)
+            echo "choco install $*"
+            return ;;
+        nix)
+            echo "nix-env --install $*"
+            return ;;
+        eopkg)
+            echo "eopkg install $*"
+            return ;;
+        termux-pkg)
+            echo "pkg install $*"
+            return ;;
+        appget|winget)
+            echo "$PMTYPE install $*"
+            return ;;
+        *)
+            fatal "Have no suitable appropriate install command for $PMTYPE"
+            ;;
+    esac
+}
+
 
 # File bin/epm-kernel_update:
 
@@ -7265,6 +7270,10 @@ get_fix_release_pkg()
         echo "apt-conf-$TO"
         # apt-conf-sisyphus and apt-conf-branch conflicts
         epm installed apt-conf-branch && echo "apt-conf-branch-"
+        #for i in apt apt-rsync libapt libpackagekit-glib librpm7 packagekit rpm synaptic realmd libldap2 ; do
+        #    epm installed $i && echo "$i"
+        #done
+
     else
         epm installed apt-conf-branch && echo "apt-conf-branch" && epm installed apt-conf-sisyphus && echo "apt-conf-sisyphus-"
     fi
@@ -8320,6 +8329,7 @@ __epm_have_repack_rule()
     # skip repacking on non ALT systems
     [ "$BASEDISTRNAME" = "alt" ] || return 1
 
+    # skip for packages built with repack
     local packager="$(epm print field Packager for "$1" 2>/dev/null)"
     [ "$packager" = "EPM <support@etersoft.ru>" ] && return 1
     [ "$packager" = "EPM <support@eepm.ru>" ] && return 1
