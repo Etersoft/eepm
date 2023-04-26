@@ -291,7 +291,7 @@ help()
 
 COMMAND="$1"
 if [ -z "$COMMAND" ] ; then
-        echo "Run with --help for get command description."
+        echo "Run with --help for get command description." >&2
         exit 1
 fi
 
