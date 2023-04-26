@@ -3,6 +3,7 @@
 PKGNAME=wine
 SUPPORTEDARCHES="x86_64 x86"
 DESCRIPTION='Wine 32/64 from the repo'
+VERSION="$2"
 TIPS="Run epm play wine=wine-vanilla to install wine-vanilla package"
 
 MAIN=wine
@@ -25,7 +26,8 @@ fi
 
 PKGCOMMON="wine-mono wine-gecko winetricks"
 
-[ -n "$2" ] && MAIN="$2"
+[ -n "$VERSION" ] && MAIN="$VERSION"
+VERSION=""
 
 if [ "$MAIN" = "wine-etersoft" ] ; then
     PKGCOMMON="wine-etersoft-mono wine-etersoft-gecko wine-etersoft-winetricks"
@@ -42,8 +44,7 @@ fi
 . $(dirname $0)/common.sh
 
 ONLY32=''
-[ "$2" == "--only-i586" ] && ONLY32=1 && shift
-[ -n "$2" ] && MAIN="$2"
+[ "$3" = "--only-i586" ] && ONLY32=1 && shift
 
 if [ "$MAIN" != "wine-etersoft" ] ; then
 
