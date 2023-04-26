@@ -8,28 +8,28 @@ DESCRIPTION="Brave browser from the official site"
 
 . $(dirname $0)/common.sh
 
-arch=x86_64
-pkgtype=rpm
 repack=''
 # we have workaround for their postinstall script, so always repack rpm package
 [ "$(epm print info -p)" = "deb" ] || repack='--repack'
 
-PKG=$(epm tool eget --list --latest https://github.com/brave/brave-browser/releases "$PKGNAME-$VERSION.$arch.$pkgtype")
+# brave-browser-beta-1.51.105-1.x86_64.rpm
+# brave-browser-beta_1.51.105_amd64.deb
 
-if [ -z "$PKG" ] ; then
-    # force use beta
+PKGURL=$(epm tool eget --list --latest https://github.com/brave/brave-browser/releases "$(epm print constructname $PKGNAME "$VERSION")")
+
+if [ -z "$PKGURL" ] ; then
+    # force use beta if can't get stable version
     if [ "$PKGNAME" = "$BASEPKGNAME" ] ; then
         TOREMOVEPKG=$PKGNAME
-        # if there is no stable release, switch to beta
         PKGNAME=$BASEPKGNAME-beta
-        PKG=$(epm tool eget --list --latest https://github.com/brave/brave-browser/releases "$PKGNAME-$VERSION.$arch.$pkgtype")
-        [ -n "$PKG" ] || fatal "Can't get package URL"
+        PKGURL=$(epm tool eget --list --latest https://github.com/brave/brave-browser/releases "$(epm print constructname $PKGNAME "$VERSION")")
+        [ -n "$PKGURL" ] || fatal "Can't get package URL"
 
         echo "Force switching from $TOREMOVEPKG to $PKGNAME ... "
         epm installed $TOREMOVEPKG && epm remove $TOREMOVEPKG
     else
-        fatal "Can't get package URL"
+        fatal "Can't get package URL for $PKGNAME-$VERSION"
     fi
 fi
 
-epm $repack install "$PKG"
+epm $repack install "$PKGURL"
