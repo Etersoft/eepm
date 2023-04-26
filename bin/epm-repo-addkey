@@ -34,8 +34,8 @@ __epm_addkey_altlinux()
     local url="$1"
     local fingerprint="$2"
     local comment="$3"
-
-    local name="$(basename "$url" .gpg)"
+    local name="$4"
+    [ -n "$name" ] || name="$(basename "$url" .gpg)"
 
     [ -s /etc/apt/vendors.list.d/$name.list ] && return
 
@@ -46,9 +46,12 @@ simple-key "$name" {
         Name "$comment";
 }
 EOF
-        eget -q -O /tmp/$name.gpg $url || fatal
-        sudorun gpg --no-default-keyring --keyring /usr/lib/alt-gpgkeys/pubring.gpg --import /tmp/$name.gpg
-        rm -f /tmp/$name.gpg
+        local tmpfile=$(__epm_get_file_from_url $url) || fatal
+
+        sudocmd gpg --no-default-keyring --keyring /usr/lib/alt-gpgkeys/pubring.gpg --import $tmpfile
+}
+
+
 __epm_addkey_alpine()
 {
     local url="$1"
