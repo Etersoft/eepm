@@ -64,7 +64,7 @@ __run_script()
 
 __get_app_package()
 {
-    __run_script "$1" --package-name "$2" 2>/dev/null
+    __run_script "$1" --package-name "$2" "$3" 2>/dev/null
 }
 
 
@@ -335,7 +335,7 @@ __epm_play_install()
        else
            shift
        fi
-       __epm_play_install_one $p $v $options || RES=1
+       __epm_play_install_one "$p" "$v" $options || RES=1
    done
 
    return $RES
