@@ -70,6 +70,7 @@ return_tar()
 {
     [ -n "$RETURNTARNAME" ] || fatal "RETURNTARNAME is empty"
     realpath $1 >$RETURNTARNAME || fatal "Can't save tar name $1 to file $RETURNTARNAME"
+    exit 0
 }
 
 [ -n "$PRODUCT" ] || PRODUCT="$(basename $0 .sh)"
