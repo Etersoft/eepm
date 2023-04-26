@@ -747,8 +747,12 @@ __epm_remove_from_tmp_files()
 {
    keep="$1"
    [ -r "$keep" ] || return 0
-   [ -n "$to_remove_pkg_files" ] || return 0
-   to_remove_pkg_files="$(echo "$to_remove_pkg_files" | sed -e "s|$keep||")"
+   if [ -n "$to_remove_pkg_files" ] ; then
+       to_remove_pkg_files="$(echo "$to_remove_pkg_files" | sed -e "s|$keep||")"
+   fi
+   if [ -n "$to_remove_tmp_files" ] ; then
+       to_remove_tmp_files="$(echo "$to_remove_tmp_files" | sed -e "s|$keep||")"
+   fi
 }
 
 # usage: trap "__epm_remove_tmp_files" EXIT
@@ -758,6 +762,7 @@ __epm_remove_tmp_files()
     if [ -z "$DEBUG" ] ; then
         # TODO: reinvent
         [ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
+        [ -n "$to_remove_tmp_files" ] && rm -f $to_remove_tmp_files
         # hack??
         [ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
         [ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
@@ -766,6 +771,19 @@ __epm_remove_tmp_files()
     return 0
 }
 
+
+remove_on_exit()
+{
+    trap "__epm_remove_tmp_files" EXIT
+    while [ -n "$1" ] ; do
+        if [ -d "$1" ] ; then
+            to_clean_tmp_dirs="$to_clean_tmp_dirs $1"
+        elif [ -f "$1" ] ; then
+            to_clean_tmp_files="$to_clean_tmp_files $1"
+        fi
+        shift
+    done
+}
 
 has_space()
 {
