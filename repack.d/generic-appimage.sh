@@ -90,7 +90,7 @@ subst '1iAutoProv:no' $SPEC
 subst '1iAutoReq:no' $SPEC
 
 if [ -f v8_context_snapshot.bin ] ; then
-    "electron based application detected, install requires"
+    echo "electron based application detected, adding requires ..."
     . $(dirname $0)/common-chromium-browser.sh
     # don't use install: we disabled AutoReq before
     add_deps
