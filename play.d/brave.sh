@@ -10,7 +10,9 @@ DESCRIPTION="Brave browser from the official site"
 
 repack=''
 # we have workaround for their postinstall script, so always repack rpm package
-[ "$(epm print info -p)" = "deb" ] || repack='--repack'
+#[ "$(epm print info -p)" = "deb" ] || repack='--repack'
+# repack for deb too, they have broken dependency on brave-keyring
+repack='--repack'
 
 # brave-browser-beta-1.51.105-1.x86_64.rpm
 # brave-browser-beta_1.51.105_amd64.deb
