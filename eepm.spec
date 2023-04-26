@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.53.0
+Version: 3.53.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -92,6 +92,19 @@ a discussion about extra requirements.
 
 
 %changelog
+* Wed Apr 26 2023 Vitaly Lipatov <lav@altlinux.ru> 3.53.1-alt1
+- epm play: add yaradio-yamusic
+- epm play: add lycheeslicer support
+- epm: use bash directly
+- serv: add all initial detection, use bash directly
+- epm play: add libicu56 (for ALT only)
+- epm repack trueconf: update script
+- epm play.d/common.sh: fix PKGNAME detection
+- epm repack synology-drive: ignore if removed extra files is missed
+- epm play: fix download name in various scripts
+- epm play: update synology* scripts
+- eepm.spec: drop BR: rpm-build-intro (isn't used anymore)
+
 * Tue Apr 25 2023 Vitaly Lipatov <lav@altlinux.ru> 3.53.0-alt1
 - epm repack microsoft-edge: use one file, add conflicts
 - epm play: update IPFS DB every time (and merge with sort)
