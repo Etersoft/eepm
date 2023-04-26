@@ -543,12 +543,11 @@ eget()
 erc()
 {
 
-    if ! is_command patool ; then
-        if is_command 7z || is_command 7za || is_command 7zr || is_command 7zz ; then
-            :
-        else
-            epm install p7zip
-        fi
+    # install 7zip in any case (can be used)
+    if is_command 7z || is_command 7za || is_command 7zr || is_command 7zz ; then
+        :
+    else
+        epm install p7zip
     fi
 
     # use internal eget only if exists
