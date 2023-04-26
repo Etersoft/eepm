@@ -380,8 +380,14 @@ epm_install_files()
             if [ -n "$noscripts" ] ; then
                 info "Workaround for install packages via apt with --noscripts (see https://bugzilla.altlinux.org/44670)"
                 info "Firstly install package requrements …"
+                # names of packages to be installed
+                local fl="$(epm print name for package $files)"
+                local req="$(docmd epm req --short $files)" || return
+                # exclude package names from requires (req - fl)
+                req="$(estrlist exclude "$fl" "$req")"
                 # TODO: can we install only requires via apt?
-                epm install $(epm req --short $files) || return
+                docmd epm install $req || return
+
                 # retry with rpm
                 # --replacepkgs: Install the Package Even If Already Installed
                 local replacepkgs="$(__epm_get_replacepkgs $files)"
