@@ -63,6 +63,31 @@ __epm_addkey_alpine()
     sudocmd cp $tmpfile $target
 }
 
+
+__epm_addkey_dnf()
+{
+    local url="$1"
+    local gpgkeyurl="$2"
+    local nametext="$3"
+    local name="$4"
+
+    # TODO: missed name, nametext, gpgkeyurl (disable gpgcheck=1)
+
+    local target="/etc/yum.repos.d/$name.repo"
+    [ -s $target ] && return
+
+    local tmpfile=$(mktemp)
+    remove_on_exit $tmpfile
+    cat >$tmpfile <<EOF
+[$name]
+name=$nametext
+baseurl=$url
+gpgcheck=1
+enabled=1
+gpgkey=$gpgkeyurl
+EOF
+    chmod 644 $tmpfile
+    sudocmd cp $tmpfile $target
 }
 
 
@@ -71,14 +96,14 @@ __epm_addkey_deb()
     local url="$1"
     local fingerprint="$2"
     local comment="$3"
-
-    local name="$(basename $url .gpg)"
+    local name="$4"
+    [ -n "$name" ] || name="$(basename "$url" .gpg)"
 
     [ -s /etc/apt/trusted.gpg.d/$name.gpg ] && return
 
     if [ -z "$fingerprint" ] ; then
-        set_sudo
-        eget -q -O- "$url" | sudorun apt-key add -
+        local tmpfile=$(__epm_get_file_from_url $url) || fatal
+        sudocmd apt-key add $tmpfile
 #
 #        if [ ! -f /etc/apt/trusted.gpg.d/$name.gpg ]; then
 #                epm tool eget -q -O /etc/apt/trusted.gpg.d/$name.gpg https://example.com/$name.gpg > /dev/null
@@ -109,6 +134,9 @@ esac
 case $PMTYPE in
     apt-dpkg)
         __epm_addkey_deb "$@"
+        ;;
+    dnf-*|yum-*)
+        __epm_addkey_dnf "$@"
         ;;
 esac
 
