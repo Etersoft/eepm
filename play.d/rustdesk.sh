@@ -7,7 +7,13 @@ if [ "$VERSION" = "nightly" ] ; then
     SUPPORTEDARCHES="x86_64 aarch64"
 fi
 DESCRIPTION="RustDesk — Display and control your PC and Android devices"
-PRODUCTALT="stable nightly"
+PRODUCTALT="'' nightly"
+
+# we have no package rustdesk-nightly
+if [ "$1" = "--remove" ] ; then
+    epm remove $BASEPKGNAME
+    exit
+fi
 
 . $(dirname $0)/common.sh
 
@@ -19,7 +25,6 @@ if [ "$PKGNAME" = "$BASEPKGNAME-nightly" ] ; then
     # https://github.com/rustdesk/rustdesk/releases/download/nightly/rustdesk-1.2.0-aarch64.deb
     MASK="nightly/$PKGNAME-$VERSION-$arch.$pkgtype"
 else
-    PKGNAME=rustdesk
     #rustdesk-1.1.9-raspberry-armhf.deb
     #rustdesk-1.1.9.deb
     [ "$VERSION" = "*" ] && VERSION="[0-9].[0-9].[0-9]"
