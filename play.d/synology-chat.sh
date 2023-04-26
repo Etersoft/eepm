@@ -9,7 +9,7 @@ DESCRIPTION='Synology Chat Client from the official site'
 
 [ "$VERSION" = "*" ] && VERSION="[0-9]*"
 
-urldir="$(epm tool eget --list https://archive.synology.com/download/Utility/ChatClient "/$VERSION-"' | head -n1)"
+urldir="$(epm tool eget --list https://archive.synology.com/download/Utility/ChatClient "/$VERSION-*" | head -n1)"
 [ -n "$urldir" ] || fatal "Can't get dir for $VERSION version on https://archive.synology.com/download/Utility/ChatClient"
 
 # use temp dir
