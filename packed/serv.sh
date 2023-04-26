@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.53.1"
+EPMVERSION="3.53.2"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -331,9 +331,10 @@ sudoepm()
 fatal()
 {
     if [ -z "$TEXTDOMAIN" ] ; then
-        set_color $RED
-        echo "Error: $*  (you can discuss the epm $EPMVERSION problem in Telegram: https://t.me/useepm)" >&2
-        restore_color
+        set_color $RED >&2
+        echo -n "ERROR: " >&2
+        restore_color >&2
+        echo "$*  (you can discuss the epm $EPMVERSION problem in Telegram: https://t.me/useepm)" >&2
     fi
     exit 1
 }
@@ -341,9 +342,10 @@ fatal()
 warning()
 {
     if [ -z "$TEXTDOMAIN" ] ; then
-        set_color $YELLOW
-        echo "Warning: $*" >&2
-        restore_color
+        set_color $YELLOW >&2
+        echo -n "WARNING: " >&2
+        restore_color >&2
+        echo "$*" >&2
     fi
 }
 
@@ -538,12 +540,11 @@ disabled_eget()
 disabled_erc()
 {
 
-    if ! is_command patool ; then
-        if is_command 7z || is_command 7za || is_command 7zr || is_command 7zz ; then
-            :
-        else
-            epm install p7zip
-        fi
+    # install 7zip in any case (can be used)
+    if is_command 7z || is_command 7za || is_command 7zr || is_command 7zz ; then
+        :
+    else
+        epm install p7zip
     fi
 
     # use internal eget only if exists
@@ -731,8 +732,12 @@ __epm_remove_from_tmp_files()
 {
    keep="$1"
    [ -r "$keep" ] || return 0
-   [ -n "$to_remove_pkg_files" ] || return 0
-   to_remove_pkg_files="$(echo "$to_remove_pkg_files" | sed -e "s|$keep||")"
+   if [ -n "$to_remove_pkg_files" ] ; then
+       to_remove_pkg_files="$(echo "$to_remove_pkg_files" | sed -e "s|$keep||")"
+   fi
+   if [ -n "$to_remove_tmp_files" ] ; then
+       to_remove_tmp_files="$(echo "$to_remove_tmp_files" | sed -e "s|$keep||")"
+   fi
 }
 
 __epm_remove_tmp_files()
@@ -741,6 +746,7 @@ __epm_remove_tmp_files()
     if [ -z "$DEBUG" ] ; then
         # TODO: reinvent
         [ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
+        [ -n "$to_remove_tmp_files" ] && rm -f $to_remove_tmp_files
         # hack??
         [ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
         [ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
@@ -749,6 +755,19 @@ __epm_remove_tmp_files()
     return 0
 }
 
+
+remove_on_exit()
+{
+    trap "__epm_remove_tmp_files" EXIT
+    while [ -n "$1" ] ; do
+        if [ -d "$1" ] ; then
+            to_clean_tmp_dirs="$to_clean_tmp_dirs $1"
+        elif [ -f "$1" ] ; then
+            to_clean_tmp_files="$to_clean_tmp_files $1"
+        fi
+        shift
+    done
+}
 
 has_space()
 {
