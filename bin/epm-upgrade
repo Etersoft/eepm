@@ -90,7 +90,7 @@ epm_upgrade()
 
     case $PMTYPE in
     apt-rpm|apt-dpkg)
-        local APTOPTIONS="$(subst_option non_interactive -y) $(subst_option verbose "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
+        local APTOPTIONS="$(subst_option non_interactive -y) $(subst_option verbose "-V -o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
         CMD="apt-get $APTOPTIONS $noremove $force_yes dist-upgrade"
         ;;
     aptitude-dpkg)
