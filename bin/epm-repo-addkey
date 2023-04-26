@@ -20,6 +20,15 @@
 load_helper epm-sh-altlinux
 
 
+# allowed files too
+__epm_get_file_from_url()
+{
+    local tmpfile=$(mktemp)
+    remove_on_exit $tmpfile
+    eget -O $tmpfile $url >/dev/null
+    echo "$tmpfile"
+}
+
 __epm_addkey_altlinux()
 {
     local url="$1"
@@ -40,6 +49,20 @@ EOF
         eget -q -O /tmp/$name.gpg $url || fatal
         sudorun gpg --no-default-keyring --keyring /usr/lib/alt-gpgkeys/pubring.gpg --import /tmp/$name.gpg
         rm -f /tmp/$name.gpg
+__epm_addkey_alpine()
+{
+    local url="$1"
+
+    local name="$(basename $url .rsa)"
+
+    local target="/etc/apk/keys/$name.rsa"
+
+    [ -s $target ] && return
+
+    local tmpfile=$(__epm_get_file_from_url $url) || fatal
+    sudocmd cp $tmpfile $target
+}
+
 }
 
 
@@ -75,6 +98,10 @@ epm_addkey()
 case $BASEDISTRNAME in
     "alt")
         __epm_addkey_altlinux "$@"
+        return
+        ;;
+    "alpine")
+        __epm_addkey_alpine "$@"
         return
         ;;
 esac
