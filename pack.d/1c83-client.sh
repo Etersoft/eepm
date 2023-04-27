@@ -7,16 +7,10 @@ RETURNTARNAME="$2"
 
 # unpack if something like server64_8_3_22_1851.tar.gz
 if echo "$(basename "$FILENAME")" | grep -q "^server.._8_3.*tar\.gz$" ; then
-    tdir=$(mktemp -d)
-    trap "rm -fr $tdir" EXIT
-
-    # FIXME: erc?
-    epm install --skip-installed tar || fatal
-
-    CURDIR="$(pwd)"
-    cd $tdir || fatal
-    a= tar xvfz $FILENAME || fatal
-    FILENAME="$(echo $tdir/setup-full-8.*.run)"
+    echo "Tarball detected, unpacking ..."
+    erc "$FILENAME" || fatal
+    # server64_8_3_22_1851.tar
+    FILENAME="$(echo server*/setup-full-8.*.run)"
 fi
 
 # with run with setup-full.*.run file
