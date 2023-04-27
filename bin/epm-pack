@@ -129,8 +129,7 @@ epm_pack()
         load_helper epm-download
         cd $tmpdir || fatal
         __handle_pkg_urls_to_install
-        # drop spaces and get full path
-        tarname="$(realpath $pkg_files)"
+        tarname="$(realpath "$pkg_files")"
     elif [ -d "$tarname" ] ; then
         tarname="$(realpath "$tarname")"
         cd $tmpdir || fatal
