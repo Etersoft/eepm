@@ -31,11 +31,21 @@ __epm_get_file_from_url()
 
 __epm_addkey_altlinux()
 {
+    local name
     local url="$1"
-    local fingerprint="$2"
-    local comment="$3"
-    local name="$4"
-    [ -n "$name" ] || name="$(basename "$url" .gpg)"
+    shift
+    if is_url "$url" ; then
+        name="$(basename "$url" .gpg)"
+    else
+        name="$url"
+        url="$1"
+        shift
+    fi
+
+    local fingerprint="$1"
+    local comment="$2"
+    # compat
+    [ -n "$3" ] && name="$3"
 
     [ -s /etc/apt/vendors.list.d/$name.list ] && return
 
@@ -54,9 +64,16 @@ EOF
 
 __epm_addkey_alpine()
 {
+    local name
     local url="$1"
-
-    local name="$(basename $url .rsa)"
+    shift
+    if is_url "$url" ; then
+        name="$(basename "$url" .rsa)"
+    else
+        name="$url"
+        url="$1"
+        shift
+    fi
 
     local target="/etc/apk/keys/$name.rsa"
 
@@ -69,10 +86,20 @@ __epm_addkey_alpine()
 
 __epm_addkey_dnf()
 {
+    local name
     local url="$1"
-    local gpgkeyurl="$2"
-    local nametext="$3"
-    local name="$4"
+    shift
+    if is_url "$url" ; then
+        name="$(basename "$url" .gpg)"
+    else
+        name="$url"
+        url="$1"
+        shift
+    fi
+    local gpgkeyurl="$1"
+    local nametext="$2"
+    # compat
+    [ -n "$3" ] && name="$3"
 
     # TODO: missed name, nametext, gpgkeyurl (disable gpgcheck=1)
 
@@ -96,16 +123,29 @@ EOF
 
 __epm_addkey_deb()
 {
+    local name
     local url="$1"
-    local fingerprint="$2"
-    local comment="$3"
-    local name="$4"
-    [ -n "$name" ] || name="$(basename "$url" .gpg)"
+    shift
+    if is_url "$url" ; then
+        name="$(basename "$url" .gpg)"
+    else
+        name="$url"
+        url="$1"
+        shift
+    fi
+    local fingerprint="$1"
+    local comment="$2"
+    # compat
+    [ -n "$3" ] && name="$3"
 
     [ -s /etc/apt/trusted.gpg.d/$name.gpg ] && return
 
     if [ -z "$fingerprint" ] ; then
         local tmpfile=$(__epm_get_file_from_url $url) || fatal
+        if cat $tmpfile | head -n3 | grep -- "-----BEGIN PGP PUBLIC KEY BLOCK-----" ; then
+            # This is a GnuPG extension to OpenPGP
+            cat $tmpfile | gpg --dearmor >$tmpfile
+        fi
         sudocmd apt-key add $tmpfile
 #
 #        if [ ! -f /etc/apt/trusted.gpg.d/$name.gpg ]; then
@@ -119,9 +159,13 @@ __epm_addkey_deb()
 }
 
 
-
 epm_addkey()
 {
+
+if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ -z "$1" ] ; then
+    echo "Usage: $ epm repo addkey [name] url [fingerprint/gpgkey] [comment/name]"
+    return
+fi
 
 case $BASEDISTRNAME in
     "alt")
