@@ -921,7 +921,7 @@ case "$1" in
         echo " -d|--base-distro-name  - print distro id (short distro name)"
         echo " -e                     - print full name of distro with version"
         echo " -o | --os-name         - print base OS name"
-        echo " -p | package-type      - print type of the packaging system"
+        echo " -p | --package-type    - print type of the packaging system"
         echo " -g                     - print name of the packaging system"
         echo " -s|-n|--vendor-name    - print name of the distro family (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (see _vendor macros in rpm)"
         echo " --pretty|--pretty-name - print pretty distro name"
