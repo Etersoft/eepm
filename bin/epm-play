@@ -396,7 +396,19 @@ case "$1" in
 
     --remove|remove)
         shift
-        __epm_play_remove "$@"
+        if [ -z "$1" ] ; then
+            fatal "run --remove with 'all' or a project name"
+        fi
+
+        local list
+        if [ "$1" = "all" ] ; then
+            shift
+            list="$(__list_installed_app)"
+        else
+            list="$*"
+        fi
+
+        __epm_play_remove $list
         exit
         ;;
 
