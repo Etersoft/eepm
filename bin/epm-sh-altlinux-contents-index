@@ -47,30 +47,6 @@ get_local_alt_mirror_path()
 
 ALT_CONTENTS_INDEX_LIST=$TMPDIR/eepm/contents_index_list
 
-__local_ercat()
-{
-   local i
-   for i in "$@" ; do
-       case "$i" in
-           *.xz)
-               a='' xzcat $i
-               ;;
-           *.lz4)
-               a='' lz4cat $i
-               ;;
-           *.gz)
-               a='' zcat $i
-               ;;
-           *.failed)
-               # just ignore
-               ;;
-           *)
-               cat $i
-               ;;
-       esac
-   done
-}
-
 # URL TARGETDIR OPTIONS
 rsync_alt_contents_index()
 {

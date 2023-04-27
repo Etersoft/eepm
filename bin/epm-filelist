@@ -39,7 +39,7 @@ __alt_local_content_filelist()
 
     {
         [ -n "$USETTY" ] && info "Search in $CI for $1..."
-        __local_ercat $CI | grep -h -P -- ".*\t$1$" | sed -e "s|\(.*\)\t\(.*\)|\1|g"
+        ercat $CI | grep -h -P -- ".*\t$1$" | sed -e "s|\(.*\)\t\(.*\)|\1|g"
     } | $OUTCMD
 }
 
