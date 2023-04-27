@@ -97,8 +97,7 @@ epm_assure()
     # can't be used in epm ei case
     #docmd epm --auto install $PACKAGE || return
     load_helper epm-install
-    # TODO: HACK: DEBUG=1 for skip to_remove_pkg handling
-    (DEBUG=1 repack='' non_interactive=1 pkg_names="$PACKAGE" pkg_files='' pkg_urls='' epm_install ) || return
+    (repack='' non_interactive=1 pkg_names="$PACKAGE" pkg_files='' pkg_urls='' epm_install ) || return
 
     # no check if we don't need a version
     [ -n "$PACKAGEVERSION" ] || return 0

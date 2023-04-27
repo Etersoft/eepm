@@ -31,8 +31,7 @@ __epm_repack_to_deb()
     repacked_pkgs=''
 
     local TDIR="$(mktemp -d --tmpdir=$BIGTMPDIR)"
-    to_clean_tmp_dirs="$to_clean_tmp_dirs $TDIR"
-    trap "__epm_remove_tmp_files" EXIT
+    remove_on_exit $TDIR
 
     for pkg in $pkgs ; do
         abspkg="$(realpath "$pkg")"
@@ -49,7 +48,7 @@ __epm_repack_to_deb()
         local DEBCONVERTED=$(grep "deb generated" $RC_STDOUT | sed -e "s| generated||g")
         if [ -n "$DEBCONVERTED" ] ; then
             repacked_pkgs="$repacked_pkgs $(realpath $DEBCONVERTED)"
-            to_remove_pkg_files="$to_remove_pkg_files $(realpath $DEBCONVERTED)"
+            remove_on_exit "$(realpath $DEBCONVERTED)"
         fi
         clean_store_output
         cd - >/dev/null

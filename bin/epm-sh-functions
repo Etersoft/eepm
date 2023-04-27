@@ -740,33 +740,24 @@ get_pkg_name_delimiter()
    echo "-"
 }
 
-
-# don't remove <arg> on exit
-__epm_remove_from_tmp_files()
-{
-   keep="$1"
-   [ -r "$keep" ] || return 0
-   if [ -n "$to_remove_pkg_files" ] ; then
-       to_remove_pkg_files="$(echo "$to_remove_pkg_files" | sed -e "s|$keep||")"
-   fi
-   if [ -n "$to_remove_tmp_files" ] ; then
-       to_remove_tmp_files="$(echo "$to_remove_tmp_files" | sed -e "s|$keep||")"
-   fi
-}
-
-# usage: trap "__epm_remove_tmp_files" EXIT
+# used via remove_on_exit
 __epm_remove_tmp_files()
 {
-    # TODO: move it to exit handler
-    if [ -z "$DEBUG" ] ; then
-        # TODO: reinvent
-        [ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
-        [ -n "$to_remove_tmp_files" ] && rm -f $to_remove_tmp_files
-        # hack??
-        [ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
-        [ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
-        [ -n "$to_clean_tmp_dirs" ] && rm -rf $to_clean_tmp_dirs 2>/dev/null
+    [ -n "$DEBUG" ] && return 0
+
+    if [ -n "$to_clean_tmp_dirs" ] ; then
+        echo "$to_clean_tmp_dirs" | while read p ; do
+            rm -rf "$p" 2>/dev/null
+        done
     fi
+
+    if [ -n "$to_clean_tmp_files" ] ; then
+        echo "$to_clean_tmp_files" | while read p ; do
+            rm -f "$p" 2>/dev/null
+            rmdir "$(dirname "$p")" 2>/dev/null
+        done
+    fi
+
     return 0
 }
 
@@ -776,9 +767,11 @@ remove_on_exit()
     trap "__epm_remove_tmp_files" EXIT
     while [ -n "$1" ] ; do
         if [ -d "$1" ] ; then
-            to_clean_tmp_dirs="$to_clean_tmp_dirs $1"
+            to_clean_tmp_dirs="$to_clean_tmp_dirs
+$1"
         elif [ -f "$1" ] ; then
-            to_clean_tmp_files="$to_clean_tmp_files $1"
+            to_clean_tmp_files="$to_clean_tmp_files
+$1"
         fi
         shift
     done

@@ -94,7 +94,7 @@ __create_rpmmacros()
 
 %_allow_root_build    1
 EOF
-    to_remove_pkg_files="$to_remove_pkg_files $HOME/.rpmmacros"
+    remove_on_exit "$HOME/.rpmmacros"
 }
 
 
@@ -132,8 +132,7 @@ __epm_repack_to_rpm()
 
     local pkg
     export HOME="$(mktemp -d --tmpdir=$BIGTMPDIR)"
-    to_clean_tmp_dirs="$to_clean_tmp_dirs $HOME"
-    trap "__epm_remove_tmp_files" EXIT
+    remove_on_exit $HOME
     __create_rpmmacros
 
     local alpkg
@@ -180,8 +179,7 @@ __epm_repack_to_rpm()
         __apply_fix_code "generic" $tmpbuilddir/$subdir $spec $pkgname
         [ -n "$SUBGENERIC" ] && __apply_fix_code "generic-$SUBGENERIC" $tmpbuilddir/$subdir $spec
         __apply_fix_code $pkgname $tmpbuilddir/$subdir $spec $pkgname
-        # TODO: we need these dirs to be created
-        to_remove_pkg_dirs="$to_remove_pkg_dirs $HOME/RPM/BUILD $HOME/RPM"
+        remove_on_exit $HOME/RPM/BUILD $HOME/RPM
 
         TARGETARCH=$(epm print info -a | sed -e 's|^x86$|i586|')
 
@@ -196,7 +194,7 @@ __epm_repack_to_rpm()
         local repacked_rpm="$(realpath $tmpbuilddir/../*.rpm)"
         if [ -s "$repacked_rpm" ] ; then
             repacked_pkgs="$repacked_pkgs $repacked_rpm"
-            to_remove_pkg_files="$to_remove_pkg_files $repacked_rpm"
+            remove_on_exit "$repacked_rpm"
         else
             warning "Can't find converted rpm for source binary package '$pkg'"
         fi

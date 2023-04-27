@@ -114,9 +114,8 @@ epm_pack()
         exit
     fi
 
-    trap "__epm_remove_tmp_files" EXIT
     local tmpdir="$(mktemp -d --tmpdir=$BIGTMPDIR)"
-    to_clean_tmp_dirs="$to_clean_tmp_dirs $tmpdir"
+    remove_on_exit $tmpdir
 
     local packname="$1"
     local tarname="$2"

@@ -81,7 +81,7 @@ __download_pkg_urls()
                 [ -s "$tmppkg/$i" ] || continue
                 chmod $verbose a+r "$tmppkg/$i"
                 [ -n "$pkg_files" ] && pkg_files="$pkg_files $tmppkg/$i" || pkg_files="$tmppkg/$i"
-                to_remove_pkg_files="$to_remove_pkg_files $tmppkg/$i"
+                remove_on_exit "$tmppkg/$i"
             done
         else
             warning "Failed to download $url, ignoring"
@@ -97,8 +97,6 @@ __handle_pkg_urls_to_install()
 {
     #[ -n "$pkg_urls" ] || return
 
-    # TODO: do it correctly
-    to_remove_pkg_files=
     # FIXME: check type of pkg_urls separately?
     if [ "$(get_package_type "$pkg_urls")" != $PKGFORMAT ] || ! __use_url_install ; then
         # use workaround with eget: download and put in pkg_files
@@ -112,20 +110,12 @@ __handle_pkg_urls_to_checking()
 {
     #[ -n "$pkg_urls" ] || return
 
-    # TODO: do it correctly
-    to_remove_pkg_files=
-    
     # use workaround with eget: download and put in pkg_files
     __download_pkg_urls
 
     pkg_urls=
 }
 
-#__clean_downloaded_pkg_files()
-#{
-#    [ -z "$to_remove_pkg_files" ] && return
-#    rm -fv $to_remove_pkg_files
-#}
 
 # obsoleted
 __epm_get_altpkg_url()
