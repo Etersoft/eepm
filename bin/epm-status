@@ -19,6 +19,17 @@
 
 load_helper epm-query
 
+epm_status_installable()
+{
+    local pkg="$1"
+    #LANG=C epm policy "$pkg" | grep Candidate >/dev/null 2>/dev/null
+    if [ -n "$verbose" ] ; then
+        docmd epm install --simulate "$pkg"
+    else
+        epm install --simulate "$pkg" 2>/dev/null >/dev/null
+    fi
+}
+
 # check if the package is really package (check accessibility)
 epm_status_validate()
 {
@@ -161,6 +172,10 @@ epm_status()
             ;;
         --validate)
             epm_status_validate "$@"
+            return
+            ;;
+        --installable)
+            epm_status_installable "$@"
             return
             ;;
         *)
