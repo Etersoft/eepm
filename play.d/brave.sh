@@ -17,6 +17,10 @@ repack='--repack'
 # brave-browser-beta-1.51.105-1.x86_64.rpm
 # brave-browser-beta_1.51.105_amd64.deb
 
+
+# rpm packages have a release in their names
+[ "$(epm print info -p)" = "rpm" ] && [ "$VERSION" != "*" ] && VERSION="$VERSION-1"
+
 PKGURL=$(epm tool eget --list --latest https://github.com/brave/brave-browser/releases "$(epm print constructname $PKGNAME "$VERSION")")
 
 if [ -z "$PKGURL" ] ; then
