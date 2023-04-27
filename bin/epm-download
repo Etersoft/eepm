@@ -80,7 +80,7 @@ __download_pkg_urls()
             for i in *.* ; do
                 [ -s "$tmppkg/$i" ] || continue
                 chmod $verbose a+r "$tmppkg/$i"
-                pkg_files="$pkg_files $tmppkg/$i"
+                [ -n "$pkg_files" ] && pkg_files="$pkg_files $tmppkg/$i" || pkg_files="$tmppkg/$i"
                 to_remove_pkg_files="$to_remove_pkg_files $tmppkg/$i"
             done
         else
