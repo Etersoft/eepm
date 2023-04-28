@@ -31,3 +31,11 @@ if [ ! -s /etc/ssl/certs/ca-certificates.crt ] ; then
     # ALT and Fedora based
     subst "s|/etc/ssl/certs/ca-certificates.crt|/etc/pki/tls/certs/ca-bundle.crt\x0\x0|" $BUILDROOT$PRODUCTDIR/libsentry.so
 fi
+
+# from vkcalls support
+mkdir -p etc/tmpfiles.d/
+cat >etc/tmpfiles.d/$PRODUCT.conf <<EOF
+#Type	Path				Mode	User	Group	Age	Argument
+f	/var/lock/vkcallsrelease.pid	0666	root	root	-	-
+EOF
+pack_file /etc/tmpfiles.d/$PRODUCT.conf
