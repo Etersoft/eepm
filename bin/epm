@@ -127,6 +127,7 @@ pkg_files=
 pkg_dirs=
 pkg_names=
 pkg_urls=
+pkg_options=
 quoted_args=
 direct_args=
 
@@ -532,6 +533,10 @@ check_option()
     --force-yes)           # HELPOPT: force yes in a danger cases (f.i., during release upgrade)
         force_yes="--force-yes"
         ;;
+    -*)
+        [ -n "$direct_args" ] && return 1
+        [ -n "$pkg_options" ] && pkg_options="$pkg_options $1" || pkg_options="$1"
+        ;;
     *)
         return 1
         ;;
@@ -557,7 +562,6 @@ check_filenames()
             pkg_urls="$pkg_urls $opt"
         else
             has_space "$opt" && warning "There are space(s) in package name '$opt', it is not supported. Skipped." && continue
-            # TODO: don't add unknown options (like -y, --unknown) to pkg_names
             pkg_names="$pkg_names $opt"
         fi
         quoted_args="$quoted_args \"$opt\""
