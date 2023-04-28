@@ -16,10 +16,8 @@ subst '1iAutoProv:no' $SPEC
 remove_file /usr/local/bin/$PRODUCT
 add_bin_link_command
 
-cd $BUILDROOT$PRODUCTDIR
-
 if epm assure patchelf ; then
-for i in lib* $PRODUCT  ; do
+for i in .$PRODUCTDIR/lib* .$PRODUCTDIR/$PRODUCT  ; do
     a= patchelf --set-rpath '$ORIGIN' $i
 done
 fi
