@@ -8,7 +8,7 @@ DESCRIPTION='An unofficial WhatsApp desktop application (from the repository if 
 . $(dirname $0)/common.sh
 
 if epm install $PKGNAME ; then
-    return
+    exit 0
 fi
 
 [ "$(epm print info -s)" = "alt" ] && fatal "ALT is not supports $PKGNAME AppImage for now."
