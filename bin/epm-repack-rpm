@@ -164,47 +164,47 @@ __epm_repack_to_rpm()
         local subdir="$(echo *)"
         [ -d "$subdir" ] || fatal "can't find subdir in $(pwd)"
 
+        local buildroot="$tmpbuilddir/$subdir"
+
         # detect spec and move to prev dir
-        local spec="$(echo $tmpbuilddir/$subdir/*.spec)"
+        local spec="$(echo $buildroot/*.spec)"
         [ -s "$spec" ] || fatal "Can't find spec $spec"
         mv $spec $tmpbuilddir || fatal
         spec="$tmpbuilddir/$(basename "$spec")"
+
         #__set_name_version $spec $PKGNAME $VERSION
         local pkgname="$(grep "^Name: " $spec | sed -e "s|Name: ||g" | head -n1)"
 
         # for tarballs fix permissions
-        [ -n "$VERSION" ] && chmod $verbose -R a+rX $tmpbuilddir/$subdir/*
+        [ -n "$VERSION" ] && chmod $verbose -R a+rX $buildroot/*
 
-        __fix_spec $pkgname $tmpbuilddir/$subdir $spec
-        __apply_fix_code "generic" $tmpbuilddir/$subdir $spec $pkgname
-        [ -n "$SUBGENERIC" ] && __apply_fix_code "generic-$SUBGENERIC" $tmpbuilddir/$subdir $spec
-        __apply_fix_code $pkgname $tmpbuilddir/$subdir $spec $pkgname
-        remove_on_exit $HOME/RPM/BUILD $HOME/RPM
+        cd $buildroot || fatal
+        __fix_spec $pkgname $buildroot $spec
+        __apply_fix_code "generic" $buildroot $spec $pkgname
+        [ -n "$SUBGENERIC" ] && __apply_fix_code "generic-$SUBGENERIC" $buildroot $spec
+        __apply_fix_code $pkgname $buildroot $spec $pkgname
+        cd - >/dev/null
 
         TARGETARCH=$(epm print info -a | sed -e 's|^x86$|i586|')
 
-        showcmd rpmbuild --buildroot $tmpbuilddir/$subdir --target $TARGETARCH -bb $spec
+        showcmd rpmbuild --buildroot $buildroot --target $TARGETARCH -bb $spec
         if [ -n "$verbose" ] ; then
-            a='' rpmbuild --buildroot $tmpbuilddir/$subdir --target $TARGETARCH -bb $spec || fatal
+            a='' rpmbuild --buildroot $buildroot --target $TARGETARCH -bb $spec || fatal
         else
-            a='' rpmbuild --buildroot $tmpbuilddir/$subdir --target $TARGETARCH -bb $spec >/dev/null || fatal
+            a='' rpmbuild --buildroot $buildroot --target $TARGETARCH -bb $spec >/dev/null || fatal
         fi
         # remove copy of source binary package (don't mix with generated)
         rm -f $tmpbuilddir/../$alpkg
         local repacked_rpm="$(realpath $tmpbuilddir/../*.rpm)"
         if [ -s "$repacked_rpm" ] ; then
-            repacked_pkgs="$repacked_pkgs $repacked_rpm"
             remove_on_exit "$repacked_rpm"
+            [ -n "$repacked_pkgs" ] && repacked_pkgs="$repacked_pkgs $repacked_rpm" || repacked_pkgs="$repacked_rpm"
         else
             warning "Can't find converted rpm for source binary package '$pkg'"
         fi
         cd $EPMCURDIR >/dev/null
-        rm -rf $tmpbuilddir/$subdir/
-        rm -rf $spec
     done
 
-    rmdir $tmpbuilddir
-    #rmdir $tmpbuilddir/..
     true
 }
 
