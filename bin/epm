@@ -544,8 +544,6 @@ check_option()
     return 0
 }
 
-# TODO: skip for commands where we don't need parse args
-
 check_filenames()
 {
     local opt
@@ -553,18 +551,18 @@ check_filenames()
         # files can be with full path or have extension via .
         if [ -f "$opt" ] && echo "$opt" | grep -q "[/\.]" ; then
             has_space "$opt" && warning "There are space(s) in filename '$opt', it is not supported. Skipped" && continue
-            pkg_files="$pkg_files $opt"
+            [ -n "$pkg_files" ] && pkg_files="$pkg_files $opt" || pkg_files="$opt"
         elif [ -d "$opt" ] ; then
             has_space "$opt" && warning "There are space(s) in directory path '$opt', it is not supported. Skipped" && continue
-            pkg_dirs="$pkg_dirs $opt"
+            [ -n "$pkg_dirs" ] && pkg_dirs="$pkg_dirs $opt" || pkg_dirs="$opt"
         elif is_url "$opt" ; then
             has_space "$opt" && warning "There are space(s) in URL '$opt', it is not supported. Skipped" && continue
-            pkg_urls="$pkg_urls $opt"
+            [ -n "$pkg_urls" ] && pkg_urls="$pkg_urls $opt" || pkg_urls="$opt"
         else
             has_space "$opt" && warning "There are space(s) in package name '$opt', it is not supported. Skipped." && continue
-            pkg_names="$pkg_names $opt"
+            [ -n "$pkg_names" ] && pkg_names="$pkg_names $opt" || pkg_names="$opt"
         fi
-        quoted_args="$quoted_args \"$opt\""
+        [ -n "$quoted_args" ] && quoted_args="$quoted_args \"$opt\"" || quoted_args="\"$opt\""
     done
 }
 
@@ -585,7 +583,7 @@ for opt in "$@" ; do
     fi
 
     if [ -n "$direct_args" ] ; then
-        quoted_args="$quoted_args \"$opt\""
+        [ -n "$quoted_args" ] && quoted_args="$quoted_args \"$opt\"" || quoted_args="\"$opt\""
     else
         # Note: will parse all params separately (no package names with spaces!)
         check_filenames "$opt"
@@ -611,11 +609,8 @@ if [ ! -n "$inscript" ] && ! inputisatty && [ -n "$PROGDIR" ] ; then
     done
 fi
 
-pkg_files=$(strip_spaces "$pkg_files")
-pkg_dirs=$(strip_spaces "$pkg_dirs")
 # in common case dirs equals to names only suddenly
 pkg_names=$(strip_spaces "$pkg_names $pkg_dirs")
-pkg_urls=$(strip_spaces "$pkg_urls")
 
 pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
 
