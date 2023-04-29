@@ -939,6 +939,25 @@ print_help()
     echo "Run without args to print all information."
 }
 
+# print code for eval with names for eepm
+print_eepm_env()
+{
+cat <<EOF
+    export DISTRNAME="$(echo $DISTRIB_ID)"
+    export DISTRVERSION="$(echo "$DISTRIB_RELEASE")"
+    export DISTRARCH="$(get_distro_arch)"
+    export DISTRCONTROL="$(get_service_manager)"
+    export BASEDISTRNAME=$(pkgvendor)
+
+    export PMTYPE="$(pkgmanager)"
+    export PKGFORMAT=$(pkgtype)
+    export PKGVENDOR=$(pkgvendor)
+    # TODO: remove?
+    export RPMVENDOR=$(pkgvendor)
+
+EOF
+
+}
 
 if [ -n "$DISTRNAME" ] ; then
     override_distrib
@@ -1053,8 +1072,14 @@ case "$1" in
     -e)
         print_name_version
         ;;
+    --print-eepm-env)
+        print_eepm_env
+        exit 0
+        ;;
     -*)
         echo "Unsupported option $1" >&2
+        # print empty line in any case
+        echo
         exit 1
         ;;
 esac
