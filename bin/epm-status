@@ -178,8 +178,11 @@ epm_status()
             epm_status_installable "$@"
             return
             ;;
-        *)
+        -*)
             fatal "Unknown option $option, use epm status --help to get info"
+            ;;
+        *)
+            fatal "No option before $option, use epm status --help to get info"
             ;;
     esac
 
