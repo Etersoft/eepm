@@ -72,7 +72,6 @@ set_service_type()
     local CMD
 
     set_distro_info
-    set_target_pkg_env
 
 case "$DISTRCONTROL" in
     sysvinit)
