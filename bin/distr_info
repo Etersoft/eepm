@@ -926,9 +926,6 @@ print_help()
     echo "Run without args to print all information."
 }
 
-fill_distr_info
-[ -n "$DISTRIB_ID" ] || DISTRIB_ID="Generic"
-
 if [ -n "$*" ] ; then
     eval lastarg=\${$#}
     case "$lastarg" in
@@ -940,6 +937,12 @@ if [ -n "$*" ] ; then
             set -- "${@:1:$(($#-1))}"
             ;;
     esac
+fi
+
+# if without override
+if [ -z "$DISTRIB_ID" ] ; then
+    fill_distr_info
+    [ -n "$DISTRIB_ID" ] || DISTRIB_ID="Generic"
 fi
 
 if [ -z "$1" ] ; then
