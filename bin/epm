@@ -243,6 +243,7 @@ check_command()
         ;;
     status)                   # HELPCMD: get status of package(s) (see epm status --help)
         epm_cmd=status
+        direct_args=1
         ;;
     -sf|sf|filesearch|search-file)        # HELPCMD: search in which package a file is included
         epm_cmd=search_file
@@ -360,6 +361,7 @@ check_command()
         ;;
     restore)                  # HELPCMD: install (restore) packages need for the project (f.i. by requirements.txt)
         epm_cmd=restore
+        direct_args=1
         ;;
     autoremove|package-cleanup)   # HELPCMD: auto remove unneeded package(s) Supports args for ALT: [--direct [libs|python|perl|libs-devel]]
         epm_cmd=autoremove
@@ -375,6 +377,7 @@ check_command()
         ;;
     autoorphans|--orphans|remove-orphans)    # HELPCMD: remove all packages not from the repository
         epm_cmd=autoorphans
+        direct_args=1
         ;;
     upgrade|up|dist-upgrade)     # HELPCMD: performs upgrades of package software distributions
         epm_cmd=upgrade
