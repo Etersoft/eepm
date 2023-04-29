@@ -778,10 +778,18 @@ $1"
     done
 }
 
+#has_space()
+#{
+#    estrlist -- has_space "$@"
+#}
+# use internal implementation for speed
 has_space()
 {
-    estrlist -- has_space "$@"
+        # not for dash:
+        [ "$1" != "${1/ //}" ]
+        # [ "$(echo "$*" | sed -e "s| ||")" != "$*" ]
 }
+
 
 is_url()
 {
