@@ -5,8 +5,6 @@ SUPPORTEDARCHES="x86_64 x86"
 VERSION="$2"
 DESCRIPTION="AnyDesk from the official site"
 
-[ -n "$VERSION" ] || VERSION="[6-9].[1-9]*"
-
 . $(dirname $0)/common.sh
 
 arch=$(epm print info --distro-arch)
@@ -24,6 +22,10 @@ esac
 # we have workaround for their postinstall script, so always repack rpm package
 repack=''
 [ "$(epm print info -s)" = "alt" ] && repack='--repack'
+
+# rpm packages have a release in their names
+[ "$(epm print info -p)" = "rpm" ] && [ "$VERSION" != "*" ] && VERSION="$VERSION-1"
+
 
 # current links:
 # https://download.anydesk.com/rpm/anydesk_6.0.1-1_x86_64.rpm
