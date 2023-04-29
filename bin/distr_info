@@ -714,7 +714,7 @@ local DIST_BIT
 DIST_BIT="$(getconf LONG_BIT 2>/dev/null)"
 if [ -n "$DIST_BIT" ] ; then
     echo "$DIST_BIT"
-    exit
+    return
 fi
 
 # Try detect arch size by arch name
@@ -929,64 +929,63 @@ print_help()
 fill_distr_info
 [ -n "$DISTRIB_ID" ] || DISTRIB_ID="Generic"
 
+if [ -n "$*" ] ; then
+    eval lastarg=\${$#}
+    case "$lastarg" in
+        -*)
+            ;;
+        *)
+            override_distrib "$lastarg"
+            # drop last arg
+            set -- "${@:1:$(($#-1))}"
+            ;;
+    esac
+fi
 
-case "$2" in
-    -*)
-        echo "Unsupported option $2" >&2
-        exit 1
-        ;;
-esac
+if [ -z "$1" ] ; then
+    print_total_info
+    exit
+fi
 
+while [ -n "$1" ] ; do
 case "$1" in
     -h|--help)
         print_help
         exit 0
         ;;
     -p|--package-type)
-        override_distrib "$2"
         pkgtype
-        exit 0
         ;;
     -g)
-        override_distrib "$2"
         pkgmanager
-        exit 0
         ;;
     --pretty|--pretty-name)
-        override_distrib "$2"
         print_pretty_name
         ;;
     --distro-arch)
-        override_distrib "$2"
         get_distro_arch
-        exit 0
         ;;
     --debian-arch)
-        override_distrib "$2"
         get_debian_arch
-        exit 0
         ;;
     --glibc-version)
-        override_distrib "$2"
         get_glibc_version
-        exit 0
         ;;
     -d|--base-distro-name)
-        override_distrib "$2"
         echo $DISTRIB_ID
         ;;
     --distro-name)
-        override_distrib "$2"
         echo $DISTRO_NAME
         ;;
     --codename)
-        override_distrib "$2"
         print_codename
         ;;
     -a)
-        override_distrib "$2"
-        [ -n "$DIST_ARCH" ] && echo "$DIST_ARCH" && exit 0
-        get_arch
+        if [ -n "$DIST_ARCH" ] ; then
+            echo "$DIST_ARCH"
+        else
+            get_arch
+        fi
         ;;
     -b)
         get_bit_size
@@ -1004,52 +1003,39 @@ case "$1" in
         get_memory_size
         ;;
     -o|--os-name)
-        override_distrib "$2"
         get_base_os_name
         ;;
     -r|--repo-name)
-        override_distrib "$2"
         print_repo_name
         ;;
     --build-id)
         echo "$BUILD_ID"
         ;;
     -v|--base-version)
-        override_distrib "$2"
         echo "$DISTRIB_RELEASE"
         ;;
     --full-version|--distro-version)
-        override_distrib "$2"
         echo "$DISTRIB_FULL_RELEASE"
         ;;
     --bug-report-url)
         print_bug_report_url
-        exit
         ;;
     -s|-n|--vendor-name)
-        override_distrib "$2"
         pkgvendor
-        exit 0
         ;;
     -y|--service-manager)
-        override_distrib "$2"
         get_service_manager
         ;;
     -V)
         echo "$PROGVERSION"
-        exit 0
         ;;
     -e)
-        override_distrib "$2"
         print_name_version
         ;;
     -*)
         echo "Unsupported option $1" >&2
         exit 1
         ;;
-    *)
-        override_distrib "$1"
-        print_total_info
-        ;;
 esac
-
+shift
+done
