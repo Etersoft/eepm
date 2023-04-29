@@ -454,6 +454,16 @@ check_command()
 
 check_option()
 {
+    # optimization
+    case $1 in
+    -*)
+        # pass
+        ;;
+    *)
+        return 1
+        ;;
+    esac
+
     case $1 in
     -v|--version)         # HELPOPT: print version
         [ -n "$epm_cmd" ] && return 1
