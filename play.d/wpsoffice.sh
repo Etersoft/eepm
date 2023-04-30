@@ -13,16 +13,16 @@ if [ "$VERSION" = "*" ] ; then
     pkgverstr=$(epm tool eget -O- "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=wps-office" | grep "^pkgver=")
     eval $pkgverstr
     [ -n "$pkgver" ] || pkgver=11.1.0.11664
-    VERSION="$pkgver"
+    VERSION="$pkgver.XA"
 fi
 
 pkgtype=$(epm print info -p)
 case $pkgtype in
     rpm)
-        PKG="https://wdl1.pcfg.cache.wpscdn.com/wpsdl/wpsoffice/download/linux/${VERSION##*.}/wps-office-${VERSION}.XA-1.x86_64.rpm"
+        PKG="https://wdl1.pcfg.cache.wpscdn.com/wpsdl/wpsoffice/download/linux/${VERSION##*.}/wps-office-${VERSION}-1.x86_64.rpm"
         ;;
     *)
-        PKG="https://wdl1.pcfg.cache.wpscdn.com/wpsdl/wpsoffice/download/linux/${VERSION##*.}/wps-office_${VERSION}.XA_amd64.deb"
+        PKG="https://wdl1.pcfg.cache.wpscdn.com/wpsdl/wpsoffice/download/linux/${VERSION##*.}/wps-office_${VERSION}_amd64.deb"
         ;;
 esac
 
