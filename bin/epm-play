@@ -341,32 +341,46 @@ __epm_play_install()
    return $RES
 }
 
+__epm_play_download_epm_file()
+{
+    local target="$1"
+    local file="$2"
+    #local epmver="$(epm --short --version)"
+    local epmver="$EPMVERSION"
+    local URL="https://eepm.ru/releases/$epmver/app-versions"
+    info "Updating local IPFS DB in $eget_ipfs_db file from $URL/eget-ipfs-db.txt"
+    docmd eget -q -O "$target" "$URL/$file" && return
+
+    URL="https://eepm.ru/app-versions"
+    info "Updating local IPFS DB in $eget_ipfs_db file from $URL/eget-ipfs-db.txt"
+    docmd eget -q -O "$target" "$URL/$file"
+}
+
+
 __epm_play_initialize_ipfs()
 {
-    if [ -d "$(dirname "$epm_ipfs_db")" ] ; then
-        local URL="https://eepm.ru/app-versions"
-        if [ ! -r "$eget_ipfs_db" ] ; then
-            sudorun touch "$eget_ipfs_db" >&2
-            sudorun chmod -v a+rw "$eget_ipfs_db" >&2
-            # TODO: update this DB every time when changed (and get from IPFS as sign it works.)
-            # get initial db from server
-            info "Initialize local IPFS DB in $eget_ipfs_db file and fill it with data from $URL/eget-ipfs-db.txt"
-            docmd eget -q -O $eget_ipfs_db "$URL/eget-ipfs-db.txt"
-        else
-            # update
-            local t=$(mktemp) || fatal
-            info "Updating local IPFS DB in $eget_ipfs_db file from $URL/eget-ipfs-db.txt"
-            docmd eget -q -O $t "$URL/eget-ipfs-db.txt" || warning "Can't update IPFS DB"
-            if [ -s "$t" ] ; then
-                echo >>$t
-                cat $eget_ipfs_db >>$t
-                sort -u < $t | grep -v "^$" > $eget_ipfs_db
-            fi
-        fi
-        export EGET_IPFS_DB="$eget_ipfs_db"
-    else
-        warning "ipfs db dir $eget_ipfs_db is not exists, skipping --ipfs"
+    if [ ! -d "$(dirname "$epm_ipfs_db")" ] ; then
+        warning "ipfs db dir $eget_ipfs_db does not exist, skipping IPFS mode"
+        return 1
     fi
+
+    if [ ! -r "$eget_ipfs_db" ] ; then
+        sudorun touch "$eget_ipfs_db" >&2
+        sudorun chmod -v a+rw "$eget_ipfs_db" >&2
+    fi
+
+    # download and merge with local db
+    local t=$(mktemp) || fatal
+    remove_on_exit "$t"
+    __epm_play_download_epm_file "$t" "eget-ipfs-db.txt" || warning "Can't update IPFS DB"
+    if [ -s "$t" ] ; then
+        echo >>$t
+        cat $eget_ipfs_db >>$t
+        sort -u < $t | grep -v "^$" > $eget_ipfs_db
+    fi
+
+    # the only one thing need to enable IPFS in eget
+    export EGET_IPFS_DB="$eget_ipfs_db"
 }
 
 epm_play()
