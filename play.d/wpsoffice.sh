@@ -16,13 +16,14 @@ if [ "$VERSION" = "*" ] ; then
     VERSION="$pkgver.XA"
 fi
 
+mversion=$(echo "$VERSION" | sed -e 's|\.XA$||' -e 's|.*\.||')
 pkgtype=$(epm print info -p)
 case $pkgtype in
     rpm)
-        PKG="https://wdl1.pcfg.cache.wpscdn.com/wpsdl/wpsoffice/download/linux/${VERSION##*.}/wps-office-${VERSION}-1.x86_64.rpm"
+        PKG="https://wdl1.pcfg.cache.wpscdn.com/wpsdl/wpsoffice/download/linux/$mversion/wps-office-${VERSION}-1.x86_64.rpm"
         ;;
     *)
-        PKG="https://wdl1.pcfg.cache.wpscdn.com/wpsdl/wpsoffice/download/linux/${VERSION##*.}/wps-office_${VERSION}_amd64.deb"
+        PKG="https://wdl1.pcfg.cache.wpscdn.com/wpsdl/wpsoffice/download/linux/$mversion/wps-office_${VERSION}_amd64.deb"
         ;;
 esac
 
