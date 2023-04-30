@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.54.0
+Version: 3.55.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -92,6 +92,30 @@ a discussion about extra requirements.
 
 
 %changelog
+* Sun Apr 30 2023 Vitaly Lipatov <lav@altlinux.ru> 3.55.0-alt1
+- epm play brave: fix download
+- epm play anydesk: fix version
+- epm play: add bitwarden
+- epm play: add unityhub
+- epm repo addkey: fix download key
+- epm pack 1c83-client: fix unpacking, use erc
+- epm play: add --remove all support
+- eget: fix for brave go-ipfs
+- epm repo addkey: allow key name as first arg
+- epm status: add --installable
+- epm play angie: use new order for epm repo addkey
+- epm play: enable whatsapp support for other distro
+- epm repack vk-calls: add /etc/tmpfiles.d/vk-calls.conf
+- emp-sh-functions: set TMPDIR if missed
+- epm repack: run repack scripts with buildroot dir as current dir
+- epm: add unknown options to pkg_options
+- epm: improve args separating
+- for extra repos use eget, not rsync
+- rewrite tmp file cleaning
+- distr_info: resort functions
+- optimization: use eval distr_info --print-eepm-env instead of separated calls
+- use /usr/bin/env bash shebang
+
 * Thu Apr 27 2023 Vitaly Lipatov <lav@altlinux.ru> 3.54.0-alt1
 - epm play: fix synology-chat
 - epm play: add youtube-music
