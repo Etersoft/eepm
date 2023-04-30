@@ -1026,12 +1026,17 @@ url_get_filename()
 
     ! is_httpurl "$URL" && basename "$URL" && return
 
-    # FIXME with wget
+    # See https://www.cpcwood.com/blog/5-aws-s3-utf-8-content-disposition
     local cd="$(url_get_header "$URL" "Content-Disposition")"
+    if echo "$cd" | grep -q "filename\*=UTF-8" ; then
+        #Content-Disposition: attachment; filename="unityhub-amd64-3.3.0.deb"; filename*=UTF-8''"unityhub-amd64-3.3.0.deb"
+        echo "$cd" | sed -e "s|.*filename\*=UTF-8''||" -e 's|^"||' -e 's|";$||' -e 's|"$||'
+        return
+    fi
     if echo "$cd" | grep -q "filename=" ; then
         #Content-Disposition: attachment; filename=postman-linux-x64.tar.gz
         #content-disposition: attachment; filename="code-1.77.1-1680651749.el7.x86_64.rpm"
-        echo "$cd" | sed -e 's|.*filename=||' -e 's|^"||' -e 's|";$||' -e 's|"$||'
+        echo "$cd" | sed -e 's|.*filename=||' -e 's|^"||' -e 's|";.*||' -e 's|"$||'
         return
     fi
 
