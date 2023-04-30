@@ -23,9 +23,10 @@ load_helper epm-sh-altlinux
 # allowed files too
 __epm_get_file_from_url()
 {
+    local url="$1"
     local tmpfile=$(mktemp)
-    remove_on_exit $tmpfile
-    eget -O $tmpfile $url >/dev/null
+    remove_on_exit "$tmpfile"
+    eget -O "$tmpfile" "$url" >/dev/null
     echo "$tmpfile"
 }
 
@@ -138,6 +139,7 @@ __epm_addkey_deb()
     # compat
     [ -n "$3" ] && name="$3"
 
+    # FIXME: check by GPG PUBKEY
     [ -s /etc/apt/trusted.gpg.d/$name.gpg ] && return
 
     if [ -z "$fingerprint" ] ; then
@@ -166,6 +168,9 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ -z "$1" ] ; then
     echo "Usage: $ epm repo addkey [name] url [fingerprint/gpgkey] [comment/name]"
     return
 fi
+
+# initialize here
+remove_on_exit
 
 case $BASEDISTRNAME in
     "alt")
