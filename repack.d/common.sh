@@ -260,11 +260,13 @@ fix_chrome_sandbox()
 
 add_requires()
 {
+    [ -n "$1" ] || return
     subst "1iRequires: $*" $SPEC
 }
 
 install_requires()
 {
+    [ -n "$1" ] || return
     if [ "$(epm print info -s)" = "alt" ] ; then
         epm install --skip-installed "$@"
     fi
