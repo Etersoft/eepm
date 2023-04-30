@@ -76,7 +76,7 @@ __apply_fix_code()
     export PATH=$PROGDIR:$PATH
     local bashopt=''
     [ -n "$verbose" ] && bashopt='-x'
-    ( unset EPMCURDIR ; docmd $CMDSHELL $bashopt $repackcode "$1" "$2" "$3" ) || fatal "There is an error from $repackcode script"
+    ( unset EPMCURDIR ; docmd $CMDSHELL $bashopt $repackcode "$1" "$2" "$3" "$4" ) || fatal "There is an error from $repackcode script"
 }
 
 __create_rpmmacros()
@@ -180,9 +180,9 @@ __epm_repack_to_rpm()
 
         cd $buildroot || fatal
         __fix_spec $pkgname $buildroot $spec
-        __apply_fix_code "generic" $buildroot $spec $pkgname
-        [ -n "$SUBGENERIC" ] && __apply_fix_code "generic-$SUBGENERIC" $buildroot $spec
-        __apply_fix_code $pkgname $buildroot $spec $pkgname
+        __apply_fix_code "generic" $buildroot $spec $pkgname $abspkg
+        [ -n "$SUBGENERIC" ] && __apply_fix_code "generic-$SUBGENERIC" $buildroot $spec $pkgname $abspkg
+        __apply_fix_code $pkgname $buildroot $spec $pkgname $abspkg
         cd - >/dev/null
 
         TARGETARCH=$(epm print info -a | sed -e 's|^x86$|i586|')
