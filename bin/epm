@@ -20,7 +20,7 @@
 PROGDIR=$(dirname "$0")
 PROGNAME=$(basename "$0")
 [ -n "$EPMCURDIR" ] || export EPMCURDIR="$(pwd)"
-CMDSHELL="/bin/bash"
+CMDSHELL="/usr/bin/env bash"
 # TODO: pwd for ./epm and which for epm
 [ "$PROGDIR" = "." ] && PROGDIR="$EPMCURDIR"
 if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then

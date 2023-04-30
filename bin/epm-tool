@@ -60,7 +60,7 @@ epm_tool()
             ;;
         "json")                      # HELPCMD: json operations
             showcmd json "$@"
-            $SHAREDIR/tools_json "$@"
+            $CMDSHELL $SHAREDIR/tools_json "$@"
             ;;
         "which")
             print_command_path "$@"  # HELPCMD: which like command (no output to stderr, can works without which package)

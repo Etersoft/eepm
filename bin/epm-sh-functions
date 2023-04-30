@@ -516,7 +516,7 @@ eget()
     local EGET
     # use internal eget only if exists
     if [ -s $SHAREDIR/tools_eget ] ; then
-        ( EGET_BACKEND=$eget_backend $SHAREDIR/tools_eget "$@" )
+        ( EGET_BACKEND=$eget_backend $CMDSHELL $SHAREDIR/tools_eget "$@" )
         return
     fi
     fatal "Internal error: missed tools_eget"
@@ -541,7 +541,7 @@ erc()
 
     # use internal eget only if exists
     if [ -s $SHAREDIR/tools_erc ] ; then
-        $SHAREDIR/tools_erc "$@"
+        $CMDSHELL $SHAREDIR/tools_erc "$@"
         return
     fi
     fatal "Internal error: missed tools_erc"
@@ -560,7 +560,7 @@ ercat()
     local ERCAT
     # use internal eget only if exists
     if [ -s $SHAREDIR/tools_ercat ] ; then
-        $SHAREDIR/tools_ercat "$@"
+        $CMDSHELL $SHAREDIR/tools_ercat "$@"
         return
     fi
     fatal "Internal error: missed tools_ercat"
@@ -575,7 +575,7 @@ ercat()
 estrlist()
 {
     if [ -s $SHAREDIR/tools_estrlist ] ; then
-        $SHAREDIR/tools_estrlist "$@"
+        $CMDSHELL $SHAREDIR/tools_estrlist "$@"
         return
     fi
     fatal "missed tools_estrlist"
