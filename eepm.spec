@@ -20,7 +20,7 @@ Obsoletes: epm
 Provides: epm = %EVR
 
 # FIXHERE: Replace with target platform package manager
-Requires: apt rpm apt-scripts
+Requires: apt rpm apt-scripts update-kernel
 # TODO: don't use at all
 Requires: apt-repo
 
