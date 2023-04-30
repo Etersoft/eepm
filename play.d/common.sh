@@ -48,10 +48,10 @@ get_latest_version()
 {
     local epmver="$(epm --short --version)"
     local URL="https://eepm.ru/releases/$epmver/app-versions"
-    if ! eget -q -O- "$URL/$1" ; then
-        URL="https://eepm.ru/app-versions"
-        eget -q -O- "$URL/$1"
-    fi
+    eget -q -O- "$URL/$1" && return
+
+    URL="https://eepm.ru/app-versions"
+    eget -q -O- "$URL/$1"
 }
 
 print_product_alt()
@@ -193,16 +193,21 @@ case "$1" in
             fi
             # latestpkgver <= $pkgver
             if [ -z "$force" ] && [ "$(epm print compare package version $latestpkgver $pkgver)" != "1" ] ; then
-                echo "Latest available version of $PKGNAME: $latestpkgver. Installed version: $pkgver."
+                if [ "$latestpkgver" = "$pkgver" ] ; then
+                    echo "Latest available version of $PKGNAME $latestpkgver is already installed."
+                else
+                    echo "Latest available version of $PKGNAME: $latestpkgver, but you have installed more new version:$pkgver."
+                fi
                 exit
             fi
 
-            if [ -n "$force" ] ; then
-                echo "Updating $PKGNAME from $pkgver to latest available version ..."
-            else
-                echo "Updating $PKGNAME from $pkgver to $latestpkgver version ..."
-                VERSION="$latestpkgver"
-            fi
+            echo "Updating $PKGNAME from $pkgver to latest available version (equal to $latestpkgver or newer) ..."
+            #if [ -n "$force" ] ; then
+            #    echo "Updating $PKGNAME from $pkgver to latest available version ..."
+            #else
+            #    echo "Updating $PKGNAME from $pkgver to $latestpkgver version ..."
+            #    VERSION="$latestpkgver"
+            #fi
         fi
         # pass to run play code
         ;;
