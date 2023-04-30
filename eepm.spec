@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.55.0
+Version: 3.55.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -92,6 +92,18 @@ a discussion about extra requirements.
 
 
 %changelog
+* Mon May 01 2023 Vitaly Lipatov <lav@altlinux.ru> 3.55.1-alt1
+- epm play: fix bitwarden, wpsoffice, trueconf
+- epm: add Requires: update-kernel for ALT
+- distr_info: allow override distr via DISTRNAMEOVERRIDE or latest arg
+- epm play: rewrite IPFS DB download, check epm specific version URL
+- epm play common.sh: update to latest available version in any case
+- epm repack trueconf: use requires from the original package
+- epm repack trueconf-server: improve preinstall packages
+- epm repack: drop old libicu in requires
+- eget: add support for UTF-8 filename in Content-disposition
+- epm: change CMDSHELL to /usr/bin/env bash and use CMDSHELL for call scripts
+
 * Sun Apr 30 2023 Vitaly Lipatov <lav@altlinux.ru> 3.55.0-alt1
 - epm play brave: fix download
 - epm play anydesk: fix version
