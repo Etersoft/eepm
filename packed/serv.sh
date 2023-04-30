@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Copyright (C) 2012-2013, 2016, 2020, 2021, 2023  Etersoft
 # Copyright (C) 2012-2013, 2016, 2020, 2021, 2023  Vitaly Lipatov <lav@etersoft.ru>
@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.54.0"
+EPMVERSION="3.55.0"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -139,16 +139,6 @@ echon()
     echo -n "$*" 2>/dev/null || a= /bin/echo -n "$*"
 }
 
-
-set_target_pkg_env()
-{
-    [ -n "$DISTRNAME" ] || fatal "Missing DISTRNAME in set_target_pkg_env."
-    local ver="$DISTRVERSION"
-    [ -n "$ver" ] && ver="/$ver"
-    PKGFORMAT=$($DISTRVENDOR -p "$DISTRNAME$ver")
-    PKGVENDOR=$($DISTRVENDOR -s "$DISTRNAME$ver")
-    RPMVENDOR=$($DISTRVENDOR -n "$DISTRNAME$ver")
-}
 
 showcmd()
 {
@@ -673,26 +663,27 @@ set_distro_info()
     [ -x $DISTRVENDOR ] || DISTRVENDOR=internal_distr_info
     export DISTRVENDOR
 
-    [ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d) || fatal "Can't get distro name."
-    [ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
-    if [ -z "$DISTRARCH" ] ; then
-        DISTRARCH=$($DISTRVENDOR --distro-arch)
-    fi
-    DISTRCONTROL="$($DISTRVENDOR -y)"
-    [ -n "$BASEDISTRNAME" ] || BASEDISTRNAME=$($DISTRVENDOR -s)
+    # export pack of variables:
+    # BASEDISTRNAME
+    # DISTRNAME
+    # DISTRVERSION
+    # DISTRARCH
+    # DISTRCONTROL
+    # PMTYPE
+    eval $($DISTRVENDOR --print-eepm-env)
 
+    [ -n "$TMPDIR" ] || TMPDIR="/tmp"
     # TODO: improve BIGTMPDIR conception
     # https://bugzilla.mozilla.org/show_bug.cgi?id=69938
     # https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s15.html
     # https://geekpeach.net/ru/%D0%BA%D0%B0%D0%BA-systemd-tmpfiles-%D0%BE%D1%87%D0%B8%D1%89%D0%B0%D0%B5%D1%82-tmp-%D0%B8%D0%BB%D0%B8-var-tmp-%D0%B7%D0%B0%D0%BC%D0%B5%D0%BD%D0%B0-tmpwatch-%D0%B2-centos-rhel-7
-    [ -n "$BIGTMPDIR" ] || [ -d "/var/tmp" ] && BIGTMPDIR="/var/tmp" || BIGTMPDIR="/tmp"
+    [ -n "$BIGTMPDIR" ] || [ -d "/var/tmp" ] && BIGTMPDIR="/var/tmp" || BIGTMPDIR="$TMPDIR"
 }
 
 set_pm_type()
 {
     local CMD
     set_distro_info
-    set_target_pkg_env
 
 if [ -n "$EPM_BACKEND" ] ; then
     PMTYPE=$EPM_BACKEND
@@ -703,7 +694,6 @@ if [ -n "$FORCEPM" ] ; then
     return
 fi
 
-    PMTYPE="$($DISTRVENDOR -g $DISTRNAME/$DISTRVERSION)"
 }
 
 is_active_systemd()
@@ -727,43 +717,41 @@ get_pkg_name_delimiter()
    echo "-"
 }
 
-
-__epm_remove_from_tmp_files()
-{
-   keep="$1"
-   [ -r "$keep" ] || return 0
-   if [ -n "$to_remove_pkg_files" ] ; then
-       to_remove_pkg_files="$(echo "$to_remove_pkg_files" | sed -e "s|$keep||")"
-   fi
-   if [ -n "$to_remove_tmp_files" ] ; then
-       to_remove_tmp_files="$(echo "$to_remove_tmp_files" | sed -e "s|$keep||")"
-   fi
-}
-
 __epm_remove_tmp_files()
 {
-    # TODO: move it to exit handler
-    if [ -z "$DEBUG" ] ; then
-        # TODO: reinvent
-        [ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
-        [ -n "$to_remove_tmp_files" ] && rm -f $to_remove_tmp_files
-        # hack??
-        [ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
-        [ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
-        [ -n "$to_clean_tmp_dirs" ] && rm -rf $to_clean_tmp_dirs 2>/dev/null
+    trap "-" EXIT
+    [ -n "$DEBUG" ] && return 0
+
+    if [ -n "$to_clean_tmp_dirs" ] ; then
+        echo "$to_clean_tmp_dirs" | while read p ; do
+            rm -rf "$p" 2>/dev/null
+        done
     fi
+
+    if [ -n "$to_clean_tmp_files" ] ; then
+        echo "$to_clean_tmp_files" | while read p ; do
+            rm -f "$p" 2>/dev/null
+            rmdir "$(dirname "$p")" 2>/dev/null
+        done
+    fi
+
     return 0
 }
 
 
 remove_on_exit()
 {
-    trap "__epm_remove_tmp_files" EXIT
+    if [ -z "$set_remove_on_exit" ] ; then
+        trap "__epm_remove_tmp_files" EXIT
+        set_remove_on_exit=1
+    fi
     while [ -n "$1" ] ; do
         if [ -d "$1" ] ; then
-            to_clean_tmp_dirs="$to_clean_tmp_dirs $1"
+            to_clean_tmp_dirs="$to_clean_tmp_dirs
+$1"
         elif [ -f "$1" ] ; then
-            to_clean_tmp_files="$to_clean_tmp_files $1"
+            to_clean_tmp_files="$to_clean_tmp_files
+$1"
         fi
         shift
     done
@@ -771,8 +759,11 @@ remove_on_exit()
 
 has_space()
 {
-    estrlist -- has_space "$@"
+        # not for dash:
+        [ "$1" != "${1/ //}" ]
+        # [ "$(echo "$*" | sed -e "s| ||")" != "$*" ]
 }
+
 
 is_url()
 {
@@ -1590,17 +1581,30 @@ print_bug_report_url()
     echo "$BUG_REPORT_URL"
 }
 
+# allows x86_64/Distro/Version
 override_distrib()
 {
-    [ -n "$1" ] || return
+    if [ -n "$1" ] ; then
+        local name="$(echo "$1" | sed -e 's|x86_64/||')"
+        [ "$name" = "$1" ] && DIST_ARCH="x86" || DIST_ARCH="x86_64"
+        DISTRIB_ID="$(echo "$name" | sed -e 's|/.*||')"
+        DISTRIB_RELEASE="$(echo "$name" | sed -e 's|.*/||')"
+        [ "$DISTRIB_ID" = "$DISTRIB_RELEASE" ] && DISTRIB_RELEASE=''
+    else
+        if [ -z "$DISTRNAME" ] ; then
+            return
+        fi
+
+        # if predefined DISTRNAME and possible DISTRVERSION
+        DISTRIB_ID="$DISTRNAME"
+        [ -n "$DISTRVERSION" ] && DISTRIB_RELEASE="$DISTRVERSION"
+        [ -n "$DISTRARCH" ] && DIST_ARCH="$DISTRARCH"
+        #    export DISTRCONTROL="$(get_service_manager)"
+    fi
+
     VENDOR_ID=''
-    PRETTY_NAME=''
-    local name="$(echo "$1" | sed -e 's|x86_64/||')"
-    [ "$name" = "$1" ] && DIST_ARCH="x86" || DIST_ARCH="x86_64"
-    DISTRIB_ID="$(echo "$name" | sed -e 's|/.*||')"
+    PRETTY_NAME="$DISTRIB_ID"
     DISTRO_NAME="$DISTRIB_ID"
-    DISTRIB_RELEASE="$(echo "$name" | sed -e 's|.*/||')"
-    [ "$DISTRIB_ID" = "$DISTRIB_RELEASE" ] && DISTRIB_RELEASE=''
     DISTRIB_CODENAME="$DISTRIB_RELEASE"
     DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
 
@@ -2108,9 +2112,6 @@ fi
 
 }
 
-fill_distr_info
-[ -n "$DISTRIB_ID" ] || DISTRIB_ID="Generic"
-
 get_uname()
 {
     tolower "$(uname $1)" | tr -d " \t\r\n"
@@ -2151,7 +2152,7 @@ echo "$DIST_OS"
 
 get_arch()
 {
-local DIST_ARCH
+[ -n "$DIST_ARCH" ] && return 0
 # Resolve the architecture
 DIST_ARCH="$(get_uname -m)"
 case "$DIST_ARCH" in
@@ -2413,91 +2414,126 @@ Distro name / version (--distro-name/version): $DISTRO_NAME / $DISTRIB_FULL_RELE
 EOF
 }
 
-case "$2" in
-    -*)
-        echo "Unsupported option $2" >&2
-        exit 1
-        ;;
-esac
+print_help()
+{
+    echo "distro_info v$PROGVERSION - distro information retriever"
+    echo "Usage: distro_info [options] [SystemName/Version]"
+    echo "Options:"
+    echo " -h | --help            - this help"
+    echo " -a                     - print hardware architecture (--distro-arch for distro depended name)"
+    echo " -b                     - print size of arch bit (32/64)"
+    echo " -c                     - print number of CPU cores"
+    echo " -i                     - print virtualization type"
+    echo " -m                     - print system memory size (in MB)"
+    echo " -y|--service-manager   - print running service manager"
+    echo " -z                     - print current CPU MHz"
+    echo " --glibc-version        - print system glibc version"
+    echo
+    echo " -d|--base-distro-name  - print distro id (short distro name)"
+    echo " -e                     - print full name of distro with version"
+    echo " -o | --os-name         - print base OS name"
+    echo " -p | --package-type    - print type of the packaging system"
+    echo " -g                     - print name of the packaging system"
+    echo " -s|-n|--vendor-name    - print name of the distro family (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (see _vendor macros in rpm)"
+    echo " --pretty|--pretty-name - print pretty distro name"
+    echo " -v | --base-version    - print version of the distro"
+    echo " --distro-name          - print distro name"
+    echo " --distro-version       - print full version of the distro"
+    echo " --full-version         - print full version of the distro"
+    echo " --codename (obsoleted) - print distro codename (focal for Ubuntu 20.04)"
+    echo " -r|--repo-name         - print repository name (focal for Ubuntu 20.04)"
+    echo " --build-id             - print a string uniquely identifying the system image originally used as the installation base"
+    echo " -V                     - print the utility version"
+    echo "Run without args to print all information."
+}
 
+# print code for eval with names for eepm
+print_eepm_env()
+{
+cat <<EOF
+    export DISTRNAME="$(echo $DISTRIB_ID)"
+    export DISTRVERSION="$(echo "$DISTRIB_RELEASE")"
+    export DISTRARCH="$(get_distro_arch)"
+    export DISTRCONTROL="$(get_service_manager)"
+    export BASEDISTRNAME=$(pkgvendor)
+
+    export PMTYPE="$(pkgmanager)"
+    export PKGFORMAT=$(pkgtype)
+    export PKGVENDOR=$(pkgvendor)
+    # TODO: remove?
+    export RPMVENDOR=$(pkgvendor)
+
+EOF
+
+}
+
+if [ -n "$DISTRNAME" ] ; then
+    override_distrib
+fi
+
+if [ -n "$*" ] ; then
+    eval lastarg=\${$#}
+    case "$lastarg" in
+        -*)
+            ;;
+        *)
+            override_distrib "$lastarg"
+            # drop last arg
+            set -- "${@:1:$(($#-1))}"
+            ;;
+    esac
+fi
+
+# if without override
+if [ -z "$DISTRIB_ID" ] && [ -z "$DISTRNAME" ] ; then
+    fill_distr_info
+    [ -n "$DISTRIB_ID" ] || DISTRIB_ID="Generic"
+fi
+
+if [ -z "$1" ] ; then
+    print_total_info
+    return
+fi
+
+while [ -n "$1" ] ; do
 case "$1" in
     -h|--help)
-        echo "distro_info v$PROGVERSION - distro information retriever"
-        echo "Usage: distro_info [options] [SystemName/Version]"
-        echo "Options:"
-        echo " -h | --help            - this help"
-        echo " -a                     - print hardware architecture (--distro-arch for distro depended name)"
-        echo " -b                     - print size of arch bit (32/64)"
-        echo " -c                     - print number of CPU cores"
-        echo " -i                     - print virtualization type"
-        echo " -m                     - print system memory size (in MB)"
-        echo " -y|--service-manager   - print running service manager"
-        echo " -z                     - print current CPU MHz"
-        echo " --glibc-version        - print system glibc version"
-        echo
-        echo " -d|--base-distro-name  - print distro id (short distro name)"
-        echo " -e                     - print full name of distro with version"
-        echo " -o | --os-name         - print base OS name"
-        echo " -p | package-type      - print type of the packaging system"
-        echo " -g                     - print name of the packaging system"
-        echo " -s|-n|--vendor-name    - print name of the distro family (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (see _vendor macros in rpm)"
-        echo " --pretty|--pretty-name - print pretty distro name"
-        echo " -v | --base-version    - print version of the distro"
-        echo " --distro-name          - print distro name"
-        echo " --distro-version       - print full version of the distro"
-        echo " --full-version         - print full version of the distro"
-        echo " --codename (obsoleted) - print distro codename (focal for Ubuntu 20.04)"
-        echo " -r|--repo-name         - print repository name (focal for Ubuntu 20.04)"
-        echo " --build-id             - print a string uniquely identifying the system image originally used as the installation base"
-        echo " -V                     - print the utility version"
-        echo "Run without args to print all information."
+        print_help
         exit 0
         ;;
     -p|--package-type)
-        override_distrib "$2"
         pkgtype
-        exit 0
         ;;
     -g)
-        override_distrib "$2"
         pkgmanager
-        exit 0
         ;;
     --pretty|--pretty-name)
-        override_distrib "$2"
         print_pretty_name
         ;;
     --distro-arch)
-        override_distrib "$2"
         get_distro_arch
-        exit 0
         ;;
     --debian-arch)
-        override_distrib "$2"
         get_debian_arch
-        exit 0
         ;;
     --glibc-version)
-        override_distrib "$2"
         get_glibc_version
-        exit 0
         ;;
     -d|--base-distro-name)
-        override_distrib "$2"
         echo $DISTRIB_ID
         ;;
     --distro-name)
-        override_distrib "$2"
         echo $DISTRO_NAME
         ;;
     --codename)
-        override_distrib "$2"
         print_codename
         ;;
     -a)
-        override_distrib "$2"
-        [ -n "$DIST_ARCH" ] && echo "$DIST_ARCH" && exit 0
-        get_arch
+        if [ -n "$DIST_ARCH" ] ; then
+            echo "$DIST_ARCH"
+        else
+            get_arch
+        fi
         ;;
     -b)
         get_bit_size
@@ -2515,55 +2551,48 @@ case "$1" in
         get_memory_size
         ;;
     -o|--os-name)
-        override_distrib "$2"
         get_base_os_name
         ;;
     -r|--repo-name)
-        override_distrib "$2"
         print_repo_name
         ;;
     --build-id)
         echo "$BUILD_ID"
         ;;
     -v|--base-version)
-        override_distrib "$2"
         echo "$DISTRIB_RELEASE"
         ;;
     --full-version|--distro-version)
-        override_distrib "$2"
         echo "$DISTRIB_FULL_RELEASE"
         ;;
     --bug-report-url)
         print_bug_report_url
-        return
         ;;
     -s|-n|--vendor-name)
-        override_distrib "$2"
         pkgvendor
-        exit 0
         ;;
     -y|--service-manager)
-        override_distrib "$2"
         get_service_manager
         ;;
     -V)
         echo "$PROGVERSION"
-        exit 0
         ;;
     -e)
-        override_distrib "$2"
         print_name_version
+        ;;
+    --print-eepm-env)
+        print_eepm_env
+        exit 0
         ;;
     -*)
         echo "Unsupported option $1" >&2
+        # print empty line in any case
+        echo
         exit 1
         ;;
-    *)
-        override_distrib "$1"
-        print_total_info
-        ;;
 esac
-
+shift
+done
 }
 ################# end of incorporated bin/distr_info #################
 
@@ -2588,7 +2617,6 @@ set_service_type()
     local CMD
 
     set_distro_info
-    set_target_pkg_env
 
 case "$DISTRCONTROL" in
     sysvinit)

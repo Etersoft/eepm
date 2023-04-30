@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Copyright (C) 2012-2021  Etersoft
 # Copyright (C) 2012-2021  Vitaly Lipatov <lav@etersoft.ru>
@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.54.0"
+EPMVERSION="3.55.0"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -141,16 +141,6 @@ echon()
     echo -n "$*" 2>/dev/null || a= /bin/echo -n "$*"
 }
 
-
-set_target_pkg_env()
-{
-    [ -n "$DISTRNAME" ] || fatal "Missing DISTRNAME in set_target_pkg_env."
-    local ver="$DISTRVERSION"
-    [ -n "$ver" ] && ver="/$ver"
-    PKGFORMAT=$($DISTRVENDOR -p "$DISTRNAME$ver")
-    PKGVENDOR=$($DISTRVENDOR -s "$DISTRNAME$ver")
-    RPMVENDOR=$($DISTRVENDOR -n "$DISTRNAME$ver")
-}
 
 showcmd()
 {
@@ -675,26 +665,27 @@ set_distro_info()
     [ -x $DISTRVENDOR ] || DISTRVENDOR=internal_distr_info
     export DISTRVENDOR
 
-    [ -n "$DISTRNAME" ] || DISTRNAME=$($DISTRVENDOR -d) || fatal "Can't get distro name."
-    [ -n "$DISTRVERSION" ] || DISTRVERSION=$($DISTRVENDOR -v)
-    if [ -z "$DISTRARCH" ] ; then
-        DISTRARCH=$($DISTRVENDOR --distro-arch)
-    fi
-    DISTRCONTROL="$($DISTRVENDOR -y)"
-    [ -n "$BASEDISTRNAME" ] || BASEDISTRNAME=$($DISTRVENDOR -s)
+    # export pack of variables:
+    # BASEDISTRNAME
+    # DISTRNAME
+    # DISTRVERSION
+    # DISTRARCH
+    # DISTRCONTROL
+    # PMTYPE
+    eval $($DISTRVENDOR --print-eepm-env)
 
+    [ -n "$TMPDIR" ] || TMPDIR="/tmp"
     # TODO: improve BIGTMPDIR conception
     # https://bugzilla.mozilla.org/show_bug.cgi?id=69938
     # https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s15.html
     # https://geekpeach.net/ru/%D0%BA%D0%B0%D0%BA-systemd-tmpfiles-%D0%BE%D1%87%D0%B8%D1%89%D0%B0%D0%B5%D1%82-tmp-%D0%B8%D0%BB%D0%B8-var-tmp-%D0%B7%D0%B0%D0%BC%D0%B5%D0%BD%D0%B0-tmpwatch-%D0%B2-centos-rhel-7
-    [ -n "$BIGTMPDIR" ] || [ -d "/var/tmp" ] && BIGTMPDIR="/var/tmp" || BIGTMPDIR="/tmp"
+    [ -n "$BIGTMPDIR" ] || [ -d "/var/tmp" ] && BIGTMPDIR="/var/tmp" || BIGTMPDIR="$TMPDIR"
 }
 
 set_pm_type()
 {
     local CMD
     set_distro_info
-    set_target_pkg_env
 
 if [ -n "$EPM_BACKEND" ] ; then
     PMTYPE=$EPM_BACKEND
@@ -705,7 +696,6 @@ if [ -n "$FORCEPM" ] ; then
     return
 fi
 
-    PMTYPE="$($DISTRVENDOR -g $DISTRNAME/$DISTRVERSION)"
 }
 
 is_active_systemd()
@@ -729,43 +719,41 @@ get_pkg_name_delimiter()
    echo "-"
 }
 
-
-__epm_remove_from_tmp_files()
-{
-   keep="$1"
-   [ -r "$keep" ] || return 0
-   if [ -n "$to_remove_pkg_files" ] ; then
-       to_remove_pkg_files="$(echo "$to_remove_pkg_files" | sed -e "s|$keep||")"
-   fi
-   if [ -n "$to_remove_tmp_files" ] ; then
-       to_remove_tmp_files="$(echo "$to_remove_tmp_files" | sed -e "s|$keep||")"
-   fi
-}
-
 __epm_remove_tmp_files()
 {
-    # TODO: move it to exit handler
-    if [ -z "$DEBUG" ] ; then
-        # TODO: reinvent
-        [ -n "$to_remove_pkg_files" ] && rm -f $to_remove_pkg_files
-        [ -n "$to_remove_tmp_files" ] && rm -f $to_remove_tmp_files
-        # hack??
-        [ -n "$to_remove_pkg_files" ] && rmdir $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
-        [ -n "$to_remove_pkg_dirs" ] && rmdir $to_remove_pkg_dirs 2>/dev/null
-        [ -n "$to_clean_tmp_dirs" ] && rm -rf $to_clean_tmp_dirs 2>/dev/null
+    trap "-" EXIT
+    [ -n "$DEBUG" ] && return 0
+
+    if [ -n "$to_clean_tmp_dirs" ] ; then
+        echo "$to_clean_tmp_dirs" | while read p ; do
+            rm -rf "$p" 2>/dev/null
+        done
     fi
+
+    if [ -n "$to_clean_tmp_files" ] ; then
+        echo "$to_clean_tmp_files" | while read p ; do
+            rm -f "$p" 2>/dev/null
+            rmdir "$(dirname "$p")" 2>/dev/null
+        done
+    fi
+
     return 0
 }
 
 
 remove_on_exit()
 {
-    trap "__epm_remove_tmp_files" EXIT
+    if [ -z "$set_remove_on_exit" ] ; then
+        trap "__epm_remove_tmp_files" EXIT
+        set_remove_on_exit=1
+    fi
     while [ -n "$1" ] ; do
         if [ -d "$1" ] ; then
-            to_clean_tmp_dirs="$to_clean_tmp_dirs $1"
+            to_clean_tmp_dirs="$to_clean_tmp_dirs
+$1"
         elif [ -f "$1" ] ; then
-            to_clean_tmp_files="$to_clean_tmp_files $1"
+            to_clean_tmp_files="$to_clean_tmp_files
+$1"
         fi
         shift
     done
@@ -773,8 +761,11 @@ remove_on_exit()
 
 has_space()
 {
-    estrlist -- has_space "$@"
+        # not for dash:
+        [ "$1" != "${1/ //}" ]
+        # [ "$(echo "$*" | sed -e "s| ||")" != "$*" ]
 }
+
 
 is_url()
 {
@@ -1358,8 +1349,7 @@ epm_assure()
 
     # can't be used in epm ei case
     #docmd epm --auto install $PACKAGE || return
-    # TODO: HACK: DEBUG=1 for skip to_remove_pkg handling
-    (DEBUG=1 repack='' non_interactive=1 pkg_names="$PACKAGE" pkg_files='' pkg_urls='' epm_install ) || return
+    (repack='' non_interactive=1 pkg_names="$PACKAGE" pkg_files='' pkg_urls='' epm_install ) || return
 
     # no check if we don't need a version
     [ -n "$PACKAGEVERSION" ] || return 0
@@ -2150,10 +2140,6 @@ epm_checkpkg()
         check_pkg_integrity $pkg || RETVAL=1
     done
 
-    # TODO: reinvent
-    [ -n "$to_remove_pkg_files" ] && rm -fv $to_remove_pkg_files
-    [ -n "$to_remove_pkg_files" ] && rmdir -v $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
-
     #fatal "Broken package $pkg"
     return $RETVAL
 }
@@ -2690,8 +2676,8 @@ __download_pkg_urls()
             for i in *.* ; do
                 [ -s "$tmppkg/$i" ] || continue
                 chmod $verbose a+r "$tmppkg/$i"
-                pkg_files="$pkg_files $tmppkg/$i"
-                to_remove_pkg_files="$to_remove_pkg_files $tmppkg/$i"
+                [ -n "$pkg_files" ] && pkg_files="$pkg_files $tmppkg/$i" || pkg_files="$tmppkg/$i"
+                remove_on_exit "$tmppkg/$i"
             done
         else
             warning "Failed to download $url, ignoring"
@@ -2706,8 +2692,6 @@ __handle_pkg_urls_to_install()
 {
     #[ -n "$pkg_urls" ] || return
 
-    # TODO: do it correctly
-    to_remove_pkg_files=
     # FIXME: check type of pkg_urls separately?
     if [ "$(get_package_type "$pkg_urls")" != $PKGFORMAT ] || ! __use_url_install ; then
         # use workaround with eget: download and put in pkg_files
@@ -2721,9 +2705,6 @@ __handle_pkg_urls_to_checking()
 {
     #[ -n "$pkg_urls" ] || return
 
-    # TODO: do it correctly
-    to_remove_pkg_files=
-    
     # use workaround with eget: download and put in pkg_files
     __download_pkg_urls
 
@@ -2942,7 +2923,13 @@ __epm_korinf_install_eepm() {
         fi
     fi
 
-    __epm_korinf_install eepm
+    pkg_list="eepm"
+    # TODO: reenable eepm-repack build
+    # don't lose epm-repack if installed
+    # is_installed epm-repack && pkg_list="$pkg_list eepm-repack"
+
+    # enable scripts to resolve dependencies with apt
+    scripts='--scripts' __epm_korinf_install $pkg_list
 }
 
 epm_epm_install_help()
@@ -3016,7 +3003,7 @@ __alt_local_content_filelist()
 
     {
         [ -n "$USETTY" ] && info "Search in $CI for $1..."
-        __local_ercat $CI | grep -h -P -- ".*\t$1$" | sed -e "s|\(.*\)\t\(.*\)|\1|g"
+        ercat $CI | grep -h -P -- ".*\t$1$" | sed -e "s|\(.*\)\t\(.*\)|\1|g"
     } | $OUTCMD
 }
 
@@ -3562,9 +3549,6 @@ __epm_info_by_pkgtype || __epm_info_by_pmtype
 
 local RETVAL=$?
 
-[ -n "$to_remove_pkg_files" ] && rm -fv $to_remove_pkg_files
-[ -n "$to_remove_pkg_files" ] && rmdir -v $(dirname $to_remove_pkg_files | head -n1) 2>/dev/null
-
 return $RETVAL
 }
 
@@ -3949,8 +3933,6 @@ epm_install_files()
             if __epm_repack_if_needed $files ; then
                 [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
                 files="$repacked_pkgs"
-                # TODO
-                #__epm_remove_tmp_files
             fi
 
             if [ -n "$save_only" ] ; then
@@ -4003,8 +3985,6 @@ epm_install_files()
             if __epm_repack_if_needed $files ; then
                 [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
                 files="$repacked_pkgs"
-                # TODO
-                #__epm_remove_tmp_files
             fi
 
             if [ -n "$save_only" ] ; then
@@ -4201,11 +4181,6 @@ epm_install()
     fi
 
     epm_install_files $files
-    local RETVAL=$?
-
-    __epm_remove_tmp_files
-
-    return $RETVAL
 }
 
 # File bin/epm-Install:
@@ -5122,9 +5097,8 @@ epm_pack()
         exit
     fi
 
-    trap "__epm_remove_tmp_files" EXIT
     local tmpdir="$(mktemp -d --tmpdir=$BIGTMPDIR)"
-    to_clean_tmp_dirs="$to_clean_tmp_dirs $tmpdir"
+    remove_on_exit $tmpdir
 
     local packname="$1"
     local tarname="$2"
@@ -5136,8 +5110,7 @@ epm_pack()
         pkg_urls="$tarname"
         cd $tmpdir || fatal
         __handle_pkg_urls_to_install
-        # drop spaces and get full path
-        tarname="$(realpath $pkg_files)"
+        tarname="$(realpath "$pkg_files")"
     elif [ -d "$tarname" ] ; then
         tarname="$(realpath "$tarname")"
         cd $tmpdir || fatal
@@ -5715,7 +5688,19 @@ case "$1" in
 
     --remove|remove)
         shift
-        __epm_play_remove "$@"
+        if [ -z "$1" ] ; then
+            fatal "run --remove with 'all' or a project name"
+        fi
+
+        local list
+        if [ "$1" = "all" ] ; then
+            shift
+            list="$(__list_installed_app)"
+        else
+            list="$*"
+        fi
+
+        __epm_play_remove $list
         exit
         ;;
 
@@ -8501,7 +8486,6 @@ epm_repack()
         fi
     fi
 
-    __epm_remove_tmp_files
 }
 
 # File bin/epm-repack-deb:
@@ -8519,8 +8503,7 @@ __epm_repack_to_deb()
     repacked_pkgs=''
 
     local TDIR="$(mktemp -d --tmpdir=$BIGTMPDIR)"
-    to_clean_tmp_dirs="$to_clean_tmp_dirs $TDIR"
-    trap "__epm_remove_tmp_files" EXIT
+    remove_on_exit $TDIR
 
     for pkg in $pkgs ; do
         abspkg="$(realpath "$pkg")"
@@ -8537,7 +8520,7 @@ __epm_repack_to_deb()
         local DEBCONVERTED=$(grep "deb generated" $RC_STDOUT | sed -e "s| generated||g")
         if [ -n "$DEBCONVERTED" ] ; then
             repacked_pkgs="$repacked_pkgs $(realpath $DEBCONVERTED)"
-            to_remove_pkg_files="$to_remove_pkg_files $(realpath $DEBCONVERTED)"
+            remove_on_exit "$(realpath $DEBCONVERTED)"
         fi
         clean_store_output
         cd - >/dev/null
@@ -8623,7 +8606,7 @@ __create_rpmmacros()
 
 %_allow_root_build    1
 EOF
-    to_remove_pkg_files="$to_remove_pkg_files $HOME/.rpmmacros"
+    remove_on_exit "$HOME/.rpmmacros"
 }
 
 
@@ -8660,8 +8643,7 @@ __epm_repack_to_rpm()
 
     local pkg
     export HOME="$(mktemp -d --tmpdir=$BIGTMPDIR)"
-    to_clean_tmp_dirs="$to_clean_tmp_dirs $HOME"
-    trap "__epm_remove_tmp_files" EXIT
+    remove_on_exit $HOME
     __create_rpmmacros
 
     local alpkg
@@ -8693,48 +8675,47 @@ __epm_repack_to_rpm()
         local subdir="$(echo *)"
         [ -d "$subdir" ] || fatal "can't find subdir in $(pwd)"
 
+        local buildroot="$tmpbuilddir/$subdir"
+
         # detect spec and move to prev dir
-        local spec="$(echo $tmpbuilddir/$subdir/*.spec)"
+        local spec="$(echo $buildroot/*.spec)"
         [ -s "$spec" ] || fatal "Can't find spec $spec"
         mv $spec $tmpbuilddir || fatal
         spec="$tmpbuilddir/$(basename "$spec")"
+
         #__set_name_version $spec $PKGNAME $VERSION
         local pkgname="$(grep "^Name: " $spec | sed -e "s|Name: ||g" | head -n1)"
 
         # for tarballs fix permissions
-        [ -n "$VERSION" ] && chmod $verbose -R a+rX $tmpbuilddir/$subdir/*
+        [ -n "$VERSION" ] && chmod $verbose -R a+rX $buildroot/*
 
-        __fix_spec $pkgname $tmpbuilddir/$subdir $spec
-        __apply_fix_code "generic" $tmpbuilddir/$subdir $spec $pkgname
-        [ -n "$SUBGENERIC" ] && __apply_fix_code "generic-$SUBGENERIC" $tmpbuilddir/$subdir $spec
-        __apply_fix_code $pkgname $tmpbuilddir/$subdir $spec $pkgname
-        # TODO: we need these dirs to be created
-        to_remove_pkg_dirs="$to_remove_pkg_dirs $HOME/RPM/BUILD $HOME/RPM"
+        cd $buildroot || fatal
+        __fix_spec $pkgname $buildroot $spec
+        __apply_fix_code "generic" $buildroot $spec $pkgname
+        [ -n "$SUBGENERIC" ] && __apply_fix_code "generic-$SUBGENERIC" $buildroot $spec
+        __apply_fix_code $pkgname $buildroot $spec $pkgname
+        cd - >/dev/null
 
         TARGETARCH=$(epm print info -a | sed -e 's|^x86$|i586|')
 
-        showcmd rpmbuild --buildroot $tmpbuilddir/$subdir --target $TARGETARCH -bb $spec
+        showcmd rpmbuild --buildroot $buildroot --target $TARGETARCH -bb $spec
         if [ -n "$verbose" ] ; then
-            a='' rpmbuild --buildroot $tmpbuilddir/$subdir --target $TARGETARCH -bb $spec || fatal
+            a='' rpmbuild --buildroot $buildroot --target $TARGETARCH -bb $spec || fatal
         else
-            a='' rpmbuild --buildroot $tmpbuilddir/$subdir --target $TARGETARCH -bb $spec >/dev/null || fatal
+            a='' rpmbuild --buildroot $buildroot --target $TARGETARCH -bb $spec >/dev/null || fatal
         fi
         # remove copy of source binary package (don't mix with generated)
         rm -f $tmpbuilddir/../$alpkg
         local repacked_rpm="$(realpath $tmpbuilddir/../*.rpm)"
         if [ -s "$repacked_rpm" ] ; then
-            repacked_pkgs="$repacked_pkgs $repacked_rpm"
-            to_remove_pkg_files="$to_remove_pkg_files $repacked_rpm"
+            remove_on_exit "$repacked_rpm"
+            [ -n "$repacked_pkgs" ] && repacked_pkgs="$repacked_pkgs $repacked_rpm" || repacked_pkgs="$repacked_rpm"
         else
             warning "Can't find converted rpm for source binary package '$pkg'"
         fi
         cd $EPMCURDIR >/dev/null
-        rm -rf $tmpbuilddir/$subdir/
-        rm -rf $spec
     done
 
-    rmdir $tmpbuilddir
-    #rmdir $tmpbuilddir/..
     true
 }
 
@@ -8840,19 +8821,30 @@ esac
 
 __epm_get_file_from_url()
 {
+    local url="$1"
     local tmpfile=$(mktemp)
-    remove_on_exit $tmpfile
-    eget -O $tmpfile $url >/dev/null
+    remove_on_exit "$tmpfile"
+    eget -O "$tmpfile" "$url" >/dev/null
     echo "$tmpfile"
 }
 
 __epm_addkey_altlinux()
 {
+    local name
     local url="$1"
-    local fingerprint="$2"
-    local comment="$3"
-    local name="$4"
-    [ -n "$name" ] || name="$(basename "$url" .gpg)"
+    shift
+    if is_url "$url" ; then
+        name="$(basename "$url" .gpg)"
+    else
+        name="$url"
+        url="$1"
+        shift
+    fi
+
+    local fingerprint="$1"
+    local comment="$2"
+    # compat
+    [ -n "$3" ] && name="$3"
 
     [ -s /etc/apt/vendors.list.d/$name.list ] && return
 
@@ -8870,9 +8862,16 @@ EOF
 
 __epm_addkey_alpine()
 {
+    local name
     local url="$1"
-
-    local name="$(basename $url .rsa)"
+    shift
+    if is_url "$url" ; then
+        name="$(basename "$url" .rsa)"
+    else
+        name="$url"
+        url="$1"
+        shift
+    fi
 
     local target="/etc/apk/keys/$name.rsa"
 
@@ -8885,10 +8884,20 @@ __epm_addkey_alpine()
 
 __epm_addkey_dnf()
 {
+    local name
     local url="$1"
-    local gpgkeyurl="$2"
-    local nametext="$3"
-    local name="$4"
+    shift
+    if is_url "$url" ; then
+        name="$(basename "$url" .gpg)"
+    else
+        name="$url"
+        url="$1"
+        shift
+    fi
+    local gpgkeyurl="$1"
+    local nametext="$2"
+    # compat
+    [ -n "$3" ] && name="$3"
 
     # TODO: missed name, nametext, gpgkeyurl (disable gpgcheck=1)
 
@@ -8912,16 +8921,30 @@ EOF
 
 __epm_addkey_deb()
 {
+    local name
     local url="$1"
-    local fingerprint="$2"
-    local comment="$3"
-    local name="$4"
-    [ -n "$name" ] || name="$(basename "$url" .gpg)"
+    shift
+    if is_url "$url" ; then
+        name="$(basename "$url" .gpg)"
+    else
+        name="$url"
+        url="$1"
+        shift
+    fi
+    local fingerprint="$1"
+    local comment="$2"
+    # compat
+    [ -n "$3" ] && name="$3"
 
+    # FIXME: check by GPG PUBKEY
     [ -s /etc/apt/trusted.gpg.d/$name.gpg ] && return
 
     if [ -z "$fingerprint" ] ; then
         local tmpfile=$(__epm_get_file_from_url $url) || fatal
+        if cat $tmpfile | head -n3 | grep -- "-----BEGIN PGP PUBLIC KEY BLOCK-----" ; then
+            # This is a GnuPG extension to OpenPGP
+            cat $tmpfile | gpg --dearmor >$tmpfile
+        fi
         sudocmd apt-key add $tmpfile
 
         return
@@ -8930,9 +8953,15 @@ __epm_addkey_deb()
 }
 
 
-
 epm_addkey()
 {
+
+if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ -z "$1" ] ; then
+    echo "Usage: $ epm repo addkey [name] url [fingerprint/gpgkey] [comment/name]"
+    return
+fi
+
+remove_on_exit
 
 case $BASEDISTRNAME in
     "alt")
@@ -10732,7 +10761,7 @@ epm_search()
 __alt_search_file_output()
 {
     # grep only on left part (filename), then revert order and grep with color
-    __local_ercat $1 | grep -h -- ".*$2.*[[:space:]]" | sed -e "s|\(.*\)\t\(.*\)|\2: \1|g" $3
+    ercat $1 | grep -h -- ".*$2.*[[:space:]]" | sed -e "s|\(.*\)\t\(.*\)|\2: \1|g" $3
 }
 
 __alt_local_content_search()
@@ -10871,30 +10900,6 @@ get_local_alt_mirror_path()
 
 ALT_CONTENTS_INDEX_LIST=$TMPDIR/eepm/contents_index_list
 
-__local_ercat()
-{
-   local i
-   for i in "$@" ; do
-       case "$i" in
-           *.xz)
-               a='' xzcat $i
-               ;;
-           *.lz4)
-               a='' lz4cat $i
-               ;;
-           *.gz)
-               a='' zcat $i
-               ;;
-           *.failed)
-               # just ignore
-               ;;
-           *)
-               cat $i
-               ;;
-       esac
-   done
-}
-
 rsync_alt_contents_index()
 {
     local URL="$1"
@@ -10961,9 +10966,12 @@ update_alt_contents_index()
                 rsync_alt_contents_index $REMOTEURL/base/contents_index.gz $LOCALPATH/contents_index.gz && __add_to_contents_index_list "$REMOTEURL" "$LOCALPATH/contents_index.gz" && continue
                 [ -n "$verbose" ] && info "Note: Can't retrieve $REMOTEURL/base/contents_index.gz, fallback to $URL/base/contents_index"
             fi
+            # we don't know if remote server has rsync
             # fix rsync URL firstly
-            local RSYNCURL="$(echo "$URL" | sed -e "s|rsync://\(ftp.basealt.ru\|basealt.org\|altlinux.ru\)/pub/distributions/ALTLinux|rsync://\1/ALTLinux|")" #"
-            rsync_alt_contents_index $RSYNCURL/base/contents_index $LOCALPATH/contents_index -z && __add_to_contents_index_list "$RSYNCURL" "$LOCALPATH/contents_index" && continue
+            #local RSYNCURL="$(echo "$URL" | sed -e "s|rsync://\(ftp.basealt.ru\|basealt.org\|altlinux.ru\)/pub/distributions/ALTLinux|rsync://\1/ALTLinux|")" #"
+            #rsync_alt_contents_index $RSYNCURL/base/contents_index $LOCALPATH/contents_index -z && __add_to_contents_index_list "$RSYNCURL" "$LOCALPATH/contents_index" && continue
+            mkdir -p "$LOCALPATH"
+            eget -O $LOCALPATH/contents_index $URL/base/contents_index && __add_to_contents_index_list "$RSYNCURL" "$LOCALPATH/contents_index" && continue
 
             __add_better_to_contents_index_list "(cached)" "$LOCALPATH/contents_index.gz" "$LOCALPATH/contents_index"
         fi
@@ -11497,6 +11505,17 @@ epm_stats()
 # File bin/epm-status:
 
 
+epm_status_installable()
+{
+    local pkg="$1"
+    #LANG=C epm policy "$pkg" | grep Candidate >/dev/null 2>/dev/null
+    if [ -n "$verbose" ] ; then
+        docmd epm install --simulate "$pkg"
+    else
+        epm install --simulate "$pkg" 2>/dev/null >/dev/null
+    fi
+}
+
 epm_status_validate()
 {
     local pkg="$1"
@@ -11640,8 +11659,15 @@ epm_status()
             epm_status_validate "$@"
             return
             ;;
-        *)
+        --installable)
+            epm_status_installable "$@"
+            return
+            ;;
+        -*)
             fatal "Unknown option $option, use epm status --help to get info"
+            ;;
+        *)
+            fatal "No option before $option, use epm status --help to get info"
             ;;
     esac
 
@@ -12200,17 +12226,30 @@ print_bug_report_url()
     echo "$BUG_REPORT_URL"
 }
 
+# allows x86_64/Distro/Version
 override_distrib()
 {
-    [ -n "$1" ] || return
+    if [ -n "$1" ] ; then
+        local name="$(echo "$1" | sed -e 's|x86_64/||')"
+        [ "$name" = "$1" ] && DIST_ARCH="x86" || DIST_ARCH="x86_64"
+        DISTRIB_ID="$(echo "$name" | sed -e 's|/.*||')"
+        DISTRIB_RELEASE="$(echo "$name" | sed -e 's|.*/||')"
+        [ "$DISTRIB_ID" = "$DISTRIB_RELEASE" ] && DISTRIB_RELEASE=''
+    else
+        if [ -z "$DISTRNAME" ] ; then
+            return
+        fi
+
+        # if predefined DISTRNAME and possible DISTRVERSION
+        DISTRIB_ID="$DISTRNAME"
+        [ -n "$DISTRVERSION" ] && DISTRIB_RELEASE="$DISTRVERSION"
+        [ -n "$DISTRARCH" ] && DIST_ARCH="$DISTRARCH"
+        #    export DISTRCONTROL="$(get_service_manager)"
+    fi
+
     VENDOR_ID=''
-    PRETTY_NAME=''
-    local name="$(echo "$1" | sed -e 's|x86_64/||')"
-    [ "$name" = "$1" ] && DIST_ARCH="x86" || DIST_ARCH="x86_64"
-    DISTRIB_ID="$(echo "$name" | sed -e 's|/.*||')"
+    PRETTY_NAME="$DISTRIB_ID"
     DISTRO_NAME="$DISTRIB_ID"
-    DISTRIB_RELEASE="$(echo "$name" | sed -e 's|.*/||')"
-    [ "$DISTRIB_ID" = "$DISTRIB_RELEASE" ] && DISTRIB_RELEASE=''
     DISTRIB_CODENAME="$DISTRIB_RELEASE"
     DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
 
@@ -12718,9 +12757,6 @@ fi
 
 }
 
-fill_distr_info
-[ -n "$DISTRIB_ID" ] || DISTRIB_ID="Generic"
-
 get_uname()
 {
     tolower "$(uname $1)" | tr -d " \t\r\n"
@@ -12761,7 +12797,7 @@ echo "$DIST_OS"
 
 get_arch()
 {
-local DIST_ARCH
+[ -n "$DIST_ARCH" ] && return 0
 # Resolve the architecture
 DIST_ARCH="$(get_uname -m)"
 case "$DIST_ARCH" in
@@ -13023,91 +13059,126 @@ Distro name / version (--distro-name/version): $DISTRO_NAME / $DISTRIB_FULL_RELE
 EOF
 }
 
-case "$2" in
-    -*)
-        echo "Unsupported option $2" >&2
-        exit 1
-        ;;
-esac
+print_help()
+{
+    echo "distro_info v$PROGVERSION - distro information retriever"
+    echo "Usage: distro_info [options] [SystemName/Version]"
+    echo "Options:"
+    echo " -h | --help            - this help"
+    echo " -a                     - print hardware architecture (--distro-arch for distro depended name)"
+    echo " -b                     - print size of arch bit (32/64)"
+    echo " -c                     - print number of CPU cores"
+    echo " -i                     - print virtualization type"
+    echo " -m                     - print system memory size (in MB)"
+    echo " -y|--service-manager   - print running service manager"
+    echo " -z                     - print current CPU MHz"
+    echo " --glibc-version        - print system glibc version"
+    echo
+    echo " -d|--base-distro-name  - print distro id (short distro name)"
+    echo " -e                     - print full name of distro with version"
+    echo " -o | --os-name         - print base OS name"
+    echo " -p | --package-type    - print type of the packaging system"
+    echo " -g                     - print name of the packaging system"
+    echo " -s|-n|--vendor-name    - print name of the distro family (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (see _vendor macros in rpm)"
+    echo " --pretty|--pretty-name - print pretty distro name"
+    echo " -v | --base-version    - print version of the distro"
+    echo " --distro-name          - print distro name"
+    echo " --distro-version       - print full version of the distro"
+    echo " --full-version         - print full version of the distro"
+    echo " --codename (obsoleted) - print distro codename (focal for Ubuntu 20.04)"
+    echo " -r|--repo-name         - print repository name (focal for Ubuntu 20.04)"
+    echo " --build-id             - print a string uniquely identifying the system image originally used as the installation base"
+    echo " -V                     - print the utility version"
+    echo "Run without args to print all information."
+}
 
+# print code for eval with names for eepm
+print_eepm_env()
+{
+cat <<EOF
+    export DISTRNAME="$(echo $DISTRIB_ID)"
+    export DISTRVERSION="$(echo "$DISTRIB_RELEASE")"
+    export DISTRARCH="$(get_distro_arch)"
+    export DISTRCONTROL="$(get_service_manager)"
+    export BASEDISTRNAME=$(pkgvendor)
+
+    export PMTYPE="$(pkgmanager)"
+    export PKGFORMAT=$(pkgtype)
+    export PKGVENDOR=$(pkgvendor)
+    # TODO: remove?
+    export RPMVENDOR=$(pkgvendor)
+
+EOF
+
+}
+
+if [ -n "$DISTRNAME" ] ; then
+    override_distrib
+fi
+
+if [ -n "$*" ] ; then
+    eval lastarg=\${$#}
+    case "$lastarg" in
+        -*)
+            ;;
+        *)
+            override_distrib "$lastarg"
+            # drop last arg
+            set -- "${@:1:$(($#-1))}"
+            ;;
+    esac
+fi
+
+# if without override
+if [ -z "$DISTRIB_ID" ] && [ -z "$DISTRNAME" ] ; then
+    fill_distr_info
+    [ -n "$DISTRIB_ID" ] || DISTRIB_ID="Generic"
+fi
+
+if [ -z "$1" ] ; then
+    print_total_info
+    return
+fi
+
+while [ -n "$1" ] ; do
 case "$1" in
     -h|--help)
-        echo "distro_info v$PROGVERSION - distro information retriever"
-        echo "Usage: distro_info [options] [SystemName/Version]"
-        echo "Options:"
-        echo " -h | --help            - this help"
-        echo " -a                     - print hardware architecture (--distro-arch for distro depended name)"
-        echo " -b                     - print size of arch bit (32/64)"
-        echo " -c                     - print number of CPU cores"
-        echo " -i                     - print virtualization type"
-        echo " -m                     - print system memory size (in MB)"
-        echo " -y|--service-manager   - print running service manager"
-        echo " -z                     - print current CPU MHz"
-        echo " --glibc-version        - print system glibc version"
-        echo
-        echo " -d|--base-distro-name  - print distro id (short distro name)"
-        echo " -e                     - print full name of distro with version"
-        echo " -o | --os-name         - print base OS name"
-        echo " -p | package-type      - print type of the packaging system"
-        echo " -g                     - print name of the packaging system"
-        echo " -s|-n|--vendor-name    - print name of the distro family (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (see _vendor macros in rpm)"
-        echo " --pretty|--pretty-name - print pretty distro name"
-        echo " -v | --base-version    - print version of the distro"
-        echo " --distro-name          - print distro name"
-        echo " --distro-version       - print full version of the distro"
-        echo " --full-version         - print full version of the distro"
-        echo " --codename (obsoleted) - print distro codename (focal for Ubuntu 20.04)"
-        echo " -r|--repo-name         - print repository name (focal for Ubuntu 20.04)"
-        echo " --build-id             - print a string uniquely identifying the system image originally used as the installation base"
-        echo " -V                     - print the utility version"
-        echo "Run without args to print all information."
+        print_help
         exit 0
         ;;
     -p|--package-type)
-        override_distrib "$2"
         pkgtype
-        exit 0
         ;;
     -g)
-        override_distrib "$2"
         pkgmanager
-        exit 0
         ;;
     --pretty|--pretty-name)
-        override_distrib "$2"
         print_pretty_name
         ;;
     --distro-arch)
-        override_distrib "$2"
         get_distro_arch
-        exit 0
         ;;
     --debian-arch)
-        override_distrib "$2"
         get_debian_arch
-        exit 0
         ;;
     --glibc-version)
-        override_distrib "$2"
         get_glibc_version
-        exit 0
         ;;
     -d|--base-distro-name)
-        override_distrib "$2"
         echo $DISTRIB_ID
         ;;
     --distro-name)
-        override_distrib "$2"
         echo $DISTRO_NAME
         ;;
     --codename)
-        override_distrib "$2"
         print_codename
         ;;
     -a)
-        override_distrib "$2"
-        [ -n "$DIST_ARCH" ] && echo "$DIST_ARCH" && exit 0
-        get_arch
+        if [ -n "$DIST_ARCH" ] ; then
+            echo "$DIST_ARCH"
+        else
+            get_arch
+        fi
         ;;
     -b)
         get_bit_size
@@ -13125,55 +13196,48 @@ case "$1" in
         get_memory_size
         ;;
     -o|--os-name)
-        override_distrib "$2"
         get_base_os_name
         ;;
     -r|--repo-name)
-        override_distrib "$2"
         print_repo_name
         ;;
     --build-id)
         echo "$BUILD_ID"
         ;;
     -v|--base-version)
-        override_distrib "$2"
         echo "$DISTRIB_RELEASE"
         ;;
     --full-version|--distro-version)
-        override_distrib "$2"
         echo "$DISTRIB_FULL_RELEASE"
         ;;
     --bug-report-url)
         print_bug_report_url
-        return
         ;;
     -s|-n|--vendor-name)
-        override_distrib "$2"
         pkgvendor
-        exit 0
         ;;
     -y|--service-manager)
-        override_distrib "$2"
         get_service_manager
         ;;
     -V)
         echo "$PROGVERSION"
-        exit 0
         ;;
     -e)
-        override_distrib "$2"
         print_name_version
+        ;;
+    --print-eepm-env)
+        print_eepm_env
+        exit 0
         ;;
     -*)
         echo "Unsupported option $1" >&2
+        # print empty line in any case
+        echo
         exit 1
         ;;
-    *)
-        override_distrib "$1"
-        print_total_info
-        ;;
 esac
-
+shift
+done
 }
 ################# end of incorporated bin/distr_info #################
 
@@ -13671,7 +13735,7 @@ ipfs_checkQm="QmYwf2GAMvHxfFiUFL2Mr6KUG6QrDiupqGc8ms785ktaYw"
 
 get_ipfs_brave()
 {
-    local ipfs_brave="$(ls ~/.config/BraveSoftware/Brave-Browser/*/*/go-ipfs_* 2>/dev/null)"
+    local ipfs_brave="$(ls ~/.config/BraveSoftware/Brave-Browser/*/*/go-ipfs_* | sort | tail -n1 2>/dev/null)"
     [ -n "$ipfs_brave" ] && [ -x "$ipfs_brave" ] || return
     echo "$ipfs_brave"
 }
@@ -15746,6 +15810,7 @@ pkg_files=
 pkg_dirs=
 pkg_names=
 pkg_urls=
+pkg_options=
 quoted_args=
 direct_args=
 
@@ -15861,6 +15926,7 @@ check_command()
         ;;
     status)                   # HELPCMD: get status of package(s) (see epm status --help)
         epm_cmd=status
+        direct_args=1
         ;;
     -sf|sf|filesearch|search-file)        # HELPCMD: search in which package a file is included
         epm_cmd=search_file
@@ -15978,6 +16044,7 @@ check_command()
         ;;
     restore)                  # HELPCMD: install (restore) packages need for the project (f.i. by requirements.txt)
         epm_cmd=restore
+        direct_args=1
         ;;
     autoremove|package-cleanup)   # HELPCMD: auto remove unneeded package(s) Supports args for ALT: [--direct [libs|python|perl|libs-devel]]
         epm_cmd=autoremove
@@ -15993,6 +16060,7 @@ check_command()
         ;;
     autoorphans|--orphans|remove-orphans)    # HELPCMD: remove all packages not from the repository
         epm_cmd=autoorphans
+        direct_args=1
         ;;
     upgrade|up|dist-upgrade)     # HELPCMD: performs upgrades of package software distributions
         epm_cmd=upgrade
@@ -16069,6 +16137,16 @@ check_command()
 
 check_option()
 {
+    # optimization
+    case $1 in
+    -*)
+        # pass
+        ;;
+    *)
+        return 1
+        ;;
+    esac
+
     case $1 in
     -v|--version)         # HELPOPT: print version
         [ -n "$epm_cmd" ] && return 1
@@ -16151,14 +16229,16 @@ check_option()
     --force-yes)           # HELPOPT: force yes in a danger cases (f.i., during release upgrade)
         force_yes="--force-yes"
         ;;
+    -*)
+        [ -n "$direct_args" ] && return 1
+        [ -n "$pkg_options" ] && pkg_options="$pkg_options $1" || pkg_options="$1"
+        ;;
     *)
         return 1
         ;;
     esac
     return 0
 }
-
-# TODO: skip for commands where we don't need parse args
 
 check_filenames()
 {
@@ -16167,19 +16247,18 @@ check_filenames()
         # files can be with full path or have extension via .
         if [ -f "$opt" ] && echo "$opt" | grep -q "[/\.]" ; then
             has_space "$opt" && warning "There are space(s) in filename '$opt', it is not supported. Skipped" && continue
-            pkg_files="$pkg_files $opt"
+            [ -n "$pkg_files" ] && pkg_files="$pkg_files $opt" || pkg_files="$opt"
         elif [ -d "$opt" ] ; then
             has_space "$opt" && warning "There are space(s) in directory path '$opt', it is not supported. Skipped" && continue
-            pkg_dirs="$pkg_dirs $opt"
+            [ -n "$pkg_dirs" ] && pkg_dirs="$pkg_dirs $opt" || pkg_dirs="$opt"
         elif is_url "$opt" ; then
             has_space "$opt" && warning "There are space(s) in URL '$opt', it is not supported. Skipped" && continue
-            pkg_urls="$pkg_urls $opt"
+            [ -n "$pkg_urls" ] && pkg_urls="$pkg_urls $opt" || pkg_urls="$opt"
         else
             has_space "$opt" && warning "There are space(s) in package name '$opt', it is not supported. Skipped." && continue
-            # TODO: don't add unknown options (like -y, --unknown) to pkg_names
-            pkg_names="$pkg_names $opt"
+            [ -n "$pkg_names" ] && pkg_names="$pkg_names $opt" || pkg_names="$opt"
         fi
-        quoted_args="$quoted_args \"$opt\""
+        [ -n "$quoted_args" ] && quoted_args="$quoted_args \"$opt\"" || quoted_args="\"$opt\""
     done
 }
 
@@ -16200,7 +16279,7 @@ for opt in "$@" ; do
     fi
 
     if [ -n "$direct_args" ] ; then
-        quoted_args="$quoted_args \"$opt\""
+        [ -n "$quoted_args" ] && quoted_args="$quoted_args \"$opt\"" || quoted_args="\"$opt\""
     else
         # Note: will parse all params separately (no package names with spaces!)
         check_filenames "$opt"
@@ -16226,11 +16305,8 @@ if [ ! -n "$inscript" ] && ! inputisatty && [ -n "$PROGDIR" ] ; then
     done
 fi
 
-pkg_files=$(strip_spaces "$pkg_files")
-pkg_dirs=$(strip_spaces "$pkg_dirs")
 # in common case dirs equals to names only suddenly
 pkg_names=$(strip_spaces "$pkg_names $pkg_dirs")
-pkg_urls=$(strip_spaces "$pkg_urls")
 
 pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
 
