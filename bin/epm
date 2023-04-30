@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Copyright (C) 2012-2021  Etersoft
 # Copyright (C) 2012-2021  Vitaly Lipatov <lav@etersoft.ru>
