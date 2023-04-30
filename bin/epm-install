@@ -410,8 +410,6 @@ epm_install_files()
             if __epm_repack_if_needed $files ; then
                 [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
                 files="$repacked_pkgs"
-                # TODO
-                #__epm_remove_tmp_files
             fi
 
             if [ -n "$save_only" ] ; then
@@ -465,8 +463,6 @@ epm_install_files()
             if __epm_repack_if_needed $files ; then
                 [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
                 files="$repacked_pkgs"
-                # TODO
-                #__epm_remove_tmp_files
             fi
 
             if [ -n "$save_only" ] ; then
@@ -667,9 +663,4 @@ epm_install()
     fi
 
     epm_install_files $files
-    local RETVAL=$?
-
-    __epm_remove_tmp_files
-
-    return $RETVAL
 }

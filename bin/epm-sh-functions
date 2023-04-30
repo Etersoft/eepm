@@ -732,6 +732,7 @@ get_pkg_name_delimiter()
 # used via remove_on_exit
 __epm_remove_tmp_files()
 {
+    trap "-" EXIT
     [ -n "$DEBUG" ] && return 0
 
     if [ -n "$to_clean_tmp_dirs" ] ; then
@@ -753,7 +754,10 @@ __epm_remove_tmp_files()
 
 remove_on_exit()
 {
-    trap "__epm_remove_tmp_files" EXIT
+    if [ -z "$set_remove_on_exit" ] ; then
+        trap "__epm_remove_tmp_files" EXIT
+        set_remove_on_exit=1
+    fi
     while [ -n "$1" ] ; do
         if [ -d "$1" ] ; then
             to_clean_tmp_dirs="$to_clean_tmp_dirs
