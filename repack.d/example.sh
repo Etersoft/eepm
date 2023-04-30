@@ -12,6 +12,10 @@
 BUILDROOT="$1"
 # rpm spec file
 SPEC="$2"
+# package name (usually the same as filename)
+# PACKAGENAME="$3"
+# full path to a package we repacking
+ORIGINPACKAGE="$4"
 
 # a command to run the application from cli (get from the script name by default)
 #PRODUCT=<cmd>
