@@ -76,23 +76,14 @@ print_bug_report_url()
 # allows x86_64/Distro/Version
 override_distrib()
 {
-    if [ -n "$1" ] ; then
-        local name="$(echo "$1" | sed -e 's|x86_64/||')"
-        [ "$name" = "$1" ] && DIST_ARCH="x86" || DIST_ARCH="x86_64"
-        DISTRIB_ID="$(echo "$name" | sed -e 's|/.*||')"
-        DISTRIB_RELEASE="$(echo "$name" | sed -e 's|.*/||')"
-        [ "$DISTRIB_ID" = "$DISTRIB_RELEASE" ] && DISTRIB_RELEASE=''
-    else
-        if [ -z "$DISTRNAME" ] ; then
-            return
-        fi
+    [ -n "$DISTRNAMEOVERRIDE" ] || DISTRNAMEOVERRIDE="$1"
+    [ -n "$DISTRNAMEOVERRIDE" ] || return
 
-        # if predefined DISTRNAME and possible DISTRVERSION
-        DISTRIB_ID="$DISTRNAME"
-        [ -n "$DISTRVERSION" ] && DISTRIB_RELEASE="$DISTRVERSION"
-        [ -n "$DISTRARCH" ] && DIST_ARCH="$DISTRARCH"
-        #    export DISTRCONTROL="$(get_service_manager)"
-    fi
+    local name="$(echo "$DISTRNAMEOVERRIDE" | sed -e 's|x86_64/||')"
+    [ "$name" = "$DISTRNAMEOVERRIDE" ] && DIST_ARCH="x86" || DIST_ARCH="x86_64"
+    DISTRIB_ID="$(echo "$name" | sed -e 's|/.*||')"
+    DISTRIB_RELEASE="$(echo "$name" | sed -e 's|.*/||')"
+    [ "$DISTRIB_ID" = "$DISTRIB_RELEASE" ] && DISTRIB_RELEASE=''
 
     VENDOR_ID=''
     PRETTY_NAME="$DISTRIB_ID"
@@ -959,9 +950,7 @@ EOF
 
 }
 
-if [ -n "$DISTRNAME" ] ; then
-    override_distrib
-fi
+override_distrib "$DISTRNAMEOVERRIDE"
 
 if [ -n "$*" ] ; then
     eval lastarg=\${$#}
@@ -977,7 +966,7 @@ if [ -n "$*" ] ; then
 fi
 
 # if without override
-if [ -z "$DISTRIB_ID" ] && [ -z "$DISTRNAME" ] ; then
+if [ -z "$DISTRIB_ID" ] ; then
     fill_distr_info
     [ -n "$DISTRIB_ID" ] || DISTRIB_ID="Generic"
 fi
