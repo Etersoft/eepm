@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.55.0"
+EPMVERSION="3.55.1"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -515,7 +515,7 @@ disabled_eget()
     local EGET
     # use internal eget only if exists
     if [ -s $SHAREDIR/tools_eget ] ; then
-        ( EGET_BACKEND=$eget_backend $SHAREDIR/tools_eget "$@" )
+        ( EGET_BACKEND=$eget_backend $CMDSHELL $SHAREDIR/tools_eget "$@" )
         return
     fi
     fatal "Internal error: missed tools_eget"
@@ -539,7 +539,7 @@ disabled_erc()
 
     # use internal eget only if exists
     if [ -s $SHAREDIR/tools_erc ] ; then
-        $SHAREDIR/tools_erc "$@"
+        $CMDSHELL $SHAREDIR/tools_erc "$@"
         return
     fi
     fatal "Internal error: missed tools_erc"
@@ -557,7 +557,7 @@ disabled_ercat()
     local ERCAT
     # use internal eget only if exists
     if [ -s $SHAREDIR/tools_ercat ] ; then
-        $SHAREDIR/tools_ercat "$@"
+        $CMDSHELL $SHAREDIR/tools_ercat "$@"
         return
     fi
     fatal "Internal error: missed tools_ercat"
@@ -572,7 +572,7 @@ disabled_ercat()
 disabled_estrlist()
 {
     if [ -s $SHAREDIR/tools_estrlist ] ; then
-        $SHAREDIR/tools_estrlist "$@"
+        $CMDSHELL $SHAREDIR/tools_estrlist "$@"
         return
     fi
     fatal "missed tools_estrlist"
@@ -1584,23 +1584,14 @@ print_bug_report_url()
 # allows x86_64/Distro/Version
 override_distrib()
 {
-    if [ -n "$1" ] ; then
-        local name="$(echo "$1" | sed -e 's|x86_64/||')"
-        [ "$name" = "$1" ] && DIST_ARCH="x86" || DIST_ARCH="x86_64"
-        DISTRIB_ID="$(echo "$name" | sed -e 's|/.*||')"
-        DISTRIB_RELEASE="$(echo "$name" | sed -e 's|.*/||')"
-        [ "$DISTRIB_ID" = "$DISTRIB_RELEASE" ] && DISTRIB_RELEASE=''
-    else
-        if [ -z "$DISTRNAME" ] ; then
-            return
-        fi
+    [ -n "$DISTRNAMEOVERRIDE" ] || DISTRNAMEOVERRIDE="$1"
+    [ -n "$DISTRNAMEOVERRIDE" ] || return
 
-        # if predefined DISTRNAME and possible DISTRVERSION
-        DISTRIB_ID="$DISTRNAME"
-        [ -n "$DISTRVERSION" ] && DISTRIB_RELEASE="$DISTRVERSION"
-        [ -n "$DISTRARCH" ] && DIST_ARCH="$DISTRARCH"
-        #    export DISTRCONTROL="$(get_service_manager)"
-    fi
+    local name="$(echo "$DISTRNAMEOVERRIDE" | sed -e 's|x86_64/||')"
+    [ "$name" = "$DISTRNAMEOVERRIDE" ] && DIST_ARCH="x86" || DIST_ARCH="x86_64"
+    DISTRIB_ID="$(echo "$name" | sed -e 's|/.*||')"
+    DISTRIB_RELEASE="$(echo "$name" | sed -e 's|.*/||')"
+    [ "$DISTRIB_ID" = "$DISTRIB_RELEASE" ] && DISTRIB_RELEASE=''
 
     VENDOR_ID=''
     PRETTY_NAME="$DISTRIB_ID"
@@ -2467,9 +2458,7 @@ EOF
 
 }
 
-if [ -n "$DISTRNAME" ] ; then
-    override_distrib
-fi
+override_distrib "$DISTRNAMEOVERRIDE"
 
 if [ -n "$*" ] ; then
     eval lastarg=\${$#}
@@ -2485,7 +2474,7 @@ if [ -n "$*" ] ; then
 fi
 
 # if without override
-if [ -z "$DISTRIB_ID" ] && [ -z "$DISTRNAME" ] ; then
+if [ -z "$DISTRIB_ID" ] ; then
     fill_distr_info
     [ -n "$DISTRIB_ID" ] || DISTRIB_ID="Generic"
 fi

@@ -20,7 +20,7 @@
 PROGDIR=$(dirname "$0")
 PROGNAME=$(basename "$0")
 [ -n "$EPMCURDIR" ] || export EPMCURDIR="$(pwd)"
-CMDSHELL="/bin/bash"
+CMDSHELL="/usr/bin/env bash"
 # TODO: pwd for ./epm and which for epm
 [ "$PROGDIR" = "." ] && PROGDIR="$EPMCURDIR"
 if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.55.0"
+EPMVERSION="3.55.1"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -517,7 +517,7 @@ disabled_eget()
     local EGET
     # use internal eget only if exists
     if [ -s $SHAREDIR/tools_eget ] ; then
-        ( EGET_BACKEND=$eget_backend $SHAREDIR/tools_eget "$@" )
+        ( EGET_BACKEND=$eget_backend $CMDSHELL $SHAREDIR/tools_eget "$@" )
         return
     fi
     fatal "Internal error: missed tools_eget"
@@ -541,7 +541,7 @@ disabled_erc()
 
     # use internal eget only if exists
     if [ -s $SHAREDIR/tools_erc ] ; then
-        $SHAREDIR/tools_erc "$@"
+        $CMDSHELL $SHAREDIR/tools_erc "$@"
         return
     fi
     fatal "Internal error: missed tools_erc"
@@ -559,7 +559,7 @@ disabled_ercat()
     local ERCAT
     # use internal eget only if exists
     if [ -s $SHAREDIR/tools_ercat ] ; then
-        $SHAREDIR/tools_ercat "$@"
+        $CMDSHELL $SHAREDIR/tools_ercat "$@"
         return
     fi
     fatal "Internal error: missed tools_ercat"
@@ -574,7 +574,7 @@ disabled_ercat()
 disabled_estrlist()
 {
     if [ -s $SHAREDIR/tools_estrlist ] ; then
-        $SHAREDIR/tools_estrlist "$@"
+        $CMDSHELL $SHAREDIR/tools_estrlist "$@"
         return
     fi
     fatal "missed tools_estrlist"
@@ -5633,32 +5633,46 @@ __epm_play_install()
    return $RES
 }
 
+__epm_play_download_epm_file()
+{
+    local target="$1"
+    local file="$2"
+    #local epmver="$(epm --short --version)"
+    local epmver="$EPMVERSION"
+    local URL="https://eepm.ru/releases/$epmver/app-versions"
+    info "Updating local IPFS DB in $eget_ipfs_db file from $URL/eget-ipfs-db.txt"
+    docmd eget -q -O "$target" "$URL/$file" && return
+
+    URL="https://eepm.ru/app-versions"
+    info "Updating local IPFS DB in $eget_ipfs_db file from $URL/eget-ipfs-db.txt"
+    docmd eget -q -O "$target" "$URL/$file"
+}
+
+
 __epm_play_initialize_ipfs()
 {
-    if [ -d "$(dirname "$epm_ipfs_db")" ] ; then
-        local URL="https://eepm.ru/app-versions"
-        if [ ! -r "$eget_ipfs_db" ] ; then
-            sudorun touch "$eget_ipfs_db" >&2
-            sudorun chmod -v a+rw "$eget_ipfs_db" >&2
-            # TODO: update this DB every time when changed (and get from IPFS as sign it works.)
-            # get initial db from server
-            info "Initialize local IPFS DB in $eget_ipfs_db file and fill it with data from $URL/eget-ipfs-db.txt"
-            docmd eget -q -O $eget_ipfs_db "$URL/eget-ipfs-db.txt"
-        else
-            # update
-            local t=$(mktemp) || fatal
-            info "Updating local IPFS DB in $eget_ipfs_db file from $URL/eget-ipfs-db.txt"
-            docmd eget -q -O $t "$URL/eget-ipfs-db.txt" || warning "Can't update IPFS DB"
-            if [ -s "$t" ] ; then
-                echo >>$t
-                cat $eget_ipfs_db >>$t
-                sort -u < $t | grep -v "^$" > $eget_ipfs_db
-            fi
-        fi
-        export EGET_IPFS_DB="$eget_ipfs_db"
-    else
-        warning "ipfs db dir $eget_ipfs_db is not exists, skipping --ipfs"
+    if [ ! -d "$(dirname "$epm_ipfs_db")" ] ; then
+        warning "ipfs db dir $eget_ipfs_db does not exist, skipping IPFS mode"
+        return 1
     fi
+
+    if [ ! -r "$eget_ipfs_db" ] ; then
+        sudorun touch "$eget_ipfs_db" >&2
+        sudorun chmod -v a+rw "$eget_ipfs_db" >&2
+    fi
+
+    # download and merge with local db
+    local t=$(mktemp) || fatal
+    remove_on_exit "$t"
+    __epm_play_download_epm_file "$t" "eget-ipfs-db.txt" || warning "Can't update IPFS DB"
+    if [ -s "$t" ] ; then
+        echo >>$t
+        cat $eget_ipfs_db >>$t
+        sort -u < $t | grep -v "^$" > $eget_ipfs_db
+    fi
+
+    # the only one thing need to enable IPFS in eget
+    export EGET_IPFS_DB="$eget_ipfs_db"
 }
 
 epm_play()
@@ -8589,7 +8603,7 @@ __apply_fix_code()
     export PATH=$PROGDIR:$PATH
     local bashopt=''
     [ -n "$verbose" ] && bashopt='-x'
-    ( unset EPMCURDIR ; docmd $CMDSHELL $bashopt $repackcode "$1" "$2" "$3" ) || fatal "There is an error from $repackcode script"
+    ( unset EPMCURDIR ; docmd $CMDSHELL $bashopt $repackcode "$1" "$2" "$3" "$4" ) || fatal "There is an error from $repackcode script"
 }
 
 __create_rpmmacros()
@@ -8691,9 +8705,9 @@ __epm_repack_to_rpm()
 
         cd $buildroot || fatal
         __fix_spec $pkgname $buildroot $spec
-        __apply_fix_code "generic" $buildroot $spec $pkgname
-        [ -n "$SUBGENERIC" ] && __apply_fix_code "generic-$SUBGENERIC" $buildroot $spec
-        __apply_fix_code $pkgname $buildroot $spec $pkgname
+        __apply_fix_code "generic" $buildroot $spec $pkgname $abspkg
+        [ -n "$SUBGENERIC" ] && __apply_fix_code "generic-$SUBGENERIC" $buildroot $spec $pkgname $abspkg
+        __apply_fix_code $pkgname $buildroot $spec $pkgname $abspkg
         cd - >/dev/null
 
         TARGETARCH=$(epm print info -a | sed -e 's|^x86$|i586|')
@@ -11720,7 +11734,7 @@ epm_tool()
             ;;
         "json")                      # HELPCMD: json operations
             showcmd json "$@"
-            internal_tools_json "$@"
+            $CMDSHELL internal_tools_json "$@"
             ;;
         "which")
             print_command_path "$@"  # HELPCMD: which like command (no output to stderr, can works without which package)
@@ -12229,23 +12243,14 @@ print_bug_report_url()
 # allows x86_64/Distro/Version
 override_distrib()
 {
-    if [ -n "$1" ] ; then
-        local name="$(echo "$1" | sed -e 's|x86_64/||')"
-        [ "$name" = "$1" ] && DIST_ARCH="x86" || DIST_ARCH="x86_64"
-        DISTRIB_ID="$(echo "$name" | sed -e 's|/.*||')"
-        DISTRIB_RELEASE="$(echo "$name" | sed -e 's|.*/||')"
-        [ "$DISTRIB_ID" = "$DISTRIB_RELEASE" ] && DISTRIB_RELEASE=''
-    else
-        if [ -z "$DISTRNAME" ] ; then
-            return
-        fi
+    [ -n "$DISTRNAMEOVERRIDE" ] || DISTRNAMEOVERRIDE="$1"
+    [ -n "$DISTRNAMEOVERRIDE" ] || return
 
-        # if predefined DISTRNAME and possible DISTRVERSION
-        DISTRIB_ID="$DISTRNAME"
-        [ -n "$DISTRVERSION" ] && DISTRIB_RELEASE="$DISTRVERSION"
-        [ -n "$DISTRARCH" ] && DIST_ARCH="$DISTRARCH"
-        #    export DISTRCONTROL="$(get_service_manager)"
-    fi
+    local name="$(echo "$DISTRNAMEOVERRIDE" | sed -e 's|x86_64/||')"
+    [ "$name" = "$DISTRNAMEOVERRIDE" ] && DIST_ARCH="x86" || DIST_ARCH="x86_64"
+    DISTRIB_ID="$(echo "$name" | sed -e 's|/.*||')"
+    DISTRIB_RELEASE="$(echo "$name" | sed -e 's|.*/||')"
+    [ "$DISTRIB_ID" = "$DISTRIB_RELEASE" ] && DISTRIB_RELEASE=''
 
     VENDOR_ID=''
     PRETTY_NAME="$DISTRIB_ID"
@@ -13112,9 +13117,7 @@ EOF
 
 }
 
-if [ -n "$DISTRNAME" ] ; then
-    override_distrib
-fi
+override_distrib "$DISTRNAMEOVERRIDE"
 
 if [ -n "$*" ] ; then
     eval lastarg=\${$#}
@@ -13130,7 +13133,7 @@ if [ -n "$*" ] ; then
 fi
 
 # if without override
-if [ -z "$DISTRIB_ID" ] && [ -z "$DISTRNAME" ] ; then
+if [ -z "$DISTRIB_ID" ] ; then
     fill_distr_info
     [ -n "$DISTRIB_ID" ] || DISTRIB_ID="Generic"
 fi
@@ -14272,12 +14275,18 @@ url_get_filename()
 
     ! is_httpurl "$URL" && basename "$URL" && return
 
-    # FIXME with wget
+    # See https://www.cpcwood.com/blog/5-aws-s3-utf-8-content-disposition
+    # https://www.rfc-editor.org/rfc/rfc6266
     local cd="$(url_get_header "$URL" "Content-Disposition")"
-    if echo "$cd" | grep -q "filename=" ; then
+    if echo "$cd" | grep -qi "filename\*= *UTF-8" ; then
+        #Content-Disposition: attachment; filename="unityhub-amd64-3.3.0.deb"; filename*=UTF-8''"unityhub-amd64-3.3.0.deb"
+        echo "$cd" | sed -e "s|.*filename\*= *UTF-8''||i" -e 's|^"||' -e 's|";$||' -e 's|"$||'
+        return
+    fi
+    if echo "$cd" | grep -qi "filename=" ; then
         #Content-Disposition: attachment; filename=postman-linux-x64.tar.gz
         #content-disposition: attachment; filename="code-1.77.1-1680651749.el7.x86_64.rpm"
-        echo "$cd" | sed -e 's|.*filename=||' -e 's|^"||' -e 's|";$||' -e 's|"$||'
+        echo "$cd" | sed -e 's|.*filename= *||i' -e 's|^"||' -e 's|";.*||' -e 's|"$||'
         return
     fi
 
