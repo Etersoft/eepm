@@ -21,6 +21,9 @@ repack='--repack'
 # rpm packages have a release in their names
 [ "$(epm print info -p)" = "rpm" ] && [ "$VERSION" != "*" ] && VERSION="$VERSION-1"
 
+# hack to fix short name issue
+[ "$VERSION" = "*" ] && VERSION="[[:digit:]]*"
+
 PKGURL=$(epm tool eget --list --latest https://github.com/brave/brave-browser/releases "$(epm print constructname $PKGNAME "$VERSION")")
 
 if [ -z "$PKGURL" ] ; then
