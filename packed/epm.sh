@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.55.1"
+EPMVERSION="3.55.2"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -978,6 +978,7 @@ epm repo add - add branch repo. Use follow params:
     yandex                   - for BaseALT repo mirror hosted by Yandex (recommended)"
     altsp                    - add ALT SP repo"
     autoimports              - for BaseALT autoimports repo"
+    autoports                - for Autoports repo (with packages from Sisyphus rebuilded to the branch)
     altlinuxclub             - for altlinuxclub repo (http://altlinuxclub.ru/)"
     etersoft                 - for LINUX@Etersoft repo"
     korinf                   - for Korinf repo"
@@ -1044,6 +1045,21 @@ __epm_addrepo_altlinux()
             ;;
         autoimports)
             repo="autoimports.$branch"
+            ;;
+        autoports)
+            local http="http"
+            epm installed apt-https && http="https"
+            case $branch in
+                p10|p9|p8)
+                    ;;
+                *)
+                    fatal "Autoports is not supported for $DISTRNAME $branch. Check https://www.altlinux.org/Autoports ."
+                    ;;
+            esac
+            epm repo addkey cronbuild "DE73F3444C163CCD751AC483B584C633278EB305" "Cronbuild Service <cronbuild@altlinux.org>"
+            epm repo add "rpm [cronbuild] $http://autoports.altlinux.org/pub ALTLinux/autoports/$DISTRVERSION/$DISTRARCH autoports"
+            epm repo add "rpm [cronbuild] $http://autoports.altlinux.org/pub ALTLinux/autoports/$DISTRVERSION/noarch autoports"
+            return 0
             ;;
         altlinuxclub)
             repo="altlinuxclub.$branch"
@@ -3861,174 +3877,19 @@ epm_install_files()
     # do not fallback to install_names if we have no permissions
     case "$BASEDISTRNAME" in
         "alt")
-
-
-            __epm_print_warning_for_nonalt_packages $files
-
-            # do repack if needed
-            if __epm_repack_if_needed $files ; then
-                [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
-                files="$repacked_pkgs"
-            fi
-
-            if [ -n "$save_only" ] ; then
-                echo
-                cp -v $files "$EPMCURDIR"
-                return
-            fi
-
-            __epm_check_if_src_rpm $files
-
-            if [ -z "$repacked_pkgs" ] ; then
-                __epm_check_vendor $files
-                __epm_check_if_needed_repack $files
-            fi
-
-            # --replacepkgs: Install the Package Even If Already Installed
-            local replacepkgs="$(__epm_get_replacepkgs $files)"
-            sudocmd rpm -Uvh $replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && save_installed_packages $files && return
-            local RES=$?
-            # TODO: check rpm result code and convert it to compatible format if possible
-            __epm_check_if_rpm_already_installed $force $replacepkgs $noscripts $nodeps $files && return
-
-            # if run with --nodeps, do not fallback on hi level
-            [ -n "$nodeps" ] && return $RES
-
-            # separate second output
-            info
-
-            # try install via apt if we could't install package file via rpm (we guess we need install requirements firsly)
-
-            # TODO: use it always (apt can install version from repo instead of a file package)
-            if [ -n "$noscripts" ] ; then
-                info "Workaround for install packages via apt with --noscripts (see https://bugzilla.altlinux.org/44670)"
-                info "Firstly install package requrements …"
-                # names of packages to be installed
-                local fl="$(epm print name for package $files)"
-                local req="$(docmd epm req --short $files)" || return
-                # exclude package names from requires (req - fl)
-                req="$(estrlist exclude "$fl" "$req")"
-                # TODO: can we install only requires via apt?
-                docmd epm install $req || return
-
-                # retry with rpm
-                # --replacepkgs: Install the Package Even If Already Installed
-                local replacepkgs="$(__epm_get_replacepkgs $files)"
-                sudocmd rpm -Uvh $replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && save_installed_packages $files
-                return
-            fi
-
-            epm_install_names $files
+            epm_install_files_alt $files
             return
             ;;
     esac
 
     case $PMTYPE in
         apt-dpkg|aptitude-dpkg)
-            # the new version of the conf. file is installed with a .dpkg-dist suffix
-            if [ -n "$non_interactive" ] ; then
-                DPKGOPTIONS="--force-confdef --force-confold"
-            fi
-
-            if __epm_repack_if_needed $files ; then
-                [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
-                files="$repacked_pkgs"
-            fi
-
-            if [ -n "$save_only" ] ; then
-                echo
-                cp -v $files "$EPMCURDIR"
-                return
-            fi
-
-            # TODO: if dpkg can't install due missed deps, trying with apt (as for now, --refuse-depends, --refuse-breaks don't help me)
-
-            if [ -n "$nodeps" ] ; then
-                sudocmd dpkg $DPKGOPTIONS -i $files
-                return
-            fi
-
-            # for too old apt-get
-            # TODO: check apt-get version?
-            apt_can_install_files='1'
-            if [ "$DISTRNAME" = "Ubuntu" ] ; then
-                [ "$DISTRVERSION" = "14.04" ] && apt_can_install_files=''
-                [ "$DISTRVERSION" = "12.04" ] && apt_can_install_files=''
-            fi
-
-            if [ -n "$apt_can_install_files" ] ; then
-                # TODO: don't resolve fuzzy dependencies ()
-                # are there apt that don't support dpkg files to install?
-                epm_install_names $(make_filepath $files)
-                return
-            fi
-
-            # old way:
-
-            sudocmd dpkg $DPKGOPTIONS -i $files
-            local RES=$?
-
-            # return OK if all is OK
-            [ "$RES" = "0" ] && return $RES
-
-            # TODO: workaround with epm-check needed only for very old apt
-
-            # run apt -f install if there are were some errors during install
-            epm_check
-
-            # repeat install for get correct status
-            sudocmd dpkg $DPKGOPTIONS -i $files
+            epm_install_files_apt_dpkg $files
             return
             ;;
 
        *-rpm)
-            if __epm_repack_if_needed $files ; then
-                [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
-                files="$repacked_pkgs"
-            fi
-
-            if [ -n "$save_only" ] ; then
-                echo
-                cp -v $files "$EPMCURDIR"
-                return
-            fi
-
-            __epm_check_if_src_rpm $files
-
-            # --replacepkgs: Install the Package Even If Already Installed
-            local replacepkgs="$(__epm_get_replacepkgs $files)"
-            sudocmd rpm -Uvh $replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && return
-            local RES=$?
-
-            __epm_check_if_rpm_already_installed $force $replacepkgs $noscripts $nodeps $files && return
-
-            # if run with --nodeps, do not fallback on hi level
-            [ -n "$nodeps" ] && return $RES
-
-            # fallback to install names
-
-            # separate second output
-            info
-
-            case $PMTYPE in
-                yum-rpm|dnf-rpm)
-                    YUMOPTIONS=--nogpgcheck
-                    # use install_names
-                    ;;
-                zypper-rpm)
-                    ZYPPEROPTIONS=$(__use_zypper_no_gpg_checks)
-                    # use install_names
-                    ;;
-                urpm-rpm)
-                    URPMOPTIONS=--no-verify-rpm
-                    # use install_names
-                    ;;
-                *)
-                    # use install_names
-                    ;;
-            esac
-
-            epm_install_names $files
+            epm_install_files_rpm $files
             return
             ;;
     esac
@@ -4199,6 +4060,137 @@ epm_Install()
     epm_install_names $names || return
 
     epm_install_files $files
+}
+
+# File bin/epm-install-alt:
+
+epm_install_files_alt()
+{
+    local files="$*"
+    [ -z "$files" ] && return
+
+    # TODO: check read permissions
+    # sudo test -r FILE
+    # do not fallback to install_names if we have no permissions
+
+    __epm_print_warning_for_nonalt_packages $files
+
+    # do repack if needed
+    if __epm_repack_if_needed $files ; then
+        [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
+        files="$repacked_pkgs"
+    fi
+
+    if [ -n "$save_only" ] ; then
+        echo
+        cp -v $files "$EPMCURDIR"
+        return
+    fi
+
+    __epm_check_if_src_rpm $files
+
+    if [ -z "$repacked_pkgs" ] ; then
+        __epm_check_vendor $files
+        __epm_check_if_needed_repack $files
+    fi
+
+    # --replacepkgs: Install the Package Even If Already Installed
+    local replacepkgs="$(__epm_get_replacepkgs $files)"
+    sudocmd rpm -Uvh $replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && save_installed_packages $files && return
+    local RES=$?
+    # TODO: check rpm result code and convert it to compatible format if possible
+    __epm_check_if_rpm_already_installed $force $replacepkgs $noscripts $nodeps $files && return
+
+    # if run with --nodeps, do not fallback on hi level
+    [ -n "$nodeps" ] && return $RES
+
+    # separate second output
+    info
+
+    # try install via apt if we could't install package file via rpm (we guess we need install requirements firsly)
+
+    if [ -z "$noscripts" ] ; then
+        epm_install_names $files
+        return
+    fi
+
+    # TODO: use it always (apt can install version from repo instead of a file package)
+    info "Workaround for install packages via apt with --noscripts (see https://bugzilla.altlinux.org/44670)"
+    info "Firstly install package requrements …"
+    # names of packages to be installed
+    local fl="$(epm print name for package $files)"
+    local req="$(docmd epm req --short $files)" || return
+    # exclude package names from requires (req - fl)
+    req="$(estrlist exclude "$fl" "$req")"
+    # TODO: can we install only requires via apt?
+    docmd epm install --skip-installed $req || return
+
+    # retry with rpm
+    # --replacepkgs: Install the Package Even If Already Installed
+    local replacepkgs="$(__epm_get_replacepkgs $files)"
+    sudocmd rpm -Uvh $replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && save_installed_packages $files
+}
+
+# File bin/epm-install-apt-dpkg:
+
+epm_install_files_apt_dpkg()
+{
+    local files="$*"
+    [ -z "$files" ] && return
+
+    # the new version of the conf. file is installed with a .dpkg-dist suffix
+    if [ -n "$non_interactive" ] ; then
+        DPKGOPTIONS="--force-confdef --force-confold"
+    fi
+
+    if __epm_repack_if_needed $files ; then
+        [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
+        files="$repacked_pkgs"
+    fi
+
+    if [ -n "$save_only" ] ; then
+        echo
+        cp -v $files "$EPMCURDIR"
+        return
+    fi
+
+    # TODO: if dpkg can't install due missed deps, trying with apt (as for now, --refuse-depends, --refuse-breaks don't help me)
+
+    if [ -n "$nodeps" ] ; then
+        sudocmd dpkg $DPKGOPTIONS -i $files
+        return
+    fi
+
+    # for too old apt-get
+    # TODO: check apt-get version?
+    apt_can_install_files='1'
+    if [ "$DISTRNAME" = "Ubuntu" ] ; then
+        [ "$DISTRVERSION" = "14.04" ] && apt_can_install_files=''
+        [ "$DISTRVERSION" = "12.04" ] && apt_can_install_files=''
+    fi
+
+    if [ -n "$apt_can_install_files" ] ; then
+        # TODO: don't resolve fuzzy dependencies ()
+        # are there apt that don't support dpkg files to install?
+        epm_install_names $(make_filepath $files)
+        return
+    fi
+
+    # old way:
+
+    sudocmd dpkg $DPKGOPTIONS -i $files
+    local RES=$?
+
+    # return OK if all is OK
+    [ "$RES" = "0" ] && return $RES
+
+    # TODO: workaround with epm-check needed only for very old apt
+
+    # run apt -f install if there are were some errors during install
+    epm_check
+
+    # repeat install for get correct status
+    sudocmd dpkg $DPKGOPTIONS -i $files
 }
 
 # File bin/epm-installed:
@@ -4419,6 +4411,64 @@ epm_print_install_names_command()
     esac
 }
 
+
+# File bin/epm-install-rpm:
+
+epm_install_files_rpm()
+{
+    local files="$*"
+    [ -z "$files" ] && return
+    
+    if __epm_repack_if_needed $files ; then
+        [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
+        files="$repacked_pkgs"
+    fi
+
+    if [ -n "$save_only" ] ; then
+        echo
+        cp -v $files "$EPMCURDIR"
+        return
+    fi
+
+    __epm_check_if_src_rpm $files
+
+    # --replacepkgs: Install the Package Even If Already Installed
+    local replacepkgs="$(__epm_get_replacepkgs $files)"
+    sudocmd rpm -Uvh $replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && return
+    local RES=$?
+
+    __epm_check_if_rpm_already_installed $force $replacepkgs $noscripts $nodeps $files && return
+
+    # if run with --nodeps, do not fallback on hi level
+    [ -n "$nodeps" ] && return $RES
+
+    # fallback to install names
+
+    # separate second output
+    info
+
+    case $PMTYPE in
+        yum-rpm|dnf-rpm)
+            YUMOPTIONS=--nogpgcheck
+            # use install_names
+            ;;
+        zypper-rpm)
+            ZYPPEROPTIONS=$(__use_zypper_no_gpg_checks)
+            # use install_names
+            ;;
+        urpm-rpm)
+            URPMOPTIONS=--no-verify-rpm
+            # use install_names
+            ;;
+        *)
+            # use install_names
+            ;;
+    esac
+
+    epm_install_names $files
+    return
+
+}
 
 # File bin/epm-kernel_update:
 
@@ -8546,6 +8596,14 @@ __epm_repack_to_deb()
 
 # File bin/epm-repack-rpm:
 
+__get_icons_hicolor_list()
+{
+    local i
+    for i in apps scalable symbolic 8x8 14x14 16x16 20x20 22x22 24x24 28x28 32x32 36x36 42x42 45x45 48x48 64 64x64 72x72 96x96 128x128 144x144 160x160 192x192 256x256 480x480 512 512x512 1024x1024 ; do
+        echo "/usr/share/icons/hicolor/$i"
+    done
+}
+
 __fix_spec()
 {
     local pkgname="$1"
@@ -8556,7 +8614,8 @@ __fix_spec()
     # drop forbidded paths
     # https://bugzilla.altlinux.org/show_bug.cgi?id=38842
     for i in / /etc /etc/init.d /etc/systemd /bin /opt /usr /usr/bin /usr/share /usr/share/doc /var /var/log /var/run \
-            /etc/cron.daily /usr/share/icons /usr/share/pixmaps /usr/share/man /usr/share/man/man1 /usr/share/appdata /usr/share/applications /usr/share/menu ; do
+            /etc/cron.daily /usr/share/icons/usr/share/pixmaps /usr/share/man /usr/share/man/man1 /usr/share/appdata /usr/share/applications /usr/share/menu \
+            /usr/share/icons/hicolor $(__get_icons_hicolor_list) ; do
         sed -i \
             -e "s|/\./|/|" \
             -e "s|^%dir[[:space:]]\"$i/*\"$||" \
@@ -8855,10 +8914,18 @@ __epm_addkey_altlinux()
         shift
     fi
 
-    local fingerprint="$1"
-    local comment="$2"
+    local fingerprint
+    if is_url "$url" ; then
+        fingerprint="$1"
+        shift
+    else
+        fingerprint="$url"
+        url=""
+    fi
+
+    local comment="$1"
     # compat
-    [ -n "$3" ] && name="$3"
+    [ -n "$2" ] && name="$2"
 
     [ -s /etc/apt/vendors.list.d/$name.list ] && return
 
@@ -8868,9 +8935,10 @@ simple-key "$name" {
         Name "$comment";
 }
 EOF
+    if [ -n "$url" ] ; then
         local tmpfile=$(__epm_get_file_from_url $url) || fatal
-
         sudocmd gpg --no-default-keyring --keyring /usr/lib/alt-gpgkeys/pubring.gpg --import $tmpfile
+    fi
 }
 
 
@@ -8971,7 +9039,7 @@ epm_addkey()
 {
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ -z "$1" ] ; then
-    echo "Usage: $ epm repo addkey [name] url [fingerprint/gpgkey] [comment/name]"
+    echo "Usage: $ epm repo addkey [name] [url] [fingerprint/gpgkey] [comment/name]"
     return
 fi
 
