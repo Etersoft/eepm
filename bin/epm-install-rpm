@@ -1,0 +1,74 @@
+#!/bin/sh
+#
+# Copyright (C) 2012-2020  Etersoft
+# Copyright (C) 2012-2020  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+epm_install_files_rpm()
+{
+    local files="$*"
+    [ -z "$files" ] && return
+    
+    if __epm_repack_if_needed $files ; then
+        [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
+        files="$repacked_pkgs"
+    fi
+
+    if [ -n "$save_only" ] ; then
+        echo
+        cp -v $files "$EPMCURDIR"
+        return
+    fi
+
+    __epm_check_if_src_rpm $files
+
+    # --replacepkgs: Install the Package Even If Already Installed
+    local replacepkgs="$(__epm_get_replacepkgs $files)"
+    sudocmd rpm -Uvh $replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && return
+    local RES=$?
+
+    __epm_check_if_rpm_already_installed $force $replacepkgs $noscripts $nodeps $files && return
+
+    # if run with --nodeps, do not fallback on hi level
+    [ -n "$nodeps" ] && return $RES
+
+    # fallback to install names
+
+    # separate second output
+    info
+
+    case $PMTYPE in
+        yum-rpm|dnf-rpm)
+            YUMOPTIONS=--nogpgcheck
+            # use install_names
+            ;;
+        zypper-rpm)
+            ZYPPEROPTIONS=$(__use_zypper_no_gpg_checks)
+            # use install_names
+            ;;
+        urpm-rpm)
+            URPMOPTIONS=--no-verify-rpm
+            # use install_names
+            ;;
+        *)
+            # use install_names
+            ;;
+    esac
+
+    epm_install_names $files
+    return
+
+}

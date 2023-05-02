@@ -1,0 +1,85 @@
+#!/bin/sh
+#
+# Copyright (C) 2012-2020  Etersoft
+# Copyright (C) 2012-2020  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+epm_install_files_alt()
+{
+    local files="$*"
+    [ -z "$files" ] && return
+
+    # TODO: check read permissions
+    # sudo test -r FILE
+    # do not fallback to install_names if we have no permissions
+
+    __epm_print_warning_for_nonalt_packages $files
+
+    # do repack if needed
+    if __epm_repack_if_needed $files ; then
+        [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
+        files="$repacked_pkgs"
+    fi
+
+    if [ -n "$save_only" ] ; then
+        echo
+        cp -v $files "$EPMCURDIR"
+        return
+    fi
+
+    __epm_check_if_src_rpm $files
+
+    if [ -z "$repacked_pkgs" ] ; then
+        __epm_check_vendor $files
+        __epm_check_if_needed_repack $files
+    fi
+
+    # --replacepkgs: Install the Package Even If Already Installed
+    local replacepkgs="$(__epm_get_replacepkgs $files)"
+    sudocmd rpm -Uvh $replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && save_installed_packages $files && return
+    local RES=$?
+    # TODO: check rpm result code and convert it to compatible format if possible
+    __epm_check_if_rpm_already_installed $force $replacepkgs $noscripts $nodeps $files && return
+
+    # if run with --nodeps, do not fallback on hi level
+    [ -n "$nodeps" ] && return $RES
+
+    # separate second output
+    info
+
+    # try install via apt if we could't install package file via rpm (we guess we need install requirements firsly)
+
+    # TODO: use it always (apt can install version from repo instead of a file package)
+    if [ -n "$noscripts" ] ; then
+        info "Workaround for install packages via apt with --noscripts (see https://bugzilla.altlinux.org/44670)"
+        info "Firstly install package requrements …"
+        # names of packages to be installed
+        local fl="$(epm print name for package $files)"
+        local req="$(docmd epm req --short $files)" || return
+        # exclude package names from requires (req - fl)
+        req="$(estrlist exclude "$fl" "$req")"
+        # TODO: can we install only requires via apt?
+        docmd epm install $req || return
+
+        # retry with rpm
+        # --replacepkgs: Install the Package Even If Already Installed
+        local replacepkgs="$(__epm_get_replacepkgs $files)"
+        sudocmd rpm -Uvh $replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && save_installed_packages $files
+        return
+    fi
+
+    epm_install_names $files
+}

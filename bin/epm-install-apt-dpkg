@@ -1,0 +1,79 @@
+#!/bin/sh
+#
+# Copyright (C) 2012-2020  Etersoft
+# Copyright (C) 2012-2020  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+epm_install_files_apt_dpkg()
+{
+    local files="$*"
+    [ -z "$files" ] && return
+
+    # the new version of the conf. file is installed with a .dpkg-dist suffix
+    if [ -n "$non_interactive" ] ; then
+        DPKGOPTIONS="--force-confdef --force-confold"
+    fi
+
+    if __epm_repack_if_needed $files ; then
+        [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
+        files="$repacked_pkgs"
+    fi
+
+    if [ -n "$save_only" ] ; then
+        echo
+        cp -v $files "$EPMCURDIR"
+        return
+    fi
+
+    # TODO: if dpkg can't install due missed deps, trying with apt (as for now, --refuse-depends, --refuse-breaks don't help me)
+
+    if [ -n "$nodeps" ] ; then
+        sudocmd dpkg $DPKGOPTIONS -i $files
+        return
+    fi
+
+    # for too old apt-get
+    # TODO: check apt-get version?
+    apt_can_install_files='1'
+    if [ "$DISTRNAME" = "Ubuntu" ] ; then
+        [ "$DISTRVERSION" = "14.04" ] && apt_can_install_files=''
+        [ "$DISTRVERSION" = "12.04" ] && apt_can_install_files=''
+    fi
+
+    if [ -n "$apt_can_install_files" ] ; then
+        # TODO: don't resolve fuzzy dependencies ()
+        # are there apt that don't support dpkg files to install?
+        epm_install_names $(make_filepath $files)
+        return
+    fi
+
+    # old way:
+
+    sudocmd dpkg $DPKGOPTIONS -i $files
+    local RES=$?
+
+    # return OK if all is OK
+    [ "$RES" = "0" ] && return $RES
+
+    # TODO: workaround with epm-check needed only for very old apt
+
+    # run apt -f install if there are were some errors during install
+    load_helper epm-check
+    epm_check
+
+    # repeat install for get correct status
+    sudocmd dpkg $DPKGOPTIONS -i $files
+}
