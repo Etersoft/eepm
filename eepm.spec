@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.55.1
+Version: 3.55.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -92,6 +92,20 @@ a discussion about extra requirements.
 
 
 %changelog
+* Wed May 03 2023 Vitaly Lipatov <lav@altlinux.ru> 3.55.2-alt1
+- epm install: move alt, apt-dpkg, rpm install to separate files
+- epm play: add joplin, novelwriter
+- epm install: use --skip-installed when install requires for rpm package with --noscripts
+- epm play brave: fix short name issue
+- epm repack rpm: drop icons dirs from packing
+- epm play yaradio-yamusic: fix icon packing
+- epm repo addkey: allow missed url with gpg key
+- epm repo add: add autoports supports
+- epm repack unigine-superposition: fix icons packing
+- epm repack common.sh remove_dir(): more correct removing
+- epm repack net.downloadhelper.coapp: fix mozilla dir
+- epm repack net.downloadhelper.coapp: use ffmpeg and xdg-open for the system
+
 * Mon May 01 2023 Vitaly Lipatov <lav@altlinux.ru> 3.55.1-alt1
 - epm play: fix bitwarden, wpsoffice, trueconf
 - epm: add Requires: update-kernel for ALT
