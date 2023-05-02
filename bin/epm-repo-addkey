@@ -43,10 +43,18 @@ __epm_addkey_altlinux()
         shift
     fi
 
-    local fingerprint="$1"
-    local comment="$2"
+    local fingerprint
+    if is_url "$url" ; then
+        fingerprint="$1"
+        shift
+    else
+        fingerprint="$url"
+        url=""
+    fi
+
+    local comment="$1"
     # compat
-    [ -n "$3" ] && name="$3"
+    [ -n "$2" ] && name="$2"
 
     [ -s /etc/apt/vendors.list.d/$name.list ] && return
 
@@ -57,9 +65,10 @@ simple-key "$name" {
         Name "$comment";
 }
 EOF
+    if [ -n "$url" ] ; then
         local tmpfile=$(__epm_get_file_from_url $url) || fatal
-
         sudocmd gpg --no-default-keyring --keyring /usr/lib/alt-gpgkeys/pubring.gpg --import $tmpfile
+    fi
 }
 
 
@@ -165,7 +174,7 @@ epm_addkey()
 {
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ -z "$1" ] ; then
-    echo "Usage: $ epm repo addkey [name] url [fingerprint/gpgkey] [comment/name]"
+    echo "Usage: $ epm repo addkey [name] [url] [fingerprint/gpgkey] [comment/name]"
     return
 fi
 
