@@ -17,6 +17,14 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+__get_icons_hicolor_list()
+{
+    local i
+    for i in apps scalable symbolic 8x8 14x14 16x16 20x20 22x22 24x24 28x28 32x32 36x36 42x42 45x45 48x48 64 64x64 72x72 96x96 128x128 144x144 160x160 192x192 256x256 480x480 512 512x512 1024x1024 ; do
+        echo "/usr/share/icons/hicolor/$i"
+    done
+}
+
 # args: pkgname buildroot spec
 __fix_spec()
 {
@@ -28,7 +36,8 @@ __fix_spec()
     # drop forbidded paths
     # https://bugzilla.altlinux.org/show_bug.cgi?id=38842
     for i in / /etc /etc/init.d /etc/systemd /bin /opt /usr /usr/bin /usr/share /usr/share/doc /var /var/log /var/run \
-            /etc/cron.daily /usr/share/icons /usr/share/pixmaps /usr/share/man /usr/share/man/man1 /usr/share/appdata /usr/share/applications /usr/share/menu ; do
+            /etc/cron.daily /usr/share/icons/usr/share/pixmaps /usr/share/man /usr/share/man/man1 /usr/share/appdata /usr/share/applications /usr/share/menu \
+            /usr/share/icons/hicolor $(__get_icons_hicolor_list) ; do
         sed -i \
             -e "s|/\./|/|" \
             -e "s|^%dir[[:space:]]\"$i/*\"$||" \
