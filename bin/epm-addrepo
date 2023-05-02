@@ -172,6 +172,7 @@ epm repo add - add branch repo. Use follow params:
     yandex                   - for BaseALT repo mirror hosted by Yandex (recommended)"
     altsp                    - add ALT SP repo"
     autoimports              - for BaseALT autoimports repo"
+    autoports                - for Autoports repo (with packages from Sisyphus rebuilded to the branch)
     altlinuxclub             - for altlinuxclub repo (http://altlinuxclub.ru/)"
     etersoft                 - for LINUX@Etersoft repo"
     korinf                   - for Korinf repo"
@@ -238,6 +239,21 @@ __epm_addrepo_altlinux()
             ;;
         autoimports)
             repo="autoimports.$branch"
+            ;;
+        autoports)
+            local http="http"
+            epm installed apt-https && http="https"
+            case $branch in
+                p10|p9|p8)
+                    ;;
+                *)
+                    fatal "Autoports is not supported for $DISTRNAME $branch. Check https://www.altlinux.org/Autoports ."
+                    ;;
+            esac
+            epm repo addkey cronbuild "DE73F3444C163CCD751AC483B584C633278EB305" "Cronbuild Service <cronbuild@altlinux.org>"
+            epm repo add "rpm [cronbuild] $http://autoports.altlinux.org/pub ALTLinux/autoports/$DISTRVERSION/$DISTRARCH autoports"
+            epm repo add "rpm [cronbuild] $http://autoports.altlinux.org/pub ALTLinux/autoports/$DISTRVERSION/noarch autoports"
+            return 0
             ;;
         altlinuxclub)
             repo="altlinuxclub.$branch"
