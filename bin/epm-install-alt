@@ -62,24 +62,24 @@ epm_install_files_alt()
 
     # try install via apt if we could't install package file via rpm (we guess we need install requirements firsly)
 
-    # TODO: use it always (apt can install version from repo instead of a file package)
-    if [ -n "$noscripts" ] ; then
-        info "Workaround for install packages via apt with --noscripts (see https://bugzilla.altlinux.org/44670)"
-        info "Firstly install package requrements …"
-        # names of packages to be installed
-        local fl="$(epm print name for package $files)"
-        local req="$(docmd epm req --short $files)" || return
-        # exclude package names from requires (req - fl)
-        req="$(estrlist exclude "$fl" "$req")"
-        # TODO: can we install only requires via apt?
-        docmd epm install $req || return
-
-        # retry with rpm
-        # --replacepkgs: Install the Package Even If Already Installed
-        local replacepkgs="$(__epm_get_replacepkgs $files)"
-        sudocmd rpm -Uvh $replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && save_installed_packages $files
+    if [ -z "$noscripts" ] ; then
+        epm_install_names $files
         return
     fi
 
-    epm_install_names $files
+    # TODO: use it always (apt can install version from repo instead of a file package)
+    info "Workaround for install packages via apt with --noscripts (see https://bugzilla.altlinux.org/44670)"
+    info "Firstly install package requrements …"
+    # names of packages to be installed
+    local fl="$(epm print name for package $files)"
+    local req="$(docmd epm req --short $files)" || return
+    # exclude package names from requires (req - fl)
+    req="$(estrlist exclude "$fl" "$req")"
+    # TODO: can we install only requires via apt?
+    docmd epm install $req || return
+
+    # retry with rpm
+    # --replacepkgs: Install the Package Even If Already Installed
+    local replacepkgs="$(__epm_get_replacepkgs $files)"
+    sudocmd rpm -Uvh $replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && save_installed_packages $files
 }
