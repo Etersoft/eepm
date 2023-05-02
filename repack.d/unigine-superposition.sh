@@ -31,10 +31,8 @@ fi
 
 # pack icons
 for i in 16 24 32 48 64 128 256 ; do
-    mkdir -p $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/
-    cp $BUILDROOT/icons/superposition_icon_$i.png $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/$PRODUCT.png
+    install_file /icons/superposition_icon_$i.png /usr/share/icons/hicolor/${i}x${i}/apps/$PRODUCT.png
 done
-subst "s|%files|%files\n/usr/share/icons/hicolor/*x*/apps/$PRODUCT.png|" $SPEC
 remove_dir /icons
 
 # FIXME:
