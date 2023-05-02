@@ -85,9 +85,22 @@ remove_dir()
 
     echo "Removing $file dir ..."
     rm -r "$BUILDROOT$file/"
-    subst "s|.*$file/.*||" $SPEC
-    subst "s|.*$file\"$||" $SPEC
-    subst "s|.*$file$||" $SPEC
+    # %dir "/icons/"
+    subst "s|^%dir $file/*$||" $SPEC
+    subst "s|^%dir \"$file/*\"$||" $SPEC
+    # %dir "/icons/some..."
+    subst "s|^%dir $file/.*$||" $SPEC
+    subst "s|^%dir \"$file/.*\"$||" $SPEC
+    # "/icons/"
+    subst "s|^$file/*$||" $SPEC
+    subst "s|^\"$file/*\"$||" $SPEC
+    # "/icons/some..."
+    subst "s|^$file/.*||" $SPEC
+    subst "s|^\"$file/.*\"$||" $SPEC
+    subst "s|^\(%config.*\) $file$||" $SPEC
+    subst "s|^\(%config.*\) \"$file\"$||" $SPEC
+    subst "s|^\(%config.*\) $file/.*||" $SPEC
+    subst "s|^\(%config.*\) \"$file/.*\"$||" $SPEC
 }
 
 has_space()
