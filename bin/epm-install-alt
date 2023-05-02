@@ -76,7 +76,7 @@ epm_install_files_alt()
     # exclude package names from requires (req - fl)
     req="$(estrlist exclude "$fl" "$req")"
     # TODO: can we install only requires via apt?
-    docmd epm install $req || return
+    docmd epm install --skip-installed $req || return
 
     # retry with rpm
     # --replacepkgs: Install the Package Even If Already Installed
