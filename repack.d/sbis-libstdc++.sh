@@ -4,6 +4,8 @@
 BUILDROOT="$1"
 SPEC="$2"
 
+. $(dirname $0)/common.sh
+
 LIBPATH="$(cd $BUILDROOT ; echo opt/gcc-*/lib64)"
 
 # find provides there

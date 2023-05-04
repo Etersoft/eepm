@@ -7,6 +7,8 @@ SPEC="$2"
 PRODUCT=unigine-superposition
 PRODUCTDIR=/opt/unigine-superposition
 
+PREINSTALL_PACKAGES="glib2 libdbus libEGL libGL libICE libqt5-test libSM libX11 libxcb libXext libXi libXinerama libXrandr libXrender zlib"
+
 . $(dirname $0)/common.sh
 
 subst "s|^Group:.*|Group: Graphics|" $SPEC
@@ -69,6 +71,3 @@ EOF
 
 pack_file /usr/share/applications/$PRODUCT.desktop
 
-if [ "$(epm print info -s)" = "alt" ] ; then
-    epm install --skip-installed glib2 libdbus libEGL libGL libICE libqt5-test libSM libX11 libxcb libXext libXi libXinerama libXrandr libXrender zlib
-fi

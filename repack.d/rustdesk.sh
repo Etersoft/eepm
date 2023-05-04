@@ -60,18 +60,13 @@ fi
 
 [ "$(epm print info -s)" = "alt" ] || exit 0
 
-epm install --skip-installed glib2 libappindicator-gtk3 libcairo libgdk-pixbuf libgtk+3 libpango libpulseaudio libuuid libX11 libXau libxcb libXdmcp libXfixes libXtst xdotool
+install_requires glib2 libappindicator-gtk3 libcairo libgdk-pixbuf libgtk+3 libpango libpulseaudio libuuid libX11 libXau libxcb libXdmcp libXfixes libXtst xdotool
 
-if ! epm install --skip-installed  python3-module-pynput ; then
+if ! epm install --skip-installed --no-remove python3-module-pynput ; then
     case "$(epm print info -e)" in
-        ALTLinux/p10|ALTServer/10)
-            epm install 316569
-            ;;
         ALTLinux/p9)
-            epm install 316570
-            ;;
-        ALTLinux/c9f2)
-            epm install 316739
+            # https://git.altlinux.org/tasks/316570/
+            epm install --no-remove 316570
             ;;
    esac
 fi

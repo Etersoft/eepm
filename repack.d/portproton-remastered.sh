@@ -6,6 +6,8 @@ SPEC="$2"
 PRODUCT=portproton
 PRODUCTDIR=/opt/PortProton
 
+PREINSTALL_PACKAGES="vulkan-tools"
+
 . $(dirname $0)/common.sh
 
 move_to_opt /PortWINE-master
@@ -37,7 +39,6 @@ pack_file /usr/share/applications/$PRODUCT.desktop
 subst 's|elif|else|' $BUILDROOT$PRODUCTDIR/data_from_portwine/scripts/portwine_db/WorldOfTanksEnCoreLauncher
 
 add_requires bubblewrap cabextract curl gamemode icoutils libvulkan1 vulkan-tools wget zenity zstd libd3d libMesaOpenCL
-epm install --skip-installed vulkan-tools
 
 filter_from_requires xneur
 
