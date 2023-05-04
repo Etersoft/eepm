@@ -47,7 +47,7 @@ eget()
 {
 	if [ -n "$EPMMODE" ] ; then
 		# if embedded in epm
-		(unset EGET_IPFS_GATEWAY; unset EGET_IPFS_API ; unset EGET_IPFS_DB ; internal_tools_eget "$@" )
+		(unset EGET_IPFS_GATEWAY; unset EGET_IPFS_API ; unset EGET_IPFS_DB ; EGET_BACKEND=$ORIG_EGET_BACKEND internal_tools_eget "$@" )
 		return
 	fi
 
@@ -56,7 +56,7 @@ eget()
 	local bashopt=''
 	#[ -n "$verbose" ] && bashopt='-x'
 
-	(unset EGET_IPFS_GATEWAY; unset EGET_IPFS_API ; unset EGET_IPFS_DB ; $CMDSHELL $bashopt $PROGDIR/$PROGNAME "$@" )
+	(unset EGET_IPFS_GATEWAY; unset EGET_IPFS_API ; unset EGET_IPFS_DB ; EGET_BACKEND=$ORIG_EGET_BACKEND $CMDSHELL $bashopt $PROGDIR/$PROGNAME "$@" )
 }
 
 # TODO:
@@ -753,7 +753,8 @@ fi
 WGET="$(print_command_path wget)"
 CURL="$(print_command_path curl)"
 
-
+ORIG_EGET_BACKEND="$EGET_BACKEND"
+# override backend
 if is_fileurl "$1" ; then
     EGET_BACKEND="file"
 elif is_ipfsurl "$1" ; then
@@ -974,7 +975,8 @@ url_get_response()
     echo "$answer"
 }
 
-
+else
+    fatal "Unknown EGET_BACKEND '$EGET_BACKEND', logical error."
 fi
 
 
