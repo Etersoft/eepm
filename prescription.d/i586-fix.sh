@@ -60,5 +60,10 @@ esac
 
 echo
 echo "Installing all appropiate 32 bit packages ..."
-epm install $LIST
+epm install --no-remove $LIST
+RES=$?
+
+[ "$RES" = "0" ] || echo "Try do epm upgrade before."
+
+exit $RES
 
