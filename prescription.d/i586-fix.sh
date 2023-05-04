@@ -12,11 +12,16 @@ for i in glibc-nss glibc-gconv-modules \
          sssd-client \
          primus \
          vulkan-amdgpu libvulkan1 \
-         $(epmqp --short nvidia_glx | grep "^nvidia_glx") \
          $(epmqp --short libnss | grep "^libnss-") \
          $(epmqp --short xorg-dri | grep "^xorg-dri-")
 do
     epm --quiet installed $i && LIST="$LIST i586-$i"
+done
+
+for i in $(epmqp --short nvidia_glx | grep "^nvidia_glx") ; do
+    epm status --installed $i || continue
+    # install i586-* only for actual packages
+    epm status --installable $i && LIST="$LIST i586-$i"
 done
 }
 
