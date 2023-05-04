@@ -76,6 +76,12 @@ epm_install_names()
         return
     fi
 
+    if [ -n "$dryrun" ] ; then
+        load_helper epm-simulate
+        epm simulate "$@"
+        return
+    fi
+
     if [ -n "$non_interactive" ] ; then
         epm_ni_install_names "$@"
         return
