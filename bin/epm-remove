@@ -330,6 +330,7 @@ epm_remove()
                 APTOPTIONS="--simulate"
                 ;;
             *)
+                fatal "don't yet support --simulate for $PMTYPE"
                 return
                 ;;
         esac
