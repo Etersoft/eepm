@@ -281,7 +281,7 @@ install_requires()
 {
     [ -n "$1" ] || return
     if [ "$(epm print info -s)" = "alt" ] ; then
-        epm install --skip-installed "$@"
+        epm install --skip-installed --no-remove "$@" || fatal "Can't install requires packages."
     fi
 }
 

@@ -16,7 +16,7 @@ subst '10iProvides: yandex-browser = %{version}' $SPEC
 add_findreq_skiplist $PRODUCTDIR/update-ffmpeg
 
 # this package can be missed
-epm install --skip-installed fonts-ttf-google-noto-emoji-color && add_requires fonts-ttf-google-noto-emoji-color
+epm install --skip-installed --no-remove fonts-ttf-google-noto-emoji-color && add_requires fonts-ttf-google-noto-emoji-color
 
 set_alt_alternatives 65
 

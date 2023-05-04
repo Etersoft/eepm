@@ -22,7 +22,8 @@ for i in .$PRODUCTDIR/lib* .$PRODUCTDIR/$PRODUCT  ; do
 done
 fi
 
-epm install --skip-installed libmfx || epm install 316139 || fatal "Can't install libmfx"
+# https://git.altlinux.org/tasks/316139
+epm install --skip-installed --no-remove libmfx || epm install --no-remove 316139 || fatal "Can't install libmfx"
 
 # if not Debian based
 if [ ! -s /etc/ssl/certs/ca-certificates.crt ] ; then
