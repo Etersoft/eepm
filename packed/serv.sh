@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.55.2"
+EPMVERSION="3.55.3"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -378,6 +378,7 @@ set_sudo()
 
     if ! is_command $SUDO_CMD ; then
         [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't find sudo. Please install and tune sudo ('# epm install sudo') or run epm under root.'"
+        SUDO_TESTED="2"
         return "$SUDO_TESTED"
     fi
 
@@ -387,6 +388,7 @@ set_sudo()
             info "Please enter sudo user password to use sudo in the current session."
             if ! $SUDO_CMD -l >/dev/null ; then
                 [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported in non interactive using). Please run epm under root.'"
+                SUDO_TESTED="3"
                 return "$SUDO_TESTED"
             fi
         fi
@@ -394,6 +396,7 @@ set_sudo()
         # use sudo if one is tuned and tuned without password
         if ! $SUDO_CMD -l -n >/dev/null 2>/dev/null ; then
             [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported). Please run epm under root or check http://altlinux.org/sudo '"
+            SUDO_TESTED="4"
             return "$SUDO_TESTED"
         fi
     fi

@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.55.2"
+EPMVERSION="3.55.3"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -380,6 +380,7 @@ set_sudo()
 
     if ! is_command $SUDO_CMD ; then
         [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't find sudo. Please install and tune sudo ('# epm install sudo') or run epm under root.'"
+        SUDO_TESTED="2"
         return "$SUDO_TESTED"
     fi
 
@@ -389,6 +390,7 @@ set_sudo()
             info "Please enter sudo user password to use sudo in the current session."
             if ! $SUDO_CMD -l >/dev/null ; then
                 [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported in non interactive using). Please run epm under root.'"
+                SUDO_TESTED="3"
                 return "$SUDO_TESTED"
             fi
         fi
@@ -396,6 +398,7 @@ set_sudo()
         # use sudo if one is tuned and tuned without password
         if ! $SUDO_CMD -l -n >/dev/null 2>/dev/null ; then
             [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported). Please run epm under root or check http://altlinux.org/sudo '"
+            SUDO_TESTED="4"
             return "$SUDO_TESTED"
         fi
     fi
@@ -3615,6 +3618,11 @@ epm_install_names()
 
     if [ -n "$download_only" ] ; then
         epm download "$@"
+        return
+    fi
+
+    if [ -n "$dryrun" ] ; then
+        epm simulate "$@"
         return
     fi
 
@@ -8098,6 +8106,7 @@ epm_remove()
                 APTOPTIONS="--simulate"
                 ;;
             *)
+                fatal "don't yet support --simulate for $PMTYPE"
                 return
                 ;;
         esac
@@ -11977,7 +11986,14 @@ epm_upgrade()
         return
     fi
 
+    # if possible, it will put pkg_urls into pkg_files and reconstruct pkg_filenames
+    if [ -n "$pkg_urls" ] ; then
+        info "Downloading packages assigned to upgrade ..."
+        __handle_pkg_urls_to_install
+    fi
+
     info "Running command for upgrade packages"
+
 
     case $PMTYPE in
         *-rpm)
@@ -13364,7 +13380,7 @@ eget()
 {
 	if [ -n "$EPMMODE" ] ; then
 		# if embedded in epm
-		(unset EGET_IPFS_GATEWAY; unset EGET_IPFS_API ; unset EGET_IPFS_DB ; internal_tools_eget "$@" )
+		(unset EGET_IPFS_GATEWAY; unset EGET_IPFS_API ; unset EGET_IPFS_DB ; EGET_BACKEND=$ORIG_EGET_BACKEND internal_tools_eget "$@" )
 		return
 	fi
 
@@ -13373,7 +13389,7 @@ eget()
 	local bashopt=''
 	#[ -n "$verbose" ] && bashopt='-x'
 
-	(unset EGET_IPFS_GATEWAY; unset EGET_IPFS_API ; unset EGET_IPFS_DB ; $CMDSHELL $bashopt $PROGDIR/$PROGNAME "$@" )
+	(unset EGET_IPFS_GATEWAY; unset EGET_IPFS_API ; unset EGET_IPFS_DB ; EGET_BACKEND=$ORIG_EGET_BACKEND $CMDSHELL $bashopt $PROGDIR/$PROGNAME "$@" )
 }
 
 # TODO:
@@ -14070,7 +14086,8 @@ fi
 WGET="$(print_command_path wget)"
 CURL="$(print_command_path curl)"
 
-
+ORIG_EGET_BACKEND="$EGET_BACKEND"
+# override backend
 if is_fileurl "$1" ; then
     EGET_BACKEND="file"
 elif is_ipfsurl "$1" ; then
@@ -14291,7 +14308,8 @@ url_get_response()
     echo "$answer"
 }
 
-
+else
+    fatal "Unknown EGET_BACKEND '$EGET_BACKEND', logical error."
 fi
 
 
@@ -14570,8 +14588,9 @@ get_github_urls()
     [ -n "$owner" ] || fatal "Can't get owner from $1"
     [ -n "$project" ] || fatal "Can't get project from $1"
     local URL="https://api.github.com/repos/$owner/$project/releases"
-    scat $URL | \
-        grep -i -o -E '"browser_download_url": "https://.*"' | cut -d'"' -f4
+    # api sometime returns unformatted json
+    scat $URL | sed -e 's|,\(["{]\)|,\n\1|g' | \
+        grep -i -o -E '"browser_download_url": *"https://.*"' | cut -d'"' -f4
 }
 
 # drop file path from URL
