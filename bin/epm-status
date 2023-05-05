@@ -78,12 +78,19 @@ epm_status_installable()
     fi
 }
 
+# allowed to use scripts 
 epm_status_certified()
 {
     local pkg="$1"
     load_helper epm-install
-    __epm_package_name_ok_scripts "$pkg"
+    __epm_package_ok_scripts "$pkg" && return
+
+    local vendor
+    vendor="$(epm print field Vendor for "$pkg" 2>/dev/null)"
+    [ -n "$vendor" ] || return
+    __epm_vendor_ok_scripts "$vendor" && return
 }
+
 
 # check if the package is really package (check accessibility)
 epm_status_validate()
@@ -219,7 +226,7 @@ epm_status()
             epm_status_original "$@"
             return
             ;;
-        --certified)
+        --certified|--allowed-scripts)
             epm_status_certified "$@"
             return
             ;;
