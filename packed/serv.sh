@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.55.3"
+EPMVERSION="3.55.4"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -515,7 +515,6 @@ assure_exists_erc()
 
 disabled_eget()
 {
-    local EGET
     # use internal eget only if exists
     if [ -s $SHAREDIR/tools_eget ] ; then
         ( EGET_BACKEND=$eget_backend $CMDSHELL $SHAREDIR/tools_eget "$@" )
@@ -523,6 +522,7 @@ disabled_eget()
     fi
     fatal "Internal error: missed tools_eget"
 
+    local EGET
     # FIXME: we need disable output here, eget can be used for get output
     assure_exists eget eget 3.3 >/dev/null
     # run external command, not the function

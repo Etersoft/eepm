@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.55.3"
+EPMVERSION="3.55.4"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -517,7 +517,6 @@ assure_exists_erc()
 
 disabled_eget()
 {
-    local EGET
     # use internal eget only if exists
     if [ -s $SHAREDIR/tools_eget ] ; then
         ( EGET_BACKEND=$eget_backend $CMDSHELL $SHAREDIR/tools_eget "$@" )
@@ -525,6 +524,7 @@ disabled_eget()
     fi
     fatal "Internal error: missed tools_eget"
 
+    local EGET
     # FIXME: we need disable output here, eget can be used for get output
     assure_exists eget eget 3.3 >/dev/null
     # run external command, not the function
@@ -5867,6 +5867,7 @@ pkg_names=$(__epm_get_hilevel_name $pkg_names)
 
 case $PMTYPE in
     apt-*)
+        # FIXME: returns TRUE ever on missed package
         docmd apt-cache policy $pkg_names
         ;;
     packagekit)
@@ -7302,6 +7303,10 @@ get_fix_release_pkg()
         echo "apt-conf-$TO"
         # apt-conf-sisyphus and apt-conf-branch conflicts
         epm installed apt-conf-branch && echo "apt-conf-branch-"
+        #for i in apt apt-rsync libapt libpackagekit-glib librpm7 packagekit rpm synaptic realmd libldap2 ; do
+        #    epm installed $i && echo "$i"
+        #done
+
     else
         epm installed apt-conf-branch && echo "apt-conf-branch" && epm installed apt-conf-sisyphus && echo "apt-conf-sisyphus-"
     fi
@@ -8074,6 +8079,8 @@ epm_remove()
         return
     fi
 
+    # TODO: add support for --no-scripts to all cases
+
     if [ "$BASEDISTRNAME" = "alt" ] ; then
         if tasknumber "$pkg_names" >/dev/null ; then
             assure_exists apt-repo
@@ -8358,6 +8365,7 @@ __epm_have_repack_rule()
     # skip repacking on non ALT systems
     [ "$BASEDISTRNAME" = "alt" ] || return 1
 
+    # skip for packages built with repack
     local packager="$(epm print field Packager for "$1" 2>/dev/null)"
     [ "$packager" = "EPM <support@etersoft.ru>" ] && return 1
     [ "$packager" = "EPM <support@eepm.ru>" ] && return 1
@@ -11122,43 +11130,6 @@ get_only_installed_packages()
     estrlist exclude "$(echo "$installlist" | (skip_installed='yes' filter_out_installed_packages))" "$installlist"
 }
 
-__convert_pkgallowscripts_to_regexp()
-{
-    local tmpalf="$(mktemp)" || fatal
-    # copied from eget's filter_glob
-    # check man glob
-    # remove commentы and translate glob to regexp
-    grep -v "^[[:space:]]*#" "$1" | grep -v "^[[:space:]]*$" | sed -e "s|\*|.*|g" -e "s|?|.|g" -e "s|^|^|" -e "s|$|\$|" >$tmpalf
-    echo "$tmpalf"
-}
-
-__epm_package_ok_scripts()
-{
-    local pkg="$1"
-    local alf="$CONFIGDIR/pkgallowscripts.list"
-    [ -s "$alf" ] || return 1
-    local name
-    name="$(epm print field Name for "$pkg" 2>/dev/null)"
-    [ -n "$name" ] || return 1
-    local tmpalf=$(__convert_pkgallowscripts_to_regexp "$alf")
-    echo "$name" | grep -q -f $tmpalf
-    local res=$?
-    rm $tmpalf
-    return $res
-}
-
-__epm_vendor_ok_scripts()
-{
-    local vendor="$1"
-    local alf="$CONFIGDIR/vendorallowscripts.list"
-    [ -s "$alf" ] || return 1
-    [ -n "$vendor" ] || return 1
-    local tmpalf=$(__convert_pkgallowscripts_to_regexp "$alf")
-    echo "$vendor" | grep -q -f $tmpalf
-    local res=$?
-    rm $tmpalf
-    return $res
-}
 
 __epm_print_warning_for_nonalt_packages()
 {
@@ -11196,10 +11167,11 @@ __epm_check_vendor()
 
     local i
     for i in $* ; do
+        bi="$(basename $i)"
         if ! epm_status_validate "$i" ; then
             # it is missed package probably (package remove case)
             if is_installed "$i" ; then
-                warning "Can't get any info for $i package. Scripts are DISABLED for package $i. Use --scripts if you need run scripts from such packages."
+                warning "Can't get any info for $i package. Scripts are DISABLED for package $bi. Use --scripts if you need run scripts from such packages."
             fi
             noscripts="--noscripts"
             continue
@@ -11209,7 +11181,7 @@ __epm_check_vendor()
         vendor="$(epm print field Vendor for "$i")"
 
         if [ -z "$vendor" ] ; then
-            warning "Can't get info about vendor for $i package. Scripts are DISABLED for package $i. Use --scripts if you need run scripts from such packages."
+            warning "Can't get info about vendor for $i package. Scripts are DISABLED for package $bi. Use --scripts if you need run scripts from such packages."
             noscripts="--noscripts"
             continue
         fi
@@ -11218,18 +11190,19 @@ __epm_check_vendor()
         epm_status_repacked "$i" && continue
 
         if __epm_vendor_ok_scripts "$vendor" ; then
-            warning "Scripts are ENABLED for package $i from outside vendor '$vendor' (this vendor is listed in $CONFIGDIR/vendorallowscripts.list).  Use --noscripts if you need disable scripts in such packages."
+            warning "Scripts are ENABLED for package $bi from outside vendor '$vendor' (this vendor is listed in $CONFIGDIR/vendorallowscripts.list).  Use --noscripts if you need disable scripts in such packages."
             continue
         fi
 
         if __epm_package_ok_scripts "$i" ; then
-            warning "Scripts are ENABLED for package $i from outside vendor '$vendor' (the package is listed in $CONFIGDIR/pkgallowscripts.list).  Use --noscripts if you need disable scripts in such packages."
+            warning "Scripts are ENABLED for package $bi from outside vendor '$vendor' (the package is listed in $CONFIGDIR/pkgallowscripts.list).  Use --noscripts if you need disable scripts in such packages."
             continue
         fi
-        warning "Scripts are DISABLED for package $i from outside vendor '$vendor'. Use --scripts if you need run scripts from such packages."
+        warning "Scripts are DISABLED for package $bi from outside vendor '$vendor'. Use --scripts if you need run scripts from such packages."
         noscripts="--noscripts"
     done
 }
+
 
 # File bin/epm-sh-warmup:
 
@@ -11596,6 +11569,54 @@ epm_stats()
 # File bin/epm-status:
 
 
+
+__convert_pkgallowscripts_to_regexp()
+{
+    local tmpalf="$(mktemp)" || fatal
+    # copied from eget's filter_glob
+    # check man glob
+    # remove commentы and translate glob to regexp
+    grep -v "^[[:space:]]*#" "$1" | grep -v "^[[:space:]]*$" | sed -e "s|\*|.*|g" -e "s|?|.|g" -e "s|^|^|" -e "s|$|\$|" >$tmpalf
+    echo "$tmpalf"
+}
+
+__epm_package_name_ok_scripts()
+{
+    local name="$1"
+    local alf="$CONFIGDIR/pkgallowscripts.list"
+    [ -s "$alf" ] || return 1
+    [ -n "$name" ] || return 1
+    local tmpalf=$(__convert_pkgallowscripts_to_regexp "$alf")
+    echo "$name" | grep -q -f $tmpalf
+    local res=$?
+    rm $tmpalf
+    return $res
+}
+
+__epm_package_ok_scripts()
+{
+    local pkg="$1"
+    local name
+    # TODO: improve epm print name and use it here
+    name="$(epm print field Name for "$pkg" 2>/dev/null)"
+    [ -n "$name" ] || return 1
+    __epm_package_name_ok_scripts "$name"
+}
+
+__epm_vendor_ok_scripts()
+{
+    local vendor="$1"
+    local alf="$CONFIGDIR/vendorallowscripts.list"
+    [ -s "$alf" ] || return 1
+    [ -n "$vendor" ] || return 1
+    local tmpalf=$(__convert_pkgallowscripts_to_regexp "$alf")
+    echo "$vendor" | grep -q -f $tmpalf
+    local res=$?
+    rm $tmpalf
+    return $res
+}
+
+
 epm_status_installable()
 {
     local pkg="$1"
@@ -11606,6 +11627,18 @@ epm_status_installable()
         epm install --simulate "$pkg" 2>/dev/null >/dev/null
     fi
 }
+
+epm_status_certified()
+{
+    local pkg="$1"
+    __epm_package_ok_scripts "$pkg" && return
+
+    local vendor
+    vendor="$(epm print field Vendor for "$pkg" 2>/dev/null)"
+    [ -n "$vendor" ] || return
+    __epm_vendor_ok_scripts "$vendor" && return
+}
+
 
 epm_status_validate()
 {
@@ -11663,7 +11696,7 @@ epm_status_repacked()
             [ "$packager" = "EPM <support@eepm.ru>" ] && return 0
             ;;
         *)
-            fatal "Unsupported $DISTRNAME"
+            fatal "Unsupported $BASEDISTRNAME"
             ;;
     esac
     return 1
@@ -11689,7 +11722,7 @@ epm_status_thirdparty()
             echo "$distribution" | grep -q "^ALT" || return 0
             ;;
         *)
-            fatal "Unsupported $DISTRNAME"
+            fatal "Unsupported $BASEDISTRNAME"
             ;;
     esac
     return 1
@@ -11705,7 +11738,9 @@ Usage: epm status [options] <package>
 
 Options:
   --installed           check if <package> is installed
+  --installable         check if <package> can be installed from the repo
   --original            check if <package> is from distro repo
+  --certified           check if <package> is certified that it can be installed without repacking
   --thirdparty          check if <package> from a third-party source (didn't packed for this distro)
   --repacked            check if <package> was repacked with epm repack
   --validate            check if <package> is accessible (we can get a fields from it)
@@ -11736,6 +11771,10 @@ epm_status()
             ;;
         --original)
             epm_status_original "$@"
+            return
+            ;;
+        --certified|--allowed-scripts)
+            epm_status_certified "$@"
             return
             ;;
          --third-party|--thirdparty|--thirdpart)
