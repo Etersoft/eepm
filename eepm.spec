@@ -1,5 +1,5 @@
 Name: eepm
-Version: 3.55.2
+Version: 3.55.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -92,6 +92,18 @@ a discussion about extra requirements.
 
 
 %changelog
+* Fri May 05 2023 Vitaly Lipatov <lav@altlinux.ru> 3.55.3-alt1
+- eget: fix github json handling (some servers return optimized nonformatted answer)
+- epm install: add missed --simulate support for hilevel command
+- epm i586-fix: add only installable ngvidia_glx i586 packages
+- epm play i586-fix: use --no-remove for install
+- epm repack: use --no-remove for install
+- epm repack: use PREINSTALL_PACKAGES install way
+- eget: use correct http download backend for ipfs via gateway
+- epm play: add commfort-client (wine)
+- epm-upgrade: for url download files to upgrade
+- add esu command (sudo -l / su - wrapper)
+
 * Wed May 03 2023 Vitaly Lipatov <lav@altlinux.ru> 3.55.2-alt1
 - epm install: move alt, apt-dpkg, rpm install to separate files
 - epm play: add joplin, novelwriter
