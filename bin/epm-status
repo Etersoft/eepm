@@ -19,6 +19,54 @@
 
 load_helper epm-query
 
+
+__convert_pkgallowscripts_to_regexp()
+{
+    local tmpalf="$(mktemp)" || fatal
+    # copied from eget's filter_glob
+    # check man glob
+    # remove commentы and translate glob to regexp
+    grep -v "^[[:space:]]*#" "$1" | grep -v "^[[:space:]]*$" | sed -e "s|\*|.*|g" -e "s|?|.|g" -e "s|^|^|" -e "s|$|\$|" >$tmpalf
+    echo "$tmpalf"
+}
+
+__epm_package_name_ok_scripts()
+{
+    local name="$1"
+    local alf="$CONFIGDIR/pkgallowscripts.list"
+    [ -s "$alf" ] || return 1
+    [ -n "$name" ] || return 1
+    local tmpalf=$(__convert_pkgallowscripts_to_regexp "$alf")
+    echo "$name" | grep -q -f $tmpalf
+    local res=$?
+    rm $tmpalf
+    return $res
+}
+
+__epm_package_ok_scripts()
+{
+    local pkg="$1"
+    local name
+    # TODO: improve epm print name and use it here
+    name="$(epm print field Name for "$pkg" 2>/dev/null)"
+    [ -n "$name" ] || return 1
+    __epm_package_name_ok_scripts "$name"
+}
+
+__epm_vendor_ok_scripts()
+{
+    local vendor="$1"
+    local alf="$CONFIGDIR/vendorallowscripts.list"
+    [ -s "$alf" ] || return 1
+    [ -n "$vendor" ] || return 1
+    local tmpalf=$(__convert_pkgallowscripts_to_regexp "$alf")
+    echo "$vendor" | grep -q -f $tmpalf
+    local res=$?
+    rm $tmpalf
+    return $res
+}
+
+
 epm_status_installable()
 {
     local pkg="$1"
