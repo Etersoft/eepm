@@ -4,7 +4,7 @@ BUILDROOT="$1"
 
 SPEC="$2"
 
-PREINSTALL_PACKAGES="ffmpeg ffplay ffprobe xdg-open"
+PREINSTALL_PACKAGES="ffmpeg ffplay ffprobe xdg-utils"
 
 . $(dirname $0)/common.sh
 

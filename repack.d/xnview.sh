@@ -3,7 +3,9 @@
 BUILDROOT="$1"
 SPEC="$2"
 
-PREINSTALL_PACKAGES="libQt5MultimediaGstTools libQt5WaylandClient libqt5-multimedia libqt5-waylandclient fontconfig glib2 libalsa libatk libcairo libcairo-gobject libcups libdbus libdrm libEGL libexpat libfreetype libgbm libgdk-pixbuf libgio libGL libgst-plugins1.0 libgstreamer1.0 libgtk+2 libgtk+3 libkrb5 liblzma libnspr libnss libpango libpulseaudio libwayland-client libwayland-cursor libwayland-egl libX11 libxcb libxcb-render-util libxcbutil-icccm libxcbutil-image libxcbutil-keysyms libXcomposite libXdamage libXext libXfixes libxkbcommon libxkbcommon-x11 libXrandr libXrender libXtst perl-base zlib"
+# FIXME: missed in the package
+#filter_from_requires libQt5MultimediaGstTools libQt5WaylandClient
+PREINSTALL_PACKAGES="libqt5-multimedia libqt5-waylandclient fontconfig glib2 libalsa libatk libcairo libcairo-gobject libcups libdbus libdrm libEGL libexpat libfreetype libgbm libgdk-pixbuf libgio libGL libgst-plugins1.0 libgstreamer1.0 libgtk+2 libgtk+3 libkrb5 liblzma libnspr libnss libpango libpulseaudio libwayland-client libwayland-cursor libwayland-egl libX11 libxcb libxcb-render-util libxcbutil-icccm libxcbutil-image libxcbutil-keysyms libXcomposite libXdamage libXext libXfixes libxkbcommon libxkbcommon-x11 libXrandr libXrender libXtst perl-base zlib"
 
 . $(dirname $0)/common.sh
 
