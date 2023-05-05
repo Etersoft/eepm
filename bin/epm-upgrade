@@ -65,7 +65,15 @@ epm_upgrade()
         return
     fi
 
+    # if possible, it will put pkg_urls into pkg_files and reconstruct pkg_filenames
+    if [ -n "$pkg_urls" ] ; then
+        info "Downloading packages assigned to upgrade ..."
+        load_helper epm-download
+        __handle_pkg_urls_to_install
+    fi
+
     info "Running command for upgrade packages"
+
 
     case $PMTYPE in
         *-rpm)
