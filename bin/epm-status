@@ -30,6 +30,13 @@ epm_status_installable()
     fi
 }
 
+epm_status_certified()
+{
+    local pkg="$1"
+    load_helper epm-install
+    __epm_package_name_ok_scripts "$pkg"
+}
+
 # check if the package is really package (check accessibility)
 epm_status_validate()
 {
@@ -129,7 +136,9 @@ Usage: epm status [options] <package>
 
 Options:
   --installed           check if <package> is installed
+  --installable         check if <package> can be installed from the repo
   --original            check if <package> is from distro repo
+  --certified           check if <package> is certified that it can be installed without repacking
   --thirdparty          check if <package> from a third-party source (didn't packed for this distro)
   --repacked            check if <package> was repacked with epm repack
   --validate            check if <package> is accessible (we can get a fields from it)
@@ -160,6 +169,10 @@ epm_status()
             ;;
         --original)
             epm_status_original "$@"
+            return
+            ;;
+        --certified)
+            epm_status_certified "$@"
             return
             ;;
          --third-party|--thirdparty|--thirdpart)

@@ -265,8 +265,13 @@ is_repacked_package()
        return 1
     fi
 
+    if epm status --certified $pkg ; then
+       # allow install/update if we agreed with their package
+       return 0
+    fi
+
     if epm status --thirdparty $pkg ; then
-       echo "Package $pkg is already installed, packaged by vendor $(epm print field Distribution for $pkg)."
+       echo "Package $pkg is already installed, packaged by vendor $(epm print field Vendor for $pkg)."
        return 1
     fi
 

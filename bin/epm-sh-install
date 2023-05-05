@@ -77,19 +77,27 @@ __convert_pkgallowscripts_to_regexp()
     echo "$tmpalf"
 }
 
-__epm_package_ok_scripts()
+__epm_package_name_ok_scripts()
 {
-    local pkg="$1"
+    local name="$1"
     local alf="$CONFIGDIR/pkgallowscripts.list"
     [ -s "$alf" ] || return 1
-    local name
-    name="$(epm print field Name for "$pkg" 2>/dev/null)"
     [ -n "$name" ] || return 1
     local tmpalf=$(__convert_pkgallowscripts_to_regexp "$alf")
     echo "$name" | grep -q -f $tmpalf
     local res=$?
     rm $tmpalf
     return $res
+}
+
+__epm_package_ok_scripts()
+{
+    local pkg="$1"
+    local name
+    # TODO: improve epm print name and use it here
+    name="$(epm print field Name for "$pkg" 2>/dev/null)"
+    [ -n "$name" ] || return 1
+    __epm_package_name_ok_scripts "$name"
 }
 
 __epm_vendor_ok_scripts()
