@@ -1,5 +1,6 @@
+%define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.55.3
+Version: 3.55.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -81,6 +82,7 @@ a discussion about extra requirements.
 %_bindir/eepm
 %_bindir/serv
 %_bindir/distr_info
+%_bindir/esu
 %dir /var/lib/eepm/
 %_man1dir/*
 %_datadir/%name/
@@ -92,6 +94,14 @@ a discussion about extra requirements.
 
 
 %changelog
+* Fri May 05 2023 Vitaly Lipatov <lav@altlinux.ru> 3.55.4-alt1
+- epm play add gitkraken
+- epm play: rename r7office to r7-office
+- epm play: add r7-office-organizer
+- epm status: add --certified support (for packages we trust)
+- epm repack: fix some requires
+- pack missed esu
+
 * Fri May 05 2023 Vitaly Lipatov <lav@altlinux.ru> 3.55.3-alt1
 - eget: fix github json handling (some servers return optimized nonformatted answer)
 - epm install: add missed --simulate support for hilevel command
