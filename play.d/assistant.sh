@@ -4,11 +4,6 @@ PKGNAME=assistant
 SUPPORTEDARCHES="x86_64 aarch64"
 DESCRIPTION="Assistant (Ассистент) from the official site"
 
-if [ "$1" = "--remove" ] ; then
-    epm remove $PKGNAME
-    exit
-fi
-
 . $(dirname $0)/common.sh
 
 

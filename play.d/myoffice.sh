@@ -5,12 +5,6 @@ SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="MyOffice Standart Home Edition for Linux from the official site"
 
-if [ "$1" = "--remove" ] ; then
-    epm remove $PKGNAME
-    exit
-fi
-
-
 . $(dirname $0)/common.sh
 
 pkgtype=$(epm print info -p)
