@@ -9,6 +9,12 @@ exit
 
 [ "$(epm print info -s)" = "alt" ] || fatal "Only ALTLinux is supported"
 
+if grep NVIDIA /proc/driver/nvidia/version 2>/dev/null ; then
+    echo "Already installed."
+    exit
+fi
+
+# ROSA: kroko-cli autoinstall
 # https://www.altlinux.org/Nvidia#Смена_открытых_драйверов_на_проприетарные[1]
 
 epm update || exit

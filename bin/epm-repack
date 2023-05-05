@@ -27,6 +27,7 @@ __epm_have_repack_rule()
     # skip repacking on non ALT systems
     [ "$BASEDISTRNAME" = "alt" ] || return 1
 
+    # skip for packages built with repack
     local packager="$(epm print field Packager for "$1" 2>/dev/null)"
     [ "$packager" = "EPM <support@etersoft.ru>" ] && return 1
     [ "$packager" = "EPM <support@eepm.ru>" ] && return 1

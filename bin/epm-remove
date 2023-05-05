@@ -297,6 +297,8 @@ epm_remove()
         return
     fi
 
+    # TODO: add support for --no-scripts to all cases
+
     if [ "$BASEDISTRNAME" = "alt" ] ; then
         load_helper epm-sh-altlinux
         if tasknumber "$pkg_names" >/dev/null ; then

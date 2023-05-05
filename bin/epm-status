@@ -149,7 +149,7 @@ epm_status_repacked()
             [ "$packager" = "EPM <support@eepm.ru>" ] && return 0
             ;;
         *)
-            fatal "Unsupported $DISTRNAME"
+            fatal "Unsupported $BASEDISTRNAME"
             ;;
     esac
     return 1
@@ -175,7 +175,7 @@ epm_status_thirdparty()
             echo "$distribution" | grep -q "^ALT" || return 0
             ;;
         *)
-            fatal "Unsupported $DISTRNAME"
+            fatal "Unsupported $BASEDISTRNAME"
             ;;
     esac
     return 1

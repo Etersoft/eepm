@@ -32,6 +32,7 @@ pkg_names=$(__epm_get_hilevel_name $pkg_names)
 
 case $PMTYPE in
     apt-*)
+        # FIXME: returns TRUE ever on missed package
         docmd apt-cache policy $pkg_names
         ;;
     packagekit)

@@ -100,3 +100,8 @@ http://wiki.etersoft.ru/Epm
 
 Please e-mail if you have any questions:
 `lav@etersoft.ru`
+
+## Simular projects
+
+* https://github.com/leamas/lpf
+* https://ihucos.github.io/zpkg/ - With zpkg you can install programs from other distributions into your system

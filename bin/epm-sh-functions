@@ -516,7 +516,6 @@ assure_exists_erc()
 # will replaced within disabled_eget in packaged version
 eget()
 {
-    local EGET
     # use internal eget only if exists
     if [ -s $SHAREDIR/tools_eget ] ; then
         ( EGET_BACKEND=$eget_backend $CMDSHELL $SHAREDIR/tools_eget "$@" )
@@ -524,6 +523,7 @@ eget()
     fi
     fatal "Internal error: missed tools_eget"
 
+    local EGET
     # FIXME: we need disable output here, eget can be used for get output
     assure_exists eget eget 3.3 >/dev/null
     # run external command, not the function
