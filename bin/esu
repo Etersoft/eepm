@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+#
+# Copyright (C) 2023  Etersoft
+# Copyright (C) 2023  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+PROGDIR=$(dirname "$0")
+PROGNAME=$(basename "$0")
+[ -n "$EPMCURDIR" ] || export EPMCURDIR="$(pwd)"
+CMDSHELL="/usr/bin/env bash"
+# TODO: pwd for ./epm and which for epm
+[ "$PROGDIR" = "." ] && PROGDIR="$EPMCURDIR"
+if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
+    PROGDIR=""
+    PROGNAME=""
+fi
+
+# will replaced with /usr/share/eepm during install
+SHAREDIR=$PROGDIR
+
+load_helper()
+{
+    local CMD="$SHAREDIR/$1"
+    # do not use fatal() here, it can be initial state
+    [ -r "$CMD" ] || { echo "FATAL: Have no $CMD helper file" ; exit 1; }
+    # shellcheck disable=SC1090
+    . $CMD
+}
+
+esu_print_help()
+{
+    cat <<EOF
+esu - get root shell or run a command in root shell
+Usage: esu [-c] [<command>]
+EOF
+}
+
+
+load_helper epm-sh-functions
+
+if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
+    esu_print_help
+    exit
+fi
+
+# just ignore
+if [ "$1" = "-c" ] ; then
+    shift
+fi
+
+if is_root ; then
+    if [ -n "$*" ] ; then
+        [ -n "$quiet" ] || showcmd "$*"
+        exec "$@"
+    else
+        # just shell
+        showcmd "su -"
+        exec su -
+    fi
+fi
+
+set_pm_type
+
+# sudo is not accessible, will ask root password
+if ! set_sudo ; then
+    #info "Enter root password:"
+    if [ -n "$*" ] ; then
+        exec su - -c "$@"
+    else
+        # just shell
+        showcmd "su -"
+        exec su -
+    fi
+fi
+
+#info "You can be asked about your password:"
+if [ -n "$*" ] ; then
+    [ -n "$quiet" ] || showcmd "$SUDO su - -c $*"
+    $SUDO su - -c "$@"
+else
+    showcmd "$SUDO su -"
+    $SUDO su -
+fi
