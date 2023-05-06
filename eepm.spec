@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.55.4
+Version: 3.55.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -94,6 +94,14 @@ a discussion about extra requirements.
 
 
 %changelog
+* Sun May 07 2023 Vitaly Lipatov <lav@altlinux.ru> 3.55.5-alt1
+- makefile: set path in esu too
+- epm-sh-functions: set_sudo(): improve messages
+- epm play: add virtualbox
+- epm install: satisfied with any installed requested package
+- epm install: implement correct install kernel module support
+- epm-repo-addkey: hide extra requires (gnupg)
+
 * Fri May 05 2023 Vitaly Lipatov <lav@altlinux.ru> 3.55.4-alt1
 - epm play add gitkraken
 - epm play: rename r7office to r7-office
