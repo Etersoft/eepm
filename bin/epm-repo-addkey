@@ -155,7 +155,7 @@ __epm_addkey_deb()
         local tmpfile=$(__epm_get_file_from_url $url) || fatal
         if cat $tmpfile | head -n3 | grep -- "-----BEGIN PGP PUBLIC KEY BLOCK-----" ; then
             # This is a GnuPG extension to OpenPGP
-            cat $tmpfile | gpg --dearmor >$tmpfile
+            cat $tmpfile | a= gpg --dearmor >$tmpfile
         fi
         sudocmd apt-key add $tmpfile
 #
