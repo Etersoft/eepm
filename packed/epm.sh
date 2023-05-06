@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.55.4"
+EPMVERSION="3.55.5"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -379,7 +379,7 @@ set_sudo()
     SUDO_TESTED="1"
 
     if ! is_command $SUDO_CMD ; then
-        [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't find sudo. Please install and tune sudo ('# epm install sudo') or run epm under root.'"
+        [ "$nofail" = "nofail" ] || SUDO="fatal 'For this operation run epm under root, or install and tune sudo (http://altlinux.org/sudo)'"
         SUDO_TESTED="2"
         return "$SUDO_TESTED"
     fi
@@ -389,7 +389,7 @@ set_sudo()
         if ! $SUDO_CMD -n true ; then
             info "Please enter sudo user password to use sudo in the current session."
             if ! $SUDO_CMD -l >/dev/null ; then
-                [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported in non interactive using). Please run epm under root.'"
+                [ "$nofail" = "nofail" ] || SUDO="fatal 'For this operation run epm under root, or install and tune sudo (http://altlinux.org/sudo)'"
                 SUDO_TESTED="3"
                 return "$SUDO_TESTED"
             fi
@@ -397,7 +397,7 @@ set_sudo()
     else
         # use sudo if one is tuned and tuned without password
         if ! $SUDO_CMD -l -n >/dev/null 2>/dev/null ; then
-            [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported). Please run epm under root or check http://altlinux.org/sudo '"
+            [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported here). Please run epm under root or check http://altlinux.org/sudo '"
             SUDO_TESTED="4"
             return "$SUDO_TESTED"
         fi
@@ -3634,7 +3634,10 @@ epm_install_names()
     case $PMTYPE in
         apt-rpm|apt-dpkg)
             APTOPTIONS="$APTOPTIONS $(subst_option verbose "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
-            sudocmd apt-get $APTOPTIONS $noremove install $@ && save_installed_packages $@
+            VIRTAPTOPTIONS="-o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true"
+            # not for kernel packages
+            echo "$*" | grep -q "^kernel-"  && VIRTAPTOPTIONS=''
+            sudocmd apt-get $VIRTAPTOPTIONS $APTOPTIONS $noremove install $@ && save_installed_packages $@
             return ;;
         aptitude-dpkg)
             sudocmd aptitude install $@
@@ -4033,8 +4036,16 @@ epm_install()
         update_repo_if_needed
     fi
 
-    # FIXME: see to_remove below
-    epm_install_names $names || return
+    case "$BASEDISTRNAME" in
+        "alt")
+            epm_install_alt_names $names || return
+            ;;
+        *)
+            # FIXME: see to_remove below
+            epm_install_names $names || return
+            ;;
+    esac
+
 
     # save files before install and repack
     if [ -n "$download_only" ] && [ -n "$files" ] ; then
@@ -4137,6 +4148,97 @@ epm_install_files_alt()
     # --replacepkgs: Install the Package Even If Already Installed
     local replacepkgs="$(__epm_get_replacepkgs $files)"
     sudocmd rpm -Uvh $replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && save_installed_packages $files
+}
+
+get_current_kernel_flavour()
+{
+    rrel=$(uname -r)
+    rflv=${rrel#*-}
+    rflv=${rflv%-*}
+    echo "$rflv"
+}
+
+make_kernel_release()
+{
+    echo "$2" | sed -e "s|-|-$1-|"
+}
+
+get_latest_kernel_rel()
+{
+    local kernel_flavour="$1"
+    # current
+    rrel=$(uname -r)
+
+    # latest
+    # copied and modified from update-kernel
+    # get the maximum available kernel package version
+    kmaxver=
+    while read version
+    do
+        comparever="$(rpmevrcmp "$kmaxver" "$version")"
+        [ "$comparever" -lt 0 ] && kmaxver="$version" ||:
+    done <<<"$(epm print version-release for package kernel-image-$kernel_flavour)"
+    [ -z "$kmaxver" ] && echo "$rrel" && return
+
+    make_kernel_release "$kernel_flavour" "$kmaxver"
+}
+
+epm_install_alt_kernel_module()
+{
+    [ -n "$1" ] || return 0
+
+    local kflist=''
+    local kmplist=''
+    local kmf km kf
+    for kmf in $*; do
+        km="$(echo "$kmf" | cut -d- -f1)"
+        kf="$(echo "$kmf" | cut -d- -f2,3)"
+        # use current flavour as default
+        [ "$km" = "$kf" ] && kf="$(get_current_kernel_flavour)"
+        kvf="$(get_latest_kernel_rel $kf)"
+        #kmplist="$kmplist kernel-modules-$km-$kf"
+        # install kernel module for latest installed kernel
+        kmplist="$kmplist kernel-modules-$km-$kvf"
+        kflist="$kflist $kf"
+    done
+
+    # firstly, update all needed kernels (by flavour)
+    for kf in $(estrlist uniq $kflist) ; do
+        epm update-kernel -t $kf || exit
+    done
+
+    # secondly, install module(s)
+    epm_install_names $kmplist
+}
+
+
+epm_install_alt_names()
+{
+    local kmlist=''
+    local installnames=''
+
+    while [ -n "$1" ] ; do
+        local pkgname
+        pkgname="$1"
+        if echo "$pkgname" | grep -v "#" | grep -q "^kernel-modules*-" ; then
+            # virtualbox[-std-def]
+            local kmn="$(echo $pkgname | sed -e 's|kernel-modules*-||')"
+            local kf1="$(echo "$kmn" | cut -d- -f2)"
+            local kf2="$(echo "$kmn" | cut -d- -f4)"
+            # pass install with full pkgnames
+            if [ "$kf1" != "$kf2" ] && [ -n "$kf2" ] || echo "$kf1" | grep -q "^[0-9]" ; then
+                installnames="$installnames $pkgname"
+            else
+                kmlist="$kmlist $kmn"
+            fi
+        else
+            installnames="$installnames $pkgname"
+        fi
+        shift
+    done
+
+    epm_install_names $installnames || return
+    epm_install_alt_kernel_module $kmlist || return
 }
 
 # File bin/epm-install-apt-dpkg:
@@ -9042,7 +9144,7 @@ __epm_addkey_deb()
         local tmpfile=$(__epm_get_file_from_url $url) || fatal
         if cat $tmpfile | head -n3 | grep -- "-----BEGIN PGP PUBLIC KEY BLOCK-----" ; then
             # This is a GnuPG extension to OpenPGP
-            cat $tmpfile | gpg --dearmor >$tmpfile
+            cat $tmpfile | a= gpg --dearmor >$tmpfile
         fi
         sudocmd apt-key add $tmpfile
 
