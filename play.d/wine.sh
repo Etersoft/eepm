@@ -7,6 +7,25 @@ VERSION="$2"
 TIPS="Run epm play wine=wine-vanilla to install wine-vanilla package"
 
 MAIN=wine
+PKGCOMMON="wine-mono wine-gecko winetricks"
+
+[ -n "$VERSION" ] && [ "$VERSION" != "*" ] && MAIN="$VERSION"
+VERSION=""
+
+if [ "$MAIN" = "wine-etersoft" ] ; then
+    PKGCOMMON="wine-etersoft-mono wine-etersoft-gecko wine-etersoft-winetricks"
+    PKGNAMES="wine-etersoft"
+    PKGNAMES32="wine32-etersoft"
+fi
+
+# FIXME: wrong epm
+if [ "$1" = "--remove" ] ; then
+    epm remove $(epm qp $MAIN-)
+    epm remove $PKGCOMMON
+    exit
+fi
+
+. $(dirname $0)/common.sh
 
 vendor="$(epm print info -s)"
 arch="$(epm print info -a)"
@@ -24,24 +43,6 @@ if [ "$vendor" != "alt" ] ; then
     exit
 fi
 
-PKGCOMMON="wine-mono wine-gecko winetricks"
-
-[ -n "$VERSION" ] && MAIN="$VERSION"
-VERSION=""
-
-if [ "$MAIN" = "wine-etersoft" ] ; then
-    PKGCOMMON="wine-etersoft-mono wine-etersoft-gecko wine-etersoft-winetricks"
-    PKGNAMES="wine-etersoft"
-    PKGNAMES32="wine32-etersoft"
-fi
-
-if [ "$1" = "--remove" ] ; then
-    epm remove $(epmqp $MAIN-)
-    epm remove $PKGCOMMON
-    exit
-fi
-
-. $(dirname $0)/common.sh
 
 ONLY32=''
 [ "$3" = "--only-i586" ] && ONLY32=1 && shift
