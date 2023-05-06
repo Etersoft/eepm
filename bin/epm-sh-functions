@@ -369,7 +369,7 @@ set_sudo()
     SUDO_TESTED="1"
 
     if ! is_command $SUDO_CMD ; then
-        [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't find sudo. Please install and tune sudo ('# epm install sudo') or run epm under root.'"
+        [ "$nofail" = "nofail" ] || SUDO="fatal 'For this operation run epm under root, or install and tune sudo (http://altlinux.org/sudo)'"
         SUDO_TESTED="2"
         return "$SUDO_TESTED"
     fi
@@ -379,7 +379,7 @@ set_sudo()
         if ! $SUDO_CMD -n true ; then
             info "Please enter sudo user password to use sudo in the current session."
             if ! $SUDO_CMD -l >/dev/null ; then
-                [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported in non interactive using). Please run epm under root.'"
+                [ "$nofail" = "nofail" ] || SUDO="fatal 'For this operation run epm under root, or install and tune sudo (http://altlinux.org/sudo)'"
                 SUDO_TESTED="3"
                 return "$SUDO_TESTED"
             fi
@@ -387,7 +387,7 @@ set_sudo()
     else
         # use sudo if one is tuned and tuned without password
         if ! $SUDO_CMD -l -n >/dev/null 2>/dev/null ; then
-            [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported). Please run epm under root or check http://altlinux.org/sudo '"
+            [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported here). Please run epm under root or check http://altlinux.org/sudo '"
             SUDO_TESTED="4"
             return "$SUDO_TESTED"
         fi
