@@ -83,3 +83,97 @@ epm_install_files_alt()
     local replacepkgs="$(__epm_get_replacepkgs $files)"
     sudocmd rpm -Uvh $replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && save_installed_packages $files
 }
+
+get_current_kernel_flavour()
+{
+    rrel=$(uname -r)
+    rflv=${rrel#*-}
+    rflv=${rflv%-*}
+    echo "$rflv"
+}
+
+# std-def 1.2.3-alt1 -> 1.2.3-std-def-alt1
+make_kernel_release()
+{
+    echo "$2" | sed -e "s|-|-$1-|"
+}
+
+# return latest installed kernel in a form like 5.15.109-un-def-alt1
+get_latest_kernel_rel()
+{
+    local kernel_flavour="$1"
+    # current
+    rrel=$(uname -r)
+
+    # latest
+    # copied and modified from update-kernel
+    # get the maximum available kernel package version
+    kmaxver=
+    while read version
+    do
+        comparever="$(rpmevrcmp "$kmaxver" "$version")"
+        [ "$comparever" -lt 0 ] && kmaxver="$version" ||:
+    done <<<"$(epm print version-release for package kernel-image-$kernel_flavour)"
+    [ -z "$kmaxver" ] && echo "$rrel" && return
+
+    make_kernel_release "$kernel_flavour" "$kmaxver"
+}
+
+# install <module-name>-std-def
+epm_install_alt_kernel_module()
+{
+    [ -n "$1" ] || return 0
+
+    local kflist=''
+    local kmplist=''
+    local kmf km kf
+    for kmf in $*; do
+        km="$(echo "$kmf" | cut -d- -f1)"
+        kf="$(echo "$kmf" | cut -d- -f2,3)"
+        # use current flavour as default
+        [ "$km" = "$kf" ] && kf="$(get_current_kernel_flavour)"
+        kvf="$(get_latest_kernel_rel $kf)"
+        #kmplist="$kmplist kernel-modules-$km-$kf"
+        # install kernel module for latest installed kernel
+        kmplist="$kmplist kernel-modules-$km-$kvf"
+        kflist="$kflist $kf"
+    done
+
+    # firstly, update all needed kernels (by flavour)
+    for kf in $(estrlist uniq $kflist) ; do
+        epm update-kernel -t $kf || exit
+    done
+
+    # secondly, install module(s)
+    epm_install_names $kmplist
+}
+
+
+epm_install_alt_names()
+{
+    local kmlist=''
+    local installnames=''
+
+    while [ -n "$1" ] ; do
+        local pkgname
+        pkgname="$1"
+        if echo "$pkgname" | grep -v "#" | grep -q "^kernel-modules*-" ; then
+            # virtualbox[-std-def]
+            local kmn="$(echo $pkgname | sed -e 's|kernel-modules*-||')"
+            local kf1="$(echo "$kmn" | cut -d- -f2)"
+            local kf2="$(echo "$kmn" | cut -d- -f4)"
+            # pass install with full pkgnames
+            if [ "$kf1" != "$kf2" ] && [ -n "$kf2" ] || echo "$kf1" | grep -q "^[0-9]" ; then
+                installnames="$installnames $pkgname"
+            else
+                kmlist="$kmlist $kmn"
+            fi
+        else
+            installnames="$installnames $pkgname"
+        fi
+        shift
+    done
+
+    epm_install_names $installnames || return
+    epm_install_alt_kernel_module $kmlist || return
+}

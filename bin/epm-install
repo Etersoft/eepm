@@ -502,8 +502,17 @@ epm_install()
         update_repo_if_needed
     fi
 
-    # FIXME: see to_remove below
-    epm_install_names $names || return
+    case "$BASEDISTRNAME" in
+        "alt")
+            load_helper epm-install-alt
+            epm_install_alt_names $names || return
+            ;;
+        *)
+            # FIXME: see to_remove below
+            epm_install_names $names || return
+            ;;
+    esac
+
 
     # save files before install and repack
     if [ -n "$download_only" ] && [ -n "$files" ] ; then
