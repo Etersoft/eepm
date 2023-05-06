@@ -8,7 +8,7 @@ REPOURL="http://packages.lab50.net"
 # TODO: remove repo too
 case "$1" in
     "--remove")
-        epm remove $(epmqp $PKGNAME-) $(epmqp poppler-csp-)
+        epm remove $(epm qp $PKGNAME-) $(epm qp poppler-csp-)
         epm repo remove okular
         exit
         ;;

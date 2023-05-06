@@ -6,7 +6,7 @@ DESCRIPTION="AliveColors from the official site"
 
 case "$1" in
     "--remove")
-        epm remove $(epmqp $PKGNAME-)
+        epm remove $(epm qp $PKGNAME-)
         epm repo remove akvis
         exit
         ;;
