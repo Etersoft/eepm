@@ -17,20 +17,10 @@ epm install $PKGNAME || exit
 #    $SUDO usermod -a -G vboxusers $USER
 #fi
 
-[ "$vendor" != "alt" ] && exit
+#[ "$vendor" != "alt" ] && exit
 
-get_kernel_vlavour()
-{
-    rrel=$(uname -r)
-    rflv=${rrel#*-}
-    rflv=${rflv%-*}
-    echo "$rflv"
-}
+epm install kernel-module-virtualbox || exit
 
-flavour=$(get_kernel_vlavour)
-
-epm update-kernel || exit
-epm install kernel-modules-virtualbox-$flavour
-
+echo
 echo "Note:Add needed users to vboxusers group via # usermod -a -G vboxusers <user>"
 echo "If the kernel just updated, you need reboot the system before VirtualBox using."
