@@ -93,6 +93,7 @@ get_first()
 check_alternative_pkgname()
 {
     [ -n "$BASEPKGNAME" ] || BASEPKGNAME="$PKGNAME"
+    [ -n "$BASEPKGNAME" ] || return
 
     # default: with first entry in $PEODUCTALT
     PKGNAME="$BASEPKGNAME-$(get_first $PRODUCTALT)"
@@ -251,7 +252,7 @@ is_repacked_package()
 {
     local pkg="$1"
     [ -n "$pkg" ] || pkg="$PKGNAME"
-    [ -n "$pkg" ] || fatal "is_repacked_package() is called without package name"
+    [ -n "$pkg" ] || return 0 #fatal "is_repacked_package() is called without package name"
 
     # actually only for ALT
     [ "$(epm print info -s)" = "alt" ] || return 0
