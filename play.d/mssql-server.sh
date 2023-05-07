@@ -41,7 +41,7 @@ case "$(epm print info -d)" in
 esac
 
 if [ -z "$EPM_AUTO" ] ; then
-    $SUDO /opt/mssql/bin/mssql-conf setup accept-eula
+    esu /opt/mssql/bin/mssql-conf setup accept-eula
     serv mssql-server on
 else
 cat <<EOF

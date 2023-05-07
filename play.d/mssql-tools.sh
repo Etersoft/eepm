@@ -37,8 +37,8 @@ case "$(epm print info -d)" in
     ;;
 esac
 
-$SUDO odbcinst -i -d -f /opt/microsoft/msodbcsql17/etc/odbcinst.ini
-$SUDO odbcinst -q -d
+esu odbcinst -i -d -f /opt/microsoft/msodbcsql17/etc/odbcinst.ini
+esu odbcinst -q -d
 
 
 cat <<EOF

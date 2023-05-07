@@ -194,11 +194,6 @@ if [ -x "../bin/epm" ] ; then
     export PATH="$(realpath ../bin):$PATH"
 fi
 
-if [ -z "$SUDO" ] && [ "$UID" != "0" ] ; then
-    SUDO="sudo"
-fi
-
-
 # set PKGNAME to $BASEPKGNAME-$VERSION if $VERSION is found in PRODUCTALT
 [ -n "$PRODUCTALT" ] && check_alternative_pkgname
 
