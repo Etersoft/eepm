@@ -199,6 +199,7 @@ fi
 
 case "$1" in
     "--remove")
+        is_repacked_package || exit 0
         epm remove $PKGNAME
         exit
         ;;
