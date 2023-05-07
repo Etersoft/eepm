@@ -96,7 +96,14 @@ epm_downgrade()
             __epm_remove_apt_downgrade_preferences
         elif [ -n "$pkg_files" ] ; then
             load_helper epm-install
-            (pkg_files=$pkg_files force="$force -F --oldpackage" epm_install)
+            local pkgs=''
+            local i
+            for i in $pkg_files ; do
+                local pkgname="$(epm print name for package $i)"
+                is_installed $pkgname || continue
+                pkgs="$pkgs $i"
+            done
+            (force="$force --oldpackage" epm_install_files $pkgs)
         fi
         return
         ;;
