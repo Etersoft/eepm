@@ -77,6 +77,13 @@ epm_downgrade()
     # it is useful for first time running
     update_repo_if_needed
 
+    # if possible, it will put pkg_urls into pkg_files and reconstruct pkg_filenames
+    if [ -n "$pkg_urls" ] ; then
+        info "Downloading packages assigned to downgrade ..."
+        load_helper epm-download
+        __handle_pkg_urls_to_install
+    fi
+
     info "Running command for downgrade packages"
 
     case $BASEDISTRNAME in
@@ -90,11 +97,6 @@ epm_downgrade()
         elif [ -n "$pkg_files" ] ; then
             load_helper epm-install
             (pkg_files=$pkg_files force="$force -F --oldpackage" epm_install)
-        else
-            __epm_add_alt_apt_downgrade_preferences || return
-            load_helper epm-upgrade
-            epm_upgrade "$@"
-            __epm_remove_apt_downgrade_preferences
         fi
         return
         ;;
