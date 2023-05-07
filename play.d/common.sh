@@ -9,17 +9,6 @@ fatal()
     exit 1
 }
 
-# check if <arg> is a real command
-is_command()
-{
-    epm tool which "$1" >/dev/null
-}
-
-eget()
-{
-    epm tool eget "$@"
-}
-
 [ -n "$BIGTMPDIR" ] || [ -d "/var/tmp" ] && BIGTMPDIR="/var/tmp" || BIGTMPDIR="/tmp"
 
 cd_to_temp_dir()
@@ -28,6 +17,45 @@ cd_to_temp_dir()
     trap "rm -fr $PKGDIR" EXIT
     cd $PKGDIR || fatal
 }
+
+# check if <arg> is a real command
+is_command()
+{
+    epm tool which "$1" >/dev/null
+}
+
+
+. $(dirname $0)/common-outformat.sh
+
+check_tty
+
+#__showcmd_shifted()
+#{
+#    local s="$1"
+#    shift
+#    shift $s
+#    showcmd "$*"
+#}
+
+
+# add to all epm calls
+EPM="$(epm tool which epm)" || fatal
+epm()
+{
+    #if [ "$1" = "tool" ] ; then
+    #    __showcmd_shifted 1 "$@"
+    if [ "$1" != "print" ] && [ "$1" != "tool" ] && [ "$1" != "status" ] ; then
+        showcmd "$(basename $EPM) $*"
+    fi
+    $EPM "$@"
+}
+
+
+eget()
+{
+    epm tool eget "$@"
+}
+
 
 is_supported_arch()
 {
@@ -63,7 +91,7 @@ print_product_alt()
 
 get_pkgvendor()
 {
-    epm print field Vendor for package $1
+    epm print field Vendor for package "$1"
 }
 
 # arg: minimal require of libstdc++ version
@@ -124,7 +152,44 @@ check_alternative_pkgname()
     done
 }
 
-# support direct run the script
+is_repacked_package()
+{
+    local pkg="$1"
+    [ -n "$pkg" ] || pkg="$PKGNAME"
+    [ -n "$pkg" ] || return 0 #fatal "is_repacked_package() is called without package name"
+
+    # actually only for ALT
+    [ "$(epm print info -s)" = "alt" ] || return 0
+
+    epm status --installed $pkg || return 0
+
+    [ -n "$force" ] && return 0
+
+    if epm status --original $pkg ; then
+       echo "Package $pkg is already installed from ALT repository."
+       return 1
+    fi
+
+    if epm status --certified $pkg ; then
+       # allow install/update if we agreed with their package
+       return 0
+    fi
+
+    if epm status --thirdparty $pkg ; then
+       echo "Package $pkg is already installed, packaged by vendor $(epm print field Vendor for $pkg)."
+       return 1
+    fi
+
+    if ! epm status --repacked $pkg ; then
+       echo "Package $pkg is already installed (possible, manually packed)."
+       return 1
+    fi
+
+    return 0
+}
+
+
+# support for direct run a play script
 if [ -x "../bin/epm" ] ; then
     export PATH="$(realpath ../bin):$PATH"
 fi
@@ -223,66 +288,6 @@ esac
 # --update/--run
 
 is_supported_arch "$(epm print info -a)" || fatal "Only '$SUPPORTEDARCHES' architectures is supported"
-
-. $(dirname $0)/common-outformat.sh
-
-check_tty
-
-__showcmd_shifted()
-{
-    local s="$1"
-    shift
-    shift $s
-    showcmd "$*"
-}
-
-# add to all epm calls
-EPM="$(epm tool which epm)" || fatal
-epm()
-{
-    #if [ "$1" = "tool" ] ; then
-    #    __showcmd_shifted 1 "$@"
-    if [ "$1" != "print" ] && [ "$1" != "tool" ] && [ "$1" != "status" ] ; then
-        showcmd "$(basename $EPM) $*"
-    fi
-    $EPM "$@"
-}
-
-is_repacked_package()
-{
-    local pkg="$1"
-    [ -n "$pkg" ] || pkg="$PKGNAME"
-    [ -n "$pkg" ] || return 0 #fatal "is_repacked_package() is called without package name"
-
-    # actually only for ALT
-    [ "$(epm print info -s)" = "alt" ] || return 0
-
-    epm status --installed $pkg || return 0
-
-    [ -n "$force" ] && return 0
-
-    if epm status --original $pkg ; then
-       echo "Package $pkg is already installed from ALT repository."
-       return 1
-    fi
-
-    if epm status --certified $pkg ; then
-       # allow install/update if we agreed with their package
-       return 0
-    fi
-
-    if epm status --thirdparty $pkg ; then
-       echo "Package $pkg is already installed, packaged by vendor $(epm print field Vendor for $pkg)."
-       return 1
-    fi
-
-    if ! epm status --repacked $pkg ; then
-       echo "Package $pkg is already installed (possible, manually packed)."
-       return 1
-    fi
-
-    return 0
-}
 
 
 # skip install if there is package installed not via epm play
