@@ -61,55 +61,10 @@ if [ "$1" = "-c" ] ; then
     shift
 fi
 
-if is_root ; then
-    if [ -n "$*" ] ; then
-        [ -n "$quiet" ] || showcmd "$*"
-        exec "$@"
-    else
-        # just shell
-        showcmd "su -"
-        exec su -
-    fi
+# just an optimization
+if ! is_root ; then
+    # need only under user
+    set_pm_type
 fi
 
-set_pm_type
-
-
-escape_args()
-{
-    local output=''
-    while [ -n "$1" ] ; do
-        if has_space "$1" ; then
-            [ -n "$output" ] && output="$output '$1'" || output="'$1'"
-        else
-            [ -n "$output" ] && output="$output $1" || output="$1"
-        fi
-        shift
-    done
-    echo "$output"
-}
-
-escaped="$(escape_args "$@")"
-
-
-# sudo is not accessible, will ask root password
-if ! set_sudo ; then
-    #info "Enter root password:"
-    if [ -n "$*" ] ; then
-        [ -n "$quiet" ] || showcmd "su - -c $escaped"
-        exec su - -c "$escaped"
-    else
-        # just shell
-        showcmd "su -"
-        exec su -
-    fi
-fi
-
-#info "You can be asked about your password:"
-if [ -n "$*" ] ; then
-    [ -n "$quiet" ] || showcmd "$SUDO su - -c $escaped"
-    $SUDO su - -c "$escaped"
-else
-    showcmd "$SUDO su -"
-    $SUDO su -
-fi
+esu "$@"
