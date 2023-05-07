@@ -141,7 +141,8 @@ epm_install_alt_kernel_module()
 
     # firstly, update all needed kernels (by flavour)
     for kf in $(estrlist uniq $kflist) ; do
-        epm update-kernel -t $kf || exit
+        info
+        docmd epm update-kernel -t $kf || exit
     done
 
     # secondly, install module(s)
