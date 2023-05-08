@@ -145,6 +145,9 @@ epm_install_alt_kernel_module()
         docmd epm update-kernel -t $kf || exit
     done
 
+    # skip install modules if there are no installed kernels (may be, a container)
+    epm installed "kernel-image-$kf" || return 0
+
     # secondly, install module(s)
     epm_install_names $kmplist
 }
