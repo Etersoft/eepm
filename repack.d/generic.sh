@@ -43,3 +43,8 @@ fi
 subst "s|^\(Name: .*\)$|# Override repository package\nEpoch: 100\n\1|g" $SPEC
 
 [ -d $BUILDROOT/usr/lib/.build-id ] && remove_dir /usr/lib/.build-id || :
+
+# disablle rpmlint (for ROSA)
+subst "1i%global _build_pkgcheck_set %nil" $SPEC
+subst "1i%global _build_pkgcheck_srpm %nil" $SPEC
+
