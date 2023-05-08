@@ -497,7 +497,7 @@ esu()
         else
             # just shell
             showcmd "su -"
-            exec su -
+            a= exec su -
         fi
     fi
 
@@ -526,11 +526,11 @@ esu()
         #info "Enter root password:"
         if [ -n "$*" ] ; then
             [ -n "$quiet" ] || showcmd "su - -c $escaped"
-            exec su - -c "$escaped"
+            a= exec su - -c "$escaped"
         else
             # just shell
             showcmd "su -"
-            exec su -
+            a= exec su -
         fi
     fi
 
