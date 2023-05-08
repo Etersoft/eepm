@@ -5,12 +5,12 @@ RETURNTARNAME="$2"
 
 . $(dirname $0)/common.sh
 
-if echo "$TAR" | grep "Sentinel_LDK_Linux_Run-time_Installer_script.tar.gz" ; then
+if echo "$TAR" | grep -q "Sentinel_LDK_Linux_Run-time_Installer_script.tar.gz" ; then
     erc $TAR || fatal
     TAR="Sentinel_LDK_Linux_Run-time_Installer_script/aksusbd-*.tar.gz"
 fi
 
-if echo "$TAR" | grep "aksusbd" ; then
+if echo "$TAR" | grep -q "aksusbd" ; then
     erc $TAR || fatal
 else
     fatal "How no idea how to handle $TAR"

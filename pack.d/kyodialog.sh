@@ -5,12 +5,12 @@ RETURNTARNAME="$2"
 
 . $(dirname $0)/common.sh
 
-if echo "$TAR" | grep Linux_Universal_Driver.zip ; then
+if echo "$TAR" | grep -q Linux_Universal_Driver.zip ; then
     erc $TAR || fatal
     TAR=$(echo KyoceraLinuxPackages-*.tar.gz)
 fi
 
-if echo "$TAR" | grep KyoceraLinuxPackages ; then
+if echo "$TAR" | grep -q KyoceraLinuxPackages ; then
     erc $TAR || fatal
 else
     fatal "How no idea how to handle $TAR"

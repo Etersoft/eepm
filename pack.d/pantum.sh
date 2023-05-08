@@ -5,11 +5,11 @@ RETURNTARNAME="$2"
 
 . $(dirname $0)/common.sh
 
-if echo "$TAR" | grep "Pantum Ubuntu Driver V.*.zip" ; then
+if echo "$TAR" | grep -q "Pantum Ubuntu Driver V.*.zip" ; then
     erc "$TAR" || fatal
-elif echo "$TAR" | grep "Pantum%20Ubuntu%20Driver%20V.*.zip" ; then
+elif echo "$TAR" | grep -q "Pantum%20Ubuntu%20Driver%20V.*.zip" ; then
     erc "$TAR" || fatal
-elif echo "$TAR" | grep "linux_pantum.7z" ; then
+elif echo "$TAR" | grep -q "linux_pantum.7z" ; then
     erc "$TAR" || fatal
     return_tar linux_pantum.deb
 else

@@ -5,8 +5,8 @@ RETURNTARNAME="$2"
 
 . $(dirname $0)/common.sh
 
-if ! echo "$TAR" | grep "linux-UFRII-drv" ; then
-    fatal "How no idea how to handle $TAR"
+if ! echo "$TAR" | grep -q "linux-UFRII-drv" ; then
+    fatal "No idea how to handle $TAR"
 fi
 
 erc unpack $TAR && cd linux-* || fatal
