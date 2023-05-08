@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.55.6"
+EPMVERSION="3.55.7"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -4273,6 +4273,9 @@ epm_install_alt_kernel_module()
         docmd epm update-kernel -t $kf || exit
     done
 
+    # skip install modules if there are no installed kernels (may be, a container)
+    epm installed "kernel-image-$kf" || return 0
+
     # secondly, install module(s)
     epm_install_names $kmplist
 }
@@ -4853,7 +4856,9 @@ case $PMTYPE in
         ;;
 esac
 
-docmd $CMD | __fo_pfn
+if [ -n "$CMD" ] ; then
+    docmd $CMD | __fo_pfn
+fi
 
 }
 
@@ -5336,6 +5341,7 @@ epm_pack()
         pkg_urls="$tarname"
         cd $tmpdir || fatal
         __handle_pkg_urls_to_install
+        [ -n "$pkg_files" ] || fatal "Can't download $tarname"
         tarname="$(realpath "$pkg_files")"
     elif [ -d "$tarname" ] ; then
         tarname="$(realpath "$tarname")"
@@ -5539,8 +5545,6 @@ docmd $CMD | __fo_pfn "$@"
 }
 
 # File bin/epm-play:
-
-epm_vardir=/var/lib/eepm
 
 
 __check_installed_app()
@@ -12051,11 +12055,21 @@ __check_for_epm_version()
     [ "$res" = "-1" ] && info "Latest EPM version in Korinf repository is $latest. You have version $EPMVERSION running." && info "You can update eepm with \$ epm ei command."
 }
 
+__save_available_packages()
+{
+    [ -d "$epm_vardir" ] || return 0
+
+    info "Retrieve all available packages (for autocompletion) ..."
+    short=--short epm_list_available | sort | sudorun tee $epm_vardir/available-packages >/dev/null
+}
+
+
 epm_update()
 {
     [ -z "$*" ] || fatal "No arguments are allowed here"
     info "Running command for update remote package repository database"
 
+local ret=0
 warmup_hibase
 
 case $PMTYPE in
@@ -12063,10 +12077,10 @@ case $PMTYPE in
         # TODO: hack against cd to cwd in apt-get on ALT
         cd /
         sudocmd apt-get update
-        local ret="$?"
+        ret="$?"
         cd - >/dev/null
+        [ "$ret" = "0" ] || return
         __check_for_epm_version
-        return $ret
         #sudocmd apt-get -f install || exit
         ;;
     apt-dpkg)
@@ -12147,6 +12161,9 @@ case $PMTYPE in
         fatal "Have no suitable update command for $PMTYPE"
         ;;
 esac
+
+__save_available_packages
+return 0
 
 }
 
@@ -16118,7 +16135,8 @@ quoted_args=
 direct_args=
 
 eget_backend=$EGET_BACKEND
-eget_ipfs_db=/var/lib/eepm/eget-ipfs-db.txt
+epm_vardir=/var/lib/eepm
+eget_ipfs_db=$epm_vardir/eget-ipfs-db.txt
 
 # load system wide config
 [ -f $CONFIGDIR/eepm.conf ] && . $CONFIGDIR/eepm.conf
