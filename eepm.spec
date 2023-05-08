@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.55.6
+Version: 3.55.7
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -94,6 +94,13 @@ a discussion about extra requirements.
 
 
 %changelog
+* Mon May 08 2023 Vitaly Lipatov <lav@altlinux.ru> 3.55.7-alt1
+- epm install kernel-module*: skip install if there is no any kernel
+- epm play virtualbox-extpack: rewrite to use package install
+- epm repack generic.sh: disable rpmlint
+- epm play: add hplip-plugin
+- epm update: save all available packages after update
+
 * Mon May 08 2023 Vitaly Lipatov <lav@altlinux.ru> 3.55.6-alt1
 - epm play: add flashplayer
 - epm play: add audiorelay
