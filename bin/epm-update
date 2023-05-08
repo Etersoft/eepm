@@ -40,11 +40,22 @@ __check_for_epm_version()
     [ "$res" = "-1" ] && info "Latest EPM version in Korinf repository is $latest. You have version $EPMVERSION running." && info "You can update eepm with \$ epm ei command."
 }
 
+__save_available_packages()
+{
+    [ -d "$epm_vardir" ] || return 0
+
+    info "Retrieve all available packages (for autocompletion) ..."
+    load_helper epm-list_available
+    short=--short epm_list_available | sort | sudorun tee $epm_vardir/available-packages >/dev/null
+}
+
+
 epm_update()
 {
     [ -z "$*" ] || fatal "No arguments are allowed here"
     info "Running command for update remote package repository database"
 
+local ret=0
 warmup_hibase
 
 case $PMTYPE in
@@ -52,10 +63,10 @@ case $PMTYPE in
         # TODO: hack against cd to cwd in apt-get on ALT
         cd /
         sudocmd apt-get update
-        local ret="$?"
+        ret="$?"
         cd - >/dev/null
+        [ "$ret" = "0" ] || return
         __check_for_epm_version
-        return $ret
         #sudocmd apt-get -f install || exit
         ;;
     apt-dpkg)
@@ -136,5 +147,8 @@ case $PMTYPE in
         fatal "Have no suitable update command for $PMTYPE"
         ;;
 esac
+
+__save_available_packages
+return 0
 
 }
