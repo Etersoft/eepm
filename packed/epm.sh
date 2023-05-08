@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.55.5"
+EPMVERSION="3.55.6"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -491,6 +491,62 @@ is_root()
 assure_root()
 {
     is_root || fatal "run me only under root"
+}
+
+esu()
+{
+    if is_root ; then
+        if [ -n "$*" ] ; then
+            [ -n "$quiet" ] || showcmd "$*"
+            exec "$@"
+        else
+            # just shell
+            showcmd "su -"
+            exec su -
+        fi
+    fi
+
+    set_pm_type
+
+
+    escape_args()
+    {
+        local output=''
+        while [ -n "$1" ] ; do
+            if has_space "$1" ; then
+                [ -n "$output" ] && output="$output '$1'" || output="'$1'"
+            else
+                [ -n "$output" ] && output="$output $1" || output="$1"
+            fi
+            shift
+        done
+        echo "$output"
+    }
+
+    escaped="$(escape_args "$@")"
+
+
+    # sudo is not accessible, will ask root password
+    if ! set_sudo ; then
+        #info "Enter root password:"
+        if [ -n "$*" ] ; then
+            [ -n "$quiet" ] || showcmd "su - -c $escaped"
+            exec su - -c "$escaped"
+        else
+            # just shell
+            showcmd "su -"
+            exec su -
+        fi
+    fi
+
+    #info "You can be asked about your password:"
+    if [ -n "$*" ] ; then
+        [ -n "$quiet" ] || showcmd "$SUDO su - -c $escaped"
+        $SUDO su - -c "$escaped"
+    else
+        showcmd "$SUDO su -"
+        $SUDO su -
+    fi
 }
 
 regexp_subst()
@@ -2573,6 +2629,12 @@ epm_downgrade()
     # it is useful for first time running
     update_repo_if_needed
 
+    # if possible, it will put pkg_urls into pkg_files and reconstruct pkg_filenames
+    if [ -n "$pkg_urls" ] ; then
+        info "Downloading packages assigned to downgrade ..."
+        __handle_pkg_urls_to_install
+    fi
+
     info "Running command for downgrade packages"
 
     case $BASEDISTRNAME in
@@ -2583,11 +2645,14 @@ epm_downgrade()
             (pkg_names=$(get_only_installed_packages $pkg_names) epm_install)
             __epm_remove_apt_downgrade_preferences
         elif [ -n "$pkg_files" ] ; then
-            (pkg_files=$pkg_files force="$force -F --oldpackage" epm_install)
-        else
-            __epm_add_alt_apt_downgrade_preferences || return
-            epm_upgrade "$@"
-            __epm_remove_apt_downgrade_preferences
+            local pkgs=''
+            local i
+            for i in $pkg_files ; do
+                local pkgname="$(epm print name for package $i)"
+                is_installed $pkgname || continue
+                pkgs="$pkgs $i"
+            done
+            (force="$force --oldpackage" epm_install_files $pkgs)
         fi
         return
         ;;
@@ -4204,7 +4269,8 @@ epm_install_alt_kernel_module()
 
     # firstly, update all needed kernels (by flavour)
     for kf in $(estrlist uniq $kflist) ; do
-        epm update-kernel -t $kf || exit
+        info
+        docmd epm update-kernel -t $kf || exit
     done
 
     # secondly, install module(s)
