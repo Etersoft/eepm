@@ -135,7 +135,9 @@ case $PMTYPE in
         ;;
 esac
 
-docmd $CMD | __fo_pfn
+if [ -n "$CMD" ] ; then
+    docmd $CMD | __fo_pfn
+fi
 # FIXME: we print empty lines, but will lost error status
 
 }
