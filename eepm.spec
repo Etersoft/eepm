@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.55.5
+Version: 3.55.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -94,6 +94,16 @@ a discussion about extra requirements.
 
 
 %changelog
+* Mon May 08 2023 Vitaly Lipatov <lav@altlinux.ru> 3.55.6-alt1
+- epm play: add flashplayer
+- epm play: add audiorelay
+- epm play: add virtualbox-extpack
+- esu: add support for quoted args (with spaces)
+- epm play: use esu instead of $SUDO
+- epm play common.sh: check for package status before remove
+- epm downgrade: download files by pkg_urls in a common place
+- epm downgrade: run downgrade only for installed packages
+
 * Sun May 07 2023 Vitaly Lipatov <lav@altlinux.ru> 3.55.5-alt1
 - makefile: set path in esu too
 - epm-sh-functions: set_sudo(): improve messages
