@@ -128,6 +128,7 @@ epm_pack()
         load_helper epm-download
         cd $tmpdir || fatal
         __handle_pkg_urls_to_install
+        [ -n "$pkg_files" ] || fatal "Can't download $tarname"
         tarname="$(realpath "$pkg_files")"
     elif [ -d "$tarname" ] ; then
         tarname="$(realpath "$tarname")"
