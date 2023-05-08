@@ -17,9 +17,6 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-# TODO
-epm_vardir=/var/lib/eepm
-
 
 __check_installed_app()
 {
