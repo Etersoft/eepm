@@ -423,35 +423,13 @@ epm_install_files()
 }
 
 
-# apt-repo with non_interactive support
-apt_repo_prepare()
-{
-    assure_exists apt-repo
-    [ -n "$non_interactive" ] || return
-
-    set_sudo
-    trap "$SUDO rm /etc/apt/apt.conf.d/eepm-apt-noninteractive.conf 2>/dev/null" EXIT
-    echo 'APT::Get::Assume-Yes "true";' | $SUDO tee /etc/apt/apt.conf.d/eepm-apt-noninteractive.conf >/dev/null
-}
-
-apt_repo_after()
-{
-    [ -n "$non_interactive" ] || return
-
-    $SUDO rm /etc/apt/apt.conf.d/eepm-apt-noninteractive.conf 2>/dev/null
-}
-
 epm_install()
 {
     if [ "$BASEDISTRNAME" = "alt" ] ; then
         if tasknumber "$pkg_names" >/dev/null ; then
-            local res
-            # TODO: don't use apt-repo
-            apt_repo_prepare
-            sudocmd_foreach "apt-repo test" $(tasknumber $pkg_names)
-            res=$?
-            apt_repo_after
-            return $res
+            load_helper epm-install-alt
+            epm_install_alt_tasks "$pkg_names"
+            return
         fi
     fi
 

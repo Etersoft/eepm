@@ -181,3 +181,36 @@ epm_install_alt_names()
     epm_install_names $installnames || return
     epm_install_alt_kernel_module $kmlist || return
 }
+
+
+# apt-repo with non_interactive support
+apt_repo_prepare()
+{
+    assure_exists apt-repo
+    [ -n "$non_interactive" ] || return
+
+    set_sudo
+    trap "$SUDO rm /etc/apt/apt.conf.d/eepm-apt-noninteractive.conf 2>/dev/null" EXIT
+    echo 'APT::Get::Assume-Yes "true";' | $SUDO tee /etc/apt/apt.conf.d/eepm-apt-noninteractive.conf >/dev/null
+}
+
+apt_repo_after()
+{
+    [ -n "$non_interactive" ] || return
+
+    $SUDO rm /etc/apt/apt.conf.d/eepm-apt-noninteractive.conf 2>/dev/null
+}
+
+
+epm_install_alt_tasks()
+{
+    local res
+    # TODO: don't use apt-repo
+    apt_repo_prepare
+
+    sudocmd_foreach "apt-repo test" $(tasknumber "$@")
+    res=$?
+
+    apt_repo_after
+    return $res
+}
