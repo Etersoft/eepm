@@ -42,11 +42,11 @@ epm_clean()
 
 case $PMTYPE in
     apt-rpm)
-        sudocmd apt-get clean
+        sudocmd apt-get clean $dryrun
         [ -n "$force" ] && __remove_alt_apt_cache_file
         ;;
     apt-dpkg)
-        sudocmd apt-get clean
+        sudocmd apt-get clean $dryrun
         [ -n "$force" ] && __remove_deb_apt_cache_file
         ;;
     aptitude-dpkg)

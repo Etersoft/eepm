@@ -57,11 +57,11 @@ epm_full_upgrade()
     docmd epm update || fatal "repository updating is failed."
 
     [ -n "$quiet" ] || echo
-    docmd epm upgrade || fatal "upgrading of the system is failed."
+    docmd epm $dryrun upgrade || fatal "upgrading of the system is failed."
 
     if [ -z "$full_upgrade_no_kernel_update" ] ; then
         [ -n "$quiet" ] || echo
-        docmd epm update-kernel || fatal "updating of the kernel is failed."
+        docmd epm $dryrun update-kernel || fatal "updating of the kernel is failed."
     fi
 
     # disable epm play --update for non ALT Systems
@@ -69,23 +69,23 @@ epm_full_upgrade()
 
     if [ -z "$full_upgrade_no_epm_play" ] ; then
         [ -n "$quiet" ] || echo
-        docmd epm play --update all || fatal "updating of applications installed via epm play is failed."
+        docmd epm $dryrun play --update all || fatal "updating of applications installed via epm play is failed."
     fi
 
     if [ -z "$full_upgrade_no_flatpack" ] ; then
         if is_command flatpak ; then
             [ -n "$quiet" ] || echo
-            docmd flatpak update
+            docmd flatpak update $(subst_option non_interactive --assume-yes) $(subst_option dryrun --no-deploy)
         fi
     fi
 
     if [ -z "$full_upgrade_no_snap" ] ; then
         if is_command snap && serv snapd exists && serv snapd status >/dev/null ; then
             [ -n "$quiet" ] || echo
-            sudocmd snap refresh
+            sudocmd snap refresh $(subst_option dryrun --list)
         fi
     fi
 
     [ -n "$quiet" ] || echo
-    docmd epm clean
+    docmd epm $dryrun clean
 }

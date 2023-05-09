@@ -151,6 +151,8 @@ __epm_play_run()
     # keep EPM_AUTO for non epm code (epm uses EPM_OPTIONS now)
     [ -n "$non_interactive" ] && export EPM_AUTO="--auto"
 
+    export EPM_OPTIONS="$EPM_OPTIONS $dryrun"
+
     local bashopt=''
     [ -n "$verbose" ] && bashopt='-x'
     #info "Running $($script --description 2>/dev/null) ..."
@@ -414,6 +416,7 @@ case "$1" in
         local list
         if [ "$1" = "all" ] ; then
             shift
+            info "Retrieving list of installed apps ..."
             list="$(__list_installed_app)"
         else
             list="$*"
@@ -436,6 +439,7 @@ case "$1" in
         local list
         if [ "$1" = "all" ] ; then
             shift
+            info "Retrieving list of installed apps ..."
             list="$(__list_installed_app)"
         else
             list="$*"
