@@ -1,0 +1,50 @@
+# eepm(8) completion
+
+# This completes on a list of all available services for the
+# 'serv' command, followed by that script's available commands
+#
+__eepm_list_commands()
+{
+    COMPREPLY=( $(echo "install remove") )
+    COMPREPLY=( $( compgen -W '${COMPREPLY[@]}' -- "$cur" ) )
+}
+
+__eepm_list_available_packages()
+{
+    COMPREPLY=( $( cat /var/lib/eepm/available-packages 2>/dev/null ) )
+    #local USLIST=$(serv ${prev##*/} usage 2>/dev/null | sed -e "y/|/ /" -ne "s/^.*\(u\|U\|msg_u\)sage.*{\(.*\)}.*$/\2/p")
+    COMPREPLY=( $( compgen -W '${COMPREPLY[@]}' -- "$cur" ) )
+    #COMPREPLY=( $( compgen -W '$USLIST' -- "$cur" ) )
+}
+
+
+__eepm()
+{
+    local cur prev
+
+    COMPREPLY=()
+    _get_comp_words_by_ref cur prev
+
+    [[ ${COMP_WORDS[0]} != "epm" ]] && return 0
+
+    # don't complete past 2nd token
+    #[ $COMP_CWORD -gt 2 ] && return 0
+
+    if [[ $COMP_CWORD -eq 1 && $prev == "epm" ]]; then
+        __eepm_list_commands
+        return 0
+    fi
+
+    if [[ $COMP_CWORD -eq 2 && $prev == "install" ]]; then
+        __eepm_list_available_packages
+        return 0
+    fi
+
+    if [[ $COMP_CWORD -eq 2 && $prev == "remove" ]]; then
+        __eepm_list_available_packages
+        return 0
+    fi
+
+    return 0
+} &&
+complete -F __eepm epm

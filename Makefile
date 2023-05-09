@@ -29,6 +29,7 @@ install_common:
 
 	mkdir -p $(DESTDIR)$(sysconfdir)/bash_completion.d/
 	install -m 0644 bash_completion/serv $(DESTDIR)$(sysconfdir)/bash_completion.d/serv
+	install -m 0644 bash_completion/eepm $(DESTDIR)$(sysconfdir)/bash_completion.d/eepm
 
 	# shebang.req.files
 	chmod a+x $(DESTDIR)$(pkgdatadir)/serv-*
