@@ -22,10 +22,7 @@ mkdir $BUILDROOT/opt
 mv $BUILDROOT/$ROOTDIR $BUILDROOT/opt/$PRODUCT
 subst "s|\"/$ROOTDIR/|\"/opt/$PRODUCT/|" $SPEC
 
-# add binary in standart path
-mkdir -p $BUILDROOT/usr/bin/
-ln -s /opt/$PRODUCT/eagle $BUILDROOT/usr/bin/$PRODUCT
-subst "s|%files|%files\n/usr/bin/$PRODUCT|" $SPEC
+add_bin_link_command
 
 # create desktop file
 mkdir -p $BUILDROOT/usr/share/applications/
@@ -38,8 +35,8 @@ Name=EAGLE
 Comment=PCB design: schematic capture, board layout, and autorouter
 
 # paths need to be absolute, no ~ allowed within this file
-Exec=/usr/bin/eagle
-Icon=/opt/eagle/bin/eagle-logo.png
+Exec=$PRODUCT
+Icon=$PRODUCT
 
 # meta data 
 Categories=Engineering;Electronics;
@@ -49,8 +46,8 @@ MimeType=application/x-eagle-schematic;application/x-eagle-board;application/x-e
 # used to group all windows under the same launcher icon
 StartupWMClass=eagle
 EOF
-subst "s|%files|%files\n/usr/share/applications/$PRODUCT.desktop|" $SPEC
-
+pack_file /usr/share/applications/$PRODUCT.desktop
+install_file /opt/eagle/bin/eagle-logo.png /usr/share/pixmaps/$PRODUCT.png
 
 # https://bugzilla.altlinux.org/44898
 remove_file /opt/eagle/lib/libxcb-dri2.so.0

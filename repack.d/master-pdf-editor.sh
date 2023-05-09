@@ -14,3 +14,4 @@ PREINSTALL_PACKAGES="libGL libqt5-core libqt5-gui libqt5-network libqt5-printsup
 add_bin_link_command
 add_bin_link_command $PRODUCTCUR $PRODUCT
 
+fix_desktop_file

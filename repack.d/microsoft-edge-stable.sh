@@ -29,6 +29,8 @@ use_system_xdg
 
 install_deps
 
+fix_desktop_file /usr/bin/$PRODUCTCUR
+
 #if ! grep -q '^"/usr/bin/microsoft-edge"' $SPEC ; then
 #    subst 's|\(.*/usr/bin/microsoft-edge-stable.*\)|"/usr/bin/microsoft-edge"\n\1|' $SPEC
 #fi

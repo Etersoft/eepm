@@ -21,6 +21,8 @@ add_bin_commands
 
 use_system_xdg
 
+fix_desktop_file /usr/bin/$PRODUCTCUR
+
 install_deps
 
 add_findreq_skiplist $PRODUCTDIR/update-ffmpeg

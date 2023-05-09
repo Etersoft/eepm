@@ -5,6 +5,7 @@ BUILDROOT="$1"
 SPEC="$2"
 
 PRODUCT=code
+PRODUCTCUR=vscode
 PRODUCTDIR=/opt/$PRODUCT
 
 # install all requires packages before packing (the list have got with rpmreqs package | xargs echo)
@@ -17,11 +18,9 @@ move_to_opt
 subst '1iAutoReq:yes,nomonolib,nomono' $SPEC
 subst '1iAutoProv:no' $SPEC
 
-subst "s|\(.*$PRODUCTDIR/code.*\)|/usr/bin/code\n/usr/bin/vscode\n\1|" $SPEC
-subst "s|/usr/share/code/code|$PRODUCTDIR/bin/code|g" $BUILDROOT/usr/share/applications/$PRODUCT.desktop
-chmod 0644 $BUILDROOT/usr/share/applications/$PRODUCT.desktop
+fix_desktop_file /usr/share/code/code
 
-mkdir -p $BUILDROOT/usr/bin/
-ln -rsf $BUILDROOT$PRODUCTDIR/bin/code $BUILDROOT/usr/bin/code
-ln -rs $BUILDROOT$PRODUCTDIR/bin/code $BUILDROOT/usr/bin/vscode
+rm $BUILDROOT/usr/bin/code
+add_bin_link_command $PRODUCT $PRODUCTDIR/bin/code
+add_bin_link_command $PRODUCTCUR $PRODUCTDIR/bin/code
 

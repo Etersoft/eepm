@@ -21,3 +21,4 @@ subst "s|/usr/bin/sh|/bin/sh|" $BUILDROOT$PRODUCTDIR/aimp.bash
 
 install_file /opt/aimp/aimp.desktop /usr/share/applications/aimp.desktop
 
+fix_desktop_file /opt/aimp/aimp.bash $PRODUCT

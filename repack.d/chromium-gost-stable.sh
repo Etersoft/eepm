@@ -29,6 +29,8 @@ use_system_xdg
 
 install_deps
 
+fix_desktop_file /usr/bin/$PRODUCTCUR
+
 # TODO: report to the upstream
 subst 's|Name=Chromium-Gost|Name=Chromium-Gost Web Browser\nName[ru]=Веб-браузер Chromium-gost|' $BUILDROOT/usr/share/applications/*.desktop
 subst 's|GenericName=Web Browser|GenericName=Chromium-Gost Web Browser|' $BUILDROOT/usr/share/applications/*.desktop

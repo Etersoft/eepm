@@ -256,6 +256,7 @@ fix_desktop_file()
     [ -n "$from" ] || from="$PRODUCTDIR/$PRODUCT"
     [ -n "$to" ] || to="$(basename "$from")"
     subst "s|$from|$to|" $BUILDROOT/usr/share/applications/*.desktop
+    chmod -v 0644 $BUILDROOT/usr/share/applications/*.desktop
 }
 
 fix_chrome_sandbox()

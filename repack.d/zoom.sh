@@ -93,3 +93,4 @@ install_deps
 
 fix_chrome_sandbox $PRODUCTDIR/cef/chrome-sandbox
 
+fix_desktop_file /usr/bin/zoom

@@ -18,6 +18,7 @@ move_to_opt
 fix_chrome_sandbox
 
 fix_desktop_file /usr/share/gitkraken/gitkraken
+fix_desktop_file /usr/bin/gitkraken
 
 add_findreq_skiplist "$PRODUCTDIR/resources/app.asar.unpacked/node_modules/@axosoft/*/build/Release/*.node"
 add_findreq_skiplist "$PRODUCTDIR/resources/app.asar.unpacked/node_modules/@msgpackr-extract/msgpackr-extract-linux-x64/*.node"

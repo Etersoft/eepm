@@ -15,8 +15,8 @@ PREINSTALL_PACKAGES="liblttng-ust libX11 fontconfig zlib"
 add_bin_link_command $PRODUCTCUR
 add_bin_link_command $PRODUCT $PRODUCTCUR
 
-fix_desktop_file
-fix_desktop_file /opt/icons8/lunacy/Assets/LunacyLogo.png $PRODUCT.png
+fix_desktop_file /opt/icons8/lunacy/Lunacy $PRODUCT
+fix_desktop_file /opt/icons8/lunacy/Assets/LunacyLogo.png $PRODUCT
 install_file /opt/icons8/lunacy/Assets/LunacyLogo.png /usr/share/pixmaps/$PRODUCT.png
 
 subst '1iAutoProv:no' $SPEC

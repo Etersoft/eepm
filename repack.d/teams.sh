@@ -29,3 +29,5 @@ subst '1iAutoProv:no' $SPEC
 drop_embedded_reqs
 
 fix_chrome_sandbox
+
+fix_desktop_file /usr/bin/teams

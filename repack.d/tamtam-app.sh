@@ -16,3 +16,5 @@ add_bin_exec_command $PRODUCT
 add_bin_exec_command $PRODUCTCUR $PRODUCTDIR/$PRODUCT
 
 fix_chrome_sandbox
+
+fix_desktop_file /opt/TamTam/tamtam

@@ -25,6 +25,7 @@ subst 's|Name=Google Chrome|Name=Google Chrome Web Browser\nName[ru]=Веб-бр
 subst 's|GenericName=Web Browser|GenericName=Google Chrome Web Browser|' $BUILDROOT/usr/share/applications/*.desktop
 subst 's|GenericName\[ru\]=Веб-браузер|GenericName[ru]=Веб-браузер Google Chrome|' $BUILDROOT/usr/share/applications/*.desktop
 
+fix_desktop_file /usr/bin/google-chrome-stable
 
 install_deps
 

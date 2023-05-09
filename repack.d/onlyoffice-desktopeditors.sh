@@ -45,3 +45,4 @@ subst "s|%files|%files\n/usr/share/icons/hicolor/*x*/apps/$iconname.png|" $SPEC
 subst '1iAutoReq:no' $SPEC
 subst '1iAutoProv:no' $SPEC
 
+fix_desktop_file /usr/bin/onlyoffice-desktopeditors

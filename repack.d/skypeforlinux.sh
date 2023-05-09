@@ -5,6 +5,7 @@ BUILDROOT="$1"
 SPEC="$2"
 
 PRODUCT=skype
+PRODUCTCUR=skypeforlinux
 PRODUCTDIR=/opt/skype
 
 . $(dirname $0)/common-chromium-browser.sh
@@ -27,3 +28,5 @@ ln -s /usr/bin/skypeforlinux $BUILDROOT/usr/bin/skype
 subst 's|%files|%files\n/usr/bin/skype|' $SPEC
 
 fix_chrome_sandbox
+
+fix_desktop_file /usr/bin/skypeforlinux

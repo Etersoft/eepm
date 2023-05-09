@@ -22,6 +22,8 @@ install_deps
 
 fix_chrome_sandbox
 
+fix_desktop_file
+
 #epm assure patchelf || exit
 #for i in $BUILDROOT$PRODUCTDIR/$PRODUCT ; do
 #    a= patchelf --set-rpath "$PRODUCTDIR" $i
