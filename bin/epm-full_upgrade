@@ -50,6 +50,9 @@ epm_full_upgrade()
             "--no-kernel-update")  # HELPCMD: skip kernel update during full upgrade
                 full_upgrade_no_kernel_update=1
                 ;;
+            "--no-clean")          # HELPCMD: no clean after upgrade
+                full_upgrade_no_clean=1
+                ;;
         esac
         shift
     done
@@ -86,6 +89,8 @@ epm_full_upgrade()
         fi
     fi
 
-    [ -n "$quiet" ] || echo
-    docmd epm $dryrun clean
+    if [ -z "$full_upgrade_no_clean" ] ; then
+        [ -n "$quiet" ] || echo
+        docmd epm $dryrun clean
+    fi
 }
