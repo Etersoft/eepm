@@ -42,11 +42,19 @@ case $BASEDISTRNAME in
             | grep -v -- "^distro_info$" \
             | grep -v -- "^kernel")
 
+        # TODO: implement for other PMTYPE
         local play_installed="$(epm play --list-installed-packages)"
         if [ -n "$play_installed" ] ; then
-            echo "Skip follow packages installed via epm play: $play_installed"
+            echo "Skip follow packages installed via epm play: $(echo $play_installed | xargs -n1000 echo)"
+            PKGLIST="$(estrlist exclude "$play_installed" "$PKGLIST")"
         fi
-        PKGLIST="$(estrlist exclude "$play_installed" "$PKGLIST")"
+
+        # TODO: implement for other PMTYPE
+        local hold_packages="$(epm mark showhold)"
+        if [ -n "$hold_packages" ] ; then
+            echo "Skip follow packages on hold: $(echo $hold_packages | xargs -n1000 echo)"
+            PKGLIST="$(estrlist exclude "$hold_packages" "$PKGLIST")"
+        fi
 
         if [ -n "$PKGLIST" ] ; then
             if [ -z "$dryrun" ] ; then
