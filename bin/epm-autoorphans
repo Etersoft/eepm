@@ -36,6 +36,7 @@ case $BASEDISTRNAME in
             warning "Use with caution!"
         fi
         epm Upgrade || fatal
+        info "Retrieving orphaned packages list ..."
         local PKGLIST=$(__epm_orphan_altrpm \
             | sed -e "s/\.32bit//g" \
             | grep -v -- "^eepm$" \
@@ -43,6 +44,7 @@ case $BASEDISTRNAME in
             | grep -v -- "^kernel")
 
         # TODO: implement for other PMTYPE
+        info "Retrieving packages installed via epm play ..."
         local play_installed="$(epm play --list-installed-packages)"
         if [ -n "$play_installed" ] ; then
             echo "Skip follow packages installed via epm play: $(echo $play_installed | xargs -n1000 echo)"
@@ -61,6 +63,8 @@ case $BASEDISTRNAME in
                 showcmd epm remove $dryrun $force $PKGLIST
                 confirm_info "We will remove packages above."
             fi
+            info
+            info
             docmd epm remove $dryrun $force $(subst_option non_interactive --auto) $PKGLIST
         else
             echo "There are no orphan packages in the system."
