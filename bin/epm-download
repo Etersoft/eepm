@@ -68,6 +68,7 @@ __download_pkg_urls()
     [ -z "$pkg_urls" ] && return
     for url in $pkg_urls ; do
         local tmppkg="$(mktemp -d)" || fatal "failed mktemp -d"
+        remove_on_exit "$tmppkg"
         docmd chmod $verbose a+rX $tmppkg
         showcmd cd $tmppkg
         cd $tmppkg || fatal
@@ -77,11 +78,10 @@ __download_pkg_urls()
         # download packages
         if docmd eget $latest "$url" ; then
             local i
-            for i in *.* ; do
+            for i in * ; do
                 [ -s "$tmppkg/$i" ] || continue
                 chmod $verbose a+r "$tmppkg/$i"
                 [ -n "$pkg_files" ] && pkg_files="$pkg_files $tmppkg/$i" || pkg_files="$tmppkg/$i"
-                remove_on_exit "$tmppkg/$i"
             done
         else
             warning "Failed to download $url, ignoring"
