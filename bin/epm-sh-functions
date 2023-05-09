@@ -504,6 +504,13 @@ esu()
     set_pm_type
 
 
+# TODO:
+#quote() {
+#    for arg in "$@"; do
+#        printf '%s\n' "$arg" | sed "s/'/'\\\\''/g;1s/^/'/;\$s/\$/'/"
+#    done
+#}
+
     escape_args()
     {
         local output=''
