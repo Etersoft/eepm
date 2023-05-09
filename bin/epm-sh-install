@@ -70,6 +70,7 @@ get_only_installed_packages()
 
 __epm_print_warning_for_nonalt_packages()
 {
+    [ -n "$dryrun" ] && return 0
     # only ALT
     [ "$BASEDISTRNAME" = "alt" ] || return 0
 
@@ -99,6 +100,7 @@ __epm_check_vendor()
 {
     # don't check vendor if there are forced script options
     [ -n "$scripts$noscripts" ] && return
+    [ -n "$dryrun" ] && return 0
 
     # only ALT
     [ "$BASEDISTRNAME" = "alt" ] || return 0
