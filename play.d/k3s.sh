@@ -25,14 +25,12 @@ case "$arch" in
         ;;
 esac
 
-# TODO: support for install any version
-#if [ "$VERSION" = "*" ] ; then
-#fi
-
-PKGURL="$(eget --list --latest https://github.com/k3s-io/k3s/releases "$file")"
-
-#direct url:
-#https://github.com/k3s-io/k3s/releases/download/v1.27.1-rc3%2Bk3s1/k3s
+if [ "$VERSION" = "*" ] ; then
+    # TODO: get latest version from somewhere?
+    PKGURL="$(eget --list --latest https://github.com/k3s-io/k3s/releases "$file")"
+else
+    PKGURL="https://github.com/k3s-io/k3s/releases/download/v$VERSION+k3s1/$file"
+fi
 
 VERSION="$(echo "$PKGURL" | sed -e 's|.*download/v||' -e 's|%2Bk3s1.*||' -e 's|-.*||')"
 epm pack --install $PKGNAME "$PKGURL" $VERSION
