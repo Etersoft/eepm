@@ -18,10 +18,13 @@ install_deps
 
 subst '1iAutoProv:no' $SPEC
 
-mkdir -p $BUILDROOT/usr/bin/
-ln -sf $PRODUCTDIR/Discord $BUILDROOT/usr/bin/$PRODUCT
-ln -sf $PRODUCTDIR/discord.desktop $BUILDROOT/usr/share/applications/discord.desktop
-ln -sf $PRODUCTDIR/discord.png $BUILDROOT/usr/share/pixmaps/discord.png
+rm usr/bin/$PRODUCT
+add_bin_link_command $PRODUCTCUR $PRODUCTDIR/$PRODUCTCUR
+add_bin_link_command $PRODUCT $PRODUCTCUR
+
+rm usr/share/applications/discord.desktop
+install_file $PRODUCTDIR/discord.desktop /usr/share/applications/discord.desktop
+rm usr/share/pixmaps/discord.png
+install_file $PRODUCTDIR/discord.png /usr/share/pixmaps/discord.png
 
 fix_desktop_file /usr/share/discord/Discord $PRODUCT
-
