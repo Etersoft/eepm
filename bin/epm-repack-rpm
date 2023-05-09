@@ -187,6 +187,7 @@ __epm_repack_to_rpm()
         # for tarballs fix permissions
         [ -n "$VERSION" ] && chmod $verbose -R a+rX $buildroot/*
 
+        # run generic scripts and repack script for the pkg
         cd $buildroot || fatal
         __fix_spec $pkgname $buildroot $spec
         __apply_fix_code "generic" $buildroot $spec $pkgname $abspkg
