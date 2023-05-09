@@ -213,7 +213,7 @@ case "$1" in
         exit
         ;;
     "--package-name")
-        [ -n "$DESCRIPTION" ] || exit 0
+        #[ -n "$DESCRIPTION" ] || exit 0
         echo "$PKGNAME"
         exit
         ;;

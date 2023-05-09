@@ -99,6 +99,7 @@ __list_installed_app()
 {
     local i
     local tapt="$(mktemp)" || fatal
+    remove_on_exit $tapt
     __list_app_packages_table >$tapt
     # get all installed packages and convert it to a apps list
     for i in $(epm query --short $(cat $tapt | sed -e 's| .*$||') 2>/dev/null) ; do
@@ -114,8 +115,9 @@ __list_installed_packages()
 {
     local i
     local tapt="$(mktemp)" || fatal
+    remove_on_exit $tapt
     __list_app_packages_table >$tapt
-    # get all installed packages and convert it to a apps list
+    # get all installed packages
     for i in $(epm query --short $(cat $tapt | sed -e 's| .*$||') 2>/dev/null) ; do
         grep "^$i " $tapt | cut -f1 -d" "
     done
@@ -164,14 +166,18 @@ __epm_play_list_installed()
     local i
     if [ -n "$short" ] ; then
         for i in $(__list_installed_app) ; do
+            # skip hidden apps
+            local desc="$(__get_app_description $i)"
+            [ -n "$desc" ] || continue
             echo "$i"
         done
         exit
     fi
     [ -n "$quiet" ] || echo "Installed applications:"
     for i in $(__list_installed_app) ; do
+        # skip hidden apps
         local desc="$(__get_app_description $i)"
-        #[ -n "$desc" ] || continue
+        [ -n "$desc" ] || continue
         [ -n "$quiet" ] || echo -n "  "
         printf "%-20s - %s\n" "$i" "$desc"
     done
