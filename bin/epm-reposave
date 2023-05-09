@@ -112,6 +112,13 @@ esac
 
 epm_reporeset()
 {
+case $BASEDISTRNAME in
+    alt)
+        sudoepm repo set $DISTRVERSION
+        return
+        ;;
+esac
+
 case $PMTYPE in
     winget)
         sudocmd winget source reset
