@@ -21,7 +21,7 @@ load_helper epm-sh-altlinux
 
 
 # under root only
-SAVELISTDIR=/tmp/eepm-etc-save
+SAVELISTDIR=$epm_vardir/eepm-etc-save
 __save_alt_repo_lists()
 {
     assure_root

@@ -76,11 +76,11 @@ epm_repo()
         # TODO: check for ALT
         sudocmd apt-repo $dryrun clean
         ;;
-    save)
+    save)                             # HELPCMD: save sources lists to a temp place
         load_helper epm-reposave
         epm_reposave "$@"
         ;;
-    restore)
+    restore)                          # HELPCMD: restore sources lists from a temp place
         load_helper epm-reposave
         epm_reporestore "$@"
         ;;
