@@ -461,6 +461,9 @@ while [ -n "$1" ] ; do
         -O-)
             TARGETFILE="-"
             ;;
+        -*)
+            fatal "Unknown option '$1', check eget --help."
+            ;;
         *)
             break
             ;;
