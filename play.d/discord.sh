@@ -10,8 +10,8 @@ DESCRIPTION="Discord from the official site"
 if [ "$VERSION" != "*" ] ; then
     PKGURL="https://dl.discordapp.net/apps/linux/$VERSION/discord-$VERSION.deb"
 else
-    epm assure wget || fatal "Can't install wget, but curl can't get filename: https://github.com/curl/curl/issues/8461"
-    PKGURL="https://discord.com/api/download?platform=linux&format=deb"
+    # workaround against curl can't get filename: https://github.com/curl/curl/issues/8461
+    PKGURL="$(eget --get-real-url "https://discord.com/api/download?platform=linux&format=deb")"
 fi
-epm install "$PKGURL"
 
+epm install "$PKGURL"
