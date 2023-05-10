@@ -50,6 +50,25 @@ __epm_check_apt_db_days()
     fi
     return 1
 }
+
+__epm_touch_apt_pkg()
+{
+    # apt-dpkg
+    local pkg="Packages"
+    [ "$BASEDISTRNAME" = "alt" ] && pkg="pkglist"
+    # ordinal package file have date of latest upstream change, not latest update, so update fake file
+    sudorun touch "/var/lib/apt/lists/eepm-fake_$pkg"
+}
+
+__epm_touch_pkg()
+{
+    case $PMTYPE in
+        apt-*)
+            __epm_touch_apt_pkg
+            ;;
+    esac
+}
+
 # check if we need initial update
 __is_repo_info_downloaded()
 {
