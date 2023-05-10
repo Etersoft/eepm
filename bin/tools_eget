@@ -1362,13 +1362,16 @@ if [ -n "$2" ] ; then
 else
     # do not support / at the end without separately specified mask
     if echo "$1" | grep -q "/$" ; then
-        fatal "Use http://example.com/e/* to download all files in dir"
+        #fatal "Use http://example.com/e/* to download all files in dir"
+        URL="$1"
+        MASK=""
+    else
+        # drop mask part
+        URL="$(dirname "$1")/"
+        # wildcards allowed only in the last part of path
+        MASK=$(basename "$1")
     fi
 
-    # drop mask part
-    URL="$(dirname "$1")/"
-    # wildcards allowed only in the last part of path
-    MASK=$(basename "$1")
 fi
 
 # https://www.freeoffice.com/download.php?filename=freeoffice-2021-1062.x86_64.rpm
