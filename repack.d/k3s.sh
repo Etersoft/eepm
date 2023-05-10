@@ -14,8 +14,7 @@ subst "s|^Summary:.*|Summary: K3s - Lightweight Kubernetes|" $SPEC
 subst '1iAutoReq:no' $SPEC
 subst '1iAutoProv:no' $SPEC
 
-#subst '1iConflicts: go-ipfs' $SPEC
-#subst '1iProvides: go-ipfs' $SPEC
+subst '1iConflicts: kubernetes-client' $SPEC
 
 # Check https://get.k3s.io/
 
