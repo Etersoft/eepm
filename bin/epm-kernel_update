@@ -24,6 +24,8 @@ epm_kernel_update()
 {
     warmup_bases
 
+    update_repo_if_needed
+
     info "Updating system kernel to the latest version..."
 
     case $BASEDISTRNAME in

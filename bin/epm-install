@@ -475,7 +475,7 @@ epm_install()
         return 0
     fi
 
-    if [ -z "$files" ] && [ -z "$direct" ] ; then
+    if [ -n "$names" ] && [ -z "$direct" ] ; then
         # it is useful for first time running
         update_repo_if_needed
     fi

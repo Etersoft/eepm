@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2014, 2015  Etersoft
-# Copyright (C) 2014, 2015  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2014, 2015, 2023  Etersoft
+# Copyright (C) 2014, 2015, 2023  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -17,13 +17,50 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+# initially copied from update-kernel
+# print number of days and error status if number of days more than 0
+__epm_check_apt_db_days()
+{
+    # apt-dpkg
+    local pkg="Packages"
+    [ "$BASEDISTRNAME" = "alt" ] && pkg="pkglist"
+    local pkglists
+    pkglists=$(find /var/lib/apt/lists -name "*_$pkg*" -ctime +1 2>/dev/null)
+    [ -z "$pkglists" ] && return
+
+    local i t
+    local ts=0
+    # set ts to newest file ctime
+    # shellcheck disable=SC2044
+    for i in $(find /var/lib/apt/lists/ -name "*_$pkg*" 2>/dev/null); do
+        t=$(stat -c%Z "$i")
+        [ "$t" -gt "$ts" ] && ts=$t
+    done
+
+    if [ "$ts" -gt 0 ]; then
+        # shellcheck disable=SC2017
+        local now=$(date +%s)
+        local days="$(( (now - ts) / (60 * 60 * 24) ))"
+        [ "$days" = "0" ] && return 0
+        [ "$days" = "1" ] && echo "1 day old" && return 1
+        echo "$days days old"
+    else
+        # no any pkglist
+        echo "stalled"
+    fi
+    return 1
+}
+# check if we need initial update
 __is_repo_info_downloaded()
 {
     case $PMTYPE in
         apt-*)
-            #if [ -r /var/cache/apt ] ; then
-            #    sudorun test -r /var/cache/apt/pkgcache.bin || return
-            #fi
+            # apt-dpkg
+            local pkg="Packages"
+            [ "$BASEDISTRNAME" = "alt" ] && pkg="pkglist"
+            local pkglists
+            pkglists=$(find /var/lib/apt/lists -name "*_$pkg*" 2>/dev/null)
+            [ -n "$pkglists" ] || return 1
             ;;
         *)
             ;;
@@ -35,14 +72,7 @@ __is_repo_info_uptodate()
 {
     case $PMTYPE in
         apt-*)
-            # apt-deb do not update lock file date
-            #if $SUDO test -r /var/lib/apt/lists ; then
-                local LOCKFILE=/var/lib/apt/lists
-                sudorun test -r $LOCKFILE || return
-                # if repo older than 1 day, return false
-                # find print string if file is obsoleted
-                test -z "$(find $LOCKFILE -maxdepth 0 -mtime +1)" || return
-            #fi
+            __epm_check_apt_db_days >/dev/null
             ;;
         *)
             ;;
@@ -52,14 +82,19 @@ __is_repo_info_uptodate()
 
 update_repo_if_needed()
 {
-    # TODO: needs careful testing
+    local days
+    days="$(__epm_check_apt_db_days)" && return
+    warning "APT database is $days, please run 'epm update'!"
+
+    # TODO: enable __is_repo_info_downloaded
+
     return
     # check if we need skip update checking
-    if [ "$1" = "soft" ] && ! set_sudo nofail ; then
-        # if sudo requires a password, skip autoupdate
-        info "can't use sudo, so skip repo status checking"
-        return 1
-    fi
+    #if [ "$1" = "soft" ] && ! set_sudo nofail ; then
+    #    # if sudo requires a password, skip autoupdate
+    #    info "can't use sudo, so skip repo status checking"
+    #    return 1
+    #fi
 
     cd / || fatal
     if ! __is_repo_info_downloaded || ! __is_repo_info_uptodate ; then

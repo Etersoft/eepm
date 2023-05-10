@@ -129,3 +129,27 @@ case $PMTYPE in
 esac
 
 }
+
+
+epm_repostatus()
+{
+case $PMTYPE in
+    apt-*)
+        load_helper epm-check_updated_repo
+        if [ -n "$short" ] ; then
+            local days
+            days="$(__epm_check_apt_db_days)" && return 0
+            echo "$days"
+            return 1
+        else
+            local days
+            days="$(__epm_check_apt_db_days)" && info "APT database is actual." && return 0
+            info "APT database is $days."
+            return 1
+        fi
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
+esac
+}
