@@ -15,6 +15,12 @@ if ! epm install $REPOPKGNAME ; then
     PKGURL="https://cdn.akamai.steamstatic.com/client/installer/steam.deb"
     epm install $PKGURL
     res=$?
+
+    if [ "$(epm print info -s)" = "alt" ] ; then
+        # https://bugzilla.altlinux.org/46110
+        epm install --skip-installed lsof i586-libcurl
+    fi
+
 fi
 
 epm play i586-fix
