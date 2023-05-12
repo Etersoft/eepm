@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.55.7"
+EPMVERSION="3.55.8"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -500,11 +500,12 @@ esu()
         else
             # just shell
             showcmd "su -"
-            exec su -
+            a= exec su -
         fi
     fi
 
     set_pm_type
+
 
 
     escape_args()
@@ -529,11 +530,11 @@ esu()
         #info "Enter root password:"
         if [ -n "$*" ] ; then
             [ -n "$quiet" ] || showcmd "su - -c $escaped"
-            exec su - -c "$escaped"
+            a= exec su - -c "$escaped"
         else
             # just shell
             showcmd "su -"
-            exec su -
+            a= exec su -
         fi
     fi
 
@@ -557,10 +558,13 @@ regexp_subst()
 assure_exists()
 {
     local package="$2"
-    local textpackage=
     [ -n "$package" ] || package="$(__get_package_for_command "$1")"
-    [ -n "$3" ] && textpackage=" >= $3"
-    ( direct='' epm_assure "$1" $package $3 ) || fatal "Can't assure in '$1' command from $package$textpackage package"
+
+    # ask for install: https://bugzilla.altlinux.org/42240
+    local ask=''
+    [ -n "$non_interactive" ] || ask=1
+
+    ( direct='' interactive=$ask epm_assure "$1" $package $3 ) || fatal
 }
 
 assure_exists_erc()

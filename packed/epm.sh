@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.55.7"
+EPMVERSION="3.55.8"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -502,11 +502,12 @@ esu()
         else
             # just shell
             showcmd "su -"
-            exec su -
+            a= exec su -
         fi
     fi
 
     set_pm_type
+
 
 
     escape_args()
@@ -531,11 +532,11 @@ esu()
         #info "Enter root password:"
         if [ -n "$*" ] ; then
             [ -n "$quiet" ] || showcmd "su - -c $escaped"
-            exec su - -c "$escaped"
+            a= exec su - -c "$escaped"
         else
             # just shell
             showcmd "su -"
-            exec su -
+            a= exec su -
         fi
     fi
 
@@ -559,10 +560,13 @@ regexp_subst()
 assure_exists()
 {
     local package="$2"
-    local textpackage=
     [ -n "$package" ] || package="$(__get_package_for_command "$1")"
-    [ -n "$3" ] && textpackage=" >= $3"
-    ( direct='' epm_assure "$1" $package $3 ) || fatal "Can't assure in '$1' command from $package$textpackage package"
+
+    # ask for install: https://bugzilla.altlinux.org/42240
+    local ask=''
+    [ -n "$non_interactive" ] || ask=1
+
+    ( direct='' interactive=$ask epm_assure "$1" $package $3 ) || fatal
 }
 
 assure_exists_erc()
@@ -1424,14 +1428,21 @@ epm_assure()
 
     # can't be used in epm ei case
     #docmd epm --auto install $PACKAGE || return
-    (repack='' non_interactive=1 pkg_names="$PACKAGE" pkg_files='' pkg_urls='' epm_install ) || return
+    (repack='' pkg_names="$PACKAGE" pkg_files='' pkg_urls='' epm_install ) || return
+
+    # https://bugzilla.altlinux.org/42240
+    epm_mark_auto "$PACKAGE"
 
     # no check if we don't need a version
     [ -n "$PACKAGEVERSION" ] || return 0
 
     # check if we couldn't update and still need update
-    __epm_need_update $PACKAGE $PACKAGEVERSION && return 1
-    return 0
+    __epm_need_update $PACKAGE $PACKAGEVERSION || return 0
+
+    local textpackage
+    [ -n "$PACKAGEVERSION" ] && textpackage=" >= $PACKAGEVERSION"
+    warning "Can't assure in '$CMD' command from $PACKAGE$textpackage package"
+    return 1
 }
 
 # File bin/epm-audit:
@@ -1476,23 +1487,35 @@ case $BASEDISTRNAME in
             warning "Use with caution!"
         fi
         epm Upgrade || fatal
+        info "Retrieving orphaned packages list ..."
         local PKGLIST=$(__epm_orphan_altrpm \
             | sed -e "s/\.32bit//g" \
             | grep -v -- "^eepm$" \
             | grep -v -- "^distro_info$" \
             | grep -v -- "^kernel")
 
+        # TODO: implement for other PMTYPE
+        info "Retrieving packages installed via epm play ..."
         local play_installed="$(epm play --list-installed-packages)"
         if [ -n "$play_installed" ] ; then
-            echo "Skip follow packages installed via epm play: $play_installed"
+            echo "Skip follow packages installed via epm play: $(echo $play_installed | xargs -n1000 echo)"
+            PKGLIST="$(estrlist exclude "$play_installed" "$PKGLIST")"
         fi
-        PKGLIST="$(estrlist exclude "$play_installed" "$PKGLIST")"
+
+        # TODO: implement for other PMTYPE
+        local hold_packages="$(epm mark showhold)"
+        if [ -n "$hold_packages" ] ; then
+            echo "Skip follow packages on hold: $(echo $hold_packages | xargs -n1000 echo)"
+            PKGLIST="$(estrlist exclude "$hold_packages" "$PKGLIST")"
+        fi
 
         if [ -n "$PKGLIST" ] ; then
             if [ -z "$dryrun" ] ; then
                 showcmd epm remove $dryrun $force $PKGLIST
                 confirm_info "We will remove packages above."
             fi
+            info
+            info
             docmd epm remove $dryrun $force $(subst_option non_interactive --auto) $PKGLIST
         else
             echo "There are no orphan packages in the system."
@@ -2276,13 +2299,66 @@ fi
 
 # File bin/epm-check_updated_repo:
 
+__epm_check_apt_db_days()
+{
+    # apt-dpkg
+    local pkg="Packages"
+    [ "$BASEDISTRNAME" = "alt" ] && pkg="pkglist"
+    local pkglists
+    pkglists=$(find /var/lib/apt/lists -name "*_$pkg*" -ctime +1 2>/dev/null)
+    [ -z "$pkglists" ] && return
+
+    local i t
+    local ts=0
+    # set ts to newest file ctime
+    # shellcheck disable=SC2044
+    for i in $(find /var/lib/apt/lists/ -name "*_$pkg*" 2>/dev/null); do
+        t=$(stat -c%Z "$i")
+        [ "$t" -gt "$ts" ] && ts=$t
+    done
+
+    if [ "$ts" -gt 0 ]; then
+        # shellcheck disable=SC2017
+        local now=$(date +%s)
+        local days="$(( (now - ts) / (60 * 60 * 24) ))"
+        [ "$days" = "0" ] && return 0
+        [ "$days" = "1" ] && echo "1 day old" && return 1
+        echo "$days days old"
+    else
+        # no any pkglist
+        echo "stalled"
+    fi
+    return 1
+}
+
+__epm_touch_apt_pkg()
+{
+    # apt-dpkg
+    local pkg="Packages"
+    [ "$BASEDISTRNAME" = "alt" ] && pkg="pkglist"
+    # ordinal package file have date of latest upstream change, not latest update, so update fake file
+    sudorun touch "/var/lib/apt/lists/eepm-fake_$pkg"
+}
+
+__epm_touch_pkg()
+{
+    case $PMTYPE in
+        apt-*)
+            __epm_touch_apt_pkg
+            ;;
+    esac
+}
+
 __is_repo_info_downloaded()
 {
     case $PMTYPE in
         apt-*)
-            #if [ -r /var/cache/apt ] ; then
-            #    sudorun test -r /var/cache/apt/pkgcache.bin || return
-            #fi
+            # apt-dpkg
+            local pkg="Packages"
+            [ "$BASEDISTRNAME" = "alt" ] && pkg="pkglist"
+            local pkglists
+            pkglists=$(find /var/lib/apt/lists -name "*_$pkg*" 2>/dev/null)
+            [ -n "$pkglists" ] || return 1
             ;;
         *)
             ;;
@@ -2294,14 +2370,7 @@ __is_repo_info_uptodate()
 {
     case $PMTYPE in
         apt-*)
-            # apt-deb do not update lock file date
-            #if $SUDO test -r /var/lib/apt/lists ; then
-                local LOCKFILE=/var/lib/apt/lists
-                sudorun test -r $LOCKFILE || return
-                # if repo older than 1 day, return false
-                # find print string if file is obsoleted
-                test -z "$(find $LOCKFILE -maxdepth 0 -mtime +1)" || return
-            #fi
+            __epm_check_apt_db_days >/dev/null
             ;;
         *)
             ;;
@@ -2311,14 +2380,19 @@ __is_repo_info_uptodate()
 
 update_repo_if_needed()
 {
-    # TODO: needs careful testing
+    local days
+    days="$(__epm_check_apt_db_days)" && return
+    warning "APT database is $days, please run 'epm update'!"
+
+    # TODO: enable __is_repo_info_downloaded
+
     return
     # check if we need skip update checking
-    if [ "$1" = "soft" ] && ! set_sudo nofail ; then
-        # if sudo requires a password, skip autoupdate
-        info "can't use sudo, so skip repo status checking"
-        return 1
-    fi
+    #if [ "$1" = "soft" ] && ! set_sudo nofail ; then
+    #    # if sudo requires a password, skip autoupdate
+    #    info "can't use sudo, so skip repo status checking"
+    #    return 1
+    #fi
 
     cd / || fatal
     if ! __is_repo_info_downloaded || ! __is_repo_info_uptodate ; then
@@ -2377,11 +2451,11 @@ epm_clean()
 
 case $PMTYPE in
     apt-rpm)
-        sudocmd apt-get clean
+        sudocmd apt-get clean $dryrun
         [ -n "$force" ] && __remove_alt_apt_cache_file
         ;;
     apt-dpkg)
-        sudocmd apt-get clean
+        sudocmd apt-get clean $dryrun
         [ -n "$force" ] && __remove_deb_apt_cache_file
         ;;
     aptitude-dpkg)
@@ -2748,6 +2822,7 @@ __download_pkg_urls()
     [ -z "$pkg_urls" ] && return
     for url in $pkg_urls ; do
         local tmppkg="$(mktemp -d)" || fatal "failed mktemp -d"
+        remove_on_exit "$tmppkg"
         docmd chmod $verbose a+rX $tmppkg
         showcmd cd $tmppkg
         cd $tmppkg || fatal
@@ -2757,11 +2832,10 @@ __download_pkg_urls()
         # download packages
         if docmd eget $latest "$url" ; then
             local i
-            for i in *.* ; do
+            for i in * ; do
                 [ -s "$tmppkg/$i" ] || continue
                 chmod $verbose a+r "$tmppkg/$i"
                 [ -n "$pkg_files" ] && pkg_files="$pkg_files $tmppkg/$i" || pkg_files="$tmppkg/$i"
-                remove_on_exit "$tmppkg/$i"
             done
         else
             warning "Failed to download $url, ignoring"
@@ -3284,6 +3358,9 @@ epm_full_upgrade()
             "--no-kernel-update")  # HELPCMD: skip kernel update during full upgrade
                 full_upgrade_no_kernel_update=1
                 ;;
+            "--no-clean")          # HELPCMD: no clean after upgrade
+                full_upgrade_no_clean=1
+                ;;
         esac
         shift
     done
@@ -3291,11 +3368,11 @@ epm_full_upgrade()
     docmd epm update || fatal "repository updating is failed."
 
     [ -n "$quiet" ] || echo
-    docmd epm upgrade || fatal "upgrading of the system is failed."
+    docmd epm $dryrun upgrade || fatal "upgrading of the system is failed."
 
     if [ -z "$full_upgrade_no_kernel_update" ] ; then
         [ -n "$quiet" ] || echo
-        docmd epm update-kernel || fatal "updating of the kernel is failed."
+        docmd epm $dryrun update-kernel || fatal "updating of the kernel is failed."
     fi
 
     # disable epm play --update for non ALT Systems
@@ -3303,25 +3380,27 @@ epm_full_upgrade()
 
     if [ -z "$full_upgrade_no_epm_play" ] ; then
         [ -n "$quiet" ] || echo
-        docmd epm play --update all || fatal "updating of applications installed via epm play is failed."
+        docmd epm $dryrun play --update all || fatal "updating of applications installed via epm play is failed."
     fi
 
     if [ -z "$full_upgrade_no_flatpack" ] ; then
         if is_command flatpak ; then
             [ -n "$quiet" ] || echo
-            docmd flatpak update
+            docmd flatpak update $(subst_option non_interactive --assume-yes) $(subst_option dryrun --no-deploy)
         fi
     fi
 
     if [ -z "$full_upgrade_no_snap" ] ; then
         if is_command snap && serv snapd exists && serv snapd status >/dev/null ; then
             [ -n "$quiet" ] || echo
-            sudocmd snap refresh
+            sudocmd snap refresh $(subst_option dryrun --list)
         fi
     fi
 
-    [ -n "$quiet" ] || echo
-    docmd epm clean
+    if [ -z "$full_upgrade_no_clean" ] ; then
+        [ -n "$quiet" ] || echo
+        docmd epm $dryrun clean
+    fi
 }
 
 # File bin/epm-history:
@@ -4025,34 +4104,12 @@ epm_install_files()
 }
 
 
-apt_repo_prepare()
-{
-    assure_exists apt-repo
-    [ -n "$non_interactive" ] || return
-
-    set_sudo
-    trap "$SUDO rm /etc/apt/apt.conf.d/eepm-apt-noninteractive.conf 2>/dev/null" EXIT
-    echo 'APT::Get::Assume-Yes "true";' | $SUDO tee /etc/apt/apt.conf.d/eepm-apt-noninteractive.conf >/dev/null
-}
-
-apt_repo_after()
-{
-    [ -n "$non_interactive" ] || return
-
-    $SUDO rm /etc/apt/apt.conf.d/eepm-apt-noninteractive.conf 2>/dev/null
-}
-
 epm_install()
 {
     if [ "$BASEDISTRNAME" = "alt" ] ; then
         if tasknumber "$pkg_names" >/dev/null ; then
-            local res
-            # TODO: don't use apt-repo
-            apt_repo_prepare
-            sudocmd_foreach "apt-repo test" $(tasknumber $pkg_names)
-            res=$?
-            apt_repo_after
-            return $res
+            epm_install_alt_tasks "$pkg_names"
+            return
         fi
     fi
 
@@ -4096,7 +4153,7 @@ epm_install()
         return 0
     fi
 
-    if [ -z "$files" ] && [ -z "$direct" ] ; then
+    if [ -n "$names" ] && [ -z "$direct" ] ; then
         # it is useful for first time running
         update_repo_if_needed
     fi
@@ -4308,6 +4365,38 @@ epm_install_alt_names()
 
     epm_install_names $installnames || return
     epm_install_alt_kernel_module $kmlist || return
+}
+
+
+apt_repo_prepare()
+{
+    assure_exists apt-repo
+    [ -n "$non_interactive" ] || return
+
+    set_sudo
+    trap "$SUDO rm /etc/apt/apt.conf.d/eepm-apt-noninteractive.conf 2>/dev/null" EXIT
+    echo 'APT::Get::Assume-Yes "true";' | $SUDO tee /etc/apt/apt.conf.d/eepm-apt-noninteractive.conf >/dev/null
+}
+
+apt_repo_after()
+{
+    [ -n "$non_interactive" ] || return
+
+    $SUDO rm /etc/apt/apt.conf.d/eepm-apt-noninteractive.conf 2>/dev/null
+}
+
+
+epm_install_alt_tasks()
+{
+    local res
+    # TODO: don't use apt-repo
+    apt_repo_prepare
+
+    sudocmd_foreach "apt-repo test" $(tasknumber "$@")
+    res=$?
+
+    apt_repo_after
+    return $res
 }
 
 # File bin/epm-install-apt-dpkg:
@@ -4655,6 +4744,8 @@ epm_install_files_rpm()
 epm_kernel_update()
 {
     warmup_bases
+
+    update_repo_if_needed
 
     info "Updating system kernel to the latest version..."
 
@@ -5627,6 +5718,7 @@ __list_installed_app()
 {
     local i
     local tapt="$(mktemp)" || fatal
+    remove_on_exit $tapt
     __list_app_packages_table >$tapt
     # get all installed packages and convert it to a apps list
     for i in $(epm query --short $(cat $tapt | sed -e 's| .*$||') 2>/dev/null) ; do
@@ -5642,8 +5734,9 @@ __list_installed_packages()
 {
     local i
     local tapt="$(mktemp)" || fatal
+    remove_on_exit $tapt
     __list_app_packages_table >$tapt
-    # get all installed packages and convert it to a apps list
+    # get all installed packages
     for i in $(epm query --short $(cat $tapt | sed -e 's| .*$||') 2>/dev/null) ; do
         grep "^$i " $tapt | cut -f1 -d" "
     done
@@ -5678,6 +5771,8 @@ __epm_play_run()
     # keep EPM_AUTO for non epm code (epm uses EPM_OPTIONS now)
     [ -n "$non_interactive" ] && export EPM_AUTO="--auto"
 
+    export EPM_OPTIONS="$EPM_OPTIONS $dryrun"
+
     local bashopt=''
     [ -n "$verbose" ] && bashopt='-x'
     #info "Running $($script --description 2>/dev/null) ..."
@@ -5689,14 +5784,18 @@ __epm_play_list_installed()
     local i
     if [ -n "$short" ] ; then
         for i in $(__list_installed_app) ; do
+            # skip hidden apps
+            local desc="$(__get_app_description $i)"
+            [ -n "$desc" ] || continue
             echo "$i"
         done
         exit
     fi
     [ -n "$quiet" ] || echo "Installed applications:"
     for i in $(__list_installed_app) ; do
+        # skip hidden apps
         local desc="$(__get_app_description $i)"
-        #[ -n "$desc" ] || continue
+        [ -n "$desc" ] || continue
         [ -n "$quiet" ] || echo -n "  "
         printf "%-20s - %s\n" "$i" "$desc"
     done
@@ -5939,6 +6038,7 @@ case "$1" in
         local list
         if [ "$1" = "all" ] ; then
             shift
+            info "Retrieving list of installed apps ..."
             list="$(__list_installed_app)"
         else
             list="$*"
@@ -5961,6 +6061,7 @@ case "$1" in
         local list
         if [ "$1" = "all" ] ; then
             shift
+            info "Retrieving list of installed apps ..."
             list="$(__list_installed_app)"
         else
             list="$*"
@@ -8951,6 +9052,7 @@ __epm_repack_to_rpm()
         # for tarballs fix permissions
         [ -n "$VERSION" ] && chmod $verbose -R a+rX $buildroot/*
 
+        # run generic scripts and repack script for the pkg
         cd $buildroot || fatal
         __fix_spec $pkgname $buildroot $spec
         __apply_fix_code "generic" $buildroot $spec $pkgname $abspkg
@@ -9035,14 +9137,17 @@ epm_repo()
         # TODO: check for ALT
         sudocmd apt-repo $dryrun clean
         ;;
-    save)
+    save)                             # HELPCMD: save sources lists to a temp place
         epm_reposave "$@"
         ;;
-    restore)
+    restore)                          # HELPCMD: restore sources lists from a temp place
         epm_reporestore "$@"
         ;;
     reset)
         epm_reporeset "$@"
+        ;;
+    status)
+        epm_repostatus "$@"
         ;;
     add)                              # HELPCMD: add package repo (etersoft, autoimports, archive 2017/12/31); run with param to get list
         epm_addrepo "$@"
@@ -9988,7 +10093,7 @@ esac
 
 
 
-SAVELISTDIR=/tmp/eepm-etc-save
+SAVELISTDIR=$epm_vardir/eepm-etc-save
 __save_alt_repo_lists()
 {
     assure_root
@@ -10077,6 +10182,13 @@ esac
 
 epm_reporeset()
 {
+case $BASEDISTRNAME in
+    alt)
+        sudoepm repo set $DISTRVERSION
+        return
+        ;;
+esac
+
 case $PMTYPE in
     winget)
         sudocmd winget source reset
@@ -10086,6 +10198,29 @@ case $PMTYPE in
         ;;
 esac
 
+}
+
+
+epm_repostatus()
+{
+case $PMTYPE in
+    apt-*)
+        if [ -n "$short" ] ; then
+            local days
+            days="$(__epm_check_apt_db_days)" && return 0
+            echo "$days"
+            return 1
+        else
+            local days
+            days="$(__epm_check_apt_db_days)" && info "APT database is actual." && return 0
+            info "APT database is $days."
+            return 1
+        fi
+        ;;
+    *)
+        fatal "Have no suitable command for $PMTYPE"
+        ;;
+esac
 }
 
 # File bin/epm-requires:
@@ -11305,6 +11440,7 @@ get_only_installed_packages()
 
 __epm_print_warning_for_nonalt_packages()
 {
+    [ -n "$dryrun" ] && return 0
     # only ALT
     [ "$BASEDISTRNAME" = "alt" ] || return 0
 
@@ -11332,6 +11468,7 @@ __epm_check_vendor()
 {
     # don't check vendor if there are forced script options
     [ -n "$scripts$noscripts" ] && return
+    [ -n "$dryrun" ] && return 0
 
     # only ALT
     [ "$BASEDISTRNAME" = "alt" ] || return 0
@@ -12162,6 +12299,8 @@ case $PMTYPE in
         ;;
 esac
 
+__epm_touch_pkg
+
 __save_available_packages
 return 0
 
@@ -12240,7 +12379,7 @@ epm_upgrade()
 
     case $PMTYPE in
     apt-rpm|apt-dpkg)
-        local APTOPTIONS="$(subst_option non_interactive -y) $(subst_option verbose "-V -o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
+        local APTOPTIONS="$dryrun $(subst_option non_interactive -y) $(subst_option verbose "-V -o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
         CMD="apt-get $APTOPTIONS $noremove $force_yes dist-upgrade"
         ;;
     aptitude-dpkg)
@@ -14018,6 +14157,9 @@ while [ -n "$1" ] ; do
         -O-)
             TARGETFILE="-"
             ;;
+        -*)
+            fatal "Unknown option '$1', check eget --help."
+            ;;
         *)
             break
             ;;
@@ -14919,13 +15061,16 @@ if [ -n "$2" ] ; then
 else
     # do not support / at the end without separately specified mask
     if echo "$1" | grep -q "/$" ; then
-        fatal "Use http://example.com/e/* to download all files in dir"
+        #fatal "Use http://example.com/e/* to download all files in dir"
+        URL="$1"
+        MASK=""
+    else
+        # drop mask part
+        URL="$(dirname "$1")/"
+        # wildcards allowed only in the last part of path
+        MASK=$(basename "$1")
     fi
 
-    # drop mask part
-    URL="$(dirname "$1")/"
-    # wildcards allowed only in the last part of path
-    MASK=$(basename "$1")
 fi
 
 # https://www.freeoffice.com/download.php?filename=freeoffice-2021-1062.x86_64.rpm
@@ -16648,7 +16793,7 @@ Popular commands:
  epm play [application]     - install the application (run without params to get list of available apps)
  epm qf (<command>|<path>)  - print what package contains this command (file)
  epm sf <name>              - search for the name in all files of all packages
- epm cl <package name>      - pint changelog for the package
+ epm cl <package name>      - print changelog for the package
 EOF
 }
 
