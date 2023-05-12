@@ -15,11 +15,19 @@ subst "s|^Group:.*|Group: Development/C|" $SPEC
 subst "s|^URL:.*|URL: https://www.jetbrains.com/ru-ru/toolbox-app/|" $SPEC
 subst "s|^Summary:.*|Summary: JetBrains Toolbox App|" $SPEC
 
-#move_to_opt "/$PRODUCT-*"
-#add_bin_link_command $PRODUCT
 
-#subst '1iAutoProv:no' $SPEC
-# ldd: ERROR: /tmp/jetbrains-toolbox-1.25.12627/jetbrains-toolbox: failed to find the program interpreter
-#subst 's|^AutoReq:.*|AutoReq:no|' $SPEC
+# overwrite default exec script
+cat <<EOF >usr/bin/$PRODUCT
+#!/bin/sh
+BINDIR=~/.local/share/JetBrains/Toolbox/bin
+if [ ! -L \$BINDIR ] ; then
+    mkdir -p \$(dirname \$BINDIR)
+    rm -rf \$BINDIR
+    ln -s $PRODUCTDIR \$BINDIR
+fi
+cd \$BINDIR
+exec ./$PRODUCT "\$@"
+EOF
 
-exit
+add_requires java-openjdk
+

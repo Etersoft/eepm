@@ -15,11 +15,3 @@ URL=$(epm tool eget -O- "https://data.services.jetbrains.com/products?code=TBA&r
 # eval for drop quotes
 eval epm pack --install $PKGNAME $URL
 
-echo
-echo "Run jetbrains-toolbox under user to install."
-
-#if [ ! -r /dev/fuse ] ; then
-#    echo
-#    echo "Add the user $USER to fuse group"
-#    echo "For example. run # usermod -aG fuse $USER"
-#fi
