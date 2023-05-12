@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.55.7
+Version: 3.55.8
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -87,6 +87,7 @@ a discussion about extra requirements.
 %_man1dir/*
 %_datadir/%name/
 %_sysconfdir/bash_completion.d/serv
+%_sysconfdir/bash_completion.d/eepm
 
 %if "%_vendor" == "alt"
 %files repack
@@ -94,6 +95,24 @@ a discussion about extra requirements.
 
 
 %changelog
+* Fri May 12 2023 Vitaly Lipatov <lav@altlinux.ru> 3.55.8-alt1
+- epm play: add k3s
+- epm play: add webdavmailrucloud
+- epm autoorphans: implement skip packages on hold
+- epm-sh-install: skip vendor/scripts warning in dryrun mode
+- epm full-upgrade: implement --dry-run (--just-print) support
+- add initial epm bash completion
+- epm download __download_pkg_urls(): allow download any files
+- epm full-upgrade: add --no-clean (via config too) to disable clean after upgrade
+- epm play --list-installed-packages: print packages for hidden apps too
+- epm repack discord: rewrite files install part
+- epm repo reset: implement for ALT
+- epm repo save/restore: add to help, change work dir
+- epm repo status: implement for apt
+- epm assure: move warning text from assure_exists()
+- assure_exists(): make interactive by default, mark as auto installed (ALT bug 42240)
+- epm repack jetbrains-toolbox: rewrite install script (ALT bug 45870)
+
 * Mon May 08 2023 Vitaly Lipatov <lav@altlinux.ru> 3.55.7-alt1
 - epm install kernel-module*: skip install if there is no any kernel
 - epm play virtualbox-extpack: rewrite to use package install
