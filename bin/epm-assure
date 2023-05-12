@@ -103,6 +103,10 @@ epm_assure()
     [ -n "$PACKAGEVERSION" ] || return 0
 
     # check if we couldn't update and still need update
-    __epm_need_update $PACKAGE $PACKAGEVERSION && return 1
-    return 0
+    __epm_need_update $PACKAGE $PACKAGEVERSION || return 0
+
+    local textpackage
+    [ -n "$PACKAGEVERSION" ] && textpackage=" >= $PACKAGEVERSION"
+    warning "Can't assure in '$CMD' command from $PACKAGE$textpackage package"
+    return 1
 }

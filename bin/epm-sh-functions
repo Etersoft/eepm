@@ -563,10 +563,8 @@ assure_exists()
 {
     load_helper epm-assure
     local package="$2"
-    local textpackage=
     [ -n "$package" ] || package="$(__get_package_for_command "$1")"
-    [ -n "$3" ] && textpackage=" >= $3"
-    ( direct='' epm_assure "$1" $package $3 ) || fatal "Can't assure in '$1' command from $package$textpackage package"
+    ( direct='' interactive=$ask epm_assure "$1" $package $3 ) || fatal
 }
 
 assure_exists_erc()
