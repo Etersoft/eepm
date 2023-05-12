@@ -645,7 +645,7 @@ Popular commands:
  epm play [application]     - install the application (run without params to get list of available apps)
  epm qf (<command>|<path>)  - print what package contains this command (file)
  epm sf <name>              - search for the name in all files of all packages
- epm cl <package name>      - pint changelog for the package
+ epm cl <package name>      - print changelog for the package
 EOF
 }
 
