@@ -35,6 +35,9 @@ case $PMTYPE in
         # FIXME: returns TRUE ever on missed package
         docmd apt-cache policy $pkg_names
         ;;
+    dnf-*|yum-*)
+        docmd dnf info $pkg_names
+        ;;
     packagekit)
         docmd pkcon resolve $pkg_names
         ;;
