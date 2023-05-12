@@ -350,8 +350,8 @@ __epm_play_download_epm_file()
 {
     local target="$1"
     local file="$2"
-    #local epmver="$(epm --short --version)"
-    local epmver="$EPMVERSION"
+    # use short version (3.4.5)
+    local epmver="$(epm --short --version)"
     local URL="https://eepm.ru/releases/$epmver/app-versions"
     info "Updating local IPFS DB in $eget_ipfs_db file from $URL/eget-ipfs-db.txt"
     docmd eget -q -O "$target" "$URL/$file" && return
