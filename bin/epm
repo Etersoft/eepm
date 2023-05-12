@@ -574,6 +574,7 @@ check_filenames()
             [ -n "$pkg_urls" ] && pkg_urls="$pkg_urls $opt" || pkg_urls="$opt"
         else
             has_space "$opt" && warning "There are space(s) in package name '$opt', it is not supported. Skipped." && continue
+            echo "$opt" | grep -q "[*]" && warning "There are forbidden symbols in package name '$opt'. Skipped." && continue
             [ -n "$pkg_names" ] && pkg_names="$pkg_names $opt" || pkg_names="$opt"
         fi
         [ -n "$quoted_args" ] && quoted_args="$quoted_args \"$opt\"" || quoted_args="\"$opt\""
