@@ -222,7 +222,7 @@ check_command()
         epm_cmd=search
         direct_args=1
         ;;
-    -qp|qp|query_package)     # HELPCMD: search in the list of installed packages
+    -qp|qp|grep|query_package)     # HELPCMD: search in the list of installed packages
         epm_cmd=query_package
         ;;
     -qf|qf|-S|wp|which|belongs)     # HELPCMD: query package(s) owning file
