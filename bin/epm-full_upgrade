@@ -78,7 +78,7 @@ epm_full_upgrade()
     if [ -z "$full_upgrade_no_flatpack" ] ; then
         if is_command flatpak ; then
             [ -n "$quiet" ] || echo
-            docmd flatpak update $(subst_option non_interactive --assume-yes) $(subst_option dryrun --no-deploy)
+            docmd flatpak update $(subst_option non_interactive --assumeyes) $(subst_option dryrun --no-deploy)
         fi
     fi
 
