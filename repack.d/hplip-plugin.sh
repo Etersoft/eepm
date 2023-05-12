@@ -11,3 +11,5 @@ subst '1iAutoProv:no' $SPEC
 
 subst "s|^License: unknown$|License: Proprietary|" $SPEC
 subst "s|^Summary:.*|Summary: Binary plugin for HPs hplip printer driver library|" $SPEC
+
+add_requires hplip
