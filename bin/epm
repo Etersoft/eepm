@@ -519,7 +519,7 @@ check_option()
         repack="--repack"
         ;;
     --norepack)              # HELPOPT: don't repack rpm package(s) if it is by default before install
-        repack="--norepack"
+        norepack="--norepack"
         ;;
     --install)             # HELPOPT: install packed rpm package(s)
         install="--install"
