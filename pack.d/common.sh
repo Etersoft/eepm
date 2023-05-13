@@ -73,4 +73,14 @@ return_tar()
     exit 0
 }
 
+install_file()
+{
+    local src="$1"
+    local dest="$2"
+
+    mkdir -p "$(dirname "$dest")" || return
+    cp "$src" "$dest" || return
+}
+
+
 [ -n "$PRODUCT" ] || PRODUCT="$(basename $0 .sh)"
