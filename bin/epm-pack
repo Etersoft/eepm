@@ -39,9 +39,6 @@ __epm_pack()
     # a file to keep filename of generated tarball
     filefortarname="$(pwd)/filefortarname"
 
-    set_sudo
-    export SUDO
-
     [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
     local bashopt=''
     [ -n "$verbose" ] && bashopt='-x'

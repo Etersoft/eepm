@@ -26,7 +26,7 @@ TARNAME="1c83-client-$VERSION.tar"
 chmod -v u+x $FILENAME
 # По умолчанию устанавливается только "client_full,langs,en,ru,advanced". Все остальные компоненты по умолчанию отключены.
 # Задана тихая установка.
-$SUDO $(realpath $FILENAME) --mode unattended || fatal "Can't install"
+esu $(realpath $FILENAME) --mode unattended || fatal "Can't install"
 
 if echo "$FILENAME" | grep -q "x86_64.run$" ; then
     arch="x86_64"
@@ -49,9 +49,9 @@ ADDFILES="$ADDFILES /usr/share/pixmaps/1c* /usr/share/app-install/icons/1c* /usr
 epm install --skip-installed tar || fatal
 a= tar cf $TARNAME $INSTDIR $ADDFILES
 
-$SUDO touch /opt/.placeholder
+esu touch /opt/.placeholder
 # Задана тихая деинсталяция.
-$SUDO $UNINSTFILE --mode unattended
-$SUDO rm /opt/.placeholder
+esu $UNINSTFILE --mode unattended
+esu rm /opt/.placeholder
 
 return_tar $TARNAME
