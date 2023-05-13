@@ -48,10 +48,18 @@ fi
 
 load_helper()
 {
+    local shieldname="loaded$(echo "$1" | sed -e 's|-||g')"
+    # already loaded
+    eval "test -n \"\$$shieldname\"" && debug "Already loaded $1" && return
+
     local CMD="$SHAREDIR/$1"
-    [ -r "$CMD" ] || fatal "Have no $CMD helper file"
+    # do not use fatal() here, it can be initial state
+    [ -r "$CMD" ] || { echo "FATAL: Have no $CMD helper file" ; exit 1; }
+    eval "$shieldname=1"
+    # shellcheck disable=SC1090
     . $CMD
 }
+
 
 load_helper epm-sh-functions
 
