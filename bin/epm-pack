@@ -112,8 +112,9 @@ epm_pack()
         exit
     fi
 
-    local tmpdir="$(mktemp -d --tmpdir=$BIGTMPDIR)"
-    remove_on_exit $tmpdir
+    local tmpdir
+    tmpdir="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
+    remove_on_exit "$tmpdir"
 
     local packname="$1"
     local tarname="$2"

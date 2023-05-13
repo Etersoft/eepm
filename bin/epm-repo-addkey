@@ -24,8 +24,8 @@ load_helper epm-sh-altlinux
 __epm_get_file_from_url()
 {
     local url="$1"
-    local tmpfile=$(mktemp)
-    remove_on_exit "$tmpfile"
+    local tmpfile
+    tmpfile=$(mktemp) || fatal
     eget -O "$tmpfile" "$url" >/dev/null
     echo "$tmpfile"
 }
@@ -116,7 +116,8 @@ __epm_addkey_dnf()
     local target="/etc/yum.repos.d/$name.repo"
     [ -s $target ] && return
 
-    local tmpfile=$(mktemp)
+    local tmpfile
+    tmpfile=$(mktemp) || fatal
     remove_on_exit $tmpfile
     cat >$tmpfile <<EOF
 [$name]

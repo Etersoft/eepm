@@ -22,7 +22,8 @@ load_helper epm-query
 
 __convert_pkgallowscripts_to_regexp()
 {
-    local tmpalf="$(mktemp)" || fatal
+    local tmpalf
+    tmpalf="$(mktemp)" || fatal
     # copied from eget's filter_glob
     # check man glob
     # remove commentы and translate glob to regexp

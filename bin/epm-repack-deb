@@ -30,7 +30,8 @@ __epm_repack_to_deb()
 
     repacked_pkgs=''
 
-    local TDIR="$(mktemp -d --tmpdir=$BIGTMPDIR)"
+    local TDIR
+    TDIR="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
     remove_on_exit $TDIR
 
     for pkg in $pkgs ; do

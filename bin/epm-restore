@@ -397,7 +397,8 @@ __epm_restore_meson()
 # gtk_wayland_dep = dependency('gtk4-wayland', required: false)
 # packagekit_dep = dependency('packagekit-glib2', version: '>= 1.2', required: get_option('packagekit'))
     if [ -n "$dryrun" ] ; then
-        local lt=$(mktemp)
+        local lt
+        lt=$(mktemp) || fatal
         echo
         __epm_restore_print_comment "$req_file" " dependency"
         grep "dependency(" $req_file | sed -e 's|.*dependency(||' -e 's|).*||' -e 's|, required.*||' -e 's|, version:||' -e "s|'||g" >$lt
@@ -407,7 +408,8 @@ __epm_restore_meson()
     fi
 
     info "Install requirements from $req_file ..."
-    local lt=$(mktemp)
+    local lt
+    lt=$(mktemp) || fatal
     grep "dependency(" $req_file | sed -e 's|.*dependency(||' -e 's|).*||' -e 's|, required.*||' -e 's|, version:||' -e "s|'||g" >$lt
     ilist="$ilist $(__epm_print_meson_list "" $lt)"
 
@@ -424,7 +426,8 @@ __epm_restore_npm()
     assure_exists jq || fatal
 
     if [ -n "$dryrun" ] ; then
-        local lt=$(mktemp)
+        local lt
+        lt=$(mktemp) || fatal
         a= jq .dependencies <$req_file >$lt
         echo
         __epm_restore_print_comment "$req_file"
@@ -439,7 +442,8 @@ __epm_restore_npm()
     fi
 
     info "Install requirements from $req_file ..."
-    local lt=$(mktemp)
+    local lt
+    lt=$(mktemp) || fatal
     a= jq .dependencies <$req_file >$lt
     ilist="$(__epm_print_npm_list "" $lt)"
     a= jq .devDependencies <$req_file >$lt
@@ -454,7 +458,8 @@ __epm_restore_perl()
     local req_file="$1"
 
     if [ -n "$dryrun" ] ; then
-        local lt=$(mktemp)
+        local lt
+        lt=$(mktemp) || fatal
         a= /usr/bin/perl $req_file PRINT_PREREQ=1 >$lt
         # all requirements will autodetected during packing, put it to the buildreq
         echo
@@ -465,7 +470,8 @@ __epm_restore_perl()
     fi
 
     info "Install requirements from $req_file ..."
-    local lt=$(mktemp)
+    local lt
+    lt=$(mktemp) || exit
     a= /usr/bin/perl $req_file PRINT_PREREQ=1 >$lt
     ilist="$(__epm_print_perl_list "" $lt)"
     rm -f $lt
@@ -480,7 +486,8 @@ __epm_restore_perl_shyaml()
     assure_exists shyaml || fatal
 
     if [ -n "$dryrun" ] ; then
-        local lt=$(mktemp)
+        local lt
+        lt=$(mktemp) || fatal
         a= shyaml get-value requires <$req_file >$lt
         # all requirements will autodetected during packing, put it to the buildreq
         echo
@@ -496,7 +503,8 @@ __epm_restore_perl_shyaml()
     fi
 
     info "Install requirements from $req_file ..."
-    local lt=$(mktemp)
+    local lt
+    lt=$(mktemp) || fatal
     a= shyaml get-value requires <$req_file >$lt
     ilist="$(__epm_print_perl_list "" $lt)"
     a= shyaml get-value build_requires <$req_file >$lt

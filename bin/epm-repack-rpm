@@ -90,9 +90,6 @@ __apply_fix_code()
 
 __create_rpmmacros()
 {
-# FIXME:
-[ -n "$TMPDIR" ] || TMPDIR=/tmp
-
     cat <<EOF >$HOME/.rpmmacros
 %_topdir    $HOME/RPM
 %_tmppath    $TMPDIR
@@ -140,8 +137,9 @@ __epm_repack_to_rpm()
     fi
 
     local pkg
-    export HOME="$(mktemp -d --tmpdir=$BIGTMPDIR)"
+    HOME="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
     remove_on_exit $HOME
+    export HOME
     __create_rpmmacros
 
     local alpkg

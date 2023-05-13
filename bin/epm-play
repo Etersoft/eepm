@@ -99,7 +99,8 @@ __list_app_packages_table()
 __list_installed_app()
 {
     local i
-    local tapt="$(mktemp)" || fatal
+    local tapt
+    tapt="$(mktemp)" || fatal
     remove_on_exit $tapt
     __list_app_packages_table >$tapt
     # get all installed packages and convert it to a apps list
@@ -115,7 +116,8 @@ __list_installed_app()
 __list_installed_packages()
 {
     local i
-    local tapt="$(mktemp)" || fatal
+    local tapt
+    tapt="$(mktemp)" || fatal
     remove_on_exit $tapt
     __list_app_packages_table >$tapt
     # get all installed packages
@@ -370,8 +372,9 @@ __epm_play_initialize_ipfs()
     fi
 
     # download and merge with local db
-    local t=$(mktemp) || fatal
-    remove_on_exit "$t"
+    local t
+    t=$(mktemp) || fatal
+    remove_on_exit $t
     __epm_play_download_epm_file "$t" "eget-ipfs-db.txt" || warning "Can't update IPFS DB"
     if [ -s "$t" ] ; then
         echo >>$t

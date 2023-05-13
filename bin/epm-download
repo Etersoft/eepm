@@ -67,8 +67,8 @@ __download_pkg_urls()
     local url
     [ -z "$pkg_urls" ] && return
     for url in $pkg_urls ; do
-        local tmppkg="$(mktemp -d)" || fatal "failed mktemp -d"
-        remove_on_exit "$tmppkg"
+        local tmppkg
+        tmppkg="$(mktemp -d)" || fatal
         docmd chmod $verbose a+rX $tmppkg
         showcmd cd $tmppkg
         cd $tmppkg || fatal
@@ -147,7 +147,8 @@ __epm_print_url_alt_check()
 {
     local pkg=$1
     shift
-    local tm="$(mktemp)"
+    local tm
+    tm="$(mktemp)" || fatal
     assure_exists curl
     load_helper epm-site
     quiet=1

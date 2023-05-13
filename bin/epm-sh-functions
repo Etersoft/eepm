@@ -254,7 +254,7 @@ subst_option()
 store_output()
 {
     # use make_temp_file from etersoft-build-utils
-    RC_STDOUT="$(mktemp)"
+    RC_STDOUT="$(mktemp)" || fatal
     local CMDSTATUS=$RC_STDOUT.pipestatus
     echo 1 >$CMDSTATUS
     #RC_STDERR=$(mktemp)
@@ -907,6 +907,7 @@ subst()
     sed -i -e "$@"
 }
 fi
+
 
 
 check_core_commands()
