@@ -375,6 +375,12 @@ epm_install_files()
         return
     fi
 
+    if [ -n "$put_to_repo" ] ; then
+        load_helper epm-repopkg
+        epm_put_to_repo $files
+        return
+    fi
+
 
     case $PMTYPE in
         packagekit)

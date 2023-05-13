@@ -136,3 +136,8 @@ esac
 
 }
 
+# call with packages to put to $put_to_repo
+epm_put_to_repo()
+{
+    epm_repo_pkgupdate "$put_to_repo" "$@"
+}

@@ -533,6 +533,9 @@ check_option()
     --save-only)            # HELPOPT: save the package/tarball after all convertations (instead of install it)
         save_only="--save-only"
         ;;
+    --put-to-repo=*)          # HELPOPT: put the package after all transformations to the repo (--put-to-repo=/path/to/repo)
+        put_to_repo="$(echo "$1" | sed -e 's|--put-to-repo=||')"
+        ;;
     --download-only)       # HELPOPT: download only the package/tarball (before any convertation)
         download_only="--download-only"
         ;;

@@ -21,7 +21,7 @@ epm_install_files_rpm()
 {
     local files="$*"
     [ -z "$files" ] && return
-    
+
     if __epm_repack_if_needed $files ; then
         [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
         files="$repacked_pkgs"
@@ -32,6 +32,13 @@ epm_install_files_rpm()
         cp -v $files "$EPMCURDIR"
         return
     fi
+
+    if [ -n "$put_to_repo" ] ; then
+        load_helper epm-repopkg
+        epm_put_to_repo $files
+        return
+    fi
+
 
     __epm_check_if_src_rpm $files
 

@@ -40,6 +40,12 @@ epm_install_files_alt()
         return
     fi
 
+    if [ -n "$put_to_repo" ] ; then
+        load_helper epm-repopkg
+        epm_put_to_repo $files
+        return
+    fi
+
     __epm_check_if_src_rpm $files
 
     if [ -z "$repacked_pkgs" ] ; then

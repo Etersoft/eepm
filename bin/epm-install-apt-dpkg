@@ -38,6 +38,13 @@ epm_install_files_apt_dpkg()
         return
     fi
 
+    if [ -n "$put_to_repo" ] ; then
+        load_helper epm-repopkg
+        epm_put_to_repo $files
+        return
+    fi
+
+
     # TODO: if dpkg can't install due missed deps, trying with apt (as for now, --refuse-depends, --refuse-breaks don't help me)
 
     if [ -n "$nodeps" ] ; then
