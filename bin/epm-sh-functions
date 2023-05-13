@@ -627,7 +627,7 @@ __epm_assure_7zip()
 erc()
 {
 
-    __epm_assure_7zip()
+    __epm_assure_7zip
 
     # use internal eget only if exists
     if [ -s $SHAREDIR/tools_erc ] ; then
