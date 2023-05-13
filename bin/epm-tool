@@ -62,6 +62,10 @@ epm_tool()
             showcmd json "$@"
             $CMDSHELL $SHAREDIR/tools_json "$@"
             ;;
+        "yaml")                      # HELPCMD: parse yaml operations
+            showcmd yaml "$@"
+            $CMDSHELL $SHAREDIR/tools_yaml "$@"
+            ;;
         "which")
             print_command_path "$@"  # HELPCMD: which like command (no output to stderr, can works without which package)
             ;;
