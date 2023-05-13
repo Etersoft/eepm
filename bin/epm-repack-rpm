@@ -82,10 +82,10 @@ __apply_fix_code()
     [ -f "$repackcode.rpmnew" ] && warning "There is .rpmnew file(s) in $EPM_REPACK_SCRIPTS_DIR dir. The pack script can be outdated."
 
     shift
-    export PATH=$PROGDIR:$PATH
+    [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
     local bashopt=''
     [ -n "$verbose" ] && bashopt='-x'
-    ( unset EPMCURDIR ; docmd $CMDSHELL $bashopt $repackcode "$1" "$2" "$3" "$4" ) || fatal "There is an error from $repackcode script"
+    ( unset EPMCURDIR ; export PATH=$SCPATH ; docmd $CMDSHELL $bashopt $repackcode "$1" "$2" "$3" "$4" ) || fatal "There is an error from $repackcode script"
 }
 
 __create_rpmmacros()

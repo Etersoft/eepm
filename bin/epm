@@ -57,8 +57,6 @@ load_helper()
 
 load_helper epm-sh-functions
 
-#PATH=$PATH:/sbin:/usr/sbin
-
 set_pm_type
 
 check_tty

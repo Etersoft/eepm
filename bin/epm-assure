@@ -19,7 +19,8 @@
 
 __check_command_in_path()
 {
-    PATH=$PATH:/sbin:/usr/sbin print_command_path "$1"
+    # with hack for sudo case
+    ( PATH=$PATH:/sbin:/usr/sbin print_command_path "$1" )
 }
 
 # returns TRUE if package version is omitted, or package is not installed, or version is too old

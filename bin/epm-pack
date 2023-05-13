@@ -42,13 +42,11 @@ __epm_pack()
     set_sudo
     export SUDO
 
-    # TODO: inside () ?
-    export PATH=$PROGDIR:$PATH
-
+    [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
     local bashopt=''
     [ -n "$verbose" ] && bashopt='-x'
     #info "Running $($script --description 2>/dev/null) ..."
-    ( unset EPMCURDIR ; docmd $CMDSHELL $bashopt $repackcode "$tarname" "$filefortarname" "$packversion" ) || fatal
+    ( unset EPMCURDIR ; export PATH=$SCPATH ;docmd $CMDSHELL $bashopt $repackcode "$tarname" "$filefortarname" "$packversion" ) || fatal
     returntarname="$(cat "$filefortarname")" || fatal "pack script $repackcode didn't set tarname"
 
     [ -s "$returntarname" ] || fatal "pack script $repackcode return unexist $returntarname file"

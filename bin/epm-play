@@ -55,7 +55,8 @@ __run_script()
     [ -f "$script.rpmnew" ] && warning "There is .rpmnew file(s) in $psdir dir. The play script can be outdated."
 
     shift
-    ( unset EPMCURDIR ; export PATH=$PROGDIR:$PATH ; $script "$@" )
+    [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
+    ( unset EPMCURDIR ; export PATH=$SCPATH ; $script "$@" )
     return
 }
 
@@ -145,7 +146,6 @@ __epm_play_run()
     local script="$psdir/$1.sh"
     shift
 
-    export PATH=$PROGDIR:$PATH
 
     set_sudo
     export SUDO
@@ -158,7 +158,8 @@ __epm_play_run()
     local bashopt=''
     [ -n "$verbose" ] && bashopt='-x'
     #info "Running $($script --description 2>/dev/null) ..."
-    docmd $CMDSHELL $bashopt $script "$@"
+    [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
+    ( export EPM_OPTIONS="$EPM_OPTIONS $addopt" export PATH=$SCPATH ; docmd $CMDSHELL $bashopt $script "$@" )
 }
 
 __epm_play_list_installed()
