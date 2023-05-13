@@ -20,7 +20,7 @@ jobs:
         run: |
             apt-get update && apt-get -y install eepm
             epm update
-            epm --auto install etersoft-build-utils rpm-build-intro su sudo
+            epm --auto install etersoft-build-utils rpm-build-intro su sudo gear
 
       - uses: actions/checkout@v2
 

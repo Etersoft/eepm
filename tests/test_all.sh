@@ -23,9 +23,9 @@ epm print info
 
 epm update
 
-epm upgrade $EPMPKGFILE
+epm --auto upgrade $EPMPKGFILE
 
-epm downgrade $EPMPKGFILE
+epm --auto downgrade $EPMPKGFILE
 
 for i in $TESTPKG1 $TESTPKG2 ; do
     epm --auto remove $i
@@ -69,10 +69,10 @@ restore_epm
 
 epm checkpkg eepm
 
-epm upgrade eepm
+epm --auto upgrade eepm
 restore_epm || :
 
-epm downgrade eepm
+epm --auto downgrade eepm
 restore_epm || :
 
 epm clean
