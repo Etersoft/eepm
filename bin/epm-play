@@ -146,14 +146,8 @@ __epm_play_run()
     local script="$psdir/$1.sh"
     shift
 
-
-    set_sudo
-    export SUDO
-
-    # keep EPM_AUTO for non epm code (epm uses EPM_OPTIONS now)
-    [ -n "$non_interactive" ] && export EPM_AUTO="--auto"
-
-    export EPM_OPTIONS="$EPM_OPTIONS $dryrun"
+    local addopt
+    addopt="$dryrun $non_interactive"
 
     local bashopt=''
     [ -n "$verbose" ] && bashopt='-x'
