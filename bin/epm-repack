@@ -19,6 +19,7 @@
 
 load_helper epm-sh-altlinux
 load_helper epm-assure
+load_helper epm-status
 
 [ -n "$EPM_REPACK_SCRIPTS_DIR" ] || EPM_REPACK_SCRIPTS_DIR="$CONFIGDIR/repack.d"
 
@@ -28,9 +29,7 @@ __epm_have_repack_rule()
     [ "$BASEDISTRNAME" = "alt" ] || return 1
 
     # skip for packages built with repack
-    local packager="$(epm print field Packager for "$1" 2>/dev/null)"
-    [ "$packager" = "EPM <support@etersoft.ru>" ] && return 1
-    [ "$packager" = "EPM <support@eepm.ru>" ] && return 1
+    epm_status_repacked "$1" && return 1
 
     # FIXME: use real way (for any archive)
     local pkgname="$(epm print name for package "$1")"
