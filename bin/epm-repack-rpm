@@ -84,7 +84,7 @@ __apply_fix_code()
     shift
     [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
     local bashopt=''
-    [ -n "$verbose" ] && bashopt='-x'
+    [ -n "$debug" ] && bashopt='-x'
     ( unset EPMCURDIR ; export PATH=$SCPATH ; docmd $CMDSHELL $bashopt $repackcode "$1" "$2" "$3" "$4" ) || fatal "There is an error from $repackcode script"
 }
 

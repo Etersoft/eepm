@@ -152,7 +152,7 @@ __epm_play_run()
     addopt="$dryrun $non_interactive"
 
     local bashopt=''
-    [ -n "$verbose" ] && bashopt='-x'
+    [ -n "$debug" ] && bashopt='-x'
     #info "Running $($script --description 2>/dev/null) ..."
     [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
     ( export EPM_OPTIONS="$EPM_OPTIONS $addopt" export PATH=$SCPATH ; docmd $CMDSHELL $bashopt $script "$@" )

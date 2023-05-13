@@ -95,6 +95,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
+debug=
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
@@ -472,6 +473,9 @@ check_option()
         ;;
     --verbose)            # HELPOPT: verbose mode
         verbose="--verbose"
+        ;;
+    --debug)              # HELPOPT: more debug output mode
+        debug="--debug"
         ;;
     --skip-installed)     # HELPOPT: skip already installed packages during install
         skip_installed=1

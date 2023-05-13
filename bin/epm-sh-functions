@@ -286,7 +286,7 @@ epm()
 
     # run epm again to full initialization
     local bashopt=''
-    [ -n "$verbose" ] && bashopt='-x'
+    [ -n "$debug" ] && bashopt='-x'
 
     $CMDSHELL $bashopt $PROGDIR/$PROGNAME --inscript "$@"
 }
@@ -297,7 +297,7 @@ sudoepm()
     [ "$EPMMODE" = "pipe" ] && fatal "Can't use sudo epm call from the piped script"
 
     local bashopt=''
-    [ -n "$verbose" ] && bashopt='-x'
+    [ -n "$debug" ] && bashopt='-x'
 
     sudorun $CMDSHELL $bashopt $PROGDIR/$PROGNAME --inscript "$@"
 }
@@ -316,6 +316,21 @@ fatal()
 #    [ "$TERM" = "screen" ] && echo "(screen detected: waiting ten seconds to exit ...)" >&2 && sleep 10
     exit 1
 }
+
+# Print debug message
+debug()
+{
+    [ -n "$debug" ] || return
+    if [ -z "$TEXTDOMAIN" ] ; then
+        set_color $YELLOW >&2
+        echo -n "WARNING: " >&2
+        restore_color >&2
+        echo "$*" >&2
+#    else
+#        echog "Error in $0: $@" >&2
+    fi
+}
+
 
 # Print warning message
 warning()
