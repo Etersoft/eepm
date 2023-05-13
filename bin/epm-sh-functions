@@ -612,16 +612,22 @@ eget()
     $EGET "$@"
 }
 
-# will replaced within disabled_erc in packaged version
-erc()
-{
 
+__epm_assure_7zip()
+{
     # install 7zip in any case (can be used)
     if is_command 7z || is_command 7za || is_command 7zr || is_command 7zz ; then
         :
     else
         epm install p7zip
     fi
+}
+
+# will replaced within disabled_erc in packaged version
+erc()
+{
+
+    __epm_assure_7zip()
 
     # use internal eget only if exists
     if [ -s $SHAREDIR/tools_erc ] ; then
