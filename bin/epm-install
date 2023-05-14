@@ -434,6 +434,9 @@ epm_install()
     if [ "$BASEDISTRNAME" = "alt" ] ; then
         if tasknumber "$pkg_names" >/dev/null ; then
             load_helper epm-install-alt
+            if [ -n "$interactive" ] ; then
+                confirm_info "You are about to install $pkg_names task(s) from https://git.altlinux.org."
+            fi
             epm_install_alt_tasks "$pkg_names"
             return
         fi
@@ -447,7 +450,7 @@ epm_install()
         return
     fi
 
-    if [ -n "$interactive" ] ; then
+    if [ -n "$interactive" ] && [ -n "$pkg_names$pkg_files$pkg_urls" ] ; then
         confirm_info "You are about to install $(echo $pkg_names $pkg_files $pkg_urls) package(s)."
         # TODO: for some packages with dependencies apt will ask later again
     fi
