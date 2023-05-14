@@ -934,29 +934,29 @@ print_help()
 print_eepm_env()
 {
 cat <<EOF
-    # -d | --base-distro-name
-    export DISTRNAME="$(echo $DISTRIB_ID)"
-    # -v | --base-version
-    export DISTRVERSION="$(echo "$DISTRIB_RELEASE")"
-    # -a
-    export DISTRARCH="$(get_distro_arch)"
-    # -y | --service-manager
-    export DISTRCONTROL="$(get_service_manager)"
-    # -s | --vendor-name
-    export BASEDISTRNAME=$(pkgvendor)
-    # --repo-name
-    export DISTRREPONAME=$(print_repo_name)
+# -d | --base-distro-name
+export DISTRNAME="$(echo $DISTRIB_ID)"
+# -v | --base-version
+export DISTRVERSION="$(echo "$DISTRIB_RELEASE")"
+# -a
+export DISTRARCH="$(get_distro_arch)"
+# -y | --service-manager
+export DISTRCONTROL="$(get_service_manager)"
+# -s | --vendor-name
+export BASEDISTRNAME=$(pkgvendor)
+# --repo-name
+export DISTRREPONAME=$(print_repo_name)
 
-    # -g
-    export PMTYPE="$(pkgmanager)"
-    # -p | --package-type
-    export PKGFORMAT=$(pkgtype)
-    # -m
-    export DISTRMEMORY="$(get_memory_size)"
+# -g
+export PMTYPE="$(pkgmanager)"
+# -p | --package-type
+export PKGFORMAT=$(pkgtype)
+# -m
+export DISTRMEMORY="$(get_memory_size)"
 
-    # TODO: remove?
-    export PKGVENDOR=$(pkgvendor)
-    export RPMVENDOR=$(pkgvendor)
+# TODO: remove?
+export PKGVENDOR=$(pkgvendor)
+export RPMVENDOR=$(pkgvendor)
 
 EOF
 
