@@ -53,8 +53,7 @@ set_rpm_field()
 {
     local field="$1"
     local value="$2"
-    local v="$(grep "^$field:.*" $SPEC | sed -e "s|$field: *||g" | head -n1)"
-    if [ -n "$v" ] ; then
+    if grep -q "^$field:" $SPEC ; then
         [ -n "$value" ] || return
         subst "s|^$field:.*|$field: $value|" $SPEC
     else
