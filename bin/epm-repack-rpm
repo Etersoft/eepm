@@ -152,7 +152,7 @@ __epm_repack_to_rpm()
 
         cd $tmpbuilddir/../ || fatal
         # fill alpkg and SUBGENERIC
-        __prepare_source_package "$pkg"
+        __prepare_source_package "$(realpath $alpkg)"
         cd $tmpbuilddir/ || fatal
 
         if [ -n "$verbose" ] ; then
