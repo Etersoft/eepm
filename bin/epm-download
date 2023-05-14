@@ -70,8 +70,7 @@ __download_pkg_urls()
         local tmppkg
         tmppkg="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
         remove_on_exit $tmppkg
-        docmd chmod $verbose a+rX $tmppkg
-        showcmd cd $tmppkg
+        chmod $verbose a+rX $tmppkg
         cd $tmppkg || fatal
         local latest='--latest'
         # hack: download all if mask is *.something
@@ -80,6 +79,7 @@ __download_pkg_urls()
         if docmd eget $latest "$url" ; then
             local i
             for i in * ; do
+                [ "$i" = "*" ] && warning "Incorrect true status from eget. No saved files from download $url, ignoring" && continue
                 [ -s "$tmppkg/$i" ] || continue
                 chmod $verbose a+r "$tmppkg/$i"
                 [ -n "$pkg_files" ] && pkg_files="$pkg_files $tmppkg/$i" || pkg_files="$tmppkg/$i"
