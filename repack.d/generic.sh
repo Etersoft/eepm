@@ -73,5 +73,19 @@ subst "s|^Release: |Release: epm1.repacked.|" $SPEC
 set_rpm_field "Distribution" "EEPM"
 
 
+if [ -r "$PKG.eepm.yaml" ] ; then
+    eval $(epm tool yaml $PKG.eepm.yaml | grep -E '(summary|description|upstream_file|upstream_url|url|appname|arches|group|license)=' ) #'
+    # for tarballs fix permissions
+    chmod $verbose -R a+rX *
+
+    set_rpm_field "Group" "$group"
+    set_rpm_field "License" "$license"
+    set_rpm_field "URL" "$url"
+    set_rpm_field "Summary" "$summary"
+    [ -n "$upstream_file" ] || upstream_file="binary package $PRODUCT"
+    [ -n "$upstream_url" ] && upstream_file="$upstream_url"
+    [ -n "$description" ] && subst "s|^\((Converted from a\) \(.*\) \(package.*\)|$description\n(Repacked from $upstream_file with $(epm --short --version))\n\1 \2 \3|" $SPEC
+else
     subst "s|^\((Converted from a\) \(.*\) \(package.*\)|(Repacked from binary \2 package with $(epm --short --version))\n\1 \2 \3|" $SPEC
+fi
 

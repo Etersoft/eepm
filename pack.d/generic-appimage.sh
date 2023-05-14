@@ -25,6 +25,14 @@ PKGNAME=$PRODUCT-$VERSION.tar
 
 [ -x "$TAR" ] || chmod u+x $verbose "$TAR"
 $TAR --appimage-extract || fatal
+
+cat <<EOF >$PKGNAME.eepm.yaml
+name: $PRODUCT
+version: $VERSION
+upstream_file: $alpkg
+generic_repack: appimage
+EOF
+
 erc pack $PKGNAME squashfs-root
 
 return_tar $PKGNAME
