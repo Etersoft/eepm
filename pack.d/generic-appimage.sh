@@ -24,7 +24,7 @@ fi
 PKGNAME=$PRODUCT-$VERSION.tar
 
 [ -x "$TAR" ] || chmod u+x $verbose "$TAR"
-./$TAR --appimage-extract || fatal
+$TAR --appimage-extract || fatal
 
 cat <<EOF >$PKGNAME.eepm.yaml
 name: $PRODUCT
