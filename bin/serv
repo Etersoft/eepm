@@ -129,7 +129,7 @@ print_version()
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
         echo "Service manager version $EPMVERSION  https://wiki.etersoft.ru/Epm"
-        echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
+        echo "Running on $DISTRNAME/$DISTRVERSION $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2023"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }

@@ -39,7 +39,7 @@ exp_with_arch_suffix()
 {
     local suffix
 
-    [ "$($DISTRVENDOR -a)" = "x86_64" ] || { cat ; return ; }
+    [ "$DISTRARCH" = "x86_64" ] || { cat ; return ; }
     [ "$DISTRNAME" = "ROSA" ] &&  { cat ; return ; }
 
     # TODO: it is ok for ALT rpm to remove with this suffix

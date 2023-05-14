@@ -19,12 +19,11 @@
 
 is_warmup_allowed()
 {
-    local MEM
     # disable warming up until set warmup in /etc/eepm/eepm.conf
     [ -n "$warmup" ] || return 1
-    MEM="$($DISTRVENDOR -m)"
+
     # disable warm if have no enough memory
-    [ "$MEM" -ge 1024 ] && return 0
+    [ "$DISTRMEMORY" -ge 1024 ] && return 0
     warning "Skipping warmup bases due low memory size"
     return 1
 }

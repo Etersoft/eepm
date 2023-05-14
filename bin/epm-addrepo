@@ -369,7 +369,7 @@ __epm_addrepo_alpine()
 __epm_addrepo_deb()
 {
     assure_exists apt-add-repository software-properties-common
-    local ad="$($DISTRVENDOR --distro-arch)"
+    local ad="$DISTRARCH"
     # TODO: move to distro_info
     local nd="$(lsb_release -cs)"
     local repo="$*"

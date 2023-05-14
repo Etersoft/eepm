@@ -187,7 +187,7 @@ __epm_play_list()
     local extra="$2"
     local i
     local IGNOREi586
-    local arch="$($DISTRVENDOR -a)"
+    local arch="$DISTRARCH"
     [ "$arch" = "x86_64" ] && IGNOREi586='' || IGNOREi586=1
 
     if [ -n "$short" ] ; then
@@ -393,7 +393,7 @@ local psdir="$(realpath $CONFIGDIR/play.d)"
 local prsdir="$(realpath $CONFIGDIR/prescription.d)"
 
 if [ -z "$1" ] ; then
-    [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $($DISTRVENDOR -a)):"
+    [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $DISTRARCH):"
     __epm_play_list $psdir
     exit
 fi
@@ -475,13 +475,13 @@ case "$1" in
         ;;
 
     --full-list-all)
-        [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $($DISTRVENDOR -a)):"
+        [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $DISTRARCH):"
         __epm_play_list $psdir extra
         exit
         ;;
 
     --list-all|list-all)
-        [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $($DISTRVENDOR -a)):"
+        [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $DISTRARCH):"
         __epm_play_list $psdir
         [ -n "$quiet" ] || [ -n "$*" ] && exit
         echo
