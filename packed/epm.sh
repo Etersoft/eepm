@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.56.0"
+EPMVERSION="3.56.1"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -2849,7 +2849,7 @@ __download_pkg_urls()
     [ -z "$pkg_urls" ] && return
     for url in $pkg_urls ; do
         local tmppkg
-        tmppkg="$(mktemp -d)" || fatal
+        tmppkg="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
         docmd chmod $verbose a+rX $tmppkg
         showcmd cd $tmppkg
         cd $tmppkg || fatal
@@ -14074,6 +14074,7 @@ Options:
     --get-response URL        - get response with all headers (ever if HEAD is not acceptable)
     --get-filename URL        - print filename for the URL (via Content-Disposition if applicable)
     --get-real-url URL        - print URL after all redirects
+    --get-ipfs-cid URL        - print CID for URL (after all redirects)
 
 Supported URLs:
   ftp:// http:// https:// file:/ ipfs://
@@ -14323,12 +14324,12 @@ ipfs_mode="$EGET_IPFS"
 [ -z "$ipfs_mode" ] && [ -n "$EGET_IPFS_DB" ] && ipfs_mode="auto"
 
 if [ -n "$LISTONLY$CHECKURL" ] ; then
-    ipfs_mode="disabled"
+    ipfs_mode=""
     EGET_IPFS_DB=''
 fi
 
 
-if [ "$ipfs_mode" != "disabled" ] && [ -n "$EGET_IPFS_DB" ] ; then
+if [ -n "$ipfs_mode" ] && [ -n "$EGET_IPFS_DB" ] ; then
     ddb="$(dirname "$EGET_IPFS_DB")"
     if [ -d "$ddb" ] ; then
         info "Using eget IPFS db $EGET_IPFS_DB"
@@ -14345,7 +14346,7 @@ if is_ipfsurl "$1" && [ -z "$ipfs_mode" ] || [ "$ipfs_mode" = "auto" ] ; then
     select_ipfs_mode
     info "Auto selected IPFS mode: $ipfs_mode"
 else
-    [ -n "$ipfs_mode" ] && [ "$ipfs_mode" != "disabled" ] && info "IPFS mode: $ipfs_mode"
+    [ -n "$ipfs_mode" ] && info "IPFS mode: $ipfs_mode"
 fi
 
 IPFS_CMD=''
@@ -14769,7 +14770,7 @@ url_get_filename()
 fi
 
 
-if [ "$ipfs_mode" != "disabled" ] && [ -n "$EGET_IPFS_DB" ] &&  ! is_ipfsurl "$1"  ; then
+if [ -n "$ipfs_mode" ] && [ -n "$EGET_IPFS_DB" ] &&  ! is_ipfsurl "$1"  ; then
 
 download_to_ipfs()
 {
