@@ -173,7 +173,9 @@ epm_status_thirdparty()
 
             local distribution
             distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
-            echo "$distribution" | grep -q "^ALT" || return 0
+            echo "$distribution" | grep -q "^ALT" && return 1
+            echo "$distribution" | grep -q "^EEPM" && return 1
+            return 0
             ;;
         *)
             fatal "Unsupported $BASEDISTRNAME"

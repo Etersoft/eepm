@@ -70,6 +70,7 @@ set_rpm_field "Summary" "$PRODUCT (fixme: was empty Summary after alien)"
 subst "s|^\(Version: .*\)~.*|\1|" $SPEC
 # add our prefix to release
 subst "s|^Release: |Release: epm1.repacked.|" $SPEC
+set_rpm_field "Distribution" "EEPM"
 
 
     subst "s|^\((Converted from a\) \(.*\) \(package.*\)|(Repacked from binary \2 package with $(epm --short --version))\n\1 \2 \3|" $SPEC
