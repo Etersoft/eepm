@@ -63,17 +63,6 @@ __epm_split_by_pkg_type()
 }
 
 
-# $spec $PKGNAME $VERSION
-__set_name_version()
-{
-    SPEC="$1"
-    PKGNAME="$2"
-    VERSION="$3"
-    [ -n "$PKGNAME" ] && subst "s|^Name:.*|Name: $PKGNAME|" $SPEC
-    [ -n "$VERSION" ] && subst "s|^Version:.*|Version: $VERSION|" $SPEC
-}
-
-
 __check_stoplist()
 {
     local pkg="$1"
@@ -84,34 +73,9 @@ __check_stoplist()
 }
 
 
-__set_version_pkgname()
-{
-    local alpkg="$1"
-    VERSION="$(echo "$alpkg" | grep -o -P '[-_.][0-9][0-9]*([.]*[0-9])*' | head -n1 | sed -e 's|^[-_.]||')" #"
-    [ -n "$VERSION" ] && PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
-    # set version as all between name and extension
-    #local woext="$(echo "alpkg" | sed -e 's|\.tar.*||')"
-    #if [ "$woext" != "$alpkg" ] ; then
-    #    VERSION="$(echo "$woext" " | sed -e "s|^$PKGNAME[-_.]||")"
-    #fi
-}
-
-
-# AppImage version
-# hack for ktalk2.4.2 -> ktalk 2.4.2
-__set_version_apppkgname()
-{
-    local alpkg="$1"
-    VERSION="$(echo "$alpkg" | grep -o -P "[-_.a-zA-Z]([0-9])([0-9])*([.]*[0-9])*" | head -n1 | sed -e 's|^[-_.a-zA-Z]||' -e 's|--|-|g' )"  #"
-    [ -n "$VERSION" ] && PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
-}
-
-
 # arg: <package file>
 # sets:
 #   alpkg      - package file name without path
-#   PKGNAME    - package name
-#   VERSION    - version of the package
 #   SUBGENERIC - name of generic file's extension
 __prepare_source_package()
 {
@@ -128,51 +92,30 @@ __prepare_source_package()
     VERSION=''
     SUBGENERIC=''
 
-    # convert tarballs to tar (for alien)
     if rhas "$alpkg" "\.(rpm|deb)$" ; then
+        # skip packing for supported: rpm and deb
         return
     fi
+
+    # convert tarballs to tar (for alien)
+    load_helper epm-pack
 
     if rhas "$alpkg" "\.AppImage$" ; then
-        __set_version_apppkgname $alpkg
-        [ -n "$VERSION" ] || fatal "Can't get version from $alpkg."
+        __epm_pack_run_handler generic-appimage "$pkg"
         SUBGENERIC='appimage'
-        # TODO: move repack archive to erc?
-        [ -x "$alpkg" ] || docmd chmod u+x $verbose "$alpkg"
-        ./$alpkg --appimage-extract || fatal
-        alpkg=$PKGNAME-$VERSION.tar
-        # make a tar for alien
-        erc a $alpkg squashfs-root
-        return
+    elif rhas "$alpkg" "\.snap$" ; then
+        __epm_pack_run_handler generic-snap "$pkg"
+        SUBGENERIC='snap'
+    else
+        __epm_pack_run_handler generic-tar "$pkg"
     fi
 
-    __set_version_pkgname $alpkg
-    if [ -n "$VERSION" ] ; then
-        # TODO: don't use erc for detect type? then we potentially can skip install it
-        pkgtype="$(erc type $alpkg)"
-        local newalpkg
-        newalpkg=$PKGNAME-$VERSION.$pkgtype
-        #[ -n "$PKGNAME" ] || PKGNAME=$(basename $alpkg .$pkgtype)
-        if [ "$pkgtype" = "tar" ] || [ "$pkgtype" = "tar.gz" ] || [ "$pkgtype" = "tgz" ] ; then
-            # just rename supported formats
-            if [ "$alpkg" != "$newalpkg" ] ; then
-                mv $alpkg $newalpkg
-            fi
-        else
-            # converts directly unsupported formats
-            newalpkg=$PKGNAME-$VERSION.tar
-            #newalpkg=$(basename $alpkg .$pkgtype).tar
-            erc repack $alpkg $newalpkg || fatal
-        fi
-        if [ "$alpkg" != "$newalpkg" ] ; then
-            rm -f $verbose $alpkg
-            alpkg=$newalpkg
-        fi
-    else
-        warning "Can't detect version in $alpkg. We have almost no chance it will supported in alien."
+    alpkg=$(basename $returntarname)
+    if [ "$(pwd)" != "$(dirname "$returntarname")" ] ; then
+        cp $verbose $returntarname $alpkg
+        [ -r "$returntarname.eepm.yaml" ] && cp $verbose $returntarname.eepm.yaml $alpkg.eepm.yaml
     fi
 }
-
 
 
 

@@ -64,13 +64,6 @@ __fix_spec()
         fi
     done
 
-    # FIXME: where is a source of the bug with empty Summary?
-    subst "s|Summary: *$|Summary: $pkgname (was empty Summary after alien)|" $spec
-    subst "s|^\(Version: .*\)~.*|\1|" $spec
-    subst "s|^Release: |Release: epm1.repacked.|" $spec
-    subst "s|^Distribution:.*||" $spec
-    subst "s|^\((Converted from a\) \(.*\) \(package.*\)|(Repacked from binary \2 package with epm $EPMVERSION)\n\1 \2 \3|" $spec
-    #" hack for highlight
 }
 
 
@@ -158,6 +151,7 @@ __epm_repack_to_rpm()
         cp $verbose $pkg $tmpbuilddir/../$alpkg
 
         cd $tmpbuilddir/../ || fatal
+        # fill alpkg and SUBGENERIC
         __prepare_source_package "$pkg"
         cd $tmpbuilddir/ || fatal
 
@@ -179,14 +173,11 @@ __epm_repack_to_rpm()
         mv $spec $tmpbuilddir || fatal
         spec="$tmpbuilddir/$(basename "$spec")"
 
-        #__set_name_version $spec $PKGNAME $VERSION
         local pkgname="$(grep "^Name: " $spec | sed -e "s|Name: ||g" | head -n1)"
-
-        # for tarballs fix permissions
-        [ -n "$VERSION" ] && chmod $verbose -R a+rX $buildroot/*
 
         # run generic scripts and repack script for the pkg
         cd $buildroot || fatal
+
         __fix_spec $pkgname $buildroot $spec
         __apply_fix_code "generic" $buildroot $spec $pkgname $abspkg
         [ -n "$SUBGENERIC" ] && __apply_fix_code "generic-$SUBGENERIC" $buildroot $spec $pkgname $abspkg
@@ -201,6 +192,7 @@ __epm_repack_to_rpm()
         else
             a='' rpmbuild --buildroot $buildroot --target $TARGETARCH -bb $spec >/dev/null || fatal
         fi
+
         # remove copy of source binary package (don't mix with generated)
         rm -f $tmpbuilddir/../$alpkg
         local repacked_rpm="$(realpath $tmpbuilddir/../*.rpm)"

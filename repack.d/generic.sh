@@ -3,6 +3,7 @@
 BUILDROOT="$1"
 SPEC="$2"
 PRODUCT="$3"
+PKG="$4"
 
 # firstly, pack $PRODUCTDIR if used
 . $(dirname $0)/common.sh
@@ -47,4 +48,29 @@ subst "s|^\(Name: .*\)$|# Override repository package\nEpoch: 100\n\1|g" $SPEC
 # disablle rpmlint (for ROSA)
 subst "1i%global _build_pkgcheck_set %nil" $SPEC
 subst "1i%global _build_pkgcheck_srpm %nil" $SPEC
+
+set_rpm_field()
+{
+    local field="$1"
+    local value="$2"
+    local v="$(grep "^$field:.*" $SPEC | sed -e "s|$field: *||g" | head -n1)"
+    if [ -n "$v" ] ; then
+        [ -n "$value" ] || return
+        subst "s|^$field:.*|$field: $value|" $SPEC
+    else
+        [ -n "$value" ] || value="Stub"
+        subst "1i$field: $value" $SPEC
+    fi
+}
+
+
+# FIXME: where is a source of the bug with empty Summary?
+set_rpm_field "Summary" "$PRODUCT (fixme: was empty Summary after alien)"
+# clean version
+subst "s|^\(Version: .*\)~.*|\1|" $SPEC
+# add our prefix to release
+subst "s|^Release: |Release: epm1.repacked.|" $SPEC
+
+
+    subst "s|^\((Converted from a\) \(.*\) \(package.*\)|(Repacked from binary \2 package with $(epm --short --version))\n\1 \2 \3|" $SPEC
 
