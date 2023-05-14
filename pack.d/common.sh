@@ -68,8 +68,12 @@ has_wildcard()
 
 return_tar()
 {
+    local i
     [ -n "$RETURNTARNAME" ] || fatal "RETURNTARNAME is empty"
-    realpath $1 >$RETURNTARNAME || fatal "Can't save tar name $1 to file $RETURNTARNAME"
+    rm -f $RETURNTARNAME
+    for i in $* ; do
+        realpath $i >>$RETURNTARNAME || fatal "Can't save tar name $i to file $RETURNTARNAME"
+    done
     exit 0
 }
 

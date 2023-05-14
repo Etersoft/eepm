@@ -47,7 +47,12 @@ __epm_pack_run_handler()
     # TODO: add url info here
     ( unset EPMCURDIR ; export PATH=$SCPATH ; docmd $CMDSHELL $bashopt $repackcode "$tarname" "$filefortarname" "$packversion" "$url") || fatal
     returntarname="$(cat "$filefortarname")" || fatal "pack script $repackcode didn't set tarname"
-    [ -s "$returntarname" ] || fatal "pack script for $packname return unexist $returntarname file"
+
+    local i
+    for i in $returntarname ; do
+        [ -s "$i" ] || fatal "pack script for $packname returned unexist $i file"
+    done
+
     return 0
 }
 
@@ -75,28 +80,31 @@ __epm_pack()
         [ -n "$repacked_pkgs" ] || fatal "Can't repack $returntarname"
     # if repack is forced or repack rule (not disabled) is exists
     elif [ -n "$repack" ] || [ -z "$norepack" ] && __epm_have_repack_rule $returntarname ; then
-        __epm_repack "$returntarname"
+        __epm_repack $returntarname
         [ -n "$repacked_pkgs" ] || fatal "Can't repack $returntarname"
     fi
 
-    local pkgname
+    local pkgnames
     if [ -n "$repacked_pkgs" ] ; then
         # remove packed file if we have repacked one
-        rm -v "$returntarname"
-        # also drop spaces
-        pkgname="$(echo $repacked_pkgs)"
+        rm -v $returntarname
+        pkgnames="$repacked_pkgs"
     else
-        pkgname="$returntarname"
+        pkgnames="$returntarname"
     fi
 
     if [ -n "$install" ] ; then
-        docmd epm install "$pkgname"
+        docmd epm install $pkgnames
         return
     fi
 
     # we need put result in the cur dir
-    mv -v "$pkgname" $EPMCURDIR || fatal
-    [ -r "$pkgname.eepm.yaml" ] && mv -v "$pkgname.eepm.yaml" $EPMCURDIR
+    mv -v $pkgnames $EPMCURDIR || fatal
+
+    local i
+    for i in $pkgnames ; do
+        [ -r "$i.eepm.yaml" ] && mv -v "$i.eepm.yaml" $EPMCURDIR
+    done
 
     return 0
 }
