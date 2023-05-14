@@ -568,7 +568,7 @@ get_cid_by_url()
     local URL="$1"
     [ -r "$EGET_IPFS_DB" ] || return
     is_fileurl "$URL" && return 1
-    grep -F "$URL Qm" "$EGET_IPFS_DB" | head -n1 | cut -f2 -d" "
+    grep -F "$URL Qm" "$EGET_IPFS_DB" | cut -f2 -d" " | grep -E "Qm[[:alnum:]]{44}" | head -n1
 }
 
 put_cid_and_url()
