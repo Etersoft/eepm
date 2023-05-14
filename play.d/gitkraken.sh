@@ -17,8 +17,4 @@ case $pkgtype in
         ;;
 esac
 
-if [ "$(epm print info -s)" = "alt" ] ; then
-    repack="--repack"
-fi
-
-epm install $repack "$PKGURL"
+epm install "$PKGURL"
