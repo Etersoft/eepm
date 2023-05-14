@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.56.0
+Version: 3.56.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -95,6 +95,14 @@ a discussion about extra requirements.
 
 
 %changelog
+* Sun May 14 2023 Vitaly Lipatov <lav@altlinux.ru> 3.56.1-alt1
+- eget: add --get-ipfs-cid to help, fix for case when IPFS is disabled (no accessible gateway)
+- epm repack: fix hack for empty Summary
+- epm pack.d/generic-snap.sh: fixes
+- epm play: add plex-desktop
+- epm pack.d: fix generic-appimage.sh
+- epm download: use BIGTMPDIR for temp download dir
+
 * Sun May 14 2023 Vitaly Lipatov <lav@altlinux.ru> 3.56.0-alt1
 - epm repack hplip-plugin: add hplip require
 - epm full-upgrade: fix --assumeyes option for flatpak
