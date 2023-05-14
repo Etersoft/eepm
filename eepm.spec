@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.55.8
+Version: 3.56.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -95,6 +95,26 @@ a discussion about extra requirements.
 
 
 %changelog
+* Sun May 14 2023 Vitaly Lipatov <lav@altlinux.ru> 3.56.0-alt1
+- epm repack hplip-plugin: add hplip require
+- epm full-upgrade: fix --assumeyes option for flatpak
+- epm play: use short epm version for get ipfs db
+- epm policy: implement via dnf/yum info for dnf/yum based systems
+- epm forbids * in any package names
+- epm: add epm grep as alias for epm qp
+- epm: modify PATH only for subprocess
+- epm pack 1c83client: use esu instead of SUDO
+- epm: introduce --debug and use it to enable bash -x
+- improve load_helper to skip repeated include
+- epm repack: use epm_status_repacked() instead if checking inplace
+- epm pack: refactoring, move script runnning to a separate func
+- epm: implement --put-to-repo=/path/repo support
+- add epm tool yaml
+- epm: fix --norepack option
+- epm pack.d: add generic-snap.sh
+- epm repack: implement all pack related things via pack code
+- epm repack: set Distribution: EEPM, fix epm status
+
 * Fri May 12 2023 Vitaly Lipatov <lav@altlinux.ru> 3.55.8-alt1
 - epm play: add k3s
 - epm play: add webdavmailrucloud
