@@ -68,7 +68,7 @@ __download_pkg_urls()
     [ -z "$pkg_urls" ] && return
     for url in $pkg_urls ; do
         local tmppkg
-        tmppkg="$(mktemp -d)" || fatal
+        tmppkg="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
         docmd chmod $verbose a+rX $tmppkg
         showcmd cd $tmppkg
         cd $tmppkg || fatal
