@@ -75,7 +75,7 @@ __check_stoplist()
 
 # arg: <package file>
 # sets:
-#   alpkg      - package file name without path
+#   alpkg      - resulted package file name in the current dir
 #   SUBGENERIC - name of generic file's extension
 __prepare_source_package()
 {
@@ -88,8 +88,6 @@ __prepare_source_package()
     # TODO: use stoplist only for deb?
     [ -z "$force" ] && __check_stoplist $(echo $alpkg | sed -e "s|_.*||") && fatal "Please use official package instead of $alpkg repacking (It is not recommended to use --force to skip this checking."
 
-    PKGNAME=''
-    VERSION=''
     SUBGENERIC=''
 
     if rhas "$alpkg" "\.(rpm|deb)$" ; then
@@ -100,6 +98,7 @@ __prepare_source_package()
     # convert tarballs to tar (for alien)
     load_helper epm-pack
 
+    # they will fill $returntarname
     if rhas "$alpkg" "\.AppImage$" ; then
         __epm_pack_run_handler generic-appimage "$pkg"
         SUBGENERIC='appimage'
@@ -111,6 +110,7 @@ __prepare_source_package()
     fi
 
     alpkg=$(basename $returntarname)
+    # FIXME: looks like a hack with current dir
     if [ "$(pwd)" != "$(dirname "$returntarname")" ] ; then
         cp $verbose $returntarname $alpkg
         [ -r "$returntarname.eepm.yaml" ] && cp $verbose $returntarname.eepm.yaml $alpkg.eepm.yaml
