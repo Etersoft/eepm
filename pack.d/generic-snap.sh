@@ -23,6 +23,9 @@ a= unsquashfs $TAR || fatal
 # description:
 eval $(epm tool yaml squashfs-root/meta/snap.yaml | head | grep -E "(name|version|summary|description)=")
 
+mkdir -p opt/
+mv squashfs-root opt/$name
+
 PKGNAME=$name-$version.tar
 
 cat <<EOF >$PKGNAME.eepm.yaml
@@ -34,10 +37,12 @@ upstream_file: $alpkg
 generic_repack: snap
 EOF
 
-install_file meta/gui/icon.png /usr/share/pixmaps.png
-install_file meta/gui/*.desktop /usr/share/applications/$name.desktop
+cd opt/$name || fatal
+install_file meta/gui/icon.png usr/share/pixmaps.png
+install_file meta/gui/*.desktop usr/share/applications/$name.desktop
 sed -i -e 's|^Icon=.*|Icon=$name|' usr/share/applications/$name.desktop
+cd - >/dev/null
 
-erc pack $PKGNAME squashfs-root
+erc pack $PKGNAME opt/$name
 
 return_tar $PKGNAME
