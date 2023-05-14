@@ -1,10 +1,10 @@
 #!/bin/sh
 
-DESCRIPTION="Panasonic Scanner Driver for Linux from the official site"
-
 PKGNAME=sane-panakvs
 
 SUPPORTEDARCHES="x86_64"
+DESCRIPTION="Panasonic Scanner Driver for Linux from the official site"
+URL="https://panasonic.net/cns/pcc/support/scanner/linuxspanakvs.html"
 
 . $(dirname $0)/common.sh
 
