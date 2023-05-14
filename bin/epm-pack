@@ -30,6 +30,7 @@ __epm_pack_run_handler()
     local packname="$1"
     local tarname="$2"
     local packversion="$3"
+    local url="$3"
     returntarname=''
 
     local repackcode="$EPM_PACK_SCRIPTS_DIR/$packname.sh"
@@ -43,7 +44,8 @@ __epm_pack_run_handler()
     local bashopt=''
     [ -n "$debug" ] && bashopt='-x'
     #info "Running $($script --description 2>/dev/null) ..."
-    ( unset EPMCURDIR ; export PATH=$SCPATH ; docmd $CMDSHELL $bashopt $repackcode "$tarname" "$filefortarname" "$packversion" ) || fatal
+    # TODO: add url info here
+    ( unset EPMCURDIR ; export PATH=$SCPATH ; docmd $CMDSHELL $bashopt $repackcode "$tarname" "$filefortarname" "$packversion" "$url") || fatal
     returntarname="$(cat "$filefortarname")" || fatal "pack script $repackcode didn't set tarname"
     [ -s "$returntarname" ] || fatal "pack script for $packname return unexist $returntarname file"
     return 0
@@ -53,6 +55,7 @@ __epm_pack_run_handler()
 __epm_pack()
 {
     local packname="$1"
+    local URL="$4"
 
     # fills returntarname with packed tar
     __epm_pack_run_handler "$@" || fatal "Can't find pack script for packname $packname"
@@ -61,6 +64,9 @@ __epm_pack()
         mv $returntarname $EPMCURDIR
         return
     fi
+
+    # TODO: merge eepm.yaml here (common with $returntarname.eepm.yaml)
+    # add upstream_url: $URL too
 
     # repack if needed
     repacked_pkgs=''
@@ -90,7 +96,9 @@ __epm_pack()
 
     # we need put result in the cur dir
     mv -v "$pkgname" $EPMCURDIR || fatal
+    [ -r "$pkgname.eepm.yaml" ] && mv -v "$pkgname.eepm.yaml" $EPMCURDIR
 
+    return 0
 }
 
 epm_pack_help()
@@ -126,10 +134,12 @@ epm_pack()
     local packname="$1"
     local tarname="$2"
     local packversion="$3"
+    local url=''
 
     [ -n "$packname" ] || fatal "run with packname, see --help"
 
     if is_url "$tarname"; then
+        url="$tarname"
         pkg_urls="$tarname"
         load_helper epm-download
         cd $tmpdir || fatal
@@ -147,6 +157,6 @@ epm_pack()
     fi
 
     cd $tmpdir || fatal
-    __epm_pack "$packname" "$tarname" "$packversion"
+    __epm_pack "$packname" "$tarname" "$packversion" "$url"
 
 }
