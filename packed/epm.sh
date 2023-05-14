@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.55.8"
+EPMVERSION="3.56.0"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -47,9 +47,14 @@ fi
 
 load_helper()
 {
+    local shieldname="loaded$(echo "$1" | sed -e 's|-||g')"
+    # already loaded
+    eval "test -n \"\$$shieldname\"" && debug "Already loaded $1" && return
+
     local CMD="$SHAREDIR/$1"
     # do not use fatal() here, it can be initial state
     [ -r "$CMD" ] || { echo "FATAL: Have no $CMD helper file" ; exit 1; }
+    eval "$shieldname=1"
     # shellcheck disable=SC1090
     . $CMD
 }
@@ -274,7 +279,7 @@ subst_option()
 store_output()
 {
     # use make_temp_file from etersoft-build-utils
-    RC_STDOUT="$(mktemp)"
+    RC_STDOUT="$(mktemp)" || fatal
     local CMDSTATUS=$RC_STDOUT.pipestatus
     echo 1 >$CMDSTATUS
     #RC_STDERR=$(mktemp)
@@ -305,7 +310,7 @@ epm()
 
     # run epm again to full initialization
     local bashopt=''
-    [ -n "$verbose" ] && bashopt='-x'
+    [ -n "$debug" ] && bashopt='-x'
 
     $CMDSHELL $bashopt $PROGDIR/$PROGNAME --inscript "$@"
 }
@@ -315,7 +320,7 @@ sudoepm()
     [ "$EPMMODE" = "pipe" ] && fatal "Can't use sudo epm call from the piped script"
 
     local bashopt=''
-    [ -n "$verbose" ] && bashopt='-x'
+    [ -n "$debug" ] && bashopt='-x'
 
     sudorun $CMDSHELL $bashopt $PROGDIR/$PROGNAME --inscript "$@"
 }
@@ -330,6 +335,18 @@ fatal()
     fi
     exit 1
 }
+
+debug()
+{
+    [ -n "$debug" ] || return
+    if [ -z "$TEXTDOMAIN" ] ; then
+        set_color $YELLOW >&2
+        echo -n "WARNING: " >&2
+        restore_color >&2
+        echo "$*" >&2
+    fi
+}
+
 
 warning()
 {
@@ -592,15 +609,21 @@ disabled_eget()
     $EGET "$@"
 }
 
-disabled_erc()
-{
 
+__epm_assure_7zip()
+{
     # install 7zip in any case (can be used)
     if is_command 7z || is_command 7za || is_command 7zr || is_command 7zz ; then
         :
     else
         epm install p7zip
     fi
+}
+
+disabled_erc()
+{
+
+    __epm_assure_7zip
 
     # use internal eget only if exists
     if [ -s $SHAREDIR/tools_erc ] ; then
@@ -876,6 +899,7 @@ subst()
     sed -i -e "$@"
 }
 fi
+
 
 
 check_core_commands()
@@ -1358,7 +1382,8 @@ esac
 
 __check_command_in_path()
 {
-    PATH=$PATH:/sbin:/usr/sbin print_command_path "$1"
+    # with hack for sudo case
+    ( PATH=$PATH:/sbin:/usr/sbin print_command_path "$1" )
 }
 
 __epm_need_update()
@@ -2247,7 +2272,9 @@ epm_checkpkg()
 
 __alt_fix_triggers()
 {
-    local TDIR="$(mktemp -d)"
+    local TDIR
+    TDIR="$(mktemp -d)" || fatal
+    remote_on_exit $TDIR
     assure_exists time
     touch $TDIR/added
     for ft in $(ls /usr/lib/rpm/*.filetrigger | sort) ; do
@@ -2821,8 +2848,8 @@ __download_pkg_urls()
     local url
     [ -z "$pkg_urls" ] && return
     for url in $pkg_urls ; do
-        local tmppkg="$(mktemp -d)" || fatal "failed mktemp -d"
-        remove_on_exit "$tmppkg"
+        local tmppkg
+        tmppkg="$(mktemp -d)" || fatal
         docmd chmod $verbose a+rX $tmppkg
         showcmd cd $tmppkg
         cd $tmppkg || fatal
@@ -2897,7 +2924,8 @@ __epm_print_url_alt_check()
 {
     local pkg=$1
     shift
-    local tm="$(mktemp)"
+    local tm
+    tm="$(mktemp)" || fatal
     assure_exists curl
     quiet=1
     local buildtime=$(paoapi packages/$pkg | get_pao_var buildtime)
@@ -3386,7 +3414,7 @@ epm_full_upgrade()
     if [ -z "$full_upgrade_no_flatpack" ] ; then
         if is_command flatpak ; then
             [ -n "$quiet" ] || echo
-            docmd flatpak update $(subst_option non_interactive --assume-yes) $(subst_option dryrun --no-deploy)
+            docmd flatpak update $(subst_option non_interactive --assumeyes) $(subst_option dryrun --no-deploy)
         fi
     fi
 
@@ -4057,6 +4085,11 @@ epm_install_files()
         return
     fi
 
+    if [ -n "$put_to_repo" ] ; then
+        epm_put_to_repo $files
+        return
+    fi
+
 
     case $PMTYPE in
         packagekit)
@@ -4225,6 +4258,11 @@ epm_install_files_alt()
     if [ -n "$save_only" ] ; then
         echo
         cp -v $files "$EPMCURDIR"
+        return
+    fi
+
+    if [ -n "$put_to_repo" ] ; then
+        epm_put_to_repo $files
         return
     fi
 
@@ -4421,6 +4459,12 @@ epm_install_files_apt_dpkg()
         cp -v $files "$EPMCURDIR"
         return
     fi
+
+    if [ -n "$put_to_repo" ] ; then
+        epm_put_to_repo $files
+        return
+    fi
+
 
     # TODO: if dpkg can't install due missed deps, trying with apt (as for now, --refuse-depends, --refuse-breaks don't help me)
 
@@ -4686,7 +4730,7 @@ epm_install_files_rpm()
 {
     local files="$*"
     [ -z "$files" ] && return
-    
+
     if __epm_repack_if_needed $files ; then
         [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
         files="$repacked_pkgs"
@@ -4697,6 +4741,12 @@ epm_install_files_rpm()
         cp -v $files "$EPMCURDIR"
         return
     fi
+
+    if [ -n "$put_to_repo" ] ; then
+        epm_put_to_repo $files
+        return
+    fi
+
 
     __epm_check_if_src_rpm $files
 
@@ -5329,39 +5379,47 @@ esac
 
 [ -n "$EPM_PACK_SCRIPTS_DIR" ] || EPM_PACK_SCRIPTS_DIR="$CONFIGDIR/pack.d"
 
-
-__epm_pack()
+__epm_pack_run_handler()
 {
     local packname="$1"
     local tarname="$2"
     local packversion="$3"
+    local url="$3"
     returntarname=''
 
     local repackcode="$EPM_PACK_SCRIPTS_DIR/$packname.sh"
-    [ -x "$repackcode" ] || fatal "Can't find script $repackcode for packname $packname"
+    [ -x "$repackcode" ] || return
     [ -f "$repackcode.rpmnew" ] && warning "There is .rpmnew file(s) in $EPM_PACK_SCRIPTS_DIR dir. The pack script can be outdated."
 
     # a file to keep filename of generated tarball
     filefortarname="$(pwd)/filefortarname"
 
-    set_sudo
-    export SUDO
-
-    # TODO: inside () ?
-    export PATH=$PROGDIR:$PATH
-
+    [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
     local bashopt=''
-    [ -n "$verbose" ] && bashopt='-x'
+    [ -n "$debug" ] && bashopt='-x'
     #info "Running $($script --description 2>/dev/null) ..."
-    ( unset EPMCURDIR ; docmd $CMDSHELL $bashopt $repackcode "$tarname" "$filefortarname" "$packversion" ) || fatal
+    # TODO: add url info here
+    ( unset EPMCURDIR ; export PATH=$SCPATH ; docmd $CMDSHELL $bashopt $repackcode "$tarname" "$filefortarname" "$packversion" "$url") || fatal
     returntarname="$(cat "$filefortarname")" || fatal "pack script $repackcode didn't set tarname"
+    [ -s "$returntarname" ] || fatal "pack script for $packname return unexist $returntarname file"
+    return 0
+}
 
-    [ -s "$returntarname" ] || fatal "pack script $repackcode return unexist $returntarname file"
+__epm_pack()
+{
+    local packname="$1"
+    local URL="$4"
+
+    # fills returntarname with packed tar
+    __epm_pack_run_handler "$@" || fatal "Can't find pack script for packname $packname"
 
     if [ -n "$download_only" ] ; then
         mv $returntarname $EPMCURDIR
         return
     fi
+
+    # TODO: merge eepm.yaml here (common with $returntarname.eepm.yaml)
+    # add upstream_url: $URL too
 
     # repack if needed
     repacked_pkgs=''
@@ -5374,6 +5432,7 @@ __epm_pack()
         [ -n "$repacked_pkgs" ] || fatal "Can't repack $returntarname"
     fi
 
+    local pkgname
     if [ -n "$repacked_pkgs" ] ; then
         # remove packed file if we have repacked one
         rm -v "$returntarname"
@@ -5390,7 +5449,9 @@ __epm_pack()
 
     # we need put result in the cur dir
     mv -v "$pkgname" $EPMCURDIR || fatal
+    [ -r "$pkgname.eepm.yaml" ] && mv -v "$pkgname.eepm.yaml" $EPMCURDIR
 
+    return 0
 }
 
 epm_pack_help()
@@ -5419,16 +5480,19 @@ epm_pack()
         exit
     fi
 
-    local tmpdir="$(mktemp -d --tmpdir=$BIGTMPDIR)"
-    remove_on_exit $tmpdir
+    local tmpdir
+    tmpdir="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
+    remove_on_exit "$tmpdir"
 
     local packname="$1"
     local tarname="$2"
     local packversion="$3"
+    local url=''
 
     [ -n "$packname" ] || fatal "run with packname, see --help"
 
     if is_url "$tarname"; then
+        url="$tarname"
         pkg_urls="$tarname"
         cd $tmpdir || fatal
         __handle_pkg_urls_to_install
@@ -5436,17 +5500,16 @@ epm_pack()
         tarname="$(realpath "$pkg_files")"
     elif [ -d "$tarname" ] ; then
         tarname="$(realpath "$tarname")"
-        cd $tmpdir || fatal
     elif [ -s "$tarname" ] ; then
         # get full path for real name
         tarname="$(realpath "$tarname")"
-        cd $tmpdir || fatal
     else
         # just pass name
         true
     fi
 
-    __epm_pack "$packname" "$tarname" "$packversion"
+    cd $tmpdir || fatal
+    __epm_pack "$packname" "$tarname" "$packversion" "$url"
 
 }
 
@@ -5675,7 +5738,8 @@ __run_script()
     [ -f "$script.rpmnew" ] && warning "There is .rpmnew file(s) in $psdir dir. The play script can be outdated."
 
     shift
-    ( unset EPMCURDIR ; export PATH=$PROGDIR:$PATH ; $script "$@" )
+    [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
+    ( unset EPMCURDIR ; export PATH=$SCPATH ; $script "$@" )
     return
 }
 
@@ -5717,7 +5781,8 @@ __list_app_packages_table()
 __list_installed_app()
 {
     local i
-    local tapt="$(mktemp)" || fatal
+    local tapt
+    tapt="$(mktemp)" || fatal
     remove_on_exit $tapt
     __list_app_packages_table >$tapt
     # get all installed packages and convert it to a apps list
@@ -5733,7 +5798,8 @@ __list_installed_app()
 __list_installed_packages()
 {
     local i
-    local tapt="$(mktemp)" || fatal
+    local tapt
+    tapt="$(mktemp)" || fatal
     remove_on_exit $tapt
     __list_app_packages_table >$tapt
     # get all installed packages
@@ -5763,20 +5829,14 @@ __epm_play_run()
     local script="$psdir/$1.sh"
     shift
 
-    export PATH=$PROGDIR:$PATH
-
-    set_sudo
-    export SUDO
-
-    # keep EPM_AUTO for non epm code (epm uses EPM_OPTIONS now)
-    [ -n "$non_interactive" ] && export EPM_AUTO="--auto"
-
-    export EPM_OPTIONS="$EPM_OPTIONS $dryrun"
+    local addopt
+    addopt="$dryrun $non_interactive"
 
     local bashopt=''
-    [ -n "$verbose" ] && bashopt='-x'
+    [ -n "$debug" ] && bashopt='-x'
     #info "Running $($script --description 2>/dev/null) ..."
-    docmd $CMDSHELL $bashopt $script "$@"
+    [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
+    ( export EPM_OPTIONS="$EPM_OPTIONS $addopt" export PATH=$SCPATH ; docmd $CMDSHELL $bashopt $script "$@" )
 }
 
 __epm_play_list_installed()
@@ -5966,8 +6026,8 @@ __epm_play_download_epm_file()
 {
     local target="$1"
     local file="$2"
-    #local epmver="$(epm --short --version)"
-    local epmver="$EPMVERSION"
+    # use short version (3.4.5)
+    local epmver="$(epm --short --version)"
     local URL="https://eepm.ru/releases/$epmver/app-versions"
     info "Updating local IPFS DB in $eget_ipfs_db file from $URL/eget-ipfs-db.txt"
     docmd eget -q -O "$target" "$URL/$file" && return
@@ -5991,8 +6051,9 @@ __epm_play_initialize_ipfs()
     fi
 
     # download and merge with local db
-    local t=$(mktemp) || fatal
-    remove_on_exit "$t"
+    local t
+    t=$(mktemp) || fatal
+    remove_on_exit $t
     __epm_play_download_epm_file "$t" "eget-ipfs-db.txt" || warning "Can't update IPFS DB"
     if [ -s "$t" ] ; then
         echo >>$t
@@ -6142,6 +6203,9 @@ case $PMTYPE in
     apt-*)
         # FIXME: returns TRUE ever on missed package
         docmd apt-cache policy $pkg_names
+        ;;
+    dnf-*|yum-*)
+        docmd dnf info $pkg_names
         ;;
     packagekit)
         docmd pkcon resolve $pkg_names
@@ -8639,9 +8703,7 @@ __epm_have_repack_rule()
     [ "$BASEDISTRNAME" = "alt" ] || return 1
 
     # skip for packages built with repack
-    local packager="$(epm print field Packager for "$1" 2>/dev/null)"
-    [ "$packager" = "EPM <support@etersoft.ru>" ] && return 1
-    [ "$packager" = "EPM <support@eepm.ru>" ] && return 1
+    epm_status_repacked "$1" && return 1
 
     # FIXME: use real way (for any archive)
     local pkgname="$(epm print name for package "$1")"
@@ -8673,16 +8735,6 @@ __epm_split_by_pkg_type()
 }
 
 
-__set_name_version()
-{
-    SPEC="$1"
-    PKGNAME="$2"
-    VERSION="$3"
-    [ -n "$PKGNAME" ] && subst "s|^Name:.*|Name: $PKGNAME|" $SPEC
-    [ -n "$VERSION" ] && subst "s|^Version:.*|Version: $VERSION|" $SPEC
-}
-
-
 __check_stoplist()
 {
     local pkg="$1"
@@ -8690,27 +8742,6 @@ __check_stoplist()
     [ -s "$alf" ] || return 1
     [ -n "$pkg" ] || return 1
     grep -E -q "^$1$" $alf
-}
-
-
-__set_version_pkgname()
-{
-    local alpkg="$1"
-    VERSION="$(echo "$alpkg" | grep -o -P '[-_.][0-9][0-9]*([.]*[0-9])*' | head -n1 | sed -e 's|^[-_.]||')" #"
-    [ -n "$VERSION" ] && PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
-    # set version as all between name and extension
-    #local woext="$(echo "alpkg" | sed -e 's|\.tar.*||')"
-    #if [ "$woext" != "$alpkg" ] ; then
-    #    VERSION="$(echo "$woext" " | sed -e "s|^$PKGNAME[-_.]||")"
-    #fi
-}
-
-
-__set_version_apppkgname()
-{
-    local alpkg="$1"
-    VERSION="$(echo "$alpkg" | grep -o -P "[-_.a-zA-Z]([0-9])([0-9])*([.]*[0-9])*" | head -n1 | sed -e 's|^[-_.a-zA-Z]||' -e 's|--|-|g' )"  #"
-    [ -n "$VERSION" ] && PKGNAME="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
 }
 
 
@@ -8729,51 +8760,29 @@ __prepare_source_package()
     VERSION=''
     SUBGENERIC=''
 
-    # convert tarballs to tar (for alien)
     if rhas "$alpkg" "\.(rpm|deb)$" ; then
+        # skip packing for supported: rpm and deb
         return
     fi
+
+    # convert tarballs to tar (for alien)
 
     if rhas "$alpkg" "\.AppImage$" ; then
-        __set_version_apppkgname $alpkg
-        [ -n "$VERSION" ] || fatal "Can't get version from $alpkg."
+        __epm_pack_run_handler generic-appimage "$pkg"
         SUBGENERIC='appimage'
-        # TODO: move repack archive to erc?
-        [ -x "$alpkg" ] || docmd chmod u+x $verbose "$alpkg"
-        ./$alpkg --appimage-extract || fatal
-        alpkg=$PKGNAME-$VERSION.tar
-        # make a tar for alien
-        erc a $alpkg squashfs-root
-        return
+    elif rhas "$alpkg" "\.snap$" ; then
+        __epm_pack_run_handler generic-snap "$pkg"
+        SUBGENERIC='snap'
+    else
+        __epm_pack_run_handler generic-tar "$pkg"
     fi
 
-    __set_version_pkgname $alpkg
-    if [ -n "$VERSION" ] ; then
-        # TODO: don't use erc for detect type? then we potentially can skip install it
-        pkgtype="$(erc type $alpkg)"
-        local newalpkg
-        newalpkg=$PKGNAME-$VERSION.$pkgtype
-        #[ -n "$PKGNAME" ] || PKGNAME=$(basename $alpkg .$pkgtype)
-        if [ "$pkgtype" = "tar" ] || [ "$pkgtype" = "tar.gz" ] || [ "$pkgtype" = "tgz" ] ; then
-            # just rename supported formats
-            if [ "$alpkg" != "$newalpkg" ] ; then
-                mv $alpkg $newalpkg
-            fi
-        else
-            # converts directly unsupported formats
-            newalpkg=$PKGNAME-$VERSION.tar
-            #newalpkg=$(basename $alpkg .$pkgtype).tar
-            erc repack $alpkg $newalpkg || fatal
-        fi
-        if [ "$alpkg" != "$newalpkg" ] ; then
-            rm -f $verbose $alpkg
-            alpkg=$newalpkg
-        fi
-    else
-        warning "Can't detect version in $alpkg. We have almost no chance it will supported in alien."
+    alpkg=$(basename $returntarname)
+    if [ "$(pwd)" != "$(dirname "$returntarname")" ] ; then
+        cp $verbose $returntarname $alpkg
+        [ -r "$returntarname.eepm.yaml" ] && cp $verbose $returntarname.eepm.yaml $alpkg.eepm.yaml
     fi
 }
-
 
 
 
@@ -8856,7 +8865,8 @@ __epm_repack_to_deb()
 
     repacked_pkgs=''
 
-    local TDIR="$(mktemp -d --tmpdir=$BIGTMPDIR)"
+    local TDIR
+    TDIR="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
     remove_on_exit $TDIR
 
     for pkg in $pkgs ; do
@@ -8932,13 +8942,6 @@ __fix_spec()
         fi
     done
 
-    # FIXME: where is a source of the bug with empty Summary?
-    subst "s|Summary: *$|Summary: $pkgname (was empty Summary after alien)|" $spec
-    subst "s|^\(Version: .*\)~.*|\1|" $spec
-    subst "s|^Release: |Release: epm1.repacked.|" $spec
-    subst "s|^Distribution:.*||" $spec
-    subst "s|^\((Converted from a\) \(.*\) \(package.*\)|(Repacked from binary \2 package with epm $EPMVERSION)\n\1 \2 \3|" $spec
-    #" hack for highlight
 }
 
 
@@ -8949,16 +8952,14 @@ __apply_fix_code()
     [ -f "$repackcode.rpmnew" ] && warning "There is .rpmnew file(s) in $EPM_REPACK_SCRIPTS_DIR dir. The pack script can be outdated."
 
     shift
-    export PATH=$PROGDIR:$PATH
+    [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
     local bashopt=''
-    [ -n "$verbose" ] && bashopt='-x'
-    ( unset EPMCURDIR ; docmd $CMDSHELL $bashopt $repackcode "$1" "$2" "$3" "$4" ) || fatal "There is an error from $repackcode script"
+    [ -n "$debug" ] && bashopt='-x'
+    ( unset EPMCURDIR ; export PATH=$SCPATH ; docmd $CMDSHELL $bashopt $repackcode "$1" "$2" "$3" "$4" ) || fatal "There is an error from $repackcode script"
 }
 
 __create_rpmmacros()
 {
-[ -n "$TMPDIR" ] || TMPDIR=/tmp
-
     cat <<EOF >$HOME/.rpmmacros
 %_topdir    $HOME/RPM
 %_tmppath    $TMPDIR
@@ -9005,8 +9006,9 @@ __epm_repack_to_rpm()
     fi
 
     local pkg
-    export HOME="$(mktemp -d --tmpdir=$BIGTMPDIR)"
+    HOME="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
     remove_on_exit $HOME
+    export HOME
     __create_rpmmacros
 
     local alpkg
@@ -9025,6 +9027,7 @@ __epm_repack_to_rpm()
         cp $verbose $pkg $tmpbuilddir/../$alpkg
 
         cd $tmpbuilddir/../ || fatal
+        # fill alpkg and SUBGENERIC
         __prepare_source_package "$pkg"
         cd $tmpbuilddir/ || fatal
 
@@ -9046,14 +9049,11 @@ __epm_repack_to_rpm()
         mv $spec $tmpbuilddir || fatal
         spec="$tmpbuilddir/$(basename "$spec")"
 
-        #__set_name_version $spec $PKGNAME $VERSION
         local pkgname="$(grep "^Name: " $spec | sed -e "s|Name: ||g" | head -n1)"
-
-        # for tarballs fix permissions
-        [ -n "$VERSION" ] && chmod $verbose -R a+rX $buildroot/*
 
         # run generic scripts and repack script for the pkg
         cd $buildroot || fatal
+
         __fix_spec $pkgname $buildroot $spec
         __apply_fix_code "generic" $buildroot $spec $pkgname $abspkg
         [ -n "$SUBGENERIC" ] && __apply_fix_code "generic-$SUBGENERIC" $buildroot $spec $pkgname $abspkg
@@ -9068,6 +9068,7 @@ __epm_repack_to_rpm()
         else
             a='' rpmbuild --buildroot $buildroot --target $TARGETARCH -bb $spec >/dev/null || fatal
         fi
+
         # remove copy of source binary package (don't mix with generated)
         rm -f $tmpbuilddir/../$alpkg
         local repacked_rpm="$(realpath $tmpbuilddir/../*.rpm)"
@@ -9189,8 +9190,8 @@ esac
 __epm_get_file_from_url()
 {
     local url="$1"
-    local tmpfile=$(mktemp)
-    remove_on_exit "$tmpfile"
+    local tmpfile
+    tmpfile=$(mktemp) || fatal
     eget -O "$tmpfile" "$url" >/dev/null
     echo "$tmpfile"
 }
@@ -9280,7 +9281,8 @@ __epm_addkey_dnf()
     local target="/etc/yum.repos.d/$name.repo"
     [ -s $target ] && return
 
-    local tmpfile=$(mktemp)
+    local tmpfile
+    tmpfile=$(mktemp) || fatal
     remove_on_exit $tmpfile
     cat >$tmpfile <<EOF
 [$name]
@@ -10088,6 +10090,10 @@ esac
 
 }
 
+epm_put_to_repo()
+{
+    epm_repo_pkgupdate "$put_to_repo" "$@"
+}
 
 # File bin/epm-reposave:
 
@@ -10745,7 +10751,8 @@ __epm_restore_meson()
 {
     local req_file="$1"
     if [ -n "$dryrun" ] ; then
-        local lt=$(mktemp)
+        local lt
+        lt=$(mktemp) || fatal
         echo
         __epm_restore_print_comment "$req_file" " dependency"
         grep "dependency(" $req_file | sed -e 's|.*dependency(||' -e 's|).*||' -e 's|, required.*||' -e 's|, version:||' -e "s|'||g" >$lt
@@ -10755,7 +10762,8 @@ __epm_restore_meson()
     fi
 
     info "Install requirements from $req_file ..."
-    local lt=$(mktemp)
+    local lt
+    lt=$(mktemp) || fatal
     grep "dependency(" $req_file | sed -e 's|.*dependency(||' -e 's|).*||' -e 's|, required.*||' -e 's|, version:||' -e "s|'||g" >$lt
     ilist="$ilist $(__epm_print_meson_list "" $lt)"
 
@@ -10772,7 +10780,8 @@ __epm_restore_npm()
     assure_exists jq || fatal
 
     if [ -n "$dryrun" ] ; then
-        local lt=$(mktemp)
+        local lt
+        lt=$(mktemp) || fatal
         a= jq .dependencies <$req_file >$lt
         echo
         __epm_restore_print_comment "$req_file"
@@ -10787,7 +10796,8 @@ __epm_restore_npm()
     fi
 
     info "Install requirements from $req_file ..."
-    local lt=$(mktemp)
+    local lt
+    lt=$(mktemp) || fatal
     a= jq .dependencies <$req_file >$lt
     ilist="$(__epm_print_npm_list "" $lt)"
     a= jq .devDependencies <$req_file >$lt
@@ -10801,7 +10811,8 @@ __epm_restore_perl()
     local req_file="$1"
 
     if [ -n "$dryrun" ] ; then
-        local lt=$(mktemp)
+        local lt
+        lt=$(mktemp) || fatal
         a= /usr/bin/perl $req_file PRINT_PREREQ=1 >$lt
         # all requirements will autodetected during packing, put it to the buildreq
         echo
@@ -10812,7 +10823,8 @@ __epm_restore_perl()
     fi
 
     info "Install requirements from $req_file ..."
-    local lt=$(mktemp)
+    local lt
+    lt=$(mktemp) || exit
     a= /usr/bin/perl $req_file PRINT_PREREQ=1 >$lt
     ilist="$(__epm_print_perl_list "" $lt)"
     rm -f $lt
@@ -10826,7 +10838,8 @@ __epm_restore_perl_shyaml()
     assure_exists shyaml || fatal
 
     if [ -n "$dryrun" ] ; then
-        local lt=$(mktemp)
+        local lt
+        lt=$(mktemp) || fatal
         a= shyaml get-value requires <$req_file >$lt
         # all requirements will autodetected during packing, put it to the buildreq
         echo
@@ -10842,7 +10855,8 @@ __epm_restore_perl_shyaml()
     fi
 
     info "Install requirements from $req_file ..."
-    local lt=$(mktemp)
+    local lt
+    lt=$(mktemp) || fatal
     a= shyaml get-value requires <$req_file >$lt
     ilist="$(__epm_print_perl_list "" $lt)"
     a= shyaml get-value build_requires <$req_file >$lt
@@ -11881,7 +11895,8 @@ epm_stats()
 
 __convert_pkgallowscripts_to_regexp()
 {
-    local tmpalf="$(mktemp)" || fatal
+    local tmpalf
+    tmpalf="$(mktemp)" || fatal
     # copied from eget's filter_glob
     # check man glob
     # remove commentы and translate glob to regexp
@@ -12028,7 +12043,9 @@ epm_status_thirdparty()
 
             local distribution
             distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
-            echo "$distribution" | grep -q "^ALT" || return 0
+            echo "$distribution" | grep -q "^ALT" && return 1
+            echo "$distribution" | grep -q "^EEPM" && return 1
+            return 0
             ;;
         *)
             fatal "Unsupported $BASEDISTRNAME"
@@ -12160,6 +12177,10 @@ epm_tool()
         "json")                      # HELPCMD: json operations
             showcmd json "$@"
             $CMDSHELL internal_tools_json "$@"
+            ;;
+        "yaml")                      # HELPCMD: parse yaml operations
+            showcmd yaml "$@"
+            $CMDSHELL $SHAREDIR/tools_yaml "$@"
             ;;
         "which")
             print_command_path "$@"  # HELPCMD: which like command (no output to stderr, can works without which package)
@@ -16205,8 +16226,6 @@ fi
 epm_main()
 {
 
-#PATH=$PATH:/sbin:/usr/sbin
-
 set_pm_type
 
 check_tty
@@ -16245,6 +16264,7 @@ print_version()
 Usage="Usage: epm [options] <command> [package name(s), package files]..."
 Descr="epm - EPM package manager"
 
+debug=
 verbose=$EPM_VERBOSE
 quiet=
 nodeps=
@@ -16370,7 +16390,7 @@ check_command()
         epm_cmd=search
         direct_args=1
         ;;
-    -qp|qp|query_package)     # HELPCMD: search in the list of installed packages
+    -qp|qp|grep|query_package)     # HELPCMD: search in the list of installed packages
         epm_cmd=query_package
         ;;
     -qf|qf|-S|wp|which|belongs)     # HELPCMD: query package(s) owning file
@@ -16623,6 +16643,9 @@ check_option()
     --verbose)            # HELPOPT: verbose mode
         verbose="--verbose"
         ;;
+    --debug)              # HELPOPT: more debug output mode
+        debug="--debug"
+        ;;
     --skip-installed)     # HELPOPT: skip already installed packages during install
         skip_installed=1
         ;;
@@ -16660,7 +16683,7 @@ check_option()
         repack="--repack"
         ;;
     --norepack)              # HELPOPT: don't repack rpm package(s) if it is by default before install
-        repack="--norepack"
+        norepack="--norepack"
         ;;
     --install)             # HELPOPT: install packed rpm package(s)
         install="--install"
@@ -16671,10 +16694,13 @@ check_option()
     --noscripts)           # HELPOPT: disable scripts in install packages
         noscripts="--noscripts"
         ;;
-    --save-only)            # HELPOPT: save the package/tarball after all convertations (instead of install it)
+    --save-only)            # HELPOPT: save the package/tarball after all transformations (instead of install it)
         save_only="--save-only"
         ;;
-    --download-only)       # HELPOPT: download only the package/tarball (before any convertation)
+    --put-to-repo=*)          # HELPOPT: put the package after all transformations to the repo (--put-to-repo=/path/to/repo)
+        put_to_repo="$(echo "$1" | sed -e 's|--put-to-repo=||')"
+        ;;
+    --download-only)       # HELPOPT: download only the package/tarball (before any transformation)
         download_only="--download-only"
         ;;
     --url)                 # HELPOPT: print only URL instead of download package
@@ -16722,6 +16748,7 @@ check_filenames()
             [ -n "$pkg_urls" ] && pkg_urls="$pkg_urls $opt" || pkg_urls="$opt"
         else
             has_space "$opt" && warning "There are space(s) in package name '$opt', it is not supported. Skipped." && continue
+            echo "$opt" | grep -q "[*]" && warning "There are forbidden symbols in package name '$opt'. Skipped." && continue
             [ -n "$pkg_names" ] && pkg_names="$pkg_names $opt" || pkg_names="$opt"
         fi
         [ -n "$quoted_args" ] && quoted_args="$quoted_args \"$opt\"" || quoted_args="\"$opt\""
@@ -16758,7 +16785,7 @@ if [ -n "$quiet" ] ; then
 fi
 
 # fill
-export EPM_OPTIONS="$nodeps $force $verbose $quiet $interactive $non_interactive $save_only $download_only"
+export EPM_OPTIONS="$nodeps $force $verbose $debug $quiet $interactive $non_interactive $save_only $download_only"
 
 # if input is not console and run script from file, get pkgs from stdin too
 if [ ! -n "$inscript" ] && ! inputisatty && [ -n "$PROGDIR" ] ; then

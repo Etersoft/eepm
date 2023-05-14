@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.55.8"
+EPMVERSION="3.56.0"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -48,10 +48,18 @@ fi
 
 load_helper()
 {
+    local shieldname="loaded$(echo "$1" | sed -e 's|-||g')"
+    # already loaded
+    eval "test -n \"\$$shieldname\"" && debug "Already loaded $1" && return
+
     local CMD="$SHAREDIR/$1"
-    [ -r "$CMD" ] || fatal "Have no $CMD helper file"
+    # do not use fatal() here, it can be initial state
+    [ -r "$CMD" ] || { echo "FATAL: Have no $CMD helper file" ; exit 1; }
+    eval "$shieldname=1"
+    # shellcheck disable=SC1090
     . $CMD
 }
+
 
 
 # File bin/epm-sh-functions:
@@ -272,7 +280,7 @@ subst_option()
 store_output()
 {
     # use make_temp_file from etersoft-build-utils
-    RC_STDOUT="$(mktemp)"
+    RC_STDOUT="$(mktemp)" || fatal
     local CMDSTATUS=$RC_STDOUT.pipestatus
     echo 1 >$CMDSTATUS
     #RC_STDERR=$(mktemp)
@@ -303,7 +311,7 @@ epm()
 
     # run epm again to full initialization
     local bashopt=''
-    [ -n "$verbose" ] && bashopt='-x'
+    [ -n "$debug" ] && bashopt='-x'
 
     $CMDSHELL $bashopt $PROGDIR/$PROGNAME --inscript "$@"
 }
@@ -313,7 +321,7 @@ sudoepm()
     [ "$EPMMODE" = "pipe" ] && fatal "Can't use sudo epm call from the piped script"
 
     local bashopt=''
-    [ -n "$verbose" ] && bashopt='-x'
+    [ -n "$debug" ] && bashopt='-x'
 
     sudorun $CMDSHELL $bashopt $PROGDIR/$PROGNAME --inscript "$@"
 }
@@ -328,6 +336,18 @@ fatal()
     fi
     exit 1
 }
+
+debug()
+{
+    [ -n "$debug" ] || return
+    if [ -z "$TEXTDOMAIN" ] ; then
+        set_color $YELLOW >&2
+        echo -n "WARNING: " >&2
+        restore_color >&2
+        echo "$*" >&2
+    fi
+}
+
 
 warning()
 {
@@ -590,15 +610,21 @@ disabled_eget()
     $EGET "$@"
 }
 
-disabled_erc()
-{
 
+__epm_assure_7zip()
+{
     # install 7zip in any case (can be used)
     if is_command 7z || is_command 7za || is_command 7zr || is_command 7zz ; then
         :
     else
         epm install p7zip
     fi
+}
+
+disabled_erc()
+{
+
+    __epm_assure_7zip
 
     # use internal eget only if exists
     if [ -s $SHAREDIR/tools_erc ] ; then
@@ -874,6 +900,7 @@ subst()
     sed -i -e "$@"
 }
 fi
+
 
 
 check_core_commands()
