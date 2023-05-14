@@ -13,7 +13,7 @@ case $pkgtype in
         mask="apache-netbeans-$VERSION.noarch.rpm"
         ;;
     *)
-        mask="apache-netbeans_$VERSION_all.deb"
+        mask="apache-netbeans_${VERSION}_all.deb"
         ;;
 esac
 

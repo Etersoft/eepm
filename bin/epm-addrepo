@@ -172,7 +172,7 @@ epm repo add - add branch repo. Use follow params:
     yandex                   - for BaseALT repo mirror hosted by Yandex (recommended)"
     altsp                    - add ALT SP repo"
     autoimports              - for BaseALT autoimports repo"
-    autoports                - for Autoports repo (with packages from Sisyphus rebuilded to the branch)
+    autoports                - for Autoports repo (with packages from Sisyphus rebuilt to the branch)
     altlinuxclub             - for altlinuxclub repo (http://altlinuxclub.ru/)"
     etersoft                 - for LINUX@Etersoft repo"
     korinf                   - for Korinf repo"
@@ -403,7 +403,7 @@ __epm_addrepo_deb()
     fi
 
     if [ -d "$repo" ] ; then
-        sudocmd epm repo add "deb file:$repo ./"
+        epm repo add "deb file:$repo ./"
         return
     fi
 
