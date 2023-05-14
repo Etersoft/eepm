@@ -455,14 +455,14 @@ epm_install()
         # TODO: for some packages with dependencies apt will ask later again
     fi
 
-    # TODO: put it after empty install list checking?
     if [ -n "$direct" ] && [ -z "$repack" ] ; then
+        # it will put pkg_urls into pkg_files and reconstruct pkg_filenames
         __handle_direct_install
     fi
 
-    # if possible, it will put pkg_urls into pkg_files and reconstruct pkg_filenames
     if [ -n "$pkg_urls" ] ; then
         load_helper epm-download
+        # it will put downloaded by pkg_urls packages to pkg_files and reconstruct pkg_filenames
         __handle_pkg_urls_to_install
     fi
 
@@ -476,10 +476,10 @@ epm_install()
     #local names="$(echo $pkg_names | exp_with_arch_suffix | filter_out_installed_packages)"
     local files="$(echo $pkg_files | filter_out_installed_packages)"
 
-    # can be empty only after skip installed
+    # can be empty only after all installed packages were skipped
     if [ -z "$files$names" ] ; then
         # TODO: assert $skip_installed
-        [ -n "$verbose" ] && info "Skip empty install list (filtered out)"
+        [ -n "$verbose" ] && info "Skip empty install list (filtered out, all requested packages is already installed)"
         # FIXME: see to_remove below
         return 0
     fi
@@ -500,16 +500,17 @@ epm_install()
             ;;
     esac
 
+    [ -z "$files" ] && debug "Skip empty install files list" && return 0
 
-    # save files before install and repack
-    if [ -n "$download_only" ] && [ -n "$files" ] ; then
+    if [ -n "$download_only" ] ; then
+        # save files to the current dir before install and repack
         echo
         cp -v $files "$EPMCURDIR"
         return
     fi
 
-    # repack binary files
     if [ -n "$repack" ] ; then
+        # repack binary files if asked
         __epm_repack $files || return
         files="$repacked_pkgs"
     fi
