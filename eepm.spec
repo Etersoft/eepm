@@ -63,6 +63,8 @@ a discussion about extra requirements.
 %make_install install DESTDIR=%buildroot \
 	datadir=%_datadir bindir=%_bindir mandir=%_mandir \
 	sysconfdir=%_sysconfdir version=%version-%release
+# temp. disable due possible side effects: https://bugzilla.altlinux.org/46146
+rm -v %buildroot%_sysconfdir/bash_completion.d/eepm
 
 %files
 %doc README.md TODO LICENSE
@@ -87,7 +89,7 @@ a discussion about extra requirements.
 %_man1dir/*
 %_datadir/%name/
 %_sysconfdir/bash_completion.d/serv
-%_sysconfdir/bash_completion.d/eepm
+#_sysconfdir/bash_completion.d/eepm
 
 %if "%_vendor" == "alt"
 %files repack
