@@ -69,6 +69,7 @@ __download_pkg_urls()
     for url in $pkg_urls ; do
         local tmppkg
         tmppkg="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
+        remove_on_exit $tmppkg
         docmd chmod $verbose a+rX $tmppkg
         showcmd cd $tmppkg
         cd $tmppkg || fatal
@@ -149,6 +150,7 @@ __epm_print_url_alt_check()
     shift
     local tm
     tm="$(mktemp)" || fatal
+    remove_on_exit $tm
     assure_exists curl
     load_helper epm-site
     quiet=1

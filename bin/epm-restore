@@ -399,6 +399,7 @@ __epm_restore_meson()
     if [ -n "$dryrun" ] ; then
         local lt
         lt=$(mktemp) || fatal
+        remove_on_exit $lt
         echo
         __epm_restore_print_comment "$req_file" " dependency"
         grep "dependency(" $req_file | sed -e 's|.*dependency(||' -e 's|).*||' -e 's|, required.*||' -e 's|, version:||' -e "s|'||g" >$lt
@@ -410,6 +411,7 @@ __epm_restore_meson()
     info "Install requirements from $req_file ..."
     local lt
     lt=$(mktemp) || fatal
+    remove_on_exit $lt
     grep "dependency(" $req_file | sed -e 's|.*dependency(||' -e 's|).*||' -e 's|, required.*||' -e 's|, version:||' -e "s|'||g" >$lt
     ilist="$ilist $(__epm_print_meson_list "" $lt)"
 
@@ -428,6 +430,7 @@ __epm_restore_npm()
     if [ -n "$dryrun" ] ; then
         local lt
         lt=$(mktemp) || fatal
+        remove_on_exit $lt
         a= jq .dependencies <$req_file >$lt
         echo
         __epm_restore_print_comment "$req_file"
@@ -444,6 +447,7 @@ __epm_restore_npm()
     info "Install requirements from $req_file ..."
     local lt
     lt=$(mktemp) || fatal
+    remove_on_exit $lt
     a= jq .dependencies <$req_file >$lt
     ilist="$(__epm_print_npm_list "" $lt)"
     a= jq .devDependencies <$req_file >$lt
@@ -460,6 +464,7 @@ __epm_restore_perl()
     if [ -n "$dryrun" ] ; then
         local lt
         lt=$(mktemp) || fatal
+        remove_on_exit $lt
         a= /usr/bin/perl $req_file PRINT_PREREQ=1 >$lt
         # all requirements will autodetected during packing, put it to the buildreq
         echo
@@ -472,6 +477,7 @@ __epm_restore_perl()
     info "Install requirements from $req_file ..."
     local lt
     lt=$(mktemp) || exit
+    remove_on_exit $lt
     a= /usr/bin/perl $req_file PRINT_PREREQ=1 >$lt
     ilist="$(__epm_print_perl_list "" $lt)"
     rm -f $lt
@@ -488,6 +494,7 @@ __epm_restore_perl_shyaml()
     if [ -n "$dryrun" ] ; then
         local lt
         lt=$(mktemp) || fatal
+        remove_on_exit $lt
         a= shyaml get-value requires <$req_file >$lt
         # all requirements will autodetected during packing, put it to the buildreq
         echo
@@ -505,6 +512,7 @@ __epm_restore_perl_shyaml()
     info "Install requirements from $req_file ..."
     local lt
     lt=$(mktemp) || fatal
+    remove_on_exit $lt
     a= shyaml get-value requires <$req_file >$lt
     ilist="$(__epm_print_perl_list "" $lt)"
     a= shyaml get-value build_requires <$req_file >$lt
