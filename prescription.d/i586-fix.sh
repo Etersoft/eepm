@@ -12,6 +12,7 @@ for i in glibc-nss glibc-gconv-modules \
          sssd-client \
          primus \
          vulkan-amdgpu libvulkan1 \
+         libd3d \
          $(epmqp --short libnss | grep "^libnss-") \
          $(epmqp --short xorg-dri | grep "^xorg-dri-")
 do
@@ -33,7 +34,7 @@ get_list_fedora()
 
 for i in \
          sssd-client \
-         mesa-vulkan-drivers mesa-dri-drivers vulkan-loader
+         mesa-vulkan-drivers mesa-dri-drivers vulkan-loader mesa-libd3d
 do
     epm --quiet installed $i && LIST="$LIST $i.i686"
 done
