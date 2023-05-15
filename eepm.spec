@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.56.1
+Version: 3.57.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -97,6 +97,17 @@ rm -v %buildroot%_sysconfdir/bash_completion.d/eepm
 
 
 %changelog
+* Mon May 15 2023 Vitaly Lipatov <lav@altlinux.ru> 3.57.0-alt1
+- disable bash completion for epm (see alt bug 46146)
+- epm play: add piktomir
+- epm play: add epsonscan2
+- epm repack gitkraken: disable perl requires (todo: remove embedded git?)
+- epm-install: improve interactive mode
+- epm download: check file after eget
+- epm ei: check stable branch for eepm install only, trying install eepm from the repo
+- epm ei: improve checking for url(s) returned from Korinf repo
+- epm pack: rewrite and fix --repack logic
+
 * Sun May 14 2023 Vitaly Lipatov <lav@altlinux.ru> 3.56.1-alt1
 - eget: add --get-ipfs-cid to help, fix for case when IPFS is disabled (no accessible gateway)
 - epm repack: fix hack for empty Summary
