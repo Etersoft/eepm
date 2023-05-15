@@ -33,6 +33,9 @@ find $BUILDROOT -name "*.py" -exec subst '1{/python3/n};1i#!/usr/bin/python3' {}
 if [ -n "$flag_python3" ] ; then
     if [ "$(epm print info -s)" = "alt" ] ; then
         epm install --skip-installed rpm-build-python3
+        subst "1i%add_python3_lib_path /usr" $SPEC
+        # by some unknown reason there are no packages provide that (https://github.com/Etersoft/eepm/issues/22)
+        subst "1i%add_python3_req_skip gi.repository.GLib" $SPEC
     fi
 fi
 
