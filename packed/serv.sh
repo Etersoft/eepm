@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.56.1"
+EPMVERSION="3.57.0"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -281,6 +281,7 @@ store_output()
 {
     # use make_temp_file from etersoft-build-utils
     RC_STDOUT="$(mktemp)" || fatal
+    remove_on_exit $RC_STDOUT
     local CMDSTATUS=$RC_STDOUT.pipestatus
     echo 1 >$CMDSTATUS
     #RC_STDERR=$(mktemp)
@@ -745,28 +746,43 @@ get_help()
     done
 }
 
-set_distro_info()
+set_bigtmpdir()
 {
-    # use external distro_info if internal one is missed
-    DISTRVENDOR=internal_distr_info
-    [ -x $DISTRVENDOR ] || DISTRVENDOR=internal_distr_info
-    export DISTRVENDOR
-
-    # export pack of variables:
-    # BASEDISTRNAME
-    # DISTRNAME
-    # DISTRVERSION
-    # DISTRARCH
-    # DISTRCONTROL
-    # PMTYPE
-    eval $($DISTRVENDOR --print-eepm-env)
-
-    [ -n "$TMPDIR" ] || TMPDIR="/tmp"
     # TODO: improve BIGTMPDIR conception
     # https://bugzilla.mozilla.org/show_bug.cgi?id=69938
     # https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s15.html
     # https://geekpeach.net/ru/%D0%BA%D0%B0%D0%BA-systemd-tmpfiles-%D0%BE%D1%87%D0%B8%D1%89%D0%B0%D0%B5%D1%82-tmp-%D0%B8%D0%BB%D0%B8-var-tmp-%D0%B7%D0%B0%D0%BC%D0%B5%D0%BD%D0%B0-tmpwatch-%D0%B2-centos-rhel-7
     [ -n "$BIGTMPDIR" ] || [ -d "/var/tmp" ] && BIGTMPDIR="/var/tmp" || BIGTMPDIR="$TMPDIR"
+    export BIGTMPDIR
+}
+
+assure_tmpdir()
+{
+    if [ -z "$TMPDIR" ] ; then
+        export TMPDIR="/tmp"
+        warning "Your have no TMPDIR defined. Use $TMPDIR as fallback."
+    fi
+
+    if [ ! -w "$TMPDIR" ] ; then
+        fatal "TMPDIR $TMPDIR is not writable."
+    fi
+}
+
+set_distro_info()
+{
+    assure_tmpdir
+
+    set_bigtmpdir
+
+    # don't run again in subprocesses
+    [ -n "$DISTRVENDOR" ] && return 0
+
+    DISTRVENDOR=internal_distr_info
+    export DISTRVENDOR
+
+    # export pack of variables, see epm print info --print-eepm-env
+    [ -n "$verbose" ] && $DISTRVENDOR --print-eepm-env
+    eval $($DISTRVENDOR --print-eepm-env | grep -v '^ *#')
 }
 
 set_pm_type()
@@ -2501,7 +2517,7 @@ print_help()
     echo "Usage: distro_info [options] [SystemName/Version]"
     echo "Options:"
     echo " -h | --help            - this help"
-    echo " -a                     - print hardware architecture (--distro-arch for distro depended name)"
+    echo " -a                     - print hardware architecture (use --distro-arch for distro depended arch name)"
     echo " -b                     - print size of arch bit (32/64)"
     echo " -c                     - print number of CPU cores"
     echo " -i                     - print virtualization type"
@@ -2513,8 +2529,8 @@ print_help()
     echo " -d|--base-distro-name  - print distro id (short distro name)"
     echo " -e                     - print full name of distro with version"
     echo " -o | --os-name         - print base OS name"
-    echo " -p | --package-type    - print type of the packaging system"
-    echo " -g                     - print name of the packaging system"
+    echo " -p | --package-type    - print type of the packaging system (f.i., apt-dpkg)"
+    echo " -g                     - print name of the packaging system (f.i., deb)"
     echo " -s|-n|--vendor-name    - print name of the distro family (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (see _vendor macros in rpm)"
     echo " --pretty|--pretty-name - print pretty distro name"
     echo " -v | --base-version    - print version of the distro"
@@ -2532,17 +2548,29 @@ print_help()
 print_eepm_env()
 {
 cat <<EOF
-    export DISTRNAME="$(echo $DISTRIB_ID)"
-    export DISTRVERSION="$(echo "$DISTRIB_RELEASE")"
-    export DISTRARCH="$(get_distro_arch)"
-    export DISTRCONTROL="$(get_service_manager)"
-    export BASEDISTRNAME=$(pkgvendor)
+# -d | --base-distro-name
+export DISTRNAME="$(echo $DISTRIB_ID)"
+# -v | --base-version
+export DISTRVERSION="$(echo "$DISTRIB_RELEASE")"
+# -a
+export DISTRARCH="$(get_distro_arch)"
+# -y | --service-manager
+export DISTRCONTROL="$(get_service_manager)"
+# -s | --vendor-name
+export BASEDISTRNAME=$(pkgvendor)
+# --repo-name
+export DISTRREPONAME=$(print_repo_name)
 
-    export PMTYPE="$(pkgmanager)"
-    export PKGFORMAT=$(pkgtype)
-    export PKGVENDOR=$(pkgvendor)
-    # TODO: remove?
-    export RPMVENDOR=$(pkgvendor)
+# -g
+export PMTYPE="$(pkgmanager)"
+# -p | --package-type
+export PKGFORMAT=$(pkgtype)
+# -m
+export DISTRMEMORY="$(get_memory_size)"
+
+# TODO: remove?
+export PKGVENDOR=$(pkgvendor)
+export RPMVENDOR=$(pkgvendor)
 
 EOF
 
@@ -2745,7 +2773,7 @@ print_version()
         local virt="$($DISTRVENDOR -i)"
         [ "$virt" = "(unknown)" ] || [ "$virt" = "(host system)" ] || on_text="(under $virt)"
         echo "Service manager version $EPMVERSION  https://wiki.etersoft.ru/Epm"
-        echo "Running on $($DISTRVENDOR -e) $on_text with $SERVICETYPE"
+        echo "Running on $DISTRNAME/$DISTRVERSION $on_text with $SERVICETYPE"
         echo "Copyright (c) Etersoft 2012-2023"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }

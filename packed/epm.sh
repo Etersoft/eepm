@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.56.1"
+EPMVERSION="3.57.0"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -280,6 +280,7 @@ store_output()
 {
     # use make_temp_file from etersoft-build-utils
     RC_STDOUT="$(mktemp)" || fatal
+    remove_on_exit $RC_STDOUT
     local CMDSTATUS=$RC_STDOUT.pipestatus
     echo 1 >$CMDSTATUS
     #RC_STDERR=$(mktemp)
@@ -744,28 +745,43 @@ get_help()
     done
 }
 
-set_distro_info()
+set_bigtmpdir()
 {
-    # use external distro_info if internal one is missed
-    DISTRVENDOR=internal_distr_info
-    [ -x $DISTRVENDOR ] || DISTRVENDOR=internal_distr_info
-    export DISTRVENDOR
-
-    # export pack of variables:
-    # BASEDISTRNAME
-    # DISTRNAME
-    # DISTRVERSION
-    # DISTRARCH
-    # DISTRCONTROL
-    # PMTYPE
-    eval $($DISTRVENDOR --print-eepm-env)
-
-    [ -n "$TMPDIR" ] || TMPDIR="/tmp"
     # TODO: improve BIGTMPDIR conception
     # https://bugzilla.mozilla.org/show_bug.cgi?id=69938
     # https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s15.html
     # https://geekpeach.net/ru/%D0%BA%D0%B0%D0%BA-systemd-tmpfiles-%D0%BE%D1%87%D0%B8%D1%89%D0%B0%D0%B5%D1%82-tmp-%D0%B8%D0%BB%D0%B8-var-tmp-%D0%B7%D0%B0%D0%BC%D0%B5%D0%BD%D0%B0-tmpwatch-%D0%B2-centos-rhel-7
     [ -n "$BIGTMPDIR" ] || [ -d "/var/tmp" ] && BIGTMPDIR="/var/tmp" || BIGTMPDIR="$TMPDIR"
+    export BIGTMPDIR
+}
+
+assure_tmpdir()
+{
+    if [ -z "$TMPDIR" ] ; then
+        export TMPDIR="/tmp"
+        warning "Your have no TMPDIR defined. Use $TMPDIR as fallback."
+    fi
+
+    if [ ! -w "$TMPDIR" ] ; then
+        fatal "TMPDIR $TMPDIR is not writable."
+    fi
+}
+
+set_distro_info()
+{
+    assure_tmpdir
+
+    set_bigtmpdir
+
+    # don't run again in subprocesses
+    [ -n "$DISTRVENDOR" ] && return 0
+
+    DISTRVENDOR=internal_distr_info
+    export DISTRVENDOR
+
+    # export pack of variables, see epm print info --print-eepm-env
+    [ -n "$verbose" ] && $DISTRVENDOR --print-eepm-env
+    eval $($DISTRVENDOR --print-eepm-env | grep -v '^ *#')
 }
 
 set_pm_type()
@@ -1065,7 +1081,7 @@ epm repo add - add branch repo. Use follow params:
     yandex                   - for BaseALT repo mirror hosted by Yandex (recommended)"
     altsp                    - add ALT SP repo"
     autoimports              - for BaseALT autoimports repo"
-    autoports                - for Autoports repo (with packages from Sisyphus rebuilded to the branch)
+    autoports                - for Autoports repo (with packages from Sisyphus rebuilt to the branch)
     altlinuxclub             - for altlinuxclub repo (http://altlinuxclub.ru/)"
     etersoft                 - for LINUX@Etersoft repo"
     korinf                   - for Korinf repo"
@@ -1262,7 +1278,7 @@ __epm_addrepo_alpine()
 __epm_addrepo_deb()
 {
     assure_exists apt-add-repository software-properties-common
-    local ad="$($DISTRVENDOR --distro-arch)"
+    local ad="$DISTRARCH"
     # TODO: move to distro_info
     local nd="$(lsb_release -cs)"
     local repo="$*"
@@ -1296,7 +1312,7 @@ __epm_addrepo_deb()
     fi
 
     if [ -d "$repo" ] ; then
-        sudocmd epm repo add "deb file:$repo ./"
+        epm repo add "deb file:$repo ./"
         return
     fi
 
@@ -2850,8 +2866,8 @@ __download_pkg_urls()
     for url in $pkg_urls ; do
         local tmppkg
         tmppkg="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
-        docmd chmod $verbose a+rX $tmppkg
-        showcmd cd $tmppkg
+        remove_on_exit $tmppkg
+        chmod $verbose a+rX $tmppkg
         cd $tmppkg || fatal
         local latest='--latest'
         # hack: download all if mask is *.something
@@ -2860,6 +2876,7 @@ __download_pkg_urls()
         if docmd eget $latest "$url" ; then
             local i
             for i in * ; do
+                [ "$i" = "*" ] && warning "Incorrect true status from eget. No saved files from download $url, ignoring" && continue
                 [ -s "$tmppkg/$i" ] || continue
                 chmod $verbose a+r "$tmppkg/$i"
                 [ -n "$pkg_files" ] && pkg_files="$pkg_files $tmppkg/$i" || pkg_files="$tmppkg/$i"
@@ -2926,6 +2943,7 @@ __epm_print_url_alt_check()
     shift
     local tm
     tm="$(mktemp)" || fatal
+    remove_on_exit $tm
     assure_exists curl
     quiet=1
     local buildtime=$(paoapi packages/$pkg | get_pao_var buildtime)
@@ -3060,10 +3078,10 @@ __epm_korinf_site_mask() {
     # short hack to install needed package
     rhas "$MASK" "[-_]" || MASK="${MASK}[-_][0-9]"
     # set arch for Korinf compatibility
-    [ "$($DISTRVENDOR -a)" = "x86_64" ] && archprefix="x86_64/"
-    local URL="$EPM_KORINF_REPO_URL/$archprefix$($DISTRVENDOR -e)"
+    [ "$DISTRARCH" = "x86_64" ] && archprefix="x86_64/"
+    local URL="$EPM_KORINF_REPO_URL/$archprefix$DISTRNAME/$DISTRVERSION"
     if ! eget --check "$URL" ; then
-        tURL="$EPM_KORINF_REPO_URL/$archprefix$($DISTRVENDOR --vendor-name)/$($DISTRVENDOR --repo-name)"
+        tURL="$EPM_KORINF_REPO_URL/$archprefix$BASEDISTRNAME/$DISTRREPONAME"
         docmd eget --check "$tURL" && URL="$tURL"
     fi
     eget --list --latest "$URL/$MASK*.$PKGFORMAT"
@@ -3079,17 +3097,32 @@ __epm_korinf_list() {
 
 __epm_korinf_install() {
 
-    local pkg
+    local pkg pkgurl
     local pkg_urls=''
-    for pkg in $* ; do
-        pkg_urls="$pkg_urls $(__epm_korinf_site_mask "$pkg")"
+    for pkgurl in $* ; do
+        pkg="$(__epm_korinf_site_mask "$pkgurl")"
+        [ -n "$pkg" ] || fatal "Can't get package url from $pkgurl"
+        [ -n "$pkg_urls" ] && pkg_urls="$pkg_urls $pkg" || pkg_urls="$pkg"
     done
     # due Error: Can't use epm call from the piped script
     #epm install $(__epm_korinf_site_mask "$PACKAGE")
     pkg_names='' pkg_files='' epm_install
 }
 
-__epm_korinf_install_eepm() {
+__epm_korinf_install_eepm()
+{
+
+    if [ "$BASEDISTRNAME" = "alt" ] && [ "$DISTRVERSION" != "Sisyphus" ] && [ "$EPMMODE" = "package" ] ; then
+        if epm status --original eepm ; then
+            warning "Using external (Korinf) repo is forbidden for stable ALT branch $DISTRVERSION."
+            info "Check https://bugzilla.altlinux.org/44314 for reasons."
+            info "You can install eepm package from Korinf manually, check instruction at https://eepm.ru"
+            info ""
+            info "Trying update eepm from the stable ALT repository ..."
+            docmd epm install eepm
+            return
+        fi
+    fi
 
     # enable interactive for install eepm from console
     if inputisatty && [ "$EPMMODE" != "pipe" ] ; then
@@ -3137,16 +3170,6 @@ EOF
 
 epm_epm_install()
 {
-
-    if [ "$BASEDISTRNAME" = "alt" ] && [ "$DISTRVERSION" != "Sisyphus" ] && [ "$EPMMODE" = "package" ] ; then
-        if epm status --original eepm ; then
-            warning "Using external (Korinf) repo is forbidden for stable ALT branch $DISTRVERSION."
-            info "Check https://bugzilla.altlinux.org/44314 for reasons."
-            info "You can install eepm package from Korinf manually, check instruction at https://eepm.ru"
-            fatal "Do nothing."
-        fi
-    fi
-
     if is_url "$1" ; then
         EPM_KORINF_REPO_URL="$1"
         info "Using $EPM_KORINF_REPO_URL repo ..."
@@ -4141,6 +4164,9 @@ epm_install()
 {
     if [ "$BASEDISTRNAME" = "alt" ] ; then
         if tasknumber "$pkg_names" >/dev/null ; then
+            if [ -n "$interactive" ] ; then
+                confirm_info "You are about to install $pkg_names task(s) from https://git.altlinux.org."
+            fi
             epm_install_alt_tasks "$pkg_names"
             return
         fi
@@ -4153,18 +4179,18 @@ epm_install()
         return
     fi
 
-    if [ -n "$interactive" ] ; then
+    if [ -n "$interactive" ] && [ -n "$pkg_names$pkg_files$pkg_urls" ] ; then
         confirm_info "You are about to install $(echo $pkg_names $pkg_files $pkg_urls) package(s)."
         # TODO: for some packages with dependencies apt will ask later again
     fi
 
-    # TODO: put it after empty install list checking?
     if [ -n "$direct" ] && [ -z "$repack" ] ; then
+        # it will put pkg_urls into pkg_files and reconstruct pkg_filenames
         __handle_direct_install
     fi
 
-    # if possible, it will put pkg_urls into pkg_files and reconstruct pkg_filenames
     if [ -n "$pkg_urls" ] ; then
+        # it will put downloaded by pkg_urls packages to pkg_files and reconstruct pkg_filenames
         __handle_pkg_urls_to_install
     fi
 
@@ -4178,10 +4204,10 @@ epm_install()
     #local names="$(echo $pkg_names | exp_with_arch_suffix | filter_out_installed_packages)"
     local files="$(echo $pkg_files | filter_out_installed_packages)"
 
-    # can be empty only after skip installed
+    # can be empty only after all installed packages were skipped
     if [ -z "$files$names" ] ; then
         # TODO: assert $skip_installed
-        [ -n "$verbose" ] && info "Skip empty install list (filtered out)"
+        [ -n "$verbose" ] && info "Skip empty install list (filtered out, all requested packages is already installed)"
         # FIXME: see to_remove below
         return 0
     fi
@@ -4201,16 +4227,17 @@ epm_install()
             ;;
     esac
 
+    [ -z "$files" ] && debug "Skip empty install files list" && return 0
 
-    # save files before install and repack
-    if [ -n "$download_only" ] && [ -n "$files" ] ; then
+    if [ -n "$download_only" ] ; then
+        # save files to the current dir before install and repack
         echo
         cp -v $files "$EPMCURDIR"
         return
     fi
 
-    # repack binary files
     if [ -n "$repack" ] ; then
+        # repack binary files if asked
         __epm_repack $files || return
         files="$repacked_pkgs"
     fi
@@ -5401,7 +5428,12 @@ __epm_pack_run_handler()
     # TODO: add url info here
     ( unset EPMCURDIR ; export PATH=$SCPATH ; docmd $CMDSHELL $bashopt $repackcode "$tarname" "$filefortarname" "$packversion" "$url") || fatal
     returntarname="$(cat "$filefortarname")" || fatal "pack script $repackcode didn't set tarname"
-    [ -s "$returntarname" ] || fatal "pack script for $packname return unexist $returntarname file"
+
+    local i
+    for i in $returntarname ; do
+        [ -s "$i" ] || fatal "pack script for $packname returned unexist $i file"
+    done
+
     return 0
 }
 
@@ -5421,35 +5453,45 @@ __epm_pack()
     # TODO: merge eepm.yaml here (common with $returntarname.eepm.yaml)
     # add upstream_url: $URL too
 
-    # repack if needed
-    repacked_pkgs=''
-    # repack to our target
-    if __epm_repack_if_needed $returntarname ; then
-        [ -n "$repacked_pkgs" ] || fatal "Can't repack $returntarname"
-    # if repack is forced or repack rule (not disabled) is exists
-    elif [ -n "$repack" ] || [ -z "$norepack" ] && __epm_have_repack_rule $returntarname ; then
-        __epm_repack "$returntarname"
-        [ -n "$repacked_pkgs" ] || fatal "Can't repack $returntarname"
-    fi
+    # note: this repack related code here for follow reasons:
+    #  * repack by default if we have repack rule
+    #  * get repacked files
+    #  * install (repacked) files
+    # the most replacement is epm repack [--install] or epm install [--repack]
 
-    local pkgname
-    if [ -n "$repacked_pkgs" ] ; then
+    # FIXME: check for every package would be more reliable
+    # by default
+    dorepack='--repack'
+    # don't repack by default there is our pkg format
+    __epm_split_by_pkg_type $PKGFORMAT $returntarname && dorepack=''
+    # repack if we have a repack rule for it
+    [ -z "$norepack" ] && __epm_have_repack_rule $returntarname && dorepack='--repack'
+    # repack if forced
+    [ -n "$repack" ] && dorepack='--repack'
+
+    local pkgnames
+    if [ -n "$dorepack" ]  ; then
+        __epm_repack $returntarname
+        [ -n "$repacked_pkgs" ] || fatal "Can't repack $returntarname"
         # remove packed file if we have repacked one
-        rm -v "$returntarname"
-        # also drop spaces
-        pkgname="$(echo $repacked_pkgs)"
+        rm -v $returntarname
+        pkgnames="$repacked_pkgs"
     else
-        pkgname="$returntarname"
+        pkgnames="$returntarname"
     fi
 
     if [ -n "$install" ] ; then
-        docmd epm install "$pkgname"
+        docmd epm install $pkgnames
         return
     fi
 
     # we need put result in the cur dir
-    mv -v "$pkgname" $EPMCURDIR || fatal
-    [ -r "$pkgname.eepm.yaml" ] && mv -v "$pkgname.eepm.yaml" $EPMCURDIR
+    mv -v $pkgnames $EPMCURDIR || fatal
+
+    local i
+    for i in $pkgnames ; do
+        [ -r "$i.eepm.yaml" ] && mv -v "$i.eepm.yaml" $EPMCURDIR
+    done
 
     return 0
 }
@@ -5868,7 +5910,7 @@ __epm_play_list()
     local extra="$2"
     local i
     local IGNOREi586
-    local arch="$($DISTRVENDOR -a)"
+    local arch="$DISTRARCH"
     [ "$arch" = "x86_64" ] && IGNOREi586='' || IGNOREi586=1
 
     if [ -n "$short" ] ; then
@@ -6072,7 +6114,7 @@ local psdir="$(realpath $CONFIGDIR/play.d)"
 local prsdir="$(realpath $CONFIGDIR/prescription.d)"
 
 if [ -z "$1" ] ; then
-    [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $($DISTRVENDOR -a)):"
+    [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $DISTRARCH):"
     __epm_play_list $psdir
     exit
 fi
@@ -6154,13 +6196,13 @@ case "$1" in
         ;;
 
     --full-list-all)
-        [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $($DISTRVENDOR -a)):"
+        [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $DISTRARCH):"
         __epm_play_list $psdir extra
         exit
         ;;
 
     --list-all|list-all)
-        [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $($DISTRVENDOR -a)):"
+        [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $DISTRARCH):"
         __epm_play_list $psdir
         [ -n "$quiet" ] || [ -n "$*" ] && exit
         echo
@@ -6501,7 +6543,7 @@ construct_name()
     local ds="$5"
     local pds="$6"
 
-    [ -n "$arch" ] || arch="$($DISTRVENDOR --distro-arch)"
+    [ -n "$arch" ] || arch="$DISTRARCH"
     [ -n "$pkgtype" ] || pkgtype="$PKGFORMAT"
     [ -n "$ds" ] || ds=$(get_pkg_name_delimiter $pkgtype)
     [ -z "$pds" ] && pds="$ds" && [ "$pds" = "-" ] && pds="."
@@ -6802,7 +6844,7 @@ exp_with_arch_suffix()
 {
     local suffix
 
-    [ "$($DISTRVENDOR -a)" = "x86_64" ] || { cat ; return ; }
+    [ "$DISTRARCH" = "x86_64" ] || { cat ; return ; }
     [ "$DISTRNAME" = "ROSA" ] &&  { cat ; return ; }
 
     # TODO: it is ok for ALT rpm to remove with this suffix
@@ -7704,9 +7746,8 @@ __check_system()
     fi
 
     if [ "$TO" != "Sisyphus" ] ; then
-        # we could miss DISTRVENDOR script during downgrade, reread
-        set_distro_info
-        if [ "$($DISTRVENDOR -v)" != "$TO" ] || epm installed altlinux-release-sisyphus >/dev/null ; then
+        # note: we get --base-version directy to get new version
+        if [ "$(DISTRVENDOR --base-version)" != "$TO" ] || epm installed altlinux-release-sisyphus >/dev/null ; then
             warning "Current distro still is not $TO, or altlinux-release-sisyphus package is installed."
             warning "Trying to fix with altlinux-release-$TO"
             docmd epm install altlinux-release-$TO
@@ -8702,13 +8743,17 @@ __epm_have_repack_rule()
     # skip repacking on non ALT systems
     [ "$BASEDISTRNAME" = "alt" ] || return 1
 
-    # skip for packages built with repack
-    epm_status_repacked "$1" && return 1
+    local i
+    for i in $* ; do
+        # skip for packages built with repack
+        epm_status_repacked "$i" && return 1
 
-    # FIXME: use real way (for any archive)
-    local pkgname="$(epm print name for package "$1")"
-    local repackcode="$EPM_REPACK_SCRIPTS_DIR/$pkgname.sh"
-    [ -s "$repackcode" ]
+        # FIXME: use real way (for any archive)
+        local pkgname="$(epm print name for package "$i")"
+        local repackcode="$EPM_REPACK_SCRIPTS_DIR/$pkgname.sh"
+        [ -s "$repackcode" ] || return 1
+    done
+    return 0
 }
 
 __epm_check_if_needed_repack()
@@ -8756,17 +8801,16 @@ __prepare_source_package()
     # TODO: use stoplist only for deb?
     [ -z "$force" ] && __check_stoplist $(echo $alpkg | sed -e "s|_.*||") && fatal "Please use official package instead of $alpkg repacking (It is not recommended to use --force to skip this checking."
 
-    PKGNAME=''
-    VERSION=''
     SUBGENERIC=''
 
     if rhas "$alpkg" "\.(rpm|deb)$" ; then
-        # skip packing for supported: rpm and deb
+        # skip packing for supported directly: rpm and deb
         return
     fi
 
     # convert tarballs to tar (for alien)
 
+    # they will fill $returntarname
     if rhas "$alpkg" "\.AppImage$" ; then
         __epm_pack_run_handler generic-appimage "$pkg"
         SUBGENERIC='appimage'
@@ -8777,7 +8821,11 @@ __prepare_source_package()
         __epm_pack_run_handler generic-tar "$pkg"
     fi
 
+    # it is possible there are a few files, we don't support it
+    [ -s "$returntarname" ] || fatal "Can't read result from pack: '$returntarname' is not a readable file."
+
     alpkg=$(basename $returntarname)
+    # FIXME: looks like a hack with current dir
     if [ "$(pwd)" != "$(dirname "$returntarname")" ] ; then
         cp $verbose $returntarname $alpkg
         [ -r "$returntarname.eepm.yaml" ] && cp $verbose $returntarname.eepm.yaml $alpkg.eepm.yaml
@@ -8967,7 +9015,6 @@ __create_rpmmacros()
 %packager    EPM <support@eepm.ru>
 %_vendor    EEPM
 %_gpg_name    support@etersoft.ru
-
 %_allow_root_build    1
 EOF
     remove_on_exit "$HOME/.rpmmacros"
@@ -9006,16 +9053,17 @@ __epm_repack_to_rpm()
     fi
 
     local pkg
-    HOME="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
-    remove_on_exit $HOME
-    export HOME
-    __create_rpmmacros
-
     local alpkg
     local abspkg
     local tmpbuilddir
     repacked_pkgs=''
     for pkg in $pkgs ; do
+        # TODO: keep home?
+        HOME="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
+        remove_on_exit $HOME
+        export HOME
+        __create_rpmmacros
+
         tmpbuilddir=$HOME/$(basename $pkg).tmpdir
         mkdir $tmpbuilddir
         abspkg="$(realpath $pkg)"
@@ -9028,7 +9076,7 @@ __epm_repack_to_rpm()
 
         cd $tmpbuilddir/../ || fatal
         # fill alpkg and SUBGENERIC
-        __prepare_source_package "$pkg"
+        __prepare_source_package "$(realpath $alpkg)"
         cd $tmpbuilddir/ || fatal
 
         if [ -n "$verbose" ] ; then
@@ -9076,7 +9124,7 @@ __epm_repack_to_rpm()
             remove_on_exit "$repacked_rpm"
             [ -n "$repacked_pkgs" ] && repacked_pkgs="$repacked_pkgs $repacked_rpm" || repacked_pkgs="$repacked_rpm"
         else
-            warning "Can't find converted rpm for source binary package '$pkg'"
+            warning "Can't find converted rpm for source binary package '$pkg' (got $repacked_rpm)"
         fi
         cd $EPMCURDIR >/dev/null
     done
@@ -9192,6 +9240,7 @@ __epm_get_file_from_url()
     local url="$1"
     local tmpfile
     tmpfile=$(mktemp) || fatal
+    remove_on_exit $tmpfile
     eget -O "$tmpfile" "$url" >/dev/null
     echo "$tmpfile"
 }
@@ -10753,6 +10802,7 @@ __epm_restore_meson()
     if [ -n "$dryrun" ] ; then
         local lt
         lt=$(mktemp) || fatal
+        remove_on_exit $lt
         echo
         __epm_restore_print_comment "$req_file" " dependency"
         grep "dependency(" $req_file | sed -e 's|.*dependency(||' -e 's|).*||' -e 's|, required.*||' -e 's|, version:||' -e "s|'||g" >$lt
@@ -10764,6 +10814,7 @@ __epm_restore_meson()
     info "Install requirements from $req_file ..."
     local lt
     lt=$(mktemp) || fatal
+    remove_on_exit $lt
     grep "dependency(" $req_file | sed -e 's|.*dependency(||' -e 's|).*||' -e 's|, required.*||' -e 's|, version:||' -e "s|'||g" >$lt
     ilist="$ilist $(__epm_print_meson_list "" $lt)"
 
@@ -10782,6 +10833,7 @@ __epm_restore_npm()
     if [ -n "$dryrun" ] ; then
         local lt
         lt=$(mktemp) || fatal
+        remove_on_exit $lt
         a= jq .dependencies <$req_file >$lt
         echo
         __epm_restore_print_comment "$req_file"
@@ -10798,6 +10850,7 @@ __epm_restore_npm()
     info "Install requirements from $req_file ..."
     local lt
     lt=$(mktemp) || fatal
+    remove_on_exit $lt
     a= jq .dependencies <$req_file >$lt
     ilist="$(__epm_print_npm_list "" $lt)"
     a= jq .devDependencies <$req_file >$lt
@@ -10813,6 +10866,7 @@ __epm_restore_perl()
     if [ -n "$dryrun" ] ; then
         local lt
         lt=$(mktemp) || fatal
+        remove_on_exit $lt
         a= /usr/bin/perl $req_file PRINT_PREREQ=1 >$lt
         # all requirements will autodetected during packing, put it to the buildreq
         echo
@@ -10825,6 +10879,7 @@ __epm_restore_perl()
     info "Install requirements from $req_file ..."
     local lt
     lt=$(mktemp) || exit
+    remove_on_exit $lt
     a= /usr/bin/perl $req_file PRINT_PREREQ=1 >$lt
     ilist="$(__epm_print_perl_list "" $lt)"
     rm -f $lt
@@ -10840,6 +10895,7 @@ __epm_restore_perl_shyaml()
     if [ -n "$dryrun" ] ; then
         local lt
         lt=$(mktemp) || fatal
+        remove_on_exit $lt
         a= shyaml get-value requires <$req_file >$lt
         # all requirements will autodetected during packing, put it to the buildreq
         echo
@@ -10857,6 +10913,7 @@ __epm_restore_perl_shyaml()
     info "Install requirements from $req_file ..."
     local lt
     lt=$(mktemp) || fatal
+    remove_on_exit $lt
     a= shyaml get-value requires <$req_file >$lt
     ilist="$(__epm_print_perl_list "" $lt)"
     a= shyaml get-value build_requires <$req_file >$lt
@@ -11282,13 +11339,12 @@ get_task_arepo_packages()
 
 get_task_packages()
 {
-    local arch="$($DISTRVENDOR -a)"
     local tn
     for tn in $(tasknumber "$@") ; do
         showcmd apt-repo list task "$tn"
         a='' apt-repo list task "$tn" >/dev/null || continue
         a='' apt-repo list task "$tn"
-        [ "$arch" = "x86_64" ] && get_task_arepo_packages "$tn"
+        [ "$DISTRARCH" = "x86_64" ] && get_task_arepo_packages "$tn"
     done
 }
 
@@ -11417,7 +11473,7 @@ filter_out_installed_packages()
 
     case $PMTYPE in
         yum-rpm|dnf-rpm)
-            if [ "$($DISTRVENDOR -a)" = "x86_64" ] && [ "$DISTRNAME" != "ROSA" ] ; then
+            if [ "$DISTRARCH" = "x86_64" ] && [ "$DISTRNAME" != "ROSA" ] ; then
                 # shellcheck disable=SC2013
                 for i in $(cat) ; do
                     is_installed "$(__print_with_arch_suffix $i .x86_64)" && continue
@@ -11531,12 +11587,11 @@ __epm_check_vendor()
 
 is_warmup_allowed()
 {
-    local MEM
     # disable warming up until set warmup in /etc/eepm/eepm.conf
     [ -n "$warmup" ] || return 1
-    MEM="$($DISTRVENDOR -m)"
+
     # disable warm if have no enough memory
-    [ "$MEM" -ge 1024 ] && return 0
+    [ "$DISTRMEMORY" -ge 1024 ] && return 0
     warning "Skipping warmup bases due low memory size"
     return 1
 }
@@ -11911,6 +11966,7 @@ __epm_package_name_ok_scripts()
     [ -s "$alf" ] || return 1
     [ -n "$name" ] || return 1
     local tmpalf=$(__convert_pkgallowscripts_to_regexp "$alf")
+    remove_on_exit $tmpalf
     echo "$name" | grep -q -f $tmpalf
     local res=$?
     rm $tmpalf
@@ -11934,6 +11990,7 @@ __epm_vendor_ok_scripts()
     [ -s "$alf" ] || return 1
     [ -n "$vendor" ] || return 1
     local tmpalf=$(__convert_pkgallowscripts_to_regexp "$alf")
+    remove_on_exit $tmpalf
     echo "$vendor" | grep -q -f $tmpalf
     local res=$?
     rm $tmpalf
@@ -13538,7 +13595,7 @@ print_help()
     echo "Usage: distro_info [options] [SystemName/Version]"
     echo "Options:"
     echo " -h | --help            - this help"
-    echo " -a                     - print hardware architecture (--distro-arch for distro depended name)"
+    echo " -a                     - print hardware architecture (use --distro-arch for distro depended arch name)"
     echo " -b                     - print size of arch bit (32/64)"
     echo " -c                     - print number of CPU cores"
     echo " -i                     - print virtualization type"
@@ -13550,8 +13607,8 @@ print_help()
     echo " -d|--base-distro-name  - print distro id (short distro name)"
     echo " -e                     - print full name of distro with version"
     echo " -o | --os-name         - print base OS name"
-    echo " -p | --package-type    - print type of the packaging system"
-    echo " -g                     - print name of the packaging system"
+    echo " -p | --package-type    - print type of the packaging system (f.i., apt-dpkg)"
+    echo " -g                     - print name of the packaging system (f.i., deb)"
     echo " -s|-n|--vendor-name    - print name of the distro family (vendor name) (ubuntu for all Ubuntu family, alt for all ALT family) (see _vendor macros in rpm)"
     echo " --pretty|--pretty-name - print pretty distro name"
     echo " -v | --base-version    - print version of the distro"
@@ -13569,17 +13626,29 @@ print_help()
 print_eepm_env()
 {
 cat <<EOF
-    export DISTRNAME="$(echo $DISTRIB_ID)"
-    export DISTRVERSION="$(echo "$DISTRIB_RELEASE")"
-    export DISTRARCH="$(get_distro_arch)"
-    export DISTRCONTROL="$(get_service_manager)"
-    export BASEDISTRNAME=$(pkgvendor)
+# -d | --base-distro-name
+export DISTRNAME="$(echo $DISTRIB_ID)"
+# -v | --base-version
+export DISTRVERSION="$(echo "$DISTRIB_RELEASE")"
+# -a
+export DISTRARCH="$(get_distro_arch)"
+# -y | --service-manager
+export DISTRCONTROL="$(get_service_manager)"
+# -s | --vendor-name
+export BASEDISTRNAME=$(pkgvendor)
+# --repo-name
+export DISTRREPONAME=$(print_repo_name)
 
-    export PMTYPE="$(pkgmanager)"
-    export PKGFORMAT=$(pkgtype)
-    export PKGVENDOR=$(pkgvendor)
-    # TODO: remove?
-    export RPMVENDOR=$(pkgvendor)
+# -g
+export PMTYPE="$(pkgmanager)"
+# -p | --package-type
+export PKGFORMAT=$(pkgtype)
+# -m
+export DISTRMEMORY="$(get_memory_size)"
+
+# TODO: remove?
+export PKGVENDOR=$(pkgvendor)
+export RPMVENDOR=$(pkgvendor)
 
 EOF
 
@@ -14285,7 +14354,7 @@ get_cid_by_url()
     local URL="$1"
     [ -r "$EGET_IPFS_DB" ] || return
     is_fileurl "$URL" && return 1
-    grep -F "$URL Qm" "$EGET_IPFS_DB" | head -n1 | cut -f2 -d" "
+    grep -F "$URL Qm" "$EGET_IPFS_DB" | cut -f2 -d" " | grep -E "Qm[[:alnum:]]{44}" | head -n1
 }
 
 put_cid_and_url()
@@ -16256,7 +16325,7 @@ Examples:
 print_version()
 {
         echo "EPM package manager version $EPMVERSION  Telegram: https://t.me/useepm  https://wiki.etersoft.ru/Epm"
-        echo "Running on $($DISTRVENDOR -e) ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
+        echo "Running on $DISTRNAME/$DISTRVERSION ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
         echo "Copyright (c) Etersoft 2012-2023"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
