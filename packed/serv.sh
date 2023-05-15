@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.57.0"
+EPMVERSION="3.57.1"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -760,7 +760,11 @@ assure_tmpdir()
 {
     if [ -z "$TMPDIR" ] ; then
         export TMPDIR="/tmp"
-        warning "Your have no TMPDIR defined. Use $TMPDIR as fallback."
+        warning "Your have no TMPDIR defined. Using $TMPDIR as fallback."
+    fi
+
+    if [ ! -d "$TMPDIR" ] ; then
+        fatal "TMPDIR $TMPDIR does not exist."
     fi
 
     if [ ! -w "$TMPDIR" ] ; then
@@ -827,16 +831,17 @@ __epm_remove_tmp_files()
     trap "-" EXIT
     [ -n "$DEBUG" ] && return 0
 
+    [ -n "$verbose" ] && info "Removing tmp files on exit ..."
+
     if [ -n "$to_clean_tmp_dirs" ] ; then
         echo "$to_clean_tmp_dirs" | while read p ; do
-            rm -rf "$p" 2>/dev/null
+            rm $verbose -rf "$p" 2>/dev/null
         done
     fi
 
     if [ -n "$to_clean_tmp_files" ] ; then
         echo "$to_clean_tmp_files" | while read p ; do
-            rm -f "$p" 2>/dev/null
-            rmdir "$(dirname "$p")" 2>/dev/null
+            rm $verbose -f "$p" 2>/dev/null
         done
     fi
 

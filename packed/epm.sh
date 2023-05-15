@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.57.0"
+EPMVERSION="3.57.1"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -759,7 +759,11 @@ assure_tmpdir()
 {
     if [ -z "$TMPDIR" ] ; then
         export TMPDIR="/tmp"
-        warning "Your have no TMPDIR defined. Use $TMPDIR as fallback."
+        warning "Your have no TMPDIR defined. Using $TMPDIR as fallback."
+    fi
+
+    if [ ! -d "$TMPDIR" ] ; then
+        fatal "TMPDIR $TMPDIR does not exist."
     fi
 
     if [ ! -w "$TMPDIR" ] ; then
@@ -826,16 +830,17 @@ __epm_remove_tmp_files()
     trap "-" EXIT
     [ -n "$DEBUG" ] && return 0
 
+    [ -n "$verbose" ] && info "Removing tmp files on exit ..."
+
     if [ -n "$to_clean_tmp_dirs" ] ; then
         echo "$to_clean_tmp_dirs" | while read p ; do
-            rm -rf "$p" 2>/dev/null
+            rm $verbose -rf "$p" 2>/dev/null
         done
     fi
 
     if [ -n "$to_clean_tmp_files" ] ; then
         echo "$to_clean_tmp_files" | while read p ; do
-            rm -f "$p" 2>/dev/null
-            rmdir "$(dirname "$p")" 2>/dev/null
+            rm $verbose -f "$p" 2>/dev/null
         done
     fi
 
@@ -4833,8 +4838,7 @@ epm_kernel_update()
             return
         fi
         assure_exists update-kernel update-kernel 0.9.9
-        update_repo_if_needed
-        sudocmd update-kernel $dryrun $(subst_option non_interactive -y) "$@" || return
+        sudocmd update-kernel $dryrun $(subst_option non_interactive -y) $force $interactive $reinstall $verbose "$@" || return
         #docmd epm remove-old-kernels "$@" || fatal
         return ;;
     esac
@@ -5474,7 +5478,7 @@ __epm_pack()
         __epm_repack $returntarname
         [ -n "$repacked_pkgs" ] || fatal "Can't repack $returntarname"
         # remove packed file if we have repacked one
-        rm -v $returntarname
+        rm -f $returntarname
         pkgnames="$repacked_pkgs"
     else
         pkgnames="$returntarname"
@@ -8819,6 +8823,7 @@ __prepare_source_package()
         SUBGENERIC='snap'
     else
         __epm_pack_run_handler generic-tar "$pkg"
+        SUBGENERIC='tar'
     fi
 
     # it is possible there are a few files, we don't support it
@@ -9091,6 +9096,9 @@ __epm_repack_to_rpm()
 
         local buildroot="$tmpbuilddir/$subdir"
 
+        # for tarballs fix permissions (ideally fix in pack.d/generic-tar.sh, but there is tar repacking only)
+        [ "$SUBGENERIC" = "tar" ] && chmod $verbose -R a+rX $buildroot/*
+
         # detect spec and move to prev dir
         local spec="$(echo $buildroot/*.spec)"
         [ -s "$spec" ] || fatal "Can't find spec $spec"
@@ -9104,7 +9112,7 @@ __epm_repack_to_rpm()
 
         __fix_spec $pkgname $buildroot $spec
         __apply_fix_code "generic" $buildroot $spec $pkgname $abspkg
-        [ -n "$SUBGENERIC" ] && __apply_fix_code "generic-$SUBGENERIC" $buildroot $spec $pkgname $abspkg
+        __apply_fix_code "generic-$SUBGENERIC" $buildroot $spec $pkgname $abspkg
         __apply_fix_code $pkgname $buildroot $spec $pkgname $abspkg
         cd - >/dev/null
 
