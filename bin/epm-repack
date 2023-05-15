@@ -95,7 +95,7 @@ __prepare_source_package()
     SUBGENERIC=''
 
     if rhas "$alpkg" "\.(rpm|deb)$" ; then
-        # skip packing for supported: rpm and deb
+        # skip packing for supported directly: rpm and deb
         return
     fi
 
@@ -112,6 +112,9 @@ __prepare_source_package()
     else
         __epm_pack_run_handler generic-tar "$pkg"
     fi
+
+    # it is possible there are a few files, we don't support it
+    [ -s "$returntarname" ] || fatal "Can't read result from pack: '$returntarname' is not a readable file."
 
     alpkg=$(basename $returntarname)
     # FIXME: looks like a hack with current dir
