@@ -79,8 +79,8 @@ get_latest_version()
     local epmver="$(epm --short --version)"
     local URL
     for URL in "https://eepm.ru/releases/$epmver/app-versions" "https://eepm.ru/app-versions" ; do
-        # TODO: check eget result, use only 200 OK
-        ver="$(eget -q -O- "$URL/$1" | head -n1 | cut -d" " -f1)"
+        ver="$(eget -q -O- "$URL/$1")" || continue
+        ver="$(echo "$ver" | head -n1 | cut -d" " -f1)"
         [ -n "$ver" ] && echo "$ver" && return
     done
 }

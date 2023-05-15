@@ -27,8 +27,9 @@ get_latest_version()
 {
     URL="https://eepm.ru/app-versions"
     #update_url_if_need_mirrored
-    # TODO: check eget result, use only 200 OK
-    epm tool eget -q -O- "$URL/$1" | head -n1 | cut -d" " -f1
+    local var
+    var="$(epm tool eget -q -O- "$URL/$1")" || return
+    echo "$var" | head -n1 | cut -d" " -f1
 }
 
 __check_for_epm_version()
