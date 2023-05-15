@@ -21,10 +21,10 @@ else
     [ -n "$VERSION" ] && PRODUCT="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")" || fatal "Can't get version from $TAR."
 fi
 
-PKGNAME=$PRODUCT-$VERSION.tar
-
 [ -x "$TAR" ] || chmod u+x $verbose "$TAR"
-$TAR --appimage-extract || fatal
+$TAR --appimage-extract >/dev/null || fatal
+
+PKGNAME=$PRODUCT-$VERSION.tar
 
 cat <<EOF >$PKGNAME.eepm.yaml
 name: $PRODUCT
