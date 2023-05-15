@@ -111,6 +111,7 @@ __prepare_source_package()
         SUBGENERIC='snap'
     else
         __epm_pack_run_handler generic-tar "$pkg"
+        SUBGENERIC='tar'
     fi
 
     # it is possible there are a few files, we don't support it
