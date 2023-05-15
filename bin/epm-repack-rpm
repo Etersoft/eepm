@@ -90,7 +90,7 @@ __create_rpmmacros()
 %packager    EPM <support@eepm.ru>
 %_vendor    EEPM
 %_gpg_name    support@etersoft.ru
-
+# TODO: use special user for repack (instead of root of local user)
 %_allow_root_build    1
 EOF
     remove_on_exit "$HOME/.rpmmacros"
@@ -130,16 +130,17 @@ __epm_repack_to_rpm()
     fi
 
     local pkg
-    HOME="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
-    remove_on_exit $HOME
-    export HOME
-    __create_rpmmacros
-
     local alpkg
     local abspkg
     local tmpbuilddir
     repacked_pkgs=''
     for pkg in $pkgs ; do
+        # TODO: keep home?
+        HOME="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
+        remove_on_exit $HOME
+        export HOME
+        __create_rpmmacros
+
         tmpbuilddir=$HOME/$(basename $pkg).tmpdir
         mkdir $tmpbuilddir
         abspkg="$(realpath $pkg)"
@@ -200,7 +201,7 @@ __epm_repack_to_rpm()
             remove_on_exit "$repacked_rpm"
             [ -n "$repacked_pkgs" ] && repacked_pkgs="$repacked_pkgs $repacked_rpm" || repacked_pkgs="$repacked_rpm"
         else
-            warning "Can't find converted rpm for source binary package '$pkg'"
+            warning "Can't find converted rpm for source binary package '$pkg' (got $repacked_rpm)"
         fi
         cd $EPMCURDIR >/dev/null
     done
