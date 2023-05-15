@@ -73,19 +73,26 @@ __epm_pack()
     # TODO: merge eepm.yaml here (common with $returntarname.eepm.yaml)
     # add upstream_url: $URL too
 
-    # repack if needed
-    repacked_pkgs=''
-    # repack to our target
-    if __epm_repack_if_needed $returntarname ; then
-        [ -n "$repacked_pkgs" ] || fatal "Can't repack $returntarname"
-    # if repack is forced or repack rule (not disabled) is exists
-    elif [ -n "$repack" ] || [ -z "$norepack" ] && __epm_have_repack_rule $returntarname ; then
-        __epm_repack $returntarname
-        [ -n "$repacked_pkgs" ] || fatal "Can't repack $returntarname"
-    fi
+    # note: this repack related code here for follow reasons:
+    #  * repack by default if we have repack rule
+    #  * get repacked files
+    #  * install (repacked) files
+    # the most replacement is epm repack [--install] or epm install [--repack]
+
+    # FIXME: check for every package would be more reliable
+    # by default
+    dorepack='--repack'
+    # don't repack by default there is our pkg format
+    __epm_split_by_pkg_type $PKGFORMAT $returntarname && dorepack=''
+    # repack if we have a repack rule for it
+    [ -z "$norepack" ] && __epm_have_repack_rule $returntarname && dorepack='--repack'
+    # repack if forced
+    [ -n "$repack" ] && dorepack='--repack'
 
     local pkgnames
-    if [ -n "$repacked_pkgs" ] ; then
+    if [ -n "$dorepack" ]  ; then
+        __epm_repack $returntarname
+        [ -n "$repacked_pkgs" ] || fatal "Can't repack $returntarname"
         # remove packed file if we have repacked one
         rm -v $returntarname
         pkgnames="$repacked_pkgs"
