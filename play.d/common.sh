@@ -75,12 +75,14 @@ is_supported_arch()
 
 get_latest_version()
 {
+    local ver
     local epmver="$(epm --short --version)"
-    local URL="https://eepm.ru/releases/$epmver/app-versions"
-    eget -q -O- "$URL/$1" && return
-
-    URL="https://eepm.ru/app-versions"
-    eget -q -O- "$URL/$1"
+    local URL
+    for URL in "https://eepm.ru/releases/$epmver/app-versions" "https://eepm.ru/app-versions" ; do
+        # TODO: check eget result, use only 200 OK
+        ver="$(eget -q -O- "$URL/$1" | head -n1 | cut -d" " -f1)"
+        [ -n "$ver" ] && echo "$ver" && return
+    done
 }
 
 print_product_alt()
