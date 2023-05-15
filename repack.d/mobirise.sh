@@ -7,6 +7,8 @@ SPEC="$2"
 PRODUCT=mobirise
 PRODUCTDIR=/opt/Mobirise
 
+PREINSTALL_PACKAGES="libjpeg8"
+
 . $(dirname $0)/common-chromium-browser.sh
 
 add_bin_link_command
