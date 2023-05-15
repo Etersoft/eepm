@@ -28,13 +28,17 @@ __epm_have_repack_rule()
     # skip repacking on non ALT systems
     [ "$BASEDISTRNAME" = "alt" ] || return 1
 
-    # skip for packages built with repack
-    epm_status_repacked "$1" && return 1
+    local i
+    for i in $* ; do
+        # skip for packages built with repack
+        epm_status_repacked "$i" && return 1
 
-    # FIXME: use real way (for any archive)
-    local pkgname="$(epm print name for package "$1")"
-    local repackcode="$EPM_REPACK_SCRIPTS_DIR/$pkgname.sh"
-    [ -s "$repackcode" ]
+        # FIXME: use real way (for any archive)
+        local pkgname="$(epm print name for package "$i")"
+        local repackcode="$EPM_REPACK_SCRIPTS_DIR/$pkgname.sh"
+        [ -s "$repackcode" ] || return 1
+    done
+    return 0
 }
 
 __epm_check_if_needed_repack()
