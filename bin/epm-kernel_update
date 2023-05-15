@@ -36,8 +36,7 @@ epm_kernel_update()
             return
         fi
         assure_exists update-kernel update-kernel 0.9.9
-        update_repo_if_needed
-        sudocmd update-kernel $dryrun $(subst_option non_interactive -y) "$@" || return
+        sudocmd update-kernel $dryrun $(subst_option non_interactive -y) $force $interactive $reinstall $verbose "$@" || return
         #docmd epm remove-old-kernels "$@" || fatal
         return ;;
     esac
