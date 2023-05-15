@@ -94,7 +94,7 @@ __epm_pack()
         __epm_repack $returntarname
         [ -n "$repacked_pkgs" ] || fatal "Can't repack $returntarname"
         # remove packed file if we have repacked one
-        rm -v $returntarname
+        rm -f $returntarname
         pkgnames="$repacked_pkgs"
     else
         pkgnames="$returntarname"
