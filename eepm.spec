@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.57.0
+Version: 3.57.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -95,6 +95,12 @@ a discussion about extra requirements.
 
 
 %changelog
+* Mon May 15 2023 Vitaly Lipatov <lav@altlinux.ru> 3.57.1-alt1
+- epm-sh-functions: add more diag info about tmp, drop rmdir for removed tmp files
+- revert "disable bash completion for epm (see alt bug 46146)"
+- epm repack: restore fixing tarball files permissions
+- epm repack mobirise: add libjpeg8 require for newest versions
+
 * Mon May 15 2023 Vitaly Lipatov <lav@altlinux.ru> 3.57.0-alt1
 - disable bash completion for epm (see alt bug 46146)
 - epm play: add piktomir
