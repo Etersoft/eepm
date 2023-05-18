@@ -21,9 +21,10 @@ epm_full_upgrade_help()
 {
             get_help HELPCMD $SHAREDIR/epm-full_upgrade
     cat <<EOF
+You can run with --interactive if you can skip some steps interactivelyю
 Also you can comment out full_upgrade parts in /etc/eepm/eepm.conf config.
 Examples:
-  epm full-upgrade
+  epm full-upgrade [--interactive]
   epm full-upgrade --no-flatpack
 EOF
 }
@@ -37,6 +38,8 @@ epm_full_upgrade()
             "-h"|"--help"|"help")      # HELPCMD: help
                 epm_full_upgrade_help
                 return
+                ;;
+            "--interactive")           # HELPCMD: ask before every step
                 ;;
             "--no-epm-play")           # HELPCMD: skip epm play during full upgrade
                 full_upgrade_no_epm_play=1
@@ -57,11 +60,37 @@ epm_full_upgrade()
         shift
     done
 
-    docmd epm update || fatal "repository updating is failed."
+confirm_action()
+{
+    [ -n "$interactive" ] || return 0
+    local response
+    # call with a prompt string or use a default
+    read -r -p "${1:-Are you sure? [Y/n]} " response
+    case $response in
+        [yY][eE][sS]|[yY]|"")
+            true
+            ;;
+        *)
+            false
+            ;;
+    esac
+}
 
-    [ -n "$quiet" ] || echo
-    docmd epm $dryrun upgrade || fatal "upgrading of the system is failed."
+    confirm_action "Update repository info? [Y/n]" || full_upgrade_no_update=1
+    if [ -z "$full_upgrade_no_update" ] ; then
+        [ -n "$quiet" ] || echo
+        docmd epm update || fatal "repository updating is failed."
+    fi
 
+
+    confirm_action "Do upgrade installed packages? [Y/n]" || full_upgrade_no_upgrade=1
+    if [ -z "$full_upgrade_no_upgrade" ] ; then
+        [ -n "$quiet" ] || echo
+        docmd epm $dryrun upgrade || fatal "upgrading of the system is failed."
+    fi
+
+
+    confirm_action "Upgrade kernel and kernel modules? [Y/n]" || full_upgrade_no_kernel_update=1
     if [ -z "$full_upgrade_no_kernel_update" ] ; then
         [ -n "$quiet" ] || echo
         docmd epm $dryrun update-kernel || fatal "updating of the kernel is failed."
@@ -70,25 +99,33 @@ epm_full_upgrade()
     # disable epm play --update for non ALT Systems
     [ "$BASEDISTRNAME" = "alt" ] || full_upgrade_no_epm_play=1
 
+
+    confirm_action "Upgrade packages installed via epm play? [Y/n]" || full_upgrade_no_epm_play=1
     if [ -z "$full_upgrade_no_epm_play" ] ; then
         [ -n "$quiet" ] || echo
         docmd epm $dryrun play --update all || fatal "updating of applications installed via epm play is failed."
     fi
 
-    if [ -z "$full_upgrade_no_flatpack" ] ; then
-        if is_command flatpak ; then
+
+    if is_command flatpak ; then
+        confirm_action "Upgrade installed flatpak packages? [Y/n]" || full_upgrade_no_flatpak=1
+        if [ -z "$full_upgrade_no_flatpak" ] ; then
             [ -n "$quiet" ] || echo
             docmd flatpak update $(subst_option non_interactive --assumeyes) $(subst_option dryrun --no-deploy)
         fi
     fi
 
-    if [ -z "$full_upgrade_no_snap" ] ; then
-        if is_command snap && serv snapd exists && serv snapd status >/dev/null ; then
+
+    if is_command snap && serv snapd exists && serv snapd status >/dev/null ; then
+        confirm_action "Upgrade installed snap packages? [Y/n]" || full_upgrade_no_snap=1
+        if [ -z "$full_upgrade_no_snap" ] ; then
             [ -n "$quiet" ] || echo
             sudocmd snap refresh $(subst_option dryrun --list)
         fi
     fi
 
+
+    confirm_action "Do epm clean? [Y/n]" || full_upgrade_no_clean=1
     if [ -z "$full_upgrade_no_clean" ] ; then
         [ -n "$quiet" ] || echo
         docmd epm $dryrun clean
