@@ -23,8 +23,10 @@ epm_repo_help()
 {
     get_help HELPCMD $SHAREDIR/epm-repo
     cat <<EOF
+
 Examples:
   epm repo set p9
+  epm repo switch p10
   epm repo add autoimports
   epm repo list
   epm repo change yandex
@@ -40,13 +42,9 @@ epm_repo()
     "-h"|"--help"|help)               # HELPCMD: help
         epm_repo_help
         ;;
-    ""|list)                          # HELPCMD: list packages
+    ""|list)                          # HELPCMD: list enabled repositories (-a|--all for list disabled repositorires too)
         load_helper epm-repolist
         epm_repolist "$@"
-        ;;
-    fix)                              # HELPCMD: fix paths in sources lists (ALT Linux only)
-        load_helper epm-repofix
-        epm_repofix "$@"
         ;;
     change)                           # HELPCMD: <mirror>: switch sources to the mirror (supports etersoft/yandex/basealt): rewrite URLs to the specified server
         load_helper epm-repofix
@@ -56,7 +54,7 @@ epm_repo()
         epm repo rm all
         epm addrepo "$@"
         ;;
-    switch)                           # HELPCMD: switch repo to <repo>: rewrite URLs to the repo
+    switch)                           # HELPCMD: switch repo to <repo>: rewrite URLs to the repo (but use epm release-upgrade [Sisyphus|p10] for upgrade to a next branch)
         load_helper epm-repofix
         epm_reposwitch "$@"
         ;;
@@ -68,11 +66,12 @@ epm_repo()
         load_helper epm-repodisable
         epm_repodisable "$@"
         ;;
-    addkey)                              # HELPCMD: add repository gpg key (by URL or file)
+    addkey)                           # HELPCMD: add repository gpg key (by URL or file) (run with --help to detail)
         load_helper epm-repo-addkey
         epm_addkey "$@"
         ;;
     clean)                            # HELPCMD: remove temp. repos (tasks and CD-ROMs)
+        [ "$BASEDISTRNAME" = "alt" ] || fatal "TODO: only ALT now is supported"
         # TODO: check for ALT
         sudocmd apt-repo $dryrun clean
         ;;
@@ -84,11 +83,11 @@ epm_repo()
         load_helper epm-reposave
         epm_reporestore "$@"
         ;;
-    reset)
+    reset)                            # HELPCMD: reset repo lists to the distro default
         load_helper epm-reposave
         epm_reporeset "$@"
         ;;
-    status)
+    status)                           # HELPCMD: print repo status
         load_helper epm-reposave
         epm_repostatus "$@"
         ;;
@@ -105,12 +104,17 @@ epm_repo()
         load_helper epm-removerepo
         epm_removerepo "$@"
         ;;
+    fix)                              # HELPCMD: fix paths in sources lists (ALT Linux only)
+        load_helper epm-repofix
+        epm_repofix "$@"
+        ;;
 
+# HELPCMD: PART: Local repo commands:
     create)                            # HELPCMD: create (initialize) repo: [path] [name]
         load_helper epm-repoindex
         epm_repocreate "$@"
         ;;
-    index)                            # HELPCMD: index repo: [--init] [path] [name]
+    index)                            # HELPCMD: index repo (update indexes): [--init] [path] [name]
         load_helper epm-repoindex
         epm_repoindex "$@"
         ;;

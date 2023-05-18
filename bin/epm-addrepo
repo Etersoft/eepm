@@ -78,6 +78,9 @@ __epm_addrepo_altsp()
     local comp
     local repo="$1"
     case "$repo" in
+        c10f1)
+            comp="CF3"
+            ;;
         c9f2)
             comp="CF2"
             ;;
@@ -169,8 +172,8 @@ cat <<EOF
 
 epm repo add - add branch repo. Use follow params:
     basealt                  - for BaseALT repo"
-    yandex                   - for BaseALT repo mirror hosted by Yandex (recommended)"
     altsp                    - add ALT SP repo"
+    yandex                   - for BaseALT repo mirror hosted by Yandex (recommended)"
     autoimports              - for BaseALT autoimports repo"
     autoports                - for Autoports repo (with packages from Sisyphus rebuilt to the branch)
     altlinuxclub             - for altlinuxclub repo (http://altlinuxclub.ru/)"
@@ -292,7 +295,7 @@ __epm_addrepo_altlinux()
     fi
 
     case "$repo" in
-        c9f2|c9f1|c9)
+        c10f*|c9f*|c9)
             __epm_addrepo_altsp "$repo"
             return
             ;;
