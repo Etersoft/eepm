@@ -18,8 +18,8 @@ esac
 
 case $(epm print info -s) in
     alt)
-        epm repo add "rpm http://akvis-alt.sfo2.cdn.digitaloceanspaces.com x86_64 akvis"
-        epm repo add "rpm http://akvis-alt.sfo2.cdn.digitaloceanspaces.com noarch akvis"
+        epm repo add "rpm https://akvis-alt.sfo2.cdn.digitaloceanspaces.com x86_64 akvis"
+        epm repo add "rpm https://akvis-alt.sfo2.cdn.digitaloceanspaces.com noarch akvis"
         epm update
         epm install $PKGNAME
         echo "Run alivecolors:"
@@ -29,7 +29,7 @@ case $(epm print info -s) in
     suse)
         # TODO: check and remove, the same as for dnf-part
         #a= rpm --import http://akvis.com/akvis.asc
-        epm repo addkey http://akvis.com/akvis.asc
+        epm repo addkey https://akvis.com/akvis.asc
         # zypper ar -r https://akvis.com/akvis.repo akvis
         epm repo add https://akvis.com/akvis.repo
         # zypper ref
@@ -46,7 +46,7 @@ esac
 case $(epm print info -g) in
     dnf-rpm|yum-rpm)
         #sudo rpm --import https://akvis.com/akvis.asc
-        epm repo addkey http://akvis.com/akvis.asc
+        epm repo addkey https://akvis.com/akvis.asc
         #sudo wget -O /etc/yum.repos.d/akvis.repo https://akvis.com/akvis.repo
         epm repo add https://akvis.com/akvis.repo
         epm update

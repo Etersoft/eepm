@@ -19,7 +19,7 @@ cd $PKGDIR || fatal
 if ! epm tool eget $PKGURL ; then
     echo "It is possible you are blocked from USA, trying get from IPFS ..."
     pkgname=$(basename $PKGURL)
-    epm tool eget -O $pkgname http://dhash.ru/ipfs/$IPFSHASH || fatal "Can't get $pkgname from IPFS."
+    epm tool eget -O $pkgname https://dhash.ru/ipfs/$IPFSHASH || fatal "Can't get $pkgname from IPFS."
 fi
 
 epm install --repack *.tar.gz || exit

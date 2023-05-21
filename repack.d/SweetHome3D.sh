@@ -16,7 +16,7 @@ PREINSTALL_PACKAGES="coreutils glib2 libalsa libatk libcairo libcairo-gobject fo
 subst '1iConflicts:sweethome3d' $SPEC
 
 subst "s|^License: unknown$|License: GPLv2|" $SPEC
-subst "s|^URL:.*|URL: http://www.sweethome3d.com|" $SPEC
+subst "s|^URL:.*|URL: https://www.sweethome3d.com|" $SPEC
 subst "s|^Summary:.*|Summary: An interior design application to draw house plans & arrange furniture|" $SPEC
 
 ROOTDIR=$(basename $(find $BUILDROOT -mindepth 1 -maxdepth 1 -type d))

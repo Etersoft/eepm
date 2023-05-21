@@ -14,7 +14,7 @@ PREINSTALL_PACKAGES="glibc-core glibc-pthread libgcc1 libstdc++6 libX11 libXau l
 
 subst "s|^Group:.*|Group: Graphics|" $SPEC
 subst "s|^License: unknown$|License: GPLv2|" $SPEC
-subst "s|^URL:.*|URL: http://cuda-z.sourceforge.net/|" $SPEC
+subst "s|^URL:.*|URL: https://cuda-z.sourceforge.net/|" $SPEC
 subst "s|^Summary:.*|Summary: CUDA-Z|" $SPEC
 
 add_bin_link_command
@@ -37,5 +37,5 @@ install_file "https://cuda-z.sourceforge.net/img/web-download-detect.png" /usr/s
 
 # Running 32 bit cuda-z on Ubuntu
 # libc6:i386 libstdc++6:i386 zlib1g:i386 libx11-6:i386 libxext6:i386 libxrender1:i386
-# http://blog.redscorp.net/?p=94
+# https://blog.redscorp.net/?p=94
 

@@ -43,7 +43,7 @@ dv=$distr/$repo
 
 if [ "$VERSION" = "*" ] ; then
     # hack with --compressed due broken answer from the server
-    RELEASEURL=$(eget --compressed --list --latest http://download.zerotier.com/RELEASES/*) || fatal
+    RELEASEURL=$(eget --compressed --list --latest https://download.zerotier.com/RELEASES/*) || fatal
     VERSION="$(basename $RELEASEURL)"
 fi
 

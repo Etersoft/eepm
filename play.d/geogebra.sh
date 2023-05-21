@@ -24,10 +24,10 @@ repack=''
 
 case $pkgtype in
     deb)
-        epm install "http://www.geogebra.net/linux/pool/main/g/geogebra-classic/$(epm print constructname $PKGNAME "$VERSION" $arch)"
+        epm install "https://www.geogebra.net/linux/pool/main/g/geogebra-classic/$(epm print constructname $PKGNAME "$VERSION" $arch)"
         ;;
     rpm)
-        epm $repack install "http://www.geogebra.net/linux/rpm/$arch/$(epm print constructname $PKGNAME "$VERSION" $arch)"
+        epm $repack install "https://www.geogebra.net/linux/rpm/$arch/$(epm print constructname $PKGNAME "$VERSION" $arch)"
         ;;
     *)
         fatal "Unsupported $pkgtype"

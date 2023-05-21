@@ -12,7 +12,7 @@ PRODUCTDIR=/opt/$PRODUCT
 
 subst "s|^Group:.*|Group: Development/Other|" $SPEC
 subst "s|^License: unknown$|License: AGPL-3.0|" $SPEC
-subst "s|^URL:.*|URL: http://snap4arduino.rocks/|" $SPEC
+subst "s|^URL:.*|URL: https://snap4arduino.rocks/|" $SPEC
 subst "s|^Summary:.*|Summary: A modification of the Snap! visual programming language that lets you seamlessly interact with almost all versions of the Arduino board.|" $SPEC
 
 # move package to /opt
