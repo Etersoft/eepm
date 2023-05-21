@@ -301,9 +301,13 @@ __epm_addrepo_altlinux()
             ;;
     esac
 
-
     # don't add again
     epm repo list --quiet | grep -q -F "$repo" && return 0
+
+    if echo "$repo" | grep -q "https://" ; then
+        local mh="$(echo /usr/lib*/apt/methods/https)"
+        assure_exists $mh apt-https
+    fi
 
     sudocmd apt-repo $dryrun add "$repo"
 
