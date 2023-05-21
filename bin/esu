@@ -67,10 +67,9 @@ if [ "$1" = "-c" ] ; then
     shift
 fi
 
-# just an optimization
-if ! is_root ; then
-    # need only under user
-    set_pm_type
+# just ignore
+if [ "$1" = "-" ] ; then
+    shift
 fi
 
 esu "$@"
