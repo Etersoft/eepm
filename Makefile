@@ -37,6 +37,7 @@ install_common:
 	chmod a+x $(DESTDIR)$(pkgdatadir)/tools_*
 
 	mkdir -p $(DESTDIR)/var/lib/eepm/
+	mkdir -p $(DESTDIR)/var/cache/eepm/
 
 
 $(cmd_list):

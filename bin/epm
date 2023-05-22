@@ -137,6 +137,7 @@ direct_args=
 
 eget_backend=$EGET_BACKEND
 epm_vardir=/var/lib/eepm
+epm_cachedir=/var/cache/eepm
 eget_ipfs_db=$epm_vardir/eget-ipfs-db.txt
 
 # load system wide config

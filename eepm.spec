@@ -84,6 +84,7 @@ a discussion about extra requirements.
 %_bindir/distr_info
 %_bindir/esu
 %dir /var/lib/eepm/
+%dir /var/cache/eepm/
 %_man1dir/*
 %_datadir/%name/
 %_sysconfdir/bash_completion.d/serv
