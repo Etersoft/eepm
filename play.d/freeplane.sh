@@ -2,15 +2,14 @@
 
 PKGNAME=freeplane
 SUPPORTEDARCHES="x86_64 x86"
+VERSION="$2"
 DESCRIPTION="FreePlane from the official site"
 URL="http://freeplane.sourceforge.net"
 
 . $(dirname $0)/common.sh
 
-PKGURL="https://nav.dl.sourceforge.net/project/freeplane/freeplane%20stable/freeplane_1.11.2~upstream-1_all.deb"
+[ "$VERSION" = "*" ] && VERSION="$(eget -O- https://sourceforge.net/projects/$PKGNAME/best_release.json | sed -e 's|.*freeplane_bin-||g' -e 's|\.zip.*||')"
 
-if [ "$(epm print info -s)" = "alt" ] ; then
-    repack="--repack"
-fi
+PKGURL="https://nav.dl.sourceforge.net/project/freeplane/freeplane%20stable/freeplane_$VERSION~upstream-1_all.deb"
 
-epm install $repack "$PKGURL"
+epm install "$PKGURL"
