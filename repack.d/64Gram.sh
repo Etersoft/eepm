@@ -32,9 +32,22 @@ done
 
 # away of file conflict
 subst 's|/etc/tdesktop/externalupdater|/etc/t64gramp/externalupdater|' $BUILDROOT$PRODUCTDIR/$PRODUCT
+# since newest versions telegram uses UCS2
+# $ echo -n '/etc/tdesktop/externalupdater' | iconv -t UCS2 | hexdump -ve '1/1 " %02x"' | sed -e 's| |\\x|g'
+# $ echo -n '/etc/t64gramp/externalupdater' | iconv -t UCS2 | hexdump -ve '1/1 " %02x"' | sed -e 's| |\\x|g'
+subst 's|\x2f\x00\x65\x00\x74\x00\x63\x00\x2f\x00\x74\x00\x64\x00\x65\x00\x73\x00\x6b\x00\x74\x00\x6f\x00\x70\x00\x2f\x00\x65\x00\x78\x00\x74\x00\x65\x00\x72\x00\x6e\x00\x61\x00\x6c\x00\x75\x00\x70\x00\x64\x00\x61\x00\x74\x00\x65\x00\x72\x00|\x2f\x00\x65\x00\x74\x00\x63\x00\x2f\x00\x74\x00\x36\x00\x34\x00\x67\x00\x72\x00\x61\x00\x6d\x00\x70\x00\x2f\x00\x65\x00\x78\x00\x74\x00\x65\x00\x72\x00\x6e\x00\x61\x00\x6c\x00\x75\x00\x70\x00\x64\x00\x61\x00\x74\x00\x65\x00\x72\x00|' $BUILDROOT$PRODUCTDIR/$PRODUCT
 
 # Disable the official Telegram Desktop updater, creating menu entry (desktop file) and settings entries
 # See https://github.com/telegramdesktop/tdesktop/issues/25718
+
+# New way:
+# commit 2be4641496f6f5efc7c18c2842ad00ddf51be43c
+#Author: Ilya Fedin <fedin-ilja2010@ya.ru>
+#Date:   Fri Jan 13 17:58:36 2023 +0400
+#
+#    Install launcher on every launch on Linux
+# set DESKTOPINTEGRATION or disable update via set path to binary to /etc/t64gramp/externalupdater
+
 mkdir -p "$BUILDROOT/etc/t64gramp"
 # telegram checks with real path to the binary
 echo "$PRODUCTDIR/$PRODUCT" >"$BUILDROOT/etc/t64gramp/externalupdater"

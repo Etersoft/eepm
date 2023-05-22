@@ -41,6 +41,15 @@ done
 
 # Disable the official Telegram Desktop updater, creating menu entry (desktop file) and settings entries
 # See https://github.com/telegramdesktop/tdesktop/issues/25718
+
+# New way:
+# commit 2be4641496f6f5efc7c18c2842ad00ddf51be43c
+#Author: Ilya Fedin <fedin-ilja2010@ya.ru>
+#Date:   Fri Jan 13 17:58:36 2023 +0400
+#
+#    Install launcher on every launch on Linux
+# set DESKTOPINTEGRATION or disable update via set path to binary to /etc/tdesktop/externalupdater
+
 mkdir -p "$BUILDROOT/etc/tdesktop"
 # telegram checks with real path to the binary
 echo "$PRODUCTDIR/$PRODUCT" >"$BUILDROOT/etc/tdesktop/externalupdater"
