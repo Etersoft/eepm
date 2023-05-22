@@ -168,7 +168,14 @@ docmd $CMD $pkg_names
 
 epm_requires()
 {
+    # if possible, it will put pkg_urls into pkg_files or pkg_names
+    if [ -n "$pkg_urls" ] ; then
+        load_helper epm-download
+        __handle_pkg_urls_to_checking
+    fi
+
     [ -n "$pkg_filenames" ] || fatal "Requires: package name is missed"
+
     epm_requires_files $pkg_files
     # shellcheck disable=SC2046
     epm_requires_names $(print_name $pkg_names)

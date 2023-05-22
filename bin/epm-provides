@@ -103,6 +103,12 @@ docmd $CMD $pkg_names
 
 epm_provides()
 {
+    # if possible, it will put pkg_urls into pkg_files or pkg_names
+    if [ -n "$pkg_urls" ] ; then
+        load_helper epm-download
+        __handle_pkg_urls_to_checking
+    fi
+
     [ -n "$pkg_filenames" ] || fatal "Provides: package name is missed"
 
     epm_provides_files $pkg_files
