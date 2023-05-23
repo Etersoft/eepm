@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.57.1
+Version: 3.57.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -96,6 +96,23 @@ a discussion about extra requirements.
 
 
 %changelog
+* Tue May 23 2023 Vitaly Lipatov <lav@altlinux.ru> 3.57.2-alt1
+- i586-fix: added libd3d
+- epm repack.d/generic.sh: improve python3 support
+- simplify download via eget, parse result strictly
+- epm full-upgrade: add --interactive support (ask for every step)
+- esu: add messages if sudo or su is missed or not accessible
+- epm addrepo: install apt-https if add https:// repo
+- epm play: use https only
+- epm play: add logseq support
+- epm play: add freeplane
+- epm requires/provides: add support for remote files (url)
+- epm repack: ungoogled-chromium: fix chrome-sandbox name
+- epm repack epsonscan2: fix linking
+- epm repack 64Gram: fix updater disabling
+- epm play cascadeur: revert to 2022.3.1 version
+- epm filelist/search-file: move content index update to epm update
+
 * Mon May 15 2023 Vitaly Lipatov <lav@altlinux.ru> 3.57.1-alt1
 - epm-sh-functions: add more diag info about tmp, drop rmdir for removed tmp files
 - revert "disable bash completion for epm (see alt bug 46146)"
