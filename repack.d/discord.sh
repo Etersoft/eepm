@@ -14,8 +14,9 @@ move_to_opt
 
 fix_chrome_sandbox
 
-install_deps
+add_deps
 
+subst '1iAutoReq:no' $SPEC
 subst '1iAutoProv:no' $SPEC
 
 rm usr/bin/$PRODUCT
