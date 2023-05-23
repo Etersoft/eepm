@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.57.2
+Version: 3.57.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -96,6 +96,12 @@ a discussion about extra requirements.
 
 
 %changelog
+* Tue May 23 2023 Vitaly Lipatov <lav@altlinux.ru> 3.57.3-alt1
+- added --nox11 to pack.d/far2l-portable.sh (ALT bug 45869)
+- epm repack ungoogled-chromium: fix chrome-sandbox name
+- epm repack discord: disable autoreq, add fixed reqs
+- epm play flyview-server: add comments about user, create var dir (ALT bug 45630)
+
 * Tue May 23 2023 Vitaly Lipatov <lav@altlinux.ru> 3.57.2-alt1
 - i586-fix: added libd3d
 - epm repack.d/generic.sh: improve python3 support
