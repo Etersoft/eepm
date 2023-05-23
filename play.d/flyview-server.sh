@@ -11,11 +11,13 @@ PKG="https://flyviewvms.ru/distro/flyview-server.deb"
 
 epm install $PKG || exit
 
-# TODO:
+echo
+echo "
+Execute manually:
 # groupadd -r ipera
 # useradd -r -g ipera ipera
-# mkdir -p /opt/ipera/var
-# chown ipera:ipera /opt/ipera/var
+# chown ipera:ipera /var/lib/ipera
+"
 
 echo
 echo "Note: run
