@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.57.1"
+EPMVERSION="3.57.2"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -511,6 +511,43 @@ assure_root()
     is_root || fatal "run me only under root"
 }
 
+check_su_access()
+{
+    is_command su && return
+    [ ! -f /bin/su ] && warning "/bin/su is missed. Try install su package (http://altlinux.org/su)." && return 1
+    local group="$(stat -c '%G' /bin/su)" || fatal
+    warning "Check if you are in $group group to have access to su command."
+    return 1
+}
+
+check_sudo_access()
+{
+    is_command sudo && return
+    local cmd=''
+    local i
+    for i in /bin/sudo /usr/bin/sudo ; do
+        [ -f $i ] && cmd="$i"
+    done
+    [ ! -f $cmd ] && warning "sudo command is missed. Try install sudo package (http://altlinux.org/sudo)." && return 1
+    local group="$(stat -c '%G' $cmd)" || fatal
+    warning "Check if you are in $group group to have access to sudo command."
+    return 1
+}
+
+check_sudo_access_only()
+{
+    is_command sudo && return
+    local cmd=''
+    local i
+    for i in /bin/sudo /usr/bin/sudo ; do
+        [ -f $i ] && cmd="$i"
+    done
+    [ ! -f $cmd ] && return 1
+    local group="$(stat -c '%G' $cmd)" || fatal
+    warning "sudo command is presence, but is not accessible for you. Check if you are in $group group to have access to sudo command."
+    return 1
+}
+
 esu()
 {
     if is_root ; then
@@ -544,9 +581,10 @@ esu()
 
     escaped="$(escape_args "$@")"
 
-
+    check_sudo_access_only
     # sudo is not accessible, will ask root password
     if ! set_sudo ; then
+        check_su_access
         #info "Enter root password:"
         if [ -n "$*" ] ; then
             [ -n "$quiet" ] || showcmd "su - -c $escaped"
@@ -557,6 +595,8 @@ esu()
             a= exec su -
         fi
     fi
+
+    check_sudo_access
 
     #info "You can be asked about your password:"
     if [ -n "$*" ] ; then
@@ -993,6 +1033,9 @@ __epm_addrepo_altsp()
     local comp
     local repo="$1"
     case "$repo" in
+        c10f1)
+            comp="CF3"
+            ;;
         c9f2)
             comp="CF2"
             ;;
@@ -1083,8 +1126,8 @@ cat <<EOF
 
 epm repo add - add branch repo. Use follow params:
     basealt                  - for BaseALT repo"
-    yandex                   - for BaseALT repo mirror hosted by Yandex (recommended)"
     altsp                    - add ALT SP repo"
+    yandex                   - for BaseALT repo mirror hosted by Yandex (recommended)"
     autoimports              - for BaseALT autoimports repo"
     autoports                - for Autoports repo (with packages from Sisyphus rebuilt to the branch)
     altlinuxclub             - for altlinuxclub repo (http://altlinuxclub.ru/)"
@@ -1206,15 +1249,19 @@ __epm_addrepo_altlinux()
     fi
 
     case "$repo" in
-        c9f2|c9f1|c9)
+        c10f*|c9f*|c9)
             __epm_addrepo_altsp "$repo"
             return
             ;;
     esac
 
-
     # don't add again
     epm repo list --quiet | grep -q -F "$repo" && return 0
+
+    if echo "$repo" | grep -q "https://" ; then
+        local mh="$(echo /usr/lib*/apt/methods/https)"
+        assure_exists $mh apt-https
+    fi
 
     sudocmd apt-repo $dryrun add "$repo"
 
@@ -3207,7 +3254,8 @@ epm_epm_install()
 __alt_local_content_filelist()
 {
 
-    update_alt_contents_index
+    check_alt_contents_index || init_alt_contents_index
+    update_repo_if_needed
     local CI="$(cat $ALT_CONTENTS_INDEX_LIST)"
 
     # TODO: safe way to use less or bat
@@ -3385,9 +3433,10 @@ epm_full_upgrade_help()
 {
             get_help HELPCMD $SHAREDIR/epm-full_upgrade
     cat <<EOF
+You can run with --interactive if you can skip some steps interactivelyю
 Also you can comment out full_upgrade parts in /etc/eepm/eepm.conf config.
 Examples:
-  epm full-upgrade
+  epm full-upgrade [--interactive]
   epm full-upgrade --no-flatpack
 EOF
 }
@@ -3401,6 +3450,8 @@ epm_full_upgrade()
             "-h"|"--help"|"help")      # HELPCMD: help
                 epm_full_upgrade_help
                 return
+                ;;
+            "--interactive")           # HELPCMD: ask before every step
                 ;;
             "--no-epm-play")           # HELPCMD: skip epm play during full upgrade
                 full_upgrade_no_epm_play=1
@@ -3421,11 +3472,37 @@ epm_full_upgrade()
         shift
     done
 
-    docmd epm update || fatal "repository updating is failed."
+confirm_action()
+{
+    [ -n "$interactive" ] || return 0
+    local response
+    # call with a prompt string or use a default
+    read -r -p "${1:-Are you sure? [Y/n]} " response
+    case $response in
+        [yY][eE][sS]|[yY]|"")
+            true
+            ;;
+        *)
+            false
+            ;;
+    esac
+}
 
-    [ -n "$quiet" ] || echo
-    docmd epm $dryrun upgrade || fatal "upgrading of the system is failed."
+    confirm_action "Update repository info? [Y/n]" || full_upgrade_no_update=1
+    if [ -z "$full_upgrade_no_update" ] ; then
+        [ -n "$quiet" ] || echo
+        docmd epm update || fatal "repository updating is failed."
+    fi
 
+
+    confirm_action "Do upgrade installed packages? [Y/n]" || full_upgrade_no_upgrade=1
+    if [ -z "$full_upgrade_no_upgrade" ] ; then
+        [ -n "$quiet" ] || echo
+        docmd epm $dryrun upgrade || fatal "upgrading of the system is failed."
+    fi
+
+
+    confirm_action "Upgrade kernel and kernel modules? [Y/n]" || full_upgrade_no_kernel_update=1
     if [ -z "$full_upgrade_no_kernel_update" ] ; then
         [ -n "$quiet" ] || echo
         docmd epm $dryrun update-kernel || fatal "updating of the kernel is failed."
@@ -3434,25 +3511,33 @@ epm_full_upgrade()
     # disable epm play --update for non ALT Systems
     [ "$BASEDISTRNAME" = "alt" ] || full_upgrade_no_epm_play=1
 
+
+    confirm_action "Upgrade packages installed via epm play? [Y/n]" || full_upgrade_no_epm_play=1
     if [ -z "$full_upgrade_no_epm_play" ] ; then
         [ -n "$quiet" ] || echo
         docmd epm $dryrun play --update all || fatal "updating of applications installed via epm play is failed."
     fi
 
-    if [ -z "$full_upgrade_no_flatpack" ] ; then
-        if is_command flatpak ; then
+
+    if is_command flatpak ; then
+        confirm_action "Upgrade installed flatpak packages? [Y/n]" || full_upgrade_no_flatpak=1
+        if [ -z "$full_upgrade_no_flatpak" ] ; then
             [ -n "$quiet" ] || echo
             docmd flatpak update $(subst_option non_interactive --assumeyes) $(subst_option dryrun --no-deploy)
         fi
     fi
 
-    if [ -z "$full_upgrade_no_snap" ] ; then
-        if is_command snap && serv snapd exists && serv snapd status >/dev/null ; then
+
+    if is_command snap && serv snapd exists && serv snapd status >/dev/null ; then
+        confirm_action "Upgrade installed snap packages? [Y/n]" || full_upgrade_no_snap=1
+        if [ -z "$full_upgrade_no_snap" ] ; then
             [ -n "$quiet" ] || echo
             sudocmd snap refresh $(subst_option dryrun --list)
         fi
     fi
 
+
+    confirm_action "Do epm clean? [Y/n]" || full_upgrade_no_clean=1
     if [ -z "$full_upgrade_no_clean" ] ; then
         [ -n "$quiet" ] || echo
         docmd epm $dryrun clean
@@ -6074,13 +6159,11 @@ __epm_play_download_epm_file()
     local file="$2"
     # use short version (3.4.5)
     local epmver="$(epm --short --version)"
-    local URL="https://eepm.ru/releases/$epmver/app-versions"
-    info "Updating local IPFS DB in $eget_ipfs_db file from $URL/eget-ipfs-db.txt"
-    docmd eget -q -O "$target" "$URL/$file" && return
-
-    URL="https://eepm.ru/app-versions"
-    info "Updating local IPFS DB in $eget_ipfs_db file from $URL/eget-ipfs-db.txt"
-    docmd eget -q -O "$target" "$URL/$file"
+    local URL
+    for URL in "https://eepm.ru/releases/$epmver/app-versions" "https://eepm.ru/app-versions" ; do
+        info "Updating local IPFS DB in $eget_ipfs_db file from $URL/eget-ipfs-db.txt"
+        docmd eget -q -O "$target" "$URL/$file" && return
+    done
 }
 
 
@@ -6821,6 +6904,11 @@ docmd $CMD $pkg_names
 
 epm_provides()
 {
+    # if possible, it will put pkg_urls into pkg_files or pkg_names
+    if [ -n "$pkg_urls" ] ; then
+        __handle_pkg_urls_to_checking
+    fi
+
     [ -n "$pkg_filenames" ] || fatal "Provides: package name is missed"
 
     epm_provides_files $pkg_files
@@ -9148,8 +9236,10 @@ epm_repo_help()
 {
     get_help HELPCMD $SHAREDIR/epm-repo
     cat <<EOF
+
 Examples:
   epm repo set p9
+  epm repo switch p10
   epm repo add autoimports
   epm repo list
   epm repo change yandex
@@ -9165,11 +9255,8 @@ epm_repo()
     "-h"|"--help"|help)               # HELPCMD: help
         epm_repo_help
         ;;
-    ""|list)                          # HELPCMD: list packages
+    ""|list)                          # HELPCMD: list enabled repositories (-a|--all for list disabled repositorires too)
         epm_repolist "$@"
-        ;;
-    fix)                              # HELPCMD: fix paths in sources lists (ALT Linux only)
-        epm_repofix "$@"
         ;;
     change)                           # HELPCMD: <mirror>: switch sources to the mirror (supports etersoft/yandex/basealt): rewrite URLs to the specified server
         epm_repofix "$@"
@@ -9178,7 +9265,7 @@ epm_repo()
         epm repo rm all
         epm addrepo "$@"
         ;;
-    switch)                           # HELPCMD: switch repo to <repo>: rewrite URLs to the repo
+    switch)                           # HELPCMD: switch repo to <repo>: rewrite URLs to the repo (but use epm release-upgrade [Sisyphus|p10] for upgrade to a next branch)
         epm_reposwitch "$@"
         ;;
     enable)                           # HELPCMD: enable <repo>
@@ -9187,10 +9274,11 @@ epm_repo()
     disable)                          # HELPCMD: disable <repo>
         epm_repodisable "$@"
         ;;
-    addkey)                              # HELPCMD: add repository gpg key (by URL or file)
+    addkey)                           # HELPCMD: add repository gpg key (by URL or file) (run with --help to detail)
         epm_addkey "$@"
         ;;
     clean)                            # HELPCMD: remove temp. repos (tasks and CD-ROMs)
+        [ "$BASEDISTRNAME" = "alt" ] || fatal "TODO: only ALT now is supported"
         # TODO: check for ALT
         sudocmd apt-repo $dryrun clean
         ;;
@@ -9200,10 +9288,10 @@ epm_repo()
     restore)                          # HELPCMD: restore sources lists from a temp place
         epm_reporestore "$@"
         ;;
-    reset)
+    reset)                            # HELPCMD: reset repo lists to the distro default
         epm_reporeset "$@"
         ;;
-    status)
+    status)                           # HELPCMD: print repo status
         epm_repostatus "$@"
         ;;
     add)                              # HELPCMD: add package repo (etersoft, autoimports, archive 2017/12/31); run with param to get list
@@ -9216,11 +9304,14 @@ epm_repo()
     rm|del|remove)                     # HELPCMD: remove repository from the sources lists (epm repo remove all for all)
         epm_removerepo "$@"
         ;;
+    fix)                              # HELPCMD: fix paths in sources lists (ALT Linux only)
+        epm_repofix "$@"
+        ;;
 
     create)                            # HELPCMD: create (initialize) repo: [path] [name]
         epm_repocreate "$@"
         ;;
-    index)                            # HELPCMD: index repo: [--init] [path] [name]
+    index)                            # HELPCMD: index repo (update indexes): [--init] [path] [name]
         epm_repoindex "$@"
         ;;
     pkgadd)                           # HELPCMD: add to <dir> applied <package-filename1> [<package-filename2>...]
@@ -10436,7 +10527,13 @@ docmd $CMD $pkg_names
 
 epm_requires()
 {
+    # if possible, it will put pkg_urls into pkg_files or pkg_names
+    if [ -n "$pkg_urls" ] ; then
+        __handle_pkg_urls_to_checking
+    fi
+
     [ -n "$pkg_filenames" ] || fatal "Requires: package name is missed"
+
     epm_requires_files $pkg_files
     # shellcheck disable=SC2046
     epm_requires_names $(print_name $pkg_names)
@@ -11252,7 +11349,9 @@ __alt_search_file_output()
 __alt_local_content_search()
 {
 
-    update_alt_contents_index
+    check_alt_contents_index || init_alt_contents_index
+    update_repo_if_needed
+
     local CI="$(cat $ALT_CONTENTS_INDEX_LIST)"
 
     info "Searching for $1 ... "
@@ -11269,11 +11368,15 @@ epm_search_file()
     local CMD
     [ -n "$pkg_filenames" ] || fatal "Search file: file name is missed"
 
-case $PMTYPE in
-    apt-rpm)
+case $BASEDISTRNAME in
+    "alt")
         __alt_local_content_search $pkg_filenames
         return ;;
+esac
+
+case $PMTYPE in
     apt-dpkg|aptitude-dpkg)
+        # move to update?
         assure_exists apt-file
         sudocmd apt-file update
         docmd apt-file search $pkg_filenames
@@ -11375,14 +11478,10 @@ get_alt_repo_path()
 
 get_local_alt_mirror_path()
 {
-    # FIXME: by some reason missed in ALT docker image (no login?)
-    [ -n "$TMPDIR" ] || TMPDIR=/tmp
-
-    # TODO: /var/cache/eepm
-    echo "$TMPDIR/eepm/$(get_alt_repo_path "$1")"
+    echo "$epm_cachedir/contents_index/$(get_alt_repo_path "$1")"
 }
 
-ALT_CONTENTS_INDEX_LIST=$TMPDIR/eepm/contents_index_list
+ALT_CONTENTS_INDEX_LIST=$epm_cachedir/contents_index/contents_index_list
 
 rsync_alt_contents_index()
 {
@@ -11406,12 +11505,6 @@ get_url_to_etersoft_mirror()
     echo "$ETERSOFT_MIRROR/$(get_alt_repo_path "$1" | sed -e "s|^ALTLinux/|ALTLinux/contents_index/|")"
 }
 
-__init_contents_index_list()
-{
-    mkdir -p "$(dirname $ALT_CONTENTS_INDEX_LIST)"
-    truncate -s0 $ALT_CONTENTS_INDEX_LIST
-}
-
 __add_to_contents_index_list()
 {
     [ -n "$quiet" ] || echo "  $1 -> $2"
@@ -11429,9 +11522,23 @@ __add_better_to_contents_index_list()
 }
 
 
+check_alt_contents_index()
+{
+    [ -f "$ALT_CONTENTS_INDEX_LIST" ]
+}
+
+init_alt_contents_index()
+{
+    sudocmd mkdir -p "$(dirname $ALT_CONTENTS_INDEX_LIST)"
+    sudocmd chmod a+rw "$(dirname $ALT_CONTENTS_INDEX_LIST)"
+    sudocmd truncate -s0 $ALT_CONTENTS_INDEX_LIST
+    sudocmd chmod a+rw $ALT_CONTENTS_INDEX_LIST
+    update_alt_contents_index
+}
+
 update_alt_contents_index()
 {
-    __init_contents_index_list
+    check_alt_contents_index || return
     # TODO: fix for Etersoft/LINUX@Etersoft
     # TODO: fix for rsync
     info "Retrieving contents_index ..."
@@ -11526,17 +11633,17 @@ __epm_print_warning_for_nonalt_packages()
     local i
     for i in $* ; do
         if epm_status_repacked "$i" ; then
-            warning "%%% You are trying install package $i repacked from third-party software source. Use it at your own discretion. %%%"
+            warning "%%% You are trying install package $i repacked from third-party software source. Use it at your own risk. %%%"
             continue
         fi
 
         if epm_status_thirdparty "$i" ; then
-            warning "%%% You are trying install package $i from third-party software source. Use it at your own discretion. %%%"
+            warning "%%% You are trying install package $i from third-party software source. Use it at your own risk. %%%"
             continue
         fi
 
         if ! epm_status_original "$i" ; then
-            warning "%%% You are trying install package $i not from official $DISTRNAME/$DISTRVERSION repository. Use it at your own discretion. %%%"
+            warning "%%% You are trying install package $i not from official $DISTRNAME/$DISTRVERSION repository. Use it at your own risk. %%%"
             continue
         fi
     done
@@ -12264,7 +12371,9 @@ get_latest_version()
 {
     URL="https://eepm.ru/app-versions"
     #update_url_if_need_mirrored
-    epm tool eget -q -O- "$URL/$1"
+    local var
+    var="$(epm tool eget -q -O- "$URL/$1")" || return
+    echo "$var" | head -n1 | cut -d" " -f1
 }
 
 __check_for_epm_version()
@@ -12282,7 +12391,7 @@ __save_available_packages()
 {
     [ -d "$epm_vardir" ] || return 0
 
-    info "Retrieve all available packages (for autocompletion) ..."
+    info "Retrieving list of all available packages (for autocompletion) ..."
     short=--short epm_list_available | sort | sudorun tee $epm_vardir/available-packages >/dev/null
 }
 
@@ -12295,8 +12404,8 @@ epm_update()
 local ret=0
 warmup_hibase
 
-case $PMTYPE in
-    apt-rpm)
+case $BASEDISTRNAME in
+    "alt")
         # TODO: hack against cd to cwd in apt-get on ALT
         cd /
         sudocmd apt-get update
@@ -12305,6 +12414,26 @@ case $PMTYPE in
         [ "$ret" = "0" ] || return
         __check_for_epm_version
         #sudocmd apt-get -f install || exit
+
+        __epm_touch_pkg
+
+        __save_available_packages
+
+        init_alt_contents_index
+
+        return $ret
+        ;;
+esac
+
+
+case $PMTYPE in
+    apt-rpm)
+        # TODO: hack against cd to cwd in apt-get on ALT
+        cd /
+        sudocmd apt-get update
+        ret="$?"
+        cd - >/dev/null
+        [ "$ret" = "0" ] || return
         ;;
     apt-dpkg)
         sudocmd apt-get update || return
@@ -16379,6 +16508,7 @@ direct_args=
 
 eget_backend=$EGET_BACKEND
 epm_vardir=/var/lib/eepm
+epm_cachedir=/var/cache/eepm
 eget_ipfs_db=$epm_vardir/eget-ipfs-db.txt
 
 # load system wide config

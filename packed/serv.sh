@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.57.1"
+EPMVERSION="3.57.2"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -512,6 +512,43 @@ assure_root()
     is_root || fatal "run me only under root"
 }
 
+check_su_access()
+{
+    is_command su && return
+    [ ! -f /bin/su ] && warning "/bin/su is missed. Try install su package (http://altlinux.org/su)." && return 1
+    local group="$(stat -c '%G' /bin/su)" || fatal
+    warning "Check if you are in $group group to have access to su command."
+    return 1
+}
+
+check_sudo_access()
+{
+    is_command sudo && return
+    local cmd=''
+    local i
+    for i in /bin/sudo /usr/bin/sudo ; do
+        [ -f $i ] && cmd="$i"
+    done
+    [ ! -f $cmd ] && warning "sudo command is missed. Try install sudo package (http://altlinux.org/sudo)." && return 1
+    local group="$(stat -c '%G' $cmd)" || fatal
+    warning "Check if you are in $group group to have access to sudo command."
+    return 1
+}
+
+check_sudo_access_only()
+{
+    is_command sudo && return
+    local cmd=''
+    local i
+    for i in /bin/sudo /usr/bin/sudo ; do
+        [ -f $i ] && cmd="$i"
+    done
+    [ ! -f $cmd ] && return 1
+    local group="$(stat -c '%G' $cmd)" || fatal
+    warning "sudo command is presence, but is not accessible for you. Check if you are in $group group to have access to sudo command."
+    return 1
+}
+
 esu()
 {
     if is_root ; then
@@ -545,9 +582,10 @@ esu()
 
     escaped="$(escape_args "$@")"
 
-
+    check_sudo_access_only
     # sudo is not accessible, will ask root password
     if ! set_sudo ; then
+        check_su_access
         #info "Enter root password:"
         if [ -n "$*" ] ; then
             [ -n "$quiet" ] || showcmd "su - -c $escaped"
@@ -558,6 +596,8 @@ esu()
             a= exec su -
         fi
     fi
+
+    check_sudo_access
 
     #info "You can be asked about your password:"
     if [ -n "$*" ] ; then
