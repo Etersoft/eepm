@@ -45,7 +45,7 @@ pack_file /usr/share/applications/$PRODUCT.desktop
 
 set_alt_alternatives 65
 
-[ -f .$PRODUCTDIR/chrome_sandbox ] && cp -v .$PRODUCTDIR/chrome_sandbox .$PRODUCTDIR/chrome-sandbox
+[ -f .$PRODUCTDIR/chrome_sandbox ] && move_file $PRODUCTDIR/chrome_sandbox $PRODUCTDIR/chrome-sandbox
 fix_chrome_sandbox
 
 install_deps
