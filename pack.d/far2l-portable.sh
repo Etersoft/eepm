@@ -23,7 +23,7 @@ fi
 
 mkdir -p opt/$PRODUCT/
 
-sh $RUNFILE --noexec --target opt/$PRODUCT || fatal
+sh $RUNFILE --nox11 --noexec --target opt/$PRODUCT || fatal
 
 #mkdir -p $tdir/usr/bin/
 #ln -s /opt/$PRODUCT/$PRODUCTCUR $tdir/usr/bin/$PRODUCTCUR
