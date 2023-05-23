@@ -47,7 +47,7 @@ __save_available_packages()
 {
     [ -d "$epm_vardir" ] || return 0
 
-    info "Retrieve all available packages (for autocompletion) ..."
+    info "Retrieving list of all available packages (for autocompletion) ..."
     load_helper epm-list_available
     short=--short epm_list_available | sort | sudorun tee $epm_vardir/available-packages >/dev/null
 }
@@ -61,8 +61,8 @@ epm_update()
 local ret=0
 warmup_hibase
 
-case $PMTYPE in
-    apt-rpm)
+case $BASEDISTRNAME in
+    "alt")
         # TODO: hack against cd to cwd in apt-get on ALT
         cd /
         sudocmd apt-get update
@@ -71,6 +71,27 @@ case $PMTYPE in
         [ "$ret" = "0" ] || return
         __check_for_epm_version
         #sudocmd apt-get -f install || exit
+
+        __epm_touch_pkg
+
+        __save_available_packages
+
+        load_helper epm-sh-altlinux-contents-index
+        init_alt_contents_index
+
+        return $ret
+        ;;
+esac
+
+
+case $PMTYPE in
+    apt-rpm)
+        # TODO: hack against cd to cwd in apt-get on ALT
+        cd /
+        sudocmd apt-get update
+        ret="$?"
+        cd - >/dev/null
+        [ "$ret" = "0" ] || return
         ;;
     apt-dpkg)
         sudocmd apt-get update || return

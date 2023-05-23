@@ -32,7 +32,9 @@ __alt_local_content_search()
     load_helper epm-sh-altlinux-contents-index
     load_helper epm-search
 
-    update_alt_contents_index
+    check_alt_contents_index || init_alt_contents_index
+    update_repo_if_needed
+
     local CI="$(cat $ALT_CONTENTS_INDEX_LIST)"
 
     info "Searching for $1 ... "
@@ -49,11 +51,15 @@ epm_search_file()
     local CMD
     [ -n "$pkg_filenames" ] || fatal "Search file: file name is missed"
 
-case $PMTYPE in
-    apt-rpm)
+case $BASEDISTRNAME in
+    "alt")
         __alt_local_content_search $pkg_filenames
         return ;;
+esac
+
+case $PMTYPE in
     apt-dpkg|aptitude-dpkg)
+        # move to update?
         assure_exists apt-file
         sudocmd apt-file update
         docmd apt-file search $pkg_filenames

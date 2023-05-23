@@ -38,14 +38,10 @@ get_alt_repo_path()
 # convert "http://download.etersoft.ru/pub/ALTLinux/p8/branch x86_64" to /tmp/epm/ALTLinux/p8/branch/x86_64
 get_local_alt_mirror_path()
 {
-    # FIXME: by some reason missed in ALT docker image (no login?)
-    [ -n "$TMPDIR" ] || TMPDIR=/tmp
-
-    # TODO: /var/cache/eepm
-    echo "$TMPDIR/eepm/$(get_alt_repo_path "$1")"
+    echo "$epm_cachedir/contents_index/$(get_alt_repo_path "$1")"
 }
 
-ALT_CONTENTS_INDEX_LIST=$TMPDIR/eepm/contents_index_list
+ALT_CONTENTS_INDEX_LIST=$epm_cachedir/contents_index/contents_index_list
 
 # URL TARGETDIR OPTIONS
 rsync_alt_contents_index()
@@ -71,12 +67,6 @@ get_url_to_etersoft_mirror()
     echo "$ETERSOFT_MIRROR/$(get_alt_repo_path "$1" | sed -e "s|^ALTLinux/|ALTLinux/contents_index/|")"
 }
 
-__init_contents_index_list()
-{
-    mkdir -p "$(dirname $ALT_CONTENTS_INDEX_LIST)"
-    truncate -s0 $ALT_CONTENTS_INDEX_LIST
-}
-
 # "comment" "file"
 __add_to_contents_index_list()
 {
@@ -96,11 +86,25 @@ __add_better_to_contents_index_list()
 }
 
 
+check_alt_contents_index()
+{
+    [ -f "$ALT_CONTENTS_INDEX_LIST" ]
+}
+
+init_alt_contents_index()
+{
+    sudocmd mkdir -p "$(dirname $ALT_CONTENTS_INDEX_LIST)"
+    sudocmd chmod a+rw "$(dirname $ALT_CONTENTS_INDEX_LIST)"
+    sudocmd truncate -s0 $ALT_CONTENTS_INDEX_LIST
+    sudocmd chmod a+rw $ALT_CONTENTS_INDEX_LIST
+    update_alt_contents_index
+}
+
 # fills ALT_CONTENTS_INDEX_LIST
 update_alt_contents_index()
 {
     load_helper epm-repolist
-    __init_contents_index_list
+    check_alt_contents_index || return
     # TODO: fix for Etersoft/LINUX@Etersoft
     # TODO: fix for rsync
     info "Retrieving contents_index ..."
