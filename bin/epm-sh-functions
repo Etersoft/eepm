@@ -808,7 +808,7 @@ assure_tmpdir()
 {
     if [ -z "$TMPDIR" ] ; then
         export TMPDIR="/tmp"
-        warning "Your have no TMPDIR defined. Using $TMPDIR as fallback."
+        debug "Your have no TMPDIR defined. Using $TMPDIR as fallback."
     fi
 
     if [ ! -d "$TMPDIR" ] ; then
