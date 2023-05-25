@@ -63,11 +63,32 @@ case $PMTYPE in
             return
         fi
         ;;
-    urpm-rpm|zypper-rpm|yum-rpm|dnf-rpm)
+    urpm-rpm)
         if is_installed $pkg_names ; then
             CMD="rpm -q --provides"
         else
-            fatal "FIXME: use hi level commands"
+            CMD="urpmq --provides"
+        fi
+        ;;
+    zypper-rpm)
+        if is_installed $pkg_names ; then
+            CMD="rpm -q --provides"
+        else
+            fatal "FIXME: use hi level commands or download firstly"
+        fi
+        ;;
+    yum-rpm)
+        if is_installed $pkg_names ; then
+            CMD="rpm -q --provides"
+        else
+            fatal "FIXME: use hi level commands or download firstly"
+        fi
+        ;;
+    dnf-rpm)
+        if is_installed $pkg_names ; then
+            CMD="rpm -q --provides"
+        else
+            CMD="dnf repoquery --provides"
         fi
         ;;
     emerge)
