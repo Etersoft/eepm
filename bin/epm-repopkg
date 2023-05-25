@@ -39,6 +39,9 @@ __epm_repo_pkgadd_alt()
 
     while [ -s "$1" ] ; do
         arch="$(epm print arch from filename "$1")" || fatal
+        # arch hack (it is better to repack firstly)
+        [ "$arch" = "i686" ] && arch="i586"
+        [ "$arch" = "i386" ] && arch="i586"
         epm checkpkg "$1" || fatal
         cp -v "$1" $REPO_DIR/$arch/RPMS.$REPO_NAME || fatal
         shift
