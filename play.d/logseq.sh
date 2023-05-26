@@ -13,7 +13,7 @@ PKGURL=$(epm tool eget --list https://github.com/logseq/logseq/releases/ "Logseq
 
 cd_to_temp_dir
 epm tool eget "$PKGURL" || fatal
-newname="$(echo *.AppImage | sed -e "s|^Logseq-linux-x64|$PKGNAME-|" )"
+newname="$(echo *.AppImage | sed -e "s|^Logseq-linux-x64-|$PKGNAME-|" )"
 mv -v *.AppImage $newname || exit
 
 epm install "$newname"
