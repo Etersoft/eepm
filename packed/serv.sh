@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.57.3"
+EPMVERSION="3.57.4"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -800,7 +800,7 @@ assure_tmpdir()
 {
     if [ -z "$TMPDIR" ] ; then
         export TMPDIR="/tmp"
-        warning "Your have no TMPDIR defined. Using $TMPDIR as fallback."
+        debug "Your have no TMPDIR defined. Using $TMPDIR as fallback."
     fi
 
     if [ ! -d "$TMPDIR" ] ; then

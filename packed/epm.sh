@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.57.3"
+EPMVERSION="3.57.4"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -799,7 +799,7 @@ assure_tmpdir()
 {
     if [ -z "$TMPDIR" ] ; then
         export TMPDIR="/tmp"
-        warning "Your have no TMPDIR defined. Using $TMPDIR as fallback."
+        debug "Your have no TMPDIR defined. Using $TMPDIR as fallback."
     fi
 
     if [ ! -d "$TMPDIR" ] ; then
@@ -6867,11 +6867,32 @@ case $PMTYPE in
             return
         fi
         ;;
-    urpm-rpm|zypper-rpm|yum-rpm|dnf-rpm)
+    urpm-rpm)
         if is_installed $pkg_names ; then
             CMD="rpm -q --provides"
         else
-            fatal "FIXME: use hi level commands"
+            CMD="urpmq --provides"
+        fi
+        ;;
+    zypper-rpm)
+        if is_installed $pkg_names ; then
+            CMD="rpm -q --provides"
+        else
+            fatal "FIXME: use hi level commands or download firstly"
+        fi
+        ;;
+    yum-rpm)
+        if is_installed $pkg_names ; then
+            CMD="rpm -q --provides"
+        else
+            fatal "FIXME: use hi level commands or download firstly"
+        fi
+        ;;
+    dnf-rpm)
+        if is_installed $pkg_names ; then
+            CMD="rpm -q --provides"
+        else
+            CMD="dnf repoquery --provides"
         fi
         ;;
     emerge)
@@ -10141,6 +10162,9 @@ __epm_repo_pkgadd_alt()
 
     while [ -s "$1" ] ; do
         arch="$(epm print arch from filename "$1")" || fatal
+        # arch hack (it is better to repack firstly)
+        [ "$arch" = "i686" ] && arch="i586"
+        [ "$arch" = "i386" ] && arch="i586"
         epm checkpkg "$1" || fatal
         cp -v "$1" $REPO_DIR/$arch/RPMS.$REPO_NAME || fatal
         shift
@@ -16996,7 +17020,7 @@ fi
 export EPM_OPTIONS="$nodeps $force $verbose $debug $quiet $interactive $non_interactive $save_only $download_only"
 
 # if input is not console and run script from file, get pkgs from stdin too
-if [ ! -n "$inscript" ] && ! inputisatty && [ -n "$PROGDIR" ] ; then
+if [ ! -n "$inscript" ] && [ -p /dev/stdin ] && [ "$EPMMODE" != "pipe" ] ; then
     for opt in $(withtimeout 10 cat) ; do
         # FIXME: do not work
         # workaround against # yes | epme
