@@ -35,6 +35,10 @@ __alt_local_content_search()
     check_alt_contents_index || init_alt_contents_index
     update_repo_if_needed
 
+    if [ ! -s "$ALT_CONTENTS_INDEX_LIST" ] ; then
+        fatal "Have no local contents index. Check epm repo --help."
+    fi
+
     local CI="$(cat $ALT_CONTENTS_INDEX_LIST)"
 
     info "Searching for $1 ... "

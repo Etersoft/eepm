@@ -77,7 +77,7 @@ case $BASEDISTRNAME in
         __save_available_packages
 
         load_helper epm-sh-altlinux-contents-index
-        init_alt_contents_index
+        update_alt_contents_index
 
         return $ret
         ;;
