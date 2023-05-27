@@ -1,0 +1,22 @@
+# Standard values
+# Specification: https://www.freedesktop.org/software/systemd/man/os-release.html
+NAME="MOS Desktop"
+ID=mos
+ID_LIKE=rosa
+PRETTY_NAME="MOS Desktop 12"
+CPE_NAME="cpe:/o:mos:rosa:2021.1"
+META_CLASS=desktop
+VARIANT_ID=mos-desktop
+ANSI_COLOR="1;43"
+VERSION="12"
+VERSION_ID=2021.1
+VERSION_CODENAME=12
+HOME_URL="http://os.mos.ru"
+LOGO=mos
+BUG_REPORT_URL="https://os.mos.ru/git"
+# ROSA-specific values
+ROSA_OS_BRANCH=mos
+ROSA_OS_PLATFORM="rosa2021.1"
+ROSA_OS_PLATFORM_INTEGER=202110
+ROSA_OS_TYPE=desktop
+ROSA_OS_VERSION=12
