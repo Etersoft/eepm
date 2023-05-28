@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.57.4
+Version: 3.57.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -96,6 +96,10 @@ a discussion about extra requirements.
 
 
 %changelog
+* Sun May 28 2023 Vitaly Lipatov <lav@altlinux.ru> 3.57.5-alt1
+- distr_info: add ID_LIKE support and small fixes
+- fix content info checking
+
 * Sat May 27 2023 Vitaly Lipatov <lav@altlinux.ru> 3.57.4-alt1
 - epm repopkg: always use i586 arch for 32 bit packages
 - epm-sh-functions: hide missed TMPDIR warning
