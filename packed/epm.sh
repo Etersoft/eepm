@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.57.4"
+EPMVERSION="3.57.5"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -11376,6 +11376,10 @@ __alt_local_content_search()
     check_alt_contents_index || init_alt_contents_index
     update_repo_if_needed
 
+    if [ ! -s "$ALT_CONTENTS_INDEX_LIST" ] ; then
+        fatal "Have no local contents index. Check epm repo --help."
+    fi
+
     local CI="$(cat $ALT_CONTENTS_INDEX_LIST)"
 
     info "Searching for $1 ... "
@@ -11585,15 +11589,12 @@ update_alt_contents_index()
             # fix rsync URL firstly
             #local RSYNCURL="$(echo "$URL" | sed -e "s|rsync://\(ftp.basealt.ru\|basealt.org\|altlinux.ru\)/pub/distributions/ALTLinux|rsync://\1/ALTLinux|")" #"
             #rsync_alt_contents_index $RSYNCURL/base/contents_index $LOCALPATH/contents_index -z && __add_to_contents_index_list "$RSYNCURL" "$LOCALPATH/contents_index" && continue
-            mkdir -p "$LOCALPATH"
-            eget -O $LOCALPATH/contents_index $URL/base/contents_index && __add_to_contents_index_list "$RSYNCURL" "$LOCALPATH/contents_index" && continue
+            #mkdir -p "$LOCALPATH"
+            #eget -O $LOCALPATH/contents_index $URL/base/contents_index && __add_to_contents_index_list "$RSYNCURL" "$LOCALPATH/contents_index" && continue
 
-            __add_better_to_contents_index_list "(cached)" "$LOCALPATH/contents_index.gz" "$LOCALPATH/contents_index"
+            #__add_better_to_contents_index_list "(cached)" "$LOCALPATH/contents_index.gz" "$LOCALPATH/contents_index"
         fi
     done
-    if [ ! -s "$ALT_CONTENTS_INDEX_LIST" ] ; then
-        fatal "Have no local contents index. Check epm repo --help."
-    fi
 }
 
 
@@ -12443,7 +12444,7 @@ case $BASEDISTRNAME in
 
         __save_available_packages
 
-        init_alt_contents_index
+        update_alt_contents_index
 
         return $ret
         ;;
@@ -13167,6 +13168,9 @@ normalize_name()
         "ROSA Chrome Desktop")
             echo "ROSA"
             ;;
+        "MOS Desktop")
+            echo "ROSA"
+            ;;
         "ROSA Enterprise Linux Desktop")
             echo "RELS"
             ;;
@@ -13225,6 +13229,7 @@ if distro os-release ; then
     # set by os-release:
     #PRETTY_NAME
     VENDOR_ID="$ID"
+    [ -n "$ID_LIKE" ] && VENDOR_ID="$ID_LIKE"
     DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
     DISTRIB_CODENAME="$VERSION_CODENAME"
 
@@ -13273,14 +13278,17 @@ case "$DISTRIB_ID" in
         echo "$VERSION" | grep -q "c9.* branch" && DISTRIB_RELEASE="c9"
         echo "$VERSION" | grep -q "c9f1 branch" && DISTRIB_RELEASE="c9f1"
         echo "$VERSION" | grep -q "c9f2 branch" && DISTRIB_RELEASE="c9f2"
+        echo "$VERSION" | grep -q "c9f3 branch" && DISTRIB_RELEASE="c9f3"
         DISTRIB_CODENAME="$DISTRIB_RELEASE"
         # FIXME: fast hack for fallback: 10.1 -> p10 for /etc/os-release
         if echo "$DISTRIB_RELEASE" | grep -q "^[0-9]" && echo "$DISTRIB_RELEASE" | grep -q -v "[0-9][0-9][0-9]"  ; then
-            DISTRIB_RELEASE="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
-            DISTRIB_CODENAME="$DISTRIB_RELEASE"
+            DISTRIB_CODENAME="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
+            # TODO: change p10 to 10
+            DISTRIB_RELEASE="$DISTRIB_CODENAME"
         fi
         ;;
     "ALTServer")
+        DISTRIB_ID="ALTLinux"
         DISTRIB_CODENAME="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
         ;;
     "ALTSPWorkstation")
@@ -13306,7 +13314,7 @@ case "$DISTRIB_ID" in
         DISTRIB_RELEASE="Sisyphus"
         DISTRIB_CODENAME="$DISTRIB_RELEASE"
         ;;
-    "ROSA")
+    "ROSA"|"MOSDesktop")
         DISTRIB_FULL_RELEASE="$DISTRIB_CODENAME"
         DISTRIB_CODENAME="$DISTRIB_RELEASE"
         ;;

@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.57.4"
+EPMVERSION="3.57.5"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1973,6 +1973,9 @@ normalize_name()
         "ROSA Chrome Desktop")
             echo "ROSA"
             ;;
+        "MOS Desktop")
+            echo "ROSA"
+            ;;
         "ROSA Enterprise Linux Desktop")
             echo "RELS"
             ;;
@@ -2031,6 +2034,7 @@ if distro os-release ; then
     # set by os-release:
     #PRETTY_NAME
     VENDOR_ID="$ID"
+    [ -n "$ID_LIKE" ] && VENDOR_ID="$ID_LIKE"
     DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
     DISTRIB_CODENAME="$VERSION_CODENAME"
 
@@ -2079,14 +2083,17 @@ case "$DISTRIB_ID" in
         echo "$VERSION" | grep -q "c9.* branch" && DISTRIB_RELEASE="c9"
         echo "$VERSION" | grep -q "c9f1 branch" && DISTRIB_RELEASE="c9f1"
         echo "$VERSION" | grep -q "c9f2 branch" && DISTRIB_RELEASE="c9f2"
+        echo "$VERSION" | grep -q "c9f3 branch" && DISTRIB_RELEASE="c9f3"
         DISTRIB_CODENAME="$DISTRIB_RELEASE"
         # FIXME: fast hack for fallback: 10.1 -> p10 for /etc/os-release
         if echo "$DISTRIB_RELEASE" | grep -q "^[0-9]" && echo "$DISTRIB_RELEASE" | grep -q -v "[0-9][0-9][0-9]"  ; then
-            DISTRIB_RELEASE="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
-            DISTRIB_CODENAME="$DISTRIB_RELEASE"
+            DISTRIB_CODENAME="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
+            # TODO: change p10 to 10
+            DISTRIB_RELEASE="$DISTRIB_CODENAME"
         fi
         ;;
     "ALTServer")
+        DISTRIB_ID="ALTLinux"
         DISTRIB_CODENAME="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
         ;;
     "ALTSPWorkstation")
@@ -2112,7 +2119,7 @@ case "$DISTRIB_ID" in
         DISTRIB_RELEASE="Sisyphus"
         DISTRIB_CODENAME="$DISTRIB_RELEASE"
         ;;
-    "ROSA")
+    "ROSA"|"MOSDesktop")
         DISTRIB_FULL_RELEASE="$DISTRIB_CODENAME"
         DISTRIB_CODENAME="$DISTRIB_RELEASE"
         ;;
