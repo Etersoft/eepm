@@ -26,7 +26,13 @@ __epm_check_apt_db_days()
     [ "$BASEDISTRNAME" = "alt" ] && pkg="pkglist"
     local pkglists
     pkglists=$(find /var/lib/apt/lists -name "*_$pkg*" -ctime +1 2>/dev/null)
-    [ -z "$pkglists" ] && return
+    if [ -z "$pkglists" ] ; then
+        # note: duplicate __is_repo_info_downloaded
+        pkglists=$(find /var/lib/apt/lists -name "*_$pkg*" 2>/dev/null)
+        [ -n "$pkglists" ] && return
+        echo "never downloaded"
+        return 1
+    fi
 
     local i t
     local ts=0
