@@ -2,7 +2,7 @@
 
 [ "$1" != "--run" ] && echo "Uninstall etersoft build of glibc" && exit
 
-distro="$(epm print info -d)" ; [ "$distro" = "ALTLinux" ] || [ "$distro" = "ALTServer" ] || { echo "Only ALTLinux is supported" ; exit 1 ; }
+[ "$(epm print info -s)" = "alt" ] || { echo "Only ALTLinux is supported" ; exit 1 ; }
 
 epm downgrade glibc-core glibc-preinstall
 exit 0

@@ -10,7 +10,7 @@ DESCRIPTION="TrueConf client for Linux from the official site"
 epmopt=''
 distrversion=$(epm print info -v)
 case "$(epm print info -e)" in
-    ALTLinux/p10|ALTServer/10|ALTLinux/Sisyphus)
+    ALTLinux/p10|ALTLinux/Sisyphus)
         URL="https://mirror.trueconf.ru/altlinux/p10/x86_64/RPMS.non-free/trueconf-${VERSION}*.x86_64.rpm"
         # we need repack, they change files in a home dir
         epmopt='--direct --repack'

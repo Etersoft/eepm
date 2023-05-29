@@ -13,11 +13,6 @@ fi
 
 [ "$(epm print info -s)" = "alt" ] && fatal "ALT is not supports $PKGNAME AppImage for now."
 
-#case "$(epm print info -d)" in
-#    ALTLinux|ALTServer)
-#        epm install --skip-installed at-spi2-atk glib2 libalsa libatk libat-spi2-core libcairo libcups libdbus libdbus-glib libdbusmenu libdbusmenu-gtk2 libdrm libexpat libgbm libgdk-pixbuf libgio libgtk+2 libgtk+3 libindicator libpango libX11 libxcb libXcomposite libXdamage libXext libXfixes libxkbcommon libXrandr
-#        ;;
-#esac
 arch=x86_64
 # sh: symbol lookup error: /tmp/.private/lav/.mount_whatsaxhRMDh/opt/libc/lib/x86_64-linux-gnu/libc.so.6: undefined symbol: __libc_enable_secure, version GLIBC_PRIVATE
 URL=$(epm tool eget --list --latest https://github.com/eneshecan/whatsapp-for-linux/releases "$PKGNAME-$VERSION-$arch.AppImage") || fatal "Can't get package URL"

@@ -29,7 +29,7 @@ case "$(epm print info -d)" in
     epm install https://packages.microsoft.com/ubuntu/20.04/mssql-server-2019/pool/main/m/mssql-server/mssql-server_1*_amd64.deb
     epm rr $DEBREPO ; epm update
     ;;
-  ALTLinux|ALTServer)
+  ALTLinux)
     epm install --repack https://packages.microsoft.com/rhel/8/mssql-server-2019/Packages/m/mssql-server-[0-9]*.x86_64.rpm || fatal
     ;;
   Debian|Ubuntu)

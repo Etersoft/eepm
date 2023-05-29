@@ -101,13 +101,6 @@ EOF
 __epm_repack_to_rpm()
 {
     local pkgs="$*"
-    #case $DISTRNAME in
-    #    ALTLinux|ALTServer)
-    #        ;;
-    #    *)
-    #        assure_distr ALTLinux "install --repack for rpm target"
-    #        ;;
-    #esac
 
     # Note: install epm-repack for static (package based) dependencies
     assure_exists alien || fatal

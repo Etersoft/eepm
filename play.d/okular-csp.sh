@@ -33,7 +33,7 @@ case $(epm print info -e) in
     Fedora/3*|ROSA/2021.1|RedOS/7.3)
         distrib=$vendor
         ;;
-    ALTLinux/p10|ALTServer/10|MOS/10)
+    ALTLinux/p10)
         ;;
     *)
         fatal "Unsupported distro $(epm print info -e). Ask application vendor for a support."

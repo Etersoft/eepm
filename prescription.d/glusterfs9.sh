@@ -2,7 +2,8 @@
 
 [ "$1" != "--run" ] && echo "Install glusterfs9 (or upgrade from glusterfs8)" && exit
 
-distro="$(epm print info -d)" ; [ "$distro" = "ALTLinux" ] || [ "$distro" = "ALTServer" ] || { echo "Only ALTLinux is supported" ; exit 1 ; }
+[ "$(epm print info -s)" = "alt" ] || { echo "Only ALTLinux is supported" ; exit 1 ; }
+
 
 GFSOLD=glusterfs8
 GFSNEW=glusterfs9

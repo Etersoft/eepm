@@ -21,7 +21,7 @@ case $(epm print info -e) in
     AlterOS/*|CentOS/*)
         PKG="https://download.r7-office.ru/centos/r7-office.rpm"
         ;;
-    ALTLinux/*|ALTServer/*)
+    ALTLinux/*)
         PKG="https://download.r7-office.ru/altlinux/r7-office.rpm"
         epm install --skip-installed fonts-ttf-dejavu fonts-ttf-google-crosextra-carlito fonts-ttf-liberation gst-libav gst-plugins-ugly1.0 libX11 libXScrnSaver libcairo libgcc1 libgtk+2 libgtkglext
         ;;

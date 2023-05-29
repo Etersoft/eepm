@@ -8,7 +8,7 @@ DESCRIPTION="Контур.Толк (ktalk) from the official site"
 
 
 case "$(epm print info -d)" in
-    ALTLinux|ALTServer)
+    ALTLinux)
         epm install --skip-installed at-spi2-atk glib2 libalsa libatk libat-spi2-core libcairo libcups libdbus libdbus-glib libdbusmenu libdbusmenu-gtk2 libdrm libexpat libgbm libgdk-pixbuf libgio libgtk+2 libgtk+3 libindicator libpango libX11 libxcb libXcomposite libXdamage libXext libXfixes libxkbcommon libXrandr
         ;;
 esac

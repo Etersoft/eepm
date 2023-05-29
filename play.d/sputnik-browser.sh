@@ -29,7 +29,7 @@ case "$(epm print info -e)" in
     ALTLinux/c8)
         id_content='alt-id'
         ;;
-    ALTLinux/*|ALTServer/*)
+    ALTLinux/*)
         id_content='alt9-id'
         ;;
     AstraLinux*)

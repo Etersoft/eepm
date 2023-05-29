@@ -28,7 +28,7 @@ case $(epm print info -e) in
     ROSA/2021.1)
         PKGURL="https://download.r7-office.ru/rosa/r7-office-organizer-$VERSION-rosa.ru.x86_64.rpm"
         ;;
-    ALTLinux/*|ALTServer/*)
+    ALTLinux/*)
         PKGURL="https://download.r7-office.ru/altlinux/r7-office-organizer-$VERSION-altlinux.ru.x86_64.rpm"
         ;;
 esac

@@ -27,7 +27,7 @@ case $(epm print info -e) in
     Fedora/*|RHEL/9)
         PKGFILTER="rhel9"
         ;;
-    ALTLinux/*|ALTServer/*)
+    ALTLinux/*)
         PKGFILTER="rhel8"
         repack='--repack'
         ;;

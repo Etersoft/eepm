@@ -110,7 +110,7 @@ epm_status_original()
     #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
 
     case $DISTRNAME in
-        ALTLinux|ALTServer)
+        ALTLinux)
             epm_status_validate $pkg || return 1
             epm_status_repacked $pkg && return 1
 

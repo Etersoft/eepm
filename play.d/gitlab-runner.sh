@@ -26,7 +26,7 @@ esac
 
 repack=''
 case $(epm print info -e) in
-    ALTLinux/*|ALTServer/*)
+    ALTLinux/*)
         repack='--repack'
         ;;
 esac
