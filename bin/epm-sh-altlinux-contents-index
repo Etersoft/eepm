@@ -105,6 +105,8 @@ update_alt_contents_index()
 {
     load_helper epm-repolist
     check_alt_contents_index || return
+
+    truncate -s0 "$ALT_CONTENTS_INDEX_LIST"
     # TODO: fix for Etersoft/LINUX@Etersoft
     # TODO: fix for rsync
     info "Retrieving contents_index ..."
