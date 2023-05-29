@@ -275,6 +275,7 @@ fix_chrome_sandbox()
 add_requires()
 {
     [ -n "$1" ] || return
+    [ "$(epm print info -s)" = "alt" ] || return 0
     subst "1iRequires: $*" $SPEC
 }
 
