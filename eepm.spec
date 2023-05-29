@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.57.5
+Version: 3.57.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -96,6 +96,14 @@ a discussion about extra requirements.
 
 
 %changelog
+* Mon May 29 2023 Vitaly Lipatov <lav@altlinux.ru> 3.57.6-alt1
+- epm repo index: add x86_64-i586 support
+- prescription: just add pipewire script
+- epm clean: add --direct support and print about a possibility to use it
+- epm check_updated_repo: add check if apt indexes is never updated
+- don't handle ALTServer distro separately
+- distr_info: fix ID_LIKE support, update tests
+
 * Sun May 28 2023 Vitaly Lipatov <lav@altlinux.ru> 3.57.5-alt1
 - distr_info: add ID_LIKE support and small fixes
 - fix content info checking
