@@ -34,7 +34,7 @@ get_archlist()
 # https://www.altlinux.org/APT_%D0%B2_ALT_Linux/CreateRepository
 __epm_repoindex_alt()
 {
-    local archlist="i586 x86_64 aarch64 noarch"
+    local archlist="i586 x86_64 x86_64-i586 aarch64 noarch"
 
     local init=''
     if [ "$1" = "--init" ] ; then

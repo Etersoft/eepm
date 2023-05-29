@@ -42,6 +42,7 @@ __epm_repo_pkgadd_alt()
         # arch hack (it is better to repack firstly)
         [ "$arch" = "i686" ] && arch="i586"
         [ "$arch" = "i386" ] && arch="i586"
+        [ -d $REPO_DIR/$arch/RPMS.$REPO_NAME ] || fatal
         epm checkpkg "$1" || fatal
         cp -v "$1" $REPO_DIR/$arch/RPMS.$REPO_NAME || fatal
         shift
@@ -71,6 +72,7 @@ __epm_repo_pkgdel_alt()
     while [ -s "$1" ] ; do
         for arch in $archlist ; do
             local rd="$REPO_DIR/$arch/RPMS.$REPO_NAME"
+            [ -d $REPO_DIR/$arch/RPMS.$REPO_NAME ] || continue
             for i in $rd/$1* ; do
                 [ "$1" = "$(epm print name for package $i)" || continue
                 rm -v $rd/$1*
