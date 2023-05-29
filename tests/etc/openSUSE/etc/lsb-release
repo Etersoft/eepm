@@ -1,5 +1,0 @@
-LSB_VERSION="core-2.0-noarch:core-3.2-noarch:core-4.0-noarch:core-2.0-x86_64:core-3.2-x86_64:core-4.0-x86_64"
-DISTRIB_ID="openSUSE Tumbleweed"
-DISTRIB_RELEASE="20161014"
-DISTRIB_CODENAME=""
-DISTRIB_DESCRIPTION="openSUSE Tumbleweed"

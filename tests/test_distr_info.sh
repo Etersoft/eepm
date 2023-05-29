@@ -15,9 +15,9 @@ for ROOTDIR in $(ls -1d etc/*) ; do
     fi
     le="$(cat $ROOTDIR/etalon.txt 2>/dev/null)"
     if [ "$le" = "$idstr" ] ; then
-        printf "%23s -> %20s : %s\n" "$(basename $ROOTDIR)" "$idstr" "OK"
+        printf "%23s -> %30s : %s\n" "$(basename $ROOTDIR)" "$idstr" "OK"
     else
-        printf "%23s -> %20s : %s\n" "$(basename $ROOTDIR)" "$idstr" "FAIL (expect $le)"
+        printf "%23s -> %30s : %s\n" "$(basename $ROOTDIR)" "$idstr" "FAIL (expect $le)"
     fi
 done
 
