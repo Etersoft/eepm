@@ -23,6 +23,7 @@ __remove_alt_apt_cache_file()
     sudocmd rm -vf /var/cache/apt/partial/*
     sudocmd rm -vf /var/lib/apt/lists/*pkglist*
     sudocmd rm -vf /var/lib/apt/lists/*release*
+    return 0
 }
 
 __remove_deb_apt_cache_file()
@@ -32,6 +33,7 @@ __remove_deb_apt_cache_file()
     sudocmd rm -vf /var/lib/apt/lists/*Packages*
     sudocmd rm -vf /var/lib/apt/lists/*Release*
     sudocmd rm -vf /var/lib/apt/lists/*Translation*
+    return 0
 }
 
 epm_clean()
@@ -43,15 +45,15 @@ epm_clean()
 case $PMTYPE in
     apt-rpm)
         sudocmd apt-get clean $dryrun
-        [ -n "$force" ] && __remove_alt_apt_cache_file
+        [ -n "$direct" ] && __remove_alt_apt_cache_file || info "Use epm clean --direct to remove all downloaded indexes."
         ;;
     apt-dpkg)
         sudocmd apt-get clean $dryrun
-        [ -n "$force" ] && __remove_deb_apt_cache_file
+        [ -n "$direct" ] && __remove_deb_apt_cache_file || info "Use epm clean --direct to remove all downloaded indexes."
         ;;
     aptitude-dpkg)
         sudocmd aptitude clean
-        [ -n "$force" ] && __remove_deb_apt_cache_file
+        [ -n "$direct" ] && __remove_deb_apt_cache_file || info "Use epm clean --direct to remove all downloaded indexes."
         ;;
     yum-rpm)
         sudocmd yum clean all
