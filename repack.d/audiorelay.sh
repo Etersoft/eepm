@@ -10,6 +10,7 @@ PREINSTALL_PACKAGES="$PREINSTALL_PACKAGES alsa-plugins-pulse"
 
 . $(dirname $0)/common.sh
 
+subst '1iAutoReq:no' $SPEC
 subst '1iAutoProv:no' $SPEC
 
 add_bin_exec_command $PRODUCT $PRODUCTDIR/bin/AudioRelay
@@ -26,6 +27,8 @@ done
 for i in .$PRODUCTDIR/lib/runtime/lib/lib*.so ; do
     a= patchelf --set-rpath '$ORIGIN:$ORIGIN/server' $i
 done
+
+add_requires $PREINSTALL_PACKAGES
 
 # TODO:
 # https://aur.archlinux.org/packages/audiorelay
