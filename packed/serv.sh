@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.57.5"
+EPMVERSION="3.57.6"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1973,7 +1973,7 @@ normalize_name()
         "ROSA Chrome Desktop")
             echo "ROSA"
             ;;
-        "MOS Desktop")
+        "MOS Desktop"|"MOS Panel")
             echo "ROSA"
             ;;
         "ROSA Enterprise Linux Desktop")
@@ -2034,7 +2034,13 @@ if distro os-release ; then
     # set by os-release:
     #PRETTY_NAME
     VENDOR_ID="$ID"
-    [ -n "$ID_LIKE" ] && VENDOR_ID="$ID_LIKE"
+    case "$VENDOR_ID" in
+        ubuntu|reld|rhel|astra)
+            ;;
+        *)
+            [ -n "$ID_LIKE" ] && VENDOR_ID="$(echo "$ID_LIKE" | cut -d" " -f1)"
+            ;;
+    esac
     DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
     DISTRIB_CODENAME="$VERSION_CODENAME"
 
@@ -2095,6 +2101,8 @@ case "$DISTRIB_ID" in
     "ALTServer")
         DISTRIB_ID="ALTLinux"
         DISTRIB_CODENAME="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
+        # TODO: change p10 to 10
+        DISTRIB_RELEASE="$DISTRIB_CODENAME"
         ;;
     "ALTSPWorkstation")
         DISTRIB_ID="ALTLinux"
@@ -2119,7 +2127,7 @@ case "$DISTRIB_ID" in
         DISTRIB_RELEASE="Sisyphus"
         DISTRIB_CODENAME="$DISTRIB_RELEASE"
         ;;
-    "ROSA"|"MOSDesktop")
+    "ROSA"|"MOSDesktop"|"MOSPanel")
         DISTRIB_FULL_RELEASE="$DISTRIB_CODENAME"
         DISTRIB_CODENAME="$DISTRIB_RELEASE"
         ;;

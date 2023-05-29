@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.57.5"
+EPMVERSION="3.57.6"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -2401,7 +2401,13 @@ __epm_check_apt_db_days()
     [ "$BASEDISTRNAME" = "alt" ] && pkg="pkglist"
     local pkglists
     pkglists=$(find /var/lib/apt/lists -name "*_$pkg*" -ctime +1 2>/dev/null)
-    [ -z "$pkglists" ] && return
+    if [ -z "$pkglists" ] ; then
+        # note: duplicate __is_repo_info_downloaded
+        pkglists=$(find /var/lib/apt/lists -name "*_$pkg*" 2>/dev/null)
+        [ -n "$pkglists" ] && return
+        echo "never downloaded"
+        return 1
+    fi
 
     local i t
     local ts=0
@@ -2527,6 +2533,7 @@ __remove_alt_apt_cache_file()
     sudocmd rm -vf /var/cache/apt/partial/*
     sudocmd rm -vf /var/lib/apt/lists/*pkglist*
     sudocmd rm -vf /var/lib/apt/lists/*release*
+    return 0
 }
 
 __remove_deb_apt_cache_file()
@@ -2536,6 +2543,7 @@ __remove_deb_apt_cache_file()
     sudocmd rm -vf /var/lib/apt/lists/*Packages*
     sudocmd rm -vf /var/lib/apt/lists/*Release*
     sudocmd rm -vf /var/lib/apt/lists/*Translation*
+    return 0
 }
 
 epm_clean()
@@ -2547,15 +2555,15 @@ epm_clean()
 case $PMTYPE in
     apt-rpm)
         sudocmd apt-get clean $dryrun
-        [ -n "$force" ] && __remove_alt_apt_cache_file
+        [ -n "$direct" ] && __remove_alt_apt_cache_file || info "Use epm clean --direct to remove all downloaded indexes."
         ;;
     apt-dpkg)
         sudocmd apt-get clean $dryrun
-        [ -n "$force" ] && __remove_deb_apt_cache_file
+        [ -n "$direct" ] && __remove_deb_apt_cache_file || info "Use epm clean --direct to remove all downloaded indexes."
         ;;
     aptitude-dpkg)
         sudocmd aptitude clean
-        [ -n "$force" ] && __remove_deb_apt_cache_file
+        [ -n "$direct" ] && __remove_deb_apt_cache_file || info "Use epm clean --direct to remove all downloaded indexes."
         ;;
     yum-rpm)
         sudocmd yum clean all
@@ -9138,13 +9146,6 @@ EOF
 __epm_repack_to_rpm()
 {
     local pkgs="$*"
-    #case $DISTRNAME in
-    #    ALTLinux|ALTServer)
-    #        ;;
-    #    *)
-    #        assure_distr ALTLinux "install --repack for rpm target"
-    #        ;;
-    #esac
 
     # Note: install epm-repack for static (package based) dependencies
     assure_exists alien || fatal
@@ -9899,7 +9900,7 @@ get_archlist()
 
 __epm_repoindex_alt()
 {
-    local archlist="i586 x86_64 aarch64 noarch"
+    local archlist="i586 x86_64 x86_64-i586 aarch64 noarch"
 
     local init=''
     if [ "$1" = "--init" ] ; then
@@ -10165,6 +10166,7 @@ __epm_repo_pkgadd_alt()
         # arch hack (it is better to repack firstly)
         [ "$arch" = "i686" ] && arch="i586"
         [ "$arch" = "i386" ] && arch="i586"
+        [ -d $REPO_DIR/$arch/RPMS.$REPO_NAME ] || fatal
         epm checkpkg "$1" || fatal
         cp -v "$1" $REPO_DIR/$arch/RPMS.$REPO_NAME || fatal
         shift
@@ -10194,6 +10196,7 @@ __epm_repo_pkgdel_alt()
     while [ -s "$1" ] ; do
         for arch in $archlist ; do
             local rd="$REPO_DIR/$arch/RPMS.$REPO_NAME"
+            [ -d $REPO_DIR/$arch/RPMS.$REPO_NAME ] || continue
             for i in $rd/$1* ; do
                 [ "$1" = "$(epm print name for package $i)" || continue
                 rm -v $rd/$1*
@@ -11985,7 +11988,7 @@ open_browser()
 __query_package_hl_url()
 {
     case $DISTRNAME in
-        ALTLinux|ALTServer)
+        ALTLinux)
             paoapi srpms/$1 | get_pao_var url
             ;;
     esac
@@ -12175,7 +12178,7 @@ epm_status_original()
     #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
 
     case $DISTRNAME in
-        ALTLinux|ALTServer)
+        ALTLinux)
             epm_status_validate $pkg || return 1
             epm_status_repacked $pkg && return 1
 
@@ -13168,7 +13171,7 @@ normalize_name()
         "ROSA Chrome Desktop")
             echo "ROSA"
             ;;
-        "MOS Desktop")
+        "MOS Desktop"|"MOS Panel")
             echo "ROSA"
             ;;
         "ROSA Enterprise Linux Desktop")
@@ -13229,7 +13232,13 @@ if distro os-release ; then
     # set by os-release:
     #PRETTY_NAME
     VENDOR_ID="$ID"
-    [ -n "$ID_LIKE" ] && VENDOR_ID="$ID_LIKE"
+    case "$VENDOR_ID" in
+        ubuntu|reld|rhel|astra)
+            ;;
+        *)
+            [ -n "$ID_LIKE" ] && VENDOR_ID="$(echo "$ID_LIKE" | cut -d" " -f1)"
+            ;;
+    esac
     DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
     DISTRIB_CODENAME="$VERSION_CODENAME"
 
@@ -13290,6 +13299,8 @@ case "$DISTRIB_ID" in
     "ALTServer")
         DISTRIB_ID="ALTLinux"
         DISTRIB_CODENAME="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
+        # TODO: change p10 to 10
+        DISTRIB_RELEASE="$DISTRIB_CODENAME"
         ;;
     "ALTSPWorkstation")
         DISTRIB_ID="ALTLinux"
@@ -13314,7 +13325,7 @@ case "$DISTRIB_ID" in
         DISTRIB_RELEASE="Sisyphus"
         DISTRIB_CODENAME="$DISTRIB_RELEASE"
         ;;
-    "ROSA"|"MOSDesktop")
+    "ROSA"|"MOSDesktop"|"MOSPanel")
         DISTRIB_FULL_RELEASE="$DISTRIB_CODENAME"
         DISTRIB_CODENAME="$DISTRIB_RELEASE"
         ;;
