@@ -28,6 +28,7 @@ __alt_local_content_filelist()
 {
     load_helper epm-sh-altlinux
     load_helper epm-sh-altlinux-contents-index
+    load_helper epm-check_updated_repo
 
     check_alt_contents_index || init_alt_contents_index
     update_repo_if_needed
