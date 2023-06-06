@@ -953,15 +953,17 @@ cat <<EOF
 export DISTRNAME="$(echo $DISTRIB_ID)"
 # -v | --base-version
 export DISTRVERSION="$(echo "$DISTRIB_RELEASE")"
-# -a
+# distro dependent arch
 export DISTRARCH="$(get_distro_arch)"
-# -y | --service-manager
-export DISTRCONTROL="$(get_service_manager)"
 # -s | --vendor-name
 export BASEDISTRNAME=$(pkgvendor)
 # --repo-name
 export DISTRREPONAME=$(print_repo_name)
 
+# -a
+export SYSTEMARCH="$(get_arch)"
+# -y | --service-manager
+export DISTRCONTROL="$(get_service_manager)"
 # -g
 export PMTYPE="$(pkgmanager)"
 # -p | --package-type
