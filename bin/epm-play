@@ -187,7 +187,7 @@ __epm_play_list()
     local extra="$2"
     local i
     local IGNOREi586
-    local arch="$DISTRARCH"
+    local arch="$SYSTEMARCH"
     [ "$arch" = "x86_64" ] && IGNOREi586='' || IGNOREi586=1
 
     if [ -n "$short" ] ; then
