@@ -16,18 +16,54 @@ else
     fatal "How no idea how to handle $TAR"
 fi
 
+# select package by package type and target arch
+
 pkgtype="$(epm print info -p)"
-case $pkgtype in
-    rpm)
-        pkg="aksusbd-*.x86_64.rpm"
-        ;;
-    deb)
-        pkg="aksusbd_*_amd64.deb"
-        ;;
-    *)
-        pkg="aksusbd_*_amd64.deb"
-        ;;
-esac
+
+if [ "$pkgtype" = "rpm" ] ; then
+
+    case "$(epm print info -a)" in
+        x86_64)
+            arch="x86_64"
+            ;;
+        x86)
+            arch="i386"
+            ;;
+        aarch64)
+            arch="aarch64"
+            ;;
+        armhf)
+            arch="armv7hl"
+            ;;
+        *)
+            fatal "Unsupported arch"
+            ;;
+    esac
+
+    pkg="aksusbd-*.$arch.rpm"
+
+else
+
+    case "$(epm print info -a)" in
+        x86_64)
+            arch="amd64"
+            ;;
+        x86)
+            arch="i386"
+            ;;
+        aarch64)
+            arch="arm64"
+            ;;
+        armhf)
+            arch="armhf"
+            ;;
+        *)
+            fatal "Unsupported arch"
+            ;;
+    esac
+
+    pkg="aksusbd_*_$arch.deb"
+fi
 
 mv -v $PRODUCT*/pkg/$pkg . || fatal
 

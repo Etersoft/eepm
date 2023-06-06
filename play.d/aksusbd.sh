@@ -1,7 +1,7 @@
 #!/bin/sh
 
 PKGNAME=aksusbd
-SUPPORTEDARCHES="x86_64"
+SUPPORTEDARCHES="x86_64 x86 aarch64 armhf"
 DESCRIPTION="Sentinel LDK daemon (HASP) from the official site"
 
 . $(dirname $0)/common.sh
