@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.57.6
+Version: 3.57.7
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -96,6 +96,20 @@ a discussion about extra requirements.
 
 
 %changelog
+* Wed Jun 07 2023 Vitaly Lipatov <lav@altlinux.ru> 3.57.7-alt1
+- epm repack: add_requires: for ALT only
+- epm repack audiorelay: disable AutoReq, add manual requires
+- epm repack k3s.sh: fix unitdir (for systemd services)
+- epm repack anydesk: fix requires
+- epm play commfort-client: get version from the site
+- epm-filelist: add missed module epm-check_updated_repo
+- epm play i586-fix: call i586-support firstly
+- epm play aksusbd: add support for i386, aarch64, armhf
+- distr_info: export SYSTEMARCH (-a)
+- epm play: fix (arch dependent) list for deb systems
+- distr_info: don't export vars, set only
+- epm-sh-functions: don't export DISTRVENDOR
+
 * Mon May 29 2023 Vitaly Lipatov <lav@altlinux.ru> 3.57.6-alt1
 - epm repo index: add x86_64-i586 support
 - prescription: just add pipewire script
