@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.57.6"
+EPMVERSION="3.57.7"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -822,7 +822,6 @@ set_distro_info()
     [ -n "$DISTRVENDOR" ] && return 0
 
     DISTRVENDOR=internal_distr_info
-    export DISTRVENDOR
 
     # export pack of variables, see epm print info --print-eepm-env
     [ -n "$verbose" ] && $DISTRVENDOR --print-eepm-env
@@ -2609,28 +2608,30 @@ print_eepm_env()
 {
 cat <<EOF
 # -d | --base-distro-name
-export DISTRNAME="$(echo $DISTRIB_ID)"
+DISTRNAME="$(echo $DISTRIB_ID)"
 # -v | --base-version
-export DISTRVERSION="$(echo "$DISTRIB_RELEASE")"
-# -a
-export DISTRARCH="$(get_distro_arch)"
-# -y | --service-manager
-export DISTRCONTROL="$(get_service_manager)"
+DISTRVERSION="$(echo "$DISTRIB_RELEASE")"
+# distro dependent arch
+DISTRARCH="$(get_distro_arch)"
 # -s | --vendor-name
-export BASEDISTRNAME=$(pkgvendor)
+BASEDISTRNAME=$(pkgvendor)
 # --repo-name
-export DISTRREPONAME=$(print_repo_name)
+DISTRREPONAME=$(print_repo_name)
 
+# -a
+SYSTEMARCH="$(get_arch)"
+# -y | --service-manager
+DISTRCONTROL="$(get_service_manager)"
 # -g
-export PMTYPE="$(pkgmanager)"
+PMTYPE="$(pkgmanager)"
 # -p | --package-type
-export PKGFORMAT=$(pkgtype)
+PKGFORMAT=$(pkgtype)
 # -m
-export DISTRMEMORY="$(get_memory_size)"
+DISTRMEMORY="$(get_memory_size)"
 
 # TODO: remove?
-export PKGVENDOR=$(pkgvendor)
-export RPMVENDOR=$(pkgvendor)
+PKGVENDOR=$(pkgvendor)
+RPMVENDOR=$(pkgvendor)
 
 EOF
 
