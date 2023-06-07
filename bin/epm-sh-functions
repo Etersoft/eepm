@@ -830,7 +830,6 @@ set_distro_info()
     [ -n "$DISTRVENDOR" ] && return 0
 
     DISTRVENDOR=$PROGDIR/distr_info
-    export DISTRVENDOR
 
     # export pack of variables, see epm print info --print-eepm-env
     [ -n "$verbose" ] && $DISTRVENDOR --print-eepm-env
