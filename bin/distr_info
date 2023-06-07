@@ -950,30 +950,30 @@ print_eepm_env()
 {
 cat <<EOF
 # -d | --base-distro-name
-export DISTRNAME="$(echo $DISTRIB_ID)"
+DISTRNAME="$(echo $DISTRIB_ID)"
 # -v | --base-version
-export DISTRVERSION="$(echo "$DISTRIB_RELEASE")"
+DISTRVERSION="$(echo "$DISTRIB_RELEASE")"
 # distro dependent arch
-export DISTRARCH="$(get_distro_arch)"
+DISTRARCH="$(get_distro_arch)"
 # -s | --vendor-name
-export BASEDISTRNAME=$(pkgvendor)
+BASEDISTRNAME=$(pkgvendor)
 # --repo-name
-export DISTRREPONAME=$(print_repo_name)
+DISTRREPONAME=$(print_repo_name)
 
 # -a
-export SYSTEMARCH="$(get_arch)"
+SYSTEMARCH="$(get_arch)"
 # -y | --service-manager
-export DISTRCONTROL="$(get_service_manager)"
+DISTRCONTROL="$(get_service_manager)"
 # -g
-export PMTYPE="$(pkgmanager)"
+PMTYPE="$(pkgmanager)"
 # -p | --package-type
-export PKGFORMAT=$(pkgtype)
+PKGFORMAT=$(pkgtype)
 # -m
-export DISTRMEMORY="$(get_memory_size)"
+DISTRMEMORY="$(get_memory_size)"
 
 # TODO: remove?
-export PKGVENDOR=$(pkgvendor)
-export RPMVENDOR=$(pkgvendor)
+PKGVENDOR=$(pkgvendor)
+RPMVENDOR=$(pkgvendor)
 
 EOF
 
