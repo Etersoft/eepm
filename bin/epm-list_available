@@ -62,9 +62,9 @@ case $PMTYPE in
     yum-*)
         warmup_rpmbase
         if [ -n "$short" ] ; then
-            docmd yum list --available | sed -e "s| .*||g"
+            docmd yum list available | sed -e "s| .*||g"
         else
-            docmd yum list --available
+            docmd yum list available
         fi
         ;;
     packagekit)
