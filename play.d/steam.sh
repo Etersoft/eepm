@@ -10,11 +10,11 @@ epm installed $REPOPKGNAME && PKGNAME=$REPOPKGNAME
 
 . $(dirname $0)/common.sh
 
-res=0
-if ! epm install $REPOPKGNAME ; then
+if epm status --installable $REPOPKGNAME ; then
+    epm install $REPOPKGNAME || exit
+else
     PKGURL="https://cdn.akamai.steamstatic.com/client/installer/steam.deb"
-    epm install $PKGURL
-    res=$?
+    epm install $PKGURL || exit
 
     if [ "$(epm print info -s)" = "alt" ] ; then
         # https://bugzilla.altlinux.org/46110
@@ -25,4 +25,4 @@ fi
 
 epm play i586-fix
 
-exit $res
+exit
