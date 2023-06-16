@@ -3,18 +3,22 @@
 PKGNAME=apache-netbeans
 #SUPPORTEDARCHES="x86_64"
 VERSION="$2"
-DESCRIPTION="Apache NetBeans 17 from the official site"
+DESCRIPTION="Apache NetBeans from the official site"
 
 . $(dirname $0)/common.sh
+
+if [ "$VERSION" = "*" ] ; then
+    VERSION="$(epm tool eget --list https://dlcdn.apache.org/netbeans/netbeans-installers/* | tail -n1 | xargs basename)"
+fi
 
 pkgtype=$(epm print info -p)
 case $pkgtype in
     rpm)
-        mask="apache-netbeans-$VERSION.noarch.rpm"
+        mask="apache-netbeans-$VERSION-*.noarch.rpm"
         ;;
     *)
-        mask="apache-netbeans_${VERSION}_all.deb"
+        mask="apache-netbeans_${VERSION}-*_all.deb"
         ;;
 esac
 
-epm install "https://dlcdn.apache.org/netbeans/netbeans-installers/17/$mask"
+epm install "https://dlcdn.apache.org/netbeans/netbeans-installers/$VERSION/$mask"
