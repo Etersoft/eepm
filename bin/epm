@@ -165,7 +165,7 @@ case $PROGNAME in
         epm_cmd=search
         direct_args=1
         ;;
-    epmsf)                     # HELPSHORT: alias for epm search file
+    epmsf)                     # HELPSHORT: alias for epm search-file (epm sf)
         epm_cmd=search_file
         ;;
     epmwd)                     # HELPSHORT: alias for epm wd
