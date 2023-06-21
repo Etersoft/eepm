@@ -53,3 +53,5 @@ fi
 filter_from_requires libpangox-1.0.so.0 libgdkglext-x11-1.0.so.0 libgtkglext-x11-1.0.so.0
 
 fix_desktop_file /usr/bin/$PRODUCT
+
+add_requires $PREINSTALL_PACKAGES
