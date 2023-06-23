@@ -33,6 +33,8 @@ upstream_file: $alpkg
 generic_repack: appimage
 EOF
 
+chmod og-w -R squashfs-root
+
 erc pack $PKGNAME squashfs-root
 
 return_tar $PKGNAME
