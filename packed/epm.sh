@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.57.7"
+EPMVERSION="3.57.8"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -5047,9 +5047,9 @@ case $PMTYPE in
     yum-*)
         warmup_rpmbase
         if [ -n "$short" ] ; then
-            docmd yum list --available | sed -e "s| .*||g"
+            docmd yum list available | sed -e "s| .*||g"
         else
-            docmd yum list --available
+            docmd yum list available
         fi
         ;;
     packagekit)
@@ -16582,7 +16582,7 @@ case $PROGNAME in
         epm_cmd=search
         direct_args=1
         ;;
-    epmsf)                     # HELPSHORT: alias for epm search file
+    epmsf)                     # HELPSHORT: alias for epm search-file (epm sf)
         epm_cmd=search_file
         ;;
     epmwd)                     # HELPSHORT: alias for epm wd
