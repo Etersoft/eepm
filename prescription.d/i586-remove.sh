@@ -11,7 +11,7 @@ case "$(epm print info -s)" in
     ubuntu|debian)
         epm --verbose --simulate remove $(epmqp "^i386-")
         ;;
-    fedora|centos|redos)
+    fedora|centos|redos|rhel)
         epm --verbose --simulate remove $(epmqp "\.i686$")
         ;;
     *)

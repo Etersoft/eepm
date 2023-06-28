@@ -6,7 +6,6 @@
 
 
 vendor="$(epm print info -s)"
-
 case "$vendor" in
     "alt")
         if epm --quiet repo list | grep -q "x86_64-i586 classic" ; then
@@ -17,6 +16,11 @@ case "$vendor" in
             epm update
         fi
         ;;
+        exit
+esac
+
+pkgtype="$(epm print info -p)"
+case "$pkgtype" in
     "deb")
         if a= dpkg --print-foreign-architectures | grep -q "i386" ; then
             #[ -n "$verbose" ] && info "This system is ready to install 32bit packages"

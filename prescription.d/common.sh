@@ -6,6 +6,11 @@ fatal()
     exit 1
 }
 
+info()
+{
+    echo "$*" >&2
+}
+
 is_root()
 {
 	local EFFUID="$(id -u)"

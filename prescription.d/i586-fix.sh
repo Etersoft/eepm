@@ -52,7 +52,7 @@ case "$vendor" in
     "alt")
         get_list_alt
         ;;
-    "fedora"|"centos"|"redos")
+    "fedora"|"centos"|"redos"|"rhel")
         get_list_fedora
         ;;
     *)
