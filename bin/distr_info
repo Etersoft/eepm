@@ -892,8 +892,10 @@ print_total_info()
 {
 local orig=''
 [ -n "$BUILD_ID" ] && orig=" (orig. $BUILD_ID)"
+local EV=''
+[ -n "$EPMVERSION" ] && EV="(EPM version $EPMVERSION) "
 cat <<EOF
-distro_info v$PROGVERSION : Copyright © 2007-2023 Etersoft
+distro_info v$PROGVERSION $EV: Copyright © 2007-2023 Etersoft
 
                 Pretty distro name (--pretty): $(print_pretty_name)
 Distro name / version (--distro-name/version): $DISTRO_NAME / $DISTRIB_FULL_RELEASE$orig

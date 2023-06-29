@@ -451,6 +451,7 @@ epm_print()
             construct_name "$@"
             ;;
         "info")
+            export EPMVERSION
             $DISTRVENDOR "$@"
             ;;
         *)
