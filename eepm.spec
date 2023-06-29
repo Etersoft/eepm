@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.57.8
+Version: 3.57.9
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,12 @@ a discussion about extra requirements.
 
 
 %changelog
+* Thu Jun 29 2023 Vitaly Lipatov <lav@altlinux.ru> 3.57.9-alt1
+- epm play: add hansoft-client
+- epm prescription i586-fix: fix missed support
+- epm print info: add epm version output
+- epm check_updated_repo: apt based only
+
 * Tue Jun 27 2023 Vitaly Lipatov <lav@altlinux.ru> 3.57.8-alt1
 - epm list --available: fix for yum
 - epm play steam: don't use deb if package can be installed from the repo
