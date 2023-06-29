@@ -108,6 +108,16 @@ __is_repo_info_uptodate()
 update_repo_if_needed()
 {
     local days
+
+    # for apt only
+    case $PMTYPE in
+        apt-*)
+            ;;
+        *)
+            return
+            ;;
+    esac
+
     days="$(__epm_check_apt_db_days)" && return
     warning "APT database is $days, please run 'epm update'!"
 
