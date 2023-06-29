@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.57.8"
+EPMVERSION="3.57.9"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -2481,6 +2481,16 @@ __is_repo_info_uptodate()
 update_repo_if_needed()
 {
     local days
+
+    # for apt only
+    case $PMTYPE in
+        apt-*)
+            ;;
+        *)
+            return
+            ;;
+    esac
+
     days="$(__epm_check_apt_db_days)" && return
     warning "APT database is $days, please run 'epm update'!"
 
@@ -6800,6 +6810,7 @@ epm_print()
             construct_name "$@"
             ;;
         "info")
+            export EPMVERSION
             $DISTRVENDOR "$@"
             ;;
         *)
@@ -13750,8 +13761,10 @@ print_total_info()
 {
 local orig=''
 [ -n "$BUILD_ID" ] && orig=" (orig. $BUILD_ID)"
+local EV=''
+[ -n "$EPMVERSION" ] && EV="(EPM version $EPMVERSION) "
 cat <<EOF
-distro_info v$PROGVERSION : Copyright © 2007-2023 Etersoft
+distro_info v$PROGVERSION $EV: Copyright © 2007-2023 Etersoft
 
                 Pretty distro name (--pretty): $(print_pretty_name)
 Distro name / version (--distro-name/version): $DISTRO_NAME / $DISTRIB_FULL_RELEASE$orig
