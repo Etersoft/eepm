@@ -48,6 +48,7 @@ rsync_alt_contents_index()
 {
     local URL="$1"
     local TD="$2"
+    local res
     assure_exists rsync
     mkdir -p "$(dirname "$TD")"
     if [ -n "$verbose" ] ; then
@@ -55,6 +56,9 @@ rsync_alt_contents_index()
     else
         a= rsync --partial --inplace $3 -a --progress "$URL" "$TD" >/dev/null 2>/dev/null
     fi
+    res=$?
+    sudocmd chmod a+rw "$TD"
+    return $res
 }
 
 # URL
@@ -91,6 +95,7 @@ check_alt_contents_index()
     [ -f "$ALT_CONTENTS_INDEX_LIST" ]
 }
 
+# TODO: use special user for this files?
 init_alt_contents_index()
 {
     sudocmd mkdir -p "$(dirname $ALT_CONTENTS_INDEX_LIST)"
