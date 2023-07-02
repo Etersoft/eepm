@@ -1272,10 +1272,9 @@ get_host_only()
 
 concatenate_url_and_filename()
 {
-    local url="$1"
-    local fn="$2"
-    # workaround for a slash in the end of URL
-    echo "$(echo "$url" | sed -e 's|/*$||' )/$fn"
+    local url="$(echo "$1" | sed -e 's|/*$||' )"
+    local fn="$(echo "$2" | sed -e 's|^/*||' )"
+    echo "$url/$fn"
 }
 
 # MADEURL filled with latest made URL as flag it is end form of URL
