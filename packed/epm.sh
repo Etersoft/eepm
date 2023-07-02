@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.57.9"
+EPMVERSION="3.57.10"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -3936,6 +3936,7 @@ epm_install_names()
     case $PMTYPE in
         apt-rpm|apt-dpkg)
             APTOPTIONS="$APTOPTIONS $(subst_option verbose "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
+            # https://bugzilla.altlinux.org/44670
             VIRTAPTOPTIONS="-o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true"
             # not for kernel packages
             echo "$*" | grep -q "^kernel-"  && VIRTAPTOPTIONS=''
@@ -15254,10 +15255,9 @@ get_host_only()
 
 concatenate_url_and_filename()
 {
-    local url="$1"
-    local fn="$2"
-    # workaround for a slash in the end of URL
-    echo "$(echo "$url" | sed -e 's|/*$||' )/$fn"
+    local url="$(echo "$1" | sed -e 's|/*$||' )"
+    local fn="$(echo "$2" | sed -e 's|^/*||' )"
+    echo "$url/$fn"
 }
 
 # MADEURL filled with latest made URL as flag it is end form of URL
