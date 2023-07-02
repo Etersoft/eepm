@@ -90,6 +90,7 @@ epm_install_names()
     case $PMTYPE in
         apt-rpm|apt-dpkg)
             APTOPTIONS="$APTOPTIONS $(subst_option verbose "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
+            # https://bugzilla.altlinux.org/44670
             VIRTAPTOPTIONS="-o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true"
             # not for kernel packages
             echo "$*" | grep -q "^kernel-"  && VIRTAPTOPTIONS=''
