@@ -59,8 +59,13 @@ create_archive()
 	# FIXME: get type by ext only
 	local type="$(get_archive_type "$arc")"
 	case "$type" in
+		tar)
+			#docmd $HAVE_7Z a -l $arc "$@"
+			docmd tar cvf $arc "$@"
+			;;
 		*)
-			docmd $HAVE_7Z a $arc "$@"
+			# TODO: fix symlinks support
+			docmd $HAVE_7Z a -l $arc "$@"
 			#fatal "Not yet supported creating of $type archives"
 			;;
 	esac
