@@ -43,12 +43,6 @@ done
 fi
 
 DESKTOPFILE="$(echo *.desktop | head -n1)"
-PRODUCTCUR="$(basename $DESKTOPFILE .desktop)"
-if [ "$PRODUCT" = "$PRODUCTCUR" ] ; then
-    PRODUCTCUR=''
-else
-    add_bin_link_command $PRODUCTCUR $PRODUCT
-fi
 
 FROMICONFILE=''
 ICONNAME=$PRODUCT
@@ -58,9 +52,19 @@ if [ -r "$DESKTOPFILE" ] ; then
     cat $DESKTOPFILE | sed -e "s|AppRun|$PRODUCT|" -e 's|X-AppImage-Integrate.*||' > $BUILDROOT/usr/share/applications/$DESKTOPFILE
     pack_file /usr/share/applications/$DESKTOPFILE
 
-    ICONNAME="$(cat $DESKTOPFILE | grep "^Icon" | head -n1 | sed -e 's|Icon=||')"
+    ICONNAME="$(cat $DESKTOPFILE | grep "^Icon=" | head -n1 | sed -e 's|Icon=||')"
     FROMICONFILE="$ICONNAME.png"
+
+    EXEC="$(cat $DESKTOPFILE | grep "^Exec=" | head -n1 | sed -e 's|Exec=||')"
+
+    if [ -n "$EXEC" ] && [ "$PRODUCT" != "$EXEC" ] ; then
+        PRODUCTCUR="$EXEC"
+        add_bin_link_command $PRODUCTCUR $PRODUCT
+    fi
+
 fi
+
+[ -n "$ICONNAME" ] || fatal "Couldn't retrieve icon name from $DESKTOPFILE"
 
 ICONFILE=$ICONNAME.png
 
