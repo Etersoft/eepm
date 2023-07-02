@@ -144,8 +144,9 @@ get_archive_type()
 		# TODO: rewrite with mime
 		file "$1" | grep -q "Zip archive data" && echo "zip" && return
 		file "$1" | grep -q "RAR archive data" && echo "rar" && return
-	else
-		warning "Couldn't read $1, skipping mime checking"
+	# used for unexists files too
+	#else
+	#	warning "Couldn't read $1, skipping mime checking"
 	fi
 
 	if aext=$(get_archive_ext "$1") ; then
