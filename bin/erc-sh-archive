@@ -27,7 +27,11 @@ have_patool()
 set_backend()
 {
 	HAVE_7Z='7z'
-	[ -n "$use_patool" ] && [ -n "$use_7z" ] && fatal "Don't use --use-7z and --use-tool simulateously."
+
+	[ "$ERC_BACKEND" = "patool" ] && use_patool=1
+	[ "$ERC_BACKEND" = "7z" ] && use_7z=1
+
+	[ -n "$use_patool" ] && [ -n "$use_7z" ] && fatal "Don't use --use-7z and --use-patool simulateously."
 
 	if [ -n "$use_7z" ] || ! have_patool ; then
 		# TODO: try install patool and p7zip
