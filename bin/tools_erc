@@ -170,7 +170,7 @@ repack_archive()
 	local ftype="$(get_archive_type "$1")"
 	local ttype="$(get_archive_type "$2")"
 	case "$ftype-$ttype" in
-		tar.*-tar)
+		tar.*-tar|tgz-tar)
 			docmd $HAVE_7Z x -so "$1" > "$2"
 			;;
 		tar-tar.*)
@@ -180,7 +180,7 @@ repack_archive()
 			docmd $HAVE_7Z x -so "$1" | $HAVE_7Z a -si "$2"
 			;;
 		*)
-			fatal "Not yet supported repack of $ftype-$ttype archives"
+			fatal "Not yet supported repack of $ftype-$ttype archives in 7z mode (try install patool)"
 			;;
 	esac
 
