@@ -21,6 +21,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+init_eget()
+{
 PROGDIR=$(dirname "$0")
 PROGNAME=$(basename "$0")
 CMDSHELL="/bin/sh"
@@ -29,6 +31,8 @@ if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
     PROGDIR=""
     PROGNAME=""
 fi
+}
+init_eget
 
 
 fatal()
