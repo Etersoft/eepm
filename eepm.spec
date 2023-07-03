@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.57.10
+Version: 3.57.12
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,21 @@ a discussion about extra requirements.
 
 
 %changelog
+* Mon Jul 03 2023 Vitaly Lipatov <lav@altlinux.ru> 3.57.12-alt1
+- epm play: add unifiedremote
+- epm sf: fix index update
+- epm play libicu56: use http (ALT bug 46508)
+- epm play vinteo.desktop: fix url (ALT bug 46501)
+- epm repack synology-drive: fix libnautilus issue (ALT bug 46509)
+- epm repack generic-appimage: get PRODUCTCUR from desktop file
+- epm play mssql-tools: fix download url
+- epm repack brave: disable AutoReq
+- epm prescription i586-support: fix typo
+- epm prescription i586-fix: check vulkan-amdgpu only on ALT p10
+- erc: add support for repack tgz->tar in 7z mode
+- erc: use tar for tar creating
+- distr_info: treat 0.x version as Sisyphus
+
 * Sun Jul 02 2023 Vitaly Lipatov <lav@altlinux.ru> 3.57.10-alt1
 - epm play: add eXpress client
 - epm play: add firefox-nightly
