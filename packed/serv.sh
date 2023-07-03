@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.57.10"
+EPMVERSION="3.57.12"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -2091,7 +2091,10 @@ case "$DISTRIB_ID" in
         echo "$VERSION" | grep -q "c9f3 branch" && DISTRIB_RELEASE="c9f3"
         DISTRIB_CODENAME="$DISTRIB_RELEASE"
         # FIXME: fast hack for fallback: 10.1 -> p10 for /etc/os-release
-        if echo "$DISTRIB_RELEASE" | grep -q "^[0-9]" && echo "$DISTRIB_RELEASE" | grep -q -v "[0-9][0-9][0-9]"  ; then
+        if echo "$DISTRIB_RELEASE" | grep -q "^0" ; then
+            DISTRIB_RELEASE="Sisyphus"
+            DISTRIB_CODENAME="$DISTRIB_RELEASE"
+        elif echo "$DISTRIB_RELEASE" | grep -q "^[0-9]" && echo "$DISTRIB_RELEASE" | grep -q -v "[0-9][0-9][0-9]"  ; then
             DISTRIB_CODENAME="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
             # TODO: change p10 to 10
             DISTRIB_RELEASE="$DISTRIB_CODENAME"

@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.57.10"
+EPMVERSION="3.57.12"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -11529,6 +11529,7 @@ rsync_alt_contents_index()
 {
     local URL="$1"
     local TD="$2"
+    local res
     assure_exists rsync
     mkdir -p "$(dirname "$TD")"
     if [ -n "$verbose" ] ; then
@@ -11536,6 +11537,9 @@ rsync_alt_contents_index()
     else
         a= rsync --partial --inplace $3 -a --progress "$URL" "$TD" >/dev/null 2>/dev/null
     fi
+    res=$?
+    sudocmd chmod a+rw "$TD"
+    return $res
 }
 
 get_url_to_etersoft_mirror()
@@ -13303,7 +13307,10 @@ case "$DISTRIB_ID" in
         echo "$VERSION" | grep -q "c9f3 branch" && DISTRIB_RELEASE="c9f3"
         DISTRIB_CODENAME="$DISTRIB_RELEASE"
         # FIXME: fast hack for fallback: 10.1 -> p10 for /etc/os-release
-        if echo "$DISTRIB_RELEASE" | grep -q "^[0-9]" && echo "$DISTRIB_RELEASE" | grep -q -v "[0-9][0-9][0-9]"  ; then
+        if echo "$DISTRIB_RELEASE" | grep -q "^0" ; then
+            DISTRIB_RELEASE="Sisyphus"
+            DISTRIB_CODENAME="$DISTRIB_RELEASE"
+        elif echo "$DISTRIB_RELEASE" | grep -q "^[0-9]" && echo "$DISTRIB_RELEASE" | grep -q -v "[0-9][0-9][0-9]"  ; then
             DISTRIB_CODENAME="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
             # TODO: change p10 to 10
             DISTRIB_RELEASE="$DISTRIB_CODENAME"
@@ -14004,6 +14011,8 @@ internal_tools_eget()
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+init_eget()
+{
 PROGDIR=$(dirname "$0")
 PROGNAME=$(basename "$0")
 CMDSHELL="/bin/sh"
@@ -14012,6 +14021,8 @@ if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
     PROGDIR=""
     PROGNAME=""
 fi
+}
+
 
 
 fatal()
@@ -15467,8 +15478,13 @@ create_archive()
 	# FIXME: get type by ext only
 	local type="$(get_archive_type "$arc")"
 	case "$type" in
+		tar)
+			#docmd $HAVE_7Z a -l $arc "$@"
+			docmd tar cvf $arc "$@"
+			;;
 		*)
-			docmd $HAVE_7Z a $arc "$@"
+			# TODO: fix symlinks support
+			docmd $HAVE_7Z a -l $arc "$@"
 			#fatal "Not yet supported creating of $type archives"
 			;;
 	esac
@@ -15578,7 +15594,7 @@ repack_archive()
 	local ftype="$(get_archive_type "$1")"
 	local ttype="$(get_archive_type "$2")"
 	case "$ftype-$ttype" in
-		tar.*-tar)
+		tar.*-tar|tgz-tar)
 			docmd $HAVE_7Z x -so "$1" > "$2"
 			;;
 		tar-tar.*)
@@ -15588,7 +15604,7 @@ repack_archive()
 			docmd $HAVE_7Z x -so "$1" | $HAVE_7Z a -si "$2"
 			;;
 		*)
-			fatal "Not yet supported repack of $ftype-$ttype archives"
+			fatal "Not yet supported repack of $ftype-$ttype archives in 7z mode (try install patool)"
 			;;
 	esac
 
