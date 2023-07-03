@@ -55,7 +55,7 @@ if [ -r "$DESKTOPFILE" ] ; then
     ICONNAME="$(cat $DESKTOPFILE | grep "^Icon=" | head -n1 | sed -e 's|Icon=||')"
     FROMICONFILE="$ICONNAME.png"
 
-    EXEC="$(cat $DESKTOPFILE | grep "^Exec=" | head -n1 | sed -e 's|Exec=||')"
+    EXEC="$(cat $BUILDROOT/usr/share/applications/$DESKTOPFILE | grep "^Exec=" | head -n1 | sed -e 's|Exec=||' -e 's| .*||')"
 
     if [ -n "$EXEC" ] && [ "$PRODUCT" != "$EXEC" ] ; then
         PRODUCTCUR="$EXEC"
