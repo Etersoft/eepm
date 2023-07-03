@@ -9,6 +9,7 @@ push_tag()
     local version="$1"
     git tag -a "$version" -e -s -m "$(rpmlog -q --last-changelog | sed -e 's|^* ||')"
     git push pub.github $version
+    git push pub.gitlab $version
 }
 
 if [ -n "$1" ] ; then
