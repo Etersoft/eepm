@@ -8,15 +8,22 @@ epm play i586-support
 
 get_list_alt()
 {
+repo="$(epm print info -r)"
 
 for i in glibc-nss glibc-gconv-modules \
          libnm \
          sssd-client \
          primus \
-         vulkan-amdgpu libvulkan1 \
+         libvulkan1 \
          libd3d \
          $(epmqp --short libnss | grep "^libnss-") \
          $(epmqp --short xorg-dri | grep "^xorg-dri-")
+do
+    epm --quiet installed $i && LIST="$LIST i586-$i"
+done
+
+[ "$repo" = "p10" ] && for i in \
+         vulkan-amdgpu
 do
     epm --quiet installed $i && LIST="$LIST i586-$i"
 done
