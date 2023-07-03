@@ -15,8 +15,8 @@ case "$vendor" in
             epm repo add "$(epm --quiet repo list | grep "x86_64 classic" | sed -e 's|x86_64 |x86_64-i586|')"
             epm update
         fi
-        ;;
         exit
+        ;;
 esac
 
 pkgtype="$(epm print info -p)"
