@@ -24,8 +24,8 @@ case "$(epm print info -d)" in
     ;;
   ALTLinux)
     epm install --skip-installed unixODBC || fatal
-    epm install --repack https://packages.microsoft.com/rhel/8/prod/mssql-tools-1*.x86_64.rpm
-    epm install --repack https://packages.microsoft.com/rhel/8/prod/msodbcsql17-1*.x86_64.rpm
+    epm install --repack https://packages.microsoft.com/rhel/8/prod/Packages/m/mssql-tools-1*.x86_64.rpm
+    epm install --repack https://packages.microsoft.com/rhel/8/prod/Packages/m/msodbcsql17-1*.x86_64.rpm
     ;;
   Debian|Ubuntu)
     epm install --skip-installed unixodbc || fatal
