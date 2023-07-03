@@ -21,5 +21,6 @@ add_bin_commands
 
 use_system_xdg
 
-install_deps
+add_deps
 
+subst '1iAutoReq:no' $SPEC

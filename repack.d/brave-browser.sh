@@ -21,6 +21,8 @@ add_bin_commands
 
 use_system_xdg
 
-install_deps
+add_deps
 
 fix_desktop_file /usr/bin/$PRODUCTCUR
+
+subst '1iAutoReq:no' $SPEC
