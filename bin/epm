@@ -558,6 +558,9 @@ check_option()
     --force-yes)           # HELPOPT: force yes in a danger cases (f.i., during release upgrade)
         force_yes="--force-yes"
         ;;
+    --no-check-certificate)
+        fatal "--no-check-certificate is a wget option. It is recommended never use it at all. Check the date or upgrade your system."
+        ;;
     -*)
         [ -n "$direct_args" ] && return 1
         [ -n "$pkg_options" ] && pkg_options="$pkg_options $1" || pkg_options="$1"
