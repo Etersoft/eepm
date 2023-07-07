@@ -22,6 +22,11 @@ pack_file /usr/bin/$PRODUCT
 
 echo "Dowloading ... "
 .$PRODUCTDIR/portmaster-start --data $BUILDROOT$PRODUCTDIR update || fatal
+
+p="$(basename $(dirname $PRODUCTDIR/updates/linux_amd64/app/portmaster-app_v*/chrome-sandbox))"
+fix_chrome_sandbox $PRODUCTDIR/updates/linux_amd64/app/$p/chrome-sandbox
+
 pack_file $PRODUCTDIR/updates
+
 
 install_deps
