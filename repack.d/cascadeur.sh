@@ -36,7 +36,4 @@ EOF
 
 pack_file /usr/share/applications/$PRODUCT.desktop
 
-if [ "$(epm print info -s)" = "alt" ] ; then
-    # just for correct deps
-    add_requires qt5-imageformats
-fi
+add_requires qt5-imageformats

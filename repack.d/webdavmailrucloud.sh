@@ -22,7 +22,4 @@ EOF
 chmod a+x usr/bin/wdmrc
 pack_file /usr/bin/wdmrc
 
-if [ "$(epm print info -s)" = "alt" ] ; then
-    # just for correct deps
-    add_requires dotnet-6.0
-fi
+add_requires dotnet-6.0

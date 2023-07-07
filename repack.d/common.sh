@@ -342,3 +342,5 @@ fi
 [ -d "$BUILDROOT$PRODUCTBASEDIR" ] && pack_dir "$PRODUCTBASEDIR"
 
 [ -n "$PREINSTALL_PACKAGES" ] && install_requires $PREINSTALL_PACKAGES
+
+true
