@@ -25,4 +25,4 @@ fi
 
 PKGURL="https://updates.safing.io/latest/linux_amd64/packages/portmaster-installer.$pkgtype"
 
-epm install $prepack "$PKGURL"
+epm install $repack "$PKGURL"
