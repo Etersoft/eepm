@@ -359,7 +359,7 @@ __epm_play_download_epm_file()
 
 __epm_play_initialize_ipfs()
 {
-    if [ ! -d "$(dirname "$epm_ipfs_db")" ] ; then
+    if [ ! -d "$(dirname "$eget_ipfs_db")" ] ; then
         warning "ipfs db dir $eget_ipfs_db does not exist, skipping IPFS mode"
         return 1
     fi
@@ -374,13 +374,13 @@ __epm_play_initialize_ipfs()
     t=$(mktemp) || fatal
     remove_on_exit $t
     __epm_play_download_epm_file "$t" "eget-ipfs-db.txt" || warning "Can't update IPFS DB"
-    if [ -s "$t" ] ; then
+    if [ -s "$t" ] && [ -z "$EPM_IPFS_DB_UPDATE_SKIPPING" ] ; then
         echo >>$t
         cat $eget_ipfs_db >>$t
         sort -u < $t | grep -v "^$" > $eget_ipfs_db
     fi
 
-    # the only one thing need to enable IPFS in eget
+    # the only one thing is needed to enable IPFS in eget
     export EGET_IPFS_DB="$eget_ipfs_db"
 }
 
