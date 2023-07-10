@@ -57,7 +57,7 @@ rsync_alt_contents_index()
         a= rsync --partial --inplace $3 -a --progress "$URL" "$TD" >/dev/null 2>/dev/null
     fi
     res=$?
-    sudocmd chmod a+rw "$TD"
+    [ -f "$TD" ] && sudocmd chmod a+rw "$TD"
     return $res
 }
 
