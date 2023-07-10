@@ -17,8 +17,7 @@ PKGNAME="$(basename $TAR .tar.xz | sed -e "s|^tsetup|$PRODUCT|" )"
 f=$FPRODUCT
 [ -f "$(echo */$FPRODUCT)" ] && f="$(echo */$FPRODUCT)"
 
-mkdir -p opt/$TPRODUCT || fatal
-cp $f opt/$TPRODUCT/$TPRODUCT || fatal
+install -D -m755 $f opt/$TPRODUCT/$TPRODUCT || fatal
 erc pack $PKGNAME.tar opt/$TPRODUCT
 
 return_tar $PKGNAME.tar

@@ -15,8 +15,7 @@ PKGNAME="$(basename $TAR .zip | sed -e "s|_linux||" )"
 f=$FPRODUCT
 [ -f "$(echo */$FPRODUCT)" ] && f="$(echo */$FPRODUCT)"
 
-mkdir -p opt/$PRODUCT || fatal
-cp $f opt/$PRODUCT/$PRODUCT || fatal
+install -D -m755 $f opt/$PRODUCT/$PRODUCT || fatal
 erc pack $PKGNAME.tar opt/$PRODUCT
 
 return_tar $PKGNAME.tar
