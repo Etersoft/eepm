@@ -5,8 +5,9 @@ SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="RuDesktop for Linux from the official site"
 
-case "$(epm print info -d)" in
-  AstraLinux*)
+# change installed package name
+case "$(epm print info -s)" in
+  astra)
       PKGNAME=rudesktop-astra
       ;;
 esac
@@ -15,5 +16,21 @@ esac
 
 [ "$VERSION" = "*" ] && VERSION="[0-9]*"
 
-PKGURL=$(epm tool eget --list --latest https://rudesktop.ru/ $PKGNAME-$VERSION.deb)
+# change package name for downloading
+case "$(epm print info -s)" in
+  alt)
+      PKGNAME=rudesktop-alt
+      ;;
+esac
+
+case "$(epm print info -p)" in
+  rpm)
+      pkgtype=rpm
+      ;;
+  *)
+      pkgtype=deb
+      ;;
+esac
+
+PKGURL=https://rudesktop.ru/download/$PKGNAME-amd64.$pkgtype
 epm install $PKGURL
