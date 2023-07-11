@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.57.12
+Version: 3.57.13
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,15 @@ a discussion about extra requirements.
 
 
 %changelog
+* Wed Jul 12 2023 Vitaly Lipatov <lav@altlinux.ru> 3.57.13-alt1
+- epm play: add portmaster
+- epm play todoist: fix package name
+- epm play ungoogled-chromium: keep old version due libc.so.6(GLIBC_2.33)
+- epm play: remove repack for rudesktop
+- epm pack: fix binary permissions for 64Gram/Telegram (7z issue)
+- epm repack generic-appimage: fix EXEC getting from desktop file
+- epm: add notify about --no-check-cerificate
+
 * Mon Jul 03 2023 Vitaly Lipatov <lav@altlinux.ru> 3.57.12-alt1
 - epm play: add unifiedremote
 - epm sf: fix index update
