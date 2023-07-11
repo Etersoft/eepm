@@ -1021,6 +1021,10 @@ url_get_real_url()
 
     local loc
     for loc in $(url_get_header "$URL" "Location" | tac | sed -e 's| .*||') ; do
+        # hack for construct full url from related Location
+        if echo "$loc" | grep -q "^/" ; then
+            loc="$(concatenate_url_and_filename "$(get_host_only "$URL")" "$loc")"
+        fi
         if ! is_strange_url "$loc" ; then
             echo "$loc"
             return
