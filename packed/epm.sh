@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.57.12"
+EPMVERSION="3.57.13"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -6187,7 +6187,7 @@ __epm_play_download_epm_file()
 
 __epm_play_initialize_ipfs()
 {
-    if [ ! -d "$(dirname "$epm_ipfs_db")" ] ; then
+    if [ ! -d "$(dirname "$eget_ipfs_db")" ] ; then
         warning "ipfs db dir $eget_ipfs_db does not exist, skipping IPFS mode"
         return 1
     fi
@@ -6202,13 +6202,13 @@ __epm_play_initialize_ipfs()
     t=$(mktemp) || fatal
     remove_on_exit $t
     __epm_play_download_epm_file "$t" "eget-ipfs-db.txt" || warning "Can't update IPFS DB"
-    if [ -s "$t" ] ; then
+    if [ -s "$t" ] && [ -z "$EPM_IPFS_DB_UPDATE_SKIPPING" ] ; then
         echo >>$t
         cat $eget_ipfs_db >>$t
         sort -u < $t | grep -v "^$" > $eget_ipfs_db
     fi
 
-    # the only one thing need to enable IPFS in eget
+    # the only one thing is needed to enable IPFS in eget
     export EGET_IPFS_DB="$eget_ipfs_db"
 }
 
@@ -11538,7 +11538,7 @@ rsync_alt_contents_index()
         a= rsync --partial --inplace $3 -a --progress "$URL" "$TD" >/dev/null 2>/dev/null
     fi
     res=$?
-    sudocmd chmod a+rw "$TD"
+    [ -f "$TD" ] && sudocmd chmod a+rw "$TD"
     return $res
 }
 
@@ -13774,8 +13774,8 @@ local EV=''
 cat <<EOF
 distro_info v$PROGVERSION $EV: Copyright © 2007-2023 Etersoft
 
-                Pretty distro name (--pretty): $(print_pretty_name)
-Distro name / version (--distro-name/version): $DISTRO_NAME / $DISTRIB_FULL_RELEASE$orig
+                       Pretty name (--pretty): $(print_pretty_name)
+           (--distro-name / --distro-version): $DISTRO_NAME / $DISTRIB_FULL_RELEASE$orig
          Base distro name (-d) / version (-v): $(print_name_version)
      Vendor distro name (-s) / Repo name (-r): $(pkgvendor) / $(print_repo_name)
                  Package manager/type (-g/-p): $(pkgmanager) / $(pkgtype)
@@ -15011,6 +15011,10 @@ url_get_real_url()
 
     local loc
     for loc in $(url_get_header "$URL" "Location" | tac | sed -e 's| .*||') ; do
+        # hack for construct full url from related Location
+        if echo "$loc" | grep -q "^/" ; then
+            loc="$(concatenate_url_and_filename "$(get_host_only "$URL")" "$loc")"
+        fi
         if ! is_strange_url "$loc" ; then
             echo "$loc"
             return
@@ -17003,6 +17007,9 @@ check_option()
         ;;
     --force-yes)           # HELPOPT: force yes in a danger cases (f.i., during release upgrade)
         force_yes="--force-yes"
+        ;;
+    --no-check-certificate)
+        fatal "--no-check-certificate is a wget option. It is recommended never use it at all. Check the date or upgrade your system."
         ;;
     -*)
         [ -n "$direct_args" ] && return 1

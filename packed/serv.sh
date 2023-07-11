@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.57.12"
+EPMVERSION="3.57.13"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -2558,8 +2558,8 @@ local EV=''
 cat <<EOF
 distro_info v$PROGVERSION $EV: Copyright © 2007-2023 Etersoft
 
-                Pretty distro name (--pretty): $(print_pretty_name)
-Distro name / version (--distro-name/version): $DISTRO_NAME / $DISTRIB_FULL_RELEASE$orig
+                       Pretty name (--pretty): $(print_pretty_name)
+           (--distro-name / --distro-version): $DISTRO_NAME / $DISTRIB_FULL_RELEASE$orig
          Base distro name (-d) / version (-v): $(print_name_version)
      Vendor distro name (-s) / Repo name (-r): $(pkgvendor) / $(print_repo_name)
                  Package manager/type (-g/-p): $(pkgmanager) / $(pkgtype)
