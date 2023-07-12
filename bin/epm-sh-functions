@@ -965,11 +965,16 @@ is_command()
 
 # compatibility layer
 
-# add realpath if missed
+# add realpath if missed (with -s support)
 if ! is_command realpath ; then
 realpath()
 {
     [ -n "$*" ] || return
+    if [ "$1" = "-s" ] ; then
+        shift
+        echo "$(cd "$(dirname "$1")" && pwd -P)/$(basename "$1")" #"
+        return
+    fi
     readlink -f "$@"
 }
 fi
