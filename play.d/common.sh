@@ -169,7 +169,7 @@ is_repacked_package()
     [ -n "$force" ] && return 0
 
     if epm status --original $pkg ; then
-       echo "Package $pkg is already installed from ALT repository."
+       echo "Package $pkg is already installed from ALT repository (use --force to override it)."
        return 1
     fi
 
