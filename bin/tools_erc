@@ -83,7 +83,7 @@ extract_archive()
 
 	local type="$(get_archive_type "$arc")"
 
-	arc="$(realpath "$arc")"
+	arc="$(realpath -s "$arc")"
 	tdir=$(mktemp -d $(pwd)/UXXXXXXXX) && cd "$tdir" || fatal
 
 	local TSUBDIR="$(basename "$arc" .$type)"
