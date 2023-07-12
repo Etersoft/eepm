@@ -89,10 +89,10 @@ extract_archive()
 	local TSUBDIR="$(basename "$arc" .$type)"
 
 	case "$type" in
-		tar.*)
+		tar.*|tgz)
 			# TODO: check if there is only one file?
 			# use subdir if there is no subdir in archive
-			TSUBDIR="$(basename "$arc" $(echo $type | sed -e 's|^tar||') )"
+			TSUBDIR="$(basename "$arc" .$(echo $type | sed -e 's|^tar\.||') )"
 			docmd $HAVE_7Z x -so $arc | docmd $HAVE_7Z x -si -ttar
 			;;
 		*)
