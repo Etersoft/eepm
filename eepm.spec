@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.57.13
+Version: 3.57.14
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,16 @@ a discussion about extra requirements.
 
 
 %changelog
+* Fri Jul 14 2023 Vitaly Lipatov <lav@altlinux.ru> 3.57.14-alt1
+- epm play: rewrite packages list operation via join
+- erc: don't expand symlink in a path to a archive
+- erc: extract_archive(): add tgz unpacking
+- epm repack wps-office: fix segfault (ALT bug 45683)
+- epm play onlyoffice: all get any version from github releases
+- epm play onlyoffice: use 7.3.3 for p9 and c9f2
+- epm play: add t1client support
+- epm pack kubo: install /usr/bin/ipfs as executable
+
 * Wed Jul 12 2023 Vitaly Lipatov <lav@altlinux.ru> 3.57.13-alt1
 - epm play: add portmaster
 - epm play todoist: fix package name
