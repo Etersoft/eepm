@@ -24,6 +24,12 @@ case "$(epm print info -s)" in
       arch=amd64
       file=onlyoffice-desktopeditors_amd64.deb
       pkgtype=deb
+
+      repo="$(epm print info -r)"
+      if [ "$VERSION" = "*" ] && [ "$repo" = "p9" ] || [ "$repo" = "c9f2" ] ; then
+          # need old glibc
+          VERSION=7.3.3
+      fi
       ;;
 esac
 
