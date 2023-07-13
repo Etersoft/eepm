@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.57.13"
+EPMVERSION="3.57.14"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -947,6 +947,11 @@ if ! is_command realpath ; then
 realpath()
 {
     [ -n "$*" ] || return
+    if [ "$1" = "-s" ] ; then
+        shift
+        echo "$(cd "$(dirname "$1")" && pwd -P)/$(basename "$1")" #"
+        return
+    fi
     readlink -f "$@"
 }
 fi
@@ -5927,35 +5932,48 @@ __list_app_packages_table()
     done
 }
 
-__list_installed_app()
+__filter_by_installed_packages()
+{
+    local i
+    local tapt="$1"
+
+    local pkglist
+    pkglist="$(mktemp)" || fatal
+    remove_on_exit $pkglist
+
+    # get intersect between full package list and available packages table
+    epm --short packages | LANG=C sort -u >$pkglist
+    LANG=C join -11 -21 $tapt $pkglist | uniq
+    rm -f $pkglist
+
+    # rpm on Fedora/CentOS no more print missed packages to stderr
+    # get supported packages list and print lines with it
+    #for i in $(epm query --short $(cat $tapt | cut -f1 -d" ") 2>/dev/null) ; do
+    #    grep "^$i " $tapt
+    #done
+}
+
+__get_installed_table()
 {
     local i
     local tapt
     tapt="$(mktemp)" || fatal
     remove_on_exit $tapt
-    __list_app_packages_table >$tapt
-    # get all installed packages and convert it to a apps list
-    for i in $(epm query --short $(cat $tapt | sed -e 's| .*$||') 2>/dev/null) ; do
-        grep "^$i " $tapt | sed -e 's|^.* ||'
-    done
+    __list_app_packages_table | LANG=C sort -u >$tapt
+    __filter_by_installed_packages $tapt
     rm -f $tapt
-    return
+}
 
-    cat $epm_vardir/installed-app 2>/dev/null
+__list_installed_app()
+{
+    # get all installed packages and convert it to a apps list
+    __get_installed_table | cut -f2 -d" "
 }
 
 __list_installed_packages()
 {
-    local i
-    local tapt
-    tapt="$(mktemp)" || fatal
-    remove_on_exit $tapt
-    __list_app_packages_table >$tapt
     # get all installed packages
-    for i in $(epm query --short $(cat $tapt | sed -e 's| .*$||') 2>/dev/null) ; do
-        grep "^$i " $tapt | cut -f1 -d" "
-    done
-    rm -f $tapt
+    __get_installed_table | cut -f1 -d" "
 }
 
 
@@ -15506,16 +15524,16 @@ extract_archive()
 
 	local type="$(get_archive_type "$arc")"
 
-	arc="$(realpath "$arc")"
+	arc="$(realpath -s "$arc")"
 	tdir=$(mktemp -d $(pwd)/UXXXXXXXX) && cd "$tdir" || fatal
 
 	local TSUBDIR="$(basename "$arc" .$type)"
 
 	case "$type" in
-		tar.*)
+		tar.*|tgz)
 			# TODO: check if there is only one file?
 			# use subdir if there is no subdir in archive
-			TSUBDIR="$(basename "$arc" $(echo $type | sed -e 's|^tar||') )"
+			TSUBDIR="$(basename "$arc" .$(echo $type | sed -e 's|^tar\.||') )"
 			docmd $HAVE_7Z x -so $arc | docmd $HAVE_7Z x -si -ttar
 			;;
 		*)

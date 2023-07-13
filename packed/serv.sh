@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.57.13"
+EPMVERSION="3.57.14"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -948,6 +948,11 @@ if ! is_command realpath ; then
 realpath()
 {
     [ -n "$*" ] || return
+    if [ "$1" = "-s" ] ; then
+        shift
+        echo "$(cd "$(dirname "$1")" && pwd -P)/$(basename "$1")" #"
+        return
+    fi
     readlink -f "$@"
 }
 fi
