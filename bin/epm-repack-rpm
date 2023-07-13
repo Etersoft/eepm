@@ -156,6 +156,9 @@ __epm_repack_to_rpm()
             a='' alien --generate --to-rpm $scripts "../$alpkg" >/dev/null || fatal
         fi
 
+        # remove all empty dirs (hack agains broken dpkg with LF in the end of line) (hack for linux_pantum.deb)
+        rmdir *
+
         local subdir="$(echo *)"
         [ -d "$subdir" ] || fatal "can't find subdir in $(pwd)"
 
