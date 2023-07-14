@@ -5,6 +5,8 @@ SPEC="$2"
 PRODUCT=ipera-client
 PRODUCTDIR=/opt/ipera
 
+PREINSTALL_PACKAGES="libQt5Pdf.so.5()(64bit)"
+
 . $(dirname $0)/common.sh
 
 LIBDIR=$(echo $BUILDROOT/opt/ipera/client/*/lib)
