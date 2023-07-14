@@ -259,12 +259,17 @@ print_srcpkgname()
     rpm_query_package_field "sourcerpm" "$@"
 }
 
+# https://blog.jasonantman.com/2014/07/how-yum-and-rpm-compare-versions/
 compare_version()
 {
     case $PMTYPE in
         *-rpm)
-            is_command rpmevrcmp || fatal "rpmevrcmp exists in ALT Linux only"
-            a= rpmevrcmp "$@"
+            # rpmevrcmp exists in ALT Linux only
+            if is_command rpmevrcmp ; then
+                a= rpmevrcmp "$@"
+            else
+                a= rpm --eval "%{lua:print(rpm.vercmp('$1', '$2'))}"
+            fi
             ;;
         *-dpkg)
             a= dpkg --compare-versions "$1" lt "$2" && echo "-1" && return
