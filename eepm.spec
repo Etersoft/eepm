@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.57.14
+Version: 3.58.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,29 @@ a discussion about extra requirements.
 
 
 %changelog
+* Sat Jul 15 2023 Vitaly Lipatov <lav@altlinux.ru> 3.58.0-alt1
+- distr_info: get_service_manager: check if systemd is running with pid 1
+- epm play common.sh: use is_repacked for --installed
+- epm repack ipera-client: add missed require (ALT bug 43761)
+- epm-repack-rpm: call generic-default if there is no special repack script
+- epm repack: use AutoReq: no, AutoProv: no by default
+- epm-download: force download for repack
+- epm mark showhold: add --short support for dnf
+- epm mark: add checkhold
+- epm mark: dnf: skip checking if versionlock is not installed
+- distr_info: user HOME_URL if BUG_REPORT_URL is empty
+- distr_info: use VENDOR_ID for select pkgtype
+- epm repack: fix cnrdrvcups-ufr2-uk
+- epm provides: add --short support for apt, separate requires by lines
+- epm print compare version: implement via lua:print for non ALT rpm)
+- epm repack common: implement add_unirequires and UNIREQUIRES support
+- epm repack common: chmod 0755 all executable targets
+- epm repack cuda-z: use UNIREQUIRES
+- epm repack zoom: switch to UNIREQUIRES
+- epm repack anydesk: switch to UNIREQUIRES
+- epm repack: switch to add_electron_deps and add_chromium_deps
+- epm play anydesk: fix download latest version
+
 * Fri Jul 14 2023 Vitaly Lipatov <lav@altlinux.ru> 3.57.14-alt1
 - epm play: rewrite packages list operation via join
 - erc: don't expand symlink in a path to a archive
