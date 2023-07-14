@@ -1,0 +1,10 @@
+NAME="Liya GNU/Linux"
+PRETTY_NAME="Liya"
+ID=liya
+ID_LIKE=arch
+BUILD_ID=rolling
+ANSI_COLOR="38;2;23;147;209"
+HOME_URL="https://liyalinux.gitlab.io/"
+LOGO=liya
+IMAGE_ID=Liya
+IMAGE_VERSION=v7.1.1
