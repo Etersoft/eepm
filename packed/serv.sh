@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.57.14"
+EPMVERSION="3.58.0"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1783,20 +1783,25 @@ pkgvendor()
 # TODO: in more appropriate way
 #which pkcon 2>/dev/null >/dev/null && info "You can run $ PMTYPE=packagekit epm to use packagekit backend"
 
-# Print package manager (need DISTRIB_ID var)
+# Print package manager (need DISTRIB_ID, DISTRIB_RELEASE vars)
 pkgmanager()
 {
 local CMD
+
+case $VENDOR_ID in
+    alt)
+        echo "apt-rpm" && return
+        ;;
+    arch|manjaro)
+        echo "pacman" && return
+        ;;
+    debian)
+        echo "apt-dpkg" && return
+        ;;
+esac
+
 # FIXME: some problems with multibased distros (Server Edition on CentOS and Desktop Edition on Ubuntu)
 case $DISTRIB_ID in
-    ALTLinux|ALTServer)
-        #which ds-install 2>/dev/null >/dev/null && CMD=deepsolver-rpm
-        #which pkcon 2>/dev/null >/dev/null && CMD=packagekit-rpm
-        CMD="apt-rpm"
-        ;;
-    ALTServer)
-        CMD="apt-rpm"
-        ;;
     PCLinux)
         CMD="apt-rpm"
         ;;
@@ -1877,11 +1882,6 @@ case $DISTRIB_ID in
         CMD="xbps"
         ;;
     *)
-        # try detect firstly
-        if grep -q "ID_LIKE=debian" /etc/os-release 2>/dev/null ; then
-            echo "apt-dpkg" && return
-        fi
-
         if is_command "rpm" && [ -s /var/lib/rpm/Name ] || [ -s /var/lib/rpm/rpmdb.sqlite ] ; then
             is_command "zypper" && echo "zypper-rpm" && return
             is_command "dnf" && echo "dnf-rpm" && return
@@ -1895,7 +1895,7 @@ case $DISTRIB_ID in
             is_command "apt-get" && echo "apt-dpkg" && return
         fi
 
-        echo "pkgmanager(): We don't support yet DISTRIB_ID $DISTRIB_ID" >&2
+        echo "pkgmanager(): We don't support yet DISTRIB_ID $DISTRIB_ID (VENDOR_ID $VENDOR_ID)" >&2
         ;;
 esac
 echo "$CMD"
@@ -1904,6 +1904,13 @@ echo "$CMD"
 # Print pkgtype (need DISTRIB_ID var)
 pkgtype()
 {
+
+    case $VENDOR_ID in
+        arch|manjaro)
+            echo "pkg.tar.xz" && return
+            ;;
+    esac
+
 # TODO: try use generic names
     case $(pkgvendor) in
         freebsd) echo "tbz" ;;
@@ -1961,6 +1968,9 @@ normalize_name()
             ;;
         "Debian GNU/Linux")
             echo "Debian"
+            ;;
+        "Liya GNU/Linux")
+            echo "LiyaLinux"
             ;;
         "CentOS Linux")
             echo "CentOS"
@@ -2035,11 +2045,13 @@ if distro os-release ; then
     DISTRIB_RELEASE_ORIG="$VERSION_ID"
     DISTRIB_RELEASE="$VERSION_ID"
     [ -n "$DISTRIB_RELEASE" ] || DISTRIB_RELEASE="CUR"
+    [ "$BUILD_ID" = "rolling" ] && DISTRIB_RELEASE="rolling"
+    [ -n "$BUG_REPORT_URL" ] || BUG_REPORT_URL="$HOME_URL"
     # set by os-release:
     #PRETTY_NAME
     VENDOR_ID="$ID"
     case "$VENDOR_ID" in
-        ubuntu|reld|rhel|astra)
+        ubuntu|reld|rhel|astra|manjaro)
             ;;
         *)
             [ -n "$ID_LIKE" ] && VENDOR_ID="$(echo "$ID_LIKE" | cut -d" " -f1)"
@@ -2141,7 +2153,7 @@ case "$DISTRIB_ID" in
 esac
 
 
-[ -n "$DISTRIB_ID" ] && return
+[ -n "$DISTRIB_ID" ] && [ -n "$DISTRIB_RELEASE" ] && return
 
 
 # check via obsoleted ways
@@ -2527,7 +2539,7 @@ get_service_manager()
     [ -d /run/systemd/system ] && echo "systemd" && return
     # TODO
     #[ -d /usr/share/upstart ] && echo "upstart" && return
-    is_command systemctl && echo "systemd" && return
+    is_command systemctl && cat /proc/1/comm | grep -q 'systemd$' && echo "systemd" && return
     [ -d /etc/init.d ] && echo "sysvinit" && return
     echo "(unknown)"
 }

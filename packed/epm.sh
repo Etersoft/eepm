@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.57.14"
+EPMVERSION="3.58.0"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1600,7 +1600,7 @@ case $BASEDISTRNAME in
         fi
 
         # TODO: implement for other PMTYPE
-        local hold_packages="$(epm mark showhold)"
+        local hold_packages="$(epm mark --short showhold)"
         if [ -n "$hold_packages" ] ; then
             echo "Skip follow packages on hold: $(echo $hold_packages | xargs -n1000 echo)"
             PKGLIST="$(estrlist exclude "$hold_packages" "$PKGLIST")"
@@ -2896,6 +2896,9 @@ __use_url_install()
     # force download if wildcard is used
     echo "$pkg_urls" | grep -q "[?*]" && return 1
 
+    # force download if repack is asked
+    [ -n "$repack" ] && return 1
+
     # install of remote files has a side affect
     # (more fresh package from a repo can be installed instead of the file)
     #case $DISTRNAME in
@@ -2918,10 +2921,10 @@ __use_url_install()
         #    pkg_names="$pkg_names $pkg_urls"
         #    ;;
         pacman)
-            pkg_names="$pkg_names $pkg_urls"
+            true
             ;;
         yum-rpm|dnf-rpm)
-            pkg_names="$pkg_names $pkg_urls"
+            true
             ;;
         #zypper-rpm)
         #    pkg_names="$pkg_names $pkg_urls"
@@ -2930,6 +2933,7 @@ __use_url_install()
             return 1
             ;;
     esac
+    [ -n "$pkg_names" ] && pkg_names="$pkg_names $pkg_urls" || pkg_names="$pkg_urls"
     return 0
 }
 
@@ -5204,6 +5208,11 @@ __dnf_assure_versionlock()
     epm assure /etc/dnf/plugins/versionlock.conf 'dnf-command(versionlock)'
 }
 
+__dnf_is_supported_versionlock()
+{
+    [ -f /etc/dnf/plugins/versionlock.conf ]
+}
+
 epm_mark_hold()
 {
 
@@ -5286,14 +5295,20 @@ esac
 
 case $PMTYPE in
     apt-dpkg)
-        sudocmd apt-mark showhold "$@"
+        docmd apt-mark showhold "$@"
         ;;
     dnf-rpm)
+        # there is no hold entries without versionlock
+        __dnf_is_supported_versionlock || return 0
         __dnf_assure_versionlock
-        sudocmd dnf versionlock list
+        if [ -n "$short" ] ; then
+            docmd dnf versionlock list "$@" | sed -e 's|\.\*$||' | grep -v " " | filter_pkgnames_to_short
+        else
+            docmd dnf versionlock list "$@"
+        fi
         ;;
     zypper-rpm)
-        sudocmd zypper ll "$@"
+        docmd zypper ll "$@"
         ;;
     emerge)
         cat /etc/portage/package.mask
@@ -5305,6 +5320,22 @@ case $PMTYPE in
         fatal "Have no suitable command for $PMTYPE"
         ;;
 esac
+
+}
+
+epm_mark_checkhold()
+{
+case $PMTYPE in
+    dnf-rpm)
+        # there is no hold entries without versionlock
+        __dnf_is_supported_versionlock || return 1
+        __dnf_assure_versionlock
+        docmd dnf versionlock list | grep "^$1" | sed -e 's|\.\*$||' | grep -v " " | filter_pkgnames_to_short | grep -q "^$1$"
+        return
+        ;;
+esac
+
+epm_mark_showhold | grep -q "^$1$"
 
 }
 
@@ -5446,6 +5477,9 @@ epm_mark()
         ;;
     showhold)                         # HELPCMD: print the list of packages on hold
         epm_mark_showhold "$@"
+        ;;
+    checkhold)                         # HELPCMD: return true if the package is on hold
+        epm_mark_checkhold "$@"
         ;;
     auto)                             # HELPCMD: mark the given package(s) as automatically installed
         epm_mark_auto "$@"
@@ -6643,8 +6677,12 @@ compare_version()
 {
     case $PMTYPE in
         *-rpm)
-            is_command rpmevrcmp || fatal "rpmevrcmp exists in ALT Linux only"
-            a= rpmevrcmp "$@"
+            # rpmevrcmp exists in ALT Linux only
+            if is_command rpmevrcmp ; then
+                a= rpmevrcmp "$@"
+            else
+                a= rpm --eval "%{lua:print(rpm.vercmp('$1', '$2'))}"
+            fi
             ;;
         *-dpkg)
             a= dpkg --compare-versions "$1" lt "$2" && echo "-1" && return
@@ -6872,7 +6910,11 @@ epm_provides_files()
     case $PKGTYPE in
         rpm)
             assure_exists rpm
-            docmd rpm -q --provides -p $pkg_files
+            if [ -n "$short" ] ; then
+                docmd rpm -q --provides -p $pkg_files | sed -e 's| .*||'
+            else
+                docmd rpm -q --provides -p $pkg_files
+            fi
             ;;
         deb)
             assure_exists dpkg
@@ -6900,7 +6942,11 @@ case $PMTYPE in
             CMD="rpm -q --provides"
         else
             EXTRA_SHOWDOCMD=' | grep "Provides:"'
-            docmd apt-cache show $pkg_names | grep "Provides:"
+            if [ -n "$short" ] ; then
+                docmd apt-cache show $pkg_names | grep "Provides:" | sed -e 's|, |\n|g' -e 's|Provides: ||' -e 's| .*||'
+            else
+                docmd apt-cache show $pkg_names | grep "Provides:" | sed -e 's|, |\n|g' -e 's|Provides: ||'
+            fi
             return
         fi
         ;;
@@ -6956,7 +7002,15 @@ case $PMTYPE in
         ;;
 esac
 
-docmd $CMD $pkg_names
+if [ -n "$direct" ] && [ "$CMD" = "rpm -q --provides" ] ; then
+    # do universal provides
+    docmd $CMD $pkg_names | sed -e 's| .*||' | grep -F "()"
+    a= $CMD $pkg_names | sed -e 's| .*||' | grep -v -E "^(lib|ld-linux)"
+elif [ -n "$short" ] ; then
+    docmd $CMD $pkg_names | sed -e 's| .*||'
+else
+    docmd $CMD $pkg_names
+fi
 
 }
 
@@ -7283,6 +7337,11 @@ is_installed()
     (quiet=1 __epm_query_name "$@") >/dev/null 2>/dev/null
 }
 
+filter_pkgnames_to_short()
+{
+    local names="$(cat)"
+    __epm_query_shortname $names
+}
 
 epm_query()
 {
@@ -7752,7 +7811,7 @@ assure_safe_run()
 
     # run under screen, check if systemd will not kill our processes
     local res
-    if ! is_active_systemd systemd ; then
+    if ! is_active_systemd ; then
         return
     fi
 
@@ -7891,7 +7950,7 @@ __check_system()
     shift
 
     # sure we have systemd if systemd is running
-    if is_active_systemd systemd ; then
+    if is_active_systemd ; then
         docmd epm --skip-installed install systemd || fatal
     fi
 
@@ -7905,7 +7964,7 @@ __check_system()
     fi
 
     # switch from prefdm: https://bugzilla.altlinux.org/show_bug.cgi?id=26405#c47
-    if is_active_systemd systemd ; then
+    if is_active_systemd ; then
         if serv display-manager exists || serv prefdm exists ; then
             # don't stop running X server!
             # docmd serv dm off
@@ -9143,6 +9202,11 @@ __fix_spec()
 
 }
 
+has_repack_script()
+{
+    local repackcode="$EPM_REPACK_SCRIPTS_DIR/$1.sh"
+    [ -s "$repackcode" ]
+}
 
 __apply_fix_code()
 {
@@ -9230,6 +9294,9 @@ __epm_repack_to_rpm()
             a='' alien --generate --to-rpm $scripts "../$alpkg" >/dev/null || fatal
         fi
 
+        # remove all empty dirs (hack against broken dpkg with LF in the end of line) (hack for linux_pantum.deb)
+        rmdir * 2>/dev/null
+
         local subdir="$(echo *)"
         [ -d "$subdir" ] || fatal "can't find subdir in $(pwd)"
 
@@ -9253,6 +9320,9 @@ __epm_repack_to_rpm()
         __apply_fix_code "generic" $buildroot $spec $pkgname $abspkg
         __apply_fix_code "generic-$SUBGENERIC" $buildroot $spec $pkgname $abspkg
         __apply_fix_code $pkgname $buildroot $spec $pkgname $abspkg
+        if ! has_repack_script $pkgname ; then
+            __apply_fix_code "generic-default" $buildroot $spec $pkgname $abspkg
+        fi
         cd - >/dev/null
 
         TARGETARCH=$(epm print info -a | sed -e 's|^x86$|i586|')
@@ -10157,7 +10227,11 @@ case $PMTYPE in
         docmd eoget list-repo
         ;;
     pacman)
-        docmd grep -v -- "^#\|^$" /etc/pacman.conf
+        if [ -f /etc/pacman.d/mirrorlist ] ; then
+            docmd grep -v -- "^#\|^$" /etc/pacman.d/mirrorlist | grep "^Server =" | sed -e 's|^Server = ||'
+        else
+            docmd grep -v -- "^#\|^$" /etc/pacman.conf
+        fi
         ;;
     slackpkg)
         docmd grep -v -- "^#\|^$" /etc/slackpkg/mirrors
@@ -10496,9 +10570,9 @@ case $PMTYPE in
                 CMD="apt-cache depends"
             else
                 if [ -n "$short" ] ; then
-                    LANG=C docmd apt-cache depends $pkg_names | grep "Depends:" | sed -e "s|.*Depends: ||" -e "s|<\(.*\)>|\1|" | __epm_filter_out_base_alt_reqs | sed -e "s| .*||"
+                    LANG=C docmd apt-cache depends $pkg_names | grep "Depends:" | sed -e 's|, |\n|g' -e "s|.*Depends: ||" -e "s|<\(.*\)>|\1|" | __epm_filter_out_base_alt_reqs | sed -e "s| .*||"
                 else
-                    LANG=C docmd apt-cache depends $pkg_names | grep "Depends:" | sed -e "s|.*Depends: ||" -e "s|<\(.*\)>|\1|" | __epm_filter_out_base_alt_reqs
+                    LANG=C docmd apt-cache depends $pkg_names | grep "Depends:" | sed -e 's|, |\n|g' -e "s|.*Depends: ||" -e "s|<\(.*\)>|\1|" | __epm_filter_out_base_alt_reqs
                 fi
                 return
             fi
@@ -13012,20 +13086,25 @@ pkgvendor()
 # TODO: in more appropriate way
 #which pkcon 2>/dev/null >/dev/null && info "You can run $ PMTYPE=packagekit epm to use packagekit backend"
 
-# Print package manager (need DISTRIB_ID var)
+# Print package manager (need DISTRIB_ID, DISTRIB_RELEASE vars)
 pkgmanager()
 {
 local CMD
+
+case $VENDOR_ID in
+    alt)
+        echo "apt-rpm" && return
+        ;;
+    arch|manjaro)
+        echo "pacman" && return
+        ;;
+    debian)
+        echo "apt-dpkg" && return
+        ;;
+esac
+
 # FIXME: some problems with multibased distros (Server Edition on CentOS and Desktop Edition on Ubuntu)
 case $DISTRIB_ID in
-    ALTLinux|ALTServer)
-        #which ds-install 2>/dev/null >/dev/null && CMD=deepsolver-rpm
-        #which pkcon 2>/dev/null >/dev/null && CMD=packagekit-rpm
-        CMD="apt-rpm"
-        ;;
-    ALTServer)
-        CMD="apt-rpm"
-        ;;
     PCLinux)
         CMD="apt-rpm"
         ;;
@@ -13106,11 +13185,6 @@ case $DISTRIB_ID in
         CMD="xbps"
         ;;
     *)
-        # try detect firstly
-        if grep -q "ID_LIKE=debian" /etc/os-release 2>/dev/null ; then
-            echo "apt-dpkg" && return
-        fi
-
         if is_command "rpm" && [ -s /var/lib/rpm/Name ] || [ -s /var/lib/rpm/rpmdb.sqlite ] ; then
             is_command "zypper" && echo "zypper-rpm" && return
             is_command "dnf" && echo "dnf-rpm" && return
@@ -13124,7 +13198,7 @@ case $DISTRIB_ID in
             is_command "apt-get" && echo "apt-dpkg" && return
         fi
 
-        echo "pkgmanager(): We don't support yet DISTRIB_ID $DISTRIB_ID" >&2
+        echo "pkgmanager(): We don't support yet DISTRIB_ID $DISTRIB_ID (VENDOR_ID $VENDOR_ID)" >&2
         ;;
 esac
 echo "$CMD"
@@ -13133,6 +13207,13 @@ echo "$CMD"
 # Print pkgtype (need DISTRIB_ID var)
 pkgtype()
 {
+
+    case $VENDOR_ID in
+        arch|manjaro)
+            echo "pkg.tar.xz" && return
+            ;;
+    esac
+
 # TODO: try use generic names
     case $(pkgvendor) in
         freebsd) echo "tbz" ;;
@@ -13190,6 +13271,9 @@ normalize_name()
             ;;
         "Debian GNU/Linux")
             echo "Debian"
+            ;;
+        "Liya GNU/Linux")
+            echo "LiyaLinux"
             ;;
         "CentOS Linux")
             echo "CentOS"
@@ -13264,11 +13348,13 @@ if distro os-release ; then
     DISTRIB_RELEASE_ORIG="$VERSION_ID"
     DISTRIB_RELEASE="$VERSION_ID"
     [ -n "$DISTRIB_RELEASE" ] || DISTRIB_RELEASE="CUR"
+    [ "$BUILD_ID" = "rolling" ] && DISTRIB_RELEASE="rolling"
+    [ -n "$BUG_REPORT_URL" ] || BUG_REPORT_URL="$HOME_URL"
     # set by os-release:
     #PRETTY_NAME
     VENDOR_ID="$ID"
     case "$VENDOR_ID" in
-        ubuntu|reld|rhel|astra)
+        ubuntu|reld|rhel|astra|manjaro)
             ;;
         *)
             [ -n "$ID_LIKE" ] && VENDOR_ID="$(echo "$ID_LIKE" | cut -d" " -f1)"
@@ -13370,7 +13456,7 @@ case "$DISTRIB_ID" in
 esac
 
 
-[ -n "$DISTRIB_ID" ] && return
+[ -n "$DISTRIB_ID" ] && [ -n "$DISTRIB_RELEASE" ] && return
 
 
 # check via obsoleted ways
@@ -13756,7 +13842,7 @@ get_service_manager()
     [ -d /run/systemd/system ] && echo "systemd" && return
     # TODO
     #[ -d /usr/share/upstart ] && echo "upstart" && return
-    is_command systemctl && echo "systemd" && return
+    is_command systemctl && cat /proc/1/comm | grep -q 'systemd$' && echo "systemd" && return
     [ -d /etc/init.d ] && echo "sysvinit" && return
     echo "(unknown)"
 }
