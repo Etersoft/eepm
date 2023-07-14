@@ -31,6 +31,10 @@ subst()
 }
 fi
 
+is_abs_path()
+{
+    echo "$1" | grep -q "^/"
+}
 
 # Remove file from the file system and from spec
 # Usage: remove_file <path_to_file>
@@ -146,7 +150,7 @@ install_file()
 
     if is_url "$src" ; then
         epm tool eget -O "$BUILDROOT$dest" "$src" || fatal "Can't download $src to install to $dest"
-    elif echo "$src" | grep -q "^/" ; then
+    elif is_abs_path "$src" ; then
         cp "$BUILDROOT/$src" "$BUILDROOT/$dest" || return
     else
         cp "$src" "$BUILDROOT/$dest" || return
