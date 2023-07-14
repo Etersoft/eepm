@@ -13,9 +13,7 @@ move_to_opt
 
 fix_chrome_sandbox
 
-install_deps
-
-set_autoreq 'yes'
+add_electron_deps
 
 remove_dir /etc
 

@@ -28,8 +28,6 @@ add_bin_commands
 
 use_system_xdg
 
-install_deps
+add_chromium_deps
 
 fix_desktop_file /usr/bin/$PRODUCTCUR
-
-set_autoreq 'yes'

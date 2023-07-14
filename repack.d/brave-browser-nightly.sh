@@ -21,5 +21,5 @@ add_bin_commands
 
 use_system_xdg
 
-add_deps
+add_chromium_deps
 

@@ -27,7 +27,7 @@ add_bin_commands
 
 use_system_xdg
 
-install_deps
+add_chromium_deps
 
 fix_desktop_file /usr/bin/$PRODUCTCUR
 
@@ -46,5 +46,3 @@ else
        exec -a "\$0" "\$HERE/chrome" "\$@"
 fi
 EOF
-
-set_autoreq 'yes'

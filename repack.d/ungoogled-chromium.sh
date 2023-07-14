@@ -46,6 +46,4 @@ set_alt_alternatives 65
 [ -f .$PRODUCTDIR/chrome_sandbox ] && move_file $PRODUCTDIR/chrome_sandbox $PRODUCTDIR/chrome-sandbox
 fix_chrome_sandbox
 
-install_deps
-
-set_autoreq 'yes'
+add_chromium_deps

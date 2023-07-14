@@ -56,19 +56,33 @@ cleanup()
     remove_file /usr/share/menu/$PRODUCTCUR.menu
 }
 
-
-install_deps()
+add_electron_deps()
 {
-    # install all requires packages before packing (the list have got with rpmreqs package | xargs echo)
-    install_requires at-spi2-atk file GConf glib2 grep libatk libat-spi2-core libalsa libcairo libcups libdbus libdrm libexpat libgbm libgdk-pixbuf libgio libgtk+3 libnspr libnss libpango \
-            libX11 libxcb libXcomposite libXcursor libXdamage libXext libXfixes libXi libXrandr libXrender libXtst sed which xdg-utils xprop libsecret
+    add_unirequires "file grep sed which xdg-utils xprop"
+    add_unirequires "libpthread.so.0 libstdc++.so.6"
+    add_unirequires "libX11.so.6 libXcomposite.so.1 libXdamage.so.1 libXext.so.6 libXfixes.so.3 libXrandr.so.2 libxcb.so.1 libxkbcommon.so.0"
+    add_unirequires "libasound.so.2 libatk-1.0.so.0 libatk-bridge-2.0.so.0 libatspi.so.0"
+    add_unirequires "libcairo.so.2 libcups.so.2 libdbus-1.so.3"
+    add_unirequires "libdrm.so.2 libexpat.so.1 libfontconfig.so.1 libgbm.so.1"
+    add_unirequires "libgio-2.0.so.0 libglib-2.0.so.0 libgobject-2.0.so.0 libgtk-3.so.0 libpango-1.0.so.0"
+    add_unirequires "libnspr4.so libnss3.so libnssutil3.so libsmime3.so"
+
 }
 
-add_deps()
+add_chromium_deps()
 {
-    [ "$(epm print info -s)" = "alt" ] || return
-    add_requires at-spi2-atk file GConf glib2 grep libatk libat-spi2-core libalsa libcairo libcups libdbus libdrm libexpat libgbm libgdk-pixbuf libgio libgtk+3 libnspr libnss libpango
-    add_requires libX11 libxcb libXcomposite libXcursor libXdamage libXext libXfixes libXi libXrandr libXrender libXtst sed which xdg-utils xprop libsecret
+    add_unirequires "file grep sed which xdg-utils xprop"
+    add_unirequires "libpthread.so.0 libstdc++.so.6"
+    add_unirequires "libatk-bridge-2.0.so.0 libglib-2.0.so.0 libgmodule-2.0.so.0 libgobject-2.0.so.0 libgthread-2.0.so.0 libatk-1.0.so.0 libatspi.so.0"
+    add_unirequires "libasound.so.2 libatopology.so.2 libcairo.so.2 libcups.so.2 libdbus-1.so.3 libdrm.so.2 libexpat.so.1 libgbm.so.1 libgdk_pixbuf-2.0.so.0"
+    add_unirequires "libpango-1.0.so.0 libpangocairo-1.0.so.0 libpangoft2-1.0.so.0 libpangoxft-1.0.so.0"
+    add_unirequires "libgio-2.0.so.0 libgdk-3.so.0 libgtk-3.so.0 libnspr4.so libplc4.so libplds4.so libfreebl3.so libfreeblpriv3.so libnss3.so"
+    add_unirequires "libsmime3.so libsoftokn3.so libssl3.so libsecret-1.so.0"
+    add_unirequires "libX11.so.6 libxcb.so.1 libXcomposite.so.1 libXcursor.so.1 libXdamage.so.1 libXext.so.6 libXfixes.so.3 libXi.so.6 libXrandr.so.2 libXrender.so.1 libXtst.so.6"
+
+    #[ "$(epm print info -s)" = "alt" ] || return
+    #add_requires at-spi2-atk file GConf glib2 grep libatk libat-spi2-core libalsa libcairo libcups libdbus libdrm libexpat libgbm libgdk-pixbuf libgio libgtk+3 libnspr libnss libpango
+    #add_requires libX11 libxcb libXcomposite libXcursor libXdamage libXext libXfixes libXi libXrandr libXrender libXtst sed which xdg-utils xprop libsecret
 }
 
 

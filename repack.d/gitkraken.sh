@@ -11,7 +11,7 @@ PRODUCT=gitkraken
 rm -v ./usr/bin/gitkraken
 add_bin_link_command
 
-install_deps
+add_electron_deps
 
 move_to_opt
 
@@ -26,4 +26,4 @@ add_findreq_skiplist "$PRODUCTDIR/resources/app.asar.unpacked/node_modules/@msgp
 add_requires libXScrnSaver
 
 # TODO: replace gitkraken/resources/app.asar.unpacked/git with system's one optionally?
-set_autoreq 'yes,noperl'
+#set_autoreq 'yes,noperl'

@@ -93,7 +93,7 @@ if [ -f v8_context_snapshot.bin ] ; then
     echo "electron based application detected, adding requires ..."
     . $(dirname $0)/common-chromium-browser.sh
     # don't use install: we disabled AutoReq before
-    add_deps
+    add_electron_deps
 fi
 
 # ignore embedded libs

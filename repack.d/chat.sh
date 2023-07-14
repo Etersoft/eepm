@@ -20,8 +20,6 @@ subst "s|/opt/Synology Chat/||" $BUILDROOT/usr/share/applications/$PRODUCT.deskt
 add_bin_link_command
 add_bin_link_command $PRODUCTCUR $PRODUCT
 
-install_deps
+add_electron_deps
 
 fix_chrome_sandbox
-
-set_autoreq 'yes'

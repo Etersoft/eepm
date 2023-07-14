@@ -14,7 +14,7 @@ move_to_opt
 
 fix_chrome_sandbox
 
-add_deps
+add_electron_deps
 
 rm usr/bin/$PRODUCT
 add_bin_link_command $PRODUCTCUR $PRODUCTDIR/$PRODUCTCUR

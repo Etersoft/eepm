@@ -23,6 +23,4 @@ add_bin_commands
 
 use_system_xdg
 
-install_deps
-
-set_autoreq 'yes'
+add_chromium_deps

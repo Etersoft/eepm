@@ -12,15 +12,9 @@ PRODUCTDIR=/opt/Rocket.Chat
 add_bin_link_command
 add_bin_link_command $PRODUCTCUR $PRODUCT
 
-install_deps
+add_electron_deps
 
 fix_chrome_sandbox
 
-subst "s|$PRODUCTDIR/||" $BUILDROOT/usr/share/applications/rocketchat-desktop.desktop
+fix_desktop_file
 
-#epm assure patchelf || exit
-#for i in $BUILDROOT$PRODUCTDIR/$PRODUCT ; do
-#    a= patchelf --set-rpath "$PRODUCTDIR" $i
-#done
-
-set_autoreq 'yes'

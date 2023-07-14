@@ -11,8 +11,6 @@ PRODUCTDIR=/opt/IPTVnator
 
 cleanup
 fix_chrome_sandbox
-install_deps
+add_electron_deps
 
 add_bin_link_command
-
-set_autoreq 'yes'

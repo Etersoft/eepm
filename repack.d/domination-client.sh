@@ -16,9 +16,6 @@ pack_dir $PRODUCTDIR
 
 add_bin_link_command
 
-install_deps
+add_electron_deps
 
 fix_chrome_sandbox
-
-set_autoreq 'yes'
-

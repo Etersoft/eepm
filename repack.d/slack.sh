@@ -13,10 +13,8 @@ PRODUCTDIR=/usr/lib/slack
 
 fix_chrome_sandbox
 
-install_deps
+add_electron_deps
 
 cleanup
 
 add_bin_exec_command
-
-set_autoreq 'yes'

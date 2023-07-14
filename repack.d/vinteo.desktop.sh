@@ -15,7 +15,7 @@ fix_desktop_file
 
 fix_chrome_sandbox
 
-install_deps
+add_electron_deps
 
 add_findreq_skiplist "/opt/VinteoDesktop/resources/app.asar.unpacked/node_modules/@serialport/bindings-cpp/prebuilds/*/*.node"
 
@@ -29,4 +29,3 @@ case "$(epm print info -e)" in
         ;;
 esac
 
-set_autoreq 'yes'

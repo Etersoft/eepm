@@ -17,6 +17,4 @@ fix_desktop_file
 
 fix_chrome_sandbox
 
-install_deps
-
-set_autoreq 'yes'
+add_electron_deps

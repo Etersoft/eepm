@@ -31,6 +31,4 @@ fix_chrome_sandbox $PRODUCTDIR/updates/linux_amd64/app/$p/chrome-sandbox
 
 pack_file $PRODUCTDIR/updates
 
-install_deps
-
-set_autoreq 'yes'
+add_electron_deps

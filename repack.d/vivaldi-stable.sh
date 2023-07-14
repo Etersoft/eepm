@@ -23,12 +23,10 @@ use_system_xdg
 
 fix_desktop_file /usr/bin/$PRODUCTCUR
 
-install_deps
+add_chromium_deps
 
 add_findreq_skiplist $PRODUCTDIR/update-ffmpeg
 
 filter_from_requires '\\/opt\\/google\\/chrome\\/WidevineCdm'
-
-set_autoreq 'yes'
 
 echo "You also can install chrome via epm play chrome to use WidevineCdm"

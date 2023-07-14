@@ -12,12 +12,10 @@ PRODUCTCUR=Pencil
 add_bin_link_command
 add_bin_link_command $PRODUCTCUR $PRODUCT
 
-install_deps
+add_electron_deps
 
 fix_chrome_sandbox
 
 fix_desktop_file
 
 subst '1iConflicts: pencil' $SPEC
-
-set_autoreq 'yes'

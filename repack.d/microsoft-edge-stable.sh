@@ -27,7 +27,7 @@ add_bin_commands
 
 use_system_xdg
 
-install_deps
+add_chromium_deps
 
 fix_desktop_file /usr/bin/$PRODUCTCUR
 
@@ -40,5 +40,3 @@ epm assure patchelf || exit
 for i in $BUILDROOT$PRODUCTDIR/libmip_*.so ; do
     [ "$(a= patchelf --print-interpreter $i)" = "/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2" ] && a= patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 $i
 done
-
-set_autoreq 'yes'

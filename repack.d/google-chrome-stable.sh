@@ -27,6 +27,4 @@ subst 's|GenericName\[ru\]=Веб-браузер|GenericName[ru]=Веб-брау
 
 fix_desktop_file /usr/bin/google-chrome-stable
 
-install_deps
-
-set_autoreq 'yes'
+add_chromium_deps

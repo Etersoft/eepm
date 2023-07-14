@@ -11,7 +11,7 @@ PRODUCTDIR=/opt/YaMusic.app
 add_bin_link_command
 #add_bin_link_command $PRODUCTCUR $PRODUCT
 
-install_deps
+add_electron_deps
 
 fix_chrome_sandbox
 
@@ -21,5 +21,3 @@ if [ -f usr/share/icons/hicolor/0x0/apps/yaradio-yamusic.png ] ; then
     install_file /usr/share/icons/hicolor/0x0/apps/yaradio-yamusic.png /usr/share/icons/hicolor/256x256/apps/yaradio-yamusic.png
     remove_dir /usr/share/icons/hicolor/0x0/
 fi
-
-set_autoreq 'yes'

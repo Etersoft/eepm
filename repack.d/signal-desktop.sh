@@ -10,9 +10,7 @@ PRODUCTDIR=/opt/$PRODUCTCUR
 
 . $(dirname $0)/common-chromium-browser.sh
 
-install_deps
-
-set_autoreq 'yes'
+add_electron_deps
 
 subst "s|.*/etc/apt.*||" $SPEC
 subst '/linux-arm64/d' $SPEC

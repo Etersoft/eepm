@@ -12,21 +12,12 @@ PRODUCTDIR=/opt/Obsidian
 
 cleanup
 
-#add_bin_commands
-
 if [ ! -f "$BUILDROOT/usr/bin/$PRODUCT" ] ; then
     add_bin_exec_command
 fi
 
-install_deps
+add_chromium_deps
 
 fix_chrome_sandbox
 
 fix_desktop_file
-
-#epm assure patchelf || exit
-#for i in $BUILDROOT$PRODUCTDIR/$PRODUCT ; do
-#    a= patchelf --set-rpath "$PRODUCTDIR" $i
-#done
-
-set_autoreq 'yes'
