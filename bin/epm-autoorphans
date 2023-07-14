@@ -52,7 +52,7 @@ case $BASEDISTRNAME in
         fi
 
         # TODO: implement for other PMTYPE
-        local hold_packages="$(epm mark showhold)"
+        local hold_packages="$(epm mark --short showhold)"
         if [ -n "$hold_packages" ] ; then
             echo "Skip follow packages on hold: $(echo $hold_packages | xargs -n1000 echo)"
             PKGLIST="$(estrlist exclude "$hold_packages" "$PKGLIST")"
