@@ -864,7 +864,7 @@ get_service_manager()
     [ -d /run/systemd/system ] && echo "systemd" && return
     # TODO
     #[ -d /usr/share/upstart ] && echo "upstart" && return
-    is_command systemctl && echo "systemd" && return
+    is_command systemctl && cat /proc/1/comm | grep -q 'systemd$' && echo "systemd" && return
     [ -d /etc/init.d ] && echo "sysvinit" && return
     echo "(unknown)"
 }
