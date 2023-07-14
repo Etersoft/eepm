@@ -244,7 +244,7 @@ case "$1" in
             exit
         fi
 
-        if epm mark showhold | grep -q "^$PKGNAME$" ; then
+        if epm mark checkhold "$PKGNAME" ; then
             echo "Skipping update of $PKGNAME (package is on hold, see '# epm mark showhold')"
             exit
         fi
