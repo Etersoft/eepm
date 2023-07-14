@@ -30,7 +30,11 @@ epm_provides_files()
     case $PKGTYPE in
         rpm)
             assure_exists rpm
-            docmd rpm -q --provides -p $pkg_files
+            if [ -n "$short" ] ; then
+                docmd rpm -q --provides -p $pkg_files | sed -e 's| .*||'
+            else
+                docmd rpm -q --provides -p $pkg_files
+            fi
             ;;
         deb)
             assure_exists dpkg
@@ -59,7 +63,11 @@ case $PMTYPE in
             CMD="rpm -q --provides"
         else
             EXTRA_SHOWDOCMD=' | grep "Provides:"'
-            docmd apt-cache show $pkg_names | grep "Provides:"
+            if [ -n "$short" ] ; then
+                docmd apt-cache show $pkg_names | grep "Provides:" | sed -e 's|, |\n|g' -e 's|Provides: ||' -e 's| .*||'
+            else
+                docmd apt-cache show $pkg_names | grep "Provides:" | sed -e 's|, |\n|g' -e 's|Provides: ||'
+            fi
             return
         fi
         ;;
@@ -118,7 +126,11 @@ case $PMTYPE in
         ;;
 esac
 
-docmd $CMD $pkg_names
+if [ -n "$short" ] ; then
+    docmd $CMD $pkg_names | sed -e 's| .*||'
+else
+    docmd $CMD $pkg_names
+fi
 
 }
 

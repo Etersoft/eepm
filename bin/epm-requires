@@ -81,9 +81,9 @@ case $PMTYPE in
                 CMD="apt-cache depends"
             else
                 if [ -n "$short" ] ; then
-                    LANG=C docmd apt-cache depends $pkg_names | grep "Depends:" | sed -e "s|.*Depends: ||" -e "s|<\(.*\)>|\1|" | __epm_filter_out_base_alt_reqs | sed -e "s| .*||"
+                    LANG=C docmd apt-cache depends $pkg_names | grep "Depends:" | sed -e 's|, |\n|g' -e "s|.*Depends: ||" -e "s|<\(.*\)>|\1|" | __epm_filter_out_base_alt_reqs | sed -e "s| .*||"
                 else
-                    LANG=C docmd apt-cache depends $pkg_names | grep "Depends:" | sed -e "s|.*Depends: ||" -e "s|<\(.*\)>|\1|" | __epm_filter_out_base_alt_reqs
+                    LANG=C docmd apt-cache depends $pkg_names | grep "Depends:" | sed -e 's|, |\n|g' -e "s|.*Depends: ||" -e "s|<\(.*\)>|\1|" | __epm_filter_out_base_alt_reqs
                 fi
                 return
             fi
