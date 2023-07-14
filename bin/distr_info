@@ -376,6 +376,7 @@ if distro os-release ; then
     DISTRIB_RELEASE="$VERSION_ID"
     [ -n "$DISTRIB_RELEASE" ] || DISTRIB_RELEASE="CUR"
     [ "$BUILD_ID" = "rolling" ] && DISTRIB_RELEASE="rolling"
+    [ -n "$BUG_REPORT_URL" ] || BUG_REPORT_URL="$HOME_URL"
     # set by os-release:
     #PRETTY_NAME
     VENDOR_ID="$ID"
