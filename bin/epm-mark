@@ -187,6 +187,22 @@ esac
 
 }
 
+epm_mark_checkhold()
+{
+# workaround against epm assure questions
+case $PMTYPE in
+    dnf-rpm)
+        __dnf_assure_versionlock
+        load_helper epm-query
+        docmd dnf versionlock list | grep "^$1" | sed -e 's|\.\*$||' | grep -v " " | filter_pkgnames_to_short | grep -q "^$1$"
+        return
+        ;;
+esac
+
+epm_mark_showhold | grep -q "^$1$"
+
+}
+
 
 epm_mark_auto()
 {
@@ -325,6 +341,9 @@ epm_mark()
         ;;
     showhold)                         # HELPCMD: print the list of packages on hold
         epm_mark_showhold "$@"
+        ;;
+    checkhold)                         # HELPCMD: return true if the package is on hold
+        epm_mark_checkhold "$@"
         ;;
     auto)                             # HELPCMD: mark the given package(s) as automatically installed
         epm_mark_auto "$@"
