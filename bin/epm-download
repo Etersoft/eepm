@@ -24,6 +24,9 @@ __use_url_install()
     # force download if wildcard is used
     echo "$pkg_urls" | grep -q "[?*]" && return 1
 
+    # force download if repack is asked
+    [ -n "$repack" ] && return 1
+
     # install of remote files has a side affect
     # (more fresh package from a repo can be installed instead of the file)
     #case $DISTRNAME in
@@ -46,10 +49,10 @@ __use_url_install()
         #    pkg_names="$pkg_names $pkg_urls"
         #    ;;
         pacman)
-            pkg_names="$pkg_names $pkg_urls"
+            true
             ;;
         yum-rpm|dnf-rpm)
-            pkg_names="$pkg_names $pkg_urls"
+            true
             ;;
         #zypper-rpm)
         #    pkg_names="$pkg_names $pkg_urls"
@@ -58,6 +61,7 @@ __use_url_install()
             return 1
             ;;
     esac
+    [ -n "$pkg_names" ] && pkg_names="$pkg_names $pkg_urls" || pkg_names="$pkg_urls"
     return 0
 }
 
