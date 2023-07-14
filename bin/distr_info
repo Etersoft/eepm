@@ -241,6 +241,13 @@ echo "$CMD"
 # Print pkgtype (need DISTRIB_ID var)
 pkgtype()
 {
+
+    case $VENDOR_ID in
+        arch|manjaro)
+            echo "pkg.tar.xz" && return
+            ;;
+    esac
+
 # TODO: try use generic names
     case $(pkgvendor) in
         freebsd) echo "tbz" ;;
