@@ -126,7 +126,11 @@ case $PMTYPE in
         ;;
 esac
 
-if [ -n "$short" ] ; then
+if [ -n "$direct" ] && [ "$CMD" = "rpm -q --provides" ] ; then
+    # do universal provides
+    docmd $CMD $pkg_names | sed -e 's| .*||' | grep -F "()"
+    a= $CMD $pkg_names | sed -e 's| .*||' | grep -v -E "^(lib|ld-linux)"
+elif [ -n "$short" ] ; then
     docmd $CMD $pkg_names | sed -e 's| .*||'
 else
     docmd $CMD $pkg_names
