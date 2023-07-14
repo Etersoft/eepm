@@ -283,6 +283,25 @@ add_requires()
     subst "1iRequires: $*" $SPEC
 }
 
+# libstdc++.so.6 -> libstdc++.so.6()(64bit)
+add_unirequires()
+{
+    [ -n "$1" ] || return
+    if [ "$(epm print info -b)" = "64" ] ; then
+        local req reqs
+        reqs=''
+        for req in $* ; do
+            reqs="$reqs $req"
+            echo "$req" | grep "^lib" | grep -q -v -F "(64bit)" && reqs="$reqs"'()(64bit)'
+        done
+        subst "1iRequires:$reqs" $SPEC
+    else
+        echo "$*" | grep -F "(64bit)" && fatal "Unsupported (64bit) on $(epm print info -a) arch."
+        subst "1iRequires: $*" $SPEC
+    fi
+}
+
+
 install_requires()
 {
     [ -n "$1" ] || return
@@ -365,5 +384,7 @@ fi
 [ -d "$BUILDROOT$PRODUCTBASEDIR" ] && pack_dir "$PRODUCTBASEDIR"
 
 [ -n "$PREINSTALL_PACKAGES" ] && install_requires $PREINSTALL_PACKAGES
+
+[ -n "$UNIREQUIRES" ] && add_unirequires $UNIREQUIRES
 
 true
