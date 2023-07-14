@@ -160,14 +160,19 @@ esac
 
 case $PMTYPE in
     apt-dpkg)
-        sudocmd apt-mark showhold "$@"
+        docmd apt-mark showhold "$@"
         ;;
     dnf-rpm)
         __dnf_assure_versionlock
-        sudocmd dnf versionlock list
+        if [ -n "$short" ] ; then
+            load_helper epm-query
+            docmd dnf versionlock list "$@" | sed -e 's|\.\*$||' | grep -v " " | filter_pkgnames_to_short
+        else
+            docmd dnf versionlock list "$@"
+        fi
         ;;
     zypper-rpm)
-        sudocmd zypper ll "$@"
+        docmd zypper ll "$@"
         ;;
     emerge)
         cat /etc/portage/package.mask

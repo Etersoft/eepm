@@ -338,6 +338,11 @@ is_installed()
     (quiet=1 __epm_query_name "$@") >/dev/null 2>/dev/null
 }
 
+filter_pkgnames_to_short()
+{
+    local names="$(cat)"
+    __epm_query_shortname $names
+}
 
 epm_query()
 {
