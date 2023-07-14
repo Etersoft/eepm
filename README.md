@@ -105,3 +105,5 @@ Please e-mail if you have any questions:
 
 * https://github.com/leamas/lpf
 * https://ihucos.github.io/zpkg/ - With zpkg you can install programs from other distributions into your system
+* https://github.com/volitank/nala
+* http://labix.org/smart
