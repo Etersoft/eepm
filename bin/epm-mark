@@ -78,6 +78,11 @@ __dnf_assure_versionlock()
     epm assure /etc/dnf/plugins/versionlock.conf 'dnf-command(versionlock)'
 }
 
+__dnf_is_supported_versionlock()
+{
+    [ -f /etc/dnf/plugins/versionlock.conf ]
+}
+
 epm_mark_hold()
 {
 
@@ -163,6 +168,8 @@ case $PMTYPE in
         docmd apt-mark showhold "$@"
         ;;
     dnf-rpm)
+        # there is no hold entries without versionlock
+        __dnf_is_supported_versionlock || return 0
         __dnf_assure_versionlock
         if [ -n "$short" ] ; then
             load_helper epm-query
@@ -192,6 +199,8 @@ epm_mark_checkhold()
 # workaround against epm assure questions
 case $PMTYPE in
     dnf-rpm)
+        # there is no hold entries without versionlock
+        __dnf_is_supported_versionlock || return 1
         __dnf_assure_versionlock
         load_helper epm-query
         docmd dnf versionlock list | grep "^$1" | sed -e 's|\.\*$||' | grep -v " " | filter_pkgnames_to_short | grep -q "^$1$"
