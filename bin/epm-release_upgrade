@@ -44,7 +44,7 @@ assure_safe_run()
 
     # run under screen, check if systemd will not kill our processes
     local res
-    if ! is_active_systemd systemd ; then
+    if ! is_active_systemd ; then
         return
     fi
 
@@ -184,7 +184,7 @@ __check_system()
     shift
 
     # sure we have systemd if systemd is running
-    if is_active_systemd systemd ; then
+    if is_active_systemd ; then
         docmd epm --skip-installed install systemd || fatal
     fi
 
@@ -198,7 +198,7 @@ __check_system()
     fi
 
     # switch from prefdm: https://bugzilla.altlinux.org/show_bug.cgi?id=26405#c47
-    if is_active_systemd systemd ; then
+    if is_active_systemd ; then
         if serv display-manager exists || serv prefdm exists ; then
             # don't stop running X server!
             # docmd serv dm off
