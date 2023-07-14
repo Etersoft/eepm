@@ -161,10 +161,10 @@ is_repacked_package()
     [ -n "$pkg" ] || pkg="$PKGNAME"
     [ -n "$pkg" ] || return 0 #fatal "is_repacked_package() is called without package name"
 
+    epm status --installed $pkg || return 0
+
     # actually only for ALT
     [ "$(epm print info -s)" = "alt" ] || return 0
-
-    epm status --installed $pkg || return 0
 
     [ -n "$force" ] && return 0
 
@@ -225,7 +225,8 @@ case "$1" in
         exit
         ;;
     "--installed")
-        epm installed $PKGNAME
+        #epm installed $PKGNAME
+        is_repacked_package $PKGNAME
         exit
         ;;
     "--installed-version")
