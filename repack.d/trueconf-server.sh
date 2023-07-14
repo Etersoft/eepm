@@ -18,3 +18,4 @@ subst '1i%filter_from_requires /^libldap_r-2.4.so.2(OPENLDAP_.*/d' $SPEC
 #REQUIRES="libcurl libldap"
 #subst "1iRequires:$REQUIRES|" $SPEC
 
+set_autoreq 'yes'

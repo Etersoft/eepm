@@ -12,7 +12,7 @@ PRODUCTDIR=/opt/$PRODUCTCUR
 
 install_deps
 
-subst '1iAutoProv:no' $SPEC
+set_autoreq 'yes'
 
 subst "s|.*/etc/apt.*||" $SPEC
 subst '/linux-arm64/d' $SPEC

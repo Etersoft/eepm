@@ -16,3 +16,5 @@ add_bin_link_command $PRODUCTCUR $PRODUCT
 fix_desktop_file /opt/drawio/drawio
 
 fix_chrome_sandbox
+
+set_autoreq 'yes'

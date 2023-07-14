@@ -15,7 +15,7 @@ PREINSTALL_PACKAGES="libalsa libGLX libOpenGL libX11 libxcb libXext zlib"
 
 move_to_opt /usr/local/DJV2
 
-subst '1iAutoProv:no' $SPEC
+set_autoreq 'yes'
 
 rm -v $BUILDROOT/usr/bin/djv
 

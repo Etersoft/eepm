@@ -10,9 +10,6 @@ SPEC="$2"
 #REQUIRES="fonts-ttf-liberation, fonts-ttf-dejavu"
 #subst "s|^\(Name: .*\)$|# Converted from original package requires\nRequires:$REQUIRES\n\1|g" $SPEC
 
-subst '1iAutoReq:no' $SPEC
-subst '1iAutoProv:no' $SPEC
-
 remove_dir /etc/cron.d
 remove_dir /etc/logrotate.d
 remove_dir /etc/xdg/menus/applications-merged

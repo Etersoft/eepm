@@ -10,3 +10,4 @@ subst '1iConflicts: tigervnc' $SPEC
 
 filter_from_requires '\\/bin\\/chkconfig' '\\/bin\\/service' '\\/lib\\/svc\\/share\\/smf_include.sh'
 
+set_autoreq 'yes'

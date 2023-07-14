@@ -28,3 +28,5 @@ case "$(epm print info -e)" in
         remove_dir $PRODUCTDIR/resources/app.asar.unpacked/node_modules/@serialport/bindings-cpp/bin/
         ;;
 esac
+
+set_autoreq 'yes'

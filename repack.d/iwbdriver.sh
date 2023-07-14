@@ -30,3 +30,5 @@ if epm assure patchelf ; then
         a= patchelf --set-rpath '$ORIGIN' $i
     done
 fi
+
+set_autoreq 'yes'

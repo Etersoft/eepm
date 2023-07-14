@@ -14,3 +14,5 @@ fix_chrome_sandbox
 install_deps
 
 add_bin_link_command
+
+set_autoreq 'yes'

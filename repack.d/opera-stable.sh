@@ -67,3 +67,5 @@ fi
 
 install_deps
 
+
+set_autoreq 'yes'

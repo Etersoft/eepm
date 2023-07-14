@@ -11,7 +11,7 @@ PRODUCTDIR=/opt/vk-calls
 
 move_to_opt /usr/opt/vk-calls
 
-subst '1iAutoProv:no' $SPEC
+set_autoreq 'yes'
 
 remove_file /usr/local/bin/$PRODUCT
 add_bin_link_command

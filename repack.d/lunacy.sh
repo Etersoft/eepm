@@ -19,6 +19,5 @@ fix_desktop_file /opt/icons8/lunacy/Lunacy $PRODUCT
 fix_desktop_file /opt/icons8/lunacy/Assets/LunacyLogo.png $PRODUCT
 install_file /opt/icons8/lunacy/Assets/LunacyLogo.png /usr/share/pixmaps/$PRODUCT.png
 
-subst '1iAutoProv:no' $SPEC
-subst '1iAutoReq:yes,nomono,nomonolib' $SPEC
+set_autoreq 'yes,nomono,nomonolib'
 

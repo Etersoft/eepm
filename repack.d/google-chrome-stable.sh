@@ -29,3 +29,4 @@ fix_desktop_file /usr/bin/google-chrome-stable
 
 install_deps
 
+set_autoreq 'yes'

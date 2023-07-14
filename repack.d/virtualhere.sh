@@ -29,3 +29,5 @@ mkdir -p $BUILDROOT/etc/$PRODUCT/
 pack_dir /etc/$PRODUCT
 
 pack_file /etc/systemd/system/$PRODUCT.service
+
+set_autoreq 'yes'

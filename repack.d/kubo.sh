@@ -18,9 +18,7 @@ subst "s|^License:.*$|License: MIT/Apache-2.0|" $SPEC
 subst "s|^URL:.*|URL: https://github.com/ipfs/kubo|" $SPEC
 subst "s|^Summary:.*|Summary: An IPFS implementation in Go|" $SPEC
 
-
-#subst '1iAutoReq:no' $SPEC
-subst '1iAutoProv:no' $SPEC
+set_autoreq 'yes'
 
 subst '1iConflicts: go-ipfs' $SPEC
 subst '1iProvides: go-ipfs' $SPEC

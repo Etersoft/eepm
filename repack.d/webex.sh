@@ -10,3 +10,5 @@ PRODUCT=webex
 
 # drop external requires
 filter_from_requires libutil.so
+
+set_autoreq 'yes'

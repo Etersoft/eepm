@@ -57,3 +57,4 @@ remove_file $PRODUCTDIR/package/cloudstation/icon-overlay/15/lib/plugin-cb.so ||
 # TODO: parse
 # https://www.synology.com/api/support/findDownloadInfo?lang=ru-ru&product=DS2411%2B&major=6&minor=2
 
+set_autoreq 'yes'

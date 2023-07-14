@@ -8,8 +8,6 @@ PRODUCT=ungoogled-chromium
 
 . $(dirname $0)/common-chromium-browser.sh
 
-#subst '1iAutoProv:no' $SPEC
-
 # move package to /opt
 ROOTDIR=$(basename $(find $BUILDROOT -mindepth 1 -maxdepth 1 -type d))
 subst "s|^License: unknown$|License: BSD-3-Clause license|" $SPEC
@@ -49,3 +47,5 @@ set_alt_alternatives 65
 fix_chrome_sandbox
 
 install_deps
+
+set_autoreq 'yes'

@@ -36,4 +36,4 @@ fi
 
 #add_findreq_skiplist "$PRODUCTDIR/runtime/lib/amd64/libav*.so"
 
-subst '1iAutoProv:no' $SPEC
+set_autoreq 'yes'

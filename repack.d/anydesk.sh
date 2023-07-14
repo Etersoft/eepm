@@ -20,8 +20,7 @@ PREINSTALL_PACKAGES="fontconfig glib2 libatk libcairo libfreetype libgdk-pixbuf 
 #subst "s|.*/etc/default/NetworkManager.*||" $BUILDROOT/etc/rc.d/init.d/anydesk
 #subst "s|/usr/share/anydesk/files/init/anydesk|/etc/rc.d/init.d/anydesk|" $SPEC
 
-
-subst '1iAutoProv:no' $SPEC
+set_autoreq 'yes'
 
 remove_file /usr/share/anydesk/files/init/anydesk
 

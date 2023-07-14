@@ -25,3 +25,4 @@ use_system_xdg
 
 install_deps
 
+set_autoreq 'yes'

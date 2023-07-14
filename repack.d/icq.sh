@@ -75,3 +75,5 @@ for i in QtQuick/*/lib*.so  ; do
     a= patchelf --set-rpath '$ORIGIN/../../lib' $i
 done
 fi
+
+set_autoreq 'yes'

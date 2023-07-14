@@ -9,7 +9,7 @@ SPEC="$2"
 # lib.req: ERROR: /tmp/.private/.../usr/lib/lightworks/libirng.so: no symbol bindings
 subst '1i%add_findreq_skiplist /usr/lib/lightworks/libirng.so /usr/lib/lightworks/libsvml.so' $SPEC
 
-subst '1iAutoProv:no' $SPEC
+set_autoreq 'yes'
 
 # ignore embedded libs
 for i in libc++.so.1 libc++abi.so.1 libedit.so libportaudio.so.2 libportaudiocpp.so.0 ; do

@@ -23,4 +23,3 @@ use_system_xdg
 
 add_deps
 
-subst '1iAutoReq:no' $SPEC

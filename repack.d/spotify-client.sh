@@ -15,7 +15,7 @@ mkdir -p $BUILDROOT$LIBDIR/
 mv $BUILDROOT/usr/share/$PRODUCT/ $BUILDROOT$LIBDIR/$PRODUCT/
 subst "s|/usr/share/$PRODUCT|$LIBDIR/$PRODUCT|g" $SPEC
 
-subst '1iAutoProv:no' $SPEC
+set_autoreq 'yes'
 
 # see https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=spotify
 mkdir -p $BUILDROOT/usr/bin/

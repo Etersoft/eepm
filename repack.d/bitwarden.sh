@@ -19,3 +19,4 @@ fix_chrome_sandbox
 
 fix_desktop_file
 
+set_autoreq 'yes'

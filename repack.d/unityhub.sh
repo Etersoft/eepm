@@ -14,6 +14,5 @@ fix_desktop_file
 
 fix_chrome_sandbox
 
-subst '1iAutoProv:no' $SPEC
-subst '1iAutoReq:yes,nomono,nomonolib' $SPEC
+set_autoreq 'yes,nomono,nomonolib'
 

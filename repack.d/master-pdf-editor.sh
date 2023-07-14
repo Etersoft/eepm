@@ -15,3 +15,6 @@ add_bin_link_command
 add_bin_link_command $PRODUCTCUR $PRODUCT
 
 fix_desktop_file
+
+set_autoreq 'yes'
+

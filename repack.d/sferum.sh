@@ -17,3 +17,5 @@ add_bin_exec_command $PRODUCT $PRODUCTDIR/$PRODUCTCUR
 fix_chrome_sandbox
 
 fix_desktop_file /opt/Sferum/sferum
+
+set_autoreq 'yes'

@@ -9,3 +9,5 @@ SPEC="$2"
 # remove broken script
 rm -fv $BUILDROOT/etc/init.d/*
 subst 's|"*/etc/init.d/*"*||' $SPEC
+
+set_autoreq 'yes'

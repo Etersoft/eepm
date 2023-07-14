@@ -66,3 +66,5 @@ fi
 
 remove_file $PRODUCTDIR/tv_bin/RTlib/qt/qml/QtWebEngine/libqtwebengineplugin.so.debug
 remove_file $PRODUCTDIR/tv_bin/RTlib/qt/qml/QtWebChannel/libdeclarative_webchannel.so.debug
+
+set_autoreq 'yes'

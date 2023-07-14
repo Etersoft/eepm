@@ -9,3 +9,5 @@ SPEC="$2"
 # remove kernel related script
 rm -fv $BUILDROOT/opt/iw/dmagent/etc/initramfs-tools/hooks/iwdm
 subst 's|"*/opt/iw/dmagent/etc/initramfs-tools/hooks/iwdm"*||' $SPEC
+
+set_autoreq 'yes'

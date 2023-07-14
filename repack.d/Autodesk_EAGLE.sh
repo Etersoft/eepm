@@ -11,8 +11,6 @@ INSTALL_PACKAGES="coreutils fontconfig glib2 libalsa libcom_err libcups libdrm l
 
 . $(dirname $0)/common.sh
 
-#subst '1iAutoProv:no' $SPEC
-
 # move package to /opt
 ROOTDIR=$(basename $(find $BUILDROOT -mindepth 1 -maxdepth 1 -type d))
 subst "s|^License: unknown$|License: Freeware|" $SPEC
@@ -59,3 +57,5 @@ if epm assure patchelf ; then
         a= patchelf --set-rpath '$ORIGIN/' $i
     done
 fi
+
+set_autoreq 'yes'

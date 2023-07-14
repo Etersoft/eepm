@@ -15,8 +15,7 @@ PREINSTALL_PACKAGES="at-spi2-atk coreutils findutils gawk glib2 libalsa libatk l
 
 move_to_opt
 
-subst '1iAutoReq:yes,nomonolib,nomono' $SPEC
-subst '1iAutoProv:no' $SPEC
+set_autoreq 'yes,nomonolib,nomono'
 
 fix_desktop_file /usr/share/code/code
 

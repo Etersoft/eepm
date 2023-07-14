@@ -48,3 +48,5 @@ chmod a+rwX $BUILDROOT/var/lib/$PRODUCT
 ln -s /var/lib/$PRODUCT $BUILDROOT$PRODUCTDIR/data
 pack_file $PRODUCTDIR/data
 pack_file /var/lib/$PRODUCT
+
+set_autoreq 'yes'

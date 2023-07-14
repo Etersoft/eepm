@@ -18,7 +18,4 @@ PRODUCT=gitlab-runner
 #  $ rpm -q --provides -p gitlab-runner_amd64.rpm
 # gitlab-ci-multi-runner
 
-subst '1iAutoReq:no' $SPEC
-subst '1iAutoProv:no' $SPEC
-
 add_requires curl git tar

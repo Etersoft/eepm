@@ -41,7 +41,7 @@ add_bin_exec_command $PRODUCT
 # error: version `GLIBC_2.33' not found (required by ./python3)
 remove_dir $PRODUCTDIR/resources/app.asar.unpacked/node_modules/register-scheme
 
-subst '1iAutoProv:no' $SPEC
+set_autoreq 'yes'
 
 # ignore embedded libs
 drop_embedded_reqs

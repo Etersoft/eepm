@@ -19,9 +19,6 @@ subst "s|^License: unknown$|License: Proprietary|" $SPEC
 subst "s|^URL:.*|URL: https://1c.ru|" $SPEC
 subst "s|^Summary:.*|Summary: 1C 8.3 Client|" $SPEC
 
-subst '1iAutoProv:no' $SPEC
-subst '1iAutoReq:no' $SPEC
-
 #remove_file /usr/local/bin/$PRODUCT
 #add_bin_link_command
 

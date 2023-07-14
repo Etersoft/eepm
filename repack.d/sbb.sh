@@ -16,3 +16,4 @@ subst '1i%filter_from_requires /^libcurl-gnutls.so.4(CURL_GNUTLS_.*/d' $SPEC
 
 add_requires $REQUIRES
 
+set_autoreq 'yes'

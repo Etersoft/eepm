@@ -7,9 +7,6 @@ PRODUCTDIR=/opt/WebDAVCloudMailRu
 
 . $(dirname $0)/common.sh
 
-subst '1iAutoReq:no' $SPEC
-subst '1iAutoProv:no' $SPEC
-
 subst "s|^License: unknown$|License: MIT|" $SPEC
 subst "s|^Url:.*|Url: https://github.com/yar229/WebDavMailRuCloud|" $SPEC
 subst "s|^Summary:.*|Summary: WebDAV emulator for Cloud.mail.ru / Yandex.Disk|" $SPEC

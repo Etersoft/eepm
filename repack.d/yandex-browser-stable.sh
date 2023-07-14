@@ -31,3 +31,5 @@ use_system_xdg
 install_deps
 
 fix_desktop_file /usr/bin/$PRODUCTCUR
+
+set_autoreq 'yes'

@@ -19,3 +19,4 @@ fix_chrome_sandbox
 
 install_deps
 
+set_autoreq 'yes'

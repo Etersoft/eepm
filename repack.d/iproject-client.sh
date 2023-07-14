@@ -28,3 +28,4 @@ filter_from_requires "mono(Microsoft.Threading.Tasks.Extensions)"
 filter_from_requires "mono(System.Runtime)"
 filter_from_requires "mono(System.Threading.Tasks)"
 
+set_autoreq 'yes'

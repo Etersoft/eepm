@@ -21,3 +21,6 @@ fix_desktop_file
 
 # ignore embedded libs
 filter_from_requires libQt5 node seamonkey thunderbird
+
+set_autoreq 'yes'
+

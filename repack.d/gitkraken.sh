@@ -26,5 +26,4 @@ add_findreq_skiplist "$PRODUCTDIR/resources/app.asar.unpacked/node_modules/@msgp
 add_requires libXScrnSaver
 
 # TODO: replace gitkraken/resources/app.asar.unpacked/git with system's one optionally?
-subst '1iAutoReq:yes,noperl' $SPEC
-subst '1iAutoProv:no' $SPEC
+set_autoreq 'yes,noperl'

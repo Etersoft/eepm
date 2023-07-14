@@ -39,3 +39,5 @@ pack_file /usr/share/applications/$PRODUCT.desktop
 # copied from ~.local/share/icons/se.hansoft.Exe-PMClient_7B6AC2CBB8795205B8E6DC09CB75B5E6.png
 i=256
 install_file ipfs://QmbYM3wS2qXtWbUg9mASMPoJmgfL6smny1m3J4PfuiDtJR /usr/share/icons/hicolor/${i}x${i}/apps/$PRODUCT.png
+
+set_autoreq 'yes'

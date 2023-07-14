@@ -13,3 +13,5 @@ PREINSTALL_PACKAGES="coreutils glib2 libcairo libdbus libdrm libexpat libgbm lib
 cleanup
 
 subst '1iBuildRequires:rpm-build-python3' $SPEC
+
+set_autoreq 'yes'

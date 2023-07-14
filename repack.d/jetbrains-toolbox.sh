@@ -31,3 +31,5 @@ EOF
 
 add_requires java-openjdk
 
+set_autoreq 'yes'
+

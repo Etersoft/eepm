@@ -6,8 +6,7 @@ SPEC="$2"
 # reenable console output
 subst 's| > /dev/null 2>&1||' $BUILDROOT/opt/pt/packettracer
 
-subst '1iAutoProv:no' $SPEC
-subst '1iAutoReq:yes,nopython' $SPEC
+set_autoreq 'yes,nopython'
 
 #REQUIRES="libcurl libldap"
 #subst "1iRequires:$REQUIRES|" $SPEC

@@ -8,7 +8,7 @@ PREINSTALL_PACKAGES="glib2 libfontconfig1 libfreetype libgdk-pixbuf libGL libgtk
 
 . $(dirname $0)/common.sh
 
-subst '1iAutoProv:no' $SPEC
+set_autoreq 'yes'
 
 subst "s|^License: unknown$|License: Proprietary|" $SPEC
 subst "s|^Summary:.*|Summary: Adobe Flash Player Standalone|" $SPEC

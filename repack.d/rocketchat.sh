@@ -22,3 +22,5 @@ subst "s|$PRODUCTDIR/||" $BUILDROOT/usr/share/applications/rocketchat-desktop.de
 #for i in $BUILDROOT$PRODUCTDIR/$PRODUCT ; do
 #    a= patchelf --set-rpath "$PRODUCTDIR" $i
 #done
+
+set_autoreq 'yes'

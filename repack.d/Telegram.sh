@@ -82,3 +82,5 @@ Keywords=tg;chat;im;messaging;messenger;sms;tdesktop;
 X-GNOME-UsesNotifications=true
 EOF
 pack_file /usr/share/applications/$PRODUCT.desktop
+
+set_autoreq 'yes'

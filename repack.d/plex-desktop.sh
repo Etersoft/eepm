@@ -8,9 +8,6 @@ SPEC="$2"
 
 add_requires glib2 glxinfo libalsa libdbus libdrm libEGL libexpat fontconfig libfreetype libgbm libGLX libharfbuzz libjpeg8 liblcms2 libminizip libnspr libnss libOpenGL libopus libpci libpulseaudio libsnappy libtiff5 libudev1 libva libwayland-client libwayland-cursor libwayland-egl libwayland-server libX11 libxcb libxcb-render-util libxcbutil-icccm libxcbutil-image libxcbutil-keysyms libXcomposite libXdamage libXext libXfixes libXinerama libxkbcommon libxkbcommon-x11 libxkbfile libxml2 libXrandr libXrender libXScrnSaver libxshmfence libxslt libXtst which zlib
 
-subst '1iAutoReq:no' $SPEC
-subst '1iAutoProv:no' $SPEC
-
 add_bin_link_command $PRODUCT $PRODUCTDIR/Plex.sh
 
 cd .$PRODUCTDIR || fatal

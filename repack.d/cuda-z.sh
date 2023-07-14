@@ -39,3 +39,4 @@ install_file "https://cuda-z.sourceforge.net/img/web-download-detect.png" /usr/s
 # libc6:i386 libstdc++6:i386 zlib1g:i386 libx11-6:i386 libxext6:i386 libxrender1:i386
 # https://blog.redscorp.net/?p=94
 
+set_autoreq 'yes'

@@ -15,7 +15,7 @@ fix_chrome_sandbox
 
 install_deps
 
-subst '1iAutoProv:no' $SPEC
+set_autoreq 'yes'
 
 remove_dir /etc
 

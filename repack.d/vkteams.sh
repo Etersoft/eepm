@@ -78,3 +78,4 @@ fi
 # FIXME: check the full list
 filter_from_requires libQt5 libxcb "libX.*"
 
+set_autoreq 'yes'

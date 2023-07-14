@@ -13,3 +13,5 @@ subst '1i%filter_from_requires /^libc.so.6(GLIBC_PRIVATE).*/d' $SPEC
 
 # Add requires of lsb-init for init script
 subst '/Group/Requires: lsb-init' $SPEC
+
+set_autoreq 'yes'

@@ -19,3 +19,4 @@ cleanup
 
 add_bin_exec_command
 
+set_autoreq 'yes'

@@ -21,3 +21,5 @@ if [ -f usr/share/icons/hicolor/0x0/apps/yaradio-yamusic.png ] ; then
     install_file /usr/share/icons/hicolor/0x0/apps/yaradio-yamusic.png /usr/share/icons/hicolor/256x256/apps/yaradio-yamusic.png
     remove_dir /usr/share/icons/hicolor/0x0/
 fi
+
+set_autoreq 'yes'

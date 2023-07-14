@@ -6,9 +6,6 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
-subst '1iAutoReq:no' $SPEC
-subst '1iAutoProv:no' $SPEC
-
 move_to_opt /cascadeur-linux
 
 subst "s|^License: unknown$|License: Proprietary|" $SPEC

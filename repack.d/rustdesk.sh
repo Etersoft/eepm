@@ -10,7 +10,7 @@ PRODUCTDIR=/usr/lib/$PRODUCT
 
 . $(dirname $0)/common.sh
 
-subst '1iAutoProv:no' $SPEC
+set_autoreq 'yes'
 
 # put service file to the normal place
 mkdir -p $BUILDROOT/etc/systemd/system/

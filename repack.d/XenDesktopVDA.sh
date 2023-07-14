@@ -13,3 +13,5 @@ if [ "$(epm print info -a)" = "x86_64" ] ; then
 fi
 
 filter_from_requires AuthManagerDaemon
+
+set_autoreq 'yes'

@@ -17,3 +17,5 @@ add_bin_link_command $PRODUCTCUR $PRODUCT
 subst '1i%filter_from_requires /^libtiff.so.5(LIBTIFF_.*/d' $SPEC
 
 fix_desktop_file
+
+set_autoreq 'yes'

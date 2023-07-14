@@ -10,3 +10,4 @@ PREINSTALL_PACKAGES="libGL libGLU libqt5-core libqt5-gui libqt5-network libqt5-o
 
 move_file /usr/lib/libOCCTWrapper.so.1 /usr/lib64/libOCCTWrapper.so.1
 
+set_autoreq 'yes'

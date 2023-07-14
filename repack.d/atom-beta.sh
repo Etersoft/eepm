@@ -23,8 +23,7 @@ PREINSTALL_PACKAGES="coreutils findutils git-core glib2 grep libalsa libatk liba
 
 . $(dirname $0)/common-chromium-browser.sh
 
-subst '1iAutoReq:yes,nomonolib,nomono,nopython' $SPEC
-subst '1iAutoProv:no' $SPEC
+set_autoreq 'yes,nomonolib,nomono,nopython'
 
 move_to_opt
 subst "s|\$USR_DIRECTORY/share/atom|/opt/atom|" $BUILDROOT/usr/bin/$PRODUCTCUR

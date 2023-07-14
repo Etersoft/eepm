@@ -16,9 +16,6 @@ fix_chrome_sandbox
 
 add_deps
 
-subst '1iAutoReq:no' $SPEC
-subst '1iAutoProv:no' $SPEC
-
 rm usr/bin/$PRODUCT
 add_bin_link_command $PRODUCTCUR $PRODUCTDIR/$PRODUCTCUR
 add_bin_link_command $PRODUCT $PRODUCTCUR

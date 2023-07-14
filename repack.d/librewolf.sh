@@ -10,8 +10,7 @@ PREINSTALL_PACKAGES="fontconfig glib2 libalsa libatk libcairo libcairo-gobject l
 
 . $(dirname $0)/common.sh
 
-subst '1iAutoReq:yes,noshell,nomonolib,nomono,nopython' $SPEC
-subst '1iAutoProv:no' $SPEC
+set_autoreq 'yes,noshell,nomonolib,nomono,nopython'
 
 move_to_opt
 fix_desktop_file "/usr/share/$PRODUCT/$PRODUCT"

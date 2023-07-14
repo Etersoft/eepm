@@ -5,3 +5,5 @@ SPEC="$2"
 
 # Remove LIBJPEG version
 subst '1i%filter_from_requires /LIBJPEG.*_6.2/d' $SPEC
+
+set_autoreq 'yes'

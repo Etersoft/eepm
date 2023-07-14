@@ -67,3 +67,5 @@ Exec=subl --command new_file
 OnlyShowIn=Unity;
 EOF
 subst "s|%files|%files\n/usr/share/applications/$PRODUCT.desktop|" $SPEC
+
+set_autoreq 'yes'

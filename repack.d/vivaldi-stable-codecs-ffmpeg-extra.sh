@@ -9,3 +9,5 @@ PRODUCT=vivaldi-stable-codecs-ffmpeg-extra
 . $(dirname $0)/common.sh
 
 add_requires vivaldi-stable
+
+set_autoreq 'yes'

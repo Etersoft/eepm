@@ -13,3 +13,5 @@ rm -fv $BUILDROOT/opt/iw/tm5/share/grafana/scripts/circle-test-*.sh
 subst 's|"*/opt/iw/tm5/share/grafana/scripts/circle-test-.*.sh"*||' $SPEC
 rm -rfv $BUILDROOT/opt/iw/tm5/share/grafana/scripts/build/
 subst 's|"*/opt/iw/tm5/share/grafana/scripts/build/.*"*||' $SPEC
+
+set_autoreq 'yes'

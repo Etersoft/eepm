@@ -11,8 +11,7 @@ move_to_opt "/opt/lithium*" || fatal "can't move to $PRODUCTDIR"
 
 add_bin_link_command $PRODUCT $PRODUCTDIR/launcher.sh
 
-#subst '1iAutoReq:no' $SPEC
-subst '1iAutoProv:no' $SPEC
+set_autoreq 'yes'
 
 cd $BUILDROOT$PRODUCTDIR || fatal
 if epm assure patchelf ; then

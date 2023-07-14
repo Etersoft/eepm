@@ -5,8 +5,7 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
-#subst '1iAutoReq:no' $SPEC
-subst '1iAutoProv:no' $SPEC
+set_autoreq 'yes'
 
 install_file /var/hasplm/init/hasplmd.service /etc/systemd/system/hasplmd.service
 install_file /var/hasplm/init/aksusbd.service /etc/systemd/system/aksusbd.service

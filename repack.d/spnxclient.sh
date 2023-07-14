@@ -6,7 +6,7 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
-subst '1iAutoProv:no' $SPEC
+set_autoreq 'yes'
 
 add_requires libpcsclite libudev0
 

@@ -19,3 +19,5 @@ fix_chrome_sandbox
 fix_desktop_file
 
 subst '1iConflicts: pencil' $SPEC
+
+set_autoreq 'yes'

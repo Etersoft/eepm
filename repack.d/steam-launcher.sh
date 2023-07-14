@@ -8,3 +8,4 @@ PRODUCT=steam-launcher
 
 subst "s|.*/etc/apt.*||" $SPEC
 
+set_autoreq 'yes'

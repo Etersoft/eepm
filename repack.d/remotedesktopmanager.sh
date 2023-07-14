@@ -10,3 +10,5 @@ PRODUCT=remotedesktopmanager
 PRODUCTDIR=/usr/lib/devolutions/RemoteDesktopManager
 
 add_findreq_skiplist "$PRODUCTDIR/runtimes/*"
+
+set_autoreq 'yes'

@@ -28,3 +28,5 @@ fix_desktop_file
 #for i in $BUILDROOT$PRODUCTDIR/$PRODUCT ; do
 #    a= patchelf --set-rpath "$PRODUCTDIR" $i
 #done
+
+set_autoreq 'yes'

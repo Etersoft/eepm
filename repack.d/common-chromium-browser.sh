@@ -47,8 +47,6 @@ copy_icons_to_share()
 
 cleanup()
 {
-    subst '1iAutoProv: no' $SPEC
-
     # remove cron update
     remove_file /etc/cron.daily/$PRODUCTCUR
     remove_file /etc/cron.daily/$PRODUCT

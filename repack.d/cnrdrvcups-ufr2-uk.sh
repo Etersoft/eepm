@@ -14,3 +14,4 @@ fi
 
 . $(dirname $0)/common.sh
 
+set_autoreq 'yes'

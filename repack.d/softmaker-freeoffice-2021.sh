@@ -11,9 +11,7 @@ PREINSTALL_PACKAGES="coreutils file gawk grep libcurl libGL libX11 libXext libXm
 
 . $(dirname $0)/common.sh
 
-
-#subst '1iAutoReq:no' $SPEC
-subst '1iAutoProv:no' $SPEC
+set_autoreq 'yes'
 
 remove_file $PRODUCTDIR/add_rpm_repo.sh
 

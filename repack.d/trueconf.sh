@@ -31,3 +31,5 @@ fi
 # libhwloc.so.5 => not found (we have only libhwloc.so.15)
 remove_file $PRODUCTDIR/lib/libtbbbind.so
 remove_file $PRODUCTDIR/lib/libtbbbind.so.2
+
+set_autoreq 'yes'

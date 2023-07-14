@@ -17,7 +17,7 @@ move_to_opt /usr/share/skypeforlinux
 
 subst "s|^SKYPE_PATH=.*|SKYPE_PATH=$PRODUCTDIR/skypeforlinux|" $BUILDROOT/usr/bin/skypeforlinux
 
-subst '1iAutoProv:no' $SPEC
+set_autoreq 'yes'
 
 # ignore embedded libs
 drop_embedded_reqs

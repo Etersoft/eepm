@@ -14,7 +14,7 @@ PRODUCTCUR=$PRODUCT$VER
 # embedded
 filter_from_requires "python3(PyPDF3)"
 
-subst '1iAutoProv: no' $SPEC
+set_autoreq 'yes'
 
 # remove embedded PyPDF3
 remove_dir /usr/share/kyocera$VER/Python

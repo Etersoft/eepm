@@ -9,9 +9,6 @@ PRODUCTDIR=/opt/$PRODUCT
 
 . $(dirname $0)/common.sh
 
-subst '1iAutoReq:no' $SPEC
-subst '1iAutoProv:no' $SPEC
-
 add_requires '/usr/bin/wine'
 add_requires '/bin/sh'
 

@@ -71,3 +71,4 @@ EOF
 
 pack_file /usr/share/applications/$PRODUCT.desktop
 
+set_autoreq 'yes'

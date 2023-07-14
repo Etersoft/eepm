@@ -26,3 +26,4 @@ remove_dir /usr/local
 
 subst '1iRequires: libjpeg8' $SPEC
 
+set_autoreq 'yes'

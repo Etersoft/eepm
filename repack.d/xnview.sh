@@ -13,8 +13,7 @@ PREINSTALL_PACKAGES="libqt5-multimedia libqt5-waylandclient fontconfig glib2 lib
 #subst "s|%files|%files\n/opt/XnView/lib/libbz2.so.1.0|" $SPEC
 
 #subst '1iRequires:bzlib' $SPEC
-subst '1iAutoReq:yes,noperl' $SPEC
-subst '1iAutoProv:no' $SPEC
+set_autoreq "yes,noperl"
 
 if epm assure patchelf ; then
 for i in $BUILDROOT/opt/XnView/lib/{*.so.*,*.so} ; do

@@ -11,9 +11,6 @@ subst "s|^License:.*$|License: Apache-2.0|" $SPEC
 subst "s|^URL:.*|URL: https://k3s.io|" $SPEC
 subst "s|^Summary:.*|Summary: K3s - Lightweight Kubernetes|" $SPEC
 
-subst '1iAutoReq:no' $SPEC
-subst '1iAutoProv:no' $SPEC
-
 subst '1iConflicts: kubernetes-client' $SPEC
 
 # Check https://get.k3s.io/

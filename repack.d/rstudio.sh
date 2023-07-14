@@ -17,7 +17,7 @@ add_bin_exec_command $PRODUCT
 subst 's|/usr/lib/rstudio/bin/rstudio|$PRODUCTDIR/$PRODUCT|' $BUILDROOT$PRODUCTDIR/resources/app/bin/rstudio-backtrace.sh
 
 # https://bugzilla.altlinux.org/43794
-subst '1iAutoReq:yes,nopython,nopython3,nomono,nomonolib' $SPEC
+set_autoreq 'yes,nopython,nopython3,nomono,nomonolib'
 
 fix_chrome_sandbox
 

@@ -7,3 +7,5 @@ SPEC="$2"
 . $(dirname $0)/common.sh
 
 subst '1iConflicts: tigervnc' $SPEC
+
+set_autoreq 'yes'

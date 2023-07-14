@@ -87,5 +87,4 @@ pack_dir $PRODUCTDIR/bin/
 pack_dir $PRODUCTDIR/lib/
 pack_dir $PRODUCTDIR/plugins/
 
-subst '1iAutoProv:no' $SPEC
-subst '1iAutoReq:yes,nopython,nopython3,nomono,nomonolib' $SPEC
+set_autoreq 'yes,nopython,nopython3,nomono,nomonolib'

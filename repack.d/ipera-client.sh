@@ -27,3 +27,5 @@ filter_from_requires "libldap_r-2.4.so.2(OPENLDAP_2.*)(64bit)" "liblber-2.4.so.2
 # ignore embedded libs
 filter_from_requires libQt5 libav libcrypto.so libdbus-1.so libicu liblibraw.so libssl.so libswresample libswscale libva libvdpau
 filter_from_requires libgst libuv
+
+set_autoreq 'yes'

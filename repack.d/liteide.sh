@@ -41,3 +41,5 @@ pack_file /usr/share/applications/$PRODUCT.desktop
 
 # https://bugzilla.altlinux.org/45635
 add_requires golang
+
+set_autoreq 'yes'

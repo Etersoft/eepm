@@ -23,7 +23,7 @@ mkdir -p $BUILDROOT/$LIBDIR
 mv -v $BUILDROOT/usr/share/teams/ $BUILDROOT/$LIBDIR/
 subst "s|/usr/share/teams|$LIBDIR/$PRODUCT|" $SPEC
 
-subst '1iAutoProv:no' $SPEC
+set_autoreq 'yes'
 
 # ignore embedded libs
 drop_embedded_reqs

@@ -28,3 +28,5 @@ mkdir -p var/lib/ipera
 pack_dir /var/lib/ipera
 ln -s /var/lib/ipera .$PRODUCTDIR/var
 pack_file $PRODUCTDIR/var
+
+set_autoreq 'yes'

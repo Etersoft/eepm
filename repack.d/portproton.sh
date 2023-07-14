@@ -11,3 +11,6 @@ PRODUCTDIR=/opt/PortProton
 add_requires bubblewrap cabextract curl gamemode icoutils libvulkan1 vulkan-tools wget zenity zstd gawk tar libd3d libMesaOpenCL /usr/bin/convert
 
 filter_from_requires xneur
+
+set_autoreq 'yes'
+

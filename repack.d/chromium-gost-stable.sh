@@ -47,3 +47,4 @@ else
 fi
 EOF
 
+set_autoreq 'yes'

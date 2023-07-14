@@ -11,7 +11,7 @@ PREINSTALL_PACKAGES="python3 rpm-build-python3"
 
 . $(dirname $0)/common-chromium-browser.sh
 
-subst '1iAutoReq:yes,noshell,nomonolib,nomono,nopython' $SPEC
+set_autoreq 'yes,noshell,nomonolib,nomono,nopython'
 
 subst '1iBuildRequires:rpm-build-python3' $SPEC
 subst "1i%add_python3_path $PRODUCTDIR" $SPEC

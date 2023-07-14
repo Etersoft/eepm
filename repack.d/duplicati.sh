@@ -14,8 +14,7 @@ add_requires mono-full libgtk-sharp2
 subst '1iBuildRequires: rpm-build-python3' $SPEC
 subst '1i%add_python3_path /usr/lib/duplicati' $SPEC
 
-subst '1iAutoProv: no' $SPEC
-subst '1iAutoReq: yes,nomonolib,nomono' $SPEC
+set_autoreq 'yes,nomonolib,nomono'
 
 subst 's|env python.*|env python3|' $BUILDROOT/usr/lib/duplicati/utility-scripts/DuplicatiVerify.py
 subst 's|/usr/bin/bash|/bin/bash|' $BUILDROOT/usr/lib/duplicati/{lvm-scripts/*.sh,run-script-example.sh} $BUILDROOT/usr/bin/{duplicati-server,duplicati-cli,duplicati}

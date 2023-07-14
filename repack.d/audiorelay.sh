@@ -10,9 +10,6 @@ PREINSTALL_PACKAGES="$PREINSTALL_PACKAGES alsa-plugins-pulse"
 
 . $(dirname $0)/common.sh
 
-subst '1iAutoReq:no' $SPEC
-subst '1iAutoProv:no' $SPEC
-
 add_bin_exec_command $PRODUCT $PRODUCTDIR/bin/AudioRelay
 install_file $PRODUCTDIR/lib/AudioRelay.png /usr/share/pixmaps/$PRODUCT.png
 
