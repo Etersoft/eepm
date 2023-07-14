@@ -150,7 +150,11 @@ case $PMTYPE in
         docmd eoget list-repo
         ;;
     pacman)
-        docmd grep -v -- "^#\|^$" /etc/pacman.conf
+        if [ -f /etc/pacman.d/mirrorlist ] ; then
+            docmd grep -v -- "^#\|^$" /etc/pacman.d/mirrorlist | grep "^Server =" | sed -e 's|^Server = ||'
+        else
+            docmd grep -v -- "^#\|^$" /etc/pacman.conf
+        fi
         ;;
     slackpkg)
         docmd grep -v -- "^#\|^$" /etc/slackpkg/mirrors
