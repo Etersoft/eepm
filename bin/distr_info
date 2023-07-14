@@ -478,7 +478,7 @@ case "$DISTRIB_ID" in
 esac
 
 
-[ -n "$DISTRIB_ID" ] && return
+[ -n "$DISTRIB_ID" ] && [ -n "$DISTRIB_RELEASE" ] && return
 
 
 # check via obsoleted ways
