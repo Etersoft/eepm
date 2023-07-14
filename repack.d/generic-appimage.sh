@@ -89,10 +89,6 @@ add_bin_cdexec_command $PRODUCT $PRODUCTDIR/AppRun
 # Strange AppRun script uses args as path, so override path detection
 subst "2iexport APPDIR=$PRODUCTDIR" $BUILDROOT/usr/bin/$PRODUCT
 
-subst '1iAutoProv:no' $SPEC
-#subst '1iAutoReq:yes,nopython,nomono,nomonolib' $SPEC
-subst '1iAutoReq:no' $SPEC
-
 if [ -f v8_context_snapshot.bin ] ; then
     echo "electron based application detected, adding requires ..."
     . $(dirname $0)/common-chromium-browser.sh

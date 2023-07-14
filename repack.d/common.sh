@@ -310,6 +310,25 @@ drop_embedded_reqs()
     filter_from_requires "libGLESv2.so()" "libEGL.so()" "libffmpeg.so()"
 }
 
+set_autoreq()
+{
+    if cat $SPEC | grep -q "^AutoReq:" ; then
+        subst "s|^AutoReq:.*|AutoReq: $*|" $SPEC
+    else
+        subst "1iAutoReq: $*" $SPEC
+    fi
+}
+
+set_autoprov()
+{
+    if cat $SPEC | grep -q "^AutoProv:" ; then
+        subst "s|^AutoProv:.*|AutoProv: $*|" $SPEC
+    else
+        subst "1iAutoProv: $*" $SPEC
+    fi
+}
+
+
 # by default check in $PRODUCTDIR
 use_system_xdg()
 {

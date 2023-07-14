@@ -43,6 +43,10 @@ fi
 # TODO: check for tarball, detect root dir
 #echo $BUILDROOT | grep -q "tar.*tmpdir/" && move_to_opt /liteide
 
+# no auto req/prov by default
+set_autoreq no
+set_autoprov no
+
 # Set high Epoche to override repository package
 subst "s|^\(Name: .*\)$|# Override repository package\nEpoch: 100\n\1|g" $SPEC
 
