@@ -83,4 +83,4 @@ X-GNOME-UsesNotifications=true
 EOF
 pack_file /usr/share/applications/$PRODUCT.desktop
 
-set_autoreq 'yes'
+add_by_ldd_deps

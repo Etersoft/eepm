@@ -313,6 +313,17 @@ install_requires()
     fi
 }
 
+add_by_ldd_deps()
+{
+    local exe="$1"
+    [ -n "$exe" ] || exe="$PRODUCTDIR/$PRODUCT"
+    if is_abs_path "$exe" ; then
+        exe="$BUILDROOT$exe"
+    fi
+    [ -x "$exe" ] || fatal "Can't get requires via ldd for non executable $1"
+    add_unirequires "$(ldd "$exe" | sed -e 's|[[:space:]]*||' | grep "^lib.*[[:space:]]=>[[:space:]]\(/usr/lib\|/lib\)" | sed -e 's|[[:space:]].*||')" #"
+}
+
 filter_from_requires()
 {
     local i

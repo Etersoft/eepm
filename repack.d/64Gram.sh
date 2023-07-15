@@ -70,7 +70,7 @@ cat <<EOF >$BUILDROOT/usr/share/applications/$PRODUCT.desktop
 Version=1.0
 Name=64Gram
 Comment=64Gram (unofficial Telegram Desktop)
-Exec=$PRODUCTCUR -- %u
+Exec=$PRODUCT -- %u
 Icon=$iconname
 StartupWMClass=64Gram
 Type=Application
@@ -81,4 +81,4 @@ X-GNOME-UsesNotifications=true
 EOF
 pack_file /usr/share/applications/$PRODUCT.desktop
 
-set_autoreq 'yes'
+add_by_ldd_deps
