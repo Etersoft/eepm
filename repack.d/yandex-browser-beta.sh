@@ -11,7 +11,8 @@ PRODUCTDIR=/opt/yandex/browser-beta
 . $(dirname $0)/common-chromium-browser.sh
 
 subst '1iConflicts: yandex-browser-stable' $SPEC
-subst '10iProvides: yandex-browser = %{version}' $SPEC
+subst "s|^\(Version:.*\)|\1\nProvides: yandex-browser = %version|" $SPEC
+
 
 add_findreq_skiplist $PRODUCTDIR/update-ffmpeg
 
