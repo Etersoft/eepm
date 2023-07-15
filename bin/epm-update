@@ -55,14 +55,23 @@ __save_available_packages()
 
 epm_update()
 {
+    local content_index
+    [ "$1" = "--content-index" ] && content_index=1 && shift
+
     [ -z "$*" ] || fatal "No arguments are allowed here"
-    info "Running command for update remote package repository database"
+
+    info "Running update the package index files from remote package repository database ..."
 
 local ret=0
 warmup_hibase
 
 case $BASEDISTRNAME in
     "alt")
+        if [ -n "$content_index" ] ; then
+            load_helper epm-sh-altlinux-contents-index
+            update_alt_contents_index
+            return
+        fi
         # TODO: hack against cd to cwd in apt-get on ALT
         cd /
         sudocmd apt-get update
@@ -70,7 +79,6 @@ case $BASEDISTRNAME in
         cd - >/dev/null
         [ "$ret" = "0" ] || return
         __check_for_epm_version
-        #sudocmd apt-get -f install || exit
 
         __epm_touch_pkg
 
@@ -94,9 +102,13 @@ case $PMTYPE in
         [ "$ret" = "0" ] || return
         ;;
     apt-dpkg)
+        if [ -n "$content_index" ] ; then
+            sudocmd apt-file update
+            return
+        fi
         sudocmd apt-get update || return
-        #sudocmd apt-get -f install || exit
-        #sudocmd apt-get autoremove
+        # apt-get update retrieve Contents file too
+        #sudocmd apt-file update
         ;;
     packagekit)
         docmd pkcon refresh

@@ -63,9 +63,12 @@ esac
 
 case $PMTYPE in
     apt-dpkg|aptitude-dpkg)
-        # move to update?
-        assure_exists apt-file
-        sudocmd apt-file update
+        if ! is_command apt-file ; then
+            assure_exists apt-file
+            sudocmd apt-file update
+        else
+            update_repo_if_needed
+        fi
         docmd apt-file search $pkg_filenames
         return ;;
     packagekit)
