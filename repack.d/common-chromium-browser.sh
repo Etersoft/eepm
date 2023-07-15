@@ -56,19 +56,6 @@ cleanup()
     remove_file /usr/share/menu/$PRODUCTCUR.menu
 }
 
-add_electron_deps()
-{
-    add_unirequires "file grep sed which xdg-utils xprop"
-    add_unirequires "libpthread.so.0 libstdc++.so.6"
-    add_unirequires "libX11.so.6 libXcomposite.so.1 libXdamage.so.1 libXext.so.6 libXfixes.so.3 libXrandr.so.2 libxcb.so.1 libxkbcommon.so.0"
-    add_unirequires "libasound.so.2 libatk-1.0.so.0 libatk-bridge-2.0.so.0 libatspi.so.0"
-    add_unirequires "libcairo.so.2 libcups.so.2 libdbus-1.so.3"
-    add_unirequires "libdrm.so.2 libexpat.so.1 libfontconfig.so.1 libgbm.so.1"
-    add_unirequires "libgio-2.0.so.0 libglib-2.0.so.0 libgobject-2.0.so.0 libgtk-3.so.0 libpango-1.0.so.0"
-    add_unirequires "libnspr4.so libnss3.so libnssutil3.so libsmime3.so"
-
-}
-
 add_chromium_deps()
 {
     add_unirequires "file grep sed which xdg-utils xprop"

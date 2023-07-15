@@ -8,14 +8,11 @@ PRODUCT=code
 PRODUCTCUR=vscode
 PRODUCTDIR=/opt/$PRODUCT
 
-# install all requires packages before packing (the list have got with rpmreqs package | xargs echo)
-PREINSTALL_PACKAGES="at-spi2-atk coreutils findutils gawk glib2 libalsa libatk libat-spi2-core libcairo libdbus libdrm libexpat libgbm libgdk-pixbuf libgio libgtk+3 libnspr libnss libpango libsecret libX11 libxcb libXcomposite libXcursor libXdamage libXext libXfixes libXi libxkbfile libXrandr libXrender libXScrnSaver libXtst sed"
-
 . $(dirname $0)/common.sh
 
 move_to_opt
 
-set_autoreq 'yes,nomonolib,nomono'
+add_electron_deps
 
 fix_desktop_file /usr/share/code/code
 

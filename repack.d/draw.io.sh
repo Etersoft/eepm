@@ -17,4 +17,4 @@ fix_desktop_file /opt/drawio/drawio
 
 fix_chrome_sandbox
 
-set_autoreq 'yes'
+add_electron_deps
