@@ -326,6 +326,14 @@ add_electron_deps()
     add_unirequires "libnspr4.so libnss3.so libnssutil3.so libsmime3.so"
 }
 
+add_qt5_deps()
+{
+    add_unirequires "libm.so.6 libc.so.6"
+    add_unirequires "libgio-2.0.so.0 libgobject-2.0.so.0 libfontconfig.so.1 libfreetype.so.6"
+    add_unirequires "libEGL.so.1 libGL.so.1 libxcb.so.1 libX11.so.6 libX11-xcb.so.1 libglib-2.0.so.0"
+}
+
+
 add_by_ldd_deps()
 {
     local exe="$1"
