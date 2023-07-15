@@ -56,11 +56,15 @@ __epm_filelist_remote()
 {
     [ -z "$*" ] && return
 
-    case $PMTYPE in
-        apt-rpm)
+    case $BASEDISTRNAME in
+        alt)
             # TODO: use RESTful interface to prometeus? See ALT bug #29496
             docmd_foreach __alt_local_content_filelist "$@"
+            return
             ;;
+    esac
+
+    case $PMTYPE in
         apt-dpkg)
             assure_exists apt-file || return
             if sudo_allowed ; then
