@@ -118,6 +118,9 @@ __do_query()
         opkg)
             CMD="opkg search"
             ;;
+        eopkg)
+            CMD="eopkg search-file"
+            ;;
         xbps)
             # FIXME: maybe it is search file?
             CMD="xbps-query -o"
