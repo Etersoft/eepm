@@ -906,7 +906,7 @@ print_pretty_name()
 print_total_info()
 {
 local orig=''
-[ -n "$BUILD_ID" ] && orig=" (orig. $BUILD_ID)"
+[ -n "$BUILD_ID" ] && [ "$DISTRIB_FULL_RELEASE" != "$BUILD_ID" ] && orig=" (orig. $BUILD_ID)"
 local EV=''
 [ -n "$EPMVERSION" ] && EV="(EPM version $EPMVERSION) "
 cat <<EOF
