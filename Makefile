@@ -6,6 +6,11 @@ cmd_list = epm serv esu
 
 .PHONY: all clean install check install_common $(installd_list) $(cmd_list)
 
+# get version from the spec by default
+PKGVER = $(shell grep "^Version: " eepm.spec | cut -d" " -f2)
+PKGREL = $(shell grep "^Release: " eepm.spec | cut -d" " -f2)
+version := $(PKGVER)-$(PKGREL)
+
 pkgdatadir=$(datadir)/eepm
 
 install: install_common $(installd_list) $(cmd_list)
