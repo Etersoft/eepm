@@ -334,7 +334,7 @@ add_by_ldd_deps()
         exe="$BUILDROOT$exe"
     fi
     [ -x "$exe" ] || fatal "Can't get requires via ldd for non executable $1"
-    add_unirequires "$(ldd "$exe" | sed -e 's|[[:space:]]*||' | grep "^lib.*[[:space:]]=>[[:space:]]\(/usr/lib\|/lib\)" | sed -e 's|[[:space:]].*||')" #"
+    add_unirequires "$(epm requires --direct "$exe")"
 }
 
 filter_from_requires()
