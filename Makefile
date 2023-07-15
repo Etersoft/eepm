@@ -1,3 +1,6 @@
+all:
+	echo "We don't need any build"
+
 installd_list = pack.d repack.d prescription.d play.d
 cmd_list = epm serv esu
 
