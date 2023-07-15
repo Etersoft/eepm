@@ -92,7 +92,7 @@ epm_requires_files()
             ;;
         eopkg)
             showcmd eopkg info $pkg_files
-            a= eopkg info $pkg_files | grep "^Dependencies" | head -n1 | sed -e "s|Dependencies[[:space:]]*: ||"
+            LANG=C eopkg info $pkg_files | grep "^Dependencies" | head -n1 | sed -e "s|Dependencies[[:space:]]*: ||"
             ;;
         ELF)
             __epm_elf_requires $pkg_files
@@ -186,7 +186,7 @@ case $PMTYPE in
         ;;
     eopkg)
         showcmd eopkg info $pkg_names
-        a= eopkg info $pkg_names | grep "^Dependencies" | sed -e "s|Dependencies[[:space:]]*: ||"
+        LANG=C eopkg info $pkg_names | grep "^Dependencies" | sed -e "s|Dependencies[[:space:]]*: ||"
         return
         ;;
     xbps)

@@ -1,0 +1,33 @@
+name        : eepm
+version     : 3.58.0
+release     : 1
+source      :
+    - https://github.com/Etersoft/eepm/archive/refs/tags/3.58.0.tar.gz : c1fdae29e31fe9a24ce1ca16cf904b7eadfc4ea0daf0c8f480dca3ebb382b702
+license     :
+    - AGPL-3.0+
+homepage    : https://eepm.ru
+summary     : Etersoft EPM package manager
+builddeps   :
+    - make
+rundeps        :
+    - coreutils
+    - findutils
+    - diffutils
+    - file
+    - gawk
+    - grep
+    - gzip
+    - less
+    - sed
+    - bash
+    - ncurses
+description : |
+    Etersoft EPM is the package manager for any platform
+    and any platform version. It provides
+    universal interface to any package manager.
+    Can be useful for system administrators working
+    with various distros.
+build      : |
+    #%make
+install    : |
+    %make_install DESTDIR=$installdir datadir=/usr/share bindir=/usr/bin mandir=/usr/share/man sysconfdir=/etc version=%version%
