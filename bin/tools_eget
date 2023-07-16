@@ -209,6 +209,11 @@ filter_order()
     sort -V | tail -n1
 }
 
+have_end_slash()
+{
+    echo "$1" | grep -q '/$'
+}
+
 is_abs_path()
 {
     echo "$1" | grep -q '^/'
@@ -1306,8 +1311,7 @@ make_fileurl()
     elif is_abs_path "$fn" ; then
         # if there is file path from the root of the site
         url="$(get_host_only "$url")"
-    elif echo "$url" | grep -q -v "/$" ; then
-        # if there is no slash in the end of URL
+    elif ! have_end_slash "$url" ; then
         url="$(dirname "$url")"
     fi
 
@@ -1375,9 +1379,7 @@ if [ -n "$2" ] ; then
     URL="$1"
     MASK="$2"
 else
-    # do not support / at the end without separately specified mask
-    if echo "$1" | grep -q "/$" ; then
-        #fatal "Use http://example.com/e/* to download all files in dir"
+    if have_end_slash "$1" ; then
         URL="$1"
         MASK=""
     else
