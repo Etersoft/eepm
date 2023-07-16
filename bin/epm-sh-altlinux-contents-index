@@ -118,7 +118,7 @@ update_alt_contents_index()
     (quiet=1 epm_repolist) | grep -v " task$" | grep -E "rpm.*(ftp://|http://|https://|rsync://|file:/)" | sed -e "s@^rpm.*\(ftp://\|http://\|https://\)@rsync://@g" | sed -e "s@^rpm.*\(file:\)@@g" | while read -r URL1 URL2 component ; do
         [ "$component" = "debuginfo" ] && continue
         URL="$URL1/$URL2"
-        if echo "$URL" | grep -q "^/" ; then
+        if is_abs_path "$URL" ; then
             # first check for local mirror
             local LOCALPATH="$(echo "$URL/base")"
             local LOCALPATHGZIP="$(echo "$LOCALPATH" | sed -e "s|/ALTLinux/|/ALTLinux/contents_index/|")"

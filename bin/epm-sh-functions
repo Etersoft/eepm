@@ -997,7 +997,10 @@ subst()
 }
 fi
 
-
+is_abs_path()
+{
+    echo "$1" | grep -q "^/"
+}
 
 check_core_commands()
 {
