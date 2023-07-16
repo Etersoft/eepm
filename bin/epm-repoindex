@@ -72,7 +72,7 @@ __epm_repoindex_alt()
     for arch in $archlist; do
         [ -d "$REPO_DIR/$arch/RPMS.$REPO_NAME" ] || continue
         mkdir -pv "$REPO_DIR/$arch/base/"
-        sudocmd genbasedir --bloat --progress --topdir=$REPO_DIR $arch $REPO_NAME
+        docmd genbasedir --bloat --progress --topdir=$REPO_DIR $arch $REPO_NAME
     done
 }
 
@@ -85,9 +85,9 @@ __epm_repoindex_deb()
     fi
 
     local dir="$1"
-    sudocmd mkdir -pv "$dir" || fatal
+    docmd mkdir -pv "$dir" || fatal
     assure_exists gzip
-    sudocmd dpkg-scanpackages -t deb "$dir" | gzip | cat > "$dir/Packages.gz"
+    docmd dpkg-scanpackages -t deb "$dir" | gzip | cat > "$dir/Packages.gz"
 }
 
 
@@ -103,15 +103,15 @@ case $PMTYPE in
         ;;
     yum-rpm)
         epm install --skip-installed yum-utils createrepo || fatal
-        sudocmd mkdir -pv "$@"
-        sudocmd createrepo -v -s md5 "$@"
-        sudocmd verifytree
+        docmd mkdir -pv "$@"
+        docmd createrepo -v -s md5 "$@"
+        docmd verifytree
         ;;
     dnf-rpm)
         epm install --skip-installed yum-utils createrepo || fatal
-        sudocmd mkdir -pv "$@"
-        sudocmd createrepo -v -s md5 "$@"
-        sudocmd verifytree
+        docmd mkdir -pv "$@"
+        docmd createrepo -v -s md5 "$@"
+        docmd verifytree
         ;;
     eoget)
         docmd eoget index "$@"
