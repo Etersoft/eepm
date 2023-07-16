@@ -209,10 +209,14 @@ filter_order()
     sort -V | tail -n1
 }
 
+is_abs_path()
+{
+    echo "$1" | grep -q '^/'
+}
 
 is_fileurl()
 {
-    echo "$1" | grep -q "^/" && return
+    is_abs_path "$1" && return
     echo "$1" | grep -q "^file:/"
 }
 
@@ -1022,7 +1026,7 @@ url_get_real_url()
     local loc
     for loc in $(url_get_header "$URL" "Location" | tac | sed -e 's| .*||') ; do
         # hack for construct full url from related Location
-        if echo "$loc" | grep -q "^/" ; then
+        if is_abs_path "$loc" ; then
             loc="$(concatenate_url_and_filename "$(get_host_only "$URL")" "$loc")"
         fi
         if ! is_strange_url "$loc" ; then
@@ -1299,7 +1303,7 @@ make_fileurl()
     if is_fileurl "$url" ; then
         # if it is url
         :
-    elif echo "$fn" | grep -q "^/" ; then
+    elif is_abs_path "$fn" ; then
         # if there is file path from the root of the site
         url="$(get_host_only "$url")"
     elif echo "$url" | grep -q -v "/$" ; then
