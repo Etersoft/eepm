@@ -870,15 +870,22 @@ get_virt()
     # TODO: check for openvz
 }
 
+get_init_process_name()
+{
+    [ ! -f /proc/1/comm ] && echo "(unknown)" && return 1
+    cat /proc/1/comm | head -n1
+    #ps --no-headers -o comm 1
+}
+
 # https://unix.stackexchange.com/questions/196166/how-to-find-out-if-a-system-uses-sysv-upstart-or-systemd-initsystem
 get_service_manager()
 {
     [ -d /run/systemd/system ] && echo "systemd" && return
     # TODO
     #[ -d /usr/share/upstart ] && echo "upstart" && return
-    is_command systemctl && cat /proc/1/comm | grep -q 'systemd$' && echo "systemd" && return
+    is_command systemctl && [ "$(get_init_process_name)" = 'systemd' ] && echo "systemd" && return
     [ -d /etc/init.d ] && echo "sysvinit" && return
-    echo "(unknown)"
+    get_init_process_name
 }
 
 filter_duplicated_words()
