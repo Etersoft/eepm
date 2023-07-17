@@ -12,15 +12,16 @@ assure_root
 
 [ "$(epm print info -s)" = "alt" ] || fatal "Only ALTLinux is supported"
 
+epm assure lspci pciutils || exit
 # проверяем работоспособность драйвера на текущий момент
 # TODO: добавить проверку на гибридную графику
 # TODO: добавить аргумент --force для принудительной переустановки
-if lspci -k | grep -A 2 -i "VGA" | grep "Kernel driver in use" | grep -q "nvidia" ; then
-	echo "Already installed."
+if a= lspci -k | grep -A 2 -i "VGA" | grep "Kernel driver in use" | grep -q "nvidia" ; then
+	echo "NVIDIA driver is already installed."
 	exit
 fi
 
-epm full-upgrade || exit
+epm full-upgrade || fatal
 
 # проверяем, совпадает ли ядро (пока нет такой проверки в update-kernel)
 # TODO: добавить функцию в update-kernel и здесь использовать её
@@ -35,13 +36,13 @@ check_run_kernel () {
 	fi
 }
 
-check_run_kernel || exit
+check_run_kernel || fatal
 
-epm install --skip-installed nvidia_glx_common || exit
+epm install --skip-installed nvidia_glx_common || fatal
 
 # используем команды из nvidia-install-driver
 # устанавливает проприетарные драйвера nvidia и модули для ядра
-a= apt-get install-nvidia || exit
+a= apt-get install-nvidia || fatal
 a= x11presetdrv # сканирует PCI в /sys на предмет видеоплат производителя NVIDIA. Если таковые найдены, ищет пары драйверов ядерный+X-овый, совпадающие по версии. Переключает /lib/modules/`uname -r`/nVidia/nvidia.ko на выбранную версию
 a= ldconfig # обновляет кэш информации о новейших версиях разделяемых библиотек
 
