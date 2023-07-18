@@ -21,7 +21,10 @@ if a= lspci -k | grep -A 2 -i "VGA" | grep "Kernel driver in use" | grep -q "nvi
 	exit
 fi
 
-epm full-upgrade || fatal
+# epm full-upgrade does too many things for this spec
+epm update || fatal
+# epm upgrade || fatal
+epm update-kernel || fatal
 
 # проверяем, совпадает ли ядро (пока нет такой проверки в update-kernel)
 # TODO: добавить функцию в update-kernel и здесь использовать её
@@ -56,8 +59,9 @@ if [ -e "/etc/X11/xorg.conf" ] && [ "$(grep -E 'nouveau|fbdev' "/etc/X11/xorg.co
 fi
 
 
-epm install --skip-installed nvidia-settings nvidia-vaapi-driver ocl-nvidia libcuda vulkan-tools \
-libnvidia-encode libnvidia-ngx libnvidia-opencl libvulkan1
+epm install --skip-installed nvidia-settings nvidia-vaapi-driver ocl-nvidia libcuda vulkan-tools libnvidia-encode libnvidia-ngx libnvidia-opencl libvulkan1
+
+epm i586-fix
 
 # для работы 2-х и более видеокарт от nvidia необходимо добавить "nvidia-drm.modeset=1" в строку GRUB_CMDLINE_LINUX_DEFAULT= в файле /etc/default/grub и обновить grub
 
