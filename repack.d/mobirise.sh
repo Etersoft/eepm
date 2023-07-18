@@ -7,7 +7,7 @@ SPEC="$2"
 PRODUCT=mobirise
 PRODUCTDIR=/opt/Mobirise
 
-PREINSTALL_PACKAGES="libjpeg8"
+UNIREQUIRES="libjpeg.so.8"
 
 . $(dirname $0)/common-chromium-browser.sh
 
