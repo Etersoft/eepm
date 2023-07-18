@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.58.0"
+EPMVERSION="3.58.1"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -755,6 +755,10 @@ get_package_type()
             return
             ;;
         *)
+            if file "$1" | grep -q " ELF " ; then
+                echo "ELF"
+                return
+            fi
             # print extension by default
             echo "$1" | sed -e 's|.*\.||'
             return 1
@@ -966,7 +970,10 @@ subst()
 }
 fi
 
-
+is_abs_path()
+{
+    echo "$1" | grep -q "^/"
+}
 
 check_core_commands()
 {
@@ -2533,15 +2540,22 @@ get_virt()
     # TODO: check for openvz
 }
 
+get_init_process_name()
+{
+    [ ! -f /proc/1/comm ] && echo "(unknown)" && return 1
+    cat /proc/1/comm | head -n1
+    #ps --no-headers -o comm 1
+}
+
 # https://unix.stackexchange.com/questions/196166/how-to-find-out-if-a-system-uses-sysv-upstart-or-systemd-initsystem
 get_service_manager()
 {
     [ -d /run/systemd/system ] && echo "systemd" && return
     # TODO
     #[ -d /usr/share/upstart ] && echo "upstart" && return
-    is_command systemctl && cat /proc/1/comm | grep -q 'systemd$' && echo "systemd" && return
+    is_command systemctl && [ "$(get_init_process_name)" = 'systemd' ] && echo "systemd" && return
     [ -d /etc/init.d ] && echo "sysvinit" && return
-    echo "(unknown)"
+    get_init_process_name
 }
 
 filter_duplicated_words()
@@ -2569,7 +2583,7 @@ print_pretty_name()
 print_total_info()
 {
 local orig=''
-[ -n "$BUILD_ID" ] && orig=" (orig. $BUILD_ID)"
+[ -n "$BUILD_ID" ] && [ "$DISTRIB_FULL_RELEASE" != "$BUILD_ID" ] && orig=" (orig. $BUILD_ID)"
 local EV=''
 [ -n "$EPMVERSION" ] && EV="(EPM version $EPMVERSION) "
 cat <<EOF

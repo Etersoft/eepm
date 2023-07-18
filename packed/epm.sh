@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.58.0"
+EPMVERSION="3.58.1"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -754,6 +754,10 @@ get_package_type()
             return
             ;;
         *)
+            if file "$1" | grep -q " ELF " ; then
+                echo "ELF"
+                return
+            fi
             # print extension by default
             echo "$1" | sed -e 's|.*\.||'
             return 1
@@ -965,7 +969,10 @@ subst()
 }
 fi
 
-
+is_abs_path()
+{
+    echo "$1" | grep -q "^/"
+}
 
 check_core_commands()
 {
@@ -3306,11 +3313,15 @@ __epm_filelist_remote()
 {
     [ -z "$*" ] && return
 
-    case $PMTYPE in
-        apt-rpm)
+    case $BASEDISTRNAME in
+        alt)
             # TODO: use RESTful interface to prometeus? See ALT bug #29496
             docmd_foreach __alt_local_content_filelist "$@"
+            return
             ;;
+    esac
+
+    case $PMTYPE in
         apt-dpkg)
             assure_exists apt-file || return
             if sudo_allowed ; then
@@ -7459,6 +7470,9 @@ __do_query()
         opkg)
             CMD="opkg search"
             ;;
+        eopkg)
+            CMD="eopkg search-file"
+            ;;
         xbps)
             # FIXME: maybe it is search file?
             CMD="xbps-query -o"
@@ -10037,7 +10051,7 @@ __epm_repoindex_alt()
     for arch in $archlist; do
         [ -d "$REPO_DIR/$arch/RPMS.$REPO_NAME" ] || continue
         mkdir -pv "$REPO_DIR/$arch/base/"
-        sudocmd genbasedir --bloat --progress --topdir=$REPO_DIR $arch $REPO_NAME
+        docmd genbasedir --bloat --progress --topdir=$REPO_DIR $arch $REPO_NAME
     done
 }
 
@@ -10050,9 +10064,9 @@ __epm_repoindex_deb()
     fi
 
     local dir="$1"
-    sudocmd mkdir -pv "$dir" || fatal
+    docmd mkdir -pv "$dir" || fatal
     assure_exists gzip
-    sudocmd dpkg-scanpackages -t deb "$dir" | gzip | cat > "$dir/Packages.gz"
+    docmd dpkg-scanpackages -t deb "$dir" | gzip | cat > "$dir/Packages.gz"
 }
 
 
@@ -10068,15 +10082,15 @@ case $PMTYPE in
         ;;
     yum-rpm)
         epm install --skip-installed yum-utils createrepo || fatal
-        sudocmd mkdir -pv "$@"
-        sudocmd createrepo -v -s md5 "$@"
-        sudocmd verifytree
+        docmd mkdir -pv "$@"
+        docmd createrepo -v -s md5 "$@"
+        docmd verifytree
         ;;
     dnf-rpm)
         epm install --skip-installed yum-utils createrepo || fatal
-        sudocmd mkdir -pv "$@"
-        sudocmd createrepo -v -s md5 "$@"
-        sudocmd verifytree
+        docmd mkdir -pv "$@"
+        docmd createrepo -v -s md5 "$@"
+        docmd verifytree
         ;;
     eoget)
         docmd eoget index "$@"
@@ -10525,6 +10539,45 @@ __epm_alt_rpm_requires()
     fi
 }
 
+get_linked_shared_libs()
+{
+    assure_exists readelf binutils
+    #is_command readelf || fatal "Can't get required shared library: readelf is missed. Try install binutils package."
+    #ldd "$exe" | sed -e 's|[[:space:]]*||' | grep "^lib.*[[:space:]]=>[[:space:]]\(/usr/lib\|/lib\)" | sed -e 's|[[:space:]].*||'
+    LANG=C readelf -d "$1" | grep "(NEEDED)" | grep "Shared library:" | sed -e 's|.*Shared library: \[||' -e 's|\]$||' | grep "^lib"
+}
+
+__epm_elf32_requires()
+{
+    get_linked_shared_libs "$1"
+}
+
+__epm_elf64_requires()
+{
+    get_linked_shared_libs "$1" | sed -e 's|$|()(64bit)|'
+}
+
+__epm_elf_requires()
+{
+    local i
+    if [ -n "$direct" ] ; then
+        for i in $* ; do
+            get_linked_shared_libs $i
+        done
+        return
+    fi
+
+    for i in $* ; do
+        if file "$i" | grep -q " ELF 32-bit " ; then
+            __epm_elf32_requires "$i"
+        elif file "$i" | grep -q " ELF 64-bit " ; then
+            __epm_elf64_requires "$i"
+        else
+            warning "Unknown ELF binary"
+        fi
+    done
+}
+
 epm_requires_files()
 {
     local pkg_files="$*"
@@ -10543,7 +10596,10 @@ epm_requires_files()
             ;;
         eopkg)
             showcmd eopkg info $pkg_files
-            a= eopkg info $pkg_files | grep "^Dependencies" | head -n1 | sed -e "s|Dependencies[[:space:]]*: ||"
+            LANG=C eopkg info $pkg_files | grep "^Dependencies" | head -n1 | sed -e "s|Dependencies[[:space:]]*: ||"
+            ;;
+        ELF)
+            __epm_elf_requires $pkg_files
             ;;
         *)
             fatal "Have no suitable command for $PKGTYPE"
@@ -10633,7 +10689,7 @@ case $PMTYPE in
         ;;
     eopkg)
         showcmd eopkg info $pkg_names
-        a= eopkg info $pkg_names | grep "^Dependencies" | sed -e "s|Dependencies[[:space:]]*: ||"
+        LANG=C eopkg info $pkg_names | grep "^Dependencies" | sed -e "s|Dependencies[[:space:]]*: ||"
         return
         ;;
     xbps)
@@ -11510,9 +11566,12 @@ esac
 
 case $PMTYPE in
     apt-dpkg|aptitude-dpkg)
-        # move to update?
-        assure_exists apt-file
-        sudocmd apt-file update
+        if ! is_command apt-file ; then
+            assure_exists apt-file
+            sudocmd apt-file update
+        else
+            update_repo_if_needed
+        fi
         docmd apt-file search $pkg_filenames
         return ;;
     packagekit)
@@ -11624,13 +11683,13 @@ rsync_alt_contents_index()
     local res
     assure_exists rsync
     mkdir -p "$(dirname "$TD")"
-    if [ -n "$verbose" ] ; then
+    if [ -z "$quiet" ] ; then
         docmd rsync --partial --inplace $3 -a --progress "$URL" "$TD"
     else
-        a= rsync --partial --inplace $3 -a --progress "$URL" "$TD" >/dev/null 2>/dev/null
+        a= rsync --partial --inplace $3 -a --progress "$URL" "$TD" >/dev/null
     fi
     res=$?
-    [ -f "$TD" ] && sudocmd chmod a+rw "$TD"
+    [ -f "$TD" ] && sudorun chmod a+rw "$TD"
     return $res
 }
 
@@ -11645,7 +11704,7 @@ get_url_to_etersoft_mirror()
 
 __add_to_contents_index_list()
 {
-    [ -n "$quiet" ] || echo "  $1 -> $2"
+    [ -n "$quiet" ] || echo " $1 -> $2"
     echo "$2" >>$ALT_CONTENTS_INDEX_LIST
 }
 
@@ -11685,7 +11744,7 @@ update_alt_contents_index()
     (quiet=1 epm_repolist) | grep -v " task$" | grep -E "rpm.*(ftp://|http://|https://|rsync://|file:/)" | sed -e "s@^rpm.*\(ftp://\|http://\|https://\)@rsync://@g" | sed -e "s@^rpm.*\(file:\)@@g" | while read -r URL1 URL2 component ; do
         [ "$component" = "debuginfo" ] && continue
         URL="$URL1/$URL2"
-        if echo "$URL" | grep -q "^/" ; then
+        if is_abs_path "$URL" ; then
             # first check for local mirror
             local LOCALPATH="$(echo "$URL/base")"
             local LOCALPATHGZIP="$(echo "$LOCALPATH" | sed -e "s|/ALTLinux/|/ALTLinux/contents_index/|")"
@@ -12535,14 +12594,22 @@ __save_available_packages()
 
 epm_update()
 {
+    local content_index
+    [ "$1" = "--content-index" ] && content_index=1 && shift
+
     [ -z "$*" ] || fatal "No arguments are allowed here"
-    info "Running command for update remote package repository database"
+
+    info "Running update the package index files from remote package repository database ..."
 
 local ret=0
 warmup_hibase
 
 case $BASEDISTRNAME in
     "alt")
+        if [ -n "$content_index" ] ; then
+            update_alt_contents_index
+            return
+        fi
         # TODO: hack against cd to cwd in apt-get on ALT
         cd /
         sudocmd apt-get update
@@ -12550,7 +12617,6 @@ case $BASEDISTRNAME in
         cd - >/dev/null
         [ "$ret" = "0" ] || return
         __check_for_epm_version
-        #sudocmd apt-get -f install || exit
 
         __epm_touch_pkg
 
@@ -12573,9 +12639,13 @@ case $PMTYPE in
         [ "$ret" = "0" ] || return
         ;;
     apt-dpkg)
+        if [ -n "$content_index" ] ; then
+            sudocmd apt-file update
+            return
+        fi
         sudocmd apt-get update || return
-        #sudocmd apt-get -f install || exit
-        #sudocmd apt-get autoremove
+        # apt-get update retrieve Contents file too
+        #sudocmd apt-file update
         ;;
     packagekit)
         docmd pkcon refresh
@@ -12905,7 +12975,7 @@ case $PMTYPE in
     eopkg)
         showcmd eopkg info $pkg
         # eopkg info prints it only from repo info
-        a= eopkg info $pkg | grep "^Reverse Dependencies" | sed -e "s|Reverse Dependencies[[:space:]]*: ||" | grep -v "^$"
+        LANG=C eopkg info $pkg | grep "^Reverse Dependencies" | sed -e "s|Reverse Dependencies[[:space:]]*: ||" | grep -v "^$"
         return
         ;;
     xbps)
@@ -13836,15 +13906,22 @@ get_virt()
     # TODO: check for openvz
 }
 
+get_init_process_name()
+{
+    [ ! -f /proc/1/comm ] && echo "(unknown)" && return 1
+    cat /proc/1/comm | head -n1
+    #ps --no-headers -o comm 1
+}
+
 # https://unix.stackexchange.com/questions/196166/how-to-find-out-if-a-system-uses-sysv-upstart-or-systemd-initsystem
 get_service_manager()
 {
     [ -d /run/systemd/system ] && echo "systemd" && return
     # TODO
     #[ -d /usr/share/upstart ] && echo "upstart" && return
-    is_command systemctl && cat /proc/1/comm | grep -q 'systemd$' && echo "systemd" && return
+    is_command systemctl && [ "$(get_init_process_name)" = 'systemd' ] && echo "systemd" && return
     [ -d /etc/init.d ] && echo "sysvinit" && return
-    echo "(unknown)"
+    get_init_process_name
 }
 
 filter_duplicated_words()
@@ -13872,7 +13949,7 @@ print_pretty_name()
 print_total_info()
 {
 local orig=''
-[ -n "$BUILD_ID" ] && orig=" (orig. $BUILD_ID)"
+[ -n "$BUILD_ID" ] && [ "$DISTRIB_FULL_RELEASE" != "$BUILD_ID" ] && orig=" (orig. $BUILD_ID)"
 local EV=''
 [ -n "$EPMVERSION" ] && EV="(EPM version $EPMVERSION) "
 cat <<EOF
