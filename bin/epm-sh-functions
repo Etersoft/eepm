@@ -359,6 +359,19 @@ info()
     fi
 }
 
+
+check_su_root()
+{
+    [ "$BASEDISTRNAME" = "alt" ] || return 0
+
+    is_root || return 0
+
+    echo "$PATH" | grep -q "/usr/sbin" && return 0
+
+    fatal "There is missed /usr/sbin path in PATH. Probably you have used 'su' without '-' to get root access. Use 'esu' or 'su -' command to get root permissions."
+}
+
+
 # if we have not sudo, returns 1 and set SUDO variable to fatal
 SUDO_TESTED=''
 SUDO_CMD='sudo'
@@ -377,6 +390,8 @@ set_sudo()
         # skip sudo using on Windows
         return
     fi
+
+    check_su_root
 
     # if we are root, do not need sudo
     is_root && return
