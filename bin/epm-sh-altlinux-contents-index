@@ -51,13 +51,13 @@ rsync_alt_contents_index()
     local res
     assure_exists rsync
     mkdir -p "$(dirname "$TD")"
-    if [ -n "$verbose" ] ; then
+    if [ -z "$quiet" ] ; then
         docmd rsync --partial --inplace $3 -a --progress "$URL" "$TD"
     else
-        a= rsync --partial --inplace $3 -a --progress "$URL" "$TD" >/dev/null 2>/dev/null
+        a= rsync --partial --inplace $3 -a --progress "$URL" "$TD" >/dev/null
     fi
     res=$?
-    [ -f "$TD" ] && sudocmd chmod a+rw "$TD"
+    [ -f "$TD" ] && sudorun chmod a+rw "$TD"
     return $res
 }
 
@@ -74,7 +74,7 @@ get_url_to_etersoft_mirror()
 # "comment" "file"
 __add_to_contents_index_list()
 {
-    [ -n "$quiet" ] || echo "  $1 -> $2"
+    [ -n "$quiet" ] || echo " $1 -> $2"
     echo "$2" >>$ALT_CONTENTS_INDEX_LIST
 }
 
