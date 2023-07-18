@@ -925,12 +925,12 @@ distro_info v$PROGVERSION $EV: Copyright © 2007-2023 Etersoft
      Vendor distro name (-s) / Repo name (-r): $(pkgvendor) / $(print_repo_name)
                  Package manager/type (-g/-p): $(pkgmanager) / $(pkgtype)
             Base OS name (-o) / CPU arch (-a): $(get_base_os_name) $(get_arch)
-            Bug report URL (--bug-report-url): $(print_bug_report_url)
-                 CPU norm register size  (-b): $(get_bit_size)
+                 CPU norm register size  (-b): $(get_bit_size) bit
                           Virtualization (-i): $(get_virt)
                         CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_core_mhz) MHz
-                 System memory size (MB) (-m): $(get_memory_size)
+                      System memory size (-m): $(get_memory_size) MiB
                  Running service manager (-y): $(get_service_manager)
+            Bug report URL (--bug-report-url): $(print_bug_report_url)
 
 (run with -h to get help)
 EOF
