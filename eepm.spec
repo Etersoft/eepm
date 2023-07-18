@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.58.0
+Version: 3.58.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,17 @@ a discussion about extra requirements.
 
 
 %changelog
+* Tue Jul 18 2023 Vitaly Lipatov <lav@altlinux.ru> 3.58.1-alt1
+- epm repack cnrdrvcups-ufr2-uk: use UNIREQUIRES
+- epm repack yandex-browser: fix Provides (ALT bug 46967)
+- epm repack Telegram/64Gram: add deps from ldd output for the main binary
+- epm repack code/codium/draw.io: use add_electron_deps
+- epm requires: add ELF support
+- distr_info: don't print orig version if it is the same as release
+- epm prescription: update switch-to-nvidia
+- epm repoindex: drop sudo
+- distr_info: get_service_manager: use 1 process name by default
+
 * Sat Jul 15 2023 Vitaly Lipatov <lav@altlinux.ru> 3.58.0-alt1
 - distr_info: get_service_manager: check if systemd is running with pid 1
 - epm play common.sh: use is_repacked for --installed
