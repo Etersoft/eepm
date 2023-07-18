@@ -2,6 +2,8 @@
 
 [ "$1" != "--run" ] && echo "Install glusterfs9 (or upgrade from glusterfs8)" && exit
 
+. $(dirname $0)/common.sh
+
 [ "$(epm print info -s)" = "alt" ] || { echo "Only ALTLinux is supported" ; exit 1 ; }
 
 

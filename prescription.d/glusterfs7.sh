@@ -2,6 +2,8 @@
 
 [ "$1" != "--run" ] && echo "Install glusterfs7 (or upgrade from glusterfs6)" && exit
 
+. $(dirname $0)/common.sh
+
 [ "$(epm print info -s)" = "alt" ] || { echo "Only ALTLinux is supported" ; exit 1 ; }
 
 if epmqp --quiet glusterfs6- ; then

@@ -2,6 +2,8 @@
 
 [ "$1" != "--run" ] && echo "Fix missed 32 bit package modules on 64 bit system" && exit
 
+. $(dirname $0)/common.sh
+
 [ "$(epm print info -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
 epm play i586-support

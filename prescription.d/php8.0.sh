@@ -2,6 +2,8 @@
 
 [ "$1" != "--run" ] && echo "Install php8.1 (or upgrade from a previous version)" && exit
 
+. $(dirname $0)/common.sh
+
 distrbase="$(epm print info -s)" ; [ "$distrbase" = "alt" ] || { echo "Only ALTLinux is supported as for now" ; exit 1 ; }
 
 if epmqp --quiet php7- ; then

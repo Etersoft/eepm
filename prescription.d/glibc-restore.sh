@@ -2,6 +2,8 @@
 
 [ "$1" != "--run" ] && echo "Uninstall etersoft build of glibc" && exit
 
+. $(dirname $0)/common.sh
+
 [ "$(epm print info -s)" = "alt" ] || { echo "Only ALTLinux is supported" ; exit 1 ; }
 
 epm downgrade glibc-core glibc-preinstall
