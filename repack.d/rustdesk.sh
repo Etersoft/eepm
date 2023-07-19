@@ -19,8 +19,8 @@ remove_dir /usr/share/rustdesk/files/systemd
 pack_file /etc/systemd/system/$PRODUCT.service
 
 VERSION=$(grep "^Version:" $SPEC | sed -e "s|Version: ||")
-if [ "$VERSION" = "1.1.9" ] ; then
-echo "Note: use 1.1.9 compatibility script"
+if [ "$VERSION" = "1.1.8" ] || [ "$VERSION" = "1.1.9" ] ; then
+echo "Note: use 1.1.x compatibility script"
 echo "Categories=GNOME;GTK;Network;RemoteAccess;" >> $BUILDROOT/usr/share/applications/$PRODUCT.desktop
 
 # thread 'main' panicked at 'error: 'libsciter-gtk.so' was not found neither in PATH nor near the current executable.
@@ -42,8 +42,10 @@ else
 subst "s|^Categories.*|Categories=GNOME;GTK;Network;RemoteAccess;|" $BUILDROOT/usr/share/applications/$PRODUCT.desktop
 subst "s|/usr/share/rustdesk/files/rustdesk.png|$PRODUCT|" $BUILDROOT/usr/share/applications/$PRODUCT.desktop
 
-ICONFILE=$PRODUCT.png
-install_file /usr/share/rustdesk/files/rustdesk.png /usr/share/pixmaps/$ICONFILE
+if [ -f $BUILDROOT/usr/share/rustdesk/files/rustdesk.png ] ; then
+    ICONFILE=$PRODUCT.png
+    install_file /usr/share/rustdesk/files/rustdesk.png /usr/share/pixmaps/$ICONFILE
+fi
 
 #move_to_opt /usr/lib/rustdesk
 add_bin_link_command
