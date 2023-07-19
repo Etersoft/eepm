@@ -123,6 +123,8 @@ __epm_repack_to_rpm()
             ;;
     esac
 
+    umask 022
+
     # TODO: improve
     if echo "$pkgs" | grep -q "\.deb" ; then
         assure_exists dpkg || fatal

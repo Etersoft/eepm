@@ -34,6 +34,8 @@ __epm_repack_to_deb()
     TDIR="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
     remove_on_exit $TDIR
 
+    umask 022
+
     for pkg in $pkgs ; do
         abspkg="$(realpath "$pkg")"
         info "Repacking $abspkg to local deb format (inside $TDIR) ..."
