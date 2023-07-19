@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.58.1
+Version: 3.58.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,15 @@ a discussion about extra requirements.
 
 
 %changelog
+* Wed Jul 19 2023 Vitaly Lipatov <lav@altlinux.ru> 3.58.2-alt1
+- epm play teams: restore install, via web.archive.org
+- epm play: add bitrix24
+- epm play: add figma
+- epm prescription switch-to-nvidia: update kernel only instead of full-upgrade, do i586-fix after all
+- epm-repack-rpm: improve icon subdirs removing from packing
+- distr_info: detect apt-get firstly
+- epm repack: set umask 022 before repack
+
 * Tue Jul 18 2023 Vitaly Lipatov <lav@altlinux.ru> 3.58.1-alt1
 - epm repack cnrdrvcups-ufr2-uk: use UNIREQUIRES
 - epm repack yandex-browser: fix Provides (ALT bug 46967)
