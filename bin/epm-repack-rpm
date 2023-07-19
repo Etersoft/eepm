@@ -19,9 +19,12 @@
 
 __get_icons_hicolor_list()
 {
-    local i
-    for i in apps scalable symbolic 8x8 14x14 16x16 20x20 22x22 24x24 28x28 32x32 36x36 42x42 45x45 48x48 64 64x64 72x72 96x96 128x128 144x144 160x160 192x192 256x256 480x480 512 512x512 1024x1024 ; do
+    local i j
+    for i in apps scalable symbolic 8x8 14x14 16x16 20x20 22x22 24x24 28x28 32x32 36x36 42x42 45x45 48x48 64 64x64 72x72 96x96 128x128 144x144 160x160 192x192 256x256 256x256@2x 480x480 512 512x512 1024x1024 ; do
         echo "/usr/share/icons/hicolor/$i"
+        for j in actions animations apps categories devices emblems emotes filesystems intl mimetypes places status stock ; do
+            echo "/usr/share/icons/hicolor/$i/$j"
+        done
     done
 }
 
