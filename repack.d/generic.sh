@@ -28,7 +28,8 @@ done
 
 # check for .py scripts
 find $BUILDROOT -name "*.py" | grep -q "\.py$" && flag_python3=1
-find $BUILDROOT -name "*.py" -exec subst '1{/python3/n};1i#!/usr/bin/python3' {} \;
+# can't use subst in find's exec (subst can be as function only)
+find $BUILDROOT -name "*.py" -exec sed -i -e '1{/python3/n};1i#!/usr/bin/python3' {} \;
 
 if [ -n "$flag_python3" ] ; then
     if [ "$(epm print info -s)" = "alt" ] ; then
