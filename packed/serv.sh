@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.58.1"
+EPMVERSION="3.58.2"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -373,6 +373,19 @@ info()
     fi
 }
 
+
+check_su_root()
+{
+    [ "$BASEDISTRNAME" = "alt" ] || return 0
+
+    is_root || return 0
+
+    echo "$PATH" | grep -q "/usr/sbin" && return 0
+
+    fatal "There is missed /usr/sbin path in PATH. Probably you have used 'su' without '-' to get root access. Use 'esu' or 'su -' command to get root permissions."
+}
+
+
 SUDO_TESTED=''
 SUDO_CMD='sudo'
 set_sudo()
@@ -390,6 +403,8 @@ set_sudo()
         # skip sudo using on Windows
         return
     fi
+
+    check_su_root
 
     # if we are root, do not need sudo
     is_root && return
@@ -1890,9 +1905,9 @@ case $DISTRIB_ID in
         ;;
     *)
         if is_command "rpm" && [ -s /var/lib/rpm/Name ] || [ -s /var/lib/rpm/rpmdb.sqlite ] ; then
+            is_command "apt-get" && [ -d /var/lib/apt ] && echo "apt-rpm" && return
             is_command "zypper" && echo "zypper-rpm" && return
             is_command "dnf" && echo "dnf-rpm" && return
-            is_command "apt-get" && echo "apt-rpm" && return
             is_command "yum" && echo "yum-rpm" && return
             is_command "urpmi" && echo "urpm-rpm" && return
         fi
@@ -2595,12 +2610,12 @@ distro_info v$PROGVERSION $EV: Copyright © 2007-2023 Etersoft
      Vendor distro name (-s) / Repo name (-r): $(pkgvendor) / $(print_repo_name)
                  Package manager/type (-g/-p): $(pkgmanager) / $(pkgtype)
             Base OS name (-o) / CPU arch (-a): $(get_base_os_name) $(get_arch)
-            Bug report URL (--bug-report-url): $(print_bug_report_url)
-                 CPU norm register size  (-b): $(get_bit_size)
+                 CPU norm register size  (-b): $(get_bit_size) bit
                           Virtualization (-i): $(get_virt)
                         CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_core_mhz) MHz
-                 System memory size (MB) (-m): $(get_memory_size)
+                      System memory size (-m): $(get_memory_size) MiB
                  Running service manager (-y): $(get_service_manager)
+            Bug report URL (--bug-report-url): $(print_bug_report_url)
 
 (run with -h to get help)
 EOF
