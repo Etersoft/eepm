@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# kind of hack: inheritance --force from main epm
+echo "$EPM_OPTIONS" | grep -q -- "--force" && force="--force"
+echo "$EPM_OPTIONS" | grep -q -- "--auto" && auto="--auto"
+
 fatal()
 {
     echo "FATAL: $*" >&2

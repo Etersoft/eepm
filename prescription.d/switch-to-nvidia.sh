@@ -43,9 +43,11 @@ check_run_kernel || fatal
 
 epm install --skip-installed nvidia_glx_common || fatal
 
+apt_auto=''
+[ -n "$auto" ] && apt_auto='-y'
 # используем команды из nvidia-install-driver
 # устанавливает проприетарные драйвера nvidia и модули для ядра
-a= apt-get install-nvidia || fatal
+a= apt-get $apt_auto install-nvidia || fatal
 a= x11presetdrv # сканирует PCI в /sys на предмет видеоплат производителя NVIDIA. Если таковые найдены, ищет пары драйверов ядерный+X-овый, совпадающие по версии. Переключает /lib/modules/`uname -r`/nVidia/nvidia.ko на выбранную версию
 a= ldconfig # обновляет кэш информации о новейших версиях разделяемых библиотек
 
