@@ -61,7 +61,7 @@ fi
 
 epm install --skip-installed nvidia-settings nvidia-vaapi-driver ocl-nvidia libcuda vulkan-tools libnvidia-encode libnvidia-ngx libnvidia-opencl libvulkan1
 
-epm i586-fix
+epm play i586-fix
 
 # для работы 2-х и более видеокарт от nvidia необходимо добавить "nvidia-drm.modeset=1" в строку GRUB_CMDLINE_LINUX_DEFAULT= в файле /etc/default/grub и обновить grub
 
