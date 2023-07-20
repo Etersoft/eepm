@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2012, 2014, 2016-2017  Etersoft
-# Copyright (C) 2012, 2014, 2016-2017  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012, 2014, 2016-2017, 2023  Etersoft
+# Copyright (C) 2012, 2014, 2016-2017, 2023  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -52,11 +52,26 @@ __save_available_packages()
     short=--short epm_list_available | sort | sudorun tee $epm_vardir/available-packages >/dev/null
 }
 
-
-epm_update()
+__epm_update_content_index()
 {
-    local content_index
-    [ "$1" = "--content-index" ] && content_index=1 && shift
+case $BASEDISTRNAME in
+    "alt")
+        load_helper epm-sh-altlinux-contents-index
+        update_alt_contents_index
+        return
+        ;;
+esac
+
+case $PMTYPE in
+    apt-dpkg)
+        sudocmd apt-file update
+        ;;
+esac
+
+}
+
+__epm_update()
+{
 
     [ -z "$*" ] || fatal "No arguments are allowed here"
 
@@ -67,26 +82,11 @@ warmup_hibase
 
 case $BASEDISTRNAME in
     "alt")
-        if [ -n "$content_index" ] ; then
-            load_helper epm-sh-altlinux-contents-index
-            update_alt_contents_index
-            return
-        fi
         # TODO: hack against cd to cwd in apt-get on ALT
         cd /
         sudocmd apt-get update
         ret="$?"
         cd - >/dev/null
-        [ "$ret" = "0" ] || return
-        __check_for_epm_version
-
-        __epm_touch_pkg
-
-        __save_available_packages
-
-        load_helper epm-sh-altlinux-contents-index
-        update_alt_contents_index
-
         return $ret
         ;;
 esac
@@ -99,13 +99,9 @@ case $PMTYPE in
         sudocmd apt-get update
         ret="$?"
         cd - >/dev/null
-        [ "$ret" = "0" ] || return
+        return $ret
         ;;
     apt-dpkg)
-        if [ -n "$content_index" ] ; then
-            sudocmd apt-file update
-            return
-        fi
         sudocmd apt-get update || return
         # apt-get update retrieve Contents file too
         #sudocmd apt-file update
@@ -183,10 +179,23 @@ case $PMTYPE in
         fatal "Have no suitable update command for $PMTYPE"
         ;;
 esac
+}
 
-__epm_touch_pkg
 
-__save_available_packages
-return 0
+epm_update()
+{
+    if [ "$1" = "--content-index" ] ; then
+        __epm_update_content_index
+        return
+    fi
 
+    __epm_update "$@" || return
+
+    __epm_touch_pkg
+
+    __save_available_packages
+
+    __epm_update_content_index
+
+    return 0
 }
