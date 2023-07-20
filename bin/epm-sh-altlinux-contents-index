@@ -43,6 +43,11 @@ get_local_alt_mirror_path()
 
 ALT_CONTENTS_INDEX_LIST=$epm_cachedir/contents_index/contents_index_list
 
+__rsync_check()
+{
+    a= rsync -n "$1" >/dev/null 2>/dev/null
+}
+
 # URL TARGETDIR OPTIONS
 rsync_alt_contents_index()
 {
@@ -50,6 +55,9 @@ rsync_alt_contents_index()
     local TD="$2"
     local res
     assure_exists rsync
+
+    __rsync_check "$URL" || return
+
     mkdir -p "$(dirname "$TD")"
     if [ -z "$quiet" ] ; then
         docmd rsync --partial --inplace $3 -a --progress "$URL" "$TD"
@@ -74,7 +82,7 @@ get_url_to_etersoft_mirror()
 # "comment" "file"
 __add_to_contents_index_list()
 {
-    [ -n "$quiet" ] || echo " $1 -> $2"
+    [ -n "$verbose" ] && echo " $1 -> $2"
     echo "$2" >>$ALT_CONTENTS_INDEX_LIST
 }
 
