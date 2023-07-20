@@ -51,7 +51,8 @@ epm_upgrade()
 
             try_change_alt_repo
             epm_addrepo "$@"
-            (pkg_names="$installlist" epm_Install) || fatal "Can't update repo"
+            __epm_update
+            (pkg_names="$installlist" epm_install) || fatal "Can't update repo"
             epm_removerepo "$@"
             end_change_alt_repo
 
