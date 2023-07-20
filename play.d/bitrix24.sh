@@ -19,6 +19,6 @@ case $pkgtype in
 esac
 
 repack=''
-[ "$(epm print info -s)/$(epm print info -r)" = "alt/Sisyphus" ] && repack='--repack'
+[ "$(epm print info -s)" = "alt" ] && repack='--repack'
 
 epm install $repack "$PKGURL"
