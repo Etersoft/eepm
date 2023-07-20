@@ -10,3 +10,8 @@ UNIREQUIRES='libnotify.so.4'
 
 . $(dirname $0)/common.sh
 
+PRODUCTDIR=/opt/$PRODUCTCUR
+
+remove_dir /etc/apt/sources.list.d
+remove_dir /etc/yum.repos.d
+remove_dir /etc/apt/trusted.gpg.d
