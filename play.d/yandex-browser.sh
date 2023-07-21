@@ -2,7 +2,7 @@
 
 BASEPKGNAME=yandex-browser
 SUPPORTEDARCHES="x86_64"
-PRODUCTALT="stable beta"
+PRODUCTALT="stable beta corporate"
 VERSION="$2"
 DESCRIPTION="Yandex browser from the official site"
 TIPS="Run 'epm play yandex-browser=beta' to install beta version of the browser."
@@ -13,11 +13,15 @@ TIPS="Run 'epm play yandex-browser=beta' to install beta version of the browser.
 
 URL="https://repo.yandex.ru/yandex-browser"
 
-if [ "$(epm print info -s)" = "alt" ] || [ "$(epm print info -p)" != "rpm" ] ; then
-    epm install "$URL/deb/pool/main/y/$PKGNAME/$(epm print constructname $PKGNAME "$VERSION*" amd64 deb)" || exit
-else
+repack=''
+[ "$(epm print info -s)" = "alt" ] && repack='--repack'
+
+if [ "$(epm print info -p)" = "rpm" ] ; then
     # https://repo.yandex.ru/yandex-browser/rpm/stable/x86_64/yandex-browser-stable-23.1.1.1114-1.x86_64.rpm
-    epm install "$URL/rpm/stable/x86_64/$(epm print constructname $PKGNAME "$VERSION*" x86_64 rpm)" || exit
+    epm install --repack "$URL/rpm/stable/x86_64/$(epm print constructname $PKGNAME "$VERSION*" x86_64 rpm)" || exit
+else
+    # https://repo.yandex.ru/yandex-browser/deb/pool/main/y/yandex-browser-beta/yandex-browser-beta_23.5.4.682-1_amd64.deb
+    epm install "$URL/deb/pool/main/y/$PKGNAME/$(epm print constructname $PKGNAME "$VERSION*" amd64 deb)" || exit
 fi
 
 UPDATEFFMPEG=$(epm ql $PKGNAME | grep update-ffmpeg) || fatal

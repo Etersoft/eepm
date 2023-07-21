@@ -13,6 +13,8 @@ BASEPKGNAME=yandex-browser-stable
 
 if echo "$PRODUCT" | grep -q "yandex-browser-beta" ; then
     BASEPKGNAME=yandex-browser-beta
+elif echo "$PRODUCT" | grep -q "yandex-browser-corporate" ; then
+    BASEPKGNAME=yandex-browser-corporate
 fi
 
 # used in update-ffmpeg

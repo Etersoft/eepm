@@ -11,6 +11,7 @@ PRODUCTDIR=/opt/yandex/browser-beta
 . $(dirname $0)/common-chromium-browser.sh
 
 subst '1iConflicts: yandex-browser-stable' $SPEC
+subst '1iConflicts: yandex-browser-corporate' $SPEC
 subst "s|^\(Version:.*\)|\1\nProvides: yandex-browser = %version|" $SPEC
 
 
