@@ -10,8 +10,5 @@ DESCRIPTION="VK Teams for Linux from the official site"
 VERSION="1.0"
 
 PKGURL="https://vkteams-www.hb.bizmrg.com/linux/x64/vkteams.tar.xz"
-PKGFILE="/tmp/$PKGNAME-$VERSION.tar.xz"
 
-epm tool eget -O $PKGFILE $PKGURL || exit
-
-epm install --repack "$PKGFILE" || exit
+epm pack --install $PKGNAME "$PKGURL" "$VERSION"

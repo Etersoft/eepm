@@ -14,12 +14,6 @@ subst "s|^Group:.*|Group: Networking/Instant messaging|" $SPEC
 subst "s|^URL:.*|URL: https://teams.vk.com/|" $SPEC
 subst "s|^Summary:.*|Summary: VK Teams|" $SPEC
 
-# move package to /opt
-mkdir -p $BUILDROOT$PRODUCTDIR
-mv $BUILDROOT/* $BUILDROOT$PRODUCTDIR
-subst "s|\"/|\"$PRODUCTDIR/|" $SPEC
-pack_dir $PRODUCTDIR
-
 add_bin_exec_command $PRODUCT
 # Hack against https://bugzilla.altlinux.org/43779
 # Create non writeable local .desktop file
