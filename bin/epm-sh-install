@@ -74,6 +74,9 @@ __epm_print_warning_for_nonalt_packages()
     # only ALT
     [ "$BASEDISTRNAME" = "alt" ] || return 0
 
+    # download only
+    [ -n "$save_only$download_only" ] && return 0
+
     load_helper epm-status
 
     local i
