@@ -20,3 +20,4 @@ rm $BUILDROOT/usr/bin/code
 add_bin_link_command $PRODUCT $PRODUCTDIR/bin/code
 add_bin_link_command $PRODUCTCUR $PRODUCTDIR/bin/code
 
+subst "s|^Group:.*|Group: Development/Tools|" $SPEC

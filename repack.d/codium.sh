@@ -18,3 +18,5 @@ add_bin_link_command
 fix_desktop_file /usr/share/codium/codium
 
 fix_chrome_sandbox
+
+subst "s|^Group:.*|Group: Development/Tools|" $SPEC
