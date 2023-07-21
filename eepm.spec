@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.58.2
+Version: 3.58.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,13 @@ a discussion about extra requirements.
 
 
 %changelog
+* Fri Jul 21 2023 Vitaly Lipatov <lav@altlinux.ru> 3.58.3-alt1
+- epm update --content-index: ignore errors
+- epm update: refactoring
+- epm play add yuzu support
+- epm play add pgadmin4
+- epm play bitrix24: repack always, improve repacking
+
 * Wed Jul 19 2023 Vitaly Lipatov <lav@altlinux.ru> 3.58.2-alt1
 - epm play teams: restore install, via web.archive.org
 - epm play: add bitrix24
