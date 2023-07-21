@@ -10,7 +10,7 @@ if ! echo "$TAR" | grep -q "hplip-.*-plugin" ; then
 fi
 
 # https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=hplip-plugin
-sh $TAR --target . --noexec || exit
+sh $TAR --target . --noexec --nox11 || exit
 
 case "$(epm print info -a)" in
     x86_64)
