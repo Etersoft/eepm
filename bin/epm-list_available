@@ -114,12 +114,6 @@ case $PMTYPE in
     nix)
         CMD="nix-env -qaP"
         ;;
-    appget)
-        CMD="appget search"
-        ;;
-    winget)
-        CMD="winget search"
-        ;;
     xbps)
         CMD="xbps-query -l -R"
         showcmd $CMD
