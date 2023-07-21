@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.58.3
+Version: 3.58.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,15 @@ a discussion about extra requirements.
 
 
 %changelog
+* Fri Jul 21 2023 Vitaly Lipatov <lav@altlinux.ru> 3.58.4-alt1
+- epm play: add pachca
+- epm assure: don't print to stdout ever in --verbose
+- epm pack hplip-plugin: add --nox11 (ALT bug 46507)
+- epm repack: rewrite skype repacking (ALT bug 45502)
+- epm play vkteams: implement via epm pack
+- epm list: implement --upgradable
+- epm play yandex-browser: install for ALT from rpm, add support for corporate package
+
 * Fri Jul 21 2023 Vitaly Lipatov <lav@altlinux.ru> 3.58.3-alt1
 - epm update --content-index: ignore errors
 - epm update: refactoring
