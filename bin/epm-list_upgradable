@@ -1,0 +1,81 @@
+#!/bin/sh
+#
+# Copyright (C) 2023  Etersoft
+# Copyright (C) 2023  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+load_helper epm-sh-warmup
+
+__aptcyg_print_full()
+{
+    #showcmd apt-cyg show
+    local VERSION=$(apt-cyg show "$1" | grep -m1 "^version: " | sed -e "s|^version: ||g")
+    echo "$1-$VERSION"
+}
+
+__fo_pfn()
+{
+    grep -v "^$" | grep -- "$pkg_filenames"
+}
+
+epm_list_upgradable()
+{
+
+case $PMTYPE in
+    apt-rpm)
+        warmup_dpkgbase
+        if [ -n "$short" ] ; then
+            docmd epm upgrade --dry-run | grep "^Inst " | sed -e "s|^Inst ||" -e "s| .*||g"
+        else
+            docmd epm upgrade --dry-run | grep "^Inst " | sed -e "s|^Inst ||"
+        fi
+        ;;
+    apt-dpkg)
+        warmup_dpkgbase
+        if [ -n "$short" ] ; then
+            docmd apt list --upgradable | sed -e "s|/.*||g"
+        else
+            docmd apt list --upgradable
+        fi
+        ;;
+    dnf-*|yum-*)
+        warmup_rpmbase
+        if [ -n "$short" ] ; then
+            docmd dnf check-update | sed -e "s| .*||g"
+        else
+            docmd dnf check-update
+        fi
+        ;;
+    zypper)
+        docmd zypper list-updates --all
+        ;;
+    snap)
+        docmd snap refresh --list
+        ;;
+    winget)
+        docmd winget upgrade
+        ;;
+    *)
+        fatal "Have no suitable query command for $PMTYPE"
+        ;;
+esac
+
+if [ -n "$CMD" ] ; then
+    docmd $CMD | __fo_pfn
+fi
+# FIXME: we print empty lines, but will lost error status
+
+}
