@@ -334,6 +334,9 @@ __epm_addrepo_astra()
         astra-1.7_x86-64)
             # TODO epm repo change http / https
             epm install --skip-installed apt-transport-https ca-certificates || fatal
+            if epm repo list | grep "dl.astralinux.ru/astra/stable/1.7_x86-64" ; then
+                fatal "Astra repo is already in the list"
+            fi
             # https://wiki.astralinux.ru/pages/viewpage.action?pageId=158598882
             epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-main/     1.7_x86-64 main contrib non-free"
             epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-update/   1.7_x86-64 main contrib non-free"
