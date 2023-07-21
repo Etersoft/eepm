@@ -15,17 +15,13 @@ remove_dir /opt/skypeforlinux
 
 move_to_opt /usr/share/skypeforlinux
 
-subst "s|^SKYPE_PATH=.*|SKYPE_PATH=$PRODUCTDIR/skypeforlinux|" $BUILDROOT/usr/bin/skypeforlinux
+# https://bugzilla.altlinux.org/45502
+remove_file /usr/bin/skypeforlinux
 
-set_autoreq 'yes'
+add_bin_link_command $PRODUCTCUR $PRODUCTDIR/$PRODUCTCUR
+add_bin_link_command $PRODUCT $PRODUCTCUR
 
-# ignore embedded libs
-drop_embedded_reqs
-
-# usual command skype
-mkdir -p $BUILDROOT/usr/bin/
-ln -s /usr/bin/skypeforlinux $BUILDROOT/usr/bin/skype
-subst 's|%files|%files\n/usr/bin/skype|' $SPEC
+add_electron_deps
 
 fix_chrome_sandbox
 
