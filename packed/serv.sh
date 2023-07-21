@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.58.3"
+EPMVERSION="3.58.4"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -640,7 +640,7 @@ assure_exists()
     local ask=''
     [ -n "$non_interactive" ] || ask=1
 
-    ( direct='' interactive=$ask epm_assure "$1" $package $3 ) || fatal
+    ( verbose='' direct='' interactive=$ask epm_assure "$1" $package $3 ) || fatal
 }
 
 assure_exists_erc()

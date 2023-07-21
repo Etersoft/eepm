@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.58.3"
+EPMVERSION="3.58.4"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -639,7 +639,7 @@ assure_exists()
     local ask=''
     [ -n "$non_interactive" ] || ask=1
 
-    ( direct='' interactive=$ask epm_assure "$1" $package $3 ) || fatal
+    ( verbose='' direct='' interactive=$ask epm_assure "$1" $package $3 ) || fatal
 }
 
 assure_exists_erc()
@@ -1314,6 +1314,9 @@ __epm_addrepo_astra()
         astra-1.7_x86-64)
             # TODO epm repo change http / https
             epm install --skip-installed apt-transport-https ca-certificates || fatal
+            if epm repo list | grep "dl.astralinux.ru/astra/stable/1.7_x86-64" ; then
+                fatal "Astra repo is already in the list"
+            fi
             # https://wiki.astralinux.ru/pages/viewpage.action?pageId=158598882
             epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-main/     1.7_x86-64 main contrib non-free"
             epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-update/   1.7_x86-64 main contrib non-free"
@@ -1510,7 +1513,7 @@ __epm_assure_checking()
         if [ -e "$CMD" ] ; then
             if [ -n "$verbose" ] ; then
                 info "File or directory $CMD is already exists."
-                epm qf "$CMD"
+                epm qf "$CMD" >&2
             fi
             return 0
         fi
@@ -1523,7 +1526,7 @@ __epm_assure_checking()
         if [ -n "$verbose" ] ; then
             local compath="$(__check_command_in_path "$1")"
             info "Command $CMD is exists: $compath"
-            epm qf "$compath"
+            epm qf "$compath" >&2
         fi
         return 0
     fi
@@ -5005,6 +5008,7 @@ Usage: epm list [options] [package]
 Options:
   --available           list only available packages
   --installed           list only installed packages
+  --upgradable          list only upgradable packages
 EOF
 }
 
@@ -5037,6 +5041,11 @@ epm_list()
             ;;
         --installed)
             epm_packages "$@"
+            return
+            ;;
+        --upgradable)
+            # TODO: exclude locally installed?
+            epm_list_upgradable "$@"
             return
             ;;
         *)
@@ -5145,12 +5154,6 @@ case $PMTYPE in
     nix)
         CMD="nix-env -qaP"
         ;;
-    appget)
-        CMD="appget search"
-        ;;
-    winget)
-        CMD="winget search"
-        ;;
     xbps)
         CMD="xbps-query -l -R"
         showcmd $CMD
@@ -5160,6 +5163,69 @@ case $PMTYPE in
             $CMD | sed -e "s|^ii ||g" -e "s| .*||g" | __fo_pfn
         fi
         return 0
+        ;;
+    *)
+        fatal "Have no suitable query command for $PMTYPE"
+        ;;
+esac
+
+if [ -n "$CMD" ] ; then
+    docmd $CMD | __fo_pfn
+fi
+
+}
+
+# File bin/epm-list_upgradable:
+
+
+__aptcyg_print_full()
+{
+    #showcmd apt-cyg show
+    local VERSION=$(apt-cyg show "$1" | grep -m1 "^version: " | sed -e "s|^version: ||g")
+    echo "$1-$VERSION"
+}
+
+__fo_pfn()
+{
+    grep -v "^$" | grep -- "$pkg_filenames"
+}
+
+epm_list_upgradable()
+{
+
+case $PMTYPE in
+    apt-rpm)
+        warmup_dpkgbase
+        if [ -n "$short" ] ; then
+            docmd epm upgrade --dry-run | grep "^Inst " | sed -e "s|^Inst ||" -e "s| .*||g"
+        else
+            docmd epm upgrade --dry-run | grep "^Inst " | sed -e "s|^Inst ||"
+        fi
+        ;;
+    apt-dpkg)
+        warmup_dpkgbase
+        if [ -n "$short" ] ; then
+            docmd apt list --upgradable | sed -e "s|/.*||g"
+        else
+            docmd apt list --upgradable
+        fi
+        ;;
+    dnf-*|yum-*)
+        warmup_rpmbase
+        if [ -n "$short" ] ; then
+            docmd dnf check-update | sed -e "s| .*||g"
+        else
+            docmd dnf check-update
+        fi
+        ;;
+    zypper)
+        docmd zypper list-updates --all
+        ;;
+    snap)
+        docmd snap refresh --list
+        ;;
+    winget)
+        docmd winget upgrade
         ;;
     *)
         fatal "Have no suitable query command for $PMTYPE"
@@ -11854,6 +11920,9 @@ __epm_print_warning_for_nonalt_packages()
     [ -n "$dryrun" ] && return 0
     # only ALT
     [ "$BASEDISTRNAME" = "alt" ] || return 0
+
+    # download only
+    [ -n "$save_only$download_only" ] && return 0
 
 
     local i
