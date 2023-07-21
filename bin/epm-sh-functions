@@ -640,7 +640,7 @@ assure_exists()
     local ask=''
     [ -n "$non_interactive" ] || ask=1
 
-    ( direct='' interactive=$ask epm_assure "$1" $package $3 ) || fatal
+    ( verbose='' direct='' interactive=$ask epm_assure "$1" $package $3 ) || fatal
 }
 
 assure_exists_erc()

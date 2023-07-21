@@ -56,7 +56,7 @@ __epm_assure_checking()
         if [ -e "$CMD" ] ; then
             if [ -n "$verbose" ] ; then
                 info "File or directory $CMD is already exists."
-                epm qf "$CMD"
+                epm qf "$CMD" >&2
             fi
             return 0
         fi
@@ -69,7 +69,7 @@ __epm_assure_checking()
         if [ -n "$verbose" ] ; then
             local compath="$(__check_command_in_path "$1")"
             info "Command $CMD is exists: $compath"
-            epm qf "$compath"
+            epm qf "$compath" >&2
         fi
         return 0
     fi
