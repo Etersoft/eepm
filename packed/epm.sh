@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.58.2"
+EPMVERSION="3.58.3"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -11698,12 +11698,20 @@ get_local_alt_mirror_path()
 
 ALT_CONTENTS_INDEX_LIST=$epm_cachedir/contents_index/contents_index_list
 
+__rsync_check()
+{
+    a= rsync -n "$1" >/dev/null 2>/dev/null
+}
+
 rsync_alt_contents_index()
 {
     local URL="$1"
     local TD="$2"
     local res
     assure_exists rsync
+
+    __rsync_check "$URL" || return
+
     mkdir -p "$(dirname "$TD")"
     if [ -z "$quiet" ] ; then
         docmd rsync --partial --inplace $3 -a --progress "$URL" "$TD"
@@ -11726,7 +11734,7 @@ get_url_to_etersoft_mirror()
 
 __add_to_contents_index_list()
 {
-    [ -n "$quiet" ] || echo " $1 -> $2"
+    [ -n "$verbose" ] && echo " $1 -> $2"
     echo "$2" >>$ALT_CONTENTS_INDEX_LIST
 }
 
@@ -12613,11 +12621,25 @@ __save_available_packages()
     short=--short epm_list_available | sort | sudorun tee $epm_vardir/available-packages >/dev/null
 }
 
-
-epm_update()
+__epm_update_content_index()
 {
-    local content_index
-    [ "$1" = "--content-index" ] && content_index=1 && shift
+case $BASEDISTRNAME in
+    "alt")
+        update_alt_contents_index
+        return
+        ;;
+esac
+
+case $PMTYPE in
+    apt-dpkg)
+        sudocmd apt-file update
+        ;;
+esac
+
+}
+
+__epm_update()
+{
 
     [ -z "$*" ] || fatal "No arguments are allowed here"
 
@@ -12628,24 +12650,11 @@ warmup_hibase
 
 case $BASEDISTRNAME in
     "alt")
-        if [ -n "$content_index" ] ; then
-            update_alt_contents_index
-            return
-        fi
         # TODO: hack against cd to cwd in apt-get on ALT
         cd /
         sudocmd apt-get update
         ret="$?"
         cd - >/dev/null
-        [ "$ret" = "0" ] || return
-        __check_for_epm_version
-
-        __epm_touch_pkg
-
-        __save_available_packages
-
-        update_alt_contents_index
-
         return $ret
         ;;
 esac
@@ -12658,13 +12667,9 @@ case $PMTYPE in
         sudocmd apt-get update
         ret="$?"
         cd - >/dev/null
-        [ "$ret" = "0" ] || return
+        return $ret
         ;;
     apt-dpkg)
-        if [ -n "$content_index" ] ; then
-            sudocmd apt-file update
-            return
-        fi
         sudocmd apt-get update || return
         # apt-get update retrieve Contents file too
         #sudocmd apt-file update
@@ -12742,12 +12747,25 @@ case $PMTYPE in
         fatal "Have no suitable update command for $PMTYPE"
         ;;
 esac
+}
 
-__epm_touch_pkg
 
-__save_available_packages
-return 0
+epm_update()
+{
+    if [ "$1" = "--content-index" ] ; then
+        __epm_update_content_index
+        return
+    fi
 
+    __epm_update "$@" || return
+
+    __epm_touch_pkg
+
+    __save_available_packages
+
+    __epm_update_content_index
+
+    return 0
 }
 
 # File bin/epm-upgrade:
@@ -12779,7 +12797,8 @@ epm_upgrade()
 
             try_change_alt_repo
             epm_addrepo "$@"
-            (pkg_names="$installlist" epm_Install) || fatal "Can't update repo"
+            __epm_update
+            (pkg_names="$installlist" epm_install) || fatal "Can't update repo"
             epm_removerepo "$@"
             end_change_alt_repo
 
