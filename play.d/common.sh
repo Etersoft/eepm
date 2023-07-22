@@ -148,7 +148,8 @@ check_alternative_pkgname()
     [ -n "$BASEPKGNAME" ] || return
 
     # default: with first entry in $PEODUCTALT
-    PKGNAME="$BASEPKGNAME-$(get_first $PRODUCTALT)"
+    BRANCH=$(get_first $PRODUCTALT)
+    PKGNAME="$BASEPKGNAME-$BRANCH"
 
     # override with VERSION
     local i
@@ -159,6 +160,7 @@ check_alternative_pkgname()
         fi
         if [ "$VERSION" = "$i" ] ; then
             PKGNAME=$BASEPKGNAME-$i
+            BRANCH="$i"
             VERSION=""
             return
         fi
@@ -171,6 +173,7 @@ check_alternative_pkgname()
         fi
         if epm installed $BASEPKGNAME-$i ; then
             PKGNAME=$BASEPKGNAME-$i
+            BRANCH="$i"
             break
         fi
     done
