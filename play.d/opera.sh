@@ -10,12 +10,12 @@ DESCRIPTION="Opera browser from the official site"
 
 arch="amd64"
 
-PKGNAME="${PKGNAME/-/_}"
-
 # will use libffmpeg.so (via config added in repack)
 epm install --skip-installed ffmpeg-plugin-browser || epm install --skip-installed chromium-codecs-ffmpeg-extra || epm play chromium-codecs-ffmpeg-extra
 
 if [ "$(epm print info -p)" = "rpm" ] ; then
+    PKGNAME="${PKGNAME/-/_}"
+
     # they put all branch here (rpm only): https://rpm.opera.com/rpm/
     [ "$(epm print info -s)" = "alt" ] && repack='--repack' || repack=''
     PKGURL="https://rpm.opera.com/rpm/$PKGNAME-$VERSION-linux-release-x64-signed.rpm"
@@ -23,5 +23,5 @@ if [ "$(epm print info -p)" = "rpm" ] ; then
     exit
 fi
 
-PKGURL="https://deb.opera.com/opera-developer/pool/non-free/o/opera-$BRANCH/$(epm print constructname $PKGNAME "$VERSION" $arch deb)"
+PKGURL="https://deb.opera.com/opera-developer/pool/non-free/o/$PKGNAME/$(epm print constructname $PKGNAME "$VERSION" $arch deb)"
 epm install "$PKGURL"
