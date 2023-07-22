@@ -921,7 +921,8 @@ __epm_remove_tmp_files()
 
     if [ -n "$to_clean_tmp_dirs" ] ; then
         echo "$to_clean_tmp_dirs" | while read p ; do
-            rm $verbose -rf "$p" 2>/dev/null
+            [ -n "$verbose" ] && echo "rm -rf '$p'"
+            rm -rf "$p" 2>/dev/null
         done
     fi
 
