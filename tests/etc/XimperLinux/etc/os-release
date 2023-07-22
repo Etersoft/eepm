@@ -1,0 +1,11 @@
+NAME="Etersoft Ximper"
+VERSION="0.6"
+ID=altlinux
+VERSION_ID=0.6
+PRETTY_NAME="Ximper Linux 0.6 (Alice)"
+ANSI_COLOR="1;33"
+CPE_NAME="cpe:/o:alt:ximper:0.6"
+BUILD_ID="Etersoft Ximper 0.3"
+HOME_URL="https://ximperlinux.ru/"
+BUG_REPORT_URL="https://bugs.altlinux.org/"
+LOGO=ximperlinux
