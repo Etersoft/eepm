@@ -69,12 +69,14 @@ __get_app_package()
 
 __list_all_app()
 {
-    for i in $psdir/*.sh ; do
-       local name=$(basename $i .sh)
-       [ -n "$IGNOREi586" ] && rhas "$name" "^i586-" && continue
-       rhas "$name" "^common" && continue
+    cd $psdir || fatal
+    for i in *.sh ; do
+       local name=${i/.sh/}
+       [ -n "$IGNOREi586" ] && startwith "$name" "i586-" && continue
+       startwith "$name" "common" && continue
        echo "$name"
     done
+    cd - >/dev/null
 }
 
 __list_all_packages()
