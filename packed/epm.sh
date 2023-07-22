@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Copyright (C) 2012-2021  Etersoft
-# Copyright (C) 2012-2021  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2023  Etersoft
+# Copyright (C) 2012-2023  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.58.4"
+EPMVERSION="3.59.0"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -49,7 +49,7 @@ load_helper()
 {
     local shieldname="loaded$(echo "$1" | sed -e 's|-||g')"
     # already loaded
-    eval "test -n \"\$$shieldname\"" && debug "Already loaded $1" && return
+    eval "[ -n \"\$$shieldname\" ]" && debug "Already loaded $1" && return
 
     local CMD="$SHAREDIR/$1"
     # do not use fatal() here, it can be initial state
@@ -245,11 +245,25 @@ rhas()
     echo "$1" | grep -E -q -- "$2"
 }
 
+startwith()
+{
+    # rhas "$1" "^$2"
+    [[ "$1" = ${2}* ]]
+}
+
+is_abs_path()
+{
+    #echo "$1" | grep -q "^/"
+    startwith "$1" "/"
+}
+
 is_dirpath()
 {
     [ "$1" = "." ] && return $?
-    rhas "$1" "/"
+    # rhas "$1" "/"
+    startwith "$1" "/"
 }
+
 
 filter_strip_spaces()
 {
@@ -937,17 +951,17 @@ is_url()
     echo "$1" | grep -q "^[filehtps]*:/"
 }
 
-if a= which which 2>/dev/null >/dev/null ; then
-    # the best case if we have which command (other ways needs checking)
-    # TODO: don't use which at all, it is binary, not builtin shell command
-print_command_path()
-{
-    a= which -- "$1" 2>/dev/null
-}
-elif a= type -a type 2>/dev/null >/dev/null ; then
+if a= type -a type 2>/dev/null >/dev/null ; then
 print_command_path()
 {
     a= type -fpP -- "$1" 2>/dev/null
+}
+elif a= which which 2>/dev/null >/dev/null ; then
+    # the best case if we have which command (other ways needs checking)
+    # TODO: don't use which at all, it is a binary, not builtin shell command
+print_command_path()
+{
+    a= which -- "$1" 2>/dev/null
 }
 else
 print_command_path()
@@ -983,11 +997,6 @@ subst()
     sed -i -e "$@"
 }
 fi
-
-is_abs_path()
-{
-    echo "$1" | grep -q "^/"
-}
 
 check_core_commands()
 {
@@ -6032,12 +6041,14 @@ __get_app_package()
 
 __list_all_app()
 {
-    for i in $psdir/*.sh ; do
-       local name=$(basename $i .sh)
-       [ -n "$IGNOREi586" ] && rhas "$name" "^i586-" && continue
-       rhas "$name" "^common" && continue
+    cd $psdir || fatal
+    for i in *.sh ; do
+       local name=${i/.sh/}
+       [ -n "$IGNOREi586" ] && startwith "$name" "i586-" && continue
+       startwith "$name" "common" && continue
        echo "$name"
     done
+    cd - >/dev/null
 }
 
 __list_all_packages()
@@ -16802,6 +16813,22 @@ fi
 
 epm_main()
 {
+
+# fast call for tool
+if [ "$1" = "tool" ] ; then
+        shift
+        epm_cmd=tool
+        eval epm_$epm_cmd "$@"
+        exit
+fi
+
+if [ "$1" = "--inscript" ] && [ "$2" = "tool" ] ; then
+        shift 2
+        epm_cmd=tool
+        eval epm_$epm_cmd "$@"
+        exit
+fi
+
 
 set_pm_type
 

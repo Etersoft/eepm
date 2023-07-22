@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.58.4"
+EPMVERSION="3.59.0"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -246,11 +246,25 @@ rhas()
     echo "$1" | grep -E -q -- "$2"
 }
 
+startwith()
+{
+    # rhas "$1" "^$2"
+    [[ "$1" = ${2}* ]]
+}
+
+is_abs_path()
+{
+    #echo "$1" | grep -q "^/"
+    startwith "$1" "/"
+}
+
 is_dirpath()
 {
     [ "$1" = "." ] && return $?
-    rhas "$1" "/"
+    # rhas "$1" "/"
+    startwith "$1" "/"
 }
+
 
 filter_strip_spaces()
 {
@@ -938,17 +952,17 @@ is_url()
     echo "$1" | grep -q "^[filehtps]*:/"
 }
 
-if a= which which 2>/dev/null >/dev/null ; then
-    # the best case if we have which command (other ways needs checking)
-    # TODO: don't use which at all, it is binary, not builtin shell command
-print_command_path()
-{
-    a= which -- "$1" 2>/dev/null
-}
-elif a= type -a type 2>/dev/null >/dev/null ; then
+if a= type -a type 2>/dev/null >/dev/null ; then
 print_command_path()
 {
     a= type -fpP -- "$1" 2>/dev/null
+}
+elif a= which which 2>/dev/null >/dev/null ; then
+    # the best case if we have which command (other ways needs checking)
+    # TODO: don't use which at all, it is a binary, not builtin shell command
+print_command_path()
+{
+    a= which -- "$1" 2>/dev/null
 }
 else
 print_command_path()
@@ -984,11 +998,6 @@ subst()
     sed -i -e "$@"
 }
 fi
-
-is_abs_path()
-{
-    echo "$1" | grep -q "^/"
-}
 
 check_core_commands()
 {
