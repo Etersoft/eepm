@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Copyright (C) 2012-2021  Etersoft
-# Copyright (C) 2012-2021  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2012-2023  Etersoft
+# Copyright (C) 2012-2023  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -49,7 +49,7 @@ load_helper()
 {
     local shieldname="loaded$(echo "$1" | sed -e 's|-||g')"
     # already loaded
-    eval "test -n \"\$$shieldname\"" && debug "Already loaded $1" && return
+    eval "[ -n \"\$$shieldname\" ]" && debug "Already loaded $1" && return
 
     local CMD="$SHAREDIR/$1"
     # do not use fatal() here, it can be initial state
@@ -61,6 +61,24 @@ load_helper()
 
 
 load_helper epm-sh-functions
+
+# fast call for tool
+if [ "$1" = "tool" ] ; then
+        shift
+        epm_cmd=tool
+        load_helper epm-$epm_cmd
+        eval epm_$epm_cmd "$@"
+        exit
+fi
+
+if [ "$1" = "--inscript" ] && [ "$2" = "tool" ] ; then
+        shift 2
+        epm_cmd=tool
+        load_helper epm-$epm_cmd
+        eval epm_$epm_cmd "$@"
+        exit
+fi
+
 
 set_pm_type
 
