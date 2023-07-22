@@ -67,6 +67,7 @@ case $PMTYPE in
             assure_exists apt-file
             sudocmd apt-file update
         else
+            load_helper epm-check_updated_repo
             update_repo_if_needed
         fi
         docmd apt-file search $pkg_filenames

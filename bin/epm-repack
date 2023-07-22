@@ -141,7 +141,7 @@ __epm_repack()
         deb)
             # FIXME: only one package in $@ is supported
             #local pkgname="$(epm print name from "$@")"
-            __set_version_pkgname "$1"
+            #__set_version_pkgname "$1"
             local repackcode="$EPM_REPACK_SCRIPTS_DIR/$PKGNAME.sh"
             if [ -x "$repackcode" ] ; then
                 load_helper epm-repack-rpm
