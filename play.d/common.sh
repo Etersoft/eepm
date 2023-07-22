@@ -19,10 +19,30 @@ cd_to_temp_dir()
     cd $PKGDIR || fatal
 }
 
+# print a path to the command if exists in $PATH
+if a= type -a type 2>/dev/null >/dev/null ; then
+print_command_path()
+{
+    a= type -fpP -- "$1" 2>/dev/null
+}
+elif a= which which 2>/dev/null >/dev/null ; then
+    # the best case if we have which command (other ways needs checking)
+    # TODO: don't use which at all, it is a binary, not builtin shell command
+print_command_path()
+{
+    a= which -- "$1" 2>/dev/null
+}
+else
+print_command_path()
+{
+    a= type "$1" 2>/dev/null | sed -e 's|.* /|/|'
+}
+fi
+
 # check if <arg> is a real command
 is_command()
 {
-    epm tool which "$1" >/dev/null
+    print_command_path "$1" >/dev/null
 }
 
 
@@ -38,9 +58,14 @@ check_tty
 #    showcmd "$*"
 #}
 
+# support for direct run a play script
+if [ -x "../bin/epm" ] ; then
+    export PATH="$(realpath ../bin):$PATH"
+fi
 
 # add to all epm calls
-EPM="$(epm tool which epm)" || fatal
+#EPM="$(epm tool which epm)" || fatal
+EPM="$(print_command_path epm)" || fatal
 epm()
 {
     #if [ "$1" = "tool" ] ; then
@@ -192,10 +217,6 @@ is_repacked_package()
 }
 
 
-# support for direct run a play script
-if [ -x "../bin/epm" ] ; then
-    export PATH="$(realpath ../bin):$PATH"
-fi
 
 # set PKGNAME to $BASEPKGNAME-$VERSION if $VERSION is found in PRODUCTALT
 [ -n "$PRODUCTALT" ] && check_alternative_pkgname
