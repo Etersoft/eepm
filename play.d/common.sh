@@ -46,10 +46,6 @@ is_command()
 }
 
 
-. $(dirname $0)/common-outformat.sh
-
-check_tty
-
 #__showcmd_shifted()
 #{
 #    local s="$1"
@@ -217,6 +213,23 @@ is_repacked_package()
 }
 
 
+case "$1" in
+    "--description")
+        is_supported_arch "$2" || exit 0
+        echo "$DESCRIPTION"
+        exit
+        ;;
+    "--product-alternatives")
+        print_product_alt $PRODUCTALT
+        exit
+        ;;
+esac
+
+
+. $(dirname $0)/common-outformat.sh
+
+check_tty
+
 
 # set PKGNAME to $BASEPKGNAME-$VERSION if $VERSION is found in PRODUCTALT
 [ -n "$PRODUCTALT" ] && check_alternative_pkgname
@@ -241,10 +254,6 @@ case "$1" in
         echo "$PKGNAME"
         exit
         ;;
-    "--product-alternatives")
-        print_product_alt $PRODUCTALT
-        exit
-        ;;
     "--installed")
         #epm installed $PKGNAME
         is_repacked_package $PKGNAME
@@ -252,11 +261,6 @@ case "$1" in
         ;;
     "--installed-version")
         epm print version for package $PKGNAME
-        exit
-        ;;
-    "--description")
-        is_supported_arch "$2" || exit 0
-        echo "$DESCRIPTION"
         exit
         ;;
     "--update")
