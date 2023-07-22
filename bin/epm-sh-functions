@@ -215,12 +215,27 @@ rhas()
     echo "$1" | grep -E -q -- "$2"
 }
 
+# bash specific
+startwith()
+{
+    # rhas "$1" "^$2"
+    [[ "$1" = ${2}* ]]
+}
+
+is_abs_path()
+{
+    #echo "$1" | grep -q "^/"
+    startwith "$1" "/"
+}
+
 # copied from strings
 is_dirpath()
 {
     [ "$1" = "." ] && return $?
-    rhas "$1" "/"
+    # rhas "$1" "/"
+    startwith "$1" "/"
 }
+
 
 filter_strip_spaces()
 {
@@ -1011,11 +1026,6 @@ subst()
     sed -i -e "$@"
 }
 fi
-
-is_abs_path()
-{
-    echo "$1" | grep -q "^/"
-}
 
 check_core_commands()
 {
