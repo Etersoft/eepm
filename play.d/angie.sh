@@ -13,20 +13,29 @@ version=$(epm print info --base-version)
 
 # Strict supported list
 case $(epm print info -e) in
-    Alpine/3.14|Alpine/3.15|Alpine/3.16|Alpine/3.17)
+    Alpine/3.15|Alpine/3.16|Alpine/3.17|Alpine/3.18)
         epm install --skip-installed ca-certificates
         epm repo addkey angie "https://angie.software/keys/angie-signing.rsa"
         epm repo add "https://download.angie.software/angie/alpine/v$version/main"
         ;;
+    AstraLinuxSE/1.7)
+        epm repo addkey angie "https://angie.software/keys/angie-signing.gpg"
+        epm repo add "rpm [angie] https://download.angie.software/angie/altlinux/10/ x86_64 main"
+        ;;
     ALTLinux/p10|ALTLinux/Sisyphus)
         epm repo addkey angie "https://angie.software/keys/angie-signing.gpg" "EB8EAF3D4EF1B1ECF34865A2617AB978CB849A76" "Angie (Signing Key) <devops@tech.wbsrv.ru>"
-        epm repo add "rpm [angie] https://download.angie.software/angie/altlinux/10/ x86_64 main"
+        epm repo addkey angie "https://angie.software/keys/angie-signing.gpg"
+        epm repo add "rpm [angie] https://download.angie.software/angie/astra-se/1.7/ unstable main"
+        ;;
+    AlmaLinux/8|AlmaLinux/9)
+        epm repo addkey angie 'https://download.angie.software/angie/centos/$releasever/' "https://angie.software/keys/angie-signing.gpg" "Angie repo"
+        #epm repo add 'https://download.angie.software/angie/centos/$releasever/'
         ;;
     CentOS/8|CentOS/9)
         epm repo addkey angie 'https://download.angie.software/angie/centos/$releasever/' "https://angie.software/keys/angie-signing.gpg" "Angie repo"
         #epm repo add 'https://download.angie.software/angie/centos/$releasever/'
         ;;
-    Debian/10|Debian/11)
+    Debian/10|Debian/11|Debian/12)
         epm install --skip-installed ca-certificates lsb-release
         epm repo addkey angie "https://angie.software/keys/angie-signing.gpg"
         epm repo add "deb [angie] https://download.angie.software/angie/debian/ $reponame main"
@@ -43,7 +52,7 @@ case $(epm print info -e) in
         epm repo addkey angie 'https://download.angie.software/angie/rocky/$releasever/' "https://angie.software/keys/angie-signing.gpg" "Angie repo"
         #epm repo add 'https://download.angie.software/angie/rocky/$releasever/'
         ;;
-    Ubuntu/20.04|Ubuntu/22.04)
+    Ubuntu/20.04|Ubuntu/22.04|Ubuntu/23.04)
         epm install --skip-installed ca-certificates lsb-release
         epm repo addkey angie "https://angie.software/keys/angie-signing.gpg"
         epm repo add "deb [angie] https://download.angie.software/angie/ubuntu/ $reponame main"
