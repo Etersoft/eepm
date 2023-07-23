@@ -67,7 +67,7 @@ pack_file /etc/tdesktop/externalupdater
 
 # create desktop file
 mkdir -p $BUILDROOT/usr/share/applications/
-cat <<EOF >$BUILDROOT/usr/share/applications/$PRODUCT.desktop
+cat <<EOF >$BUILDROOT/usr/share/applications/org.telegram.desktop
 [Desktop Entry]
 Version=1.0
 Name=Telegram Desktop
@@ -81,6 +81,6 @@ MimeType=x-scheme-handler/tg;
 Keywords=tg;chat;im;messaging;messenger;sms;tdesktop;
 X-GNOME-UsesNotifications=true
 EOF
-pack_file /usr/share/applications/$PRODUCT.desktop
+pack_file /usr/share/applications/org.telegram.desktop
 
 add_by_ldd_deps
