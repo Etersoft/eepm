@@ -17,18 +17,30 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+__epm_apt_set_lists_pkg()
+{
+    # apt-dpkg
+    pkg="Packages"
+
+    LISTS='/var/lib/apt/lists'
+    if [ "$BASEDISTRNAME" = "alt" ] ; then
+        pkg="pkglist"
+        # see update-kernel: Use Dir::State::lists for apt update freshness check (ALT bug 46987)
+        eval "$(apt-config shell LISTS Dir::State::lists/f)"
+    fi
+}
+
 # initially copied from update-kernel
 # print number of days and error status if number of days more than 0
 __epm_check_apt_db_days()
 {
-    # apt-dpkg
-    local pkg="Packages"
-    [ "$BASEDISTRNAME" = "alt" ] && pkg="pkglist"
+    local pkg
     local pkglists
-    pkglists=$(find /var/lib/apt/lists -name "*_$pkg*" -ctime +1 2>/dev/null)
+    __epm_apt_set_lists_pkg
+    pkglists=$(find $LISTS -name "*_$pkg*" -ctime +1 2>/dev/null)
     if [ -z "$pkglists" ] ; then
         # note: duplicate __is_repo_info_downloaded
-        pkglists=$(find /var/lib/apt/lists -name "*_$pkg*" 2>/dev/null)
+        pkglists=$(find $LISTS -name "*_$pkg*" 2>/dev/null)
         [ -n "$pkglists" ] && return
         echo "never downloaded"
         return 1
@@ -38,7 +50,7 @@ __epm_check_apt_db_days()
     local ts=0
     # set ts to newest file ctime
     # shellcheck disable=SC2044
-    for i in $(find /var/lib/apt/lists/ -name "*_$pkg*" 2>/dev/null); do
+    for i in $(find $LISTS -name "*_$pkg*" 2>/dev/null); do
         t=$(stat -c%Z "$i")
         [ "$t" -gt "$ts" ] && ts=$t
     done
@@ -59,11 +71,10 @@ __epm_check_apt_db_days()
 
 __epm_touch_apt_pkg()
 {
-    # apt-dpkg
-    local pkg="Packages"
-    [ "$BASEDISTRNAME" = "alt" ] && pkg="pkglist"
+    local pkg
+    __epm_apt_set_lists_pkg
     # ordinal package file have date of latest upstream change, not latest update, so update fake file
-    sudorun touch "/var/lib/apt/lists/eepm-fake_$pkg"
+    sudorun touch "$LISTS/eepm-fake_$pkg"
 }
 
 __epm_touch_pkg()
@@ -80,11 +91,10 @@ __is_repo_info_downloaded()
 {
     case $PMTYPE in
         apt-*)
-            # apt-dpkg
-            local pkg="Packages"
-            [ "$BASEDISTRNAME" = "alt" ] && pkg="pkglist"
+            local pkg
+            __epm_apt_set_lists_pkg
             local pkglists
-            pkglists=$(find /var/lib/apt/lists -name "*_$pkg*" 2>/dev/null)
+            pkglists=$(find $LIST -name "*_$pkg*" 2>/dev/null)
             [ -n "$pkglists" ] || return 1
             ;;
         *)
