@@ -65,17 +65,15 @@ load_helper epm-sh-functions
 # fast call for tool
 if [ "$1" = "tool" ] ; then
         shift
-        epm_cmd=tool
-        load_helper epm-$epm_cmd
-        eval epm_$epm_cmd "$@"
+        load_helper epm-tool
+        epm_tool "$@"
         exit
 fi
 
 if [ "$1" = "--inscript" ] && [ "$2" = "tool" ] ; then
         shift 2
-        epm_cmd=tool
-        load_helper epm-$epm_cmd
-        eval epm_$epm_cmd "$@"
+        load_helper epm-tool
+        epm_tool "$@"
         exit
 fi
 
