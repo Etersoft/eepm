@@ -96,3 +96,4 @@ else
     subst "s|^\((Converted from a\) \(.*\) \(package.*\)|(Repacked from binary \2 package with $(epm --short --version))\n\1 \2 \3|" $SPEC
 fi
 
+fix_cpio_bug_links

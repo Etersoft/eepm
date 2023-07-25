@@ -386,6 +386,18 @@ set_autoprov()
     fi
 }
 
+# https://bugzilla.altlinux.org/42189
+fix_cpio_bug_links()
+{
+    local rlink
+    find -type l | while read link ; do
+        rlink="$(readlink "$link")"
+        echo "$rlink" | grep -E "^(etc|var|opt|usr)/" || continue
+        echo "Fixing cpio ALT bug 42189 in $link <- $rlink" >&2
+        rm -v $link
+        ln -sv /$rlink $link
+    done
+}
 
 # by default check in $PRODUCTDIR
 use_system_xdg()
