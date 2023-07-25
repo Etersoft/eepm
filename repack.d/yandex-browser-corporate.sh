@@ -32,3 +32,5 @@ use_system_xdg
 add_chromium_deps
 
 fix_desktop_file /usr/bin/$PRODUCTCUR
+
+chmod a-x .$PRODUCTDIR/update-ffmpeg
