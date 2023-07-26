@@ -5,7 +5,7 @@ BUILDROOT="$1"
 SPEC="$2"
 
 PRODUCT=idea
-PRODUCTCUR=idea-IU
+PRODUCTCUR=idea-IC
 
 . $(dirname $0)/common.sh
 
@@ -14,7 +14,7 @@ subst '1iConflicts: ideaIU' $SPEC
 subst "s|^Group:.*|Group: Development/Tools|" $SPEC
 #subst "s|^License: unknown$|License: GPLv2|" $SPEC
 subst "s|^URL:.*|URL: https://www.jetbrains.com/idea/|" $SPEC
-subst "s|^Summary:.*|Summary: IntelliJ IDEA – the Leading Java and Kotlin IDE|" $SPEC
+subst "s|^Summary:.*|Summary: IntelliJ IDEA Community Edition – the Leading Java and Kotlin IDE|" $SPEC
 
 move_to_opt "/$PRODUCTCUR-*"
 add_bin_link_command $PRODUCT $PRODUCTDIR/bin/$PRODUCT.sh
@@ -26,7 +26,7 @@ cat <<EOF >$BUILDROOT/usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]
 Version=1.0
 Type=Application
-Name=IntelliJ IDEA
+Name=IntelliJ IDEA Community Edition
 Comment=The Leading Java and Kotlin IDE
 Exec=$PRODUCT %f
 Icon=$PRODUCT
