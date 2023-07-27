@@ -348,6 +348,34 @@ add_qt6_deps()
     add_unirequires "libxkbcommon-x11.so.0 libxkbcommon.so.0 libxkbfile.so.1 libxml2.so.2 libxshmfence.so.1 libxslt.so.1 libz.so.1"
 }
 
+# fast hack to get all extra soname list
+get_libs_requires()
+{
+    local libreqlist=$(mktemp)
+    local libpreslist=$(mktemp)
+    local fdir="$BUILDROOT/$1"
+
+    find "$fdir" -type f | while read f ; do
+        epm req --short $f </dev/null 2>/dev/null | sed -e 's|().*||'
+    done | LANG=C sort -u >$libreqlist
+
+    find "$fdir" -name "lib*.so*" | xargs -n1 objdump -p | grep "SONAME" | sed -e 's|.* ||' | LANG=C sort -u >$libpreslist
+
+    LANG=C join -v2 $libpreslist $libreqlist
+    rm -f $libreqlist $libpreslist
+}
+
+add_libs_requires()
+{
+    local ll
+    echo "Scanning for required libs soname ..."
+    get_libs_requires | xargs -n6 echo | while read ll ; do
+        echo "Requires: $ll"
+        add_unirequires "$ll" </dev/null
+    done
+}
+
+
 add_by_ldd_deps()
 {
     local exe="$1"
@@ -438,7 +466,7 @@ use_system_xdg()
 
 
 # like /opt/yandex/browser
-if [ -n "$PRODUCTDIR" ] && [ "$(dirname "$PRODUCTDIR" )" != "/" ] && [ "$(dirname "$(dirname "$PRODUCTDIR" )" )" != "/" ] ; then
+if [ -n "$PRODUCTDIR" ] && [ "$(dirname "$PRODUCTDIR" )" != "/" ] && [ "$(dirname "$(dirname "$PRODUCTDIR" )" )" != "/" ] ; then #"
    [ -n "$PRODUCTBASEDIR" ] || PRODUCTBASEDIR="$(dirname "$PRODUCTDIR")"
 fi
 
