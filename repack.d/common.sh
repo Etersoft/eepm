@@ -329,10 +329,24 @@ add_electron_deps()
 add_qt5_deps()
 {
     add_unirequires "libm.so.6 libc.so.6"
-    add_unirequires "libgio-2.0.so.0 libgobject-2.0.so.0 libfontconfig.so.1 libfreetype.so.6"
+    add_unirequires "libglib-2.0.so.0 libgio-2.0.so.0 libgobject-2.0.so.0 libfontconfig.so.1 libfreetype.so.6"
     add_unirequires "libEGL.so.1 libGL.so.1 libxcb.so.1 libX11.so.6 libX11-xcb.so.1 libglib-2.0.so.0"
 }
 
+add_qt6_deps()
+{
+    add_unirequires "libm.so.6 libc.so.6 libdl.so.2 libgcc_s.so.1 libpthread.so.0 libstdc++.so.6"
+    add_unirequires "libEGL.so.1 libGL.so.1 libxcb.so.1 libX11.so.6 libX11-xcb.so.1 libglib-2.0.so.0"
+    add_unirequires "libGLX.so.0 libOpenGL.so.0"
+    add_unirequires "libX11-xcb.so.1 libX11.so.6 libXcomposite.so.1 libXdamage.so.1 libXext.so.6 libXfixes.so.3 libXinerama.so.1 libXrandr.so.2 libXrender.so.1 libXss.so.1 libXtst.so.6"
+    add_unirequires "libasound.so.2 libdbus-1.so.3 libdrm.so.2 libexpat.so.1 libfontconfig.so.1 libfreetype.so.6 libgbm.so.1"
+    add_unirequires "libglib-2.0.so.0 libgthread-2.0.so.0 libharfbuzz.so.0 libjpeg.so.8 liblcms2.so.2 libminizip.so.1"
+    add_unirequires "libnspr4.so libnss3.so libnssutil3.so libopus.so.0 libpci.so.3 libplc4.so libplds4.so libpulse.so.0 libresolv.so.2 librt.so.1 libsmime3.so libsnappy.so.1"
+    add_unirequires "libtiff.so.5 libudev.so.1 libva-drm.so.2 libva-x11.so.2 libva.so.2 libwayland-client.so.0 libwayland-cursor.so.0 libwayland-egl.so.1 libwayland-server.so.0"
+    add_unirequires "libxcb-glx.so.0 libxcb-icccm.so.4 libxcb-image.so.0 libxcb-keysyms.so.1 libxcb-randr.so.0 libxcb-render-util.so.0 libxcb-render.so.0"
+    add_unirequires "libxcb-shape.so.0 libxcb-shm.so.0 libxcb-sync.so.1 libxcb-xfixes.so.0 libxcb-xkb.so.1 libxcb.so.1"
+    add_unirequires "libxkbcommon-x11.so.0 libxkbcommon.so.0 libxkbfile.so.1 libxml2.so.2 libxshmfence.so.1 libxslt.so.1 libz.so.1"
+}
 
 add_by_ldd_deps()
 {
