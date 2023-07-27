@@ -5,27 +5,14 @@ SPEC="$2"
 PRODUCT=ipera-client
 PRODUCTDIR=/opt/ipera
 
-PREINSTALL_PACKAGES="libQt5Pdf.so.5()(64bit)"
+UNIREQUIRES="binutils coreutils
+libXcomposite.so.1 libXdamage.so.1 libXext.so.6 libXfixes.so.3 libXrandr.so.2 libXrender.so.1 libXtst.so.6
+libasound.so.2 libdrm.so.2 libexpat.so.1 libglib-2.0.so.0 libgmodule-2.0.so.0 libgthread-2.0.so.0
+libnspr4.so libnss3.so libnssutil3.so libopenal.so.1 liborc-0.4.so.0 libplc4.so libplds4.so libpulse-mainloop-glib.so.0
+libpulse.so.0 libresolv.so.2 libsmime3.so
+libudev.so.1
+libxkbcommon-x11.so.0 libxkbcommon.so.0
+libxml2.so.2 libxslt.so.1 libz.so.1"
 
 . $(dirname $0)/common.sh
 
-LIBDIR=$(echo $BUILDROOT/opt/ipera/client/*/lib)
-[ -d "$LIBDIR" ] || exit
-
-if epm assure patchelf ; then
-cd $LIBDIR
-for i in lib*.so.* gstreamer-0.10/lib*.so.*  ; do
-    a= patchelf --set-rpath '$ORIGIN' $i
-done
-fi
-
-#for i in ../bin/qml/QtQuick/Particles.2/libparticlesplugin.so ; do
-#    a= patchelf --set-rpath "$LIBDIR" $i
-#done
-
-filter_from_requires "libldap_r-2.4.so.2(OPENLDAP_2.*)(64bit)" "liblber-2.4.so.2(OPENLDAP_2.*)(64bit)" "ld-linux-.*(GLIBC_PRIVATE)"
-# ignore embedded libs
-filter_from_requires libQt5 libav libcrypto.so libdbus-1.so libicu liblibraw.so libssl.so libswresample libswscale libva libvdpau
-filter_from_requires libgst libuv
-
-set_autoreq 'yes'

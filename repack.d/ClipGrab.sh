@@ -3,8 +3,6 @@
 BUILDROOT="$1"
 SPEC="$2"
 
+UNIREQUIRES="yt-dlp"
+
 . $(dirname $0)/common.sh
-
-add_requires yt-dlp
-
-set_autoreq 'yes'
