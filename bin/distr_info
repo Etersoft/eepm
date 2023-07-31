@@ -862,7 +862,7 @@ get_virt()
     fi
 
     # use util-linux
-    if LANG=C a= lscpu | grep "Hypervisor vendor:" | grep -q "KVM" ; then
+    if LC_ALL=C a= lscpu | grep "Hypervisor vendor:" | grep -q "KVM" ; then
         echo "kvm" && return
     fi
 

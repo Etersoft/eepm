@@ -93,7 +93,7 @@ case $PMTYPE in
         if [ -n "$verbose" ] ; then
             CMD="/usr/sbin/slackpkg search"
         else
-            LANG=C docmd /usr/sbin/slackpkg search $string | grep " - " | sed -e 's|.* - ||g'
+            LC_ALL=C docmd /usr/sbin/slackpkg search $string | grep " - " | sed -e 's|.* - ||g'
             return
         fi
         ;;
@@ -126,7 +126,7 @@ case $PMTYPE in
         ;;
 esac
 
-LANG=C docmd $CMD $string
+LC_ALL=C docmd $CMD $string
 epm play $short --list-all | sed -e 's|^ *||g' -e 's|[[:space:]]\+| |g' -e "s|\$| (use \'epm play\' to install it)|"
 }
 

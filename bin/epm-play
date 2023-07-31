@@ -108,8 +108,8 @@ __filter_by_installed_packages()
     remove_on_exit $pkglist
 
     # get intersect between full package list and available packages table
-    epm --short packages | LANG=C sort -u >$pkglist
-    LANG=C join -11 -21 $tapt $pkglist | uniq
+    epm --short packages | LC_ALL=C sort -u >$pkglist
+    LC_ALL=C join -11 -21 $tapt $pkglist | uniq
     rm -f $pkglist
 
     # rpm on Fedora/CentOS no more print missed packages to stderr
@@ -125,7 +125,7 @@ __get_installed_table()
     local tapt
     tapt="$(mktemp)" || fatal
     remove_on_exit $tapt
-    __list_app_packages_table | LANG=C sort -u >$tapt
+    __list_app_packages_table | LC_ALL=C sort -u >$tapt
     __filter_by_installed_packages $tapt
     rm -f $tapt
 }

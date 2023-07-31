@@ -40,7 +40,7 @@ get_linked_shared_libs()
     assure_exists readelf binutils
     #is_command readelf || fatal "Can't get required shared library: readelf is missed. Try install binutils package."
     #ldd "$exe" | sed -e 's|[[:space:]]*||' | grep "^lib.*[[:space:]]=>[[:space:]]\(/usr/lib\|/lib\)" | sed -e 's|[[:space:]].*||'
-    LANG=C readelf -d "$1" | grep "(NEEDED)" | grep "Shared library:" | sed -e 's|.*Shared library: \[||' -e 's|\]$||' | grep "^lib"
+    LC_ALL=C readelf -d "$1" | grep "(NEEDED)" | grep "Shared library:" | sed -e 's|.*Shared library: \[||' -e 's|\]$||' | grep "^lib"
 }
 
 __epm_elf32_requires()
@@ -92,7 +92,7 @@ epm_requires_files()
             ;;
         eopkg)
             showcmd eopkg info $pkg_files
-            LANG=C eopkg info $pkg_files | grep "^Dependencies" | head -n1 | sed -e "s|Dependencies[[:space:]]*: ||"
+            LC_ALL=C eopkg info $pkg_files | grep "^Dependencies" | head -n1 | sed -e "s|Dependencies[[:space:]]*: ||"
             ;;
         ELF)
             __epm_elf_requires $pkg_files
@@ -123,9 +123,9 @@ case $PMTYPE in
                 CMD="apt-cache depends"
             else
                 if [ -n "$short" ] ; then
-                    LANG=C docmd apt-cache depends $pkg_names | grep "Depends:" | sed -e 's|, |\n|g' -e "s|.*Depends: ||" -e "s|<\(.*\)>|\1|" | __epm_filter_out_base_alt_reqs | sed -e "s| .*||"
+                    LC_ALL=C docmd apt-cache depends $pkg_names | grep "Depends:" | sed -e 's|, |\n|g' -e "s|.*Depends: ||" -e "s|<\(.*\)>|\1|" | __epm_filter_out_base_alt_reqs | sed -e "s| .*||"
                 else
-                    LANG=C docmd apt-cache depends $pkg_names | grep "Depends:" | sed -e 's|, |\n|g' -e "s|.*Depends: ||" -e "s|<\(.*\)>|\1|" | __epm_filter_out_base_alt_reqs
+                    LC_ALL=C docmd apt-cache depends $pkg_names | grep "Depends:" | sed -e 's|, |\n|g' -e "s|.*Depends: ||" -e "s|<\(.*\)>|\1|" | __epm_filter_out_base_alt_reqs
                 fi
                 return
             fi
@@ -186,7 +186,7 @@ case $PMTYPE in
         ;;
     eopkg)
         showcmd eopkg info $pkg_names
-        LANG=C eopkg info $pkg_names | grep "^Dependencies" | sed -e "s|Dependencies[[:space:]]*: ||"
+        LC_ALL=C eopkg info $pkg_names | grep "^Dependencies" | sed -e "s|Dependencies[[:space:]]*: ||"
         return
         ;;
     xbps)

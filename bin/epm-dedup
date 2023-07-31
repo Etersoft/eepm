@@ -28,7 +28,7 @@ try_fix_apt_rpm_dupls()
         sudocmd epm remove --auto $TESTPKG || return
     fi
     local PKGLIST
-    PKGLIST=$(LANG=C sudorun apt-get install $TESTPKG 2>&1 | grep "W: There are multiple versions of" | \
+    PKGLIST=$(LC_ALL=C sudorun apt-get install $TESTPKG 2>&1 | grep "W: There are multiple versions of" | \
         sed -e 's|W: There are multiple versions of "\(.*\)" in your system.|\1|')
     local TODEL
     for i in $PKGLIST ; do

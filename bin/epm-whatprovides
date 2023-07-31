@@ -32,7 +32,7 @@ case $PMTYPE in
         CMD="conary repquery --what-provides"
         ;;
     apt-rpm|apt-dpkg|aptitude-dpkg)
-        LANG=C docmd apt-get install --print-uris $pkg | grep "^Selecting" | cut -f2 -d" "
+        LC_ALL=C docmd apt-get install --print-uris $pkg | grep "^Selecting" | cut -f2 -d" "
         return
         ;;
     yum-rpm)

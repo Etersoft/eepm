@@ -62,7 +62,7 @@ is_service_autostart()
             fi
 
             # FIXME: check for current runlevel
-            LANG=C sudorun chkconfig $1 --list | grep -q "[35]:on"
+            LC_ALL=C sudorun chkconfig $1 --list | grep -q "[35]:on"
             ;;
         service-initd|service-update)
             test -L "$(echo /etc/rc5.d/S??$1)"
