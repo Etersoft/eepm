@@ -7,6 +7,8 @@ DESCRIPTION="TrueConf client for Linux from the official site"
 
 . $(dirname $0)/common.sh
 
+[ "$VERSION" = "*" ] && VERSION="[0-9]*"
+
 epmopt=''
 distrversion=$(epm print info -v)
 case "$(epm print info -e)" in
