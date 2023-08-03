@@ -8,4 +8,3 @@ SPEC="$2"
 
 add_requires yandex-browser-corporate
 
-set_autoreq 'yes'
