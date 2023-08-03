@@ -79,6 +79,7 @@ epm_requires_files()
     local pkg_files="$*"
     [ -n "$pkg_files" ] || return
 
+    # TODO: handle separately
     local PKGTYPE="$(get_package_type $pkg_files)"
 
     case "$PKGTYPE" in

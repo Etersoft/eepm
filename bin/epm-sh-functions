@@ -791,7 +791,7 @@ get_package_type()
             return
             ;;
         *)
-            if file "$1" | grep -q " ELF " ; then
+            if [ -r "$1" ] && file "$1" | grep -q " ELF " ; then
                 echo "ELF"
                 return
             fi
