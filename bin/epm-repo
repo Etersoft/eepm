@@ -91,7 +91,7 @@ epm_repo()
         load_helper epm-reposave
         epm_repostatus "$@"
         ;;
-    add)                              # HELPCMD: add package repo (etersoft, autoimports, archive 2017/12/31); run with param to get list
+    add)                              # HELPCMD: add package repo (etersoft, autoimports, archive 2017/01/31); run with param to get list
         load_helper epm-addrepo
         epm_addrepo "$@"
         ;;
