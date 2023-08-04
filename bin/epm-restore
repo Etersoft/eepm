@@ -168,6 +168,61 @@ __epm_restore_pip()
     docmd epm install $ilist
 }
 
+__epm_restore_print_toml()
+{
+    local lt
+    lt=$(mktemp) || fatal
+    remove_on_exit $lt
+cat <<EOF >$lt
+#!//usr/bin/env python3
+
+# https://realpython.com/python-toml/
+import sys
+import toml
+
+if len(sys.argv) < 2:
+	raise Exception('Run me with a file')
+
+pyproject = sys.argv[1]
+
+c = toml.load(pyproject)
+n = c["tool"]["poetry"]["dependencies"]
+for key, value in n.items():
+	if isinstance(value, dict):
+		print('\n' + key + ' ' , value["version"])
+	else:
+		print('\n' + key + ' ' + value)
+EOF
+    a= python3 $lt "$1"
+}
+
+__epm_restore_print_pyproject()
+{
+    local req_file="$1"
+    __epm_restore_print_toml "$req_file" | __epm_restore_convert_to_rpm_notation | sed -e 's|\*||' -e 's|\^|>= |'
+}
+
+__epm_restore_pyproject()
+{
+    local req_file="$1"
+    local reqmacro
+    local ilist
+
+    if [ -n "$dryrun" ] ; then
+        reqmacro="%py3_use"
+        echo
+        __epm_restore_print_comment "$req_file"
+        __epm_restore_print_pyproject "$req_file" | sed -e "s|^|$reqmacro |"
+        return
+    else
+        info "Install requirements from $req_file ..."
+        ilist="$(__epm_restore_print_pyproject "$req_file" | cut -d' ' -f 1 | sed -e "s|^|python3-module-|")"
+    fi
+
+    ilist="$(estrlist list $ilist)"
+    docmd epm install $ilist
+}
+
 __eresection()
 {
     rhas "$1" "[[:space:]]*$2[[:space:]]*=[[:space:]]*[\[(]"
@@ -552,6 +607,9 @@ __epm_restore_by()
         setup.py|python_dependencies.py)
             [ -s "$req_file" ] && __epm_restore_setup_py "$req_file"
             ;;
+        pyproject.toml)
+            [ -s "$req_file" ] && __epm_restore_pyproject "$req_file"
+            ;;
         package.json)
             [ -s "$req_file" ] && __epm_restore_npm "$req_file"
             ;;
@@ -596,7 +654,7 @@ epm_restore()
     # if run with empty args
     for i in requirements.txt requirements/default.txt requirements_dev.txt requirements-dev.txt requirements/dev.txt dev-requirements.txt \
              requirements-test.txt requirements_test.txt requirements/test.txt test-requirements.txt requirements/coverage.txt \
-             Gemfile requires.txt package.json setup.py python_dependencies.py Makefile.PL meson.build \
+             Gemfile requires.txt package.json setup.py python_dependencies.py Makefile.PL meson.build pyproject.toml \
              *.sln *.csproj ; do
         __epm_restore_by $i
     done
