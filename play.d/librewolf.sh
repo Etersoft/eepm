@@ -22,13 +22,8 @@ case $pkgtype in
         ;;
 esac
 
-case "$(epm print info -s)" in
-  alt)
-      # uses old glibc needed for ALT p10
-      PKG="https://deb.librewolf.net/pool/focal/librewolf-$VERSION$arch.deb"
-      epm install --repack $PKG
-      exit
-      ;;
-esac
+if ! is_glibc_enough 2.35 ; then
+    PKG="https://deb.librewolf.net/pool/focal/librewolf-$VERSION$arch.deb"
+fi
 
 epm install "$PKG"

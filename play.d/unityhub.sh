@@ -18,15 +18,10 @@ vendor=$(epm print info -s)
 
 case $vendor in
     alt)
-        if [ "$VERSION" = "*" ] ; then
-            case $reponame in
-                p10)
-                    VERSION="3.3.0"
-                    ;;
-                *)
-                    VERSION="3.4.2"
-                    ;;
-            esac
+        if is_glibc_enough 2.35 ; then
+            VERSION="3.4.2"
+        else
+            VERSION="3.3.0"
         fi
         PKGURL=https://hub.unity3d.com/linux/repos/deb/pool/main/u/unity/unityhub_$arch/unityhub-amd64-$VERSION.deb
         epm install --repack "$PKGURL"
@@ -34,22 +29,7 @@ case $vendor in
         ;;
 esac
 
-case $vendor/$reponame in
-    alt/Sisyphus)
-        epm repo addkey "https://angie.software/keys/angie-signing.gpg" "EB8EAF3D4EF1B1ECF34865A2617AB978CB849A76" "Angie (Signing Key) <devops@tech.wbsrv.ru>" angie
-        epm repo add "rpm [angie] https://download.angie.software/angie/altlinux/10/ x86_64 main"
-
-        epm update
-        epm install $PKGNAME
-        ;;
-    alt/p10)
-        epm repo addkey "https://angie.software/keys/angie-signing.gpg" "EB8EAF3D4EF1B1ECF34865A2617AB978CB849A76" "Angie (Signing Key) <devops@tech.wbsrv.ru>" angie
-        epm repo add "rpm [angie] https://download.angie.software/angie/altlinux/10/ x86_64 main"
-
-        epm update
-        epm install $PKGNAME
-        ;;
-esac
+echo "Adding vendor repo ..."
 
 case $(epm print info -p) in
     rpm)
@@ -63,7 +43,6 @@ case $(epm print info -p) in
         ;;
 esac
 
-
 epm update
 epm install $PKGNAME
-exit
+

@@ -8,7 +8,7 @@ DESCRIPTION="Google Chromium, sans integration with Google from the official sit
 . $(dirname $0)/common.sh
 
 # keep old version due libc.so.6(GLIBC_2.33)(64bit)
-if [ "$VERSION" = "*" ] && [ "$(epm print info -s)" = "alt" ] && [ "$(epm print info -r)" = "p10" ] ; then
+if [ "$VERSION" = "*" ] && ! is_glibc_enough 2.35 ; then
     VERSION="113.0.5672.127"
 fi
 
