@@ -75,6 +75,7 @@ progname="${0##*/}"
 Usage="Usage: $progname [options] file(s)..."
 Descr="ercat - universal file uncompressor"
 
+quiet=
 cmd=$1
 
 # Just printout help if run without args
@@ -88,6 +89,11 @@ case $cmd in
     -h|--help|help)       # HELPOPT: this help
         phelp
         exit
+        ;;
+    -q|--quiet)           # HELPOPT: be silent
+        quiet=--quiet
+        shift
+        cmd=$1
         ;;
     -v|--version)         # HELPOPT: print version
         print_version
