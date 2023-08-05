@@ -10,3 +10,5 @@ libssl.so.3 libcrypto.so.3
 libgcc_s.so.1 libm.so.6 libc.so.6"
 
 . $(dirname $0)/common.sh
+
+is_soname_present libssl.so.3 | fatal "This package needs OpenSSL 3."

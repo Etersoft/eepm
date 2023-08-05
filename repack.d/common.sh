@@ -375,6 +375,16 @@ add_libs_requires()
     done
 }
 
+# TODO: improve for other arch
+is_soname_present()
+{
+    local libdir
+    for libdir in /usr/lib/x86_64-linux-gnu /usr/lib64 /lib64 ; do
+        [ -r $libdir/$1 ] && return 0
+    done
+    return 1
+}
+
 
 add_by_ldd_deps()
 {
@@ -402,12 +412,6 @@ add_findreq_skiplist()
     for i in "$@" ; do
         subst "1i%add_findreq_skiplist $i" $SPEC
     done
-}
-
-# ignore embedded libs
-drop_embedded_reqs()
-{
-    filter_from_requires "libGLESv2.so()" "libEGL.so()" "libffmpeg.so()"
 }
 
 set_autoreq()
