@@ -16,10 +16,12 @@ esac
 
 [ "$VERSION" = "*" ] && VERSION="[0-9]*"
 
+repack=''
 # change package name for downloading
 case "$(epm print info -s)" in
   alt)
       PKGNAME=rudesktop-alt
+      repack='--repack'
       ;;
 esac
 
@@ -32,5 +34,5 @@ case "$(epm print info -p)" in
       ;;
 esac
 
-PKGURL=https://rudesktop.ru/download/$PKGNAME-amd64.$pkgtype
-epm install $PKGURL
+PKGURL="https://rudesktop.ru/download/$PKGNAME-amd64.$pkgtype"
+epm install $repack $PKGURL
