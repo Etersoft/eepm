@@ -509,7 +509,7 @@ check_option()
         show_command_only=1
         ;;
     --quiet|--silent)     # HELPOPT: quiet mode (do not print commands before exec)
-        quiet=1
+        quiet="--quiet"
         ;;
     --nodeps)             # HELPOPT: skip dependency check (during install/simulate and so on)
         nodeps="--nodeps"

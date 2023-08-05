@@ -23,7 +23,7 @@
 __alt_search_file_output()
 {
     # grep only on left part (filename), then revert order and grep with color
-    ercat $1 | grep -h -- ".*$2.*[[:space:]]" | sed -e "s|\(.*\)\t\(.*\)|\2: \1|g" $3
+    ercat $quiet $1 | grep -h -- ".*$2.*[[:space:]]" | sed -e "s|\(.*\)\t\(.*\)|\2: \1|g" $3
 }
 
 __alt_local_content_search()
