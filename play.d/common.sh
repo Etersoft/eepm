@@ -118,6 +118,22 @@ get_pkgvendor()
     epm print field Vendor for package "$1"
 }
 
+
+is_pkg_enough()
+{
+    local needed="$2"
+    local PKG="$1"
+
+    if epm installed $PKG ; then
+        local ver
+        ver=$(epm print version for package "$PKG" | head -n1)
+        if [ -n "$ver" ] && [ "$(epm print compare version "$ver" "$needed")" = "-1" ] ; then
+            return 1
+        fi
+    fi
+    return 0
+}
+
 # arg: minimal require of libstdc++ version
 # return true is we have such version
 is_stdcpp_enough()
@@ -126,14 +142,24 @@ is_stdcpp_enough()
     local STDCPKG="libstdc++"
     epm installed $STDCPKG || STDCPKG="libstdc++6"
 
-    if epm installed $STDCPKG ; then
-        local stdcver
-        stdcver=$(epm print version for package "$STDCPKG" | head -n1)
-        if [ -n "$stdcver" ] && [ "$(epm print compare version "$stdcver" "$needed")" = "-1" ] ; then
-            return 1
-        fi
-    fi
-    return 0
+    is_pkg_enough $STDCPKG $needed
+}
+
+is_glibc_enough()
+{
+    local needed="$1"
+    local PKG="glibc-core"
+    epm installed $PKG || PKG="glibc"
+
+    is_pkg_enough $PKG $needed
+}
+
+is_openssl_enough()
+{
+    local needed="$1"
+    local PKG="openssl"
+
+    is_pkg_enough $PKG $needed
 }
 
 
