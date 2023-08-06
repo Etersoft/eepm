@@ -301,8 +301,10 @@ __epm_addrepo_altlinux()
             ;;
     esac
 
-    # don't add again
-    epm repo list --quiet | grep -q -F "$repo" && return 0
+    if [ -z "$force" ] ; then
+        # don't add again
+        epm repo list --quiet | grep -q -F "$repo" && return 0
+    fi
 
     if echo "$repo" | grep -q "https://" ; then
         local mh="$(echo /usr/lib*/apt/methods/https)"
@@ -429,12 +431,11 @@ local repo="$*"
 
 case $BASEDISTRNAME in
     "alt")
-        # Note! Don't use quotes here
-        __epm_addrepo_altlinux $repo
+        __epm_addrepo_altlinux "$@"
         return
         ;;
     "astra")
-        __epm_addrepo_astra $repo
+        __epm_addrepo_astra "$@"
         return
         ;;
     "apk")
@@ -444,8 +445,7 @@ esac
 
 case $PMTYPE in
     apt-dpkg)
-        # Note! Don't use quotes here
-        __epm_addrepo_deb $repo
+        __epm_addrepo_deb "$@"
         ;;
     aptitude-dpkg)
         info "You need manually add repo to /etc/apt/sources.list (TODO)"
