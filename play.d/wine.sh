@@ -7,7 +7,9 @@ VERSION="$2"
 TIPS="Run epm play wine=wine-vanilla to install wine-vanilla package"
 
 MAIN=wine
-PKGCOMMON="wine-mono wine-gecko winetricks"
+#PKGCOMMON="wine-mono wine-gecko winetricks"
+# wine-full and wine require needed versions of these common packages
+PKGCOMMON=""
 
 [ -n "$VERSION" ] && [ "$VERSION" != "*" ] && MAIN="$VERSION"
 VERSION=""
