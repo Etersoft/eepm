@@ -4,10 +4,10 @@
 BUILDROOT="$1"
 SPEC="$2"
 
+VERSION=$(grep "^Version:" $SPEC | sed -e "s|Version: ||")
+
 PRODUCT=kyodialog
-# FIXME
-VER=9.2
-PRODUCTCUR=$PRODUCT$VER
+PRODUCTCUR=$PRODUCT$VERSION
 
 . $(dirname $0)/common.sh
 
@@ -17,10 +17,10 @@ filter_from_requires "python3(PyPDF3)"
 set_autoreq 'yes'
 
 # remove embedded PyPDF3
-remove_dir /usr/share/kyocera$VER/Python
+remove_dir /usr/share/kyocera$VERSION/Python
 
 # PRIMARY_PPD_DIRECTORY=/usr/share/ppd/kyocera/
-fromppd="/usr/share/kyocera$VER/ppd$VER"
+fromppd="/usr/share/kyocera$VERSION/ppd$VERSION"
 mkdir -p $BUILDROOT/usr/share/ppd/
 mv $BUILDROOT$fromppd $BUILDROOT/usr/share/ppd/kyocera
 subst "s|$fromppd|/usr/share/ppd/kyocera|" $SPEC
@@ -47,4 +47,4 @@ Categories=Qt;Printing;HardwareSettings;Settings
 EOF
 pack_file /usr/share/applications/$PRODUCTCUR.desktop
 
-install_file /usr/share/kyocera9.2/appicon_H.png /usr/share/pixmaps/$PRODUCTCUR.png
+install_file /usr/share/kyocera$VERSION/appicon_H.png /usr/share/pixmaps/$PRODUCTCUR.png
