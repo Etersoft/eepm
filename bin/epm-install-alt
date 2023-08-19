@@ -133,15 +133,13 @@ epm_install_alt_kernel_module()
     local kflist=''
     local kmplist=''
     local kmf km kf
+
+    # fill kernel flavour list
     for kmf in $*; do
         km="$(echo "$kmf" | cut -d- -f1)"
         kf="$(echo "$kmf" | cut -d- -f2,3)"
         # use current flavour as default
         [ "$km" = "$kf" ] && kf="$(get_current_kernel_flavour)"
-        kvf="$(get_latest_kernel_rel $kf)"
-        #kmplist="$kmplist kernel-modules-$km-$kf"
-        # install kernel module for latest installed kernel
-        kmplist="$kmplist kernel-modules-$km-$kvf"
         kflist="$kflist $kf"
     done
 
@@ -153,6 +151,18 @@ epm_install_alt_kernel_module()
 
     # skip install modules if there are no installed kernels (may be, a container)
     epm installed "kernel-image-$kf" || return 0
+
+    # make list for install kernel modules
+    for kmf in $*; do
+        km="$(echo "$kmf" | cut -d- -f1)"
+        kf="$(echo "$kmf" | cut -d- -f2,3)"
+        # use current flavour as default
+        [ "$km" = "$kf" ] && kf="$(get_current_kernel_flavour)"
+        kvf="$(get_latest_kernel_rel $kf)"
+        #kmplist="$kmplist kernel-modules-$km-$kf"
+        # install kernel module for latest installed kernel
+        kmplist="$kmplist kernel-modules-$km-$kvf"
+    done
 
     # secondly, install module(s)
     epm_install_names $kmplist
