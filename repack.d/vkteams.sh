@@ -5,8 +5,6 @@ SPEC="$2"
 
 PRODUCT=vkteams
 
-PREINSTALL_PACKAGES="glib2 libdbus libexpat libgbm libgio libgpg-error libuuid zlib fontconfig libGL libalsa libnspr libnss"
-
 . $(dirname $0)/common.sh
 
 subst "s|^Group:.*|Group: Networking/Instant messaging|" $SPEC
@@ -46,6 +44,10 @@ ICONURL=https://is1-ssl.mzstatic.com/image/thumb/Purple122/v4/a8/36/64/a83664d6-
 install_file $ICONURL /usr/share/pixmaps/$PRODUCT.png
 
 subst "s|.*$PRODUCTDIR/unittests.*||" $SPEC
+
+add_libs_requires
+# autoreq is disabled: don't patch elf due requires
+exit
 
 cd $BUILDROOT$PRODUCTDIR
 

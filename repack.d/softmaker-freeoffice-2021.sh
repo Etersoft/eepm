@@ -7,11 +7,10 @@ PRODUCT=freeoffice2021
 PRODUCTDIR=/usr/share/freeoffice2021
 VERSION=free21
 
-PREINSTALL_PACKAGES="coreutils file gawk grep libcurl libGL libX11 libXext libXmu libXrandr libXrender sed xprop"
+#PREINSTALL_PACKAGES="coreutils file gawk grep libcurl libGL libX11 libXext libXmu libXrandr libXrender sed xprop"
+UNIREQUIRES="coreutils file gawk grep sed xprop"
 
 . $(dirname $0)/common.sh
-
-set_autoreq 'yes'
 
 remove_file $PRODUCTDIR/add_rpm_repo.sh
 
@@ -82,3 +81,4 @@ epm tool erc dwr.tar.lzma || fatal
 mv -v dwr.tar/* . || fatal
 remove_file $PRODUCTDIR/dwr.tar.lzma
 
+add_libs_requires

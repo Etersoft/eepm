@@ -6,7 +6,7 @@ SPEC="$2"
 PRODUCT=icq
 PRODUCTCUR=icq
 
-PREINSTALL_PACKAGES="glib2 libdbus libexpat libgbm libgio libgpg-error libuuid zlib fontconfig libGL"
+#PREINSTALL_PACKAGES="glib2 libdbus libexpat libgbm libgio libgpg-error libuuid zlib fontconfig libGL"
 
 . $(dirname $0)/common.sh
 
@@ -54,6 +54,10 @@ install_file https://dashboard.snapcraft.io/site_media/appmedia/2020/04/icq_copy
 
 subst "s|.*/opt/icq/unittests.*||" $SPEC
 
+add_libs_requires
+
+exit
+
 # ignore embedded libs
 filter_from_requires libQt5 libxcb "libX.*"
 
@@ -75,5 +79,3 @@ for i in QtQuick/*/lib*.so  ; do
     a= patchelf --set-rpath '$ORIGIN/../../lib' $i
 done
 fi
-
-set_autoreq 'yes'

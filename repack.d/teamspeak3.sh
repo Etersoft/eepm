@@ -52,3 +52,5 @@ if [ "$libevent" != "libevent-2.1.so.7" ] && epm assure patchelf ; then
     # Fix libquazip1-qt5.so name
     #patchelf --replace-needed libquazip.so libquazip1-qt5.so.1.0.0 .$PRODUCTDIR/ts3client_linux_amd64
 fi
+
+add_libs_requires

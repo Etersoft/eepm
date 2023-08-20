@@ -8,6 +8,10 @@ PRODUCT=webex
 
 . $(dirname $0)/common.sh
 
+add_libs_requires
+# autoreq is disabled: don't patch elf due requires
+exit
+
 # drop external requires
 filter_from_requires libutil.so
 

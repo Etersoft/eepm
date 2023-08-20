@@ -29,3 +29,4 @@ filter_from_requires libQt5 libicu "libpq.so.5(RHPG_9"
 #    rm -v $BUILDROOT/usr/lib/rstudio/resources/app/bin/{diagnostics,rpostback,rsession}
 #fi
 
+add_libs_requires

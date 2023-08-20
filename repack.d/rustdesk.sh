@@ -10,8 +10,6 @@ PRODUCTDIR=/usr/lib/$PRODUCT
 
 . $(dirname $0)/common.sh
 
-set_autoreq 'yes'
-
 # put service file to the normal place
 mkdir -p $BUILDROOT/etc/systemd/system/
 cp $BUILDROOT/usr/share/rustdesk/files/systemd/rustdesk.service $BUILDROOT/etc/systemd/system/$PRODUCT.service
@@ -59,6 +57,10 @@ fi
 filter_from_requires /etc/X11/xinit/Xsession /etc/default/locale /usr/etc/X11/xdm/Xsession
 
 fi
+
+set_autoreq 'yes'
+
+#add_libs_requires
 
 [ "$(epm print info -s)" = "alt" ] || exit 0
 

@@ -6,8 +6,6 @@ SPEC="$2"
 
 PRODUCT=weasis
 
-PREINSTALL_PACKAGES="coreutils glib2 libalsa libatk libcairo libcairo-gobject fontconfig libfreetype libgdk-pixbuf libgio libGL libgtk+2 libgtk+3 libnsl1 libpango libX11 libXext libXi libXrender libXtst"
-
 . $(dirname $0)/common.sh
 
 add_bin_link_command weasis $PRODUCTDIR/bin/Weasis
@@ -26,6 +24,10 @@ fix_desktop_file "/opt/weasis/bin/Dicomizer"
 # icons
 fix_desktop_file "/opt/weasis/lib/Weasis"
 fix_desktop_file "/opt/weasis/lib/Dicomizer"
+
+add_libs_requires
+# autoreq is disabled: don't patch elf due requires
+exit
 
 cd $BUILDROOT$PRODUCTDIR/ || fatal
 if epm assure patchelf ; then

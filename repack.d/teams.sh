@@ -23,11 +23,9 @@ mkdir -p $BUILDROOT/$LIBDIR
 mv -v $BUILDROOT/usr/share/teams/ $BUILDROOT/$LIBDIR/
 subst "s|/usr/share/teams|$LIBDIR/$PRODUCT|" $SPEC
 
-set_autoreq 'yes'
-
-# ignore embedded libs
-drop_embedded_reqs
-
 fix_chrome_sandbox
 
+add_electron_deps
+
 fix_desktop_file /usr/bin/teams
+

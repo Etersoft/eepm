@@ -6,16 +6,6 @@ SPEC="$2"
 PRODUCT=zoom
 PRODUCTDIR=/opt/zoom
 
-#PREINSTALL_PACKAGES="glib2 libalsa libatk libat-spi2-core libcairo libcairo-gobject libcups libdbus libdrm libEGL libexpat libgbm libgdk-pixbuf libgio libGL libgomp1 libgtk+3 libkrb5 libnspr libnss libpango libpulseaudio libwayland-client libwayland-cursor libwayland-egl libX11 libxcb libxcb-render-util libxcbutil-icccm libxcbutil-image libxcbutil-keysyms libXcomposite libXdamage libXext libXfixes libxkbcommon libxkbcommon-x11 libXrandr libXtst zlib"
-UNIREQUIRES="libEGL.so.1 libGL.so.1 libX11-xcb.so.1 libX11.so.6 libXcomposite.so.1 libXdamage.so.1 libXext.so.6 libXfixes.so.3 libXrandr.so.2 libXtst.so.6 libasound.so.2
-libatk-1.0.so.0 libatk-bridge-2.0.so.0 libatspi.so.0 libcairo-gobject.so.2 libcairo.so.2 libcups.so.2 libdbus-1.so.3
-libdrm.so.2 libexpat.so.1 libfontconfig.so.1 libfreetype.so.6 libgbm.so.1
-libgdk-3.so.0 libgdk_pixbuf-2.0.so.0 libgio-2.0.so.0 libglib-2.0.so.0 libgmodule-2.0.so.0 libgobject-2.0.so.0 libgomp.so.1 libgssapi_krb5.so.2
-libgthread-2.0.so.0 libgtk-3.so.0 libnspr4.so libnss3.so libnssutil3.so libpango-1.0.so.0 libpangocairo-1.0.so.0 libsmime3.so
-libwayland-client.so.0 libwayland-cursor.so.0 libwayland-egl.so.1
-libxcb-glx.so.0 libxcb-icccm.so.4 libxcb-image.so.0 libxcb-keysyms.so.1 libxcb-randr.so.0 libxcb-render-util.so.0 libxcb-render.so.0 libxcb-shape.so.0 libxcb-shm.so.0 libxcb-sync.so.1
-libxcb-xfixes.so.0 libxcb-xinerama.so.0 libxcb-xkb.so.1 libxcb-xtest.so.0 libxcb.so.1 libxkbcommon-x11.so.0 libxkbcommon.so.0 libz.so.1"
-
 . $(dirname $0)/common-chromium-browser.sh
 
 # TODO: remove it after fix https://bugzilla.altlinux.org/42189
@@ -27,6 +17,7 @@ fix_chrome_sandbox $PRODUCTDIR/cef/chrome-sandbox
 
 fix_desktop_file /usr/bin/zoom
 
+add_libs_requires
 # autoreq is disabled: don't patch elf due requires
 exit
 

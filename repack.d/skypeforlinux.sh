@@ -21,8 +21,9 @@ remove_file /usr/bin/skypeforlinux
 add_bin_link_command $PRODUCTCUR $PRODUCTDIR/$PRODUCTCUR
 add_bin_link_command $PRODUCT $PRODUCTCUR
 
-add_electron_deps
-
 fix_chrome_sandbox
 
 fix_desktop_file /usr/bin/skypeforlinux
+
+add_electron_deps
+

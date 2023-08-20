@@ -15,8 +15,6 @@ mkdir -p $BUILDROOT$LIBDIR/
 mv $BUILDROOT/usr/share/$PRODUCT/ $BUILDROOT$LIBDIR/$PRODUCT/
 subst "s|/usr/share/$PRODUCT|$LIBDIR/$PRODUCT|g" $SPEC
 
-set_autoreq 'yes'
-
 # see https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=spotify
 mkdir -p $BUILDROOT/usr/bin/
 ln -sf $LIBDIR/$PRODUCT/$PRODUCT $BUILDROOT/usr/bin/$PRODUCT
@@ -30,3 +28,4 @@ for i in 16 22 24 32 48 64 128 256 ; do
     cp $BUILDROOT/$LIBDIR/$PRODUCT/icons/spotify-linux-$i.png $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/spotify-client.png
 done
 
+add_libs_requires

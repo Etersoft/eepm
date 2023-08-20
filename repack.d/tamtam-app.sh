@@ -19,4 +19,4 @@ fix_chrome_sandbox
 
 fix_desktop_file /opt/TamTam/tamtam
 
-set_autoreq 'yes'
+add_electron_deps

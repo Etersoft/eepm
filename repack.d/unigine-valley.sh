@@ -34,11 +34,11 @@ pack_dir $PRODUCTDIR/bin
 
 add_bin_link_command $PRODUCT /usr/bin/valley
 
-epm assure patchelf || exit
+#epm assure patchelf || exit
 
-for i in *_x64 lib*_x64.so* ; do
-    a= patchelf --set-rpath '$ORIGIN' $i
-done
+#for i in *_x64 lib*_x64.so* ; do
+#    a= patchelf --set-rpath '$ORIGIN' $i
+#done
 
 
 mkdir -p $BUILDROOT/usr/bin
@@ -67,4 +67,4 @@ EOF
 
 pack_file /usr/share/applications/$PRODUCT.desktop
 
-set_autoreq 'yes'
+add_libs_requires

@@ -40,4 +40,4 @@ GenericName[en]=Use Snap! to control Arduino boards. Arduino goes lambda!
 EOF
 subst "s|%files|%files\n/usr/share/applications/$PRODUCT.desktop|" $SPEC
 
-set_autoreq 'yes'
+add_libs_requires

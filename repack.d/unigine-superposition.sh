@@ -7,8 +7,6 @@ SPEC="$2"
 PRODUCT=unigine-superposition
 PRODUCTDIR=/opt/unigine-superposition
 
-PREINSTALL_PACKAGES="glib2 libdbus libEGL libGL libICE libqt5-test libSM libX11 libxcb libXext libXi libXinerama libXrandr libXrender zlib"
-
 . $(dirname $0)/common.sh
 
 subst "s|^Group:.*|Group: Graphics|" $SPEC
@@ -25,11 +23,11 @@ done
 
 cd $BUILDROOT/$PRODUCTDIR || fatal
 
-if epm assure patchelf ; then
-for i in bin/lib*.so bin/qt/lib/lib*.so*; do
-    a= patchelf --set-rpath '$ORIGIN' $i
-done
-fi
+#if epm assure patchelf ; then
+#for i in bin/lib*.so bin/qt/lib/lib*.so*; do
+#    a= patchelf --set-rpath '$ORIGIN' $i
+#done
+#fi
 
 # pack icons
 for i in 16 24 32 48 64 128 256 ; do
@@ -71,4 +69,4 @@ EOF
 
 pack_file /usr/share/applications/$PRODUCT.desktop
 
-set_autoreq 'yes'
+add_libs_requires

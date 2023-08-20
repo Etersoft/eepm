@@ -68,4 +68,4 @@ OnlyShowIn=Unity;
 EOF
 subst "s|%files|%files\n/usr/share/applications/$PRODUCT.desktop|" $SPEC
 
-set_autoreq 'yes'
+add_libs_requires

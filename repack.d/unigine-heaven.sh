@@ -33,11 +33,11 @@ pack_dir $PRODUCTDIR/bin
 
 add_bin_link_command $PRODUCT /usr/bin/heaven
 
-if epm assure patchelf ; then
-for i in *_x64 lib*_x64.so* ; do
-    a= patchelf --set-rpath '$ORIGIN' $i
-done
-fi
+#if epm assure patchelf ; then
+#for i in *_x64 lib*_x64.so* ; do
+#    a= patchelf --set-rpath '$ORIGIN' $i
+#done
+#fi
 
 mkdir -p $BUILDROOT/usr/bin
 cat <<EOF >$BUILDROOT/usr/bin/heaven
@@ -65,4 +65,4 @@ EOF
 
 pack_file /usr/share/applications/$PRODUCT.desktop
 
-set_autoreq 'yes'
+add_libs_requires

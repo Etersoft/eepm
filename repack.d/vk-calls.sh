@@ -11,19 +11,11 @@ PRODUCTDIR=/opt/vk-calls
 
 move_to_opt /usr/opt/vk-calls
 
-set_autoreq 'yes'
-
 remove_file /usr/local/bin/$PRODUCT
 add_bin_link_command
 
-if epm assure patchelf ; then
-for i in .$PRODUCTDIR/lib* .$PRODUCTDIR/$PRODUCT  ; do
-    a= patchelf --set-rpath '$ORIGIN' $i
-done
-fi
-
 # https://git.altlinux.org/tasks/316139
-epm install --skip-installed --no-remove libmfx || epm install --no-remove 316139 || fatal "Can't install libmfx"
+#epm install --skip-installed --no-remove libmfx || epm install --no-remove 316139 || fatal "Can't install libmfx"
 
 # if not Debian based
 if [ ! -s /etc/ssl/certs/ca-certificates.crt ] ; then
@@ -38,3 +30,16 @@ cat >etc/tmpfiles.d/$PRODUCT.conf <<EOF
 f	/var/lock/vkcallsrelease.pid	0666	root	root	-	-
 EOF
 pack_file /etc/tmpfiles.d/$PRODUCT.conf
+
+
+add_libs_requires
+# autoreq is disabled: don't patch elf due requires
+exit
+
+
+if epm assure patchelf ; then
+for i in .$PRODUCTDIR/lib* .$PRODUCTDIR/$PRODUCT  ; do
+    a= patchelf --set-rpath '$ORIGIN' $i
+done
+fi
+

@@ -12,3 +12,5 @@ PRODUCTDIR=/opt/dssl/t1client
 add_bin_link_command $PRODUCT $PRODUCTDIR/run_t1client.sh
 
 fix_desktop_file /opt/dssl/t1client/run_t1client.sh $PRODUCT
+
+add_libs_requires

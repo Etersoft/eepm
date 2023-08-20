@@ -6,8 +6,6 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
-set_autoreq 'yes'
-
 add_requires libpcsclite libudev0
 
 if [ "$(epm print info -a)" = "x86_64" ] ; then
@@ -19,6 +17,8 @@ else
     remove_file /usr/share/sphinx/gui/lib/libguinative_amd64.so
     subst "s|/usr/lib/i386-linux-gnu/libpcsclite.so|/usr/lib/libpcsclite.so|" $BUILDROOT/usr/bin/spnxclient
 fi
+
+add_libs_requires
 
 # https://sigur.com/download/
 echo "WARNING! Just see these crazy pre/post install scripts in the original deb package."

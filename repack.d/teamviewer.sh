@@ -6,12 +6,7 @@ SPEC="$2"
 
 PRODUCTDIR=/opt/teamviewer
 
-UNIREQUIRES="xdg-utils
-libEGL.so.1 libGL.so.1 libICE.so.6 libSM.so.6 libX11-xcb.so.1 libX11.so.6 libXext.so.6 libc.so.6 libdbus-1.so.3 libdl.so.2
-libfontconfig.so.1 libfreetype.so.6
-libglib-2.0.so.0 libgthread-2.0.so.0 libm.so.6
-libminizip.so.1 libnspr4.so libnss3.so libnssutil3.so libplc4.so libplds4.so libpthread.so.0 libresolv.so.2 librt.so.1
-libsmime3.so libsoftokn3.so libuuid.so.1 libxcb-glx.so.0 libxcb-render.so.0 libxcb-shape.so.0 libxcb-shm.so.0 libxcb-sync.so.1 libxcb-xfixes.so.0 libxcb.so.1 libz.so.1"
+UNIREQUIRES="xdg-utils"
 
 . $(dirname $0)/common.sh
 
@@ -28,3 +23,4 @@ remove_dir /opt/teamviewer/tv_bin/xdg-utils
 
 remove_file /opt/teamviewer/tv_bin/script/teamviewerd.sysv
 
+add_libs_requires

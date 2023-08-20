@@ -10,8 +10,6 @@ PRODUCTDIR=/opt/$PRODUCTCUR
 
 . $(dirname $0)/common-chromium-browser.sh
 
-add_electron_deps
-
 subst "s|.*/etc/apt.*||" $SPEC
 subst '/linux-arm64/d' $SPEC
 rm -rf $BUILDROOT/opt/Signal/resources/app.asar.unpacked/node_modules/ffi-napi/node_modules/ref-napi/prebuilds/linux-arm64
@@ -19,3 +17,6 @@ rm -rf $BUILDROOT/opt/Signal/resources/app.asar.unpacked/node_modules/ffi-napi/n
 fix_chrome_sandbox
 
 add_bin_link_command
+
+add_electron_deps
+

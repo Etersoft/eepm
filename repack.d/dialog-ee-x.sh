@@ -9,4 +9,4 @@ SPEC="$2"
 # https://bugzilla.altlinux.org/show_bug.cgi?id=39099
 filter_from_requires '\\/opt\\/Dialog'
 
-set_autoreq 'yes'
+add_libs_requires

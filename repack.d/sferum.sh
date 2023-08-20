@@ -18,4 +18,4 @@ fix_chrome_sandbox
 
 fix_desktop_file /opt/Sferum/sferum
 
-set_autoreq 'yes'
+add_electron_deps
