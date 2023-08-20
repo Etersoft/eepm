@@ -399,6 +399,8 @@ add_by_ldd_deps()
 
 filter_from_requires()
 {
+    # hack for uncompatible rpm-build
+    [ -n "$EPM_RPMBUILD" ] && return
     local i
     for i in "$@" ; do
         local ti="$(echo "$i" | sed -e 's|^/|\\\\/|' -e 's|\([^\]\)/|\1\\\\/|g')"
@@ -408,6 +410,8 @@ filter_from_requires()
 
 add_findreq_skiplist()
 {
+    # hack for uncompatible rpm-build
+    [ -n "$EPM_RPMBUILD" ] && return
     local i
     for i in "$@" ; do
         subst "1i%add_findreq_skiplist $i" $SPEC
