@@ -58,13 +58,11 @@ filter_from_requires /etc/X11/xinit/Xsession /etc/default/locale /usr/etc/X11/xd
 
 fi
 
-set_autoreq 'yes'
-
-#add_libs_requires
+add_libs_requires
 
 [ "$(epm print info -s)" = "alt" ] || exit 0
 
-install_requires glib2 libappindicator-gtk3 libcairo libgdk-pixbuf libgtk+3 libpango libpulseaudio libuuid libX11 libXau libxcb libXdmcp libXfixes libXtst xdotool
+add_unirequires xdotool
 
 if ! epm install --skip-installed --no-remove python3-module-pynput ; then
     case "$(epm print info -e)" in
