@@ -25,5 +25,11 @@ else
     epm install "$URL/deb/pool/main/y/$PKGNAME/$(epm print constructname $PKGNAME "$VERSION*" amd64 deb)" || exit
 fi
 
+# TODO: use needed version
+if [ "$(epm print info -s)" = "alt" ] ; then
+    epm install ffmpeg-plugin-browser
+    exit
+fi
+
 UPDATEFFMPEG=$(epm ql $PKGNAME | grep update-ffmpeg) || fatal
 epm pack --install $PKGNAME-codecs-ffmpeg-extra $UPDATEFFMPEG
