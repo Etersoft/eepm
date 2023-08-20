@@ -253,6 +253,7 @@ Examples:
     epm play yandex-browser = beta
     epm play telegram = beta
     epm play telegram = 4.7.1
+    epm play --update all
 EOF
 }
 
@@ -424,7 +425,7 @@ case "$1" in
         __epm_play_initialize_ipfs
         ;;
 
-    --remove|remove)
+    --remove)
         shift
         if [ -z "$1" ] ; then
             fatal "run --remove with 'all' or a project name"
@@ -466,7 +467,7 @@ case "$1" in
         exit
         ;;
 
-    --installed|installed)
+    --installed)
         shift
         __is_app_installed "$1" "$2"
         #[ -n "$quiet" ] && exit
@@ -482,7 +483,7 @@ case "$1" in
         __list_installed_packages
         exit
         ;;
-    --list|--list-installed|list|list-installed)
+    --list|--list-installed)
         __epm_play_list_installed
         exit
         ;;
@@ -493,7 +494,7 @@ case "$1" in
         exit
         ;;
 
-    --list-all|list-all)
+    --list-all)
         [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $DISTRARCH):"
         __epm_play_list $psdir
         [ -n "$quiet" ] || [ -n "$*" ] && exit
@@ -503,7 +504,7 @@ case "$1" in
         exit
         ;;
 
-    --list-scripts|list-scripts)
+    --list-scripts)
         [ -n "$short" ] || [ -n "$quiet" ] || echo "Run with a name of a play script to run:"
         __epm_play_list $prsdir
         exit
