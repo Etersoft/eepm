@@ -478,7 +478,7 @@ if [ -n "$PRODUCTDIR" ] && [ "$(dirname "$PRODUCTDIR" )" != "/" ] && [ "$(dirnam
    [ -n "$PRODUCTBASEDIR" ] || PRODUCTBASEDIR="$(dirname "$PRODUCTDIR")"
 fi
 
-[ -d "$BUILDROOT$PRODUCTBASEDIR" ] && pack_dir "$PRODUCTBASEDIR"
+[ -d "$BUILDROOT$PRODUCTBASEDIR" ] && [ "$PRODUCTBASEDIR" != "/usr/lib" ] && pack_dir "$PRODUCTBASEDIR"
 
 [ -n "$PREINSTALL_PACKAGES" ] && install_requires $PREINSTALL_PACKAGES
 
