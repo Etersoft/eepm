@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.59.0"
+EPMVERSION="3.60.0"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -298,7 +298,7 @@ store_output()
     local CMDSTATUS=$RC_STDOUT.pipestatus
     echo 1 >$CMDSTATUS
     #RC_STDERR=$(mktemp)
-    ( LANG=C $@ 2>&1 ; echo $? >$CMDSTATUS ) | tee $RC_STDOUT
+    ( LC_ALL=C $@ 2>&1 ; echo $? >$CMDSTATUS ) | tee $RC_STDOUT
     return "$(cat $CMDSTATUS)"
     # bashism
     # http://tldp.org/LDP/abs/html/bashver3.html#PIPEFAILREF
@@ -783,7 +783,7 @@ get_package_type()
             return
             ;;
         *)
-            if file "$1" | grep -q " ELF " ; then
+            if [ -r "$1" ] && file "$1" | grep -q " ELF " ; then
                 echo "ELF"
                 return
             fi
@@ -906,7 +906,8 @@ __epm_remove_tmp_files()
 
     if [ -n "$to_clean_tmp_dirs" ] ; then
         echo "$to_clean_tmp_dirs" | while read p ; do
-            rm $verbose -rf "$p" 2>/dev/null
+            [ -n "$verbose" ] && echo "rm -rf '$p'"
+            rm -rf "$p" 2>/dev/null
         done
     fi
 
@@ -1261,7 +1262,7 @@ __epm_addrepo_altlinux()
             ;;
         archive)
             datestr="$2"
-            echo "$datestr" | grep -Eq "^20[0-2][0-9]/[01][0-9]/[0-3][0-9]$" || fatal "use follow date format: 2017/12/31"
+            echo "$datestr" | grep -Eq "^20[0-2][0-9]/[01][0-9]/[0-3][0-9]$" || fatal "use follow date format: 2017/01/31"
 
             local rpmsign='[alt]'
             [ "$branch" != "sisyphus" ] && rpmsign="[$branch]"
@@ -1290,8 +1291,10 @@ __epm_addrepo_altlinux()
             ;;
     esac
 
-    # don't add again
-    epm repo list --quiet | grep -q -F "$repo" && return 0
+    if [ -z "$force" ] ; then
+        # don't add again
+        epm repo list --quiet | grep -q -F "$repo" && return 0
+    fi
 
     if echo "$repo" | grep -q "https://" ; then
         local mh="$(echo /usr/lib*/apt/methods/https)"
@@ -1418,12 +1421,11 @@ local repo="$*"
 
 case $BASEDISTRNAME in
     "alt")
-        # Note! Don't use quotes here
-        __epm_addrepo_altlinux $repo
+        __epm_addrepo_altlinux "$@"
         return
         ;;
     "astra")
-        __epm_addrepo_astra $repo
+        __epm_addrepo_astra "$@"
         return
         ;;
     "apk")
@@ -1433,8 +1435,7 @@ esac
 
 case $PMTYPE in
     apt-dpkg)
-        # Note! Don't use quotes here
-        __epm_addrepo_deb $repo
+        __epm_addrepo_deb "$@"
         ;;
     aptitude-dpkg)
         info "You need manually add repo to /etc/apt/sources.list (TODO)"
@@ -2432,16 +2433,28 @@ fi
 
 # File bin/epm-check_updated_repo:
 
-__epm_check_apt_db_days()
+__epm_apt_set_lists_pkg()
 {
     # apt-dpkg
-    local pkg="Packages"
-    [ "$BASEDISTRNAME" = "alt" ] && pkg="pkglist"
+    pkg="Packages"
+
+    LISTS='/var/lib/apt/lists'
+    if [ "$BASEDISTRNAME" = "alt" ] ; then
+        pkg="pkglist"
+        # see update-kernel: Use Dir::State::lists for apt update freshness check (ALT bug 46987)
+        eval "$(apt-config shell LISTS Dir::State::lists/f)"
+    fi
+}
+
+__epm_check_apt_db_days()
+{
+    local pkg
     local pkglists
-    pkglists=$(find /var/lib/apt/lists -name "*_$pkg*" -ctime +1 2>/dev/null)
+    __epm_apt_set_lists_pkg
+    pkglists=$(find $LISTS -name "*_$pkg*" -ctime +1 2>/dev/null)
     if [ -z "$pkglists" ] ; then
         # note: duplicate __is_repo_info_downloaded
-        pkglists=$(find /var/lib/apt/lists -name "*_$pkg*" 2>/dev/null)
+        pkglists=$(find $LISTS -name "*_$pkg*" 2>/dev/null)
         [ -n "$pkglists" ] && return
         echo "never downloaded"
         return 1
@@ -2451,7 +2464,7 @@ __epm_check_apt_db_days()
     local ts=0
     # set ts to newest file ctime
     # shellcheck disable=SC2044
-    for i in $(find /var/lib/apt/lists/ -name "*_$pkg*" 2>/dev/null); do
+    for i in $(find $LISTS -name "*_$pkg*" 2>/dev/null); do
         t=$(stat -c%Z "$i")
         [ "$t" -gt "$ts" ] && ts=$t
     done
@@ -2472,11 +2485,10 @@ __epm_check_apt_db_days()
 
 __epm_touch_apt_pkg()
 {
-    # apt-dpkg
-    local pkg="Packages"
-    [ "$BASEDISTRNAME" = "alt" ] && pkg="pkglist"
+    local pkg
+    __epm_apt_set_lists_pkg
     # ordinal package file have date of latest upstream change, not latest update, so update fake file
-    sudorun touch "/var/lib/apt/lists/eepm-fake_$pkg"
+    sudorun touch "$LISTS/eepm-fake_$pkg"
 }
 
 __epm_touch_pkg()
@@ -2492,11 +2504,10 @@ __is_repo_info_downloaded()
 {
     case $PMTYPE in
         apt-*)
-            # apt-dpkg
-            local pkg="Packages"
-            [ "$BASEDISTRNAME" = "alt" ] && pkg="pkglist"
+            local pkg
+            __epm_apt_set_lists_pkg
             local pkglists
-            pkglists=$(find /var/lib/apt/lists -name "*_$pkg*" 2>/dev/null)
+            pkglists=$(find $LIST -name "*_$pkg*" 2>/dev/null)
             [ -n "$pkglists" ] || return 1
             ;;
         *)
@@ -2759,7 +2770,7 @@ try_fix_apt_rpm_dupls()
         sudocmd epm remove --auto $TESTPKG || return
     fi
     local PKGLIST
-    PKGLIST=$(LANG=C sudorun apt-get install $TESTPKG 2>&1 | grep "W: There are multiple versions of" | \
+    PKGLIST=$(LC_ALL=C sudorun apt-get install $TESTPKG 2>&1 | grep "W: There are multiple versions of" | \
         sed -e 's|W: There are multiple versions of "\(.*\)" in your system.|\1|')
     local TODEL
     for i in $PKGLIST ; do
@@ -2878,6 +2889,10 @@ epm_downgrade()
                 pkgs="$pkgs $i"
             done
             (force="$force --oldpackage" epm_install_files $pkgs)
+        else
+            __epm_add_alt_apt_downgrade_preferences || return
+            epm_upgrade "$@"
+            __epm_remove_apt_downgrade_preferences
         fi
         return
         ;;
@@ -4182,7 +4197,7 @@ epm_ni_install_names()
 __epm_check_if_rpm_already_installed()
 {
     # Not: we can make optimize if just check version?
-    LANG=C sudorun rpm -Uvh --test "$@" 2>&1 | grep -q "is already installed"
+    LC_ALL=C sudorun rpm -Uvh --test "$@" 2>&1 | grep -q "is already installed"
 }
 
 __handle_direct_install()
@@ -4532,15 +4547,13 @@ epm_install_alt_kernel_module()
     local kflist=''
     local kmplist=''
     local kmf km kf
+
+    # fill kernel flavour list
     for kmf in $*; do
         km="$(echo "$kmf" | cut -d- -f1)"
         kf="$(echo "$kmf" | cut -d- -f2,3)"
         # use current flavour as default
         [ "$km" = "$kf" ] && kf="$(get_current_kernel_flavour)"
-        kvf="$(get_latest_kernel_rel $kf)"
-        #kmplist="$kmplist kernel-modules-$km-$kf"
-        # install kernel module for latest installed kernel
-        kmplist="$kmplist kernel-modules-$km-$kvf"
         kflist="$kflist $kf"
     done
 
@@ -4552,6 +4565,18 @@ epm_install_alt_kernel_module()
 
     # skip install modules if there are no installed kernels (may be, a container)
     epm installed "kernel-image-$kf" || return 0
+
+    # make list for install kernel modules
+    for kmf in $*; do
+        km="$(echo "$kmf" | cut -d- -f1)"
+        kf="$(echo "$kmf" | cut -d- -f2,3)"
+        # use current flavour as default
+        [ "$km" = "$kf" ] && kf="$(get_current_kernel_flavour)"
+        kvf="$(get_latest_kernel_rel $kf)"
+        #kmplist="$kmplist kernel-modules-$km-$kf"
+        # install kernel module for latest installed kernel
+        kmplist="$kmplist kernel-modules-$km-$kvf"
+    done
 
     # secondly, install module(s)
     epm_install_names $kmplist
@@ -6079,8 +6104,8 @@ __filter_by_installed_packages()
     remove_on_exit $pkglist
 
     # get intersect between full package list and available packages table
-    epm --short packages | LANG=C sort -u >$pkglist
-    LANG=C join -11 -21 $tapt $pkglist | uniq
+    epm --short packages | LC_ALL=C sort -u >$pkglist
+    LC_ALL=C join -11 -21 $tapt $pkglist | uniq
     rm -f $pkglist
 
     # rpm on Fedora/CentOS no more print missed packages to stderr
@@ -6096,7 +6121,7 @@ __get_installed_table()
     local tapt
     tapt="$(mktemp)" || fatal
     remove_on_exit $tapt
-    __list_app_packages_table | LANG=C sort -u >$tapt
+    __list_app_packages_table | LC_ALL=C sort -u >$tapt
     __filter_by_installed_packages $tapt
     rm -f $tapt
 }
@@ -6223,6 +6248,7 @@ Examples:
     epm play yandex-browser = beta
     epm play telegram = beta
     epm play telegram = 4.7.1
+    epm play --update all
 EOF
 }
 
@@ -6392,7 +6418,7 @@ case "$1" in
         __epm_play_initialize_ipfs
         ;;
 
-    --remove|remove)
+    --remove)
         shift
         if [ -z "$1" ] ; then
             fatal "run --remove with 'all' or a project name"
@@ -6434,7 +6460,7 @@ case "$1" in
         exit
         ;;
 
-    --installed|installed)
+    --installed)
         shift
         __is_app_installed "$1" "$2"
         #[ -n "$quiet" ] && exit
@@ -6450,7 +6476,7 @@ case "$1" in
         __list_installed_packages
         exit
         ;;
-    --list|--list-installed|list|list-installed)
+    --list|--list-installed)
         __epm_play_list_installed
         exit
         ;;
@@ -6461,7 +6487,7 @@ case "$1" in
         exit
         ;;
 
-    --list-all|list-all)
+    --list-all)
         [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $DISTRARCH):"
         __epm_play_list $psdir
         [ -n "$quiet" ] || [ -n "$*" ] && exit
@@ -6471,7 +6497,7 @@ case "$1" in
         exit
         ;;
 
-    --list-scripts|list-scripts)
+    --list-scripts)
         [ -n "$short" ] || [ -n "$quiet" ] || echo "Run with a name of a play script to run:"
         __epm_play_list $prsdir
         exit
@@ -9160,7 +9186,7 @@ __epm_repack()
         deb)
             # FIXME: only one package in $@ is supported
             #local pkgname="$(epm print name from "$@")"
-            __set_version_pkgname "$1"
+            #__set_version_pkgname "$1"
             local repackcode="$EPM_REPACK_SCRIPTS_DIR/$PKGNAME.sh"
             if [ -x "$repackcode" ] ; then
                 __epm_repack_to_rpm "$@" || return
@@ -9282,7 +9308,7 @@ __fix_spec()
 
     # drop forbidded paths
     # https://bugzilla.altlinux.org/show_bug.cgi?id=38842
-    for i in / /etc /etc/init.d /etc/systemd /bin /opt /usr /usr/bin /usr/share /usr/share/doc /var /var/log /var/run \
+    for i in / /etc /etc/init.d /etc/systemd /bin /opt /usr /usr/bin /usr/lib /usr/lib64 /usr/share /usr/share/doc /var /var/log /var/run \
             /etc/cron.daily /usr/share/icons/usr/share/pixmaps /usr/share/man /usr/share/man/man1 /usr/share/appdata /usr/share/applications /usr/share/menu \
             /usr/share/icons/hicolor $(__get_icons_hicolor_list) ; do
         sed -i \
@@ -9354,15 +9380,23 @@ __epm_repack_to_rpm()
     # Note: install epm-repack for static (package based) dependencies
     assure_exists alien || fatal
 
-    # TODO: check for all systems
-    case $PKGFORMAT in
-        rpm)
-            assure_exists /usr/bin/rpmbuild rpm-build || fatal
-            ;;
-        deb)
-            assure_exists /usr/bin/rpmbuild rpm || fatal
-            ;;
-    esac
+    RPMBUILD=/usr/bin/eepm-rpmbuild
+
+    if [ -x $RPMBUILD ] ; then
+        warning "will use eepm-rpmbuild for rpm packing"
+        export EPM_RPMBUILD=$RPMBUILD
+    else
+        RPMBUILD=/usr/bin/rpmbuild
+        # TODO: check for all systems
+        case $PKGFORMAT in
+            rpm)
+                assure_exists $RPMBUILD rpm-build || fatal
+                ;;
+            deb)
+                assure_exists $RPMBUILD rpm || fatal
+                ;;
+        esac
+    fi
 
     umask 022
 
@@ -9440,11 +9474,11 @@ __epm_repack_to_rpm()
 
         TARGETARCH=$(epm print info -a | sed -e 's|^x86$|i586|')
 
-        showcmd rpmbuild --buildroot $buildroot --target $TARGETARCH -bb $spec
+        showcmd $RPMBUILD --buildroot $buildroot --target $TARGETARCH -bb $spec
         if [ -n "$verbose" ] ; then
-            a='' rpmbuild --buildroot $buildroot --target $TARGETARCH -bb $spec || fatal
+            a='' $RPMBUILD --buildroot $buildroot --target $TARGETARCH -bb $spec || fatal
         else
-            a='' rpmbuild --buildroot $buildroot --target $TARGETARCH -bb $spec >/dev/null || fatal
+            a='' $RPMBUILD --buildroot $buildroot --target $TARGETARCH -bb $spec >/dev/null || fatal
         fi
 
         # remove copy of source binary package (don't mix with generated)
@@ -9528,7 +9562,7 @@ epm_repo()
     status)                           # HELPCMD: print repo status
         epm_repostatus "$@"
         ;;
-    add)                              # HELPCMD: add package repo (etersoft, autoimports, archive 2017/12/31); run with param to get list
+    add)                              # HELPCMD: add package repo (etersoft, autoimports, archive 2017/01/31); run with param to get list
         epm_addrepo "$@"
         ;;
     Add)                              # HELPCMD: like add, but do update after add
@@ -10643,7 +10677,7 @@ get_linked_shared_libs()
     assure_exists readelf binutils
     #is_command readelf || fatal "Can't get required shared library: readelf is missed. Try install binutils package."
     #ldd "$exe" | sed -e 's|[[:space:]]*||' | grep "^lib.*[[:space:]]=>[[:space:]]\(/usr/lib\|/lib\)" | sed -e 's|[[:space:]].*||'
-    LANG=C readelf -d "$1" | grep "(NEEDED)" | grep "Shared library:" | sed -e 's|.*Shared library: \[||' -e 's|\]$||' | grep "^lib"
+    LC_ALL=C readelf -d "$1" | grep "(NEEDED)" | grep "Shared library:" | sed -e 's|.*Shared library: \[||' -e 's|\]$||' | grep "^lib"
 }
 
 __epm_elf32_requires()
@@ -10682,6 +10716,7 @@ epm_requires_files()
     local pkg_files="$*"
     [ -n "$pkg_files" ] || return
 
+    # TODO: handle separately
     local PKGTYPE="$(get_package_type $pkg_files)"
 
     case "$PKGTYPE" in
@@ -10695,7 +10730,7 @@ epm_requires_files()
             ;;
         eopkg)
             showcmd eopkg info $pkg_files
-            LANG=C eopkg info $pkg_files | grep "^Dependencies" | head -n1 | sed -e "s|Dependencies[[:space:]]*: ||"
+            LC_ALL=C eopkg info $pkg_files | grep "^Dependencies" | head -n1 | sed -e "s|Dependencies[[:space:]]*: ||"
             ;;
         ELF)
             __epm_elf_requires $pkg_files
@@ -10725,9 +10760,9 @@ case $PMTYPE in
                 CMD="apt-cache depends"
             else
                 if [ -n "$short" ] ; then
-                    LANG=C docmd apt-cache depends $pkg_names | grep "Depends:" | sed -e 's|, |\n|g' -e "s|.*Depends: ||" -e "s|<\(.*\)>|\1|" | __epm_filter_out_base_alt_reqs | sed -e "s| .*||"
+                    LC_ALL=C docmd apt-cache depends $pkg_names | grep "Depends:" | sed -e 's|, |\n|g' -e "s|.*Depends: ||" -e "s|<\(.*\)>|\1|" | __epm_filter_out_base_alt_reqs | sed -e "s| .*||"
                 else
-                    LANG=C docmd apt-cache depends $pkg_names | grep "Depends:" | sed -e 's|, |\n|g' -e "s|.*Depends: ||" -e "s|<\(.*\)>|\1|" | __epm_filter_out_base_alt_reqs
+                    LC_ALL=C docmd apt-cache depends $pkg_names | grep "Depends:" | sed -e 's|, |\n|g' -e "s|.*Depends: ||" -e "s|<\(.*\)>|\1|" | __epm_filter_out_base_alt_reqs
                 fi
                 return
             fi
@@ -10788,7 +10823,7 @@ case $PMTYPE in
         ;;
     eopkg)
         showcmd eopkg info $pkg_names
-        LANG=C eopkg info $pkg_names | grep "^Dependencies" | sed -e "s|Dependencies[[:space:]]*: ||"
+        LC_ALL=C eopkg info $pkg_names | grep "^Dependencies" | sed -e "s|Dependencies[[:space:]]*: ||"
         return
         ;;
     xbps)
@@ -10961,6 +10996,59 @@ __epm_restore_pip()
     else
         info "Install requirements from $req_file ..."
         ilist="$(cat $req_file | __epm_restore_convert_to_rpm_notation | cut -d' ' -f 1 | sed -e "s|^|python3-module-|")"
+    fi
+
+    ilist="$(estrlist list $ilist)"
+    docmd epm install $ilist
+}
+
+__epm_restore_print_toml()
+{
+    local lt
+    lt=$(mktemp) || fatal
+    remove_on_exit $lt
+cat <<EOF >$lt
+
+import sys
+import toml
+
+if len(sys.argv) < 2:
+	raise Exception('Run me with a file')
+
+pyproject = sys.argv[1]
+
+c = toml.load(pyproject)
+n = c["tool"]["poetry"]["dependencies"]
+for key, value in n.items():
+	if isinstance(value, dict):
+		print('\n' + key + ' ' , value["version"])
+	else:
+		print('\n' + key + ' ' + value)
+EOF
+    a= python3 $lt "$1"
+}
+
+__epm_restore_print_pyproject()
+{
+    local req_file="$1"
+    __epm_restore_print_toml "$req_file" | __epm_restore_convert_to_rpm_notation | sed -e 's|\*||' -e 's|\^|>= |'
+}
+
+__epm_restore_pyproject()
+{
+    local req_file="$1"
+    local reqmacro
+    local ilist
+
+    if [ -n "$dryrun" ] ; then
+        reqmacro="%py3_use"
+        echo
+        __epm_restore_print_comment "$req_file"
+        __epm_restore_print_pyproject "$req_file" | sed -e "s|^|$reqmacro |"
+        return
+    else
+        info "Install requirements from $req_file ..."
+        ilist="$(__epm_restore_print_pyproject "$req_file" | cut -d' ' -f 1 | sed -e "s|^|python3-module-|")"
     fi
 
     ilist="$(estrlist list $ilist)"
@@ -11343,6 +11431,9 @@ __epm_restore_by()
         setup.py|python_dependencies.py)
             [ -s "$req_file" ] && __epm_restore_setup_py "$req_file"
             ;;
+        pyproject.toml)
+            [ -s "$req_file" ] && __epm_restore_pyproject "$req_file"
+            ;;
         package.json)
             [ -s "$req_file" ] && __epm_restore_npm "$req_file"
             ;;
@@ -11383,7 +11474,7 @@ epm_restore()
     # if run with empty args
     for i in requirements.txt requirements/default.txt requirements_dev.txt requirements-dev.txt requirements/dev.txt dev-requirements.txt \
              requirements-test.txt requirements_test.txt requirements/test.txt test-requirements.txt requirements/coverage.txt \
-             Gemfile requires.txt package.json setup.py python_dependencies.py Makefile.PL meson.build \
+             Gemfile requires.txt package.json setup.py python_dependencies.py Makefile.PL meson.build pyproject.toml \
              *.sln *.csproj ; do
         __epm_restore_by $i
     done
@@ -11466,7 +11557,7 @@ case $PMTYPE in
         if [ -n "$verbose" ] ; then
             CMD="/usr/sbin/slackpkg search"
         else
-            LANG=C docmd /usr/sbin/slackpkg search $string | grep " - " | sed -e 's|.* - ||g'
+            LC_ALL=C docmd /usr/sbin/slackpkg search $string | grep " - " | sed -e 's|.* - ||g'
             return
         fi
         ;;
@@ -11499,7 +11590,7 @@ case $PMTYPE in
         ;;
 esac
 
-LANG=C docmd $CMD $string
+LC_ALL=C docmd $CMD $string
 epm play $short --list-all | sed -e 's|^ *||g' -e 's|[[:space:]]\+| |g' -e "s|\$| (use \'epm play\' to install it)|"
 }
 
@@ -11628,7 +11719,7 @@ epm_search()
 __alt_search_file_output()
 {
     # grep only on left part (filename), then revert order and grep with color
-    ercat $1 | grep -h -- ".*$2.*[[:space:]]" | sed -e "s|\(.*\)\t\(.*\)|\2: \1|g" $3
+    ercat $quiet $1 | grep -h -- ".*$2.*[[:space:]]" | sed -e "s|\(.*\)\t\(.*\)|\2: \1|g" $3
 }
 
 __alt_local_content_search()
@@ -11881,7 +11972,7 @@ update_alt_contents_index()
 
 __fast_hack_for_filter_out_installed_rpm()
 {
-    LANG=C LC_ALL=C xargs -n1 rpm -q 2>&1 | grep 'is not installed' |
+    LC_ALL=C xargs -n1 rpm -q 2>&1 | grep 'is not installed' |
         sed -e 's|^.*package \(.*\) is not installed.*|\1|g'
 }
 
@@ -13096,7 +13187,7 @@ case $PMTYPE in
     eopkg)
         showcmd eopkg info $pkg
         # eopkg info prints it only from repo info
-        LANG=C eopkg info $pkg | grep "^Reverse Dependencies" | sed -e "s|Reverse Dependencies[[:space:]]*: ||" | grep -v "^$"
+        LC_ALL=C eopkg info $pkg | grep "^Reverse Dependencies" | sed -e "s|Reverse Dependencies[[:space:]]*: ||" | grep -v "^$"
         return
         ;;
     xbps)
@@ -13126,7 +13217,7 @@ case $PMTYPE in
         CMD="conary repquery --what-provides"
         ;;
     apt-rpm|apt-dpkg|aptitude-dpkg)
-        LANG=C docmd apt-get install --print-uris $pkg | grep "^Selecting" | cut -f2 -d" "
+        LC_ALL=C docmd apt-get install --print-uris $pkg | grep "^Selecting" | cut -f2 -d" "
         return
         ;;
     yum-rpm)
@@ -14019,7 +14110,7 @@ get_virt()
     fi
 
     # use util-linux
-    if LANG=C a= lscpu | grep "Hypervisor vendor:" | grep -q "KVM" ; then
+    if LC_ALL=C a= lscpu | grep "Hypervisor vendor:" | grep -q "KVM" ; then
         echo "kvm" && return
     fi
 
@@ -16203,6 +16294,7 @@ progname="${0##*/}"
 Usage="Usage: $progname [options] file(s)..."
 Descr="ercat - universal file uncompressor"
 
+quiet=
 cmd=$1
 
 # Just printout help if run without args
@@ -16216,6 +16308,11 @@ case $cmd in
     -h|--help|help)       # HELPOPT: this help
         phelp
         return
+        ;;
+    -q|--quiet)           # HELPOPT: be silent
+        quiet=--quiet
+        shift
+        cmd=$1
         ;;
     -v|--version)         # HELPOPT: print version
         print_version
@@ -16817,15 +16914,13 @@ epm_main()
 # fast call for tool
 if [ "$1" = "tool" ] ; then
         shift
-        epm_cmd=tool
-        eval epm_$epm_cmd "$@"
+        epm_tool "$@"
         exit
 fi
 
 if [ "$1" = "--inscript" ] && [ "$2" = "tool" ] ; then
         shift 2
-        epm_cmd=tool
-        eval epm_$epm_cmd "$@"
+        epm_tool "$@"
         exit
 fi
 
@@ -17075,7 +17170,7 @@ check_command()
         epm_cmd=update
         direct_args=1
         ;;
-    addrepo|ar|--add-repo)    # HELPCMD: add package repo (etersoft, autoimports, archive 2017/12/31); run with param to get list
+    addrepo|ar|--add-repo)    # HELPCMD: add package repo (etersoft, autoimports, archive 2017/01/31); run with param to get list
         epm_cmd=addrepo
         direct_args=1
         ;;
@@ -17261,7 +17356,7 @@ check_option()
         show_command_only=1
         ;;
     --quiet|--silent)     # HELPOPT: quiet mode (do not print commands before exec)
-        quiet=1
+        quiet="--quiet"
         ;;
     --nodeps)             # HELPOPT: skip dependency check (during install/simulate and so on)
         nodeps="--nodeps"

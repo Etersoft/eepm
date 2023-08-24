@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.59.0"
+EPMVERSION="3.60.0"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -299,7 +299,7 @@ store_output()
     local CMDSTATUS=$RC_STDOUT.pipestatus
     echo 1 >$CMDSTATUS
     #RC_STDERR=$(mktemp)
-    ( LANG=C $@ 2>&1 ; echo $? >$CMDSTATUS ) | tee $RC_STDOUT
+    ( LC_ALL=C $@ 2>&1 ; echo $? >$CMDSTATUS ) | tee $RC_STDOUT
     return "$(cat $CMDSTATUS)"
     # bashism
     # http://tldp.org/LDP/abs/html/bashver3.html#PIPEFAILREF
@@ -784,7 +784,7 @@ get_package_type()
             return
             ;;
         *)
-            if file "$1" | grep -q " ELF " ; then
+            if [ -r "$1" ] && file "$1" | grep -q " ELF " ; then
                 echo "ELF"
                 return
             fi
@@ -907,7 +907,8 @@ __epm_remove_tmp_files()
 
     if [ -n "$to_clean_tmp_dirs" ] ; then
         echo "$to_clean_tmp_dirs" | while read p ; do
-            rm $verbose -rf "$p" 2>/dev/null
+            [ -n "$verbose" ] && echo "rm -rf '$p'"
+            rm -rf "$p" 2>/dev/null
         done
     fi
 
@@ -1524,7 +1525,7 @@ is_service_autostart()
             fi
 
             # FIXME: check for current runlevel
-            LANG=C sudorun chkconfig $1 --list | grep -q "[35]:on"
+            LC_ALL=C sudorun chkconfig $1 --list | grep -q "[35]:on"
             ;;
         service-initd|service-update)
             test -L "$(echo /etc/rc5.d/S??$1)"
@@ -2556,7 +2557,7 @@ get_virt()
     fi
 
     # use util-linux
-    if LANG=C a= lscpu | grep "Hypervisor vendor:" | grep -q "KVM" ; then
+    if LC_ALL=C a= lscpu | grep "Hypervisor vendor:" | grep -q "KVM" ; then
         echo "kvm" && return
     fi
 
