@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.59.0
+Version: 3.60.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,49 @@ a discussion about extra requirements.
 
 
 %changelog
+* Thu Aug 24 2023 Vitaly Lipatov <lav@altlinux.ru> 3.60.0-alt1
+- epm play: add teamspeak3, teamspeak5, chatgpg-desktop, idea-community
+- epm play: add rememberthemilk, rupost, powershell, dbeaver
+- epm play: add thinlic-client, balena-etcher, bitwig-studio
+- epm play angie: update supported distros
+- epm: fix args for epm tool
+- epm play: add 1c-connect
+- epm-check_updated_repo: add support for LISTS from apt-config (see ALT bug 46987)
+- epm repack yandex-browser: set update-ffmpeg as non executable
+- epm repack generic.sh: do fix_cpio_bug_links (workaround for ALT bug 42189)
+- epm repack teamviewer: rewrite
+- epm repack: telegram: fix .desktop filename to work correctly in Wayland
+- epm prescription: add glusterfs10, glusterfs11
+- epm-downgrade: restore suddenly removed code for full downgrade (ALT bug 47048)
+- epm repack bitwarden: use electron deps
+- epm repack: rewrite with UNIREQUIRES and predefined lists
+- epm repack: add missed yandex-browser-corporate-codecs-ffmpeg-extra.sh
+- epm play steam: install only from repo on ALT
+- use LC_ALL=C instead of LANG=C
+- epm-repack-rpm: use eepm-rpmbuild if available
+- epm play trueconf: fix package name
+- epm play: add trueconf-server
+- epm repack *codecs-ffmpeg: disable autoreq, cleanup
+- epm restore: add pyproject.toml support
+- epm play: check available glibc, not distro version
+- epm play common: add is_openssl_enough, is_pkg_enough, is_glibc_enough
+- epm repack: add is_soname_present and use it for chat-gpt
+- epm play rudesktop: repack for ALT
+- ercat: add --quiet support
+- epm repo add: fix quoting, add --force support
+- epm play wine: don't install wine-mono, wine-gecko directly
+- epm repack kyodialog: fix version
+- epm-install-alt: fix install kernel modules
+- epm play: drop support for options without --
+- epm repack: stop autoreq: yes for some scripts
+- epm repack generic-appimage: use add_libs_requires
+- epm repack: skip ALT only macros using when epm-rpm-build is used
+- epm play: use ffmpeg-plugin-browser on ALT
+- epm repack: skip /usr/lib and /usr/lib64 dir
+- epm play rustdesk: allow install latest 1.2.2 version and fix 1.1.9 install
+- fix breaking typo in i586-support.sh
+- epm repack cnrdrvcups-ufr2-uk: fix issue with fixed libjbig
+
 * Sat Jul 22 2023 Vitaly Lipatov <lav@altlinux.ru> 3.59.0-alt1
 - epm play: add rpcs3, pcsx2, duckstation
 - epm play signal: switch to new way to get the latest version
