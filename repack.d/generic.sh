@@ -4,6 +4,7 @@ BUILDROOT="$1"
 SPEC="$2"
 PRODUCT="$3"
 PKG="$4"
+SUBGENERIC="$5"
 
 # firstly, pack $PRODUCTDIR if used
 . $(dirname $0)/common.sh
@@ -96,4 +97,7 @@ else
     subst "s|^\((Converted from a\) \(.*\) \(package.*\)|(Repacked from binary \2 package with $(epm --short --version))\n\1 \2 \3|" $SPEC
 fi
 
-fix_cpio_bug_links
+# only for rpm
+if [ -z "$SUBGENERIC" ] ; then
+    fix_cpio_bug_links
+fi

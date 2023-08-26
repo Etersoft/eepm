@@ -86,7 +86,7 @@ __apply_fix_code()
     [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
     local bashopt=''
     [ -n "$debug" ] && bashopt='-x'
-    ( unset EPMCURDIR ; export PATH=$SCPATH ; docmd $CMDSHELL $bashopt $repackcode "$1" "$2" "$3" "$4" ) || fatal "There is an error from $repackcode script"
+    ( unset EPMCURDIR ; export PATH=$SCPATH ; docmd $CMDSHELL $bashopt $repackcode "$1" "$2" "$3" "$4" "$5" ) || fatal "There is an error from $repackcode script"
 }
 
 __create_rpmmacros()
@@ -214,7 +214,7 @@ __epm_repack_to_rpm()
         cd $buildroot || fatal
 
         __fix_spec $pkgname $buildroot $spec
-        __apply_fix_code "generic" $buildroot $spec $pkgname $abspkg
+        __apply_fix_code "generic" $buildroot $spec $pkgname $abspkg $SUBGENERIC
         __apply_fix_code "generic-$SUBGENERIC" $buildroot $spec $pkgname $abspkg
         __apply_fix_code $pkgname $buildroot $spec $pkgname $abspkg
         if ! has_repack_script $pkgname ; then
