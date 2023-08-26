@@ -41,6 +41,8 @@ if [ "$1" == "--hasher" ] ; then
     HDIR=$(loginhsh -q -t -d -p epm $B)
     cp -afv ../* $HDIR/chroot/.in
     loginhsh -t -p epm $B -o -r "bash -x /.in/tests/test_play.sh $ipfs --local $APP" || exit
+    loginhsh -t -p epm $B -o
+    loginhsh -Y -t -p epm $B
     loginhsh -c -t -p epm $B
     exit
 fi
@@ -82,9 +84,9 @@ if [ -n "$APP" ] ; then
     echo
     echo "Installing $app ... "
     $EPM --auto play --verbose $ipfs $app </dev/null || exit
-    bash
-    echo "  Removing $app ... "
-    $EPM --auto play $ipfs --remove $app </dev/null
+    #bash
+    #echo "  Removing $app ... "
+    #$EPM --auto play $ipfs --remove $app </dev/null
     exit
 fi
 
