@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.60.0"
+EPMVERSION="3.60.1"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -9355,7 +9355,7 @@ __apply_fix_code()
     [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
     local bashopt=''
     [ -n "$debug" ] && bashopt='-x'
-    ( unset EPMCURDIR ; export PATH=$SCPATH ; docmd $CMDSHELL $bashopt $repackcode "$1" "$2" "$3" "$4" ) || fatal "There is an error from $repackcode script"
+    ( unset EPMCURDIR ; export PATH=$SCPATH ; docmd $CMDSHELL $bashopt $repackcode "$1" "$2" "$3" "$4" "$5" ) || fatal "There is an error from $repackcode script"
 }
 
 __create_rpmmacros()
@@ -9372,6 +9372,24 @@ EOF
     remove_on_exit "$HOME/.rpmmacros"
 }
 
+__try_install_eepm_rpmbuild()
+{
+    RPMBUILD=/usr/bin/rpmbuild
+    [ -x "$RPMBUILD" ] && return
+
+    RPMBUILD=/usr/bin/eepm-rpmbuild
+    if [ ! -x $RPMBUILD ] ; then
+        epm install eepm-rpm-build
+    fi
+
+    if [ -x $RPMBUILD ] ; then
+        warning "will use eepm-rpmbuild for rpm packing"
+        export EPM_RPMBUILD=$RPMBUILD
+        return
+    fi
+
+    RPMBUILD=/usr/bin/rpmbuild
+}
 
 __epm_repack_to_rpm()
 {
@@ -9380,12 +9398,10 @@ __epm_repack_to_rpm()
     # Note: install epm-repack for static (package based) dependencies
     assure_exists alien || fatal
 
-    RPMBUILD=/usr/bin/eepm-rpmbuild
+    # will set RPMBUILD
+    __try_install_eepm_rpmbuild
 
-    if [ -x $RPMBUILD ] ; then
-        warning "will use eepm-rpmbuild for rpm packing"
-        export EPM_RPMBUILD=$RPMBUILD
-    else
+    if [ ! -x $RPMBUILD ] ; then
         RPMBUILD=/usr/bin/rpmbuild
         # TODO: check for all systems
         case $PKGFORMAT in
@@ -9464,7 +9480,7 @@ __epm_repack_to_rpm()
         cd $buildroot || fatal
 
         __fix_spec $pkgname $buildroot $spec
-        __apply_fix_code "generic" $buildroot $spec $pkgname $abspkg
+        __apply_fix_code "generic" $buildroot $spec $pkgname $abspkg $SUBGENERIC
         __apply_fix_code "generic-$SUBGENERIC" $buildroot $spec $pkgname $abspkg
         __apply_fix_code $pkgname $buildroot $spec $pkgname $abspkg
         if ! has_repack_script $pkgname ; then
@@ -16997,6 +17013,7 @@ pkg_urls=
 pkg_options=
 quoted_args=
 direct_args=
+use_context=
 
 eget_backend=$EGET_BACKEND
 epm_vardir=/var/lib/eepm
@@ -17082,9 +17099,11 @@ check_command()
     case $1 in
     -i|install|add|i|it)         # HELPCMD: install package(s) from remote repositories or from local file
         epm_cmd=install
+        use_context=1
         ;;
     -e|-P|rm|del|remove|delete|uninstall|erase|purge|e)  # HELPCMD: remove (delete) package(s) from the database and the system
         epm_cmd=remove
+        use_context=1
         ;;
     -s|search|s|find|sr)                # HELPCMD: search in remote package repositories
         epm_cmd=search
@@ -17100,9 +17119,11 @@ check_command()
 # HELPCMD: PART: Useful commands:
     reinstall)                # HELPCMD: reinstall package(s) from remote repositories or from local file
         epm_cmd=reinstall
+        use_context=1
         ;;
     Install)                  # HELPCMD: perform update package repo info and install package(s) via install command
         epm_cmd=Install
+        use_context=1
         ;;
     -q|q|query)               # HELPCMD: check presence of package(s) and print this name (also --short is supported)
         epm_cmd=query
@@ -17250,13 +17271,16 @@ check_command()
         ;;
     upgrade|up|dist-upgrade)     # HELPCMD: performs upgrades of package software distributions
         epm_cmd=upgrade
+        use_context=1
         ;;
     Upgrade)                  # HELPCMD: force update package base, then run upgrade
         epm_cmd=Upgrade
         direct_args=1
+        use_context=1
         ;;
     downgrade)                # HELPCMD: downgrade [all] packages to the repo state
         epm_cmd=downgrade
+        use_context=1
         ;;
     download|fetch|fc)        # HELPCMD: download package(s) file to the current dir
         epm_cmd=download
@@ -17264,6 +17288,7 @@ check_command()
 # TODO: replace with install --simulate
     simulate)                 # HELPCMD: simulate install with check requires
         epm_cmd=simulate
+        use_context=1
         ;;
     audit)                    # HELPCMD: audits installed packages against known vulnerabilities
         epm_cmd=audit
