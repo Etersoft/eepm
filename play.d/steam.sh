@@ -14,6 +14,7 @@ if [ "$(epm print info -s)" = "alt" ] ; then
     epm install $REPOPKGNAME || exit
     epm play i586-fix
     exit
+fi
 
 if epm status --installable $REPOPKGNAME ; then
     epm install $REPOPKGNAME || exit
