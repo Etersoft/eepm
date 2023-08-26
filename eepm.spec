@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.60.0
+Version: 3.60.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,12 @@ a discussion about extra requirements.
 
 
 %changelog
+* Sat Aug 26 2023 Vitaly Lipatov <lav@altlinux.ru> 3.60.1-alt1
+- epm repack common.sh: speedup requires retrieving
+- epm repack-rpm: try install eepm-rpm-build
+- epm repack: use cpio fixing only for rpm/deb
+- epm repack: fix chat-gpt repack issue
+
 * Thu Aug 24 2023 Vitaly Lipatov <lav@altlinux.ru> 3.60.0-alt1
 - epm play: add teamspeak3, teamspeak5, chatgpg-desktop, idea-community
 - epm play: add rememberthemilk, rupost, powershell, dbeaver
