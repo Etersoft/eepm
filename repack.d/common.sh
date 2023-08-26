@@ -6,6 +6,11 @@ fatal()
     exit 1
 }
 
+info()
+{
+    echo "$*" >&2
+}
+
 # compatibility layer
 
 # check if <arg> is a real command
@@ -348,6 +353,17 @@ add_qt6_deps()
     add_unirequires "libxkbcommon-x11.so.0 libxkbcommon.so.0 libxkbfile.so.1 libxml2.so.2 libxshmfence.so.1 libxslt.so.1 libz.so.1"
 }
 
+__get_binary_requires()
+{
+    local fdir="$1"
+
+    info "  Getting executable requires ..."
+    epm req --short $(find "$fdir" -type f -executable) </dev/null 2>/dev/null | sed -e 's|().*||'
+
+    info "  Getting libs requires ..."
+    epm req --short $(find "$fdir" -type f -name "lib*.so*") </dev/null 2>/dev/null | sed -e 's|().*||'
+}
+
 # fast hack to get all extra soname list
 get_libs_requires()
 {
@@ -355,12 +371,12 @@ get_libs_requires()
     local libpreslist=$(mktemp)
     local fdir="$BUILDROOT/$1"
 
-    find "$fdir" -type f | while read f ; do
-        epm req --short $f </dev/null 2>/dev/null | sed -e 's|().*||'
-    done | LANG=C sort -u >$libreqlist
+    __get_binary_requires "$fdir" | LANG=C sort -u >$libreqlist
 
+    info "  Getting internal provides ..."
     find "$fdir" -name "lib*.so*" | xargs -n1 objdump -p | grep "SONAME" | sed -e 's|.* ||' | LANG=C sort -u >$libpreslist
 
+    # print out result
     LANG=C join -v2 $libpreslist $libreqlist
     rm -f $libreqlist $libpreslist
 }
@@ -368,9 +384,9 @@ get_libs_requires()
 add_libs_requires()
 {
     local ll
-    echo "Scanning for required libs soname ..."
+    info "Scanning for required libs soname ..."
     get_libs_requires | xargs -n6 echo | while read ll ; do
-        echo "Requires: $ll"
+        info "Requires: $ll"
         add_unirequires "$ll" </dev/null
     done
 }
