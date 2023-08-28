@@ -82,10 +82,11 @@ set_rpm_field "Distribution" "EEPM"
 
 
 if [ -r "$PKG.eepm.yaml" ] ; then
-    eval $(epm tool yaml $PKG.eepm.yaml | grep -E '(summary|description|upstream_file|upstream_url|url|appname|arches|group|license)=' ) #'
+    eval $(epm tool yaml $PKG.eepm.yaml | grep -E '(summary|description|upstream_file|upstream_url|url|appname|arches|group|license|version)=' ) #'
     # for tarballs fix permissions
     chmod $verbose -R a+rX *
 
+    [ -n "$version" ] && set_rpm_field "Version" "$version"
     set_rpm_field "Group" "$group"
     set_rpm_field "License" "$license"
     set_rpm_field "URL" "$url"
