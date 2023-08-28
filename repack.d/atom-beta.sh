@@ -14,16 +14,11 @@ for i in atom atom-beta ; do
     subst "1iConflicts:$i" $SPEC
 done
 
-# install all requires packages before packing (the list have got with rpmreqs package | xargs echo)
-PREINSTALL_PACKAGES="coreutils findutils git-core glib2 grep libalsa libatk libat-spi2-core \
-            libcairo libcups libdbus libdrm libexpat libgbm libgdk-pixbuf libgio libgtk+3 libnspr libnss libpango libsecret \
-            libX11 libxcb libXcomposite libXdamage libXext libXfixes libxkbcommon libxkbfile libXrandr \
-            sed /usr/bin/git /usr/bin/node /usr/bin/npm /usr/bin/npx util-linux which xprop \
-            node python3 rpm-build-python3"
+UNIREQUIRES="coreutils findutils grep sed /usr/bin/git /usr/bin/node /usr/bin/npm /usr/bin/npx util-linux which xprop python3"
 
 . $(dirname $0)/common-chromium-browser.sh
 
-set_autoreq 'yes,nomonolib,nomono,nopython'
+add_electron_deps
 
 move_to_opt
 subst "s|\$USR_DIRECTORY/share/atom|/opt/atom|" $BUILDROOT/usr/bin/$PRODUCTCUR
@@ -34,8 +29,8 @@ add_bin_exec_command $PRODUCT /usr/bin/$PRODUCTCUR
 rm -v $BUILDROOT/usr/bin/$APMNAME
 add_bin_link_command $APMNAME $PRODUCTDIR/resources/app/apm/node_modules/.bin/apm
 
-subst '1iBuildRequires:rpm-build-python3' $SPEC
-subst "1i%add_python3_path $PRODUCTDIR" $SPEC
+#subst '1iBuildRequires:rpm-build-python3' $SPEC
+#subst "1i%add_python3_path $PRODUCTDIR" $SPEC
 
 # replace embedded git with standalone (due Can't locate Git/LoadCPAN/Error.pm)
 EMBDIR=$PRODUCTDIR/resources/app.asar.unpacked/node_modules/dugite/git
