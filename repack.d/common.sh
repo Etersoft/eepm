@@ -364,6 +364,16 @@ __get_binary_requires()
     epm req --short $(find "$fdir" -type f -name "lib*.so*") </dev/null 2>/dev/null | sed -e 's|().*||'
 }
 
+__get_library_provides()
+{
+    local fdir="$1"
+
+    info "  Getting internal provides ..."
+    find "$fdir" -name "lib*.so*" | xargs -n1 objdump -p | grep "SONAME" | sed -e 's|.* ||'
+
+    echo "$EEPM_IGNORE_LIB_REQUIRES" | xargs -n1 echo
+}
+
 # fast hack to get all extra soname list
 get_libs_requires()
 {
@@ -373,8 +383,7 @@ get_libs_requires()
 
     __get_binary_requires "$fdir" | LANG=C sort -u >$libreqlist
 
-    info "  Getting internal provides ..."
-    find "$fdir" -name "lib*.so*" | xargs -n1 objdump -p | grep "SONAME" | sed -e 's|.* ||' | LANG=C sort -u >$libpreslist
+    __get_library_provides "$fdir" | LANG=C sort -u >$libpreslist
 
     # print out result
     LANG=C join -v2 $libpreslist $libreqlist
@@ -413,6 +422,7 @@ add_by_ldd_deps()
     add_unirequires "$(epm requires --direct "$exe")"
 }
 
+
 filter_from_requires()
 {
     # hack for uncompatible rpm-build
@@ -423,6 +433,17 @@ filter_from_requires()
         subst "1i%filter_from_requires /^$ti.*/d" $SPEC
     done
 }
+
+ignore_lib_requires()
+{
+   #if [ -z "$EPM_RPMBUILD" ] ; then
+   #    filter_from_requires "$@"
+   #    return
+   #fi
+
+   EEPM_IGNORE_LIB_REQUIRES="$EEPM_IGNORE_LIB_REQUIRES $@"
+}
+
 
 add_findreq_skiplist()
 {
