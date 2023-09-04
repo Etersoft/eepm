@@ -17,6 +17,7 @@ fix_chrome_sandbox $PRODUCTDIR/cef/chrome-sandbox
 
 fix_desktop_file /usr/bin/zoom
 
+remove_file /opt/zoom/Qt/qml/Qt/labs/lottieqt/liblottieqtplugin.so
 add_libs_requires
 # autoreq is disabled: don't patch elf due requires
 exit
