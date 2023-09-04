@@ -370,6 +370,7 @@ __get_library_provides()
 
     info "  Getting internal provides ..."
     find "$fdir" -name "lib*.so*" | xargs -n1 objdump -p | grep "SONAME" | sed -e 's|.* ||'
+    find "$fdir" -name "lib*.so*" -printf "%f\n"
 
     echo "$EEPM_IGNORE_LIB_REQUIRES" | xargs -n1 echo
 }
