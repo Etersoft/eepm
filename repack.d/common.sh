@@ -382,9 +382,14 @@ get_libs_requires()
     local fdir="$BUILDROOT/$1"
 
     __get_binary_requires "$fdir" | LANG=C sort -u >$libreqlist
+    info "  List of binary requires:"
+    info $(cat $libreqlist)
+    info "  End of the list binary requires."
 
     __get_library_provides "$fdir" | LANG=C sort -u >$libpreslist
-
+    info "  List of libraries provided:"
+    info $(cat $libpreslist)
+    info "  End of the list provided by the library."
     # print out result
     LANG=C join -v2 $libpreslist $libreqlist
     rm -f $libreqlist $libpreslist
