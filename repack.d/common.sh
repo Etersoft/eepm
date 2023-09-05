@@ -369,8 +369,10 @@ __get_library_provides()
     local fdir="$1"
 
     info "  Getting internal provides ..."
-    find "$fdir" -name "lib*.so*" | xargs -n1 objdump -p | grep "SONAME" | sed -e 's|.* ||'
-    find "$fdir" -name "lib*.so*" -printf "%f\n"
+    for libso in $(find "$fdir" -name "lib*.so*") ; do
+        objdump -p "$libso" | grep "SONAME" | sed -e 's|.* ||'
+        echo "$libso" | awk -F'/' '{print $NF}'
+    done
 
     echo "$EEPM_IGNORE_LIB_REQUIRES" | xargs -n1 echo
 }
@@ -383,9 +385,9 @@ get_libs_requires()
     local fdir="$BUILDROOT/$1"
 
     __get_binary_requires "$fdir" | LANG=C sort -u >$libreqlist
-    info "  List of binary requires:"
+    info "  List of binary and libs requires:"
     info $(cat $libreqlist)
-    info "  End of the list binary requires."
+    info "  End of the list binary and libs requires."
 
     __get_library_provides "$fdir" | LANG=C sort -u >$libpreslist
     info "  List of libraries provided:"
@@ -400,7 +402,7 @@ add_libs_requires()
 {
     local ll
     info "Scanning for required libs soname ..."
-    get_libs_requires | xargs -n6 echo | while read ll ; do
+    get_libs_requires | xargs -n6 echo | grep -ve '^$' | while read ll ; do
         info "Requires: $ll"
         add_unirequires "$ll" </dev/null
     done
