@@ -99,4 +99,5 @@ pack_dir $PRODUCTDIR/bin/
 pack_dir $PRODUCTDIR/lib/
 pack_dir $PRODUCTDIR/plugins/
 
-set_autoreq 'yes,nopython,nopython3,nomono,nomonolib'
+# set_autoreq 'yes,nopython,nopython3,nomono,nomonolib'
+add_libs_requires
