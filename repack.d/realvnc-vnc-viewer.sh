@@ -8,4 +8,5 @@ SPEC="$2"
 
 subst '1iConflicts: tigervnc' $SPEC
 
-set_autoreq 'yes'
+# set_autoreq 'yes'
+add_libs_requires
