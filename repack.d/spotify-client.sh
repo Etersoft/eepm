@@ -4,7 +4,7 @@
 BUILDROOT="$1"
 SPEC="$2"
 
-PREINSTALL_PACKAGES="libcurl4-gnutls"
+# PREINSTALL_PACKAGES="libcurl4-gnutls"
 
 . $(dirname $0)/common.sh
 
@@ -28,4 +28,6 @@ for i in 16 22 24 32 48 64 128 256 ; do
     cp $BUILDROOT/$LIBDIR/$PRODUCT/icons/spotify-linux-$i.png $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/spotify-client.png
 done
 
+ignore_lib_requires libcurl-gnutls.so.4
+add_unirequires "libcurl-gnutls.so.4(64bit)"
 add_libs_requires
