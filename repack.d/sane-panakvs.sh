@@ -11,5 +11,5 @@ subst "s|^License:.*$|License: Proprietary|" $SPEC
 subst "s|^URL:.*|URL: https://github.com/zerotier/ZeroTierOne|" $SPEC
 subst "s|^Summary:.*|Summary: Panasonic Scanner Driver for Linux|" $SPEC
 
-set_autoreq 'yes'
-
+# set_autoreq 'yes'
+add_libs_requires
