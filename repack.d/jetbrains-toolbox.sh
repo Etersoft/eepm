@@ -31,5 +31,5 @@ EOF
 
 add_requires java-openjdk
 
-set_autoreq 'yes'
-
+# set_autoreq 'yes'
+add_libs_requires
