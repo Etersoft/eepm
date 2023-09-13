@@ -21,12 +21,11 @@ case $(epm print info -e) in
         ;;
     AstraLinuxSE/1.7)
         epm repo addkey angie "https://angie.software/keys/angie-signing.gpg"
-        epm repo add "rpm [angie] https://download.angie.software/angie/altlinux/10/ x86_64 main"
+        epm repo add "rpm [angie] https://download.angie.software/angie/astra-se/1.7/ unstable main"
         ;;
     ALTLinux/p10|ALTLinux/Sisyphus)
         epm repo addkey angie "https://angie.software/keys/angie-signing.gpg" "EB8EAF3D4EF1B1ECF34865A2617AB978CB849A76" "Angie (Signing Key) <devops@tech.wbsrv.ru>"
-        epm repo addkey angie "https://angie.software/keys/angie-signing.gpg"
-        epm repo add "rpm [angie] https://download.angie.software/angie/astra-se/1.7/ unstable main"
+        epm repo add "rpm [angie] https://download.angie.software/angie/altlinux/10/ x86_64 main"
         ;;
     AlmaLinux/8|AlmaLinux/9)
         epm repo addkey angie 'https://download.angie.software/angie/centos/$releasever/' "https://angie.software/keys/angie-signing.gpg" "Angie repo"
