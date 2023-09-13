@@ -371,7 +371,7 @@ __get_library_provides()
     info "  Getting internal provides ..."
     for libso in $(find "$fdir" -name "lib*.so*") ; do
         objdump -p "$libso" | grep "SONAME" | sed -e 's|.* ||'
-        echo "$libso" | awk -F'/' '{print $NF}'
+        basename "$libso"
     done
 
     echo "$EEPM_IGNORE_LIB_REQUIRES" | xargs -n1 echo
