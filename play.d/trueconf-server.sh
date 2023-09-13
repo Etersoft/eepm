@@ -1,6 +1,7 @@
 #!/bin/sh
 
 PKGNAME=trueconf-server
+SKIPREPACK=1
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="TrueConf server for Linux from the official site"

@@ -229,6 +229,7 @@ is_repacked_package()
     fi
 
     if epm status --thirdparty $pkg ; then
+       [ -n "$SKIPREPACK" ] && return 0
        echo "Package $pkg is already installed, packaged by vendor $(epm print field Vendor for $pkg)."
        return 1
     fi

@@ -1,6 +1,7 @@
 #!/bin/sh
 
 PKGNAME=myoffice-standard-home-edition
+SKIPREPACK=1
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="MyOffice Standart Home Edition for Linux from the official site"

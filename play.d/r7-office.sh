@@ -1,6 +1,7 @@
 #!/bin/sh
 
 PKGNAME=r7-office
+SKIPREPACK=1
 SUPPORTEDARCHES="x86_64"
 DESCRIPTION="R7 Office for Linux from the official site"
 

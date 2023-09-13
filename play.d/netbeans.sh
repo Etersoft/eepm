@@ -1,6 +1,7 @@
 #!/bin/sh
 
 PKGNAME=apache-netbeans
+SKIPREPACK=1
 #SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="Apache NetBeans from the official site"

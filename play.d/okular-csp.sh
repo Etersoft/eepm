@@ -1,6 +1,7 @@
 #!/bin/sh
 
 PKGNAME=okular-csp
+SKIPREPACK=1
 SUPPORTEDARCHES="x86_64"
 DESCRIPTION="Okular GOST (free version) with CryptoPro support from the official site"
 REPOURL="http://packages.lab50.net"

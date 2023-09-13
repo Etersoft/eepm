@@ -1,6 +1,7 @@
 #!/bin/sh
 
 PKGNAME=assistant
+SKIPREPACK=1
 SUPPORTEDARCHES="x86_64 aarch64"
 DESCRIPTION="Assistant (Ассистент) from the official site"
 
