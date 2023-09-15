@@ -24,6 +24,8 @@ remove_dir /usr/lib/x86_64-linux-gnu
 
 remove_dir /usr/local
 
-subst '1iRequires: libjpeg8' $SPEC
+# add_libs_requires finds it...
+# subst '1iRequires: libjpeg8' $SPEC
 
-set_autoreq 'yes'
+# set_autoreq 'yes'
+add_libs_requires
