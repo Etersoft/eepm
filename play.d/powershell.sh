@@ -20,7 +20,7 @@ case $(epm print info -e) in
         file="powershell_$VERSION.deb_amd64.deb"
         ;;
     *)
-        PKGURL="https://github.com/PowerShell/PowerShell/releases"
+        BASEURL="https://github.com/PowerShell/PowerShell/releases"
         file="powershell-$VERSION.rh.x86_64.rpm"
         ;;
 esac
