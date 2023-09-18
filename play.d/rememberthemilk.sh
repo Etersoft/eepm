@@ -2,7 +2,7 @@
 
 PKGNAME=rememberthemilk
 SUPPORTEDARCHES="x86_64"
-DESCRIPTION='Remember the milk from the official site'
+DESCRIPTION='' # 'Remember the milk from the official site'
 URL="https://www.rememberthemilk.com/"
 
 . $(dirname $0)/common.sh
