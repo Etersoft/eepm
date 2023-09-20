@@ -61,11 +61,11 @@ create_archive()
 	case "$type" in
 		tar)
 			#docmd $HAVE_7Z a -l $arc "$@"
-			docmd tar cvf $arc "$@"
+			docmd tar cvf "$arc" "$@"
 			;;
 		*)
 			# TODO: fix symlinks support
-			docmd $HAVE_7Z a -l $arc "$@"
+			docmd $HAVE_7Z a -l "$arc" "$@"
 			#fatal "Not yet supported creating of $type archives"
 			;;
 	esac
@@ -93,10 +93,10 @@ extract_archive()
 			# TODO: check if there is only one file?
 			# use subdir if there is no subdir in archive
 			TSUBDIR="$(basename "$arc" .$(echo $type | sed -e 's|^tar\.||') )"
-			docmd $HAVE_7Z x -so $arc | docmd $HAVE_7Z x -si -ttar
+			docmd $HAVE_7Z x -so "$arc" | docmd $HAVE_7Z x -si -ttar
 			;;
 		*)
-			docmd $HAVE_7Z x $arc "$@"
+			docmd $HAVE_7Z x "$arc" "$@"
 			#fatal "Not yet supported extracting of $type archives"
 			;;
 	esac
@@ -130,7 +130,7 @@ list_archive()
 	local type="$(get_archive_type "$arc")"
 	case "$type" in
 		*)
-			docmd $HAVE_7Z l $arc "$@"
+			docmd $HAVE_7Z l "$arc" "$@"
 			#fatal "Not yet supported listing of $type archives"
 			;;
 	esac
@@ -156,7 +156,7 @@ test_archive()
 	local type="$(get_archive_type "$arc")"
 	case "$type" in
 		*)
-			docmd $HAVE_7Z t $arc "$@"
+			docmd $HAVE_7Z t "$arc" "$@"
 			#fatal "Not yet supported test of $type archives"
 			;;
 	esac
