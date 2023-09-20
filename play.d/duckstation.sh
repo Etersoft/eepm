@@ -10,7 +10,7 @@ URL="https://github.com/stenzek/duckstation/releases"
 file="DuckStation-x64.AppImage"
 
 # TODO: preview, previous-latest
-SELECTOR="latest"
+SELECTOR="preview"
 
 PKGURL=$(epm tool eget --list https://github.com/stenzek/duckstation/releases $file | grep "/$SELECTOR/") || fatal "Can't get package URL"
 
