@@ -17,7 +17,8 @@ PREINSTALL_PACKAGES="fontconfig glib2 libalsa libatk libcairo libcairo-gobject l
 #    subst "1iConflicts:$i" $SPEC
 #done
 
-set_autoreq 'yes,noshell,nomonolib,nomono,nopython'
+# set_autoreq 'yes,noshell,nomonolib,nomono,nopython'
+add_libs_requires
 
 #set_alt_alternatives 65
 
