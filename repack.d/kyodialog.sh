@@ -14,7 +14,8 @@ PRODUCTCUR=$PRODUCT$VERSION
 # embedded
 filter_from_requires "python3(PyPDF3)"
 
-set_autoreq 'yes'
+# set_autoreq 'yes'
+add_libs_requires
 
 # remove embedded PyPDF3
 remove_dir /usr/share/kyocera$VERSION/Python
