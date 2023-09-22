@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME=webcord
+PKGNAME=WebCord
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="A Discord and Spacebar client implemented directly without Discord API from the official github"
