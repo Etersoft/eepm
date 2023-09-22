@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.60.1
+Version: 3.60.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,29 @@ a discussion about extra requirements.
 
 
 %changelog
+* Fri Sep 22 2023 Vitaly Lipatov <lav@altlinux.ru> 3.60.2-alt1
+- epm play steam: fix bug
+- epm play common.sh: allow removing for packages from the distro repo
+- epm repack generic.sh: override version with value from eepm.yaml file
+- epm play: add guardant (glds)
+- epm repack atom: fix packing with eepm-rpm-build
+- epm prescription switch-to-nvidia: added nvidia-modprobe (for the nvenc codec to work)
+- epm repack wps-office: fix broken deps
+- epm-sh-functions: fix BIGTMPDIR
+- epm play zoom: fix broken deps
+- epm play common.sh: accelerated find provides, fix objdump a.out, skipping empty lines in function add_libs_requires
+- epm play spotify: fix broken deps
+- epm play sane-panakvs: replaced set_autoreq by add_libs_requires
+- epm play realvnc-viewer: replaced set_autoreq by add_libs_requires
+- epm play realvnc-server: replaced set_autoreq by add_libs_requires
+- epm play pycharm-professional: replaced set_autoreq by add_libs_requires
+- epm play jetbrains-toolbox: replaced set_autoreq by add_libs_requires
+- epm play: add SKIPREPACK for packages allowed install nonmodified
+- epm repack: add printer-driver-pantum.sh
+- epm play angie: fix repo for ALT and Astra
+- erc: fixed 7z working with spaces in names
+- erc: added assume Yes on all queries for unpack with 7z
+
 * Sat Aug 26 2023 Vitaly Lipatov <lav@altlinux.ru> 3.60.1-alt1
 - epm repack common.sh: speedup requires retrieving
 - epm repack-rpm: try install eepm-rpm-build
