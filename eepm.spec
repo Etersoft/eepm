@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.60.2
+Version: 3.60.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,19 @@ a discussion about extra requirements.
 
 
 %changelog
+* Fri Sep 22 2023 Vitaly Lipatov <lav@altlinux.ru> 3.60.3-alt1
+- epm repack: add support for plk-sane
+- epm play: add webcord
+- epm play pantum: replaced set_autoreq by add_libs_requires
+- epm play powershell: fix get version from github
+- epm play rememberthemilk: hidden from the list
+- epm play duplicati: replaced set_autoreq by add_libs_requires
+- epm play kyodialog: replaced set_autoreq by add_libs_requires
+- epm play firefox-nigtly: replaced set_autoreq by add_libs_requires
+- epm play duckstation: move to preview version
+- epm play t1client: added ignore_lib_requires libmng.so.1
+- epm play far2l-portable: move to AppImage
+
 * Fri Sep 22 2023 Vitaly Lipatov <lav@altlinux.ru> 3.60.2-alt1
 - epm play steam: fix bug
 - epm play common.sh: allow removing for packages from the distro repo
