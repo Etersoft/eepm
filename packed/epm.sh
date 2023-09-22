@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.60.1"
+EPMVERSION="3.60.2"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -824,7 +824,7 @@ set_bigtmpdir()
     # https://bugzilla.mozilla.org/show_bug.cgi?id=69938
     # https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s15.html
     # https://geekpeach.net/ru/%D0%BA%D0%B0%D0%BA-systemd-tmpfiles-%D0%BE%D1%87%D0%B8%D1%89%D0%B0%D0%B5%D1%82-tmp-%D0%B8%D0%BB%D0%B8-var-tmp-%D0%B7%D0%B0%D0%BC%D0%B5%D0%BD%D0%B0-tmpwatch-%D0%B2-centos-rhel-7
-    [ -n "$BIGTMPDIR" ] || [ -d "/var/tmp" ] && BIGTMPDIR="/var/tmp" || BIGTMPDIR="$TMPDIR"
+    [ -z "$BIGTMPDIR" ] && [ -d "/var/tmp" ] && BIGTMPDIR="/var/tmp" || BIGTMPDIR="$TMPDIR"
     export BIGTMPDIR
 }
 
@@ -15893,11 +15893,11 @@ create_archive()
 	case "$type" in
 		tar)
 			#docmd $HAVE_7Z a -l $arc "$@"
-			docmd tar cvf $arc "$@"
+			docmd tar cvf "$arc" "$@"
 			;;
 		*)
 			# TODO: fix symlinks support
-			docmd $HAVE_7Z a -l $arc "$@"
+			docmd $HAVE_7Z a -l "$arc" "$@"
 			#fatal "Not yet supported creating of $type archives"
 			;;
 	esac
@@ -15925,10 +15925,10 @@ extract_archive()
 			# TODO: check if there is only one file?
 			# use subdir if there is no subdir in archive
 			TSUBDIR="$(basename "$arc" .$(echo $type | sed -e 's|^tar\.||') )"
-			docmd $HAVE_7Z x -so $arc | docmd $HAVE_7Z x -si -ttar
+			docmd $HAVE_7Z x -so "$arc" | docmd $HAVE_7Z x -y -si -ttar
 			;;
 		*)
-			docmd $HAVE_7Z x $arc "$@"
+			docmd $HAVE_7Z x -y "$arc" "$@"
 			#fatal "Not yet supported extracting of $type archives"
 			;;
 	esac
@@ -15962,7 +15962,7 @@ list_archive()
 	local type="$(get_archive_type "$arc")"
 	case "$type" in
 		*)
-			docmd $HAVE_7Z l $arc "$@"
+			docmd $HAVE_7Z l "$arc" "$@"
 			#fatal "Not yet supported listing of $type archives"
 			;;
 	esac
@@ -15988,7 +15988,7 @@ test_archive()
 	local type="$(get_archive_type "$arc")"
 	case "$type" in
 		*)
-			docmd $HAVE_7Z t $arc "$@"
+			docmd $HAVE_7Z t "$arc" "$@"
 			#fatal "Not yet supported test of $type archives"
 			;;
 	esac
@@ -17013,7 +17013,6 @@ pkg_urls=
 pkg_options=
 quoted_args=
 direct_args=
-use_context=
 
 eget_backend=$EGET_BACKEND
 epm_vardir=/var/lib/eepm
@@ -17099,11 +17098,9 @@ check_command()
     case $1 in
     -i|install|add|i|it)         # HELPCMD: install package(s) from remote repositories or from local file
         epm_cmd=install
-        use_context=1
         ;;
     -e|-P|rm|del|remove|delete|uninstall|erase|purge|e)  # HELPCMD: remove (delete) package(s) from the database and the system
         epm_cmd=remove
-        use_context=1
         ;;
     -s|search|s|find|sr)                # HELPCMD: search in remote package repositories
         epm_cmd=search
@@ -17119,11 +17116,9 @@ check_command()
 # HELPCMD: PART: Useful commands:
     reinstall)                # HELPCMD: reinstall package(s) from remote repositories or from local file
         epm_cmd=reinstall
-        use_context=1
         ;;
     Install)                  # HELPCMD: perform update package repo info and install package(s) via install command
         epm_cmd=Install
-        use_context=1
         ;;
     -q|q|query)               # HELPCMD: check presence of package(s) and print this name (also --short is supported)
         epm_cmd=query
@@ -17271,16 +17266,13 @@ check_command()
         ;;
     upgrade|up|dist-upgrade)     # HELPCMD: performs upgrades of package software distributions
         epm_cmd=upgrade
-        use_context=1
         ;;
     Upgrade)                  # HELPCMD: force update package base, then run upgrade
         epm_cmd=Upgrade
         direct_args=1
-        use_context=1
         ;;
     downgrade)                # HELPCMD: downgrade [all] packages to the repo state
         epm_cmd=downgrade
-        use_context=1
         ;;
     download|fetch|fc)        # HELPCMD: download package(s) file to the current dir
         epm_cmd=download
@@ -17288,7 +17280,6 @@ check_command()
 # TODO: replace with install --simulate
     simulate)                 # HELPCMD: simulate install with check requires
         epm_cmd=simulate
-        use_context=1
         ;;
     audit)                    # HELPCMD: audits installed packages against known vulnerabilities
         epm_cmd=audit
