@@ -43,5 +43,5 @@ else
 fi
 epm install $PKGURL || fatal
 
-UPDATEFFMPEG=$(epm ql $PKGNAME | grep update-ffmpeg) || fatal
-epm pack --install $PKGNAME-codecs-ffmpeg-extra $UPDATEFFMPEG
+#UPDATEFFMPEG=$(epm ql $PKGNAME | grep update-ffmpeg) || fatal
+#epm pack --install $PKGNAME-codecs-ffmpeg-extra $UPDATEFFMPEG
