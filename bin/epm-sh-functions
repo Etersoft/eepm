@@ -321,11 +321,13 @@ sudoepm()
 # Print error message and stop the program
 fatal()
 {
+    local PROMOMESSAGE="$EPMPROMOMESSAGE"
+    [ -n "$PROMOMESSAGE" ] || PROMOMESSAGE=" (you can discuss the epm $EPMVERSION problem in Telegram: https://t.me/useepm)"
     if [ -z "$TEXTDOMAIN" ] ; then
         set_color $RED >&2
         echo -n "ERROR: " >&2
         restore_color >&2
-        echo "$*  (you can discuss the epm $EPMVERSION problem in Telegram: https://t.me/useepm)" >&2
+        echo "$* $PROMOMESSAGE" >&2
 #    else
 #        echog "Error in $0: $@" >&2
     fi
