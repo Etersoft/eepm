@@ -856,8 +856,19 @@ assure_tmpdir()
     fi
 }
 
+test_shell()
+{
+    local R
+    R="$($CMDSHELL /dev/null 2>&1)"
+    [ -n "$R" ] && fatal "$CMDSHELL is broken (bash wrongly printing out '$R'). Check ~/.bashrc and /etc/bashrc, run $CMDSHELL manually for test."
+}
+
+
 set_distro_info()
 {
+
+    test_shell
+
     assure_tmpdir
 
     set_bigtmpdir
