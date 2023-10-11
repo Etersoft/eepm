@@ -553,8 +553,8 @@ check_sudo_access()
     for i in /bin/sudo /usr/bin/sudo ; do
         [ -f $i ] && cmd="$i"
     done
-    [ ! -f $cmd ] && warning "sudo command is missed. Try install sudo package (http://altlinux.org/sudo)." && return 1
-    local group="$(stat -c '%G' $cmd)" || fatal
+    [ ! -f "$cmd" ] && warning "sudo command is missed. Try install sudo package (http://altlinux.org/sudo)." && return 1
+    local group="$(stat -c '%G' "$cmd")" || fatal
     warning "Check if you are in $group group to have access to sudo command."
     return 1
 }
@@ -567,8 +567,8 @@ check_sudo_access_only()
     for i in /bin/sudo /usr/bin/sudo ; do
         [ -f $i ] && cmd="$i"
     done
-    [ ! -f $cmd ] && return 1
-    local group="$(stat -c '%G' $cmd)" || fatal
+    [ ! -f "$cmd" ] && return 1
+    local group="$(stat -c '%G' "$cmd")" || fatal
     warning "sudo command is presence, but is not accessible for you. Check if you are in $group group to have access to sudo command."
     return 1
 }
