@@ -85,7 +85,12 @@ and run in the download directory via bash:
 # bash epm.sh ei
 ```
 
+In a common case you can install eepm package manually:
+`https://download.etersoft.ru/pub/Korinf/x86_64`
+
 ## How to add new distro support
+
+For developers only:
 1. Fix detection with `distro_info`
 2. Add distro support in `set_pm_type` function
 3. Implement every command in epm-* files
