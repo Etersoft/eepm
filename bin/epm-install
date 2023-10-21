@@ -316,7 +316,7 @@ __epm_check_if_src_rpm()
 {
     local pkg
     for pkg in $@ ; do
-        echo "$pkg" | grep -q "\.src.\rpm" && fatal "Installation of a source packages (like '$pkg') is not supported."
+        echo "$pkg" | grep -q "\.src\.rpm" && fatal "Installation of a source packages (like '$pkg') is not supported."
     done
 }
 
