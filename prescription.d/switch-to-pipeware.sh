@@ -7,7 +7,13 @@
 assure_root
 exit
 
-[ "$(epm print info -s)" = "alt" ] || fatal "Only ALTLinux is supported"
+if [ "$(epm print info -s)" = "rosa" ] ; then
+    dnf_auto='' && [ -n "$auto" ] && dnf_auto='-y'
+    a= dnf swap pulseaudio pipewire --allow-erasing $dnf_auto
+    exit
+fi
+
+[ "$(epm print info -s)" = "alt" ] || fatal "Only ALTLinux or ROSA are supported"
 
 
 epm install pipewire pipewire-utils pipewire-libs
