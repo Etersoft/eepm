@@ -10,7 +10,13 @@
 
 assure_root
 
-[ "$(epm print info -s)" = "alt" ] || fatal "Only ALTLinux is supported"
+if [ "$(epm print info -s)" = "rosa" ] ; then
+    epm assure kroko-cli auto-krokodil-cli || fatal
+    sudo kroko-cli autoinstall
+    exit
+fi
+
+[ "$(epm print info -s)" = "alt" ] || fatal "Only ALTLinux and ROSA Linux are supported"
 
 epm assure lspci pciutils || exit
 # проверяем работоспособность драйвера на текущий момент
