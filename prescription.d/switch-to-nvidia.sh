@@ -12,7 +12,7 @@ assure_root
 
 if [ "$(epm print info -s)" = "rosa" ] ; then
     epm assure kroko-cli auto-krokodil-cli || fatal
-    sudo kroko-cli autoinstall
+    kroko-cli autoinstall
     exit
 fi
 
