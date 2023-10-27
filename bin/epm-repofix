@@ -175,6 +175,16 @@ __subst_with_etersoft_url()
     echo "$1" | sed \
         -e "s|h\?f\?t\?tp://ftp.altlinux.org/pub/distributions/* ALTLinux|$NURL|" \
         -e "s|h\?f\?t\?tp://ftp.basealt.ru/pub/distributions/* ALTLinux|$NURL|" \
+        -e "s|h\?f\?t\?tp://mirror.yandex.ru/* altlinux|$NURL|" \
+        -e "s|h\?f\?t\?tp://mirror.eterfund.org/download.etersoft.ru/pub/* ALTLinux|$NURL|"
+}
+
+__subst_with_eterfund_url()
+{
+    local NURL="https://mirror.eterfund.org/download.etersoft.ru/pub ALTLinux"
+    echo "$1" | sed \
+        -e "s|h\?f\?t\?tp://ftp.altlinux.org/pub/distributions/* ALTLinux|$NURL|" \
+        -e "s|h\?f\?t\?tp://ftp.basealt.ru/pub/distributions/* ALTLinux|$NURL|" \
         -e "s|h\?f\?t\?tp://mirror.yandex.ru/* altlinux|$NURL|"
 }
 
@@ -185,7 +195,8 @@ __subst_with_yandex_url()
         -e "s|h\?f\?t\?tp://ftp.altlinux.org/pub/distributions/* ALTLinux|$NURL|" \
         -e "s|h\?f\?t\?tp://ftp.basealt.ru/pub/distributions/* ALTLinux|$NURL|" \
         -e "s|h\?f\?t\?tp://ftp.etersoft.ru/pub/* ALTLinux|$NURL|" \
-        -e "s|h\?f\?t\?tp://download.etersoft.ru/pub/* ALTLinux|$NURL|"
+        -e "s|h\?f\?t\?tp://download.etersoft.ru/pub/* ALTLinux|$NURL|" \
+        -e "s|h\?f\?t\?tp://mirror.eterfund.org/download.etersoft.ru/pub/* ALTLinux|$NURL|"
 }
 
 __subst_with_basealt_url()
@@ -194,6 +205,17 @@ __subst_with_basealt_url()
     echo "$1" | sed \
         -e "s|h\?f\?t\?tp://mirror.yandex.ru/* altlinux|$NURL|" \
         -e "s|h\?f\?t\?tp://ftp.etersoft.ru/pub/* ALTLinux|$NURL|" \
+        -e "s|h\?f\?t\?tp://mirror.eterfund.org/download.etersoft.ru/pub/* ALTLinux|$NURL|" \
+        -e "s|h\?f\?t\?tp://download.etersoft.ru/pub/* ALTLinux|$NURL|"
+}
+
+__subst_with_altlinux_url()
+{
+    local NURL="http://ftp.altlinux.org/pub/distributions ALTLinux"
+    echo "$1" | sed \
+        -e "s|h\?f\?t\?tp://mirror.yandex.ru/* altlinux|$NURL|" \
+        -e "s|h\?f\?t\?tp://ftp.etersoft.ru/pub/* ALTLinux|$NURL|" \
+        -e "s|h\?f\?t\?tp://mirror.eterfund.org/download.etersoft.ru/pub/* ALTLinux|$NURL|" \
         -e "s|h\?f\?t\?tp://download.etersoft.ru/pub/* ALTLinux|$NURL|"
 }
 
@@ -246,6 +268,10 @@ case $BASEDISTRNAME in
             __fix_repo_to_etersoft /etc/apt/sources.list
             __fix_repo_to_etersoft /etc/apt/sources.list.d/*.list
         fi
+        if [ "$1" = "eterfund.org" ] ; then
+            __fix_repo_to_eterfund /etc/apt/sources.list
+            __fix_repo_to_eterfund /etc/apt/sources.list.d/*.list
+        fi
         if [ "$1" = "yandex" ] ; then
             __fix_repo_to_yandex /etc/apt/sources.list
             __fix_repo_to_yandex /etc/apt/sources.list.d/*.list
@@ -253,6 +279,10 @@ case $BASEDISTRNAME in
         if [ "$1" = "basealt" ] ; then
             __fix_repo_to_basealt /etc/apt/sources.list
             __fix_repo_to_basealt /etc/apt/sources.list.d/*.list
+        fi
+        if [ "$1" = "altlinux.org" ] ; then
+            __fix_repo_to_altlinux /etc/apt/sources.list
+            __fix_repo_to_altlinux /etc/apt/sources.list.d/*.list
         fi
         docmd apt-repo list
         return
