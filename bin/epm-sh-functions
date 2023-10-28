@@ -692,7 +692,7 @@ __epm_assure_7zip()
     if is_command 7z || is_command 7za || is_command 7zr || is_command 7zz ; then
         :
     else
-        epm install p7zip
+        epm install 7-zip || epm install p7zip
     fi
 }
 
