@@ -34,6 +34,7 @@ generic_repack: appimage
 EOF
 
 chmod og-w -R squashfs-root
+chmod a+rX -R squashfs-root
 
 erc pack $PKGNAME squashfs-root
 
