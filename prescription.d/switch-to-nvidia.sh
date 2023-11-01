@@ -62,12 +62,14 @@ echo "blacklist nouveau" > /etc/modprobe.d/blacklist-nvidia-x11.conf
 a= rmmod nouveau
 
 # удаляем /etc/X11/xorg.conf если он есть и в нём содержится nouveau или fbdev
-if [ -e "/etc/X11/xorg.conf" ] && [ "$(grep -E 'nouveau|fbdev' "/etc/X11/xorg.conf")"  ] ; then
+if [ -e "/etc/X11/xorg.conf" ] && [ "$(grep -E 'nouveau|fbdev|vesa' "/etc/X11/xorg.conf")"  ] ; then
 	 rm -v "/etc/X11/xorg.conf"
 fi
 
 
-epm install --skip-installed nvidia-settings nvidia-vaapi-driver ocl-nvidia libcuda vulkan-tools libnvidia-encode libnvidia-ngx libnvidia-opencl libvulkan1 nvidia-modprobe
+epm install --skip-installed nvidia-settings nvidia-vaapi-driver ocl-nvidia libcuda vulkan-tools libnvidia-encode libnvidia-ngx libnvidia-opencl libvulkan1 nvidia-modprobe \
+	libglut libGLU nvidia-xconfig libvulkan1 libcudadebugger libnvcuvid libnvidia-api \
+	libnvidia-fbc libnvidia-ml libnvidia-nvvm libnvidia-ptxjitcompiler libnvoptix nvidia-smi
 
 epm play i586-fix
 
