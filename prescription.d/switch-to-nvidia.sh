@@ -73,6 +73,16 @@ epm install --skip-installed nvidia-settings nvidia-vaapi-driver ocl-nvidia libc
 
 epm play i586-fix
 
-# для работы 2-х и более видеокарт от nvidia необходимо добавить "nvidia-drm.modeset=1" в строку GRUB_CMDLINE_LINUX_DEFAULT= в файле /etc/default/grub и обновить grub
+# Делаем копию
+cp /etc/sysconfig/grub2 /etc/sysconfig/grub2.epmbak
+
+# для работы 2-х и более видеокарт, а так же Wayland c nvidia необходимо добавить "nvidia-drm.modeset=1" в строку GRUB_CMDLINE_LINUX_DEFAULT= в файле /etc/default/grub и обновить grub
+sed -i "s|^\(GRUB_CMDLINE_LINUX_DEFAULT='.*\)'\$|\1 nvidia-drm.modeset=1'|" /etc/sysconfig/grub2
+
+# Убирает «Неизвестный монитор» в настройках дисплеев в сессии Wayland
+sed -i "s|^\(GRUB_CMDLINE_LINUX_DEFAULT='.*\)'\$|\1 initcall_blacklist=simpledrm_platform_driver_init'|" /etc/sysconfig/grub2
+
+# Обновляем grub
+grub2-mkconfig -o /boot/grub2/grub.cfg
 
 echo "Done. Just you need reboot your system to use nVidia proprietary drivers."
