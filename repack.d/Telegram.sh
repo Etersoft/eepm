@@ -66,8 +66,9 @@ pack_file /etc/tdesktop/externalupdater
 # https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=telegram-desktop-bin
 
 # create desktop file
+DESKTOPFILE=/usr/share/applications/org.telegram.desktop.desktop
 mkdir -p $BUILDROOT/usr/share/applications/
-cat <<EOF >$BUILDROOT/usr/share/applications/org.telegram.desktop
+cat <<EOF >$BUILDROOT$DESKTOPFILE
 [Desktop Entry]
 Version=1.0
 Name=Telegram Desktop
@@ -81,6 +82,6 @@ MimeType=x-scheme-handler/tg;
 Keywords=tg;chat;im;messaging;messenger;sms;tdesktop;
 X-GNOME-UsesNotifications=true
 EOF
-pack_file /usr/share/applications/org.telegram.desktop
+pack_file $DESKTOPFILE
 
 add_by_ldd_deps
