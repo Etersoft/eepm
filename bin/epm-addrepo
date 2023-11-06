@@ -177,6 +177,8 @@ epm repo add - add branch repo. Use follow params:
     autoimports              - for BaseALT autoimports repo"
     autoports                - for Autoports repo (with packages from Sisyphus rebuilt to the branch)
     altlinuxclub             - for altlinuxclub repo (http://altlinuxclub.ru/)"
+    deferred                 - for Etersoft Sisyphus Deferred repo"
+    deferred.org             - for Etersoft Sisyphus Deferred repo (at mirror.eterfund.org)"
     etersoft                 - for LINUX@Etersoft repo"
     korinf                   - for Korinf repo"
     <task number>            - add task repo"
@@ -268,6 +270,16 @@ __epm_addrepo_altlinux()
             local http="http"
             epm installed apt-https && http="https"
             epm repo add "rpm $http://download.etersoft.ru/pub Korinf/ALTLinux/$DISTRVERSION main"
+            return 0
+            ;;
+        deferred)
+            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersot Sisyphus Deferred supported only for ALT Sisyphus."
+            epm repo add "http://download.etersoft.ru/pub Etersoft/Sisyphus/Deferred"
+            return 0
+            ;;
+        deferred.org)
+            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersot Sisyphus Deferred supported only for ALT Sisyphus."
+            epm repo add "http://mirror.eterfund.org/download.etersoft.ru/pub Etersoft/Sisyphus/Deferred"
             return 0
             ;;
         archive)
