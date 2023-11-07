@@ -83,6 +83,6 @@ sed -i "s|^\(GRUB_CMDLINE_LINUX_DEFAULT='.*\)'\$|\1 nvidia-drm.modeset=1'|" /etc
 sed -i "s|^\(GRUB_CMDLINE_LINUX_DEFAULT='.*\)'\$|\1 initcall_blacklist=simpledrm_platform_driver_init'|" /etc/sysconfig/grub2
 
 # Обновляем grub
-grub2-mkconfig -o /boot/grub2/grub.cfg
+update-grub
 
 echo "Done. Just you need reboot your system to use nVidia proprietary drivers."
