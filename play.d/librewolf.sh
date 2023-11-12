@@ -26,4 +26,7 @@ if ! is_glibc_enough 2.35 ; then
     PKG="https://deb.librewolf.net/pool/focal/librewolf-$VERSION$arch.deb"
 fi
 
-epm install "$PKG"
+repack=''
+[ "$(epm print info -s)" = "alt" ] && repack='--repack'
+
+epm install $repack "$PKG"
