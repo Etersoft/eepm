@@ -64,17 +64,17 @@ if [ -r "$DESKTOPFILE" ] ; then
 
 fi
 
-[ -n "$ICONNAME" ] || fatal "Couldn't retrieve icon name from $DESKTOPFILE"
+if [ -n "$ICONNAME" ] ; then
+    ICONFILE=$ICONNAME.png
 
-ICONFILE=$ICONNAME.png
-
-# it is strange, there is no icon file
-# https://docs.appimage.org/reference/appdir.html
-if [ ! -s "$FROMICONFILE" ] ; then
-    FROMICONFILE=".DirIcon"
-    grep -q "^<svg" $FROMICONFILE && ICONFILE="$PRODUCT.svg"
+    # it is strange, there is no icon file
+    # https://docs.appimage.org/reference/appdir.html
+    if [ ! -s "$FROMICONFILE" ] ; then
+        FROMICONFILE=".DirIcon"
+        grep -q "^<svg" $FROMICONFILE && ICONFILE="$PRODUCT.svg"
+    fi
+    install_file $PRODUCTDIR/$FROMICONFILE /usr/share/pixmaps/$ICONFILE
 fi
-install_file $PRODUCTDIR/$FROMICONFILE /usr/share/pixmaps/$ICONFILE
 
 # copy icons if possible
 for i in usr/share/icons/hicolor/*x*/apps/* ; do
