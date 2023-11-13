@@ -13,6 +13,7 @@ libcairo.so.2 libfontconfig.so.1 libfreetype.so.6
 libgdk-x11-2.0.so.0 libgdk_pixbuf-2.0.so.0 libgio-2.0.so.0 libglib-2.0.so.0 libgobject-2.0.so.0 libgtk-x11-2.0.so.0 libpango-1.0.so.0 libpangocairo-1.0.so.0 libpangoft2-1.0.so.0 libpolkit-gobject-1.so.0
 libstdc++.so.6
 libxcb-shm.so.0 libxcb.so.1 libxkbfile.so.1
+libpangox-1.0.so.0 libgdkglext-x11-1.0.so.0 libgtkglext-x11-1.0.so.0
 polkit"
 
 . $(dirname $0)/common.sh
@@ -45,19 +46,19 @@ LIBDIR=/usr/lib64
 # don't check lib if missed
 [ ! -d $BUILDROOT$LIBDIR ] && exit
 
-if epm assure patchelf ; then
-for i in $BUILDROOT$LIBDIR/anydesk/{libgdkglext-x11-1.0.*,libgtkglext-x11-1.0.*} ; do
-    a= patchelf --set-rpath '$ORIGIN/' $i
-done
+#if epm assure patchelf ; then
+#for i in $BUILDROOT$LIBDIR/anydesk/{libgdkglext-x11-1.0.*,libgtkglext-x11-1.0.*} ; do
+#    a= patchelf --set-rpath '$ORIGIN/' $i
+#done
 
 # /usr/libexec/anydesk: library libpangox-1.0.so.0 not found
-for i in $BUILDROOT/usr/libexec/anydesk ; do
-    a= patchelf --set-rpath "$LIBDIR/anydesk" $i
-done
-fi
+#for i in $BUILDROOT/usr/libexec/anydesk ; do
+#    a= patchelf --set-rpath "$LIBDIR/anydesk" $i
+#done
+#fi
 
 # preloaded from /usr/lib64/anydesk/, drop external requires
-filter_from_requires libpangox-1.0.so.0 libgdkglext-x11-1.0.so.0 libgtkglext-x11-1.0.so.0
+#filter_from_requires libpangox-1.0.so.0 libgdkglext-x11-1.0.so.0 libgtkglext-x11-1.0.so.0
 
 #add_requires $PREINSTALL_PACKAGES
 #set_autoreq 'yes'
