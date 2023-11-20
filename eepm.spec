@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.60.3
+Version: 3.60.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,26 @@ a discussion about extra requirements.
 
 
 %changelog
+* Tue Nov 21 2023 Vitaly Lipatov <lav@altlinux.ru> 3.60.4-alt1
+- epm play vivaldi: disable install external codecs
+- epm-sh-functions: allow override error comment with EPMPROMOMESSAGE
+- epm pack k3s: add symlinks
+- epm-install: fix broken grep rule
+- epm prescription switch-no-nvidia: add ROSA support via kroko-cli
+- epm prescription switch-no-pipeware: add ROSA support
+- epm repo change: add support for ftp.altlinux.org and mirror.eterfund.org
+- __epm_assure_7zip: install 7-zip firstly
+- epm pack: fix dir permissions for AppImage
+- update switch-to-nvidia.sh. More packages. Add vesa as cleanup xorg trigger (#45)
+- update switch-to-nvidia.sh (#46)
+- epm repack Telegram: revert desktop name to origin
+- epm addrepo: add deferred repo support
+- update switch-to-nvidia.sh (#47)
+- epm play librewolf: repack for alt
+- epm repack: add workaround for missed icons
+- epm play: add xod-ide support
+- epm-update: update local packages list only if /etc/bash_completion.d is exists
+
 * Fri Sep 22 2023 Vitaly Lipatov <lav@altlinux.ru> 3.60.3-alt1
 - epm repack: add support for plk-sane
 - epm play: add webcord
