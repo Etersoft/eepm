@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.60.3"
+EPMVERSION="3.60.4"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -343,11 +343,13 @@ sudoepm()
 
 fatal()
 {
+    local PROMOMESSAGE="$EPMPROMOMESSAGE"
+    [ -n "$PROMOMESSAGE" ] || PROMOMESSAGE=" (you can discuss the epm $EPMVERSION problem in Telegram: https://t.me/useepm)"
     if [ -z "$TEXTDOMAIN" ] ; then
         set_color $RED >&2
         echo -n "ERROR: " >&2
         restore_color >&2
-        echo "$*  (you can discuss the epm $EPMVERSION problem in Telegram: https://t.me/useepm)" >&2
+        echo "$* $PROMOMESSAGE" >&2
     fi
     exit 1
 }
@@ -558,8 +560,8 @@ check_sudo_access()
     for i in /bin/sudo /usr/bin/sudo ; do
         [ -f $i ] && cmd="$i"
     done
-    [ ! -f $cmd ] && warning "sudo command is missed. Try install sudo package (http://altlinux.org/sudo)." && return 1
-    local group="$(stat -c '%G' $cmd)" || fatal
+    [ ! -f "$cmd" ] && warning "sudo command is missed. Try install sudo package (http://altlinux.org/sudo)." && return 1
+    local group="$(stat -c '%G' "$cmd")" || fatal
     warning "Check if you are in $group group to have access to sudo command."
     return 1
 }
@@ -572,8 +574,8 @@ check_sudo_access_only()
     for i in /bin/sudo /usr/bin/sudo ; do
         [ -f $i ] && cmd="$i"
     done
-    [ ! -f $cmd ] && return 1
-    local group="$(stat -c '%G' $cmd)" || fatal
+    [ ! -f "$cmd" ] && return 1
+    local group="$(stat -c '%G' "$cmd")" || fatal
     warning "sudo command is presence, but is not accessible for you. Check if you are in $group group to have access to sudo command."
     return 1
 }
@@ -687,7 +689,7 @@ __epm_assure_7zip()
     if is_command 7z || is_command 7za || is_command 7zr || is_command 7zz ; then
         :
     else
-        epm install p7zip
+        epm install 7-zip || epm install p7zip
     fi
 }
 
@@ -845,8 +847,19 @@ assure_tmpdir()
     fi
 }
 
+test_shell()
+{
+    local R
+    R="$($CMDSHELL /dev/null 2>&1)"
+    [ -n "$R" ] && fatal "$CMDSHELL is broken (bash wrongly printing out '$R'). Check ~/.bashrc and /etc/bashrc, run $CMDSHELL manually for test."
+}
+
+
 set_distro_info()
 {
+
+    test_shell
+
     assure_tmpdir
 
     set_bigtmpdir

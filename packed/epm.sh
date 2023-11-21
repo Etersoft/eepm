@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.60.3"
+EPMVERSION="3.60.4"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -342,11 +342,13 @@ sudoepm()
 
 fatal()
 {
+    local PROMOMESSAGE="$EPMPROMOMESSAGE"
+    [ -n "$PROMOMESSAGE" ] || PROMOMESSAGE=" (you can discuss the epm $EPMVERSION problem in Telegram: https://t.me/useepm)"
     if [ -z "$TEXTDOMAIN" ] ; then
         set_color $RED >&2
         echo -n "ERROR: " >&2
         restore_color >&2
-        echo "$*  (you can discuss the epm $EPMVERSION problem in Telegram: https://t.me/useepm)" >&2
+        echo "$* $PROMOMESSAGE" >&2
     fi
     exit 1
 }
@@ -557,8 +559,8 @@ check_sudo_access()
     for i in /bin/sudo /usr/bin/sudo ; do
         [ -f $i ] && cmd="$i"
     done
-    [ ! -f $cmd ] && warning "sudo command is missed. Try install sudo package (http://altlinux.org/sudo)." && return 1
-    local group="$(stat -c '%G' $cmd)" || fatal
+    [ ! -f "$cmd" ] && warning "sudo command is missed. Try install sudo package (http://altlinux.org/sudo)." && return 1
+    local group="$(stat -c '%G' "$cmd")" || fatal
     warning "Check if you are in $group group to have access to sudo command."
     return 1
 }
@@ -571,8 +573,8 @@ check_sudo_access_only()
     for i in /bin/sudo /usr/bin/sudo ; do
         [ -f $i ] && cmd="$i"
     done
-    [ ! -f $cmd ] && return 1
-    local group="$(stat -c '%G' $cmd)" || fatal
+    [ ! -f "$cmd" ] && return 1
+    local group="$(stat -c '%G' "$cmd")" || fatal
     warning "sudo command is presence, but is not accessible for you. Check if you are in $group group to have access to sudo command."
     return 1
 }
@@ -686,7 +688,7 @@ __epm_assure_7zip()
     if is_command 7z || is_command 7za || is_command 7zr || is_command 7zz ; then
         :
     else
-        epm install p7zip
+        epm install 7-zip || epm install p7zip
     fi
 }
 
@@ -844,8 +846,19 @@ assure_tmpdir()
     fi
 }
 
+test_shell()
+{
+    local R
+    R="$($CMDSHELL /dev/null 2>&1)"
+    [ -n "$R" ] && fatal "$CMDSHELL is broken (bash wrongly printing out '$R'). Check ~/.bashrc and /etc/bashrc, run $CMDSHELL manually for test."
+}
+
+
 set_distro_info()
 {
+
+    test_shell
+
     assure_tmpdir
 
     set_bigtmpdir
@@ -1167,6 +1180,8 @@ epm repo add - add branch repo. Use follow params:
     autoimports              - for BaseALT autoimports repo"
     autoports                - for Autoports repo (with packages from Sisyphus rebuilt to the branch)
     altlinuxclub             - for altlinuxclub repo (http://altlinuxclub.ru/)"
+    deferred                 - for Etersoft Sisyphus Deferred repo"
+    deferred.org             - for Etersoft Sisyphus Deferred repo (at mirror.eterfund.org)"
     etersoft                 - for LINUX@Etersoft repo"
     korinf                   - for Korinf repo"
     <task number>            - add task repo"
@@ -1258,6 +1273,16 @@ __epm_addrepo_altlinux()
             local http="http"
             epm installed apt-https && http="https"
             epm repo add "rpm $http://download.etersoft.ru/pub Korinf/ALTLinux/$DISTRVERSION main"
+            return 0
+            ;;
+        deferred)
+            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersot Sisyphus Deferred supported only for ALT Sisyphus."
+            epm repo add "http://download.etersoft.ru/pub Etersoft/Sisyphus/Deferred"
+            return 0
+            ;;
+        deferred.org)
+            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersot Sisyphus Deferred supported only for ALT Sisyphus."
+            epm repo add "http://mirror.eterfund.org/download.etersoft.ru/pub Etersoft/Sisyphus/Deferred"
             return 0
             ;;
         archive)
@@ -4221,7 +4246,7 @@ __epm_check_if_src_rpm()
 {
     local pkg
     for pkg in $@ ; do
-        echo "$pkg" | grep -q "\.src.\rpm" && fatal "Installation of a source packages (like '$pkg') is not supported."
+        echo "$pkg" | grep -q "\.src\.rpm" && fatal "Installation of a source packages (like '$pkg') is not supported."
     done
 }
 
@@ -9542,7 +9567,7 @@ epm_repo()
     ""|list)                          # HELPCMD: list enabled repositories (-a|--all for list disabled repositorires too)
         epm_repolist "$@"
         ;;
-    change)                           # HELPCMD: <mirror>: switch sources to the mirror (supports etersoft/yandex/basealt): rewrite URLs to the specified server
+    change)                           # HELPCMD: <mirror>: switch sources to the mirror (supports etersoft/yandex/basealt/altlinux.org/eterfund.org): rewrite URLs to the specified server
         epm_repofix "$@"
         ;;
     set)                              # HELPCMD: <mirror>: remove all existing sources and add mirror for the branch
@@ -10054,6 +10079,16 @@ __subst_with_etersoft_url()
     echo "$1" | sed \
         -e "s|h\?f\?t\?tp://ftp.altlinux.org/pub/distributions/* ALTLinux|$NURL|" \
         -e "s|h\?f\?t\?tp://ftp.basealt.ru/pub/distributions/* ALTLinux|$NURL|" \
+        -e "s|h\?f\?t\?tp://mirror.yandex.ru/* altlinux|$NURL|" \
+        -e "s|h\?f\?t\?tp://mirror.eterfund.org/download.etersoft.ru/pub/* ALTLinux|$NURL|"
+}
+
+__subst_with_eterfund_url()
+{
+    local NURL="https://mirror.eterfund.org/download.etersoft.ru/pub ALTLinux"
+    echo "$1" | sed \
+        -e "s|h\?f\?t\?tp://ftp.altlinux.org/pub/distributions/* ALTLinux|$NURL|" \
+        -e "s|h\?f\?t\?tp://ftp.basealt.ru/pub/distributions/* ALTLinux|$NURL|" \
         -e "s|h\?f\?t\?tp://mirror.yandex.ru/* altlinux|$NURL|"
 }
 
@@ -10064,7 +10099,8 @@ __subst_with_yandex_url()
         -e "s|h\?f\?t\?tp://ftp.altlinux.org/pub/distributions/* ALTLinux|$NURL|" \
         -e "s|h\?f\?t\?tp://ftp.basealt.ru/pub/distributions/* ALTLinux|$NURL|" \
         -e "s|h\?f\?t\?tp://ftp.etersoft.ru/pub/* ALTLinux|$NURL|" \
-        -e "s|h\?f\?t\?tp://download.etersoft.ru/pub/* ALTLinux|$NURL|"
+        -e "s|h\?f\?t\?tp://download.etersoft.ru/pub/* ALTLinux|$NURL|" \
+        -e "s|h\?f\?t\?tp://mirror.eterfund.org/download.etersoft.ru/pub/* ALTLinux|$NURL|"
 }
 
 __subst_with_basealt_url()
@@ -10073,6 +10109,17 @@ __subst_with_basealt_url()
     echo "$1" | sed \
         -e "s|h\?f\?t\?tp://mirror.yandex.ru/* altlinux|$NURL|" \
         -e "s|h\?f\?t\?tp://ftp.etersoft.ru/pub/* ALTLinux|$NURL|" \
+        -e "s|h\?f\?t\?tp://mirror.eterfund.org/download.etersoft.ru/pub/* ALTLinux|$NURL|" \
+        -e "s|h\?f\?t\?tp://download.etersoft.ru/pub/* ALTLinux|$NURL|"
+}
+
+__subst_with_altlinux_url()
+{
+    local NURL="http://ftp.altlinux.org/pub/distributions ALTLinux"
+    echo "$1" | sed \
+        -e "s|h\?f\?t\?tp://mirror.yandex.ru/* altlinux|$NURL|" \
+        -e "s|h\?f\?t\?tp://ftp.etersoft.ru/pub/* ALTLinux|$NURL|" \
+        -e "s|h\?f\?t\?tp://mirror.eterfund.org/download.etersoft.ru/pub/* ALTLinux|$NURL|" \
         -e "s|h\?f\?t\?tp://download.etersoft.ru/pub/* ALTLinux|$NURL|"
 }
 
@@ -10125,6 +10172,10 @@ case $BASEDISTRNAME in
             __fix_repo_to_etersoft /etc/apt/sources.list
             __fix_repo_to_etersoft /etc/apt/sources.list.d/*.list
         fi
+        if [ "$1" = "eterfund.org" ] ; then
+            __fix_repo_to_eterfund /etc/apt/sources.list
+            __fix_repo_to_eterfund /etc/apt/sources.list.d/*.list
+        fi
         if [ "$1" = "yandex" ] ; then
             __fix_repo_to_yandex /etc/apt/sources.list
             __fix_repo_to_yandex /etc/apt/sources.list.d/*.list
@@ -10132,6 +10183,10 @@ case $BASEDISTRNAME in
         if [ "$1" = "basealt" ] ; then
             __fix_repo_to_basealt /etc/apt/sources.list
             __fix_repo_to_basealt /etc/apt/sources.list.d/*.list
+        fi
+        if [ "$1" = "altlinux.org" ] ; then
+            __fix_repo_to_altlinux /etc/apt/sources.list
+            __fix_repo_to_altlinux /etc/apt/sources.list.d/*.list
         fi
         docmd apt-repo list
         return
@@ -12803,6 +12858,9 @@ __check_for_epm_version()
 __save_available_packages()
 {
     [ -d "$epm_vardir" ] || return 0
+
+    # update list only if the system supports bash completion
+    [ -d /etc/bash_completion.d ] || return 0
 
     info "Retrieving list of all available packages (for autocompletion) ..."
     short=--short epm_list_available | sort | sudorun tee $epm_vardir/available-packages >/dev/null
