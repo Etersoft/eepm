@@ -50,12 +50,14 @@ done
 #    Install launcher on every launch on Linux
 # set DESKTOPINTEGRATION or disable update via set path to binary to /etc/tdesktop/externalupdater
 
-mkdir -p "$BUILDROOT/etc/tdesktop"
+#mkdir -p "$BUILDROOT/etc/tdesktop"
 # telegram checks with real path to the binary
-echo "$PRODUCTDIR/$PRODUCT" >"$BUILDROOT/etc/tdesktop/externalupdater"
-pack_dir /etc/tdesktop
-pack_file /etc/tdesktop/externalupdater
-#remove_file /opt/Telegram/Updater
+#echo "$PRODUCTDIR/$PRODUCT" >"$BUILDROOT/etc/tdesktop/externalupdater"
+#pack_dir /etc/tdesktop
+#pack_file /etc/tdesktop/externalupdater
+mkdir -p "$BUILDROOT/usr/share/TelegramDesktop/externalupdater.d"
+echo "$PRODUCTDIR/$PRODUCT" >"$BUILDROOT/usr/share/TelegramDesktop/externalupdater.d/telegram-desktop.conf"
+pack_file /usr/share/TelegramDesktop/externalupdater.d/telegram-desktop.conf
 
 # fixed above
 # Hack against https://bugzilla.altlinux.org/42402
