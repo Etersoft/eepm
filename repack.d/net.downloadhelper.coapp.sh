@@ -22,6 +22,36 @@ if [ ! -f ./opt/net.downloadhelper.coapp/bin/xdg-open ] ; then
     rm -v .$PRODUCTDIR/xdg-open
     ln -s /usr/bin/xdg-open .$PRODUCTDIR/xdg-open
 
+cat <<EOF > net.downloadhelper.coapp.json
+{
+  "type": "stdio",
+  "allowed_extensions": [
+    "weh-native-test@downloadhelper.net",
+    "{b9db16a4-6edc-47ec-a1f4-b86292ed211d}"
+  ],
+  "name": "net.downloadhelper.coapp",
+  "description": "Video DownloadHelper companion app",
+  "path": "/var/tmp/vdhcoapp-2.0.10-linux-x86_64/opt/vdhcoapp/vdhcoapp"
+}
+EOF
+install_file net.downloadhelper.coapp.json /usr/lib64/mozilla/native-messaging-hosts/net.downloadhelper.coapp.json
+
+cat <<EOF > net.downloadhelper.coapp.json
+{
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://lmjnegcaeklhafolokijcfjliaokphfk/",
+    "chrome-extension://pfoiagbblcbmognbkekfpodpidedkmcc/",
+    "chrome-extension://jmkaglaafmhbcpleggkmaliipiilhldn/",
+    "chrome-extension://fojefjolbhfidomcaelhceoldmmpcaga/"
+  ],
+  "name": "net.downloadhelper.coapp",
+  "description": "Video DownloadHelper companion app",
+  "path": "/var/tmp/vdhcoapp-2.0.10-linux-x86_64/opt/vdhcoapp/vdhcoapp"
+}
+EOF
+install_file net.downloadhelper.coapp.json /etc/chromium/native-messaging-hosts/net.downloadhelper.coapp.json
+
     exit
 fi
 
