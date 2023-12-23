@@ -11,7 +11,11 @@ TIPS="Run 'epm play telegram-desktop=beta' to install beta version of the Telegr
 
 if [ "$VERSION" = "*" ] ; then
     [ "$PKGNAME" = "$BASEPKGNAME" ] || VERSION="*beta"
+    if ! is_glibc_enough 2.32 ; then
+        VERSION="4.9.5"
+    fi
 fi
+
 
 PKGURL=$(epm tool eget --list --latest https://github.com/telegramdesktop/tdesktop/releases "tsetup.$VERSION*.tar.xz") #"
 [ -n "$PKGURL" ] || fatal "Can't get package URL"
