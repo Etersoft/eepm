@@ -475,6 +475,7 @@ case "$DISTRIB_ID" in
                 DISTRIB_RELEASE="c9f3"
             ;;
         esac
+        [ -n "$ALT_BRANCH_ID" ] && DISTRIB_RELEASE="$ALT_BRANCH_ID"
         DISTRIB_CODENAME="$DISTRIB_RELEASE"
 #        DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\..*//g")
         ;;
