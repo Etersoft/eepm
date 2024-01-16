@@ -47,6 +47,7 @@ __save_available_packages()
 {
     [ -d "$epm_vardir" ] || return 0
 
+    # TODO: ignore in docker
     # update list only if the system supports bash completion
     [ -d /etc/bash_completion.d ] || return 0
 
@@ -67,6 +68,8 @@ esac
 
 case $PMTYPE in
     apt-dpkg)
+        is_command apt-file || return 0
+        assure_exists apt-file || return 0
         sudocmd apt-file update
         ;;
 esac
