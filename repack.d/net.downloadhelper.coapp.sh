@@ -31,7 +31,7 @@ cat <<EOF > net.downloadhelper.coapp.json
   ],
   "name": "net.downloadhelper.coapp",
   "description": "Video DownloadHelper companion app",
-  "path": "/var/tmp/vdhcoapp-2.0.10-linux-x86_64/opt/vdhcoapp/vdhcoapp"
+  "path": "$PRODUCTDIR/vdhcoapp"
 }
 EOF
 install_file net.downloadhelper.coapp.json /usr/lib64/mozilla/native-messaging-hosts/net.downloadhelper.coapp.json
@@ -47,7 +47,7 @@ cat <<EOF > net.downloadhelper.coapp.json
   ],
   "name": "net.downloadhelper.coapp",
   "description": "Video DownloadHelper companion app",
-  "path": "/var/tmp/vdhcoapp-2.0.10-linux-x86_64/opt/vdhcoapp/vdhcoapp"
+  "path": "$PRODUCTDIR/vdhcoapp"
 }
 EOF
 install_file net.downloadhelper.coapp.json /etc/chromium/native-messaging-hosts/net.downloadhelper.coapp.json
