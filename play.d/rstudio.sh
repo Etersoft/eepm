@@ -21,6 +21,9 @@ case $(epm print info -e) in
     RedOS/7*|AlterOS/*|Fedora/19)
         PKGFILTER="centos7"
         ;;
+    ROSA/*)
+        PKGFILTER="rhel8"
+        ;;
     CentOS/*|Fedora/34|Fedora/35|RHEL/8)
         PKGFILTER="rhel8"
         ;;
