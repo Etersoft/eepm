@@ -918,7 +918,7 @@ local orig=''
 local EV=''
 [ -n "$EPMVERSION" ] && EV="(EPM version $EPMVERSION) "
 cat <<EOF
-distro_info v$PROGVERSION $EV: Copyright © 2007-2023 Etersoft
+distro_info v$PROGVERSION $EV: Copyright © 2007-2024 Etersoft
 
                        Pretty name (--pretty): $(print_pretty_name)
            (--distro-name / --distro-version): $DISTRO_NAME / $DISTRIB_FULL_RELEASE$orig
