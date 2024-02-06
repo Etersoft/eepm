@@ -29,7 +29,7 @@ __epm_korinf_site_mask() {
     # short hack to install needed package
     rhas "$MASK" "[-_]" || MASK="${MASK}[-_][0-9]"
     # set arch for Korinf compatibility
-    [ "$DISTRARCH" = "x86_64" ] && archprefix="x86_64/"
+    [ "$SYSTEMARCH" = "x86_64" ] && archprefix="x86_64/"
     local URL="$EPM_KORINF_REPO_URL/$archprefix$DISTRNAME/$DISTRVERSION"
     if ! eget --check "$URL" ; then
         tURL="$EPM_KORINF_REPO_URL/$archprefix$BASEDISTRNAME/$DISTRREPONAME"
