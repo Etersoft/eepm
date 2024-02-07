@@ -35,7 +35,7 @@ epm update-kernel || fatal
 # проверяем, совпадает ли ядро (пока нет такой проверки в update-kernel)
 # TODO: добавить функцию в update-kernel и здесь использовать её
 check_run_kernel () {
-	if [ -n "$(ls /boot | grep "vmlinuz" | grep -vE 'vmlinuz-un-def|vmlinuz-std-def' | sort -r | head -n1 | grep $(uname -r))" ] ; then
+	if [ -n "$(ls /boot | grep "vmlinuz" | grep -vE 'vmlinuz-un-def|vmlinuz-std-def' | sort -Vr | head -n1 | grep $(uname -r))" ] ; then
 		echo "Запущено самое свежее установленное ядро."
 		return 0
 	else
@@ -81,6 +81,9 @@ sed -i "s|^\(GRUB_CMDLINE_LINUX_DEFAULT='.*\)'\$|\1 nvidia-drm.modeset=1'|" /etc
 
 # Убирает «Неизвестный монитор» в настройках дисплеев в сессии Wayland
 sed -i "s|^\(GRUB_CMDLINE_LINUX_DEFAULT='.*\)'\$|\1 initcall_blacklist=simpledrm_platform_driver_init'|" /etc/sysconfig/grub2
+
+# Запускаем регенерацию initrd
+make-initrd
 
 # Обновляем grub
 update-grub
