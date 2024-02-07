@@ -34,7 +34,7 @@ arch="$(epm print info -a)"
 
 if [ "$vendor" != "alt" ] ; then
     # Устанавливаем wine
-    epm install $PKGNAME || exit
+    epm install $MAIN || exit
 
     case $arch in
         x86_64)
@@ -66,28 +66,33 @@ fi
 
 fi
 
-case $arch in
-    x86_64)
-        PKGNAMES="$PKGNAMES $PKGNAMES32 $PKGCOMMON"
-        [ -n "$ONLY32" ] && PKGNAMES="$PKGNAMES32 $PKGCOMMON"
-        ;;
-    x86)
-        PKGNAMES="$PKGNAMES $PKGCOMMON"
-        ;;
-    *)
-        echo "Arch $arch is not yet supported" && exit 1
-esac
+if [ "$arch" = "x86" ] ; then
+    PKGNAMES="$PKGNAMES $PKGCOMMON"
+    epm install $PKGNAMES || exit
+    exit
+fi
 
+if [ "$arch" = "x86_64" ] && [ -n "$ONLY32" ] ; then
+    PKGNAMES="$PKGNAMES32 $PKGCOMMON"
+    epm install $PKGNAMES || exit
+    # Доставляем пропущенные модули (подпакеты) для установленных 64-битных
+    epm prescription i586-fix
+    exit
+fi
 
-# Устанавливаем wine
-epm install $PKGNAMES || exit
+if [ "$arch" = "x86_64" ] ; then
+    PKGNAMES="$PKGNAMES $PKGCOMMON"
+    epm install $PKGNAMES || exit
+    # for non wow64 packages install 32 bit part
+    if ! epm ql $MAIN | grep -q "/i386-windows/" ; then
+        epm install $PKGNAMES32 || exit
+        # Доставляем пропущенные модули (подпакеты) для установленных 64-битных
+        epm prescription i586-fix
+    fi
+    exit
+fi
+
+echo "Arch $arch is not yet supported" && exit 1
 
 # TODO:
 # epm policy $MAIN-gl 2>/dev/null >/dev/null || OLD wine packaging name scheme
-
-case $arch in
-    x86_64)
-        # Доставляем пропущенные модули (подпакеты) для установленных 64-битных
-        epm prescription i586-fix
-        ;;
-esac
