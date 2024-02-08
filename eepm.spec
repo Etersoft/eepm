@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.60.5
+Version: 3.60.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,21 @@ a discussion about extra requirements.
 
 
 %changelog
+* Thu Feb 08 2024 Vitaly Lipatov <lav@altlinux.ru> 3.60.6-alt1
+- epm repack net.downloadhelper.coapp: add json for browsers
+- add ALT_BRANCH_ID support for ALT SP Workstation
+- repack.d/net.downloadhelper.coapp.sh: fix path
+- epm play rstudio: add ROSA support
+- epm-repack-rpm: try use hard link during copying
+- epm-sh-functions: fix BIGTMPDIR
+- epm repack librewolf: fix dependencies
+- epm-epm_install: use SYSTEMARCH for distro independent arch checking
+- epm-repolist: add support for apt-dpkg
+- epm play wine: add support for wow64 build
+- epm prescription switch-to-nvidia: fixed check kernel version and added make-initrd
+- epm play: add upscayl (thx @bbadon)
+- epm play: add yandexmusic
+
 * Sat Dec 23 2023 Vitaly Lipatov <lav@altlinux.ru> 3.60.5-alt1
 - epm repack Telegram: disable updater
 - epm play telegram: set maximal version for glibc
