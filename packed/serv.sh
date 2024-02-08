@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.60.5"
+EPMVERSION="3.60.6"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -827,7 +827,10 @@ set_bigtmpdir()
     # https://bugzilla.mozilla.org/show_bug.cgi?id=69938
     # https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s15.html
     # https://geekpeach.net/ru/%D0%BA%D0%B0%D0%BA-systemd-tmpfiles-%D0%BE%D1%87%D0%B8%D1%89%D0%B0%D0%B5%D1%82-tmp-%D0%B8%D0%BB%D0%B8-var-tmp-%D0%B7%D0%B0%D0%BC%D0%B5%D0%BD%D0%B0-tmpwatch-%D0%B2-centos-rhel-7
-    [ -z "$BIGTMPDIR" ] && [ -d "/var/tmp" ] && BIGTMPDIR="/var/tmp" || BIGTMPDIR="$TMPDIR"
+    if [ -z "$BIGTMPDIR" ] ; then
+        BIGTMPDIR="/var/tmp"
+        [ -d "$BIGTMPDIR" ] || BIGTMPDIR="$TMPDIR"
+    fi
     export BIGTMPDIR
 }
 
@@ -2183,6 +2186,7 @@ case "$DISTRIB_ID" in
                 DISTRIB_RELEASE="c9f3"
             ;;
         esac
+        [ -n "$ALT_BRANCH_ID" ] && DISTRIB_RELEASE="$ALT_BRANCH_ID"
         DISTRIB_CODENAME="$DISTRIB_RELEASE"
 #        DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\..*//g")
         ;;
@@ -2625,7 +2629,7 @@ local orig=''
 local EV=''
 [ -n "$EPMVERSION" ] && EV="(EPM version $EPMVERSION) "
 cat <<EOF
-distro_info v$PROGVERSION $EV: Copyright © 2007-2023 Etersoft
+distro_info v$PROGVERSION $EV: Copyright © 2007-2024 Etersoft
 
                        Pretty name (--pretty): $(print_pretty_name)
            (--distro-name / --distro-version): $DISTRO_NAME / $DISTRIB_FULL_RELEASE$orig

@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.60.5"
+EPMVERSION="3.60.6"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -826,7 +826,10 @@ set_bigtmpdir()
     # https://bugzilla.mozilla.org/show_bug.cgi?id=69938
     # https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch05s15.html
     # https://geekpeach.net/ru/%D0%BA%D0%B0%D0%BA-systemd-tmpfiles-%D0%BE%D1%87%D0%B8%D1%89%D0%B0%D0%B5%D1%82-tmp-%D0%B8%D0%BB%D0%B8-var-tmp-%D0%B7%D0%B0%D0%BC%D0%B5%D0%BD%D0%B0-tmpwatch-%D0%B2-centos-rhel-7
-    [ -z "$BIGTMPDIR" ] && [ -d "/var/tmp" ] && BIGTMPDIR="/var/tmp" || BIGTMPDIR="$TMPDIR"
+    if [ -z "$BIGTMPDIR" ] ; then
+        BIGTMPDIR="/var/tmp"
+        [ -d "$BIGTMPDIR" ] || BIGTMPDIR="$TMPDIR"
+    fi
     export BIGTMPDIR
 }
 
@@ -3230,7 +3233,7 @@ __epm_korinf_site_mask() {
     # short hack to install needed package
     rhas "$MASK" "[-_]" || MASK="${MASK}[-_][0-9]"
     # set arch for Korinf compatibility
-    [ "$DISTRARCH" = "x86_64" ] && archprefix="x86_64/"
+    [ "$SYSTEMARCH" = "x86_64" ] && archprefix="x86_64/"
     local URL="$EPM_KORINF_REPO_URL/$archprefix$DISTRNAME/$DISTRVERSION"
     if ! eget --check "$URL" ; then
         tURL="$EPM_KORINF_REPO_URL/$archprefix$BASEDISTRNAME/$DISTRREPONAME"
@@ -9468,7 +9471,7 @@ __epm_repack_to_rpm()
 
         alpkg=$(basename $pkg)
         # don't use abs package path: copy package to temp dir and use there
-        cp $verbose $pkg $tmpbuilddir/../$alpkg
+        cp -l $verbose $pkg $tmpbuilddir/../$alpkg || cp $verbose $pkg $tmpbuilddir/../$alpkg || fatal
 
         cd $tmpbuilddir/../ || fatal
         # fill alpkg and SUBGENERIC
@@ -10393,7 +10396,7 @@ print_apt_sources_list()
 epm_repolist()
 {
 
-[ -z "$*" ] || [ "$PMTYPE" = "apt-rpm" ] || fatal "No arguments are allowed here"
+[ -z "$*" ] || [ "$PMTYPE" = "apt-rpm" ] || [ "$PMTYPE" = "apt-dpkg" ]  || fatal "No arguments are allowed here"
 
 case $PMTYPE in
     apt-rpm)
@@ -12859,6 +12862,7 @@ __save_available_packages()
 {
     [ -d "$epm_vardir" ] || return 0
 
+    # TODO: ignore in docker
     # update list only if the system supports bash completion
     [ -d /etc/bash_completion.d ] || return 0
 
@@ -12877,6 +12881,8 @@ esac
 
 case $PMTYPE in
     apt-dpkg)
+        is_command apt-file || return 0
+        assure_exists apt-file || return 0
         sudocmd apt-file update
         ;;
 esac
@@ -13797,6 +13803,7 @@ case "$DISTRIB_ID" in
                 DISTRIB_RELEASE="c9f3"
             ;;
         esac
+        [ -n "$ALT_BRANCH_ID" ] && DISTRIB_RELEASE="$ALT_BRANCH_ID"
         DISTRIB_CODENAME="$DISTRIB_RELEASE"
 #        DISTRIB_RELEASE=$(echo $DISTRIB_RELEASE | sed -e "s/\..*//g")
         ;;
@@ -14239,7 +14246,7 @@ local orig=''
 local EV=''
 [ -n "$EPMVERSION" ] && EV="(EPM version $EPMVERSION) "
 cat <<EOF
-distro_info v$PROGVERSION $EV: Copyright © 2007-2023 Etersoft
+distro_info v$PROGVERSION $EV: Copyright © 2007-2024 Etersoft
 
                        Pretty name (--pretty): $(print_pretty_name)
            (--distro-name / --distro-version): $DISTRO_NAME / $DISTRIB_FULL_RELEASE$orig
@@ -17029,7 +17036,7 @@ print_version()
 {
         echo "EPM package manager version $EPMVERSION  Telegram: https://t.me/useepm  https://wiki.etersoft.ru/Epm"
         echo "Running on $DISTRNAME/$DISTRVERSION ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
-        echo "Copyright (c) Etersoft 2012-2023"
+        echo "Copyright (c) Etersoft 2012-2024"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 
