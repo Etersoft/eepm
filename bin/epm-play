@@ -312,7 +312,11 @@ __epm_play_install_one()
         opsdir=$psdir
         psdir=$prsdir
         __check_play_script "$prescription" || fatal "We have no idea how to play $prescription (checked in $opsdir and $prsdir)"
-        __epm_play_run "$prescription" --run "$@" || fatal "There was some error during run $prescription script."
+        if [ -n "$force" ]; then
+            __epm_play_run "$prescription" --run --force "$@" || fatal "There was some error during run $prescription script."
+        else
+            __epm_play_run "$prescription" --run "$@" || fatal "There was some error during run $prescription script."
+        fi
     fi
 }
 

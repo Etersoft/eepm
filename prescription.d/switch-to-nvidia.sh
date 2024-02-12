@@ -21,8 +21,7 @@ fi
 epm assure lspci pciutils || exit
 # проверяем работоспособность драйвера на текущий момент
 # TODO: добавить проверку на гибридную графику
-# TODO: добавить аргумент --force для принудительной переустановки
-if a= lspci -k | grep -A 2 -i "VGA" | grep "Kernel driver in use" | grep -q "nvidia" ; then
+if a= lspci -k | grep -A 2 -i "VGA" | grep "Kernel driver in use" | grep -q "nvidia" && [ "$2" != "--force" ] ; then
 	echo "NVIDIA driver is already installed."
 	exit
 fi
