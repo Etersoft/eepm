@@ -32,6 +32,7 @@ epm update || fatal
 # epm upgrade || fatal
 epm update-kernel || fatal
 
+
 # проверяем, совпадает ли ядро (пока нет такой проверки в update-kernel)
 # TODO: добавить функцию в update-kernel и здесь использовать её
 check_run_kernel () {
@@ -44,6 +45,7 @@ check_run_kernel () {
 		return 1
 	fi
 }
+
 
 check_run_kernel || fatal
 
@@ -76,16 +78,10 @@ epm play i586-fix
 # Делаем копию
 cp /etc/sysconfig/grub2 /etc/sysconfig/grub2.epmbak
 
-# для работы 2-х и более видеокарт, а так же Wayland c nvidia необходимо добавить "nvidia-drm.modeset=1" в строку GRUB_CMDLINE_LINUX_DEFAULT= в файле /etc/default/grub и обновить grub
-sed -i "s|^\(GRUB_CMDLINE_LINUX_DEFAULT='.*\)'\$|\1 nvidia-drm.modeset=1'|" /etc/sysconfig/grub2
-
-# Убирает «Неизвестный монитор» в настройках дисплеев в сессии Wayland
-sed -i "s|^\(GRUB_CMDLINE_LINUX_DEFAULT='.*\)'\$|\1 initcall_blacklist=simpledrm_platform_driver_init'|" /etc/sysconfig/grub2
+# Для работы 2-х и более видеокарт, а так же Wayland c nvidia необходимо добавить nvidia-drm.modeset=1 и fbdev=1 в modprobe файл
+echo "options nvidia_drm modeset=1 fbdev=1" > /etc/modprobe.d/nvidia.conf
 
 # Запускаем регенерацию initrd
 make-initrd
-
-# Обновляем grub
-update-grub
 
 echo "Done. Just you need reboot your system to use nVidia proprietary drivers."
