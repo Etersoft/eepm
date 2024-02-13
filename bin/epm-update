@@ -51,6 +51,9 @@ __save_available_packages()
     # update list only if the system supports bash completion
     [ -d /etc/bash_completion.d ] || return 0
 
+    # HACK: too much time (5 minutes) on deb systems in a docker
+    [ $PMTYPE = "apt-dpkg" ] && return 0
+
     info "Retrieving list of all available packages (for autocompletion) ..."
     load_helper epm-list_available
     short=--short epm_list_available | sort | sudorun tee $epm_vardir/available-packages >/dev/null
