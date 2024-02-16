@@ -20,11 +20,39 @@ fi
 
 epm assure lspci pciutils || exit
 # проверяем работоспособность драйвера на текущий момент
-# TODO: добавить проверку на гибридную графику
 # TODO: добавить аргумент --force для принудительной переустановки
 if a= lspci -k | grep -A 2 -i "VGA" | grep "Kernel driver in use" | grep -q "nvidia" ; then
 	echo "NVIDIA driver is already installed."
 	exit
+fi
+
+LSPCI_OUTPUT="$(lspci -k | grep VGA | tr -d '\n')"
+
+if a= echo "$LSPCI_OUTPUT" | grep -qi "nvidia" | grep -qiE "(intel|amd)" ; then
+	cat <<EOF > "/lib/udev/rules.d/80-nvidia-pm.rules"
+# Remove NVIDIA USB xHCI Host Controller devices, if present
+ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c0330", ATTR{remove}="1"
+
+# Remove NVIDIA USB Type-C UCSI devices, if present
+ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c8000", ATTR{remove}="1"
+
+# Remove NVIDIA Audio devices, if present
+ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x040300", ATTR{remove}="1"
+
+# Enable runtime PM for NVIDIA VGA/3D controller devices on driver bind
+ACTION=="bind", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x030000", TEST=="power/control", ATTR{power/control}="auto"
+ACTION=="bind", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x030200", TEST=="power/control", ATTR{power/control}="auto"
+
+# Disable runtime PM for NVIDIA VGA/3D controller devices on driver unbind
+ACTION=="unbind", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x030000", TEST=="power/control", ATTR{power/control}="on"
+ACTION=="unbind", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x030200", TEST=="power/control", ATTR{power/control}="on"
+EOF
+
+	cat <<EOF > "/etc/modprobe.d/nvidia-rtd3.conf"
+options nvidia NVreg_PreserveVideoMemoryAllocations=1
+options nvidia NVreg_TemporaryFilePath=/var/tmp
+options nvidia "NVreg_DynamicPowerManagement=0x02"
+EOF
 fi
 
 # epm full-upgrade does too many things for this spec
