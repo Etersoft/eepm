@@ -130,7 +130,8 @@ __try_fix_apt_source_list()
     local list="$1"
     local br="$(__repofix_filter_vendor "$2")"
     local path="$3"
-    if grep -q -e "^[^#].*$path" $list ; then
+    # FIXME: masked grep: предупреждение: stray \ before /
+    if grep -q -e "^[^#].*$path" $list 2>/dev/null ; then
         if __repofix_check_vendor $br ; then
             regexp_subst "/$path/s/^rpm[[:space:]]*([fhr])/rpm [$br] \1/" $list
         else
@@ -169,29 +170,12 @@ __fix_alt_sources_list()
     done
 }
 
-__subst_with_etersoft_url()
+
+__subst_with_repo_url()
 {
-    local NURL="http://download.etersoft.ru/pub ALTLinux"
+    local NURL="$2"
     echo "$1" | sed \
-        -e "s|h\?f\?t\?tp://ftp.altlinux.org/pub/distributions/* ALTLinux|$NURL|" \
-        -e "s|h\?f\?t\?tp://ftp.basealt.ru/pub/distributions/* ALTLinux|$NURL|" \
         -e "s|h\?f\?t\?tp://mirror.yandex.ru/* altlinux|$NURL|" \
-        -e "s|h\?f\?t\?tp://mirror.eterfund.org/download.etersoft.ru/pub/* ALTLinux|$NURL|"
-}
-
-__subst_with_eterfund_url()
-{
-    local NURL="https://mirror.eterfund.org/download.etersoft.ru/pub ALTLinux"
-    echo "$1" | sed \
-        -e "s|h\?f\?t\?tp://ftp.altlinux.org/pub/distributions/* ALTLinux|$NURL|" \
-        -e "s|h\?f\?t\?tp://ftp.basealt.ru/pub/distributions/* ALTLinux|$NURL|" \
-        -e "s|h\?f\?t\?tp://mirror.yandex.ru/* altlinux|$NURL|"
-}
-
-__subst_with_yandex_url()
-{
-    local NURL="http://mirror.yandex.ru altlinux"
-    echo "$1" | sed \
         -e "s|h\?f\?t\?tp://ftp.altlinux.org/pub/distributions/* ALTLinux|$NURL|" \
         -e "s|h\?f\?t\?tp://ftp.basealt.ru/pub/distributions/* ALTLinux|$NURL|" \
         -e "s|h\?f\?t\?tp://ftp.etersoft.ru/pub/* ALTLinux|$NURL|" \
@@ -199,56 +183,15 @@ __subst_with_yandex_url()
         -e "s|h\?f\?t\?tp://mirror.eterfund.org/download.etersoft.ru/pub/* ALTLinux|$NURL|"
 }
 
-__subst_with_basealt_url()
+__change_repo()
 {
-    local NURL="http://ftp.basealt.ru/pub/distributions ALTLinux"
-    echo "$1" | sed \
-        -e "s|h\?f\?t\?tp://mirror.yandex.ru/* altlinux|$NURL|" \
-        -e "s|h\?f\?t\?tp://ftp.etersoft.ru/pub/* ALTLinux|$NURL|" \
-        -e "s|h\?f\?t\?tp://mirror.eterfund.org/download.etersoft.ru/pub/* ALTLinux|$NURL|" \
-        -e "s|h\?f\?t\?tp://download.etersoft.ru/pub/* ALTLinux|$NURL|"
-}
-
-__subst_with_altlinux_url()
-{
-    local NURL="http://ftp.altlinux.org/pub/distributions ALTLinux"
-    echo "$1" | sed \
-        -e "s|h\?f\?t\?tp://mirror.yandex.ru/* altlinux|$NURL|" \
-        -e "s|h\?f\?t\?tp://ftp.etersoft.ru/pub/* ALTLinux|$NURL|" \
-        -e "s|h\?f\?t\?tp://mirror.eterfund.org/download.etersoft.ru/pub/* ALTLinux|$NURL|" \
-        -e "s|h\?f\?t\?tp://download.etersoft.ru/pub/* ALTLinux|$NURL|"
-}
-
-__fix_repo_to_etersoft()
-{
+    local SHORT="$1"
+    local REPLTO="$2"
     local NN
-    a="" apt-repo list | grep -v debuginfo | grep -v etersoft | grep -v "file:/" | while read nn ; do
-        NN="$(__subst_with_etersoft_url "$nn")"
+    a="" apt-repo list | grep -v $SHORT | grep -v "file:/" | while read nn ; do
+        NN="$(__subst_with_repo_url "$nn" "$REPLTO")"
         [ "$NN" = "$nn" ] && continue
-        epm removerepo "$nn"
-        epm addrepo "$NN"
-    done
-}
-
-__fix_repo_to_yandex()
-{
-    local NN
-    a="" apt-repo list | grep -v debuginfo | grep -v mirror\.yandex | grep -v "file:/" | while read nn ; do
-        NN="$(__subst_with_yandex_url "$nn")"
-        [ "$NN" = "$nn" ] && continue
-        epm removerepo "$nn"
-        epm addrepo "$NN"
-    done
-}
-
-__fix_repo_to_basealt()
-{
-    local NN
-    a="" apt-repo list | grep -v debuginfo | grep -v ftp.basealt | grep -v "file:/" | while read nn ; do
-        NN="$(__subst_with_basealt_url "$nn")"
-        [ "$NN" = "$nn" ] && continue
-        epm removerepo "$nn"
-        epm addrepo "$NN"
+        epm addrepo "$NN" && epm removerepo "$nn" || return 1
     done
 }
 
@@ -264,26 +207,25 @@ case $BASEDISTRNAME in
         __fix_alt_sources_list /etc/apt/sources.list
         __fix_alt_sources_list /etc/apt/sources.list.d/*.list
         # TODO: move to repo change
-        if [ "$1" = "etersoft" ] ; then
-            __fix_repo_to_etersoft /etc/apt/sources.list
-            __fix_repo_to_etersoft /etc/apt/sources.list.d/*.list
-        fi
-        if [ "$1" = "eterfund.org" ] ; then
-            __fix_repo_to_eterfund /etc/apt/sources.list
-            __fix_repo_to_eterfund /etc/apt/sources.list.d/*.list
-        fi
-        if [ "$1" = "yandex" ] ; then
-            __fix_repo_to_yandex /etc/apt/sources.list
-            __fix_repo_to_yandex /etc/apt/sources.list.d/*.list
-        fi
-        if [ "$1" = "basealt" ] ; then
-            __fix_repo_to_basealt /etc/apt/sources.list
-            __fix_repo_to_basealt /etc/apt/sources.list.d/*.list
-        fi
-        if [ "$1" = "altlinux.org" ] ; then
-            __fix_repo_to_altlinux /etc/apt/sources.list
-            __fix_repo_to_altlinux /etc/apt/sources.list.d/*.list
-        fi
+        case "$1" in
+        "etersoft")
+            __change_repo etersoft "http://download.etersoft.ru/pub ALTLinux"
+            ;;
+        "eterfund.org")
+            __change_repo eterfund.org "https://mirror.eterfund.org/download.etersoft.ru/pub ALTLinux"
+            ;;
+        "yandex")
+            __change_repo mirror.yandex "http://mirror.yandex.ru altlinux"
+            ;;
+        "basealt")
+            __change_repo ftp.basealt "http://ftp.basealt.ru/pub/distributions ALTLinux"
+            ;;
+        "altlinux.org")
+            __change_repo ftp.altlinux "http://ftp.altlinux.org/pub/distributions ALTLinux"
+            ;;
+        *)
+            fatal "Unsupported change key $1"
+        esac
         docmd apt-repo list
         return
         ;;
