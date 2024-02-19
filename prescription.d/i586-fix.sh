@@ -72,7 +72,9 @@ esac
 
 echo
 echo "Installing all appropiate 32 bit packages ..."
-epm install --no-remove $LIST
+noremove=''
+[ -n "$auto" ] && noremove='--no-remove'
+epm install $noremove $LIST
 RES=$?
 
 [ "$RES" = "0" ] || echo "Try do epm upgrade before."
