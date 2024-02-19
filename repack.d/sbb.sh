@@ -8,7 +8,12 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
+# hack due broken provides in libcurl-gnutls-compat
+ignore_lib_requires "libcurl-gnutls.so.4"
+add_requires "libcurl-gnutls.so.4(64bit)"
+
 add_libs_requires
+
 exit
 
 # ошибка: Неудовлетворенные зависимости:
