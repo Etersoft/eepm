@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.60.6
+Version: 3.60.7
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,17 @@ a discussion about extra requirements.
 
 
 %changelog
+* Tue Feb 20 2024 Vitaly Lipatov <lav@altlinux.ru> 3.60.7-alt1
+- epm-update: skip apt-cache (use too much time)
+- /etc/pkgallowscripts.list: allow scripts for eepm as a hack
+- epmp switch-to-nvidia.sh: added check kflavour
+- epm-repofix: rewrite epm repo change
+- epm prescription i586-fix: no remove in auto mode
+- epm repack anydesk: add missed gtk gl libs
+- epm play switch-to-nvidia.sh: add --force support
+- epm play switch-to-nvidia: cleanup check_run_kernel
+- epm repack sbb: fix libcurl-gnutls.so.4(64bit) require (ALT bug 47890)
+
 * Thu Feb 08 2024 Vitaly Lipatov <lav@altlinux.ru> 3.60.6-alt1
 - epm repack net.downloadhelper.coapp: add json for browsers
 - add ALT_BRANCH_ID support for ALT SP Workstation
