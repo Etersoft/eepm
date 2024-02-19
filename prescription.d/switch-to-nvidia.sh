@@ -35,18 +35,18 @@ epm update-kernel || fatal
 # проверяем, совпадает ли ядро (пока нет такой проверки в update-kernel)
 # TODO: добавить функцию в update-kernel и здесь использовать её
 check_run_kernel () {
-	USED_KFLAVOUR="$(uname -r | awk -F'-' '{print $(NF-2)}')-def"
-	if [ -n "$(ls /boot | grep "vmlinuz" | grep -vE 'vmlinuz-un-def|vmlinuz-std-def' | grep "${USED_KFLAVOUR}" | sort -Vr | head -n1 | grep $(uname -r))" ] ; then
-		echo "Запущено самое свежее установленное ${USED_KFLAVOUR} ядро."
-		return 0
-	else
-		echo "В системе есть ${USED_KFLAVOUR} ядро свежее запущенного."
-		echo "Перезагрузитесь со свежим ${USED_KFLAVOUR} ядром и перезапустите: epm play switch-to-nvidia"
-		return 1
-	fi
+    # TODO: support kernel-image-rt
+    local USED_KFLAVOUR="$(uname -r | awk -F'-' '{print $(NF-2)}')-def"
+    ls /boot | grep "vmlinuz" | grep -vE 'vmlinuz-un-def|vmlinuz-std-def' | grep "${USED_KFLAVOUR}" | sort -Vr | head -n1 | grep -q $(uname -r)
 }
 
-check_run_kernel || fatal
+if check_run_kernel ; then
+	echo "Запущено самое свежее установленное ${USED_KFLAVOUR} ядро."
+else
+	echo "В системе есть ${USED_KFLAVOUR} ядро свежее запущенного."
+	echo "Перезагрузитесь со свежим ${USED_KFLAVOUR} ядром и перезапустите: epm play switch-to-nvidia"
+	fatal
+fi
 
 epm install --skip-installed nvidia_glx_common || fatal
 
