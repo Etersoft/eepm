@@ -6,13 +6,12 @@ SPEC="$2"
 
 PRODUCT=anydesk
 
-# install all requires packages before packing (the list have got with rpmreqs anydesk)
-#PREINSTALL_PACKAGES="fontconfig glib2 libatk libcairo libfreetype libgdk-pixbuf libgio libGL libGLU libgtk+2 libICE libpango libpolkit libSM libX11 libxcb libXdamage libXext libXfixes libXi libxkbfile libXmu libXrandr libXrender libXt libXtst polkit libminizip libgtkglext libpangox-1.0.so.0"
 UNIREQUIRES="libGL.so.1 libGLU.so.1 libX11-xcb.so.1 libX11.so.6 libXdamage.so.1 libXext.so.6 libXfixes.so.3 libXi.so.6 libXrandr.so.2 libXrender.so.1 libXtst.so.6 libatk-1.0.so.0
 libcairo.so.2 libfontconfig.so.1 libfreetype.so.6
 libgdk-x11-2.0.so.0 libgdk_pixbuf-2.0.so.0 libgio-2.0.so.0 libglib-2.0.so.0 libgobject-2.0.so.0 libgtk-x11-2.0.so.0 libpango-1.0.so.0 libpangocairo-1.0.so.0 libpangoft2-1.0.so.0 libpolkit-gobject-1.so.0
 libstdc++.so.6
 libxcb-shm.so.0 libxcb.so.1 libxkbfile.so.1
+libpangox-1.0.so.0 libgdkglext-x11-1.0.so.0 libgtkglext-x11-1.0.so.0
 polkit"
 
 . $(dirname $0)/common.sh
