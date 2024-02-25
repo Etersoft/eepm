@@ -36,7 +36,7 @@ __alt_local_content_search()
     update_repo_if_needed
 
     if [ ! -s "$ALT_CONTENTS_INDEX_LIST" ] ; then
-        fatal "Have no local contents index. Check epm repo --help."
+        fatal "There was some error in contents index retrieving. Try run 'epm update' again."
     fi
 
     local CI="$(cat $ALT_CONTENTS_INDEX_LIST)"

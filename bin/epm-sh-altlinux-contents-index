@@ -59,10 +59,13 @@ rsync_alt_contents_index()
     __rsync_check "$URL" || return
 
     mkdir -p "$(dirname "$TD")"
+
+    [ -n "$USER" ] && sudorun chown -R $USER "$TD"
+
     if [ -z "$quiet" ] ; then
-        docmd rsync --partial --inplace $3 -a --progress "$URL" "$TD"
+        docmd rsync --partial --inplace $3 -a "$URL" "$TD"
     else
-        a= rsync --partial --inplace $3 -a --progress "$URL" "$TD" >/dev/null
+        a= rsync --partial --inplace $3 -a "$URL" "$TD"
     fi
     res=$?
     [ -f "$TD" ] && sudorun chmod a+rw "$TD"
