@@ -11,7 +11,7 @@ URL="https://github.com/cucumber-sp/yandex-music-linux/releases"
 arch="$(epm print info -a)"
 case "$arch" in
     x86_64)
-        arch=x64
+        arch=amd64
         ;;
     aarch64)
         arch=arm64
@@ -21,6 +21,6 @@ case "$arch" in
         ;;
 esac
 
-PKGURL=$(epm tool eget --list --latest https://github.com/cucumber-sp/yandex-music-linux/releases "yandexmusic.$VERSION.$arch.rpm")
+PKGURL=$(epm tool eget --list --latest https://github.com/cucumber-sp/yandex-music-linux/releases "yandex-music_${VERSION}_${arch}.deb")
 
 epm install --repack $PKGURL
