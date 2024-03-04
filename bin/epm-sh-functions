@@ -434,6 +434,8 @@ set_sudo()
         fi
     else
         # use sudo if one is tuned and tuned without password
+        # hack: check twice
+        $SUDO_CMD -l -n >/dev/null 2>/dev/null
         if ! $SUDO_CMD -l -n >/dev/null 2>/dev/null ; then
             [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported here). Please run epm under root or check http://altlinux.org/sudo '"
             SUDO_TESTED="4"
