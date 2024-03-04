@@ -60,10 +60,10 @@ case $PMTYPE in
         CMD="eopkg search --"
         ;;
     yum-rpm)
-        CMD="yum search --"
+        CMD="yum search"
         ;;
     dnf-rpm)
-        CMD="dnf search --"
+        CMD="dnf search"
         ;;
     zypper-rpm)
         CMD="zypper search -d --"
