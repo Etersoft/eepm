@@ -1,4 +1,5 @@
 #!/bin/sh
+
 # eget - simply shell on wget for loading directories over http (wget does not support wildcard for http)
 # Use:
 # eget http://ftp.altlinux.ru/pub/security/ssl/*
@@ -320,6 +321,18 @@ WGETNAMEOPTIONS='--content-disposition'
 CURLNAMEOPTIONS='--remote-name --remote-time --remote-header-name'
 AXELNAMEOPTIONS=''
 
+WGETNODIRECTORIES=''
+WGETCONTINUE=''
+CURLCONTINUE=''
+WGETTIMEOUT=''
+CURLMAXTIME=''
+WGETREADTIMEOUT=''
+WGETRETRYCONNREFUSED=''
+CURLRETRYCONNREFUSED=''
+WGETTRIES=''
+CURLRETRY=''
+WGETLOADCOOKIES=''
+CURLCOOKIE=''
 
 LISTONLY=''
 CHECKURL=''
@@ -362,6 +375,13 @@ Options:
     -6|--ipv6|--inet6-only    - use only IPV6
     -O-|-O -                  - output downloaded file to stdout
     -O file                   - download to this file
+    -nd|--no-directories      - do not create a hierarchy of directories when retrieving recursively
+    -c|--continue             - continue getting a partially-downloaded file
+    -T|--timeout=N            - set  the network timeout to N seconds
+    --read-timeout=N          - set the read (and write) timeout to N seconds
+    --retry-connrefused       - consider “connection refused” a transient error and try again
+    -t|--tries                - set number of tries to number. Specify 0 or ‘inf’ for infinite retrying
+    --load-cookies file       - load cookies from file before the first HTTP retrieval
     --latest                  - print only latest version of a file
     --second-latest           - print only second to latest version of a file
     --allow-mirrors           - check mirrors if url is not accessible
@@ -403,7 +423,9 @@ fi
 
 while [ -n "$1" ] ; do
 
-    case "$1" in
+    argument="$(echo $1 | cut -d= -f1)"
+    argvalue="$(echo $1 | cut -s -d= -f2)"
+    case "$argument" in
         -h|--help)
             eget_help
             exit
@@ -420,10 +442,14 @@ while [ -n "$1" ] ; do
             AXELNOSSLCHECK='--insecure'
             ;;
         -H|--header)
-            shift
-            WGETHEADER="--header=$1"
-            CURLHEADER="--header $1"
-            AXELHEADER="--header=$1"
+            #TODO: error if header value contains spaces
+            if [ -z "$argvalue" ];then
+                shift
+                argvalue="$1"
+            fi
+            WGETHEADER="--header=\"$argvalue\""
+            CURLHEADER="--header \"$argvalue\""
+            AXELHEADER="--header=\"$argvalue\""
             ;;
         -U|-A|--user-agent)
             user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
@@ -480,6 +506,58 @@ while [ -n "$1" ] ; do
             ;;
         -O-)
             TARGETFILE="-"
+            ;;
+        -nd|--no-directories)
+            WGETNODIRECTORIES="$1"
+            ;;
+        -c|--continue)
+            WGETCONTINUE="$1"
+            CURLCONTINUE="-C -"
+            ;;
+        -T|--timeout)
+            if [ -z "$argvalue" ];then
+                shift
+                argvalue="$1"
+            fi
+            WGETTIMEOUT="--timeout $argvalue"
+            CURLMAXTIME="--max-time $argvalue"
+            ;;
+        --read-timeout)
+            if [ -z "$argvalue" ];then
+                shift
+                argvalue="$1"
+            fi
+            WGETREADTIMEOUT="--read-timeout $argvalue"
+            if [ -z "$CURLMAXTIME" ];then
+                CURLMAXTIME="--max-time $argvalue"
+            fi
+            ;;
+        --retry-connrefused)
+            WGETRETRYCONNREFUSED="$1"
+            CURLRETRYCONNREFUSED="$1"
+            ;;
+        -t|--tries)
+            if [ -z "$argvalue" ];then
+                shift
+                argvalue="$1"
+            fi
+
+            case "$argvalue" in
+                0|inf)
+                    CURLRETRY="--retry 1000"
+                    WGETTRIES="--tries $argvalue"
+                    ;;
+
+                *)
+                    WGETTRIES="--tries $argvalue"
+                    CURLRETRY="--retry $(($argvalue-1))"
+                    ;;
+            esac
+            ;;
+        --load-cookies)
+            shift;
+            WGETLOADCOOKIES="--load-cookies $1"
+            CURLCOOKIE="--cookie $1"
             ;;
         -*)
             fatal "Unknown option '$1', check eget --help."
@@ -948,9 +1026,9 @@ elif [ "$EGET_BACKEND" = "wget" ] ; then
 __wget()
 {
     if [ -n "$WGETUSERAGENT" ] ; then
-        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETHEADER $WGETNOSSLCHECK "$WGETUSERAGENT" "$@"
+        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETHEADER $WGETNOSSLCHECK $WGETNODIRECTORIES $WGETCONTINUE $WGETTIMEOUT $WGETREADTIMEOUT $WGETRETRYCONNREFUSED $WGETTRIES $WGETLOADCOOKIES "$WGETUSERAGENT" "$@"
     else
-        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETHEADER $WGETNOSSLCHECK "$@"
+        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETHEADER $WGETNOSSLCHECK $WGETNODIRECTORIES $WGETCONTINUE $WGETTIMEOUT $WGETREADTIMEOUT $WGETRETRYCONNREFUSED $WGETTRIES $WGETLOADCOOKIES "$@"
     fi
 }
 
@@ -998,9 +1076,9 @@ elif [ "$EGET_BACKEND" = "curl" ] ; then
 __curl()
 {
     if [ -n "$CURLUSERAGENT" ] ; then
-        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER "$CURLUSERAGENT" $CURLNOSSLCHECK "$@"
+        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER $CURLNOSSLCHECK $CURLCONTINUE $CURLMAXTIME $CURLRETRYCONNREFUSED $CURLRETRY $CURLCOOKIE "$CURLUSERAGENT" "$@"
     else
-        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER $CURLNOSSLCHECK "$@"
+        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER $CURLNOSSLCHECK $CURLCONTINUE $CURLMAXTIME $CURLRETRYCONNREFUSED $CURLRETRY $CURLCOOKIE "$@"
     fi
 }
 # put remote content to stdout
