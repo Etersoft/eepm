@@ -391,7 +391,8 @@ if distro os-release ; then
         ubuntu|reld|rhel|astra|manjaro)
             ;;
         *)
-            [ -n "$ID_LIKE" ] && VENDOR_ID="$(echo "$ID_LIKE" | cut -d" " -f1)"
+            # ID_LIKE can be 'rhel centos fedora', use latest word
+            [ -n "$ID_LIKE" ] && VENDOR_ID="$(echo "$ID_LIKE" | xargs -n1 | tail -n1)"
             ;;
     esac
     DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
