@@ -618,7 +618,8 @@ elif [ "$(uname)" = "Linux" ] && is_command guix ; then
 # fixme: move to up
 elif [ "$(uname)" = "Linux" ] && [ -x $ROOTDIR/system/bin/getprop ] ; then
     DISTRIB_ID="Android"
-    DISTRIB_RELEASE=$(getprop | awk -F": " '/build.version.release/ { print $2 }' | tr -d '[]')
+    DISTRIB_RELEASE=$(getprop | awk -F": " '/system.build.version.release\]/ { print $2 }' | tr -d '[]' | head -n1)
+    [ -n "$DISTRIB_RELEASE" ] || DISTRIB_RELEASE=$(getprop | awk -F": " '/build.version.release/ { print $2 }' | tr -d '[]' | head -n1)
 
 elif [ "$(uname -o 2>/dev/null)" = "Cygwin" ] ; then
         DISTRIB_ID="Cygwin"
