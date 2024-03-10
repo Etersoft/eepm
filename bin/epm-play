@@ -51,7 +51,7 @@ __is_app_installed()
 __run_script()
 {
     local script="$psdir/$1.sh"
-    [ -x "$script" ] || return
+    [ -s "$script" ] || return
     [ -f "$script.rpmnew" ] && warning "There is .rpmnew file(s) in $psdir dir. The play script can be outdated."
 
     shift
@@ -154,7 +154,7 @@ __check_play_script()
     local script="$psdir/$1.sh"
     shift
 
-    [ -x "$script" ]
+    [ -s "$script" ]
 }
 
 
