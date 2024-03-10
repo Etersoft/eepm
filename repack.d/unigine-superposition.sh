@@ -46,9 +46,13 @@ remove_file /version
 pack_dir $PRODUCTDIR
 pack_dir $PRODUCTDIR/bin
 
+# use internal libcrypto.so
 # lib.req: ERROR: .../opt/unigine-superposition/bin/qt/lib/libssl.so: library libcrypto.so.1.0.0 not found
 a= patchelf --remove-needed libcrypto.so.1.0.0 $BUILDROOT$PRODUCTDIR/bin/qt/lib/libssl.so
 a= patchelf --add-needed libcrypto.so $BUILDROOT$PRODUCTDIR/bin/qt/lib/libssl.so
+
+# there is no libQt5Test.so.5
+remove_file $PRODUCTDIR/bin/qt/lib/libQt5QuickTest.so.5
 
 add_bin_exec_command superposition $PRODUCTDIR/bin/launcher
 add_bin_link_command $PRODUCT /usr/bin/superposition
