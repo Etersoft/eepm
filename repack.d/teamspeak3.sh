@@ -53,4 +53,5 @@ if [ "$libevent" != "libevent-2.1.so.7" ] && epm assure patchelf ; then
     #patchelf --replace-needed libquazip.so libquazip1-qt5.so.1.0.0 .$PRODUCTDIR/ts3client_linux_amd64
 fi
 
+epm install "libwebp.so.6()(64bit)" || epm install https://git.altlinux.org/tasks/177836/build/200/x86_64/rpms/libwebp6-0.5.2-alt2.x86_64.rpm || fatal "Can't install needed libwebp6"
 add_libs_requires
