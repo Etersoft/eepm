@@ -27,4 +27,7 @@ subst 's|GenericName\[ru\]=Веб-браузер|GenericName[ru]=Веб-брау
 
 fix_desktop_file /usr/bin/google-chrome-stable
 
+subst "s|^Summary:.*|Summary: Google Chrome browser|" $SPEC
+subst '1iConflicts: google-chrome-preinstall' $SPEC
+
 add_chromium_deps
