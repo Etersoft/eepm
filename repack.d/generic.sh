@@ -58,6 +58,9 @@ subst "s|^\(Name: .*\)$|# Override repository package\nEpoch: 100\n\1|g" $SPEC
 subst "1i%global _build_pkgcheck_set %nil" $SPEC
 subst "1i%global _build_pkgcheck_srpm %nil" $SPEC
 
+# disable /usr/lib/.build-id generating
+subst "1i%global _build_id_links none" $SPEC
+
 set_rpm_field()
 {
     local field="$1"
