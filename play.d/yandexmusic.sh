@@ -1,7 +1,7 @@
 #!/bin/sh
 
 PKGNAME=YandexMusic
-SUPPORTEDARCHES="x86_64 aarch64"
+SUPPORTEDARCHES="x86_64 aarch64 armhf"
 VERSION="$2"
 DESCRIPTION="Native Yandex Music client for Linux. Made with OSX/Windows beta client repacking"
 URL="https://github.com/cucumber-sp/yandex-music-linux/releases"
@@ -15,6 +15,9 @@ case "$arch" in
         ;;
     aarch64)
         arch=arm64
+        ;;
+    armhf)
+        arch=armhf
         ;;
     *)
         fatal "$arch arch is not supported"
