@@ -34,7 +34,7 @@ __epm_pack_run_handler()
     returntarname=''
 
     local repackcode="$EPM_PACK_SCRIPTS_DIR/$packname.sh"
-    [ -x "$repackcode" ] || return
+    [ -s "$repackcode" ] || return
     [ -f "$repackcode.rpmnew" ] && warning "There is .rpmnew file(s) in $EPM_PACK_SCRIPTS_DIR dir. The pack script can be outdated."
 
     # a file to keep filename of generated tarball
