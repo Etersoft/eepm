@@ -21,7 +21,10 @@ a= unsquashfs $TAR || fatal
 # version: 1.69.1
 # summary: Plex for Linux
 # description:
-eval $(epm tool yaml squashfs-root/meta/snap.yaml | head | grep -E "(name|version|summary|description)=")
+eval $(epm tool yaml squashfs-root/meta/snap.yaml | grep -E "(name|version|summary|description)=") #"
+
+[ -n "$name" ] || fatal "Can't get name from snap.yaml"
+[ -n "$version" ] || fatal "Can't get version from snap.yaml"
 
 mkdir -p opt/
 mv squashfs-root opt/$name
@@ -37,12 +40,11 @@ upstream_file: $alpkg
 generic_repack: snap
 EOF
 
-cd opt/$name || fatal
-install_file meta/gui/icon.png usr/share/pixmaps.png
-install_file meta/gui/*.desktop usr/share/applications/$name.desktop
+test -d opt/$name || fatal "Can't find opt/$name"
+install_file opt/$name/meta/gui/icon.png usr/share/pixmaps.png
+install_file opt/$name/meta/gui/*.desktop usr/share/applications/$name.desktop
 sed -i -e 's|^Icon=.*|Icon=$name|' usr/share/applications/$name.desktop
-cd - >/dev/null
 
-erc pack $PKGNAME opt/$name
+erc pack $PKGNAME opt/$name usr/share
 
 return_tar $PKGNAME
