@@ -10,8 +10,6 @@ subst "s|^Group:.*|Group: Video|" $SPEC
 subst "s|^URL:.*|URL: http://www.teamspeak.com|" $SPEC
 subst "s|^Summary:.*|Summary: TeamSpeak is software for quality voice communication via the Internet|" $SPEC
 
-#UNIREQUIRES="libquazip1-qt5.so.1.0.0"
-
 add_bin_link_command $PRODUCT $PRODUCTDIR/ts3client_runscript.sh
 #add_bin_link_command $PRODUCT $PRODUCTDIR/ts3client_linux_amd64
 
@@ -54,4 +52,11 @@ if [ "$libevent" != "libevent-2.1.so.7" ] && epm assure patchelf ; then
 fi
 
 epm install "libwebp.so.6()(64bit)" || epm install https://git.altlinux.org/tasks/177836/build/200/x86_64/rpms/libwebp6-0.5.2-alt2.x86_64.rpm || fatal "Can't install needed libwebp6"
+
+# require missed libQt5WaylandClient.so.5
+remove_file $PRODUCTDIR/platforms/libqwayland-generic.so
+remove_file $PRODUCTDIR/platforms/libqwayland-egl.so
+remove_file $PRODUCTDIR/platforms/libqwayland-xcomposite-glx.so
+remove_file $PRODUCTDIR/platforms/libqwayland-xcomposite-egl.so
+
 add_libs_requires
