@@ -7,7 +7,8 @@ DESCRIPTION="TeamSpeak3 Client for Linux from the official site"
 
 . $(dirname $0)/common.sh
 
-[ "$VERSION" = "*" ] && VERSION=3.6.0
+# TODO: check latest version here: https://www.teamspeak.com/en/downloads/#ts3client
+[ "$VERSION" = "*" ] && VERSION=3.6.1
 
 PKGURL="https://files.teamspeak-services.com/releases/client/$VERSION/TeamSpeak3-Client-linux_amd64-$VERSION.run"
 
