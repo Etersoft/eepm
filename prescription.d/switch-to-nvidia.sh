@@ -81,6 +81,9 @@ cp /etc/sysconfig/grub2 /etc/sysconfig/grub2.epmbak
 # Данное решение приводит к невозможности входа в tty, к отсутствию вывода логов во время загрузки (Если не включён Plymouth)
 sed -i "s|^\(GRUB_CMDLINE_LINUX_DEFAULT='.*\)'\$|\1 initcall_blacklist=simpledrm_platform_driver_init'|" /etc/sysconfig/grub2
 
+# Активируем службы управления питания NVIDIA, без этих служб будет некоректно работать уход в сон
+systemctl enable nvidia-suspend.service nvidia-resume.service nvidia-hibernate.service
+
 # Запускаем регенерацию initrd
 make-initrd
 
