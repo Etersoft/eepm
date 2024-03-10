@@ -78,6 +78,7 @@ epm play i586-fix
 cp /etc/sysconfig/grub2 /etc/sysconfig/grub2.epmbak
 
 # Убирает «Неизвестный монитор» в настройках дисплеев в сессии Wayland
+# Данное решение приводит к невозможности входа в tty, к отсутствию вывода логов во время загрузки (Если не включён Plymouth)
 sed -i "s|^\(GRUB_CMDLINE_LINUX_DEFAULT='.*\)'\$|\1 initcall_blacklist=simpledrm_platform_driver_init'|" /etc/sysconfig/grub2
 
 # Запускаем регенерацию initrd
