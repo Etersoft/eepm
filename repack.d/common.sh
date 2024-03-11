@@ -433,6 +433,8 @@ add_by_ldd_deps()
 
 filter_from_requires()
 {
+    # ALT specific only
+    [ "$(epm print info -s)" = "alt" ] || return 0
     # hack for uncompatible rpm-build
     [ -n "$EPM_RPMBUILD" ] && return
     local i
@@ -455,6 +457,8 @@ ignore_lib_requires()
 
 add_findreq_skiplist()
 {
+    # ALT specific only
+    [ "$(epm print info -s)" = "alt" ] || return 0
     # hack for uncompatible rpm-build
     [ -n "$EPM_RPMBUILD" ] && return
     local i
@@ -484,6 +488,9 @@ set_autoprov()
 # https://bugzilla.altlinux.org/42189
 fix_cpio_bug_links()
 {
+    # ALT specific only
+    [ "$(epm print info -s)" = "alt" ] || return 0
+
     local rlink
     find -type l | while read link ; do
         rlink="$(readlink "$link")"
