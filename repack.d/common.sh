@@ -386,13 +386,18 @@ get_libs_requires()
 
     __get_binary_requires "$fdir" | LANG=C sort -u >$libreqlist
     info "  List of binary and libs requires:"
-    info $(cat $libreqlist)
+    info "$(cat $libreqlist | xargs -n1000)"
     info "  End of the list binary and libs requires."
 
     __get_library_provides "$fdir" | LANG=C sort -u >$libpreslist
     info "  List of libraries provided:"
-    info $(cat $libpreslist)
-    info "  End of the list provided by the library."
+    info "$(cat $libpreslist | xargs -n1000)"
+    info "  End of the provided libraries list."
+
+    info "  List of ignored libraries:"
+    info "$EEPM_IGNORE_LIB_REQUIRES"
+    info "  End of the ignored libraries."
+
     # print out result
     LANG=C join -v2 $libpreslist $libreqlist
     rm -f $libreqlist $libpreslist
