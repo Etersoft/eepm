@@ -800,7 +800,7 @@ get_package_type()
                 return
             fi
             # print extension by default
-            echo "$1" | sed -e 's|.*\.||'
+            basename "$1" | sed -e 's|.*\.||'
             return 1
             ;;
     esac

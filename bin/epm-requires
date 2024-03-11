@@ -79,29 +79,31 @@ epm_requires_files()
     local pkg_files="$*"
     [ -n "$pkg_files" ] || return
 
-    # TODO: handle separately
-    local PKGTYPE="$(get_package_type $pkg_files)"
+    local fl
+    for fl in $pkg_files ; do
+        local PKGTYPE="$(get_package_type $fl)"
 
-    case "$PKGTYPE" in
-        rpm)
-            assure_exists rpm >/dev/null
-            __epm_alt_rpm_requires -p $pkg_files
-            ;;
-        deb)
-            assure_exists dpkg >/dev/null
-            a='' docmd dpkg -I $pkg_files | grep "^ *Depends:" | sed "s|^ *Depends:||g"
-            ;;
-        eopkg)
-            showcmd eopkg info $pkg_files
-            LC_ALL=C eopkg info $pkg_files | grep "^Dependencies" | head -n1 | sed -e "s|Dependencies[[:space:]]*: ||"
-            ;;
-        ELF)
-            __epm_elf_requires $pkg_files
-            ;;
-        *)
-            fatal "Have no suitable command for $PKGTYPE"
-            ;;
-    esac
+        case "$PKGTYPE" in
+            rpm)
+                assure_exists rpm >/dev/null
+                __epm_alt_rpm_requires -p $fl
+                ;;
+            deb)
+                assure_exists dpkg >/dev/null
+                a='' docmd dpkg -I $fl | grep "^ *Depends:" | sed "s|^ *Depends:||g"
+                ;;
+            eopkg)
+                showcmd eopkg info $fl
+                LC_ALL=C eopkg info $fl | grep "^Dependencies" | head -n1 | sed -e "s|Dependencies[[:space:]]*: ||"
+                ;;
+            ELF)
+                __epm_elf_requires $fl
+                ;;
+            *)
+                warning "Have no suitable command for handle file $fl with .$PKGTYPE"
+                ;;
+        esac
+    done
 }
 
 epm_requires_names()
