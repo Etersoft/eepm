@@ -58,9 +58,7 @@ a= x11presetdrv # сканирует PCI в /sys на предмет видео�
 a= ldconfig # обновляет кэш информации о новейших версиях разделяемых библиотек
 
 # отключаем nouveau
-if ! grep "blacklist nouveau" /etc/modprobe.d/blacklist-nvidia-x11.conf &>/dev/null
-then echo "blacklist nouveau" > /etc/modprobe.d/blacklist-nvidia-x11.conf
-fi
+echo "blacklist nouveau" > /etc/modprobe.d/blacklist-nvidia-x11.conf
 a= rmmod nouveau
 
 # удаляем /etc/X11/xorg.conf если он есть и в нём содержится nouveau или fbdev
