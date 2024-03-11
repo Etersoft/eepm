@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.60.8
+Version: 3.60.9
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,20 @@ a discussion about extra requirements.
 
 
 %changelog
+* Mon Mar 11 2024 Vitaly Lipatov <lav@altlinux.ru> 3.60.9-alt1
+- epm repack.d/common.sh: skip alt specific on non ALT systems
+- epm pack.d/generic-appimage.sh: get VERSION from X-AppImage-Version field of a desktop file
+- epm repack: run add_libs_requires by default
+- epm play viber: use AppImage
+- epm play: add tonkeeper
+- epm repack: add net.downloadhelper.coapp.noffmpeg
+- epm play r7-office: update for support new versions
+- add_chromium_deps(): remove libatopology.so.2
+- epm repack balena-etcher: move to /opt
+- epm repack: add hack for get AppImage version from URL
+- epm play: add neovide
+- epm repack librewolf: fix repacking
+
 * Mon Mar 11 2024 Vitaly Lipatov <lav@altlinux.ru> 3.60.8-alt1
 - epm-sh-altlinux-contents-index: fix update content index
 - epm repack plex-desktop: fix repack with eepm-rpm-build
