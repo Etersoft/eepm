@@ -35,7 +35,7 @@ epm update-kernel || fatal
 # TODO: добавить функцию в update-kernel и здесь использовать её
 check_run_kernel () {
     # TODO: support kernel-image-rt
-    local USED_KFLAVOUR="$(uname -r | awk -F'-' '{print $(NF-2)}')-def"
+    USED_KFLAVOUR="$(uname -r | awk -F'-' '{print $(NF-2)}')-def"
     ls /boot | grep "vmlinuz" | grep -vE 'vmlinuz-un-def|vmlinuz-std-def' | grep "${USED_KFLAVOUR}" | sort -Vr | head -n1 | grep -q $(uname -r)
 }
 
@@ -73,12 +73,13 @@ epm install --skip-installed nvidia-settings nvidia-vaapi-driver ocl-nvidia libc
 
 epm play i586-fix
 
-# Делаем копию
-cp /etc/sysconfig/grub2 /etc/sysconfig/grub2.epmbak
-
 # Убирает «Неизвестный монитор» в настройках дисплеев в сессии Wayland
 # Данное решение приводит к невозможности входа в tty, к отсутствию вывода логов во время загрузки (Если не включён Plymouth)
-sed -i "s|^\(GRUB_CMDLINE_LINUX_DEFAULT='.*\)'\$|\1 initcall_blacklist=simpledrm_platform_driver_init'|" /etc/sysconfig/grub2
+if ! grep "initcall_blacklist=simpledrm_platform_driver_init" /etc/sysconfig/grub2 &>/dev/null ; then 
+	# Делаем копию
+	cp /etc/sysconfig/grub2 /etc/sysconfig/grub2.epmbak
+	sed -i "s|^\(GRUB_CMDLINE_LINUX_DEFAULT='.*\)'\$|\1 initcall_blacklist=simpledrm_platform_driver_init'|" /etc/sysconfig/grub2
+fi
 
 # Активируем службы управления питания NVIDIA, без этих служб будет некоректно работать уход в сон
 systemctl enable nvidia-suspend.service nvidia-resume.service nvidia-hibernate.service
