@@ -5,10 +5,13 @@ BUILDROOT="$1"
 SPEC="$2"
 
 PRODUCT=balena-etcher
-PRODUCTDIR=/opt/balenaEtcher
+PRODUCTDIR=/opt/balena-etcher
 
 . $(dirname $0)/common-chromium-browser.sh
 
+move_to_opt
+
+rm usr/bin/$PRODUCT
 add_bin_link_command
 fix_desktop_file
 
