@@ -20,7 +20,8 @@
 PROGDIR=$(dirname "$0")
 PROGNAME=$(basename "$0")
 [ -n "$EPMCURDIR" ] || export EPMCURDIR="$(pwd)"
-CMDSHELL="/usr/bin/env bash"
+CMDENV="/usr/bin/env"
+[ -x "$CMDENV" ] && CMDSHELL="/usr/bin/env bash" || CMDSHELL="$SHELL"
 # TODO: pwd for ./epm and which for epm
 [ "$PROGDIR" = "." ] && PROGDIR="$EPMCURDIR"
 if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
@@ -33,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.60.7"
+EPMVERSION="3.60.8"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -445,6 +446,8 @@ set_sudo()
         fi
     else
         # use sudo if one is tuned and tuned without password
+        # hack: check twice
+        $SUDO_CMD -l -n >/dev/null 2>/dev/null
         if ! $SUDO_CMD -l -n >/dev/null 2>/dev/null ; then
             [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported here). Please run epm under root or check http://altlinux.org/sudo '"
             SUDO_TESTED="4"
@@ -790,7 +793,7 @@ get_package_type()
                 return
             fi
             # print extension by default
-            echo "$1" | sed -e 's|.*\.||'
+            basename "$1" | sed -e 's|.*\.||'
             return 1
             ;;
     esac
@@ -3540,9 +3543,10 @@ epm_full_upgrade_help()
 {
             get_help HELPCMD $SHAREDIR/epm-full_upgrade
     cat <<EOF
-You can run with --interactive if you can skip some steps interactivelyю
+You can run with --interactive if you can skip some steps interactively.
 Also you can comment out full_upgrade parts in /etc/eepm/eepm.conf config.
 Examples:
+  epm full-upgrade [--auto]
   epm full-upgrade [--interactive]
   epm full-upgrade --no-flatpack
 EOF
@@ -3622,7 +3626,11 @@ confirm_action()
     confirm_action "Upgrade packages installed via epm play? [Y/n]" || full_upgrade_no_epm_play=1
     if [ -z "$full_upgrade_no_epm_play" ] ; then
         [ -n "$quiet" ] || echo
-        docmd epm $dryrun play --update all || fatal "updating of applications installed via epm play is failed."
+        if [ -n "$force" ] ; then
+            docmd epm $dryrun play || fatal "updating of applications installed via epm play is failed."
+        else
+            docmd epm $dryrun play --update all || fatal "updating of applications installed via epm play is failed."
+        fi
     fi
 
 
@@ -5715,7 +5723,7 @@ __epm_pack_run_handler()
     returntarname=''
 
     local repackcode="$EPM_PACK_SCRIPTS_DIR/$packname.sh"
-    [ -x "$repackcode" ] || return
+    [ -s "$repackcode" ] || return
     [ -f "$repackcode.rpmnew" ] && warning "There is .rpmnew file(s) in $EPM_PACK_SCRIPTS_DIR dir. The pack script can be outdated."
 
     # a file to keep filename of generated tarball
@@ -6076,7 +6084,7 @@ __is_app_installed()
 __run_script()
 {
     local script="$psdir/$1.sh"
-    [ -x "$script" ] || return
+    [ -s "$script" ] || return
     [ -f "$script.rpmnew" ] && warning "There is .rpmnew file(s) in $psdir dir. The play script can be outdated."
 
     shift
@@ -6177,7 +6185,7 @@ __check_play_script()
     local script="$psdir/$1.sh"
     shift
 
-    [ -x "$script" ]
+    [ -s "$script" ]
 }
 
 
@@ -10732,29 +10740,31 @@ epm_requires_files()
     local pkg_files="$*"
     [ -n "$pkg_files" ] || return
 
-    # TODO: handle separately
-    local PKGTYPE="$(get_package_type $pkg_files)"
+    local fl
+    for fl in $pkg_files ; do
+        local PKGTYPE="$(get_package_type $fl)"
 
-    case "$PKGTYPE" in
-        rpm)
-            assure_exists rpm >/dev/null
-            __epm_alt_rpm_requires -p $pkg_files
-            ;;
-        deb)
-            assure_exists dpkg >/dev/null
-            a='' docmd dpkg -I $pkg_files | grep "^ *Depends:" | sed "s|^ *Depends:||g"
-            ;;
-        eopkg)
-            showcmd eopkg info $pkg_files
-            LC_ALL=C eopkg info $pkg_files | grep "^Dependencies" | head -n1 | sed -e "s|Dependencies[[:space:]]*: ||"
-            ;;
-        ELF)
-            __epm_elf_requires $pkg_files
-            ;;
-        *)
-            fatal "Have no suitable command for $PKGTYPE"
-            ;;
-    esac
+        case "$PKGTYPE" in
+            rpm)
+                assure_exists rpm >/dev/null
+                __epm_alt_rpm_requires -p $fl
+                ;;
+            deb)
+                assure_exists dpkg >/dev/null
+                a='' docmd dpkg -I $fl | grep "^ *Depends:" | sed "s|^ *Depends:||g"
+                ;;
+            eopkg)
+                showcmd eopkg info $fl
+                LC_ALL=C eopkg info $fl | grep "^Dependencies" | head -n1 | sed -e "s|Dependencies[[:space:]]*: ||"
+                ;;
+            ELF)
+                __epm_elf_requires $fl
+                ;;
+            *)
+                warning "Have no suitable command for handle file $fl with .$PKGTYPE"
+                ;;
+        esac
+    done
 }
 
 epm_requires_names()
@@ -11540,10 +11550,10 @@ case $PMTYPE in
         CMD="eopkg search --"
         ;;
     yum-rpm)
-        CMD="yum search --"
+        CMD="yum search"
         ;;
     dnf-rpm)
-        CMD="dnf search --"
+        CMD="dnf search"
         ;;
     zypper-rpm)
         CMD="zypper search -d --"
@@ -11745,7 +11755,7 @@ __alt_local_content_search()
     update_repo_if_needed
 
     if [ ! -s "$ALT_CONTENTS_INDEX_LIST" ] ; then
-        fatal "Have no local contents index. Check epm repo --help."
+        fatal "There was some error in contents index retrieving. Try run 'epm update' again."
     fi
 
     local CI="$(cat $ALT_CONTENTS_INDEX_LIST)"
@@ -11897,10 +11907,13 @@ rsync_alt_contents_index()
     __rsync_check "$URL" || return
 
     mkdir -p "$(dirname "$TD")"
+
+    [ -n "$USER" ] && sudorun chown -R $USER "$TD"
+
     if [ -z "$quiet" ] ; then
-        docmd rsync --partial --inplace $3 -a --progress "$URL" "$TD"
+        docmd rsync --partial --inplace $3 -a "$URL" "$TD"
     else
-        a= rsync --partial --inplace $3 -a --progress "$URL" "$TD" >/dev/null
+        a= rsync --partial --inplace $3 -a "$URL" "$TD"
     fi
     res=$?
     [ -f "$TD" ] && sudorun chmod a+rw "$TD"
@@ -13664,7 +13677,8 @@ if distro os-release ; then
         ubuntu|reld|rhel|astra|manjaro)
             ;;
         *)
-            [ -n "$ID_LIKE" ] && VENDOR_ID="$(echo "$ID_LIKE" | cut -d" " -f1)"
+            # ID_LIKE can be 'rhel centos fedora', use latest word
+            [ -n "$ID_LIKE" ] && VENDOR_ID="$(echo "$ID_LIKE" | xargs -n1 | tail -n1)"
             ;;
     esac
     DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
@@ -13890,7 +13904,8 @@ elif [ "$(uname)" = "Linux" ] && is_command guix ; then
 # fixme: move to up
 elif [ "$(uname)" = "Linux" ] && [ -x $ROOTDIR/system/bin/getprop ] ; then
     DISTRIB_ID="Android"
-    DISTRIB_RELEASE=$(getprop | awk -F": " '/build.version.release/ { print $2 }' | tr -d '[]')
+    DISTRIB_RELEASE=$(getprop | awk -F": " '/system.build.version.release\]/ { print $2 }' | tr -d '[]' | head -n1)
+    [ -n "$DISTRIB_RELEASE" ] || DISTRIB_RELEASE=$(getprop | awk -F": " '/build.version.release/ { print $2 }' | tr -d '[]' | head -n1)
 
 elif [ "$(uname -o 2>/dev/null)" = "Cygwin" ] ; then
         DISTRIB_ID="Cygwin"
@@ -14136,7 +14151,7 @@ get_virt()
     fi
 
     # use util-linux
-    if LC_ALL=C a= lscpu | grep "Hypervisor vendor:" | grep -q "KVM" ; then
+    if LC_ALL=C a= lscpu 2>/dev/null | grep "Hypervisor vendor:" | grep -q "KVM" ; then
         echo "kvm" && return
     fi
 
@@ -17475,6 +17490,9 @@ check_filenames()
         elif is_url "$opt" ; then
             has_space "$opt" && warning "There are space(s) in URL '$opt', it is not supported. Skipped" && continue
             [ -n "$pkg_urls" ] && pkg_urls="$pkg_urls $opt" || pkg_urls="$opt"
+        elif echo "$opt" | grep -q "[/]" ; then
+            has_space "$opt" && warning "There are space(s) in filename '$opt', it is not supported. Skipped" && continue
+            [ -n "$pkg_files" ] && pkg_files="$pkg_files $opt" || pkg_files="$opt"
         else
             has_space "$opt" && warning "There are space(s) in package name '$opt', it is not supported. Skipped." && continue
             echo "$opt" | grep -q "[*]" && warning "There are forbidden symbols in package name '$opt'. Skipped." && continue

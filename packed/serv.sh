@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.60.7"
+EPMVERSION="3.60.8"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -446,6 +446,8 @@ set_sudo()
         fi
     else
         # use sudo if one is tuned and tuned without password
+        # hack: check twice
+        $SUDO_CMD -l -n >/dev/null 2>/dev/null
         if ! $SUDO_CMD -l -n >/dev/null 2>/dev/null ; then
             [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported here). Please run epm under root or check http://altlinux.org/sudo '"
             SUDO_TESTED="4"
@@ -791,7 +793,7 @@ get_package_type()
                 return
             fi
             # print extension by default
-            echo "$1" | sed -e 's|.*\.||'
+            basename "$1" | sed -e 's|.*\.||'
             return 1
             ;;
     esac
@@ -2102,7 +2104,8 @@ if distro os-release ; then
         ubuntu|reld|rhel|astra|manjaro)
             ;;
         *)
-            [ -n "$ID_LIKE" ] && VENDOR_ID="$(echo "$ID_LIKE" | cut -d" " -f1)"
+            # ID_LIKE can be 'rhel centos fedora', use latest word
+            [ -n "$ID_LIKE" ] && VENDOR_ID="$(echo "$ID_LIKE" | xargs -n1 | tail -n1)"
             ;;
     esac
     DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
@@ -2328,7 +2331,8 @@ elif [ "$(uname)" = "Linux" ] && is_command guix ; then
 # fixme: move to up
 elif [ "$(uname)" = "Linux" ] && [ -x $ROOTDIR/system/bin/getprop ] ; then
     DISTRIB_ID="Android"
-    DISTRIB_RELEASE=$(getprop | awk -F": " '/build.version.release/ { print $2 }' | tr -d '[]')
+    DISTRIB_RELEASE=$(getprop | awk -F": " '/system.build.version.release\]/ { print $2 }' | tr -d '[]' | head -n1)
+    [ -n "$DISTRIB_RELEASE" ] || DISTRIB_RELEASE=$(getprop | awk -F": " '/build.version.release/ { print $2 }' | tr -d '[]' | head -n1)
 
 elif [ "$(uname -o 2>/dev/null)" = "Cygwin" ] ; then
         DISTRIB_ID="Cygwin"
@@ -2574,7 +2578,7 @@ get_virt()
     fi
 
     # use util-linux
-    if LC_ALL=C a= lscpu | grep "Hypervisor vendor:" | grep -q "KVM" ; then
+    if LC_ALL=C a= lscpu 2>/dev/null | grep "Hypervisor vendor:" | grep -q "KVM" ; then
         echo "kvm" && return
     fi
 
