@@ -3,6 +3,7 @@
 TAR="$1"
 RETURNTARNAME="$2"
 VERSION="$3"
+URL="$4"
 
 . $(dirname $0)/common.sh
 
@@ -29,6 +30,12 @@ str="$(grep '^X-AppImage-Version=' $DESKTOPFILE)"
 if [ -n "$str" ] ; then
     VERSION="$(echo $str | sed -e 's|.*X-AppImage-Version=||')"
 fi
+
+# https://github.com/neovide/neovide/releases/download/0.12.2/neovide.AppImage
+if [ -z "$VERSION" ] && rhas "$URL" "github.com.*/releases/download" ; then
+    VERSION="$(echo "$URL" | sed -e 's|.*/releases/download/||' -e "s|/$alpkg||")"
+fi
+
 [ -n "$VERSION" ] || fatal "Can't get version from $TAR."
 
 PKGNAME=$PRODUCT-$VERSION.tar

@@ -109,7 +109,8 @@ __prepare_source_package()
 
     # they will fill $returntarname
     if rhas "$alpkg" "\.AppImage$" ; then
-        __epm_pack_run_handler generic-appimage "$pkg"
+        # big hack with $pkg_urls_downloaded (it can be a list, not a single url)
+        __epm_pack_run_handler generic-appimage "$pkg" "" "$pkg_urls_downloaded"
         SUBGENERIC='appimage'
     elif rhas "$alpkg" "\.snap$" ; then
         __epm_pack_run_handler generic-snap "$pkg"

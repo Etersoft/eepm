@@ -30,7 +30,7 @@ __epm_pack_run_handler()
     local packname="$1"
     local tarname="$2"
     local packversion="$3"
-    local url="$3"
+    local url="$4"
     returntarname=''
 
     local repackcode="$EPM_PACK_SCRIPTS_DIR/$packname.sh"
