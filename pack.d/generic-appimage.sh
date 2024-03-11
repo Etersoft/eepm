@@ -36,7 +36,7 @@ if [ -z "$VERSION" ] && rhas "$URL" "github.com.*/releases/download" ; then
     VERSION="$(echo "$URL" | sed -e 's|.*/releases/download/||' -e "s|/$alpkg||")"
 fi
 
-[ -n "$VERSION" ] || fatal "Can't get version from $TAR."
+[ -n "$VERSION" ] || fatal "Can't get version from $TAR. Please, inform ustream about https://docs.appimage.org/reference/desktop-integration.html (X-AppImage-Version field)"
 
 PKGNAME=$PRODUCT-$VERSION.tar
 
