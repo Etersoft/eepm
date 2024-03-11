@@ -9,7 +9,6 @@ DESCRIPTION="Viber for Linux from the official site"
 
 [ "$VERSION" = "*" ] || fatal "Only latest Viber version is allowed"
 
-# the same binaries in deb and rpm
-PKG="https://download.cdn.viber.com/cdn/desktop/Linux/viber.deb"
+PKGURL="https://download.cdn.viber.com/desktop/Linux/viber.AppImage"
 
-epm install "$PKG"
+epm install "$PKGURL"
