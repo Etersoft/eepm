@@ -156,6 +156,7 @@ __epm_addrepo_altlinux_url()
     local res=''
     for arch in $(get_archlist) ; do
         local rd="$(eget --list $url/$arch/RPMS.*)"
+# TODO: fix URL support!
         [ -d "$rd" ] || continue
         local REPO_NAME="$(echo "$rd" | sed -e 's|.*\.||')"
         docmd epm repo add "rpm $url $arch $REPO_NAME"

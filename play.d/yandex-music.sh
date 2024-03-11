@@ -26,4 +26,4 @@ esac
 
 PKGURL=$(epm tool eget --list --latest https://github.com/cucumber-sp/yandex-music-linux/releases "yandex-music_${VERSION}_${arch}.deb")
 
-epm install --repack $PKGURL
+epm install $PKGURL

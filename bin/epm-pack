@@ -109,7 +109,7 @@ __epm_pack()
     mv -v $pkgnames $EPMCURDIR || fatal
 
     local i
-    for i in $pkgnames ; do
+    for i in "$returntarname" ; do
         [ -r "$i.eepm.yaml" ] && mv -v "$i.eepm.yaml" $EPMCURDIR
     done
 

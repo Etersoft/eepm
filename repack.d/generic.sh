@@ -83,7 +83,7 @@ subst "s|^\(Version: .*\)~.*|\1|" $SPEC
 subst "s|^Release: |Release: epm1.repacked.|" $SPEC
 set_rpm_field "Distribution" "EEPM"
 
-
+# TODO: check the yaml file!!!
 if [ -r "$PKG.eepm.yaml" ] ; then
     eval $(epm tool yaml $PKG.eepm.yaml | grep -E '(summary|description|upstream_file|upstream_url|url|appname|arches|group|license|version)=' ) #'
     # for tarballs fix permissions
