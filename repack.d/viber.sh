@@ -9,6 +9,13 @@ PRODUCTDIR=/opt/viber
 
 . $(dirname $0)/common.sh
 
+# handle AppImage
+if [ -f ".$PRODUCTDIR/.DirIcon" ] ; then
+    ignore_lib_requires libQt6LabsSettings.so.6 libQt6LabsSharedImage.so.6 libQt6LabsWavefrontMesh.so.6 libQt6WebEngineQuickDelegatesQml.so.6 libQt6LabsQmlModels.so.6
+    add_libs_requires
+    exit
+fi
+
 add_bin_link_command
 add_bin_link_command $PRODUCTCUR $PRODUCT
 
