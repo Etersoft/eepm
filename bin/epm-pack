@@ -85,7 +85,7 @@ __epm_pack()
     # don't repack by default there is our pkg format
     __epm_split_by_pkg_type $PKGFORMAT $returntarname && dorepack=''
     # repack if we have a repack rule for it
-    [ -z "$norepack" ] && __epm_have_repack_rule $returntarname && dorepack='--repack'
+    [ -z "$norepack" ] && __epm_check_repack_rule $returntarname && dorepack='--repack'
     # repack if forced
     [ -n "$repack" ] && dorepack='--repack'
 
