@@ -603,6 +603,9 @@ check_filenames()
         elif is_url "$opt" ; then
             has_space "$opt" && warning "There are space(s) in URL '$opt', it is not supported. Skipped" && continue
             [ -n "$pkg_urls" ] && pkg_urls="$pkg_urls $opt" || pkg_urls="$opt"
+        elif echo "$opt" | grep -q "[/]" ; then
+            has_space "$opt" && warning "There are space(s) in filename '$opt', it is not supported. Skipped" && continue
+            [ -n "$pkg_files" ] && pkg_files="$pkg_files $opt" || pkg_files="$opt"
         else
             has_space "$opt" && warning "There are space(s) in package name '$opt', it is not supported. Skipped." && continue
             echo "$opt" | grep -q "[*]" && warning "There are forbidden symbols in package name '$opt'. Skipped." && continue
