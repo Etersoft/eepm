@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.60.8"
+EPMVERSION="3.60.9"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -3038,6 +3038,7 @@ __download_pkg_urls()
                 [ -s "$tmppkg/$i" ] || continue
                 chmod $verbose a+r "$tmppkg/$i"
                 [ -n "$pkg_files" ] && pkg_files="$pkg_files $tmppkg/$i" || pkg_files="$tmppkg/$i"
+                [ -n "$pkg_urls_downloaded" ] && pkg_urls_downloaded="$pkg_urls_downloaded $url" || pkg_urls_downloaded="$url"
             done
         else
             warning "Failed to download $url, ignoring"
@@ -5719,7 +5720,7 @@ __epm_pack_run_handler()
     local packname="$1"
     local tarname="$2"
     local packversion="$3"
-    local url="$3"
+    local url="$4"
     returntarname=''
 
     local repackcode="$EPM_PACK_SCRIPTS_DIR/$packname.sh"
@@ -5773,7 +5774,7 @@ __epm_pack()
     # don't repack by default there is our pkg format
     __epm_split_by_pkg_type $PKGFORMAT $returntarname && dorepack=''
     # repack if we have a repack rule for it
-    [ -z "$norepack" ] && __epm_have_repack_rule $returntarname && dorepack='--repack'
+    [ -z "$norepack" ] && __epm_check_repack_rule $returntarname && dorepack='--repack'
     # repack if forced
     [ -n "$repack" ] && dorepack='--repack'
 
@@ -5797,7 +5798,7 @@ __epm_pack()
     mv -v $pkgnames $EPMCURDIR || fatal
 
     local i
-    for i in $pkgnames ; do
+    for i in "$returntarname" ; do
         [ -r "$i.eepm.yaml" ] && mv -v "$i.eepm.yaml" $EPMCURDIR
     done
 
@@ -9117,6 +9118,14 @@ esac
 
 __epm_have_repack_rule()
 {
+    # FIXME: use real way (for any archive)
+    local pkgname="$(epm print name for package "$1")"
+    local repackcode="$EPM_REPACK_SCRIPTS_DIR/$pkgname.sh"
+    [ -s "$repackcode" ]
+}
+
+__epm_check_repack_rule()
+{
     # skip repacking on non ALT systems
     [ "$BASEDISTRNAME" = "alt" ] || return 1
 
@@ -9125,17 +9134,14 @@ __epm_have_repack_rule()
         # skip for packages built with repack
         epm_status_repacked "$i" && return 1
 
-        # FIXME: use real way (for any archive)
-        local pkgname="$(epm print name for package "$i")"
-        local repackcode="$EPM_REPACK_SCRIPTS_DIR/$pkgname.sh"
-        [ -s "$repackcode" ] || return 1
+        __epm_have_repack_rule "$i" || return 1
     done
     return 0
 }
 
 __epm_check_if_needed_repack()
 {
-    __epm_have_repack_rule "$@" || return
+    __epm_check_repack_rule "$@" || return
     local pkgname="$(epm print name for package "$1")"
     warning "There is repack rule for '$pkgname' package. It is better install this package via 'epm install --repack' or 'epm play'."
 }
@@ -9189,7 +9195,8 @@ __prepare_source_package()
 
     # they will fill $returntarname
     if rhas "$alpkg" "\.AppImage$" ; then
-        __epm_pack_run_handler generic-appimage "$pkg"
+        # big hack with $pkg_urls_downloaded (it can be a list, not a single url)
+        __epm_pack_run_handler generic-appimage "$pkg" "" "$pkg_urls_downloaded"
         SUBGENERIC='appimage'
     elif rhas "$alpkg" "\.snap$" ; then
         __epm_pack_run_handler generic-snap "$pkg"
@@ -9212,24 +9219,21 @@ __prepare_source_package()
 
 
 
-__epm_repack()
+__epm_repack_single()
 {
-    repacked_pkgs=''
+    local pkg="$1"
     case $PKGFORMAT in
         rpm)
-            __epm_repack_to_rpm "$@" || return
+            __epm_repack_to_rpm "$pkg" || return
             ;;
         deb)
-            # FIXME: only one package in $@ is supported
-            #local pkgname="$(epm print name from "$@")"
-            #__set_version_pkgname "$1"
-            local repackcode="$EPM_REPACK_SCRIPTS_DIR/$PKGNAME.sh"
-            if [ -x "$repackcode" ] ; then
-                __epm_repack_to_rpm "$@" || return
-                [ -n "$repacked_pkgs" ] || return
-                __epm_repack_to_deb $repacked_pkgs
+            if __epm_have_repack_rule "$pkg" ; then
+                # we have repack rules only for rpm, so use rpm step in any case
+                __epm_repack_to_rpm "$pkg" || return
+                [ -n "$repacked_pkg" ] || return
+                __epm_repack_to_deb $repacked_pkg || return
             else
-                __epm_repack_to_deb "$@" || return
+                __epm_repack_to_deb "$pkg" || return
             fi
             ;;
         *)
@@ -9239,6 +9243,17 @@ __epm_repack()
 
     return 0
 }
+
+__epm_repack()
+{
+    local pkg
+    repacked_pkgs=''
+    for pkg in $* ; do
+        __epm_repack_single "$pkg" || fatal "Error with $pkg repacking."
+        [ -n "$repacked_pkgs" ] && repacked_pkgs="$repacked_pkgs $repacked_pkg" || repacked_pkgs="$repacked_pkg"
+    done
+}
+
 
 __epm_repack_if_needed()
 {
@@ -9282,14 +9297,13 @@ epm_repack()
 
 __epm_repack_to_deb()
 {
-    local pkg
-    local pkgs="$*"
+    local pkg="$1"
 
     assure_exists alien
     assure_exists fakeroot
     assure_exists rpm
 
-    repacked_pkgs=''
+    repacked_pkg=''
 
     local TDIR
     TDIR="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
@@ -9297,7 +9311,10 @@ __epm_repack_to_deb()
 
     umask 022
 
-    for pkg in $pkgs ; do
+    if echo "$pkg" | grep -q "\.deb" ; then
+        warning "Repack deb to deb is not supported yet."
+    fi
+
         abspkg="$(realpath "$pkg")"
         info "Repacking $abspkg to local deb format (inside $TDIR) ..."
 
@@ -9308,15 +9325,16 @@ __epm_repack_to_deb()
         cd $TDIR || fatal
         __prepare_source_package "$pkg"
 
-        showcmd_store_output fakeroot alien -d -k $scripts "$alpkg"
+        showcmd_store_output fakeroot alien -d -k $verbose $scripts "$alpkg"
         local DEBCONVERTED=$(grep "deb generated" $RC_STDOUT | sed -e "s| generated||g")
         if [ -n "$DEBCONVERTED" ] ; then
-            repacked_pkgs="$repacked_pkgs $(realpath $DEBCONVERTED)"
+            repacked_pkg="$repacked_pkg $(realpath $DEBCONVERTED)"
             remove_on_exit "$(realpath $DEBCONVERTED)"
+        else
+            warning "Can't find converted deb for source binary package '$pkg'"
         fi
         clean_store_output
         cd - >/dev/null
-    done
 
     return 0
 }
@@ -9429,7 +9447,7 @@ __try_install_eepm_rpmbuild()
 
 __epm_repack_to_rpm()
 {
-    local pkgs="$*"
+    local pkg="$1"
 
     # Note: install epm-repack for static (package based) dependencies
     assure_exists alien || fatal
@@ -9453,18 +9471,18 @@ __epm_repack_to_rpm()
     umask 022
 
     # TODO: improve
-    if echo "$pkgs" | grep -q "\.deb" ; then
+    if echo "$pkg" | grep -q "\.deb" ; then
         assure_exists dpkg || fatal
         # TODO: Для установки требует: /usr/share/debconf/confmodule но пакет не может быть установлен
         # assure_exists debconf
     fi
 
-    local pkg
     local alpkg
     local abspkg
     local tmpbuilddir
-    repacked_pkgs=''
-    for pkg in $pkgs ; do
+
+    repacked_pkg=''
+
         # TODO: keep home?
         HOME="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
         remove_on_exit $HOME
@@ -9479,7 +9497,7 @@ __epm_repack_to_rpm()
 
         alpkg=$(basename $pkg)
         # don't use abs package path: copy package to temp dir and use there
-        cp -l $verbose $pkg $tmpbuilddir/../$alpkg || cp $verbose $pkg $tmpbuilddir/../$alpkg || fatal
+        cp -l $verbose $pkg $tmpbuilddir/../$alpkg 2>/dev/null || cp $verbose $pkg $tmpbuilddir/../$alpkg || fatal
 
         cd $tmpbuilddir/../ || fatal
         # fill alpkg and SUBGENERIC
@@ -9516,9 +9534,9 @@ __epm_repack_to_rpm()
         cd $buildroot || fatal
 
         __fix_spec $pkgname $buildroot $spec
-        __apply_fix_code "generic" $buildroot $spec $pkgname $abspkg $SUBGENERIC
+        __apply_fix_code "generic"             $buildroot $spec $pkgname $abspkg $SUBGENERIC
         __apply_fix_code "generic-$SUBGENERIC" $buildroot $spec $pkgname $abspkg
-        __apply_fix_code $pkgname $buildroot $spec $pkgname $abspkg
+        __apply_fix_code $pkgname              $buildroot $spec $pkgname $abspkg
         if ! has_repack_script $pkgname ; then
             __apply_fix_code "generic-default" $buildroot $spec $pkgname $abspkg
         fi
@@ -9538,12 +9556,11 @@ __epm_repack_to_rpm()
         local repacked_rpm="$(realpath $tmpbuilddir/../*.rpm)"
         if [ -s "$repacked_rpm" ] ; then
             remove_on_exit "$repacked_rpm"
-            [ -n "$repacked_pkgs" ] && repacked_pkgs="$repacked_pkgs $repacked_rpm" || repacked_pkgs="$repacked_rpm"
+            repacked_pkg="$repacked_rpm"
         else
             warning "Can't find converted rpm for source binary package '$pkg' (got $repacked_rpm)"
         fi
         cd $EPMCURDIR >/dev/null
-    done
 
     true
 }
