@@ -89,11 +89,3 @@ add_bin_cdexec_command $PRODUCT $PRODUCTDIR/AppRun
 # Strange AppRun script uses args as path, so override path detection
 subst "2iexport APPDIR=$PRODUCTDIR" $BUILDROOT/usr/bin/$PRODUCT
 
-# detect requires by libs
-add_libs_requires
-
-if [ -f v8_context_snapshot.bin ] ; then
-    echo "electron based application detected, adding requires for it ..."
-    add_electron_deps
-fi
-
