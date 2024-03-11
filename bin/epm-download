@@ -87,6 +87,7 @@ __download_pkg_urls()
                 [ -s "$tmppkg/$i" ] || continue
                 chmod $verbose a+r "$tmppkg/$i"
                 [ -n "$pkg_files" ] && pkg_files="$pkg_files $tmppkg/$i" || pkg_files="$tmppkg/$i"
+                [ -n "$pkg_urls_downloaded" ] && pkg_urls_downloaded="$pkg_urls_downloaded $url" || pkg_urls_downloaded="$url"
             done
         else
             warning "Failed to download $url, ignoring"
