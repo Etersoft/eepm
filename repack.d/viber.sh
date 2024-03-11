@@ -12,7 +12,22 @@ PRODUCTDIR=/opt/viber
 add_bin_link_command
 add_bin_link_command $PRODUCTCUR $PRODUCT
 
-#subst '1i%filter_from_requires /^libtiff.so.5(LIBTIFF_.*/d' $SPEC
+# hack, todo: update libevent in p10
+get_libevent()
+{
+    local libdir
+    for libdir in /usr/lib/x86_64-linux-gnu /usr/lib64 /lib64 ; do
+        basename $(ls $libdir/libevent-2.1.so.[0-9] 2>/dev/null) 2>/dev/null
+    done | head -n1
+}
+
+libevent="$(get_libevent)"
+[ -n "$libevent" ] || fatal "libevent is missed, install it before"
+
+if [ "$libevent" != "libevent-2.1.so.7" ] && epm assure patchelf ; then
+    patchelf --replace-needed libevent-2.1.so.7 $libevent .$PRODUCTDIR/lib/libQt6WebEngineCore.so.6
+fi
+
 
 fix_desktop_file
 
