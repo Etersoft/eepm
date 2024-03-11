@@ -132,31 +132,26 @@ __prepare_source_package()
 
 
 
-# FIXME: Нужно как-то обеспечить непродолжение выполнения.
 # used in epm install
-# fill repacked_pkgs
-__epm_repack()
+__epm_repack_single()
 {
-    repacked_pkgs=''
+    local pkg="$1"
     case $PKGFORMAT in
         rpm)
             load_helper epm-repack-rpm
-            __epm_repack_to_rpm "$@" || return
+            __epm_repack_to_rpm "$pkg" || return
             ;;
         deb)
-            # FIXME: only one package in $@ is supported
-            #local pkgname="$(epm print name from "$@")"
-            #__set_version_pkgname "$1"
-            local repackcode="$EPM_REPACK_SCRIPTS_DIR/$PKGNAME.sh"
-            if [ -x "$repackcode" ] ; then
+            if __epm_have_repack_rule "$pkg" ; then
+                # we have repack rules only for rpm, so use rpm step in any case
                 load_helper epm-repack-rpm
                 load_helper epm-repack-deb
-                __epm_repack_to_rpm "$@" || return
-                [ -n "$repacked_pkgs" ] || return
-                __epm_repack_to_deb $repacked_pkgs
+                __epm_repack_to_rpm "$pkg" || return
+                [ -n "$repacked_pkg" ] || return
+                __epm_repack_to_deb $repacked_pkg || return
             else
                 load_helper epm-repack-deb
-                __epm_repack_to_deb "$@" || return
+                __epm_repack_to_deb "$pkg" || return
             fi
             ;;
         *)
@@ -166,6 +161,18 @@ __epm_repack()
 
     return 0
 }
+
+# fill repacked_pkgs
+__epm_repack()
+{
+    local pkg
+    repacked_pkgs=''
+    for pkg in $* ; do
+        __epm_repack_single "$pkg" || fatal "Error with $pkg repacking."
+        [ -n "$repacked_pkgs" ] && repacked_pkgs="$repacked_pkgs $repacked_pkg" || repacked_pkgs="$repacked_pkg"
+    done
+}
+
 
 __epm_repack_if_needed()
 {

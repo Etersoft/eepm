@@ -124,10 +124,10 @@ __try_install_eepm_rpmbuild()
     RPMBUILD=/usr/bin/rpmbuild
 }
 
-# will fill repacked_pkgs var
+# will fill repacked_pkg var
 __epm_repack_to_rpm()
 {
-    local pkgs="$*"
+    local pkg="$1"
 
     # Note: install epm-repack for static (package based) dependencies
     assure_exists alien || fatal
@@ -151,18 +151,18 @@ __epm_repack_to_rpm()
     umask 022
 
     # TODO: improve
-    if echo "$pkgs" | grep -q "\.deb" ; then
+    if echo "$pkg" | grep -q "\.deb" ; then
         assure_exists dpkg || fatal
         # TODO: Для установки требует: /usr/share/debconf/confmodule но пакет не может быть установлен
         # assure_exists debconf
     fi
 
-    local pkg
     local alpkg
     local abspkg
     local tmpbuilddir
-    repacked_pkgs=''
-    for pkg in $pkgs ; do
+
+    repacked_pkg=''
+
         # TODO: keep home?
         HOME="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
         remove_on_exit $HOME
@@ -236,12 +236,11 @@ __epm_repack_to_rpm()
         local repacked_rpm="$(realpath $tmpbuilddir/../*.rpm)"
         if [ -s "$repacked_rpm" ] ; then
             remove_on_exit "$repacked_rpm"
-            [ -n "$repacked_pkgs" ] && repacked_pkgs="$repacked_pkgs $repacked_rpm" || repacked_pkgs="$repacked_rpm"
+            repacked_pkg="$repacked_rpm"
         else
             warning "Can't find converted rpm for source binary package '$pkg' (got $repacked_rpm)"
         fi
         cd $EPMCURDIR >/dev/null
-    done
 
     true
 }

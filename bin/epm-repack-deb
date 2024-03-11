@@ -18,17 +18,16 @@
 #
 
 
-# fills repacked_pkgs
+# fills repacked_pkg
 __epm_repack_to_deb()
 {
-    local pkg
-    local pkgs="$*"
+    local pkg="$1"
 
     assure_exists alien
     assure_exists fakeroot
     assure_exists rpm
 
-    repacked_pkgs=''
+    repacked_pkg=''
 
     local TDIR
     TDIR="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
@@ -36,7 +35,10 @@ __epm_repack_to_deb()
 
     umask 022
 
-    for pkg in $pkgs ; do
+    if echo "$pkg" | grep -q "\.deb" ; then
+        warning "Repack deb to deb is not supported yet."
+    fi
+
         abspkg="$(realpath "$pkg")"
         info "Repacking $abspkg to local deb format (inside $TDIR) ..."
 
@@ -47,15 +49,16 @@ __epm_repack_to_deb()
         cd $TDIR || fatal
         __prepare_source_package "$pkg"
 
-        showcmd_store_output fakeroot alien -d -k $scripts "$alpkg"
+        showcmd_store_output fakeroot alien -d -k $verbose $scripts "$alpkg"
         local DEBCONVERTED=$(grep "deb generated" $RC_STDOUT | sed -e "s| generated||g")
         if [ -n "$DEBCONVERTED" ] ; then
-            repacked_pkgs="$repacked_pkgs $(realpath $DEBCONVERTED)"
+            repacked_pkg="$repacked_pkg $(realpath $DEBCONVERTED)"
             remove_on_exit "$(realpath $DEBCONVERTED)"
+        else
+            warning "Can't find converted deb for source binary package '$pkg'"
         fi
         clean_store_output
         cd - >/dev/null
-    done
 
     return 0
 }
