@@ -177,7 +177,7 @@ __epm_repack_to_rpm()
 
         alpkg=$(basename $pkg)
         # don't use abs package path: copy package to temp dir and use there
-        cp -l $verbose $pkg $tmpbuilddir/../$alpkg || cp $verbose $pkg $tmpbuilddir/../$alpkg || fatal
+        cp -l $verbose $pkg $tmpbuilddir/../$alpkg 2>/dev/null || cp $verbose $pkg $tmpbuilddir/../$alpkg || fatal
 
         cd $tmpbuilddir/../ || fatal
         # fill alpkg and SUBGENERIC
