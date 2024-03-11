@@ -18,11 +18,18 @@ else
     # AppImage version
     # hack for ktalk2.4.2 -> ktalk 2.4.2
     VERSION="$(echo "$alpkg" | grep -o -P "[-_.a-zA-Z]([0-9])([0-9])*([.]*[0-9])*" | head -n1 | sed -e 's|^[-_.a-zA-Z]||' -e 's|--|-|g' )"  #"
-    [ -n "$VERSION" ] && PRODUCT="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")" || fatal "Can't get version from $TAR."
+    [ -n "$VERSION" ] && PRODUCT="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")" || PRODUCT="$(basename $alpkg .AppImage)"
 fi
 
 [ -x "$TAR" ] || chmod u+x $verbose "$TAR"
 $TAR --appimage-extract >/dev/null || fatal
+
+DESKTOPFILE="$(echo squashfs-root/*.desktop | head -n1)"
+str="$(grep '^X-AppImage-Version=' $DESKTOPFILE)"
+if [ -n "$str" ] ; then
+    VERSION="$(echo $str | sed -e 's|.*X-AppImage-Version=||')"
+fi
+[ -n "$VERSION" ] || fatal "Can't get version from $TAR."
 
 PKGNAME=$PRODUCT-$VERSION.tar
 
