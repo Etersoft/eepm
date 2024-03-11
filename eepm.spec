@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.60.7
+Version: 3.60.8
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,27 @@ a discussion about extra requirements.
 
 
 %changelog
+* Mon Mar 11 2024 Vitaly Lipatov <lav@altlinux.ru> 3.60.8-alt1
+- epm-sh-altlinux-contents-index: fix update content index
+- epm repack plex-desktop: fix repack with eepm-rpm-build
+- epm-search: don't use -- in dnf/yum search
+- set_sudo: check sudo twice
+- distr_info: use lastest ID_LIKE word
+- distr_info: fix Android version detection
+- epm play yandexmusic: update download package name
+- repack.d/generic.sh: disable /usr/lib/.build-id generating
+- epm repack google-chrome-stable: fix summary, add conflicts to google-chrome-preinstall
+- repack.d/unigine-superposition.sh: stop require libQt5Test.so.5
+- epm play: rename yandexmusic.sh to yandex-music.sh
+- epm play: don't check if a play script is executable
+- epm repack teamspeak3: add libwebp6 install (fix github issue 64)
+- epm repack teamspeak3: remove unusable libqwayland*
+- epm play teamspeak: update versions
+- epm play: add singularityapp (fix github issue 49)
+- epm requires: check every file separately
+- epm repack singularityapp: remove common libs
+- epm play: add vk-messenger (fix github issue 50)
+
 * Tue Feb 20 2024 Vitaly Lipatov <lav@altlinux.ru> 3.60.7-alt1
 - epm-update: skip apt-cache (use too much time)
 - /etc/pkgallowscripts.list: allow scripts for eepm as a hack
