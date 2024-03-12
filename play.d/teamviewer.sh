@@ -1,26 +1,18 @@
 #!/bin/sh
 
 PKGNAME="teamviewer"
-SUPPORTEDARCHES="x86_64 armhf"
+SUPPORTEDARCHES="x86_64 aarch64"
 DESCRIPTION="Teamviewer from the official site"
+URL="https://www.teamviewer.com/ru-cis/download/linux"
 
 . $(dirname $0)/common.sh
 
-
-arch="$(epm print info -a)"
-case "$arch" in
-    x86_64|x86)
-        ;;
-    armhf)
-        PKGNAME="teamviewer-host"
-        ;;
-    *)
-        fatal "$arch arch is not supported"
-        ;;
-esac
-
+arch=$(epm print info --distro-arch)
 
 # See https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=teamviewer
+
+# TODO: version support
+# https://dl.teamviewer.com/download/linux/version_15x/teamviewer_15.51.5.x86_64.rpm
 
 repack=''
 [ "$(epm print info -p)" = "deb" ] || repack='--repack'
