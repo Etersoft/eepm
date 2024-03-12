@@ -13,7 +13,7 @@ else
 fi
 
 mkdir opt
-mv vkteams.tar opt/$PRODUCT || fatal
+mv vkteams* opt/$PRODUCT || fatal
 
 PKGNAME=$PRODUCT-$VERSION.tar
 erc pack $PKGNAME opt/$PRODUCT
