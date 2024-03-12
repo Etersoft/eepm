@@ -436,6 +436,9 @@ case "$VENDOR_ID" in
             [ -n "$fr" ] && echo "$fr" | grep -q "$DISTRIB_RELEASE" && DISTRIB_FULL_RELEASE="$fr"
         fi
         ;;
+    "fedora")
+            DISTRIB_ID="Fedora"
+        ;;
 esac
 
 case "$DISTRIB_ID" in
