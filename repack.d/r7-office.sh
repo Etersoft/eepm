@@ -8,6 +8,7 @@ PRODUCTDIR=/opt/r7-office
 
 . $(dirname $0)/common.sh
 
+fatal "TODO: as for now, repack for $PRODUCT is not supported yet."
 #REQUIRES="fonts-ttf-liberation, fonts-ttf-dejavu"
 #subst "s|^\(Name: .*\)$|# Converted from original package requires\nRequires:$REQUIRES\n\1|g" $SPEC
 
