@@ -350,3 +350,6 @@ is_repacked_package $REPOPKGNAME || exit 0
 
 # default version value (can be overrided with arg $2 or by update)
 [ -n "$VERSION" ] || VERSION="*"
+
+echo
+echo "Installing $DESCRIPTION as $PKGNAME package ..."
