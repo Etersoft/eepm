@@ -18,6 +18,9 @@ for i in glibc-nss glibc-gconv-modules \
          primus \
          libvulkan1 \
          libd3d \
+         libgamemodeauto0 \
+         vkBasalt \
+         mangohud \
          $(epmqp --short libnss | grep "^libnss-") \
          $(epmqp --short xorg-dri | grep "^xorg-dri-")
 do
