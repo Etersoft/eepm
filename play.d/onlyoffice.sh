@@ -44,4 +44,5 @@ fi
 #PKGURL="https://download.onlyoffice.com/install/desktop/editors/linux/"
 #PKGURL="$(eget --list --latest https://github.com/ONLYOFFICE/DesktopEditors/releases $(epm print constructname $PKGNAME "$VERSION" $arch $pkgtype))"
 
-epm install "$PKGURL"
+# use --repack to apply repack script for all platforms
+epm install --repack "$PKGURL"
