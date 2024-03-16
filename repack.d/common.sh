@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# kind of hack: inheritance --force from main epm
+echo "$EPM_OPTIONS" | grep -q -- "--nodeps" && nodeps="--nodeps"
+echo "$EPM_OPTIONS" | grep -q -- "--verbose" && verbose="--verbose"
+
 fatal()
 {
     echo "FATAL: $*" >&2
@@ -385,18 +389,22 @@ get_libs_requires()
     local fdir="$BUILDROOT/$1"
 
     __get_binary_requires "$fdir" | LANG=C sort -u >$libreqlist
-    info "  List of binary and libs requires:"
-    info "$(cat $libreqlist | xargs -n1000)"
-    info "  End of the list binary and libs requires."
+    if [ -n "$verbose" ] ; then
+        info "  List of binary and libs requires:"
+        info "$(cat $libreqlist | xargs -n1000)"
+        info "  End of the list binary and libs requires."
+    fi
 
     __get_library_provides "$fdir" | LANG=C sort -u >$libpreslist
-    info "  List of libraries provided:"
-    info "$(cat $libpreslist | xargs -n1000)"
-    info "  End of the provided libraries list."
+    if [ -n "$verbose" ] ; then
+        info "  List of libraries provided:"
+        info "$(cat $libpreslist | xargs -n1000)"
+        info "  End of the provided libraries list."
 
-    info "  List of ignored libraries:"
-    info "$EEPM_IGNORE_LIB_REQUIRES"
-    info "  End of the ignored libraries."
+        info "  List of ignored libraries:"
+        info "$EEPM_IGNORE_LIB_REQUIRES"
+        info "  End of the ignored libraries."
+    fi
 
     # print out result
     LANG=C join -v2 $libpreslist $libreqlist
@@ -406,6 +414,7 @@ get_libs_requires()
 add_libs_requires()
 {
     local ll
+    [ -n "$nodeps" ] && info "Skipping any requires detection ..." && return
     info "Scanning for required libs soname ..."
     get_libs_requires | xargs -n6 echo | grep -ve '^$' | while read ll ; do
         info "Requires: $ll"
