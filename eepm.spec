@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.60.9
+Version: 3.60.10
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,19 @@ a discussion about extra requirements.
 
 
 %changelog
+* Sun Mar 17 2024 Vitaly Lipatov <lav@altlinux.ru> 3.60.10-alt1
+- distr_info: identify all Fedora based system as Fedora
+- epm-addrepo: fixes for URLs to ALT repos
+- epm pack vkteams: fix unpacking
+- epm play: add wing (ALT bug 47465)
+- epm play teamviewer: add aarch64
+- epm play: print package description before install
+- epm play: add ridoclnx
+- epm repack r7-office: add comment
+- epm play: onlyoffice.sh: use --repack for all platforms
+- epm repack: update onlyoffice-desktopeditors
+- epm repack: add support for --verbose and --nodeps
+
 * Mon Mar 11 2024 Vitaly Lipatov <lav@altlinux.ru> 3.60.9-alt1
 - epm repack.d/common.sh: skip alt specific on non ALT systems
 - epm pack.d/generic-appimage.sh: get VERSION from X-AppImage-Version field of a desktop file
