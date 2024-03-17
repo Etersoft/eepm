@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.60.9"
+EPMVERSION="3.60.10"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1147,7 +1147,7 @@ __epm_addrepo_altlinux_url()
     if echo "$base" | grep -q "^RPMS\." ; then
         REPO_NAME="$(echo $base | sed -e 's|.*\.||')"
         url="$(dirname $url)"
-        docmd epm repo add "rpm $url $REPO_NAME"
+        __epm_addrepo_altlinux_short rpm "$url" "$REPO_NAME"
         return
     fi
 
@@ -1156,8 +1156,8 @@ __epm_addrepo_altlinux_url()
     local baseurl="$(eget --list "$url/RPMS.*")"
     base="$(basename "$baseurl")"
     if echo "$base" | grep -q "^RPMS\." ; then
-        REPO_NAME="$(echo $base | sed -e 's|.*\.||')"
-        docmd epm repo add "rpm $url $REPO_NAME"
+        REPO_NAME="$(echo "$base" | sed -e 's|.*\.||')"
+        __epm_addrepo_altlinux_short rpm "$url" "$REPO_NAME"
         return
     fi
 
@@ -1165,8 +1165,9 @@ __epm_addrepo_altlinux_url()
     local res=''
     for arch in $(get_archlist) ; do
         local rd="$(eget --list $url/$arch/RPMS.*)"
-        [ -d "$rd" ] || continue
-        local REPO_NAME="$(echo "$rd" | sed -e 's|.*\.||')"
+        [ -n "$rd" ] || continue
+        local REPO_NAME="$(echo "$rd" | sed -e 's|/*$||' -e 's|.*\.||')"
+        [ "$REPO_NAME" = "*" ] && continue
         docmd epm repo add "rpm $url $arch $REPO_NAME"
         res='1'
     done
@@ -13738,6 +13739,9 @@ case "$VENDOR_ID" in
             local fr="$(cat /etc/astra_version 2>/dev/null)"
             [ -n "$fr" ] && echo "$fr" | grep -q "$DISTRIB_RELEASE" && DISTRIB_FULL_RELEASE="$fr"
         fi
+        ;;
+    "fedora")
+            DISTRIB_ID="Fedora"
         ;;
 esac
 

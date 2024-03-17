@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.60.9"
+EPMVERSION="3.60.10"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -2148,6 +2148,9 @@ case "$VENDOR_ID" in
             local fr="$(cat /etc/astra_version 2>/dev/null)"
             [ -n "$fr" ] && echo "$fr" | grep -q "$DISTRIB_RELEASE" && DISTRIB_FULL_RELEASE="$fr"
         fi
+        ;;
+    "fedora")
+            DISTRIB_ID="Fedora"
         ;;
 esac
 
