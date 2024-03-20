@@ -6,6 +6,8 @@ PRODUCTDIR=/opt/vdhcoapp
 
 . $(dirname $0)/common.sh
 
+subst '1iConflicts: net.downloadhelper.coapp' $SPEC
+
 # use xdg-open from the system
 rm -v .$PRODUCTDIR/xdg-open
 ln -s /usr/bin/xdg-open .$PRODUCTDIR/xdg-open
