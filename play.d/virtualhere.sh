@@ -59,7 +59,7 @@ pack_tar() {
 # FIXME
 VERSION="*"
 if [ "$VERSION" = "*" ] ; then
-    VERSION="$(epm tool eget -O- https://virtualhere.com/usb_server_software | grep "<b>Version [0-9.]*</b>" | sed -e 's|.*<b>Version \([0-9.]*\)</b>.*|\1|')"
+    VERSION="$(epm tool eget -O- https://virtualhere.com/usb_server_software | grep "<strong>Version" | sed -e 's|.*<strong>Version ||' -e 's|</strong>.*||')"
     [ -n "$VERSION" ] || fatal "Can't get version for $PKGNAME"
 fi
 
