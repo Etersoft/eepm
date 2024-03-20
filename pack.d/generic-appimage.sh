@@ -26,7 +26,7 @@ fi
 $TAR --appimage-extract >/dev/null || fatal
 
 DESKTOPFILE="$(echo squashfs-root/*.desktop | head -n1)"
-str="$(grep '^X-AppImage-Version=' $DESKTOPFILE)"
+str="$(grep '^X-AppImage-Version=[0-9]' $DESKTOPFILE)"
 if [ -n "$str" ] ; then
     VERSION="$(echo $str | sed -e 's|.*X-AppImage-Version=||')"
 fi
