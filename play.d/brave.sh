@@ -2,7 +2,7 @@
 
 BASEPKGNAME=brave-browser
 SUPPORTEDARCHES="x86_64"
-PRODUCTALT="'' beta nightly dev"
+PRODUCTALT="'' beta nightly"
 VERSION="$2"
 DESCRIPTION="Brave browser from the official site"
 
