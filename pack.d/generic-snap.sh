@@ -41,9 +41,10 @@ generic_repack: snap
 EOF
 
 test -d opt/$name || fatal "Can't find opt/$name"
-install_file opt/$name/meta/gui/icon.png usr/share/pixmaps.png
+install_file opt/$name/meta/gui/icon.png usr/share/pixmaps/$name.png
 install_file opt/$name/meta/gui/*.desktop usr/share/applications/$name.desktop
-sed -i -e 's|^Icon=.*|Icon=$name|' usr/share/applications/$name.desktop
+subst "s|^Icon=.*|Icon=$name|" usr/share/applications/$name.desktop
+subst "s|^Comment=$|Comment=$summary|" usr/share/applications/$name.desktop
 
 erc pack $PKGNAME opt/$name usr/share
 
