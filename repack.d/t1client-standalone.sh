@@ -13,5 +13,6 @@ add_bin_link_command $PRODUCT $PRODUCTDIR/run_t1client.sh
 
 fix_desktop_file /opt/dssl/t1client/run_t1client.sh $PRODUCT
 
-ignore_lib_requires 'libmng.so.1'
-add_libs_requires
+# disable auto req
+#ignore_lib_requires 'libmng.so.1'
+#add_libs_requires

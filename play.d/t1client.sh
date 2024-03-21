@@ -12,13 +12,13 @@ case "$(epm print info -p)" in
       PKGURL="ipfs://QmarAX2ATvXaqFdar6t5ZYTi9yuVjmAKyS8AvBCJDWC92Z?filename=t1client-standalone-0.1.4.0.13209.rpm"
       ;;
   *)
-      PKGURL="ipfs://QmXnpA7nUZRjV9owyW6t79SB9kGbwve6vHWaiawan53sqG?filename=t1client-standalone-4.4.7.0-1186989-Release.deb"
+      PKGURL="ipfs://QmYU1SVJXdPDYxYzoPWSJ39Xmrx16YbTDztyM5nMCAiDZx?filename=t1client-standalone-4.5.5.0-1202308-Release.deb"
       ;;
 esac
 
 case "$(epm print info -s)" in
   alt)
-      PKGURL="ipfs://QmXnpA7nUZRjV9owyW6t79SB9kGbwve6vHWaiawan53sqG?filename=t1client-standalone-4.4.7.0-1186989-Release.deb"
+      PKGURL="ipfs://QmYU1SVJXdPDYxYzoPWSJ39Xmrx16YbTDztyM5nMCAiDZx?filename=t1client-standalone-4.5.5.0-1202308-Release.deb"
       ;;
 esac
 
