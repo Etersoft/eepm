@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME=YandexMusic
+PKGNAME=yandex-music
 SUPPORTEDARCHES="x86_64 aarch64 armhf"
 VERSION="$2"
 DESCRIPTION="Native Yandex Music client for Linux. Made with OSX/Windows beta client repacking"
