@@ -105,9 +105,9 @@ confirm_action()
     if [ -z "$full_upgrade_no_epm_play" ] ; then
         [ -n "$quiet" ] || echo
         if [ -n "$force" ] ; then
-            docmd epm $dryrun play || fatal "updating of applications installed via epm play is failed."
+            docmd epm $dryrun play #|| fatal "updating of applications installed via epm play is failed."
         else
-            docmd epm $dryrun play --update all || fatal "updating of applications installed via epm play is failed."
+            docmd epm $dryrun play --update all #|| fatal "updating of applications installed via epm play is failed."
         fi
     fi
 
