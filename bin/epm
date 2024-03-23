@@ -409,6 +409,9 @@ check_command()
         epm_cmd=Upgrade
         direct_args=1
         ;;
+    Downgrade)                # HELPCMD: force update package base, then run downgrade [all] packages to the repo state
+        epm_cmd=Downgrade
+        ;;
     downgrade)                # HELPCMD: downgrade [all] packages to the repo state
         epm_cmd=downgrade
         ;;
