@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.60.10"
+EPMVERSION="3.60.11"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -2968,6 +2968,15 @@ epm_downgrade()
     esac
 }
 
+# File bin/epm-Downgrade:
+
+
+epm_Downgrade()
+{
+    epm_update
+    epm_downgrade "$@"
+}
+
 # File bin/epm-download:
 
 alt_base_dist_url="http://ftp.basealt.ru/pub/distributions"
@@ -3240,9 +3249,9 @@ __epm_korinf_site_mask() {
     # set arch for Korinf compatibility
     [ "$SYSTEMARCH" = "x86_64" ] && archprefix="x86_64/"
     local URL="$EPM_KORINF_REPO_URL/$archprefix$DISTRNAME/$DISTRVERSION"
-    if ! eget --check "$URL" ; then
+    if ! eget --check-url "$URL" ; then
         tURL="$EPM_KORINF_REPO_URL/$archprefix$BASEDISTRNAME/$DISTRREPONAME"
-        docmd eget --check "$tURL" && URL="$tURL"
+        docmd eget --check-url "$tURL" && URL="$tURL"
     fi
     eget --list --latest "$URL/$MASK*.$PKGFORMAT"
 }
@@ -3629,9 +3638,9 @@ confirm_action()
     if [ -z "$full_upgrade_no_epm_play" ] ; then
         [ -n "$quiet" ] || echo
         if [ -n "$force" ] ; then
-            docmd epm $dryrun play || fatal "updating of applications installed via epm play is failed."
+            docmd epm $dryrun play #|| fatal "updating of applications installed via epm play is failed."
         else
-            docmd epm $dryrun play --update all || fatal "updating of applications installed via epm play is failed."
+            docmd epm $dryrun play --update all #|| fatal "updating of applications installed via epm play is failed."
         fi
     fi
 
@@ -5736,12 +5745,12 @@ __epm_pack_run_handler()
     [ -n "$debug" ] && bashopt='-x'
     #info "Running $($script --description 2>/dev/null) ..."
     # TODO: add url info here
-    ( unset EPMCURDIR ; export PATH=$SCPATH ; docmd $CMDSHELL $bashopt $repackcode "$tarname" "$filefortarname" "$packversion" "$url") || fatal
+    ( unset EPMCURDIR ; export PATH=$SCPATH ; export HOME=$(pwd) ; docmd $CMDSHELL $bashopt $repackcode "$tarname" "$filefortarname" "$packversion" "$url") || fatal
     returntarname="$(cat "$filefortarname")" || fatal "pack script $repackcode didn't set tarname"
 
     local i
     for i in $returntarname ; do
-        [ -s "$i" ] || fatal "pack script for $packname returned unexist $i file"
+        [ -s "$i" ] || fatal "pack script for $packname returned a non-existent file $i"
     done
 
     return 0
@@ -9120,7 +9129,7 @@ esac
 __epm_have_repack_rule()
 {
     # FIXME: use real way (for any archive)
-    local pkgname="$(epm print name for package "$1")"
+    local pkgname="$(epm print name for package "$1" 2>/dev/null)"
     local repackcode="$EPM_REPACK_SCRIPTS_DIR/$pkgname.sh"
     [ -s "$repackcode" ]
 }
@@ -14654,10 +14663,19 @@ filter_order()
     sort -V | tail -n1
 }
 
+have_end_slash()
+{
+    echo "$1" | grep -q '/$'
+}
+
+is_abs_path()
+{
+    echo "$1" | grep -q '^/'
+}
 
 is_fileurl()
 {
-    echo "$1" | grep -q "^/" && return
+    is_abs_path "$1" && return
     echo "$1" | grep -q "^file:/"
 }
 
@@ -14759,6 +14777,7 @@ AXELNAMEOPTIONS=''
 
 LISTONLY=''
 CHECKURL=''
+CHECKSITE=''
 GETRESPONSE=''
 GETFILENAME=''
 GETREALURL=''
@@ -14802,7 +14821,8 @@ Options:
     --allow-mirrors           - check mirrors if url is not accessible
 
     --list|--list-only        - print only URLs
-    --check URL               - check if the URL is accessible (returns HTTP 200 OK)
+    --check-url URL  L        - check if the URL exists (returns HTTP 200 OK)
+    --check-site URL          - check if the site is accessible (returns HTTP 200 OK or 404 Not found)
     --get-response URL        - get response with all headers (ever if HEAD is not acceptable)
     --get-filename URL        - print filename for the URL (via Content-Disposition if applicable)
     --get-real-url URL        - print URL after all redirects
@@ -14879,8 +14899,12 @@ while [ -n "$1" ] ; do
             LISTONLY="$1"
             set_quiet
             ;;
-        --check)
+        --check-url)
             CHECKURL="$1"
+            #set_quiet
+            ;;
+        --check-site)
+            CHECKSITE="$1"
             #set_quiet
             ;;
         --get-filename)
@@ -15055,7 +15079,7 @@ ipfs_mode="$EGET_IPFS"
 # enable auto mode when set $EGET_IPFS_DB
 [ -z "$ipfs_mode" ] && [ -n "$EGET_IPFS_DB" ] && ipfs_mode="auto"
 
-if [ -n "$LISTONLY$CHECKURL" ] ; then
+if [ -n "$LISTONLY$CHECKURL$CHECKSITE" ] ; then
     ipfs_mode=""
     EGET_IPFS_DB=''
 fi
@@ -15258,7 +15282,13 @@ url_sget()
     cp -av "$(path_from_url "$URL")" .
 }
 
-url_check()
+url_check_accessible()
+{
+    local URL="$1"
+    test -f "$(path_from_url "$URL")"
+}
+
+url_check_available()
 {
     local URL="$1"
     test -f "$(path_from_url "$URL")"
@@ -15303,7 +15333,14 @@ url_sget()
     ipfs_get "$(cid_from_url "$URL")"
 }
 
-url_check()
+url_check_accessible()
+{
+    local URL="$1"
+    # TODO: improve me
+    scat "$URL" >/dev/null
+}
+
+url_check_available()
 {
     local URL="$1"
     # TODO: improve me
@@ -15442,10 +15479,16 @@ url_get_headers()
     url_get_response "$URL" | grep -i "^ *[[:alpha:]].*: " | sed -e 's|^ *||' -e 's|\r$||'
 }
 
-url_check()
+url_check_accessible()
 {
     local URL="$1"
     url_get_response "$URL" | grep "HTTP/" | tail -n1 | grep -q -w "200\|404"
+}
+
+url_check_available()
+{
+    local URL="$1"
+    url_get_response "$URL" | grep "HTTP/" | tail -n1 | grep -q -w "200"
 }
 
 url_get_header()
@@ -15467,8 +15510,8 @@ url_get_real_url()
     local loc
     for loc in $(url_get_header "$URL" "Location" | tac | sed -e 's| .*||') ; do
         # hack for construct full url from related Location
-        if echo "$loc" | grep -q "^/" ; then
-            loc="$(concatenate_url_and_filename "$(get_host_only "$URL")" "$loc")"
+        if is_abs_path "$loc" ; then
+            loc="$(concatenate_url_and_filename "$(get_host_only "$URL")" "$loc")" #"
         fi
         if ! is_strange_url "$loc" ; then
             echo "$loc"
@@ -15637,7 +15680,7 @@ sget()
     put_cid_and_url "$REALURL" "$CID" "$FN"
 }
 
-check_url_is_accessible()
+check_url_is_available()
 {
     local URL="$1"
     local REALURL="$(get_real_url "$URL")" || return
@@ -15653,6 +15696,11 @@ check_url_is_accessible()
     local FN="$(url_get_filename "$REALURL")" || return
     ipfs_cat "$CID" >/dev/null || return
     put_cid_and_url "$REALURL" "$CID" "$FN"
+}
+
+check_url_is_accessible()
+{
+    check_url_is_available "$@"
 }
 
 get_filename()
@@ -15688,7 +15736,12 @@ sget()
 
 check_url_is_accessible()
 {
-    url_check "$@"
+    url_check_accessible "$@"
+}
+
+check_url_is_available()
+{
+    url_check_available "$@"
 }
 
 get_filename()
@@ -15744,11 +15797,10 @@ make_fileurl()
     if is_fileurl "$url" ; then
         # if it is url
         :
-    elif echo "$fn" | grep -q "^/" ; then
+    elif is_abs_path "$fn" ; then
         # if there is file path from the root of the site
         url="$(get_host_only "$url")"
-    elif echo "$url" | grep -q -v "/$" ; then
-        # if there is no slash in the end of URL
+    elif ! have_end_slash "$url" ; then
         url="$(dirname "$url")"
     fi
 
@@ -15770,6 +15822,17 @@ get_urls()
 
 
 if [ -n "$CHECKURL" ] ; then
+    #set_quiet
+    URL="$1"
+    check_url_is_available "$URL"
+    res=$?
+    if [ -n "$verbose" ] ; then
+        [ "$res" = "0" ] && echo "$URL is accessible via network and file exists" || echo "$URL is NOT accessible via network or file does not exist"
+    fi
+     return $res
+fi
+
+if [ -n "$CHECKSITE" ] ; then
     #set_quiet
     URL="$1"
     check_url_is_accessible "$URL"
@@ -15816,9 +15879,7 @@ if [ -n "$2" ] ; then
     URL="$1"
     MASK="$2"
 else
-    # do not support / at the end without separately specified mask
-    if echo "$1" | grep -q "/$" ; then
-        #fatal "Use http://example.com/e/* to download all files in dir"
+    if have_end_slash "$1" ; then
         URL="$1"
         MASK=""
     else
@@ -17316,6 +17377,9 @@ check_command()
     Upgrade)                  # HELPCMD: force update package base, then run upgrade
         epm_cmd=Upgrade
         direct_args=1
+        ;;
+    Downgrade)                # HELPCMD: force update package base, then run downgrade [all] packages to the repo state
+        epm_cmd=Downgrade
         ;;
     downgrade)                # HELPCMD: downgrade [all] packages to the repo state
         epm_cmd=downgrade
