@@ -20,6 +20,12 @@ case "$arch" in
         ;;
 esac
 
+[ "$VERSION" = "*" ] || fatal "versioning is not supported"
+
+if ! is_glibc_enough 2.34 ; then
+    fatal "glibc is too old"
+fi
+
 # https://icons8.ru/lunacy
 epm install "https://lcdn.icons8.com/setup/$file"
 
