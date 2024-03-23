@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.60.10
+Version: 3.60.11
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,33 @@ a discussion about extra requirements.
 
 
 %changelog
+* Sun Mar 24 2024 Vitaly Lipatov <lav@altlinux.ru> 3.60.11-alt1
+- repack.d: remove scripts with only add_libs_requires (it is default behaviour)
+- epm play: add xnconvert
+- epm-pack: change HOME to $(pwd) for pack.d scripts
+- epm play brave: drop dev build
+- epm play: add reaper
+- epm pack.d/generic-appimage.sh: add workaround for empty version in the desktop file
+- epm play yuzu: switch to IPFS archive
+- epm play virtualhere: fix version retrieving
+- epm repack net.downloadhelper.coapp.noffmpeg: add conflict to net.downloadhelper.coapp
+- epm play todoist: cleanup for new AppImage naming scheme
+- epm pack generic-snap.sh: fix icon placement and desktop file
+- epm play geogebra: restore install via IPFS store
+- epm play freeplane: fix download URL
+- epm repack ipera-mediaserver: fix requires
+- epm play t1client: update download URL
+- epm pack far2l-portable: fix package name as far2l-portable
+- epm play yandex-music: fix package name
+- epm-full_upgrade: don't stop if epm play is failed
+- epm pack: add davinchi-resolve
+- epm pack: add postman
+- add epm Downgrade (update and downgrade)
+- epm play lunacy: don't install if glibc is too old
+- epm repack postman: packing as electron app
+- epm play: add unsupported docker-desktop
+- eget: replace --check with --check-url and --check-site
+
 * Sun Mar 17 2024 Vitaly Lipatov <lav@altlinux.ru> 3.60.10-alt1
 - distr_info: identify all Fedora based system as Fedora
 - epm-addrepo: fixes for URLs to ALT repos
