@@ -323,6 +323,7 @@ AXELNAMEOPTIONS=''
 
 LISTONLY=''
 CHECKURL=''
+CHECKSITE=''
 GETRESPONSE=''
 GETFILENAME=''
 GETREALURL=''
@@ -366,7 +367,8 @@ Options:
     --allow-mirrors           - check mirrors if url is not accessible
 
     --list|--list-only        - print only URLs
-    --check URL               - check if the URL is accessible (returns HTTP 200 OK)
+    --check-url URL  L        - check if the URL exists (returns HTTP 200 OK)
+    --check-site URL          - check if the site is accessible (returns HTTP 200 OK or 404 Not found)
     --get-response URL        - get response with all headers (ever if HEAD is not acceptable)
     --get-filename URL        - print filename for the URL (via Content-Disposition if applicable)
     --get-real-url URL        - print URL after all redirects
@@ -443,8 +445,12 @@ while [ -n "$1" ] ; do
             LISTONLY="$1"
             set_quiet
             ;;
-        --check)
+        --check-url)
             CHECKURL="$1"
+            #set_quiet
+            ;;
+        --check-site)
+            CHECKSITE="$1"
             #set_quiet
             ;;
         --get-filename)
@@ -619,7 +625,7 @@ ipfs_mode="$EGET_IPFS"
 # enable auto mode when set $EGET_IPFS_DB
 [ -z "$ipfs_mode" ] && [ -n "$EGET_IPFS_DB" ] && ipfs_mode="auto"
 
-if [ -n "$LISTONLY$CHECKURL" ] ; then
+if [ -n "$LISTONLY$CHECKURL$CHECKSITE" ] ; then
     ipfs_mode=""
     EGET_IPFS_DB=''
 fi
@@ -822,7 +828,13 @@ url_sget()
     cp -av "$(path_from_url "$URL")" .
 }
 
-url_check()
+url_check_accessible()
+{
+    local URL="$1"
+    test -f "$(path_from_url "$URL")"
+}
+
+url_check_available()
 {
     local URL="$1"
     test -f "$(path_from_url "$URL")"
@@ -867,7 +879,14 @@ url_sget()
     ipfs_get "$(cid_from_url "$URL")"
 }
 
-url_check()
+url_check_accessible()
+{
+    local URL="$1"
+    # TODO: improve me
+    scat "$URL" >/dev/null
+}
+
+url_check_available()
 {
     local URL="$1"
     # TODO: improve me
@@ -1006,10 +1025,16 @@ url_get_headers()
     url_get_response "$URL" | grep -i "^ *[[:alpha:]].*: " | sed -e 's|^ *||' -e 's|\r$||'
 }
 
-url_check()
+url_check_accessible()
 {
     local URL="$1"
     url_get_response "$URL" | grep "HTTP/" | tail -n1 | grep -q -w "200\|404"
+}
+
+url_check_available()
+{
+    local URL="$1"
+    url_get_response "$URL" | grep "HTTP/" | tail -n1 | grep -q -w "200"
 }
 
 url_get_header()
@@ -1032,7 +1057,7 @@ url_get_real_url()
     for loc in $(url_get_header "$URL" "Location" | tac | sed -e 's| .*||') ; do
         # hack for construct full url from related Location
         if is_abs_path "$loc" ; then
-            loc="$(concatenate_url_and_filename "$(get_host_only "$URL")" "$loc")"
+            loc="$(concatenate_url_and_filename "$(get_host_only "$URL")" "$loc")" #"
         fi
         if ! is_strange_url "$loc" ; then
             echo "$loc"
@@ -1201,7 +1226,7 @@ sget()
     put_cid_and_url "$REALURL" "$CID" "$FN"
 }
 
-check_url_is_accessible()
+check_url_is_available()
 {
     local URL="$1"
     local REALURL="$(get_real_url "$URL")" || return
@@ -1217,6 +1242,11 @@ check_url_is_accessible()
     local FN="$(url_get_filename "$REALURL")" || return
     ipfs_cat "$CID" >/dev/null || return
     put_cid_and_url "$REALURL" "$CID" "$FN"
+}
+
+check_url_is_accessible()
+{
+    check_url_is_available "$@"
 }
 
 get_filename()
@@ -1252,7 +1282,12 @@ sget()
 
 check_url_is_accessible()
 {
-    url_check "$@"
+    url_check_accessible "$@"
+}
+
+check_url_is_available()
+{
+    url_check_available "$@"
 }
 
 get_filename()
@@ -1333,6 +1368,17 @@ get_urls()
 
 
 if [ -n "$CHECKURL" ] ; then
+    #set_quiet
+    URL="$1"
+    check_url_is_available "$URL"
+    res=$?
+    if [ -n "$verbose" ] ; then
+        [ "$res" = "0" ] && echo "$URL is accessible via network and file exists" || echo "$URL is NOT accessible via network or file does not exist"
+    fi
+    exit $res
+fi
+
+if [ -n "$CHECKSITE" ] ; then
     #set_quiet
     URL="$1"
     check_url_is_accessible "$URL"
