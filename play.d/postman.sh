@@ -15,6 +15,5 @@ case "$(epm print info -a)" in
 esac
 
 PKGURL="https://dl.pstmn.io/download/latest/linux_$arch"
-[ -n "$PKGURL" ] || fatal "Can't get package URL"
 
 epm pack --install $PKGNAME "$PKGURL"

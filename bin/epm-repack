@@ -26,7 +26,7 @@ load_helper epm-status
 __epm_have_repack_rule()
 {
     # FIXME: use real way (for any archive)
-    local pkgname="$(epm print name for package "$1")"
+    local pkgname="$(epm print name for package "$1" 2>/dev/null)"
     local repackcode="$EPM_REPACK_SCRIPTS_DIR/$pkgname.sh"
     [ -s "$repackcode" ]
 }

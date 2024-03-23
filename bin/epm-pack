@@ -50,7 +50,7 @@ __epm_pack_run_handler()
 
     local i
     for i in $returntarname ; do
-        [ -s "$i" ] || fatal "pack script for $packname returned unexist $i file"
+        [ -s "$i" ] || fatal "pack script for $packname returned a non-existent file $i"
     done
 
     return 0
