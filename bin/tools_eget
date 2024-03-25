@@ -367,7 +367,7 @@ Options:
     --allow-mirrors           - check mirrors if url is not accessible
 
     --list|--list-only        - print only URLs
-    --check-url URL  L        - check if the URL exists (returns HTTP 200 OK)
+    --check-url URL           - check if the URL exists (returns HTTP 200 OK)
     --check-site URL          - check if the site is accessible (returns HTTP 200 OK or 404 Not found)
     --get-response URL        - get response with all headers (ever if HEAD is not acceptable)
     --get-filename URL        - print filename for the URL (via Content-Disposition if applicable)
@@ -386,7 +386,7 @@ Examples:
   $ eget https://github.com/owner/project package*.ext
   $ eget -O myname ipfs://QmVRUjnsnxHWkjq91KreCpUk4D9oZEbMwNQ3rzdjwND5dR
   $ eget --list http://ftp.somesite.ru/package-*.tar
-  $ eget --check http://ftp.somesite.ru/test
+  $ eget --check-url http://ftp.somesite.ru/test
   $ eget --list http://download.somesite.ru 'package-*.tar.xz'
   $ eget --list --latest https://github.com/telegramdesktop/tdesktop/releases 'tsetup.*.tar.xz'
 
@@ -449,7 +449,7 @@ while [ -n "$1" ] ; do
             CHECKURL="$1"
             #set_quiet
             ;;
-        --check-site)
+        --check-site|--check)
             CHECKSITE="$1"
             #set_quiet
             ;;
@@ -565,13 +565,13 @@ select_ipfs_mode()
     fi
 
     # TODO: check checksum
-    if docmd eget --check "$ipfs_gateway/$ipfs_checkQm" ; then
+    if docmd eget --check-url "$ipfs_gateway/$ipfs_checkQm" ; then
         ipfs_mode="gateway"
         return
     fi
 
     IPFS_GATEWAY=''
-    if docmd eget --check "$(dirname $ipfs_gateway)" ; then
+    if docmd eget --check-site "$(dirname $ipfs_gateway)" ; then
        info "IPFS gateway $ipfs_gateway is accessible, but can't return shared $ipfs_checkQm"
     else
        info "IPFS gateway $(dirname $ipfs_gateway) is not accessible"
