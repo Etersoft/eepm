@@ -22,7 +22,7 @@ PKGURL="$(eget --list --latest https://mango3d.io/downloads/ "LycheeSlicer-$VERS
 # restore missed CDN for the latest release
 PKGURL=$(echo $PKGURL | sed -e 's|mango-lychee.nyc3.digitaloceanspaces.com|mango-lychee.nyc3.cdn.digitaloceanspaces.com|')
 
-if ! eget --check "$PKGURL" ; then
+if ! eget --check-url "$PKGURL" ; then
     # all previous versions return url to cdn with broken SSL (SSL connection broken only with wget or works only in a browser):
     # Connecting to mango-lychee.nyc3.cdn.digitaloceanspaces.com (mango-lychee.nyc3.cdn.digitaloceanspaces.com)|205.185.216.42|:443... connected.
     # Unable to establish SSL connection.

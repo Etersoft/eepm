@@ -31,9 +31,9 @@ __epm_korinf_site_mask() {
     # set arch for Korinf compatibility
     [ "$SYSTEMARCH" = "x86_64" ] && archprefix="x86_64/"
     local URL="$EPM_KORINF_REPO_URL/$archprefix$DISTRNAME/$DISTRVERSION"
-    if ! eget --check "$URL" ; then
+    if ! eget --check-url "$URL" ; then
         tURL="$EPM_KORINF_REPO_URL/$archprefix$BASEDISTRNAME/$DISTRREPONAME"
-        docmd eget --check "$tURL" && URL="$tURL"
+        docmd eget --check-url "$tURL" && URL="$tURL"
     fi
     eget --list --latest "$URL/$MASK*.$PKGFORMAT"
 }
