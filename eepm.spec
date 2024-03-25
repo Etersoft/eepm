@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.60.11
+Version: 3.60.12
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,12 @@ a discussion about extra requirements.
 
 
 %changelog
+* Tue Mar 26 2024 Vitaly Lipatov <lav@altlinux.ru> 3.60.12-alt1
+- eget: fix --check using (also allow --check for backward compatibility)
+- epm play: add yandex-messenger
+- epm play: add pfusp (Ricoh SP-1120N / SP-1125N / SP-1130N Image Scanner Driver)
+- epm play: add webots
+
 * Sun Mar 24 2024 Vitaly Lipatov <lav@altlinux.ru> 3.60.11-alt1
 - repack.d: remove scripts with only add_libs_requires (it is default behaviour)
 - epm play: add xnconvert
