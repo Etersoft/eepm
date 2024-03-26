@@ -349,6 +349,11 @@ epm_remove()
         [ -n "$force" ] || return $STATUS
     fi
 
+    if [ -n "$noscripts" ] ; then
+        warning "It is not recommended to remove a few packages with disabled scripts simultaneously."
+        fatal "We can't allow packages removing on hi level when --noscripts is used."
+    fi
+
     # get package name for hi level package management command (with version if supported and if possible)
     pkg_names=$(__epm_get_hilevel_name $pkg_names)
 
