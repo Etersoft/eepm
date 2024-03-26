@@ -512,7 +512,7 @@ ipfs_checkQm="QmYwf2GAMvHxfFiUFL2Mr6KUG6QrDiupqGc8ms785ktaYw"
 
 get_ipfs_brave()
 {
-    local ipfs_brave="$(ls ~/.config/BraveSoftware/Brave-Browser/*/*/go-ipfs_* | sort | tail -n1 2>/dev/null)"
+    local ipfs_brave="$(ls ~/.config/BraveSoftware/Brave-Browser/*/*/go-ipfs_* 2>/dev/null | sort | tail -n1)"
     [ -n "$ipfs_brave" ] && [ -x "$ipfs_brave" ] || return
     echo "$ipfs_brave"
 }
