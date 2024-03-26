@@ -44,7 +44,7 @@ check_pkg_integrity()
         docmd apkg verify $PKG
         ;;
     exe)
-        file $PKG | grep -q "executable for MS Windows"
+        file -L $PKG | grep -q "executable for MS Windows"
         ;;
     msi)
         # TODO: add to patool via cabextract
