@@ -14,6 +14,9 @@ if [ "$VERSION" = "*" ] ; then
     if ! is_glibc_enough 2.32 ; then
         VERSION="4.9.5"
     fi
+    if ! is_glibc_enough 2.28 ; then
+        fatal "glibc is too old, upgrade your system."
+    fi
 fi
 
 
