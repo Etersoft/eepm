@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME=vdhcoapp
+PKGNAME=net.downloadhelper.coapp.noffmpeg
 SUPPORTEDARCHES="x86_64 aarch64"
 VERSION="$2"
 DESCRIPTION="Video DownloadHelper Companion App 2"
