@@ -131,6 +131,7 @@ __epm_repack_to_rpm()
 
     # Note: install epm-repack for static (package based) dependencies
     assure_exists alien || fatal
+    assure_exists fakeroot
 
     # will set RPMBUILD
     __try_install_eepm_rpmbuild
@@ -184,11 +185,15 @@ __epm_repack_to_rpm()
         __prepare_source_package "$(realpath $alpkg)"
         cd $tmpbuilddir/ || fatal
 
+        local fakeroot
+        fakeroot=''
+        ! is_root && is_command fakeroot && fakeroot='fakeroot'
+
         if [ -n "$verbose" ] ; then
-            docmd alien --generate --to-rpm $verbose $scripts "../$alpkg" || fatal
+            docmd $fakeroot alien --generate --to-rpm $verbose $scripts "../$alpkg" || fatal
         else
-            showcmd alien --generate --to-rpm $scripts "../$alpkg"
-            a='' alien --generate --to-rpm $scripts "../$alpkg" >/dev/null || fatal
+            showcmd $fakeroot alien --generate --to-rpm $scripts "../$alpkg"
+            a='' $fakeroot alien --generate --to-rpm $scripts "../$alpkg" >/dev/null || fatal
         fi
 
         # remove all empty dirs (hack against broken dpkg with LF in the end of line) (hack for linux_pantum.deb)
