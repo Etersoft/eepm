@@ -269,6 +269,9 @@ case $BASEDISTRNAME in
 
         return
         ;;
+    "astra")
+        [ -n "$force" ] || fatal "It seems AstraLinux does no support autoremove correctly. You can rerun the command with --force option to get into trouble."
+        ;;
     *)
         ;;
 esac
