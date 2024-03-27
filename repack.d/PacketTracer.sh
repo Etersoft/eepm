@@ -3,13 +3,51 @@
 BUILDROOT="$1"
 SPEC="$2"
 
+PRODUCT=packettracer
+PRODUCTDIR=/opt/pt
+
+. $(dirname $0)/common.sh
+
 # reenable console output
-subst 's| > /dev/null 2>&1||' $BUILDROOT/opt/pt/packettracer
+subst 's| > /dev/null 2>&1||' opt/pt/packettracer
 
-set_autoreq 'yes,nopython'
+#add_requires sudo dialog xdg-utils
 
-#REQUIRES="libcurl libldap"
-#subst "1iRequires:$REQUIRES|" $SPEC
+add_libs_requires
 
-# install all requires packages before packing (the list have got with rpmreqs anydesk)
-#epm install --skip-installed coreutils gawk libapr1 libaprutil1 libcares libcrypt libcrypto1.1 libcurl liblame libldap libncurses libnghttp2 libnsl1 libpcre3 libpng16 libpq5 libreadline7 libspeex libssl1.1 libtinfo libxml2 mozldap systemd-utils veyon zlib
+create_file()
+{
+    local t="$1"
+    local l="$(basename $t)"
+    cat >$l
+    install_file $l $t
+}
+
+if -d usr/share/applications ; then
+    fix_desktop_file
+else
+    echo -e "[Desktop Entry]\nType=Application\nExec=/opt/pt/packettracer %f\nName=Packet Tracer\nIcon=/opt/pt/art/app.png\nTerminal=false\nStartupNotify=true\nMimeType=application/x-pkt;application/x-pka;application/x-pkz;application/x-pks;application/x-pksz;"  \
+        | create_file /usr/share/applications/cisco-pt.desktop
+    echo -e "[Desktop Entry]\nType=Application\nExec=/opt/pt/packettracer -uri=%u\nName=Packet Tracer\nIcon=/opt/pt/art/app.png\nTerminal=false\nStartupNotify=true\nNoDisplay=true\nMimeType=x-scheme-handler/pttp;" \
+        | create_file /usr/share/applications/cisco-ptsa.desktop
+fi
+
+add_bin_link_command
+
+for i in icudtl.dat  qtwebengine_devtools_resources.pak  qtwebengine_resources_100p.pak  qtwebengine_resources_200p.pak  qtwebengine_resources.pak ; do
+    install_file opt/pt/bin/$i /opt/pt/bin/resources/$i
+    remove_file /opt/pt/bin/$i
+done
+
+remove_dir /opt/pt/bin/qtwebengine_locales
+ln -s /opt/pt/translations opt/pt/bin/translations
+pack_file /opt/pt/bin/translations
+
+# TODO
+#Icon=/opt/pt/art/app.png
+
+# TODO
+#CONTENTS.cpio/ucpio://usr/share/icons/gnome/48x48/mimetypes
+#/usr/share/icons/hicolor/48x48/mimetypes
+
+
