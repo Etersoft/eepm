@@ -100,9 +100,10 @@ epm_assure()
     load_helper epm-install
     (repack='' pkg_names="$PACKAGE" pkg_files='' pkg_urls='' epm_install ) || return
 
+    # keep auto installed packages
     # https://bugzilla.altlinux.org/42240
-    load_helper epm-mark
-    epm_mark_auto "$PACKAGE"
+    #load_helper epm-mark
+    #epm_mark_auto "$PACKAGE"
 
     # no check if we don't need a version
     [ -n "$PACKAGEVERSION" ] || return 0
