@@ -503,9 +503,8 @@ ipfs_api_local="/ip4/127.0.0.1/tcp/5001"
 
 ipfs_api_brave="/ip4/127.0.0.1/tcp/45005"
 
-ipfs_gateway="https://cloudflare-ipfs.com/ipfs"
-[ -n "$EGET_IPFS_GATEWAY" ] && ipfs_gateway="$EGET_IPFS_GATEWAY"
-IPFS_GATEWAY="$ipfs_gateway"
+# Public IPFS http gateways
+ipfs_gateways="https://cloudflare-ipfs.com/ipfs https://dweb.link/ipfs https://dhash.ru/ipfs"
 
 # Test data: https://etersoft.ru/templates/etersoft/images/logo.png
 ipfs_checkQm="QmYwf2GAMvHxfFiUFL2Mr6KUG6QrDiupqGc8ms785ktaYw"
@@ -533,6 +532,23 @@ ipfs_check()
     verdocmd $IPFS_CMD --api $IPFS_API $ipfs_diag_timeout cat "$1" >/dev/null
 }
 
+check_ipfs_gateway()
+{
+    local ipfs_gateway="$1"
+    # TODO: check checksum
+    if docmd eget --check-url "$ipfs_gateway/$ipfs_checkQm" ; then
+        ipfs_mode="gateway"
+        return
+    fi
+
+    if docmd eget --check-site "$(dirname $ipfs_gateway)" ; then
+       info "IPFS gateway $ipfs_gateway is accessible, but can't return shared $ipfs_checkQm"
+    else
+       info "IPFS gateway $(dirname $ipfs_gateway) is not accessible"
+    fi
+
+    return 1
+}
 
 
 select_ipfs_mode()
@@ -564,20 +580,23 @@ select_ipfs_mode()
         fi
     fi
 
-    # TODO: check checksum
-    if docmd eget --check-url "$ipfs_gateway/$ipfs_checkQm" ; then
-        ipfs_mode="gateway"
+    IPFS_GATEWAY=''
+
+    # if set some http gateway, use only it
+    if [ -n "$EGET_IPFS_GATEWAY" ] ; then
+        check_ipfs_gateway "$EGET_IPFS_GATEWAY" && IPFS_GATEWAY="$EGET_IPFS_GATEWAY" || ipfs_mode="disabled"
         return
     fi
 
-    IPFS_GATEWAY=''
-    if docmd eget --check-site "$(dirname $ipfs_gateway)" ; then
-       info "IPFS gateway $ipfs_gateway is accessible, but can't return shared $ipfs_checkQm"
-    else
-       info "IPFS gateway $(dirname $ipfs_gateway) is not accessible"
-    fi
+    # check public http gateways
+    for ipfs_gateway in $ipfs_gateways ; do
+        check_ipfs_gateway $ipfs_gateway || continue
+        IPFS_GATEWAY="$ipfs_gateway"
+        return
+    done
 
     ipfs_mode="disabled"
+
 }
 
 
