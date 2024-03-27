@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.60.12"
+EPMVERSION="3.60.13"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -788,7 +788,7 @@ get_package_type()
             return
             ;;
         *)
-            if [ -r "$1" ] && file "$1" | grep -q " ELF " ; then
+            if [ -r "$1" ] && file -L "$1" | grep -q " ELF " ; then
                 echo "ELF"
                 return
             fi
@@ -1594,8 +1594,10 @@ epm_assure()
     #docmd epm --auto install $PACKAGE || return
     (repack='' pkg_names="$PACKAGE" pkg_files='' pkg_urls='' epm_install ) || return
 
+    # keep auto installed packages
     # https://bugzilla.altlinux.org/42240
-    epm_mark_auto "$PACKAGE"
+    #load_helper epm-mark
+    #epm_mark_auto "$PACKAGE"
 
     # no check if we don't need a version
     [ -n "$PACKAGEVERSION" ] || return 0
@@ -2020,6 +2022,9 @@ case $BASEDISTRNAME in
 
         return
         ;;
+    "astra")
+        [ -n "$force" ] || fatal "It seems AstraLinux does no support autoremove correctly. You can rerun the command with --force option to get into trouble."
+        ;;
     *)
         ;;
 esac
@@ -2309,7 +2314,7 @@ check_pkg_integrity()
         docmd apkg verify $PKG
         ;;
     exe)
-        file $PKG | grep -q "executable for MS Windows"
+        file -L $PKG | grep -q "executable for MS Windows"
         ;;
     msi)
         # TODO: add to patool via cabextract
@@ -8896,6 +8901,11 @@ epm_remove()
         [ -n "$force" ] || return $STATUS
     fi
 
+    if [ -n "$noscripts" ] ; then
+        warning "It is not recommended to remove a few packages with disabled scripts simultaneously."
+        fatal "We can't allow packages removing on hi level when --noscripts is used."
+    fi
+
     # get package name for hi level package management command (with version if supported and if possible)
     pkg_names=$(__epm_get_hilevel_name $pkg_names)
 
@@ -9461,6 +9471,7 @@ __epm_repack_to_rpm()
 
     # Note: install epm-repack for static (package based) dependencies
     assure_exists alien || fatal
+    assure_exists fakeroot
 
     # will set RPMBUILD
     __try_install_eepm_rpmbuild
@@ -9514,11 +9525,15 @@ __epm_repack_to_rpm()
         __prepare_source_package "$(realpath $alpkg)"
         cd $tmpbuilddir/ || fatal
 
+        local fakeroot
+        fakeroot=''
+        ! is_root && is_command fakeroot && fakeroot='fakeroot'
+
         if [ -n "$verbose" ] ; then
-            docmd alien --generate --to-rpm $verbose $scripts "../$alpkg" || fatal
+            docmd $fakeroot alien --generate --to-rpm $verbose $scripts "../$alpkg" || fatal
         else
-            showcmd alien --generate --to-rpm $scripts "../$alpkg"
-            a='' alien --generate --to-rpm $scripts "../$alpkg" >/dev/null || fatal
+            showcmd $fakeroot alien --generate --to-rpm $scripts "../$alpkg"
+            a='' $fakeroot alien --generate --to-rpm $scripts "../$alpkg" >/dev/null || fatal
         fi
 
         # remove all empty dirs (hack against broken dpkg with LF in the end of line) (hack for linux_pantum.deb)
@@ -10752,9 +10767,9 @@ __epm_elf_requires()
     fi
 
     for i in $* ; do
-        if file "$i" | grep -q " ELF 32-bit " ; then
+        if file -L "$i" | grep -q " ELF 32-bit " ; then
             __epm_elf32_requires "$i"
-        elif file "$i" | grep -q " ELF 64-bit " ; then
+        elif file -L "$i" | grep -q " ELF 64-bit " ; then
             __epm_elf64_requires "$i"
         else
             warning "Unknown ELF binary"
@@ -14957,16 +14972,15 @@ ipfs_api_local="/ip4/127.0.0.1/tcp/5001"
 
 ipfs_api_brave="/ip4/127.0.0.1/tcp/45005"
 
-ipfs_gateway="https://cloudflare-ipfs.com/ipfs"
-[ -n "$EGET_IPFS_GATEWAY" ] && ipfs_gateway="$EGET_IPFS_GATEWAY"
-IPFS_GATEWAY="$ipfs_gateway"
+# Public IPFS http gateways
+ipfs_gateways="https://cloudflare-ipfs.com/ipfs https://dweb.link/ipfs https://dhash.ru/ipfs"
 
 # Test data: https://etersoft.ru/templates/etersoft/images/logo.png
 ipfs_checkQm="QmYwf2GAMvHxfFiUFL2Mr6KUG6QrDiupqGc8ms785ktaYw"
 
 get_ipfs_brave()
 {
-    local ipfs_brave="$(ls ~/.config/BraveSoftware/Brave-Browser/*/*/go-ipfs_* | sort | tail -n1 2>/dev/null)"
+    local ipfs_brave="$(ls ~/.config/BraveSoftware/Brave-Browser/*/*/go-ipfs_* 2>/dev/null | sort | tail -n1)"
     [ -n "$ipfs_brave" ] && [ -x "$ipfs_brave" ] || return
     echo "$ipfs_brave"
 }
@@ -14987,6 +15001,23 @@ ipfs_check()
     verdocmd $IPFS_CMD --api $IPFS_API $ipfs_diag_timeout cat "$1" >/dev/null
 }
 
+check_ipfs_gateway()
+{
+    local ipfs_gateway="$1"
+    # TODO: check checksum
+    if docmd eget --check-url "$ipfs_gateway/$ipfs_checkQm" ; then
+        ipfs_mode="gateway"
+        return
+    fi
+
+    if docmd eget --check-site "$(dirname $ipfs_gateway)" ; then
+       info "IPFS gateway $ipfs_gateway is accessible, but can't return shared $ipfs_checkQm"
+    else
+       info "IPFS gateway $(dirname $ipfs_gateway) is not accessible"
+    fi
+
+    return 1
+}
 
 
 select_ipfs_mode()
@@ -15018,20 +15049,23 @@ select_ipfs_mode()
         fi
     fi
 
-    # TODO: check checksum
-    if docmd eget --check-url "$ipfs_gateway/$ipfs_checkQm" ; then
-        ipfs_mode="gateway"
+    IPFS_GATEWAY=''
+
+    # if set some http gateway, use only it
+    if [ -n "$EGET_IPFS_GATEWAY" ] ; then
+        check_ipfs_gateway "$EGET_IPFS_GATEWAY" && IPFS_GATEWAY="$EGET_IPFS_GATEWAY" || ipfs_mode="disabled"
         return
     fi
 
-    IPFS_GATEWAY=''
-    if docmd eget --check-site "$(dirname $ipfs_gateway)" ; then
-       info "IPFS gateway $ipfs_gateway is accessible, but can't return shared $ipfs_checkQm"
-    else
-       info "IPFS gateway $(dirname $ipfs_gateway) is not accessible"
-    fi
+    # check public http gateways
+    for ipfs_gateway in $ipfs_gateways ; do
+        check_ipfs_gateway $ipfs_gateway || continue
+        IPFS_GATEWAY="$ipfs_gateway"
+        return
+    done
 
     ipfs_mode="disabled"
+
 }
 
 

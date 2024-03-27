@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.60.12"
+EPMVERSION="3.60.13"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -788,7 +788,7 @@ get_package_type()
             return
             ;;
         *)
-            if [ -r "$1" ] && file "$1" | grep -q " ELF " ; then
+            if [ -r "$1" ] && file -L "$1" | grep -q " ELF " ; then
                 echo "ELF"
                 return
             fi
