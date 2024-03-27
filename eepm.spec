@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.60.12
+Version: 3.60.13
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,26 @@ a discussion about extra requirements.
 
 
 %changelog
+* Thu Mar 28 2024 Vitaly Lipatov <lav@altlinux.ru> 3.60.13-alt1
+- epm play: add mailspring
+- epm-remove: stop hi level removing when --noscripts is used
+- epm play telegram: add check for glibc 2.28
+- epm play: add sidequest
+- epm play: add element-desktop
+- epm play: add mattermost-desktop
+- epm-assure: keep installed packages
+- epm-autoremove: stop on AstraLinux (unsupported by the distro)
+- epm: allow scripts in Kaspersky packages
+- epm repack PacketTracker: improved for 8.2 and 8.2.1
+- epm play packet-tracer: add install from sysnettechsolutions
+- epm play: add epson-printer-utility
+- epm-repack-rpm: use fakeroot when is not root (to avoid alien warning about root)
+- vdhcoapp: fix package name
+- eget: hide missed Brave's ipfs error
+- eget: add support for a new IPFS gateways
+- epm play: add nwjs-ffmpeg-prebuilt
+- epm repack trueconf: fix for trueconf client since 8.4.0.1957
+
 * Tue Mar 26 2024 Vitaly Lipatov <lav@altlinux.ru> 3.60.12-alt1
 - eget: fix --check using (also allow --check for backward compatibility)
 - epm play: add yandex-messenger
