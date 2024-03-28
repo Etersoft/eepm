@@ -21,6 +21,10 @@ use_system_xdg
 
 install_file $PRODUCTDIR/product_logo_48.png /usr/share/pixmaps/$PRODUCT.png
 
+#fix duplication .desktop file
+subst "s|chromium-devel|ungoogled-chromium|" $BUILDROOT/opt/$PRODUCT/chrome-wrapper
+
+
 # create desktop file
 mkdir -p $BUILDROOT/usr/share/applications/
 cat <<EOF >$BUILDROOT/usr/share/applications/$PRODUCT.desktop
@@ -47,3 +51,4 @@ set_alt_alternatives 65
 fix_chrome_sandbox
 
 add_chromium_deps
+
