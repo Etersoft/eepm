@@ -9,7 +9,7 @@ echo "$TAR" | grep -q "1C-Connect-Linux-x64.tar.gz" || fatal "Use only for 1C-Co
 
 mkdir opt
 erc unpack $TAR || fatal
-mv 1C-Connect-Linux-x64.tar opt/$PRODUCT
+mv 1C-Connect-Linux-x64* opt/$PRODUCT
 
 echo "true" > ./opt/$PRODUCT/app/bin/updater
 
