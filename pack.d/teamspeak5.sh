@@ -10,7 +10,7 @@ VERSION="$3"
 
 erc $TAR || fatal
 mkdir -p opt
-mv teamspeak-client.tar opt/TeamSpeak
+mv teamspeak-client* opt/TeamSpeak
 
 PKGNAME=$PRODUCT-$VERSION
 
