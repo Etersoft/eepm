@@ -13,7 +13,7 @@ fi
 if echo "$TAR" | grep -q KyoceraLinuxPackages ; then
     erc $TAR || fatal
 else
-    fatal "How no idea how to handle $TAR"
+    fatal "Have no idea how to handle $(basename $TAR)"
 fi
 
 cd KyoceraLinuxPackages-*.tar || fatal

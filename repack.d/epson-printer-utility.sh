@@ -17,7 +17,7 @@ install_file opt/epson-printer-utility/epson-printer-utility.desktop /usr/share/
 
 # backend
 install_file usr/lib/epson-backend/ecbd.service /usr/lib/systemd/system/ecbd.service
-mkdir -p /var/cache/epson-backend
+mkdir -p var/cache/epson-backend
 pack_dir /var/cache/epson-backend
 
 # if command -v semodule > /dev/null 2>&1;then
