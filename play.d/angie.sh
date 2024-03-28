@@ -14,7 +14,7 @@ version=$(epm print info --base-version)
 
 # Strict supported list
 case $(epm print info -e) in
-    Alpine/3.15|Alpine/3.16|Alpine/3.17|Alpine/3.18)
+    Alpine/3.*)
         epm install --skip-installed ca-certificates
         epm repo addkey angie "https://angie.software/keys/angie-signing.rsa"
         epm repo add "https://download.angie.software/angie/alpine/v$version/main"
@@ -44,15 +44,19 @@ case $(epm print info -e) in
         epm repo addkey angie 'https://download.angie.software/angie/oracle/$releasever/' "https://angie.software/keys/angie-signing.gpg" "Angie repo"
         #epm repo add 'https://download.angie.software/angie/oracle/$releasever/'
         ;;
-    RedOS/7.3)
-        epm repo addkey angie "https://download.angie.software/angie/redos/73/" "https://angie.software/keys/angie-signing.gpg" "Angie repo"
-        #epm repo add "https://download.angie.software/angie/redos/73/"
+    RedOS/7*)
+        epm repo addkey angie "https://download.angie.software/angie/redos/7/" "https://angie.software/keys/angie-signing.gpg" "Angie repo"
+        epm repo add "https://download.angie.software/angie/redos/7/"
+        ;;
+    RedOS/8*)
+        epm repo addkey angie "https://download.angie.software/angie/redos/8/" "https://angie.software/keys/angie-signing.gpg" "Angie repo"
+        epm repo add "https://download.angie.software/angie/redos/8/"
         ;;
     RockyLinux/8|RockyLinux/9)
         epm repo addkey angie 'https://download.angie.software/angie/rocky/$releasever/' "https://angie.software/keys/angie-signing.gpg" "Angie repo"
         #epm repo add 'https://download.angie.software/angie/rocky/$releasever/'
         ;;
-    Ubuntu/20.04|Ubuntu/22.04|Ubuntu/23.04)
+    Ubuntu/*)
         epm install --skip-installed ca-certificates lsb-release
         epm repo addkey angie "https://angie.software/keys/angie-signing.gpg"
         epm repo add "deb [angie] https://download.angie.software/angie/ubuntu/ $reponame main"
