@@ -21,7 +21,6 @@ use_system_xdg
 
 install_file $PRODUCTDIR/product_logo_48.png /usr/share/pixmaps/$PRODUCT.png
 
-#fix duplication .desktop file
 subst "s|chromium-devel|ungoogled-chromium|" $BUILDROOT/opt/$PRODUCT/chrome-wrapper
 
 
