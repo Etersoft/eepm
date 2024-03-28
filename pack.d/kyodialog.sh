@@ -16,7 +16,7 @@ else
     fatal "Have no idea how to handle $(basename $TAR)"
 fi
 
-cd KyoceraLinuxPackages-*.tar || fatal
+cd KyoceraLinuxPackages-* || fatal
 case "$(epm print info -p)" in
     rpm)
         cd Fedora/Global/kyodialog_x86_64 || fatal
