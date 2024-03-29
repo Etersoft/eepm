@@ -189,7 +189,8 @@ epm_repack()
     # if possible, it will put pkg_urls into pkg_files and reconstruct pkg_filenames
     if [ -n "$pkg_urls" ] ; then
         load_helper epm-download
-        __handle_pkg_urls_to_install
+        __download_pkg_urls
+        pkg_urls=
     fi
 
     [ -n "$pkg_names" ] && warning "Can't find $pkg_names files"
