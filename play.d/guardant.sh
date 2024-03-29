@@ -29,7 +29,7 @@ esac
 PKGURL=$(epm tool eget --list --latest https://download.guardant.ru/LM/Linux/$VERSION/$shortarch/ "$file") || fatal "Can't get package URL"
 
 repack=''
-[ "$(epm print info -s)" = "alt" ] && repack='--repack'
+[ "$pkgtype" = "rpm" ] && repack='--repack'
 
 epm pack $PKGNAME $repack --install "$PKGURL" "$VERSION" || exit
 
