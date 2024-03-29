@@ -20,8 +20,8 @@ mkdir -p usr/share/applications/
 mv $BASENAME/ opt/sidequest
 
 for res in 16x16 24x24 32x32 48x48 64x64 128x128 256x256 512x512 1024x1024; do
-    install -dm644 "usr/share/icons/hicolor/${res}/apps/"
-    cp opt/sidequest/resources/app.asar.unpacked/build/icons/${res}.png usr/share/icons/hicolor/${res}/apps/sidequest.png
+    install -dm755 "usr/share/icons/hicolor/${res}/apps/"
+    install -m644 opt/sidequest/resources/app.asar.unpacked/build/icons/${res}.png usr/share/icons/hicolor/${res}/apps/sidequest.png
 done
 
 # create desktop file
