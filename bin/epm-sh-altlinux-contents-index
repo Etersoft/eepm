@@ -54,9 +54,12 @@ rsync_alt_contents_index()
     local URL="$1"
     local TD="$2"
     local res
-    assure_exists rsync
+    assure_exists rsync || return
 
-    __rsync_check "$URL" || return
+    if ! __rsync_check "$URL" ; then
+        warning "$URL is not accessible via rsync, skipping contents index update..."
+        return
+    fi
 
     mkdir -p "$(dirname "$TD")"
 
