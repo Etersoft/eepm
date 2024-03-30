@@ -4,6 +4,7 @@ PKGNAME=synology-drive
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION='Synology Drive Client from the official site'
+URL="https://www.synology.com/"
 
 . $(dirname $0)/common.sh
 

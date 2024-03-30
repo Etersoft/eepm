@@ -1,8 +1,10 @@
 #!/bin/sh
 
 PKGNAME=duplicati
+# noarch
 VERSION="$2"
 DESCRIPTION="Duplicati from the official site"
+URL="https://www.duplicati.com/"
 
 . $(dirname $0)/common.sh
 

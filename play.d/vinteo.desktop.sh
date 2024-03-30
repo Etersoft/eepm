@@ -4,6 +4,7 @@ PKGNAME=vinteo.desktop
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="Client for Vinteo videoconferencing server"
+URL="https://vinteo.com"
 
 . $(dirname $0)/common.sh
 

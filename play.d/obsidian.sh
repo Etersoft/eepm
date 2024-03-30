@@ -4,6 +4,7 @@ PKGNAME=obsidian
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION='Obsidian from the official site'
+URL="https://obsidian.md"
 
 . $(dirname $0)/common.sh
 

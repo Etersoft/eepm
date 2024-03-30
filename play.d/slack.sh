@@ -4,6 +4,7 @@ PKGNAME=slack
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION='Slack from the official site'
+URL="https://slack.com"
 
 . $(dirname $0)/common.sh
 

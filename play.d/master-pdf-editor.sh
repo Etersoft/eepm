@@ -4,6 +4,7 @@ PKGNAME=master-pdf-editor
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="Master PDF Editor from the official site"
+URL="https://master-pdf-editor.ru/"
 
 . $(dirname $0)/common.sh
 

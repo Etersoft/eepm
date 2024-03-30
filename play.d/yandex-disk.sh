@@ -4,6 +4,7 @@ PKGNAME=yandex-disk
 SUPPORTEDARCHES="x86_64 x86"
 VERSION="$2"
 DESCRIPTION="Yandex Disk from the official site"
+URL="https://360.yandex.com/disk/download/"
 
 . $(dirname $0)/common.sh
 

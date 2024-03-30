@@ -4,6 +4,7 @@ PKGNAME=synology-chat
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION='Synology Chat Client from the official site'
+URL="https://synology.com"
 
 . $(dirname $0)/common.sh
 

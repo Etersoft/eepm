@@ -4,6 +4,7 @@ PKGNAME=icq
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="ICQ for Linux from the official site"
+URL="https://icq.com/desktop/ru?#linux"
 
 . $(dirname $0)/common.sh
 

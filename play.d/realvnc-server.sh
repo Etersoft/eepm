@@ -4,6 +4,7 @@ PKGNAME=realvnc-vnc-server
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="Real VNC Server from the official site"
+URL="https://www.realvnc.com/en/connect/download/vnc/"
 
 . $(dirname $0)/common.sh
 

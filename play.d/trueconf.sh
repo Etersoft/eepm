@@ -4,6 +4,7 @@ PKGNAME=trueconf
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="TrueConf client for Linux from the official site"
+URL="https://trueconf.ru"
 
 . $(dirname $0)/common.sh
 

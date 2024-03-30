@@ -4,6 +4,7 @@ PKGNAME=powershell
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="Microsoft PowerShell from the official site"
+URL="https://github.com/PowerShell/PowerShell"
 
 . $(dirname $0)/common.sh
 

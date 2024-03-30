@@ -4,6 +4,7 @@ PKGNAME=rudesktop
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="RuDesktop for Linux from the official site"
+URL="https://rudesktop.ru/"
 
 # change installed package name
 case "$(epm print info -s)" in

@@ -4,6 +4,7 @@ PKGNAME=whatsapp-for-linux
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION='An unofficial WhatsApp desktop application (from the repository if the package is there, or from the official site)'
+URL="https://github.com/eneshecan/whatsapp-for-linux"
 
 . $(dirname $0)/common.sh
 

@@ -4,6 +4,7 @@ PKGNAME=google-chrome-stable
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="The popular and trusted web browser by Google (Stable Channel) from the official site"
+URL="https://www.google.com/chrome/"
 
 . $(dirname $0)/common.sh
 

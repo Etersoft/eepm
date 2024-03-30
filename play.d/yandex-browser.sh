@@ -5,6 +5,7 @@ SUPPORTEDARCHES="x86_64"
 PRODUCTALT="stable beta corporate"
 VERSION="$2"
 DESCRIPTION="Yandex browser from the official site"
+URL="https://browser.yandex.ru/"
 TIPS="Run 'epm play yandex-browser=beta' to install beta version of the browser."
 
 . $(dirname $0)/common.sh

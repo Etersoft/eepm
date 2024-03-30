@@ -4,6 +4,7 @@ PKGNAME=novelwriter
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="novelWriter - a markdown-like editor for novels"
+URL="https://github.com/vkbo/novelWriter"
 
 . $(dirname $0)/common.sh
 

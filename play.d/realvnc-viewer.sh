@@ -4,6 +4,7 @@ PKGNAME=realvnc-vnc-viewer
 SUPPORTEDARCHES="x86_64 armhf aarch64"
 VERSION="$2"
 DESCRIPTION="Real VNC Viewer from the official site"
+URL="https://www.realvnc.com/en/connect/download/vnc/"
 
 . $(dirname $0)/common.sh
 

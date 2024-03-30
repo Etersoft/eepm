@@ -4,6 +4,7 @@ PKGNAME=vk-calls
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="VK Calls for Linux from the official site"
+URL="https://calls.vk.com/"
 
 . $(dirname $0)/common.sh
 

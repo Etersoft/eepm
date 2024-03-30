@@ -4,6 +4,7 @@ PKGNAME=wps-office
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="WPS Office for Linux from the official site"
+URL="https://www.wps.com/ru-RU/"
 TIPS="Run epm play wpsoffice=<version> to install some specific version"
 
 . $(dirname $0)/common.sh

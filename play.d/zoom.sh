@@ -4,6 +4,7 @@ PKGNAME=zoom
 SUPPORTEDARCHES="x86_64 x86"
 VERSION="$2"
 DESCRIPTION="Zoom client from the official site"
+URL="https://zoom.us"
 
 . $(dirname $0)/common.sh
 

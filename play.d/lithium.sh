@@ -13,6 +13,7 @@ esac
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="CAD of printed circuit boards"
+URL="https://www.lecad.ru"
 
 . $(dirname $0)/common.sh
 

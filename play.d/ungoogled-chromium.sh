@@ -4,6 +4,7 @@ PKGNAME=ungoogled-chromium
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="Google Chromium, sans integration with Google from the official site"
+URL="https://ungoogled-software.github.io/ungoogled-chromium-binaries/"
 
 . $(dirname $0)/common.sh
 

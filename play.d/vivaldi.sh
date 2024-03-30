@@ -6,6 +6,7 @@ PRODUCTALT="stable snapshot"
 VERSION="$2"
 SUPPORTEDARCHES="x86_64 x86 aarch64 armhf"
 DESCRIPTION="Vivaldi browser from the official site"
+URL="https://vivaldi.com"
 TIPS="Run 'epm play vivaldi=snapshot' to install snapshot version of the browser."
 
 . $(dirname $0)/common.sh

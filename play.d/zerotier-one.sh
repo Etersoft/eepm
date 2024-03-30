@@ -4,6 +4,7 @@ PKGNAME=zerotier-one
 SUPPORTEDARCHES="x86_64 aarch64 ppc64el"
 VERSION="$2"
 DESCRIPTION="ZeroTier - A Smart Ethernet Switch for Earth from the official site"
+URL="https://zerotier.com"
 
 . $(dirname $0)/common.sh
 

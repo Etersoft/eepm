@@ -4,8 +4,7 @@ PKGNAME=unityhub
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="Unity Hub from the official site"
-REPOURL="https://unity.com/"
-
+URL="https://unity.com/"
 
 . $(dirname $0)/common.sh
 

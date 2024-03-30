@@ -4,6 +4,7 @@ PKGNAME=teamspeak5
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="TeamSpeak5 Client for Linux from the official site"
+URL="https://www.teamspeak.com/"
 
 . $(dirname $0)/common.sh
 

@@ -3,8 +3,8 @@
 PKGNAME=xod-client-electron
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
-URL="https://xod.io/"
 DESCRIPTION="A visual programming language for microcontrollers"
+URL="https://xod.io/"
 
 . $(dirname $0)/common.sh
 

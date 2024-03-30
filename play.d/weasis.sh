@@ -2,8 +2,9 @@
 
 PKGNAME=weasis
 SUPPORTEDARCHES="x86_64 aarch64 armhf"
-DESCRIPTION="Weasis DICOM medical viewer"
 VERSION="$2"
+DESCRIPTION="Weasis DICOM medical viewer"
+URL="https://github.com/nroduit/Weasis"
 
 . $(dirname $0)/common.sh
 

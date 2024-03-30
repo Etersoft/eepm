@@ -4,6 +4,7 @@ PKGNAME=WebCord
 SUPPORTEDARCHES="x86_64 arm64"
 VERSION="$2"
 DESCRIPTION="A Discord and Spacebar client implemented directly without Discord API from the official github"
+URL="https://github.com/SpacingBat3/WebCord"
 
 . $(dirname $0)/common.sh
 

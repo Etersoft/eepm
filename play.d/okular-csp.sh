@@ -5,6 +5,7 @@ SKIPREPACK=1
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="Okular GOST (free version) with CryptoPro support from the official site"
+URL="https://packages.lab50.net"
 REPOURL="http://packages.lab50.net"
 
 # TODO: remove repo too

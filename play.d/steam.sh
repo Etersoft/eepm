@@ -4,6 +4,7 @@ PKGNAME=steam-launcher
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION='Steam Launcher (from the repository if the package is there, or from the official site)'
+URL="https://store.steampowered.com/about"
 
 [ "$(epm print info -s)" = "alt" ] && REPOPKGNAME=i586-steam || REPOPKGNAME=steam
 

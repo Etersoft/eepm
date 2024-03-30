@@ -5,6 +5,7 @@ SUPPORTEDARCHES="x86_64"
 PRODUCTALT="stable beta developer"
 VERSION="$2"
 DESCRIPTION="Opera browser from the official site"
+URL="https://opera.com"
 
 . $(dirname $0)/common.sh
 

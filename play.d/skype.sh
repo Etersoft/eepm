@@ -4,6 +4,7 @@ PKGNAME=skypeforlinux
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="Skype for Linux - Stable/Release Version from the official site"
+URL="https://skype.com"
 
 . $(dirname $0)/common.sh
 

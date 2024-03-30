@@ -4,6 +4,7 @@ PKGNAME=iptvnator
 SUPPORTEDARCHES="x86_64 aarch64"
 VERSION="$2"
 DESCRIPTION='IPTV player from the official site'
+URL="https://github.com/4gray/iptvnator"
 
 . $(dirname $0)/common.sh
 

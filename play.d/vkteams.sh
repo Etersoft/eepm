@@ -4,6 +4,7 @@ PKGNAME=vkteams
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="VK Teams for Linux from the official site"
+URL="https://biz.mail.ru/teams"
 
 . $(dirname $0)/common.sh
 

@@ -4,6 +4,7 @@ PKGNAME=lunacy
 SUPPORTEDARCHES="x86_64 aarch64"
 VERSION="$2"
 DESCRIPTION="Lunacy - Graphic Design Editor"
+URL="https://icons8.ru/lunacy"
 
 . $(dirname $0)/common.sh
 

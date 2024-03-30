@@ -4,6 +4,7 @@ PKGNAME=jetbrains-toolbox
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="JetBrains Toolbox App from the official site"
+URL="https://www.jetbrains.com/toolbox/"
 
 . $(dirname $0)/common.sh
 

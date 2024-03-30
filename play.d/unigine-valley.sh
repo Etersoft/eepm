@@ -4,6 +4,7 @@ PKGNAME=unigine-valley
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="Unigine Valley 2013 (Unigine Benchmark) from the official site"
+URL="https://benchmark.unigine.com/valley"
 
 . $(dirname $0)/common.sh
 

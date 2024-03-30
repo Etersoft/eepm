@@ -1,11 +1,10 @@
 #!/bin/sh
 
-DESCRIPTION="VueScan from the official site"
-
 PKGNAME=vuescan
-
 SUPPORTEDARCHES="x86_64 x86 aarch64 armhf"
 VERSION="$2"
+DESCRIPTION="VueScan from the official site"
+URL="https://www.hamrick.com/alternate-versions.html"
 
 . $(dirname $0)/common.sh
 

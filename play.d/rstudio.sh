@@ -4,6 +4,7 @@ PKGNAME=rstudio
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION='RStudio from the official site'
+URL="https://www.rstudio.com/products/rstudio"
 
 . $(dirname $0)/common.sh
 
