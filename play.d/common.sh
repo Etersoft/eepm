@@ -321,18 +321,18 @@ case "$1" in
                 if [ "$latestpkgver" = "$pkgver" ] ; then
                     echo "Latest available version of $PKGNAME $latestpkgver is already installed."
                 else
-                    echo "Latest available version of $PKGNAME: $latestpkgver, but you a newer version installed: $pkgver."
+                    echo "Latest available version of $PKGNAME: $latestpkgver, but you have a newer version installed: $pkgver."
                 fi
                 exit
             fi
 
-            echo "Updating $PKGNAME from $pkgver to the latest available version (equal to $latestpkgver or newer) ..."
-            #if [ -n "$force" ] ; then
-            #    echo "Updating $PKGNAME from $pkgver to latest available version ..."
-            #else
-            #    echo "Updating $PKGNAME from $pkgver to $latestpkgver version ..."
-            #    VERSION="$latestpkgver"
-            #fi
+            #echo "Updating $PKGNAME from $pkgver to the latest available version (equal to $latestpkgver or newer) ..."
+            if [ -n "$force" ] ; then
+                echo "Updating $PKGNAME from $pkgver to latest available version ..."
+            else
+                echo "Updating $PKGNAME from $pkgver to $latestpkgver version ..."
+                VERSION="$latestpkgver"
+            fi
         fi
         # pass to run play code
         ;;
