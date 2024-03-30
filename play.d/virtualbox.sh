@@ -21,6 +21,7 @@ epm install $PKGNAME || exit
 
 #[ "$vendor" != "alt" ] && exit
 
+# epm can install module correctly
 epm install kernel-module-virtualbox || exit
 
 echo

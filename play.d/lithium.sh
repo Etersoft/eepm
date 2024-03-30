@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# TODO: uses global epm here
 pkgtype=$(epm print info -p)
 case $pkgtype in
     rpm)
@@ -16,7 +17,6 @@ DESCRIPTION="CAD of printed circuit boards"
 URL="https://www.lecad.ru"
 
 . $(dirname $0)/common.sh
-
 
 case $pkgtype in
     rpm)

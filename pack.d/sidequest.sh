@@ -17,7 +17,7 @@ erc unpack $BASENAME.tar.xz || fatal
 mkdir -p opt
 mkdir -p usr/share/applications/
 
-mv $BASENAME/ opt/sidequest
+mv $BASENAME* opt/sidequest
 
 for res in 16x16 24x24 32x32 48x48 64x64 128x128 256x256 512x512 1024x1024; do
     install -dm755 "usr/share/icons/hicolor/${res}/apps/"

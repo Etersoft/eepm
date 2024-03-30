@@ -38,4 +38,4 @@ fi
 epm install $repack "$URL" || exit
 
 echo
-echo "NOTE: VS Code is a proprietary build. We recommend to use open source editors: Codium, Atom."
+echo "NOTE: VS Code is a proprietary build. We recommend you to use open source editors: Codium, Atom."
