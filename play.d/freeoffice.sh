@@ -18,7 +18,7 @@ case $pkgtype in
         ;;
 esac
 
-PKGURL="$(epm tool eget --list --latest https://www.freeoffice.com/ru/download/applications $file)" || fatal "Can't get package URL"
+PKGURL="$(eget --list --latest https://www.freeoffice.com/ru/download/applications $file)" || fatal "Can't get package URL"
 
 repack=''
 [ "$(epm print info -s)" = "alt" ] && repack='--repack'

@@ -21,7 +21,7 @@ esac
 #https://github.com/bitwarden/clients/releases/download/desktop-v2023.4.0/Bitwarden-2023.4.0-amd64.deb
 #https://github.com/bitwarden/clients/releases/download/desktop-v2023.4.0/Bitwarden-2023.4.0-x86_64.rpm
 
-PKGURL=$(epm tool eget --list --latest https://github.com/bitwarden/clients/releases $(epm print constructname Bitwarden "$VERSION*" $arch $pkgtype "-" "-")) || fatal "Can't get package URL"
+PKGURL=$(eget --list --latest https://github.com/bitwarden/clients/releases $(epm print constructname Bitwarden "$VERSION*" $arch $pkgtype "-" "-")) || fatal "Can't get package URL"
 
 # we have workaround for their postinstall script, so always repack rpm package
 [ "$pkgtype" = "deb" ] || repack='--repack'

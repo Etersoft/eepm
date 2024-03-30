@@ -20,7 +20,6 @@ esac
 
 pkgtype=deb
 
-PKG=$(epm tool eget --list --latest https://github.com/4gray/iptvnator/releases/ "$PKGNAME*$VERSION*$arch.$pkgtype") || fatal "Can't get package URL"
-[ -n "$PKG" ] || fatal "Can't get package URL"
+PKGURL=$(eget --list --latest https://github.com/4gray/iptvnator/releases/ "$PKGNAME*$VERSION*$arch.$pkgtype") || fatal "Can't get package URL"
 
-epm install "$PKG"
+epm install "$PKGURL"

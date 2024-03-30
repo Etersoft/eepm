@@ -8,7 +8,7 @@ URL="https://neovide.dev/"
 
 . $(dirname $0)/common.sh
 
-PKGURL=$(epm tool eget --list --latest https://github.com/neovide/neovide/releases $PKGNAME.AppImage) || fatal "Can't get package URL"
+PKGURL=$(eget --list --latest https://github.com/neovide/neovide/releases $PKGNAME.AppImage) || fatal "Can't get package URL"
 
 epm install "$PKGURL"
 

@@ -15,7 +15,7 @@ case $pkgtype in
     rpm)
         PKGURL="https://desktop.docker.com/linux/main/amd64/139021/docker-desktop-4.28.0-x86_64.rpm"
         ;;
-    deb)
+    *)
         PKGURL="https://desktop.docker.com/linux/main/amd64/139021/docker-desktop-4.28.0-amd64.deb"
         ;;
 esac

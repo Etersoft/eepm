@@ -14,7 +14,7 @@ URL="https://wingware.com/"
 BASEURL="https://wingware.com/pub/wing-personal"
 
 if [ "$VERSION" = "*" ] ; then
-    DIRVERSION="$(epm tool eget --list --latest $BASEURL/10.* | xargs basename)"
+    DIRVERSION="$(eget --list --latest $BASEURL/10.* | xargs basename)"
     VERSION="$(echo $DIRVERSION | sed -e 's|\.[0-9]$||')"
 else
     # TODO: get full version from site
@@ -33,7 +33,7 @@ case $pkgtype in
         ;;
 esac
 
-PKGURL="$(epm tool eget --list --latest $BASEURL/$DIRVERSION/ $mask)" || fatal "Can't get package URL"
+PKGURL="$(eget --list --latest $BASEURL/$DIRVERSION/ $mask)" || fatal "Can't get package URL"
 #PKGURL="https://wingware.com/pub/wing-personal/$VERSION/$mask"
 
 repack=''

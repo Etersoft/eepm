@@ -13,7 +13,7 @@ URL="https://element.io/"
 
 arch="amd64"
 
-PKGURL=$(epm tool eget --list --latest https://packages.element.io/debian/pool/main/e/element-desktop/index.html $(epm print constructname $PKGNAME "$VERSION" $arch "deb")) || fatal "Can't get package URL"
+mask="$(epm print constructname $PKGNAME "$VERSION" $arch "deb")"
+PKGURL=$(eget --list --latest https://packages.element.io/debian/pool/main/e/element-desktop/index.html "$mask") || fatal "Can't get package URL"
 
-epm install --repack "$PKGURL"
-
+epm install "$PKGURL"

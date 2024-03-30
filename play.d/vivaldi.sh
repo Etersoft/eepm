@@ -1,6 +1,5 @@
 #!/bin/sh
 
-
 BASEPKGNAME=vivaldi
 PRODUCTALT="stable snapshot"
 VERSION="$2"
@@ -36,11 +35,11 @@ if [ "$PKGNAME" = "$BASEPKGNAME-snapshot" ] ; then
     # https://help.vivaldi.com/desktop/install-update/install-snapshots-on-non-deb-rpm-distros/
     DEBARCH=$arch
     if [ "$VERSION" = "*" ] ; then
-        VERSION=$(epm tool eget -O- "https://repo.vivaldi.com/archive/deb/dists/stable/main/binary-$DEBARCH/Packages.gz" | gzip -d | grep -A6 -x "Package: $PKGNAME" | sed -n 's/^Version: \(\([0-9]\+\.\)\{3\}[0-9]\+-[0-9]\+\)/\1/p' | sort -t. -k 1,1n -k 2,2n -k 3,3n -k 4,4n | tail -n 1) #'
+        VERSION=$(eget -O- "https://repo.vivaldi.com/archive/deb/dists/stable/main/binary-$DEBARCH/Packages.gz" | gzip -d | grep -A6 -x "Package: $PKGNAME" | sed -n 's/^Version: \(\([0-9]\+\.\)\{3\}[0-9]\+-[0-9]\+\)/\1/p' | sort -t. -k 1,1n -k 2,2n -k 3,3n -k 4,4n | tail -n 1) #'
     fi
     PKGURL="https://downloads.vivaldi.com/snapshot/vivaldi-snapshot_${VERSION}_$arch.deb"
 else
-    PKGURL="$(epm tool eget --list --latest https://vivaldi.com/ru/download "$(epm print constructname $PKGNAME "$VERSION" $arch deb)")" #" || fatal
+    PKGURL="$(eget --list --latest https://vivaldi.com/ru/download "$(epm print constructname $PKGNAME "$VERSION" $arch deb)")" #" || fatal
 fi
 epm install $PKGURL || fatal
 

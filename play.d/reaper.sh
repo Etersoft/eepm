@@ -17,7 +17,7 @@ case "$(epm print info -a)" in
         arch="armv7l" ;;
 esac
 
-PKGURL=$(epm tool eget --list --latest https://www.reaper.fm/download.php "*$arch.tar.xz") 
+PKGURL=$(eget --list --latest https://www.reaper.fm/download.php "*$arch.tar.xz") 
 [ -n "$PKGURL" ] || fatal "Can't get package URL"
 
 epm pack --install reaper "$PKGURL"

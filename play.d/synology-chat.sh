@@ -10,7 +10,7 @@ URL="https://synology.com"
 
 [ "$VERSION" = "*" ] && VERSION="[0-9]*"
 
-urldir="$(epm tool eget --list https://archive.synology.com/download/Utility/ChatClient "/$VERSION-*" | head -n1)"
+urldir="$(eget --list https://archive.synology.com/download/Utility/ChatClient "/$VERSION-*" | head -n1)"
 [ -n "$urldir" ] || fatal "Can't get dir for $VERSION version on https://archive.synology.com/download/Utility/ChatClient"
 
 # use temp dir
@@ -19,7 +19,6 @@ trap "rm -fr $PKGDIR" EXIT
 cd $PKGDIR || fatal
 
 # fix spaces in the package name
-epm tool eget -O $PKGNAME.deb "$urldir/Synology*.deb"
+eget -O $PKGNAME.deb "$urldir/Synology*.deb"
 
 epm install $PKGNAME.deb
-

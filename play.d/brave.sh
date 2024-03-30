@@ -24,14 +24,14 @@ repack='--repack'
 # hack to fix short name issue
 [ "$VERSION" = "*" ] && VERSION="[[:digit:]]*"
 
-PKGURL=$(epm tool eget --list --latest https://github.com/brave/brave-browser/releases "$(epm print constructname $PKGNAME "$VERSION")")
+PKGURL=$(eget --list --latest https://github.com/brave/brave-browser/releases $(epm print constructname $PKGNAME "$VERSION"))
 
 if [ -z "$PKGURL" ] ; then
     # force use beta if can't get stable version
     if [ "$PKGNAME" = "$BASEPKGNAME" ] ; then
         TOREMOVEPKG=$PKGNAME
         PKGNAME=$BASEPKGNAME-beta
-        PKGURL=$(epm tool eget --list --latest https://github.com/brave/brave-browser/releases "$(epm print constructname $PKGNAME "$VERSION")")
+        PKGURL=$(eget --list --latest https://github.com/brave/brave-browser/releases "$(epm print constructname $PKGNAME "$VERSION")")
         [ -n "$PKGURL" ] || fatal "Can't get package URL"
 
         echo "Force switching from $TOREMOVEPKG to $PKGNAME ... "

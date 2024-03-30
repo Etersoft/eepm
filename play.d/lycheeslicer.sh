@@ -20,7 +20,7 @@ is_stdcpp_enough "11.0" || VERSION="4.1.0"
 PKGURL="$(eget --list --latest https://mango3d.io/downloads/ "LycheeSlicer-$VERSION.deb")"
 
 # restore missed CDN for the latest release
-PKGURL=$(echo $PKGURL | sed -e 's|mango-lychee.nyc3.digitaloceanspaces.com|mango-lychee.nyc3.cdn.digitaloceanspaces.com|')
+PKGURL="$(echo $PKGURL | sed -e 's|mango-lychee.nyc3.digitaloceanspaces.com|mango-lychee.nyc3.cdn.digitaloceanspaces.com|')"
 
 if ! eget --check-url "$PKGURL" ; then
     # all previous versions return url to cdn with broken SSL (SSL connection broken only with wget or works only in a browser):
@@ -29,7 +29,7 @@ if ! eget --check-url "$PKGURL" ; then
     if epm assure curl ; then
         export EGET_BACKEND=curl
     else
-        PKGURL=$(echo $PKGURL | sed -e 's|mango-lychee.nyc3.cdn|mango-lychee.nyc3|')
+        PKGURL="$(echo $PKGURL | sed -e 's|mango-lychee.nyc3.cdn|mango-lychee.nyc3|')"
     fi
 fi
 

@@ -22,5 +22,5 @@ esac
 
 #pkgtype="$(epm print info -p)"
 
-PKGURL="$(eget --list --latest https://cuda-z.sourceforge.net/ "$file" )"
+PKGURL="$(eget --list --latest https://cuda-z.sourceforge.net/ "$file" )" || fatal "Can't get package URL"
 epm pack --install $PKGNAME "$PKGURL"

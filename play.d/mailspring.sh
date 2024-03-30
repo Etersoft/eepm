@@ -13,6 +13,6 @@ URL="https://www.getmailspring.com/"
 arch=amd64
 pkgtype=deb
 
-PKGURL=$(epm tool eget --list --latest https://github.com/Foundry376/Mailspring/releases/ "$PKGNAME*$VERSION*$arch.$pkgtype") || fatal "Can't get package URL"
+PKGURL=$(eget --list --latest https://github.com/Foundry376/Mailspring/releases/ "$PKGNAME*$VERSION*$arch.$pkgtype") || fatal "Can't get package URL"
 
 epm install "$PKGURL"

@@ -21,4 +21,4 @@ fi
 
 PKGURL="https://download.virtualbox.org/virtualbox/$VERSION/Oracle_VM_VirtualBox_Extension_Pack-$VERSION.vbox-extpack"
 
-epm pack --install $PKGNAME $PKGURL
+epm pack --install $PKGNAME "$PKGURL"

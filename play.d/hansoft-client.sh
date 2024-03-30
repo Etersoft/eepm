@@ -13,6 +13,6 @@ URL="https://www.perforce.com/products/hansoft"
 
 VERSION="${VERSION/\./_}"
 
-PKG="https://cache.hansoft.com/hansoft_${VERSION}_x64.deb"
+PKGURL="https://cache.hansoft.com/hansoft_${VERSION}_x64.deb"
 
-epm install $PKG
+epm install "$PKGURL"

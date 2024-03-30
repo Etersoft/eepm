@@ -15,18 +15,17 @@ if ! is_command wine ; then
 fi
 
 warn_version_is_not_supported
-repack=''
-[ "$(epm print info -s)" = "alt" ] && repack='--repack'
 
 case $pkgtype in
     deb)
-        epm install "https://www.aimp.ru/?do=download.file&id=26"
-        ;;
-    rpm)
-        epm $repack install "https://www.aimp.ru/?do=download.file&id=32"
+        PKGURL="https://www.aimp.ru/?do=download.file&id=26"
         ;;
     *)
-        fatal "Unsupported $pkgtype"
+        PKGURL="https://www.aimp.ru/?do=download.file&id=32"
         ;;
 esac
 
+repack=''
+[ "$(epm print info -s)" = "alt" ] && repack='--repack'
+
+epm $repack install "$PKGURL"

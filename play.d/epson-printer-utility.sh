@@ -35,7 +35,7 @@ esac
 repack=''
 [ "$(epm print info -s)" = "alt" ] && repack='--repack'
 
-epm install $repack "$PKGURL"
+epm install $repack "$PKGURL" || exit
 
 echo
 echo "Note: run

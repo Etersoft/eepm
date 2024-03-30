@@ -33,5 +33,5 @@ repack=''
 
 PKGMASK="$(epm print constructname $PKGNAME "$VERSION.ga" $arch)"
 
-PKGURL="$(epm tool eget --list --latest https://pencil.evolus.vn/Downloads.html $PKGMASK)" || fatal "Can't get package URL"
+PKGURL="$(eget --list --latest https://pencil.evolus.vn/Downloads.html $PKGMASK)" || fatal "Can't get package URL"
 epm $repack install "$PKGURL"

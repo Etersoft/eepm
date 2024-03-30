@@ -11,7 +11,7 @@ URL="https://www.bitwig.com"
 if [ "$VERSION" = "*" ] ; then
     PKGURL="https://www.bitwig.com/dl/?id=533&os=installer_linux"
 else
-    PKGURL="https://downloads.bitwig.com/5.0.4/bitwig-studio-5.0.4.deb"
+    PKGURL="https://downloads.bitwig.com/$VERSION/bitwig-studio-$VERSION.deb"
 fi
 
 epm install $PKGURL

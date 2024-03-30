@@ -33,14 +33,14 @@ PKGDIR="$(mktemp -d)"
 trap "rm -fr $PKGDIR" EXIT
 cd $PKGDIR || fatal
 
-pkgname=$(basename $PKGURL)
 
-if ! epm tool eget $PKGURL ; then
+if ! eget --check-site $PKGURL ; then
     echo "It is possible you are blocked from USA, trying get from IPFS ..."
-    epm tool eget -O $pkgname https://dhash.ru/ipfs/$IPFSHASH || fatal "Can't get $pkgname from IPFS."
+    pkgname=$(basename $PKGURL)
+    PKGURL="ipfs://$IPFSHASH?filename=$pkgname"
 fi
 
 repack=''
 [ "$(epm print info -s)" = "alt" ] && repack='--repack'
 
-epm install $repack $pkgname || exit
+epm install $repack $PKGURL

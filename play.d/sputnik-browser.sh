@@ -13,7 +13,7 @@ URL="https://sputnik-lab.com/api-updates/updates/apps/meta?channel=b2c-distrs-on
 url_by_id_content()
 {
     local id_content="$1"
-    epm tool eget -q -O- "$URL" | grep -A6 "$id_content" | tail -n1 | sed -e 's|.*"url": "||' -e 's|".*||'
+    eget -q -O- "$URL" | grep -A6 "$id_content" | tail -n1 | sed -e 's|.*"url": "||' -e 's|".*||'
 }
 
 case "$(epm print info -e)" in

@@ -39,7 +39,7 @@ case $(epm print info -e) in
         ;;
 esac
 
-PKGURL="$(epm tool eget --list --latest -U  "$URLBASE" "$mask")"
+PKGURL="$(eget --list --latest -U  "$URLBASE" "$mask")"
 
 # install with scripts (need for install icons and associations)
 # see /etc/eepm/pkgallowscripts.list

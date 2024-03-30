@@ -15,7 +15,9 @@ warn_version_is_not_supported
 # https://repo.yandex.ru/yandex-disk/yandex-disk_latest_i386.deb
 # https://repo.yandex.ru/yandex-disk/yandex-disk-latest.i386.rpm
 # epm uses eget to download * names
-epm install "https://repo.yandex.ru/yandex-disk/$(epm print constructname $PKGNAME "latest")" || exit
+
+PKGURL="https://repo.yandex.ru/yandex-disk/$(epm print constructname $PKGNAME "latest")" || fatal "Can't get package URL"
+epm install "$PKGURL" || exit
 
 # Install also tray indicator
 if [ "$(epm print info -s)" = "alt" ] ; then

@@ -32,6 +32,6 @@ case $pkgtype-$arch in
         ;;
 esac
 
-PKGURL=$(epm tool eget --list --latest https://www.realvnc.com/en/connect/download/viewer/ $PKG)
+PKGURL=$(eget --list --latest https://www.realvnc.com/en/connect/download/viewer/ $PKG) || fatal "Can't get package URL"
 
 epm $repack install $PKGURL

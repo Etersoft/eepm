@@ -8,6 +8,6 @@ URL="https://github.com/th-ch/youtube-music"
 
 . $(dirname $0)/common.sh
 
-PKGURL=$(epm tool eget --list --latest https://github.com/th-ch/youtube-music/releases/ "YouTube-Music-$VERSION.AppImage")
+PKGURL="$(eget --list --latest https://github.com/th-ch/youtube-music/releases/ "YouTube-Music-$VERSION.AppImage")"
 
-epm install $PKGURL
+epm install "$PKGURL"

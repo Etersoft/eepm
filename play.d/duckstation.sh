@@ -15,6 +15,6 @@ file="DuckStation-x64.AppImage"
 # TODO: preview, previous-latest
 SELECTOR="preview"
 
-PKGURL=$(epm tool eget --list https://github.com/stenzek/duckstation/releases $file | grep "/$SELECTOR/") || fatal "Can't get package URL"
+PKGURL=$(eget --list https://github.com/stenzek/duckstation/releases $file | grep "/$SELECTOR/") || fatal "Can't get package URL"
 
 epm pack --install "$PKGNAME" "$PKGURL"

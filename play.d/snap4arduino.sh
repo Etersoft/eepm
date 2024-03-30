@@ -18,7 +18,7 @@ case $arch in
         fatal "Unsupported arch $arch for $(epm print info -d)"
 esac
 
-PKGURL=$(epm tool eget --list --latest https://github.com/bromagosa/Snap4Arduino/releases "Snap4Arduino_desktop-gnu-$arch_*.tar.gz") #"
+PKGURL=$(eget --list --latest https://github.com/bromagosa/Snap4Arduino/releases "Snap4Arduino_desktop-gnu-$arch_*.tar.gz") #"
 [ -n "$PKGURL" ] || fatal "Can't get package URL"
 
 epm pack --install $PKGNAME "$PKGURL"

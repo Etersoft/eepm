@@ -15,7 +15,7 @@ case $pkgtype in
     rpm)
         mask="ridoclnx-1.0-4.4.x86_64.rpm"
         ;;
-    deb)
+    *)
         mask="ridoclnx_1.0.4.4.deb"
         ;;
 esac

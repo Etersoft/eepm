@@ -21,7 +21,7 @@ if [ "$VERSION" = "*" ] ; then
 fi
 
 
-PKGURL=$(epm tool eget --list --latest https://github.com/telegramdesktop/tdesktop/releases "tsetup.$VERSION*.tar.xz") #"
+PKGURL=$(eget --list --latest https://github.com/telegramdesktop/tdesktop/releases "tsetup.$VERSION*.tar.xz") #"
 [ -n "$PKGURL" ] || fatal "Can't get package URL"
 
 epm --install pack $PKGNAME "$PKGURL"

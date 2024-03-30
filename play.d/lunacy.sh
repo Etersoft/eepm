@@ -29,5 +29,6 @@ if ! is_glibc_enough 2.34 ; then
 fi
 
 # https://icons8.ru/lunacy
-epm install "https://lcdn.icons8.com/setup/$file"
+PKGURL="https://lcdn.icons8.com/setup/$file"
 
+epm install $PKGURL

@@ -12,13 +12,13 @@ PKG=''
 repack=''
 # Strict supported list
 case $(epm print info -e) in
-    AstraLinuxCE/*|Debian/9|Ubuntu/20)
+    AstraLinuxCE/*|Debian/9|Ubuntu/18)
         PKG="master-pdf-editor-$VERSION-qt5.9.x86_64.deb"
         ;;
     AstraLinuxSE/1.7*|Debian/*|Ubuntu/*)
         PKG="master-pdf-editor-$VERSION-qt5.x86_64.deb"
         ;;
-    RedOS/*|AlterOS/*|ALTLinux/*)
+    RedOS/*|AlterOS/*|ALTLinux/*|CentOS/*|RockyLinux/*)
         PKG="master-pdf-editor-$VERSION-qt5.x86_64.rpm"
         repack='--repack'
         ;;
@@ -27,6 +27,7 @@ esac
 if [ -z "$PKG" ] ; then
     case $(epm print info -p) in
         rpm)
+            repack='--repack'
             PKG="master-pdf-editor-$VERSION-qt5.x86_64.rpm"
             ;;
         *)
@@ -35,6 +36,6 @@ if [ -z "$PKG" ] ; then
     esac
 fi
 
-PKGURL=$(epm tool eget --list --latest https://code-industry.ru/get-master-pdf-editor-for-linux/ $PKG)
+PKGURL=$(eget --list --latest https://code-industry.ru/get-master-pdf-editor-for-linux/ $PKG) || fatal "Can't get package URL"
 
 epm $repack install "$PKGURL"

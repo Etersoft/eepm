@@ -17,7 +17,7 @@ get_jetbrains_url()
             ;;
     esac
 
-    epm tool eget -O- "https://data.services.jetbrains.com/products/releases?code=$CODE&latest=true&type=release" | epm --inscript tool json -b | \
+    eget -O- "https://data.services.jetbrains.com/products/releases?code=$CODE&latest=true&type=release" | epm --inscript tool json -b | \
         grep '"'$CODE'",0,"downloads","'$OS'","link"' | sed -e 's|.*[[:space:]]||' | sed -e 's|"||g'
 }
 

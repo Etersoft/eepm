@@ -16,6 +16,6 @@ fi
 
 arch=x86_64
 # sh: symbol lookup error: /tmp/.private/lav/.mount_whatsaxhRMDh/opt/libc/lib/x86_64-linux-gnu/libc.so.6: undefined symbol: __libc_enable_secure, version GLIBC_PRIVATE
-URL=$(epm tool eget --list --latest https://github.com/eneshecan/whatsapp-for-linux/releases "$PKGNAME-$VERSION-$arch.AppImage") || fatal "Can't get package URL"
+URL=$(eget --list --latest https://github.com/eneshecan/whatsapp-for-linux/releases "$PKGNAME-$VERSION-$arch.AppImage") || fatal "Can't get package URL"
 epm install $URL
 

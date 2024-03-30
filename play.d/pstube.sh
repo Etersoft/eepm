@@ -24,7 +24,7 @@ esac
 arch=x86_64
 # https://github.com/prateekmedia/pstube/releases/download/2.6.0/pstube-linux-2.6.0-x86_64.rpm
 # https://github.com/prateekmedia/pstube/releases/download/2.6.0/pstube-linux-2.6.0-x86_64.deb
-PKGURL=$(epm tool eget --list --latest https://github.com/prateekmedia/pstube/releases "$PKGNAME-$VERSION-$arch.$pkgtype") || fatal "Can't get package URL"
+PKGURL=$(eget --list --latest https://github.com/prateekmedia/pstube/releases "$PKGNAME-$VERSION-$arch.$pkgtype") || fatal "Can't get package URL"
 
 # we have workaround for their postinstall script, so always repack rpm package
 [ "$pkgtype" = "deb" ] || repack='--repack'

@@ -11,7 +11,7 @@ URL="https://clipgrab.org/"
 if [ "$VERSION" != "*" ] ; then
     PKGURL="https://download.clipgrab.org/ClipGrab-$VERSION-x86_64.AppImage"
 else
-    PKGURL="$(eget --list --latest https://clipgrab.org/ "ClipGrab-*-x86_64.AppImage")"
+    PKGURL="$(eget --list --latest https://clipgrab.org/ "ClipGrab-*-x86_64.AppImage")" || fatal "Can't get package URL"
 fi
 
 epm install $PKGURL

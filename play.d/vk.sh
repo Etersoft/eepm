@@ -15,6 +15,6 @@ case "$arch" in
         ;;
 esac
 
-PKGURL=$(epm tool eget --list --latest https://desktop.userapi.com/rpm/master/ "$PKGNAME-$VERSION.$arch.rpm")
+PKGURL="$(eget --list --latest https://desktop.userapi.com/rpm/master/ "$PKGNAME-$VERSION.$arch.rpm")" || fatal "Can't get package URL"
 
-epm --repack install $PKGURL
+epm install --repack "$PKGURL"

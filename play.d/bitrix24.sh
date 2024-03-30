@@ -15,7 +15,7 @@ case $pkgtype in
     rpm)
         PKGURL="https://dl.bitrix24.com/b24/bitrix24_desktop.rpm"
         ;;
-    deb)
+    *)
         PKGURL="https://dl.bitrix24.com/b24/bitrix24_desktop.deb"
         ;;
 esac

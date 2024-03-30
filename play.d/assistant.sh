@@ -20,7 +20,7 @@ URL="https://xn--80akicokc0aablc.xn--p1ai/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D
 # parse vendor site
 tmpfile=$(mktemp)
 trap "rm -f $tmpfile" EXIT
-epm tool eget -q -O- "$URL" | grep -A200 "Ассистент для LINUX" >$tmpfile
+eget -q -O- "$URL" | grep -A200 "Ассистент для LINUX" >$tmpfile
 
 url_by_text()
 {

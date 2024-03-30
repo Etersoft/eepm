@@ -11,6 +11,6 @@ URL="https://github.com/PCSX2/pcsx2/releases"
 # https://github.com/PCSX2/pcsx2/releases/download/v1.7.4767/pcsx2-v1.7.4767-linux-appimage-x64-Qt.AppImage
 file="pcsx2-v${VERSION}-linux-appimage-x64-Qt.AppImage"
 
-PKGURL=$(epm tool eget --list --latest https://github.com/PCSX2/pcsx2/releases $file) || fatal "Can't get package URL"
+PKGURL=$(eget --list --latest https://github.com/PCSX2/pcsx2/releases $file) || fatal "Can't get package URL"
 
 epm pack --install "$PKGNAME" "$PKGURL"

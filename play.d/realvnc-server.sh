@@ -26,6 +26,6 @@ case $pkgtype-$arch in
         ;;
 esac
 
-PKGURL=$(epm tool eget --list --latest https://www.realvnc.com/en/connect/download/vnc/ $PKG)
+PKGURL=$(eget --list --latest https://www.realvnc.com/en/connect/download/vnc/ $PKG) || fatal "Can't get package URL"
 
 epm $repack install $PKGURL

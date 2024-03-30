@@ -8,6 +8,6 @@ URL="https://github.com/upscayl/upscayl"
 
 . $(dirname $0)/common.sh
 
-PKGURL=$(epm tool eget --list --latest https://github.com/upscayl/upscayl/releases "upscayl-$VERSION-linux.AppImage")
+PKGURL=$(eget --list --latest https://github.com/upscayl/upscayl/releases "upscayl-$VERSION-linux.AppImage") || fatal "Can't get package URL"
 
-epm install $PKGURL
+epm install "$PKGURL"

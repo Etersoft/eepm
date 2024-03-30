@@ -8,12 +8,14 @@ URL="https://www.guardant.ru/support/users/download/1223/"
 
 . $(dirname $0)/common.sh
 
-[ "$VERSION" = "*" ] && VERSION="$(basename $(epm tool eget --list --latest https://download.guardant.ru/LM/Linux/ '*/'))"
+[ "$VERSION" = "*" ] && VERSION="$(basename $(eget --list --latest https://download.guardant.ru/LM/Linux/ '*/'))"
+[ -n "$VERSION" ] || fatal "Can't get version."
 
 shortarch=x64
 
 pkgtype="$(epm print info -p)"
 
+# there are incorrect version in the package name
 case "$pkgtype" in
     rpm)
         file="glds-*.x86_64.rpm"
@@ -26,7 +28,7 @@ case "$pkgtype" in
         ;;
 esac
 
-PKGURL=$(epm tool eget --list --latest https://download.guardant.ru/LM/Linux/$VERSION/$shortarch/ "$file") || fatal "Can't get package URL"
+PKGURL=$(eget --list --latest https://download.guardant.ru/LM/Linux/$VERSION/$shortarch/ "$file") || fatal "Can't get package URL"
 
 repack=''
 [ "$pkgtype" = "rpm" ] && repack='--repack'

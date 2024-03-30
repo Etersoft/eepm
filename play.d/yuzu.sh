@@ -11,8 +11,8 @@ URL="https://github.com/yuzu-emu/yuzu-mainline/releases"
 [ "$VERSION" = "*" ] || VERSION="$VERSION-*"
 
 # Closed by Nintendo
-#PKGURL=$(epm tool eget --list --latest https://github.com/yuzu-emu/yuzu-mainline/releases "$PKGNAME-$VERSION.AppImage")
+#PKGURL=$(eget --list --latest https://github.com/yuzu-emu/yuzu-mainline/releases "$PKGNAME-$VERSION.AppImage")
 # https://github.com/yuzu-emu/yuzu-mainline/releases/download/mainline-0-1733/yuzu-mainline-20240303-7ffac53c9.AppImage
 PKGURL="ipfs://QmVQ9La5aqL89mm6PkiYfBn5nF9NyhFsuWyaesY3k9JsUN?filename=yuzu-mainline-20240303-7ffac53c9.AppImage"
 
-epm install $PKGURL
+epm install "$PKGURL"

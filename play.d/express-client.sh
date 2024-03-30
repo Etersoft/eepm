@@ -9,6 +9,7 @@ URL="https://express.ms/"
 . $(dirname $0)/common.sh
 
 warn_version_is_not_supported
-PKG="https://express.ms/download/deb"
 
-epm install $PKG
+PKGURL="https://express.ms/download/deb"
+
+epm install $PKGURL

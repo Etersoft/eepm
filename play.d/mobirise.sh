@@ -8,7 +8,8 @@ URL="https://mobirise.com"
 
 . $(dirname $0)/common.sh
 
-# https://mobihtml.ru/
-epm install "https://download.mobirise.com/MobiriseSetup.deb"
 warn_version_is_not_supported
 
+PKGURL="https://download.mobirise.com/MobiriseSetup.deb"
+
+epm install "$PKGURL"

@@ -9,4 +9,7 @@ URL="https://xnview.com/"
 . $(dirname $0)/common.sh
 
 warn_version_is_not_supported
-epm install https://download.xnview.com/XnViewMP-linux-x64.deb
+
+PKGURL="https://download.xnview.com/XnViewMP-linux-x64.deb"
+
+epm install "$PKGURL"

@@ -11,7 +11,7 @@ URL="https://netbeans.apache.org"
 . $(dirname $0)/common.sh
 
 if [ "$VERSION" = "*" ] ; then
-    VERSION="$(epm tool eget --list https://dlcdn.apache.org/netbeans/netbeans-installers/* | tail -n1 | xargs basename)"
+    VERSION="$(eget --list https://dlcdn.apache.org/netbeans/netbeans-installers/* | tail -n1 | xargs basename)"
 fi
 
 pkgtype=$(epm print info -p)

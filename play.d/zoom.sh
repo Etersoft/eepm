@@ -26,4 +26,5 @@ repack=''
 [ "$(epm print info -s)" = "alt" ] && repack="--repack"
 
 # TODO: there are more complex distro dependent url
-epm install $repack "https://zoom.us/client/$VERSION/zoom_$arch.$(epm print info -p)"
+PKGURL="https://zoom.us/client/$VERSION/zoom_$arch.$(epm print info -p)"
+epm install $repack "$PKGURL"

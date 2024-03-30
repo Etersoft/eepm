@@ -13,21 +13,19 @@ arch=x86_64
 pkgtype=$(epm print info -p)
 case $pkgtype in
     rpm)
-        PKG="https://rpm.librewolf.net/pool/librewolf$VERSION.rpm"
-        ;;
-    deb)
-        PKG="https://deb.librewolf.net/pool/focal/librewolf-$VERSION$arch.deb"
+        PKGURL="https://rpm.librewolf.net/pool/librewolf$VERSION.rpm"
         ;;
     *)
-        fatal "Package target $pkgtype is not supported yet"
+        PKGURL="https://deb.librewolf.net/pool/focal/librewolf-$VERSION$arch.deb"
         ;;
 esac
 
 if ! is_glibc_enough 2.35 ; then
-    PKG="https://deb.librewolf.net/pool/focal/librewolf-$VERSION$arch.deb"
+    # use deb package for old glibc
+    PKGURL="https://deb.librewolf.net/pool/focal/librewolf-$VERSION$arch.deb"
 fi
 
 repack=''
 [ "$(epm print info -s)" = "alt" ] && repack='--repack'
 
-epm install $repack "$PKG"
+epm install $repack "$PKGURL"

@@ -8,6 +8,6 @@ URL="https://github.com/yar229/WebDavMailRuCloud"
 
 . $(dirname $0)/common.sh
 
-PKGURL=$(epm tool eget --list --latest https://github.com/yar229/WebDavMailRuCloud/releases "WebDAVCloudMailRu-${VERSION}-dotNet6.zip") || fatal
+PKGURL=$(eget --list --latest https://github.com/yar229/WebDavMailRuCloud/releases "WebDAVCloudMailRu-${VERSION}-dotNet6.zip") || fatal
 
 epm pack --install $PKGNAME $PKGURL
