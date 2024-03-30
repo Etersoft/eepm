@@ -2,10 +2,13 @@
 
 PKGNAME="teamviewer"
 SUPPORTEDARCHES="x86_64 aarch64"
+VERSION="$2"
 DESCRIPTION="Teamviewer from the official site"
 URL="https://www.teamviewer.com/ru-cis/download/linux"
 
 . $(dirname $0)/common.sh
+
+warn_version_is_not_supported
 
 arch=$(epm print info --distro-arch)
 

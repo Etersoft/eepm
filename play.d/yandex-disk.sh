@@ -2,10 +2,12 @@
 
 PKGNAME=yandex-disk
 SUPPORTEDARCHES="x86_64 x86"
+VERSION="$2"
 DESCRIPTION="Yandex Disk from the official site"
 
 . $(dirname $0)/common.sh
 
+warn_version_is_not_supported
 
 # https://repo.yandex.ru/yandex-disk/yandex-disk_latest_amd64.deb
 # https://repo.yandex.ru/yandex-disk/yandex-disk-latest.x86_64.rpm

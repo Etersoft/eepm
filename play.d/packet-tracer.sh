@@ -8,6 +8,8 @@ URL="https://www.sysnettechsolutions.com/en/download-cisco-packet-tracer/"
 
 . $(dirname $0)/common.sh
 
+warn_version_is_not_supported
+
 # Closed by Cisco
 case $VERSION in
     8.2|8.2.0)

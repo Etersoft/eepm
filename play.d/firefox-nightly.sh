@@ -2,10 +2,12 @@
 
 PKGNAME=firefox-nightly
 SUPPORTEDARCHES="x86_64"
-#VERSION="$2"
+VERSION="$2"
 DESCRIPTION="Firefox nightly from the official site"
 
 . $(dirname $0)/common.sh
+
+warn_version_is_not_supported
 
 arch=x86_64
 

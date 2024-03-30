@@ -2,6 +2,7 @@
 
 PKGNAME=epson-printer-utility
 SUPPORTEDARCHES="x86_64"
+VERSION="$2"
 DESCRIPTION="Epson Printer Utility - Linux Epson Printer Utility from the official site"
 URL="http://support.epson.net/linux/Printer/LSB_distribution_pages/en/utility.php"
 
@@ -13,8 +14,9 @@ case "$1" in
         ;;
 esac
 
-
 . $(dirname $0)/common.sh
+
+warn_version_is_not_supported
 
 pkgtype=$(epm print info -p)
 arch="$(epm print info -a)"

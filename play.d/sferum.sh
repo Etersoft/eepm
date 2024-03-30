@@ -2,10 +2,12 @@
 
 PKGNAME=sferum
 SUPPORTEDARCHES="x86_64 x86"
+VERSION="$2"
 DESCRIPTION="Sferum for Linux from the official site"
 
 . $(dirname $0)/common.sh
 
+warn_version_is_not_supported
 
 arch=$(epm print info --distro-arch)
 case $arch in

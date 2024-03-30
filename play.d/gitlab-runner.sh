@@ -2,6 +2,7 @@
 
 PKGNAME=gitlab-runner
 SUPPORTEDARCHES="armhf aarch64 x86 x86_64 ppc64le"
+VERSION="$2"
 DESCRIPTION='Gitlab runner'
 
 . $(dirname $0)/common.sh

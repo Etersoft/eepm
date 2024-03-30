@@ -8,6 +8,8 @@ URL="https://safing.io/"
 
 . $(dirname $0)/common.sh
 
+warn_version_is_not_supported
+
 repack=''
 pkgtype="$(epm print info -p)"
 

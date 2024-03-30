@@ -2,9 +2,12 @@
 
 PKGNAME=lunacy
 SUPPORTEDARCHES="x86_64 aarch64"
+VERSION="$2"
 DESCRIPTION="Lunacy - Graphic Design Editor"
 
 . $(dirname $0)/common.sh
+
+warn_version_is_not_supported
 
 arch="$(epm print info -a)"
 
@@ -19,8 +22,6 @@ case "$arch" in
         fatal "$arch arch is not supported"
         ;;
 esac
-
-[ "$VERSION" = "*" ] || fatal "versioning is not supported"
 
 if ! is_glibc_enough 2.34 ; then
     fatal "glibc is too old"

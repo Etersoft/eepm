@@ -8,6 +8,8 @@ URL="https://yandex.ru/support/messenger/index.html"
 
 . $(dirname $0)/common.sh
 
+warn_version_is_not_supported
+
 PKGURL="ipfs://Qma7e4MpopXpeoNnTsCXxx92q1oTrgJmz1aHjecvcEBNWx?filename=Yandex_Messenger_2.155.0_amd64.deb"
 
 epm install --repack $PKGURL

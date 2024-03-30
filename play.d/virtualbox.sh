@@ -2,6 +2,7 @@
 
 PKGNAME=virtualbox
 SUPPORTEDARCHES="x86_64 x86"
+VERSION="$2"
 DESCRIPTION='VirtualBox from the ALT repo'
 
 . $(dirname $0)/common.sh

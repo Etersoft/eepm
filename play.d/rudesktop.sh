@@ -14,7 +14,7 @@ esac
 
 . $(dirname $0)/common.sh
 
-[ "$VERSION" = "*" ] && VERSION="[0-9]*"
+warn_version_is_not_supported
 
 repack=''
 # change package name for downloading

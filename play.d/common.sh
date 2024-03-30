@@ -93,6 +93,10 @@ is_supported_arch()
     return 1
 }
 
+warn_version_is_not_supported()
+{
+    [ "$VERSION" = "*" ] || echo -e "\nWarning: Specifying the version is not supported by vendor. Downloading latest version ...\n"
+}
 
 get_latest_version()
 {

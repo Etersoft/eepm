@@ -2,10 +2,13 @@
 
 PKGNAME=postman
 SUPPORTEDARCHES="x86_64 aarch64"
+VERSION="$2"
 DESCRIPTION='Postman is an API platform for building and using APIs'
 URL="https://www.postman.com"
 
 . $(dirname $0)/common.sh
+
+warn_version_is_not_supported
 
 case "$(epm print info -a)" in
     x86_64)

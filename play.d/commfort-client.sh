@@ -8,6 +8,7 @@ URL="https://www.commfort.com/ru/article-commfort-linux.shtml"
 
 . $(dirname $0)/common.sh
 
+warn_version_is_not_supported
 VERSION="$(epm tool eget -O- https://www.commfort.com/ru/download.shtml  | grep "Версия .* от .* г." | head -n2 | tail -n1 | sed -e 's|.*Версия ||' -e 's| от .*||')"
 [ -n "$VERSION" ] || fatal "Can't get version."
 

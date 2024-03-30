@@ -1,12 +1,14 @@
 #!/bin/sh
 
 PKGNAME=urserver
-
 SUPPORTEDARCHES="x86_64 x86"
+VERSION="$2"
 DESCRIPTION="Unified Remote Server from the official site"
 URL="https://www.unifiedremote.com/"
 
 . $(dirname $0)/common.sh
+
+warn_version_is_not_supported
 
 pkgtype=$(epm print info -p)
 arch="$(epm print info -a)"

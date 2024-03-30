@@ -2,10 +2,13 @@
 
 PKGNAME=cascadeur
 SUPPORTEDARCHES="x86_64"
+VERSION="$2"
 DESCRIPTION="Cascadeur - a physics‑based 3D animation software"
 URL="https://cascadeur.com/download"
 
 . $(dirname $0)/common.sh
+
+warn_version_is_not_supported
 
 # keep worked version
 VERSION="2022.3.1"

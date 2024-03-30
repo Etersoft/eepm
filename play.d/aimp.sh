@@ -2,6 +2,7 @@
 
 PKGNAME=aimp
 SUPPORTEDARCHES="x86_64"
+VERSION="$2"
 DESCRIPTION="AIMP (Wine based audio player) from the official site"
 URL="https://www.aimp.ru/?do=download&os=linux"
 
@@ -13,6 +14,7 @@ if ! is_command wine ; then
     epm play wine || fatal
 fi
 
+warn_version_is_not_supported
 repack=''
 [ "$(epm print info -s)" = "alt" ] && repack='--repack'
 

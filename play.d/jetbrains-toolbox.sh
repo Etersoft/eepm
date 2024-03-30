@@ -2,9 +2,12 @@
 
 PKGNAME=jetbrains-toolbox
 SUPPORTEDARCHES="x86_64"
+VERSION="$2"
 DESCRIPTION="JetBrains Toolbox App from the official site"
 
 . $(dirname $0)/common.sh
+
+warn_version_is_not_supported
 
 # https://github.com/nagygergo/jetbrains-toolbox-install/blob/master/jetbrains-toolbox.sh
 

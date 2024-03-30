@@ -3,6 +3,7 @@
 PKGNAME=okular-csp
 SKIPREPACK=1
 SUPPORTEDARCHES="x86_64"
+VERSION="$2"
 DESCRIPTION="Okular GOST (free version) with CryptoPro support from the official site"
 REPOURL="http://packages.lab50.net"
 
@@ -17,6 +18,7 @@ esac
 
 . $(dirname $0)/common.sh
 
+warn_version_is_not_supported
 
 # see
 # https://okulargost.ru/info.html

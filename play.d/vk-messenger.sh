@@ -8,6 +8,8 @@ URL="https://vk.me/app"
 
 . $(dirname $0)/common.sh
 
+warn_version_is_not_supported
+
 pkgtype="$(epm print info -p)"
 case "$pkgtype" in
     rpm|deb)

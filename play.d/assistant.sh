@@ -3,10 +3,12 @@
 PKGNAME=assistant
 SKIPREPACK=1
 SUPPORTEDARCHES="x86_64 aarch64"
+VERSION="$2"
 DESCRIPTION="Assistant (Ассистент) from the official site"
 
 . $(dirname $0)/common.sh
 
+warn_version_is_not_supported
 
 arch="$(epm print info -a)"
 pkg="$(epm print info -p)"

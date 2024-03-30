@@ -2,10 +2,13 @@
 
 PKGNAME=t1client-standalone
 SUPPORTEDARCHES="x86_64"
+VERSION="$2"
 DESCRIPTION="DSSL Trassir Client"
 URL="https://confluence.trassir.com/pages/viewpage.action?pageId=36865118"
 
 . $(dirname $0)/common.sh
+
+warn_version_is_not_supported
 
 case "$(epm print info -p)" in
   rpm)

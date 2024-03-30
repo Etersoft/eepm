@@ -2,10 +2,12 @@
 
 PKGNAME=Autodesk_EAGLE
 SUPPORTEDARCHES="x86_64"
+VERSION="$2"
 DESCRIPTION="EAGLE (EDA software) from the official site"
 
 . $(dirname $0)/common.sh
 
+warn_version_is_not_supported
 
 VERSION=9.6.2
 IPFSHASH=Qmd38jJnTnUMUeJuKSDBGesqXF3SxEahUVZc6NUPyMKgj1

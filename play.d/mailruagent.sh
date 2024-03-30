@@ -2,12 +2,14 @@
 
 PKGNAME=mailruagent
 SUPPORTEDARCHES="x86_64"
-#VERSION="$2"
+VERSION="$2"
 # is not supported
 DESCRIPTION='' #"Mail.ru Agent for Linux from the official site"
 URL="https://agent.mail.ru/linux"
 
 . $(dirname $0)/common.sh
+
+warn_version_is_not_supported
 
 VERSION="*"
 if [ "$VERSION" = "*" ] ; then

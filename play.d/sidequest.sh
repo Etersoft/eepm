@@ -2,6 +2,7 @@
 
 PKGNAME=sidequest
 SUPPORTEDARCHES="x86_64"
+VERSION="$2"
 DESCRIPTION='The SideQuest desktop application'
 URL="https://sidequestvr.com/"
 

@@ -2,10 +2,12 @@
 
 PKGNAME=ktalk
 SUPPORTEDARCHES="x86_64"
+VERSION="$2"
 DESCRIPTION="Контур.Толк (ktalk) from the official site"
 
 . $(dirname $0)/common.sh
 
+warn_version_is_not_supported
 
 case "$(epm print info -d)" in
     ALTLinux)

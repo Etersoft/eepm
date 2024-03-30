@@ -2,10 +2,12 @@
 
 PKGNAME=tamtam-app
 SUPPORTEDARCHES="x86_64 x86"
+VERSION="$2"
 DESCRIPTION="TamTam messenger from the official site"
 
 . $(dirname $0)/common.sh
 
+warn_version_is_not_supported
 
 arch="$(epm print info --debian-arch)"
 case "$arch" in

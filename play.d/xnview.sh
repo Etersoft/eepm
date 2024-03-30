@@ -2,8 +2,10 @@
 
 PKGNAME=xnview
 SUPPORTEDARCHES="x86_64"
+VERSION="$2"
 DESCRIPTION="XnView MP: Image management from the official site"
 
 . $(dirname $0)/common.sh
 
+warn_version_is_not_supported
 epm install https://download.xnview.com/XnViewMP-linux-x64.deb

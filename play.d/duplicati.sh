@@ -1,9 +1,12 @@
 #!/bin/sh
 
 PKGNAME=duplicati
+VERSION="$2"
 DESCRIPTION="Duplicati from the official site"
 
 . $(dirname $0)/common.sh
+
+warn_version_is_not_supported
 
 pkgtype="$(epm print info -p)"
 
