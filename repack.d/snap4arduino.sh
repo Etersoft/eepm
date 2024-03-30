@@ -4,40 +4,30 @@
 BUILDROOT="$1"
 SPEC="$2"
 
-PRODUCT=Snap4Arduino
-PRODUCTCUR=snap4arduino
-PRODUCTDIR=/opt/$PRODUCT
+PRODUCT=snap4arduino
 
 . $(dirname $0)/common.sh
 
+# TODO: move to json in pack.d
 subst "s|^Group:.*|Group: Development/Other|" $SPEC
 subst "s|^License: unknown$|License: AGPL-3.0|" $SPEC
 subst "s|^URL:.*|URL: https://snap4arduino.rocks/|" $SPEC
 subst "s|^Summary:.*|Summary: A modification of the Snap! visual programming language that lets you seamlessly interact with almost all versions of the Arduino board.|" $SPEC
 
-# move package to /opt
-ROOTDIR=$(basename $(find $BUILDROOT -mindepth 1 -maxdepth 1 -type d))
-mkdir $BUILDROOT/opt
-mv $BUILDROOT/$ROOTDIR $BUILDROOT$PRODUCTDIR
-subst "s|\"/$ROOTDIR/|\"$PRODUCTDIR/|" $SPEC
+add_bin_link_command $PRODUCT $PRODUCTDIR/run
 
-# add binary to the search path
-mkdir -p $BUILDROOT/usr/bin/
-ln -s $PRODUCTDIR/run $BUILDROOT/usr/bin/$PRODUCTCUR
-subst "s|%files|%files\n/usr/bin/$PRODUCTUR|" $SPEC
+# TODO: copy icons
 
-# create desktop file
-mkdir -p $BUILDROOT/usr/share/applications/
-cat <<EOF >$BUILDROOT/usr/share/applications/$PRODUCT.desktop
+cat <<EOF >$PRODUCT.desktop
 [Desktop Entry]
 Type=Application
 Version=1.0
 Icon=$PRODUCTDIR/icons/128x128x32.png
-Exec=$PRODUCTDIR/run
+Exec=$PRODUCT
 Name=Snap4Arduino
 Name[en]=Snap4Arduino
 GenericName[en]=Use Snap! to control Arduino boards. Arduino goes lambda!
 EOF
-subst "s|%files|%files\n/usr/share/applications/$PRODUCT.desktop|" $SPEC
+install_file $PRODUCT.desktop /usr/share/applications/$PRODUCT.desktop
 
 add_libs_requires

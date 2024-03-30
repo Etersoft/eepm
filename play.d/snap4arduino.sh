@@ -2,7 +2,9 @@
 
 PKGNAME=snap4arduino
 SUPPORTEDARCHES="x86_64 x86"
+VERSION="$2"
 DESCRIPTION="Snap4Arduino binds Snap! and Arduino together"
+URL="https://github.com/bromagosa/Snap4Arduino"
 
 . $(dirname $0)/common.sh
 
@@ -18,9 +20,5 @@ esac
 
 PKGURL=$(epm tool eget --list --latest https://github.com/bromagosa/Snap4Arduino/releases "Snap4Arduino_desktop-gnu-$arch_*.tar.gz") #"
 [ -n "$PKGURL" ] || fatal "Can't get package URL"
-PKGFILE=$(echo /tmp/$(basename $PKGURL) | sed -e "s|/Snap4Arduino_desktop-gnu-$arch\_|/$PKGNAME-|")
-epm tool eget -O $PKGFILE $PKGURL || exit
 
-epm install --repack "$PKGFILE" || exit
-
-rm -fv $PKGFILE
+epm pack --install $PKGNAME "$PKGURL"
