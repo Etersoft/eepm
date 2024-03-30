@@ -1,13 +1,14 @@
 #!/bin/sh
 
 PKGNAME=virtualhere
-PRODUCTDIR=/opt/$PKGNAME
-BINNAME=vhusbd
 SUPPORTEDARCHES="x86_64 armhf mips mipsel aarch64 x86"
 VERSION="$2"
 DESCRIPTION='Generic VirtualHere USB Server from the official site'
+URL="https://www.virtualhere.com/"
 
 . $(dirname $0)/common.sh
+
+warn_version_is_not_supported
 
 arch="$(epm print info -a)"
 case "$arch" in
@@ -34,39 +35,17 @@ case "$arch" in
         ;;
 esac
 
-pkgtype="$(epm print info -p)"
-
-tdir=$(mktemp -d)
-trap "rm -fr $tdir" EXIT
-mkdir -p $tdir/opt/$PKGNAME/
-cd $tdir || fatal
-
-# https://github.com/virtualhere/script/blob/main/install_server
-epm tool eget -O opt/$PKGNAME/$BINNAME https://www.virtualhere.com/sites/default/files/usbserver/$file || fatal
-chmod 0755 opt/$PKGNAME/$BINNAME
-
-pack_tar() {
-    local tarname="$1"
-    local file="$2"
-    local destfile="$3"
-    [ -n "$destfile" ] || destfile="$PRODUCTDIR/$(basename $file)"
-    local dest=$(dirname $destfile)
-    mkdir -p .$dest
-    [ -s .$dest/$(basename $file) ] || cp -v $file .$dest/
-    a='' tar cf $tarname .$(dirname $dest)
-}
+# https://www.virtualhere.com/sites/default/files/usbserver/vhusbdx86_64
+PKGURL="https://www.virtualhere.com/sites/default/files/usbserver/$file"
 
 # FIXME
 VERSION="*"
 if [ "$VERSION" = "*" ] ; then
-    VERSION="$(epm tool eget -O- https://virtualhere.com/usb_server_software | grep "<strong>Version" | sed -e 's|.*<strong>Version ||' -e 's|</strong>.*||')"
+    VERSION="$(eget -O- https://virtualhere.com/usb_server_software | grep "<strong>Version" | sed -e 's|.*<strong>Version ||' -e 's|</strong>.*||')"
     [ -n "$VERSION" ] || fatal "Can't get version for $PKGNAME"
 fi
 
-PKG=$PKGNAME-$VERSION.tar
-pack_tar $PKG opt/$PKGNAME/$BINNAME
-
-epm install --repack "$PKG" || exit
+epm pack --install $PKGNAME "$PKGURL" $VERSION || exit
 
 echo
 echo "Note: run
