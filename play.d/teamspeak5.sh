@@ -8,9 +8,11 @@ URL="https://www.teamspeak.com/"
 
 . $(dirname $0)/common.sh
 
+warn_version_is_not_supported
 # TODO: check latest version here: https://www.teamspeak.com/en/downloads/#ts5client
-[ "$VERSION" = "*" ] && VERSION=5.0.0-beta77
+#[ "$VERSION" = "*" ] && VERSION=5.0.0-beta77
+VERSION=5.0.0-beta77
 
 PKGURL="https://files.teamspeak-services.com/pre_releases/client/$VERSION/teamspeak-client.tar.gz"
 
-install_pack_pkgurl $VERSION
+install_pack_pkgurl "$VERSION"
