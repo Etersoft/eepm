@@ -12,6 +12,9 @@ elif echo "$TAR" | grep -q "Pantum%20Ubuntu%20Driver%20V.*.zip" ; then
 elif echo "$TAR" | grep -q "linux_pantum.7z" ; then
     erc "$TAR" || fatal
     return_tar linux_pantum.deb
+elif echo "$TAR" | grep -q "pantum.*astra.*_amd64.zip" ; then
+    erc "$TAR" || fatal
+    return_tar pantum_*_amd64.deb
 else
     fatal "We support only Pantum Ubuntu Driver V.*.zip"
 fi
@@ -27,7 +30,7 @@ case "$(epm print info -a)" in
         PKG="pantum_*_amd64.deb"
         ;;
     x86)
-        PKG="kyodialog_*_i386.deb"
+        PKG="pantum_*_i386.deb"
         ;;
 esac
 

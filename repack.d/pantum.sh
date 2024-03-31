@@ -16,16 +16,18 @@ else
     # keep /usr/lib
 fi
 
+if [ "$(epm print info -p)" = "rpm" ] ; then
+    mv usr/lib/x86_64-linux-gnu usr/lib64
+    subst 's|/usr/lib/x86_64-linux-gnu|/usr/lib64|' $SPEC
+fi
+
 # Debian style duplicates
 remove_dir /usr/lib/aarch64-linux-gnu
 remove_dir /usr/lib/arm-linux-gnueabihf
 remove_dir /usr/lib/i386-linux-gnu
 remove_dir /usr/lib/x86_64-linux-gnu
 
+# duplicates main files
 remove_dir /usr/local
 
-# add_libs_requires finds it...
-# subst '1iRequires: libjpeg8' $SPEC
-
-# set_autoreq 'yes'
 add_libs_requires
