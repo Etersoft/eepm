@@ -32,5 +32,5 @@ else
     PKGURL="https://github.com/k3s-io/k3s/releases/download/v$VERSION+k3s1/$file"
 fi
 
-VERSION="$(echo "$PKGURL" | sed -e 's|.*download/v||' -e 's|%2Bk3s1.*||' -e 's|-.*||')"
+VERSION="$(echo "$PKGURL" | sed -e 's|.*download/v||' -e 's|%2Bk3s1.*||' -e 's|+k3s1.*||' -e 's|-.*||')"
 epm pack --install $PKGNAME "$PKGURL" $VERSION

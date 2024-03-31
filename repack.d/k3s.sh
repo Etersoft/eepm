@@ -12,6 +12,8 @@ subst "s|^URL:.*|URL: https://k3s.io|" $SPEC
 subst "s|^Summary:.*|Summary: K3s - Lightweight Kubernetes|" $SPEC
 
 subst '1iConflicts: kubernetes-client' $SPEC
+# /usr/bin/ctr
+subst '1iConflicts: containerd' $SPEC
 
 # Check https://get.k3s.io/
 

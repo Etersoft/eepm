@@ -10,7 +10,7 @@ PKGNAME=$PRODUCT-$VERSION
 
 install -D $TAR usr/bin/$PRODUCT || fatal
 for i in kubectl crictl ctr k3s ; do
-    ln -s $PRODUCT usr/bin/$i
+    ln -sf $PRODUCT usr/bin/$i
 done
 erc pack $PKGNAME.tar usr/bin
 
