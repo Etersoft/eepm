@@ -25,7 +25,7 @@ case "$pkgtype" in
         ;;
 esac
 
-PKGURL=$(eget --list --latest https://github.com/Figma-Linux/figma-linux/releases $file) || fatal "Can't get package URL"
+PKGURL=$(eget --list --latest https://github.com/Figma-Linux/figma-linux/releases "$file") || fatal "Can't get package URL"
 
 repack=''
 [ "$(epm print info -s)" = "alt" ] && repack='--repack'

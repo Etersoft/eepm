@@ -36,5 +36,5 @@ case "$arch" in
 esac
 
 
-PKGURL="$(eget --list --latest https://github.com/ipfs/kubo/releases ${BASEPKGNAME}_v$VERSION$file)"
+PKGURL="$(eget --list --latest https://github.com/ipfs/kubo/releases "${BASEPKGNAME}_v$VERSION$file")"
 epm pack --install $PKGNAME "$PKGURL"

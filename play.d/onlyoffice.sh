@@ -34,7 +34,7 @@ case "$(epm print info -s)" in
 esac
 
 if [ "$VERSION" = "*" ] ; then
-    PKGURL="$(eget --list --latest https://github.com/ONLYOFFICE/DesktopEditors/releases $file)"
+    PKGURL="$(eget --list --latest https://github.com/ONLYOFFICE/DesktopEditors/releases "$file")"
 else
     PKGURL="https://github.com/ONLYOFFICE/DesktopEditors/releases/download/v$VERSION/$file"
 fi

@@ -11,8 +11,8 @@ URL="https://slack.com"
 arch=x86_64
 pkgtype=rpm
 
-PKGMASK="$(epm print constructname $PKGNAME "$VERSION" $arch $pkgtype)"
-PKGURL="$(eget --list --latest https://slack.com/downloads/instructions/fedora $PKGMASK)" || fatal "Can't get package URL"
+mask="$(epm print constructname $PKGNAME "$VERSION" $arch $pkgtype)"
+PKGURL="$(eget --list --latest https://slack.com/downloads/instructions/fedora "$mask")" || fatal "Can't get package URL"
 [ -n "$PKGURL" ] || fatal "Can't get package URL"
 
 epm install --repack "$PKGURL"

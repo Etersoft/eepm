@@ -9,7 +9,7 @@ DESCRIPTION='PortProton (from the repository if the package is there, or from th
 
 res=0
 if ! epm install portproton ; then
-    PKGURL="$(eget --list --latest https://github.com/Castro-Fidel/PortProton_dpkg/releases portproton_${VERSION}amd64.deb)"
+    PKGURL="$(eget --list --latest https://github.com/Castro-Fidel/PortProton_dpkg/releases "portproton_${VERSION}amd64.deb")"
     epm install $PKGURL
     res=$?
 fi

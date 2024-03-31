@@ -18,7 +18,7 @@ case $pkgtype in
         ;;
 esac
 
-PKGURL=$(eget --list --latest https://github.com/balena-io/etcher/releases $mask) || fatal "Can't get package URL"
+PKGURL=$(eget --list --latest https://github.com/balena-io/etcher/releases "$mask") || fatal "Can't get package URL"
 
 repack=''
 [ "$(epm print info -s)" = "alt" ] && repack='--repack'

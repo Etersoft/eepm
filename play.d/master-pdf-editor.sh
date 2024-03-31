@@ -36,6 +36,6 @@ if [ -z "$PKG" ] ; then
     esac
 fi
 
-PKGURL=$(eget --list --latest https://code-industry.ru/get-master-pdf-editor-for-linux/ $PKG) || fatal "Can't get package URL"
+PKGURL=$(eget --list --latest https://code-industry.ru/get-master-pdf-editor-for-linux/ "$PKG") || fatal "Can't get package URL"
 
 epm $repack install "$PKGURL"

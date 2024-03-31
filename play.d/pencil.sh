@@ -31,7 +31,7 @@ repack=''
 # https://pencil.evolus.vn/dl/V3.1.1.ga/Pencil_3.1.1.ga_amd64.deb
 # https://pencil.evolus.vn/dl/V3.1.1.ga/Pencil_3.1.1.ga_i386.deb
 
-PKGMASK="$(epm print constructname $PKGNAME "$VERSION.ga" $arch)"
+mask="$(epm print constructname $PKGNAME "$VERSION.ga" $arch)"
 
-PKGURL="$(eget --list --latest https://pencil.evolus.vn/Downloads.html $PKGMASK)" || fatal "Can't get package URL"
+PKGURL="$(eget --list --latest https://pencil.evolus.vn/Downloads.html "$mask")" || fatal "Can't get package URL"
 epm $repack install "$PKGURL"

@@ -11,7 +11,7 @@ URL="https://vinteo.com"
 arch=amd64
 pkgtype=deb
 
-[ "$VERSION" = "*" ] && VERSION="$(eget --list --latest https://download.vinteo.com/VinteoClient/linux/3.* | xargs basename)"
+[ "$VERSION" = "*" ] && VERSION="$(eget --list --latest "https://download.vinteo.com/VinteoClient/linux/3.*" | xargs basename)"
 [ -n "$VERSION" ] || fatal "Can't get version"
 
 # use rpm, but not for ALT

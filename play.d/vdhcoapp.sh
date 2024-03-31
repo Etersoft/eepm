@@ -12,7 +12,7 @@ arch="$(epm print info -a)"
 
 mask="dhcoapp-noffmpeg-linux-$arch.deb"
 
-PKGURL=$(eget --list --latest https://github.com/aclap-dev/vdhcoapp/releases/ $mask) || fatal "Can't get package URL"
+PKGURL=$(eget --list --latest https://github.com/aclap-dev/vdhcoapp/releases/ "$mask") || fatal "Can't get package URL"
 
 repack=''
 [ "$(epm print info -s)" = "alt" ] && repack='--repack'
