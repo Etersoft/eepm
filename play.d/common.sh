@@ -363,6 +363,11 @@ if [ -z "$VERSION" ] && [ -n "$EGET_IPFS_DB" ] ; then
     VERSION="$(get_latest_version $PKGNAME)"
 fi
 
+if [ -z "$VERSION" ] && [ -z "$force" ] ; then
+    # by default use known version to install
+    VERSION="$(get_latest_version $PKGNAME)"
+fi
+
 # default version value (can be overrided with arg $2 or by update)
 [ -n "$VERSION" ] || VERSION="*"
 
