@@ -82,7 +82,7 @@ esac
 __epm_update()
 {
 
-    [ -z "$*" ] || fatal "No arguments are allowed here"
+    [ -z "$*" ] || fatal "No arguments are allowed for epm update command"
 
     info "Running update the package index files from remote package repository database ..."
 

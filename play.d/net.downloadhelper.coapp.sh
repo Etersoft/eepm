@@ -4,6 +4,7 @@ PKGNAME=net.downloadhelper.coapp
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="Video DownloadHelper Companion App (obsoleted)"
+DESCRIPTION=''
 URL="https://www.downloadhelper.net/install-coapp"
 
 . $(dirname $0)/common.sh
