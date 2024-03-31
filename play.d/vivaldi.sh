@@ -20,6 +20,9 @@ case "$arch" in
         ;;
 esac
 
+# can't use wildcard for -1
+[ "$VERSION" = "*" ] || VERSION="$VERSION-1"
+
 # See also https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=vivaldi
 
 # TODO:
@@ -39,6 +42,7 @@ if [ "$PKGNAME" = "$BASEPKGNAME-snapshot" ] ; then
     fi
     PKGURL="https://downloads.vivaldi.com/snapshot/vivaldi-snapshot_${VERSION}_$arch.deb"
 else
+    # https://downloads.vivaldi.com/stable/vivaldi-stable_6.6.3271.55-1_amd64.deb
     PKGURL="$(eget --list --latest https://vivaldi.com/ru/download "$(epm print constructname $PKGNAME "$VERSION" $arch deb)")" #" || fatal
 fi
 
