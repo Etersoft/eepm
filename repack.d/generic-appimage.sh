@@ -91,3 +91,5 @@ add_bin_cdexec_command $PRODUCT $PRODUCTDIR/AppRun
 # Strange AppRun script uses args as path, so override path detection
 subst "2iexport APPDIR=$PRODUCTDIR" $BUILDROOT/usr/bin/$PRODUCT
 
+PRODUCTCUR="$(echo $PRODUCT | tr "[A-Z_]" "[a-z-]")"
+[ "$PRODUCT" = "$PRODUCTCUR" ] || add_bin_link_command $PRODUCTCUR $PRODUCT
