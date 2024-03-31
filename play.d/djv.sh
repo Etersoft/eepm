@@ -19,6 +19,6 @@ esac
 
 arch=amd64
 
-PKGURL=$(eget --list --latest https://github.com/darbyjohnston/DJV/releases "$mask") || fatal "Can't get package URL"
+PKGURL=$(eget --list --latest https://github.com/darbyjohnston/DJV/releases "$mask")
 
 install_pkgurl

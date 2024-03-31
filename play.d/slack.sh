@@ -13,6 +13,6 @@ pkgtype=rpm
 
 # https://downloads.slack-edge.com/desktop-releases/linux/x64/4.37.94/slack-4.37.94-0.1.el8.x86_64.rpm
 mask="$(epm print constructname $PKGNAME "$VERSION-[.09]*" $arch $pkgtype)"
-PKGURL="$(eget --list --latest https://slack.com/downloads/instructions/fedora "$mask")" || fatal "Can't get package URL"
+PKGURL="$(eget --list --latest https://slack.com/downloads/instructions/fedora "$mask")"
 
 install_pkgurl

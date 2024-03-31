@@ -15,6 +15,6 @@ case "$arch" in
         ;;
 esac
 
-PKGURL="$(eget --list --latest https://desktop.userapi.com/rpm/master/ "$PKGNAME-$VERSION.$arch.rpm")" || fatal "Can't get package URL"
+PKGURL="$(eget --list --latest https://desktop.userapi.com/rpm/master/ "$PKGNAME-$VERSION.$arch.rpm")"
 
 install_pkgurl

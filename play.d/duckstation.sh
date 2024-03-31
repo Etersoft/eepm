@@ -15,6 +15,6 @@ file="DuckStation-x64.AppImage"
 # TODO: preview, previous-latest
 SELECTOR="preview"
 
-PKGURL=$(eget --list https://github.com/stenzek/duckstation/releases $file | grep "/$SELECTOR/") || fatal "Can't get package URL"
+PKGURL=$(eget --list https://github.com/stenzek/duckstation/releases $file | grep "/$SELECTOR/")
 
 install_pack_pkgurl

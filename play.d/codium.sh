@@ -31,7 +31,7 @@ esac
 
 
 mask="$(epm print constructname $PKGNAME "$VERSION*" $arch $pkgtype)"
-PKGURL="$(eget --list --latest https://github.com/VSCodium/vscodium/releases "$mask")" || fatal "Can't get package URL"
+PKGURL="$(eget --list --latest https://github.com/VSCodium/vscodium/releases "$mask")"
 
 install_pkgurl
 

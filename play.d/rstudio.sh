@@ -60,6 +60,6 @@ esac
 VERSION="${VERSION/+/-}"
 
 PKGMASK="$(epm print constructname $PKGNAME "$VERSION" $arch $pkgtype "-" "-")"
-PKGURL="$(eget --list https://www.rstudio.com/products/rstudio/download/ "$PKGMASK" | grep "$PKGFILTER")" || fatal "Can't get package URL"
+PKGURL="$(eget --list https://www.rstudio.com/products/rstudio/download/ "$PKGMASK" | grep "$PKGFILTER")"
 
 install_pkgurl

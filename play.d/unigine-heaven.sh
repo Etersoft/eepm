@@ -8,6 +8,6 @@ URL="https://benchmark.unigine.com/heaven"
 
 . $(dirname $0)/common.sh
 
-PKGURL="$(eget --list --latest https://benchmark.unigine.com/heaven "Unigine_Heaven-$VERSION.run")" || fatal "Can't get package URL"
+PKGURL="$(eget --list --latest https://benchmark.unigine.com/heaven "Unigine_Heaven-$VERSION.run")"
 
 install_pack_pkgurl

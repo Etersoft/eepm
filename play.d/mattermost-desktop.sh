@@ -21,7 +21,7 @@ case "$arch" in
         ;;
 esac
 
-PKGURL=$(eget --list --latest https://github.com/mattermost/desktop/releases $(epm print constructname $PKGNAME "$VERSION*" $arch "deb")) || fatal "Can't get package URL"
+PKGURL=$(eget --list --latest https://github.com/mattermost/desktop/releases $(epm print constructname $PKGNAME "$VERSION*" $arch "deb"))
 
 install_pkgurl
 

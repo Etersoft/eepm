@@ -17,7 +17,7 @@ URL="https://repo.yandex.ru/yandex-browser"
 if [ "$(epm print info -p)" = "rpm" ] ; then
     # https://repo.yandex.ru/yandex-browser/rpm/stable/x86_64/yandex-browser-stable-23.1.1.1114-1.x86_64.rpm
     [ "$BRANCH" = "corporate" ] && BRANCH="stable"
-    PKGURL="$URL/rpm/$BRANCH/x86_64/$(epm print constructname $PKGNAME "$VERSION*" x86_64 rpm)" || fatal "Can't get package URL"
+    PKGURL="$URL/rpm/$BRANCH/x86_64/$(epm print constructname $PKGNAME "$VERSION*" x86_64 rpm)"
 else
     # https://repo.yandex.ru/yandex-browser/deb/pool/main/y/yandex-browser-beta/yandex-browser-beta_23.5.4.682-1_amd64.deb
     PKGURL="$URL/deb/pool/main/y/$PKGNAME/$(epm print constructname $PKGNAME "$VERSION*" amd64 deb)"

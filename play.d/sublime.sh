@@ -21,7 +21,7 @@ case "$arch" in
         ;;
 esac
 
-PKGURL=$(eget --list --latest https://www.sublimetext.com/download_thanks "sublime_text_build_${VERSION}_$arch.tar.xz") || fatal "Can't get package URL"
+PKGURL=$(eget --list --latest https://www.sublimetext.com/download_thanks "sublime_text_build_${VERSION}_$arch.tar.xz")
 
 install_pack_pkgurl
 

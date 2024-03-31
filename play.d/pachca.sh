@@ -11,7 +11,6 @@ URL="https://github.com/pachca/pachca-desktop"
 arch="$(epm print info --debian-arch)"
 file="${PKGNAME}_${VERSION}_$arch.deb"
 
-PKGURL=$(eget --list --latest https://github.com/pachca/pachca-desktop/releases "$file") || fatal "Can't get package URL"
+PKGURL=$(eget --list --latest https://github.com/pachca/pachca-desktop/releases "$file")
 
 install_pkgurl
-

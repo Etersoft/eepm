@@ -29,6 +29,6 @@ esac
 
 mask="$(epm print constructname $PKGNAME "$VERSION.ga" $arch)"
 
-PKGURL="$(eget --list --latest https://pencil.evolus.vn/Downloads.html "$mask")" || fatal "Can't get package URL"
+PKGURL="$(eget --list --latest https://pencil.evolus.vn/Downloads.html "$mask")"
 
 install_pkgurl

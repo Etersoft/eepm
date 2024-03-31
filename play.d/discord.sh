@@ -9,7 +9,7 @@ DESCRIPTION="Discord from the official site"
 
 if [ "$VERSION" = "*" ] ; then
     # workaround against curl can't get filename: https://github.com/curl/curl/issues/8461
-    PKGURL="$(eget --get-real-url "https://discord.com/api/download?platform=linux&format=deb")" || fatal "Can't get package URL"
+    PKGURL="$(eget --get-real-url "https://discord.com/api/download?platform=linux&format=deb")"
 else
     PKGURL="https://dl.discordapp.net/apps/linux/$VERSION/discord-$VERSION.deb"
 fi

@@ -8,7 +8,7 @@ URL="https://neovide.dev/"
 
 . $(dirname $0)/common.sh
 
-PKGURL=$(eget --list --latest https://github.com/neovide/neovide/releases "$PKGNAME.AppImage") || fatal "Can't get package URL"
+PKGURL=$(eget --list --latest https://github.com/neovide/neovide/releases "$PKGNAME.AppImage")
 
 install_pkgurl
 

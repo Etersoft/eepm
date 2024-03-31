@@ -22,7 +22,7 @@ if [ "$VERSION" != "*" ] ; then
     [ "$PKGNAME" = "atom-beta" ] && VERSION="$VERSION-beta0"
     PKGURL="https://github.com/atom/atom/releases/download/v$VERSION/atom-$arch.$pkgtype"
 else
-    PKGURL=$(eget --list https://github.com/atom/atom/releases/ "atom-$arch.$pkgtype" | grep $notbeta -- "-beta" | head -n1) || fatal "Can't get package URL"
+    PKGURL=$(eget --list https://github.com/atom/atom/releases/ "atom-$arch.$pkgtype" | grep $notbeta -- "-beta" | head -n1)
 fi
 
 install_pkgurl

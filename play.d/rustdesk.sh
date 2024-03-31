@@ -21,7 +21,8 @@ else
     MASK="$PKGNAME-$VERSION-$arch.$pkgtype"
 fi
 
-PKGURL=$(eget --list --latest https://github.com/rustdesk/rustdesk/releases "$MASK") || fatal "Can't get package URL"
+PKGURL=$(eget --list --latest https://github.com/rustdesk/rustdesk/releases "$MASK")
+
 install_pkgurl
 
 cat <<EOF

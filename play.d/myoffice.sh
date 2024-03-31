@@ -17,6 +17,6 @@ epm assure xdg-desktop-menu xdg-utils
 # https://preset.myoffice-app.ru/myoffice-standard-home-edition-2.3.0-x86_64.rpm
 # https://preset.myoffice-app.ru/myoffice-standard-home-edition_2.3.0_amd64.deb
 PKGMASK="$(epm print constructname $PKGNAME "$VERSION" "" "" "" "[-_]")"
-PKGURL="$(eget --list --latest https://myoffice.ru/products/standard-home-edition/ "$PKGMASK")" || fatal "Can't get package URL"
+PKGURL="$(eget --list --latest https://myoffice.ru/products/standard-home-edition/ "$PKGMASK")"
 
 epm install "$PKGURL"

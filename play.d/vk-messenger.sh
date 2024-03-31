@@ -19,6 +19,6 @@ case "$pkgtype" in
         ;;
 esac
 
-PKGURL="$(eget --list --latest "$URL" "$PKGNAME.$pkgtype")" || fatal "Can't get package URL"
+PKGURL="$(eget --list --latest "$URL" "$PKGNAME.$pkgtype")"
 
 install_pkgurl

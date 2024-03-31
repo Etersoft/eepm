@@ -36,6 +36,6 @@ esac
 
 # https://downloads.realvnc.com/download/file/viewer.files/VNC-Viewer-7.10.0-Linux-x64.deb
 # https://downloads.realvnc.com/download/file/viewer.files/VNC-Viewer-7.10.0-Linux-x64.rpm
-PKGURL=$(eget --list --latest https://www.realvnc.com/en/connect/download/viewer/ "$PKG") || fatal "Can't get package URL"
+PKGURL=$(eget --list --latest https://www.realvnc.com/en/connect/download/viewer/ "$PKG")
 
 install_pkgurl

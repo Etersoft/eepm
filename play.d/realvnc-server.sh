@@ -28,6 +28,5 @@ case $pkgtype-$arch in
         ;;
 esac
 
-PKGURL=$(eget --list --latest https://www.realvnc.com/en/connect/download/vnc/ "$mask") || fatal "Can't get package URL"
-
+PKGURL=$(eget --list --latest https://www.realvnc.com/en/connect/download/vnc/ "$mask")
 install_pkgurl

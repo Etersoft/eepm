@@ -33,7 +33,7 @@ case $pkgtype in
         ;;
 esac
 
-PKGURL="$(eget --list --latest $BASEURL/$DIRVERSION/ "$mask")" || fatal "Can't get package URL"
+PKGURL="$(eget --list --latest $BASEURL/$DIRVERSION/ "$mask")"
 #PKGURL="https://wingware.com/pub/wing-personal/$VERSION/$mask"
 
 install_pkgurl

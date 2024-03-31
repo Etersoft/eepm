@@ -16,7 +16,7 @@ warn_version_is_not_supported
 # https://repo.yandex.ru/yandex-disk/yandex-disk-latest.i386.rpm
 # epm uses eget to download * names
 
-PKGURL="https://repo.yandex.ru/yandex-disk/$(epm print constructname $PKGNAME "latest")" || fatal "Can't get package URL"
+PKGURL="https://repo.yandex.ru/yandex-disk/$(epm print constructname $PKGNAME "latest")"
 
 install_pkgurl
 

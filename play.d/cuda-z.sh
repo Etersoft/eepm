@@ -20,6 +20,6 @@ case "$arch" in
         ;;
 esac
 
-PKGURL="$(eget --list --latest https://cuda-z.sourceforge.net/ "$file" )" || fatal "Can't get package URL"
+PKGURL="$(eget --list --latest https://cuda-z.sourceforge.net/ "$file" )"
 
 install_pack_pkgurl

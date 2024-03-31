@@ -15,6 +15,6 @@ fi
 
 [ "$VERSION" != "*" ] && VERSION="$VERSION-1.1"
 
-PKGURL=$(eget --list --latest https://github.com/clickot/ungoogled-chromium-binaries/releases "ungoogled-chromium_${VERSION}_linux.tar.xz") || fatal "Can't get package URL"
+PKGURL=$(eget --list --latest https://github.com/clickot/ungoogled-chromium-binaries/releases "ungoogled-chromium_${VERSION}_linux.tar.xz")
 
 install_pkgurl

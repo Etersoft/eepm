@@ -13,6 +13,6 @@ DESCRIPTION="Chromium with GOST support from the official site"
 arch=amd64
 pkgtype=deb
 
-PKGURL=$(eget --list --latest https://github.com/deemru/chromium-gost/releases "chromium-gost-$VERSION-linux-$arch.$pkgtype") || fatal "Can't get package URL"
+PKGURL="$(eget --list --latest https://github.com/deemru/chromium-gost/releases "chromium-gost-$VERSION-linux-$arch.$pkgtype")"
 
 install_pkgurl

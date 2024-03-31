@@ -26,6 +26,6 @@ case $(epm print info -e) in
         ;;
 esac
 
-PKGURL=$(eget --list --latest $BASEURL "$file") || fatal "Can't get package URL"
+PKGURL=$(eget --list --latest $BASEURL "$file")
 
 install_pkgurl

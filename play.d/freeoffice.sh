@@ -18,6 +18,6 @@ case $pkgtype in
         ;;
 esac
 
-PKGURL="$(eget --list --latest https://www.freeoffice.com/ru/download/applications "$file")" || fatal "Can't get package URL"
+PKGURL="$(eget --list --latest https://www.freeoffice.com/ru/download/applications "$file")"
 
 install_pkgurl

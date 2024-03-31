@@ -11,6 +11,6 @@ URL="https://github.com/upscayl/upscayl"
 # FIXME: they put some wrong version to X-AppImage-Version
 # https://github.com/upscayl/upscayl/issues/761
 
-PKGURL=$(eget --list --latest https://github.com/upscayl/upscayl/releases "upscayl-$VERSION-linux.AppImage") || fatal "Can't get package URL"
+PKGURL=$(eget --list --latest https://github.com/upscayl/upscayl/releases "upscayl-$VERSION-linux.AppImage")
 
 install_pkgurl

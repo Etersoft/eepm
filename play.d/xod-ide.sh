@@ -22,6 +22,6 @@ case $pkgtype in
         ;;
 esac
 
-PKGURL=$(eget --list --latest https://xod.io/ "$mask") || fatal "Can't get package URL"
+PKGURL=$(eget --list --latest https://xod.io/ "$mask")
 
 install_pkgurl

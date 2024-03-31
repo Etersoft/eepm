@@ -24,6 +24,6 @@ esac
 # https://github.com/tonkeeper/tonkeeper-web/releases/download/v3.7.1/tonkeeper_3.7.1_amd64.deb
 # https://github.com/tonkeeper/tonkeeper-web/releases/download/v3.7.1/Tonkeeper-3.7.1-1.x86_64.rpm
 
-PKGURL=$(eget --list --latest https://github.com/tonkeeper/tonkeeper-web/releases $(epm print constructname $PKGNAME "$VERSION" $arch $pkgtype)) || fatal "Can't get package URL"
+PKGURL=$(eget --list --latest https://github.com/tonkeeper/tonkeeper-web/releases $(epm print constructname $PKGNAME "$VERSION" $arch $pkgtype))
 
 install_pkgurl

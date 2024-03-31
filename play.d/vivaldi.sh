@@ -43,7 +43,7 @@ if [ "$PKGNAME" = "$BASEPKGNAME-snapshot" ] ; then
     PKGURL="https://downloads.vivaldi.com/snapshot/vivaldi-snapshot_${VERSION}_$arch.deb"
 else
     # https://downloads.vivaldi.com/stable/vivaldi-stable_6.6.3271.55-1_amd64.deb
-    PKGURL="$(eget --list --latest https://vivaldi.com/ru/download "$(epm print constructname $PKGNAME "$VERSION" $arch deb)")" #" || fatal
+    PKGURL="$(eget --list --latest https://vivaldi.com/ru/download "$(epm print constructname $PKGNAME "$VERSION" $arch deb)")" #"
 fi
 
 install_pkgurl
