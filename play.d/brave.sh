@@ -30,7 +30,7 @@ if [ -z "$PKGURL" ] ; then
     # force use beta if can't get stable version
     if [ "$PKGNAME" = "$BASEPKGNAME" ] ; then
         TOREMOVEPKG=$PKGNAME
-        PKGNAME=$BASEPKGNAME-beta
+        override_pkgname "$BASEPKGNAME-beta"
         PKGURL=$(eget --list --latest https://github.com/brave/brave-browser/releases "$(epm print constructname $PKGNAME "$VERSION")")
         [ -n "$PKGURL" ] || fatal "Can't get package URL"
 

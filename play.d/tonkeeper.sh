@@ -15,11 +15,8 @@ case "$pkgtype" in
     rpm)
         [ "$VERSION" = "*" ] && VERSION="[0-9]*" || VERSION="$VERSION-1"
         ;;
-    deb)
-        PKGNAME=tonkeeper
-        ;;
     *)
-        PKGNAME=tonkeeper
+        override_pkgname "tonkeeper"
         pkgtype="deb"
         ;;
 esac

@@ -98,6 +98,12 @@ warn_version_is_not_supported()
     [ "$VERSION" = "*" ] || echo -e "\nWarning: Specifying the version is not supported by vendor. Downloading latest version ...\n"
 }
 
+override_pkgname()
+{
+    PKGNAME="$1"
+    export EEPM_INTERNAL_PKGNAME="$PKGNAME"
+}
+
 get_latest_version()
 {
     local ver

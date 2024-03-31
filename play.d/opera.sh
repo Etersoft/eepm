@@ -15,12 +15,12 @@ arch="amd64"
 epm install --skip-installed ffmpeg-plugin-browser || epm install --skip-installed chromium-codecs-ffmpeg-extra || epm play chromium-codecs-ffmpeg-extra
 
 if [ "$(epm print info -p)" = "rpm" ] ; then
-    PKGNAME="${PKGNAME/-/_}"
+    override_pkgname "${PKGNAME/-/_}"
 
     # they put all branch here (rpm only): https://rpm.opera.com/rpm/
     [ "$(epm print info -s)" = "alt" ] && repack='--repack' || repack=''
     PKGURL="https://rpm.opera.com/rpm/$PKGNAME-$VERSION-linux-release-x64-signed.rpm"
-    epm install $repack $PKGURL
+    epm install $repack "$PKGURL"
     exit
 fi
 
