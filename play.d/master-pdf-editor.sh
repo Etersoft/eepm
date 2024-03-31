@@ -9,7 +9,6 @@ URL="https://master-pdf-editor.ru/"
 . $(dirname $0)/common.sh
 
 PKG=''
-repack=''
 # Strict supported list
 case $(epm print info -e) in
     AstraLinuxCE/*|Debian/9|Ubuntu/18)
@@ -20,14 +19,12 @@ case $(epm print info -e) in
         ;;
     RedOS/*|AlterOS/*|ALTLinux/*|CentOS/*|RockyLinux/*)
         PKG="master-pdf-editor-$VERSION-qt5.x86_64.rpm"
-        repack='--repack'
         ;;
 esac
 
 if [ -z "$PKG" ] ; then
     case $(epm print info -p) in
         rpm)
-            repack='--repack'
             PKG="master-pdf-editor-$VERSION-qt5.x86_64.rpm"
             ;;
         *)
@@ -38,4 +35,4 @@ fi
 
 PKGURL=$(eget --list --latest https://code-industry.ru/get-master-pdf-editor-for-linux/ "$PKG") || fatal "Can't get package URL"
 
-epm $repack install "$PKGURL"
+install_pkgurl

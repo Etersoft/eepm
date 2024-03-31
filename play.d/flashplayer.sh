@@ -13,4 +13,4 @@ warn_version_is_not_supported
 VERSION=32.0.0.465
 PKGURL="https://fpdownload.macromedia.com/pub/flashplayer/updaters/32/flash_player_sa_linux.x86_64.tar.gz"
 
-epm pack --install $PKGNAME $PKGURL "$VERSION"
+install_pack_pkgurl "$VERSION"

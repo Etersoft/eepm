@@ -16,4 +16,4 @@ arch="amd64"
 mask="$(epm print constructname $PKGNAME "$VERSION" $arch "deb")"
 PKGURL=$(eget --list --latest https://packages.element.io/debian/pool/main/e/element-desktop/index.html "$mask") || fatal "Can't get package URL"
 
-epm install "$PKGURL"
+install_pkgurl

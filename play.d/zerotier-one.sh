@@ -51,4 +51,5 @@ fi
 # hack with --compressed due broken answer from the server
 PKGURL="$(eget --compressed --list --latest https://download.zerotier.com/RELEASES/$VERSION/dist/$dv/${PKGNAME}[-_]$VERSION*$arch.$pkg)" || fatal "Can't get package URL"
 
+# TODO: install_pkgurl
 epm install --scripts "$PKGURL"

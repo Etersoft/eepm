@@ -32,4 +32,5 @@ esac
 pkgtype="$(epm print info -p)"
 
 PKGURL="$(eget --list --latest https://www.hamrick.com/alternate-versions.html "$file*.$pkgtype" )" || fatal "Can't get package URL"
-epm install "$PKGURL"
+
+install_pkgurl

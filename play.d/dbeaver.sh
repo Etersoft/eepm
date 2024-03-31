@@ -20,4 +20,4 @@ case $pkgtype in
         ;;
 esac
 
-epm install "$PKGURL"
+install_pkgurl

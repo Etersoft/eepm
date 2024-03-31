@@ -22,8 +22,7 @@ fi
 BASEURL=https://ftp.postgresql.org/pub/pgadmin/pgadmin4/yum/redhat/rhel-8Workstation-x86_64
 #BASEURL=https://ftp.postgresql.org/pub/pgadmin/pgadmin4/yum/fedora/fedora-38Workstation-x86_64
 
-repack=''
-[ "$(epm print info -s)" = "alt" ] && repack='--repack'
-
 pkgarch='x86_64'
-epm $repack install $BASEURL/pgadmin4-server-$VERSION.*.$pkgarch.rpm $BASEURL/pgadmin4-desktop-$VERSION.*.$pkgarch.rpm
+PKGURL="$BASEURL/pgadmin4-server-$VERSION.*.$pkgarch.rpm $BASEURL/pgadmin4-desktop-$VERSION.*.$pkgarch.rpm"
+
+install_pkgurl

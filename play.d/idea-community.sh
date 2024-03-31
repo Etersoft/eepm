@@ -10,5 +10,4 @@ URL="https://www.jetbrains.com/idea/"
 
 PKGURL="$(get_jetbrains_pkgurl IIC idea)"
 
-epm install $PKGURL
-
+install_pkgurl

@@ -27,7 +27,4 @@ if ! is_glibc_enough 2.35 ; then
     PKGURL="https://deb.librewolf.net/pool/focal/librewolf-$VERSION-[0-9].$arch.deb"
 fi
 
-repack=''
-[ "$(epm print info -s)" = "alt" ] && repack='--repack'
-
-epm install $repack "$PKGURL"
+install_pkgurl

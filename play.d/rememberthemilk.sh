@@ -13,4 +13,4 @@ warn_version_is_not_supported
 # https://www.rememberthemilk.com/services/linux/
 PKGURL="https://www.rememberthemilk.com/services/linux/download/?os=ubuntu_64&subtype=1.3.11"
 
-epm install "$PKGURL"
+install_pkgurl

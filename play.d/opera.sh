@@ -18,11 +18,9 @@ if [ "$(epm print info -p)" = "rpm" ] ; then
     pkgname="${PKGNAME/-/_}"
 
     # they put all branch here (rpm only): https://rpm.opera.com/rpm/
-    [ "$(epm print info -s)" = "alt" ] && repack='--repack' || repack=''
     PKGURL="https://rpm.opera.com/rpm/$pkgname-$VERSION-linux-release-x64-signed.rpm"
-    epm install $repack "$PKGURL"
-    exit
+else
+    PKGURL="https://deb.opera.com/opera-developer/pool/non-free/o/$PKGNAME/$(epm print constructname $PKGNAME "$VERSION" $arch deb)"
 fi
 
-PKGURL="https://deb.opera.com/opera-developer/pool/non-free/o/$PKGNAME/$(epm print constructname $PKGNAME "$VERSION" $arch deb)"
-epm install "$PKGURL"
+install_pkgurl

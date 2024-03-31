@@ -18,7 +18,8 @@ PKGDIR="$(mktemp -d)"
 trap "rm -fr $PKGDIR" EXIT
 cd $PKGDIR || fatal
 
+PKGURL="$PKGNAME.deb"
 # fix spaces in the package name
-eget -O $PKGNAME.deb "$urldir/Synology*.deb"
+eget -O $PKGURL "$urldir/Synology*.deb"
 
-epm install $PKGNAME.deb
+install_pkgurl

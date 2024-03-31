@@ -14,4 +14,4 @@ else
     PKGURL=$(eget --list --latest https://github.com/PurpleHorrorRus/Meridius/releases "$PKGNAME-*.tar.gz") || fatal "Can't get package URL"
 fi
 
-epm install "$PKGURL"
+install_pkgurl

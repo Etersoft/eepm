@@ -15,4 +15,4 @@ pkgtype=deb
 
 PKGURL=$(eget --list --latest https://github.com/Foundry376/Mailspring/releases/ "$PKGNAME*$VERSION*$arch.$pkgtype") || fatal "Can't get package URL"
 
-epm install "$PKGURL"
+install_pkgurl

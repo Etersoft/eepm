@@ -36,7 +36,7 @@ case $(epm print info -e) in
 #        ;;
 esac
 
-epm pack --install $PKGNAME "$PKGURL" || exit
+install_pack_pkgurl
 
 #PKGURL="https://drivers.pantum.ru/userfiles/files/download/%E9%A9%B1%E5%8A%A8%E6%96%87%E4%BB%B6/%E6%A0%87%E7%AD%BE%E6%9C%BA/Linux/linux_pantum.7z"
 

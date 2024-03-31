@@ -12,7 +12,7 @@ warn_version_is_not_supported
 #PKG="$(eget --list --latest https://flyviewvms.ru/downloads/ "flyview-server*linux64.deb")"
 PKGURL="https://flyviewvms.ru/distro/flyview-server.deb"
 
-epm install $PKGURL || exit
+install_pkgurl
 
 echo
 echo "

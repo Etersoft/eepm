@@ -19,10 +19,6 @@ case $arch in
         fatal "Unsupported arch $arch for $(epm print info -d)"
 esac
 
-# we have workaround for their postinstall script, so always repack rpm package
-repack=''
-[ "$(epm print info -s)" = "alt" ] && repack='--repack'
-
 # rpm packages have a release in their names
 [ "$(epm print info -p)" = "rpm" ] && [ "$VERSION" != "*" ] && VERSION="$VERSION-1"
 
@@ -43,7 +39,7 @@ PKGMASK="$(epm print constructname $PKGNAME "$VERSION" $arch '' '_')"
 
 PKGURL="$(eget --list --latest https://download.anydesk.com/linux/ "./$PKGMASK")" || fatal "Can't get package URL"
 
-epm $repack install "$PKGURL" || exit
+install_pkgurl
 
 echo
 echo "Note: run

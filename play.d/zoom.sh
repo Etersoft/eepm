@@ -22,9 +22,7 @@ case $arch in
         fatal "Unsupported arch $arch for $(epm print info -d)"
 esac
 
-repack=''
-[ "$(epm print info -s)" = "alt" ] && repack="--repack"
-
 # TODO: there are more complex distro dependent url
 PKGURL="https://zoom.us/client/$VERSION/zoom_$arch.$(epm print info -p)"
-epm install $repack "$PKGURL"
+
+install_pkgurl

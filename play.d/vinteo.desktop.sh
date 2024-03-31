@@ -26,4 +26,4 @@ case "$(epm print info -d)" in
       ;;
 esac
 
-epm install "$PKGURL"
+install_pkgurl

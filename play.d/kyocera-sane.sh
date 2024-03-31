@@ -12,4 +12,4 @@ warn_version_is_not_supported
 
 PKGURL="https://www.kyoceradocumentsolutions.de/content/download-center/de/drivers/all/SANE_Driver_zip.download.zip"
 
-epm pack --install $PKGNAME "$PKGURL"
+install_pack_pkgurl

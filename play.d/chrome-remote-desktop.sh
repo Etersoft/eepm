@@ -10,17 +10,12 @@ DESCRIPTION='' # echo " Remote desktop support for google-chrome & chromium" && 
 echo "Note: It is not tested yet."
 
 #arch=$(epm print info --distro-arch)
-#pkgtype=$(epm print info -p)
-repack=''
 arch=amd64
 pkgtype=deb
 
-# we have workaround for their postinstall script, so always repack rpm package
-[ "$(epm print info -p)" = "deb" ] || repack='--repack'
+PKGURL="https://dl.google.com/linux/direct/${PKGNAME}_current_$arch.$pkgtype"
 
-PKG="https://dl.google.com/linux/direct/${PKGNAME}_current_$arch.$pkgtype"
-
-epm install $repack "$PKG" || exit
+install_pkgurl
 
 echo '
 You need run

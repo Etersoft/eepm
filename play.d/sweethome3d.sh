@@ -29,4 +29,4 @@ esac
 URL="$(eget -4 --list --latest https://www.sweethome3d.com/download.jsp SweetHome3D-$VERSION-linux-$arch.tgz/download)"
 PKGURL="$(echo "$URL" | sed -e "s|https*://sourceforge.net/projects/sweethome3d/files|https://download.sourceforge.net/project/sweethome3d|" -e 's|/download$||' )"
 
-epm install "$PKGURL"
+install_pkgurl

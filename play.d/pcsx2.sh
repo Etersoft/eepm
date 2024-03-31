@@ -13,4 +13,4 @@ file="pcsx2-v${VERSION}-linux-appimage-x64-Qt.AppImage"
 
 PKGURL=$(eget --list --latest https://github.com/PCSX2/pcsx2/releases "$file") || fatal "Can't get package URL"
 
-epm pack --install "$PKGNAME" "$PKGURL"
+install_pack_pkgurl

@@ -26,8 +26,4 @@ arch=x86_64
 # https://github.com/prateekmedia/pstube/releases/download/2.6.0/pstube-linux-2.6.0-x86_64.deb
 PKGURL=$(eget --list --latest https://github.com/prateekmedia/pstube/releases "$PKGNAME-$VERSION-$arch.$pkgtype") || fatal "Can't get package URL"
 
-# we have workaround for their postinstall script, so always repack rpm package
-[ "$pkgtype" = "deb" ] || repack='--repack'
-
-epm install $repack "$PKGURL" || exit
-
+install_pkgurl

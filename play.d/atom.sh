@@ -25,4 +25,4 @@ else
     PKGURL=$(eget --list https://github.com/atom/atom/releases/ "atom-$arch.$pkgtype" | grep $notbeta -- "-beta" | head -n1) || fatal "Can't get package URL"
 fi
 
-epm install "$PKGURL"
+install_pkgurl

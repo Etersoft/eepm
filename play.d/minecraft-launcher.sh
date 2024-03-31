@@ -11,5 +11,6 @@ URL="https://www.minecraft.net/en-us/download"
 warn_version_is_not_supported
 
 # https://www.minecraft.net/en-us/download
-epm install "https://launcher.mojang.com/download/Minecraft.deb"
+PKGURL="https://launcher.mojang.com/download/Minecraft.deb"
 
+install_pkgurl

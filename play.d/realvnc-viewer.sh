@@ -16,9 +16,6 @@ fi
 pkgtype="$(epm print info -p)"
 arch="$(epm print info -a)"
 
-repack=''
-[ "$(epm print info -s)" = "alt" ] && repack='--repack'
-
 case $pkgtype-$arch in
     rpm-x86_64)
         PKG="VNC-Viewer-$VERSION-Linux-x64.rpm"
@@ -41,4 +38,4 @@ esac
 # https://downloads.realvnc.com/download/file/viewer.files/VNC-Viewer-7.10.0-Linux-x64.rpm
 PKGURL=$(eget --list --latest https://www.realvnc.com/en/connect/download/viewer/ "$PKG") || fatal "Can't get package URL"
 
-epm $repack install $PKGURL
+install_pkgurl

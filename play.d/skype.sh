@@ -15,4 +15,4 @@ pkgtype=deb
 # https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=skypeforlinux-stable-bin
 PKGURL="https://repo.skype.com/deb/pool/main/s/${PKGNAME}/${PKGNAME}_${VERSION}_amd64.deb"
 
-epm install "$PKGURL"
+install_pkgurl

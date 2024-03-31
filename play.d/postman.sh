@@ -19,4 +19,4 @@ esac
 
 PKGURL="https://dl.pstmn.io/download/latest/linux_$arch"
 
-epm pack --install $PKGNAME "$PKGURL"
+install_pack_pkgurl

@@ -31,4 +31,4 @@ fi
 # https://icons8.ru/lunacy
 PKGURL="https://lcdn.icons8.com/setup/$file"
 
-epm install $PKGURL
+install_pkgurl

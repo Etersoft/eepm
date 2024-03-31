@@ -16,9 +16,6 @@ fi
 pkgtype="$(epm print info -p)"
 arch="$(epm print info -a)"
 
-repack=''
-[ "$(epm print info -s)" = "alt" ] && repack='--repack'
-
 case $pkgtype-$arch in
     rpm-x86_64)
         mask="VNC-Server-$VERSION-Linux-x64.rpm"
@@ -33,4 +30,4 @@ esac
 
 PKGURL=$(eget --list --latest https://www.realvnc.com/en/connect/download/vnc/ "$mask") || fatal "Can't get package URL"
 
-epm $repack install $PKGURL
+install_pkgurl

@@ -14,4 +14,6 @@ VERSION="0.27.5"
 
 # https://audiorelay.net/downloads
 # TODO: https://api.audiorelay.net/downloads
-epm install "https://dl.audiorelay.net/setups/linux/audiorelay-$VERSION.deb"
+PKGURL="https://dl.audiorelay.net/setups/linux/audiorelay-$VERSION.deb"
+
+install_pkgurl

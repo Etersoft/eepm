@@ -25,6 +25,5 @@ esac
 pkgtype=AppImage
 
 PKGURL=$(eget --list --latest https://github.com/SpacingBat3/WebCord/releases "WebCord-$VERSION-$arch.$pkgtype")
-[ -n "$PKGURL" ] || fatal "Can't get package URL"
 
-epm install "$PKGURL"
+install_pkgurl

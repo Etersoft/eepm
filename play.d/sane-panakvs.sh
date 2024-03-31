@@ -28,4 +28,4 @@ esac
 
 PKGURL="https://www.psn-web.net/cs-im/Japan/Scanner/cojp/data_cmns/linux/$file"
 
-epm pack --install $PKGNAME "$PKGURL"
+install_pack_pkgurl

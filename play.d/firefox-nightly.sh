@@ -14,4 +14,4 @@ arch=x86_64
 VERSION="*"
 PKGURL="https://ftp.mozilla.org/pub/firefox/nightly/latest-mozilla-central/firefox-$VERSION.en-US.linux-$arch.deb"
 
-epm install "$PKGURL"
+install_pkgurl

@@ -18,4 +18,4 @@ fi
 # https://www.openprinting.org/download/printdriver/auxfiles/HP/plugins/hplip-$VERSION-plugin.run
 PKGURL="https://developers.hp.com/sites/default/files/hplip-$VERSION-plugin.run"
 
-epm pack --install $PKGNAME $PKGURL
+install_pack_pkgurl

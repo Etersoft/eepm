@@ -26,4 +26,4 @@ esac
 
 PKGURL=$(eget --list --latest https://github.com/cucumber-sp/yandex-music-linux/releases "yandex-music_${VERSION}_${arch}.deb") || fatal "Can't get package URL"
 
-epm install "$PKGURL"
+install_pkgurl

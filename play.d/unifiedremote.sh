@@ -32,7 +32,4 @@ esac
 
 PKGURL="https://www.unifiedremote.com/download/$file"
 
-repack=''
-[ "$(epm print info -s)" = "alt" ] && repack='--repack'
-
-epm install $repack "$PKGURL"
+install_pkgurl

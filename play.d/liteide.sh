@@ -11,6 +11,5 @@ URL="https://github.com/visualfc/liteide"
 archbit="$(epm print info -b)"
 
 PKGURL=$(eget --list --latest https://github.com/visualfc/liteide/releases "liteidex$VERSION.linux$archbit-qt5*-system.tar.gz") #"
-[ -n "$PKGURL" ] || fatal "Can't get package URL"
 
-epm pack --install $PKGNAME "$PKGURL"
+install_pack_pkgurl

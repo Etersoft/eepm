@@ -13,5 +13,5 @@ file="${PKGNAME}_${VERSION}_$arch.deb"
 
 PKGURL=$(eget --list --latest https://github.com/pachca/pachca-desktop/releases "$file") || fatal "Can't get package URL"
 
-epm install "$PKGURL"
+install_pkgurl
 

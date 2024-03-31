@@ -13,4 +13,4 @@ URL="https://github.com/upscayl/upscayl"
 
 PKGURL=$(eget --list --latest https://github.com/upscayl/upscayl/releases "upscayl-$VERSION-linux.AppImage") || fatal "Can't get package URL"
 
-epm install "$PKGURL"
+install_pkgurl

@@ -24,8 +24,6 @@ esac
 #case "$distr" in
 #case
 
-repack=''
-
 case $(epm print info -e) in
     Ubuntu/20.*|Debian/11)
         PKGFILTER="focal"
@@ -53,7 +51,6 @@ case $(epm print info -e) in
         ;;
     ALTLinux/*)
         PKGFILTER="rhel8"
-        repack='--repack'
         ;;
     *)
         fatal "Unsupported distro $(epm print info -e). Ask application vendor for a support."
@@ -65,4 +62,4 @@ VERSION="${VERSION/+/-}"
 PKGMASK="$(epm print constructname $PKGNAME "$VERSION" $arch $pkgtype "-" "-")"
 PKGURL="$(eget --list https://www.rstudio.com/products/rstudio/download/ "$PKGMASK" | grep "$PKGFILTER")" || fatal "Can't get package URL"
 
-epm install $repack "$PKGURL"
+install_pkgurl

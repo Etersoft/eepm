@@ -41,7 +41,8 @@ if [ "$PKGNAME" = "$BASEPKGNAME-snapshot" ] ; then
 else
     PKGURL="$(eget --list --latest https://vivaldi.com/ru/download "$(epm print constructname $PKGNAME "$VERSION" $arch deb)")" #" || fatal
 fi
-epm install $PKGURL || fatal
+
+install_pkgurl
 
 #UPDATEFFMPEG=$(epm ql $PKGNAME | grep update-ffmpeg) || fatal
 #epm pack --install $PKGNAME-codecs-ffmpeg-extra $UPDATEFFMPEG

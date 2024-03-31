@@ -9,7 +9,6 @@ DESCRIPTION="Microsoft Teams for Linux from the archive.org of the official site
 
 . $(dirname $0)/common.sh
 
-repack=''
 pkgtype="$(epm print info -p)"
 
 # archive.org have only deb packages
@@ -26,14 +25,10 @@ else
     [ "$VERSION" = "*" ] && VERSION="[0-9]*" || VERSION="$VERSION-1"
 fi
 
-if [ "$(epm print info -s)" = "alt" ] ; then
-    repack="--repack"
-fi
-
 # rpm and deb contains the same binaries
 # $ diff -ru teams-1.5.00.23861-1.x86_64 teams_1.5.00.23861_amd64
 ARCHIVEORG=https://web.archive.org/web/20221130114832if_
 
+PKGURL="$ARCHIVEORG/$URL/$(epm print constructname teams "$VERSION" $arch $pkgtype)"
 
-# epm uses eget to download * names
-epm install $repack "$ARCHIVEORG/$URL/$(epm print constructname teams "$VERSION" $arch $pkgtype)"
+install_pkgurl

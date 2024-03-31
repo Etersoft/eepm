@@ -10,4 +10,4 @@ URL="https://joplinapp.org/"
 
 PKGURL="$(eget --list --latest https://github.com/laurent22/joplin/releases/ "Joplin-$VERSION.AppImage")"
 
-epm install $PKGURL
+install_pkgurl

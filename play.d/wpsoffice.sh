@@ -29,12 +29,4 @@ case $pkgtype in
         ;;
 esac
 
-repack=''
-case "$(epm print info -s)" in
-  alt)
-      # See in the package scripts: find /home/*/.config/Kingsoft/Office.conf
-      repack='--repack'
-      ;;
-esac
-
-epm install $repack "$PKGURL"
+install_pkgurl

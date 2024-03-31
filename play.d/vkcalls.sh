@@ -12,4 +12,4 @@ warn_version_is_not_supported
 
 PKGURL="https://vkcalls-native-ac.vk-apps.com/latest/vk-calls-amd64.deb"
 
-epm install "$PKGURL"
+install_pkgurl

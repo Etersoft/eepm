@@ -20,15 +20,12 @@ esac
 
 pkgtype="$(epm print info -p)"
 
-repack=''
-[ "$(epm print info -s)" = "alt" ] && repack='--repack'
-
 case $pkgtype in
     #deb)
     #    epm install "https://www.geogebra.net/linux/pool/main/g/geogebra-classic/$(epm print constructname $PKGNAME "$VERSION" $arch)"
     #    ;;
     rpm)
-        #epm $repack install "https://www.geogebra.net/linux/rpm/$arch/$(epm print constructname $PKGNAME "$VERSION" $arch)"
+        #PKGURL="https://www.geogebra.net/linux/rpm/$arch/$(epm print constructname $PKGNAME "$VERSION" $arch)"
         #http://www.geogebra.net/linux/rpm/x86_64/geogebra-classic-6.0.666.0-202109211234.x86_64.rpm
         PKGURL="ipfs://Qmc6KzDcverDKJptZd6ffJMqyYbKKcuwdHitB6EAEw2C6n?filename=geogebra-classic-6.0.666.0-202109211234.x86_64.rpm"
         ;;
@@ -37,4 +34,4 @@ case $pkgtype in
         ;;
 esac
 
-epm $repack install "$PKGURL"
+install_pkgurl

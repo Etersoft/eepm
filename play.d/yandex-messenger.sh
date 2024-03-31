@@ -13,4 +13,4 @@ warn_version_is_not_supported
 # they publish it on Yandex Disk only (without direct download)
 PKGURL="ipfs://Qma7e4MpopXpeoNnTsCXxx92q1oTrgJmz1aHjecvcEBNWx?filename=Yandex_Messenger_2.155.0_amd64.deb"
 
-epm install --repack "$PKGURL"
+install_pkgurl

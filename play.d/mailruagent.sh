@@ -17,7 +17,7 @@ if [ "$VERSION" = "*" ] ; then
 fi
 
 PKGURL="https://hb.bizmrg.com/agent-www/linux/x64/agent.tar.xz"
-epm pack --install $PKGNAME "$PKGURL" $VERSION
+install_pack_pkgurl "$VERSION"
 
 #PKGURL="$(eget -O- -H Snap-Device-Series:16 https://api.snapcraft.io/v2/snaps/info/agent | epm --inscript tool json -b | grep '\["channel-map",0,"download","url"\]' | head -n1 | sed -e 's|.*"\(.*\)"$|\1|' )" || fatal "Can't get URL"
 

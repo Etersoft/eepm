@@ -10,7 +10,6 @@ URL="https://safing.io/"
 
 warn_version_is_not_supported
 
-repack=''
 pkgtype="$(epm print info -p)"
 
 case "$pkgtype" in
@@ -21,10 +20,6 @@ case "$pkgtype" in
         ;;
 esac
 
-if [ "$(epm print info -s)" = "alt" ] ; then
-    repack="--repack"
-fi
-
 PKGURL="https://updates.safing.io/latest/linux_amd64/packages/portmaster-installer.$pkgtype"
 
-epm install $repack "$PKGURL"
+install_pkgurl

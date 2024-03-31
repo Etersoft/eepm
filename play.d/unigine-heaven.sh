@@ -10,4 +10,4 @@ URL="https://benchmark.unigine.com/heaven"
 
 PKGURL="$(eget --list --latest https://benchmark.unigine.com/heaven "Unigine_Heaven-$VERSION.run")" || fatal "Can't get package URL"
 
-epm pack --install $PKGNAME "$PKGURL"
+install_pack_pkgurl

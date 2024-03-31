@@ -22,9 +22,8 @@ case "$arch" in
 esac
 
 PKGURL=$(eget --list --latest https://www.sublimetext.com/download_thanks "sublime_text_build_${VERSION}_$arch.tar.xz") || fatal "Can't get package URL"
-[ -n "$PKGURL" ] || fatal "Can't get package URL"
 
-epm pack $PKGNAME "$PKGURL" || exit
+install_pack_pkgurl
 
 echo
 echo "NOTE: Sublime Text 4 is a proprietary software. We recommend to use open source editors: Codium, VS Code, Atom."

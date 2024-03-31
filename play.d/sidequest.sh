@@ -10,4 +10,4 @@ URL="https://sidequestvr.com/"
 
 PKGURL=$(eget --list --latest "https://github.com/SideQuestVR/SideQuest/releases/" "SideQuest-$VERSION.tar.xz") || fatal "Can't get package URL"
 
-epm pack --install $PKGNAME "$PKGURL"
+install_pack_pkgurl

@@ -30,10 +30,8 @@ case "$arch-$pkgtype" in
 esac
 
 
-PKGURL="$(eget --list --latest https://github.com/VSCodium/vscodium/releases "$(epm print constructname $PKGNAME "$VERSION*" $arch $pkgtype)")" || fatal "Can't get package URL"
+mask="$(epm print constructname $PKGNAME "$VERSION*" $arch $pkgtype)"
+PKGURL="$(eget --list --latest https://github.com/VSCodium/vscodium/releases "$mask")" || fatal "Can't get package URL"
 
-# we have workaround for their postinstall script, so always repack rpm package
-[ "$pkgtype" = "deb" ] || repack='--repack'
-
-epm install $repack "$PKGURL" || exit
+install_pkgurl
 

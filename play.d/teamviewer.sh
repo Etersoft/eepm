@@ -17,11 +17,10 @@ arch=$(epm print info --distro-arch)
 # TODO: version support
 # https://dl.teamviewer.com/download/linux/version_15x/teamviewer_15.51.5.x86_64.rpm
 
-repack=''
-[ "$(epm print info -p)" = "deb" ] || repack='--repack'
-
 # epm uses eget to download * names
-epm $repack install "https://download.teamviewer.com/download/linux/$(epm print constructname $PKGNAME)" || exit
+PKGURL="https://download.teamviewer.com/download/linux/$(epm print constructname $PKGNAME)"
+
+install_pkgurl
 
 cat <<EOF
 

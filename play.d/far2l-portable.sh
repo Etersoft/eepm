@@ -12,4 +12,4 @@ warn_version_is_not_supported
 PKGURL=$(eget --list --latest https://github.com/spvkgn/far2l-portable/releases "far2l_x86_64.AppImage.tar")
 [ -n "$PKGURL" ] || fatal "Can't get package URL"
 
-epm --install pack $PKGNAME "$PKGURL"
+install_pack_pkgurl

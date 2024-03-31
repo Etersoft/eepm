@@ -17,4 +17,4 @@ pkgtype=deb
 # https://github.com/vkbo/novelWriter/releases/download/v2.0.7/novelwriter_2.0.7_all.deb
 PKGURL=$(eget --list --latest https://github.com/vkbo/novelWriter/releases "novelwriter_${VERSION}_all.$pkgtype") || fatal "Can't get package URL"
 
-epm install "$PKGURL"
+install_pkgurl

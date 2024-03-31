@@ -33,4 +33,5 @@ else
 fi
 
 VERSION="$(echo "$PKGURL" | sed -e 's|.*download/v||' -e 's|%2Bk3s1.*||' -e 's|+k3s1.*||' -e 's|-.*||')"
-epm pack --install $PKGNAME "$PKGURL" $VERSION
+
+install_pack_pkgurl $VERSION

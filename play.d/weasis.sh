@@ -13,4 +13,4 @@ file="weasis_$VERSION-1_$arch.deb"
 
 PKGURL=$(eget --list --latest https://github.com/nroduit/Weasis/releases "$file") || fatal "Can't get package URL"
 
-epm install "$PKGURL"
+install_pkgurl

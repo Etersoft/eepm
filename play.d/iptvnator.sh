@@ -22,4 +22,4 @@ pkgtype=deb
 
 PKGURL=$(eget --list --latest https://github.com/4gray/iptvnator/releases/ "$PKGNAME*$VERSION*$arch.$pkgtype") || fatal "Can't get package URL"
 
-epm install "$PKGURL"
+install_pkgurl

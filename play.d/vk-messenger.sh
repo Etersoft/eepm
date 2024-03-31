@@ -21,7 +21,4 @@ esac
 
 PKGURL="$(eget --list --latest "$URL" "$PKGNAME.$pkgtype")" || fatal "Can't get package URL"
 
-repack=''
-[ "$(epm print info -s)" = "alt" ] && repack='--repack'
-
-epm $repack install "$PKGURL"
+install_pkgurl

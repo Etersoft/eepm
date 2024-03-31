@@ -26,4 +26,5 @@ esac
 
 # epm install "https://dlcdn.apache.org/netbeans/netbeans-installers/$VERSION/$mask"
 PKGURL="https://archive.apache.org/dist/netbeans/netbeans-installers/$VERSION/$mask"
-epm install "$PKGURL"
+
+install_pkgurl

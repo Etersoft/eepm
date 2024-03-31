@@ -22,7 +22,7 @@ else
 fi
 
 PKGURL=$(eget --list --latest https://github.com/rustdesk/rustdesk/releases "$MASK") || fatal "Can't get package URL"
-epm install $PKGURL || exit
+install_pkgurl
 
 cat <<EOF
 

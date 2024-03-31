@@ -26,4 +26,4 @@ file=signal-desktop_${VERSION}_amd64.deb
 #PKGURL="https://updates.signal.org/desktop/apt/pool/main/s/signal-desktop/$file"
 PKGURL="https://updates.signal.org/desktop/apt/pool/s/signal-desktop/$file"
 
-epm install "$PKGURL"
+install_pkgurl

@@ -9,6 +9,7 @@ URL="https://1c-connect.com"
 . $(dirname $0)/common.sh
 
 warn_version_is_not_supported
+
 PKGURL="https://updates.1c-connect.com/desktop/distribs/1C-Connect-Linux-x64.tar.gz"
 
-epm pack --install $PKGNAME "$PKGURL"
+install_pack_pkgurl

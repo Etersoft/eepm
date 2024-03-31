@@ -14,7 +14,7 @@ warn_version_is_not_supported
 VERSION="2022.3.1"
 PKGURL="ipfs://Qma8WF8iPwgKNPM6UdZHWse4q1cTnPAvjMRkGsbbWYi18w?filename=cascadeur-linux.tgz"
 # TODO: ask license
-epm pack --install $PKGNAME "$PKGURL" "$VERSION"
+install_pack_pkgurl "$VERSION"
 exit
 
 # (liblapack.so.3)
@@ -25,5 +25,4 @@ VERSION=$(echo "$page" | grep 'main-download__info-version' | sed -e 's|.*<div c
 PKGURL="https://cdn.cascadeur.com/builds/linux/$BUILDID/cascadeur-linux_$VERSION.tgz"
 
 # TODO: ask license
-epm pack --install $PKGNAME "$PKGURL" "$VERSION"
-
+install_pack_pkgurl "$VERSION"

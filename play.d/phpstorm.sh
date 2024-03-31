@@ -10,4 +10,4 @@ URL="https://www.jetbrains.com/phpstorm/"
 
 PKGURL="$(get_jetbrains_pkgurl PS webide)"
 
-epm install $PKGURL
+install_pkgurl

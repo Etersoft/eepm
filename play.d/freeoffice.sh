@@ -20,7 +20,4 @@ esac
 
 PKGURL="$(eget --list --latest https://www.freeoffice.com/ru/download/applications "$file")" || fatal "Can't get package URL"
 
-repack=''
-[ "$(epm print info -s)" = "alt" ] && repack='--repack'
-
-epm install $repack "$PKGURL"
+install_pkgurl

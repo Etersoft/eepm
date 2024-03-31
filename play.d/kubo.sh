@@ -39,4 +39,5 @@ esac
 
 
 PKGURL="$(eget --list --latest https://github.com/ipfs/kubo/releases "${BASEPKGNAME}_v${VERSION}$file")"
-epm pack --install $PKGNAME "$PKGURL"
+
+install_pack_pkgurl

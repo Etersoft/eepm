@@ -10,4 +10,4 @@ URL="https://www.jetbrains.com/webstorm/"
 
 PKGURL="$(get_jetbrains_pkgurl WS webstorm)"
 
-epm install $PKGURL
+install_pkgurl

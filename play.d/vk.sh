@@ -17,4 +17,4 @@ esac
 
 PKGURL="$(eget --list --latest https://desktop.userapi.com/rpm/master/ "$PKGNAME-$VERSION.$arch.rpm")" || fatal "Can't get package URL"
 
-epm install --repack "$PKGURL"
+install_pkgurl

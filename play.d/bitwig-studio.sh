@@ -14,4 +14,4 @@ else
     PKGURL="https://downloads.bitwig.com/$VERSION/bitwig-studio-$VERSION.deb"
 fi
 
-epm install $PKGURL
+install_pkgurl

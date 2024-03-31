@@ -45,7 +45,7 @@ if [ "$VERSION" = "*" ] ; then
     [ -n "$VERSION" ] || fatal "Can't get version for $PKGNAME"
 fi
 
-epm pack --install $PKGNAME "$PKGURL" $VERSION || exit
+install_pack_pkgurl $VERSION
 
 echo
 echo "Note: run

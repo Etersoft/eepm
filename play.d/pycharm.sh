@@ -10,4 +10,4 @@ URL="https://www.jetbrains.com/ru-ru/pycharm/"
 
 PKGURL="$(get_jetbrains_pkgurl PCC python)"
 
-epm install $PKGURL
+install_pkgurl

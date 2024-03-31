@@ -12,4 +12,4 @@ arch=amd64
 # https://github.com/dedpnd/yaradio-yamusic/releases/download/v1.0.6/yaradio-yamusic_1.0.6_amd64.deb
 PKGURL=$(eget --list --latest https://github.com/dedpnd/yaradio-yamusic/releases "${PKGNAME}_${VERSION}_$arch.deb")
 
-epm install "$PKGURL"
+install_pkgurl

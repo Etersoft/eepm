@@ -22,7 +22,4 @@ esac
 
 PKGURL="https://ridoclnx.com/download/$mask"
 
-# for add /usr/bin/ridoclnx
-repack='--repack'
-
-epm install $repack "$PKGURL"
+install_pkgurl

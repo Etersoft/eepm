@@ -7,13 +7,10 @@ DESCRIPTION='PortProton (from the repository if the package is there, or from th
 
 . $(dirname $0)/common.sh
 
-res=0
 if ! epm install portproton ; then
     PKGURL="$(eget --list --latest https://github.com/Castro-Fidel/PortProton_dpkg/releases "portproton_${VERSION}amd64.deb")"
-    epm install $PKGURL
-    res=$?
+    install_pkgurl
 fi
-
 
 # TODO: get from  grep '^###Scripts version ' PortWINE/data_from_portwine/changelog_eng | head -n1
 ###Scripts version 2172###
@@ -21,5 +18,3 @@ fi
 #epm pack --install $PKGNAME https://github.com/Castro-Fidel/PortWINE/archive/refs/heads/master.tar.gz $VERSION
 
 epm play i586-fix
-
-exit $res

@@ -7,7 +7,7 @@ DESCRIPTION="RuDesktop for Linux from the official site"
 URL="https://rudesktop.ru/"
 
 pkgname="$PKGNAME"
-repack=''
+
 # FIXME: uses global epm
 # change package name (like on the site)
 case "$(epm print info -s)" in
@@ -16,7 +16,6 @@ case "$(epm print info -s)" in
       ;;
   alt)
       pkgname=rudesktop-alt
-      repack='--repack'
       ;;
   osnova)
       PKGNAME=rudesktop-astra
@@ -38,7 +37,7 @@ case "$(epm print info -p)" in
 esac
 
 PKGURL="https://rudesktop.ru/download/$PKGNAME-amd64.$pkgtype"
-epm install $repack $PKGURL || exit
+install_pkgurl
 
 echo
 echo "Note: run

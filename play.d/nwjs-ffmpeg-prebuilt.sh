@@ -11,4 +11,4 @@ URL="https://github.com/nwjs-ffmpeg-prebuilt/nwjs-ffmpeg-prebuilt/"
 # https://github.com/nwjs-ffmpeg-prebuilt/nwjs-ffmpeg-prebuilt/releases/download/0.85.0/0.85.0-linux-x64.zip
 PKGURL=$(eget --list --latest https://github.com/nwjs-ffmpeg-prebuilt/nwjs-ffmpeg-prebuilt/releases "${VERSION}-linux-x64.zip") || fatal "Can't get package URL"
 
-epm pack --install $PKGNAME $PKGURL
+install_pack_pkgurl

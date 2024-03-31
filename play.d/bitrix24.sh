@@ -20,7 +20,4 @@ case $pkgtype in
         ;;
 esac
 
-repack=''
-[ "$(epm print info -s)" = "alt" ] && repack='--repack'
-
-epm install $repack "$PKGURL"
+install_pkgurl

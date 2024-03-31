@@ -28,8 +28,4 @@ esac
 
 PKGURL=$(eget --list --latest $BASEURL "$file") || fatal "Can't get package URL"
 
-repack=''
-[ "$(epm print info -s)" = "alt" ] && repack='--repack'
-
-epm install $repack "$PKGURL" || exit
-
+install_pkgurl

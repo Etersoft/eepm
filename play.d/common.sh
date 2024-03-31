@@ -104,6 +104,37 @@ override_pkgname()
     export EEPM_INTERNAL_PKGNAME="$PKGNAME"
 }
 
+# epm install $PKGURL
+install_pkgurl()
+{
+    local repack=''
+    local pkgtype="$(epm print info -p)"
+
+    # we have workaround for their postinstall script, so always repack rpm package
+    # TODO: repack for deb systems too
+    [ "$pkgtype" = "rpm" ] && repack='--repack'
+
+    [ -n "$PKGURL" ] || fatal "Can't get package URL"
+
+    epm install $repack "$PKGURL" "$@" || exit
+}
+
+# epm pack --install $PKGNAME "$PKGURL"
+install_pack_pkgurl()
+{
+    local repack=''
+    local pkgtype="$(epm print info -p)"
+
+    # we have workaround for their postinstall script, so always repack rpm package
+    # TODO: repack for deb systems too
+    [ "$pkgtype" = "rpm" ] && repack='--repack'
+
+    [ -n "$PKGURL" ] || fatal "Can't get package URL"
+
+    epm pack $repack --install $PKGNAME "$PKGURL" "$@"
+}
+
+
 get_latest_version()
 {
     local ver

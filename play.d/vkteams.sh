@@ -15,4 +15,4 @@ VERSION="1.0"
 
 PKGURL="https://vkteams-www.hb.bizmrg.com/linux/x64/vkteams.tar.xz"
 
-epm pack --install $PKGNAME "$PKGURL" "$VERSION"
+install_pack_pkgurl "$VERSION"

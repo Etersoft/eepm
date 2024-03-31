@@ -36,7 +36,4 @@ esac
 PKGURL="$(eget --list --latest $BASEURL/$DIRVERSION/ "$mask")" || fatal "Can't get package URL"
 #PKGURL="https://wingware.com/pub/wing-personal/$VERSION/$mask"
 
-repack=''
-[ "$(epm print info -s)" = "alt" ] && repack='--repack'
-
-epm install $repack "$PKGURL"
+install_pkgurl

@@ -20,10 +20,9 @@ case $pkgtype in
         ;;
 esac
 
-repack=''
-if [ "$(epm print info -s)" = "alt" ] ; then
-    PKGURL="https://desktop.docker.com/linux/main/amd64/139021/docker-desktop-4.28.0-amd64.deb"
-    repack='--repack'
-fi
+# TODO: rpm and deb packages has diffent binaries
+#if [ "$(epm print info -s)" = "alt" ] ; then
+#    PKGURL="https://desktop.docker.com/linux/main/amd64/139021/docker-desktop-4.28.0-amd64.deb"
+#fi
 
-epm install $repack "$PKGURL"
+install_pkgurl

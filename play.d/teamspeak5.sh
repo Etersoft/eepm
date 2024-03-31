@@ -13,4 +13,4 @@ URL="https://www.teamspeak.com/"
 
 PKGURL="https://files.teamspeak-services.com/pre_releases/client/$VERSION/teamspeak-client.tar.gz"
 
-epm pack --install $PKGNAME "$PKGURL" $VERSION
+install_pack_pkgurl $VERSION

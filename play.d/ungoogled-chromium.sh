@@ -17,4 +17,4 @@ fi
 
 PKGURL=$(eget --list --latest https://github.com/clickot/ungoogled-chromium-binaries/releases "ungoogled-chromium_${VERSION}_linux.tar.xz") || fatal "Can't get package URL"
 
-epm install "$PKGURL"
+install_pkgurl

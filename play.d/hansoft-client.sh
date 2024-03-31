@@ -15,4 +15,4 @@ VERSION="${VERSION/\./_}"
 
 PKGURL="https://cache.hansoft.com/hansoft_${VERSION}_x64.deb"
 
-epm install "$PKGURL"
+install_pkgurl

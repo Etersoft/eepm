@@ -14,4 +14,4 @@ else
     PKGURL="$(eget --list --latest https://clipgrab.org/ "ClipGrab-*-x86_64.AppImage")" || fatal "Can't get package URL"
 fi
 
-epm install $PKGURL
+install_pkgurl

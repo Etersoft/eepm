@@ -24,9 +24,8 @@ fi
 
 
 PKGURL=$(eget --list --latest https://github.com/telegramdesktop/tdesktop/releases "tsetup.$VERSION.tar.xz") #"
-[ -n "$PKGURL" ] || fatal "Can't get package URL"
 
 # override PKGNAME for beta version
 echo "$PKGURL" | grep -q "beta.tar.xz" && override_pkgname "$BASEPKGNAME-beta"
 
-epm --install pack $PKGNAME "$PKGURL"
+install_pack_pkgurl

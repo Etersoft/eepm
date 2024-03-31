@@ -23,7 +23,7 @@ case $vendor in
             VERSION="3.3.0"
         fi
         PKGURL="https://hub.unity3d.com/linux/repos/deb/pool/main/u/unity/unityhub_$arch/unityhub-amd64-$VERSION.deb"
-        epm install --repack "$PKGURL"
+        install_pkgurl
         exit
         ;;
 esac
@@ -44,4 +44,3 @@ esac
 
 epm update
 epm install $PKGNAME
-

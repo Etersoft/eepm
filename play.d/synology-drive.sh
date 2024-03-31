@@ -19,4 +19,4 @@ urldir="$(eget --list https://archive.synology.com/download/Utility/SynologyDriv
 
 PKGURL="$urldir/$PKGNAME-*.x86_64.deb"
 
-epm install "$PKGURL"
+install_pkgurl

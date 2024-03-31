@@ -12,4 +12,4 @@ warn_version_is_not_supported
 
 PKGURL="https://todoist.com/linux_app/appimage"
 
-epm install "$PKGURL"
+install_pkgurl

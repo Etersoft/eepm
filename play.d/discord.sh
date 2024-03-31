@@ -14,4 +14,4 @@ else
     PKGURL="https://dl.discordapp.net/apps/linux/$VERSION/discord-$VERSION.deb"
 fi
 
-epm install "$PKGURL"
+install_pkgurl

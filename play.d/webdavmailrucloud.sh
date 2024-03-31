@@ -10,4 +10,4 @@ URL="https://github.com/yar229/WebDavMailRuCloud"
 
 PKGURL=$(eget --list --latest https://github.com/yar229/WebDavMailRuCloud/releases "WebDAVCloudMailRu-${VERSION}-dotNet6.zip") || fatal
 
-epm pack --install $PKGNAME $PKGURL
+install_pack_pkgurl

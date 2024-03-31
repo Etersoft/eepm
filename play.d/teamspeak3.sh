@@ -13,4 +13,4 @@ URL="https://www.teamspeak.com/"
 
 PKGURL="https://files.teamspeak-services.com/releases/client/$VERSION/TeamSpeak3-Client-linux_amd64-$VERSION.run"
 
-epm pack --install $PKGNAME "$PKGURL"
+install_pack_pkgurl

@@ -13,4 +13,4 @@ file="rpcs3-v${VERSION}-*-*_linux64.AppImage"
 
 PKGURL=$(eget --list --latest https://github.com/RPCS3/rpcs3-binaries-linux/releases "$file") || fatal "Can't get package URL"
 
-epm pack --install "$PKGNAME" "$PKGURL"
+install_pack_pkgurl

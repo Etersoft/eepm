@@ -14,7 +14,4 @@ mask="dhcoapp-noffmpeg-linux-$arch.deb"
 
 PKGURL=$(eget --list --latest https://github.com/aclap-dev/vdhcoapp/releases/ "$mask") || fatal "Can't get package URL"
 
-repack=''
-[ "$(epm print info -s)" = "alt" ] && repack='--repack'
-
-epm install $repack "$PKGURL"
+install_pkgurl

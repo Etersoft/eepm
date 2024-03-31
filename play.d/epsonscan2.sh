@@ -24,7 +24,4 @@ case "$pkgtype-$arch" in
         ;;
 esac
 
-repack=''
-[ "$(epm print info -s)" = "alt" ] && repack='--repack'
-
-epm pack $repack --install $PKGNAME "$PKGURL"
+install_pack_pkgurl

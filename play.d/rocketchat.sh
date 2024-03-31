@@ -13,4 +13,4 @@ pkgtype=deb
 
 PKGURL=$(eget --list --latest https://github.com/RocketChat/Rocket.Chat.Electron/releases/ "$PKGNAME*$VERSION*$arch.$pkgtype") || fatal "Can't get package URL"
 
-epm install "$PKGURL"
+install_pkgurl

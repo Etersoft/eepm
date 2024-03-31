@@ -12,4 +12,4 @@ warn_version_is_not_supported
 
 PKGURL="https://download.xnview.com/XnConvert-linux-x64.deb"
 
-epm install "$PKGURL"
+install_pkgurl

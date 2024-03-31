@@ -12,4 +12,4 @@ warn_version_is_not_supported
 #PKG="$(eget --list --latest https://flyviewvms.ru/downloads/ "flyview-client*linux64.deb")"
 PKGURL="https://flyviewvms.ru/distro/flyview-client.deb"
 
-epm install $PKGURL
+install_pkgurl

@@ -10,5 +10,5 @@ URL="https://www.jetbrains.com/idea/"
 
 PKGURL="$(get_jetbrains_pkgurl IIU idea)"
 
-epm install $PKGURL
+install_pkgurl
 

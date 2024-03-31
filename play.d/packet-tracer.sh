@@ -20,4 +20,4 @@ case $VERSION in
         ;;
 esac
 
-epm install $PKGURL
+install_pkgurl

@@ -16,4 +16,5 @@ fi
 # TODO: install from snap
 #PKGURL="https://icq-www.hb.bizmrg.com/linux/x64/icq.tar.xz"
 PKGURL="https://hb.bizmrg.com/icq-www/linux/x64/packages/$VERSION/icq-${VERSION}_64bit.tar.xz"
-epm install --repack "$PKGURL"
+
+install_pkgurl

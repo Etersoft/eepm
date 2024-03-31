@@ -21,9 +21,6 @@ case $arch in
         fatal "Unsupported arch $arch for $(epm print info -d)"
 esac
 
-repack=''
-[ "$(epm print info -s)" = "alt" ] && repack='--repack'
-
 #https://st.mycdn.me/static/sferum/latest/sferum-i386.deb
 #https://st.mycdn.me/static/sferum/latest/sferum-amd64.deb
 #https://st.mycdn.me/static/sferum/latest/sferum-i686.rpm
@@ -31,4 +28,6 @@ repack=''
 
 # can't use constructname due '-' before arch
 #epm install "https://st.mycdn.me/static/sferum/latest/$(epm print constructname $PKGNAME '' $arch '' '-')"
-epm $repack install "https://st.mycdn.me/static/sferum/latest/$PKGNAME-$arch.$(epm print info -p)"
+PKGURL="https://st.mycdn.me/static/sferum/latest/$PKGNAME-$arch.$(epm print info -p)"
+
+install_pkgurl

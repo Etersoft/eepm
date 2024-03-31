@@ -40,7 +40,4 @@ if ! eget --check-site $PKGURL ; then
     PKGURL="ipfs://$IPFSHASH?filename=$pkgname"
 fi
 
-repack=''
-[ "$(epm print info -s)" = "alt" ] && repack='--repack'
-
-epm install $repack $PKGURL
+install_pkgurl

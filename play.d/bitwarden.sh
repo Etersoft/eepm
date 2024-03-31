@@ -23,8 +23,5 @@ esac
 
 PKGURL=$(eget --list --latest https://github.com/bitwarden/clients/releases $(epm print constructname Bitwarden "$VERSION*" $arch $pkgtype "-" "-")) || fatal "Can't get package URL"
 
-# we have workaround for their postinstall script, so always repack rpm package
-[ "$pkgtype" = "deb" ] || repack='--repack'
-
-epm install $repack "$PKGURL" || exit
+install_pkgurl
 

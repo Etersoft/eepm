@@ -26,16 +26,13 @@ esac
 
 pkgtype="$(epm print info -p)"
 
-# we have workaround for their postinstall script, so always repack rpm package
-[ "$pkgtype" = "deb" ] || repack='--repack'
-
 if [ "$VERSION" != "*" ] ; then
-    URL="https://update.code.visualstudio.com/$VERSION/linux-$pkgtype-$arch/stable"
+    PKGURL="https://update.code.visualstudio.com/$VERSION/linux-$pkgtype-$arch/stable"
 else
-    URL="https://code.visualstudio.com/sha/download?build=stable&os=linux-$pkgtype-$arch"
+    PKGURL="https://code.visualstudio.com/sha/download?build=stable&os=linux-$pkgtype-$arch"
 fi
 
-epm install $repack "$URL" || exit
+install_pkgurl
 
 echo
 echo "NOTE: VS Code is a proprietary build. We recommend you to use open source editors: Codium, Atom."

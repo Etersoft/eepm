@@ -10,4 +10,4 @@ URL="https://github.com/th-ch/youtube-music"
 
 PKGURL="$(eget --list --latest https://github.com/th-ch/youtube-music/releases/ "YouTube-Music-$VERSION.AppImage")"
 
-epm install "$PKGURL"
+install_pkgurl

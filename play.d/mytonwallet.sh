@@ -10,4 +10,4 @@ URL="https://mytonwallet.app/"
 
 PKGURL=$(eget --list --latest https://github.com/mytonwalletorg/mytonwallet/releases "MyTonWallet-x86_64.AppImage") || fatal "Can't get package URL"
 
-epm install "$PKGURL"
+install_pkgurl

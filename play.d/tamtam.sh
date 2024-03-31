@@ -21,5 +21,6 @@ case "$arch" in
         ;;
 esac
 
-# epm uses eget to download * names
-epm install "https://download.tamtam.chat/latest/TamTam-$arch.deb"
+PKGURL="https://download.tamtam.chat/latest/TamTam-$arch.deb"
+
+install_pkgurl

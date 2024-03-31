@@ -30,10 +30,7 @@ esac
 
 PKGURL=$(eget --list --latest https://download.guardant.ru/LM/Linux/$VERSION/$shortarch/ "$file") || fatal "Can't get package URL"
 
-repack=''
-[ "$pkgtype" = "rpm" ] && repack='--repack'
-
-epm pack $PKGNAME $repack --install "$PKGURL" "$VERSION" || exit
+install_pack_pkgurl "$VERSION"
 
 cat <<EOF
 

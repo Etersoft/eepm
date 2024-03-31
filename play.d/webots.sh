@@ -11,4 +11,4 @@ URL="https://cyberbotics.com/"
 
 PKGURL=$(eget --list --latest https://github.com/cyberbotics/webots/releases/"*.deb") || fatal "Can't get package URL"
 
-epm install "$PKGURL"
+install_pkgurl

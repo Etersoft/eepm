@@ -17,7 +17,8 @@ warn_version_is_not_supported
 # epm uses eget to download * names
 
 PKGURL="https://repo.yandex.ru/yandex-disk/$(epm print constructname $PKGNAME "latest")" || fatal "Can't get package URL"
-epm install "$PKGURL" || exit
+
+install_pkgurl
 
 # Install also tray indicator
 if [ "$(epm print info -s)" = "alt" ] ; then

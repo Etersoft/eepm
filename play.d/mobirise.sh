@@ -12,4 +12,4 @@ warn_version_is_not_supported
 
 PKGURL="https://download.mobirise.com/MobiriseSetup.deb"
 
-epm install "$PKGURL"
+install_pkgurl

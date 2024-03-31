@@ -12,4 +12,4 @@ warn_version_is_not_supported
 
 PKGURL="https://download.cdn.viber.com/desktop/Linux/viber.AppImage"
 
-epm install "$PKGURL"
+install_pkgurl

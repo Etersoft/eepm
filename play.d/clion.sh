@@ -10,4 +10,4 @@ URL="https://www.jetbrains.com/clion/"
 
 PKGURL="$(get_jetbrains_pkgurl CL cpp)"
 
-epm install $PKGURL
+install_pkgurl

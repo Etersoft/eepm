@@ -10,5 +10,5 @@ URL="https://neovide.dev/"
 
 PKGURL=$(eget --list --latest https://github.com/neovide/neovide/releases "$PKGNAME.AppImage") || fatal "Can't get package URL"
 
-epm install "$PKGURL"
+install_pkgurl
 

@@ -26,7 +26,4 @@ esac
 
 PKGURL=$(eget --list --latest https://github.com/tonkeeper/tonkeeper-web/releases $(epm print constructname $PKGNAME "$VERSION" $arch $pkgtype)) || fatal "Can't get package URL"
 
-repack=''
-[ "$(epm print info -s)" = "alt" ] && repack='--repack'
-
-epm install $repack "$PKGURL"
+install_pkgurl

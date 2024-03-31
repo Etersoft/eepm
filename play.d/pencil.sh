@@ -21,10 +21,6 @@ case $arch in
         fatal "Unsupported arch $arch for $(epm print info -d)"
 esac
 
-# we have workaround for their postinstall script, so always repack rpm package
-repack=''
-[ "$(epm print info -s)" = "alt" ] && repack='--repack'
-
 # current links:
 # https://pencil.evolus.vn/dl/V3.1.1.ga/Pencil-3.1.1.ga.x86_64.rpm
 # https://pencil.evolus.vn/dl/V3.1.1.ga/Pencil-3.1.1.ga.i686.rpm
@@ -34,4 +30,5 @@ repack=''
 mask="$(epm print constructname $PKGNAME "$VERSION.ga" $arch)"
 
 PKGURL="$(eget --list --latest https://pencil.evolus.vn/Downloads.html "$mask")" || fatal "Can't get package URL"
-epm $repack install "$PKGURL"
+
+install_pkgurl

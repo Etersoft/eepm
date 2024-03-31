@@ -21,7 +21,4 @@ arch=amd64
 
 PKGURL=$(eget --list --latest https://github.com/darbyjohnston/DJV/releases "$mask") || fatal "Can't get package URL"
 
-repack=''
-[ "$(epm print info -s)" = "alt" ] && repack='--repack'
-
-epm install $repack "$PKGURL"
+install_pkgurl

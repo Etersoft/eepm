@@ -12,5 +12,5 @@ warn_version_is_not_supported
 
 PKGURL="https://www.rupost.ru/desktop/download/linux/"
 
-epm install $PKGURL
+install_pkgurl
 

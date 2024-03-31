@@ -14,6 +14,6 @@ VERSION="$(eget -O- https://www.commfort.com/ru/download.shtml  | grep "Верс
 [ -n "$VERSION" ] || fatal "Can't get version."
 
 # TODO: check: https://www.commfort.com/download/commfort_client.msi
-INSTALLURL="https://www.commfort.com/download/commfort_client_wine.exe"
+PKGURL="https://www.commfort.com/download/commfort_client_wine.exe"
 
-epm pack --install $PKGNAME $INSTALLURL $VERSION
+install_pack_pkgurl $VERSION

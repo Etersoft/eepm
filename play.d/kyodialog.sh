@@ -12,4 +12,4 @@ warn_version_is_not_supported
 
 PKGURL="https://www.kyoceradocumentsolutions.eu/content/download-center/eu/drivers/all/Linux_Universal_Driver_zip.download.zip"
 
-epm pack --install kyodialog "$PKGURL"
+install_pack_pkgurl

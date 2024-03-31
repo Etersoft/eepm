@@ -33,4 +33,4 @@ if ! eget --check-url "$PKGURL" ; then
     fi
 fi
 
-epm install $PKGURL
+install_pkgurl
