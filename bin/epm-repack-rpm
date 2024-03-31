@@ -227,6 +227,7 @@ __epm_repack_to_rpm()
         if ! has_repack_script $pkgname ; then
             __apply_fix_code "generic-default" $buildroot $spec $pkgname $abspkg
         fi
+        __fix_spec $pkgname $buildroot $spec
         cd - >/dev/null
 
         TARGETARCH=$(epm print info -a | sed -e 's|^x86$|i586|')
