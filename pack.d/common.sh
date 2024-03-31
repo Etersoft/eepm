@@ -96,6 +96,7 @@ return_tar()
     exit 0
 }
 
+# really like install -D src dst
 install_file()
 {
     local src="$1"
@@ -104,6 +105,15 @@ install_file()
     mkdir -p "$(dirname "$dest")" || return
     cp "$src" "$dest" || return
 }
+
+# Create target file from file
+# Usage: echo "text" | create_file file
+create_file()
+{
+    local t="$1"
+    install_file /dev/stdin $t
+}
+
 
 # set PRODUCT by pack.d script name
 [ -n "$PRODUCT" ] || PRODUCT="$(basename $0 .sh)"

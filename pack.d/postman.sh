@@ -11,18 +11,17 @@ BASENAME=$(basename $TAR .tar.gz)
 
 ln -s $TAR $BASENAME.tar.gz
 erc unpack $BASENAME.tar.gz || fatal
+
 mkdir -p opt
-mkdir -p usr/share/pixmaps
 mv Postman/app opt/postman
 
-VERSION=$(cat "opt/postman/resources/app/package.json" | epm --inscript tool json -b | grep version | awk 'gsub(/"/, "", $2) {print $2}')
+VERSION=$(cat "opt/postman/resources/app/package.json" | epm --inscript tool json -b | grep version | awk 'gsub(/"/, "", $2) {print $2}') #'
 [ -n "$VERSION" ] || fatal "Can't get package version"
 
-cp opt/postman/resources/app/assets/icon.png usr/share/pixmaps/postman.png
+install_file opt/postman/resources/app/assets/icon.png usr/share/pixmaps/postman.png
 
 # create desktop file
-mkdir -p usr/share/applications/
-cat <<EOF > usr/share/applications/$PRODUCT.desktop
+cat <<EOF | create_file usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]
 Version=1.0
 Type=Application

@@ -15,8 +15,6 @@ ln -s $TAR $BASENAME.tar.xz
 erc unpack $BASENAME.tar.xz || fatal
 
 mkdir -p opt
-mkdir -p usr/share/applications/
-
 mv $BASENAME* opt/sidequest
 
 for res in 16x16 24x24 32x32 48x48 64x64 128x128 256x256 512x512 1024x1024; do
@@ -25,7 +23,7 @@ for res in 16x16 24x24 32x32 48x48 64x64 128x128 256x256 512x512 1024x1024; do
 done
 
 # create desktop file
-cat <<EOF > usr/share/applications/$PRODUCT.desktop
+cat <<EOF | create_file usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]
 Version=1.0
 Type=Application
