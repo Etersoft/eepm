@@ -60,6 +60,11 @@ if [ "$1" = "--ipfs" ] ; then
     shift
 fi
 
+if [ "$1" = "--force" ] ; then
+    playopt="$playopt $1"
+    shift
+fi
+
 if [ -n "$1" ] ; then
     install_app_alt "$1"
     exit
