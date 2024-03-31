@@ -9,16 +9,15 @@ epm assure xdg-desktop-menu xdg-utils || fatal
 
 # reaper711_linux_x86_64.tar.xz
 BASENAME=$(basename $TAR .tar.xz)
-VERSION=$(echo $BASENAME | sed -e 's|reaper||' | sed -e 's|_linux_*.tar.xz||')
+VERSION=$(echo $BASENAME | sed -e 's|^reaper||' | sed -e 's|_linux_.*||')
 
-ln -s $TAR $BASENAME.tar.xz
-erc unpack $BASENAME.tar.xz || fatal
-
-subst "s|xdg-desktop-menu install \$2 |xdg-desktop-menu install --mode user --noupdate |" reaper_linux_x86_64/install-reaper.sh
-subst "s|--size 256|--size 256 --noupdate|" reaper_linux_x86_64/install-reaper.sh
+erc unpack $TAR || fatal
+SUBDIR="$(echo reaper*)"
+subst "s|xdg-desktop-menu install \$2 |xdg-desktop-menu install --mode user --noupdate |" $SUBDIR/install-reaper.sh
+subst "s|--size 256|--size 256 --noupdate|" $SUBDIR/install-reaper.sh
 
 # subst 's|cd "$(dirname "$0")"||' install-reaper.sh
-sh reaper_linux_x86_64/install-reaper.sh --install $(pwd)/opt --integrate-desktop --quiet
+sh $SUBDIR/install-reaper.sh --install $(pwd)/opt --integrate-desktop --quiet || fatal
 
 mkdir -p usr/share/applications
 mkdir -p usr/share/icons/hicolor/256x256/apps/

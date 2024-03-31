@@ -6,4 +6,4 @@ SPEC="$2"
 PRODUCTDIR=/opt/REAPER
 . $(dirname $0)/common.sh
 
-add_bin_link_command $PRODUCT $PRODUCTDIR/$PRODUCT
+add_bin_link_command
