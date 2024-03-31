@@ -12,9 +12,8 @@ PRODUCTDIR=/opt/Obsidian
 
 cleanup
 
-if [ ! -f "$BUILDROOT/usr/bin/$PRODUCT" ] ; then
-    add_bin_exec_command
-fi
+rm usr/bin/$PRODUCT
+add_bin_exec_command
 
 add_chromium_deps
 

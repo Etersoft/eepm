@@ -96,9 +96,9 @@ if [ -r "$PKG.eepm.yaml" ] ; then
     set_rpm_field "Summary" "$summary"
     [ -n "$upstream_file" ] || upstream_file="binary package $PRODUCT"
     [ -n "$upstream_url" ] && upstream_file="$upstream_url"
-    [ -n "$description" ] && subst "s|^\((Converted from a\) \(.*\) \(package.*\)|$description\n(Repacked from $upstream_file with $(epm --short --version))\n\1 \2 \3|" $SPEC
+    [ -n "$description" ] && subst "s|^\((Converted from a\) \(.*\) \(package.*\)|$description\n(Repacked from $upstream_file with EPM $(epm --short --version))\n\1 \2 \3|" $SPEC
 else
-    subst "s|^\((Converted from a\) \(.*\) \(package.*\)|(Repacked from binary \2 package with $(epm --short --version))\n\1 \2 \3|" $SPEC
+    subst "s|^\((Converted from a\) \(.*\) \(package.*\)|(Repacked from binary \2 package with EPM $(epm --short --version))\n\1 \2 \3|" $SPEC
 fi
 
 # only for rpm

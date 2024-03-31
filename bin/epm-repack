@@ -94,8 +94,10 @@ __prepare_source_package()
 
     # TODO: use func for get name from deb pkg
     # TODO: epm print name from deb package
+    local pkgname="$(echo $alpkg | sed -e "s|_.*||")"
+
     # TODO: use stoplist only for deb?
-    [ -z "$force" ] && __check_stoplist $(echo $alpkg | sed -e "s|_.*||") && fatal "Please use official package instead of $alpkg repacking (It is not recommended to use --force to skip this checking."
+    [ -z "$force" ] && __check_stoplist $pkgname && fatal "Please use official package instead of $alpkg repacking (It is not recommended to use --force to skip this checking."
 
     SUBGENERIC=''
 
