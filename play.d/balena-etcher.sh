@@ -11,7 +11,7 @@ URL="https://etcher.io/"
 pkgtype=$(epm print info -p)
 case $pkgtype in
     rpm)
-        mask="balena-etcher-${VERSION}.x86_64.rpm"
+        mask="balena-etcher-${VERSION}-[1-9].x86_64.rpm"
         ;;
     *)
         mask="balena-etcher_${VERSION}_amd64.deb"

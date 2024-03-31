@@ -10,7 +10,7 @@ DESCRIPTION="DJV2 - Professional media review software for VFX, animation, and f
 pkgtype=$(epm print info -p)
 case $pkgtype in
     rpm)
-        mask="DJV2-${VERSION}.x86_64.rpm"
+        mask="DJV2-${VERSION}-[1-9].x86_64.rpm"
         ;;
     *)
         mask="DJV2_${VERSION}_amd64.deb"

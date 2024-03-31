@@ -17,6 +17,8 @@ if [ "$VERSION" = "*" ] ; then
     # v0.20.0_linux
     # kubo_v*.[0-9]_linux*.tar.gz
     [ "$PKGNAME" = "$BASEPKGNAME" ] && VERSION="*.[0-9]_" || VERSION="*-rc*_"
+else
+    VERSION="*_"
 fi
 
 arch="$(epm print info -a)"
@@ -36,5 +38,5 @@ case "$arch" in
 esac
 
 
-PKGURL="$(eget --list --latest https://github.com/ipfs/kubo/releases "${BASEPKGNAME}_v$VERSION$file")"
+PKGURL="$(eget --list --latest https://github.com/ipfs/kubo/releases "${BASEPKGNAME}_v${VERSION}$file")"
 epm pack --install $PKGNAME "$PKGURL"

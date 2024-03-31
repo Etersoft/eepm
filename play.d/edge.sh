@@ -8,4 +8,4 @@ DESCRIPTION="Microsoft Edge browser (dev) from the official site"
 
 . $(dirname $0)/common.sh
 
-epm install "https://packages.microsoft.com/repos/edge/pool/main/m/$PKGNAME/${PKGNAME}_${VERSION}_amd64.deb"
+epm install "https://packages.microsoft.com/repos/edge/pool/main/m/$PKGNAME/${PKGNAME}_${VERSION}-[12]_amd64.deb"

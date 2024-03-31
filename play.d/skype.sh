@@ -8,16 +8,11 @@ URL="https://skype.com"
 
 . $(dirname $0)/common.sh
 
-
 #arch=$(epm print info --distro-arch)
 #pkgtype=$(epm print info -p)
 pkgtype=deb
 
-if [ "$VERSION" != "*" ] ; then
-    # https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=skypeforlinux-stable-bin
-    PKGURL="https://repo.skype.com/deb/pool/main/s/${PKGNAME}/${PKGNAME}_${VERSION}_amd64.deb"
-else
-    PKGURL="https://repo.skype.com/latest/$PKGNAME-64.$pkgtype"
-fi
+# https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=skypeforlinux-stable-bin
+PKGURL="https://repo.skype.com/deb/pool/main/s/${PKGNAME}/${PKGNAME}_${VERSION}_amd64.deb"
 
 epm install "$PKGURL"

@@ -8,6 +8,11 @@ URL="https://www.realvnc.com/en/connect/download/vnc/"
 
 . $(dirname $0)/common.sh
 
+# vendor packages has shorted version, so drop latest version part (buildid)
+if [ "$VERSION" != "*" ] ; then
+    VERSION="$(echo "$VERSION" | sed -e 's|\.[0-9][0-9][0-9].*||')"
+fi
+
 pkgtype="$(epm print info -p)"
 arch="$(epm print info -a)"
 

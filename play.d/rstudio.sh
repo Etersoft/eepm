@@ -9,11 +9,28 @@ URL="https://www.rstudio.com/products/rstudio"
 . $(dirname $0)/common.sh
 
 arch=x86_64
-pkgtype=$(epm print info -p)
+pkgtype="$(epm print info -p)"
+distr="$(epm print info -s)"
+
+case $pkgtype in
+    rpm)
+        PKGFILTER="rhel8"
+        ;;
+    *)
+        PKGFILTER="focal"
+        ;;
+esac
+
+#case "$distr" in
+#case
+
 repack=''
 
 case $(epm print info -e) in
-    Ubuntu/22*|Ubuntu/23*)
+    Ubuntu/20.*|Debian/11)
+        PKGFILTER="focal"
+        ;;
+    Ubuntu/22.*|Ubuntu/23*|Debian/12)
         PKGFILTER="jammy"
         ;;
     AstraLinux*|Debian/*|Ubuntu/*)
@@ -31,6 +48,9 @@ case $(epm print info -e) in
     Fedora/*|RHEL/9)
         PKGFILTER="rhel9"
         ;;
+    OpenSUSE/*)
+        PKGFILTER="opensuse15"
+        ;;
     ALTLinux/*)
         PKGFILTER="rhel8"
         repack='--repack'
@@ -39,6 +59,8 @@ case $(epm print info -e) in
         fatal "Unsupported distro $(epm print info -e). Ask application vendor for a support."
         ;;
 esac
+
+VERSION="${VERSION/+/-}"
 
 PKGMASK="$(epm print constructname $PKGNAME "$VERSION" $arch $pkgtype "-" "-")"
 PKGURL="$(eget --list https://www.rstudio.com/products/rstudio/download/ "$PKGMASK" | grep "$PKGFILTER")" || fatal "Can't get package URL"

@@ -8,8 +8,9 @@ RETURNTARNAME="$2"
 # use version from tarball
 PKGNAME="$(basename $TAR .tar.gz)"
 
+# they packed AppImage to tarball, so unpack it
 erc $TAR || fatal
-cd $PKGNAME || fatal
+cd $PKGNAME* || fatal
 cp $PRODUCT $PKGNAME.AppImage || fatal
 
 return_tar $PKGNAME.AppImage

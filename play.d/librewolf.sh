@@ -13,16 +13,18 @@ arch=x86_64
 pkgtype=$(epm print info -p)
 case $pkgtype in
     rpm)
-        PKGURL="https://rpm.librewolf.net/pool/librewolf$VERSION.rpm"
+        # https://rpm.librewolf.net/pool/librewolf-124.0.1-1.fc38.x86_64.rpm
+        PKGURL="https://rpm.librewolf.net/pool/librewolf-$VERSION-[0-9]*.$arch.rpm"
         ;;
     *)
-        PKGURL="https://deb.librewolf.net/pool/focal/librewolf-$VERSION$arch.deb"
+        # https://deb.librewolf.net/pool/focal/librewolf-124.0.1-1.en-US.ubuntu20.x86_64.deb
+        PKGURL="https://deb.librewolf.net/pool/focal/librewolf-$VERSION-[0-9]*.$arch.deb"
         ;;
 esac
 
 if ! is_glibc_enough 2.35 ; then
     # use deb package for old glibc
-    PKGURL="https://deb.librewolf.net/pool/focal/librewolf-$VERSION$arch.deb"
+    PKGURL="https://deb.librewolf.net/pool/focal/librewolf-$VERSION-[0-9].$arch.deb"
 fi
 
 repack=''
