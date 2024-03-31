@@ -14,6 +14,6 @@ erc unpack $TAR && cd epsonscan2-bundle-* || fatal
 # TODO:
 # cp $base/DefaultSettings.SF2 $HOME/.epsonscan2
 
-core="core/epsonscan2*.*"
+plugins="plugins/epsonscan2-non-free-plugin*.*"
 
-return_tar $core
+return_tar $plugins

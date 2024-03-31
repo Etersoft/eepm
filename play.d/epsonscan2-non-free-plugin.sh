@@ -1,9 +1,9 @@
 #!/bin/sh
 
-PKGNAME=epsonscan2
+PKGNAME=epsonscan2-non-free-plugin
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
-DESCRIPTION="Epson Scan 2 - Linux Scanner Driver from the official site"
+DESCRIPTION="Epson Scan 2 non-free-plugin - Linux Scanner Driver from the official site"
 URL="https://support.epson.net/linux/en/epsonscan2.php"
 
 . $(dirname $0)/common.sh
