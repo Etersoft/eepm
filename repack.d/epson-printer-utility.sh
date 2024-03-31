@@ -3,14 +3,13 @@
 BUILDROOT="$1"
 SPEC="$2"
 
-UNIREQUIRES="udev libusb-1.0.so.0"
-
 . $(dirname $0)/common.sh
 
-add_qt5_deps
+add_requires udev
+
+add_libs_requires
 
 # utility
-
 add_bin_link_command $PRODUCT $PRODUCTDIR/bin/$PRODUCT
 install_file opt/epson-printer-utility/rules/79-udev-epson.rules /etc/udev/rules.d/79-udev-epson.rules
 install_file opt/epson-printer-utility/epson-printer-utility.desktop /usr/share/applications/epson-printer-utility.desktop
@@ -26,3 +25,5 @@ pack_dir /var/cache/epson-backend
 
 remove_dir /usr/lib/epson-backend/rc.d
 remove_dir /usr/lib/epson-backend/scripts
+
+fix_desktop_file /opt/epson-printer-utility/bin/epson-printer-utility

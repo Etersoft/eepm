@@ -6,14 +6,6 @@ VERSION="$2"
 DESCRIPTION="Epson Printer Utility - Linux Epson Printer Utility from the official site"
 URL="http://support.epson.net/linux/Printer/LSB_distribution_pages/en/utility.php"
 
-# TODO: remove repo too
-case "$1" in
-    "--remove")
-        epm remove $(epm qp $PKGNAME-)
-        exit
-        ;;
-esac
-
 . $(dirname $0)/common.sh
 
 warn_version_is_not_supported
