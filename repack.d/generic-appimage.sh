@@ -8,6 +8,8 @@ PRODUCTDIR=/opt/$PRODUCT
 
 . $(dirname $0)/common.sh
 
+[ "$PRODUCT" = "AppImage" ] && fatal "Can't recognize correct package name ($PRODUCT is incorrect name)"
+
 # move package to /opt
 ROOTDIR=$(basename $(find $BUILDROOT -mindepth 1 -maxdepth 1 -type d))
 move_to_opt /$ROOTDIR

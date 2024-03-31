@@ -362,3 +362,5 @@ fi
 
 echo
 echo "Installing $DESCRIPTION as $PKGNAME package ..."
+
+export EEPM_INTERNAL_PKGNAME="$PKGNAME"

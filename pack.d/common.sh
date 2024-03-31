@@ -105,5 +105,5 @@ install_file()
     cp "$src" "$dest" || return
 }
 
-
+# set PRODUCT by pack.d script name
 [ -n "$PRODUCT" ] || PRODUCT="$(basename $0 .sh)"
