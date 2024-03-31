@@ -13,24 +13,28 @@ fi
 
 alpkg=$(basename $TAR)
 
-if [ -n "$VERSION" ] ; then
-    PRODUCT="$(basename $alpkg .AppImage)"
-else
-    # AppImage version
-    # hack for ktalk2.4.2 -> ktalk 2.4.2
-    VERSION="$(echo "$alpkg" | grep -o -P "[-_.a-zA-Z]([0-9])([0-9])*([.]*[0-9])*" | head -n1 | sed -e 's|^[-_.a-zA-Z]||' -e 's|--|-|g' )"  #"
-    [ -n "$VERSION" ] && PRODUCT="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")" || PRODUCT="$(basename $alpkg .AppImage)"
-fi
+PRODUCT="$(basename $alpkg .AppImage)"
 
+# unpack AppImage
+# TODO: use SHELL/sh instead of execute bit
 [ -x "$TAR" ] || chmod u+x $verbose "$TAR"
 $TAR --appimage-extract >/dev/null || fatal
 
+# try separate VERSION from PRODUCT
+if [ -z "$VERSION" ] ; then
+    VERSION="$(echo "$PRODUCT" | grep -o -P "[-_.a-zA-Z]([0-9])([0-9])*([.]*[0-9])*" | head -n1 | sed -e 's|^[-_.a-zA-Z]||' -e 's|--|-|g' )"  #"
+    [ -n "$VERSION" ] && PRODUCT="$(echo "$PRODUCT" | sed -e "s|[-_.]$VERSION.*||")"
+    PRODUCT="${PRODUCT/-x86_64/}"
+fi
+
+# try override version with X-AppImage-Version if present
 DESKTOPFILE="$(echo squashfs-root/*.desktop | head -n1)"
 str="$(grep '^X-AppImage-Version=[0-9]' $DESKTOPFILE)"
 if [ -n "$str" ] ; then
     VERSION="$(echo $str | sed -e 's|.*X-AppImage-Version=||')"
 fi
 
+# try get version from URL
 # https://github.com/neovide/neovide/releases/download/0.12.2/neovide.AppImage
 if [ -z "$VERSION" ] && rhas "$URL" "github.com.*/releases/download" ; then
     VERSION="$(echo "$URL" | sed -e 's|.*/releases/download/||' -e "s|/$alpkg||")"
