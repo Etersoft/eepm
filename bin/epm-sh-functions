@@ -215,6 +215,11 @@ rhas()
     echo "$1" | grep -E -q -- "$2"
 }
 
+rihas()
+{
+    echo "$1" | grep -E -i -q -- "$2"
+}
+
 # bash specific
 startwith()
 {
