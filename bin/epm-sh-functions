@@ -795,7 +795,7 @@ get_package_type()
             echo "msi"
             return
             ;;
-        *.AppImage)
+        *.AppImage|*.appimage)
             echo "AppImage"
             return
             ;;

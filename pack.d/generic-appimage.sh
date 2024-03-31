@@ -7,6 +7,13 @@ URL="$4"
 
 . $(dirname $0)/common.sh
 
+# allow .appimage extension
+if rhas "$TAR" "\.appimage$" ; then
+    newtarname="${TAR/.appimage/.AppImage}"
+    mv "$TAR" "$newtarname"
+    TAR="$newtarname"
+fi
+
 if ! rhas "$TAR" "\.AppImage$" ; then
     fatal "No idea how to handle $TAR"
 fi
