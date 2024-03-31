@@ -65,6 +65,24 @@ has_wildcard()
     [ "${1/\*/}" != "$1" ]
 }
 
+__handle_tarname()
+{
+    # TODO: we don't know PKGNAME here
+    PKGNAME=
+
+    if [ -n "$EEPM_INTERNAL_PKGNAME" ] ; then
+        # it is ok
+        [ "$EEPM_INTERNAL_PKGNAME" = "$PKGNAME" ] && continue
+        # PKGNAME was changed in play.d script after common.sh include
+        echo "Packing as $PKGNAME (not $EEPM_INTERNAL_PKGNAME as it said before) ..."
+    else
+        # it is possible direct call, not from epm play
+        echo "Packing as $PKGNAME package ..."
+    fi
+
+    export EEPM_INTERNAL_PKGNAME="$PKGNAME"
+}
+
 
 return_tar()
 {
@@ -72,6 +90,7 @@ return_tar()
     [ -n "$RETURNTARNAME" ] || fatal "RETURNTARNAME is empty"
     rm -f $RETURNTARNAME
     for i in $* ; do
+        #__handle_tarname $i
         realpath $i >>$RETURNTARNAME || fatal "Can't save tar name $i to file $RETURNTARNAME"
     done
     exit 0
