@@ -9,7 +9,10 @@ URL="https://trueconf.ru"
 
 . $(dirname $0)/common.sh
 
-[ "$VERSION" = "*" ] && VERSION="[0-9]*"
+warn_version_is_not_supported
+#[ "$VERSION" = "*" ] && VERSION="[0-9]*"
+# only one version in repo
+VERSION="*"
 
 distrversion=$(epm print info -v)
 case "$(epm print info -e)" in
