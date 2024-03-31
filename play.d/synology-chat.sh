@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME=synology-chat
+PKGNAME=chat
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION='Synology Chat Client from the official site'
