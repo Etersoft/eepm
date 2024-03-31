@@ -13,4 +13,4 @@ warn_version_is_not_supported
 # https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=cnrdrvcups-lb
 PKGURL="https://gdlp01.c-wss.com/gds/8/0100007658/33/linux-UFRII-drv-v570-m17n-11.tar.gz"
 
-epm pack --install $PKGNAME "$PKGURL"
+install_pack_pkgurl
