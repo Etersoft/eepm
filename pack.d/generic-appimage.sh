@@ -23,22 +23,23 @@ alpkg=$(basename $TAR)
 PRODUCT="$(basename $alpkg .AppImage)"
 
 # unpack AppImage
-# TODO: use SHELL/sh instead of execute bit
 [ -x "$TAR" ] || chmod u+x $verbose "$TAR"
 $TAR --appimage-extract >/dev/null || fatal
 
 # try separate VERSION from PRODUCT
 if [ -z "$VERSION" ] ; then
-    VERSION="$(echo "$PRODUCT" | grep -o -P "[-_.a-zA-Z]([0-9])([0-9])*([.]*[0-9])*" | head -n1 | sed -e 's|^[-_.a-zA-Z]||' -e 's|--|-|g' )"  #"
+    VERSION="$(echo "$PRODUCT" | grep -o -P "[-_.]([0-9v])([0-9])*([.]*[0-9])*" | head -n1 | sed -e 's|^[-_.a-zA-Z]||' -e 's|--|-|g' -e 's|^v\([0-9]\)|\1|' )"  #"
     [ -n "$VERSION" ] && PRODUCT="$(echo "$PRODUCT" | sed -e "s|[-_.]$VERSION.*||")"
     PRODUCT="${PRODUCT/-x86_64/}"
 fi
 
-# try override version with X-AppImage-Version if present
-DESKTOPFILE="$(echo squashfs-root/*.desktop | head -n1)"
-str="$(grep '^X-AppImage-Version=[0-9]' $DESKTOPFILE)"
-if [ -n "$str" ] ; then
-    VERSION="$(echo $str | sed -e 's|.*X-AppImage-Version=||')"
+# try get version from X-AppImage-Version
+if [ -z "$VERSION" ] ; then
+    DESKTOPFILE="$(echo squashfs-root/*.desktop | head -n1)"
+    str="$(grep '^X-AppImage-Version=[0-9]' $DESKTOPFILE)"
+    if [ -n "$str" ] ; then
+        VERSION="$(echo $str | sed -e 's|.*X-AppImage-Version=||')"
+    fi
 fi
 
 # try get version from URL
