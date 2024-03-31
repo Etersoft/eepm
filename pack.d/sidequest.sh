@@ -11,11 +11,10 @@ BASENAME=$(basename $TAR .tar.xz)
 VERSION=$(echo $BASENAME | sed -e 's|SideQuest-||' | sed -e 's|.tar.xz||')
 [ -n "$VERSION" ] || fatal "Can't get package version"
 
-ln -s $TAR $BASENAME.tar.xz
-erc unpack $BASENAME.tar.xz || fatal
+erc unpack $TAR || fatal
 
 mkdir -p opt
-mv $BASENAME* opt/sidequest
+mv $BASENAME* opt/sidequest || fatal
 
 for res in 16x16 24x24 32x32 48x48 64x64 128x128 256x256 512x512 1024x1024; do
     install -dm755 "usr/share/icons/hicolor/${res}/apps/"

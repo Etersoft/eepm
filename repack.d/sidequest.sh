@@ -12,6 +12,3 @@ add_bin_link_command
 fix_chrome_sandbox
 
 add_electron_deps
-
-
-# fix_desktop_file 
