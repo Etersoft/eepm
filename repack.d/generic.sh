@@ -76,7 +76,8 @@ set_rpm_field()
 
 
 # FIXME: where is a source of the bug with empty Summary?
-set_rpm_field "Summary" "$PRODUCT (fixme: was empty Summary after alien)"
+summary="$(grep "^Summary: " $SPEC | sed -e "s|Summary: ||g" | head -n1)"
+[ -n "$summary" ] || set_rpm_field "Summary" "$PRODUCT (fixme: was empty Summary after alien)"
 # clean version
 subst "s|^\(Version: .*\)~.*|\1|" $SPEC
 # add our prefix to release
