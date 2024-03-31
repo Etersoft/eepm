@@ -1457,8 +1457,8 @@ else
 fi
 
 # https://www.freeoffice.com/download.php?filename=freeoffice-2021-1062.x86_64.rpm
-if echo "$URL" | grep -q "[*]" ; then
-    fatal "Error: there are globbing symbol (*) in $URL. It is allowed only for mask part"
+if echo "$URL" | grep -q "[*\[\]]" ; then
+    fatal "Error: there are globbing symbol (*[]) in $URL. It is allowed only for mask part"
 fi
 
 is_url "$MASK" && fatal "eget supports only one URL as argument"
@@ -1481,8 +1481,15 @@ if [ -n "$LISTONLY" ] ; then
     exit
 fi
 
+is_wildcard()
+{
+    echo "$1" | grep -q "[*?]" && return
+    echo "$1" | grep -q "\]" && return
+    echo "$1" | grep -q "\[" && return
+}
+
 # If there is no wildcard symbol like asterisk, just download
-if echo "$MASK" | grep -qv "[*?]" || echo "$MASK" | grep -q "[?].*="; then
+if ! is_wildcard "$MASK" || echo "$MASK" | grep -q "[?].*="; then
     sget "$1" "$TARGETFILE"
     exit
 fi
