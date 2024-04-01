@@ -33,13 +33,3 @@ pack_file /etc/tmpfiles.d/$PRODUCT.conf
 
 
 add_libs_requires
-# autoreq is disabled: don't patch elf due requires
-exit
-
-
-if epm assure patchelf ; then
-for i in .$PRODUCTDIR/lib* .$PRODUCTDIR/$PRODUCT  ; do
-    a= patchelf --set-rpath '$ORIGIN' $i
-done
-fi
-

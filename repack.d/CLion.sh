@@ -18,9 +18,7 @@ move_to_opt "/$PRODUCT-*"
 add_bin_link_command $PRODUCT $PRODUCTDIR/bin/$PRODUCT.sh
 add_bin_link_command $PRODUCTCUR $PRODUCT
 
-# create desktop file
-mkdir -p $BUILDROOT/usr/share/applications/
-cat <<EOF >$BUILDROOT/usr/share/applications/$PRODUCT.desktop
+cat <<EOF | create_file /usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]
 Version=1.0
 Type=Application
@@ -33,8 +31,6 @@ StartupNotify=true
 StartupWMClass=jetbrains-clion
 Categories=Development;IDE
 EOF
-
-pack_file /usr/share/applications/$PRODUCT.desktop
 
 mkdir -p $BUILDROOT/usr/share/pixmaps
 install_file $PRODUCTDIR/bin/$PRODUCT.png /usr/share/pixmaps/

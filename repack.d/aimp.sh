@@ -12,7 +12,6 @@ PRODUCTDIR=/opt/$PRODUCT
 add_requires '/usr/bin/wine'
 add_requires '/bin/sh'
 
-
 add_bin_link_command $PRODUCT $PRODUCTDIR/aimp.bash
 subst "s|/usr/bin/sh|/bin/sh|" $BUILDROOT$PRODUCTDIR/aimp.bash
 

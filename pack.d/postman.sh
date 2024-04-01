@@ -18,10 +18,10 @@ mv Postman/app opt/postman
 VERSION=$(cat "opt/postman/resources/app/package.json" | epm --inscript tool json -b | grep version | awk 'gsub(/"/, "", $2) {print $2}') #'
 [ -n "$VERSION" ] || fatal "Can't get package version"
 
-install_file opt/postman/resources/app/assets/icon.png usr/share/pixmaps/postman.png
+install_file opt/postman/resources/app/assets/icon.png /usr/share/pixmaps/postman.png
 
 # create desktop file
-cat <<EOF | create_file usr/share/applications/$PRODUCT.desktop
+cat <<EOF | create_file /usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]
 Version=1.0
 Type=Application

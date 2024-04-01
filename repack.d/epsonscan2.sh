@@ -5,8 +5,9 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
-add_requires udev
+add_unirequires udev
+
+fix_desktop_file /usr/bin/epsonscan2
 
 add_libs_requires
 
-fix_desktop_file /usr/bin/epsonscan2

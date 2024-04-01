@@ -31,9 +31,7 @@ exec $PRODUCTDIR/$PRODUCT "\$@"
 EOF
 
 
-# create desktop file
-mkdir -p $BUILDROOT/usr/share/applications/
-cat <<EOF >$BUILDROOT/usr/share/applications/$PRODUCT.desktop
+cat <<EOF | create_file /usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]
 Version=1.0
 Type=Application
@@ -47,35 +45,9 @@ MimeType=x-scheme-handler/icq;
 Keywords=icq;
 EOF
 
-pack_file /usr/share/applications/$PRODUCT.desktop
-
 # https://hb.bizmrg.com/icq-www/linux/x64/packages/10.0.13286/icq.png
 install_file https://dashboard.snapcraft.io/site_media/appmedia/2020/04/icq_copy.png /usr/share/pixmaps/$PRODUCT.png
 
 subst "s|.*/opt/icq/unittests.*||" $SPEC
 
 add_libs_requires
-
-exit
-
-# ignore embedded libs
-filter_from_requires libQt5 libxcb "libX.*"
-
-if epm assure patchelf ; then
-cd $BUILDROOT$PRODUCTDIR
-for i in $PRODUCT  ; do
-    a= patchelf --set-rpath '$ORIGIN/lib' $i
-done
-
-for i in lib/*.so.*  ; do
-    a= patchelf --set-rpath '$ORIGIN' $i
-done
-
-for i in QtQuick.2/lib*.so  ; do
-    a= patchelf --set-rpath '$ORIGIN/../lib' $i
-done
-
-for i in QtQuick/*/lib*.so  ; do
-    a= patchelf --set-rpath '$ORIGIN/../../lib' $i
-done
-fi

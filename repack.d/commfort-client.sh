@@ -13,8 +13,7 @@ add_requires '/usr/bin/wine'
 
 add_bin_link_command $PRODUCT $PRODUCTDIR/run.sh
 
-mkdir -p usr/share/applications
-cat <<EOF >usr/share/applications/$PRODUCT.desktop
+cat <<EOF | create_file /usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]
 Name=CommFort
 Exec=$PRODUCT %F
@@ -24,7 +23,6 @@ Icon=$PRODUCT
 StartupWMClass=commfort.exe
 Categories=Wine;Chat;Network;InstantMessaging;
 EOF
-pack_file /usr/share/applications/$PRODUCT.desktop
 
 # copied from ~/.local/share/icons/hicolor/256x256/apps/2887_CommFort.0.png
 i=256

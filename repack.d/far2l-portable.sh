@@ -6,7 +6,6 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
-subst '1iConflicts: far2l' $SPEC
+add_conflicts far2l
 
-# set_autoreq 'yes'
 add_libs_requires

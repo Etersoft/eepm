@@ -12,6 +12,7 @@ PRODUCTDIR=/opt/onlyoffice
 # $ rpm -qf /usr/lib64/LibreOffice/share/fonts/truetype/opens___.ttf
 #LibreOffice-common-7.0.1.2-alt1.0.p9.x86_64
 
+# ALT only
 add_requires fonts-ttf-liberation fonts-ttf-dejavu
 
 # pack icons

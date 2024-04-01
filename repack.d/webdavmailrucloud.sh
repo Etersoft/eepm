@@ -7,16 +7,10 @@ PRODUCTDIR=/opt/WebDAVCloudMailRu
 
 . $(dirname $0)/common.sh
 
-subst "s|^License: unknown$|License: MIT|" $SPEC
-subst "s|^Url:.*|Url: https://github.com/yar229/WebDavMailRuCloud|" $SPEC
-subst "s|^Summary:.*|Summary: WebDAV emulator for Cloud.mail.ru / Yandex.Disk|" $SPEC
-
-mkdir -p usr/bin
+add_bin_exec_command wdmrc $PRODUCTDIR/wdmrc.dll
 cat <<EOF >usr/bin/wdmrc
 #!/bin/sh
 dotnet $PRODUCTDIR/wdmrc.dll "\$@"
 EOF
-chmod a+x usr/bin/wdmrc
-pack_file /usr/bin/wdmrc
 
 add_requires dotnet-6.0

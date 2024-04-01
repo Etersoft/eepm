@@ -9,7 +9,7 @@ PRODUCT=liteide
 . $(dirname $0)/common.sh
 
 # previous package name
-subst '1iConflicts: liteidex' $SPEC
+add_conflicts liteidex
 
 subst "s|^Group:.*|Group: Development/Tools|" $SPEC
 subst "s|^License: unknown$|License: LGPLv2|" $SPEC
@@ -24,9 +24,7 @@ done
 
 install_file $PRODUCTDIR/share/liteide/welcome/images/liteide.png /usr/share/pixmaps/$PRODUCT.png
 
-# create desktop file
-mkdir -p $BUILDROOT/usr/share/applications/
-cat <<EOF >$BUILDROOT/usr/share/applications/$PRODUCT.desktop
+cat <<EOF | create_file /usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]
 Type=Application
 Name=LiteIDE
@@ -36,8 +34,6 @@ Comment=LiteIDE is a simple, open source, cross-platform Go IDE
 Terminal=false
 Categories=Development;
 EOF
-
-pack_file /usr/share/applications/$PRODUCT.desktop
 
 # https://bugzilla.altlinux.org/45635
 add_requires golang

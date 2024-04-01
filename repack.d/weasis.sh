@@ -26,16 +26,3 @@ fix_desktop_file "/opt/weasis/lib/Weasis"
 fix_desktop_file "/opt/weasis/lib/Dicomizer"
 
 add_libs_requires
-# autoreq is disabled: don't patch elf due requires
-exit
-
-cd $BUILDROOT$PRODUCTDIR/ || fatal
-if epm assure patchelf ; then
-    for i in lib/runtime/lib/lib*.so ; do
-        a= patchelf --set-rpath '$ORIGIN:$ORIGIN/server' $i
-    done
-fi
-
-#add_findreq_skiplist "$PRODUCTDIR/runtime/lib/amd64/libav*.so"
-
-set_autoreq 'yes'

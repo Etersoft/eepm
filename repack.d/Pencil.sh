@@ -9,6 +9,8 @@ PRODUCTCUR=Pencil
 
 . $(dirname $0)/common-chromium-browser.sh
 
+add_conflicts pencil
+
 add_bin_link_command
 add_bin_link_command $PRODUCTCUR $PRODUCT
 
@@ -18,4 +20,3 @@ fix_chrome_sandbox
 
 fix_desktop_file
 
-subst '1iConflicts: pencil' $SPEC

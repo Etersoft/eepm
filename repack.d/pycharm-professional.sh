@@ -18,23 +18,19 @@ subst "s|^Summary:.*|Summary: The Python IDE for Professional Developers (Free 3
 move_to_opt "/pycharm-*"
 add_bin_link_command $PRODUCT $PRODUCTDIR/bin/$PRODUCTCUR.sh
 
-# create desktop file
-mkdir -p $BUILDROOT/usr/share/applications/
-cat <<EOF >$BUILDROOT/usr/share/applications/$PRODUCT.desktop
+cat <<EOF |create_file /usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]
 Version=1.0
 Type=Application
 Name=PyCharm Professional Edition
 Comment=Python IDE for Professional Developers (Free 30-day trial available)
-Exec=/usr/bin/$PRODUCT %f
+Exec=$PRODUCT %f
 Icon=$PRODUCT
 Terminal=false
 StartupNotify=true
 StartupWMClass=jetbrains-pycharm-pro
 Categories=Development;IDE;Python;
 EOF
-
-pack_file /usr/share/applications/$PRODUCT.desktop
 
 install_file $PRODUCTDIR/bin/$PRODUCTCUR.png /usr/share/pixmaps/$PRODUCT.png
 install_file $PRODUCTDIR/bin/$PRODUCTCUR.svg /usr/share/pixmaps/$PRODUCT.svg
@@ -78,17 +74,6 @@ cd $BUILDROOT$PRODUCTDIR/ || exit
 file=$(basename $(ls $BUILDROOT$PRODUCTDIR/plugins/tailwindcss/server/node.napi.musl-*.node))
 [ -n "$file" ] && remove_file $PRODUCTDIR/plugins/tailwindcss/server/$file
 
-if epm assure patchelf ; then
-for i in jbr/lib/lib*.so  ; do
-    a= patchelf --set-rpath '$ORIGIN/server:$ORIGIN' $i
-done
-
-for i in plugins/remote-dev-server/selfcontained/lib/lib*.so*  ; do
-    a= patchelf --set-rpath '$ORIGIN' $i
-done
-fi
-
-
 subst 's|%dir "'$PRODUCTDIR'/"||' $SPEC
 subst 's|%dir "'$PRODUCTDIR'/bin/"||' $SPEC
 subst 's|%dir "'$PRODUCTDIR'/lib/"||' $SPEC
@@ -99,5 +84,4 @@ pack_dir $PRODUCTDIR/bin/
 pack_dir $PRODUCTDIR/lib/
 pack_dir $PRODUCTDIR/plugins/
 
-# set_autoreq 'yes,nopython,nopython3,nomono,nomonolib'
 add_libs_requires

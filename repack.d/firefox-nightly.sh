@@ -4,11 +4,8 @@ BUILDROOT="$1"
 SPEC="$2"
 
 PRODUCT=firefox
-
 PRODUCTCUR=$(basename $0 .sh)
 PRODUCTDIR=/opt/$PRODUCTCUR
-
-PREINSTALL_PACKAGES="fontconfig glib2 libalsa libatk libcairo libcairo-gobject libdbus libdbus-glib libfreetype libgdk-pixbuf libgio libgtk+3 libharfbuzz libpango libX11 libxcb libXcomposite libXcursor libXdamage libXext libXfixes libXi libXrandr libXrender libXtst"
 
 . $(dirname $0)/common-chromium-browser.sh
 
@@ -16,9 +13,6 @@ PREINSTALL_PACKAGES="fontconfig glib2 libalsa libatk libcairo libcairo-gobject l
 #    [ "$i"  = "$PRODUCTCUR" ] && continue
 #    subst "1iConflicts:$i" $SPEC
 #done
-
-# set_autoreq 'yes,noshell,nomonolib,nomono,nopython'
-add_libs_requires
 
 #set_alt_alternatives 65
 
@@ -42,22 +36,11 @@ copy_icons_to_share()
     for i in 16 32 48 64 128 ; do
         sicon=$BUILDROOT$PRODUCTDIR/browser/chrome/icons/default/default$i.png
         [ -r $sicon ] || continue
-        mkdir -p $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/
-        rm -f $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png
-        cp $sicon $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png
+        install_file $sicon $/usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png
     done
 
-    #subst "s|%files|%files\n/usr/share/icons/hicolor/*x*/apps/$iconname.png|" $SPEC
 }
 
 copy_icons_to_share
 
-if epm assure patchelf ; then
-for i in $BUILDROOT/$PRODUCTDIR/{lib*.so,plugin-container} ; do
-    a= patchelf --set-rpath '$ORIGIN/' $i || continue
-done
-
-for i in $BUILDROOT/$PRODUCTDIR/gmp-clearkey/0.1/lib*.so ; do
-    a= patchelf --set-rpath '$ORIGIN/../../' $i || continue
-done
-fi
+add_libs_requires

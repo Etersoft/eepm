@@ -15,7 +15,16 @@ fi
 mkdir opt
 mv vkteams* opt/$PRODUCT || fatal
 
-PKGNAME=$PRODUCT-$VERSION.tar
-erc pack $PKGNAME opt/$PRODUCT
+PKG=$PRODUCT-$VERSION.tar
+erc pack $PKG opt/$PRODUCT
 
-return_tar $PKGNAME
+cat <<EOF >$PKG.eepm.yaml
+name: $PRODUCT
+group: Networking/Instant messaging
+license: Proprietary
+url: https://teams.vk.com/
+summary: VK Teams
+description: VK Teams desktop client.
+EOF
+
+return_tar $PKG

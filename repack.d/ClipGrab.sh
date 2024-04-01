@@ -3,6 +3,6 @@
 BUILDROOT="$1"
 SPEC="$2"
 
-UNIREQUIRES="yt-dlp"
-
 . $(dirname $0)/common.sh
+
+add_unirequires yt-dlp

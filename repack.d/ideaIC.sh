@@ -9,7 +9,7 @@ PRODUCTCUR=idea-IC
 
 . $(dirname $0)/common.sh
 
-subst '1iConflicts: ideaIU' $SPEC
+add_conflicts ideaIU
 
 subst "s|^Group:.*|Group: Development/Tools|" $SPEC
 #subst "s|^License: unknown$|License: GPLv2|" $SPEC

@@ -9,7 +9,6 @@ PRODUCTDIR=/opt/YaMusic.app
 . $(dirname $0)/common-chromium-browser.sh
 
 add_bin_link_command
-#add_bin_link_command $PRODUCTCUR $PRODUCT
 
 add_electron_deps
 
@@ -18,6 +17,6 @@ fix_chrome_sandbox
 fix_desktop_file
 
 if [ -f usr/share/icons/hicolor/0x0/apps/yaradio-yamusic.png ] ; then
-    install_file /usr/share/icons/hicolor/0x0/apps/yaradio-yamusic.png /usr/share/icons/hicolor/256x256/apps/yaradio-yamusic.png
+    install_file usr/share/icons/hicolor/0x0/apps/yaradio-yamusic.png /usr/share/icons/hicolor/256x256/apps/yaradio-yamusic.png
     remove_dir /usr/share/icons/hicolor/0x0/
 fi

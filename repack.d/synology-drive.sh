@@ -6,8 +6,6 @@ SPEC="$2"
 PRODUCT=synology-drive
 PRODUCTDIR=/opt/Synology/SynologyDrive
 
-PREINSTALL_PACKAGES="coreutils glib2 libdbus libgtk+3 libICE libpango libSM libX11 libxcb libxkbcommon libXrender fontconfig libfreetype"
-
 . $(dirname $0)/common.sh
 
 cd $BUILDROOT/$PRODUCTDIR || exit
@@ -38,25 +36,3 @@ remove_file $PRODUCTDIR/package/cloudstation/icon-overlay/15/lib/plugin-cb.so ||
 # https://www.synology.com/api/support/findDownloadInfo?lang=ru-ru&product=DS2411%2B&major=6&minor=2
 
 add_libs_requires
-exit
-
-if epm assure patchelf ; then
-for i in lib/lib*.so.* package/cloudstation/lib/lib*.so.* ; do
-    a= patchelf --set-rpath '$ORIGIN' $i
-done
-
-# /opt/Synology/SynologyDrive/package/cloudstation/lib/plugins/designer/libqquickwidget.so
-for i in package/cloudstation/lib/plugins/designer/lib*.so ; do
-    a= patchelf --set-rpath '$ORIGIN../../' $i
-done
-
-for i in bin/launcher package/cloudstation/bin/cloud-drive-* ; do
-    a= patchelf --set-rpath '$ORIGIN/../lib' $i
-done
-fi
-
-# TODO: some dependency leak?
-# ignore embedded libs
-filter_from_requires libQt5
-
-

@@ -26,20 +26,3 @@ done
 cd >/dev/null
 
 add_libs_requires
-
-exit
-
-add_requires glib2 glxinfo libalsa libdbus libdrm libEGL libexpat fontconfig libfreetype libgbm libGLX libharfbuzz libjpeg8 liblcms2 libminizip libnspr libnss libOpenGL libopus libpci libpulseaudio libsnappy libtiff5 libudev1 libva libwayland-client libwayland-cursor libwayland-egl libwayland-server libX11 libxcb libxcb-render-util libxcbutil-icccm libxcbutil-image libxcbutil-keysyms libXcomposite libXdamage libXext libXfixes libXinerama libxkbcommon libxkbcommon-x11 libxkbfile libxml2 libXrandr libXrender libXScrnSaver libxshmfence libxslt libXtst which zlib
-
-if epm assure patchelf ; then
-for i in bin/Plex "bin/Plex Transcoder" ; do
-    a= patchelf --set-rpath '$ORIGIN/../lib' "$i" || continue
-done
-for i in lib/lib*.so* ; do
-    a= patchelf --set-rpath '$ORIGIN' "$i" || continue
-done
-fi
-
-subst '1i%filter_from_requires /^libtiff.so.5(LIBTIFF_.*/d' $SPEC
-
-exit 0

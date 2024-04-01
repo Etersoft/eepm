@@ -6,7 +6,6 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
-subst '1iConflicts: tigervnc' $SPEC
+add_conflicts tigervnc
 
-# set_autoreq 'yes'
 add_libs_requires

@@ -35,4 +35,13 @@ PKGNAME="$(basename $TAR | sed -e "s|libsane-panakvs|$PRODUCT|")"
 
 erc pack $PKGNAME.tar etc usr
 
+cat <<EOF >$PKGNAME.tar.eepm.yaml
+name: $PRODUCT
+group: Graphics
+license: Proprietary
+url: https://github.com/zerotier/ZeroTierOne
+summary: Panasonic Scanner Driver for Linux
+description: Panasonic Scanner Driver for Linux.
+EOF
+
 return_tar $PKGNAME.tar

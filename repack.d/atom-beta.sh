@@ -11,14 +11,14 @@ APMNAME=$(echo $PRODUCTCUR | sed -e 's|^atom|apm|')
 
 for i in atom atom-beta ; do
     [ "$i"  = "$PRODUCTCUR" ] && continue
-    subst "1iConflicts:$i" $SPEC
+    add_conflicts $i
 done
-
-UNIREQUIRES="coreutils findutils grep sed /usr/bin/git /usr/bin/node /usr/bin/npm /usr/bin/npx util-linux which xprop python3"
 
 . $(dirname $0)/common-chromium-browser.sh
 
 add_electron_deps
+
+add_unirequires coreutils findutils grep sed /usr/bin/git /usr/bin/node /usr/bin/npm /usr/bin/npx util-linux which xprop python3
 
 move_to_opt
 subst "s|\$USR_DIRECTORY/share/atom|/opt/atom|" $BUILDROOT/usr/bin/$PRODUCTCUR

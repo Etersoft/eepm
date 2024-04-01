@@ -13,7 +13,7 @@ PRODUCTDIR=/opt/$PRODUCTCUR
 
 for i in opera-stable opera-beta opera-developer ; do
     [ "$i"  = "$PRODUCTCUR0" ] && continue
-    subst "1iConflicts:$i" $SPEC
+    add_conflicts $i
 done
 
 set_alt_alternatives 65

@@ -20,4 +20,13 @@ f=$FPRODUCT
 install -D -m755 $f opt/$TPRODUCT/$TPRODUCT || fatal
 erc pack $PKGNAME.tar opt/$TPRODUCT
 
+cat <<EOF >$PKGNAME.tar.eepm.yaml
+name: $PRODUCT
+group: Networking/Instant messaging
+license: GPLv2
+url: https://desktop.telegram.org/
+summary: Telegram Desktop messaging app
+description: Telegram Desktop messaging app.
+EOF
+
 return_tar $PKGNAME.tar

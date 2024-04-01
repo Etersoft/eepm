@@ -9,11 +9,6 @@ PRODUCTDIR=/opt/unigine-heaven
 
 . $(dirname $0)/common.sh
 
-subst "s|^Group:.*|Group: Graphics|" $SPEC
-subst "s|^License: unknown$|License: Proprietary|" $SPEC
-subst "s|^URL:.*|URL: https://benchmark.unigine.com/heaven|" $SPEC
-subst "s|^Summary:.*|Summary: Unigine Heaven (Unigine Benchmark)|" $SPEC
-
 mkdir -p $BUILDROOT$PRODUCTDIR/
 for i in bin data documentation ; do
     mv $BUILDROOT/$i $BUILDROOT$PRODUCTDIR/$i
@@ -51,9 +46,7 @@ pack_file /usr/bin/heaven
 
 install_file $PRODUCTDIR/data/launcher/icon.png /usr/share/pixmaps/$PRODUCT.png
 
-# create desktop file
-mkdir -p $BUILDROOT/usr/share/applications/
-cat <<EOF >$BUILDROOT/usr/share/applications/$PRODUCT.desktop
+cat <<EOF | create_file /usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]
 Version=1.0
 Name=Unigine Heaven 2009
@@ -62,7 +55,5 @@ Icon=$PRODUCT
 Exec=heaven
 Terminal=false
 EOF
-
-pack_file /usr/share/applications/$PRODUCT.desktop
 
 add_libs_requires

@@ -13,7 +13,7 @@ PRODUCTDIR=/opt/microsoft/msedge
 
 for i in microsoft-edge-stable microsoft-edge-beta microsoft-edge-dev ; do
     [ "$i"  = "$PRODUCTCUR" ] && continue
-    subst "1iConflicts:$i" $SPEC
+    add_conflicts $i
 done
 
 

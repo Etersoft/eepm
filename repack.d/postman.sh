@@ -6,9 +6,8 @@ SPEC="$2"
 
 . $(dirname $0)/common-chromium-browser.sh
 
-add_bin_link_command $PRODUCT $PRODUCTDIR/$PRODUCT
+add_bin_link_command
 
 fix_chrome_sandbox
 
 add_electron_deps
-

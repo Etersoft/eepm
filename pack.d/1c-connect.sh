@@ -20,4 +20,13 @@ PKGNAME=$PRODUCT-$VERSION
 
 erc a $PKGNAME.tar opt
 
+cat <<EOF >$PKGNAME.tar.eepm.yaml
+name: $PRODUCT
+group: Office
+license: Proprietary
+url: https://1c-connect.com/
+summary: 1C Connect
+description: 1C Connect.
+EOF
+
 return_tar $PKGNAME.tar

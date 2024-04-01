@@ -11,11 +11,8 @@ PRODUCTDIR=/opt/LycheeSlicer
 add_bin_link_command
 #add_bin_link_command $PRODUCTCUR $PRODUCT
 
-add_electron_deps
-
 fix_chrome_sandbox
 
 fix_desktop_file
 
-# ignore embedded libs
-filter_from_requires libQt5 node seamonkey thunderbird
+add_libs_requires

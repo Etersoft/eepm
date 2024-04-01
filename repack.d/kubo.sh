@@ -9,17 +9,11 @@ SPEC="$2"
 # add conflicts to all alternatives
 for i in kubo kubo-beta ; do
     [ "$i" = "$PRODUCT" ] && continue
-    subst "1iConflicts: $i" $SPEC
+    add_conflicts $i
 done
 
+add_conflicts go-ipfs
+add_provides go-ipfs
 
-subst "s|^Group:.*|Group: File tools|" $SPEC
-subst "s|^License:.*$|License: MIT/Apache-2.0|" $SPEC
-subst "s|^URL:.*|URL: https://github.com/ipfs/kubo|" $SPEC
-subst "s|^Summary:.*|Summary: An IPFS implementation in Go|" $SPEC
-
-set_autoreq 'yes'
-
-subst '1iConflicts: go-ipfs' $SPEC
-subst '1iProvides: go-ipfs' $SPEC
+add_libs_requires
 

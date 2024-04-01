@@ -8,13 +8,6 @@ PRODUCT=ungoogled-chromium
 
 . $(dirname $0)/common-chromium-browser.sh
 
-# move package to /opt
-ROOTDIR=$(basename $(find $BUILDROOT -mindepth 1 -maxdepth 1 -type d))
-subst "s|^License: unknown$|License: BSD-3-Clause license|" $SPEC
-subst "s|^Summary:.*|Summary: Google Chromium, sans integration with Google|" $SPEC
-
-move_to_opt /$ROOTDIR
-
 add_bin_link_command $PRODUCT $PRODUCTDIR/chrome-wrapper
 
 use_system_xdg
@@ -24,10 +17,7 @@ install_file $PRODUCTDIR/product_logo_48.png /usr/share/pixmaps/$PRODUCT.png
 #fix duplication .desktop file
 subst "s|chromium-devel|ungoogled-chromium|" $BUILDROOT/opt/$PRODUCT/chrome-wrapper
 
-
-# create desktop file
-mkdir -p $BUILDROOT/usr/share/applications/
-cat <<EOF >$BUILDROOT/usr/share/applications/$PRODUCT.desktop
+cat <<EOF | create_file /usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]
 Version=1.0
 Type=Application
@@ -43,12 +33,9 @@ GenericName=Ungoogle Chromium Web Browser
 GenericName[ru]=Веб-браузер Ungoogled Chromium
 EOF
 
-pack_file /usr/share/applications/$PRODUCT.desktop
-
 set_alt_alternatives 65
 
 [ -f .$PRODUCTDIR/chrome_sandbox ] && move_file $PRODUCTDIR/chrome_sandbox $PRODUCTDIR/chrome-sandbox
 fix_chrome_sandbox
 
 add_chromium_deps
-

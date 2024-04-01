@@ -19,3 +19,5 @@ PRODUCT=gitlab-runner
 # gitlab-ci-multi-runner
 
 add_requires curl git tar
+
+add_libs_requires

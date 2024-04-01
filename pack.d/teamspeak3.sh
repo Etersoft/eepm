@@ -29,4 +29,13 @@ PKGNAME=$PRODUCT-$VERSION
 
 erc a $PKGNAME.tar opt/$PRODUCT
 
+cat <<EOF >$PKGNAME.tar.eepm.yaml
+name: $PRODUCT
+group: Video
+license: Proprietary
+url: http://www.teamspeak.com
+summary: TeamSpeak is software for quality voice communication via the Internet
+description: eamSpeak is software for quality voice communication via the Internet
+EOF
+
 return_tar $PKGNAME.tar

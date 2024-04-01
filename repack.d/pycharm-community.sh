@@ -21,23 +21,19 @@ add_bin_link_command $PRODUCT $PRODUCTDIR/bin/$PRODUCT.sh
 # TODO:
 # https://github.com/archlinux/svntogit-community/blob/packages/pycharm-community-edition/trunk/pycharm.sh
 
-# create desktop file
-mkdir -p $BUILDROOT/usr/share/applications/
-cat <<EOF >$BUILDROOT/usr/share/applications/$PRODUCT.desktop
+cat <<EOF | create_file /usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]
 Version=1.0
 Type=Application
 Name=PyCharm Community Edition
 Comment=Python IDE for Professional Developers
-Exec=/usr/bin/pycharm %f
+Exec=pycharm %f
 Icon=pycharm
 Terminal=false
 StartupNotify=true
 StartupWMClass=jetbrains-pycharm-ce
 Categories=Development;IDE;Python;
 EOF
-
-pack_file /usr/share/applications/$PRODUCT.desktop
 
 install_file $PRODUCTDIR/bin/$PRODUCT.png /usr/share/pixmaps/
 install_file $PRODUCTDIR/bin/$PRODUCT.svg /usr/share/pixmaps/
@@ -69,14 +65,6 @@ for i in $PRODUCTDIR/plugins/python-ce/helpers/pydev/_pydevd_frame_eval/*-{win32
     remove_file $i
 done
 
-cd $BUILDROOT$PRODUCTDIR/ || exit
-
-if epm assure patchelf ; then
-for i in jbr/lib/lib*.so  ; do
-    a= patchelf --set-rpath '$ORIGIN/server:$ORIGIN' $i
-done
-fi
-
 subst 's|%dir "'$PRODUCTDIR'/"||' $SPEC
 subst 's|%dir "'$PRODUCTDIR'/bin/"||' $SPEC
 subst 's|%dir "'$PRODUCTDIR'/lib/"||' $SPEC
@@ -87,4 +75,4 @@ pack_dir $PRODUCTDIR/bin/
 pack_dir $PRODUCTDIR/lib/
 pack_dir $PRODUCTDIR/plugins/
 
-set_autoreq 'yes,nopython,nopython3,nomono,nomonolib'
+add_libs_requires

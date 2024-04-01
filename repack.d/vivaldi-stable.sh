@@ -9,7 +9,7 @@ PRODUCTDIR=/opt/vivaldi
 
 . $(dirname $0)/common-chromium-browser.sh
 
-subst '1iConflicts:vivaldi-snapshot' $SPEC
+add_conflicts vivaldi-snapshot
 
 set_alt_alternatives 65
 

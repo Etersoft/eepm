@@ -9,7 +9,7 @@ PRODUCTCUR=idea-IU
 
 . $(dirname $0)/common.sh
 
-subst '1iConflicts: ideaIU' $SPEC
+add_conflicts ideaIU
 
 subst "s|^Group:.*|Group: Development/Tools|" $SPEC
 #subst "s|^License: unknown$|License: GPLv2|" $SPEC
@@ -20,9 +20,7 @@ move_to_opt "/$PRODUCTCUR-*"
 add_bin_link_command $PRODUCT $PRODUCTDIR/bin/$PRODUCT.sh
 add_bin_link_command $PRODUCTCUR $PRODUCT
 
-# create desktop file
-mkdir -p $BUILDROOT/usr/share/applications/
-cat <<EOF >$BUILDROOT/usr/share/applications/$PRODUCT.desktop
+cat <<EOF | create_file /usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]
 Version=1.0
 Type=Application
@@ -36,11 +34,8 @@ StartupWMClass=jetbrains-idea
 Categories=Development;IDE
 EOF
 
-pack_file /usr/share/applications/$PRODUCT.desktop
-
-mkdir -p $BUILDROOT/usr/share/pixmaps
-install_file $PRODUCTDIR/bin/$PRODUCT.png /usr/share/pixmaps/
-install_file $PRODUCTDIR/bin/$PRODUCT.svg /usr/share/pixmaps/
+install_file $PRODUCTDIR/bin/$PRODUCT.png /usr/share/pixmaps/$PRODUCT.png
+install_file $PRODUCTDIR/bin/$PRODUCT.svg /usr/share/pixmaps/$PRODUCT.svg
 
 # kind of hack
 subst 's|%dir "'$PRODUCTDIR'/"||' $SPEC

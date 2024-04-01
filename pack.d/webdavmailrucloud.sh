@@ -16,7 +16,17 @@ VERSION="$(echo "$TAR" | sed -e 's|.*WebDAVCloudMailRu-||' -e 's|-.*||')"
 mkdir opt
 mv WebDAVCloudMailRu* opt/WebDAVCloudMailRu || fatal
 
-PKGNAME=webdavmailrucloud-$VERSION.tar
-erc pack $PKGNAME opt/WebDAVCloudMailRu
+PKG=webdavmailrucloud-$VERSION.tar
+erc pack $PKG opt/WebDAVCloudMailRu
 
-return_tar $PKGNAME
+cat <<EOF >$PKG.eepm.yaml
+name: $PRODUCT
+group: Networking/File transfer
+license: MIT
+url: https://github.com/yar229/WebDavMailRuCloud
+summary: WebDAV emulator for Cloud.mail.ru / Yandex.Disk
+description: WebDAV emulator for Cloud.mail.ru / Yandex.Disk
+EOF
+
+
+return_tar $PKG

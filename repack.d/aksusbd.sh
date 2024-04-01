@@ -5,7 +5,7 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
-set_autoreq 'yes'
+add_unirequires udev
 
 install_file /var/hasplm/init/hasplmd.service /etc/systemd/system/hasplmd.service
 install_file /var/hasplm/init/aksusbd.service /etc/systemd/system/aksusbd.service
@@ -24,3 +24,5 @@ touch $BUILDROOT/etc/hasplm/nethasp.ini
 pack_file /etc/hasplm/nethasp.ini
 
 remove_dir /var/hasplm/init
+
+add_libs_requires

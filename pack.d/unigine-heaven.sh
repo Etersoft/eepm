@@ -19,4 +19,13 @@ BASENAME="$(basename $TAR .run | tr "[A-Z_]" "[a-z-]")"
 
 convert_makeself_to_tar $TAR $BASENAME.tar
 
+cat <<EOF >$BASENAME.tar.eepm.yaml
+name: $PRODUCT
+group: Graphics
+license: Proprietary
+url: https://benchmark.unigine.com/heaven
+summary: Unigine Heaven (Unigine Benchmark)
+description: Unigine Heaven (Unigine Benchmark).
+EOF
+
 return_tar $BASENAME.tar

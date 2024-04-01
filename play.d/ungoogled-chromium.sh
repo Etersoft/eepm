@@ -17,4 +17,4 @@ fi
 
 PKGURL=$(eget --list --latest https://github.com/clickot/ungoogled-chromium-binaries/releases "ungoogled-chromium_${VERSION}_linux.tar.xz")
 
-install_pkgurl
+install_pack_pkgurl

@@ -15,14 +15,6 @@ subst 's| > /dev/null 2>&1||' opt/pt/packettracer
 
 add_libs_requires
 
-create_file()
-{
-    local t="$1"
-    local l="$(basename $t)"
-    cat >$l
-    install_file $l $t
-}
-
 if -d usr/share/applications ; then
     fix_desktop_file
 else

@@ -9,7 +9,7 @@ PRODUCTDIR=/opt/$PRODUCTCUR
 
 . $(dirname $0)/common-chromium-browser.sh
 
-subst '1iConflicts:vivaldi-stable' $SPEC
+add_conflicts vivaldi-stable
 
 set_alt_alternatives 65
 

@@ -17,5 +17,5 @@ add_electron_deps
 
 remove_dir /etc
 
-rm -f $BUILDROOT/usr/bin/vk
+rm -f usr/bin/vk
 add_bin_link_command

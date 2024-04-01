@@ -18,9 +18,7 @@ add_bin_exec_command
 # QmQLQK6byKKzvvHEA84h4Auxci1o9T6bCQQikZFgRM8KBx
 install_file "https://ph-files.imgix.net/e07b5249-d804-4b4e-9458-fa037d30a14b.png?auto=compress&codec=mozjpeg&cs=strip&auto=format&w=72&h=72&fit=crop&bg=0fff&dpr=1" /usr/share/pixmaps/$PRODUCT.png
 
-# create desktop file
-mkdir -p $BUILDROOT/usr/share/applications/
-cat <<EOF >$BUILDROOT/usr/share/applications/$PRODUCT.desktop
+cat <<EOF |create_file /usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]
 Version=1.0
 Type=Application
@@ -32,6 +30,6 @@ Categories=Games;
 Terminal=false
 EOF
 
-pack_file /usr/share/applications/$PRODUCT.desktop
-
 add_requires qt5-imageformats
+
+add_libs_requires

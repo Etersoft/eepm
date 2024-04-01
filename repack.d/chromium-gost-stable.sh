@@ -11,7 +11,7 @@ PRODUCTDIR=/opt/$PRODUCT
 . $(dirname $0)/common-chromium-browser.sh
 
 # can be in the repo
-subst '1iConflicts:chromium-gost' $SPEC
+add_conflicts chromium-gost
 
 set_alt_alternatives 62
 

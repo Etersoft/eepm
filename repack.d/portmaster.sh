@@ -15,13 +15,11 @@ remove_file $PRODUCTDIR/portmaster.desktop
 install -D -m644 .$PRODUCTDIR/portmaster_notifier.desktop ./usr/share/applications/portmaster_notifier.desktop
 remove_file $PRODUCTDIR/portmaster_notifier.desktop
 
-mkdir -p $BUILDROOT/usr/bin/
-cat <<EOF >$BUILDROOT/usr/bin/$PRODUCT
+add_bin_exec_command
+cat <<EOF >usr/bin/$PRODUCT
 #!/bin/sh
 $PRODUCTDIR/portmaster-start app --data=$PRODUCTDIR "\$@"
 EOF
-chmod a+x $BUILDROOT/usr/bin/$PRODUCT
-pack_file /usr/bin/$PRODUCT
 
 echo "Dowloading ... "
 .$PRODUCTDIR/portmaster-start --data $BUILDROOT$PRODUCTDIR update || fatal

@@ -14,7 +14,6 @@ PRODUCTCUR=$PRODUCT$VERSION
 # embedded
 filter_from_requires "python3(PyPDF3)"
 
-# set_autoreq 'yes'
 add_libs_requires
 
 # remove embedded PyPDF3
@@ -34,9 +33,7 @@ mkdir -p $BUILDROOT/usr/share/cups/model/
 ln -s /usr/share/ppd/kyocera $BUILDROOT/usr/share/cups/model/kyocera
 pack_file /usr/share/cups/model/kyocera
 
-# create desktop file
-mkdir -p $BUILDROOT/usr/share/applications/
-cat <<EOF >$BUILDROOT/usr/share/applications/$PRODUCTCUR.desktop
+cat <<EOF |create_file /usr/share/applications/$PRODUCTCUR.desktop
 [Desktop Entry]
 Type=Application
 Name=Kyocera Print Panel
@@ -46,6 +43,5 @@ Comment=Kyocera Print Panel
 Terminal=false
 Categories=Qt;Printing;HardwareSettings;Settings
 EOF
-pack_file /usr/share/applications/$PRODUCTCUR.desktop
 
 install_file /usr/share/kyocera$VERSION/appicon_H.png /usr/share/pixmaps/$PRODUCTCUR.png

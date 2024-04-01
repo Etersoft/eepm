@@ -16,10 +16,9 @@ add_bin_link_command $PRODUCT $PRODUCTDIR/$PRODUCTCUR
 
 add_libs_requires
 
-
 for size in 16 32 48 64 128
 do
-    install_file $PRODUCTDIR/resources/wing$size.png //usr/share/icons/hicolor/${size}x${size}/apps/$PRODUCT.png
+    install_file $PRODUCTDIR/resources/wing$size.png /usr/share/icons/hicolor/${size}x${size}/apps/$PRODUCT.png
 done
 
 install_file $PRODUCTDIR/resources/linux/desktop/wing-personal10.desktop /usr/share/applications/$PRODUCT.desktop

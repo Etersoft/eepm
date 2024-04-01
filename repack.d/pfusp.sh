@@ -13,15 +13,6 @@ for i in opt/pfusp/consumables/pfuspconsumables \
    add_bin_link_command $(basename $i) /$i
 done
 
-create_file()
-{
-    local t="$1"
-    local l="$(basename $t)"
-    cat >$l
-    install_file $l $t
-}
-
-
 PFUSCANNER="pfusp"
 
 cat <<EOF | create_file /opt/pfusp/etc/$PFUSCANNER.conf

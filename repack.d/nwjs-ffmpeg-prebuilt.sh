@@ -6,7 +6,7 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
-subst '1iConflicts: ffmpeg-plugin-browser' $SPEC
-subst '1iProvides: ffmpeg-plugin-browser' $SPEC
+add_conflicts ffmpeg-plugin-browser
+add_provides ffmpeg-plugin-browser
 
 add_libs_requires

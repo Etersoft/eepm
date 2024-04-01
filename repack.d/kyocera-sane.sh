@@ -9,14 +9,6 @@ SPEC="$2"
 # TODO: broken
 # 40-scanner-permissions.rules
 
-create_file()
-{
-    local t="$1"
-    local l="$(basename $t)"
-    cat >$l
-    install_file $l $t
-}
-
 cat <<EOF | create_file /etc/sane.d/dll.d/kyocera
 # dll.conf snippet for kyocera
 #

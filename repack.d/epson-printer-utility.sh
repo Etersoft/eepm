@@ -5,9 +5,7 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
-add_requires udev
-
-add_libs_requires
+add_unirequires udev
 
 # utility
 add_bin_link_command $PRODUCT $PRODUCTDIR/bin/$PRODUCT
@@ -27,3 +25,6 @@ remove_dir /usr/lib/epson-backend/rc.d
 remove_dir /usr/lib/epson-backend/scripts
 
 fix_desktop_file /opt/epson-printer-utility/bin/epson-printer-utility
+
+add_libs_requires
+

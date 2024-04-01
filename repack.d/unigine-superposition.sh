@@ -9,11 +9,6 @@ PRODUCTDIR=/opt/unigine-superposition
 
 . $(dirname $0)/common.sh
 
-subst "s|^Group:.*|Group: Graphics|" $SPEC
-subst "s|^License: unknown$|License: Proprietary|" $SPEC
-subst "s|^URL:.*|URL: https://benchmark.unigine.com/superposition|" $SPEC
-subst "s|^Summary:.*|Summary: Unigine Superposition (Unigine Benchmark)|" $SPEC
-
 # move subdirs
 mkdir -p $BUILDROOT$PRODUCTDIR/
 for i in bin data docs ; do
@@ -57,9 +52,7 @@ remove_file $PRODUCTDIR/bin/qt/lib/libQt5QuickTest.so.5
 add_bin_exec_command superposition $PRODUCTDIR/bin/launcher
 add_bin_link_command $PRODUCT /usr/bin/superposition
 
-# create desktop file
-mkdir -p $BUILDROOT/usr/share/applications/
-cat <<EOF >$BUILDROOT/usr/share/applications/$PRODUCT.desktop
+cat <<EOF | create_file /usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]
 Version=1.0
 Type=Application
@@ -70,7 +63,5 @@ Exec=superposition
 Terminal=false
 Categories=Launcher;Benchmark;
 EOF
-
-pack_file /usr/share/applications/$PRODUCT.desktop
 
 add_libs_requires

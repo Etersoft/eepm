@@ -42,6 +42,12 @@ erc()
     epm tool erc "$@"
 }
 
+is_abs_path()
+{
+    echo "$1" | grep -q "^/"
+}
+
+
 is_dir_empty()
 {
     [ -z "$(ls -A "$1")" ]
@@ -102,8 +108,13 @@ install_file()
     local src="$1"
     local dest="$2"
 
+    if is_abs_path "$dest" ; then
+        dest=".$dest"
+    fi
+
     mkdir -p "$(dirname "$dest")" || return
     cp "$src" "$dest" || return
+    chmod 0644 "$dest"
 }
 
 # Create target file from file

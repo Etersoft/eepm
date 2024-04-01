@@ -28,10 +28,10 @@ $TAR --appimage-extract >/dev/null || fatal
 
 # try separate VERSION from PRODUCT
 if [ -z "$VERSION" ] ; then
+    PRODUCT="${PRODUCT/-x86_64/}"
     VERSION="$(echo "$PRODUCT" | grep -o -P "[-_.]([0-9v])([0-9])*([.]*[0-9])*" | head -n1 | sed -e 's|^[-_.a-zA-Z]||' -e 's|--|-|g' )"  #"
     [ -n "$VERSION" ] && PRODUCT="$(echo "$PRODUCT" | sed -e "s|[-_.]$VERSION.*||")"
     [ -n "$VERSION" ] && VERSION="$(echo "$VERSION" | sed -e 's|^v||')"
-    PRODUCT="${PRODUCT/-x86_64/}"
 fi
 
 # try get version from X-AppImage-Version

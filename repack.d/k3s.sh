@@ -6,14 +6,9 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
-subst "s|^Group:.*|Group: File tools|" $SPEC
-subst "s|^License:.*$|License: Apache-2.0|" $SPEC
-subst "s|^URL:.*|URL: https://k3s.io|" $SPEC
-subst "s|^Summary:.*|Summary: K3s - Lightweight Kubernetes|" $SPEC
-
-subst '1iConflicts: kubernetes-client' $SPEC
+add_conflicts kubernetes-client
 # /usr/bin/ctr
-subst '1iConflicts: containerd' $SPEC
+add_conflicts containerd
 
 # Check https://get.k3s.io/
 
@@ -21,7 +16,7 @@ UNITDIR=/lib/systemd/system/
 [ -d "$UNITDIR" ] || UNITDIR=/usr/lib/systemd/system/
 
 mkdir -p .$UNITDIR
-cat >.$UNITDIR/k3s.service << EOF
+cat <<EOF | create_file $UNITDIR/k3s.service
 [Unit]
 Description=Lightweight Kubernetes
 Documentation=https://k3s.io
@@ -50,17 +45,10 @@ RestartSec=5s
 ExecStartPre=-/sbin/modprobe br_netfilter
 ExecStartPre=-/sbin/modprobe overlay
 ExecStart=/usr/bin/k3s server
-
 EOF
 
-pack_file $UNITDIR/k3s.service
-
-mkdir -p etc/systemd/system/
-cat >etc/systemd/system/k3s.service.env << EOF
+cat <<EOF | create_file /etc/systemd/system/k3s.service.env
 # K3S_URL=
 # K3S_TOKEN=
 # K3S_CLUSTER_SECRET=
 EOF
-
-pack_file /etc/systemd/system/k3s.service.env
-

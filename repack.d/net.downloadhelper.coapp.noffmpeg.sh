@@ -6,15 +6,16 @@ PRODUCTDIR=/opt/vdhcoapp
 
 . $(dirname $0)/common.sh
 
-subst '1iConflicts: net.downloadhelper.coapp' $SPEC
+add_conflicts net.downloadhelper.coapp
+
+add_unirequires /usr/bin/xdg-open
+add_unirequires /usr/bin/ffmpeg /usr/bin/ffplay /usr/bin/ffprobe
 
 # use xdg-open from the system
 rm -v .$PRODUCTDIR/xdg-open
 ln -s /usr/bin/xdg-open .$PRODUCTDIR/xdg-open
-add_unirequires /usr/bin/xdg-open
-add_unirequires /usr/bin/ffmpeg /usr/bin/ffplay /usr/bin/ffprobe
 
-cat <<EOF > net.downloadhelper.coapp.json
+cat <<EOF | create_file /usr/lib64/mozilla/native-messaging-hosts/net.downloadhelper.coapp.json
 {
   "type": "stdio",
   "allowed_extensions": [
@@ -26,9 +27,8 @@ cat <<EOF > net.downloadhelper.coapp.json
   "path": "$PRODUCTDIR/vdhcoapp"
 }
 EOF
-install_file net.downloadhelper.coapp.json /usr/lib64/mozilla/native-messaging-hosts/net.downloadhelper.coapp.json
 
-cat <<EOF > net.downloadhelper.coapp.json
+cat <<EOF | create_file /etc/chromium/native-messaging-hosts/net.downloadhelper.coapp.json
 {
   "type": "stdio",
   "allowed_origins": [
@@ -42,4 +42,3 @@ cat <<EOF > net.downloadhelper.coapp.json
   "path": "$PRODUCTDIR/vdhcoapp"
 }
 EOF
-install_file net.downloadhelper.coapp.json /etc/chromium/native-messaging-hosts/net.downloadhelper.coapp.json

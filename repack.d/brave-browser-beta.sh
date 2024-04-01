@@ -9,7 +9,7 @@ PRODUCTDIR=/opt/brave.com/brave-beta
 
 . $(dirname $0)/common-chromium-browser.sh
 
-subst '1iConflicts:brave-browser brave-browser-dev brave-browser-nightly' $SPEC
+add_conflicts brave-browser brave-browser-dev brave-browser-nightly
 
 set_alt_alternatives 80
 

@@ -4,11 +4,9 @@ BUILDROOT="$1"
 
 SPEC="$2"
 
-UNIREQUIRES="libglib-2.0.so.0 libgmodule-2.0.so.0 libgobject-2.0.so.0 libgthread-2.0.so.0 libatk-1.0.so.0 libcairo.so.2 libcairo-gobject.so.2
-libcups.so.2 libcupsimage.so.2 libgdk_pixbuf-2.0.so.0 libgio-2.0.so.0 libgdk-3.so.0 libgtk-3.so.0
-libpango-1.0.so.0 libpangocairo-1.0.so.0 libpangoft2-1.0.so.0 libpangoxft-1.0.so.0 libxml2.so.2 libjbig.so.2.1"
-
 . $(dirname $0)/common.sh
+
+add_libs_requires
 
 [ "$(epm print info -s)" = "alt" ] || exit 0
 

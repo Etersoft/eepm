@@ -16,4 +16,13 @@ PKGNAME=$PRODUCT-$VERSION
 
 erc pack $PKGNAME.tar usr || fatal
 
+cat <<EOF >$PKGNAME.tar.eepm.yaml
+name: $PRODUCT
+group: File tools
+license: MIT/Apache-2.0
+url: https://github.com/ipfs/kubo
+summary: An IPFS implementation in Go
+description: An IPFS implementation in Go.
+EOF
+
 return_tar $PKGNAME.tar
