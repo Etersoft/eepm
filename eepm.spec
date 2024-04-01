@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.61.1
+Version: 3.61.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,15 @@ a discussion about extra requirements.
 
 
 %changelog
+* Mon Apr 01 2024 Vitaly Lipatov <lav@altlinux.ru> 3.61.2-alt1
+- epm play: fix forcing version with --ipfs
+- epm play myoffice: add direct download for known version
+- epm pack snap4arduino: use .tar as intermediate archive
+- epm play librewolf: fix download for ALT 10
+- distr_info: add initial support for OpenMandrivaLx
+- epm play: rewrite r7-office-organizer, add r7-office-organizer-pro
+- epm repack rudesktop: drop original requires
+
 * Mon Apr 01 2024 Vitaly Lipatov <lav@altlinux.ru> 3.61.1-alt1
 - epm release-upgrade: add rule for OpenMandrivaLX (untested)
 - epm repack.d/common.sh: add tags Requires, Conflicts, Provides after main tags
