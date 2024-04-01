@@ -8,12 +8,15 @@ URL="https://www.google.com/chrome/"
 
 . $(dirname $0)/common.sh
 
+arch=amd64
+pkgtype=deb
 _channel="stable"
 
 if [ "$VERSION" = "*" ] ; then
     PKGURL="https://dl.google.com/linux/direct/google-chrome-stable_current_$arch.$pkgtype"
 else
-    PKGURL="https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-${_channel}/google-chrome-${_channel}_${VERSION}-1_amd64.deb"
+    VERSION="$VERSION-1"
+    PKGURL="https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-${_channel}/google-chrome-${_channel}_${VERSION}_$arch.$pkgtype"
 fi
 
 install_pkgurl
