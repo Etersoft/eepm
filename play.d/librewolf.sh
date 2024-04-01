@@ -24,7 +24,7 @@ esac
 
 if ! is_glibc_enough 2.35 ; then
     # use deb package for old glibc
-    PKGURL="https://deb.librewolf.net/pool/focal/librewolf-$VERSION-[0-9].$arch.deb"
+    PKGURL="https://deb.librewolf.net/pool/focal/librewolf-$VERSION-[0-9]*.$arch.deb"
 fi
 
 install_pkgurl
