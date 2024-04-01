@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.61.0
+Version: 3.61.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,13 @@ a discussion about extra requirements.
 
 
 %changelog
+* Mon Apr 01 2024 Vitaly Lipatov <lav@altlinux.ru> 3.61.1-alt1
+- epm release-upgrade: add rule for OpenMandrivaLX (untested)
+- epm repack.d/common.sh: add tags Requires, Conflicts, Provides after main tags
+- epm play: fix icons install for JetBrains products
+- epm repack: add apache-netbeans rule to ignore some deps
+- epm play anydesk: use direct link to workaround against buggy vendor server
+
 * Mon Apr 01 2024 Vitaly Lipatov <lav@altlinux.ru> 3.61.0-alt1
 - epm play angie: update distros
 - epm play: add kyocera-sane
