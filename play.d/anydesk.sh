@@ -28,16 +28,19 @@ esac
 # https://download.anydesk.com/os-specific/rhel8/anydesk-6.0.1-1.el8.x86_64.rpm
 # https://download.anydesk.com/deb/anydesk_6.0.1-1_amd64.deb
 
-# general msk
-#PKGMASK="$(epm print info -p)/$(epm print constructname $PKGNAME "*" $arch '' '_')"
-# TODO: hack with version, there are too many files
 PKGMASK="$(epm print constructname $PKGNAME "$VERSION" $arch '' '_')"
 
 # we miss obsoleted libpangox on ALT, so use RHEL8 build
 # lib.req: WARNING: /usr/bin/anydesk: library libpangox-1.0.so.0 not found
 #[ "$(epm print info -s)" = "alt" ] && PKGMASK="os-specific/rhel8/$(epm print constructname $PKGNAME "*" $arch)"
 
-PKGURL="$(eget --list --latest https://download.anydesk.com/linux/ "./$PKGMASK")"
+if [ "$VERSION" = "*" ] ; then
+    PKGURL="$(eget --list --latest https://download.anydesk.com/linux/ "./$PKGMASK")"
+else
+    # https://download.anydesk.com/linux/anydesk_6.3.0-1_amd64.deb
+    # https://download.anydesk.com/linux/anydesk_6.3.0-1_x86_64.rpm
+    PKGURL="https://download.anydesk.com/linux/$PKGMASK"
+fi
 
 install_pkgurl
 
