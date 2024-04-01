@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.60.13
+Version: 3.60.14
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,54 @@ a discussion about extra requirements.
 
 
 %changelog
+* Mon Apr 01 2024 Vitaly Lipatov <lav@altlinux.ru> 3.61.0-alt1
+- epm play angie: update distros
+- epm play: add kyocera-sane
+- epm repack ungoogled-chromium: fix duplication .desktop file
+- epm repack 64gram: disable autoupdate
+- epm pack/repack: download package in any case
+- rsync_alt_contents_index: add warning if rsync check is failed
+- epm play guardant: use repack for all rpm based distros
+- epm pack sidequest: fix icons install
+- epm play virtualhere: replace legacy converting code to epm pack using
+- epm play snap4arduino: rewrite via epm pack
+- epm play sublime: rewrite via epm pack
+- epm play.d: introduce warn_version_is_not_supported() and use it
+- epm play logseq: move repacking to pack.d
+- epm play liteide: move repacking to pack.d
+- epm play: add URL where missed
+- epm play common: switch to update to latest known version
+- epm play common.sh: use last unknown version if --ipfs in use
+- epm play: replace epm tool eget with just eget
+- epm play: add mytonwallet
+- epm repack: add check if the package name is the same as was in play.d script
+- epm pack.d/generic-appimage.sh: improve PRODUCT/VERSION separating
+- epm play xod-ide: fix downloading and repacking
+- epm repack.d/generic-appimage.sh: set PRODUCTCUR (as lowercased PRODUCT) and create link if they differs
+- epm play: cleanup rudesktop download and repacking
+- epm play.d: add override_pkgname and use it
+- epm play telegram: fix beta support
+- epm play: install latest tested version by default
+- epm repack.d/generic.sh: fill only empty Summary
+- eget: add support square brackets as wildcards
+- epm-repack-rpm: run fix spec after repack scripts
+- epm play pantum: full rewrite
+- epm play epsonscan2: rewrite, split epsonscan2-non-free-plugin separately
+- epm play epson-printer-utility: cleanup
+- epm repack: add support for .appimage (low case) extension
+- epm pack.d/generic-appimage.sh: don't override package version with X-AppImage-Version (can be wrong)
+- epm play: fix version issues (installing by version package we get before)
+- epm play.d/common.sh: implement install_pkgurl and install_pack_pkgurl and use it (repack rpm packages for any distro)
+- epm play piktomir: clean up via pack.d/piktomir.sh
+- epm play: remove obsoleted sputnik-browser, net.downloadhelper.coapp.sh
+- epm play cnrdrvcups-ufr2: enable repack for rpm
+- epm play aksusbd: update to 9.15, switch to IPFS
+- epm pack.d/generic-appimage.sh: fix for version started with v
+- epm play: add NotepadNext
+- epm pack: add create_file() and use it
+- epm repack: huge cleanup
+- epm repack: remove unused scripts
+
 * Thu Mar 28 2024 Vitaly Lipatov <lav@altlinux.ru> 3.60.13-alt1
 - epm play: add mailspring
 - epm-remove: stop hi level removing when --noscripts is used
