@@ -283,6 +283,12 @@ is_repacked_package()
     return 0
 }
 
+snap_get_pkgurl()
+{
+    local SNAPNAME=$1
+    eget -O- -H Snap-Device-Series:16 https://api.snapcraft.io/v2/snaps/info/$SNAPNAME | epm --inscript tool json -b | grep '\["channel-map",0,"download","url"\]' | head -n1 | sed -e 's|.*"\(.*\)"$|\1|'
+    
+}
 
 case "$1" in
     "--description")
