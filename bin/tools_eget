@@ -666,6 +666,7 @@ if is_ipfsurl "$1" && [ -z "$ipfs_mode" ] || [ "$ipfs_mode" = "auto" ] ; then
     info "Autodetecting available IPFS relay..."
     select_ipfs_mode
     info "Auto selected IPFS mode: $ipfs_mode"
+    [ "$ipfs_mode" = "gateway" ] && info "Since the ipfs command is missed, the http gateway will be used."
 else
     [ -n "$ipfs_mode" ] && info "IPFS mode: $ipfs_mode"
 fi
