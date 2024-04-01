@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.61.1"
+EPMVERSION="3.61.2"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -13504,7 +13504,7 @@ case $DISTRIB_ID in
     Mandriva)
         CMD="urpm-rpm"
         ;;
-    ROSA)
+    ROSA|NAME="OpenMandrivaLx")
         CMD="urpm-rpm"
         is_command yum && CMD="yum-rpm"
         is_command dnf && CMD="dnf-rpm"
@@ -13842,6 +13842,10 @@ case "$DISTRIB_ID" in
     "ROSA"|"MOSDesktop"|"MOSPanel")
         DISTRIB_FULL_RELEASE="$DISTRIB_CODENAME"
         DISTRIB_CODENAME="$DISTRIB_RELEASE"
+        ;;
+    "OpenMandrivaLx")
+        echo "$PRETTY_NAME" | grep -q "Cooker" && DISTRIB_RELEASE="Cooker"
+        echo "$PRETTY_NAME" | grep -q "Rolling" && DISTRIB_RELEASE="Rolling"
         ;;
 esac
 
