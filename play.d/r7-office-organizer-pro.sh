@@ -1,14 +1,12 @@
 #!/bin/sh
 
-PKGNAME=r7-organizer
+PKGNAME=r7-organizer_pro
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
-DESCRIPTION="R7 Office Organizer for Linux from the official site"
+DESCRIPTION="R7 Office Organizer Pro for Linux from the official site"
 URL="https://r7-office.ru/downloadorganizer"
 
 . $(dirname $0)/common.sh
-
-# TODO: add repack with conflicts to r7-office-organizer, r7-organizer-pro
 
 # hack with release part
 [ "$VERSION" = "*" ] || VERSION="$VERSION-1"
@@ -17,22 +15,19 @@ URL="https://r7-office.ru/downloadorganizer"
 
 case $(epm print info -p) in
     rpm)
-        mask="centos/r7organizer-$VERSION.x86_64.rpm"
+        mask="centos/r7organizer_pro-$VERSION.x86_64.rpm"
         ;;
     *)
-        mask="ubuntu/r7-organizer_${VERSION}_ubuntu-20.04_amd64.deb"
+        mask="ubuntu/r7-organizer_pro_${VERSION}_amd64.deb"
         ;;
 esac
 
 case $(epm print info -e) in
     AstraLinuxSE/*)
-        mask="astra/r7-organizer_${VERSION}_astralinux-signed_amd64.deb"
+        mask="astra/r7-organizer_pro_${VERSION}_astralinux-signed_amd64.deb"
         ;;
-#    Ubuntu/*)
-#        mask="ubuntu/r7-organizer_${VERSION}_ubuntu-20.04_amd64.deb"
-#        ;;
     ALTLinux/*)
-        mask="alt/r7organizer-${VERSION}_altlinux.x86_64.rpm"
+        mask="alt/r7organizer_pro-${VERSION}_altlinux.x86_64.rpm"
         ;;
 esac
 
