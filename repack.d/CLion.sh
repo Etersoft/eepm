@@ -32,9 +32,8 @@ StartupWMClass=jetbrains-clion
 Categories=Development;IDE
 EOF
 
-mkdir -p $BUILDROOT/usr/share/pixmaps
-install_file $PRODUCTDIR/bin/$PRODUCT.png /usr/share/pixmaps/
-install_file $PRODUCTDIR/bin/$PRODUCT.svg /usr/share/pixmaps/
+install_file $PRODUCTDIR/bin/$PRODUCT.png /usr/share/pixmaps/$PRODUCT.png
+install_file $PRODUCTDIR/bin/$PRODUCT.svg /usr/share/pixmaps/$PRODUCT.svg
 
 # kind of hack
 subst 's|%dir "'$PRODUCTDIR'/"||' $SPEC

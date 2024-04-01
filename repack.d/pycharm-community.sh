@@ -35,8 +35,8 @@ StartupWMClass=jetbrains-pycharm-ce
 Categories=Development;IDE;Python;
 EOF
 
-install_file $PRODUCTDIR/bin/$PRODUCT.png /usr/share/pixmaps/
-install_file $PRODUCTDIR/bin/$PRODUCT.svg /usr/share/pixmaps/
+install_file $PRODUCTDIR/bin/$PRODUCT.png /usr/share/pixmaps/$PRODUCT.png
+install_file $PRODUCTDIR/bin/$PRODUCT.svg /usr/share/pixmaps/$PRODUCT.svg
 
 # TODO: support other arch
 for i in arm aarch64 mips64el ppc64le x86 x86-64 ; do
