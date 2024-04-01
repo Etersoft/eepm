@@ -389,7 +389,7 @@ is_supported_arch "$(epm print info -a)" || fatal "Only '$SUPPORTEDARCHES' archi
 # skip install if there is package installed not via epm play
 is_repacked_package $REPOPKGNAME || exit 0
 
-if [ -z "$VERSION" ] && [ -n "$EGET_IPFS_DB" ] ; then
+if [ -z "$VERSION" ] && [ -z "$force" ] && [ -n "$EGET_IPFS_DB" ] ; then
     # IPFS is using, use known version
     VERSION="$(get_latest_version $PKGNAME)"
 fi
