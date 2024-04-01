@@ -301,23 +301,28 @@ fix_chrome_sandbox()
     chmod -v 4711 "$BUILDROOT$sandbox"
 }
 
+__add_tag_after_d()
+{
+    subst "s|^\(Distribution:.*\)|\1\n$*|" $SPEC
+}
+
 add_requires()
 {
     [ -n "$1" ] || return
     [ "$(epm print info -s)" = "alt" ] || return 0
-    subst "1iRequires: $*" $SPEC
+    __add_tag_after_d "Requires: $*"
 }
 
 add_conflicts()
 {
     [ -n "$1" ] || return
-    subst "1iConflicts: $*" $SPEC
+    __add_tag_after_d "Conflicts: $*"
 }
 
 add_provides()
 {
     [ -n "$1" ] || return
-    subst "1iProvides: $*" $SPEC
+    __add_tag_after_d "Provides: $*"
 }
 
 
