@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.60.14
+Version: 3.61.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
