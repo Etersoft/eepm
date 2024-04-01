@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.60.13"
+EPMVERSION="3.61.0"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -244,6 +244,11 @@ isnumber()
 rhas()
 {
     echo "$1" | grep -E -q -- "$2"
+}
+
+rihas()
+{
+    echo "$1" | grep -E -i -q -- "$2"
 }
 
 startwith()
@@ -783,7 +788,7 @@ get_package_type()
             echo "msi"
             return
             ;;
-        *.AppImage)
+        *.AppImage|*.appimage)
             echo "AppImage"
             return
             ;;
@@ -5861,7 +5866,10 @@ epm_pack()
         url="$tarname"
         pkg_urls="$tarname"
         cd $tmpdir || fatal
-        __handle_pkg_urls_to_install
+
+        __download_pkg_urls
+        pkg_urls=
+
         [ -n "$pkg_files" ] || fatal "Can't download $tarname"
         tarname="$(realpath "$pkg_files")"
     elif [ -d "$tarname" ] ; then
@@ -8435,6 +8443,10 @@ epm_release_upgrade()
         sudocmd urpmi --auto-update $non_interactive $force
         return
         ;;
+     "OpenMandrivaLx")
+        sudocmd dnf clean all
+        sudocmd dnf --allowerasing distro-sync
+        return
     "ROSA")
         # TODO: move to distro related upgrade
         #epm repo remove all
@@ -8901,8 +8913,10 @@ epm_remove()
         [ -n "$force" ] || return $STATUS
     fi
 
+    # TODO: FIX
+    # нужно удалить все пакеты, которые зависят от удаляемого
     if [ -n "$noscripts" ] ; then
-        warning "It is not recommended to remove a few packages with disabled scripts simultaneously."
+        #warning "It is not recommended to remove a few packages with disabled scripts simultaneously."
         fatal "We can't allow packages removing on hi level when --noscripts is used."
     fi
 
@@ -9201,8 +9215,10 @@ __prepare_source_package()
 
     # TODO: use func for get name from deb pkg
     # TODO: epm print name from deb package
+    local pkgname="$(echo $alpkg | sed -e "s|_.*||")"
+
     # TODO: use stoplist only for deb?
-    [ -z "$force" ] && __check_stoplist $(echo $alpkg | sed -e "s|_.*||") && fatal "Please use official package instead of $alpkg repacking (It is not recommended to use --force to skip this checking."
+    [ -z "$force" ] && __check_stoplist $pkgname && fatal "Please use official package instead of $alpkg repacking (It is not recommended to use --force to skip this checking."
 
     SUBGENERIC=''
 
@@ -9214,7 +9230,7 @@ __prepare_source_package()
     # convert tarballs to tar (for alien)
 
     # they will fill $returntarname
-    if rhas "$alpkg" "\.AppImage$" ; then
+    if rihas "$alpkg" "\.AppImage$" ; then
         # big hack with $pkg_urls_downloaded (it can be a list, not a single url)
         __epm_pack_run_handler generic-appimage "$pkg" "" "$pkg_urls_downloaded"
         SUBGENERIC='appimage'
@@ -9288,7 +9304,8 @@ epm_repack()
 {
     # if possible, it will put pkg_urls into pkg_files and reconstruct pkg_filenames
     if [ -n "$pkg_urls" ] ; then
-        __handle_pkg_urls_to_install
+        __download_pkg_urls
+        pkg_urls=
     fi
 
     [ -n "$pkg_names" ] && warning "Can't find $pkg_names files"
@@ -9558,6 +9575,8 @@ __epm_repack_to_rpm()
         # run generic scripts and repack script for the pkg
         cd $buildroot || fatal
 
+        [ -n "$EEPM_INTERNAL_PKGNAME" ] && [ "$EEPM_INTERNAL_PKGNAME" != "$pkgname" ] && fatal "Some bug: the name of the repacking package ($pkgname) differs with the package name ($EEPM_INTERNAL_PKGNAME) from play.d script."
+
         __fix_spec $pkgname $buildroot $spec
         __apply_fix_code "generic"             $buildroot $spec $pkgname $abspkg $SUBGENERIC
         __apply_fix_code "generic-$SUBGENERIC" $buildroot $spec $pkgname $abspkg
@@ -9565,6 +9584,7 @@ __epm_repack_to_rpm()
         if ! has_repack_script $pkgname ; then
             __apply_fix_code "generic-default" $buildroot $spec $pkgname $abspkg
         fi
+        __fix_spec $pkgname $buildroot $spec
         cd - >/dev/null
 
         TARGETARCH=$(epm print info -a | sed -e 's|^x86$|i586|')
@@ -11944,9 +11964,12 @@ rsync_alt_contents_index()
     local URL="$1"
     local TD="$2"
     local res
-    assure_exists rsync
+    assure_exists rsync || return
 
-    __rsync_check "$URL" || return
+    if ! __rsync_check "$URL" ; then
+        warning "$URL is not accessible via rsync, skipping contents index update..."
+        return
+    fi
 
     mkdir -p "$(dirname "$TD")"
 
@@ -12892,7 +12915,7 @@ esac
 __epm_update()
 {
 
-    [ -z "$*" ] || fatal "No arguments are allowed here"
+    [ -z "$*" ] || fatal "No arguments are allowed for epm update command"
 
     info "Running update the package index files from remote package repository database ..."
 
@@ -15851,7 +15874,7 @@ get_urls()
 
     # cat html, divide to lines by tags and cut off hrefs only
     scat $URL | sed -e 's|<|<\n|g' -e 's|data-file=|href=|g' -e "s|href=http|href=\"http|g" -e "s|>|\">|g" -e "s|'|\"|g" | \
-         grep -i -o -E 'href="(.+)"' | cut -d'"' -f2
+         grep -i -o -E 'href="(.+)"' | sed -e 's|&amp;|\&|' | cut -d'"' -f2
 }
 
 
@@ -15926,8 +15949,8 @@ else
 fi
 
 # https://www.freeoffice.com/download.php?filename=freeoffice-2021-1062.x86_64.rpm
-if echo "$URL" | grep -q "[*]" ; then
-    fatal "Error: there are globbing symbol (*) in $URL. It is allowed only for mask part"
+if echo "$URL" | grep -q "[*\[\]]" ; then
+    fatal "Error: there are globbing symbol (*[]) in $URL. It is allowed only for mask part"
 fi
 
 is_url "$MASK" && fatal "eget supports only one URL as argument"
@@ -15950,8 +15973,15 @@ if [ -n "$LISTONLY" ] ; then
     return
 fi
 
+is_wildcard()
+{
+    echo "$1" | grep -q "[*?]" && return
+    echo "$1" | grep -q "\]" && return
+    echo "$1" | grep -q "\[" && return
+}
+
 # If there is no wildcard symbol like asterisk, just download
-if echo "$MASK" | grep -qv "[*?]" || echo "$MASK" | grep -q "[?].*="; then
+if ! is_wildcard "$MASK" || echo "$MASK" | grep -q "[?].*="; then
     sget "$1" "$TARGETFILE"
     return
 fi

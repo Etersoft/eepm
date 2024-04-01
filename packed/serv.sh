@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.60.13"
+EPMVERSION="3.61.0"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -244,6 +244,11 @@ isnumber()
 rhas()
 {
     echo "$1" | grep -E -q -- "$2"
+}
+
+rihas()
+{
+    echo "$1" | grep -E -i -q -- "$2"
 }
 
 startwith()
@@ -783,7 +788,7 @@ get_package_type()
             echo "msi"
             return
             ;;
-        *.AppImage)
+        *.AppImage|*.appimage)
             echo "AppImage"
             return
             ;;
