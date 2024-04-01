@@ -4,7 +4,7 @@
 # https://www.altlinux.org/Nvidia#Смена_открытых_драйверов_на_проприетарные[1]
 # https://www.altlinux.org/Переход_на_драйверы_Nvidia_и_fglrx#Установка_проприетарных_драйверов_nvidia_и_fglrx_:
 
-[ "$1" != "--run" ] && echo "Switch to using nVidia proprietary driver" && exit
+[ "$1" != "--run" ] && echo "Переход на использование проприетарных драйверов nvidia" && exit
 
 . $(dirname $0)/common.sh
 
@@ -22,7 +22,7 @@ epm assure lspci pciutils || exit
 # проверяем работоспособность драйвера на текущий момент
 # TODO: добавить аргумент --force для принудительной переустановки
 if [ -z "$force" ] && a= lspci -k | grep -A 2 -i "VGA" | grep "Kernel driver in use" | grep -q "nvidia" ; then
-	echo "NVIDIA driver is already installed and used."
+	echo "Драйвера nvidia уже установлены и запущены."
 	exit
 fi
 
@@ -67,27 +67,88 @@ if [ -e "/etc/X11/xorg.conf" ] && [ "$(grep -E 'nouveau|fbdev|vesa' "/etc/X11/xo
 fi
 
 
-epm install --skip-installed nvidia-settings nvidia-vaapi-driver ocl-nvidia libcuda vulkan-tools libnvidia-encode libnvidia-ngx libnvidia-opencl libvulkan1 nvidia-modprobe \
-	libglut libGLU nvidia-xconfig libvulkan1 libcudadebugger libnvcuvid libnvidia-api \
-	libnvidia-fbc libnvidia-ml libnvidia-nvvm libnvidia-ptxjitcompiler libnvoptix nvidia-smi
+# Создаем список дополнительных пакетов и их описания. Все новые пакеты добавлять в этот список.
+declare -A packages
+packages=(
+    ["nvidia-settings"]=" nvidia-settings — это инструмент для настройки видеокарт NVIDIA."
+    ["nvidia-vaapi-driver"]="nvidia-vaapi-driver — это драйвер для аппаратного декодирования видео на видеокартах NVIDIA."
+    ["vulkan-tools"]="vulkan-tools — это набор инструментов для работы с Vulkan API."
+    ["nvidia-modprobe"]="nvidia-modprobe — это утилита для загрузки модулей ядра NVIDIA."
+    ["nvidia-xconfig"]="nvidia-xconfig — это инструмент для управления конфигурацией X server для видеокарт NVIDIA."
+    ["libvulkan1"]="libvulkan1 — это библиотека, которая предоставляет API Vulkan 1.x."
+)
+install_list=()
+
+# Для каждого пакета спрашиваем пользователя, хочет ли он его установить
+for package in "${!packages[@]}"; do
+    echo "${packages[$package]}"
+    read -p "Установить $package? [Y/n] " answer
+    answer=${answer,,}  # Преобразуем ответ в нижний регистр
+
+    # Если ответ 'y' или пустой (вариант по умолчанию), то добавляем пакет в список для установки. В противном случае пропускаем.
+    if [[ $answer == 'y' || $answer == '' ]]; then
+        install_list+=($package)
+	else
+		continue
+    fi
+done
+
+# Отдельно спрашиваем про пакеты для поддержки Cuda. Аналогично установке пакетов nvidia_glx_libs_XXX.XX.
+#TODO необходимо разобраться с групами пакетов. Если Rosa и другие ветки репозиториев Alt позволяют, то придумать как применить nvidia_glx_libs_XXX.XX нужной версии.
+read -p "Вы хотите установить дополнительные пакеты для поддержки Cuda? [Y/n] " answer
+
+answer=${answer,,}
+
+if [[ $answer == 'y' || $answer == '' ]]; then
+	cuda_list=("ocl-nvidia" "libcuda" "libnvidia-encode" "libnvidia-ngx" "libnvidia-opencl" "libcudadebugger" "libnvcuvid" "libnvidia-api" "libnvidia-fbc" "libnvidia-ml" "libnvidia-nvvm" "libnvidia-ptxjitcompiler" "libnvoptix" "nvidia-smi")
+    install_list+=($cuda_list)
+else
+	continue
+fi
+
+# Если список для установки не пуст, то устанавливаем пакеты
+if [ ${#install_list[@]} -ne 0 ]; then
+    echo "Устанавливаем пакеты: ${install_list[@]}"
+    epm install --skip-installed ${install_list[@]}
+else
+    echo "Вы не выбрали ни одного дополнительного пакета для установки."
+fi
 
 epm play i586-fix
 
-# Убирает «Неизвестный монитор» в настройках дисплеев в сессии Wayland
-# Данное решение приводит к невозможности входа в tty, к отсутствию вывода логов во время загрузки (Если не включён Plymouth)
-if ! grep "initcall_blacklist=simpledrm_platform_driver_init" /etc/sysconfig/grub2 &>/dev/null ; then 
-	# Делаем копию
-	cp /etc/sysconfig/grub2 /etc/sysconfig/grub2.epmbak
-	sed -i "s|^\(GRUB_CMDLINE_LINUX_DEFAULT='.*\)'\$|\1 initcall_blacklist=simpledrm_platform_driver_init'|" /etc/sysconfig/grub2
+# У этого фикса есть плюсы и минусы. Лучше предложить его применение на этапе установки.
+echo "FIX: убираем «Неизвестный монитор» в настройках дисплеев в сессии Wayland"
+echo "Существует проблема, когда у некоторых пользователей появляется дополнительный «Неизвестный монитор»."
+echo  "Внимание! Данное решение приводит к невозможности входа в tty, к отсутствию вывода логов во время загрузки (Если не включён Plymouth)."
+
+read -p "Вы хотите применить FIX? [Y/n] " answer
+
+answer=${answer,,}
+
+if [[ $answer == 'y' || $answer == '' ]]; then
+	if ! grep "initcall_blacklist=simpledrm_platform_driver_init" /etc/sysconfig/grub2 &>/dev/null ; then 
+		echo "Создание копии /etc/sysconfig/grub2..."
+		cp /etc/sysconfig/grub2 /etc/sysconfig/grub2.epmbak
+
+		echo "Добавление initcall_blacklist=simpledrm_platform_driver_init в параметры ядра..."
+		sed -i "s|^\(GRUB_CMDLINE_LINUX_DEFAULT='.*\)'\$|\1 initcall_blacklist=simpledrm_platform_driver_init'|" /etc/sysconfig/grub2
+
+		echo "FIX применён."
+	fi
+else
+	continue
 fi
 
-# Активируем службы управления питания NVIDIA, без этих служб будет некоректно работать уход в сон
+# Без этих служб будет некоректно работать уход в сон
+echo "Активируем службы управления питания NVIDIA."
 systemctl enable nvidia-suspend.service nvidia-resume.service nvidia-hibernate.service
 
-# Запускаем регенерацию initrd
+
+echo "Запускаем регенерацию initrd."
 make-initrd
 
-# Обновляем grub
+echo "Обновляем grub..."
 update-grub
 
-echo "Done. Just you need reboot your system to use nVidia proprietary drivers."
+echo "Выполнено. Перезагрузите систему для использования проприетарных драйверов nvidia."
+
