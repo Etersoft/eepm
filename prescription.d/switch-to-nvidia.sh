@@ -139,10 +139,14 @@ else
 	continue
 fi
 
-# Без этих служб будет некоректно работать уход в сон
-echo "Активируем службы управления питания NVIDIA."
+# Без этих интерфейсов будет некоректно работать уход в сон
+echo "Активируем интерфесы питания NVIDIA."
 systemctl enable nvidia-suspend.service nvidia-resume.service nvidia-hibernate.service
-
+# Добавляем выделение места в системе для видеопамяти. Иначе интерфейсы не будут работать.
+cat << _EOF_ > /etc/modprobe.d/nvidia_videomemory_allocation.conf
+options nvidia NVreg_PreserveVideoMemoryAllocations=1
+options nvidia NVreg_TemporaryFilePath=/run
+_EOF_
 
 echo "Запускаем регенерацию initrd."
 make-initrd
