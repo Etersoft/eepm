@@ -218,7 +218,11 @@ __epm_repack_to_rpm()
         # run generic scripts and repack script for the pkg
         cd $buildroot || fatal
 
-        [ -n "$EEPM_INTERNAL_PKGNAME" ] && [ "$EEPM_INTERNAL_PKGNAME" != "$pkgname" ] && fatal "Some bug: the name of the repacking package ($pkgname) differs with the package name ($EEPM_INTERNAL_PKGNAME) from play.d script."
+        if [ -n "$EEPM_INTERNAL_PKGNAME" ] ; then
+            if ! estrlist contains "$pkgname" "$EEPM_INTERNAL_PKGNAME" ; then
+                fatal "Some bug: the name of the repacking package ($pkgname) differs with the package name ($EEPM_INTERNAL_PKGNAME) from play.d script."
+            fi
+        fi
 
         __fix_spec $pkgname $buildroot $spec
         __apply_fix_code "generic"             $buildroot $spec $pkgname $abspkg $SUBGENERIC
