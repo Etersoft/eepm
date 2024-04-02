@@ -12,8 +12,12 @@ fatal()
 
 EPM=$(realpath $(dirname $0)/../bin/epm)
 
+ipfs=''
+kubo=''
+
 if [ "$1" == "--ipfs" ] ; then
     ipfs="--ipfs"
+    kubo="kubo"
     shift
 fi
 
@@ -35,7 +39,7 @@ if [ "$1" == "--hasher" ] ; then
         exit
     fi
 
-    loginhsh -i -t -p epm $B -r true curl iputils eepm-repack apt-repo
+    loginhsh -i -t -p epm $B -r true curl iputils eepm-repack apt-repo $kubo
     loginhsh -t -p epm $B -o
 
     HDIR=$(loginhsh -q -t -d -p epm $B)
@@ -51,6 +55,8 @@ if [ "$1" != "--local" ] ; then
     echo "Run with --hasher or --local to test all apps install"
     exit
 fi
+
+[ -n "$ipfs" ] && export EGET_IPFS_API=/ip4/91.232.225.49/tcp/5001
 
 shift
 SILENT=''

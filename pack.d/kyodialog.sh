@@ -16,7 +16,7 @@ else
     fatal "Have no idea how to handle $(basename $TAR)"
 fi
 
-rm KyoceraLinuxPackages-*.tar.gz
+rm $TAR
 cd KyoceraLinuxPackages-* || fatal
 case "$(epm print info -p)" in
     rpm)

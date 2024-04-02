@@ -3,6 +3,10 @@
 # It will be run with two args: buildroot spec
 BUILDROOT="$1"
 SPEC="$2"
+
+PKGNAME="yandex-messenger"
+subst "s|^Name:.*|Name: $PKGNAME|" $SPEC
+
 PRODUCTDIR=/opt/yandex-messenger
 PRODUCTCUR=yandex-messenger
 . $(dirname $0)/common-chromium-browser.sh

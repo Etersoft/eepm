@@ -134,7 +134,13 @@ install_pack_pkgurl()
     epm pack $repack --install $PKGNAME "$PKGURL" "$@"
 }
 
+snap_get_pkgurl()
+{
+    local SNAPNAME=$1
+    eget -O- -H Snap-Device-Series:16 https://api.snapcraft.io/v2/snaps/info/$SNAPNAME | epm --inscript tool json -b | grep '\["channel-map",0,"download","url"\]' | head -n1 | sed -e 's|.*"\(.*\)"$|\1|'
+}
 
+# return version only for the first package
 get_latest_version()
 {
     local ver
@@ -283,12 +289,17 @@ is_repacked_package()
     return 0
 }
 
-snap_get_pkgurl()
+is_repacked_packages()
 {
-    local SNAPNAME=$1
-    eget -O- -H Snap-Device-Series:16 https://api.snapcraft.io/v2/snaps/info/$SNAPNAME | epm --inscript tool json -b | grep '\["channel-map",0,"download","url"\]' | head -n1 | sed -e 's|.*"\(.*\)"$|\1|'
-    
+    local pkg
+    local pkgs="$1"
+    [ -n "$pkgs" ] || pkgs="$PKGNAME"
+    [ -n "$pkgs" ] || return 0 #fatal "is_repacked_package() is called without package name"
+    for pkg in $pkgs ; do
+        is_repacked_package $pkg || return
+    done
 }
+
 
 case "$1" in
     "--description")
@@ -307,13 +318,16 @@ esac
 
 check_tty
 
+pkgtext="package"
+pkgistext="package is"
+epm tool estrlist has_space "$PKGNAME" 2>/dev/null && pkgtext="packages" && pkgistext="packages are"
 
 # set PKGNAME to $BASEPKGNAME-$VERSION if $VERSION is found in PRODUCTALT
 [ -n "$PRODUCTALT" ] && check_alternative_pkgname
 
 case "$1" in
     "--remove")
-        #is_repacked_package || exit 0
+        #is_repacked_packages || exit 0
         epm remove $PKGNAME
         exit
         ;;
@@ -333,25 +347,26 @@ case "$1" in
         ;;
     "--installed")
         #epm installed $PKGNAME
-        is_repacked_package $PKGNAME
+        is_repacked_packages $PKGNAME
         exit
         ;;
     "--installed-version")
-        epm print version for package $PKGNAME
+        epm print version for package $PKGNAME | head -n1
         exit
         ;;
     "--update")
         if ! epm installed $PKGNAME ; then
-            echo "Skipping update of $PKGNAME (package is not installed)"
+            echo "Skipping update of $PKGNAME ($pkgistext not installed)"
             exit
         fi
 
-        if epm mark checkhold "$PKGNAME" ; then
-            echo "Skipping update of $PKGNAME (package is on hold, see '# epm mark showhold')"
+        if epm mark checkhold $PKGNAME ; then
+            echo "Skipping update of $PKGNAME ($pkgistext on hold, see '# epm mark showhold')"
             exit
         fi
 
-        pkgver="$(epm print version for package $PKGNAME)"
+        # HACK: check version only by first package (we assume all packages have the same version)
+        pkgver="$(epm print version for package $PKGNAME | head -n1)"
         latestpkgver="$(get_latest_version $PKGNAME)"
         # ignore update if have no latest package version or the latest package version no more than installed one
         if [ -n "$pkgver" ] ; then
@@ -391,9 +406,10 @@ esac
 
 is_supported_arch "$(epm print info -a)" || fatal "Only '$SUPPORTEDARCHES' architectures is supported"
 
+#epm tool estrlist has_space "$PKGNAME" && fatal "play.d/common does not support a new packages in PKGNAME at all!"
 
 # skip install if there is package installed not via epm play
-is_repacked_package $REPOPKGNAME || exit 0
+is_repacked_packages $REPOPKGNAME || exit 0
 
 if [ -z "$VERSION" ] && [ -z "$force" ] && [ -n "$EGET_IPFS_DB" ] ; then
     # IPFS is using, use known version
@@ -409,6 +425,6 @@ fi
 [ -n "$VERSION" ] || VERSION="*"
 
 echo
-echo "Installing $DESCRIPTION as $PKGNAME package ..."
+echo "Installing $DESCRIPTION as $PKGNAME $pkgtext ..."
 
 export EEPM_INTERNAL_PKGNAME="$PKGNAME"

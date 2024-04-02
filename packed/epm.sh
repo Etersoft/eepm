@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.61.2"
+EPMVERSION="3.61.3"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -6213,9 +6213,9 @@ __check_play_script()
 }
 
 
-__epm_play_run()
+__epm_play_run_script()
 {
-    local script="$psdir/$1.sh"
+    local script="$1"
     shift
 
     local addopt
@@ -6226,6 +6226,13 @@ __epm_play_run()
     #info "Running $($script --description 2>/dev/null) ..."
     [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
     ( export EPM_OPTIONS="$EPM_OPTIONS $addopt" export PATH=$SCPATH ; docmd $CMDSHELL $bashopt $script "$@" )
+}
+
+__epm_play_run()
+{
+    local script="$psdir/$1.sh"
+    shift
+    __epm_play_run_script "$script" "$@"
 }
 
 __epm_play_list_installed()
@@ -6312,11 +6319,20 @@ Examples:
 EOF
 }
 
+__epm_is_shell_script()
+{
+    local script="$1"
+    [ -x "$script" ] && rhas "$script" "\.sh$" && head -n1 "$script" | grep -q "^#!/bin/sh"
+}
 
 __epm_play_remove()
 {
     local prescription
     for prescription in $* ; do
+        if __epm_is_shell_script "$prescription"  ; then
+            __epm_play_run_script $prescription --remove
+            continue
+        fi
         if __check_play_script "$prescription" ; then
             __epm_play_run $prescription --remove
             __remove_installed_app "$prescription"
@@ -6358,6 +6374,12 @@ __epm_play_install_one()
 {
     local prescription="$1"
     shift
+
+    if __epm_is_shell_script "$prescription"  ; then
+        # direct run play script
+        __epm_play_run_script "$prescription" --run "$@" || fatal "There was some error during install the application."
+        return
+    fi
 
     if __check_play_script "$prescription" ; then
         #__is_app_installed "$prescription" && info "$$prescription is already installed (use --remove to remove)" && exit 1
@@ -9575,7 +9597,11 @@ __epm_repack_to_rpm()
         # run generic scripts and repack script for the pkg
         cd $buildroot || fatal
 
-        [ -n "$EEPM_INTERNAL_PKGNAME" ] && [ "$EEPM_INTERNAL_PKGNAME" != "$pkgname" ] && fatal "Some bug: the name of the repacking package ($pkgname) differs with the package name ($EEPM_INTERNAL_PKGNAME) from play.d script."
+        if [ -n "$EEPM_INTERNAL_PKGNAME" ] ; then
+            if ! estrlist contains "$pkgname" "$EEPM_INTERNAL_PKGNAME" ; then
+                fatal "Some bug: the name of the repacking package ($pkgname) differs with the package name ($EEPM_INTERNAL_PKGNAME) from play.d script."
+            fi
+        fi
 
         __fix_spec $pkgname $buildroot $spec
         __apply_fix_code "generic"             $buildroot $spec $pkgname $abspkg $SUBGENERIC
@@ -16790,6 +16816,13 @@ reg_include()
         strip_spaces "$RES"
 }
 
+contains()
+{
+    #estrlist has "$1" "$2"
+    local res="$(estrlist reg_wordexclude "$1" "$2")"
+    [ "$res" != "$2" ]
+}
+
 example()
 {
         local CMD="$1"
@@ -16827,6 +16860,7 @@ help()
         echo "  uniq [word list]                  - alias for union"
         echo "  list [word list]                  - just list words line by line"
         echo "  count [word list]                 - print word count"
+        echo "  contains <word> [word list]       - check if word list contains the word"
         echo
         echo "Examples:"
 #        example reg_remove "1." "11 12 21 22"
@@ -16835,6 +16869,8 @@ help()
         example reg_exclude "22 1." "11 12 21 22"
         example reg_wordexclude "wo.* er" "work were more else"
         example union "1 2 2 3 3"
+        example_res contains "wo" "wo wor"
+        example_res contains "word" "wo wor"
         example count "1 2 3 4 10"
         example_res isempty "  "
         #example_res isempty " 1 "

@@ -9,12 +9,12 @@ PRODUCT=atom
 PRODUCTCUR=$(basename $0 .sh)
 APMNAME=$(echo $PRODUCTCUR | sed -e 's|^atom|apm|')
 
+. $(dirname $0)/common-chromium-browser.sh
+
 for i in atom atom-beta ; do
     [ "$i"  = "$PRODUCTCUR" ] && continue
     add_conflicts $i
 done
-
-. $(dirname $0)/common-chromium-browser.sh
 
 add_electron_deps
 

@@ -14,6 +14,11 @@ URL="https://element.io/"
 arch="amd64"
 
 mask="$(epm print constructname $PKGNAME "$VERSION" $arch "deb")"
-PKGURL=$(eget --list --latest https://packages.element.io/debian/pool/main/e/element-desktop/index.html "$mask")
+
+if [ "$VERSION" = "*" ] ; then
+    PKGURL="$(eget --list --latest https://packages.element.io/debian/pool/main/e/element-desktop/index.html "$mask")"
+else
+    PKGURL="https://packages.element.io/debian/pool/main/e/element-desktop/$mask"
+fi
 
 install_pkgurl

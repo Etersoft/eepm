@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME=chats
+PKGNAME=yandex-messenger
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="Yandex Messenger is designed for communication: send text messages, make audio and video calls in private and group chats, subscribe to and create channels."
