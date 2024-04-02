@@ -26,7 +26,7 @@ case "$(epm print info -s)" in
       file=onlyoffice-desktopeditors_amd64.deb
       pkgtype=deb
 
-      if !is_glibc_enough 2.32 ; then
+      if ! is_glibc_enough 2.32 ; then
           # need old glibc
           VERSION=7.3.3
       fi
