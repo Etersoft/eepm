@@ -6,6 +6,13 @@ VERSION="$2"
 DESCRIPTION="R7 Office Organizer for Linux from the official site"
 URL="https://r7-office.ru/downloadorganizer"
 
+# fixme: global epm is used
+case $(epm print info -e) in
+    ALTLinux/*)
+        PKGNAME="r7organizer"
+        ;;
+esac
+
 . $(dirname $0)/common.sh
 
 # TODO: add repack with conflicts to r7-office-organizer, r7-organizer-pro
@@ -33,6 +40,7 @@ case $(epm print info -e) in
 #        ;;
     ALTLinux/*)
         mask="alt/r7organizer-${VERSION}_altlinux.x86_64.rpm"
+        #override_pkgname "r7organizer"
         ;;
 esac
 

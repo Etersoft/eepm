@@ -4,6 +4,9 @@
 myoffice-*
 r7-office
 r7-office-organizer
+r7-office-organizer_pro
+# ALT hack
+r7organizer
 lsb-cprocsp-*
 cprocsp-*
 # vendor: SAFIB
