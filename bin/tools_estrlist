@@ -235,6 +235,13 @@ reg_include()
         strip_spaces "$RES"
 }
 
+contains()
+{
+    #estrlist has "$1" "$2"
+    local res="$(estrlist reg_wordexclude "$1" "$2")"
+    [ "$res" != "$2" ]
+}
+
 example()
 {
         local CMD="$1"
@@ -272,6 +279,7 @@ help()
         echo "  uniq [word list]                  - alias for union"
         echo "  list [word list]                  - just list words line by line"
         echo "  count [word list]                 - print word count"
+        echo "  contains <word> [word list]       - check if word list contains the word"
         echo
         echo "Examples:"
 #        example reg_remove "1." "11 12 21 22"
@@ -280,6 +288,8 @@ help()
         example reg_exclude "22 1." "11 12 21 22"
         example reg_wordexclude "wo.* er" "work were more else"
         example union "1 2 2 3 3"
+        example_res contains "wo" "wo wor"
+        example_res contains "word" "wo wor"
         example count "1 2 3 4 10"
         example_res isempty "  "
         #example_res isempty " 1 "
