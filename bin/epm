@@ -308,7 +308,7 @@ check_command()
         epm_cmd=list_available
         direct_args=1
         ;;
-    programs)                 # HELPCMD: print list of installed GUI program(s) (they have .desktop files)
+    programs)                 # HELPCMD: print list of installed packages with GUI program(s) (they have .desktop files)
         epm_cmd=programs
         direct_args=1
         ;;

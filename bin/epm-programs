@@ -32,6 +32,14 @@ epm_programs()
     esac
 
     [ -d "$DESKTOPDIR" ] || fatal "There is no $DESKTOPDIR dir on the system."
+
+    if [ -n "$short" ] ; then
+        cd $DESKTOPDIR || fatal
+        showcmd ls -1 *.desktop
+        ls -1 *.desktop
+        exit
+    fi
+
     #find /usr/share/applications -type f -name "*.desktop" | while read f; do pkg_files="$f" quiet=1 short=1 epm_query_file ; done | sort -u
     showcmd "find $DESKTOPDIR -type f -print0 -name "*.desktop" | xargs -0 $0 -qf --quiet --short | sort -u"
     find $DESKTOPDIR -type f -print0 -name "*.desktop" | \
