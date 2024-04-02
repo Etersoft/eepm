@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.61.2
+Version: 3.61.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,16 @@ a discussion about extra requirements.
 
 
 %changelog
+* Tue Apr 02 2024 Vitaly Lipatov <lav@altlinux.ru> 3.61.3-alt1
+- epm play chrome: fix downloading
+- epm play: add popcorn-time
+- epm play: add tradingview
+- epm play element-desktop: add direct URL
+- epm play kyodialog: update to 9.3
+- epm play: add support for run direct script
+- epm play.d/common.sh: do fatal if there are a few packages in PKGNAME
+- epm play onlyoffice: fix is_glibc_enough call
+
 * Mon Apr 01 2024 Vitaly Lipatov <lav@altlinux.ru> 3.61.2-alt1
 - epm play: fix forcing version with --ipfs
 - epm play myoffice: add direct download for known version
