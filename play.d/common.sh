@@ -171,7 +171,7 @@ is_pkg_enough()
     local needed="$2"
     local PKG="$1"
 
-    if epm installed $PKG ; then
+    if epm status --installed $PKG ; then
         local ver
         ver=$(epm print version for package "$PKG" | head -n1)
         if [ -n "$ver" ] && [ "$(epm print compare version "$ver" "$needed")" = "-1" ] ; then
@@ -187,7 +187,7 @@ is_stdcpp_enough()
 {
     local needed="$1"
     local STDCPKG="libstdc++"
-    epm installed $STDCPKG || STDCPKG="libstdc++6"
+    epm status --installed $STDCPKG || STDCPKG="libstdc++6"
 
     is_pkg_enough $STDCPKG $needed
 }
@@ -196,7 +196,7 @@ is_glibc_enough()
 {
     local needed="$1"
     local PKG="glibc-core"
-    epm installed $PKG || PKG="glibc"
+    epm status --installed $PKG || PKG="glibc"
 
     is_pkg_enough $PKG $needed
 }
@@ -244,7 +244,7 @@ check_alternative_pkgname()
         if [ "$i" = "''" ] ; then
             continue
         fi
-        if epm installed $BASEPKGNAME-$i ; then
+        if epm status --installed $BASEPKGNAME-$i ; then
             PKGNAME=$BASEPKGNAME-$i
             BRANCH="$i"
             break
