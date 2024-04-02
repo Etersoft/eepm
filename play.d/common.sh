@@ -391,6 +391,7 @@ esac
 
 is_supported_arch "$(epm print info -a)" || fatal "Only '$SUPPORTEDARCHES' architectures is supported"
 
+epm tool estrlist has_space "$PKGNAME" && fatal "play.d/common does not support a new packages in PKGNAME at all!"
 
 # skip install if there is package installed not via epm play
 is_repacked_package $REPOPKGNAME || exit 0
