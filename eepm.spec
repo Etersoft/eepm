@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.61.3
+Version: 3.61.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,23 @@ a discussion about extra requirements.
 
 
 %changelog
+* Wed Apr 03 2024 Vitaly Lipatov <lav@altlinux.ru> 3.61.4-alt1
+- epm-repack-rpm: check package name after spec fixing
+- epm play yandex-messanger: rename package chats to yandex-messenger
+- epm play r7-office-organizer*: fix removing on ALT (fix package name)
+- epm play.d/common.sh: allow a few packages in PKGNAME (assume they with the same version)
+- epm play: add i586-openssl098
+- epm-programs: add --short support
+- epm play telegram: add direct URL support
+- epm play mailruagent: rewritten
+- epm repack cascadeur: rewritten
+- epm pack flashplayer: move all code from repack rule
+- epm pack Telegram: move desktop/icons from repack rule
+- epm pack 64Gram: move icons/desktop from repack rules
+- epm repack cuda-z: move icons/desktop from repack rule
+- epm repack vkteams: move icons/desktop from repack rule
+- epm play: Added snap support
+
 * Tue Apr 02 2024 Vitaly Lipatov <lav@altlinux.ru> 3.61.3-alt1
 - epm play chrome: fix downloading
 - epm play: add popcorn-time
