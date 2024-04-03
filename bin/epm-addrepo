@@ -172,24 +172,24 @@ __epm_addrepo_altlinux_help()
 cat <<EOF
 
 epm repo add - add branch repo. Use follow params:
-    basealt                  - for BaseALT repo"
-    altsp                    - add ALT SP repo"
-    yandex                   - for BaseALT repo mirror hosted by Yandex (recommended)"
-    autoimports              - for BaseALT autoimports repo"
+    basealt                  - for BaseALT repo
+    altsp                    - add ALT SP repo
+    yandex                   - for BaseALT repo mirror hosted by Yandex (recommended)
+    autoimports              - for BaseALT autoimports repo
     autoports                - for Autoports repo (with packages from Sisyphus rebuilt to the branch)
-    altlinuxclub             - for altlinuxclub repo (http://altlinuxclub.ru/)"
-    deferred                 - for Etersoft Sisyphus Deferred repo"
-    deferred.org             - for Etersoft Sisyphus Deferred repo (at mirror.eterfund.org)"
-    etersoft                 - for LINUX@Etersoft repo"
-    korinf                   - for Korinf repo"
-    <task number>            - add task repo"
-    archive 2018/02/09       - add archive of the repo from that date"
-    /dir/to/repo [component] - add repo dir generated with epm repo index --init"
-    URL [arch] [component]   - add repo by URL"
+    altlinuxclub             - for altlinuxclub repo (http://altlinuxclub.ru/)
+    deferred                 - for Etersoft Sisyphus Deferred repo
+    deferred.org             - for Etersoft Sisyphus Deferred repo (at mirror.eterfund.org)
+    etersoft                 - for LINUX@Etersoft repo
+    korinf                   - for Korinf repo
+    <task number>            - add task repo
+    archive 2018/02/09       - add archive of the repo from that date
+    /dir/to/repo [component] - add repo dir generated with epm repo index --init
+    URL [arch] [component]   - add repo by URL
 
 Examples:
     # epm repo add yandex
-    # epm repo add "rpm http://somesite/pub/product x86_64 addon"
+    # epm repo add "rpm http://somesite/pub/product x86_64 addon
     # epm repo add /var/ftp/pub/altlinux/p10
 
 EOF
