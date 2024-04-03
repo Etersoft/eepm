@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.61.4
+Version: 3.61.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,16 @@ a discussion about extra requirements.
 
 
 %changelog
+* Thu Apr 04 2024 Vitaly Lipatov <lav@altlinux.ru> 3.61.5-alt1
+- eget: select IPFS gateway if gateway mode is forced
+- epm play: add obs-linuxbrowser
+- epm play: Added flatpak support
+- epm-mark: add aliases install/remove for manual/auto (dnf compatibility)
+- epm update: run upgrade with used with args
+- epm-repack: drop strict eepm version requires, drop rpm-build requires
+- epm-sh-functions: enable gettext translation
+- add initial po/Makefile
+
 * Wed Apr 03 2024 Vitaly Lipatov <lav@altlinux.ru> 3.61.4-alt1
 - epm-repack-rpm: check package name after spec fixing
 - epm play yandex-messanger: rename package chats to yandex-messenger
