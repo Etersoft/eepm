@@ -47,9 +47,11 @@ See detailed description here: http://wiki.etersoft.ru/EPM
 %package repack
 Summary: Etersoft EPM package manager (repack requirements)
 Group: System/Configuration/Packaging
-Requires: %name = %EVR
+Requires: %name
+# = %EVR
 Requires: alien dpkg patchelf p7zip
-Requires: /usr/bin/rpmbuild
+# preferable eepm-rpm-build
+#Requires: /usr/bin/rpmbuild
 
 %description repack
 This package has requirements needed for using epm repack on ALT
@@ -92,9 +94,7 @@ a discussion about extra requirements.
 %_sysconfdir/bash_completion.d/serv
 %_sysconfdir/bash_completion.d/eepm
 
-%if "%_vendor" == "alt"
 %files repack
-%endif
 
 
 %changelog
