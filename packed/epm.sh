@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.61.4"
+EPMVERSION="3.61.5"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -138,7 +138,7 @@ restore_color()
 echover()
 {
     [ -z "$verbose" ] && return
-    echo "$*" >&2
+    echog "$*" >&2
 }
 
 echon()
@@ -346,39 +346,46 @@ sudoepm()
     sudorun $CMDSHELL $bashopt $PROGDIR/$PROGNAME --inscript "$@"
 }
 
+echog()
+{
+	if [ "$1" = "-n" ] ; then
+		shift
+		eval_gettext "$*"
+	else
+		eval_gettext "$*"; echo
+	fi
+}
+
+
 fatal()
 {
     local PROMOMESSAGE="$EPMPROMOMESSAGE"
     [ -n "$PROMOMESSAGE" ] || PROMOMESSAGE=" (you can discuss the epm $EPMVERSION problem in Telegram: https://t.me/useepm)"
-    if [ -z "$TEXTDOMAIN" ] ; then
-        set_color $RED >&2
-        echo -n "ERROR: " >&2
-        restore_color >&2
-        echo "$* $PROMOMESSAGE" >&2
-    fi
+
+    set_color $RED >&2
+    echog -n "ERROR: " >&2
+    restore_color >&2
+    echog "$* $PROMOMESSAGE" >&2
     exit 1
 }
 
 debug()
 {
     [ -n "$debug" ] || return
-    if [ -z "$TEXTDOMAIN" ] ; then
-        set_color $YELLOW >&2
-        echo -n "WARNING: " >&2
-        restore_color >&2
-        echo "$*" >&2
-    fi
+
+    set_color $YELLOW >&2
+    echog -n "WARNING: " >&2
+    restore_color >&2
+    echog "$*" >&2
 }
 
 
 warning()
 {
-    if [ -z "$TEXTDOMAIN" ] ; then
-        set_color $YELLOW >&2
-        echo -n "WARNING: " >&2
-        restore_color >&2
-        echo "$*" >&2
-    fi
+    set_color $YELLOW >&2
+    echog -n "WARNING: " >&2
+    restore_color >&2
+    echog "$*" >&2
 }
 
 info()
@@ -388,9 +395,9 @@ info()
     # print message to stderr if stderr forwarded to (a file)
     if isatty2 ; then
         isatty || return 0
-        echo "$*"
+        echog "$*"
     else
-        echo "$*" >&2
+        echog "$*" >&2
     fi
 }
 
@@ -1030,6 +1037,23 @@ check_core_commands()
     is_command sed || fatal "Can't find sed command (sed package is missed?)"
 }
 
+export TEXTDOMAIN=eepm
+if [ "$EPMMODE" = "git" ] ; then
+    TEXTDOMAINDIR=$PROGDIR/../po
+else
+    TEXTDOMAINDIR='/usr/share/locale'
+fi
+export TEXTDOMAINDIR
+
+if [ -d "$TEXTDOMAINDIR" ] && is_command gettext.sh ; then
+	. gettext.sh
+else
+	eval_gettext()
+	{
+		echo -n $@
+	}
+fi
+
 
 # File bin/epm-addrepo:
 
@@ -1186,24 +1210,24 @@ __epm_addrepo_altlinux_help()
 cat <<EOF
 
 epm repo add - add branch repo. Use follow params:
-    basealt                  - for BaseALT repo"
-    altsp                    - add ALT SP repo"
-    yandex                   - for BaseALT repo mirror hosted by Yandex (recommended)"
-    autoimports              - for BaseALT autoimports repo"
+    basealt                  - for BaseALT repo
+    altsp                    - add ALT SP repo
+    yandex                   - for BaseALT repo mirror hosted by Yandex (recommended)
+    autoimports              - for BaseALT autoimports repo
     autoports                - for Autoports repo (with packages from Sisyphus rebuilt to the branch)
-    altlinuxclub             - for altlinuxclub repo (http://altlinuxclub.ru/)"
-    deferred                 - for Etersoft Sisyphus Deferred repo"
-    deferred.org             - for Etersoft Sisyphus Deferred repo (at mirror.eterfund.org)"
-    etersoft                 - for LINUX@Etersoft repo"
-    korinf                   - for Korinf repo"
-    <task number>            - add task repo"
-    archive 2018/02/09       - add archive of the repo from that date"
-    /dir/to/repo [component] - add repo dir generated with epm repo index --init"
-    URL [arch] [component]   - add repo by URL"
+    altlinuxclub             - for altlinuxclub repo (http://altlinuxclub.ru/)
+    deferred                 - for Etersoft Sisyphus Deferred repo
+    deferred.org             - for Etersoft Sisyphus Deferred repo (at mirror.eterfund.org)
+    etersoft                 - for LINUX@Etersoft repo
+    korinf                   - for Korinf repo
+    <task number>            - add task repo
+    archive 2018/02/09       - add archive of the repo from that date
+    /dir/to/repo [component] - add repo dir generated with epm repo index --init
+    URL [arch] [component]   - add repo by URL
 
 Examples:
     # epm repo add yandex
-    # epm repo add "rpm http://somesite/pub/product x86_64 addon"
+    # epm repo add "rpm http://somesite/pub/product x86_64 addon
     # epm repo add /var/ftp/pub/altlinux/p10
 
 EOF
@@ -5661,13 +5685,13 @@ epm_mark()
     showhold)                         # HELPCMD: print the list of packages on hold
         epm_mark_showhold "$@"
         ;;
-    checkhold)                         # HELPCMD: return true if the package is on hold
+    checkhold)                        # HELPCMD: return true if the package is on hold
         epm_mark_checkhold "$@"
         ;;
-    auto)                             # HELPCMD: mark the given package(s) as automatically installed
+    auto|remove)                      # HELPCMD: mark the given package(s) as automatically installed
         epm_mark_auto "$@"
         ;;
-    manual)                           # HELPCMD: mark the given package(s) as manually installed
+    manual|install)                   # HELPCMD: mark the given package(s) as manually installed
         epm_mark_manual "$@"
         ;;
     showauto)                         # HELPCMD: print the list of automatically installed packages
@@ -8477,6 +8501,7 @@ epm_release_upgrade()
         sudocmd dnf clean all
         sudocmd dnf --allowerasing distro-sync
         return
+        ;;
     "ROSA")
         # TODO: move to distro related upgrade
         #epm repo remove all
@@ -12952,8 +12977,6 @@ esac
 __epm_update()
 {
 
-    [ -z "$*" ] || fatal "No arguments are allowed for epm update command"
-
     info "Running update the package index files from remote package repository database ..."
 
 local ret=0
@@ -13065,6 +13088,12 @@ epm_update()
 {
     if [ "$1" = "--content-index" ] ; then
         __epm_update_content_index
+        return
+    fi
+
+    # update with args is the alias for upgrade
+    if [ -n "$*" ] ; then
+        epm upgrade "$@"
         return
     fi
 
@@ -15083,6 +15112,19 @@ check_ipfs_gateway()
     return 1
 }
 
+select_ipfs_gateway()
+{
+    # check public http gateways
+    for ipfs_gateway in $ipfs_gateways ; do
+        check_ipfs_gateway $ipfs_gateway || continue
+        IPFS_GATEWAY="$ipfs_gateway"
+        return
+    done
+
+    ipfs_mode="disabled"
+    return 1
+}
+
 
 select_ipfs_mode()
 {
@@ -15121,15 +15163,7 @@ select_ipfs_mode()
         return
     fi
 
-    # check public http gateways
-    for ipfs_gateway in $ipfs_gateways ; do
-        check_ipfs_gateway $ipfs_gateway || continue
-        IPFS_GATEWAY="$ipfs_gateway"
-        return
-    done
-
-    ipfs_mode="disabled"
-
+    select_ipfs_gateway
 }
 
 
@@ -15199,7 +15233,9 @@ if is_ipfsurl "$1" && [ -z "$ipfs_mode" ] || [ "$ipfs_mode" = "auto" ] ; then
     info "Autodetecting available IPFS relay..."
     select_ipfs_mode
     info "Auto selected IPFS mode: $ipfs_mode"
+    [ "$ipfs_mode" = "gateway" ] && info "Since the ipfs command is missed, the http gateway will be used."
 else
+    [ "$ipfs_mode" = "gateway" ] && select_ipfs_gateway
     [ -n "$ipfs_mode" ] && info "IPFS mode: $ipfs_mode"
 fi
 
@@ -16830,7 +16866,7 @@ reg_include()
 contains()
 {
     #estrlist has "$1" "$2"
-    local res="$(estrlist reg_wordexclude "$1" "$2")"
+    local res="$(reg_wordexclude "$1" "$2")"
     [ "$res" != "$2" ]
 }
 
@@ -17404,9 +17440,9 @@ check_command()
         ;;
 
 # HELPCMD: PART: Repository control:
-    update|update-repo|ur)                   # HELPCMD: update remote package repository databases
+    update|update-repo|ur)    # HELPCMD: update remote package repository databases (with args, run upgrade)
         epm_cmd=update
-        direct_args=1
+        #direct_args=1
         ;;
     addrepo|ar|--add-repo)    # HELPCMD: add package repo (etersoft, autoimports, archive 2017/01/31); run with param to get list
         epm_cmd=addrepo
@@ -17496,7 +17532,7 @@ check_command()
     Downgrade)                # HELPCMD: force update package base, then run downgrade [all] packages to the repo state
         epm_cmd=Downgrade
         ;;
-    downgrade)                # HELPCMD: downgrade [all] packages to the repo state
+    downgrade|distro-sync)    # HELPCMD: downgrade [all] packages to the repo state
         epm_cmd=downgrade
         ;;
     download|fetch|fc)        # HELPCMD: download package(s) file to the current dir

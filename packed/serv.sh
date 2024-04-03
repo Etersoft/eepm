@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.61.4"
+EPMVERSION="3.61.5"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -138,7 +138,7 @@ restore_color()
 echover()
 {
     [ -z "$verbose" ] && return
-    echo "$*" >&2
+    echog "$*" >&2
 }
 
 echon()
@@ -346,39 +346,46 @@ sudoepm()
     sudorun $CMDSHELL $bashopt $PROGDIR/$PROGNAME --inscript "$@"
 }
 
+echog()
+{
+	if [ "$1" = "-n" ] ; then
+		shift
+		eval_gettext "$*"
+	else
+		eval_gettext "$*"; echo
+	fi
+}
+
+
 fatal()
 {
     local PROMOMESSAGE="$EPMPROMOMESSAGE"
     [ -n "$PROMOMESSAGE" ] || PROMOMESSAGE=" (you can discuss the epm $EPMVERSION problem in Telegram: https://t.me/useepm)"
-    if [ -z "$TEXTDOMAIN" ] ; then
-        set_color $RED >&2
-        echo -n "ERROR: " >&2
-        restore_color >&2
-        echo "$* $PROMOMESSAGE" >&2
-    fi
+
+    set_color $RED >&2
+    echog -n "ERROR: " >&2
+    restore_color >&2
+    echog "$* $PROMOMESSAGE" >&2
     exit 1
 }
 
 debug()
 {
     [ -n "$debug" ] || return
-    if [ -z "$TEXTDOMAIN" ] ; then
-        set_color $YELLOW >&2
-        echo -n "WARNING: " >&2
-        restore_color >&2
-        echo "$*" >&2
-    fi
+
+    set_color $YELLOW >&2
+    echog -n "WARNING: " >&2
+    restore_color >&2
+    echog "$*" >&2
 }
 
 
 warning()
 {
-    if [ -z "$TEXTDOMAIN" ] ; then
-        set_color $YELLOW >&2
-        echo -n "WARNING: " >&2
-        restore_color >&2
-        echo "$*" >&2
-    fi
+    set_color $YELLOW >&2
+    echog -n "WARNING: " >&2
+    restore_color >&2
+    echog "$*" >&2
 }
 
 info()
@@ -388,9 +395,9 @@ info()
     # print message to stderr if stderr forwarded to (a file)
     if isatty2 ; then
         isatty || return 0
-        echo "$*"
+        echog "$*"
     else
-        echo "$*" >&2
+        echog "$*" >&2
     fi
 }
 
@@ -1029,6 +1036,23 @@ check_core_commands()
     is_command grep || fatal "Can't find grep command (coreutils package is missed?)"
     is_command sed || fatal "Can't find sed command (sed package is missed?)"
 }
+
+export TEXTDOMAIN=eepm
+if [ "$EPMMODE" = "git" ] ; then
+    TEXTDOMAINDIR=$PROGDIR/../po
+else
+    TEXTDOMAINDIR='/usr/share/locale'
+fi
+export TEXTDOMAINDIR
+
+if [ -d "$TEXTDOMAINDIR" ] && is_command gettext.sh ; then
+	. gettext.sh
+else
+	eval_gettext()
+	{
+		echo -n $@
+	}
+fi
 
 
 # File bin/serv-cat:
