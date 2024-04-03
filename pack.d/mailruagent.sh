@@ -13,9 +13,22 @@ else
 fi
 
 mkdir opt
-mv agent.tar opt/$PRODUCT || fatal
+mv agent* opt/$PRODUCT || fatal
+
+# https://webagent.mail.ru/favicon.ico
+install_file ipfs://QmZNK3w2i2CTUwfHfxiJR6HR2CDaALUUhJSq4bfoAEUMMH /usr/share/pixmaps/$PRODUCT.png
 
 PKGNAME=$PRODUCT-$VERSION.tar
-erc pack $PKGNAME opt/$PRODUCT
+erc pack $PKGNAME opt/$PRODUCT usr
+
+cat <<EOF >$PKG.eepm.yaml
+name: $PRODUCT
+group: Networking/Instant messaging
+license: Proprietary
+url: https://agent.mail.ru/linux
+summary: Mail.ru agent
+description: Mail.ru agent.
+EOF
+
 
 return_tar $PKGNAME

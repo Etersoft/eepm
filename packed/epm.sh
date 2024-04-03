@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.61.3"
+EPMVERSION="3.61.4"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -7102,6 +7102,14 @@ epm_programs()
     esac
 
     [ -d "$DESKTOPDIR" ] || fatal "There is no $DESKTOPDIR dir on the system."
+
+    if [ -n "$short" ] ; then
+        cd $DESKTOPDIR || fatal
+        showcmd ls -1 *.desktop
+        ls -1 *.desktop
+        exit
+    fi
+
     #find /usr/share/applications -type f -name "*.desktop" | while read f; do pkg_files="$f" quiet=1 short=1 epm_query_file ; done | sort -u
     showcmd "find $DESKTOPDIR -type f -print0 -name "*.desktop" | xargs -0 $0 -qf --quiet --short | sort -u"
     find $DESKTOPDIR -type f -print0 -name "*.desktop" | \
@@ -9597,12 +9605,6 @@ __epm_repack_to_rpm()
         # run generic scripts and repack script for the pkg
         cd $buildroot || fatal
 
-        if [ -n "$EEPM_INTERNAL_PKGNAME" ] ; then
-            if ! estrlist contains "$pkgname" "$EEPM_INTERNAL_PKGNAME" ; then
-                fatal "Some bug: the name of the repacking package ($pkgname) differs with the package name ($EEPM_INTERNAL_PKGNAME) from play.d script."
-            fi
-        fi
-
         __fix_spec $pkgname $buildroot $spec
         __apply_fix_code "generic"             $buildroot $spec $pkgname $abspkg $SUBGENERIC
         __apply_fix_code "generic-$SUBGENERIC" $buildroot $spec $pkgname $abspkg
@@ -9612,6 +9614,15 @@ __epm_repack_to_rpm()
         fi
         __fix_spec $pkgname $buildroot $spec
         cd - >/dev/null
+
+        # reassign package name (could be renamed in fix scripts)
+        pkgname="$(grep "^Name: " $spec | sed -e "s|Name: ||g" | head -n1)"
+
+        if [ -n "$EEPM_INTERNAL_PKGNAME" ] ; then
+            if ! estrlist contains "$pkgname" "$EEPM_INTERNAL_PKGNAME" ; then
+                fatal "Some bug: the name of the repacking package ($pkgname) differs with the package name ($EEPM_INTERNAL_PKGNAME) from play.d script."
+            fi
+        fi
 
         TARGETARCH=$(epm print info -a | sed -e 's|^x86$|i586|')
 
@@ -17381,7 +17392,7 @@ check_command()
         epm_cmd=list_available
         direct_args=1
         ;;
-    programs)                 # HELPCMD: print list of installed GUI program(s) (they have .desktop files)
+    programs)                 # HELPCMD: print list of installed packages with GUI program(s) (they have .desktop files)
         epm_cmd=programs
         direct_args=1
         ;;

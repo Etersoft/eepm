@@ -47,6 +47,10 @@ is_abs_path()
     echo "$1" | grep -q "^/"
 }
 
+is_url()
+{
+    echo "$1" | grep -q "^[filehtps]*:/"
+}
 
 is_dir_empty()
 {
@@ -111,9 +115,13 @@ install_file()
     if is_abs_path "$dest" ; then
         dest=".$dest"
     fi
-
     mkdir -p "$(dirname "$dest")" || return
-    cp "$src" "$dest" || return
+
+    if is_url "$src" ; then
+        epm tool eget -O "$dest" "$src" || fatal "Can't download $src to install to $dest"
+    else
+        cp "$src" "$dest" || return
+    fi
     chmod 0644 "$dest"
 }
 

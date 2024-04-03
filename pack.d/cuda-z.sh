@@ -8,7 +8,22 @@ RETURNTARNAME="$2"
 PKGNAME="$(basename $TAR .run | tr "[A-Z_]" "[a-z-]")"
 
 install -D $TAR opt/$PRODUCT/$PRODUCT || fatal
-erc pack $PKGNAME.tar opt/$PRODUCT
+
+cat <<EOF | create_file /usr/share/applications/$PRODUCT.desktop
+[Desktop Entry]
+Version=1.0
+Name=CUDA-Z
+Comment=CUDA Information Utility
+Type=Application
+Icon=$PRODUCT
+Exec=$PRODUCT
+Terminal=false
+EOF
+
+install_file "https://cuda-z.sourceforge.net/img/web-download-detect.png" /usr/share/pixmaps/$PRODUCT.png
+
+
+erc pack $PKGNAME.tar opt/$PRODUCT usr
 
 cat <<EOF >$PKGNAME.tar.eepm.yaml
 name: $PRODUCT

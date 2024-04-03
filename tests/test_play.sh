@@ -39,14 +39,18 @@ if [ "$1" == "--hasher" ] ; then
         exit
     fi
 
-    loginhsh -i -t -p epm $B -r true curl iputils eepm-repack apt-repo $kubo
-    loginhsh -t -p epm $B -o
+    loginhsh -Y -i -t -p epm $B -r true curl iputils eepm-repack apt-repo $kubo
+    loginhsh -Y -t -p epm $B -o
 
     HDIR=$(loginhsh -q -t -d -p epm $B)
     cp -afv ../* $HDIR/chroot/.in
-    loginhsh -t -p epm $B -o -r "bash -x /.in/tests/test_play.sh $ipfs --local $APP" || exit
+    # install
+    loginhsh -Y -t -p epm $B -o -r "bash -x /.in/tests/test_play.sh $ipfs --local $APP" || exit
+    # login under root
     loginhsh -t -p epm $B -o
-    loginhsh -Y -t -p epm $B
+    # login under user
+    loginhsh -Y -t -s -p epm $B
+    # clean
     loginhsh -c -t -p epm $B
     exit
 fi
