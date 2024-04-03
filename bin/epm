@@ -320,9 +320,9 @@ check_command()
         ;;
 
 # HELPCMD: PART: Repository control:
-    update|update-repo|ur)                   # HELPCMD: update remote package repository databases
+    update|update-repo|ur)    # HELPCMD: update remote package repository databases (with args, run upgrade)
         epm_cmd=update
-        direct_args=1
+        #direct_args=1
         ;;
     addrepo|ar|--add-repo)    # HELPCMD: add package repo (etersoft, autoimports, archive 2017/01/31); run with param to get list
         epm_cmd=addrepo
@@ -412,7 +412,7 @@ check_command()
     Downgrade)                # HELPCMD: force update package base, then run downgrade [all] packages to the repo state
         epm_cmd=Downgrade
         ;;
-    downgrade)                # HELPCMD: downgrade [all] packages to the repo state
+    downgrade|distro-sync)    # HELPCMD: downgrade [all] packages to the repo state
         epm_cmd=downgrade
         ;;
     download|fetch|fc)        # HELPCMD: download package(s) file to the current dir
