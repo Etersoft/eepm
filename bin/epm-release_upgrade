@@ -499,6 +499,7 @@ epm_release_upgrade()
         sudocmd dnf clean all
         sudocmd dnf --allowerasing distro-sync
         return
+        ;;
     "ROSA")
         # TODO: move to distro related upgrade
         #epm repo remove all
