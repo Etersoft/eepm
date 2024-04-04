@@ -27,12 +27,13 @@ jobs:
       - name: build
         run: |
             echo "%_allow_root_build 1" > ${HOME}/.rpmmacros
+            echo "%_topdir ${HOME}/RPM" >> ${HOME}/.rpmmacros
             git config --global --add safe.directory /__w/eepm/eepm
             rpmbb
 
       - name: install
         run: |
-            apt-get install -y /usr/src/RPM/RPMS/noarch/eepm-3*.rpm
+            apt-get install -y ${HOME}/RPM/RPMS/noarch/eepm-3*.rpm
             epm update
 
       - name: testsuite
