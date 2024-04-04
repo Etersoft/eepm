@@ -550,6 +550,19 @@ check_ipfs_gateway()
     return 1
 }
 
+select_ipfs_gateway()
+{
+    # check public http gateways
+    for ipfs_gateway in $ipfs_gateways ; do
+        check_ipfs_gateway $ipfs_gateway || continue
+        IPFS_GATEWAY="$ipfs_gateway"
+        return
+    done
+
+    ipfs_mode="disabled"
+    return 1
+}
+
 
 select_ipfs_mode()
 {
@@ -588,15 +601,7 @@ select_ipfs_mode()
         return
     fi
 
-    # check public http gateways
-    for ipfs_gateway in $ipfs_gateways ; do
-        check_ipfs_gateway $ipfs_gateway || continue
-        IPFS_GATEWAY="$ipfs_gateway"
-        return
-    done
-
-    ipfs_mode="disabled"
-
+    select_ipfs_gateway
 }
 
 
@@ -666,7 +671,9 @@ if is_ipfsurl "$1" && [ -z "$ipfs_mode" ] || [ "$ipfs_mode" = "auto" ] ; then
     info "Autodetecting available IPFS relay..."
     select_ipfs_mode
     info "Auto selected IPFS mode: $ipfs_mode"
+    [ "$ipfs_mode" = "gateway" ] && info "Since the ipfs command is missed, the http gateway will be used."
 else
+    [ "$ipfs_mode" = "gateway" ] && select_ipfs_gateway
     [ -n "$ipfs_mode" ] && info "IPFS mode: $ipfs_mode"
 fi
 

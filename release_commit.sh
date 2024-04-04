@@ -21,7 +21,7 @@ fi
 SPECNAME=eepm.spec
 version="$(get_version $SPECNAME)"
 
-./pack_in_onefile.sh
+./pack_in_onefile.sh || exit
 
 git add packed
 git commit packed -m "commit packed $version"

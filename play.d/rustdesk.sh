@@ -23,6 +23,12 @@ fi
 
 PKGURL=$(eget --list --latest https://github.com/rustdesk/rustdesk/releases "$MASK")
 
+# 
+if [ "$VERSION" = "*" ] && echo "$PKGURL" | grep -q "nightly" ; then
+    echo "Skipping nightly $PKGURL ..."
+    PKGURL=$(eget --list --second-latest https://github.com/rustdesk/rustdesk/releases "$MASK")
+fi
+
 install_pkgurl
 
 cat <<EOF

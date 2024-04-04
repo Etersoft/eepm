@@ -82,8 +82,6 @@ esac
 __epm_update()
 {
 
-    [ -z "$*" ] || fatal "No arguments are allowed for epm update command"
-
     info "Running update the package index files from remote package repository database ..."
 
 local ret=0
@@ -195,6 +193,12 @@ epm_update()
 {
     if [ "$1" = "--content-index" ] ; then
         __epm_update_content_index
+        return
+    fi
+
+    # update with args is the alias for upgrade
+    if [ -n "$*" ] ; then
+        epm upgrade "$@"
         return
     fi
 

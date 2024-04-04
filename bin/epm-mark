@@ -351,13 +351,13 @@ epm_mark()
     showhold)                         # HELPCMD: print the list of packages on hold
         epm_mark_showhold "$@"
         ;;
-    checkhold)                         # HELPCMD: return true if the package is on hold
+    checkhold)                        # HELPCMD: return true if the package is on hold
         epm_mark_checkhold "$@"
         ;;
-    auto)                             # HELPCMD: mark the given package(s) as automatically installed
+    auto|remove)                      # HELPCMD: mark the given package(s) as automatically installed
         epm_mark_auto "$@"
         ;;
-    manual)                           # HELPCMD: mark the given package(s) as manually installed
+    manual|install)                   # HELPCMD: mark the given package(s) as manually installed
         epm_mark_manual "$@"
         ;;
     showauto)                         # HELPCMD: print the list of automatically installed packages

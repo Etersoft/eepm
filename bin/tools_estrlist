@@ -238,7 +238,7 @@ reg_include()
 contains()
 {
     #estrlist has "$1" "$2"
-    local res="$(estrlist reg_wordexclude "$1" "$2")"
+    local res="$(reg_wordexclude "$1" "$2")"
     [ "$res" != "$2" ]
 }
 

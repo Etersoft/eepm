@@ -102,6 +102,12 @@ chmod 0755 $OUTPUT
 PACKCOMMAND=epm
 incorporate_all
 
+# test
+packed/$PACKCOMMAND.sh --help >/dev/null || exit
+
 ###############
 PACKCOMMAND=serv
 incorporate_all
+
+# test
+packed/$PACKCOMMAND.sh --help >/dev/null || exit
