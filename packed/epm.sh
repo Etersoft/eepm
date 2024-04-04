@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.61.5"
+EPMVERSION="3.62.0"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -3911,7 +3911,7 @@ case $PMTYPE in
         __epm_info_rpm_low && return
         case $PMTYPE in
             apt-rpm)
-                docmd apt-cache show $pkg_names
+                docmd apt-cache show $pkg_names | awk 'BEGIN{desk=1}{if(/^Changelog:$/){desk=0} else if (desk==1) {print}}'
                 ;;
             packagekit)
                 docmd pkcon get-details $pkg_names
