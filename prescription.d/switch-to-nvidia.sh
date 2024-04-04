@@ -67,7 +67,7 @@ if [ -e "/etc/X11/xorg.conf" ] && [ "$(grep -E 'nouveau|fbdev|vesa' "/etc/X11/xo
 fi
 
 
-epm install --skip-installed nvidia-settings nvidia-vaapi-driver ocl-nvidia libcuda vulkan-tools libnvidia-encode libnvidia-ngx libnvidia-opencl libvulkan1 nvidia-modprobe \
+epm install --skip-installed nvidia-settings nvidia-vaapi-driver ocl-nvidia libcuda vulkan-tools libnvidia-encode libnvidia-ngx libnvidia-opencl nvidia-modprobe \
 	libglut libGLU nvidia-xconfig libvulkan1 libcudadebugger libnvcuvid libnvidia-api \
 	libnvidia-fbc libnvidia-ml libnvidia-nvvm libnvidia-ptxjitcompiler libnvoptix nvidia-smi
 
@@ -83,6 +83,11 @@ fi
 
 # Активируем службы управления питания NVIDIA, без этих служб будет некоректно работать уход в сон
 systemctl enable nvidia-suspend.service nvidia-resume.service nvidia-hibernate.service
+# Добавляем выделение места в системе для видеопамяти. Иначе интерфейсы не будут работать.
+cat << _EOF_ > /etc/modprobe.d/nvidia_videomemory_allocation.conf
+options nvidia NVreg_PreserveVideoMemoryAllocations=1
+options nvidia NVreg_TemporaryFilePath=/run
+_EOF_
 
 # Запускаем регенерацию initrd
 make-initrd
