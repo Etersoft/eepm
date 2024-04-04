@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.61.5
+Version: 3.62.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,12 @@ a discussion about extra requirements.
 
 
 %changelog
+* Thu Apr 04 2024 Vitaly Lipatov <lav@altlinux.ru> 3.62.0-alt1
+- stable release
+- epm play: add raindrop.io
+- epm play rustdesk: skip nighttly downloading, rewrite repack
+- epm info: stop Changelog list on ALT
+
 * Thu Apr 04 2024 Vitaly Lipatov <lav@altlinux.ru> 3.61.5-alt1
 - eget: select IPFS gateway if gateway mode is forced
 - epm play: add obs-linuxbrowser
