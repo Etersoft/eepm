@@ -40,10 +40,10 @@ check_run_kernel () {
 }
 
 if check_run_kernel ; then
-	echo "Запущено самое свежее установленное ${USED_KFLAVOUR} ядро."
+	echo "The most recently installed ${USED_KFLAVOUR} kernel is running."
 else
-	echo "В системе есть ${USED_KFLAVOUR} ядро свежее запущенного."
-	echo "Перезагрузитесь со свежим ${USED_KFLAVOUR} ядром и перезапустите: epm play switch-to-nvidia"
+	echo "The system has a ${USED_KFLAVOUR} kernel that is more recent than the one that was launched."
+	echo "Reboot with a fresh ${USED_KFLAVOUR} kernel and restart: epm play switch-to-nvidia"
 	fatal
 fi
 
@@ -68,7 +68,7 @@ fi
 
 
 epm install --skip-installed nvidia-settings nvidia-vaapi-driver ocl-nvidia libcuda vulkan-tools libnvidia-encode libnvidia-ngx libnvidia-opencl libvulkan1 nvidia-modprobe \
-	libglut libGLU nvidia-xconfig libvulkan1 libcudadebugger libnvcuvid libnvidia-api \
+	nvidia-xconfig libvulkan1 libcudadebugger libnvcuvid libnvidia-api \
 	libnvidia-fbc libnvidia-ml libnvidia-nvvm libnvidia-ptxjitcompiler libnvoptix nvidia-smi
 
 epm play i586-fix
