@@ -89,6 +89,7 @@ get_url_to_etersoft_mirror()
 __add_to_contents_index_list()
 {
     [ -n "$verbose" ] && echo " $1 -> $2"
+    [ -s "$2" ] || return
     echo "$2" >>$ALT_CONTENTS_INDEX_LIST
 }
 
