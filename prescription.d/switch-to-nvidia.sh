@@ -4,7 +4,7 @@
 # https://www.altlinux.org/Nvidia#Смена_открытых_драйверов_на_проприетарные[1]
 # https://www.altlinux.org/Переход_на_драйверы_Nvidia_и_fglrx#Установка_проприетарных_драйверов_nvidia_и_fglrx_:
 
-[ "$1" != "--run" ] && echo "Switch to using nVidia proprietary driver" && exit
+[ "$1" != "--run" ] && echo "Switch to using Nvidia proprietary driver" && exit
 
 . $(dirname $0)/common.sh
 
@@ -22,7 +22,7 @@ epm assure lspci pciutils || exit
 # проверяем работоспособность драйвера на текущий момент
 # TODO: добавить аргумент --force для принудительной переустановки
 if [ -z "$force" ] && a= lspci -k | grep -A 2 -i "VGA" | grep "Kernel driver in use" | grep -q "nvidia" ; then
-	echo "NVIDIA driver is already installed and used."
+	echo "Nvidia driver is already installed and used."
 	exit
 fi
 
@@ -40,9 +40,9 @@ check_run_kernel () {
 }
 
 if check_run_kernel ; then
-	echo "The most recently installed ${USED_KFLAVOUR} kernel is running."
+	echo "The most newer installed ${USED_KFLAVOUR} kernel is running."
 else
-	echo "The system has a ${USED_KFLAVOUR} kernel that is more recent than the one that was launched."
+	echo "The system has a newer ${USED_KFLAVOUR} kernel."
 	echo "Reboot with a fresh ${USED_KFLAVOUR} kernel and restart: epm play switch-to-nvidia"
 	fatal
 fi
