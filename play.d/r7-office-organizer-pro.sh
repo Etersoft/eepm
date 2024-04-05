@@ -10,6 +10,8 @@ URL="https://r7-office.ru/downloadorganizer"
 case $(epm print info -e) in
     ALTLinux/*)
         PKGNAME="r7organizer"
+        # force latest version due broken package name
+        VERSION="*"
         ;;
 esac
 

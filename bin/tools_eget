@@ -1387,6 +1387,13 @@ get_urls()
         return
     fi
 
+    # Markdown support
+    # https://raw.githubusercontent.com/dotnet/core/main/release-notes/8.0/8.0.3/8.0.103.md
+    if echo "$URL" | grep -q "\.md$" ; then
+        scat $URL | grep "https*" | sed -e 's|.*\(https*://\)|\1|'
+        return
+    fi
+
     # cat html, divide to lines by tags and cut off hrefs only
     scat $URL | sed -e 's|<|<\n|g' -e 's|data-file=|href=|g' -e "s|href=http|href=\"http|g" -e "s|>|\">|g" -e "s|'|\"|g" | \
          grep -i -o -E 'href="(.+)"' | sed -e 's|&amp;|\&|' | cut -d'"' -f2
