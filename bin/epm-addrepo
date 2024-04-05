@@ -41,13 +41,13 @@ __epm_addrepo_rhel()
             ;;
         powertools)
             # https://serverfault.com/questions/997896/how-to-enable-powertools-repository-in-centos-8
-            epm install --skip-installed dnf-plugins-core
+            assure_exists dnf-plugins-core
             sudocmd dnf config-manager --set-enabled powertools
             return 1
             ;;
         crb)
             # https://wiki.rockylinux.org/rocky/repo/
-            epm install --skip-installed dnf-plugins-core
+            assure_exists dnf-plugins-core
             sudocmd dnf config-manager --set-enabled crb
             return 1
             ;;
