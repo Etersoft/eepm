@@ -1457,6 +1457,7 @@ fi
 if [ -n "$2" ] ; then
     URL="$1"
     MASK="$2"
+    SEPMASK="$2"
 else
     if have_end_slash "$1" ; then
         URL="$1"
@@ -1503,7 +1504,7 @@ is_wildcard()
 }
 
 # If there is no wildcard symbol like asterisk, just download
-if ! is_wildcard "$MASK" || echo "$MASK" | grep -q "[?].*="; then
+if [ -z "$SEPMASK" ] && ! is_wildcard "$MASK" || echo "$MASK" | grep -q "[?].*="; then
     sget "$1" "$TARGETFILE"
     exit
 fi
