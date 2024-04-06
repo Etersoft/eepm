@@ -81,6 +81,32 @@ __check_stoplist()
     grep -E -q "^$1$" $alf
 }
 
+__convert_packrule_to_regexp()
+{
+    local tmpalf
+    tmpalf="$(mktemp)" || fatal
+    # copied from eget's filter_glob
+    # check man glob
+    # remove commentы and translate glob to regexp
+    grep -v "^[[:space:]]*#" "$1" | grep -v "^[[:space:]]*$" | sed -e "s|\*|.*|g" -e "s|?|.|g" >$tmpalf
+    echo "$tmpalf"
+}
+
+# fill __PACKRULE if $1 in packrules.list
+__check_packrule()
+{
+    local pkg="$1"
+    local alf="$CONFIGDIR/packrules.list"
+    [ -s "$pkg" ] || return 1
+    [ -s "$alf" ] || return 1
+
+    local tmpalf=$(__convert_packrule_to_regexp "$alf")
+    remove_on_exit $tmpalf
+    __PACKRULE="$(awk -v s="$pkg" 'BEGIN{FS=" "} s ~ $2  {print $1}' "$tmpalf")"
+    rm $tmpalf
+    [ -n "${__PACKRULE}" ]
+    return
+}
 
 # arg: <package file>
 # sets:
@@ -110,7 +136,10 @@ __prepare_source_package()
     load_helper epm-pack
 
     # they will fill $returntarname
-    if rihas "$alpkg" "\.AppImage$" ; then
+
+    if __check_packrule "$alpkg" ; then
+        __epm_pack_run_handler ${__PACKRULE} "$pkg"
+    elif rihas "$alpkg" "\.AppImage$" ; then
         # big hack with $pkg_urls_downloaded (it can be a list, not a single url)
         __epm_pack_run_handler generic-appimage "$pkg" "" "$pkg_urls_downloaded"
         SUBGENERIC='appimage'

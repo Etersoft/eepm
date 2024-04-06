@@ -1,0 +1,7 @@
+1c-connect 1C-Connect-Linux-x64.tar.gz
+davinci-resolve DaVinci_Resolve_*_Linux.run
+cascadeur cascadeur-linux.tgz
+# there are two package
+epsonscan2-non-free-plugin epsonscan2-bundle-*.tar.gz
+hplip-plugin hplip-*-plugin
+sublime-text sublime_text_build_*
