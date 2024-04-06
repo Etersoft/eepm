@@ -74,6 +74,10 @@ __epm_assure_checking()
         return 0
     fi
 
+    # at least check if the package is installed
+    load_helper epm-query
+    is_installed "$PACKAGE" && return 0
+
     return 1
 }
 
