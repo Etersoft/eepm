@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.62.0
+Version: 3.62.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -98,6 +98,17 @@ a discussion about extra requirements.
 
 
 %changelog
+* Sat Apr 06 2024 Vitaly Lipatov <lav@altlinux.ru> 3.62.1-alt1
+- epm play r7-office-organizer: force latest version due bug with package name
+- epm-download: __download_pkg_urls(): add workaround for spaces in downloaded files
+- eget: add list url support for .md (markdown)
+- eget: always use filter for separated mask
+- epm play: add cursor
+- __add_to_contents_index_list: skip missed files
+- epm whatdepends: separate ALT case
+- epm assure: check if the package is installed before ask
+- confirm_info: print out question message to /dev/stderr
+
 * Thu Apr 04 2024 Vitaly Lipatov <lav@altlinux.ru> 3.62.0-alt1
 - stable release
 - epm play: add raindrop.io
