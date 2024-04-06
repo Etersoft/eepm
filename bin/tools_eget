@@ -984,8 +984,9 @@ url_get_response()
     local answer
     answer="$(quiet=1 __wget --spider -S "$URL" 2>&1)"
     # HTTP/1.1 405 Method Not Allowed
-    if echo "$answer" | grep -q "^ *HTTP/[12.]* 405" ; then
-        (quiet=1 __wget --start-pos=5000G -S "$URL" 2>&1)
+    # HTTP/1.1 404 Not Found
+    if echo "$answer" | grep -q "^ *HTTP/[12.]* 40[45]" ; then
+        (quiet=1 __wget -O/dev/null --header="Range: bytes=0-0" -S "$URL" 2>&1)
         return
     fi
     echo "$answer"
@@ -1030,7 +1031,8 @@ url_get_response()
     local answer
     answer="$(quiet=1 __curl -LI "$URL" 2>&1)"
     # HTTP/1.1 405 Method Not Allowed
-    if echo "$answer" | grep -q "^ *HTTP/[12.]* 405" ; then
+    # HTTP/1.1 404 Not Found
+    if echo "$answer" | grep -q "^ *HTTP/[12.]* 40[45]" ; then
         (quiet=1 __curl -L -i -r0-0 "$URL" 2>&1)
         return
     fi

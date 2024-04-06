@@ -74,7 +74,7 @@ __epm_repo_pkgdel_alt()
             local rd="$REPO_DIR/$arch/RPMS.$REPO_NAME"
             [ -d $REPO_DIR/$arch/RPMS.$REPO_NAME ] || continue
             for i in $rd/$1* ; do
-                [ "$1" = "$(epm print name for package $i)" || continue
+                [ "$1" = "$(epm print name for package $i)" ] || continue
                 rm -v $rd/$1*
             done
         done

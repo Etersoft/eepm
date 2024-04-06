@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.62.0"
+EPMVERSION="3.62.1"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -538,7 +538,7 @@ confirm() {
 
 confirm_info()
 {
-    info "$*"
+    info "$*" >&2
     if [ -z "$non_interactive" ] ; then
         confirm "Are you sure? [y/N]" || fatal "Exiting"
     fi
@@ -1080,13 +1080,13 @@ __epm_addrepo_rhel()
             ;;
         powertools)
             # https://serverfault.com/questions/997896/how-to-enable-powertools-repository-in-centos-8
-            epm install --skip-installed dnf-plugins-core
+            assure_exists dnf-plugins-core
             sudocmd dnf config-manager --set-enabled powertools
             return 1
             ;;
         crb)
             # https://wiki.rockylinux.org/rocky/repo/
-            epm install --skip-installed dnf-plugins-core
+            assure_exists dnf-plugins-core
             sudocmd dnf config-manager --set-enabled crb
             return 1
             ;;
@@ -1601,6 +1601,9 @@ __epm_assure_checking()
         fi
         return 0
     fi
+
+    # at least check if the package is installed
+    is_installed "$PACKAGE" && return 0
 
     return 1
 }
@@ -3081,6 +3084,12 @@ __download_pkg_urls()
                 [ "$i" = "*" ] && warning "Incorrect true status from eget. No saved files from download $url, ignoring" && continue
                 [ -s "$tmppkg/$i" ] || continue
                 chmod $verbose a+r "$tmppkg/$i"
+                local si="${i/ /}"
+                if [ "$si" != "$i" ] ; then
+                    info "Space detected in the downloaded file '$i', removing spaces ..."
+                    mv -v "$tmppkg/$i" "$tmppkg/$si"
+                    i="$si"
+                fi
                 [ -n "$pkg_files" ] && pkg_files="$pkg_files $tmppkg/$i" || pkg_files="$tmppkg/$i"
                 [ -n "$pkg_urls_downloaded" ] && pkg_urls_downloaded="$pkg_urls_downloaded $url" || pkg_urls_downloaded="$url"
             done
@@ -12059,6 +12068,7 @@ get_url_to_etersoft_mirror()
 __add_to_contents_index_list()
 {
     [ -n "$verbose" ] && echo " $1 -> $2"
+    [ -s "$2" ] || return
     echo "$2" >>$ALT_CONTENTS_INDEX_LIST
 }
 
@@ -13301,12 +13311,13 @@ epm_Upgrade()
 epm_whatdepends()
 {
     local CMD
-    [ -n "$pkg_files" ] && fatal "whatdepends does not handle files"
-    [ -n "$pkg_names" ] || fatal "whatdepends: package name is missed"
-    local pkg=$(print_name $pkg_names)
+    local pkg
 
-case $PMTYPE in
-    apt-rpm)
+case $BASEDISTRNAME in
+    "alt")
+        [ -n "$@" ] || fatal "Missed package name or some provides"
+        pkg="$(print_name "$@")"
+
         if [ -z "$verbose" ] ; then
             showcmd apt-cache whatdepends $pkg
             if [ -n "$short" ] ; then
@@ -13316,6 +13327,18 @@ case $PMTYPE in
             fi
             return
         fi
+        CMD="apt-cache whatdepends"
+        docmd $CMD $pkg
+        return
+        ;;
+esac
+
+[ -n "$pkg_files" ] && fatal "whatdepends does not handle files"
+[ -n "$pkg_names" ] || fatal "whatdepends: package name is missed"
+pkg="$(print_name $pkg_names)"
+
+case $PMTYPE in
+    apt-rpm)
         CMD="apt-cache whatdepends"
         ;;
     apt-dpkg|aptitude-dpkg)
@@ -15949,6 +15972,13 @@ get_urls()
         return
     fi
 
+    # Markdown support
+    # https://raw.githubusercontent.com/dotnet/core/main/release-notes/8.0/8.0.3/8.0.103.md
+    if echo "$URL" | grep -q "\.md$" ; then
+        scat $URL | grep "https*" | sed -e 's|.*\(https*://\)|\1|'
+        return
+    fi
+
     # cat html, divide to lines by tags and cut off hrefs only
     scat $URL | sed -e 's|<|<\n|g' -e 's|data-file=|href=|g' -e "s|href=http|href=\"http|g" -e "s|>|\">|g" -e "s|'|\"|g" | \
          grep -i -o -E 'href="(.+)"' | sed -e 's|&amp;|\&|' | cut -d'"' -f2
@@ -16012,6 +16042,7 @@ fi
 if [ -n "$2" ] ; then
     URL="$1"
     MASK="$2"
+    SEPMASK="$2"
 else
     if have_end_slash "$1" ; then
         URL="$1"
@@ -16058,7 +16089,7 @@ is_wildcard()
 }
 
 # If there is no wildcard symbol like asterisk, just download
-if ! is_wildcard "$MASK" || echo "$MASK" | grep -q "[?].*="; then
+if [ -z "$SEPMASK" ] && ! is_wildcard "$MASK" || echo "$MASK" | grep -q "[?].*="; then
     sget "$1" "$TARGETFILE"
     return
 fi
