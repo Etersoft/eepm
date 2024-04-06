@@ -50,8 +50,11 @@ Group: System/Configuration/Packaging
 Requires: %name
 # = %EVR
 Requires: alien dpkg patchelf p7zip
-# preferable eepm-rpm-build
-#Requires: /usr/bin/rpmbuild
+%if "%_vendor" == "alt"
+Requires: eepm-rpm-build
+%else
+Requires: /usr/bin/rpmbuild
+%endif
 
 %description repack
 This package has requirements needed for using epm repack on ALT
