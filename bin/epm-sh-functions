@@ -654,8 +654,8 @@ regexp_subst()
     sed -i -r -e "$expression" "$@"
 }
 
-# TODO: we we can't use epm directly?
-assure_exists()
+# TODO: why we can't use epm directly?
+try_assure_exists()
 {
     load_helper epm-assure
     local package="$2"
@@ -665,8 +665,14 @@ assure_exists()
     local ask=''
     [ -n "$non_interactive" ] || ask=1
 
-    ( verbose='' direct='' interactive=$ask epm_assure "$1" $package $3 ) || fatal
+    ( verbose='' direct='' interactive=$ask epm_assure "$1" $package $3 )
 }
+
+assure_exists()
+{
+    try_assure_exists "$@" || fatal
+}
+
 
 assure_exists_erc()
 {
@@ -762,8 +768,8 @@ onefile_eget()
 {
     # check for both
     # we really need that cross here,
-    is_command curl || assure_exists wget
-    is_command wget || assure_exists curl
+    is_command curl || try_assure_exists wget
+    is_command wget || try_assure_exists curl
     internal_tools_eget "$@"
 }
 

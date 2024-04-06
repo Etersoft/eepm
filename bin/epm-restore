@@ -480,7 +480,7 @@ __epm_restore_npm()
 {
     local req_file="$1"
 
-    assure_exists jq || fatal
+    assure_exists jq
 
     if [ -n "$dryrun" ] ; then
         local lt
@@ -544,7 +544,7 @@ __epm_restore_perl_shyaml()
 {
     local req_file="$1"
 
-    assure_exists shyaml || fatal
+    assure_exists shyaml
 
     if [ -n "$dryrun" ] ; then
         local lt

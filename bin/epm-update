@@ -72,7 +72,7 @@ esac
 case $PMTYPE in
     apt-dpkg)
         is_command apt-file || return 0
-        assure_exists apt-file || return 0
+        try_assure_exists apt-file || return 0
         sudocmd apt-file update
         ;;
 esac
