@@ -33,7 +33,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.62.0"
+EPMVERSION="3.62.1"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -538,7 +538,7 @@ confirm() {
 
 confirm_info()
 {
-    info "$*"
+    info "$*" >&2
     if [ -z "$non_interactive" ] ; then
         confirm "Are you sure? [y/N]" || fatal "Exiting"
     fi
