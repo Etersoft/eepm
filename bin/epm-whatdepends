@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2013, 2016, 2018  Etersoft
-# Copyright (C) 2013, 2016, 2018  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2013, 2016, 2018, 2024  Etersoft
+# Copyright (C) 2013, 2016, 2018, 2024  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -24,13 +24,13 @@ load_helper epm-print
 epm_whatdepends()
 {
     local CMD
-    [ -n "$pkg_files" ] && fatal "whatdepends does not handle files"
-    [ -n "$pkg_names" ] || fatal "whatdepends: package name is missed"
-    local pkg=$(print_name $pkg_names)
+    local pkg
 
-# by package name
-case $PMTYPE in
-    apt-rpm)
+case $BASEDISTRNAME in
+    "alt")
+        [ -n "$@" ] || fatal "Missed package name or some provides"
+        pkg="$(print_name "$@")"
+
         if [ -z "$verbose" ] ; then
             showcmd apt-cache whatdepends $pkg
             if [ -n "$short" ] ; then
@@ -43,6 +43,19 @@ case $PMTYPE in
             fi
             return
         fi
+        CMD="apt-cache whatdepends"
+        docmd $CMD $pkg
+        return
+        ;;
+esac
+
+[ -n "$pkg_files" ] && fatal "whatdepends does not handle files"
+[ -n "$pkg_names" ] || fatal "whatdepends: package name is missed"
+pkg="$(print_name $pkg_names)"
+
+# by package name
+case $PMTYPE in
+    apt-rpm)
         CMD="apt-cache whatdepends"
         ;;
     apt-dpkg|aptitude-dpkg)
