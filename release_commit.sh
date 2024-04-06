@@ -20,6 +20,9 @@ fi
 
 SPECNAME=eepm.spec
 version="$(get_version $SPECNAME)"
+baseversion=$(echo "$version" | sed -e 's|\.[0-9]*$||')
+
+[ $((version%2)) = 1 ] && version="$version-beta"
 
 ./pack_in_onefile.sh || exit
 
@@ -29,7 +32,6 @@ git commit packed -m "commit packed $version"
 push_tag $version
 gpush pub.github
 
-baseversion=$(echo "$version" | sed -e 's|\.[0-9]*$||')
 
 rpmpub /var/ftp/pub/Korinf/sources
 #rpmpub /var/ftp/pub/Etersoft/EPM/$baseversion/sources
