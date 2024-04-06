@@ -525,7 +525,7 @@ confirm() {
 
 confirm_info()
 {
-    info "$*"
+    info "$*" >&2
     if [ -z "$non_interactive" ] ; then
         confirm "Are you sure? [y/N]" || fatal "Exiting"
     fi
