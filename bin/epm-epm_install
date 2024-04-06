@@ -52,7 +52,7 @@ __epm_korinf_install() {
     local pkg_urls=''
     for pkgurl in $* ; do
         pkg="$(__epm_korinf_site_mask "$pkgurl")"
-        [ -n "$pkg" ] || fatal "Can't get package url from $pkgurl"
+        [ -n "$pkg" ] || fatal "Can't get package url by $pkgurl"
         [ -n "$pkg_urls" ] && pkg_urls="$pkg_urls $pkg" || pkg_urls="$pkg"
     done
     # due Error: Can't use epm call from the piped script
