@@ -66,7 +66,7 @@ __epm_filelist_remote()
 
     case $PMTYPE in
         apt-dpkg)
-            assure_exists apt-file || return
+            try_assure_exists apt-file || return
             if sudo_allowed ; then
                 sudocmd apt-file update
             else
@@ -78,11 +78,11 @@ __epm_filelist_remote()
             docmd pkcon get-files "$@"
             ;;
         yum-rpm)
-            assure_exists yum-utils || return
+            assure_exists yum-utils
             docmd repoquery -q -l "$@"
             ;;
         dnf-rpm)
-            assure_exists dnf-plugins-core || return
+            assure_exists dnf-plugins-core
             docmd dnf repoquery -l "$@"
             ;;
         *)

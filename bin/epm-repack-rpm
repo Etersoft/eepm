@@ -130,7 +130,7 @@ __epm_repack_to_rpm()
     local pkg="$1"
 
     # Note: install epm-repack for static (package based) dependencies
-    assure_exists alien || fatal
+    assure_exists alien
     assure_exists fakeroot
 
     # will set RPMBUILD
@@ -141,10 +141,10 @@ __epm_repack_to_rpm()
         # TODO: check for all systems
         case $PKGFORMAT in
             rpm)
-                assure_exists $RPMBUILD rpm-build || fatal
+                assure_exists $RPMBUILD rpm-build
                 ;;
             deb)
-                assure_exists $RPMBUILD rpm || fatal
+                assure_exists $RPMBUILD rpm
                 ;;
         esac
     fi
@@ -153,7 +153,7 @@ __epm_repack_to_rpm()
 
     # TODO: improve
     if echo "$pkg" | grep -q "\.deb" ; then
-        assure_exists dpkg || fatal
+        assure_exists dpkg
         # TODO: Для установки требует: /usr/share/debconf/confmodule но пакет не может быть установлен
         # assure_exists debconf
     fi

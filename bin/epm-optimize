@@ -20,8 +20,8 @@
 # TODO: is it different from rpm --rebuilddb?
 __repack_rpm_base()
 {
-    assure_exists db_dump || fatal
-    assure_exists db_load || fatal
+    assure_exists db_dump
+    assure_exists db_load
     cd /var/lib/rpm || fatal
     mv Packages Packages.BACKUP || fatal
     # mask dependencies with a=
