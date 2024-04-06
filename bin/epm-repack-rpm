@@ -105,23 +105,43 @@ EOF
 }
 
 # will set RPMBUILD
-__try_install_eepm_rpmbuild()
+__assure_exists_rpmbuild()
 {
-    RPMBUILD=/usr/bin/rpmbuild
-    [ -x "$RPMBUILD" ] && return
-
+    # checking both if they already installed
     RPMBUILD=/usr/bin/eepm-rpmbuild
-    if [ ! -x $RPMBUILD ] ; then
-        epm install eepm-rpm-build
-    fi
-
     if [ -x $RPMBUILD ] ; then
-        warning "will use eepm-rpmbuild for rpm packing"
+        info "will use eepm-rpmbuild for rpm packing"
         export EPM_RPMBUILD=$RPMBUILD
         return
     fi
 
     RPMBUILD=/usr/bin/rpmbuild
+    [ -x "$RPMBUILD" ] && return
+
+
+    # try install eepm-rpm-build
+    RPMBUILD=/usr/bin/eepm-rpmbuild
+    try_assure_exists $RPMBUILD eepm-rpm-build
+
+    if [ -x $RPMBUILD ] ; then
+        info "will use eepm-rpmbuild for rpm packing"
+        export EPM_RPMBUILD=$RPMBUILD
+        return
+    fi
+
+
+    # return to the default
+    RPMBUILD=/usr/bin/rpmbuild
+
+    # TODO: check for all systems
+    case $PKGFORMAT in
+        rpm)
+            assure_exists $RPMBUILD rpm-build
+            ;;
+        deb)
+            assure_exists $RPMBUILD rpm
+            ;;
+    esac
 }
 
 # will fill repacked_pkg var
@@ -134,20 +154,7 @@ __epm_repack_to_rpm()
     assure_exists fakeroot
 
     # will set RPMBUILD
-    __try_install_eepm_rpmbuild
-
-    if [ ! -x $RPMBUILD ] ; then
-        RPMBUILD=/usr/bin/rpmbuild
-        # TODO: check for all systems
-        case $PKGFORMAT in
-            rpm)
-                assure_exists $RPMBUILD rpm-build
-                ;;
-            deb)
-                assure_exists $RPMBUILD rpm
-                ;;
-        esac
-    fi
+    __assure_exists_rpmbuild
 
     umask 022
 
