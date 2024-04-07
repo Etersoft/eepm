@@ -1,0 +1,48 @@
+'\" t
+.\"
+.\" Author: Vitaly Lipatov
+.\"
+.\" This file has been put into the public domain.
+.\" You can do whatever you want with this file.
+.\"
+.TH EEPM 1 "April 2024" "Version 1.1"
+
+.SH NAME
+esu - get root shell or run a command in a root shell
+.SH SYNOPSIS
+.B esu
+.RI [ -c ]...
+.RI <command>...
+.PP
+.br
+.SH DESCRIPTION
+.BI
+.B esu
+can be used instead sudo or su - for privilegies escalation.
+.br
+.B esu
+will try to perform privilege escalation via
+.B sudo
+, and if
+.B sudo
+is not configured, it will apply
+.B su -.
+.br
+If the command is not specified, you will receive a privileged shell.
+
+.SH OPTIONS
+.TP
+.I -h
+Display help
+.TP
+
+.SH BUGS
+Please report any bugs to lav@etersoft.ru
+.SH EXIT STATUS
+.B esu
+will return zero on success and non zero on operation failure.
+.SH SEE ALSO
+.BR epm (1), sudo (8), su (1)
+.TP
+.B http://wiki.etersoft.ru/eepm
+EEPM wiki page
