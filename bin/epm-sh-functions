@@ -439,6 +439,7 @@ set_sudo()
             fi
         fi
     else
+        # TODO: check user_can_sudo in https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
         # use sudo if one is tuned and tuned without password
         # hack: check twice
         $SUDO_CMD -l -n >/dev/null 2>/dev/null
