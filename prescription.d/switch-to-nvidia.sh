@@ -86,7 +86,7 @@ systemctl enable nvidia-suspend.service nvidia-resume.service nvidia-hibernate.s
 # Добавляем выделение места в системе для видеопамяти. Иначе интерфейсы не будут работать.
 cat << _EOF_ > /etc/modprobe.d/nvidia_videomemory_allocation.conf
 options nvidia NVreg_PreserveVideoMemoryAllocations=1
-options nvidia NVreg_TemporaryFilePath=/run
+options nvidia NVreg_TemporaryFilePath=/var/tmp
 _EOF_
 
 # Запускаем регенерацию initrd
