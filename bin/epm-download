@@ -86,7 +86,7 @@ __download_pkg_urls()
                 [ "$i" = "*" ] && warning "Incorrect true status from eget. No saved files from download $url, ignoring" && continue
                 [ -s "$tmppkg/$i" ] || continue
                 chmod $verbose a+r "$tmppkg/$i"
-                local si="${i/ /}"
+                local si="$(echo "$i" | sed -e 's| |-|g')"
                 if [ "$si" != "$i" ] ; then
                     info "Space detected in the downloaded file '$i', removing spaces ..."
                     mv -v "$tmppkg/$i" "$tmppkg/$si"
