@@ -45,6 +45,11 @@ is_command()
     print_command_path "$1" >/dev/null
 }
 
+is_url()
+{
+    echo "$1" | grep -q "^[filehtps]*:/"
+}
+
 
 #__showcmd_shifted()
 #{
@@ -136,7 +141,8 @@ install_pack_pkgurl()
 
 snap_get_pkgurl()
 {
-    local SNAPNAME=$1
+    local SNAPNAME="$1"
+    is_url "$SNAPNAME" && SNAPNAME="$(basename "$SNAPNAME")"
     eget -O- -H Snap-Device-Series:16 https://api.snapcraft.io/v2/snaps/info/$SNAPNAME | epm --inscript tool json -b | grep '\["channel-map",0,"download","url"\]' | head -n1 | sed -e 's|.*"\(.*\)"$|\1|'
 }
 
