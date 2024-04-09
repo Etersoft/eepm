@@ -1,6 +1,6 @@
 #!/bin/bash
 
-EPMPKGFILE=/usr/src/RPM/RPMS/noarch/eepm-3*.rpm
+EPMPKGFILE=/github/home/RPM/RPMS/noarch/eepm-3.*.rpm
 # just a package
 TESTPKG1=fakeroot
 TESTPKG2=erc
