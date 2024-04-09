@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.62.1
+Version: 3.62.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -54,7 +54,7 @@ Requires: alien dpkg patchelf p7zip
 Requires: eepm-rpm-build
 %else
 Requires: /usr/bin/rpmbuild
-fi
+%endif
 
 %description repack
 This package has requirements needed for using epm repack on ALT
@@ -101,6 +101,28 @@ a discussion about extra requirements.
 
 
 %changelog
+* Tue Apr 09 2024 Vitaly Lipatov <lav@altlinux.ru> 3.62.2-alt1
+- eget: fix get response 404 from CloudFlare via range 0-0 downloading (#1)
+- epm-repack subpackage: require eepm-rpm-build for ALT and /usr/bin/rpm-build for other distros
+- epm-repopkg: fix missed closing square bracket
+- introduce try_assure_exists() and use it
+- epm-repack-rpm: rewrite rpm-build checking (try install eepm-rpmbuild firstly)
+- epm pack, repack: add Davinci-resolve
+- epm repack: add checking for tarball name in packrules.list
+- epm: check PATH on any systems, add warning if sudo is used
+- add esu man page
+- update CMDSHELL to use SHELL if env is missed
+- epm play: fix far2l download
+- epm play pstube: enable, fix downloading latest version
+- epm-download: replace spaces in downloaded filenames with -
+- epm play: added penpot-desktop
+- epm play common.sh: add url support to snap_get_pkgurl
+- epm-repack-rpm: drop /usr/share/icons/gnome dirs from packing
+- epm repack.d/generic.sh: add correct defattr
+- epm pack pantum: fix tar name handling (there are no spaces more)
+- epm sf: skip missed contents_index files
+- epm: export EPMVERSION for all tools
+
 * Sat Apr 06 2024 Vitaly Lipatov <lav@altlinux.ru> 3.62.1-alt1
 - epm play r7-office-organizer: force latest version due bug with package name
 - epm-download: __download_pkg_urls(): add workaround for spaces in downloaded files

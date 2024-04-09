@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.62.1"
+export EPMVERSION="3.62.2"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -404,7 +404,7 @@ info()
 
 check_su_root()
 {
-    [ "$BASEDISTRNAME" = "alt" ] || return 0
+    #[ "$BASEDISTRNAME" = "alt" ] || return 0
 
     is_root || return 0
 
@@ -457,6 +457,7 @@ set_sudo()
             fi
         fi
     else
+        # TODO: check user_can_sudo in https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
         # use sudo if one is tuned and tuned without password
         # hack: check twice
         $SUDO_CMD -l -n >/dev/null 2>/dev/null
@@ -661,7 +662,7 @@ regexp_subst()
     sed -i -r -e "$expression" "$@"
 }
 
-assure_exists()
+try_assure_exists()
 {
     local package="$2"
     [ -n "$package" ] || package="$(__get_package_for_command "$1")"
@@ -670,8 +671,14 @@ assure_exists()
     local ask=''
     [ -n "$non_interactive" ] || ask=1
 
-    ( verbose='' direct='' interactive=$ask epm_assure "$1" $package $3 ) || fatal
+    ( verbose='' direct='' interactive=$ask epm_assure "$1" $package $3 )
 }
+
+assure_exists()
+{
+    try_assure_exists "$@" || fatal
+}
+
 
 assure_exists_erc()
 {
@@ -762,8 +769,8 @@ eget()
 {
     # check for both
     # we really need that cross here,
-    is_command curl || assure_exists wget
-    is_command wget || assure_exists curl
+    is_command curl || try_assure_exists wget
+    is_command wget || try_assure_exists curl
     internal_tools_eget "$@"
 }
 
@@ -876,6 +883,8 @@ set_distro_info()
 {
 
     test_shell
+
+    [ -n "$SUDO_USER" ] && warning "It is not necessary to run epm using sudo."
 
     assure_tmpdir
 
@@ -3084,7 +3093,7 @@ __download_pkg_urls()
                 [ "$i" = "*" ] && warning "Incorrect true status from eget. No saved files from download $url, ignoring" && continue
                 [ -s "$tmppkg/$i" ] || continue
                 chmod $verbose a+r "$tmppkg/$i"
-                local si="${i/ /}"
+                local si="$(echo "$i" | sed -e 's| |-|g')"
                 if [ "$si" != "$i" ] ; then
                     info "Space detected in the downloaded file '$i', removing spaces ..."
                     mv -v "$tmppkg/$i" "$tmppkg/$si"
@@ -3313,7 +3322,7 @@ __epm_korinf_install() {
     local pkg_urls=''
     for pkgurl in $* ; do
         pkg="$(__epm_korinf_site_mask "$pkgurl")"
-        [ -n "$pkg" ] || fatal "Can't get package url from $pkgurl"
+        [ -n "$pkg" ] || fatal "Can't get package url by $pkgurl"
         [ -n "$pkg_urls" ] && pkg_urls="$pkg_urls $pkg" || pkg_urls="$pkg"
     done
     # due Error: Can't use epm call from the piped script
@@ -3450,7 +3459,7 @@ __epm_filelist_remote()
 
     case $PMTYPE in
         apt-dpkg)
-            assure_exists apt-file || return
+            try_assure_exists apt-file || return
             if sudo_allowed ; then
                 sudocmd apt-file update
             else
@@ -3462,11 +3471,11 @@ __epm_filelist_remote()
             docmd pkcon get-files "$@"
             ;;
         yum-rpm)
-            assure_exists yum-utils || return
+            assure_exists yum-utils
             docmd repoquery -q -l "$@"
             ;;
         dnf-rpm)
-            assure_exists dnf-plugins-core || return
+            assure_exists dnf-plugins-core
             docmd dnf repoquery -l "$@"
             ;;
         *)
@@ -5736,8 +5745,8 @@ epm_moo()
 
 __repack_rpm_base()
 {
-    assure_exists db_dump || fatal
-    assure_exists db_load || fatal
+    assure_exists db_dump
+    assure_exists db_load
     cd /var/lib/rpm || fatal
     mv Packages Packages.BACKUP || fatal
     # mask dependencies with a=
@@ -9270,6 +9279,31 @@ __check_stoplist()
     grep -E -q "^$1$" $alf
 }
 
+__convert_packrule_to_regexp()
+{
+    local tmpalf
+    tmpalf="$(mktemp)" || fatal
+    # copied from eget's filter_glob
+    # check man glob
+    # remove commentы and translate glob to regexp
+    grep -v "^[[:space:]]*#" "$1" | grep -v "^[[:space:]]*$" | sed -e "s|\*|.*|g" -e "s|?|.|g" >$tmpalf
+    echo "$tmpalf"
+}
+
+__check_packrule()
+{
+    local pkg="$1"
+    local alf="$CONFIGDIR/packrules.list"
+    [ -s "$pkg" ] || return 1
+    [ -s "$alf" ] || return 1
+
+    local tmpalf=$(__convert_packrule_to_regexp "$alf")
+    remove_on_exit $tmpalf
+    __PACKRULE="$(awk -v s="$pkg" 'BEGIN{FS=" "} s ~ $2  {print $1}' "$tmpalf")"
+    rm $tmpalf
+    [ -n "${__PACKRULE}" ]
+    return
+}
 
 __prepare_source_package()
 {
@@ -9294,7 +9328,10 @@ __prepare_source_package()
     # convert tarballs to tar (for alien)
 
     # they will fill $returntarname
-    if rihas "$alpkg" "\.AppImage$" ; then
+
+    if __check_packrule "$alpkg" ; then
+        __epm_pack_run_handler ${__PACKRULE} "$pkg"
+    elif rihas "$alpkg" "\.AppImage$" ; then
         # big hack with $pkg_urls_downloaded (it can be a list, not a single url)
         __epm_pack_run_handler generic-appimage "$pkg" "" "$pkg_urls_downloaded"
         SUBGENERIC='appimage'
@@ -9443,13 +9480,27 @@ __epm_repack_to_deb()
 
 # File bin/epm-repack-rpm:
 
+__icons_res_list="apps scalable symbolic 8x8 14x14 16x16 20x20 22x22 24x24 28x28 32x32 36x36 42x42 45x45 48x48 64 64x64 72x72 96x96 128x128 144x144 160x160 192x192 256x256 256x256@2x 480x480 512 512x512 1024x1024"
+__icons_type_list="actions animations apps categories devices emblems emotes filesystems intl mimetypes places status stock"
+
 __get_icons_hicolor_list()
 {
     local i j
-    for i in apps scalable symbolic 8x8 14x14 16x16 20x20 22x22 24x24 28x28 32x32 36x36 42x42 45x45 48x48 64 64x64 72x72 96x96 128x128 144x144 160x160 192x192 256x256 256x256@2x 480x480 512 512x512 1024x1024 ; do
+    for i in ${__icons_res_list} ; do
         echo "/usr/share/icons/hicolor/$i"
-        for j in actions animations apps categories devices emblems emotes filesystems intl mimetypes places status stock ; do
+        for j in ${__icons_type_list}; do
             echo "/usr/share/icons/hicolor/$i/$j"
+        done
+    done
+}
+
+__get_icons_gnome_list()
+{
+    local i j
+    for i in ${__icons_res_list} ; do
+        echo "/usr/share/icons/gnome/$i"
+        for j in ${__icons_type_list}; do
+            echo "/usr/share/icons/gnome/$i/$j"
         done
     done
 }
@@ -9465,6 +9516,8 @@ __fix_spec()
     # https://bugzilla.altlinux.org/show_bug.cgi?id=38842
     for i in / /etc /etc/init.d /etc/systemd /bin /opt /usr /usr/bin /usr/lib /usr/lib64 /usr/share /usr/share/doc /var /var/log /var/run \
             /etc/cron.daily /usr/share/icons/usr/share/pixmaps /usr/share/man /usr/share/man/man1 /usr/share/appdata /usr/share/applications /usr/share/menu \
+            /usr/share/mime /usr/share/mime/packages \
+            /usr/share/icons/gnome $(__get_icons_gnome_list) \
             /usr/share/icons/hicolor $(__get_icons_hicolor_list) ; do
         sed -i \
             -e "s|/\./|/|" \
@@ -9527,23 +9580,43 @@ EOF
     remove_on_exit "$HOME/.rpmmacros"
 }
 
-__try_install_eepm_rpmbuild()
+__assure_exists_rpmbuild()
 {
-    RPMBUILD=/usr/bin/rpmbuild
-    [ -x "$RPMBUILD" ] && return
-
+    # checking both if they already installed
     RPMBUILD=/usr/bin/eepm-rpmbuild
-    if [ ! -x $RPMBUILD ] ; then
-        epm install eepm-rpm-build
-    fi
-
     if [ -x $RPMBUILD ] ; then
-        warning "will use eepm-rpmbuild for rpm packing"
+        info "will use eepm-rpmbuild for rpm packing"
         export EPM_RPMBUILD=$RPMBUILD
         return
     fi
 
     RPMBUILD=/usr/bin/rpmbuild
+    [ -x "$RPMBUILD" ] && return
+
+
+    # try install eepm-rpm-build
+    RPMBUILD=/usr/bin/eepm-rpmbuild
+    try_assure_exists $RPMBUILD eepm-rpm-build
+
+    if [ -x $RPMBUILD ] ; then
+        info "will use eepm-rpmbuild for rpm packing"
+        export EPM_RPMBUILD=$RPMBUILD
+        return
+    fi
+
+
+    # return to the default
+    RPMBUILD=/usr/bin/rpmbuild
+
+    # TODO: check for all systems
+    case $PKGFORMAT in
+        rpm)
+            assure_exists $RPMBUILD rpm-build
+            ;;
+        deb)
+            assure_exists $RPMBUILD rpm
+            ;;
+    esac
 }
 
 __epm_repack_to_rpm()
@@ -9551,30 +9624,17 @@ __epm_repack_to_rpm()
     local pkg="$1"
 
     # Note: install epm-repack for static (package based) dependencies
-    assure_exists alien || fatal
+    assure_exists alien
     assure_exists fakeroot
 
     # will set RPMBUILD
-    __try_install_eepm_rpmbuild
-
-    if [ ! -x $RPMBUILD ] ; then
-        RPMBUILD=/usr/bin/rpmbuild
-        # TODO: check for all systems
-        case $PKGFORMAT in
-            rpm)
-                assure_exists $RPMBUILD rpm-build || fatal
-                ;;
-            deb)
-                assure_exists $RPMBUILD rpm || fatal
-                ;;
-        esac
-    fi
+    __assure_exists_rpmbuild
 
     umask 022
 
     # TODO: improve
     if echo "$pkg" | grep -q "\.deb" ; then
-        assure_exists dpkg || fatal
+        assure_exists dpkg
         # TODO: Для установки требует: /usr/share/debconf/confmodule но пакет не может быть установлен
         # assure_exists debconf
     fi
@@ -10605,7 +10665,7 @@ __epm_repo_pkgdel_alt()
             local rd="$REPO_DIR/$arch/RPMS.$REPO_NAME"
             [ -d $REPO_DIR/$arch/RPMS.$REPO_NAME ] || continue
             for i in $rd/$1* ; do
-                [ "$1" = "$(epm print name for package $i)" || continue
+                [ "$1" = "$(epm print name for package $i)" ] || continue
                 rm -v $rd/$1*
             done
         done
@@ -11465,7 +11525,7 @@ __epm_restore_npm()
 {
     local req_file="$1"
 
-    assure_exists jq || fatal
+    assure_exists jq
 
     if [ -n "$dryrun" ] ; then
         local lt
@@ -11527,7 +11587,7 @@ __epm_restore_perl_shyaml()
 {
     local req_file="$1"
 
-    assure_exists shyaml || fatal
+    assure_exists shyaml
 
     if [ -n "$dryrun" ] ; then
         local lt
@@ -11891,7 +11951,7 @@ __alt_local_content_search()
         fatal "There was some error in contents index retrieving. Try run 'epm update' again."
     fi
 
-    local CI="$(cat $ALT_CONTENTS_INDEX_LIST)"
+    local CI="$(ls $(cat $ALT_CONTENTS_INDEX_LIST) 2>/dev/null)"
 
     info "Searching for $1 ... "
 
@@ -12035,7 +12095,7 @@ rsync_alt_contents_index()
     local URL="$1"
     local TD="$2"
     local res
-    assure_exists rsync || return
+    try_assure_exists rsync || return
 
     if ! __rsync_check "$URL" ; then
         warning "$URL is not accessible via rsync, skipping contents index update..."
@@ -12977,7 +13037,7 @@ esac
 case $PMTYPE in
     apt-dpkg)
         is_command apt-file || return 0
-        assure_exists apt-file || return 0
+        try_assure_exists apt-file || return 0
         sudocmd apt-file update
         ;;
 esac
@@ -15569,8 +15629,9 @@ url_get_response()
     local answer
     answer="$(quiet=1 __wget --spider -S "$URL" 2>&1)"
     # HTTP/1.1 405 Method Not Allowed
-    if echo "$answer" | grep -q "^ *HTTP/[12.]* 405" ; then
-        (quiet=1 __wget --start-pos=5000G -S "$URL" 2>&1)
+    # HTTP/1.1 404 Not Found
+    if echo "$answer" | grep -q "^ *HTTP/[12.]* 40[45]" ; then
+        (quiet=1 __wget -O/dev/null --header="Range: bytes=0-0" -S "$URL" 2>&1)
         return
     fi
     echo "$answer"
@@ -15615,7 +15676,8 @@ url_get_response()
     local answer
     answer="$(quiet=1 __curl -LI "$URL" 2>&1)"
     # HTTP/1.1 405 Method Not Allowed
-    if echo "$answer" | grep -q "^ *HTTP/[12.]* 405" ; then
+    # HTTP/1.1 404 Not Found
+    if echo "$answer" | grep -q "^ *HTTP/[12.]* 40[45]" ; then
         (quiet=1 __curl -L -i -r0-0 "$URL" 2>&1)
         return
     fi

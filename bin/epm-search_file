@@ -39,7 +39,7 @@ __alt_local_content_search()
         fatal "There was some error in contents index retrieving. Try run 'epm update' again."
     fi
 
-    local CI="$(cat $ALT_CONTENTS_INDEX_LIST)"
+    local CI="$(ls $(cat $ALT_CONTENTS_INDEX_LIST) 2>/dev/null)"
 
     info "Searching for $1 ... "
 
