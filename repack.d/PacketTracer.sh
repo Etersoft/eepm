@@ -15,7 +15,7 @@ subst 's| > /dev/null 2>&1||' opt/pt/packettracer
 
 add_libs_requires
 
-if -d usr/share/applications ; then
+if [ -d usr/share/applications ] ; then
     fix_desktop_file
 else
     echo -e "[Desktop Entry]\nType=Application\nExec=/opt/pt/packettracer %f\nName=Packet Tracer\nIcon=/opt/pt/art/app.png\nTerminal=false\nStartupNotify=true\nMimeType=application/x-pkt;application/x-pka;application/x-pkz;application/x-pks;application/x-pksz;"  \
@@ -41,5 +41,4 @@ pack_file /opt/pt/bin/translations
 # TODO
 #CONTENTS.cpio/ucpio://usr/share/icons/gnome/48x48/mimetypes
 #/usr/share/icons/hicolor/48x48/mimetypes
-
 
