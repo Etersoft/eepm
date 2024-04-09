@@ -8,18 +8,6 @@ SPEC="$2"
 
 add_bin_exec_command
 
-cd .$PRODUCTDIR || fatal
-
-for i in data-dir gnome-platform lib meta scripts usr ; do
-    remove_dir $PRODUCTDIR/$i
-done
-
-for i in *.sh ; do
-    remove_file $PRODUCTDIR/$i
-done
-
-cd >/dev/null
-
 add_libs_requires
 
 add_bin_link_command
