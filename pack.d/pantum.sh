@@ -5,7 +5,8 @@ RETURNTARNAME="$2"
 
 . $(dirname $0)/common.sh
 
-if echo "$TAR" | grep -q "Pantum Ubuntu Driver V.*.zip" ; then
+# epm replaces spaces with - in downloaded files
+if echo "$TAR" | grep -q "Pantum[ -]Ubuntu[ -]Driver[- ]V.*.zip" ; then
     erc "$TAR" || fatal
 elif echo "$TAR" | grep -q "Pantum%20Ubuntu%20Driver%20V.*.zip" ; then
     erc "$TAR" || fatal
@@ -19,7 +20,6 @@ else
     fatal "We support only Pantum Ubuntu Driver V.*.zip"
 fi
 
-rm -v "$TAR"
 # drop dirname with spaces
 mv Pantum* PantumDriver || fatal
 cd PantumDriver/Resources || fatal
