@@ -20,7 +20,8 @@
 PROGDIR=$(dirname "$0")
 PROGNAME=$(basename "$0")
 [ -n "$EPMCURDIR" ] || export EPMCURDIR="$(pwd)"
-CMDSHELL="/bin/bash"
+CMDENV="/usr/bin/env"
+[ -x "$CMDENV" ] && CMDSHELL="/usr/bin/env bash" || CMDSHELL="$SHELL"
 # TODO: pwd for ./epm and which for epm
 [ "$PROGDIR" = "." ] && PROGDIR="$EPMCURDIR"
 if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
@@ -33,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.62.1"
+EPMVERSION="3.62.2"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -404,7 +405,7 @@ info()
 
 check_su_root()
 {
-    [ "$BASEDISTRNAME" = "alt" ] || return 0
+    #[ "$BASEDISTRNAME" = "alt" ] || return 0
 
     is_root || return 0
 
@@ -457,6 +458,7 @@ set_sudo()
             fi
         fi
     else
+        # TODO: check user_can_sudo in https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
         # use sudo if one is tuned and tuned without password
         # hack: check twice
         $SUDO_CMD -l -n >/dev/null 2>/dev/null
@@ -661,7 +663,7 @@ regexp_subst()
     sed -i -r -e "$expression" "$@"
 }
 
-assure_exists()
+try_assure_exists()
 {
     local package="$2"
     [ -n "$package" ] || package="$(__get_package_for_command "$1")"
@@ -670,8 +672,14 @@ assure_exists()
     local ask=''
     [ -n "$non_interactive" ] || ask=1
 
-    ( verbose='' direct='' interactive=$ask epm_assure "$1" $package $3 ) || fatal
+    ( verbose='' direct='' interactive=$ask epm_assure "$1" $package $3 )
 }
+
+assure_exists()
+{
+    try_assure_exists "$@" || fatal
+}
+
 
 assure_exists_erc()
 {
@@ -762,8 +770,8 @@ eget()
 {
     # check for both
     # we really need that cross here,
-    is_command curl || assure_exists wget
-    is_command wget || assure_exists curl
+    is_command curl || try_assure_exists wget
+    is_command wget || try_assure_exists curl
     internal_tools_eget "$@"
 }
 
@@ -876,6 +884,8 @@ set_distro_info()
 {
 
     test_shell
+
+    [ -n "$SUDO_USER" ] && warning "It is not necessary to run epm using sudo."
 
     assure_tmpdir
 
