@@ -17,13 +17,27 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+__icons_res_list="apps scalable symbolic 8x8 14x14 16x16 20x20 22x22 24x24 28x28 32x32 36x36 42x42 45x45 48x48 64 64x64 72x72 96x96 128x128 144x144 160x160 192x192 256x256 256x256@2x 480x480 512 512x512 1024x1024"
+__icons_type_list="actions animations apps categories devices emblems emotes filesystems intl mimetypes places status stock"
+
 __get_icons_hicolor_list()
 {
     local i j
-    for i in apps scalable symbolic 8x8 14x14 16x16 20x20 22x22 24x24 28x28 32x32 36x36 42x42 45x45 48x48 64 64x64 72x72 96x96 128x128 144x144 160x160 192x192 256x256 256x256@2x 480x480 512 512x512 1024x1024 ; do
+    for i in ${__icons_res_list} ; do
         echo "/usr/share/icons/hicolor/$i"
-        for j in actions animations apps categories devices emblems emotes filesystems intl mimetypes places status stock ; do
+        for j in ${__icons_type_list}; do
             echo "/usr/share/icons/hicolor/$i/$j"
+        done
+    done
+}
+
+__get_icons_gnome_list()
+{
+    local i j
+    for i in ${__icons_res_list} ; do
+        echo "/usr/share/icons/gnome/$i"
+        for j in ${__icons_type_list}; do
+            echo "/usr/share/icons/gnome/$i/$j"
         done
     done
 }
@@ -40,6 +54,8 @@ __fix_spec()
     # https://bugzilla.altlinux.org/show_bug.cgi?id=38842
     for i in / /etc /etc/init.d /etc/systemd /bin /opt /usr /usr/bin /usr/lib /usr/lib64 /usr/share /usr/share/doc /var /var/log /var/run \
             /etc/cron.daily /usr/share/icons/usr/share/pixmaps /usr/share/man /usr/share/man/man1 /usr/share/appdata /usr/share/applications /usr/share/menu \
+            /usr/share/mime /usr/share/mime/packages \
+            /usr/share/icons/gnome $(__get_icons_gnome_list) \
             /usr/share/icons/hicolor $(__get_icons_hicolor_list) ; do
         sed -i \
             -e "s|/\./|/|" \
