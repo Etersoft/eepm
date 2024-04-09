@@ -21,8 +21,9 @@ fi
 SPECNAME=eepm.spec
 version="$(get_version $SPECNAME)"
 baseversion=$(echo "$version" | sed -e 's|\.[0-9]*$||')
+minorversion=$(echo "$baseversion" | sed -e 's|.*\.||')
 
-[ $((version%2)) = 1 ] && version="$version-beta"
+[ "$((minorversion%2))" = 1 ] && version="$version-beta"
 
 ./pack_in_onefile.sh || exit
 
