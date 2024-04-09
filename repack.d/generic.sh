@@ -102,6 +102,10 @@ else
     subst "s|^\((Converted from a\) \(.*\) \(package.*\)|(Repacked from binary \2 package with EPM $(epm --short --version))\n\1 \2 \3|" $SPEC
 fi
 
+if ! grep "^%defattr" $SPEC ; then
+    subst "s|^%files$|%files\n%defattr(-,root,root,755)|" $SPEC
+fi
+
 # only for rpm
 if [ -z "$SUBGENERIC" ] ; then
     fix_cpio_bug_links
