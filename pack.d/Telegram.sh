@@ -19,12 +19,16 @@ f=$FPRODUCT
 
 install -D -m755 $f opt/$TPRODUCT/$TPRODUCT || fatal
 
-# TODO: move to ipfs
-# Icons
+IPFS_ICONS_URL="ipfs://QmWYv5mMrvpbN9YWpJ2MuK9rEu6crJBP8YvDp1SKxhqLWP?filename=telegram-icons.tar"
+if eget $IPFS_ICONS_URL && erc telegram-icons.tar ; then
+    iconpath=telegram-icons
+else
+    iconpath=https://github.com/telegramdesktop/tdesktop/raw/master/Telegram/Resources/art
+fi
+
 iconname=$PRODUCT
-url=https://github.com/telegramdesktop/tdesktop
 for i in 16 32 48 64 128 256 512 ; do
-    install_file $url/raw/master/Telegram/Resources/art/icon$i.png /usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png
+    install_file $iconpath/icon$i.png /usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png
 done
 
 cat <<EOF | create_file /usr/share/applications/org.telegram.desktop.desktop
