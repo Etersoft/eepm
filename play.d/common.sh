@@ -306,6 +306,38 @@ is_repacked_packages()
     done
 }
 
+check_for_product_update()
+{
+    # HACK: check version only by first package (we assume all packages have the same version)
+    pkgver="$(epm print version for package $PKGNAME | head -n1)"
+    latestpkgver="$(get_latest_version $PKGNAME)"
+
+    # ignore update if have no latest package version or the latest package version no more than installed one
+    [ -n "$pkgver" ] || return
+
+    if [ -z "$latestpkgver" ] ; then
+        echo "Can't get info about latest version of $PKGNAME, so skip updating installed version $pkgver."
+        exit
+    fi
+    # latestpkgver <= $pkgver
+    if [ -z "$force" ] && [ "$(epm print compare package version $latestpkgver $pkgver)" != "1" ] ; then
+        if [ "$latestpkgver" = "$pkgver" ] ; then
+            echo "Latest available version of $PKGNAME $latestpkgver is already installed."
+        else
+            echo "Latest available version of $PKGNAME: $latestpkgver, but you have a newer version installed: $pkgver."
+        fi
+        exit
+    fi
+
+    #echo "Updating $PKGNAME from $pkgver to the latest available version (equal to $latestpkgver or newer) ..."
+    if [ -n "$force" ] ; then
+        echo "Updating $PKGNAME from $pkgver to latest available version ..."
+    else
+        echo "Updating $PKGNAME from $pkgver to $latestpkgver version ..."
+        VERSION="$latestpkgver"
+    fi
+}
+
 
 case "$1" in
     "--description")
@@ -371,33 +403,7 @@ case "$1" in
             exit
         fi
 
-        # HACK: check version only by first package (we assume all packages have the same version)
-        pkgver="$(epm print version for package $PKGNAME | head -n1)"
-        latestpkgver="$(get_latest_version $PKGNAME)"
-        # ignore update if have no latest package version or the latest package version no more than installed one
-        if [ -n "$pkgver" ] ; then
-            if [ -z "$latestpkgver" ] ; then
-                echo "Can't get info about latest version of $PKGNAME, so skip updating installed version $pkgver."
-                exit
-            fi
-            # latestpkgver <= $pkgver
-            if [ -z "$force" ] && [ "$(epm print compare package version $latestpkgver $pkgver)" != "1" ] ; then
-                if [ "$latestpkgver" = "$pkgver" ] ; then
-                    echo "Latest available version of $PKGNAME $latestpkgver is already installed."
-                else
-                    echo "Latest available version of $PKGNAME: $latestpkgver, but you have a newer version installed: $pkgver."
-                fi
-                exit
-            fi
-
-            #echo "Updating $PKGNAME from $pkgver to the latest available version (equal to $latestpkgver or newer) ..."
-            if [ -n "$force" ] ; then
-                echo "Updating $PKGNAME from $pkgver to latest available version ..."
-            else
-                echo "Updating $PKGNAME from $pkgver to $latestpkgver version ..."
-                VERSION="$latestpkgver"
-            fi
-        fi
+        check_for_product_update
         # pass to run play code
         ;;
     "--run")
@@ -423,7 +429,7 @@ if [ -z "$VERSION" ] && [ -z "$force" ] && [ -n "$EGET_IPFS_DB" ] ; then
 fi
 
 if [ -z "$VERSION" ] && [ -z "$force" ] ; then
-    # by default use known version to install
+    # by default use latest known version to install
     VERSION="$(get_latest_version $PKGNAME)"
 fi
 
