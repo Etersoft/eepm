@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.62.2"
+EPMVERSION="3.62.3"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -885,7 +885,8 @@ set_distro_info()
 
     test_shell
 
-    [ -n "$SUDO_USER" ] && warning "It is not necessary to run epm using sudo."
+    # TODO: return when we will not ask run under root
+    #[ -n "$SUDO_USER" ] && warning "It is not necessary to run epm using sudo."
 
     assure_tmpdir
 

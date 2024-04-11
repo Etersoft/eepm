@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-export EPMVERSION="3.62.2"
+export EPMVERSION="3.62.3"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -884,7 +884,8 @@ set_distro_info()
 
     test_shell
 
-    [ -n "$SUDO_USER" ] && warning "It is not necessary to run epm using sudo."
+    # TODO: return when we will not ask run under root
+    #[ -n "$SUDO_USER" ] && warning "It is not necessary to run epm using sudo."
 
     assure_tmpdir
 
@@ -1121,33 +1122,20 @@ __epm_addrepo_etersoft_addon()
     fi
 }
 
-__epm_addrepo_altsp()
+__epm_addrepo_alt_repo()
 {
     local comp
+    local sign
     local repo="$1"
-    case "$repo" in
-        c10f1)
-            comp="CF3"
-            ;;
-        c9f2)
-            comp="CF2"
-            ;;
-        c9f1)
-            comp="CF1"
-            ;;
-        c9)
-            comp="cf"
-            ;;
-        *)
-            fatal "Uknown CF comp $repo"
-            ;;
-    esac
-
-    epm repo add "rpm [cert8] http://update.altsp.su/pub/distributions/ALTLinux $comp/branch/$DISTRARCH classic" || return
+    comp="$repo"
+    sign="$repo"
+    rhas "$repo" "^c" && sign="cert8"
+    local baseurl="http://ftp.basealt.ru/pub/distributions/ALTLinux"
+    epm repo add "rpm [$sign] $baseurl $comp/branch/$DISTRARCH classic" || return
     if [ "$DISTRARCH" = "x86_64" ] ; then
-        epm repo add "rpm [cert8] http://update.altsp.su/pub/distributions/ALTLinux $comp/branch/x86_64-i586 classic" || return
+        epm repo add "rpm [$sign] $baseurl $comp/branch/x86_64-i586 classic" || return
     fi
-    epm repo add "rpm [cert8] http://update.altsp.su/pub/distributions/ALTLinux $comp/branch/noarch classic" || return
+    epm repo add "rpm [$sign] $baseurl $comp/branch/noarch classic" || return
 }
 
 get_archlist()
@@ -1355,8 +1343,12 @@ __epm_addrepo_altlinux()
     fi
 
     case "$repo" in
-        c10f*|c9f*|c9)
-            __epm_addrepo_altsp "$repo"
+        c10f2|c10f1|c9f2|c9f1|c9)
+            __epm_addrepo_alt_repo "$repo"
+            return
+            ;;
+        p11|p10|p9|p8)
+            __epm_addrepo_alt_repo "$repo"
             return
             ;;
     esac
@@ -9751,11 +9743,12 @@ epm_repo_help()
     cat <<EOF
 
 Examples:
-  epm repo set p9
-  epm repo switch p10
-  epm repo add autoimports
-  epm repo list
-  epm repo change yandex
+  epm repo set p9          - clean all sources and add default repo for p9 branch
+  epm repo set c10f1       - clean all sources and add default repo for c10f1 branch
+  epm repo switch p10      - change only branch name to p10
+  epm repo add autoimports - add autoimports (from Fedora) repo
+  epm repo change yandex   - change only base url part to mirror.yandex.ru server
+  epm repo list            - list current repos
 EOF
 }
 
@@ -10161,7 +10154,10 @@ __repofix_filter_vendor()
             br="cert8"
             ;;
         c9*)
-            br="cert9"
+            br="cert8"
+            ;;
+        c10*)
+            br="cert8"
             ;;
         Sisyphus)
             br="alt"
@@ -10191,8 +10187,7 @@ __alt_replace_sign_name()
     __replace_text_in_alt_repo "/^ *#/! s!\[sisyphus\]!$TO!g"
     __replace_text_in_alt_repo "/^ *#/! s!\[updates\]!$TO!g"
     __replace_text_in_alt_repo "/^ *#/! s!\[cert[789]\]!$TO!g"
-    __replace_text_in_alt_repo "/^ *#/! s!\[p10\.?[0-9]?\]!$TO!g"
-    __replace_text_in_alt_repo "/^ *#/! s!\[[tpc][6-9]\.?[0-9]?\]!$TO!g"
+    __replace_text_in_alt_repo "/^ *#/! s!\[[tcp][1-3]?[6-90][.f]?[0-9]?\]!$TO!g"
 }
 
 __alt_repofix()
@@ -10206,28 +10201,29 @@ __alt_repofix()
     fi
 }
 
+__alt_branch_reg='[tcp][1-3]?[6-90][.f]?[0-9]?'
+
 epm_reposwitch()
 {
     local TO="$1"
     [ -n "$TO" ] || fatal "run repo switch with arg (p9, p10, Sisyphus)"
     [ "$TO" = "sisyphus" ] && TO="Sisyphus"
     if [ "$TO" = "Sisyphus" ] ; then
-        __replace_alt_version_in_repo "[tpc][5-9]\.?[0-9]?/branch/" "$TO/"
-        __replace_alt_version_in_repo "p10\.?[0-9]?/branch/" "$TO/"
+        __replace_alt_version_in_repo "$__alt_branch_reg/branch/" "$TO/"
     else
         __replace_alt_version_in_repo "Sisyphus/" "$TO/branch/"
-        __replace_alt_version_in_repo "[tpc][5-9]\.?[0-9]?/branch/" "$TO/branch/"
-        if [ "$TO" != "p10" ] ; then
-            __replace_alt_version_in_repo "p10\.?[0-9]?/branch/" "$TO/branch/"
-        fi
+        __replace_alt_version_in_repo "$__alt_branch_reg/branch/" "$TO/branch/"
     fi
 
     __alt_repofix "$TO"
 
+    # TODO: improve for c10f1?
     if [ "$TO" = "p10" ] ; then
-        echo '%_priority_distbranch p10' >/etc/rpm/macros.d/p10
+        echo '%_priority_distbranch $TO' >/etc/rpm/macros.d/$TO
+    elif [ "$TO" = "p11" ] ; then
+        echo '%_priority_distbranch p11' >/etc/rpm/macros.d/p11
     else
-        rm -fv /etc/rpm/macros.d/p10
+        rm -fv /etc/rpm/macros.d/{p10,p11}
     fi
     #epm repo list
 }
@@ -10253,7 +10249,7 @@ __fix_alt_sources_list()
 {
     # for beauty spaces
     local SUBST_ALT_RULE1='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ]*(Sisyphus)[/ ](x86_64|i586|x86_64-i586|noarch|aarch64) !\1 \2/\3/\4 !gi'
-    local SUBST_ALT_RULE2='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ]*([tcp][6-9]\.?[0-9]?[/ ]branch|[tcp]1[012][/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch|aarch64) !\1 \2/\3/\4 !gi'
+    local SUBST_ALT_RULE2='s!^(.*)[/ ](ALTLinux|LINUX\@Etersoft)[/ ]*('$__alt_branch_reg'[/ ]branch)[/ ](x86_64|i586|x86_64-i586|noarch|aarch64) !\1 \2/\3/\4 !gi'
     local i
 
     for i in "$@" ; do
@@ -10262,6 +10258,7 @@ __fix_alt_sources_list()
         # TODO: only for uncommented strings
         #sed -i -r -e "$SUBST_ALT_RULE" $i
         regexp_subst "/^ *#/! s| pub|/pub|" $i
+        regexp_subst "/^ *#/! s| distributions|/distributions|" $i
         regexp_subst "/^ *#/! $SUBST_ALT_RULE1" $i
         regexp_subst "/^ *#/! $SUBST_ALT_RULE2" $i
 
@@ -10283,12 +10280,13 @@ __subst_with_repo_url()
 {
     local NURL="$2"
     echo "$1" | sed \
-        -e "s|h\?f\?t\?tp://mirror.yandex.ru/* altlinux|$NURL|" \
-        -e "s|h\?f\?t\?tp://ftp.altlinux.org/pub/distributions/* ALTLinux|$NURL|" \
-        -e "s|h\?f\?t\?tp://ftp.basealt.ru/pub/distributions/* ALTLinux|$NURL|" \
-        -e "s|h\?f\?t\?tp://ftp.etersoft.ru/pub/* ALTLinux|$NURL|" \
-        -e "s|h\?f\?t\?tp://download.etersoft.ru/pub/* ALTLinux|$NURL|" \
-        -e "s|h\?f\?t\?tp://mirror.eterfund.org/download.etersoft.ru/pub/* ALTLinux|$NURL|"
+        -e "s|//mirror.yandex.ru/* altlinux|$NURL|" \
+        -e "s|//ftp.altlinux.org/pub/distributions/* ALTLinux|$NURL|" \
+        -e "s|//ftp.basealt.ru/pub/distributions/* ALTLinux|$NURL|" \
+        -e "s|//update.altsp.su/pub/distributions/* ALTLinux|$NURL|" \
+        -e "s|//ftp.etersoft.ru/pub/* ALTLinux|$NURL|" \
+        -e "s|//download.etersoft.ru/pub/* ALTLinux|$NURL|" \
+        -e "s|//mirror.eterfund.org/download.etersoft.ru/pub/* ALTLinux|$NURL|"
 }
 
 __change_repo()
@@ -10317,19 +10315,21 @@ case $BASEDISTRNAME in
         # TODO: move to repo change
         case "$1" in
         "etersoft")
-            __change_repo etersoft "http://download.etersoft.ru/pub ALTLinux"
+            __change_repo etersoft "//download.etersoft.ru/pub ALTLinux"
             ;;
         "eterfund.org")
-            __change_repo eterfund.org "https://mirror.eterfund.org/download.etersoft.ru/pub ALTLinux"
+            __change_repo eterfund.org "//mirror.eterfund.org/download.etersoft.ru/pub ALTLinux"
             ;;
         "yandex")
-            __change_repo mirror.yandex "http://mirror.yandex.ru altlinux"
+            __change_repo mirror.yandex "//mirror.yandex.ru altlinux"
             ;;
         "basealt")
-            __change_repo ftp.basealt "http://ftp.basealt.ru/pub/distributions ALTLinux"
+            __change_repo ftp.basealt "//ftp.basealt.ru/pub/distributions ALTLinux"
             ;;
         "altlinux.org")
-            __change_repo ftp.altlinux "http://ftp.altlinux.org/pub/distributions ALTLinux"
+            __change_repo ftp.altlinux "//ftp.altlinux.org/pub/distributions ALTLinux"
+            ;;
+        "")
             ;;
         *)
             fatal "Unsupported change key $1"
