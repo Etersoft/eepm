@@ -35,7 +35,10 @@ subst()
 }
 fi
 
-
+eget()
+{
+    epm tool eget "$@"
+}
 
 erc()
 {
