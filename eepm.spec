@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.62.2
+Version: 3.62.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -101,6 +101,13 @@ a discussion about extra requirements.
 
 
 %changelog
+* Thu Apr 11 2024 Vitaly Lipatov <lav@altlinux.ru> 3.62.3-alt1
+- epm pack Telegram: download icons from IPFS
+- epm pack 64Gram: download icons from IPFS
+- epm-addrepo: add to rewrite p1?/p? and c1?f?/c?f? without apt-repo
+- epm-repofix: rewrite, update for p11/c10f?
+- epm-sh-functions: don't warning about sudo
+
 * Tue Apr 09 2024 Vitaly Lipatov <lav@altlinux.ru> 3.62.2-alt1
 - eget: fix get response 404 from CloudFlare via range 0-0 downloading (#1)
 - epm-repack subpackage: require eepm-rpm-build for ALT and /usr/bin/rpm-build for other distros
