@@ -25,11 +25,12 @@ epm_repo_help()
     cat <<EOF
 
 Examples:
-  epm repo set p9
-  epm repo switch p10
-  epm repo add autoimports
-  epm repo list
-  epm repo change yandex
+  epm repo set p9          - clean all sources and add default repo for p9 branch
+  epm repo set c10f1       - clean all sources and add default repo for c10f1 branch
+  epm repo switch p10      - change only branch name to p10
+  epm repo add autoimports - add autoimports (from Fedora) repo
+  epm repo change yandex   - change only base url part to mirror.yandex.ru server
+  epm repo list            - list current repos
 EOF
 }
 
