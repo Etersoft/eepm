@@ -887,7 +887,8 @@ set_distro_info()
 
     test_shell
 
-    [ -n "$SUDO_USER" ] && warning "It is not necessary to run epm using sudo."
+    # TODO: return when we will not ask run under root
+    #[ -n "$SUDO_USER" ] && warning "It is not necessary to run epm using sudo."
 
     assure_tmpdir
 
