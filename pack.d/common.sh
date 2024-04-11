@@ -121,7 +121,7 @@ install_file()
     mkdir -p "$(dirname "$dest")" || return
 
     if is_url "$src" ; then
-        epm tool eget -O "$dest" "$src" || fatal "Can't download $src to install to $dest"
+        eget -O "$dest" "$src" || fatal "Can't download $src to install to $dest"
     else
         cp "$src" "$dest" || return
     fi

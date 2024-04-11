@@ -38,7 +38,7 @@ SC=tmp_updateffmpeg
 a='' awk 'BEGIN{desk=0}{ if(/^.*--system.*/&&desk==0){desk++} ; if (desk==0) {print} }' < $UPDATEFFMPEG > $SC
 . $SC
 
-epm tool eget $FFMPEG_URL_DEB || exit
+eget $FFMPEG_URL_DEB || exit
 SUITABLE_URLS=$FFMPEG_URL_DEB
 a='' ar -x *.deb || exit
 a='' tar xf "data.tar.xz" || exit
