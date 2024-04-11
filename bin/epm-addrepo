@@ -73,33 +73,20 @@ __epm_addrepo_etersoft_addon()
     fi
 }
 
-__epm_addrepo_altsp()
+__epm_addrepo_alt_repo()
 {
     local comp
+    local sign
     local repo="$1"
-    case "$repo" in
-        c10f1)
-            comp="CF3"
-            ;;
-        c9f2)
-            comp="CF2"
-            ;;
-        c9f1)
-            comp="CF1"
-            ;;
-        c9)
-            comp="cf"
-            ;;
-        *)
-            fatal "Uknown CF comp $repo"
-            ;;
-    esac
-
-    epm repo add "rpm [cert8] http://update.altsp.su/pub/distributions/ALTLinux $comp/branch/$DISTRARCH classic" || return
+    comp="$repo"
+    sign="$repo"
+    rhas "$repo" "^c" && sign="cert8"
+    local baseurl="http://ftp.basealt.ru/pub/distributions/ALTLinux"
+    epm repo add "rpm [$sign] $baseurl $comp/branch/$DISTRARCH classic" || return
     if [ "$DISTRARCH" = "x86_64" ] ; then
-        epm repo add "rpm [cert8] http://update.altsp.su/pub/distributions/ALTLinux $comp/branch/x86_64-i586 classic" || return
+        epm repo add "rpm [$sign] $baseurl $comp/branch/x86_64-i586 classic" || return
     fi
-    epm repo add "rpm [cert8] http://update.altsp.su/pub/distributions/ALTLinux $comp/branch/noarch classic" || return
+    epm repo add "rpm [$sign] $baseurl $comp/branch/noarch classic" || return
 }
 
 get_archlist()
@@ -308,8 +295,12 @@ __epm_addrepo_altlinux()
     fi
 
     case "$repo" in
-        c10f*|c9f*|c9)
-            __epm_addrepo_altsp "$repo"
+        c10f2|c10f1|c9f2|c9f1|c9)
+            __epm_addrepo_alt_repo "$repo"
+            return
+            ;;
+        p11|p10|p9|p8)
+            __epm_addrepo_alt_repo "$repo"
             return
             ;;
     esac
