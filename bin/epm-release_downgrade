@@ -29,6 +29,8 @@ get_prev_release()
         echo "p8" ;;
     "p10")
         echo "p9" ;;
+    "p11")
+        echo "p10" ;;
     "c7")
         echo "c6" ;;
     "c8")
@@ -41,6 +43,8 @@ get_prev_release()
         echo "c8" ;;
     "c9f2")
         echo "c9f1" ;;
+    "c10f2")
+        echo "c10f1" ;;
     "10")
         echo "9" ;;
     *)
