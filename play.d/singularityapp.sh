@@ -8,5 +8,5 @@ URL="https://snapcraft.io/singularityapp"
 
 . $(dirname $0)/common.sh
 
-PKGURL="$(snap_get_pkgurl $PKGNAME)"
+PKGURL="$(snap_get_pkgurl $URL)"
 install_pkgurl
