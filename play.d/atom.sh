@@ -4,7 +4,10 @@ PKGNAME=atom
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 PRODUCTALT="'' beta"
-DESCRIPTION="The hackable text editor from the official site"
+#DESCRIPTION="The hackable text editor from the official site"
+# official sunset on December 15, 2022.
+DESCRIPTION=''
+URL="https://github.blog/2022-06-08-sunsetting-atom/"
 
 . $(dirname $0)/common.sh
 
