@@ -8,6 +8,6 @@ URL="https://www.plex.tv/"
 
 . $(dirname $0)/common.sh
 
-PKGURL="$(snap_get_pkgurl $PKGNAME)"
+PKGURL="$(snap_get_pkgurl https://snapcraft.io/plex-desktop)"
 
 install_pkgurl
