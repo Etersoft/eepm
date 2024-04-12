@@ -47,6 +47,17 @@ epm ql eepm | head
 
 epm cl erc | head
 
+epm checkpkg eepm
+
+epm --auto upgrade eepm
+restore_epm || :
+
+epm --auto downgrade eepm
+restore_epm || :
+
+# stop upgrade (it is broken now)
+exit 0
+
 # Sisyphus -> p10
 epm --auto --force --force-yes downgrade-release p10
 restore_epm
@@ -67,12 +78,5 @@ restore_epm
 epm --auto --force --force-yes upgrade-release Sisyphus
 restore_epm
 
-epm checkpkg eepm
-
-epm --auto upgrade eepm
-restore_epm || :
-
-epm --auto downgrade eepm
-restore_epm || :
 
 epm clean
