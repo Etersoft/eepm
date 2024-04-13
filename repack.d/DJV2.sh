@@ -15,6 +15,7 @@ move_to_opt /usr/local/DJV2
 rm -v $BUILDROOT/usr/bin/djv
 
 add_bin_exec_command $PRODUCT $PRODUCTDIR/bin/$PRODUCT
+
 add_bin_link_command $PRODUCTCUR $PRODUCT
 
 fix_desktop_file /usr/local/DJV2/bin/djv.sh $PRODUCT
