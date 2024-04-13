@@ -211,6 +211,9 @@ __epm_download_alt()
         return
     fi
 
+    info "Cleaning apt cache for correct result ..."
+    epm --quiet clean
+
     # old systems ignore reinstall ?
     for pkg in "$@" ; do
         for i in $(sudocmd apt-get install -y --print-uris --reinstall "$pkg" | cut -f1 -d " " | grep ".rpm'$" | sed -e "s|^'||" -e "s|'$||") ; do
