@@ -1,7 +1,7 @@
 #!/bin/sh
 
 BASEPKGNAME=brave-browser
-SUPPORTEDARCHES="x86_64"
+SUPPORTEDARCHES="x86_64 aarch64"
 PRODUCTALT="'' beta nightly"
 VERSION="$2"
 DESCRIPTION="Brave browser from the official site"
@@ -11,13 +11,16 @@ DESCRIPTION="Brave browser from the official site"
 # brave-browser-beta-1.51.105-1.x86_64.rpm
 # brave-browser-beta_1.51.105_amd64.deb
 
-# rpm packages have a release in their names
-[ "$(epm print info -p)" = "rpm" ] && [ "$VERSION" != "*" ] && VERSION="$VERSION-1"
-
 # hack to fix short name issue
-[ "$VERSION" = "*" ] && VERSION="[[:digit:]]*"
-
-PKGURL=$(eget --list --latest https://github.com/brave/brave-browser/releases $(epm print constructname $PKGNAME "$VERSION"))
+if [ "$VERSION" = "*" ] ; then
+    VERSION="[[:digit:]]*"
+    PKGURL=$(eget --list --latest https://github.com/brave/brave-browser/releases $(epm print constructname $PKGNAME "$VERSION"))
+else
+    OVERSION="$VERSION"
+    # rpm packages have a release in their names
+    [ "$(epm print info -p)" = "rpm" ] && VERSION="$VERSION-1"
+    PKGURL="https://github.com/brave/brave-browser/releases/download/v$OVERSION/$(epm print constructname $PKGNAME "$VERSION")"
+fi
 
 # some hack
 if [ -z "$PKGURL" ] ; then
