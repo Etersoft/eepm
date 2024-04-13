@@ -187,12 +187,19 @@ add_bin_link_command()
     local target="$2"
     [ -n "$name" ] || name="$PRODUCT"
     [ -n "$target" ] || target="$PRODUCTDIR/$name"
-    [ -e "$BUILDROOT/usr/bin/$name" ] && return
     [ "$name" = "$target" ] && return
+
+    if is_abs_path "$target" ; then
+        # if target does not exist, skipping
+        [ -e "$BUILDROOT$target" ] || return
+    else
+        # if target is a relative, skiping when /usr/bin/$name exists
+        [ -e "$BUILDROOT/usr/bin/$name" ] && return
+    fi
 
     is_abs_path "$target" && chmod 0755 "$BUILDROOT$target"
     mkdir -p $BUILDROOT/usr/bin/
-    ln -s "$target" "$BUILDROOT/usr/bin/$name" || return
+    ln -sf "$target" "$BUILDROOT/usr/bin/$name" || return
     pack_file "/usr/bin/$name"
 }
 
@@ -203,8 +210,15 @@ add_bin_exec_command()
     local target="$2"
     [ -n "$name" ] || name="$PRODUCT"
     [ -n "$target" ] || target="$PRODUCTDIR/$name"
-    [ -e "$BUILDROOT/usr/bin/$name" ] && return
     [ "$name" = "$target" ] && return
+
+    if is_abs_path "$target" ; then
+        # if target does not exist, skipping
+        [ -e "$BUILDROOT$target" ] || return
+    else
+        # if target is a relative, skiping when /usr/bin/$name exists
+        [ -e "$BUILDROOT/usr/bin/$name" ] && return
+    fi
 
     is_abs_path "$target" && chmod 0755 "$BUILDROOT$target"
     mkdir -p $BUILDROOT/usr/bin/
@@ -222,8 +236,15 @@ add_bin_cdexec_command()
     local target="$2"
     [ -n "$name" ] || name="$PRODUCT"
     [ -n "$target" ] || target="$PRODUCTDIR/$name"
-    [ -e "$BUILDROOT/usr/bin/$name" ] && return
     [ "$name" = "$target" ] && return
+
+    if is_abs_path "$target" ; then
+        # if target does not exist, skipping
+        [ -e "$BUILDROOT$target" ] || return
+    else
+        # if target is a relative, skiping when /usr/bin/$name exists
+        [ -e "$BUILDROOT/usr/bin/$name" ] && return
+    fi
 
     is_abs_path "$target" && chmod 0755 "$BUILDROOT$target"
     mkdir -p $BUILDROOT/usr/bin/
