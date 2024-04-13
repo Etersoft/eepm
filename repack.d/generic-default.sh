@@ -13,6 +13,10 @@ PKG="$4"
 # detect requires by libs
 add_libs_requires
 
+if [ -f "$BUILDROOT/$PRODUCTDIR/$PRODUCT" ] ; then
+    add_bin_exec_command
+fi
+
 # TODO: add product dir detection
 if [ -f $PRODUCTDIR/v8_context_snapshot.bin ] ; then
     echo "electron based application detected, adding requires for it ..."
