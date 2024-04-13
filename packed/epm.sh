@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-export EPMVERSION="3.62.3"
+export EPMVERSION="3.62.4"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -3200,6 +3200,9 @@ __epm_download_alt()
         return
     fi
 
+    info "Cleaning apt cache for correct result ..."
+    epm --quiet clean
+
     # old systems ignore reinstall ?
     for pkg in "$@" ; do
         for i in $(sudocmd apt-get install -y --print-uris --reinstall "$pkg" | cut -f1 -d " " | grep ".rpm'$" | sed -e "s|^'||" -e "s|'$||") ; do
@@ -3356,9 +3359,8 @@ __epm_korinf_install_eepm()
     fi
 
     pkg_list="eepm"
-    # TODO: reenable eepm-repack build
-    # don't lose epm-repack if installed
-    # is_installed epm-repack && pkg_list="$pkg_list eepm-repack"
+    # don't lose eepm-repack if installed
+    is_installed eepm-repack && pkg_list="$pkg_list eepm-repack"
 
     # enable scripts to resolve dependencies with apt
     scripts='--scripts' __epm_korinf_install $pkg_list
@@ -6389,7 +6391,7 @@ __epm_play_update()
         echo
         echo "$i"
             if ! __is_app_installed "$i" ; then
-                warning "$i is not installed"
+                warning "App $i is not installed"
                 continue
             fi
         prescription="$i"
@@ -7901,6 +7903,8 @@ get_prev_release()
         echo "p8" ;;
     "p10")
         echo "p9" ;;
+    "p11")
+        echo "p10" ;;
     "c7")
         echo "c6" ;;
     "c8")
@@ -7913,6 +7917,8 @@ get_prev_release()
         echo "c8" ;;
     "c9f2")
         echo "c9f1" ;;
+    "c10f2")
+        echo "c10f1" ;;
     "10")
         echo "9" ;;
     *)
@@ -8103,8 +8109,8 @@ __detect_alt_release_by_repo()
 {
     local BRD=$(cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list \
         | grep -v "^#" \
-        | grep -E "[tpc][5-9]\.?[0-9]?/branch/" \
-        | sed -e "s|.*\([tpc][5-9]\.\?[0-9]\?\)/branch.*|\1|g" \
+        | grep -E "[tpc][1-3]?[5-9][f.]?[0-9]?/branch/" \
+        | sed -e "s|.*\([tpc][1-3]\?[5-9][f.]\?[0-9]\?\)/branch.*|\1|g" \
         | sort -u )
     if [ "$(__wcount $BRD)" = "1" ] ; then
         echo "$BRD"
@@ -8265,6 +8271,8 @@ get_next_release()
         echo "p9" ;;
     "p9")
         echo "p10" ;;
+    "p10")
+        echo "p11" ;;
     "c6")
         echo "c7" ;;
     "c7")
@@ -8275,6 +8283,8 @@ get_next_release()
         echo "c9f2" ;;
     "c9f1")
         echo "c9f2" ;;
+    "c10f1")
+        echo "c10f2" ;;
     *)
         echo "$FROM" ;;
     esac
@@ -8355,7 +8365,7 @@ __switch_alt_to_distro()
             docmd epm update-kernel || fatal
             info "Run epm release-upgrade again for update to p10"
             ;;
-        "p9"|"p9 p10"|"p10 p10")
+        "p9"|"p9 p10"|"p10 p10"|"p10 p11")
             info "Upgrade all packages to current $FROM repository"
             __do_upgrade
             confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
@@ -8395,7 +8405,7 @@ __switch_alt_to_distro()
             __check_system "$TO"
             docmd epm upgrade || fatal
             ;;
-        "p10 p9")
+        "p10 p9"|"p11 p9")
             confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
             docmd epm install $(get_fix_release_pkg "$FROM")
             __switch_repo_to $TO
@@ -8405,7 +8415,7 @@ __switch_alt_to_distro()
             __check_system "$TO"
             docmd epm upgrade || fatal
             ;;
-        "Sisyphus p8"|"Sisyphus p9"|"Sisyphus p10"|"Sisyphus c8"|"Sisyphus c8.1"|"Sisyphus c9f2")
+        "Sisyphus p8"|"Sisyphus p9"|"Sisyphus p10"|"Sisyphus c8"|"Sisyphus c8.1"|"Sisyphus c9f2"|"Sisyphus c10f1"|"Sisyphus c10f2")
             confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
             docmd epm install $(get_fix_release_pkg "$FROM")
             __switch_repo_to $TO
@@ -8415,7 +8425,7 @@ __switch_alt_to_distro()
             __check_system "$TO"
             docmd epm upgrade || fatal
             ;;
-        "p8 Sisyphus"|"p9 Sisyphus"|"p10 Sisyphus"|"10 Sisyphus"|"Sisyphus Sisyphus")
+        "p8 Sisyphus"|"p9 Sisyphus"|"p10 Sisyphus"|"p11 Sisyphus"|"10 Sisyphus"|"Sisyphus Sisyphus")
             confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
             docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
             docmd epm upgrade || fatal
@@ -8423,6 +8433,7 @@ __switch_alt_to_distro()
             __replace_alt_version_in_repo "$FROM/branch/" "$TO/"
             __alt_repofix "alt"
             [ -s /etc/rpm/macros.d/p10 ] && rm -fv /etc/rpm/macros.d/p10
+            [ -s /etc/rpm/macros.d/p11 ] && rm -fv /etc/rpm/macros.d/p11
             __epm_ru_update || fatal
             docmd epm fix || fatal
             docmd epm install $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
@@ -17810,7 +17821,7 @@ check_filenames()
     local opt
     for opt in "$@" ; do
         # files can be with full path or have extension via .
-        if [ -f "$opt" ] && echo "$opt" | grep -q "[/\.]" ; then
+        if [ -f "$opt" ] && rhas "$opt" "[/\.]" ; then
             has_space "$opt" && warning "There are space(s) in filename '$opt', it is not supported. Skipped" && continue
             [ -n "$pkg_files" ] && pkg_files="$pkg_files $opt" || pkg_files="$opt"
         elif [ -d "$opt" ] ; then
@@ -17819,12 +17830,13 @@ check_filenames()
         elif is_url "$opt" ; then
             has_space "$opt" && warning "There are space(s) in URL '$opt', it is not supported. Skipped" && continue
             [ -n "$pkg_urls" ] && pkg_urls="$pkg_urls $opt" || pkg_urls="$opt"
-        elif echo "$opt" | grep -q "[/]" ; then
+        # hack, TODO: reasons
+        elif rhas "$opt" "[/]" && ! rhas "$opt" "[()]" ; then
             has_space "$opt" && warning "There are space(s) in filename '$opt', it is not supported. Skipped" && continue
             [ -n "$pkg_files" ] && pkg_files="$pkg_files $opt" || pkg_files="$opt"
         else
             has_space "$opt" && warning "There are space(s) in package name '$opt', it is not supported. Skipped." && continue
-            echo "$opt" | grep -q "[*]" && warning "There are forbidden symbols in package name '$opt'. Skipped." && continue
+            rhas "$opt" "[*]" && warning "There are forbidden symbols in package name '$opt'. Skipped." && continue
             [ -n "$pkg_names" ] && pkg_names="$pkg_names $opt" || pkg_names="$opt"
         fi
         [ -n "$quoted_args" ] && quoted_args="$quoted_args \"$opt\"" || quoted_args="\"$opt\""
