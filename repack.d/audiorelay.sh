@@ -13,7 +13,7 @@ install_file $PRODUCTDIR/lib/audiorelay-AudioRelay.desktop /usr/share/applicatio
 fix_desktop_file /opt/audiorelay/bin/AudioRelay $PRODUCT
 fix_desktop_file /opt/audiorelay/lib/AudioRelay.png $PRODUCT
 
+add_libs_requires
+
 # TODO:
 # https://aur.archlinux.org/packages/audiorelay
-
-add_libs_requires

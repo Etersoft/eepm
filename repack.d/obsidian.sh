@@ -12,7 +12,6 @@ PRODUCTDIR=/opt/Obsidian
 
 cleanup
 
-rm usr/bin/$PRODUCT
 add_bin_exec_command
 
 add_chromium_deps
