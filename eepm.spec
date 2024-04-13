@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.62.3
+Version: 3.62.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -101,6 +101,16 @@ a discussion about extra requirements.
 
 
 %changelog
+* Sun Apr 14 2024 Vitaly Lipatov <lav@altlinux.ru> 3.62.4-alt1
+- epm pack.d common: add eget()
+- epm: improve hack for install by provides
+- epm release-upgrade/downgrade: update supported ALT branches
+- epm download: add epm clean to fix downloading when the package already in the cache
+- epm play: disabled atom: official sunset on December 15, 2022
+- epm play brave: allow direct downloading
+- epm play joplin: switch to the project site, get latest stable version
+- epm ei: update eepm-repack if it is installed
+
 * Thu Apr 11 2024 Vitaly Lipatov <lav@altlinux.ru> 3.62.3-alt1
 - epm pack Telegram: download icons from IPFS
 - epm pack 64Gram: download icons from IPFS
