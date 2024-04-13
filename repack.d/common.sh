@@ -183,8 +183,15 @@ create_file()
 __check_target_bin()
 {
     local target="$1"
-    is_abs_path "$target" || return 0
-    chmod 0755 "$BUILDROOT$target" || fatal
+    if is_abs_path "$target" ; then
+        # if target does not exist
+        [ -e "$BUILDROOT$target" ] || fatal "fatal on broken link creating"
+        chmod 0755 "$BUILDROOT$target" || fatal
+    else
+        # if target is a relative, skiping when /usr/bin/$name exists
+        [ -e "$BUILDROOT/usr/bin/$name" ] && return
+    fi
+
 }
 
 add_bin_link_command()
@@ -193,12 +200,11 @@ add_bin_link_command()
     local target="$2"
     [ -n "$name" ] || name="$PRODUCT"
     [ -n "$target" ] || target="$PRODUCTDIR/$name"
-    [ -e "$BUILDROOT/usr/bin/$name" ] && return
     [ "$name" = "$target" ] && return
 
     __check_target_bin "$target"
     mkdir -p $BUILDROOT/usr/bin/
-    ln -s "$target" "$BUILDROOT/usr/bin/$name" || return
+    ln -sf "$target" "$BUILDROOT/usr/bin/$name" || return
     pack_file "/usr/bin/$name"
 }
 
@@ -209,7 +215,6 @@ add_bin_exec_command()
     local target="$2"
     [ -n "$name" ] || name="$PRODUCT"
     [ -n "$target" ] || target="$PRODUCTDIR/$name"
-    [ -e "$BUILDROOT/usr/bin/$name" ] && return
     [ "$name" = "$target" ] && return
 
     __check_target_bin "$target"
@@ -228,7 +233,6 @@ add_bin_cdexec_command()
     local target="$2"
     [ -n "$name" ] || name="$PRODUCT"
     [ -n "$target" ] || target="$PRODUCTDIR/$name"
-    [ -e "$BUILDROOT/usr/bin/$name" ] && return
     [ "$name" = "$target" ] && return
 
     __check_target_bin "$target"
