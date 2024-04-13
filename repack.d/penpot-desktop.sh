@@ -6,8 +6,6 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
-add_bin_exec_command
-
 add_libs_requires
 
 add_bin_link_command

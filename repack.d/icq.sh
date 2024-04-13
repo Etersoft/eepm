@@ -21,6 +21,7 @@ mv $BUILDROOT/* $BUILDROOT$PRODUCTDIR
 subst "s|\"/|\"$PRODUCTDIR/|" $SPEC
 
 add_bin_exec_command $PRODUCT
+
 # Hack against https://bugzilla.altlinux.org/43779
 # Create non writeable local .desktop file
 cat <<EOF >$BUILDROOT/usr/bin/$PRODUCT
