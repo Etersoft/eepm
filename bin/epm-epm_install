@@ -94,9 +94,8 @@ __epm_korinf_install_eepm()
     fi
 
     pkg_list="eepm"
-    # TODO: reenable eepm-repack build
-    # don't lose epm-repack if installed
-    # is_installed epm-repack && pkg_list="$pkg_list eepm-repack"
+    # don't lose eepm-repack if installed
+    is_installed eepm-repack && pkg_list="$pkg_list eepm-repack"
 
     # enable scripts to resolve dependencies with apt
     scripts='--scripts' __epm_korinf_install $pkg_list
