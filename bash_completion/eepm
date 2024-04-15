@@ -37,13 +37,17 @@ __eepm_complete_args(){
 }
 
 __eepm_complete_commands() {
+    
+    local special i
+    for ((i = 1; i < ${#COMP_WORDS[@]} - 1; i++)); do
+        if [[ ${COMP_WORDS[i]} == @(install|remove|play) ]]; then
+            special=${COMP_WORDS[i]}
+            break
+        fi
+    done
 
-    if [[ $COMP_CWORD -eq 1 ]]; then
-        __eepm_list_commands
-        return 0
-
-    else
-        case ${COMP_WORDS[1]} in
+    if [[ -v special ]]; then
+        case $special in
             install)
                 __eepm_list_available_packages
                 return 0 
@@ -55,12 +59,14 @@ __eepm_complete_commands() {
                 
             play)
                 __eepm_list_available_packages_play
-                return 0 ;;
+                return 0 
+                ;;
         esac
+    else
+        __eepm_list_commands
     fi
-    
-    
 }
+
 
 __eepm()
 {
@@ -71,7 +77,7 @@ __eepm()
 
   case "${COMP_WORDS[0]}" in
     epm)
-        __eepm_complete_commands $cur $prev;;
+        __eepm_complete_commands ;;
     epmi)
         __eepm_list_available_packages ;;
     epme)
