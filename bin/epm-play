@@ -466,7 +466,7 @@ case "$1" in
         exit
         ;;
 
-    --update)
+    --update|--upgrade)
         shift
         local CMDUPDATE="--update"
         # check --force on common.sh side
