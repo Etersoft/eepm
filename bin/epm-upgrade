@@ -112,11 +112,11 @@ epm_upgrade()
     yum-rpm)
         local OPTIONS="$(subst_option non_interactive -y)"
         # can do update repobase automagically
-        CMD="yum $OPTIONS update $*"
+        CMD="yum $OPTIONS upgrade $*"
         ;;
     dnf-rpm)
         local OPTIONS="$(subst_option non_interactive -y)"
-        CMD="dnf $OPTIONS distro-sync $*"
+        CMD="dnf $OPTIONS upgrade $*"
         ;;
     snappy)
         CMD="snappy update"
