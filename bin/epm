@@ -151,6 +151,7 @@ pkg_urls=
 pkg_options=
 quoted_args=
 direct_args=
+ipfs=
 
 eget_backend=$EGET_BACKEND
 epm_vardir=/var/lib/eepm

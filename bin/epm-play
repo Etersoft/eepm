@@ -434,6 +434,9 @@ if [ -z "$1" ] ; then
     exit
 fi
 
+# allow enable ipfs in global conf
+[ "$ipfs" = "--ipfs" ] && __epm_play_initialize_ipfs
+
 
 while [ -n "$1" ] ; do
 case "$1" in
@@ -444,7 +447,7 @@ case "$1" in
 
     --ipfs)
         shift
-        __epm_play_initialize_ipfs
+        [ "$ipfs" = "--ipfs" ] || __epm_play_initialize_ipfs
         ;;
 
     --remove)
