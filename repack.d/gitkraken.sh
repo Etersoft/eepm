@@ -8,10 +8,9 @@ PRODUCT=gitkraken
 
 . $(dirname $0)/common-chromium-browser.sh
 
-rm -v ./usr/bin/gitkraken
-add_bin_link_command
-
 move_to_opt
+
+add_bin_link_command
 
 fix_chrome_sandbox
 
@@ -24,4 +23,5 @@ add_findreq_skiplist "$PRODUCTDIR/resources/app.asar.unpacked/node_modules/@msgp
 add_requires libXScrnSaver
 
 add_electron_deps
+ignore_lib_requires libc.so
 add_libs_requires
