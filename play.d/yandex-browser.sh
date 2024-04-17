@@ -10,6 +10,9 @@ TIPS="Run 'epm play yandex-browser=beta' to install beta version of the browser.
 
 . $(dirname $0)/common.sh
 
+warn_version_is_not_supported
+VERSION="*"
+
 # See also https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=yandex-browser-beta
 
 URL="https://repo.yandex.ru/yandex-browser"
@@ -21,6 +24,11 @@ if [ "$(epm print info -p)" = "rpm" ] ; then
 else
     # https://repo.yandex.ru/yandex-browser/deb/pool/main/y/yandex-browser-beta/yandex-browser-beta_23.5.4.682-1_amd64.deb
     PKGURL="$URL/deb/pool/main/y/$PKGNAME/$(epm print constructname $PKGNAME "$VERSION*" amd64 deb)"
+fi
+
+if "$(epm print info -s)" = "redos" ] ; then
+    BRANCH="stable"
+    PKGURL="$URL/rpm/redos/x86_64/$(epm print constructname $PKGNAME "$VERSION*" x86_64 rpm)"
 fi
 
 install_pkgurl
