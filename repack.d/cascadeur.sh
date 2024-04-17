@@ -20,10 +20,11 @@ Categories=Games;
 Terminal=false
 EOF
 
-# they use missed Qt5 libs
+# they use missed Qt5/Qt6 libs
 remove_dir /opt/cascadeur/qml/QtQuick/Scene2D
 remove_dir /opt/cascadeur/qml/QtQuick/Scene3D
 remove_dir /opt/cascadeur/qml/QtQuick/Shapes
+remove_dir /opt/cascadeur/qml/QtQuick/Effects
 remove_dir /opt/cascadeur/qml/QtQml/RemoteObjects
 remove_dir /opt/cascadeur/qml/QtQuick/LocalStorage
 remove_dir /opt/cascadeur/qml/QtQuick/XmlListModel
