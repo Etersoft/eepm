@@ -630,6 +630,15 @@ check_ipfs_gateway()
 
 select_ipfs_gateway()
 {
+
+    IPFS_GATEWAY=''
+
+    # if set some http gateway, use only it
+    if [ -n "$EGET_IPFS_GATEWAY" ] ; then
+        check_ipfs_gateway "$EGET_IPFS_GATEWAY" && IPFS_GATEWAY="$EGET_IPFS_GATEWAY" || ipfs_mode="disabled"
+        return
+    fi
+
     # check public http gateways
     for ipfs_gateway in $ipfs_gateways ; do
         check_ipfs_gateway $ipfs_gateway || continue
@@ -670,14 +679,6 @@ select_ipfs_mode()
             #    info "Skipped Brave: it is accessible via $IPFS_CMD --api $IPFS_API, but can't return shared $ipfs_checkQm"
             #fi
         fi
-    fi
-
-    IPFS_GATEWAY=''
-
-    # if set some http gateway, use only it
-    if [ -n "$EGET_IPFS_GATEWAY" ] ; then
-        check_ipfs_gateway "$EGET_IPFS_GATEWAY" && IPFS_GATEWAY="$EGET_IPFS_GATEWAY" || ipfs_mode="disabled"
-        return
     fi
 
     select_ipfs_gateway
