@@ -38,11 +38,19 @@ case $PMTYPE in
     *-rpm)
         # FIXME: space with quotes problems, use point instead
         warmup_rpmbase
-        docmd rpm -qa --queryformat "%{size}@%{name}-%{version}-%{release}\n" "$@" | sed -e "s|@| |g" | sort -n -k1 -r
+        if [ -n "$short" ] ; then
+            docmd rpm -qa --queryformat "%{size}@%{name}\n" "$@" | sed -e "s|@| |g" | sort -n -k1 -r
+        else
+            docmd rpm -qa --queryformat "%{size}@%{name}-%{version}-%{release}\n" "$@" | sed -e "s|@| |g" | sort -n -k1 -r
+        fi
         ;;
     *-dpkg)
         warmup_dpkgbase
-        docmd dpkg-query -W --showformat="\${Installed-Size}@\${Package}-\${Version}:\${Architecture}\n" "$@" | sed -e "s|@| |g" | sort -n -k1 -r
+        if [ -n "$short" ] ; then
+            docmd dpkg-query -W --showformat="\${Installed-Size}@\${Package}\n" "$@" | sed -e "s|@| |g" | sort -n -k1 -r
+        else
+            docmd dpkg-query -W --showformat="\${Installed-Size}@\${Package}-\${Version}:\${Architecture}\n" "$@" | sed -e "s|@| |g" | sort -n -k1 -r
+        fi
         ;;
     *)
         fatal "Sorted package list function is not implemented for $PMTYPE"
