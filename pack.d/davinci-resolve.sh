@@ -1,5 +1,5 @@
 #!/bin/sh
-set -x
+
 TAR="$1"
 RETURNTARNAME="$2"
 PRODUCT=davinci-resolve
