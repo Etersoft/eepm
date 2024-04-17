@@ -180,6 +180,12 @@ create_file()
     install_file /dev/stdin $t
 }
 
+__check_target_bin()
+{
+    local target="$1"
+    is_abs_path "$target" || return 0
+    chmod 0755 "$BUILDROOT$target" || fatal
+}
 
 add_bin_link_command()
 {
@@ -190,7 +196,7 @@ add_bin_link_command()
     [ -e "$BUILDROOT/usr/bin/$name" ] && return
     [ "$name" = "$target" ] && return
 
-    is_abs_path "$target" && chmod 0755 "$BUILDROOT$target"
+    __check_target_bin "$target"
     mkdir -p $BUILDROOT/usr/bin/
     ln -s "$target" "$BUILDROOT/usr/bin/$name" || return
     pack_file "/usr/bin/$name"
@@ -206,7 +212,7 @@ add_bin_exec_command()
     [ -e "$BUILDROOT/usr/bin/$name" ] && return
     [ "$name" = "$target" ] && return
 
-    is_abs_path "$target" && chmod 0755 "$BUILDROOT$target"
+    __check_target_bin "$target"
     mkdir -p $BUILDROOT/usr/bin/
     cat <<EOF > "$BUILDROOT/usr/bin/$name"
 #!/bin/sh
@@ -225,7 +231,7 @@ add_bin_cdexec_command()
     [ -e "$BUILDROOT/usr/bin/$name" ] && return
     [ "$name" = "$target" ] && return
 
-    is_abs_path "$target" && chmod 0755 "$BUILDROOT$target"
+    __check_target_bin "$target"
     mkdir -p $BUILDROOT/usr/bin/
     cat <<EOF > "$BUILDROOT/usr/bin/$name"
 #!/bin/sh
