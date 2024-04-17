@@ -19,9 +19,21 @@
 
 load_helper epm-sh-warmup
 
+__epm_packages_help()
+{
+    echo "package management list"
+            get_help HELPCMD $SHAREDIR/epm-packages
+    cat <<EOF
+Examples:
+  epm packages --sort
+  epm packages --sort=size
+  epm packages --last
+EOF
+}
+
 __epm_packages_sort()
 {
-# FIXME: sort depends on --sort value
+
 case $PMTYPE in
     *-rpm)
         # FIXME: space with quotes problems, use point instead
@@ -34,6 +46,24 @@ case $PMTYPE in
         ;;
     *)
         fatal "Sorted package list function is not implemented for $PMTYPE"
+        ;;
+esac
+}
+
+__epm_packages_last()
+{
+case $PMTYPE in
+    *-rpm)
+        # FIXME: space with quotes problems, use point instead
+        warmup_rpmbase
+        docmd rpm -qa --last
+        ;;
+    pacman)
+        assure_exists expac
+        docmd expac --timefmt='%Y-%m-%d %T' '%l\t%n %v' | sort | tail -200 | nl
+        ;;
+    *)
+        fatal "Last package list function is not implemented for $PMTYPE"
         ;;
 esac
 }
@@ -54,7 +84,25 @@ __fo_pfn()
 epm_packages()
 {
     local CMD
-    [ -n "$sort" ] && __epm_packages_sort "$@" && return
+
+    case "$1" in
+        -h|--help|help)  # HELPCMD: help
+            __epm_packages_help
+            return
+            ;;
+        --sort=size|--sort)   # HELPCMD: list package(s) by size, most
+            __epm_packages_sort
+            return
+            ;;
+        --last|--sort=time)   # HELPCMD: list package(s) by install time, most
+            __epm_packages_last
+            return
+            ;;
+        "")
+            ;;
+        *)
+            fatal "Unknown option $1. Use epm packages --help to get help."
+    esac
 
 case $PMTYPE in
     *-dpkg)
