@@ -200,6 +200,7 @@ case $PROGNAME in
         ;;
     epmqa)                     # HELPSHORT: alias for epm packages
         epm_cmd=packages
+        direct_args=1
         ;;
     epmqp)                     # HELPSHORT: alias for epm qp (epm query package)
         epm_cmd=query_package
@@ -563,10 +564,6 @@ check_option()
         ;;
     --url)                 # HELPOPT: print only URL instead of download package
         print_url="--url"
-        ;;
-    --sort)               # HELPOPT: sort output, f.i. --sort=size (supported only for packages command)
-        # TODO: how to read arg?
-        sort="$1"
         ;;
     -y|--auto|--assumeyes|--non-interactive|--disable-interactivity)  # HELPOPT: non interactive mode
         non_interactive="--auto"
