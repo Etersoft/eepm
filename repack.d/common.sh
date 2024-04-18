@@ -252,6 +252,7 @@ move_to_opt()
         from="/usr/share/$PRODUCTCUR"
         [ -d "$BUILDROOT$from" ] || from="/usr/share/$PRODUCT"
         [ -d "$BUILDROOT$from" ] || from="/usr/lib/$PRODUCT"
+        [ -d "$BUILDROOT$from" ] || from="/$(echo opt/*)"
         sdir="$BUILDROOT$from"
     elif has_space "$1" ; then
         sdir="$BUILDROOT$1"
@@ -269,6 +270,9 @@ move_to_opt()
     rdir="$(echo "$sdir" | sed -e "s|^$BUILDROOT||")"
     [ -n "$rdir" ] || return 1 #fatal "Can't resolve $from in $BUILDROOT"
     [ -d "$BUILDROOT$rdir" ] || return 1 #fatal "Can't resolve $from in $BUILDROOT"
+
+    # already there
+    [ "$rdir" = "$PRODUCTDIR" ] && return
 
     [ -d "$BUILDROOT$PRODUCTDIR/" ] && return 1
     mkdir -p "$BUILDROOT$(dirname "$PRODUCTDIR")/"
