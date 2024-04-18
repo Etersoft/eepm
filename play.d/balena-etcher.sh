@@ -8,16 +8,12 @@ URL="https://etcher.io/"
 
 . $(dirname $0)/common.sh
 
-pkgtype=$(epm print info -p)
-case $pkgtype in
-    rpm)
-        mask="balena-etcher-${VERSION}-[1-9].x86_64.rpm"
-        ;;
-    *)
-        mask="balena-etcher_${VERSION}_amd64.deb"
-        ;;
-esac
+mask="balena-etcher_${VERSION}_amd64.deb"
 
-PKGURL=$(eget --list --latest https://github.com/balena-io/etcher/releases "$mask")
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(eget --list --latest https://github.com/balena-io/etcher/releases "$mask")
+else
+    PKGURL="https://github.com/balena-io/etcher/releases/download/v$VERSION/${PKGNAME}_${VERSION}_amd64.deb"
+fi
 
 install_pkgurl

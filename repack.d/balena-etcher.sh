@@ -11,7 +11,6 @@ PRODUCTDIR=/opt/balena-etcher
 
 move_to_opt
 
-rm usr/bin/$PRODUCT
 add_bin_link_command
 fix_desktop_file
 
