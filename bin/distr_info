@@ -388,7 +388,7 @@ if distro os-release ; then
     #PRETTY_NAME
     VENDOR_ID="$ID"
     case "$VENDOR_ID" in
-        ubuntu|reld|rhel|astra|manjaro)
+        ubuntu|reld|rhel|astra|manjaro|redos)
             ;;
         *)
             # ID_LIKE can be 'rhel centos fedora', use latest word
@@ -437,7 +437,7 @@ case "$VENDOR_ID" in
         fi
         ;;
     "fedora")
-            DISTRIB_ID="Fedora"
+        DISTRIB_ID="Fedora"
         ;;
 esac
 
