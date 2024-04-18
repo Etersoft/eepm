@@ -333,6 +333,9 @@ normalize_name()
         "ROSA Enterprise Linux Server")
             echo "RELS"
             ;;
+        "uos")
+            echo "UOS"
+            ;;
         *)
             #echo "${1// /}"
             #firstupper "$1" | sed -e "s/ //g" -e 's|(.*||'
