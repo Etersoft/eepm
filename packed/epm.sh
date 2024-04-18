@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-export EPMVERSION="3.62.4"
+export EPMVERSION="3.62.5"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -3621,6 +3621,9 @@ epm_full_upgrade()
                 ;;
             "--interactive")           # HELPCMD: ask before every step
                 ;;
+            "--ipfs")                  # HELPCMD: use IPFS for epm play
+                ipfs='--ipfs'
+                ;;
             "--no-epm-play")           # HELPCMD: skip epm play during full upgrade
                 full_upgrade_no_epm_play=1
                 ;;
@@ -3684,9 +3687,9 @@ confirm_action()
     if [ -z "$full_upgrade_no_epm_play" ] ; then
         [ -n "$quiet" ] || echo
         if [ -n "$force" ] ; then
-            docmd epm $dryrun play #|| fatal "updating of applications installed via epm play is failed."
+            docmd epm $dryrun play $ipfs --force #|| fatal "updating of applications installed via epm play is failed."
         else
-            docmd epm $dryrun play --update all #|| fatal "updating of applications installed via epm play is failed."
+            docmd epm $dryrun play $ipfs --update all #|| fatal "updating of applications installed via epm play is failed."
         fi
     fi
 
@@ -6523,6 +6526,8 @@ if [ -z "$1" ] ; then
     exit
 fi
 
+[ "$ipfs" = "--ipfs" ] && __epm_play_initialize_ipfs
+
 
 while [ -n "$1" ] ; do
 case "$1" in
@@ -6533,7 +6538,7 @@ case "$1" in
 
     --ipfs)
         shift
-        __epm_play_initialize_ipfs
+        [ "$ipfs" = "--ipfs" ] || __epm_play_initialize_ipfs
         ;;
 
     --remove)
@@ -6555,7 +6560,7 @@ case "$1" in
         exit
         ;;
 
-    --update)
+    --update|--upgrade)
         shift
         local CMDUPDATE="--update"
         # check --force on common.sh side
@@ -13276,11 +13281,11 @@ epm_upgrade()
     yum-rpm)
         local OPTIONS="$(subst_option non_interactive -y)"
         # can do update repobase automagically
-        CMD="yum $OPTIONS update $*"
+        CMD="yum $OPTIONS upgrade $*"
         ;;
     dnf-rpm)
         local OPTIONS="$(subst_option non_interactive -y)"
-        CMD="dnf $OPTIONS distro-sync $*"
+        CMD="dnf $OPTIONS upgrade $*"
         ;;
     snappy)
         CMD="snappy update"
@@ -13844,6 +13849,9 @@ normalize_name()
         "ROSA Enterprise Linux Server")
             echo "RELS"
             ;;
+        "uos")
+            echo "UOS"
+            ;;
         *)
             #echo "${1// /}"
             #firstupper "$1" | sed -e "s/ //g" -e 's|(.*||'
@@ -13899,7 +13907,7 @@ if distro os-release ; then
     #PRETTY_NAME
     VENDOR_ID="$ID"
     case "$VENDOR_ID" in
-        ubuntu|reld|rhel|astra|manjaro)
+        ubuntu|reld|rhel|astra|manjaro|redos)
             ;;
         *)
             # ID_LIKE can be 'rhel centos fedora', use latest word
@@ -13948,7 +13956,7 @@ case "$VENDOR_ID" in
         fi
         ;;
     "fedora")
-            DISTRIB_ID="Fedora"
+        DISTRIB_ID="Fedora"
         ;;
 esac
 
@@ -14655,6 +14663,7 @@ done
 ################# incorporate bin/tools_eget #################
 internal_tools_eget()
 {
+
 # eget - simply shell on wget for loading directories over http (wget does not support wildcard for http)
 # Use:
 # eget http://ftp.altlinux.ru/pub/security/ssl/*
@@ -14976,6 +14985,18 @@ WGETNAMEOPTIONS='--content-disposition'
 CURLNAMEOPTIONS='--remote-name --remote-time --remote-header-name'
 AXELNAMEOPTIONS=''
 
+WGETNODIRECTORIES=''
+WGETCONTINUE=''
+CURLCONTINUE=''
+WGETTIMEOUT=''
+CURLMAXTIME=''
+WGETREADTIMEOUT=''
+WGETRETRYCONNREFUSED=''
+CURLRETRYCONNREFUSED=''
+WGETTRIES=''
+CURLRETRY=''
+WGETLOADCOOKIES=''
+CURLCOOKIE=''
 
 LISTONLY=''
 CHECKURL=''
@@ -15018,6 +15039,13 @@ Options:
     -6|--ipv6|--inet6-only    - use only IPV6
     -O-|-O -                  - output downloaded file to stdout
     -O file                   - download to this file
+    -nd|--no-directories      - do not create a hierarchy of directories when retrieving recursively
+    -c|--continue             - continue getting a partially-downloaded file
+    -T|--timeout=N            - set  the network timeout to N seconds
+    --read-timeout=N          - set the read (and write) timeout to N seconds
+    --retry-connrefused       - consider “connection refused” a transient error and try again
+    -t|--tries                - set number of tries to number. Specify 0 or ‘inf’ for infinite retrying
+    --load-cookies file       - load cookies from file before the first HTTP retrieval
     --latest                  - print only latest version of a file
     --second-latest           - print only second to latest version of a file
     --allow-mirrors           - check mirrors if url is not accessible
@@ -15059,7 +15087,9 @@ fi
 
 while [ -n "$1" ] ; do
 
-    case "$1" in
+    argument="$(echo $1 | cut -d= -f1)"
+    argvalue="$(echo $1 | cut -s -d= -f2)"
+    case "$argument" in
         -h|--help)
             eget_help
             return
@@ -15076,10 +15106,14 @@ while [ -n "$1" ] ; do
             AXELNOSSLCHECK='--insecure'
             ;;
         -H|--header)
-            shift
-            WGETHEADER="--header=$1"
-            CURLHEADER="--header $1"
-            AXELHEADER="--header=$1"
+            #TODO: error if header value contains spaces
+            if [ -z "$argvalue" ];then
+                shift
+                argvalue="$1"
+            fi
+            WGETHEADER="--header=\"$argvalue\""
+            CURLHEADER="--header \"$argvalue\""
+            AXELHEADER="--header=\"$argvalue\""
             ;;
         -U|-A|--user-agent)
             user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
@@ -15137,6 +15171,58 @@ while [ -n "$1" ] ; do
         -O-)
             TARGETFILE="-"
             ;;
+        -nd|--no-directories)
+            WGETNODIRECTORIES="$1"
+            ;;
+        -c|--continue)
+            WGETCONTINUE="$1"
+            CURLCONTINUE="-C -"
+            ;;
+        -T|--timeout)
+            if [ -z "$argvalue" ];then
+                shift
+                argvalue="$1"
+            fi
+            WGETTIMEOUT="--timeout $argvalue"
+            CURLMAXTIME="--max-time $argvalue"
+            ;;
+        --read-timeout)
+            if [ -z "$argvalue" ];then
+                shift
+                argvalue="$1"
+            fi
+            WGETREADTIMEOUT="--read-timeout $argvalue"
+            if [ -z "$CURLMAXTIME" ];then
+                CURLMAXTIME="--max-time $argvalue"
+            fi
+            ;;
+        --retry-connrefused)
+            WGETRETRYCONNREFUSED="$1"
+            CURLRETRYCONNREFUSED="$1"
+            ;;
+        -t|--tries)
+            if [ -z "$argvalue" ];then
+                shift
+                argvalue="$1"
+            fi
+
+            case "$argvalue" in
+                0|inf)
+                    CURLRETRY="--retry 1000"
+                    WGETTRIES="--tries $argvalue"
+                    ;;
+
+                *)
+                    WGETTRIES="--tries $argvalue"
+                    CURLRETRY="--retry $(($argvalue-1))"
+                    ;;
+            esac
+            ;;
+        --load-cookies)
+            shift;
+            WGETLOADCOOKIES="--load-cookies $1"
+            CURLCOOKIE="--cookie $1"
+            ;;
         -*)
             fatal "Unknown option '$1', check eget --help."
             ;;
@@ -15160,7 +15246,7 @@ ipfs_api_local="/ip4/127.0.0.1/tcp/5001"
 ipfs_api_brave="/ip4/127.0.0.1/tcp/45005"
 
 # Public IPFS http gateways
-ipfs_gateways="https://cloudflare-ipfs.com/ipfs https://dweb.link/ipfs https://dhash.ru/ipfs"
+ipfs_gateways="https://cloudflare-ipfs.com/ipfs https://gateway.pinata.cloud/ipfs https://dweb.link/ipfs https://dhash.ru/ipfs"
 
 # Test data: https://etersoft.ru/templates/etersoft/images/logo.png
 ipfs_checkQm="QmYwf2GAMvHxfFiUFL2Mr6KUG6QrDiupqGc8ms785ktaYw"
@@ -15208,6 +15294,15 @@ check_ipfs_gateway()
 
 select_ipfs_gateway()
 {
+
+    IPFS_GATEWAY=''
+
+    # if set some http gateway, use only it
+    if [ -n "$EGET_IPFS_GATEWAY" ] ; then
+        check_ipfs_gateway "$EGET_IPFS_GATEWAY" && IPFS_GATEWAY="$EGET_IPFS_GATEWAY" || ipfs_mode="disabled"
+        return
+    fi
+
     # check public http gateways
     for ipfs_gateway in $ipfs_gateways ; do
         check_ipfs_gateway $ipfs_gateway || continue
@@ -15235,9 +15330,10 @@ select_ipfs_mode()
         fi
     fi
 
+    # disabled, browser not for mass downloading
     IPFS_CMD="$(get_ipfs_brave)"
     # if no EGET_IPFS_API, check brave
-    if [ -z "$EGET_IPFS_API" ] && [ -n "$IPFS_CMD" ] ; then
+    if false && [ -z "$EGET_IPFS_API" ] && [ -n "$IPFS_CMD" ] ; then
         IPFS_API="$ipfs_api_brave"
         if ipfs_api_access ; then
             ipfs_mode="brave" && return
@@ -15247,14 +15343,6 @@ select_ipfs_mode()
             #    info "Skipped Brave: it is accessible via $IPFS_CMD --api $IPFS_API, but can't return shared $ipfs_checkQm"
             #fi
         fi
-    fi
-
-    IPFS_GATEWAY=''
-
-    # if set some http gateway, use only it
-    if [ -n "$EGET_IPFS_GATEWAY" ] ; then
-        check_ipfs_gateway "$EGET_IPFS_GATEWAY" && IPFS_GATEWAY="$EGET_IPFS_GATEWAY" || ipfs_mode="disabled"
-        return
     fi
 
     select_ipfs_gateway
@@ -15327,7 +15415,7 @@ if is_ipfsurl "$1" && [ -z "$ipfs_mode" ] || [ "$ipfs_mode" = "auto" ] ; then
     info "Autodetecting available IPFS relay..."
     select_ipfs_mode
     info "Auto selected IPFS mode: $ipfs_mode"
-    [ "$ipfs_mode" = "gateway" ] && info "Since the ipfs command is missed, the http gateway will be used."
+    [ "$ipfs_mode" = "gateway" ] && info "Since the local ipfs service is not accessible, the http gateway will be used."
 else
     [ "$ipfs_mode" = "gateway" ] && select_ipfs_gateway
     [ -n "$ipfs_mode" ] && info "IPFS mode: $ipfs_mode"
@@ -15604,9 +15692,9 @@ elif [ "$EGET_BACKEND" = "wget" ] ; then
 __wget()
 {
     if [ -n "$WGETUSERAGENT" ] ; then
-        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETHEADER $WGETNOSSLCHECK "$WGETUSERAGENT" "$@"
+        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETHEADER $WGETNOSSLCHECK $WGETNODIRECTORIES $WGETCONTINUE $WGETTIMEOUT $WGETREADTIMEOUT $WGETRETRYCONNREFUSED $WGETTRIES $WGETLOADCOOKIES "$WGETUSERAGENT" "$@"
     else
-        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETHEADER $WGETNOSSLCHECK "$@"
+        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETHEADER $WGETNOSSLCHECK $WGETNODIRECTORIES $WGETCONTINUE $WGETTIMEOUT $WGETREADTIMEOUT $WGETRETRYCONNREFUSED $WGETTRIES $WGETLOADCOOKIES "$@"
     fi
 }
 
@@ -15654,9 +15742,9 @@ elif [ "$EGET_BACKEND" = "curl" ] ; then
 __curl()
 {
     if [ -n "$CURLUSERAGENT" ] ; then
-        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER "$CURLUSERAGENT" $CURLNOSSLCHECK "$@"
+        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER $CURLNOSSLCHECK $CURLCONTINUE $CURLMAXTIME $CURLRETRYCONNREFUSED $CURLRETRY $CURLCOOKIE "$CURLUSERAGENT" "$@"
     else
-        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER $CURLNOSSLCHECK "$@"
+        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER $CURLNOSSLCHECK $CURLCONTINUE $CURLMAXTIME $CURLRETRYCONNREFUSED $CURLRETRY $CURLCOOKIE "$@"
     fi
 }
 # put remote content to stdout
@@ -17375,6 +17463,7 @@ pkg_urls=
 pkg_options=
 quoted_args=
 direct_args=
+ipfs=
 
 eget_backend=$EGET_BACKEND
 epm_vardir=/var/lib/eepm

@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.62.4"
+EPMVERSION="3.62.5"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -2086,6 +2086,9 @@ normalize_name()
         "ROSA Enterprise Linux Server")
             echo "RELS"
             ;;
+        "uos")
+            echo "UOS"
+            ;;
         *)
             #echo "${1// /}"
             #firstupper "$1" | sed -e "s/ //g" -e 's|(.*||'
@@ -2141,7 +2144,7 @@ if distro os-release ; then
     #PRETTY_NAME
     VENDOR_ID="$ID"
     case "$VENDOR_ID" in
-        ubuntu|reld|rhel|astra|manjaro)
+        ubuntu|reld|rhel|astra|manjaro|redos)
             ;;
         *)
             # ID_LIKE can be 'rhel centos fedora', use latest word
@@ -2190,7 +2193,7 @@ case "$VENDOR_ID" in
         fi
         ;;
     "fedora")
-            DISTRIB_ID="Fedora"
+        DISTRIB_ID="Fedora"
         ;;
 esac
 
