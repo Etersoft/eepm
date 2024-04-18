@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.62.4
+Version: 3.62.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -101,6 +101,29 @@ a discussion about extra requirements.
 
 
 %changelog
+* Thu Apr 18 2024 Vitaly Lipatov <lav@altlinux.ru> 3.62.5-alt1
+- epm prescription: add gcc-multilib
+- epm repack apache-netbeans: add /usr/bin/javac require
+- epm play: add --upgrade as alias for --update
+- epm upgrade: use upgrade for dnf/yum instead of distro-sync
+- epm play: allow enable ipfs in eepm.conf
+- epm full-upgrade: add --ipfs support for epm play
+- epm play cascadeur: add several versions to install
+- epm play yandex-browser: force unversioned install, add redos support
+- eget: add pinata.cloud ipfs gateway, disable local Brave ipfs instance
+- eget: use only selected ipfs gateway when EGET_IPFS_GATEWAY is set
+- epm repack.d/common.sh: make fatal on missed target bin
+- epm repack.d/common.sh: add support for some source /opt/dir in move_to_opt
+- epm play balena-etcher: add direct downloading, use deb only
+- distr_info: fix vendor distro name for RedOS
+- distr_info: add UOS support
+- epm play switch-to-pipewire: added install mode
+- epm play: add mts-link-desktop (eterbug #17254)
+- epm play: add Vesktop (eterbug #17255)
+- epm play: add OrcaSlicer (eterbug #17261)
+- epm play gitkraken: fix libc req; bin file not found (eterbug #17262)
+- epm play: add radicle (eterbug #17267)
+
 * Sun Apr 14 2024 Vitaly Lipatov <lav@altlinux.ru> 3.62.4-alt1
 - epm pack.d common: add eget()
 - epm: improve hack for install by provides
