@@ -94,6 +94,11 @@ case $BASEDISTRNAME in
         sudocmd apt-get update
         ret="$?"
         cd - >/dev/null
+        if [ "$ret" != "0" ] && [ -z "$quiet" ] ; then
+            warning "There are some errors with repo info updating. Check apt repos:"
+            docmd epm repo list
+            warning "Also check if you have an internet connection (ping to the problem site)"
+        fi
         return $ret
         ;;
 esac
