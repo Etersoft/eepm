@@ -17,12 +17,6 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-# TODO: move to a common place and use
-__is_wildcard()
-{
-    echo "$1" | grep -q "[*?]"
-}
-
 __alt_mark_hold_package()
 {
         local pkg="$1"
