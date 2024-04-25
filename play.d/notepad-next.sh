@@ -8,6 +8,6 @@ URL="https://github.com/dail8859/NotepadNext"
 
 . $(dirname $0)/common.sh
 
-PKGURL=$(eget --list --latest https://github.com/dail8859/NotepadNext/releases "*.AppImage")
+PKGURL=$(eget --list --latest https://github.com/dail8859/NotepadNext/releases "NotepadNext-v$VERSION-x86_64.AppImage")
 
 install_pkgurl
