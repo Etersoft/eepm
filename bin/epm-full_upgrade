@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2019, 2022  Etersoft
-# Copyright (C) 2019, 2022  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2019, 2022, 2024  Etersoft
+# Copyright (C) 2019, 2022, 2024  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -16,6 +16,19 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
+
+__check_upgrade_conditions()
+{
+    [ "$BASEDISTRNAME" = "alt" ] || return 0
+    [ "$DISTRVERSION" = "Sisyphus" ] || return 0
+
+    # https://www.altlinux.org/Usrmerge
+    epm status --installed filesystem 3.1 && return 0
+    info "Installing usrmerge-hier-convert to merge file hierarhy, check https://www.altlinux.org/Usrmerge."
+    epm upgrade vim-minimal vim-console
+    epm install usrmerge-hier-convert
+    return 0
+}
 
 epm_full_upgrade_help()
 {
@@ -90,6 +103,7 @@ confirm_action()
     confirm_action "Do upgrade installed packages? [Y/n]" || full_upgrade_no_upgrade=1
     if [ -z "$full_upgrade_no_upgrade" ] ; then
         [ -n "$quiet" ] || echo
+        __check_upgrade_conditions || fatal "upgrade conditions is not satisfied."
         docmd epm $dryrun upgrade || fatal "upgrading of the system is failed."
     fi
 
