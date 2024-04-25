@@ -25,6 +25,7 @@ warn_version_is_not_supported
 # https://okulargost.ru/info.html
 # http://packages.lab50.net/okular/install
 
+distr=$(epm print info -e)
 distrib=$(epm print info --repo-name)
 vendor=$(epm print info -s)
 
@@ -34,10 +35,10 @@ case $(epm print info -e) in
         ;;
     AstraLinuxSE/1.7*)
         ;;
-    Fedora/3*|ROSA/2021.1|RedOS/7.3)
+    Fedora/3*|ROSA/2021.1|RedOS/*)
         distrib=$vendor
         ;;
-    ALTLinux/p10)
+    ALTLinux/*)
         ;;
     *)
         fatal "Unsupported distro $(epm print info -e). Ask application vendor for a support."
@@ -73,6 +74,8 @@ esac
 
 case $vendor in
     alt)
+        epm installed lsb-cprocsp-capilite-64 || fatal "lsb-cprocsp-capilite-64 is not installed. Use 'ecryptomgr install cryptopro' to install it."
+        epm installed cprocsp-pki-cades-64 || fatal "cprocsp-pki-cades-64 is not installed. Use 'ecryptomgr install cades' to install it."
 # TODO get key info from gpg file
         epm repo addkey "$REPOURL/lab50.gpg" "D0C721136AFF9319DCF8276EA98DF0BE319FACDA" "Laboratory 50 (APT Archive Key) <team@lab50.net>"
         epm repo add "rpm [lab50] $REPOURL/okular/alt x86_64 p10"
