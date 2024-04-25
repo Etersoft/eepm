@@ -115,7 +115,7 @@ confirm_action()
     fi
 
     # disable epm play --update for non ALT Systems
-    [ "$BASEDISTRNAME" = "alt" ] || full_upgrade_no_epm_play=1
+    #[ "$BASEDISTRNAME" = "alt" ] || full_upgrade_no_epm_play=1
 
 
     confirm_action "Upgrade packages installed via epm play? [Y/n]" || full_upgrade_no_epm_play=1
