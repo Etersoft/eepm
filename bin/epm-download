@@ -65,6 +65,20 @@ __use_url_install()
     return 0
 }
 
+# some heuristic to detect if we need download only latest package
+__check_if_wildcard_downloading()
+{
+    mask="$(basename "$1")"
+    is_wildcard "$mask" || return 1
+
+    local fn
+    fn="$(docmd eget --list "$url" | xargs -n1 basename)"
+    local wf="$(epm print shortname from filename $fn | wc -l)"
+    local ws="$(epm print shortname from filename $fn | sort -u | wc -l)"
+    # not the same package of various versions
+    [ "$wf" = "$ws" ]
+}
+
 # for download before install / checking
 __download_pkg_urls()
 {
@@ -76,9 +90,10 @@ __download_pkg_urls()
         remove_on_exit $tmppkg
         chmod $verbose a+rX $tmppkg
         cd $tmppkg || fatal
+
         local latest='--latest'
-        # hack: download all if mask is *.something
-        basename "$url" | grep -q "^\*\." && latest=''
+        __check_if_wildcard_downloading "$url" && latest=''
+
         # download packages
         if docmd eget $latest "$url" ; then
             local i
