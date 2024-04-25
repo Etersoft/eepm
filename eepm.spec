@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.62.5
+Version: 3.62.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -101,6 +101,30 @@ a discussion about extra requirements.
 
 
 %changelog
+* Thu Apr 25 2024 Vitaly Lipatov <lav@altlinux.ru> 3.62.6-alt1
+- epm play switch-to-nvidia: remove libGLUT and  libGLU, translate output console into English
+- epm play: add Trezor Suite
+- epm repack.d/common.sh: always set SUID for chrome-sandbox (ignore userns)
+- epm-update: improve message about repo update errors
+- epm-repack-rpm: fix packing links to dirs
+- epm play: add yougile
+- epm play: add nekoray
+- epm play: add yandex-telemost (eterbug #17210)
+- epm status: implement support for --installed package version checking
+- epm print: add enough package command to check if needed version is installed (use epm status --installed instead of)
+- epm full-upgrade: add support for usrmerge (filesystem 3.1)
+- epm play: add lexmark-upd-ppd (eterbug #17268)
+- epm play: add bellsoft-java11-full (eterbug #17289)
+- epm play: add Anytype (eterbug #17279)
+- epm play.d/okular-csp.sh: allow install on ALT Sisyphus
+- epm play: use universal script for repacking snaps
+- epm play: added add_bin_exec_command to generic-default.sh (eterbug #17248)
+- epm packages: add --last argument (eterbug #17253)
+- epm packages: changed sort order from most to least in --sort argument
+- epm packages: fix working of argument --sort with argument --short
+- epm full-upgrade: run epm play --update on all systems
+- eget: fix header quoting issue
+
 * Thu Apr 18 2024 Vitaly Lipatov <lav@altlinux.ru> 3.62.5-alt1
 - epm prescription: add gcc-multilib
 - epm repack apache-netbeans: add /usr/bin/javac require
