@@ -282,6 +282,24 @@ compare_version()
     esac
 }
 
+
+is_pkg_enough()
+{
+    local needed="$2"
+    local PKG="$1"
+    local ver
+
+    load_helper epm-query
+    is_installed $PKG || return
+
+    ver=$(print_pkg_version "$PKG" | head -n1)
+    if [ -n "$ver" ] && [ "$(compare_version "$ver" "$needed")" = "-1" ] ; then
+        return 1
+    fi
+    return 0
+}
+
+
 # construct package file name.
 # name version [arch] [pkgtype] [ds] [pds]
 construct_name()
@@ -319,6 +337,7 @@ cat <<EOF
     epm print specname from filename NN      print spec filename for the source package file
     epm print binpkgfilelist in DIR for NN   list binary package(s) filename(s) from DIR for the source package file
     epm print compare [package] version N1 N2          compare (package) versions and print -1 (N1 < N2), 0 (N1 == N2), 1 (N1 > N2)
+    epm print enough [package version] package version   returns true if the package with the version or above is installed
     epm print constructname <name> <version> [arch] [pkgtype] [delimiter1] [delimiter2]  print distro dependend package filename from args name version arch pkgtype
 EOF
 }
@@ -451,6 +470,13 @@ epm_print()
             #else
                  compare_version "$1" "$2"
             #fi
+            ;;
+        "enough")
+            [ "$1" = "package" ] && shift
+            [ "$2" = "version" ] && shift
+            [ -n "$1" ] || fatal "Arg is missed"
+            [ -n "$2" ] || fatal "Arg is missed"
+            is_pkg_enough "$1" "$2"
             ;;
         "constructname")
             construct_name "$@"
