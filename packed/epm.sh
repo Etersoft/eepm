@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-export EPMVERSION="3.62.5"
+export EPMVERSION="3.62.6"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -3596,6 +3596,19 @@ epm_filelist()
 
 # File bin/epm-full_upgrade:
 
+__check_upgrade_conditions()
+{
+    [ "$BASEDISTRNAME" = "alt" ] || return 0
+    [ "$DISTRVERSION" = "Sisyphus" ] || return 0
+
+    # https://www.altlinux.org/Usrmerge
+    epm status --installed filesystem 3.1 && return 0
+    info "Installing usrmerge-hier-convert to merge file hierarhy, check https://www.altlinux.org/Usrmerge."
+    epm upgrade vim-minimal vim-console
+    epm install usrmerge-hier-convert
+    return 0
+}
+
 epm_full_upgrade_help()
 {
             get_help HELPCMD $SHAREDIR/epm-full_upgrade
@@ -3669,6 +3682,7 @@ confirm_action()
     confirm_action "Do upgrade installed packages? [Y/n]" || full_upgrade_no_upgrade=1
     if [ -z "$full_upgrade_no_upgrade" ] ; then
         [ -n "$quiet" ] || echo
+        __check_upgrade_conditions || fatal "upgrade conditions is not satisfied."
         docmd epm $dryrun upgrade || fatal "upgrading of the system is failed."
     fi
 
@@ -3680,7 +3694,7 @@ confirm_action()
     fi
 
     # disable epm play --update for non ALT Systems
-    [ "$BASEDISTRNAME" = "alt" ] || full_upgrade_no_epm_play=1
+    #[ "$BASEDISTRNAME" = "alt" ] || full_upgrade_no_epm_play=1
 
 
     confirm_action "Upgrade packages installed via epm play? [Y/n]" || full_upgrade_no_epm_play=1
@@ -5929,20 +5943,59 @@ epm_pack()
 # File bin/epm-packages:
 
 
+__epm_packages_help()
+{
+    echo "package management list"
+            get_help HELPCMD $SHAREDIR/epm-packages
+    cat <<EOF
+Examples:
+  epm packages --sort
+  epm packages --sort=size
+  epm packages --last
+EOF
+}
+
 __epm_packages_sort()
+{
+
+case $PMTYPE in
+    *-rpm)
+        # FIXME: space with quotes problems, use point instead
+        warmup_rpmbase
+        if [ -n "$short" ] ; then
+            docmd rpm -qa --queryformat "%{size}@%{name}\n" "$@" | sed -e "s|@| |g" | sort -n -k1 -r
+        else
+            docmd rpm -qa --queryformat "%{size}@%{name}-%{version}-%{release}\n" "$@" | sed -e "s|@| |g" | sort -n -k1 -r
+        fi
+        ;;
+    *-dpkg)
+        warmup_dpkgbase
+        if [ -n "$short" ] ; then
+            docmd dpkg-query -W --showformat="\${Installed-Size}@\${Package}\n" "$@" | sed -e "s|@| |g" | sort -n -k1 -r
+        else
+            docmd dpkg-query -W --showformat="\${Installed-Size}@\${Package}-\${Version}:\${Architecture}\n" "$@" | sed -e "s|@| |g" | sort -n -k1 -r
+        fi
+        ;;
+    *)
+        fatal "Sorted package list function is not implemented for $PMTYPE"
+        ;;
+esac
+}
+
+__epm_packages_last()
 {
 case $PMTYPE in
     *-rpm)
         # FIXME: space with quotes problems, use point instead
         warmup_rpmbase
-        docmd rpm -qa --queryformat "%{size}@%{name}-%{version}-%{release}\n" "$@" | sed -e "s|@| |g" | sort -n -k1
+        docmd rpm -qa --last
         ;;
-    *-dpkg)
-        warmup_dpkgbase
-        docmd dpkg-query -W --showformat="\${Installed-Size}@\${Package}-\${Version}:\${Architecture}\n" "$@" | sed -e "s|@| |g" | sort -n -k1
+    pacman)
+        assure_exists expac
+        docmd expac --timefmt='%Y-%m-%d %T' '%l\t%n %v' | sort | tail -200 | nl
         ;;
     *)
-        fatal "Sorted package list function is not implemented for $PMTYPE"
+        fatal "Last package list function is not implemented for $PMTYPE"
         ;;
 esac
 }
@@ -5962,7 +6015,25 @@ __fo_pfn()
 epm_packages()
 {
     local CMD
-    [ -n "$sort" ] && __epm_packages_sort "$@" && return
+
+    case "$1" in
+        -h|--help|help)  # HELPCMD: help
+            __epm_packages_help
+            return
+            ;;
+        --sort=size|--sort)   # HELPCMD: list package(s) by size, most
+            __epm_packages_sort
+            return
+            ;;
+        --last|--sort=time)   # HELPCMD: list package(s) by install time, most
+            __epm_packages_last
+            return
+            ;;
+        "")
+            ;;
+        *)
+            fatal "Unknown option $1. Use epm packages --help to get help."
+    esac
 
 case $PMTYPE in
     *-dpkg)
@@ -6947,6 +7018,23 @@ compare_version()
     esac
 }
 
+
+is_pkg_enough()
+{
+    local needed="$2"
+    local PKG="$1"
+    local ver
+
+    is_installed $PKG || return
+
+    ver=$(print_pkg_version "$PKG" | head -n1)
+    if [ -n "$ver" ] && [ "$(compare_version "$ver" "$needed")" = "-1" ] ; then
+        return 1
+    fi
+    return 0
+}
+
+
 construct_name()
 {
     local name="$1"
@@ -6982,6 +7070,7 @@ cat <<EOF
     epm print specname from filename NN      print spec filename for the source package file
     epm print binpkgfilelist in DIR for NN   list binary package(s) filename(s) from DIR for the source package file
     epm print compare [package] version N1 N2          compare (package) versions and print -1 (N1 < N2), 0 (N1 == N2), 1 (N1 > N2)
+    epm print enough [package version] package version   returns true if the package with the version or above is installed
     epm print constructname <name> <version> [arch] [pkgtype] [delimiter1] [delimiter2]  print distro dependend package filename from args name version arch pkgtype
 EOF
 }
@@ -7114,6 +7203,13 @@ epm_print()
             #else
                  compare_version "$1" "$2"
             #fi
+            ;;
+        "enough")
+            [ "$1" = "package" ] && shift
+            [ "$2" = "version" ] && shift
+            [ -n "$1" ] || fatal "Arg is missed"
+            [ -n "$2" ] || fatal "Arg is missed"
+            is_pkg_enough "$1" "$2"
             ;;
         "constructname")
             construct_name "$@"
@@ -9546,7 +9642,7 @@ __fix_spec()
     # replace dir "/path/dir" -> %dir /path/dir
     grep '^"/' $spec | sed -e 's|^"\(/.*\)"$|\1|' | while read i ; do
         # add dir as %dir in the filelist
-        if [ -d "$buildroot$i" ] ; then
+        if [ -d "$buildroot$i" ] && [ ! -L "$buildroot$i" ] ; then
             subst "s|^\(\"$i\"\)$|%dir \1|" $spec
         #else
         #    subst 's|^\("'$i'"\)$|\1|' $spec
@@ -12751,6 +12847,24 @@ __epm_vendor_ok_scripts()
     return $res
 }
 
+epm_status_installed()
+{
+    local pkg="$1"
+    local needed="$2"
+    local ver
+
+    is_installed "$pkg" || return
+
+    [ -z "$needed" ] && return
+
+    ver=$(epm print version for package "$pkg" | head -n1)
+    if [ -n "$ver" ] && [ "$(epm print compare version "$ver" "$needed")" = "-1" ] ; then
+        return 1
+    fi
+
+    return 0
+}
+
 
 epm_status_installable()
 {
@@ -12871,10 +12985,10 @@ epm_status_help()
     cat <<EOF
 
 epm status - check status of the package and return result via exit code
-Usage: epm status [options] <package>
+Usage: epm status [options] <package> [version]
 
 Options:
-  --installed           check if <package> is installed
+  --installed [version] check if <package> is installed (if version is specified, not older than the version)
   --installable         check if <package> can be installed from the repo
   --original            check if <package> is from distro repo
   --certified           check if <package> is certified that it can be installed without repacking
@@ -12903,7 +13017,7 @@ epm_status()
             return
             ;;
         --installed)
-            is_installed "$@"
+            epm_status_installed "$@"
             return
             ;;
         --original)
@@ -13075,6 +13189,11 @@ case $BASEDISTRNAME in
         sudocmd apt-get update
         ret="$?"
         cd - >/dev/null
+        if [ "$ret" != "0" ] && [ -z "$quiet" ] ; then
+            warning "There are some errors with repo info updating. Check apt repos:"
+            docmd epm repo list
+            warning "Also check if you have an internet connection (ping to the problem site)"
+        fi
         return $ret
         ;;
 esac
@@ -15106,14 +15225,14 @@ while [ -n "$1" ] ; do
             AXELNOSSLCHECK='--insecure'
             ;;
         -H|--header)
-            #TODO: error if header value contains spaces
+            # TODO: error if header value contains spaces
             if [ -z "$argvalue" ];then
                 shift
-                argvalue="$1"
+                argvalue="${1/ /}"
             fi
-            WGETHEADER="--header=\"$argvalue\""
-            CURLHEADER="--header \"$argvalue\""
-            AXELHEADER="--header=\"$argvalue\""
+            WGETHEADER="--header=$argvalue"
+            CURLHEADER="--header $argvalue"
+            AXELHEADER="--header=$argvalue"
             ;;
         -U|-A|--user-agent)
             user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
@@ -17512,6 +17631,7 @@ case $PROGNAME in
         ;;
     epmqa)                     # HELPSHORT: alias for epm packages
         epm_cmd=packages
+        direct_args=1
         ;;
     epmqp)                     # HELPSHORT: alias for epm qp (epm query package)
         epm_cmd=query_package
@@ -17875,10 +17995,6 @@ check_option()
         ;;
     --url)                 # HELPOPT: print only URL instead of download package
         print_url="--url"
-        ;;
-    --sort)               # HELPOPT: sort output, f.i. --sort=size (supported only for packages command)
-        # TODO: how to read arg?
-        sort="$1"
         ;;
     -y|--auto|--assumeyes|--non-interactive|--disable-interactivity)  # HELPOPT: non interactive mode
         non_interactive="--auto"
