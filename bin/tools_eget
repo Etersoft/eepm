@@ -442,14 +442,14 @@ while [ -n "$1" ] ; do
             AXELNOSSLCHECK='--insecure'
             ;;
         -H|--header)
-            #TODO: error if header value contains spaces
+            # TODO: error if header value contains spaces
             if [ -z "$argvalue" ];then
                 shift
-                argvalue="$1"
+                argvalue="${1/ /}"
             fi
-            WGETHEADER="--header=\"$argvalue\""
-            CURLHEADER="--header \"$argvalue\""
-            AXELHEADER="--header=\"$argvalue\""
+            WGETHEADER="--header=$argvalue"
+            CURLHEADER="--header $argvalue"
+            AXELHEADER="--header=$argvalue"
             ;;
         -U|-A|--user-agent)
             user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
