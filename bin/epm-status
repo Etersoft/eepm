@@ -69,6 +69,25 @@ __epm_vendor_ok_scripts()
     return $res
 }
 
+#  check if the package is installed and the version is enough (if the version is specified)
+epm_status_installed()
+{
+    local pkg="$1"
+    local needed="$2"
+    local ver
+
+    is_installed "$pkg" || return
+
+    [ -z "$needed" ] && return
+
+    ver=$(epm print version for package "$pkg" | head -n1)
+    if [ -n "$ver" ] && [ "$(epm print compare version "$ver" "$needed")" = "-1" ] ; then
+        return 1
+    fi
+
+    return 0
+}
+
 
 epm_status_installable()
 {
@@ -192,10 +211,10 @@ epm_status_help()
     cat <<EOF
 
 epm status - check status of the package and return result via exit code
-Usage: epm status [options] <package>
+Usage: epm status [options] <package> [version]
 
 Options:
-  --installed           check if <package> is installed
+  --installed [version] check if <package> is installed (if version is specified, not older than the version)
   --installable         check if <package> can be installed from the repo
   --original            check if <package> is from distro repo
   --certified           check if <package> is certified that it can be installed without repacking
@@ -224,7 +243,7 @@ epm_status()
             return
             ;;
         --installed)
-            is_installed "$@"
+            epm_status_installed "$@"
             return
             ;;
         --original)

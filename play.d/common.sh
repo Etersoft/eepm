@@ -174,17 +174,8 @@ get_pkgvendor()
 
 is_pkg_enough()
 {
-    local needed="$2"
-    local PKG="$1"
-
-    if epm status --installed $PKG ; then
-        local ver
-        ver=$(epm print version for package "$PKG" | head -n1)
-        if [ -n "$ver" ] && [ "$(epm print compare version "$ver" "$needed")" = "-1" ] ; then
-            return 1
-        fi
-    fi
-    return 0
+    # epm print enough package version "$PKG" "$needed"
+    epm status --installed "$PKG" "$needed"
 }
 
 # arg: minimal require of libstdc++ version
