@@ -41,6 +41,19 @@ epm_list_available()
         return
     fi
 
+    # use cache we got during epm update
+    # TODO: update from this place if obsoleted
+    if [ -n "$short" ] ; then
+        if [ -s $epm_vardir/available-packages ] ; then
+            cat $epm_vardir/available-packages
+            return
+        elif [ -n "$direct" ] ; then
+            # don't go in long retrieving if --direct is used
+            return
+        fi
+    fi
+
+
 case $PMTYPE in
     apt-*)
         warmup_dpkgbase
