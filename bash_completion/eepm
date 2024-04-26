@@ -11,19 +11,19 @@ __eepm_list_commands()
 
 __eepm_list_installed_packages()
 {
-    COMPREPLY=( $( epm list --installed --quiet --short) )
+    COMPREPLY=( $( epm list --installed --quiet --short --direct ) )
     COMPREPLY=( $( compgen -W '${COMPREPLY[@]}' -- "$cur" ) )
 }
 
 __eepm_list_available_packages()
 {
-    COMPREPLY=( $( cat /var/lib/eepm/available-packages 2>/dev/null ) )
+    COMPREPLY=( $( epm list --available --quiet --short --direct ) )
     COMPREPLY=( $( compgen -W '${COMPREPLY[@]}' -- "$cur" ) )
 }
 
 __eepm_list_available_packages_play()
 {
-    COMPREPLY=( $( epm play --list-all --short ) )
+    COMPREPLY=( $( epm play --list-all --quiet --short ) )
     COMPREPLY=( $( compgen -W '${COMPREPLY[@]%.sh}' -- "$cur" ) )
 }
 
