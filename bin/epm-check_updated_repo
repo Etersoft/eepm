@@ -154,14 +154,14 @@ update_repo_if_needed()
 # save manually installed packages
 save_installed_packages()
 {
-    [ -d /var/lib/rpm ] || return 0
-    estrlist list "$@" | sudorun tee /var/lib/rpm/EPM-installed >/dev/null
+    [ -d $epm_vardir ] || return 0
+    estrlist list "$@" | sudorun tee $epm_vardir/installed-via-epm >/dev/null
 }
 
 check_manually_installed()
 {
-    [ -r /var/lib/rpm/EPM-installed ] || return 1
-    grep -q -- "^$1\$" /var/lib/rpm/EPM-installed
+    [ -r $epm_vardir/installed-via-epm ] || return 1
+    grep -q -- "^$1\$" $epm_vardir/installed-via-epm
 }
 
 skip_manually_installed()
