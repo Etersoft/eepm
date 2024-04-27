@@ -672,7 +672,7 @@ pkg_filenames=$(strip_spaces "$pkg_files $pkg_names")
 
 print_short_help()
 {
-cat <<EOF
+message '
 
 Popular commands:
  epm search <name>          - search package by name
@@ -683,7 +683,7 @@ Popular commands:
  epm qf (<command>|<path>)  - print what package contains this command (file)
  epm sf <name>              - search for the name in all files of all packages
  epm cl <package name>      - print changelog for the package
-EOF
+'
 }
 
 # Just printout help if run without args

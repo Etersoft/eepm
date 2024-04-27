@@ -118,7 +118,7 @@ __epm_pack()
 
 epm_pack_help()
 {
-    cat <<EOF
+    message '
 epm pack - create rpm package from files
 Usage: epm pack [options] <packname> <tar|url|dir> [version]
 Options:
@@ -130,7 +130,7 @@ Options:
     --repack              - force repack ever if returned package can be installed without repack
     --download-only       - save pack result and exit
     --save-only           - save repacked packages and exit (this is default behaviour)
-EOF
+'
 }
 
 
