@@ -321,7 +321,7 @@ construct_name()
 
 epm_print_help()
 {
-cat <<EOF
+message '
   Examples:
     epm print info [args]                    print system and distro info (via distro_info command)
     epm print name [from filename|for package] NN        print only name of package name or package file
@@ -339,7 +339,7 @@ cat <<EOF
     epm print compare [package] version N1 N2          compare (package) versions and print -1 (N1 < N2), 0 (N1 == N2), 1 (N1 > N2)
     epm print enough [package version] package version   returns true if the package with the version or above is installed
     epm print constructname <name> <version> [arch] [pkgtype] [delimiter1] [delimiter2]  print distro dependend package filename from args name version arch pkgtype
-EOF
+'
 }
 
 epm_print()

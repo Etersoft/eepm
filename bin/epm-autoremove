@@ -208,7 +208,7 @@ epm_autoremove_print_help()
     echo "run 'epm autoremove' to use apt-get autoremove"
     echo "or run 'epm autoremove --direct [group1] [group2] ...' to use epm implementation"
     echo "Default groups: $epm_autoremove_default_groups"
-    cat <<EOF
+    message '
 Supported package groups:
     libs       - unused libraries
     libs-devel - unused -devel packages
@@ -224,7 +224,7 @@ Supported package groups:
 
 Use
 --auto|--assumeyes|--non-interactive  for non interactive mode
-EOF
+'
 }
 
 

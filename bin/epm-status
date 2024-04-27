@@ -208,7 +208,7 @@ epm_status_thirdparty()
 
 epm_status_help()
 {
-    cat <<EOF
+    message '
 
 epm status - check status of the package and return result via exit code
 Usage: epm status [options] <package> [version]
@@ -218,11 +218,10 @@ Options:
   --installable         check if <package> can be installed from the repo
   --original            check if <package> is from distro repo
   --certified           check if <package> is certified that it can be installed without repacking
-  --thirdparty          check if <package> from a third-party source (didn't packed for this distro)
+  --thirdparty          check if <package> from a third-party source (didnt packed for this distro)
   --repacked            check if <package> was repacked with epm repack
   --validate            check if <package> is accessible (we can get a fields from it)
-
-EOF
+'
 }
 
 epm_status()

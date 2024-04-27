@@ -22,12 +22,12 @@ epm_tool_help()
     echo "Tools embedded in epm:"
     get_help HELPCMD $SHAREDIR/epm-tool
 
-    cat <<EOF
+    message '
   Examples:
     epm tool eget -U http://ya.ru
     epm tool estrlist union a b a c
     epm tool erc archive.zip
-EOF
+'
 }
 
 epm_tool()
