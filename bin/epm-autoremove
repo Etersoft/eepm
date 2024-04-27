@@ -64,7 +64,7 @@ __epm_autoremove_altrpm_pp()
 
 
     if [ -n "$flag" ] ; then
-        info ""
+        info
         info "call again for next cycle until all modules will be removed"
         __epm_autoremove_altrpm_pp "$libexclude"
     fi
@@ -135,7 +135,7 @@ __epm_autoremove_altrpm_lib()
     fi
 
     if [ -n "$flag" ] ; then
-        info ""
+        info
         info "call again for next cycle until all libs will be removed"
         __epm_autoremove_altrpm_lib $opt
     fi
