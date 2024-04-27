@@ -20,14 +20,14 @@
 epm_full_upgrade_help()
 {
             get_help HELPCMD $SHAREDIR/epm-full_upgrade
-    cat <<EOF
+    message '
 You can run with --interactive if you can skip some steps interactively.
 Also you can comment out full_upgrade parts in /etc/eepm/eepm.conf config.
 Examples:
   epm full-upgrade [--auto]
   epm full-upgrade [--interactive]
   epm full-upgrade --no-flatpack
-EOF
+'
 }
 
 
