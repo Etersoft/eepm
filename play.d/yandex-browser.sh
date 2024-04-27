@@ -26,7 +26,7 @@ else
     PKGURL="$URL/deb/pool/main/y/$PKGNAME/$(epm print constructname $PKGNAME "$VERSION*" amd64 deb)"
 fi
 
-if "$(epm print info -s)" = "redos" ] ; then
+if [ "$(epm print info -s)" = "redos" ] ; then
     BRANCH="stable"
     PKGURL="$URL/rpm/redos/x86_64/$(epm print constructname $PKGNAME "$VERSION*" x86_64 rpm)"
 fi
