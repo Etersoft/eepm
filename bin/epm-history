@@ -101,11 +101,11 @@ epm_history_help()
 {
     echo "package management history"
             get_help HELPCMD $SHAREDIR/epm-history
-    cat <<EOF
+    message '
 Examples:
   epm history
   epm history --removed
-EOF
+'
 }
 
 

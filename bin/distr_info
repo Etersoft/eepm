@@ -929,7 +929,7 @@ local orig=''
 [ -n "$BUILD_ID" ] && [ "$DISTRIB_FULL_RELEASE" != "$BUILD_ID" ] && orig=" (orig. $BUILD_ID)"
 local EV=''
 [ -n "$EPMVERSION" ] && EV="(EPM version $EPMVERSION) "
-cat <<EOF
+message '
 distro_info v$PROGVERSION $EV: Copyright © 2007-2024 Etersoft
 
                        Pretty name (--pretty): $(print_pretty_name)
@@ -946,7 +946,7 @@ distro_info v$PROGVERSION $EV: Copyright © 2007-2024 Etersoft
             Bug report URL (--bug-report-url): $(print_bug_report_url)
 
 (run with -h to get help)
-EOF
+'
 }
 
 print_help()
@@ -985,7 +985,7 @@ print_help()
 # print code for eval with names for eepm
 print_eepm_env()
 {
-cat <<EOF
+message '
 # -d | --base-distro-name
 DISTRNAME="$(echo $DISTRIB_ID)"
 # -v | --base-version
@@ -1012,7 +1012,7 @@ DISTRMEMORY="$(get_memory_size)"
 PKGVENDOR=$(pkgvendor)
 RPMVENDOR=$(pkgvendor)
 
-EOF
+'
 
 }
 
