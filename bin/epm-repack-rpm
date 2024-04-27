@@ -196,7 +196,7 @@ __epm_repack_to_rpm()
         tmpbuilddir=$HOME/$(basename $pkg).tmpdir
         mkdir $tmpbuilddir
         abspkg="$(realpath $pkg)"
-        info ""
+        info
         info "Repacking $abspkg to local rpm format (inside $tmpbuilddir) ..."
 
         alpkg=$(basename $pkg)
