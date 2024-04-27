@@ -156,7 +156,7 @@ __epm_addrepo_altlinux_url()
 __epm_addrepo_altlinux_help()
 {
     #sudocmd apt-repo $dryrun add branch
-cat <<EOF
+message '
 
 epm repo add - add branch repo. Use follow params:
     basealt                  - for BaseALT repo
@@ -179,7 +179,7 @@ Examples:
     # epm repo add "rpm http://somesite/pub/product x86_64 addon
     # epm repo add /var/ftp/pub/altlinux/p10
 
-EOF
+'
     return
 }
 

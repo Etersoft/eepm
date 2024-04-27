@@ -321,11 +321,11 @@ epm_mark_help()
 {
     echo "mark is the interface for marking packages"
             get_help HELPCMD $SHAREDIR/epm-mark
-    cat <<EOF
+    message '
 Examples:
   epm mark hold mc
   epm manual mc
-EOF
+'
 }
 
 epm_mark()

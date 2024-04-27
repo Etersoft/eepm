@@ -23,12 +23,12 @@ __epm_packages_help()
 {
     echo "package management list"
             get_help HELPCMD $SHAREDIR/epm-packages
-    cat <<EOF
+    message '
 Examples:
   epm packages --sort
   epm packages --sort=size
   epm packages --last
-EOF
+'
 }
 
 __epm_packages_sort()

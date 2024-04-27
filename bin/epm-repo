@@ -22,7 +22,7 @@ load_helper epm-sh-altlinux
 epm_repo_help()
 {
     get_help HELPCMD $SHAREDIR/epm-repo
-    cat <<EOF
+    message '
 
 Examples:
   epm repo set p9          - clean all sources and add default repo for p9 branch
@@ -31,7 +31,7 @@ Examples:
   epm repo add autoimports - add autoimports (from Fedora) repo
   epm repo change yandex   - change only base url part to mirror.yandex.ru server
   epm repo list            - list current repos
-EOF
+'
 }
 
 

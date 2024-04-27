@@ -25,11 +25,11 @@ epm_prescription()
 local psdir="$CONFIGDIR/prescription.d"
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
-    cat <<EOF
+    message '
 Options:
     <receipt>      - run <receipt>
     --list-all     - list all available receipts
-EOF
+'
     exit
 fi
 

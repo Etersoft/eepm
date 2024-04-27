@@ -242,7 +242,7 @@ __epm_play_list()
 
 epm_play_help()
 {
-    cat <<EOF
+    message '
 Usage: epm play [options] [<app>]
 Options:
     <app>                 - install <app>
@@ -261,7 +261,7 @@ Examples:
     epm play telegram = beta
     epm play telegram = 4.7.1
     epm play --update all
-EOF
+'
 }
 
 __epm_is_shell_script()
