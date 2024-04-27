@@ -19,7 +19,7 @@
 
 epm_list_help()
 {
-    cat <<EOF
+    message '
 epm list - list packages
 Usage: epm list [options] [package]
 
@@ -27,7 +27,7 @@ Options:
   --available           list only available packages
   --installed           list only installed packages
   --upgradable          list only upgradable packages
-EOF
+'
 #  --all                 list all packages (default)
 }
 

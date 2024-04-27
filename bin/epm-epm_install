@@ -105,7 +105,7 @@ epm_epm_install_help()
 {
     echo "epm ei [URL] [packages] - install packages from EPM based Korinf repository"
             get_help HELPCMD $SHAREDIR/epm-epm_install
-    cat <<EOF
+    message '
 
 Default Korinf repository: $EPM_KORINF_REPO_URL
 
@@ -114,7 +114,7 @@ Examples:
   epm ei <package1> [<package2>...] - install package(s) from default Korinf repo
   epm http://someurl.ru <package>   - install package(s) from a repo defined by URL
   epm --list <package mask>         - list available packages by mask
-EOF
+'
 }
 
 
