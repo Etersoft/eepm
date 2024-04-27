@@ -339,6 +339,10 @@ echog()
 	fi
 }
 
+message()
+{
+    echog "$*"
+}
 
 # Print error message and stop the program
 fatal()
@@ -350,6 +354,20 @@ fatal()
     echog -n "ERROR: " >&2
     restore_color >&2
     echog "$* $PROMOMESSAGE" >&2
+#    [ "$TERM" = "screen" ] && echo "(screen detected: waiting ten seconds to exit ...)" >&2 && sleep 10
+    exit 1
+}
+
+# Print error message and stop the program, skippimg translate
+fixme()
+{
+    local PROMOMESSAGE="$EPMPROMOMESSAGE"
+    [ -n "$PROMOMESSAGE" ] || PROMOMESSAGE=" (you can discuss the epm $EPMVERSION problem in Telegram: https://t.me/useepm)"
+
+    set_color $RED >&2
+    echo -n "ERROR: " >&2
+    restore_color >&2
+    echo "$* $PROMOMESSAGE" >&2
 #    [ "$TERM" = "screen" ] && echo "(screen detected: waiting ten seconds to exit ...)" >&2 && sleep 10
     exit 1
 }

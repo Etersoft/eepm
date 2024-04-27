@@ -82,14 +82,14 @@ case $PMTYPE in
         if is_installed $pkg_names ; then
             CMD="rpm -q --provides"
         else
-            fatal "FIXME: use hi level commands or download firstly"
+            fixme "FIXME: use hi level commands or download firstly"
         fi
         ;;
     yum-rpm)
         if is_installed $pkg_names ; then
             CMD="rpm -q --provides"
         else
-            fatal "FIXME: use hi level commands or download firstly"
+            fixme "FIXME: use hi level commands or download firstly"
         fi
         ;;
     dnf-rpm)
