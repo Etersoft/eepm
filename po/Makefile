@@ -17,7 +17,7 @@ $(PROJECT).mo: $(PROJECT).po
 	$(MSGFMT) -c -o t-$@ $< && mv t-$@ $@
 
 $(PROJECT).pot: $(SCRIPTLIST) Makefile
-	echo $(SCRIPTLIST) | xargs xgettext -a -o $@ --language Shell --from-code=utf-8 $^
+	echo $(SCRIPTLIST) | xargs xgettext --keyword=info --keyword=fatal --keyword=warning --keyword=debug --keyword=message --keyword=confirm_action --keyword=confirm_info -o $@ --language Shell --from-code=utf-8 $^
 
 $(PROJECT).po: $(PROJECT).pot
 	$(MSGMERGE_UPDATE) $@ $<
