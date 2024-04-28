@@ -103,7 +103,7 @@ __epm_korinf_install_eepm()
 
 epm_epm_install_help()
 {
-    echo "epm ei [URL] [packages] - install packages from EPM based Korinf repository"
+    message "epm ei [URL] [packages] - install packages from EPM based Korinf repository"
             get_help HELPCMD $SHAREDIR/epm-epm_install
     message '
 

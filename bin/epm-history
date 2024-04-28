@@ -64,7 +64,7 @@ _alt_epm_history_print_group()
 
 __alt_epm_history_removed()
 {
-    echo "Removed packages history:"
+    message "Removed packages history:"
     __alt_epm_history_uniq | while read pid ; do
         date="$(_alt_epm_history_date $pid)"
         removed="$(epm print shortname for $(__alt_epm_history_select $pid "removed") )"
@@ -75,7 +75,7 @@ __alt_epm_history_removed()
 
 __alt_epm_history_installed()
 {
-    echo "Installed packages history:"
+    message "Installed packages history:"
     __alt_epm_history_uniq | while read pid ; do
         date="$(_alt_epm_history_date $pid)"
         #epm print shortname for $(__alt_epm_history_select $pid "installed") | sed -e "s|^|    |"
@@ -87,7 +87,7 @@ __alt_epm_history_installed()
 
 __alt_epm_history_updated()
 {
-    echo "Updated packages history:"
+    message "Updated packages history:"
     __alt_epm_history_uniq | while read pid ; do
         date="$(_alt_epm_history_date $pid)"
         #epm print shortname for $(__alt_epm_history_select $pid "installed") | sed -e "s|^|    |"
@@ -99,7 +99,7 @@ __alt_epm_history_updated()
 
 epm_history_help()
 {
-    echo "package management history"
+    message "package management history"
             get_help HELPCMD $SHAREDIR/epm-history
     message '
 Examples:
