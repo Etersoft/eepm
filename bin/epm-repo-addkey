@@ -176,7 +176,7 @@ epm_addkey()
 {
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ -z "$1" ] ; then
-    echo "Usage: $ epm repo addkey [name] [url] [fingerprint/gpgkey] [comment/name]"
+    message "Usage: $ epm repo addkey [name] [url] [fingerprint/gpgkey] [comment/name]"
     return
 fi
 

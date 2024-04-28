@@ -182,13 +182,13 @@ __epm_print_url_alt_check()
     quiet=1
     local buildtime=$(paoapi packages/$pkg | get_pao_var buildtime)
     echo
-    echo "Latest release: $(paoapi packages/$pkg | get_pao_var sourcepackage) $buildtime"
+    message 'Latest release:' $(paoapi packages/$pkg | get_pao_var sourcepackage) $buildtime
     __epm_print_url_alt "$1" | while read url ; do
         eget --get-response $url >$tm || { echo "$url: missed" ; continue ; }
         local http=$(cat $tm | grep "^HTTP" | sed -e "s|\r||g")
         local lastdate=$(cat $tm | grep "^Last-Modified:" | sed -e "s|\r||g")
         local size=$(cat $tm | grep "^Content-Length:" | sed -e "s|^Content-Length: ||g"  | sed -e "s|\r||g")
-        echo "$url ($http $lastdate) Size: $size"
+        echo "$url ($http $lastdate) $(message "Size:") $size"
     done
     rm -f $tm
 }

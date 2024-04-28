@@ -319,7 +319,7 @@ esac
 
 epm_mark_help()
 {
-    echo "mark is the interface for marking packages"
+    message "mark is the interface for marking packages"
             get_help HELPCMD $SHAREDIR/epm-mark
     message '
 Examples:
