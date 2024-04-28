@@ -26,7 +26,7 @@ __epm_print_excluded()
     local excluded
     excluded="$(estrlist exclude "$pkgs" "$fullpkgs")"
     if [ -n "$excluded" ] ; then
-        echo "Skipped manually installed:"
+        message "Skipped manually installed:"
         estrlist union $excluded
     fi
 }
@@ -204,10 +204,10 @@ __epm_autoremove_altrpm()
 
 epm_autoremove_print_help()
 {
-    echo "epm autoremove removes unneeded packages from the system"
-    echo "run 'epm autoremove' to use apt-get autoremove"
-    echo "or run 'epm autoremove --direct [group1] [group2] ...' to use epm implementation"
-    echo "Default groups: $epm_autoremove_default_groups"
+    message 'epm autoremove removes unneeded packages from the system
+             run epm autoremove to use apt-get autoremove
+             or run epm autoremove --direct [group1] [group2] ... to use epm implementation
+             Default groups: $epm_autoremove_default_groups'
     message '
 Supported package groups:
     libs       - unused libraries

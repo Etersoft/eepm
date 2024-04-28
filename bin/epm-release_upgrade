@@ -24,12 +24,12 @@ load_helper epm-reposave
 assure_safe_run()
 {
     if [ "$TERM" = "linux" ] ; then
-        echo "You have the best choise to run the '# epm release-upgrade' from text console."
+        message "You have the best choise to run the '# epm release-upgrade' from text console."
         return
     fi
     if [ "$TERM" != "screen" ] ; then
         if [ -n "$force" ] ; then
-            echo "You force me running not under screen (TERM=$TERM now)! You can lost your system!"
+            message "You force me running not under screen (TERM=$TERM now)! You can lost your system!"
             return
         else
             warning "It is very dangerous to upgrade to next release from a GUI (your TERM=$TERM)."
@@ -50,7 +50,7 @@ assure_safe_run()
 
     res="$(busctl get-property org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager KillUserProcesses)"
     if [ "$res" = "b false" ] ; then
-        echo "Good news: systemd-logind will not kill your screen processes (KillUserProcesses=false)"
+        message "Good news: systemd-logind will not kill your screen processes (KillUserProcesses=false)"
         return
     else
         if [ -n "$force" ] ; then

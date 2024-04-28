@@ -236,7 +236,7 @@ epm_repack()
         cp $repacked_pkgs "$EPMCURDIR"
         if [ -z "$quiet" ] ; then
             echo
-            echo "Adapted packages:"
+            message "Adapted packages:"
             for i in $repacked_pkgs ; do
                 echo "    $EPMCURDIR/$(basename "$i")"
             done

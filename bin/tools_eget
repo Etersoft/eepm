@@ -359,7 +359,7 @@ set_quiet()
 
 eget_help()
 {
-message '
+cat <<EOF
 
 eget - wget like downloader wrapper with wildcard support in filename part of URL
 Usage: eget [options] http://somesite.ru/dir/na*.log
@@ -407,11 +407,11 @@ Examples:
   $ eget -O myname ipfs://QmVRUjnsnxHWkjq91KreCpUk4D9oZEbMwNQ3rzdjwND5dR
   $ eget --list http://ftp.somesite.ru/package-*.tar
   $ eget --check-url http://ftp.somesite.ru/test
-  $ eget --list http://download.somesite.ru "package-*.tar.xz"
-  $ eget --list --latest https://github.com/telegramdesktop/tdesktop/releases "tsetup.*.tar.xz"
-'
-}
+  $ eget --list http://download.somesite.ru 'package-*.tar.xz'
+  $ eget --list --latest https://github.com/telegramdesktop/tdesktop/releases 'tsetup.*.tar.xz'
 
+EOF
+}
 
 if [ -z "$1" ] ; then
     echo "eget - wget like downloader wrapper with wildcard support, uses wget or curl as backend" >&2
@@ -1205,7 +1205,6 @@ url_get_filename()
 }
 
 fi
-
 
 if [ -n "$ipfs_mode" ] && [ -n "$EGET_IPFS_DB" ] &&  ! is_ipfsurl "$1"  ; then
 
