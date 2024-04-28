@@ -50,10 +50,10 @@ load_helper epm-sh-functions
 
 esu_print_help()
 {
-    message '
+    cat <<EOF
 esu - get root shell or run a command in root shell
 Usage: esu [-c] [<command>]
-'
+EOF
 }
 
 

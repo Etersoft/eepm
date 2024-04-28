@@ -21,7 +21,7 @@ load_helper epm-sh-warmup
 
 __epm_packages_help()
 {
-    echo "package management list"
+    message "package management list"
             get_help HELPCMD $SHAREDIR/epm-packages
     message '
 Examples:
