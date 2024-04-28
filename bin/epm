@@ -54,7 +54,7 @@ load_helper()
 
     local CMD="$SHAREDIR/$1"
     # do not use fatal() here, it can be initial state
-    [ -r "$CMD" ] || { echo "FATAL: Have no $CMD helper file" ; exit 1; }
+    [ -r "$CMD" ] || { message "FATAL: Have no $CMD helper file" ; exit 1; }
     eval "$shieldname=1"
     # shellcheck disable=SC1090
     . $CMD
@@ -88,34 +88,36 @@ check_tty
 phelp()
 {
     echo "$Descr
-$Usage
+$Usage"
 
-Options:
+message "Options:"
 $(get_help HELPOPT)
 
-Short commands:
+message "Short commands:"
 $(get_help HELPSHORT)
 
 $(get_help HELPCMD)
 
+message "
 Examples:
     $ epmi etckeeper      install etckeeper package
     $ epmqp lib           print out all installed packages with 'lib' in a name
     $ epmqf ip            print out a package the command 'ip' from is
 "
+
 }
 
 print_version()
 {
-        echo "EPM package manager version $EPMVERSION  Telegram: https://t.me/useepm  https://wiki.etersoft.ru/Epm"
-        echo "Running on $DISTRNAME/$DISTRVERSION ('$PMTYPE' package manager uses '$PKGFORMAT' package format)"
-        echo "Copyright (c) Etersoft 2012-2024"
-        echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
+        message 'EPM package manager version $EPMVERSION  Telegram: https://t.me/useepm  https://wiki.etersoft.ru/Epm
+                 Running on $DISTRNAME/$DISTRVERSION ($PMTYPE package manager uses $PKGFORMAT package format)
+                 Copyright (c) Etersoft 2012-2024
+                 This program may be freely redistributed under the terms of the GNU AGPLv3.'
 }
 
 
-Usage="Usage: epm [options] <command> [package name(s), package files]..."
-Descr="epm - EPM package manager"
+Usage=$(eval_gettext "Usage: epm [options] <command> [package name(s), package files]...")
+Descr=$(eval_gettext "epm - EPM package manager")
 
 debug=
 verbose=$EPM_VERBOSE

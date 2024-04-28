@@ -42,7 +42,7 @@ __epm_check_apt_db_days()
         # note: duplicate __is_repo_info_downloaded
         pkglists=$(find $LISTS -name "*_$pkg*" 2>/dev/null)
         [ -n "$pkglists" ] && return
-        echo "never downloaded"
+        message "never downloaded"
         return 1
     fi
 
@@ -60,11 +60,11 @@ __epm_check_apt_db_days()
         local now=$(date +%s)
         local days="$(( (now - ts) / (60 * 60 * 24) ))"
         [ "$days" = "0" ] && return 0
-        [ "$days" = "1" ] && echo "1 day old" && return 1
-        echo "$days days old"
+        [ "$days" = "1" ] && message "1 day old" && return 1
+        message '$days days old'
     else
         # no any pkglist
-        echo "stalled"
+        message "stalled"
     fi
     return 1
 }

@@ -393,4 +393,3 @@ case $cmd in
         fatal "Unknown command $1"
         ;;
 esac
-

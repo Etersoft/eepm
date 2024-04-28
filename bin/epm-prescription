@@ -34,7 +34,7 @@ Options:
 fi
 
 if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
-    [ -n "$short" ] || [ -n "$quiet" ] || echo "Run with a name of a prescription to run:"
+    [ -n "$short" ] || [ -n "$quiet" ] || message "Run with a name of a prescription to run:"
     __epm_play_list $psdir
     exit
 fi

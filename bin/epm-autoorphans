@@ -32,7 +32,7 @@ case $BASEDISTRNAME in
         # ALT Linux only
         assure_exists /usr/share/apt/scripts/list-extras.lua apt-scripts
         if [ -z "$dryrun" ] ; then
-            echo "We will try remove all installed packages which are missed in repositories"
+            message "We will try remove all installed packages which are missed in repositories"
             warning "Use with caution!"
         fi
         epm Upgrade || fatal
@@ -47,14 +47,14 @@ case $BASEDISTRNAME in
         info "Retrieving packages installed via epm play ..."
         local play_installed="$(epm play --list-installed-packages)"
         if [ -n "$play_installed" ] ; then
-            echo "Skip follow packages installed via epm play: $(echo $play_installed | xargs -n1000 echo)"
+            message "Skip follow packages installed via epm play: $(echo $play_installed | xargs -n1000 echo)"
             PKGLIST="$(estrlist exclude "$play_installed" "$PKGLIST")"
         fi
 
         # TODO: implement for other PMTYPE
         local hold_packages="$(epm mark --short showhold)"
         if [ -n "$hold_packages" ] ; then
-            echo "Skip follow packages on hold: $(echo $hold_packages | xargs -n1000 echo)"
+            message "Skip follow packages on hold: $(echo $hold_packages | xargs -n1000 echo)"
             PKGLIST="$(estrlist exclude "$hold_packages" "$PKGLIST")"
         fi
 
@@ -67,7 +67,7 @@ case $BASEDISTRNAME in
             info
             docmd epm remove $dryrun $force $(subst_option non_interactive --auto) $PKGLIST
         else
-            echo "There are no orphan packages in the system."
+            message "There are no orphan packages in the system."
         fi
         return 0
         ;;

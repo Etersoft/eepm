@@ -36,7 +36,7 @@ try_fix_apt_rpm_dupls()
         local todel="$(rpm -q $pkg | head -n1)"
         local todel2="$(rpm -q $pkg | head -n2 | tail -n1)"
         if [ "$todel" = "$todel2" ] ; then
-            echo "Fix the same name duplicates for $pkg..."
+            message "Fix the same name duplicates for $pkg..."
             sudocmd rpm -e "$todel" --allmatches --nodeps --justdb && epm install $pkg && continue
         fi
                 # first use older package

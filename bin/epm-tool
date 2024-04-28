@@ -19,7 +19,7 @@
 
 epm_tool_help()
 {
-    echo "Tools embedded in epm:"
+    message "Tools embedded in epm:"
     get_help HELPCMD $SHAREDIR/epm-tool
 
     message '

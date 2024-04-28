@@ -27,12 +27,12 @@ __alt_fix_triggers()
     assure_exists time
     touch $TDIR/added
     for ft in $(ls /usr/lib/rpm/*.filetrigger | sort) ; do
-        echo "Try run $ft ..."
+        message "Try run $ft ..."
         echo $TDIR/added $TDIR/removed | a='' time $ft
     done
     rm -f $TDIR/added fatal
     rmdir $TDIR || fatal
-    echo "Count lines:"
+    message "Count lines:"
     wc -l /var/lib/rpm/files-awaiting-filetriggers
 }
 

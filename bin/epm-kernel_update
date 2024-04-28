@@ -46,7 +46,7 @@ epm_kernel_update()
         docmd epm install kernel
         ;;
     apt-*)
-        echo "Skipping: kernel package will update during dist-upgrade"
+        message "Skipping: kernel package will update during dist-upgrade"
         ;;
     *)
         fatal "Have no suitable command for $PMTYPE"

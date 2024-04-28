@@ -27,6 +27,7 @@ usage() {
   echo
 }
 
+
 parse_options() {
   set -- "$@"
   local ARGN=$#
