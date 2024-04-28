@@ -112,6 +112,7 @@ is_anyservice()
 }
 
 
+
 phelp()
 {
     echo "$Descr
@@ -139,6 +140,7 @@ progname="${0##*/}"
 
 Usage="Usage: $progname [options] [<service>] [<command>] [params]..."
 Descr="serv - Service manager"
+
 
 set_service_type
 

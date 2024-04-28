@@ -26,11 +26,11 @@ __epm_addrepo_rhel()
 {
     local repo="$*"
     if [ -z "$repo" ] ; then
-        echo "Add repo."
-        echo "1. Use with repository URL, f.i. http://www.example.com/example.repo"
-        echo "2. Use with epel to add EPEL repository"
-        echo "3. Use with powertools to add PowerTools repository"
-        echo "4. Use with crb to add Rocky Linux CRB repository"
+        message 'Add repo.
+                 1. Use with repository URL, f.i. http://www.example.com/example.repo
+                 2. Use with epel to add EPEL repository
+                 3. Use with powertools to add PowerTools repository
+                 4. Use with crb to add Rocky Linux CRB repository'
         return 1
     fi
     case "$1" in
@@ -325,10 +325,10 @@ __epm_addrepo_astra()
     local repo="$*"
 
     if [ -z "$repo" ] || [ "$repo" = "--help" ]; then
-        info "Add repo. You can use follow params:"
-        echo "  distribution component name"
-        echo "  full sources list line"
-        echo "  URL version component"
+        message 'Add repo. You can use follow params:
+                    distribution component name
+                    full sources list line
+                    URL version component'
         return
     fi
 
@@ -391,12 +391,12 @@ __epm_addrepo_deb()
     local repo="$*"
 
     if [ -z "$repo" ] || [ "$repo" = "--help" ]; then
-        info "Add repo. You can use follow params:"
-        echo "  docker - add official docker repo"
-        echo "  ppa:<user>/<ppa-name> - add PPA repo"
-        echo "  distribution component name"
-        echo "  full sources list line"
-        echo "  URL version component"
+        message 'Add repo. You can use follow params:
+                  docker - add official docker repo
+                  ppa:<user>/<ppa-name> - add PPA repo
+                  distribution component name
+                  full sources list line
+                  URL version component'
         return
     fi
 
