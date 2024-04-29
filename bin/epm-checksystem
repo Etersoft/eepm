@@ -27,7 +27,7 @@ __alt_fix_triggers()
     assure_exists time
     touch $TDIR/added
     for ft in $(ls /usr/lib/rpm/*.filetrigger | sort) ; do
-        message "Try run $ft ..."
+        message 'Try run $ft ...'
         echo $TDIR/added $TDIR/removed | a='' time $ft
     done
     rm -f $TDIR/added fatal
@@ -60,7 +60,7 @@ case $BASEDISTRNAME in
         epm_checksystem_$DISTRNAME
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 

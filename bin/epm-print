@@ -433,23 +433,23 @@ epm_print()
             query_package_field "$FIELD" "$@"
             ;;
         "pkgname")
-            [ -n "$FNFLAG" ] || fatal "print $WHAT works only for filename(s)"
+            [ -n "$FNFLAG" ] || fatal 'print $WHAT works only for filename(s)'
             [ -n "$1" ] || fatal "Arg is missed"
             # TODO: drop_pkg_extensions
             print_pkgname "$@"
             ;;
         "srcname")
-            [ -n "$FNFLAG" ] || fatal "print $WHAT works only for filename(s)"
+            [ -n "$FNFLAG" ] || fatal 'print $WHAT works only for filename(s)'
             [ -n "$1" ] || fatal "Arg is missed"
             print_srcname "$@"
             ;;
         "srcpkgname")
-            [ -n "$FNFLAG" ] || [ -n "$PKFLAG" ] || fatal "print $WHAT works only for filename(s)"
+            [ -n "$FNFLAG" ] || [ -n "$PKFLAG" ] || fatal 'print $WHAT works only for filename(s)'
             [ -n "$1" ] || fatal "Arg is missed"
             print_srcpkgname "$@"
             ;;
         "specname")
-            [ -n "$FNFLAG" ] || [ -n "$PKFLAG" ] || fatal "print $WHAT works only for filename(s)"
+            [ -n "$FNFLAG" ] || [ -n "$PKFLAG" ] || fatal 'print $WHAT works only for filename(s)'
             [ -n "$1" ] || fatal "Arg is missed"
             print_specname "$@"
             ;;
@@ -487,7 +487,7 @@ epm_print()
             $DISTRVENDOR "$@"
             ;;
         *)
-            fatal "Unknown command $ epm print $WHAT. Use epm print help for get help."
+            fatal 'Unknown command $ epm print $WHAT. Use epm print help for get help.'
             ;;
     esac
 }

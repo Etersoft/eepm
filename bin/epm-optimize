@@ -41,7 +41,7 @@ case $PMTYPE in
         a= rpm --rebuilddb
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 

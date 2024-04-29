@@ -161,7 +161,7 @@ case $PMTYPE in
         docmd grep -v -- "^#\|^$" /etc/slackpkg/mirrors
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 

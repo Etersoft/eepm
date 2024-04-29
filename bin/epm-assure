@@ -1,4 +1,4 @@
-#!/bin/sh
+ #!/bin/sh
 #
 # Copyright (C) 2013-2016  Etersoft
 # Copyright (C) 2013-2016  Vitaly Lipatov <lav@etersoft.ru>
@@ -55,7 +55,7 @@ __epm_assure_checking()
         # TODO: check for /usr/bin, /bin, /usr/sbin, /sbin
         if [ -e "$CMD" ] ; then
             if [ -n "$verbose" ] ; then
-                info "File or directory $CMD is already exists."
+                info 'File or directory $CMD is already exists.'
                 epm qf "$CMD" >&2
             fi
             return 0
@@ -68,7 +68,7 @@ __epm_assure_checking()
     if __check_command_in_path "$CMD" >/dev/null ; then
         if [ -n "$verbose" ] ; then
             local compath="$(__check_command_in_path "$1")"
-            info "Command $CMD is exists: $compath"
+            info 'Command $CMD is exists: $compath'
             epm qf "$compath" >&2
         fi
         return 0
@@ -96,7 +96,7 @@ epm_assure()
 
     __epm_assure_checking $CMD $PACKAGE $PACKAGEVERSION && return 0
 
-    info "Installing appropriate package for $CMD command..."
+    info 'Installing appropriate package for $CMD command...'
     __epm_need_update $PACKAGE $PACKAGEVERSION || return 0
 
     # can't be used in epm ei case
@@ -117,6 +117,6 @@ epm_assure()
 
     local textpackage
     [ -n "$PACKAGEVERSION" ] && textpackage=" >= $PACKAGEVERSION"
-    warning "Can't assure in '$CMD' command from $PACKAGE$textpackage package"
+    warning 'Cant assure in $CMD command from $PACKAGE$textpackage package'
     return 1
 }

@@ -28,7 +28,7 @@ __epm_removerepo_alt_grepremove()
         rl="$1"
     else
         rl="$( epm --quiet repolist 2>/dev/null | grep -F "$1")"
-        [ -z "$rl" ] && warning "Can't find '$1' in the repos (see '# epm repolist' output)" && return 1
+        [ -z "$rl" ] && warning 'Cant find '$1' in the repos (see # epm repolist output)' && return 1
     fi
     echo "$rl" | while read rp ; do
         # TODO: print removed lines
@@ -159,7 +159,7 @@ case $PMTYPE in
         info "You need remove repo from /etc/slackpkg/mirrors"
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 

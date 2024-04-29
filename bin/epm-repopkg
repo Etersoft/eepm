@@ -25,7 +25,7 @@ __epm_repo_pkgadd_alt()
 
     local REPO_DIR="$1"
     shift
-    [ -d "$REPO_DIR" ] || fatal "Can't find repo dir $REPO_DIR."
+    [ -d "$REPO_DIR" ] || fatal 'Cant find repo dir $REPO_DIR.'
 
     # default name
     REPO_NAME="addon"
@@ -57,7 +57,7 @@ __epm_repo_pkgdel_alt()
 
     local REPO_DIR="$1"
     shift
-    [ -d "$REPO_DIR" ] || fatal "Can't find repo dir $REPO_DIR."
+    [ -d "$REPO_DIR" ] || fatal 'Cant find repo dir $REPO_DIR.'
 
     [ -n "$1" ] || fatal "Missed package name"
 
@@ -105,7 +105,7 @@ case $PMTYPE in
         __epm_repo_pkgadd_alt "$@"
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 
@@ -120,7 +120,7 @@ case $PMTYPE in
         __epm_repo_pkgupdate_alt "$@"
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 
@@ -135,7 +135,7 @@ case $PMTYPE in
         __epm_repo_pkgdel_alt "$@"
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 

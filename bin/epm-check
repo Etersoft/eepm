@@ -80,7 +80,7 @@ case $PMTYPE in
         sudocmd apk fix
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 

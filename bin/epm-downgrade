@@ -147,7 +147,7 @@ epm_downgrade()
         sudocmd urpm-reposync -v
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
     esac
 }

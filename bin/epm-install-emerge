@@ -27,11 +27,11 @@
 __emerge_install_ebuild()
 {
     local EBUILD="$1"
-    [ -s "$EBUILD" ] || fatal ".ebuild file '$EBUILD' is missed"
+    [ -s "$EBUILD" ] || fatal '.ebuild file $EBUILD is missed'
 
     # load ebuild and get vars
     . $(pwd)/$EBUILD
-    [ -n "$SRC_URI" ] || fatal "Can't load SRC_URI from $EBUILD"
+    [ -n "$SRC_URI" ] || fatal 'Cant load SRC_URI from $EBUILD'
 
     # try to detect tarballs
     local TARBALLS=

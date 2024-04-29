@@ -25,14 +25,14 @@ SAVELISTDIR=$epm_vardir/eepm-etc-save
 __save_alt_repo_lists()
 {
     assure_root
-    info "Creating copy of all sources lists to $SAVELISTDIR ..."
+    info 'Creating copy of all sources lists to $SAVELISTDIR ...'
     local i
     rm -rf $verbose $SAVELISTDIR 2>/dev/null
     mkdir -p $SAVELISTDIR/apt/ $SAVELISTDIR/apt/sources.list.d/
     for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
         [ -s "$i" ] || continue
         local DD="$(echo "$i" | sed -e "s|/etc|$SAVELISTDIR|")"
-        cp -af $verbose "$i" "$DD" || fatal "Can't save apt source list files to $SAVELISTDIR"
+        cp -af $verbose "$i" "$DD" || fatal 'Cant save apt source list files to $SAVELISTDIR'
     done
 }
 
@@ -40,7 +40,7 @@ __save_alt_repo_lists()
 __restore_alt_repo_lists()
 {
     assure_root
-    info "Restoring copy of all sources lists from $SAVELISTDIR ..."
+    info 'Restoring copy of all sources lists from $SAVELISTDIR ...'
     local i
     [ -d "$SAVELISTDIR/apt" ] || return 0
     mkdir -p $SAVELISTDIR/apt/ $SAVELISTDIR/apt/sources.list.d/
@@ -51,7 +51,7 @@ __restore_alt_repo_lists()
         if diff -q "$DD" "$i" >/dev/null ; then
             rm -f $verbose "$DD"
         else
-            mv $verbose "$DD" "$i" || warning "Can't restore $i file"
+            mv $verbose "$DD" "$i" || warning 'Cant restore $i file'
         fi
     done
 }
@@ -87,7 +87,7 @@ case $PMTYPE in
         __save_alt_repo_lists
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 
@@ -104,7 +104,7 @@ case $PMTYPE in
         __restore_alt_repo_lists
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 
@@ -124,7 +124,7 @@ case $PMTYPE in
         sudocmd winget source reset
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 
@@ -144,12 +144,12 @@ case $PMTYPE in
         else
             local days
             days="$(__epm_check_apt_db_days)" && info "APT database is actual." && return 0
-            info "APT database is $days."
+            info 'APT database is $days.'
             return 1
         fi
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 }

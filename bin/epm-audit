@@ -30,7 +30,7 @@ case $PMTYPE in
         sudocmd apk audit
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 

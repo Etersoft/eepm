@@ -117,7 +117,7 @@ query_altlinux_url()
     case $PMTYPE in
         *-rpm)
             local srpm=$(print_srcname "$1")
-            [ -n "$srpm" ] || fatal "Can't get source name for $1"
+            [ -n "$srpm" ] || fatal 'Cant get source name for $1'
             echo "$(get_pao_url)/$srpm"
             return
             ;;
@@ -139,7 +139,7 @@ for f in $pkg_names $pkg_files ; do
         pkg_url=$(query_package_url $f)
     fi
     [ -n "$pkg_url" ] && open_browser "$pkg_url" && continue
-    warning "Can't get URL for $f package"
+    warning 'Cant get URL for $f package'
 done
 
 #for f in $pkg_names ; do

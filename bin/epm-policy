@@ -45,7 +45,7 @@ case $PMTYPE in
         docmd apk policy $pkg_names
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 

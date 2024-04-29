@@ -42,7 +42,7 @@ fi
 prescription="$1"
 shift
 
-__check_play_script "$prescription" || fatal "We have no idea how to play $prescription (checked in $psdir)"
+__check_play_script "$prescription" || fatal 'We have no idea how to play $prescription (checked in $psdir)'
 __epm_play_run "$prescription" --run "$@" || fatal "There was some error during run the script."
 
 }

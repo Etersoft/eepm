@@ -360,7 +360,7 @@ __epm_addrepo_astra()
             return
             ;;
         astra-*)
-            fatal "Unsupported distro version $1-$reponame, see '# epm print info' output."
+            fatal 'Unsupported distro version $1-$reponame, see # epm print info output.'
             ;;
     esac
 
@@ -493,7 +493,7 @@ case $PMTYPE in
         info "You need manually add repo to /etc/slackpkg/mirrors"
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 

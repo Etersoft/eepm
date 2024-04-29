@@ -47,14 +47,14 @@ case $BASEDISTRNAME in
         info "Retrieving packages installed via epm play ..."
         local play_installed="$(epm play --list-installed-packages)"
         if [ -n "$play_installed" ] ; then
-            message "Skip follow packages installed via epm play: $(echo $play_installed | xargs -n1000 echo)"
+            message "Skip follow packages installed via epm play:" $(echo $play_installed | xargs -n1000 echo)
             PKGLIST="$(estrlist exclude "$play_installed" "$PKGLIST")"
         fi
 
         # TODO: implement for other PMTYPE
         local hold_packages="$(epm mark --short showhold)"
         if [ -n "$hold_packages" ] ; then
-            message "Skip follow packages on hold: $(echo $hold_packages | xargs -n1000 echo)"
+            message "Skip follow packages on hold:" $(echo $hold_packages | xargs -n1000 echo)
             PKGLIST="$(estrlist exclude "$hold_packages" "$PKGLIST")"
         fi
 
@@ -148,7 +148,7 @@ case $PMTYPE in
         fi
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 

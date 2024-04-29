@@ -194,7 +194,7 @@ epm_install_names()
             sudocmd $PMTYPE install $@
             return ;;
         *)
-            fatal "Have no suitable install command for $PMTYPE"
+            fatal 'Have no suitable install command for $PMTYPE'
             ;;
     esac
 }
@@ -285,7 +285,7 @@ epm_ni_install_names()
             __separate_sudocmd_foreach "/usr/sbin/slackpkg -batch=on -default_answer=yes install" "/usr/sbin/slackpkg -batch=on -default_answer=yes upgrade" $@
             return ;;
         *)
-            fatal "Have no suitable appropriate install command for $PMTYPE"
+            fatal 'Have no suitable appropriate install command for $PMTYPE'
             ;;
     esac
 }

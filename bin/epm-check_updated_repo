@@ -129,7 +129,7 @@ update_repo_if_needed()
     esac
 
     days="$(__epm_check_apt_db_days)" && return
-    warning "APT database is $days, please run 'epm update'!"
+    warning 'APT database is $days, please run epm update!'
 
     # TODO: enable __is_repo_info_downloaded
 

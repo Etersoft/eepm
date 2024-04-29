@@ -52,7 +52,7 @@ __run_script()
 {
     local script="$psdir/$1.sh"
     [ -s "$script" ] || return
-    [ -f "$script.rpmnew" ] && warning "There is .rpmnew file(s) in $psdir dir. The play script can be outdated."
+    [ -f "$script.rpmnew" ] && warning 'There is .rpmnew file(s) in $psdir dir. The play script can be outdated.'
 
     shift
     [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
@@ -283,7 +283,7 @@ __epm_play_remove()
             __remove_installed_app "$prescription"
         else
             psdir=$prsdir
-            __check_play_script "$prescription" || fatal "We have no idea how to remove $prescription (checked in $psdir and $prsdir)"
+            __check_play_script "$prescription" || fatal 'We have no idea how to remove $prescription (checked in $psdir and $prsdir)'
             __epm_play_run "$prescription" --remove || fatal "There was some error during run the script."
         fi
     done

@@ -72,7 +72,7 @@ epm_list()
             return
             ;;
         *)
-            fatal "Unknown option $option, use epm list --help to get info"
+            fatal 'Unknown option $option, use epm list --help to get info
             ;;
     esac
 

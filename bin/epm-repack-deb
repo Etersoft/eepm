@@ -40,7 +40,7 @@ __epm_repack_to_deb()
     fi
 
         abspkg="$(realpath "$pkg")"
-        info "Repacking $abspkg to local deb format (inside $TDIR) ..."
+        info 'Repacking $abspkg to local deb format (inside $TDIR) ...'
 
         alpkg=$(basename $pkg)
         # don't use abs package path: copy package to temp dir and use there
@@ -55,7 +55,7 @@ __epm_repack_to_deb()
             repacked_pkg="$repacked_pkg $(realpath $DEBCONVERTED)"
             remove_on_exit "$(realpath $DEBCONVERTED)"
         else
-            warning "Can't find converted deb for source binary package '$pkg'"
+            warning 'Cant find converted deb for source binary package $pkg'
         fi
         clean_store_output
         cd - >/dev/null

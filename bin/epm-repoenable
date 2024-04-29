@@ -31,10 +31,10 @@ __epm_repoenable_alt()
         rl="$(echo "$1" | sed -e 's|\^||')"
     else
         rl="$( epm --quiet --all repolist 2>/dev/null | grep -F "$1" | head -n1 | sed -e 's|[[:space:]]*#[[:space:]]*||' )"
-        [ -z "$rl" ] && warning "Can't find commented '$1' in the repos (see '# epm repolist' output)" && return 1
+        [ -z "$rl" ] && warning 'Cant find commented $1 in the repos (see # epm repolist output)' && return 1
     fi
     echo "$rl" | while read rp ; do
-        [ -n "$dryrun" ] && echo "will uncomment $rp" && continue
+        [ -n "$dryrun" ] && message 'will uncomment $rp' && continue
         sed -i -e "s|^[[:space:]]*#[[:space:]]*\($(sed_escape "$rl")\)|\1|" $alt_LISTS
     done
 }
@@ -62,7 +62,7 @@ case $PMTYPE in
         docmd eoget enable-repo "$@"
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 

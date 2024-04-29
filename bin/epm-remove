@@ -182,7 +182,7 @@ epm_remove_names()
             sudocmd opkg $(subst_option force -force-depends) remove $@
             return ;;
         *)
-            fatal "Have no suitable command for $PMTYPE"
+            fatal 'Have no suitable command for $PMTYPE'
             ;;
     esac
 }
@@ -285,7 +285,7 @@ epm_print_remove_command()
             echo "$PMTYPE uninstall -s $*"
             ;;
         *)
-            fatal "Have no suitable appropriate remove command for $PMTYPE"
+            fatal 'Have no suitable appropriate remove command for $PMTYPE'
             ;;
     esac
 }
@@ -333,7 +333,7 @@ epm_remove()
                 APTOPTIONS="--simulate"
                 ;;
             *)
-                fatal "don't yet support --simulate for $PMTYPE"
+                fatal 'dont yet support --simulate for $PMTYPE'
                 return
                 ;;
         esac

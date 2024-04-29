@@ -53,7 +53,7 @@ case $PMTYPE in
         fi
         ;;
     *)
-        fatal "Sorted package list function is not implemented for $PMTYPE"
+        fatal 'Sorted package list function is not implemented for $PMTYPE'
         ;;
 esac
 }
@@ -109,7 +109,7 @@ epm_packages()
         "")
             ;;
         *)
-            fatal "Unknown option $1. Use epm packages --help to get help."
+            fatal 'Unknown option $1. Use epm packages --help to get help.'
     esac
 
 case $PMTYPE in
@@ -251,7 +251,7 @@ case $PMTYPE in
         fi
         ;;
     *)
-        fatal "Have no suitable query command for $PMTYPE"
+        fatal 'Have no suitable query command for $PMTYPE'
         ;;
 esac
 

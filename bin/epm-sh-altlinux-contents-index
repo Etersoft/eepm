@@ -57,7 +57,7 @@ rsync_alt_contents_index()
     try_assure_exists rsync || return
 
     if ! __rsync_check "$URL" ; then
-        warning "$URL is not accessible via rsync, skipping contents index update..."
+        warning '$URL is not accessible via rsync, skipping contents index update...'
         return
     fi
 
@@ -143,7 +143,7 @@ update_alt_contents_index()
             local REMOTEURL="$(get_url_to_etersoft_mirror "$URL")"
             if [ -n "$REMOTEURL" ] ; then
                 rsync_alt_contents_index $REMOTEURL/base/contents_index.gz $LOCALPATH/contents_index.gz && __add_to_contents_index_list "$REMOTEURL" "$LOCALPATH/contents_index.gz" && continue
-                [ -n "$verbose" ] && info "Note: Can't retrieve $REMOTEURL/base/contents_index.gz, fallback to $URL/base/contents_index"
+                [ -n "$verbose" ] && info 'Note: Cat retrieve $REMOTEURL/base/contents_index.gz, fallback to $URL/base/contents_index'
             fi
             # we don't know if remote server has rsync
             # fix rsync URL firstly

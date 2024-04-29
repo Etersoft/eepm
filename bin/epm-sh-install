@@ -82,17 +82,17 @@ __epm_print_warning_for_nonalt_packages()
     local i
     for i in $* ; do
         if epm_status_repacked "$i" ; then
-            warning "%%% You are trying install package $i repacked from third-party software source. Use it at your own risk. %%%"
+            warning '%%% You are trying install package $i repacked from third-party software source. Use it at your own risk. %%%'
             continue
         fi
 
         if epm_status_thirdparty "$i" ; then
-            warning "%%% You are trying install package $i from third-party software source. Use it at your own risk. %%%"
+            warning '%%% You are trying install package $i from third-party software source. Use it at your own risk. %%%'
             continue
         fi
 
         if ! epm_status_original "$i" ; then
-            warning "%%% You are trying install package $i not from official $DISTRNAME/$DISTRVERSION repository. Use it at your own risk. %%%"
+            warning '%%% You are trying install package $i not from official $DISTRNAME/$DISTRVERSION repository. Use it at your own risk. %%%'
             continue
         fi
     done
@@ -116,7 +116,7 @@ __epm_check_vendor()
         if ! epm_status_validate "$i" ; then
             # it is missed package probably (package remove case)
             if is_installed "$i" ; then
-                warning "Can't get any info for $i package. Scripts are DISABLED for package $bi. Use --scripts if you need run scripts from such packages."
+                warning 'Cant get any info for $i package. Scripts are DISABLED for package $bi. Use --scripts if you need run scripts from such packages.'
             fi
             noscripts="--noscripts"
             continue
@@ -126,7 +126,7 @@ __epm_check_vendor()
         vendor="$(epm print field Vendor for "$i")"
 
         if [ -z "$vendor" ] ; then
-            warning "Can't get info about vendor for $i package. Scripts are DISABLED for package $bi. Use --scripts if you need run scripts from such packages."
+            warning 'Cant get info about vendor for $i package. Scripts are DISABLED for package $bi. Use --scripts if you need run scripts from such packages.'
             noscripts="--noscripts"
             continue
         fi
@@ -135,15 +135,15 @@ __epm_check_vendor()
         epm_status_repacked "$i" && continue
 
         if __epm_vendor_ok_scripts "$vendor" ; then
-            warning "Scripts are ENABLED for package $bi from outside vendor '$vendor' (this vendor is listed in $CONFIGDIR/vendorallowscripts.list).  Use --noscripts if you need disable scripts in such packages."
+            warning 'Scripts are ENABLED for package $bi from outside vendor $vendor (this vendor is listed in $CONFIGDIR/vendorallowscripts.list).  Use --noscripts if you need disable scripts in such packages.'
             continue
         fi
 
         if __epm_package_ok_scripts "$i" ; then
-            warning "Scripts are ENABLED for package $bi from outside vendor '$vendor' (the package is listed in $CONFIGDIR/pkgallowscripts.list).  Use --noscripts if you need disable scripts in such packages."
+            warning 'Scripts are ENABLED for package $bi from outside vendor $vendor (the package is listed in $CONFIGDIR/pkgallowscripts.list).  Use --noscripts if you need disable scripts in such packages.'
             continue
         fi
-        warning "Scripts are DISABLED for package $bi from outside vendor '$vendor'. Use --scripts if you need run scripts from such packages."
+        warning 'Scripts are DISABLED for package $bi from outside vendor $vendor. Use --scripts if you need run scripts from such packages.'
         noscripts="--noscripts"
     done
 }

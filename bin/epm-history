@@ -166,7 +166,7 @@ case $PMTYPE in
         docmd cat /var/log/portage
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 

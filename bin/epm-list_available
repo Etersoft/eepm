@@ -138,7 +138,7 @@ case $PMTYPE in
         return 0
         ;;
     *)
-        fatal "Have no suitable query command for $PMTYPE"
+        fatal 'Have no suitable query command for $PMTYPE'
         ;;
 esac
 
