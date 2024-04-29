@@ -41,7 +41,7 @@ __epm_changelog_files()
 #            
 #            ;;
         *)
-            fatal "Have no suitable command for $1"
+            fatal 'Have no suitable command for $1'
             ;;
     esac
 }
@@ -65,7 +65,7 @@ __epm_changelog_local_names()
             docmd pacman -Qc $1
             ;;
         *)
-            fatal "Have no suitable command for $PMTYPE"
+            fatal 'Have no suitable command for $PMTYPE'
             ;;
     esac
 }
@@ -96,7 +96,7 @@ __epm_changelog_unlocal_names()
             docmd equery changes -f "$1"
             ;;
         *)
-            fatal "Have no suitable command for $PMTYPE. Try install the package firstly."
+            fatal 'Have no suitable command for $PMTYPE. Try install the package firstly.'
             ;;
     esac
 

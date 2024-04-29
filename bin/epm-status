@@ -151,7 +151,7 @@ epm_status_original()
             return 0
             ;;
         *)
-            fatal "Unsupported $DISTRNAME"
+            fatal 'Unsupported $DISTRNAME'
             ;;
     esac
     return 1
@@ -171,7 +171,7 @@ epm_status_repacked()
             [ "$packager" = "EPM <support@eepm.ru>" ] && return 0
             ;;
         *)
-            fatal "Unsupported $BASEDISTRNAME"
+            fatal 'Unsupported $BASEDISTRNAME'
             ;;
     esac
     return 1
@@ -270,10 +270,10 @@ epm_status()
             return
             ;;
         -*)
-            fatal "Unknown option $option, use epm status --help to get info"
+            fatal 'Unknown option $option, use epm status --help to get info'
             ;;
         *)
-            fatal "No option before $option, use epm status --help to get info"
+            fatal 'No option before $option, use epm status --help to get info'
             ;;
     esac
 

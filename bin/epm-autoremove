@@ -356,7 +356,7 @@ case $PMTYPE in
         fi
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 
