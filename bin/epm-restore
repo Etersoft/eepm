@@ -102,23 +102,23 @@ __epm_restore_convert_to_rpm_notation()
     local l
     while read l ; do
         if echo "$l" | grep -q 'platform_python_implementation != "PyPy"' ; then
-            [ -n "$verbose" ] && warning "    $t is not PyPi requirement, skipped"
+            [ -n "$verbose" ] && warning '    $t is not PyPi requirement, skipped'
             continue
         fi
         if echo "$l" | grep -q 'sys_platform == "darwin"' ; then
-            [ -n "$verbose" ] && warning "    $t is darwin only requirement, skipped"
+            [ -n "$verbose" ] && warning '    $t is darwin only requirement, skipped'
             continue
         fi
         if echo "$l" | grep -q 'sys_platform == "win32"' ; then
-            [ -n "$verbose" ] && warning "    $t is win32 only requirement, skipped"
+            [ -n "$verbose" ] && warning '    $t is win32 only requirement, skipped'
             continue
         fi
         if echo "$l" | grep -q "; *python_version *< *['\"]3" ; then
-            [ -n "$verbose" ] && warning "    $t is python2 only requirement, skipped"
+            [ -n "$verbose" ] && warning '    $t is python2 only requirement, skipped'
             continue
         fi
         if echo "$l" | grep -q "; *python_version *<= *['\"]2\." ; then
-            [ -n "$verbose" ] && warning "    $t is python2 only requirement, skipped"
+            [ -n "$verbose" ] && warning '    $t is python2 only requirement, skipped'
             continue
         fi
         # drop various "python_version > '3.5'"
@@ -160,7 +160,7 @@ __epm_restore_pip()
         cat $req_file | __epm_restore_convert_to_rpm_notation | sed -e "s|^|$reqmacro |"
         return
     else
-        info "Install requirements from $req_file ..."
+        info 'Install requirements from $req_file ...'
         ilist="$(cat $req_file | __epm_restore_convert_to_rpm_notation | cut -d' ' -f 1 | sed -e "s|^|python3-module-|")"
     fi
 
@@ -579,7 +579,7 @@ __epm_restore_perl_shyaml()
 __epm_restore_by()
 {
     local req_file="$1"
-    [ -n "$verbose" ] && info "Checking for $req_file ..."
+    [ -n "$verbose" ] && info 'Checking for $req_file ...'
     [ -s "$req_file" ] || return
     if file $req_file | grep -q "ELF [3264]*-bit LSB executable" ; then
         assure_exists ldd-requires
@@ -589,7 +589,7 @@ __epm_restore_by()
             estrlist list $TOINSTALL
             return
         fi
-        [ -n "$TOINSTALL" ] || { info "There are no missed packages is found for $req_file binary." ; return ; }
+        [ -n "$TOINSTALL" ] || { info 'There are no missed packages is found for $req_file binary.' ; return ; }
         docmd epm install $TOINSTALL
         return
     fi
