@@ -102,7 +102,7 @@ case $PMTYPE in
         sudocmd eopkg check $@
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 

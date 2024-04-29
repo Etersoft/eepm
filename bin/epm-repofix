@@ -220,7 +220,7 @@ __epm_repochange_alt()
             __change_repo ftp.altlinux "//ftp.altlinux.org/pub/distributions ALTLinux"
             ;;
         *)
-            fatal "Unsupported change key '$1'"
+            fatal 'Unsupported change key $1'
             ;;
     esac
 }
@@ -235,7 +235,7 @@ epm_repochange()
             __epm_repochange_alt "$1"
             ;;
          *)
-            fatal "Repo change Unsupported for $BASEDISTRNAME"
+            fatal 'Repo change Unsupported for $BASEDISTRNAME'
             ;;
     esac
 }
@@ -264,7 +264,7 @@ case $PMTYPE in
 #    yum-rpm|dnf-rpm)
 #        ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 

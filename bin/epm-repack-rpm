@@ -96,13 +96,13 @@ __apply_fix_code()
 {
     local repackcode="$EPM_REPACK_SCRIPTS_DIR/$1.sh"
     [ -s "$repackcode" ] || return
-    [ -f "$repackcode.rpmnew" ] && warning "There is .rpmnew file(s) in $EPM_REPACK_SCRIPTS_DIR dir. The pack script can be outdated."
+    [ -f "$repackcode.rpmnew" ] && warning 'There is .rpmnew file(s) in $EPM_REPACK_SCRIPTS_DIR dir. The pack script can be outdated.'
 
     shift
     [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
     local bashopt=''
     [ -n "$debug" ] && bashopt='-x'
-    ( unset EPMCURDIR ; export PATH=$SCPATH ; docmd $CMDSHELL $bashopt $repackcode "$1" "$2" "$3" "$4" "$5" ) || fatal "There is an error from $repackcode script"
+    ( unset EPMCURDIR ; export PATH=$SCPATH ; docmd $CMDSHELL $bashopt $repackcode "$1" "$2" "$3" "$4" "$5" ) || fatal 'There is an error from $repackcode script'
 }
 
 __create_rpmmacros()
@@ -197,7 +197,7 @@ __epm_repack_to_rpm()
         mkdir $tmpbuilddir
         abspkg="$(realpath $pkg)"
         info
-        info "Repacking $abspkg to local rpm format (inside $tmpbuilddir) ..."
+        info 'Repacking $abspkg to local rpm format (inside $tmpbuilddir) ...'
 
         alpkg=$(basename $pkg)
         # don't use abs package path: copy package to temp dir and use there
@@ -223,7 +223,7 @@ __epm_repack_to_rpm()
         rmdir * 2>/dev/null
 
         local subdir="$(echo *)"
-        [ -d "$subdir" ] || fatal "can't find subdir in $(pwd)"
+        [ -d "$subdir" ] || fatal "can't find subdir in" $(pwd)
 
         local buildroot="$tmpbuilddir/$subdir"
 
@@ -256,7 +256,7 @@ __epm_repack_to_rpm()
 
         if [ -n "$EEPM_INTERNAL_PKGNAME" ] ; then
             if ! estrlist contains "$pkgname" "$EEPM_INTERNAL_PKGNAME" ; then
-                fatal "Some bug: the name of the repacking package ($pkgname) differs with the package name ($EEPM_INTERNAL_PKGNAME) from play.d script."
+                fatal 'Some bug: the name of the repacking package ($pkgname) differs with the package name ($EEPM_INTERNAL_PKGNAME) from play.d script.'
             fi
         fi
 
@@ -276,7 +276,7 @@ __epm_repack_to_rpm()
             remove_on_exit "$repacked_rpm"
             repacked_pkg="$repacked_rpm"
         else
-            warning "Can't find converted rpm for source binary package '$pkg' (got $repacked_rpm)"
+            warning 'Cant find converted rpm for source binary package $pkg (got $repacked_rpm)'
         fi
         cd $EPMCURDIR >/dev/null
 

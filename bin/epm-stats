@@ -24,7 +24,7 @@ epm_stats()
             CMD="apk stats"
             ;;
         *)
-            fatal "Have no suitable command for $PMTYPE"
+            fatal 'Have no suitable command for $PMTYPE'
             ;;
         esac
 

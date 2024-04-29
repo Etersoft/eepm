@@ -41,7 +41,7 @@ __alt_local_content_search()
 
     local CI="$(ls $(cat $ALT_CONTENTS_INDEX_LIST) 2>/dev/null)"
 
-    info "Searching for $1 ... "
+    info 'Searching for $1 ... '
 
     # FIXME: do it better
     local MGS
@@ -111,7 +111,7 @@ case $PMTYPE in
         return
         ;;
     *)
-        fatal "Have no suitable search file command for $PMTYPE"
+        fatal 'Have no suitable search file command for $PMTYPE'
         ;;
 esac
 

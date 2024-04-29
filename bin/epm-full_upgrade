@@ -69,7 +69,7 @@ confirm_action()
     [ -n "$interactive" ] || return 0
     local response
     # call with a prompt string or use a default
-    read -r -p "${1:-Are you sure? [Y/n]} " response
+    read -r -p "${1:-$(eval_gettext 'Are you sure? [Y/n]')} " response
     case $response in
         [yY][eE][sS]|[yY]|"")
             true

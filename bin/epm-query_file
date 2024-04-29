@@ -137,7 +137,7 @@ __do_query()
             return 1
             ;;
         *)
-            fatal "Have no suitable query command for $PMTYPE"
+            fatal 'Have no suitable query command for $PMTYPE'
             ;;
     esac
 
@@ -168,7 +168,7 @@ __do_short_query()
             return
             ;;
         *)
-            fatal "Have no suitable query command for $PMTYPE"
+            fatal 'Have no suitable query command for $PMTYPE'
             ;;
     esac
 
