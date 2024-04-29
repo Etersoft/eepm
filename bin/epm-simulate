@@ -67,6 +67,7 @@ _epm_do_simulate()
             CMD="aptitude -s install"
             ;;
         yum-rpm)
+            set_sudo
             if __use_yum_assumeno ; then
                 store_output sudocmd yum --assumeno install $filenames
                 __check_yum_result $RC_STDOUT $?
@@ -80,6 +81,7 @@ EOF
             clean_store_output
             return $RES ;;
         dnf-rpm)
+            set_sudo
             store_output sudocmd dnf --assumeno install $filenames
             __check_yum_result $RC_STDOUT $?
             RES=$?
@@ -110,6 +112,7 @@ EOF
             docmd --noaction install $filenames
             return $res ;;
         pacman)
+            set_sudo
             store_output sudocmd pacman -v -S $filenames <<EOF
 no
 EOF

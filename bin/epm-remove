@@ -43,6 +43,7 @@ epm_remove_low()
         *-rpm)
             cd /tmp || fatal
             __epm_check_vendor $@
+            set_sudo
             store_output sudocmd rpm -ev $noscripts $nodeps $@
             # rpm returns number of packages if failed on removing
             __check_rpm_e_result $RC_STDOUT $?
