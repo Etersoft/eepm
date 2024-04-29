@@ -20,6 +20,24 @@
 load_helper epm-check_updated_repo
 load_helper epm-sh-warmup
 
+
+__check_upgrade_conditions()
+{
+    #[ "$BASEDISTRNAME" = "alt" ] || return 0
+    [ "$DISTRVERSION" = "Sisyphus" ] || return 0
+
+    # fast skip if already updated
+    [ -L "/bin" ] && return 0
+
+    # https://www.altlinux.org/Usrmerge
+    epm status --installed filesystem 3.1 && return 0
+    info "Installing usrmerge-hier-convert to merge file hierarhy, check https://www.altlinux.org/Usrmerge."
+    epm upgrade vim-minimal vim-console
+    epm install usrmerge-hier-convert
+    return 0
+}
+
+
 epm_upgrade()
 {
     local CMD
@@ -58,6 +76,8 @@ epm_upgrade()
 
             return
         fi
+
+        __check_upgrade_conditions || fatal "upgrade conditions is not satisfied."
     fi
 
     # Solus supports upgrade for a package (with all dependencies)
