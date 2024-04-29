@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-export EPMVERSION="3.62.6"
+export EPMVERSION="3.62.7"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -270,6 +270,12 @@ is_dirpath()
     startwith "$1" "/"
 }
 
+is_wildcard()
+{
+    echo "$1" | grep -q "[*?]" && return
+    echo "$1" | grep -q "\]" && return
+    echo "$1" | grep -q "\[" && return
+}
 
 filter_strip_spaces()
 {
@@ -2635,14 +2641,14 @@ update_repo_if_needed()
 
 save_installed_packages()
 {
-    [ -d /var/lib/rpm ] || return 0
-    estrlist list "$@" | sudorun tee /var/lib/rpm/EPM-installed >/dev/null
+    [ -d $epm_vardir ] || return 0
+    estrlist list "$@" | sudorun tee $epm_vardir/installed-via-epm >/dev/null
 }
 
 check_manually_installed()
 {
-    [ -r /var/lib/rpm/EPM-installed ] || return 1
-    grep -q -- "^$1\$" /var/lib/rpm/EPM-installed
+    [ -r $epm_vardir/installed-via-epm ] || return 1
+    grep -q -- "^$1\$" $epm_vardir/installed-via-epm
 }
 
 skip_manually_installed()
@@ -3065,6 +3071,19 @@ __use_url_install()
     return 0
 }
 
+__check_if_wildcard_downloading()
+{
+    mask="$(basename "$1")"
+    is_wildcard "$mask" || return 1
+
+    local fn
+    fn="$(docmd eget --list "$url" | xargs -n1 basename)"
+    local wf="$(epm print shortname from filename $fn | wc -l)"
+    local ws="$(epm print shortname from filename $fn | sort -u | wc -l)"
+    # not the same package of various versions
+    [ "$wf" = "$ws" ]
+}
+
 __download_pkg_urls()
 {
     local url
@@ -3075,9 +3094,10 @@ __download_pkg_urls()
         remove_on_exit $tmppkg
         chmod $verbose a+rX $tmppkg
         cd $tmppkg || fatal
+
         local latest='--latest'
-        # hack: download all if mask is *.something
-        basename "$url" | grep -q "^\*\." && latest=''
+        __check_if_wildcard_downloading "$url" && latest=''
+
         # download packages
         if docmd eget $latest "$url" ; then
             local i
@@ -3596,19 +3616,6 @@ epm_filelist()
 
 # File bin/epm-full_upgrade:
 
-__check_upgrade_conditions()
-{
-    [ "$BASEDISTRNAME" = "alt" ] || return 0
-    [ "$DISTRVERSION" = "Sisyphus" ] || return 0
-
-    # https://www.altlinux.org/Usrmerge
-    epm status --installed filesystem 3.1 && return 0
-    info "Installing usrmerge-hier-convert to merge file hierarhy, check https://www.altlinux.org/Usrmerge."
-    epm upgrade vim-minimal vim-console
-    epm install usrmerge-hier-convert
-    return 0
-}
-
 epm_full_upgrade_help()
 {
             get_help HELPCMD $SHAREDIR/epm-full_upgrade
@@ -3682,7 +3689,6 @@ confirm_action()
     confirm_action "Do upgrade installed packages? [Y/n]" || full_upgrade_no_upgrade=1
     if [ -z "$full_upgrade_no_upgrade" ] ; then
         [ -n "$quiet" ] || echo
-        __check_upgrade_conditions || fatal "upgrade conditions is not satisfied."
         docmd epm $dryrun upgrade || fatal "upgrading of the system is failed."
     fi
 
@@ -5225,6 +5231,19 @@ epm_list_available()
         return
     fi
 
+    # use cache we got during epm update
+    # TODO: update from this place if obsoleted
+    if [ -n "$short" ] ; then
+        if [ -s $epm_vardir/available-packages ] ; then
+            cat $epm_vardir/available-packages
+            return
+        elif [ -n "$direct" ] ; then
+            # don't go in long retrieving if --direct is used
+            return
+        fi
+    fi
+
+
 case $PMTYPE in
     apt-*)
         warmup_dpkgbase
@@ -5383,11 +5402,6 @@ fi
 }
 
 # File bin/epm-mark:
-
-__is_wildcard()
-{
-    echo "$1" | grep -q "[*?]"
-}
 
 __alt_mark_hold_package()
 {
@@ -8786,6 +8800,7 @@ epm_remove_low()
         *-rpm)
             cd /tmp || fatal
             __epm_check_vendor $@
+            set_sudo
             store_output sudocmd rpm -ev $noscripts $nodeps $@
             # rpm returns number of packages if failed on removing
             __check_rpm_e_result $RC_STDOUT $?
@@ -12554,6 +12569,7 @@ _epm_do_simulate()
             CMD="aptitude -s install"
             ;;
         yum-rpm)
+            set_sudo
             if __use_yum_assumeno ; then
                 store_output sudocmd yum --assumeno install $filenames
                 __check_yum_result $RC_STDOUT $?
@@ -12567,6 +12583,7 @@ EOF
             clean_store_output
             return $RES ;;
         dnf-rpm)
+            set_sudo
             store_output sudocmd dnf --assumeno install $filenames
             __check_yum_result $RC_STDOUT $?
             RES=$?
@@ -12597,6 +12614,7 @@ EOF
             docmd --noaction install $filenames
             return $res ;;
         pacman)
+            set_sudo
             store_output sudocmd pacman -v -S $filenames <<EOF
 no
 EOF
@@ -13316,6 +13334,24 @@ epm_update()
 # File bin/epm-upgrade:
 
 
+
+__check_upgrade_conditions()
+{
+    #[ "$BASEDISTRNAME" = "alt" ] || return 0
+    [ "$DISTRVERSION" = "Sisyphus" ] || return 0
+
+    # fast skip if already updated
+    [ -L "/bin" ] && return 0
+
+    # https://www.altlinux.org/Usrmerge
+    epm status --installed filesystem 3.1 && return 0
+    info "Installing usrmerge-hier-convert to merge file hierarhy, check https://www.altlinux.org/Usrmerge."
+    epm upgrade vim-minimal vim-console
+    epm install usrmerge-hier-convert
+    return 0
+}
+
+
 epm_upgrade()
 {
     local CMD
@@ -13349,6 +13385,8 @@ epm_upgrade()
 
             return
         fi
+
+        __check_upgrade_conditions || fatal "upgrade conditions is not satisfied."
     fi
 
     # Solus supports upgrade for a package (with all dependencies)

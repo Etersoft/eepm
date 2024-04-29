@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.62.6"
+EPMVERSION="3.62.7"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -271,6 +271,12 @@ is_dirpath()
     startwith "$1" "/"
 }
 
+is_wildcard()
+{
+    echo "$1" | grep -q "[*?]" && return
+    echo "$1" | grep -q "\]" && return
+    echo "$1" | grep -q "\[" && return
+}
 
 filter_strip_spaces()
 {
