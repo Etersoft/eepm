@@ -70,7 +70,7 @@ epm_tool()
             print_command_path "$@"  # HELPCMD: which like command (no output to stderr, can works without which package)
             ;;
         *)
-            fatal "Unknown command $ epm tool $WHAT. Use epm print help for get help."
+            fatal 'Unknown command $ epm tool $WHAT. Use epm print help for get help.'
             ;;
     esac
 }

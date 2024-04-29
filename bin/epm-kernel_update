@@ -49,7 +49,7 @@ epm_kernel_update()
         message "Skipping: kernel package will update during dist-upgrade"
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
     esac
 }

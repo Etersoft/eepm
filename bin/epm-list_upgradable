@@ -69,7 +69,7 @@ case $PMTYPE in
         docmd winget upgrade
         ;;
     *)
-        fatal "Have no suitable query command for $PMTYPE"
+        fatal 'Have no suitable query command for $PMTYPE'
         ;;
 esac
 

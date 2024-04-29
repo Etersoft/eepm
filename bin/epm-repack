@@ -50,7 +50,7 @@ __epm_check_if_needed_repack()
 {
     __epm_check_repack_rule "$@" || return
     local pkgname="$(epm print name for package "$1")"
-    warning "There is repack rule for '$pkgname' package. It is better install this package via 'epm install --repack' or 'epm play'."
+    warning 'There is repack rule for $pkgname package. It is better install this package via epm install --repack or epm play.'
 }
 
 # arg: rpm or deb
@@ -123,7 +123,7 @@ __prepare_source_package()
     local pkgname="$(echo $alpkg | sed -e "s|_.*||")"
 
     # TODO: use stoplist only for deb?
-    [ -z "$force" ] && __check_stoplist $pkgname && fatal "Please use official package instead of $alpkg repacking (It is not recommended to use --force to skip this checking."
+    [ -z "$force" ] && __check_stoplist $pkgname && fatal 'Please use official package instead of $alpkg repacking (It is not recommended to use --force to skip this checking.'
 
     SUBGENERIC=''
 
@@ -152,7 +152,7 @@ __prepare_source_package()
     fi
 
     # it is possible there are a few files, we don't support it
-    [ -s "$returntarname" ] || fatal "Can't read result from pack: '$returntarname' is not a readable file."
+    [ -s "$returntarname" ] || fatal 'Cant read result from pack: $returntarname is not a readable file.'
 
     alpkg=$(basename $returntarname)
     # FIXME: looks like a hack with current dir
@@ -187,7 +187,7 @@ __epm_repack_single()
             fi
             ;;
         *)
-            fatal "$PKGFORMAT is not supported for repack yet"
+            fatal '$PKGFORMAT is not supported for repack yet'
             ;;
     esac
 
@@ -200,7 +200,7 @@ __epm_repack()
     local pkg
     repacked_pkgs=''
     for pkg in $* ; do
-        __epm_repack_single "$pkg" || fatal "Error with $pkg repacking."
+        __epm_repack_single "$pkg" || fatal 'Error with $pkg repacking.'
         [ -n "$repacked_pkgs" ] && repacked_pkgs="$repacked_pkgs $repacked_pkg" || repacked_pkgs="$repacked_pkg"
     done
 }
@@ -224,7 +224,7 @@ epm_repack()
         pkg_urls=
     fi
 
-    [ -n "$pkg_names" ] && warning "Can't find $pkg_names files"
+    [ -n "$pkg_names" ] && warning 'Cant find $pkg_names files'
     [ -z "$pkg_files" ] && info "Skip empty repack list" && return 22
 
     if __epm_repack $pkg_files && [ -n "$repacked_pkgs" ] ; then

@@ -31,10 +31,10 @@ __epm_repodisable_alt()
         rl="$(echo "$1" | sed -e 's|\^||')"
     else
         rl="$( (epm --quiet repolist) 2>/dev/null | grep -F "$1" | head -n1 )"
-        [ -z "$rl" ] && warning "Can't find '$1' entries in the repos (see '# epm repolist' output)" && return 1
+        [ -z "$rl" ] && warning 'Cant find $1 entries in the repos (see # epm repolist output)' && return 1
     fi
     echo "$rl" | while read rp ; do
-        [ -n "$dryrun" ] && echo "will comment $rp" && continue
+        [ -n "$dryrun" ] && messagw 'will comment $rp' && continue
         sed -i -e "s|^\($(sed_escape "$rl")\)|#\1|" $alt_LISTS
     done
 }
@@ -62,7 +62,7 @@ case $PMTYPE in
         docmd eoget disable-repo "$@"
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 

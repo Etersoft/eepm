@@ -74,7 +74,7 @@ epm_release_downgrade()
             dv="$(__detect_alt_release_by_repo)"
             if [ -n "$dv" ] && [ "$dv" != "$DISTRVERSION" ] ; then
                 DISTRVERSION="$dv"
-                info "Detected running $DISTRNAME $DISTRVERSION (according to using repos)"
+                info 'Detected running $DISTRNAME $DISTRVERSION (according to using repos)'
             fi
         fi
 
@@ -92,7 +92,7 @@ epm_release_downgrade()
 
         __alt_repofix
 
-        __switch_alt_to_distro $DISTRVERSION $TARGET && info "Done. The system has been successfully downgraded to the previous release '$TARGET'."
+        __switch_alt_to_distro $DISTRVERSION $TARGET && info 'Done. The system has been successfully downgraded to the previous release $TARGET.'
 
         return 0
         ;;
@@ -103,7 +103,7 @@ epm_release_downgrade()
     case $PMTYPE in
     apt-rpm)
         #docmd epm update
-        info "Have no idea how to downgrade $DISTRNAME"
+        info 'Have no idea how to downgrade $DISTRNAME'
         ;;
     *-dpkg)
         assure_exists do-release-upgrade update-manager-core
@@ -130,7 +130,7 @@ epm_release_downgrade()
         local RELEASEVER="$1"
         [ -n "$RELEASEVER" ] || RELEASEVER=$(($DISTRVERSION + 1))
         #[ -n "$RELEASEVER" ] || fatal "Run me with new version"
-        confirm_info "Upgrade to $DISTRNAME/$RELEASEVER"
+        confirm_info 'Upgrade to $DISTRNAME/$RELEASEVER'
         sudocmd dnf system-upgrade download --refresh --releasever=$RELEASEVER
         # TODO: from docs:
         # dnf system-upgrade reboot
@@ -168,7 +168,7 @@ epm_release_downgrade()
         sudocmd guix pull --verbose
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
     esac
 

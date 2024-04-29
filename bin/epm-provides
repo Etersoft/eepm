@@ -42,7 +42,7 @@ epm_provides_files()
             docmd dpkg -I $pkg_files | grep "^ *Provides:" | sed "s|^ *Provides:||g"
             ;;
         *)
-            fatal "Have no suitable command for $PMTYPE"
+            fatal 'Have no suitable command for $PMTYPE'
             ;;
     esac
 }
@@ -122,7 +122,7 @@ case $PMTYPE in
         fi
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 
