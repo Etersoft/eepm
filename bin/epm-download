@@ -83,7 +83,7 @@ __download_pkg_urls()
         if docmd eget $latest "$url" ; then
             local i
             for i in * ; do
-                [ "$i" = "*" ] && warning "Incorrect true status from eget. No saved files from download $url, ignoring" && continue
+                [ "$i" = "*" ] && warning 'Incorrect true status from eget. No saved files from download $url, ignoring' && continue
                 [ -s "$tmppkg/$i" ] || continue
                 chmod $verbose a+r "$tmppkg/$i"
                 local si="$(echo "$i" | sed -e 's| |-|g')"
@@ -198,7 +198,7 @@ __epm_download_alt()
         local installlist="$(get_task_packages $*)"
         # hack: drop -devel packages to avoid package provided by multiple packages
         installlist="$(estrlist reg_exclude ".*-devel .*-devel-static .*-checkinstall .*-debuginfo" "$installlist")"
-        [ -n "$verbose" ] && info "Packages from task(s): $installlist"
+        [ -n "$verbose" ] && info 'Packages from task(s): $installlist'
 
         try_change_alt_repo
         epm_addrepo "$@"
@@ -288,7 +288,7 @@ epm_download()
         docmd brew fetch $*
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
     esac
 }

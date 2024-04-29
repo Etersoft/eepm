@@ -79,7 +79,7 @@ epm_remove_old_kernels()
 
     case $PMTYPE in
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
     esac
 }

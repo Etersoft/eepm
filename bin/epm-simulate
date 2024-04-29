@@ -136,7 +136,7 @@ EOF
             done
             return $res ;;
         *)
-            fatal "Have no suitable simulate command for $PMTYPE"
+            fatal 'Have no suitable simulate command for $PMTYPE'
             ;;
     esac
 
@@ -155,7 +155,7 @@ epm_simulate()
     local RES=$?
     if [ -z "$quiet" ] ; then
         if [ "$RES" = 0 ] ; then
-            info "Simulate result: $filenames package(s) CAN BE installed"
+            info 'Simulate result: $filenames package(s) CAN BE installed'
         else
             info "Simulate result: There are PROBLEMS with install some package(s)"
         fi

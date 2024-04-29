@@ -40,7 +40,7 @@ __check_for_epm_version()
     local latest="$(get_latest_version eepm)"
     #[ -z "$latest" ] && return
     local res="$(epm print compare "$EPMVERSION" "$latest")"
-    [ "$res" = "-1" ] && info "Latest EPM version in Korinf repository is $latest. You have version $EPMVERSION running." && info "You can update eepm with \$ epm ei command."
+    [ "$res" = "-1" ] && info 'Latest EPM version in Korinf repository is $latest. You have version $EPMVERSION running.' && info "You can update eepm with \$ epm ei command."
 }
 
 __save_available_packages()
@@ -188,7 +188,7 @@ case $PMTYPE in
         sudocmd winget source update
         ;;
     *)
-        fatal "Have no suitable update command for $PMTYPE"
+        fatal 'Have no suitable update command for $PMTYPE'
         ;;
 esac
 }
