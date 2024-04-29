@@ -132,7 +132,7 @@ epm_repo()
         epm_repo_pkgdel "$@"
         ;;
     *)
-        fatal "Unknown command $ epm repo '$CMD'"
+        fatal 'Unknown command $ epm repo $CMD'
         ;;
 esac
 

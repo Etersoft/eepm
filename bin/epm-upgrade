@@ -63,7 +63,7 @@ epm_upgrade()
             installlist="$(get_only_installed_packages "$installlist")"
             [ -n "$verbose" ] && info "Packages to upgrade: $installlist"
             if [ -z "$installlist" ] ; then
-                warning "There is no installed packages for upgrade from task $*"
+                warning 'There is no installed packages for upgrade from task $*'
                 return 22
             fi
 
@@ -110,7 +110,7 @@ epm_upgrade()
                 # hack for https://bugzilla.altlinux.org/41225
                 case "$pkg_names" in
                     -*)
-                        fatal "Option $pkg_names is not allowed here"
+                        fatal 'Option $pkg_names is not allowed here'
                 esac
                 load_helper epm-install
                 (pkg_names=$(get_only_installed_packages $pkg_names) epm_install)
@@ -216,7 +216,7 @@ epm_upgrade()
         CMD="pkg upgrade"
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
     esac
 

@@ -47,7 +47,7 @@ __epm_repoindex_alt()
     # TODO: check if we inside arch dir or RPMS.*
     [ -n "$REPO_DIR" ] || REPO_DIR="$(pwd)"
     if [ -z "$init" ] ; then
-        [ -d "$REPO_DIR" ] || fatal "Repo dir $REPO_DIR does not exist"
+        [ -d "$REPO_DIR" ] || fatal 'Repo dir $REPO_DIR does not exist'
     fi
 
     REPO_NAME="$2"
@@ -117,7 +117,7 @@ case $PMTYPE in
         docmd eoget index "$@"
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 

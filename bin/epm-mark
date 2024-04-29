@@ -105,7 +105,7 @@ case $PMTYPE in
         info "Manually: edit /etc/pacman.conf modifying IgnorePkg array"
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 
@@ -140,7 +140,7 @@ case $PMTYPE in
         info "Manually: edit /etc/pacman.conf removing package from IgnorePkg line"
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 
@@ -182,7 +182,7 @@ case $PMTYPE in
         cat /etc/pacman.conf
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 
@@ -231,7 +231,7 @@ case $PMTYPE in
             sudocmd emerge --oneshot "$@"
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 
@@ -262,7 +262,7 @@ case $PMTYPE in
             sudocmd emerge --select "$@"
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 
@@ -287,7 +287,7 @@ case $PMTYPE in
         sudocmd dnf repoquery --unneeded
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 
@@ -311,7 +311,7 @@ case $PMTYPE in
         sudocmd dnf repoquery --userinstalled
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 
@@ -361,7 +361,7 @@ epm_mark()
         epm_mark_showmanual "$@"
         ;;
     *)
-        fatal "Unknown command $ epm repo '$CMD'"
+        fatal 'Unknown command $ epm repo $CMD'
         ;;
 esac
 

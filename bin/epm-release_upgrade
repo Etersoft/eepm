@@ -29,10 +29,10 @@ assure_safe_run()
     fi
     if [ "$TERM" != "screen" ] ; then
         if [ -n "$force" ] ; then
-            message "You force me running not under screen (TERM=$TERM now)! You can lost your system!"
+            message 'You force me running not under screen (TERM=$TERM now)! You can lost your system!'
             return
         else
-            warning "It is very dangerous to upgrade to next release from a GUI (your TERM=$TERM)."
+            warning 'It is very dangerous to upgrade to next release from a GUI (your TERM=$TERM).'
             if is_installed screen ; then
                 warning "You have 'screen' already installed, just run upgrade via screen (check https://losst.ru/komanda-screen-linux if needed)."
             else
@@ -191,8 +191,8 @@ __check_system()
     if [ "$TO" != "Sisyphus" ] ; then
         # note: we get --base-version directy to get new version
         if [ "$(DISTRVENDOR --base-version)" != "$TO" ] || epm installed altlinux-release-sisyphus >/dev/null ; then
-            warning "Current distro still is not $TO, or altlinux-release-sisyphus package is installed."
-            warning "Trying to fix with altlinux-release-$TO"
+            warning 'Current distro still is not $TO, or altlinux-release-sisyphus package is installed.'
+            warning 'Trying to fix with altlinux-release-$TO'
             docmd epm install altlinux-release-$TO
         fi
     fi
@@ -430,9 +430,9 @@ __switch_alt_to_distro()
             ;;
         *)
             if [ "$FROM" = "$TO" ] ; then
-                info "It seems your system is already $DISTRNAME $TO"
+                info 'It seems your system is already $DISTRNAME $TO'
             else
-                warning "Unknown distro version. Have no idea how to switch from $DISTRNAME $FROM to $DISTRNAME $TO."
+                warning 'Unknown distro version. Have no idea how to switch from $DISTRNAME $FROM to $DISTRNAME $TO.'
             fi
             end_change_alt_repo
             info "Try run f.i. '# epm release-upgrade p10' or '# epm release-downgrade p9' or '# epm release-upgrade Sisyphus'"
@@ -465,15 +465,15 @@ epm_release_upgrade()
             dv="$(__detect_alt_release_by_repo)"
             if [ -n "$dv" ] && [ "$dv" != "$DISTRVERSION" ] ; then
                 DISTRVERSION="$dv"
-                info "Detected running $DISTRNAME $DISTRVERSION (according to using repos)"
+                info 'Detected running $DISTRNAME $DISTRVERSION (according to using repos)'
             fi
         fi
 
         TARGET=""
-        [ -n "$3" ] && fatal "Too many args: $*"
+        [ -n "$3" ] && fatal 'Too many args: $*'
         if [ -n "$2" ] ; then
             DISTRVERSION="$1"
-            info "Force current distro version as $DISTRVERSION"
+            info 'Force current distro version as $DISTRVERSION'
             TARGET="$2"
         elif [ -n "$1" ] ; then
             TARGET="$1"
@@ -485,7 +485,7 @@ epm_release_upgrade()
 
         __alt_repofix
 
-        __switch_alt_to_distro $DISTRVERSION $TARGET && info "Done. The system has been successfully upgraded to the next release '$TO'."
+        __switch_alt_to_distro $DISTRVERSION $TARGET && info 'Done. The system has been successfully upgraded to the next release $TO.'
 
         return 0
         ;;
@@ -521,7 +521,7 @@ epm_release_upgrade()
     case $PMTYPE in
     apt-rpm)
         #docmd epm update
-        info "Have no idea how to upgrade $DISTRNAME. It is possible you need use 'release-downgrade'"
+        info 'Have no idea how to upgrade $DISTRNAME. It is possible you need use release-downgrade'
         ;;
     *-dpkg)
         assure_exists do-release-upgrade update-manager-core
@@ -588,7 +588,7 @@ epm_release_upgrade()
             DV=$(echo "$DISTRVERSION" | sed -e "s|\..*||")
             local RELEASEVER="$1"
             [ -n "$RELEASEVER" ] || RELEASEVER=$(($DV + 1))
-            confirm_info "Upgrade to $DISTRNAME/$RELEASEVER"
+            confirm_info 'Upgrade to $DISTRNAME/$RELEASEVER'
 
             sudocmd dnf -y --releasever=$RELEASEVER --allowerasing --setopt=deltarpm=false distro-sync
             sudocmd rpm --rebuilddb
@@ -607,7 +607,7 @@ epm_release_upgrade()
         local RELEASEVER="$1"
         [ -n "$RELEASEVER" ] || RELEASEVER=$(($DISTRVERSION + 1))
         #[ -n "$RELEASEVER" ] || fatal "Run me with new version"
-        confirm_info "Upgrade to $DISTRNAME/$RELEASEVER"
+        confirm_info 'Upgrade to $DISTRNAME/$RELEASEVER'
         sudocmd dnf system-upgrade download --refresh --releasever=$RELEASEVER
         # TODO: from docs:
         # dnf system-upgrade reboot
@@ -639,7 +639,7 @@ epm_release_upgrade()
         sudocmd guix pull --verbose
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
     esac
 

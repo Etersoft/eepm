@@ -103,7 +103,7 @@ case $PMTYPE in
         CMD="xbps-query -X"
         ;;
     *)
-        fatal "Have no suitable command for $PMTYPE"
+        fatal 'Have no suitable command for $PMTYPE'
         ;;
 esac
 

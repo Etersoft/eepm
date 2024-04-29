@@ -79,7 +79,7 @@ epm_print_install_files_command()
             ;;
 
         *)
-            fatal "Have no suitable appropriate install command for $PMTYPE"
+            fatal 'Have no suitable appropriate install command for $PMTYPE'
             ;;
     esac
 }
@@ -134,8 +134,7 @@ epm_print_install_names_command()
             echo "$PMTYPE install $*"
             return ;;
         *)
-            fatal "Have no suitable appropriate install command for $PMTYPE"
+            fatal 'Have no suitable appropriate install command for $PMTYPE'
             ;;
     esac
 }
-

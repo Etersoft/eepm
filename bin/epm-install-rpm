@@ -23,7 +23,7 @@ epm_install_files_rpm()
     [ -z "$files" ] && return
 
     if __epm_repack_if_needed $files ; then
-        [ -n "$repacked_pkgs" ] || fatal "Can't convert $files"
+        [ -n "$repacked_pkgs" ] || fatal 'Cant convert $files'
         files="$repacked_pkgs"
     fi
 
