@@ -26,7 +26,7 @@ Also you can comment out full_upgrade parts in /etc/eepm/eepm.conf config.
 Examples:
   epm full-upgrade [--auto]
   epm full-upgrade [--interactive]
-  epm full-upgrade --no-flatpack
+  epm full-upgrade --no-flatpak
 '
 }
 
@@ -48,8 +48,8 @@ epm_full_upgrade()
             "--no-epm-play")           # HELPCMD: skip epm play during full upgrade
                 full_upgrade_no_epm_play=1
                 ;;
-            "--no-flatpack")           # HELPCMD: skip flatpack update during full upgrade
-                full_upgrade_no_flatpack=1
+            "--no-flatpak")           # HELPCMD: skip flatpak update during full upgrade
+                full_upgrade_no_flatpak=1
                 ;;
             "--no-snap")           # HELPCMD: skip snap update during full upgrade
                 full_upgrade_no_snap=1
