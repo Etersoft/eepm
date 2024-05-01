@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-export EPMVERSION="3.62.7"
+export EPMVERSION="3.62.8"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -362,6 +362,10 @@ echog()
 	fi
 }
 
+message()
+{
+    echog "$*"
+}
 
 fatal()
 {
@@ -372,6 +376,18 @@ fatal()
     echog -n "ERROR: " >&2
     restore_color >&2
     echog "$* $PROMOMESSAGE" >&2
+    exit 1
+}
+
+fixme()
+{
+    local PROMOMESSAGE="$EPMPROMOMESSAGE"
+    [ -n "$PROMOMESSAGE" ] || PROMOMESSAGE=" (you can discuss the epm $EPMVERSION problem in Telegram: https://t.me/useepm)"
+
+    set_color $RED >&2
+    echo -n "ERROR: " >&2
+    restore_color >&2
+    echo "$* $PROMOMESSAGE" >&2
     exit 1
 }
 
@@ -1858,7 +1874,7 @@ __epm_autoremove_altrpm_pp()
 
 
     if [ -n "$flag" ] ; then
-        info ""
+        info
         info "call again for next cycle until all modules will be removed"
         __epm_autoremove_altrpm_pp "$libexclude"
     fi
@@ -1929,7 +1945,7 @@ __epm_autoremove_altrpm_lib()
     fi
 
     if [ -n "$flag" ] ; then
-        info ""
+        info
         info "call again for next cycle until all libs will be removed"
         __epm_autoremove_altrpm_lib $opt
     fi
@@ -3353,7 +3369,7 @@ __epm_korinf_install_eepm()
             warning "Using external (Korinf) repo is forbidden for stable ALT branch $DISTRVERSION."
             info "Check https://bugzilla.altlinux.org/44314 for reasons."
             info "You can install eepm package from Korinf manually, check instruction at https://eepm.ru"
-            info ""
+            info
             info "Trying update eepm from the stable ALT repository ..."
             docmd epm install eepm
             return
@@ -3647,8 +3663,8 @@ epm_full_upgrade()
             "--no-epm-play")           # HELPCMD: skip epm play during full upgrade
                 full_upgrade_no_epm_play=1
                 ;;
-            "--no-flatpack")           # HELPCMD: skip flatpack update during full upgrade
-                full_upgrade_no_flatpack=1
+            "--no-flatpak")           # HELPCMD: skip flatpak update during full upgrade
+                full_upgrade_no_flatpak=1
                 ;;
             "--no-snap")           # HELPCMD: skip snap update during full upgrade
                 full_upgrade_no_snap=1
@@ -7331,14 +7347,14 @@ case $PMTYPE in
         if is_installed $pkg_names ; then
             CMD="rpm -q --provides"
         else
-            fatal "FIXME: use hi level commands or download firstly"
+            fixme "FIXME: use hi level commands or download firstly"
         fi
         ;;
     yum-rpm)
         if is_installed $pkg_names ; then
             CMD="rpm -q --provides"
         else
-            fatal "FIXME: use hi level commands or download firstly"
+            fixme "FIXME: use hi level commands or download firstly"
         fi
         ;;
     dnf-rpm)
@@ -9773,7 +9789,7 @@ __epm_repack_to_rpm()
         tmpbuilddir=$HOME/$(basename $pkg).tmpdir
         mkdir $tmpbuilddir
         abspkg="$(realpath $pkg)"
-        info ""
+        info
         info "Repacking $abspkg to local rpm format (inside $tmpbuilddir) ..."
 
         alpkg=$(basename $pkg)
@@ -13386,7 +13402,9 @@ epm_upgrade()
             return
         fi
 
-        __check_upgrade_conditions || fatal "upgrade conditions is not satisfied."
+        if [ -z "$*" ] ; then
+            __check_upgrade_conditions || fatal "upgrade conditions is not satisfied."
+        fi
     fi
 
     # Solus supports upgrade for a package (with all dependencies)

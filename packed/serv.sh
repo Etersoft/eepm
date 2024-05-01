@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.62.7"
+EPMVERSION="3.62.8"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -363,6 +363,10 @@ echog()
 	fi
 }
 
+message()
+{
+    echog "$*"
+}
 
 fatal()
 {
@@ -373,6 +377,18 @@ fatal()
     echog -n "ERROR: " >&2
     restore_color >&2
     echog "$* $PROMOMESSAGE" >&2
+    exit 1
+}
+
+fixme()
+{
+    local PROMOMESSAGE="$EPMPROMOMESSAGE"
+    [ -n "$PROMOMESSAGE" ] || PROMOMESSAGE=" (you can discuss the epm $EPMVERSION problem in Telegram: https://t.me/useepm)"
+
+    set_color $RED >&2
+    echo -n "ERROR: " >&2
+    restore_color >&2
+    echo "$* $PROMOMESSAGE" >&2
     exit 1
 }
 
