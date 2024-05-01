@@ -29,9 +29,6 @@ add_bin_exec_command $PRODUCT /usr/bin/$PRODUCTCUR
 rm -v $BUILDROOT/usr/bin/$APMNAME
 add_bin_link_command $APMNAME $PRODUCTDIR/resources/app/apm/node_modules/.bin/apm
 
-#subst '1iBuildRequires:rpm-build-python3' $SPEC
-#subst "1i%add_python3_path $PRODUCTDIR" $SPEC
-
 # replace embedded git with standalone (due Can't locate Git/LoadCPAN/Error.pm)
 EMBDIR=$PRODUCTDIR/resources/app.asar.unpacked/node_modules/dugite/git
 echo "Removing $BUILDROOT$EMBDIR/ ..."
