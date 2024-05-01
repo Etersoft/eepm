@@ -185,7 +185,7 @@ __check_target_bin()
     local target="$1"
     if is_abs_path "$target" ; then
         # if target does not exist
-        [ -e "$BUILDROOT$target" ] || fatal "fatal on broken link creating"
+        [ -e "$BUILDROOT$target" ] || fatal "fatal on broken link creating (missed target $target for add_bin_*_command)"
         chmod 0755 "$BUILDROOT$target" || fatal
     else
         # if target is a relative, skiping when /usr/bin/$name exists
