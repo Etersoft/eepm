@@ -4,7 +4,7 @@ PKGNAME=rstudio
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION='RStudio from the official site'
-URL="https://www.rstudio.com/products/rstudio"
+URL="https://posit.co/"
 
 . $(dirname $0)/common.sh
 
@@ -60,6 +60,6 @@ esac
 VERSION="${VERSION/+/-}"
 
 PKGMASK="$(epm print constructname $PKGNAME "$VERSION" $arch $pkgtype "-" "-")"
-PKGURL="$(eget --list https://www.rstudio.com/products/rstudio/download/ "$PKGMASK" | grep "$PKGFILTER")"
+PKGURL="$(eget --list https://posit.co/download/rstudio-desktop/ "$PKGMASK" | grep "$PKGFILTER")"
 
 install_pkgurl
