@@ -186,12 +186,17 @@ if len(sys.argv) < 2:
 pyproject = sys.argv[1]
 
 c = toml.load(pyproject)
-n = c["tool"]["poetry"]["dependencies"]
-for key, value in n.items():
-	if isinstance(value, dict):
-		print('\n' + key + ' ' , value["version"])
-	else:
-		print('\n' + key + ' ' + value)
+try:
+	n = c["tool"]["poetry"]["dependencies"]
+	for key, value in n.items():
+		if isinstance(value, dict):
+			print('\n' + key + ' ' , value["version"])
+		else:
+			print('\n' + key + ' ' + value)
+except:
+	n = c["project"]["dependencies"]
+	for t in n:
+		print('\n' + t)
 EOF
     a= python3 $lt "$1"
 }
