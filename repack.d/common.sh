@@ -412,6 +412,7 @@ get_libs_requires()
     local fdir="$BUILDROOT/$1"
 
     __get_binary_requires "$fdir" | LANG=C sort -u >$libreqlist
+    estrlist reg_exclude "$EEPM_IGNORE_LIB_REQUIRES" "$(cat $libreqlist)" >$libreqlist
     if [ -n "$verbose" ] ; then
         info "  List of binary and libs requires:"
         info "$(cat $libreqlist | xargs -n1000)"
