@@ -88,23 +88,22 @@ check_tty
 phelp()
 {
     echo "$Descr
-$Usage"
+$Usage
 
-message "Options:"
+$(message "Options:")
 $(get_help HELPOPT)
 
-message "Short commands:"
+$(message "Short commands:")
 $(get_help HELPSHORT)
 
 $(get_help HELPCMD)
 
-message "
+$(message "
 Examples:
     $ epmi etckeeper      install etckeeper package
     $ epmqp lib           print out all installed packages with 'lib' in a name
     $ epmqf ip            print out a package the command 'ip' from is
-"
-
+")"
 }
 
 print_version()
