@@ -26,8 +26,6 @@ done
 pack_dir $PRODUCTDIR
 pack_dir $PRODUCTDIR/bin
 
-add_bin_link_command $PRODUCT /usr/bin/heaven
-
 #if epm assure patchelf ; then
 #for i in *_x64 lib*_x64.so* ; do
 #    a= patchelf --set-rpath '$ORIGIN' $i
@@ -35,14 +33,16 @@ add_bin_link_command $PRODUCT /usr/bin/heaven
 #fi
 
 mkdir -p $BUILDROOT/usr/bin
-cat <<EOF >$BUILDROOT/usr/bin/heaven
+cat <<EOF | create_file /usr/bin/heaven
 #!/bin/sh
 cd $PRODUCTDIR/bin
 export LD_LIBRARY_PATH=./x64:\$LD_LIBRARY_PATH
 ./browser_x64 -config ../data/launcher/launcher.xml
 EOF
 chmod a+x $BUILDROOT/usr/bin/heaven
-pack_file /usr/bin/heaven
+
+add_bin_link_command $PRODUCT /usr/bin/heaven
+
 
 install_file $PRODUCTDIR/data/launcher/icon.png /usr/share/pixmaps/$PRODUCT.png
 
