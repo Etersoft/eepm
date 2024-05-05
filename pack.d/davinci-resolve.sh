@@ -36,7 +36,9 @@ subst "s|RESOLVE_INSTALL_LOCATION|/opt/davinci-resolve|" usr/share/applications/
 subst "s|RESOLVE_INSTALL_LOCATION|/opt/davinci-resolve|" usr/share/desktop-directories/*
 # fix for libpango.so error too
 
-rm -v opt/davinci-resolve/libs/libglib-2.0.so.0
+rm -v opt/davinci-resolve/libs/libglib-2.0.so*
+rm -v opt/davinci-resolve/libs/libgio-2.0.so*
+rm -v opt/davinci-resolve/libs/libgmodule-2.0.so*
 # ln -s /usr/lib/libglib-2.0.so.0 opt/davinci-resolve/libs/libglib-2.0.so.0
 
 PKGNAME=$PRODUCT-$VERSION
