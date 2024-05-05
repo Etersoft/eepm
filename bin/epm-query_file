@@ -41,8 +41,14 @@ __do_query_real_file()
     if [ -e "$1" ] ; then
         TOFILE="$(__abs_filename "$1")"
     else
-        TOFILE=$(print_command_path "$1" || echo "$1")
+        TOFILE="$(print_command_path "$1" || echo "$1")"
         if [ "$TOFILE" != "$1" ] ; then
+            # work against usrmerge
+            local t="$(realpath "$(dirname "$TOFILE")")/$(basename "$TOFILE")" #"
+            if [ "$TOFILE" != "$t" ] ; then
+                #info " > $TOFILE is placed as $t"
+                TOFILE="$t"
+            fi
             info " > $1 is placed as $TOFILE"
         fi
     fi
