@@ -344,7 +344,12 @@ add_provides()
 add_unirequires()
 {
     [ -n "$1" ] || return
-    if [ "$(epm print info -b)" = "64" ] ; then
+
+    # cache arch
+    [ -z "$EPMARCH" ] && EPMARCH="$(epm print info -b)"
+
+    # FIXME: use package arch, not system arch
+    if [ "$EPMARCH" = "64" ] ; then
         local req reqs
         reqs=''
         for req in $* ; do
