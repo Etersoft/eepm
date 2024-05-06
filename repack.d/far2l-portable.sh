@@ -11,6 +11,9 @@ remove_file /opt/far2l-portable/usr/lib/x86_64-linux-gnu/samba/libsamba-python.c
 remove_file /opt/far2l-portable/usr/lib/x86_64-linux-gnu/samba/libsamba-net.cpython-310-x86-64-linux-gnu.so.0
 remove_file /opt/far2l-portable/usr/lib/x86_64-linux-gnu/libsamba-policy.cpython-310-x86-64-linux-gnu.so.0.0.1
 
+add_bin_link_command far2l $PRODUCT
+
 add_conflicts far2l
+fix_desktop_file usr/bin/far2l far2l
 
 add_libs_requires
