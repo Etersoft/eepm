@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-export EPMVERSION="3.62.8"
+export EPMVERSION="3.62.9"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -3124,6 +3124,12 @@ __download_pkg_urls()
                 local si="$(echo "$i" | sed -e 's| |-|g')"
                 if [ "$si" != "$i" ] ; then
                     info "Space detected in the downloaded file '$i', removing spaces ..."
+                    mv -v "$tmppkg/$i" "$tmppkg/$si"
+                    i="$si"
+                fi
+                si="$(echo "$i" | sed -e 's|\?.*||g')"
+                if [ "$si" != "$i" ] ; then
+                    info "Arg sign ? detected in the downloaded file '$i', removing args from filename ..."
                     mv -v "$tmppkg/$i" "$tmppkg/$si"
                     i="$si"
                 fi
@@ -7768,8 +7774,14 @@ __do_query_real_file()
     if [ -e "$1" ] ; then
         TOFILE="$(__abs_filename "$1")"
     else
-        TOFILE=$(print_command_path "$1" || echo "$1")
+        TOFILE="$(print_command_path "$1" || echo "$1")"
         if [ "$TOFILE" != "$1" ] ; then
+            # work against usrmerge
+            local t="$(realpath "$(dirname "$TOFILE")")/$(basename "$TOFILE")" #"
+            if [ "$TOFILE" != "$t" ] ; then
+                #info " > $TOFILE is placed as $t"
+                TOFILE="$t"
+            fi
             info " > $1 is placed as $TOFILE"
         fi
     fi
@@ -11380,12 +11392,17 @@ if len(sys.argv) < 2:
 pyproject = sys.argv[1]
 
 c = toml.load(pyproject)
-n = c["tool"]["poetry"]["dependencies"]
-for key, value in n.items():
-	if isinstance(value, dict):
-		print('\n' + key + ' ' , value["version"])
-	else:
-		print('\n' + key + ' ' + value)
+try:
+	n = c["tool"]["poetry"]["dependencies"]
+	for key, value in n.items():
+		if isinstance(value, dict):
+			print('\n' + key + ' ' , value["version"])
+		else:
+			print('\n' + key + ' ' + value)
+except:
+	n = c["project"]["dependencies"]
+	for t in n:
+		print('\n' + t)
 EOF
     a= python3 $lt "$1"
 }
