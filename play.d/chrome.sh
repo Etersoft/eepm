@@ -12,6 +12,8 @@ arch=amd64
 pkgtype=deb
 _channel="stable"
 
+warn_version_is_not_supported
+
 if [ "$VERSION" = "*" ] ; then
     PKGURL="https://dl.google.com/linux/direct/google-chrome-stable_current_$arch.$pkgtype"
 else
