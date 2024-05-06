@@ -107,6 +107,12 @@ __download_pkg_urls()
                     mv -v "$tmppkg/$i" "$tmppkg/$si"
                     i="$si"
                 fi
+                si="$(echo "$i" | sed -e 's|\?.*||g')"
+                if [ "$si" != "$i" ] ; then
+                    info "Arg sign ? detected in the downloaded file '$i', removing args from filename ..."
+                    mv -v "$tmppkg/$i" "$tmppkg/$si"
+                    i="$si"
+                fi
                 [ -n "$pkg_files" ] && pkg_files="$pkg_files $tmppkg/$i" || pkg_files="$tmppkg/$i"
                 [ -n "$pkg_urls_downloaded" ] && pkg_urls_downloaded="$pkg_urls_downloaded $url" || pkg_urls_downloaded="$url"
             done
