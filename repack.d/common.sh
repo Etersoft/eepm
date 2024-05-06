@@ -70,6 +70,10 @@ is_url()
     echo "$1" | grep -q "^[filehtps]*:/"
 }
 
+estrlist()
+{
+    epm tool estrlist "$@"
+}
 
 
 # Move file to a new place
