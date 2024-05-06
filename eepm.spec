@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.62.8
+Version: 3.62.9
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -101,6 +101,21 @@ a discussion about extra requirements.
 
 
 %changelog
+* Mon May 06 2024 Vitaly Lipatov <lav@altlinux.ru> 3.62.9-alt1
+- epm play: add everdo
+- epm query_file: use realpath to dir (workaround against usrmerge)
+- epm generic-default: improve link creation, desktop fixing, chrome-sandbox detection
+- epm repack freeplane: fix path
+- epm repack: add hiddify support
+- epm play: add arduino-ide (eterbug #17318)
+- epm pack davinci-resolve: removed problematic libs
+- epm repack: fix unigine-heaven executable link
+- epm repack postmaster: fix exec script
+- epm repack microsoft-edge-*.sh: skip missed libs
+- epm repack rupost-desktop: fix link issue
+- epm play chrome: set warn_version_is_not_supported
+- epm download: add workaround for args (particularly, ?viasf=1) in downloaded files
+
 * Wed May 01 2024 Vitaly Lipatov <lav@altlinux.ru> 3.62.8-alt1
 - epm play: add --no-sandbox to raindrop (eterbug #17298)
 - epm-upgrade: do usrmerge only when real epm upgrade
