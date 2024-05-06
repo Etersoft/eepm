@@ -10,12 +10,13 @@ VERSION=$3
 BASENAME=$(basename $TAR .tar.gz)
 
 erc unpack $TAR || fatal
+cd *
+
 mkdir -p usr/share/man/man1
 mkdir -p opt/$PRODUCT
 
-
-mv */*.1 usr/share/man/man1/
-mv */* opt/$PRODUCT/
+mv man/man1/*.1 usr/share/man/man1/
+mv bin/* opt/$PRODUCT/
 
 PKGNAME=$PRODUCT-$VERSION
 
