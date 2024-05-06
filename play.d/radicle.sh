@@ -10,9 +10,9 @@ URL="https://radicle.xyz/"
 
 warn_version_is_not_supported
 
-VERSION=$(eget -q -O- "https://files.radicle.xyz/latest/version.json" | epm tool json -b | grep version |  awk 'gsub(/"/, "", $2) {print $2}')
+VERSION=$(eget -q -O- "https://files.radicle.xyz/releases/latest/radicle.json" | epm tool json -b | grep version |  awk 'gsub(/"/, "", $2) {print $2}')
 [ -n "$VERSION" ] || fatal "Can't get version"
 
-PKGURL="https://files.radicle.xyz/latest/x86_64-unknown-linux-musl/radicle-x86_64-unknown-linux-musl.tar.gz"
+PKGURL="https://files.radicle.xyz/releases/latest/radicle-$VERSION-x86_64-unknown-linux-musl.tar.xz"
 
 install_pack_pkgurl $VERSION
