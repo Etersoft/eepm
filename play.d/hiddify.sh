@@ -15,6 +15,6 @@ if [ "$VERSION" = "*" ] ; then
 	VERSION="$(eget --get-real-url -O- https://github.com/hiddify/hiddify-next/releases/latest | awk -F '/' '{print $(NF)}' | awk -F 'v' '{print $2}')"
 fi
 
-PKGURL=$(eget --list --latest https://github.com/hiddify/hiddify-next/releases/tag/v$VERSION "Hiddify-Debian-x64.deb")
+PKGURL="https://github.com/hiddify/hiddify-next/releases/download/v$VERSION/Hiddify-Debian-x64.deb"
 
 install_pkgurl
