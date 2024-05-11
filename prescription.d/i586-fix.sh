@@ -33,7 +33,11 @@ do
     epm --quiet installed $i && LIST="$LIST i586-$i"
 done
 
-for i in $(epmqp --short nvidia_glx | grep "^nvidia_glx") ; do
+for i in \
+          libxnvctrl0 \
+          libnvidia-ml \
+          $(epmqp --short nvidia_glx | grep "^nvidia_glx")
+do
     epm status --installed $i || continue
     # install i586-* only for actual packages
     epm status --installable $i && LIST="$LIST i586-$i"
