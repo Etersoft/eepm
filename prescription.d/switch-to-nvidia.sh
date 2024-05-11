@@ -59,7 +59,7 @@ a= ldconfig # обновляет кэш информации о новейших
 
 # отключаем nouveau
 echo "blacklist nouveau" > /etc/modprobe.d/blacklist-nvidia-x11.conf
-a= rmmod nouveau
+a= modprobe -r nouveau
 
 # удаляем /etc/X11/xorg.conf если он есть и в нём содержится nouveau или fbdev
 if [ -e "/etc/X11/xorg.conf" ] && [ "$(grep -E 'nouveau|fbdev|vesa' "/etc/X11/xorg.conf")"  ] ; then
