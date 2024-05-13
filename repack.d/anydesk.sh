@@ -18,4 +18,6 @@ fi
 
 fix_desktop_file /usr/bin/$PRODUCT
 
+add_unirequires libgtkglext-x11-1.0.so.0
+
 add_libs_requires
