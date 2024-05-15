@@ -691,7 +691,7 @@ get_cid_by_url()
     local URL="$1"
     [ -r "$EGET_IPFS_DB" ] || return
     is_fileurl "$URL" && return 1
-    grep -F "$URL Qm" "$EGET_IPFS_DB" | cut -f2 -d" " | grep -E "Qm[[:alnum:]]{44}" | head -n1
+    tac "$EGET_IPFS_DB" | grep -F "$URL Qm" | cut -f2 -d" " | grep -E "Qm[[:alnum:]]{44}" | head -n1
 }
 
 put_cid_and_url()
@@ -716,14 +716,14 @@ get_filename_by_cid()
 {
     local CID="$1"
     [ -z "$EGET_IPFS_DB" ] && basename "$CID" && return
-    grep -F " $CID " "$EGET_IPFS_DB" | head -n1 | cut -f3 -d" "
+    tac "$EGET_IPFS_DB" | grep -F " $CID " | head -n1 | cut -f3 -d" "
 }
 
 get_url_by_cid()
 {
     local CID="$1"
     [ -z "$EGET_IPFS_DB" ] && echo "$CID" && return
-    grep -F " $CID " "$EGET_IPFS_DB" | head -n1 | cut -f1 -d" "
+    tac "$EGET_IPFS_DB" | grep -F " $CID " | head -n1 | cut -f1 -d" "
 }
 
 ###################
