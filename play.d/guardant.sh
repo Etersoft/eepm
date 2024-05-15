@@ -21,10 +21,10 @@ case "$pkgtype" in
         file="glds-*.x86_64.rpm"
         ;;
     deb)
-        file="glds-*_x86_64.deb"
+        file="glds-*_amd64.deb"
         ;;
     *)
-        file="glds-*_x86_64.deb"
+        file="glds-*_amd64.deb"
         ;;
 esac
 
