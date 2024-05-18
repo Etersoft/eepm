@@ -172,6 +172,7 @@ print_binpkgfilelist()
 # nx-libs-3.5.99.26.1-eter2astra:amd64
 PKGNAMEMASK4="6\(.*\)[_-]\([^_-]*\)[_-]\(.*[0-9].*\):\(.*\)$"
 # nx-libs-3.5.99.26.1-eter2astra
+# microsoft-edge-stable_113.0.1774.35-1_amd64.deb
 PKGNAMEMASK3="^\(.*\)[_-]\([^_-]*\)[_-]\(.*[0-9].*\)$"
 # nx-libs-3.5.99.26.1
 #PKGNAMEMASK2="^\(.*\)[_-]\([0-9].*\)$"
@@ -191,7 +192,7 @@ print_shortname()
 {
     #if [ "$
     #echo "$@" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK4|\1-\2-\3|" -e "s|$PKGNAMEMASK3|\1|"
-    echo "$@" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK3|\1|"
+    print_pkgname "$@" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK3|\1|"
 }
 
 print_version()
