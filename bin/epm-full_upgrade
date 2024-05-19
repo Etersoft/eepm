@@ -60,6 +60,9 @@ epm_full_upgrade()
             "--no-clean")          # HELPCMD: no clean after upgrade
                 full_upgrade_no_clean=1
                 ;;
+            "--no-epm-update-check")          # HELPCMD: skip epm update during full upgrade
+                full_upgrade_no_epm_update_check=1
+                ;;
         esac
         shift
     done
@@ -86,13 +89,26 @@ confirm_action()
         docmd epm update || fatal "repository updating is failed."
     fi
 
+    if [ "$BASEDISTRNAME" = "alt" ] ; then
+        confirm_action "Do upgrade epm? [Y/n]" || full_upgrade_no_epm_update_check=1
+        if [ -z "$full_upgrade_no_epm_update_check" ] ; then
+            [ -n "$quiet" ] || echo
+            epm_version_before=$(epmq eepm &>/dev/null)
+            docmd epm $dryrun install eepm &>/dev/null
+            epm_version_after=$(epmq eepm &>/dev/null)
+            if [ "$epm_version_before" != "$epm_version_after" ] ; then
+                info "An update for epm has been found, epm will be restarted for the update"
+                exec $PROGDIR/$PROGNAME full-upgrade "$@"
+                exit 0
+            fi
+        fi
+    fi
 
     confirm_action "Do upgrade installed packages? [Y/n]" || full_upgrade_no_upgrade=1
     if [ -z "$full_upgrade_no_upgrade" ] ; then
         [ -n "$quiet" ] || echo
         docmd epm $dryrun upgrade || fatal "upgrading of the system is failed."
     fi
-
 
     confirm_action "Upgrade kernel and kernel modules? [Y/n]" || full_upgrade_no_kernel_update=1
     if [ -z "$full_upgrade_no_kernel_update" ] ; then
