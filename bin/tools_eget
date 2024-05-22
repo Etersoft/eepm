@@ -1235,7 +1235,7 @@ scat()
     ###################
 
     local CID="$(get_cid_by_url "$URL")"
-    if [ -n "$CID" ] ; then
+    if [ -n "$CID" ] && [ -z "$EGET_IPFS_FORCE_LOAD" ] ; then
         info "$URL -> $CID"
         ipfs_cat "$CID"
         return
@@ -1282,7 +1282,7 @@ sget()
     #fi
 
     local CID="$(get_cid_by_url "$REALURL")"
-    if [ -n "$CID" ] ; then
+    if [ -n "$CID" ] && [ -z "$EGET_IPFS_FORCE_LOAD" ] ; then
 
         if [ -n "$GETIPFSCID" ] ; then
             echo "$CID"
