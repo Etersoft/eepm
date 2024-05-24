@@ -3,9 +3,11 @@
 # This completes on a list of all available services for the
 # 'serv' command, followed by that script's available commands
 # 
+EEMP_COMMANDS="install|remove|play|update|full-upgrade|Upgrade|search|cl|qf|Install"
+
 __eepm_list_commands()
 {
-    COMPREPLY=( $(echo "install remove play update full-upgrade") )
+    COMPREPLY=( $(echo ${EEMP_COMMANDS//'|'/' '}) )
     COMPREPLY=( $( compgen -W '${COMPREPLY[@]}' -- "$cur" ) )
 }
 
@@ -26,6 +28,11 @@ __eepm_list_available_packages_play()
     COMPREPLY=( $( epm play --list-all --quiet --short ) )
     COMPREPLY=( $( compgen -W '${COMPREPLY[@]%.sh}' -- "$cur" ) )
 }
+#TODO fix spaces in path
+__eepm_complete_qf() {
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    COMPREPLY=( $(compgen -o default -A file -A command -- "$cur") )
+}
 
 __eepm_complete_args(){
     COMPREPLY=($(compgen -W '-h --help -v --version --verbose --debug
@@ -40,7 +47,7 @@ __eepm_complete_commands() {
     
     local special i
     for ((i = 1; i < ${#COMP_WORDS[@]} - 1; i++)); do
-        if [[ ${COMP_WORDS[i]} == @(install|remove|play) ]]; then
+        if [[ ${COMP_WORDS[i]} == @(${EEMP_COMMANDS}) ]]; then
             special=${COMP_WORDS[i]}
             break
         fi
@@ -48,7 +55,7 @@ __eepm_complete_commands() {
 
     if [[ -v special ]]; then
         case $special in
-            install)
+            install|cl|Install)
                 __eepm_list_available_packages
                 return 0 
                 ;;
@@ -60,7 +67,15 @@ __eepm_complete_commands() {
             play)
                 __eepm_list_available_packages_play
                 return 0 
+                ;;     
+            qf)
+                __eepm_complete_qf
+                return 0 
                 ;;
+            *)
+                return 0
+                ;;
+
         esac
     else
         __eepm_list_commands
@@ -78,12 +93,14 @@ __eepm()
   case "${COMP_WORDS[0]}" in
     epm)
         __eepm_complete_commands ;;
-    epmi)
+    epmi|epmcl)
         __eepm_list_available_packages ;;
     epme)
         __eepm_list_installed_packages ;;
     epmp)
         __eepm_list_available_packages_play ;;
+    epmqf)
+        __eepm_complete_qf ;;
     *)
         return 0 ;;
     esac
@@ -95,5 +112,6 @@ __eepm()
 
 } &&
 
+
 # . "/usr/share/bash-completion/bash_completion"
-complete -F __eepm epm epmi epme epmp
+complete -F __eepm epm epmi epme epmp epmcl epmqf epmI
