@@ -77,12 +77,10 @@ epm()
     $EPM "$@"
 }
 
-
 eget()
 {
     epm tool eget "$@"
 }
-
 
 is_supported_arch()
 {
@@ -157,6 +155,22 @@ get_latest_version()
         ver="$(echo "$ver" | head -n1 | cut -d" " -f1)"
         [ -n "$ver" ] && echo "$ver" && return
     done
+}
+
+get_github_version()
+{
+    is_command jq || fatal "jq not found, please install jq"
+    local url="$1"
+    local user_and_repo=${url#https://github.com/}
+    local user_and_repo=${user_and_repo%/}
+    local asset_name="$2"
+
+    if [ "$3" == "prerelease" ] ; then
+        curl -s "https://api.github.com/repos/${user_and_repo}/releases" | jq -r '.[] | .assets[].browser_download_url' | grep "$2" | head -n1
+    else
+        curl -s "https://api.github.com/repos/${user_and_repo}/releases" | jq -r '.[] | select(.prerelease == false) | .assets[].browser_download_url' | grep "$2" | head -n1
+    fi
+
 }
 
 print_product_alt()
