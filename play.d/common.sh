@@ -159,6 +159,32 @@ get_latest_version()
     done
 }
 
+get_github_version()
+{
+    local url="$1"
+    local user_and_repo=${url#https://github.com/}
+    local user_and_repo=${user_and_repo%/}
+    local asset_name="$2"
+
+    if [ "$3" == "prerelease" ] ; then
+        curl -s "https://api.github.com/repos/${user_and_repo}/releases" | grep 'browser_download_url' | grep -iEo 'https.*download.*' | grep "$2" | head -n1
+    else
+        curl -s "https://api.github.com/repos/${user_and_repo}/releases" \
+        | awk '{
+    if ($0 ~ /"prerelease": false/) {
+        prerelease = 0;
+    } else if ($0 ~ /"prerelease": true/) {
+        prerelease = 1;
+    }
+    if (!prerelease && $0 ~ /"browser_download_url":/) {
+        match($0, /"browser_download_url": "(https[^"]*)"/, arr);
+        print arr[1];
+    }
+}' | grep "$2" | head -1
+    fi
+
+}
+
 print_product_alt()
 {
     [ -n "$1" ] || return
