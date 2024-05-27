@@ -3,7 +3,31 @@
 # This completes on a list of all available services for the
 # 'serv' command, followed by that script's available commands
 # 
-EEMP_COMMANDS="install|remove|play|update|full-upgrade|Upgrade|search|cl|qf|Install"
+# packages complete commands
+EEMP_COMMANDS="query|q|info|packages|filelist|qp|grep|query_package|ql|get-files|changelog|cl|qi|show|qa|list-installed|ls|li|list-available|programs"
+# package requires and depend complete commands
+EEMP_COMMANDS+="|requires|deplist|depends|req|depends-on|whatdepends|rdepends|whatrequires|wd|required-by|provides|prov|whatprovides|conflicts|policy|resolve"
+# query package owning file complete commands
+EEMP_COMMANDS+="|qf|wp|which|belongs"
+# install complete commands
+EEMP_COMMANDS+="|install|Install|reinstall|play|add|i|it|installed"
+# remove complete commands
+EEMP_COMMANDS+="|rm|del|remove|delete|uninstall|erase|purge|e"
+# update complete commands
+EEMP_COMMANDS+="|update|full-upgrade|Upgrade"
+# search complete commands
+EEMP_COMMANDS+="|search|search-file|s|find|sr|filesearch|sf"
+# complex complete commands
+EEMP_COMMANDS+="|status|list|assure"
+# short args complete commands
+EEPM_SHORT_ARGS='-h|-v|-y|-i|-e|-P|-s|-qp|-qf|-q|-S|-sf|-ql|-cl|-qi|-qa'
+
+EEPM_FULL_ARGS='--help --version --verbose --debug
+        --skip-installed --skip-missed --show-command-only --quiet --silent --nodeps
+        --force --noremove --no-remove --no-stdin --inscript
+        --dry-run --simulate --just-print --no-act --short --direct --repack --norepack --install
+        --scripts --noscripts --save-only --put-to-repo= --download-only --url --sort --auto 
+        --assumeyes --non-interactive --disable-interactivity --interactive --force-yes'
 
 __eepm_list_commands()
 {
@@ -28,55 +52,114 @@ __eepm_list_available_packages_play()
     COMPREPLY=( $( epm play --list-all --quiet --short ) )
     COMPREPLY=( $( compgen -W '${COMPREPLY[@]%.sh}' -- "$cur" ) )
 }
-#TODO fix spaces in path
+
 __eepm_complete_qf() {
     local cur=${COMP_WORDS[COMP_CWORD]}
-    COMPREPLY=( $(compgen -o default -A file -A command -- "$cur") )
+    if [[ $cur == */* ]]; then
+        _filedir
+    else
+        COMPREPLY=( $(compgen -A command -- "$cur") )
+    fi
 }
 
-__eepm_complete_args(){
-    COMPREPLY=($(compgen -W '-h --help -v --version --verbose --debug
-        --skip-installed --skip-missed --show-command-only --quiet --silent --nodeps
-        --force --noremove --no-remove --no-stdin --inscript
-        --dry-run --simulate --just-print --no-act --short --direct --repack --norepack --install
-        --scripts --noscripts --save-only --put-to-repo= --download-only --url --sort -y --auto 
-        --assumeyes --non-interactive --disable-interactivity --interactive --force-yes' -- "$cur"))
+__eepm_complete_status() { 
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    local options="--installed --installable --original --certified --thirdparty --repacked --validate"
+
+    if [[ $cur == --* || ($cur == '' && $prev == 'status') ]]; then
+        COMPREPLY=( $(compgen -W "$options" -- "$cur") )
+    elif [[ ${COMP_CWORD} -eq 3 ]]; then
+        __eepm_list_available_packages
+    fi
+
 }
 
+__eepm_complete_list() { 
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    local options="--available --installed --upgradable"
+
+    if [[ $cur == --* || ($cur == '' && $prev == 'list') ]]; then
+        COMPREPLY=( $(compgen -W "$options" -- "$cur") )
+    # elif [[ ${COMP_CWORD} -eq 3 ]]; then
+    #     __eepm_list_available_packages
+    fi
+
+}
+
+__eepm_complete_assure() { 
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    if [[ $cur == */* ]]; then
+        _filedir
+    else
+        COMPREPLY=( $(compgen -A command -- "$cur") )
+    fi
+}
+__eepm_complete_full_args(){
+    COMPREPLY=($(compgen -W "$EEPM_FULL_ARGS" -- "$cur"))
+}
+
+__eepm_complete_short_args(){
+    COMPREPLY=( $(echo ${EEPM_SHORT_ARGS//'|'/' '}) )
+    COMPREPLY=( $( compgen -W '${COMPREPLY[@]}' -- "$cur" ) )
+    
+}
 __eepm_complete_commands() {
     
     local special i
     for ((i = 1; i < ${#COMP_WORDS[@]} - 1; i++)); do
-        if [[ ${COMP_WORDS[i]} == @(${EEMP_COMMANDS}) ]]; then
+        if [[ ${COMP_WORDS[i]} == @(${EEMP_COMMANDS}) || ${COMP_WORDS[i]} == @(${EEPM_SHORT_ARGS}) ]]; then
             special=${COMP_WORDS[i]}
             break
         fi
     done
-
+    
     if [[ -v special ]]; then
         case $special in
-            install|cl|Install)
+            install|Install|reinstall|add|i|it|-i|installed)
                 __eepm_list_available_packages
                 return 0 
                 ;;
-            remove)
+            query|q|-q|info|qp|grep|query_package|-qp|changelog|cl|-cl|show|qi|-qi)
+                __eepm_list_available_packages
+                return 0 
+                ;;
+            search|s|find|sr|-s|-ql|ql|get-files|filelist)
+                __eepm_list_available_packages
+                return 0 
+                ;;
+            requires|deplist|depends|req|depends-on|whatdepends|rdepends|whatrequires|wd|required-by|provides|prov|whatprovides|conflicts|policy|resolve)
+                __eepm_list_available_packages
+                return 0 
+                ;;
+            remove|rm|del|delete|uninstall|erase|purge|e|-e|-P)
                 __eepm_list_installed_packages
                 return 0 
                 ;;
-                
             play)
                 __eepm_list_available_packages_play
                 return 0 
                 ;;     
-            qf)
+            qf|wp|which|belongs|-qf|-S)
                 __eepm_complete_qf
+                return 0 
+                ;;
+            status)
+                __eepm_complete_status
+                return 0 
+                ;;
+            list)
+                __eepm_complete_list
+                return 0 
+                ;;
+            assure)
+                __eepm_complete_assure
                 return 0 
                 ;;
             *)
                 return 0
                 ;;
-
         esac
+
     else
         __eepm_list_commands
     fi
@@ -90,28 +173,78 @@ __eepm()
     COMPREPLY=()
     _get_comp_words_by_ref cur prev
 
-  case "${COMP_WORDS[0]}" in
-    epm)
-        __eepm_complete_commands ;;
-    epmi|epmcl)
-        __eepm_list_available_packages ;;
-    epme)
-        __eepm_list_installed_packages ;;
-    epmp)
-        __eepm_list_available_packages_play ;;
-    epmqf)
-        __eepm_complete_qf ;;
-    *)
-        return 0 ;;
+    cmd="${COMP_WORDS[1]}"
+
+    case "${COMP_WORDS[0]}" in
+        epm|eepm)
+            __eepm_complete_commands 
+            ;;
+        epmi|epmcl|epmwd|epmq|epmqi|epmqp|epms|epmql)
+            __eepm_list_available_packages 
+            return 0
+            ;;
+        epme)
+            __eepm_list_installed_packages 
+            return 0
+            ;;
+        epmp)
+            __eepm_list_available_packages_play 
+            return 0
+            ;;
+        epmqf)
+            __eepm_complete_qf 
+            return 0
+            ;;
+        *)
+            return 0 
+            ;;
     esac
 
+
+    if [[ $cur == --* && ! $cur = '-' ]]; then
+        case $cmd in
+            epm|eepm)
+                __eepm_complete_full_args
+                return 0
+                ;;
+            status)
+                __eepm_complete_status
+                return 0
+                ;;
+            list)
+                __eepm_complete_list
+                return 0
+                ;;
+            *)
+                __eepm_complete_full_args
+                return 0
+                ;;
+        esac
+    fi
+
     if [[ $cur == -* ]]; then
-        __eepm_complete_args
-        return 0
+        case $cmd in
+            epm|eepm)
+                __eepm_complete_short_args
+                return 0
+                ;;
+            status)
+                __eepm_complete_status
+                return 0
+                ;;
+            list)
+                __eepm_complete_list
+                return 0
+                ;;
+            *)
+                __eepm_complete_short_args
+                return 0
+                ;;
+        esac
     fi
 
 } &&
 
 
 # . "/usr/share/bash-completion/bash_completion"
-complete -F __eepm epm epmi epme epmp epmcl epmqf epmI
+complete -F __eepm epm eepm epmi epme epmp epmcl epmqf epmI epms epmsf epmwd epmq epmqi epmqa epmqp epmql epmrl epmu
