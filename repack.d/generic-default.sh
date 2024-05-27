@@ -10,8 +10,10 @@ PKG="$4"
 
 . $(dirname $0)/common.sh
 
-# detect requires by libs
-add_libs_requires
+# detect requires by libs (skip Full AppImage bundle)
+if [ ! -f "$BUILDROOT$PRODUCTDIR/.bundle.yml" ] ; then
+    add_libs_requires
+fi
 
 # FIXME: hack for nonstandart name
 pd="$(echo $BUILDROOT/opt/*)"
