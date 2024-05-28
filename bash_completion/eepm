@@ -1,8 +1,8 @@
 # eepm(8) completion
 
 # This completes on a list of all available services for the
-# 'serv' command, followed by that script's available commands
-# 
+# 'eepm' command, followed by that script's available commands
+# 88 minutes
 # packages complete commands
 EEMP_COMMANDS="query|q|info|packages|filelist|qp|grep|query_package|ql|get-files|changelog|cl|qi|show|qa|list-installed|ls|li|list-available|programs"
 # package requires and depend complete commands
@@ -14,11 +14,18 @@ EEMP_COMMANDS+="|install|Install|reinstall|play|add|i|it|installed"
 # remove complete commands
 EEMP_COMMANDS+="|rm|del|remove|delete|uninstall|erase|purge|e"
 # update complete commands
-EEMP_COMMANDS+="|update|full-upgrade|Upgrade"
+EEMP_COMMANDS+="|update|full-upgrade|Upgrade|update-repo|ur"
 # search complete commands
 EEMP_COMMANDS+="|search|search-file|s|find|sr|filesearch|sf"
 # complex complete commands
-EEMP_COMMANDS+="|status|list|assure"
+EEMP_COMMANDS+="|status|list|assure|repo"
+# repo-control complete commands
+EEMP_COMMANDS+="|addrepo|ar|repofix|removerepo|remove-repo|rr"
+# packages check complete commands
+EEMP_COMMANDS+="|check|fix|verify|dedup|release-upgrade|upgrade-release|upgrade-system|release-switch|release-downgrade|downgrade-release|downgrade-system"
+# kernels complete commands
+EEMP_COMMANDS+="|remove-old-kernels|remove-old-kernel|kernel-update|kernel-upgrade|update-kernel|upgrade-kernel|stats"
+
 # short args complete commands
 EEPM_SHORT_ARGS='-h|-v|-y|-i|-e|-P|-s|-qp|-qf|-q|-S|-sf|-ql|-cl|-qi|-qa'
 
@@ -27,7 +34,7 @@ EEPM_FULL_ARGS='--help --version --verbose --debug
         --force --noremove --no-remove --no-stdin --inscript
         --dry-run --simulate --just-print --no-act --short --direct --repack --norepack --install
         --scripts --noscripts --save-only --put-to-repo= --download-only --url --sort --auto 
-        --assumeyes --non-interactive --disable-interactivity --interactive --force-yes'
+        --assumeyes --non-interactive --disable-interactivity --interactive --force-yes --add-repo'
 
 __eepm_list_commands()
 {
@@ -49,8 +56,14 @@ __eepm_list_available_packages()
 
 __eepm_list_available_packages_play()
 {
-    COMPREPLY=( $( epm play --list-all --quiet --short ) )
-    COMPREPLY=( $( compgen -W '${COMPREPLY[@]%.sh}' -- "$cur" ) )
+    local options='--remove --update --list --list-all --list-scripts --short --installed --product-alternatives --quiet'
+    
+    if [[ ! $cur == -* ]]; then
+        COMPREPLY=( $( epm play --list-all --quiet --short ) )
+        COMPREPLY=( $( compgen -W '${COMPREPLY[@]%.sh}' -- "$cur" ) )
+    else
+        COMPREPLY=( $(compgen -W "$EEPM_FULL_ARGS $options" -- "$cur") )
+    fi
 }
 
 __eepm_complete_qf() {
@@ -85,7 +98,7 @@ __eepm_complete_list() {
     fi
 
 }
-
+# TODO logic
 __eepm_complete_assure() { 
     local cur=${COMP_WORDS[COMP_CWORD]}
     if [[ $cur == */* ]]; then
@@ -94,6 +107,61 @@ __eepm_complete_assure() {
         COMPREPLY=( $(compgen -A command -- "$cur") )
     fi
 }
+
+__eepm_complete_repolist() { 
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    if [[ $cur == */* ]]; then
+        _filedir
+    elif [[ $(epm print info -s) == 'alt' ]]; then
+        COMPREPLY="basealt altsp yandex autoimports autoports altlinuxclub deferred deferred.org etersoft korinf"
+        COMPREPLY=( $( compgen -W '${COMPREPLY[@]}' -- "$cur" ) )
+    fi
+}
+
+__eepm_complete_repo() { 
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    REPO_CMD_LIST='list|change|set|switch|enable|disable|addkey|clean|save|restore|reset|status|add|Add|rm|del|remove'
+    if [[ $prev == "repo" ]]; then
+        
+        COMPREPLY=( $( compgen -W "${REPO_CMD_LIST//'|'/' '}" -- "$cur" ) )
+    else
+     
+        local special i
+        for ((i = 1; i < ${#COMP_WORDS[@]} - 1; i++)); do
+            if [[ ${COMP_WORDS[i]} == @(${REPO_CMD_LIST}) ]]; then
+                special=${COMP_WORDS[i]}
+                break
+            fi
+        done
+        
+        if [[ -v special ]]; then
+            case $special in
+                change|set|add|Add)
+                __eepm_complete_repolist
+                ;;
+                rm|del|remove)
+                __eepm_complete_repolist
+                ;;
+                switch)
+                __eepm_complete_repolist
+                ;;
+                enable|disable)
+                __eepm_complete_repolist
+                ;;
+            esac
+        fi
+    fi
+}
+
+ __eepm_complete_kernel_update(){
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    local options="-A -D -l --list -h --help -a --all -i --interactive -H --headers --debuginfo -f -y --force -t --type -r --release -u --update -n --dry-run -d --download-only"
+
+    if [[ $cur == -* ]]; then
+        COMPREPLY=( $(compgen -W "$options" -- "$cur") )
+    fi
+ }
+
 __eepm_complete_full_args(){
     COMPREPLY=($(compgen -W "$EEPM_FULL_ARGS" -- "$cur"))
 }
@@ -103,6 +171,7 @@ __eepm_complete_short_args(){
     COMPREPLY=( $( compgen -W '${COMPREPLY[@]}' -- "$cur" ) )
     
 }
+
 __eepm_complete_commands() {
     
     local special i
@@ -154,6 +223,18 @@ __eepm_complete_commands() {
             assure)
                 __eepm_complete_assure
                 return 0 
+                ;;
+            addrepo|ar|repofix|removerepo|remove-repo|rr)
+                __eepm_complete_repolist
+                return 0
+                ;;
+            repo)
+                __eepm_complete_repo 
+                return 0
+                ;;
+            kernel-update|kernel-upgrade|update-kernel|upgrade-kernel)
+                __eepm_complete_kernel_update 
+                return 0
                 ;;
             *)
                 return 0
@@ -215,6 +296,14 @@ __eepm()
                 __eepm_complete_list
                 return 0
                 ;;
+            play|epmp)
+                __eepm_complete_list
+                return 0
+                ;;
+            kernel-update|kernel-upgrade|update-kernel|upgrade-kernel)
+                __eepm_complete_kernel_update 
+                return 0
+                ;;
             *)
                 __eepm_complete_full_args
                 return 0
@@ -234,6 +323,14 @@ __eepm()
                 ;;
             list)
                 __eepm_complete_list
+                return 0
+                ;;
+            play|epmp)
+                __eepm_complete_list
+                return 0
+                ;;
+            kernel-update|kernel-upgrade|update-kernel|upgrade-kernel)
+                __eepm_complete_kernel_update 
                 return 0
                 ;;
             *)
