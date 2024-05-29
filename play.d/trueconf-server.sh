@@ -16,8 +16,14 @@ VERSION="*"
 
 distrversion=$(epm print info -v)
 case "$(epm print info -e)" in
-    ALTLinux/p10|ALTLinux/Sisyphus)
+    ALTLinux/Sisyphus)
         PKGURL="https://mirror.trueconf.ru/altlinux/p10/x86_64/RPMS.non-free/trueconf-server-${VERSION}*.x86_64.rpm"
+        ;;
+    ALTLinux/p10)
+        PKGURL="https://mirror.trueconf.ru/altlinux/p10/x86_64/RPMS.non-free/trueconf-server-${VERSION}*.x86_64.rpm"
+        ;;
+    ALTLinux/c10f1)
+        PKGURL="https://mirror.trueconf.ru/altlinux/sp10f1/x86_64/RPMS.non-free/trueconf-server-${VERSION}*.x86_64.rpm"
         ;;
     ALTLinux/p9)
         PKGURL="https://mirror.trueconf.ru/altlinux/p9/x86_64/RPMS.non-free/trueconf-${VERSION}*.x86_64.rpm"

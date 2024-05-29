@@ -13,7 +13,17 @@ URL="https://trueconf.ru"
 epmopt=''
 distrversion=$(epm print info -v)
 case "$(epm print info -e)" in
-    ALTLinux/p10|ALTLinux/Sisyphus)
+    ALTLinux/Sisyphus)
+        URL="https://mirror.trueconf.ru/altlinux/p10/x86_64/RPMS.non-free/trueconf-${VERSION}*.x86_64.rpm"
+        # TODO: we need repack, they change files in a home dir
+        epmopt='--direct --repack'
+        ;;
+    ALTLinux/p11)
+        URL="https://mirror.trueconf.ru/altlinux/p10/x86_64/RPMS.non-free/trueconf-${VERSION}*.x86_64.rpm"
+        # we need repack, they change files in a home dir
+        epmopt='--direct --repack'
+        ;;
+    ALTLinux/p10)
         URL="https://mirror.trueconf.ru/altlinux/p10/x86_64/RPMS.non-free/trueconf-${VERSION}*.x86_64.rpm"
         # we need repack, they change files in a home dir
         epmopt='--direct --repack'
@@ -24,6 +34,10 @@ case "$(epm print info -e)" in
         ;;
     ALTLinux/p8)
         URL="https://mirror.trueconf.ru/altlinux/p8/x86_64/RPMS.non-free/trueconf-${VERSION}*.x86_64.rpm"
+        epmopt='--direct --repack'
+        ;;
+    ALTLinux/c10f1)
+        URL="https://mirror.trueconf.ru/altlinux/c10f1/x86_64/RPMS.non-free/trueconf-${VERSION}*.x86_64.rpm"
         epmopt='--direct --repack'
         ;;
     ALTLinux/c8.2)
