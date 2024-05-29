@@ -190,7 +190,7 @@ __check_system()
 
     if [ "$TO" != "Sisyphus" ] ; then
         # note: we get --base-version directy to get new version
-        if [ "$(DISTRVENDOR --base-version)" != "$TO" ] || epm installed altlinux-release-sisyphus >/dev/null ; then
+        if [ "$($DISTRVENDOR --base-version)" != "$TO" ] || epm installed altlinux-release-sisyphus >/dev/null ; then
             warning "Current distro still is not $TO, or altlinux-release-sisyphus package is installed."
             warning "Trying to fix with altlinux-release-$TO"
             docmd epm install altlinux-release-$TO
