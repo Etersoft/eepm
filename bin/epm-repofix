@@ -201,18 +201,9 @@ __change_repo()
 }
 
 
-epm_repofix()
+__epm_repochange_alt()
 {
-
-case $BASEDISTRNAME in
-    "alt")
-        assure_exists apt-repo
-        [ -n "$quiet" ] || docmd apt-repo list
-        assure_root
-        __fix_alt_sources_list /etc/apt/sources.list
-        __fix_alt_sources_list /etc/apt/sources.list.d/*.list
-        # TODO: move to repo change
-        case "$1" in
+    case "$1" in
         "etersoft")
             __change_repo etersoft "//download.etersoft.ru/pub ALTLinux"
             ;;
@@ -228,12 +219,40 @@ case $BASEDISTRNAME in
         "altlinux.org")
             __change_repo ftp.altlinux "//ftp.altlinux.org/pub/distributions ALTLinux"
             ;;
-        "")
-            ;;
         *)
-            fatal "Unsupported change key $1"
-        esac
-        docmd apt-repo list
+            fatal "Unsupported change key '$1'"
+            ;;
+    esac
+}
+
+
+epm_repochange()
+{
+
+    case $BASEDISTRNAME in
+        "alt")
+            __epm_repochange_alt "$1"
+            ;;
+         *)
+            fatal "Repo change Unsupported for $BASEDISTRNAME"
+            ;;
+    esac
+}
+
+
+epm_repofix()
+{
+
+case $BASEDISTRNAME in
+    "alt")
+        assure_exists apt-repo
+        [ -n "$quiet" ] || docmd apt-repo list
+        assure_root
+
+        __fix_alt_sources_list /etc/apt/sources.list
+        __fix_alt_sources_list /etc/apt/sources.list.d/*.list
+
+        [ -n "$quiet" ] || docmd apt-repo list
         return
         ;;
 esac

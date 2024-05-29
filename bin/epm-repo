@@ -49,7 +49,7 @@ epm_repo()
         ;;
     change)                           # HELPCMD: <mirror>: switch sources to the mirror (supports etersoft/yandex/basealt/altlinux.org/eterfund.org): rewrite URLs to the specified server
         load_helper epm-repofix
-        epm_repofix "$@"
+        epm_repochange "$@"
         ;;
     set)                              # HELPCMD: <mirror>: remove all existing sources and add mirror for the branch
         epm repo rm all
