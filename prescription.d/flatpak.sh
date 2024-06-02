@@ -8,7 +8,7 @@ assure_root
 
 [ "$(epm print info -s)" = "alt" ] || fatal "Only ALTLinux is supported"
 
-# Мсправляет ошибку "enabling unprivileged user namespaces" без перезагрузки
+# Исправляет ошибку "enabling unprivileged user namespaces" без перезагрузки
 a= sysctl -w kernel.unprivileged_userns_clone=1
 
 install_portals=""
@@ -32,13 +32,38 @@ EOF
 
 epm install --skip-installed $install_portals xdg-desktop-portal
 
-epm install flatpak flatpak-repo-flathub sysctl-conf-userns
+epm install --skip-installed flatpak flatpak-repo-flathub sysctl-conf-userns
 
 if epm installed plasma5-discover ; then
-    epm install plasma5-discover-flatpak
+    epm install --skip-installed plasma5-discover-flatpak
 fi
 
 # Без перезагрузки dbus, порталы не заработают
-a= systemctl try-reload-or-restart dbus
+serv dbus reload
 
-echo "Flatpak successfully installed, but epm play is the preferred way to install the software."
+# https://bugzilla.altlinux.org/46690
+cat <<EOL > /etc/systemd/system/check-bwrap.service
+[Unit]
+Description=Check and fix permissions for bwrap
+Wants=check-bwrap.path
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c "CURRENT_PERMISSIONS=\$(stat -c '%a' /usr/bin/bwrap); if [ '\$CURRENT_PERMISSIONS' != '775' ]; then chmod 0755 /usr/bin/bwrap; fi"
+EOL
+
+cat <<EOL > /etc/systemd/system/check-bwrap.path
+[Unit]
+Description=Watch /usr/bin/bwrap for changes
+
+[Path]
+PathModified=/usr/bin/bwrap
+
+[Install]
+WantedBy=multi-user.target
+EOL
+
+serv on check-bwrap.path
+serv start check-bwrap.service
+
+echo "You need to log out of the session for flatpak to work."
