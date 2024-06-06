@@ -356,9 +356,17 @@ add_unirequires()
     if [ "$EPMARCH" = "64" ] ; then
         local req reqs
         reqs=''
+        while IFS= read -r file ; do
+            if file "$file" | grep -q "ELF 32-bit" ; then
+                X32_ARCH="true"
+                break
+            fi
+        done < <(find "$BUILDROOT" -type f -executable)
         for req in $* ; do
             reqs="$reqs $req"
-            echo "$req" | grep "^lib.*\.so" | grep -q -v -F "(64bit)" && reqs="$reqs"'()(64bit)'
+            if [ "$X32_ARCH" != "true" ] ; then
+                echo "$req" | grep "^lib.*\.so" | grep -q -v -F "(64bit)" && reqs="$reqs"'()(64bit)'
+            fi
         done
         subst "1iRequires:$reqs" $SPEC
     else
