@@ -2,7 +2,7 @@
 
 # This completes on a list of all available services for the
 # 'eepm' command, followed by that script's available commands
-# 88 minutes
+
 # packages complete commands
 EEMP_COMMANDS="query|q|info|packages|filelist|qp|grep|query_package|ql|get-files|changelog|cl|qi|show|qa|list-installed|ls|li|list-available|programs"
 # package requires and depend complete commands
@@ -10,31 +10,43 @@ EEMP_COMMANDS+="|requires|deplist|depends|req|depends-on|whatdepends|rdepends|wh
 # query package owning file complete commands
 EEMP_COMMANDS+="|qf|wp|which|belongs"
 # install complete commands
-EEMP_COMMANDS+="|install|Install|reinstall|play|add|i|it|installed"
+EEMP_COMMANDS+="|install|Install|reinstall|add|i|it|installed|simulate|prescription|recipe"
 # remove complete commands
-EEMP_COMMANDS+="|rm|del|remove|delete|uninstall|erase|purge|e"
+EEMP_COMMANDS+="|rm|del|remove|delete|uninstall|erase|purge|e|autoorphans|remove-orphans"
 # update complete commands
-EEMP_COMMANDS+="|update|full-upgrade|Upgrade|update-repo|ur"
+EEMP_COMMANDS+="|update|full-upgrade|Upgrade|update-repo|ur|up"
 # search complete commands
 EEMP_COMMANDS+="|search|search-file|s|find|sr|filesearch|sf"
 # complex complete commands
-EEMP_COMMANDS+="|status|list|assure|repo"
+EEMP_COMMANDS+="|status|list|assure|repo|autoremove|package-cleanup|mark|tool|print"
 # repo-control complete commands
 EEMP_COMMANDS+="|addrepo|ar|repofix|removerepo|remove-repo|rr"
 # packages check complete commands
-EEMP_COMMANDS+="|check|fix|verify|dedup|release-upgrade|upgrade-release|upgrade-system|release-switch|release-downgrade|downgrade-release|downgrade-system"
+EEMP_COMMANDS+="|check|fix|verify|dedup|release-upgrade|upgrade-release|upgrade-system|release-switch|history|checkpkg|integrity"
+# downgrade complete commands
+EEMP_COMMANDS+="|Downgrade|release-downgrade|downgrade-release|downgrade-system|downgrade|distro-sync"
+# download complete commands
+EEMP_COMMANDS+="|download|fetch|fc"
 # kernels complete commands
 EEMP_COMMANDS+="|remove-old-kernels|remove-old-kernel|kernel-update|kernel-upgrade|update-kernel|upgrade-kernel|stats"
+# clean and restore complete commands
+EEMP_COMMANDS+="|clean|delete-cache|dc|restore"
+# Unknown complete commands (need help with it)
+EEMP_COMMANDS+="|audit|site|url|checkpkg|integrity"
+# selfinstall complete commands (need help with it)
+EEMP_COMMANDS+="|ei|ik|epminstall|epm-install|selfinstall"
+# play complete commands
+EEMP_COMMANDS+="|repack|play|pack"
 
 # short args complete commands
-EEPM_SHORT_ARGS='-h|-v|-y|-i|-e|-P|-s|-qp|-qf|-q|-S|-sf|-ql|-cl|-qi|-qa'
+EEPM_SHORT_ARGS='-h|-v|-y|-i|-e|-P|-s|-qp|-qf|-q|-S|-sf|-ql|-cl|-qi|-qa|-V'
 
 EEPM_FULL_ARGS='--help --version --verbose --debug
         --skip-installed --skip-missed --show-command-only --quiet --silent --nodeps
         --force --noremove --no-remove --no-stdin --inscript
         --dry-run --simulate --just-print --no-act --short --direct --repack --norepack --install
         --scripts --noscripts --save-only --put-to-repo= --download-only --url --sort --auto 
-        --assumeyes --non-interactive --disable-interactivity --interactive --force-yes --add-repo'
+        --assumeyes --non-interactive --disable-interactivity --interactive --force-yes --add-repo --orphans'
 
 __eepm_list_commands()
 {
@@ -51,6 +63,12 @@ __eepm_list_installed_packages()
 __eepm_list_available_packages()
 {
     COMPREPLY=( $( epm list --available --quiet --short --direct ) )
+    COMPREPLY=( $( compgen -W '${COMPREPLY[@]}' -- "$cur" ) )
+}
+
+__eepm_list_available_prescription()
+{
+    COMPREPLY=( $( epm prescription --list-all --quiet --short ) )
     COMPREPLY=( $( compgen -W '${COMPREPLY[@]}' -- "$cur" ) )
 }
 
@@ -75,6 +93,15 @@ __eepm_complete_qf() {
     fi
 }
 
+__eepm_complete_history() {
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    local options="-h --help --installed --removed --updated --list"
+
+    if [[ $cur == -* ]]; then
+        COMPREPLY=( $(compgen -W "$options" -- "$cur") )
+    fi
+}
+
 __eepm_complete_status() { 
     local cur=${COMP_WORDS[COMP_CWORD]}
     local options="--installed --installable --original --certified --thirdparty --repacked --validate"
@@ -86,6 +113,50 @@ __eepm_complete_status() {
     fi
 
 }
+
+
+__eepm_complete_full-upgrade() { 
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    local options="-h --help --interactive --ipfs --no-epm-play --no-flatpak --no-snap --no-kernel-update --no-clean"
+
+    if [[ $cur == -* ]]; then
+        COMPREPLY=( $(compgen -W "$EEPM_FULL_ARGS $options" -- "$cur") )
+    fi
+}
+
+__eepm_complete_mark() { 
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    #check another options
+    local options="-h --help"
+    local subcommands='hold|unhold|showhold|checkhold|auto|remove|manual|install|showauto|showmanual'
+
+    if [[ $cur == -* ]]; then
+        COMPREPLY=( $(compgen -W "$options" -- "$cur") )
+    fi
+
+    local special i
+    for ((i = 1; i < ${#COMP_WORDS[@]} - 1; i++)); do
+        if [[ ${COMP_WORDS[i]} == @(${subcommands}) ]]; then
+            special=${COMP_WORDS[i]}
+            break
+        fi
+    done
+    # TODO logic for others commands
+    if [[ -v special ]]; then
+        case $special in
+            hold|unhold)
+                __eepm_list_installed_packages
+                return 0
+                ;;
+            *)
+                return 0
+                ;;
+        esac
+    else 
+        COMPREPLY=( $( compgen -W "${subcommands//'|'/' '}" -- "$cur" ) )
+    fi
+}
+
 
 __eepm_complete_list() { 
     local cur=${COMP_WORDS[COMP_CWORD]}
@@ -120,36 +191,76 @@ __eepm_complete_repolist() {
 
 __eepm_complete_repo() { 
     local cur=${COMP_WORDS[COMP_CWORD]}
-    REPO_CMD_LIST='list|change|set|switch|enable|disable|addkey|clean|save|restore|reset|status|add|Add|rm|del|remove'
-    if [[ $prev == "repo" ]]; then
-        
-        COMPREPLY=( $( compgen -W "${REPO_CMD_LIST//'|'/' '}" -- "$cur" ) )
+    local subcommands='list|change|set|switch|enable|disable|addkey|clean|save|restore|reset|status|add|Add|rm|del|remove'
+
+    local special i
+    for ((i = 1; i < ${#COMP_WORDS[@]} - 1; i++)); do
+        if [[ ${COMP_WORDS[i]} == @(${subcommands}) ]]; then
+            special=${COMP_WORDS[i]}
+            break
+        fi
+    done
+    # TODO logic for others commands
+    if [[ -v special ]]; then
+        case $special in
+            change|set|add|Add)
+            __eepm_complete_repolist
+            ;;
+            rm|del|remove)
+            __eepm_complete_repolist
+            ;;
+            switch)
+            __eepm_complete_repolist
+            ;;
+            enable|disable)
+            __eepm_complete_repolist
+            ;;
+        esac
     else
-     
+        COMPREPLY=( $( compgen -W "${subcommands//'|'/' '}" -- "$cur" ) )
+    fi
+
+}
+
+
+__eepm_complete_pack() { 
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    local options="--install --repack --download-only --save-only"
+    # local subcommands='list|change|set|switch|enable|disable|addkey|clean|save|restore|reset|status|add|Add|rm|del|remove'
+    if [[ $cur == -* ]]; then
+        COMPREPLY=( $(compgen -W "$options" -- "$cur") )
+    else
+        _filedir
+    fi
+}
+
+__eepm_complete_repack() { 
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    _filedir
+}
+
+__eepm_complete_autoremove() { 
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    local options="--auto --assumeyes --non-interactive --help"
+    local subcommands='libs libs-devel i586-libs debuginfo devel python python2 python3 perl gem ruby'
+    
+    if [[ $(epm print info -s) == 'alt' ]]; then
+        options+=" --direct"
         local special i
         for ((i = 1; i < ${#COMP_WORDS[@]} - 1; i++)); do
-            if [[ ${COMP_WORDS[i]} == @(${REPO_CMD_LIST}) ]]; then
+            if [[ ${COMP_WORDS[i]} == @(--direct) ]]; then
                 special=${COMP_WORDS[i]}
                 break
             fi
         done
-        
+
         if [[ -v special ]]; then
-            case $special in
-                change|set|add|Add)
-                __eepm_complete_repolist
-                ;;
-                rm|del|remove)
-                __eepm_complete_repolist
-                ;;
-                switch)
-                __eepm_complete_repolist
-                ;;
-                enable|disable)
-                __eepm_complete_repolist
-                ;;
-            esac
+            COMPREPLY=( $(compgen -W "${subcommands}" -- "$cur") )
         fi
+    fi
+    
+    if [[ $cur == -* ]]; then
+        COMPREPLY=( $(compgen -W "$options" -- "$cur") )
     fi
 }
 
@@ -188,6 +299,10 @@ __eepm_complete_commands() {
                 __eepm_list_available_packages
                 return 0 
                 ;;
+            full-upgrade)
+                __eepm_complete_full-upgrade
+                return 0 
+                ;;
             query|q|-q|info|qp|grep|query_package|-qp|changelog|cl|-cl|show|qi|-qi)
                 __eepm_list_available_packages
                 return 0 
@@ -200,7 +315,7 @@ __eepm_complete_commands() {
                 __eepm_list_available_packages
                 return 0 
                 ;;
-            remove|rm|del|delete|uninstall|erase|purge|e|-e|-P)
+            remove|rm|del|delete|uninstall|erase|purge|e|-e|-P|site|url)
                 __eepm_list_installed_packages
                 return 0 
                 ;;
@@ -234,6 +349,42 @@ __eepm_complete_commands() {
                 ;;
             kernel-update|kernel-upgrade|update-kernel|upgrade-kernel)
                 __eepm_complete_kernel_update 
+                return 0
+                ;;
+            autoremove|package-cleanup)
+                __eepm_complete_autoremove
+                return 0
+                ;;
+            mark)
+                __eepm_complete_mark
+                return 0
+                ;;
+            history)
+                __eepm_complete_history
+                return 0
+                ;;
+            download|fetch|fc|simulate)
+                __eepm_list_available_packages
+                return 0
+                ;;
+            prescription|recipe)
+                __eepm_list_available_prescription
+                return 0
+                ;;
+            pack)
+                __eepm_complete_pack
+                return 0
+                ;;
+            repack)
+                __eepm_complete_repack
+                return 0
+                ;;      
+            tool)
+                __eepm_complete_tool
+                return 0
+                ;;      
+            print)
+                __eepm_complete_print
                 return 0
                 ;;
             *)
@@ -304,6 +455,26 @@ __eepm()
                 __eepm_complete_kernel_update 
                 return 0
                 ;;
+            full-upgrade)
+                __eepm_complete_full-upgrade
+                return 0
+                ;;
+            autoremove|package-cleanup)
+                __eepm_complete_autoremove
+                return 0
+                ;;
+            history)
+                __eepm_complete_history
+                return 0
+                ;;
+            mark)
+                __eepm_complete_mark
+                return 0
+                ;;
+            pack)
+                __eepm_complete_pack
+                return 0
+                ;;
             *)
                 __eepm_complete_full_args
                 return 0
@@ -331,6 +502,22 @@ __eepm()
                 ;;
             kernel-update|kernel-upgrade|update-kernel|upgrade-kernel)
                 __eepm_complete_kernel_update 
+                return 0
+                ;;
+            full-upgrade)
+                __eepm_complete_full-upgrade
+                return 0
+                ;;
+            autoremove|package-cleanup)
+                __eepm_complete_autoremove
+                return 0
+                ;;
+            history)
+                __eepm_complete_history
+                return 0
+                ;;
+            pack)
+                __eepm_complete_pack
                 return 0
                 ;;
             *)
