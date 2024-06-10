@@ -146,7 +146,13 @@ __list_installed_packages()
 # args: script, host arch
 __get_app_description()
 {
-    __run_script "$1" --description "$2" 2>/dev/null
+    local arch=$(grep 'SUPPORTEDARCHES=' "$psdir/$1.sh" | cut -d'=' -f2)
+
+    if echo "$arch" | grep -q "$2" ; then
+        grep '^DESCRIPTION=' "$psdir/$1.sh" | cut -d'=' -f2 | tr -d "\"'"
+    else
+        exit 0
+    fi
 }
 
 __check_play_script()
@@ -214,13 +220,14 @@ __epm_play_list()
 
     if [ -n "$short" ] ; then
         for i in $(__list_all_app) ; do
-            local desc="$(__get_app_description $i $arch)"
-            [ -n "$desc" ] || continue
-            echo "$i"
-            if [ -n "$extra" ] ; then
-                for j in $(__run_script "$i" "--product-alternatives") ; do
-                    echo "  $i=$j"
-                done
+            local supported_arch=$(grep 'SUPPORTEDARCHES=' "$psdir/$1.sh" | cut -d'=' -f2)
+            if echo "$supported_arch" | grep -q "$arch" ; then
+                printf "%s\n" "$i"
+                if [ -n "$extra" ] ; then
+                    for j in $(__run_script "$i" "--product-alternatives") ; do
+                        echo "  $i=$j"
+                    done
+                fi
             fi
         done
         exit
