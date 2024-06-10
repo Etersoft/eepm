@@ -116,6 +116,26 @@ __epm_pack()
     return 0
 }
 
+__list_all_app()
+{
+    cd $EPM_PACK_SCRIPTS_DIR || fatal
+    for i in *.sh ; do
+       local name=${i/.sh/}
+       startwith "$name" "common" && continue
+       echo "$name"
+    done
+    cd - >/dev/null
+}
+
+__epm_pack_list()
+{
+for i in $(__list_all_app) ; do
+    echo "$i"
+done
+exit
+
+}
+
 epm_pack_help()
 {
     message '
@@ -130,6 +150,7 @@ Options:
     --repack              - force repack ever if returned package can be installed without repack
     --download-only       - save pack result and exit
     --save-only           - save repacked packages and exit (this is default behaviour)
+    --list                - list all available receipts
 '
 }
 
@@ -137,10 +158,16 @@ Options:
 epm_pack()
 {
 
-    if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
-        epm_pack_help
-        exit
-    fi
+case "$1" in
+    -h|--help)                     # HELPCMD: help
+        epm_epm_install_help
+        return
+        ;;
+    --list)                        # HELPCMD: list all available receipts
+        __list_all_app
+        return
+        ;;
+esac
 
     local tmpdir
     tmpdir="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
@@ -151,7 +178,7 @@ epm_pack()
     local packversion="$3"
     local url=''
 
-    [ -n "$packname" ] || fatal "run with packname, see --help"
+    [ -n "$packname" ] || __epm_pack_list
 
     if is_url "$tarname"; then
         url="$tarname"
