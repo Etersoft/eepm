@@ -66,8 +66,8 @@ epm_tool()
             showcmd yaml "$@"
             $CMDSHELL $SHAREDIR/tools_yaml "$@"
             ;;
-        "which")
-            print_command_path "$@"  # HELPCMD: which like command (no output to stderr, can works without which package)
+        "which")                    # HELPCMD: which like command (no output to stderr, can works without which package)
+            print_command_path "$@"
             ;;
         *)
             fatal 'Unknown command $ epm tool $WHAT. Use epm print help for get help.'
