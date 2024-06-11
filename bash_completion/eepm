@@ -72,6 +72,30 @@ __eepm_list_available_prescription()
     COMPREPLY=( $( compgen -W '${COMPREPLY[@]}' -- "$cur" ) )
 }
 
+__eepm_complete_full_args(){
+    COMPREPLY=($(compgen -W "$EEPM_FULL_ARGS" -- "$cur"))
+}
+
+__eepm_complete_short_args(){
+    COMPREPLY=( $(echo ${EEPM_SHORT_ARGS//'|'/' '}) )
+    COMPREPLY=( $( compgen -W '${COMPREPLY[@]}' -- "$cur" ) )
+    
+}
+
+__eepm_complete_repack() { 
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    _filedir
+}
+
+ __eepm_complete_kernel_update(){
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    local options="-A -D -l --list -h --help -a --all -i --interactive -H --headers --debuginfo -f -y --force -t --type -r --release -u --update -n --dry-run -d --download-only"
+
+    if [[ $cur == -* ]]; then
+        COMPREPLY=( $(compgen -W "$options" -- "$cur") )
+    fi
+ }
+
 __eepm_list_available_packages_play()
 {
     local options='--remove --update --list --list-all --list-scripts --short --installed --product-alternatives --quiet'
@@ -106,14 +130,15 @@ __eepm_complete_status() {
     local cur=${COMP_WORDS[COMP_CWORD]}
     local options="--installed --installable --original --certified --thirdparty --repacked --validate"
 
-    if [[ $cur == --* || ($cur == '' && $prev == 'status') ]]; then
+    if [[ $cur == -* || ($cur == '' && $prev == 'status') ]]; then
         COMPREPLY=( $(compgen -W "$options" -- "$cur") )
+        return 0
     elif [[ ${COMP_CWORD} -eq 3 ]]; then
         __eepm_list_available_packages
+        return 0
     fi
 
 }
-
 
 __eepm_complete_full-upgrade() { 
     local cur=${COMP_WORDS[COMP_CWORD]}
@@ -121,17 +146,55 @@ __eepm_complete_full-upgrade() {
 
     if [[ $cur == -* ]]; then
         COMPREPLY=( $(compgen -W "$EEPM_FULL_ARGS $options" -- "$cur") )
+        return 0
     fi
+}
+
+__eepm_complete_repolist() { 
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    
+    if [[ $cur == */* ]]; then
+        _filedir
+    elif [[ $(epm print info -s) == 'alt' ]]; then
+        COMPREPLY="basealt altsp yandex autoimports autoports altlinuxclub deferred deferred.org etersoft korinf archive URL"
+        COMPREPLY=( $( compgen -W '${COMPREPLY[@]}' -- "$cur" ) )
+    fi
+}
+
+__eepm_complete_list() { 
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    local options="--available --installed --upgradable"
+
+    if [[ $cur == --* || ($cur == '' && $prev == 'list') ]]; then
+        COMPREPLY=( $(compgen -W "$options" -- "$cur") )
+    fi
+
+}
+
+__eepm_complete_pack() { 
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    local options="--install --repack --download-only --save-only"
+
+    if [[ $cur == -* ]]; then
+        COMPREPLY=( $(compgen -W "$options" -- "$cur") )
+        return 0
+    elif [[ $cur == */* ]]; then
+        _filedir
+    else
+        COMPREPLY=( $( epm pack --list ) )
+        COMPREPLY=( $( compgen -W '${COMPREPLY[@]}' -- "$cur" ) ) 
+    fi
+    
 }
 
 __eepm_complete_mark() { 
     local cur=${COMP_WORDS[COMP_CWORD]}
-    #check another options
     local options="-h --help"
     local subcommands='hold|unhold|showhold|checkhold|auto|remove|manual|install|showauto|showmanual'
 
     if [[ $cur == -* ]]; then
         COMPREPLY=( $(compgen -W "$options" -- "$cur") )
+        return 0
     fi
 
     local special i
@@ -157,41 +220,9 @@ __eepm_complete_mark() {
     fi
 }
 
-
-__eepm_complete_list() { 
-    local cur=${COMP_WORDS[COMP_CWORD]}
-    local options="--available --installed --upgradable"
-
-    if [[ $cur == --* || ($cur == '' && $prev == 'list') ]]; then
-        COMPREPLY=( $(compgen -W "$options" -- "$cur") )
-    # elif [[ ${COMP_CWORD} -eq 3 ]]; then
-    #     __eepm_list_available_packages
-    fi
-
-}
-# TODO logic
-__eepm_complete_assure() { 
-    local cur=${COMP_WORDS[COMP_CWORD]}
-    if [[ $cur == */* ]]; then
-        _filedir
-    else
-        COMPREPLY=( $(compgen -A command -- "$cur") )
-    fi
-}
-
-__eepm_complete_repolist() { 
-    local cur=${COMP_WORDS[COMP_CWORD]}
-    if [[ $cur == */* ]]; then
-        _filedir
-    elif [[ $(epm print info -s) == 'alt' ]]; then
-        COMPREPLY="basealt altsp yandex autoimports autoports altlinuxclub deferred deferred.org etersoft korinf"
-        COMPREPLY=( $( compgen -W '${COMPREPLY[@]}' -- "$cur" ) )
-    fi
-}
-
 __eepm_complete_repo() { 
     local cur=${COMP_WORDS[COMP_CWORD]}
-    local subcommands='list|change|set|switch|enable|disable|addkey|clean|save|restore|reset|status|add|Add|rm|del|remove'
+    local subcommands='list|change|set|switch|enable|disable|addkey|clean|save|restore|reset|status|add|Add|rm|del|remove|create|index|pkgadd|pkgupdate|pkgdel'
 
     local special i
     for ((i = 1; i < ${#COMP_WORDS[@]} - 1; i++)); do
@@ -215,28 +246,17 @@ __eepm_complete_repo() {
             enable|disable)
             __eepm_complete_repolist
             ;;
+            create|index)
+            _filedir
+            ;;
+            pkgadd|pkgupdate|pkgdel)
+            _filedir
+            ;;
         esac
     else
         COMPREPLY=( $( compgen -W "${subcommands//'|'/' '}" -- "$cur" ) )
     fi
 
-}
-
-
-__eepm_complete_pack() { 
-    local cur=${COMP_WORDS[COMP_CWORD]}
-    local options="--install --repack --download-only --save-only"
-    # local subcommands='list|change|set|switch|enable|disable|addkey|clean|save|restore|reset|status|add|Add|rm|del|remove'
-    if [[ $cur == -* ]]; then
-        COMPREPLY=( $(compgen -W "$options" -- "$cur") )
-    else
-        _filedir
-    fi
-}
-
-__eepm_complete_repack() { 
-    local cur=${COMP_WORDS[COMP_CWORD]}
-    _filedir
 }
 
 __eepm_complete_autoremove() { 
@@ -262,25 +282,6 @@ __eepm_complete_autoremove() {
     if [[ $cur == -* ]]; then
         COMPREPLY=( $(compgen -W "$options" -- "$cur") )
     fi
-}
-
- __eepm_complete_kernel_update(){
-    local cur=${COMP_WORDS[COMP_CWORD]}
-    local options="-A -D -l --list -h --help -a --all -i --interactive -H --headers --debuginfo -f -y --force -t --type -r --release -u --update -n --dry-run -d --download-only"
-
-    if [[ $cur == -* ]]; then
-        COMPREPLY=( $(compgen -W "$options" -- "$cur") )
-    fi
- }
-
-__eepm_complete_full_args(){
-    COMPREPLY=($(compgen -W "$EEPM_FULL_ARGS" -- "$cur"))
-}
-
-__eepm_complete_short_args(){
-    COMPREPLY=( $(echo ${EEPM_SHORT_ARGS//'|'/' '}) )
-    COMPREPLY=( $( compgen -W '${COMPREPLY[@]}' -- "$cur" ) )
-    
 }
 
 __eepm_complete_commands() {
@@ -335,10 +336,6 @@ __eepm_complete_commands() {
                 __eepm_complete_list
                 return 0 
                 ;;
-            assure)
-                __eepm_complete_assure
-                return 0 
-                ;;
             addrepo|ar|repofix|removerepo|remove-repo|rr)
                 __eepm_complete_repolist
                 return 0
@@ -379,14 +376,6 @@ __eepm_complete_commands() {
                 __eepm_complete_repack
                 return 0
                 ;;      
-            tool)
-                __eepm_complete_tool
-                return 0
-                ;;      
-            print)
-                __eepm_complete_print
-                return 0
-                ;;
             *)
                 return 0
                 ;;
@@ -467,12 +456,12 @@ __eepm()
                 __eepm_complete_history
                 return 0
                 ;;
-            mark)
-                __eepm_complete_mark
-                return 0
-                ;;
             pack)
                 __eepm_complete_pack
+                return 0
+                ;;
+            mark)
+                __eepm_complete_mark
                 return 0
                 ;;
             *)
@@ -518,6 +507,10 @@ __eepm()
                 ;;
             pack)
                 __eepm_complete_pack
+                return 0
+                ;;
+            mark)
+                __eepm_complete_mark
                 return 0
                 ;;
             *)
