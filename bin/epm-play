@@ -62,7 +62,7 @@ __run_script()
 
 __get_app_package()
 {
-    __run_script "$1" --package-name "$2" "$3" 2>/dev/null
+    grep 'PKGNAME=' "$psdir/$1.sh" | cut -d'=' -f2
 }
 
 
