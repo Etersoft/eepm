@@ -1,0 +1,91 @@
+#compdef epm
+
+_epm() {
+  typeset -A opt_args
+  local context state line curcontext="$curcontext"
+
+  local ret=1
+
+  _arguments -C \
+    '(- 1 *)--help[show usage]' \
+    '1:cmd:->cmds' \
+    '*::arg:->args' \
+  && ret=0
+
+  case "$state" in
+    cmds)
+      local commands; commands=(
+        'play:install the application'
+        'install:install packages'
+        'remove:remove packages'
+        'full-upgrade:do full upgrade'
+        'update:update remote package repository databases'
+      )
+      _describe -t commands 'command' commands && ret=0
+    ;;
+    args)
+      curcontext="${curcontext%:*:*}:epm-cmd-${words[1]}:"
+      case "${words[1]}" in
+        play)
+          if [[ ${words[CURRENT]} == -* ]]; then
+            _arguments \
+              '--remove[remove a play package]' \
+              '--update[update a play package]' \
+              '--list[list play packages]' \
+              '--list-all[list all play packages]' \
+              '--list-scripts[list play package scripts]' \
+              '--short[short format]' \
+              '--installed[list installed play packages]' \
+              '--product-alternatives[list product alternatives]' \
+              '--quiet[quiet mode]' \
+          && ret=0
+          else
+            _epm_play_packages && ret=0
+          fi
+        ;;
+        install)
+          _epm_available_packages && ret=0
+        ;;
+        remove)
+          _epm_installed_packages && ret=0
+        ;;
+        full-upgrade)
+          _arguments \
+            '--help[show help]' \
+            '--verbose[verbose mode]' \
+            '--version[show version]' \
+            '--quiet[quiet mode]' \
+            && ret=0
+        ;;
+        update)
+          _arguments \
+            '--all[update all installed packages]' \
+            '1:package:->_epm_installed_packages' \
+          && ret=0
+        ;;
+      esac
+    ;;
+  esac
+
+  return $ret
+}
+
+_epm_play_packages() {
+  local play_packages 
+  play_packages=( $(epm play --list-all --quiet --short) )
+  _describe -t play-packages 'play package' play_packages "$@"
+}
+
+_epm_available_packages() {
+  local available_packages 
+  available_packages=( $(epm list --available --quiet --short --direct) )
+  _describe -t available-packages 'available package' available_packages "$@"
+}
+
+_epm_installed_packages() {
+  local installed_packages 
+  installed_packages=( $(epm list --installed --quiet --short --direct) )
+  _describe -t installed-packages 'installed package' installed_packages "$@"
+}
+
+compdef _epm epm
