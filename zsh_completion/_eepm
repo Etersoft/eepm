@@ -1,32 +1,48 @@
-#compdef epm
+#compdef _epm epm eepm epmi epme epmp epmqf epmI epms epmsf epmu epmq epmql epmqa epmqi epmcl epmrl epmwd epmqp  
 
 _epm() {
   typeset -A opt_args
   local context state line curcontext="$curcontext"
-
   local ret=1
+
+  local commands; commands=(
+    'play:install the application'
+    'install:install packages'
+    'remove:remove packages'
+    'full-upgrade:do full upgrade'
+    'update:update remote package repository databases'
+    'search:search package by name'
+    'Upgrade:upgrade all installed packages (Upgrade = update + upgrade)'
+    'qf:(<command>|<path>) print what package contains this command (file)'
+    'help:print help'
+    'sf:search for the name in all files of all packages'
+    'cl:print changelog for the package'
+  )
 
   _arguments -C \
     '(- 1 *)--help[show usage]' \
-    '1:cmd:->cmds' \
-    '*::arg:->args' \
+    '*:command:->args' \
   && ret=0
 
+  local cmd
+  for word in "${words[@]}"; do
+    case "$word" in
+      play|epmp|install|epmi|epmI|epms|remove|epme|full-upgrade|update|epmu|qf|epmqf|cl|epmcl|sf|epmsf|epmq|epmql|epmqi|epmwd|epmqp|epmrl|epmqa)
+        cmd="$word"
+        break
+        ;;
+    esac
+  done
+
+  if [[ -z "$cmd" ]]; then
+    _describe -t commands 'command' commands && ret=0
+    return $ret
+  fi
+
   case "$state" in
-    cmds)
-      local commands; commands=(
-        'play:install the application'
-        'install:install packages'
-        'remove:remove packages'
-        'full-upgrade:do full upgrade'
-        'update:update remote package repository databases'
-      )
-      _describe -t commands 'command' commands && ret=0
-    ;;
     args)
-      curcontext="${curcontext%:*:*}:epm-cmd-${words[1]}:"
-      case "${words[1]}" in
-        play)
+      case "$cmd" in
+        play|epmp)
           if [[ ${words[CURRENT]} == -* ]]; then
             _arguments \
               '--remove[remove a play package]' \
@@ -38,30 +54,35 @@ _epm() {
               '--installed[list installed play packages]' \
               '--product-alternatives[list product alternatives]' \
               '--quiet[quiet mode]' \
-          && ret=0
+            && ret=0
           else
             _epm_play_packages && ret=0
           fi
         ;;
-        install)
+        install|epmi|epmI|epms|epmcl|epmwd|epmq|epmqi|epmqp|epmql|cl)
           _epm_available_packages && ret=0
         ;;
-        remove)
+        remove|epme)
           _epm_installed_packages && ret=0
         ;;
         full-upgrade)
           _arguments \
-            '--help[show help]' \
-            '--verbose[verbose mode]' \
-            '--version[show version]' \
-            '--quiet[quiet mode]' \
-            && ret=0
-        ;;
-        update)
-          _arguments \
-            '--all[update all installed packages]' \
-            '1:package:->_epm_installed_packages' \
+            '-h[help]' \
+            '--help[help]' \
+            '--interactive[ask before every step]' \
+            '--ipfs[use IPFS for epm play]' \
+            '--no-epm-play[skip epm play during full upgrade]' \
+            '--no-flatpak[skip flatpak update during full upgrade]'\
+            '--no-snap[skip snap update during full upgrade]'\
+            '--no-kernel-update[skip kernel update during full upgrade]'\
+            '--no-clean[no clean after upgrade]' \
           && ret=0
+        ;;
+        qf|epmqf)
+          _epm_complete_qf && ret=0
+        ;;
+        *)
+          ret=0
         ;;
       esac
     ;;
@@ -70,22 +91,33 @@ _epm() {
   return $ret
 }
 
+_epm_complete_qf() {
+  local current_word="${words[CURRENT]}"
+  if [[ "$current_word" == */* ]]; then
+    _files
+  else
+    compadd $(compgen -A command -- "$current_word")
+  fi
+}
+
 _epm_play_packages() {
   local play_packages 
   play_packages=( $(epm play --list-all --quiet --short) )
-  _describe -t play-packages 'play package' play_packages "$@"
+  _describe -t play-packages 'play package' play_packages 
 }
 
 _epm_available_packages() {
   local available_packages 
   available_packages=( $(epm list --available --quiet --short --direct) )
-  _describe -t available-packages 'available package' available_packages "$@"
+  _describe -t available-packages 'available package' available_packages
 }
 
 _epm_installed_packages() {
   local installed_packages 
   installed_packages=( $(epm list --installed --quiet --short --direct) )
-  _describe -t installed-packages 'installed package' installed_packages "$@"
+  _describe -t installed-packages 'installed package' installed_packages 
 }
 
-compdef _epm epm
+compdef _epm epm eepm epmi epme epmp epmqf epmI epms epmsf epmu epmq epmql epmqa epmqi epmcl epmrl epmwd epmqp  
+#                            
+#    
