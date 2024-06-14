@@ -4,42 +4,140 @@ _epm() {
   typeset -A opt_args
   local context state line curcontext="$curcontext"
   local ret=1
+  EEPM_COMMANDS=(
+    epmp epmi epmI epms epme epmu epmqf epmcl epmsf
+    query q info packages filelist qp grep query_package ql get-files changelog cl qi show qa list-installed ls li list-available programs
+    requires deplist depends req depends-on whatdepends rdepends whatrequires wd required-by provides prov whatprovides conflicts policy resolve
+    qf wp which belongs
+    install Install reinstall add i it installed simulate prescription recipe
+    remove rm del remove delete uninstall erase purge e autoorphans remove-orphans
+    update full-upgrade Upgrade update-repo ur up
+    search search-file s find sr filesearch sf
+    status list assure repo autoremove package-cleanup mark tool print
+    addrepo ar repofix removerepo remove-repo rr
+    check fix verify dedup release-upgrade upgrade-release upgrade-system release-switch history checkpkg integrity
+    Downgrade release-downgrade downgrade-release downgrade-system downgrade distro-sync
+    download fetch fc
+    remove-old-kernels remove-old-kernel kernel-update kernel-upgrade update-kernel upgrade-kernel stats
+    clean delete-cache dc restore
+    audit site url checkpkg integrity
+    ei ik epminstall epm-install selfinstall
+    repack play pack -i
+  )
+  EEPM_SUBCOMMANDS_ARGS=(epmi epme epmp epmqf epmI epms epmsf epmu epmq epmql epmqa epmqi epmcl epmrl epmwd epmqp)
 
-  local commands; commands=(
-    'play:install the application'
-    'install:install packages'
-    'remove:remove packages'
-    'full-upgrade:do full upgrade'
-    'update:update remote package repository databases'
-    'search:search package by name'
-    'Upgrade:upgrade all installed packages (Upgrade = update + upgrade)'
-    'qf:(<command>|<path>) print what package contains this command (file)'
-    'help:print help'
-    'sf:search for the name in all files of all packages'
-    'cl:print changelog for the package'
+  EEPM_SHORT_ARGS=(
+    '-h[show help]'
+    '-v[show version]'
+    '-y[assume yes]'
+    '-i[install]'
+    '-e[remove]'
+    '-P[remove]'
+    '-s[search]'
+    '-qp[query package]'
+    '-qf[query file]'
+    '-q[query]'
+    '-S[search]'
+    '-sf[search file]'
+    '-ql[list files]'
+    '-cl[changelog]'
+    '-qi[query info]'
+    '-qa[query all]'
+    '-V[verify]'
   )
 
-  _arguments -C \
-    '(- 1 *)--help[show usage]' \
-    '*:command:->args' \
-  && ret=0
+  EEPM_FULL_ARGS=(
+    '--help[show help]'
+    '--version[show version]'
+    '--verbose[verbose mode]'
+    '--debug[debug mode]'
+    '--skip-installed[skip installed]'
+    '--skip-missed[skip missed]'
+    '--show-command-only[show command only]'
+    '--quiet[quiet mode]'
+    '--silent[silent mode]'
+    '--nodeps[no dependencies]'
+    '--force[force action]'
+    '--noremove[no remove]'
+    '--no-remove[no remove]'
+    '--no-stdin[no stdin]'
+    '--inscript[in script]'
+    '--dry-run[dry run]'
+    '--simulate[simulate]'
+    '--just-print[just print]'
+    '--no-act[no action]'
+    '--short[short format]'
+    '--direct[direct mode]'
+    '--repack[repack]'
+    '--norepack[no repack]'
+    '--install[install]'
+    '--scripts[show scripts]'
+    '--noscripts[no scripts]'
+    '--save-only[save only]'
+    '--put-to-repo=[put to repo]'
+    '--download-only[download only]'
+    '--url[show URL]'
+    '--sort[sort]'
+    '--auto[auto]'
+    '--assumeyes[assume yes]'
+    '--non-interactive[non-interactive]'
+    '--disable-interactivity[disable interactivity]'
+    '--interactive[interactive]'
+    '--force-yes[force yes]'
+    '--add-repo[add repo]'
+    '--orphans[show orphans]'
+  )
+
+local commands; commands=(
+  'play:install the application'
+  'add:install packages'
+  'install:install packages'
+  'i:install packages'
+  'it:install packages' 
+  'remove:remove packages'
+  'uninstall:remove packages'
+  'rm:remove packages'
+  'del:remove packages'
+  'delete:remove packages'
+  'erase:remove packages'
+  'purge:remove packages'
+  'e:remove packages'
+  'full-upgrade:do full upgrade'
+  'update:update remote package repository databases'
+  'search:search package by name'
+  'Upgrade:upgrade all installed packages (Upgrade = update + upgrade)'
+  'qf:(<command>|<path>) print what package contains this command (file)'
+  'help:print help'
+  'sf:search for the name in all files of all packages'
+  'cl:print changelog for the package'
+  )
+
+
 
   local cmd
   for word in "${words[@]}"; do
-    case "$word" in
-      play|epmp|install|epmi|epmI|epms|remove|epme|full-upgrade|update|epmu|qf|epmqf|cl|epmcl|sf|epmsf|epmq|epmql|epmqi|epmwd|epmqp|epmrl|epmqa)
-        cmd="$word"
-        break
-        ;;
-    esac
+    if [[ " ${EEPM_COMMANDS[@]} " =~ " $word " ]] || [[ " ${EEPM_SHORT_ARGS[@]} " =~ " $word " ]]; then
+      cmd="$word"
+      break
+    fi
   done
 
+  if [[ ! " ${EEPM_SUBCOMMANDS_ARGS[@]} " =~ " $cmd " ]]; then
+    _arguments -C \
+        "${EEPM_SHORT_ARGS[@]}" \
+        "${EEPM_FULL_ARGS[@]}" \
+        '*::arg:->args' \
+      && ret=0
+  else
+     _arguments -C '*:arg:->args'
+  fi
+  
   if [[ -z "$cmd" ]]; then
     _describe -t commands 'command' commands && ret=0
     return $ret
   fi
 
-  case "$state" in
+   case "$state" in
     args)
       case "$cmd" in
         play|epmp)
@@ -58,37 +156,86 @@ _epm() {
           else
             _epm_play_packages && ret=0
           fi
-        ;;
-        install|epmi|epmI|epms|epmcl|epmwd|epmq|epmqi|epmqp|epmql|cl)
+          ;;
+        install|Install|reinstall|add|i|it|-i|installed|epmi|epmI|epms|epmq|epmql|epmqi|epmcl|epmwd)
           _epm_available_packages && ret=0
-        ;;
-        remove|epme)
-          _epm_installed_packages && ret=0
-        ;;
+          ;;
         full-upgrade)
-          _arguments \
-            '-h[help]' \
-            '--help[help]' \
-            '--interactive[ask before every step]' \
-            '--ipfs[use IPFS for epm play]' \
-            '--no-epm-play[skip epm play during full upgrade]' \
-            '--no-flatpak[skip flatpak update during full upgrade]'\
-            '--no-snap[skip snap update during full upgrade]'\
-            '--no-kernel-update[skip kernel update during full upgrade]'\
-            '--no-clean[no clean after upgrade]' \
-          && ret=0
-        ;;
-        qf|epmqf)
+          _epm_complete_full-upgrade && ret=0
+          ;;
+        query|q|-q|info|qp|grep|query_package|-qp|changelog|cl|-cl|show|qi|-qi|search|s|find|sr|-s|-ql|ql|get-files|filelist|requires|deplist|depends|req|depends-on|whatdepends|rdepends|whatrequires|wd|required-by|provides|prov|whatprovides|conflicts|policy|resolve)
+          _epm_available_packages && ret=0
+          ;;
+        remove|rm|del|delete|uninstall|erase|purge|e|-e|-P|site|url|epme|epmqp)
+          _epm_installed_packages && ret=0
+          ;;
+        qf|wp|which|belongs|-qf|-S|epmqf)
           _epm_complete_qf && ret=0
-        ;;
+          ;;
+        status)
+          _epm_complete_status && ret=0
+          ;;
+        list)
+          _epm_complete_list && ret=0
+          ;;
+        addrepo|ar|repofix|removerepo|remove-repo|rr)
+          _epm_complete_repolist && ret=0
+          ;;
+        repo)
+          _epm_complete_repo && ret=0
+          ;;
+        kernel-update|kernel-upgrade|update-kernel|upgrade-kernel)
+          _epm_complete_kernel_update && ret=0
+          ;;
+        autoremove|package-cleanup)
+          _epm_complete_autoremove && ret=0
+          ;;
+        mark)
+          _epm_complete_mark && ret=0
+          ;;
+        history)
+          _epm_complete_history && ret=0
+          ;;
+        download|fetch|fc|simulate)
+          _epm_available_packages && ret=0
+          ;;
+        prescription|recipe)
+          _epm_list_available_prescription && ret=0
+          ;;
+        pack)
+          _epm_complete_pack && ret=0
+          ;;
+        repack)
+          _epm_complete_repack && ret=0
+          ;;
+        tool)
+          _epm_complete_tool && ret=0
+          ;;
+        print)
+          _epm_complete_print && ret=0
+          ;;
         *)
           ret=0
-        ;;
+          ;;
       esac
     ;;
   esac
 
   return $ret
+}
+
+_epm_complete_full-upgrade(){
+
+  _arguments \
+    '-h[help]' \
+    '--help[help]' \
+    '--interactive[ask before every step]' \
+    '--ipfs[use IPFS for epm play]' \
+    '--no-epm-play[skip epm play during full upgrade]' \
+    '--no-flatpak[skip flatpak update during full upgrade]'\
+    '--no-snap[skip snap update during full upgrade]'\
+    '--no-kernel-update[skip kernel update during full upgrade]'\
+    '--no-clean[no clean after upgrade]' 
 }
 
 _epm_complete_qf() {
@@ -119,5 +266,3 @@ _epm_installed_packages() {
 }
 
 compdef _epm epm eepm epmi epme epmp epmqf epmI epms epmsf epmu epmq epmql epmqa epmqi epmcl epmrl epmwd epmqp  
-#                            
-#    
