@@ -1,29 +1,10 @@
-#compdef _epm epm eepm epmi epme epmp epmqf epmI epms epmsf epmu epmq epmql epmqa epmqi epmcl epmrl epmwd epmqp  
+#compdef _epm epm eepm epmi epme epmp epmqf epmI epms epmsf epmu epmq epmql epmqa epmqi epmcl epmrl epmwd epmqp 
 
 _epm() {
   typeset -A opt_args
   local context state line curcontext="$curcontext"
   local ret=1
-  EEPM_COMMANDS=(
-    epmp epmi epmI epms epme epmu epmqf epmcl epmsf
-    query q info packages filelist qp grep query_package ql get-files changelog cl qi show qa list-installed ls li list-available programs
-    requires deplist depends req depends-on whatdepends rdepends whatrequires wd required-by provides prov whatprovides conflicts policy resolve
-    qf wp which belongs
-    install Install reinstall add i it installed simulate prescription recipe
-    remove rm del remove delete uninstall erase purge e autoorphans remove-orphans
-    update full-upgrade Upgrade update-repo ur up
-    search search-file s find sr filesearch sf
-    status list assure repo autoremove package-cleanup mark tool print
-    addrepo ar repofix removerepo remove-repo rr
-    check fix verify dedup release-upgrade upgrade-release upgrade-system release-switch history checkpkg integrity
-    Downgrade release-downgrade downgrade-release downgrade-system downgrade distro-sync
-    download fetch fc
-    remove-old-kernels remove-old-kernel kernel-update kernel-upgrade update-kernel upgrade-kernel stats
-    clean delete-cache dc restore
-    audit site url checkpkg integrity
-    ei ik epminstall epm-install selfinstall
-    repack play pack -i
-  )
+
   EEPM_SUBCOMMANDS_ARGS=(epmi epme epmp epmqf epmI epms epmsf epmu epmq epmql epmqa epmqi epmcl epmrl epmwd epmqp)
 
   EEPM_SHORT_ARGS=(
@@ -37,7 +18,7 @@ _epm() {
     '-qp[query package]'
     '-qf[query file]'
     '-q[query]'
-    '-S[search]'
+    '-S[query package(s) owning file]'
     '-sf[search file]'
     '-ql[list files]'
     '-cl[changelog]'
@@ -88,36 +69,198 @@ _epm() {
     '--orphans[show orphans]'
   )
 
-local commands; commands=(
-  'play:install the application'
-  'add:install packages'
-  'install:install packages'
-  'i:install packages'
-  'it:install packages' 
-  'remove:remove packages'
-  'uninstall:remove packages'
-  'rm:remove packages'
-  'del:remove packages'
-  'delete:remove packages'
-  'erase:remove packages'
-  'purge:remove packages'
-  'e:remove packages'
-  'full-upgrade:do full upgrade'
-  'update:update remote package repository databases'
-  'search:search package by name'
-  'Upgrade:upgrade all installed packages (Upgrade = update + upgrade)'
-  'qf:(<command>|<path>) print what package contains this command (file)'
-  'help:print help'
-  'sf:search for the name in all files of all packages'
-  'cl:print changelog for the package'
+  local commands; commands=(
+    # install comp
+    'play:install the application'
+    'add:install packages'
+    'install:install packages'
+    'i:install packages'
+    'it:install packages' 
+    'reinstall:reinstall package(s) from remote repositories or from local file'
+    'Install:perform update package repo info and install package(s) via install command'
+    # remove comp
+    'remove:remove packages'
+    'uninstall:remove packages'
+    'rm:remove packages'
+    'del:remove packages'
+    'delete:remove packages'
+    'erase:remove packages'
+    'purge:remove packages'
+    'e:remove packages'
+    # search comp
+    'search:search package by name'
+    's:search package by name'
+    'find:search package by name'
+    'sr:search package by name'
+    # upgrade comp
+    'full-upgrade:do full upgrade'
+    'update:update remote package repository databases'
+    'Upgrade:upgrade all installed packages (Upgrade = update + upgrade)'
+    # qp comp
+    'qp:search in the list of installed packages'
+    'grep:search in the list of installed packages'
+    'query_package:search in the list of installed packages'
+    # qf comp
+    'qf:query package(s) owning file'
+    'wp:query package(s) owning file'
+    'which:query package(s) owning file'
+    'belongs:query package(s) owning file'
+    # package comp  
+    'q:check presence of package(s) and print this name'
+    'query:check presence of package(s) and print this name' 
+    'installed:check presence of package(s)'
+    'status:get status of package(s)'
+    'provides:print package provides'
+    'prov:print package provides'
+    'list:print list of packages'
+    'list-available:print list of all available packages'
+    'programs:print list of installed packages with GUI program(s)'
+    # sf comp
+    'search-file:search for the name in all files of all packages'
+    'filesearch:search for the name in all files of all packages'
+    'sf:search for the name in all files of all packages'
+    # ql comp 
+    'ql:print package file list'
+    'filelist:print package file list'
+    'get-files:print package file list'
+    # cl comp
+    'cl:show changelog for package'
+    'changelog:show changelog for package'
+    # qi comp
+    'qi:print package detail info'
+    'info:print package detail info'
+    'show:print package detail info' 
+    # req comp
+    'requires:print package requires'
+    'deplist:print package requires'
+    'depends:print package requires'
+    'req:print package requires'
+    'depends-on:print package requires'
+    # wd comp
+    'whatdepends:print packages dependences on that'
+    'rdepends:print packages dependences on that'
+    'whatrequires:print packages dependences on that'
+    'wd:print packages dependences on that'
+    'required-by:print packages dependences on that'
+    'whatprovides:print packages provides that target'
+    'conflicts:print package conflicts'
+    # qa comp
+    'qa:print list of all installed packages'
+    'ls:print list of all installed packages'
+    'packages:print list of all installed packages'
+    'list-installed:print list of all installed packages'
+    'li:print list of all installed packages'
+    # policy comp
+    'policy:print detailed information about the priority selection of package'
+    'resolve:print detailed information about the priority selection of package'
+    # others
+    'help:print help'
+
+    # repo ctl comp
+    'update:update remote package repository databases'
+    'update-repo:update remote package repository databases'
+    'ur:update remote package repository databases'
+
+    'addrepo:add package repo'
+    'ar:add package repo'
+
+    'repolist:print repo list'
+    'sl:print repo list'
+    'rl:print repo list'
+    'listrepo:print repo list'
+    'repo-list:print repo list'
+    'list-repo:print repo list'
+    'lr:print repo list'
+
+    'repofix:<mirror>: fix paths in sources lists'
+
+    'removerepo:remove package repo'
+    'remove-repo:remove package repo'
+    'rr:remove package repo'
+
+    'repo:manipulate with repository list'
+
+    'check:check local package base integrity and fix it'
+    'fix:check local package base integrity and fix it'
+    'verify:check local package base integrity and fix it'
+
+    'dedup:remove unallowed duplicated pkgs'
+    'release-upgrade:upgrade/switch whole system to the release in arg'
+    'upgrade-release:upgrade/switch whole system to the release in arg'
+    'upgrade-system:upgrade/switch whole system to the release in arg'
+    'release-switch:upgrade/switch whole system to the release in arg'
+
+    'release-downgrade:downgrade whole system to the release in arg'
+    'downgrade-release:downgrade whole system to the release in arg'
+    'downgrade-system:downgrade whole system to the release in arg'
+
+    'kernel-update:update system kernel to the last repo version'
+    'kernel-upgrade:update system kernel to the last repo version'
+    'update-kernel:update system kernel to the last repo version'
+    'upgrade-kernel:update system kernel to the last repo version'
+
+    'remove-old-kernels:remove old system kernels'
+    'remove-old-kernel:remove old system kernels'
+
+    'stats:show statistics about repositories and installations'
+
+    # other com comp
+    'clean:clean local package cache'
+    'delete-cache:clean local package cache'
+    'dc:clean local package cache'
+
+    'restore:install (restore) packages need for the project'
+
+    'autoremove:auto remove unneeded package(s)'
+    'package-cleanup:auto remove unneeded package(s)'
+    'mark:mark package as manually or automatically installed or hold/unhold it'
+    'history:show a log of actions taken by the software management'
+
+    'autoorphans:remove all packages not from the repository'
+    'remove-orphans:remove all packages not from the repository'
+
+    'upgrade:performs upgrades of package software distributions'
+    'up:performs upgrades of package software distributions'
+    'dist-upgrade:performs upgrades of package software distributions'
+
+    'Upgrade:force update package base, then run upgrade'
+    'Downgrade:force update package base, then run downgrade [all] packages to the repo state'
+
+    'downgrade:downgrade [all] packages to the repo state'
+    'distro-sync:downgrade [all] packages to the repo state'
+
+    'download:download package(s) file to the current dir'
+    'fetch:download package(s) file to the current dir'
+    'fc:download package(s) file to the current dir'
+
+    'simulate:simulate install with check requires'
+    'audit:audits installed packages against known vulnerabilities'
+
+    'site:open package`s site in a browser'
+    'url:open package`s site in a browser'
+
+    'ei:install package(s) from Korinf (eepm by default)'
+    'ik:install package(s) from Korinf (eepm by default)'
+    'epminstall:install package(s) from Korinf (eepm by default)'
+    'epm-install:install package(s) from Korinf (eepm by default)'
+    'selfinstall:install package(s) from Korinf (eepm by default)'
+
+    'print:print various info, run epm print help for details'
+    'tool:run embedded tool (see epm tool --help)'
+    'repack:repack rpm to local compatibility'
+    'pack:pack tarball or dir to a rpm package'
+
+    'prescription:run prescription (a script to achieving the goal), run without args to get list'
+    'recipe:run prescription (a script to achieving the goal), run without args to get list'   
+
+    'checkpkg:check package file integrity (checksum)'
+    'integrity:check package file integrity (checksum)'  
   )
-
-
-
+#TODO fix long args
   local cmd
   for word in "${words[@]}"; do
-    if [[ " ${EEPM_COMMANDS[@]} " =~ " $word " ]] || [[ " ${EEPM_SHORT_ARGS[@]} " =~ " $word " ]]; then
-      cmd="$word"
+    if [[ " ${commands[@]%%:*} " =~ " ${word} " ]] || [[ " ${EEPM_SHORT_ARGS[@]%%'['*} " =~ " $word " ]] || [[ " ${EEPM_SUBCOMMANDS_ARGS[@]} " =~ " $word " ]]; then
+      cmd="${word}"
       break
     fi
   done
@@ -141,21 +284,7 @@ local commands; commands=(
     args)
       case "$cmd" in
         play|epmp)
-          if [[ ${words[CURRENT]} == -* ]]; then
-            _arguments \
-              '--remove[remove a play package]' \
-              '--update[update a play package]' \
-              '--list[list play packages]' \
-              '--list-all[list all play packages]' \
-              '--list-scripts[list play package scripts]' \
-              '--short[short format]' \
-              '--installed[list installed play packages]' \
-              '--product-alternatives[list product alternatives]' \
-              '--quiet[quiet mode]' \
-            && ret=0
-          else
-            _epm_play_packages && ret=0
-          fi
+          _epm_play_packages && ret=0
           ;;
         install|Install|reinstall|add|i|it|-i|installed|epmi|epmI|epms|epmq|epmql|epmqi|epmcl|epmwd)
           _epm_available_packages && ret=0
@@ -208,12 +337,6 @@ local commands; commands=(
         repack)
           _epm_complete_repack && ret=0
           ;;
-        tool)
-          _epm_complete_tool && ret=0
-          ;;
-        print)
-          _epm_complete_print && ret=0
-          ;;
         *)
           ret=0
           ;;
@@ -225,7 +348,6 @@ local commands; commands=(
 }
 
 _epm_complete_full-upgrade(){
-
   _arguments \
     '-h[help]' \
     '--help[help]' \
@@ -238,19 +360,334 @@ _epm_complete_full-upgrade(){
     '--no-clean[no clean after upgrade]' 
 }
 
+_epm_list_available_prescription()
+{ 
+  local list_available_prescription
+  list_available_prescription=( $( epm prescription --list-all --quiet --short) )
+  _describe -t list_available_prescription 'list available prescription' list_available_prescription
+
+}
+
+_epm_complete_repack() { 
+  _files
+}
+
+_epm_complete_kernel_update() {
+  #TODO more info
+  local types=('std-def' 'std-kvm' 'un-def' 'ovz-el7' 'rt')
+
+  local options=(
+    '-A[include (add) external module (by a short name)]'
+    '-D[exclude (del) external module from install]'
+    '-l[list available kernel]' 
+    '--list[list available kernel]'
+    '-h[show help]'
+    '--help[show help]'
+    '-a[select all available kernel modules to install]'
+    '--all[select all available kernel modules to install]'
+    '-i[interactive modules selection]'
+    '--interactive[interactive modules selection]'
+    '-H[add kernel headers to install]'
+    '--headers[add kernel headers to install]'
+    '--debuginfo[add debuginfo package to install]'
+    '-f[force kernel upgrade]' 
+    '-y[force kernel upgrade]'
+    '--force[force kernel upgrade]'
+    '-t[select desired kernel flavour]'
+    '--type[select desired kernel flavour]'
+    '-r[desired kernel release]'
+    '--release[desired kernel release]'
+    '-u[run `apt-get update` automatically]'
+    '--update[run `apt-get update` automatically]' 
+    '-n[perform a simulation of events that would occur but do not actually change the system]'
+    '--dry-run[perform a simulation of events that would occur but do not actually change the system]'
+    '-d[download packages, but don`t install]' 
+    '--download-only[download packages, but don`t install]'
+  )
+
+  if [[ ${words[CURRENT-1]} == '--type' || ${words[CURRENT-1]} == '-t' ]]; then
+    _describe -t types 'types' types
+  else
+    _arguments -C "${options[@]}"
+  fi
+}
+
+
+_epm_complete_history() {
+  local options=(
+      '-h[show help]'
+      '--help[show help]'
+      '--installed[show installed packages history]'
+      '--removed[show removed packages history]'
+      '--updated[show updated packages history]'
+      '--list[list all history entries]' )
+  
+  _arguments "${options[@]}"
+}
+
+
+_epm_complete_status() { 
+ local options=(
+    '--installed[check if <package> is installed (if version is specified, not older than the version)]'
+    '--installable[check if <package> can be installed from the repo]'
+    '--original[check if <package> is from distro repo]'
+    '--certified[check if <package> is certified that it can be installed without repacking]'
+    '--thirdparty[check if <package> is from a third-party source (didn`t packed for this distro)]'
+    '--repacked[check if <package> was repacked with epm repack]'
+    '--validate[check if <package> is accessible (we can get a fields from it)]'
+  )
+
+  if [[ ${words[CURRENT]} == -* || (${words[CURRENT]} == '' && ${words[CURRENT-1]} == 'status') ]]; then
+    _arguments -C "${options[@]}"
+  elif [[ ${#words[@]} -eq 3 ]]; then
+    _epm_available_packages
+  fi
+}
+
+_epm_complete_repolist() {
+  local options=(
+    'basealt:BaseALT repository'
+    'altsp:ALTSP repository'
+    'yandex:Yandex repository'
+    'autoimports:AutoImports repository'
+    'autoports:AutoPorts repository'
+    'altlinuxclub:ALT Linux Club repository'
+    'deferred:Deferred repository'
+    'deferred.org:Deferred.org repository'
+    'etersoft:Etersoft repository'
+    'korinf:Korinf repository'
+    'archive:Archive repository'
+    'URL:Specify a URL for the repository'
+  )
+
+  if [[ ${words[CURRENT]} == */* ]]; then
+    _files
+  elif [[ $(epm print info -s) == 'alt' ]]; then
+    _describe -t repos 'repositories' options
+  fi
+}
+
+_epm_complete_list() {
+  local options=(
+    '--available[Show available packages]'
+    '--installed[Show installed packages]'
+    '--upgradable[Show upgradable packages]'
+  )
+
+  if [[ ${words[CURRENT]} == -* || (${words[CURRENT]} == '' && ${words[CURRENT-1]} == 'list') ]]; then
+    _arguments "${options[@]}"
+  fi
+}
+
+
+_epm_complete_pack() {
+  local options=(
+    '--install[Install the package]'
+    '--repack[Repack the package]'
+    '--download-only[Download the package only]'
+    '--save-only[Save the package only]'
+  )
+
+  if [[ ${words[CURRENT]} == -* ]]; then
+    _arguments -C "${options[@]}"
+  elif [[ ${words[CURRENT]} == */* ]]; then
+    _files
+  else
+    local pack_options
+    pack_options=( $(epm pack --list) )
+    _describe -t pack-options 'pack options' pack_options
+  fi
+}
+
+_epm_complete_mark() {
+  local subcommands=(
+    'hold:mark the given package(s) as held back'
+    'unhold:unset the given package(s) as held back'
+    'showhold:print the list of packages on hold'
+    'checkhold:return true if the package is on hold'
+    'auto:mark the given package(s) as automatically installed'
+    'remove:mark the given package(s) as automatically installed'
+    'manual:mark the given package(s) as manually installed'
+    'install:mark the given package(s) as manually installed'
+    'showauto:print the list of automatically installed packages'
+    'showmanual:print the list of manually installed packages'
+    'help:show help'
+  )
+
+  local options=(
+    '-h[show help]'
+    '--help[show help]'
+  )
+
+  local special
+  for word in "${words[@]}"; do
+    if [[ " ${subcommands[@]%%:*} " =~ " ${word} " ]]; then
+      special="${word}"
+      break
+    fi
+  done
+
+  if [[ ${words[CURRENT]} == -* || ${words[CURRENT]} == help ]]; then
+    _arguments $options
+  elif [[ -n $special ]]; then
+    case $special in
+      hold|unhold|auto|remove|manual|install)
+        _epm_installed_packages
+        ;;
+      *)
+        return 0
+        ;;
+    esac
+
+  else
+    _describe 'subcommand' subcommands
+  fi
+}
+
+_epm_complete_repo() {
+  local subcommands=(
+    'help:help'
+    'list:list enabled repositories (-a|--all for list disabled repositories too)'
+    'change:switch sources to the mirror (etersoft/yandex/basealt/altlinux.org/eterfund.org): rewrite URLs to the specified server'
+    'set:remove all existing sources and add mirror for the branch'
+    'switch:switch repo to <repo>: rewrite URLs to the repo (use epm release-upgrade [Sisyphus|p10] for upgrade to a next branch)'
+    'enable:enable <repo>'
+    'disable:disable <repo>'
+    'addkey:add repository gpg key (by URL or file) (run with --help to detail)'
+    'clean:remove temp. repos (tasks and CD-ROMs)'
+    'save:save sources lists to a temp place'
+    'restore:restore sources lists from a temp place'
+    'reset:reset repo lists to the distro default'
+    'status:print repo status]'
+    'add:add package repo (etersoft, autoimports, archive 2017/01/31); run with param to get list'
+    'Add:like add, but do update after add'
+    'rm:remove repository from the sources lists (epm repo remove all for all)'
+    'del:remove repository from the sources lists (epm repo remove all for all)'
+    'remove:remove repository from the sources lists (epm repo remove all for all)'
+    'fix:fix paths in sources lists (ALT Linux only)]'
+    'create:create (initialize) repo: [path] [name]'
+    'index:index repo (update indexes): [--init] [path] [name]'
+    'pkgadd:add to <dir> applied <package-filename1> [<package-filename2>...]'
+    'pkgupdate:replace in <dir> with new <package-filename1> [<package-filename2>...]'
+    'pkgdel:del from <dir> <package1> [<package2>...]'
+  )
+
+  local options=(
+    '-h[help]'
+    '--help[help]'
+    )
+
+  local special
+  for word in "${words[@]}"; do
+    if [[ " ${subcommands[@]%%:*} " =~ " ${word} " ]]; then
+      special="${word}"
+      break
+    fi
+  done
+
+  if [[ ${words[CURRENT]} == -* ]]; then
+    _arguments -C "${options[@]}"
+  elif [[ ${words[CURRENT]} == */* ]]; then
+    _files
+  else
+    case $special in
+      change|set|add|Add)
+        _epm_complete_repolist
+        ;;
+      rm|del|remove)
+        _epm_complete_repolist
+        ;;
+      switch)
+        _epm_complete_repolist
+        ;;
+      enable|disable)
+        _epm_complete_repolist
+        ;;
+      create|index)
+        _files
+        ;;
+      pkgadd|pkgupdate|pkgdel)
+        _files
+        ;;
+      *)
+        _describe -t subcommands "repo subcommands" subcommands
+        ;;
+    esac
+  fi
+}
+
+_epm_complete_autoremove() {
+  local subcommands=(
+    'libs:remove libraries'
+    'libs-devel:remove development libraries'
+    'i586-libs:remove i586 libraries'
+    'debuginfo:remove debug information'
+    'devel:remove development packages'
+    'python:remove Python packages'
+    'python2:remove Python 2 packages'
+    'python3:remove Python 3 packages'
+    'perl:remove Perl packages'
+    'gem:remove Gem packages'
+    'ruby:remove Ruby packages'
+  )
+
+  local options=(
+    '--auto[for non interactive mode]'
+    '--assumeyes[for non interactive mode]'
+    '--non-interactive[for non interactive mode]'
+    '--help[for non interactive mode]'
+  )
+
+  if [[ $(epm print info -s) == 'alt' ]]; then
+
+    options+=('--direct[direct removal]')
+
+    local special
+    for word in "${words[@]}"; do
+      if [[  "--direct" == "${word}" ]]; then
+        special="${word}"
+        break
+      fi
+    done
+
+  fi
+
+  if [[ ${words[CURRENT]} == -* ]]; then
+    _arguments $options
+  elif [[ -n $special ]]; then
+    _describe 'subcommand' subcommands
+  fi
+}
+
+#TODO fix commands comp
 _epm_complete_qf() {
   local current_word="${words[CURRENT]}"
   if [[ "$current_word" == */* ]]; then
     _files
   else
-    compadd $(compgen -A command -- "$current_word")
+   # _absolute_command_paths -e
+    _message
   fi
 }
 
 _epm_play_packages() {
   local play_packages 
-  play_packages=( $(epm play --list-all --quiet --short) )
-  _describe -t play-packages 'play package' play_packages 
+
+  if [[ ${words[CURRENT]} == -* ]]; then
+    _arguments \
+      '--remove[remove a play package]' \
+      '--update[update a play package]' \
+      '--list[list play packages]' \
+      '--list-all[list all play packages]' \
+      '--list-scripts[list play package scripts]' \
+      '--short[short format]' \
+      '--installed[list installed play packages]' \
+      '--product-alternatives[list product alternatives]' \
+      '--quiet[quiet mode]'
+  else
+    play_packages=( $(epm play --list-all --quiet --short) )
+    _describe -t play-packages 'play package' play_packages 
+  fi
 }
 
 _epm_available_packages() {
@@ -265,4 +702,4 @@ _epm_installed_packages() {
   _describe -t installed-packages 'installed package' installed_packages 
 }
 
-compdef _epm epm eepm epmi epme epmp epmqf epmI epms epmsf epmu epmq epmql epmqa epmqi epmcl epmrl epmwd epmqp  
+compdef _epm epm eepm epmi epme epmp epmqf epmI epms epmsf epmu epmq epmql epmqa epmqi epmcl epmrl epmwd epmqp 
