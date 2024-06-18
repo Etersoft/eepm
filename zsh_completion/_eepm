@@ -8,66 +8,68 @@ _epm() {
   EEPM_SUBCOMMANDS_ARGS=(epmi epme epmp epmqf epmI epms epmsf epmu epmq epmql epmqa epmqi epmcl epmrl epmwd epmqp)
 
   EEPM_SHORT_ARGS=(
+    '-v[print version]' 
     '-h[show help]'
-    '-v[show version]'
-    '-y[assume yes]'
-    '-i[install]'
-    '-e[remove]'
-    '-P[remove]'
-    '-s[search]'
-    '-qp[query package]'
-    '-qf[query file]'
-    '-q[query]'
+    '-y[non interactive mode]'
+    '-e[remove packages]'
+    '-P[remove packages]'
+    '-s[search package by name]'
+    '-qp[search in the list of installed packages]'
+    '-qf[query package(s) owning file]'
     '-S[query package(s) owning file]'
-    '-sf[search file]'
-    '-ql[list files]'
-    '-cl[changelog]'
-    '-qi[query info]'
-    '-qa[query all]'
-    '-V[verify]'
+    '-q[check presence of package(s) and print this name]'
+    '-ql[print package file list]'
+    '-V[check package file integrity (checksum)]'
+    '-sf[search for the name in all files of all packages]'
+    '-cl[show changelog for package]'
+    '-qa[print list of all installed packages]'
+    '-qi[print package detail info]'
+    '-i[install packages]'
+
   )
 
   EEPM_FULL_ARGS=(
     '--help[show help]'
-    '--version[show version]'
+
+    '--version[print version]'
     '--verbose[verbose mode]'
-    '--debug[debug mode]'
-    '--skip-installed[skip installed]'
-    '--skip-missed[skip missed]'
-    '--show-command-only[show command only]'
-    '--quiet[quiet mode]'
-    '--silent[silent mode]'
-    '--nodeps[no dependencies]'
-    '--force[force action]'
-    '--noremove[no remove]'
-    '--no-remove[no remove]'
-    '--no-stdin[no stdin]'
-    '--inscript[in script]'
-    '--dry-run[dry run]'
-    '--simulate[simulate]'
-    '--just-print[just print]'
-    '--no-act[no action]'
-    '--short[short format]'
-    '--direct[direct mode]'
-    '--repack[repack]'
-    '--norepack[no repack]'
-    '--install[install]'
-    '--scripts[show scripts]'
-    '--noscripts[no scripts]'
-    '--save-only[save only]'
-    '--put-to-repo=[put to repo]'
-    '--download-only[download only]'
-    '--url[show URL]'
+    '--debug[more debug output mode]'
+    '--skip-installed[skip already installed packages during install]'
+    '--skip-missed[skip not installed packages during remove]'
+    '--show-command-only[show command only, do not any action ]'
+    '--quiet[quiet mode (do not print commands before exec)]'
+    '--silent[quiet mode (do not print commands before exec)]'
+    '--nodeps[skip dependency check (during install/simulate and so on)]'
+    '--force[force install/remove package (f.i., override)]'
+    '--noremove[exit if any packages are to be removed during upgrade]'
+    '--no-remove[exit if any packages are to be removed during upgrade]'
+    '--no-stdin[don`t read from stdin for epm args]'
+    '--inscript[don`t read from stdin for epm args]'
+    '--dry-run[print only (autoremove/autoorphans/remove only)]'
+    '--simulate[print only (autoremove/autoorphans/remove only)]'
+    '--just-print[print only (autoremove/autoorphans/remove only)]'
+    '--no-act[print only (autoremove/autoorphans/remove only)]'
+    '--short[short output (just 'package' instead 'package-version-release')]'
+    '--direct[direct install package file from ftp]'
+    '--repack[repack rpm package(s) before install]'
+    '--norepack[don`t repack rpm package(s) if it is by default before install]'
+    '--install[install packed rpm package(s)]'
+    '--scripts[include scripts in repacked rpm package(s)]'
+    '--noscripts[disable scripts in install packages]'
+    '--save-only[save the package/tarball after all transformations]'
+    '--put-to-repo=[put the package after all transformations to the repo]'
+    '--download-only[download only the package/tarball]'
+    '--url[print only URL instead of download package]'
     '--sort[sort]'
-    '--auto[auto]'
-    '--assumeyes[assume yes]'
-    '--non-interactive[non-interactive]'
-    '--disable-interactivity[disable interactivity]'
-    '--interactive[interactive]'
-    '--force-yes[force yes]'
+    '--auto[non interactive mode]'
+    '--assumeyes[non interactive mode]'
+    '--non-interactive[non interactive mode]'
+    '--disable-interactivity[non interactive mode]'
+    '--interactive[interactive mode]'
+    '--force-yes[force yes in a danger cases]'
     '--add-repo[add repo]'
     '--orphans[show orphans]'
-  )
+)
 
   local commands; commands=(
     # install comp
@@ -146,6 +148,7 @@ _epm() {
     'conflicts:print package conflicts'
     # qa comp
     'qa:print list of all installed packages'
+
     'ls:print list of all installed packages'
     'packages:print list of all installed packages'
     'list-installed:print list of all installed packages'
@@ -366,6 +369,9 @@ _epm_list_available_prescription()
   list_available_prescription=( $( epm prescription --list-all --quiet --short) )
   _describe -t list_available_prescription 'list available prescription' list_available_prescription
 
+  if [[ ${words[CURRENT]} == -* ]]; then
+    _arguments -C "${EEPM_SHORT_ARGS[@]}" "${EEPM_FULL_ARGS[@]}"
+  fi
 }
 
 _epm_complete_repack() { 
@@ -659,14 +665,12 @@ _epm_complete_autoremove() {
   fi
 }
 
-#TODO fix commands comp
+# TODO need help with it
+# do system commands complete
 _epm_complete_qf() {
   local current_word="${words[CURRENT]}"
   if [[ "$current_word" == */* ]]; then
     _files
-  else
-   # _absolute_command_paths -e
-    _message
   fi
 }
 
@@ -694,12 +698,18 @@ _epm_available_packages() {
   local available_packages 
   available_packages=( $(epm list --available --quiet --short --direct) )
   _describe -t available-packages 'available package' available_packages
+  if [[ ${words[CURRENT]} == -* ]]; then
+    _arguments -C "${EEPM_SHORT_ARGS[@]}" "${EEPM_FULL_ARGS[@]}"
+  fi
 }
 
 _epm_installed_packages() {
   local installed_packages 
   installed_packages=( $(epm list --installed --quiet --short --direct) )
   _describe -t installed-packages 'installed package' installed_packages 
+  if [[ ${words[CURRENT]} == -* ]]; then
+    _arguments -C "${EEPM_SHORT_ARGS[@]}" "${EEPM_FULL_ARGS[@]}"
+  fi
 }
 
 compdef _epm epm eepm epmi epme epmp epmqf epmI epms epmsf epmu epmq epmql epmqa epmqi epmcl epmrl epmwd epmqp 
