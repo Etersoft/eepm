@@ -76,6 +76,30 @@ __wcount()
     echo "$*" | wc -w
 }
 
+__p11_upgrade_fix()
+{
+    if [[ ! $(docmd epm installed apt-conf-branch) ]]; then 
+        info "Need to install default apt-conf package to avoid missing $TO repo"
+        docmd epm install apt-conf-branch || fatal
+    fi
+    # libcrypto1.1 fix
+    docmd epm repo save
+    docmd epm repo rm all
+    docmd apt-repo add branch sisyphus 2024/05/22
+    docmd epm update
+    docmd epm install libcrypto1.1
+    docmd epm repo rm all
+    docmd epm repo restore
+}
+
+__sisyphus_downgrade_fix()
+{
+    if [[ ! $(docmd epm installed apt-conf-sisyphus) ]]; then 
+        info "Need to install default apt-conf package to avoid missing $TO repo"
+        docmd epm install apt-conf-sisyphus || fatal
+    fi
+}
+
 # TODO: remove it or move to distro_info
 __detect_alt_release_by_repo()
 {
@@ -352,6 +376,7 @@ __switch_alt_to_distro()
             __do_upgrade
             confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
             docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+            if [ $TO = "p11" ]; then __p11_upgrade_fix; fi
             __switch_repo_to $TO
             end_change_alt_repo
             __do_upgrade
@@ -397,9 +422,10 @@ __switch_alt_to_distro()
             __check_system "$TO"
             docmd epm upgrade || fatal
             ;;
-        "Sisyphus p8"|"Sisyphus p9"|"Sisyphus p10"|"Sisyphus c8"|"Sisyphus c8.1"|"Sisyphus c9f2"|"Sisyphus c10f1"|"Sisyphus c10f2")
+        "Sisyphus p8"|"Sisyphus p9"|"Sisyphus p10"|"Sisyphus p11"|"Sisyphus c8"|"Sisyphus c8.1"|"Sisyphus c9f2"|"Sisyphus c10f1"|"Sisyphus c10f2")
             confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
             docmd epm install $(get_fix_release_pkg "$FROM")
+            if [ $TO = "p11" ]; then __sisyphus_downgrade_fix; fi
             __switch_repo_to $TO
             docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
             docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
@@ -413,7 +439,7 @@ __switch_alt_to_distro()
             docmd epm upgrade || fatal
             # TODO: epm_reposwitch??
             __replace_alt_version_in_repo "$FROM/branch/" "$TO/"
-            __alt_repofix "alt"
+            __switch_repo_to $TO
             [ -s /etc/rpm/macros.d/p10 ] && rm -fv /etc/rpm/macros.d/p10
             [ -s /etc/rpm/macros.d/p11 ] && rm -fv /etc/rpm/macros.d/p11
             __epm_ru_update || fatal
