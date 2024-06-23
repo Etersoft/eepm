@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-export EPMVERSION="3.62.9"
+export EPMVERSION="3.62.10"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -6966,7 +6966,7 @@ print_shortname()
 {
     #if [ "$
     #echo "$@" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK4|\1-\2-\3|" -e "s|$PKGNAMEMASK3|\1|"
-    echo "$@" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK3|\1|"
+    print_pkgname "$@" | xargs -n1 echo | sed -e "s|$PKGNAMEMASK3|\1|"
 }
 
 print_version()
@@ -8361,7 +8361,7 @@ __check_system()
 
     if [ "$TO" != "Sisyphus" ] ; then
         # note: we get --base-version directy to get new version
-        if [ "$(DISTRVENDOR --base-version)" != "$TO" ] || epm installed altlinux-release-sisyphus >/dev/null ; then
+        if [ "$($DISTRVENDOR --base-version)" != "$TO" ] || epm installed altlinux-release-sisyphus >/dev/null ; then
             warning "Current distro still is not $TO, or altlinux-release-sisyphus package is installed."
             warning "Trying to fix with altlinux-release-$TO"
             docmd epm install altlinux-release-$TO
@@ -9920,7 +9920,7 @@ epm_repo()
         epm_repolist "$@"
         ;;
     change)                           # HELPCMD: <mirror>: switch sources to the mirror (supports etersoft/yandex/basealt/altlinux.org/eterfund.org): rewrite URLs to the specified server
-        epm_repofix "$@"
+        epm_repochange "$@"
         ;;
     set)                              # HELPCMD: <mirror>: remove all existing sources and add mirror for the branch
         epm repo rm all
@@ -10457,18 +10457,9 @@ __change_repo()
 }
 
 
-epm_repofix()
+__epm_repochange_alt()
 {
-
-case $BASEDISTRNAME in
-    "alt")
-        assure_exists apt-repo
-        [ -n "$quiet" ] || docmd apt-repo list
-        assure_root
-        __fix_alt_sources_list /etc/apt/sources.list
-        __fix_alt_sources_list /etc/apt/sources.list.d/*.list
-        # TODO: move to repo change
-        case "$1" in
+    case "$1" in
         "etersoft")
             __change_repo etersoft "//download.etersoft.ru/pub ALTLinux"
             ;;
@@ -10484,12 +10475,40 @@ case $BASEDISTRNAME in
         "altlinux.org")
             __change_repo ftp.altlinux "//ftp.altlinux.org/pub/distributions ALTLinux"
             ;;
-        "")
-            ;;
         *)
-            fatal "Unsupported change key $1"
-        esac
-        docmd apt-repo list
+            fatal "Unsupported change key '$1'"
+            ;;
+    esac
+}
+
+
+epm_repochange()
+{
+
+    case $BASEDISTRNAME in
+        "alt")
+            __epm_repochange_alt "$1"
+            ;;
+         *)
+            fatal "Repo change Unsupported for $BASEDISTRNAME"
+            ;;
+    esac
+}
+
+
+epm_repofix()
+{
+
+case $BASEDISTRNAME in
+    "alt")
+        assure_exists apt-repo
+        [ -n "$quiet" ] || docmd apt-repo list
+        assure_root
+
+        __fix_alt_sources_list /etc/apt/sources.list
+        __fix_alt_sources_list /etc/apt/sources.list.d/*.list
+
+        [ -n "$quiet" ] || docmd apt-repo list
         return
         ;;
 esac
@@ -15547,7 +15566,7 @@ get_cid_by_url()
     local URL="$1"
     [ -r "$EGET_IPFS_DB" ] || return
     is_fileurl "$URL" && return 1
-    grep -F "$URL Qm" "$EGET_IPFS_DB" | cut -f2 -d" " | grep -E "Qm[[:alnum:]]{44}" | head -n1
+    tac "$EGET_IPFS_DB" | grep -F "$URL Qm" | cut -f2 -d" " | grep -E "Qm[[:alnum:]]{44}" | head -n1
 }
 
 put_cid_and_url()
@@ -15559,6 +15578,11 @@ put_cid_and_url()
 
     is_fileurl "$URL" && return
 
+    local ac="$(get_url_by_cid)"
+    if [ "$ac" = "$URL" ] ; then
+        info "CID $CID is already exist as the same URL $URL in IPFS DB, skipping"
+        return
+    fi
     echo "$URL $CID $FN" >> "$EGET_IPFS_DB"
     info "Placed in $EGET_IPFS_DB: $URL $CID $FN"
 }
@@ -15567,14 +15591,14 @@ get_filename_by_cid()
 {
     local CID="$1"
     [ -z "$EGET_IPFS_DB" ] && basename "$CID" && return
-    grep -F " $CID " "$EGET_IPFS_DB" | head -n1 | cut -f3 -d" "
+    tac "$EGET_IPFS_DB" | grep -F " $CID " | head -n1 | cut -f3 -d" "
 }
 
 get_url_by_cid()
 {
     local CID="$1"
     [ -z "$EGET_IPFS_DB" ] && echo "$CID" && return
-    grep -F " $CID " "$EGET_IPFS_DB" | head -n1 | cut -f1 -d" "
+    tac "$EGET_IPFS_DB" | grep -F " $CID " | head -n1 | cut -f1 -d" "
 }
 
 ###################
@@ -16086,7 +16110,7 @@ scat()
     ###################
 
     local CID="$(get_cid_by_url "$URL")"
-    if [ -n "$CID" ] ; then
+    if [ -n "$CID" ] && [ -z "$EGET_IPFS_FORCE_LOAD" ] ; then
         info "$URL -> $CID"
         ipfs_cat "$CID"
         return
@@ -16133,7 +16157,7 @@ sget()
     #fi
 
     local CID="$(get_cid_by_url "$REALURL")"
-    if [ -n "$CID" ] ; then
+    if [ -n "$CID" ] && [ -z "$EGET_IPFS_FORCE_LOAD" ] ; then
 
         if [ -n "$GETIPFSCID" ] ; then
             echo "$CID"
