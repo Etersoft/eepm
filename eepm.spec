@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.62.9
+Version: 3.62.10
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -101,6 +101,30 @@ a discussion about extra requirements.
 
 
 %changelog
+* Sun Jun 23 2024 Vitaly Lipatov <lav@altlinux.ru> 3.62.10-alt1
+- epm play: add hiddify
+- epm play: fix nekoray
+- epm play: fix hiddify
+- epm play: add anilibrix
+- epm print: fix shortname on deb systems
+- eget: don't add duplicate URL with the same CID
+- eget: get latest CID entry from IPFS_DB
+- eget: add EGET_IPFS_FORCE_LOAD enables downloading ever if the target is exists in IPFS DB
+- epm play trueconf: update source urls
+- epm play: add libgtkglext to anydesk dependency (eterbug #17334)
+- epm play: add sane-katusham247 (eterbug #17332)
+- epm play: add s4a (eterbug #17346)
+- epm play: fix guardant PKGURL in deb systems (eterbug #17340)
+- epm play switch-to-nvidia: add libxnvctrl0 and i586-libnvidia-ml (eterbug #17333)
+- epm play switch-to-nvidia: use modprobe -r for unload nouveau
+- epm play: add cups-drivers-katusham247 (eterbug #17332)
+- epm play: add Firestorm Viewer for Open Simulator (eterbug #17325)
+- epm play: add Firestorm Viewer for Second Life (eterbug #17325)
+- epm play: add alteroffice (eterbug #17332)
+- epm play: fix far2l-portable install (eterbug #17322)
+- epm play: fix radicle install (eterbug #17322)
+- epm repack far2l-portable: fix desktop file, bin command (eterbug #17322)
+
 * Mon May 06 2024 Vitaly Lipatov <lav@altlinux.ru> 3.62.9-alt1
 - epm play: add everdo
 - epm query_file: use realpath to dir (workaround against usrmerge)
