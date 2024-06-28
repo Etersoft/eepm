@@ -283,13 +283,15 @@ is_repacked_package()
 
     epm status --installed $pkg || return 0
 
-    # actually only for ALT
-    [ "$(epm print info -s)" = "alt" ] || return 0
+    # actually only for ALT and RedOS
+    if [ "$(epm print info -s)" != "alt" ] && [ "$(epm print info -s)" != "redos" ] ; then
+        return 0
+    fi
 
     [ -n "$force" ] && return 0
 
     if epm status --original $pkg ; then
-       echo "Package $pkg is already installed from ALT repository (use --force to override it)."
+       echo "Package $pkg is already installed from repository (use --force to override it)."
        return 1
     fi
 
