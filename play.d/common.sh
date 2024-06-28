@@ -257,8 +257,8 @@ is_repacked_package()
 
     epm status --installed $pkg || return 0
 
-    # actually only for ALT, RedOS and R
-    if [ "$(epm print info -s)" != "alt" ] && [ "$(epm print info -s)" != "redos" ] && [ "$(epm print info -s)" != "rosafresh" ] ; then
+    # actually only for ALT, RedOS, Rosa Fresh and MOS Desktop
+    if [ "$(epm print info -s)" != "alt" ] && [ "$(epm print info -s)" != "redos" ] && [ "$(epm print info -s)" != "rosafresh" ] && [ "$(epm print info -s)" != "mos" ] ; then
         return 0
     fi
 
