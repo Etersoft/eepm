@@ -248,6 +248,7 @@ Options:
     <app>                 - install <app>
     --remove <app>        - uninstall <app>
     --update [<app>|all]  - update <app> (or all installed apps) if there is new version
+    --latest <app>        - forced to install the latest version of the application
     --list                - list all installed apps
     --list-all            - list all available apps
     --list-scripts        - list all available scripts
@@ -532,6 +533,11 @@ case "$1" in
         [ -n "$short" ] || [ -n "$quiet" ] || echo "Run with a name of a play script to run:"
         __epm_play_list $prsdir
         exit
+        ;;
+
+    --latest)
+        shift
+        export latest="true"
         ;;
     -*)
         fatal "Unknown option $1"
