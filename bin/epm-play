@@ -248,6 +248,7 @@ Options:
     <app>                 - install <app>
     --remove <app>        - uninstall <app>
     --update [<app>|all]  - update <app> (or all installed apps) if there is new version
+    --force <app>         - forced to install the latest untested version of the application
     --list                - list all installed apps
     --list-all            - list all available apps
     --list-scripts        - list all available scripts
