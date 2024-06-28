@@ -127,6 +127,8 @@ epm_status_original()
     local pkg="$1"
 
     #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
+    local distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
+    local release="$(epm print release from package "$pkg" 2>/dev/null )"
 
     case $DISTRNAME in
         ALTLinux)
@@ -136,8 +138,6 @@ epm_status_original()
             # not for all packages
             #[ "$(epm print field Vendor for package $pkg)" = "ALT Linux Team" ] || return
 
-            local distribution
-            distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
             echo "$distribution" | grep -q "^ALT" || return 1
 
             # mc in Sisyphus has not a signature
@@ -146,8 +146,15 @@ epm_status_original()
             #[ "$sig" = "(none)" ] && return 1
 
             # FIXME: how to check if the package is from ALT repo (verified)?
-            local release="$(epm print release from package "$pkg" 2>/dev/null )"
             echo "$release" | grep -q "^alt" || return 1
+            return 0
+            ;;
+        RedOS)
+            epm_status_validate $pkg || return 1
+            epm_status_repacked $pkg && return 1
+
+            echo "$distribution" | grep -q "RED SOFT" || return
+            echo "$release" | grep -q "el7" || return 1
             return 0
             ;;
         *)
@@ -164,7 +171,7 @@ epm_status_repacked()
     #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
 
     case $BASEDISTRNAME in
-        alt)
+        alt|redos)
             epm_status_validate $pkg || return
             local packager="$(epm print field Packager for "$1" 2>/dev/null)"
             [ "$packager" = "EPM <support@etersoft.ru>" ] && return 0
@@ -181,8 +188,10 @@ epm_status_repacked()
 epm_status_thirdparty()
 {
     local pkg="$1"
+    local distribution
 
     #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
+    distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
 
     case $BASEDISTRNAME in
         alt)
@@ -192,9 +201,14 @@ epm_status_thirdparty()
             #echo "$packager" && grep -q "basealt" && return 0
             epm_status_validate $pkg || return 1
 
-            local distribution
-            distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
             echo "$distribution" | grep -q "^ALT" && return 1
+            echo "$distribution" | grep -q "^EEPM" && return 1
+            return 0
+            ;;
+        redos)
+            epm_status_validate $pkg || return 1
+
+            echo "$distribution" | grep -q "^RED SOFT" && return 1
             echo "$distribution" | grep -q "^EEPM" && return 1
             return 0
             ;;
