@@ -3,6 +3,8 @@
 # kind of hack: inheritance --force from main epm
 echo "$EPM_OPTIONS" | grep -q -- "--force" && force="--force"
 echo "$EPM_OPTIONS" | grep -q -- "--auto" && auto="--auto"
+echo "$EPM_OPTIONS" | grep -q -- "--latest" && latest="true"
+
 
 fatal()
 {
@@ -311,17 +313,19 @@ check_for_product_update()
         exit
     fi
     # latestpkgver <= $pkgver
-    if [ -z "$force" ] && [ "$(epm print compare package version $latestpkgver $pkgver)" != "1" ] ; then
-        if [ "$latestpkgver" = "$pkgver" ] ; then
-            echo "Latest available version of $PKGNAME $latestpkgver is already installed."
-        else
-            echo "Latest available version of $PKGNAME: $latestpkgver, but you have a newer version installed: $pkgver."
+    if [ -z "$force" ] || [ -z "$latest" ] ; then
+        if [ "$(epm print compare package version $latestpkgver $pkgver)" != "1" ] ; then
+            if [ "$latestpkgver" = "$pkgver" ] ; then
+                echo "Latest available version of $PKGNAME $latestpkgver is already installed."
+            else
+                echo "Latest available version of $PKGNAME: $latestpkgver, but you have a newer version installed: $pkgver."
+            fi
+            exit
         fi
-        exit
     fi
 
     #echo "Updating $PKGNAME from $pkgver to the latest available version (equal to $latestpkgver or newer) ..."
-    if [ -n "$force" ] ; then
+    if [ -n "$force" ] || [ -z "$latest" ] ; then
         echo "Updating $PKGNAME from $pkgver to latest available version ..."
     else
         echo "Updating $PKGNAME from $pkgver to $latestpkgver version ..."
@@ -414,12 +418,12 @@ is_supported_arch "$(epm print info -a)" || fatal "Only '$SUPPORTEDARCHES' archi
 # skip install if there is package installed not via epm play
 is_repacked_packages $REPOPKGNAME || exit 0
 
-if [ -z "$VERSION" ] && [ -z "$force" ] && [ -n "$EGET_IPFS_DB" ] ; then
+if [ -z "$VERSION" ] && [ -z "$force" ] && [ -n "$EGET_IPFS_DB" ] && [ -z "$latest" ] ; then
     # IPFS is using, use known version
     VERSION="$(get_latest_version $PKGNAME)"
 fi
 
-if [ -z "$VERSION" ] && [ -z "$force" ] ; then
+if [ -z "$VERSION" ] && [ -z "$force" ]  && [ -z "$latest" ] ; then
     # by default use latest known version to install
     VERSION="$(get_latest_version $PKGNAME)"
 fi
