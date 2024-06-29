@@ -421,7 +421,6 @@ check_su_root()
 
 # if we have not sudo, returns 1 and set SUDO variable to fatal
 SUDO_TESTED=''
-SUDO_CMD='sudo'
 set_sudo()
 {
     local nofail="$1"
@@ -446,37 +445,35 @@ set_sudo()
     # start error section
     SUDO_TESTED="1"
 
-    if ! is_command $SUDO_CMD ; then
-        [ "$nofail" = "nofail" ] || SUDO="fatal 'For this operation run epm under root, or install and tune sudo (http://altlinux.org/sudo)'"
-        SUDO_TESTED="2"
-        return "$SUDO_TESTED"
-    fi
-
-    # if input is a console
-    if inputisatty && isatty && isatty2 ; then
-        if ! $SUDO_CMD -n true ; then
-            info "Please enter sudo user password to use sudo in the current session."
-            if ! $SUDO_CMD -l >/dev/null ; then
-                [ "$nofail" = "nofail" ] || SUDO="fatal 'For this operation run epm under root, or install and tune sudo (http://altlinux.org/sudo)'"
+    if is_command sudo ; then
+        # if input is a console
+        if inputisatty && isatty && isatty2 ; then
+            if ! sudo -n true ; then
+                info "Please enter sudo user password to use sudo in the current session."
+                if ! sudo -l >/dev/null ; then
+                    [ "$nofail" = "nofail" ] || SUDO="fatal 'For this operation run epm under root, or install and tune sudo (http://altlinux.org/sudo)'"
+                    SUDO_TESTED="2"
+                    return "$SUDO_TESTED"
+                fi
+            fi
+        else
+            # TODO: check user_can_sudo in https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+            # use sudo if one is tuned and tuned without password
+            # hack: check twice
+            sudo -l -n >/dev/null 2>/dev/null
+            if ! sudo -l -n >/dev/null 2>/dev/null ; then
+                [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported here). Please run epm under root or check http://altlinux.org/sudo '"
                 SUDO_TESTED="3"
                 return "$SUDO_TESTED"
             fi
         fi
-    else
-        # TODO: check user_can_sudo in https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
-        # use sudo if one is tuned and tuned without password
-        # hack: check twice
-        $SUDO_CMD -l -n >/dev/null 2>/dev/null
-        if ! $SUDO_CMD -l -n >/dev/null 2>/dev/null ; then
-            [ "$nofail" = "nofail" ] || SUDO="fatal 'Can't use sudo (only passwordless sudo is supported here). Please run epm under root or check http://altlinux.org/sudo '"
-            SUDO_TESTED="4"
-            return "$SUDO_TESTED"
-        fi
+        SUDO="sudo"
+    elif is_command doas && doas -C /etc/doas.conf > /dev/null 2>&1 ; then
+        SUDO="doas"
     fi
 
     SUDO_TESTED="0"
     # FIXME: does not work: sudo -- VARIABLE=some command
-    SUDO="$SUDO_CMD"
     #SUDO="$SUDO_CMD --"
     # check for < 1.7 version which do not support -- (and --help possible too)
     #$SUDO_CMD -h 2>/dev/null | grep -q "  --" || SUDO="$SUDO_CMD"
