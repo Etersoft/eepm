@@ -83,7 +83,7 @@ __alt_replace_sign_name()
     __replace_text_in_alt_repo "/^ *#/! s!\[sisyphus\]!$TO!g"
     __replace_text_in_alt_repo "/^ *#/! s!\[updates\]!$TO!g"
     __replace_text_in_alt_repo "/^ *#/! s!\[cert[789]\]!$TO!g"
-    __replace_text_in_alt_repo "/^ *#/! s!\[[tcp][1-3]?[6-90][.f]?[0-9]?\]!$TO!g"
+    __replace_text_in_alt_repo "/^ *#/! s!\[[tcp][1-3]?[0-9][.f]?[0-9]?\]!$TO!g"
 }
 
 __alt_repofix()
@@ -97,7 +97,7 @@ __alt_repofix()
     fi
 }
 
-__alt_branch_reg='[tcp][1-3]?[6-90][.f]?[0-9]?'
+__alt_branch_reg='[tcp][1-3]?[0-9][.f]?[0-9]?'
 
 #__switch_repo_to()
 epm_reposwitch()
@@ -115,13 +115,18 @@ epm_reposwitch()
     __alt_repofix "$TO"
 
     # TODO: improve for c10f1?
-    if [ "$TO" = "p10" ] ; then
-        echo '%_priority_distbranch $TO' >/etc/rpm/macros.d/$TO
-    elif [ "$TO" = "p11" ] ; then
-        echo '%_priority_distbranch p11' >/etc/rpm/macros.d/p11
-    else
-        rm -fv /etc/rpm/macros.d/{p10,p11}
-    fi
+    case $TO in
+        "p10"|"p11"|"Sisyphus")
+            rm -fv /etc/rpm/macros.d/{p10,p11} 
+
+            [ "$TO" = "Sisyphus" ] && TO="sisyphus"
+            
+            echo "%_priority_distbranch $TO" >/etc/rpm/macros.d/priority_distbranch
+            ;;
+        *)
+            rm -fv /etc/rpm/macros.d/{p10,p11,priority_distbranch}
+            ;;
+    esac
     #epm repo list
 }
 
