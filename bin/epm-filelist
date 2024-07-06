@@ -161,6 +161,9 @@ __epm_filelist_name()
         pkgng)
             CMD="pkg info -l"
             ;;
+        redox-pkg)
+            CMD="pkg list"
+            ;;
         opkg)
             CMD="opkg files"
             ;;

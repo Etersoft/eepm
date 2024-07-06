@@ -114,6 +114,9 @@ epm_install_names()
         pkgng)
             sudocmd pkg install $@
             return ;;
+        redox-pkg)
+            sudocmd pkg install $@
+            return ;;
         emerge)
             sudocmd emerge -uD $@
             return ;;

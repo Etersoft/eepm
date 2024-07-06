@@ -168,6 +168,9 @@ epm_upgrade()
     pkgng)
         CMD="pkg upgrade"
         ;;
+    redox-pkg)
+        CMD="pkg upgrade"
+        ;;
     apk)
         CMD="apk upgrade"
         ;;
