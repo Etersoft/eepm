@@ -25,10 +25,10 @@ case "$arch" in
 esac
 
 if ! is_glibc_enough 2.34 ; then
-    fatal "glibc is too old"
+    #fatal "glibc is too old"
+    PKGURL="$(snap_get_pkgurl $URL)"
+else
+    PKGURL="https://lcdn.icons8.com/setup/$file"
 fi
-
-# https://icons8.ru/lunacy
-PKGURL="https://lcdn.icons8.com/setup/$file"
 
 install_pkgurl
