@@ -37,7 +37,8 @@ install_pkgurl
 if [ "$(epm print info -s)" = "alt" ] ; then
     epm install ffmpeg-plugin-browser
     exit
+else
+    epm play nwjs-ffmpeg-prebuilt=0.87.0
+    exit
 fi
 
-UPDATEFFMPEG=$(epm ql $PKGNAME | grep update-ffmpeg) || fatal
-epm pack --install $PKGNAME-codecs-ffmpeg-extra $UPDATEFFMPEG
