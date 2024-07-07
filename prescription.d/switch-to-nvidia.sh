@@ -83,7 +83,7 @@ fi
 
 # Активируем службы управления питания NVIDIA, без этих служб будет некоректно работать уход в сон
 systemctl enable nvidia-suspend.service nvidia-resume.service nvidia-hibernate.service
-echo "options nvidia NVreg_PreserveVideoMemoryAllocations=1" > /etc/modprobe.d/nvidia_memory_allocation.conf
+echo "options nvidia NVreg_PreserveVideoMemoryAllocations=1 NVreg_TemporaryFilePath=/var/tmp" > /etc/modprobe.d/nvidia_memory_allocation.conf
 
 # Запускаем регенерацию initrd
 make-initrd
