@@ -11,6 +11,10 @@ URL="https://obsidian.md"
 arch=amd64
 pkgtype=deb
 
-PKGURL=$(eget --list --latest https://github.com/obsidianmd/obsidian-releases/releases/ "$PKGNAME*$VERSION*$arch.$pkgtype")
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(get_github_version "https://github.com/obsidianmd/obsidian-releases/" "$PKGNAME*.$VERSION*$arch.$pkgtype")
+else
+    PKGURL=$(get_github_version "https://github.com/obsidianmd/obsidian-releases/" "$PKGNAME.*$VERSION.*$arch.$pkgtype")
+fi
 
 install_pkgurl

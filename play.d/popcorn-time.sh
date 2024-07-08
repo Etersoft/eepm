@@ -8,8 +8,11 @@ URL="https://github.com/popcorn-official/popcorn-desktop"
 
 . $(dirname $0)/common.sh
 
-PKGURL=$(epm tool eget --list --latest https://github.com/popcorn-official/popcorn-desktop/releases "Popcorn-Time-$VERSION-amd64.deb")
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(get_github_version "https://github.com/popcorn-official/popcorn-desktop/" "Popcorn-Time-.$VERSION-amd64.deb")
+else
+    PKGURL="https://github.com/popcorn-official/popcorn-desktop/releases/download/v$VERSION/Popcorn-Time-$VERSION-amd64.deb"
+fi
 
 # repack always, ever for deb system (bad postinst script)
 install_pkgurl --repack
-

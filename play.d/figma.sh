@@ -8,7 +8,7 @@ URL="https://github.com/Figma-Linux/figma-linux"
 
 . $(dirname $0)/common.sh
 
-[ "$VERSION" = "*" ] && VERSION="[0-9]*"
+[ "$VERSION" = "*" ] && VERSION="[0-9].*"
 
 pkgtype="$(epm print info -p)"
 
@@ -35,7 +35,7 @@ elif [ "$pkgtype" == "pacman" ] ; then
     esac
 fi
 
-PKGURL=$(eget --list --latest https://github.com/Figma-Linux/figma-linux/releases "$file")
+PKGURL=$(get_github_version "https://github.com/Figma-Linux/figma-linux/" "$file")
 
 install_pkgurl
 

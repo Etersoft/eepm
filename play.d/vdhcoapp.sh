@@ -10,8 +10,11 @@ URL="https://www.downloadhelper.net/w/CoApp-Installation"
 
 arch="$(epm print info -a)"
 
-mask="dhcoapp-noffmpeg-linux-$arch.deb"
-
-PKGURL=$(eget --list --latest https://github.com/aclap-dev/vdhcoapp/releases/ "$mask")
+mask="vdhcoapp-noffmpeg-linux-$arch.deb"
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(get_github_version "https://github.com/aclap-dev/vdhcoapp/" "$mask")
+else
+    PKGURL="https://github.com/aclap-dev/vdhcoapp/releases/download/v$VERSION/$mask"
+fi
 
 install_pkgurl

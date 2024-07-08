@@ -20,6 +20,10 @@ esac
 
 pkgtype=deb
 
-PKGURL=$(eget --list --latest https://github.com/4gray/iptvnator/releases/ "$PKGNAME*$VERSION*$arch.$pkgtype")
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(get_github_version "https://github.com/4gray/iptvnator/" "$PKGNAME*.$VERSION*$arch.$pkgtype")
+else
+    PKGURL="https://github.com/4gray/iptvnator/releases/download/v$VERSION/${PKGNAME}_${VERSION}_$arch.$pkgtype"
+fi
 
 install_pkgurl

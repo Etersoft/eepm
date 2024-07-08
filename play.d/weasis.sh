@@ -9,8 +9,10 @@ URL="https://github.com/nroduit/Weasis"
 . $(dirname $0)/common.sh
 
 arch="$(epm print info --debian-arch)"
-file="weasis_$VERSION-1_$arch.deb"
-
-PKGURL=$(eget --list --latest https://github.com/nroduit/Weasis/releases "$file")
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(get_github_version "https://github.com/nroduit/Weasis/" "weasis_.$VERSION-1_$arch.deb")
+else
+    PKGURL="https://github.com/nroduit/Weasis/releases/download/v$VERSION/weasis_$VERSION-1_$arch.deb"
+fi
 
 install_pkgurl

@@ -9,7 +9,7 @@ URL="https://github.com/nwjs-ffmpeg-prebuilt/nwjs-ffmpeg-prebuilt/"
 . $(dirname $0)/common.sh
 
 if [ "$VERSION" = "*" ] ; then
-    PKGURL=$(eget --list --latest https://github.com/nwjs-ffmpeg-prebuilt/nwjs-ffmpeg-prebuilt/releases "${VERSION}-linux-x64.zip")
+    PKGURL=$(get_github_version "https://github.com/nwjs-ffmpeg-prebuilt/nwjs-ffmpeg-prebuilt/" ".${VERSION}-linux-x64.zip")
 else
     PKGURL="https://github.com/nwjs-ffmpeg-prebuilt/nwjs-ffmpeg-prebuilt/releases/download/$VERSION/$VERSION-linux-x64.zip"
 fi

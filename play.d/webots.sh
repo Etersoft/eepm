@@ -9,6 +9,6 @@ URL="https://cyberbotics.com/"
 . $(dirname $0)/common.sh
 
 
-PKGURL=$(eget --list --latest https://github.com/cyberbotics/webots/releases/"*.deb")
+PKGURL=$(get_github_version "https://github.com/cyberbotics/webots/" ".*.deb")
 
 install_pkgurl

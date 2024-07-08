@@ -26,7 +26,11 @@ else
     pkgtype="deb"
 fi
 
-PKGURL=$(eget --list --latest https://github.com/cyanfish/naps2/releases "$PKGNAME-$VERSION-linux-$arch.$pkgtype")
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(get_github_version "https://github.com/cyanfish/naps2/" "$PKGNAME-.$VERSION-linux-$arch.$pkgtype")
+else
+    PKGURL="https://github.com/cyanfish/naps2/releases/download/v$VERSION/$PKGNAME-$VERSION-linux-$arch.$pkgtype"
+fi
 
 
 install_pkgurl

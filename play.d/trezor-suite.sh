@@ -21,6 +21,10 @@ case "$arch" in
         ;;
 esac
 
-PKGURL=$(eget --list --latest $URL $(epm print constructname Trezor-Suite "$VERSION" linux-$arch AppImage "-" "-"))
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(get_github_version "https://github.com/trezor/trezor-suite/" $(epm print constructname Trezor-Suite ".$VERSION" linux-$arch AppImage "-" "-"))
+else
+    PKGURL=$(get_github_version "https://github.com/trezor/trezor-suite/" $(epm print constructname Trezor-Suite "$VERSION" linux-$arch AppImage "-" "-"))
+fi
 
 install_pkgurl

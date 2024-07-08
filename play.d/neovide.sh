@@ -8,7 +8,10 @@ URL="https://neovide.dev/"
 
 . $(dirname $0)/common.sh
 
-PKGURL=$(eget --list --latest https://github.com/neovide/neovide/releases "$PKGNAME.AppImage")
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(get_github_version "https://github.com/neovide/neovide/" "$PKGNAME.AppImage")
+else
+    PKGURL="https://github.com/neovide/neovide/releases/download/$VERSION/$PKGNAME.AppImage"
+fi
 
 install_pkgurl
-

@@ -16,7 +16,10 @@ fi
 
 arch=x86_64
 # sh: symbol lookup error: /tmp/.private/lav/.mount_whatsaxhRMDh/opt/libc/lib/x86_64-linux-gnu/libc.so.6: undefined symbol: __libc_enable_secure, version GLIBC_PRIVATE
-PKGURL=$(eget --list --latest https://github.com/eneshecan/whatsapp-for-linux/releases "$PKGNAME-$VERSION-$arch.AppImage")
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(get_github_version "https://github.com/eneshecan/whatsapp-for-linux/" "$PKGNAME-.$VERSION-$arch.AppImage")
+else
+    PKGURL="https://github.com/eneshecan/whatsapp-for-linux/releases/download/v$VERSION/$PKGNAME-$VERSION-$arch.AppImage"
+fi
 
 install_pkgurl
-

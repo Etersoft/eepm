@@ -10,6 +10,10 @@ DESCRIPTION="diagrams.net desktop"
 arch=amd64
 pkgtype=deb
 
-PKGURL=$(eget --list --latest https://github.com/jgraph/drawio-desktop/releases "drawio-$arch-$VERSION.$pkgtype")
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(get_github_version "https://github.com/jgraph/drawio-desktop/" "drawio-$arch-.$VERSION.$pkgtype")
+else
+    PKGURL="https://github.com/jgraph/drawio-desktop/releases/download/v$VERSION/drawio-$arch-$VERSION.$pkgtype"
+fi
 
 install_pkgurl

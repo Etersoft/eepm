@@ -8,10 +8,8 @@ URL="https://etcher.io/"
 
 . $(dirname $0)/common.sh
 
-mask="balena-etcher_${VERSION}_amd64.deb"
-
 if [ "$VERSION" = "*" ] ; then
-    PKGURL=$(eget --list --latest https://github.com/balena-io/etcher/releases "$mask")
+    PKGURL=$(get_github_version "https://github.com/balena-io/etcher/" "balena-etcher_.${VERSION}_amd64.deb")
 else
     PKGURL="https://github.com/balena-io/etcher/releases/download/v$VERSION/${PKGNAME}_${VERSION}_amd64.deb"
 fi

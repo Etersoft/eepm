@@ -27,11 +27,13 @@ esac
 
 if [ "$VERSION" = "*" ] ; then
     # TODO: get latest version from somewhere?
-    PKGURL="$(eget --list --latest https://github.com/k3s-io/k3s/releases "$file")"
+    PKGURL="$(get_github_version "https://github.com/k3s-io/k3s/" "$file")"
 else
     PKGURL="https://github.com/k3s-io/k3s/releases/download/v$VERSION+k3s1/$file"
 fi
 
-VERSION="$(echo "$PKGURL" | sed -e 's|.*download/v||' -e 's|%2Bk3s1.*||' -e 's|+k3s1.*||' -e 's|-.*||')"
+VERSION="$(echo "$PKGURL" | sed -e 's|.*download/v||' -e 's|%2Bk3s1.*||' -e 's|%2Bk3s2/k3s||' -e 's|+k3s1.*||' -e 's|-.*||')"
+
+echo $VERSION
 
 install_pack_pkgurl $VERSION

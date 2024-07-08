@@ -10,7 +10,10 @@ URL="https://github.com/MatsuriDayo/nekoray"
 arch=x64
 pkgtype=deb
 
-PKGURL=$(eget --list --latest https://github.com/MatsuriDayo/nekoray/releases "nekoray-$VERSION-debian-$arch.$pkgtype")
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(get_github_version "https://github.com/MatsuriDayo/nekoray/" "nekoray-.$VERSION-debian-$arch.$pkgtype")
+else
+    PKGURL=$(get_github_version "https://github.com/MatsuriDayo/nekoray/" "nekoray-$VERSION.*-debian-$arch.$pkgtype")
+fi
 
 install_pkgurl
-

@@ -10,11 +10,6 @@ URL="https://github.com/stenzek/duckstation/releases"
 
 warn_version_is_not_supported
 
-file="DuckStation-x64.AppImage"
-
-# TODO: preview, previous-latest
-SELECTOR="preview"
-
-PKGURL=$(eget --list https://github.com/stenzek/duckstation/releases $file | grep "/$SELECTOR/")
+PKGURL=$(get_github_version "https://github.com/stenzek/duckstation" "DuckStation-x64.AppImage")
 
 install_pack_pkgurl

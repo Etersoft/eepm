@@ -8,6 +8,10 @@ URL="https://github.com/th-ch/youtube-music"
 
 . $(dirname $0)/common.sh
 
-PKGURL="$(eget --list --latest https://github.com/th-ch/youtube-music/releases/ "YouTube-Music-$VERSION.AppImage")"
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(get_github_version "https://github.com/th-ch/youtube-music/" "YouTube-Music-.$VERSION.AppImage")
+else
+    PKGURL="https://github.com/th-ch/youtube-music/releases/download/v$VERSION/YouTube-Music-$VERSION.AppImage"
+fi
 
 install_pkgurl

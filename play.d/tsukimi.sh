@@ -9,7 +9,7 @@ URL="https://github.com/tsukinaha/tsukimi"
 . $(dirname $0)/common.sh
 
 if [ "$VERSION" = "*" ] ; then
-    PKGURL=$(eget --list --latest https://github.com/tsukinaha/tsukimi/releases/ "${PKGNAME}_${VERSION}_amd64.deb")
+    PKGURL=$(get_github_version "https://github.com/tsukinaha/tsukimi/" "${PKGNAME}_.${VERSION}_amd64.deb")
 else
     PKGURL="https://github.com/tsukinaha/tsukimi/releases/download/v$VERSION/${PKGNAME}_${VERSION}_amd64.deb"
 fi

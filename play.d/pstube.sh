@@ -18,8 +18,6 @@ case "$pkgtype" in
         ;;
 esac
 
-[ "$VERSION" = "*" ] && VERSION="[0-9]*"
-
 if ! is_glibc_enough 2.34 ; then
     fatal "glibc is too old"
 fi
@@ -28,6 +26,6 @@ arch=x86_64
 # https://github.com/prateekmedia/pstube/releases/download/2.6.0/pstube-linux-2.6.0-x86_64.rpm
 # https://github.com/prateekmedia/pstube/releases/download/2.6.0/pstube-linux-2.6.0-x86_64.deb
 # https://github.com/prateekmedia/pstube/releases/download/3.0.0-beta/pstube-3.0.0-beta-linux-x86_64.rpm
-PKGURL=$(eget --list --latest https://github.com/prateekmedia/pstube/releases "$PKGNAME-$VERSION-$arch.$pkgtype")
+PKGURL=$(get_github_version "https://github.com/prateekmedia/pstube/" "$PKGNAME-.$VERSION-$arch.$pkgtype")
 
 install_pkgurl
