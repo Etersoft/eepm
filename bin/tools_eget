@@ -329,7 +329,7 @@ CURLMAXTIME=''
 WGETREADTIMEOUT=''
 WGETRETRYCONNREFUSED=''
 CURLRETRYCONNREFUSED=''
-WGETTRIES=''
+WGETTRIES='--tries 1'
 CURLRETRY=''
 WGETLOADCOOKIES=''
 CURLCOOKIE=''
@@ -1067,7 +1067,7 @@ url_get_response()
 {
     local URL="$1"
     local answer
-    answer="$(quiet=1 __wget --spider -S "$URL" 2>&1)"
+    answer="$(quiet=1 __wget --timeout 20 --tries 1 --spider -S "$URL" 2>&1)"
     # HTTP/1.1 405 Method Not Allowed
     # HTTP/1.1 404 Not Found
     if echo "$answer" | grep -q "^ *HTTP/[12.]* 40[45]" ; then
@@ -1114,11 +1114,11 @@ url_get_response()
 {
     local URL="$1"
     local answer
-    answer="$(quiet=1 __curl -LI "$URL" 2>&1)"
+    answer="$(quiet=1 __curl --max-time 20 --retry 0 -LI "$URL" 2>&1)"
     # HTTP/1.1 405 Method Not Allowed
     # HTTP/1.1 404 Not Found
     if echo "$answer" | grep -q "^ *HTTP/[12.]* 40[45]" ; then
-        (quiet=1 __curl -L -i -r0-0 "$URL" 2>&1)
+        (quiet=1 __curl --max-time 20 --retry 0 -L -i -r0-0 "$URL" 2>&1)
         return
     fi
     echo "$answer"
