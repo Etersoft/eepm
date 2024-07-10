@@ -574,7 +574,7 @@ done
 # defaults
 
 # https://github.com/ipfs/kubo/issues/5541
-ipfs_diag_timeout='--timeout 60s'
+ipfs_diag_timeout='--timeout 20s --tries 1'
 
 ipfs_api_local="/ip4/127.0.0.1/tcp/5001"
 [ -n "$EGET_IPFS_API" ] && ipfs_api_local="$EGET_IPFS_API"
@@ -582,7 +582,7 @@ ipfs_api_local="/ip4/127.0.0.1/tcp/5001"
 ipfs_api_brave="/ip4/127.0.0.1/tcp/45005"
 
 # Public IPFS http gateways
-ipfs_gateways="https://cloudflare-ipfs.com/ipfs https://gateway.pinata.cloud/ipfs https://dweb.link/ipfs https://dhash.ru/ipfs"
+ipfs_gateways="https://dhash.ru/ipfs https://ipfs.io/ipfs https://gateway.pinata.cloud/ipfs https://dweb.link/ipfs"
 
 # Test data: https://etersoft.ru/templates/etersoft/images/logo.png
 ipfs_checkQm="QmYwf2GAMvHxfFiUFL2Mr6KUG6QrDiupqGc8ms785ktaYw"
