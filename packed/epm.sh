@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-export EPMVERSION="3.62.10"
+export EPMVERSION="3.62.11"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -3590,6 +3590,9 @@ __epm_filelist_name()
         pkgng)
             CMD="pkg info -l"
             ;;
+        redox-pkg)
+            CMD="pkg list"
+            ;;
         opkg)
             CMD="opkg files"
             ;;
@@ -4158,6 +4161,9 @@ epm_install_names()
             sudocmd pkg_add -r $@
             return ;;
         pkgng)
+            sudocmd pkg install $@
+            return ;;
+        redox-pkg)
             sudocmd pkg install $@
             return ;;
         emerge)
@@ -13526,6 +13532,9 @@ epm_upgrade()
     pkgng)
         CMD="pkg upgrade"
         ;;
+    redox-pkg)
+        CMD="pkg upgrade"
+        ;;
     apk)
         CMD="apk upgrade"
         ;;
@@ -13893,6 +13902,9 @@ case $DISTRIB_ID in
         ;;
     Gentoo)
         CMD="emerge"
+        ;;
+    Redox)
+        CMD="redox-pkg"
         ;;
     ArchLinux|ManjaroLinux)
         CMD="pacman"
@@ -14331,6 +14343,10 @@ elif distro SuSe-release || distro SuSE-release ; then
         DISTRIB_ID="SLES"
     fi
 
+elif distro redox-release ; then
+    DISTRIB_ID="Redox"
+    DISTRIB_RELEASE=$(cat $DISTROFILE)
+
 # fixme: can we detect by some file?
 elif [ "$(uname)" = "FreeBSD" ] ; then
     DISTRIB_ID="FreeBSD"
@@ -14397,6 +14413,9 @@ case "$DIST_OS" in
         ;;
     'freebsd' | 'openbsd' | 'netbsd')
         DIST_OS="freebsd"
+        ;;
+    'Redox')
+        DIST_OS="redox"
         ;;
 esac
 echo "$DIST_OS"
@@ -15204,7 +15223,7 @@ CURLMAXTIME=''
 WGETREADTIMEOUT=''
 WGETRETRYCONNREFUSED=''
 CURLRETRYCONNREFUSED=''
-WGETTRIES=''
+WGETTRIES='--tries 1'
 CURLRETRY=''
 WGETLOADCOOKIES=''
 CURLCOOKIE=''
@@ -15449,7 +15468,7 @@ done
 # defaults
 
 # https://github.com/ipfs/kubo/issues/5541
-ipfs_diag_timeout='--timeout 60s'
+ipfs_diag_timeout='--timeout 20s --tries 1'
 
 ipfs_api_local="/ip4/127.0.0.1/tcp/5001"
 [ -n "$EGET_IPFS_API" ] && ipfs_api_local="$EGET_IPFS_API"
@@ -15457,7 +15476,7 @@ ipfs_api_local="/ip4/127.0.0.1/tcp/5001"
 ipfs_api_brave="/ip4/127.0.0.1/tcp/45005"
 
 # Public IPFS http gateways
-ipfs_gateways="https://cloudflare-ipfs.com/ipfs https://gateway.pinata.cloud/ipfs https://dweb.link/ipfs https://dhash.ru/ipfs"
+ipfs_gateways="https://dhash.ru/ipfs https://ipfs.io/ipfs https://gateway.pinata.cloud/ipfs https://dweb.link/ipfs"
 
 # Test data: https://etersoft.ru/templates/etersoft/images/logo.png
 ipfs_checkQm="QmYwf2GAMvHxfFiUFL2Mr6KUG6QrDiupqGc8ms785ktaYw"
@@ -15942,7 +15961,7 @@ url_get_response()
 {
     local URL="$1"
     local answer
-    answer="$(quiet=1 __wget --spider -S "$URL" 2>&1)"
+    answer="$(quiet=1 __wget --timeout 20 --tries 1 --spider -S "$URL" 2>&1)"
     # HTTP/1.1 405 Method Not Allowed
     # HTTP/1.1 404 Not Found
     if echo "$answer" | grep -q "^ *HTTP/[12.]* 40[45]" ; then
@@ -15989,11 +16008,11 @@ url_get_response()
 {
     local URL="$1"
     local answer
-    answer="$(quiet=1 __curl -LI "$URL" 2>&1)"
+    answer="$(quiet=1 __curl --max-time 20 --retry 0 -LI "$URL" 2>&1)"
     # HTTP/1.1 405 Method Not Allowed
     # HTTP/1.1 404 Not Found
     if echo "$answer" | grep -q "^ *HTTP/[12.]* 40[45]" ; then
-        (quiet=1 __curl -L -i -r0-0 "$URL" 2>&1)
+        (quiet=1 __curl --max-time 20 --retry 0 -L -i -r0-0 "$URL" 2>&1)
         return
     fi
     echo "$answer"

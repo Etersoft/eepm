@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.62.10"
+EPMVERSION="3.62.11"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1942,6 +1942,9 @@ case $DISTRIB_ID in
     Gentoo)
         CMD="emerge"
         ;;
+    Redox)
+        CMD="redox-pkg"
+        ;;
     ArchLinux|ManjaroLinux)
         CMD="pacman"
         ;;
@@ -2379,6 +2382,10 @@ elif distro SuSe-release || distro SuSE-release ; then
         DISTRIB_ID="SLES"
     fi
 
+elif distro redox-release ; then
+    DISTRIB_ID="Redox"
+    DISTRIB_RELEASE=$(cat $DISTROFILE)
+
 # fixme: can we detect by some file?
 elif [ "$(uname)" = "FreeBSD" ] ; then
     DISTRIB_ID="FreeBSD"
@@ -2445,6 +2452,9 @@ case "$DIST_OS" in
         ;;
     'freebsd' | 'openbsd' | 'netbsd')
         DIST_OS="freebsd"
+        ;;
+    'Redox')
+        DIST_OS="redox"
         ;;
 esac
 echo "$DIST_OS"
