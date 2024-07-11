@@ -229,6 +229,7 @@ __epm_repochange_alt()
 epm_repochange()
 {
 
+    epm_repofix
     case $BASEDISTRNAME in
         "alt")
             __epm_repochange_alt "$1"
