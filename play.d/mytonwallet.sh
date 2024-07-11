@@ -10,4 +10,10 @@ URL="https://mytonwallet.app/"
 
 PKGURL=$(eget --list --latest https://github.com/mytonwalletorg/mytonwallet/releases "MyTonWallet-x86_64.AppImage")
 
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(get_github_version "https://github.com/mytonwalletorg/mytonwallet/" "MyTonWallet-x86_64.AppImage")
+else
+    PKGURL="https://github.com/mytonwalletorg/mytonwallet/releases/download/v$VERSION/MyTonWallet-x86_64.AppImage"
+fi
+
 install_pkgurl

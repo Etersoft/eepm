@@ -11,6 +11,6 @@ URL="https://github.com/RocketChat/Rocket.Chat.Electron"
 arch=amd64
 pkgtype=deb
 
-PKGURL=$(eget --list --latest https://github.com/RocketChat/Rocket.Chat.Electron/releases/ "$PKGNAME*$VERSION*$arch.$pkgtype")
+PKGURL=$(get_github_version "https://github.com/RocketChat/Rocket.Chat.Electron/" "$PKGNAME.*.$VERSION.*$arch.$pkgtype")
 
 install_pkgurl

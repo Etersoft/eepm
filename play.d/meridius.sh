@@ -8,10 +8,10 @@ URL="https://github.com/PurpleHorrorRus/Meridius"
 
 . $(dirname $0)/common.sh
 
-if [ "$VERSION" != "*" ] ; then
-    PKGURL="https://github.com/PurpleHorrorRus/Meridius/releases/download/v$VERSION/meridius-$VERSION.tar.gz"
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(get_github_version "https://github.com/PurpleHorrorRus/Meridius/" "$PKGNAME-.*.tar.gz")
 else
-    PKGURL=$(eget --list --latest https://github.com/PurpleHorrorRus/Meridius/releases "$PKGNAME-*.tar.gz")
+    PKGURL="https://github.com/PurpleHorrorRus/Meridius/releases/download/v$VERSION/meridius-$VERSION.tar.gz"
 fi
 
 install_pack_pkgurl

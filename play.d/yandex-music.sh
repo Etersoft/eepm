@@ -24,6 +24,10 @@ case "$arch" in
         ;;
 esac
 
-PKGURL=$(eget --list --latest https://github.com/cucumber-sp/yandex-music-linux/releases "yandex-music_${VERSION}_${arch}.deb")
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(get_github_version "https://github.com/cucumber-sp/yandex-music-linux/" "yandex-music_.${VERSION}_${arch}.deb")
+else
+    PKGURL="https://github.com/cucumber-sp/yandex-music-linux/releases/download/v$VERSION/yandex-music_${VERSION}_${arch}.deb"
+fi
 
 install_pkgurl

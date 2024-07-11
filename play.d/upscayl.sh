@@ -10,7 +10,10 @@ URL="https://github.com/upscayl/upscayl"
 
 # FIXME: they put some wrong version to X-AppImage-Version
 # https://github.com/upscayl/upscayl/issues/761
-
-PKGURL=$(eget --list --latest https://github.com/upscayl/upscayl/releases "upscayl-$VERSION-linux.AppImage")
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(get_github_version "https://github.com/upscayl/upscayl/" "upscayl-.$VERSION-linux.AppImage")
+else
+    PKGURL="https://github.com/upscayl/upscayl/releases/download/v$VERSION/upscayl-$VERSION-linux.AppImage"
+fi
 
 install_pkgurl

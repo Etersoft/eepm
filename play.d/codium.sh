@@ -29,9 +29,11 @@ case "$arch-$pkgtype" in
         ;;
 esac
 
-
-mask="$(epm print constructname $PKGNAME "$VERSION*" $arch $pkgtype)"
-PKGURL="$(eget --list --latest https://github.com/VSCodium/vscodium/releases "$mask")"
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(get_github_version "https://github.com/VSCodium/vscodium/" "$(epm print constructname $PKGNAME ".$VERSION*" $arch $pkgtype)")
+else
+    PKGURL=$(get_github_version "https://github.com/VSCodium/vscodium/" "$(epm print constructname $PKGNAME "$VERSION*" $arch $pkgtype)")
+fi
 
 install_pkgurl
 

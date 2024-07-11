@@ -8,6 +8,10 @@ URL="https://sidequestvr.com/"
 
 . $(dirname $0)/common.sh
 
-PKGURL=$(eget --list --latest "https://github.com/SideQuestVR/SideQuest/releases/" "SideQuest-$VERSION.tar.xz")
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(get_github_version "https://github.com/SideQuestVR/SideQuest/" "SideQuest-.$VERSION.tar.xz")
+else
+    PKGURL="https://github.com/SideQuestVR/SideQuest/releases/download/v$VERSION/SideQuest-$VERSION.tar.xz"
+fi
 
 install_pack_pkgurl

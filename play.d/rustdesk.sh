@@ -11,22 +11,10 @@ URL="https://github.com/rustdesk/rustdesk/"
 arch=$(epm print info -a)
 pkgtype=deb
 
-if [ "$VERSION" = "1.1.9" ] ; then
-    #rustdesk-1.1.9-raspberry-armhf.deb
-    #rustdesk-1.1.9.deb
-    #[ "$VERSION" = "*" ] && VERSION="[0-9].[0-9].[0-9]"
-    #[ "$arch" = "armhf" ] && VERSION="$VERSION-raspberry-armhf"
-    MASK="$PKGNAME-$VERSION.$pkgtype"
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(get_github_version "https://github.com/rustdesk/rustdesk/" "$PKGNAME-.$VERSION-$arch.$pkgtype")
 else
-    MASK="$PKGNAME-$VERSION-$arch.$pkgtype"
-fi
-
-PKGURL=$(eget --list --latest https://github.com/rustdesk/rustdesk/releases "$MASK")
-
-# 
-if [ "$VERSION" = "*" ] && echo "$PKGURL" | grep -q "nightly" ; then
-    echo "Skipping nightly $PKGURL ..."
-    PKGURL=$(eget --list --second-latest https://github.com/rustdesk/rustdesk/releases "$MASK")
+    PKGURL="https://github.com/rustdesk/rustdesk/releases/download/$VERSION/$PKGNAME-$VERSION-$arch.$pkgtype"
 fi
 
 install_pkgurl

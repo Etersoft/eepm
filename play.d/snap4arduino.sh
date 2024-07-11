@@ -18,6 +18,6 @@ case $arch in
         fatal "Unsupported arch $arch for $(epm print info -d)"
 esac
 
-PKGURL=$(eget --list --latest https://github.com/bromagosa/Snap4Arduino/releases "Snap4Arduino_desktop-gnu-$arch_*.tar.gz") #"
+PKGURL=$(get_github_version "https://github.com/bromagosa/Snap4Arduino/" "Snap4Arduino_desktop-gnu-$arch_.*.tar.gz") #
 
 install_pack_pkgurl

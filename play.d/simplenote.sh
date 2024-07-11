@@ -2,7 +2,7 @@
 
 PKGNAME=Simplenote-linux
 SUPPORTEDARCHES="x86_64 aarch64 armhf"
-VERSION="2.21.0"
+VERSION="$2"
 DESCRIPTION='A Simplenote React client packaged in Electron.'
 URL="https://github.com/Automattic/simplenote-electron"
 
@@ -19,6 +19,10 @@ case "$(epm print info -a)" in
         arch="armv7l" ;;
 esac
 
-PKGURL="https://github.com/Automattic/simplenote-electron/releases/download/v$VERSION/$PKGNAME-$VERSION-$arch.AppImage"
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(get_github_version "https://github.com/Automattic/simplenote-electron" "/$PKGNAME-.$VERSION-$arch.AppImage")
+else
+    PKGURL="https://github.com/Automattic/simplenote-electron/releases/download/v$VERSION/$PKGNAME-$VERSION-$arch.AppImage"
+fi
 
 install_pkgurl

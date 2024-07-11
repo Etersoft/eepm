@@ -23,7 +23,10 @@ esac
 
 
 pkgtype=AppImage
-
-PKGURL=$(eget --list --latest https://github.com/SpacingBat3/WebCord/releases "WebCord-$VERSION-$arch.$pkgtype")
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(get_github_version "https://github.com/SpacingBat3/WebCord/" "WebCord-.$VERSION-$arch.$pkgtype")
+else
+    PKGURL="https://github.com/SpacingBat3/WebCord/releases/download/v$VERSION/WebCord-$VERSION-$arch.$pkgtype"
+fi
 
 install_pkgurl

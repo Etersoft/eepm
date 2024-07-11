@@ -9,6 +9,10 @@ TIPS="Run 'epm play 64gram=<version>' to install the version of the 64Gram Teleg
 
 . $(dirname $0)/common.sh
 
-PKGURL=$(eget --list --latest https://github.com/TDesktop-x64/tdesktop/releases ${PKGNAME}_${VERSION}_linux.zip)
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(get_github_version "https://github.com/TDesktop-x64/tdesktop/" "${PKGNAME}_.${VERSION}_linux.zip")
+else
+    PKGURL="https://github.com/TDesktop-x64/tdesktop/releases/download/v$VERSION/${PKGNAME}_${VERSION}_linux.zip"
+fi
 
 epm --install pack $PKGNAME "$PKGURL"

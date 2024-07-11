@@ -10,6 +10,10 @@ URL="https://github.com/visualfc/liteide"
 
 archbit="$(epm print info -b)"
 
-PKGURL=$(eget --list --latest https://github.com/visualfc/liteide/releases "liteidex$VERSION.linux$archbit-qt5*-system.tar.gz") #"
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(get_github_version "https://github.com/visualfc/liteide/" "liteidex.$VERSION.linux$archbit-qt5.*-system.tar.gz")
+else
+    PKGURL=$(get_github_version "https://github.com/visualfc/liteide/" "liteidex$VERSION.linux$archbit-qt5.*-system.tar.gz")
+fi
 
 install_pack_pkgurl
