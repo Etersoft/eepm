@@ -39,6 +39,13 @@ check_run_kernel () {
     ls /boot | grep "vmlinuz" | grep -vE 'vmlinuz-un-def|vmlinuz-std-def' | grep "${USED_KFLAVOUR}" | sort -Vr | head -n1 | grep -q $(uname -r)
 }
 
+check_old_nvidia () {
+	local lspci_output=$(lspci -k 2>/dev/null | grep -E 'VGA|3D' | tr -d '\n')
+	# Fermi, Kepler and Tesla
+	[[ "$lspci_output" == *GF[0-9]* ]] || [[ "$lspci_output" == *GK[0-9]* ]] [[ "$lspci_output" == *G[0-9]* ]] || [[ "$lspci_output" == *GT[0-9]* ]] || [[ "$lspci_output" == *MCP[0-9]* ]] && return 0
+    return 1
+}
+
 if check_run_kernel ; then
 	echo "The most newer installed ${USED_KFLAVOUR} kernel is running."
 else
@@ -73,12 +80,20 @@ epm install --skip-installed nvidia-settings nvidia-vaapi-driver ocl-nvidia libc
 
 epm play i586-fix
 
-# Убирает «Неизвестный монитор» в настройках дисплеев в сессии Wayland
-# Данное решение приводит к невозможности входа в tty, к отсутствию вывода логов во время загрузки (Если не включён Plymouth)
-if ! grep "initcall_blacklist=simpledrm_platform_driver_init" /etc/sysconfig/grub2 &>/dev/null ; then 
-	# Делаем копию
-	cp /etc/sysconfig/grub2 /etc/sysconfig/grub2.epmbak
-	sed -i "s|^\(GRUB_CMDLINE_LINUX_DEFAULT='.*\)'\$|\1 initcall_blacklist=simpledrm_platform_driver_init'|" /etc/sysconfig/grub2
+# Убирает «Неизвестный монитор» в настройках дисплеев
+if check_old_nvidia ; then
+	# Данное решение приводит к невозможности входа в tty, к отсутствию вывода логов во время загрузки, а так же к поломке luks
+	if ! grep "initcall_blacklist=simpledrm_platform_driver_init" /etc/sysconfig/grub2 &>/dev/null ; then
+		# Делаем копию
+		cp /etc/sysconfig/grub2 /etc/sysconfig/grub2.epmbak
+		sed -i "s|^\(GRUB_CMDLINE_LINUX_DEFAULT='.*\)'\$|\1 initcall_blacklist=simpledrm_platform_driver_init'|" /etc/sysconfig/grub2
+	fi
+else
+	if ! grep "nvidia_drm.fbdev=1" /etc/sysconfig/grub2 &>/dev/null ; then
+		# Делаем копию
+		cp /etc/sysconfig/grub2 /etc/sysconfig/grub2.epmbak
+		sed -i "s|^\(GRUB_CMDLINE_LINUX_DEFAULT='.*\)'\$|\1 nvidia_drm.fbdev=1'|" /etc/sysconfig/grub2
+	fi
 fi
 
 # Активируем службы управления питания NVIDIA, без этих служб будет некоректно работать уход в сон
