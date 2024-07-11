@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.62.11
+Version: 3.63.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -101,6 +101,41 @@ a discussion about extra requirements.
 
 
 %changelog
+* Thu Jul 11 2024 Vitaly Lipatov <lav@altlinux.ru> 3.63.0-alt1
+- epm full-upgrade: fix --no-flatpak option (eterbug #17308)
+- repack.d: add wildcard support to ignore_lib_requires (eterbug #17320)
+- epm: fix --help argument (eterbug #17319)
+- epm play: add gradle (eterbug #17332)
+- epm play: add levenhuklite (eterbug #17332)
+- epm repo: add dnf support to epm repo del (eterbug #17353)
+- epm play: add Citrix Secure Access Client (eterbug #17364)
+- epm play: add madcad (eterbug #17374)
+- bash_completion/eepm: add commands to complete (eterbug #17251)
+- epm play: add Simplenote-linux (eterbug #17493)
+- epm play nwjs-ffmpeg-prebuilt: add version support (eterbug #17494)
+- epm play yandex-browser: install nwjs-ffmpeg-prebuilt instead used update-ffmpeg (eterbug #17494)
+- epm repofix: fix regex pattern (eterbug #17440)
+- zsh_completion/eepm: add all commands (eterbug #17426)
+- epm play: add naps2 (eterbug #17358)
+- epm play: add tsukimi (eterbug #17376)
+- epm repack freeoffice: force use 7z (eterbug #17401)
+- epm pack: add list argument (eterbug #17417)
+- epm play common: add get_github_version function
+- epm play: add losless-cut (eterbug #17355)
+- add_unirequires: add 32 bit libs support (eterbug #17360)
+- epm play: add ROSA and MOS dependency to S4A and update ALT dependency and move this to opt (eterbug #17360)
+- epm status: Add RedOS support (eterbug #17411)
+- epm play: dont update packages from RedOS repository
+- epm status: Add Rosa Fresh support (eterbug #17411)
+- epm play: dont update packages from Rosa Fresh repository
+- epm status: Add MOS Desktop support (eterbug #17411)
+- epm play: dont update packages from MOS Desktop repository
+- epm play: fix figma deb package link and add pacman package (eterbug #17399)
+- epm repack: dont detect requires for Full AppImage bundle
+- epm play: add ProtonUp-Qt (eterbug #17377)
+- drop closed apps (icq,yandex-chats and yuzu)
+- epm release-upgrade: fix apt-conf with p11 upgrade (eterbug #17440)
+
 * Wed Jul 10 2024 Vitaly Lipatov <lav@altlinux.ru> 3.62.11-alt1
 - epm play lunacy: use snap if glibc is too old
 - add base Redox support
