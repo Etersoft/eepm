@@ -300,7 +300,6 @@ __epm_play_update()
         echo
         echo "$i"
             if ! __is_app_installed "$i" ; then
-                warning "App $i is not installed"
                 continue
             fi
         prescription="$i"
