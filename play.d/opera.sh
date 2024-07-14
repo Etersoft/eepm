@@ -12,7 +12,7 @@ URL="https://opera.com"
 arch="amd64"
 
 # will use libffmpeg.so (via config added in repack)
-epm install --skip-installed ffmpeg-plugin-browser || epm install --skip-installed chromium-codecs-ffmpeg-extra || epm play chromium-codecs-ffmpeg-extra
+epm install --skip-installed ffmpeg-plugin-browser || epm play nwjs-ffmpeg-prebuilt
 
 if [ "$(epm print info -p)" = "rpm" ] ; then
     pkgname="${PKGNAME/-/_}"
