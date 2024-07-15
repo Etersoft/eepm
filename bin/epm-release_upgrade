@@ -94,9 +94,9 @@ __p11_upgrade_fix()
 
 __sisyphus_downgrade_fix()
 {
-    if [[ ! $(docmd epm installed apt-conf-sisyphus) ]]; then 
+    if [[ ! $(docmd epm installed apt-conf-branch) ]]; then 
         info "Need to install default apt-conf package to avoid missing $TO repo"
-        docmd epm install apt-conf-sisyphus || fatal
+        docmd epm install apt-conf-branch || fatal
     fi
 }
 
@@ -427,7 +427,7 @@ __switch_alt_to_distro()
             docmd epm install $(get_fix_release_pkg "$FROM")
             if [ $TO = "p11" ]; then __sisyphus_downgrade_fix; fi
             __switch_repo_to $TO
-            docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
+            docmd epm downgrade rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
             docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
             end_change_alt_repo
             __check_system "$TO"
