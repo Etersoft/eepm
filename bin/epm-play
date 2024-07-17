@@ -109,7 +109,11 @@ __filter_by_installed_packages()
 
     # get intersect between full package list and available packages table
     epm --short packages | LC_ALL=C sort -u >$pkglist
-    LC_ALL=C join -11 -21 $tapt $pkglist | uniq
+    LC_ALL=C join -11 -21 $tapt $pkglist | uniq | while read -r package description ; do
+        if epm status --repacked "$package" </dev/null ; then
+            echo "$package $description"
+        fi
+    done
     rm -f $pkglist
 
     # rpm on Fedora/CentOS no more print missed packages to stderr
