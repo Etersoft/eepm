@@ -153,7 +153,7 @@ epm_status_original()
             epm_status_validate $pkg || return 1
             epm_status_repacked $pkg && return 1
 
-            echo "$distribution" | grep -q "RED SOFT" || return
+            echo "$distribution" | grep -q "RED SOFT" || return 1
             echo "$release" | grep -q "el7" || return 1
             return 0
             ;;
@@ -161,7 +161,15 @@ epm_status_original()
             epm_status_validate $pkg || return 1
             epm_status_repacked $pkg && return 1
 
-            echo "$distribution" | grep -q "ROSA" || return
+            echo "$distribution" | grep -q "ROSA" || return 1
+            return 0
+            ;;
+        Fedora)
+            epm_status_validate $pkg || return 1
+            epm_status_repacked $pkg && return 1
+
+            echo "$distribution" | grep -q "Fedora Project" || return 1
+            echo "$release" | grep -q "fc" || return 1
             return 0
             ;;
         *)
@@ -178,7 +186,7 @@ epm_status_repacked()
     #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
 
     case $BASEDISTRNAME in
-        alt|redos|rosafresh|mos)
+        alt|redos|rosafresh|mos|fedora)
             epm_status_validate $pkg || return
             local packager="$(epm print field Packager for "$1" 2>/dev/null)"
             [ "$packager" = "EPM <support@etersoft.ru>" ] && return 0
@@ -223,6 +231,13 @@ epm_status_thirdparty()
             epm_status_validate $pkg || return 1
 
             echo "$distribution" | grep -q "^ROSA" && return 1
+            echo "$distribution" | grep -q "^EEPM" && return 1
+            return 0
+            ;;
+        fedora)
+            epm_status_validate $pkg || return 1
+
+            echo "$distribution" | grep -q "^Fedora Project" && return 1
             echo "$distribution" | grep -q "^EEPM" && return 1
             return 0
             ;;
