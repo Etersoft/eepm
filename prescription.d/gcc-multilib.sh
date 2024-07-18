@@ -1,6 +1,6 @@
 #!/bin/sh
 
-[ "$1" != "--run" ] && echo "Remove all 32 bit packages from 64 bit system" && exit
+[ "$1" != "--run" ] && echo "Install gcc with support for building 32-bit applications" && exit
 
 . $(dirname $0)/common.sh
 
