@@ -446,6 +446,12 @@ set_sudo()
     # start error section
     SUDO_TESTED="1"
 
+    if is_command doas && doas -C /etc/doas.conf > /dev/null 2>&1 ; then
+        SUDO="doas"
+        SUDO_TESTED="0"
+        return "$SUDO_TESTED"
+    fi
+
     if ! is_command $SUDO_CMD ; then
         [ "$nofail" = "nofail" ] || SUDO="fatal 'For this operation run epm under root, or install and tune sudo (http://altlinux.org/sudo)'"
         SUDO_TESTED="2"
