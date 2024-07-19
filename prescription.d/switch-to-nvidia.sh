@@ -12,7 +12,7 @@ assure_root
 
 if [ "$(epm print info -s)" = "rosa" ] ; then
     epm assure kroko-cli auto-krokodil-cli || fatal
-    kroko-cli autoinstall
+    a='' kroko-cli autoinstall
     exit
 fi
 
@@ -40,7 +40,7 @@ check_run_kernel () {
 }
 
 check_old_nvidia () {
-	local lspci_output=$(lspci -k 2>/dev/null | grep -E 'VGA|3D' | tr -d '\n')
+	local lspci_output=$(a= lspci -k 2>/dev/null | grep -E 'VGA|3D' | tr -d '\n')
 	# Fermi, Kepler and Tesla
 	[[ "$lspci_output" == *GF[0-9]* ]] || [[ "$lspci_output" == *GK[0-9]* ]] [[ "$lspci_output" == *G[0-9]* ]] || [[ "$lspci_output" == *GT[0-9]* ]] || [[ "$lspci_output" == *MCP[0-9]* ]] && return 0
     return 1
@@ -97,13 +97,13 @@ else
 fi
 
 # Активируем службы управления питания NVIDIA, без этих служб будет некоректно работать уход в сон
-systemctl enable nvidia-suspend.service nvidia-resume.service nvidia-hibernate.service
+a= systemctl enable nvidia-suspend.service nvidia-resume.service nvidia-hibernate.service
 echo "options nvidia NVreg_PreserveVideoMemoryAllocations=1 NVreg_TemporaryFilePath=/var/tmp" > /etc/modprobe.d/nvidia_memory_allocation.conf
 
 # Запускаем регенерацию initrd
-make-initrd
+a= make-initrd
 
 # Обновляем grub
-update-grub
+a= update-grub
 
 echo "Done. Just you need reboot your system to use nVidia proprietary drivers."

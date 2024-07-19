@@ -32,7 +32,7 @@ libevent="$(get_libevent)"
 [ -n "$libevent" ] || fatal "libevent is missed, install it before"
 
 if [ "$libevent" != "libevent-2.1.so.7" ] && epm assure patchelf ; then
-    patchelf --replace-needed libevent-2.1.so.7 $libevent .$PRODUCTDIR/lib/libQt6WebEngineCore.so.6
+    a= patchelf --replace-needed libevent-2.1.so.7 $libevent .$PRODUCTDIR/lib/libQt6WebEngineCore.so.6
 fi
 
 

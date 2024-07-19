@@ -34,7 +34,7 @@ __epm_repodisable_alt()
         [ -z "$rl" ] && warning 'Cant find $1 entries in the repos (see # epm repolist output)' && return 1
     fi
     echo "$rl" | while read rp ; do
-        [ -n "$dryrun" ] && messagw 'will comment $rp' && continue
+        [ -n "$dryrun" ] && message 'will comment $rp' && continue
         sed -i -e "s|^\($(sed_escape "$rl")\)|#\1|" $alt_LISTS
     done
 }
