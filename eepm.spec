@@ -96,6 +96,7 @@ a discussion about extra requirements.
 %_datadir/%name/
 %_sysconfdir/bash_completion.d/serv
 %_sysconfdir/bash_completion.d/eepm
+%_datadir/zsh/Completion/Linux/_eepm
 
 %files repack
 
