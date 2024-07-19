@@ -42,7 +42,7 @@ check_run_kernel () {
 check_old_nvidia () {
 	local lspci_output=$(a= lspci -k 2>/dev/null | grep -E 'VGA|3D' | tr -d '\n')
 	# Fermi, Kepler and Tesla
-	[[ "$lspci_output" == *GF[0-9]* ]] || [[ "$lspci_output" == *GK[0-9]* ]] [[ "$lspci_output" == *G[0-9]* ]] || [[ "$lspci_output" == *GT[0-9]* ]] || [[ "$lspci_output" == *MCP[0-9]* ]] && return 0
+	[[ "$lspci_output" == *GF[0-9]* ]] || [[ "$lspci_output" == *GK[0-9]* ]] || [[ "$lspci_output" == *G[0-9]* ]] || [[ "$lspci_output" == *GT[0-9]* ]] || [[ "$lspci_output" == *MCP[0-9]* ]] && return 0
     return 1
 }
 
