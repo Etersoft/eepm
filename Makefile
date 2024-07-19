@@ -39,6 +39,9 @@ install_common:
 	install -m 0644 bash_completion/serv $(DESTDIR)$(sysconfdir)/bash_completion.d/serv
 	install -m 0644 bash_completion/eepm $(DESTDIR)$(sysconfdir)/bash_completion.d/eepm
 
+	mkdir -p $(DESTDIR)$(datadir)/zsh/Completion/Linux/
+	install -m 0644 zsh_completion/_eepm $(DESTDIR)$(datadir)/zsh/Completion/Linux/
+
 	# shebang.req.files
 	chmod a+x $(DESTDIR)$(pkgdatadir)/serv-*
 	chmod a+x $(DESTDIR)$(pkgdatadir)/epm-*
