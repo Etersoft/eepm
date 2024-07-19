@@ -66,12 +66,18 @@ a discussion about extra requirements.
 %prep
 %setup
 
+%build
+make -C po
+
 %install
 %make_install install DESTDIR=%buildroot \
 	datadir=%_datadir bindir=%_bindir mandir=%_mandir \
 	sysconfdir=%_sysconfdir version=%version-%release
+%make_install -C po install DESTDIR=%buildroot \
+	datadir=%_datadir
+%find_lang %name
 
-%files
+%files -f %name.lang
 %doc README.md TODO LICENSE
 %dir %_sysconfdir/eepm/
 %dir %_sysconfdir/eepm/play.d/
