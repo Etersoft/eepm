@@ -635,8 +635,8 @@ elif [ "$(uname)" = "Linux" ] && is_command guix ; then
 # fixme: move to up
 elif [ "$(uname)" = "Linux" ] && [ -x $ROOTDIR/system/bin/getprop ] ; then
     DISTRIB_ID="Android"
-    DISTRIB_RELEASE=$(getprop | awk -F": " '/system.build.version.release\]/ { print $2 }' | tr -d '[]' | head -n1)
-    [ -n "$DISTRIB_RELEASE" ] || DISTRIB_RELEASE=$(getprop | awk -F": " '/build.version.release/ { print $2 }' | tr -d '[]' | head -n1)
+    DISTRIB_RELEASE=$(a='' getprop | awk -F": " '/system.build.version.release\]/ { print $2 }' | tr -d '[]' | head -n1)
+    [ -n "$DISTRIB_RELEASE" ] || DISTRIB_RELEASE=$(a='' getprop | awk -F": " '/build.version.release/ { print $2 }' | tr -d '[]' | head -n1)
 
 elif [ "$(uname -o 2>/dev/null)" = "Cygwin" ] ; then
         DISTRIB_ID="Cygwin"
@@ -768,7 +768,7 @@ get_bit_size()
 {
 local DIST_BIT
 
-DIST_BIT="$(getconf LONG_BIT 2>/dev/null)"
+DIST_BIT="$(a= getconf LONG_BIT 2>/dev/null)"
 if [ -n "$DIST_BIT" ] ; then
     echo "$DIST_BIT"
     return
@@ -817,7 +817,7 @@ get_memory_size()
             [ -r /proc/meminfo ] && detected=$((`cat /proc/meminfo | grep MemTotal | awk '{print $2}'`/1024))
             ;;
         solaris)
-            detected=$(prtconf | grep Memory | sed -e "s|Memory size: \([0-9][0-9]*\) Megabyte.*|\1|") #"
+            detected=$(a='' prtconf | grep Memory | sed -e "s|Memory size: \([0-9][0-9]*\) Megabyte.*|\1|") #"
             ;;
 #        *)
 #            fatal "Unsupported OS $DIST_OS"

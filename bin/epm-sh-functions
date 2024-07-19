@@ -446,7 +446,7 @@ set_sudo()
     # start error section
     SUDO_TESTED="1"
 
-    if is_command doas && doas -C /etc/doas.conf > /dev/null 2>&1 ; then
+    if is_command doas && a='' doas -C /etc/doas.conf > /dev/null 2>&1 ; then
         SUDO="doas"
         SUDO_TESTED="0"
         return "$SUDO_TESTED"

@@ -86,7 +86,7 @@ case $PMTYPE in
         docmd epm upgrade
         assure_exists package-cleanup yum-utils
         showcmd package-cleanup --orphans
-        local PKGLIST=$(package-cleanup -q --orphans | grep -v "^eepm-")
+        local PKGLIST=$(a= package-cleanup -q --orphans | grep -v "^eepm-")
         docmd epm remove $dryrun $PKGLIST
         ;;
     dnf-rpm)
@@ -94,7 +94,7 @@ case $PMTYPE in
         docmd epm upgrade
         assure_exists package-cleanup dnf-utils
         showcmd package-cleanup --orphans
-        local PKGLIST=$(package-cleanup -q --orphans | grep -v "^eepm-")
+        local PKGLIST=$(a= package-cleanup -q --orphans | grep -v "^eepm-")
         docmd epm remove $dryrun $PKGLIST
         ;;
     urpm-rpm)
@@ -137,7 +137,7 @@ case $PMTYPE in
         # For zypper < 1.9.2: zypper se -si | grep 'System Packages'
         sudocmd zypper packages --orphaned
         # FIXME: x86_64/i586 are duplicated
-        local PKGLIST=$(zypper packages --orphaned | tail -n +5 | cut -d \| -f 3 | sort -u)
+        local PKGLIST=$(a= zypper packages --orphaned | tail -n +5 | cut -d \| -f 3 | sort -u)
         docmd epm remove $dryrun --clean-deps $PKGLIST
         ;;
     xbps)

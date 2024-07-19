@@ -179,7 +179,7 @@ epm_upgrade()
         ;;
     homebrew)
         #CMD="brew upgrade"
-        sudocmd brew upgrade $(brew outdated)
+        sudocmd brew upgrade $(a='' brew outdated)
         return
         ;;
     opkg)

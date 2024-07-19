@@ -79,7 +79,7 @@ esac
 __aptcyg_print_full()
 {
     #showcmd apt-cyg show
-    local VERSION=$(apt-cyg show "$1" | grep -m1 "^version: " | sed -e "s|^version: ||g")
+    local VERSION=$(a= apt-cyg show "$1" | grep -m1 "^version: " | sed -e "s|^version: ||g")
     echo "$1-$VERSION"
 }
 

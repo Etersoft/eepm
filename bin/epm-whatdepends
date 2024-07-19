@@ -96,7 +96,7 @@ case $PMTYPE in
     eopkg)
         showcmd eopkg info $pkg
         # eopkg info prints it only from repo info
-        LC_ALL=C eopkg info $pkg | grep "^Reverse Dependencies" | sed -e "s|Reverse Dependencies[[:space:]]*: ||" | grep -v "^$"
+        LC_ALL=C a= eopkg info $pkg | grep "^Reverse Dependencies" | sed -e "s|Reverse Dependencies[[:space:]]*: ||" | grep -v "^$"
         return
         ;;
     xbps)
