@@ -6,6 +6,10 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
+add_bin_link_command $PRODUCT $PRODUCTDIR/$PRODUCT
+
+add_requires "/usr/bin/clapper"
+
 install_file https://raw.githubusercontent.com/tsukinaha/tsukimi/main/resources/ui/icons/$PRODUCT.png /usr/share/pixmaps/$PRODUCT.png
 install_file https://raw.githubusercontent.com/tsukinaha/tsukimi/main/moe.tsuna.tsukimi.gschema.xml /usr/share/glib-2.0/schemas/moe.tsuna.tsukimi.gschema.xml
 
@@ -19,9 +23,5 @@ Icon=$PRODUCT
 Categories=AudioVideo;
 StartupWMClass=moe.tsuna.tsukimi
 EOF
-
-# glib-compile-schemas /usr/share/glib-2.0/schemas/
-
-add_requires "/usr/bin/clapper"
 
 add_libs_requires
