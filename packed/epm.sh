@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-export EPMVERSION="3.62.11"
+export EPMVERSION="3.62.12"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -10491,6 +10491,7 @@ __epm_repochange_alt()
 epm_repochange()
 {
 
+    epm_repofix
     case $BASEDISTRNAME in
         "alt")
             __epm_repochange_alt "$1"
