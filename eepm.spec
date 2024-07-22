@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.62.11
+Version: 3.62.12
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -101,6 +101,13 @@ a discussion about extra requirements.
 
 
 %changelog
+* Tue Jul 23 2024 Vitaly Lipatov <lav@altlinux.ru> 3.62.12-alt1
+- epm play: add ayugram
+- epm play: add waterfox
+- fix memory allocations in switch-to-nvidia.sh
+- update switch-to-nvidia.sh
+- epm repo change: call repofix before
+
 * Wed Jul 10 2024 Vitaly Lipatov <lav@altlinux.ru> 3.62.11-alt1
 - epm play lunacy: use snap if glibc is too old
 - add base Redox support
