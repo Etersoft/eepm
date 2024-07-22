@@ -9,10 +9,9 @@ URL="https://github.com/tsukinaha/tsukimi"
 . $(dirname $0)/common.sh
 
 if [ "$VERSION" = "*" ] ; then
-    PKGURL=$(eget --list --latest https://github.com/tsukinaha/tsukimi/releases/ "${PKGNAME}_${VERSION}_amd64.deb")
+    PKGURL=$(get_github_version "https://github.com/tsukinaha/tsukimi/" "tsukimi-x86_64-linux-gnu.tar.gz")
 else
-    PKGURL="https://github.com/tsukinaha/tsukimi/releases/download/v$VERSION/${PKGNAME}_${VERSION}_amd64.deb"
+    PKGURL="https://github.com/tsukinaha/tsukimi/releases/download/v$VERSION/tsukimi-x86_64-linux-gnu.tar.gz"
 fi
 
-install_pkgurl
-
+install_pack_pkgurl
