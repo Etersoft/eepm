@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: EEPM VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-19 18:01+0300\n"
+"POT-Creation-Date: 2024-07-24 02:37+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Vitaly Lipatov <lav@etersoft.ru>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -251,7 +251,7 @@ msgstr ""
 #: ../bin/epm-pack:49
 #, sh-format
 msgid "pack script $repackcode didnt set tarname"
-msgstr "скрипт упаковки $repackcode не установил имя архива tar"
+msgstr "скрипт упаковки $repackcode не установил название архива tar"
 
 #: ../bin/epm-pack:53
 #, sh-format
@@ -283,9 +283,10 @@ msgid ""
 msgstr ""
 "\n"
 "epm pack - создать rpm-пакет из файлов\n"
-"Использование: epm pack [опции] <имя_пакета> <tar|url|dir> [версия]\n"
-"Опции:\n"
-"    <имя_пакета>          - рецепт\n"
+"Использование: epm pack [параметры] <название_пакета> <tar|url|dir> "
+"[версия]\n"
+"Параметры:\n"
+"    <название_пакета>     - рецепт\n"
 "    <dir>                 - создать архив tar из каталога\n"
 "    <url>                 - скачать tar из url\n"
 "    [версия]              - принудительно задать версию для не имеющих "
@@ -362,7 +363,7 @@ msgstr "Пропуск разогрева баз из-за недостаточ�
 
 #: ../bin/epm-checkpkg:132
 msgid "Checkpkg: filename(s) is missed"
-msgstr "Checkpkg: отсутствует имя файла(ов)"
+msgstr "Checkpkg: отсутствует название файла(ов)"
 
 #: ../bin/epm-release_upgrade:27
 msgid ""
@@ -417,7 +418,9 @@ msgstr ""
 
 #: ../bin/epm-release_upgrade:57
 msgid "You force runnning even if systemd-logind kills screen on disconnect"
-msgstr "Вы запустили обновление принудительно, хотя systemd-logind завершит screen при отсоединении."
+msgstr ""
+"Вы запустили обновление принудительно, хотя systemd-logind завершит screen "
+"при отсоединении."
 
 #: ../bin/epm-release_upgrade:60
 msgid "Can't install the package above. Fix it or run with --force."
@@ -599,7 +602,7 @@ msgstr ""
 
 #: ../bin/epm-whatdepends:31
 msgid "Missed package name or some provides"
-msgstr "Отсутствует имя пакета или некоторые зависимости"
+msgstr "Отсутствует название пакета или некоторые зависимости"
 
 #: ../bin/epm-whatdepends:52
 msgid "whatdepends does not handle files"
@@ -607,7 +610,7 @@ msgstr "whatdepends не обрабатывает файлы"
 
 #: ../bin/epm-whatdepends:53
 msgid "whatdepends: package name is missed"
-msgstr "whatdepends: отсутствует имя пакета"
+msgstr "whatdepends: отсутствует название пакета"
 
 #: ../bin/epm-sh-altlinux-contents-index:60
 #, sh-format
@@ -633,7 +636,7 @@ msgstr "whatprovides не обрабатывает файлы"
 
 #: ../bin/epm-whatprovides:26
 msgid "whatprovides: package name is missed"
-msgstr "whatprovides: отсутствует имя пакета"
+msgstr "whatprovides: отсутствует название пакета"
 
 #: ../bin/epm-simulate:98
 msgid "zypper is too old: does not support --dry-run"
@@ -743,11 +746,11 @@ msgstr ""
 
 #: ../bin/epm-site:120
 msgid "Cant get source name for $1"
-msgstr "Не удается получить имя источника для $1"
+msgstr "Не удается получить название источника для $1"
 
 #: ../bin/epm-site:131 ../bin/epm-info:170 ../bin/epm-policy:26
 msgid "Info: package name is missed"
-msgstr "Информация: имя пакета отсутствует"
+msgstr "Информация: название пакета отсутствует"
 
 #: ../bin/epm-site:142
 #, sh-format
@@ -767,9 +770,9 @@ msgid ""
 msgstr ""
 "\n"
 "epm list - список пакетов\n"
-"Использование: epm list [опции] [пакет]\n"
+"Использование: epm list [параметры] [пакет]\n"
 "\n"
-"Опции:\n"
+"Параметры:\n"
 "  --available           показывать только доступные пакеты\n"
 "  --installed           показывать только установленные пакеты\n"
 "  --upgradable          показывать только обновляемые пакеты\n"
@@ -778,12 +781,12 @@ msgstr ""
 #, sh-format
 msgid "Unknown option $option, use epm list --help to get info"
 msgstr ""
-"Неизвестная опция $option, используйте epm list --help для получения "
+"Неизвестный параметр $option, используйте epm list --help для получения "
 "информации"
 
 #: ../bin/epm-list:80 ../bin/epm-status:324
 msgid "Run with appropriate option"
-msgstr "Запустите с соответствующей опцией"
+msgstr "Запустите с соответствующим параметром"
 
 #: ../bin/tools_eget:59
 msgid "pipe mode is not supported"
@@ -847,55 +850,63 @@ msgstr ""
 
 #: ../bin/epm-search:228 ../bin/epm-search:242
 msgid "Search: search argument(s) is missed"
-msgstr ""
+msgstr "Поиск: отсутствуют аргументы поиска"
 
 #: ../bin/epm-search:249 ../bin/epm-mark:29
 msgid "Only glob symbols * and ? are supported. Don't use regexp here!"
 msgstr ""
+"Поддерживаются только глобальные символы * и ?. Не используйте регулярные "
+"выражения здесь!"
 
 #: ../bin/epm-autoremove:29
 msgid "Skipped manually installed:"
-msgstr ""
+msgstr "Пропущены вручную установленные пакеты:"
 
 #: ../bin/epm-autoremove:38
 msgid "Removing unused python/perl modules..."
-msgstr ""
+msgstr "Удаление неиспользуемых модулей python/perl..."
 
 #: ../bin/epm-autoremove:49 ../bin/epm-autoremove:122
 msgid "Packages for autoremoving:"
-msgstr ""
+msgstr "Пакеты для автоматического удаления:"
 
 #: ../bin/epm-autoremove:56 ../bin/epm-autoremove:129
 msgid "The command we will run:"
-msgstr ""
+msgstr "Команда, которую мы запустим:"
 
 #: ../bin/epm-autoremove:60 ../bin/epm-autoremove:78 ../bin/epm-autoremove:132
 msgid "We will remove unused (without dependencies) packages above."
-msgstr ""
+msgstr "Мы удалим неиспользуемые (без зависимостей) пакеты, указанные выше."
 
 #: ../bin/epm-autoremove:68
 msgid "call again for next cycle until all modules will be removed"
-msgstr ""
+msgstr "вызовите снова для следующего цикла, пока все модули не будут удалены"
 
 #: ../bin/epm-autoremove:93
 msgid ""
 "Removing all non -devel/-debuginfo libs packages not need by anything..."
 msgstr ""
+"Удаление всех библиотек, не являющихся -devel/-debuginfo, не нужных ничем..."
 
 #: ../bin/epm-autoremove:98
 msgid ""
 "Removing all non -devel/-debuginfo i586-libs packages not need by anything..."
 msgstr ""
+"Удаление всех библиотек i586, не являющихся -devel/-debuginfo, не нужных "
+"ничем..."
 
 #: ../bin/epm-autoremove:103
 msgid ""
 "Removing all non -debuginfo libs packages (-devel too) not need by "
 "anything..."
 msgstr ""
+"Удаление всех библиотек, не являющихся -debuginfo (и -devel тоже), не нужных "
+"ничем..."
 
 #: ../bin/epm-autoremove:139
 msgid "call again for next cycle until all libs will be removed"
 msgstr ""
+"вызовите снова для следующего цикла, пока все библиотеки не будут удалены"
 
 #: ../bin/epm-autoremove:207
 #, sh-format
@@ -906,6 +917,12 @@ msgid ""
 "implementation\n"
 "             Default groups: $epm_autoremove_default_groups"
 msgstr ""
+"epm autoremove удаляет ненужные пакеты из системы\n"
+"             запустите epm autoremove, чтобы использовать apt-get "
+"autoremove\n"
+"             или запустите epm autoremove --direct [group1] [group2] ..., "
+"чтобы использовать реализацию epm\n"
+"             Группы по умолчанию: $epm_autoremove_default_groups"
 
 #: ../bin/epm-autoremove:211
 msgid ""
@@ -932,56 +949,64 @@ msgid ""
 "Run autoremove without args or with --direct. Check epm autoremove --help to "
 "available commands."
 msgstr ""
+"Запустите autoremove без аргументов или с --direct. Проверьте epm autoremove "
+"--help для доступных команд."
 
 #: ../bin/epm-autoremove:251 ../bin/epm-autoremove:267
 msgid ""
 "Also you can run 'epm autoremove --direct' to use epm implementation of "
 "autoremove (see --help)"
 msgstr ""
+"Также вы можете запустить 'epm autoremove --direct', чтобы использовать "
+"реализацию epm для autoremove (см. --help)"
 
 #: ../bin/epm-autoremove:273
 msgid ""
 "It seems AstraLinux does no support autoremove correctly. You can rerun the "
 "command with --force option to get into trouble."
 msgstr ""
+"Похоже, AstraLinux не поддерживает autoremove корректно. Вы можете повторно "
+"запустить команду с параметром --force, чтобы попасть в неприятности."
 
 #: ../bin/serv-common:28
 msgid "Have no idea how to call anyservice service with args"
-msgstr ""
+msgstr "Нет идеи, как вызвать службу anyservice с аргументами"
 
 #: ../bin/epm-kernel_update:29
 msgid "Updating system kernel to the latest version..."
-msgstr ""
+msgstr "Обновление системного ядра до последней версии..."
 
 #: ../bin/epm-kernel_update:35
 msgid "No installed kernel packages, skipping update"
-msgstr ""
+msgstr "Нет установленных пакетов ядра, обновление пропущено"
 
 #: ../bin/epm-kernel_update:49
 msgid "Skipping: kernel package will update during dist-upgrade"
-msgstr ""
+msgstr "Пропуск: пакет ядра будет обновлен во время dist-upgrade"
 
 #: ../bin/epm-remove:288
 #, sh-format
 msgid "Have no suitable appropriate remove command for $PMTYPE"
-msgstr ""
+msgstr "Нет подходящей команды для удаления для $PMTYPE"
 
 #: ../bin/epm-remove:317
 msgid "no package(s) to remove."
-msgstr ""
+msgstr "нет пакетов для удаления."
 
 #: ../bin/epm-remove:324
 msgid "Packages for removing:"
-msgstr ""
+msgstr "Пакеты для удаления:"
 
 #: ../bin/epm-remove:336
 #, sh-format
 msgid "dont yet support --simulate for $PMTYPE"
-msgstr ""
+msgstr "пока не поддерживается --simulate для $PMTYPE"
 
 #: ../bin/epm-remove:357
 msgid "We can't allow packages removing on hi level when --noscripts is used."
 msgstr ""
+"Мы не можем разрешить удаление пакетов на высоком уровне, когда используется "
+"--noscripts."
 
 #: ../bin/epm-update:43
 #, sh-format
@@ -989,71 +1014,81 @@ msgid ""
 "Latest EPM version in Korinf repository is $latest. You have version "
 "$EPMVERSION running."
 msgstr ""
+"Последняя версия EPM в репозитории Korinf - $latest. У вас запущена версия "
+"$EPMVERSION."
 
 #: ../bin/epm-update:43
 msgid "You can update eepm with $ epm ei command."
-msgstr ""
+msgstr "Вы можете обновить eepm с помощью команды $ epm ei."
 
 #: ../bin/epm-update:57
 msgid "Retrieving list of all available packages (for autocompletion) ..."
-msgstr ""
+msgstr "Получение списка всех доступных пакетов (для автодополнения) ..."
 
 #: ../bin/epm-update:85
 msgid ""
 "Running update the package index files from remote package repository "
 "database ..."
 msgstr ""
+"Выполняется обновление файлов индекса пакетов из удаленной базы данных "
+"репозитория пакетов ..."
 
 #: ../bin/epm-update:98
 msgid "There are some errors with repo info updating. Check apt repos:"
 msgstr ""
+"Возникли ошибки при обновлении информации о репозиториях. Проверьте apt "
+"репозитории:"
 
 #: ../bin/epm-update:100
 msgid ""
 "Also check if you have an internet connection (ping to the problem site)"
 msgstr ""
+"Также проверьте, есть ли у вас подключение к интернету (ping до проблемного "
+"сайта)"
 
 #: ../bin/epm-update:132
 msgid "update command is stubbed for yum"
-msgstr ""
+msgstr "команда обновления заглушена для yum"
 
 #: ../bin/epm-update:136
 msgid "update command is stubbed for dnf"
-msgstr ""
+msgstr "команда обновления заглушена для dnf"
 
 #: ../bin/epm-update:191
 #, sh-format
 msgid "Have no suitable update command for $PMTYPE"
-msgstr ""
+msgstr "Нет подходящей команды обновления для $PMTYPE"
 
 #: ../bin/epm-repoenable:34
 msgid "Cant find commented $1 in the repos (see # epm repolist output)"
 msgstr ""
+"Не удается найти закомментированный $1 в репозиториях (см. вывод # epm "
+"repolist)"
 
 #: ../bin/epm-repoenable:37
 #, sh-format
 msgid "will uncomment $rp"
-msgstr ""
+msgstr "будет раскомментировано $rp"
 
 #: ../bin/epm-filelist:73
 msgid "sudo requires a password, skip apt-file update"
-msgstr ""
+msgstr "sudo требует пароль, пропускаем обновление apt-file"
 
 #: ../bin/epm-filelist:89
 msgid "Query filelist for non installed packages is not implemented yet."
-msgstr ""
+msgstr "Запрос списка файлов для неустановленных пакетов еще не реализован."
 
 #: ../bin/epm-filelist:186
 msgid "Query filelist for non installed packages is not implemented yet"
-msgstr ""
+msgstr "Запрос списка файлов для неустановленных пакетов еще не реализован"
 
 #: ../bin/epm-filelist:204
 msgid "Filelist: package name is missed"
-msgstr ""
+msgstr "Список файлов: отсутствует название пакета"
 
 #: ../bin/epm-tool:22
 msgid "Tools embedded in epm:"
-msgstr ""
+msgstr "Инструменты, встроенные в epm:"
 
 #: ../bin/epm-tool:25
 msgid ""
@@ -1063,29 +1098,38 @@ msgid ""
 "    epm tool estrlist union a b a c\n"
 "    epm tool erc archive.zip\n"
 msgstr ""
+"\n"
+"  Примеры:\n"
+"    epm tool eget -U http://ya.ru\n"
+"    epm tool estrlist union a b a c\n"
+"    epm tool erc archive.zip\n"
 
 #: ../bin/epm-tool:40
 msgid "Use epm tool --help to get help."
-msgstr ""
+msgstr "Используйте epm tool --help для получения помощи."
 
 #: ../bin/epm-tool:73
 msgid "Unknown command $ epm tool $WHAT. Use epm print help for get help."
 msgstr ""
+"Неизвестная команда $ epm tool $WHAT. Используйте epm print help для "
+"получения помощи."
 
 #: ../bin/epm-install-emerge:30
 #, sh-format
 msgid ".ebuild file $EBUILD is missed"
-msgstr ""
+msgstr "Файл .ebuild $EBUILD отсутствует"
 
 #: ../bin/epm-install-emerge:34
 #, sh-format
 msgid "Cant load SRC_URI from $EBUILD"
-msgstr ""
+msgstr "Не удается загрузить SRC_URI из $EBUILD"
 
 #: ../bin/epm-install:181
 msgid ""
 "We still have no idea how to use package repository, ever if it is F-Droid."
 msgstr ""
+"Мы до сих пор не знаем, как использовать репозиторий пакетов, даже если это "
+"F-Droid."
 
 #: ../bin/epm-install:190
 msgid ""
@@ -1095,82 +1139,89 @@ msgid ""
 "Only if no binary is available in the binary cache, Nix will build the "
 "package from source."
 msgstr ""
+"Когда вы просите Nix установить пакет, он сначала попытается получить его в "
+"предварительно скомпилированной форме из бинарного кэша. По умолчанию Nix "
+"будет использовать бинарный кэш https://cache.nixos.org; он содержит "
+"бинарные файлы для большинства пакетов в Nixpkgs. Только если бинарный файл "
+"недоступен в бинарном кэше, Nix соберет пакет из исходников."
 
 #: ../bin/epm-install:197
 #, sh-format
 msgid "Have no suitable install command for $PMTYPE"
-msgstr ""
+msgstr "Нет подходящей команды для установки для $PMTYPE"
 
 #: ../bin/epm-install:288 ../bin/epm-install-print-command:82
 #: ../bin/epm-install-print-command:137
 #, sh-format
 msgid "Have no suitable appropriate install command for $PMTYPE"
-msgstr ""
+msgstr "Нет подходящей команды для установки для $PMTYPE"
 
 #: ../bin/epm-install:473
 msgid "Skip empty install list"
-msgstr "Пропускаем пустой список для установки"
+msgstr "Пропустить пустой список для установки"
 
 #: ../bin/epm-install:486
 msgid ""
 "Skip empty install list (filtered out, all requested packages is already "
 "installed)"
 msgstr ""
+"Пропустить пустой список для установки (отфильтровано, все запрошенные "
+"пакеты уже установлены)"
 
 #: ../bin/epm-install:507
 msgid "Skip empty install files list"
-msgstr ""
+msgstr "Пропустить пустой список файлов для установки"
 
 #: ../bin/epm-reinstall:37
 msgid "Please send me the correct command form for it"
-msgstr ""
+msgstr "Пожалуйста, пришлите мне правильную форму команды для этого"
 
 #: ../bin/epm-reinstall:94
 msgid "Reinstall: package name is missed."
-msgstr ""
+msgstr "Переустановка: название пакета отсутствует."
 
 #: ../bin/tools_erc:317 ../bin/tools_erc:364
 msgid "Need two args"
-msgstr ""
+msgstr "Необходимо два аргумента"
 
 #: ../bin/tools_erc:365 ../bin/tools_erc:375
 msgid "Output file is the same as input"
-msgstr ""
+msgstr "Выходной файл совпадает с входным"
 
 #: ../bin/epm-restore:105
 #, sh-format
 msgid "    $t is not PyPi requirement, skipped"
-msgstr ""
+msgstr "    $t не является требованием PyPi, пропускаем"
 
 #: ../bin/epm-restore:109
 #, sh-format
 msgid "    $t is darwin only requirement, skipped"
-msgstr ""
+msgstr "    $t является требованием только для darwin, пропускаем"
 
 #: ../bin/epm-restore:113
 #, sh-format
 msgid "    $t is win32 only requirement, skipped"
-msgstr ""
+msgstr "    $t является требованием только для win32, пропускаем"
 
 #: ../bin/epm-restore:117 ../bin/epm-restore:121
 #, sh-format
 msgid "    $t is python2 only requirement, skipped"
-msgstr ""
+msgstr "    $t является требованием только для python2, пропускаем"
 
 #: ../bin/epm-restore:163
 #, sh-format
 msgid "Install requirements from $req_file ..."
-msgstr ""
+msgstr "Устанавливаем требования из $req_file ..."
 
 #: ../bin/epm-restore:587
 #, sh-format
 msgid "Checking for $req_file ..."
-msgstr ""
+msgstr "Проверка $req_file ..."
 
 #: ../bin/epm-repoindex:50
 #, sh-format
 msgid "Repo dir $REPO_DIR does not exist"
-msgstr ""
+msgstr "Каталог репозитория $REPO_DIR не существует"
 
 #: ../bin/epm-repo:25
 msgid ""
@@ -1187,53 +1238,68 @@ msgid ""
 "server\n"
 "  epm repo list            - list current repos\n"
 msgstr ""
+"\n"
+"\n"
+"Примеры:\n"
+"  epm repo set p9          - очистить все источники и добавить репозиторий "
+"по умолчанию для ветки p9\n"
+"  epm repo set c10f1       - очистить все источники и добавить репозиторий "
+"по умолчанию для ветки c10f1\n"
+"  epm repo switch p10      - изменить только название ветки на p10\n"
+"  epm repo add autoimports - добавить репозиторий autoimports (из Fedora)\n"
+"  epm repo change yandex   - изменить только базовую часть url на сервер "
+"mirror.yandex.ru\n"
+"  epm repo list            - показать текущие репозитории\n"
 
 #: ../bin/epm-repo:75
 msgid "TODO: only ALT now is supported"
-msgstr ""
+msgstr "TODO: сейчас поддерживается только ALT"
 
 #: ../bin/epm-repo:135 ../bin/epm-mark:364
 msgid "Unknown command $ epm repo $CMD"
-msgstr ""
+msgstr "Неизвестная команда $ epm repo $CMD"
 
 #: ../bin/epm-changelog:44
 msgid "Have no suitable command for $1"
-msgstr ""
+msgstr "Нет подходящей команды для $1"
 
 #: ../bin/epm-changelog:99
 #, sh-format
 msgid "Have no suitable command for $PMTYPE. Try install the package firstly."
 msgstr ""
+"Нет подходящей команды для $PMTYPE. Попробуйте сначала установить пакет."
 
 #: ../bin/epm-changelog:108
 msgid "Changelog: Missing package(s) name"
-msgstr ""
+msgstr "Журнал изменений: Отсутствует название пакета(ов)"
 
 #: ../bin/erc-sh-archive:34
 msgid "Don't use --use-7z and --use-patool simulateously."
-msgstr ""
+msgstr "Не используйте --use-7z и --use-patool одновременно."
 
 #: ../bin/erc-sh-archive:47
 msgid ""
 "Could not find any patool or 7-zip backend. Please install p7zip package and "
 "retry."
 msgstr ""
+"Не удалось найти backend для patool или 7-zip. Пожалуйста, установите пакет "
+"p7zip и попробуйте снова."
 
 #: ../bin/epm-downgrade:24 ../bin/epm-downgrade:51
 msgid "/etc/apt/preferences already exists"
-msgstr ""
+msgstr "/etc/apt/preferences уже существует"
 
 #: ../bin/epm-downgrade:52
 msgid "Running with /etc/apt/preferences:"
-msgstr ""
+msgstr "Запуск с /etc/apt/preferences:"
 
 #: ../bin/epm-downgrade:82
 msgid "Downloading packages assigned to downgrade ..."
-msgstr ""
+msgstr "Скачивание пакетов, назначенных для понижения версии ..."
 
 #: ../bin/epm-downgrade:87
 msgid "Running command for downgrade packages"
-msgstr ""
+msgstr "Запуск команды для понижения версии пакетов"
 
 #: ../bin/epm-repack-rpm:99
 #, sh-format
@@ -1241,24 +1307,26 @@ msgid ""
 "There is .rpmnew file(s) in $EPM_REPACK_SCRIPTS_DIR dir. The pack script can "
 "be outdated."
 msgstr ""
+"В каталоге $EPM_REPACK_SCRIPTS_DIR есть файл(ы) .rpmnew. Скрипт упаковки "
+"может быть устаревшим."
 
 #: ../bin/epm-repack-rpm:105
 #, sh-format
 msgid "There is an error from $repackcode script"
-msgstr ""
+msgstr "Возникла ошибка в скрипте $repackcode"
 
 #: ../bin/epm-repack-rpm:129 ../bin/epm-repack-rpm:143
 msgid "will use eepm-rpmbuild for rpm packing"
-msgstr ""
+msgstr "будет использовать eepm-rpmbuild для упаковки rpm"
 
 #: ../bin/epm-repack-rpm:200
 #, sh-format
 msgid "Repacking $abspkg to local rpm format (inside $tmpbuilddir) ..."
-msgstr ""
+msgstr "Переупаковка $abspkg в локальный формат rpm (внутри $tmpbuilddir) ..."
 
 #: ../bin/epm-repack-rpm:226
 msgid "can't find subdir in"
-msgstr ""
+msgstr "не удается найти подкаталог в"
 
 #: ../bin/epm-repack-rpm:259
 #, sh-format
@@ -1266,6 +1334,8 @@ msgid ""
 "Some bug: the name of the repacking package ($pkgname) differs with the "
 "package name ($EEPM_INTERNAL_PKGNAME) from play.d script."
 msgstr ""
+"Ошибка: название переупаковываемого пакета ($pkgname) отличается от имени "
+"пакета ($EEPM_INTERNAL_PKGNAME) из скрипта play.d."
 
 #: ../bin/epm-repack-rpm:263 ../pack.d/aksusbd.sh:25 ../pack.d/aksusbd.sh:47
 #: ../pack.d/cnrdrvcups-ufr2-uk.sh:14 ../pack.d/hplip-plugin.sh:15
@@ -1291,17 +1361,19 @@ msgstr ""
 #: ../play.d/simplenote.sh:13 ../repack.d/spnxclient.sh:11
 #: ../repack.d/common.sh:373 ../repack.d/XenDesktopVDA.sh:9
 msgid "-a"
-msgstr ""
+msgstr "-a"
 
 #: ../bin/epm-repack-rpm:279
 #, sh-format
 msgid ""
 "Cant find converted rpm for source binary package $pkg (got $repacked_rpm)"
 msgstr ""
+"Не удается найти преобразованный rpm для исходного бинарного пакета $pkg "
+"(получен $repacked_rpm)"
 
 #: ../bin/epm-packages:24
 msgid "package management list"
-msgstr ""
+msgstr "список управления пакетами"
 
 #: ../bin/epm-packages:26
 msgid ""
@@ -1311,21 +1383,29 @@ msgid ""
 "  epm packages --sort=size\n"
 "  epm packages --last\n"
 msgstr ""
+"\n"
+"Примеры:\n"
+"  epm packages --sort\n"
+"  epm packages --sort=size\n"
+"  epm packages --last\n"
 
 #: ../bin/epm-packages:56
 #, sh-format
 msgid "Sorted package list function is not implemented for $PMTYPE"
-msgstr ""
+msgstr "Функция сортировки списка пакетов не реализована для $PMTYPE"
 
 #: ../bin/epm-packages:112
 msgid "Unknown option $1. Use epm packages --help to get help."
 msgstr ""
+"Неизвестный параметр $1. Используйте epm packages --help для получения "
+"справки."
 
 #: ../bin/epm-play:55
 #, sh-format
 msgid ""
 "There is .rpmnew file(s) in $psdir dir. The play script can be outdated."
 msgstr ""
+"В каталоге $psdir есть файл(ы) .rpmnew. Скрипт play может быть устаревшим."
 
 #: ../bin/epm-play:249
 msgid ""
@@ -1352,122 +1432,149 @@ msgid ""
 "    epm play telegram = 4.7.1\n"
 "    epm play --update all\n"
 msgstr ""
+"\n"
+"Использование: epm play [параметр] [<приложение>]\n"
+"Параметры:\n"
+"    <приложение>          - установить <приложение>\n"
+"    --remove <приложение> - удалить <приложение>\n"
+"    --update [<приложение>|all] - обновить <приложение> (или все "
+"установленные приложения), если есть новая версия\n"
+"    --latest <приложение> - принудительно установить последнюю версию "
+"приложения\n"
+"    --list                - показать все установленные приложения\n"
+"    --list-all            - показать все доступные приложения\n"
+"    --list-scripts        - показать все доступные скрипты\n"
+"    --short (с --list)    - показать только имена\n"
+"    --installed <приложение> - проверить, установлено ли приложение\n"
+"    --product-alternatives- показать альтернативы (используйте, как epm play "
+"app=beta)\n"
+"\n"
+"Примеры:\n"
+"    epm play --remove opera\n"
+"    epm play yandex-browser = beta\n"
+"    epm play telegram = beta\n"
+"    epm play telegram = 4.7.1\n"
+"    epm play --update all\n"
 
 #: ../bin/epm-play:291
 #, sh-format
 msgid ""
 "We have no idea how to remove $prescription (checked in $psdir and $prsdir)"
-msgstr ""
+msgstr "Мы не знаем, как удалить $prescription (проверено в $psdir и $prsdir)"
 
 #: ../bin/epm-play:292 ../bin/epm-prescription:46
 msgid "There was some error during run the script."
-msgstr ""
+msgstr "Произошла ошибка при выполнении скрипта."
 
 #: ../bin/epm-play:330 ../bin/epm-play:336
 msgid "There was some error during install the application."
-msgstr ""
+msgstr "Произошла ошибка при установке приложения."
 
 #: ../bin/epm-play:418
 msgid "Can't update IPFS DB"
-msgstr ""
+msgstr "Не удается обновить базу данных IPFS"
 
 #: ../bin/epm-play:431
 msgid "epm play is not supported in single file mode"
-msgstr ""
+msgstr "epm play не поддерживается в режиме одного файла"
 
 #: ../bin/epm-play:460
 msgid "run --remove with 'all' or a project name"
-msgstr ""
+msgstr "запустите --remove с 'all' или именем проекта"
 
 #: ../bin/epm-play:466 ../bin/epm-play:489
 msgid "Retrieving list of installed apps ..."
-msgstr ""
+msgstr "Получение списка установленных приложений ..."
 
 #: ../bin/epm-play:483
 msgid "run --update with 'all' or a project name"
-msgstr ""
+msgstr "запустите --update с 'all' или именем проекта"
 
 #: ../bin/epm-removerepo:50
 msgid ""
 "No such repo or task. Use epm repo remove <regexp|autoimports|archive|tasks|"
 "TASKNUMBER>"
 msgstr ""
+"Нет такого репозитория или задачи. Используйте epm repo remove <regexp|"
+"autoimports|archive|tasks|TASKNUMBER>"
 
 #: ../bin/epm-removerepo:66
 msgid "remove autoimports repo"
-msgstr ""
+msgstr "удалить репозиторий autoimports"
 
 #: ../bin/epm-removerepo:67 ../bin/epm-addrepo:67 ../bin/epm-addrepo:214
 msgid "Empty DISTRVERSION"
-msgstr ""
+msgstr "Пустая DISTRVERSION"
 
 #: ../bin/epm-removerepo:72
 msgid "remove archive repos"
-msgstr ""
+msgstr "удалить архивные репозитории"
 
 #: ../bin/epm-removerepo:76
 msgid "remove korinf repo"
-msgstr ""
+msgstr "удалить репозиторий korinf"
 
 #: ../bin/epm-removerepo:80
 msgid "remove task repos"
-msgstr ""
+msgstr "удалить репозитории задач"
 
 #: ../bin/epm-removerepo:88
 msgid "epm removerepo: no options are supported"
-msgstr ""
+msgstr "epm removerepo: не поддерживаются параметры"
 
 #: ../bin/epm-removerepo:109
 msgid "empty repo name"
-msgstr ""
+msgstr "пустое название репозитория"
 
 #: ../bin/epm-removerepo:124 ../bin/epm-addrepo:429
 msgid "Check file /etc/apt/sources.list if needed"
-msgstr ""
+msgstr "При необходимости проверьте файл /etc/apt/sources.list"
 
 #: ../bin/epm-removerepo:127
 msgid "You need remove repo from /etc/apt/sources.list"
-msgstr ""
+msgstr "Вам нужно удалить репозиторий из /etc/apt/sources.list"
 
 #: ../bin/epm-removerepo:151
 msgid "You need remove repo from /etc/pacman.conf"
-msgstr ""
+msgstr "Вам нужно удалить репозиторий из /etc/pacman.conf"
 
 #: ../bin/epm-removerepo:163
 msgid "You need remove repo from /etc/slackpkg/mirrors"
-msgstr ""
+msgstr "Вам нужно удалить репозиторий из /etc/slackpkg/mirrors"
 
 #: ../bin/epm-search_file:39
 msgid ""
 "There was some error in contents index retrieving. Try run 'epm update' "
 "again."
 msgstr ""
+"Произошла ошибка при получении индекса содержимого. Попробуйте снова "
+"запустить 'epm update'."
 
 #: ../bin/epm-search_file:44
 msgid "Searching for $1 ... "
-msgstr ""
+msgstr "Поиск $1 ... "
 
 #: ../bin/epm-search_file:56
 msgid "Search file: file name is missed"
-msgstr ""
+msgstr "Поиск файла: название файла отсутствует"
 
 #: ../bin/epm-search_file:80 ../bin/epm-search_file:85
 msgid "Search by full packages list is not implemented yet"
-msgstr ""
+msgstr "Поиск по полному списку пакетов еще не реализован"
 
 #: ../bin/epm-search_file:114
 #, sh-format
 msgid "Have no suitable search file command for $PMTYPE"
-msgstr ""
+msgstr "Нет подходящей команды поиска файла для $PMTYPE"
 
 #: ../bin/epm-repopkg:28 ../bin/epm-repopkg:60
 #, sh-format
 msgid "Cant find repo dir $REPO_DIR."
-msgstr ""
+msgstr "Не удается найти каталог репозитория $REPO_DIR."
 
 #: ../bin/epm-repopkg:38 ../bin/epm-repopkg:62
 msgid "Missed package name"
-msgstr ""
+msgstr "Отсутствует название пакета"
 
 #: ../bin/epm-repack:53
 #, sh-format
@@ -1475,6 +1582,8 @@ msgid ""
 "There is repack rule for $pkgname package. It is better install this package "
 "via epm install --repack or epm play."
 msgstr ""
+"Существует правило переупаковки для пакета $pkgname. Лучше установить этот "
+"пакет через epm install --repack или epm play."
 
 #: ../bin/epm-repack:126
 #, sh-format
@@ -1482,39 +1591,43 @@ msgid ""
 "Please use official package instead of $alpkg repacking (It is not "
 "recommended to use --force to skip this checking."
 msgstr ""
+"Пожалуйста, используйте официальный пакет вместо переупакованного $alpkg (не "
+"рекомендуется использовать --force для пропуска этой проверки)."
 
 #: ../bin/epm-repack:155
 #, sh-format
 msgid "Cant read result from pack: $returntarname is not a readable file."
 msgstr ""
+"Не удается прочитать результат из пакета: $returntarname не является "
+"читаемым файлом."
 
 #: ../bin/epm-repack:190
 #, sh-format
 msgid "$PKGFORMAT is not supported for repack yet"
-msgstr ""
+msgstr "$PKGFORMAT пока не поддерживается для переупаковки"
 
 #: ../bin/epm-repack:203
 #, sh-format
 msgid "Error with $pkg repacking."
-msgstr ""
+msgstr "Ошибка при переупаковке $pkg."
 
 #: ../bin/epm-repack:227
 #, sh-format
 msgid "Cant find $pkg_names files"
-msgstr ""
+msgstr "Не удается найти файлы $pkg_names"
 
 #: ../bin/epm-repack:228
 msgid "Skip empty repack list"
-msgstr ""
+msgstr "Пропустить пустой список переупаковок"
 
 #: ../bin/epm-repack:239
 msgid "Adapted packages:"
-msgstr ""
+msgstr "Адаптированные пакеты:"
 
 #: ../bin/epm-assure:58
 #, sh-format
 msgid "File or directory $CMD is already exists."
-msgstr ""
+msgstr "Файл или каталог $CMD уже существует."
 
 #: ../bin/epm-assure:64
 msgid ""
@@ -1525,21 +1638,21 @@ msgstr ""
 #: ../bin/epm-assure:71
 #, sh-format
 msgid "Command $CMD is exists: $compath"
-msgstr ""
+msgstr "Команда $CMD существует: $compath"
 
 #: ../bin/epm-assure:99
 #, sh-format
 msgid "Installing appropriate package for $CMD command..."
-msgstr ""
+msgstr "Установка соответствующего пакета для команды $CMD..."
 
 #: ../bin/epm-assure:120
 #, sh-format
 msgid "Cant assure in $CMD command from $PACKAGE$textpackage package"
-msgstr ""
+msgstr "Не удается подтвердить команду $CMD из пакета $PACKAGE$textpackage"
 
 #: ../bin/epm-print:246
 msgid "Unknown command for get source package name via dpkg"
-msgstr ""
+msgstr "Неизвестная команда для получения имени исходного пакета через dpkg"
 
 #: ../bin/epm-print:325
 msgid ""
@@ -1578,10 +1691,44 @@ msgid ""
 "[delimiter2]  print distro dependend package filename from args name version "
 "arch pkgtype\n"
 msgstr ""
+"\n"
+"  Примеры:\n"
+"    epm print info [аргументы]                    вывод информации о системе "
+"и дистрибутиве (с помощью команды distro_info)\n"
+"    epm print name [from filename|for package] NN        вывод только имени "
+"имени пакета или файла пакета\n"
+"    epm print shortname [for package] NN        вывод только короткого имени "
+"имени пакета\n"
+"    epm print version [from filename|for package] NN     вывод только версии "
+"имени пакета или файла пакета\n"
+"    epm print release [from filename|for package] NN     вывод только релиза "
+"имени пакета или файла пакета\n"
+"    epm print version-release [from filename|for package] NN     вывод "
+"только релиза-релиза имени пакета или файла пакета\n"
+"    epm print arch [from filename|for package] NN     вывод архитектуры  "
+"имени имени пакета или файла пакета\n"
+"    epm print field FF for package NN        вывод поля пакета\n"
+"    epm print pkgname from filename NN       вывод имени пакета для файла "
+"пакета\n"
+"    epm print srcname from filename NN       вывод имени источника для файла "
+"пакета\n"
+"    epm print srcpkgname from [filename|package] NN    вывод имени исходного "
+"пакета для бинарного файла пакета\n"
+"    epm print specname from filename NN      вывод имени файла spec для "
+"исходного пакета\n"
+"    epm print binpkgfilelist in DIR for NN   список имен файлов бинарных "
+"пакетов из DIR для исходного файла пакета\n"
+"    epm print compare [package] version N1 N2          сравнение (пакета) "
+"версий и вывод -1 (N1 < N2), 0 (N1 == N2), 1 (N1 > N2)\n"
+"    epm print enough [package version] package version   возвращает true, "
+"если установлен пакет с данной версией или выше\n"
+"    epm print constructname <name> <version> [arch] [pkgtype] [delimiter1] "
+"[delimiter2]  вывод имени файла пакета в зависимости от дистрибутива из "
+"аргументов name version arch pkgtype\n"
 
 #: ../bin/epm-print:368
 msgid "Use epm print --help to get help."
-msgstr ""
+msgstr "Используйте epm print --help для получения справки."
 
 #: ../bin/epm-print:374 ../bin/epm-print:384 ../bin/epm-print:394
 #: ../bin/epm-print:404 ../bin/epm-print:418 ../bin/epm-print:428
@@ -1589,29 +1736,31 @@ msgstr ""
 #: ../bin/epm-print:453 ../bin/epm-print:468 ../bin/epm-print:478
 #: ../bin/epm-print:479
 msgid "Arg is missed"
-msgstr ""
+msgstr "Аргумент отсутствует"
 
 #: ../bin/epm-print:436 ../bin/epm-print:442 ../bin/epm-print:447
 #: ../bin/epm-print:452
 #, sh-format
 msgid "print $WHAT works only for filename(s)"
-msgstr ""
+msgstr "print $WHAT работает только для файла(ов)"
 
 #: ../bin/epm-print:462
 msgid "DIR arg is missed"
-msgstr ""
+msgstr "Аргумент DIR отсутствует"
 
 #: ../bin/epm-print:463
 msgid "source package filename is missed"
-msgstr ""
+msgstr "Название файла исходного пакета отсутствует"
 
 #: ../bin/epm-print:490
 msgid "Unknown command $ epm print $WHAT. Use epm print help for get help."
 msgstr ""
+"Неизвестная команда $ epm print $WHAT. Используйте epm print help для "
+"получения помощи."
 
 #: ../bin/serv-list:23
 msgid "Running services:"
-msgstr ""
+msgstr "Запущенные службы:"
 
 #: ../bin/epm-addrepo:29
 msgid ""
@@ -1622,10 +1771,18 @@ msgid ""
 "                 3. Use with powertools to add PowerTools repository\n"
 "                 4. Use with crb to add Rocky Linux CRB repository"
 msgstr ""
+"Добавить репозиторий.\n"
+"                 1. Используйте с URL репозитория, например, http://www."
+"example.com/example.repo\n"
+"                 2. Используйте epel для добавления репозитория EPEL\n"
+"                 3. Используйте powertools для добавления репозитория "
+"PowerTools\n"
+"                 4. Используйте crb для добавления репозитория CRB Rocky "
+"Linux"
 
 #: ../bin/epm-addrepo:106
 msgid "only for rpm repo"
-msgstr ""
+msgstr "только для rpm репозитория"
 
 #: ../bin/epm-addrepo:159
 msgid ""
@@ -1658,14 +1815,42 @@ msgid ""
 "    # epm repo add /var/ftp/pub/altlinux/p10\n"
 "\n"
 msgstr ""
+"\n"
+"\n"
+"epm repo add - добавить репозиторий ветки. Используйте следующие параметры:\n"
+"    basealt                  - для репозитория BaseALT\n"
+"    altsp                    - добавить репозиторий ALT SP\n"
+"    yandex                   - для зеркала репозитория BaseALT, размещенного "
+"на Yandex (рекомендуется)\n"
+"    autoimports              - для репозитория BaseALT autoimports\n"
+"    autoports                - для репозитория Autoports (с пакетами из "
+"Sisyphus, пересобранными для ветки)\n"
+"    altlinuxclub             - для репозитория altlinuxclub (http://"
+"altlinuxclub.ru/)\n"
+"    deferred                 - для репозитория Etersoft Sisyphus Deferred\n"
+"    deferred.org             - для репозитория Etersoft Sisyphus Deferred "
+"(на mirror.eterfund.org)\n"
+"    etersoft                 - для репозитория LINUX@Etersoft\n"
+"    korinf                   - для репозитория Korinf\n"
+"    <номер задачи>           - добавить репозиторий задачи\n"
+"    archive 2018/02/09       - добавить архив репозитория с этой даты\n"
+"    /dir/to/repo [компонент] - добавить каталог репозитория, созданный с "
+"помощью epm repo index --init\n"
+"    URL [арх] [компонент]    - добавить репозиторий по URL\n"
+"\n"
+"Примеры:\n"
+"    # epm repo add yandex\n"
+"    # epm repo add \"rpm http://somesite/pub/product x86_64 addon\n"
+"    # epm repo add /var/ftp/pub/altlinux/p10\n"
+"\n"
 
 #: ../bin/epm-addrepo:264 ../bin/epm-addrepo:269
 msgid "Etersot Sisyphus Deferred supported only for ALT Sisyphus."
-msgstr ""
+msgstr "Etersot Sisyphus Deferred поддерживается только для ALT Sisyphus."
 
 #: ../bin/epm-addrepo:275
 msgid "use follow date format: 2017/01/31"
-msgstr ""
+msgstr "используйте следующий формат даты: 2017/01/31"
 
 #: ../bin/epm-addrepo:328
 msgid ""
@@ -1674,33 +1859,38 @@ msgid ""
 "                    full sources list line\n"
 "                    URL version component"
 msgstr ""
+"Добавить репозиторий. Вы можете использовать следующие параметры:\n"
+"                    название компонента дистрибутива\n"
+"                    полная строка списка источников\n"
+"                    версия URL компонента"
 
 #: ../bin/epm-addrepo:335 ../play.d/unityhub.sh:12 ../play.d/okular-csp.sh:29
 #: ../play.d/powershell.sh:13 ../play.d/angie.sh:11
 msgid "--repo-name"
-msgstr ""
+msgstr "--repo-name"
 
 #: ../bin/epm-addrepo:344
 msgid "Astra repo is already in the list"
-msgstr ""
+msgstr "Репозиторий Astra уже в списке"
 
 #: ../bin/epm-addrepo:358 ../play.d/trueconf-server.sh:17
 #: ../play.d/mssql-server.sh:22 ../play.d/trueconf.sh:14
 #: ../play.d/mssql-tools.sh:15
 msgid "-v"
-msgstr ""
+msgstr "-v"
 
 #: ../bin/epm-addrepo:358
 msgid "--full-version"
-msgstr ""
+msgstr "--full-version"
 
 #: ../bin/epm-addrepo:363
 msgid "Unsupported distro version $1-$reponame, see # epm print info output."
 msgstr ""
+"Неподдерживаемая версия дистрибутива $1-$reponame, см. вывод epm print info."
 
 #: ../bin/epm-addrepo:379
 msgid "Only URL is supported"
-msgstr ""
+msgstr "Поддерживается только URL"
 
 #: ../bin/epm-addrepo:394
 msgid ""
@@ -1711,63 +1901,75 @@ msgid ""
 "                  full sources list line\n"
 "                  URL version component"
 msgstr ""
+"Добавить репозиторий. Вы можете использовать следующие параметры:\n"
+"                  docker - добавить официальный репозиторий docker\n"
+"                  ppa:<user>/<ppa-name> - добавить репозиторий PPA\n"
+"                  название компонента дистрибутива\n"
+"                  полная строка списка источников\n"
+"                  версия URL компонента"
 
 #: ../bin/epm-addrepo:455
 msgid "You need manually add repo to /etc/apt/sources.list (TODO)"
-msgstr ""
+msgstr "Вам нужно вручную добавить репозиторий в /etc/apt/sources.list (TODO)"
 
 #: ../bin/epm-addrepo:476
 msgid "You need manually add repo to /etc/pacman.conf"
-msgstr ""
+msgstr "Вам нужно вручную добавить репозиторий в /etc/pacman.conf"
 
 #: ../bin/epm-addrepo:493
 msgid "You need manually add repo to /etc/slackpkg/mirrors"
-msgstr ""
+msgstr "Вам нужно вручную добавить репозиторий в /etc/slackpkg/mirrors"
 
 #: ../bin/epm-download:101
 #, sh-format
 msgid ""
 "Incorrect true status from eget. No saved files from download $url, ignoring"
 msgstr ""
+"Некорректный истинный статус от eget. Нет сохраненных файлов из загрузки "
+"$url, игнорируется"
 
 #: ../bin/epm-download:156
 msgid "TODO: https://packages.altlinux.org/api/branches"
-msgstr ""
+msgstr "TODO: https://packages.altlinux.org/api/branches"
 
 #: ../bin/epm-download:163
 msgid "Can't get filename"
-msgstr ""
+msgstr "Не удается получить название файла"
 
 #: ../bin/epm-download:191
 msgid "Latest release:"
-msgstr ""
+msgstr "Последний релиз:"
 
 #: ../bin/epm-download:197
 msgid "Size:"
-msgstr ""
+msgstr "Размер:"
 
 #: ../bin/epm-download:222
 #, sh-format
 msgid "Packages from task(s): $installlist"
-msgstr ""
+msgstr "Пакеты из задач: $installlist"
 
 #: ../bin/epm-download:235
 msgid "Cleaning apt cache for correct result ..."
-msgstr ""
+msgstr "Очистка кэша apt для корректного результата ..."
 
 #: ../bin/epm-remove_old_kernels:31 ../bin/epm-remove_old_kernels:55
 msgid "No installed kernel packages, skipping cleaning"
-msgstr ""
+msgstr "Нет установленных пакетов ядра, пропускается очистка"
 
 #: ../bin/epm-remove_old_kernels:58
 msgid "Note: it is enough to use eepm autoremove for old kernel removing..."
 msgstr ""
+"Примечание: достаточно использовать eepm autoremove для удаления старого "
+"ядра..."
 
 #: ../bin/epm-remove_old_kernels:59
 msgid ""
 "Check also http://ubuntuhandbook.org/index.php/2016/05/remove-old-kernels-"
 "ubuntu-16-04/"
 msgstr ""
+"Также проверьте http://ubuntuhandbook.org/index.php/2016/05/remove-old-"
+"kernels-ubuntu-16-04/"
 
 #: ../bin/epm-full_upgrade:23
 msgid ""
@@ -1779,79 +1981,89 @@ msgid ""
 "  epm full-upgrade [--interactive]\n"
 "  epm full-upgrade --no-flatpak\n"
 msgstr ""
+"\n"
+"Вы можете запустить с --interactive, если можете пропустить некоторые шаги "
+"интерактивно.\n"
+"Также вы можете закомментировать части full_upgrade в конфигурации /etc/eepm/"
+"eepm.conf.\n"
+"Примеры:\n"
+"  epm full-upgrade [--auto]\n"
+"  epm full-upgrade [--interactive]\n"
+"  epm full-upgrade --no-flatpak\n"
 
 #: ../bin/epm-full_upgrade:75
 #, sh-format
 msgid "Are you sure? [Y/n]"
-msgstr ""
+msgstr "Вы уверены? [Y/n]"
 
 #: ../bin/epm-full_upgrade:86
 msgid "Update repository info? [Y/n]"
-msgstr ""
+msgstr "Обновить информацию о репозитории? [Y/n]"
 
 #: ../bin/epm-full_upgrade:89
 msgid "repository updating is failed."
-msgstr ""
+msgstr "Ошибка обновления репозитория."
 
 #: ../bin/epm-full_upgrade:93
 msgid "Do upgrade epm? [Y/n]"
-msgstr ""
+msgstr "Обновить epm? [Y/n]"
 
 #: ../bin/epm-full_upgrade:100
 msgid "An update for epm has been found, epm will be restarted for the update"
-msgstr ""
+msgstr "Найдено обновление для epm, epm будет перезапущен для обновления"
 
 #: ../bin/epm-full_upgrade:107
 msgid "Do upgrade installed packages? [Y/n]"
-msgstr ""
+msgstr "Обновить установленные пакеты? [Y/n]"
 
 #: ../bin/epm-full_upgrade:110
 msgid "upgrading of the system is failed."
-msgstr ""
+msgstr "обновление системы не удалось."
 
 #: ../bin/epm-full_upgrade:113
 msgid "Upgrade kernel and kernel modules? [Y/n]"
-msgstr ""
+msgstr "Обновить ядро и модули ядра? [Y/n]"
 
 #: ../bin/epm-full_upgrade:116
 msgid "updating of the kernel is failed."
-msgstr ""
+msgstr "обновление ядра не удалось."
 
 #: ../bin/epm-full_upgrade:123
 msgid "Upgrade packages installed via epm play? [Y/n]"
-msgstr ""
+msgstr "Обновить пакеты, установленные через epm play? [Y/n]"
 
 #: ../bin/epm-full_upgrade:135
 msgid "Upgrade installed flatpak packages? [Y/n]"
-msgstr ""
+msgstr "Обновить установленные пакеты flatpak? [Y/n]"
 
 #: ../bin/epm-full_upgrade:144
 msgid "Upgrade installed snap packages? [Y/n]"
-msgstr ""
+msgstr "Обновить установленные пакеты snap? [Y/n]"
 
 #: ../bin/epm-full_upgrade:152
 msgid "Do epm clean? [Y/n]"
-msgstr ""
+msgstr "Выполнить очистку epm? [Y/n]"
 
 #: ../bin/epm-mark:102
 msgid "Check /etc/portage/package.mask"
-msgstr ""
+msgstr "Проверьте /etc/portage/package.mask"
 
 #: ../bin/epm-mark:105
 msgid "Manually: edit /etc/pacman.conf modifying IgnorePkg array"
-msgstr ""
+msgstr "Вручную: отредактируйте /etc/pacman.conf, изменив массив IgnorePkg"
 
 #: ../bin/epm-mark:137
 msgid "Check /etc/portage/package.mask (package.unmask)"
-msgstr ""
+msgstr "Проверьте /etc/portage/package.mask (package.unmask)"
 
 #: ../bin/epm-mark:140
 msgid "Manually: edit /etc/pacman.conf removing package from IgnorePkg line"
 msgstr ""
+"Вручную: отредактируйте /etc/pacman.conf, удалив пакет из строки IgnorePkg"
 
 #: ../bin/epm-mark:322
 msgid "mark is the interface for marking packages"
-msgstr ""
+msgstr "mark — это интерфейс для маркировки пакетов"
 
 #: ../bin/epm-mark:324
 msgid ""
@@ -1860,20 +2072,24 @@ msgid ""
 "  epm mark hold mc\n"
 "  epm manual mc\n"
 msgstr ""
+"\n"
+"Примеры:\n"
+"  epm mark hold mc\n"
+"  epm manual mc\n"
 
 #: ../bin/epm-conflicts:102
 msgid "Conflicts: Missing package(s) name"
-msgstr ""
+msgstr "Конфликты: Отсутствует название пакета(ов)"
 
 #: ../bin/epm-status:176
 #, sh-format
 msgid "Unsupported $DISTRNAME"
-msgstr ""
+msgstr "Неподдерживаемый $DISTRNAME"
 
 #: ../bin/epm-status:196
 #, sh-format
 msgid "Unsupported $BASEDISTRNAME"
-msgstr ""
+msgstr "Неподдерживаемый $BASEDISTRNAME"
 
 #: ../bin/epm-status:254
 msgid ""
@@ -1895,69 +2111,100 @@ msgid ""
 "  --validate            check if <package> is accessible (we can get a "
 "fields from it)\n"
 msgstr ""
+"\n"
+"\n"
+"epm status - проверка состояния пакета и возврат результата через код "
+"выхода\n"
+"Использование: epm status [параметры] <пакет> [версия]\n"
+"\n"
+"Параметры:\n"
+"  --installed [версия] проверить, установлен ли <пакет> (если указана "
+"версия, то не старше этой версии)\n"
+"  --installable         проверить, можно ли установить <пакет> из "
+"репозитория\n"
+"  --original            проверить, принадлежит ли <пакет> репозиторию "
+"дистрибутива\n"
+"  --certified           проверить, сертифицирован ли <пакет> для установки "
+"без перепаковки\n"
+"  --thirdparty          проверить, является ли <пакет> сторонним источником "
+"(не упакован для этого дистрибутива)\n"
+"  --repacked            проверить, был ли <пакет> перепакован с помощью epm "
+"repack\n"
+"  --validate            проверить, доступен ли <пакет> (можно ли получить из "
+"него поля)\n"
 
 #: ../bin/epm-status:316
 #, sh-format
 msgid "Unknown option $option, use epm status --help to get info"
 msgstr ""
+"Неизвестный параметр $option, используйте epm status --help для получения "
+"информации"
 
 #: ../bin/epm-status:319
 #, sh-format
 msgid "No option before $option, use epm status --help to get info"
 msgstr ""
+"Нет параметра перед $option, используйте epm status --help для получения "
+"информации"
 
 #: ../bin/epm-repack-deb:39
 msgid "Repack deb to deb is not supported yet."
-msgstr ""
+msgstr "Перепаковка deb в deb пока не поддерживается."
 
 #: ../bin/epm-repack-deb:43
 #, sh-format
 msgid "Repacking $abspkg to local deb format (inside $TDIR) ..."
-msgstr ""
+msgstr "Перепаковка $abspkg в локальный формат deb (внутри $TDIR) ..."
 
 #: ../bin/epm-repack-deb:58
 #, sh-format
 msgid "Cant find converted deb for source binary package $pkg"
 msgstr ""
+"Не удается найти преобразованный deb для исходного двоичного пакета $pkg"
 
 #: ../bin/epm-provides:149
 msgid "Provides: package name is missed"
-msgstr ""
+msgstr "Provides: название пакета отсутствует"
 
 #: ../bin/epm-clean:48 ../bin/epm-clean:52 ../bin/epm-clean:56
 msgid "Use epm clean --direct to remove all downloaded indexes."
-msgstr ""
+msgstr "Используйте epm clean --direct для удаления всех загруженных индексов."
 
 #: ../bin/epm-clean:101
 msgid ""
 "Note: Also you can try (with CAUTION) '# epm autoremove' and '# epm "
 "autoorphans' commands to remove obsoleted and unused packages."
 msgstr ""
+"Примечание: Также вы можете попробовать (с ОСТОРОЖНОСТЬЮ) команды '# epm "
+"autoremove' и '# epm autoorphans' для удаления устаревших и неиспользуемых "
+"пакетов."
 
 #: ../bin/epm-Install:29
 msgid "Install: Skip empty install list."
-msgstr ""
+msgstr "Установка: пропустить пустой список установки."
 
 #: ../bin/epm-query_package:30
 msgid ""
 "Please, use search with some argument or run epmqa for get all packages."
 msgstr ""
+"Пожалуйста, используйте поиск с аргументом или запустите epmqa для получения "
+"всех пакетов."
 
 #: ../bin/epm-check:32
 msgid "You can use epm dedup also"
-msgstr ""
+msgstr "Вы также можете использовать epm dedup"
 
 #: ../bin/epm:53
 msgid "Already loaded $1"
-msgstr ""
+msgstr "Уже загружено $1"
 
 #: ../bin/epm:93
 msgid "Options:"
-msgstr ""
+msgstr "Параметры:"
 
 #: ../bin/epm:96
 msgid "Short commands:"
-msgstr ""
+msgstr "Короткие команды:"
 
 #: ../bin/epm:111
 #, sh-format
@@ -1970,47 +2217,59 @@ msgid ""
 "                 This program may be freely redistributed under the terms of "
 "the GNU AGPLv3."
 msgstr ""
+"Менеджер пакетов EPM версии $EPMVERSION  Telegram: https://t.me/useepm  "
+"https://wiki.etersoft.ru/Epm\n"
+"                 Работает на $DISTRNAME/$DISTRVERSION (менеджер пакетов "
+"$PMTYPE использует формат пакетов $PKGFORMAT)\n"
+"                 Авторские права (c) Etersoft 2012-2024\n"
+"                 Эта программа может свободно распространяться на условиях "
+"GNU AGPLv3."
 
 #: ../bin/epm:118
 #, sh-format
 msgid "Usage: epm [options] <command> [package name(s), package files]..."
 msgstr ""
+"Использование: epm [параметры] <команда> [название пакета(ов), файлы "
+"пакета]..."
 
 #: ../bin/epm:119
 #, sh-format
 msgid "epm - EPM package manager"
-msgstr ""
+msgstr "epm - менеджер пакетов EPM"
 
 #: ../bin/epm:581
 msgid ""
 "--no-check-certificate is a wget option. It is recommended never use it at "
 "all. Check the date or upgrade your system."
 msgstr ""
+"--no-check-certificate — это параметр wget. Рекомендуется не использовать "
+"его. Проверьте дату или обновите систему."
 
 #: ../bin/epm:600 ../bin/epm:610
 #, sh-format
 msgid "There are space(s) in filename $opt, it is not supported. Skipped"
-msgstr ""
+msgstr "В имени файла $opt есть пробелы, это не поддерживается. Пропущено"
 
 #: ../bin/epm:603
 #, sh-format
 msgid "There are space(s) in directory path $opt, it is not supported. Skipped"
 msgstr ""
+"В пути к директории $opt есть пробелы, это не поддерживается. Пропущено"
 
 #: ../bin/epm:606
 #, sh-format
 msgid "There are space(s) in URL $opt, it is not supported. Skipped"
-msgstr ""
+msgstr "В URL $opt есть пробелы, это не поддерживается. Пропущено"
 
 #: ../bin/epm:613
 #, sh-format
 msgid "There are space(s) in package name $opt, it is not supported. Skipped."
-msgstr ""
+msgstr "В имени пакета $opt есть пробелы, это не поддерживается. Пропущено."
 
 #: ../bin/epm:614
 #, sh-format
 msgid "There are forbidden symbols in package name $opt. Skipped."
-msgstr ""
+msgstr "В имени пакета $opt есть запрещенные символы. Пропущено."
 
 #: ../bin/epm:676
 msgid ""
@@ -2031,32 +2290,51 @@ msgid ""
 "packages\n"
 " epm cl <package name>      - print changelog for the package\n"
 msgstr ""
+"\n"
+"\n"
+"Популярные команды:\n"
+" epm search <название>      - поиск пакета по названию\n"
+" epm install <пакет>        - установка пакета\n"
+" epm full-upgrade           - полное обновление системы (пакеты, ядро)\n"
+" epm Upgrade                - обновление всех установленных пакетов (Upgrade "
+"= update + upgrade)\n"
+" epm play [приложение]      - установка приложения (запустите без параметров "
+"для получения списка доступных приложений)\n"
+" epm qf (<команда>|<путь>)  - показать, какой пакет содержит эту команду "
+"(файл)\n"
+" epm sf <название>          - поиск названия во всех файлах всех пакетов\n"
+" epm cl <название пакета>   - показать журнал изменений для пакета\n"
 
 #: ../bin/epm:694
 msgid "Unrecognized command in $* arg(s)"
-msgstr ""
+msgstr "Неопознанная команда в аргументах $*"
 
 #: ../bin/epm:696
 #, sh-format
 msgid "That program needs be running with some command"
-msgstr ""
+msgstr "Эта программа должна быть запущена с какой-либо командой"
 
 #: ../bin/epm-repodisable:34
 msgid "Cant find $1 entries in the repos (see # epm repolist output)"
-msgstr ""
+msgstr "Не удается найти записи $1 в репозиториях (см. вывод # epm repolist)"
+
+#: ../bin/epm-repodisable:37
+#, fuzzy, sh-format
+msgid "will comment $rp"
+msgstr "будет раскомментировано $rp"
 
 #: ../bin/epm-repofix:106
 msgid "run repo switch with arg (p9, p10, Sisyphus)"
-msgstr ""
+msgstr "выполните переключение репозитория с аргументом (p9, p10, Sisyphus)"
 
 #: ../bin/epm-repofix:228
 msgid "Unsupported change key $1"
-msgstr ""
+msgstr "Неподдерживаемый ключ изменения $1"
 
 #: ../bin/epm-repofix:243
 #, sh-format
 msgid "Repo change Unsupported for $BASEDISTRNAME"
-msgstr ""
+msgstr "Изменение репозитория не поддерживается для $BASEDISTRNAME"
 
 #: ../bin/epm-sh-install:85
 #, sh-format
@@ -2064,6 +2342,8 @@ msgid ""
 "%%% You are trying install package $i repacked from third-party software "
 "source. Use it at your own risk. %%%"
 msgstr ""
+"%%% Вы пытаетесь установить пакет $i, перепакованный из стороннего источника "
+"ПО. Используйте на свой страх и риск. %%%"
 
 #: ../bin/epm-sh-install:90
 #, sh-format
@@ -2071,6 +2351,8 @@ msgid ""
 "%%% You are trying install package $i from third-party software source. Use "
 "it at your own risk. %%%"
 msgstr ""
+"%%% Вы пытаетесь установить пакет $i из стороннего источника ПО. Используйте "
+"на свой страх и риск. %%%"
 
 #: ../bin/epm-sh-install:95
 #, sh-format
@@ -2078,6 +2360,8 @@ msgid ""
 "%%% You are trying install package $i not from official $DISTRNAME/"
 "$DISTRVERSION repository. Use it at your own risk. %%%"
 msgstr ""
+"%%% Вы пытаетесь установить пакет $i не из официального репозитория "
+"$DISTRNAME/$DISTRVERSION. Используйте на свой страх и риск. %%%"
 
 #: ../bin/epm-sh-install:119
 #, sh-format
@@ -2085,6 +2369,9 @@ msgid ""
 "Cant get any info for $i package. Scripts are DISABLED for package $bi. Use "
 "--scripts if you need run scripts from such packages."
 msgstr ""
+"Не удается получить информацию для пакета $i. Скрипты ОТКЛЮЧЕНЫ для пакета "
+"$bi. Используйте --scripts, если необходимо запустить скрипты из таких "
+"пакетов."
 
 #: ../bin/epm-sh-install:129
 #, sh-format
@@ -2092,6 +2379,9 @@ msgid ""
 "Cant get info about vendor for $i package. Scripts are DISABLED for package "
 "$bi. Use --scripts if you need run scripts from such packages."
 msgstr ""
+"Не удается получить информацию о поставщике для пакета $i. Скрипты ОТКЛЮЧЕНЫ "
+"для пакета $bi. Используйте --scripts, если необходимо запустить скрипты из "
+"таких пакетов."
 
 #: ../bin/epm-sh-install:138
 #, sh-format
@@ -2100,6 +2390,9 @@ msgid ""
 "is listed in $CONFIGDIR/vendorallowscripts.list).  Use --noscripts if you "
 "need disable scripts in such packages."
 msgstr ""
+"Скрипты ВКЛЮЧЕНЫ для пакета $bi от внешнего поставщика $vendor (этот "
+"поставщик перечислен в $CONFIGDIR/vendorallowscripts.list). Используйте --"
+"noscripts, если необходимо отключить скрипты в таких пакетах."
 
 #: ../bin/epm-sh-install:143
 #, sh-format
@@ -2108,6 +2401,9 @@ msgid ""
 "is listed in $CONFIGDIR/pkgallowscripts.list).  Use --noscripts if you need "
 "disable scripts in such packages."
 msgstr ""
+"Скрипты ВКЛЮЧЕНЫ для пакета $bi от внешнего поставщика $vendor (пакет "
+"перечислен в $CONFIGDIR/pkgallowscripts.list). Используйте --noscripts, если "
+"необходимо отключить скрипты в таких пакетах."
 
 #: ../bin/epm-sh-install:146
 #, sh-format
@@ -2115,10 +2411,12 @@ msgid ""
 "Scripts are DISABLED for package $bi from outside vendor $vendor. Use --"
 "scripts if you need run scripts from such packages."
 msgstr ""
+"Скрипты ОТКЛЮЧЕНЫ для пакета $bi от внешнего поставщика $vendor. Используйте "
+"--scripts, если необходимо запустить скрипты из таких пакетов."
 
 #: ../bin/epm-installed:35
 msgid "is_installed: package name is missed"
-msgstr ""
+msgstr "is_installed: название пакета отсутствует"
 
 #: ../bin/epm-prescription:28
 msgid ""
@@ -2127,133 +2425,139 @@ msgid ""
 "    <receipt>      - run <receipt>\n"
 "    --list-all     - list all available receipts\n"
 msgstr ""
+"\n"
+"Параметры:\n"
+"    <рецепт>       - запустить <рецепт>\n"
+"    --list-all     - перечислить все доступные рецепты\n"
 
 #: ../bin/epm-prescription:37
 msgid "Run with a name of a prescription to run:"
-msgstr ""
+msgstr "Запустите с именем рецепта для запуска:"
 
 #: ../bin/epm-prescription:45
 #, sh-format
 msgid "We have no idea how to play $prescription (checked in $psdir)"
-msgstr ""
+msgstr "Мы не знаем, как выполнить $prescription (проверено в $psdir)"
 
 #: ../bin/epm-dedup:23
 msgid "Check for duplicates (internal implementation) ..."
-msgstr ""
+msgstr "Проверка на дубликаты (внутренняя реализация) ..."
 
 #: ../bin/epm-dedup:56
 msgid ""
 "Check for duplicates via apt-get dedup from apt-scripts (also you can use "
 "internal EPM dedup implementation with --direct option)"
 msgstr ""
+"Проверка на дубликаты через apt-get dedup из apt-scripts (также можно "
+"использовать внутреннюю реализацию dedup EPM с параметром --direct)"
 
 #: ../bin/epm-dedup:59
 msgid "You can use dedup from apt-scripts package"
-msgstr ""
+msgstr "Вы можете использовать dedup из пакета apt-scripts"
 
 #: ../bin/epm-query:197
 msgid "Do not know command for query file package"
-msgstr ""
+msgstr "Неизвестная команда для запроса файла пакета"
 
 #: ../bin/epm-query:349
 msgid "Query: package name is missed"
-msgstr ""
+msgstr "Запрос: название пакета отсутствует"
 
 #: ../bin/epm-checksystem:30
 #, sh-format
 msgid "Try run $ft ..."
-msgstr ""
+msgstr "Попробуйте запустить $ft ..."
 
 #: ../bin/epm-checksystem:35
 msgid "Count lines:"
-msgstr ""
+msgstr "Подсчет строк:"
 
 #: ../bin/epm-checksystem:41
 msgid "Not yet implemented"
-msgstr ""
+msgstr "Пока не реализовано"
 
 #: ../bin/epm-checksystem:49
 msgid "Do not use checksystem under root"
-msgstr ""
+msgstr "Не используйте checksystem под root"
 
 #: ../bin/epm-reposave:28
 #, sh-format
 msgid "Creating copy of all sources lists to $SAVELISTDIR ..."
-msgstr ""
+msgstr "Создание копии всех списков источников в $SAVELISTDIR ..."
 
 #: ../bin/epm-reposave:35
 #, sh-format
 msgid "Cant save apt source list files to $SAVELISTDIR"
-msgstr ""
+msgstr "Не удается сохранить файлы списка источников apt в $SAVELISTDIR"
 
 #: ../bin/epm-reposave:43
 #, sh-format
 msgid "Restoring copy of all sources lists from $SAVELISTDIR ..."
-msgstr ""
+msgstr "Восстановление копии всех списков источников из $SAVELISTDIR ..."
 
 #: ../bin/epm-reposave:54
 #, sh-format
 msgid "Cant restore $i file"
-msgstr ""
+msgstr "Не удается восстановить файл $i"
 
 #: ../bin/epm-reposave:62
 msgid "An error occurred..."
-msgstr ""
+msgstr "Произошла ошибка..."
 
 #: ../bin/epm-reposave:146
 msgid "APT database is actual."
-msgstr ""
+msgstr "База данных APT актуальна."
 
 #: ../bin/epm-reposave:147
 #, sh-format
 msgid "APT database is $days."
-msgstr ""
+msgstr "База данных APT составляет $days."
 
 #: ../bin/epm-requires:72
 msgid "Unknown ELF binary"
-msgstr ""
+msgstr "Неизвестный ELF бинарный файл"
 
 #: ../bin/epm-requires:222
 msgid "Requires: package name is missed"
-msgstr ""
+msgstr "Требуется: название пакета отсутствует"
 
 #: ../bin/epm-check_updated_repo:45
 msgid "never downloaded"
-msgstr ""
+msgstr "никогда не загружался"
 
 #: ../bin/epm-check_updated_repo:63
 msgid "1 day old"
-msgstr ""
+msgstr "1 день"
 
 #: ../bin/epm-check_updated_repo:64
 #, sh-format
 msgid "$days days old"
-msgstr ""
+msgstr "$days дней"
 
 #: ../bin/epm-check_updated_repo:67
 msgid "stalled"
-msgstr ""
+msgstr "застрял"
 
 #: ../bin/epm-check_updated_repo:132
 #, sh-format
 msgid "APT database is $days, please run epm update!"
-msgstr ""
+msgstr "База данных APT составляет $days, пожалуйста, выполните epm update!"
 
 #: ../bin/epm-history:67
 msgid "Removed packages history:"
-msgstr ""
+msgstr "История удаленных пакетов:"
 
 #: ../bin/epm-history:78
 msgid "Installed packages history:"
-msgstr ""
+msgstr "История установленных пакетов:"
 
 #: ../bin/epm-history:90
 msgid "Updated packages history:"
-msgstr ""
+msgstr "История обновленных пакетов:"
 
 #: ../bin/epm-history:102
 msgid "package management history"
-msgstr ""
+msgstr "история управления пакетами"
 
 #: ../bin/epm-history:104
 msgid ""
@@ -2262,17 +2566,23 @@ msgid ""
 "  epm history\n"
 "  epm history --removed\n"
 msgstr ""
+"\n"
+"Примеры:\n"
+"  epm history\n"
+"  epm history --removed\n"
 
 #: ../bin/epm-sh-altlinux:32
 msgid ""
 "TODO: please, improve apt-repo to support arepo (i586-) packages for apt-"
 "repo list task"
 msgstr ""
+"TODO: пожалуйста, улучшите apt-repo для поддержки пакетов arepo (i586-) для "
+"задачи списка apt-repo"
 
 #: ../pack.d/lossless-cut.sh:15 ../pack.d/firestorm-os.sh:15
 #: ../pack.d/sidequest.sh:12 ../pack.d/postman.sh:19 ../pack.d/firestorm.sh:15
 msgid "Can't get package version"
-msgstr ""
+msgstr "Не удается получить версию пакета"
 
 #: ../pack.d/aksusbd.sh:21 ../pack.d/kyodialog.sh:21
 #: ../pack.d/kyocera-sane.sh:18 ../pack.d/cnrdrvcups-ufr2-uk.sh:29
@@ -2308,59 +2618,59 @@ msgstr ""
 #: ../play.d/realvnc-server.sh:27 ../play.d/realvnc-viewer.sh:33
 #: ../repack.d/1c83-client.sh:30
 msgid "Unsupported arch"
-msgstr ""
+msgstr "Неподдерживаемая архитектура"
 
 #: ../pack.d/webdavmailrucloud.sh:11
 msgid "We support only WebDAVCloudMailRu....zip"
-msgstr ""
+msgstr "Мы поддерживаем только WebDAVCloudMailRu....zip"
 
 #: ../pack.d/mailruagent.sh:12
 msgid "We support only agent.tar.xz"
-msgstr ""
+msgstr "Мы поддерживаем только agent.tar.xz"
 
 #: ../pack.d/1c-connect.sh:8
 msgid "Use only for 1C-Connect-Linux-x64.tar.gz."
-msgstr ""
+msgstr "Используйте только для 1C-Connect-Linux-x64.tar.gz."
 
 #: ../pack.d/1c-connect.sh:17
 msgid "Can't get version from dist.json file."
-msgstr ""
+msgstr "Не удается получить версию из файла dist.json."
 
 #: ../pack.d/generic-snap.sh:26
 msgid "Can't get name from snap.yaml"
-msgstr ""
+msgstr "Не удается получить название из snap.yaml"
 
 #: ../pack.d/generic-snap.sh:27
 msgid "Can't get version from snap.yaml"
-msgstr ""
+msgstr "Не удается получить версию из snap.yaml"
 
 #: ../pack.d/portproton.sh:9
 msgid "Missed archive version"
-msgstr ""
+msgstr "Отсутствует версия архива"
 
 #: ../pack.d/1c83-client.sh:17
 msgid "run with file looks like setup-full-8.3.22.1851-x86_64.run"
-msgstr ""
+msgstr "запустите с файлом, похожим на setup-full-8.3.22.1851-x86_64.run"
 
 #: ../pack.d/1c83-client.sh:29
 msgid "Can't install"
-msgstr ""
+msgstr "Не удается установить"
 
 #: ../pack.d/cascadeur.sh:14
 msgid "We support only cascadeur-linux.tgz"
-msgstr ""
+msgstr "Мы поддерживаем только cascadeur-linux.tgz"
 
 #: ../pack.d/vkteams.sh:12
 msgid "We support only vkteams.tar.xz"
-msgstr ""
+msgstr "Мы поддерживаем только vkteams.tar.xz"
 
 #: ../pack.d/common.sh:103
 msgid "RETURNTARNAME is empty"
-msgstr ""
+msgstr "RETURNTARNAME пуст"
 
 #: ../pack.d/pantum.sh:20
 msgid "We support only Pantum Ubuntu Driver V.*.zip"
-msgstr ""
+msgstr "Мы поддерживаем только Pantum Ubuntu Driver V.*.zip"
 
 #: ../play.d/yandex-browser.sh:29 ../play.d/yandex-browser.sh:37
 #: ../play.d/lycheeslicer.sh:12 ../play.d/whatsapp.sh:15
@@ -2572,3 +2882,37 @@ msgstr "Отсутствует libevent, установите его перед 
 msgid "Can't install needed libwebp6"
 msgstr "Невозможно установить необходимую библиотеку libwebp6"
 
+#~ msgid ""
+#~ "\n"
+#~ "Supported package groups:\n"
+#~ "    libs       - неиспользуемые библиотеки\n"
+#~ "    libs-devel - неиспользуемые пакеты -devel\n"
+#~ "    i586-libs  - неиспользуемые библиотеки i586\n"
+#~ "    debuginfo  - все пакеты debuginfo\n"
+#~ "    devel      - все пакеты, используемые для сборки/разработки\n"
+#~ "    python     - все модули python\n"
+#~ "    python2    - модули python2\n"
+#~ "    python3    - модули python3\n"
+#~ "    perl       - модули perl\n"
+#~ "    gem        - модули gem\n"
+#~ "    ruby       - модули ruby\n"
+#~ "\n"
+#~ "Используйте\n"
+#~ "--auto|--assumeyes|--non-interactive  для неинтерактивного режима\n"
+#~ msgstr ""
+#~ "\n"
+#~ "Поддерживаемые группы пакетов:\n"
+#~ "    libs       - неиспользуемые библиотеки\n"
+#~ "    libs-devel - неиспользуемые пакеты -devel\n"
+#~ "    i586-libs  - неиспользуемые библиотеки i586\n"
+#~ "    debuginfo  - все пакеты debuginfo\n"
+#~ "    devel      - все пакеты, используемые для сборки/разработки\n"
+#~ "    python     - все модули python\n"
+#~ "    python2    - модули python2\n"
+#~ "    python3    - модули python3\n"
+#~ "    perl       - модули perl\n"
+#~ "    gem        - модули gem\n"
+#~ "    ruby       - модули ruby\n"
+#~ "\n"
+#~ "Используйте\n"
+#~ "--auto|--assumeyes|--non-interactive  для неинтерактивного режима\n"
