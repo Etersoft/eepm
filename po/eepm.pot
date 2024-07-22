@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-19 18:01+0300\n"
+"POT-Creation-Date: 2024-07-24 02:37+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1951,6 +1951,11 @@ msgstr ""
 
 #: ../bin/epm-repodisable:34
 msgid "Cant find $1 entries in the repos (see # epm repolist output)"
+msgstr ""
+
+#: ../bin/epm-repodisable:37
+#, sh-format
+msgid "will comment $rp"
 msgstr ""
 
 #: ../bin/epm-repofix:106
