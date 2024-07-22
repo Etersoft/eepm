@@ -47,8 +47,7 @@ See detailed description here: http://wiki.etersoft.ru/EPM
 %package repack
 Summary: Etersoft EPM package manager (repack requirements)
 Group: System/Configuration/Packaging
-Requires: %name
-# = %EVR
+Requires: %name = %EVR
 Requires: alien dpkg patchelf p7zip
 %if "%_vendor" == "alt"
 Requires: eepm-rpm-build
@@ -62,6 +61,22 @@ This package has requirements needed for using epm repack on ALT
 
 See https://bugzilla.altlinux.org/show_bug.cgi?id=34308 for
 a discussion about extra requirements.
+
+
+%package play
+Summary: Etersoft EPM package manager (epm play command)
+Group: System/Configuration/Packaging
+Requires: %name = %EVR
+
+AutoProv:no
+AutoReq:no
+
+%description play
+This package contains epm play command for install
+packages from vendor's sites.
+
+See https://bugzilla.altlinux.org/48465 for
+a discussion about epm play security.
 
 %prep
 %setup
@@ -80,7 +95,6 @@ make -C po
 %files -f %name.lang
 %doc README.md TODO LICENSE
 %dir %_sysconfdir/eepm/
-%dir %_sysconfdir/eepm/play.d/
 %dir %_sysconfdir/eepm/pack.d/
 %dir %_sysconfdir/eepm/repack.d/
 %dir %_sysconfdir/eepm/prescription.d/
@@ -89,9 +103,9 @@ make -C po
 %config(noreplace) %_sysconfdir/eepm/*.list
 %config(noreplace) %_sysconfdir/eepm/repack.d/*
 %config(noreplace) %_sysconfdir/eepm/pack.d/*
-%config(noreplace) %_sysconfdir/eepm/play.d/*
 %config(noreplace) %_sysconfdir/eepm/prescription.d/*
 %_bindir/epm*
+%exclude %_bindir/epmp
 %_bindir/eepm
 %_bindir/serv
 %_bindir/distr_info
@@ -100,12 +114,18 @@ make -C po
 %dir /var/cache/eepm/
 %_man1dir/*
 %_datadir/%name/
+%exclude %_datadir/%name/epm-play
 %_sysconfdir/bash_completion.d/serv
 %_sysconfdir/bash_completion.d/eepm
 %_datadir/zsh/Completion/Linux/_eepm
 
 %files repack
 
+%files play
+%_bindir/epmp
+%_datadir/%name/epm-play
+%dir %_sysconfdir/eepm/play.d/
+%config(noreplace) %_sysconfdir/eepm/play.d/*
 
 %changelog
 * Thu Jul 11 2024 Vitaly Lipatov <lav@altlinux.ru> 3.63.0-alt1
