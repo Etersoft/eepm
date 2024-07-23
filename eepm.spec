@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.63.0
+Version: 3.63.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -128,6 +128,31 @@ make -C po
 %config(noreplace) %_sysconfdir/eepm/play.d/*
 
 %changelog
+* Tue Jul 23 2024 Vitaly Lipatov <lav@altlinux.ru> 3.63.1-alt1
+- epm play: add yucca (eterbug #17437)
+- epm play: add Heroic Games Launcher (eterbug #17510)
+- epm play --update: drop App is not installed warning
+- epm play: add --latest argument (eterbug #17408)
+- epm play opera: fix ffmpeg codecs (eterbug #17509)
+- epm full-upgrade: check epm update (eterbug #17354)
+- epm play: add persepolis (eterbug #17504)
+- epm release-upgrade: fix sisyphus to p11
+- eget: fix ipfs_diag_timeout
+- epm play switch-to-nvidia: use fbdev wherever possible (eterbug #17500)
+- epm play --list: dont show packages from repo (eterbug #17527)
+- epm play: add winbox (eterbug #17528)
+- epm status: Add Fedora support (eterbug #17527)
+- epm play: dont update packages from Fedora repository
+- epm set_sudo: added support for doas (eterbug #17459)
+- epm play: add podman-enable-rootless prescription (eterbug #17356)
+- epm play: add workaround for bwrap (eterbug #17394)
+- epm play: move bwrap-fix to separate prescription
+- epm play common.sh: check applications' version by major epm version
+- add initial ru.po and po file
+- eepm.spec: install zsh completion
+- epm play: add zwcad-viewer (eterbug #17529)
+- pack epm play separately
+
 * Thu Jul 11 2024 Vitaly Lipatov <lav@altlinux.ru> 3.63.0-alt1
 - epm full-upgrade: fix --no-flatpak option (eterbug #17308)
 - repack.d: add wildcard support to ignore_lib_requires (eterbug #17320)
