@@ -493,11 +493,25 @@ epm_install()
     case "$BASEDISTRNAME" in
         "alt")
             load_helper epm-install-alt
-            epm_install_alt_names $names || return
+            if echo "$@" | grep -q ":" ; then
+                for arg in "$@"; do
+                    set_backend "$arg"
+                    epm_install_alt_names "$arg"
+                done
+            else
+                epm_install_alt_names $names
+            fi
             ;;
         *)
             # FIXME: see to_remove below
-            epm_install_names $names || return
+            if echo "$@" | grep -q ":" ; then
+                for arg in "$@"; do
+                    set_backend "$arg"
+                    epm_install_names "$arg"
+                done
+            else
+                epm_install_names $names
+            fi
             ;;
     esac
 
