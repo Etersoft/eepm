@@ -20,8 +20,49 @@
 load_helper epm-check_updated_repo
 load_helper epm-sh-warmup
 
+EFI=$(bootctl -p 2>/dev/null)
+sdboot_loader_id=$(bootctl status 2>/dev/null | grep -oP '(?<=id: ).*')
+
+if [ -f "$EFI/loader/entries/$sdboot_loader_id" ]; then
+    entry_file="$EFI/loader/entries/$sdboot_loader_id"
+    options="options"
+    bootloader="systemd"
+elif [ -f "/etc/sysconfig/grub2" ]; then
+    entry_file="/etc/sysconfig/grub2"
+    options="GRUB_CMDLINE_LINUX_DEFAULT="
+    bootloader="grub"
+elif [ -f "/etc/default/grub" ]; then
+    entry_file="/etc/default/grub"
+    options="GRUB_CMDLINE_LINUX_DEFAULT="
+    bootloader="grub"
+elif [ -f "$EFI/refind_linux.conf" ]; then
+    entry_file="$EFI/refind_linux.conf"
+    options="Boot with standard options"
+    bootloader="refind"
+fi
+
 epm_kernel_update()
 {
+
+case $1 in
+    '--list-kernel-options' )
+        assure_root
+        kernel_options_list
+        return ;;
+
+    '--add-kernel-options')
+        assure_root
+        shift
+        kernel_options_add "$@"
+        return ;;
+
+    '--remove-kernel-options')
+        assure_root
+        shift
+        kernel_options_remove "$@"
+        return ;;
+esac
+
     warmup_bases
 
     update_repo_if_needed
@@ -52,4 +93,40 @@ epm_kernel_update()
         fatal 'Have no suitable command for $PMTYPE'
         ;;
     esac
+}
+
+kernel_options_list () {
+    if [ "$bootloader" = "refind" ] ; then
+        grep "^\"$options\"" "$entry_file" | sed 's/^\"'"$options"'" //' | sed 's/\s*$//' | tr ' ' '\n'
+    else
+        grep "^$options" "$entry_file" | sed 's/^"'$options'" //' | sed 's/\s*$//' | tr ' ' '\n'
+    fi
+}
+
+kernel_options_add () {
+    for search_string in "$@"; do
+        if grep -qF "$search_string" "$entry_file"; then
+            echo "The string '$search_string' is already present in $entry_file"
+        else
+            echo "The string '$search_string' is not present in $entry_file"
+            echo "Updating $entry_file"
+            if [ $bootloader = "systemd" ]; then
+                sed -i "/^$options/ s~\$~ $search_string~" "$entry_file"
+            else
+                sed -i "s|^\($options'.*\)'\$|\1 $search_string'|" "$entry_file"
+            fi
+            echo "Added '$search_string' to the kernel boot parameters in $entry_file"
+        fi
+    done
+}
+
+kernel_options_remove() {
+    for remove_string in "$@"; do
+        if grep -qF "$remove_string" "$entry_file"; then
+            sed -i "s~ $remove_string~~" "$entry_file"
+            echo "Removed '$remove_string' from the kernel parameters in $entry_file"
+        else
+            echo "The string '$remove_string' is not present in $entry_file"
+        fi
+    done
 }
