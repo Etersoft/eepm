@@ -66,6 +66,11 @@ case $1 in
         used_kflavour
         info 'You used $USED_KFLAVOUR kernel kflavour'
         return ;;
+
+    '--check-run-kernel' )
+        assure_root
+        check_run_kernel
+        return ;;
 esac
 
     warmup_bases
@@ -142,4 +147,9 @@ used_kflavour () {
     else
         USED_KFLAVOUR=$(uname -r | awk -F'-' '{print $2 "-" $3}')
     fi
+}
+
+check_run_kernel() {
+    used_kflavour
+    ls /boot | grep "vmlinuz" | grep -v "vmlinuz-$USED_KFLAVOUR" | grep "${USED_KFLAVOUR}" | sort -Vr | head -n1 | grep -q $(uname -r)
 }
