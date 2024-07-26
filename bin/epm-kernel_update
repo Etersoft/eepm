@@ -61,6 +61,11 @@ case $1 in
         shift
         kernel_options_remove "$@"
         return ;;
+
+    '--used-kflavour' )
+        used_kflavour
+        info 'You used $USED_KFLAVOUR kernel kflavour'
+        return ;;
 esac
 
     warmup_bases
@@ -129,4 +134,12 @@ kernel_options_remove() {
             echo "The string '$remove_string' is not present in $entry_file"
         fi
     done
+}
+
+used_kflavour () {
+    if [ $(uname -r | grep "rt") ] ; then
+        USED_KFLAVOUR=$(uname -r | awk -F'-' '{print $2}')
+    else
+        USED_KFLAVOUR=$(uname -r | awk -F'-' '{print $2 "-" $3}')
+    fi
 }
