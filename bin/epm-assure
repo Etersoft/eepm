@@ -1,4 +1,4 @@
- #!/bin/sh
+#!/bin/sh
 #
 # Copyright (C) 2013-2016  Etersoft
 # Copyright (C) 2013-2016  Vitaly Lipatov <lav@etersoft.ru>
@@ -117,6 +117,6 @@ epm_assure()
 
     local textpackage
     [ -n "$PACKAGEVERSION" ] && textpackage=" >= $PACKAGEVERSION"
-    warning 'Cant assure in $CMD command from $PACKAGE$textpackage package'
+    warning 'Can'\''t assure in $CMD command from $PACKAGE$textpackage package'
     return 1
 }

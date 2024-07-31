@@ -31,7 +31,7 @@ __emerge_install_ebuild()
 
     # load ebuild and get vars
     . $(pwd)/$EBUILD
-    [ -n "$SRC_URI" ] || fatal 'Cant load SRC_URI from $EBUILD'
+    [ -n "$SRC_URI" ] || fatal 'Can'\''t load SRC_URI from $EBUILD'
 
     # try to detect tarballs
     local TARBALLS=
