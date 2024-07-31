@@ -276,7 +276,7 @@ __epm_repack_to_rpm()
             remove_on_exit "$repacked_rpm"
             repacked_pkg="$repacked_rpm"
         else
-            warning 'Cant find converted rpm for source binary package $pkg (got $repacked_rpm)'
+            warning 'Can'\''t find converted rpm for source binary package $pkg (got $repacked_rpm)'
         fi
         cd $EPMCURDIR >/dev/null
 

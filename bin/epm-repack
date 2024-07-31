@@ -152,7 +152,7 @@ __prepare_source_package()
     fi
 
     # it is possible there are a few files, we don't support it
-    [ -s "$returntarname" ] || fatal 'Cant read result from pack: $returntarname is not a readable file.'
+    [ -s "$returntarname" ] || fatal 'Can'\''t read result from pack: $returntarname is not a readable file.'
 
     alpkg=$(basename $returntarname)
     # FIXME: looks like a hack with current dir
@@ -224,7 +224,7 @@ epm_repack()
         pkg_urls=
     fi
 
-    [ -n "$pkg_names" ] && warning 'Cant find $pkg_names files'
+    [ -n "$pkg_names" ] && warning 'Can'\''t find $pkg_names files'
     [ -z "$pkg_files" ] && info "Skip empty repack list" && return 22
 
     if __epm_repack $pkg_files && [ -n "$repacked_pkgs" ] ; then
