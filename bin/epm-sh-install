@@ -116,7 +116,7 @@ __epm_check_vendor()
         if ! epm_status_validate "$i" ; then
             # it is missed package probably (package remove case)
             if is_installed "$i" ; then
-                warning 'Cant get any info for $i package. Scripts are DISABLED for package $bi. Use --scripts if you need run scripts from such packages.'
+                warning 'Can'\''t get any info for $i package. Scripts are DISABLED for package $bi. Use --scripts if you need run scripts from such packages.'
             fi
             noscripts="--noscripts"
             continue
@@ -126,7 +126,7 @@ __epm_check_vendor()
         vendor="$(epm print field Vendor for "$i")"
 
         if [ -z "$vendor" ] ; then
-            warning 'Cant get info about vendor for $i package. Scripts are DISABLED for package $bi. Use --scripts if you need run scripts from such packages.'
+            warning 'Can'\''t get info about vendor for $i package. Scripts are DISABLED for package $bi. Use --scripts if you need run scripts from such packages.'
             noscripts="--noscripts"
             continue
         fi

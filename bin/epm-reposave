@@ -32,7 +32,7 @@ __save_alt_repo_lists()
     for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
         [ -s "$i" ] || continue
         local DD="$(echo "$i" | sed -e "s|/etc|$SAVELISTDIR|")"
-        cp -af $verbose "$i" "$DD" || fatal 'Cant save apt source list files to $SAVELISTDIR'
+        cp -af $verbose "$i" "$DD" || fatal 'Can'\''t save apt source list files to $SAVELISTDIR'
     done
 }
 
@@ -51,7 +51,7 @@ __restore_alt_repo_lists()
         if diff -q "$DD" "$i" >/dev/null ; then
             rm -f $verbose "$DD"
         else
-            mv $verbose "$DD" "$i" || warning 'Cant restore $i file'
+            mv $verbose "$DD" "$i" || warning 'Can'\''t restore $i file'
         fi
     done
 }
