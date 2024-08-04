@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.63.1
+Version: 3.63.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -128,6 +128,19 @@ make -C po
 %config(noreplace) %_sysconfdir/eepm/play.d/*
 
 %changelog
+* Mon Aug 05 2024 Vitaly Lipatov <lav@altlinux.ru> 3.63.2-alt1
+- epm play: add xerox-spl-driver (eterbug #17548)
+- returned deleted apostrophe (eterbug #17278)
+- epm play: add schildichat-desktop (eterbug #17565)
+- epm play: remove hardcoded version from simplenote
+- epm play madcad: fix pymadcad dependency (eterbug #17558)
+- epm update-kernel: add arguments to manage kernel parametrs (eterbug #17553)
+- epm update-kernel: add --used-kflavour argument for print kernel flavour
+- epm update-kernel: add --check-run-kernel argument
+- epm play: add waydroid prescription (eterbug #17553)
+- epm play: fix tsukimi (eterbug #17547)
+- epm play: add zed (authored by @pechenovv) (eterbug #17578)
+
 * Tue Jul 23 2024 Vitaly Lipatov <lav@altlinux.ru> 3.63.1-alt1
 - epm play: add yucca (eterbug #17437)
 - epm play: add Heroic Games Launcher (eterbug #17510)
