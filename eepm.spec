@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.62.12
+Version: 3.62.13
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -101,6 +101,13 @@ a discussion about extra requirements.
 
 
 %changelog
+* Wed Aug 07 2024 Vitaly Lipatov <lav@altlinux.ru> 3.62.13-alt1
+- distr_info: add MSVSphere and AlterOS support
+- epm-epm_install: install epm-play if needed
+- epm play: add xerox-spl-driver (eterbug #17548)
+- epm play: add schildichat-desktop (eterbug #17565)
+- epm play rstudio: fix install (eterbug #17589)
+
 * Tue Jul 23 2024 Vitaly Lipatov <lav@altlinux.ru> 3.62.12-alt1
 - epm play: add ayugram
 - epm play: add waterfox
