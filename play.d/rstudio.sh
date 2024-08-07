@@ -8,31 +8,24 @@ URL="https://posit.co/"
 
 . $(dirname $0)/common.sh
 
+warn_version_is_not_supported
+
 arch=x86_64
 pkgtype="$(epm print info -p)"
 distr="$(epm print info -s)"
 
-case $pkgtype in
-    rpm)
-        PKGFILTER="rhel8"
-        ;;
-    *)
-        PKGFILTER="focal"
-        ;;
-esac
-
-#case "$distr" in
-#case
-
 case $(epm print info -e) in
     Ubuntu/20.*|Debian/11)
         PKGFILTER="focal"
+        arch=amd64
         ;;
     Ubuntu/22.*|Ubuntu/23*|Debian/12)
         PKGFILTER="jammy"
+        arch=amd64
         ;;
     AstraLinux*|Debian/*|Ubuntu/*)
         PKGFILTER="bionic"
+        arch=amd64
         ;;
     RedOS/7*|AlterOS/*|Fedora/19)
         PKGFILTER="centos7"
@@ -50,14 +43,16 @@ case $(epm print info -e) in
         PKGFILTER="opensuse15"
         ;;
     ALTLinux/*)
-        PKGFILTER="rhel8"
+        PKGFILTER="jammy"
+        arch="amd64"
+        pkgtype="deb"
         ;;
     *)
         fatal "Unsupported distro $(epm print info -e). Ask application vendor for a support."
         ;;
 esac
 
-VERSION="${VERSION/+/-}"
+VERSION="*"
 
 PKGMASK="$(epm print constructname $PKGNAME "$VERSION" $arch $pkgtype "-" "-")"
 PKGURL="$(eget --list https://posit.co/download/rstudio-desktop/ "$PKGMASK" | grep "$PKGFILTER")"
