@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.62.12"
+EPMVERSION="3.62.13"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -2169,7 +2169,7 @@ if distro os-release ; then
     #PRETTY_NAME
     VENDOR_ID="$ID"
     case "$VENDOR_ID" in
-        ubuntu|reld|rhel|astra|manjaro|redos)
+        ubuntu|reld|rhel|astra|manjaro|redos|msvsphere|alteros)
             ;;
         *)
             # ID_LIKE can be 'rhel centos fedora', use latest word

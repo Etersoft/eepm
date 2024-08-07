@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-export EPMVERSION="3.62.12"
+export EPMVERSION="3.62.13"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -3401,8 +3401,10 @@ __epm_korinf_install_eepm()
     fi
 
     pkg_list="eepm"
-    # don't lose eepm-repack if installed
-    is_installed eepm-repack && pkg_list="$pkg_list eepm-repack"
+    # don't lose eepm-* if installed
+    for i in repack play ; do
+       is_installed eepm-$i && pkg_list="$pkg_list eepm-$i"
+    done
 
     # enable scripts to resolve dependencies with apt
     scripts='--scripts' __epm_korinf_install $pkg_list
@@ -14131,7 +14133,7 @@ if distro os-release ; then
     #PRETTY_NAME
     VENDOR_ID="$ID"
     case "$VENDOR_ID" in
-        ubuntu|reld|rhel|astra|manjaro|redos)
+        ubuntu|reld|rhel|astra|manjaro|redos|msvsphere|alteros)
             ;;
         *)
             # ID_LIKE can be 'rhel centos fedora', use latest word
