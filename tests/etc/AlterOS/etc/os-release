@@ -1,0 +1,11 @@
+NAME="AlterOS"
+VERSION="7 (Final)"
+ID="alteros"
+ID_LIKE="rhel fedora"
+VERSION_ID="7"
+PRETTY_NAME="AlterOS 7 (Final)"
+ANSI_COLOR="0;31"
+CPE_NAME="cpe:/o:alteros:alteros:7"
+HOME_URL="https://www.alter-os.ru/"
+BUG_REPORT_URL="https://bugs.alter-os.ru/"
+
