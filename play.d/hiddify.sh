@@ -12,7 +12,7 @@ if ! is_glibc_enough 2.32 ; then
 fi
 
 if [ "$VERSION" = "*" ] ; then
-	VERSION="$(eget --get-real-url -O- https://github.com/hiddify/hiddify-next/releases/latest | awk -F '/' '{print $(NF)}' | awk -F 'v' '{print $2}')"
+	VERSION="$(eget -O- https://api.github.com/repos/hiddify/hiddify-next/releases/latest | grep -oP '"tag_name": "\K(.*?)(?=")' | sed 's/v//g')"
 fi
 
 PKGURL="https://github.com/hiddify/hiddify-next/releases/download/v$VERSION/Hiddify-Debian-x64.deb"
