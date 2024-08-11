@@ -123,7 +123,7 @@ kernel_options_add () {
             if [ $bootloader = "systemd" ]; then
                 sed -i "/^$options/ s~\$~ $search_string~" "$entry_file"
             else
-                sed -i "s|^\($options'.*\)'\$|\1 $search_string'|" "$entry_file"
+                sed -i "s|\(^$options[\"']\)\(.*\)\([\"']\)|\1\2 $search_string\3|" "$entry_file"
             fi
             echo "Added '$search_string' to the kernel boot parameters in $entry_file"
         fi
