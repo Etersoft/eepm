@@ -8,10 +8,10 @@ URL="https://www.bitwig.com"
 
 . $(dirname $0)/common.sh
 
-if [ "$VERSION" = "*" ] ; then
-    PKGURL="https://www.bitwig.com/dl/?id=533&os=installer_linux"
-else
-    PKGURL="https://downloads.bitwig.com/$VERSION/bitwig-studio-$VERSION.deb"
+if [ "$VERSION" = "*" ]; then
+    VERSION=$(eget -O- https://www.bitwig.com/download/ | grep -o "Bitwig Studio [0-9].[0-9].[0-9]" | grep -o "[0-9].[0-9].[0-9]")
 fi
+
+PKGURL="https://www.bitwig.com/dl/Bitwig%20Studio/$VERSION/installer_linux/"
 
 install_pkgurl
