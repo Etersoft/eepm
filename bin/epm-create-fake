@@ -1,0 +1,159 @@
+#!/bin/sh
+#
+# Copyright (C) 2017-2018, 2020  Etersoft
+# Copyright (C) 2017-2018, 2020  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+load_helper epm-assure
+load_helper epm-repack-rpm
+
+
+__create_spec() {
+
+echo "%{!?fake_name: %global fake_name $NAME}" >> "$1"
+echo "%{!?fake_version: %global fake_version $VERSION}" >> "$1"
+echo "%{!?fake_release: %global fake_release $RELEASE}" >> "$1"
+if [ -n "$REQUIRES" ]; then
+  echo "%{!?fake_requires: %global fake_requires $REQUIRES}" >> "$1"
+fi
+if [ -n "$PROVIDES" ]; then
+  echo "%{!?fake_provides: %global fake_provides $PROVIDES}" >> "$1"
+fi
+
+  cat <<EOF >> "$1"
+%define _rpmdir $PWD
+
+Name: fake-%{fake_name}
+
+Version: %{fake_version}
+Release: %{fake_release}
+License: CC0
+Group: Other
+
+Summary: Faked provides package
+
+%if "%{?fake_provides}" != ""
+Provides: %{fake_provides}
+%endif
+Provides: %{fake_name}
+%if "%{?fake_requires}" != ""
+Requires: %{fake_requires}
+%endif
+BuildArch: noarch
+
+%description
+This package is empty. It has been created to put fake entry in rpmdb.
+
+%files
+#intentionaly empty
+
+%changelog
+#intentionaly empty
+EOF
+}
+
+
+__epm_create-fake_help()
+{
+message '
+
+epm create-fake - create package with fake provides and requires. Use follow params:
+    --install                - auto install fake package
+    --version=*              - set package version (by default version is 0)
+    --release=*              - set package release (by default release is 0)
+    --requires=*             - set package requires
+    --provides=*             - set package provides (by default package provide only it self)
+
+Examples:
+    # epm create-fake --install python-somepackage
+    # epm create-fake --install --provides="python3dist(somepackage)" python-somepackage
+    # epm create-fake --install --requires=python3 --requires=python3-module python-somepackage
+
+'
+    return
+}
+
+epm_create-fake()
+{
+
+  VERSION=0
+  RELEASE=0
+  REQUIRES=""
+
+  for i in "$@"; do
+    case $i in
+      --version=*)
+      VERSION="${i#*=}"
+      shift # past argument
+      ;;
+      --release=*)
+      RELEASE="${i#*=}"
+      shift # past argument
+      ;;
+      --requires=*)
+      REQUIRES+=" ${i#*=}"
+      shift # past argument
+      ;;
+      --provides=*)
+      PROVIDES+=" ${i#*=}"
+      shift # past argument
+      ;;
+      --help|-h)
+      __epm_create-fake_help
+      return
+      ;;
+      *)
+            # unknown option
+      ;;
+    esac
+  done
+
+  NAME=$1
+
+  if [ -z "$NAME" ]; then
+    fatal "Error: You have to specify PACKAGE_NAME"
+  fi
+
+    # will set RPMBUILD
+  __assure_exists_rpmbuild
+
+  HOME="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
+  remove_on_exit $HOME
+  export HOME
+  __create_rpmmacros
+
+  tmpbuilddir=$HOME/$(basename $NAME).tmpdir
+  mkdir $tmpbuilddir
+
+  cd $tmpbuilddir/ || fatal
+
+  SPECFILE=${PWD}/${NAME}.spec
+  __create_spec "$SPECFILE"
+
+  showcmd $RPMBUILD -bb $SPECFILE
+  if [ -n "$verbose" ] ; then
+      a='' $RPMBUILD  -bb $SPECFILE || fatal
+  else
+      a='' $RPMBUILD -bb $SPECFILE >/dev/null || fatal
+  fi
+
+   repacked_rpm="$(realpath "$tmpbuilddir/noarch/*.rpm")"
+   remove_on_exit "$repacked_rpm"
+
+  if [ -n "$install" ] ; then
+    epm install "$repacked_rpm"
+  fi
+}
