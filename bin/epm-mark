@@ -36,7 +36,7 @@ __alt_mark_hold()
     local i
     __alt_test_glob "$*"
     for i in "$@" ; do
-        if __is_wildcard "$i" ; then
+        if is_wildcard "$i" ; then
             local pkglist
             pkglist="$(epm qp --short "^$i")" || continue
             for pkg in $pkglist ; do
