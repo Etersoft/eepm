@@ -74,6 +74,8 @@ pax
 zst
 zstd
 exe
+AppImage
+appimage
 EOF
 }
 
@@ -154,4 +156,15 @@ get_archive_type()
 		return
 	fi
 	return 1
+}
+
+extract_command() {
+    local cmd="$1"
+    local archive="$2"
+
+    if is_command tar; then
+        docmd $cmd "$archive"
+    else
+        docmd $HAVE_7Z x -so "$archive" | docmd $HAVE_7Z x -y -si -ttar
+    fi
 }
