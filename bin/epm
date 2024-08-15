@@ -115,7 +115,7 @@ print_version()
 }
 
 
-Usage=$(eval_gettext "Usage: epm [options] <command> [package name(s), package files]...")
+Usage=$(eval_gettext "Usage: epm [options] <command> [package name(s), package files]...") #"
 Descr=$(eval_gettext "epm - EPM package manager")
 
 debug=
