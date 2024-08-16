@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.63.2
+Version: 3.63.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -128,6 +128,19 @@ make -C po
 %config(noreplace) %_sysconfdir/eepm/play.d/*
 
 %changelog
+* Sat Aug 17 2024 Vitaly Lipatov <lav@altlinux.ru> 3.63.3-alt1
+- distr_info: add MSVSphere and AlterOS support
+- epm-epm_install: install epm-play if needed
+- epm play rstudio: fix install (eterbug #17589)
+- epm play: add goofcord
+- epm play: remove alien.sh
+- epm-mark: fix is_wildcard using
+- epm fix arguments show (eterbug #17278)
+- add-kernel-options: fixed adding if GRUB_CMDLINE_LINUX_DEFAULT in double quotes (eterbug #17553)
+- tools_erc: update to erc 1.1.3
+- tools_erc: update to erc 1.1.3
+- epm: fix highlighting
+
 * Mon Aug 05 2024 Vitaly Lipatov <lav@altlinux.ru> 3.63.2-alt1
 - epm play: add xerox-spl-driver (eterbug #17548)
 - returned deleted apostrophe (eterbug #17278)
