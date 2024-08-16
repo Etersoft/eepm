@@ -121,7 +121,7 @@ case $PMTYPE in
         # TODO: ${Architecture}
         [ -n "$short" ] && CMD="dpkg-query -W --showformat=\${db:Status-Abbrev}\${Package}\n"
         showcmd $CMD "$@"
-        $CMD "$@" | grep "^i" | sed -e "s|.* ||g" | __fo_pfn "$@"
+        $CMD "$@" | grep "^.i" | sed -e "s|.* ||g" | __fo_pfn "$@"
         return ;;
     *-rpm)
         warmup_rpmbase
