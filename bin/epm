@@ -153,6 +153,7 @@ pkg_options=
 quoted_args=
 direct_args=
 ipfs=
+force_overwrite=
 
 eget_backend=$EGET_BACKEND
 epm_vardir=/var/lib/eepm
@@ -584,6 +585,9 @@ check_option()
     --no-check-certificate)
         fatal "--no-check-certificate is a wget option. It is recommended never use it at all. Check the date or upgrade your system."
         ;;
+    --force-overwrite)
+        force_overwrite="--force-overwrite"
+        ;;
     -*)
         [ -n "$direct_args" ] && return 1
         [ -n "$pkg_options" ] && pkg_options="$pkg_options $1" || pkg_options="$1"
@@ -652,7 +656,7 @@ if [ -n "$quiet" ] ; then
 fi
 
 # fill
-export EPM_OPTIONS="$nodeps $force $verbose $debug $quiet $interactive $non_interactive $save_only $download_only"
+export EPM_OPTIONS="$nodeps $force $verbose $debug $quiet $interactive $non_interactive $save_only $download_only $force_overwrite"
 
 # if input is not console and run script from file, get pkgs from stdin too
 if [ ! -n "$inscript" ] && [ -p /dev/stdin ] && [ "$EPMMODE" != "pipe" ] ; then
