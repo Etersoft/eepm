@@ -32,6 +32,10 @@ epm_install_files_apt_dpkg()
         files="$repacked_pkgs"
     fi
 
+    if [ -n "$force_overwrite" ] ; then
+        DPKGOPTIONS="$DPKGOPTIONS --force-overwrite"
+    fi
+
     if [ -n "$save_only" ] ; then
         echo
         cp -v $files "$EPMCURDIR"

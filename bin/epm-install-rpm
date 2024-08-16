@@ -39,12 +39,16 @@ epm_install_files_rpm()
         return
     fi
 
+    if [ -n "$force_overwrite" ] ; then
+        force_overwrite="--replacefiles"
+    fi
+
 
     __epm_check_if_src_rpm $files
 
     # --replacepkgs: Install the Package Even If Already Installed
     local replacepkgs="$(__epm_get_replacepkgs $files)"
-    sudocmd rpm -Uvh $replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && return
+    sudocmd rpm -Uvh $replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files $force_overwrite && return
     local RES=$?
 
     __epm_check_if_rpm_already_installed $force $replacepkgs $noscripts $nodeps $files && return

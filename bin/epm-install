@@ -87,6 +87,10 @@ epm_install_names()
         return
     fi
 
+    if [ -n "$force_overwrite" ] ; then
+        APTOPTIONS="$APTOPTIONS -o Dpkg::Options::=\"--force-overwrite\""
+    fi
+
     case $PMTYPE in
         apt-rpm|apt-dpkg)
             APTOPTIONS="$APTOPTIONS $(subst_option verbose "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
