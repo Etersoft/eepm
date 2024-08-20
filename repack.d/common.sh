@@ -402,10 +402,10 @@ __get_binary_requires()
     local fdir="$1"
 
     info "  Getting executable requires ..."
-    epm req --short $(find "$fdir" -type f -executable) </dev/null 2>/dev/null | sed -e 's|().*||'
+    epm req --short $(find "$fdir" -type f -executable) </dev/null 2>/dev/null
 
     info "  Getting libs requires ..."
-    epm req --short $(find "$fdir" -type f -name "lib*.so*") </dev/null 2>/dev/null | sed -e 's|().*||'
+    epm req --short $(find "$fdir" -type f -name "lib*.so*") </dev/null 2>/dev/null
 }
 
 __get_library_provides()
