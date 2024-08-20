@@ -331,6 +331,12 @@ add_requires()
     __add_tag_after_d "Requires: $*"
 }
 
+add_directrequires()
+{
+    [ -n "$1" ] || return
+    __add_tag_after_d "Requires: $*"
+}
+
 add_conflicts()
 {
     [ -n "$1" ] || return
@@ -374,7 +380,6 @@ add_unirequires()
         subst "1iRequires: $*" $SPEC
     fi
 }
-
 
 install_requires()
 {
@@ -459,7 +464,7 @@ add_libs_requires()
     info "Scanning for required libs soname ..."
     get_libs_requires | xargs -n6 echo | grep -ve '^$' | while read ll ; do
         info "Requires: $ll"
-        add_unirequires "$ll" </dev/null
+        add_directrequires "$ll" </dev/null
     done
 }
 
