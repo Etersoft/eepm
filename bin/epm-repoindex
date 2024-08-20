@@ -69,6 +69,12 @@ __epm_repoindex_alt()
         return
     fi
 
+    if [ -d "$REPO_DIR/RPMS.$REPO_NAME" ] ; then
+        mkdir -pv "$REPO_DIR/base/"
+        docmd genbasedir --bloat --progress --topdir=$(dirname $REPO_DIR) $(basename $REPO_DIR) $REPO_NAME
+        return
+    fi
+
     for arch in $archlist; do
         [ -d "$REPO_DIR/$arch/RPMS.$REPO_NAME" ] || continue
         mkdir -pv "$REPO_DIR/$arch/base/"
