@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.63.3
+Version: 3.63.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -128,6 +128,15 @@ make -C po
 %config(noreplace) %_sysconfdir/eepm/play.d/*
 
 %changelog
+* Wed Aug 21 2024 Vitaly Lipatov <lav@altlinux.ru> 3.63.4-alt1
+- added requires bit to __get_binary_requires
+- added add_directrequires function
+- epm-repoindex: add support for dir without arch component
+- distr_info: add RockyLinux support
+- epm play: add sunshine
+- /bin/epm-packages: show proper list of installed packages, check package status instead of desired action (eterbug#17932)
+- epm play bitwig-studio: fix install (eterbug #17605)
+
 * Sat Aug 17 2024 Vitaly Lipatov <lav@altlinux.ru> 3.63.3-alt1
 - distr_info: add MSVSphere and AlterOS support
 - epm-epm_install: install epm-play if needed
