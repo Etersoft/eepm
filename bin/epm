@@ -475,6 +475,11 @@ check_command()
         epm_cmd=create-fake
         direct_args=1
         ;;
+    desktop)
+        epm_cmd=desktop
+        direct_args=1
+        ;;
+
     -V|checkpkg|integrity)    # HELPCMD: check package file integrity (checksum)
         epm_cmd=checkpkg
         ;;
