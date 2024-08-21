@@ -1,6 +1,6 @@
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.63.4
+Version: 3.63.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -128,6 +128,12 @@ make -C po
 %config(noreplace) %_sysconfdir/eepm/play.d/*
 
 %changelog
+* Thu Aug 22 2024 Vitaly Lipatov <lav@altlinux.ru> 3.63.5-alt1
+- epm: inform about missed epm-play package
+- epm-prescription: use epm-play-common for common functions
+- prescription.d: call epm prescription instead of epm play
+- move play.d/wine to prescription.d
+
 * Wed Aug 21 2024 Vitaly Lipatov <lav@altlinux.ru> 3.63.4-alt1
 - added requires bit to __get_binary_requires
 - added add_directrequires function
