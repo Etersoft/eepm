@@ -17,21 +17,45 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-load_helper epm-play
+load_helper epm-play-common
+
+epm_prescription_help()
+{
+    message '
+Options:
+    <receipt>      - run <receipt>
+    --list-all     - list all available receipts
+'
+}
 
 epm_prescription()
 {
 
 local psdir="$CONFIGDIR/prescription.d"
 
-if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
-    message '
-Options:
-    <receipt>      - run <receipt>
-    --list-all     - list all available receipts
-'
-    exit
-fi
+while [ -n "$1" ] ; do
+case "$1" in
+    -h|--help)
+        epm_prescription_help
+        exit
+        ;;
+    --remove)
+        shift
+        if [ -z "$1" ] ; then
+            fatal "run --remove with receipt name"
+        fi
+
+        __epm_play_remove "$@"
+        exit
+        ;;
+    -*)
+        fatal "Unknown option $1"
+        ;;
+     *)
+        break
+        ;;
+esac
+done
 
 if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
     [ -n "$short" ] || [ -n "$quiet" ] || message "Run with a name of a prescription to run:"

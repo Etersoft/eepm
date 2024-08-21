@@ -1,0 +1,145 @@
+#!/bin/sh
+#
+# Copyright (C) 2015, 2017, 2019, 2020, 2022  Etersoft
+# Copyright (C) 2015, 2017, 2019, 2020, 2022  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+
+__run_script()
+{
+    local script="$psdir/$1.sh"
+    [ -s "$script" ] || return
+    [ -f "$script.rpmnew" ] && warning 'There is .rpmnew file(s) in $psdir dir. The play script can be outdated.'
+
+    shift
+    [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
+    ( unset EPMCURDIR ; export PATH=$SCPATH ; $script "$@" )
+    return
+}
+
+
+__list_all_app()
+{
+    cd $psdir || fatal
+    for i in *.sh ; do
+       local name=${i/.sh/}
+       [ -n "$IGNOREi586" ] && startwith "$name" "i586-" && continue
+       startwith "$name" "common" && continue
+       echo "$name"
+    done
+    cd - >/dev/null
+}
+
+
+# args: script, host arch
+__get_app_description()
+{
+    __run_script "$1" --description "$2" 2>/dev/null
+}
+
+__check_play_script()
+{
+    local script="$psdir/$1.sh"
+    shift
+
+    [ -s "$script" ]
+}
+
+
+__epm_play_run_script()
+{
+    local script="$1"
+    shift
+
+    local addopt
+    addopt="$dryrun $non_interactive"
+
+    local bashopt=''
+    [ -n "$debug" ] && bashopt='-x'
+    #info "Running $($script --description 2>/dev/null) ..."
+    [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
+    ( export EPM_OPTIONS="$EPM_OPTIONS $addopt" export PATH=$SCPATH ; docmd $CMDSHELL $bashopt $script "$@" )
+}
+
+__epm_play_run()
+{
+    local script="$psdir/$1.sh"
+    shift
+    __epm_play_run_script "$script" "$@"
+}
+
+__epm_is_shell_script()
+{
+    local script="$1"
+    [ -x "$script" ] && rhas "$script" "\.sh$" && head -n1 "$script" | grep -q "^#!/bin/sh"
+}
+
+
+__epm_play_remove()
+{
+    local prescription
+    for prescription in $* ; do
+        if __epm_is_shell_script "$prescription"  ; then
+            __epm_play_run_script $prescription --remove
+            continue
+        fi
+        if __check_play_script "$prescription" ; then
+            __epm_play_run $prescription --remove
+            __remove_installed_app "$prescription"
+        else
+            psdir=$prsdir
+            __check_play_script "$prescription" || fatal 'We have no idea how to remove $prescription (checked in $psdir and $prsdir)'
+            __epm_play_run "$prescription" --remove || fatal "There was some error during run the script."
+        fi
+    done
+}
+
+
+__epm_play_list()
+{
+    local psdir="$1"
+    local extra="$2"
+    local i
+    local IGNOREi586
+    local arch="$SYSTEMARCH"
+    [ "$arch" = "x86_64" ] && IGNOREi586='' || IGNOREi586=1
+
+    if [ -n "$short" ] ; then
+        for i in $(__list_all_app) ; do
+            local desc="$(__get_app_description $i $arch)"
+            [ -n "$desc" ] || continue
+            echo "$i"
+            if [ -n "$extra" ] ; then
+                for j in $(__run_script "$i" "--product-alternatives") ; do
+                    echo "  $i=$j"
+                done
+            fi
+        done
+        exit
+    fi
+
+    for i in $(__list_all_app) ; do
+        local desc="$(__get_app_description $i $arch)"
+        [ -n "$desc" ] || continue
+        [ -n "$quiet" ] || echo -n "  "
+        printf "%-20s - %s\n" "$i" "$desc"
+        if [ -n "$extra" ] ; then
+            for j in $(__run_script "$i" "--product-alternatives") ; do
+                printf "  %-20s - %s\n" "$i=$j" "$desc"
+            done
+        fi
+    done
+}
