@@ -365,6 +365,11 @@ normalize_version3()
     echo "$1" | sed -e "s|^\([^.][^.]*\.[^.][^.]*\.[^.][^.]*\)\..*|\1|"
 }
 
+is_numeric()
+{
+    echo "$1" | grep -q "^[0-9][0-9]*$"
+}
+
 
 fill_distr_info()
 {
@@ -394,11 +399,17 @@ if distro os-release ; then
     #PRETTY_NAME
     VENDOR_ID="$ID"
     case "$VENDOR_ID" in
-        ubuntu|reld|rhel|astra|manjaro|redos|msvsphere|alteros)
+        ubuntu|reld|rhel|astra|manjaro|redos|msvsphere|alteros|rockylinux|almalinux)
             ;;
         *)
-            # ID_LIKE can be 'rhel centos fedora', use latest word
-            [ -n "$ID_LIKE" ] && VENDOR_ID="$(echo "$ID_LIKE" | xargs -n1 | tail -n1)"
+            if [ -n "$ID_LIKE" ] ; then
+                # ID_LIKE can be 'rhel centos fedora', use first word
+                VENDOR_ID="$(echo "$ID_LIKE" | xargs -n1 | head -n1)"
+                # use latest word for versions like Fedora has
+                if is_numeric "$DISTRIB_RELEASE" && [ "$DISTRIB_RELEASE" -ge 20 ] ; then
+                    VENDOR_ID="$(echo "$ID_LIKE" | xargs -n1 | tail -n1)"
+                fi
+            fi
             ;;
     esac
     DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
