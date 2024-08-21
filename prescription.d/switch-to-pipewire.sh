@@ -8,7 +8,7 @@
 display_help()
 {
     echo "
-Использование: epm play switch-to-pipewire [option]
+Использование: epm prescription switch-to-pipewire [option]
 --global
     Запуск под рутом: нужен для глобального включения(enable) службы pipewire после установки. 
     Но запуск(start) этой службы глобально невозможен, так как pipewire работает под пользователем. 

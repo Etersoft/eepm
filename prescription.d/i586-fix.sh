@@ -6,7 +6,7 @@
 
 [ "$(epm print info -a)" != "x86_64" ] && echo "Only x86_64 is supported" && exit 1
 
-epm play i586-support
+epm prescription i586-support
 
 get_list_alt()
 {

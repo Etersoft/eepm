@@ -50,7 +50,7 @@ if check_run_kernel ; then
 	echo "The most newer installed ${USED_KFLAVOUR} kernel is running."
 else
 	echo "The system has a newer ${USED_KFLAVOUR} kernel."
-	echo "Reboot with a fresh ${USED_KFLAVOUR} kernel and restart: epm play switch-to-nvidia"
+	echo "Reboot with a fresh ${USED_KFLAVOUR} kernel and restart: epm prescription switch-to-nvidia"
 	fatal
 fi
 
@@ -78,7 +78,7 @@ epm install --skip-installed nvidia-settings nvidia-vaapi-driver ocl-nvidia libc
 	nvidia-xconfig libvulkan1 libcudadebugger libnvcuvid libnvidia-api \
 	libnvidia-fbc libnvidia-ml libnvidia-nvvm libnvidia-ptxjitcompiler libnvoptix nvidia-smi libxnvctrl0
 
-epm play i586-fix
+epm prescription i586-fix
 
 # Убирает «Неизвестный монитор» в настройках дисплеев
 if check_old_nvidia ; then

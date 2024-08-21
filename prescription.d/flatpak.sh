@@ -42,6 +42,6 @@ fi
 serv dbus reload
 
 # https://bugzilla.altlinux.org/46690 and https://github.com/flatpak/flatpak/wiki/User-namespace-requirements
-epm play bwrap-fix
+epm prescription bwrap-fix
 
 echo "You need to log out of the session for flatpak to work."

@@ -17,7 +17,7 @@ check_run_kernel () {
 display_help()
 {
     echo "
-Use: epm play waydroid [option]
+Use: epm prescription waydroid [option]
 --gpu
 	Select GPU for Waydroid
 
