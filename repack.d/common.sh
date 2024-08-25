@@ -442,13 +442,14 @@ get_libs_requires()
     fi
 
     __get_library_provides "$fdir" | LANG=C sort -u >$libpreslist
+    estrlist reg_wordexclude "$(cat $libpreslist | xargs -n1000)" "$(cat $libreqlist | tr '\n' ' ')" >$libreqlist
     if [ -n "$verbose" ] ; then
         info "  List of libraries provided:"
         info "$(cat $libpreslist | xargs -n1000)"
         info "  End of the provided libraries list."
 
         info "  List of ignored libraries:"
-        info "$EEPM_IGNORE_LIB_REQUIRES"
+        info "$EEPM_IGNORE_LIB_REQUIRES $(cat $libpreslist | xargs -n1000)"
         info "  End of the ignored libraries."
     fi
 
