@@ -1,3 +1,5 @@
+%def_disable sepplay
+
 %define _unpackaged_files_terminate_build 1
 Name: eepm
 Version: 3.62.13
@@ -27,6 +29,11 @@ Requires: apt rpm
 # TODO: don't use at all
 Requires: apt-repo
 
+%endif
+
+%if_disabled sepplay
+Conflicts: eepm-play < %EVR
+Provides: eepm-play = %EVR
 %endif
 
 AutoProv:no
@@ -105,7 +112,6 @@ make -C po
 %config(noreplace) %_sysconfdir/eepm/pack.d/*
 %config(noreplace) %_sysconfdir/eepm/prescription.d/*
 %_bindir/epm*
-%exclude %_bindir/epmp
 %_bindir/eepm
 %_bindir/serv
 %_bindir/distr_info
@@ -114,18 +120,26 @@ make -C po
 %dir /var/cache/eepm/
 %_man1dir/*
 %_datadir/%name/
+%if_enabled sepplay
+%exclude %_bindir/epmp
 %exclude %_datadir/%name/epm-play
+%else
+%dir %_sysconfdir/eepm/play.d/
+%config(noreplace) %_sysconfdir/eepm/play.d/*
+%endif
 %_sysconfdir/bash_completion.d/serv
 %_sysconfdir/bash_completion.d/eepm
 %_datadir/zsh/Completion/Linux/_eepm
 
 %files repack
 
+%if_enabled sepplay
 %files play
 %_bindir/epmp
 %_datadir/%name/epm-play
 %dir %_sysconfdir/eepm/play.d/
 %config(noreplace) %_sysconfdir/eepm/play.d/*
+%endif
 
 %changelog
 * Wed Aug 07 2024 Vitaly Lipatov <lav@altlinux.ru> 3.62.13-alt1
