@@ -88,7 +88,7 @@ epm_install_names()
     fi
 
     if [ -n "$force_overwrite" ] ; then
-        APTOPTIONS="$APTOPTIONS -o Dpkg::Options::=\"--force-overwrite\""
+        APTOPTIONS="$APTOPTIONS -o Dpkg::Options::=--force-overwrite"
     fi
 
     case $PMTYPE in
