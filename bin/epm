@@ -589,7 +589,7 @@ check_option()
     --no-check-certificate)
         fatal "--no-check-certificate is a wget option. It is recommended never use it at all. Check the date or upgrade your system."
         ;;
-    --force-overwrite)
+    --force-overwrite)      # HELPOPT: force overwrite one package's file with another's file
         force_overwrite="--force-overwrite"
         ;;
     -*)
