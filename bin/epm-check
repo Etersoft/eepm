@@ -19,11 +19,26 @@
 
 load_helper epm-check_updated_repo
 
+__epm_check_container_issue_43533()
+{
+    [ "$(epm print info -i)" = "lxc" ] || return
+    [ -s /etc/rpm/macros.d/container ] && return
+    info "Adding /sys and /proc owners workaround to /etc/rpm/macros.d/container..."
+    echo '%_netsharedpath /sys:/proc' | sudocmd tee /etc/rpm/macros.d/container
+}
+
+
 epm_check()
 {
 update_repo_if_needed
 local APTOPTIONS="$(subst_option non_interactive -y)"
 local DNFOPTIONS="$(subst_option non_interactive -y) $(subst_option verbose --verbose) "
+
+case $BASEDISTRNAME in
+    "alt")
+        __epm_check_container_issue_43533
+esac
+
 case $PMTYPE in
     apt-rpm)
         #sudocmd apt-get check || exit
