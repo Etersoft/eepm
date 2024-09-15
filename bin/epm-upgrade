@@ -78,8 +78,12 @@ epm_upgrade()
         fi
 
         if [ -z "$*" ] ; then
+            load_helper epm-check
+            __epm_check_container_issue_43533
+
             __check_upgrade_conditions || fatal "upgrade conditions is not satisfied."
         fi
+
     fi
 
     # Solus supports upgrade for a package (with all dependencies)
