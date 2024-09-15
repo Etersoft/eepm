@@ -343,11 +343,14 @@ epm_install_files()
     local files="$*"
     [ -z "$files" ] && return
 
+    # TODO: enable support only for systems with support for it
     # on some systems install target can be a real path
-    # use hi-level for install by file path (f.i. epm install /usr/bin/git)
+    # use hi-level for install by command path (f.i. epm install /usr/bin/git)
     if __epm_if_command_path $files ; then
         epm_install_names $files
         return
+    elif is_dirpath "$1" && [ ! -f "$1" ] ; then
+        fatal "Can't install non-existent file '$1'"
     fi
 
     # TODO: check read permissions
