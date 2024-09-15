@@ -232,12 +232,13 @@ Use
 epm_autoremove()
 {
 
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "help" ] ; then
+        epm_autoremove_print_help
+        return 0
+    fi
+
 case $BASEDISTRNAME in
     "alt")
-        if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "help" ] ; then
-            epm_autoremove_print_help
-            return 0
-        fi
 
         if [ -z "$direct" ] ; then
             [ -n "$1" ] && fatal "Run autoremove without args or with --direct. Check epm autoremove --help to available commands."
