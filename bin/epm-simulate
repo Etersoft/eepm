@@ -148,7 +148,7 @@ EOF
 
 epm_simulate()
 {
-    [ -z "$pkg_filenames" ] && info "Simulate: Skip empty list" && return 22
+    [ -z "$pkg_filenames" ] && info "Simulate: skipped due empty list" && return 22
 
     local filenames="$(echo $pkg_filenames | filter_out_installed_packages)"
 

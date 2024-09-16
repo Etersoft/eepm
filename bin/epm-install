@@ -477,7 +477,7 @@ epm_install()
         __handle_pkg_urls_to_install
     fi
 
-    [ -z "$pkg_files$pkg_names" ] && info "Skip empty install list" && return 22
+    [ -z "$pkg_files$pkg_names" ] && info "Empty install list was skipped" && return 22
 
     # to be filter happy
     warmup_lowbase
@@ -490,7 +490,7 @@ epm_install()
     # can be empty only after all installed packages were skipped
     if [ -z "$files$names" ] ; then
         # TODO: assert $skip_installed
-        [ -n "$verbose" ] && info "Skip empty install list (filtered out, all requested packages is already installed)"
+        [ -n "$verbose" ] && info "Empty install list was skipped (filtered out, all requested packages is already installed)"
         # FIXME: see to_remove below
         return 0
     fi
@@ -511,7 +511,7 @@ epm_install()
             ;;
     esac
 
-    [ -z "$files" ] && debug "Skip empty install files list" && return 0
+    [ -z "$files" ] && debug "Empty install files list was skipped" && return 0
 
     if [ -n "$download_only" ] ; then
         # save files to the current dir before install and repack

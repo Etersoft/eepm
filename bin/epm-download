@@ -72,7 +72,10 @@ __check_if_wildcard_downloading()
     is_wildcard "$mask" || return 1
 
     local fn
-    fn="$(docmd eget --list "$url" | xargs -n1 basename)"
+    fn="$(docmd eget --list "$url" | xargs -n1 basename 2>/dev/null)"
+    # just return if there is no answer
+    [ -n "$fn" ] || return 0
+
     local wf="$(epm print shortname from filename $fn | wc -l)"
     local ws="$(epm print shortname from filename $fn | sort -u | wc -l)"
     # not the same package of various versions

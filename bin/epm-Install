@@ -26,7 +26,7 @@ epm_Install()
     local names="$(echo $pkg_names | filter_out_installed_packages)"
     local files="$(echo $pkg_files | filter_out_installed_packages)"
 
-    [ -z "$files$names" ] && info "Install: Skip empty install list." && return 22
+    [ -z "$files$names" ] && info "Install: Empty install list was skipped." && return 22
 
     epm_update || { [ -n "$force" ] || return ; }
 
