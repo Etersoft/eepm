@@ -1164,20 +1164,20 @@ msgid "Have no suitable appropriate install command for $PMTYPE"
 msgstr "Нет подходящей команды для установки для $PMTYPE"
 
 #: ../bin/epm-install:477
-msgid "Skip empty install list"
-msgstr "Пропустить пустой список для установки"
+msgid "Empty install list was skipped"
+msgstr "Пропускаем пустой список для установки"
 
 #: ../bin/epm-install:490
 msgid ""
-"Skip empty install list (filtered out, all requested packages is already "
+"Empty install list was skipped (filtered out, all requested packages is already "
 "installed)"
 msgstr ""
-"Пропустить пустой список для установки (отфильтровано, все запрошенные "
+"Пропускаем пустой список для установки (отфильтровано, все запрошенные "
 "пакеты уже установлены)"
 
 #: ../bin/epm-install:511
-msgid "Skip empty install files list"
-msgstr "Пропустить пустой список файлов для установки"
+msgid "Empty install files list was skipped"
+msgstr "Пропускаем пустой список файлов для установки"
 
 #: ../bin/epm-reinstall:37
 msgid "Please send me the correct command form for it"
@@ -1681,8 +1681,8 @@ msgid "Can't find $pkg_names files"
 msgstr "Не удается найти файлы $pkg_names"
 
 #: ../bin/epm-repack:228
-msgid "Skip empty repack list"
-msgstr "Пропустить пустой список переупаковок"
+msgid "Empty repack list was skipped"
+msgstr "Пропущен пустой список переупаковки"
 
 #: ../bin/epm-repack:239
 msgid "Adapted packages:"
@@ -2245,8 +2245,8 @@ msgstr ""
 "пакетов."
 
 #: ../bin/epm-Install:29
-msgid "Install: Skip empty install list."
-msgstr "Установка: пропустить пустой список установки."
+msgid "Install: Empty install list was skipped"
+msgstr "Установка: пропущен пустой список установки."
 
 #: ../bin/epm-query_package:30
 msgid ""

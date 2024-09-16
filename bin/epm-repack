@@ -225,7 +225,7 @@ epm_repack()
     fi
 
     [ -n "$pkg_names" ] && warning 'Can'\''t find $pkg_names files'
-    [ -z "$pkg_files" ] && info "Skip empty repack list" && return 22
+    [ -z "$pkg_files" ] && info "Empty repack list was skipped" && return 22
 
     if __epm_repack $pkg_files && [ -n "$repacked_pkgs" ] ; then
         if [ -n "$install" ] ; then
