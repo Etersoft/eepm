@@ -1472,10 +1472,10 @@ get_urls()
         return
     fi
 
-    # Markdown support
-    # https://raw.githubusercontent.com/dotnet/core/main/release-notes/8.0/8.0.3/8.0.103.md
-    if echo "$URL" | grep -q "\.md$" ; then
-        scat $URL | grep "https*" | sed -e 's|.*\(https*://\)|\1|'
+    # Hack: Converted markdown support
+    # https://github.com/dotnet/core/blob/main/release-notes/9.0/preview/rc1/9.0.0-rc.1.md
+    if false && echo "$URL" | grep -q "\.md$" ; then
+        scat $URL | sed -e 's|<|<\n|g' | grep "https*" | sed -e 's|.*\(https*://\)|\1|' -e 's|".*||g'
         return
     fi
 
@@ -1515,7 +1515,7 @@ fi
 
 # separate part for github downloads
 if echo "$1" | grep -q "^https://github.com/" && \
-   echo "$1" | grep -q -v "/download/" && [ -n "$2" ] ; then
+   echo "$1" | grep -q -v "/blob/" && echo "$1" | grep -q -v "/download/" && [ -n "$2" ] ; then
     MASK="$2"
 
     if [ -n "$LISTONLY" ] ; then
