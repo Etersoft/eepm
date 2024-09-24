@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.63.5
+Version: 3.63.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -142,6 +142,20 @@ make -C po
 %endif
 
 %changelog
+* Wed Sep 25 2024 Vitaly Lipatov <lav@altlinux.ru> 3.63.6-alt1
+- eepm.spec: revert to epm play inside
+- epm-install: use sandbox as root during install to avoid warnings (eterbug #17685)
+- epm-install: fix --force-overwrite not working, add this option to help (eterbug #17603)
+- epm play: add faststone-image-viewer(eterbug #17695)
+- epm install: stop on install non-existent file
+- epm-autoremove: show help on any system
+- epm-check: add /sys and /proc owners workaround (see ALT bug 43533)
+- epm-upgrade: add /sys and /proc owners workaround (see ALT bug 43533)
+- epm play: add ngrok (eterbug #17697)
+- epm play: add freetube (eterbug #17696)
+- epm repack: fix ignore_lib_requires (eterbug #17610)
+- epm repack: add libraries provided to ignored libraries (eterbug #17610)
+
 * Thu Aug 22 2024 Vitaly Lipatov <lav@altlinux.ru> 3.63.5-alt1
 - epm: inform about missed epm-play package
 - epm-prescription: use epm-play-common for common functions
