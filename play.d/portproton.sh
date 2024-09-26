@@ -7,8 +7,10 @@ DESCRIPTION='PortProton (from the repository if the package is there, or from th
 
 . $(dirname $0)/common.sh
 
+warn_version_is_not_supported
+
 if ! epm install portproton ; then
-    PKGURL="$(eget --list --latest https://github.com/Castro-Fidel/PortProton_dpkg/releases "portproton_${VERSION}amd64.deb")"
+    PKGURL="$(eget --list --latest https://github.com/Castro-Fidel/PortProton_dpkg/releases "portproton_*amd64.deb")"
     install_pkgurl
 fi
 
