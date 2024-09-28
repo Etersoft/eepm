@@ -28,6 +28,7 @@ done <<EOF
     muffin              xdg-desktop-portal-xapp
     liblxqt             xdg-desktop-portal-lxqt
     lxde-common         xdg-desktop-portal-gtk
+    kwin                xdg-desktop-portal-kde
 EOF
 
 epm install --skip-installed $install_portals xdg-desktop-portal
@@ -36,6 +37,10 @@ epm install --skip-installed flatpak flatpak-repo-flathub sysctl-conf-userns
 
 if epm installed plasma5-discover ; then
     epm install --skip-installed plasma5-discover-flatpak
+fi
+
+if epm installed plasma-discover ; then
+    epm install --skip-installed plasma-discover-flatpak
 fi
 
 # Без перезагрузки dbus, порталы не заработают
