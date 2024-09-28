@@ -15,7 +15,7 @@ add_bin_link_command $PRODUCT $PRODUCTDIR/launcher.sh
 ignore_lib_requires libjasper.so.1
 
 install_file $PRODUCTDIR/lithium-ecad.desktop /usr/share/applications/$PRODUCT.desktop
-fix_desktop_file "/opt/lithium_ecad-.*/launcher.sh"
+fix_desktop_file "/opt/lithium_ecad-.*/launcher.sh" $PRODUCT
 fix_desktop_file "/opt/lithium_ecad-.*/lithium-ecad.png"
 
 install_file $PRODUCTDIR/lithium-ecad.png /usr/share/pixmaps/$PRODUCT.png
