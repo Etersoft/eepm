@@ -196,6 +196,31 @@ get_github_version()
 
 }
 
+get_github_tag()
+{
+    local url="$1"
+    local user_and_repo=${url#https://github.com/}
+    local user_and_repo=${user_and_repo%/}
+
+    if [ "$2" == "prerelease" ] ; then
+        eget -O- "https://api.github.com/repos/${user_and_repo}/releases" | grep -oP '"tag_name": *"[^"]*' | grep -oP '[0-9]+(\.[0-9]+)*(-[0-9]+)?' | head -n1
+    else
+        eget -O- "https://api.github.com/repos/${user_and_repo}/releases" \
+        | awk '{
+    if ($0 ~ /"prerelease": false/) {
+        prerelease = 0;
+    } else if ($0 ~ /"prerelease": true/) {
+        prerelease = 1;
+    }
+    if (!prerelease && $0 ~ /"tag_name":/) {
+        match($0, /"tag_name": "([^"]*)"/, arr);
+        print arr[1];
+    }
+}' | grep -oP '[0-9]+(\.[0-9]+)*(-[0-9]+)?' | head -n1
+    fi
+
+}
+
 print_product_alt()
 {
     [ -n "$1" ] || return
