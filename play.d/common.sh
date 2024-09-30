@@ -170,9 +170,9 @@ get_github_version()
     local asset_name="$2"
 
     if [ "$3" == "prerelease" ] ; then
-        curl -s "https://api.github.com/repos/${user_and_repo}/releases" | grep 'browser_download_url' | grep -iEo 'https.*download.*' | grep "$2" | head -n1
+        eget -O- "https://api.github.com/repos/${user_and_repo}/releases" | grep 'browser_download_url' | grep -iEo 'https.*download.*' | grep "$2" | head -n1
     else
-        curl -s "https://api.github.com/repos/${user_and_repo}/releases" \
+        eget -O- "https://api.github.com/repos/${user_and_repo}/releases" \
         | awk '{
     if ($0 ~ /"prerelease": false/) {
         prerelease = 0;
