@@ -412,6 +412,11 @@ if distro os-release ; then
             fi
             ;;
     esac
+    case "$VENDOR_ID" in
+        reld|rhel|msvsphere|alteros|rockylinux|almalinux)
+            DISTRIB_RELEASE=$(normalize_version1 "$DISTRIB_RELEASE")
+            ;;
+    esac
     DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
     DISTRIB_CODENAME="$VERSION_CODENAME"
 
