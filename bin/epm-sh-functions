@@ -541,7 +541,11 @@ __get_package_for_command()
 # TODO:
 confirm() {
     local response
-    # call with a prompt string or use a default
+    if [ ! -t 0 ]; then
+        message "Non-interactive mode detected. Skipping confirmation."
+        return 0
+    fi
+
     read -r -p "${1:-Are you sure? [y/N]} " response
     case $response in
         [yY][eE][sS]|[yY])
@@ -552,6 +556,7 @@ confirm() {
             ;;
     esac
 }
+
 
 
 confirm_info()
