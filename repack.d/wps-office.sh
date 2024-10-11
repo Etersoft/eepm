@@ -12,7 +12,7 @@ PRODUCTDIR=/opt/kingsoft/wps-office
 
 remove_dir /etc/cron.d
 remove_dir /etc/logrotate.d
-remove_dir /etc/xdg/menus/applications-merged
+remove_dir /etc/xdg
 
 # ALT bug 43751
 remove_file /usr/share/desktop-directories/wps-office.directory
