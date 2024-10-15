@@ -1,0 +1,9 @@
+apps:
+  - name: commfort-client
+    group: commfort-client group
+    license: commfort-client license:
+    url: https://www.commfort.com/ru/article-commfort-linux.shtml
+    summary: commfort-client summary
+    description: 
+    arches: x86_64 x86
+    download_page: https://www.commfort.com/download/commfort_client_wine.exe

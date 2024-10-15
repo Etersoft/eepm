@@ -1,0 +1,9 @@
+apps:
+  - name: wps-office
+    group: wps-office group
+    license: wps-office license:
+    url: https://www.wps.com/ru-RU/
+    summary: wps-office summary
+    description: WPS Office for Linux from the official site
+    arches: x86_64
+    download_page: 

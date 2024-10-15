@@ -1,0 +1,9 @@
+apps:
+  - name: chrome-remote-desktop
+    group: chrome-remote-desktop group
+    license: chrome-remote-desktop license:
+    url: 
+    summary: chrome-remote-desktop summary
+    description: 
+    arches: x86_64
+    download_page: https://dl.google.com/linux/direct/${PKGNAME}_current_$arch.$pkgtype

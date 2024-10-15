@@ -1,0 +1,10 @@
+apps:
+  - name: AniLibrix-linux
+    group: AniLibrix-linux group
+    license: AniLibrix-linux license:
+    url: https://github.com/pavloniym/anilibrix
+    summary: AniLibrix-linux summary
+    description: Anilibria desktop anime cinema for any of your computers
+    arches: x86_64
+    download_page: https://github.com/pavloniym/anilibrix/releases
+    download_mask: AniLibrix-linux-x86_64-$VERSION.AppImage

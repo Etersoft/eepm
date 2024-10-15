@@ -1,0 +1,9 @@
+apps:
+  - name: mailruagent
+    group: mailruagent group
+    license: mailruagent license:
+    url: https://agent.mail.ru/linux
+    summary: mailruagent summary
+    description: Mail.ru Agent for Linux from the official site
+    arches: x86_64
+    download_page: https://hb.bizmrg.com/agent-www/linux/x64/agent.tar.xz

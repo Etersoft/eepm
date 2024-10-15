@@ -1,0 +1,12 @@
+apps:
+  - name: lycheeslicer
+    group: lycheeslicer group
+    license: lycheeslicer license:
+    url: https://mango3d.io/downloads/
+    summary: lycheeslicer summary
+    description: Lychee Slicer - A powerful and versatile Slicer for Resin and Filament 3D Printers from the official site
+    arches: x86_64
+    download_page: https://mango3d.io/downloads/
+PKGURL=$(echo $PKGURL | sed -e 's|mango-lychee.nyc3.digitaloceanspaces.com|mango-lychee.nyc3.cdn.digitaloceanspaces.com|')
+    download_mask: LycheeSlicer-$VERSION.deb
+PKGURL=$(echo $PKGURL | sed -e 's|mango-lychee.nyc3.digitaloceanspaces.com|mango-lychee.nyc3.cdn.digitaloceanspaces.com|'
