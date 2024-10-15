@@ -123,7 +123,7 @@ install_pkgurl()
 
     [ -n "$PKGURL" ] || fatal "Can't get package URL"
 
-    epm install $repack "$PKGURL" "$@" || exit
+    epm install $repack $PKGURL "$@" || exit
 }
 
 # epm pack --install $PKGNAME "$PKGURL"
