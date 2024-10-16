@@ -10,15 +10,10 @@ URL="https://www.teamviewer.com/ru-cis/download/linux"
 
 warn_version_is_not_supported
 
-arch=$(epm print info --distro-arch)
 
 # See https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=teamviewer
-
 # TODO: version support
-# https://dl.teamviewer.com/download/linux/version_15x/teamviewer_15.51.5.x86_64.rpm
-
-# epm uses eget to download * names
-PKGURL="https://download.teamviewer.com/download/linux/$(epm print constructname $PKGNAME)"
+PKGURL="ipfs://QmShWJX7rJ2wgTpLGdoUoGCXNutvMHr9YGnRuDF4Xc4RgF?filename=teamviewer.x86_64.rpm"
 
 install_pkgurl
 
