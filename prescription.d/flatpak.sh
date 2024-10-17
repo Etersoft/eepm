@@ -46,7 +46,10 @@ fi
 # Без перезагрузки dbus, порталы не заработают
 serv dbus reload
 
-# https://bugzilla.altlinux.org/46690 and https://github.com/flatpak/flatpak/wiki/User-namespace-requirements
-epm prescription bwrap-fix
+current_version=$(epm -q bubblewrap | sed 's/^bubblewrap-\(.*\)-\(.*\)\.\(.*\)$/\1-\2/')
+# Проверяем, если версия bubblewrap меньше 0.10.0-alt1.1 (с версии 0.10.0-alt1.1 фикс не нужен)
+if [ "$(printf '%s\n' "$current_version" "0.10.0-alt1.1" | sort -V | head -n1)" != "0.10.0-alt1.1" ]; then
+    epm prescription bwrap-fix
+fi
 
 echo "You need to log out of the session for flatpak to work."
