@@ -46,7 +46,9 @@ fi
 # Без перезагрузки dbus, порталы не заработают
 serv dbus reload
 
-# https://bugzilla.altlinux.org/46690 and https://github.com/flatpak/flatpak/wiki/User-namespace-requirements
-epm prescription bwrap-fix
+# C версии 0.10.0-alt1.1 bubblewrap собирается с опцией priv_mode=none поэтому фикс не нужен
+if [ ! $(epm depends bubblewrap | grep sysctl-conf-userns) ]; then
+    epm prescription bwrap-fix
+fi
 
 echo "You need to log out of the session for flatpak to work."
