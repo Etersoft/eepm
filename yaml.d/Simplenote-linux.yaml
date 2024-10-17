@@ -1,0 +1,9 @@
+apps:
+  - name: Simplenote-linux
+    group: Simplenote-linux group
+    license: Simplenote-linux license:
+    url: https://github.com/Automattic/simplenote-electron
+    summary: Simplenote-linux summary
+    description: A Simplenote React client packaged in Electron.
+    arches: x86_64 aarch64 armhf
+    download_page: 

@@ -1,0 +1,9 @@
+apps:
+  - name: rememberthemilk
+    group: rememberthemilk group
+    license: rememberthemilk license:
+    url: https://www.rememberthemilk.com/
+    summary: rememberthemilk summary
+    description: 
+    arches: x86_64
+    download_page: https://www.rememberthemilk.com/services/linux/download/?os=ubuntu_64&subtype=1.3.11
