@@ -20,6 +20,7 @@
 load_helper epm-sh-altlinux
 load_helper epm-query
 load_helper epm-print
+load_helper epm-requires
 load_helper epm-sh-warmup
 load_helper epm-sh-install
 
@@ -306,6 +307,10 @@ epm_remove()
             assure_exists apt-repo
             pkg_names="$(get_task_packages $pkg_names)"
         fi
+    fi
+
+    if [ -n "$manual_requires" ] ; then
+        local pkg_names="$pkg_names $(short=1 epm_requires $pkg_names)"
     fi
 
     # TODO: fix pkg_names override
