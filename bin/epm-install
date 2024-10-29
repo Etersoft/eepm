@@ -22,6 +22,7 @@ load_helper epm-sh-install
 load_helper epm-query
 load_helper epm-assure
 load_helper epm-repack
+load_helper epm-requires
 load_helper epm-check_updated_repo
 load_helper epm-sh-warmup
 
@@ -451,6 +452,10 @@ epm_install()
             epm_install_alt_tasks "$pkg_names"
             return
         fi
+    fi
+
+    if [ -n "$manual_requires" ] ; then
+        local pkg_names="$pkg_names $(short=1 epm_requires $pkg_names)"
     fi
 
     if [ -n "$show_command_only" ] ; then
