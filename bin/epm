@@ -147,6 +147,7 @@ force_yes=
 skip_installed=
 skip_missed=
 show_command_only=
+manual_requires=
 epm_cmd=
 warmup=
 pkg_files=
@@ -597,6 +598,9 @@ check_option()
     --force-overwrite)      # HELPOPT: force overwrite one package's file with another's file
         force_overwrite="--force-overwrite"
         ;;
+    --manual-requires)       # HELPOPT: includes all package dependencies in the install/uninstall list
+        manual_requires="--manual-requires"
+        ;;
     -*)
         [ -n "$direct_args" ] && return 1
         [ -n "$pkg_options" ] && pkg_options="$pkg_options $1" || pkg_options="$1"
@@ -665,7 +669,7 @@ if [ -n "$quiet" ] ; then
 fi
 
 # fill
-export EPM_OPTIONS="$nodeps $force $verbose $debug $quiet $interactive $non_interactive $save_only $download_only $force_overwrite"
+export EPM_OPTIONS="$nodeps $force $verbose $debug $quiet $interactive $non_interactive $save_only $download_only $force_overwrite $manual_requires"
 
 # if input is not console and run script from file, get pkgs from stdin too
 if [ ! -n "$inscript" ] && [ -p /dev/stdin ] && [ "$EPMMODE" != "pipe" ] ; then
