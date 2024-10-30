@@ -14,12 +14,12 @@ epmopt=''
 distrversion=$(epm print info -v)
 case "$(epm print info -e)" in
     ALTLinux/Sisyphus)
-        URL="https://mirror.trueconf.ru/altlinux/p10/x86_64/RPMS.non-free/trueconf-${VERSION}*.x86_64.rpm"
+        URL="https://mirror.trueconf.ru/altlinux/p11/x86_64/RPMS.non-free/trueconf-${VERSION}*.x86_64.rpm"
         # TODO: we need repack, they change files in a home dir
         epmopt='--direct --repack'
         ;;
     ALTLinux/p11)
-        URL="https://mirror.trueconf.ru/altlinux/p10/x86_64/RPMS.non-free/trueconf-${VERSION}*.x86_64.rpm"
+        URL="https://mirror.trueconf.ru/altlinux/p11/x86_64/RPMS.non-free/trueconf-${VERSION}*.x86_64.rpm"
         # we need repack, they change files in a home dir
         epmopt='--direct --repack'
         ;;
