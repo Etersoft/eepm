@@ -16,7 +16,7 @@ subst "s|^URL:.*|URL: https://www.jetbrains.com/pycharm|" $SPEC
 subst "s|^Summary:.*|Summary: The Python IDE for Professional Developers|" $SPEC
 
 move_to_opt "/pycharm-community-*"
-add_bin_link_command $PRODUCT $PRODUCTDIR/bin/$PRODUCT.sh
+add_bin_link_command $PRODUCT $PRODUCTDIR/bin/$PRODUCT
 
 # TODO:
 # https://github.com/archlinux/svntogit-community/blob/packages/pycharm-community-edition/trunk/pycharm.sh
