@@ -11,7 +11,7 @@ PRODUCTDIR=/opt/trueconf/client
 
 # follow original requires
 reqs="$(epm requires "$ORIGINPACKAGE")"
-[ -n "$reqs" ] && add_requires $reqs
+[ -n "$reqs" ] && add_requires "$(echo $reqs | sed -e 's|pulseaudio||g' )"
 
 # for old trueconf (before 8.4.0.1957)
 [ -d .$PRODUCTDIR ] || PRODUCTDIR=/opt/$PRODUCT
