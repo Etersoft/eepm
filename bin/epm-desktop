@@ -36,12 +36,14 @@ copy_files_if_absent() {
     sudorun mkdir -p "$target_dir"
 
     for file in "$source_dir"/*.json; do
+
         filename=$(basename "$file")
         target_file="$target_dir/$filename"
 
-        if [ ! -f "$target_file" ]; then
+        if [ ! -f "$target_file" ] || ! grep -q "metapackages" "$target_file"; then
            sudorun cp "$file" "$target_file"
         fi
+
     done
 }
 
@@ -123,6 +125,12 @@ get_repo_version() {
         fi
     fi
 }
+install_de_meta() {
+    local metapackages=$(get_value "$de_name" "metapackages")
+
+    [ -n "$metapackages" ] && epm install --manual-requires $metapackages
+    return
+}
 
 install_de() {
     local de_name=$1
@@ -133,15 +141,17 @@ install_de() {
         message "$de_name is already installed."
         return 0
     fi
-
-    message "Installing $de_name with dependencies: $dependencies"
     
+    message "Installing $de_name with dependencies: $dependencies"
+    if ! install_de_meta $metapackages; then
+        message "Failed to install $de_name." && return 1
+    fi
+
     if epm install $dependencies; then
         message "$de_name successfully installed."
         update_installed_status "$de_name" true
     else
-        message "Failed to install $de_name."
-        return 1
+        message "Failed to install $de_name." && return 1
     fi
 }
 
