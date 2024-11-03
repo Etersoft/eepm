@@ -434,7 +434,7 @@ get_libs_requires()
     local fdir="$BUILDROOT/$1"
 
     __get_binary_requires "$fdir" | LANG=C sort -u >$libreqlist
-    estrlist reg_wordexclude "$EEPM_IGNORE_LIB_REQUIRES" "$(cat $libreqlist | tr '\n' ' ')" >$libreqlist
+    estrlist reg_wordexclude "$EEPM_IGNORE_LIB_REQUIRES" "$(cat $libreqlist | tr '\n' ' ')" > $libreqlist >/dev/null 2>&1
     if [ -n "$verbose" ] ; then
         info "  List of binary and libs requires:"
         info "$(cat $libreqlist | xargs -n1000)"
@@ -442,7 +442,7 @@ get_libs_requires()
     fi
 
     __get_library_provides "$fdir" | LANG=C sort -u >$libpreslist
-    estrlist reg_wordexclude "$(cat $libpreslist | xargs -n1000)" "$(cat $libreqlist | tr '\n' ' ')" >$libreqlist
+    estrlist reg_wordexclude "$(cat $libpreslist | xargs -n1000)" "$(cat $libreqlist | tr '\n' ' ')" > $libreqlist >/dev/null 2>&1
     if [ -n "$verbose" ] ; then
         info "  List of libraries provided:"
         info "$(cat $libpreslist | xargs -n1000)"
