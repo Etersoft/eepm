@@ -9,13 +9,9 @@ TIPS="Run epm play wpsoffice=<version> to install some specific version"
 
 . $(dirname $0)/common.sh
 
-# TODO: get latest version from vendor
 if [ "$VERSION" = "*" ] ; then
-    # https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=wps-office
-    pkgverstr=$(eget -O- "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=wps-office" | grep "^pkgver=")
-    eval $pkgverstr
-    [ -n "$pkgver" ] || pkgver=11.1.0.11664
-    VERSION="$pkgver.XA"
+    VERSION=$(eget -O- https://www.wps.com/whatsnew/linux/ | grep -oP "\W(\d+\.\d+\.\d+\.\d+)\W" | grep -oP "\d+\.\d+\.\d+\.\d+" | head -n1)
+    VERSION="${VERSION}.XA"
 fi
 
 mversion=$(echo "$VERSION" | sed -e 's|\.XA$||' -e 's|.*\.||')
