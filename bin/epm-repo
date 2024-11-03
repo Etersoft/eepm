@@ -52,6 +52,9 @@ epm_repo()
         epm_repochange "$@"
         ;;
     set)                              # HELPCMD: <mirror>: remove all existing sources and add mirror for the branch
+        if [ -z "$1" ]; then
+            fatal "No repository specified."
+        fi
         epm repo rm all
         epm addrepo "$@"
         ;;
