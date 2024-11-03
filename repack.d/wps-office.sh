@@ -23,7 +23,19 @@ remove_file $PRODUCTDIR/office6/wpscloudsvr
 # linked with missed libkappessframework.so()(64bit)
 remove_file $PRODUCTDIR/office6/addons/pdfbatchcompression/libpdfbatchcompressionapp.so
 
+# Fix for icu>=71.1
+# TODO: add wildcard support to remove_file
+remove_file $PRODUCTDIR/office6/libstdc++.so.6
+remove_file $PRODUCTDIR/office6/libstdc++.so.6.0.28
+
 # hack to fix bug somewhere in linking
 ignore_lib_requires "libc++.so"
+
+# QT is prebuilded
+ignore_lib_requires "libQtCore.so.4 libQtNetwork.so.4 libQtXml.so.4"
+
+# Fix wps deprecated python2 command
+# https://aur.archlinux.org/cgit/aur.git/tree/fix-wps-python-parse.patch?h=wps-office-cn
+subst 's/python -c '\''import sys, urllib; print urllib.unquote(sys.argv\[1\])'\''/python3 -c '\''import sys, urllib.parse; print(urllib.parse.unquote(sys.argv[1]))'\''/' $BUILDROOT/usr/bin/wps
 
 add_libs_requires
