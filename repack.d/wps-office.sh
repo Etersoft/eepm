@@ -24,9 +24,7 @@ remove_file $PRODUCTDIR/office6/wpscloudsvr
 remove_file $PRODUCTDIR/office6/addons/pdfbatchcompression/libpdfbatchcompressionapp.so
 
 # Fix for icu>=71.1
-# TODO: add wildcard support to remove_file
-remove_file $PRODUCTDIR/office6/libstdc++.so.6
-remove_file $PRODUCTDIR/office6/libstdc++.so.6.0.28
+remove_file $PRODUCTDIR/office6/libstdc++.so.6*
 
 # hack to fix bug somewhere in linking
 ignore_lib_requires "libc++.so"
