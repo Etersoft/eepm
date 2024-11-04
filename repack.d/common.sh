@@ -45,20 +45,27 @@ is_abs_path()
     echo "$1" | grep -q "^/"
 }
 
-# Remove file from the file system and from spec
-# Usage: remove_file <path_to_file>
+# Remove file(s) from the file system and from spec
+# Usage: remove_file <path_to_file_or_pattern>
 remove_file()
 {
-    local file="$1"
-    [ -n "$file" ] || return
-    [ -e "$BUILDROOT$file" ] || [ -L "$BUILDROOT$file" ] || return
+    local file_pattern="$1"
+    [ -n "$file_pattern" ] || return
 
-    rm -v "$BUILDROOT$file"
-    subst "s|^$file$||" $SPEC
-    subst "s|^\"$file\"$||" $SPEC
-    subst "s|^\(%config.*\) $file$||" $SPEC
-    subst "s|^\(%config.*\) \"$file\"$||" $SPEC
+    for file in $(eval echo "$BUILDROOT$file_pattern"); do
+        [ -e "$file" ] || [ -L "$file" ] || continue
+
+        rm -v "$file"
+
+        local relative_file="${file#"$BUILDROOT"}"
+
+        subst "s|^$relative_file$||" $SPEC
+        subst "s|^\"$relative_file\"$||" $SPEC
+        subst "s|^\(%config.*\) $relative_file$||" $SPEC
+        subst "s|^\(%config.*\) \"$relative_file\"$||" $SPEC
+    done
 }
+
 
 is_dir_empty()
 {
