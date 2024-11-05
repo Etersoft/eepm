@@ -1,7 +1,7 @@
 #!/bin/sh
 
 PKGNAME=librewolf
-SUPPORTEDARCHES="x86_64"
+SUPPORTEDARCHES="x86_64 aarch64"
 VERSION="$2"
 DESCRIPTION="LibreWolf - a custom version of Firefox, focused on privacy, security and freedom"
 URL="https://librewolf.net/"
@@ -10,21 +10,31 @@ URL="https://librewolf.net/"
 
 arch=x86_64
 
+
+if [ "$(epm print info -a)" = "aarch64" ]; then
+    arch="arm64"
+fi
+
+if [ "$VERSION" = "*" ] ; then
+    # Get latest version from vendor
+    VERSION=$(eget --list --latest https://repo.librewolf.net/pool/ | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?')
+fi
+
 pkgtype=$(epm print info -p)
 case $pkgtype in
     rpm)
-        # https://rpm.librewolf.net/pool/librewolf-124.0.1-1.fc38.x86_64.rpm
-        PKGURL="https://rpm.librewolf.net/pool/librewolf-$VERSION-[0-9]*.$arch.rpm"
+        # https://repo.librewolf.net/pool/librewolf-132.0-1-linux-x86_64-rpm.rpm
+        PKGURL="https://repo.librewolf.net/pool/librewolf-$VERSION-[0-9]*-linux-$arch-rpm.rpm"
         ;;
     *)
-        # https://deb.librewolf.net/pool/focal/librewolf-124.0.1-1.en-US.ubuntu20.x86_64.deb
-        PKGURL="https://deb.librewolf.net/pool/focal/librewolf-$VERSION-[0-9]*.$arch.deb"
+        # https://repo.librewolf.net/pool/librewolf-132.0-1-linux-x86_64-deb.deb
+        PKGURL="https://repo.librewolf.net/pool/librewolf-$VERSION-[0-9]*-linux-$arch-deb.deb"
         ;;
 esac
 
 if ! is_glibc_enough 2.35 ; then
     # use deb package for old glibc
-    PKGURL="https://deb.librewolf.net/pool/focal/librewolf-$VERSION-[0-9]*.$arch.deb"
+    PKGURL="https://repo.librewolf.net/pool/librewolf-$VERSION-[0-9]*-linux-$arch-deb.deb"
 fi
 
 install_pkgurl
