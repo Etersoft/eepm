@@ -34,9 +34,12 @@ epm update-kernel || fatal
 # проверяем, совпадает ли ядро (пока нет такой проверки в update-kernel)
 # TODO: добавить функцию в update-kernel и здесь использовать её
 check_run_kernel () {
-    # TODO: support kernel-image-rt
-    USED_KFLAVOUR="$(uname -r | awk -F'-' '{print $(NF-2)}')-def"
-    ls /boot | grep "vmlinuz" | grep -vE 'vmlinuz-un-def|vmlinuz-std-def' | grep "${USED_KFLAVOUR}" | sort -Vr | head -n1 | grep -q $(uname -r)
+	if uname -r | grep "-def" ; then
+		USED_KFLAVOUR="$(uname -r | awk -F'-' '{print $(NF-2)}')-def"
+	else
+		USED_KFLAVOUR="$(uname -r | awk -F'-' '{print $2}')"
+	fi
+	ls /boot | grep "vmlinuz" | grep -vE 'vmlinuz-un-def|vmlinuz-std-def|[0-9].[0-9]+$' | grep "${USED_KFLAVOUR}" | sort -Vr | head -n1 | grep -q $(uname -r)
 }
 
 check_old_nvidia () {
