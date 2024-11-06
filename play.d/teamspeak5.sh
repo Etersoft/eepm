@@ -8,10 +8,12 @@ URL="https://www.teamspeak.com/"
 
 . $(dirname $0)/common.sh
 
+# Why we need this ?
 warn_version_is_not_supported
-# TODO: check latest version here: https://www.teamspeak.com/en/downloads/#ts5client
-#[ "$VERSION" = "*" ] && VERSION=5.0.0-beta77
-VERSION=5.0.0-beta77
+
+if [ "$VERSION" = "*" ] ; then
+    VERSION=$(eget -O- https://teamspeak.com/en/downloads/ | grep -oP 'https://files\.teamspeak-services\.com/pre_releases/client/([\.\-beta\d]+)' | head -n 1 | grep -oP '([\.\-beta\d]+)' | tail -n 1)
+fi
 
 PKGURL="https://files.teamspeak-services.com/pre_releases/client/$VERSION/teamspeak-client.tar.gz"
 
