@@ -142,14 +142,20 @@ kernel_options_remove() {
 }
 
 used_kflavour () {
-    if [ $(uname -r | grep "rt") ] ; then
-        USED_KFLAVOUR=$(uname -r | awk -F'-' '{print $2}')
-    else
+    if [ $(uname -r | grep "def") ] ; then
         USED_KFLAVOUR=$(uname -r | awk -F'-' '{print $2 "-" $3}')
+    else
+        USED_KFLAVOUR=$(uname -r | awk -F'-' '{print $2}')
     fi
 }
 
 check_run_kernel() {
     used_kflavour
-    ls /boot | grep "vmlinuz" | grep -v "vmlinuz-$USED_KFLAVOUR" | grep "${USED_KFLAVOUR}" | sort -Vr | head -n1 | grep -q $(uname -r)
+    if ls /boot | grep -E "^vmlinuz-[0-9]+\.[0-9]+(\.[0-9]+)?-${USED_KFLAVOUR}-alt[0-9]+(\.rt[0-9]+)?$" | sort -Vr | head -n 1 | grep -q "$(uname -r)"; then
+        echo "The newest installed ${USED_KFLAVOUR} kernel is running."
+        return 0
+    else
+        echo "The system has a newer ${USED_KFLAVOUR} kernel."
+        return 1
+    fi
 }
