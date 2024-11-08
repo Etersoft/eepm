@@ -20,7 +20,6 @@ fi
 
 epm assure lspci pciutils || exit
 # проверяем работоспособность драйвера на текущий момент
-# TODO: добавить аргумент --force для принудительной переустановки
 if [ -z "$force" ] && a= lspci -k | grep -A 2 -i "VGA" | grep "Kernel driver in use" | grep -q "nvidia" ; then
 	echo "Nvidia driver is already installed and used."
 	exit
@@ -31,17 +30,6 @@ epm update || fatal
 # epm upgrade || fatal
 epm update-kernel || fatal
 
-# проверяем, совпадает ли ядро (пока нет такой проверки в update-kernel)
-# TODO: добавить функцию в update-kernel и здесь использовать её
-check_run_kernel () {
-	if uname -r | grep "-def" ; then
-		USED_KFLAVOUR="$(uname -r | awk -F'-' '{print $(NF-2)}')-def"
-	else
-		USED_KFLAVOUR="$(uname -r | awk -F'-' '{print $2}')"
-	fi
-	ls /boot | grep "vmlinuz" | grep -vE 'vmlinuz-un-def|vmlinuz-std-def|[0-9].[0-9]+$' | grep "${USED_KFLAVOUR}" | sort -Vr | head -n1 | grep -q $(uname -r)
-}
-
 check_old_nvidia () {
 	local lspci_output=$(a= lspci -k 2>/dev/null | grep -E 'VGA|3D' | tr -d '\n')
 	# Fermi, Kepler and Tesla
@@ -49,11 +37,7 @@ check_old_nvidia () {
     return 1
 }
 
-if check_run_kernel ; then
-	echo "The most newer installed ${USED_KFLAVOUR} kernel is running."
-else
-	echo "The system has a newer ${USED_KFLAVOUR} kernel."
-	echo "Reboot with a fresh ${USED_KFLAVOUR} kernel and restart: epm prescription switch-to-nvidia"
+if ! epm update-kernel --check-run-kernel ; then
 	fatal
 fi
 
@@ -76,7 +60,6 @@ if [ -e "/etc/X11/xorg.conf" ] && [ "$(grep -E 'nouveau|fbdev|vesa' "/etc/X11/xo
 	 rm -v "/etc/X11/xorg.conf"
 fi
 
-
 epm install --skip-installed nvidia-settings nvidia-vaapi-driver ocl-nvidia libcuda vulkan-tools libnvidia-encode libnvidia-ngx libnvidia-opencl libvulkan1 nvidia-modprobe \
 	nvidia-xconfig libvulkan1 libcudadebugger libnvcuvid libnvidia-api \
 	libnvidia-fbc libnvidia-ml libnvidia-nvvm libnvidia-ptxjitcompiler libnvoptix nvidia-smi libxnvctrl0
@@ -86,17 +69,9 @@ epm prescription i586-fix
 # Убирает «Неизвестный монитор» в настройках дисплеев
 if check_old_nvidia ; then
 	# Данное решение приводит к невозможности входа в tty, к отсутствию вывода логов во время загрузки, а так же к поломке luks
-	if ! grep "initcall_blacklist=simpledrm_platform_driver_init" /etc/sysconfig/grub2 &>/dev/null ; then
-		# Делаем копию
-		cp /etc/sysconfig/grub2 /etc/sysconfig/grub2.epmbak
-		sed -i "s|^\(GRUB_CMDLINE_LINUX_DEFAULT='.*\)'\$|\1 initcall_blacklist=simpledrm_platform_driver_init'|" /etc/sysconfig/grub2
-	fi
+	epm update-kernel --add-kernel-options initcall_blacklist=simpledrm_platform_driver_init
 else
-	if ! grep "nvidia_drm.fbdev=1" /etc/sysconfig/grub2 &>/dev/null ; then
-		# Делаем копию
-		cp /etc/sysconfig/grub2 /etc/sysconfig/grub2.epmbak
-		sed -i "s|^\(GRUB_CMDLINE_LINUX_DEFAULT='.*\)'\$|\1 nvidia_drm.fbdev=1'|" /etc/sysconfig/grub2
-	fi
+	epm update-kernel --add-kernel-options nvidia_drm.fbdev=1
 fi
 
 # Активируем службы управления питания NVIDIA, без этих служб будет некоректно работать уход в сон
