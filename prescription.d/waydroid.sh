@@ -53,6 +53,7 @@ case "${3}" in
         waydroid_install ;;
 
     '--integrate')
+		assure_root
         waydroid_integrate ;;
 
     '--software-render')
@@ -65,19 +66,12 @@ esac
 
 
 waydroid_install () {
-	if ! grep "psi=1" /etc/sysconfig/grub2 &>/dev/null ; then
-		cp /etc/sysconfig/grub2 /etc/sysconfig/grub2.epmbak
-		sed -i "s|^\(GRUB_CMDLINE_LINUX_DEFAULT='.*\)'\$|\1 psi=1'|" /etc/sysconfig/grub2
-	fi
+	epm update-kernel --add-kernel-options psi1
 
 	epm update || fatal
 	epm update-kernel || fatal
 
-	if check_run_kernel ; then
-		echo "The most newer installed ${USED_KFLAVOUR} kernel is running."
-	else
-		echo "The system has a newer ${USED_KFLAVOUR} kernel."
-		echo "Reboot with a fresh ${USED_KFLAVOUR} kernel and restart: epm play waydroid"
+	if ! epm update-kernel --check-run-kernel ; then
 		fatal
 	fi
 
