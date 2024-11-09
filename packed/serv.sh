@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.62.13"
+EPMVERSION="3.64.0"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -462,6 +462,12 @@ set_sudo()
 
     # start error section
     SUDO_TESTED="1"
+
+    if is_command doas && a='' doas -C /etc/doas.conf > /dev/null 2>&1 ; then
+        SUDO="doas"
+        SUDO_TESTED="0"
+        return "$SUDO_TESTED"
+    fi
 
     if ! is_command $SUDO_CMD ; then
         [ "$nofail" = "nofail" ] || SUDO="fatal 'For this operation run epm under root, or install and tune sudo (http://altlinux.org/sudo)'"
@@ -2140,6 +2146,11 @@ normalize_version3()
     echo "$1" | sed -e "s|^\([^.][^.]*\.[^.][^.]*\.[^.][^.]*\)\..*|\1|"
 }
 
+is_numeric()
+{
+    echo "$1" | grep -q "^[0-9][0-9]*$"
+}
+
 
 fill_distr_info()
 {
@@ -2169,11 +2180,22 @@ if distro os-release ; then
     #PRETTY_NAME
     VENDOR_ID="$ID"
     case "$VENDOR_ID" in
-        ubuntu|reld|rhel|astra|manjaro|redos|msvsphere|alteros)
+        ubuntu|reld|rhel|astra|manjaro|redos|msvsphere|alteros|rockylinux|almalinux)
             ;;
         *)
-            # ID_LIKE can be 'rhel centos fedora', use latest word
-            [ -n "$ID_LIKE" ] && VENDOR_ID="$(echo "$ID_LIKE" | xargs -n1 | tail -n1)"
+            if [ -n "$ID_LIKE" ] ; then
+                # ID_LIKE can be 'rhel centos fedora', use first word
+                VENDOR_ID="$(echo "$ID_LIKE" | xargs -n1 | head -n1)"
+                # use latest word for versions like Fedora has
+                if is_numeric "$DISTRIB_RELEASE" && [ "$DISTRIB_RELEASE" -ge 20 ] ; then
+                    VENDOR_ID="$(echo "$ID_LIKE" | xargs -n1 | tail -n1)"
+                fi
+            fi
+            ;;
+    esac
+    case "$VENDOR_ID" in
+        reld|rhel|msvsphere|alteros|rockylinux|almalinux)
+            DISTRIB_RELEASE=$(normalize_version1 "$DISTRIB_RELEASE")
             ;;
     esac
     DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
@@ -2410,8 +2432,8 @@ elif [ "$(uname)" = "Linux" ] && is_command guix ; then
 # fixme: move to up
 elif [ "$(uname)" = "Linux" ] && [ -x $ROOTDIR/system/bin/getprop ] ; then
     DISTRIB_ID="Android"
-    DISTRIB_RELEASE=$(getprop | awk -F": " '/system.build.version.release\]/ { print $2 }' | tr -d '[]' | head -n1)
-    [ -n "$DISTRIB_RELEASE" ] || DISTRIB_RELEASE=$(getprop | awk -F": " '/build.version.release/ { print $2 }' | tr -d '[]' | head -n1)
+    DISTRIB_RELEASE=$(a='' getprop | awk -F": " '/system.build.version.release\]/ { print $2 }' | tr -d '[]' | head -n1)
+    [ -n "$DISTRIB_RELEASE" ] || DISTRIB_RELEASE=$(a='' getprop | awk -F": " '/build.version.release/ { print $2 }' | tr -d '[]' | head -n1)
 
 elif [ "$(uname -o 2>/dev/null)" = "Cygwin" ] ; then
         DISTRIB_ID="Cygwin"
@@ -2543,7 +2565,7 @@ get_bit_size()
 {
 local DIST_BIT
 
-DIST_BIT="$(getconf LONG_BIT 2>/dev/null)"
+DIST_BIT="$(a= getconf LONG_BIT 2>/dev/null)"
 if [ -n "$DIST_BIT" ] ; then
     echo "$DIST_BIT"
     return
@@ -2592,7 +2614,7 @@ get_memory_size()
             [ -r /proc/meminfo ] && detected=$((`cat /proc/meminfo | grep MemTotal | awk '{print $2}'`/1024))
             ;;
         solaris)
-            detected=$(prtconf | grep Memory | sed -e "s|Memory size: \([0-9][0-9]*\) Megabyte.*|\1|") #"
+            detected=$(a='' prtconf | grep Memory | sed -e "s|Memory size: \([0-9][0-9]*\) Megabyte.*|\1|") #"
             ;;
 #        *)
 #            fatal "Unsupported OS $DIST_OS"
@@ -2980,6 +3002,7 @@ is_anyservice()
 }
 
 
+
 phelp()
 {
     echo "$Descr
@@ -3007,6 +3030,7 @@ progname="${0##*/}"
 
 Usage="Usage: $progname [options] [<service>] [<command>] [params]..."
 Descr="serv - Service manager"
+
 
 set_service_type
 
