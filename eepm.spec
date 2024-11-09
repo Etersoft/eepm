@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.62.13
+Version: 3.64.0
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -142,6 +142,136 @@ make -C po
 %endif
 
 %changelog
+* Sat Nov 09 2024 Vitaly Lipatov <lav@altlinux.ru> 3.64.0-alt1
+- epm play --update: drop App is not installed warning
+- epm play: add sunshine
+- /bin/epm-packages: show proper list of installed packages, check package status instead of desired action (eterbug#17932)
+- epm play: nekoray: fix version troubles
+- epm play: add min
+- epm full-upgrade: fix --no-flatpak option (eterbug #17308)
+- repack.d: add wildcard support to ignore_lib_requires (eterbug #17320)
+- epm: fix --help argument (eterbug #17319)
+- epm play: add gradle (eterbug #17332)
+- epm play: add levenhuklite (eterbug #17332)
+- epm repo: add dnf support to epm repo del (eterbug #17353)
+- epm play: add Citrix Secure Access Client (eterbug #17364)
+- epm play: add madcad (eterbug #17374)
+- bash_completion/eepm: add commands to complete (eterbug #17251)
+- epm play: add Simplenote-linux (eterbug #17493)
+- epm play nwjs-ffmpeg-prebuilt: add version support (eterbug #17494)
+- epm play yandex-browser: install nwjs-ffmpeg-prebuilt instead used update-ffmpeg (eterbug #17494)
+- epm repofix: fix regex pattern (eterbug #17440)
+- zsh_completion/eepm: add all commands (eterbug #17426)
+- epm play: add naps2 (eterbug #17358)
+- epm play: add tsukimi (eterbug #17376)
+- epm repack freeoffice: force use 7z (eterbug #17401)
+- epm pack: add list argument (eterbug #17417)
+- epm play: add losless-cut (eterbug #17355)
+- add_unirequires: add 32 bit libs support (eterbug #17360)
+- epm play: add ROSA and MOS dependency to S4A and update ALT dependency and move this to opt (eterbug #17360)
+- epm status: Add RedOS support (eterbug #17411)
+- epm play: dont update packages from RedOS repository
+- epm status: Add Rosa Fresh support (eterbug #17411)
+- epm play: dont update packages from Rosa Fresh repository
+- epm status: Add MOS Desktop support (eterbug #17411)
+- epm play: dont update packages from MOS Desktop repository
+- epm play: fix figma deb package link and add pacman package (eterbug #17399)
+- epm repack: dont detect requires for Full AppImage bundle
+- epm play: add ProtonUp-Qt (eterbug #17377)
+- drop closed apps (icq,yandex-chats and yuzu)
+- epm release-upgrade: fix apt-conf with p11 upgrade (eterbug #17440)
+- epm tool: fix typo in help (eterbug #17424)
+- epm play: add xeoma (eterbug #17431)
+- epm play: add yucca (eterbug #17437)
+- epm play: add Heroic Games Launcher (eterbug #17510)
+- epm play: add --latest argument (eterbug #17408)
+- epm play opera: fix ffmpeg codecs (eterbug #17509)
+- epm full-upgrade: check epm update (eterbug #17354)
+- epm play: add persepolis (eterbug #17504)
+- epm release-upgrade: fix sisyphus to p11
+- eget: fix ipfs_diag_timeout
+- epm play switch-to-nvidia: use fbdev wherever possible (eterbug #17500)
+- epm play --list: dont show packages from repo (eterbug #17527)
+- epm play: add winbox (eterbug #17528)
+- epm status: Add Fedora support (eterbug #17527)
+- epm play: dont update packages from Fedora repository
+- epm-list: fix missed quote
+- epm set_sudo: added support for doas (eterbug #17459)
+- epm play: add podman-enable-rootless prescription (eterbug #17356)
+- epm play: add workaround for bwrap (eterbug #17394)
+- epm play: move bwrap-fix to separate prescription
+- epm prescription gcc-multilib: fix description
+- epm play common.sh: check applications' version by major epm version
+- epm: hide extra requires
+- add initial ru.po and po file
+- switch-to-nvidia.sh: add missed OR
+- eepm.spec: install ru.mo file (enable translation)
+- epm play: add zwcad-viewer (eterbug #17529)
+- epm play: remove hardcoded version from simplenote
+- epm play madcad: fix pymadcad dependency (eterbug #17558)
+- epm update-kernel: add arguments to manage kernel parametrs (eterbug #17553)
+- epm update-kernel: add --used-kflavour argument for print kernel flavour
+- epm update-kernel: add --check-run-kernel argument
+- epm play: add waydroid prescription (eterbug #17553)
+- epm play: fix tsukimi (eterbug #17547)
+- epm play: add zed (autored by @pechenovv) (eterbug #17578)
+- epm play: add goofcord
+- epm play: remove alien.sh
+- epm-mark: fix is_wildcard using
+- epm fix arguments show (eterbug #17278)
+- add-kernel-options: fixed adding if GRUB_CMDLINE_LINUX_DEFAULT in double quotes (eterbug #17553)
+- tools_erc: update to erc 1.1.3
+- add epm create-fake command (eterbug #17597)
+- epm, epm-install: added --force-overwrite option (eterbug #17603)
+- epm-repoindex: add support for dir without arch component
+- distr_info: add RockyLinux support
+- epm play bitwig-studio: fix install (eterbug #17605)
+- epm: inform about missed epm-play package
+- epm-prescription: use epm-play-common for common functions
+- prescription.d: call epm prescription instead of epm play
+- move play.d/wine to prescription.d
+- epm-install: use sandbox as root during install to avoid warnings (eterbug #17685)
+- epm-install: fix --force-overwrite not working, add this option to help (eterbug #17603)
+- epm play: add faststone-image-viewer(eterbug #17695)
+- epm install: stop on install non-existent file
+- epm-autoremove: show help on any system
+- epm-check: add /sys and /proc owners workaround (see ALT bug 43533)
+- epm-upgrade: add /sys and /proc owners workaround (see ALT bug 43533)
+- epm play: add ngrok (eterbug #17697)
+- epm play: add freetube (eterbug #17696)
+- epm repack: fix ignore_lib_requires (eterbug #17610)
+- epm repack: add libraries provided to ignored libraries (eterbug #17610)
+- epm play flatpak: fix for plasma 6 (eterbug #17720)
+- epm play snap_get_pkgurl: add multiarch support (eterbug #17702)
+- epm play lithium: fix desktop file (eterbug #17706)
+- epm play get_github_version: replace curl to eget
+- epm play add get_github_tag function (eterbug #17728)
+- epm repack: add crossover (eterbug #17729)
+- epm play: add mssql-server-fts (eterbug #17762)
+- epm: add desktop manager (eterbug #17617)
+- epm play wpsoffice: drop /etc/xdg directory (eterbug #17771)
+- epm play: add bastyon (eterbug #17772)
+- epm play common: remove quotes for multiple values (eterbug #17776)
+- epmp switch-to-nvidia.sh: added support for new KFLAVOUR
+- epm play librewolf: replace url and add latest version from vendor (eterbug #17816)
+- epm repo set: dont delete all repos if repo list is empty (eterbug #17788)
+- get_libs_requires: avoid libs spam (eterbug #17815)
+- epm play wpsoffice: parse version from vendor (eterbug #17812)
+- epm play wpsoffice: fix skin center in system with icu>=71.1 (eterbug #17812)
+- epm repack common: add wildcard support to remove_file (eterbug #17812)
+- epm play trueconf: fix download link for p11 (eterbug #17809)
+- epm play pycharm: fix bin link (eterbug #17808)
+- epm [remove, install]: new flag: manual_requires
+- epm play: add fbreader (eterbug #17797)
+- epm play flatpak: Do not use bwrap-fix if bubblewrap build with priv_mode=none (eterbug #17394)
+- epm update-kernel --check-run-kernel: fix for new kflavour
+- epm play waydroid: migrate to epm update-kernel functions
+- epm play switch-to-nvidia: migrate to epm update-kernel functions (eterbug #17826)
+- epm repack generic: fatal if no executable binaries found (eterbug #17820)
+- epm play teamspeak3: parse version from vendor (eterbug #17822)
+- epm play teamspeak5: parse version from vendor (eterbug #17822)
+- distr_info: use major version only for RHEL compat distros
+
 * Wed Aug 07 2024 Vitaly Lipatov <lav@altlinux.ru> 3.62.13-alt1
 - distr_info: add MSVSphere and AlterOS support
 - epm-epm_install: install epm-play if needed
