@@ -119,6 +119,10 @@ extract_archive()
 			is_command zstd || fatal "Could not find zstd package. Please install zstd package and retry."
 			extract_command "tar -I zstd -xhf" "$arc"
 			;;
+		tar.bz2|tbz2)
+			is_command bunzip2 || fatal "Could not find bzip2 package. Please install bzip2 package and retry."
+			extract_command "tar -xjf" "$arc"
+			;;
 		tar)
 			extract_command "tar -xhf" "$arc"
 			;;
