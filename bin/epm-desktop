@@ -1,5 +1,5 @@
 #!/bin/sh
-#
+# shellcheck disable=SC3043,SC2086
 # Copyright (C) 2024  Etersoft
 # Copyright (C) 2024  Ivan Mazhukin <vanomj@etersoft.ru>
 #
@@ -18,7 +18,7 @@
 json=0
 
 is_de_exist() {
-    local json_file="$(realpath $epm_vardir/desktop.d/$1.json)"
+    local json_file="$(realpath $CONFIGDIR/desktop.d/$1.json)"
     local de_name=$1
 
     if [ -f "$json_file" ]; then
@@ -29,33 +29,6 @@ is_de_exist() {
     fi
 }
 
-copy_files_if_absent() {
-    local source_dir="$CONFIGDIR/desktop.d/"
-    local target_dir="$epm_vardir/desktop.d"
-
-    sudorun mkdir -p "$target_dir"
-
-    for file in "$source_dir"/*.json; do
-
-        filename=$(basename "$file")
-        target_file="$target_dir/$filename"
-
-        if [ ! -f "$target_file" ] || ! grep -q "metapackages" "$target_file"; then
-           sudorun cp "$file" "$target_file"
-        fi
-
-    done
-}
-
-check_installed_des() {
-    for json_file in $epm_vardir/desktop.d/*.json; do
-        de_name=$(basename "$json_file" .json)
-        dependencies=$(get_value "$de_name" "dependencies")
-        
-        is_installed "$dependencies" && status=true || status=false
-        update_installed_status $de_name $status
-    done
-}
 
 is_installed() {
     local dependencies=$1
@@ -63,73 +36,37 @@ is_installed() {
     return
 }
 
-check_and_update_version() {
-    for json_file in $epm_vardir/desktop.d/*.json; do
-        de_name=$(basename "$json_file" .json)
-        main_package=$(get_value "$de_name" dependencies | awk '{print $1}')
-        
-        current_version=$(get_value "$de_name" version)
-        repo_version=$(get_repo_version "$main_package")
-
-        if [ "$repo_version" != "Version unchanged" ] && [ -n "$repo_version" ] && [ "$repo_version" != "$current_version" ]; then
-            update_json_version "$de_name" "$repo_version"
-        fi
-
-    done
-}
-
-update_installed_status() {
-    local de_name=$1
-    local status=$2
-    local json_file="$(realpath $epm_vardir/desktop.d/$de_name.json)"
-
- 
-    sudorun sed -i "s/\"installed\": .*/\"installed\": $status,/" "$json_file"
-}
-
-update_json_version() {
-    local de_name=$1
-    local new_version=$2
-    local json_file="$epm_vardir/desktop.d/$de_name.json"
-
-    sudorun sed -i "s/\"version\": \".*\"/\"version\": \"$new_version\"/" "$json_file"
-}
 
 get_value() {
-    local json_file="$(realpath $epm_vardir/desktop.d/$1.json)"
+    local json_file="$(realpath $CONFIGDIR/desktop.d/$1.json)"
     local key="$2"
 
     if [ "$key" = "description" ]; then
-        cat "$json_file" | epm --quiet tool json -b  | grep "\[\"$key\"" | cut -d ' ' -f2- | sed 's/[",]//g'
+        epm --quiet tool json -b < "$json_file" | grep "\[\"$key\"" | xargs | sed 's/[",]//g' | cut -f2- -d ' '
     else
-        cat "$json_file" | epm --quiet tool json -b  | grep "\[\"$key\"" | awk '{print $2}' | sed 's/[",]//g' | tr '\n' ' '
+        epm --quiet tool json -b < "$json_file" | grep "\[\"$key\"" | awk '{print $2}' | sed 's/[",]//g' | xargs
     fi
 }
 
 get_repo_version() {
-    local package_name=$1
+    local de_name=$1
+    local package_name=$(get_value "$de_name" "dependencies" | awk '{print $1}')
     local latest_version
 
     latest_version=$(eget --quiet -O- "https://rdb.altlinux.org/api/package/package_info?name=$package_name&arch=x86_64&source=false&branch=sisyphus&full=false" \
-        | epm --quiet tool json -b | grep '"packages",0,"version"]' | awk '{print $2}' | tr -d '"')
+        | epm --quiet tool json -b 2> /dev/null | grep '"packages",0,"version"]' | awk '{print $2}' | tr -d '"')
 
     if [ -n "$latest_version" ]; then
         echo "$latest_version"
     else
-        latest_version=$(epm --quiet info $package_name | grep 'Version:' | awk '{print $2}' | sed 's/-.*//') 
+        latest_version=$(epm --quiet info $package_name 2>/dev/null | grep 'Version' | grep -E '[0-9]+.[0-9]+(.[0-9]+)?' | awk '{print $NF}' | sed 's/-.*//') 
 
         if [ -n "$latest_version" ]; then
             echo "$latest_version"
         else
-            echo "Version unchanged"
+            get_value "$de_name" "version"
         fi
     fi
-}
-install_de_meta() {
-    local metapackages=$(get_value "$de_name" "metapackages")
-
-    [ -n "$metapackages" ] && epm install --manual-requires $metapackages
-    return
 }
 
 install_de() {
@@ -141,17 +78,14 @@ install_de() {
         message "$de_name is already installed."
         return 0
     fi
-    
-    message "Installing $de_name with dependencies: $dependencies"
-    if ! install_de_meta $metapackages; then
-        message "Failed to install $de_name." && return 1
-    fi
 
+    message "Installing $de_name with dependencies: $dependencies"
+    
     if epm install $dependencies; then
         message "$de_name successfully installed."
-        update_installed_status "$de_name" true
     else
-        message "Failed to install $de_name." && return 1
+        fatal "Failed to install $de_name."
+        return 1
     fi
 }
 
@@ -169,9 +103,8 @@ remove_de() {
 
     if epm remove $dependencies; then
         message "$de_name successfully removed."
-        update_installed_status "$de_name" false
     else
-        message "Failed to remove $de_name."
+        fatal "Failed to remove $de_name."
         return 1
     fi
 }
@@ -180,8 +113,8 @@ get_de_info() {
     local de_name=$1
     message "   Information for $de_name:
     Name: $(get_value $de_name name)
-    Version: $(get_value $de_name version)
-    Installed: $(get_value $de_name installed)
+    Version: $(get_repo_version $de_name)
+    Installed: $(is_installed $de_name && echo 'true'|| echo 'false' )
     Description: $(get_value $de_name description)"
 }
 
@@ -189,17 +122,23 @@ list_des() {
     if [ "$json" -eq 1 ]; then
         echo '['
         first=1
-        for de in $epm_vardir/desktop.d/*.json; do
+        for de in $CONFIGDIR/desktop.d/*.json; do
             if [ $first -eq 1 ]; then
                 first=0
             else
                 echo ','
             fi
-            cat "$de"
+
+            de_name=$(basename $de .json)
+            ver=$(get_repo_version $de_name)
+            installed=$(is_installed $de_name && echo 'true' || echo 'false')
+
+            cat "$de" | sed -E "s/\"version\": \"[0-9]+.[0-9]+(.[0-9]+)?\"/\"version\": \"$ver\"/g" | sed "s/\"installed\": false/\"installed\": ${installed}/g"
+        
         done
         echo ']'
     else
-        for de in $epm_vardir/desktop.d/*.json; do
+        for de in $CONFIGDIR/desktop.d/*.json; do
             basename "$de" .json
         done
     fi
@@ -215,10 +154,6 @@ Commands:
 }
 
 epm_desktop() {
-    copy_files_if_absent
-
-    check_installed_des
-    check_and_update_version
 
     case "$2" in
         --json)
