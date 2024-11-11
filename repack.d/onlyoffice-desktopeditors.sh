@@ -17,12 +17,21 @@ add_requires fonts-ttf-liberation fonts-ttf-dejavu
 
 # pack icons
 iconname=onlyoffice-desktopeditors
-for i in 16 22 24 32 48 64 128 256 ; do
-    [ -r $BUILDROOT/$PRODUCTDIR/desktopeditors/asc-de-$i.png ] || continue
-    mkdir -p $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/
-    cp $BUILDROOT/$PRODUCTDIR/desktopeditors/asc-de-$i.png $BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png
+icon_paths=""
+
+for i in 16 22 24 32 48 64 128 256; do
+    icon_src="$BUILDROOT/$PRODUCTDIR/desktopeditors/asc-de-$i.png"
+    icon_dest="$BUILDROOT/usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png"
+
+    [ -r "$icon_src" ] || continue
+
+    mkdir -p "$(dirname "$icon_dest")"
+    cp "$icon_src" "$icon_dest"
+
+    icon_paths="/usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png\n$icon_paths"
 done
-subst "s|%files|%files\n/usr/share/icons/hicolor/*x*/apps/$iconname.png|" $SPEC
+
+subst "s|%files|%files\n${icon_paths%\\n}|" "$SPEC"
 
 fix_desktop_file /usr/bin/onlyoffice-desktopeditors
 
