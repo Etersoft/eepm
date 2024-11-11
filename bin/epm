@@ -712,7 +712,8 @@ Popular commands:
 if [ -z "$epm_cmd" ] ; then
     print_version >&2
     echo >&2
-    fatstr="$(eval_gettext 'Unrecognized command in '"$*" 'arg(s)')"
+    args="$*"
+    fatstr=$(eval_gettext "Unrecognized command in \$args arg(s)")
     if [ -z "$*" ] ; then
         fatstr=$(eval_gettext "That program needs be running with some command")
         print_short_help >&2
