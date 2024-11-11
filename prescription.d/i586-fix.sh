@@ -38,9 +38,7 @@ for i in \
           libnvidia-ml \
           $(epmqp --short nvidia_glx | grep "^nvidia_glx")
 do
-    epm status --installed $i || continue
-    # install i586-* only for actual packages
-    epm status --installable $i && LIST="$LIST i586-$i"
+    epm --quiet installed $i && LIST="$LIST i586-$i"
 done
 }
 
@@ -63,7 +61,6 @@ vendor="$(epm print info -s)"
 LIST=''
 echo
 echo "Checking for installed packages ... "
-
 case "$vendor" in
     "alt")
         get_list_alt
@@ -77,10 +74,17 @@ case "$vendor" in
         ;;
 esac
 
+filtered_list=""
+for pkg in $LIST; do
+    if epm status --installable $pkg; then
+        filtered_list="$filtered_list $pkg"
+    fi
+done
 echo
 echo "Installing all appropiate 32 bit packages ..."
 noremove=''
 [ -n "$auto" ] && noremove='--no-remove'
+LIST="$filtered_list"
 epm install $noremove $LIST
 RES=$?
 
