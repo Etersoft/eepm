@@ -1112,7 +1112,7 @@ if [ -d "$TEXTDOMAINDIR" ] && is_command gettext.sh ; then
 else
 	eval_gettext()
 	{
-		echo -n $@
+		eval "echo -n \"$@\""
 	}
 fi
 
