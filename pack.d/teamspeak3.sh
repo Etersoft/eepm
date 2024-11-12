@@ -22,12 +22,17 @@ false && rm -rfv qt.conf *.so* \
 rm -v update
 cd - >/dev/null
 
+# pack libwebp.so.6 from ALT Linux
+eget https://git.altlinux.org/tasks/177836/build/200/x86_64/rpms/libwebp6-0.5.2-alt2.x86_64.rpm
+rpm2cpio libwebp6-0.5.2-alt2.x86_64.rpm | cpio -idmv
+cp usr/lib64/* opt/$PRODUCT
+rm libwebp6-0.5.2-alt2.x86_64.rpm
 
 # TeamSpeak3-Client-linux_amd64-3.6.0.run
 VERSION="$(echo $TAR | sed -e 's|.*-||' -e 's|\..*||')"
 PKGNAME=$PRODUCT-$VERSION
 
-erc a $PKGNAME.tar opt/$PRODUCT
+erc pack $PKGNAME.tar opt || fatal
 
 cat <<EOF >$PKGNAME.tar.eepm.yaml
 name: $PRODUCT
