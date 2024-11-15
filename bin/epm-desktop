@@ -17,6 +17,18 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 json=0
 
+run_script()
+{
+    local script="$CONFIGDIR/desktop.d/$1.sh"
+    [ -s "$script" ] || return
+    [ -f "$script.rpmnew" ] && warning 'There is .rpmnew file(s) in $psdir dir. The desktop script`s can be outdated.'
+
+    shift
+    [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
+    ( unset EPMCURDIR ; export PATH=$SCPATH ; $script "$@" )
+    return
+}
+
 is_de_exist() {
     local json_file="$(realpath $CONFIGDIR/desktop.d/$1.json)"
     local de_name=$1
@@ -82,11 +94,13 @@ install_de() {
     message "Installing $de_name with dependencies: $dependencies"
     
     if epm install $dependencies; then
+        run_script "$de_name-postin" $de_name || warning "Postinstall script for $de_name encountered an issue."
         message "$de_name successfully installed."
     else
         fatal "Failed to install $de_name."
         return 1
     fi
+
 }
 
 remove_de() {
@@ -102,6 +116,7 @@ remove_de() {
     message "Removing $de_name with dependencies: $dependencies"
 
     if epm remove $dependencies; then
+        run_script "$de_name-postun" $de_name || warning "Postuninstall script for $de_name encountered an issue." 
         message "$de_name successfully removed."
     else
         fatal "Failed to remove $de_name."
