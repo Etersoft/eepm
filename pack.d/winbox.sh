@@ -3,21 +3,21 @@
 TAR="$1"
 RETURNTARNAME="$2"
 VERSION="$3"
+URL="$4"
 
 . $(dirname $0)/common.sh
 
-PKGNAME=$PRODUCT-$VERSION.tar
+mkdir -p opt/$PRODUCT
 
-mkdir -p opt/eepm-wine/$PRODUCT/
+erc $TAR || fatal
 
-cat <<EOF >opt/eepm-wine/$PRODUCT/run.sh
-#!/bin/sh
-RUNFILE="/opt/eepm-wine/winbox/winbox64.exe"
-exec wine "\$RUNFILE" "\$@"
-EOF
-chmod 755 opt/eepm-wine/$PRODUCT/run.sh
+mv WinBox_Linux/* opt/$PRODUCT
 
-cp $TAR opt/eepm-wine/$PRODUCT/
-erc pack $PKGNAME opt/eepm-wine
+VERSION=$(echo "$URL" | awk -F'/' '{print $6}')
+[ -n "$VERSION" ] || fatal "Can't get package version"
 
-return_tar $PKGNAME
+PKGNAME=$PRODUCT-$VERSION
+
+erc pack $PKGNAME.tar opt || fatal
+
+return_tar $PKGNAME.tar
