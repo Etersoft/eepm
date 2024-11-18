@@ -9,11 +9,6 @@
 
 epm assure lspci pciutils || exit
 
-check_run_kernel () {
-    USED_KFLAVOUR="$(uname -r | awk -F'-' '{print $(NF-2)}')-def"
-    ls /boot | grep "vmlinuz" | grep -vE 'vmlinuz-un-def|vmlinuz-std-def' | grep "${USED_KFLAVOUR}" | sort -Vr | head -n1 | grep -q $(uname -r)
-}
-
 display_help()
 {
     echo "
@@ -24,46 +19,26 @@ Use: epm prescription waydroid [option]
 --init
     Initialize Waydroid
 
---install
-	Instal Waydroid
-
 --integrate
 	Enable desktop window integration for Waydroid
 
---clean
-	Clean all Waydroid files
-
 --software-render
 	Use software render in Waydroid (maybe fix work in Nvidia)
+
+--help
+	Display this page
 "
     exit
 }
 
-case "${3}" in
-    '--gpu' )
-        assure_root
-        waydroid_select_gpu ;;
-
-    '--init')
-        assure_root
-        waydroid_init ;;
-
-    '--install')
-        assure_root
-        waydroid_install ;;
-
-    '--integrate')
-		assure_root
-        waydroid_integrate ;;
-
-    '--software-render')
-		assure_root
-        waydroid_software_rendering ;;
-
-    '--help' | *)
-        display_help;;
-esac
-
+# TODO: fix used_kflavour export in epm update-kernel --check-run-kernel
+used_kflavour () {
+    if [ $(uname -r | grep "def") ] ; then
+		USED_KFLAVOUR=$(uname -r | awk -F'-' '{print $2 "-" $3}')
+    else
+		USED_KFLAVOUR=$(uname -r | awk -F'-' '{print $2}')
+    fi
+}
 
 waydroid_install () {
 	epm update-kernel --add-kernel-options psi1
@@ -75,6 +50,7 @@ waydroid_install () {
 		fatal
 	fi
 
+	used_kflavour
 	epm install --skip-installed kernel-modules-anbox-$USED_KFLAVOUR libgbinder1 waydroid || fatal
 
 	a= update-grub
@@ -136,3 +112,28 @@ waydroid_software_rendering () {
 	sed -i "s/ro.hardware.gralloc=.*/ro.hardware.gralloc=default/g" /var/lib/waydroid/waydroid_base.prop
 	sed -i "s/ro.hardware.egl=.*/ro.hardware.egl=swiftshader/g" /var/lib/waydroid/waydroid_base.prop
 }
+
+case "${3}" in
+    '--gpu' )
+        assure_root
+        waydroid_select_gpu ;;
+
+    '--init')
+        assure_root
+        waydroid_init ;;
+
+    '--integrate')
+		assure_root
+        waydroid_integrate ;;
+
+    '--software-render')
+		assure_root
+        waydroid_software_rendering ;;
+
+    '--help')
+        display_help;;
+
+        *)
+		assure_root
+		waydroid_install ;;
+esac
