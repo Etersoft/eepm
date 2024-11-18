@@ -210,9 +210,9 @@ filter_order()
     sort -V | tail -n1
 }
 
-have_end_slash()
+have_end_slash_or_php_parametr()
 {
-    echo "$1" | grep -q '/$'
+    echo "$1" | grep -qE '(/$|\.php($|\?))'
 }
 
 is_abs_path()
@@ -1463,7 +1463,7 @@ make_fileurl()
     elif is_abs_path "$fn" ; then
         # if there is file path from the root of the site
         url="$(get_host_only "$url")"
-    elif ! have_end_slash "$url" ; then
+    elif ! have_end_slash_or_php_parametr "$url" ; then
         url="$(dirname "$url")"
     fi
 
@@ -1550,7 +1550,7 @@ if [ -n "$2" ] ; then
     MASK="$2"
     SEPMASK="$2"
 else
-    if have_end_slash "$1" ; then
+    if have_end_slash_or_php_parametr "$1" ; then
         URL="$1"
         MASK=""
     else
