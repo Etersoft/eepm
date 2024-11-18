@@ -315,11 +315,12 @@ WGETQ='' #-q
 CURLQ='' #-s
 AXELQ='' #-q
 # TODO: aria2c
-# TODO: wget --trust-server-names
 # TODO: 
 WGETNAMEOPTIONS='--content-disposition'
 CURLNAMEOPTIONS='--remote-name --remote-time --remote-header-name'
 AXELNAMEOPTIONS=''
+WGETRUSTSERVERNAMES=''
+CURLTRUSTSERVERNAMES=''
 
 WGETNODIRECTORIES=''
 WGETCONTINUE=''
@@ -385,6 +386,7 @@ Options:
     --latest                  - print only latest version of a file
     --second-latest           - print only second to latest version of a file
     --allow-mirrors           - check mirrors if url is not accessible
+    --trust-server-names      - use the name specified by the redirection
 
     --list|--list-only        - print only URLs
     --check-url URL           - check if the URL exists (returns HTTP 200 OK)
@@ -534,6 +536,10 @@ while [ -n "$1" ] ; do
         --retry-connrefused)
             WGETRETRYCONNREFUSED="$1"
             CURLRETRYCONNREFUSED="$1"
+            ;;
+        --trust-server-names)
+            WGETRUSTSERVERNAMES="--trust-server-names"
+            CURLTRUSTSERVERNAMES="-w '%{url_effective}'"
             ;;
         -t|--tries)
             if [ -z "$argvalue" ];then
@@ -1032,9 +1038,9 @@ elif [ "$EGET_BACKEND" = "wget" ] ; then
 __wget()
 {
     if [ -n "$WGETUSERAGENT" ] ; then
-        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETHEADER $WGETNOSSLCHECK $WGETNODIRECTORIES $WGETCONTINUE $WGETTIMEOUT $WGETREADTIMEOUT $WGETRETRYCONNREFUSED $WGETTRIES $WGETLOADCOOKIES "$WGETUSERAGENT" "$@"
+        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETHEADER $WGETNOSSLCHECK $WGETNODIRECTORIES $WGETCONTINUE $WGETTIMEOUT $WGETREADTIMEOUT $WGETRETRYCONNREFUSED $WGETTRIES $WGETLOADCOOKIES $WGETRUSTSERVERNAMES "$WGETUSERAGENT" "$@"
     else
-        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETHEADER $WGETNOSSLCHECK $WGETNODIRECTORIES $WGETCONTINUE $WGETTIMEOUT $WGETREADTIMEOUT $WGETRETRYCONNREFUSED $WGETTRIES $WGETLOADCOOKIES "$@"
+        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETHEADER $WGETNOSSLCHECK $WGETNODIRECTORIES $WGETCONTINUE $WGETTIMEOUT $WGETREADTIMEOUT $WGETRETRYCONNREFUSED $WGETTRIES $WGETLOADCOOKIES $WGETRUSTSERVERNAMES "$@"
     fi
 }
 
@@ -1082,9 +1088,9 @@ elif [ "$EGET_BACKEND" = "curl" ] ; then
 __curl()
 {
     if [ -n "$CURLUSERAGENT" ] ; then
-        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER $CURLNOSSLCHECK $CURLCONTINUE $CURLMAXTIME $CURLRETRYCONNREFUSED $CURLRETRY $CURLCOOKIE "$CURLUSERAGENT" "$@"
+        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER $CURLNOSSLCHECK $CURLCONTINUE $CURLMAXTIME $CURLRETRYCONNREFUSED $CURLRETRY $CURLCOOKIE $CURLTRUSTSERVERNAMES "$CURLUSERAGENT" "$@"
     else
-        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER $CURLNOSSLCHECK $CURLCONTINUE $CURLMAXTIME $CURLRETRYCONNREFUSED $CURLRETRY $CURLCOOKIE "$@"
+        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER $CURLNOSSLCHECK $CURLCONTINUE $CURLMAXTIME $CURLRETRYCONNREFUSED $CURLRETRY $CURLCOOKIE $CURLTRUSTSERVERNAMES "$@"
     fi
 }
 # put remote content to stdout
