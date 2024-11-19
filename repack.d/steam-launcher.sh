@@ -6,6 +6,10 @@ SPEC="$2"
 
 PRODUCT=steam-launcher
 
+. $(dirname $0)/common.sh
+
 subst "s|.*/etc/apt.*||" $SPEC
+
+remove_dir "/etc/apt"
 
 set_autoreq 'yes'
