@@ -33,6 +33,12 @@ epm_prescription()
 
 local psdir="$CONFIGDIR/prescription.d"
 
+if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
+    [ -n "$short" ] || [ -n "$quiet" ] || message "Run with a name of a prescription to run:"
+    __epm_play_list $psdir
+    exit
+fi
+
 while [ -n "$1" ] ; do
 case "$1" in
     -h|--help)
@@ -56,12 +62,6 @@ case "$1" in
         ;;
 esac
 done
-
-if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
-    [ -n "$short" ] || [ -n "$quiet" ] || message "Run with a name of a prescription to run:"
-    __epm_play_list $psdir
-    exit
-fi
 
 prescription="$1"
 shift
