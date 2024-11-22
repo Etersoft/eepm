@@ -120,7 +120,7 @@ __list_all_app()
 {
     cd $EPM_PACK_SCRIPTS_DIR || fatal
     for i in *.sh ; do
-       local name=${i/.sh/}
+       local name=$(basename $i .sh)
        startwith "$name" "common" && continue
        echo "$name"
     done
