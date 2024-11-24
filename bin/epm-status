@@ -186,7 +186,7 @@ epm_status_repacked()
     #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
 
     case $BASEDISTRNAME in
-        alt|redos|rosafresh|mos|fedora)
+        alt|redos|rosa*|mos|fedora)
             epm_status_validate $pkg || return
             local packager="$(epm print field Packager for "$1" 2>/dev/null)"
             [ "$packager" = "EPM <support@etersoft.ru>" ] && return 0

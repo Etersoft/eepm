@@ -320,7 +320,7 @@ is_repacked_package()
     epm status --installed $pkg || return 0
 
     # actually only for ALT, RedOS, Rosa Fresh, MOS Desktop and Fedora
-    if [ "$(epm print info -s)" != "alt" ] && [ "$(epm print info -s)" != "redos" ] && [ "$(epm print info -s)" != "rosafresh" ] && [ "$(epm print info -s)" != "mos" ] && [ "$(epm print info -s)" != "fedora" ] ; then
+    if [ "$(epm print info -s)" != "alt" ] && [ "$(epm print info -s)" != "redos" ] && [ "$(epm print info -s)" != "rosa*" ] && [ "$(epm print info -s)" != "mos" ] && [ "$(epm print info -s)" != "fedora" ] ; then
         return 0
     fi
 
