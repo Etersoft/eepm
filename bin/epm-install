@@ -25,6 +25,7 @@ load_helper epm-repack
 load_helper epm-requires
 load_helper epm-check_updated_repo
 load_helper epm-sh-warmup
+load_helper epm-installed
 
 
 # for zypper before SUSE/11.0
