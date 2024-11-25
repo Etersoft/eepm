@@ -114,6 +114,19 @@ epm_status_certified()
 }
 
 
+epm_status_supported() {
+    local distro
+    distro=$(epm print info -s)
+    case "$distro" in
+        alt|redos|rosa*|mos|fedora)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
 # check if the package is really package (check accessibility)
 epm_status_validate()
 {
@@ -264,6 +277,7 @@ Options:
   --thirdparty          check if <package> from a third-party source (didn'\''t packed for this distro)
   --repacked            check if <package> was repacked with epm repack
   --validate            check if <package> is accessible (we can get a fields from it)
+  --supported           check if distribution is supported by epm status
 '
 }
 
@@ -310,6 +324,10 @@ epm_status()
             ;;
         --installable)
             epm_status_installable "$@"
+            return
+            ;;
+        --supported)
+            epm_status_supported
             return
             ;;
         -*)
