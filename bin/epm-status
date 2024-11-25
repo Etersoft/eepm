@@ -170,7 +170,7 @@ epm_status_original()
             echo "$release" | grep -q "el7" || return 1
             return 0
             ;;
-        ROSAFresh|MOSDesktop)
+        ROSA*|MOSDesktop)
             epm_status_validate $pkg || return 1
             epm_status_repacked $pkg && return 1
 
