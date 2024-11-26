@@ -333,9 +333,10 @@ echog()
 {
 	if [ "$1" = "-n" ] ; then
 		shift
-		eval_gettext "$*"
+		[ -n "$1" ] && eval_gettext "$*"
 	else
-		eval_gettext "$*"; echo
+		[ -n "$1" ] && eval_gettext "$*"
+		echo
 	fi
 }
 
