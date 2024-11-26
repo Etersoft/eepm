@@ -10,6 +10,6 @@ URL="https://cursor.sh/"
 
 warn_version_is_not_supported
 
-PKGURL="https://download.cursor.sh/linux/appImage/x64"
+PKGURL="https://downloader.cursor.sh/linux/appImage/x64"
 
 install_pkgurl
