@@ -14,10 +14,10 @@ pkgtype=$(epm print info -p)
 arch="$(epm print info -a)"
 case "$pkgtype-$arch" in
     rpm-x86_64)
-        PKGURL="https://download.ebz.epson.net/dsc/du/02/DriverDownloadInfo.do?LG2=JA&CN2=US&CTI=177&PRN=Linux%20rpm%2064bit%20package&OSC=LX&DL"
+        PKGURL="https://download3.ebz.epson.net/dsc/f/03/00/15/43/24/e0c56348985648be318592edd35955672826bf2c/epson-printer-utility-1.1.3-1.x86_64.rpm"
         ;;
     *-x86_64)
-        PKGURL="https://download.ebz.epson.net/dsc/du/02/DriverDownloadInfo.do?LG2=JA&CN2=US&CTI=177&PRN=Linux%20deb%2064bit%20package&OSC=LX&DL"
+        PKGURL="https://download3.ebz.epson.net/dsc/f/03/00/15/43/23/b85f4cf2956db3dd768468b418b964045c047b2c/epson-printer-utility_1.1.3-1_amd64.deb"
         ;;
     *)
         fatal "$arch arch is not supported"
