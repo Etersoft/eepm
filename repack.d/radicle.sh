@@ -10,6 +10,4 @@ add_libs_requires
 
 add_bin_link_command rad
 add_bin_link_command git-remote-rad
-add_bin_link_command rad-web
-add_bin_link_command radicle-httpd
 add_bin_link_command radicle-node
