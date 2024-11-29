@@ -17,10 +17,11 @@ esac
 
 is_stdcpp_enough "11.0" || VERSION="4.1.0"
 
-PKGURL="$(eget --list --latest https://mango3d.io/downloads/ "LycheeSlicer-$VERSION.deb")"
+if [ "$VERSION" = "*" ]; then
+    VERSION=$(eget -O- https://mango3d.io/download-lychee-slicer | grep -o "Lychee Slicer [0-9].[0-9].[0-9]" | awk '{print $3}')
+fi
 
-# restore missed CDN for the latest release
-PKGURL="$(echo $PKGURL | sed -e 's|mango-lychee.nyc3.digitaloceanspaces.com|mango-lychee.nyc3.cdn.digitaloceanspaces.com|')"
+PKGURL="https://mango-lychee.nyc3.cdn.digitaloceanspaces.com/LycheeSlicer-$VERSION.deb"
 
 if ! eget --check-url "$PKGURL" ; then
     # all previous versions return url to cdn with broken SSL (SSL connection broken only with wget or works only in a browser):
