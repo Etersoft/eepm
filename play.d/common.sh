@@ -236,6 +236,8 @@ get_pkgvendor()
 
 is_pkg_enough()
 {
+    local PKG="$1"
+    local needed="$2"
     # epm print enough package version "$PKG" "$needed"
     epm status --installed "$PKG" "$needed"
 }
