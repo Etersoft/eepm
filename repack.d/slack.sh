@@ -5,11 +5,12 @@ BUILDROOT="$1"
 SPEC="$2"
 
 PRODUCT=slack
-PRODUCTDIR=/usr/lib/slack
+# PRODUCTDIR=/usr/lib/slack
 
 . $(dirname $0)/common-chromium-browser.sh
 
-#move_to_opt
+move_to_opt "/usr/lib/$PRODUCT"
+remove_file "/usr/bin/slack"
 
 fix_chrome_sandbox
 
