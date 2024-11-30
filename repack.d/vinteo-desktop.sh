@@ -4,7 +4,7 @@
 BUILDROOT="$1"
 SPEC="$2"
 
-PRODUCT=vinteo.desktop
+PRODUCT=vinteo-desktop
 PRODUCTDIR=/opt/VinteoDesktop
 
 . $(dirname $0)/common-chromium-browser.sh
