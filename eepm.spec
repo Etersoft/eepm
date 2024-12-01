@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.0
+Version: 3.64.1
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -142,6 +142,46 @@ make -C po
 %endif
 
 %changelog
+* Mon Dec 02 2024 Vitaly Lipatov <lav@altlinux.ru> 3.64.1-alt1
+- epm play onlyoffice: fix icon file duplicate warning (eterbug #17832)
+- epm prescription i586-fix: check package installable before install it (etebug #17831)
+- epm play ngrok: added armhf aarch64 to SUPPORTEDARCHES (eterbug #17702)
+- epm play waterfox: fix PKGURL and VERSION (eterbug #17830)
+- epm play: add webex (eterbug #17843)
+- epm pack --list drop bashism
+- epm prescription --list-all: fix Unknown option --list-all (eterbug #17857)
+- epm play spotify: fix download and run (eterbug #17856)
+- epm repack steam: fix repack from deb (eterbug #17850)
+- epm play waydroid: fix install (eterbug #17553)
+- epm kernel-update --check-run-kernel: fix for p11 kernel suffix (eterbug #17826)
+- epm play winbox: use native winbox4 instead windows winbox3 (eterbug #17844)
+- epm:  Fixed disclosure of variables if there is no gettext (eterbug #17278)
+- epm-search_file:  Fixed disclosure of variables (eterbug #17278)
+- epm desktop: add metapackage's support (eterbug #17617)
+- epm desktop: no longer copies/modifies files (eterbug #17617)
+- epm desktop: add postin/postun support (eterbug #17617)
+- epm status: fix Rosa and MOS detection (eterbug #17860)
+- epm status: added --supported argument
+- bin/epm-sh-functions echog: don't use eval_gettext for empty strings
+- epm play common: fix is_pkg_enough function (eterbug #17865)
+- epm status: fix Rosa and MOS detection again
+- epm install: fix if used nix package manager
+- epm play cursor: fix download link (eterbug #17865)
+- epm play epson-printer-utility: fix download link (eterbug #17865)
+- epm play epsonscan2[-non-free-plugin]: fix download link (eterbug #17865)
+- epm play lycheeslicer: fix download link (eterbug #17865)
+- epm play mailruagent: drop closed app (eterbug #17865)
+- epm repack radicle: remove orphaned bin links (eterbug #17865)
+- epm play: add radicle-httpd (eterbug #17865)
+- epm play slack: fix download link; fix launch (eterbug #17865)
+- epm play vinteo.desktop: fix getting version; fix package name (eterbug #17865)
+- epm play youtube-music: add arm support; fix x86_64 AppImage download (eterbug #17865)
+- revert "get_libs_requires: avoid libs spam (eterbug #17815)"
+- epm-sh-functions: add set_backend function (eterbug #17511)
+- epm install: transform package_manager:package_name to EPM_BACKEND value
+- revert "epm install: transform package_manager:package_name to EPM_BACKEND value"
+- epm play: use base epm version for get ipfs db
+
 * Sat Nov 09 2024 Vitaly Lipatov <lav@altlinux.ru> 3.64.0-alt1
 - epm play --update: drop App is not installed warning
 - epm play: add sunshine
