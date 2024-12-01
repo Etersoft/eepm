@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.0"
+EPMVERSION="3.64.1"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -357,9 +357,10 @@ echog()
 {
 	if [ "$1" = "-n" ] ; then
 		shift
-		eval_gettext "$*"
+		[ -n "$1" ] && eval_gettext "$*"
 	else
-		eval_gettext "$*"; echo
+		[ -n "$1" ] && eval_gettext "$*"
+		echo
 	fi
 }
 
@@ -1089,9 +1090,22 @@ if [ -d "$TEXTDOMAINDIR" ] && is_command gettext.sh ; then
 else
 	eval_gettext()
 	{
-		echo -n $@
+		eval "echo -n \"$@\""
 	}
 fi
+
+set_backend()
+{
+    case $arg in
+        *:*)
+            PMTYPE=$(echo "$arg" | cut -d: -f1)
+            names=$(echo "$arg" | cut -d: -f2)
+            ;;
+        *)
+            PMTYPE=$($DISTRVENDOR -g)
+            names="$(echo $pkg_names | tr ' ' '\n' | grep -v ':' | filter_out_installed_packages)"
+    esac
+}
 
 
 # File bin/serv-cat:

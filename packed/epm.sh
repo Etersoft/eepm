@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-export EPMVERSION="3.64.0"
+export EPMVERSION="3.64.1"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -360,9 +360,10 @@ echog()
 {
 	if [ "$1" = "-n" ] ; then
 		shift
-		eval_gettext "$*"
+		[ -n "$1" ] && eval_gettext "$*"
 	else
-		eval_gettext "$*"; echo
+		[ -n "$1" ] && eval_gettext "$*"
+		echo
 	fi
 }
 
@@ -1092,9 +1093,22 @@ if [ -d "$TEXTDOMAINDIR" ] && is_command gettext.sh ; then
 else
 	eval_gettext()
 	{
-		echo -n $@
+		eval "echo -n \"$@\""
 	}
 fi
+
+set_backend()
+{
+    case $arg in
+        *:*)
+            PMTYPE=$(echo "$arg" | cut -d: -f1)
+            names=$(echo "$arg" | cut -d: -f2)
+            ;;
+        *)
+            PMTYPE=$($DISTRVENDOR -g)
+            names="$(echo $pkg_names | tr ' ' '\n' | grep -v ':' | filter_out_installed_packages)"
+    esac
+}
 
 
 # File bin/epm-addrepo:
@@ -3069,8 +3083,20 @@ esac
 # File bin/epm-desktop:
 json=0
 
+run_script()
+{
+    local script="$CONFIGDIR/desktop.d/$1.sh"
+    [ -s "$script" ] || return
+    [ -f "$script.rpmnew" ] && warning 'There is .rpmnew file(s) in $psdir dir. The desktop script`s can be outdated.'
+
+    shift
+    [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
+    ( unset EPMCURDIR ; export PATH=$SCPATH ; $script "$@" )
+    return
+}
+
 is_de_exist() {
-    local json_file="$(realpath $epm_vardir/desktop.d/$1.json)"
+    local json_file="$(realpath $CONFIGDIR/desktop.d/$1.json)"
     local de_name=$1
 
     if [ -f "$json_file" ]; then
@@ -3081,31 +3107,6 @@ is_de_exist() {
     fi
 }
 
-copy_files_if_absent() {
-    local source_dir="$CONFIGDIR/desktop.d/"
-    local target_dir="$epm_vardir/desktop.d"
-
-    sudorun mkdir -p "$target_dir"
-
-    for file in "$source_dir"/*.json; do
-        filename=$(basename "$file")
-        target_file="$target_dir/$filename"
-
-        if [ ! -f "$target_file" ]; then
-           sudorun cp "$file" "$target_file"
-        fi
-    done
-}
-
-check_installed_des() {
-    for json_file in $epm_vardir/desktop.d/*.json; do
-        de_name=$(basename "$json_file" .json)
-        dependencies=$(get_value "$de_name" "dependencies")
-        
-        is_installed "$dependencies" && status=true || status=false
-        update_installed_status $de_name $status
-    done
-}
 
 is_installed() {
     local dependencies=$1
@@ -3113,65 +3114,35 @@ is_installed() {
     return
 }
 
-check_and_update_version() {
-    for json_file in $epm_vardir/desktop.d/*.json; do
-        de_name=$(basename "$json_file" .json)
-        main_package=$(get_value "$de_name" dependencies | awk '{print $1}')
-        
-        current_version=$(get_value "$de_name" version)
-        repo_version=$(get_repo_version "$main_package")
-
-        if [ "$repo_version" != "Version unchanged" ] && [ -n "$repo_version" ] && [ "$repo_version" != "$current_version" ]; then
-            update_json_version "$de_name" "$repo_version"
-        fi
-
-    done
-}
-
-update_installed_status() {
-    local de_name=$1
-    local status=$2
-    local json_file="$(realpath $epm_vardir/desktop.d/$de_name.json)"
-
- 
-    sudorun sed -i "s/\"installed\": .*/\"installed\": $status,/" "$json_file"
-}
-
-update_json_version() {
-    local de_name=$1
-    local new_version=$2
-    local json_file="$epm_vardir/desktop.d/$de_name.json"
-
-    sudorun sed -i "s/\"version\": \".*\"/\"version\": \"$new_version\"/" "$json_file"
-}
 
 get_value() {
-    local json_file="$(realpath $epm_vardir/desktop.d/$1.json)"
+    local json_file="$(realpath $CONFIGDIR/desktop.d/$1.json)"
     local key="$2"
 
     if [ "$key" = "description" ]; then
-        cat "$json_file" | epm --quiet tool json -b  | grep "\[\"$key\"" | cut -d ' ' -f2- | sed 's/[",]//g'
+        epm --quiet tool json -b < "$json_file" | grep "\[\"$key\"" | xargs | sed 's/[",]//g' | cut -f2- -d ' '
     else
-        cat "$json_file" | epm --quiet tool json -b  | grep "\[\"$key\"" | awk '{print $2}' | sed 's/[",]//g' | tr '\n' ' '
+        epm --quiet tool json -b < "$json_file" | grep "\[\"$key\"" | awk '{print $2}' | sed 's/[",]//g' | xargs
     fi
 }
 
 get_repo_version() {
-    local package_name=$1
+    local de_name=$1
+    local package_name=$(get_value "$de_name" "dependencies" | awk '{print $1}')
     local latest_version
 
     latest_version=$(eget --quiet -O- "https://rdb.altlinux.org/api/package/package_info?name=$package_name&arch=x86_64&source=false&branch=sisyphus&full=false" \
-        | epm --quiet tool json -b | grep '"packages",0,"version"]' | awk '{print $2}' | tr -d '"')
+        | epm --quiet tool json -b 2> /dev/null | grep '"packages",0,"version"]' | awk '{print $2}' | tr -d '"')
 
     if [ -n "$latest_version" ]; then
         echo "$latest_version"
     else
-        latest_version=$(epm --quiet info $package_name | grep 'Version:' | awk '{print $2}' | sed 's/-.*//') 
+        latest_version=$(epm --quiet info $package_name 2>/dev/null | grep 'Version' | grep -E '[0-9]+.[0-9]+(.[0-9]+)?' | awk '{print $NF}' | sed 's/-.*//') 
 
         if [ -n "$latest_version" ]; then
             echo "$latest_version"
         else
-            echo "Version unchanged"
+            get_value "$de_name" "version"
         fi
     fi
 }
@@ -3189,12 +3160,13 @@ install_de() {
     message "Installing $de_name with dependencies: $dependencies"
     
     if epm install $dependencies; then
+        run_script "$de_name-postin" $de_name || warning "Postinstall script for $de_name encountered an issue."
         message "$de_name successfully installed."
-        update_installed_status "$de_name" true
     else
-        message "Failed to install $de_name."
+        fatal "Failed to install $de_name."
         return 1
     fi
+
 }
 
 remove_de() {
@@ -3210,10 +3182,10 @@ remove_de() {
     message "Removing $de_name with dependencies: $dependencies"
 
     if epm remove $dependencies; then
+        run_script "$de_name-postun" $de_name || warning "Postuninstall script for $de_name encountered an issue." 
         message "$de_name successfully removed."
-        update_installed_status "$de_name" false
     else
-        message "Failed to remove $de_name."
+        fatal "Failed to remove $de_name."
         return 1
     fi
 }
@@ -3222,8 +3194,8 @@ get_de_info() {
     local de_name=$1
     message "   Information for $de_name:
     Name: $(get_value $de_name name)
-    Version: $(get_value $de_name version)
-    Installed: $(get_value $de_name installed)
+    Version: $(get_repo_version $de_name)
+    Installed: $(is_installed $de_name && echo 'true'|| echo 'false' )
     Description: $(get_value $de_name description)"
 }
 
@@ -3231,17 +3203,23 @@ list_des() {
     if [ "$json" -eq 1 ]; then
         echo '['
         first=1
-        for de in $epm_vardir/desktop.d/*.json; do
+        for de in $CONFIGDIR/desktop.d/*.json; do
             if [ $first -eq 1 ]; then
                 first=0
             else
                 echo ','
             fi
-            cat "$de"
+
+            de_name=$(basename $de .json)
+            ver=$(get_repo_version $de_name)
+            installed=$(is_installed $de_name && echo 'true' || echo 'false')
+
+            cat "$de" | sed -E "s/\"version\": \"[0-9]+.[0-9]+(.[0-9]+)?\"/\"version\": \"$ver\"/g" | sed "s/\"installed\": false/\"installed\": ${installed}/g"
+        
         done
         echo ']'
     else
-        for de in $epm_vardir/desktop.d/*.json; do
+        for de in $CONFIGDIR/desktop.d/*.json; do
             basename "$de" .json
         done
     fi
@@ -3257,10 +3235,6 @@ Commands:
 }
 
 epm_desktop() {
-    copy_files_if_absent
-
-    check_installed_des
-    check_and_update_version
 
     case "$2" in
         --json)
@@ -5700,7 +5674,7 @@ used_kflavour () {
 
 check_run_kernel() {
     used_kflavour
-    if ls /boot | grep -E "^vmlinuz-[0-9]+\.[0-9]+(\.[0-9]+)?-${USED_KFLAVOUR}-alt[0-9]+(\.rt[0-9]+)?$" | sort -Vr | head -n 1 | grep -q "$(uname -r)"; then
+    if ls /boot | grep -E "^vmlinuz-[0-9]+\.[0-9]+(\.[0-9]+)?-${USED_KFLAVOUR}-alt[0-9]*" | sort -Vr | head -n 1 | grep -q "$(uname -r)"; then
         echo "The newest installed ${USED_KFLAVOUR} kernel is running."
         return 0
     else
@@ -6458,7 +6432,7 @@ __list_all_app()
 {
     cd $EPM_PACK_SCRIPTS_DIR || fatal
     for i in *.sh ; do
-       local name=${i/.sh/}
+       local name=$(basename $i .sh)
        startwith "$name" "common" && continue
        echo "$name"
     done
@@ -7036,6 +7010,9 @@ __epm_play_download_epm_file()
     local file="$2"
     # use short version (3.4.5)
     local epmver="$(epm --short --version)"
+    # use baseversion
+    epmver=$(echo "$epmver" | sed -e 's|\.[0-9]*$||')
+
     local URL
     for URL in "https://eepm.ru/releases/$epmver/app-versions" "https://eepm.ru/app-versions" ; do
         info "Updating local IPFS DB in $eget_ipfs_db file from $URL/eget-ipfs-db.txt"
@@ -7378,6 +7355,12 @@ epm_prescription()
 
 local psdir="$CONFIGDIR/prescription.d"
 
+if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
+    [ -n "$short" ] || [ -n "$quiet" ] || message "Run with a name of a prescription to run:"
+    __epm_play_list $psdir
+    exit
+fi
+
 while [ -n "$1" ] ; do
 case "$1" in
     -h|--help)
@@ -7401,12 +7384,6 @@ case "$1" in
         ;;
 esac
 done
-
-if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
-    [ -n "$short" ] || [ -n "$quiet" ] || message "Run with a name of a prescription to run:"
-    __epm_play_list $psdir
-    exit
-fi
 
 prescription="$1"
 shift
@@ -12788,7 +12765,7 @@ __alt_local_content_search()
 
     local CI="$(ls $(cat $ALT_CONTENTS_INDEX_LIST) 2>/dev/null)"
 
-    info 'Searching for $1 ... '
+    info "Searching for" "$1... "
 
     # FIXME: do it better
     local MGS
@@ -13615,6 +13592,19 @@ epm_status_certified()
 }
 
 
+epm_status_supported() {
+    local distro
+    distro=$(epm print info -s)
+    case "$distro" in
+        alt|redos|rosa*|mos|fedora)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
 epm_status_validate()
 {
     local pkg="$1"
@@ -13657,7 +13647,7 @@ epm_status_original()
             echo "$release" | grep -q "el7" || return 1
             return 0
             ;;
-        ROSAFresh|MOSDesktop)
+        ROSA*|MOSDesktop)
             epm_status_validate $pkg || return 1
             epm_status_repacked $pkg && return 1
 
@@ -13686,7 +13676,7 @@ epm_status_repacked()
     #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
 
     case $BASEDISTRNAME in
-        alt|redos|rosafresh|mos|fedora)
+        alt|redos|rosa*|mos|fedora)
             epm_status_validate $pkg || return
             local packager="$(epm print field Packager for "$1" 2>/dev/null)"
             [ "$packager" = "EPM <support@etersoft.ru>" ] && return 0
@@ -13764,6 +13754,7 @@ Options:
   --thirdparty          check if <package> from a third-party source (didn'\''t packed for this distro)
   --repacked            check if <package> was repacked with epm repack
   --validate            check if <package> is accessible (we can get a fields from it)
+  --supported           check if distribution is supported by epm status
 '
 }
 
@@ -13810,6 +13801,10 @@ epm_status()
             ;;
         --installable)
             epm_status_installable "$@"
+            return
+            ;;
+        --supported)
+            epm_status_supported
             return
             ;;
         -*)
@@ -18986,7 +18981,8 @@ Popular commands:
 if [ -z "$epm_cmd" ] ; then
     print_version >&2
     echo >&2
-    fatstr="$(eval_gettext 'Unrecognized command in '"$*" 'arg(s)')"
+    args="$*"
+    fatstr=$(eval_gettext "Unrecognized command in \$args arg(s)")
     if [ -z "$*" ] ; then
         fatstr=$(eval_gettext "That program needs be running with some command")
         print_short_help >&2
