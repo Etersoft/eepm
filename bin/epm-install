@@ -224,7 +224,7 @@ epm_ni_install_names()
             sudocmd yum -y $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
             return ;;
         dnf-rpm)
-            sudocmd dnf -y --allowerasing $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
+            sudocmd dnf install -y --allowerasing $YUMOPTIONS $(echo "$*" | exp_with_arch_suffix)
             return ;;
         urpm-rpm)
             sudocmd urpmi --auto $URPMOPTIONS $@

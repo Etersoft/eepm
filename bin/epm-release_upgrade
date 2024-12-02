@@ -528,7 +528,7 @@ epm_release_upgrade()
         ;;
      "OpenMandrivaLx")
         sudocmd dnf clean all
-        sudocmd dnf --allowerasing distro-sync
+        sudocmd dnf distro-sync --allowerasing
         return
         ;;
     "ROSA")
@@ -616,7 +616,7 @@ epm_release_upgrade()
             [ -n "$RELEASEVER" ] || RELEASEVER=$(($DV + 1))
             confirm_info 'Upgrade to $DISTRNAME/$RELEASEVER'
 
-            sudocmd dnf -y --releasever=$RELEASEVER --allowerasing --setopt=deltarpm=false distro-sync
+            sudocmd dnf distro-sync -y --releasever=$RELEASEVER --allowerasing --setopt=deltarpm=false
             sudocmd rpm --rebuilddb
             epm upgrade
             info "You can run '# epm autoorphans' to remove orphaned packages"

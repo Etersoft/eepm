@@ -104,7 +104,7 @@ epm_print_install_names_command()
             echo "yum -y $YUMOPTIONS install $*"
             return ;;
         dnf-rpm)
-            echo "dnf -y $YUMOPTIONS --allowerasing install $*"
+            echo "dnf install -y $YUMOPTIONS --allowerasing  $*"
             return ;;
         urpm-rpm)
             echo "urpmi --auto $URPMOPTIONS $*"
