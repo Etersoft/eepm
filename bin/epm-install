@@ -66,12 +66,46 @@ __separate_sudocmd()
     return 0
 }
 
+process_package_arguments() {
+    local pmtype
+    local name
+    local arg
+    local package_groups
+    declare -A package_groups
+    VALID_BACKENDS="apt-rpm apt-dpkg aptitude-dpkg deepsolver-rpm urpm-rpm packagekit pkgsrc pkgng redox-pkg emerge pacman aura yum-rpm dnf-rpm snappy zypper-rpm mpkg eopkg conary npackd slackpkg homebrew opkg nix apk tce guix termux-pkg aptcyg xbps appget winget"
+    for arg in "$@"; do
+        case "$arg" in
+            *:*)
+                pmtype=$(echo "$arg" | cut -d: -f1)
+                name=$(echo "$arg" | cut -d: -f2)
+                if ! echo "$VALID_BACKENDS" | grep -qw "$pmtype"; then
+                    pmtype=$PMTYPE
+                fi
+                ;;
+            *)
+                pmtype=$PMTYPE
+                name="$arg"
+                ;;
+        esac
+        package_groups["$pmtype"]+="$name "
+    done
+
+    for pmtype in "${!package_groups[@]}"; do
+        (PMTYPE="$pmtype" epm_install_names ${package_groups[$pmtype]})
+    done
+}
+
 # copied from etersoft-build-utils/share/eterbuild/functions/rpmpkg
 epm_install_names()
 {
     [ -z "$1" ] && return
 
     warmup_hibase
+
+    if echo "$@" | grep -q ':'; then
+        process_package_arguments "$@"
+        return
+    fi
 
     if [ -n "$download_only" ] ; then
         epm download "$@"
