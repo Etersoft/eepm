@@ -1138,17 +1138,3 @@ else
 		eval "echo -n \"$@\""
 	}
 fi
-
-set_backend()
-{
-    case $arg in
-        *:*)
-            PMTYPE=$(echo "$arg" | cut -d: -f1)
-            names=$(echo "$arg" | cut -d: -f2)
-            ;;
-        *)
-            PMTYPE=$($DISTRVENDOR -g)
-            names="$(echo $pkg_names | tr ' ' '\n' | grep -v ':' | filter_out_installed_packages)"
-    esac
-}
-
