@@ -134,6 +134,10 @@ case $PMTYPE in
         repo_file_name=$(env LC_ALL=C dnf repoinfo "$@" 2>/dev/null | sed -n 's/^Repo-filename\s*:\s*//p')
         sudocmd rm "$repo_file_name"
         ;;
+    dnf5-rpm)
+        repo_file_name=$(env LC_ALL=C dnf repoinfo "$@" 2>/dev/null | sed -n 's/^Config file\s*:\s*//p')
+        sudocmd rm "$repo_file_name"
+        ;;
     urpm-rpm)
         if [ "$1" = "all" ] ; then
             sudocmd urpmi.removemedia -av
