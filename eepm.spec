@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.1
+Version: 3.64.2
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -142,6 +142,14 @@ make -C po
 %endif
 
 %changelog
+* Thu Dec 05 2024 Vitaly Lipatov <lav@altlinux.ru> 3.64.2-alt1
+- fix options order for dnf5
+- distr_info: use alt vendor instead of altlinux
+- eget: use curl by default
+- epm: fix EGET_BACKEND handling
+- epm-install-apt-dpkg: use dpkg directly when --force-overwrite
+- added dnf5-rpm package manager support
+
 * Mon Dec 02 2024 Vitaly Lipatov <lav@altlinux.ru> 3.64.1-alt1
 - epm play onlyoffice: fix icon file duplicate warning (eterbug #17832)
 - epm prescription i586-fix: check package installable before install it (etebug #17831)
