@@ -140,7 +140,7 @@ epm_upgrade()
         # can do update repobase automagically
         CMD="yum $OPTIONS upgrade $*"
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         local OPTIONS="$(subst_option non_interactive -y)"
         CMD="dnf $OPTIONS upgrade $*"
         ;;

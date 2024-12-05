@@ -67,7 +67,7 @@ case $PMTYPE in
 
         docmd rpm -Va --nofiles --nodigest
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         sudocmd dnf check $DNFOPTIONS
         ;;
     emerge)

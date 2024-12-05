@@ -81,7 +81,7 @@ __epm_filelist_remote()
             assure_exists yum-utils
             docmd repoquery -q -l "$@"
             ;;
-        dnf-rpm)
+        dnf-rpm|dnf5-rpm)
             assure_exists dnf-plugins-core
             docmd dnf repoquery -l "$@"
             ;;

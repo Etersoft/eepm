@@ -92,7 +92,7 @@ case $PMTYPE in
             fixme "FIXME: use hi level commands or download firstly"
         fi
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         if is_installed $pkg_names ; then
             CMD="rpm -q --provides"
         else

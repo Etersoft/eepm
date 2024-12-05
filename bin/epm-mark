@@ -91,7 +91,7 @@ case $PMTYPE in
     apt-dpkg)
         sudocmd apt-mark hold "$@"
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         __dnf_assure_versionlock
         sudocmd dnf versionlock add "$@"
         ;;

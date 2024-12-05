@@ -89,7 +89,7 @@ case $PMTYPE in
         local PKGLIST=$(a= package-cleanup -q --orphans | grep -v "^eepm-")
         docmd epm remove $dryrun $PKGLIST
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         # TODO: dnf list extras
         docmd epm upgrade
         assure_exists package-cleanup dnf-utils

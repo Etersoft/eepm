@@ -93,7 +93,7 @@ esac
     esac
 
     case $PMTYPE in
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         docmd epm install kernel
         ;;
     apt-*)

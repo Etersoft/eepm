@@ -78,7 +78,7 @@ case $PMTYPE in
             urpmi-rpm)
                 docmd urpmq -i $pkg_names
                 ;;
-            dnf-rpm)
+            dnf-rpm|dnf5-rpm)
                 docmd dnf info $pkg_names
                 ;;
             zypper-rpm)

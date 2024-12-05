@@ -151,7 +151,7 @@ case $PMTYPE in
             CMD="yum deplist"
         fi
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         if is_installed $pkg_names ; then
             CMD="rpm -q --requires"
         else

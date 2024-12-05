@@ -249,7 +249,7 @@ print_srcpkgname()
             docmd urpmq --sourcerpm "$@"
             return
             ;;
-        dnf-rpm)
+        dnf-rpm|dnf5-rpm)
             showcmd dnf repoquery --qf '%{SOURCERPM}' "$@"
             a= dnf repoquery --qf '%{SOURCERPM}' "$@"
             return

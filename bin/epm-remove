@@ -124,7 +124,7 @@ epm_remove_names()
         yum-rpm)
             sudocmd yum remove $@
             return ;;
-        dnf-rpm)
+        dnf-rpm|dnf5-rpm)
             sudocmd dnf remove $@
             return ;;
         snappy)

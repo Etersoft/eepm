@@ -135,7 +135,7 @@ epm_downgrade()
             sudocmd yum distro-sync
         fi
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         if [ -n "$pkg_filenames" ] ; then
             sudocmd dnf downgrade $pkg_filenames
         else
