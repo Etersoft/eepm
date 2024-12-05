@@ -153,6 +153,9 @@ case $PMTYPE in
     dnf-rpm)
         sudocmd dnf history
         ;;
+    dnf5-rpm)
+        sudocmd dnf history list
+        ;;
     eopkg)
         sudocmd eopkg history
         ;;
