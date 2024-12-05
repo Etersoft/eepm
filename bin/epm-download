@@ -279,7 +279,7 @@ epm_download()
         fi
         docmd apt-get download $*
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         sudocmd dnf download $print_url $*
         ;;
     aptcyg)

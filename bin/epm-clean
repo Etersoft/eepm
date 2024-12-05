@@ -59,7 +59,7 @@ case $PMTYPE in
         sudocmd yum clean all
         #sudocmd yum makecache
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         sudocmd dnf clean all
         ;;
     urpm-rpm)

@@ -131,7 +131,7 @@ case $PMTYPE in
         # just skipped
         [ -z "$verbose" ] || info "update command is stubbed for yum"
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         # just skipped
         [ -z "$verbose" ] || info "update command is stubbed for dnf"
         ;;

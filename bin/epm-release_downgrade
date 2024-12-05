@@ -119,7 +119,7 @@ epm_release_downgrade()
         showcmd rpm -Uvh http://mirror.yandex.ru/fedora/linux/releases/16/Fedora/x86_64/os/Packages/fedora-release-16-1.noarch.rpm
         showcmd epm Upgrade
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm))
         info "Check https://fedoraproject.org/wiki/DNF_system_upgrade for an additional info"
         docmd epm install dnf
         #docmd epm install epel-release yum-utils

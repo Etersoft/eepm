@@ -121,7 +121,7 @@ case $PMTYPE in
         docmd yum repolist $verbose
         [ -n "$verbose" ] || info "Use --verbose if you need detail information."
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         docmd dnf repolist $verbose
         [ -n "$verbose" ] || info "Use --verbose if you need detail information."
         ;;

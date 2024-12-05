@@ -41,8 +41,8 @@ case $PMTYPE in
     urpm-rpm)
         CMD="urpmq --whatprovides"
         ;;
-    dnf-rpm)
-        CMD="yum provides"
+    dnf-rpm|dnf5-rpm)
+        CMD="dnf repoquery --whatprovides"
         ;;
     zypper-rpm)
         CMD="zypper what-provides"

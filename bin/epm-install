@@ -135,7 +135,7 @@ epm_install_names()
         yum-rpm)
             sudocmd yum $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
             return ;;
-        dnf-rpm)
+        dnf-rpm|dnf5-rpm)
             sudocmd dnf install $(echo "$*" | exp_with_arch_suffix)
             return ;;
         snappy)
@@ -223,7 +223,7 @@ epm_ni_install_names()
         yum-rpm)
             sudocmd yum -y $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
             return ;;
-        dnf-rpm)
+        dnf-rpm|dnf5-rpm)
             sudocmd dnf install -y --allowerasing $YUMOPTIONS $(echo "$*" | exp_with_arch_suffix)
             return ;;
         urpm-rpm)

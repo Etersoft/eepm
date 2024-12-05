@@ -80,7 +80,7 @@ case $PMTYPE in
         info "Search by full packages list is not implemented yet"
         CMD="yum provides"
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         # TODO
         info "Search by full packages list is not implemented yet"
         CMD="dnf provides"

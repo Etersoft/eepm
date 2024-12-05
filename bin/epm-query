@@ -45,7 +45,7 @@ exp_with_arch_suffix()
     # TODO: it is ok for ALT rpm to remove with this suffix
     # TODO: separate install and remove?
     case $PMTYPE in
-        yum-rpm|dnf-rpm)
+        yum-rpm|dnf-rpm|dnf5-rpm)
             suffix=".x86_64"
             ;;
         *)
@@ -146,7 +146,7 @@ __epm_get_hilevel_nameform()
             echo $pkg
             return
             ;;
-        yum-rpm|dnf-rpm)
+        yum-rpm|dnf-rpm|dnf5-rpm)
             # just use strict version with Epoch and Serial
             local pkg
             #pkg=$(rpm -q --queryformat "%{EPOCH}:%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" -- $1)

@@ -303,7 +303,7 @@ case $PMTYPE in
             docmd epm remove $PKGLIST
         done
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         if [ -n "$dryrun" ] ; then
             fatal "--dry-run is not supported yet"
         fi

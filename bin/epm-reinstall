@@ -40,7 +40,7 @@ epm_reinstall_names()
         yum-rpm)
             sudocmd yum reinstall $@
             return ;;
-        dnf-rpm)
+        dnf-rpm|dnf5-rpm)
             sudocmd dnf reinstall $@
             return ;;
         homebrew)

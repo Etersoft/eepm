@@ -103,7 +103,7 @@ epm_print_install_names_command()
         yum-rpm)
             echo "yum -y $YUMOPTIONS install $*"
             return ;;
-        dnf-rpm)
+        dnf-rpm|dnf5-rpm)
             echo "dnf install -y $YUMOPTIONS --allowerasing  $*"
             return ;;
         urpm-rpm)

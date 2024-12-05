@@ -62,7 +62,7 @@ case $PMTYPE in
     yum-rpm)
         CMD="yum search"
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         CMD="dnf search"
         ;;
     zypper-rpm)
