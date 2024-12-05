@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-export EPMVERSION="3.64.1"
+export EPMVERSION="3.64.2"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1557,6 +1557,10 @@ case $PMTYPE in
         __epm_addrepo_rhel "$repo" || return
         sudocmd dnf config-manager --add-repo "$repo"
         ;;
+    dnf5-rpm)
+        __epm_addrepo_rhel "$repo" || return
+        sudocmd dnf config-manager addrepo --from-repofile "$repo"
+        ;;
     urpm-rpm)
         sudocmd urpmi.addmedia "$@"
         ;;
@@ -1785,7 +1789,7 @@ case $PMTYPE in
         local PKGLIST=$(a= package-cleanup -q --orphans | grep -v "^eepm-")
         docmd epm remove $dryrun $PKGLIST
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         # TODO: dnf list extras
         docmd epm upgrade
         assure_exists package-cleanup dnf-utils
@@ -2135,7 +2139,7 @@ case $PMTYPE in
             docmd epm remove $PKGLIST
         done
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         if [ -n "$dryrun" ] ; then
             fatal "--dry-run is not supported yet"
         fi
@@ -2227,7 +2231,7 @@ __epm_changelog_local_names()
     [ -z "$*" ] && return
 
     case $PMTYPE in
-        apt-rpm|yum-rpm|dnf-rpm|urpm-rpm|zypper-rpm)
+        apt-rpm|yum-rpm|dnf-rpm|dnf5-rpm|urpm-rpm|zypper-rpm)
             docmd_foreach "rpm -q --changelog" $@
             ;;
         apt-dpkg|aptitude-dpkg)
@@ -2347,7 +2351,7 @@ case $PMTYPE in
 
         docmd rpm -Va --nofiles --nodigest
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         sudocmd dnf check $DNFOPTIONS
         ;;
     emerge)
@@ -2760,7 +2764,7 @@ case $PMTYPE in
         sudocmd yum clean all
         #sudocmd yum makecache
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         sudocmd dnf clean all
         ;;
     urpm-rpm)
@@ -2890,7 +2894,7 @@ epm_conflicts()
     epm_conflicts_names
 }
 
-# File bin/epm-create-fake:
+# File bin/epm-create_fake:
 
 
 
@@ -2937,7 +2941,7 @@ EOF
 }
 
 
-__epm_create-fake_help()
+__epm_create_fake_help()
 {
 message '
 
@@ -2957,7 +2961,7 @@ Examples:
     return
 }
 
-epm_create-fake()
+epm_create_fake()
 {
 
   VERSION=0
@@ -2983,7 +2987,7 @@ epm_create-fake()
       shift # past argument
       ;;
       --help|-h)
-      __epm_create-fake_help
+      __epm_create_fake_help
       return
       ;;
       *)
@@ -3374,7 +3378,7 @@ epm_downgrade()
             sudocmd yum distro-sync
         fi
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         if [ -n "$pkg_filenames" ] ; then
             sudocmd dnf downgrade $pkg_filenames
         else
@@ -3652,7 +3656,7 @@ epm_download()
         fi
         docmd apt-get download $*
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         sudocmd dnf download $print_url $*
         ;;
     aptcyg)
@@ -3878,7 +3882,7 @@ __epm_filelist_remote()
             assure_exists yum-utils
             docmd repoquery -q -l "$@"
             ;;
-        dnf-rpm)
+        dnf-rpm|dnf5-rpm)
             assure_exists dnf-plugins-core
             docmd dnf repoquery -l "$@"
             ;;
@@ -4285,6 +4289,9 @@ case $PMTYPE in
     dnf-rpm)
         sudocmd dnf history
         ;;
+    dnf5-rpm)
+        sudocmd dnf history list
+        ;;
     eopkg)
         sudocmd eopkg history
         ;;
@@ -4366,7 +4373,7 @@ case $PMTYPE in
             urpmi-rpm)
                 docmd urpmq -i $pkg_names
                 ;;
-            dnf-rpm)
+            dnf-rpm|dnf5-rpm)
                 docmd dnf info $pkg_names
                 ;;
             zypper-rpm)
@@ -4566,7 +4573,7 @@ epm_install_names()
         yum-rpm)
             sudocmd yum $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
             return ;;
-        dnf-rpm)
+        dnf-rpm|dnf5-rpm)
             sudocmd dnf install $(echo "$*" | exp_with_arch_suffix)
             return ;;
         snappy)
@@ -4653,8 +4660,8 @@ epm_ni_install_names()
         yum-rpm)
             sudocmd yum -y $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
             return ;;
-        dnf-rpm)
-            sudocmd dnf -y --allowerasing $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
+        dnf-rpm|dnf5-rpm)
+            sudocmd dnf install -y --allowerasing $YUMOPTIONS $(echo "$*" | exp_with_arch_suffix)
             return ;;
         urpm-rpm)
             sudocmd urpmi --auto $URPMOPTIONS $@
@@ -5200,10 +5207,6 @@ epm_install_files_apt_dpkg()
         files="$repacked_pkgs"
     fi
 
-    if [ -n "$force_overwrite" ] ; then
-        DPKGOPTIONS="$DPKGOPTIONS --force-overwrite"
-    fi
-
     if [ -n "$save_only" ] ; then
         echo
         cp -v $files "$EPMCURDIR"
@@ -5218,7 +5221,11 @@ epm_install_files_apt_dpkg()
 
     # TODO: if dpkg can't install due missed deps, trying with apt (as for now, --refuse-depends, --refuse-breaks don't help me)
 
-    if [ -n "$nodeps" ] ; then
+    if [ -n "$force_overwrite" ] ; then
+        DPKGOPTIONS="$DPKGOPTIONS --force-overwrite"
+    fi
+
+    if [ -n "$nodeps" ] || [ -n "$force_overwrite" ] ; then
         sudocmd dpkg $DPKGOPTIONS -i $files
         return
     fi
@@ -5437,8 +5444,8 @@ epm_print_install_names_command()
         yum-rpm)
             echo "yum -y $YUMOPTIONS install $*"
             return ;;
-        dnf-rpm)
-            echo "dnf -y $YUMOPTIONS --allowerasing install $*"
+        dnf-rpm|dnf5-rpm)
+            echo "dnf install -y $YUMOPTIONS --allowerasing  $*"
             return ;;
         urpm-rpm)
             echo "urpmi --auto $URPMOPTIONS $*"
@@ -5616,7 +5623,7 @@ esac
     esac
 
     case $PMTYPE in
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         docmd epm install kernel
         ;;
     apt-*)
@@ -6013,7 +6020,7 @@ case $PMTYPE in
     apt-dpkg)
         sudocmd apt-mark hold "$@"
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         __dnf_assure_versionlock
         sudocmd dnf versionlock add "$@"
         ;;
@@ -7605,7 +7612,7 @@ print_srcpkgname()
             docmd urpmq --sourcerpm "$@"
             return
             ;;
-        dnf-rpm)
+        dnf-rpm|dnf5-rpm)
             showcmd dnf repoquery --qf '%{SOURCERPM}' "$@"
             a= dnf repoquery --qf '%{SOURCERPM}' "$@"
             return
@@ -7947,7 +7954,7 @@ case $PMTYPE in
             fixme "FIXME: use hi level commands or download firstly"
         fi
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         if is_installed $pkg_names ; then
             CMD="rpm -q --provides"
         else
@@ -8030,7 +8037,7 @@ exp_with_arch_suffix()
     # TODO: it is ok for ALT rpm to remove with this suffix
     # TODO: separate install and remove?
     case $PMTYPE in
-        yum-rpm|dnf-rpm)
+        yum-rpm|dnf-rpm|dnf5-rpm)
             suffix=".x86_64"
             ;;
         *)
@@ -8127,7 +8134,7 @@ __epm_get_hilevel_nameform()
             echo $pkg
             return
             ;;
-        yum-rpm|dnf-rpm)
+        yum-rpm|dnf-rpm|dnf5-rpm)
             # just use strict version with Epoch and Serial
             local pkg
             #pkg=$(rpm -q --queryformat "%{EPOCH}:%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" -- $1)
@@ -8552,7 +8559,7 @@ epm_reinstall_names()
         yum-rpm)
             sudocmd yum reinstall $@
             return ;;
-        dnf-rpm)
+        dnf-rpm|dnf5-rpm)
             sudocmd dnf reinstall $@
             return ;;
         homebrew)
@@ -8719,7 +8726,7 @@ epm_release_downgrade()
         showcmd rpm -Uvh http://mirror.yandex.ru/fedora/linux/releases/16/Fedora/x86_64/os/Packages/fedora-release-16-1.noarch.rpm
         showcmd epm Upgrade
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         info "Check https://fedoraproject.org/wiki/DNF_system_upgrade for an additional info"
         docmd epm install dnf
         #docmd epm install epel-release yum-utils
@@ -9273,7 +9280,7 @@ epm_release_upgrade()
         ;;
      "OpenMandrivaLx")
         sudocmd dnf clean all
-        sudocmd dnf --allowerasing distro-sync
+        sudocmd dnf distro-sync --allowerasing
         return
         ;;
     "ROSA")
@@ -9361,7 +9368,7 @@ epm_release_upgrade()
             [ -n "$RELEASEVER" ] || RELEASEVER=$(($DV + 1))
             confirm_info 'Upgrade to $DISTRNAME/$RELEASEVER'
 
-            sudocmd dnf -y --releasever=$RELEASEVER --allowerasing --setopt=deltarpm=false distro-sync
+            sudocmd dnf distro-sync -y --releasever=$RELEASEVER --allowerasing --setopt=deltarpm=false
             sudocmd rpm --rebuilddb
             epm upgrade
             info "You can run '# epm autoorphans' to remove orphaned packages"
@@ -9518,7 +9525,7 @@ epm_remove_names()
         yum-rpm)
             sudocmd yum remove $@
             return ;;
-        dnf-rpm)
+        dnf-rpm|dnf5-rpm)
             sudocmd dnf remove $@
             return ;;
         snappy)
@@ -9946,6 +9953,10 @@ case $PMTYPE in
         ;;
     dnf-rpm)
         repo_file_name=$(env LC_ALL=C dnf repoinfo "$@" 2>/dev/null | sed -n 's/^Repo-filename\s*:\s*//p')
+        sudocmd rm "$repo_file_name"
+        ;;
+    dnf5-rpm)
+        repo_file_name=$(env LC_ALL=C dnf repoinfo "$@" 2>/dev/null | sed -n 's/^Config file\s*:\s*//p')
         sudocmd rm "$repo_file_name"
         ;;
     urpm-rpm)
@@ -10835,6 +10846,9 @@ case $PMTYPE in
     dnf-rpm)
         sudocmd dnf config-manager --enable $verbose "$@"
         ;;
+    dnf5-rpm)
+        sudocmd dnf config-manager setopt "$@.enabled=0"
+        ;;
     eoget)
         docmd eoget disable-repo "$@"
         ;;
@@ -10885,6 +10899,9 @@ case $PMTYPE in
         ;;
     dnf-rpm)
         sudocmd dnf config-manager --disable $verbose "$@"
+        ;;
+    dnf5-rpm)
+        sudocmd dnf config-manager setopt "$@.enabled=1"
         ;;
     eoget)
         docmd eoget enable-repo "$@"
@@ -11368,7 +11385,7 @@ case $PMTYPE in
         docmd yum repolist $verbose
         [ -n "$verbose" ] || info "Use --verbose if you need detail information."
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         docmd dnf repolist $verbose
         [ -n "$verbose" ] || info "Use --verbose if you need detail information."
         ;;
@@ -11811,7 +11828,7 @@ case $PMTYPE in
             CMD="yum deplist"
         fi
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         if is_installed $pkg_names ; then
             CMD="rpm -q --requires"
         else
@@ -12557,7 +12574,7 @@ case $PMTYPE in
     yum-rpm)
         CMD="yum search"
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         CMD="dnf search"
         ;;
     zypper-rpm)
@@ -12803,7 +12820,7 @@ case $PMTYPE in
         info "Search by full packages list is not implemented yet"
         CMD="yum provides"
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         # TODO
         info "Search by full packages list is not implemented yet"
         CMD="dnf provides"
@@ -13989,7 +14006,7 @@ case $PMTYPE in
         # just skipped
         [ -z "$verbose" ] || info "update command is stubbed for yum"
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         # just skipped
         [ -z "$verbose" ] || info "update command is stubbed for dnf"
         ;;
@@ -14190,7 +14207,7 @@ epm_upgrade()
         # can do update repobase automagically
         CMD="yum $OPTIONS upgrade $*"
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         local OPTIONS="$(subst_option non_interactive -y)"
         CMD="dnf $OPTIONS upgrade $*"
         ;;
@@ -14342,9 +14359,9 @@ case $PMTYPE in
     urpm-rpm)
         CMD="urpmq --whatrequires"
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         # check command: dnf repoquery --whatrequires
-        CMD="repoquery --whatrequires"
+        CMD="dnf repoquery --whatrequires"
         ;;
     emerge)
         assure_exists equery
@@ -14404,8 +14421,8 @@ case $PMTYPE in
     urpm-rpm)
         CMD="urpmq --whatprovides"
         ;;
-    dnf-rpm)
-        CMD="yum provides"
+    dnf-rpm|dnf5-rpm)
+        CMD="dnf repoquery --whatprovides"
         ;;
     zypper-rpm)
         CMD="zypper what-provides"
@@ -14536,7 +14553,6 @@ pkgvendor()
     [ "$DISTRIB_ID" = "openSUSETumbleweed" ] && echo "suse" && return
     [ "$DISTRIB_ID" = "openSUSELeap" ] && echo "suse" && return
     if [ -n "$VENDOR_ID" ] ; then
-        [ "$VENDOR_ID" = "altlinux" ] && echo "alt" && return
         echo "$VENDOR_ID"
         return
     fi
@@ -14664,6 +14680,9 @@ case $DISTRIB_ID in
         echo "pkgmanager(): We don't support yet DISTRIB_ID $DISTRIB_ID (VENDOR_ID $VENDOR_ID)" >&2
         ;;
 esac
+if [ "$CMD" = "dnf-rpm" ] && [ $(dnf --version | grep -qi "dnf5") ] ; then
+    CMD="dnf5-rpm"
+fi
 echo "$CMD"
 }
 
@@ -14860,7 +14879,12 @@ DISTRIB_RELEASE=$(normalize_version2 "$DISTRIB_RELEASE")
 [ -n "$DISTRIB_CODENAME" ] || DISTRIB_CODENAME=$DISTRIB_RELEASE
 
 case "$VENDOR_ID" in
-    "alt"|"altlinux")
+    "altlinux")
+        VENDOR_ID="alt"
+esac
+
+case "$VENDOR_ID" in
+    "alt")
         # 2.4.5.99 -> 2
         DISTRIB_RELEASE=$(normalize_version1 "$DISTRIB_RELEASE_ORIG")
         case "$DISTRIB_ID" in
@@ -16505,9 +16529,9 @@ case "$EGET_BACKEND" in
         [ -n "$CURL" ] || fatal "There are no curl in the system but you forced using it via EGET_BACKEND. Install it with $ epm install curl"
         ;;
     '')
-        [ -n "$WGET" ] && EGET_BACKEND="wget"
-        [ -z "$EGET_BACKEND" ] && [ -n "$CURL" ] && EGET_BACKEND="curl"
-        [ -n "$EGET_BACKEND" ] || fatal "There are no wget nor curl in the system. Install something with $ epm install wget"
+        [ -n "$CURL" ] && EGET_BACKEND="curl"
+        [ -z "$EGET_BACKEND" ] && [ -n "$WGET" ] && EGET_BACKEND="wget"
+        [ -n "$EGET_BACKEND" ] || fatal "There are no wget nor curl in the system. Install it via $ epm install curl"
         ;;
     *)
         fatal "Uknown EGET_BACKEND $EGET_BACKEND"
@@ -18338,6 +18362,8 @@ fi
 epm_main()
 {
 
+eget_backend=$EGET_BACKEND
+
 # fast call for tool
 if [ "$1" = "tool" ] ; then
         shift
@@ -18429,7 +18455,6 @@ direct_args=
 ipfs=
 force_overwrite=
 
-eget_backend=$EGET_BACKEND
 epm_vardir=/var/lib/eepm
 epm_cachedir=/var/cache/eepm
 eget_ipfs_db=$epm_vardir/eget-ipfs-db.txt
@@ -18742,7 +18767,7 @@ check_command()
         direct_args=1
         ;;
     create-fake)             # HELPCMD: create fake rpm
-        epm_cmd=create-fake
+        epm_cmd=create_fake
         direct_args=1
         ;;
     desktop)

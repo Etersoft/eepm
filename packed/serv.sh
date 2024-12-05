@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.1"
+EPMVERSION="3.64.2"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1905,7 +1905,6 @@ pkgvendor()
     [ "$DISTRIB_ID" = "openSUSETumbleweed" ] && echo "suse" && return
     [ "$DISTRIB_ID" = "openSUSELeap" ] && echo "suse" && return
     if [ -n "$VENDOR_ID" ] ; then
-        [ "$VENDOR_ID" = "altlinux" ] && echo "alt" && return
         echo "$VENDOR_ID"
         return
     fi
@@ -2033,6 +2032,9 @@ case $DISTRIB_ID in
         echo "pkgmanager(): We don't support yet DISTRIB_ID $DISTRIB_ID (VENDOR_ID $VENDOR_ID)" >&2
         ;;
 esac
+if [ "$CMD" = "dnf-rpm" ] && [ $(dnf --version | grep -qi "dnf5") ] ; then
+    CMD="dnf5-rpm"
+fi
 echo "$CMD"
 }
 
@@ -2229,7 +2231,12 @@ DISTRIB_RELEASE=$(normalize_version2 "$DISTRIB_RELEASE")
 [ -n "$DISTRIB_CODENAME" ] || DISTRIB_CODENAME=$DISTRIB_RELEASE
 
 case "$VENDOR_ID" in
-    "alt"|"altlinux")
+    "altlinux")
+        VENDOR_ID="alt"
+esac
+
+case "$VENDOR_ID" in
+    "alt")
         # 2.4.5.99 -> 2
         DISTRIB_RELEASE=$(normalize_version1 "$DISTRIB_RELEASE_ORIG")
         case "$DISTRIB_ID" in
