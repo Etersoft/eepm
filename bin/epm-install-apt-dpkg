@@ -32,10 +32,6 @@ epm_install_files_apt_dpkg()
         files="$repacked_pkgs"
     fi
 
-    if [ -n "$force_overwrite" ] ; then
-        DPKGOPTIONS="$DPKGOPTIONS --force-overwrite"
-    fi
-
     if [ -n "$save_only" ] ; then
         echo
         cp -v $files "$EPMCURDIR"
@@ -51,7 +47,11 @@ epm_install_files_apt_dpkg()
 
     # TODO: if dpkg can't install due missed deps, trying with apt (as for now, --refuse-depends, --refuse-breaks don't help me)
 
-    if [ -n "$nodeps" ] ; then
+    if [ -n "$force_overwrite" ] ; then
+        DPKGOPTIONS="$DPKGOPTIONS --force-overwrite"
+    fi
+
+    if [ -n "$nodeps" ] || [ -n "$force_overwrite" ] ; then
         sudocmd dpkg $DPKGOPTIONS -i $files
         return
     fi
