@@ -73,9 +73,9 @@ case $PMTYPE in
     urpm-rpm)
         CMD="urpmq --whatrequires"
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         # check command: dnf repoquery --whatrequires
-        CMD="repoquery --whatrequires"
+        CMD="dnf repoquery --whatrequires"
         ;;
     emerge)
         assure_exists equery
