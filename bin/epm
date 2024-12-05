@@ -474,7 +474,7 @@ check_command()
         direct_args=1
         ;;
     create-fake)             # HELPCMD: create fake rpm
-        epm_cmd=create-fake
+        epm_cmd=create_fake
         direct_args=1
         ;;
     desktop)
