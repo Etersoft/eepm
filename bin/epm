@@ -67,6 +67,8 @@ load_helper()
 
 load_helper epm-sh-functions
 
+eget_backend=$EGET_BACKEND
+
 # fast call for tool
 if [ "$1" = "tool" ] ; then
         shift
@@ -160,7 +162,6 @@ direct_args=
 ipfs=
 force_overwrite=
 
-eget_backend=$EGET_BACKEND
 epm_vardir=/var/lib/eepm
 epm_cachedir=/var/cache/eepm
 eget_ipfs_db=$epm_vardir/eget-ipfs-db.txt
