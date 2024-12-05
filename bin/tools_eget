@@ -905,9 +905,9 @@ case "$EGET_BACKEND" in
         [ -n "$CURL" ] || fatal "There are no curl in the system but you forced using it via EGET_BACKEND. Install it with $ epm install curl"
         ;;
     '')
-        [ -n "$WGET" ] && EGET_BACKEND="wget"
-        [ -z "$EGET_BACKEND" ] && [ -n "$CURL" ] && EGET_BACKEND="curl"
-        [ -n "$EGET_BACKEND" ] || fatal "There are no wget nor curl in the system. Install something with $ epm install wget"
+        [ -n "$CURL" ] && EGET_BACKEND="curl"
+        [ -z "$EGET_BACKEND" ] && [ -n "$WGET" ] && EGET_BACKEND="wget"
+        [ -n "$EGET_BACKEND" ] || fatal "There are no wget nor curl in the system. Install it via $ epm install curl"
         ;;
     *)
         fatal "Uknown EGET_BACKEND $EGET_BACKEND"
