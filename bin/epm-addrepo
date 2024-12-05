@@ -463,6 +463,10 @@ case $PMTYPE in
         __epm_addrepo_rhel "$repo" || return
         sudocmd dnf config-manager --add-repo "$repo"
         ;;
+    dnf5-rpm)
+        __epm_addrepo_rhel "$repo" || return
+        sudocmd dnf config-manager addrepo --from-repofile "$repo"
+        ;;
     urpm-rpm)
         sudocmd urpmi.addmedia "$@"
         ;;
