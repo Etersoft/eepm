@@ -58,6 +58,9 @@ case $PMTYPE in
     dnf-rpm)
         sudocmd dnf config-manager --disable $verbose "$@"
         ;;
+    dnf5-rpm)
+        sudocmd dnf config-manager setopt "$@.enabled=1"
+        ;;
     eoget)
         docmd eoget enable-repo "$@"
         ;;
