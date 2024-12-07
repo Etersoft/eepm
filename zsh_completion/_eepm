@@ -681,11 +681,13 @@ _epm_play_packages() {
     _arguments \
       '--remove[remove a play package]' \
       '--update[update a play package]' \
+      '--latest[forced to install the latest version]' \
       '--list[list play packages]' \
       '--list-all[list all play packages]' \
       '--list-scripts[list play package scripts]' \
       '--short[short format]' \
       '--installed[list installed play packages]' \
+      '--ipfs[use IPFS for downloading]' \
       '--product-alternatives[list product alternatives]' \
       '--quiet[quiet mode]'
   else
