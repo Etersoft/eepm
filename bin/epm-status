@@ -118,7 +118,7 @@ epm_status_supported() {
     local distro
     distro=$(epm print info -s)
     case "$distro" in
-        alt|redos|rosa*|mos|fedora)
+        alt|redos|rosa*|mos|fedora|debian)
             return 0
             ;;
         *)
@@ -185,6 +185,13 @@ epm_status_original()
             echo "$release" | grep -q "fc" || return 1
             return 0
             ;;
+        Uncom)
+            epm_status_validate $pkg || return 1
+            epm_status_repacked $pkg && return 1
+
+            echo "$release" | grep -qi "uncom" || return 1
+            return 0
+            ;;
         *)
             fatal 'Unsupported $DISTRNAME'
             ;;
@@ -196,14 +203,23 @@ epm_status_repacked()
 {
     local pkg="$1"
 
+    # dpkg package missing packager field
+    local repacked="$(epm print field Description for "$1" | grep -qi "alien" 2>/dev/null)"
+    local packager="$(epm print field Packager for "$1" 2>/dev/null)"
+
     #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
 
     case $BASEDISTRNAME in
         alt|redos|rosa*|mos|fedora)
             epm_status_validate $pkg || return
-            local packager="$(epm print field Packager for "$1" 2>/dev/null)"
             [ "$packager" = "EPM <support@etersoft.ru>" ] && return 0
             [ "$packager" = "EPM <support@eepm.ru>" ] && return 0
+            ;;
+       debian)
+            epm_status_validate $pkg || return
+
+            # In packages repackaged via alien maintainer equal to $USER, it is better to use the package description
+            [ ! -z "$repacked" ] && return 0
             ;;
         *)
             fatal 'Unsupported $BASEDISTRNAME'
@@ -217,9 +233,13 @@ epm_status_thirdparty()
 {
     local pkg="$1"
     local distribution
+    local repacked
+    local maintainer
 
     #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
     distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
+    repacked="$(epm print field Description for "$1" | grep -qi "alien" 2>/dev/null)"
+    maintainer="$(epm print field Maintainer for "$pkg" 2>/dev/nul)"
 
     case $BASEDISTRNAME in
         alt)
@@ -252,6 +272,15 @@ epm_status_thirdparty()
 
             echo "$distribution" | grep -q "^Fedora Project" && return 1
             echo "$distribution" | grep -q "^EEPM" && return 1
+            return 0
+            ;;
+        debian)
+            epm_status_validate $pkg || return 1
+
+            # On UncomOS maintainer Ubuntu and Debian * team
+            echo "$maintainer" | grep -q "Debian" && return 1
+            echo "$maintainer" | grep -q "Ubuntu" && return 1
+            [ ! -z "$repacked" ] && return 1
             return 0
             ;;
         *)
