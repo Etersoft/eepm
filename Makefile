@@ -1,7 +1,7 @@
 all:
 	echo "We don't need any build"
 
-installd_list = pack.d repack.d prescription.d play.d
+installd_list = pack.d repack.d prescription.d play.d desktop.d
 cmd_list = epm serv esu
 
 .PHONY: all clean install check install_common $(installd_list) $(cmd_list)
