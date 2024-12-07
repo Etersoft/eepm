@@ -98,7 +98,7 @@ __eepm_complete_repack() {
 
 __eepm_list_available_packages_play()
 {
-    local options='--remove --update --list --list-all --list-scripts --short --installed --product-alternatives --quiet'
+    local options='--remove --update --latest --list --list-all --list-scripts --short --installed --ipfs --product-alternatives --quiet'
     
     if [[ ! $cur == -* ]]; then
         COMPREPLY=( $( epm play --list-all --quiet --short ) )
