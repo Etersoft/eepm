@@ -318,7 +318,6 @@ AXELQ='' #-q
 # TODO: wget --trust-server-names
 # TODO: 
 WGETNAMEOPTIONS='--content-disposition'
-CURLNAMEOPTIONS='--remote-name --remote-time --remote-header-name'
 AXELNAMEOPTIONS=''
 
 WGETNODIRECTORIES=''
@@ -1104,6 +1103,13 @@ url_sget()
     elif [ -n "$2" ] ; then
        download_with_mirroring __curl "$URL" --output "$2"
        return
+    fi
+
+    FILENAME=$(echo "$URL" | sed 's#.*/##' | sed 's/[?].*//')
+    if [[ ! -z "$FILENAME" ]] ; then
+        CURLNAMEOPTIONS="-o $FILENAME"
+    else
+        CURLNAMEOPTIONS='--remote-name --remote-time --remote-header-name'
     fi
 
     download_with_mirroring __curl "$URL" $CURLNAMEOPTIONS
