@@ -161,6 +161,7 @@ Options:
     --list-scripts        - list all available scripts
     --short (with --list) - list names only
     --installed <app>     - check if the app is installed
+    --ipfs <app>          - use IPFS for downloading
     --product-alternatives- list alternatives (use like epm play app=beta)
 
 Examples:
