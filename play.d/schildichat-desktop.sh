@@ -8,23 +8,29 @@ URL="https://schildi.chat/"
 
 . $(dirname $0)/common.sh
 
-warn_version_is_not_supported
+pkgtype="$(epm print info -p)"
 
-case $(epm print info -p) in
-    rpm)
-        mask="schildichat-desktop*x86_64.rpm"
-        ;;
+case $pkgtype in
+    # rpm)
+    #     mask="${PKGNAME}-.${VERSION}.x86_64.rpm"
+    #     ;;
     deb)
-        mask="schildichat-desktop*_amd64.deb"
+        mask="${PKGNAME}-.${VERSION}_amd64.deb"
         ;;
     *)
-        mask="SchildiChat*.AppImage"
+        mask="SchildiChat-.${VERSION}.AppImage"
         ;;
 esac
 
-PKGURL="$(eget --list --latest https://github.com/SchildiChat/schildichat-desktop/releases "$mask")"
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(get_github_version "https://github.com/SchildiChat/schildichat-desktop/" "$mask")
+else
+    # need because get_github_version doesn't support ${VERSION} without a dot before VERSION in mask
+    direct_mask="$(echo $mask | sed 's/\.//')"
+    PKGURL="https://github.com/SchildiChat/schildichat-desktop/releases/download/v$VERSION/$direct_mask"
+fi
 
-if [ $mask = 'SchildiChat*.AppImage' ]; then
+if [ $mask = "SchildiChat-.${VERSION}.AppImage" ]; then
     install_pack_pkgurl
 else
     install_pkgurl
