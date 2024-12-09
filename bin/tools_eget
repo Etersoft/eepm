@@ -322,6 +322,8 @@ AXELNAMEOPTIONS=''
 WGETRUSTSERVERNAMES=''
 CURLTRUSTSERVERNAMES=''
 
+CURLOUTPUTDIR=''
+WGETOUTPUTDIR=''
 WGETNODIRECTORIES=''
 WGETCONTINUE=''
 CURLCONTINUE=''
@@ -376,6 +378,8 @@ Options:
     -6|--ipv6|--inet6-only    - use only IPV6
     -O-|-O -                  - output downloaded file to stdout
     -O file                   - download to this file
+    -P|--output-dir           - download to this directory
+
     -nd|--no-directories      - do not create a hierarchy of directories when retrieving recursively
     -c|--continue             - continue getting a partially-downloaded file
     -T|--timeout=N            - set  the network timeout to N seconds
@@ -451,6 +455,11 @@ while [ -n "$1" ] ; do
             WGETHEADER="--header=$argvalue"
             CURLHEADER="--header $argvalue"
             AXELHEADER="--header=$argvalue"
+            ;;
+        -P|--output-dir)
+            shift
+            CURLOUTPUTDIR="--create-dirs --output-dir $1"
+            WGETOUTPUTDIR="-P $1"
             ;;
         -U|-A|--user-agent)
             user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
