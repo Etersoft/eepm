@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.3
+Version: 3.64.4
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -144,6 +144,13 @@ make -C po
 %endif
 
 %changelog
+* Tue Dec 10 2024 Vitaly Lipatov <lav@altlinux.ru> 3.64.4-alt1
+- epm status: fix typo (eterbug #17865)
+- epm play cnrdrvcups-ufr2: fix download link (eterbug #17865)
+- epm play schildichat-desktop: fix download method; add version support (eterbug #17865)
+- epm repack tsukimi: fix png, xml download link  (eterbug #17865)
+- epm play yucca: fix getting version (eterbug #17865)
+
 * Tue Dec 10 2024 Vitaly Lipatov <lav@altlinux.ru> 3.64.3-alt1
 - epm status: add UncomOS support (eterbug #17885)
 - epm status: add Ubuntu support (eterbug #17885)
