@@ -497,6 +497,7 @@ case "$DISTRIB_ID" in
         DISTRIB_ID="ALTLinux"
         case "$DISTRIB_RELEASE_ORIG" in
             8.0|8.1)
+                DISTRIB_RELEASE="c8"
                 ;;
             8.2|8.3)
                 DISTRIB_RELEASE="c9f1"
