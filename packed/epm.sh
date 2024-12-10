@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-export EPMVERSION="3.64.2"
+export EPMVERSION="3.64.3"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -6910,6 +6910,7 @@ Options:
     --list-scripts        - list all available scripts
     --short (with --list) - list names only
     --installed <app>     - check if the app is installed
+    --ipfs <app>          - use IPFS for downloading
     --product-alternatives- list alternatives (use like epm play app=beta)
 
 Examples:
@@ -8942,7 +8943,7 @@ get_fix_release_pkg()
         # TODO: we don't support LINUX@Etersoft for now
         # leave etersoft-gpgkeys only if we have LINUX@Etersoft repo
         #epm repo list | grep -q "LINUX@Etersoft" && echo "etersoft-gpgkeys" || echo "alt-gpgkeys"
-        epm --quiet repo comment "LINUX@Etersoft"
+        epm --quiet repo disable "LINUX@Etersoft"
         echo "alt-gpgkeys"
     else
         # update if installed (just print package name here to include in the install list)
@@ -10292,7 +10293,7 @@ __fix_spec()
     # https://bugzilla.altlinux.org/show_bug.cgi?id=38842
     for i in / /etc /etc/init.d /etc/systemd /bin /opt /usr /usr/bin /usr/lib /usr/lib64 /usr/share /usr/share/doc /var /var/log /var/run \
             /etc/cron.daily /usr/share/icons/usr/share/pixmaps /usr/share/man /usr/share/man/man1 /usr/share/appdata /usr/share/applications /usr/share/menu \
-            /usr/share/mime /usr/share/mime/packages \
+            /usr/share/mime /usr/share/mime/packages /usr/share/icons \
             /usr/share/icons/gnome $(__get_icons_gnome_list) \
             /usr/share/icons/hicolor $(__get_icons_hicolor_list) ; do
         sed -i \
@@ -13613,7 +13614,7 @@ epm_status_supported() {
     local distro
     distro=$(epm print info -s)
     case "$distro" in
-        alt|redos|rosa*|mos|fedora)
+        alt|redos|rosa*|mos|fedora|debian|ubuntu)
             return 0
             ;;
         *)
@@ -13679,6 +13680,27 @@ epm_status_original()
             echo "$release" | grep -q "fc" || return 1
             return 0
             ;;
+        Uncom)
+            epm_status_validate $pkg || return 1
+            epm_status_repacked $pkg && return 1
+
+            echo "$release" | grep -qi "uncom" || return 1
+            return 0
+            ;;
+        Ubuntu)
+            epm_status_validate $pkg || return 1
+            epm_status_repacked $pkg && return 1
+
+            echo "$release" | grep -qi "ubuntu" || return 1
+            return 0
+            ;;
+        Debian)
+            epm_status_validate $pkg || return 1
+            epm_status_repacked $pkg && return 1
+
+            echo "$release" | grep -qi "debian" || return 1
+            return 0
+            ;;
         *)
             fatal 'Unsupported $DISTRNAME'
             ;;
@@ -13690,14 +13712,23 @@ epm_status_repacked()
 {
     local pkg="$1"
 
+    # dpkg package missing packager field
+    local repacked="$(epm print field Description for "$1" | grep -qi "alien" 2>/dev/null)"
+    local packager="$(epm print field Packager for "$1" 2>/dev/null)"
+
     #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
 
     case $BASEDISTRNAME in
         alt|redos|rosa*|mos|fedora)
             epm_status_validate $pkg || return
-            local packager="$(epm print field Packager for "$1" 2>/dev/null)"
             [ "$packager" = "EPM <support@etersoft.ru>" ] && return 0
             [ "$packager" = "EPM <support@eepm.ru>" ] && return 0
+            ;;
+       debian|ubuntu)
+            epm_status_validate $pkg || return
+
+            # In packages repackaged via alien maintainer equal to $USER, it is better to use the package description
+            [ ! -z "$repacked" ] && return 0
             ;;
         *)
             fatal 'Unsupported $BASEDISTRNAME'
@@ -13711,9 +13742,13 @@ epm_status_thirdparty()
 {
     local pkg="$1"
     local distribution
+    local repacked
+    local maintainer
 
     #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
     distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
+    repacked="$(epm print field Description for "$1" | grep -qi "alien" 2>/dev/null)"
+    maintainer="$(epm print field Maintainer for "$pkg" 2>/dev/nul)"
 
     case $BASEDISTRNAME in
         alt)
@@ -13746,6 +13781,15 @@ epm_status_thirdparty()
 
             echo "$distribution" | grep -q "^Fedora Project" && return 1
             echo "$distribution" | grep -q "^EEPM" && return 1
+            return 0
+            ;;
+        debian|ubuntu)
+            epm_status_validate $pkg || return 1
+
+            # On UncomOS maintainer Ubuntu and Debian * team
+            echo "$maintainer" | grep -q "Debian" && return 1
+            echo "$maintainer" | grep -q "Ubuntu" && return 1
+            [ ! -z "$repacked" ] && return 1
             return 0
             ;;
         *)
@@ -15834,9 +15878,9 @@ filter_order()
     sort -V | tail -n1
 }
 
-have_end_slash()
+have_end_slash_or_php_parametr()
 {
-    echo "$1" | grep -q '/$'
+    echo "$1" | grep -qE '(/$|\.php($|\?))'
 }
 
 is_abs_path()
@@ -15939,12 +15983,15 @@ WGETQ='' #-q
 CURLQ='' #-s
 AXELQ='' #-q
 # TODO: aria2c
-# TODO: wget --trust-server-names
 # TODO: 
 WGETNAMEOPTIONS='--content-disposition'
 CURLNAMEOPTIONS='--remote-name --remote-time --remote-header-name'
 AXELNAMEOPTIONS=''
+WGETRUSTSERVERNAMES=''
+CURLTRUSTSERVERNAMES=''
 
+CURLOUTPUTDIR=''
+WGETOUTPUTDIR=''
 WGETNODIRECTORIES=''
 WGETCONTINUE=''
 CURLCONTINUE=''
@@ -15999,6 +16046,8 @@ Options:
     -6|--ipv6|--inet6-only    - use only IPV6
     -O-|-O -                  - output downloaded file to stdout
     -O file                   - download to this file
+    -P|--output-dir           - download to this directory
+
     -nd|--no-directories      - do not create a hierarchy of directories when retrieving recursively
     -c|--continue             - continue getting a partially-downloaded file
     -T|--timeout=N            - set  the network timeout to N seconds
@@ -16009,6 +16058,7 @@ Options:
     --latest                  - print only latest version of a file
     --second-latest           - print only second to latest version of a file
     --allow-mirrors           - check mirrors if url is not accessible
+    --trust-server-names      - use the name specified by the redirection
 
     --list|--list-only        - print only URLs
     --check-url URL           - check if the URL exists (returns HTTP 200 OK)
@@ -16073,6 +16123,11 @@ while [ -n "$1" ] ; do
             WGETHEADER="--header=$argvalue"
             CURLHEADER="--header $argvalue"
             AXELHEADER="--header=$argvalue"
+            ;;
+        -P|--output-dir)
+            shift
+            CURLOUTPUTDIR="--create-dirs --output-dir $1"
+            WGETOUTPUTDIR="-P $1"
             ;;
         -U|-A|--user-agent)
             user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
@@ -16158,6 +16213,10 @@ while [ -n "$1" ] ; do
         --retry-connrefused)
             WGETRETRYCONNREFUSED="$1"
             CURLRETRYCONNREFUSED="$1"
+            ;;
+        --trust-server-names)
+            WGETRUSTSERVERNAMES="--trust-server-names"
+            CURLTRUSTSERVERNAMES="-w '%{url_effective}'"
             ;;
         -t|--tries)
             if [ -z "$argvalue" ];then
@@ -16511,6 +16570,8 @@ WGET="$(print_command_path wget)"
 CURL="$(print_command_path curl)"
 
 ORIG_EGET_BACKEND="$EGET_BACKEND"
+EGET_BACKEND="$(basename "$EGET_BACKEND")"
+
 # override backend
 if is_fileurl "$1" ; then
     EGET_BACKEND="file"
@@ -16518,20 +16579,27 @@ elif is_ipfsurl "$1" ; then
     EGET_BACKEND="ipfs"
 fi
 
-
-case "$EGET_BACKEND" in
+case "$ORIG_EGET_BACKEND" in
     file|ipfs)
+        ;;
+    */wget)
+        WGET="$ORIG_EGET_BACKEND"
+        [ -x "$WGET" ] || fatal "There are no $ORIG_EGET_BACKEND in the system but you forced using it via EGET_BACKEND. Install it with $ epm install wget"
         ;;
     wget)
         [ -n "$WGET" ] || fatal "There are no wget in the system but you forced using it via EGET_BACKEND. Install it with $ epm install wget"
+        ;;
+    */curl)
+        CURL="$ORIG_EGET_BACKEND"
+        [ -x "$CURL" ] || fatal "There are no $ORIG_EGET_BACKEND in the system but you forced using it via EGET_BACKEND. Install it with $ epm install curl"
         ;;
     curl)
         [ -n "$CURL" ] || fatal "There are no curl in the system but you forced using it via EGET_BACKEND. Install it with $ epm install curl"
         ;;
     '')
-        [ -n "$CURL" ] && EGET_BACKEND="curl"
-        [ -z "$EGET_BACKEND" ] && [ -n "$WGET" ] && EGET_BACKEND="wget"
-        [ -n "$EGET_BACKEND" ] || fatal "There are no wget nor curl in the system. Install it via $ epm install curl"
+        [ -n "$WGET" ] && EGET_BACKEND="wget"
+        [ -z "$EGET_BACKEND" ] && [ -n "$CURL" ] && EGET_BACKEND="curl"
+        [ -n "$EGET_BACKEND" ] || fatal "There are no wget nor curl in the system. Install something with $ epm install wget"
         ;;
     *)
         fatal "Uknown EGET_BACKEND $EGET_BACKEND"
@@ -16656,9 +16724,9 @@ elif [ "$EGET_BACKEND" = "wget" ] ; then
 __wget()
 {
     if [ -n "$WGETUSERAGENT" ] ; then
-        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETHEADER $WGETNOSSLCHECK $WGETNODIRECTORIES $WGETCONTINUE $WGETTIMEOUT $WGETREADTIMEOUT $WGETRETRYCONNREFUSED $WGETTRIES $WGETLOADCOOKIES "$WGETUSERAGENT" "$@"
+        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETHEADER $WGETNOSSLCHECK $WGETNODIRECTORIES $WGETCONTINUE $WGETTIMEOUT $WGETREADTIMEOUT $WGETRETRYCONNREFUSED $WGETTRIES $WGETLOADCOOKIES $WGETRUSTSERVERNAMES "$WGETUSERAGENT" "$@"
     else
-        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETHEADER $WGETNOSSLCHECK $WGETNODIRECTORIES $WGETCONTINUE $WGETTIMEOUT $WGETREADTIMEOUT $WGETRETRYCONNREFUSED $WGETTRIES $WGETLOADCOOKIES "$@"
+        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETHEADER $WGETNOSSLCHECK $WGETNODIRECTORIES $WGETCONTINUE $WGETTIMEOUT $WGETREADTIMEOUT $WGETRETRYCONNREFUSED $WGETTRIES $WGETLOADCOOKIES $WGETRUSTSERVERNAMES "$@"
     fi
 }
 
@@ -16706,9 +16774,9 @@ elif [ "$EGET_BACKEND" = "curl" ] ; then
 __curl()
 {
     if [ -n "$CURLUSERAGENT" ] ; then
-        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER $CURLNOSSLCHECK $CURLCONTINUE $CURLMAXTIME $CURLRETRYCONNREFUSED $CURLRETRY $CURLCOOKIE "$CURLUSERAGENT" "$@"
+        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER $CURLOUTPUTDIR $CURLNOSSLCHECK $CURLCONTINUE $CURLMAXTIME $CURLRETRYCONNREFUSED $CURLRETRY $CURLCOOKIE $CURLTRUSTSERVERNAMES "$CURLUSERAGENT" "$@"
     else
-        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER $CURLNOSSLCHECK $CURLCONTINUE $CURLMAXTIME $CURLRETRYCONNREFUSED $CURLRETRY $CURLCOOKIE "$@"
+        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER $CURLNOSSLCHECK $CURLCONTINUE $CURLMAXTIME $CURLRETRYCONNREFUSED $CURLRETRY $CURLCOOKIE $CURLTRUSTSERVERNAMES "$@"
     fi
 }
 # put remote content to stdout
@@ -16730,6 +16798,12 @@ url_sget()
        return
     fi
 
+    local FILENAME=$(url_get_filename "$URL")
+    if [ -n "$FILENAME" ] ; then
+        download_with_mirroring __curl "$URL" --remote-time --remote-header-name --output "$FILENAME"
+        return
+    fi
+    
     download_with_mirroring __curl "$URL" $CURLNAMEOPTIONS
 }
 
@@ -17081,7 +17155,7 @@ make_fileurl()
     elif is_abs_path "$fn" ; then
         # if there is file path from the root of the site
         url="$(get_host_only "$url")"
-    elif ! have_end_slash "$url" ; then
+    elif ! have_end_slash_or_php_parametr "$url" ; then
         url="$(dirname "$url")"
     fi
 
@@ -17168,7 +17242,7 @@ if [ -n "$2" ] ; then
     MASK="$2"
     SEPMASK="$2"
 else
-    if have_end_slash "$1" ; then
+    if have_end_slash_or_php_parametr "$1" ; then
         URL="$1"
         MASK=""
     else
@@ -17225,7 +17299,6 @@ for fn in $(get_urls | filter_glob "$MASK" | filter_order) ; do
     [ -n "$TARGETFILE" ] && [ "$ERROR" = "0" ] && break
 done
  return $ERROR
-
 }
 ################# end of incorporated bin/tools_eget #################
 
