@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-export EPMVERSION="3.64.3"
+export EPMVERSION="3.64.4"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -13748,7 +13748,7 @@ epm_status_thirdparty()
     #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
     distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
     repacked="$(epm print field Description for "$1" | grep -qi "alien" 2>/dev/null)"
-    maintainer="$(epm print field Maintainer for "$pkg" 2>/dev/nul)"
+    maintainer="$(epm print field Maintainer for "$pkg" 2>/dev/null)"
 
     case $BASEDISTRNAME in
         alt)
