@@ -180,7 +180,7 @@ get_fix_release_pkg()
         # TODO: we don't support LINUX@Etersoft for now
         # leave etersoft-gpgkeys only if we have LINUX@Etersoft repo
         #epm repo list | grep -q "LINUX@Etersoft" && echo "etersoft-gpgkeys" || echo "alt-gpgkeys"
-        epm --quiet repo comment "LINUX@Etersoft"
+        epm --quiet repo disable "LINUX@Etersoft"
         echo "alt-gpgkeys"
     else
         # update if installed (just print package name here to include in the install list)
