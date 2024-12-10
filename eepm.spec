@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.2
+Version: 3.64.3
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -144,6 +144,21 @@ make -C po
 %endif
 
 %changelog
+* Tue Dec 10 2024 Vitaly Lipatov <lav@altlinux.ru> 3.64.3-alt1
+- epm status: add UncomOS support (eterbug #17885)
+- epm status: add Ubuntu support (eterbug #17885)
+- epm status: add Debian support (eterbug #17885)
+- epm play: add the --ipfs flag to the help message
+- bash and zsh completion update
+- epm play freeoffice: drop year from PKGNAME (eterbug #17849)
+- eget: added --trust-server-names to wget and curl (eterbug #17842)
+- eget: have_end_slash added support to php? url style
+- eget: added --output-dir option (eterbug #17899)
+- eget: fix download name on using curl backend (eterbug #17899)
+- revert "eget: use curl by default"
+- EGET_BACKEND: add support for abs path to the command
+- epm-repack-rpm: don't pack /usr/share/icons
+
 * Thu Dec 05 2024 Vitaly Lipatov <lav@altlinux.ru> 3.64.2-alt1
 - fix options order for dnf5
 - distr_info: use alt vendor instead of altlinux
