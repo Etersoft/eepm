@@ -26,3 +26,10 @@ esac
 #fi
 
 install_pkgurl
+
+
+cat <<EOF
+Note: run
+# epm prescription podman-enable-rootless from root
+to enable rootless support
+EOF
