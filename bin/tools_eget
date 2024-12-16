@@ -902,7 +902,6 @@ WGET="$(print_command_path wget)"
 CURL="$(print_command_path curl)"
 
 ORIG_EGET_BACKEND="$EGET_BACKEND"
-EGET_BACKEND="$(basename "$EGET_BACKEND")"
 
 # override backend
 if is_fileurl "$1" ; then
@@ -911,19 +910,22 @@ elif is_ipfsurl "$1" ; then
     EGET_BACKEND="ipfs"
 fi
 
-case "$ORIG_EGET_BACKEND" in
+orig_EGET_BACKEND="$EGET_BACKEND"
+EGET_BACKEND="$(basename "$EGET_BACKEND")"
+
+case "$orig_EGET_BACKEND" in
     file|ipfs)
         ;;
     */wget)
-        WGET="$ORIG_EGET_BACKEND"
-        [ -x "$WGET" ] || fatal "There are no $ORIG_EGET_BACKEND in the system but you forced using it via EGET_BACKEND. Install it with $ epm install wget"
+        WGET="$orig_EGET_BACKEND"
+        [ -x "$WGET" ] || fatal "There are no $orig_EGET_BACKEND in the system but you forced using it via EGET_BACKEND. Install it with $ epm install wget"
         ;;
     wget)
         [ -n "$WGET" ] || fatal "There are no wget in the system but you forced using it via EGET_BACKEND. Install it with $ epm install wget"
         ;;
     */curl)
-        CURL="$ORIG_EGET_BACKEND"
-        [ -x "$CURL" ] || fatal "There are no $ORIG_EGET_BACKEND in the system but you forced using it via EGET_BACKEND. Install it with $ epm install curl"
+        CURL="$orig_EGET_BACKEND"
+        [ -x "$CURL" ] || fatal "There are no $orig_EGET_BACKEND in the system but you forced using it via EGET_BACKEND. Install it with $ epm install curl"
         ;;
     curl)
         [ -n "$CURL" ] || fatal "There are no curl in the system but you forced using it via EGET_BACKEND. Install it with $ epm install curl"
