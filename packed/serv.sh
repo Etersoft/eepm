@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.4"
+EPMVERSION="3.64.5"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -2201,10 +2201,10 @@ if distro os-release ; then
         *)
             if [ -n "$ID_LIKE" ] ; then
                 # ID_LIKE can be 'rhel centos fedora', use first word
-                VENDOR_ID="$(echo "$ID_LIKE" | xargs -n1 | head -n1)"
+                VENDOR_ID="$(echo "$ID_LIKE" | xargs -n1 echo | head -n1)"
                 # use latest word for versions like Fedora has
                 if is_numeric "$DISTRIB_RELEASE" && [ "$DISTRIB_RELEASE" -ge 20 ] ; then
-                    VENDOR_ID="$(echo "$ID_LIKE" | xargs -n1 | tail -n1)"
+                    VENDOR_ID="$(echo "$ID_LIKE" | xargs -n1 echo | tail -n1)"
                 fi
             fi
             ;;
@@ -2292,6 +2292,7 @@ case "$DISTRIB_ID" in
         DISTRIB_ID="ALTLinux"
         case "$DISTRIB_RELEASE_ORIG" in
             8.0|8.1)
+                DISTRIB_RELEASE="c8"
                 ;;
             8.2|8.3)
                 DISTRIB_RELEASE="c9f1"

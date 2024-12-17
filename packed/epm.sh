@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-export EPMVERSION="3.64.4"
+export EPMVERSION="3.64.5"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -14893,10 +14893,10 @@ if distro os-release ; then
         *)
             if [ -n "$ID_LIKE" ] ; then
                 # ID_LIKE can be 'rhel centos fedora', use first word
-                VENDOR_ID="$(echo "$ID_LIKE" | xargs -n1 | head -n1)"
+                VENDOR_ID="$(echo "$ID_LIKE" | xargs -n1 echo | head -n1)"
                 # use latest word for versions like Fedora has
                 if is_numeric "$DISTRIB_RELEASE" && [ "$DISTRIB_RELEASE" -ge 20 ] ; then
-                    VENDOR_ID="$(echo "$ID_LIKE" | xargs -n1 | tail -n1)"
+                    VENDOR_ID="$(echo "$ID_LIKE" | xargs -n1 echo | tail -n1)"
                 fi
             fi
             ;;
@@ -14984,6 +14984,7 @@ case "$DISTRIB_ID" in
         DISTRIB_ID="ALTLinux"
         case "$DISTRIB_RELEASE_ORIG" in
             8.0|8.1)
+                DISTRIB_RELEASE="c8"
                 ;;
             8.2|8.3)
                 DISTRIB_RELEASE="c9f1"
@@ -16570,7 +16571,6 @@ WGET="$(print_command_path wget)"
 CURL="$(print_command_path curl)"
 
 ORIG_EGET_BACKEND="$EGET_BACKEND"
-EGET_BACKEND="$(basename "$EGET_BACKEND")"
 
 # override backend
 if is_fileurl "$1" ; then
@@ -16579,19 +16579,22 @@ elif is_ipfsurl "$1" ; then
     EGET_BACKEND="ipfs"
 fi
 
-case "$ORIG_EGET_BACKEND" in
+orig_EGET_BACKEND="$EGET_BACKEND"
+EGET_BACKEND="$(basename "$EGET_BACKEND")"
+
+case "$orig_EGET_BACKEND" in
     file|ipfs)
         ;;
     */wget)
-        WGET="$ORIG_EGET_BACKEND"
-        [ -x "$WGET" ] || fatal "There are no $ORIG_EGET_BACKEND in the system but you forced using it via EGET_BACKEND. Install it with $ epm install wget"
+        WGET="$orig_EGET_BACKEND"
+        [ -x "$WGET" ] || fatal "There are no $orig_EGET_BACKEND in the system but you forced using it via EGET_BACKEND. Install it with $ epm install wget"
         ;;
     wget)
         [ -n "$WGET" ] || fatal "There are no wget in the system but you forced using it via EGET_BACKEND. Install it with $ epm install wget"
         ;;
     */curl)
-        CURL="$ORIG_EGET_BACKEND"
-        [ -x "$CURL" ] || fatal "There are no $ORIG_EGET_BACKEND in the system but you forced using it via EGET_BACKEND. Install it with $ epm install curl"
+        CURL="$orig_EGET_BACKEND"
+        [ -x "$CURL" ] || fatal "There are no $orig_EGET_BACKEND in the system but you forced using it via EGET_BACKEND. Install it with $ epm install curl"
         ;;
     curl)
         [ -n "$CURL" ] || fatal "There are no curl in the system but you forced using it via EGET_BACKEND. Install it with $ epm install curl"
