@@ -8,10 +8,13 @@ URL="https://app.lizardbyte.dev/Sunshine"
 
 . $(dirname $0)/common.sh
 
-if [ "$VERSION" = "*" ] ; then
-	VERSION="$(curl -s https://api.github.com/repos/LizardByte/Sunshine/releases/latest | grep -oP '"tag_name": "\K(.*?)(?=")' | sed 's/G//g')"
-fi
-
-PKGURL=https://github.com/LizardByte/Sunshine/releases/download/$VERSION/sunshine.AppImage
+PKGURL=$(get_github_version "https://github.com/LizardByte/Sunshine/" "sunshine-fedora-.*-amd64.rpm")
 
 install_pkgurl
+
+cat <<EOF
+
+Note: run
+# setcap cap_sys_admin+p $(readlink -f $(command -v sunshine))
+to enable permissions for KMS capture (Capture of most Wayland-based desktop environments will fail unless this step is performed.)
+EOF
