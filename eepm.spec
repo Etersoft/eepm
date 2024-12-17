@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.4
+Version: 3.64.5
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -144,6 +144,13 @@ make -C po
 %endif
 
 %changelog
+* Tue Dec 17 2024 Vitaly Lipatov <lav@altlinux.ru> 3.64.5-alt1
+- distr_info: fix VENDOR_ID for fedora like
+- distr_info: fix for ALT c8
+- epm play docker-desktop: added note about enable rootless
+- eget: fix bug with IPFS handling
+- epm play: added moonlight (eterbug #17912)
+
 * Tue Dec 10 2024 Vitaly Lipatov <lav@altlinux.ru> 3.64.4-alt1
 - epm status: fix typo (eterbug #17865)
 - epm play cnrdrvcups-ufr2: fix download link (eterbug #17865)
