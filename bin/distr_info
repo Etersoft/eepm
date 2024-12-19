@@ -133,6 +133,7 @@ pkgvendor()
 #which pkcon 2>/dev/null >/dev/null && info "You can run $ PMTYPE=packagekit epm to use packagekit backend"
 
 # Print package manager (need DISTRIB_ID, DISTRIB_RELEASE vars)
+# used in package manager detection via distro name
 pkgmanager()
 {
 local CMD
@@ -154,7 +155,7 @@ case $DISTRIB_ID in
     PCLinux)
         CMD="apt-rpm"
         ;;
-    Ubuntu|Debian|Mint|OSNovaLinux|AstraLinux*|Elbrus)
+    Ubuntu|Debian|Mint|OSNovaLinux|Uncom|AstraLinux*|Elbrus)
         CMD="apt-dpkg"
         #which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
         #is_command snappy && CMD=snappy
@@ -185,7 +186,7 @@ case $DISTRIB_ID in
     ArchLinux|ManjaroLinux)
         CMD="pacman"
         ;;
-    Fedora|CentOS|OracleLinux|RockyLinux|AlmaLinux|RHEL|RELS|Scientific|GosLinux|Amzn|RedOS)
+    Fedora|CentOS|OracleLinux|RockyLinux|AlmaLinux|RHEL|RELS|Scientific|GosLinux|Amzn|RedOS|MSVSphere)
         CMD="dnf-rpm"
         is_command dnf || CMD="yum-rpm"
         [ "$DISTRIB_ID/$DISTRIB_RELEASE" = "CentOS/7" ] && CMD="yum-rpm"
