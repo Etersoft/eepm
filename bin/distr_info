@@ -68,6 +68,19 @@ tolower()
     echo "$*" | awk '{print tolower($0)}'
 }
 
+# copied from estrlist
+firstword()
+{
+        echo "$*" | cut -f1 -d" "
+}
+
+lastword()
+{
+        echo "$*" | xargs -n1 echo 2>/dev/null | tail -n1
+}
+
+
+
 print_bug_report_url()
 {
     echo "$BUG_REPORT_URL"
@@ -406,10 +419,10 @@ if distro os-release ; then
         *)
             if [ -n "$ID_LIKE" ] ; then
                 # ID_LIKE can be 'rhel centos fedora', use first word
-                VENDOR_ID="$(echo "$ID_LIKE" | xargs -n1 echo | head -n1)"
+                VENDOR_ID="$(echo "$ID_LIKE" | firstword)"
                 # use latest word for versions like Fedora has
                 if is_numeric "$DISTRIB_RELEASE" && [ "$DISTRIB_RELEASE" -ge 20 ] ; then
-                    VENDOR_ID="$(echo "$ID_LIKE" | xargs -n1 echo | tail -n1)"
+                    VENDOR_ID="$(echo "$ID_LIKE" | lastword)"
                 fi
             fi
             ;;
