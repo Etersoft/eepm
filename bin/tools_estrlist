@@ -53,6 +53,16 @@ isempty()
         is_empty "$@"
 }
 
+first()
+{
+        echo "$*" | cut -f1 -d" "
+}
+
+last()
+{
+        echo "$*" | xargs -n1 echo 2>/dev/null | tail -n1
+}
+
 has_space()
 {
         # not for dash:
@@ -280,6 +290,8 @@ help()
         echo "  list [word list]                  - just list words line by line"
         echo "  count [word list]                 - print word count"
         echo "  contains <word> [word list]       - check if word list contains the word"
+        echo "  first <word list>                 - print first word"
+        echo "  last <word list>                  - print last word"
         echo
         echo "Examples:"
 #        example reg_remove "1." "11 12 21 22"
@@ -297,6 +309,8 @@ help()
         example_res has exo "exactly"
         example_res match "M[0-9]+" "M250"
         example_res match "M[0-9]+" "MI"
+        example_res first "1 2 3"
+        example_res last "1 2 3"
 }
 
 COMMAND="$1"
