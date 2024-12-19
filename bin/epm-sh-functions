@@ -261,6 +261,28 @@ strip_spaces()
         echo "$*" | filter_strip_spaces
 }
 
+firstupper()
+{
+    # FIXME: works with GNU sed only
+    echo "$*" | sed 's/.*/\u&/'
+}
+
+tolower()
+{
+    # tr is broken in busybox (checked with OpenWrt)
+    #echo "$*" | tr "[:upper:]" "[:lower:]"
+    echo "$*" | awk '{print tolower($0)}'
+}
+
+firstword()
+{
+        echo "$*" | cut -f1 -d" "
+}
+
+lastword()
+{
+        echo "$*" | xargs -n1 echo 2>/dev/null | tail -n1
+}
 
 # https://superuser.com/questions/422459/substitution-in-text-file-without-regular-expressions
 # http://stackoverflow.com/a/2705678/120999
