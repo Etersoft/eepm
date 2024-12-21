@@ -24,13 +24,19 @@ remove_file $PRODUCTDIR/office6/wpscloudsvr
 remove_file $PRODUCTDIR/office6/addons/pdfbatchcompression/libpdfbatchcompressionapp.so
 
 # Fix for icu>=71.1
-remove_file $PRODUCTDIR/office6/libstdc++.so.6*
+remove_file $PRODUCTDIR/office6/libstdc++.so.*
+
+# Use system libjpeg
+remove_file $PRODUCTDIR/office6/libjpeg.so.*
 
 # hack to fix bug somewhere in linking
 ignore_lib_requires "libc++.so"
 
 # QT is prebuilded
 ignore_lib_requires "libQtCore.so.4 libQtNetwork.so.4 libQtXml.so.4"
+
+# WPS Office provide libuof.so()(64bit) itself
+ignore_lib_requires "libuof.so"
 
 # Fix wps deprecated python2 command
 # https://aur.archlinux.org/cgit/aur.git/tree/fix-wps-python-parse.patch?h=wps-office-cn
