@@ -36,7 +36,12 @@ fi
 
 #### 1.2.3 and above
 
-move_to_opt /usr/lib/rustdesk
+# "$VERSION" >= "1.3.6"
+if printf '%s\n' "$VERSION" "1.3.6" | sort -V | head -n 1 | grep -q "1.3.6" ; then
+    move_to_opt /usr/share/rustdesk
+else
+    move_to_opt /usr/lib/rustdesk
+fi
 
 subst "s|^Categories.*|Categories=GNOME;GTK;Network;RemoteAccess;|" usr/share/applications/$PRODUCT.desktop
 
