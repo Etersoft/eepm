@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.5"
+EPMVERSION="3.64.6"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -291,6 +291,28 @@ strip_spaces()
         echo "$*" | filter_strip_spaces
 }
 
+firstupper()
+{
+    # FIXME: works with GNU sed only
+    echo "$*" | sed 's/.*/\u&/'
+}
+
+tolower()
+{
+    # tr is broken in busybox (checked with OpenWrt)
+    #echo "$*" | tr "[:upper:]" "[:lower:]"
+    echo "$*" | awk '{print tolower($0)}'
+}
+
+firstword()
+{
+        echo "$*" | cut -f1 -d" "
+}
+
+lastword()
+{
+        echo "$*" | xargs -n1 echo 2>/dev/null | tail -n1
+}
 
 sed_escape()
 {
@@ -1863,6 +1885,19 @@ tolower()
     echo "$*" | awk '{print tolower($0)}'
 }
 
+# copied from estrlist
+firstword()
+{
+        echo "$*" | cut -f1 -d" "
+}
+
+lastword()
+{
+        echo "$*" | xargs -n1 echo 2>/dev/null | tail -n1
+}
+
+
+
 print_bug_report_url()
 {
     echo "$BUG_REPORT_URL"
@@ -1915,6 +1950,7 @@ pkgvendor()
 #which pkcon 2>/dev/null >/dev/null && info "You can run $ PMTYPE=packagekit epm to use packagekit backend"
 
 # Print package manager (need DISTRIB_ID, DISTRIB_RELEASE vars)
+# used in package manager detection via distro name
 pkgmanager()
 {
 local CMD
@@ -1936,7 +1972,7 @@ case $DISTRIB_ID in
     PCLinux)
         CMD="apt-rpm"
         ;;
-    Ubuntu|Debian|Mint|OSNovaLinux|AstraLinux*|Elbrus)
+    Ubuntu|Debian|Mint|OSNovaLinux|Uncom|AstraLinux*|Elbrus)
         CMD="apt-dpkg"
         #which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
         #is_command snappy && CMD=snappy
@@ -1967,7 +2003,7 @@ case $DISTRIB_ID in
     ArchLinux|ManjaroLinux)
         CMD="pacman"
         ;;
-    Fedora|CentOS|OracleLinux|RockyLinux|AlmaLinux|RHEL|RELS|Scientific|GosLinux|Amzn|RedOS)
+    Fedora|CentOS|OracleLinux|RockyLinux|AlmaLinux|RHEL|RELS|Scientific|GosLinux|Amzn|RedOS|MSVSphere)
         CMD="dnf-rpm"
         is_command dnf || CMD="yum-rpm"
         [ "$DISTRIB_ID/$DISTRIB_RELEASE" = "CentOS/7" ] && CMD="yum-rpm"
@@ -2195,16 +2231,20 @@ if distro os-release ; then
     # set by os-release:
     #PRETTY_NAME
     VENDOR_ID="$ID"
+    DISTRIB_CODENAME="$VERSION_CODENAME"
     case "$VENDOR_ID" in
         ubuntu|reld|rhel|astra|manjaro|redos|msvsphere|alteros|rockylinux|almalinux)
             ;;
         *)
             if [ -n "$ID_LIKE" ] ; then
                 # ID_LIKE can be 'rhel centos fedora', use first word
-                VENDOR_ID="$(echo "$ID_LIKE" | xargs -n1 echo | head -n1)"
+                VENDOR_ID="$(firstword "$ID_LIKE")"
                 # use latest word for versions like Fedora has
                 if is_numeric "$DISTRIB_RELEASE" && [ "$DISTRIB_RELEASE" -ge 20 ] ; then
-                    VENDOR_ID="$(echo "$ID_LIKE" | xargs -n1 echo | tail -n1)"
+                    VENDOR_ID="$(lastword "$ID_LIKE")"
+                fi
+                if [ "$VENDOR_ID" = "debian" ] && [ -n "$DEBIAN_CODENAME" ] ; then
+                    DISTRIB_CODENAME="$DEBIAN_CODENAME"
                 fi
             fi
             ;;
@@ -2215,7 +2255,6 @@ if distro os-release ; then
             ;;
     esac
     DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
-    DISTRIB_CODENAME="$VERSION_CODENAME"
 
 elif distro lsb-release ; then
     DISTRIB_ID=$(cat $DISTROFILE | get_var DISTRIB_ID)
