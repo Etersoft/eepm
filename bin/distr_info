@@ -421,10 +421,10 @@ if distro os-release ; then
         *)
             if [ -n "$ID_LIKE" ] ; then
                 # ID_LIKE can be 'rhel centos fedora', use first word
-                VENDOR_ID="$(echo "$ID_LIKE" | firstword)"
+                VENDOR_ID="$(firstword "$ID_LIKE")"
                 # use latest word for versions like Fedora has
                 if is_numeric "$DISTRIB_RELEASE" && [ "$DISTRIB_RELEASE" -ge 20 ] ; then
-                    VENDOR_ID="$(echo "$ID_LIKE" | lastword)"
+                    VENDOR_ID="$(lastword "$ID_LIKE")"
                 fi
                 if [ "$VENDOR_ID" = "debian" ] && [ -n "$DEBIAN_CODENAME" ] ; then
                     DISTRIB_CODENAME="$DEBIAN_CODENAME"
