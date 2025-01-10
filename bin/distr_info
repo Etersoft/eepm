@@ -414,6 +414,7 @@ if distro os-release ; then
     # set by os-release:
     #PRETTY_NAME
     VENDOR_ID="$ID"
+    DISTRIB_CODENAME="$VERSION_CODENAME"
     case "$VENDOR_ID" in
         ubuntu|reld|rhel|astra|manjaro|redos|msvsphere|alteros|rockylinux|almalinux)
             ;;
@@ -425,6 +426,9 @@ if distro os-release ; then
                 if is_numeric "$DISTRIB_RELEASE" && [ "$DISTRIB_RELEASE" -ge 20 ] ; then
                     VENDOR_ID="$(echo "$ID_LIKE" | lastword)"
                 fi
+                if [ "$VENDOR_ID" = "debian" ] && [ -n "$DEBIAN_CODENAME" ] ; then
+                    DISTRIB_CODENAME="$DEBIAN_CODENAME"
+                fi
             fi
             ;;
     esac
@@ -434,7 +438,6 @@ if distro os-release ; then
             ;;
     esac
     DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
-    DISTRIB_CODENAME="$VERSION_CODENAME"
 
 elif distro lsb-release ; then
     DISTRIB_ID=$(cat $DISTROFILE | get_var DISTRIB_ID)
