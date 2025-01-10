@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.5
+Version: 3.64.6
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -144,6 +144,13 @@ make -C po
 %endif
 
 %changelog
+* Sat Jan 11 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.6-alt1
+- epm: play added svp4 (eterbug #17842)
+- epm status --third-party: fix on rosa and mos (eterbug #17860)
+- distr_info: and Uncom, MSVSphere to package manager detection
+- epm play duplicati: always download deb package (eterbug #17955)
+- distr_info: improve support for Debian based distro
+
 * Tue Dec 17 2024 Vitaly Lipatov <lav@altlinux.ru> 3.64.5-alt1
 - distr_info: fix VENDOR_ID for fedora like
 - distr_info: fix for ALT c8
