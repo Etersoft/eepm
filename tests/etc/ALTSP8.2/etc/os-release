@@ -1,0 +1,9 @@
+NAME="ALT SPWorkstation"
+VERSION="8.0 (cliff)"
+ID=altlinux
+VERSION_ID=8.0
+PRETTY_NAME="ALT 8 SP Workstation (cliff)"
+ANSI_COLOR="1;33"
+CPE_NAME="cpe:/o:alt:spworkstation:8.0"
+HOME_URL="http://altsp.su"
+BUG_REPORT_URL="https://bugs.altlinux.org/"
