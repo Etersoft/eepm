@@ -13,7 +13,7 @@ cat <<EOF |create_file /usr/share/applications/$PRODUCT.desktop
 Version=1.0
 Type=Application
 Name=Cascadeur
-Comment=Cascadeur - a physics‑based 3D animation software
+Comment=Cascadeur - a physics-based 3D animation software
 Icon=$PRODUCT
 Exec=$PRODUCT %u
 Categories=Games;
@@ -28,5 +28,5 @@ remove_dir /opt/cascadeur/qml/QtQuick/Effects
 remove_dir /opt/cascadeur/qml/QtQml/RemoteObjects
 remove_dir /opt/cascadeur/qml/QtQuick/LocalStorage
 remove_dir /opt/cascadeur/qml/QtQuick/XmlListModel
-
+ignore_lib_requires 'libbz2.so.1.0' 'libgdbm.so.6'
 add_libs_requires
