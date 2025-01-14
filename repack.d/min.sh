@@ -6,7 +6,7 @@ SPEC="$2"
 
 PRODUCT=min
 PRODUCTCUR=Min
-PRODUCTDIR=/opt/$PRODUCT
+PRODUCTDIR=/opt/$PRODUCTCUR
 
 . $(dirname $0)/common-chromium-browser.sh
 
@@ -15,5 +15,7 @@ cleanup
 add_chromium_deps
 
 fix_chrome_sandbox
+
+add_bin_exec_command $PRODUCT $PRODUCTDIR/$PRODUCT 
 
 fix_desktop_file
