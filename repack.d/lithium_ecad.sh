@@ -12,7 +12,7 @@ add_bin_link_command $PRODUCT $PRODUCTDIR/launcher.sh
 # missed with other soname
 #ln -s /usr/lib64/libjasper.so.* bin/libjasper.so.1
 #pack_file $PRODUCTDIR/bin/libjasper.so.1
-ignore_lib_requires libjasper.so.1
+ignore_lib_requires libjasper.so.1 libhunspell-1.6.so.0
 
 install_file $PRODUCTDIR/lithium-ecad.desktop /usr/share/applications/$PRODUCT.desktop
 fix_desktop_file "/opt/lithium_ecad-.*/launcher.sh" $PRODUCT
