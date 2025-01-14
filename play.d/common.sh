@@ -170,7 +170,7 @@ get_latest_version()
     done
 }
 
-get_github_version()
+get_github_url()
 {
     local url="$1"
     local user_and_repo=${url#https://github.com/}

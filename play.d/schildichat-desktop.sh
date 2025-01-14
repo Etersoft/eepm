@@ -23,9 +23,9 @@ case $pkgtype in
 esac
 
 if [ "$VERSION" = "*" ] ; then
-    PKGURL=$(get_github_version "https://github.com/SchildiChat/schildichat-desktop/" "$mask")
+    PKGURL=$(get_github_url "https://github.com/SchildiChat/schildichat-desktop/" "$mask")
 else
-    # need because get_github_version doesn't support ${VERSION} without a dot before VERSION in mask
+    # need because get_github_url doesn't support ${VERSION} without a dot before VERSION in mask
     direct_mask="$(echo $mask | sed 's/\.//')"
     PKGURL="https://github.com/SchildiChat/schildichat-desktop/releases/download/v$VERSION/$direct_mask"
 fi
