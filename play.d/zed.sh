@@ -21,7 +21,7 @@ case "$arch" in
 esac
 
 if [ "$VERSION" = "*" ] ; then 
-	PKGURL=$(get_github_version "https://github.com/zed-industries/zed/" "zed-linux-$arch.tar.gz") 
+	PKGURL=$(get_github_url "https://github.com/zed-industries/zed/" "zed-linux-$arch.tar.gz") 
 else 
 	PKGURL="https://github.com/zed-industries/zed/releases/download/v$VERSION/zed-linux-$arch.tar.gz" 
 fi

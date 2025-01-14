@@ -18,7 +18,7 @@ case "$(epm print info -a)" in
 esac
 
 if [ "$VERSION" = "*" ] ; then
-    PKGURL=$(get_github_version "https://github.com/mifi/lossless-cut/" "LosslessCut-linux-$arch.tar.bz2")
+    PKGURL=$(get_github_url "https://github.com/mifi/lossless-cut/" "LosslessCut-linux-$arch.tar.bz2")
 else
     PKGURL="https://github.com/mifi/lossless-cut/releases/download/v$VERSION/LosslessCut-linux-$arch.tar.bz2"
 fi

@@ -8,7 +8,7 @@ URL="https://app.lizardbyte.dev/Sunshine"
 
 . $(dirname $0)/common.sh
 
-PKGURL=$(get_github_version "https://github.com/LizardByte/Sunshine/" "sunshine-fedora-.*-amd64.rpm")
+PKGURL=$(get_github_url "https://github.com/LizardByte/Sunshine/" "sunshine-fedora-.*-amd64.rpm")
 
 install_pkgurl
 
