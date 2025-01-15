@@ -697,13 +697,25 @@ _epm_play_packages() {
 }
 
 _epm_available_packages() {
-  local available_packages 
-  available_packages=( $(epm list --available --quiet --short --direct) )
-  _describe -t available-packages 'available package' available_packages
-  if [[ ${words[CURRENT]} == -* ]]; then
+  local cur=${words[CURRENT]}
+  if [[ "$cur" == ./* || "$cur" == ../* || "$cur" == /* ]]; then
+    _files
+    return
+  fi
+
+  repo_results=( ${(f)"$(epm list --available --quiet --short --direct | grep "^$cur")"} )
+
+  if (( ${#repo_results[@]} > 0 )); then
+    _describe -t available-packages 'available package' repo_results
+  else
+    _files
+  fi
+
+  if [[ "$cur" == -* ]]; then
     _arguments -C "${EEPM_SHORT_ARGS[@]}" "${EEPM_FULL_ARGS[@]}"
   fi
 }
+
 
 _epm_installed_packages() {
   local installed_packages 

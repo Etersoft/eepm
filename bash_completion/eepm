@@ -60,10 +60,22 @@ __eepm_list_installed_packages()
     COMPREPLY=( $( compgen -W '${COMPREPLY[@]}' -- "$cur" ) )
 }
 
-__eepm_list_available_packages()
-{
-    COMPREPLY=( $( epm list --available --quiet --short --direct ) )
-    COMPREPLY=( $( compgen -W '${COMPREPLY[@]}' -- "$cur" ) )
+__eepm_list_available_packages() {
+    
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local repo_results
+
+    if [[ "$cur" == ./* || "$cur" == ../* || "$cur" == /* ]]; then
+        _filedir
+        return
+    fi
+    
+    repo_results=$(epm list --available --quiet --short --direct | grep "^$cur" )
+    COMPREPLY=( $(compgen -W "$repo_results" -- "$cur") )
+
+    if [[ -z "$COMPREPLY" ]]; then
+        _filedir
+    fi
 }
 
 __eepm_list_available_prescription()
