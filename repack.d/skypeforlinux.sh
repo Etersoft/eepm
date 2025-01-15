@@ -6,17 +6,9 @@ SPEC="$2"
 
 PRODUCT=skype
 PRODUCTCUR=skypeforlinux
-PRODUCTDIR=/opt/skype
+PRODUCTDIR=/opt/skypeforlinux
 
 . $(dirname $0)/common-chromium-browser.sh
-
-# remove key install script
-remove_dir /opt/skypeforlinux
-
-move_to_opt /usr/share/skypeforlinux
-
-# https://bugzilla.altlinux.org/45502
-remove_file /usr/bin/skypeforlinux
 
 add_bin_link_command $PRODUCTCUR $PRODUCTDIR/$PRODUCTCUR
 add_bin_link_command $PRODUCT $PRODUCTCUR
@@ -24,6 +16,7 @@ add_bin_link_command $PRODUCT $PRODUCTCUR
 fix_chrome_sandbox
 
 fix_desktop_file /usr/bin/skypeforlinux
+fix_desktop_file '${SNAP}/meta/gui/skypeforlinux.png' skypeforlinux.png
 
 add_electron_deps
 
