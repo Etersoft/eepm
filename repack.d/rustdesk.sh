@@ -35,8 +35,11 @@ exit
 fi
 
 #### 1.2.3 and above
-
-move_to_opt /usr/lib/rustdesk
+if [ -d "usr/lib/rustdesk" ]; then
+    move_to_opt /usr/lib/rustdesk
+else
+    move_to_opt /usr/share/rustdesk
+fi
 
 subst "s|^Categories.*|Categories=GNOME;GTK;Network;RemoteAccess;|" usr/share/applications/$PRODUCT.desktop
 
