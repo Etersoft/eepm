@@ -8,11 +8,9 @@ URL="https://skype.com"
 
 . $(dirname $0)/common.sh
 
-#arch=$(epm print info --distro-arch)
-#pkgtype=$(epm print info -p)
-pkgtype=deb
+warn_version_is_not_supported
 
-# https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=skypeforlinux-stable-bin
-PKGURL="https://repo.skype.com/deb/pool/main/s/${PKGNAME}/${PKGNAME}_${VERSION}_amd64.deb"
+# https://snapcraft.io/skype https://aur.archlinux.org/packages/skypeforlinux-bin
+PKGURL="$(snap_get_pkgurl https://snapcraft.io/skype)"
 
-install_pkgurl
+install_pack_pkgurl
