@@ -38,12 +38,19 @@ BOOST_REPO_VERSION=$(LC_ALL=C epm info boost | grep -oP '^Version\s*:\s*\K[^\s]+
 BOOST_FEDORA_VERSION=$(ldd usr/bin/sunshine | grep -oP 'libboost_[^ ]+\.so\.\K[0-9]+\.[0-9]+\.[0-9]+' | sort -u)
 BOOST_LIBS=$(ldd usr/bin/sunshine | grep -oP 'libboost_[^ ]+\.so' | sort -u | sed 's/libboost_//; s/\.so//')
 
+MINIUPNPC_FEDORA_VERSION=$(ldd usr/bin/sunshine | grep -oP 'libminiupnpc\.so\.\K[0-9]+')
+MINIUPNPC_REPO_VERSION=$(LC_ALL=C epm search miniupnpc |  grep -Eo 'libminiupnpc[0-9]+' | grep -Eo '[0-9]+' | sort -V | tail -n1)
+
+if [ -z $MINIUPNPC_REPO_VERSION ] ; then
+    MINIUPNPC_REPO_VERSION=$(LC_ALL=C epm ql miniupnpc | grep -o 'libminiupnpc\.so\.[0-9]\+' | sed 's/.*\.so\.//' | sort -V | tail -n1)
+fi
+
 # Replace fedora libboost to system libboost
 for lib in ${BOOST_LIBS}; do
     patchelf --replace-needed "libboost_${lib}.so.${BOOST_FEDORA_VERSION}" "libboost_${lib}.so.${BOOST_REPO_VERSION}" "usr/bin/sunshine"
 done
 
-# Commented until I know how to find out the version of the library in the repository
-# patchelf --replace-needed libminiupnpc.so.1{7,8} "usr/bin/sunshine"
+# Replace fedora libminiupnpc to system libminiupnpc
+patchelf --replace-needed "libminiupnpc.so.$MINIUPNPC_FEDORA_VERSION" "libminiupnpc.so.$MINIUPNPC_REPO_VERSION"  "usr/bin/sunshine"
 
 add_libs_requires
