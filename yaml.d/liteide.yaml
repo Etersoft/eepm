@@ -1,0 +1,10 @@
+apps:
+  - name: liteide
+    group: liteide group
+    license: liteide license
+    url: https://github.com/visualfc/liteide
+    summary: liteide summary
+    description: LiteIDE is a simple, open source, cross-platform Go IDE. From the official site
+    arches: x86_64 x86
+    download_page: https://github.com/visualfc/liteide/releases
+    download_mask: liteidex*.linux$archbit-qt5*-system.tar.gz

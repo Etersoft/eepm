@@ -1,0 +1,9 @@
+apps:
+  - name: firefox-nightly
+    group: firefox-nightly group
+    license: firefox-nightly license
+    url: 
+    summary: firefox-nightly summary
+    description: Firefox nightly from the official site
+    arches: x86_64
+    download_page: https://ftp.mozilla.org/pub/firefox/nightly/latest-mozilla-central/firefox-*.en-US.linux-$arch.deb

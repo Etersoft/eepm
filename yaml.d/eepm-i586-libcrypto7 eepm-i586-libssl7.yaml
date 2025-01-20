@@ -1,0 +1,9 @@
+apps:
+  - name: eepm-i586-libcrypto7 eepm-i586-libssl7
+    group: eepm-i586-libcrypto7 eepm-i586-libssl7 group
+    license: eepm-i586-libcrypto7 eepm-i586-libssl7 license
+    url: https://packages.altlinux.org/ru/sisyphus/srpms/openssl098/rpms/
+    summary: eepm-i586-libcrypto7 eepm-i586-libssl7 summary
+    description: OpenSSL 0.9.8 (libcrypto.so.0.9.8, libssl.so.0.9.8) from ALT repo
+    arches: x86_64
+    download_page: 

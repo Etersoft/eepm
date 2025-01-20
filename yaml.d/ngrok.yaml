@@ -1,0 +1,9 @@
+apps:
+  - name: ngrok
+    group: ngrok group
+    license: ngrok license
+    url: https://ngrok.com/
+    summary: ngrok summary
+    description: ngrok is the programmable network edge that adds connectivity, security, and observability to your apps with no code changes.
+    arches: x86_64 armhf aarch64
+    download_page: $(snap_get_pkgurl https://snapcraft.io/ngrok)

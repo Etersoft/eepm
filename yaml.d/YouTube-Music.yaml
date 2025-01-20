@@ -1,0 +1,10 @@
+apps:
+  - name: YouTube-Music
+    group: YouTube-Music group
+    license: YouTube-Music license
+    url: https://github.com/th-ch/youtube-music
+    summary: YouTube-Music summary
+    description: YouTube Music Desktop App bundled with custom plugins (and built-in ad blocker / downloader)
+    arches: x86_64 armv7l aarch64
+    download_page: https://github.com/th-ch/youtube-music/releases/
+    download_mask: $mask

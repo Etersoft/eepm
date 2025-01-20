@@ -1,0 +1,9 @@
+apps:
+  - name: gitkraken
+    group: gitkraken group
+    license: gitkraken license
+    url: https://www.gitkraken.com/
+    summary: gitkraken summary
+    description: GitKraken Client from the official site
+    arches: x86_64
+    download_page: 

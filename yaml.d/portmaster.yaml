@@ -1,0 +1,9 @@
+apps:
+  - name: portmaster
+    group: portmaster group
+    license: portmaster license
+    url: https://safing.io/
+    summary: portmaster summary
+    description: Portmaster from the official site
+    arches: x86_64
+    download_page: https://updates.safing.io/latest/linux_amd64/packages/portmaster-installer.$pkgtype

@@ -1,0 +1,9 @@
+apps:
+  - name: t1client-standalone
+    group: t1client-standalone group
+    license: t1client-standalone license
+    url: https://confluence.trassir.com/pages/viewpage.action?pageId=36865118
+    summary: t1client-standalone summary
+    description: DSSL Trassir Client
+    arches: x86_64
+    download_page: 

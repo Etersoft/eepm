@@ -1,0 +1,10 @@
+apps:
+  - name: bitwarden
+    group: bitwarden group
+    license: bitwarden license
+    url: 
+    summary: bitwarden summary
+    description: Bitwarden desktop from the official site
+    arches: x86_64
+    download_page: https://github.com/bitwarden/clients/releases
+    download_mask: $(epm

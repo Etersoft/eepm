@@ -1,0 +1,9 @@
+apps:
+  - name: lunacy
+    group: lunacy group
+    license: lunacy license
+    url: https://icons8.ru/lunacy
+    summary: lunacy summary
+    description: Lunacy - Graphic Design Editor
+    arches: x86_64 aarch64
+    download_page: 

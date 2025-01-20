@@ -1,0 +1,9 @@
+apps:
+  - name: rudesktop
+    group: rudesktop group
+    license: rudesktop license
+    url: https://rudesktop.ru/
+    summary: rudesktop summary
+    description: RuDesktop for Linux from the official site
+    arches: x86_64
+    download_page: https://rudesktop.ru/download/rudesktop-amd64.$pkgtype

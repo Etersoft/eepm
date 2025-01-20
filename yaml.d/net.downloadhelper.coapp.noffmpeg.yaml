@@ -1,0 +1,10 @@
+apps:
+  - name: net.downloadhelper.coapp.noffmpeg
+    group: net.downloadhelper.coapp.noffmpeg group
+    license: net.downloadhelper.coapp.noffmpeg license
+    url: https://www.downloadhelper.net/w/CoApp-Installation
+    summary: net.downloadhelper.coapp.noffmpeg summary
+    description: Video DownloadHelper Companion App 2
+    arches: x86_64 aarch64
+    download_page: https://github.com/aclap-dev/vdhcoapp/releases/
+    download_mask: $mask
