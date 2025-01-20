@@ -1,0 +1,9 @@
+apps:
+  - name: flashplayer
+    group: flashplayer group
+    license: flashplayer license
+    url: https://www.adobe.com/support/flashplayer/downloads.html
+    summary: flashplayer summary
+    description: Adobe Flash Player from the official site
+    arches: x86_64
+    download_page: https://fpdownload.macromedia.com/pub/flashplayer/updaters/32/flash_player_sa_linux.x86_64.tar.gz

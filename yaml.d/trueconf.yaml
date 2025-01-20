@@ -1,0 +1,9 @@
+apps:
+  - name: trueconf
+    group: trueconf group
+    license: trueconf license
+    url: https://trueconf.ru
+    summary: trueconf summary
+    description: TrueConf client for Linux from the official site
+    arches: x86_64
+    download_page: 

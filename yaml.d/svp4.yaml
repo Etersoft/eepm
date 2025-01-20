@@ -1,0 +1,9 @@
+apps:
+  - name: svp4
+    group: svp4 group
+    license: svp4 license
+    url: https://svp-team.com/wiki/SVP:Linux
+    summary: svp4 summary
+    description: SmoothVideo Project 4 (SVP4)
+    arches: x86_64
+    download_page: http://www.svp-team.com/files/svp4-latest.php?linux

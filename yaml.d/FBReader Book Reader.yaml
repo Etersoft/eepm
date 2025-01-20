@@ -1,0 +1,9 @@
+apps:
+  - name: FBReader Book Reader
+    group: FBReader Book Reader group
+    license: FBReader Book Reader license
+    url: https://fbreader.org/en/linux
+    summary: FBReader Book Reader summary
+    description: An ePub reader supporting Readium LCP DRM. Also opens fb2 and other formats. Free, fast, configurable
+    arches: x86_64 aarch64
+    download_page: https://fbreader.org/static/packages/linux/FBReader_Book_Reader-$arch-*.AppImage

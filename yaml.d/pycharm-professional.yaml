@@ -1,0 +1,9 @@
+apps:
+  - name: pycharm-professional
+    group: pycharm-professional group
+    license: pycharm-professional license
+    url: https://www.jetbrains.com/ru-ru/pycharm/
+    summary: pycharm-professional summary
+    description: PyCharm Professional — The Python IDE for Professional Developers (Trial)
+    arches: x86_64 aarch64
+    download_page: $(get_jetbrains_pkgurl PCP python)

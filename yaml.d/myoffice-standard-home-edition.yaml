@@ -1,0 +1,9 @@
+apps:
+  - name: myoffice-standard-home-edition
+    group: myoffice-standard-home-edition group
+    license: myoffice-standard-home-edition license
+    url: https://myoffice.ru/products/standard-home-edition/
+    summary: myoffice-standard-home-edition summary
+    description: MyOffice Standart Home Edition for Linux from the official site
+    arches: x86_64
+    download_page: 

@@ -1,0 +1,9 @@
+apps:
+  - name: ClipGrab
+    group: ClipGrab group
+    license: ClipGrab license
+    url: https://clipgrab.org/
+    summary: ClipGrab summary
+    description: ClibGrab - A friendly downloader for YouTube and other sites from the official site
+    arches: x86_64
+    download_page: 

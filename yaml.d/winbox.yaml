@@ -1,0 +1,9 @@
+apps:
+  - name: winbox
+    group: winbox group
+    license: winbox license
+    url: https://mikrotik.com/download
+    summary: winbox summary
+    description: Winbox from the official site
+    arches: x86_64
+    download_page: https://download.mikrotik.com/routeros/winbox/*/WinBox_Linux.zip

@@ -1,0 +1,10 @@
+apps:
+  - name: DJV2
+    group: DJV2 group
+    license: DJV2 license
+    url: 
+    summary: DJV2 summary
+    description: DJV2 - Professional media review software for VFX, animation, and film production
+    arches: x86_64
+    download_page: https://github.com/darbyjohnston/DJV/releases
+    download_mask: $mask

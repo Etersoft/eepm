@@ -1,0 +1,10 @@
+apps:
+  - name: ProtonUp-Qt
+    group: ProtonUp-Qt group
+    license: ProtonUp-Qt license
+    url: https://github.com/DavidoTek/ProtonUp-Qt
+    summary: ProtonUp-Qt summary
+    description: Install and manage GE-Proton and Luxtorpeda for Steam and Wine-GE for Lutris with this graphical user interface
+    arches: x86_64
+    download_page: https://github.com/DavidoTek/ProtonUp-Qt/releases
+    download_mask: ProtonUp-Qt-*-x86_64.AppImage

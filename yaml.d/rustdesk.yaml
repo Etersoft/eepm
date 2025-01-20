@@ -1,0 +1,10 @@
+apps:
+  - name: rustdesk
+    group: rustdesk group
+    license: rustdesk license
+    url: https://github.com/rustdesk/rustdesk/
+    summary: rustdesk summary
+    description: RustDesk — Display and control your PC and Android devices
+    arches: x86_64
+    download_page: https://github.com/rustdesk/rustdesk/releases
+    download_mask: $MASK

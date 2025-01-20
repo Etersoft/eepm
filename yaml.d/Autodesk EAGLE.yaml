@@ -1,0 +1,9 @@
+apps:
+  - name: Autodesk EAGLE
+    group: Autodesk EAGLE group
+    license: Autodesk EAGLE license
+    url: 
+    summary: Autodesk EAGLE summary
+    description: EAGLE (EDA software) from the official site
+    arches: x86_64
+    download_page: https://trial2.autodesk.com/NET17SWDLD/2017/EGLPRM/ESD/Autodesk_EAGLE_*_English_Linux_64bit.tar.gz

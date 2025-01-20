@@ -1,0 +1,9 @@
+apps:
+  - name: libicu56
+    group: libicu56 group
+    license: libicu56 license
+    url: 
+    summary: libicu56 summary
+    description: 
+    arches: x86_64
+    download_page: 

@@ -1,0 +1,9 @@
+apps:
+  - name: cursor
+    group: cursor group
+    license: cursor license
+    url: https://cursor.sh/
+    summary: cursor summary
+    description: The AI-first Code Editor
+    arches: x86_64
+    download_page: https://downloader.cursor.sh/linux/appImage/x64

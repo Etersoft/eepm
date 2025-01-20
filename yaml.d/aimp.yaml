@@ -1,0 +1,9 @@
+apps:
+  - name: aimp
+    group: aimp group
+    license: aimp license
+    url: https://www.aimp.ru/?do=download&os=linux
+    summary: aimp summary
+    description: AIMP (Wine based audio player) from the official site
+    arches: x86_64
+    download_page: 

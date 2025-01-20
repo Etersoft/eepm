@@ -1,0 +1,10 @@
+apps:
+  - name: mssql-server-fts
+    group: mssql-server-fts group
+    license: mssql-server-fts license
+    url: https://www.minecraft.net/en-us/download
+    summary: mssql-server-fts summary
+    description: MS SQL Server Full Text Search
+    arches: x86_64
+    download_page: https://packages.microsoft.com/sles/12/mssql-server-2019/Packages/m/
+    download_mask: mssql-server-fts*.x86_64.rpm

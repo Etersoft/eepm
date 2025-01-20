@@ -1,0 +1,9 @@
+apps:
+  - name: mssql-tools
+    group: mssql-tools group
+    license: mssql-tools license
+    url: 
+    summary: mssql-tools summary
+    description: MS SQL Server sqlcmd and bcp from the official site
+    arches: x86_64
+    download_page: 

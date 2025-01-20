@@ -1,0 +1,9 @@
+apps:
+  - name: kyocera-sane
+    group: kyocera-sane group
+    license: kyocera-sane license
+    url: https://www.kyoceradocumentsolutions.eu/en/support/downloads.name-L2V1L2VuL21mcC9FQ09TWVNNNjIzMENJRE4=.html
+    summary: kyocera-sane summary
+    description: Kyocera sane scanner support package
+    arches: x86_64
+    download_page: https://www.kyoceradocumentsolutions.de/content/download-center/de/drivers/all/SANE_Driver_zip.download.zip

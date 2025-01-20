@@ -1,0 +1,9 @@
+apps:
+  - name: audiorelay
+    group: audiorelay group
+    license: audiorelay license
+    url: https://audiorelay.net
+    summary: audiorelay summary
+    description: AudioRelay from the official site
+    arches: x86_64
+    download_page: https://dl.audiorelay.net/setups/linux/audiorelay-*.deb

@@ -1,0 +1,9 @@
+apps:
+  - name: bitrix24
+    group: bitrix24 group
+    license: bitrix24 license
+    url: https://www.bitrix24.ru/features/desktop.php
+    summary: bitrix24 summary
+    description: Bitrix24 desktop client from the official site
+    arches: x86_64
+    download_page: 

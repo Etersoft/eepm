@@ -1,0 +1,9 @@
+apps:
+  - name: virtualbox-extpack
+    group: virtualbox-extpack group
+    license: virtualbox-extpack license
+    url: https://www.virtualbox.org/wiki/Downloads
+    summary: virtualbox-extpack summary
+    description: Oracle VM VirtualBox Extension pack from the official site (personal use only)
+    arches: x86_64
+    download_page: https://download.virtualbox.org/virtualbox/*/Oracle_VM_VirtualBox_Extension_Pack-*.vbox-extpack

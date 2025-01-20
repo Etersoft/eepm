@@ -1,0 +1,9 @@
+apps:
+  - name: lexmark-upd-ppd
+    group: lexmark-upd-ppd group
+    license: lexmark-upd-ppd license
+    url: https://support.lexmark.com/content/support/en_xm/support/download.DRI1000577.html
+    summary: lexmark-upd-ppd summary
+    description: Linux Universal Print Driver with 64-bit packaging for Lexmark Printers
+    arches: x86_64
+    download_page: https://downloads.lexmark.com/downloads/drivers/Lexmark-UPD-PPD-Files-1.0-05252022.x86_64.rpm

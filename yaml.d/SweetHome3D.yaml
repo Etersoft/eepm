@@ -1,0 +1,9 @@
+apps:
+  - name: SweetHome3D
+    group: SweetHome3D group
+    license: SweetHome3D license
+    url: $(eget -4 --list --latest https://www.sweethome3d.com/download.jsp SweetHome3D-$VERSION-linux-$arch.tgz/download)
+    summary: SweetHome3D summary
+    description: 
+    arches: x86_64 x86
+    download_page: $(echo $URL | sed -e s|https*://sourceforge.net/projects/sweethome3d/files|https://download.sourceforge.net/project/sweethome3d| -e 's|/download$||' )

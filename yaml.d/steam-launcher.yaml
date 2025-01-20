@@ -1,0 +1,9 @@
+apps:
+  - name: steam-launcher
+    group: steam-launcher group
+    license: steam-launcher license
+    url: https://store.steampowered.com/about
+    summary: steam-launcher summary
+    description: Steam Launcher (from the repository if the package is there, or from the official site)
+    arches: x86_64
+    download_page: 

@@ -1,0 +1,9 @@
+apps:
+  - name: epson-printer-utility
+    group: epson-printer-utility group
+    license: epson-printer-utility license
+    url: http://support.epson.net/linux/Printer/LSB_distribution_pages/en/utility.php
+    summary: epson-printer-utility summary
+    description: Epson Printer Utility - Linux Epson Printer Utility from the official site
+    arches: x86_64
+    download_page: 

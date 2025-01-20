@@ -1,0 +1,9 @@
+apps:
+  - name: S4A
+    group: S4A group
+    license: S4A license
+    url: https://s4a.cat/
+    summary: S4A summary
+    description: A Scratch modification that allows for simple programming of the Arduino open source hardware platform
+    arches: x86_64
+    download_page: https://s4a.cat/downloads/S4A16.deb

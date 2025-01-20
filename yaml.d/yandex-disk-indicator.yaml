@@ -1,0 +1,9 @@
+apps:
+  - name: yandex-disk-indicator
+    group: yandex-disk-indicator group
+    license: yandex-disk-indicator license
+    url: https://github.com/slytomcat/yandex-disk-indicator
+    summary: yandex-disk-indicator summary
+    description: Panel indicator (GUI) for YandexDisk CLI client for Linux
+    arches: x86_64
+    download_page: https://github.com/slytomcat/yandex-disk-indicator/archive/*.tar.gz

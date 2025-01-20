@@ -1,0 +1,9 @@
+apps:
+  - name: sane-panakvs
+    group: sane-panakvs group
+    license: sane-panakvs license
+    url: https://panasonic.net/cns/pcc/support/scanner/linuxspanakvs.html
+    summary: sane-panakvs summary
+    description: Panasonic Scanner Driver for Linux from the official site
+    arches: x86_64
+    download_page: https://www.psn-web.net/cs-im/Japan/Scanner/cojp/data_cmns/linux/$file

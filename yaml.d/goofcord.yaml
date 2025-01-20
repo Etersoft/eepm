@@ -1,0 +1,10 @@
+apps:
+  - name: goofcord
+    group: goofcord group
+    license: goofcord license
+    url: https://github.com/Milkshiift/GoofCord/
+    summary: goofcord summary
+    description: The highly configurable and privacy minded discord client
+    arches: x86_64 arm64
+    download_page: https://github.com/Milkshiift/GoofCord/releases
+    download_mask: GoofCord-*-linux-$arch.$pkgtype

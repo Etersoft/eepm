@@ -1,0 +1,9 @@
+apps:
+  - name: epsonscan2
+    group: epsonscan2 group
+    license: epsonscan2 license
+    url: https://support.epson.net/linux/en/epsonscan2.php
+    summary: epsonscan2 summary
+    description: Epson Scan 2 - Linux Scanner Driver from the official site
+    arches: x86_64
+    download_page: 

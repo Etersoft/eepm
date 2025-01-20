@@ -1,0 +1,10 @@
+apps:
+  - name: neovide
+    group: neovide group
+    license: neovide license
+    url: https://neovide.dev/
+    summary: neovide summary
+    description: No Nonsense Neovim Client in Rust from the official site
+    arches: x86_64
+    download_page: https://github.com/neovide/neovide/releases
+    download_mask: neovide.AppImage

@@ -1,0 +1,9 @@
+apps:
+  - name: xerox-spl-driver
+    group: xerox-spl-driver group
+    license: xerox-spl-driver license
+    url: https://www.support.xerox.com
+    summary: xerox-spl-driver summary
+    description: Xerox SPL Linux Driver for printers and scanners
+    arches: x86_64
+    download_page: http://download.support.xerox.com/pub/drivers/B215/drivers/linux/ar/Xerox_B215_Linux_PrintDriver_Utilities.tar.gz

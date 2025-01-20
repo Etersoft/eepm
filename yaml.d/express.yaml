@@ -1,0 +1,9 @@
+apps:
+  - name: express
+    group: express group
+    license: express license
+    url: https://express.ms/
+    summary: express summary
+    description: eXpress client from the official site
+    arches: x86_64
+    download_page: https://express.ms/download/deb

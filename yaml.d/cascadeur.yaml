@@ -1,0 +1,9 @@
+apps:
+  - name: cascadeur
+    group: cascadeur group
+    license: cascadeur license
+    url: https://cascadeur.com/download
+    summary: cascadeur summary
+    description: Cascadeur - a physics‑based 3D animation software
+    arches: x86_64
+    download_page: https://cdn.cascadeur.com/builds/linux/$BUILDID/cascadeur-linux_*.tgz

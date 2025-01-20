@@ -1,0 +1,10 @@
+apps:
+  - name: freetube
+    group: freetube group
+    license: freetube license
+    url: https://freetubeapp.io/
+    summary: freetube summary
+    description: The Private YouTube Client
+    arches: x86_64 armhf aarch64
+    download_page: https://github.com/FreeTubeApp/FreeTube/releases
+    download_mask: freetube***${arch}.deb

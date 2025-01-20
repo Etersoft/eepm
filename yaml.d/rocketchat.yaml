@@ -1,0 +1,10 @@
+apps:
+  - name: rocketchat
+    group: rocketchat group
+    license: rocketchat license
+    url: https://github.com/RocketChat/Rocket.Chat.Electron
+    summary: rocketchat summary
+    description: Rocket.Chat Linux Desktop Client from the official site
+    arches: x86_64
+    download_page: https://github.com/RocketChat/Rocket.Chat.Electron/releases/
+    download_mask: rocketchat***$arch.$pkgtype

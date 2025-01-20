@@ -1,0 +1,10 @@
+apps:
+  - name: Tonkeeper
+    group: Tonkeeper group
+    license: Tonkeeper license
+    url: https://tonkeeper.com/desktop
+    summary: Tonkeeper summary
+    description: Tonkeeper desktop from the official site
+    arches: x86_64 aarch64
+    download_page: https://github.com/tonkeeper/tonkeeper-web/releases
+    download_mask: $(epm

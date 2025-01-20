@@ -1,0 +1,10 @@
+apps:
+  - name: rpcs3
+    group: rpcs3 group
+    license: rpcs3 license
+    url: https://rpcs3.net/download
+    summary: rpcs3 summary
+    description: RPCS3 - free and open-source PlayStation 3 emulator from the official site
+    arches: x86_64
+    download_page: https://github.com/RPCS3/rpcs3-binaries-linux/releases
+    download_mask: $file

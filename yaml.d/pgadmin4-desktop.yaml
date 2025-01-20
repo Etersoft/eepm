@@ -1,0 +1,9 @@
+apps:
+  - name: pgadmin4-desktop
+    group: pgadmin4-desktop group
+    license: pgadmin4-desktop license
+    url: 
+    summary: pgadmin4-desktop summary
+    description: 
+    arches: x86_64
+    download_page: $BASEURL/pgadmin4-server-*.*.$pkgarch.rpm $BASEURL/pgadmin4-desktop-*.*.$pkgarch.rpm

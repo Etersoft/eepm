@@ -1,0 +1,9 @@
+apps:
+  - name: jetbrains-toolbox
+    group: jetbrains-toolbox group
+    license: jetbrains-toolbox license
+    url: https://www.jetbrains.com/toolbox/
+    summary: jetbrains-toolbox summary
+    description: JetBrains Toolbox App from the official site
+    arches: x86_64
+    download_page: $(eget -O- https://data.services.jetbrains.com/products?code=TBA&release.type=eap%2Crc%2Crelease&fields=distributions%2Clink%2Cname%2Creleases | epm --inscript tool json -b | grep '0,releases,0,downloads,linux,link' | sed -e 's|.*[[:space:]]||' -e 's|||g' )

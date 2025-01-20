@@ -1,0 +1,9 @@
+apps:
+  - name: refind
+    group: refind group
+    license: refind license
+    url: https://sourceforge.net/projects/refind
+    summary: refind summary
+    description: An EFI boot manager utility
+    arches: x86_64
+    download_page: 

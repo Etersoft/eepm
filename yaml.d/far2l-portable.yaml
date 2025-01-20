@@ -1,0 +1,10 @@
+apps:
+  - name: far2l-portable
+    group: far2l-portable group
+    license: far2l-portable license
+    url: 
+    summary: far2l-portable summary
+    description: FAR2L Portable from the official site
+    arches: x86_64
+    download_page: https://github.com/spvkgn/far2l-portable/releases
+    download_mask: far2l*x86_64*.AppImage.tar

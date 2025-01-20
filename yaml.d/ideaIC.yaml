@@ -1,0 +1,9 @@
+apps:
+  - name: ideaIC
+    group: ideaIC group
+    license: ideaIC license
+    url: https://www.jetbrains.com/idea/
+    summary: ideaIC summary
+    description: IntelliJ IDEA Community Edition - The Leading Java and Kotlin IDE from the official site
+    arches: x86_64 aarch64
+    download_page: $(get_jetbrains_pkgurl IIC idea)

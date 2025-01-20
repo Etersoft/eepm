@@ -1,0 +1,10 @@
+apps:
+  - name: obs-linuxbrowser
+    group: obs-linuxbrowser group
+    license: obs-linuxbrowser license
+    url: https://github.com/bazukas/obs-linuxbrowser/
+    summary: obs-linuxbrowser summary
+    description: Portable version of OBS linux browser
+    arches: x86_64
+    download_page: https://github.com/bazukas/obs-linuxbrowser/releases
+    download_mask: .tgz

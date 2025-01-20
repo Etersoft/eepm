@@ -1,0 +1,10 @@
+apps:
+  - name: webdavmailrucloud
+    group: webdavmailrucloud group
+    license: webdavmailrucloud license
+    url: https://github.com/yar229/WebDavMailRuCloud
+    summary: webdavmailrucloud summary
+    description: WebDAV emulator for Cloud.mail.ru / Yandex.Disk
+    arches: x86_64
+    download_page: https://github.com/yar229/WebDavMailRuCloud/releases
+    download_mask: WebDAVCloudMailRu-*-dotNet$dotnet.zip

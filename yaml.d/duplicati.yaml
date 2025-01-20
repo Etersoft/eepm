@@ -1,0 +1,9 @@
+apps:
+  - name: duplicati
+    group: duplicati group
+    license: duplicati license
+    url: https://www.duplicati.com/
+    summary: duplicati summary
+    description: Duplicati from the official site
+    arches: 
+    download_page: $(eget -O /dev/stdout https://updates.duplicati.com/beta/latest-installers.js | grep -i -o -E 'url: (.+)' | cut -d'' -f4 | grep duplicati.*deb)

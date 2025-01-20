@@ -1,0 +1,10 @@
+apps:
+  - name: softmaker-freeoffice
+    group: softmaker-freeoffice group
+    license: softmaker-freeoffice license
+    url: 
+    summary: softmaker-freeoffice summary
+    description: SoftMaker Free Office from the official site
+    arches: x86_64
+    download_page: https://www.freeoffice.com/ru/download/applications
+    download_mask: softmaker-freeoffice-**-amd64.tgz

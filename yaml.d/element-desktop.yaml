@@ -1,0 +1,9 @@
+apps:
+  - name: element-desktop
+    group: element-desktop group
+    license: element-desktop license
+    url: https://element.io/
+    summary: element-desktop summary
+    description: A feature-rich client for Matrix.org
+    arches: x86_64
+    download_page: 

@@ -1,0 +1,10 @@
+apps:
+  - name: whatsapp-for
+    group: whatsapp-for group
+    license: whatsapp-for license
+    url: https://github.com/eneshecan/whatsapp-for-linux
+    summary: whatsapp-for summary
+    description: An unofficial WhatsApp desktop application (from the repository if the package is there, or from the official site)
+    arches: x86_64
+    download_page: https://github.com/eneshecan/whatsapp-for-linux/releases
+    download_mask: whatsapp-for-*-$arch.AppImage

@@ -1,0 +1,10 @@
+apps:
+  - name: Trezor-Suite
+    group: Trezor-Suite group
+    license: Trezor-Suite license
+    url: https://github.com/trezor/trezor-suite/releases
+    summary: Trezor-Suite summary
+    description: Management software for Trezor hardware cryptocurrency wallets
+    arches: x86_64 aarch64
+    download_page: $URL
+    download_mask: $(epm

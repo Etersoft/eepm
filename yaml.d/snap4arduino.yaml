@@ -1,0 +1,10 @@
+apps:
+  - name: snap4arduino
+    group: snap4arduino group
+    license: snap4arduino license
+    url: https://github.com/bromagosa/Snap4Arduino
+    summary: snap4arduino summary
+    description: Snap4Arduino binds Snap! and Arduino together
+    arches: x86_64 x86
+    download_page: https://github.com/bromagosa/Snap4Arduino/releases
+    download_mask: Snap4Arduino_desktop-gnu-$arch_*.tar.gz

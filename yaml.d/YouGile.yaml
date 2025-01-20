@@ -1,0 +1,9 @@
+apps:
+  - name: YouGile
+    group: YouGile group
+    license: YouGile license
+    url: https://yougile.com
+    summary: YouGile summary
+    description: Система управления проектами и задачами
+    arches: x86_64
+    download_page: https://dist.yougile.com/app/YouGile-*-x86_64.AppImage

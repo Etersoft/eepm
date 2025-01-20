@@ -1,0 +1,9 @@
+apps:
+  - name: mts-link-desktop
+    group: mts-link-desktop group
+    license: mts-link-desktop license
+    url: https://mts-link.ru/
+    summary: mts-link-desktop summary
+    description: Ecosystem of services for business communications and collaboration
+    arches: x86_64
+    download_page: https://apps.webinar.ru/desktop/latest/mts-link-desktop.AppImage

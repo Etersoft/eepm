@@ -1,0 +1,10 @@
+apps:
+  - name: vk
+    group: vk group
+    license: vk license
+    url: https://vk.com/vkme
+    summary: vk summary
+    description: VK Messenger from the official site
+    arches: x86_64 x86
+    download_page: https://desktop.userapi.com/rpm/master/
+    download_mask: vk-*.$arch.rpm

@@ -1,0 +1,9 @@
+apps:
+  - name: raindrop
+    group: raindrop group
+    license: raindrop license
+    url: https://snapcraft.io/raindrop
+    summary: raindrop summary
+    description: Raindrop.io from the snapcraft
+    arches: x86_64
+    download_page: $(snap_get_pkgurl $URL)

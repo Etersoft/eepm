@@ -1,0 +1,10 @@
+apps:
+  - name: mailspring
+    group: mailspring group
+    license: mailspring license
+    url: https://www.getmailspring.com/
+    summary: mailspring summary
+    description: Mailspring - a beautiful, fast and fully open source mail client
+    arches: x86_64
+    download_page: https://github.com/Foundry376/Mailspring/releases/
+    download_mask: mailspring***$arch.$pkgtype

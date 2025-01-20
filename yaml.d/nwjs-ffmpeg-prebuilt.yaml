@@ -1,0 +1,9 @@
+apps:
+  - name: nwjs-ffmpeg-prebuilt
+    group: nwjs-ffmpeg-prebuilt group
+    license: nwjs-ffmpeg-prebuilt license
+    url: https://github.com/nwjs-ffmpeg-prebuilt/nwjs-ffmpeg-prebuilt/
+    summary: nwjs-ffmpeg-prebuilt summary
+    description: FFmpeg prebuilt binaries for NW.js / Chromium from the official project site
+    arches: x86_64
+    download_page: 

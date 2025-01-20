@@ -1,0 +1,9 @@
+apps:
+  - name: xnview
+    group: xnview group
+    license: xnview license
+    url: https://xnview.com/
+    summary: xnview summary
+    description: XnView MP: Image management from the official site
+    arches: x86_64
+    download_page: https://download.xnview.com/XnViewMP-linux-x64.deb

@@ -1,0 +1,9 @@
+apps:
+  - name: virtualhere
+    group: virtualhere group
+    license: virtualhere license
+    url: https://www.virtualhere.com/
+    summary: virtualhere summary
+    description: Generic VirtualHere USB Server from the official site
+    arches: x86_64 armhf mips mipsel aarch64 x86
+    download_page: https://www.virtualhere.com/sites/default/files/usbserver/$file

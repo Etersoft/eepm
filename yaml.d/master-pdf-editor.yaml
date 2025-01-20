@@ -1,0 +1,10 @@
+apps:
+  - name: master-pdf-editor
+    group: master-pdf-editor group
+    license: master-pdf-editor license
+    url: https://master-pdf-editor.ru/
+    summary: master-pdf-editor summary
+    description: Master PDF Editor from the official site
+    arches: x86_64
+    download_page: https://code-industry.ru/get-master-pdf-editor-for-linux/
+    download_mask: $PKG

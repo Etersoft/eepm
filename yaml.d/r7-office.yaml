@@ -1,0 +1,10 @@
+apps:
+  - name: r7-office
+    group: r7-office group
+    license: r7-office license
+    url: https://r7-office.ru/
+    summary: r7-office summary
+    description: R7 Office for Linux from the official site
+    arches: x86_64
+    download_page: -U
+    download_mask: $URLBASE

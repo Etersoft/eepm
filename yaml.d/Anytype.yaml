@@ -1,0 +1,10 @@
+apps:
+  - name: Anytype
+    group: Anytype group
+    license: Anytype license
+    url: https://anytype.io/
+    summary: Anytype summary
+    description: The everything app for those who celebrate trust & autonomy
+    arches: x86_64
+    download_page: https://download.anytype.io/
+    download_mask: *.AppImage

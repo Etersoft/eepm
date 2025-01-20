@@ -1,0 +1,9 @@
+apps:
+  - name: penpot-desktop
+    group: penpot-desktop group
+    license: penpot-desktop license
+    url: https://snapcraft.io/penpot-desktop
+    summary: penpot-desktop summary
+    description: Penpot Desktop from the snapcraft
+    arches: x86_64
+    download_page: $(snap_get_pkgurl $URL)

@@ -1,0 +1,10 @@
+apps:
+  - name: webots
+    group: webots group
+    license: webots license
+    url: https://cyberbotics.com/
+    summary: webots summary
+    description: Webots: open-source robot simulator
+    arches: x86_64
+    download_page: https://github.com/cyberbotics/webots/releases/*.deb)
+    download_mask: PKGURL=$(eget --list --latest https://github.com/cyberbotics/webots/releases/*.deb

@@ -1,0 +1,9 @@
+apps:
+  - name: zoom
+    group: zoom group
+    license: zoom license
+    url: https://zoom.us
+    summary: zoom summary
+    description: Zoom client from the official site
+    arches: x86_64 x86
+    download_page: https://zoom.us/client/*/zoom_$arch.$(epm print info -p)

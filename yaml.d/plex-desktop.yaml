@@ -1,0 +1,9 @@
+apps:
+  - name: plex-desktop
+    group: plex-desktop group
+    license: plex-desktop license
+    url: https://www.plex.tv/
+    summary: plex-desktop summary
+    description: Plex Desktop from the official site
+    arches: x86_64
+    download_page: $(snap_get_pkgurl https://snapcraft.io/plex-desktop)

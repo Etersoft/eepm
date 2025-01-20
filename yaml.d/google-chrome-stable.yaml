@@ -1,0 +1,9 @@
+apps:
+  - name: google-chrome-stable
+    group: google-chrome-stable group
+    license: google-chrome-stable license
+    url: https://www.google.com/chrome/
+    summary: google-chrome-stable summary
+    description: The popular and trusted web browser by Google (Stable Channel) from the official site
+    arches: x86_64
+    download_page: 

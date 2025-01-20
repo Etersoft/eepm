@@ -1,0 +1,10 @@
+apps:
+  - name: slack
+    group: slack group
+    license: slack license
+    url: https://slack.com
+    summary: slack summary
+    description: Slack from the official site
+    arches: x86_64
+    download_page: https://slack.com/downloads/instructions/linux?ddl=1&build=rpm
+    download_mask: $mask

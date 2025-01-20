@@ -1,0 +1,10 @@
+apps:
+  - name: gradle
+    group: gradle group
+    license: gradle license
+    url: https://gradle.org/
+    summary: gradle summary
+    description: Gradle is a build automation tool known for its flexibility to build software
+    arches: x86_64
+    download_page: https://gradle.org/releases/
+    download_mask: gradle-*-bin.zip

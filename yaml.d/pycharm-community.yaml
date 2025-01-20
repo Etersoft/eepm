@@ -1,0 +1,9 @@
+apps:
+  - name: pycharm-community
+    group: pycharm-community group
+    license: pycharm-community license
+    url: https://www.jetbrains.com/ru-ru/pycharm/
+    summary: pycharm-community summary
+    description: PyCharm CE — The Python IDE for Professional Developers
+    arches: x86_64 aarch64
+    download_page: $(get_jetbrains_pkgurl PCC python)

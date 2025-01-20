@@ -1,0 +1,10 @@
+apps:
+  - name: madcad
+    group: madcad group
+    license: madcad license
+    url: https://madcad.netlify.app/uimadcad
+    summary: madcad summary
+    description: uimadcad is a GUI (Graphical User Interface) meant to ease the use of pymadcad
+    arches: x86_64 x86
+    download_page: https://madcad.netlify.app/uimadcad
+    download_mask: uimadcad*$arch.tar.gz

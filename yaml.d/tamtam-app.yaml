@@ -1,0 +1,9 @@
+apps:
+  - name: tamtam-app
+    group: tamtam-app group
+    license: tamtam-app license
+    url: 
+    summary: tamtam-app summary
+    description: TamTam messenger from the official site
+    arches: x86_64 x86
+    download_page: https://download.tamtam.chat/latest/TamTam-$arch.deb

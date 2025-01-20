@@ -1,0 +1,10 @@
+apps:
+  - name: yandex-music
+    group: yandex-music group
+    license: yandex-music license
+    url: https://github.com/cucumber-sp/yandex-music-linux/releases
+    summary: yandex-music summary
+    description: Native Yandex Music client for Linux. Made with OSX/Windows beta client repacking
+    arches: x86_64 aarch64 armhf
+    download_page: https://github.com/cucumber-sp/yandex-music-linux/releases
+    download_mask: yandex-music_*_${arch}.deb

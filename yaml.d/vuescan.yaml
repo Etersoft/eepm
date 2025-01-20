@@ -1,0 +1,10 @@
+apps:
+  - name: vuescan
+    group: vuescan group
+    license: vuescan license
+    url: https://www.hamrick.com/alternate-versions.html
+    summary: vuescan summary
+    description: VueScan from the official site
+    arches: x86_64 x86 aarch64 armhf
+    download_page: https://www.hamrick.com/alternate-versions.html
+    download_mask: $file*.$pkgtype

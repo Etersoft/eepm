@@ -1,0 +1,10 @@
+apps:
+  - name: codium
+    group: codium group
+    license: codium license
+    url: 
+    summary: codium summary
+    description: Codium from the official site
+    arches: x86_64 aarch64 armhf
+    download_page: https://github.com/VSCodium/vscodium/releases
+    download_mask: $mask

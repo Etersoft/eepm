@@ -1,0 +1,10 @@
+apps:
+  - name: sidequest
+    group: sidequest group
+    license: sidequest license
+    url: https://sidequestvr.com/
+    summary: sidequest summary
+    description: The SideQuest desktop application
+    arches: x86_64
+    download_page: https://github.com/SideQuestVR/SideQuest/releases/
+    download_mask: SideQuest-*.tar.xz

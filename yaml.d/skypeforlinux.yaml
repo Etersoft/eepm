@@ -1,0 +1,9 @@
+apps:
+  - name: skypeforlinux
+    group: skypeforlinux group
+    license: skypeforlinux license
+    url: https://skype.com
+    summary: skypeforlinux summary
+    description: Skype for Linux - Stable/Release Version from the official site
+    arches: x86_64
+    download_page: $(snap_get_pkgurl https://snapcraft.io/skype)

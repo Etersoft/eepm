@@ -1,0 +1,10 @@
+apps:
+  - name: arduino-ide
+    group: arduino-ide group
+    license: arduino-ide license
+    url: https://www.arduino.cc/en/software
+    summary: arduino-ide summary
+    description: The new major release of the Arduino IDE is faster and even more powerful!
+    arches: x86_64
+    download_page: https://github.com/arduino/arduino-ide/releases
+    download_mask: arduino-ide_*_Linux_64bit.AppImage

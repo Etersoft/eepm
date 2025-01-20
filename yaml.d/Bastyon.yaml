@@ -1,0 +1,10 @@
+apps:
+  - name: Bastyon
+    group: Bastyon group
+    license: Bastyon license
+    url: https://bastyon.com/applications
+    summary: Bastyon summary
+    description: Bastyon is a decentralized, open-source social network and video sharing platform.
+    arches: x86_64
+    download_page: https://github.com/pocketnetteam/pocketnet.gui/releases
+    download_mask: Bastyon.AppImage

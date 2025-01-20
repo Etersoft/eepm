@@ -1,0 +1,9 @@
+apps:
+  - name: zerotier-one
+    group: zerotier-one group
+    license: zerotier-one license
+    url: https://zerotier.com
+    summary: zerotier-one summary
+    description: ZeroTier - A Smart Ethernet Switch for Earth from the official site
+    arches: x86_64 aarch64 ppc64el
+    download_page: $(eget --compressed --list --latest https://download.zerotier.com/RELEASES/*/dist/$dv/zerotier-one[-_]**$arch.$pkg)

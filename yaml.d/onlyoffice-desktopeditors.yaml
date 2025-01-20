@@ -1,0 +1,9 @@
+apps:
+  - name: onlyoffice-desktopeditors
+    group: onlyoffice-desktopeditors group
+    license: onlyoffice-desktopeditors license
+    url: www.onlyoffice.com
+    summary: onlyoffice-desktopeditors summary
+    description: ONLYOFFICE for Linux from the official site
+    arches: x86_64
+    download_page: 

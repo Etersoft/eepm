@@ -1,0 +1,9 @@
+apps:
+  - name: firestorm-os
+    group: firestorm-os group
+    license: firestorm-os license
+    url: https://www.firestormviewer.org/
+    summary: firestorm-os summary
+    description: Firestorm Open Simulator viewer
+    arches: x86_64
+    download_page: https://downloads.firestormviewer.org/release/linux/Phoenix-FirestormOS-Releasex64-6-6-17-70368.tar.xz

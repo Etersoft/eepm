@@ -1,0 +1,9 @@
+apps:
+  - name: apache-netbeans
+    group: apache-netbeans group
+    license: apache-netbeans license
+    url: https://netbeans.apache.org
+    summary: apache-netbeans summary
+    description: Apache NetBeans from the official site
+    arches: 
+    download_page: https://archive.apache.org/dist/netbeans/netbeans-installers/*/$mask

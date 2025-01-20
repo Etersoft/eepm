@@ -1,0 +1,9 @@
+apps:
+  - name: atom
+    group: atom group
+    license: atom license
+    url: https://github.blog/2022-06-08-sunsetting-atom/
+    summary: atom summary
+    description: 
+    arches: x86_64
+    download_page: 

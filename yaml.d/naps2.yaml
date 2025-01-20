@@ -1,0 +1,9 @@
+apps:
+  - name: naps2
+    group: naps2 group
+    license: naps2 license
+    url: https://github.com/cyanfish/naps2/releases/
+    summary: naps2 summary
+    description: Scan documents to PDF and more, as simply as possible.
+    arches: x86_64 aarch64
+    download_page: 

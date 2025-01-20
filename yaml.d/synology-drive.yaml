@@ -1,0 +1,9 @@
+apps:
+  - name: synology-drive
+    group: synology-drive group
+    license: synology-drive license
+    url: https://www.synology.com/
+    summary: synology-drive summary
+    description: Synology Drive Client from the official site
+    arches: x86_64
+    download_page: $urldir/synology-drive-*.x86_64.deb

@@ -1,0 +1,9 @@
+apps:
+  - name: vkteams
+    group: vkteams group
+    license: vkteams license
+    url: https://biz.mail.ru/teams
+    summary: vkteams summary
+    description: VK Teams for Linux from the official site
+    arches: x86_64
+    download_page: https://vkteams-www.hb.bizmrg.com/linux/x64/vkteams.tar.xz

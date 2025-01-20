@@ -1,0 +1,9 @@
+apps:
+  - name: dbeaver-ce
+    group: dbeaver-ce group
+    license: dbeaver-ce license
+    url: https://dbeaver.io/
+    summary: dbeaver-ce summary
+    description: DBeaver Community from the official site
+    arches: x86_64
+    download_page: 

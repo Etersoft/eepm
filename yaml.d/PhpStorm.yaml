@@ -1,0 +1,9 @@
+apps:
+  - name: PhpStorm
+    group: PhpStorm group
+    license: PhpStorm license
+    url: https://www.jetbrains.com/phpstorm/
+    summary: PhpStorm summary
+    description: PhpStorm - The Lightning-Smart PHP IDE from the official site
+    arches: x86_64 aarch64
+    download_page: $(get_jetbrains_pkgurl PS webide)

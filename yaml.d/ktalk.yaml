@@ -1,0 +1,9 @@
+apps:
+  - name: ktalk
+    group: ktalk group
+    license: ktalk license
+    url: https://kontur.ru/talk
+    summary: ktalk summary
+    description: Контур.Толк (ktalk) from the official site
+    arches: x86_64
+    download_page: https://app.ktalk.ru/system/dist/download/linux

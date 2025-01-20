@@ -1,0 +1,9 @@
+apps:
+  - name: pfusp
+    group: pfusp group
+    license: pfusp license
+    url: https://www.pfu.ricoh.com/global/scanners/fi/dl/agree/ubuntu-64-221-sp.html
+    summary: pfusp summary
+    description: Ricoh SP-1120N / SP-1125N / SP-1130N Image Scanner Driver Linux from the official site
+    arches: x86_64
+    download_page: https://origin.pfultd.com/downloads/IMAGE/driver/ubuntu/221/pfusp-ubuntu_2.2.1_amd64.deb

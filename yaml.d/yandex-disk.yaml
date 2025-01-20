@@ -1,0 +1,9 @@
+apps:
+  - name: yandex-disk
+    group: yandex-disk group
+    license: yandex-disk license
+    url: https://360.yandex.com/disk/download/
+    summary: yandex-disk summary
+    description: Yandex Disk from the official site
+    arches: x86_64 x86
+    download_page: https://repo.yandex.ru/yandex-disk/$(epm print constructname yandex-disk latest)

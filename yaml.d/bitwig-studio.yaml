@@ -1,0 +1,9 @@
+apps:
+  - name: bitwig-studio
+    group: bitwig-studio group
+    license: bitwig-studio license
+    url: https://www.bitwig.com
+    summary: bitwig-studio summary
+    description: Bitwig Studio from the official site
+    arches: x86_64
+    download_page: https://www.bitwig.com/dl/Bitwig%20Studio/*/installer_linux/

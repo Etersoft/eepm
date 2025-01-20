@@ -1,0 +1,9 @@
+apps:
+  - name: teamviewer
+    group: teamviewer group
+    license: teamviewer license
+    url: https://www.teamviewer.com/ru-cis/download/linux
+    summary: teamviewer summary
+    description: Teamviewer from the official site
+    arches: x86_64 aarch64
+    download_page: https://download.teamviewer.com/download/linux/$(epm print constructname teamviewer)

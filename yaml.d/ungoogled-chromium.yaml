@@ -1,0 +1,10 @@
+apps:
+  - name: ungoogled-chromium
+    group: ungoogled-chromium group
+    license: ungoogled-chromium license
+    url: https://ungoogled-software.github.io/ungoogled-chromium-binaries/
+    summary: ungoogled-chromium summary
+    description: Google Chromium, sans integration with Google from the official site
+    arches: x86_64
+    download_page: https://github.com/clickot/ungoogled-chromium-binaries/releases
+    download_mask: ungoogled-chromium_*_linux.tar.xz

@@ -1,0 +1,10 @@
+apps:
+  - name: draw.io
+    group: draw.io group
+    license: draw.io license
+    url: 
+    summary: draw.io summary
+    description: diagrams.net desktop
+    arches: x86_64
+    download_page: https://github.com/jgraph/drawio-desktop/releases
+    download_mask: drawio-$arch-*.$pkgtype

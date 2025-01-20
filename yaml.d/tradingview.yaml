@@ -1,0 +1,9 @@
+apps:
+  - name: tradingview
+    group: tradingview group
+    license: tradingview license
+    url: https://snapcraft.io/tradingview
+    summary: tradingview summary
+    description: TradingView from the snapcraft
+    arches: x86_64
+    download_page: $(snap_get_pkgurl $URL)

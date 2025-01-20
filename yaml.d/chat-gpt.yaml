@@ -1,0 +1,10 @@
+apps:
+  - name: chat-gpt
+    group: chat-gpt group
+    license: chat-gpt license
+    url: https://github.com/lencx/ChatGPT
+    summary: chat-gpt summary
+    description: Unofficial ChatGPT Desktop Application from the official site
+    arches: x86_64
+    download_page: https://github.com/lencx/ChatGPT/releases/
+    download_mask: ChatGPT_*_linux_x86_64.deb

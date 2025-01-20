@@ -1,0 +1,9 @@
+apps:
+  - name: firestorm
+    group: firestorm group
+    license: firestorm license
+    url: https://www.firestormviewer.org/
+    summary: firestorm summary
+    description: Firestorm Second Life viewer
+    arches: x86_64
+    download_page: https://downloads.firestormviewer.org/release/linux/Phoenix-Firestorm-Releasex64-6-6-17-70368.tar.xz

@@ -1,0 +1,9 @@
+apps:
+  - name: xnconvert
+    group: xnconvert group
+    license: xnconvert license
+    url: https://www.xnview.com/en/xnconvert/
+    summary: xnconvert summary
+    description: XnConvert: Image Converter from the official site
+    arches: x86_64
+    download_page: https://download.xnview.com/XnConvert-linux-x64.deb

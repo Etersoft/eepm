@@ -1,0 +1,10 @@
+apps:
+  - name: vk-messenger
+    group: vk-messenger group
+    license: vk-messenger license
+    url: https://vk.me/app
+    summary: vk-messenger summary
+    description: VK Messenger from the official site
+    arches: x86_64
+    download_page: $URL
+    download_mask: vk-messenger.$pkgtype

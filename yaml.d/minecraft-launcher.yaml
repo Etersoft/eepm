@@ -1,0 +1,9 @@
+apps:
+  - name: minecraft-launcher
+    group: minecraft-launcher group
+    license: minecraft-launcher license
+    url: https://www.minecraft.net/en-us/download
+    summary: minecraft-launcher summary
+    description: Minecraft launcher from the official site
+    arches: x86_64
+    download_page: https://launcher.mojang.com/download/Minecraft.deb

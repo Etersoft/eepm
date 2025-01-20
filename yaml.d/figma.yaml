@@ -1,0 +1,10 @@
+apps:
+  - name: figma
+    group: figma group
+    license: figma license
+    url: https://github.com/Figma-Linux/figma-linux
+    summary: figma summary
+    description: Figma-linux - an unofficial Electron-based Figma desktop app for Linux
+    arches: x86_64 aarch64
+    download_page: https://github.com/Figma-Linux/figma-linux/releases
+    download_mask: $file

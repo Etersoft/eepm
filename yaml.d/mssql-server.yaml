@@ -1,0 +1,9 @@
+apps:
+  - name: mssql-server
+    group: mssql-server group
+    license: mssql-server license
+    url: 
+    summary: mssql-server summary
+    description: MS SQL Server 2019 from the official site
+    arches: x86_64
+    download_page: 

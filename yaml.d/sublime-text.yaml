@@ -1,0 +1,10 @@
+apps:
+  - name: sublime-text
+    group: sublime-text group
+    license: sublime-text license
+    url: https://www.sublimetext.com/
+    summary: sublime-text summary
+    description: Sublime Text 4 from the official site
+    arches: x86_64 aarch64
+    download_page: https://www.sublimetext.com/download_thanks
+    download_mask: sublime_text_build_*_$arch.tar.xz

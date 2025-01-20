@@ -1,0 +1,9 @@
+apps:
+  - name: viber
+    group: viber group
+    license: viber license
+    url: https://viber.com
+    summary: viber summary
+    description: Viber for Linux from the official site
+    arches: x86_64
+    download_page: https://download.cdn.viber.com/desktop/Linux/viber.AppImage

@@ -1,0 +1,9 @@
+apps:
+  - name: okular-csp
+    group: okular-csp group
+    license: okular-csp license
+    url: https://packages.lab50.net
+    summary: okular-csp summary
+    description: Okular GOST (free version) with CryptoPro support from the official site
+    arches: x86_64
+    download_page: 

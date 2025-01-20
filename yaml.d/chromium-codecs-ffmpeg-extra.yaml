@@ -1,0 +1,9 @@
+apps:
+  - name: chromium-codecs-ffmpeg-extra
+    group: chromium-codecs-ffmpeg-extra group
+    license: chromium-codecs-ffmpeg-extra license
+    url: 
+    summary: chromium-codecs-ffmpeg-extra summary
+    description: 
+    arches: x86_64
+    download_page: 

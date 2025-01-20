@@ -1,0 +1,10 @@
+apps:
+  - name: everdo
+    group: everdo group
+    license: everdo license
+    url: https://everdo.net/
+    summary: everdo summary
+    description: A productivity app for GTD (Getting Things Done) from the official site
+    arches: x86_64
+    download_page: https://everdo.net/getting-started/?d=deb
+    download_mask: everdo*.deb

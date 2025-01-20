@@ -1,0 +1,9 @@
+apps:
+  - name: discord
+    group: discord group
+    license: discord license
+    url: 
+    summary: discord summary
+    description: Discord from the official site
+    arches: x86_64
+    download_page: 

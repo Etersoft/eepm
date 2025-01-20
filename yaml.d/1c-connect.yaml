@@ -1,0 +1,9 @@
+apps:
+  - name: 1c-connect
+    group: 1c-connect group
+    license: 1c-connect license
+    url: https://1c-connect.com
+    summary: 1c-connect summary
+    description: 1C Connect — Service & Help desk со встроенным удалённым доступом и мессенджером
+    arches: x86_64
+    download_page: https://updates.1c-connect.com/desktop/distribs/1C-Connect-Linux-x64.tar.gz

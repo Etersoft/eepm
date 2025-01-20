@@ -1,0 +1,9 @@
+apps:
+  - name: Moonlight
+    group: Moonlight group
+    license: Moonlight license
+    url: https://moonlight-stream.org/
+    summary: Moonlight summary
+    description: GameStream client for PCs (Windows, Mac, and Linux)
+    arches: x86_64
+    download_page: 

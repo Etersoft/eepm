@@ -1,0 +1,9 @@
+apps:
+  - name: CLion
+    group: CLion group
+    license: CLion license
+    url: https://www.jetbrains.com/clion/
+    summary: CLion summary
+    description: CLion - A cross-platform IDE for C and C++ from the official site
+    arches: x86_64 aarch64
+    download_page: $(get_jetbrains_pkgurl CL cpp)

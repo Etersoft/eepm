@@ -1,0 +1,9 @@
+apps:
+  - name: xeoma
+    group: xeoma group
+    license: xeoma license
+    url: https://felenasoft.com/xeoma/ru/
+    summary: xeoma summary
+    description: Video surveillance with AI video analytics
+    arches: x86_64
+    download_page: https://felenasoft.com/xeoma/downloads/latest/linux/xeoma_linux64.tgz

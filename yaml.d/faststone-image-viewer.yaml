@@ -1,0 +1,9 @@
+apps:
+  - name: faststone-image-viewer
+    group: faststone-image-viewer group
+    license: faststone-image-viewer license
+    url: https://www.faststone.org/FSViewerDetail.htm
+    summary: faststone-image-viewer summary
+    description: An image browser, converter and editor that supports all major graphic formats.
+    arches: x86_64
+    download_page: https://www.faststonesoft.net/DN/FSViewer${VERSION//./}.zip

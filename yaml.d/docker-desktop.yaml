@@ -1,0 +1,9 @@
+apps:
+  - name: docker-desktop
+    group: docker-desktop group
+    license: docker-desktop license
+    url: https://docs.docker.com/desktop/install/ubuntu/
+    summary: docker-desktop summary
+    description: Docker Desktop from the official site
+    arches: x86_64 aarch64
+    download_page: 

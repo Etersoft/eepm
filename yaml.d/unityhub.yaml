@@ -1,0 +1,9 @@
+apps:
+  - name: unityhub
+    group: unityhub group
+    license: unityhub license
+    url: https://unity.com/
+    summary: unityhub summary
+    description: Unity Hub from the official site
+    arches: x86_64
+    download_page: 

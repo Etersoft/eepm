@@ -1,0 +1,10 @@
+apps:
+  - name: unigine-superposition
+    group: unigine-superposition group
+    license: unigine-superposition license
+    url: https://benchmark.unigine.com/superposition
+    summary: unigine-superposition summary
+    description: Unigine Superposition 2017 (Unigine Benchmark) from the official site
+    arches: x86_64
+    download_page: https://benchmark.unigine.com/superposition
+    download_mask: Unigine_Superposition-*.run
