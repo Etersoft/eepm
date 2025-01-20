@@ -4,6 +4,7 @@ PKGNAME=discord
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="Discord from the official site"
+URL="https://discord.com/api/download?platform=linux"
 
 . $(dirname $0)/common.sh
 

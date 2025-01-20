@@ -4,6 +4,7 @@ PKGNAME=tamtam-app
 SUPPORTEDARCHES="x86_64 x86"
 VERSION="$2"
 DESCRIPTION="TamTam messenger from the official site"
+URL="https://download.tamtam.chat/latest/"
 
 . $(dirname $0)/common.sh
 

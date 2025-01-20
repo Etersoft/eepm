@@ -4,6 +4,7 @@ PKGNAME=draw.io
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="diagrams.net desktop"
+URL="https://github.com/jgraph/drawio-desktop/releases"
 
 . $(dirname $0)/common.sh
 

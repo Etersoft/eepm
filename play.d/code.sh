@@ -5,6 +5,7 @@ SUPPORTEDARCHES="x86_64 armhf aarch64"
 VERSION="$2"
 DESCRIPTION="Visual Studio Code from the official site"
 TIPS="Run epm play code=<version> to install specific version."
+URL="https://code.visualstudio.com/"
 
 . $(dirname $0)/common.sh
 

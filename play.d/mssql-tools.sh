@@ -3,6 +3,7 @@
 PKGNAME=mssql-tools
 SUPPORTEDARCHES="x86_64"
 DESCRIPTION="MS SQL Server sqlcmd and bcp from the official site"
+URL="https://packages.microsoft.com/"
 
 if [ "$1" = "--remove" ] ; then
     epm remove $PKGNAME msodbcsql17

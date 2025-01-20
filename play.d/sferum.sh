@@ -4,6 +4,7 @@ PKGNAME=sferum
 SUPPORTEDARCHES="x86_64 x86"
 VERSION="$2"
 DESCRIPTION="Sferum for Linux from the official site"
+URL="https://st.mycdn.me/static/sferum/latest/"
 
 . $(dirname $0)/common.sh
 

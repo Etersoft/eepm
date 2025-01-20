@@ -4,6 +4,7 @@ PKGNAME="far2l-portable"
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="FAR2L Portable from the official site"
+URL="https://github.com/spvkgn/far2l-portable/releases"
 
 . $(dirname $0)/common.sh
 

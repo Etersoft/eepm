@@ -5,6 +5,7 @@ SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="SoftMaker Free Office from the official site"
 TIPS="Run epm play freeoffice=<version> to install some specific version"
+URL="https://www.freeoffice.com/ru/download/applications"
 
 . $(dirname $0)/common.sh
 

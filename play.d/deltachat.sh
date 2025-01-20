@@ -4,6 +4,7 @@ PKGNAME=deltachat-desktop
 SUPPORTEDARCHES="x86_64 aarch64"
 VERSION="$2"
 DESCRIPTION="Delta Chat is a decentralized and secure messenger app"
+URL="https://delta.chat/ru/download"
 
 . $(dirname $0)/common.sh
 
