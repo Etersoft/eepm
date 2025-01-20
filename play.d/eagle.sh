@@ -4,6 +4,7 @@ PKGNAME=Autodesk_EAGLE
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="EAGLE (EDA software) from the official site"
+URL="https://trial2.autodesk.com"
 
 . $(dirname $0)/common.sh
 

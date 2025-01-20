@@ -6,6 +6,7 @@ REPOPKGNAME=chromium-gost
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="Chromium with GOST support from the official site"
+URL="https://github.com/deemru/chromium-gost/"
 
 . $(dirname $0)/common.sh
 

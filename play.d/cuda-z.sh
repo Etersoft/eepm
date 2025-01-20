@@ -4,6 +4,7 @@ PKGNAME=cuda-z
 VERSION="$2"
 SUPPORTEDARCHES="x86_64 x86"
 DESCRIPTION="CUDA-Z from the official site"
+URL="https://cuda-z.sourceforge.net/"
 
 . $(dirname $0)/common.sh
 

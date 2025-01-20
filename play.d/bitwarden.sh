@@ -4,6 +4,7 @@ PKGNAME=bitwarden
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="Bitwarden desktop from the official site"
+URL="https://github.com/bitwarden/clients/"
 
 . $(dirname $0)/common.sh
 

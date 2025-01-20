@@ -4,6 +4,7 @@ PKGNAME=anydesk
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="AnyDesk from the official site"
+URL="https://download.anydesk.com/linux/"
 
 . $(dirname $0)/common.sh
 

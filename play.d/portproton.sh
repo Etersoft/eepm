@@ -4,6 +4,7 @@ PKGNAME=portproton
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION='PortProton (from the repository if the package is there, or from the official site)'
+URL="https://github.com/Castro-Fidel/PortProton_dpkg/releases"
 
 . $(dirname $0)/common.sh
 

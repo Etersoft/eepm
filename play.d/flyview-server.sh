@@ -4,6 +4,7 @@ PKGNAME=ipera-mediaserver
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="FlyView (Ipera) Server from the official site"
+URL="https://flyviewvms.ru/distro/flyview-server.deb"
 
 . $(dirname $0)/common.sh
 

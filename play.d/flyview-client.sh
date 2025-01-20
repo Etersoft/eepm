@@ -4,6 +4,7 @@ PKGNAME=ipera-client
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="FlyView Client from the official site"
+URL="https://flyviewvms.ru/distro/flyview-client.deb"
 
 . $(dirname $0)/common.sh
 

@@ -4,6 +4,7 @@ PKGNAME=DJV2
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="DJV2 - Professional media review software for VFX, animation, and film production"
+URL="https://github.com/darbyjohnston/DJV/releases"
 
 . $(dirname $0)/common.sh
 

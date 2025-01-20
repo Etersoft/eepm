@@ -4,6 +4,7 @@ PKGNAME=alivecolors
 SKIPREPACK=1
 SUPPORTEDARCHES="x86_64"
 DESCRIPTION="AliveColors from the official site"
+URL="https://alivecolors.com/ru"
 
 case "$1" in
     "--remove")

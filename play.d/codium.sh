@@ -4,6 +4,7 @@ PKGNAME=codium
 SUPPORTEDARCHES="x86_64 aarch64 armhf"
 VERSION="$2"
 DESCRIPTION="Codium from the official site"
+URL="https://github.com/VSCodium/vscodium/releases"
 
 . $(dirname $0)/common.sh
 

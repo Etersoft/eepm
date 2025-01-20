@@ -5,6 +5,7 @@ SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION='Signal private messenger from the official site'
 DOWNURL="https://updates.signal.org/desktop/apt/pool/main/s/signal-desktop"
+URL="https://github.com/signalapp/Signal-Desktop/releases/"
 
 . $(dirname $0)/common.sh
 
@@ -16,6 +17,7 @@ DOWNURL="https://updates.signal.org/desktop/apt/pool/main/s/signal-desktop"
 #file="$(basename $PKGURL)"
 
 #[ "$VERSION" = "*" ] && VERSION="$(eget --list --latest https://github.com/signalapp/Signal-Desktop/releases/ v$VERSION.tar.gz | sed -e 's|^v\(.*\)\.tar\.gz|\1|')"
+# We need replace VERSION bellow to get_github_url ?
 [ "$VERSION" = "*" ] && VERSION="$(eget -O- https://api.github.com/repos/signalapp/Signal-Desktop/releases | grep '"name": "v[0-9]*\.[0-9]*\.[0-9]*"' | head -n1 | sed -e 's|.* "v\(.*\)".*|\1|')" #'
 #file="$(eget -O- https://updates.signal.org/desktop/apt/dists/xenial/main/binary-amd64/Packages.gz | zcat | grep Filename | sed 's_Filename: _https://updates.signal.org/desktop/apt/_')"
 [ -n "$VERSION" ] || fatal "Can't retrieve the latest version for $PKGNAME."

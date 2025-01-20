@@ -4,7 +4,7 @@ PKGNAME=angie
 SKIPREPACK=1
 SUPPORTEDARCHES="x86_64 aarch64"
 DESCRIPTION="ANGIE (a web server, that was forked from nginx) from the official site"
-REPOURL="https://angie.software/"
+URL="https://angie.software/"
 
 . $(dirname $0)/common.sh
 

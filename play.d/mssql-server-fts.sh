@@ -4,7 +4,7 @@ PKGNAME=mssql-server-fts
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="MS SQL Server Full Text Search"
-URL="https://www.minecraft.net/en-us/download"
+URL="https://packages.microsoft.com/"
 
 . $(dirname $0)/common.sh
 

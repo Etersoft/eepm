@@ -4,6 +4,7 @@ PKGNAME=firefox-nightly
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="Firefox nightly from the official site"
+URL="https://ftp.mozilla.org/pub/firefox/nightly/latest-mozilla-central/"
 
 . $(dirname $0)/common.sh
 
