@@ -17,16 +17,16 @@ fix_chrome_sandbox
 cat <<EOF | create_file /usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]
 Encoding=UTF-8
-Name=TeamSpeak 5
-GenericName=TeamSpeak 5 - Voice communication
+Name=TeamSpeak
+GenericName=TeamSpeak - Voice communication
 Comment=TeamSpeak is software for quality voice communication via the Internet
-Exec=teamspeak5
-Icon=teamspeak5
+Exec=teamspeak
+Icon=teamspeak
 StartupNotify=true
 Terminal=false
 Type=Application
 Categories=Network;Application
-StartupWMClass=TeamSpeak 5
+StartupWMClass=TeamSpeak
 EOF
 
 install_file .$PRODUCTDIR/logo-128.png /usr/share/pixmaps/$PRODUCT.png
