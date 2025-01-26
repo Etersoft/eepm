@@ -10,26 +10,26 @@ URL="https://github.com/cyanfish/naps2/releases/"
 
 arch="$(epm print info -a)"
 case "$arch" in
-    x86_64)
-        arch=x64
+x86_64)
+	arch=x64
 	;;
-    aarch64)
-        arch=arm64
-        ;;
+aarch64)
+	arch=arm64
+	;;
 esac
 
 pkgtype=$(epm print info -p)
 
-if [ "$pkgtype" == "deb" ] || [ "$pkgtype" == "rpm" ] ; then
-    pkgtype="$pkgtype"
+if [ "$pkgtype" == "deb" ] || [ "$pkgtype" == "rpm" ]; then
+	pkgtype="$pkgtype"
 else
-    pkgtype="deb"
+	pkgtype="deb"
 fi
 
-if [ "$VERSION" = "*" ] ; then
-    PKGURL=$(get_github_url "https://github.com/cyanfish/naps2/" "$PKGNAME-.$VERSION-linux-$arch.$pkgtype")
+if [ "$VERSION" = "*" ]; then
+	PKGURL=$(get_github_url "https://github.com/cyanfish/naps2/" "$PKGNAME-$VERSION-linux-$arch.$pkgtype")
 else
-    PKGURL="https://github.com/cyanfish/naps2/releases/download/v$VERSION/$PKGNAME-$VERSION-linux-$arch.$pkgtype"
+	PKGURL="https://github.com/cyanfish/naps2/releases/download/v$VERSION/$PKGNAME-$VERSION-linux-$arch.$pkgtype"
 fi
 
 install_pkgurl
