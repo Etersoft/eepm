@@ -43,7 +43,7 @@ epm_list_available()
 
     # use cache we got during epm update
     # TODO: update from this place if obsoleted
-    if [ -n "$short" ] ; then
+    if [ -n "$short" ] && [ -z "$update" ] ; then
         if [ -s $epm_vardir/available-packages ] ; then
             cat $epm_vardir/available-packages
             return
