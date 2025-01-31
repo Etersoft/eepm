@@ -56,7 +56,7 @@ __save_available_packages()
 
     info "Retrieving list of all available packages (for autocompletion) ..."
     load_helper epm-list_available
-    short=--short epm_list_available | sort | sudorun tee $epm_vardir/available-packages >/dev/null
+    short=--short update=update epm_list_available | sort | sudorun tee $epm_vardir/available-packages >/dev/null
 }
 
 __epm_update_content_index()
