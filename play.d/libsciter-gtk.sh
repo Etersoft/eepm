@@ -1,0 +1,22 @@
+#!/bin/sh
+
+PKGNAME=libsciter-gtk
+SUPPORTEDARCHES="x86_64 aarch64"
+VERSION="4.4.8.23"
+DESCRIPTION='Embeddable HTML/CSS/JavaScript engine for modern UI development'
+URL="https://github.com/c-smile/sciter-sdk"
+
+. $(dirname $0)/common.sh
+
+warn_version_is_not_supported
+
+case "$(epm print info -a)" in
+    x86_64)
+        arch="x64" ;;
+    aarch64)
+        arch="arm64" ;;
+esac
+
+PKGURL="https://raw.githubusercontent.com/c-smile/sciter-sdk/master/bin.lnx/$arch/libsciter-gtk.so"
+
+install_pack_pkgurl "$VERSION"
