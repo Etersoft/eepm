@@ -53,6 +53,10 @@ case $PMTYPE in
         sudocmd brew doctor
         return
         ;;
+    pisi)
+        sudocmd pisi check
+        return
+        ;;
 esac
 
 case $BASEDISTRNAME in

@@ -68,6 +68,9 @@ case $PMTYPE in
     winget)
         docmd winget upgrade
         ;;
+    pisi)
+        docmd pisi list-upgrades
+        ;;
     *)
         fatal 'Have no suitable query command for $PMTYPE'
         ;;

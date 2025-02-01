@@ -163,6 +163,9 @@ case $PMTYPE in
     eopkg)
         sudocmd eopkg remove-repo "$@"
         ;;
+    pisi)
+        sudocmd pisi remove-repo "$@"
+        ;;
     slackpkg)
         info "You need remove repo from /etc/slackpkg/mirrors"
         ;;

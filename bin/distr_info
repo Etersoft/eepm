@@ -163,6 +163,9 @@ case $DISTRIB_ID in
     Solus)
         CMD="eopkg"
         ;;
+    PisiLinux)
+        CMD="pisi"
+        ;;
     Mandriva)
         CMD="urpm-rpm"
         ;;
@@ -282,6 +285,7 @@ pkgtype()
         openwrt) echo "ipk" ;;
         cygwin) echo "tar.xz" ;;
         solus) echo "eopkg" ;;
+        pisilinux) echo "pisi" ;;
         *)
             case $(pkgmanager) in
                 *-dpkg)

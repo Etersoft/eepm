@@ -61,6 +61,9 @@ case $PMTYPE in
     dnf5-rpm)
         sudocmd dnf config-manager setopt "$@.enabled=0"
         ;;
+    pisi)
+        docmd pisi disable-repo "$@"
+        ;;
     eoget)
         docmd eoget disable-repo "$@"
         ;;

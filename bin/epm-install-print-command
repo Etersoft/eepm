@@ -55,6 +55,9 @@ epm_print_install_files_command()
         eopkg)
             echo "eopkg install $*"
             ;;
+        pisi)
+            echo "pisi install $*"
+            ;;
         android)
             echo "pm install $*"
             ;;
@@ -126,6 +129,9 @@ epm_print_install_names_command()
             return ;;
         eopkg)
             echo "eopkg install $*"
+            return ;;
+        pisi)
+            echo "pisi install $*"
             return ;;
         termux-pkg)
             echo "pkg install $*"

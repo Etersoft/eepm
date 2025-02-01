@@ -184,6 +184,9 @@ epm_install_names()
         eopkg)
             sudocmd eopkg $(subst_option nodeps --ignore-dependency) install $@
             return ;;
+        pisi)
+            sudocmd pisi $(subst_option nodeps --ignore-dependency) install $@
+            return ;;
         conary)
             sudocmd conary update $@
             return ;;
@@ -297,6 +300,9 @@ epm_ni_install_names()
             return ;;
         eopkg)
             sudocmd eopkg --yes-all install $@
+            return ;;
+        pisi)
+            sudocmd pisi --yes-all install $@
             return ;;
         nix)
             sudocmd nix-env --install $@
@@ -452,6 +458,9 @@ epm_install_files()
             return ;;
         eopkg)
             sudocmd eopkg install $files
+            return ;;
+        pisi)
+            sudocmd pisi install $files
             return ;;
         emerge)
             load_helper epm-install-emerge

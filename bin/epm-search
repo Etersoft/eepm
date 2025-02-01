@@ -59,6 +59,9 @@ case $PMTYPE in
     eopkg)
         CMD="eopkg search --"
         ;;
+    pisi)
+        CMD="pisi search --"
+        ;;
     yum-rpm)
         CMD="yum search"
         ;;

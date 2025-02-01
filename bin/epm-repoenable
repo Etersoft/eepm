@@ -64,6 +64,9 @@ case $PMTYPE in
     eoget)
         docmd eoget enable-repo "$@"
         ;;
+    pisi)
+        docmd pisi enable-repo "$@"
+        ;;
     *)
         fatal 'Have no suitable command for $PMTYPE'
         ;;

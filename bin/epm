@@ -408,7 +408,7 @@ check_command()
         epm_cmd=history
         direct_args=1
         ;;
-    autoorphans|--orphans|remove-orphans)    # HELPCMD: remove all packages not from the repository
+    autoorphans|--orphans|remove-orphans|remove-orphaned)    # HELPCMD: remove all packages not from the repository
         epm_cmd=autoorphans
         direct_args=1
         ;;

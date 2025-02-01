@@ -1,0 +1,9 @@
+NAME="PisiLinux"
+ID=pisilinux
+VERSION="2.4 (Karagül)"
+VERSION_ID="2.4"
+VERSION_CODENAME=Karagül
+PRETTY_NAME="Pisi GNU/Linux 2.4 (Karagül)"
+HOME_URL="https://pisilinux.org/"
+SUPPORT_URL="https://pisilinux.org/forum"
+BUG_REPORT_URL="https://github.com/pisilinux/main/issues"

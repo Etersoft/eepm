@@ -140,6 +140,9 @@ case $PMTYPE in
     eopkg)
         docmd eopkg info $pkg_files $pkg_names
         ;;
+    pisi)
+        docmd pisi info $pkg_files $pkg_names
+        ;;
     appget)
         docmd appget view $pkg_names
         ;;

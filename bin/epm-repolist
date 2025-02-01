@@ -150,6 +150,9 @@ case $PMTYPE in
     eoget)
         docmd eoget list-repo
         ;;
+    pisi)
+        docmd pisi list-repo
+        ;;
     pacman)
         if [ -f /etc/pacman.d/mirrorlist ] ; then
             docmd grep -v -- "^#\|^$" /etc/pacman.d/mirrorlist | grep "^Server =" | sed -e 's|^Server = ||'

@@ -159,6 +159,9 @@ case $PMTYPE in
     eopkg)
         sudocmd eopkg history
         ;;
+    pisi)
+        docmd pisi history
+        ;;
     zypper-rpm)
         docmd cat /var/log/zypp/history
         ;;

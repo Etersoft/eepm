@@ -109,6 +109,9 @@ case $PMTYPE in
     eopkg)
         CMD="eopkg list-available"
         ;;
+    pisi)
+        CMD="pisi list-available"
+        ;;
     choco)
         CMD="choco search ."
         ;;

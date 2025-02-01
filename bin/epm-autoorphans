@@ -125,6 +125,9 @@ case $PMTYPE in
     eopkg)
         sudocmd eopkg remove-orphans
         ;;
+    pisi)
+        sudocmd pisi remove-orphaned
+        ;;
     #guix)
     #    sudocmd guix gc
     #    ;;

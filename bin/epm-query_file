@@ -127,6 +127,9 @@ __do_query()
         eopkg)
             CMD="eopkg search-file"
             ;;
+        pisi)
+            CMD="pisi search-file"
+            ;;
         xbps)
             # FIXME: maybe it is search file?
             CMD="xbps-query -o"

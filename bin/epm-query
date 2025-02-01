@@ -238,7 +238,15 @@ __epm_query_name()
         eopkg)
             showcmd eopkg blame $1
             local str
-            str="$(a= eopkg blame $1 | grep "^Name")"
+            str="$(LC_ALL=C eopkg blame $1 | grep "^Name")"
+            [ -n "$str" ] || return 1
+            echo "$str" | sed -e "s|Name[[:space:]]*: \(.*\), version: \(.*\), release: \(.*\)|\1-\2-\3|"
+            return
+            ;;
+        pisi)
+            showcmd pisi blame $1
+            local str
+            str="$(LC_ALL=C pisi blame $1 | grep "^Name")"
             [ -n "$str" ] || return 1
             echo "$str" | sed -e "s|Name[[:space:]]*: \(.*\), version: \(.*\), release: \(.*\)|\1-\2-\3|"
             return
@@ -298,7 +306,15 @@ __epm_query_shortname()
         eopkg)
             showcmd eopkg blame $1
             local str
-            str="$(a= eopkg blame $1 | grep "^Name")"
+            str="$(LC_ALL=C eopkg blame $1 | grep "^Name")"
+            [ -n "$str" ] || return 1
+            echo "$str" | sed -e "s|Name[[:space:]]*: \(.*\), version: \(.*\), release: \(.*\)|\1|"
+            return
+            ;;
+        pisi)
+            showcmd pisi blame $1
+            local str
+            str="$(LC_ALL=C pisi blame $1 | grep "^Name")"
             [ -n "$str" ] || return 1
             echo "$str" | sed -e "s|Name[[:space:]]*: \(.*\), version: \(.*\), release: \(.*\)|\1|"
             return

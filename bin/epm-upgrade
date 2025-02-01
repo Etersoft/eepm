@@ -192,6 +192,9 @@ epm_upgrade()
     eopkg)
         CMD="eopkg upgrade"
         ;;
+    pisi)
+        CMD="pisi upgrade"
+        ;;
     slackpkg)
         CMD="/usr/sbin/slackpkg upgrade-all"
         ;;

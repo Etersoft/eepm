@@ -68,6 +68,10 @@ case $PMTYPE in
         sudocmd eopkg check
         return
         ;;
+    pisi)
+        sudocmd pisi check
+        return
+        ;;
 esac
 
     local j cl
@@ -100,6 +104,9 @@ case $PMTYPE in
         ;;
     eopkg)
         sudocmd eopkg check $@
+        ;;
+    pisi)
+        sudocmd pisi check $@
         ;;
     *)
         fatal 'Have no suitable command for $PMTYPE'

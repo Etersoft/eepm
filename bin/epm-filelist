@@ -111,6 +111,10 @@ __epm_filelist_file()
             assure_exists eopkg
             CMD="eopkg --files info"
             ;;
+        pisi)
+            assure_exists pisi
+            CMD="pisi --files info"
+            ;;
         *)
             fatal 'Have no suitable query command for $PMTYPE'
             ;;
@@ -173,6 +177,10 @@ __epm_filelist_name()
             ;;
         eopkg)
             docmd eopkg --files -s info $@ | grep "^/"
+            return
+            ;;
+        pisi)
+            docmd pisi --files -s info $@ | grep "^/"
             return
             ;;
         xbps)

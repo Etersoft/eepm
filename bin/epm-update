@@ -168,6 +168,9 @@ case $PMTYPE in
     eopkg)
         sudocmd eopkg update-repo
         ;;
+    pisi)
+        sudocmd pisi update-repo
+        ;;
     apk)
         sudocmd apk update
         ;;

@@ -481,6 +481,9 @@ case $PMTYPE in
         # Only for alone packages:
         #sudocmd repo-add $pkg_filenames
         ;;
+    pisi)
+        sudocmd pisi add-repo "$repo"
+        ;;
     npackd)
         sudocmd npackdcl add-repo --url="$repo"
         ;;

@@ -93,6 +93,9 @@ EOF
         eopkg)
             CMD="eopkg --dry-run install"
             ;;
+        pisi)
+            CMD="pisi --dry-run install"
+            ;;
         zypper-rpm)
             if ! __use_zypper_dry_run >/dev/null ; then
                 fatal "zypper is too old: does not support --dry-run"

@@ -103,6 +103,9 @@ case $PMTYPE in
     eopkg)
         CMD="eopkg search-file"
         ;;
+    pisi)
+        CMD="pisi search-file"
+        ;;
     xbps)
         CMD="xbps-query -Ro"
         ;;

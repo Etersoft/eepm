@@ -308,6 +308,9 @@ epm_download()
     eopkg)
         docmd eopkg fetch $*
         ;;
+    pisi)
+        docmd pisi fetch $*
+        ;;
     homebrew)
         docmd brew fetch $*
         ;;

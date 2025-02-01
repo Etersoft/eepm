@@ -82,6 +82,9 @@ case $PMTYPE in
     eopkg)
         sudocmd eopkg delete-cache
         ;;
+    pisi)
+        sudocmd pisi delete-cache
+        ;;
     pkgng)
         sudocmd pkg clean -a
         ;;
