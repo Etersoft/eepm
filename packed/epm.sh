@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-export EPMVERSION="3.64.6"
+export EPMVERSION="3.64.7"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -394,27 +394,29 @@ message()
     echog "$*"
 }
 
-fatal()
+
+__promo_message()
 {
     local PROMOMESSAGE="$EPMPROMOMESSAGE"
-    [ -n "$PROMOMESSAGE" ] || PROMOMESSAGE=" (you can discuss the epm $EPMVERSION problem in Telegram: https://t.me/useepm)"
+    [ -n "$PROMOMESSAGE" ] || PROMOMESSAGE=" (you can discuss this problem (epm $EPMVERSION on $DISTRNAME/$DISTRVERSION) in Telegram: https://t.me/useepm)"
+    echo "$PROMOMESSAGE"
+}
 
+fatal()
+{
     set_color $RED >&2
     echog -n "ERROR: " >&2
     restore_color >&2
-    echog "$* $PROMOMESSAGE" >&2
+    echog "$* $(__promo_message)" >&2
     exit 1
 }
 
 fixme()
 {
-    local PROMOMESSAGE="$EPMPROMOMESSAGE"
-    [ -n "$PROMOMESSAGE" ] || PROMOMESSAGE=" (you can discuss the epm $EPMVERSION problem in Telegram: https://t.me/useepm)"
-
     set_color $RED >&2
     echo -n "ERROR: " >&2
     restore_color >&2
-    echo "$* $PROMOMESSAGE" >&2
+    echog "$* $(__promo_message)" >&2
     exit 1
 }
 
@@ -1119,20 +1121,6 @@ else
 	}
 fi
 
-set_backend()
-{
-    case $arg in
-        *:*)
-            PMTYPE=$(echo "$arg" | cut -d: -f1)
-            names=$(echo "$arg" | cut -d: -f2)
-            ;;
-        *)
-            PMTYPE=$($DISTRVENDOR -g)
-            names="$(echo $pkg_names | tr ' ' '\n' | grep -v ':' | filter_out_installed_packages)"
-    esac
-}
-
-
 # File bin/epm-addrepo:
 
 
@@ -1597,6 +1585,9 @@ case $PMTYPE in
         # Only for alone packages:
         #sudocmd repo-add $pkg_filenames
         ;;
+    pisi)
+        sudocmd pisi add-repo "$repo"
+        ;;
     npackd)
         sudocmd npackdcl add-repo --url="$repo"
         ;;
@@ -1846,6 +1837,9 @@ case $PMTYPE in
         ;;
     eopkg)
         sudocmd eopkg remove-orphans
+        ;;
+    pisi)
+        sudocmd pisi remove-orphaned
         ;;
     #guix)
     #    sudocmd guix gc
@@ -2214,6 +2208,13 @@ case $PMTYPE in
             sudocmd opkg --autoremove
         fi
         ;;
+    eopkg)
+        if [ -n "$dryrun" ] ; then
+            sudocmd opkg --dry-run autoremove
+        else
+            sudocmd eopkg autoremove
+        fi
+        ;;
     *)
         fatal 'Have no suitable command for $PMTYPE'
         ;;
@@ -2459,6 +2460,10 @@ case $PMTYPE in
         sudocmd eopkg check
         return
         ;;
+    pisi)
+        sudocmd pisi check
+        return
+        ;;
 esac
 
     local j cl
@@ -2491,6 +2496,9 @@ case $PMTYPE in
         ;;
     eopkg)
         sudocmd eopkg check $@
+        ;;
+    pisi)
+        sudocmd pisi check $@
         ;;
     *)
         fatal 'Have no suitable command for $PMTYPE'
@@ -2567,6 +2575,10 @@ is_root && fatal "Do not use checksystem under root"
 case $PMTYPE in
     homebrew)
         sudocmd brew doctor
+        return
+        ;;
+    pisi)
+        sudocmd pisi check
         return
         ;;
 esac
@@ -2808,6 +2820,9 @@ case $PMTYPE in
         ;;
     eopkg)
         sudocmd eopkg delete-cache
+        ;;
+    pisi)
+        sudocmd pisi delete-cache
         ;;
     pkgng)
         sudocmd pkg clean -a
@@ -3707,6 +3722,9 @@ epm_download()
     eopkg)
         docmd eopkg fetch $*
         ;;
+    pisi)
+        docmd pisi fetch $*
+        ;;
     homebrew)
         docmd brew fetch $*
         ;;
@@ -3934,6 +3952,10 @@ __epm_filelist_file()
             assure_exists eopkg
             CMD="eopkg --files info"
             ;;
+        pisi)
+            assure_exists pisi
+            CMD="pisi --files info"
+            ;;
         *)
             fatal 'Have no suitable query command for $PMTYPE'
             ;;
@@ -3996,6 +4018,10 @@ __epm_filelist_name()
             ;;
         eopkg)
             docmd eopkg --files -s info $@ | grep "^/"
+            return
+            ;;
+        pisi)
+            docmd pisi --files -s info $@ | grep "^/"
             return
             ;;
         xbps)
@@ -4317,6 +4343,9 @@ case $PMTYPE in
     eopkg)
         sudocmd eopkg history
         ;;
+    pisi)
+        docmd pisi history
+        ;;
     zypper-rpm)
         docmd cat /var/log/zypp/history
         ;;
@@ -4457,6 +4486,9 @@ case $PMTYPE in
     eopkg)
         docmd eopkg info $pkg_files $pkg_names
         ;;
+    pisi)
+        docmd pisi info $pkg_files $pkg_names
+        ;;
     appget)
         docmd appget view $pkg_names
         ;;
@@ -4528,11 +4560,45 @@ __separate_sudocmd()
     return 0
 }
 
+process_package_arguments() {
+    local pmtype
+    local name
+    local arg
+    local package_groups
+    declare -A package_groups
+    VALID_BACKENDS="apt-rpm apt-dpkg aptitude-dpkg deepsolver-rpm urpm-rpm packagekit pkgsrc pkgng redox-pkg emerge pacman aura yum-rpm dnf-rpm snappy zypper-rpm mpkg eopkg conary npackd slackpkg homebrew opkg nix apk tce guix termux-pkg aptcyg xbps appget winget"
+    for arg in "$@"; do
+        case "$arg" in
+            *:*)
+                pmtype=$(echo "$arg" | cut -d: -f1)
+                name=$(echo "$arg" | cut -d: -f2)
+                if ! echo "$VALID_BACKENDS" | grep -qw "$pmtype"; then
+                    pmtype=$PMTYPE
+                fi
+                ;;
+            *)
+                pmtype=$PMTYPE
+                name="$arg"
+                ;;
+        esac
+        package_groups["$pmtype"]+="$name "
+    done
+
+    for pmtype in "${!package_groups[@]}"; do
+        (PMTYPE="$pmtype" epm_install_names ${package_groups[$pmtype]})
+    done
+}
+
 epm_install_names()
 {
     [ -z "$1" ] && return
 
     warmup_hibase
+
+    if echo "$@" | grep -q ':'; then
+        process_package_arguments "$@"
+        return
+    fi
 
     if [ -n "$download_only" ] ; then
         epm download "$@"
@@ -4609,6 +4675,9 @@ epm_install_names()
             return ;;
         eopkg)
             sudocmd eopkg $(subst_option nodeps --ignore-dependency) install $@
+            return ;;
+        pisi)
+            sudocmd pisi $(subst_option nodeps --ignore-dependency) install $@
             return ;;
         conary)
             sudocmd conary update $@
@@ -4722,6 +4791,9 @@ epm_ni_install_names()
             return ;;
         eopkg)
             sudocmd eopkg --yes-all install $@
+            return ;;
+        pisi)
+            sudocmd pisi --yes-all install $@
             return ;;
         nix)
             sudocmd nix-env --install $@
@@ -4871,6 +4943,9 @@ epm_install_files()
             return ;;
         eopkg)
             sudocmd eopkg install $files
+            return ;;
+        pisi)
+            sudocmd pisi install $files
             return ;;
         emerge)
             sudocmd epm_install_emerge $files
@@ -5418,6 +5493,9 @@ epm_print_install_files_command()
         eopkg)
             echo "eopkg install $*"
             ;;
+        pisi)
+            echo "pisi install $*"
+            ;;
         android)
             echo "pm install $*"
             ;;
@@ -5489,6 +5567,9 @@ epm_print_install_names_command()
             return ;;
         eopkg)
             echo "eopkg install $*"
+            return ;;
+        pisi)
+            echo "pisi install $*"
             return ;;
         termux-pkg)
             echo "pkg install $*"
@@ -5798,7 +5879,7 @@ epm_list_available()
 
     # use cache we got during epm update
     # TODO: update from this place if obsoleted
-    if [ -n "$short" ] ; then
+    if [ -n "$short" ] && [ -z "$update" ] ; then
         if [ -s $epm_vardir/available-packages ] ; then
             cat $epm_vardir/available-packages
             return
@@ -5863,6 +5944,9 @@ case $PMTYPE in
         ;;
     eopkg)
         CMD="eopkg list-available"
+        ;;
+    pisi)
+        CMD="pisi list-available"
         ;;
     choco)
         CMD="choco search ."
@@ -5954,6 +6038,9 @@ case $PMTYPE in
         ;;
     winget)
         docmd winget upgrade
+        ;;
+    pisi)
+        docmd pisi list-upgrades
         ;;
     *)
         fatal 'Have no suitable query command for $PMTYPE'
@@ -6711,6 +6798,9 @@ case $PMTYPE in
         ;;
     eopkg)
         CMD="eopkg list-installed"
+        ;;
+    pisi)
+        CMD="pisi list-installed"
         ;;
     choco)
         CMD="choco list"
@@ -8246,7 +8336,15 @@ __epm_query_name()
         eopkg)
             showcmd eopkg blame $1
             local str
-            str="$(a= eopkg blame $1 | grep "^Name")"
+            str="$(LC_ALL=C eopkg blame $1 | grep "^Name")"
+            [ -n "$str" ] || return 1
+            echo "$str" | sed -e "s|Name[[:space:]]*: \(.*\), version: \(.*\), release: \(.*\)|\1-\2-\3|"
+            return
+            ;;
+        pisi)
+            showcmd pisi blame $1
+            local str
+            str="$(LC_ALL=C pisi blame $1 | grep "^Name")"
             [ -n "$str" ] || return 1
             echo "$str" | sed -e "s|Name[[:space:]]*: \(.*\), version: \(.*\), release: \(.*\)|\1-\2-\3|"
             return
@@ -8306,7 +8404,15 @@ __epm_query_shortname()
         eopkg)
             showcmd eopkg blame $1
             local str
-            str="$(a= eopkg blame $1 | grep "^Name")"
+            str="$(LC_ALL=C eopkg blame $1 | grep "^Name")"
+            [ -n "$str" ] || return 1
+            echo "$str" | sed -e "s|Name[[:space:]]*: \(.*\), version: \(.*\), release: \(.*\)|\1|"
+            return
+            ;;
+        pisi)
+            showcmd pisi blame $1
+            local str
+            str="$(LC_ALL=C pisi blame $1 | grep "^Name")"
             [ -n "$str" ] || return 1
             echo "$str" | sed -e "s|Name[[:space:]]*: \(.*\), version: \(.*\), release: \(.*\)|\1|"
             return
@@ -8474,6 +8580,9 @@ __do_query()
         eopkg)
             CMD="eopkg search-file"
             ;;
+        pisi)
+            CMD="pisi search-file"
+            ;;
         xbps)
             # FIXME: maybe it is search file?
             CMD="xbps-query -o"
@@ -8599,6 +8708,9 @@ epm_reinstall_names()
             return ;;
         eopkg)
             sudocmd eopkg --reinstall install $@
+            return ;;
+        pisi)
+            sudocmd pisi --reinstall install $@
             return ;;
         slackpkg)
             sudocmd_foreach "/usr/sbin/slackpkg reinstall" $@
@@ -9495,6 +9607,9 @@ epm_remove_low()
         eopkg)
             sudocmd eopkg $(subst_option nodeps --ignore-dependency) remove $@
             return ;;
+        pisi)
+            sudocmd pisi $(subst_option nodeps --ignore-dependency) remove $@
+            return ;;
         appget|winget)
             sudocmd $PMTYPE uninstall $@
             return ;;
@@ -9562,6 +9677,9 @@ epm_remove_names()
             return ;;
         eopkg)
             sudocmd eopkg $(subst_option nodeps --ignore-dependency) remove $@
+            return ;;
+        pisi)
+            sudocmd pisi $(subst_option nodeps --ignore-dependency) remove $@
             return ;;
         conary)
             sudocmd conary erase $@
@@ -9656,6 +9774,9 @@ epm_remove_nonint()
         eopkg)
             sudocmd eopkg $(subst_option nodeps --ignore-dependency) --yes-all remove $@
             return ;;
+        pisi)
+            sudocmd pisi $(subst_option nodeps --ignore-dependency) --yes-all remove $@
+            return ;;
         appget|winget)
             sudocmd $PMTYPE uninstall -s $@
             return ;;
@@ -9698,6 +9819,9 @@ epm_print_remove_command()
             ;;
         eopkg)
             echo "eopkg remove $*"
+            ;;
+        pisi)
+            echo "pisi remove $*"
             ;;
         aptcyg)
             echo "apt-cyg remove $*"
@@ -10006,6 +10130,9 @@ case $PMTYPE in
         ;;
     eopkg)
         sudocmd eopkg remove-repo "$@"
+        ;;
+    pisi)
+        sudocmd pisi remove-repo "$@"
         ;;
     slackpkg)
         info "You need remove repo from /etc/slackpkg/mirrors"
@@ -10872,6 +10999,9 @@ case $PMTYPE in
     dnf5-rpm)
         sudocmd dnf config-manager setopt "$@.enabled=0"
         ;;
+    pisi)
+        docmd pisi disable-repo "$@"
+        ;;
     eoget)
         docmd eoget disable-repo "$@"
         ;;
@@ -10928,6 +11058,9 @@ case $PMTYPE in
         ;;
     eoget)
         docmd eoget enable-repo "$@"
+        ;;
+    pisi)
+        docmd pisi enable-repo "$@"
         ;;
     *)
         fatal 'Have no suitable command for $PMTYPE'
@@ -11437,6 +11570,9 @@ case $PMTYPE in
     eoget)
         docmd eoget list-repo
         ;;
+    pisi)
+        docmd pisi list-repo
+        ;;
     pacman)
         if [ -f /etc/pacman.d/mirrorlist ] ; then
             docmd grep -v -- "^#\|^$" /etc/pacman.d/mirrorlist | grep "^Server =" | sed -e 's|^Server = ||'
@@ -11797,6 +11933,10 @@ epm_requires_files()
                 showcmd eopkg info $fl
                 LC_ALL=C a='' eopkg info $fl | grep "^Dependencies" | head -n1 | sed -e "s|Dependencies[[:space:]]*: ||"
                 ;;
+            pisi)
+                showcmd pisi info $fl
+                LC_ALL=C pisi info $fl | grep "^Dependencies" | head -n1 | sed -e "s|Dependencies[[:space:]]*: ||"
+                ;;
             ELF)
                 __epm_elf_requires $fl
                 ;;
@@ -11890,6 +12030,11 @@ case $PMTYPE in
     eopkg)
         showcmd eopkg info $pkg_names
         LC_ALL=C a='' eopkg info $pkg_names | grep "^Dependencies" | sed -e "s|Dependencies[[:space:]]*: ||"
+        return
+        ;;
+    pisi)
+        showcmd pisi info $pkg_names
+        LC_ALL=C pisi info $pkg_names | grep "^Dependencies" | sed -e "s|Dependencies[[:space:]]*: ||"
         return
         ;;
     xbps)
@@ -12594,6 +12739,9 @@ case $PMTYPE in
     eopkg)
         CMD="eopkg search --"
         ;;
+    pisi)
+        CMD="pisi search --"
+        ;;
     yum-rpm)
         CMD="yum search"
         ;;
@@ -12865,6 +13013,9 @@ case $PMTYPE in
         ;;
     eopkg)
         CMD="eopkg search-file"
+        ;;
+    pisi)
+        CMD="pisi search-file"
         ;;
     xbps)
         CMD="xbps-query -Ro"
@@ -13319,6 +13470,9 @@ EOF
             ;;
         eopkg)
             CMD="eopkg --dry-run install"
+            ;;
+        pisi)
+            CMD="pisi --dry-run install"
             ;;
         zypper-rpm)
             if ! __use_zypper_dry_run >/dev/null ; then
@@ -13998,7 +14152,7 @@ __save_available_packages()
     [ $PMTYPE = "apt-dpkg" ] && return 0
 
     info "Retrieving list of all available packages (for autocompletion) ..."
-    short=--short epm_list_available | sort | sudorun tee $epm_vardir/available-packages >/dev/null
+    short=--short update=update epm_list_available | sort | sudorun tee $epm_vardir/available-packages >/dev/null
 }
 
 __epm_update_content_index()
@@ -14108,6 +14262,9 @@ case $PMTYPE in
         ;;
     eopkg)
         sudocmd eopkg update-repo
+        ;;
+    pisi)
+        sudocmd pisi update-repo
         ;;
     apk)
         sudocmd apk update
@@ -14325,6 +14482,9 @@ epm_upgrade()
     eopkg)
         CMD="eopkg upgrade"
         ;;
+    pisi)
+        CMD="pisi upgrade"
+        ;;
     slackpkg)
         CMD="/usr/sbin/slackpkg upgrade-all"
         ;;
@@ -14449,6 +14609,12 @@ case $PMTYPE in
         showcmd eopkg info $pkg
         # eopkg info prints it only from repo info
         LC_ALL=C a= eopkg info $pkg | grep "^Reverse Dependencies" | sed -e "s|Reverse Dependencies[[:space:]]*: ||" | grep -v "^$"
+        return
+        ;;
+    pisi)
+        showcmd pisi info $pkg
+        # pisi info prints it only from repo info
+        LC_ALL=C pisi info $pkg | grep "^Reverse Dependencies" | sed -e "s|Reverse Dependencies[[:space:]]*: ||" | grep -v "^$"
         return
         ;;
     xbps)
@@ -14672,6 +14838,9 @@ case $DISTRIB_ID in
     Solus)
         CMD="eopkg"
         ;;
+    PisiLinux)
+        CMD="pisi"
+        ;;
     Mandriva)
         CMD="urpm-rpm"
         ;;
@@ -14760,7 +14929,7 @@ case $DISTRIB_ID in
         echo "pkgmanager(): We don't support yet DISTRIB_ID $DISTRIB_ID (VENDOR_ID $VENDOR_ID)" >&2
         ;;
 esac
-if [ "$CMD" = "dnf-rpm" ] && [ $(dnf --version | grep -qi "dnf5") ] ; then
+if [ "$CMD" = "dnf-rpm" ] && dnf --version | grep -qi "dnf5" ; then
     CMD="dnf5-rpm"
 fi
 echo "$CMD"
@@ -14791,6 +14960,7 @@ pkgtype()
         openwrt) echo "ipk" ;;
         cygwin) echo "tar.xz" ;;
         solus) echo "eopkg" ;;
+        pisilinux) echo "pisi" ;;
         *)
             case $(pkgmanager) in
                 *-dpkg)
@@ -14842,6 +15012,9 @@ normalize_name()
             ;;
         "Fedora Linux")
             echo "Fedora"
+            ;;
+        "Pardus GNU/Linux")
+            echo "Pardus"
             ;;
         "Red Hat Enterprise Linux Server")
             echo "RHEL"
@@ -18816,7 +18989,7 @@ check_command()
         epm_cmd=history
         direct_args=1
         ;;
-    autoorphans|--orphans|remove-orphans)    # HELPCMD: remove all packages not from the repository
+    autoorphans|--orphans|remove-orphans|remove-orphaned)    # HELPCMD: remove all packages not from the repository
         epm_cmd=autoorphans
         direct_args=1
         ;;

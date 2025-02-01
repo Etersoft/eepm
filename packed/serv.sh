@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.6"
+EPMVERSION="3.64.7"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -391,27 +391,29 @@ message()
     echog "$*"
 }
 
-fatal()
+
+__promo_message()
 {
     local PROMOMESSAGE="$EPMPROMOMESSAGE"
-    [ -n "$PROMOMESSAGE" ] || PROMOMESSAGE=" (you can discuss the epm $EPMVERSION problem in Telegram: https://t.me/useepm)"
+    [ -n "$PROMOMESSAGE" ] || PROMOMESSAGE=" (you can discuss this problem (epm $EPMVERSION on $DISTRNAME/$DISTRVERSION) in Telegram: https://t.me/useepm)"
+    echo "$PROMOMESSAGE"
+}
 
+fatal()
+{
     set_color $RED >&2
     echog -n "ERROR: " >&2
     restore_color >&2
-    echog "$* $PROMOMESSAGE" >&2
+    echog "$* $(__promo_message)" >&2
     exit 1
 }
 
 fixme()
 {
-    local PROMOMESSAGE="$EPMPROMOMESSAGE"
-    [ -n "$PROMOMESSAGE" ] || PROMOMESSAGE=" (you can discuss the epm $EPMVERSION problem in Telegram: https://t.me/useepm)"
-
     set_color $RED >&2
     echo -n "ERROR: " >&2
     restore_color >&2
-    echo "$* $PROMOMESSAGE" >&2
+    echog "$* $(__promo_message)" >&2
     exit 1
 }
 
@@ -1115,20 +1117,6 @@ else
 		eval "echo -n \"$@\""
 	}
 fi
-
-set_backend()
-{
-    case $arg in
-        *:*)
-            PMTYPE=$(echo "$arg" | cut -d: -f1)
-            names=$(echo "$arg" | cut -d: -f2)
-            ;;
-        *)
-            PMTYPE=$($DISTRVENDOR -g)
-            names="$(echo $pkg_names | tr ' ' '\n' | grep -v ':' | filter_out_installed_packages)"
-    esac
-}
-
 
 # File bin/serv-cat:
 
@@ -1980,6 +1968,9 @@ case $DISTRIB_ID in
     Solus)
         CMD="eopkg"
         ;;
+    PisiLinux)
+        CMD="pisi"
+        ;;
     Mandriva)
         CMD="urpm-rpm"
         ;;
@@ -2068,7 +2059,7 @@ case $DISTRIB_ID in
         echo "pkgmanager(): We don't support yet DISTRIB_ID $DISTRIB_ID (VENDOR_ID $VENDOR_ID)" >&2
         ;;
 esac
-if [ "$CMD" = "dnf-rpm" ] && [ $(dnf --version | grep -qi "dnf5") ] ; then
+if [ "$CMD" = "dnf-rpm" ] && dnf --version | grep -qi "dnf5" ; then
     CMD="dnf5-rpm"
 fi
 echo "$CMD"
@@ -2099,6 +2090,7 @@ pkgtype()
         openwrt) echo "ipk" ;;
         cygwin) echo "tar.xz" ;;
         solus) echo "eopkg" ;;
+        pisilinux) echo "pisi" ;;
         *)
             case $(pkgmanager) in
                 *-dpkg)
@@ -2150,6 +2142,9 @@ normalize_name()
             ;;
         "Fedora Linux")
             echo "Fedora"
+            ;;
+        "Pardus GNU/Linux")
+            echo "Pardus"
             ;;
         "Red Hat Enterprise Linux Server")
             echo "RHEL"
