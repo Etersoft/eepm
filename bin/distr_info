@@ -338,6 +338,9 @@ normalize_name()
         "Fedora Linux")
             echo "Fedora"
             ;;
+        "Pardus GNU/Linux")
+            echo "Pardus"
+            ;;
         "Red Hat Enterprise Linux Server")
             echo "RHEL"
             ;;

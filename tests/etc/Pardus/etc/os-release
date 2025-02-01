@@ -1,0 +1,11 @@
+PRETTY_NAME="Pardus GNU/Linux 23 (yirmiuc)"
+NAME="Pardus GNU/Linux"
+VERSION_ID="23.3"
+VERSION="23.3 (yirmiuc)"
+VERSION_CODENAME=yirmiuc
+ID=pardus
+HOME_URL="https://www.pardus.org.tr/"
+SUPPORT_URL="https://forum.pardus.org.tr/"
+BUG_REPORT_URL="https://talep.pardus.org.tr/"
+ID_LIKE=debian
+PARDUS_CODENAME=yirmiuc
