@@ -356,6 +356,13 @@ case $PMTYPE in
             sudocmd opkg --autoremove
         fi
         ;;
+    eopkg)
+        if [ -n "$dryrun" ] ; then
+            sudocmd opkg --dry-run autoremove
+        else
+            sudocmd eopkg autoremove
+        fi
+        ;;
     *)
         fatal 'Have no suitable command for $PMTYPE'
         ;;
