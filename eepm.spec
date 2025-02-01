@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.6
+Version: 3.64.7
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -144,6 +144,42 @@ make -C po
 %endif
 
 %changelog
+* Sat Feb 01 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.7-alt1
+- epm play: add deltachat (eterbug #17964)
+- epm repack anytype: fix install (eterbug #17865)
+- epm repack geogebra-classic: remove python3 deps (eterbug #17865)
+- epm pack: fix install [typo]  (eterbug #17865)
+- epm play: added refind (eterbug #17963)
+- epm play reaper: fix getting version (eterbug #17953)
+- epm play wpsoffice: use new cn version (eterbug #17952)
+- epm play sunshine: added udev rule, systemd service and fix work on wayland (eterbug #17913)
+- epm play mattermost-desktop: dont install rc versions (eterbug #17911)
+- epm pack teamspeak3: pack libwebp.so.6 to teamspeak for fix install on RedOS (eterbug #17822)
+- epm install: transform package_manager:package_name to EPM_BACKEND value (eterbug #17511)
+- epm play naps2: fix pkgurl (eterbug #17910)
+- epm play sunshine: use libminiupnpc abi from system (eterbug #17913)
+- bash & zsh completion: add path support for epmi (eterbug #17968)
+- epm play skype: fix install; move to snap (eterbug #17865)
+- epm play ridoclnx: fix download (eterbug #17865)
+- epm repack lithium: fix install (eterbug #17865)
+- epm play common: rename get_github_version to get_github_url
+- epm repack min: add bin exec (eterbug #17865)
+- epm repack cascadeur: fix install (eterbug #17865)
+- epm play rustdesk: fix install (eterbug #17865)
+- epm play: added yandex-disk-indicator (eterbug #17976)
+- epm play: hiddify: improved speed of version query (thnx @pechenovv)
+- epm play: rename teamspeak5 to simple teamspeak (eterbug #17980)
+- epm play skype: add forgotten pack (eterbug #17865)
+- epm play: nekoray: fix icon
+- epm play: add xppen (eterbug #17981)
+- epm-autoremove: add eopkg support
+- add pisi package manager support (for Turkish distro PisiLinux)
+- add Pardus support (Turkish Debian based distro)
+- epm play: added libsciter-gtk.so for rustdesk (eterbug #17989)
+- epm update: fix getting package list (eterbug #17995)
+- epm-sh-functions: print distr name/version in every error message
+- distr_info: fix dnf5 detection
+
 * Sat Jan 11 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.6-alt1
 - epm: play added svp4 (eterbug #17842)
 - epm status --third-party: fix on rosa and mos (eterbug #17860)
