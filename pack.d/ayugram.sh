@@ -24,7 +24,7 @@ for i in 16 32 48 64 128 256 512 ; do
     install_file $iconpath/icon$i.png /usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png
 done
 
-cat <<EOF | create_file /usr/share/applications/ayugram.desktop.desktop
+cat <<EOF | create_file /usr/share/applications/com.ayugram.desktop
 [Desktop Entry]
 Version=1.0
 Name=AyuGram Desktop
