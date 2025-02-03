@@ -28,7 +28,7 @@ epm --auto upgrade $EPMPKGFILE
 epm --auto downgrade $EPMPKGFILE
 
 for i in $TESTPKG1 $TESTPKG2 ; do
-    epm --auto remove $i
+    #epm --auto remove $i
     epm --auto install $i
     epm --auto remove $i
 done
