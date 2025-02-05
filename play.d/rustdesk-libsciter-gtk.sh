@@ -1,9 +1,9 @@
 #!/bin/sh
 
-PKGNAME=libsciter-gtk
+PKGNAME=rustdesk-libsciter-gtk
 SUPPORTEDARCHES="x86_64 aarch64"
 VERSION="4.4.8.23"
-DESCRIPTION='Embeddable HTML/CSS/JavaScript engine for modern UI development'
+DESCRIPTION='Embeddable HTML/CSS/JavaScript engine for modern UI development (only for RustDesk from Sisyphus)'
 URL="https://github.com/c-smile/sciter-sdk"
 
 . $(dirname $0)/common.sh
