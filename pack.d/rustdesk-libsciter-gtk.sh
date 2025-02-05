@@ -8,8 +8,8 @@ VERSION="$3"
 
 PKGNAME=$PRODUCT-$VERSION
 
-mkdir -p usr/lib64/
-mv -v $TAR usr/lib64/
+mkdir -p usr/lib/rustdesk
+mv -v $TAR usr/lib/rustdesk
 
 erc pack $PKGNAME.tar usr
 
