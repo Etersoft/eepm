@@ -38,8 +38,11 @@ if [ "$vendor" != "alt" ] ; then
 
     case $arch in
         x86_64)
-            # Доставляем пропущенные модули (подпакеты) для установленных 64-битных
-            epm prescription i586-fix
+            # for non wow64 packages
+            if ! epm ql $MAIN | grep -q '/i386-windows/' ; then
+                # Доставляем пропущенные модули (подпакеты) для установленных 64-битных
+                epm prescription i586-fix
+            fi
             ;;
         esac
     exit
@@ -65,6 +68,7 @@ else
 fi
 
 fi
+
 
 if [ "$arch" = "x86" ] ; then
     PKGNAMES="$PKGNAMES $PKGCOMMON"
