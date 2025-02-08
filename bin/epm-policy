@@ -35,8 +35,11 @@ case $PMTYPE in
         # FIXME: returns TRUE ever on missed package
         docmd apt-cache policy $pkg_names
         ;;
-    dnf-*|yum-*)
+    dnf-*|dnf5-*)
         docmd dnf info $pkg_names
+        ;;
+    yum-*)
+        fatal "policy command is not implemented for yum"
         ;;
     packagekit)
         docmd pkcon resolve $pkg_names
