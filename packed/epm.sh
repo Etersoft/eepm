@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-export EPMVERSION="3.64.7"
+export EPMVERSION="3.64.8"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -7442,8 +7442,11 @@ case $PMTYPE in
         # FIXME: returns TRUE ever on missed package
         docmd apt-cache policy $pkg_names
         ;;
-    dnf-*|yum-*)
+    dnf-*|dnf5-*)
         docmd dnf info $pkg_names
+        ;;
+    yum-*)
+        fatal "policy command is not implemented for yum"
         ;;
     packagekit)
         docmd pkcon resolve $pkg_names
@@ -18697,7 +18700,7 @@ print_version()
 {
         message 'EPM package manager version $EPMVERSION  Telegram: https://t.me/useepm  https://wiki.etersoft.ru/Epm
                  Running on $DISTRNAME/$DISTRVERSION ($PMTYPE package manager uses $PKGFORMAT package format)
-                 Copyright (c) Etersoft 2012-2024
+                 Copyright (c) Etersoft 2012-2025
                  This program may be freely redistributed under the terms of the GNU AGPLv3.'
 }
 
