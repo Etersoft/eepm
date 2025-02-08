@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.7
+Version: 3.64.8
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -144,6 +144,15 @@ make -C po
 %endif
 
 %changelog
+* Sat Feb 08 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.8-alt1
+- pack: ayugram: fix non-binding application to .desktop file in the GNOME Wayland session
+- epm prescription wine: improve wow64 build for non ALT systems
+- epm play libsciter-gtk: fix lib path and rename (ALT bug: 52924)
+- epm play: rudesktop move to opt (eterbug #18004)
+- epm-policy: add fatal for yum
+- epm play mailspring: replace eget to get_github_url (eterbug #18012)
+- epm repack vkteams: remove image format jp2 support (was via obsoleted libjasper)
+
 * Sat Feb 01 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.7-alt1
 - epm play: add deltachat (eterbug #17964)
 - epm repack anytype: fix install (eterbug #17865)
