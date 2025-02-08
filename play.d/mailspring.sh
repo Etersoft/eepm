@@ -13,6 +13,6 @@ URL="https://www.getmailspring.com/"
 arch=amd64
 pkgtype=deb
 
-PKGURL=$(eget --list --latest https://github.com/Foundry376/Mailspring/releases/ "$PKGNAME*$VERSION*$arch.$pkgtype")
+PKGURL=$(get_github_url https://github.com/Foundry376/Mailspring/ "$PKGNAME.*.$VERSION.*$arch.$pkgtype")
 
 install_pkgurl
