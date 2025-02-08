@@ -262,12 +262,12 @@ __epm_addrepo_altlinux()
             ;;
         deferred)
             [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersot Sisyphus Deferred supported only for ALT Sisyphus."
-            epm repo add "http://download.etersoft.ru/pub Etersoft/Sisyphus/Deferred"
+            epm repo add "http://download.etersoft.ru/pub/Etersoft/Sisyphus/Deferred"
             return 0
             ;;
         deferred.org)
             [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersot Sisyphus Deferred supported only for ALT Sisyphus."
-            epm repo add "http://mirror.eterfund.org/download.etersoft.ru/pub Etersoft/Sisyphus/Deferred"
+            epm repo add "http://mirror.eterfund.org/download.etersoft.ru/pub/Etersoft/Sisyphus/Deferred"
             return 0
             ;;
         archive)
