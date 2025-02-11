@@ -116,7 +116,7 @@ print_version()
 {
         message 'EPM package manager version $EPMVERSION  Telegram: https://t.me/useepm  https://wiki.etersoft.ru/Epm
                  Running on $DISTRNAME/$DISTRVERSION ($PMTYPE package manager uses $PKGFORMAT package format)
-                 Copyright (c) Etersoft 2012-2024
+                 Copyright (c) Etersoft 2012-2025
                  This program may be freely redistributed under the terms of the GNU AGPLv3.'
 }
 
