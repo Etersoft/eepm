@@ -6,7 +6,7 @@ RETURNTARNAME="$2"
 
 . $(dirname $0)/common.sh
 
-epm assure unsquashfs
+epm assure unsquashfs squashfs-tools || fatal "Install a package with unsquashfs command manually."
 unsquashfs $TAR || fatal
 
 VERSION=$(grep version squashfs-root/snapcraft.yaml | awk '{print $2}')
