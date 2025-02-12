@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.8
+Version: 3.64.9
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -144,6 +144,13 @@ make -C po
 %endif
 
 %changelog
+* Wed Feb 12 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.9-alt1
+- epm-addrepo: fix add Deffered repo
+- distr_info: skip dnf requre
+- epm pack skypeforlinux.sh: fix unsquashfs install
+- po: improve messages
+- epm-install: fix prefix parsing
+
 * Sat Feb 08 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.8-alt1
 - pack: ayugram: fix non-binding application to .desktop file in the GNOME Wayland session
 - epm prescription wine: improve wow64 build for non ALT systems
