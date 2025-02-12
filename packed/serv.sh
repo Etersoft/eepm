@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.8"
+EPMVERSION="3.64.9"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1811,7 +1811,7 @@ internal_distr_info()
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
 
-PROGVERSION="20230406"
+PROGVERSION="20250206"
 
 # TODO: check /etc/system-release
 
@@ -2059,7 +2059,7 @@ case $DISTRIB_ID in
         echo "pkgmanager(): We don't support yet DISTRIB_ID $DISTRIB_ID (VENDOR_ID $VENDOR_ID)" >&2
         ;;
 esac
-if [ "$CMD" = "dnf-rpm" ] && dnf --version | grep -qi "dnf5" ; then
+if [ "$CMD" = "dnf-rpm" ] && a= dnf --version | grep -qi "dnf5" ; then
     CMD="dnf5-rpm"
 fi
 echo "$CMD"
@@ -2793,7 +2793,7 @@ local orig=''
 local EV=''
 [ -n "$EPMVERSION" ] && EV="(EPM version $EPMVERSION) "
 cat <<EOF
-distro_info v$PROGVERSION $EV: Copyright © 2007-2024 Etersoft
+distro_info v$PROGVERSION $EV: Copyright © 2007-2025 Etersoft
 
                        Pretty name (--pretty): $(print_pretty_name)
            (--distro-name / --distro-version): $DISTRO_NAME / $DISTRIB_FULL_RELEASE$orig

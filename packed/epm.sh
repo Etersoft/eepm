@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-export EPMVERSION="3.64.8"
+export EPMVERSION="3.64.9"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1366,12 +1366,12 @@ __epm_addrepo_altlinux()
             ;;
         deferred)
             [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersot Sisyphus Deferred supported only for ALT Sisyphus."
-            epm repo add "http://download.etersoft.ru/pub Etersoft/Sisyphus/Deferred"
+            epm repo add "http://download.etersoft.ru/pub/Etersoft/Sisyphus/Deferred"
             return 0
             ;;
         deferred.org)
             [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersot Sisyphus Deferred supported only for ALT Sisyphus."
-            epm repo add "http://mirror.eterfund.org/download.etersoft.ru/pub Etersoft/Sisyphus/Deferred"
+            epm repo add "http://mirror.eterfund.org/download.etersoft.ru/pub/Etersoft/Sisyphus/Deferred"
             return 0
             ;;
         archive)
@@ -4566,26 +4566,26 @@ process_package_arguments() {
     local arg
     local package_groups
     declare -A package_groups
+    # ONLY supported backend in short form?
     VALID_BACKENDS="apt-rpm apt-dpkg aptitude-dpkg deepsolver-rpm urpm-rpm packagekit pkgsrc pkgng redox-pkg emerge pacman aura yum-rpm dnf-rpm snappy zypper-rpm mpkg eopkg conary npackd slackpkg homebrew opkg nix apk tce guix termux-pkg aptcyg xbps appget winget"
     for arg in "$@"; do
+        pmtype=$PMTYPE
+        name="$arg"
+        tpmtype=$(echo "$arg" | cut -d: -f1)
         case "$arg" in
             *:*)
-                pmtype=$(echo "$arg" | cut -d: -f1)
-                name=$(echo "$arg" | cut -d: -f2)
-                if ! echo "$VALID_BACKENDS" | grep -qw "$pmtype"; then
-                    pmtype=$PMTYPE
+                # FIXME
+                if echo "$arg" | grep -q "^[a-z][a-z][a-z]*:" && echo "$VALID_BACKENDS" | grep -qw "$tpmtype"; then
+                    pmtype=$tpmtype
+                    name=$(echo "$arg" | cut -d: -f2)
                 fi
-                ;;
-            *)
-                pmtype=$PMTYPE
-                name="$arg"
                 ;;
         esac
         package_groups["$pmtype"]+="$name "
     done
 
     for pmtype in "${!package_groups[@]}"; do
-        (PMTYPE="$pmtype" epm_install_names ${package_groups[$pmtype]})
+        (PMTYPE="$pmtype" PPARGS=1 epm_install_names ${package_groups[$pmtype]})
     done
 }
 
@@ -4593,9 +4593,8 @@ epm_install_names()
 {
     [ -z "$1" ] && return
 
-    warmup_hibase
-
-    if echo "$@" | grep -q ':'; then
+    # check some like nix: prefix, PPARGS for stop possible recursion. TODO
+    if echo "$*" | grep -q '[a-z][a-z][a-z]*:' && [ -z "$PPARGS" ] ; then
         process_package_arguments "$@"
         return
     fi
@@ -4604,6 +4603,8 @@ epm_install_names()
         epm download "$@"
         return
     fi
+
+    warmup_hibase
 
     if [ -n "$dryrun" ] ; then
         epm simulate "$@"
@@ -14684,7 +14685,7 @@ internal_distr_info()
 # You can set ROOTDIR to root system dir
 #ROOTDIR=
 
-PROGVERSION="20230406"
+PROGVERSION="20250206"
 
 # TODO: check /etc/system-release
 
@@ -14932,7 +14933,7 @@ case $DISTRIB_ID in
         echo "pkgmanager(): We don't support yet DISTRIB_ID $DISTRIB_ID (VENDOR_ID $VENDOR_ID)" >&2
         ;;
 esac
-if [ "$CMD" = "dnf-rpm" ] && dnf --version | grep -qi "dnf5" ; then
+if [ "$CMD" = "dnf-rpm" ] && a= dnf --version | grep -qi "dnf5" ; then
     CMD="dnf5-rpm"
 fi
 echo "$CMD"
@@ -15666,7 +15667,7 @@ local orig=''
 local EV=''
 [ -n "$EPMVERSION" ] && EV="(EPM version $EPMVERSION) "
 cat <<EOF
-distro_info v$PROGVERSION $EV: Copyright © 2007-2024 Etersoft
+distro_info v$PROGVERSION $EV: Copyright © 2007-2025 Etersoft
 
                        Pretty name (--pretty): $(print_pretty_name)
            (--distro-name / --distro-version): $DISTRO_NAME / $DISTRIB_FULL_RELEASE$orig
