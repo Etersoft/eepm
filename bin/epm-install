@@ -72,26 +72,26 @@ process_package_arguments() {
     local arg
     local package_groups
     declare -A package_groups
+    # ONLY supported backend in short form?
     VALID_BACKENDS="apt-rpm apt-dpkg aptitude-dpkg deepsolver-rpm urpm-rpm packagekit pkgsrc pkgng redox-pkg emerge pacman aura yum-rpm dnf-rpm snappy zypper-rpm mpkg eopkg conary npackd slackpkg homebrew opkg nix apk tce guix termux-pkg aptcyg xbps appget winget"
     for arg in "$@"; do
+        pmtype=$PMTYPE
+        name="$arg"
+        tpmtype=$(echo "$arg" | cut -d: -f1)
         case "$arg" in
             *:*)
-                pmtype=$(echo "$arg" | cut -d: -f1)
-                name=$(echo "$arg" | cut -d: -f2)
-                if ! echo "$VALID_BACKENDS" | grep -qw "$pmtype"; then
-                    pmtype=$PMTYPE
+                # FIXME
+                if echo "$arg" | grep -q "^[a-z][a-z][a-z]*:" && echo "$VALID_BACKENDS" | grep -qw "$tpmtype"; then
+                    pmtype=$tpmtype
+                    name=$(echo "$arg" | cut -d: -f2)
                 fi
-                ;;
-            *)
-                pmtype=$PMTYPE
-                name="$arg"
                 ;;
         esac
         package_groups["$pmtype"]+="$name "
     done
 
     for pmtype in "${!package_groups[@]}"; do
-        (PMTYPE="$pmtype" epm_install_names ${package_groups[$pmtype]})
+        (PMTYPE="$pmtype" PPARGS=1 epm_install_names ${package_groups[$pmtype]})
     done
 }
 
@@ -100,9 +100,8 @@ epm_install_names()
 {
     [ -z "$1" ] && return
 
-    warmup_hibase
-
-    if echo "$@" | grep -q ':'; then
+    # check some like nix: prefix, PPARGS for stop possible recursion. TODO
+    if echo "$*" | grep -q '[a-z][a-z][a-z]*:' && [ -z "$PPARGS" ] ; then
         process_package_arguments "$@"
         return
     fi
@@ -111,6 +110,8 @@ epm_install_names()
         epm download "$@"
         return
     fi
+
+    warmup_hibase
 
     if [ -n "$dryrun" ] ; then
         load_helper epm-simulate
