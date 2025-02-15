@@ -33,6 +33,18 @@ done
 
 subst "s|%files|%files\n${icon_paths%\\n}|" "$SPEC"
 
+# Rename templates for compatibility with rpmbuild
+find "$BUILDROOT$PRODUCTDIR/desktopeditors/converter/templates" -name '*\[*]*' | while read file; do
+    newfile=$(echo "$file" | sed 's/\[//g; s/\]//g')
+    mv "$file" "$newfile"
+done
+template_paths=$(find "$BUILDROOT$PRODUCTDIR/desktopeditors/converter/templates" -type f | sed "s|$BUILDROOT||")
+
+subst '/\/desktopeditors\/converter\/templates\/.*\[\|\]/d' "$SPEC"
+
+escaped_paths=$(echo "$template_paths" | sed ':a;N;$!ba;s/\n/\\n/g')
+subst "s|%files|%files\n$escaped_paths|" "$SPEC"
+
 fix_desktop_file /usr/bin/onlyoffice-desktopeditors
 
 add_libs_requires
