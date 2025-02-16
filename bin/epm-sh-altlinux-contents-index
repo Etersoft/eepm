@@ -130,9 +130,23 @@ update_alt_contents_index()
     # TODO: fix for Etersoft/LINUX@Etersoft
     # TODO: fix for rsync
     info "Retrieving contents_index ..."
-    (quiet=1 epm_repolist) | grep -v " task$" | grep -E "rpm.*(ftp://|http://|https://|rsync://|file:/)" | sed -e "s@^rpm.*\(ftp://\|http://\|https://\)@rsync://@g" | sed -e "s@^rpm.*\(file:\)@@g" | while read -r URL1 URL2 component ; do
+
+    mapfile -t URL_LIST < <(
+        (quiet=1 epm_repolist) | \
+        grep -v " task$" | \
+        grep -E "rpm.*(ftp://|http://|https://|rsync://|file:/)" | \
+        sed -e "s@^rpm.*\(ftp://\|http://\|https://\)@rsync://@g" | \
+        sed -e "s@^rpm.*\(file:\)@@g"
+    )
+
+    for line in "${URL_LIST[@]}"; do
+        URL1=$(echo "$line" | awk '{print $1}')
+        URL2=$(echo "$line" | awk '{print $2}')
+        component=$(echo "$line" | awk '{print $3}')
+
         [ "$component" = "debuginfo" ] && continue
         URL="$URL1/$URL2"
+
         if is_abs_path "$URL" ; then
             # first check for local mirror
             local LOCALPATH="$(echo "$URL/base")"
@@ -141,9 +155,11 @@ update_alt_contents_index()
         else
             local LOCALPATH="$(get_local_alt_mirror_path "$URL")"
             local REMOTEURL="$(get_url_to_etersoft_mirror "$URL")"
+
             if [ -n "$REMOTEURL" ] ; then
-                rsync_alt_contents_index $REMOTEURL/base/contents_index.gz $LOCALPATH/contents_index.gz && __add_to_contents_index_list "$REMOTEURL" "$LOCALPATH/contents_index.gz" && continue
-                [ -n "$verbose" ] && info 'Note: Can'\''t retrieve $REMOTEURL/base/contents_index.gz, fallback to $URL/base/contents_index'
+                rsync_alt_contents_index "$REMOTEURL/base/contents_index.gz" "$LOCALPATH/contents_index.gz" && \
+                __add_to_contents_index_list "$REMOTEURL" "$LOCALPATH/contents_index.gz" && continue
+                [ -n "$verbose" ] && info "Note: Can't retrieve $REMOTEURL/base/contents_index.gz, fallback to $URL/base/contents_index"
             fi
             # we don't know if remote server has rsync
             # fix rsync URL firstly
