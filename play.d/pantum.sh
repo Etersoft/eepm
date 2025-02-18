@@ -15,7 +15,10 @@ warn_version_is_not_supported
 
 # all printer here
 # 1.1.106
-PKGURL="https://drivers.pantum.ru/userfiles/files/download/drive/2013/0619/Pantum%20Ubuntu%20Driver%20V1_1_106(1).zip"
+# PKGURL="https://www.pantum.ru/wp-content/uploads/2024/06/pantum-ubuntu-driver-v1_1_106.zip"
+
+# 1.1.123
+PKGURL="https://www.pantum.ru/wp-content/uploads/2024/06/Pantum-Ubuntu-Driver-V1_1_123.zip"
 
 #case $(epm print info -p) in
 #    *)
@@ -28,7 +31,7 @@ PKGURL="https://drivers.pantum.ru/userfiles/files/download/drive/2013/0619/Pantu
 
 case $(epm print info -e) in
     AstraLinuxSE/1.7*)
-        PKGURL="https://drivers.pantum.ru/userfiles/files/download/drive/4020/linux%E5%85%B6%E4%BB%96%E7%B3%BB%E7%BB%9F%EF%BC%88ru%EF%BC%89/pantum_1_1_101-1astra1_amd64.zip"
+        PKGURL="https://disk.astralinux.ru/s/EdEx4wNdtDpZaww/download/Pantum_Ubuntu_Driver_V1.1.5.tar.gz"
         ;;
 #    Ubuntu/*)
 #        # 1.1.106
