@@ -16,6 +16,9 @@ elif echo "$TAR" | grep -q "linux_pantum.7z" ; then
 elif echo "$TAR" | grep -q "pantum.*astra.*_amd64.zip" ; then
     erc "$TAR" || fatal
     return_tar pantum_*_amd64.deb
+# from Astra disk: Pantum_Ubuntu_Driver_V1.1.5.tar.gz
+elif echo "$TAR" | grep -q "Pantum_Ubuntu_Driver_V.*.tar.gz" ; then
+    erc "$TAR" || fatal
 else
     fatal "We support only Pantum Ubuntu Driver V.*.zip"
 fi
@@ -24,13 +27,12 @@ fi
 mv Pantum* PantumDriver || fatal
 cd PantumDriver/Resources || fatal
 
-
 case "$(epm print info -a)" in
     x86_64)
-        PKG="pantum_*_amd64.deb"
+        PKG="pantum[-_]*[-_]amd64.deb"
         ;;
     x86)
-        PKG="pantum_*_i386.deb"
+        PKG="pantum[-_]*[-_]i386.deb"
         ;;
 esac
 
