@@ -1,0 +1,9 @@
+apps:
+  - name: teamspeak5
+    group: teamspeak5 group
+    license: teamspeak5 license
+    url: https://www.teamspeak.com/
+    summary: teamspeak5 summary
+    description: TeamSpeak5 Client for Linux from the official site
+    arches: x86_64
+    download_page: https://files.teamspeak-services.com/pre_releases/client/*/teamspeak-client.tar.gz

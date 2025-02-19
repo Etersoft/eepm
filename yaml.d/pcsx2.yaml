@@ -1,0 +1,10 @@
+apps:
+  - name: pcsx2
+    group: pcsx2 group
+    license: pcsx2 license
+    url: https://github.com/PCSX2/pcsx2/releases
+    summary: pcsx2 summary
+    description: PCSX2 - free and open-source PlayStation 2 (PS2) emulator from the official site
+    arches: x86_64
+    download_page: https://github.com/PCSX2/pcsx2/releases
+    download_mask: $file

@@ -1,0 +1,10 @@
+apps:
+  - name: ayugram
+    group: ayugram group
+    license: ayugram license
+    url: https://github.com/AyuGram/AyuGramDesktop
+    summary: ayugram summary
+    description: Desktop Telegram client with good customization and Ghost mode
+    arches: x86_64
+    download_page: https://github.com/nevazno00/AyuGramDesktop-Linux-Binary/releases
+    download_mask: AyuGram-*

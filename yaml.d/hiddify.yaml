@@ -1,0 +1,9 @@
+apps:
+  - name: hiddify
+    group: hiddify group
+    license: hiddify license
+    url: https://github.com/hiddify/hiddify-next
+    summary: hiddify summary
+    description: Кроссплатформенный прокси-клиент на основе ядра Sing-box
+    arches: x86_64
+    download_page: https://github.com/hiddify/hiddify-next/releases/download/v*/Hiddify-Debian-x64.deb

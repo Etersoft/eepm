@@ -1,0 +1,9 @@
+apps:
+  - name: rstudio
+    group: rstudio group
+    license: rstudio license
+    url: https://posit.co/
+    summary: rstudio summary
+    description: RStudio from the official site
+    arches: x86_64
+    download_page: $(eget --list https://posit.co/download/rstudio-desktop/ $PKGMASK | grep $PKGFILTER)

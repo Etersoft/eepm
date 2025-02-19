@@ -1,0 +1,9 @@
+apps:
+  - name: nsgclient
+    group: nsgclient group
+    license: nsgclient license
+    url: https://www.citrix.com/downloads/citrix-gateway/plug-ins/Citrix-Gateway-VPN-EPA-Clients-Ubuntu.html
+    summary: nsgclient summary
+    description: Is the client software that allows access to corporate data and applications through Citrix ADC
+    arches: x86_64
+    download_page: ipfs://QmXYsYw63ufk5aUmVpddA6YbjvAbdnnEZk36yGajU3pc5j?filename=Citrix_VPN.zip

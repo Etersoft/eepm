@@ -1,0 +1,9 @@
+apps:
+  - name: alivecolors
+    group: alivecolors group
+    license: alivecolors license
+    url: 
+    summary: alivecolors summary
+    description: AliveColors from the official site
+    arches: x86_64
+    download_page: 

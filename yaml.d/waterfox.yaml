@@ -1,0 +1,9 @@
+apps:
+  - name: waterfox
+    group: waterfox group
+    license: waterfox license
+    url: https://www.waterfox.net/
+    summary: waterfox summary
+    description: Fast and Private Web Browser
+    arches: x86_64
+    download_page: https://cdn1.waterfox.net/waterfox/releases/*/Linux_x86_64/waterfox-*.tar.bz2

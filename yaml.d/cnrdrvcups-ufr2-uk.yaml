@@ -1,0 +1,9 @@
+apps:
+  - name: cnrdrvcups-ufr2-uk
+    group: cnrdrvcups-ufr2-uk group
+    license: cnrdrvcups-ufr2-uk license
+    url: https://www.canon.ru/support/business-product-support/office_driver_guide/
+    summary: cnrdrvcups-ufr2-uk summary
+    description: Canon UFR II Printer Driver for Linux from the official site
+    arches: x86_64 aarch64
+    download_page: https://gdlp01.c-wss.com/gds/0/0100009240/36/linux-UFRII-drv-v600-m17n-06.tar.gz

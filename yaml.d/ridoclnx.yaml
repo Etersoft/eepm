@@ -1,0 +1,10 @@
+apps:
+  - name: ridoclnx
+    group: ridoclnx group
+    license: ridoclnx license
+    url: https://ridoclnx.com/
+    summary: ridoclnx summary
+    description: RiDocLNX - scanner software for Linux
+    arches: x86_64
+    download_page: https://ridoclnx.com/download-ridoclnx-ru
+    download_mask: $mask

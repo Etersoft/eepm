@@ -1,0 +1,9 @@
+apps:
+  - name: wpsoffice
+    group: wpsoffice group
+    license: wpsoffice license
+    url: https://www.wps.cn/product/wpslinux
+    summary: wpsoffice summary
+    description: WPS Office for Linux from the official site
+    arches: x86_64
+    download_page: https://archive2.kylinos.cn/DEB/KYLIN_DEB/pool/main/deb/wpsoffice/wpsoffice_*_amd64.deb

@@ -1,0 +1,9 @@
+apps:
+  - name: vinteo-desktop
+    group: vinteo-desktop group
+    license: vinteo-desktop license
+    url: https://vinteo.com
+    summary: vinteo-desktop summary
+    description: Client for Vinteo videoconferencing server
+    arches: x86_64
+    download_page: 

@@ -1,0 +1,10 @@
+apps:
+  - name: chromium-gost-stable
+    group: chromium-gost-stable group
+    license: chromium-gost-stable license
+    url: 
+    summary: chromium-gost-stable summary
+    description: Chromium with GOST support from the official site
+    arches: x86_64
+    download_page: https://github.com/deemru/chromium-gost/releases
+    download_mask: chromium-gost-*-linux-$arch.$pkgtype

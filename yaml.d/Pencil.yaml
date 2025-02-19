@@ -1,0 +1,10 @@
+apps:
+  - name: Pencil
+    group: Pencil group
+    license: Pencil license
+    url: https://pencil.evolus.vn/
+    summary: Pencil summary
+    description: Pencil from the official site
+    arches: x86_64 x86
+    download_page: https://pencil.evolus.vn/Downloads.html
+    download_mask: $mask

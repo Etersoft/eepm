@@ -1,0 +1,10 @@
+apps:
+  - name: pachca
+    group: pachca group
+    license: pachca license
+    url: https://github.com/pachca/pachca-desktop
+    summary: pachca summary
+    description: Корпоративный мессенджер Пачка с официального сайта
+    arches: x86_64
+    download_page: https://github.com/pachca/pachca-desktop/releases
+    download_mask: $file

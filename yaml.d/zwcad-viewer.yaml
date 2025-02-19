@@ -1,0 +1,9 @@
+apps:
+  - name: zwcad-viewer
+    group: zwcad-viewer group
+    license: zwcad-viewer license
+    url: https://sapr-soft.ru/zwcad_viewer
+    summary: zwcad-viewer summary
+    description: ZWCAD Viewer from the official site
+    arches: x86_64
+    download_page: https://sapr-soft.ru/download/Viewer/ZWCAD_Viewer_Beta.tar.gz

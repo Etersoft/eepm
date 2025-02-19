@@ -1,0 +1,9 @@
+apps:
+  - name: epsonscan2-non-free-plugin
+    group: epsonscan2-non-free-plugin group
+    license: epsonscan2-non-free-plugin license
+    url: https://support.epson.net/linux/en/epsonscan2.php
+    summary: epsonscan2-non-free-plugin summary
+    description: Epson Scan 2 non-free-plugin - Linux Scanner Driver from the official site
+    arches: x86_64
+    download_page: 

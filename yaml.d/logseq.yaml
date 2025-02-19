@@ -1,0 +1,9 @@
+apps:
+  - name: logseq
+    group: logseq group
+    license: logseq license
+    url: https://github.com/logseq/logseq
+    summary: logseq summary
+    description: Logseq - a platform for knowledge management and collaboration. From the official site
+    arches: x86_64
+    download_page: $(eget --list https://github.com/logseq/logseq/releases/ Logseq-linux-x64-*.AppImage | grep -v nightly | head -n1)

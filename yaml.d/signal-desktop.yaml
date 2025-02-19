@@ -1,0 +1,9 @@
+apps:
+  - name: signal-desktop
+    group: signal-desktop group
+    license: signal-desktop license
+    url: 
+    summary: signal-desktop summary
+    description: Signal private messenger from the official site
+    arches: x86_64
+    download_page: https://updates.signal.org/desktop/apt/pool/s/signal-desktop/$file

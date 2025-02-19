@@ -1,0 +1,9 @@
+apps:
+  - name: kyodialog
+    group: kyodialog group
+    license: kyodialog license
+    url: https://www.kyoceradocumentsolutions.com/download/model_ru.html?r=92&s=23&m=255&p=50
+    summary: kyodialog summary
+    description: KYOCERA Printing Package (Linux Universal Driver)
+    arches: x86_64
+    download_page: https://dam.kyoceradocumentsolutions.com/content/dam/gdam_dc/dc_global/executables/web/KyoceraLinuxPackages-20230720.tar.gz

@@ -1,0 +1,15 @@
+play.d/brave.sh пропущен: PKGNAME не найден
+play.d/chrome-remote-desktop.sh пропущен: комментарии в description
+play.d/commfort-client.sh пропущен: комментарии в description
+play.d/common-jetbrains.sh пропущен: файл common
+play.d/common-outformat.sh пропущен: файл common
+play.d/common.sh пропущен: файл common
+play.d/edge.sh пропущен: PKGNAME не найден
+play.d/kubo.sh пропущен: PKGNAME не найден
+play.d/lithium.sh пропущен: PKGNAME не найден
+play.d/opera.sh пропущен: PKGNAME не найден
+play.d/rememberthemilk.sh пропущен: комментарии в description
+play.d/rupost.sh пропущен: PKGNAME не найден
+play.d/telegram.sh пропущен: PKGNAME не найден
+play.d/vivaldi.sh пропущен: PKGNAME не найден
+play.d/yandex-browser.sh пропущен: PKGNAME не найден
