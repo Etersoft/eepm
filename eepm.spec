@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.9
+Version: 3.64.10
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -144,6 +144,13 @@ make -C po
 %endif
 
 %changelog
+* Wed Feb 19 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.10-alt1
+- epm-release_upgrade: improvements for p11
+- epm play pantum: fix download link (eterbug #18054)
+- epm play freeoffice: fix url search mask (eterbug #17865)
+- epm play onlyoffice: fix install with rpmbuild (eterbug #17982)
+- epm update --content-index: fix rsync install (eterbug #17634)
+
 * Wed Feb 12 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.9-alt1
 - epm-addrepo: fix add Deffered repo
 - distr_info: skip dnf requre
