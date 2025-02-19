@@ -10,6 +10,6 @@ URL="https://www.freeoffice.com/ru/download/applications"
 . $(dirname $0)/common.sh
 
 
-PKGURL="$(eget --list --latest https://www.freeoffice.com/ru/download/applications "softmaker-freeoffice-$VERSION*-amd64.tgz")"
+PKGURL="$(eget --list --latest https://www.freeoffice.com/ru/download/applications "softmaker-freeoffice-202*-$VERSION-amd64.tgz")"
 
 install_pack_pkgurl
