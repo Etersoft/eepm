@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-export EPMVERSION="3.64.9"
+export EPMVERSION="3.64.10"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -8984,6 +8984,9 @@ __p11_upgrade_fix()
         info "Need to install default apt-conf package to avoid missing $TO repo"
         docmd epm install apt-conf-branch || fatal
     fi
+    # файл /etc/openssl/openssl.cnf из устанавливаемого пакета openssl-config-3.2.0-alt1.noarch конфликтует с файлом из пакета libcrypto10-1.0.2u-alt1.p9.2.x86_64
+    docmd epm remove libcrypto10 libssl10
+
     # libcrypto1.1 fix
     docmd epm repo save
     docmd epm repo rm all
@@ -9119,6 +9122,7 @@ __check_system()
             warning 'Current distro still is not $TO, or altlinux-release-sisyphus package is installed.'
             warning 'Trying to fix with altlinux-release-$TO'
             docmd epm install altlinux-release-$TO
+            docmd epm install altlinux-os-release
         fi
     fi
 
@@ -9262,7 +9266,7 @@ __switch_alt_to_distro()
             docmd epm update-kernel || fatal
             info "Run epm release-upgrade again for update to p10"
             ;;
-        "p9"|"p9 p10"|"p10 p10"|"p10 p11")
+        "p9"|"p9 p10"|"p10 p10")
             info "Upgrade all packages to current $FROM repository"
             __do_upgrade
             confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
@@ -9274,6 +9278,20 @@ __switch_alt_to_distro()
             docmd epm install rpm apt $(get_fix_release_pkg "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
             __check_system "$TO"
             docmd epm update-kernel -t std-def || fatal
+            ;;
+        "p10 p11")
+            info "Upgrade all packages to current $FROM repository"
+            __do_upgrade
+            confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
+            docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+            __p11_upgrade_fix
+            __switch_repo_to $TO
+            end_change_alt_repo
+            __do_upgrade
+            docmd epm install rpm apt $(get_fix_release_pkg "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
+            __check_system "$TO"
+            # will update to kernel 6.6
+            docmd epm update-kernel || fatal
             ;;
         "p9 p8"|"c8.1 c8"|"c8.1 p8"|"p8 p8")
             confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
@@ -13172,9 +13190,23 @@ update_alt_contents_index()
     # TODO: fix for Etersoft/LINUX@Etersoft
     # TODO: fix for rsync
     info "Retrieving contents_index ..."
-    (quiet=1 epm_repolist) | grep -v " task$" | grep -E "rpm.*(ftp://|http://|https://|rsync://|file:/)" | sed -e "s@^rpm.*\(ftp://\|http://\|https://\)@rsync://@g" | sed -e "s@^rpm.*\(file:\)@@g" | while read -r URL1 URL2 component ; do
+
+    mapfile -t URL_LIST < <(
+        (quiet=1 epm_repolist) | \
+        grep -v " task$" | \
+        grep -E "rpm.*(ftp://|http://|https://|rsync://|file:/)" | \
+        sed -e "s@^rpm.*\(ftp://\|http://\|https://\)@rsync://@g" | \
+        sed -e "s@^rpm.*\(file:\)@@g"
+    )
+
+    for line in "${URL_LIST[@]}"; do
+        URL1=$(echo "$line" | awk '{print $1}')
+        URL2=$(echo "$line" | awk '{print $2}')
+        component=$(echo "$line" | awk '{print $3}')
+
         [ "$component" = "debuginfo" ] && continue
         URL="$URL1/$URL2"
+
         if is_abs_path "$URL" ; then
             # first check for local mirror
             local LOCALPATH="$(echo "$URL/base")"
@@ -13183,9 +13215,11 @@ update_alt_contents_index()
         else
             local LOCALPATH="$(get_local_alt_mirror_path "$URL")"
             local REMOTEURL="$(get_url_to_etersoft_mirror "$URL")"
+
             if [ -n "$REMOTEURL" ] ; then
-                rsync_alt_contents_index $REMOTEURL/base/contents_index.gz $LOCALPATH/contents_index.gz && __add_to_contents_index_list "$REMOTEURL" "$LOCALPATH/contents_index.gz" && continue
-                [ -n "$verbose" ] && info 'Note: Can'\''t retrieve $REMOTEURL/base/contents_index.gz, fallback to $URL/base/contents_index'
+                rsync_alt_contents_index "$REMOTEURL/base/contents_index.gz" "$LOCALPATH/contents_index.gz" && \
+                __add_to_contents_index_list "$REMOTEURL" "$LOCALPATH/contents_index.gz" && continue
+                [ -n "$verbose" ] && info "Note: Can't retrieve $REMOTEURL/base/contents_index.gz, fallback to $URL/base/contents_index"
             fi
             # we don't know if remote server has rsync
             # fix rsync URL firstly
