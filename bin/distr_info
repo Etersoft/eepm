@@ -155,7 +155,7 @@ case $DISTRIB_ID in
     PCLinux)
         CMD="apt-rpm"
         ;;
-    Ubuntu|Debian|Mint|OSNovaLinux|Uncom|AstraLinux*|Elbrus)
+    Ubuntu|Debian|Mint|OSnovaLinux|Uncom|AstraLinux*|Elbrus)
         CMD="apt-dpkg"
         #which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
         #is_command snappy && CMD=snappy
