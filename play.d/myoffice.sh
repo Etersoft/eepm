@@ -22,7 +22,9 @@ fi
 
 # https://preset.myoffice-app.ru/myoffice-standard-home-edition-2.3.0-x86_64.rpm
 # https://preset.myoffice-app.ru/myoffice-standard-home-edition_2.3.0_amd64.deb
-PKGMASK="$(epm print constructname $PKGNAME "$VERSION" "" "$pkgtype" "" "$delim")"
+# https://preset.myoffice-app.ru/myoffice-standard-home-edition-3.2-139.x86_64.rpm
+
+PKGMASK="$(epm print constructname $PKGNAME "$VERSION" "" "$pkgtype" "$delim")"
 if [ "$VERSION" = "*" ] ; then
     PKGURL="$(eget --list --latest https://myoffice.ru/products/standard-home-edition/ "$PKGMASK")"
 else
