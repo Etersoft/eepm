@@ -742,7 +742,7 @@ eget()
 {
     # use internal eget only if exists
     if [ -s $SHAREDIR/tools_eget ] ; then
-        ( EGET_BACKEND=$eget_backend $CMDSHELL $SHAREDIR/tools_eget "$@" )
+        ( EGET_BACKEND="$eget_backend" $CMDSHELL "$SHAREDIR"/tools_eget "$@" )
         return
     fi
     fatal "Internal error: missed tools_eget"
@@ -773,8 +773,8 @@ erc()
     __epm_assure_7zip
 
     # use internal eget only if exists
-    if [ -s $SHAREDIR/tools_erc ] ; then
-        $CMDSHELL $SHAREDIR/tools_erc "$@"
+    if [ -s "$SHAREDIR"/tools_erc ] ; then
+        $CMDSHELL "$SHAREDIR"/tools_erc "$@"
         return
     fi
     fatal "Internal error: missed tools_erc"
@@ -792,8 +792,8 @@ ercat()
 {
     local ERCAT
     # use internal eget only if exists
-    if [ -s $SHAREDIR/tools_ercat ] ; then
-        $CMDSHELL $SHAREDIR/tools_ercat "$@"
+    if [ -s "$SHAREDIR"/tools_ercat ] ; then
+        $CMDSHELL "$SHAREDIR"/tools_ercat "$@"
         return
     fi
     fatal "Internal error: missed tools_ercat"
@@ -807,8 +807,8 @@ ercat()
 
 estrlist()
 {
-    if [ -s $SHAREDIR/tools_estrlist ] ; then
-        $CMDSHELL $SHAREDIR/tools_estrlist "$@"
+    if [ -s "$SHAREDIR"/tools_estrlist ] ; then
+        $CMDSHELL "$SHAREDIR"/tools_estrlist "$@"
         return
     fi
     fatal "missed tools_estrlist"
@@ -952,7 +952,7 @@ set_distro_info()
     # don't run again in subprocesses
     [ -n "$DISTRVENDOR" ] && return 0
 
-    DISTRVENDOR=$PROGDIR/distr_info
+    DISTRVENDOR="$PROGDIR"/distr_info
 
     # export pack of variables, see epm print info --print-eepm-env
     [ -n "$verbose" ] && $DISTRVENDOR --print-eepm-env
@@ -967,12 +967,12 @@ set_pm_type()
 
 # override package manager detection result
 if [ -n "$EPM_BACKEND" ] ; then
-    PMTYPE=$EPM_BACKEND
+    PMTYPE="$EPM_BACKEND"
     return
 fi
 # obsoleted
 if [ -n "$FORCEPM" ] ; then
-    PMTYPE=$FORCEPM
+    PMTYPE="$FORCEPM"
     return
 fi
 

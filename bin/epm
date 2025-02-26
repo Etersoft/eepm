@@ -17,8 +17,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-PROGDIR=$(dirname "$0")
-PROGNAME=$(basename "$0")
+PROGDIR="$(dirname "$0")"
+PROGNAME="$(basename "$0")"
 [ -n "$EPMCURDIR" ] || export EPMCURDIR="$(pwd)"
 CMDENV="/usr/bin/env"
 [ -x "$CMDENV" ] && CMDSHELL="/usr/bin/env bash" || CMDSHELL="$SHELL"
@@ -30,9 +30,9 @@ if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
 fi
 
 # will replaced with /usr/share/eepm during install
-SHAREDIR=$PROGDIR
+SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
-CONFIGDIR=$PROGDIR/../etc
+CONFIGDIR="$PROGDIR/../etc"
 
 export EPMVERSION="@VERSION@"
 
@@ -43,7 +43,7 @@ EPMMODE="package"
 [ "$PROGNAME" = "" ] && EPMMODE="pipe"
 
 if [ "$EPMMODE" = "git" ] ; then
-    EPMVERSION=$(head $PROGDIR/../eepm.spec | grep "^Version: " | sed -e 's|Version: ||' )
+    EPMVERSION="$(head "$PROGDIR/../eepm.spec" | grep "^Version: " | sed -e 's|Version: ||' )"
 fi
 
 load_helper()
@@ -67,7 +67,7 @@ load_helper()
 
 load_helper epm-sh-functions
 
-eget_backend=$EGET_BACKEND
+eget_backend="$EGET_BACKEND"
 
 # fast call for tool
 if [ "$1" = "tool" ] ; then
