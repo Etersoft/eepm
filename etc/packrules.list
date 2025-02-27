@@ -5,3 +5,5 @@ cascadeur cascadeur-linux.tgz
 epsonscan2-non-free-plugin epsonscan2-bundle-*.tar.gz
 hplip-plugin hplip-*-plugin
 sublime-text sublime_text_build_*
+ArmorPaint ArmorPaint_*_linux64.zip
+ArmorPaintVKRT ArmorPaintVKRT_*_linux64.zip
