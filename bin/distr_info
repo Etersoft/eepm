@@ -853,26 +853,31 @@ echo "$DIST_BIT"
 get_memory_size()
 {
     local detected=""
+    local divider="1"
     local DIST_OS="$(get_base_os_name)"
     case "$DIST_OS" in
         macosx)
-            detected=$((`sysctl hw.memsize | sed s/"hw.memsize: "//`/1024/1024))
+            detected="$(a='' sysctl hw.memsize | sed 's/hw.memsize: //')"
+            divider="1024/1024"
             ;;
         freebsd)
-            detected=$((`sysctl hw.physmem | sed s/"hw.physmem: "//`/1024/1024))
+            detected="$(a='' sysctl hw.physmem | sed 's/hw.physmem: //')"
+            divider="1024/1024"
             ;;
         linux)
-            [ -r /proc/meminfo ] && detected=$((`cat /proc/meminfo | grep MemTotal | awk '{print $2}'`/1024))
+            detected="$(cat /proc/meminfo 2>/dev/null | grep 'MemTotal' | awk '{print $2}')"
+            divider="1024"
             ;;
         solaris)
             detected=$(a='' prtconf | grep Memory | sed -e "s|Memory size: \([0-9][0-9]*\) Megabyte.*|\1|") #"
+            divider="1"
             ;;
 #        *)
 #            fatal "Unsupported OS $DIST_OS"
     esac
 
     [ -n "$detected" ] || detected=0
-    echo $detected
+    echo "$(($detected/$divider))"
 }
 
 print_name_version()
