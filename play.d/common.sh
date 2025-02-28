@@ -170,17 +170,22 @@ get_latest_version()
     done
 }
 
+get_github_release_info() {
+    local url="$1"
+    local user_and_repo=${url#https://github.com/}
+    
+    eget -O- "https://api.github.com/repos/${user_and_repo%/}/releases"
+}
+
 get_github_url()
 {
     local url="$1"
-    local user_and_repo=${url#https://github.com/}
-    local user_and_repo=${user_and_repo%/}
     local asset_name="$2"
 
     if [ "$3" == "prerelease" ] ; then
-        eget -O- "https://api.github.com/repos/${user_and_repo}/releases" | grep 'browser_download_url' | grep -iEo 'https.*download.*' | grep "$2" | head -n1
+        get_github_release_info "$url" | grep 'browser_download_url' | grep -iEo 'https.*download.*' | grep "$2" | head -n1
     else
-        eget -O- "https://api.github.com/repos/${user_and_repo}/releases" \
+        get_github_release_info "$url" \
         | awk '{
     if ($0 ~ /"prerelease": false/) {
         prerelease = 0;
@@ -199,13 +204,11 @@ get_github_url()
 get_github_tag()
 {
     local url="$1"
-    local user_and_repo=${url#https://github.com/}
-    local user_and_repo=${user_and_repo%/}
 
     if [ "$2" == "prerelease" ] ; then
-        eget -O- "https://api.github.com/repos/${user_and_repo}/releases" | grep -oP '"tag_name": *"[^"]*' | grep -oP '[0-9]+(\.[0-9]+)*(-[0-9]+)?' | head -n1
+        get_github_release_info "$url" | grep -oP '"tag_name": *"[^"]*' | grep -oP '[0-9]+(\.[0-9]+)*(-[0-9]+)?' | head -n1
     else
-        eget -O- "https://api.github.com/repos/${user_and_repo}/releases" \
+        get_github_release_info "$url" \
         | awk '{
     if ($0 ~ /"prerelease": false/) {
         prerelease = 0;
