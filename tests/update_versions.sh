@@ -65,6 +65,11 @@ if [ "$1" = "--force" ] ; then
     shift
 fi
 
+if [ "$1" = "--slow" ] ; then
+    slow="60"
+    shift
+fi
+
 if [ -n "$1" ] ; then
     install_app_alt "$1"
     exit
@@ -76,6 +81,7 @@ $EPM play $playopt --list-all --short | while read app ; do
     # hack for broken gitlab-runner
     [ "$distr" != "alt" ] && [ "$app" = "gitlab-runner" ] && continue
     install_app_alt $app </dev/null
+    [ -n "$show" ] && sleep $slow
 done
 
 # save eepm version
