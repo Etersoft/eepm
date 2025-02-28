@@ -14,7 +14,7 @@ PRODUCTDIR=/opt/$PRODUCTCUR
 #    subst "1iConflicts:$i" $SPEC
 #done
 
-#set_alt_alternatives 65
+set_alt_alternatives 65
 
 move_to_opt /usr/lib/$PRODUCTCUR
 

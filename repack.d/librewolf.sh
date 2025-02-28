@@ -5,7 +5,7 @@ SPEC="$2"
 
 PRODUCT=librewolf
 
-. $(dirname $0)/common.sh
+. $(dirname $0)/common-chromium-browser.sh
 
 move_to_opt
 fix_desktop_file "/usr/share/$PRODUCT/$PRODUCT"
@@ -14,3 +14,4 @@ add_libs_requires
 
 rm usr/bin/librewolf
 add_bin_link_command
+set_alt_alternatives 65
