@@ -6,7 +6,7 @@ SPEC="$2"
 
 #PRODUCT=waterfox
 
-. $(dirname $0)/common.sh
+. $(dirname $0)/common-chromium-browser.sh
 
 add_bin_link_command $PRODUCT $PRODUCTDIR/$PRODUCT
 
@@ -29,3 +29,5 @@ iconname=$PRODUCT
 for i in 16 22 24 32 48 64 128 256 ; do
     install_file $iconpath/default$i.png /usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png
 done
+
+set_alt_alternatives 65
