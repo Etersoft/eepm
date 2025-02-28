@@ -50,7 +50,7 @@ load_helper()
 {
     local shieldname="loaded$(echo "$1" | sed -e 's|-||g')"
     # already loaded
-    eval "[ -n \"\$$shieldname\" ]" && debug 'Already loaded $1' && return
+    eval "[ -n \"\$$shieldname\" ]" && debug 'Already loaded' $1 && return
 
     local CMD="$SHAREDIR/$1"
     # do not use fatal() here, it can be initial state
