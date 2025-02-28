@@ -15,6 +15,14 @@ if [ ! -f "$BUILDROOT$PRODUCTDIR/.bundle.yml" ] ; then
     add_libs_requires
 fi
 
+pd="$(echo $BUILDROOT/*)"
+if [ -d "$pd" ] ; then
+    bn="$(basename "$pd")"
+    if [ "$bn" != "usr" ] && [ "$bn" != "opt" ] ; then
+        move_to_opt "/$bn"
+    fi
+fi
+
 # FIXME: hack for nonstandart name
 pd="$(echo $BUILDROOT/opt/*)"
 [ -d "$pd" ] && PRODUCTDIR="/opt/$(basename "$pd")"
