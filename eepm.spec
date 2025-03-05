@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.10
+Version: 3.64.11
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -144,6 +144,18 @@ make -C po
 %endif
 
 %changelog
+* Wed Mar 05 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.11-alt1
+- distr_info: fix OSnovaLinux name
+- epm play t1client: update packages' URL
+- epm play myoffice: fix url search mask (eterbug #17865)
+- epm play: added zen-browser (eterbug #18085)
+- epm repack: add ArmorPaint support
+- epm: play added firefox (thx @pechenovv for waterfox) (eterbug #17838)
+- epm repack.d/generic-default.sh: move to /opt any one dir archive
+- epm: Add set_alt_alternatives for all browsers (eterbug #18085)
+- epm play common: add get_github_release_info to retrieve GitHub release information (eterbug #18094)
+- epm play: added netbird
+
 * Wed Feb 19 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.10-alt1
 - epm-release_upgrade: improvements for p11
 - epm play pantum: fix download link (eterbug #18054)
