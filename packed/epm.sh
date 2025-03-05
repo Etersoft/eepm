@@ -17,8 +17,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-PROGDIR=$(dirname "$0")
-PROGNAME=$(basename "$0")
+PROGDIR="$(dirname "$0")"
+PROGNAME="$(basename "$0")"
 [ -n "$EPMCURDIR" ] || export EPMCURDIR="$(pwd)"
 CMDENV="/usr/bin/env"
 [ -x "$CMDENV" ] && CMDSHELL="/usr/bin/env bash" || CMDSHELL="$SHELL"
@@ -30,11 +30,11 @@ if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
 fi
 
 # will replaced with /usr/share/eepm during install
-SHAREDIR=$PROGDIR
+SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
-CONFIGDIR=$PROGDIR/../etc
+CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.10"
+export EPMVERSION="3.64.11"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -43,14 +43,14 @@ EPMMODE="package"
 [ "$PROGNAME" = "" ] && EPMMODE="pipe"
 
 if [ "$EPMMODE" = "git" ] ; then
-    EPMVERSION=$(head $PROGDIR/../eepm.spec | grep "^Version: " | sed -e 's|Version: ||' )
+    EPMVERSION="$(head "$PROGDIR/../eepm.spec" | grep "^Version: " | sed -e 's|Version: ||' )"
 fi
 
 load_helper()
 {
     local shieldname="loaded$(echo "$1" | sed -e 's|-||g')"
     # already loaded
-    eval "[ -n \"\$$shieldname\" ]" && debug 'Already loaded $1' && return
+    eval "[ -n \"\$$shieldname\" ]" && debug 'Already loaded' $1 && return
 
     local CMD="$SHAREDIR/$1"
     # do not use fatal() here, it can be initial state
@@ -747,7 +747,7 @@ disabled_eget()
 {
     # use internal eget only if exists
     if [ -s $SHAREDIR/tools_eget ] ; then
-        ( EGET_BACKEND=$eget_backend $CMDSHELL $SHAREDIR/tools_eget "$@" )
+        ( EGET_BACKEND="$eget_backend" $CMDSHELL "$SHAREDIR"/tools_eget "$@" )
         return
     fi
     fatal "Internal error: missed tools_eget"
@@ -777,8 +777,8 @@ disabled_erc()
     __epm_assure_7zip
 
     # use internal eget only if exists
-    if [ -s $SHAREDIR/tools_erc ] ; then
-        $CMDSHELL $SHAREDIR/tools_erc "$@"
+    if [ -s "$SHAREDIR"/tools_erc ] ; then
+        $CMDSHELL "$SHAREDIR"/tools_erc "$@"
         return
     fi
     fatal "Internal error: missed tools_erc"
@@ -795,8 +795,8 @@ disabled_ercat()
 {
     local ERCAT
     # use internal eget only if exists
-    if [ -s $SHAREDIR/tools_ercat ] ; then
-        $CMDSHELL $SHAREDIR/tools_ercat "$@"
+    if [ -s "$SHAREDIR"/tools_ercat ] ; then
+        $CMDSHELL "$SHAREDIR"/tools_ercat "$@"
         return
     fi
     fatal "Internal error: missed tools_ercat"
@@ -810,8 +810,8 @@ disabled_ercat()
 
 disabled_estrlist()
 {
-    if [ -s $SHAREDIR/tools_estrlist ] ; then
-        $CMDSHELL $SHAREDIR/tools_estrlist "$@"
+    if [ -s "$SHAREDIR"/tools_estrlist ] ; then
+        $CMDSHELL "$SHAREDIR"/tools_estrlist "$@"
         return
     fi
     fatal "missed tools_estrlist"
@@ -951,7 +951,7 @@ set_distro_info()
     # don't run again in subprocesses
     [ -n "$DISTRVENDOR" ] && return 0
 
-    DISTRVENDOR=internal_distr_info
+    DISTRVENDOR="$PROGDIR"/distr_info
 
     # export pack of variables, see epm print info --print-eepm-env
     [ -n "$verbose" ] && $DISTRVENDOR --print-eepm-env
@@ -964,11 +964,11 @@ set_pm_type()
     set_distro_info
 
 if [ -n "$EPM_BACKEND" ] ; then
-    PMTYPE=$EPM_BACKEND
+    PMTYPE="$EPM_BACKEND"
     return
 fi
 if [ -n "$FORCEPM" ] ; then
-    PMTYPE=$FORCEPM
+    PMTYPE="$FORCEPM"
     return
 fi
 
@@ -14868,7 +14868,7 @@ case $DISTRIB_ID in
     PCLinux)
         CMD="apt-rpm"
         ;;
-    Ubuntu|Debian|Mint|OSNovaLinux|Uncom|AstraLinux*|Elbrus)
+    Ubuntu|Debian|Mint|OSnovaLinux|Uncom|AstraLinux*|Elbrus)
         CMD="apt-dpkg"
         #which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
         #is_command snappy && CMD=snappy
@@ -15566,26 +15566,31 @@ echo "$DIST_BIT"
 get_memory_size()
 {
     local detected=""
+    local divider="1"
     local DIST_OS="$(get_base_os_name)"
     case "$DIST_OS" in
         macosx)
-            detected=$((`sysctl hw.memsize | sed s/"hw.memsize: "//`/1024/1024))
+            detected="$(a='' sysctl hw.memsize | sed 's/hw.memsize: //')"
+            divider="1024/1024"
             ;;
         freebsd)
-            detected=$((`sysctl hw.physmem | sed s/"hw.physmem: "//`/1024/1024))
+            detected="$(a='' sysctl hw.physmem | sed 's/hw.physmem: //')"
+            divider="1024/1024"
             ;;
         linux)
-            [ -r /proc/meminfo ] && detected=$((`cat /proc/meminfo | grep MemTotal | awk '{print $2}'`/1024))
+            detected="$(cat /proc/meminfo 2>/dev/null | grep 'MemTotal' | awk '{print $2}')"
+            divider="1024"
             ;;
         solaris)
             detected=$(a='' prtconf | grep Memory | sed -e "s|Memory size: \([0-9][0-9]*\) Megabyte.*|\1|") #"
+            divider="1"
             ;;
 #        *)
 #            fatal "Unsupported OS $DIST_OS"
     esac
 
     [ -n "$detected" ] || detected=0
-    echo $detected
+    echo "$(($detected/$divider))"
 }
 
 print_name_version()
@@ -18688,7 +18693,7 @@ fi
 epm_main()
 {
 
-eget_backend=$EGET_BACKEND
+eget_backend="$EGET_BACKEND"
 
 # fast call for tool
 if [ "$1" = "tool" ] ; then
