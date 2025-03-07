@@ -948,7 +948,7 @@ set_distro_info()
     # don't run again in subprocesses
     [ -n "$DISTRVENDOR" ] && return 0
 
-    DISTRVENDOR="$PROGDIR"/distr_info
+    DISTRVENDOR=internal_distr_info
 
     # export pack of variables, see epm print info --print-eepm-env
     [ -n "$verbose" ] && $DISTRVENDOR --print-eepm-env
