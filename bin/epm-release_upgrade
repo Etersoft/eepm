@@ -294,6 +294,8 @@ get_next_release()
         echo "c9f2" ;;
     "c10f1")
         echo "c10f2" ;;
+    "c10f2")
+        echo "c10f3" ;;
     *)
         echo "$FROM" ;;
     esac
@@ -402,6 +404,20 @@ __switch_alt_to_distro()
             # will update to kernel 6.6
             docmd epm update-kernel || fatal
             ;;
+        "c10f1 c10f2"|"c10f2 c10f3")
+            info "Upgrade all packages to current $FROM repository"
+            __do_upgrade
+            confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
+            docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+            __p11_upgrade_fix
+            __switch_repo_to $TO
+            end_change_alt_repo
+            __do_upgrade
+            docmd epm install rpm apt $(get_fix_release_pkg "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
+            __check_system "$TO"
+            # will update to kernel 6.6
+            docmd epm update-kernel || fatal
+            ;;
         "p9 p8"|"c8.1 c8"|"c8.1 p8"|"p8 p8")
             confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
             docmd epm install $(get_fix_release_pkg "$FROM")
@@ -440,7 +456,7 @@ __switch_alt_to_distro()
             __check_system "$TO"
             docmd epm upgrade || fatal
             ;;
-        "Sisyphus p8"|"Sisyphus p9"|"Sisyphus p10"|"Sisyphus p11"|"Sisyphus c8"|"Sisyphus c8.1"|"Sisyphus c9f2"|"Sisyphus c10f1"|"Sisyphus c10f2")
+        "Sisyphus p8"|"Sisyphus p9"|"Sisyphus p10"|"Sisyphus p11"|"Sisyphus c8"|"Sisyphus c8.1"|"Sisyphus c9f2"|"Sisyphus c10f1"|"Sisyphus c10f2"|"Sisyphus c10f3")
             confirm_info "Downgrade $DISTRNAME from $FROM to $TO ..."
             docmd epm install $(get_fix_release_pkg "$FROM")
             if [ $TO = "p11" ]; then __sisyphus_downgrade_fix; fi
@@ -451,7 +467,7 @@ __switch_alt_to_distro()
             __check_system "$TO"
             docmd epm upgrade || fatal
             ;;
-        "p8 Sisyphus"|"p9 Sisyphus"|"p10 Sisyphus"|"p11 Sisyphus"|"10 Sisyphus"|"Sisyphus Sisyphus")
+        "p8 Sisyphus"|"p9 Sisyphus"|"p10 Sisyphus"|"p11 Sisyphus"|"Sisyphus Sisyphus")
             confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
             docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
             docmd epm upgrade || fatal
