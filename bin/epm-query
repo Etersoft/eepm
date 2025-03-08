@@ -138,9 +138,9 @@ __epm_get_hilevel_nameform()
         apt-rpm)
             # use # as delimeter for apt
             local pkg
-            pkg=$(rpm -q --queryformat "%{NAME}=%{SERIAL}:%{VERSION}-%{RELEASE}\n" -- $1)
+            pkg=$(a='' rpm -q --queryformat "%{NAME}=%{SERIAL}:%{VERSION}-%{RELEASE}\n" -- $1)
             # for case if serial is missed
-            echo $pkg | grep -q "(none)" && pkg=$(rpm -q --queryformat "%{NAME}#%{VERSION}-%{RELEASE}\n" -- $1)
+            echo $pkg | grep -q "(none)" && pkg=$(a='' rpm -q --queryformat "%{NAME}#%{VERSION}-%{RELEASE}\n" -- $1)
             # HACK: can use only for multiple install packages like kernel
             echo $pkg | grep -q kernel || return 1
             echo $pkg
@@ -151,7 +151,7 @@ __epm_get_hilevel_nameform()
             local pkg
             #pkg=$(rpm -q --queryformat "%{EPOCH}:%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" -- $1)
             #echo $pkg | grep -q "(none)" && pkg=$(rpm -q --queryformat "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" -- $1)
-            pkg=$(rpm -q --queryformat "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" -- $1)
+            pkg=$(a='' rpm -q --queryformat "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" -- $1)
             echo $pkg
             return
             ;;
@@ -238,7 +238,7 @@ __epm_query_name()
         eopkg)
             showcmd eopkg blame $1
             local str
-            str="$(LC_ALL=C eopkg blame $1 | grep "^Name")"
+            str="$(LC_ALL=C a='' eopkg blame $1 | grep "^Name")"
             [ -n "$str" ] || return 1
             echo "$str" | sed -e "s|Name[[:space:]]*: \(.*\), version: \(.*\), release: \(.*\)|\1-\2-\3|"
             return
@@ -246,7 +246,7 @@ __epm_query_name()
         pisi)
             showcmd pisi blame $1
             local str
-            str="$(LC_ALL=C pisi blame $1 | grep "^Name")"
+            str="$(LC_ALL=C a='' pisi blame $1 | grep "^Name")"
             [ -n "$str" ] || return 1
             echo "$str" | sed -e "s|Name[[:space:]]*: \(.*\), version: \(.*\), release: \(.*\)|\1-\2-\3|"
             return
@@ -306,7 +306,7 @@ __epm_query_shortname()
         eopkg)
             showcmd eopkg blame $1
             local str
-            str="$(LC_ALL=C eopkg blame $1 | grep "^Name")"
+            str="$(LC_ALL=C a='' eopkg blame $1 | grep "^Name")"
             [ -n "$str" ] || return 1
             echo "$str" | sed -e "s|Name[[:space:]]*: \(.*\), version: \(.*\), release: \(.*\)|\1|"
             return
@@ -314,7 +314,7 @@ __epm_query_shortname()
         pisi)
             showcmd pisi blame $1
             local str
-            str="$(LC_ALL=C pisi blame $1 | grep "^Name")"
+            str="$(LC_ALL=C a='' pisi blame $1 | grep "^Name")"
             [ -n "$str" ] || return 1
             echo "$str" | sed -e "s|Name[[:space:]]*: \(.*\), version: \(.*\), release: \(.*\)|\1|"
             return

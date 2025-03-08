@@ -47,10 +47,10 @@ fi
 
 # Replace fedora libboost to system libboost
 for lib in ${BOOST_LIBS}; do
-    patchelf --replace-needed "libboost_${lib}.so.${BOOST_FEDORA_VERSION}" "libboost_${lib}.so.${BOOST_REPO_VERSION}" "usr/bin/sunshine"
+    a='' patchelf --replace-needed "libboost_${lib}.so.${BOOST_FEDORA_VERSION}" "libboost_${lib}.so.${BOOST_REPO_VERSION}" "usr/bin/sunshine"
 done
 
 # Replace fedora libminiupnpc to system libminiupnpc
-patchelf --replace-needed "libminiupnpc.so.$MINIUPNPC_FEDORA_VERSION" "libminiupnpc.so.$MINIUPNPC_REPO_VERSION"  "usr/bin/sunshine"
+a='' patchelf --replace-needed "libminiupnpc.so.$MINIUPNPC_FEDORA_VERSION" "libminiupnpc.so.$MINIUPNPC_REPO_VERSION"  "usr/bin/sunshine"
 
 add_libs_requires

@@ -82,7 +82,7 @@ dpkg_print_name_version()
     local ver i
     for i in "$@" ; do
         [ -n "$i" ] || continue
-        ver=$(dpkg -s "$i" 2>/dev/null | grep "Version:" | sed -e "s|Version: ||g")
+        ver=$(a='' dpkg -s "$i" 2>/dev/null | grep "Version:" | sed -e "s|Version: ||g")
         if [ -z "$ver" ] ; then
             echo "$i"
         else
@@ -98,7 +98,7 @@ __do_query()
     case $PMTYPE in
         *-dpkg)
             showcmd dpkg -S "$1"
-            dpkg_print_name_version "$(dpkg -S "$1" | grep -v "^diversion by" | sed -e "s|:.*||")"
+            dpkg_print_name_version "$(a='' dpkg -S "$1" | grep -v "^diversion by" | sed -e "s|:.*||")"
             return ;;
         *-rpm)
             CMD="rpm -qf"

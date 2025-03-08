@@ -60,7 +60,7 @@ waydroid_install () {
 
 waydroid_select_gpu () {
 	echo "Select GPU for Waydroid"
-	gpu_info=$(lspci -nn | grep '\[03')
+	gpu_info=$(a='' lspci -nn | grep '\[03')
 	gpu_number=$(echo "$gpu_info" | awk '{print $1}')
 	gpu_name=$(echo "$gpu_info" | grep -oP '(?<=: ).*')
 

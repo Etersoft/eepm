@@ -98,7 +98,7 @@ epm_requires_files()
                 ;;
             pisi)
                 showcmd pisi info $fl
-                LC_ALL=C pisi info $fl | grep "^Dependencies" | head -n1 | sed -e "s|Dependencies[[:space:]]*: ||"
+                LC_ALL=C a='' pisi info $fl | grep "^Dependencies" | head -n1 | sed -e "s|Dependencies[[:space:]]*: ||"
                 ;;
             ELF)
                 __epm_elf_requires $fl
@@ -198,7 +198,7 @@ case $PMTYPE in
         ;;
     pisi)
         showcmd pisi info $pkg_names
-        LC_ALL=C pisi info $pkg_names | grep "^Dependencies" | sed -e "s|Dependencies[[:space:]]*: ||"
+        LC_ALL=C a='' pisi info $pkg_names | grep "^Dependencies" | sed -e "s|Dependencies[[:space:]]*: ||"
         return
         ;;
     xbps)
