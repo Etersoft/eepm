@@ -115,6 +115,7 @@ __epm_autoremove_altrpm_lib()
         | grep -E -v -- "$develrule" \
         | grep -E -v -- "-(debuginfo)$" \
         | grep -E -v -- "-(util|utils|tool|tools|plugin|daemon|help)$" \
+        | grep -E -v -- "^(libva-|libvdpau-va-gl)$" \
         | grep -E -v -- "^(libsystemd|libreoffice|libnss|libvirt-client|libvirt-daemon|libsasl2-plugin|eepm|distro_info)" )
     pkgs=$(skip_manually_installed $fullpkgs)
 
