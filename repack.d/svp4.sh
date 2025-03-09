@@ -32,6 +32,8 @@ Exec=$PRODUCT %f
 Icon=svp-manager4.png
 EOF
 
-add_requires mpv libmediainfo python3-module-vapoursynth libqt5-concurrent
+add_requires mpv libqt5-concurrent
+add_unirequires libPythonQt.so.0 "python3(vapoursynth)" libmediainfo.so.0
+ignore_lib_requires libPythonQt.so.1
 add_libs_requires
 add_bin_link_command $PRODUCT $PRODUCTDIR/SVPManager
