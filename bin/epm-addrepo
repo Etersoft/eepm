@@ -120,6 +120,9 @@ __epm_addrepo_altlinux_url()
     local arch
     local base
 
+    # apt supports 302 redirect only since apt 0.7.21 (14th April 2009)
+    url="$(eget --get-real-url $url)"
+
     # URL to path/RPMS.addon
     base="$(basename "$url")"
     if echo "$base" | grep -q "^RPMS\." ; then
