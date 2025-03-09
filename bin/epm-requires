@@ -163,6 +163,7 @@ case $PMTYPE in
         fi
         ;;
     pacman)
+        assure_exists pactree pacman-contrib
         CMD="pactree"
         ;;
     apt-dpkg|aptitude-dpkg)
