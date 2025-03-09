@@ -1,0 +1,9 @@
+{
+    "name": "Budgie",
+    "version": "10.9.2",
+    "installed": false,
+    "dependencies": [ "budgie-desktop", "gnome-console", "fonts-ttf-fira-code-nerd" ],
+    "description": "Budgie Desktop is a familiar, modern desktop environment",
+    "metapackages": [ ]
+}
+  
