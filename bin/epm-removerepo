@@ -19,6 +19,14 @@
 
 load_helper epm-sh-altlinux
 
+__epm_grep_repo_list()
+{
+    while [ -n "$1" ] ; do
+        epm --quiet repolist | grep -E "$1"
+        shift
+    done
+}
+
 # remove grepped lines
 __epm_removerepo_alt_grepremove()
 {
@@ -27,8 +35,8 @@ __epm_removerepo_alt_grepremove()
     if [ "$1" = "all" ] || rhas "$1" "^rpm" ; then
         rl="$1"
     else
-        rl="$( epm --quiet repolist 2>/dev/null | grep -F "$1")"
-        [ -z "$rl" ] && warning 'Can'\''t find '$1' in the repos (see # epm repolist output)' && return 1
+        rl="$(__epm_grep_repo_list "$@" 2>/dev/null)"
+        [ -z "$rl" ] && warning 'Can'\''t find '$*' in the repos (see # epm repolist output)' && return 1
     fi
     echo "$rl" | while read rp ; do
         # TODO: print removed lines
@@ -54,7 +62,7 @@ __epm_removerepo_alt()
     if tasknumber "$repo" >/dev/null ; then
         local tn
         for tn in $(tasknumber "$repo") ; do
-            __epm_removerepo_alt_grepremove " repo/$tn/"
+            __epm_removerepo_alt_grepremove " repo/$tn/" "/tasks/$tn " "/$tn[ /]build/repo"
         done
         return
     fi
@@ -78,11 +86,11 @@ __epm_removerepo_alt()
             ;;
         tasks)
             info "remove task repos"
-            __epm_removerepo_alt_grepremove " repo/[0-9]+/"
+            __epm_removerepo_alt_grepremove " repo/[0-9]+/" "/tasks/[0-9]+ " "/[0-9]+[ /]build/repo"
             ;;
         task)
             shift
-            __epm_removerepo_alt_grepremove " repo/$1/"
+            __epm_removerepo_alt_grepremove " repo/$1/" "/tasks/$1 " "/$1[ /]build/repo"
             ;;
         -*)
             fatal "epm removerepo: no options are supported"
