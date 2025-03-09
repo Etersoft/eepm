@@ -22,6 +22,9 @@ for f in "installer/"*.7z; do
 		7z -bd -bb0 -y x -o"extracted/" "${f}" || true
 done
 
+# Drop bundled pythonqt for avoid dependency on python 3.8
+rm extracted/extensions/libPythonQt.so
+
 mv extracted/* opt/svp4/
 
 PKGNAME=$PRODUCT-$VERSION
