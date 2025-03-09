@@ -1,0 +1,9 @@
+apps:
+  - name: yandex-telemost
+    group: yandex-telemost group
+    license: yandex-telemost license
+    url: https://www.commfort.com/ru/article-commfort-linux.shtml
+    summary: yandex-telemost summary
+    description: Yandex telemost from the official site
+    arches: x86_64
+    download_page: https://telemost.yandex.ru/download-desktop

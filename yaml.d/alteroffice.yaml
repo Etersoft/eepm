@@ -1,0 +1,9 @@
+apps:
+  - name: alteroffice
+    group: alteroffice group
+    license: alteroffice license
+    url: https://alteroffice.ru/
+    summary: alteroffice summary
+    description: AlterOffice from the official site
+    arches: x86_64
+    download_page: 

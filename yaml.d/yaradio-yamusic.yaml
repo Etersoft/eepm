@@ -1,0 +1,10 @@
+apps:
+  - name: yaradio-yamusic
+    group: yaradio-yamusic group
+    license: yaradio-yamusic license
+    url: https://github.com/dedpnd/yaradio-yamusic
+    summary: yaradio-yamusic summary
+    description: Yandex Radio + Yandex Music - unofficial desktop application
+    arches: x86_64
+    download_page: https://github.com/dedpnd/yaradio-yamusic/releases
+    download_mask: yaradio-yamusic_*_$arch.deb

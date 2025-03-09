@@ -1,0 +1,10 @@
+apps:
+  - name: NotepadNext
+    group: NotepadNext group
+    license: NotepadNext license
+    url: https://github.com/dail8859/NotepadNext
+    summary: NotepadNext summary
+    description: A cross-platform, reimplementation of Notepad++
+    arches: x86_64
+    download_page: https://github.com/dail8859/NotepadNext/releases
+    download_mask: NotepadNext-v*-x86_64.AppImage

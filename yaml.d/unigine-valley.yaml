@@ -1,0 +1,10 @@
+apps:
+  - name: unigine-valley
+    group: unigine-valley group
+    license: unigine-valley license
+    url: https://benchmark.unigine.com/valley
+    summary: unigine-valley summary
+    description: Unigine Valley 2013 (Unigine Benchmark) from the official site
+    arches: x86_64
+    download_page: https://benchmark.unigine.com/valley
+    download_mask: Unigine_Valley-*.run

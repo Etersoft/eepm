@@ -1,0 +1,9 @@
+apps:
+  - name: portproton
+    group: portproton group
+    license: portproton license
+    url: 
+    summary: portproton summary
+    description: PortProton (from the repository if the package is there, or from the official site)
+    arches: x86_64
+    download_page: 

@@ -1,0 +1,9 @@
+apps:
+  - name: PacketTracer
+    group: PacketTracer group
+    license: PacketTracer license
+    url: https://www.sysnettechsolutions.com/en/download-cisco-packet-tracer/
+    summary: PacketTracer summary
+    description: Cisco PacketTracer
+    arches: x86_64
+    download_page: 

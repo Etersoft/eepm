@@ -1,0 +1,9 @@
+apps:
+  - name: freeplane
+    group: freeplane group
+    license: freeplane license
+    url: http://freeplane.sourceforge.net
+    summary: freeplane summary
+    description: FreePlane from the official site
+    arches: x86_64 x86
+    download_page: https://download.sourceforge.net/project/freeplane/freeplane%20stable/freeplane_*~upstream-1_all.deb

@@ -1,0 +1,9 @@
+apps:
+  - name: mobirise
+    group: mobirise group
+    license: mobirise license
+    url: https://mobirise.com
+    summary: mobirise summary
+    description: Mobirise - create awesome mobile-friendly websites!
+    arches: x86_64
+    download_page: https://download.mobirise.com/MobiriseSetup.deb

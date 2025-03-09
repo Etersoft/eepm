@@ -1,0 +1,9 @@
+apps:
+  - name: geogebra-classic
+    group: geogebra-classic group
+    license: geogebra-classic license
+    url: https://wiki.geogebra.org/en/Reference:GeoGebra_Installation
+    summary: geogebra-classic summary
+    description: Geogebra 6 from the official site
+    arches: x86_64 x86
+    download_page: 

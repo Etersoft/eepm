@@ -1,0 +1,10 @@
+apps:
+  - name: iptvnator
+    group: iptvnator group
+    license: iptvnator license
+    url: https://github.com/4gray/iptvnator
+    summary: iptvnator summary
+    description: IPTV player from the official site
+    arches: x86_64 aarch64
+    download_page: https://github.com/4gray/iptvnator/releases/
+    download_mask: iptvnator***$arch.$pkgtype

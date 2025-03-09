@@ -1,0 +1,9 @@
+apps:
+  - name: schildichat-desktop
+    group: schildichat-desktop group
+    license: schildichat-desktop license
+    url: https://schildi.chat/
+    summary: schildichat-desktop summary
+    description: Matrix client / Element Web / Desktop fork
+    arches: x86_64
+    download_page: 

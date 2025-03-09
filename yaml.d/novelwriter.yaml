@@ -1,0 +1,10 @@
+apps:
+  - name: novelwriter
+    group: novelwriter group
+    license: novelwriter license
+    url: https://github.com/vkbo/novelWriter
+    summary: novelwriter summary
+    description: novelWriter - a markdown-like editor for novels
+    arches: 
+    download_page: https://github.com/vkbo/novelWriter/releases
+    download_mask: novelwriter_*_all.$pkgtype

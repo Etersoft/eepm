@@ -1,0 +1,9 @@
+apps:
+  - name: webex
+    group: webex group
+    license: webex license
+    url: https://www.webex.com/
+    summary: webex summary
+    description: AI-driven collaboration and customer experience that works for you
+    arches: x86_64
+    download_page: https://binaries.webex.com/WebexDesktop-Ubuntu-Official-Package/Webex.deb

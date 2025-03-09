@@ -1,0 +1,10 @@
+apps:
+  - name: min
+    group: min group
+    license: min license
+    url: https://github.com/minbrowser/min
+    summary: min summary
+    description: A fast, minimal browser that protects your privacy
+    arches: x86_64 aarch64 armhf
+    download_page: ${URL}/releases
+    download_mask: ${file}

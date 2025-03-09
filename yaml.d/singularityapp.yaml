@@ -1,0 +1,9 @@
+apps:
+  - name: singularityapp
+    group: singularityapp group
+    license: singularityapp license
+    url: https://snapcraft.io/singularityapp
+    summary: singularityapp summary
+    description: SingularityApp from the official site
+    arches: x86_64
+    download_page: $(snap_get_pkgurl $URL)

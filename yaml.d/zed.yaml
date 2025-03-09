@@ -1,0 +1,9 @@
+apps:
+  - name: zed
+    group: zed group
+    license: zed license
+    url: https://zed.dev/
+    summary: zed summary
+    description: High-performance, multiplayer code editor from the creators of Atom and Tree-sitter
+    arches: x86_64
+    download_page: 

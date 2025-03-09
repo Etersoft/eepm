@@ -1,0 +1,9 @@
+apps:
+  - name: balena-etcher
+    group: balena-etcher group
+    license: balena-etcher license
+    url: https://etcher.io/
+    summary: balena-etcher summary
+    description: Flash OS images to SD cards & USB drives, safely and easily
+    arches: x86_64
+    download_page: 

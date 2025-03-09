@@ -1,0 +1,10 @@
+apps:
+  - name: mattermost-desktop
+    group: mattermost-desktop group
+    license: mattermost-desktop license
+    url: https://mattermost.com/
+    summary: mattermost-desktop summary
+    description: Mattermost Desktop application for Linux from the official site
+    arches: x86_64 aarch64
+    download_page: https://github.com/mattermost/desktop/
+    download_mask: $(epm
