@@ -73,7 +73,7 @@ __epm_addrepo_etersoft_addon()
     fi
 }
 
-__epm_addrepo_alt_repo()
+__epm_addrepo_main_alt_repo()
 {
     local comp
     local sign
@@ -95,7 +95,7 @@ get_archlist()
     echo "$DISTRARCH"
     case $DISTRARCH in
         x86_64)
-            echo "i586"
+            echo "x86_64-i586"
             ;;
     esac
 }
@@ -293,17 +293,20 @@ __epm_addrepo_altlinux()
     assure_exists apt-repo
 
     if tasknumber "$repo" >/dev/null ; then
-        sudocmd_foreach "apt-repo $dryrun add" $(tasknumber "$repo")
+        #sudocmd_foreach "apt-repo $dryrun add" $(tasknumber "$repo")
+        for i in $repo ; do
+            epm repo add "https://git.altlinux.org/tasks/$i/build/repo"
+        done
         return
     fi
 
     case "$repo" in
         c10f2|c10f1|c9f2|c9f1|c9)
-            __epm_addrepo_alt_repo "$repo"
+            __epm_addrepo_main_alt_repo "$repo"
             return
             ;;
         p11|p10|p9|p8)
-            __epm_addrepo_alt_repo "$repo"
+            __epm_addrepo_main_alt_repo "$repo"
             return
             ;;
     esac
