@@ -37,6 +37,42 @@ __check_upgrade_conditions()
     return 0
 }
 
+epm_upgrade_alt_tasks()
+{
+    load_helper epm-addrepo
+    load_helper epm-reposave
+    load_helper epm-removerepo
+    load_helper epm-Install
+
+    local installlist="$(get_task_packages "$@")"
+
+    [ -n "$verbose" ] && info "Packages from task(s): $installlist"
+
+    if [ -z "$full" ] ; then
+        # hack: drop -devel packages to avoid package provided by multiple packages
+        installlist="$(estrlist reg_exclude ".*-devel .*-devel-static .*-checkinstall .*-debuginfo" "$installlist")"
+    fi
+
+    # install only installed packages (simulate upgrade packages)
+    installlist="$(get_only_installed_packages "$installlist")"
+
+    [ -n "$verbose" ] && info "Packages to upgrade: $installlist"
+
+    if [ -z "$installlist" ] ; then
+        warning 'There is no installed packages for upgrade from task $*'
+        return 22
+    fi
+
+    local res
+    try_change_alt_repo
+    epm_addrepo "$@"
+    __epm_update
+    (pkg_names="$installlist" epm_install)
+    res=$?
+    epm_removerepo "$@"
+    end_change_alt_repo
+    return $res
+}
 
 epm_upgrade()
 {
@@ -50,30 +86,7 @@ epm_upgrade()
     if [ "$BASEDISTRNAME" = "alt" ] ; then
         load_helper epm-sh-altlinux
         if tasknumber "$@" >/dev/null ; then
-            load_helper epm-addrepo
-            load_helper epm-reposave
-            load_helper epm-removerepo
-            load_helper epm-Install
-
-            local installlist="$(get_task_packages $*)"
-            # hack: drop -devel packages to avoid package provided by multiple packages
-            installlist="$(estrlist reg_exclude ".*-devel .*-devel-static" "$installlist")"
-            [ -n "$verbose" ] && info "Packages from task(s): $installlist"
-            # install only installed packages (simulate upgrade packages)
-            installlist="$(get_only_installed_packages "$installlist")"
-            [ -n "$verbose" ] && info "Packages to upgrade: $installlist"
-            if [ -z "$installlist" ] ; then
-                warning 'There is no installed packages for upgrade from task $*'
-                return 22
-            fi
-
-            try_change_alt_repo
-            epm_addrepo "$@"
-            __epm_update
-            (pkg_names="$installlist" epm_install) || fatal "Can't update repo"
-            epm_removerepo "$@"
-            end_change_alt_repo
-
+            epm_upgrade_alt_tasks "$@"
             return
         fi
 
