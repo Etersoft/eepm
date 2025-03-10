@@ -22,7 +22,7 @@ load_helper epm-print
 
 __epm_filter_out_base_alt_reqs()
 {
-    grep -E -v "(^rpmlib\(|^/bin/sh|^/bin/bash|^rtld\(GNU_HASH\)|ld-linux)"
+    grep -E -v "(^rpmlib\(|^/bin/sh|^/bin/bash|^rtld\(GNU_HASH\)|ld-linux)" | grep -E -v " or "
 }
 
 __epm_alt_rpm_requires()
