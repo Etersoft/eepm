@@ -345,8 +345,15 @@ __epm_addrepo_altlinux()
         assure_exists $mh apt-https
     fi
 
-    sudocmd apt-repo $dryrun add "$repo"
+    # when add correct sources.list string
+    if echo "$repo" | grep "^rpm " ; then
+        __epm_addrepo_apt "$repo"
+        return
+    fi
 
+    # TODO: rewrite this fallback
+    assure_exists apt-repo
+    sudocmd apt-repo $dryrun add "$repo"
 }
 
 
