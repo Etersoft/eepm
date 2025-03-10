@@ -155,7 +155,7 @@ epm_upgrade()
         CMD="zypper $(subst_option non_interactive --non-interactive) dist-upgrade"
         ;;
     pacman)
-        CMD="pacman -S -u $force"
+        CMD="pacman -S -u $force $(subst_option non_interactive --noconfirm)"
         ;;
     aura)
         CMD="aura -A -u"
