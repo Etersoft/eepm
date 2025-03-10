@@ -131,6 +131,7 @@ nodeps=
 noremove=
 dryrun=
 force=
+full=
 repack=
 norepack=
 install=
@@ -540,6 +541,9 @@ check_option()
     --force)              # HELPOPT: force install/remove package (f.i., override)
         force="--force"
         ;;
+    --full)               # HELPOPT: do full operation (f.i., use all packages from task, without excludes)
+        full="--full"
+        ;;
     --noremove|--no-remove)  # HELPOPT: exit if any packages are to be removed during upgrade
         noremove="--no-remove"
         ;;
@@ -670,7 +674,7 @@ if [ -n "$quiet" ] ; then
 fi
 
 # fill
-export EPM_OPTIONS="$nodeps $force $verbose $debug $quiet $interactive $non_interactive $save_only $download_only $force_overwrite $manual_requires"
+export EPM_OPTIONS="$nodeps $force $full $verbose $debug $quiet $interactive $non_interactive $save_only $download_only $force_overwrite $manual_requires"
 
 # if input is not console and run script from file, get pkgs from stdin too
 if [ ! -n "$inscript" ] && [ -p /dev/stdin ] && [ "$EPMMODE" != "pipe" ] ; then
