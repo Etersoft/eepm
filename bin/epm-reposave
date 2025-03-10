@@ -43,17 +43,19 @@ __restore_alt_repo_lists()
     info 'Restoring copy of all sources lists from $SAVELISTDIR ...'
     local i
     [ -d "$SAVELISTDIR/apt" ] || return 0
-    mkdir -p $SAVELISTDIR/apt/ $SAVELISTDIR/apt/sources.list.d/
-    for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
+
+    mkdir -p /etc/apt/ /etc/apt/sources.list.d/
+    for i in $SAVELISTDIR/apt/sources.list $SAVELISTDIR/apt/sources.list.d/*.list ; do
         [ -s "$i" ] || continue
-        local DD="$(echo "$i" | sed -e "s|/etc|$SAVELISTDIR|")"
+        local DD="$(echo "$i" | sed -e "s|$SAVELISTDIR|/etc|")"
         # restore only if there are differences
-        if diff -q "$DD" "$i" >/dev/null ; then
-            rm -f $verbose "$DD"
+        if diff -q "$i" "$DD" >/dev/null ; then
+            rm -f $verbose "$i"
         else
-            mv $verbose "$DD" "$i" || warning 'Can'\''t restore $i file'
+            mv $verbose "$i" "$DD" || warning 'Can'\''t restore $i file'
         fi
     done
+    rmdir "$SAVELISTDIR/apt/sources.list.d" "$SAVELISTDIR/apt"
 }
 
 # save and restore repo lists
