@@ -19,6 +19,19 @@
 
 load_helper epm-sh-altlinux
 
+
+# like apt-add-repository --remove on deb systems
+__epm_removerepo_apt()
+{
+    [ -n "$*" ] || fatal "empty repo name"
+    # aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
+    sudocmd sed -i -e "s|.*$*.*||" /etc/apt/sources.list
+    if [ -d /etc/apt/sources.list.d ] && ls /etc/apt/sources.list.d/*.list >/dev/null 2>/dev/null ; then
+        sudocmd sed -i -e "s|.*$*.*||" /etc/apt/sources.list.d/*.list
+    fi
+}
+
+
 __epm_grep_repo_list()
 {
     while [ -n "$1" ] ; do
@@ -114,12 +127,8 @@ case $BASEDISTRNAME in
         ;;
     "astra")
         echo "Use workaround for AstraLinux"
-        [ -n "$*" ] || fatal "empty repo name"
         # aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
-        sudocmd sed -i -e "s|.*$*.*||" /etc/apt/sources.list
-        if [ -d /etc/apt/sources.list.d ] && ls /etc/apt/sources.list.d/*.list >/dev/null 2>/dev/null ; then
-            sudocmd sed -i -e "s|.*$*.*||" /etc/apt/sources.list.d/*.list
-        fi
+        __epm_removerepo_apt "$@"
         return
         ;;
 esac;
