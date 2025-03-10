@@ -75,9 +75,8 @@ epm_repo()
         epm_addkey "$@"
         ;;
     clean)                            # HELPCMD: remove temp. repos (tasks and CD-ROMs)
-        [ "$BASEDISTRNAME" = "alt" ] || fatal "TODO: only ALT now is supported"
-        # TODO: check for ALT
-        sudocmd apt-repo $dryrun clean
+        load_helper epm-repofix
+        epm_repoclean "$@"
         ;;
     save)                             # HELPCMD: save sources lists to a temp place
         load_helper epm-reposave

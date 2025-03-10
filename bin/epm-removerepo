@@ -97,8 +97,12 @@ __epm_removerepo_alt()
             info "remove korinf repo"
             __epm_removerepo_alt_grepremove "Korinf/"
             ;;
+        cdroms)
+            info "remove cdroms entries"
+            __epm_removerepo_alt_grepremove "/^[[:space:]]*rpm[[:space:]]+cdrom:/" "/^cdrom(s)?$/"
+            ;;
         tasks)
-            info "remove task repos"
+            info "remove tasks' repos"
             __epm_removerepo_alt_grepremove " repo/[0-9]+/" "/tasks/[0-9]+ " "/[0-9]+[ /]build/repo"
             ;;
         task)

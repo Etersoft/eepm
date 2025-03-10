@@ -274,3 +274,9 @@ case $PMTYPE in
 esac
 
 }
+
+epm_repoclean()
+{
+    epm repo remove tasks
+    epm repo remove cdroms
+}
