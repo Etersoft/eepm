@@ -52,16 +52,7 @@ __epm_removerepo_alt_grepremove()
         [ -z "$rl" ] && warning 'Can'\''t find '$*' in the repos (see # epm repolist output)' && return 1
     fi
     echo "$rl" | while read rp ; do
-        # TODO: print removed lines
-        if [ -n "$dryrun" ] ; then
-            docmd apt-repo $dryrun rm "$rp"
-            continue
-        fi
-        if [ -z "$quiet" ] ; then
-            sudocmd apt-repo $dryrun rm "$rp"
-        else
-            sudorun apt-repo $dryrun rm "$rp"
-        fi
+        __epm_removerepo_apt "$rp"
     done
 }
 
