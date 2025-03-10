@@ -497,6 +497,18 @@ epm_install()
             epm_install_alt_tasks "$pkg_names"
             return
         fi
+        if echo "$pkg_urls" | grep -q -E "https://packages.altlinux.org/ru/tasks/[0-9]+/*$" || \
+           echo "$pkg_urls" | grep -q -E "https://git.altlinux.org/tasks/[0-9]+/*$" || \
+           echo "$pkg_urls" | grep -q -E "https://git.altlinux.org/tasks/archive/done/_[0-9]+/[0-9]+/*$" ; then
+            load_helper epm-install-alt
+            local task="$(basename "$pkg_urls")"
+            pkg_urls=""
+            if [ -n "$interactive" ] ; then
+                confirm_info "You are about to install $task task from $(dirname "$pkg_urls")."
+            fi
+            epm_install_alt_tasks "$task"
+            return
+        fi
     fi
 
     if [ -n "$manual_requires" ] ; then
