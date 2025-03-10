@@ -34,11 +34,13 @@ __epm_removerepo_apt()
     local sc="sudocmd"
     [ -z "$quiet" ] || sc="sudorun"
 
-    # aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
-    $sc sed -i -e "s|.*$repo.*||" /etc/apt/sources.list
-    if [ -d /etc/apt/sources.list.d ] && ls /etc/apt/sources.list.d/*.list >/dev/null 2>/dev/null ; then
-        $sc sed -i -e "s|.*$repo.*||" /etc/apt/sources.list.d/*.list
-    fi
+    local i
+    for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
+        [ -s "$i" ] || continue
+        # touch file only when it is needed
+        grep -q -E "$repo" $i || continue
+        $sc sed -i -e "s|.*$repo.*||" $i
+    done
 }
 
 
@@ -59,7 +61,10 @@ __epm_removerepo_alt_grepremove()
         rl="$1"
     else
         rl="$(__epm_grep_repo_list "$@" 2>/dev/null)"
-        [ -z "$rl" ] && warning 'Can'\''t find '$*' in the repos (see # epm repolist output)' && return 1
+        if [ -z "$rl" ] ; then
+            [ -n "$verbose" ] && warning 'Can'\''t find '$*' in the repos (see # epm repolist output)'
+            return 1
+        fi
     fi
     echo "$rl" | while read rp ; do
         __epm_removerepo_apt "$rp"
