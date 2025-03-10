@@ -66,14 +66,12 @@ __repofix_filter_vendor()
 __replace_alt_version_in_repo()
 {
     local i
-    assure_exists apt-repo
     #echo "Upgrading $DISTRNAME from $1 to $2 ..."
-    a='' apt-repo list | sed -E -e "s|($1)|{\1}->{$2}|g" | grep -E --color -- "$1"
+    epm --quiet repo list | sed -E -e "s|($1)|{\1}->{$2}|g" | grep -E --color -- "$1"
     # ask and replace only we will have changes
-    if a='' apt-repo list | grep -E -q -- "$1" ; then
+    if epm --quiet repo list | grep -E -q -- "$1" ; then
         __replace_text_in_alt_repo "/^ *#/! s!$1!$2!g"
     fi
-    #docmd apt-repo list
 }
 
 __alt_replace_sign_name()
@@ -198,7 +196,7 @@ __change_repo()
     local SHORT="$1"
     local REPLTO="$2"
     local NN
-    a="" apt-repo list | grep -v $SHORT | grep -v "file:/" | while read nn ; do
+    epm --quiet repo list | grep -v $SHORT | grep -v "file:/" | while read nn ; do
         NN="$(__subst_with_repo_url "$nn" "$REPLTO")"
         [ "$NN" = "$nn" ] && continue
         epm addrepo "$NN" && epm removerepo "$nn" || return 1
@@ -251,14 +249,13 @@ epm_repofix()
 
 case $BASEDISTRNAME in
     "alt")
-        assure_exists apt-repo
-        [ -n "$quiet" ] || docmd apt-repo list
+        [ -n "$quiet" ] || docmd epm repo list
         assure_root
 
         __fix_alt_sources_list /etc/apt/sources.list
         __fix_alt_sources_list /etc/apt/sources.list.d/*.list
 
-        [ -n "$quiet" ] || docmd apt-repo list
+        [ -n "$quiet" ] || docmd epm repo list
         return
         ;;
 esac

@@ -45,7 +45,7 @@ __epm_removerepo_apt()
 __epm_grep_repo_list()
 {
     while [ -n "$1" ] ; do
-        epm --quiet repolist | grep -E "$1"
+        epm --quiet repo list | grep -E "$1"
         shift
     done
 }
@@ -71,8 +71,6 @@ __epm_removerepo_alt()
     local repo="$*"
     [ -n "$repo" ] || fatal "No such repo or task. Use epm repo remove <regexp|autoimports|archive|tasks|TASKNUMBER>"
 
-    assure_exists apt-repo
-
     if tasknumber "$repo" >/dev/null ; then
         local tn
         for tn in $(tasknumber "$repo") ; do
@@ -88,8 +86,8 @@ __epm_removerepo_alt()
             info "remove autoimports repo"
             [ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
             repo="autoimports.$branch"
-            sudocmd apt-repo $dryrun rm "$repo"
-            ;;
+            __epm_removerepo_alt_grepremove "$repo/"
+             ;;
         archive)
             info "remove archive repos"
             __epm_removerepo_alt_grepremove "archive/"
@@ -114,8 +112,6 @@ __epm_removerepo_alt()
             fatal "epm removerepo: no options are supported"
             ;;
         *)
-# TODO: if return empty for whole line, use grep
-#            sudocmd apt-repo $dryrun rm "$*"
             __epm_removerepo_alt_grepremove "$*"
             ;;
     esac

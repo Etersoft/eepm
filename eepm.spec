@@ -24,10 +24,6 @@ Provides: epm = %EVR
 
 # FIXHERE: Replace with target platform package manager
 Requires: apt rpm
-# apt-scripts missed on ALT SP 8, update-kernel is extra in containers
-#Requires: apt-scripts update-kernel
-# TODO: don't use at all
-Requires: apt-repo
 
 %endif
 

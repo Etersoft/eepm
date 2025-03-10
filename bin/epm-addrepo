@@ -158,7 +158,6 @@ __epm_addrepo_altlinux_url()
 
 __epm_addrepo_altlinux_help()
 {
-    #sudocmd apt-repo $dryrun add branch
 message '
 
 epm repo add - add branch repo. Use follow params:
@@ -313,8 +312,6 @@ __epm_addrepo_altlinux()
             return 0
             ;;
     esac
-
-    assure_exists apt-repo
 
     if tasknumber "$repo" >/dev/null ; then
         #sudocmd_foreach "apt-repo $dryrun add" $(tasknumber "$repo")

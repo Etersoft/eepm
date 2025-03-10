@@ -57,7 +57,7 @@ get_task_arepo_packages_list()
     echo "$res" | cut -f1
 }
 
-# use assure apt-repo before
+
 get_task_packages()
 {
     local tn

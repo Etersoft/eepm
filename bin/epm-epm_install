@@ -82,7 +82,7 @@ __epm_korinf_install_eepm()
         [ -n "$interactive" ] || non_interactive="--auto"
     fi
 
-    # as now, can't install one package from task (and old apt-repo can't install one package)
+    # as now, can't install one package from task
     if false && [ "$BASEDISTRNAME" = "alt" ] && [ -z "$direct" ] ; then
         local task="$(docmd eget -O- https://eepm.ru/vendor/alt/task)"
         if [ -n "$task" ] ; then
