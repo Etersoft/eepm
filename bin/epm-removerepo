@@ -88,25 +88,25 @@ __epm_removerepo_alt()
 
     case "$1" in
         autoimports)
-            info "remove autoimports repo"
+            info "removing autoimports repo"
             [ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
             repo="autoimports.$branch"
             __epm_removerepo_alt_grepremove "$repo/"
              ;;
         archive)
-            info "remove archive repos"
+            info "removing archive repos"
             __epm_removerepo_alt_grepremove "archive/"
             ;;
         korinf)
-            info "remove korinf repo"
+            info "removing korinf repo"
             __epm_removerepo_alt_grepremove "Korinf/"
             ;;
         cdroms)
-            info "remove cdroms entries"
+            info "removing cdroms entries"
             __epm_removerepo_alt_grepremove "/^[[:space:]]*rpm[[:space:]]+cdrom:/" "/^cdrom(s)?$/"
             ;;
         tasks)
-            info "remove tasks' repos"
+            info "removing tasks' repos"
             __epm_removerepo_alt_grepremove " repo/[0-9]+/" "/tasks/[0-9]+ " "/[0-9]+[ /]build/repo"
             ;;
         task)
