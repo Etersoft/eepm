@@ -117,7 +117,12 @@ __epm_removerepo_alt()
             fatal "epm removerepo: no options are supported"
             ;;
         *)
-            __epm_removerepo_alt_grepremove "$*"
+            if echo "$*" | grep -q "^rpm" ] ; then
+                __epm_removerepo_apt "$*"
+            else
+                info "removing source.list entries by mask '$*'"
+                __epm_removerepo_alt_grepremove "$*"
+            fi
             ;;
     esac
 
