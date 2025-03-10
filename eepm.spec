@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.11
+Version: 3.64.12
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -140,6 +140,20 @@ make -C po
 %endif
 
 %changelog
+* Mon Mar 10 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.12-alt1
+- epm repo remove: add support for archived task
+- epm-addrepo: get real url before add (old apt doesn't support redirects)
+- epm-addrepo: implement task repo via full url
+- epm desktop: add initial budgie support
+- epm-remove: use hi level removing with any error on low level (closes #236)
+- epm play svp4: Drop bundled pythonqt for avoid dependency on python 3.8 (eterbug #18111)
+- epm play: add salutejazz (eterbug #18100)
+- epm: add --full option
+- epm-addrepo: add epm repo add archive sisyphus support
+- rewrite repo related code and remove apt-repo using
+- epm-removerepo: improve removing
+- epm-repolist: add regexp support
+
 * Wed Mar 05 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.11-alt1
 - distr_info: fix OSnovaLinux name
 - epm play t1client: update packages' URL
