@@ -34,7 +34,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.11"
+export EPMVERSION="3.64.12"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1178,7 +1178,7 @@ __epm_addrepo_etersoft_addon()
     fi
 }
 
-__epm_addrepo_alt_repo()
+__epm_addrepo_main_alt_repo()
 {
     local comp
     local sign
@@ -1200,7 +1200,7 @@ get_archlist()
     echo "$DISTRARCH"
     case $DISTRARCH in
         x86_64)
-            echo "i586"
+            echo "x86_64-i586"
             ;;
     esac
 }
@@ -1223,6 +1223,9 @@ __epm_addrepo_altlinux_url()
     local url="$1"
     local arch
     local base
+
+    # apt supports 302 redirect only since apt 0.7.21 (14th April 2009)
+    url="$(eget --get-real-url $url)"
 
     # URL to path/RPMS.addon
     base="$(basename "$url")"
@@ -1259,7 +1262,6 @@ __epm_addrepo_altlinux_url()
 
 __epm_addrepo_altlinux_help()
 {
-    #sudocmd apt-repo $dryrun add branch
 message '
 
 epm repo add - add branch repo. Use follow params:
@@ -1285,6 +1287,25 @@ Examples:
 
 '
     return
+}
+
+__epm_addrepo_apt()
+{
+    local repo="$*"
+
+    epm repo list --quiet 2>/dev/null | grep -q -F "$repo" && return 0
+
+    if [ -n "$dryrun" ] ; then
+        echo "$repo"
+        return
+    fi
+
+    local sc="sudocmd"
+    [ -z "$quiet" ] || sc="sudorun"
+
+    [ -z "$(tail -n1 /etc/apt/sources.list)" ] || echo "" | $sc tee -a /etc/apt/sources.list
+    echo "$repo" | $sc tee -a /etc/apt/sources.list
+
 }
 
 __epm_addrepo_altlinux()
@@ -1375,6 +1396,10 @@ __epm_addrepo_altlinux()
             return 0
             ;;
         archive)
+            if [ "$2" = "sisyphus" ] ; then
+                branch="$2"
+                shift
+            fi
             datestr="$2"
             echo "$datestr" | grep -Eq "^20[0-2][0-9]/[01][0-9]/[0-3][0-9]$" || fatal "use follow date format: 2017/01/31"
 
@@ -1391,20 +1416,21 @@ __epm_addrepo_altlinux()
             ;;
     esac
 
-    assure_exists apt-repo
-
     if tasknumber "$repo" >/dev/null ; then
-        sudocmd_foreach "apt-repo $dryrun add" $(tasknumber "$repo")
+        #sudocmd_foreach "apt-repo $dryrun add" $(tasknumber "$repo")
+        for i in $repo ; do
+            epm repo add "https://git.altlinux.org/tasks/$i/build/repo"
+        done
         return
     fi
 
     case "$repo" in
         c10f2|c10f1|c9f2|c9f1|c9)
-            __epm_addrepo_alt_repo "$repo"
+            __epm_addrepo_main_alt_repo "$repo"
             return
             ;;
         p11|p10|p9|p8)
-            __epm_addrepo_alt_repo "$repo"
+            __epm_addrepo_main_alt_repo "$repo"
             return
             ;;
     esac
@@ -1419,8 +1445,15 @@ __epm_addrepo_altlinux()
         assure_exists $mh apt-https
     fi
 
-    sudocmd apt-repo $dryrun add "$repo"
+    # when add correct sources.list string
+    if echo "$repo" | grep "^rpm " ; then
+        __epm_addrepo_apt "$repo"
+        return
+    fi
 
+    # TODO: rewrite this fallback
+    assure_exists apt-repo
+    sudocmd apt-repo $dryrun add "$repo"
 }
 
 
@@ -1468,12 +1501,9 @@ __epm_addrepo_astra()
             ;;
     esac
 
-    echo "Use workaround for AstraLinux ..."
+    #echo "Use workaround for AstraLinux ..."
     # aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
-    # don't add again
-    epm repo list --quiet | grep -q -F "$repo" && return 0
-    [ -z "$(tail -n1 /etc/apt/sources.list)" ] || echo "" | sudocmd tee -a /etc/apt/sources.list
-    echo "$repo" | sudocmd tee -a /etc/apt/sources.list
+    __epm_addrepo_apt "$repo"
     return
 }
 
@@ -1969,6 +1999,7 @@ __epm_autoremove_altrpm_lib()
         | grep -E -v -- "$develrule" \
         | grep -E -v -- "-(debuginfo)$" \
         | grep -E -v -- "-(util|utils|tool|tools|plugin|daemon|help)$" \
+        | grep -E -v -- "^(libva-|libvdpau-va-gl)$" \
         | grep -E -v -- "^(libsystemd|libreoffice|libnss|libvirt-client|libvirt-daemon|libsasl2-plugin|eepm|distro_info)" )
     pkgs=$(skip_manually_installed $fullpkgs)
 
@@ -2612,7 +2643,7 @@ __epm_apt_set_lists_pkg()
     if [ "$BASEDISTRNAME" = "alt" ] ; then
         pkg="pkglist"
         # see update-kernel: Use Dir::State::lists for apt update freshness check (ALT bug 46987)
-        eval "$(apt-config shell LISTS Dir::State::lists/f)"
+        eval "$(a='' apt-config shell LISTS Dir::State::lists/f)"
     fi
 }
 
@@ -3087,14 +3118,14 @@ try_fix_apt_rpm_dupls()
     local TODEL
     for i in $PKGLIST ; do
         local pkg=${i/.32bit/}
-        local todel="$(rpm -q $pkg | head -n1)"
-        local todel2="$(rpm -q $pkg | head -n2 | tail -n1)"
+        local todel="$(a='' rpm -q $pkg | head -n1)"
+        local todel2="$(a='' rpm -q $pkg | head -n2 | tail -n1)"
         if [ "$todel" = "$todel2" ] ; then
             message "Fix the same name duplicates for $pkg..."
             sudocmd rpm -e "$todel" --allmatches --nodeps --justdb && epm install $pkg && continue
         fi
-                # first use older package
-                [ "$(rpmevrcmp "$todel" "$todel2")" = "1" ] && todel="$todel2"
+        # first use older package
+        [ "$(a='' rpmevrcmp "$todel" "$todel2")" = "1" ] && todel="$todel2"
         sudocmd rpm -e "$todel" || TODEL="$TODEL $todel"
     done
     [ -n "$TODEL" ] && sudocmd rpm -e $TODEL
@@ -3634,7 +3665,6 @@ __epm_download_alt()
     if tasknumber "$@" >/dev/null ; then
 
         local installlist="$(get_task_packages $*)"
-        # hack: drop -devel packages to avoid package provided by multiple packages
         installlist="$(estrlist reg_exclude ".*-devel .*-devel-static .*-checkinstall .*-debuginfo" "$installlist")"
         [ -n "$verbose" ] && info 'Packages from task(s): $installlist'
 
@@ -3799,7 +3829,7 @@ __epm_korinf_install_eepm()
         [ -n "$interactive" ] || non_interactive="--auto"
     fi
 
-    # as now, can't install one package from task (and old apt-repo can't install one package)
+    # as now, can't install one package from task
     if false && [ "$BASEDISTRNAME" = "alt" ] && [ -z "$direct" ] ; then
         local task="$(docmd eget -O- https://eepm.ru/vendor/alt/task)"
         if [ -n "$task" ] ; then
@@ -5176,7 +5206,7 @@ get_latest_kernel_rel()
     kmaxver=
     while read version
     do
-        comparever="$(rpmevrcmp "$kmaxver" "$version")"
+        comparever="$(a='' rpmevrcmp "$kmaxver" "$version")"
         [ "$comparever" -lt 0 ] && kmaxver="$version" ||:
     done <<<"$(epm print version-release for package kernel-image-$kernel_flavour)"
     [ -z "$kmaxver" ] && echo "$rrel" && return
@@ -5256,7 +5286,6 @@ epm_install_alt_names()
     epm_install_alt_kernel_module $kmlist || return
 }
 
-
 apt_repo_prepare()
 {
     assure_exists apt-repo
@@ -5277,14 +5306,39 @@ apt_repo_after()
 
 epm_install_alt_tasks()
 {
+
+    local installlist="$(get_task_packages "$@")"
+
+    [ -n "$verbose" ] && info "Packages from task(s): $installlist"
+
+    if [ -n "$full" ] ; then
+        installlist="$(estrlist reg_exclude ".*-checkinstall .*-debuginfo" "$installlist")"
+    else
+        # hack: drop -devel packages to avoid package provided by multiple packages
+        installlist="$(estrlist reg_exclude ".*-devel .*-devel-static .*-checkinstall .*-debuginfo" "$installlist")"
+    fi
+
+    # TODO: need we this option?
+    #if [ -z "$force" ] ; then
+    #    # skip i586- on install
+    installlist="$(estrlist reg_exclude "i586-.*" "$installlist")"
+    #fi
+
+    [ -n "$verbose" ] && info "Packages to install: $installlist"
+
+    if [ -z "$installlist" ] ; then
+        warning 'There is no installed packages for upgrade from task $*'
+        return 22
+    fi
+
     local res
-    # TODO: don't use apt-repo
-    apt_repo_prepare
-
-    sudocmd_foreach "apt-repo test" $(tasknumber "$@")
+    try_change_alt_repo
+    epm_addrepo "$@"
+    __epm_update
+    (pkg_names="$installlist" epm_install)
     res=$?
-
-    apt_repo_after
+    epm_removerepo "$@"
+    end_change_alt_repo
     return $res
 }
 
@@ -5655,8 +5709,8 @@ epm_install_files_rpm()
 # File bin/epm-kernel_update:
 
 
-EFI=$(bootctl -p 2>/dev/null)
-sdboot_loader_id=$(bootctl status 2>/dev/null | grep -oP '(?<=id: ).*')
+EFI=$(a="" bootctl -p 2>/dev/null)
+sdboot_loader_id=$(a="" bootctl status 2>/dev/null | grep -oP '(?<=id: ).*')
 
 if [ -f "$EFI/loader/entries/$sdboot_loader_id" ]; then
     entry_file="$EFI/loader/entries/$sdboot_loader_id"
@@ -8243,9 +8297,9 @@ __epm_get_hilevel_nameform()
         apt-rpm)
             # use # as delimeter for apt
             local pkg
-            pkg=$(rpm -q --queryformat "%{NAME}=%{SERIAL}:%{VERSION}-%{RELEASE}\n" -- $1)
+            pkg=$(a='' rpm -q --queryformat "%{NAME}=%{SERIAL}:%{VERSION}-%{RELEASE}\n" -- $1)
             # for case if serial is missed
-            echo $pkg | grep -q "(none)" && pkg=$(rpm -q --queryformat "%{NAME}#%{VERSION}-%{RELEASE}\n" -- $1)
+            echo $pkg | grep -q "(none)" && pkg=$(a='' rpm -q --queryformat "%{NAME}#%{VERSION}-%{RELEASE}\n" -- $1)
             # HACK: can use only for multiple install packages like kernel
             echo $pkg | grep -q kernel || return 1
             echo $pkg
@@ -8256,7 +8310,7 @@ __epm_get_hilevel_nameform()
             local pkg
             #pkg=$(rpm -q --queryformat "%{EPOCH}:%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" -- $1)
             #echo $pkg | grep -q "(none)" && pkg=$(rpm -q --queryformat "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" -- $1)
-            pkg=$(rpm -q --queryformat "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" -- $1)
+            pkg=$(a='' rpm -q --queryformat "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" -- $1)
             echo $pkg
             return
             ;;
@@ -8273,7 +8327,7 @@ __epm_get_hilevel_name()
         local pkg
         # get short form in pkg
         # FIXME: where we use it? continue or pkg=$i?
-        quiet=1 pkg=$(__epm_query_shortname "$i") || pkg="$i" #continue # drop not installed packages
+        quiet=1 pkg=$(__epm_query_shortname "$i" 2>/dev/null) || pkg="$i" #continue # drop not installed packages
         # if already short form, skipped
         [ "$pkg" = "$i" ] && echo "$i" && continue
         # try get long form or use short form
@@ -8340,7 +8394,7 @@ __epm_query_name()
         eopkg)
             showcmd eopkg blame $1
             local str
-            str="$(LC_ALL=C eopkg blame $1 | grep "^Name")"
+            str="$(LC_ALL=C a='' eopkg blame $1 | grep "^Name")"
             [ -n "$str" ] || return 1
             echo "$str" | sed -e "s|Name[[:space:]]*: \(.*\), version: \(.*\), release: \(.*\)|\1-\2-\3|"
             return
@@ -8348,7 +8402,7 @@ __epm_query_name()
         pisi)
             showcmd pisi blame $1
             local str
-            str="$(LC_ALL=C pisi blame $1 | grep "^Name")"
+            str="$(LC_ALL=C a='' pisi blame $1 | grep "^Name")"
             [ -n "$str" ] || return 1
             echo "$str" | sed -e "s|Name[[:space:]]*: \(.*\), version: \(.*\), release: \(.*\)|\1-\2-\3|"
             return
@@ -8408,7 +8462,7 @@ __epm_query_shortname()
         eopkg)
             showcmd eopkg blame $1
             local str
-            str="$(LC_ALL=C eopkg blame $1 | grep "^Name")"
+            str="$(LC_ALL=C a='' eopkg blame $1 | grep "^Name")"
             [ -n "$str" ] || return 1
             echo "$str" | sed -e "s|Name[[:space:]]*: \(.*\), version: \(.*\), release: \(.*\)|\1|"
             return
@@ -8416,7 +8470,7 @@ __epm_query_shortname()
         pisi)
             showcmd pisi blame $1
             local str
-            str="$(LC_ALL=C pisi blame $1 | grep "^Name")"
+            str="$(LC_ALL=C a='' pisi blame $1 | grep "^Name")"
             [ -n "$str" ] || return 1
             echo "$str" | sed -e "s|Name[[:space:]]*: \(.*\), version: \(.*\), release: \(.*\)|\1|"
             return
@@ -8539,7 +8593,7 @@ dpkg_print_name_version()
     local ver i
     for i in "$@" ; do
         [ -n "$i" ] || continue
-        ver=$(dpkg -s "$i" 2>/dev/null | grep "Version:" | sed -e "s|Version: ||g")
+        ver=$(a='' dpkg -s "$i" 2>/dev/null | grep "Version:" | sed -e "s|Version: ||g")
         if [ -z "$ver" ] ; then
             echo "$i"
         else
@@ -8555,7 +8609,7 @@ __do_query()
     case $PMTYPE in
         *-dpkg)
             showcmd dpkg -S "$1"
-            dpkg_print_name_version "$(dpkg -S "$1" | grep -v "^diversion by" | sed -e "s|:.*||")"
+            dpkg_print_name_version "$(a='' dpkg -S "$1" | grep -v "^diversion by" | sed -e "s|:.*||")"
             return ;;
         *-rpm)
             CMD="rpm -qf"
@@ -8987,13 +9041,13 @@ __p11_upgrade_fix()
     # файл /etc/openssl/openssl.cnf из устанавливаемого пакета openssl-config-3.2.0-alt1.noarch конфликтует с файлом из пакета libcrypto10-1.0.2u-alt1.p9.2.x86_64
     docmd epm remove libcrypto10 libssl10
 
-    # libcrypto1.1 fix
+    # libcrypto1.1 workaround
     docmd epm repo save
     docmd epm repo rm all
-    docmd apt-repo add branch sisyphus 2024/05/22
+    docmd epm repo add archive sisyphus 2024/05/22
     docmd epm update
     docmd epm install libcrypto1.1
-    docmd epm repo rm all
+    #docmd epm repo rm all
     docmd epm repo restore
 }
 
@@ -9619,6 +9673,9 @@ epm_remove_low()
             cd /tmp || fatal
             __epm_check_vendor $@
             set_sudo
+            sudocmd rpm -ev $noscripts $nodeps $@
+            return
+            # we don't need RPMISNOTINSTALLED as for now
             store_output sudocmd rpm -ev $noscripts $nodeps $@
             # rpm returns number of packages if failed on removing
             __check_rpm_e_result $RC_STDOUT $?
@@ -9640,7 +9697,7 @@ epm_remove_low()
             sudocmd emerge --unmerge $@
             return ;;
         pacman)
-            sudocmd pacman -R $@
+            sudocmd pacman $(subst_option non_interactive --noconfirm) -R $@
             return ;;
         eopkg)
             sudocmd eopkg $(subst_option nodeps --ignore-dependency) remove $@
@@ -9888,7 +9945,6 @@ epm_remove()
 
     if [ "$BASEDISTRNAME" = "alt" ] ; then
         if tasknumber "$pkg_names" >/dev/null ; then
-            assure_exists apt-repo
             pkg_names="$(get_task_packages $pkg_names)"
         fi
     fi
@@ -9935,7 +9991,9 @@ epm_remove()
     epm_remove_low $pkg_names && return
     local STATUS=$?
 
-    if [ -n "$direct" ] || [ -n "$nodeps" ] || [ "$STATUS" = "$RPMISNOTINSTALLED" ]; then
+    # || [ "$STATUS" = "$RPMISNOTINSTALLED" ]
+    # see https://github.com/Etersoft/eepm/issues/236
+    if [ -n "$direct" ] || [ -n "$nodeps" ] ; then
         [ -n "$force" ] || return $STATUS
     fi
 
@@ -10028,6 +10086,38 @@ epm_remove_old_kernels()
 # File bin/epm-removerepo:
 
 
+
+__epm_removerepo_apt()
+{
+    local repo="$*"
+    [ -n "$repo" ] || fatal "empty repo name"
+
+    if [ -n "$dryrun" ] ; then
+        echo "$repo"
+        return
+    fi
+
+    local sc="sudocmd"
+    [ -z "$quiet" ] || sc="sudorun"
+
+    local i
+    for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
+        [ -s "$i" ] || continue
+        # touch file only when it is needed
+        grep -q -E "$repo" $i || continue
+        $sc sed -i -e "s|.*$repo.*||" $i
+    done
+}
+
+
+__epm_grep_repo_list()
+{
+    while [ -n "$1" ] ; do
+        epm --quiet repo list | grep -E "$1"
+        shift
+    done
+}
+
 __epm_removerepo_alt_grepremove()
 {
     local rl
@@ -10035,20 +10125,14 @@ __epm_removerepo_alt_grepremove()
     if [ "$1" = "all" ] || rhas "$1" "^rpm" ; then
         rl="$1"
     else
-        rl="$( epm --quiet repolist 2>/dev/null | grep -F "$1")"
-        [ -z "$rl" ] && warning 'Can'\''t find '$1' in the repos (see # epm repolist output)' && return 1
+        rl="$(__epm_grep_repo_list "$@" 2>/dev/null)"
+        if [ -z "$rl" ] ; then
+            [ -n "$verbose" ] && warning 'Can'\''t find '$*' in the repos (see # epm repolist output)'
+            return 1
+        fi
     fi
     echo "$rl" | while read rp ; do
-        # TODO: print removed lines
-        if [ -n "$dryrun" ] ; then
-            docmd apt-repo $dryrun rm "$rp"
-            continue
-        fi
-        if [ -z "$quiet" ] ; then
-            sudocmd apt-repo $dryrun rm "$rp"
-        else
-            sudorun apt-repo $dryrun rm "$rp"
-        fi
+        __epm_removerepo_apt "$rp"
     done
 }
 
@@ -10057,12 +10141,10 @@ __epm_removerepo_alt()
     local repo="$*"
     [ -n "$repo" ] || fatal "No such repo or task. Use epm repo remove <regexp|autoimports|archive|tasks|TASKNUMBER>"
 
-    assure_exists apt-repo
-
     if tasknumber "$repo" >/dev/null ; then
         local tn
         for tn in $(tasknumber "$repo") ; do
-            __epm_removerepo_alt_grepremove " repo/$tn/"
+            __epm_removerepo_alt_grepremove " repo/$tn/" "/tasks/$tn " "/$tn[ /]build/repo"
         done
         return
     fi
@@ -10071,32 +10153,41 @@ __epm_removerepo_alt()
 
     case "$1" in
         autoimports)
-            info "remove autoimports repo"
+            info "removing autoimports repo"
             [ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
             repo="autoimports.$branch"
-            sudocmd apt-repo $dryrun rm "$repo"
-            ;;
+            __epm_removerepo_alt_grepremove "$repo/"
+             ;;
         archive)
-            info "remove archive repos"
+            info "removing archive repos"
             __epm_removerepo_alt_grepremove "archive/"
             ;;
         korinf)
-            info "remove korinf repo"
+            info "removing korinf repo"
             __epm_removerepo_alt_grepremove "Korinf/"
             ;;
+        cdroms)
+            info "removing cdroms entries"
+            __epm_removerepo_alt_grepremove "/^[[:space:]]*rpm[[:space:]]+cdrom:/" "/^cdrom(s)?$/"
+            ;;
         tasks)
-            info "remove task repos"
-            __epm_removerepo_alt_grepremove " repo/[0-9]+/"
+            info "removing tasks' repos"
+            __epm_removerepo_alt_grepremove " repo/[0-9]+/" "/tasks/[0-9]+ " "/[0-9]+[ /]build/repo"
             ;;
         task)
             shift
-            __epm_removerepo_alt_grepremove " repo/$1/"
+            __epm_removerepo_alt_grepremove " repo/$1/" "/tasks/$1 " "/$1[ /]build/repo"
             ;;
         -*)
             fatal "epm removerepo: no options are supported"
             ;;
         *)
-            __epm_removerepo_alt_grepremove "$*"
+            if echo "$*" | grep -q "^rpm" ] ; then
+                __epm_removerepo_apt "$*"
+            else
+                info "removing source.list entries by mask '$*'"
+                __epm_removerepo_alt_grepremove "$*"
+            fi
             ;;
     esac
 
@@ -10112,12 +10203,8 @@ case $BASEDISTRNAME in
         ;;
     "astra")
         echo "Use workaround for AstraLinux"
-        [ -n "$*" ] || fatal "empty repo name"
         # aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
-        sudocmd sed -i -e "s|.*$*.*||" /etc/apt/sources.list
-        if [ -d /etc/apt/sources.list.d ] && ls /etc/apt/sources.list.d/*.list >/dev/null 2>/dev/null ; then
-            sudocmd sed -i -e "s|.*$*.*||" /etc/apt/sources.list.d/*.list
-        fi
+        __epm_removerepo_apt "$@"
         return
         ;;
 esac;
@@ -10759,9 +10846,7 @@ epm_repo()
         epm_addkey "$@"
         ;;
     clean)                            # HELPCMD: remove temp. repos (tasks and CD-ROMs)
-        [ "$BASEDISTRNAME" = "alt" ] || fatal "TODO: only ALT now is supported"
-        # TODO: check for ALT
-        sudocmd apt-repo $dryrun clean
+        epm_repoclean "$@"
         ;;
     save)                             # HELPCMD: save sources lists to a temp place
         epm_reposave "$@"
@@ -11157,14 +11242,12 @@ __repofix_filter_vendor()
 __replace_alt_version_in_repo()
 {
     local i
-    assure_exists apt-repo
     #echo "Upgrading $DISTRNAME from $1 to $2 ..."
-    a='' apt-repo list | sed -E -e "s|($1)|{\1}->{$2}|g" | grep -E --color -- "$1"
+    epm --quiet repo list | sed -E -e "s|($1)|{\1}->{$2}|g" | grep -E --color -- "$1"
     # ask and replace only we will have changes
-    if a='' apt-repo list | grep -E -q -- "$1" ; then
+    if epm --quiet repo list | grep -E -q -- "$1" ; then
         __replace_text_in_alt_repo "/^ *#/! s!$1!$2!g"
     fi
-    #docmd apt-repo list
 }
 
 __alt_replace_sign_name()
@@ -11286,7 +11369,7 @@ __change_repo()
     local SHORT="$1"
     local REPLTO="$2"
     local NN
-    a="" apt-repo list | grep -v $SHORT | grep -v "file:/" | while read nn ; do
+    epm --quiet repo list | grep -v $SHORT | grep -v "file:/" | while read nn ; do
         NN="$(__subst_with_repo_url "$nn" "$REPLTO")"
         [ "$NN" = "$nn" ] && continue
         epm addrepo "$NN" && epm removerepo "$nn" || return 1
@@ -11339,14 +11422,13 @@ epm_repofix()
 
 case $BASEDISTRNAME in
     "alt")
-        assure_exists apt-repo
-        [ -n "$quiet" ] || docmd apt-repo list
+        [ -n "$quiet" ] || docmd epm repo list
         assure_root
 
         __fix_alt_sources_list /etc/apt/sources.list
         __fix_alt_sources_list /etc/apt/sources.list.d/*.list
 
-        [ -n "$quiet" ] || docmd apt-repo list
+        [ -n "$quiet" ] || docmd epm repo list
         return
         ;;
 esac
@@ -11357,6 +11439,12 @@ case $PMTYPE in
         ;;
 esac
 
+}
+
+epm_repoclean()
+{
+    epm repo remove tasks
+    epm repo remove cdroms
 }
 
 # File bin/epm-repoindex:
@@ -11481,20 +11569,24 @@ epm_repocreate()
 
 __print_apt_sources_list()
 {
+    local regexp="$1"
+    shift
     local i
     for i in $@ ; do
         test -r "$i" || continue
         grep -v -- "^.*#" $i
-    done | grep -v -- "^ *\$"
+    done | grep -v -- "^ *\$" | grep -E "$regexp"
 }
 
 __print_apt_sources_list_full()
 {
+    local regexp="$1"
+    shift
     local i
     for i in $@ ; do
         test -r "$i" || continue
         grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i
-    done | grep -v -- "^ *\$"
+    done | grep -v -- "^ *\$" | grep -E "$regexp"
 }
 
 __print_apt_sources_list_list()
@@ -11515,21 +11607,25 @@ __info_cyan()
 
 __print_apt_sources_list_verbose()
 {
+    local regexp="$1"
+    shift
     local i
     for i in $@ ; do
         test -r "$i" || continue
         grep -v -- "^.*#" $i | grep -v -- "^ *\$" | grep -q . && __info_cyan "$i:" || continue
-        grep -v -- "^.*#" $i | grep -v -- "^ *\$" | sed -e 's|^|    |'
+        grep -v -- "^.*#" $i | grep -v -- "^ *\$" | sed -e 's|^|    |' | grep -E --color "$regexp"
     done
 }
 
 __print_apt_sources_list_verbose_full()
 {
+    local regexp="$1"
+    shift
     local i
     for i in $@ ; do
         test -r "$i" || continue
         grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i | grep -v -- "^ *\$" | grep -q . && echo && __info_cyan "$i:" || continue
-        grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i | grep -v -- "^ *\$" | sed -e 's|^|    |' -e "s|\(.*#.*\)|$(set_color $WHITE)\1$(restore_color)|"
+        grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i | grep -v -- "^ *\$" | sed -e 's|^|    |' -e "s|\(.*#.*\)|$(set_color $WHITE)\1$(restore_color)|" | grep -E --color "$regexp"
     done
 }
 
@@ -11538,18 +11634,19 @@ print_apt_sources_list()
     local LISTS='/etc/apt/sources.list /etc/apt/sources.list.d/*.list'
 
     if [ "$1" = "-a" ] || [ "$1" = "--all" ] ; then
+        shift
         if [ -n "$quiet" ] ; then
-            __print_apt_sources_list_full $LISTS
+            __print_apt_sources_list_full "$*" $LISTS
         else
-            __print_apt_sources_list_verbose_full $LISTS
+            __print_apt_sources_list_verbose_full "$*" $LISTS
         fi
         return
     fi
 
     if [ -n "$quiet" ] ; then
-        __print_apt_sources_list $LISTS
+        __print_apt_sources_list "$*" $LISTS
     else
-        __print_apt_sources_list_verbose $LISTS
+        __print_apt_sources_list_verbose "$*" $LISTS
     fi
 }
 
@@ -11561,12 +11658,11 @@ epm_repolist()
 
 case $PMTYPE in
     apt-rpm)
-        #assure_exists apt-repo
         if tasknumber "$1" >/dev/null ; then
+            # FIXME: unexpectedly, a list of packages instead of repositories.
             get_task_packages "$@"
         else
             print_apt_sources_list "$@"
-            #docmd apt-repo list
         fi
         ;;
     deepsolver-rpm)
@@ -11783,17 +11879,19 @@ __restore_alt_repo_lists()
     info 'Restoring copy of all sources lists from $SAVELISTDIR ...'
     local i
     [ -d "$SAVELISTDIR/apt" ] || return 0
-    mkdir -p $SAVELISTDIR/apt/ $SAVELISTDIR/apt/sources.list.d/
-    for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
+
+    mkdir -p /etc/apt/ /etc/apt/sources.list.d/
+    for i in $SAVELISTDIR/apt/sources.list $SAVELISTDIR/apt/sources.list.d/*.list ; do
         [ -s "$i" ] || continue
-        local DD="$(echo "$i" | sed -e "s|/etc|$SAVELISTDIR|")"
+        local DD="$(echo "$i" | sed -e "s|$SAVELISTDIR|/etc|")"
         # restore only if there are differences
-        if diff -q "$DD" "$i" >/dev/null ; then
-            rm -f $verbose "$DD"
+        if diff -q "$i" "$DD" >/dev/null ; then
+            rm -f $verbose "$i"
         else
-            mv $verbose "$DD" "$i" || warning 'Can'\''t restore $i file'
+            mv $verbose "$i" "$DD" || warning 'Can'\''t restore $i file'
         fi
     done
+    rmdir "$SAVELISTDIR/apt/sources.list.d" "$SAVELISTDIR/apt"
 }
 
 __on_error_restore_alt_repo_lists()
@@ -11915,7 +12013,7 @@ get_linked_shared_libs()
     assure_exists readelf binutils
     #is_command readelf || fatal "Can't get required shared library: readelf is missed. Try install binutils package."
     #ldd "$exe" | sed -e 's|[[:space:]]*||' | grep "^lib.*[[:space:]]=>[[:space:]]\(/usr/lib\|/lib\)" | sed -e 's|[[:space:]].*||'
-    LC_ALL=C readelf -d "$1" | grep "(NEEDED)" | grep "Shared library:" | sed -e 's|.*Shared library: \[||' -e 's|\]$||' | grep "^lib"
+    LC_ALL=C a="" readelf -d "$1" | grep "(NEEDED)" | grep "Shared library:" | sed -e 's|.*Shared library: \[||' -e 's|\]$||' | grep "^lib"
 }
 
 __epm_elf32_requires()
@@ -11973,7 +12071,7 @@ epm_requires_files()
                 ;;
             pisi)
                 showcmd pisi info $fl
-                LC_ALL=C pisi info $fl | grep "^Dependencies" | head -n1 | sed -e "s|Dependencies[[:space:]]*: ||"
+                LC_ALL=C a='' pisi info $fl | grep "^Dependencies" | head -n1 | sed -e "s|Dependencies[[:space:]]*: ||"
                 ;;
             ELF)
                 __epm_elf_requires $fl
@@ -12037,6 +12135,7 @@ case $PMTYPE in
         fi
         ;;
     pacman)
+        assure_exists pactree pacman-contrib
         CMD="pactree"
         ;;
     apt-dpkg|aptitude-dpkg)
@@ -12072,7 +12171,7 @@ case $PMTYPE in
         ;;
     pisi)
         showcmd pisi info $pkg_names
-        LC_ALL=C pisi info $pkg_names | grep "^Dependencies" | sed -e "s|Dependencies[[:space:]]*: ||"
+        LC_ALL=C a='' pisi info $pkg_names | grep "^Dependencies" | sed -e "s|Dependencies[[:space:]]*: ||"
         return
         ;;
     xbps)
@@ -13079,26 +13178,50 @@ tasknumber()
     isnumber "$num" && echo "$*"
 }
 
-get_task_arepo_packages()
-{
-    local res
-    assure_exists apt-repo
+ALTTASKURL="http://git.altlinux.org/tasks"
 
-    info "TODO: please, improve apt-repo to support arepo (i586-) packages for apt-repo list task"
-    showcmd "eget -q -O- http://git.altlinux.org/tasks/$tn/plan/arepo-add-x86_64-i586 | cut -f1"
-    # TODO: retrieve one time
-    res="$(eget -q -O- http://git.altlinux.org/tasks/$tn/plan/arepo-add-x86_64-i586 2>/dev/null)" || return #{ warning "There is a download error for x86_64-i586 arepo." ; return ; }
+get_task_status()
+{
+    local tn="$1"
+    docmd eget --check-url $ALTTASKURL/$tn/plan/add-bin
+}
+
+get_task_arepo_status()
+{
+    local tn="$1"
+    docmd eget --check-url $ALTTASKURL/$tn/plan/arepo-add-x86_64-i586
+}
+
+get_task_packages_list()
+{
+    local tn="$1"
+    local res
+
+    showcmd "eget -q -O- $ALTTASKURL/$tn/plan/add-bin"
+    res="$(eget -q -O- $ALTTASKURL/$tn/plan/add-bin)" || return
+    echo "$res" | cut -f1-3 | grep -E "(noarch|$DISTRARCH)$" | cut -f1
+}
+
+get_task_arepo_packages_list()
+{
+    local tn="$1"
+    local res
+
+    showcmd "eget -q -O- $ALTTASKURL/$tn/plan/arepo-add-x86_64-i586"
+    res="$(eget -q -O- $ALTTASKURL/$tn/plan/arepo-add-x86_64-i586)" || return
     echo "$res" | cut -f1
 }
+
 
 get_task_packages()
 {
     local tn
     for tn in $(tasknumber "$@") ; do
-        showcmd apt-repo list task "$tn"
-        a='' apt-repo list task "$tn" >/dev/null || continue
-        a='' apt-repo list task "$tn"
-        [ "$DISTRARCH" = "x86_64" ] && get_task_arepo_packages "$tn"
+        get_task_status "$tn" || continue
+        get_task_packages_list "$tn"
+        [ "$DISTRARCH" = "x86_64" ] || continue
+        get_task_arepo_status "$tn" || continue
+        get_task_arepo_packages_list "$tn"
     done
 }
 
@@ -13346,8 +13469,9 @@ __epm_check_vendor()
             # it is missed package probably (package remove case)
             if is_installed "$i" ; then
                 warning 'Can'\''t get any info for $i package. Scripts are DISABLED for package $bi. Use --scripts if you need run scripts from such packages.'
+                noscripts="--noscripts"
             fi
-            noscripts="--noscripts"
+            # don't set --noscripts for non existent packages (will run scripts when remove by provides, see https://github.com/Etersoft/eepm/issues/236)
             continue
         fi
 
@@ -14390,6 +14514,38 @@ __check_upgrade_conditions()
     return 0
 }
 
+epm_upgrade_alt_tasks()
+{
+
+    local installlist="$(get_task_packages "$@")"
+
+    [ -n "$verbose" ] && info "Packages from task(s): $installlist"
+
+    if [ -z "$full" ] ; then
+        # hack: drop -devel packages to avoid package provided by multiple packages
+        installlist="$(estrlist reg_exclude ".*-devel .*-devel-static .*-checkinstall .*-debuginfo" "$installlist")"
+    fi
+
+    # install only installed packages (simulate upgrade packages)
+    installlist="$(get_only_installed_packages "$installlist")"
+
+    [ -n "$verbose" ] && info "Packages to upgrade: $installlist"
+
+    if [ -z "$installlist" ] ; then
+        warning 'There is no installed packages for upgrade from task $*'
+        return 22
+    fi
+
+    local res
+    try_change_alt_repo
+    epm_addrepo "$@"
+    __epm_update
+    (pkg_names="$installlist" epm_install)
+    res=$?
+    epm_removerepo "$@"
+    end_change_alt_repo
+    return $res
+}
 
 epm_upgrade()
 {
@@ -14402,26 +14558,7 @@ epm_upgrade()
 
     if [ "$BASEDISTRNAME" = "alt" ] ; then
         if tasknumber "$@" >/dev/null ; then
-
-            local installlist="$(get_task_packages $*)"
-            # hack: drop -devel packages to avoid package provided by multiple packages
-            installlist="$(estrlist reg_exclude ".*-devel .*-devel-static" "$installlist")"
-            [ -n "$verbose" ] && info "Packages from task(s): $installlist"
-            # install only installed packages (simulate upgrade packages)
-            installlist="$(get_only_installed_packages "$installlist")"
-            [ -n "$verbose" ] && info "Packages to upgrade: $installlist"
-            if [ -z "$installlist" ] ; then
-                warning 'There is no installed packages for upgrade from task $*'
-                return 22
-            fi
-
-            try_change_alt_repo
-            epm_addrepo "$@"
-            __epm_update
-            (pkg_names="$installlist" epm_install) || fatal "Can't update repo"
-            epm_removerepo "$@"
-            end_change_alt_repo
-
+            epm_upgrade_alt_tasks "$@"
             return
         fi
 
@@ -14499,7 +14636,7 @@ epm_upgrade()
         CMD="zypper $(subst_option non_interactive --non-interactive) dist-upgrade"
         ;;
     pacman)
-        CMD="pacman -S -u $force"
+        CMD="pacman -S -u $force $(subst_option non_interactive --noconfirm)"
         ;;
     aura)
         CMD="aura -A -u"
@@ -14662,13 +14799,13 @@ case $PMTYPE in
     eopkg)
         showcmd eopkg info $pkg
         # eopkg info prints it only from repo info
-        LC_ALL=C a= eopkg info $pkg | grep "^Reverse Dependencies" | sed -e "s|Reverse Dependencies[[:space:]]*: ||" | grep -v "^$"
+        LC_ALL=C a='' eopkg info $pkg | grep "^Reverse Dependencies" | sed -e "s|Reverse Dependencies[[:space:]]*: ||" | grep -v "^$"
         return
         ;;
     pisi)
         showcmd pisi info $pkg
         # pisi info prints it only from repo info
-        LC_ALL=C pisi info $pkg | grep "^Reverse Dependencies" | sed -e "s|Reverse Dependencies[[:space:]]*: ||" | grep -v "^$"
+        LC_ALL=C a='' pisi info $pkg | grep "^Reverse Dependencies" | sed -e "s|Reverse Dependencies[[:space:]]*: ||" | grep -v "^$"
         return
         ;;
     xbps)
@@ -15499,7 +15636,7 @@ case "$DIST_ARCH" in
     armv7*)
         # TODO: use uname only
         # uses binutils package
-        if is_command readelf && [ -z "$(readelf -A /proc/self/exe | grep Tag_ABI_VFP_args)" ] ; then
+        if is_command readelf && [ -z "$(a='' readelf -A /proc/self/exe | grep Tag_ABI_VFP_args)" ] ; then
             DIST_ARCH="armel"
         else
             DIST_ARCH="armhf"
@@ -15649,7 +15786,7 @@ get_virt()
 {
     local VIRT
     if is_command systemd-detect-virt ; then
-        VIRT="$(systemd-detect-virt)"
+        VIRT="$(a='' systemd-detect-virt)"
         [ "$VIRT" = "none" ] && echo "(host system)" && return
         [ -z "$VIRT" ] && echo "(unknown)" && return
         echo "$VIRT" && return
@@ -18771,6 +18908,7 @@ nodeps=
 noremove=
 dryrun=
 force=
+full=
 repack=
 norepack=
 install=
@@ -19180,6 +19318,9 @@ check_option()
     --force)              # HELPOPT: force install/remove package (f.i., override)
         force="--force"
         ;;
+    --full)               # HELPOPT: do full operation (f.i., use all packages from task, without excludes)
+        full="--full"
+        ;;
     --noremove|--no-remove)  # HELPOPT: exit if any packages are to be removed during upgrade
         noremove="--no-remove"
         ;;
@@ -19310,7 +19451,7 @@ if [ -n "$quiet" ] ; then
 fi
 
 # fill
-export EPM_OPTIONS="$nodeps $force $verbose $debug $quiet $interactive $non_interactive $save_only $download_only $force_overwrite $manual_requires"
+export EPM_OPTIONS="$nodeps $force $full $verbose $debug $quiet $interactive $non_interactive $save_only $download_only $force_overwrite $manual_requires"
 
 # if input is not console and run script from file, get pkgs from stdin too
 if [ ! -n "$inscript" ] && [ -p /dev/stdin ] && [ "$EPMMODE" != "pipe" ] ; then

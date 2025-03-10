@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.11"
+EPMVERSION="3.64.12"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -2575,7 +2575,7 @@ case "$DIST_ARCH" in
     armv7*)
         # TODO: use uname only
         # uses binutils package
-        if is_command readelf && [ -z "$(readelf -A /proc/self/exe | grep Tag_ABI_VFP_args)" ] ; then
+        if is_command readelf && [ -z "$(a='' readelf -A /proc/self/exe | grep Tag_ABI_VFP_args)" ] ; then
             DIST_ARCH="armel"
         else
             DIST_ARCH="armhf"
@@ -2725,7 +2725,7 @@ get_virt()
 {
     local VIRT
     if is_command systemd-detect-virt ; then
-        VIRT="$(systemd-detect-virt)"
+        VIRT="$(a='' systemd-detect-virt)"
         [ "$VIRT" = "none" ] && echo "(host system)" && return
         [ -z "$VIRT" ] && echo "(unknown)" && return
         echo "$VIRT" && return
