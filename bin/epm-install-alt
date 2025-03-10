@@ -198,7 +198,7 @@ epm_install_alt_names()
     epm_install_alt_kernel_module $kmlist || return
 }
 
-
+# Unused hack for apt-repo
 # apt-repo with non_interactive support
 apt_repo_prepare()
 {
@@ -218,15 +218,45 @@ apt_repo_after()
 }
 
 
+# copied from epm_upgrade_alt_tasks()
 epm_install_alt_tasks()
 {
+    load_helper epm-addrepo
+    load_helper epm-reposave
+    load_helper epm-removerepo
+    load_helper epm-Install
+
+    local installlist="$(get_task_packages "$@")"
+
+    [ -n "$verbose" ] && info "Packages from task(s): $installlist"
+
+    if [ -n "$full" ] ; then
+        installlist="$(estrlist reg_exclude ".*-checkinstall .*-debuginfo" "$installlist")"
+    else
+        # hack: drop -devel packages to avoid package provided by multiple packages
+        installlist="$(estrlist reg_exclude ".*-devel .*-devel-static .*-checkinstall .*-debuginfo" "$installlist")"
+    fi
+
+    # TODO: need we this option?
+    #if [ -z "$force" ] ; then
+    #    # skip i586- on install
+    installlist="$(estrlist reg_exclude "i586-.*" "$installlist")"
+    #fi
+
+    [ -n "$verbose" ] && info "Packages to install: $installlist"
+
+    if [ -z "$installlist" ] ; then
+        warning 'There is no installed packages for upgrade from task $*'
+        return 22
+    fi
+
     local res
-    # TODO: don't use apt-repo
-    apt_repo_prepare
-
-    sudocmd_foreach "apt-repo test" $(tasknumber "$@")
+    try_change_alt_repo
+    epm_addrepo "$@"
+    __epm_update
+    (pkg_names="$installlist" epm_install)
     res=$?
-
-    apt_repo_after
+    epm_removerepo "$@"
+    end_change_alt_repo
     return $res
 }
