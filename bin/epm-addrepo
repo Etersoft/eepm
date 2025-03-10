@@ -186,6 +186,26 @@ Examples:
     return
 }
 
+# like apt-add-repository on deb systems
+__epm_addrepo_apt()
+{
+    local repo="$*"
+
+    epm repo list --quiet 2>/dev/null | grep -q -F "$repo" && return 0
+
+    if [ -n "$dryrun" ] ; then
+        echo "$repo"
+        return
+    fi
+
+    local sc="sudocmd"
+    [ -z "$quiet" ] || sc="sudorun"
+
+    [ -z "$(tail -n1 /etc/apt/sources.list)" ] || echo "" | $sc tee -a /etc/apt/sources.list
+    echo "$repo" | $sc tee -a /etc/apt/sources.list
+
+}
+
 __epm_addrepo_altlinux()
 {
     local repo="$*"
@@ -370,12 +390,9 @@ __epm_addrepo_astra()
             ;;
     esac
 
-    echo "Use workaround for AstraLinux ..."
+    #echo "Use workaround for AstraLinux ..."
     # aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
-    # don't add again
-    epm repo list --quiet | grep -q -F "$repo" && return 0
-    [ -z "$(tail -n1 /etc/apt/sources.list)" ] || echo "" | sudocmd tee -a /etc/apt/sources.list
-    echo "$repo" | sudocmd tee -a /etc/apt/sources.list
+    __epm_addrepo_apt "$repo"
     return
 }
 
