@@ -33,12 +33,13 @@ WantedBy=xdg-desktop-autostart.target
 EOF
 
 epm assure patchelf
+epm assure ldd glibc-utils
 
 BOOST_REPO_VERSION=$(LC_ALL=C epm info boost | grep -oP '^Version\s*:\s*\K[^\s]+' | sed 's/^[0-9]*://g' | cut -d '-' -f 1)
-BOOST_FEDORA_VERSION=$(ldd usr/bin/sunshine | grep -oP 'libboost_[^ ]+\.so\.\K[0-9]+\.[0-9]+\.[0-9]+' | sort -u)
-BOOST_LIBS=$(ldd usr/bin/sunshine | grep -oP 'libboost_[^ ]+\.so' | sort -u | sed 's/libboost_//; s/\.so//')
+BOOST_FEDORA_VERSION=$(a='' ldd usr/bin/sunshine | grep -oP 'libboost_[^ ]+\.so\.\K[0-9]+\.[0-9]+\.[0-9]+' | sort -u)
+BOOST_LIBS=$(a='' ldd usr/bin/sunshine | grep -oP 'libboost_[^ ]+\.so' | sort -u | sed 's/libboost_//; s/\.so//')
 
-MINIUPNPC_FEDORA_VERSION=$(ldd usr/bin/sunshine | grep -oP 'libminiupnpc\.so\.\K[0-9]+')
+MINIUPNPC_FEDORA_VERSION=$(a='' ldd usr/bin/sunshine | grep -oP 'libminiupnpc\.so\.\K[0-9]+')
 MINIUPNPC_REPO_VERSION=$(LC_ALL=C epm search miniupnpc |  grep -Eo 'libminiupnpc[0-9]+' | grep -Eo '[0-9]+' | sort -V | tail -n1)
 
 if [ -z $MINIUPNPC_REPO_VERSION ] ; then

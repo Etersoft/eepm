@@ -424,9 +424,11 @@ __get_library_provides()
 {
     local fdir="$1"
 
+    epm assure objdump binutils || fatal "Can't install needed binutils package"
+
     info "  Getting internal provides ..."
     for libso in $(find "$fdir" -name "lib*.so*") ; do
-        objdump -p "$libso" | grep "SONAME" | sed -e 's|.* ||'
+        a="" objdump -p "$libso" | grep "SONAME" | sed -e 's|.* ||'
         basename "$libso"
     done
 

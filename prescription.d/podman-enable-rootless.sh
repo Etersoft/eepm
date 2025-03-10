@@ -24,7 +24,7 @@ a= setcap cap_setgid+ep /usr/bin/newgidmap
 
 for i in $users ; do
     if ! grep -q $i /etc/subuid /etc/subgid ; then
-        usermod --add-subuids 100000-165535 --add-subgids 100000-165535 "$i"
+        a= usermod --add-subuids 100000-165535 --add-subgids 100000-165535 "$i"
     fi
 done
 

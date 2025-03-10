@@ -26,7 +26,7 @@ __epm_apt_set_lists_pkg()
     if [ "$BASEDISTRNAME" = "alt" ] ; then
         pkg="pkglist"
         # see update-kernel: Use Dir::State::lists for apt update freshness check (ALT bug 46987)
-        eval "$(apt-config shell LISTS Dir::State::lists/f)"
+        eval "$(a='' apt-config shell LISTS Dir::State::lists/f)"
     fi
 }
 

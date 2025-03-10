@@ -20,8 +20,8 @@
 load_helper epm-check_updated_repo
 load_helper epm-sh-warmup
 
-EFI=$(bootctl -p 2>/dev/null)
-sdboot_loader_id=$(bootctl status 2>/dev/null | grep -oP '(?<=id: ).*')
+EFI=$(a="" bootctl -p 2>/dev/null)
+sdboot_loader_id=$(a="" bootctl status 2>/dev/null | grep -oP '(?<=id: ).*')
 
 if [ -f "$EFI/loader/entries/$sdboot_loader_id" ]; then
     entry_file="$EFI/loader/entries/$sdboot_loader_id"

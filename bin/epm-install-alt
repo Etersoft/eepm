@@ -117,7 +117,7 @@ get_latest_kernel_rel()
     kmaxver=
     while read version
     do
-        comparever="$(rpmevrcmp "$kmaxver" "$version")"
+        comparever="$(a='' rpmevrcmp "$kmaxver" "$version")"
         [ "$comparever" -lt 0 ] && kmaxver="$version" ||:
     done <<<"$(epm print version-release for package kernel-image-$kernel_flavour)"
     [ -z "$kmaxver" ] && echo "$rrel" && return
