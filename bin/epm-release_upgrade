@@ -85,13 +85,13 @@ __p11_upgrade_fix()
     # файл /etc/openssl/openssl.cnf из устанавливаемого пакета openssl-config-3.2.0-alt1.noarch конфликтует с файлом из пакета libcrypto10-1.0.2u-alt1.p9.2.x86_64
     docmd epm remove libcrypto10 libssl10
 
-    # libcrypto1.1 fix
+    # libcrypto1.1 workaround
     docmd epm repo save
     docmd epm repo rm all
-    docmd apt-repo add branch sisyphus 2024/05/22
+    docmd epm repo add archive sisyphus 2024/05/22
     docmd epm update
     docmd epm install libcrypto1.1
-    docmd epm repo rm all
+    #docmd epm repo rm all
     docmd epm repo restore
 }
 
