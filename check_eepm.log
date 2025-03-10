@@ -1,10 +1,15 @@
-coreutils
 diffutils
 eepm
+eget
+erc
+estrlist
 /etc/bashrc
 file
 findutils
 gawk
+gettext
 grep
 gzip
+info
+rpm
 sed

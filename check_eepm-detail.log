@@ -1,0 +1,2103 @@
+
+==== bin/epm-addrepo:
+eget
+eepm
+grep
+info
+sed
+
+==== bin/epm-assure:
+eepm
+info
+
+==== bin/epm-audit:
+
+==== bin/epm-autoorphans:
+eepm
+estrlist
+grep
+info
+sed
+findutils
+
+==== bin/epm-autoremove:
+eepm
+eepm
+estrlist
+grep
+info
+sed
+
+==== bin/epm-changelog:
+grep
+
+==== bin/epm-check:
+eepm
+info
+
+==== bin/epm-checkpkg:
+eepm
+file
+grep
+info
+findutils
+
+==== bin/epm-checksystem:
+
+==== bin/epm-check_updated_repo:
+estrlist
+findutils
+grep
+
+==== bin/epm-clean:
+info
+
+==== bin/epm-conflicts:
+grep
+sed
+
+==== bin/epm-create_fake:
+eepm
+
+==== bin/epm-dedup:
+eepm
+grep
+info
+sed
+
+==== bin/epm-desktop:
+gawk
+eget
+eepm
+grep
+sed
+findutils
+
+==== bin/epm-downgrade:
+eepm
+info
+
+==== bin/epm-Downgrade:
+
+==== bin/epm-download:
+eget
+eepm
+estrlist
+grep
+info
+sed
+findutils
+
+==== bin/epm-epm_install:
+eget
+eepm
+info
+
+==== bin/epm-filelist:
+erc
+grep
+info
+sed
+
+==== bin/epm-full_upgrade:
+eepm
+info
+eepm
+
+==== bin/epm-history:
+eepm
+estrlist
+grep
+sed
+
+==== bin/epm-info:
+gawk
+
+==== bin/epm-install:
+eepm
+grep
+info
+
+==== bin/epm-Install:
+info
+
+==== bin/epm-install-alt:
+eepm
+estrlist
+grep
+info
+rpm
+sed
+
+==== bin/epm-install-apt-dpkg:
+
+==== bin/epm-installed:
+
+==== bin/epm-install-emerge:
+grep
+sed
+
+==== bin/epm-install-print-command:
+
+==== bin/epm-install-rpm:
+info
+
+==== bin/epm-kernel_update:
+gawk
+grep
+info
+sed
+
+==== bin/epm-list:
+
+==== bin/epm-list_available:
+grep
+sed
+
+==== bin/epm-list_upgradable:
+grep
+sed
+
+==== bin/epm-mark:
+eepm
+grep
+info
+sed
+
+==== bin/epm-moo:
+eepm
+
+==== bin/epm-optimize:
+
+==== bin/epm-pack:
+
+==== bin/epm-packages:
+grep
+sed
+findutils
+
+==== bin/epm-play:
+eepm
+grep
+info
+sed
+
+==== bin/epm-play-common:
+grep
+
+==== bin/epm-policy:
+
+==== bin/epm-prescription:
+
+==== bin/epm-print:
+findutils
+grep
+sed
+findutils
+
+==== bin/epm-programs:
+findutils
+findutils
+
+==== bin/epm-provides:
+grep
+sed
+
+==== bin/epm-query:
+grep
+sed
+
+==== bin/epm-query_file:
+grep
+info
+sed
+
+==== bin/epm-query_package:
+
+==== bin/epm-reinstall:
+
+==== bin/epm-release_downgrade:
+eepm
+info
+
+==== bin/epm-release_upgrade:
+eepm
+grep
+info
+sed
+eepm
+
+==== bin/epm-remove:
+eepm
+grep
+info
+
+==== bin/epm-remove_old_kernels:
+info
+
+==== bin/epm-removerepo:
+eepm
+grep
+info
+sed
+
+==== bin/epm-repack:
+gawk
+eepm
+grep
+info
+sed
+
+==== bin/epm-repack-deb:
+grep
+info
+sed
+
+==== bin/epm-repack-rpm:
+eepm
+estrlist
+grep
+info
+sed
+sed
+
+==== bin/epm-repo:
+eepm
+
+==== bin/epm-repo-addkey:
+eget
+grep
+
+==== bin/epm-repodisable:
+eepm
+grep
+info
+sed
+
+==== bin/epm-repoenable:
+eepm
+grep
+info
+sed
+
+==== bin/epm-repofix:
+eepm
+grep
+sed
+
+==== bin/epm-repoindex:
+eepm
+gzip
+sed
+
+==== bin/epm-repolist:
+grep
+info
+sed
+
+==== bin/epm-repopkg:
+eepm
+sed
+
+==== bin/epm-reposave:
+diffutils
+eepm
+info
+sed
+
+==== bin/epm-requires:
+file
+grep
+sed
+
+==== bin/epm-restore:
+eget
+estrlist
+file
+grep
+info
+sed
+
+==== bin/epm-search:
+eepm
+grep
+sed
+
+==== bin/epm-search_file:
+erc
+grep
+info
+sed
+
+==== bin/epm-sh-altlinux:
+eget
+grep
+sed
+
+==== bin/epm-sh-altlinux-contents-index:
+gawk
+grep
+info
+sed
+
+==== bin/epm-sh-functions:
+gawk
+file
+gettext
+grep
+sed
+findutils
+
+==== bin/epm-sh-install:
+eepm
+estrlist
+grep
+sed
+findutils
+
+==== bin/epm-sh-warmup:
+info
+
+==== bin/epm-simulate:
+grep
+info
+
+==== bin/epm-site:
+grep
+sed
+
+==== bin/epm-stats:
+
+==== bin/epm-status:
+eepm
+grep
+sed
+
+==== bin/epm-tool:
+eget
+erc
+erc
+estrlist
+
+==== bin/epm-update:
+eepm
+info
+
+==== bin/epm-upgrade:
+eepm
+estrlist
+info
+
+==== bin/epm-Upgrade:
+
+==== bin/epm-whatdepends:
+grep
+sed
+
+==== bin/epm-whatprovides:
+grep
+
+==== bin/distr_info:
+gawk
+grep
+sed
+findutils
+
+==== bin/serv-cat:
+
+==== bin/serv-common:
+
+==== bin/serv-disable:
+info
+
+==== bin/serv-edit:
+
+==== bin/serv-enable:
+info
+
+==== bin/serv-exists:
+
+==== bin/serv-list:
+grep
+info
+sed
+
+==== bin/serv-list_all:
+grep
+sed
+
+==== bin/serv-list_failed:
+
+==== bin/serv-list_startup:
+
+==== bin/serv-log:
+
+==== bin/serv-off:
+info
+
+==== bin/serv-on:
+info
+
+==== bin/serv-print:
+
+==== bin/serv-reload:
+info
+
+==== bin/serv-restart:
+
+==== bin/serv-start:
+
+==== bin/serv-status:
+grep
+
+==== bin/serv-stop:
+
+==== bin/serv-test:
+
+==== bin/serv-try_restart:
+info
+
+==== bin/serv-usage:
+
+==== bin/tools_eget:
+grep
+sed
+
+==== bin/tools_erc:
+/etc/bashrc
+sed
+
+==== bin/tools_ercat:
+/etc/bashrc
+eepm
+
+==== bin/tools_estrlist:
+/etc/bashrc
+grep
+sed
+
+==== bin/tools_json:
+grep
+sed
+
+==== bin/tools_yaml:
+/etc/bashrc
+gawk
+grep
+sed
+
+==== play.d/1c-connect.sh:
+
+==== play.d/64gram.sh:
+eget
+eepm
+
+==== play.d/aimp.sh:
+eepm
+
+==== play.d/aksusbd.sh:
+
+==== play.d/alivecolors.sh:
+eepm
+
+==== play.d/alteroffice.sh:
+eepm
+
+==== play.d/angie.sh:
+eepm
+
+==== play.d/anilibrix.sh:
+eget
+
+==== play.d/anydesk.sh:
+eget
+eepm
+
+==== play.d/anytype.sh:
+eget
+
+==== play.d/arduino-ide.sh:
+eget
+
+==== play.d/assistant.sh:
+eget
+eepm
+eepm
+grep
+sed
+
+==== play.d/atom.sh:
+eget
+grep
+
+==== play.d/audiorelay.sh:
+
+==== play.d/ayugram.sh:
+eget
+
+==== play.d/balena-etcher.sh:
+eget
+
+==== play.d/bastyon.sh:
+eget
+
+==== play.d/bellsoft-java11-full.sh:
+
+==== play.d/bitrix24.sh:
+eepm
+
+==== play.d/bitwarden.sh:
+eget
+eepm
+
+==== play.d/bitwig-studio.sh:
+eget
+grep
+
+==== play.d/brave.sh:
+eget
+eepm
+
+==== play.d/cascadeur.sh:
+eget
+grep
+sed
+
+==== play.d/chatgpt-desktop.sh:
+eget
+
+==== play.d/chrome-remote-desktop.sh:
+
+==== play.d/chrome.sh:
+
+==== play.d/chromium-codecs-ffmpeg-extra.sh:
+eepm
+
+==== play.d/chromium-gost.sh:
+eget
+
+==== play.d/clion.sh:
+
+==== play.d/clipgrab.sh:
+eget
+
+==== play.d/cnrdrvcups-ufr2.sh:
+
+==== play.d/code.sh:
+eepm
+
+==== play.d/codium.sh:
+eget
+eepm
+
+==== play.d/commfort-client.sh:
+eget
+grep
+sed
+
+==== play.d/common-jetbrains.sh:
+eget
+eepm
+grep
+sed
+
+==== play.d/common-outformat.sh:
+grep
+
+==== play.d/common.sh:
+gawk
+grep
+sed
+
+==== play.d/cuda-z.sh:
+eget
+eepm
+
+==== play.d/cups-drivers-katusham247.sh:
+
+==== play.d/cursor.sh:
+
+==== play.d/dbeaver.sh:
+eepm
+
+==== play.d/deltachat.sh:
+eget
+eepm
+
+==== play.d/discord.sh:
+eget
+
+==== play.d/djv.sh:
+eget
+eepm
+
+==== play.d/docker-desktop.sh:
+eepm
+
+==== play.d/draw.io.sh:
+eget
+
+==== play.d/duckstation.sh:
+eget
+grep
+
+==== play.d/duplicati.sh:
+eget
+grep
+
+==== play.d/eagle.sh:
+eget
+
+==== play.d/edge.sh:
+
+==== play.d/element-desktop.sh:
+eget
+eepm
+
+==== play.d/epson-printer-utility.sh:
+eepm
+
+==== play.d/epsonscan2-non-free-plugin.sh:
+eepm
+
+==== play.d/epsonscan2.sh:
+eepm
+
+==== play.d/everdo.sh:
+eget
+
+==== play.d/express-client.sh:
+
+==== play.d/far2l-portable.sh:
+eget
+
+==== play.d/faststone-image-viewer.sh:
+gawk
+eget
+grep
+
+==== play.d/fbreader.sh:
+gawk
+eget
+eepm
+grep
+
+==== play.d/figma.sh:
+eget
+eepm
+
+==== play.d/firefox-nightly.sh:
+
+==== play.d/firefox.sh:
+eget
+grep
+
+==== play.d/firestorm-os.sh:
+
+==== play.d/firestorm.sh:
+
+==== play.d/flashplayer.sh:
+
+==== play.d/flyview-client.sh:
+
+==== play.d/flyview-server.sh:
+
+==== play.d/freeoffice.sh:
+eget
+
+==== play.d/freeplane.sh:
+eget
+sed
+
+==== play.d/freetube.sh:
+eget
+eepm
+
+==== play.d/geogebra.sh:
+eepm
+
+==== play.d/gitkraken.sh:
+eepm
+
+==== play.d/gitlab-runner.sh:
+eepm
+
+==== play.d/goofcord.sh:
+eget
+eepm
+
+==== play.d/gradle.sh:
+eget
+
+==== play.d/guardant.sh:
+eget
+eepm
+
+==== play.d/hansoft-client.sh:
+
+==== play.d/heroic-games-launcher.sh:
+
+==== play.d/hiddify.sh:
+
+==== play.d/hplip-plugin.sh:
+eepm
+
+==== play.d/i586-openssl098.sh:
+eepm
+
+==== play.d/icaclient.sh:
+eget
+eepm
+
+==== play.d/idea-community.sh:
+
+==== play.d/idea.sh:
+
+==== play.d/iptvnator.sh:
+eget
+eepm
+
+==== play.d/jetbrains-toolbox.sh:
+eget
+eepm
+grep
+sed
+
+==== play.d/joplin.sh:
+eget
+
+==== play.d/k3s.sh:
+eget
+eepm
+sed
+
+==== play.d/ktalk.sh:
+eepm
+
+==== play.d/kubo.sh:
+eget
+eepm
+
+==== play.d/kyocera-sane.sh:
+
+==== play.d/kyodialog.sh:
+
+==== play.d/levenhuklite.sh:
+
+==== play.d/lexmark-upd-ppd.sh:
+
+==== play.d/libicu56.sh:
+eepm
+
+==== play.d/librewolf.sh:
+eget
+eepm
+grep
+
+==== play.d/liteide.sh:
+eget
+eepm
+
+==== play.d/lithium.sh:
+eget
+eepm
+
+==== play.d/logseq.sh:
+eget
+grep
+
+==== play.d/lossless-cut.sh:
+eepm
+
+==== play.d/lunacy.sh:
+eepm
+
+==== play.d/lycheeslicer.sh:
+gawk
+eget
+eepm
+grep
+sed
+
+==== play.d/madcad.sh:
+eget
+eepm
+
+==== play.d/mailspring.sh:
+
+==== play.d/master-pdf-editor.sh:
+eget
+eepm
+
+==== play.d/mattermost-desktop.sh:
+eepm
+
+==== play.d/meridius.sh:
+eget
+
+==== play.d/minecraft-launcher.sh:
+
+==== play.d/min.sh:
+eget
+eepm
+
+==== play.d/mobirise.sh:
+
+==== play.d/moonlight.sh:
+
+==== play.d/mssql-server-fts.sh:
+eget
+
+==== play.d/mssql-server.sh:
+eepm
+eepm
+eepm
+
+==== play.d/mssql-tools.sh:
+eepm
+eepm
+
+==== play.d/mts-link.sh:
+
+==== play.d/myoffice.sh:
+eget
+eepm
+
+==== play.d/mytonwallet.sh:
+eget
+
+==== play.d/naps2.sh:
+eepm
+
+==== play.d/nekoray.sh:
+eget
+grep
+sed
+
+==== play.d/neovide.sh:
+eget
+
+==== play.d/netbeans.sh:
+eget
+eepm
+findutils
+
+==== play.d/netbird.sh:
+eepm
+
+==== play.d/netbird-ui.sh:
+eepm
+
+==== play.d/ngrok.sh:
+
+==== play.d/notepad-next.sh:
+eget
+
+==== play.d/novelwriter.sh:
+eget
+
+==== play.d/nsg-client.sh:
+
+==== play.d/nwjs-ffmpeg-prebuilt.sh:
+eget
+
+==== play.d/obsidian.sh:
+eget
+
+==== play.d/obs-linuxbrowser.sh:
+eget
+
+==== play.d/okular-csp.sh:
+eepm
+
+==== play.d/onlyoffice.sh:
+eget
+eepm
+
+==== play.d/opera.sh:
+eepm
+
+==== play.d/orca-slicer.sh:
+eget
+
+==== play.d/pachca.sh:
+eget
+eepm
+
+==== play.d/packet-tracer.sh:
+
+==== play.d/pantum.sh:
+eepm
+
+==== play.d/pcsx2.sh:
+eget
+
+==== play.d/pencil.sh:
+eget
+eepm
+
+==== play.d/penpot-desktop.sh:
+
+==== play.d/persepolis.sh:
+
+==== play.d/pfusp.sh:
+
+==== play.d/pgadmin4.sh:
+eepm
+
+==== play.d/phpstorm.sh:
+
+==== play.d/piktomir.sh:
+
+==== play.d/plex-desktop.sh:
+
+==== play.d/popcorn-time.sh:
+eepm
+
+==== play.d/portmaster.sh:
+eepm
+
+==== play.d/portproton.sh:
+eget
+eepm
+
+==== play.d/postman.sh:
+eepm
+
+==== play.d/powershell.sh:
+eget
+eepm
+
+==== play.d/protonup-qt.sh:
+eget
+
+==== play.d/pstube.sh:
+eget
+eepm
+
+==== play.d/pycharm-pro.sh:
+
+==== play.d/pycharm.sh:
+
+==== play.d/r7-office-organizer-pro.sh:
+eget
+eepm
+
+==== play.d/r7-office-organizer.sh:
+eget
+eepm
+
+==== play.d/r7-office.sh:
+eget
+eepm
+
+==== play.d/radicle-httpd.sh:
+gawk
+eget
+eepm
+grep
+
+==== play.d/radicle.sh:
+gawk
+eget
+eepm
+grep
+
+==== play.d/raindrop.sh:
+
+==== play.d/realvnc-server.sh:
+eget
+eepm
+sed
+
+==== play.d/realvnc-viewer.sh:
+eget
+eepm
+sed
+
+==== play.d/reaper.sh:
+gawk
+eget
+eepm
+grep
+
+==== play.d/refind.sh:
+eget
+eepm
+sed
+
+==== play.d/rememberthemilk.sh:
+
+==== play.d/ridoclnx.sh:
+eget
+eepm
+
+==== play.d/rocketchat.sh:
+eget
+
+==== play.d/rpcs3.sh:
+eget
+
+==== play.d/rstudio.sh:
+eget
+eepm
+grep
+
+==== play.d/rudesktop.sh:
+eepm
+
+==== play.d/rupost.sh:
+
+==== play.d/rustdesk-libsciter-gtk.sh:
+eepm
+
+==== play.d/rustdesk.sh:
+eget
+eepm
+grep
+
+==== play.d/s4a.sh:
+
+==== play.d/salutejazz.sh:
+eepm
+
+==== play.d/sane-katusham247.sh:
+
+==== play.d/sane-panakvs.sh:
+eepm
+
+==== play.d/schildichat-desktop.sh:
+eepm
+sed
+
+==== play.d/sferum.sh:
+eepm
+
+==== play.d/sidequest.sh:
+eget
+
+==== play.d/signal.sh:
+eget
+grep
+sed
+
+==== play.d/simplenote.sh:
+eepm
+
+==== play.d/singularityapp.sh:
+
+==== play.d/skype.sh:
+
+==== play.d/slack.sh:
+eget
+eepm
+
+==== play.d/snap4arduino.sh:
+eget
+eepm
+
+==== play.d/spotify.sh:
+eepm
+
+==== play.d/steam.sh:
+eepm
+
+==== play.d/sublime.sh:
+eget
+eepm
+
+==== play.d/sunshine.sh:
+
+==== play.d/svp4.sh:
+
+==== play.d/sweethome3d.sh:
+eget
+eepm
+sed
+
+==== play.d/synology-chat.sh:
+eget
+
+==== play.d/synology-drive.sh:
+eget
+sed
+
+==== play.d/t1client.sh:
+eepm
+
+==== play.d/tamtam.sh:
+eepm
+
+==== play.d/teamspeak3.sh:
+eget
+grep
+
+==== play.d/teamspeak.sh:
+eget
+grep
+
+==== play.d/teams.sh:
+eepm
+
+==== play.d/teamviewer.sh:
+eepm
+
+==== play.d/telegram.sh:
+eget
+grep
+
+==== play.d/thinlinc-client.sh:
+eepm
+
+==== play.d/todoist.sh:
+
+==== play.d/tonkeeper.sh:
+eget
+eepm
+
+==== play.d/tradingview.sh:
+
+==== play.d/trezor-suite.sh:
+eget
+eepm
+
+==== play.d/trueconf-server.sh:
+eepm
+
+==== play.d/trueconf.sh:
+eepm
+
+==== play.d/tsukimi.sh:
+
+==== play.d/ungoogled-chromium.sh:
+eget
+
+==== play.d/unifiedremote.sh:
+eepm
+
+==== play.d/unigine-heaven.sh:
+eget
+
+==== play.d/unigine-superposition.sh:
+eget
+
+==== play.d/unigine-valley.sh:
+eget
+
+==== play.d/unityhub.sh:
+eepm
+
+==== play.d/upscayl.sh:
+eget
+
+==== play.d/vdhcoapp.sh:
+eget
+eepm
+
+==== play.d/vesktop.sh:
+eepm
+
+==== play.d/viber.sh:
+
+==== play.d/vinteo.desktop.sh:
+gawk
+eget
+eepm
+grep
+
+==== play.d/virtualbox-extpack.sh:
+eepm
+
+==== play.d/virtualbox.sh:
+eepm
+
+==== play.d/virtualhere.sh:
+eget
+eepm
+grep
+sed
+
+==== play.d/vivaldi.sh:
+eget
+eepm
+grep
+gzip
+sed
+
+==== play.d/vkcalls.sh:
+
+==== play.d/vk-messenger.sh:
+eget
+eepm
+
+==== play.d/vk.sh:
+eget
+eepm
+
+==== play.d/vkteams.sh:
+
+==== play.d/vuescan.sh:
+eget
+eepm
+
+==== play.d/waterfox.sh:
+
+==== play.d/weasis.sh:
+eget
+eepm
+
+==== play.d/webcord.sh:
+eget
+eepm
+
+==== play.d/webdavmailrucloud.sh:
+eget
+
+==== play.d/webex.sh:
+
+==== play.d/webots.sh:
+eget
+
+==== play.d/webstorm.sh:
+
+==== play.d/whatsapp.sh:
+eget
+eepm
+
+==== play.d/winbox.sh:
+gawk
+eget
+grep
+
+==== play.d/wing.sh:
+eget
+eepm
+sed
+findutils
+
+==== play.d/wpsoffice.sh:
+eget
+grep
+
+==== play.d/xeoma.sh:
+eget
+grep
+
+==== play.d/xerox-spl-driver.sh:
+
+==== play.d/xnconvert.sh:
+
+==== play.d/xnview.sh:
+
+==== play.d/xod-ide.sh:
+eget
+eepm
+
+==== play.d/xppen.sh:
+
+==== play.d/yandex-browser.sh:
+eepm
+
+==== play.d/yandex-disk-indicator.sh:
+
+==== play.d/yandex-disk.sh:
+eepm
+
+==== play.d/yandex-music.sh:
+eget
+eepm
+
+==== play.d/yandex-telemost.sh:
+
+==== play.d/yaradio-yamusic.sh:
+eget
+
+==== play.d/yougile.sh:
+eget
+grep
+sed
+
+==== play.d/youtube-music.sh:
+eget
+eepm
+grep
+
+==== play.d/yucca.sh:
+eget
+eepm
+
+==== play.d/zed.sh:
+eepm
+
+==== play.d/zen-browser.sh:
+eepm
+
+==== play.d/zerotier-one.sh:
+eget
+eepm
+
+==== play.d/zoom.sh:
+eepm
+
+==== play.d/zwcad-viewer.sh:
+
+==== prescription.d/bwrap-fix.sh:
+eepm
+eepm
+
+==== prescription.d/common.sh:
+eepm
+grep
+
+==== prescription.d/flatpak.sh:
+eepm
+grep
+eepm
+
+==== prescription.d/gcc-multilib.sh:
+eepm
+eepm
+eepm
+sed
+
+==== prescription.d/glibc-restore.sh:
+eepm
+grep
+
+==== prescription.d/glusterfs10.sh:
+eepm
+eepm
+eepm
+eepm
+grep
+sed
+eepm
+
+==== prescription.d/glusterfs11.sh:
+eepm
+eepm
+eepm
+eepm
+grep
+sed
+eepm
+
+==== prescription.d/glusterfs7.sh:
+eepm
+eepm
+eepm
+eepm
+sed
+eepm
+
+==== prescription.d/glusterfs8.sh:
+eepm
+eepm
+eepm
+eepm
+grep
+sed
+eepm
+
+==== prescription.d/glusterfs9.sh:
+eepm
+eepm
+eepm
+eepm
+grep
+sed
+eepm
+
+==== prescription.d/i586-fix.sh:
+eepm
+eepm
+grep
+info
+
+==== prescription.d/i586-remove.sh:
+eepm
+eepm
+
+==== prescription.d/i586-support.sh:
+eepm
+grep
+info
+sed
+
+==== prescription.d/nvidia-remove.sh:
+eepm
+
+==== prescription.d/php7.sh:
+eepm
+eepm
+eepm
+grep
+sed
+
+==== prescription.d/php8.0.sh:
+eepm
+eepm
+eepm
+grep
+sed
+
+==== prescription.d/php8.1.sh:
+eepm
+eepm
+eepm
+grep
+sed
+
+==== prescription.d/php8.2.sh:
+eepm
+eepm
+eepm
+grep
+sed
+
+==== prescription.d/podman-enable-rootless.sh:
+gawk
+eepm
+grep
+
+==== prescription.d/python2-remove.sh:
+eepm
+
+==== prescription.d/snap.sh:
+eepm
+
+==== prescription.d/switch-to-nouveau.sh:
+eepm
+grep
+
+==== prescription.d/switch-to-nvidia.sh:
+/etc/bashrc
+eepm
+grep
+
+==== prescription.d/switch-to-pipewire.sh:
+eepm
+
+==== prescription.d/waydroid.sh:
+/etc/bashrc
+gawk
+eepm
+grep
+sed
+eepm
+
+==== prescription.d/wine.sh:
+eepm
+grep
+
+==== repack.d/1c83-client.sh:
+eepm
+sed
+
+==== repack.d/1c-connect.sh:
+
+==== repack.d/64Gram.sh:
+
+==== repack.d/aimp.sh:
+sed
+
+==== repack.d/aksusbd.sh:
+sed
+
+==== repack.d/anydesk.sh:
+
+==== repack.d/Anytype.sh:
+
+==== repack.d/apache-netbeans.sh:
+
+==== repack.d/arduino-ide.sh:
+
+==== repack.d/ArmorPaint.sh:
+sed
+
+==== repack.d/ArmorPaintVKRT.sh:
+sed
+
+==== repack.d/atom-beta.sh:
+sed
+sed
+
+==== repack.d/atom.sh:
+sed
+sed
+
+==== repack.d/audiorelay.sh:
+
+==== repack.d/Autodesk_EAGLE.sh:
+findutils
+sed
+
+==== repack.d/ayugram.sh:
+
+==== repack.d/balena-etcher.sh:
+
+==== repack.d/bellsoft-java11-full.sh:
+
+==== repack.d/bitrix24.sh:
+
+==== repack.d/bitwarden.sh:
+
+==== repack.d/bitwig-studio.sh:
+
+==== repack.d/brave-browser-beta.sh:
+
+==== repack.d/brave-browser-dev.sh:
+
+==== repack.d/brave-browser-nightly.sh:
+
+==== repack.d/brave-browser.sh:
+
+==== repack.d/brgenml1cupswrapper.sh:
+
+==== repack.d/brgenml1lpr.sh:
+
+==== repack.d/brscanads2200ads2700w.sh:
+
+==== repack.d/cascadeur.sh:
+
+==== repack.d/chat-gpt.sh:
+
+==== repack.d/chat.sh:
+sed
+
+==== repack.d/chrome-remote-desktop.sh:
+
+==== repack.d/chromium-gost-stable.sh:
+sed
+
+==== repack.d/CLion.sh:
+sed
+
+==== repack.d/ClipGrab.sh:
+
+==== repack.d/cnrdrvcups-ufr2-uk.sh:
+eepm
+sed
+
+==== repack.d/code.sh:
+sed
+
+==== repack.d/codium.sh:
+sed
+
+==== repack.d/commfort-client.sh:
+
+==== repack.d/common-chromium-browser.sh:
+grep
+sed
+sed
+
+==== repack.d/common.sh:
+eepm
+file
+findutils
+grep
+sed
+findutils
+
+==== repack.d/crossover.sh:
+eepm
+
+==== repack.d/cuda-z.sh:
+
+==== repack.d/davinci-resolve.sh:
+
+==== repack.d/dbeaver-ce.sh:
+
+==== repack.d/dialog-ee-x.sh:
+
+==== repack.d/discord.sh:
+
+==== repack.d/DJV2.sh:
+
+==== repack.d/docker-desktop.sh:
+
+==== repack.d/domination-client.sh:
+sed
+
+==== repack.d/draw.io.sh:
+
+==== repack.d/duplicati.sh:
+sed
+
+==== repack.d/element-desktop.sh:
+
+==== repack.d/epson-printer-utility.sh:
+
+==== repack.d/epsonscan2.sh:
+
+==== repack.d/example.sh:
+
+==== repack.d/express.sh:
+
+==== repack.d/far2l-portable.sh:
+
+==== repack.d/faststone-image-viewer.sh:
+
+==== repack.d/figma-linux.sh:
+
+==== repack.d/firefox-nightly.sh:
+grep
+sed
+
+==== repack.d/firefox.sh:
+
+==== repack.d/firestorm-os.sh:
+
+==== repack.d/flashprint5.sh:
+
+==== repack.d/freeplane.sh:
+
+==== repack.d/freetube.sh:
+
+==== repack.d/generic-appimage.sh:
+eepm
+file
+findutils
+grep
+sed
+sed
+
+==== repack.d/generic-default.sh:
+grep
+sed
+
+==== repack.d/generic.sh:
+eepm
+findutils
+grep
+sed
+sed
+
+==== repack.d/generic-snap.sh:
+grep
+sed
+
+==== repack.d/geogebra-classic.sh:
+sed
+
+==== repack.d/gitkraken.sh:
+
+==== repack.d/gitlab-runner.sh:
+
+==== repack.d/google-chrome-stable.sh:
+sed
+
+==== repack.d/gradle.sh:
+
+==== repack.d/hansoft.sh:
+
+==== repack.d/hiddify.sh:
+sed
+
+==== repack.d/hplip-plugin.sh:
+sed
+
+==== repack.d/i586-libcrypto7.sh:
+sed
+
+==== repack.d/i586-libssl7.sh:
+sed
+
+==== repack.d/icaclient.sh:
+sed
+
+==== repack.d/ICAClient.sh:
+sed
+
+==== repack.d/ideaIC.sh:
+sed
+
+==== repack.d/ideaIU.sh:
+sed
+
+==== repack.d/ipera-client.sh:
+
+==== repack.d/ipera-mediaserver.sh:
+
+==== repack.d/iproject-client.sh:
+
+==== repack.d/iptvnator.sh:
+
+==== repack.d/iwbdriver.sh:
+eepm
+sed
+
+==== repack.d/iwdm.sh:
+sed
+
+==== repack.d/iwtm-grafana.sh:
+sed
+
+==== repack.d/iwtm-prometheus.sh:
+sed
+
+==== repack.d/jetbrains-toolbox.sh:
+
+==== repack.d/k3s.sh:
+
+==== repack.d/kubo-beta.sh:
+
+==== repack.d/kubo.sh:
+
+==== repack.d/kyocera-sane.sh:
+
+==== repack.d/kyodialog.sh:
+grep
+sed
+sed
+
+==== repack.d/LevenhukLite.sh:
+
+==== repack.d/librewolf.sh:
+
+==== repack.d/lightworks.sh:
+sed
+
+==== repack.d/liteide.sh:
+sed
+
+==== repack.d/lithium_ecad.sh:
+
+==== repack.d/lossless-cut.sh:
+
+==== repack.d/lunacy.sh:
+
+==== repack.d/lycheeslicer.sh:
+
+==== repack.d/madcad.sh:
+
+==== repack.d/mailspring.sh:
+
+==== repack.d/master-pdf-editor.sh:
+
+==== repack.d/mattermost-desktop.sh:
+
+==== repack.d/meridius.sh:
+
+==== repack.d/microsoft-edge-beta.sh:
+eepm
+
+==== repack.d/microsoft-edge-dev.sh:
+eepm
+
+==== repack.d/microsoft-edge-stable.sh:
+eepm
+
+==== repack.d/minecraft-launcher.sh:
+
+==== repack.d/min.sh:
+
+==== repack.d/mobirise.sh:
+
+==== repack.d/mssql-server.sh:
+eepm
+sed
+
+==== repack.d/naps2.sh:
+
+==== repack.d/nekoray.sh:
+
+==== repack.d/net.downloadhelper.coapp.noffmpeg.sh:
+
+==== repack.d/nsgclient.sh:
+
+==== repack.d/nwjs-ffmpeg-prebuilt.sh:
+
+==== repack.d/obsidian.sh:
+
+==== repack.d/onlyoffice-desktopeditors.sh:
+findutils
+sed
+sed
+
+==== repack.d/opera-beta.sh:
+
+==== repack.d/opera-developer.sh:
+
+==== repack.d/opera-stable.sh:
+
+==== repack.d/pachca.sh:
+
+==== repack.d/PacketTracer.sh:
+sed
+
+==== repack.d/pantum.sh:
+eepm
+sed
+
+==== repack.d/Pencil.sh:
+
+==== repack.d/penpot-desktop.sh:
+
+==== repack.d/persepolis.sh:
+
+==== repack.d/pfusp.sh:
+
+==== repack.d/pgadmin4-desktop.sh:
+grep
+sed
+
+==== repack.d/pgadmin4-server.sh:
+
+==== repack.d/PhpStorm.sh:
+sed
+
+==== repack.d/plex-desktop.sh:
+
+==== repack.d/plk-sane.sh:
+sed
+
+==== repack.d/Popcorn-Time.sh:
+
+==== repack.d/portmaster.sh:
+
+==== repack.d/portproton-remastered.sh:
+sed
+
+==== repack.d/portproton.sh:
+
+==== repack.d/postman.sh:
+
+==== repack.d/pycharm-community.sh:
+sed
+
+==== repack.d/pycharm-professional.sh:
+sed
+
+==== repack.d/r7-office.sh:
+eepm
+
+==== repack.d/radicle-httpd.sh:
+
+==== repack.d/radicle.sh:
+
+==== repack.d/raindrop.sh:
+sed
+
+==== repack.d/realvnc-vnc-server.sh:
+
+==== repack.d/realvnc-vnc-viewer.sh:
+
+==== repack.d/reaper.sh:
+
+==== repack.d/rememberthemilk.sh:
+
+==== repack.d/remotedesktopmanager.sh:
+
+==== repack.d/ridoclnx.sh:
+sed
+
+==== repack.d/rocketchat.sh:
+
+==== repack.d/rstudio.sh:
+sed
+
+==== repack.d/rudesktop.sh:
+sed
+
+==== repack.d/rupost-desktop.sh:
+
+==== repack.d/rustdesk-libsciter-gtk.sh:
+
+==== repack.d/rustdesk.sh:
+eepm
+grep
+sed
+sed
+
+==== repack.d/S4A.sh:
+eepm
+sed
+
+==== repack.d/sbb.sh:
+
+==== repack.d/sbis-libstdc++.sh:
+sed
+
+==== repack.d/sferum.sh:
+
+==== repack.d/sidequest.sh:
+
+==== repack.d/signal-desktop.sh:
+sed
+
+==== repack.d/singularityapp.sh:
+
+==== repack.d/skypeforlinux.sh:
+
+==== repack.d/slack.sh:
+
+==== repack.d/snap4arduino.sh:
+
+==== repack.d/softmaker-freeoffice.sh:
+eepm
+grep
+
+==== repack.d/spnxclient.sh:
+eepm
+sed
+
+==== repack.d/spotify-client.sh:
+sed
+
+==== repack.d/steam-launcher.sh:
+sed
+
+==== repack.d/sublime-text.sh:
+
+==== repack.d/sunshine.sh:
+eepm
+grep
+sed
+
+==== repack.d/svp4.sh:
+sed
+
+==== repack.d/SweetHome3D.sh:
+eepm
+findutils
+sed
+
+==== repack.d/synology-drive.sh:
+
+==== repack.d/t1client-standalone.sh:
+
+==== repack.d/tamtam-app.sh:
+
+==== repack.d/teamspeak3.sh:
+eepm
+
+==== repack.d/teamspeak.sh:
+
+==== repack.d/teams.sh:
+eepm
+sed
+
+==== repack.d/teamviewer.sh:
+
+==== repack.d/Telegram-beta.sh:
+
+==== repack.d/Telegram.sh:
+
+==== repack.d/thinlinc-client.sh:
+
+==== repack.d/Tonkeeper.sh:
+
+==== repack.d/tradingview.sh:
+sed
+
+==== repack.d/Trezor-Suite.sh:
+eepm
+sed
+
+==== repack.d/trueconf-server.sh:
+
+==== repack.d/trueconf.sh:
+eepm
+sed
+
+==== repack.d/tsukimi.sh:
+
+==== repack.d/ungoogled-chromium.sh:
+sed
+
+==== repack.d/unigine-heaven.sh:
+sed
+
+==== repack.d/unigine-superposition.sh:
+sed
+
+==== repack.d/unigine-valley.sh:
+sed
+
+==== repack.d/unityhub.sh:
+
+==== repack.d/viber.sh:
+eepm
+
+==== repack.d/vinteo-desktop.sh:
+eepm
+
+==== repack.d/virtualhere.sh:
+
+==== repack.d/vivaldi-snapshot-codecs-ffmpeg-extra.sh:
+
+==== repack.d/vivaldi-snapshot.sh:
+
+==== repack.d/vivaldi-stable-codecs-ffmpeg-extra.sh:
+
+==== repack.d/vivaldi-stable.sh:
+
+==== repack.d/vk-calls.sh:
+sed
+
+==== repack.d/vk-messenger.sh:
+
+==== repack.d/vk.sh:
+
+==== repack.d/vkteams.sh:
+sed
+
+==== repack.d/waterfox.sh:
+
+==== repack.d/weasis.sh:
+
+==== repack.d/webdavmailrucloud.sh:
+
+==== repack.d/webex.sh:
+sed
+
+==== repack.d/webots.sh:
+
+==== repack.d/WebStorm.sh:
+sed
+
+==== repack.d/winbox.sh:
+
+==== repack.d/wing-personal10.sh:
+sed
+
+==== repack.d/wpsoffice.sh:
+sed
+
+==== repack.d/XenDesktopVDA.sh:
+eepm
+sed
+
+==== repack.d/xod-client-electron.sh:
+sed
+
+==== repack.d/XPPenLinux.sh:
+
+==== repack.d/yandex-browser-beta-codecs-ffmpeg-extra.sh:
+
+==== repack.d/yandex-browser-beta.sh:
+eepm
+
+==== repack.d/yandex-browser-corporate-codecs-ffmpeg-extra.sh:
+
+==== repack.d/yandex-browser-corporate.sh:
+eepm
+
+==== repack.d/yandex-browser-stable-codecs-ffmpeg-extra.sh:
+
+==== repack.d/yandex-browser-stable.sh:
+eepm
+
+==== repack.d/yandex-disk-indicator.sh:
+eepm
+grep
+
+==== repack.d/yandex-telemost.sh:
+
+==== repack.d/yaradio-yamusic.sh:
+
+==== repack.d/zed.sh:
+
+==== repack.d/zoom.sh:
