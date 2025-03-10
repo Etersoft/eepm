@@ -23,11 +23,21 @@ load_helper epm-sh-altlinux
 # like apt-add-repository --remove on deb systems
 __epm_removerepo_apt()
 {
-    [ -n "$*" ] || fatal "empty repo name"
+    local repo="$*"
+    [ -n "$repo" ] || fatal "empty repo name"
+
+    if [ -n "$dryrun" ] ; then
+        echo "$repo"
+        return
+    fi
+
+    local sc="sudocmd"
+    [ -z "$quiet" ] || sc="sudorun"
+
     # aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
-    sudocmd sed -i -e "s|.*$*.*||" /etc/apt/sources.list
+    $sc sed -i -e "s|.*$repo.*||" /etc/apt/sources.list
     if [ -d /etc/apt/sources.list.d ] && ls /etc/apt/sources.list.d/*.list >/dev/null 2>/dev/null ; then
-        sudocmd sed -i -e "s|.*$*.*||" /etc/apt/sources.list.d/*.list
+        $sc sed -i -e "s|.*$repo.*||" /etc/apt/sources.list.d/*.list
     fi
 }
 
