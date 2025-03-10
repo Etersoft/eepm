@@ -220,7 +220,6 @@ __epm_download_alt()
         load_helper epm-Install
 
         local installlist="$(get_task_packages $*)"
-        # hack: drop -devel packages to avoid package provided by multiple packages
         installlist="$(estrlist reg_exclude ".*-devel .*-devel-static .*-checkinstall .*-debuginfo" "$installlist")"
         [ -n "$verbose" ] && info 'Packages from task(s): $installlist'
 

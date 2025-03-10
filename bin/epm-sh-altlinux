@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2014, 2017, 2021  Etersoft
-# Copyright (C) 2014, 2017, 2021  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2014, 2017, 2021, 2025  Etersoft
+# Copyright (C) 2014, 2017, 2021, 2025  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -23,16 +23,37 @@ tasknumber()
     isnumber "$num" && echo "$*"
 }
 
-# todo: improve apt-repo
-get_task_arepo_packages()
-{
-    local res
-    assure_exists apt-repo
+ALTTASKURL="http://git.altlinux.org/tasks"
 
-    info "TODO: please, improve apt-repo to support arepo (i586-) packages for apt-repo list task"
-    showcmd "eget -q -O- http://git.altlinux.org/tasks/$tn/plan/arepo-add-x86_64-i586 | cut -f1"
-    # TODO: retrieve one time
-    res="$(eget -q -O- http://git.altlinux.org/tasks/$tn/plan/arepo-add-x86_64-i586 2>/dev/null)" || return #{ warning "There is a download error for x86_64-i586 arepo." ; return ; }
+get_task_status()
+{
+    local tn="$1"
+    docmd eget --check-url $ALTTASKURL/$tn/plan/add-bin
+}
+
+get_task_arepo_status()
+{
+    local tn="$1"
+    docmd eget --check-url $ALTTASKURL/$tn/plan/arepo-add-x86_64-i586
+}
+
+get_task_packages_list()
+{
+    local tn="$1"
+    local res
+
+    showcmd "eget -q -O- $ALTTASKURL/$tn/plan/add-bin"
+    res="$(eget -q -O- $ALTTASKURL/$tn/plan/add-bin)" || return
+    echo "$res" | cut -f1-3 | grep -E "(noarch|$DISTRARCH)$" | cut -f1
+}
+
+get_task_arepo_packages_list()
+{
+    local tn="$1"
+    local res
+
+    showcmd "eget -q -O- $ALTTASKURL/$tn/plan/arepo-add-x86_64-i586"
+    res="$(eget -q -O- $ALTTASKURL/$tn/plan/arepo-add-x86_64-i586)" || return
     echo "$res" | cut -f1
 }
 
@@ -41,9 +62,10 @@ get_task_packages()
 {
     local tn
     for tn in $(tasknumber "$@") ; do
-        showcmd apt-repo list task "$tn"
-        a='' apt-repo list task "$tn" >/dev/null || continue
-        a='' apt-repo list task "$tn"
-        [ "$DISTRARCH" = "x86_64" ] && get_task_arepo_packages "$tn"
+        get_task_status "$tn" || continue
+        get_task_packages_list "$tn"
+        [ "$DISTRARCH" = "x86_64" ] || continue
+        get_task_arepo_status "$tn" || continue
+        get_task_arepo_packages_list "$tn"
     done
 }

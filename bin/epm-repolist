@@ -103,12 +103,11 @@ epm_repolist()
 
 case $PMTYPE in
     apt-rpm)
-        #assure_exists apt-repo
         if tasknumber "$1" >/dev/null ; then
+            # FIXME: unexpectedly, a list of packages instead of repositories.
             get_task_packages "$@"
         else
             print_apt_sources_list "$@"
-            #docmd apt-repo list
         fi
         ;;
     deepsolver-rpm)
