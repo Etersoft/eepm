@@ -45,6 +45,9 @@ epm_remove_low()
             cd /tmp || fatal
             __epm_check_vendor $@
             set_sudo
+            sudocmd rpm -ev $noscripts $nodeps $@
+            return
+            # we don't need RPMISNOTINSTALLED as for now
             store_output sudocmd rpm -ev $noscripts $nodeps $@
             # rpm returns number of packages if failed on removing
             __check_rpm_e_result $RC_STDOUT $?
@@ -363,7 +366,9 @@ epm_remove()
     epm_remove_low $pkg_names && return
     local STATUS=$?
 
-    if [ -n "$direct" ] || [ -n "$nodeps" ] || [ "$STATUS" = "$RPMISNOTINSTALLED" ]; then
+    # || [ "$STATUS" = "$RPMISNOTINSTALLED" ]
+    # see https://github.com/Etersoft/eepm/issues/236
+    if [ -n "$direct" ] || [ -n "$nodeps" ] ; then
         [ -n "$force" ] || return $STATUS
     fi
 

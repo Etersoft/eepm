@@ -170,7 +170,7 @@ __epm_get_hilevel_name()
         local pkg
         # get short form in pkg
         # FIXME: where we use it? continue or pkg=$i?
-        quiet=1 pkg=$(__epm_query_shortname "$i") || pkg="$i" #continue # drop not installed packages
+        quiet=1 pkg=$(__epm_query_shortname "$i" 2>/dev/null) || pkg="$i" #continue # drop not installed packages
         # if already short form, skipped
         [ "$pkg" = "$i" ] && echo "$i" && continue
         # try get long form or use short form

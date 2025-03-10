@@ -117,8 +117,9 @@ __epm_check_vendor()
             # it is missed package probably (package remove case)
             if is_installed "$i" ; then
                 warning 'Can'\''t get any info for $i package. Scripts are DISABLED for package $bi. Use --scripts if you need run scripts from such packages.'
+                noscripts="--noscripts"
             fi
-            noscripts="--noscripts"
+            # don't set --noscripts for non existent packages (will run scripts when remove by provides, see https://github.com/Etersoft/eepm/issues/236)
             continue
         fi
 
