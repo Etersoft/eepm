@@ -164,6 +164,9 @@ __fix_alt_sources_list()
         regexp_subst "/^ *#/! $SUBST_ALT_RULE1" $i
         regexp_subst "/^ *#/! $SUBST_ALT_RULE2" $i
 
+        # don't restore repo sign
+        continue
+
         # Sisyphus uses 'alt' vendor key
         __try_fix_apt_source_list $i alt "ALTLinux\/Sisyphus"
         __try_fix_apt_source_list $i etersoft "Etersoft\/Sisyphus"
