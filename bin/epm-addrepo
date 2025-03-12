@@ -73,20 +73,14 @@ __epm_addrepo_etersoft_addon()
     fi
 }
 
-__epm_addrepo_main_alt_repo()
+__get_sign()
 {
-    local comp
-    local sign
     local repo="$1"
-    comp="$repo"
-    sign="$repo"
-    rhas "$repo" "^c" && sign="cert8"
-    local baseurl="http://ftp.basealt.ru/pub/distributions/ALTLinux"
-    epm repo add "rpm [$sign] $baseurl $comp/branch/$DISTRARCH classic" || return
-    if [ "$DISTRARCH" = "x86_64" ] ; then
-        epm repo add "rpm [$sign] $baseurl $comp/branch/x86_64-i586 classic" || return
-    fi
-    epm repo add "rpm [$sign] $baseurl $comp/branch/noarch classic" || return
+    rhas "$repo" "^c[0-9]" && echo "[cert8]" && return
+    [ "$repo" = "sisyphus" ] && repo="alt"
+    # alt c* distr has no alt vendor
+    rhas "$DISTRVERSION" "^c[0-9]" && return
+    [ -n "$repo" ] && echo "[$repo]"
 }
 
 get_archlist()
@@ -99,6 +93,39 @@ get_archlist()
             ;;
     esac
 }
+
+# arg: $branch "URL ALTLinux/$repo" "classic"
+__epm_addrepo_add_alt_repo()
+{
+    local branch="$1"
+    local repourl="$2"
+    local comp="$3"
+    local sign
+
+    sign="$(__get_sign $repo)"
+
+    [ -n "$comp" ] | comp="classic"
+
+    local i
+    for i in $(get_archlist) ; do
+        epm repo add "rpm $sign $repourl/$i $comp"
+    done
+
+}
+
+# args: p10|c10f1|sisyphus
+__epm_addrepo_main_alt_repo()
+{
+    local repo="$1"
+
+    local baseurl="http://ftp.basealt.ru/pub/distributions"
+
+    local repopart
+    [ "$repo" = "sisyphus" ] && repopart="Sisyphus" || repopart="$repo/branch"
+
+    __epm_addrepo_add_alt_repo "$repo" "$baseurl ALTLinux/$repopart" "classic"
+}
+
 
 # 'rpm protocol:/path/to/repo component'
 __epm_addrepo_altlinux_short()
@@ -283,12 +310,12 @@ __epm_addrepo_altlinux()
             return 0
             ;;
         deferred)
-            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersot Sisyphus Deferred supported only for ALT Sisyphus."
+            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersoft Sisyphus Deferred supported only for ALT Sisyphus."
             epm repo add "http://download.etersoft.ru/pub/Etersoft/Sisyphus/Deferred"
             return 0
             ;;
         deferred.org)
-            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersot Sisyphus Deferred supported only for ALT Sisyphus."
+            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersoft Sisyphus Deferred supported only for ALT Sisyphus."
             epm repo add "http://mirror.eterfund.org/download.etersoft.ru/pub/Etersoft/Sisyphus/Deferred"
             return 0
             ;;
@@ -300,14 +327,7 @@ __epm_addrepo_altlinux()
             datestr="$2"
             echo "$datestr" | grep -Eq "^20[0-2][0-9]/[01][0-9]/[0-3][0-9]$" || fatal "use follow date format: 2017/01/31"
 
-            local rpmsign='[alt]'
-            [ "$branch" != "sisyphus" ] && rpmsign="[$branch]"
-
-            epm repo add "rpm $rpmsign $ALTLINUXPUBURL archive/$branch/date/$datestr/$DISTRARCH classic"
-            if [ "$DISTRARCH" = "x86_64" ] ; then
-                epm repo add "rpm $rpmsign $ALTLINUXPUBURL archive/$branch/date/$datestr/x86_64-i586 classic"
-            fi
-            epm repo add "rpm $rpmsign $ALTLINUXPUBURL archive/$branch/date/$datestr/noarch classic"
+            __epm_addrepo_add_alt_repo "$branch $ALTLINUXPUBURL archive/$branch/date/$datestr" "classic"
 
             return 0
             ;;
@@ -322,7 +342,7 @@ __epm_addrepo_altlinux()
     fi
 
     case "$repo" in
-        c10f2|c10f1|c9f2|c9f1|c9)
+        c10f3|c10f2|c10f1|c9f2|c9f1|c9)
             __epm_addrepo_main_alt_repo "$repo"
             return
             ;;
