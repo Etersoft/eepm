@@ -78,8 +78,8 @@ __wcount()
 
 __p11_upgrade_fix()
 {
-    if [[ ! $(docmd epm installed apt-conf-branch) ]]; then 
-        info "Need to install default apt-conf package to avoid missing $TO repo"
+    if ! docmd epm installed apt-conf-branch ; then 
+        info "Need to install default apt-conf-branch package to avoid missing $TO repo"
         docmd epm install apt-conf-branch || fatal
     fi
     # файл /etc/openssl/openssl.cnf из устанавливаемого пакета openssl-config-3.2.0-alt1.noarch конфликтует с файлом из пакета libcrypto10-1.0.2u-alt1.p9.2.x86_64
@@ -409,7 +409,7 @@ __switch_alt_to_distro()
             __do_upgrade
             confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
             docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
-            __p11_upgrade_fix
+            #__p11_upgrade_fix
             __switch_repo_to $TO
             end_change_alt_repo
             __do_upgrade
