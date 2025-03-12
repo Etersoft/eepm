@@ -64,11 +64,13 @@ __print_apt_sources_list_verbose()
     local regexp="$1"
     shift
     local i
+    local res=1
     for i in $@ ; do
         test -r "$i" || continue
         grep -v -- "^.*#" $i | grep -v -- "^ *\$" | grep -q . && __info_cyan "$i:" || continue
-        grep -v -- "^.*#" $i | grep -v -- "^ *\$" | sed -e 's|^|    |' | grep -E --color "$regexp"
+        grep -v -- "^.*#" $i | grep -v -- "^ *\$" | sed -e 's|^|    |' | grep -E --color "$regexp" && res=0
     done
+    return $res
 }
 
 __print_apt_sources_list_verbose_full()
@@ -76,11 +78,13 @@ __print_apt_sources_list_verbose_full()
     local regexp="$1"
     shift
     local i
+    local res=1
     for i in $@ ; do
         test -r "$i" || continue
         grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i | grep -v -- "^ *\$" | grep -q . && echo && __info_cyan "$i:" || continue
-        grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i | grep -v -- "^ *\$" | sed -e 's|^|    |' -e "s|\(.*#.*\)|$(set_color $WHITE)\1$(restore_color)|" | grep -E --color "$regexp"
+        grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i | grep -v -- "^ *\$" | sed -e 's|^|    |' -e "s|\(.*#.*\)|$(set_color $WHITE)\1$(restore_color)|" | grep -E --color "$regexp" && res=0
     done
+    return $res
 }
 
 print_apt_sources_list()
