@@ -34,16 +34,15 @@ if [ -f "\$DISCORD_CONFIG_FILE" ]; then
     EXTRA_PARAMS=$(cat "\$DISCORD_CONFIG_FILE")
 fi
 
-if [ -f "\$SETTINGS_FILE" ] && grep -q '"SKIP_HOST_UPDATE": true' "\$SETTINGS_FILE"; then
-    exec $PRODUCTDIR/$PRODUCTCUR \$EXTRA_PARAMS "\$@"
-else
+if [ ! -f "\$SETTINGS_FILE" ]; then
     mkdir -p "\$CONFIG_DIR"
     echo '{ "SKIP_HOST_UPDATE": true}' > "\$SETTINGS_FILE"
-    exec $PRODUCTDIR/$PRODUCTCUR \$EXTRA_PARAMS "\$@"
 fi
+exec $PRODUCTDIR/$PRODUCTCUR \$EXTRA_PARAMS "\$@"
 EOF
 chmod a+x $BUILDROOT/usr/bin/$PRODUCT
 pack_file /usr/bin/$PRODUCT
+add_bin_link_command $PRODUCTCUR $PRODUCT
 
 rm usr/share/applications/discord.desktop
 install_file $PRODUCTDIR/discord.desktop /usr/share/applications/discord.desktop
