@@ -89,18 +89,22 @@ print_apt_sources_list()
 
     if [ "$1" = "-a" ] || [ "$1" = "--all" ] ; then
         shift
+        local wc=$(__convert_glob__to_regexp "$*")
+
         if [ -n "$quiet" ] ; then
-            __print_apt_sources_list_full "$*" $LISTS
+            __print_apt_sources_list_full "$wc" $LISTS
         else
-            __print_apt_sources_list_verbose_full "$*" $LISTS
+            __print_apt_sources_list_verbose_full "$wc" $LISTS
         fi
         return
     fi
 
+    local wc=$(__convert_glob__to_regexp "$*")
+
     if [ -n "$quiet" ] ; then
-        __print_apt_sources_list "$*" $LISTS
+        __print_apt_sources_list "$wc" $LISTS
     else
-        __print_apt_sources_list_verbose "$*" $LISTS
+        __print_apt_sources_list_verbose "$wc" $LISTS
     fi
 }
 
