@@ -1,5 +1,4 @@
 diffutils
-eepm
 eget
 erc
 estrlist
@@ -11,5 +10,4 @@ gettext
 grep
 gzip
 info
-rpm
 sed

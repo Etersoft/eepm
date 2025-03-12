@@ -1,19 +1,16 @@
 
 ==== bin/epm-addrepo:
 eget
-eepm
 grep
 info
 sed
 
 ==== bin/epm-assure:
-eepm
 info
 
 ==== bin/epm-audit:
 
 ==== bin/epm-autoorphans:
-eepm
 estrlist
 grep
 info
@@ -21,8 +18,6 @@ sed
 findutils
 
 ==== bin/epm-autoremove:
-eepm
-eepm
 estrlist
 grep
 info
@@ -32,11 +27,9 @@ sed
 grep
 
 ==== bin/epm-check:
-eepm
 info
 
 ==== bin/epm-checkpkg:
-eepm
 file
 grep
 info
@@ -57,10 +50,8 @@ grep
 sed
 
 ==== bin/epm-create_fake:
-eepm
 
 ==== bin/epm-dedup:
-eepm
 grep
 info
 sed
@@ -68,20 +59,17 @@ sed
 ==== bin/epm-desktop:
 gawk
 eget
-eepm
 grep
 sed
 findutils
 
 ==== bin/epm-downgrade:
-eepm
 info
 
 ==== bin/epm-Downgrade:
 
 ==== bin/epm-download:
 eget
-eepm
 estrlist
 grep
 info
@@ -90,7 +78,6 @@ findutils
 
 ==== bin/epm-epm_install:
 eget
-eepm
 info
 
 ==== bin/epm-filelist:
@@ -100,12 +87,9 @@ info
 sed
 
 ==== bin/epm-full_upgrade:
-eepm
 info
-eepm
 
 ==== bin/epm-history:
-eepm
 estrlist
 grep
 sed
@@ -114,7 +98,6 @@ sed
 gawk
 
 ==== bin/epm-install:
-eepm
 grep
 info
 
@@ -122,11 +105,9 @@ info
 info
 
 ==== bin/epm-install-alt:
-eepm
 estrlist
 grep
 info
-rpm
 sed
 
 ==== bin/epm-install-apt-dpkg:
@@ -159,13 +140,11 @@ grep
 sed
 
 ==== bin/epm-mark:
-eepm
 grep
 info
 sed
 
 ==== bin/epm-moo:
-eepm
 
 ==== bin/epm-optimize:
 
@@ -177,7 +156,6 @@ sed
 findutils
 
 ==== bin/epm-play:
-eepm
 grep
 info
 sed
@@ -217,18 +195,14 @@ sed
 ==== bin/epm-reinstall:
 
 ==== bin/epm-release_downgrade:
-eepm
 info
 
 ==== bin/epm-release_upgrade:
-eepm
 grep
 info
 sed
-eepm
 
 ==== bin/epm-remove:
-eepm
 grep
 info
 
@@ -236,14 +210,12 @@ info
 info
 
 ==== bin/epm-removerepo:
-eepm
 grep
 info
 sed
 
 ==== bin/epm-repack:
 gawk
-eepm
 grep
 info
 sed
@@ -254,7 +226,6 @@ info
 sed
 
 ==== bin/epm-repack-rpm:
-eepm
 estrlist
 grep
 info
@@ -262,31 +233,26 @@ sed
 sed
 
 ==== bin/epm-repo:
-eepm
 
 ==== bin/epm-repo-addkey:
 eget
 grep
 
 ==== bin/epm-repodisable:
-eepm
 grep
 info
 sed
 
 ==== bin/epm-repoenable:
-eepm
 grep
 info
 sed
 
 ==== bin/epm-repofix:
-eepm
 grep
 sed
 
 ==== bin/epm-repoindex:
-eepm
 gzip
 sed
 
@@ -296,12 +262,10 @@ info
 sed
 
 ==== bin/epm-repopkg:
-eepm
 sed
 
 ==== bin/epm-reposave:
 diffutils
-eepm
 info
 sed
 
@@ -319,7 +283,6 @@ info
 sed
 
 ==== bin/epm-search:
-eepm
 grep
 sed
 
@@ -349,7 +312,6 @@ sed
 findutils
 
 ==== bin/epm-sh-install:
-eepm
 estrlist
 grep
 sed
@@ -369,7 +331,6 @@ sed
 ==== bin/epm-stats:
 
 ==== bin/epm-status:
-eepm
 grep
 sed
 
@@ -380,11 +341,9 @@ erc
 estrlist
 
 ==== bin/epm-update:
-eepm
 info
 
 ==== bin/epm-upgrade:
-eepm
 estrlist
 info
 
@@ -469,7 +428,6 @@ sed
 
 ==== bin/tools_ercat:
 /etc/bashrc
-eepm
 
 ==== bin/tools_estrlist:
 /etc/bashrc
@@ -490,28 +448,22 @@ sed
 
 ==== play.d/64gram.sh:
 eget
-eepm
 
 ==== play.d/aimp.sh:
-eepm
 
 ==== play.d/aksusbd.sh:
 
 ==== play.d/alivecolors.sh:
-eepm
 
 ==== play.d/alteroffice.sh:
-eepm
 
 ==== play.d/angie.sh:
-eepm
 
 ==== play.d/anilibrix.sh:
 eget
 
 ==== play.d/anydesk.sh:
 eget
-eepm
 
 ==== play.d/anytype.sh:
 eget
@@ -521,8 +473,6 @@ eget
 
 ==== play.d/assistant.sh:
 eget
-eepm
-eepm
 grep
 sed
 
@@ -544,11 +494,9 @@ eget
 ==== play.d/bellsoft-java11-full.sh:
 
 ==== play.d/bitrix24.sh:
-eepm
 
 ==== play.d/bitwarden.sh:
 eget
-eepm
 
 ==== play.d/bitwig-studio.sh:
 eget
@@ -556,7 +504,6 @@ grep
 
 ==== play.d/brave.sh:
 eget
-eepm
 
 ==== play.d/cascadeur.sh:
 eget
@@ -571,7 +518,6 @@ eget
 ==== play.d/chrome.sh:
 
 ==== play.d/chromium-codecs-ffmpeg-extra.sh:
-eepm
 
 ==== play.d/chromium-gost.sh:
 eget
@@ -584,11 +530,9 @@ eget
 ==== play.d/cnrdrvcups-ufr2.sh:
 
 ==== play.d/code.sh:
-eepm
 
 ==== play.d/codium.sh:
 eget
-eepm
 
 ==== play.d/commfort-client.sh:
 eget
@@ -597,7 +541,6 @@ sed
 
 ==== play.d/common-jetbrains.sh:
 eget
-eepm
 grep
 sed
 
@@ -611,28 +554,23 @@ sed
 
 ==== play.d/cuda-z.sh:
 eget
-eepm
 
 ==== play.d/cups-drivers-katusham247.sh:
 
 ==== play.d/cursor.sh:
 
 ==== play.d/dbeaver.sh:
-eepm
 
 ==== play.d/deltachat.sh:
 eget
-eepm
 
 ==== play.d/discord.sh:
 eget
 
 ==== play.d/djv.sh:
 eget
-eepm
 
 ==== play.d/docker-desktop.sh:
-eepm
 
 ==== play.d/draw.io.sh:
 eget
@@ -652,16 +590,12 @@ eget
 
 ==== play.d/element-desktop.sh:
 eget
-eepm
 
 ==== play.d/epson-printer-utility.sh:
-eepm
 
 ==== play.d/epsonscan2-non-free-plugin.sh:
-eepm
 
 ==== play.d/epsonscan2.sh:
-eepm
 
 ==== play.d/everdo.sh:
 eget
@@ -679,12 +613,10 @@ grep
 ==== play.d/fbreader.sh:
 gawk
 eget
-eepm
 grep
 
 ==== play.d/figma.sh:
 eget
-eepm
 
 ==== play.d/firefox-nightly.sh:
 
@@ -711,27 +643,25 @@ sed
 
 ==== play.d/freetube.sh:
 eget
-eepm
+
+==== play.d/furmark.sh:
+eget
+grep
 
 ==== play.d/geogebra.sh:
-eepm
 
 ==== play.d/gitkraken.sh:
-eepm
 
 ==== play.d/gitlab-runner.sh:
-eepm
 
 ==== play.d/goofcord.sh:
 eget
-eepm
 
 ==== play.d/gradle.sh:
 eget
 
 ==== play.d/guardant.sh:
 eget
-eepm
 
 ==== play.d/hansoft-client.sh:
 
@@ -740,14 +670,11 @@ eepm
 ==== play.d/hiddify.sh:
 
 ==== play.d/hplip-plugin.sh:
-eepm
 
 ==== play.d/i586-openssl098.sh:
-eepm
 
 ==== play.d/icaclient.sh:
 eget
-eepm
 
 ==== play.d/idea-community.sh:
 
@@ -755,11 +682,9 @@ eepm
 
 ==== play.d/iptvnator.sh:
 eget
-eepm
 
 ==== play.d/jetbrains-toolbox.sh:
 eget
-eepm
 grep
 sed
 
@@ -768,15 +693,12 @@ eget
 
 ==== play.d/k3s.sh:
 eget
-eepm
 sed
 
 ==== play.d/ktalk.sh:
-eepm
 
 ==== play.d/kubo.sh:
 eget
-eepm
 
 ==== play.d/kyocera-sane.sh:
 
@@ -787,50 +709,40 @@ eepm
 ==== play.d/lexmark-upd-ppd.sh:
 
 ==== play.d/libicu56.sh:
-eepm
 
 ==== play.d/librewolf.sh:
 eget
-eepm
 grep
 
 ==== play.d/liteide.sh:
 eget
-eepm
 
 ==== play.d/lithium.sh:
 eget
-eepm
 
 ==== play.d/logseq.sh:
 eget
 grep
 
 ==== play.d/lossless-cut.sh:
-eepm
 
 ==== play.d/lunacy.sh:
-eepm
 
 ==== play.d/lycheeslicer.sh:
 gawk
 eget
-eepm
 grep
 sed
 
 ==== play.d/madcad.sh:
 eget
-eepm
 
 ==== play.d/mailspring.sh:
 
 ==== play.d/master-pdf-editor.sh:
 eget
-eepm
 
 ==== play.d/mattermost-desktop.sh:
-eepm
 
 ==== play.d/meridius.sh:
 eget
@@ -839,7 +751,6 @@ eget
 
 ==== play.d/min.sh:
 eget
-eepm
 
 ==== play.d/mobirise.sh:
 
@@ -849,25 +760,18 @@ eepm
 eget
 
 ==== play.d/mssql-server.sh:
-eepm
-eepm
-eepm
 
 ==== play.d/mssql-tools.sh:
-eepm
-eepm
 
 ==== play.d/mts-link.sh:
 
 ==== play.d/myoffice.sh:
 eget
-eepm
 
 ==== play.d/mytonwallet.sh:
 eget
 
 ==== play.d/naps2.sh:
-eepm
 
 ==== play.d/nekoray.sh:
 eget
@@ -879,14 +783,11 @@ eget
 
 ==== play.d/netbeans.sh:
 eget
-eepm
 findutils
 
 ==== play.d/netbird.sh:
-eepm
 
 ==== play.d/netbird-ui.sh:
-eepm
 
 ==== play.d/ngrok.sh:
 
@@ -908,33 +809,27 @@ eget
 eget
 
 ==== play.d/okular-csp.sh:
-eepm
 
 ==== play.d/onlyoffice.sh:
 eget
-eepm
 
 ==== play.d/opera.sh:
-eepm
 
 ==== play.d/orca-slicer.sh:
 eget
 
 ==== play.d/pachca.sh:
 eget
-eepm
 
 ==== play.d/packet-tracer.sh:
 
 ==== play.d/pantum.sh:
-eepm
 
 ==== play.d/pcsx2.sh:
 eget
 
 ==== play.d/pencil.sh:
 eget
-eepm
 
 ==== play.d/penpot-desktop.sh:
 
@@ -943,7 +838,6 @@ eepm
 ==== play.d/pfusp.sh:
 
 ==== play.d/pgadmin4.sh:
-eepm
 
 ==== play.d/phpstorm.sh:
 
@@ -952,28 +846,22 @@ eepm
 ==== play.d/plex-desktop.sh:
 
 ==== play.d/popcorn-time.sh:
-eepm
 
 ==== play.d/portmaster.sh:
-eepm
 
 ==== play.d/portproton.sh:
 eget
-eepm
 
 ==== play.d/postman.sh:
-eepm
 
 ==== play.d/powershell.sh:
 eget
-eepm
 
 ==== play.d/protonup-qt.sh:
 eget
 
 ==== play.d/pstube.sh:
 eget
-eepm
 
 ==== play.d/pycharm-pro.sh:
 
@@ -981,56 +869,46 @@ eepm
 
 ==== play.d/r7-office-organizer-pro.sh:
 eget
-eepm
 
 ==== play.d/r7-office-organizer.sh:
 eget
-eepm
 
 ==== play.d/r7-office.sh:
 eget
-eepm
 
 ==== play.d/radicle-httpd.sh:
 gawk
 eget
-eepm
 grep
 
 ==== play.d/radicle.sh:
 gawk
 eget
-eepm
 grep
 
 ==== play.d/raindrop.sh:
 
 ==== play.d/realvnc-server.sh:
 eget
-eepm
 sed
 
 ==== play.d/realvnc-viewer.sh:
 eget
-eepm
 sed
 
 ==== play.d/reaper.sh:
 gawk
 eget
-eepm
 grep
 
 ==== play.d/refind.sh:
 eget
-eepm
 sed
 
 ==== play.d/rememberthemilk.sh:
 
 ==== play.d/ridoclnx.sh:
 eget
-eepm
 
 ==== play.d/rocketchat.sh:
 eget
@@ -1040,38 +918,30 @@ eget
 
 ==== play.d/rstudio.sh:
 eget
-eepm
 grep
 
 ==== play.d/rudesktop.sh:
-eepm
 
 ==== play.d/rupost.sh:
 
 ==== play.d/rustdesk-libsciter-gtk.sh:
-eepm
 
 ==== play.d/rustdesk.sh:
 eget
-eepm
 grep
 
 ==== play.d/s4a.sh:
 
 ==== play.d/salutejazz.sh:
-eepm
 
 ==== play.d/sane-katusham247.sh:
 
 ==== play.d/sane-panakvs.sh:
-eepm
 
 ==== play.d/schildichat-desktop.sh:
-eepm
 sed
 
 ==== play.d/sferum.sh:
-eepm
 
 ==== play.d/sidequest.sh:
 eget
@@ -1082,7 +952,6 @@ grep
 sed
 
 ==== play.d/simplenote.sh:
-eepm
 
 ==== play.d/singularityapp.sh:
 
@@ -1090,21 +959,16 @@ eepm
 
 ==== play.d/slack.sh:
 eget
-eepm
 
 ==== play.d/snap4arduino.sh:
 eget
-eepm
 
 ==== play.d/spotify.sh:
-eepm
 
 ==== play.d/steam.sh:
-eepm
 
 ==== play.d/sublime.sh:
 eget
-eepm
 
 ==== play.d/sunshine.sh:
 
@@ -1112,7 +976,6 @@ eepm
 
 ==== play.d/sweethome3d.sh:
 eget
-eepm
 sed
 
 ==== play.d/synology-chat.sh:
@@ -1123,10 +986,8 @@ eget
 sed
 
 ==== play.d/t1client.sh:
-eepm
 
 ==== play.d/tamtam.sh:
-eepm
 
 ==== play.d/teamspeak3.sh:
 eget
@@ -1137,35 +998,31 @@ eget
 grep
 
 ==== play.d/teams.sh:
-eepm
 
 ==== play.d/teamviewer.sh:
-eepm
 
 ==== play.d/telegram.sh:
 eget
 grep
 
 ==== play.d/thinlinc-client.sh:
-eepm
+
+==== play.d/tixati.sh:
+eget
 
 ==== play.d/todoist.sh:
 
 ==== play.d/tonkeeper.sh:
 eget
-eepm
 
 ==== play.d/tradingview.sh:
 
 ==== play.d/trezor-suite.sh:
 eget
-eepm
 
 ==== play.d/trueconf-server.sh:
-eepm
 
 ==== play.d/trueconf.sh:
-eepm
 
 ==== play.d/tsukimi.sh:
 
@@ -1173,7 +1030,6 @@ eepm
 eget
 
 ==== play.d/unifiedremote.sh:
-eepm
 
 ==== play.d/unigine-heaven.sh:
 eget
@@ -1185,41 +1041,33 @@ eget
 eget
 
 ==== play.d/unityhub.sh:
-eepm
 
 ==== play.d/upscayl.sh:
 eget
 
 ==== play.d/vdhcoapp.sh:
 eget
-eepm
 
 ==== play.d/vesktop.sh:
-eepm
 
 ==== play.d/viber.sh:
 
 ==== play.d/vinteo.desktop.sh:
 gawk
 eget
-eepm
 grep
 
 ==== play.d/virtualbox-extpack.sh:
-eepm
 
 ==== play.d/virtualbox.sh:
-eepm
 
 ==== play.d/virtualhere.sh:
 eget
-eepm
 grep
 sed
 
 ==== play.d/vivaldi.sh:
 eget
-eepm
 grep
 gzip
 sed
@@ -1228,27 +1076,22 @@ sed
 
 ==== play.d/vk-messenger.sh:
 eget
-eepm
 
 ==== play.d/vk.sh:
 eget
-eepm
 
 ==== play.d/vkteams.sh:
 
 ==== play.d/vuescan.sh:
 eget
-eepm
 
 ==== play.d/waterfox.sh:
 
 ==== play.d/weasis.sh:
 eget
-eepm
 
 ==== play.d/webcord.sh:
 eget
-eepm
 
 ==== play.d/webdavmailrucloud.sh:
 eget
@@ -1262,7 +1105,6 @@ eget
 
 ==== play.d/whatsapp.sh:
 eget
-eepm
 
 ==== play.d/winbox.sh:
 gawk
@@ -1271,7 +1113,6 @@ grep
 
 ==== play.d/wing.sh:
 eget
-eepm
 sed
 findutils
 
@@ -1291,21 +1132,17 @@ grep
 
 ==== play.d/xod-ide.sh:
 eget
-eepm
 
 ==== play.d/xppen.sh:
 
 ==== play.d/yandex-browser.sh:
-eepm
 
 ==== play.d/yandex-disk-indicator.sh:
 
 ==== play.d/yandex-disk.sh:
-eepm
 
 ==== play.d/yandex-music.sh:
 eget
-eepm
 
 ==== play.d/yandex-telemost.sh:
 
@@ -1319,179 +1156,111 @@ sed
 
 ==== play.d/youtube-music.sh:
 eget
-eepm
 grep
 
 ==== play.d/yucca.sh:
 eget
-eepm
 
 ==== play.d/zed.sh:
-eepm
 
 ==== play.d/zen-browser.sh:
-eepm
 
 ==== play.d/zerotier-one.sh:
 eget
-eepm
 
 ==== play.d/zoom.sh:
-eepm
 
 ==== play.d/zwcad-viewer.sh:
 
 ==== prescription.d/bwrap-fix.sh:
-eepm
-eepm
 
 ==== prescription.d/common.sh:
-eepm
 grep
 
 ==== prescription.d/flatpak.sh:
-eepm
 grep
-eepm
 
 ==== prescription.d/gcc-multilib.sh:
-eepm
-eepm
-eepm
 sed
 
 ==== prescription.d/glibc-restore.sh:
-eepm
 grep
 
 ==== prescription.d/glusterfs10.sh:
-eepm
-eepm
-eepm
-eepm
 grep
 sed
-eepm
 
 ==== prescription.d/glusterfs11.sh:
-eepm
-eepm
-eepm
-eepm
 grep
 sed
-eepm
 
 ==== prescription.d/glusterfs7.sh:
-eepm
-eepm
-eepm
-eepm
 sed
-eepm
 
 ==== prescription.d/glusterfs8.sh:
-eepm
-eepm
-eepm
-eepm
 grep
 sed
-eepm
 
 ==== prescription.d/glusterfs9.sh:
-eepm
-eepm
-eepm
-eepm
 grep
 sed
-eepm
 
 ==== prescription.d/i586-fix.sh:
-eepm
-eepm
 grep
 info
 
 ==== prescription.d/i586-remove.sh:
-eepm
-eepm
 
 ==== prescription.d/i586-support.sh:
-eepm
 grep
 info
 sed
 
 ==== prescription.d/nvidia-remove.sh:
-eepm
 
 ==== prescription.d/php7.sh:
-eepm
-eepm
-eepm
 grep
 sed
 
 ==== prescription.d/php8.0.sh:
-eepm
-eepm
-eepm
 grep
 sed
 
 ==== prescription.d/php8.1.sh:
-eepm
-eepm
-eepm
 grep
 sed
 
 ==== prescription.d/php8.2.sh:
-eepm
-eepm
-eepm
 grep
 sed
 
 ==== prescription.d/podman-enable-rootless.sh:
 gawk
-eepm
 grep
 
 ==== prescription.d/python2-remove.sh:
-eepm
 
 ==== prescription.d/snap.sh:
-eepm
 
 ==== prescription.d/switch-to-nouveau.sh:
-eepm
 grep
 
 ==== prescription.d/switch-to-nvidia.sh:
 /etc/bashrc
-eepm
 grep
 
 ==== prescription.d/switch-to-pipewire.sh:
-eepm
 
 ==== prescription.d/waydroid.sh:
 /etc/bashrc
 gawk
-eepm
 grep
 sed
-eepm
 
 ==== prescription.d/wine.sh:
-eepm
 grep
 
 ==== repack.d/1c83-client.sh:
-eepm
 sed
 
 ==== repack.d/1c-connect.sh:
@@ -1576,7 +1345,6 @@ sed
 ==== repack.d/ClipGrab.sh:
 
 ==== repack.d/cnrdrvcups-ufr2-uk.sh:
-eepm
 sed
 
 ==== repack.d/code.sh:
@@ -1593,7 +1361,6 @@ sed
 sed
 
 ==== repack.d/common.sh:
-eepm
 file
 findutils
 grep
@@ -1601,7 +1368,6 @@ sed
 findutils
 
 ==== repack.d/crossover.sh:
-eepm
 
 ==== repack.d/cuda-z.sh:
 
@@ -1655,8 +1421,9 @@ sed
 
 ==== repack.d/freetube.sh:
 
+==== repack.d/furmark.sh:
+
 ==== repack.d/generic-appimage.sh:
-eepm
 file
 findutils
 grep
@@ -1668,7 +1435,6 @@ grep
 sed
 
 ==== repack.d/generic.sh:
-eepm
 findutils
 grep
 sed
@@ -1725,7 +1491,6 @@ sed
 ==== repack.d/iptvnator.sh:
 
 ==== repack.d/iwbdriver.sh:
-eepm
 sed
 
 ==== repack.d/iwdm.sh:
@@ -1781,13 +1546,10 @@ sed
 ==== repack.d/meridius.sh:
 
 ==== repack.d/microsoft-edge-beta.sh:
-eepm
 
 ==== repack.d/microsoft-edge-dev.sh:
-eepm
 
 ==== repack.d/microsoft-edge-stable.sh:
-eepm
 
 ==== repack.d/minecraft-launcher.sh:
 
@@ -1796,7 +1558,6 @@ eepm
 ==== repack.d/mobirise.sh:
 
 ==== repack.d/mssql-server.sh:
-eepm
 sed
 
 ==== repack.d/naps2.sh:
@@ -1828,7 +1589,6 @@ sed
 sed
 
 ==== repack.d/pantum.sh:
-eepm
 sed
 
 ==== repack.d/Pencil.sh:
@@ -1871,7 +1631,6 @@ sed
 sed
 
 ==== repack.d/r7-office.sh:
-eepm
 
 ==== repack.d/radicle-httpd.sh:
 
@@ -1906,13 +1665,11 @@ sed
 ==== repack.d/rustdesk-libsciter-gtk.sh:
 
 ==== repack.d/rustdesk.sh:
-eepm
 grep
 sed
 sed
 
 ==== repack.d/S4A.sh:
-eepm
 sed
 
 ==== repack.d/sbb.sh:
@@ -1936,11 +1693,9 @@ sed
 ==== repack.d/snap4arduino.sh:
 
 ==== repack.d/softmaker-freeoffice.sh:
-eepm
 grep
 
 ==== repack.d/spnxclient.sh:
-eepm
 sed
 
 ==== repack.d/spotify-client.sh:
@@ -1952,7 +1707,6 @@ sed
 ==== repack.d/sublime-text.sh:
 
 ==== repack.d/sunshine.sh:
-eepm
 grep
 sed
 
@@ -1960,7 +1714,6 @@ sed
 sed
 
 ==== repack.d/SweetHome3D.sh:
-eepm
 findutils
 sed
 
@@ -1971,12 +1724,10 @@ sed
 ==== repack.d/tamtam-app.sh:
 
 ==== repack.d/teamspeak3.sh:
-eepm
 
 ==== repack.d/teamspeak.sh:
 
 ==== repack.d/teams.sh:
-eepm
 sed
 
 ==== repack.d/teamviewer.sh:
@@ -1987,19 +1738,19 @@ sed
 
 ==== repack.d/thinlinc-client.sh:
 
+==== repack.d/tixati.sh:
+
 ==== repack.d/Tonkeeper.sh:
 
 ==== repack.d/tradingview.sh:
 sed
 
 ==== repack.d/Trezor-Suite.sh:
-eepm
 sed
 
 ==== repack.d/trueconf-server.sh:
 
 ==== repack.d/trueconf.sh:
-eepm
 sed
 
 ==== repack.d/tsukimi.sh:
@@ -2019,10 +1770,8 @@ sed
 ==== repack.d/unityhub.sh:
 
 ==== repack.d/viber.sh:
-eepm
 
 ==== repack.d/vinteo-desktop.sh:
-eepm
 
 ==== repack.d/virtualhere.sh:
 
@@ -2067,7 +1816,6 @@ sed
 sed
 
 ==== repack.d/XenDesktopVDA.sh:
-eepm
 sed
 
 ==== repack.d/xod-client-electron.sh:
@@ -2078,20 +1826,16 @@ sed
 ==== repack.d/yandex-browser-beta-codecs-ffmpeg-extra.sh:
 
 ==== repack.d/yandex-browser-beta.sh:
-eepm
 
 ==== repack.d/yandex-browser-corporate-codecs-ffmpeg-extra.sh:
 
 ==== repack.d/yandex-browser-corporate.sh:
-eepm
 
 ==== repack.d/yandex-browser-stable-codecs-ffmpeg-extra.sh:
 
 ==== repack.d/yandex-browser-stable.sh:
-eepm
 
 ==== repack.d/yandex-disk-indicator.sh:
-eepm
 grep
 
 ==== repack.d/yandex-telemost.sh:
