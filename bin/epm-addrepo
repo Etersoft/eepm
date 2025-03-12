@@ -217,7 +217,7 @@ __epm_addrepo_apt()
 {
     local repo="$*"
 
-    epm repo list --quiet 2>/dev/null | grep -q -F "$repo" && return 0
+    epm --quiet repo list | grep -q -F "$repo" && return 0
 
     if [ -n "$dryrun" ] ; then
         echo "$repo"
@@ -428,7 +428,7 @@ __epm_addrepo_alpine()
 {
     local repo="$1"
     is_url "$repo" || fatal "Only URL is supported"
-    epm repo list --quiet | grep -q -F "$repo" && return 0
+    epm --quiet repo list | grep -q -F "$repo" && return 0
 
     echo "$repo" | sudocmd tee -a /etc/apk/repositories
 }

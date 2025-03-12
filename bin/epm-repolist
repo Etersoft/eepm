@@ -91,6 +91,8 @@ print_apt_sources_list()
 {
     local LISTS='/etc/apt/sources.list /etc/apt/sources.list.d/*.list'
 
+    [ -n "$1" ] && echo "$*" | grep -q "\.[*?]" && warning "Only glob symbols * and ? are supported. Don't use regexp here!"
+
     if [ "$1" = "-a" ] || [ "$1" = "--all" ] ; then
         shift
         local wc=$(__convert_glob__to_regexp "$*")

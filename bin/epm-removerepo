@@ -38,8 +38,8 @@ __epm_removerepo_apt()
     for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
         [ -s "$i" ] || continue
         # touch file only when it is needed
-        grep -q -E "$repo" $i || continue
-        $sc sed -i -e "s|.*$repo.*||" $i
+        grep -q -F "$repo" $i || continue
+        $sc sed -i -e "s|.*$(sed_escape "$repo").*||" $i
     done
 }
 
@@ -47,7 +47,7 @@ __epm_removerepo_apt()
 __epm_grep_repo_list()
 {
     while [ -n "$1" ] ; do
-        epm --quiet repo list | grep -E "$1"
+        epm --quiet repo list "$1"
         shift
     done
 }
@@ -55,17 +55,17 @@ __epm_grep_repo_list()
 # remove grepped lines
 __epm_removerepo_alt_grepremove()
 {
-    local rl="$1"
+    local rl="$*"
 
     if [ "$rl" = "all" ] ; then
-        rl=".*"
+        rl="*"
     fi
 
     # ^rpm means full string
-    if !rhas "$1" "^rpm" ; then
-        rl="$(__epm_grep_repo_list "$@" 2>/dev/null)"
+    if ! rhas "$rl" "^rpm" ; then
+        rl="$(__epm_grep_repo_list "$rl" 2>/dev/null)"
         if [ -z "$rl" ] ; then
-            [ -n "$verbose" ] && warning 'Can'\''t find '$*' in the repos (see # epm repolist output)'
+            [ -n "$verbose" ] && warning 'Can'\''t find '$rl' in the repos (see # epm repolist output)'
             return 1
         fi
     fi
@@ -124,7 +124,7 @@ __epm_removerepo_alt()
             if echo "$*" | grep -q "^rpm" ; then
                 __epm_removerepo_apt "$*"
             else
-                info "removing source.list entries by mask '$*'"
+                info "removing all source.list"
                 __epm_removerepo_alt_grepremove "$*"
             fi
             ;;
