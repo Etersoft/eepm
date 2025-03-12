@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.12
+Version: 3.64.13
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -140,6 +140,21 @@ make -C po
 %endif
 
 %changelog
+* Wed Mar 12 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.13-alt1
+- epm-install: add support for install task by URL
+- epm-requires: skip or in requires
+- epm-release-upgrade: add support for ROSA/13
+- epm-repofix: don't restore repo sign
+- distr_info: fix alt c10* branch detection
+- epm-removerepo: fix all removing
+- epm-addrepo: rewrite alt repo setting
+- epm play: add furmark (eterbug #18119)
+- epm play discord: disable autoupdate and add epm config file (eterbug #18120)
+- epm repolist: move to wildcard support
+- epm-repolist: fix repo list return code
+- epm-repo: fixes and improvements
+- epm play: add tixati (eterbug #18121)
+
 * Mon Mar 10 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.12-alt1
 - epm repo remove: add support for archived task
 - epm-addrepo: get real url before add (old apt doesn't support redirects)
