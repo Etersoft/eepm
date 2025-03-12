@@ -703,6 +703,14 @@ esu()
     fi
 }
 
+# copied from eget's filter_glob
+# check man glob
+__convert_glob__to_regexp()
+{
+    # translate glob to regexp
+    echo "$1" | sed -e "s|\*|.*|g" -e "s|?|.|g"
+}
+
 regexp_subst()
 {
     local expression="$1"

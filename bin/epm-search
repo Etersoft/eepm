@@ -133,13 +133,6 @@ LC_ALL=C docmd $CMD $string
 epm play $short --list-all | sed -e 's|^ *||g' -e 's|[[:space:]]\+| |g' -e "s|\$| (use \'epm play\' to install it)|"
 }
 
-# copied from eget's filter_glob
-# check man glob
-__convert_glob__to_regexp()
-{
-    # translate glob to regexp
-    echo "$1" | sed -e "s|\*|.*|g" -e "s|?|.|g"
-}
 
 # ^mc.*ext -> mc
 _clean_from_regexp()
