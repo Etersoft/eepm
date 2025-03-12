@@ -55,17 +55,21 @@ __epm_grep_repo_list()
 # remove grepped lines
 __epm_removerepo_alt_grepremove()
 {
-    local rl
+    local rl="$1"
+
+    if [ "$rl" = "all" ] ; then
+        rl=".*"
+    fi
+
     # ^rpm means full string
-    if [ "$1" = "all" ] || rhas "$1" "^rpm" ; then
-        rl="$1"
-    else
+    if !rhas "$1" "^rpm" ; then
         rl="$(__epm_grep_repo_list "$@" 2>/dev/null)"
         if [ -z "$rl" ] ; then
             [ -n "$verbose" ] && warning 'Can'\''t find '$*' in the repos (see # epm repolist output)'
             return 1
         fi
     fi
+
     echo "$rl" | while read rp ; do
         __epm_removerepo_apt "$rp"
     done
@@ -117,7 +121,7 @@ __epm_removerepo_alt()
             fatal "epm removerepo: no options are supported"
             ;;
         *)
-            if echo "$*" | grep -q "^rpm" ] ; then
+            if echo "$*" | grep -q "^rpm" ; then
                 __epm_removerepo_apt "$*"
             else
                 info "removing source.list entries by mask '$*'"
