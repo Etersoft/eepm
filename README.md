@@ -73,19 +73,14 @@ or using wget:
 # wget -O- https://eepm.ru/epm.sh | bash /dev/stdin ei
 ```
 
-or more long version:
 
-```
-# curl -s https://raw.githubusercontent.com/Etersoft/eepm/master/packed/epm.sh | bash /dev/stdin ei --auto
-```
-
-If you have no `curl` or `wget` on your system, just download file `https://raw.githubusercontent.com/Etersoft/eepm/master/packed/epm.sh`
-and run in the download directory via bash:
+If you have no `curl` or `wget` on your system, just download file `https://eepm.ru/epm.sh`
+and run it in the download directory via bash:
 ```
 # bash epm.sh ei
 ```
 
-In a common case you can install eepm package manually:
+Also you can install eepm package manually:
 `https://download.etersoft.ru/pub/Korinf/x86_64`
 
 ## How to add new distro support
@@ -101,7 +96,10 @@ For developers only:
 * https://wiki.archlinux.org/title/Pacman/Rosetta
 
 See detailed description in Russian at
-http://wiki.etersoft.ru/Epm
+https://wiki.eepm.ru/
+
+Please visit our Telegram group
+https://t.me/useepm
 
 Please e-mail if you have any questions:
 `lav@etersoft.ru`
