@@ -34,7 +34,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.12"
+export EPMVERSION="3.64.13"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -712,6 +712,12 @@ esu()
     fi
 }
 
+__convert_glob__to_regexp()
+{
+    # translate glob to regexp
+    echo "$1" | sed -e "s|\*|.*|g" -e "s|?|.|g"
+}
+
 regexp_subst()
 {
     local expression="$1"
@@ -1178,20 +1184,14 @@ __epm_addrepo_etersoft_addon()
     fi
 }
 
-__epm_addrepo_main_alt_repo()
+__get_sign()
 {
-    local comp
-    local sign
     local repo="$1"
-    comp="$repo"
-    sign="$repo"
-    rhas "$repo" "^c" && sign="cert8"
-    local baseurl="http://ftp.basealt.ru/pub/distributions/ALTLinux"
-    epm repo add "rpm [$sign] $baseurl $comp/branch/$DISTRARCH classic" || return
-    if [ "$DISTRARCH" = "x86_64" ] ; then
-        epm repo add "rpm [$sign] $baseurl $comp/branch/x86_64-i586 classic" || return
-    fi
-    epm repo add "rpm [$sign] $baseurl $comp/branch/noarch classic" || return
+    rhas "$repo" "^c[0-9]" && echo "[cert8]" && return
+    [ "$repo" = "sisyphus" ] && repo="alt"
+    # alt c* distr has no alt vendor
+    rhas "$DISTRVERSION" "^c[0-9]" && return
+    [ -n "$repo" ] && echo "[$repo]"
 }
 
 get_archlist()
@@ -1204,6 +1204,37 @@ get_archlist()
             ;;
     esac
 }
+
+__epm_addrepo_add_alt_repo()
+{
+    local branch="$1"
+    local repourl="$2"
+    local comp="$3"
+    local sign
+
+    sign="$(__get_sign $repo)"
+
+    [ -n "$comp" ] | comp="classic"
+
+    local i
+    for i in $(get_archlist) ; do
+        epm repo add "rpm $sign $repourl/$i $comp"
+    done
+
+}
+
+__epm_addrepo_main_alt_repo()
+{
+    local repo="$1"
+
+    local baseurl="http://ftp.basealt.ru/pub/distributions"
+
+    local repopart
+    [ "$repo" = "sisyphus" ] && repopart="Sisyphus" || repopart="$repo/branch"
+
+    __epm_addrepo_add_alt_repo "$repo" "$baseurl ALTLinux/$repopart" "classic"
+}
+
 
 __epm_addrepo_altlinux_short()
 {
@@ -1293,7 +1324,7 @@ __epm_addrepo_apt()
 {
     local repo="$*"
 
-    epm repo list --quiet 2>/dev/null | grep -q -F "$repo" && return 0
+    epm --quiet repo list | grep -q -F "$repo" && return 0
 
     if [ -n "$dryrun" ] ; then
         echo "$repo"
@@ -1386,12 +1417,12 @@ __epm_addrepo_altlinux()
             return 0
             ;;
         deferred)
-            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersot Sisyphus Deferred supported only for ALT Sisyphus."
+            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersoft Sisyphus Deferred supported only for ALT Sisyphus."
             epm repo add "http://download.etersoft.ru/pub/Etersoft/Sisyphus/Deferred"
             return 0
             ;;
         deferred.org)
-            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersot Sisyphus Deferred supported only for ALT Sisyphus."
+            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersoft Sisyphus Deferred supported only for ALT Sisyphus."
             epm repo add "http://mirror.eterfund.org/download.etersoft.ru/pub/Etersoft/Sisyphus/Deferred"
             return 0
             ;;
@@ -1403,14 +1434,7 @@ __epm_addrepo_altlinux()
             datestr="$2"
             echo "$datestr" | grep -Eq "^20[0-2][0-9]/[01][0-9]/[0-3][0-9]$" || fatal "use follow date format: 2017/01/31"
 
-            local rpmsign='[alt]'
-            [ "$branch" != "sisyphus" ] && rpmsign="[$branch]"
-
-            epm repo add "rpm $rpmsign $ALTLINUXPUBURL archive/$branch/date/$datestr/$DISTRARCH classic"
-            if [ "$DISTRARCH" = "x86_64" ] ; then
-                epm repo add "rpm $rpmsign $ALTLINUXPUBURL archive/$branch/date/$datestr/x86_64-i586 classic"
-            fi
-            epm repo add "rpm $rpmsign $ALTLINUXPUBURL archive/$branch/date/$datestr/noarch classic"
+            __epm_addrepo_add_alt_repo "$branch $ALTLINUXPUBURL archive/$branch/date/$datestr" "classic"
 
             return 0
             ;;
@@ -1425,7 +1449,7 @@ __epm_addrepo_altlinux()
     fi
 
     case "$repo" in
-        c10f2|c10f1|c9f2|c9f1|c9)
+        c10f3|c10f2|c10f1|c9f2|c9f1|c9)
             __epm_addrepo_main_alt_repo "$repo"
             return
             ;;
@@ -1511,7 +1535,7 @@ __epm_addrepo_alpine()
 {
     local repo="$1"
     is_url "$repo" || fatal "Only URL is supported"
-    epm repo list --quiet | grep -q -F "$repo" && return 0
+    epm --quiet repo list | grep -q -F "$repo" && return 0
 
     echo "$repo" | sudocmd tee -a /etc/apk/repositories
 }
@@ -5008,6 +5032,17 @@ epm_install()
                 confirm_info "You are about to install $pkg_names task(s) from https://git.altlinux.org."
             fi
             epm_install_alt_tasks "$pkg_names"
+            return
+        fi
+        if echo "$pkg_urls" | grep -q -E "https://packages.altlinux.org/ru/tasks/[0-9]+/*$" || \
+           echo "$pkg_urls" | grep -q -E "https://git.altlinux.org/tasks/[0-9]+/*$" || \
+           echo "$pkg_urls" | grep -q -E "https://git.altlinux.org/tasks/archive/done/_[0-9]+/[0-9]+/*$" ; then
+            local task="$(basename "$pkg_urls")"
+            pkg_urls=""
+            if [ -n "$interactive" ] ; then
+                confirm_info "You are about to install $task task from $(dirname "$pkg_urls")."
+            fi
+            epm_install_alt_tasks "$task"
             return
         fi
     fi
@@ -9034,8 +9069,8 @@ __wcount()
 
 __p11_upgrade_fix()
 {
-    if [[ ! $(docmd epm installed apt-conf-branch) ]]; then 
-        info "Need to install default apt-conf package to avoid missing $TO repo"
+    if ! docmd epm installed apt-conf-branch ; then 
+        info "Need to install default apt-conf-branch package to avoid missing $TO repo"
         docmd epm install apt-conf-branch || fatal
     fi
     # файл /etc/openssl/openssl.cnf из устанавливаемого пакета openssl-config-3.2.0-alt1.noarch конфликтует с файлом из пакета libcrypto10-1.0.2u-alt1.p9.2.x86_64
@@ -9354,7 +9389,7 @@ __switch_alt_to_distro()
             __do_upgrade
             confirm_info "Upgrade $DISTRNAME from $FROM to $TO ..."
             docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
-            __p11_upgrade_fix
+            #__p11_upgrade_fix
             __switch_repo_to $TO
             end_change_alt_repo
             __do_upgrade
@@ -9511,12 +9546,16 @@ epm_release_upgrade()
         return
         ;;
     "ROSA")
-        # TODO: move to distro related upgrade
-        #epm repo remove all
-        # FIXME: don't work:
-        #epm repo add "http://mirror.rosalinux.ru/rosa/rosa2021.1/repository/$DISTRARCH"
-        #showcmd urpmi.addmedia --distrib http://mirror.yandex.ru/mandriva/devel/2010.2/i586/
-        #sudocmd urpmi --auto-update --replacefiles
+        sudocmd dnf --refresh upgrade || fatal
+        sudocmd dnf clean all
+        DV=$(echo "$DISTRVERSION" | sed -e "s|\..*||")
+        [ "$DV" = "2021" ] && DV=12
+        local RELEASEVER="$1"
+        [ -n "$RELEASEVER" ] || RELEASEVER=$(($DV + 1))
+        confirm_info 'Upgrade to $DISTRNAME/$RELEASEVER'
+        sudocmd dnf distro-sync -y --releasever=$RELEASEVER --allowerasing
+        sudocmd rpm --rebuilddb
+        epm upgrade
         return
         ;;
     *)
@@ -10104,8 +10143,8 @@ __epm_removerepo_apt()
     for i in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
         [ -s "$i" ] || continue
         # touch file only when it is needed
-        grep -q -E "$repo" $i || continue
-        $sc sed -i -e "s|.*$repo.*||" $i
+        grep -q -F "$repo" $i || continue
+        $sc sed -i -e "s|.*$(sed_escape "$repo").*||" $i
     done
 }
 
@@ -10113,24 +10152,28 @@ __epm_removerepo_apt()
 __epm_grep_repo_list()
 {
     while [ -n "$1" ] ; do
-        epm --quiet repo list | grep -E "$1"
+        epm --quiet repo list "$1"
         shift
     done
 }
 
 __epm_removerepo_alt_grepremove()
 {
-    local rl
+    local rl="$*"
+
+    if [ "$rl" = "all" ] ; then
+        rl="*"
+    fi
+
     # ^rpm means full string
-    if [ "$1" = "all" ] || rhas "$1" "^rpm" ; then
-        rl="$1"
-    else
-        rl="$(__epm_grep_repo_list "$@" 2>/dev/null)"
+    if ! rhas "$rl" "^rpm" ; then
+        rl="$(__epm_grep_repo_list "$rl" 2>/dev/null)"
         if [ -z "$rl" ] ; then
-            [ -n "$verbose" ] && warning 'Can'\''t find '$*' in the repos (see # epm repolist output)'
+            [ -n "$verbose" ] && warning 'Can'\''t find '$rl' in the repos (see # epm repolist output)'
             return 1
         fi
     fi
+
     echo "$rl" | while read rp ; do
         __epm_removerepo_apt "$rp"
     done
@@ -10182,10 +10225,10 @@ __epm_removerepo_alt()
             fatal "epm removerepo: no options are supported"
             ;;
         *)
-            if echo "$*" | grep -q "^rpm" ] ; then
+            if echo "$*" | grep -q "^rpm" ; then
                 __epm_removerepo_apt "$*"
             else
-                info "removing source.list entries by mask '$*'"
+                info "removing all source.list"
                 __epm_removerepo_alt_grepremove "$*"
             fi
             ;;
@@ -11093,6 +11136,7 @@ __epm_repodisable_alt()
     else
         rl="$( (epm --quiet repolist) 2>/dev/null | grep -F "$1" | head -n1 )"
         [ -z "$rl" ] && warning 'Can'\''t find $1 entries in the repos (see # epm repolist output)' && return 1
+        [ -z "$rl" ] && warning "Can't find '" $1 "' entries in the repos (see # epm repolist output)" && return 1
     fi
     echo "$rl" | while read rp ; do
         [ -n "$dryrun" ] && message 'will comment $rp' && continue
@@ -11148,8 +11192,9 @@ __epm_repoenable_alt()
     if rhas "$1" "\^rpm" ; then
         rl="$(echo "$1" | sed -e 's|\^||')"
     else
-        rl="$( epm --quiet --all repolist 2>/dev/null | grep -F "$1" | head -n1 | sed -e 's|[[:space:]]*#[[:space:]]*||' )"
+        rl="$( epm --quiet repolist --all 2>/dev/null | grep -F "$1" | head -n1 | sed -e 's|[[:space:]]*#[[:space:]]*||' )"
         [ -z "$rl" ] && warning 'Can'\''t find commented $1 in the repos (see # epm repolist output)' && return 1
+        [ -z "$rl" ] && warning "Can't find commented '"$1"' in the repos (see # epm repolist output)" && return 1
     fi
     echo "$rl" | while read rp ; do
         [ -n "$dryrun" ] && message 'will uncomment $rp' && continue
@@ -11245,7 +11290,7 @@ __replace_alt_version_in_repo()
     #echo "Upgrading $DISTRNAME from $1 to $2 ..."
     epm --quiet repo list | sed -E -e "s|($1)|{\1}->{$2}|g" | grep -E --color -- "$1"
     # ask and replace only we will have changes
-    if epm --quiet repo list | grep -E -q -- "$1" ; then
+    if epm --quiet repo list "$1" ; then
         __replace_text_in_alt_repo "/^ *#/! s!$1!$2!g"
     fi
 }
@@ -11336,6 +11381,9 @@ __fix_alt_sources_list()
         regexp_subst "/^ *#/! s| distributions|/distributions|" $i
         regexp_subst "/^ *#/! $SUBST_ALT_RULE1" $i
         regexp_subst "/^ *#/! $SUBST_ALT_RULE2" $i
+
+        # don't restore repo sign
+        continue
 
         # Sisyphus uses 'alt' vendor key
         __try_fix_apt_source_list $i alt "ALTLinux\/Sisyphus"
@@ -11610,11 +11658,13 @@ __print_apt_sources_list_verbose()
     local regexp="$1"
     shift
     local i
+    local res=1
     for i in $@ ; do
         test -r "$i" || continue
         grep -v -- "^.*#" $i | grep -v -- "^ *\$" | grep -q . && __info_cyan "$i:" || continue
-        grep -v -- "^.*#" $i | grep -v -- "^ *\$" | sed -e 's|^|    |' | grep -E --color "$regexp"
+        grep -v -- "^.*#" $i | grep -v -- "^ *\$" | sed -e 's|^|    |' | grep -E --color "$regexp" && res=0
     done
+    return $res
 }
 
 __print_apt_sources_list_verbose_full()
@@ -11622,31 +11672,39 @@ __print_apt_sources_list_verbose_full()
     local regexp="$1"
     shift
     local i
+    local res=1
     for i in $@ ; do
         test -r "$i" || continue
         grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i | grep -v -- "^ *\$" | grep -q . && echo && __info_cyan "$i:" || continue
-        grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i | grep -v -- "^ *\$" | sed -e 's|^|    |' -e "s|\(.*#.*\)|$(set_color $WHITE)\1$(restore_color)|" | grep -E --color "$regexp"
+        grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i | grep -v -- "^ *\$" | sed -e 's|^|    |' -e "s|\(.*#.*\)|$(set_color $WHITE)\1$(restore_color)|" | grep -E --color "$regexp" && res=0
     done
+    return $res
 }
 
 print_apt_sources_list()
 {
     local LISTS='/etc/apt/sources.list /etc/apt/sources.list.d/*.list'
 
+    [ -n "$1" ] && echo "$*" | grep -q "\.[*?]" && warning "Only glob symbols * and ? are supported. Don't use regexp here!"
+
     if [ "$1" = "-a" ] || [ "$1" = "--all" ] ; then
         shift
+        local wc=$(__convert_glob__to_regexp "$*")
+
         if [ -n "$quiet" ] ; then
-            __print_apt_sources_list_full "$*" $LISTS
+            __print_apt_sources_list_full "$wc" $LISTS
         else
-            __print_apt_sources_list_verbose_full "$*" $LISTS
+            __print_apt_sources_list_verbose_full "$wc" $LISTS
         fi
         return
     fi
 
+    local wc=$(__convert_glob__to_regexp "$*")
+
     if [ -n "$quiet" ] ; then
-        __print_apt_sources_list "$*" $LISTS
+        __print_apt_sources_list "$wc" $LISTS
     else
-        __print_apt_sources_list_verbose "$*" $LISTS
+        __print_apt_sources_list_verbose "$wc" $LISTS
     fi
 }
 
@@ -11995,7 +12053,7 @@ esac
 
 __epm_filter_out_base_alt_reqs()
 {
-    grep -E -v "(^rpmlib\(|^/bin/sh|^/bin/bash|^rtld\(GNU_HASH\)|ld-linux)"
+    grep -E -v "(^rpmlib\(|^/bin/sh|^/bin/bash|^rtld\(GNU_HASH\)|ld-linux)" | grep -E -v " or "
 }
 
 __epm_alt_rpm_requires()
@@ -12950,11 +13008,6 @@ LC_ALL=C docmd $CMD $string
 epm play $short --list-all | sed -e 's|^ *||g' -e 's|[[:space:]]\+| |g' -e "s|\$| (use \'epm play\' to install it)|"
 }
 
-__convert_glob__to_regexp()
-{
-    # translate glob to regexp
-    echo "$1" | sed -e "s|\*|.*|g" -e "s|?|.|g"
-}
 
 _clean_from_regexp()
 {
@@ -15362,10 +15415,10 @@ esac
 
 case "$DISTRIB_ID" in
     "ALTLinux")
-        echo "$VERSION" | grep -q "c9.* branch" && DISTRIB_RELEASE="c9"
-        echo "$VERSION" | grep -q "c9f1 branch" && DISTRIB_RELEASE="c9f1"
-        echo "$VERSION" | grep -q "c9f2 branch" && DISTRIB_RELEASE="c9f2"
-        echo "$VERSION" | grep -q "c9f3 branch" && DISTRIB_RELEASE="c9f3"
+        echo "$VERSION" | grep -q "c9\.* branch" && DISTRIB_RELEASE="c9"
+        if echo "$VERSION" | grep -q -E "c[0-9]+f[1-9] branch" ; then
+            DISTRIB_RELEASE="$(echo "$VERSION" | sed 's| branch||')"
+        fi
         DISTRIB_CODENAME="$DISTRIB_RELEASE"
         # FIXME: fast hack for fallback: 10.1 -> p10 for /etc/os-release
         if echo "$DISTRIB_RELEASE" | grep -q "^0" ; then

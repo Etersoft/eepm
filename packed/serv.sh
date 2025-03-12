@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.12"
+EPMVERSION="3.64.13"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -707,6 +707,12 @@ esu()
         showcmd "$SUDO su -"
         $SUDO su -
     fi
+}
+
+__convert_glob__to_regexp()
+{
+    # translate glob to regexp
+    echo "$1" | sed -e "s|\*|.*|g" -e "s|?|.|g"
 }
 
 regexp_subst()
@@ -2301,10 +2307,10 @@ esac
 
 case "$DISTRIB_ID" in
     "ALTLinux")
-        echo "$VERSION" | grep -q "c9.* branch" && DISTRIB_RELEASE="c9"
-        echo "$VERSION" | grep -q "c9f1 branch" && DISTRIB_RELEASE="c9f1"
-        echo "$VERSION" | grep -q "c9f2 branch" && DISTRIB_RELEASE="c9f2"
-        echo "$VERSION" | grep -q "c9f3 branch" && DISTRIB_RELEASE="c9f3"
+        echo "$VERSION" | grep -q "c9\.* branch" && DISTRIB_RELEASE="c9"
+        if echo "$VERSION" | grep -q -E "c[0-9]+f[1-9] branch" ; then
+            DISTRIB_RELEASE="$(echo "$VERSION" | sed 's| branch||')"
+        fi
         DISTRIB_CODENAME="$DISTRIB_RELEASE"
         # FIXME: fast hack for fallback: 10.1 -> p10 for /etc/os-release
         if echo "$DISTRIB_RELEASE" | grep -q "^0" ; then
