@@ -54,4 +54,6 @@ done
 # Replace fedora libminiupnpc to system libminiupnpc
 a='' patchelf --replace-needed "libminiupnpc.so.$MINIUPNPC_FEDORA_VERSION" "libminiupnpc.so.$MINIUPNPC_REPO_VERSION"  "usr/bin/sunshine"
 
+a='' patchelf --replace-needed "libappindicator3.so.1" "libayatana-appindicator3.so.1" "usr/bin/sunshine"
+
 add_libs_requires
