@@ -1,8 +1,16 @@
 #!/bin/sh
 
-SPECNAME=$(pwd)/../../eepm.spec
+fatal()
+{
+    echo "$*" >&2
+    exit 1
+}
 
-cd ~/Projects/git/eepm.aur/ || exit
+SPECNAME=$(realpath $(dirname $0)/../../eepm.spec)
+
+ls "$SPECNAME" || fatal
+
+cd ~/Projects/git/eepm.aur/ || fatal
 
 if [ -f /usr/share/eterbuild/eterbuild ] ; then
 
@@ -11,6 +19,7 @@ if [ -f /usr/share/eterbuild/eterbuild ] ; then
     load_mod spec etersoft
 
     VERSION="$(get_version $SPECNAME)"
+    [ -n "$VERSION" ] || fatal
 
     echo "$ subst \"s|^pkgver=.*|pkgver=$VERSION|\" PKGBUILD"
 
@@ -20,13 +29,16 @@ fi
 
 if [ $(epm print info -g) != "pacman" ] ; then
     echo "Rerun the script on Arch based system"
-    exit 1
+    ssh manjaro bash -x ~/Projects/git/eepm/packaging/AUR/update.sh
+    exit 0
 fi
 
 updpkgsums
 makepkg --printsrcinfo > .SRCINFO
 git add PKGBUILD .SRCINFO
-git commit
+
+. PKGBUILD
+git commit -m "new version $pkgver"
 
 makepkg -C -f --noconfirm
 
