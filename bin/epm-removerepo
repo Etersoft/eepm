@@ -63,9 +63,9 @@ __epm_removerepo_alt_grepremove()
 
     # ^rpm means full string
     if ! rhas "$rl" "^rpm" ; then
-        rl="$(__epm_grep_repo_list "$rl" 2>/dev/null)"
+        rl="$(__epm_grep_repo_list $rl 2>/dev/null)"
         if [ -z "$rl" ] ; then
-            [ -n "$verbose" ] && warning 'Can'\''t find '$rl' in the repos (see # epm repolist output)'
+            [ -n "$verbose" ] && warning 'Can'\''t find '$*' in the repos (see # epm repolist output)'
             return 1
         fi
     fi
@@ -124,7 +124,7 @@ __epm_removerepo_alt()
             if echo "$*" | grep -q "^rpm" ; then
                 __epm_removerepo_apt "$*"
             else
-                info "removing all source.list"
+                info "removing with grep by '$*'"
                 __epm_removerepo_alt_grepremove "$*"
             fi
             ;;
