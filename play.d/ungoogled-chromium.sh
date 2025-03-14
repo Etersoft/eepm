@@ -4,7 +4,7 @@ PKGNAME=ungoogled-chromium
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="Google Chromium, sans integration with Google from the official site"
-URL="https://ungoogled-software.github.io/ungoogled-chromium-binaries/"
+URL="https://github.com/ungoogled-software/ungoogled-chromium-portablelinux"
 
 . $(dirname $0)/common.sh
 
@@ -15,6 +15,7 @@ fi
 
 [ "$VERSION" != "*" ] && VERSION="$VERSION-1.1"
 
-PKGURL=$(eget --list --latest https://github.com/clickot/ungoogled-chromium-binaries/releases "ungoogled-chromium_${VERSION}_linux.tar.xz")
+# https://github.com/ungoogled-software/ungoogled-chromium-portablelinux/releases/download/134.0.6998.88-1/ungoogled-chromium_134.0.6998.88-1_linux.tar.xz
+PKGURL=$(eget --list --latest https://github.com/ungoogled-software/ungoogled-chromium-portablelinux/releases "ungoogled-chromium_${VERSION}_linux.tar.xz")
 
 install_pack_pkgurl
