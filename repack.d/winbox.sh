@@ -21,8 +21,6 @@ StartupWMClass=winbox
 Categories=Network
 EOF
 
-# copied from unpacked exe file: winbox64.exe
-i=48
-install_file ipfs://Qmdkgx2mstbxHtvFuooaUTrRL1tnz5XWh5seiyXQGkTmCW /usr/share/icons/hicolor/${i}x${i}/apps/$PRODUCT.png
+install_file $PRODUCTDIR/assets/img/$PRODUCT.png /usr/share/pixmaps/$PRODUCT.png
 
 add_libs_requires
