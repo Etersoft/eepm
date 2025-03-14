@@ -926,6 +926,16 @@ get_virt()
         echo "$VIRT" && return
     fi
 
+    if [ "$UID" = 0 ] ; then
+        if grep -q "docker" /proc/1/environ; then
+            echo "docker" && return
+        elif grep -q "lxc" /proc/1/environ; then
+            echo "lxc" && return
+        elif grep -q "libpod" /proc/1/environ; then
+            echo "podman" && return
+        fi
+    fi
+
     # TODO: use virt-what under root
 
     # inspired by virt_what
