@@ -377,9 +377,7 @@ __epm_addrepo_altlinux()
         return
     fi
 
-    # TODO: rewrite this fallback
-    assure_exists apt-repo
-    sudocmd apt-repo $dryrun add "$repo"
+    fatal "Can't recognize how to add $repo, please report it"
 }
 
 
