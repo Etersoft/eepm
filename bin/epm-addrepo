@@ -403,7 +403,7 @@ __epm_addrepo_astra()
         astra-1.7_x86-64)
             # TODO epm repo change http / https
             epm install --skip-installed apt-transport-https ca-certificates || fatal
-            if epm repo list | grep "dl.astralinux.ru/astra/stable/1.7_x86-64" ; then
+            if epm repo list "dl.astralinux.ru/astra/stable/1.7_x86-64" ; then
                 fatal "Astra repo is already in the list"
             fi
             # https://wiki.astralinux.ru/pages/viewpage.action?pageId=158598882
@@ -412,6 +412,16 @@ __epm_addrepo_astra()
             epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-base/     1.7_x86-64 main contrib non-free"
             epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-extended/ 1.7_x86-64 main contrib non-free"
             epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-extended/ 1.7_x86-64 astra-ce"
+            return
+            ;;
+        astra-1.8_x86-64)
+            # TODO epm repo change http / https
+            epm install --skip-installed apt-transport-https ca-certificates || fatal
+            if epm repo list "dl.astralinux.ru/astra/stable/$reponame" ; then
+                fatal "Astra repo is already in the list"
+            fi
+            epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/$reponame/main-repository/     $reponame main contrib non-free non-free-firmware"
+            epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/$reponame/extended-repository/ $reponame main contrib non-free non-free-firmware"
             return
             ;;
         astra-orel)
