@@ -94,6 +94,11 @@ get_archlist()
     esac
 }
 
+normalize_date()
+{
+    echo "$1" | sed -e 's|-|/|g' | grep -E "^20[0-3][0-9]/[01][0-9]/[0-3][0-9]$" || fatal "use follow date format: 2017/01/31 or 2017-01-31"
+}
+
 # arg: $branch "URL ALTLinux/$repo" "classic"
 __epm_addrepo_add_alt_repo()
 {
@@ -334,10 +339,9 @@ __epm_addrepo_altlinux()
                 branch="$2"
                 shift
             fi
-            datestr="$2"
-            echo "$datestr" | grep -Eq "^20[0-2][0-9]/[01][0-9]/[0-3][0-9]$" || fatal "use follow date format: 2017/01/31"
-
-            __epm_addrepo_add_alt_repo "$branch $ALTLINUXPUBURL archive/$branch/date/$datestr" "classic"
+            datestr="$(normalize_date $2)"
+    
+            __epm_addrepo_add_alt_repo "$branch" "$ALTLINUXPUBURL archive/$branch/date/$datestr" "classic"
 
             return 0
             ;;
