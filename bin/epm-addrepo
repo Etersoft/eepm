@@ -100,11 +100,10 @@ __epm_addrepo_add_alt_repo()
     local branch="$1"
     local repourl="$2"
     local comp="$3"
-    local sign
+    local sign="$4"
 
-    sign="$(__get_sign $repo)"
-
-    [ -n "$comp" ] | comp="classic"
+    [ -n "$sign" ] || sign="$(__get_sign $repo)"
+    [ -n "$comp" ] || comp="classic"
 
     local i
     for i in $(get_archlist) ; do
@@ -212,23 +211,34 @@ Examples:
     return
 }
 
+__add_line_to_file()
+{
+    local file="$1"
+    local line="$2"
+    local sc="sudocmd"
+    [ -n "$verbose" ] || sc="sudorun"
+    # add empty line if needed
+    [ -z "$(tail -n1 "$file")" ] || echo "" | $sc tee -a "$file" >/dev/null
+    echo "$line" | $sc tee -a "$file" >/dev/null
+}
+
+
 # like apt-add-repository on deb systems
-__epm_addrepo_apt()
+__epm_addrepo_to_file()
 {
     local repo="$*"
 
-    epm --quiet repo list | grep -q -F "$repo" && return 0
+    if [ -z "$force" ] ; then
+        # skip if repo is already in the list
+        epm --quiet repo list "$repo" && return 0
+    fi
 
     if [ -n "$dryrun" ] ; then
         echo "$repo"
         return
     fi
 
-    local sc="sudocmd"
-    [ -z "$quiet" ] || sc="sudorun"
-
-    [ -z "$(tail -n1 /etc/apt/sources.list)" ] || echo "" | $sc tee -a /etc/apt/sources.list
-    echo "$repo" | $sc tee -a /etc/apt/sources.list
+    __add_line_to_file "$repo"
 
 }
 
@@ -364,7 +374,7 @@ __epm_addrepo_altlinux()
 
     # when add correct sources.list string
     if echo "$repo" | grep "^rpm " ; then
-        __epm_addrepo_apt "$repo"
+        __epm_addrepo_to_file /etc/apt/sources.list "$repo"
         return
     fi
 
@@ -418,9 +428,7 @@ __epm_addrepo_astra()
             ;;
     esac
 
-    #echo "Use workaround for AstraLinux ..."
-    # aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
-    __epm_addrepo_apt "$repo"
+    __epm_addrepo_to_file /etc/apt/sources.list "$repo"
     return
 }
 
@@ -428,9 +436,7 @@ __epm_addrepo_alpine()
 {
     local repo="$1"
     is_url "$repo" || fatal "Only URL is supported"
-    epm --quiet repo list | grep -q -F "$repo" && return 0
-
-    echo "$repo" | sudocmd tee -a /etc/apk/repositories
+    __epm_addrepo_to_file /etc/apk/repositories "$repo"
 }
 
 __epm_addrepo_deb()
@@ -474,10 +480,17 @@ __epm_addrepo_deb()
         return
     fi
 
-    # FIXME: quotes in showcmd/sudocmd
-    showcmd apt-add-repository "$repo"
-    sudorun apt-add-repository "$repo"
-    info "Check file /etc/apt/sources.list if needed"
+    if is_command apt-add-repository ; then
+        # FIXME: quotes in showcmd/sudocmd
+        showcmd apt-add-repository "$repo"
+        sudorun apt-add-repository "$repo"
+        info "Check file /etc/apt/sources.list if needed"
+        return
+    else
+        warning "apt-add-repository is not installed, use file /etc/apt/sources.list directly"
+        __epm_addrepo_to_file /etc/apt/sources.list "$repo"
+    fi  
+
 }
 
 epm_addrepo()
