@@ -55,24 +55,6 @@ __epm_addrepo_rhel()
     return 0
 }
 
-__epm_addrepo_etersoft_addon()
-{
-    epm install --skip-installed apt-conf-etersoft-common apt-conf-etersoft-hold || fatal
-    # TODO: ignore only error code 22 (skipped) || fatal
-
-    local pb="$DISTRVERSION/branch"
-    [ "$DISTRVERSION" = "Sisyphus" ] && pb="$DISTRVERSION"
-
-    # FIXME
-    [ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
-
-    docmd epm repo add "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/noarch addon"
-    docmd epm repo add "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/$DISTRARCH addon"
-    if [ "$DISTRARCH" = "x86_64" ] ; then
-        docmd epm repo add "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/x86_64-i586 addon"
-    fi
-}
-
 __get_sign()
 {
     local repo="$1"
@@ -115,6 +97,19 @@ __epm_addrepo_add_alt_repo()
         epm repo add "rpm $sign $repourl/$i $comp"
     done
 
+}
+
+
+__epm_addrepo_etersoft_addon()
+{
+    epm install --skip-installed apt-conf-etersoft-common apt-conf-etersoft-hold || fatal
+    # TODO: ignore only error code 22 (skipped) || fatal
+
+    local repo="$1"
+    local repopart
+    [ "$repo" = "sisyphus" ] && repopart="Sisyphus" || repopart="$repo/branch"
+
+    __epm_addrepo_add_alt_repo "$repo" "$ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$repopart" "addon"
 }
 
 # args: p10|c10f1|sisyphus
