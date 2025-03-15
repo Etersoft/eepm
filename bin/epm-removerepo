@@ -39,7 +39,8 @@ __epm_removerepo_apt()
         [ -s "$i" ] || continue
         # touch file only when it is needed
         grep -q -F "$repo" $i || continue
-        $sc sed -i -e "s|.*$(sed_escape "$repo").*||" $i
+        
+        $sc sed -i -e "\|$(sed_escape "$repo")|d" $i
     done
 }
 
