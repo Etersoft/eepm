@@ -21,24 +21,26 @@ load_helper epm-sh-altlinux
 
 __print_apt_sources_list()
 {
-    local regexp="$1"
-    shift
+    local grepflags="$1"
+    local regexp="$2"
+    shift 2
     local i
     for i in $@ ; do
         test -r "$i" || continue
         grep -v -- "^.*#" $i
-    done | grep -v -- "^ *\$" | grep -E "$regexp"
+    done | grep -v -- "^ *\$" | grep $grepflags "$regexp"
 }
 
 __print_apt_sources_list_full()
 {
-    local regexp="$1"
-    shift
+    local grepflags="$1"
+    local regexp="$2"
+    shift 2
     local i
     for i in $@ ; do
         test -r "$i" || continue
         grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i
-    done | grep -v -- "^ *\$" | grep -E "$regexp"
+    done | grep -v -- "^ *\$" | grep $grepflags "$regexp"
 }
 
 # TODO: remove
@@ -61,28 +63,30 @@ __info_cyan()
 
 __print_apt_sources_list_verbose()
 {
-    local regexp="$1"
-    shift
+    local grepflags="$1"
+    local regexp="$2"
+    shift 2
     local i
     local res=1
     for i in $@ ; do
         test -r "$i" || continue
         grep -v -- "^.*#" $i | grep -v -- "^ *\$" | grep -q . && __info_cyan "$i:" || continue
-        grep -v -- "^.*#" $i | grep -v -- "^ *\$" | sed -e 's|^|    |' | grep -E --color "$regexp" && res=0
+        grep -v -- "^.*#" $i | grep -v -- "^ *\$" | sed -e 's|^|    |' | grep $grepflags --color "$regexp" && res=0
     done
     return $res
 }
 
 __print_apt_sources_list_verbose_full()
 {
-    local regexp="$1"
-    shift
+    local grepflags="$1"
+    local regexp="$2"
+    shift 2
     local i
     local res=1
     for i in $@ ; do
         test -r "$i" || continue
         grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i | grep -v -- "^ *\$" | grep -q . && echo && __info_cyan "$i:" || continue
-        grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i | grep -v -- "^ *\$" | sed -e 's|^|    |' -e "s|\(.*#.*\)|$(set_color $WHITE)\1$(restore_color)|" | grep -E --color "$regexp" && res=0
+        grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i | grep -v -- "^ *\$" | sed -e 's|^|    |' -e "s|\(.*#.*\)|$(set_color $WHITE)\1$(restore_color)|" | grep $grepflags --color "$regexp" && res=0
     done
     return $res
 }
@@ -91,26 +95,35 @@ print_apt_sources_list()
 {
     local LISTS='/etc/apt/sources.list /etc/apt/sources.list.d/*.list'
 
-    [ -n "$1" ] && echo "$*" | grep -q "\.[*?]" && warning "Only glob symbols * and ? are supported. Don't use regexp here!"
-
+    local flagall=''
     if [ "$1" = "-a" ] || [ "$1" = "--all" ] ; then
+        flagall='--all'
         shift
-        local wc=$(__convert_glob__to_regexp "$*")
+    fi
 
+    local wc="$*"
+    local grepflags=""
+    if echo "$wc" | grep -q -E "^(deb|rpm) " ; then
+        grepflags="-F"
+    else
+        echo "$wc" | grep -q "\.[*?]" && warning "Only glob symbols * and ? are supported. Don't use regexp here!"
+        wc="$(__convert_glob__to_regexp "$wc")"
+        grepflags="-E"
+    fi
+
+    if [ -n "$flagall" ] ; then
         if [ -n "$quiet" ] ; then
-            __print_apt_sources_list_full "$wc" $LISTS
+            __print_apt_sources_list_full "$grepflags" "$wc" $LISTS
         else
-            __print_apt_sources_list_verbose_full "$wc" $LISTS
+            __print_apt_sources_list_verbose_full "$grepflags" "$wc" $LISTS
         fi
         return
     fi
 
-    local wc=$(__convert_glob__to_regexp "$*")
-
     if [ -n "$quiet" ] ; then
-        __print_apt_sources_list "$wc" $LISTS
+        __print_apt_sources_list "$grepflags" "$wc" $LISTS
     else
-        __print_apt_sources_list_verbose "$wc" $LISTS
+        __print_apt_sources_list_verbose "$grepflags" "$wc" $LISTS
     fi
 }
 
