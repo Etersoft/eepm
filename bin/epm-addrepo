@@ -89,7 +89,7 @@ __epm_addrepo_add_alt_repo()
     local comp="$3"
     local sign="$4"
 
-    [ -n "$sign" ] || sign="$(__get_sign $repo)"
+    [ -n "$sign" ] || sign="$(__get_sign $branch)"
     [ -n "$comp" ] || comp="classic"
 
     local i
@@ -129,14 +129,14 @@ __epm_addrepo_main_alt_repo()
 # 'rpm protocol:/path/to/repo component'
 __epm_addrepo_altlinux_short()
 {
-    [ -n "$1" ] || fatal "only for rpm repo"
+    [ "$1" = "rpm" ] || fatal "only for rpm repo"
     local url="$2"
-    local REPO_NAME="$3"
+    local repo="$3"
     local arch
 
     arch="$(basename "$url")"
     url="$(dirname "$url")"
-    docmd epm repo add "rpm $url $arch $REPO_NAME"
+    docmd epm repo add "rpm $url $arch $repo"
 }
 
 
@@ -145,6 +145,7 @@ __epm_addrepo_altlinux_url()
     local url="$1"
     local arch
     local base
+    local repo
 
     # apt supports 302 redirect only since apt 0.7.21 (14th April 2009)
     url="$(eget --get-real-url $url)"
@@ -152,9 +153,9 @@ __epm_addrepo_altlinux_url()
     # URL to path/RPMS.addon
     base="$(basename "$url")"
     if echo "$base" | grep -q "^RPMS\." ; then
-        REPO_NAME="$(echo $base | sed -e 's|.*\.||')"
+        repo="$(echo $base | sed -e 's|.*\.||')"
         url="$(dirname $url)"
-        __epm_addrepo_altlinux_short rpm "$url" "$REPO_NAME"
+        __epm_addrepo_altlinux_short rpm "$url" "$repo"
         return
     fi
 
@@ -226,11 +227,13 @@ __add_line_to_file()
 # like apt-add-repository on deb systems
 __epm_addrepo_to_file()
 {
+    local file="$1"
+    shift
     local repo="$*"
 
     if [ -z "$force" ] ; then
         # skip if repo is already in the list
-        epm --quiet repo list "$repo" && return 0
+        epm --quiet repo list "$repo" >/dev/null && return
     fi
 
     if [ -n "$dryrun" ] ; then
@@ -238,7 +241,7 @@ __epm_addrepo_to_file()
         return
     fi
 
-    __add_line_to_file "$repo"
+    __add_line_to_file "$file" "$repo"
 
 }
 
@@ -251,8 +254,8 @@ __epm_addrepo_altlinux()
         return
     fi
 
-    # 'rpm protocol:/path/to/repo component'
-    if [ "$1" = "rpm" ] && [ -n "$2" ] && [ -n "$3" ] && [ -z "$4" ] ; then
+    # 'rpm protocol:/path/to/repo/arch component' (no sign, arch in the URL)
+    if [ "$1" = "rpm" ] && is_url "$2" && [ -n "$3" ] && [ -z "$4" ] ; then
         __epm_addrepo_altlinux_short "$@"
         return
     fi
@@ -276,9 +279,9 @@ __epm_addrepo_altlinux()
         etersoft)
             # TODO: return when Etersoft improved its repos
             #info "add Etersoft's addon repo"
-            #__epm_addrepo_etersoft_addon
+            #__epm_addrepo_etersoft_addon $branch
             epm repo add $branch
-            epm repofix etersoft
+            epm repo change etersoft
             return 0
             ;;
         basealt|alt|altsp)
@@ -286,7 +289,7 @@ __epm_addrepo_altlinux()
             ;;
         yandex)
             epm repo add $branch
-            epm repofix yandex
+            epm repo change yandex
             return 0
             ;;
         autoimports)
@@ -303,8 +306,9 @@ __epm_addrepo_altlinux()
                     ;;
             esac
             epm repo addkey cronbuild "DE73F3444C163CCD751AC483B584C633278EB305" "Cronbuild Service <cronbuild@altlinux.org>"
-            epm repo add "rpm [cronbuild] $http://autoports.altlinux.org/pub ALTLinux/autoports/$DISTRVERSION/$DISTRARCH autoports"
-            epm repo add "rpm [cronbuild] $http://autoports.altlinux.org/pub ALTLinux/autoports/$DISTRVERSION/noarch autoports"
+            for i in $DISTRARCH noarch ; do
+                epm repo add "rpm [cronbuild] $http://autoports.altlinux.org/pub ALTLinux/autoports/$branch/$i autoports"
+            done
             return 0
             ;;
         altlinuxclub)
@@ -316,17 +320,17 @@ __epm_addrepo_altlinux()
         korinf)
             local http="http"
             epm installed apt-https && http="https"
-            epm repo add "rpm $http://download.etersoft.ru/pub Korinf/ALTLinux/$DISTRVERSION main"
+            epm repo add "rpm $http://download.etersoft.ru/pub Korinf/$DISTRARCH/$DISTRNAME/$DISTRVERSION main"
             return 0
             ;;
         deferred)
-            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersoft Sisyphus Deferred supported only for ALT Sisyphus."
-            epm repo add "http://download.etersoft.ru/pub/Etersoft/Sisyphus/Deferred"
+            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersoft Sisyphus Deferred supported only for ALT Sisyphus based systems."
+            __epm_addrepo_add_alt_repo "$branch" "https://download.etersoft.ru/pub Etersoft/Sisyphus/Deferred" "classic"
             return 0
             ;;
         deferred.org)
-            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersoft Sisyphus Deferred supported only for ALT Sisyphus."
-            epm repo add "http://mirror.eterfund.org/download.etersoft.ru/pub/Etersoft/Sisyphus/Deferred"
+            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersoft Sisyphus Deferred supported only for ALT Sisyphus based systems."
+            __epm_addrepo_add_alt_repo "$branch" "http://mirror.eterfund.org/pub Etersoft/Sisyphus/Deferred" "classic"
             return 0
             ;;
         archive)
@@ -343,7 +347,6 @@ __epm_addrepo_altlinux()
     esac
 
     if tasknumber "$repo" >/dev/null ; then
-        #sudocmd_foreach "apt-repo $dryrun add" $(tasknumber "$repo")
         for i in $repo ; do
             epm repo add "https://git.altlinux.org/tasks/$i/build/repo"
         done
@@ -351,7 +354,7 @@ __epm_addrepo_altlinux()
     fi
 
     case "$repo" in
-        c10f3|c10f2|c10f1|c9f2|c9f1|c9)
+        c10f*|c9f*|c9)
             __epm_addrepo_main_alt_repo "$repo"
             return
             ;;
@@ -360,11 +363,6 @@ __epm_addrepo_altlinux()
             return
             ;;
     esac
-
-    if [ -z "$force" ] ; then
-        # don't add again
-        epm repo list --quiet | grep -q -F "$repo" && return 0
-    fi
 
     if echo "$repo" | grep -q "https://" ; then
         local mh="$(echo /usr/lib*/apt/methods/https)"
