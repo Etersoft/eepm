@@ -9,6 +9,66 @@ SUBGENERIC="$5"
 # firstly, pack $PRODUCTDIR if used
 . $(dirname $0)/common.sh
 
+# commented out: conflicts with already installed package
+# drop %dir for existed system dirs
+#for i in $(grep '^%dir "' $spec | sed -e 's|^%dir  *"\(.*\)".*|\1|' ) ; do #"
+#    echo "$i" | grep -q '^/opt/' && continue
+#    [ -d "$i" ] && [ -n "$verbose" ] && echo "drop dir $i from packing, it exists in the system"
+#done
+
+# TODO: drop it, it breaks packages with spaces in paths
+# replace dir "/path/dir" -> %dir /path/dir
+grep '^"/' $SPEC | sed -e 's|^"\(/.*\)"$|\1|' | while read i ; do
+    # add dir as %dir in the filelist
+    if [ -d "$BUILDROOT$i" ] && [ ! -L "$BUILDROOT$i" ] ; then
+        subst "s|^\(\"$i\"\)$|%dir \1|" $SPEC
+    #else
+    #    subst 's|^\("'$i'"\)$|\1|' $spec
+    fi
+done
+
+__icons_res_list="apps scalable symbolic 8x8 14x14 16x16 20x20 22x22 24x24 28x28 32x32 36x36 42x42 45x45 48x48 64 64x64 72x72 96x96 128x128 144x144 160x160 192x192 256x256 256x256@2x 480x480 512 512x512 1024x1024"
+__icons_type_list="actions animations apps categories devices emblems emotes filesystems intl mimetypes places status stock"
+
+__get_icons_hicolor_list()
+{
+    local i j
+    for i in ${__icons_res_list} ; do
+        echo "/usr/share/icons/hicolor/$i"
+        for j in ${__icons_type_list}; do
+            echo "/usr/share/icons/hicolor/$i/$j"
+        done
+    done
+}
+
+__get_icons_gnome_list()
+{
+    local i j
+    for i in ${__icons_res_list} ; do
+        echo "/usr/share/icons/gnome/$i"
+        for j in ${__icons_type_list}; do
+            echo "/usr/share/icons/gnome/$i/$j"
+        done
+    done
+}
+
+# drop forbidded paths
+# https://bugzilla.altlinux.org/show_bug.cgi?id=38842
+for i in / /etc /etc/init.d /etc/systemd /bin /opt /usr /usr/bin /usr/lib /usr/lib64 /usr/share /usr/share/doc /var /var/log /var/run \
+        /etc/cron.daily /usr/share/icons/usr/share/pixmaps /usr/share/man /usr/share/man/man1 /usr/share/appdata /usr/share/applications /usr/share/menu \
+        /usr/share/mime /usr/share/mime/packages /usr/share/icons \
+        /usr/share/icons/gnome $(__get_icons_gnome_list) \
+        /usr/share/icons/hicolor $(__get_icons_hicolor_list) ; do
+    sed -i \
+        -e "s|/\./|/|" \
+        -e "s|^%dir[[:space:]]\"$i/*\"$||" \
+        -e "s|^%dir[[:space:]]$i/*$||" \
+        -e "s|^\"$i/*\"$||" \
+        -e "s|^$i/*$||" \
+        $SPEC
+done
+
+
 flag_python3=''
 
 for i in lib/python3 lib/python2.7 ; do
