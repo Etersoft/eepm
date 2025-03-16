@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.13
+Version: 3.64.14
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -140,6 +140,17 @@ make -C po
 %endif
 
 %changelog
+* Sun Mar 16 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.14-alt1
+- epm-removerepo: fix task removing
+- epm play sunshine: replace libappindicator3 to libayatana-appindicator3 (eterbug #18131)
+- epm play: add gdlauncher (eterbug #18127)
+- epm play ungoogled-chromium: update url
+- epm repo list: allow search by full line
+- epm-addrepo: add AstraLinux 1.8 support
+- epm-addrepo: don't use apt-repo as callback anymore
+- epm play: add pureref (eterbug #18140)
+- epm play chrome-remote-desktop: fix work (eterbug #18144)
+
 * Wed Mar 12 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.13-alt1
 - epm-install: add support for install task by URL
 - epm-requires: skip or in requires
