@@ -36,4 +36,7 @@ subst "s|.*$PRODUCTDIR/unittests.*||" $SPEC
 # to skip obsoleted require libjasper.so.1()(64bit)
 remove_file $PRODUCTDIR/plugins/imageformats/libqjp2.so
 
+# to skip obsoleted libsqlite.so.0()(64bit)
+remove_file $PRODUCTDIR/plugins/sqldrivers/libqsqlite2.so
+
 add_libs_requires
