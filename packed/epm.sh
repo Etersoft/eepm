@@ -34,7 +34,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.13"
+export EPMVERSION="3.64.14"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1166,24 +1166,6 @@ __epm_addrepo_rhel()
     return 0
 }
 
-__epm_addrepo_etersoft_addon()
-{
-    epm install --skip-installed apt-conf-etersoft-common apt-conf-etersoft-hold || fatal
-    # TODO: ignore only error code 22 (skipped) || fatal
-
-    local pb="$DISTRVERSION/branch"
-    [ "$DISTRVERSION" = "Sisyphus" ] && pb="$DISTRVERSION"
-
-    # FIXME
-    [ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
-
-    docmd epm repo add "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/noarch addon"
-    docmd epm repo add "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/$DISTRARCH addon"
-    if [ "$DISTRARCH" = "x86_64" ] ; then
-        docmd epm repo add "rpm [etersoft] $ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$pb/x86_64-i586 addon"
-    fi
-}
-
 __get_sign()
 {
     local repo="$1"
@@ -1205,22 +1187,39 @@ get_archlist()
     esac
 }
 
+normalize_date()
+{
+    echo "$1" | sed -e 's|-|/|g' | grep -E "^20[0-3][0-9]/[01][0-9]/[0-3][0-9]$" || fatal "use follow date format: 2017/01/31 or 2017-01-31"
+}
+
 __epm_addrepo_add_alt_repo()
 {
     local branch="$1"
     local repourl="$2"
     local comp="$3"
-    local sign
+    local sign="$4"
 
-    sign="$(__get_sign $repo)"
-
-    [ -n "$comp" ] | comp="classic"
+    [ -n "$sign" ] || sign="$(__get_sign $branch)"
+    [ -n "$comp" ] || comp="classic"
 
     local i
     for i in $(get_archlist) ; do
         epm repo add "rpm $sign $repourl/$i $comp"
     done
 
+}
+
+
+__epm_addrepo_etersoft_addon()
+{
+    epm install --skip-installed apt-conf-etersoft-common apt-conf-etersoft-hold || fatal
+    # TODO: ignore only error code 22 (skipped) || fatal
+
+    local repo="$1"
+    local repopart
+    [ "$repo" = "sisyphus" ] && repopart="Sisyphus" || repopart="$repo/branch"
+
+    __epm_addrepo_add_alt_repo "$repo" "$ETERSOFTPUBURL/Etersoft LINUX@Etersoft/$repopart" "addon"
 }
 
 __epm_addrepo_main_alt_repo()
@@ -1238,14 +1237,14 @@ __epm_addrepo_main_alt_repo()
 
 __epm_addrepo_altlinux_short()
 {
-    [ -n "$1" ] || fatal "only for rpm repo"
+    [ "$1" = "rpm" ] || fatal "only for rpm repo"
     local url="$2"
-    local REPO_NAME="$3"
+    local repo="$3"
     local arch
 
     arch="$(basename "$url")"
     url="$(dirname "$url")"
-    docmd epm repo add "rpm $url $arch $REPO_NAME"
+    docmd epm repo add "rpm $url $arch $repo"
 }
 
 
@@ -1254,6 +1253,7 @@ __epm_addrepo_altlinux_url()
     local url="$1"
     local arch
     local base
+    local repo
 
     # apt supports 302 redirect only since apt 0.7.21 (14th April 2009)
     url="$(eget --get-real-url $url)"
@@ -1261,9 +1261,9 @@ __epm_addrepo_altlinux_url()
     # URL to path/RPMS.addon
     base="$(basename "$url")"
     if echo "$base" | grep -q "^RPMS\." ; then
-        REPO_NAME="$(echo $base | sed -e 's|.*\.||')"
+        repo="$(echo $base | sed -e 's|.*\.||')"
         url="$(dirname $url)"
-        __epm_addrepo_altlinux_short rpm "$url" "$REPO_NAME"
+        __epm_addrepo_altlinux_short rpm "$url" "$repo"
         return
     fi
 
@@ -1320,22 +1320,35 @@ Examples:
     return
 }
 
-__epm_addrepo_apt()
+__add_line_to_file()
 {
+    local file="$1"
+    local line="$2"
+    local sc="sudocmd"
+    [ -n "$verbose" ] || sc="sudorun"
+    # add empty line if needed
+    [ -z "$(tail -n1 "$file")" ] || echo "" | $sc tee -a "$file" >/dev/null
+    echo "$line" | $sc tee -a "$file" >/dev/null
+}
+
+
+__epm_addrepo_to_file()
+{
+    local file="$1"
+    shift
     local repo="$*"
 
-    epm --quiet repo list | grep -q -F "$repo" && return 0
+    if [ -z "$force" ] ; then
+        # skip if repo is already in the list
+        epm --quiet repo list "$repo" >/dev/null && return
+    fi
 
     if [ -n "$dryrun" ] ; then
         echo "$repo"
         return
     fi
 
-    local sc="sudocmd"
-    [ -z "$quiet" ] || sc="sudorun"
-
-    [ -z "$(tail -n1 /etc/apt/sources.list)" ] || echo "" | $sc tee -a /etc/apt/sources.list
-    echo "$repo" | $sc tee -a /etc/apt/sources.list
+    __add_line_to_file "$file" "$repo"
 
 }
 
@@ -1348,8 +1361,8 @@ __epm_addrepo_altlinux()
         return
     fi
 
-    # 'rpm protocol:/path/to/repo component'
-    if [ "$1" = "rpm" ] && [ -n "$2" ] && [ -n "$3" ] && [ -z "$4" ] ; then
+    # 'rpm protocol:/path/to/repo/arch component' (no sign, arch in the URL)
+    if [ "$1" = "rpm" ] && is_url "$2" && [ -n "$3" ] && [ -z "$4" ] ; then
         __epm_addrepo_altlinux_short "$@"
         return
     fi
@@ -1373,9 +1386,9 @@ __epm_addrepo_altlinux()
         etersoft)
             # TODO: return when Etersoft improved its repos
             #info "add Etersoft's addon repo"
-            #__epm_addrepo_etersoft_addon
+            #__epm_addrepo_etersoft_addon $branch
             epm repo add $branch
-            epm repofix etersoft
+            epm repo change etersoft
             return 0
             ;;
         basealt|alt|altsp)
@@ -1383,7 +1396,7 @@ __epm_addrepo_altlinux()
             ;;
         yandex)
             epm repo add $branch
-            epm repofix yandex
+            epm repo change yandex
             return 0
             ;;
         autoimports)
@@ -1400,8 +1413,9 @@ __epm_addrepo_altlinux()
                     ;;
             esac
             epm repo addkey cronbuild "DE73F3444C163CCD751AC483B584C633278EB305" "Cronbuild Service <cronbuild@altlinux.org>"
-            epm repo add "rpm [cronbuild] $http://autoports.altlinux.org/pub ALTLinux/autoports/$DISTRVERSION/$DISTRARCH autoports"
-            epm repo add "rpm [cronbuild] $http://autoports.altlinux.org/pub ALTLinux/autoports/$DISTRVERSION/noarch autoports"
+            for i in $DISTRARCH noarch ; do
+                epm repo add "rpm [cronbuild] $http://autoports.altlinux.org/pub ALTLinux/autoports/$branch/$i autoports"
+            done
             return 0
             ;;
         altlinuxclub)
@@ -1413,17 +1427,17 @@ __epm_addrepo_altlinux()
         korinf)
             local http="http"
             epm installed apt-https && http="https"
-            epm repo add "rpm $http://download.etersoft.ru/pub Korinf/ALTLinux/$DISTRVERSION main"
+            epm repo add "rpm $http://download.etersoft.ru/pub Korinf/$DISTRARCH/$DISTRNAME/$DISTRVERSION main"
             return 0
             ;;
         deferred)
-            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersoft Sisyphus Deferred supported only for ALT Sisyphus."
-            epm repo add "http://download.etersoft.ru/pub/Etersoft/Sisyphus/Deferred"
+            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersoft Sisyphus Deferred supported only for ALT Sisyphus based systems."
+            __epm_addrepo_add_alt_repo "$branch" "https://download.etersoft.ru/pub Etersoft/Sisyphus/Deferred" "classic"
             return 0
             ;;
         deferred.org)
-            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersoft Sisyphus Deferred supported only for ALT Sisyphus."
-            epm repo add "http://mirror.eterfund.org/download.etersoft.ru/pub/Etersoft/Sisyphus/Deferred"
+            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersoft Sisyphus Deferred supported only for ALT Sisyphus based systems."
+            __epm_addrepo_add_alt_repo "$branch" "http://mirror.eterfund.org/pub Etersoft/Sisyphus/Deferred" "classic"
             return 0
             ;;
         archive)
@@ -1431,17 +1445,15 @@ __epm_addrepo_altlinux()
                 branch="$2"
                 shift
             fi
-            datestr="$2"
-            echo "$datestr" | grep -Eq "^20[0-2][0-9]/[01][0-9]/[0-3][0-9]$" || fatal "use follow date format: 2017/01/31"
-
-            __epm_addrepo_add_alt_repo "$branch $ALTLINUXPUBURL archive/$branch/date/$datestr" "classic"
+            datestr="$(normalize_date $2)"
+    
+            __epm_addrepo_add_alt_repo "$branch" "$ALTLINUXPUBURL archive/$branch/date/$datestr" "classic"
 
             return 0
             ;;
     esac
 
     if tasknumber "$repo" >/dev/null ; then
-        #sudocmd_foreach "apt-repo $dryrun add" $(tasknumber "$repo")
         for i in $repo ; do
             epm repo add "https://git.altlinux.org/tasks/$i/build/repo"
         done
@@ -1449,7 +1461,7 @@ __epm_addrepo_altlinux()
     fi
 
     case "$repo" in
-        c10f3|c10f2|c10f1|c9f2|c9f1|c9)
+        c10f*|c9f*|c9)
             __epm_addrepo_main_alt_repo "$repo"
             return
             ;;
@@ -1459,11 +1471,6 @@ __epm_addrepo_altlinux()
             ;;
     esac
 
-    if [ -z "$force" ] ; then
-        # don't add again
-        epm repo list --quiet | grep -q -F "$repo" && return 0
-    fi
-
     if echo "$repo" | grep -q "https://" ; then
         local mh="$(echo /usr/lib*/apt/methods/https)"
         assure_exists $mh apt-https
@@ -1471,13 +1478,11 @@ __epm_addrepo_altlinux()
 
     # when add correct sources.list string
     if echo "$repo" | grep "^rpm " ; then
-        __epm_addrepo_apt "$repo"
+        __epm_addrepo_to_file /etc/apt/sources.list "$repo"
         return
     fi
 
-    # TODO: rewrite this fallback
-    assure_exists apt-repo
-    sudocmd apt-repo $dryrun add "$repo"
+    fatal "Can't recognize how to add $repo, please report it"
 }
 
 
@@ -1501,7 +1506,7 @@ __epm_addrepo_astra()
         astra-1.7_x86-64)
             # TODO epm repo change http / https
             epm install --skip-installed apt-transport-https ca-certificates || fatal
-            if epm repo list | grep "dl.astralinux.ru/astra/stable/1.7_x86-64" ; then
+            if epm repo list "dl.astralinux.ru/astra/stable/1.7_x86-64" ; then
                 fatal "Astra repo is already in the list"
             fi
             # https://wiki.astralinux.ru/pages/viewpage.action?pageId=158598882
@@ -1510,6 +1515,16 @@ __epm_addrepo_astra()
             epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-base/     1.7_x86-64 main contrib non-free"
             epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-extended/ 1.7_x86-64 main contrib non-free"
             epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/1.7_x86-64/repository-extended/ 1.7_x86-64 astra-ce"
+            return
+            ;;
+        astra-1.8_x86-64)
+            # TODO epm repo change http / https
+            epm install --skip-installed apt-transport-https ca-certificates || fatal
+            if epm repo list "dl.astralinux.ru/astra/stable/$reponame" ; then
+                fatal "Astra repo is already in the list"
+            fi
+            epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/$reponame/main-repository/     $reponame main contrib non-free non-free-firmware"
+            epm repo add "deb [arch-=i386] https://dl.astralinux.ru/astra/stable/$reponame/extended-repository/ $reponame main contrib non-free non-free-firmware"
             return
             ;;
         astra-orel)
@@ -1525,9 +1540,7 @@ __epm_addrepo_astra()
             ;;
     esac
 
-    #echo "Use workaround for AstraLinux ..."
-    # aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
-    __epm_addrepo_apt "$repo"
+    __epm_addrepo_to_file /etc/apt/sources.list "$repo"
     return
 }
 
@@ -1535,9 +1548,7 @@ __epm_addrepo_alpine()
 {
     local repo="$1"
     is_url "$repo" || fatal "Only URL is supported"
-    epm --quiet repo list | grep -q -F "$repo" && return 0
-
-    echo "$repo" | sudocmd tee -a /etc/apk/repositories
+    __epm_addrepo_to_file /etc/apk/repositories "$repo"
 }
 
 __epm_addrepo_deb()
@@ -1581,10 +1592,17 @@ __epm_addrepo_deb()
         return
     fi
 
-    # FIXME: quotes in showcmd/sudocmd
-    showcmd apt-add-repository "$repo"
-    sudorun apt-add-repository "$repo"
-    info "Check file /etc/apt/sources.list if needed"
+    if is_command apt-add-repository ; then
+        # FIXME: quotes in showcmd/sudocmd
+        showcmd apt-add-repository "$repo"
+        sudorun apt-add-repository "$repo"
+        info "Check file /etc/apt/sources.list if needed"
+        return
+    else
+        warning "apt-add-repository is not installed, use file /etc/apt/sources.list directly"
+        __epm_addrepo_to_file /etc/apt/sources.list "$repo"
+    fi  
+
 }
 
 epm_addrepo()
@@ -10144,7 +10162,8 @@ __epm_removerepo_apt()
         [ -s "$i" ] || continue
         # touch file only when it is needed
         grep -q -F "$repo" $i || continue
-        $sc sed -i -e "s|.*$(sed_escape "$repo").*||" $i
+        
+        $sc sed -i -e "\|$(sed_escape "$repo")|d" $i
     done
 }
 
@@ -10167,9 +10186,9 @@ __epm_removerepo_alt_grepremove()
 
     # ^rpm means full string
     if ! rhas "$rl" "^rpm" ; then
-        rl="$(__epm_grep_repo_list "$rl" 2>/dev/null)"
+        rl="$(__epm_grep_repo_list $rl 2>/dev/null)"
         if [ -z "$rl" ] ; then
-            [ -n "$verbose" ] && warning 'Can'\''t find '$rl' in the repos (see # epm repolist output)'
+            [ -n "$verbose" ] && warning 'Can'\''t find '$*' in the repos (see # epm repolist output)'
             return 1
         fi
     fi
@@ -10228,7 +10247,7 @@ __epm_removerepo_alt()
             if echo "$*" | grep -q "^rpm" ; then
                 __epm_removerepo_apt "$*"
             else
-                info "removing all source.list"
+                info "removing with grep by '$*'"
                 __epm_removerepo_alt_grepremove "$*"
             fi
             ;;
@@ -11617,24 +11636,26 @@ epm_repocreate()
 
 __print_apt_sources_list()
 {
-    local regexp="$1"
-    shift
+    local grepflags="$1"
+    local regexp="$2"
+    shift 2
     local i
     for i in $@ ; do
         test -r "$i" || continue
         grep -v -- "^.*#" $i
-    done | grep -v -- "^ *\$" | grep -E "$regexp"
+    done | grep -v -- "^ *\$" | grep $grepflags "$regexp"
 }
 
 __print_apt_sources_list_full()
 {
-    local regexp="$1"
-    shift
+    local grepflags="$1"
+    local regexp="$2"
+    shift 2
     local i
     for i in $@ ; do
         test -r "$i" || continue
         grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i
-    done | grep -v -- "^ *\$" | grep -E "$regexp"
+    done | grep -v -- "^ *\$" | grep $grepflags "$regexp"
 }
 
 __print_apt_sources_list_list()
@@ -11655,28 +11676,30 @@ __info_cyan()
 
 __print_apt_sources_list_verbose()
 {
-    local regexp="$1"
-    shift
+    local grepflags="$1"
+    local regexp="$2"
+    shift 2
     local i
     local res=1
     for i in $@ ; do
         test -r "$i" || continue
         grep -v -- "^.*#" $i | grep -v -- "^ *\$" | grep -q . && __info_cyan "$i:" || continue
-        grep -v -- "^.*#" $i | grep -v -- "^ *\$" | sed -e 's|^|    |' | grep -E --color "$regexp" && res=0
+        grep -v -- "^.*#" $i | grep -v -- "^ *\$" | sed -e 's|^|    |' | grep $grepflags --color "$regexp" && res=0
     done
     return $res
 }
 
 __print_apt_sources_list_verbose_full()
 {
-    local regexp="$1"
-    shift
+    local grepflags="$1"
+    local regexp="$2"
+    shift 2
     local i
     local res=1
     for i in $@ ; do
         test -r "$i" || continue
         grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i | grep -v -- "^ *\$" | grep -q . && echo && __info_cyan "$i:" || continue
-        grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i | grep -v -- "^ *\$" | sed -e 's|^|    |' -e "s|\(.*#.*\)|$(set_color $WHITE)\1$(restore_color)|" | grep -E --color "$regexp" && res=0
+        grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i | grep -v -- "^ *\$" | sed -e 's|^|    |' -e "s|\(.*#.*\)|$(set_color $WHITE)\1$(restore_color)|" | grep $grepflags --color "$regexp" && res=0
     done
     return $res
 }
@@ -11685,26 +11708,35 @@ print_apt_sources_list()
 {
     local LISTS='/etc/apt/sources.list /etc/apt/sources.list.d/*.list'
 
-    [ -n "$1" ] && echo "$*" | grep -q "\.[*?]" && warning "Only glob symbols * and ? are supported. Don't use regexp here!"
-
+    local flagall=''
     if [ "$1" = "-a" ] || [ "$1" = "--all" ] ; then
+        flagall='--all'
         shift
-        local wc=$(__convert_glob__to_regexp "$*")
+    fi
 
+    local wc="$*"
+    local grepflags=""
+    if echo "$wc" | grep -q -E "^(deb|rpm) " ; then
+        grepflags="-F"
+    else
+        echo "$wc" | grep -q "\.[*?]" && warning "Only glob symbols * and ? are supported. Don't use regexp here!"
+        wc="$(__convert_glob__to_regexp "$wc")"
+        grepflags="-E"
+    fi
+
+    if [ -n "$flagall" ] ; then
         if [ -n "$quiet" ] ; then
-            __print_apt_sources_list_full "$wc" $LISTS
+            __print_apt_sources_list_full "$grepflags" "$wc" $LISTS
         else
-            __print_apt_sources_list_verbose_full "$wc" $LISTS
+            __print_apt_sources_list_verbose_full "$grepflags" "$wc" $LISTS
         fi
         return
     fi
 
-    local wc=$(__convert_glob__to_regexp "$*")
-
     if [ -n "$quiet" ] ; then
-        __print_apt_sources_list "$wc" $LISTS
+        __print_apt_sources_list "$grepflags" "$wc" $LISTS
     else
-        __print_apt_sources_list_verbose "$wc" $LISTS
+        __print_apt_sources_list_verbose "$grepflags" "$wc" $LISTS
     fi
 }
 
@@ -15843,6 +15875,16 @@ get_virt()
         [ "$VIRT" = "none" ] && echo "(host system)" && return
         [ -z "$VIRT" ] && echo "(unknown)" && return
         echo "$VIRT" && return
+    fi
+
+    if [ "$UID" = 0 ] ; then
+        if grep -q "docker" /proc/1/environ; then
+            echo "docker" && return
+        elif grep -q "lxc" /proc/1/environ; then
+            echo "lxc" && return
+        elif grep -q "libpod" /proc/1/environ; then
+            echo "podman" && return
+        fi
     fi
 
     # TODO: use virt-what under root

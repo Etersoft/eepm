@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.13"
+EPMVERSION="3.64.14"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -2735,6 +2735,16 @@ get_virt()
         [ "$VIRT" = "none" ] && echo "(host system)" && return
         [ -z "$VIRT" ] && echo "(unknown)" && return
         echo "$VIRT" && return
+    fi
+
+    if [ "$UID" = 0 ] ; then
+        if grep -q "docker" /proc/1/environ; then
+            echo "docker" && return
+        elif grep -q "lxc" /proc/1/environ; then
+            echo "lxc" && return
+        elif grep -q "libpod" /proc/1/environ; then
+            echo "podman" && return
+        fi
     fi
 
     # TODO: use virt-what under root
