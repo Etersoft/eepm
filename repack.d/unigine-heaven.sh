@@ -32,14 +32,12 @@ pack_dir $PRODUCTDIR/bin
 #done
 #fi
 
-mkdir -p $BUILDROOT/usr/bin
-cat <<EOF | create_file /usr/bin/heaven
+cat <<EOF | create_exec_file /usr/bin/heaven
 #!/bin/sh
 cd $PRODUCTDIR/bin
 export LD_LIBRARY_PATH=./x64:\$LD_LIBRARY_PATH
 ./browser_x64 -config ../data/launcher/launcher.xml
 EOF
-chmod a+x $BUILDROOT/usr/bin/heaven
 
 add_bin_link_command $PRODUCT /usr/bin/heaven
 

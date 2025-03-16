@@ -16,10 +16,7 @@ fix_chrome_sandbox
 
 add_electron_deps
 
-rm usr/bin/$PRODUCT
-
-mkdir -p $BUILDROOT/usr/bin
-cat <<EOF >$BUILDROOT/usr/bin/$PRODUCT
+cat <<EOF | create_exec_file /usr/bin/$PRODUCT
 #!/bin/sh
 CONFIG_DIR="\$HOME"/.config/discord
 SETTINGS_FILE="\$CONFIG_DIR"/settings.json
@@ -40,8 +37,6 @@ if [ ! -f "\$SETTINGS_FILE" ]; then
 fi
 exec $PRODUCTDIR/$PRODUCTCUR \$EXTRA_PARAMS "\$@"
 EOF
-chmod a+x $BUILDROOT/usr/bin/$PRODUCT
-pack_file /usr/bin/$PRODUCT
 add_bin_link_command $PRODUCTCUR $PRODUCT
 
 rm usr/share/applications/discord.desktop

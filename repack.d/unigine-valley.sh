@@ -26,15 +26,12 @@ done
 pack_dir $PRODUCTDIR
 pack_dir $PRODUCTDIR/bin
 
-mkdir -p $BUILDROOT/usr/bin
-cat <<EOF >$BUILDROOT/usr/bin/valley
+cat <<EOF | create_exec_file /usr/bin/valley
 #!/bin/sh
 cd $PRODUCTDIR/bin
 export LD_LIBRARY_PATH=./x64:\$LD_LIBRARY_PATH
 ./browser_x64 -config ../data/launcher/launcher.xml
 EOF
-chmod a+x $BUILDROOT/usr/bin/valley
-pack_file /usr/bin/valley
 
 add_bin_link_command $PRODUCT /usr/bin/valley
 

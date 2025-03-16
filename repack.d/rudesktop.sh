@@ -27,8 +27,7 @@ remove_file /usr/bin/rudesktop
 
 move_to_opt /usr/share/rudesktop-client/files
 
-mkdir -p $BUILDROOT/usr/bin
-cat <<EOF >$BUILDROOT/usr/bin/rudesktop
+cat <<EOF | create_exec_file /usr/bin/rudesktop
 #!/bin/sh
 cd /opt/rudesktop
 if [ "\$LD_LIBRARY_PATH" ]; then
@@ -38,9 +37,8 @@ else
 fi
 ./rudesktop
 EOF
-chmod a+x $BUILDROOT/usr/bin/rudesktop
+
 chmod a+x $BUILDROOT/opt/rudesktop/rudesktop
-pack_file /usr/bin/rudesktop
 
 subst "s|^Summary:.*|Summary: A remote control software.|" $SPEC
 

@@ -10,14 +10,10 @@ PREINSTALL_PACKAGES="coreutils libgdiplus liblame libnuma libopus libuuid libvor
 
 . $(dirname $0)/common.sh
 
-mkdir -p $BUILDROOT/usr/bin/
-
-cat <<EOF >$BUILDROOT/usr/bin/$PRODUCT
+cat <<EOF | create_exec_file /usr/bin/$PRODUCT
 #!/bin/sh
 mono /opt/iproject-client/RSClient.exe
 EOF
-chmod 755 $BUILDROOT/usr/bin/$PRODUCT
-pack_file /usr/bin/$PRODUCT
 
 #	mono(Microsoft.Threading.Tasks) = 1.0.12.0 нужен для iproject-client-100:2.0.11.128-alt1.repacked.with.epm.2.x86_64
 #	mono(Microsoft.Threading.Tasks.Extensions) = 1.0.12.0 нужен для iproject-client-100:2.0.11.128-alt1.repacked.with.epm.2.x86_64

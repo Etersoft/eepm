@@ -191,6 +191,13 @@ create_file()
     install_file /dev/stdin $t
 }
 
+create_exec_file()
+{
+    create_file "$1"
+    chmod a+x "$BUILDROOT/$1"
+}
+
+
 __check_target_bin()
 {
     local target="$1"
