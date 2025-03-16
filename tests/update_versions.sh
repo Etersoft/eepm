@@ -81,7 +81,7 @@ $EPM play $playopt --list-all --short | while read app ; do
     # hack for broken gitlab-runner
     [ "$distr" != "alt" ] && [ "$app" = "gitlab-runner" ] && continue
     install_app_alt $app </dev/null
-    [ -n "$show" ] && sleep $slow
+    [ -n "$slow" ] && sleep $slow
 done
 
 # save eepm version
