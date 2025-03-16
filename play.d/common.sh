@@ -121,7 +121,7 @@ install_pkgurl()
     # TODO: repack for deb systems too
     [ "$pkgtype" = "rpm" ] && repack='--repack'
 
-    [ -n "$PKGURL" ] || fatal "Can't get package URL"
+    [ -n "$PKGURL" ] || fatal "Can't get package URL. Try use epm play --latest <app> to get latest version."
 
     epm install $repack $PKGURL "$@" || exit
 }
@@ -136,7 +136,7 @@ install_pack_pkgurl()
     # TODO: repack for deb systems too
     [ "$pkgtype" = "rpm" ] && repack='--repack'
 
-    [ -n "$PKGURL" ] || fatal "Can't get package URL"
+    [ -n "$PKGURL" ] || fatal "Can't get package URL. Try use epm play --latest <app> to get latest version."
 
     epm pack $repack --install $PKGNAME "$PKGURL" "$@"
 }
