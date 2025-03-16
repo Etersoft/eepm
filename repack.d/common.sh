@@ -15,6 +15,11 @@ info()
     echo "$*" >&2
 }
 
+warning()
+{
+    echo "WARNING: $*" >&2
+}
+
 # compatibility layer
 
 # check if <arg> is a real command
