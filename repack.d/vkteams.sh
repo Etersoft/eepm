@@ -7,14 +7,26 @@ PRODUCT=vkteams
 
 . $(dirname $0)/common.sh
 
-add_bin_exec_command $PRODUCT
-# Hack against https://bugzilla.altlinux.org/43779
-# Create non writeable local .desktop file
-cat <<EOF >$BUILDROOT/usr/bin/$PRODUCT
+cat <<EOF | create_exec_file /usr/bin/$PRODUCT
 #!/bin/sh
-LDT=~/.local/share/applications/vkteamsdesktop.desktop
-[ ! -r "\$LDT" ] && mkdir -p ~/.local/share/applications/ && echo "[Desktop Entry]" > "\$LDT" && chmod a-w "\$LDT"
+# Hack against https://bugzilla.altlinux.org/43779
+# add fake desktop-file-install to path to skip desktop creating
+export PATH=$PRODUCTDIR:$PATH
 exec $PRODUCTDIR/$PRODUCT "\$@"
+EOF
+
+cat <<'EOF' | create_exec_file $PRODUCTDIR/desktop-file-install
+#!/bin/sh
+while [ -n "$1" ] ; do
+    case "$1" in
+        --*)
+            shift
+            continue
+            ;;
+    esac
+    rm -fv "$1"
+    shift
+done
 EOF
 
 cat <<EOF | create_file /usr/share/applications/$PRODUCT.desktop
