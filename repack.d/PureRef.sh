@@ -10,6 +10,8 @@ PRODUCTDIR=/opt/$PRODUCT
 
 move_to_opt /usr/bin
 
+fix_desktop_file "PureRef %U" "pureref %U"
+
 add_bin_exec_command pureref $PRODUCTDIR/$PRODUCT
 
 add_libs_requires
