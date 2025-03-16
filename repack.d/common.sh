@@ -173,6 +173,7 @@ install_file()
     local dest="$2"
 
     mkdir -p "$BUILDROOT/$(dirname "$dest")" || return
+    [ -L "$BUILDROOT$dest" ] && rm -v "$BUILDROOT$dest"
 
     if is_url "$src" ; then
         epm tool eget -O "$BUILDROOT$dest" "$src" || fatal "Can't download $src to install to $dest"
