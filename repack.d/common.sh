@@ -579,6 +579,13 @@ use_system_xdg()
     done
 }
 
+get_desktop_value()
+{
+    local DESKTOPFILE="$1"
+    local FIELD="$2"
+    cat "$DESKTOPFILE" | grep "^$FIELD=" | head -n1 | sed -e 's|^'"$FIELD"'=||' -e 's| .*||'
+}
+
 
 [ -d "$BUILDROOT" ] || fatal "Run me only via epm repack <package>"
 

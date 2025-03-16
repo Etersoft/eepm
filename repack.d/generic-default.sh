@@ -32,7 +32,8 @@ if [ -f "$BUILDROOT$PRODUCTDIR/$PRODUCT" ] ; then
 fi
 
 if [ -f $BUILDROOT/usr/share/applications/*.desktop ] ; then
-    EXEC="$(cat $BUILDROOT/usr/share/applications/*.desktop | grep "^Exec=" | head -n1 | sed -e 's|Exec=||' -e 's| .*||')"
+    EXEC="$(get_desktop_value "$BUILDROOT/usr/share/applications/*.desktop" "Exec")"
+    # replace /opt path with command name only
     if [ "/usr/bin/$(basename "$EXEC")" = "/usr/bin/$PRODUCT" ] || [ "$EXEC" = "$PRODUCTDIR/$PRODUCT" ] ; then
         if [ -x $BUILDROOT/usr/bin/$PRODUCT ] ; then
             fix_desktop_file "$EXEC"
