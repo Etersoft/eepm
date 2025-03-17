@@ -12,12 +12,12 @@ PRODUCTDIR=/opt/$PRODUCT
 
 # move package to /opt
 ROOTDIR=$(basename $(find $BUILDROOT -mindepth 1 -maxdepth 1 -type d))
-move_to_opt /$ROOTDIR
+move_to_opt /$ROOTDIR || fatal
 
 fix_chrome_sandbox
 
 
-cd $BUILDROOT$PRODUCTDIR
+cd $BUILDROOT$PRODUCTDIR || fatal
 
 # TODO
 if false ; then

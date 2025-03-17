@@ -34,9 +34,12 @@ if [ -z "$VERSION" ] ; then
     [ -n "$VERSION" ] && VERSION="$(echo "$VERSION" | sed -e 's|^v||')"
 fi
 
+BASEDIR="squashfs-root"
+[ -L "$BASEDIR" ] && [ -d "AppDir" ] && BASEDIR="AppDir"
+
 # try get version from X-AppImage-Version
 if [ -z "$VERSION" ] ; then
-    DESKTOPFILE="$(echo squashfs-root/*.desktop | head -n1)"
+    DESKTOPFILE="$(echo $BASEDIR/*.desktop | head -n1)"
     str="$(grep '^X-AppImage-Version=[0-9]' $DESKTOPFILE)"
     if [ -n "$str" ] ; then
         VERSION="$(echo $str | sed -e 's|.*X-AppImage-Version=||')"
@@ -60,9 +63,9 @@ upstream_file: $alpkg
 generic_repack: appimage
 EOF
 
-chmod og-w -R squashfs-root
-chmod a+rX -R squashfs-root
+chmod og-w -R $BASEDIR
+chmod a+rX -R $BASEDIR
 
-erc pack $PKGNAME squashfs-root
+erc pack $PKGNAME $BASEDIR
 
 return_tar $PKGNAME
