@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.14
+Version: 3.64.15
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -140,6 +140,24 @@ make -C po
 %endif
 
 %changelog
+* Tue Mar 18 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.15-alt1
+- epm play winbox: use new original icon
+- epm repack vkteams: drop libsqlite.so.0 require
+- epm repack: add create_exec_file and use it
+- epm repack vkteams: prevent install local desktop file
+- epm play discord: use url as written in IPFS db
+- epm repack pureref: fix desktop file
+- epm repack common.sh: add get_desktop_value()
+- epm repack generic-post.sh: add some post checking with warnings
+- epm repack common.sh: install_file(): overwrite target links
+- epm play common.sh: add comment about --latest
+- epm pack appimage: add support for AppDir instead of squashfs-root
+- epm play: fix tsukimi
+- epm repack: small webex improvements
+- epm repack webots: fix repacking
+- epm repack generic.sh: don't drop quotes anymore
+- epm play: speedup --list and --list-all (eterbug #17418)
+
 * Sun Mar 16 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.14-alt1
 - epm-removerepo: fix task removing
 - epm play sunshine: replace libappindicator3 to libayatana-appindicator3 (eterbug #18131)
