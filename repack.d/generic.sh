@@ -16,14 +16,18 @@ SUBGENERIC="$5"
 #    [ -d "$i" ] && [ -n "$verbose" ] && echo "drop dir $i from packing, it exists in the system"
 #done
 
-# TODO: drop it, it breaks packages with spaces in paths
-# replace dir "/path/dir" -> %dir /path/dir
+# replace dir "/path/dir" -> %dir "/path/dir"
 grep '^"/' $SPEC | sed -e 's|^"\(/.*\)"$|\1|' | while read i ; do
     # add dir as %dir in the filelist
     if [ -d "$BUILDROOT$i" ] && [ ! -L "$BUILDROOT$i" ] ; then
-        subst "s|^\(\"$i\"\)$|%dir \1|" $SPEC
-    #else
-    #    subst 's|^\("'$i'"\)$|\1|' $spec
+        subst "s|^\(\"$i\"\)$|%dir \"\1\"|" $SPEC
+    fi
+done
+
+grep '^/' $SPEC | while read i ; do
+    # add dir as %dir in the filelist
+    if [ -d "$BUILDROOT$i" ] && [ ! -L "$BUILDROOT$i" ] ; then
+        subst "s|^\($i\)$|%dir \1|" $SPEC
     fi
 done
 
