@@ -52,6 +52,8 @@ __is_app_installed()
 
 __get_app_package()
 {
+    grep -oP "^PKGNAME=[\"']*\K[^\"']+" "$psdir/$1.sh" && return
+    # fallback if PKGNAME is not set directly
     __run_script "$1" --package-name "$2" "$3" 2>/dev/null
 }
 
@@ -69,9 +71,12 @@ __list_app_packages_table()
 {
     local name
     for name in $(__list_all_app) ; do
-        local pkg="$(__get_app_package $name)"
-        [ -n "$pkg" ] || continue
-        echo "$pkg $name"
+        local pkg
+        for pkg in $(__get_app_package $name) ; do
+            echo "$pkg $name"
+            # check only first package
+            break
+        done
     done
 }
 
@@ -127,10 +132,11 @@ __list_installed_packages()
 __epm_play_list_installed()
 {
     local i
+    local arch="$SYSTEMARCH"
     if [ -n "$short" ] ; then
         for i in $(__list_installed_app) ; do
             # skip hidden apps
-            local desc="$(__get_app_description $i)"
+            local desc="$(__get_app_description $i $arch)"
             [ -n "$desc" ] || continue
             echo "$i"
         done
@@ -139,7 +145,7 @@ __epm_play_list_installed()
     [ -n "$quiet" ] || echo "Installed applications:"
     for i in $(__list_installed_app) ; do
         # skip hidden apps
-        local desc="$(__get_app_description $i)"
+        local desc="$(__get_app_description $i $arch)"
         [ -n "$desc" ] || continue
         [ -n "$quiet" ] || echo -n "  "
         printf "%-20s - %s\n" "$i" "$desc"

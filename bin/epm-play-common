@@ -47,7 +47,12 @@ __list_all_app()
 # args: script, host arch
 __get_app_description()
 {
-    __run_script "$1" --description "$2" 2>/dev/null
+    local arch="$2"
+    #__run_script "$1" --description "$arch" 2>/dev/null
+    #return
+    if grep -q '^SUPPORTEDARCHES=.*\<'"$arch"'\>' "$psdir/$1.sh" || grep -q "^SUPPORTEDARCHES=[\"'][\"']$" "$psdir/$1.sh" || grep -q -v "^SUPPORTEDARCHES=" "$psdir/$1.sh" ; then
+        grep -oP "^DESCRIPTION=[\"']*\K[^\"']+" "$psdir/$1.sh" | sed -e 's| *#*$||'
+    fi
 }
 
 __check_play_script()
