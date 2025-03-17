@@ -7,8 +7,7 @@ PRODUCTDIR=/opt/WebDAVCloudMailRu
 
 . $(dirname $0)/common.sh
 
-add_bin_exec_command wdmrc $PRODUCTDIR/wdmrc.dll
-cat <<EOF >usr/bin/wdmrc
+cat <<EOF | create_bin_exec_command /usr/bin/wdmrc
 #!/bin/sh
 dotnet $PRODUCTDIR/wdmrc.dll "\$@"
 EOF

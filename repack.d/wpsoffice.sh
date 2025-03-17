@@ -24,10 +24,10 @@ remove_file $PRODUCTDIR/office6/wpscloudsvr
 remove_file $PRODUCTDIR/office6/addons/pdfbatchcompression/libpdfbatchcompressionapp.so
 
 # Fix for icu>=71.1
-remove_file $PRODUCTDIR/office6/libstdc++.so.*
+remove_file $PRODUCTDIR/office6/libstdc++.so*
 
 # Use system libjpeg
-remove_file $PRODUCTDIR/office6/libjpeg.so.*
+remove_file $PRODUCTDIR/office6/libjpeg.so*
 
 # hack to fix bug somewhere in linking
 ignore_lib_requires "libc++.so"
@@ -41,5 +41,9 @@ ignore_lib_requires "libuof.so"
 # Fix wps deprecated python2 command
 # https://aur.archlinux.org/cgit/aur.git/tree/fix-wps-python-parse.patch?h=wps-office-cn
 subst 's/python -c '\''import sys, urllib; print urllib.unquote(sys.argv\[1\])'\''/python3 -c '\''import sys, urllib.parse; print(urllib.parse.unquote(sys.argv[1]))'\''/' $BUILDROOT/usr/bin/wps
+
+# ошибка: Macro %20sequence not found
+remove_file $PRODUCTDIR/office6/mui/zh_CN/resource/help/etrainbow/images/Ribbon/custom_%20sequence.gif
+#remove_dir $PRODUCTDIR/office6/mui/zh_CN/resource/help/etrainbow/images
 
 add_libs_requires
