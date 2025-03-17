@@ -34,7 +34,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.14"
+export EPMVERSION="3.64.15"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -7022,6 +7022,8 @@ __is_app_installed()
 
 __get_app_package()
 {
+    grep -oP "^PKGNAME=[\"']*\K[^\"']+" "$psdir/$1.sh" && return
+    # fallback if PKGNAME is not set directly
     __run_script "$1" --package-name "$2" "$3" 2>/dev/null
 }
 
@@ -7038,9 +7040,12 @@ __list_app_packages_table()
 {
     local name
     for name in $(__list_all_app) ; do
-        local pkg="$(__get_app_package $name)"
-        [ -n "$pkg" ] || continue
-        echo "$pkg $name"
+        local pkg
+        for pkg in $(__get_app_package $name) ; do
+            echo "$pkg $name"
+            # check only first package
+            break
+        done
     done
 }
 
@@ -7096,10 +7101,11 @@ __list_installed_packages()
 __epm_play_list_installed()
 {
     local i
+    local arch="$SYSTEMARCH"
     if [ -n "$short" ] ; then
         for i in $(__list_installed_app) ; do
             # skip hidden apps
-            local desc="$(__get_app_description $i)"
+            local desc="$(__get_app_description $i $arch)"
             [ -n "$desc" ] || continue
             echo "$i"
         done
@@ -7108,7 +7114,7 @@ __epm_play_list_installed()
     [ -n "$quiet" ] || echo "Installed applications:"
     for i in $(__list_installed_app) ; do
         # skip hidden apps
-        local desc="$(__get_app_description $i)"
+        local desc="$(__get_app_description $i $arch)"
         [ -n "$desc" ] || continue
         [ -n "$quiet" ] || echo -n "  "
         printf "%-20s - %s\n" "$i" "$desc"
@@ -7436,7 +7442,12 @@ __list_all_app()
 
 __get_app_description()
 {
-    __run_script "$1" --description "$2" 2>/dev/null
+    local arch="$2"
+    #__run_script "$1" --description "$arch" 2>/dev/null
+    #return
+    if grep -q '^SUPPORTEDARCHES=.*\<'"$arch"'\>' "$psdir/$1.sh" || grep -q "^SUPPORTEDARCHES=[\"'][\"']$" "$psdir/$1.sh" || grep -q -v "^SUPPORTEDARCHES=" "$psdir/$1.sh" ; then
+        grep -oP "^DESCRIPTION=[\"']*\K[^\"']+" "$psdir/$1.sh" | sed -e 's| *#*$||'
+    fi
 }
 
 __check_play_script()
@@ -10593,73 +10604,6 @@ __epm_repack_to_deb()
 
 # File bin/epm-repack-rpm:
 
-__icons_res_list="apps scalable symbolic 8x8 14x14 16x16 20x20 22x22 24x24 28x28 32x32 36x36 42x42 45x45 48x48 64 64x64 72x72 96x96 128x128 144x144 160x160 192x192 256x256 256x256@2x 480x480 512 512x512 1024x1024"
-__icons_type_list="actions animations apps categories devices emblems emotes filesystems intl mimetypes places status stock"
-
-__get_icons_hicolor_list()
-{
-    local i j
-    for i in ${__icons_res_list} ; do
-        echo "/usr/share/icons/hicolor/$i"
-        for j in ${__icons_type_list}; do
-            echo "/usr/share/icons/hicolor/$i/$j"
-        done
-    done
-}
-
-__get_icons_gnome_list()
-{
-    local i j
-    for i in ${__icons_res_list} ; do
-        echo "/usr/share/icons/gnome/$i"
-        for j in ${__icons_type_list}; do
-            echo "/usr/share/icons/gnome/$i/$j"
-        done
-    done
-}
-
-__fix_spec()
-{
-    local pkgname="$1"
-    local buildroot="$2"
-    local spec="$3"
-    local i
-
-    # drop forbidded paths
-    # https://bugzilla.altlinux.org/show_bug.cgi?id=38842
-    for i in / /etc /etc/init.d /etc/systemd /bin /opt /usr /usr/bin /usr/lib /usr/lib64 /usr/share /usr/share/doc /var /var/log /var/run \
-            /etc/cron.daily /usr/share/icons/usr/share/pixmaps /usr/share/man /usr/share/man/man1 /usr/share/appdata /usr/share/applications /usr/share/menu \
-            /usr/share/mime /usr/share/mime/packages /usr/share/icons \
-            /usr/share/icons/gnome $(__get_icons_gnome_list) \
-            /usr/share/icons/hicolor $(__get_icons_hicolor_list) ; do
-        sed -i \
-            -e "s|/\./|/|" \
-            -e "s|^%dir[[:space:]]\"$i/*\"$||" \
-            -e "s|^%dir[[:space:]]$i/*$||" \
-            -e "s|^\"$i/*\"$||" \
-            -e "s|^$i/*$||" \
-            $spec
-    done
-
-    # commented out: conflicts with already installed package
-    # drop %dir for existed system dirs
-    #for i in $(grep '^%dir "' $spec | sed -e 's|^%dir  *"\(.*\)".*|\1|' ) ; do #"
-    #    echo "$i" | grep -q '^/opt/' && continue
-    #    [ -d "$i" ] && [ -n "$verbose" ] && echo "drop dir $i from packing, it exists in the system"
-    #done
-
-    # replace dir "/path/dir" -> %dir /path/dir
-    grep '^"/' $spec | sed -e 's|^"\(/.*\)"$|\1|' | while read i ; do
-        # add dir as %dir in the filelist
-        if [ -d "$buildroot$i" ] && [ ! -L "$buildroot$i" ] ; then
-            subst "s|^\(\"$i\"\)$|%dir \1|" $spec
-        #else
-        #    subst 's|^\("'$i'"\)$|\1|' $spec
-        fi
-    done
-
-}
-
 has_repack_script()
 {
     local repackcode="$EPM_REPACK_SCRIPTS_DIR/$1.sh"
@@ -10669,7 +10613,7 @@ has_repack_script()
 __apply_fix_code()
 {
     local repackcode="$EPM_REPACK_SCRIPTS_DIR/$1.sh"
-    [ -s "$repackcode" ] || return
+    [ -s "$repackcode" ] || return 0
     [ -f "$repackcode.rpmnew" ] && warning 'There is .rpmnew file(s) in $EPM_REPACK_SCRIPTS_DIR dir. The pack script can be outdated.'
 
     shift
@@ -10812,14 +10756,13 @@ __epm_repack_to_rpm()
         # run generic scripts and repack script for the pkg
         cd $buildroot || fatal
 
-        __fix_spec $pkgname $buildroot $spec
         __apply_fix_code "generic"             $buildroot $spec $pkgname $abspkg $SUBGENERIC
         __apply_fix_code "generic-$SUBGENERIC" $buildroot $spec $pkgname $abspkg
         __apply_fix_code $pkgname              $buildroot $spec $pkgname $abspkg
         if ! has_repack_script $pkgname ; then
             __apply_fix_code "generic-default" $buildroot $spec $pkgname $abspkg
         fi
-        __fix_spec $pkgname $buildroot $spec
+        __apply_fix_code "generic-post"        $buildroot $spec $pkgname $abspkg
         cd - >/dev/null
 
         # reassign package name (could be renamed in fix scripts)
