@@ -2,14 +2,23 @@
 
 TAR="$1"
 RETURNTARNAME="$2"
-#VERSION+"$3"
+VERSION="$3"
+URL="$4"
 
 . $(dirname $0)/common.sh
 
 alpkg=$(basename $TAR)
 
 VERSION="$(echo "$alpkg" | grep -o -P '[-_.][0-9][0-9]*([.]*[0-9])*' | head -n1 | sed -e 's|^[-_.]||')" #"
-[ -n "$VERSION" ] && PRODUCT="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")" || fatal "Can't get version from $TAR. We have almost no chance it will supported in alien."
+
+# Commented out: will not work due incorect name
+# Hack for https://www.bitwig.com/dl/Bitwig%20Studio/5.3.2/installer_linux/
+#[ -n "$VERSION" ] || VERSION="$(basename "$(dirname "$URL")" | grep -E "[0-9.]+")"
+
+[ -n "$VERSION" ] || fatal "Can't get version from $TAR. We have almost no chance it will supported in alien."
+
+PRODUCT="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
+
     # set version as all between name and extension
     #local woext="$(echo "alpkg" | sed -e 's|\.tar.*||')"
     #if [ "$woext" != "$alpkg" ] ; then
