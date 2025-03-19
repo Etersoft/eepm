@@ -47,6 +47,10 @@ __epm_removerepo_apt()
 
 __epm_grep_repo_list()
 {
+    if [ "$1" = "all" ] ; then
+        epm --quiet repo list
+        return
+    fi
     while [ -n "$1" ] ; do
         epm --quiet repo list "$1"
         shift
@@ -56,19 +60,12 @@ __epm_grep_repo_list()
 # remove grepped lines
 __epm_removerepo_alt_grepremove()
 {
-    local rl="$*"
+    local rl
 
-    if [ "$rl" = "all" ] ; then
-        rl="*"
-    fi
-
-    # ^rpm means full string
-    if ! rhas "$rl" "^rpm" ; then
-        rl="$(__epm_grep_repo_list $rl 2>/dev/null)"
-        if [ -z "$rl" ] ; then
-            [ -n "$verbose" ] && warning 'Can'\''t find '$*' in the repos (see # epm repolist output)'
-            return 1
-        fi
+    rl="$(__epm_grep_repo_list "$@" 2>/dev/null)"
+    if [ -z "$rl" ] ; then
+        [ -n "$verbose" ] && warning 'Can'\''t find '$*' in the repos list (see # epm repolist output)'
+        return 1
     fi
 
     echo "$rl" | while read rp ; do
@@ -117,6 +114,10 @@ __epm_removerepo_alt()
         task)
             shift
             __epm_removerepo_alt_grepremove " repo/$1/" "/tasks/$1 " "/$1[ /]build/repo"
+            ;;
+        all)
+            info "removing all repos"
+            __epm_removerepo_alt_grepremove "all"
             ;;
         -*)
             fatal "epm removerepo: no options are supported"
