@@ -34,7 +34,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.16"
+export EPMVERSION="3.64.17"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1469,6 +1469,10 @@ __epm_addrepo_altlinux()
             __epm_addrepo_main_alt_repo "$repo"
             return
             ;;
+        sisyphus|Sisyphus)
+            __epm_addrepo_main_alt_repo "$(echo $repo | tr "[:upper:]" "[:lower:]")"
+            return
+            ;;
     esac
 
     if echo "$repo" | grep -q "https://" ; then
@@ -2078,13 +2082,13 @@ __epm_autoremove_altrpm()
     local i
     assure_exists /usr/share/apt/scripts/list-nodeps.lua apt-scripts
 
-    if [ -z "$pkg_names" ] ; then
+    if [ -z "$*" ] ; then
         pkg_names="$epm_autoremove_default_groups"
-    elif [ "$pkg_names" = "python" ] ; then
+    elif [ "$*" = "python" ] ; then
         pkg_names="python2 python3"
     fi
 
-    for i in $pkg_names ; do
+    for i in "$@" ; do
         case $i in
         libs)
             __epm_autoremove_altrpm_lib libs
@@ -2166,7 +2170,7 @@ case $BASEDISTRNAME in
     "alt")
 
         if [ -z "$direct" ] ; then
-            [ -n "$1" ] && fatal "Run autoremove without args or with --direct. Check epm autoremove --help to available commands."
+            [ -n "$1" ] && fatal "Please, run autoremove without args or with --direct. Check epm autoremove --help to available commands."
             if epm installed sudo ; then
                 epm mark manual sudo || fatal
             fi
@@ -7445,7 +7449,7 @@ __get_app_description()
     local arch="$2"
     #__run_script "$1" --description "$arch" 2>/dev/null
     #return
-    if grep -q '^SUPPORTEDARCHES=.*\<'"$arch"'\>' "$psdir/$1.sh" || grep -q "^SUPPORTEDARCHES=[\"'][\"']$" "$psdir/$1.sh" || grep -q -v "^SUPPORTEDARCHES=" "$psdir/$1.sh" ; then
+    if grep -q '^SUPPORTEDARCHES=.*\<'"$arch"'\>' "$psdir/$1.sh" || grep -q "^SUPPORTEDARCHES=[\"'][\"']$" "$psdir/$1.sh" || ! grep -q "^SUPPORTEDARCHES=" "$psdir/$1.sh" ; then
         grep -oP "^DESCRIPTION=[\"']*\K[^\"']+" "$psdir/$1.sh" | sed -e 's| *#*$||'
     fi
 }
