@@ -199,7 +199,7 @@ __change_repo()
     local SHORT="$1"
     local REPLTO="$2"
     local NN
-    epm --quiet repo list | grep -v $SHORT | grep -v "file:/" | while read nn ; do
+    epm --quiet repo list | grep -v "file:/" | while read nn ; do
         NN="$(__subst_with_repo_url "$nn" "$REPLTO")"
         [ "$NN" = "$nn" ] && continue
         epm addrepo "$NN" && epm removerepo "$nn" || return 1
