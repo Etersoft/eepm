@@ -31,7 +31,7 @@ for DESKTOPFILE in $BUILDROOT/usr/share/applications/*.desktop ; do
     EXEC="$(get_desktop_value "$DESKTOPFILE" "Exec")"
     if echo "$EXEC" | grep -q "/" ; then
         warning "Exec path in desktop file $DESKTOPFILE contains slashes: $EXEC"
-    elif [ ! -f "./usr/bin/$EXEC" ] ; then
+    elif [ ! -s "./usr/bin/$EXEC" ] ; then
         warning "Exec from desktop file $DESKTOPFILE missed in /usr/bin: $EXEC"
     elif [ ! -x "./usr/bin/$EXEC" ] ; then
         warning "Exec from desktop file $DESKTOPFILE exists in /usr/bin, but not executable: $EXEC"
