@@ -1,6 +1,7 @@
 #!/bin/sh
 
 PKGNAME=okular-csp
+# TODO: okular-gost contains ugly hack with libcurl
 SKIPREPACK=1
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
@@ -11,7 +12,7 @@ REPOURL="http://packages.lab50.net"
 # TODO: remove repo too
 case "$1" in
     "--remove")
-        epm remove $(epm qp $PKGNAME-) $(epm qp poppler-csp-)
+        epm remove $(epm qp $PKGNAME-) $(epm qp poppler-csp-) okular-gost
         epm repo remove okular
         exit
         ;;
@@ -31,14 +32,20 @@ vendor=$(epm print info -s)
 
 # Strict supported list
 case $(epm print info -e) in
-    Debian/1*|Ubuntu/20.04)
+    Debian/1*|Ubuntu/2*)
         ;;
     AstraLinuxSE/1.7*)
+        distrib=alse17
+        additional_packages="libkf5js5=5.78.0-0ubuntu2+alse17 libkf5jsapi5=5.78.0-0ubuntu2+alse17"
         ;;
-    Fedora/3*|ROSA/2021.1|RedOS/*)
+    AstraLinuxSE/1.8*)
+        distrib=alse18
+        ;;
+    Fedora/*|ROSA/2021.1|ROSA/13|RedOS/7.3|RedOS/8.0)
         distrib=$vendor
         ;;
-    ALTLinux/*)
+    ALTLinux/p10|ALTLinux/p11|ALTLinux/Sisyphus)
+        [ "$distrib" = "Sisyphus" ] && distrib="p11"
         ;;
     *)
         fatal "Unsupported distro $(epm print info -e). Ask application vendor for a support."
@@ -58,27 +65,13 @@ fi
 
 pkgsystem=$(epm print info -g)
 
-case $(epm print info -e) in
-# TODO:
-    AstraLinuxCE*)
-        pkgsystem=''
-        epm repo addkey "$REPOURL/lab50.gpg"
-        epm repo add "deb $REPOURL/ce stable main"
-        ;;
-# TODO:
-    AstraLinuxSE*)
-        distrib=alse17
-        additional_packages="libkf5js5=5.78.0-0ubuntu2+alse17 libkf5jsapi5=5.78.0-0ubuntu2+alse17"
-        ;;
-esac
-
 case $vendor in
     alt)
         epm installed lsb-cprocsp-capilite-64 || fatal "lsb-cprocsp-capilite-64 is not installed. Use 'ecryptomgr install cryptopro' to install it."
         epm installed cprocsp-pki-cades-64 || fatal "cprocsp-pki-cades-64 is not installed. Use 'ecryptomgr install cades' to install it."
 # TODO get key info from gpg file
-        epm repo addkey "$REPOURL/lab50.gpg" "D0C721136AFF9319DCF8276EA98DF0BE319FACDA" "Laboratory 50 (APT Archive Key) <team@lab50.net>"
-        epm repo add "rpm [lab50] $REPOURL/okular/alt x86_64 p10"
+#        epm repo addkey "$REPOURL/lab50.gpg" "D0C721136AFF9319DCF8276EA98DF0BE319FACDA" "Laboratory 50 (APT Archive Key) <team@lab50.net>"
+        epm repo add "rpm $REPOURL/okular/alt $distrib/x86_64 okulargost"
         ;;
 esac
 
@@ -93,4 +86,4 @@ case $pkgsystem in
 esac
 
 epm update
-epm install okular-csp $additional_packages
+epm install $PKGNAME $additional_packages
