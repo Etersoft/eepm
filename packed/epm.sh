@@ -34,7 +34,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.15"
+export EPMVERSION="3.64.16"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -10181,6 +10181,10 @@ __epm_removerepo_apt()
 
 __epm_grep_repo_list()
 {
+    if [ "$1" = "all" ] ; then
+        epm --quiet repo list
+        return
+    fi
     while [ -n "$1" ] ; do
         epm --quiet repo list "$1"
         shift
@@ -10189,19 +10193,12 @@ __epm_grep_repo_list()
 
 __epm_removerepo_alt_grepremove()
 {
-    local rl="$*"
+    local rl
 
-    if [ "$rl" = "all" ] ; then
-        rl="*"
-    fi
-
-    # ^rpm means full string
-    if ! rhas "$rl" "^rpm" ; then
-        rl="$(__epm_grep_repo_list $rl 2>/dev/null)"
-        if [ -z "$rl" ] ; then
-            [ -n "$verbose" ] && warning 'Can'\''t find '$*' in the repos (see # epm repolist output)'
-            return 1
-        fi
+    rl="$(__epm_grep_repo_list "$@" 2>/dev/null)"
+    if [ -z "$rl" ] ; then
+        [ -n "$verbose" ] && warning 'Can'\''t find '$*' in the repos list (see # epm repolist output)'
+        return 1
     fi
 
     echo "$rl" | while read rp ; do
@@ -10250,6 +10247,10 @@ __epm_removerepo_alt()
         task)
             shift
             __epm_removerepo_alt_grepremove " repo/$1/" "/tasks/$1 " "/$1[ /]build/repo"
+            ;;
+        all)
+            info "removing all repos"
+            __epm_removerepo_alt_grepremove "all"
             ;;
         -*)
             fatal "epm removerepo: no options are supported"
@@ -11583,10 +11584,13 @@ __print_apt_sources_list()
     local regexp="$2"
     shift 2
     local i
+    local res=1
+    [ -n "$regexp" ] || res=0
     for i in $@ ; do
         test -r "$i" || continue
         grep -v -- "^.*#" $i
-    done | grep -v -- "^ *\$" | grep $grepflags "$regexp"
+    done | grep -v -- "^ *\$" | grep $grepflags "$regexp" && res=0
+    return $res
 }
 
 __print_apt_sources_list_full()
@@ -11595,10 +11599,13 @@ __print_apt_sources_list_full()
     local regexp="$2"
     shift 2
     local i
+    local res=1
+    [ -n "$regexp" ] || res=0
     for i in $@ ; do
         test -r "$i" || continue
         grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i
-    done | grep -v -- "^ *\$" | grep $grepflags "$regexp"
+    done | grep -v -- "^ *\$" | grep $grepflags "$regexp" && res=0
+    return $res
 }
 
 __print_apt_sources_list_list()
@@ -11624,6 +11631,7 @@ __print_apt_sources_list_verbose()
     shift 2
     local i
     local res=1
+    [ -n "$regexp" ] || res=0
     for i in $@ ; do
         test -r "$i" || continue
         grep -v -- "^.*#" $i | grep -v -- "^ *\$" | grep -q . && __info_cyan "$i:" || continue
@@ -11639,6 +11647,7 @@ __print_apt_sources_list_verbose_full()
     shift 2
     local i
     local res=1
+    [ -n "$regexp" ] || res=0
     for i in $@ ; do
         test -r "$i" || continue
         grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i | grep -v -- "^ *\$" | grep -q . && echo && __info_cyan "$i:" || continue
