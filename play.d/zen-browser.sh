@@ -12,4 +12,4 @@ arch=$(epm print info -a)
 
 PKGURL=$(get_github_url "https://github.com/zen-browser/desktop/" "zen-${arch}.AppImage")
 
-install_pkgurl
+install_pack_pkgurl
