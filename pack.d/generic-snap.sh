@@ -21,7 +21,7 @@ a= unsquashfs $TAR || fatal
 # version: 1.69.1
 # summary: Plex for Linux
 # description:
-eval $(epm tool yaml squashfs-root/meta/snap.yaml | grep -E "(name|version|summary|description)=") #"
+eval $(epm tool yaml squashfs-root/meta/snap.yaml | grep -E "^(name|version|summary|description)=") #"
 
 [ -n "$name" ] || fatal "Can't get name from snap.yaml"
 [ -n "$version" ] || fatal "Can't get version from snap.yaml"

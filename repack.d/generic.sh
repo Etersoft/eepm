@@ -151,10 +151,10 @@ set_rpm_field "Distribution" "EEPM"
 
 # TODO: check the yaml file!!!
 if [ -r "$PKG.eepm.yaml" ] ; then
-    eval $(epm tool yaml $PKG.eepm.yaml | grep -E '(summary|description|upstream_file|upstream_url|url|appname|arch|group|license|version)=' ) #'
+    eval $(epm tool yaml $PKG.eepm.yaml | grep -E '^(summary|description|upstream_file|upstream_url|url|appname|arch|group|license|version)=' ) #'
     # for tarballs fix permissions
     chmod $verbose -R a+rX *
-
+    [ -n "$name" ] && [ "$name" != "$PRODUCT" ] && warning "name $name in $PKG.eepm.yaml is not equal to PRODUCT $PRODUCT"
     [ -n "$version" ] && set_rpm_field "Version" "$version"
     set_rpm_field "Group" "$group"
     set_rpm_field "License" "$license"
@@ -164,6 +164,9 @@ if [ -r "$PKG.eepm.yaml" ] ; then
     [ -n "$upstream_url" ] && upstream_file="$upstream_url"
     [ -n "$description" ] && subst "s|^\((Converted from a\) \(.*\) \(package.*\)|$description\n(Repacked from $upstream_file with EPM $(epm --short --version))\n\1 \2 \3|" $SPEC
 else
+    warning "$PKG.eepm.yaml is missed"
+    exya="$(echo $(dirname $PKG.eepm.yaml)/*.eepm.yaml)"
+    [ -f "$exya" ] && warning "$PKG.eepm.yaml is missed, but $exya is exists"
     subst "s|^\((Converted from a\) \(.*\) \(package.*\)|(Repacked from binary \2 package with EPM $(epm --short --version))\n\1 \2 \3|" $SPEC
 fi
 
