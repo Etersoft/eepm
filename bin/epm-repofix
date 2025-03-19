@@ -69,7 +69,7 @@ __replace_alt_version_in_repo()
     #echo "Upgrading $DISTRNAME from $1 to $2 ..."
     epm --quiet repo list | sed -E -e "s|($1)|{\1}->{$2}|g" | grep -E --color -- "$1"
     # ask and replace only we will have changes
-    if epm --quiet repo list "$1" ; then
+    if epm --quiet repo list | grep -E -q -- "$1" ; then
         __replace_text_in_alt_repo "/^ *#/! s!$1!$2!g"
     fi
 }
