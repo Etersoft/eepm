@@ -25,10 +25,13 @@ __print_apt_sources_list()
     local regexp="$2"
     shift 2
     local i
+    local res=1
+    [ -n "$regexp" ] || res=0
     for i in $@ ; do
         test -r "$i" || continue
         grep -v -- "^.*#" $i
-    done | grep -v -- "^ *\$" | grep $grepflags "$regexp"
+    done | grep -v -- "^ *\$" | grep $grepflags "$regexp" && res=0
+    return $res
 }
 
 __print_apt_sources_list_full()
@@ -37,10 +40,13 @@ __print_apt_sources_list_full()
     local regexp="$2"
     shift 2
     local i
+    local res=1
+    [ -n "$regexp" ] || res=0
     for i in $@ ; do
         test -r "$i" || continue
         grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i
-    done | grep -v -- "^ *\$" | grep $grepflags "$regexp"
+    done | grep -v -- "^ *\$" | grep $grepflags "$regexp" && res=0
+    return $res
 }
 
 # TODO: remove
@@ -68,6 +74,7 @@ __print_apt_sources_list_verbose()
     shift 2
     local i
     local res=1
+    [ -n "$regexp" ] || res=0
     for i in $@ ; do
         test -r "$i" || continue
         grep -v -- "^.*#" $i | grep -v -- "^ *\$" | grep -q . && __info_cyan "$i:" || continue
@@ -83,6 +90,7 @@ __print_apt_sources_list_verbose_full()
     shift 2
     local i
     local res=1
+    [ -n "$regexp" ] || res=0
     for i in $@ ; do
         test -r "$i" || continue
         grep -- "^[[:space:]]*#*[[:space:]]*rpm" $i | grep -v -- "^ *\$" | grep -q . && echo && __info_cyan "$i:" || continue
