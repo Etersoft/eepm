@@ -35,6 +35,7 @@ EOF
 install_file $PRODUCTDIR/bin/$PRODUCT.png /usr/share/pixmaps/$PRODUCT.png
 install_file $PRODUCTDIR/bin/$PRODUCT.svg /usr/share/pixmaps/$PRODUCT.svg
 
+exit
 # kind of hack
 subst 's|%dir "'$PRODUCTDIR'/"||' $SPEC
 subst 's|%dir "'$PRODUCTDIR'/bin/"||' $SPEC
