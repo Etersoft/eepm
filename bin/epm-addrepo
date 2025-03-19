@@ -362,6 +362,10 @@ __epm_addrepo_altlinux()
             __epm_addrepo_main_alt_repo "$repo"
             return
             ;;
+        sisyphus|Sisyphus)
+            __epm_addrepo_main_alt_repo "$(echo $repo | tr "[:upper:]" "[:lower:]")"
+            return
+            ;;
     esac
 
     if echo "$repo" | grep -q "https://" ; then
