@@ -31,15 +31,16 @@ if [ -f "$BUILDROOT$PRODUCTDIR/$PRODUCT" ] ; then
     add_bin_exec_command
 fi
 
-if [ -f $BUILDROOT/usr/share/applications/*.desktop ] ; then
-    EXEC="$(get_desktop_value "$BUILDROOT/usr/share/applications/*.desktop" "Exec")"
+for desktopfile in $BUILDROOT/usr/share/applications/*.desktop ; do
+    [ -f "$desktopfile" ] || continue
+    EXEC="$(get_desktop_value "$desktopfile" "Exec")"
     # replace /opt path with command name only
     if [ "/usr/bin/$(basename "$EXEC")" = "/usr/bin/$PRODUCT" ] || [ "$EXEC" = "$PRODUCTDIR/$PRODUCT" ] ; then
         if [ -x $BUILDROOT/usr/bin/$PRODUCT ] ; then
             fix_desktop_file "$EXEC"
         fi
     fi
-fi
+done
 
 # TODO: add product dir detection
 if [ -f "$BUILDROOT$PRODUCTDIR/v8_context_snapshot.bin" ] ; then
