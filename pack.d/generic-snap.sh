@@ -26,6 +26,11 @@ eval $(epm tool yaml squashfs-root/meta/snap.yaml | grep -E "^(name|version|summ
 [ -n "$name" ] || fatal "Can't get name from snap.yaml"
 [ -n "$version" ] || fatal "Can't get version from snap.yaml"
 
+# hack version
+if echo "$version" | grep -q "^v[0-9]" ; then
+    version="$(echo $version | sed -e 's|^v||')"
+fi
+
 mkdir -p opt/
 mv squashfs-root opt/$name
 
