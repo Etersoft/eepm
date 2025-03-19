@@ -20,10 +20,11 @@ SUBGENERIC="$5"
 grep '^"/' $SPEC | sed -e 's|^"\(/.*\)"$|\1|' | while read i ; do
     # add dir as %dir in the filelist
     if [ -d "$BUILDROOT$i" ] && [ ! -L "$BUILDROOT$i" ] ; then
-        subst "s|^\(\"$i\"\)$|%dir \"\1\"|" $SPEC
+        subst "s|^\(\"$i\"\)$|%dir \1|" $SPEC
     fi
 done
 
+# replace dir /path/dir -> %dir /path/dir
 grep '^/' $SPEC | while read i ; do
     # add dir as %dir in the filelist
     if [ -d "$BUILDROOT$i" ] && [ ! -L "$BUILDROOT$i" ] ; then
