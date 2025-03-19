@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.15
+Version: 3.64.16
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -140,6 +140,14 @@ make -C po
 %endif
 
 %changelog
+* Wed Mar 19 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.16-alt1
+- epm play whatsapp: move to WasIstLos upstream and wasistlos package name
+- epm play: add whatsie
+- epm-repolist: fix result code for list without grep
+- epm-removerepo: fix removing all repos, cleanup
+- epm repack generic.sh: fix quotes
+- epm repack generic-default.sh: fix desktop file checking
+
 * Tue Mar 18 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.15-alt1
 - epm play winbox: use new original icon
 - epm repack vkteams: drop libsqlite.so.0 require
