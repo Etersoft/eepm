@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.16
+Version: 3.64.17
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -140,6 +140,18 @@ make -C po
 %endif
 
 %changelog
+* Thu Mar 20 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.17-alt1
+- epm play: fix list only for the arch
+- epm repo add: return support for sisyphus/Sisyphus
+- epm play: update okular-csp
+- epm play firefox: update url
+- epm repack CLion: fix overpacking
+- epm repack min.sh: hack for install on separated /opt
+- epm autoremove --direct: fix args handling
+- epm play nomachine: add install support
+- epm play: rename zen-browser package to zen-browser, improve repacking
+- epm play vinteo.desktop: fix version detection
+
 * Wed Mar 19 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.16-alt1
 - epm play whatsapp: move to WasIstLos upstream and wasistlos package name
 - epm play: add whatsie
