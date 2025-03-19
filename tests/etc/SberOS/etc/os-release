@@ -1,0 +1,6 @@
+PRETTY_NAME="SberOS GNU/Linux (Rolling Release)"
+NAME="SberOS GNU/Linux"
+VERSION_CODENAME="n/a"
+ID=sberos
+HOME_URL="https://sberos.sber.ru/"
+BUG_REPORT_URL="https://bugs.sber.ru"

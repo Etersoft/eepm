@@ -1,0 +1,14 @@
+PRETTY_NAME="OSnova Linux (Onyx3 3.0)"
+NAME="OSnova Linux"
+ID=osnova
+ID_LIKE=debian
+ANSI_COLOR="1;31"
+HOME_URL="http://www.nppct.ru/"
+SUPPORT_URL="http://www.nppct.ru/support"
+BUG_REPORT_URL="https://support.nppct.ru"
+VARIANT_ID=onyx3
+VARIANT=Onyx3
+VERSION_ID=3.0
+VERSION_CODENAME=onyx3
+BUILD_ID=3.0
+VERSION="3.0 (Onyx3)"

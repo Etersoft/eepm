@@ -1,0 +1,22 @@
+# Standard values
+# Specification: https://www.freedesktop.org/software/systemd/man/os-release.html
+NAME="ROSA Fresh Desktop"
+ID=rosa
+PRETTY_NAME="ROSA Fresh Desktop"
+CPE_NAME="cpe:/o:rosalinux:rosa:13"
+META_CLASS=desktop
+VARIANT_ID=fresh-desktop
+ANSI_COLOR="1;43"
+VERSION="13.0"
+VERSION_ID=13
+VERSION_CODENAME=13.0
+HOME_URL="https://www.rosa.ru"
+# TODO: by far not all icons packages provide an icon "rosa"
+LOGO=rosa
+BUG_REPORT_URL="https://bugzilla.rosa.ru"
+# ROSA-specific values
+ROSA_OS_BRANCH=fresh
+ROSA_OS_PLATFORM="rosa13"
+ROSA_OS_PLATFORM_INTEGER=202510
+ROSA_OS_TYPE=desktop
+ROSA_OS_VERSION=13.0
