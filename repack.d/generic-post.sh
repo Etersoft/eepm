@@ -35,5 +35,7 @@ for DESKTOPFILE in $BUILDROOT/usr/share/applications/*.desktop ; do
         warning "Exec from desktop file $DESKTOPFILE missed in /usr/bin: $EXEC"
     elif [ ! -x "./usr/bin/$EXEC" ] ; then
         warning "Exec from desktop file $DESKTOPFILE exists in /usr/bin, but not executable: $EXEC"
+    elif [ -z "$EXEC" ] ; then
+        warning "Exec from desktop file $DESKTOPFILE is missed"
     fi
 done
