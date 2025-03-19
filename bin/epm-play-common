@@ -50,7 +50,7 @@ __get_app_description()
     local arch="$2"
     #__run_script "$1" --description "$arch" 2>/dev/null
     #return
-    if grep -q '^SUPPORTEDARCHES=.*\<'"$arch"'\>' "$psdir/$1.sh" || grep -q "^SUPPORTEDARCHES=[\"'][\"']$" "$psdir/$1.sh" || grep -q -v "^SUPPORTEDARCHES=" "$psdir/$1.sh" ; then
+    if grep -q '^SUPPORTEDARCHES=.*\<'"$arch"'\>' "$psdir/$1.sh" || grep -q "^SUPPORTEDARCHES=[\"'][\"']$" "$psdir/$1.sh" || ! grep -q "^SUPPORTEDARCHES=" "$psdir/$1.sh" ; then
         grep -oP "^DESCRIPTION=[\"']*\K[^\"']+" "$psdir/$1.sh" | sed -e 's| *#*$||'
     fi
 }
