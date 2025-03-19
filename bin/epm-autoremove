@@ -153,13 +153,13 @@ __epm_autoremove_altrpm()
     load_helper epm-packages
     assure_exists /usr/share/apt/scripts/list-nodeps.lua apt-scripts
 
-    if [ -z "$pkg_names" ] ; then
+    if [ -z "$*" ] ; then
         pkg_names="$epm_autoremove_default_groups"
-    elif [ "$pkg_names" = "python" ] ; then
+    elif [ "$*" = "python" ] ; then
         pkg_names="python2 python3"
     fi
 
-    for i in $pkg_names ; do
+    for i in "$@" ; do
         case $i in
         libs)
             __epm_autoremove_altrpm_lib libs
@@ -242,7 +242,7 @@ case $BASEDISTRNAME in
     "alt")
 
         if [ -z "$direct" ] ; then
-            [ -n "$1" ] && fatal "Run autoremove without args or with --direct. Check epm autoremove --help to available commands."
+            [ -n "$1" ] && fatal "Please, run autoremove without args or with --direct. Check epm autoremove --help to available commands."
             if epm installed sudo ; then
                 epm mark manual sudo || fatal
             fi
