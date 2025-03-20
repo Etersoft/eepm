@@ -74,6 +74,10 @@ epm_repo()
         load_helper epm-repo-addkey
         epm_addkey "$@"
         ;;
+    importgpg)                        # HELPCMD: import gpg key (by URL or file)
+        load_helper epm-repo-addkey
+        epm_importgpg "$@"
+        ;;
     clean)                            # HELPCMD: remove temp. repos (tasks and CD-ROMs)
         load_helper epm-repofix
         epm_repoclean "$@"

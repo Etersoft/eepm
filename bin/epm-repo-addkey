@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Copyright (C) 2023  Etersoft
-# Copyright (C) 2023  Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2023, 2025  Etersoft
+# Copyright (C) 2023, 2025  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -31,6 +31,22 @@ __epm_get_file_from_url()
     echo "$tmpfile"
 }
 
+__epm_altgpg()
+{
+    sudocmd gpg --no-default-keyring --keyring /usr/lib/alt-gpgkeys/pubring.gpg "$@"
+}
+
+__epm_importgpg_altlinux()
+{
+    local res
+    local url="$1"
+    local tmpfile=$(__epm_get_file_from_url "$url") || fatal
+    # just always try import
+    __epm_altgpg --import $tmpfile
+    res=$?
+    rm $tmpfile
+    return $res
+}
 __epm_addkey_altlinux()
 {
     local name
@@ -170,6 +186,28 @@ __epm_addkey_deb()
     fi
     sudocmd apt-key adv --keyserver "$url" --recv "$fingerprint"
 }
+
+epm_importgpg()
+{
+
+if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ -z "$1" ] ; then
+    message "Usage: $ epm repo importgpg <url>"
+    return
+fi
+
+# initialize here
+remove_on_exit
+
+case $BASEDISTRNAME in
+    "alt")
+        __epm_importgpg_altlinux "$@"
+        return
+        ;;
+esac
+
+}
+
+
 
 
 epm_addkey()
