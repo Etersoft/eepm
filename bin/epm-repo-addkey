@@ -47,6 +47,27 @@ __epm_importgpg_altlinux()
     rm $tmpfile
     return $res
 }
+
+
+# gpg --with-colons --with-fingerprint 1.gpg
+# pub:-:4096:1:617AB978CB849A76:2022-10-25:::-:Angie (Signing Key) <devops@tech.wbsrv.ru>:
+# fpr:::::::::EB8EAF3D4EF1B1ECF34865A2617AB978CB849A76:
+__epm_altgpg_get_fingerprint()
+{
+    __epm_altgpg --with-colons --with-fingerprint "$1" | grep fpr | rev | cut -d":" -f2 | rev
+}
+
+__epm_altgpg_get_comment()
+{
+    __epm_altgpg --with-colons --with-fingerprint "$1" | grep pub | rev | cut -d":" -f2 | rev
+}
+
+# args: [name] [url] [fingerprint] [comment] [name]
+# actuals:
+#   url
+#   name url
+#   name url fingerprint comment
+#   fingerprint comment
 __epm_addkey_altlinux()
 {
     local name
@@ -73,19 +94,34 @@ __epm_addkey_altlinux()
     # compat
     [ -n "$2" ] && name="$2"
 
-    [ -s /etc/apt/vendors.list.d/$name.list ] && return
+    local tmpfile=''
 
-# TODO: get this info from the gpg key
-    cat << EOF | sudorun tee /etc/apt/vendors.list.d/$name.list
+    if [ -n "$url" ] ; then
+        tmpfile=$(__epm_get_file_from_url "$url") || fatal
+        # __epm_importgpg_altlinux "$url"
+        __epm_altgpg --import $tmpfile
+    fi
+
+    if [ ! -s /etc/apt/vendors.list.d/$name.list ] ; then
+
+        if [ -z "$fingerprint" ] || [ -z "$comment" ] ; then
+            [ -n "$url" ] || fatal "can't get fingerprint and comment from url, missed url"
+            [ -n "$tmpfile" ] || tmpfile=$(__epm_get_file_from_url "$url") || fatal
+            fingerprint="$(__epm_altgpg_get_fingerprint "$tmpfile")"
+            comment="$(__epm_altgpg_get_comment "$tmpfile")"
+        fi
+
+        [ -n "$fingerprint" ] || fatal "missed fingerprint"
+        [ -n "$comment" ] || fatal "missed comment"
+
+        cat << EOF | sudorun tee /etc/apt/vendors.list.d/$name.list
 simple-key "$name" {
         FingerPrint "$fingerprint";
         Name "$comment";
 }
 EOF
-    if [ -n "$url" ] ; then
-        local tmpfile=$(__epm_get_file_from_url $url) || fatal
-        sudocmd gpg --no-default-keyring --keyring /usr/lib/alt-gpgkeys/pubring.gpg --import $tmpfile
     fi
+
 }
 
 
@@ -111,6 +147,7 @@ __epm_addkey_alpine()
 }
 
 
+# [name] url gpgkeyurl comment
 __epm_addkey_dnf()
 {
     local name
@@ -144,6 +181,7 @@ gpgcheck=1
 enabled=1
 gpgkey=$gpgkeyurl
 EOF
+    #epm repo add $tmpfile
     chmod 644 $tmpfile
     sudocmd cp $tmpfile $target
 }
@@ -242,4 +280,5 @@ case $PMTYPE in
 esac
 
 }
+
 
