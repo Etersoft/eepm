@@ -69,9 +69,8 @@ case $vendor in
     alt)
         epm installed lsb-cprocsp-capilite-64 || fatal "lsb-cprocsp-capilite-64 is not installed. Use 'ecryptomgr install cryptopro' to install it."
         epm installed cprocsp-pki-cades-64 || fatal "cprocsp-pki-cades-64 is not installed. Use 'ecryptomgr install cades' to install it."
-# TODO get key info from gpg file
-#        epm repo addkey "$REPOURL/lab50.gpg" "D0C721136AFF9319DCF8276EA98DF0BE319FACDA" "Laboratory 50 (APT Archive Key) <team@lab50.net>"
-        epm repo add "rpm $REPOURL/okular/alt $distrib/x86_64 okulargost"
+        epm repo addkey "$REPOURL/lab50.gpg"
+        epm repo add "rpm [lab50] $REPOURL/okular/alt $distrib/x86_64 okulargost"
         ;;
 esac
 
