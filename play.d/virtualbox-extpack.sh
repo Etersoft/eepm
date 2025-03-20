@@ -8,17 +8,23 @@ URL="https://www.virtualbox.org/wiki/Downloads"
 
 . $(dirname $0)/common.sh
 
-#if [ "$VERSION" = "*" ] ; then
-#    VERSION=$(basename $(eget --list --latest https://download.virtualbox.org/virtualbox/ "^[0-9]*"))
-#fi
-
-epm installed virtualbox || fatal "virtualbox package is not installed"
-
 # for current virtualbox package
 if [ "$VERSION" = "*" ] ; then
-    VERSION="$(epm print version for package virtualbox)"
+    if [ -n "$force" ] ; then
+        VERSION=$(basename $(eget --list --latest https://download.virtualbox.org/virtualbox/ "^[0-9]*"))
+    else
+        epm installed virtualbox || fatal "virtualbox package is not installed"
+        VERSION="$(epm print version for package virtualbox)"
+    fi
 fi
 
-PKGURL="https://download.virtualbox.org/virtualbox/$VERSION/Oracle_VM_VirtualBox_Extension_Pack-$VERSION.vbox-extpack"
+if [ "$(epm print compare "$VERSION" 7.1.0)" != "-1" ] ; then
+    pkgname="Oracle_VirtualBox_Extension_Pack"
+else
+    pkgname="Oracle_VM_VirtualBox_Extension_Pack"
+fi
+
+
+PKGURL="https://download.virtualbox.org/virtualbox/$VERSION/$pkgname-$VERSION.vbox-extpack"
 
 install_pack_pkgurl
