@@ -17,13 +17,16 @@ VERSION="*"
 distrversion=$(epm print info -v)
 case "$(epm print info -e)" in
     ALTLinux/Sisyphus)
-        PKGURL="https://mirror.trueconf.ru/altlinux/p10/x86_64/RPMS.non-free/trueconf-server-${VERSION}*.x86_64.rpm"
+        PKGURL="https://mirror.trueconf.ru/altlinux/p11/x86_64/RPMS.non-free/trueconf-server-${VERSION}*.x86_64.rpm"
+        ;;
+    ALTLinux/p11)
+        PKGURL="https://mirror.trueconf.ru/altlinux/p11/x86_64/RPMS.non-free/trueconf-server-${VERSION}*.x86_64.rpm"
         ;;
     ALTLinux/p10)
         PKGURL="https://mirror.trueconf.ru/altlinux/p10/x86_64/RPMS.non-free/trueconf-server-${VERSION}*.x86_64.rpm"
         ;;
-    ALTLinux/c10f1)
-        PKGURL="https://mirror.trueconf.ru/altlinux/sp10f1/x86_64/RPMS.non-free/trueconf-server-${VERSION}*.x86_64.rpm"
+    ALTLinux/c10f*)
+        PKGURL="https://mirror.trueconf.ru/altlinux/c10f1/x86_64/RPMS.non-free/trueconf-server-${VERSION}*.x86_64.rpm"
         ;;
     ALTLinux/p9)
         PKGURL="https://mirror.trueconf.ru/altlinux/p9/x86_64/RPMS.non-free/trueconf-${VERSION}*.x86_64.rpm"
@@ -31,7 +34,17 @@ case "$(epm print info -e)" in
     AstraLinuxSE/1.7*)
         PKGURL="https://mirror.trueconf.ru/astra17/pool/non-free/t/trueconf-server/trueconf_server_${VERSION}*_amd64.deb"
         ;;
-    RedOS/7.*)
+    AstraLinuxSE/1.8*)
+        PKGURL="https://mirror.trueconf.ru/astra17/pool/non-free/t/trueconf-server/trueconf_server_${VERSION}*_amd64.deb"
+        ;;
+    Debian/*)
+        URL="https://mirror.trueconf.ru/debian/pool/non-free/t/trueconf-server/trueconf-server_${VERSION}-*deb${distrversion}_amd64.deb"
+        ;;
+    Ubuntu/*)
+        URL="https://mirror.trueconf.ru/ubuntu/pool/non-free/t/trueconf-server/trueconf-server_${VERSION}-*ubt${distrversion}_amd64.deb"
+        ;;
+    RedOS/*)
+        [ "$distrversion" = "7.3" ] && distrversion="7.3.5"
         PKGURL="https://mirror.trueconf.ru/redos/$distrversion/x86_64/release/trueconf-server-${VERSION}*.x86_64.rpm"
         ;;
     *)

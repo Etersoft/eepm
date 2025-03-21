@@ -36,7 +36,7 @@ case "$(epm print info -e)" in
         URL="https://mirror.trueconf.ru/altlinux/p8/x86_64/RPMS.non-free/trueconf-${VERSION}*.x86_64.rpm"
         epmopt='--direct --repack'
         ;;
-    ALTLinux/c10f1)
+    ALTLinux/c10f*)
         URL="https://mirror.trueconf.ru/altlinux/c10f1/x86_64/RPMS.non-free/trueconf-${VERSION}*.x86_64.rpm"
         epmopt='--direct --repack'
         ;;
@@ -44,14 +44,14 @@ case "$(epm print info -e)" in
         URL="https://mirror.trueconf.ru/altlinux/c8.2/x86_64/RPMS.non-free/trueconf-${VERSION}*.x86_64.rpm"
         epmopt='--direct --repack'
         ;;
-    AstraLinuxCE/2.12*)
-        URL="https://mirror.trueconf.ru/astra212/pool/non-free/t/trueconf/trueconf_${VERSION}*_amd64.deb"
-        ;;
     AstraLinuxSE/1.6*)
         URL="https://mirror.trueconf.ru/astra16/pool/non-free/t/trueconf/trueconf_${VERSION}*_amd64.deb"
         ;;
     AstraLinuxSE/1.7*)
         URL="https://mirror.trueconf.ru/astra17/pool/non-free/t/trueconf/trueconf_${VERSION}*_amd64.deb"
+        ;;
+    AstraLinuxSE/1.8*)
+        URL="https://mirror.trueconf.ru/astra18/pool/non-free/t/trueconf/trueconf_${VERSION}*_amd64.deb"
         ;;
     Debian/*)
         URL="https://mirror.trueconf.ru/debian/pool/non-free/t/trueconf/trueconf_${VERSION}-*deb${distrversion}_amd64.deb"
@@ -62,14 +62,18 @@ case "$(epm print info -e)" in
     Fedora/*)
         URL="https://mirror.trueconf.ru/fedora/$distrversion/x86_64/release/trueconf-${VERSION}-*.x86_64.rpm"
         ;;
-    RedOS/7.*)
+    RedOS/*)
+        [ "$distrversion" = "7.3" ] && distrversion="7.3.5"
         URL="https://mirror.trueconf.ru/redos/$distrversion/x86_64/release/trueconf-${VERSION}*.x86_64.rpm"
         ;;
     ROSA/2021.1)
-        URL="https://mirror.trueconf.ru/rosa/$distrversion/x86_64/testing/trueconf-${VERSION}*.x86_64.rpm"
+        URL="https://mirror.trueconf.ru/rosa/$distrversion/x86_64/release/trueconf-${VERSION}*.x86_64.rpm"
         ;;
     RELS/7.9)
         URL="https://mirror.trueconf.ru/rosa/$distrversion/x86_64/testing/trueconf-${VERSION}*.x86_64.rpm"
+        ;;
+    CentOS/*)
+        URL="https://mirror.trueconf.ru/centos/$distrversion/x86_64/release/trueconf-${VERSION}*.x86_64.rpm"
         ;;
     *)
         fatal "$(epm print info -e) is not supported"
