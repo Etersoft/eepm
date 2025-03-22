@@ -165,12 +165,19 @@ __epm_play_list()
     fi
 
     __get_fast_int_list_app $arch | while IFS=$'\x1E' read -r app desc; do
-        [ -n "$quiet" ] || echo -n "  "
-        printf "%-25s - %s\n" "$app" "$desc"
+        if [ -n "$quiet" ] ; then
+            printf "%s - %s\n" "$app" "$desc"
+        else
+            printf "  %-25s - %s\n" "$app" "$desc"
+        fi
         if [ -n "$extra" ] && __check_product_alt $app ; then
             local j
             for j in $(__run_script "$app" "--product-alternatives" </dev/null) ; do
-                printf "  %-25s - %s\n" "$app=$j" "$desc"
+                if [ -n "$quiet" ] ; then
+                    printf "%s - %s\n" "$app=$j" "$desc"
+                else
+                    printf "  %-25s - %s\n" "$app=$j" "$desc"
+                fi
             done
         fi
     done
