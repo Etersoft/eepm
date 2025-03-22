@@ -129,15 +129,17 @@ __epm_play_list()
     local psdir="$1"
     local extra="$2"
     local i
-    local IGNOREi586
     local RIFS=$'\x1E'
     local arch="$SYSTEMARCH"
-    [ "$arch" = "x86_64" ] && IGNOREi586='' || IGNOREi586=1
 
+    if [ -n "$short" ] && [ -z "$extra" ] ; then
+        __get_fast_short_list_app $arch
+        return
+    fi
     if [ -n "$short" ] ; then
         for i in $(__get_fast_short_list_app $arch) ; do
             echo "$i"
-            if [ -n "$extra" ] && __check_product_alt $i ; then
+            if __check_product_alt $i ; then
                 for j in $(__run_script "$i" "--product-alternatives" </dev/null) ; do
                     echo "  $i=$j"
                 done
