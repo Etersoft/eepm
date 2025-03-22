@@ -113,6 +113,11 @@ __epm_play_remove()
 }
 
 
+__check_product_alt()
+{
+    grep -q -E "^PRODUCTALT=" $psdir/$1.sh
+}
+
 __get_fast_short_list_app()
 {
     local arch="$1"
@@ -145,8 +150,8 @@ __epm_play_list()
     if [ -n "$short" ] ; then
         for i in $(__get_fast_short_list_app $arch) ; do
             echo "$i"
-            if [ -n "$extra" ] ; then
-                for j in $(__run_script "$i" "--product-alternatives") ; do
+            if [ -n "$extra" ] && __check_product_alt $i ; then
+                for j in $(__run_script "$i" "--product-alternatives" </dev/null) ; do
                     echo "  $i=$j"
                 done
             fi
@@ -161,8 +166,8 @@ __epm_play_list()
 
     __get_fast_int_list_app $arch | while IFS=$'\x1E' read -r app desc; do
         [ -n "$quiet" ] || echo -n "  "
-        if [ -n "$extra" ] ; then
         printf "%-25s - %s\n" "$app" "$desc"
+        if [ -n "$extra" ] && __check_product_alt $app ; then
             local j
             for j in $(__run_script "$app" "--product-alternatives" </dev/null) ; do
                 printf "  %-25s - %s\n" "$app=$j" "$desc"
