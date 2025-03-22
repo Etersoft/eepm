@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.17"
+EPMVERSION="3.64.18"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1966,7 +1966,7 @@ case $DISTRIB_ID in
     PCLinux)
         CMD="apt-rpm"
         ;;
-    Ubuntu|Debian|Mint|OSnovaLinux|Uncom|AstraLinux*|Elbrus)
+    Ubuntu|Debian|Mint|OSnovaLinux|Uncom|AstraLinux*|Elbrus|SberOS)
         CMD="apt-dpkg"
         #which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
         #is_command snappy && CMD=snappy
@@ -2170,6 +2170,9 @@ normalize_name()
         "ROSA Enterprise Linux Server")
             echo "RELS"
             ;;
+        "SberOS GNU/Linux")
+            echo "SberOS"
+            ;;
         "uos")
             echo "UOS"
             ;;
@@ -2352,6 +2355,10 @@ case "$DISTRIB_ID" in
         DISTRIB_ID="ALTLinux"
         DISTRIB_RELEASE="Sisyphus"
         DISTRIB_CODENAME="$DISTRIB_RELEASE"
+        ;;
+    "SberOS")
+        DISTRIB_RELEASE="Rolling"
+        DISTRIB_CODENAME="rolling"
         ;;
     "ROSA"|"MOSDesktop"|"MOSPanel")
         DISTRIB_FULL_RELEASE="$DISTRIB_CODENAME"

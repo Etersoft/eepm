@@ -34,7 +34,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.17"
+export EPMVERSION="3.64.18"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -7426,7 +7426,7 @@ __run_script()
 
     shift
     [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
-    ( unset EPMCURDIR ; export PATH=$SCPATH ; $script "$@" )
+    ( unset EPMCURDIR ; export PATH=$SCPATH ; $CMDSHELL $bashopt $script "$@" )
     return
 }
 
@@ -7512,37 +7512,71 @@ __epm_play_remove()
 }
 
 
+__check_product_alt()
+{
+    grep -q -E "^PRODUCTALT=" $psdir/$1.sh
+}
+
+__get_fast_short_list_app()
+{
+    local arch="$1"
+    [ -n "$arch" ] || fatal
+    local IGNOREi586
+    [ "$arch" = "x86_64" ] && IGNOREi586='NoNo' || IGNOREi586='i586-'
+    grep -L -E "^DESCRIPTION=(''|\"\")" $psdir/*.sh | xargs grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\<$arch\>)" | xargs basename -s .sh | grep -v -E "(^$IGNOREi586|^common)"
+}
+
+__get_fast_int_list_app()
+{
+    local arch="$1"
+    [ -n "$arch" ] || fatal
+    local IGNOREi586
+    local RIFS=$'\x1E'
+    [ "$arch" = "x86_64" ] && IGNOREi586='NoNo' || IGNOREi586='i586-'
+    grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\<$arch\>)" $psdir/*.sh | xargs grep -oP "^DESCRIPTION=[\"']*\K[^\"']+"  | sed -e "s|.*/\(.*\).sh:|\1$RIFS|" | grep -v -E "(^$IGNOREi586|^common|#.*$)"
+}
+
 __epm_play_list()
 {
     local psdir="$1"
     local extra="$2"
     local i
     local IGNOREi586
+    local RIFS=$'\x1E'
     local arch="$SYSTEMARCH"
     [ "$arch" = "x86_64" ] && IGNOREi586='' || IGNOREi586=1
 
     if [ -n "$short" ] ; then
-        for i in $(__list_all_app) ; do
-            local desc="$(__get_app_description $i $arch)"
-            [ -n "$desc" ] || continue
+        for i in $(__get_fast_short_list_app $arch) ; do
             echo "$i"
-            if [ -n "$extra" ] ; then
-                for j in $(__run_script "$i" "--product-alternatives") ; do
+            if [ -n "$extra" ] && __check_product_alt $i ; then
+                for j in $(__run_script "$i" "--product-alternatives" </dev/null) ; do
                     echo "  $i=$j"
                 done
             fi
         done
-        exit
+        return
     fi
 
-    for i in $(__list_all_app) ; do
-        local desc="$(__get_app_description $i $arch)"
-        [ -n "$desc" ] || continue
-        [ -n "$quiet" ] || echo -n "  "
-        printf "%-20s - %s\n" "$i" "$desc"
-        if [ -n "$extra" ] ; then
-            for j in $(__run_script "$i" "--product-alternatives") ; do
-                printf "  %-20s - %s\n" "$i=$j" "$desc"
+    if [ -n "$quiet" ] && [ -z "$extra" ] ; then
+        __get_fast_int_list_app $arch | sed -e "s|$RIFS| - |"
+        return
+    fi
+
+    __get_fast_int_list_app $arch | while IFS=$'\x1E' read -r app desc; do
+        if [ -n "$quiet" ] ; then
+            printf "%s - %s\n" "$app" "$desc"
+        else
+            printf "  %-25s - %s\n" "$app" "$desc"
+        fi
+        if [ -n "$extra" ] && __check_product_alt $app ; then
+            local j
+            for j in $(__run_script "$app" "--product-alternatives" </dev/null) ; do
+                if [ -n "$quiet" ] ; then
+                    printf "%s - %s\n" "$app=$j" "$desc"
+                else
+                    printf "  %-25s - %s\n" "$app=$j" "$desc"
+                fi
             done
         fi
     done
@@ -10855,6 +10889,9 @@ epm_repo()
     addkey)                           # HELPCMD: add repository gpg key (by URL or file) (run with --help to detail)
         epm_addkey "$@"
         ;;
+    importgpg)                        # HELPCMD: import gpg key (by URL or file)
+        epm_importgpg "$@"
+        ;;
     clean)                            # HELPCMD: remove temp. repos (tasks and CD-ROMs)
         epm_repoclean "$@"
         ;;
@@ -10920,6 +10957,34 @@ __epm_get_file_from_url()
     echo "$tmpfile"
 }
 
+__epm_altgpg()
+{
+    sudocmd gpg --no-default-keyring --keyring /usr/lib/alt-gpgkeys/pubring.gpg "$@"
+}
+
+__epm_importgpg_altlinux()
+{
+    local res
+    local url="$1"
+    local tmpfile=$(__epm_get_file_from_url "$url") || fatal
+    # just always try import
+    __epm_altgpg --import $tmpfile
+    res=$?
+    rm $tmpfile
+    return $res
+}
+
+
+__epm_altgpg_get_fingerprint()
+{
+    __epm_altgpg --with-colons --with-fingerprint "$1" | grep fpr | rev | cut -d":" -f2 | rev
+}
+
+__epm_altgpg_get_comment()
+{
+    __epm_altgpg --with-colons --with-fingerprint "$1" | grep pub | rev | cut -d":" -f2 | rev
+}
+
 __epm_addkey_altlinux()
 {
     local name
@@ -10946,18 +11011,34 @@ __epm_addkey_altlinux()
     # compat
     [ -n "$2" ] && name="$2"
 
-    [ -s /etc/apt/vendors.list.d/$name.list ] && return
+    local tmpfile=''
 
-    cat << EOF | sudorun tee /etc/apt/vendors.list.d/$name.list
+    if [ -n "$url" ] ; then
+        tmpfile=$(__epm_get_file_from_url "$url") || fatal
+        # __epm_importgpg_altlinux "$url"
+        __epm_altgpg --import $tmpfile
+    fi
+
+    if [ ! -s /etc/apt/vendors.list.d/$name.list ] ; then
+
+        if [ -z "$fingerprint" ] || [ -z "$comment" ] ; then
+            [ -n "$url" ] || fatal "can't get fingerprint and comment from url, missed url"
+            [ -n "$tmpfile" ] || tmpfile=$(__epm_get_file_from_url "$url") || fatal
+            fingerprint="$(__epm_altgpg_get_fingerprint "$tmpfile")"
+            comment="$(__epm_altgpg_get_comment "$tmpfile")"
+        fi
+
+        [ -n "$fingerprint" ] || fatal "missed fingerprint"
+        [ -n "$comment" ] || fatal "missed comment"
+
+        cat << EOF | sudorun tee /etc/apt/vendors.list.d/$name.list
 simple-key "$name" {
         FingerPrint "$fingerprint";
         Name "$comment";
 }
 EOF
-    if [ -n "$url" ] ; then
-        local tmpfile=$(__epm_get_file_from_url $url) || fatal
-        sudocmd gpg --no-default-keyring --keyring /usr/lib/alt-gpgkeys/pubring.gpg --import $tmpfile
     fi
+
 }
 
 
@@ -11016,6 +11097,7 @@ gpgcheck=1
 enabled=1
 gpgkey=$gpgkeyurl
 EOF
+    #epm repo add $tmpfile
     chmod 644 $tmpfile
     sudocmd cp $tmpfile $target
 }
@@ -11054,6 +11136,27 @@ __epm_addkey_deb()
     sudocmd apt-key adv --keyserver "$url" --recv "$fingerprint"
 }
 
+epm_importgpg()
+{
+
+if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ -z "$1" ] ; then
+    message "Usage: $ epm repo importgpg <url>"
+    return
+fi
+
+remove_on_exit
+
+case $BASEDISTRNAME in
+    "alt")
+        __epm_importgpg_altlinux "$@"
+        return
+        ;;
+esac
+
+}
+
+
+
 
 epm_addkey()
 {
@@ -11086,6 +11189,7 @@ case $PMTYPE in
 esac
 
 }
+
 
 
 # File bin/epm-repodisable:
@@ -11257,7 +11361,7 @@ __replace_alt_version_in_repo()
     #echo "Upgrading $DISTRNAME from $1 to $2 ..."
     epm --quiet repo list | sed -E -e "s|($1)|{\1}->{$2}|g" | grep -E --color -- "$1"
     # ask and replace only we will have changes
-    if epm --quiet repo list "$1" ; then
+    if epm --quiet repo list | grep -E -q -- "$1" ; then
         __replace_text_in_alt_repo "/^ *#/! s!$1!$2!g"
     fi
 }
@@ -11384,7 +11488,7 @@ __change_repo()
     local SHORT="$1"
     local REPLTO="$2"
     local NN
-    epm --quiet repo list | grep -v $SHORT | grep -v "file:/" | while read nn ; do
+    epm --quiet repo list | grep -v "file:/" | while read nn ; do
         NN="$(__subst_with_repo_url "$nn" "$REPLTO")"
         [ "$NN" = "$nn" ] && continue
         epm addrepo "$NN" && epm removerepo "$nn" || return 1
@@ -15062,7 +15166,7 @@ case $DISTRIB_ID in
     PCLinux)
         CMD="apt-rpm"
         ;;
-    Ubuntu|Debian|Mint|OSnovaLinux|Uncom|AstraLinux*|Elbrus)
+    Ubuntu|Debian|Mint|OSnovaLinux|Uncom|AstraLinux*|Elbrus|SberOS)
         CMD="apt-dpkg"
         #which aptitude 2>/dev/null >/dev/null && CMD=aptitude-dpkg
         #is_command snappy && CMD=snappy
@@ -15266,6 +15370,9 @@ normalize_name()
         "ROSA Enterprise Linux Server")
             echo "RELS"
             ;;
+        "SberOS GNU/Linux")
+            echo "SberOS"
+            ;;
         "uos")
             echo "UOS"
             ;;
@@ -15448,6 +15555,10 @@ case "$DISTRIB_ID" in
         DISTRIB_ID="ALTLinux"
         DISTRIB_RELEASE="Sisyphus"
         DISTRIB_CODENAME="$DISTRIB_RELEASE"
+        ;;
+    "SberOS")
+        DISTRIB_RELEASE="Rolling"
+        DISTRIB_CODENAME="rolling"
         ;;
     "ROSA"|"MOSDesktop"|"MOSPanel")
         DISTRIB_FULL_RELEASE="$DISTRIB_CODENAME"
@@ -17888,6 +17999,10 @@ extract_archive()
 		tar.zst)
 			is_command zstd || fatal "Could not find zstd package. Please install zstd package and retry."
 			extract_command "tar -I zstd -xhf" "$arc"
+			;;
+		tar.bz2|tbz2)
+			is_command bunzip2 || fatal "Could not find bzip2 package. Please install bzip2 package and retry."
+			extract_command "tar -xjf" "$arc"
 			;;
 		tar)
 			extract_command "tar -xhf" "$arc"
