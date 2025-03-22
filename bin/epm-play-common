@@ -122,12 +122,23 @@ __get_fast_short_list_app()
     grep -L -E "^DESCRIPTION=(''|\"\")" $psdir/*.sh | xargs grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\<$arch\>)" | xargs basename -s .sh | grep -v -E "(^$IGNOREi586|^common)"
 }
 
+__get_fast_int_list_app()
+{
+    local arch="$1"
+    [ -n "$arch" ] || fatal
+    local IGNOREi586
+    local RIFS=$'\x1E'
+    [ "$arch" = "x86_64" ] && IGNOREi586='NoNo' || IGNOREi586='i586-'
+    grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\<$arch\>)" $psdir/*.sh | xargs grep -oP "^DESCRIPTION=[\"']*\K[^\"']+"  | sed -e "s|.*/\(.*\).sh:|\1$RIFS|" | grep -v -E "(^$IGNOREi586|^common|#.*$)"
+}
+
 __epm_play_list()
 {
     local psdir="$1"
     local extra="$2"
     local i
     local IGNOREi586
+    local RIFS=$'\x1E'
     local arch="$SYSTEMARCH"
     [ "$arch" = "x86_64" ] && IGNOREi586='' || IGNOREi586=1
 
@@ -143,14 +154,18 @@ __epm_play_list()
         return
     fi
 
-    for i in $(__list_all_app) ; do
-        local desc="$(__get_app_description $i $arch)"
-        [ -n "$desc" ] || continue
+    if [ -n "$quiet" ] && [ -z "$extra" ] ; then
+        __get_fast_int_list_app $arch | sed -e "s|$RIFS| - |"
+        return
+    fi
+
+    __get_fast_int_list_app $arch | while IFS=$'\x1E' read -r app desc; do
         [ -n "$quiet" ] || echo -n "  "
-        printf "%-20s - %s\n" "$i" "$desc"
         if [ -n "$extra" ] ; then
-            for j in $(__run_script "$i" "--product-alternatives") ; do
-                printf "  %-20s - %s\n" "$i=$j" "$desc"
+        printf "%-25s - %s\n" "$app" "$desc"
+            local j
+            for j in $(__run_script "$app" "--product-alternatives" </dev/null) ; do
+                printf "  %-25s - %s\n" "$app=$j" "$desc"
             done
         fi
     done
