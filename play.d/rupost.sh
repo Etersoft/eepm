@@ -1,6 +1,6 @@
 #!/bin/sh
 
-BASEPKGNAME=rupost-desktop
+PKGNAME=rupost-desktop
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="RuPost Desktop Personal from the official site"
