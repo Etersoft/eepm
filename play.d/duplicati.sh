@@ -1,7 +1,7 @@
 #!/bin/sh
 
 PKGNAME=duplicati
-# noarch
+SUPPORTEDARCHES=""
 VERSION="$2"
 DESCRIPTION="Duplicati from the official site"
 URL="https://www.duplicati.com/"

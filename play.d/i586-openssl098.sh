@@ -3,7 +3,7 @@
 PKGNAME="eepm-i586-libcrypto7 eepm-i586-libssl7"
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
-DESCRIPTION="OpenSSL 0.9.8 (libcrypto.so.0.9.8, libssl.so.0.9.8) from ALT repo"
+#DESCRIPTION="OpenSSL 0.9.8 (libcrypto.so.0.9.8, libssl.so.0.9.8) from ALT repo"
 DESCRIPTION=''
 URL="https://packages.altlinux.org/ru/sisyphus/srpms/openssl098/rpms/"
 

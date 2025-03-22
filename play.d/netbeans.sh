@@ -2,8 +2,7 @@
 
 PKGNAME=apache-netbeans
 SKIPREPACK=1
-# noarch package
-#SUPPORTEDARCHES="x86_64"
+SUPPORTEDARCHES=""
 VERSION="$2"
 DESCRIPTION="Apache NetBeans from the official site"
 URL="https://netbeans.apache.org"
