@@ -113,6 +113,15 @@ __epm_play_remove()
 }
 
 
+__get_fast_short_list_app()
+{
+    local arch="$1"
+    [ -n "$arch" ] || fatal
+    local IGNOREi586
+    [ "$arch" = "x86_64" ] && IGNOREi586='NoNo' || IGNOREi586='i586-'
+    grep -L -E "^DESCRIPTION=(''|\"\")" $psdir/*.sh | xargs grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\<$arch\>)" | xargs basename -s .sh | grep -v -E "(^$IGNOREi586|^common)"
+}
+
 __epm_play_list()
 {
     local psdir="$1"
@@ -123,9 +132,7 @@ __epm_play_list()
     [ "$arch" = "x86_64" ] && IGNOREi586='' || IGNOREi586=1
 
     if [ -n "$short" ] ; then
-        for i in $(__list_all_app) ; do
-            local desc="$(__get_app_description $i $arch)"
-            [ -n "$desc" ] || continue
+        for i in $(__get_fast_short_list_app $arch) ; do
             echo "$i"
             if [ -n "$extra" ] ; then
                 for j in $(__run_script "$i" "--product-alternatives") ; do
@@ -133,7 +140,7 @@ __epm_play_list()
                 done
             fi
         done
-        exit
+        return
     fi
 
     for i in $(__list_all_app) ; do
