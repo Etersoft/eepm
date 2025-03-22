@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.17
+Version: 3.64.18
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -140,6 +140,18 @@ make -C po
 %endif
 
 %changelog
+* Sat Mar 22 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.18-alt1
+- unpack tar.bz2 archives using tar (eterbug #17830)
+- distr_info: add SberOS support
+- epm repo change: fix changing from eterfund.org
+- epm play virtualbox-extpack: update tarball name since 7.1.0
+- add epm repo importgpg - import gpg key to package manager
+- epm repo addkey: rewritten for alt
+- epm play angie: update
+- epm play okular-csp: restore sign use for alt
+- epm play trueconf: update
+- epm play: rewrite listing to improve listing
+
 * Thu Mar 20 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.17-alt1
 - epm play: fix list only for the arch
 - epm repo add: return support for sisyphus/Sisyphus
