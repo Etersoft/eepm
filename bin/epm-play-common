@@ -31,19 +31,6 @@ __run_script()
 }
 
 
-__list_all_app()
-{
-    cd $psdir || fatal
-    for i in *.sh ; do
-       local name=${i/.sh/}
-       [ -n "$IGNOREi586" ] && startwith "$name" "i586-" && continue
-       startwith "$name" "common" && continue
-       echo "$name"
-    done
-    cd - >/dev/null
-}
-
-
 # args: script, host arch
 __get_app_description()
 {

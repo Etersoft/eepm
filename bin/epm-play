@@ -61,7 +61,9 @@ __get_app_package()
 __list_all_packages()
 {
     local name
-    for name in $(__list_all_app) ; do
+    local arch="$SYSTEMARCH"
+
+    for name in $(__get_fast_short_list_app $arch) ; do
         __get_app_package $name
     done
 }
@@ -97,7 +99,8 @@ __list_app_packages_table()
 __list_app_packages_table_old()
 {
     local name
-    for name in $(__list_all_app) ; do
+    local arch="$SYSTEMARCH"
+    for name in $(__get_fast_short_list_app $arch) ; do
         local pkg
         for pkg in $(__get_app_package $name) ; do
             echo "$pkg $name"
