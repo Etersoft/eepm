@@ -66,8 +66,35 @@ __list_all_packages()
     done
 }
 
-# pkg app
+# TODO: wrong, missed some packages (f.i., kubo
 __list_app_packages_table()
+{
+    local arch="$SYSTEMARCH"
+    local IGNOREi586
+
+    local tmplist
+    tmplist="$(mktemp)" || fatal
+    remove_on_exit $tmplist
+
+    local tmplist1
+    tmplist1="$(mktemp)" || fatal
+    remove_on_exit $tmplist1
+
+    [ "$arch" = "x86_64" ] && IGNOREi586='NoNo' || IGNOREi586='i586-'
+
+    __get_fast_short_list_app $arch | LC_ALL=C sort -k1,1 >$tmplist
+    grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\<$arch\>)" $psdir/*.sh | xargs grep -oP "^PKGNAME=[\"']*\K[^\"']+"  | sed -e "s|.*/\(.*\).sh:|\1 |" | grep -v -E "(^$IGNOREi586|^common|#.*$)" | LC_ALL=C sort -k1,1 >$tmplist1
+    # tmplist - app
+    # tmplist1 - app package
+    LC_ALL=C join -j 1 -a 1 $tmplist $tmplist1 | while read -r app package ; do
+        [ -n "$package" ] || package="$(__get_app_package $app </dev/null)"
+        echo "$package $app"
+    done
+}
+
+
+# pkg app
+__list_app_packages_table_old()
 {
     local name
     for name in $(__list_all_app) ; do
@@ -413,6 +440,10 @@ case "$1" in
         ;;
     --list-installed-packages)
         __list_installed_packages
+        exit
+        ;;
+    --list-all-packages)
+        __list_all_packages
         exit
         ;;
     --list|--list-installed)
