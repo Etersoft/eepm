@@ -421,6 +421,7 @@ epm tool estrlist has_space "$PKGNAME" 2>/dev/null && pkgtext="packages" && pkgi
 
 # set PKGNAME to $BASEPKGNAME-$VERSION if $VERSION is found in PRODUCTALT
 [ -n "$PRODUCTALT" ] && check_alternative_pkgname
+[ -n "$PKGNAME" ] || fatal "Can't get PKGNAME"
 
 case "$1" in
     "--remove")
