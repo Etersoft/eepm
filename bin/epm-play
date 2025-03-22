@@ -80,6 +80,12 @@ __list_app_packages_table()
     done
 }
 
+__get_all_alt_repacked_packages()
+{
+    FORMAT="%{Name} %{Version} %{Packager}\n"
+    a= rpmquery --queryformat "$FORMAT" -a | grep "EPM <support@e"
+}
+
 __filter_by_installed_packages()
 {
     local i
@@ -89,11 +95,19 @@ __filter_by_installed_packages()
     pkglist="$(mktemp)" || fatal
     remove_on_exit $pkglist
 
+    # hack for ALT
+    if [ "$BASEDISTRNAME" = "alt" ] ; then
+        __get_all_alt_repacked_packages | LC_ALL=C sort -u >$pkglist
+        LC_ALL=C join -11 -21 $tapt $pkglist | uniq
+        rm -f $pkglist
+        return
+    fi
+
     # get intersect between full package list and available packages table
     epm --short packages | LC_ALL=C sort -u >$pkglist
-    LC_ALL=C join -11 -21 $tapt $pkglist | uniq | while read -r package description ; do
+    LC_ALL=C join -11 -21 $tapt $pkglist | uniq | while read -r package app ; do
         if epm status --repacked "$package" </dev/null ; then
-            echo "$package $description"
+            echo "$package $app"
         fi
     done
     rm -f $pkglist
@@ -148,7 +162,7 @@ __epm_play_list_installed()
         local desc="$(__get_app_description $i $arch)"
         [ -n "$desc" ] || continue
         [ -n "$quiet" ] || echo -n "  "
-        printf "%-20s - %s\n" "$i" "$desc"
+        printf "%-25s - %s\n" "$i" "$desc"
     done
 }
 
