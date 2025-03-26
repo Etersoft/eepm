@@ -57,6 +57,24 @@ __get_app_package()
     __run_script "$1" --package-name "$2" "$3" 2>/dev/null
 }
 
+# args: app pkglistfile
+__get_resolved_app_package()
+{
+    local basepkgname
+    local pkglist="$2"
+
+    #if [ "$BASEDISTRNAME" != "alt" ] ; then
+    #    __get_app_package "$1"
+    #    return
+    #fi
+
+    basepkgname="$(grep -oP "^BASEPKGNAME=[\"']*\K[^\"']+" "$psdir/$1.sh")"
+    # lithium construct PKGNAME
+    [ -z "$basepkgname" ] && __get_app_package "$1" && return # || fatal "Missed both PKGNAME and BASEPKGNAME in the play script $1."
+    # fixme: space at the end?
+    grep -o -m1 -E "^$basepkgname[ $]" $pkglist && return
+    grep -o -m1 -E "^$basepkgname-[a-z0-9-]*[ $]" $pkglist && return
+}
 
 __list_all_packages()
 {
@@ -71,6 +89,7 @@ __list_all_packages()
 # TODO: wrong, missed some packages (f.i., kubo
 __list_app_packages_table()
 {
+    local pkglist="$1"
     local arch="$SYSTEMARCH"
     local IGNOREi586
 
@@ -89,7 +108,8 @@ __list_app_packages_table()
     # tmplist - app
     # tmplist1 - app package
     LC_ALL=C join -j 1 -a 1 $tmplist $tmplist1 | while read -r app package ; do
-        [ -n "$package" ] || package="$(__get_app_package $app </dev/null)"
+        [ -n "$package" ] || package="$(__get_resolved_app_package $app $pkglist </dev/null)"
+        [ -n "$package" ] || continue # fatal "Missed package for $app"
         echo "$package $app"
     done
 }
@@ -120,27 +140,20 @@ __filter_by_installed_packages()
 {
     local i
     local tapt="$1"
-
-    local pkglist
-    pkglist="$(mktemp)" || fatal
-    remove_on_exit $pkglist
+    local pkglist="$2"
 
     # hack for ALT
     if [ "$BASEDISTRNAME" = "alt" ] ; then
-        __get_all_alt_repacked_packages | LC_ALL=C sort -u >$pkglist
         LC_ALL=C join -11 -21 $tapt $pkglist | uniq
-        rm -f $pkglist
         return
     fi
 
     # get intersect between full package list and available packages table
-    epm --short packages | LC_ALL=C sort -u >$pkglist
     LC_ALL=C join -11 -21 $tapt $pkglist | uniq | while read -r package app ; do
         if epm status --repacked "$package" </dev/null ; then
             echo "$package $app"
         fi
     done
-    rm -f $pkglist
 
     # rpm on Fedora/CentOS no more print missed packages to stderr
     # get supported packages list and print lines with it
@@ -155,9 +168,21 @@ __get_installed_table()
     local tapt
     tapt="$(mktemp)" || fatal
     remove_on_exit $tapt
-    __list_app_packages_table | LC_ALL=C sort -u >$tapt
-    __filter_by_installed_packages $tapt
+
+    local pkglist
+    pkglist="$(mktemp)" || fatal
+    remove_on_exit $pkglist
+
+    if [ "$BASEDISTRNAME" = "alt" ] ; then
+        __get_all_alt_repacked_packages | LC_ALL=C sort -u >$pkglist
+    else
+        epm --short packages | LC_ALL=C sort -u >$pkglist
+    fi
+
+    __list_app_packages_table $pkglist | LC_ALL=C sort -u >$tapt
+    __filter_by_installed_packages $tapt $pkglist
     rm -f $tapt
+    rm -f $pkglist
 }
 
 __list_installed_app()
