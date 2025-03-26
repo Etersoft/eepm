@@ -1,0 +1,9 @@
+apps:
+  - name: ICAClient
+    group: ICAClient group
+    license: ICAClient license
+    url: https://www.citrix.com/downloads/workspace-app/linux/workspace-app-for-linux-latest.html
+    summary: ICAClient summary
+    description: 
+    arches: x86_64
+    download_page: 

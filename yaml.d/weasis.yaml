@@ -1,0 +1,10 @@
+apps:
+  - name: weasis
+    group: weasis group
+    license: weasis license
+    url: https://github.com/nroduit/Weasis
+    summary: weasis summary
+    description: Weasis DICOM medical viewer
+    arches: x86_64 aarch64 armhf
+    download_page: https://github.com/nroduit/Weasis/releases
+    download_mask: $file

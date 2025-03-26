@@ -1,0 +1,9 @@
+apps:
+  - name: ipera-mediaserver
+    group: ipera-mediaserver group
+    license: ipera-mediaserver license
+    url: 
+    summary: ipera-mediaserver summary
+    description: FlyView (Ipera) Server from the official site
+    arches: x86_64
+    download_page: https://flyviewvms.ru/distro/flyview-server.deb

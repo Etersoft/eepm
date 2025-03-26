@@ -1,0 +1,10 @@
+apps:
+  - name: sunshine
+    group: sunshine group
+    license: sunshine license
+    url: https://app.lizardbyte.dev/Sunshine
+    summary: sunshine summary
+    description: Self-hosted game stream host for Moonlight
+    arches: x86_64
+    download_page: https://github.com/LizardByte/Sunshine/
+    download_mask: sunshine-fedora-.*-amd64.rpm

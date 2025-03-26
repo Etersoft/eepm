@@ -1,0 +1,9 @@
+apps:
+  - name: anydesk
+    group: anydesk group
+    license: anydesk license
+    url: 
+    summary: anydesk summary
+    description: AnyDesk from the official site
+    arches: x86_64
+    download_page: 

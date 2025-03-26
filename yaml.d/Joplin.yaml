@@ -1,0 +1,9 @@
+apps:
+  - name: Joplin
+    group: Joplin group
+    license: Joplin license
+    url: https://joplinapp.org/
+    summary: Joplin summary
+    description: Joplin - an open source note taking and to-do application with synchronisation capabilities
+    arches: x86_64
+    download_page: 

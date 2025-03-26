@@ -1,0 +1,9 @@
+apps:
+  - name: synology-chat
+    group: synology-chat group
+    license: synology-chat license
+    url: https://synology.com
+    summary: synology-chat summary
+    description: Synology Chat Client from the official site
+    arches: x86_64
+    download_page: synology-chat.deb

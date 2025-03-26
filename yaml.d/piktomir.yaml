@@ -1,0 +1,9 @@
+apps:
+  - name: piktomir
+    group: piktomir group
+    license: piktomir license
+    url: https://piktomir.ru/
+    summary: piktomir summary
+    description: Piktomir ПиктоМир Младший брат КуМира
+    arches: x86_64
+    download_page: https://dl.piktomir.ru/PiktoMir-x86_64.AppImage

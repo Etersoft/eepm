@@ -1,0 +1,9 @@
+apps:
+  - name: trueconf-server
+    group: trueconf-server group
+    license: trueconf-server license
+    url: https://trueconf.ru
+    summary: trueconf-server summary
+    description: TrueConf server for Linux from the official site
+    arches: x86_64
+    download_page: 

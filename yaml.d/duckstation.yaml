@@ -1,0 +1,9 @@
+apps:
+  - name: duckstation
+    group: duckstation group
+    license: duckstation license
+    url: https://github.com/stenzek/duckstation/releases
+    summary: duckstation summary
+    description: DuckStation is an simulator/emulator of the Sony PlayStation(TM) from the official site
+    arches: x86_64
+    download_page: $(eget --list https://github.com/stenzek/duckstation/releases $file | grep /$SELECTOR/)

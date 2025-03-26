@@ -1,0 +1,10 @@
+apps:
+  - name: nekoray
+    group: nekoray group
+    license: nekoray license
+    url: https://github.com/MatsuriDayo/nekoray
+    summary: nekoray summary
+    description: Qt based cross-platform GUI proxy configuration manager (backend: Xray / sing-box)
+    arches: x86_64
+    download_page: https://github.com/MatsuriDayo/nekoray/releases
+    download_mask: nekoray-*-*-debian-$arch.$pkgtype

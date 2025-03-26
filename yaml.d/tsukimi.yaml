@@ -1,0 +1,9 @@
+apps:
+  - name: tsukimi
+    group: tsukimi group
+    license: tsukimi license
+    url: https://github.com/tsukinaha/tsukimi
+    summary: tsukimi summary
+    description: A Simple Third-party GTK4 Emby client
+    arches: x86_64
+    download_page: 

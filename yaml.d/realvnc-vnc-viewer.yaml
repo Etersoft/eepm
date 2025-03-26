@@ -1,0 +1,10 @@
+apps:
+  - name: realvnc-vnc-viewer
+    group: realvnc-vnc-viewer group
+    license: realvnc-vnc-viewer license
+    url: https://www.realvnc.com/en/connect/download/vnc/
+    summary: realvnc-vnc-viewer summary
+    description: Real VNC Viewer from the official site
+    arches: x86_64 armhf aarch64
+    download_page: https://www.realvnc.com/en/connect/download/viewer/
+    download_mask: $PKG

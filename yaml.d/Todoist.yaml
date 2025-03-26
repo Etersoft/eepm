@@ -1,0 +1,9 @@
+apps:
+  - name: Todoist
+    group: Todoist group
+    license: Todoist license
+    url: https://todoist.com/
+    summary: Todoist summary
+    description: Todoist client application from the official site
+    arches: x86_64
+    download_page: https://todoist.com/linux_app/appimage

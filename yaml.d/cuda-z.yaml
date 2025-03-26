@@ -1,0 +1,10 @@
+apps:
+  - name: cuda-z
+    group: cuda-z group
+    license: cuda-z license
+    url: 
+    summary: cuda-z summary
+    description: CUDA-Z from the official site
+    arches: x86_64 x86
+    download_page: https://cuda-z.sourceforge.net/
+    download_mask: $file

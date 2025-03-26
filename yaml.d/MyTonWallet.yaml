@@ -1,0 +1,10 @@
+apps:
+  - name: MyTonWallet
+    group: MyTonWallet group
+    license: MyTonWallet license
+    url: https://mytonwallet.app/
+    summary: MyTonWallet summary
+    description: MyTonWallet from the official site
+    arches: x86_64
+    download_page: https://github.com/mytonwalletorg/mytonwallet/releases
+    download_mask: MyTonWallet-x86_64.AppImage

@@ -1,0 +1,10 @@
+apps:
+  - name: WebCord
+    group: WebCord group
+    license: WebCord license
+    url: https://github.com/SpacingBat3/WebCord
+    summary: WebCord summary
+    description: A Discord and Spacebar client implemented directly without Discord API from the official github
+    arches: x86_64 arm64
+    download_page: https://github.com/SpacingBat3/WebCord/releases
+    download_mask: WebCord-*-$arch.$pkgtype

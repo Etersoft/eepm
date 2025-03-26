@@ -1,0 +1,9 @@
+apps:
+  - name: thinlinc-client
+    group: thinlinc-client group
+    license: thinlinc-client license
+    url: https://www.cendio.com/thinlinc
+    summary: thinlinc-client summary
+    description: ThinLinc Client from the official site
+    arches: x86_64 x86 armhf
+    download_page: https://www.cendio.com/downloads/clients/$file
