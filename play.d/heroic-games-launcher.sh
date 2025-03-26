@@ -8,10 +8,11 @@ URL="https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher"
 
 . $(dirname $0)/common.sh
 
+arch=x86_64
 if [ "$VERSION" = "*" ] ; then
-    PKGURL=$(get_github_url "https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/" "${PKGNAME}-.${VERSION}.AppImage")
+    PKGURL=$(get_github_url "https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/" "${PKGNAME}-.${VERSION}-linux-$arch.AppImage")
 else
-    PKGURL="https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/releases/download/v$VERSION/${PKGNAME}-${VERSION}.AppImage"
+    PKGURL="https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/releases/download/v$VERSION/${PKGNAME}-${VERSION}-linux-$arch.AppImage"
 fi
 
 install_pkgurl
