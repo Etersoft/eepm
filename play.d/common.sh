@@ -284,8 +284,9 @@ check_alternative_pkgname()
     [ -n "$BASEPKGNAME" ] || BASEPKGNAME="$PKGNAME"
     [ -n "$BASEPKGNAME" ] || return
 
-    # default: with first entry in $PEODUCTALT
+    # default: with first entry in $PRODUCTALT
     BRANCH=$(get_first $PRODUCTALT)
+    [ "$BRANCH" = "''" ] && BRANCH=""
     PKGNAME="$BASEPKGNAME-$BRANCH"
 
     # override with VERSION
