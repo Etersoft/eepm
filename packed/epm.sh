@@ -34,7 +34,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.18"
+export EPMVERSION="3.64.19"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -7031,19 +7031,67 @@ __get_app_package()
     __run_script "$1" --package-name "$2" "$3" 2>/dev/null
 }
 
+__get_resolved_app_package()
+{
+    local basepkgname
+    local pkglist="$2"
+
+    #if [ "$BASEDISTRNAME" != "alt" ] ; then
+    #    __get_app_package "$1"
+    #    return
+    #fi
+
+    basepkgname="$(grep -oP "^BASEPKGNAME=[\"']*\K[^\"']+" "$psdir/$1.sh")"
+    # lithium construct PKGNAME
+    [ -z "$basepkgname" ] && __get_app_package "$1" && return # || fatal "Missed both PKGNAME and BASEPKGNAME in the play script $1."
+    # fixme: space at the end?
+    grep -o -m1 -E "^$basepkgname[ $]" $pkglist && return
+    grep -o -m1 -E "^$basepkgname-[a-z0-9-]*[ $]" $pkglist && return
+}
 
 __list_all_packages()
 {
     local name
-    for name in $(__list_all_app) ; do
+    local arch="$SYSTEMARCH"
+
+    for name in $(__get_fast_short_list_app $arch) ; do
         __get_app_package $name
     done
 }
 
 __list_app_packages_table()
 {
+    local pkglist="$1"
+    local arch="$SYSTEMARCH"
+    local IGNOREi586
+
+    local tmplist
+    tmplist="$(mktemp)" || fatal
+    remove_on_exit $tmplist
+
+    local tmplist1
+    tmplist1="$(mktemp)" || fatal
+    remove_on_exit $tmplist1
+
+    [ "$arch" = "x86_64" ] && IGNOREi586='NoNo' || IGNOREi586='i586-'
+
+    __get_fast_short_list_app $arch | LC_ALL=C sort -k1,1 >$tmplist
+    grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\<$arch\>)" $psdir/*.sh | xargs grep -oP "^PKGNAME=[\"']*\K[^\"']+"  | sed -e "s|.*/\(.*\).sh:|\1 |" | grep -v -E "(^$IGNOREi586|^common|#.*$)" | LC_ALL=C sort -k1,1 >$tmplist1
+    # tmplist - app
+    # tmplist1 - app package
+    LC_ALL=C join -j 1 -a 1 $tmplist $tmplist1 | while read -r app package ; do
+        [ -n "$package" ] || package="$(__get_resolved_app_package $app $pkglist </dev/null)"
+        [ -n "$package" ] || continue # fatal "Missed package for $app"
+        echo "$package $app"
+    done
+}
+
+
+__list_app_packages_table_old()
+{
     local name
-    for name in $(__list_all_app) ; do
+    local arch="$SYSTEMARCH"
+    for name in $(__get_fast_short_list_app $arch) ; do
         local pkg
         for pkg in $(__get_app_package $name) ; do
             echo "$pkg $name"
@@ -7053,23 +7101,30 @@ __list_app_packages_table()
     done
 }
 
+__get_all_alt_repacked_packages()
+{
+    FORMAT="%{Name} %{Version} %{Packager}\n"
+    a= rpmquery --queryformat "$FORMAT" -a | grep "EPM <support@e"
+}
+
 __filter_by_installed_packages()
 {
     local i
     local tapt="$1"
+    local pkglist="$2"
 
-    local pkglist
-    pkglist="$(mktemp)" || fatal
-    remove_on_exit $pkglist
+    # hack for rpm based
+    if [ "$PKGFORMAT" = "rpm" ] ; then
+        LC_ALL=C join -11 -21 $tapt $pkglist | uniq
+        return
+    fi
 
     # get intersect between full package list and available packages table
-    epm --short packages | LC_ALL=C sort -u >$pkglist
-    LC_ALL=C join -11 -21 $tapt $pkglist | uniq | while read -r package description ; do
+    LC_ALL=C join -11 -21 $tapt $pkglist | uniq | while read -r package app ; do
         if epm status --repacked "$package" </dev/null ; then
-            echo "$package $description"
+            echo "$package $app"
         fi
     done
-    rm -f $pkglist
 
     # rpm on Fedora/CentOS no more print missed packages to stderr
     # get supported packages list and print lines with it
@@ -7084,9 +7139,21 @@ __get_installed_table()
     local tapt
     tapt="$(mktemp)" || fatal
     remove_on_exit $tapt
-    __list_app_packages_table | LC_ALL=C sort -u >$tapt
-    __filter_by_installed_packages $tapt
+
+    local pkglist
+    pkglist="$(mktemp)" || fatal
+    remove_on_exit $pkglist
+
+    if [ "$PKGFORMAT" = "rpm" ] ; then
+        __get_all_alt_repacked_packages | LC_ALL=C sort -u >$pkglist
+    else
+        epm --short packages | LC_ALL=C sort -u >$pkglist
+    fi
+
+    __list_app_packages_table $pkglist | LC_ALL=C sort -u >$tapt
+    __filter_by_installed_packages $tapt $pkglist
     rm -f $tapt
+    rm -f $pkglist
 }
 
 __list_installed_app()
@@ -7121,7 +7188,7 @@ __epm_play_list_installed()
         local desc="$(__get_app_description $i $arch)"
         [ -n "$desc" ] || continue
         [ -n "$quiet" ] || echo -n "  "
-        printf "%-20s - %s\n" "$i" "$desc"
+        printf "%-25s - %s\n" "$i" "$desc"
     done
 }
 
@@ -7371,6 +7438,10 @@ case "$1" in
         __list_installed_packages
         exit
         ;;
+    --list-all-packages)
+        __list_all_packages
+        exit
+        ;;
     --list|--list-installed)
         __epm_play_list_installed
         exit
@@ -7424,23 +7495,13 @@ __run_script()
     [ -s "$script" ] || return
     [ -f "$script.rpmnew" ] && warning 'There is .rpmnew file(s) in $psdir dir. The play script can be outdated.'
 
+    local bashopt=''
+    [ -n "$debug" ] && bashopt='-x'
+
     shift
     [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
     ( unset EPMCURDIR ; export PATH=$SCPATH ; $CMDSHELL $bashopt $script "$@" )
     return
-}
-
-
-__list_all_app()
-{
-    cd $psdir || fatal
-    for i in *.sh ; do
-       local name=${i/.sh/}
-       [ -n "$IGNOREi586" ] && startwith "$name" "i586-" && continue
-       startwith "$name" "common" && continue
-       echo "$name"
-    done
-    cd - >/dev/null
 }
 
 
@@ -7488,7 +7549,7 @@ __epm_play_run()
 __epm_is_shell_script()
 {
     local script="$1"
-    [ -x "$script" ] && rhas "$script" "\.sh$" && head -n1 "$script" | grep -q "^#!/bin/sh"
+    [ -x "$script" ] && rhas "$script" "\.sh$" && head -n1 "$script" | grep -q "^#!/"
 }
 
 
@@ -7496,10 +7557,12 @@ __epm_play_remove()
 {
     local prescription
     for prescription in $* ; do
+        # run shell script directly
         if __epm_is_shell_script "$prescription"  ; then
             __epm_play_run_script $prescription --remove
             continue
         fi
+        # run play script
         if __check_play_script "$prescription" ; then
             __epm_play_run $prescription --remove
             __remove_installed_app "$prescription"
@@ -7541,15 +7604,17 @@ __epm_play_list()
     local psdir="$1"
     local extra="$2"
     local i
-    local IGNOREi586
     local RIFS=$'\x1E'
     local arch="$SYSTEMARCH"
-    [ "$arch" = "x86_64" ] && IGNOREi586='' || IGNOREi586=1
 
+    if [ -n "$short" ] && [ -z "$extra" ] ; then
+        __get_fast_short_list_app $arch
+        return
+    fi
     if [ -n "$short" ] ; then
         for i in $(__get_fast_short_list_app $arch) ; do
             echo "$i"
-            if [ -n "$extra" ] && __check_product_alt $i ; then
+            if __check_product_alt $i ; then
                 for j in $(__run_script "$i" "--product-alternatives" </dev/null) ; do
                     echo "  $i=$j"
                 done
@@ -14217,20 +14282,20 @@ epm_status_repacked()
 
     #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
 
-    case $BASEDISTRNAME in
-        alt|redos|rosa*|mos|fedora)
+    case $PKGFORMAT in
+        rpm)
             epm_status_validate $pkg || return
             [ "$packager" = "EPM <support@etersoft.ru>" ] && return 0
             [ "$packager" = "EPM <support@eepm.ru>" ] && return 0
             ;;
-       debian|ubuntu)
+        deb)
             epm_status_validate $pkg || return
 
             # In packages repackaged via alien maintainer equal to $USER, it is better to use the package description
             [ ! -z "$repacked" ] && return 0
             ;;
         *)
-            fatal 'Unsupported $BASEDISTRNAME'
+            fatal 'epm_status_repacked: unsupported $PKGNAME ($BASEDISTRNAME)'
             ;;
     esac
     return 1
