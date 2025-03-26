@@ -29,7 +29,7 @@ cp usr/lib64/* opt/$PRODUCT
 rm libwebp6-0.5.2-alt2.x86_64.rpm
 
 # TeamSpeak3-Client-linux_amd64-3.6.0.run
-VERSION="$(echo $TAR | sed -e 's|.*-||' -e 's|\..*||')"
+VERSION="$(echo $TAR | sed -e 's|.*-||' -e 's|\.run||')"
 PKGNAME=$PRODUCT-$VERSION
 
 erc pack $PKGNAME.tar opt || fatal
