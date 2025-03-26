@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.18
+Version: 3.64.19
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -140,6 +140,15 @@ make -C po
 %endif
 
 %changelog
+* Wed Mar 26 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.19-alt1
+- epm play rupost: fix PKGNAME
+- epm play common.sh: add check for missed PKGNAME
+- epm play heroic-games-launcher: fix URL
+- epm play: improve speed for --list
+- epm play: use improved --list on all rpm based distro
+- epm play teamspeak3: fix version
+- epm play: add simplex (eterbug #18196)
+
 * Sat Mar 22 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.18-alt1
 - unpack tar.bz2 archives using tar (eterbug #17830)
 - distr_info: add SberOS support
