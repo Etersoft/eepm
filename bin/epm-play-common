@@ -24,6 +24,9 @@ __run_script()
     [ -s "$script" ] || return
     [ -f "$script.rpmnew" ] && warning 'There is .rpmnew file(s) in $psdir dir. The play script can be outdated.'
 
+    local bashopt=''
+    [ -n "$debug" ] && bashopt='-x'
+
     shift
     [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
     ( unset EPMCURDIR ; export PATH=$SCPATH ; $CMDSHELL $bashopt $script "$@" )
@@ -76,7 +79,7 @@ __epm_play_run()
 __epm_is_shell_script()
 {
     local script="$1"
-    [ -x "$script" ] && rhas "$script" "\.sh$" && head -n1 "$script" | grep -q "^#!/bin/sh"
+    [ -x "$script" ] && rhas "$script" "\.sh$" && head -n1 "$script" | grep -q "^#!/"
 }
 
 
@@ -84,10 +87,12 @@ __epm_play_remove()
 {
     local prescription
     for prescription in $* ; do
+        # run shell script directly
         if __epm_is_shell_script "$prescription"  ; then
             __epm_play_run_script $prescription --remove
             continue
         fi
+        # run play script
         if __check_play_script "$prescription" ; then
             __epm_play_run $prescription --remove
             __remove_installed_app "$prescription"
