@@ -223,20 +223,20 @@ epm_status_repacked()
 
     #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
 
-    case $BASEDISTRNAME in
-        alt|redos|rosa*|mos|fedora)
+    case $PKGFORMAT in
+        rpm)
             epm_status_validate $pkg || return
             [ "$packager" = "EPM <support@etersoft.ru>" ] && return 0
             [ "$packager" = "EPM <support@eepm.ru>" ] && return 0
             ;;
-       debian|ubuntu)
+        deb)
             epm_status_validate $pkg || return
 
             # In packages repackaged via alien maintainer equal to $USER, it is better to use the package description
             [ ! -z "$repacked" ] && return 0
             ;;
         *)
-            fatal 'Unsupported $BASEDISTRNAME'
+            fatal 'epm_status_repacked: unsupported $PKGNAME ($BASEDISTRNAME)'
             ;;
     esac
     return 1

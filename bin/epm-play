@@ -142,8 +142,8 @@ __filter_by_installed_packages()
     local tapt="$1"
     local pkglist="$2"
 
-    # hack for ALT
-    if [ "$BASEDISTRNAME" = "alt" ] ; then
+    # hack for rpm based
+    if [ "$PKGFORMAT" = "rpm" ] ; then
         LC_ALL=C join -11 -21 $tapt $pkglist | uniq
         return
     fi
@@ -173,7 +173,7 @@ __get_installed_table()
     pkglist="$(mktemp)" || fatal
     remove_on_exit $pkglist
 
-    if [ "$BASEDISTRNAME" = "alt" ] ; then
+    if [ "$PKGFORMAT" = "rpm" ] ; then
         __get_all_alt_repacked_packages | LC_ALL=C sort -u >$pkglist
     else
         epm --short packages | LC_ALL=C sort -u >$pkglist
