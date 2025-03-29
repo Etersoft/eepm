@@ -484,6 +484,9 @@ is_supported_arch "$(epm print info -a)" || fatal "Only '$SUPPORTEDARCHES' archi
 # skip install if there is package installed not via epm play
 is_repacked_packages $REPOPKGNAME || exit 0
 
+# hack for hplip
+[ "$PKGNAME" = "hplip-plugin" ] && VERSION="*"
+
 if [ -z "$VERSION" ] && [ -z "$force" ] && [ -n "$EGET_IPFS_DB" ] && [ -z "$latest" ] ; then
     # IPFS is using, use known version
     VERSION="$(get_latest_version $PKGNAME)"
