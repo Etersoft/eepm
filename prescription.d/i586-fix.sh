@@ -24,13 +24,13 @@ for i in glibc-nss glibc-gconv-modules \
          $(epmqp --short libnss | grep "^libnss-") \
          $(epmqp --short xorg-dri | grep "^xorg-dri-")
 do
-    epm --quiet installed $i && LIST="$LIST i586-$i"
+    epm status --installed $i && LIST="$LIST i586-$i"
 done
 
 [ "$repo" = "p10" ] && for i in \
          vulkan-amdgpu
 do
-    epm --quiet installed $i && LIST="$LIST i586-$i"
+    epm status --installed $i && LIST="$LIST i586-$i"
 done
 
 for i in \
@@ -38,7 +38,8 @@ for i in \
           libnvidia-ml \
           $(epmqp --short nvidia_glx | grep "^nvidia_glx")
 do
-    epm --quiet installed $i && LIST="$LIST i586-$i"
+    # https://bugs.etersoft.ru/show_bug.cgi?id=17831
+    epm status --installed $i && epm status --installable i586-$i && LIST="$LIST i586-$i"
 done
 }
 
@@ -52,7 +53,7 @@ for i in \
          sssd-client \
          mesa-vulkan-drivers mesa-dri-drivers vulkan-loader mesa-libd3d
 do
-    epm --quiet installed $i && LIST="$LIST $i.i686"
+    epm status --installed $i && LIST="$LIST $i.i686"
 done
 }
 
@@ -74,21 +75,14 @@ case "$vendor" in
         ;;
 esac
 
-filtered_list=""
-for pkg in $LIST; do
-    if epm status --installable $pkg; then
-        filtered_list="$filtered_list $pkg"
-    fi
-done
 echo
-echo "Installing all appropiate 32 bit packages ..."
+info "Installing all appropiate 32 bit packages ..."
 noremove=''
 [ -n "$auto" ] && noremove='--no-remove'
-LIST="$filtered_list"
 epm install $noremove $LIST
 RES=$?
 
-[ "$RES" = "0" ] || echo "Try do epm upgrade before."
+[ "$RES" = "0" ] || info "Try do epm upgrade before and check epm repo list."
 
 exit $RES
 
