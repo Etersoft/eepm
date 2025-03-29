@@ -96,7 +96,7 @@ epm_status_installable()
     if [ -n "$verbose" ] ; then
         docmd epm install --simulate "$pkg"
     else
-        epm install --simulate "$pkg" 2>/dev/null >/dev/null
+        epm install --simulate "$pkg" >/dev/null
     fi
 }
 
