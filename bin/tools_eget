@@ -317,7 +317,8 @@ AXELQ='' #-q
 # TODO: aria2c
 # TODO: 
 WGETNAMEOPTIONS='--content-disposition'
-CURLNAMEOPTIONS='--remote-name --remote-time --remote-header-name'
+CURLFILENAMEOPTIONS='--remote-name --remote-time --remote-header-name'
+CURLNAMEOPTIONS='--remote-time --remote-header-name'
 AXELNAMEOPTIONS=''
 WGETRUSTSERVERNAMES=''
 CURLTRUSTSERVERNAMES=''
@@ -371,6 +372,7 @@ Options:
     -q|--quiet                - quiet mode
     --verbose                 - verbose mode
     -k|--no-check-certificate - skip SSL certificate chain support
+    --no-content-disposition  - skip Content-Disposition header
     -H|--header               - use <header> (X-Cache:1 for example)
     -U|-A|--user-agent        - send browser like UserAgent
     --compressed              - request a compressed response and automatically decompress the content
@@ -449,6 +451,12 @@ while [ -n "$1" ] ; do
             WGETNOSSLCHECK='--no-check-certificate'
             CURLNOSSLCHECK='-k'
             AXELNOSSLCHECK='--insecure'
+            ;;
+        --no-content-disposition)
+            WGETNAMEOPTIONS=''
+            CURLFILENAMEOPTIONS=''
+            CURLNAMEOPTIONS=''
+            AXELNAMEOPTIONS=''
             ;;
         -H|--header)
             # TODO: error if header value contains spaces
@@ -1143,11 +1151,11 @@ url_sget()
 
     local FILENAME=$(url_get_filename "$URL")
     if [ -n "$FILENAME" ] ; then
-        download_with_mirroring __curl "$URL" --remote-time --remote-header-name --output "$FILENAME"
+        download_with_mirroring __curl "$URL" $CURLNAMEOPTIONS --output "$FILENAME"
         return
     fi
     
-    download_with_mirroring __curl "$URL" $CURLNAMEOPTIONS
+    download_with_mirroring __curl "$URL" $CURLFILENAMEOPTIONS
 }
 
 url_get_response()
