@@ -411,18 +411,26 @@ case "$1" in
         ;;
 esac
 
+# set PKGNAME to $BASEPKGNAME-$VERSION if $VERSION is found in PRODUCTALT
+[ -n "$PRODUCTALT" ] && check_alternative_pkgname
+[ -n "$PKGNAME" ] || fatal "Can't get PKGNAME"
+
+case "$1" in
+    "--package-name")
+        #[ -n "$DESCRIPTION" ] || exit 0
+        echo "$PKGNAME"
+        exit
+        ;;
+    "--installed")
+        #epm installed $PKGNAME
+        is_repacked_packages $PKGNAME
+        exit
+        ;;
+esac
 
 . $(dirname $0)/common-outformat.sh
 
 check_tty
-
-pkgtext="package"
-pkgistext="package is"
-epm tool estrlist has_space "$PKGNAME" 2>/dev/null && pkgtext="packages" && pkgistext="packages are"
-
-# set PKGNAME to $BASEPKGNAME-$VERSION if $VERSION is found in PRODUCTALT
-[ -n "$PRODUCTALT" ] && check_alternative_pkgname
-[ -n "$PKGNAME" ] || fatal "Can't get PKGNAME"
 
 case "$1" in
     "--remove")
@@ -439,21 +447,15 @@ case "$1" in
         [ -n "$URL" ] && echo "Url: $URL"
         exit
         ;;
-    "--package-name")
-        #[ -n "$DESCRIPTION" ] || exit 0
-        echo "$PKGNAME"
-        exit
-        ;;
-    "--installed")
-        #epm installed $PKGNAME
-        is_repacked_packages $PKGNAME
-        exit
-        ;;
     "--installed-version")
         epm print version for package $PKGNAME | head -n1
         exit
         ;;
     "--update")
+        pkgtext="package"
+        pkgistext="package is"
+        epm tool estrlist has_space "$PKGNAME" 2>/dev/null && pkgtext="packages" && pkgistext="packages are"
+
         if ! epm installed $PKGNAME ; then
             echo "Skipping update of $PKGNAME ($pkgistext not installed)"
             exit
