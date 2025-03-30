@@ -42,6 +42,11 @@ case $(epm print info -e) in
     OpenSUSE/*)
         PKGFILTER="opensuse15"
         ;;
+    ALTLinux/p10|p9|c10*)
+        PKGFILTER="focal"
+        arch="amd64"
+        pkgtype="deb"
+        ;;
     ALTLinux/*)
         PKGFILTER="jammy"
         arch="amd64"
