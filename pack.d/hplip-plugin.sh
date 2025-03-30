@@ -9,6 +9,14 @@ if ! echo "$TAR" | grep -q "hplip-.*-plugin" ; then
     fatal "No idea how to handle $TAR"
 fi
 
+VERSION="$(echo "$TAR" | sed -e "s|.*hplip-\(.*\)-plugin.*|\1|")" #"
+
+if echo "$TAR" | grep -q "plugin_run\.zip$" ; then
+    erc $TAR || fatal
+    #TAR="hplip-$VERSION-plugin.run"
+    TAR="$(echo "hplip*.run")"
+fi
+
 # https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=hplip-plugin
 sh $TAR --target . --noexec --nox11 || exit
 
@@ -29,8 +37,6 @@ case "$(epm print info -a)" in
         fatal "Unsupported arch"
         ;;
 esac
-
-VERSION="$(echo "$TAR" | sed -e "s|.*hplip-\(.*\)-plugin.run.*|\1|")" #"
 
 mkdir -p usr/share/hplip/data/firmware
 mkdir -p usr/share/hplip/fax/plugins

@@ -9,6 +9,9 @@ SPEC="$2"
 subst "s|^License: unknown$|License: Proprietary|" $SPEC
 subst "s|^Summary:.*|Summary: Binary plugin for HPs hplip printer driver library|" $SPEC
 
-add_requires hplip
+# While hplip-plugin requires the version of hplip to match exactly,
+# specifying such a requirement breaks the ability to upgrade hplip.
+VERSION=$(grep "^Version:" $SPEC | sed -e "s|Version: ||")
+add_requires "hplip >= $VERSION"
 
 add_libs_requires
