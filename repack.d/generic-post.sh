@@ -32,7 +32,13 @@ for DESKTOPFILE in $BUILDROOT/usr/share/applications/*.desktop ; do
     if echo "$EXEC" | grep -q "/" ; then
         warning "Exec path in desktop file $DESKTOPFILE contains slashes: $EXEC"
     elif [ ! -s "./usr/bin/$EXEC" ] ; then
-        warning "Exec from desktop file $DESKTOPFILE missed in /usr/bin: $EXEC"
+        if [ -L "./usr/bin/$EXEC" ] ; then
+            if [ ! -s ".$(readlink "./usr/bin/$EXEC")" ] ; then
+                warning "Exec from desktop file $DESKTOPFILE exists as broken symlink /usr/bin/$EXEC to $(readlink "./usr/bin/$EXEC")"
+            fi
+        else
+            warning "Exec from desktop file $DESKTOPFILE missed in /usr/bin: $EXEC"
+        fi
     elif [ ! -x "./usr/bin/$EXEC" ] ; then
         warning "Exec from desktop file $DESKTOPFILE exists in /usr/bin, but not executable: $EXEC"
     elif [ -z "$EXEC" ] ; then
