@@ -240,6 +240,7 @@ is_strange_url()
 {
     local URL="$1"
     is_url "$URL" || return
+    #echo "$URL" | grep -q -E "\.(deb|rpm|zip)\?" && return 1
     echo "$URL" | grep -q "[?&]"
 }
 
@@ -1205,7 +1206,7 @@ url_get_header()
     url_get_headers "$URL" | grep -i "^ *$HEADER: " | sed -e "s|^ *$HEADER: ||i"
 }
 
-url_get_real_url()
+url_get_raw_real_url()
 {
     local URL="$1"
 
@@ -1220,11 +1221,24 @@ url_get_real_url()
         if is_abs_path "$loc" ; then
             loc="$(concatenate_url_and_filename "$(get_host_only "$URL")" "$loc")" #"
         fi
-        if ! is_strange_url "$loc" ; then
-            echo "$loc"
-            return
-        fi
+        echo "$loc"
+        return
     done
+
+    echo "$URL"
+}
+
+url_get_real_url()
+{
+    local URL="$1"
+    local loc
+    loc="$(url_get_raw_real_url "$URL")"
+
+    # we need stay with original url due redirect tags
+    if ! is_strange_url "$loc" ; then
+        echo "$loc"
+        return
+    fi
 
     echo "$URL"
 }
@@ -1250,7 +1264,11 @@ url_get_filename()
         return
     fi
 
-    basename "$(url_get_real_url "$URL")"
+    local loc="$(url_get_raw_real_url "$URL")"
+    if is_strange_url "$loc" ; then
+        loc="$(echo "$loc" | sed -e "s|\?.*||")"
+    fi
+    basename "$loc"
 }
 
 fi
