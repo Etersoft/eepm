@@ -406,6 +406,8 @@ Supported URLs:
 Supported backends (set like EGET_BACKEND=curl)
   wget curl (todo: aria2c)
 
+Also you can set EGET_OPTIONS variable with needed options
+
 Examples:
   $ eget http://ftp.somesite.ru/package-*.x64.tar
   $ eget http://ftp.somesite.ru/package *.tar
@@ -425,7 +427,9 @@ if [ -z "$1" ] ; then
     exit 1
 fi
 
-
+__eget_parse_options()
+{
+local skipopt=0
 while [ -n "$1" ] ; do
 
     argument="$(echo $1 | cut -d= -f1)"
@@ -577,12 +581,17 @@ while [ -n "$1" ] ; do
             fatal "Unknown option '$1', check eget --help."
             ;;
         *)
-            break
+            return $skipopt
             ;;
     esac
     shift
+    skipopt=$(($skipopt+1))
 done
+}
 
+__eget_parse_options "$@"
+shift $?
+__eget_parse_options $EGET_OPTIONS
 
 #############################3
 # defaults
