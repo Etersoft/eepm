@@ -34,7 +34,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.19"
+export EPMVERSION="3.64.20"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -503,10 +503,10 @@ set_sudo()
         return "$SUDO_TESTED"
     fi
 
-    # if input is a console
-    if inputisatty && isatty && isatty2 ; then
+    # if input is a console and stderr is a console
+    if inputisatty && isatty2 ; then
         if ! $SUDO_CMD -n true ; then
-            info "Please enter sudo user password to use sudo in the current session."
+            info "Please enter sudo user password to use sudo for all privileged operations in the current session." >&2
             if ! $SUDO_CMD -l >/dev/null ; then
                 [ "$nofail" = "nofail" ] || SUDO="fatal 'For this operation run epm under root, or install and tune sudo (http://altlinux.org/sudo)'"
                 SUDO_TESTED="3"
@@ -14158,7 +14158,7 @@ epm_status_installable()
     if [ -n "$verbose" ] ; then
         docmd epm install --simulate "$pkg"
     else
-        epm install --simulate "$pkg" 2>/dev/null >/dev/null
+        epm install --simulate "$pkg" >/dev/null
     fi
 }
 
@@ -16621,7 +16621,8 @@ AXELQ='' #-q
 # TODO: aria2c
 # TODO: 
 WGETNAMEOPTIONS='--content-disposition'
-CURLNAMEOPTIONS='--remote-name --remote-time --remote-header-name'
+CURLFILENAMEOPTIONS='--remote-name --remote-time --remote-header-name'
+CURLNAMEOPTIONS='--remote-time --remote-header-name'
 AXELNAMEOPTIONS=''
 WGETRUSTSERVERNAMES=''
 CURLTRUSTSERVERNAMES=''
@@ -16675,6 +16676,7 @@ Options:
     -q|--quiet                - quiet mode
     --verbose                 - verbose mode
     -k|--no-check-certificate - skip SSL certificate chain support
+    --no-content-disposition  - skip Content-Disposition header
     -H|--header               - use <header> (X-Cache:1 for example)
     -U|-A|--user-agent        - send browser like UserAgent
     --compressed              - request a compressed response and automatically decompress the content
@@ -16710,6 +16712,8 @@ Supported URLs:
 Supported backends (set like EGET_BACKEND=curl)
   wget curl (todo: aria2c)
 
+Also you can set EGET_OPTIONS variable with needed options
+
 Examples:
   $ eget http://ftp.somesite.ru/package-*.x64.tar
   $ eget http://ftp.somesite.ru/package *.tar
@@ -16729,7 +16733,9 @@ if [ -z "$1" ] ; then
     exit 1
 fi
 
-
+__eget_parse_options()
+{
+local skipopt=0
 while [ -n "$1" ] ; do
 
     argument="$(echo $1 | cut -d= -f1)"
@@ -16750,6 +16756,12 @@ while [ -n "$1" ] ; do
             CURLNOSSLCHECK='-k'
             AXELNOSSLCHECK='--insecure'
             ;;
+        --no-content-disposition)
+            WGETNAMEOPTIONS=''
+            CURLFILENAMEOPTIONS=''
+            CURLNAMEOPTIONS=''
+            AXELNAMEOPTIONS=''
+            ;;
         -H|--header)
             # TODO: error if header value contains spaces
             if [ -z "$argvalue" ];then
@@ -16766,7 +16778,7 @@ while [ -n "$1" ] ; do
             WGETOUTPUTDIR="-P $1"
             ;;
         -U|-A|--user-agent)
-            user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
+            user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
             WGETUSERAGENT="-U '$user_agent'"
             CURLUSERAGENT="-A '$user_agent'"
             AXELUSERAGENT="--user-agent='$user_agent'"
@@ -16881,12 +16893,17 @@ while [ -n "$1" ] ; do
             fatal "Unknown option '$1', check eget --help."
             ;;
         *)
-            break
+            return $skipopt
             ;;
     esac
     shift
+    skipopt=$(($skipopt+1))
 done
+}
 
+__eget_parse_options "$@"
+shift $?
+__eget_parse_options $EGET_OPTIONS
 
 #############################3
 # defaults
@@ -17362,7 +17379,7 @@ elif [ "$EGET_BACKEND" = "wget" ] ; then
 __wget()
 {
     if [ -n "$WGETUSERAGENT" ] ; then
-        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETHEADER $WGETNOSSLCHECK $WGETNODIRECTORIES $WGETCONTINUE $WGETTIMEOUT $WGETREADTIMEOUT $WGETRETRYCONNREFUSED $WGETTRIES $WGETLOADCOOKIES $WGETRUSTSERVERNAMES "$WGETUSERAGENT" "$@"
+        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETHEADER $WGETNOSSLCHECK $WGETNODIRECTORIES $WGETCONTINUE $WGETTIMEOUT $WGETREADTIMEOUT $WGETRETRYCONNREFUSED $WGETTRIES $WGETLOADCOOKIES $WGETRUSTSERVERNAMES "$(eval echo "$WGETUSERAGENT")" "$@"
     else
         docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETHEADER $WGETNOSSLCHECK $WGETNODIRECTORIES $WGETCONTINUE $WGETTIMEOUT $WGETREADTIMEOUT $WGETRETRYCONNREFUSED $WGETTRIES $WGETLOADCOOKIES $WGETRUSTSERVERNAMES "$@"
     fi
@@ -17412,7 +17429,7 @@ elif [ "$EGET_BACKEND" = "curl" ] ; then
 __curl()
 {
     if [ -n "$CURLUSERAGENT" ] ; then
-        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER $CURLOUTPUTDIR $CURLNOSSLCHECK $CURLCONTINUE $CURLMAXTIME $CURLRETRYCONNREFUSED $CURLRETRY $CURLCOOKIE $CURLTRUSTSERVERNAMES "$CURLUSERAGENT" "$@"
+        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER $CURLOUTPUTDIR $CURLNOSSLCHECK $CURLCONTINUE $CURLMAXTIME $CURLRETRYCONNREFUSED $CURLRETRY $CURLCOOKIE $CURLTRUSTSERVERNAMES "$(eval echo "$CURLUSERAGENT")" "$@"
     else
         docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER $CURLNOSSLCHECK $CURLCONTINUE $CURLMAXTIME $CURLRETRYCONNREFUSED $CURLRETRY $CURLCOOKIE $CURLTRUSTSERVERNAMES "$@"
     fi
@@ -17438,11 +17455,11 @@ url_sget()
 
     local FILENAME=$(url_get_filename "$URL")
     if [ -n "$FILENAME" ] ; then
-        download_with_mirroring __curl "$URL" --remote-time --remote-header-name --output "$FILENAME"
+        download_with_mirroring __curl "$URL" $CURLNAMEOPTIONS --output "$FILENAME"
         return
     fi
     
-    download_with_mirroring __curl "$URL" $CURLNAMEOPTIONS
+    download_with_mirroring __curl "$URL" $CURLFILENAMEOPTIONS
 }
 
 url_get_response()

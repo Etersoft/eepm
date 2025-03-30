@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.19"
+EPMVERSION="3.64.20"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -500,10 +500,10 @@ set_sudo()
         return "$SUDO_TESTED"
     fi
 
-    # if input is a console
-    if inputisatty && isatty && isatty2 ; then
+    # if input is a console and stderr is a console
+    if inputisatty && isatty2 ; then
         if ! $SUDO_CMD -n true ; then
-            info "Please enter sudo user password to use sudo in the current session."
+            info "Please enter sudo user password to use sudo for all privileged operations in the current session." >&2
             if ! $SUDO_CMD -l >/dev/null ; then
                 [ "$nofail" = "nofail" ] || SUDO="fatal 'For this operation run epm under root, or install and tune sudo (http://altlinux.org/sudo)'"
                 SUDO_TESTED="3"
