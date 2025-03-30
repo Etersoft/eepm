@@ -198,6 +198,7 @@ epm repo add - add branch repo. Use follow params:
     deferred.org             - for Etersoft Sisyphus Deferred repo (at mirror.eterfund.org)
     etersoft                 - for LINUX@Etersoft repo
     korinf                   - for Korinf repo
+    ximper                   - for Ximper Linux repo
     <task number>            - add task repo
     archive 2018/02/09       - add archive of the repo from that date
     /dir/to/repo [component] - add repo dir generated with epm repo index --init
@@ -321,6 +322,11 @@ __epm_addrepo_altlinux()
             local http="http"
             epm installed apt-https && http="https"
             epm repo add "rpm $http://download.etersoft.ru/pub Korinf/$DISTRARCH/$DISTRNAME/$DISTRVERSION main"
+            return 0
+            ;;
+        ximper|ximperlinux)
+            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Ximper Linux repo is applicable to Sisyphus only"
+            epm install --scripts "https://download.etersoft.ru/pub/Etersoft/XimperLinux/Current/Additives/$DISTRARCH/RPMS.addon/ximper-repos-[0-9]*.$DISTRARCH.rpm"
             return 0
             ;;
         deferred)
