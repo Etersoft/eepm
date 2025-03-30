@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.19
+Version: 3.64.20
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -140,6 +140,16 @@ make -C po
 %endif
 
 %changelog
+* Sun Mar 30 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.20-alt1
+- epm play: add tabby (eterbug #18217)
+- epm play: add LM-Studio (eterbug #18215)
+- epm play: add headscale (eterbug #18220)
+- set_sudo: allow sudo dialog if only stdout is not tty
+- epm prescription i586-fix: check for installable only nvidia packages
+- epm-status: allow epm install --simulate with password sudo
+- epm play common.sh: add hack for hplip-plugin
+- epm play hplip-plugin: add support for new hplip-plugin download
+
 * Wed Mar 26 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.19-alt1
 - epm play rupost: fix PKGNAME
 - epm play common.sh: add check for missed PKGNAME
