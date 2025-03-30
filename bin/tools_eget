@@ -431,11 +431,11 @@ fi
 
 __eget_parse_options()
 {
-local skipopt=0
+local argument
+local argvalue
 while [ -n "$1" ] ; do
-
-    argument="$(echo $1 | cut -d= -f1)"
-    argvalue="$(echo $1 | cut -s -d= -f2)"
+    argument="$(echo "$1" | cut -d= -f1)"
+    argvalue="$(echo "$1" | cut -s -d= -f2)"
     case "$argument" in
         -h|--help)
             eget_help
@@ -589,16 +589,16 @@ while [ -n "$1" ] ; do
             fatal "Unknown option '$1', check eget --help."
             ;;
         *)
-            return $skipopt
+            return $#
             ;;
     esac
     shift
-    skipopt=$(($skipopt+1))
 done
+return $#
 }
 
 __eget_parse_options "$@"
-shift $?
+shift $(($#-$?))
 __eget_parse_options $EGET_OPTIONS
 
 #############################3
