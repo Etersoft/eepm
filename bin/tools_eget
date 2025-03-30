@@ -474,7 +474,7 @@ while [ -n "$1" ] ; do
             WGETOUTPUTDIR="-P $1"
             ;;
         -U|-A|--user-agent)
-            user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
+            user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
             WGETUSERAGENT="-U '$user_agent'"
             CURLUSERAGENT="-A '$user_agent'"
             AXELUSERAGENT="--user-agent='$user_agent'"
