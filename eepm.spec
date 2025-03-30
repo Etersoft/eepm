@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.20
+Version: 3.64.21
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -140,6 +140,10 @@ make -C po
 %endif
 
 %changelog
+* Sun Mar 30 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.21-alt1
+- epm play tabby: add repack (eterbug #18217)
+- eget: fix left args
+
 * Sun Mar 30 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.20-alt1
 - epm play: add tabby (eterbug #18217)
 - epm play: add LM-Studio (eterbug #18215)
