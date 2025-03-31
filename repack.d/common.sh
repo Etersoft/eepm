@@ -425,12 +425,20 @@ add_electron_deps()
 __get_binary_requires()
 {
     local fdir="$1"
+    local d
+    local findex
+    
+    # prepare case for ignored path
+    for d in $EEPM_IGNORE_LIB_PATH ; do
+       info "  Skipping $d ..."
+       findex="$findex -type d -path $BUILDROOT$d -prune -o"
+    done
 
     info "  Getting executable requires ..."
-    epm req --short $(find "$fdir" -type f -executable) </dev/null 2>/dev/null
+    epm req --short $(find "$fdir" $findex -type f -executable) </dev/null 2>/dev/null
 
     info "  Getting libs requires ..."
-    epm req --short $(find "$fdir" -type f -name "lib*.so*") </dev/null 2>/dev/null
+    epm req --short $(find "$fdir" $findex -type f -name "lib*.so*") </dev/null 2>/dev/null
 }
 
 __get_library_provides()
@@ -523,6 +531,11 @@ ignore_lib_requires()
    #fi
 
    EEPM_IGNORE_LIB_REQUIRES="$EEPM_IGNORE_LIB_REQUIRES $@"
+}
+
+ignore_library_path()
+{
+   EEPM_IGNORE_LIB_PATH="$EEPM_IGNORE_LIB_PATH $@"
 }
 
 
