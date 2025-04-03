@@ -24,6 +24,8 @@ StartupNotify=true
 Categories=Engineering;
 EOF
 
+install_file ipfs://QmUvB4BvoUsQDxMUH9rZ3PMaZgYoBishLyGBwxdDQ1uHcU /usr/share/pixmaps/$PRODUCT.png
+
 add_bin_exec_command
 #add_bin_link_command $PRODUCTCUR $PRODUCT
 
