@@ -66,7 +66,7 @@ __epm_pack()
     __epm_pack_run_handler "$@" || fatal 'Can'\''t find pack script for packname $packname'
 
     if [ -n "$download_only" ] ; then
-        mv $returntarname $EPMCURDIR
+        mv $returntarname "$EPMCURDIR"
         return
     fi
 
@@ -106,11 +106,11 @@ __epm_pack()
     fi
 
     # we need put result in the cur dir
-    mv -v $pkgnames $EPMCURDIR || fatal
+    mv -v $pkgnames "$EPMCURDIR" || fatal
 
     local i
     for i in "$returntarname" ; do
-        [ -r "$i.eepm.yaml" ] && mv -v "$i.eepm.yaml" $EPMCURDIR
+        [ -r "$i.eepm.yaml" ] && mv -v "$i.eepm.yaml" "$EPMCURDIR"
     done
 
     return 0
