@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.21
+Version: 3.64.23
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -140,6 +140,27 @@ make -C po
 %endif
 
 %changelog
+* Sat Apr 05 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.23-alt1
+- eget: fix get real filename for redirects with tags
+- epm play rstudio: add support for p10/c10
+- epm play: add gigaide
+- epm-addrepo: add ximper
+- revert "epm-addrepo: don't use apt-repo as callback anymore"
+- epm play myoffice: use latest version from vendor (etebug #18228)
+- epm play: add android-studio
+- epm repack ArmorPaint: add icon
+- epm play: warn_version_is_not_supported() now set VERSION=*
+- epm play firefox: fix getting first stable release
+- epm play teamspeak: they keep all releases, so remove warn_version_is_not_supported
+- epm repack common.sh: override links in and_bin_*_command, skipping relative links
+- epm play: add cstcadnavigator
+- epm pack Telegram: fix icon name
+
+* Sat Apr 05 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.22-alt1
+- commit packed 3.64.21
+- eget: fix get real filename for redirects with tags
+- epm play rstudio: add support for p10/c10
+
 * Sun Mar 30 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.21-alt1
 - epm play tabby: add repack (eterbug #18217)
 - eget: fix left args
