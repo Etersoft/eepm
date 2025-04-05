@@ -26,12 +26,15 @@ else
     iconpath=https://github.com/telegramdesktop/tdesktop/raw/master/Telegram/Resources/art
 fi
 
-iconname=$PRODUCT
+desktopname=org.telegram.desktop
+# GNOME ignores Icon= and use desktop name for icon
+iconname=$desktopname
+
 for i in 16 32 48 64 128 256 512 ; do
     install_file $iconpath/icon$i.png /usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png
 done
 
-cat <<EOF | create_file /usr/share/applications/org.telegram.desktop.desktop
+cat <<EOF | create_file /usr/share/applications/$desktopname.desktop
 [Desktop Entry]
 Version=1.0
 Name=Telegram Desktop
