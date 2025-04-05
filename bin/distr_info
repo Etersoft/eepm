@@ -1035,7 +1035,7 @@ print_help()
     echo "Usage: distro_info [options] [SystemName/Version]"
     echo "Options:"
     echo " -h | --help            - this help"
-    echo " -a                     - print hardware architecture (use --distro-arch for distro depended arch name)"
+    echo " -a                     - print hardware architecture (use --distro-arch for distro depended arch name or --debian-arch for Debian style)"
     echo " -b                     - print size of arch bit (32/64)"
     echo " -c                     - print number of CPU cores"
     echo " -i                     - print virtualization type"
