@@ -146,14 +146,7 @@ install_pack_pkgurl()
 snap_get_pkgurl()
 {
     local SNAPNAME="$1"
-    case "$(epm print info -a)" in
-        x86_64)
-            local ARCH="amd64" ;;
-        aarch64)
-            local ARCH="arm64" ;;
-        *)
-            local ARCH="$(epm print info -a)" ;;
-    esac
+    ARCH="$(epm print info --debian-arch)"
     is_url "$SNAPNAME" && SNAPNAME="$(basename "$SNAPNAME")"
     eget -O- -H Snap-Device-Series:16 https://api.snapcraft.io/v2/snaps/info/$SNAPNAME | epm --inscript tool json -b | grep -A 8 "$ARCH" | grep '\["channel-map",[0-9],"download","url"\]' | head -n1 | sed 's/.*"\(https:\/\/.*\)".*/\1/'
 }
