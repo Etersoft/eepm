@@ -102,7 +102,9 @@ is_supported_arch()
 
 warn_version_is_not_supported()
 {
-    [ "$VERSION" = "*" ] || echo -e "\nWarning: Specifying the version is not supported by vendor. Downloading latest version ...\n"
+    [ "$VERSION" = "*" ] && return
+    echo -e "\nWarning: Specifying the version is not supported by vendor. Downloading latest version ...\n"
+    VERSION="*"
 }
 
 override_pkgname()

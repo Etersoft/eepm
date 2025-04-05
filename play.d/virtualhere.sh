@@ -39,7 +39,6 @@ esac
 PKGURL="https://www.virtualhere.com/sites/default/files/usbserver/$file"
 
 # FIXME
-VERSION="*"
 if [ "$VERSION" = "*" ] ; then
     VERSION="$(eget -O- https://virtualhere.com/usb_server_software | grep "<strong>Version" | sed -e 's|.*<strong>Version ||' -e 's|</strong>.*||')"
     [ -n "$VERSION" ] || fatal "Can't get version for $PKGNAME"

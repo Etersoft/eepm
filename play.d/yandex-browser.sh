@@ -11,7 +11,6 @@ TIPS="Run 'epm play yandex-browser=beta' to install beta version of the browser.
 . $(dirname $0)/common.sh
 
 warn_version_is_not_supported
-VERSION="*"
 
 # See also https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=yandex-browser-beta
 
