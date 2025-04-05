@@ -8,7 +8,7 @@ URL="https://www.mozilla.org/en-US/firefox"
 . $(dirname $0)/common.sh
 
 if [ "$VERSION" = "*" ] ; then
-	VERSION="$(eget -O- https://www.mozilla.org/en-US/firefox/releases/ | grep -oP '\K[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -n1)"
+	VERSION="$(eget -O- https://www.mozilla.org/en-US/firefox/releases/ | grep -P '>[0-9]+\.[0-9]+\.*[0-9]*<' | grep -oP '\K[0-9]+\.[0-9]+[.0-9]*' | sort -V | tail -n1)"
 fi
 
 arch=$(epm print info -a)
