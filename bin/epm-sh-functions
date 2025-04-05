@@ -244,8 +244,7 @@ is_dirpath()
 is_wildcard()
 {
     echo "$1" | grep -q "[*?]" && return
-    echo "$1" | grep -q "\]" && return
-    echo "$1" | grep -q "\[" && return
+    echo "$1" | grep -q "\[.*\]" && return
 }
 
 filter_strip_spaces()
