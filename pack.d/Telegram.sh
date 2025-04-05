@@ -38,7 +38,6 @@ Name=Telegram Desktop
 Comment=Official desktop version of Telegram messaging app
 Exec=$PRODUCT -- %u
 Icon=$iconname
-StartupWMClass=TelegramDesktop
 Type=Application
 Categories=Chat;Network;InstantMessaging;Qt;
 MimeType=x-scheme-handler/tg;
