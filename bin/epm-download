@@ -70,6 +70,8 @@ __check_if_wildcard_downloading()
 {
     mask="$(basename "$1")"
     is_wildcard "$mask" || return 1
+    # skip ? as param
+    echo "$mask" | grep -E -q '\?.*=' && return 1
 
     local fn
     fn="$(docmd eget --list "$url" | xargs -n1 basename 2>/dev/null)"
