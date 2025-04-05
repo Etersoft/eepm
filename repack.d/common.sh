@@ -245,13 +245,10 @@ add_bin_exec_command()
     [ "$name" = "$target" ] && return
 
     __check_target_bin "$name" "$target" || return
-    mkdir -p $BUILDROOT/usr/bin/
-    cat <<EOF > "$BUILDROOT/usr/bin/$name"
+    cat <<EOF | create_exec_file "/usr/bin/$name"
 #!/bin/sh
 exec "$target" "\$@"
 EOF
-    chmod 0755 "$BUILDROOT/usr/bin/$name"
-    pack_file "/usr/bin/$name"
 }
 
 add_bin_cdexec_command()
@@ -263,14 +260,11 @@ add_bin_cdexec_command()
     [ "$name" = "$target" ] && return
 
     __check_target_bin "$name" "$target" || return
-    mkdir -p $BUILDROOT/usr/bin/
-    cat <<EOF > "$BUILDROOT/usr/bin/$name"
+    cat <<EOF | create_exec_file "/usr/bin/$name"
 #!/bin/sh
 cd "$(dirname "$target")" || exit
 exec ./"$(basename "$target")" "\$@"
 EOF
-    chmod 0755 "$BUILDROOT/usr/bin/$name"
-    pack_file "/usr/bin/$name"
 }
 
 # move files to $PRODUCTDIR
