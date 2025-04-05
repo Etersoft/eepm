@@ -789,7 +789,8 @@ echo "$DIST_ARCH"
 
 get_debian_arch()
 {
-    local arch="$(get_arch)"
+    local arch="$1"
+    [ -n "$arch" ] || arch="$(get_arch)"
     case $arch in
     'x86')
         arch='i386' ;;
@@ -797,6 +798,20 @@ get_debian_arch()
         arch='amd64' ;;
     'aarch64')
         arch='arm64' ;;
+    'armhf')
+        arch='armv7l' ;;
+    esac
+    echo "$arch"
+}
+
+get_arch_arch()
+{
+    local arch
+    local arch="$1"
+    [ -n "$arch" ] || arch="$(get_arch)"
+    case $arch in
+        'x86_64')
+            arch='x64' ;;
     esac
     echo "$arch"
 }
@@ -813,6 +828,12 @@ get_distro_arch()
             ;;
         deb)
             get_debian_arch
+            return
+            ;;
+    esac
+    case "$(pkgmanager)" in
+        pacman)
+            get_arch_arch
             return
             ;;
     esac
@@ -1142,6 +1163,9 @@ case "$1" in
         ;;
     --debian-arch)
         get_debian_arch
+        ;;
+    --arch-arch)
+        get_arch_arch
         ;;
     --glibc-version)
         get_glibc_version
