@@ -34,7 +34,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.21"
+export EPMVERSION="3.64.23"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1306,6 +1306,7 @@ epm repo add - add branch repo. Use follow params:
     deferred.org             - for Etersoft Sisyphus Deferred repo (at mirror.eterfund.org)
     etersoft                 - for LINUX@Etersoft repo
     korinf                   - for Korinf repo
+    ximper                   - for Ximper Linux repo
     <task number>            - add task repo
     archive 2018/02/09       - add archive of the repo from that date
     /dir/to/repo [component] - add repo dir generated with epm repo index --init
@@ -1430,6 +1431,11 @@ __epm_addrepo_altlinux()
             epm repo add "rpm $http://download.etersoft.ru/pub Korinf/$DISTRARCH/$DISTRNAME/$DISTRVERSION main"
             return 0
             ;;
+        ximper|ximperlinux)
+            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Ximper Linux repo is applicable to Sisyphus only"
+            epm install --scripts "https://download.etersoft.ru/pub/Etersoft/XimperLinux/Current/Additives/$DISTRARCH/RPMS.addon/ximper-repos-[0-9]*.$DISTRARCH.rpm"
+            return 0
+            ;;
         deferred)
             [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersoft Sisyphus Deferred supported only for ALT Sisyphus based systems."
             __epm_addrepo_add_alt_repo "$branch" "https://download.etersoft.ru/pub Etersoft/Sisyphus/Deferred" "classic"
@@ -1486,7 +1492,9 @@ __epm_addrepo_altlinux()
         return
     fi
 
-    fatal "Can't recognize how to add $repo, please report it"
+    # TODO: rewrite this fallback
+    assure_exists apt-repo
+    sudocmd apt-repo $dryrun add "$repo"
 }
 
 
@@ -6606,7 +6614,7 @@ __epm_pack()
     __epm_pack_run_handler "$@" || fatal 'Can'\''t find pack script for packname $packname'
 
     if [ -n "$download_only" ] ; then
-        mv $returntarname $EPMCURDIR
+        mv $returntarname "$EPMCURDIR"
         return
     fi
 
@@ -6646,11 +6654,11 @@ __epm_pack()
     fi
 
     # we need put result in the cur dir
-    mv -v $pkgnames $EPMCURDIR || fatal
+    mv -v $pkgnames "$EPMCURDIR" || fatal
 
     local i
     for i in "$returntarname" ; do
-        [ -r "$i.eepm.yaml" ] && mv -v "$i.eepm.yaml" $EPMCURDIR
+        [ -r "$i.eepm.yaml" ] && mv -v "$i.eepm.yaml" "$EPMCURDIR"
     done
 
     return 0
@@ -10896,7 +10904,7 @@ __epm_repack_to_rpm()
         else
             warning 'Can'\''t find converted rpm for source binary package $pkg (got $repacked_rpm)'
         fi
-        cd $EPMCURDIR >/dev/null
+        cd "$EPMCURDIR" >/dev/null
 
     true
 }
@@ -16544,6 +16552,7 @@ is_strange_url()
 {
     local URL="$1"
     is_url "$URL" || return
+    #echo "$URL" | grep -q -E "\.(deb|rpm|zip)\?" && return 1
     echo "$URL" | grep -q "[?&]"
 }
 
@@ -17509,7 +17518,7 @@ url_get_header()
     url_get_headers "$URL" | grep -i "^ *$HEADER: " | sed -e "s|^ *$HEADER: ||i"
 }
 
-url_get_real_url()
+url_get_raw_real_url()
 {
     local URL="$1"
 
@@ -17524,11 +17533,24 @@ url_get_real_url()
         if is_abs_path "$loc" ; then
             loc="$(concatenate_url_and_filename "$(get_host_only "$URL")" "$loc")" #"
         fi
-        if ! is_strange_url "$loc" ; then
-            echo "$loc"
-            return
-        fi
+        echo "$loc"
+        return
     done
+
+    echo "$URL"
+}
+
+url_get_real_url()
+{
+    local URL="$1"
+    local loc
+    loc="$(url_get_raw_real_url "$URL")"
+
+    # we need stay with original url due redirect tags
+    if ! is_strange_url "$loc" ; then
+        echo "$loc"
+        return
+    fi
 
     echo "$URL"
 }
@@ -17554,7 +17576,11 @@ url_get_filename()
         return
     fi
 
-    basename "$(url_get_real_url "$URL")"
+    local loc="$(url_get_raw_real_url "$URL")"
+    if is_strange_url "$loc" ; then
+        loc="$(echo "$loc" | sed -e "s|\?.*||")"
+    fi
+    basename "$loc"
 }
 
 fi
