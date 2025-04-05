@@ -206,16 +206,19 @@ create_exec_file()
 
 __check_target_bin()
 {
-    local target="$1"
+    local name="$1"
+    local target="$2"
     if is_abs_path "$target" ; then
         # if target does not exist
         [ -e "$BUILDROOT$target" ] || fatal "fatal on broken link creating (missed target $target for add_bin_*_command)"
-        chmod 0755 "$BUILDROOT$target" || fatal
+        chmod -v 0755 "$BUILDROOT$target" || fatal
     else
         # if target is a relative, skiping when /usr/bin/$name exists
-        [ -e "$BUILDROOT/usr/bin/$name" ] && return
+        [ -e "$BUILDROOT/usr/bin/$name" ] && echo "Skipping /usr/bin/$name with relative target $target ..." && return 1
     fi
-
+    # allow override existed links
+    [ -L "$BUILDROOT/usr/bin/$name" ] && rm -f "$BUILDROOT/usr/bin/$name"
+    return 0
 }
 
 add_bin_link_command()
@@ -226,7 +229,7 @@ add_bin_link_command()
     [ -n "$target" ] || target="$PRODUCTDIR/$name"
     [ "$name" = "$target" ] && return
 
-    __check_target_bin "$target"
+    __check_target_bin "$name" "$target" || return
     mkdir -p $BUILDROOT/usr/bin/
     ln -sf "$target" "$BUILDROOT/usr/bin/$name" || return
     pack_file "/usr/bin/$name"
@@ -241,7 +244,7 @@ add_bin_exec_command()
     [ -n "$target" ] || target="$PRODUCTDIR/$name"
     [ "$name" = "$target" ] && return
 
-    __check_target_bin "$target"
+    __check_target_bin "$name" "$target" || return
     mkdir -p $BUILDROOT/usr/bin/
     cat <<EOF > "$BUILDROOT/usr/bin/$name"
 #!/bin/sh
@@ -259,7 +262,7 @@ add_bin_cdexec_command()
     [ -n "$target" ] || target="$PRODUCTDIR/$name"
     [ "$name" = "$target" ] && return
 
-    __check_target_bin "$target"
+    __check_target_bin "$name" "$target" || return
     mkdir -p $BUILDROOT/usr/bin/
     cat <<EOF > "$BUILDROOT/usr/bin/$name"
 #!/bin/sh
@@ -303,6 +306,7 @@ move_to_opt()
     [ "$rdir" = "$PRODUCTDIR" ] && return
 
     [ -d "$BUILDROOT$PRODUCTDIR/" ] && return 1
+    echo "Moving $rdir to $PRODUCTDIR ..."
     mkdir -p "$BUILDROOT$(dirname "$PRODUCTDIR")/"
     mv "$BUILDROOT$rdir" "$BUILDROOT$PRODUCTDIR/"
     subst "s|%dir $rdir|%dir $PRODUCTDIR|" $SPEC
