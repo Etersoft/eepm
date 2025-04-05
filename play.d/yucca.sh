@@ -1,22 +1,17 @@
 #!/bin/sh
 
 PKGNAME=yucca
-SUPPORTEDARCHES="x86_64 armv7l aarch64"
+SUPPORTEDARCHES="x86_64 armhf aarch64"
 VERSION="$2"
 DESCRIPTION="Simple solution for video surveillance"
 URL="https://yucca.app/"
 
 . $(dirname $0)/common.sh
 
-case $(epm print info -a) in
-    x86_64)
-        arch=amd64 ;;
+arch="$(epm print info --debian-arch)"
+case "$arch" in
     armv7l)
         arch=arm ;;
-    aarch64)
-        arch=arm64 ;;
-    *)
-        fatal "Unsupported arch $arch for $(epm print info -d)"
 esac
 
 if [ "$VERSION" = "*" ] ; then

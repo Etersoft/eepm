@@ -8,14 +8,7 @@ URL="https://freetubeapp.io/"
 
 . $(dirname $0)/common.sh
 
-case "$(epm print info -a)" in
-    aarch64)
-        arch="arm64" ;;
-    armhf)
-        arch="armv7l" ;;
-    x86_64)
-        arch="amd64" ;;
-esac
+arch="$(epm print info --debian-arch)"
 
 PKGURL=$(eget --list --latest https://github.com/FreeTubeApp/FreeTube/releases "freetube*${VERSION}*${arch}.deb")
 

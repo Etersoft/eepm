@@ -11,29 +11,9 @@ URL="https://github.com/Figma-Linux/figma-linux"
 [ "$VERSION" = "*" ] && VERSION="[0-9]*"
 
 pkgtype="$(epm print info -p)"
+arch="$(epm print info --distro-arch)"
 
-if [ "$pkgtype" == "rpm" ] ; then
-    case "$(epm print info -a)" in
-        x86_64)
-            file="${PKGNAME}_${VERSION}_linux_x86_64.$pkgtype" ;;
-        aarch64)
-            file="${PKGNAME}_${VERSION}_linux_aarch64.$pkgtype" ;;
-    esac
-elif [ "$pkgtype" == "deb" ] ; then
-    case "$(epm print info -a)" in
-        x86_64)
-            file="${PKGNAME}_${VERSION}_linux_amd64.$pkgtype" ;;
-        aarch64)
-            file="${PKGNAME}_${VERSION}_linux_arm64.$pkgtype" ;;
-    esac
-elif [ "$pkgtype" == "pacman" ] ; then
-    case "$(epm print info -a)" in
-        x86_64)
-            file="${PKGNAME}_${VERSION}_linux_x64.$pkgtype" ;;
-        aarch64)
-            file="${PKGNAME}_${VERSION}_linux_aarch64.$pkgtype" ;;
-    esac
-fi
+file="${PKGNAME}_${VERSION}_linux_$arch.$pkgtype"
 
 PKGURL=$(eget --list --latest https://github.com/Figma-Linux/figma-linux/releases "$file")
 

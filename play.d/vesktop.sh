@@ -10,12 +10,7 @@ URL="https://github.com/Vencord/Vesktop"
 
 warn_version_is_not_supported
 
-case "$(epm print info -a)" in
-    x86_64)
-        arch="amd64" ;;
-    aarch64)
-        arch="arm64" ;;
-esac
+arch="$(epm print info --debian-arch)"
 
 PKGURL="https://vencord.dev/download/vesktop/$arch/appimage"
 

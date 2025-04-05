@@ -8,13 +8,11 @@ URL="https://github.com/Eugeny/tabby"
 
 . $(dirname $0)/common.sh
 
-case "$(epm print info -a)" in
+
+arch="$(epm print info --debian-arch)"
+case "$arch" in
     x86_64)
         arch="x64" ;;
-    aarch64)
-        arch="arm64" ;;
-    armhf)
-        arch="armv7l" ;;
 esac
 
 case "$(epm print info -p)" in

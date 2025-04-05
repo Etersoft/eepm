@@ -8,10 +8,9 @@ URL="https://librewolf.net/"
 
 . $(dirname $0)/common.sh
 
-arch=x86_64
+arch="$(epm print info -a)"
 
-
-if [ "$(epm print info -a)" = "aarch64" ]; then
+if [ "$arch" = "aarch64" ]; then
     arch="arm64"
 fi
 

@@ -1,22 +1,16 @@
 #!/bin/sh
 
 PKGNAME=netbird
-SUPPORTEDARCHES="x86_64 aarch64 i386 armv6l"
+SUPPORTEDARCHES="x86_64 aarch64 x86 armv6l"
 VERSION="$2"
 DESCRIPTION="Secure WireGuard® overlay network with SSO/MFA."
 URL="https://github.com/netbirdio/netbird"
 
 . $(dirname $0)/common.sh
 
-arch="$(epm print info -a)"
+arch="$(epm print info --debian-arch)"
 case "$arch" in
-x86_64)
-    arch="amd64"
-    ;;
-aarch64)
-    arch="arm64"
-    ;;
-i386 | i686)
+i386)
     arch="386"
     ;;
 armv6l | armv7l)

@@ -8,15 +8,7 @@ URL="https://github.com/Windscribe/Desktop-App"
 
 . $(dirname $0)/common.sh
 
-arch="$(epm print info -a)"
-case "$arch" in
-    x86_64)
-        arch=amd64
-        ;;
-    aarch64)
-        arch=arm64
-        ;;
-esac
+arch="$(epm print info --debian-arch)"
 
 if [ "$VERSION" = "*" ] ; then
     PKGURL=$(get_github_url "https://github.com/Windscribe/Desktop-App/" "${PKGNAME}_.${VERSION}_$arch.deb")

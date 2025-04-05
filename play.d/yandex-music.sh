@@ -8,19 +8,10 @@ URL="https://github.com/cucumber-sp/yandex-music-linux/releases"
 
 . $(dirname $0)/common.sh
 
-arch="$(epm print info -a)"
+arch="$(epm print info --debian-arch)"
 case "$arch" in
-    x86_64)
-        arch=amd64
-        ;;
-    aarch64)
-        arch=arm64
-        ;;
-    armhf)
+    armv7l)
         arch=armhf
-        ;;
-    *)
-        fatal "$arch arch is not supported"
         ;;
 esac
 

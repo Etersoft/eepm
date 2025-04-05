@@ -17,18 +17,7 @@ case "$(epm print info -p)" in
         pkgtype=deb ;;
 esac
 
-if [ $pkgtype = 'deb' ]; then
-    case $(epm print info -a) in
-        x86_64)
-            arch=amd64 ;;
-        aarch64)
-            arch=arm64 ;;
-        *)
-            fatal "Unsupported arch $arch for $(epm print info -d)"
-    esac
-else
-    arch=$(epm print info -a)
-fi
+arch=$(epm print info --distro-arch)
 
 PKGURL=$(eget --list --latest https://delta.chat/ru/download "deltachat-desktop*$arch.$pkgtype")
 

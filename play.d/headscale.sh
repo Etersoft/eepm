@@ -8,14 +8,9 @@ URL="https://github.com/juanfont/headscale"
 
 . $(dirname $0)/common.sh
 
-case "$(epm print info -a)" in
-    x86_64)
-        arch="amd64" ;;
-    aarch64)
-        arch="arm64" ;;
-    armhf)
-        arch="armv7l" ;;
-    i586)
+arch="$(epm print info --debian-arch)"
+case "$arch" in
+    i386)
         arch="386" ;;
 esac
 
