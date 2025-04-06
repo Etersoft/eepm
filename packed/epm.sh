@@ -34,7 +34,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.23"
+export EPMVERSION="3.64.24"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -277,8 +277,7 @@ is_dirpath()
 is_wildcard()
 {
     echo "$1" | grep -q "[*?]" && return
-    echo "$1" | grep -q "\]" && return
-    echo "$1" | grep -q "\[" && return
+    echo "$1" | grep -q "\[.*\]" && return
 }
 
 filter_strip_spaces()
@@ -3580,6 +3579,8 @@ __check_if_wildcard_downloading()
 {
     mask="$(basename "$1")"
     is_wildcard "$mask" || return 1
+    # skip ? as param
+    echo "$mask" | grep -E -q '\?.*=' && return 1
 
     local fn
     fn="$(docmd eget --list "$url" | xargs -n1 basename 2>/dev/null)"
@@ -15873,7 +15874,8 @@ echo "$DIST_ARCH"
 
 get_debian_arch()
 {
-    local arch="$(get_arch)"
+    local arch="$1"
+    [ -n "$arch" ] || arch="$(get_arch)"
     case $arch in
     'x86')
         arch='i386' ;;
@@ -15881,6 +15883,20 @@ get_debian_arch()
         arch='amd64' ;;
     'aarch64')
         arch='arm64' ;;
+    'armhf')
+        arch='armv7l' ;;
+    esac
+    echo "$arch"
+}
+
+get_arch_arch()
+{
+    local arch
+    local arch="$1"
+    [ -n "$arch" ] || arch="$(get_arch)"
+    case $arch in
+        'x86_64')
+            arch='x64' ;;
     esac
     echo "$arch"
 }
@@ -15897,6 +15913,12 @@ get_distro_arch()
             ;;
         deb)
             get_debian_arch
+            return
+            ;;
+    esac
+    case "$(pkgmanager)" in
+        pacman)
+            get_arch_arch
             return
             ;;
     esac
@@ -16119,7 +16141,7 @@ print_help()
     echo "Usage: distro_info [options] [SystemName/Version]"
     echo "Options:"
     echo " -h | --help            - this help"
-    echo " -a                     - print hardware architecture (use --distro-arch for distro depended arch name)"
+    echo " -a                     - print hardware architecture (use --distro-arch for distro depended arch name or --debian-arch for Debian style)"
     echo " -b                     - print size of arch bit (32/64)"
     echo " -c                     - print number of CPU cores"
     echo " -i                     - print virtualization type"
@@ -16226,6 +16248,9 @@ case "$1" in
         ;;
     --debian-arch)
         get_debian_arch
+        ;;
+    --arch-arch)
+        get_arch_arch
         ;;
     --glibc-version)
         get_glibc_version
