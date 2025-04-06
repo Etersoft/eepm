@@ -229,7 +229,7 @@ add_bin_link_command()
     [ -n "$target" ] || target="$PRODUCTDIR/$name"
     [ "$name" = "$target" ] && return
 
-    __check_target_bin "$name" "$target" || return
+    __check_target_bin "$name" "$target" || return 0
     mkdir -p $BUILDROOT/usr/bin/
     ln -sf "$target" "$BUILDROOT/usr/bin/$name" || return
     pack_file "/usr/bin/$name"
@@ -244,7 +244,7 @@ add_bin_exec_command()
     [ -n "$target" ] || target="$PRODUCTDIR/$name"
     [ "$name" = "$target" ] && return
 
-    __check_target_bin "$name" "$target" || return
+    __check_target_bin "$name" "$target" || return 0
     cat <<EOF | create_exec_file "/usr/bin/$name"
 #!/bin/sh
 exec "$target" "\$@"
@@ -259,7 +259,7 @@ add_bin_cdexec_command()
     [ -n "$target" ] || target="$PRODUCTDIR/$name"
     [ "$name" = "$target" ] && return
 
-    __check_target_bin "$name" "$target" || return
+    __check_target_bin "$name" "$target" || return 0
     cat <<EOF | create_exec_file "/usr/bin/$name"
 #!/bin/sh
 cd "$(dirname "$target")" || exit
