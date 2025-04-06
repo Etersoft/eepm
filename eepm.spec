@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.23
+Version: 3.64.24
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -140,6 +140,16 @@ make -C po
 %endif
 
 %changelog
+* Sun Apr 06 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.24-alt1
+- epm repack DJV2: fix executable run
+- epm-download: don't treat args ?some= as wildcard
+- epm play packet-tracer: add all available versions
+- epm play: added Windscribe (eterbug #18250)
+- epm play common.sh: snap_get_pkgurl(): use print info --debian-arch
+- epm play: use --distro-arch/--debian-arch instead of arch cases
+- epm play: add forticlient_vpn and forticlient
+- epm repack common.sh: fix skipping in add_bin_*_command()
+
 * Sat Apr 05 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.23-alt1
 - eget: fix get real filename for redirects with tags
 - epm play rstudio: add support for p10/c10
@@ -155,11 +165,6 @@ make -C po
 - epm repack common.sh: override links in and_bin_*_command, skipping relative links
 - epm play: add cstcadnavigator
 - epm pack Telegram: fix icon name
-
-* Sat Apr 05 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.22-alt1
-- commit packed 3.64.21
-- eget: fix get real filename for redirects with tags
-- epm play rstudio: add support for p10/c10
 
 * Sun Mar 30 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.21-alt1
 - epm play tabby: add repack (eterbug #18217)
