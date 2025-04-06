@@ -26,7 +26,7 @@ StartupWMClass=TeamSpeak 3
 EOF
 pack_file /usr/share/applications/$PRODUCT.desktop
 
-install_file "https://aur.archlinux.org/cgit/aur.git/plain/teamspeak3.png?h=teamspeak3-wbundled" /usr/share/pixmaps/$PRODUCT.png
+install_file "ipfs://QmX2qYLUXLpGc18U3MmDL1mg1EydWdGUpPGaFCZ2tWbH6x" /usr/share/pixmaps/$PRODUCT.png
 
 # hack, todo: update libevent in p10
 get_libevent()
