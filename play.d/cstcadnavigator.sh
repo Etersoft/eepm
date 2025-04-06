@@ -16,4 +16,4 @@ else
     PKGURL="https://cadsofttools.ru/download/cstcadnavigator-$VERSION-1.x86_64.rpm"
 fi
 
-install_pack_pkgurl
+install_pkgurl

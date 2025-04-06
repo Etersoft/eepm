@@ -9,7 +9,8 @@ SPEC="$2"
 move_to_opt "/usr/local/webots"
 
 remove_file /usr/local/bin/webots
-rm -rv usr/local
+remove_dir /usr/local/bin
+remove_dir /usr/local
 remove_file $PRODUCTDIR/lib/webots/libzip.so.4
 
 #ignore_lib_requires librospack.so libtinyxml2.so.6 libicui18n.so.66 libicuuc.so.66  libbz2.so.1.0  libPocoFoundation.so.62
