@@ -92,7 +92,7 @@ __epm_removerepo_alt()
         autoimports)
             info "removing autoimports repo"
             [ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
-            repo="autoimports.$branch"
+            repo="autoimports/$DISTRVERSION"
             __epm_removerepo_alt_grepremove "$repo/"
              ;;
         archive)
@@ -127,6 +127,7 @@ __epm_removerepo_alt()
                 __epm_removerepo_apt "$*"
             else
                 info "removing with grep by '$*'"
+                # TODO: switch to $@ and use epm repo remove instead of __epm_removerepo_alt_grepremove
                 __epm_removerepo_alt_grepremove "$*"
             fi
             ;;
