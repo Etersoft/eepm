@@ -203,6 +203,10 @@ epm_update()
         __epm_update_content_index
         return
     fi
+    if [ "$1" = "--check-apt-db-days" ] ; then
+        __epm_check_apt_db_days && info "APT DB is up to date"
+        return
+    fi
 
     # update with args is the alias for upgrade
     #if [ -n "$*" ] ; then
