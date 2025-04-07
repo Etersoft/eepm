@@ -205,10 +205,10 @@ epm_update()
     fi
 
     # update with args is the alias for upgrade
-    if [ -n "$*" ] ; then
-        epm upgrade "$@"
-        return
-    fi
+    #if [ -n "$*" ] ; then
+    #    epm upgrade "$@"
+    #    return
+    #fi
 
     __epm_update "$@" || return
 
