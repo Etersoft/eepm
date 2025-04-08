@@ -1,6 +1,7 @@
 #!/bin/sh
 
-[ "$1" != "--run" ] && echo "Add snap support to system" && exit
+SUPPORTEDARCHES=''
+DESCRIPTION="Add snap support to system"
 
 CONFINEMENT="$2"
 

@@ -1,6 +1,7 @@
 #!/bin/sh
 
-[ "$1" != "--run" ] && echo "Remove all proprietary NVIDIA cards support" && exit
+SUPPORTEDARCHES=''
+DESCRIPTION="Remove all proprietary NVIDIA cards support"
 
 . $(dirname $0)/common.sh
 

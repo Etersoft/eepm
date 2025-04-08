@@ -1,6 +1,7 @@
 #!/bin/sh
 
-[ "$1" != "--run" ] && echo "Basic Setup to Use of Podman in a Rootless environment" && exit
+SUPPORTEDARCHES=''
+DESCRIPTION="Basic Setup to Use of Podman in a Rootless environment"
 
 . $(dirname $0)/common.sh
 

@@ -1,6 +1,7 @@
 #!/bin/sh
 
-[ "$1" != "--run" ] && echo "Install php8.1 (or upgrade from a previous version)" && exit
+SUPPORTEDARCHES=''
+DESCRIPTION="Install php8.1 (or upgrade from a previous version)"
 
 . $(dirname $0)/common.sh
 

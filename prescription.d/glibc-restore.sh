@@ -1,6 +1,7 @@
 #!/bin/sh
 
-[ "$1" != "--run" ] && echo "Uninstall etersoft build of glibc" && exit
+SUPPORTEDARCHES=''
+DESCRIPTION="Uninstall etersoft build of glibc"
 
 . $(dirname $0)/common.sh
 

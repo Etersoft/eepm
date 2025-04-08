@@ -1,6 +1,7 @@
 #!/bin/sh
 
-[ "$1" != "--run" ] && echo "Switch to using open source driver nouveau for NVIDIA cards" && exit
+SUPPORTEDARCHES=''
+DESCRIPTION="Switch to using open source driver nouveau for NVIDIA cards"
 
 . $(dirname $0)/common.sh
 

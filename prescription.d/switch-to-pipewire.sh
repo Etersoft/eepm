@@ -1,5 +1,7 @@
 #!/bin/sh
 
+SUPPORTEDARCHES=''
+DESCRIPTION="Switch to using Pipeware"
 [ "$1" != "--run" ] && echo "Switch to using Pipeware" && exit
 
 . $(dirname $0)/common.sh

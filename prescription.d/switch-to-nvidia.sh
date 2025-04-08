@@ -4,7 +4,8 @@
 # https://www.altlinux.org/Nvidia#Смена_открытых_драйверов_на_проприетарные[1]
 # https://www.altlinux.org/Переход_на_драйверы_Nvidia_и_fglrx#Установка_проприетарных_драйверов_nvidia_и_fglrx_:
 
-[ "$1" != "--run" ] && echo "Switch to using Nvidia proprietary driver" && exit
+SUPPORTEDARCHES=''
+DESCRIPTION="Switch to using Nvidia proprietary driver"
 
 . $(dirname $0)/common.sh
 

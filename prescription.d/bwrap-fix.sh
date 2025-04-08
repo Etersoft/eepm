@@ -1,6 +1,7 @@
 #!/bin/sh
 
-[ "$1" != "--run" ] && echo "Enable unprivileged bubblewrap mode" && exit
+SUPPORTEDARCHES=''
+DESCRIPTION="Enable unprivileged bubblewrap mode"
 
 . $(dirname $0)/common.sh
 

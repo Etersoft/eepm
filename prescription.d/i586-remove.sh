@@ -1,6 +1,7 @@
 #!/bin/sh
 
-[ "$1" != "--run" ] && echo "Remove all 32 bit packages from 64 bit system" && exit
+SUPPORTEDARCHES='x86_64'
+DESCRIPTION="Remove all 32 bit packages from 64 bit system"
 
 . $(dirname $0)/common.sh
 

@@ -1,6 +1,7 @@
 #!/bin/sh
 
-[ "$1" != "--run" ] && echo "Fix missed 32 bit package modules on 64 bit system" && exit
+SUPPORTEDARCHES='x86_64'
+DESCRIPTION="Fix missed 32 bit package modules on 64 bit system"
 
 . $(dirname $0)/common.sh
 

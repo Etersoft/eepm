@@ -1,6 +1,7 @@
 #!/bin/sh
 
-[ "$1" != "--run" ] && echo "Install gcc with support for building 32-bit applications" && exit
+SUPPORTEDARCHES='x86_64'
+DESCRIPTION="Install gcc with support for building 32-bit applications"
 
 . $(dirname $0)/common.sh
 

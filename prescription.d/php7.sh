@@ -1,6 +1,7 @@
 #!/bin/sh
 
-[ "$1" != "--run" ] && echo "Install php7 (or upgrade from php5)" && exit
+SUPPORTEDARCHES=''
+DESCRIPTION="Install php7 (or upgrade from php5)"
 
 . $(dirname $0)/common.sh
 

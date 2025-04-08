@@ -1,6 +1,7 @@
 #!/bin/sh
 
-[ "$1" != "--run" ] && echo "Add 32 bit support on 64 bit system" && exit
+SUPPORTEDARCHES='x86_64'
+DESCRIPTION="Add 32 bit support on 64 bit system"
 
 . $(dirname $0)/common.sh
 

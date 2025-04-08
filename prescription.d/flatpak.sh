@@ -1,6 +1,7 @@
 #!/bin/sh
 
-[ "$1" != "--run" ] && echo "Add flatpak support to system" && exit
+SUPPORTEDARCHES=''
+DESCRIPTION="Add flatpak support to system"
 
 . $(dirname $0)/common.sh
 

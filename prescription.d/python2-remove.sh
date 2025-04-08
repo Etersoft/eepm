@@ -1,6 +1,7 @@
 #!/bin/sh
 
-[ "$1" != "--run" ] && echo "Remove all possible python2 packages" && exit
+SUPPORTEDARCHES=''
+DESCRIPTION="Remove all possible python2 packages"
 
 . $(dirname $0)/common.sh
 

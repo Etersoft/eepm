@@ -1,6 +1,7 @@
 #!/bin/bash
 
-[ "$1" != "--run" ] && echo "Install and configure Waydroid" && exit
+SUPPORTEDARCHES=''
+DESCRIPTION="Install and configure Waydroid"
 
 . $(dirname $0)/common.sh
 
