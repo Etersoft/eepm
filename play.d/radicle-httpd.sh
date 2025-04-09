@@ -10,7 +10,8 @@ URL="https://radicle.xyz/"
 
 warn_version_is_not_supported
 
-VERSION=$(eget -q -O- "https://files.radicle.xyz/releases/radicle-httpd/latest/radicle-httpd.json" | epm tool json -b | grep version |  awk 'gsub(/"/, "", $2) {print $2}')
+VERSION="$(get_json_value "https://files.radicle.xyz/releases/radicle-httpd/latest/radicle-httpd.json" "version")"
+
 [ -n "$VERSION" ] || fatal "Can't get version"
 
 PKGURL="https://files.radicle.xyz/releases/radicle-httpd/latest/radicle-httpd-$VERSION-x86_64-unknown-linux-musl.tar.xz"

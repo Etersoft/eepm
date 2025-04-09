@@ -11,8 +11,7 @@ URL="https://www.cursor.com/"
 warn_version_is_not_supported
 
 arch="$(epm print info --arch-arch)"
-JSON="https://www.cursor.com/api/download?platform=linux-$arch&releaseTrack=stable"
 
-PKGURL="$(eget -O- "$JSON" | parse_json_value "downloadUrl")"
+PKGURL="$(get_json_value "https://www.cursor.com/api/download?platform=linux-$arch&releaseTrack=stable" "downloadUrl")"
 
 install_pkgurl

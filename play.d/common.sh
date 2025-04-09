@@ -151,6 +151,12 @@ parse_json_value()
     epm tool json -b | grep -m1 -F "$field" | sed -e 's|.*[[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
 }
 
+# URL/file ["version"]
+get_json_value()
+{
+    eget -q -O- "$1" | parse_json_value "$2"
+}
+
 snap_get_pkgurl()
 {
     local SNAPNAME="$1"
@@ -163,7 +169,7 @@ snap_get_pkgurl()
 get_latest_version()
 {
     local ver
-    local epmver="$(epm --short --version)"
+    local epmver="$(epm --short --version 2>/dev/null)"
     local URL
     epmver=$(echo "$epmver" | sed -e 's|\.[0-9]*$||')
     for URL in "https://eepm.ru/releases/$epmver/app-versions" "https://eepm.ru/app-versions" ; do

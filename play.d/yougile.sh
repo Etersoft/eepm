@@ -9,7 +9,7 @@ URL="https://yougile.com"
 . $(dirname $0)/common.sh
 
 if [ "$VERSION" = "*" ] ; then
-    VERSION="$(eget -O- https://dist.yougile.com/app/latest.json | grep -o '"version":[^,}]*' | sed 's/[^0-9.]//g')"
+    VERSION="$(get_json_value https://dist.yougile.com/app/latest.json version)"
 fi
 
 PKGURL="https://dist.yougile.com/app/YouGile-$VERSION-x86_64.AppImage"
