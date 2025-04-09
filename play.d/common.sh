@@ -154,7 +154,12 @@ parse_json_value()
 # URL/file ["version"]
 get_json_value()
 {
-    eget -q -O- "$1" | parse_json_value "$2"
+    if is_url "$1" ; then
+        eget -q -O- "$1" | parse_json_value "$2"
+    else
+        [ -s "$1" ] || fatal "File $1 is missed, can't get json"
+        parse_json_value "$2" < "$1"
+    fi
 }
 
 snap_get_pkgurl()
