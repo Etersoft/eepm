@@ -6,8 +6,9 @@
 # Returns URL like https://download.jetbrains.com/python/pycharm-professional-2022.2.1.tar.gz
 get_jetbrains_url()
 {
-    CODE="$1"
-    arch="$(epm print info -a)"
+    local OS
+    local CODE="$1"
+    local arch="$(epm print info -a)"
     case $arch in
         aarch64)
             OS=linuxARM64
@@ -17,8 +18,9 @@ get_jetbrains_url()
             ;;
     esac
 
-    eget -O- "https://data.services.jetbrains.com/products/releases?code=$CODE&latest=true&type=release" | epm --inscript tool json -b | \
-        grep '"'$CODE'",0,"downloads","'$OS'","link"' | sed -e 's|.*[[:space:]]||' | sed -e 's|"||g'
+    # Note, replacing download with download-cdn due HTTP 451
+    get_json_value "https://data.services.jetbrains.com/products/releases?code=$CODE&latest=true&type=release" '["'$CODE'",0,"downloads","'$OS'","link"]' | \
+        sed -e "s|download.jetbrains.com|download-cdn.jetbrains.com|"
 }
 
 # PS python
