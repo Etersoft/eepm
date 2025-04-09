@@ -1,0 +1,9 @@
+apps:
+  - name: radicle-httpd
+    group: radicle-httpd group
+    license: radicle-httpd license
+    url: https://radicle.xyz/
+    summary: radicle-httpd summary
+    description: Radicle is a sovereign code forge built on Git.
+    arches: x86_64
+    download_page: https://files.radicle.xyz/releases/radicle-httpd/latest/radicle-httpd-*-x86_64-unknown-linux-musl.tar.xz

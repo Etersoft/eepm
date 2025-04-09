@@ -1,0 +1,9 @@
+apps:
+  - name: reaper
+    group: reaper group
+    license: reaper license
+    url: https://www.reaper.fm/index.php
+    summary: reaper summary
+    description: REAPER is a complete digital audio production application for computers, offering a full multitrack audio and MIDI recording, editing, processing, mixing and mastering toolset.
+    arches: x86_64 x86 armhf aarch64
+    download_page: https://www.reaper.fm/files/7.x/reaper*_linux_${arch}.tar.xz

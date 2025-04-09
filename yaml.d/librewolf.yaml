@@ -1,0 +1,9 @@
+apps:
+  - name: librewolf
+    group: librewolf group
+    license: librewolf license
+    url: https://librewolf.net/
+    summary: librewolf summary
+    description: LibreWolf - a custom version of Firefox, focused on privacy, security and freedom
+    arches: x86_64 aarch64
+    download_page: 

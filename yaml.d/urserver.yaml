@@ -1,0 +1,9 @@
+apps:
+  - name: urserver
+    group: urserver group
+    license: urserver license
+    url: https://www.unifiedremote.com/
+    summary: urserver summary
+    description: Unified Remote Server from the official site
+    arches: x86_64 x86
+    download_page: https://www.unifiedremote.com/download/$file

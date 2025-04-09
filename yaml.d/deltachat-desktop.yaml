@@ -1,0 +1,10 @@
+apps:
+  - name: deltachat-desktop
+    group: deltachat-desktop group
+    license: deltachat-desktop license
+    url: 
+    summary: deltachat-desktop summary
+    description: Delta Chat is a decentralized and secure messenger app
+    arches: x86_64 aarch64
+    download_page: https://delta.chat/ru/download
+    download_mask: deltachat-desktop*$arch.$pkgtype

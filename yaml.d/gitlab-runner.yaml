@@ -1,0 +1,9 @@
+apps:
+  - name: gitlab-runner
+    group: gitlab-runner group
+    license: gitlab-runner license
+    url: 
+    summary: gitlab-runner summary
+    description: Gitlab runner
+    arches: armhf aarch64 x86 x86_64 ppc64le
+    download_page: https://gitlab-runner-downloads.s3.amazonaws.com/latest/$pkg/gitlab-runner_${arch}.$pkg

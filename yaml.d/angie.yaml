@@ -1,0 +1,9 @@
+apps:
+  - name: angie
+    group: angie group
+    license: angie license
+    url: 
+    summary: angie summary
+    description: ANGIE (a web server, that was forked from nginx) from the official site
+    arches: x86_64 aarch64
+    download_page: 

@@ -1,0 +1,9 @@
+apps:
+  - name: k3s
+    group: k3s group
+    license: k3s license
+    url: https://k3s.io
+    summary: k3s summary
+    description: K3s - Lightweight Kubernetes from the official site
+    arches: x86_64 aarch64 armhf
+    download_page: 

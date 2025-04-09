@@ -1,0 +1,10 @@
+apps:
+  - name: wing-personal10
+    group: wing-personal10 group
+    license: wing-personal10 license
+    url: https://wingware.com/
+    summary: wing-personal10 summary
+    description: Wing Python IDE Personal from the official site
+    arches: x86_64
+    download_page: $BASEURL/$DIRVERSION/
+    download_mask: $mask

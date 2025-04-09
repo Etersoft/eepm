@@ -1,0 +1,9 @@
+apps:
+  - name: virtualbox
+    group: virtualbox group
+    license: virtualbox license
+    url: https://www.virtualbox.org/
+    summary: virtualbox summary
+    description: VirtualBox from the ALT repo
+    arches: x86_64 x86
+    download_page: 

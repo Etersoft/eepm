@@ -1,0 +1,10 @@
+apps:
+  - name: upscayl
+    group: upscayl group
+    license: upscayl license
+    url: https://github.com/upscayl/upscayl
+    summary: upscayl summary
+    description: Free and Open Source AI Image Upscaler
+    arches: x86_64
+    download_page: https://github.com/upscayl/upscayl/releases
+    download_mask: upscayl-*-linux.AppImage

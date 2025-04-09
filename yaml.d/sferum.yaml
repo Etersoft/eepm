@@ -1,0 +1,9 @@
+apps:
+  - name: sferum
+    group: sferum group
+    license: sferum license
+    url: 
+    summary: sferum summary
+    description: Sferum for Linux from the official site
+    arches: x86_64 x86
+    download_page: https://st.mycdn.me/static/sferum/latest/sferum-$arch.$(epm print info -p)
