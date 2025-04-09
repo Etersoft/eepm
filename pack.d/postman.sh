@@ -15,7 +15,7 @@ erc unpack $BASENAME.tar.gz || fatal
 mkdir -p opt
 mv Postman/app opt/postman
 
-VERSION=$(cat "opt/postman/resources/app/package.json" | epm --inscript tool json -b | grep version | awk 'gsub(/"/, "", $2) {print $2}') #'
+VERSION="$(get_json_value opt/postman/resources/app/package.json version)"
 [ -n "$VERSION" ] || fatal "Can't get package version"
 
 install_file opt/postman/resources/app/assets/icon.png /usr/share/pixmaps/postman.png

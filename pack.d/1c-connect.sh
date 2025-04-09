@@ -13,7 +13,7 @@ mv 1C-Connect-Linux-x64* opt/$PRODUCT
 
 echo "true" > ./opt/$PRODUCT/app/bin/updater
 
-VERSION="$(grep version_name opt/$PRODUCT/dist.json | sed -e 's|",.*||' -e 's|.*"||')"
+VERSION="$(get_json_value opt/$PRODUCT/dist.json version_name)"
 [ -n "$VERSION" ] || fatal "Can't get version from dist.json file."
 
 PKGNAME=$PRODUCT-$VERSION

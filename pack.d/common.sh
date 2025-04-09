@@ -78,6 +78,26 @@ has_wildcard()
     [ "${1/\*/}" != "$1" ]
 }
 
+# ["version"]
+parse_json_value()
+{
+    local field="$1"
+    echo "$field" | grep -q -E "^\[" || field='["'$field'"]'
+    epm tool json -b | grep -m1 -F "$field" | sed -e 's|.*[[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
+}
+
+# URL/file ["version"]
+get_json_value()
+{
+    if is_url "$1" ; then
+        eget -q -O- "$1" | parse_json_value "$2"
+    else
+        [ -s "$1" ] || fatal "File $1 is missed, can't get json"
+        parse_json_value "$2" < "$1"
+    fi
+}
+
+
 __handle_tarname()
 {
     # TODO: we don't know PKGNAME here
