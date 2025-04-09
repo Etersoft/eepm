@@ -51,6 +51,15 @@ __epm_repoindex_alt()
     fi
 
     REPO_NAME="$2"
+
+    # copied from epm-addrepo
+    # URL to path/RPMS.addon
+    local base="$(basename "$REPO_DIR")"
+    if echo "$base" | grep -q "^RPMS\." ; then
+        REPO_NAME="$(echo $base | sed -e 's|.*\.||')"
+        REPO_DIR="$(dirname "$REPO_DIR")"
+    fi
+
     if [ -z "$REPO_NAME" ] ; then
         # default name
         REPO_NAME="addon"
