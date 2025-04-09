@@ -1,19 +1,13 @@
 #!/bin/sh
 
 PKGNAME=jetbrains-toolbox
-SUPPORTEDARCHES="x86_64"
+SUPPORTEDARCHES="x86_64 aarch64"
 VERSION="$2"
 DESCRIPTION="JetBrains Toolbox App from the official site"
 URL="https://www.jetbrains.com/toolbox/"
 
-. $(dirname $0)/common.sh
+. $(dirname $0)/common-jetbrains.sh
 
-warn_version_is_not_supported
-
-# https://github.com/nagygergo/jetbrains-toolbox-install/blob/master/jetbrains-toolbox.sh
-
-# https://download.jetbrains.com/toolbox/jetbrains-toolbox-1.25.12627.tar.gz
-
-PKGURL=$(eget -O- "https://data.services.jetbrains.com/products?code=TBA&release.type=eap%2Crc%2Crelease&fields=distributions%2Clink%2Cname%2Creleases" | epm --inscript tool json -b | grep '0,"releases",0,"downloads","linux","link"' | sed -e 's|.*[[:space:]]||' -e 's|"||g' )
+PKGURL="$(get_jetbrains_pkgurl TBA toolbox)"
 
 install_pack_pkgurl
