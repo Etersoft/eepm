@@ -15,13 +15,6 @@ move_to_opt "/gigaide-CE-*"
 # use native launcher as recommended
 add_bin_link_command $PRODUCT $PRODUCTDIR/bin/idea
 
-# file fieldstring
-get_json_value()
-{
-    [ -s "$1" ] || fatal "Missed $1 file"
-    epm tool json -b < "$1" | grep -m1 -F "$2" | sed -e 's|.*[[:space:]]||' | sed -e 's|"||g'
-}
-
 wmClass="$(get_json_value .$PRODUCTDIR/product-info.json '["launch",0,"startupWmClass"]')"
 [ -n "$wmClass" ] || wmClass="$PRODUCT"
 
