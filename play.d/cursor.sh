@@ -1,15 +1,18 @@
 #!/bin/sh
 
-PKGNAME=cursor
-SUPPORTEDARCHES="x86_64"
+PKGNAME=Cursor
+SUPPORTEDARCHES="x86_64 aarch64"
 VERSION="$2"
 DESCRIPTION="The AI-first Code Editor"
-URL="https://cursor.sh/"
+URL="https://www.cursor.com/"
 
 . $(dirname $0)/common.sh
 
 warn_version_is_not_supported
 
-PKGURL="https://downloader.cursor.sh/linux/appImage/x64"
+arch="$(epm print info --arch-arch)"
+JSON="https://www.cursor.com/api/download?platform=linux-$arch&releaseTrack=stable"
+
+PKGURL="$(eget -O- "$JSON" | parse_json_value "downloadUrl")"
 
 install_pkgurl
