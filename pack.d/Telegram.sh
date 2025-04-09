@@ -19,7 +19,7 @@ f=$FPRODUCT
 
 install -D -m755 $f opt/$TPRODUCT/$TPRODUCT || fatal
 
-IPFS_ICONS_URL="ipfs://QmWYv5mMrvpbN9YWpJ2MuK9rEu6crJBP8YvDp1SKxhqLWP?filename=telegram-icons.tar"
+IPFS_ICONS_URL="ipfs://QmNV53KfivD8FDMAVVpErNyPrugckgkvGQMRimpNz25Swn?filename=telegram-icons.tar"
 if eget $IPFS_ICONS_URL && erc telegram-icons.tar ; then
     iconpath=telegram-icons
 else
@@ -32,6 +32,10 @@ iconname=$desktopname
 
 for i in 16 32 48 64 128 256 512 ; do
     install_file $iconpath/icon$i.png /usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png
+done
+
+for i in org.telegram.desktop-attention-symbolic.svg org.telegram.desktop-mute-symbolic.svg org.telegram.desktop-symbolic.svg ; do
+    install_file $iconpath/$i /usr/share/icons/hicolor/symbolic/apps/$i
 done
 
 cat <<EOF | create_file /usr/share/applications/$desktopname.desktop
