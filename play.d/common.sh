@@ -143,6 +143,14 @@ install_pack_pkgurl()
     epm pack $repack --install $PKGNAME "$PKGURL" "$@"
 }
 
+# ["version"]
+parse_json_value()
+{
+    local field="$1"
+    echo "$field" | grep -q -E "^\[" || field='["'$field'"]'
+    epm tool json -b | grep -m1 -F "$field" | sed -e 's|.*[[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
+}
+
 snap_get_pkgurl()
 {
     local SNAPNAME="$1"
