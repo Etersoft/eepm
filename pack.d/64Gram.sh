@@ -24,19 +24,19 @@ else
     iconpath=https://github.com/TDesktop-x64/tdesktop/raw/master/Telegram/Resources/art
 fi
 
-iconname=$PRODUCT
+desktopname=io.github.tdesktop_x64.TDesktop
+iconname=$desktopname
 for i in 16 32 48 64 128 256 512 ; do
     install_file $iconpath/icon$i.png /usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png
 done
 
-cat <<EOF | create_file /usr/share/applications/$PRODUCT.desktop
+cat <<EOF | create_file /usr/share/applications/$desktopname.desktop
 [Desktop Entry]
 Version=1.0
 Name=64Gram
 Comment=64Gram (unofficial Telegram Desktop)
 Exec=$PRODUCT -- %u
 Icon=$iconname
-StartupWMClass=64Gram
 Type=Application
 Categories=Chat;Network;InstantMessaging;Qt;
 MimeType=x-scheme-handler/tg;
