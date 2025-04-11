@@ -19,12 +19,13 @@ chmod 0755 opt/$PRODUCT/$PRODUCT
 iconpath=https://github.com/AyuGram/AyuGramDesktop/raw/dev/Telegram/Resources/art
 #fi
 
-iconname=$PRODUCT
+desktopname=com.ayugram
+iconname=$desktopname
 for i in 16 32 48 64 128 256 512 ; do
     install_file $iconpath/icon$i.png /usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png
 done
 
-cat <<EOF | create_file /usr/share/applications/com.ayugram.desktop
+cat <<EOF | create_file /usr/share/applications/$desktopname.desktop
 [Desktop Entry]
 Version=1.0
 Name=AyuGram Desktop
