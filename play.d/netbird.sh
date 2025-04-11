@@ -16,9 +16,6 @@ i386)
 armv6l | armv7l)
     arch="armv6"
     ;;
-*)
-    fatal "Unsupported architecture: $arch"
-    ;;
 esac
 
 if [ "$VERSION" = "*" ]; then
