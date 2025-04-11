@@ -34,7 +34,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.24"
+export EPMVERSION="3.64.25"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -2694,7 +2694,7 @@ __epm_apt_set_lists_pkg()
 
     LISTS='/var/lib/apt/lists'
     if [ "$BASEDISTRNAME" = "alt" ] ; then
-        pkg="pkglist"
+        pkg="pkglist."
         # see update-kernel: Use Dir::State::lists for apt update freshness check (ALT bug 46987)
         eval "$(a='' apt-config shell LISTS Dir::State::lists/f)"
     fi
@@ -10337,7 +10337,7 @@ __epm_removerepo_alt()
         autoimports)
             info "removing autoimports repo"
             [ -n "$DISTRVERSION" ] || fatal "Empty DISTRVERSION"
-            repo="autoimports.$branch"
+            repo="autoimports/$DISTRVERSION"
             __epm_removerepo_alt_grepremove "$repo/"
              ;;
         archive)
@@ -10372,6 +10372,7 @@ __epm_removerepo_alt()
                 __epm_removerepo_apt "$*"
             else
                 info "removing with grep by '$*'"
+                # TODO: switch to $@ and use epm repo remove instead of __epm_removerepo_alt_grepremove
                 __epm_removerepo_alt_grepremove "$*"
             fi
             ;;
@@ -11673,6 +11674,15 @@ __epm_repoindex_alt()
     fi
 
     REPO_NAME="$2"
+
+    # copied from epm-addrepo
+    # URL to path/RPMS.addon
+    local base="$(basename "$REPO_DIR")"
+    if echo "$base" | grep -q "^RPMS\." ; then
+        REPO_NAME="$(echo $base | sed -e 's|.*\.||')"
+        REPO_DIR="$(dirname "$REPO_DIR")"
+    fi
+
     if [ -z "$REPO_NAME" ] ; then
         # default name
         REPO_NAME="addon"
@@ -14695,12 +14705,16 @@ epm_update()
         __epm_update_content_index
         return
     fi
-
-    # update with args is the alias for upgrade
-    if [ -n "$*" ] ; then
-        epm upgrade "$@"
+    if [ "$1" = "--check-apt-db-days" ] ; then
+        __epm_check_apt_db_days && info "APT DB is up to date"
         return
     fi
+
+    # update with args is the alias for upgrade
+    #if [ -n "$*" ] ; then
+    #    epm upgrade "$@"
+    #    return
+    #fi
 
     __epm_update "$@" || return
 
@@ -19407,9 +19421,9 @@ check_command()
         ;;
 
 # HELPCMD: PART: Repository control:
-    update|update-repo|ur)    # HELPCMD: update remote package repository databases (with args, run upgrade)
+    update|update-repo|ur)    # HELPCMD: update remote package repository databases
         epm_cmd=update
-        #direct_args=1
+        direct_args=1
         ;;
     addrepo|ar|--add-repo)    # HELPCMD: add package repo (etersoft, autoimports, archive 2017/01/31); run with param to get list
         epm_cmd=addrepo
