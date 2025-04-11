@@ -12,6 +12,6 @@ arch="$(epm print info --debian-arch)"
 
 file="min-${VERSION}-${arch}.deb"
 
-PKGURL="$(eget --list --latest "https://github.com/minbrowser/min/releases "$file")"
+PKGURL="$(eget --list --latest "https://github.com/minbrowser/min/releases" "$file")"
 
 install_pkgurl
