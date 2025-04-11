@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.24
+Version: 3.64.25
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -140,6 +140,17 @@ make -C po
 %endif
 
 %changelog
+* Fri Apr 11 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.25-alt1
+- epm removerepo: fix autoimports removing
+- epm-check_updated_repo: make touch apt lists compatible with update-kernel checking
+- epm prescription: fix all scripts for optimized listing
+- epm play cursor: update to new download scheme
+- epm play jetbrains-toolbox: use get_jetbrains_pkgurl()
+- epm pack Telegram: add symbolic icons
+- epm-repoindex: add path to RPMS.addon support
+- epm repack zed.sh: fix desktop file name
+- epm pack 64Gram: fix for GNOME Dock
+
 * Sun Apr 06 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.24-alt1
 - epm repack DJV2: fix executable run
 - epm-download: don't treat args ?some= as wildcard
