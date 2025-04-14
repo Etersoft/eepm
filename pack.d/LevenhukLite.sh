@@ -6,7 +6,10 @@ VERSION="$3"
 
 . $(dirname $0)/common.sh
 
-# lvh_software_levenhuklite_4_11_2023_12.zip
+# lvh_software_levenhuklite_4_12_2024_09.zip
+
+VERSION=$(basename $TAR | sed -e 's/lvh_software_levenhuklite_//' | tr '_' '.')
+
 erc unpack $TAR || fatal
 cd *
 
