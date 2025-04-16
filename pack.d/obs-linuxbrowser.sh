@@ -19,6 +19,10 @@ mkdir -p usr/share/obs/obs-plugins/obs-linuxbrowser/
 install -Dm755 bin/64bit/* usr/lib64/obs-plugins/
 cp -R data/* usr/share/obs/obs-plugins/obs-linuxbrowser/
 
+epm assure patchelf
+
+patchelf --replace-needed "libobs.so.0" "libobs.so.30"  "usr/lib64/obs-plugins/libobs-linuxbrowser.so"
+
 PKGNAME=$PRODUCT-$VERSION
 
 erc pack $PKGNAME.tar usr || fatal
