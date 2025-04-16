@@ -35,7 +35,8 @@ EOF
 epm assure patchelf
 epm assure ldd glibc-utils
 
-BOOST_REPO_VERSION=$(LC_ALL=C epm info boost | grep -oP '^Version\s*:\s*\K[^\s]+' | sed 's/^[0-9]*://g' | cut -d '-' -f 1)
+BOOST_NAME=$(epm search boost | head -n1 | awk '{print $1}')
+BOOST_REPO_VERSION=$(LC_ALL=C epm info $BOOST_NAME | grep -oP '^Version\s*:\s*\K[^\s]+' | sed 's/^[0-9]*://g' | cut -d '-' -f 1)
 BOOST_FEDORA_VERSION=$(a='' ldd usr/bin/sunshine | grep -oP 'libboost_[^ ]+\.so\.\K[0-9]+\.[0-9]+\.[0-9]+' | sort -u)
 BOOST_LIBS=$(a='' ldd usr/bin/sunshine | grep -oP 'libboost_[^ ]+\.so' | sort -u | sed 's/libboost_//; s/\.so//')
 
