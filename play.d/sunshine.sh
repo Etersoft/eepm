@@ -1,14 +1,19 @@
 #!/bin/sh
 
-PKGNAME=sunshine
-SUPPORTEDARCHES="x86_64"
+PKGNAME=Sunshine
+SUPPORTEDARCHES="x86_64 aarch64"
 VERSION="$2"
 DESCRIPTION="Self-hosted game stream host for Moonlight"
 URL="https://app.lizardbyte.dev/Sunshine"
 
 . $(dirname $0)/common.sh
 
-PKGURL=$(get_github_url "https://github.com/LizardByte/Sunshine/" "sunshine-fedora-.*-amd64.rpm")
+arch=$(epm print info -a)
+
+
+BUILD_ID=$(eget --list https://copr.fedorainfracloud.org/coprs/lizardbyte/stable/package/Sunshine/ | grep -o 'build/[0-9]\+' | cut -d/ -f2 | sort -n | tail -n1)
+
+PKGURL=$(eget --list --latest https://download.copr.fedorainfracloud.org/results/lizardbyte/stable/fedora-41-$arch/0$BUILD_ID-Sunshine/ Sunshine-*.rpm)
 
 install_pkgurl
 
