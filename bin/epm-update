@@ -91,7 +91,8 @@ case $BASEDISTRNAME in
     "alt")
         # TODO: hack against cd to cwd in apt-get on ALT
         cd /
-        sudocmd apt-get update
+        local APTOPTIONS="$dryrun $(subst_option non_interactive -y) $(subst_option debug "-o Acquire::Verbose=1 -o Debug::pkgAcquire::Auth=1 -o Debug::identcdrom=1 -o Debug::Acquire::http=1 ")"
+        sudocmd apt-get update $APTOPTIONS
         ret="$?"
         cd - >/dev/null
         if [ "$ret" != "0" ] && [ -z "$quiet" ] ; then
