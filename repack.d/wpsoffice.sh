@@ -23,8 +23,9 @@ remove_file $PRODUCTDIR/office6/wpscloudsvr
 # linked with missed libkappessframework.so()(64bit)
 remove_file $PRODUCTDIR/office6/addons/pdfbatchcompression/libpdfbatchcompressionapp.so
 
+# https://bugs.etersoft.ru/show_bug.cgi?id=17812
 # Fix for icu>=71.1
-remove_file $PRODUCTDIR/office6/libstdc++.so*
+#remove_file $PRODUCTDIR/office6/libstdc++.so*
 
 # Use system libjpeg
 remove_file $PRODUCTDIR/office6/libjpeg.so*
@@ -33,7 +34,9 @@ remove_file $PRODUCTDIR/office6/libjpeg.so*
 ignore_lib_requires "libc++.so"
 
 # QT is prebuilded
-ignore_lib_requires "libQtCore.so.4 libQtNetwork.so.4 libQtXml.so.4"
+#ignore_lib_requires "libQtCore.so.4 libQtNetwork.so.4 libQtXml.so.4"
+remove_file $PRODUCTDIR/office6/librpcwpsapi.so
+remove_file $PRODUCTDIR/office6/librpcwppapi.so
 
 # WPS Office provide libuof.so()(64bit) itself
 ignore_lib_requires "libuof.so"
