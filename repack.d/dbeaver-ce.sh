@@ -16,4 +16,6 @@ fix_desktop_file "/usr/share/dbeaver-ce/dbeaver"
 fix_desktop_file "/usr/share/dbeaver-ce/dbeaver.png"
 fix_desktop_file "/usr/share/dbeaver-ce/" "$PRODUCTDIR/"
 
+install_file .$PRODUCTDIR/dbeaver.png /usr/share/pixmaps/dbeaver.png
+
 add_requires java-openjdk
