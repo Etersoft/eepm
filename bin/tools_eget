@@ -4,9 +4,9 @@
 # Use:
 # eget http://ftp.altlinux.ru/pub/security/ssl/*
 #
-# Copyright (C) 2014-2014, 2016, 2020, 2022  Etersoft
+# Copyright (C) 2014-2014, 2016, 2020, 2022, 2025  Etersoft
 # Copyright (C) 2014 Daniil Mikhailov <danil@etersoft.ru>
-# Copyright (C) 2016-2017, 2020, 2022 Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2016-2017, 2020, 2022, 2025 Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -339,6 +339,7 @@ CURLRETRY=''
 WGETLOADCOOKIES=''
 CURLCOOKIE=''
 
+NOGLOB=''
 LISTONLY=''
 CHECKURL=''
 CHECKSITE=''
@@ -384,6 +385,7 @@ Options:
     -P|--output-dir           - download to this directory
 
     -nd|--no-directories      - do not create a hierarchy of directories when retrieving recursively
+    --no-glob                 - turn off file name globbing
     -c|--continue             - continue getting a partially-downloaded file
     -T|--timeout=N            - set  the network timeout to N seconds
     --read-timeout=N          - set the read (and write) timeout to N seconds
@@ -532,6 +534,9 @@ while [ -n "$1" ] ; do
             ;;
         -nd|--no-directories)
             WGETNODIRECTORIES="$1"
+            ;;
+        --no-glob)
+            NOGLOB="$1"
             ;;
         -c|--continue)
             WGETCONTINUE="$1"
@@ -1605,13 +1610,14 @@ if is_ipfsurl "$1" ; then
     exit
 fi
 
+SEPMASK=""
 # if mask is the second arg
 if [ -n "$2" ] ; then
     URL="$1"
     MASK="$2"
     SEPMASK="$2"
 else
-    if have_end_slash_or_php_parametr "$1" ; then
+    if [ -n "$NOGLOB" ] || have_end_slash_or_php_parametr "$1" ; then
         URL="$1"
         MASK=""
     else
@@ -1624,7 +1630,7 @@ else
 fi
 
 # https://www.freeoffice.com/download.php?filename=freeoffice-2021-1062.x86_64.rpm
-if echo "$URL" | grep -q "[*\[\]]" ; then
+if [ -z "$NOGLOB" ] && echo "$URL" | grep -q -P "[*\[\]]" ; then
     fatal "Error: there are globbing symbol (*[]) in $URL. It is allowed only for mask part"
 fi
 
