@@ -219,6 +219,7 @@ __add_line_to_file()
     local line="$2"
     local sc="sudocmd"
     [ -n "$verbose" ] || sc="sudorun"
+    set_sudo
     # add empty line if needed
     [ -z "$(tail -n1 "$file")" ] || echo "" | $sc tee -a "$file" >/dev/null
     echo "$line" | $sc tee -a "$file" >/dev/null
