@@ -31,7 +31,7 @@ EOF
 
 # from https://logos.fandom.com/wiki/Adobe_Flash_Player#2015%E2%80%932020
 # https://static.wikia.nocookie.net/logopedia/images/7/7c/Flashplayer_app_RGB.svg/revision/latest/scale-to-width-down/200?cb=20190707103515
-install_file "https://static.wikia.nocookie.net/logopedia/images/7/7c/Flashplayer_app_RGB.svg/revision/latest/scale-to-width-down/200?cb=20190707103515" /usr/share/icons/hicolor/scalable/apps/$PRODUCT.svg
+install_file "ipfs://Qmd5wuWHz2mmZ5FurexeKHL7f4gi9G4upu9poVZ5oRZ7JL" /usr/share/icons/hicolor/scalable/apps/$PRODUCT.svg
 
 erc pack $PKGNAME.tar usr
 

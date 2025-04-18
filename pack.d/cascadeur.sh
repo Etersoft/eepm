@@ -18,8 +18,8 @@ mkdir opt
 mv cascadeur* opt/$PRODUCT || fatal
 
 # from https://www.producthunt.com/posts/cascadeur
-# QmQLQK6byKKzvvHEA84h4Auxci1o9T6bCQQikZFgRM8KBx
-install_file "https://ph-files.imgix.net/e07b5249-d804-4b4e-9458-fa037d30a14b.png?auto=compress&codec=mozjpeg&cs=strip&auto=format&w=72&h=72&fit=crop&bg=0fff&dpr=1" /usr/share/pixmaps/$PRODUCT.png
+# https://ph-files.imgix.net/e07b5249-d804-4b4e-9458-fa037d30a14b.png?auto=compress&codec=mozjpeg&cs=strip&auto=format&w=72&h=72&fit=crop&bg=0fff&dpr=1
+install_file "ipfs://QmXwpR5PJK13xUYF3LBmotGQEUvY75zeR5NwpRJi2tFfj1" /usr/share/pixmaps/$PRODUCT.png
 
 erc pack $PKGNAME.tar opt usr
 

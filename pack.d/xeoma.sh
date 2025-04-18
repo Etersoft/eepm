@@ -11,7 +11,7 @@ erc unpack $TAR || fatal
 mkdir -p opt/xeoma
 mv xeoma.app* opt/xeoma/xeoma
 
-install_file ipfs://QmaVnzNmFjR3BmA5b4jzjwo4MNBRkN7UoewiKotDULbCH5 usr/share/icons/hicolor/512x512/apps/$PRODUCT.png
+install_file ipfs://QmaVnzNmFjR3BmA5b4jzjwo4MNBRkN7UoewiKotDULbCH5 /usr/share/icons/hicolor/512x512/apps/$PRODUCT.png
 
 # create desktop file
 cat <<EOF | create_file /usr/share/applications/$PRODUCT.desktop
