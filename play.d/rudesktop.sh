@@ -15,11 +15,10 @@ case "$(epm print info -s)" in
       PKGNAME=rudesktop-astra
       ;;
   alt)
-      pkgname=rudesktop-alt
+      PKGNAME=rudesktop-alt
       ;;
   osnova)
-      PKGNAME=rudesktop-astra
-      pkgname=rudesktop-osnova
+      PKGNAME=rudesktop-osnova
       ;;
 esac
 
