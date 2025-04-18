@@ -1495,7 +1495,7 @@ get_github_urls()
     [ -n "$project" ] || fatal "Can't get project from $1"
     local URL="https://api.github.com/repos/$owner/$project/releases"
     # api sometime returns unformatted json
-    scat $URL | sed -e 's|,\(["{]\)|,\n\1|g' | \
+    scat "$URL" | sed -e 's|,\(["{]\)|,\n\1|g' | \
         grep -i -o -E '"browser_download_url": *"https://.*"' | cut -d'"' -f4
 }
 
@@ -1547,12 +1547,12 @@ get_urls()
     # Hack: Converted markdown support
     # https://github.com/dotnet/core/blob/main/release-notes/9.0/preview/rc1/9.0.0-rc.1.md
     if false && echo "$URL" | grep -q "\.md$" ; then
-        scat $URL | sed -e 's|<|<\n|g' | grep "https*" | sed -e 's|.*\(https*://\)|\1|' -e 's|".*||g'
+        scat "$URL" | sed -e 's|<|<\n|g' | grep "https*" | sed -e 's|.*\(https*://\)|\1|' -e 's|".*||g'
         return
     fi
 
     # cat html, divide to lines by tags and cut off hrefs only
-    scat $URL | sed -e 's|<|<\n|g' -e 's|data-file=|href=|g' -e "s|href=http|href=\"http|g" -e "s|>|\">|g" -e "s|'|\"|g" | \
+    scat "$URL" | sed -e 's|<|<\n|g' -e 's|data-file=|href=|g' -e "s|href=http|href=\"http|g" -e "s|>|\">|g" -e "s|'|\"|g" | \
          grep -i -o -E 'href="(.+)"' | sed -e 's|&amp;|\&|' | cut -d'"' -f2
 }
 
