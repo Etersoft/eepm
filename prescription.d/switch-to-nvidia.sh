@@ -39,6 +39,7 @@ check_old_nvidia () {
 }
 
 if ! epm update-kernel --check-run-kernel ; then
+    echo "Please reboot the system to run the latest kernel."
 	fatal
 fi
 
