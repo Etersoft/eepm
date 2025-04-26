@@ -98,6 +98,7 @@ __epm_repack_to_rpm()
     local pkg="$1"
 
     # Note: install epm-repack for static (package based) dependencies
+    assure_exists cpio
     assure_exists alien
     assure_exists fakeroot
 
@@ -144,8 +145,10 @@ __epm_repack_to_rpm()
         fakeroot=''
         ! is_root && is_command fakeroot && fakeroot='fakeroot'
 
-        if [ -n "$verbose" ] ; then
-            docmd $fakeroot alien --generate --to-rpm $verbose $scripts "../$alpkg" || fatal
+        if [ -n "$verbose" ] || [ -n "$debug" ] ; then
+            verbose1="$verbose"
+            [ -n "$debug" ] && verbose1="--veryverbose"
+            docmd $fakeroot alien --generate --to-rpm $verbose1 $scripts "../$alpkg" || fatal
         else
             showcmd $fakeroot alien --generate --to-rpm $scripts "../$alpkg"
             a='' $fakeroot alien --generate --to-rpm $scripts "../$alpkg" >/dev/null || fatal
