@@ -29,7 +29,7 @@ Examples:
   epm repo set c10f1       - clean all sources and add default repo for c10f1 branch
   epm repo switch p10      - change only branch name to p10
   epm repo add autoimports - add autoimports (from Fedora) repo
-  epm repo change yandex   - change only base url part to mirror.yandex.ru server
+  epm repo change yandex   - change only base url part to mirror.yandex.ru server (use epm repo change --list to get possible targets)
   epm repo list            - list current repos
 '
 }

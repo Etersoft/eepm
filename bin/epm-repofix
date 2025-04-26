@@ -210,6 +210,9 @@ __change_repo()
 __epm_repochange_alt()
 {
     case "$1" in
+        "--list")
+            echo "Possible targets: etersoft eterfund.org yandex basealt altlinux.org"
+            ;;
         "etersoft")
             __change_repo etersoft "//download.etersoft.ru/pub ALTLinux"
             ;;
@@ -238,7 +241,7 @@ epm_repochange()
     epm_repofix
     case $BASEDISTRNAME in
         "alt")
-            __epm_repochange_alt "$1"
+            __epm_repochange_alt "$@"
             ;;
          *)
             fatal 'Repo change Unsupported for $BASEDISTRNAME'
