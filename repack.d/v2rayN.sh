@@ -14,10 +14,12 @@ cat <<EOF | create_file /usr/share/applications/$PRODUCT.desktop
 Name=v2rayN
 Comment=A GUI client for Windows, Linux and macOS, support Xray core and sing-box-core and others
 Exec=$PRODUCT %f
-Icon=$PRODUCTDIR/$PRODUCT.png
+Icon=$PRODUCT
 Type=Application
 Terminal=false
 Categories=Network;Internet;Utility;
 EOF
+
+install_file $PRODUCTDIR/$PRODUCT.png /usr/share/pixmaps/$PRODUCT.png
 
 add_libs_requires

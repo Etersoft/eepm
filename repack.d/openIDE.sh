@@ -35,7 +35,7 @@ Categories=Development;IDE;
 EOF
 
 install_file $PRODUCTDIR/bin/$PRODUCT.png /usr/share/pixmaps/$PRODUCT.png
-install_file $PRODUCTDIR/bin/$PRODUCT.svg /usr/share/pixmaps/$PRODUCT.svg
+#install_file $PRODUCTDIR/bin/$PRODUCT.svg /usr/share/icons/hicolor/scalable/apps/$PRODUCT.svg
 
 subst 's|%dir "'$PRODUCTDIR'/"||' $SPEC
 subst 's|%dir "'$PRODUCTDIR'/bin/"||' $SPEC

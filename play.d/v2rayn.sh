@@ -21,10 +21,10 @@ case "$arch" in
         ;;
 esac
 
-if [ "$VERSION" = "*" ]; then
-    VERSION="$(get_github_tag "https://github.com/2dust/v2rayN/")"
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(get_github_url "https://github.com/2dust/v2rayN/" "v2rayN-linux-${arch}.deb")
+else
+    PKGURL="https://github.com/2dust/v2rayN/releases/download/$VERSION/v2rayN-linux-${arch}.deb"
 fi
-
-PKGURL="https://github.com/2dust/v2rayN/releases/download/$VERSION/v2rayN-linux-$arch.deb"
 
 install_pkgurl
