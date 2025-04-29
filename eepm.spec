@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.25
+Version: 3.64.26
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -140,6 +140,29 @@ make -C po
 %endif
 
 %changelog
+* Tue Apr 29 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.26-alt1
+- epm play tabby: fix download for x86_64 (eterbug #17865)
+- epm play rememberthemilk: fix download & description (eterbug #17865)
+- epm play levenhuklite: fix download (eterbug #17865)
+- epm play sunshine: Use version from developer copr and fix boost name on p10 (eterbug #17913)
+- epm play obs-linuxbrowser: replace soversion according to the new libobs version (eterbug #18264)
+- epm install/upgrade: enable apt debug when --debug
+- epm update: enable fetching debugging when --debug
+- epm play wpsoffice: allow old 11.x versions, fix run on systems with old libstdc++  (eterbug #17812)
+- epm play: added OCCT (eterbug #18266)
+- epm-addrepo: use set_sudo to ask passwd
+- epm repack: pack dbeaver icon
+- epm play occt: disable autoupdate and returned forget play script (eterbug #18266)
+- epm play rudesktop: fix package name logic and URL handling
+- epm-repack-rpm: add support --debug for alien using
+- epm repo change: add --list
+- eepm.spec: add cpio require to eepm-repack
+- epm repack: updated icon paths for Nekoray and added categories to the .desktop file
+- epm play: add zlibrary
+- epm play: add tailscale (eterbug #18275)
+- epm play: add openide
+- epm play: add v2rayn
+
 * Fri Apr 11 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.25-alt1
 - epm removerepo: fix autoimports removing
 - epm-check_updated_repo: make touch apt lists compatible with update-kernel checking
