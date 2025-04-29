@@ -34,7 +34,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.25"
+export EPMVERSION="3.64.26"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1326,6 +1326,7 @@ __add_line_to_file()
     local line="$2"
     local sc="sudocmd"
     [ -n "$verbose" ] || sc="sudorun"
+    set_sudo
     # add empty line if needed
     [ -z "$(tail -n1 "$file")" ] || echo "" | $sc tee -a "$file" >/dev/null
     echo "$line" | $sc tee -a "$file" >/dev/null
@@ -4707,7 +4708,7 @@ epm_install_names()
 
     case $PMTYPE in
         apt-rpm|apt-dpkg)
-            APTOPTIONS="$APTOPTIONS -o APT::Sandbox::User=root $(subst_option verbose "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
+            APTOPTIONS="$APTOPTIONS -o APT::Sandbox::User=root $(subst_option debug "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
             # https://bugzilla.altlinux.org/44670
             VIRTAPTOPTIONS="-o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true"
             # not for kernel packages
@@ -10795,6 +10796,7 @@ __epm_repack_to_rpm()
     local pkg="$1"
 
     # Note: install epm-repack for static (package based) dependencies
+    assure_exists cpio
     assure_exists alien
     assure_exists fakeroot
 
@@ -10841,8 +10843,10 @@ __epm_repack_to_rpm()
         fakeroot=''
         ! is_root && is_command fakeroot && fakeroot='fakeroot'
 
-        if [ -n "$verbose" ] ; then
-            docmd $fakeroot alien --generate --to-rpm $verbose $scripts "../$alpkg" || fatal
+        if [ -n "$verbose" ] || [ -n "$debug" ] ; then
+            verbose1="$verbose"
+            [ -n "$debug" ] && verbose1="--veryverbose"
+            docmd $fakeroot alien --generate --to-rpm $verbose1 $scripts "../$alpkg" || fatal
         else
             showcmd $fakeroot alien --generate --to-rpm $scripts "../$alpkg"
             a='' $fakeroot alien --generate --to-rpm $scripts "../$alpkg" >/dev/null || fatal
@@ -10925,7 +10929,7 @@ Examples:
   epm repo set c10f1       - clean all sources and add default repo for c10f1 branch
   epm repo switch p10      - change only branch name to p10
   epm repo add autoimports - add autoimports (from Fedora) repo
-  epm repo change yandex   - change only base url part to mirror.yandex.ru server
+  epm repo change yandex   - change only base url part to mirror.yandex.ru server (use epm repo change --list to get possible targets)
   epm repo list            - list current repos
 '
 }
@@ -11574,6 +11578,9 @@ __change_repo()
 __epm_repochange_alt()
 {
     case "$1" in
+        "--list")
+            echo "Possible targets: etersoft eterfund.org yandex basealt altlinux.org"
+            ;;
         "etersoft")
             __change_repo etersoft "//download.etersoft.ru/pub ALTLinux"
             ;;
@@ -11602,7 +11609,7 @@ epm_repochange()
     epm_repofix
     case $BASEDISTRNAME in
         "alt")
-            __epm_repochange_alt "$1"
+            __epm_repochange_alt "$@"
             ;;
          *)
             fatal 'Repo change Unsupported for $BASEDISTRNAME'
@@ -14593,7 +14600,8 @@ case $BASEDISTRNAME in
     "alt")
         # TODO: hack against cd to cwd in apt-get on ALT
         cd /
-        sudocmd apt-get update
+        local APTOPTIONS="$dryrun $(subst_option non_interactive -y) $(subst_option debug "-o Acquire::Verbose=1 -o Debug::pkgAcquire::Auth=1 -o Debug::identcdrom=1 -o Debug::Acquire::http=1 ")"
+        sudocmd apt-get update $APTOPTIONS
         ret="$?"
         cd - >/dev/null
         if [ "$ret" != "0" ] && [ -z "$quiet" ] ; then
@@ -14839,7 +14847,7 @@ epm_upgrade()
 
     case $PMTYPE in
     apt-rpm|apt-dpkg)
-        local APTOPTIONS="$dryrun $(subst_option non_interactive -y) $(subst_option verbose "-V -o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
+        local APTOPTIONS="$dryrun $(subst_option non_interactive -y) $(subst_option debug "-V -o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
         CMD="apt-get $APTOPTIONS $noremove $force_yes dist-upgrade"
         ;;
     aptitude-dpkg)
@@ -16355,9 +16363,9 @@ internal_tools_eget()
 # Use:
 # eget http://ftp.altlinux.ru/pub/security/ssl/*
 #
-# Copyright (C) 2014-2014, 2016, 2020, 2022  Etersoft
+# Copyright (C) 2014-2014, 2016, 2020, 2022, 2025  Etersoft
 # Copyright (C) 2014 Daniil Mikhailov <danil@etersoft.ru>
-# Copyright (C) 2016-2017, 2020, 2022 Vitaly Lipatov <lav@etersoft.ru>
+# Copyright (C) 2016-2017, 2020, 2022, 2025 Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -16690,6 +16698,7 @@ CURLRETRY=''
 WGETLOADCOOKIES=''
 CURLCOOKIE=''
 
+NOGLOB=''
 LISTONLY=''
 CHECKURL=''
 CHECKSITE=''
@@ -16735,6 +16744,7 @@ Options:
     -P|--output-dir           - download to this directory
 
     -nd|--no-directories      - do not create a hierarchy of directories when retrieving recursively
+    --no-glob                 - turn off file name globbing
     -c|--continue             - continue getting a partially-downloaded file
     -T|--timeout=N            - set  the network timeout to N seconds
     --read-timeout=N          - set the read (and write) timeout to N seconds
@@ -16883,6 +16893,9 @@ while [ -n "$1" ] ; do
             ;;
         -nd|--no-directories)
             WGETNODIRECTORIES="$1"
+            ;;
+        --no-glob)
+            NOGLOB="$1"
             ;;
         -c|--continue)
             WGETCONTINUE="$1"
@@ -17841,7 +17854,7 @@ get_github_urls()
     [ -n "$project" ] || fatal "Can't get project from $1"
     local URL="https://api.github.com/repos/$owner/$project/releases"
     # api sometime returns unformatted json
-    scat $URL | sed -e 's|,\(["{]\)|,\n\1|g' | \
+    scat "$URL" | sed -e 's|,\(["{]\)|,\n\1|g' | \
         grep -i -o -E '"browser_download_url": *"https://.*"' | cut -d'"' -f4
 }
 
@@ -17893,12 +17906,12 @@ get_urls()
     # Hack: Converted markdown support
     # https://github.com/dotnet/core/blob/main/release-notes/9.0/preview/rc1/9.0.0-rc.1.md
     if false && echo "$URL" | grep -q "\.md$" ; then
-        scat $URL | sed -e 's|<|<\n|g' | grep "https*" | sed -e 's|.*\(https*://\)|\1|' -e 's|".*||g'
+        scat "$URL" | sed -e 's|<|<\n|g' | grep "https*" | sed -e 's|.*\(https*://\)|\1|' -e 's|".*||g'
         return
     fi
 
     # cat html, divide to lines by tags and cut off hrefs only
-    scat $URL | sed -e 's|<|<\n|g' -e 's|data-file=|href=|g' -e "s|href=http|href=\"http|g" -e "s|>|\">|g" -e "s|'|\"|g" | \
+    scat "$URL" | sed -e 's|<|<\n|g' -e 's|data-file=|href=|g' -e "s|href=http|href=\"http|g" -e "s|>|\">|g" -e "s|'|\"|g" | \
          grep -i -o -E 'href="(.+)"' | sed -e 's|&amp;|\&|' | cut -d'"' -f2
 }
 
@@ -17956,13 +17969,14 @@ if is_ipfsurl "$1" ; then
     return
 fi
 
+SEPMASK=""
 # if mask is the second arg
 if [ -n "$2" ] ; then
     URL="$1"
     MASK="$2"
     SEPMASK="$2"
 else
-    if have_end_slash_or_php_parametr "$1" ; then
+    if [ -n "$NOGLOB" ] || have_end_slash_or_php_parametr "$1" ; then
         URL="$1"
         MASK=""
     else
@@ -17975,7 +17989,7 @@ else
 fi
 
 # https://www.freeoffice.com/download.php?filename=freeoffice-2021-1062.x86_64.rpm
-if echo "$URL" | grep -q "[*\[\]]" ; then
+if [ -z "$NOGLOB" ] && echo "$URL" | grep -q -P "[*\[\]]" ; then
     fatal "Error: there are globbing symbol (*[]) in $URL. It is allowed only for mask part"
 fi
 
