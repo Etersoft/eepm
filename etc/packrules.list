@@ -7,3 +7,10 @@ hplip-plugin hplip-*-plugin
 sublime-text sublime_text_build_*
 ArmorPaint ArmorPaint_*_linux64.zip
 ArmorPaintVKRT ArmorPaintVKRT_*_linux64.zip
+# 1C
+1c83-universal client_*.rpm64.zip
+1c83-universal rpm64_*.zip
+1c83-universal thin.client_*.rpm64.zip
+1c83-universal client_*.deb64.zip
+1c83-universal deb64_*.zip
+1c83-universal thin.client_*.deb64.zip
