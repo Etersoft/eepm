@@ -8,15 +8,13 @@ VERSION="$3"
 
 PKGNAME=$PRODUCT-$VERSION
 
-mkdir -p opt/OCCT
-mv -v $TAR opt/OCCT/occt
-chmod 0755 opt/OCCT/occt
-
-cat <<EOF | create_file /opt/OCCT/OCCT.config.json
-{
-  "CheckForUpdates": "Disabled",
-}
-EOF
+mkdir -p opt/occt
+mv -v $TAR opt/occt/occt
+chmod 0755 opt/occt/occt
+# Disable automatic updates in future release
+touch "opt/occt/disable_update"
+# Use configs in home dir
+touch "opt/occt/use_home_config"
 
 cat <<EOF | create_file /usr/share/applications/occt.desktop
 [Desktop Entry]
