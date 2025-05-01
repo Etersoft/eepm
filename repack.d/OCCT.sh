@@ -8,5 +8,5 @@ SPEC="$2"
 
 add_libs_requires
 
-add_bin_exec_command occt "/opt/OCCT/occt"
+add_bin_exec_command occt "/opt/occt/occt"
 
