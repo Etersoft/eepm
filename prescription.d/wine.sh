@@ -88,7 +88,9 @@ if [ "$arch" = "x86_64" ] ; then
     PKGNAMES="$PKGNAMES $PKGCOMMON"
     epm install $PKGNAMES || exit
     # for non wow64 packages install 32 bit part
-    if ! epm ql $MAIN | grep -q "/i386-windows/" ; then
+    if epm ql $MAIN | grep -q "/i386-windows/" ; then
+        echo "Run epm play wine --only-i586 if you need support for 32 bit only wine prefixes."
+    else
         epm install $PKGNAMES32 || exit
         # Доставляем пропущенные модули (подпакеты) для установленных 64-битных
         epm prescription i586-fix
