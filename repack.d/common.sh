@@ -626,6 +626,17 @@ get_desktop_value()
     cat "$DESKTOPFILE" | grep "^$FIELD=" | head -n1 | sed -e 's|^'"$FIELD"'=||' -e 's| .*||'
 }
 
+# copied from epm play common
+# arg: minimal require of libstdc++ version
+# return true is we have such version
+is_stdcpp_enough()
+{
+    local needed="$1"
+    local STDCPKG="libstdc++"
+    epm status --installed $STDCPKG || STDCPKG="libstdc++6"
+
+    is_pkg_enough $STDCPKG $needed
+}
 
 [ -d "$BUILDROOT" ] || fatal "Run me only via epm repack <package>"
 
