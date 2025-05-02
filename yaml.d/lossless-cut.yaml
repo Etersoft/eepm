@@ -1,0 +1,9 @@
+apps:
+  - name: lossless-cut
+    group: lossless-cut group
+    license: lossless-cut license
+    url: https://github.com/mifi/lossless-cut
+    summary: lossless-cut summary
+    description: The swiss army knife of lossless video/audio editing
+    arches: x86_64 aarch64 armhf
+    download_page: 

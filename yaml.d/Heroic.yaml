@@ -1,0 +1,9 @@
+apps:
+  - name: Heroic
+    group: Heroic group
+    license: Heroic license
+    url: https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher
+    summary: Heroic summary
+    description: Is an Open Source Game Launcher for Linux. It supports launching games from the Epic Games Store, GOG Games and Amazon Games
+    arches: x86_64
+    download_page: 

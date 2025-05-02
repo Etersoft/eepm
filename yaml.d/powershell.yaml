@@ -1,0 +1,10 @@
+apps:
+  - name: powershell
+    group: powershell group
+    license: powershell license
+    url: https://github.com/PowerShell/PowerShell
+    summary: powershell summary
+    description: Microsoft PowerShell from the official site
+    arches: x86_64
+    download_page: $BASEURL
+    download_mask: $file

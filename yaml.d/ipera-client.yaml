@@ -1,0 +1,9 @@
+apps:
+  - name: ipera-client
+    group: ipera-client group
+    license: ipera-client license
+    url: 
+    summary: ipera-client summary
+    description: FlyView Client from the official site
+    arches: x86_64
+    download_page: https://flyviewvms.ru/distro/flyview-client.deb

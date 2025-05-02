@@ -1,0 +1,10 @@
+apps:
+  - name: pstube
+    group: pstube group
+    license: pstube license
+    url: https://github.com/prateekmedia/pstube
+    summary: pstube summary
+    description: PsTube (formerly FluTube) - Watch and download videos without ads. From the official site
+    arches: x86_64
+    download_page: https://github.com/prateekmedia/pstube/releases
+    download_mask: pstube-*-$arch.$pkgtype

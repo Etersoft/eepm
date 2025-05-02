@@ -1,0 +1,9 @@
+apps:
+  - name: postman
+    group: postman group
+    license: postman license
+    url: https://www.postman.com
+    summary: postman summary
+    description: Postman is an API platform for building and using APIs
+    arches: x86_64 aarch64
+    download_page: https://dl.pstmn.io/download/latest/linux_$arch

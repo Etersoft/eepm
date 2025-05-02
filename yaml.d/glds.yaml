@@ -1,0 +1,10 @@
+apps:
+  - name: glds
+    group: glds group
+    license: glds license
+    url: https://www.guardant.ru/support/users/download/1223/
+    summary: glds summary
+    description: Guardant License Server from the official site
+    arches: x86_64
+    download_page: https://download.guardant.ru/LM/Linux/*/$shortarch/
+    download_mask: $file

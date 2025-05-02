@@ -1,0 +1,10 @@
+apps:
+  - name: 64Gram
+    group: 64Gram group
+    license: 64Gram license
+    url: https://github.com/TDesktop-x64
+    summary: 64Gram summary
+    description: 64Gram (unofficial Telegram Desktop)
+    arches: x86_64
+    download_page: https://github.com/TDesktop-x64/tdesktop/releases
+    download_mask: 64Gram_*_linux.zip

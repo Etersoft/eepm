@@ -1,0 +1,9 @@
+apps:
+  - name: teams
+    group: teams group
+    license: teams license
+    url: 
+    summary: teams summary
+    description: Microsoft Teams for Linux from the archive.org of the official site
+    arches: x86_64
+    download_page: $ARCHIVEORG/$URL/$(epm print constructname teams * $arch $pkgtype)

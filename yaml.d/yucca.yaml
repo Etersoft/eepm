@@ -1,0 +1,9 @@
+apps:
+  - name: yucca
+    group: yucca group
+    license: yucca license
+    url: https://yucca.app/
+    summary: yucca summary
+    description: Simple solution for video surveillance
+    arches: x86_64 armv7l aarch64
+    download_page: https://releases.yucca.app/v*/yucca_*_linux_${arch}.tar.gz

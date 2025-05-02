@@ -1,0 +1,9 @@
+apps:
+  - name: persepolis
+    group: persepolis group
+    license: persepolis license
+    url: https://persepolisdm.github.io/
+    summary: persepolis summary
+    description: is a download manager & a GUI for Aria2
+    arches: x86_64
+    download_page: 

@@ -1,0 +1,9 @@
+apps:
+  - name: pantum
+    group: pantum group
+    license: pantum license
+    url: https://www.pantum.ru/support/download/driver/
+    summary: pantum summary
+    description: CUPS and SANE drivers for Pantum series printer and scanner
+    arches: x86_64 x86
+    download_page: https://drivers.pantum.ru/userfiles/files/download/drive/2013/0619/Pantum%20Ubuntu%20Driver%20V1_1_106(1).zip

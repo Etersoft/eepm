@@ -1,0 +1,10 @@
+apps:
+  - name: xod-client-electron
+    group: xod-client-electron group
+    license: xod-client-electron license
+    url: https://xod.io/
+    summary: xod-client-electron summary
+    description: A visual programming language for microcontrollers
+    arches: x86_64
+    download_page: https://xod.io/
+    download_mask: $mask
