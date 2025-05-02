@@ -23,12 +23,12 @@ remove_file $PRODUCTDIR/office6/wpscloudsvr
 # linked with missed libkappessframework.so()(64bit)
 remove_file $PRODUCTDIR/office6/addons/pdfbatchcompression/libpdfbatchcompressionapp.so
 
-# https://bugs.etersoft.ru/show_bug.cgi?id=17812
-# Fix for icu>=71.1
-#remove_file $PRODUCTDIR/office6/libstdc++.so*
-
+# https://github.com/NixOS/nixpkgs/commit/da74ad3a905aa45ee6e4f8b4b69b56930195adcb
 # Use system libjpeg
 remove_file $PRODUCTDIR/office6/libjpeg.so*
+
+# Fix theme system on WPS Office 11
+is_stdcpp_enough "12.1" && remove_file $PRODUCTDIR/office6/libstdc++.so*
 
 # hack to fix bug somewhere in linking
 ignore_lib_requires "libc++.so"
