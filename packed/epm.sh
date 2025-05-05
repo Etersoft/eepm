@@ -34,7 +34,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.26"
+export EPMVERSION="3.64.27"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -10934,6 +10934,16 @@ Examples:
 '
 }
 
+if_valid_reponame()
+{
+    [ -n "$1" ] || return 1
+    case "$1" in
+    -*)
+        return 1
+        ;;
+    esac
+    return 0
+}
 
 epm_repo()
 {
@@ -10949,10 +10959,11 @@ epm_repo()
     change)                           # HELPCMD: <mirror>: switch sources to the mirror (supports etersoft/yandex/basealt/altlinux.org/eterfund.org): rewrite URLs to the specified server
         epm_repochange "$@"
         ;;
-    set)                              # HELPCMD: <mirror>: remove all existing sources and add mirror for the branch
-        if [ -z "$1" ]; then
-            fatal "No repository specified."
-        fi
+    set)                              # HELPCMD: <repo>: remove all existing sources and add default mirror for the branch
+        if_valid_reponame "$1" || fatal "No valid repository is specified."
+        [ -n "$quiet" ] || epm repo list
+        confirm_info 'You are about to set repo ' "$*" "(all repos will be removed)."
+        #epm repo save
         epm repo rm all
         epm addrepo "$@"
         ;;
