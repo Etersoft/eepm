@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.26
+Version: 3.64.27
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -140,6 +140,16 @@ make -C po
 %endif
 
 %changelog
+* Mon May 05 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.27-alt1
+- epm repo set: add confirm, improve checking
+- epm play: add clash-verge
+- epm play wine: add message about 32 bit packages
+- epm play occt: improve (eterbug #18266)
+- epm play: add freedownloadmanager (eterbug #18282)
+- epm play: add fplus-upd-ppd (eterbug #18278)
+- epm prescription switch-to-nvidia: apply fixes for proper Wayland, CUDA, and sleep functionality (eterbug #18286)
+- epm play: drop skype
+
 * Tue Apr 29 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.26-alt1
 - epm play tabby: fix download for x86_64 (eterbug #17865)
 - epm play rememberthemilk: fix download & description (eterbug #17865)
