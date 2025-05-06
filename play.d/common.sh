@@ -184,6 +184,15 @@ get_latest_version()
     done
 }
 
+# copied from epm-sh-functions
+# copied from eget's filter_glob
+# check man glob
+__convert_glob__to_regexp()
+{
+    # translate glob to regexp
+    echo "$1" | sed -e "s|\*|.*|g" -e "s|?|.|g"
+}
+
 get_github_release_info() {
     local url="$1"
     local user_and_repo=${url#https://github.com/}
@@ -196,8 +205,11 @@ get_github_url()
     local url="$1"
     local asset_name="$2"
 
+    echo "$asset_name" | grep -q "\.[*?]" && fatal "Only glob symbols * and ? are supported. Don't use regexp! Input string: $asset_name"
+    wc="$(__convert_glob__to_regexp "$asset_name")"
+
     if [ "$3" == "prerelease" ] ; then
-        get_github_release_info "$url" | grep 'browser_download_url' | grep -iEo 'https.*download.*' | grep "$2" | head -n1
+        get_github_release_info "$url" | grep 'browser_download_url' | grep -iEo 'https.*download.*' | grep -E "$wc" | head -n1
     else
         get_github_release_info "$url" \
         | awk '{
@@ -210,7 +222,7 @@ get_github_url()
         match($0, /"browser_download_url": "(https[^"]*)"/, arr);
         print arr[1];
     }
-}' | grep "$2" | head -1
+}' | grep -E "$wc" | head -1
     fi
 
 }

@@ -14,7 +14,7 @@ arch="$(epm print info --debian-arch)"
 #https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v2.2.3/Clash.Verge-2.2.3-1.x86_64.rpm
 # Clash.Verge_2.2.3_amd64.deb
 if [ "$VERSION" = "*" ] ; then
-    PKGURL=$(get_github_url "https://github.com/clash-verge-rev/clash-verge-rev/" "Clash.Verge_.${VERSION}_$arch.deb")
+    PKGURL=$(get_github_url "https://github.com/clash-verge-rev/clash-verge-rev/" "Clash.Verge_${VERSION}_$arch.deb")
 else
     PKGURL="https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v${VERSION}/Clash.Verge_${VERSION}_$arch.deb"
 fi

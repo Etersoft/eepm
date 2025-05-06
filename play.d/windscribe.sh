@@ -11,7 +11,7 @@ URL="https://github.com/Windscribe/Desktop-App"
 arch="$(epm print info --debian-arch)"
 
 if [ "$VERSION" = "*" ] ; then
-    PKGURL=$(get_github_url "https://github.com/Windscribe/Desktop-App/" "${PKGNAME}_.${VERSION}_$arch.deb")
+    PKGURL=$(get_github_url "https://github.com/Windscribe/Desktop-App/" "${PKGNAME}_${VERSION}_$arch.deb")
 else
     PKGURL="https://github.com/Windscribe/Desktop-App/releases/download/v$VERSION/${PKGNAME}_${VERSION}_$arch.deb"
 fi

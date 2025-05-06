@@ -9,7 +9,7 @@ URL="https://moonlight-stream.org/"
 . $(dirname $0)/common.sh
 
 if [ "$VERSION" = "*" ] ; then
-    PKGURL=$(get_github_url "https://github.com/moonlight-stream/moonlight-qt/" "$PKGNAME-.$VERSION-x86_64.AppImage")
+    PKGURL=$(get_github_url "https://github.com/moonlight-stream/moonlight-qt/" "$PKGNAME-$VERSION-x86_64.AppImage")
 else
     PKGURL="https://github.com/moonlight-stream/moonlight-qt/releases/download/v$VERSION/$PKGNAME-$VERSION-x86_64.AppImage"
 fi

@@ -16,7 +16,7 @@ esac
 
 
 if [ "$VERSION" = "*" ] ; then
-    PKGURL=$(get_github_url "https://github.com/juanfont/headscale/" "${PKGNAME}_.${VERSION}_linux_$arch.deb")
+    PKGURL=$(get_github_url "https://github.com/juanfont/headscale/" "${PKGNAME}_${VERSION}_linux_$arch.deb")
 else
     PKGURL="https://github.com/juanfont/headscale/releases/download/v$VERSION/${PKGNAME}_${VERSION}_linux_$arch.deb"
 fi

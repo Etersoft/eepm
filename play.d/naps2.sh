@@ -27,7 +27,7 @@ else
 fi
 
 if [ "$VERSION" = "*" ] ; then
-    PKGURL=$(get_github_url "https://github.com/cyanfish/naps2/" "$PKGNAME-.$VERSION-linux-$arch.$pkgtype")
+    PKGURL=$(get_github_url "https://github.com/cyanfish/naps2/" "$PKGNAME-$VERSION-linux-$arch.$pkgtype")
 else
     PKGURL="https://github.com/cyanfish/naps2/releases/download/v$VERSION/$PKGNAME-$VERSION-linux-$arch.$pkgtype"
 fi

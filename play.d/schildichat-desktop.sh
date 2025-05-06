@@ -12,25 +12,23 @@ pkgtype="$(epm print info -p)"
 
 case $pkgtype in
     # rpm)
-    #     mask="${PKGNAME}-.${VERSION}.x86_64.rpm"
+    #     mask="${PKGNAME}-${VERSION}.x86_64.rpm"
     #     ;;
     deb)
-        mask="${PKGNAME}-.${VERSION}_amd64.deb"
+        mask="${PKGNAME}-${VERSION}_amd64.deb"
         ;;
     *)
-        mask="SchildiChat-.${VERSION}.AppImage"
+        mask="SchildiChat-${VERSION}.AppImage"
         ;;
 esac
 
 if [ "$VERSION" = "*" ] ; then
     PKGURL=$(get_github_url "https://github.com/SchildiChat/schildichat-desktop/" "$mask")
 else
-    # need because get_github_url doesn't support ${VERSION} without a dot before VERSION in mask
-    direct_mask="$(echo $mask | sed 's/\.//')"
-    PKGURL="https://github.com/SchildiChat/schildichat-desktop/releases/download/v$VERSION/$direct_mask"
+    PKGURL="https://github.com/SchildiChat/schildichat-desktop/releases/download/v$VERSION/$mask"
 fi
 
-if [ $mask = "SchildiChat-.${VERSION}.AppImage" ]; then
+if [ $mask = "SchildiChat-${VERSION}.AppImage" ]; then
     install_pack_pkgurl
 else
     install_pkgurl
