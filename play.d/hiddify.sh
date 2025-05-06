@@ -12,7 +12,7 @@ if ! is_glibc_enough 2.32 ; then
 fi
 
 if [ "$VERSION" = "*" ] ; then
-	VERSION="$(get_github_tag https://github.com/hiddify/hiddify-next/)"
+	VERSION="$(get_github_tag https://github.com/hiddify/hiddify-next/ prerelease)"
 fi
 
 PKGURL="https://github.com/hiddify/hiddify-next/releases/download/v$VERSION/Hiddify-Debian-x64.deb"
