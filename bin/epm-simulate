@@ -80,7 +80,7 @@ EOF
             RES=$?
             clean_store_output
             return $RES ;;
-        dnf-rpm)
+        dnf-rpm|dnf5-rpm)
             set_sudo
             store_output sudocmd dnf --assumeno install $filenames
             __check_yum_result $RC_STDOUT $?
