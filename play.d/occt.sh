@@ -8,6 +8,10 @@ URL="https://www.ocbase.com/download"
 
 . $(dirname $0)/common.sh
 
+if ! is_glibc_enough 2.34 ; then
+	fatal "Версия glibc слишком старая, требуется система с glibc 2.34 и выше."
+fi
+
 if [ "$VERSION" = "*" ] ; then
     VERSION=$(eget -q -O- https://www.ocbase.com/download | grep -oP '"versionStr":"\K[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -n1)
     PKGURL="https://dl.ocbase.com/linux/per/stable/OCCT"
