@@ -230,24 +230,33 @@ get_github_url()
 get_github_tag()
 {
     local url="$1"
+    local flag="$2"
+    local json
+    json="$(get_github_release_info "$url")"
 
-    if [ "$2" == "prerelease" ] ; then
-        get_github_release_info "$url" | grep -oP '"tag_name": *"[^"]*' | grep -oP '[0-9]+(\.[0-9]+)*(-[0-9]+)?' | head -n1
-    else
-        get_github_release_info "$url" \
-        | awk '{
-    if ($0 ~ /"prerelease": false/) {
-        prerelease = 0;
-    } else if ($0 ~ /"prerelease": true/) {
-        prerelease = 1;
+    jv()
+    {
+        local item="$1"
+        local tag="$2"
+        echo "$json" | parse_json_value "[$item,\"$tag\"]" 2>/dev/null
     }
-    if (!prerelease && $0 ~ /"tag_name":/) {
-        match($0, /"tag_name": "([^"]*)"/, arr);
-        print arr[1];
-    }
-}' | grep -oP '[0-9]+(\.[0-9]+)*(-[0-9]+)?' | head -n1
-    fi
 
+    local item
+    for item in $(seq 0 100) ; do
+        local val
+        val=$(jv $item "tag_name")
+        [ -n "$val" ] || return
+        echo "Checking for [$item,$val] ..." >&2
+        #[0,"draft"]     false
+        #[0,"prerelease"]        true
+        [ "$(jv $item "draft")" = "true" ] && continue
+        [ "$flag" == "prerelease" ] && break
+        [ "$(jv $item "prerelease")" = "true" ] && continue
+        break
+    done
+
+    echo "$val" | grep -oP '[0-9]+(\.[0-9]+)*(-[0-9]+)?' | head -n1
+    return
 }
 
 print_product_alt()
