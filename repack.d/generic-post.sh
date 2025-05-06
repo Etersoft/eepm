@@ -28,6 +28,7 @@ done
 
 for DESKTOPFILE in $BUILDROOT/usr/share/applications/*.desktop ; do
     [ -f "$DESKTOPFILE" ] || continue
+
     EXEC="$(get_desktop_value "$DESKTOPFILE" "Exec")"
     if echo "$EXEC" | grep -q "/" ; then
         warning "Exec path in desktop file $DESKTOPFILE contains slashes: $EXEC"
@@ -43,5 +44,11 @@ for DESKTOPFILE in $BUILDROOT/usr/share/applications/*.desktop ; do
         warning "Exec from desktop file $DESKTOPFILE exists in /usr/bin, but not executable: $EXEC"
     elif [ -z "$EXEC" ] ; then
         warning "Exec from desktop file $DESKTOPFILE is missed"
+    fi
+
+    desktopfile="$(basename "$DESKTOPFILE" .desktop)"
+    ICON="$(get_desktop_value "$DESKTOPFILE" "Icon")"
+    if [ "$ICON" != "$desktopfile" ] ; then
+        warning "Icon '$ICON' from desktop file $DESKTOPFILE is not the same as desktop file name."
     fi
 done
