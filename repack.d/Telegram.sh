@@ -15,6 +15,8 @@ PRODUCTDIR=/opt/Telegram
 add_conflicts telegram-desktop
 add_conflicts telegram-desktop-binary
 
+add_provides telegram
+
 for i in Telegram Telegram-beta ; do
     [ "$i"  = "$PKGNAME" ] && continue
     add_conflicts $i
