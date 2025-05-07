@@ -402,7 +402,7 @@ __switch_alt_to_distro()
             docmd epm install rpm apt $(get_fix_release_pkg "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
             __check_system "$TO"
             # will update to kernel 6.6
-            docmd epm update-kernel || fatal
+            docmd epm update-kernel -t 6.12 || fatal
             ;;
         "c10f1 c10f2"|"c10f2 c10f3")
             info "Upgrade all packages to current $FROM repository"
