@@ -21,6 +21,15 @@ if [ -d "$pd" ] ; then
     if [ "$bn" != "usr" ] && [ "$bn" != "opt" ] ; then
         move_to_opt "/$bn"
     fi
+else
+    flag_dir=
+    for i in $pd ; do
+        [ -d "$i" ] && flag_dir=1 && break
+    done
+    if [ -z "$flag_dir" ] ; then
+        # only a few files in the root
+        move_to_opt "/"
+    fi
 fi
 
 # FIXME: hack for nonstandart name

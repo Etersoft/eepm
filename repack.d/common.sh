@@ -304,6 +304,13 @@ move_to_opt()
         sdir="$BUILDROOT$from"
     elif has_space "$1" ; then
         sdir="$BUILDROOT$1"
+    elif [ "$1" = "/" ] ; then
+        local sfiles
+        sfiles="$(echo $BUILDROOT/*)"
+        sdir="$BUILDROOT/tmp"
+        mkdir $sdir
+        mv $sfiles $sdir
+
     else
         sdir=''
         for i in "$@" ; do
@@ -326,6 +333,13 @@ move_to_opt()
     echo "Moving $rdir to $PRODUCTDIR ..."
     mkdir -p "$BUILDROOT$(dirname "$PRODUCTDIR")/"
     mv "$BUILDROOT$rdir" "$BUILDROOT$PRODUCTDIR/"
+    if [ "$1" = "/" ] ; then
+        rdir="/"
+        subst "s|^$rdir|$PRODUCTDIR/|" $SPEC
+        subst "s|^\"$rdir|\"$PRODUCTDIR/|" $SPEC
+        pack_dir "$PRODUCTDIR"
+        return
+    fi
     subst "s|%dir $rdir|%dir $PRODUCTDIR|" $SPEC
     subst "s|%dir \"$rdir|%dir \"$PRODUCTDIR|" $SPEC
     subst "s|\(%config.*\) $rdir|\1 $PRODUCTDIR|" $SPEC
