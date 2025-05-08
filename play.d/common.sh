@@ -205,7 +205,8 @@ get_github_url()
     local url="$1"
     local asset_name="$2"
 
-    echo "$asset_name" | grep -q "\.[*?]" && fatal "Only glob symbols * and ? are supported. Don't use regexp! Input string: $asset_name"
+    # See tdesktop.*.tar.gz
+    #echo "$asset_name" | grep -q "\.[*?]" && fatal "Only glob symbols * and ? are supported. Don't use regexp! Input string: $asset_name"
     wc="$(__convert_glob__to_regexp "$asset_name")"
 
     if [ "$3" == "prerelease" ] ; then
