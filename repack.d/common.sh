@@ -627,6 +627,15 @@ get_desktop_value()
 }
 
 # copied from epm play common
+
+s_pkg_enough()
+{
+    local PKG="$1"
+    local needed="$2"
+    # epm print enough package version "$PKG" "$needed"
+    epm status --installed "$PKG" "$needed"
+}
+
 # arg: minimal require of libstdc++ version
 # return true is we have such version
 is_stdcpp_enough()
