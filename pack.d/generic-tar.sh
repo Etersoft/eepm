@@ -25,17 +25,17 @@ PRODUCT="$(echo "$alpkg" | sed -e "s|[-_.]$VERSION.*||")"
     #    VERSION="$(echo "$woext" " | sed -e "s|^$PKGNAME[-_.]||")"
     #fi
 
-pkgtype="$(erc type $alpkg)"
-PKGNAME=$PRODUCT-$VERSION.$pkgtype
+pkgtype="$(erc type "$alpkg")"
+PKGNAME="$PRODUCT-$VERSION.$pkgtype"
 if [ "$pkgtype" = "tar" ] || [ "$pkgtype" = "tar.gz" ] || [ "$pkgtype" = "tgz" ] ; then
     # just rename supported formats
     if [ "$alpkg" != "$PKGNAME" ] ; then
-        mv $alpkg $PKGNAME
+        mv "$alpkg" "$PKGNAME"
     fi
 else
     # converts directly unsupported formats
-    PKGNAME=$PRODUCT-$VERSION.tar
-    erc repack $alpkg $PKGNAME || fatal
+    PKGNAME="$PRODUCT-$VERSION.tar"
+    erc repack "$alpkg" "$PKGNAME" || fatal
 fi
 
 #if [ "$alpkg" != "$newalpkg" ] ; then
