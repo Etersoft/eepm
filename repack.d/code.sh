@@ -15,9 +15,10 @@ move_to_opt
 add_electron_deps
 
 fix_desktop_file /usr/share/code/code
+# TODO:
 
 rm $BUILDROOT/usr/bin/code
 add_bin_link_command $PRODUCT $PRODUCTDIR/bin/code
-add_bin_link_command $PRODUCTCUR $PRODUCTDIR/bin/code
+add_bin_link_command $PRODUCTCUR $PRODUCT
 
 subst "s|^Group:.*|Group: Development/Tools|" $SPEC
