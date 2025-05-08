@@ -33,10 +33,10 @@ is_stdcpp_enough "12.1" && remove_file $PRODUCTDIR/office6/libstdc++.so*
 # hack to fix bug somewhere in linking
 ignore_lib_requires "libc++.so"
 
-# QT is prebuilded
-#ignore_lib_requires "libQtCore.so.4 libQtNetwork.so.4 libQtXml.so.4"
+# avoid dependency to Qt 4
 remove_file $PRODUCTDIR/office6/librpcwpsapi.so
 remove_file $PRODUCTDIR/office6/librpcwppapi.so
+remove_file $PRODUCTDIR/office6/librpcetapi.so
 
 # WPS Office provide libuof.so()(64bit) itself
 ignore_lib_requires "libuof.so"
