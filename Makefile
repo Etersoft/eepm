@@ -42,6 +42,9 @@ install_common:
 	mkdir -p $(DESTDIR)$(datadir)/zsh/Completion/Linux/
 	install -m 0644 zsh_completion/_eepm $(DESTDIR)$(datadir)/zsh/Completion/Linux/
 
+	mkdir -p $(DESTDIR)$(datadir)/fish/vendor_completions.d/
+	install -m 0644 fish_completion/eepm.fish $(DESTDIR)$(datadir)/fish/vendor_completions.d/
+
 	# shebang.req.files
 	chmod a+x $(DESTDIR)$(pkgdatadir)/serv-*
 	chmod a+x $(DESTDIR)$(pkgdatadir)/epm-*
