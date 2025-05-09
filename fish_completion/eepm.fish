@@ -14,7 +14,7 @@ end
 
 function __eepm_list_available_packages
     set -l cur (commandline -ct)
-    if string match -q -r '^\.{0,2}/' -- $cur
+    if string match -q -r '^(~|\.{0,2}/)' -- $cur
         __fish_complete_path "$cur"
     else
         epm list --available --quiet --short --direct | grep "^$cur"
