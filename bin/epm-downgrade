@@ -21,6 +21,7 @@ load_helper epm-check_updated_repo
 
 __epm_add_alt_apt_downgrade_preferences()
 {
+    set_sudo
     [ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists"
     cat <<EOF | sudocmd tee /etc/apt/preferences
 # classic repo
@@ -48,6 +49,7 @@ EOF
 # See https://wiki.debian.org/ru/AptPreferences
 __epm_add_deb_apt_downgrade_preferences()
 {
+    set_sudo
     [ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists"
     info "Running with /etc/apt/preferences:"
     cat <<EOF | sudorun tee /etc/apt/preferences
@@ -72,6 +74,7 @@ __epm_remove_apt_downgrade_preferences()
 
 epm_downgrade()
 {
+    arg="$1"
     local CMD
 
     # it is useful for first time running
@@ -88,6 +91,17 @@ epm_downgrade()
 
     case $BASEDISTRNAME in
     alt)
+        if [ "$arg" = "archive" ] ; then
+            __epm_add_alt_apt_downgrade_preferences || return
+            docmd epm repo save
+            docmd epm repo set archive "$2"
+            load_helper epm-Upgrade
+            shift 2
+            epm_Upgrade "$2"
+            docmd epm repo restore
+            __epm_remove_apt_downgrade_preferences
+            return
+        fi
         # pass pkg_filenames too
         if [ -n "$pkg_names" ] ; then
             __epm_add_alt_apt_downgrade_preferences || return
