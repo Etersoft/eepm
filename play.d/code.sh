@@ -36,4 +36,4 @@ fi
 install_pkgurl
 
 echo
-echo "NOTE: VS Code is a proprietary build. We recommend you to use open source editors: Codium, Atom."
+echo "NOTE: VS Code is a proprietary build. You can use follow open source editors: Zed, Pulsar, Codium."
