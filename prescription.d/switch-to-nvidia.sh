@@ -55,6 +55,11 @@ if [ "$nvidia_installed" = false ] || [ -n "$force" ]; then
         rm -v "/etc/X11/xorg.conf"
     fi
 
+    # Чистим xorg конфиг и блеклисты от switch-to-nouveau
+    for file in /etc/modprobe.d/blacklist-nouveau-x11.conf /etc/X11/xorg.conf.d/10-monitor.conf; do
+        [ -f "$file" ] && rm -f "$file"
+    done
+
     epm install --skip-installed nvidia-settings nvidia-vaapi-driver ocl-nvidia libcuda vulkan-tools libnvidia-encode libnvidia-ngx libnvidia-opencl libvulkan1 nvidia-modprobe \
         nvidia-xconfig libvulkan1 libcudadebugger libnvcuvid libnvidia-api \
         libnvidia-fbc libnvidia-ml libnvidia-nvvm libnvidia-ptxjitcompiler libnvoptix nvidia-smi libxnvctrl0
