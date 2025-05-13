@@ -11,42 +11,48 @@ exit
 [ "$(epm print info -s)" = "alt" ] || fatal "Only ALTLinux is supported"
 
 # https://www.altlinux.org/Nvidia#Смена_открытых_драйверов_на_проприетарные[1]
+used_kflavour () {
+    if [ $(uname -r | grep "def") ] ; then
+		USED_KFLAVOUR=$(uname -r | awk -F'-' '{print $2 "-" $3}')
+    else
+		USED_KFLAVOUR=$(uname -r | awk -F'-' '{print $2}')
+    fi
+}
 
-epm update || exit
-epm update-kernel || exit
-# epm full-upgrade || exit
+epm update || fatal
+epm update-kernel || fatal
 
-# TODO: проверить, совпадает ли ядро
-# reboot now
+if ! epm update-kernel --check-run-kernel ; then
+    fatal
+fi
 
-# TODO
-#kernel-modules-drm-nouveau-std-def   (un-def)
-#xorg-drv-nouveau
-#xorg-dri-nouveau
+used_kflavour
+epm install --skip-installed kernel-modules-drm-nouveau-$USED_KFLAVOUR xorg-drv-nouveau i586-xorg-drv-nouveau || fatal
 
 echo "Set nouveau in /etc/X11/xorg.conf.d/10-monitor.conf"
 a= xsetup-monitor -d nouveau
 
-# TODO
-grep nvidia /etc/X11/xorg.conf.d/*.conf /etc/X11/xorg.conf
+# Clean alterator blacklist, epm files and nvidia_glx_common xorg config
+for file in /etc/modprobe.d/blacklist-alterator-x11 /etc/modprobe.d/blacklist-nvidia-x11.conf /etc/X11/xorg.conf.d/09-nvidia.conf /etc/modprobe.d/nvidia_memory_allocation.conf /etc/udev/rules.d/99-nvidia.rules; do
+    [ -f "$file" ] && rm -f "$file"
+done
 
-#/etc/modprobe.d/blacklist-nvidia-x11.conf и записываем туда:[1]
-#blacklist nvidia
-#blacklist nouveau
+# Prevert nvidia for load
+cat > /etc/modprobe.d/blacklist-nouveau-x11.conf <<'EOF'
+blacklist nvidia
+blacklist nvidia_drm
+blacklist nvidia_uvm
+blacklist nvidia_modeset
+blacklist i2c_nvidia_gpu
+alias nouveau off
+alias nvidia off
+alias nvidia_drm off
+alias nvidia_uvm off
+alias nvidia_modeset off
+alias i2c_nvidia_gpu off
+EOF
 
-# TODO
-# rm -f /etc/modprobe.d/blacklist-alterator-x11
-# или наоборот записываем в него вместо блокировки nouveau , блокировку nvidia
-
-# TODO
-a= x11presetdrv
-a= ldconfig
-
-# И не обязательно перезагружаться?
-a= make-initrd -k $(uname -r)
-
-# /usr/bin/nvidia-clean-driver
-
-# TODO: https://www.altlinux.org/Nvidia#Замена_драйверов_nouveau/nvidia_"на_лету"
+a= make-initrd
+a= update-grub
 
 echo "Done. Just you need reboot your system to use open source nouveau drivers for NVIDIA cards."
