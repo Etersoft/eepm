@@ -35,7 +35,6 @@ set_backend()
 
 	if [ -n "$use_7z" ] || ! have_patool ; then
 		# TODO: try install patool and p7zip
-		is_command 7za && HAVE_7Z='7za'
 		if ! is_command $HAVE_7Z ; then
 			# 7-zip
 			is_command 7zz && HAVE_7Z='7zz'
@@ -43,6 +42,10 @@ set_backend()
 		if ! is_command $HAVE_7Z ; then
 			# reduced p7-zip
 			is_command 7zr && HAVE_7Z='7zr'
+		fi
+		if ! is_command $HAVE_7Z ; then
+			# 7-zip Standalone/Alternative
+			is_command 7za && HAVE_7Z='7za'
 		fi
 		is_command $HAVE_7Z || fatal "Could not find any patool or 7-zip backend. Please install p7zip package and retry."
 	fi
