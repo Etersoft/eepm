@@ -71,7 +71,11 @@ fi
 
 
 if [ "$arch" = "x86" ] ; then
-    PKGNAMES="$PKGNAMES $PKGCOMMON"
+    if [ "$MAIN" = "wine-etersoft" ] ; then
+        PKGNAMES="$PKGNAMES32 $PKGCOMMON"
+    else
+        PKGNAMES="$PKGNAMES $PKGCOMMON"
+    fi
     epm install $PKGNAMES || exit
     exit
 fi
@@ -89,7 +93,7 @@ if [ "$arch" = "x86_64" ] ; then
     epm install $PKGNAMES || exit
     # for non wow64 packages install 32 bit part
     if epm ql $MAIN | grep -q "/i386-windows/" ; then
-        echo "Run epm play wine --only-i586 if you need support for 32 bit only wine prefixes."
+        echo "Run also epm play wine --only-i586 if you need support for 32 bit only wine prefixes."
     else
         epm install $PKGNAMES32 || exit
         # Доставляем пропущенные модули (подпакеты) для установленных 64-битных
