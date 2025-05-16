@@ -57,7 +57,7 @@ remove_file()
     local file_pattern="$1"
     [ -n "$file_pattern" ] || return
 
-    for file in $(eval echo "$BUILDROOT$file_pattern"); do
+    for file in $BUILDROOT$file_pattern ; do
         [ -e "$file" ] || [ -L "$file" ] || continue
 
         rm -v "$file"
