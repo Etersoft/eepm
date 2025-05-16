@@ -303,7 +303,10 @@ get_next_release()
 
 __do_upgrade()
 {
-    docmd epm $non_interactive $force_yes upgrade || fatal "Check the errors and run '# $0' again"
+    docmd epm $non_interactive $force_yes upgrade && return
+    docmd epm $non_interactive $force_yes fix
+    docmd epm $non_interactive $force_yes upgrade && return
+    fatal "Check the errors and run '# $0' after fix."
 }
 
 # TODO: install new conf without signs?
