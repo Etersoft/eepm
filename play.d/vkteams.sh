@@ -10,9 +10,6 @@ URL="https://biz.mail.ru/teams"
 
 warn_version_is_not_supported
 
-# TODO:
-VERSION="1.0"
+PKGURL="https://vkteams-www.hb.bizmrg.com/linux/x64/vkteams.deb"
 
-PKGURL="https://vkteams-www.hb.bizmrg.com/linux/x64/vkteams.tar.xz"
-
-install_pack_pkgurl "$VERSION"
+install_pkgurl
