@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.27
+Version: 3.64.28
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -141,6 +141,41 @@ make -C po
 %endif
 
 %changelog
+* Sat May 17 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.28-alt1
+- epm play common.sh: rewrite get_github_tag() to fix prerelease handling
+- epm play hiddify: allow use prerelease
+- epm play occt: add checking for glibc 2.34 or above
+- epm-release-upgrade: update kernel to 6.12 for p11 upgrade
+- epm repack Telegram.sh: add telegram provides
+- epm play wpsoffice: separate to cn and global version (eterbug #17812)
+- epm play: added brew (eterbug #18290)
+- epm play wpsoffice: drop qt4 dependency  (eterbug #17812)
+- epm repack code.sh: fix linking
+- epm play: add JetBrains.Rider
+- epm play: add Goland
+- epm play: add RustRover
+- epm play: add RubyMine
+- epm play: add DataGrip
+- epm play: add SMath Studio
+- init fish completion
+- epm repack: move root files to /opt/productdir
+- epm downgrade: add archive YYYY-MM-DD support before packages
+- epm play: added Prism Launcher (eterbug #18292)
+- epm play: added PolyMC (eterbug #18292)
+- epm play code: update open source replacements (ALT bug 53834)
+- epm play: add pulsar
+- epm play: add localsend
+- epm play: add jellyfin-server (eterbug #18293)
+- epm play: add jellyfin-web (eterbug #18293)
+- epm play: add deepseek-desktop
+- epm prescription switch-to-nouveau: rewrite (eterbug #18297)
+- epm prescription switch-to-nvidia: drop blacklist from switch to nouveau (eterbug #18297)
+- epm prescription wine: fix install on 32 bit system
+- erc-sh-archive: Use 7za only if there is no 7z (eterbug #18296)
+- epm-release_upgrade: run epm fix if epm upgrade is failed
+- epm repack.d/common.sh: fix remove_file for wildcard
+- epm play vkteams: switch to deb package epm repack vkteams: drop Qt plugins depend on missed libs
+
 * Mon May 05 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.27-alt1
 - epm repo set: add confirm, improve checking
 - epm play: add clash-verge
