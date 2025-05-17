@@ -170,6 +170,14 @@ snap_get_pkgurl()
     eget -O- -H Snap-Device-Series:16 https://api.snapcraft.io/v2/snaps/info/$SNAPNAME | epm --inscript tool json -b | grep -A 8 "$ARCH" | grep '\["channel-map",[0-9],"download","url"\]' | head -n1 | sed 's/.*"\(https:\/\/.*\)".*/\1/'
 }
 
+snap_get_version()
+{
+    local SNAPNAME="$1"
+    ARCH="$(epm print info --debian-arch)"
+    is_url "$SNAPNAME" && SNAPNAME="$(basename "$SNAPNAME")"
+    eget -O- -H Snap-Device-Series:16 https://api.snapcraft.io/v2/snaps/info/$SNAPNAME | parse_json_value '["channel-map",0,"version"]'
+}
+
 # return version only for the first package
 get_latest_version()
 {
