@@ -132,36 +132,64 @@ epm_install_alt_kernel_module()
 
     local kflist=''
     local kmplist=''
-    local kmf km kf
+    local kmf module flavour tmp
 
     # fill kernel flavour list
-    for kmf in $*; do
-        km="$(echo "$kmf" | cut -d- -f1)"
-        kf="$(echo "$kmf" | cut -d- -f2,3)"
-        # use current flavour as default
-        [ "$km" = "$kf" ] && kf="$(get_current_kernel_flavour)"
-        kflist="$kflist $kf"
+    for kmf in "$@"; do
+        case "$kmf" in
+            # full package with explicit version: kernel-modules-<mod>-<ver>
+            kernel-modules-*-*[0-9]*)
+                tmp=${kmf#kernel-modules-}      # tmp="<mod>-<ver>"
+                flavour=${tmp##*-}              # take version part
+                ;;
+            # full package without version: kernel-modules-<mod>
+            kernel-modules-*)
+                flavour=$(get_current_kernel_flavour)
+                ;;
+            # short name with version: <mod>-<ver>
+            *-[0-9]*)
+                flavour=${kmf##*-}
+                ;;
+            # everything else — module name only
+            *)
+                flavour=$(get_current_kernel_flavour)
+                ;;
+        esac
+        kflist="$kflist $flavour"
     done
 
     # firstly, update all needed kernels (by flavour)
-    for kf in $(estrlist uniq $kflist) ; do
+    for flavour in $(estrlist uniq $kflist); do
         info
-        docmd epm update-kernel -t $kf || exit
+        docmd epm update-kernel -t "$flavour" || exit
     done
 
     # skip install modules if there are no installed kernels (may be, a container)
-    epm installed "kernel-image-$kf" || return 0
+    epm installed "kernel-image-$flavour" || return 0
 
     # make list for install kernel modules
-    for kmf in $*; do
-        km="$(echo "$kmf" | cut -d- -f1)"
-        kf="$(echo "$kmf" | cut -d- -f2,3)"
-        # use current flavour as default
-        [ "$km" = "$kf" ] && kf="$(get_current_kernel_flavour)"
-        kvf="$(get_latest_kernel_rel $kf)"
-        #kmplist="$kmplist kernel-modules-$km-$kf"
-        # install kernel module for latest installed kernel
-        kmplist="$kmplist kernel-modules-$km-$kvf"
+    for kmf in "$@"; do
+        case "$kmf" in
+            kernel-modules-*-*[0-9]*)
+                tmp=${kmf#kernel-modules-}
+                module=${tmp%-*}
+                flavour=${tmp##*-}
+                ;;
+            kernel-modules-*)
+                module=${kmf#kernel-modules-}
+                flavour=$(get_current_kernel_flavour)
+                ;;
+            *-[0-9]*)
+                module=${kmf%-*}
+                flavour=${kmf##*-}
+                ;;
+            *)
+                module=$kmf
+                flavour=$(get_current_kernel_flavour)
+                ;;
+        esac
+        kvf=$(get_latest_kernel_rel "$flavour")
+        kmplist="$kmplist kernel-modules-$module-$kvf"
     done
 
     # secondly, install module(s)
