@@ -34,7 +34,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.27"
+export EPMVERSION="3.64.28"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -3395,6 +3395,7 @@ epm_desktop() {
 
 __epm_add_alt_apt_downgrade_preferences()
 {
+    set_sudo
     [ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists"
     cat <<EOF | sudocmd tee /etc/apt/preferences
 Package: *
@@ -3417,6 +3418,7 @@ EOF
 
 __epm_add_deb_apt_downgrade_preferences()
 {
+    set_sudo
     [ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists"
     info "Running with /etc/apt/preferences:"
     cat <<EOF | sudorun tee /etc/apt/preferences
@@ -3441,6 +3443,7 @@ __epm_remove_apt_downgrade_preferences()
 
 epm_downgrade()
 {
+    arg="$1"
     local CMD
 
     # it is useful for first time running
@@ -3456,6 +3459,16 @@ epm_downgrade()
 
     case $BASEDISTRNAME in
     alt)
+        if [ "$arg" = "archive" ] ; then
+            __epm_add_alt_apt_downgrade_preferences || return
+            docmd epm repo save
+            docmd epm repo set archive "$2"
+            shift 2
+            epm_Upgrade "$2"
+            docmd epm repo restore
+            __epm_remove_apt_downgrade_preferences
+            return
+        fi
         # pass pkg_filenames too
         if [ -n "$pkg_names" ] ; then
             __epm_add_alt_apt_downgrade_preferences || return
@@ -9426,7 +9439,10 @@ get_next_release()
 
 __do_upgrade()
 {
-    docmd epm $non_interactive $force_yes upgrade || fatal "Check the errors and run '# $0' again"
+    docmd epm $non_interactive $force_yes upgrade && return
+    docmd epm $non_interactive $force_yes fix
+    docmd epm $non_interactive $force_yes upgrade && return
+    fatal "Check the errors and run '# $0' after fix."
 }
 
 __switch_alt_to_distro()
@@ -9524,7 +9540,7 @@ __switch_alt_to_distro()
             docmd epm install rpm apt $(get_fix_release_pkg "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
             __check_system "$TO"
             # will update to kernel 6.6
-            docmd epm update-kernel || fatal
+            docmd epm update-kernel -t 6.12 || fatal
             ;;
         "c10f1 c10f2"|"c10f2 c10f3")
             info "Upgrade all packages to current $FROM repository"
@@ -13883,7 +13899,7 @@ EOF
             RES=$?
             clean_store_output
             return $RES ;;
-        dnf-rpm)
+        dnf-rpm|dnf5-rpm)
             set_sudo
             store_output sudocmd dnf --assumeno install $filenames
             __check_yum_result $RC_STDOUT $?
@@ -14784,7 +14800,7 @@ epm_upgrade_alt_tasks()
     [ -n "$verbose" ] && info "Packages to upgrade: $installlist"
 
     if [ -z "$installlist" ] ; then
-        warning 'There is no installed packages for upgrade from task $*'
+        warning 'There is no installed packages for upgrade from task' "$*"
         return 22
     fi
 
