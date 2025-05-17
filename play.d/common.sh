@@ -533,12 +533,7 @@ is_repacked_packages $REPOPKGNAME || exit 0
 # hack for hplip
 [ "$PKGNAME" = "hplip-plugin" ] && VERSION="*"
 
-if [ -z "$VERSION" ] && [ -z "$force" ] && [ -n "$EGET_IPFS_DB" ] && [ -z "$latest" ] ; then
-    # IPFS is using, use known version
-    VERSION="$(get_latest_version $PKGNAME)"
-fi
-
-if [ -z "$VERSION" ] && [ -z "$force" ]  && [ -z "$latest" ] ; then
+if [ -z "$VERSION" ] && [ -z "$force" ] && [ -z "$latest" ] ; then
     # by default use latest known version to install
     VERSION="$(get_latest_version $PKGNAME)"
 fi
