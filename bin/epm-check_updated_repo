@@ -155,6 +155,7 @@ update_repo_if_needed()
 save_installed_packages()
 {
     [ -d $epm_vardir ] || return 0
+    set_sudo
     estrlist list "$@" | sudorun tee $epm_vardir/installed-via-epm >/dev/null
 }
 

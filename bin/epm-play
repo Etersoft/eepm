@@ -29,6 +29,7 @@ __save_installed_app()
 {
     [ -d "$epm_vardir" ] || return 0
     __check_installed_app "$1" && return 0
+    set_sudo
     echo "$1" | sudorun tee -a $epm_vardir/installed-app >/dev/null
 }
 
@@ -36,6 +37,7 @@ __remove_installed_app()
 {
     [ -s $epm_vardir/installed-app ] || return 0
     local i
+    set_sudo
     for i in $* ; do
         sudorun sed -i "/^$i$/d" $epm_vardir/installed-app
     done
