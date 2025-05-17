@@ -32,15 +32,6 @@ Use: epm prescription waydroid [option]
     exit
 }
 
-# TODO: fix used_kflavour export in epm update-kernel --check-run-kernel
-used_kflavour () {
-    if [ $(uname -r | grep "def") ] ; then
-		USED_KFLAVOUR=$(uname -r | awk -F'-' '{print $2 "-" $3}')
-    else
-		USED_KFLAVOUR=$(uname -r | awk -F'-' '{print $2}')
-    fi
-}
-
 waydroid_install () {
 	epm update-kernel --add-kernel-options psi1
 
@@ -51,7 +42,7 @@ waydroid_install () {
 		fatal
 	fi
 
-	used_kflavour
+	USED_KFLAVOUR="$(epm update-kernel --used-kflavour)"
 	epm install --skip-installed kernel-modules-anbox-$USED_KFLAVOUR libgbinder1 waydroid || fatal
 
 	a= update-grub

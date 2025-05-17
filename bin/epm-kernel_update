@@ -64,7 +64,7 @@ case $1 in
 
     '--used-kflavour' )
         used_kflavour
-        info 'You used $USED_KFLAVOUR kernel kflavour'
+        [ -n "$verbose" ] && info 'You used $USED_KFLAVOUR kernel kflavour' || echo "$USED_KFLAVOUR"
         return ;;
 
     '--check-run-kernel' )

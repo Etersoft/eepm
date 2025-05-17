@@ -11,13 +11,6 @@ exit
 [ "$(epm print info -s)" = "alt" ] || fatal "Only ALTLinux is supported"
 
 # https://www.altlinux.org/Nvidia#Смена_открытых_драйверов_на_проприетарные[1]
-used_kflavour () {
-    if [ $(uname -r | grep "def") ] ; then
-		USED_KFLAVOUR=$(uname -r | awk -F'-' '{print $2 "-" $3}')
-    else
-		USED_KFLAVOUR=$(uname -r | awk -F'-' '{print $2}')
-    fi
-}
 
 epm update || fatal
 epm update-kernel || fatal
@@ -26,7 +19,8 @@ if ! epm update-kernel --check-run-kernel ; then
     fatal
 fi
 
-used_kflavour
+USED_KFLAVOUR="$(epm update-kernel --used-kflavour)"
+# TODO: fix to use just epmi kernel-modules-drm-nouveau
 epm install --skip-installed kernel-modules-drm-nouveau-$USED_KFLAVOUR xorg-drv-nouveau i586-xorg-drv-nouveau || fatal
 
 echo "Set nouveau in /etc/X11/xorg.conf.d/10-monitor.conf"
