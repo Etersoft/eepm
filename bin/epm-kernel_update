@@ -21,7 +21,7 @@ load_helper epm-check_updated_repo
 load_helper epm-sh-warmup
 
 EFI=$(a="" bootctl -p 2>/dev/null)
-sdboot_loader_id=$(a="" bootctl status 2>/dev/null | grep -oP '(?<=id: ).*')
+sdboot_loader_id=$(a="" bootctl status 2>/dev/null | grep -oP '(?<=id: ).*') #'
 
 if [ -f "$EFI/loader/entries/$sdboot_loader_id" ]; then
     entry_file="$EFI/loader/entries/$sdboot_loader_id"
@@ -155,7 +155,7 @@ check_run_kernel() {
         echo "The newest installed ${USED_KFLAVOUR} kernel is running."
         return 0
     else
-        echo "The system has a newer ${USED_KFLAVOUR} kernel."
+        echo "The system has a newer ${USED_KFLAVOUR} kernel. You can reboot to run it."
         return 1
     fi
 }
