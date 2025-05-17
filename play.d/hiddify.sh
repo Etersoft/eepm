@@ -7,7 +7,7 @@ URL="https://github.com/hiddify/hiddify-next"
 
 . $(dirname $0)/common.sh
 
-if ! is_glibc_enough 2.32 ; then
+if ! is_glibc_enough 2.34 ; then
 	fatal "Версия glibc слишком старая, обновите свою систему"
 fi
 
