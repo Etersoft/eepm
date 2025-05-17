@@ -70,9 +70,7 @@ filter_from_requires '\\/lib\\/ld-linux-aarch64.so.1'
 
 cd $BUILDROOT$PRODUCTDIR/ || exit
 
-# FIXME: improve * support in remove_file
-file=$(basename $(ls $BUILDROOT$PRODUCTDIR/plugins/tailwindcss/server/node.napi.musl-*.node))
-[ -n "$file" ] && remove_file $PRODUCTDIR/plugins/tailwindcss/server/$file
+remove_file "$PRODUCTDIR/plugins/tailwindcss/server/node.napi.musl-*.node"
 
 subst 's|%dir "'$PRODUCTDIR'/"||' $SPEC
 subst 's|%dir "'$PRODUCTDIR'/bin/"||' $SPEC
