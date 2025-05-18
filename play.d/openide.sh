@@ -19,7 +19,12 @@ case "$arch" in
 esac
 
 if [ "$VERSION" = "*" ]; then
-    VERSION=$(eget -q -O- https://download.openide.ru/ | grep -B1 "openIDE.*tar\.gz" | grep -o "[0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+" | tail -n1)
+    # stable version
+    VERSION="$(eget -q -O- https://openide.ru/download/ | grep "Сборка:" | sed -e "s|.*Сборка:</span>[[:space:]]||" -e "s|</p>.*||")"
+    if [ -z "$VERSION" ] ; then
+        # latest may be unstable
+        VERSION="$(eget -q -O- https://download.openide.ru/ | grep -B1 "openIDE.*tar\.gz" | grep -o "[0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+" | tail -n1)"
+    fi
 fi
 
 PKGURL="https://download.openide.ru/$VERSION/openIDE-$VERSION${arch}.tar.gz"
