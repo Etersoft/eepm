@@ -20,6 +20,7 @@ case "$arch" in
         ;;
 esac
 
+# TODO: вообще-то vivaldi только текущую версию поддерживает, остальные разве что через --ipfs
 # can't use wildcard for -1
 [ "$VERSION" = "*" ] || VERSION="$VERSION-1"
 
