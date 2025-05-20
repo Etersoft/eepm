@@ -51,7 +51,7 @@ __use_url_install()
         pacman)
             true
             ;;
-        yum-rpm|dnf-rpm)
+        yum-rpm|dnf-rpm|dnf5-rpm)
             true
             ;;
         #zypper-rpm)
@@ -294,7 +294,7 @@ epm_download()
         assure_exists yumdownloader yum-utils
         sudocmd yumdownloader $*
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         sudocmd dnf download $*
         ;;
     urpm-rpm)

@@ -224,7 +224,7 @@ epm_remove_nonint()
         yum-rpm)
             sudocmd yum -y remove $@
             return ;;
-        dnf-rpm)
+        dnf-rpm|dnf5-rpm)
             sudocmd dnf remove --assumeyes $@
             return ;;
         zypper-rpm)

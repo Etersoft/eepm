@@ -604,7 +604,7 @@ epm_release_upgrade()
         showcmd rpm -Uvh http://mirror.yandex.ru/fedora/linux/releases/16/Fedora/x86_64/os/Packages/fedora-release-16-1.noarch.rpm
         showcmd epm Upgrade
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         if [ "$DISTRNAME/$DISTRVERSION" = "CentOS/8" ] ; then
             if [ "$1" = "RockyLinux" ] ; then
                 info "https://github.com/rocky-linux/rocky-tools/tree/main/migrate2rocky/"

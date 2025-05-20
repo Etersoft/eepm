@@ -126,7 +126,7 @@ case $PMTYPE in
     apt-dpkg)
         sudocmd apt-mark unhold "$@"
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         __dnf_assure_versionlock
         sudocmd dnf versionlock delete "$@"
         ;;
@@ -161,7 +161,7 @@ case $PMTYPE in
     apt-dpkg)
         docmd apt-mark showhold "$@"
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         # there is no hold entries without versionlock
         __dnf_is_supported_versionlock || return 0
         __dnf_assure_versionlock
@@ -192,7 +192,7 @@ epm_mark_checkhold()
 {
 # workaround against epm assure questions
 case $PMTYPE in
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         # there is no hold entries without versionlock
         __dnf_is_supported_versionlock || return 1
         __dnf_assure_versionlock
@@ -221,7 +221,7 @@ case $PMTYPE in
     apt-dpkg)
         sudocmd apt-mark auto "$@"
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         sudocmd dnf mark remove "$@"
         ;;
     pacman)
@@ -252,7 +252,7 @@ case $PMTYPE in
     apt-dpkg)
         sudocmd apt-mark manual "$@"
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         sudocmd dnf mark install "$@"
         ;;
     pacman)
@@ -283,7 +283,7 @@ case $PMTYPE in
     apt-dpkg)
         sudocmd apt-mark showauto "$@"
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         sudocmd dnf repoquery --unneeded
         ;;
     *)
@@ -307,7 +307,7 @@ case $PMTYPE in
     apt-dpkg)
         sudocmd apt-mark showmanual "$@"
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         sudocmd dnf repoquery --userinstalled
         ;;
     *)

@@ -62,7 +62,7 @@ epm_install_files_rpm()
     info
 
     case $PMTYPE in
-        yum-rpm|dnf-rpm)
+        yum-rpm|dnf-rpm|dnf5-rpm)
             YUMOPTIONS=--nogpgcheck
             # use install_names
             ;;
