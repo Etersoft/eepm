@@ -33,7 +33,7 @@ Use: epm prescription waydroid [option]
 }
 
 waydroid_install () {
-	epm update-kernel --add-kernel-options psi1
+	epm update-kernel --add-kernel-options psi=1
 
 	epm update || fatal
 	epm update-kernel || fatal
