@@ -129,12 +129,13 @@ case $PMTYPE in
         sudocmd aptitude update || return
         ;;
     yum-rpm)
-        # just skipped
-        [ -z "$verbose" ] || info "update command is stubbed for yum"
+        sudocmd yum makecache
         ;;
-    dnf-rpm|dnf5-rpm)
-        # just skipped
-        [ -z "$verbose" ] || info "update command is stubbed for dnf"
+    dnf-rpm)
+        sudocmd dnf makecache
+        ;;
+    dnf5-rpm)
+        sudocmd dnf5 makecache
         ;;
     urpm-rpm)
         sudocmd urpmi.update -a
