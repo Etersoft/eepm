@@ -123,10 +123,14 @@ case $PMTYPE in
         docmd verifytree
         ;;
     dnf-rpm)
-        epm install --skip-installed yum-utils createrepo || fatal
+        epm install --skip-installed createrepo || fatal
         docmd mkdir -pv "$@"
-        docmd createrepo -v -s md5 "$@"
-        docmd verifytree
+        docmd createrepo -v --update "$@"
+        ;;
+    dnf5-rpm)
+        epm install --skip-installed createrepo_c || fatal
+        docmd mkdir -pv "$@"
+        docmd createrepo_c -v --update "$@"
         ;;
     eoget)
         docmd eoget index "$@"
