@@ -47,7 +47,11 @@ waydroid_install () {
 
 	a= update-grub
 
-	echo "Waydroid has been installed"
+	echo "binder_linux" > /etc/modules-load.d/waydroid.conf
+
+	epm prescription waydroid --init || fatal
+
+	echo "Done. Just you need reboot your system to use waydroid."
 }
 
 waydroid_select_gpu () {
