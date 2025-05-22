@@ -14,7 +14,7 @@ SOURL=$(eget --list --latest "https://fplustech.ru/product/mnogofunktsionalnoe-u
 
 PKGURL="${SOURL}%20для%20Linux.zip"
 
-install_pack_pkgurl
+install_pack_pkgurl || exit
 
 echo "Note: run
 # serv cups restart
