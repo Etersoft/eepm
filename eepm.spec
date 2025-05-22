@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.28
+Version: 3.64.29
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -141,6 +141,26 @@ make -C po
 %endif
 
 %changelog
+* Thu May 22 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.29-alt1
+- epm play hiddify: up required glibc to 2.34
+- distr_info: detect ALT Sisyphus as Sisyphus
+- epm play: add missed warn_version_is_not_supported for snap source
+- epm play common.sh: don't get latest version twice for IPFS
+- epm play: add blender
+- epm-install-alt: fixed parsing of module names and kernel flavors (eterbug #18303)
+- epm play openide: get latest stable version from the main page
+- epm play: add cnijfilter2
+- epm play aksusbd: updated to 10.13
+- epm ungoogled-chromium: drop old glibc support (by upstream), download directly (IPFS compatible)
+- epm play: added ventoy (eterbug #18304)
+- epm update: run dnf makecache
+- epm-repoindex: update for dnf
+- add missed dnf5-support
+- epm prescription waydroid: fix binder_linux load
+- erc: add squashfs support
+- erc: unpack exe to subdir, add dll unpacking support
+- epm repo change: don't call repofix before --list
+
 * Sat May 17 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.28-alt1
 - epm play common.sh: rewrite get_github_tag() to fix prerelease handling
 - epm play hiddify: allow use prerelease
