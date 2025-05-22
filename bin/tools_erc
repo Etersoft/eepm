@@ -83,7 +83,16 @@ extract_archive()
 
 	# TODO: move to patool
 	if [ "$type" = "exe" ] ; then
-		docmd $HAVE_7Z x "$arc"
+		local subdir="$(basename "$arc" .exe)"
+		mkdir -p "$subdir" && cd "$subdir" || fatal
+		docmd $HAVE_7Z x ../"$arc"
+		exit
+	fi
+
+	if [ "$type" = "dll" ] ; then
+		local subdir="$(basename "$arc" .dll)"
+		mkdir -p "$subdir" && cd "$subdir" || fatal
+		docmd $HAVE_7Z x ../"$arc"
 		exit
 	fi
 
