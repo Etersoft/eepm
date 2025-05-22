@@ -79,6 +79,7 @@ zstd
 exe
 AppImage
 appimage
+squashfs
 EOF
 }
 

@@ -94,6 +94,13 @@ extract_archive()
 		exit
 	fi
 
+	if [ "$type" = "squashfs" ] ; then
+		local subdir="$(basename "$arc" .squashfs)"
+		mkdir -p "$subdir" && cd "$subdir" || fatal
+		docmd $HAVE_7Z x ../"$arc"
+		exit
+	fi
+
 	if have_patool ; then
         docmd patool $verbose extract "$arc" "$@"
 		return
