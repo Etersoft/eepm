@@ -237,8 +237,7 @@ __epm_repochange_alt()
 
 epm_repochange()
 {
-
-    epm_repofix
+    [ "$1" = "--list" ] || epm_repofix
     case $BASEDISTRNAME in
         "alt")
             __epm_repochange_alt "$@"
