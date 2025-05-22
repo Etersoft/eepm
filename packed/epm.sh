@@ -34,7 +34,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.28"
+export EPMVERSION="3.64.29"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1767,9 +1767,9 @@ epm_assure()
 
     __epm_assure_checking $CMD $PACKAGE $PACKAGEVERSION && return 0
 
-    info 'Installing appropriate package for $CMD command...'
     __epm_need_update $PACKAGE $PACKAGEVERSION || return 0
 
+    info 'Installing appropriate package for $CMD command...'
     # can't be used in epm ei case
     #docmd epm --auto install $PACKAGE || return
     (repack='' pkg_names="$PACKAGE" pkg_files='' pkg_urls='' epm_install ) || return
@@ -2821,6 +2821,7 @@ update_repo_if_needed()
 save_installed_packages()
 {
     [ -d $epm_vardir ] || return 0
+    set_sudo
     estrlist list "$@" | sudorun tee $epm_vardir/installed-via-epm >/dev/null
 }
 
@@ -3575,7 +3576,7 @@ __use_url_install()
         pacman)
             true
             ;;
-        yum-rpm|dnf-rpm)
+        yum-rpm|dnf-rpm|dnf5-rpm)
             true
             ;;
         #zypper-rpm)
@@ -3806,7 +3807,7 @@ epm_download()
         assure_exists yumdownloader yum-utils
         sudocmd yumdownloader $*
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         sudocmd dnf download $*
         ;;
     urpm-rpm)
@@ -5300,36 +5301,64 @@ epm_install_alt_kernel_module()
 
     local kflist=''
     local kmplist=''
-    local kmf km kf
+    local kmf module flavour tmp
 
     # fill kernel flavour list
-    for kmf in $*; do
-        km="$(echo "$kmf" | cut -d- -f1)"
-        kf="$(echo "$kmf" | cut -d- -f2,3)"
-        # use current flavour as default
-        [ "$km" = "$kf" ] && kf="$(get_current_kernel_flavour)"
-        kflist="$kflist $kf"
+    for kmf in "$@"; do
+        case "$kmf" in
+            # full package with explicit version: kernel-modules-<mod>-<ver>
+            kernel-modules-*-*[0-9]*)
+                tmp=${kmf#kernel-modules-}      # tmp="<mod>-<ver>"
+                flavour=${tmp##*-}              # take version part
+                ;;
+            # full package without version: kernel-modules-<mod>
+            kernel-modules-*)
+                flavour=$(get_current_kernel_flavour)
+                ;;
+            # short name with version: <mod>-<ver>
+            *-[0-9]*)
+                flavour=${kmf##*-}
+                ;;
+            # everything else — module name only
+            *)
+                flavour=$(get_current_kernel_flavour)
+                ;;
+        esac
+        kflist="$kflist $flavour"
     done
 
     # firstly, update all needed kernels (by flavour)
-    for kf in $(estrlist uniq $kflist) ; do
+    for flavour in $(estrlist uniq $kflist); do
         info
-        docmd epm update-kernel -t $kf || exit
+        docmd epm update-kernel -t "$flavour" || exit
     done
 
     # skip install modules if there are no installed kernels (may be, a container)
-    epm installed "kernel-image-$kf" || return 0
+    epm installed "kernel-image-$flavour" || return 0
 
     # make list for install kernel modules
-    for kmf in $*; do
-        km="$(echo "$kmf" | cut -d- -f1)"
-        kf="$(echo "$kmf" | cut -d- -f2,3)"
-        # use current flavour as default
-        [ "$km" = "$kf" ] && kf="$(get_current_kernel_flavour)"
-        kvf="$(get_latest_kernel_rel $kf)"
-        #kmplist="$kmplist kernel-modules-$km-$kf"
-        # install kernel module for latest installed kernel
-        kmplist="$kmplist kernel-modules-$km-$kvf"
+    for kmf in "$@"; do
+        case "$kmf" in
+            kernel-modules-*-*[0-9]*)
+                tmp=${kmf#kernel-modules-}
+                module=${tmp%-*}
+                flavour=${tmp##*-}
+                ;;
+            kernel-modules-*)
+                module=${kmf#kernel-modules-}
+                flavour=$(get_current_kernel_flavour)
+                ;;
+            *-[0-9]*)
+                module=${kmf%-*}
+                flavour=${kmf##*-}
+                ;;
+            *)
+                module=$kmf
+                flavour=$(get_current_kernel_flavour)
+                ;;
+        esac
+        kvf=$(get_latest_kernel_rel "$flavour")
+        kmplist="$kmplist kernel-modules-$module-$kvf"
     done
 
     # secondly, install module(s)
@@ -5764,7 +5793,7 @@ epm_install_files_rpm()
     info
 
     case $PMTYPE in
-        yum-rpm|dnf-rpm)
+        yum-rpm|dnf-rpm|dnf5-rpm)
             YUMOPTIONS=--nogpgcheck
             # use install_names
             ;;
@@ -5790,7 +5819,7 @@ epm_install_files_rpm()
 
 
 EFI=$(a="" bootctl -p 2>/dev/null)
-sdboot_loader_id=$(a="" bootctl status 2>/dev/null | grep -oP '(?<=id: ).*')
+sdboot_loader_id=$(a="" bootctl status 2>/dev/null | grep -oP '(?<=id: ).*') #'
 
 if [ -f "$EFI/loader/entries/$sdboot_loader_id" ]; then
     entry_file="$EFI/loader/entries/$sdboot_loader_id"
@@ -5833,7 +5862,7 @@ case $1 in
 
     '--used-kflavour' )
         used_kflavour
-        info 'You used $USED_KFLAVOUR kernel kflavour'
+        [ -n "$verbose" ] && info 'You used $USED_KFLAVOUR kernel kflavour' || echo "$USED_KFLAVOUR"
         return ;;
 
     '--check-run-kernel' )
@@ -5923,7 +5952,7 @@ check_run_kernel() {
         echo "The newest installed ${USED_KFLAVOUR} kernel is running."
         return 0
     else
-        echo "The system has a newer ${USED_KFLAVOUR} kernel."
+        echo "The system has a newer ${USED_KFLAVOUR} kernel. You can reboot to run it."
         return 1
     fi
 }
@@ -6299,7 +6328,7 @@ case $PMTYPE in
     apt-dpkg)
         sudocmd apt-mark unhold "$@"
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         __dnf_assure_versionlock
         sudocmd dnf versionlock delete "$@"
         ;;
@@ -6334,7 +6363,7 @@ case $PMTYPE in
     apt-dpkg)
         docmd apt-mark showhold "$@"
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         # there is no hold entries without versionlock
         __dnf_is_supported_versionlock || return 0
         __dnf_assure_versionlock
@@ -6363,7 +6392,7 @@ esac
 epm_mark_checkhold()
 {
 case $PMTYPE in
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         # there is no hold entries without versionlock
         __dnf_is_supported_versionlock || return 1
         __dnf_assure_versionlock
@@ -6391,7 +6420,7 @@ case $PMTYPE in
     apt-dpkg)
         sudocmd apt-mark auto "$@"
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         sudocmd dnf mark remove "$@"
         ;;
     pacman)
@@ -6422,7 +6451,7 @@ case $PMTYPE in
     apt-dpkg)
         sudocmd apt-mark manual "$@"
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         sudocmd dnf mark install "$@"
         ;;
     pacman)
@@ -6453,7 +6482,7 @@ case $PMTYPE in
     apt-dpkg)
         sudocmd apt-mark showauto "$@"
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         sudocmd dnf repoquery --unneeded
         ;;
     *)
@@ -6477,7 +6506,7 @@ case $PMTYPE in
     apt-dpkg)
         sudocmd apt-mark showmanual "$@"
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         sudocmd dnf repoquery --userinstalled
         ;;
     *)
@@ -7026,6 +7055,7 @@ __save_installed_app()
 {
     [ -d "$epm_vardir" ] || return 0
     __check_installed_app "$1" && return 0
+    set_sudo
     echo "$1" | sudorun tee -a $epm_vardir/installed-app >/dev/null
 }
 
@@ -7033,6 +7063,7 @@ __remove_installed_app()
 {
     [ -s $epm_vardir/installed-app ] || return 0
     local i
+    set_sudo
     for i in $* ; do
         sudorun sed -i "/^$i$/d" $epm_vardir/installed-app
     done
@@ -9739,7 +9770,7 @@ epm_release_upgrade()
         showcmd rpm -Uvh http://mirror.yandex.ru/fedora/linux/releases/16/Fedora/x86_64/os/Packages/fedora-release-16-1.noarch.rpm
         showcmd epm Upgrade
         ;;
-    dnf-rpm)
+    dnf-rpm|dnf5-rpm)
         if [ "$DISTRNAME/$DISTRVERSION" = "CentOS/8" ] ; then
             if [ "$1" = "RockyLinux" ] ; then
                 info "https://github.com/rocky-linux/rocky-tools/tree/main/migrate2rocky/"
@@ -10048,7 +10079,7 @@ epm_remove_nonint()
         yum-rpm)
             sudocmd yum -y remove $@
             return ;;
-        dnf-rpm)
+        dnf-rpm|dnf5-rpm)
             sudocmd dnf remove --assumeyes $@
             return ;;
         zypper-rpm)
@@ -11632,8 +11663,7 @@ __epm_repochange_alt()
 
 epm_repochange()
 {
-
-    epm_repofix
+    [ "$1" = "--list" ] || epm_repofix
     case $BASEDISTRNAME in
         "alt")
             __epm_repochange_alt "$@"
@@ -11780,10 +11810,14 @@ case $PMTYPE in
         docmd verifytree
         ;;
     dnf-rpm)
-        epm install --skip-installed yum-utils createrepo || fatal
+        epm install --skip-installed createrepo || fatal
         docmd mkdir -pv "$@"
-        docmd createrepo -v -s md5 "$@"
-        docmd verifytree
+        docmd createrepo -v --update "$@"
+        ;;
+    dnf5-rpm)
+        epm install --skip-installed createrepo_c || fatal
+        docmd mkdir -pv "$@"
+        docmd createrepo_c -v --update "$@"
         ;;
     eoget)
         docmd eoget index "$@"
@@ -13650,7 +13684,7 @@ filter_out_installed_packages()
     [ -z "$skip_installed" ] && cat && return
 
     case $PMTYPE in
-        yum-rpm|dnf-rpm)
+        yum-rpm|dnf-rpm|dnf5-rpm)
             if [ "$DISTRARCH" = "x86_64" ] && [ "$DISTRNAME" != "ROSA" ] ; then
                 # shellcheck disable=SC2013
                 for i in $(cat) ; do
@@ -14665,12 +14699,13 @@ case $PMTYPE in
         sudocmd aptitude update || return
         ;;
     yum-rpm)
-        # just skipped
-        [ -z "$verbose" ] || info "update command is stubbed for yum"
+        sudocmd yum makecache
         ;;
-    dnf-rpm|dnf5-rpm)
-        # just skipped
-        [ -z "$verbose" ] || info "update command is stubbed for dnf"
+    dnf-rpm)
+        sudocmd dnf makecache
+        ;;
+    dnf5-rpm)
+        sudocmd dnf5 makecache
         ;;
     urpm-rpm)
         sudocmd urpmi.update -a
@@ -15646,6 +15681,10 @@ case "$DISTRIB_ID" in
             DISTRIB_CODENAME="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
             # TODO: change p10 to 10
             DISTRIB_RELEASE="$DISTRIB_CODENAME"
+        elif [ "$ALT_BRANCH_ID" = "sisyphus" ] ; then
+            DISTRIB_RELEASE="Sisyphus"
+            DISTRIB_CODENAME="$DISTRIB_RELEASE"
+            DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
         fi
         ;;
     "ALTServer")
@@ -18152,7 +18191,16 @@ extract_archive()
 
 	# TODO: move to patool
 	if [ "$type" = "exe" ] ; then
-		docmd $HAVE_7Z x "$arc"
+		local subdir="$(basename "$arc" .exe)"
+		mkdir -p "$subdir" && cd "$subdir" || fatal
+		docmd $HAVE_7Z x ../"$arc"
+		exit
+	fi
+
+	if [ "$type" = "dll" ] ; then
+		local subdir="$(basename "$arc" .dll)"
+		mkdir -p "$subdir" && cd "$subdir" || fatal
+		docmd $HAVE_7Z x ../"$arc"
 		exit
 	fi
 
@@ -18160,6 +18208,13 @@ extract_archive()
 		docmd chmod u+x "$arc" || fatal "Can't set executable permission"
 		docmd "$(realpath $arc)" --appimage-extract
 		mv squashfs-root "$(basename "$(basename "$arc" .AppImage)" .appimage)"
+		exit
+	fi
+
+	if [ "$type" = "squashfs" ] ; then
+		local subdir="$(basename "$arc" .squashfs)"
+		mkdir -p "$subdir" && cd "$subdir" || fatal
+		docmd $HAVE_7Z x ../"$arc"
 		exit
 	fi
 

@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.28"
+EPMVERSION="3.64.29"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -2322,6 +2322,10 @@ case "$DISTRIB_ID" in
             DISTRIB_CODENAME="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
             # TODO: change p10 to 10
             DISTRIB_RELEASE="$DISTRIB_CODENAME"
+        elif [ "$ALT_BRANCH_ID" = "sisyphus" ] ; then
+            DISTRIB_RELEASE="Sisyphus"
+            DISTRIB_CODENAME="$DISTRIB_RELEASE"
+            DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
         fi
         ;;
     "ALTServer")
