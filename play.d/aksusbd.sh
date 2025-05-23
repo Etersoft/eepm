@@ -14,4 +14,15 @@ warn_version_is_not_supported
 # Sentinel LDK Linux Runtime Installer Script 10.13
 PKGURL="ipfs://Qme9tqhRy2gkbu1qtj663n5UN5mvFgCPRLLg3uhTCS23pC?filename=Sentinel_LDK_Linux_Run-time_Installer_script.tar.gz"
 
-install_pack_pkgurl
+install_pack_pkgurl || exit
+
+# TODO: move to the package?
+serv aksusbd try-restart
+
+serv --quiet aksusbd status >/dev/null && return
+
+echo
+echo "Note: run
+# serv aksusbd on
+to start Sentinel license service
+"
