@@ -70,11 +70,37 @@ dpkg_query_package_field()
         #fi
 }
 
+__get_pmtype()
+{
+    local pkg="$1"
+    local pmtype="$2"
+
+    if ! is_pkgfile "$1" ; then
+        echo "$pmtype"
+        return
+    fi
+
+    case $(get_package_type "$pkg") in
+        rpm)
+            echo "fake-rpm"
+            return
+            ;;
+        deb)
+            echo "fake-dpkg"
+            return
+            ;;
+    esac
+
+    echo "$pmtype"
+    return
+}
+
 query_package_field()
 {
     local field="$1"
     shift
-    case $PMTYPE in
+    local pmtype="$(__get_pmtype "$1" "$PMTYPE")"
+    case $pmtype in
         *-dpkg)
             dpkg_query_package_field "$field" "$@"
             ;;
@@ -87,9 +113,10 @@ query_package_field()
 
 print_pkg_arch()
 {
-    case $PMTYPE in
+    local pmtype="$(__get_pmtype "$1" "$PMTYPE")"
+    case $pmtype in
         *-dpkg)
-            dpkg_query_package_field "Arch" "$@" | sed -e "s|-.*||" -e "s|.*:||"
+            dpkg_query_package_field "Architecture" "$@" | sed -e "s|-.*||" -e "s|.*:||"
             ;;
         *-rpm)
             rpm_query_package_field "arch" "$@"
@@ -99,7 +126,8 @@ print_pkg_arch()
 
 print_pkg_version()
 {
-    case $PMTYPE in
+    local pmtype="$(__get_pmtype "$1" "$PMTYPE")"
+    case $pmtype in
         *-dpkg)
             dpkg_query_package_field "Version" "$@" | sed -e "s|-.*||" -e "s|.*:||"
             ;;
@@ -111,7 +139,8 @@ print_pkg_version()
 
 print_pkg_release()
 {
-    case $PMTYPE in
+    local pmtype="$(__get_pmtype "$1" "$PMTYPE")"
+    case $pmtype in
         *-dpkg)
             dpkg_query_package_field "Version" "$@" | sed -e "s|.*-||"
             ;;
@@ -123,7 +152,8 @@ print_pkg_release()
 
 print_pkg_version_release()
 {
-    case $PMTYPE in
+    local pmtype="$(__get_pmtype "$1" "$PMTYPE")"
+    case $pmtype in
         *-dpkg)
             dpkg_query_package_field "Version" "$@" | sed -e "s|.*:||"
             ;;
@@ -135,7 +165,8 @@ print_pkg_version_release()
 
 print_pkg_name()
 {
-    case $PMTYPE in
+    local pmtype="$(__get_pmtype "$1" "$PMTYPE")"
+    case $pmtype in
         *-dpkg)
             dpkg_query_package_field "Package" "$@"
             ;;
