@@ -17,7 +17,7 @@ fix_desktop_file /usr/share/pixmaps/vkteams.png vkteams
 remove_file $PRODUCTDIR/plugins/imageformats/libqjp2.so
 
 # drop unneeded plugins
-remove_file $PRODUCTDIR/plugins/sqldrivers/*.so
+remove_file "$PRODUCTDIR/plugins/sqldrivers/*.so"
 
 # libavcodec.so.61()(64bit)
 # libavformat.so.61()(64bit)

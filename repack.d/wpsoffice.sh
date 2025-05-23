@@ -25,10 +25,10 @@ remove_file $PRODUCTDIR/office6/addons/pdfbatchcompression/libpdfbatchcompressio
 
 # https://github.com/NixOS/nixpkgs/commit/da74ad3a905aa45ee6e4f8b4b69b56930195adcb
 # Use system libjpeg
-remove_file $PRODUCTDIR/office6/libjpeg.so*
+remove_file "$PRODUCTDIR/office6/libjpeg.so*"
 
 # Fix theme system on WPS Office 11
-is_stdcpp_enough "12.1" && remove_file $PRODUCTDIR/office6/libstdc++.so*
+is_stdcpp_enough "12.1" && remove_file "$PRODUCTDIR/office6/libstdc++.so*"
 
 # hack to fix bug somewhere in linking
 ignore_lib_requires "libc++.so"
