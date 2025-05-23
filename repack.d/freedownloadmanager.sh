@@ -12,7 +12,7 @@ install_file $PRODUCTDIR/icon.png /usr/share/icons/hicolor/256x256/apps/$PRODUCT
 fix_desktop_file $PRODUCTDIR/fdm fdm
 fix_desktop_file $PRODUCTDIR/icon.png $PRODUCT.png
 
-# libmimerapi.so dependency fix
-remove_file /opt/freedownloadmanager/plugins/sqldrivers/libqsqlmimer.so
+# remove unsed sql dependencies
+remove_file $PRODUCTDIR/plugins/sqldrivers/*.so
 
 add_libs_requires
