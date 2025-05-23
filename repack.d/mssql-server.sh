@@ -9,13 +9,12 @@ PREINSTALL_PACKAGES="libnuma libsss_nss_idmap bzip2 cyrus-sasl2 libcom_err libkr
 
 . $(dirname $0)/common.sh
 
+# for ALT only
 # we need libssl/libcrypto-devel due libssl.so/libcrypto.so using (ALT bug 35559)
-add_requires="python3 pbzip2 bzip2 gdb libnuma libkrb5 libsss_nss_idmap cyrus-sasl2 libsasl2-plugin-gssapi procps"
+add_requires python3 pbzip2 bzip2 gdb libnuma libkrb5 libsss_nss_idmap cyrus-sasl2 libsasl2-plugin-gssapi procps
 
 # ALT's su does not support -p last 20 years
 subst "s|su -p |su |" $BUILDROOT/opt/mssql/lib/mssql-conf/invokesqlservr.sh
-
-set_autoreq 'yes,nopython,nopython3'
 
 # fix typo
 subst "s|Руѝѝкий|Русский|" $BUILDROOT/opt/mssql/lib/mssql-conf/mssqlconfhelper.py
@@ -29,3 +28,5 @@ for i in $BUILDROOT/opt/mssql/lib/libunwind-x86_64.so.8 ; do
     a= patchelf --set-rpath '$ORIGIN/' $i
 done
 fi
+
+add_libs_requires
