@@ -44,7 +44,7 @@ else
     PKGURL="$(eget --list --latest https://rudesktop.ru/downloads/ "$PKGNAME-*-amd64.$pkgtype")"
 fi
 
-install_pkgurl
+install_pkgurl || exit
 
 echo
 echo "Note: run

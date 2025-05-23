@@ -44,7 +44,7 @@ if [ "$VERSION" = "*" ] ; then
     [ -n "$VERSION" ] || fatal "Can't get version for $PKGNAME"
 fi
 
-install_pack_pkgurl $VERSION
+install_pack_pkgurl $VERSION || exit
 
 echo
 echo "Note: run

@@ -20,7 +20,7 @@ arch=$(epm print info --distro-arch)
 # epm uses eget to download * names
 PKGURL="https://download.teamviewer.com/download/linux/$(epm print constructname $PKGNAME)"
 
-install_pkgurl
+install_pkgurl || exit
 
 cat <<EOF
 

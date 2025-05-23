@@ -13,7 +13,7 @@ warn_version_is_not_supported
 
 PKGURL="http://download.support.xerox.com/pub/drivers/B215/drivers/linux/ar/Xerox_B215_Linux_PrintDriver_Utilities.tar.gz"
 
-install_pack_pkgurl
+install_pack_pkgurl || exit
 
 echo "Note: run
 # serv cups restart

@@ -30,7 +30,7 @@ esac
 
 PKGURL=$(eget --list --latest https://download.guardant.ru/LM/Linux/$VERSION/$shortarch/ "$file")
 
-install_pack_pkgurl "$VERSION"
+install_pack_pkgurl "$VERSION" || exit
 
 cat <<EOF
 

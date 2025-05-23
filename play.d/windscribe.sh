@@ -16,7 +16,7 @@ else
     PKGURL="https://github.com/Windscribe/Desktop-App/releases/download/v$VERSION/${PKGNAME}_${VERSION}_$arch.deb"
 fi
 
-install_pkgurl
+install_pkgurl || exit
 
 cat <<EOF
 Note: run

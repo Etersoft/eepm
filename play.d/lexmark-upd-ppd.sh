@@ -13,7 +13,7 @@ warn_version_is_not_supported
 
 PKGURL="https://downloads.lexmark.com/downloads/drivers/Lexmark-UPD-PPD-Files-1.0-05252022.x86_64.rpm"
 
-install_pack_pkgurl
+install_pack_pkgurl || exit
 
 echo "Note: run
 # serv cups restart

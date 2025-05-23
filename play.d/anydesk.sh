@@ -29,7 +29,7 @@ else
     PKGURL="https://download.anydesk.com/linux/$PKGMASK"
 fi
 
-install_pkgurl
+install_pkgurl || exit
 
 echo
 echo "Note: run

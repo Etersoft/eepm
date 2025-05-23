@@ -29,7 +29,7 @@ if [ "$VERSION" = "*" ] && echo "$PKGURL" | grep -q "nightly" ; then
     PKGURL=$(eget --list --second-latest https://github.com/rustdesk/rustdesk/releases "$MASK")
 fi
 
-install_pkgurl
+install_pkgurl || exit
 
 cat <<EOF
 

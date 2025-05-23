@@ -24,7 +24,7 @@ case "$pkgtype-$arch" in
         ;;
 esac
 
-install_pkgurl
+install_pkgurl || exit
 
 echo
 echo "Note: run
