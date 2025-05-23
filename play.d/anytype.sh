@@ -10,7 +10,7 @@ URL="https://anytype.io/"
 
 warn_version_is_not_supported
 
-PKGURL="$(eget --list --latest https://download.anytype.io/ "*.AppImage")"
+PKGURL="$(get_json_value https://publish-releases.anytype.io/api/v1/latestRelease '["LatestReleasesLinks","LINUX_APP_IMAGE","url"]')"
 
 install_pkgurl
 
