@@ -16,7 +16,8 @@ ROOTDIR=$(pwd)
 
 # Linux-драйвер-сканирования-Катюша-M247.zip
 erc unpack $TAR || fatal 
-cd * # Linux драйвер сканирования Катюша M247
+mv Linux*/Katusha_Scanner_M247_ubuntu64_*.tar.gz .
+rmdir Linux*
 
 # Katusha_Scanner_M247_ubuntu64_V110.tar.gz
 erc unpack Katusha_Scanner_M247_ubuntu64_*.tar.gz || fatal
