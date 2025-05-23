@@ -7,7 +7,7 @@ SPEC="$2"
 
 move_to_opt
 
-ln -sf $PRODUCTDIR/$PRODUCT.sh usr/bin/$PRODUCT
+add_bin_link_command $PRODUCT $PRODUCTDIR/$PRODUCT.sh
 
 fix_desktop_file "/usr/bin/$PRODUCT"
 
