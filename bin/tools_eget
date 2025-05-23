@@ -1222,6 +1222,10 @@ url_get_raw_real_url()
 
     local loc
     for loc in $(url_get_header "$URL" "Location" | tac | sed -e 's| .*||') ; do
+        # add protocol if missed
+        if echo "$loc" | grep -q '^//' ; then
+            loc="$(echo "$URL" | sed -e 's|//.*||')$loc"
+        fi
         # hack for construct full url from related Location
         if is_abs_path "$loc" ; then
             loc="$(concatenate_url_and_filename "$(get_host_only "$URL")" "$loc")" #"
