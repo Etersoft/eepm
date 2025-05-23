@@ -58,6 +58,6 @@ case $(epm print info -e) in
 esac
 
 PKGMASK="$(epm print constructname $PKGNAME "$VERSION" $arch $pkgtype "-" "-")"
-PKGURL="$(eget --list https://posit.co/download/rstudio-desktop/ "$PKGMASK" | grep "$PKGFILTER")"
+PKGURL="$(eget --list --latest https://posit.co/download/rstudio-desktop/ "$PKGMASK" | grep "$PKGFILTER")"
 
 install_pkgurl
