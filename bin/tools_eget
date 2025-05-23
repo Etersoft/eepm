@@ -1263,7 +1263,8 @@ url_get_filename()
     local cd="$(url_get_header "$URL" "Content-Disposition")"
     if echo "$cd" | grep -qi "filename\*= *UTF-8" ; then
         #Content-Disposition: attachment; filename="unityhub-amd64-3.3.0.deb"; filename*=UTF-8''"unityhub-amd64-3.3.0.deb"
-        echo "$cd" | sed -e "s|.*filename\*= *UTF-8''||i" -e 's|^"||' -e 's|";$||' -e 's|"$||'
+        #Content-Disposition: attachment; filename*=UTF-8''t1client-standalone-4.5.28.0-1238402-Release.deb; filename="t1client-standalone-4.5.28.0-1238402-Release.deb"
+        echo "$cd" | sed -e "s|.*filename\*= *UTF-8''||i" -e 's|^"||' -e 's|";$||' -e 's|"$||' -e 's|; filename=.*||'
         return
     fi
     if echo "$cd" | grep -qi "filename=" ; then
