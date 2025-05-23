@@ -8,20 +8,15 @@ URL="https://download.anydesk.com/linux/"
 
 . $(dirname $0)/common.sh
 
-warn_version_is_not_supported
-
 # current links:
-# https://download.anydesk.com/linux/anydesk_6.3.2-1_x86_64.rpm
-# https://download.anydesk.com/linux/anydesk-6.3.2-1.el8.x86_64.rpm
-# https://download.anydesk.com/linux/anydesk_6.3.2-1_amd64.deb
 
 [ "$VERSION" = "*" ] || VERSION="$VERSION-1"
 
-#PKGMASK="$(epm print constructname $PKGNAME "$VERSION" '' '' '_')"
-
-#[ "$(epm print info -s)" = "alt" ] && 
 # use el8 build for all systems
-PKGMASK="$(epm print constructname $PKGNAME "$VERSION.el8")"
+#PKGMASK="$(epm print constructname $PKGNAME "$VERSION.el8")"
+# no more el8 build
+# https://download.anydesk.com/linux/anydesk_7.0.0-1_x86_64.rpm
+PKGMASK="$(epm print constructname $PKGNAME "$VERSION" '' '' '_')"
 
 if [ "$VERSION" = "*" ] ; then
     PKGURL="$(eget --list --latest https://download.anydesk.com/linux/$PKGMASK)"
