@@ -159,9 +159,12 @@ findutils
 grep
 info
 sed
+findutils
 
 ==== bin/epm-play-common:
 grep
+sed
+findutils
 
 ==== bin/epm-policy:
 
@@ -230,13 +233,13 @@ estrlist
 grep
 info
 sed
-sed
 
 ==== bin/epm-repo:
 
 ==== bin/epm-repo-addkey:
 eget
 grep
+util-linux
 
 ==== bin/epm-repodisable:
 grep
@@ -253,6 +256,7 @@ grep
 sed
 
 ==== bin/epm-repoindex:
+grep
 gzip
 sed
 
@@ -457,6 +461,9 @@ eget
 
 ==== play.d/alteroffice.sh:
 
+==== play.d/android-studio.sh:
+eget
+
 ==== play.d/angie.sh:
 
 ==== play.d/anilibrix.sh:
@@ -502,8 +509,12 @@ eget
 eget
 grep
 
+==== play.d/blender.sh:
+
 ==== play.d/brave.sh:
 eget
+
+==== play.d/brew.sh:
 
 ==== play.d/cascadeur.sh:
 eget
@@ -522,10 +533,14 @@ eget
 ==== play.d/chromium-gost.sh:
 eget
 
+==== play.d/clash-verge.sh:
+
 ==== play.d/clion.sh:
 
 ==== play.d/clipgrab.sh:
 eget
+
+==== play.d/cnijfilter2.sh:
 
 ==== play.d/cnrdrvcups-ufr2.sh:
 
@@ -540,8 +555,6 @@ grep
 sed
 
 ==== play.d/common-jetbrains.sh:
-eget
-grep
 sed
 
 ==== play.d/common-outformat.sh:
@@ -552,6 +565,9 @@ gawk
 grep
 sed
 
+==== play.d/cstcadnavigator.sh:
+eget
+
 ==== play.d/cuda-z.sh:
 eget
 
@@ -559,7 +575,11 @@ eget
 
 ==== play.d/cursor.sh:
 
+==== play.d/datagrip.sh:
+
 ==== play.d/dbeaver.sh:
+
+==== play.d/deepseek-desktop.sh:
 
 ==== play.d/deltachat.sh:
 eget
@@ -634,6 +654,16 @@ grep
 
 ==== play.d/flyview-server.sh:
 
+==== play.d/forticlient.sh:
+
+==== play.d/forticlient-vpn.sh:
+
+==== play.d/fplus-upd-ppd.sh:
+eget
+
+==== play.d/freedownloadmanager.sh:
+eget
+
 ==== play.d/freeoffice.sh:
 eget
 
@@ -648,11 +678,18 @@ eget
 eget
 grep
 
+==== play.d/gdlauncher.sh:
+
 ==== play.d/geogebra.sh:
+
+==== play.d/gigaide.sh:
+eget
 
 ==== play.d/gitkraken.sh:
 
 ==== play.d/gitlab-runner.sh:
+
+==== play.d/goland.sh:
 
 ==== play.d/goofcord.sh:
 eget
@@ -665,11 +702,14 @@ eget
 
 ==== play.d/hansoft-client.sh:
 
+==== play.d/headscale.sh:
+
 ==== play.d/heroic-games-launcher.sh:
 
 ==== play.d/hiddify.sh:
 
 ==== play.d/hplip-plugin.sh:
+eget
 
 ==== play.d/i586-openssl098.sh:
 
@@ -683,10 +723,13 @@ eget
 ==== play.d/iptvnator.sh:
 eget
 
-==== play.d/jetbrains-toolbox.sh:
+==== play.d/jellyfin-server.sh:
 eget
-grep
-sed
+
+==== play.d/jellyfin-web.sh:
+eget
+
+==== play.d/jetbrains-toolbox.sh:
 
 ==== play.d/joplin.sh:
 eget
@@ -705,6 +748,7 @@ eget
 ==== play.d/kyodialog.sh:
 
 ==== play.d/levenhuklite.sh:
+eget
 
 ==== play.d/lexmark-upd-ppd.sh:
 
@@ -719,6 +763,13 @@ eget
 
 ==== play.d/lithium.sh:
 eget
+
+==== play.d/lm-studio.sh:
+eget
+grep
+sed
+
+==== play.d/localsend.sh:
 
 ==== play.d/logseq.sh:
 eget
@@ -766,7 +817,6 @@ eget
 ==== play.d/mts-link.sh:
 
 ==== play.d/myoffice.sh:
-eget
 
 ==== play.d/mytonwallet.sh:
 eget
@@ -791,6 +841,11 @@ findutils
 
 ==== play.d/ngrok.sh:
 
+==== play.d/nomachine.sh:
+eget
+grep
+sed
+
 ==== play.d/notepad-next.sh:
 eget
 
@@ -808,10 +863,19 @@ eget
 ==== play.d/obs-linuxbrowser.sh:
 eget
 
+==== play.d/occt.sh:
+eget
+grep
+
 ==== play.d/okular-csp.sh:
 
 ==== play.d/onlyoffice.sh:
 eget
+
+==== play.d/openide.sh:
+eget
+grep
+sed
 
 ==== play.d/opera.sh:
 
@@ -845,6 +909,8 @@ eget
 
 ==== play.d/plex-desktop.sh:
 
+==== play.d/polymc.sh:
+
 ==== play.d/popcorn-time.sh:
 
 ==== play.d/portmaster.sh:
@@ -857,11 +923,21 @@ eget
 ==== play.d/powershell.sh:
 eget
 
+==== play.d/prismlauncher.sh:
+
 ==== play.d/protonup-qt.sh:
 eget
 
 ==== play.d/pstube.sh:
 eget
+
+==== play.d/pulsar.sh:
+
+==== play.d/pureref.sh:
+gawk
+eget
+grep
+sed
 
 ==== play.d/pycharm-pro.sh:
 
@@ -877,14 +953,8 @@ eget
 eget
 
 ==== play.d/radicle-httpd.sh:
-gawk
-eget
-grep
 
 ==== play.d/radicle.sh:
-gawk
-eget
-grep
 
 ==== play.d/raindrop.sh:
 
@@ -907,6 +977,8 @@ sed
 
 ==== play.d/rememberthemilk.sh:
 
+==== play.d/rider.sh:
+
 ==== play.d/ridoclnx.sh:
 eget
 
@@ -920,7 +992,10 @@ eget
 eget
 grep
 
+==== play.d/rubymine.sh:
+
 ==== play.d/rudesktop.sh:
+eget
 
 ==== play.d/rupost.sh:
 
@@ -929,6 +1004,8 @@ grep
 ==== play.d/rustdesk.sh:
 eget
 grep
+
+==== play.d/rustrover.sh:
 
 ==== play.d/s4a.sh:
 
@@ -939,7 +1016,6 @@ grep
 ==== play.d/sane-panakvs.sh:
 
 ==== play.d/schildichat-desktop.sh:
-sed
 
 ==== play.d/sferum.sh:
 
@@ -947,18 +1023,17 @@ sed
 eget
 
 ==== play.d/signal.sh:
-eget
-grep
-sed
 
 ==== play.d/simplenote.sh:
 
-==== play.d/singularityapp.sh:
+==== play.d/simplex.sh:
 
-==== play.d/skype.sh:
+==== play.d/singularityapp.sh:
 
 ==== play.d/slack.sh:
 eget
+
+==== play.d/smathstudio.sh:
 
 ==== play.d/snap4arduino.sh:
 eget
@@ -971,6 +1046,8 @@ eget
 eget
 
 ==== play.d/sunshine.sh:
+eget
+grep
 
 ==== play.d/svp4.sh:
 
@@ -987,11 +1064,15 @@ sed
 
 ==== play.d/t1client.sh:
 
+==== play.d/tabby.sh:
+
+==== play.d/tailscale.sh:
+eget
+
 ==== play.d/tamtam.sh:
 
 ==== play.d/teamspeak3.sh:
 eget
-grep
 
 ==== play.d/teamspeak.sh:
 eget
@@ -1002,7 +1083,6 @@ grep
 ==== play.d/teamviewer.sh:
 
 ==== play.d/telegram.sh:
-eget
 grep
 
 ==== play.d/thinlinc-client.sh:
@@ -1027,7 +1107,6 @@ eget
 ==== play.d/tsukimi.sh:
 
 ==== play.d/ungoogled-chromium.sh:
-eget
 
 ==== play.d/unifiedremote.sh:
 
@@ -1045,8 +1124,12 @@ eget
 ==== play.d/upscayl.sh:
 eget
 
+==== play.d/v2rayn.sh:
+
 ==== play.d/vdhcoapp.sh:
 eget
+
+==== play.d/ventoy.sh:
 
 ==== play.d/vesktop.sh:
 
@@ -1058,6 +1141,7 @@ eget
 grep
 
 ==== play.d/virtualbox-extpack.sh:
+eget
 
 ==== play.d/virtualbox.sh:
 
@@ -1106,19 +1190,26 @@ eget
 ==== play.d/whatsapp.sh:
 eget
 
+==== play.d/whatsie.sh:
+
 ==== play.d/winbox.sh:
 gawk
 eget
 grep
+
+==== play.d/windscribe.sh:
 
 ==== play.d/wing.sh:
 eget
 sed
 findutils
 
-==== play.d/wpsoffice.sh:
+==== play.d/wpsoffice-cn.sh:
 eget
 grep
+
+==== play.d/wpsoffice.sh:
+sed
 
 ==== play.d/xeoma.sh:
 eget
@@ -1150,9 +1241,6 @@ eget
 eget
 
 ==== play.d/yougile.sh:
-eget
-grep
-sed
 
 ==== play.d/youtube-music.sh:
 eget
@@ -1168,14 +1256,20 @@ eget
 ==== play.d/zerotier-one.sh:
 eget
 
+==== play.d/zlibrary.sh:
+
 ==== play.d/zoom.sh:
 
 ==== play.d/zwcad-viewer.sh:
 
 ==== prescription.d/bwrap-fix.sh:
 
+==== prescription.d/common-outformat.sh:
+grep
+
 ==== prescription.d/common.sh:
 grep
+sed
 
 ==== prescription.d/flatpak.sh:
 grep
@@ -1186,22 +1280,7 @@ sed
 ==== prescription.d/glibc-restore.sh:
 grep
 
-==== prescription.d/glusterfs10.sh:
-grep
-sed
-
 ==== prescription.d/glusterfs11.sh:
-grep
-sed
-
-==== prescription.d/glusterfs7.sh:
-sed
-
-==== prescription.d/glusterfs8.sh:
-grep
-sed
-
-==== prescription.d/glusterfs9.sh:
 grep
 sed
 
@@ -1243,7 +1322,6 @@ grep
 ==== prescription.d/snap.sh:
 
 ==== prescription.d/switch-to-nouveau.sh:
-grep
 
 ==== prescription.d/switch-to-nvidia.sh:
 /etc/bashrc
@@ -1271,6 +1349,9 @@ sed
 sed
 
 ==== repack.d/aksusbd.sh:
+sed
+
+==== repack.d/android-studio.sh:
 sed
 
 ==== repack.d/anydesk.sh:
@@ -1313,6 +1394,8 @@ sed
 
 ==== repack.d/bitwig-studio.sh:
 
+==== repack.d/blender.sh:
+
 ==== repack.d/brave-browser-beta.sh:
 
 ==== repack.d/brave-browser-dev.sh:
@@ -1321,9 +1404,7 @@ sed
 
 ==== repack.d/brave-browser.sh:
 
-==== repack.d/brgenml1cupswrapper.sh:
-
-==== repack.d/brgenml1lpr.sh:
+==== repack.d/brew.sh:
 
 ==== repack.d/brscanads2200ads2700w.sh:
 
@@ -1335,6 +1416,7 @@ sed
 sed
 
 ==== repack.d/chrome-remote-desktop.sh:
+sed
 
 ==== repack.d/chromium-gost-stable.sh:
 sed
@@ -1361,6 +1443,7 @@ sed
 sed
 
 ==== repack.d/common.sh:
+eget
 file
 findutils
 grep
@@ -1369,11 +1452,19 @@ findutils
 
 ==== repack.d/crossover.sh:
 
+==== repack.d/cstcadnavigator.sh:
+findutils
+
 ==== repack.d/cuda-z.sh:
+
+==== repack.d/datagrip.sh:
+sed
 
 ==== repack.d/davinci-resolve.sh:
 
 ==== repack.d/dbeaver-ce.sh:
+
+==== repack.d/deepseek-desktop.sh:
 
 ==== repack.d/dialog-ee-x.sh:
 
@@ -1417,6 +1508,10 @@ sed
 
 ==== repack.d/flashprint5.sh:
 
+==== repack.d/forticlient.sh:
+
+==== repack.d/freedownloadmanager.sh:
+
 ==== repack.d/freeplane.sh:
 
 ==== repack.d/freetube.sh:
@@ -1431,6 +1526,9 @@ sed
 sed
 
 ==== repack.d/generic-default.sh:
+
+==== repack.d/generic-post.sh:
+diffutils
 grep
 sed
 
@@ -1447,9 +1545,15 @@ sed
 ==== repack.d/geogebra-classic.sh:
 sed
 
+==== repack.d/gigaideCE.sh:
+sed
+
 ==== repack.d/gitkraken.sh:
 
 ==== repack.d/gitlab-runner.sh:
+
+==== repack.d/goland.sh:
+sed
 
 ==== repack.d/google-chrome-stable.sh:
 sed
@@ -1458,10 +1562,15 @@ sed
 
 ==== repack.d/hansoft.sh:
 
+==== repack.d/headscale.sh:
+sed
+
 ==== repack.d/hiddify.sh:
 sed
 
 ==== repack.d/hplip-plugin.sh:
+grep
+sed
 sed
 
 ==== repack.d/i586-libcrypto7.sh:
@@ -1502,6 +1611,11 @@ sed
 ==== repack.d/iwtm-prometheus.sh:
 sed
 
+==== repack.d/jellyfin-server.sh:
+sed
+
+==== repack.d/jellyfin-web.sh:
+
 ==== repack.d/jetbrains-toolbox.sh:
 
 ==== repack.d/k3s.sh:
@@ -1528,6 +1642,8 @@ sed
 sed
 
 ==== repack.d/lithium_ecad.sh:
+
+==== repack.d/localsend.sh:
 
 ==== repack.d/lossless-cut.sh:
 
@@ -1572,9 +1688,14 @@ sed
 
 ==== repack.d/obsidian.sh:
 
+==== repack.d/OCCT.sh:
+
 ==== repack.d/onlyoffice-desktopeditors.sh:
 findutils
 sed
+sed
+
+==== repack.d/openIDE.sh:
 sed
 
 ==== repack.d/opera-beta.sh:
@@ -1613,6 +1734,8 @@ sed
 ==== repack.d/plk-sane.sh:
 sed
 
+==== repack.d/PolyMC-Linux.sh:
+
 ==== repack.d/Popcorn-Time.sh:
 
 ==== repack.d/portmaster.sh:
@@ -1623,6 +1746,12 @@ sed
 ==== repack.d/portproton.sh:
 
 ==== repack.d/postman.sh:
+
+==== repack.d/PrismLauncher-Linux.sh:
+
+==== repack.d/pulsar.sh:
+
+==== repack.d/PureRef.sh:
 
 ==== repack.d/pycharm-community.sh:
 sed
@@ -1649,12 +1778,20 @@ sed
 
 ==== repack.d/remotedesktopmanager.sh:
 
+==== repack.d/Rider.sh:
+grep
+sed
+sed
+
 ==== repack.d/ridoclnx.sh:
 sed
 
 ==== repack.d/rocketchat.sh:
 
 ==== repack.d/rstudio.sh:
+sed
+
+==== repack.d/RubyMine.sh:
 sed
 
 ==== repack.d/rudesktop.sh:
@@ -1667,6 +1804,9 @@ sed
 ==== repack.d/rustdesk.sh:
 grep
 sed
+sed
+
+==== repack.d/RustRover.sh:
 sed
 
 ==== repack.d/S4A.sh:
@@ -1684,9 +1824,9 @@ sed
 ==== repack.d/signal-desktop.sh:
 sed
 
-==== repack.d/singularityapp.sh:
+==== repack.d/simplex.sh:
 
-==== repack.d/skypeforlinux.sh:
+==== repack.d/singularityapp.sh:
 
 ==== repack.d/slack.sh:
 
@@ -1706,7 +1846,8 @@ sed
 
 ==== repack.d/sublime-text.sh:
 
-==== repack.d/sunshine.sh:
+==== repack.d/Sunshine.sh:
+gawk
 grep
 sed
 
@@ -1720,6 +1861,10 @@ sed
 ==== repack.d/synology-drive.sh:
 
 ==== repack.d/t1client-standalone.sh:
+
+==== repack.d/tabby-terminal.sh:
+
+==== repack.d/tailscale.sh:
 
 ==== repack.d/tamtam-app.sh:
 
@@ -1769,6 +1914,11 @@ sed
 
 ==== repack.d/unityhub.sh:
 
+==== repack.d/v2rayN.sh:
+
+==== repack.d/ventoy.sh:
+patch
+
 ==== repack.d/viber.sh:
 
 ==== repack.d/vinteo-desktop.sh:
@@ -1791,7 +1941,6 @@ sed
 ==== repack.d/vk.sh:
 
 ==== repack.d/vkteams.sh:
-sed
 
 ==== repack.d/waterfox.sh:
 
@@ -1810,6 +1959,9 @@ sed
 ==== repack.d/winbox.sh:
 
 ==== repack.d/wing-personal10.sh:
+sed
+
+==== repack.d/wps-office.sh:
 sed
 
 ==== repack.d/wpsoffice.sh:
@@ -1843,5 +1995,9 @@ grep
 ==== repack.d/yaradio-yamusic.sh:
 
 ==== repack.d/zed.sh:
+
+==== repack.d/zen-browser.sh:
+
+==== repack.d/z-library.sh:
 
 ==== repack.d/zoom.sh:

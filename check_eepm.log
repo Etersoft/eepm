@@ -10,4 +10,6 @@ gettext
 grep
 gzip
 info
+patch
 sed
+util-linux
