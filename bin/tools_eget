@@ -362,6 +362,14 @@ set_quiet()
     quiet=1
 }
 
+unset_quiet()
+{
+    WGETQ=''
+    CURLQ=''
+    AXELQ=''
+    quiet=''
+}
+
 
 eget_help()
 {
@@ -1091,6 +1099,8 @@ __wget()
 url_scat()
 {
     local URL="$1"
+    download_with_mirroring __wget "$URL" -O- && return
+    unset_quiet
     download_with_mirroring __wget "$URL" -O-
 }
 # download to default name of to $2
@@ -1140,6 +1150,8 @@ __curl()
 url_scat()
 {
     local URL="$1"
+    download_with_mirroring __curl "$URL" --output - && return
+    unset_quiet
     download_with_mirroring __curl "$URL" --output -
 }
 # download to default name of to $2
