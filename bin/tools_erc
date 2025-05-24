@@ -116,7 +116,7 @@ extract_archive()
 	fi
 
 	arc="$(realpath -s "$arc")"
-	tdir=$(mktemp -d $(pwd)/UXXXXXXXX) && cd "$tdir" || fatal
+	tdir="$(mktemp -d "$(pwd)/UXXXXXXXX")" && cd "$tdir" || fatal
 
 	local TSUBDIR="$(basename "$arc" .$type | sed -e 's|^tar\.||')"
 
@@ -148,14 +148,17 @@ extract_archive()
 			;;
 	esac
 
+	local res=$?
+
 	cd - >/dev/null
 	# if only one dir in the subdir
 	if [ -e "$(echo $tdir/*)" ] ; then
-		mv $tdir/* .
-		rmdir $tdir
+		mv "$tdir"/* .
+		rmdir "$tdir"
 	else
-		mv $tdir "$TSUBDIR"
+		mv "$tdir" "$TSUBDIR"
 	fi
+	return $res
 }
 
 list_archive()
@@ -210,6 +213,19 @@ test_archive()
 
 }
 
+__repack_zip_tar()
+{
+	sfile="$(realpath -s "$1")"
+	dfile="$(realpath -s "$2")"
+	ddir="$(dirname "$dfile")"
+	tdir="$(mktemp -d "$ddir/UXXXXXXXX")" && cd "$tdir" || fatal
+	trap "rm -fr $tdir" EXIT
+	extract_archive "$sfile" || fatal
+	create_archive "$dfile" "."
+	#cd - >/dev/null
+	#rm -fr "$tdir"
+}
+
 repack_archive()
 {
 	if have_patool ; then
@@ -231,8 +247,11 @@ repack_archive()
 		tar.*-tar.*)
 			docmd $HAVE_7Z x -so "$1" | $HAVE_7Z a -si "$2"
 			;;
+		zip-tar)
+			__repack_zip_tar "$1" "$2"
+			;;
 		*)
-			fatal "Not yet supported repack of $ftype-$ttype archives in 7z mode (try install patool)"
+			fatal "Not yet supported repack $ftype to $ttype archives in 7z mode (try install patool)"
 			;;
 	esac
 
@@ -263,7 +282,7 @@ $(get_help HELPOPT)
 print_version()
 {
         echo "Etersoft archive manager version @VERSION@"
-        echo "Copyright (c) Etersoft 2013-2023"
+        echo "Copyright (c) Etersoft 2013-2025"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 
@@ -410,7 +429,7 @@ case $cmd in
             exit
         fi
 
-        # add support for target zip:
+        # add support for target like zip:
         for i in "$@" ; do
             [ "$i" = "$lastarg" ] && continue
             target="$(build_target_name "$i" "$lastarg")"
