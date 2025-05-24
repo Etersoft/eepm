@@ -8,8 +8,9 @@ URL="https://app.lizardbyte.dev/Sunshine"
 
 . $(dirname $0)/common.sh
 
-arch=$(epm print info -a)
+warn_version_is_not_supported
 
+arch=$(epm print info -a)
 
 BUILD_ID=$(eget --list https://copr.fedorainfracloud.org/coprs/lizardbyte/stable/package/Sunshine/ | grep -o 'build/[0-9]\+' | cut -d/ -f2 | sort -n | tail -n1)
 
