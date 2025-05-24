@@ -33,13 +33,19 @@ case "$arch-$pkgtype" in
 #        ;;
 esac
 
-# VERSION=8.16.1
-[ "$VERSION" = "*" ] && VERSION="$(eget -O- https://downloads.nomachine.com/ru/download/?id=4 | grep -A1 "Версия:" | tail -n1 | sed -e 's|.*<p>\([0-9.]*\)_1</p>.*|\1|')"
-
+if [ "$VERSION" = "*" ] ; then
+    #VERSION="$(eget -O- https://downloads.nomachine.com/download/?id=4 | grep -A1 "Version:" | tail -n1 | sed -e 's|.*<p>\([0-9.]*\)_1</p>.*|\1|')"
+    # it is hard to get the page with version
+    VERSION=9.0.188
+    [ -n "$VERSION" ] || fatal "Can't get version"
+fi
 base=$(echo "$VERSION" | sed -e 's|\.[0-9]*$||')
 
+# hack for 9.x
+VERSION="${VERSION}_11"
+
 #mask="$(epm print constructname $PKGNAME "$VERSION*" $arch $pkgtype)"
-PKGURL="https://download.nomachine.com/download/$base/Linux/nomachine_${VERSION}_1_$arch.$pkgtype"
+PKGURL="https://download.nomachine.com/download/$base/Linux/nomachine_${VERSION}_$arch.$pkgtype"
 
 install_pkgurl
 
