@@ -31,6 +31,6 @@ case $(epm print info -a) in
         fatal "Unsupported arch $arch for $(epm print info -d)" ;;
 esac
 
-PKGURL="$(eget --list --latest https://github.com/th-ch/youtube-music/releases/ $mask)"
+PKGURL="$(eget --list --latest https://github.com/th-ch/youtube-music/releases/ "$mask")"
 
 install_pkgurl

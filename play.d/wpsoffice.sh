@@ -10,7 +10,7 @@ TIPS="Run epm play wpsoffice=<version> to install some specific version"
 . $(dirname $0)/common.sh
 
 if [ "$VERSION" = "*" ] ; then
-    VERSION=$(eget -O- https://www.wps.com/whatsnew/linux/ | grep -oP "\W(\d+\.\d+\.\d+\.\d+)\W" | grep -oP "\d+\.\d+\.\d+\.\d+" | head -n1)
+    VERSION="$(eget -O- https://www.wps.com/whatsnew/linux/ | grep -oP "\W(\d+\.\d+\.\d+\.\d+)\W" | grep -oP "\d+\.\d+\.\d+\.\d+" | head -n1)" #"
     VERSION="${VERSION}.XA"
 fi
 

@@ -14,7 +14,7 @@ DESCRIPTION="Brave browser from the official site"
 # hack to fix short name issue
 if [ "$VERSION" = "*" ] ; then
     VERSION="[[:digit:]]*"
-    PKGURL=$(eget --list --latest https://github.com/brave/brave-browser/releases $(epm print constructname $PKGNAME "$VERSION"))
+    PKGURL=$(eget --list --latest https://github.com/brave/brave-browser/releases "$(epm print constructname $PKGNAME "$VERSION")")
 else
     OVERSION="$VERSION"
     # rpm packages have a release in their names

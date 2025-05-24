@@ -11,9 +11,11 @@ URL="https://salutejazz.ru/"
 pkgtype=$(epm print info -p)
 case $pkgtype in
     deb)
-        PKGURL="https://dl.salutejazz.ru/desktop/latest/jazz.deb" ;;
+        PKGURL="https://dl.salutejazz.ru/desktop/latest/jazz.deb"
+        ;;
     *)
-        PKGURL="https://dl.salutejazz.ru/desktop/latest/jazz.AppImage" ;;
+        PKGURL="https://dl.salutejazz.ru/desktop/latest/jazz.AppImage"
+        ;;
 esac
 
 install_pkgurl

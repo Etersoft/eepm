@@ -10,7 +10,7 @@ URL="https://mts-link.ru/"
 
 warn_version_is_not_supported
 
-PKGURL=https://apps.webinar.ru/desktop/latest/mts-link-desktop.AppImage
+PKGURL="https://apps.webinar.ru/desktop/latest/mts-link-desktop.AppImage"
 
 install_pkgurl
 

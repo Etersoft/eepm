@@ -19,7 +19,7 @@ URL="https://download.anydesk.com/linux/"
 PKGMASK="$(epm print constructname $PKGNAME "$VERSION" '' '' '_')"
 
 if [ "$VERSION" = "*" ] ; then
-    PKGURL="$(eget --list --latest https://download.anydesk.com/linux/$PKGMASK)"
+    PKGURL="$(eget --list --latest "https://download.anydesk.com/linux/$PKGMASK")"
 else
     PKGURL="https://download.anydesk.com/linux/$PKGMASK"
 fi

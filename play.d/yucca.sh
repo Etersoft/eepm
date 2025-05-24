@@ -15,7 +15,7 @@ case "$arch" in
 esac
 
 if [ "$VERSION" = "*" ] ; then
-    VERSION=$(eget -O- https://releases.yucca.app/latest/VERSION.txt)
+    VERSION="$(eget -O- https://releases.yucca.app/latest/VERSION.txt)"
 fi
 
 PKGURL="https://releases.yucca.app/v${VERSION}/yucca_${VERSION}_linux_${arch}.tar.gz"

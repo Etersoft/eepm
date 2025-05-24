@@ -16,7 +16,7 @@ fi
 
 if [ "$VERSION" = "*" ] ; then
     # Get latest version from vendor
-    VERSION=$(eget --list --latest https://repo.librewolf.net/pool/ | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?')
+    VERSION="$(eget --list --latest https://repo.librewolf.net/pool/ | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?')"
 fi
 
 pkgtype=$(epm print info -p)

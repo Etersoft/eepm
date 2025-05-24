@@ -11,7 +11,7 @@ URL="https://gitverse.ru/features/gigaide/#desktop"
 if [ "$VERSION" = "*" ] ; then
     PKGURL="$(eget --list --latest https://gitverse.ru/features/gigaide/desktop/download/ $PKGNAME-$VERSION.tar.gz)"
 else
-    PKGURL=https://gigaide.ru/downloadlast/$PKGNAME-$VERSION.tar.gz
+    PKGURL="https://gigaide.ru/downloadlast/$PKGNAME-$VERSION.tar.gz"
 fi
 
 install_pkgurl
