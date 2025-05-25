@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.29
+Version: 3.64.30
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -141,6 +141,30 @@ make -C po
 %endif
 
 %changelog
+* Mon May 26 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.30-alt1
+- epm play: fix status on error
+- epm play aksusbd: add service restart after upgrade
+- epm play anydesk: update to support newest versions
+- epm play: update msqsql server install for new distros
+- epm print: allow use field/arch/version/release/name for foreign package
+- epm play: add warp-terminal
+- epm play: add teams-for-linux
+- epm repack freedownloadmanager: drop sql deps
+- epm play anytype: fix download url
+- epm play rstudio: fix getting download url
+- epm play: update rupost urls
+- epm play freeplane: fix latest version
+- epm play wpsoffice-cn: fix version getting
+- epm play wpsoffice: fix version getting
+- epm pack katusha: fix unpacking
+- epm repack ayugram: add conflict with ayugram-desktop
+- epm play: update nomachine version
+- eget: don't hide errors on list
+- erc: add support for repack zip->tar with 7z
+- epm play: repack dangerous assisant package (disable scripts and provides)
+- epm play hplip-plugin: fix downloading
+- epm play: add Murglar-Desktop
+
 * Thu May 22 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.29-alt1
 - epm play hiddify: up required glibc to 2.34
 - distr_info: detect ALT Sisyphus as Sisyphus
