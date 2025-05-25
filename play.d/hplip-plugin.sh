@@ -18,9 +18,7 @@ fi
 export EGET_OPTIONS="--user-agent"
 
 if [ "$(epm print compare "$VERSION" 3.25.2)" != "-1" ] ; then
-    #PKGURL="https://developers.hp.com/sites/default/files/hplip-$VERSION-plugin.run.zip"
-    #PKGURL="https://developers.hp.com/system/files/2025-03/hplip-$VERSION-plugin_run.zip"
-    PKGURL="$(eget --list https://developers.hp.com/hp-linux-imaging-and-printing/plugins "hplip-$VERSION-plugin_run.zip")"
+    PKGURL="$(eget --list https://developers.hp.com/hp-linux-imaging-and-printing/plugins "hplip-$VERSION-plugin.run")"
 else
     # https://www.openprinting.org/download/printdriver/auxfiles/HP/plugins/hplip-$VERSION-plugin.run
     PKGURL="https://developers.hp.com/sites/default/files/hplip-$VERSION-plugin.run"
