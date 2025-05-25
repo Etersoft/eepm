@@ -185,8 +185,9 @@ get_latest_version()
     local epmver="$(epm --short --version 2>/dev/null)"
     local URL
     epmver=$(echo "$epmver" | sed -e 's|\.[0-9]*$||')
-    for URL in "https://eepm.ru/releases/$epmver/app-versions" "https://eepm.ru/app-versions" ; do
-        ver="$(eget -q -O- "$URL/$1")" || continue
+    for URL in "https://eepm.ru/releases/$epmver/app-versions" ; do
+        echo "Getting latest version from $URL/$1 ..." >&2
+        ver="$(eget -q -O- "$URL/$1" 2>/dev/null)" || continue
         ver="$(echo "$ver" | head -n1 | cut -d" " -f1)"
         [ -n "$ver" ] && echo "$ver" && return
     done
