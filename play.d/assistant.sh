@@ -5,6 +5,7 @@ SKIPREPACK=1
 SUPPORTEDARCHES="x86_64 aarch64"
 VERSION="$2"
 DESCRIPTION="Assistant (Ассистент) from the official site"
+URL="https://мойассистент.рф"
 
 . $(dirname $0)/common.sh
 
@@ -14,13 +15,13 @@ arch="$(epm print info -a)"
 pkg="$(epm print info -p)"
 
 # some locale depend troubles (ALT with bash 4 needs LANG=ru_RU.UTF-8, Ubuntu with bash 5 needs LANG=C.UTF-8)
-#URL="https://мойассистент.рф/скачать"
-URL="https://xn--80akicokc0aablc.xn--p1ai/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C"
+#DLURL="https://мойассистент.рф/скачать"
+DLURL="https://xn--80akicokc0aablc.xn--p1ai/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C"
 
 # parse vendor site
 tmpfile=$(mktemp)
 trap "rm -f $tmpfile" EXIT
-eget -q -O- "$URL" | grep -A200 "Ассистент для LINUX" >$tmpfile
+eget -q -O- "$DLURL" | grep -A200 "Ассистент для LINUX" >$tmpfile
 
 url_by_text()
 {
@@ -33,16 +34,16 @@ url_by_text()
 
 case $arch-$pkg in
     x86_64-rpm)
-        URL="$(url_by_text "Скачать RPM пакет")"
+        PKGURL="$(url_by_text "Скачать RPM пакет")"
         ;;
     x86_64-deb)
-        URL="$(url_by_text "Скачать DEB пакет")"
+        PKGURL="$(url_by_text "Скачать DEB пакет")"
         ;;
     aarch64-rpm)
-        URL="$(url_by_text "Скачать RPM пакет для ARM устройств")"
+        PKGURL="$(url_by_text "Скачать RPM пакет для ARM устройств")"
         ;;
     aarch64-deb)
-        URL="$(url_by_text "Скачать DEB пакет для ARM устройств")"
+        PKGURL="$(url_by_text "Скачать DEB пакет для ARM устройств")"
         ;;
     *)
         fatal "$(epm print info -e) is not supported (arch $arch, package type is $pkg)"
@@ -55,8 +56,10 @@ esac
 
 [ "$(epm print info -s)" = "alt" ] && epmi --skip-installed fontconfig-disable-type1-font-for-assistant
 
-# TODO: disable scripts (see /etc/eepm/pkgallowscripts.list)
-LANG=ru_RU.UTF8 epm install "$URL" || exit
+LANG=ru_RU.UTF8 install_pkgurl || exit
 
-echo "Note: original package runs /opt/assistant/scripts/setup.sh --install during install.."
-echo "It is dangerous. Use this package at your own risk."
+echo "Note:
+Vendor suggest run /opt/assistant/scripts/setup.sh --install after install.
+Vendor suggest run /opt/assistant/scripts/setup.sh --uninstall before removing the package.
+Warning! This script will setup daemon. It is dangerous. Use this script and this package at your own risk.
+"
