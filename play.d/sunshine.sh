@@ -14,7 +14,7 @@ arch=$(epm print info -a)
 
 BUILD_ID=$(eget --list https://copr.fedorainfracloud.org/coprs/lizardbyte/stable/package/Sunshine/ | grep -o 'build/[0-9]\+' | cut -d/ -f2 | sort -n | tail -n1)
 
-PKGURL=$(eget --list --latest https://download.copr.fedorainfracloud.org/results/lizardbyte/stable/fedora-41-$arch/0$BUILD_ID-Sunshine/ "Sunshine-*.rpm")
+PKGURL=$(eget --list --latest https://download.copr.fedorainfracloud.org/results/lizardbyte/stable/fedora-41-$arch/0$BUILD_ID-Sunshine/ "Sunshine-*.$arch.rpm")
 
 install_pkgurl
 
