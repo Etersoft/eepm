@@ -14,7 +14,7 @@ arch=$(epm print info -a)
 
 PKGURL=$(eget --list --latest "https://download1.rpmfusion.org/free/fedora/releases/42/Everything/$arch/os/Packages/j/" "jellyfin-server*$arch.rpm")
 
-install_pkgurl
+install_pkgurl || exit
 
 echo "Note: You also need to install jellyfin-web using the command:
 # epm play jellyfin-web

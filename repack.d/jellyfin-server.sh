@@ -6,7 +6,7 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
-move_to_opt /usr/lib64/jellyfin 
+move_to_opt /usr/lib64/jellyfin
 
 #wrong link; remake
 remove_file /opt/jellyfin-server/jellyfin-web
@@ -21,6 +21,10 @@ subst 's|JELLYFIN_WEB_OPT="--webdir=/usr/share/jellyfin-web"|JELLYFIN_WEB_OPT="-
 # Jellyfin tries to create files in /etc/jellyfin on the first run, but fails
 # because it runs as the jellyfin user, not root
 subst 's|JELLYFIN_CONFIG_DIR="/etc/jellyfin"|JELLYFIN_CONFIG_DIR="/var/lib/jellyfin"|' $BUILDROOT/etc/sysconfig/jellyfin
+
+# /etc/sudoers.d/jellyfin-sudoers:4:95: duplicate Cmnd_Alias "STOPSERVER_SYSTEMD", previously defined at /etc/sudoers.d/jellyfin-sudoers:4:12
+# Cmnd_Alias STOPSERVER_SYSTEMD = /usr/bin/systemctl stop jellyfin, /bin/systemctl stop jellyfin
+subst 's|, /bin/systemctl.*||' $BUILDROOT/etc/sudoers.d/jellyfin-sudoers
 
 # This is required for ALT systems
 if [ "$(epm print info -s)" = "alt" ]; then
