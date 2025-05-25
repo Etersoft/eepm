@@ -34,7 +34,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.29"
+export EPMVERSION="3.64.30"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -7844,11 +7844,37 @@ dpkg_query_package_field()
         #fi
 }
 
+__get_pmtype()
+{
+    local pkg="$1"
+    local pmtype="$2"
+
+    if ! is_pkgfile "$1" ; then
+        echo "$pmtype"
+        return
+    fi
+
+    case $(get_package_type "$pkg") in
+        rpm)
+            echo "fake-rpm"
+            return
+            ;;
+        deb)
+            echo "fake-dpkg"
+            return
+            ;;
+    esac
+
+    echo "$pmtype"
+    return
+}
+
 query_package_field()
 {
     local field="$1"
     shift
-    case $PMTYPE in
+    local pmtype="$(__get_pmtype "$1" "$PMTYPE")"
+    case $pmtype in
         *-dpkg)
             dpkg_query_package_field "$field" "$@"
             ;;
@@ -7861,9 +7887,10 @@ query_package_field()
 
 print_pkg_arch()
 {
-    case $PMTYPE in
+    local pmtype="$(__get_pmtype "$1" "$PMTYPE")"
+    case $pmtype in
         *-dpkg)
-            dpkg_query_package_field "Arch" "$@" | sed -e "s|-.*||" -e "s|.*:||"
+            dpkg_query_package_field "Architecture" "$@" | sed -e "s|-.*||" -e "s|.*:||"
             ;;
         *-rpm)
             rpm_query_package_field "arch" "$@"
@@ -7873,7 +7900,8 @@ print_pkg_arch()
 
 print_pkg_version()
 {
-    case $PMTYPE in
+    local pmtype="$(__get_pmtype "$1" "$PMTYPE")"
+    case $pmtype in
         *-dpkg)
             dpkg_query_package_field "Version" "$@" | sed -e "s|-.*||" -e "s|.*:||"
             ;;
@@ -7885,7 +7913,8 @@ print_pkg_version()
 
 print_pkg_release()
 {
-    case $PMTYPE in
+    local pmtype="$(__get_pmtype "$1" "$PMTYPE")"
+    case $pmtype in
         *-dpkg)
             dpkg_query_package_field "Version" "$@" | sed -e "s|.*-||"
             ;;
@@ -7897,7 +7926,8 @@ print_pkg_release()
 
 print_pkg_version_release()
 {
-    case $PMTYPE in
+    local pmtype="$(__get_pmtype "$1" "$PMTYPE")"
+    case $pmtype in
         *-dpkg)
             dpkg_query_package_field "Version" "$@" | sed -e "s|.*:||"
             ;;
@@ -7909,7 +7939,8 @@ print_pkg_version_release()
 
 print_pkg_name()
 {
-    case $PMTYPE in
+    local pmtype="$(__get_pmtype "$1" "$PMTYPE")"
+    case $pmtype in
         *-dpkg)
             dpkg_query_package_field "Package" "$@"
             ;;
@@ -16787,6 +16818,14 @@ set_quiet()
     quiet=1
 }
 
+unset_quiet()
+{
+    WGETQ=''
+    CURLQ=''
+    AXELQ=''
+    quiet=''
+}
+
 
 eget_help()
 {
@@ -17516,6 +17555,8 @@ __wget()
 url_scat()
 {
     local URL="$1"
+    download_with_mirroring __wget "$URL" -O- && return
+    unset_quiet
     download_with_mirroring __wget "$URL" -O-
 }
 # download to default name of to $2
@@ -17565,6 +17606,8 @@ __curl()
 url_scat()
 {
     local URL="$1"
+    download_with_mirroring __curl "$URL" --output - && return
+    unset_quiet
     download_with_mirroring __curl "$URL" --output -
 }
 # download to default name of to $2
@@ -17647,6 +17690,10 @@ url_get_raw_real_url()
 
     local loc
     for loc in $(url_get_header "$URL" "Location" | tac | sed -e 's| .*||') ; do
+        # add protocol if missed
+        if echo "$loc" | grep -q '^//' ; then
+            loc="$(echo "$URL" | sed -e 's|//.*||')$loc"
+        fi
         # hack for construct full url from related Location
         if is_abs_path "$loc" ; then
             loc="$(concatenate_url_and_filename "$(get_host_only "$URL")" "$loc")" #"
@@ -17684,7 +17731,8 @@ url_get_filename()
     local cd="$(url_get_header "$URL" "Content-Disposition")"
     if echo "$cd" | grep -qi "filename\*= *UTF-8" ; then
         #Content-Disposition: attachment; filename="unityhub-amd64-3.3.0.deb"; filename*=UTF-8''"unityhub-amd64-3.3.0.deb"
-        echo "$cd" | sed -e "s|.*filename\*= *UTF-8''||i" -e 's|^"||' -e 's|";$||' -e 's|"$||'
+        #Content-Disposition: attachment; filename*=UTF-8''t1client-standalone-4.5.28.0-1238402-Release.deb; filename="t1client-standalone-4.5.28.0-1238402-Release.deb"
+        echo "$cd" | sed -e "s|.*filename\*= *UTF-8''||i" -e 's|^"||' -e 's|";$||' -e 's|"$||' -e 's|; filename=.*||'
         return
     fi
     if echo "$cd" | grep -qi "filename=" ; then
@@ -18224,7 +18272,7 @@ extract_archive()
 	fi
 
 	arc="$(realpath -s "$arc")"
-	tdir=$(mktemp -d $(pwd)/UXXXXXXXX) && cd "$tdir" || fatal
+	tdir="$(mktemp -d "$(pwd)/UXXXXXXXX")" && cd "$tdir" || fatal
 
 	local TSUBDIR="$(basename "$arc" .$type | sed -e 's|^tar\.||')"
 
@@ -18256,14 +18304,17 @@ extract_archive()
 			;;
 	esac
 
+	local res=$?
+
 	cd - >/dev/null
 	# if only one dir in the subdir
 	if [ -e "$(echo $tdir/*)" ] ; then
-		mv $tdir/* .
-		rmdir $tdir
+		mv "$tdir"/* .
+		rmdir "$tdir"
 	else
-		mv $tdir "$TSUBDIR"
+		mv "$tdir" "$TSUBDIR"
 	fi
+	return $res
 }
 
 list_archive()
@@ -18318,6 +18369,19 @@ test_archive()
 
 }
 
+__repack_zip_tar()
+{
+	sfile="$(realpath -s "$1")"
+	dfile="$(realpath -s "$2")"
+	ddir="$(dirname "$dfile")"
+	tdir="$(mktemp -d "$ddir/UXXXXXXXX")" && cd "$tdir" || fatal
+	trap "rm -fr $tdir" EXIT
+	extract_archive "$sfile" || fatal
+	create_archive "$dfile" "."
+	#cd - >/dev/null
+	#rm -fr "$tdir"
+}
+
 repack_archive()
 {
 	if have_patool ; then
@@ -18339,8 +18403,11 @@ repack_archive()
 		tar.*-tar.*)
 			docmd $HAVE_7Z x -so "$1" | $HAVE_7Z a -si "$2"
 			;;
+		zip-tar)
+			__repack_zip_tar "$1" "$2"
+			;;
 		*)
-			fatal "Not yet supported repack of $ftype-$ttype archives in 7z mode (try install patool)"
+			fatal "Not yet supported repack $ftype to $ttype archives in 7z mode (try install patool)"
 			;;
 	esac
 
@@ -18371,7 +18438,7 @@ $(get_help HELPOPT)
 print_version()
 {
         echo "Etersoft archive manager version @VERSION@"
-        echo "Copyright (c) Etersoft 2013-2023"
+        echo "Copyright (c) Etersoft 2013-2025"
         echo "This program may be freely redistributed under the terms of the GNU AGPLv3."
 }
 
@@ -18518,7 +18585,7 @@ case $cmd in
             return
         fi
 
-        # add support for target zip:
+        # add support for target like zip:
         for i in "$@" ; do
             [ "$i" = "$lastarg" ] && continue
             target="$(build_target_name "$i" "$lastarg")"
@@ -18750,6 +18817,30 @@ isempty()
         is_empty "$@"
 }
 
+first()
+{
+        echo "$*" | cut -f1 -d" "
+}
+
+last()
+{
+        echo "$*" | xargs -n1 echo 2>/dev/null | tail -n1
+}
+
+firstupper()
+{
+    # FIXME: works with GNU sed only
+    list "$*" | sed 's/.*/\u&/'
+}
+
+tolower()
+{
+    # tr is broken in busybox (checked with OpenWrt)
+    #echo "$*" | tr "[:upper:]" "[:lower:]"
+    list "$*" | awk '{print tolower($0)}'
+}
+
+
 has_space()
 {
         # not for dash:
@@ -18977,6 +19068,10 @@ help()
         echo "  list [word list]                  - just list words line by line"
         echo "  count [word list]                 - print word count"
         echo "  contains <word> [word list]       - check if word list contains the word"
+        echo "  first <word list>                 - print first word"
+        echo "  last <word list>                  - print last word"
+        echo "  firstupper <word list>            - print the words with first letter of each in upper case"
+        echo "  tolower <word list>               - print the words in lower case"
         echo
         echo "Examples:"
 #        example reg_remove "1." "11 12 21 22"
@@ -18994,6 +19089,10 @@ help()
         example_res has exo "exactly"
         example_res match "M[0-9]+" "M250"
         example_res match "M[0-9]+" "MI"
+        example_res first "1 2 3"
+        example_res last "1 2 3"
+        example_res firstupper "world camp"
+        example_res tolower "World Camp"
 }
 
 COMMAND="$1"
