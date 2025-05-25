@@ -11,7 +11,8 @@ fatal()
 TDIR=$LOGDIR/epm-play-versions
 EDIR=$LOGDIR/epm-errors
 LDIR=$LOGDIR/epm-logs
-mkdir -p $TDIR/ $EDIR/ $LDIR/
+RDIR=$LOGDIR/epm-requires
+mkdir -p $TDIR/ $EDIR/ $LDIR/ $RDIR/
 
 rm -f $EDIR/errors.txt
 
@@ -36,6 +37,7 @@ install_app()
     local pkgname="$($EPM play --package-name $app $alt)"
     $EPM print version for package $pkgname > $TDIR/$pkgname 2>$EDIR/$pkgname && rm -f $EDIR/$pkgname
     [ -s $TDIR/$pkgname ] || echo "empty file $TDIR/$pkgname" >>$EDIR/errors.txt
+    $EPM req $pkgname >$RDIR/$applog
 }
 
 install_app_alt()
@@ -98,6 +100,7 @@ commit_git()
 commit_git $TDIR
 commit_git $EDIR
 commit_git $LDIR
+commit_git $RDIR
 
 cd $TMP
 rm -rf tmp.* rpm-tmp.*
