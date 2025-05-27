@@ -81,24 +81,26 @@ extract_archive()
 	local type="$(get_archive_type "$arc")"
 	[ -n "$type" ] || fatal "Can't recognize type of $arc."
 
+	local rarc="$(realpath -s "$arc")"
+
 	# TODO: move to patool
 	if [ "$type" = "exe" ] ; then
 		local subdir="$(basename "$arc" .exe)"
 		mkdir -p "$subdir" && cd "$subdir" || fatal
-		docmd $HAVE_7Z x ../"$arc"
+		docmd $HAVE_7Z x "$rarc"
 		exit
 	fi
 
 	if [ "$type" = "dll" ] ; then
 		local subdir="$(basename "$arc" .dll)"
 		mkdir -p "$subdir" && cd "$subdir" || fatal
-		docmd $HAVE_7Z x ../"$arc"
+		docmd $HAVE_7Z x "$rarc"
 		exit
 	fi
 
 	if [ "$type" = "AppImage" ] || [ "$type" = "appimage" ] ; then
-		docmd chmod u+x "$arc" || fatal "Can't set executable permission"
-		docmd "$(realpath $arc)" --appimage-extract
+		docmd chmod u+x "$rarc" || fatal "Can't set executable permission"
+		docmd "$rarc" --appimage-extract
 		mv squashfs-root "$(basename "$(basename "$arc" .AppImage)" .appimage)"
 		exit
 	fi
@@ -106,7 +108,7 @@ extract_archive()
 	if [ "$type" = "squashfs" ] ; then
 		local subdir="$(basename "$arc" .squashfs)"
 		mkdir -p "$subdir" && cd "$subdir" || fatal
-		docmd $HAVE_7Z x ../"$arc"
+		docmd $HAVE_7Z x "$rarc"
 		exit
 	fi
 
