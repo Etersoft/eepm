@@ -13,17 +13,19 @@ URL="https://cascadeur.com/download"
 if [ "$VERSION" = "*" ] ; then
     #distr="$(epm print info -s)"
     #repo="$(epm print info -r)"
-    VERSION="2024.1"
+    VERSION="2025.1.2"
 fi
 
 # 'Older versions of Cascadeur' on  https://cascadeur.com/download is broken
 # https://cdn.cascadeur.com/builds/linux/63/cascadeur-linux.tgz
 case "$VERSION" in
+    "2025.1.2")    # 93 https://cdn.cascadeur.com/builds/linux/93/cascadeur-linux.tgz
+        PKGURL="ipfs://QmQVXzCymb5RD4PNLS93cvY67qkYL4TEaxFiafHAxrXHzr?filename=cascadeur-linux.tgz"
+        ;;
+    "2024.3.3")    # 78
+        PKGURL="ipfs://QmXN1qQgbBFkhsom69CzzNWEDe2MmQnYqHBExeww6tfu89?filename=cascadeur-linux.tgz"
+        ;;
     "2024.1")    # 67
-# ALT Sisyphus:
-#  cascadeur: Depends: libbz2.so.1.0()(64bit) но пакет не может быть установлен
-#             Depends: libgdbm.so.6()(64bit) но пакет не может быть установлен
-
         PKGURL="ipfs://QmPGBGkFm5aCc6PGPGwyc2cxTBbNWgCkJiGRoDeBFDDkK5?filename=cascadeur-linux.tgz"
         ;;
 #    "2023.2.1")  #

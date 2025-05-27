@@ -28,5 +28,15 @@ remove_dir /opt/cascadeur/qml/QtQuick/Effects
 remove_dir /opt/cascadeur/qml/QtQml/RemoteObjects
 remove_dir /opt/cascadeur/qml/QtQuick/LocalStorage
 remove_dir /opt/cascadeur/qml/QtQuick/XmlListModel
+
 ignore_lib_requires 'libbz2.so.1.0' 'libgdbm.so.6'
+
+# used in some python lib-dyn modules
+ignore_lib_requires 'libncursesw.so.*'
+ignore_lib_requires 'libpanelw.so.*'
+ignore_lib_requires 'libreadline.so.*'
+ignore_lib_requires 'libtinfo.so.*'
+
+ignore_library_path /opt/cascadeur/plugins/multimedia
+
 add_libs_requires
