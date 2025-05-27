@@ -10,6 +10,7 @@ URL="https://sapr-soft.ru/zwcad_viewer"
 warn_version_is_not_supported
 
 VERSION="2.1.5"
-PKGURL="https://sapr-soft.ru/download/Viewer/ZWCAD_Viewer_Beta.tar.gz"
+#PKGURL="https://sapr-soft.ru/download/Viewer/ZWCAD_Viewer_Beta.tar.gz"
+PKGURL="https://sapr-soft.ru/download/Viewer/ZWCAD_Viewer_for_Linux_Beta.zip"
 
 install_pack_pkgurl $VERSION

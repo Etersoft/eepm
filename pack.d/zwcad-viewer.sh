@@ -28,6 +28,16 @@ mv .config/menus/applications-merged/xdg-desktop-menu-dummy.menu etc/xdg/menus/a
 mv "opt/zwcad-viewer/ZWCADRUN.sh" opt/zwcad-viewer/$PRODUCT
 subst 's|$HOME/ZWCADViewer|/opt/zwcad-viewer|' opt/zwcad-viewer/$PRODUCT
 
+# FIXME: remove unneeded .sh files
+
+# remove linked with missed libs
+#    libgstinterfaces-0.10.so.0 => not found
+#    libgstvideo-0.10.so.0 => not found
+#    libgstapp-0.10.so.0 => not found
+#    libgstbase-0.10.so.0 => not found
+#    libgstreamer-0.10.so.0 => not found
+rm -v opt/zwcad-viewer/libqgsttools_p.so.*
+
 # setup icon
 mkdir -p usr/share/icons/hicolor/512x512/apps
 mv opt/zwcad-viewer/ZWCAD.png usr/share/icons/hicolor/512x512/apps/
