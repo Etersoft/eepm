@@ -4,7 +4,7 @@ PKGNAME=freeplane
 SUPPORTEDARCHES="x86_64 x86"
 VERSION="$2"
 DESCRIPTION="FreePlane from the official site"
-URL="http://freeplane.sourceforge.net"
+URL="https://freeplane.sourceforge.net"
 
 . $(dirname $0)/common.sh
 

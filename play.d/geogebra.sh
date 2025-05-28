@@ -26,7 +26,7 @@ case $pkgtype in
     #    ;;
     rpm)
         #PKGURL="https://www.geogebra.net/linux/rpm/$arch/$(epm print constructname $PKGNAME "$VERSION" $arch)"
-        #http://www.geogebra.net/linux/rpm/x86_64/geogebra-classic-6.0.666.0-202109211234.x86_64.rpm
+        #https://www.geogebra.net/linux/rpm/x86_64/geogebra-classic-6.0.666.0-202109211234.x86_64.rpm
         PKGURL="ipfs://Qmc6KzDcverDKJptZd6ffJMqyYbKKcuwdHitB6EAEw2C6n?filename=geogebra-classic-6.0.666.0-202109211234.x86_64.rpm"
         ;;
     *)

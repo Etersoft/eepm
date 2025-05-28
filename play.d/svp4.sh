@@ -10,6 +10,6 @@ URL="https://svp-team.com/wiki/SVP:Linux"
 
 warn_version_is_not_supported
 
-PKGURL="http://www.svp-team.com/files/svp4-latest.php?linux"
+PKGURL="https://www.svp-team.com/files/svp4-latest.php?linux"
 
 install_pack_pkgurl
