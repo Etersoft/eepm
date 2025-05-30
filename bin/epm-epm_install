@@ -69,7 +69,7 @@ __epm_korinf_install_eepm()
             info "Check https://bugzilla.altlinux.org/44314 for reasons."
             info "You can install eepm package from Korinf manually, check instruction at https://eepm.ru"
             info
-            info "Trying update eepm from the stable ALT repository ..."
+            info "Trying update eepm from the stable ALT $DISTRVERSION repository ..."
             docmd epm install eepm
             return
         fi

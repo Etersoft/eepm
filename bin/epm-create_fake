@@ -131,6 +131,7 @@ epm_create_fake()
   __assure_exists_rpmbuild
 
   HOME="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
+  unset BASH_ENV
   remove_on_exit $HOME
   export HOME
   __create_rpmmacros

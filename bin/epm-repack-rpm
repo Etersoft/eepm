@@ -122,6 +122,7 @@ __epm_repack_to_rpm()
 
         # TODO: keep home?
         HOME="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
+        unset BASH_ENV
         remove_on_exit $HOME
         export HOME
         __create_rpmmacros
