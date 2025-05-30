@@ -219,7 +219,7 @@ get_github_url()
     wc="$(__convert_glob__to_regexp "$asset_name")"
 
     if [ "$3" == "prerelease" ] ; then
-        get_github_release_info "$url" | grep 'browser_download_url' | grep -iEo 'https.*download.*' | grep -E "$wc" | head -n1
+        get_github_release_info "$url" | grep 'browser_download_url' | grep -iEo 'https.*download.*' | grep -E "$wc" | head -n1 | sed -e 's|"$||'
     else
         get_github_release_info "$url" \
         | awk '{
@@ -232,7 +232,7 @@ get_github_url()
         match($0, /"browser_download_url": "(https[^"]*)"/, arr);
         print arr[1];
     }
-}' | grep -E "$wc" | head -1
+}' | grep -E "$wc" | head -n1 | sed -e 's|"$||'
     fi
 
 }
