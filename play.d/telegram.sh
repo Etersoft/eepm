@@ -15,8 +15,9 @@ if [ "$VERSION" = "*" ] && ! is_glibc_enough 2.32 ; then
 fi
 
 if [ "$VERSION" = "*" ] ; then
-    if [ "$PKGNAME" != "$BASEPKGNAME" ] ; then
-        prerelease="prelease"
+    if [ "$PKGNAME" = "$BASEPKGNAME-beta" ] ; then
+        prerelease="prerelease"
+        VERSION="$VERSION.beta"
     fi
     # can't use get_github_tag (not every tag has binary release)
     PKGURL=$(get_github_url "https://github.com/telegramdesktop/tdesktop/" "tsetup.$VERSION.tar.xz" $prerelease)
@@ -26,7 +27,7 @@ if [ "$VERSION" = "*" ] ; then
     fi
 else
     PKGBASEURL="https://github.com/telegramdesktop/tdesktop/releases/download/v$VERSION"
-    [ "$PKGNAME" = "$BASEPKGNAME" ] || VERSION="$VERSION.beta"
+    [ "$PKGNAME" = "$BASEPKGNAME-beta" ] && VERSION="$VERSION.beta"
     # version can be 1.2.3.beta or 1.2.3
     PKGURL="$PKGBASEURL/tsetup.$VERSION.tar.xz"
 fi
