@@ -8,14 +8,13 @@ URL="https://www.virtualbox.org/wiki/Downloads"
 
 . $(dirname $0)/common.sh
 
-# for current virtualbox package
 if [ "$VERSION" = "*" ] ; then
-    if [ -n "$force" ] ; then
-        VERSION=$(basename $(eget --list --latest https://download.virtualbox.org/virtualbox/ "^[0-9]*"))
-    else
-        epm installed virtualbox || fatal "virtualbox package is not installed"
-        VERSION="$(epm print version for package virtualbox)"
-    fi
+    # use latest virtualbox version
+    VERSION=$(basename $(eget --list --latest https://download.virtualbox.org/virtualbox/ "^[0-9]*"))
+else
+    # always install the version corresponding to the installed virtualbox
+    epm status --installed virtualbox || fatal "virtualbox package is not installed"
+    VERSION="$(epm print version for package virtualbox)"
 fi
 
 if [ "$(epm print compare "$VERSION" 7.1.0)" != "-1" ] ; then
