@@ -33,6 +33,10 @@ if [ -z "$PKG" ] ; then
     esac
 fi
 
-PKGURL=$(eget --list --latest https://code-industry.ru/get-master-pdf-editor-for-linux/ "$PKG")
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(eget --list --latest https://code-industry.ru/get-master-pdf-editor-for-linux/ "$PKG")
+else
+    PKGURL="https://code-industry.ru/public/$PKG"
+fi
 
 install_pkgurl
