@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.30
+Version: 3.64.31
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -141,6 +141,18 @@ make -C po
 %endif
 
 %changelog
+* Tue Jun 03 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.31-alt1
+- epm play cascadeur: update to 2025.1.2, cleanup requires
+- epm update: update zwcad-viewer download url
+- erc: fix path to unpacked archives
+- epm play: added muffon (eterbug #18317)
+- epm play sferum: abandoned by upstream, removed
+- epm play: use https where possible
+- epm play: added Lenza (eterbug #18324)
+- epm play telegram: fix beta (prerelease) install and update
+- epm play virtualbox-extpack: always use version of the installed virtualbox
+- epm: unset BASH_ENV after HOME is changed
+
 * Mon May 26 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.30-alt1
 - epm play: fix status on error
 - epm play aksusbd: add service restart after upgrade
