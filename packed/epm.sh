@@ -34,7 +34,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.30"
+export EPMVERSION="3.64.31"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -3129,6 +3129,7 @@ epm_create_fake()
   __assure_exists_rpmbuild
 
   HOME="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
+  unset BASH_ENV
   remove_on_exit $HOME
   export HOME
   __create_rpmmacros
@@ -3886,7 +3887,7 @@ __epm_korinf_install_eepm()
             info "Check https://bugzilla.altlinux.org/44314 for reasons."
             info "You can install eepm package from Korinf manually, check instruction at https://eepm.ru"
             info
-            info "Trying update eepm from the stable ALT repository ..."
+            info "Trying update eepm from the stable ALT $DISTRVERSION repository ..."
             docmd epm install eepm
             return
         fi
@@ -6638,7 +6639,7 @@ __epm_pack_run_handler()
     [ -n "$debug" ] && bashopt='-x'
     #info "Running $($script --description 2>/dev/null) ..."
     # TODO: add url info here
-    ( unset EPMCURDIR ; export PATH=$SCPATH ; export HOME=$(pwd) ; docmd $CMDSHELL $bashopt $repackcode "$tarname" "$filefortarname" "$packversion" "$url") || fatal
+    ( unset BASH_ENV ; unset EPMCURDIR ; export PATH=$SCPATH ; export HOME=$(pwd) ; docmd $CMDSHELL $bashopt $repackcode "$tarname" "$filefortarname" "$packversion" "$url") || fatal
     returntarname="$(cat "$filefortarname")" || fatal 'pack script $repackcode didn'\''t set tarname'
 
     local i
@@ -10898,6 +10899,7 @@ __epm_repack_to_rpm()
 
         # TODO: keep home?
         HOME="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
+        unset BASH_ENV
         remove_on_exit $HOME
         export HOME
         __create_rpmmacros
@@ -18237,24 +18239,26 @@ extract_archive()
 	local type="$(get_archive_type "$arc")"
 	[ -n "$type" ] || fatal "Can't recognize type of $arc."
 
+	local rarc="$(realpath -s "$arc")"
+
 	# TODO: move to patool
 	if [ "$type" = "exe" ] ; then
 		local subdir="$(basename "$arc" .exe)"
 		mkdir -p "$subdir" && cd "$subdir" || fatal
-		docmd $HAVE_7Z x ../"$arc"
+		docmd $HAVE_7Z x "$rarc"
 		exit
 	fi
 
 	if [ "$type" = "dll" ] ; then
 		local subdir="$(basename "$arc" .dll)"
 		mkdir -p "$subdir" && cd "$subdir" || fatal
-		docmd $HAVE_7Z x ../"$arc"
+		docmd $HAVE_7Z x "$rarc"
 		exit
 	fi
 
 	if [ "$type" = "AppImage" ] || [ "$type" = "appimage" ] ; then
-		docmd chmod u+x "$arc" || fatal "Can't set executable permission"
-		docmd "$(realpath $arc)" --appimage-extract
+		docmd chmod u+x "$rarc" || fatal "Can't set executable permission"
+		docmd "$rarc" --appimage-extract
 		mv squashfs-root "$(basename "$(basename "$arc" .AppImage)" .appimage)"
 		exit
 	fi
@@ -18262,7 +18266,7 @@ extract_archive()
 	if [ "$type" = "squashfs" ] ; then
 		local subdir="$(basename "$arc" .squashfs)"
 		mkdir -p "$subdir" && cd "$subdir" || fatal
-		docmd $HAVE_7Z x ../"$arc"
+		docmd $HAVE_7Z x "$rarc"
 		exit
 	fi
 
