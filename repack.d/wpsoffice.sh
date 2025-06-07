@@ -49,4 +49,19 @@ subst 's/python -c '\''import sys, urllib; print urllib.unquote(sys.argv\[1\])'\
 remove_file $PRODUCTDIR/office6/mui/zh_CN/resource/help/etrainbow/images/Ribbon/custom_%20sequence.gif
 #remove_dir $PRODUCTDIR/office6/mui/zh_CN/resource/help/etrainbow/images
 
+# Fixes the problem of incorrect text display in WPS Office in non-GTK environments (KDE, Lxde, etc.)
+cat <<EOF | create_file "$PRODUCTDIR/office6/setenv.sh"
+#!/bin/bash
+
+if echo "\${XDG_CURRENT_DESKTOP:-}" | grep -qi 'kde'; then
+    export XDG_CURRENT_DESKTOP=GNOME
+fi
+EOF
+
+for f in wps et wpp wpspdf; do
+    bin_file="$BUILDROOT/usr/bin/$f"
+    [ -f "$bin_file" ] || fatal "Missing $bin_file"
+    sed -i '2i . /opt/kingsoft/wps-office/office6/setenv.sh' "$bin_file"
+done
+
 add_libs_requires
