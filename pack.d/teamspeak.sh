@@ -3,10 +3,17 @@
 TAR="$1"
 RETURNTARNAME="$2"
 VERSION="$3"
+URL="$4"
+
 
 . $(dirname $0)/common.sh
 
 [ "$(basename $TAR)" = "teamspeak-client.tar.gz" ] || fatal "Unsupported $TAR"
+
+if [ -z "$VERSION" ] ; then
+    VERSION=$(basename $(dirname "$URL") | sed -e "s|-beta|.beta|")
+    [ -n "$VERSION" ] || fatal "Can't get version from URL $URL"
+fi
 
 erc $TAR || fatal
 mkdir -p opt

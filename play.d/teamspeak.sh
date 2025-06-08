@@ -9,9 +9,10 @@ URL="https://www.teamspeak.com/"
 . $(dirname $0)/common.sh
 
 if [ "$VERSION" = "*" ] ; then
-    VERSION=$(eget -O- https://teamspeak.com/en/downloads/ | grep -oP 'https://files\.teamspeak-services\.com/pre_releases/client/([\.\-beta\d]+)' | head -n 1 | grep -oP '([\.\-beta\d]+)' | tail -n 1)
+    PKGURL="$(eget --list https://teamspeak.com/en/downloads/ teamspeak-client.tar.gz)"
+else
+    VERSION=${VERSION/.beta/-beta}
+    PKGURL="https://files.teamspeak-services.com/pre_releases/client/$VERSION/teamspeak-client.tar.gz"
 fi
 
-PKGURL="https://files.teamspeak-services.com/pre_releases/client/$VERSION/teamspeak-client.tar.gz"
-
-install_pack_pkgurl "$VERSION"
+install_pack_pkgurl
