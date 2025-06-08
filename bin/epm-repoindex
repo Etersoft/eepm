@@ -37,10 +37,34 @@ __epm_repoindex_alt()
     local archlist="i586 x86_64 x86_64-i586 aarch64 noarch"
 
     local init=''
-    if [ "$1" = "--init" ] ; then
-        init='--init'
-        shift
-    fi
+    local sign=''
+    local default_key=''
+
+    while [ -n "$1" ] ; do
+        case "$1" in
+            --init)
+                init='--init'
+                ;;
+            --sign)
+                sign='--sign'
+                ;;
+            --default-key=*)
+                default_key="--default-key=${1#*=}"
+                ;;
+            --default-key)
+                shift
+                [ -n "$1" ] || fatal "Missed value for --default-key"
+                default_key="--default-key=$1"
+                ;;
+            --*)
+                fatal "Unknown option $1"
+                ;;
+            *)
+                break
+                ;;
+         esac
+         shift
+    done
 
     epm assure genbasedir apt-repo-tools || fatal
     REPO_DIR="$1"
@@ -80,14 +104,14 @@ __epm_repoindex_alt()
 
     if [ -d "$REPO_DIR/RPMS.$REPO_NAME" ] ; then
         mkdir -pv "$REPO_DIR/base/"
-        docmd genbasedir --bloat --progress --topdir=$(dirname $REPO_DIR) $(basename $REPO_DIR) $REPO_NAME
+        docmd genbasedir --bloat --progress $sign $default_key --topdir=$(dirname $REPO_DIR) $(basename $REPO_DIR) $REPO_NAME
         return
     fi
 
     for arch in $archlist; do
         [ -d "$REPO_DIR/$arch/RPMS.$REPO_NAME" ] || continue
         mkdir -pv "$REPO_DIR/$arch/base/"
-        docmd genbasedir --bloat --progress --topdir=$REPO_DIR $arch $REPO_NAME
+        docmd genbasedir --bloat --progress $sign $default_key --topdir=$REPO_DIR $arch $REPO_NAME
     done
 }
 
