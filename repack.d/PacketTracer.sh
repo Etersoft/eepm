@@ -42,3 +42,17 @@ pack_file /opt/pt/bin/translations
 #CONTENTS.cpio/ucpio://usr/share/icons/gnome/48x48/mimetypes
 #/usr/share/icons/hicolor/48x48/mimetypes
 
+# Fixes the problem of incorrect text display in Packet Tracer in non-GTK environments (KDE, LXDE, etc.)
+cat <<EOF | create_file "$PRODUCTDIR/setenv.sh"
+#!/bin/bash
+
+if echo "\${XDG_CURRENT_DESKTOP:-}" | grep -qi 'kde'; then
+    export XDG_CURRENT_DESKTOP=GNOME
+fi
+EOF
+
+for f in packettracer; do
+    bin_file="$BUILDROOT/$PRODUCTDIR/$f"
+    [ -f "$bin_file" ] || fatal "Missing $bin_file"
+    sed -i "2i . $PRODUCTDIR/setenv.sh" "$bin_file"
+done
