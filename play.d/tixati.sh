@@ -8,6 +8,8 @@ URL="https://tixati.com/"
 
 . $(dirname $0)/common.sh
 
+[ "$VERSION" = "*" ] || VERSION="$VERSION-1"
+
 case "$(epm print info -p)" in
     rpm)
         mask="tixati-${VERSION}.x86_64.rpm"
@@ -17,6 +19,10 @@ case "$(epm print info -p)" in
         ;;
 esac
 
-PKGURL="$(eget --list --latest "https://download.tixati.com/" "$mask")"
+if [ "$VERSION" = "*" ] ; then
+    PKGURL="$(eget --list --latest "https://download.tixati.com/" "$mask")"
+else
+    PKGURL="https://download.tixati.com/$mask"
+fi
 
 install_pkgurl
