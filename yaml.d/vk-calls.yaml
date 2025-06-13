@@ -1,0 +1,9 @@
+apps:
+  - name: vk-calls
+    group: vk-calls group
+    license: vk-calls license
+    url: https://calls.vk.com/
+    summary: vk-calls summary
+    description: VK Calls for Linux from the official site
+    arches: x86_64
+    download_page: https://vkcalls-native-ac.vk-apps.com/latest/vk-calls-amd64.deb

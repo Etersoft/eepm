@@ -1,0 +1,9 @@
+apps:
+  - name: Vesktop
+    group: Vesktop group
+    license: Vesktop license
+    url: https://github.com/Vencord/Vesktop
+    summary: Vesktop summary
+    description: A cross platform electron-based desktop app aiming to give you a snappier Discord experience with Vencord pre-installed
+    arches: x86_64 aarch64
+    download_page: https://vencord.dev/download/vesktop/$arch/appimage

@@ -1,0 +1,9 @@
+apps:
+  - name: r7-organizer
+    group: r7-organizer group
+    license: r7-organizer license
+    url: https://r7-office.ru/downloadorganizer
+    summary: r7-organizer summary
+    description: R7 Office Organizer for Linux from the official site
+    arches: x86_64
+    download_page: 

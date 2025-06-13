@@ -1,0 +1,10 @@
+apps:
+  - name: obsidian
+    group: obsidian group
+    license: obsidian license
+    url: https://obsidian.md
+    summary: obsidian summary
+    description: Obsidian from the official site
+    arches: x86_64
+    download_page: https://github.com/obsidianmd/obsidian-releases/releases/
+    download_mask: obsidian***$arch.$pkgtype

@@ -1,0 +1,9 @@
+apps:
+  - name: hansoft
+    group: hansoft group
+    license: hansoft license
+    url: https://www.perforce.com/products/hansoft
+    summary: hansoft summary
+    description: Hansoft client from the official site
+    arches: x86_64
+    download_page: https://cache.hansoft.com/hansoft_*_x64.deb

@@ -1,0 +1,10 @@
+apps:
+  - name: unigine-heaven
+    group: unigine-heaven group
+    license: unigine-heaven license
+    url: https://benchmark.unigine.com/heaven
+    summary: unigine-heaven summary
+    description: Unigine Heaven 2009 (Unigine Benchmark) from the official site
+    arches: x86_64
+    download_page: https://benchmark.unigine.com/heaven
+    download_mask: Unigine_Heaven-*.run

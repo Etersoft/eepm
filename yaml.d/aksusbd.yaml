@@ -1,0 +1,9 @@
+apps:
+  - name: aksusbd
+    group: aksusbd group
+    license: aksusbd license
+    url: 
+    summary: aksusbd summary
+    description: Sentinel LDK daemon (HASP) from the official site
+    arches: x86_64 x86 aarch64 armhf
+    download_page: ipfs://QmXkf4Wz9wSSqpGbLyebwYVtZ5PTYcNM12g4FtzXjDQiX4?filename=Sentinel_LDK_Linux_Run-time_Installer_script.tar.gz

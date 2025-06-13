@@ -1,0 +1,9 @@
+apps:
+  - name: LevenhukLite
+    group: LevenhukLite group
+    license: LevenhukLite license
+    url: https://www.levenhuk.ru/
+    summary: LevenhukLite summary
+    description: LevenhukLite microscope
+    arches: x86_64
+    download_page: https://www.levenhuk.ru/products/materials/0/lvh_software_levenhuklite_${VERSION//./_}.zip

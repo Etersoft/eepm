@@ -1,0 +1,9 @@
+apps:
+  - name: spotify-client
+    group: spotify-client group
+    license: spotify-client license
+    url: https://spotify.com
+    summary: spotify-client summary
+    description: Spotify client for Linux from the official site
+    arches: x86_64
+    download_page: http://repository.spotify.com/pool/non-free/s/spotify-client/$(epm print constructname spotify-client ** amd64 deb)

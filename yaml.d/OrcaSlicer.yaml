@@ -1,0 +1,10 @@
+apps:
+  - name: OrcaSlicer
+    group: OrcaSlicer group
+    license: OrcaSlicer license
+    url: https://github.com/SoftFever/OrcaSlicer
+    summary: OrcaSlicer summary
+    description: Orca Slicer is an open source slicer for FDM printers
+    arches: x86_64
+    download_page: https://github.com/SoftFever/OrcaSlicer/releases/
+    download_mask: OrcaSlicer_Linux_V*.AppImage

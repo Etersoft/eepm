@@ -1,0 +1,9 @@
+apps:
+  - name: code
+    group: code group
+    license: code license
+    url: 
+    summary: code summary
+    description: Visual Studio Code from the official site
+    arches: x86_64 armhf aarch64
+    download_page: 

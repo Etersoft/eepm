@@ -1,0 +1,10 @@
+apps:
+  - name: realvnc-vnc-server
+    group: realvnc-vnc-server group
+    license: realvnc-vnc-server license
+    url: https://www.realvnc.com/en/connect/download/vnc/
+    summary: realvnc-vnc-server summary
+    description: Real VNC Server from the official site
+    arches: x86_64
+    download_page: https://www.realvnc.com/en/connect/download/vnc/
+    download_mask: $mask
