@@ -20,4 +20,10 @@ add_bin_exec_command $PRODUCTCUR-web $PRODUCTDIR/$PRODUCTCUR-web
 add_bin_link_command $PRODUCT $PRODUCTCUR
 add_bin_link_command $PRODUCT-web $PRODUCTCUR-web
 
+# FIXME
+#ignore_lib_requires libQt5*
+#ignore_lib_requires libQt6*
+ignore_lib_requires libQt5Core.so.5 libQt5Gui.so.5 libQt5Widgets.so.5
+ignore_lib_requires libQt6Core.so.6 libQt6Gui.so.6  libQt6Widgets.so.6
+
 add_libs_requires
