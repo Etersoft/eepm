@@ -8,9 +8,6 @@ _epm() {
   EEPM_SUBCOMMANDS_ARGS=(epmi epme epmp epmqf epmI epms epmsf epmu epmq epmql epmqa epmqi epmcl epmrl epmwd epmqp)
 
   EEPM_SHORT_ARGS=(
-    '-v[print version]' 
-    '-h[show help]'
-    '-y[non interactive mode]'
     '-e[remove packages]'
     '-P[remove packages]'
     '-s[search package by name]'
@@ -26,6 +23,12 @@ _epm() {
     '-qi[print package detail info]'
     '-i[install packages]'
 
+  )
+
+  EEPM_SHORT_ARGS_SKIP_COMP=(
+    '-h[show help]'
+    '-y[non interactive mode]'
+    '-v[print version]' 
   )
 
   EEPM_FULL_ARGS=(
@@ -49,7 +52,7 @@ _epm() {
     '--simulate[print only (autoremove/autoorphans/remove only)]'
     '--just-print[print only (autoremove/autoorphans/remove only)]'
     '--no-act[print only (autoremove/autoorphans/remove only)]'
-    '--short[short output (just 'package' instead 'package-version-release')]'
+    '--short[short output (just "package" instead "package-version-release")]'
     '--direct[direct install package file from ftp]'
     '--repack[repack rpm package(s) before install]'
     '--norepack[don`t repack rpm package(s) if it is by default before install]'
@@ -271,6 +274,7 @@ _epm() {
   if [[ ! " ${EEPM_SUBCOMMANDS_ARGS[@]} " =~ " $cmd " ]]; then
     _arguments -C \
         "${EEPM_SHORT_ARGS[@]}" \
+        "${EEPM_SHORT_ARGS_SKIP_COMP[@]}" \
         "${EEPM_FULL_ARGS[@]}" \
         '*::arg:->args' \
       && ret=0
@@ -374,7 +378,7 @@ _epm_list_available_prescription()
   _describe -t list_available_prescription 'list available prescription' list_available_prescription
 
   if [[ ${words[CURRENT]} == -* ]]; then
-    _arguments -C "${EEPM_SHORT_ARGS[@]}" "${EEPM_FULL_ARGS[@]}"
+    _arguments -C "${EEPM_SHORT_ARGS[@]}" "${EEPM_SHORT_ARGS_SKIP_COMP[@]}" "${EEPM_FULL_ARGS[@]}"
   fi
 }
 
@@ -716,7 +720,7 @@ _epm_available_packages() {
   fi
 
   if [[ "$cur" == -* ]]; then
-    _arguments -C "${EEPM_SHORT_ARGS[@]}" "${EEPM_FULL_ARGS[@]}"
+    _arguments -C "${EEPM_SHORT_ARGS[@]}" "${EEPM_SHORT_ARGS_SKIP_COMP[@]}" "${EEPM_FULL_ARGS[@]}"
   fi
 }
 
@@ -724,9 +728,11 @@ _epm_available_packages() {
 _epm_installed_packages() {
   local installed_packages 
   installed_packages=( $(epm list --installed --quiet --short --direct) )
+  
   _describe -t installed-packages 'installed package' installed_packages 
+
   if [[ ${words[CURRENT]} == -* ]]; then
-    _arguments -C "${EEPM_SHORT_ARGS[@]}" "${EEPM_FULL_ARGS[@]}"
+    _arguments -C "${EEPM_SHORT_ARGS[@]}" "${EEPM_SHORT_ARGS_SKIP_COMP[@]}" "${EEPM_FULL_ARGS[@]}"
   fi
 }
 
