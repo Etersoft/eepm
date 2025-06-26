@@ -316,9 +316,14 @@ __eepm_complete_commands() {
                 __eepm_complete_full-upgrade
                 return 0 
                 ;;
-            query|q|-q|info|qp|grep|query_package|-qp|changelog|cl|-cl|show|qi|-qi)
+            query|q|-q|info|qp|grep|query_package|-qp|show|qi|-qi)
                 __eepm_list_available_packages
+                __eepm_list_installed_packages
                 return 0 
+                ;;
+            changelog|cl|-cl)
+                __eepm_list_available_packages
+                return 0
                 ;;
             search|s|find|sr|-s|-ql|ql|get-files|filelist)
                 __eepm_list_available_packages
@@ -412,8 +417,13 @@ __eepm()
         epm|eepm)
             __eepm_complete_commands 
             ;;
-        epmi|epmcl|epmwd|epmq|epmqi|epmqp|epms|epmql)
+        epmi|epmcl|epmwd|epms)
             __eepm_list_available_packages 
+            return 0
+            ;;
+        epmql|epmq|epmqi|epmqp)
+            __eepm_list_available_packages 
+            __eepm_list_installed_packages
             return 0
             ;;
         epme)
