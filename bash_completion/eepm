@@ -217,7 +217,7 @@ __eepm_complete_mark() {
         fi
     done
     # TODO logic for others commands
-    if [[ -v special ]]; then
+    if [[ -n "$special" ]]; then
         case $special in
             hold|unhold)
                 __eepm_list_installed_packages
@@ -244,7 +244,7 @@ __eepm_complete_repo() {
         fi
     done
     # TODO logic for others commands
-    if [[ -v special ]]; then
+    if [[ -n "$special" ]]; then
         case $special in
             change|set|add|Add)
             __eepm_complete_repolist
@@ -286,7 +286,7 @@ __eepm_complete_autoremove() {
             fi
         done
 
-        if [[ -v special ]]; then
+        if [[ -n "$special" ]]; then
             COMPREPLY=( $(compgen -W "${subcommands}" -- "$cur") )
         fi
     fi
@@ -306,7 +306,7 @@ __eepm_complete_commands() {
         fi
     done
     
-    if [[ -v special ]]; then
+    if [[ -n "$special" ]]; then
         case $special in
             install|Install|reinstall|add|i|it|-i|installed)
                 __eepm_list_available_packages
