@@ -289,20 +289,24 @@ _epm() {
         play|epmp)
           _epm_play_packages && ret=0
           ;;
-        install|Install|reinstall|add|i|it|-i|installed|epmi|epmI|epms|epmq|epmql|epmqi|epmcl|epmwd)
+        install|Install|reinstall|add|i|it|-i|installed|epmi|epmI|epms|epmcl|epmwd)
           _epm_available_packages && ret=0
           ;;
         full-upgrade)
           _epm_complete_full-upgrade && ret=0
           ;;
-        query|q|-q|info|qp|grep|query_package|-qp|changelog|cl|-cl|show|qi|-qi|search|s|find|sr|-s|-ql|ql|get-files|filelist|requires|deplist|depends|req|depends-on|whatdepends|rdepends|whatrequires|wd|required-by|provides|prov|whatprovides|conflicts|policy|resolve)
+        changelog|cl|-cl|search|s|find|sr|-s|-ql|ql|get-files|filelist|requires|deplist|depends|req|depends-on|whatdepends|rdepends|whatrequires|wd|required-by|provides|prov|whatprovides|conflicts|policy|resolve)
           _epm_available_packages && ret=0
           ;;
-        remove|rm|del|delete|uninstall|erase|purge|e|-e|-P|site|url|epme|epmqp)
+        remove|rm|del|delete|uninstall|erase|purge|e|-e|-P|site|url|epme)
           _epm_installed_packages && ret=0
           ;;
         qf|wp|which|belongs|-qf|-S|epmqf)
           _epm_complete_qf && ret=0
+          ;;
+        epmql|epmq|epmqi|epmqp|query|q|-q|info|qp|grep|query_package|-qp|show|qi|-qi)
+          _epm_available_packages && ret=0 
+          _epm_installed_packages && ret=0
           ;;
         status)
           _epm_complete_status && ret=0
