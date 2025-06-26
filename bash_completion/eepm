@@ -39,7 +39,8 @@ EEMP_COMMANDS+="|ei|ik|epminstall|epm-install|selfinstall"
 EEMP_COMMANDS+="|repack|play|pack"
 
 # short args complete commands
-EEPM_SHORT_ARGS='-h|-v|-y|-i|-e|-P|-s|-qp|-qf|-q|-S|-sf|-ql|-cl|-qi|-qa|-V'
+EEPM_SHORT_ARGS='-i|-e|-P|-s|-qp|-qf|-q|-S|-sf|-ql|-cl|-qi|-qa|-V'
+EEPM_SHORT_ARGS_SKIP_COMP='-h|-v|-y'
 
 EEPM_FULL_ARGS='--help --version --verbose --debug
         --skip-installed --skip-missed --show-command-only --quiet --silent --nodeps
@@ -90,6 +91,7 @@ __eepm_complete_full_args(){
 
 __eepm_complete_short_args(){
     COMPREPLY=( $(echo ${EEPM_SHORT_ARGS//'|'/' '}) )
+    COMPREPLY+=( $(echo " ${EEPM_SHORT_ARGS_SKIP_COMP//'|'/' '}" )  )
     COMPREPLY=( $( compgen -W '${COMPREPLY[@]}' -- "$cur" ) )
     
 }
@@ -411,9 +413,9 @@ __eepm()
     COMPREPLY=()
     _get_comp_words_by_ref cur prev
 
-    cmd="${COMP_WORDS[1]}"
+    cmd="${COMP_WORDS[0]}"
 
-    case "${COMP_WORDS[0]}" in
+    case $cmd in
         epm|eepm)
             __eepm_complete_commands 
             ;;
@@ -450,92 +452,12 @@ __eepm()
                 __eepm_complete_full_args
                 return 0
                 ;;
-            status)
-                __eepm_complete_status
-                return 0
-                ;;
-            list)
-                __eepm_complete_list
-                return 0
-                ;;
-            play|epmp)
-                __eepm_complete_list
-                return 0
-                ;;
-            kernel-update|kernel-upgrade|update-kernel|upgrade-kernel)
-                __eepm_complete_kernel_update 
-                return 0
-                ;;
-            full-upgrade)
-                __eepm_complete_full-upgrade
-                return 0
-                ;;
-            autoremove|package-cleanup)
-                __eepm_complete_autoremove
-                return 0
-                ;;
-            history)
-                __eepm_complete_history
-                return 0
-                ;;
-            pack)
-                __eepm_complete_pack
-                return 0
-                ;;
-            mark)
-                __eepm_complete_mark
-                return 0
-                ;;
-            *)
-                __eepm_complete_full_args
-                return 0
-                ;;
         esac
     fi
 
     if [[ $cur == -* ]]; then
         case $cmd in
             epm|eepm)
-                __eepm_complete_short_args
-                return 0
-                ;;
-            status)
-                __eepm_complete_status
-                return 0
-                ;;
-            list)
-                __eepm_complete_list
-                return 0
-                ;;
-            play|epmp)
-                __eepm_complete_list
-                return 0
-                ;;
-            kernel-update|kernel-upgrade|update-kernel|upgrade-kernel)
-                __eepm_complete_kernel_update 
-                return 0
-                ;;
-            full-upgrade)
-                __eepm_complete_full-upgrade
-                return 0
-                ;;
-            autoremove|package-cleanup)
-                __eepm_complete_autoremove
-                return 0
-                ;;
-            history)
-                __eepm_complete_history
-                return 0
-                ;;
-            pack)
-                __eepm_complete_pack
-                return 0
-                ;;
-            mark)
-                __eepm_complete_mark
-                return 0
-                ;;
-            *)
                 __eepm_complete_short_args
                 return 0
                 ;;
