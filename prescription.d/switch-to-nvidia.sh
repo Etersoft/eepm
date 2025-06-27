@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 # ROSA: kroko-cli autoinstall
 # https://www.altlinux.org/Nvidia#Смена_открытых_драйверов_на_проприетарные[1]
