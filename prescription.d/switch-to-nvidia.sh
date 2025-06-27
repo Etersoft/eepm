@@ -47,9 +47,12 @@ if [ "$nvidia_installed" = false ] || [ -n "$force" ]; then
     a= x11presetdrv # сканирует PCI в /sys на предмет видеоплат производителя NVIDIA. Если таковые найдены, ищет пары драйверов ядерный+X-овый, совпадающие по версии. Переключает /lib/modules/`uname -r`/nVidia/nvidia.ko на выбранную версию
     a= ldconfig # обновляет кэш информации о новейших версиях разделяемых библиотек
 
-    # отключаем nouveau
-    echo "blacklist nouveau" > /etc/modprobe.d/blacklist-nvidia-x11.conf
-    a= modprobe -r nouveau
+    # Отключаем nouveau и nova
+    cat > /etc/modprobe.d/blacklist-nvidia-x11.conf <<'EOF'
+blacklist nouveau
+blacklist nova_core
+blacklist nova_drm
+EOF
 
     if [ -e "/etc/X11/xorg.conf" ] && grep -Eq 'nouveau|fbdev|vesa' "/etc/X11/xorg.conf"; then
         rm -v "/etc/X11/xorg.conf"
