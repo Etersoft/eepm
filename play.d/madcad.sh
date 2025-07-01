@@ -1,7 +1,7 @@
 #!/bin/sh
 
 PKGNAME=madcad
-SUPPORTEDARCHES="x86_64 x86"
+SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION='uimadcad is a GUI (Graphical User Interface) meant to ease the use of pymadcad'
 URL="https://madcad.netlify.app/uimadcad"
@@ -10,9 +10,29 @@ URL="https://madcad.netlify.app/uimadcad"
 
 warn_version_is_not_supported
 
-PKGURL=$(eget --list --latest "https://madcad.netlify.app/uimadcad" "uimadcad*$arch.tar.gz")
+case $(epm print info -p) in
+    rpm)
+        mask="uimadcad-*.x86_64.rpm"
+        ;;
+    deb)
+        mask="uimadcad_*_amd64.deb"
+        ;;
+    *)
+        mask="uimadcad*$arch.tar.gz"
+        ;;
+esac
 
-install_pack_pkgurl || exit
+if [ $(epm print info -e) = 'ALTLinux/Sisyphus' ]; then
+    epm install uimadcad && exit
+fi 
+
+PKGURL=$(eget --list --latest "https://madcad.netlify.app/uimadcad" "$mask")
+
+if echo "$mask" | grep -qE 'rpm|deb'; then
+    install_pkgurl || exit
+else
+    install_pack_pkgurl || exit
+fi
 
 if [ ! $(epm print info -e) = 'ALTLinux/Sisyphus' ]; then
     echo "Note: You need also to install pymadcad from pip:
