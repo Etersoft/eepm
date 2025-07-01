@@ -25,7 +25,7 @@ run_script()
 
     shift
     [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
-    ( unset EPMCURDIR ; export PATH=$SCPATH ; $script "$@" )
+    ( unset EPMCURDIR ; export PATH=$SCPATH ; $script "$@" ) || warning "Postinstall/postuninstall script for $de_name encountered an issue."
     return
 }
 
@@ -81,6 +81,13 @@ get_repo_version() {
     fi
 }
 
+install_de_meta() {
+    local metapackages=$(get_value "$de_name" "metapackages")
+
+    [ -n "$metapackages" ] && epm install --manual-requires $metapackages
+    return
+}
+
 install_de() {
     local de_name=$1
 
@@ -93,8 +100,12 @@ install_de() {
 
     message "Installing $de_name with dependencies: $dependencies"
     
+    if ! install_de_meta $metapackages; then
+        message "Failed to install $de_name." && return 1
+    fi
+    
     if epm install $dependencies; then
-        run_script "$de_name-postin" $de_name || warning "Postinstall script for $de_name encountered an issue."
+        run_script "$de_name-postin" $de_name 
         message "$de_name successfully installed."
     else
         fatal "Failed to install $de_name."
@@ -116,7 +127,7 @@ remove_de() {
     message "Removing $de_name with dependencies: $dependencies"
 
     if epm remove $dependencies; then
-        run_script "$de_name-postun" $de_name || warning "Postuninstall script for $de_name encountered an issue." 
+        run_script "$de_name-postun" $de_name
         message "$de_name successfully removed."
     else
         fatal "Failed to remove $de_name."
