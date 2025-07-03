@@ -4,9 +4,11 @@
 BUILDROOT="$1"
 SPEC="$2"
 
+PRODUCTDIR=/opt/davinci-resolve
+
 . $(dirname $0)/common.sh
 
-add_conflicts davinci-resolve-Studio
+add_conflicts davinci-resolve
 
 ignore_lib_requires libstdc++-libc6.2-2.so.3 libstdc++.so.5
 
