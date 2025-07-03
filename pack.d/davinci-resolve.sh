@@ -5,7 +5,7 @@ RETURNTARNAME="$2"
 PRODUCT=davinci-resolve
 
 . $(dirname $0)/common.sh
-
+# DaVinci_Resolve_Studio_20.0.1_Linux.run
 # DaVinci_Resolve_18.6.5_Linux.run
 BASENAME=$(basename $1 .run)
 VERSION=$(echo $BASENAME | sed -e 's|DaVinci_Resolve_||' -e 's|_Linux||')
@@ -40,6 +40,8 @@ rm -v opt/davinci-resolve/libs/libglib-2.0.so*
 rm -v opt/davinci-resolve/libs/libgio-2.0.so*
 rm -v opt/davinci-resolve/libs/libgmodule-2.0.so*
 # ln -s /usr/lib/libglib-2.0.so.0 opt/davinci-resolve/libs/libglib-2.0.so.0
+rm -v opt/davinci-resolve/bin/sqlite3
+rm -v opt/davinci-resolve/Onboarding/qml/Qt/labs/lottieqt/liblottieqtplugin.so
 
 PKGNAME=$PRODUCT-$VERSION
 
