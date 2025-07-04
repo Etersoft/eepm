@@ -49,9 +49,7 @@ waydroid_install () {
 
 	echo "binder_linux" > /etc/modules-load.d/waydroid.conf
 
-	epm prescription waydroid --init || fatal
-
-	echo "Done. Just you need reboot your system to use waydroid."
+	echo "Done. Just you need type epm prescription waydroid --init and reboot your system to use waydroid."
 }
 
 waydroid_select_gpu () {
