@@ -8,8 +8,10 @@ URL="https://github.com/Castro-Fidel/PortProton_dpkg/releases"
 
 . $(dirname $0)/common.sh
 
+warn_version_is_not_supported
+
 if ! epm install portproton ; then
-    PKGURL="$(eget --list --latest https://github.com/Castro-Fidel/PortProton_dpkg/releases "portproton_${VERSION}amd64.deb")"
+    PKGURL="https://github.com/Castro-Fidel/PortProton_dpkg/releases/download/portproton_amd64/portproton_amd64.deb"
     install_pkgurl
 fi
 
