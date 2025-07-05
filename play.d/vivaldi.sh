@@ -20,7 +20,8 @@ case "$arch" in
         ;;
 esac
 
-# TODO: вообще-то vivaldi только текущую версию поддерживает, остальные разве что через --ipfs
+warn_version_is_not_supported
+
 # can't use wildcard for -1
 [ "$VERSION" = "*" ] || VERSION="$VERSION-1"
 
@@ -43,8 +44,11 @@ if [ "$PKGNAME" = "$BASEPKGNAME-snapshot" ] ; then
     fi
     PKGURL="https://downloads.vivaldi.com/snapshot/vivaldi-snapshot_${VERSION}_$arch.deb"
 else
-    # https://downloads.vivaldi.com/stable/vivaldi-stable_6.6.3271.55-1_amd64.deb
-    PKGURL="$(eget --list --latest https://vivaldi.com/ru/download "$(epm print constructname $PKGNAME "$VERSION" $arch deb)")" #"
+    if [ "$VERSION" = "*" ] ; then
+        PKGURL="$(eget --list --latest https://vivaldi.com/ru/download "")" #"
+    else
+        PKGURL="https://downloads.vivaldi.com/stable/$(epm print constructname $PKGNAME "$VERSION" $arch deb)"
+    fi
 fi
 
 install_pkgurl
