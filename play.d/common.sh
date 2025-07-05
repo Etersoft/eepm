@@ -4,6 +4,7 @@
 echo "$EPM_OPTIONS" | grep -q -- "--force" && force="--force"
 echo "$EPM_OPTIONS" | grep -q -- "--auto" && auto="--auto"
 echo "$EPM_OPTIONS" | grep -q -- "--latest" && latest="true"
+[ -n "$EGET_IPFS_DB" ] && ipfs="true"
 
 
 fatal()
@@ -103,6 +104,10 @@ is_supported_arch()
 warn_version_is_not_supported()
 {
     [ "$VERSION" = "*" ] && return
+    if [ -n "$ipfs" ] ; then
+        echo -e "\nWarning: Specifying the version is not supported by vendor. But you run me with --ipfs, so I am working around it ...\n"
+        return
+    fi
     echo -e "\nWarning: Specifying the version is not supported by vendor. Downloading latest version ...\n"
     VERSION="*"
 }
