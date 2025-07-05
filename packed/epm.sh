@@ -34,7 +34,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.31"
+export EPMVERSION="3.64.32"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -3219,7 +3219,7 @@ run_script()
 
     shift
     [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
-    ( unset EPMCURDIR ; export PATH=$SCPATH ; $script "$@" )
+    ( unset EPMCURDIR ; export PATH=$SCPATH ; $script "$@" ) || warning "Postinstall/postuninstall script for $de_name encountered an issue."
     return
 }
 
@@ -3275,6 +3275,13 @@ get_repo_version() {
     fi
 }
 
+install_de_meta() {
+    local metapackages=$(get_value "$de_name" "metapackages")
+
+    [ -n "$metapackages" ] && epm install --manual-requires $metapackages
+    return
+}
+
 install_de() {
     local de_name=$1
 
@@ -3287,8 +3294,12 @@ install_de() {
 
     message "Installing $de_name with dependencies: $dependencies"
     
+    if ! install_de_meta $metapackages; then
+        message "Failed to install $de_name." && return 1
+    fi
+    
     if epm install $dependencies; then
-        run_script "$de_name-postin" $de_name || warning "Postinstall script for $de_name encountered an issue."
+        run_script "$de_name-postin" $de_name 
         message "$de_name successfully installed."
     else
         fatal "Failed to install $de_name."
@@ -3310,7 +3321,7 @@ remove_de() {
     message "Removing $de_name with dependencies: $dependencies"
 
     if epm remove $dependencies; then
-        run_script "$de_name-postun" $de_name || warning "Postuninstall script for $de_name encountered an issue." 
+        run_script "$de_name-postun" $de_name
         message "$de_name successfully removed."
     else
         fatal "Failed to remove $de_name."
@@ -6702,7 +6713,7 @@ __epm_pack()
     mv -v $pkgnames "$EPMCURDIR" || fatal
 
     local i
-    for i in "$returntarname" ; do
+    for i in $returntarname ; do
         [ -r "$i.eepm.yaml" ] && mv -v "$i.eepm.yaml" "$EPMCURDIR"
     done
 
@@ -10913,10 +10924,13 @@ __epm_repack_to_rpm()
         alpkg=$(basename $pkg)
         # don't use abs package path: copy package to temp dir and use there
         cp -l $verbose $pkg $tmpbuilddir/../$alpkg 2>/dev/null || cp $verbose $pkg $tmpbuilddir/../$alpkg || fatal
+        [ -r "$pkg.eepm.yaml" ] && cp $verbose $pkg.eepm.yaml $tmpbuilddir/../$alpkg.eepm.yaml
 
         cd $tmpbuilddir/../ || fatal
         # fill alpkg and SUBGENERIC
         __prepare_source_package "$(realpath $alpkg)"
+        # override abspkg
+        abspkg="$(realpath $alpkg)"
         cd $tmpbuilddir/ || fatal
 
         local fakeroot
@@ -11757,10 +11771,34 @@ __epm_repoindex_alt()
     local archlist="i586 x86_64 x86_64-i586 aarch64 noarch"
 
     local init=''
-    if [ "$1" = "--init" ] ; then
-        init='--init'
-        shift
-    fi
+    local sign=''
+    local default_key=''
+
+    while [ -n "$1" ] ; do
+        case "$1" in
+            --init)
+                init='--init'
+                ;;
+            --sign)
+                sign='--sign'
+                ;;
+            --default-key=*)
+                default_key="--default-key=${1#*=}"
+                ;;
+            --default-key)
+                shift
+                [ -n "$1" ] || fatal "Missed value for --default-key"
+                default_key="--default-key=$1"
+                ;;
+            --*)
+                fatal "Unknown option $1"
+                ;;
+            *)
+                break
+                ;;
+         esac
+         shift
+    done
 
     epm assure genbasedir apt-repo-tools || fatal
     REPO_DIR="$1"
@@ -11800,14 +11838,14 @@ __epm_repoindex_alt()
 
     if [ -d "$REPO_DIR/RPMS.$REPO_NAME" ] ; then
         mkdir -pv "$REPO_DIR/base/"
-        docmd genbasedir --bloat --progress --topdir=$(dirname $REPO_DIR) $(basename $REPO_DIR) $REPO_NAME
+        docmd genbasedir --bloat --progress $sign $default_key --topdir=$(dirname $REPO_DIR) $(basename $REPO_DIR) $REPO_NAME
         return
     fi
 
     for arch in $archlist; do
         [ -d "$REPO_DIR/$arch/RPMS.$REPO_NAME" ] || continue
         mkdir -pv "$REPO_DIR/$arch/base/"
-        docmd genbasedir --bloat --progress --topdir=$REPO_DIR $arch $REPO_NAME
+        docmd genbasedir --bloat --progress $sign $default_key --topdir=$REPO_DIR $arch $REPO_NAME
     done
 }
 
