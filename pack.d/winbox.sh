@@ -13,7 +13,7 @@ erc $TAR || fatal
 
 mv WinBox_Linux/* opt/$PRODUCT
 
-VERSION=$(echo "$URL" | awk -F'/' '{print $6}')
+[ -n "$VERSION" ] || VERSION=$(echo "$URL" | awk -F'/' '{print $6}')
 [ -n "$VERSION" ] || fatal "Can't get package version"
 
 PKGNAME=$PRODUCT-$VERSION
