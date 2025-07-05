@@ -14,6 +14,8 @@ arch="amd64"
 # will use libffmpeg.so (via config added in repack)
 epm install --skip-installed ffmpeg-plugin-browser || epm play nwjs-ffmpeg-prebuilt
 
+warn_version_is_not_supported
+
 if [ "$(epm print info -p)" = "rpm" ] ; then
     pkgname="${PKGNAME/-/_}"
 
