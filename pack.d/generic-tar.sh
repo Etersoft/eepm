@@ -9,7 +9,8 @@ URL="$4"
 
 alpkg=$(basename $TAR)
 
-VERSION="$(echo "$alpkg" | grep -o -P '[-_.][0-9][0-9]*([.]*[0-9])*' | head -n1 | sed -e 's|^[-_.]||')" #"
+# FIXME: this heruistic need be improved
+VERSION="$(echo "$alpkg" | grep -o -P '[-_.][0-9][0-9]*([.]*[0-9][0-9a-z]*)*' | head -n1 | sed -e 's|^[-_.]||')" #"
 
 # Commented out: will not work due incorect name
 # Hack for https://www.bitwig.com/dl/Bitwig%20Studio/5.3.2/installer_linux/
