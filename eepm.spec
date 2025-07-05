@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.31
+Version: 3.64.32
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -141,6 +141,40 @@ make -C po
 %endif
 
 %changelog
+* Sat Jul 05 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.32-alt1
+- git repack localsend: fix package version
+- epm play master-pdf-editor: download directly if version is known
+- epm repo index: add support for --sign [--default-key=NN] (fix issue 296)
+- epm play teamspeak: fix beta version support
+- epm play tixati: fix downloading version, use direct link
+- epm play wpsoffice: fix text display in non-GTK environments
+- epm play: added AFFiNE (eterbug #18345)
+- epm play packet-tracer: fix text display in non-GTK environments
+- epm repack zwcad-viewer: fix Qt requires
+- epm repack bitrix24: fix Qt requires
+- epm repack zoom: fix Qt requires
+- epm play: add betaflight-configurator
+- epm play: added rlinux (eterbug #18361)
+- epm desktop: restore metapackage's support; add kde; fix postin/postun message (eterbug #17617)
+- epm play madcad: fix alt sisyphus install (eterbug #17558)
+- epm play: added Lens (eterbug #18378)
+- epm prescription switch-to-nvidia: fix shebang (eterbug #18373)
+- epm prescription switch-to-nvidia: blacklist nova too (eterbug #18373)
+- bash_completion: fix bash < v.4 support (eterbug #18367)
+- bash_completion,zsh_completion: fix epmq* command's completion for new installed packages (eterbug #18367)
+- bash_completion: cleanup code; fix -y completion (eterbug #18367)
+- zsh_completion: fix -y completion (eterbug #18367)
+- epm prescription: added blacklist-kvm (eterbug #18372)
+- epm play: add vintasoft-web-twain-service
+- epm play common.sh: still use version after warn_version_is_not_supported if ipfs is using
+- epm repack: fix path to eepm.yaml with metainfo
+- epm pack: generic-tar.sh: improve version splitting
+- epm play: improve winbox downloading
+- epm play opera: vendor doesn't support custom version
+- epm play vivaldi: allow direct downloading, add warning about custom version
+- epm prescription waydroid: drop init on install (eterbug #18386)
+- epm pack davinci-resolve: fix dependencies; add repack for Studio (eterbug #18117)
+
 * Tue Jun 03 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.31-alt1
 - epm play cascadeur: update to 2025.1.2, cleanup requires
 - epm update: update zwcad-viewer download url
