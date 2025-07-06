@@ -57,7 +57,7 @@ epm_repo()
         load_helper epm-repolist
         epm_repolist "$@"
         ;;
-    change)                           # HELPCMD: <mirror>: switch sources to the mirror (supports etersoft/yandex/basealt/altlinux.org/eterfund.org): rewrite URLs to the specified server
+    change)                           # HELPCMD: <mirror>: switch sources to the mirror (supports etersoft/yandex/basealt/datacenter/truenetwork/msu/altlinux.org/eterfund.org): rewrite URLs to the specified server
         load_helper epm-repofix
         epm_repochange "$@"
         ;;
