@@ -10,6 +10,8 @@ URL="https://app.lizardbyte.dev/Sunshine"
 
 warn_version_is_not_supported
 
+is_openssl_enough 3 || fatal "There is no needed OpenSSL 3 in the system."
+
 arch=$(epm print info -a)
 
 BUILD_ID=$(eget --list https://copr.fedorainfracloud.org/coprs/lizardbyte/stable/package/Sunshine/ | grep -o 'build/[0-9]\+' | cut -d/ -f2 | sort -n | tail -n1)
