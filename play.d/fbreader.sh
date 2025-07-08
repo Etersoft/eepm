@@ -10,6 +10,8 @@ URL="https://fbreader.org/en/linux"
 
 warn_version_is_not_supported
 
+is_openssl_enough 3 || fatal "There is no needed OpenSSL 3 in the system."
+
 arch=$(epm print info -a)
 
 if [ "$VERSION" = "*" ]; then

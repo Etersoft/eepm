@@ -8,6 +8,8 @@ URL="https://www.clashverge.dev/"
 
 . $(dirname $0)/common.sh
 
+is_openssl_enough 3 || fatal "There is no needed OpenSSL 3 in the system."
+
 arch="$(epm print info --debian-arch)"
 
 #https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v2.2.3/Clash.Verge-2.2.3-1.aarch64.rpm

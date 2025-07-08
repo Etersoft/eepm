@@ -10,6 +10,8 @@ URL="https://www.gitkraken.com/"
 
 warn_version_is_not_supported
 
+is_openssl_enough 3 || fatal "There is no needed OpenSSL 3 in the system."
+
 pkgtype=$(epm print info -p)
 case $pkgtype in
     rpm)
