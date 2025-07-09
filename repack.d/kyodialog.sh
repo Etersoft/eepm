@@ -6,8 +6,17 @@ SPEC="$2"
 
 VERSION=$(grep "^Version:" $SPEC | sed -e "s|Version: ||")
 
+case "$VERSION" in
+    # set MAJORVERSION to "5" to ensure the correct version is used in the path
+    5* )
+        MAJORVERSION="5"
+        ;;
+    9*)
+        MAJORVERSION=$VERSION
+esac
+
 PRODUCT=kyodialog
-PRODUCTCUR=$PRODUCT$VERSION
+PRODUCTCUR=$PRODUCT$MAJORVERSION
 
 . $(dirname $0)/common.sh
 
@@ -17,10 +26,10 @@ filter_from_requires "python3(PyPDF3)"
 add_libs_requires
 
 # remove embedded PyPDF3
-remove_dir /usr/share/kyocera$VERSION/Python
+remove_dir /usr/share/kyocera$MAJORVERSION/Python
 
 # PRIMARY_PPD_DIRECTORY=/usr/share/ppd/kyocera/
-fromppd="/usr/share/kyocera$VERSION/ppd$VERSION"
+fromppd="/usr/share/kyocera$MAJORVERSION/ppd$MAJORVERSION"
 mkdir -p $BUILDROOT/usr/share/ppd/
 mv $BUILDROOT$fromppd $BUILDROOT/usr/share/ppd/kyocera
 subst "s|$fromppd|/usr/share/ppd/kyocera|" $SPEC
@@ -44,4 +53,5 @@ Terminal=false
 Categories=Qt;Printing;HardwareSettings;Settings
 EOF
 
-install_file /usr/share/kyocera$VERSION/appicon_H.png /usr/share/pixmaps/$PRODUCTCUR.png
+# 9.3 appicon_H.png; 5.0 appicon_F.png 
+install_file "/usr/share/kyocera$MAJORVERSION/appicon_H.png" "/usr/share/pixmaps/$PRODUCTCUR.png" || install_file "/usr/share/kyocera$MAJORVERSION/appicon_F.png" "/usr/share/pixmaps/$PRODUCTCUR.png" 
