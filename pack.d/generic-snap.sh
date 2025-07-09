@@ -31,6 +31,10 @@ if echo "$version" | grep -q "^v[0-9]" ; then
     version="$(echo $version | sed -e 's|^v||')"
 fi
 
+
+version="$(echo $version | sed 's/-/./g')"
+
+
 mkdir -p opt/
 mv squashfs-root opt/$name
 
