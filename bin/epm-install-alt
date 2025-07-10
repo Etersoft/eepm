@@ -274,7 +274,7 @@ epm_install_alt_tasks()
     [ -n "$verbose" ] && info "Packages to install: $installlist"
 
     if [ -z "$installlist" ] ; then
-        warning 'There is no installed packages for upgrade from task $*'
+        warning 'There is no installed packages for upgrade from task' "$*"
         return 22
     fi
 
