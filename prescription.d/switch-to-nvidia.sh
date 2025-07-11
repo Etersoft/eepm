@@ -9,6 +9,21 @@ DESCRIPTION="Switch to using Nvidia proprietary driver"
 
 . $(dirname $0)/common.sh
 
+case "${3}" in
+
+    '--clean' )
+        assure_root
+        for file in /etc/modules-load.d/nvidia-uvm.conf /etc/modprobe.d/blacklist-nvidia-x11.conf \
+                    /etc/udev/rules.d/99-nvidia.rules /etc/modprobe.d/nvidia_memory_allocation.conf; do
+            [ -f "$file" ] && rm -vf "$file"
+        done
+        epm update-kernel --remove-kernel-options initcall_blacklist=simpledrm_platform_driver_init nvidia_drm.fbdev=1 nvidia.NVreg_EnableGpuFirmware=0 nvidia_drm.modeset=1
+        a= make-initrd
+        a= update-grub
+        exit 0
+        ;;
+esac
+
 assure_root
 
 if [ "$(epm print info -s)" = "rosa" ] ; then
