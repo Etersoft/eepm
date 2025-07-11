@@ -124,6 +124,16 @@ case "${3}" in
 		assure_root
         waydroid_software_rendering ;;
 
+    '--clean')
+		assure_root
+		for file in /var/lib/waydroid/lxc/waydroid/config_nodes.bak /etc/modules-load.d/waydroid.conf; do
+			[ -f "$file" ] && rm -vf "$file"
+		done
+		epm update-kernel --remove-kernel-options psi=1
+		a= update-grub
+		exit 0
+        ;;
+
     '--help')
         display_help;;
 
