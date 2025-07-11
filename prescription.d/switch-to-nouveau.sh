@@ -5,6 +5,15 @@ DESCRIPTION="Switch to using open source driver nouveau for NVIDIA cards"
 
 . $(dirname $0)/common.sh
 
+case "${3}" in
+
+    '--clean' )
+        assure_root
+        [ -f "/etc/modprobe.d/blacklist-nouveau-x11.conf" ] && rm -vf "/etc/modprobe.d/blacklist-nouveau-x11.conf"
+        exit 0
+        ;;
+esac
+
 assure_root
 exit
 
@@ -38,12 +47,6 @@ blacklist nvidia_drm
 blacklist nvidia_uvm
 blacklist nvidia_modeset
 blacklist i2c_nvidia_gpu
-alias nouveau off
-alias nvidia off
-alias nvidia_drm off
-alias nvidia_uvm off
-alias nvidia_modeset off
-alias i2c_nvidia_gpu off
 EOF
 
 a= make-initrd
