@@ -125,25 +125,22 @@ update_alt_contents_index()
 {
     load_helper epm-repolist
     check_alt_contents_index || return
-
     truncate -s0 "$ALT_CONTENTS_INDEX_LIST"
     # TODO: fix for Etersoft/LINUX@Etersoft
     # TODO: fix for rsync
     info "Retrieving contents_index ..."
 
-    mapfile -t URL_LIST < <(
-        (quiet=1 epm_repolist) | \
-        grep -v " task$" | \
-        grep -E "rpm.*(ftp://|http://|https://|rsync://|file:/)" | \
-        sed -e "s@^rpm.*\(ftp://\|http://\|https://\)@rsync://@g" | \
-        sed -e "s@^rpm.*\(file:\)@@g"
-    )
+    local tmpfile
+    tmpfile=$(mktemp) || { echo "Cannot create temp file"; return 1; }
 
-    for line in "${URL_LIST[@]}"; do
-        URL1=$(echo "$line" | awk '{print $1}')
-        URL2=$(echo "$line" | awk '{print $2}')
-        component=$(echo "$line" | awk '{print $3}')
+    (quiet=1 epm_repolist) | \
+    grep -v " task$" | \
+    grep -E "rpm.*(ftp://|http://|https://|rsync://|file:/)" | \
+    sed -e "s@^rpm.*\(ftp://\|http://\|https://\)@rsync://@g" | \
+    sed -e "s@^rpm.*\(file:\)@@g" > "$tmpfile"
 
+    exec 3< "$tmpfile"
+    while read -r URL1 URL2 component <&3; do
         [ "$component" = "debuginfo" ] && continue
         URL="$URL1/$URL2"
 
@@ -171,5 +168,7 @@ update_alt_contents_index()
             #__add_better_to_contents_index_list "(cached)" "$LOCALPATH/contents_index.gz" "$LOCALPATH/contents_index"
         fi
     done
-}
+    exec 3<&-
 
+    rm -f "$tmpfile"
+}
