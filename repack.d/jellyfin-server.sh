@@ -24,7 +24,21 @@ subst 's|JELLYFIN_CONFIG_DIR="/etc/jellyfin"|JELLYFIN_CONFIG_DIR="/var/lib/jelly
 
 # /etc/sudoers.d/jellyfin-sudoers:4:95: duplicate Cmnd_Alias "STOPSERVER_SYSTEMD", previously defined at /etc/sudoers.d/jellyfin-sudoers:4:12
 # Cmnd_Alias STOPSERVER_SYSTEMD = /usr/bin/systemctl stop jellyfin, /bin/systemctl stop jellyfin
-subst 's|, /bin/systemctl.*||' $BUILDROOT/etc/sudoers.d/jellyfin-sudoers
+# Remove sudoers file - switching to Polkit
+remove_file /etc/sudoers.d/jellyfin-sudoers
+
+# Create Polkit rule allowing jellyfin user to manage jellyfin.service
+cat <<EOF |create_file /usr/share/polkit-1/rules.d/50.jellyfin-manage-jellyfin.rules
+polkit.addRule(function(action, subject) {
+    if (
+        action.id == "org.freedesktop.systemd1.manage-units" &&
+        action.lookup("unit") == "jellyfin.service" &&
+        subject.user == "jellyfin"
+    ) {
+        return polkit.Result.YES;
+    }
+});
+EOF
 
 # This is required for ALT systems
 if [ "$(epm print info -s)" = "alt" ]; then
