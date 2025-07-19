@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.32
+Version: 3.64.33
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -141,6 +141,24 @@ make -C po
 %endif
 
 %changelog
+* Sun Jul 20 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.33-alt1
+- epm repo change: add support for datacenter, truenetwork, msu mirrors
+- epm play portproton: fix download link (eterbug #18388)
+- epm prescription switch-to-nvidia: added --clean argument
+- epm prescription switch-to-nouveau: added --clean argument
+- epm prescription waydroid: added --clean argument
+- epm play: added ElyPrismLauncher (eterbug #18405)
+- epm pack generic-snap: fix version for rpm (eterbug #17865)
+- epm play vivaldi: fix download (eterbug #17865)
+- epm repack freedownloadmanager: restore libsqlite plugin
+- epm repack jellyfin: remove sudoers, add polkit rule instead (eterbug #18411)
+- epm play freeplane: fix getting version (eterbug #17865)
+- epm play netbeans: fix download (eterbug #17865)
+- epm play clash-verge, fbreader, gitkraken, simplex, sunshine, vkcalls: add notification about libssl3 (eterbug #17865)
+- epm pack, repack jetbrains-toolbox: fix install (eterbug #17865)
+- epm play: add kyodialog-phase5 (eterbug #18400) epm repack kyodialog: add support for phase-5 (eterbug #18400)
+- epm pack: add 1c-universal (eterbug #18280)
+
 * Sat Jul 05 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.32-alt1
 - git repack localsend: fix package version
 - epm play master-pdf-editor: download directly if version is known
