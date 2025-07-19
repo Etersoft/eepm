@@ -12,7 +12,10 @@ install_file $PRODUCTDIR/icon.png /usr/share/icons/hicolor/256x256/apps/$PRODUCT
 fix_desktop_file $PRODUCTDIR/fdm fdm
 fix_desktop_file $PRODUCTDIR/icon.png $PRODUCT.png
 
-# remove unused sql dependencies
-remove_file "$PRODUCTDIR/plugins/sqldrivers/*.so"
+# remove unused sql dependencies (but keep libqsqlite)
+remove_file "$PRODUCTDIR/plugins/sqldrivers/libqsqlmimer.so"
+remove_file "$PRODUCTDIR/plugins/sqldrivers/libqsqlmysql.so"
+remove_file "$PRODUCTDIR/plugins/sqldrivers/libqsqlodbc.so"
+remove_file "$PRODUCTDIR/plugins/sqldrivers/libqsqlpsql.so"
 
 add_libs_requires
