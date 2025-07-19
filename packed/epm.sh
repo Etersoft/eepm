@@ -34,7 +34,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.32"
+export EPMVERSION="3.64.33"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -5448,7 +5448,7 @@ epm_install_alt_tasks()
     [ -n "$verbose" ] && info "Packages to install: $installlist"
 
     if [ -z "$installlist" ] ; then
-        warning 'There is no installed packages for upgrade from task $*'
+        warning 'There is no installed packages for upgrade from task' "$*"
         return 22
     fi
 
@@ -9188,7 +9188,7 @@ epm_release_downgrade()
         docmd epm install dnf
         #docmd epm install epel-release yum-utils
         sudocmd dnf --refresh upgrade
-        sudocmd dnf clean all
+        #sudocmd dnf clean all
         assure_exists dnf-plugin-system-upgrade
         sudocmd dnf upgrade --refresh
         local RELEASEVER="$1"
@@ -9773,13 +9773,13 @@ epm_release_upgrade()
         return
         ;;
      "OpenMandrivaLx")
-        sudocmd dnf clean all
+        #sudocmd dnf clean all
         sudocmd dnf distro-sync --allowerasing
         return
         ;;
     "ROSA")
         sudocmd dnf --refresh upgrade || fatal
-        sudocmd dnf clean all
+        #sudocmd dnf clean all
         DV=$(echo "$DISTRVERSION" | sed -e "s|\..*||")
         [ "$DV" = "2021" ] && DV=12
         local RELEASEVER="$1"
@@ -9854,7 +9854,7 @@ epm_release_upgrade()
 
         if [ "$DISTRNAME" = "RockyLinux" ] ; then
             sudocmd dnf --refresh upgrade || fatal
-            sudocmd dnf clean all
+            #sudocmd dnf clean all
             info "Check https://www.centlinux.com/2022/07/upgrade-your-servers-from-rocky-linux-8-to-9.html"
             info "For upgrading your yum repositories from Rocky Linux 8 to 9 ..."
             epm install "https://download.rockylinux.org/pub/rocky/9/BaseOS/x86_64/os/Packages/r/rocky-gpg-keys*.rpm" || fatal
@@ -9877,7 +9877,7 @@ epm_release_upgrade()
         info "Check https://fedoraproject.org/wiki/DNF_system_upgrade for an additional info"
         #docmd epm install epel-release yum-utils
         sudocmd dnf --refresh upgrade || fatal
-        sudocmd dnf clean all
+        #sudocmd dnf clean all
         assure_exists dnf-plugin-system-upgrade
         sudocmd dnf upgrade --refresh
         local RELEASEVER="$1"
@@ -11050,7 +11050,7 @@ epm_repo()
     ""|list)                          # HELPCMD: list enabled repositories (-a|--all for list disabled repositorires too)
         epm_repolist "$@"
         ;;
-    change)                           # HELPCMD: <mirror>: switch sources to the mirror (supports etersoft/yandex/basealt/altlinux.org/eterfund.org): rewrite URLs to the specified server
+    change)                           # HELPCMD: <mirror>: switch sources to the mirror (supports etersoft/yandex/basealt/datacenter/truenetwork/msu/altlinux.org/eterfund.org): rewrite URLs to the specified server
         epm_repochange "$@"
         ;;
     set)                              # HELPCMD: <repo>: remove all existing sources and add default mirror for the branch
@@ -11663,6 +11663,9 @@ __subst_with_repo_url()
         -e "s|//ftp.basealt.ru/pub/distributions/* ALTLinux|$NURL|" \
         -e "s|//update.altsp.su/pub/distributions/* ALTLinux|$NURL|" \
         -e "s|//ftp.etersoft.ru/pub/* ALTLinux|$NURL|" \
+        -e "s|//mirror.datacenter.by/pub/* ALTLinux|$NURL|" \
+        -e "s|//mirror.truenetwork.ru/* altlinux|$NURL|" \
+        -e "s|//mirror.cs.msu.ru/* alt|$NURL|" \
         -e "s|//download.etersoft.ru/pub/* ALTLinux|$NURL|" \
         -e "s|//mirror.eterfund.org/download.etersoft.ru/pub/* ALTLinux|$NURL|"
 }
@@ -11688,6 +11691,15 @@ __epm_repochange_alt()
             ;;
         "etersoft")
             __change_repo etersoft "//download.etersoft.ru/pub ALTLinux"
+            ;;
+        "datacenter")
+            __change_repo etersoft "//mirror.datacenter.by/pub ALTLinux"
+            ;;
+        "truenetwork")
+            __change_repo etersoft "//mirror.truenetwork.ru altlinux"
+            ;;
+        "msu")
+            __change_repo etersoft "//mirror.cs.msu.ru alt"
             ;;
         "eterfund.org")
             __change_repo eterfund.org "//mirror.eterfund.org/download.etersoft.ru/pub ALTLinux"
