@@ -1,0 +1,1 @@
+Pardus/23.3 debian/yirmiuc
