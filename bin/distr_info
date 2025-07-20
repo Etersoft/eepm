@@ -549,6 +549,9 @@ case "$DISTRIB_ID" in
         DISTRIB_RELEASE="Sisyphus"
         DISTRIB_CODENAME="$DISTRIB_RELEASE"
         ;;
+    "LinuxMint"|"LMDE")
+        DISTRIB_RELEASE=$(normalize_version1 "$DISTRIB_RELEASE_ORIG")
+        ;;
     "SberOS")
         DISTRIB_RELEASE="Rolling"
         DISTRIB_CODENAME="rolling"
