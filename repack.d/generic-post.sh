@@ -13,7 +13,7 @@ PKG="$4"
 # https://bugzilla.altlinux.org/show_bug.cgi?id=38842
 for i in / /etc /etc/init.d /etc/systemd /bin /opt /usr /usr/bin /usr/lib /usr/lib64 /usr/share /usr/share/doc /var /var/log /var/run \
         /etc/cron.daily /usr/share/icons/usr/share/pixmaps /usr/share/man /usr/share/man/man1 /usr/share/appdata /usr/share/applications /usr/share/menu \
-        /usr/share/mime /usr/share/mime/packages /usr/share/icons \
+        /usr/share/mime /usr/share/mime/icons /usr/share/mime/packages /usr/share/icons \
         /usr/share/icons/gnome \
         /usr/share/icons/hicolor ; do
     sed \
