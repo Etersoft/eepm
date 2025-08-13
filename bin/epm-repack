@@ -168,17 +168,25 @@ __prepare_source_package()
 __epm_repack_single()
 {
     local pkg="$1"
+    local repack_script="$2"
+    local packversion="$3"
+    local packrelease="$4"
+
+    if [ -n "$repack_script" ] && [ ! -s "$EPM_REPACK_SCRIPTS_DIR/$repack_script.sh" ]; then
+        fatal "Repack script $repack_script.sh not found in $EPM_REPACK_SCRIPTS_DIR"
+    fi
+
     case $PKGFORMAT in
         rpm)
             load_helper epm-repack-rpm
-            __epm_repack_to_rpm "$pkg" || return
+            __epm_repack_to_rpm "$pkg" "$repack_script" "$packversion" "$packrelease" || return
             ;;
         deb)
-            if __epm_have_repack_rule "$pkg" ; then
+            if [ -n "$repack_script" ] || __epm_have_repack_rule "$pkg" ; then
                 # we have repack rules only for rpm, so use rpm step in any case
                 load_helper epm-repack-rpm
                 load_helper epm-repack-deb
-                __epm_repack_to_rpm "$pkg" || return
+                __epm_repack_to_rpm "$pkg" "$repack_script" "$packversion" "$packrelease" || return
                 [ -n "$repacked_pkg" ] || return
                 __epm_repack_to_deb $repacked_pkg || return
             else
@@ -217,17 +225,89 @@ __epm_repack_if_needed()
 
 epm_repack()
 {
-    # if possible, it will put pkg_urls into pkg_files and reconstruct pkg_filenames
-    if [ -n "$pkg_urls" ] ; then
-        load_helper epm-download
-        __download_pkg_urls
-        pkg_urls=
+    local repack_script=""
+    local packversion=""
+    local packrelease=""
+    local pkg_files=""
+    local pkg_urls=""
+    repacked_pkgs=""
+
+    # Check for script (optional) and package
+    if [ -n "$1" ]; then
+        if [ -s "$EPM_REPACK_SCRIPTS_DIR/$1.sh" ]; then
+            repack_script="$1"
+            shift
+            # Next argument must be package
+            if [ -n "$1" ]; then
+                if [ -e "$1" ] || is_url "$1" || [ -d "$1" ]; then
+                    pkg_files="$1"
+                else
+                    pkg_urls="$1"
+                fi
+                shift
+            else
+                fatal "Package file or URL required after script name"
+            fi
+        else
+            # No script, first argument is package
+            if [ -e "$1" ] || is_url "$1" || [ -d "$1" ]; then
+                pkg_files="$1"
+            else
+                pkg_urls="$1"
+            fi
+            shift
+        fi
+    else
+        fatal "At least one argument (package file or URL) is required"
     fi
 
-    [ -n "$pkg_names" ] && warning 'Can'\''t find $pkg_names files'
-    [ -z "$pkg_files" ] && info "Empty repack list was skipped" && return 22
+    # Check for version-release (optional)
+    if [ -n "$1" ]; then
+        if echo "$1" | grep -qE '^[0-9]+(\.[0-9]+)*(-[0-9a-zA-Z.-]+)?$'; then
+            packversion=$(echo "$1" | sed -e 's|-\([0-9a-zA-Z.-]\+\)$||')
+            packrelease=$(echo "$1" | sed -e 's|^.*-\([0-9a-zA-Z.-]\+\)$|\1|')
+            shift
+        else
+            pkg_urls="$pkg_urls $1"
+            warning "Invalid version format: $1, treating as URL"
+            shift
+        fi
+    fi
 
-    if __epm_repack $pkg_files && [ -n "$repacked_pkgs" ] ; then
+    # Append remaining arguments as package files or URLs
+    while [ -n "$1" ]; do
+        if [ -e "$1" ] || is_url "$1" || [ -d "$1" ]; then
+            pkg_files="$pkg_files $1"
+        else
+            pkg_urls="$pkg_urls $1"
+            warning "Invalid argument (not a file, URL, or version): $1"
+        fi
+        shift
+    done
+
+    if [ -n "$pkg_urls" ] || is_url "$pkg_files"; then
+        load_helper epm-download
+        pkg_urls="$pkg_urls $pkg_files"
+        __download_pkg_urls
+        pkg_files="$pkg_files_downloaded"
+        pkg_urls=""
+    fi
+
+    if [ -z "$pkg_files" ]; then
+        info "Empty repack list was skipped"
+        return 22
+    fi
+
+    for pkg in $pkg_files; do
+        if [ ! -e "$pkg" ] && ! is_url "$pkg"; then
+            warning "Can't find package file $pkg"
+            return 22
+        fi
+        __epm_repack_single "$pkg" "$repack_script" "$packversion" "$packrelease" || { warning "Failed to repack $pkg" >&2; return 1; }
+        [ -n "$repacked_pkg" ] && repacked_pkgs="$repacked_pkgs $repacked_pkg"
+    done
+
+    if [ -n "$repacked_pkgs" ]; then
         if [ -n "$install" ] ; then
             epm install $repacked_pkgs
             return
