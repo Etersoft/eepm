@@ -8,6 +8,10 @@ URL="https://lenzaos.com/"
 
 . $(dirname $0)/common.sh
 
+if ! is_glibc_enough 2.34 ; then
+    fatal "glibc is too old"
+fi
+
 if [ "$VERSION" = "*" ] ; then
     VERSION=$(eget -O- https://lenzaos.com/ | grep -oP 'Lenza-\K[0-9]+\.[0-9]+\.[0-9]+(?=\.AppImage)')
 fi
