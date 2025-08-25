@@ -22,7 +22,7 @@ for i in glibc-nss glibc-gconv-modules \
          libgamemodeauto0 \
          vkBasalt \
          mangohud \
-         $(epmqp --short libnss | grep "^libnss-") \
+         $(epmqp --short libnss | grep "^libnss-" | grep -v "libnss-fallback") \
          $(epmqp --short xorg-dri | grep "^xorg-dri-")
 do
     epm status --installed $i && LIST="$LIST i586-$i"
