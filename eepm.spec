@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.33
+Version: 3.64.34
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -141,6 +141,21 @@ make -C po
 %endif
 
 %changelog
+* Wed Aug 27 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.34-alt1
+- distr_info: fix version for LinuxMint
+- epm play: add pdfsam-basic (eterbug #18459)
+- repack.d/generic-post.sh: add /usr/share/mime/icons to exclude
+- epm play: added geforce-infinity (eterbug #18494)
+- epm play: added qsp-classic (eterbug #18485)
+- epm play: added q-spider (eterbug #18485)
+- epm play lenza: added glibc version check
+- epm play: added torrserver (eterbug #18509)
+- epm play upscayl: use get_github_url and drop FIXME (eterbug #18508)
+- epm play: added max (eterbug #18399)
+- epm prescription i586-fix: drop libnss-fallback from install list
+- epm play: added windows max version (eterbug #18399)
+- epm play: add firefox-esr
+
 * Sun Jul 20 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.33-alt1
 - epm repo change: add support for datacenter, truenetwork, msu mirrors
 - epm play portproton: fix download link (eterbug #18388)
