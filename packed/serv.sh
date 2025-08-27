@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.33"
+EPMVERSION="3.64.34"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -2358,6 +2358,9 @@ case "$DISTRIB_ID" in
         DISTRIB_ID="ALTLinux"
         DISTRIB_RELEASE="Sisyphus"
         DISTRIB_CODENAME="$DISTRIB_RELEASE"
+        ;;
+    "LinuxMint"|"LMDE")
+        DISTRIB_RELEASE=$(normalize_version1 "$DISTRIB_RELEASE_ORIG")
         ;;
     "SberOS")
         DISTRIB_RELEASE="Rolling"
