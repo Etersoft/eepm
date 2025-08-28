@@ -12,6 +12,8 @@ mkdir -p var/lib/torrserver
 mkdir -p usr/bin
 mv -v $TAR usr/bin/torrserver
 
+chmod 755 usr/bin/torrserver
+
 cat <<EOF | create_file /usr/lib/systemd/system/torrserver.service
 [Unit]
 Description = TorrServer
