@@ -13,8 +13,13 @@ case "${3}" in
 
     '--clean' )
         assure_root
-        for file in /etc/modules-load.d/nvidia-uvm.conf /etc/modprobe.d/blacklist-nvidia-x11.conf \
-                    /etc/udev/rules.d/99-nvidia.rules /etc/modprobe.d/nvidia_memory_allocation.conf; do
+        for file in \
+            /etc/modules-load.d/nvidia-uvm.conf \
+            /etc/modprobe.d/blacklist-nvidia-x11.conf \
+            /etc/udev/rules.d/99-nvidia.rules \
+            /etc/modprobe.d/nvidia_memory_allocation.conf \
+            /etc/profile.d/gsk-renderer.sh \
+            /etc/environment.d/10-gsk.conf; do
             [ -f "$file" ] && rm -vf "$file"
         done
         epm update-kernel --remove-kernel-options initcall_blacklist=simpledrm_platform_driver_init nvidia_drm.fbdev=1 nvidia.NVreg_EnableGpuFirmware=0 nvidia_drm.modeset=1
@@ -121,6 +126,14 @@ ACTION=="bind", ATTR{vendor}=="0x10de", ATTR{class}=="0x03[0-9]*", DRIVER=="nvid
     RUN+="/usr/bin/nvidia-modprobe -c0 -u"
 EOF
 echo "nvidia-uvm" > /etc/modules-load.d/nvidia-uvm.conf
+
+# Переключение рендера GTK4 приложений с Vulkan на OpenGL
+# https://forums.developer.nvidia.com/t/580-65-06-gtk-4-apps-hang-when-attempting-to-exit-close/341308/5?u=ptr1337
+# https://gitlab.archlinux.org/archlinux/packaging/packages/nvidia-utils/-/commit/b29d9c29d63aa5508692a395d0f798856b8da953
+# TODO: think how apply it to fish and zsh too
+echo "export GSK_RENDERER=ngl" > /etc/profile.d/gsk-renderer.sh
+echo "GSK_RENDERER=ngl" > /etc/environment.d/10-gsk.conf
+chmod +x /etc/profile.d/gsk-renderer.sh
 
 # Перезапуск udev и обновление initrd/grub
 a= udevadm control --reload
