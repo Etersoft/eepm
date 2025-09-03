@@ -11,7 +11,7 @@ PRODUCTDIR=/opt/trueconf/client
 
 # follow original requires
 reqs="$(epm requires "$ORIGINPACKAGE")"
-[ -n "$reqs" ] && add_requires "$(echo $reqs | sed -e 's|pulseaudio||g' )"
+[ -n "$reqs" ] && add_requires $reqs pulseaudio-daemon
 
 # for old trueconf (before 8.4.0.1957)
 [ -d .$PRODUCTDIR ] || PRODUCTDIR=/opt/$PRODUCT
@@ -24,6 +24,11 @@ chmod a+x .$PRODUCTDIR/trueconf-autostart
 if [ -e .$PRODUCTDIR/QtWebEngineProcess ]; then
     chmod a+x .$PRODUCTDIR/QtWebEngineProcess
 fi
+
+if [ -e .$PRODUCTDIR/qt5/libexec/QtWebEngineProcess ]; then
+    chmod a+x .$PRODUCTDIR/qt5/libexec/QtWebEngineProcess
+fi
+
 
 # TODO: report the bug:
 # libhwloc.so.5 => not found (we have only libhwloc.so.15)
