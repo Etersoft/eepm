@@ -130,7 +130,7 @@ case $PMTYPE in
 esac
 
 LC_ALL=C docmd $CMD $string
-epm play $short --list-all | sed -e 's|^ *||g' -e 's|[[:space:]]\+| |g' -e "s|\$| (use \'epm play\' to install it)|"
+epm play $short --quiet --list-all | sed -e 's|^ *||g' -e 's|[[:space:]]\+| |g' -e "s|\$| (use \'epm play\' to install it)|"
 }
 
 
