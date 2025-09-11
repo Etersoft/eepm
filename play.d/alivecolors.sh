@@ -39,11 +39,9 @@ case $(epm print info -s) in
         epm install $PKGNAME
         exit
         ;;
-    *)
-        fatal "Unsupported distro."
 esac
 
-
+# Fallback to common method
 
 case $(epm print info -g) in
     dnf-rpm|yum-rpm)
