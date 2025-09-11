@@ -28,6 +28,13 @@ case $(epm print info -s) in
         echo "$ LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu alivecolors"
         exit
         ;;
+    rosa)
+        rpm --import https://akvis.com/akvis.asc
+        wget -O /etc/yum.repos.d/akvis.repo https://akvis.com/akvis.repo
+        epm update
+        epm install $PKGNAME
+        exit
+        ;;
     suse)
         # TODO: check and remove, the same as for dnf-part
         #a= rpm --import http://akvis.com/akvis.asc
