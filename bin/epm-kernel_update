@@ -39,6 +39,10 @@ elif [ -f "$EFI/refind_linux.conf" ]; then
     entry_file="$EFI/refind_linux.conf"
     options="Boot with standard options"
     bootloader="refind"
+elif [ -f "$EFI/limine.conf" ]; then
+    entry_file="$EFI/limine.conf"
+    options="kernel_cmdline:"
+    bootloader="limine"
 fi
 
 epm_kernel_update()
@@ -108,6 +112,12 @@ esac
 kernel_options_list () {
     if [ "$bootloader" = "refind" ] ; then
         grep "^\"$options\"" "$entry_file" | sed 's/^\"'"$options"'" //' | sed 's/\s*$//' | tr ' ' '\n'
+    elif [ "$bootloader" = "limine" ]; then
+        echo "=== All kernel command lines in Limine config ==="
+        grep "^[[:space:]]*$options" "$entry_file" | while read -r line; do
+            echo "$line" | sed "s/^[[:space:]]*${options}[[:space:]]*//" | tr ' ' '\n'
+            echo "---"
+        done
     else
         grep "^$options" "$entry_file" | sed 's/^"'$options'" //' | sed 's/\s*$//' | tr ' ' '\n'
     fi
@@ -120,8 +130,10 @@ kernel_options_add () {
         else
             echo "The string '$search_string' is not present in $entry_file"
             echo "Updating $entry_file"
-            if [ $bootloader = "systemd" ]; then
+            if [ "$bootloader" = "systemd" ]; then
                 sed -i "/^$options/ s~\$~ $search_string~" "$entry_file"
+            elif [ "$bootloader" = "limine" ]; then
+                sed -i "/^[[:space:]]*$options/ s~\$~ $search_string~" "$entry_file"
             else
                 sed -i "s|\(^$options[\"']\)\(.*\)\([\"']\)|\1\2 $search_string\3|" "$entry_file"
             fi
@@ -133,8 +145,12 @@ kernel_options_add () {
 kernel_options_remove() {
     for remove_string in "$@"; do
         if grep -qF "$remove_string" "$entry_file"; then
-            sed -i "s~ $remove_string~~" "$entry_file"
             echo "Removed '$remove_string' from the kernel parameters in $entry_file"
+            if [ "$bootloader" = "limine" ]; then
+                sed -i "/^[[:space:]]*$options/ s~ $remove_string~~g" "$entry_file"
+            else
+                sed -i "s~ $remove_string~~g" "$entry_file"
+            fi
         else
             echo "The string '$remove_string' is not present in $entry_file"
         fi
