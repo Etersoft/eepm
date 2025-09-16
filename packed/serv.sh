@@ -1929,6 +1929,7 @@ pkgvendor()
     [ "$DISTRIB_ID" = "TinyCoreLinux" ] && echo "tcl" && return
     [ "$DISTRIB_ID" = "VoidLinux" ] && echo "void" && return
     [ "$DISTRIB_ID" = "ManjaroLinux" ] && echo "manjaro" && return
+    [ "$DISTRIB_ID" = "UBLinux" ] && echo "ublinux" && return
     [ "$DISTRIB_ID" = "OpenSUSE" ] && echo "suse" && return
     [ "$DISTRIB_ID" = "openSUSETumbleweed" ] && echo "suse" && return
     [ "$DISTRIB_ID" = "openSUSELeap" ] && echo "suse" && return
@@ -1952,7 +1953,7 @@ case $VENDOR_ID in
     alt)
         echo "apt-rpm" && return
         ;;
-    arch|manjaro)
+    arch|manjaro|ublinux)
         echo "pacman" && return
         ;;
     debian)
@@ -1996,7 +1997,7 @@ case $DISTRIB_ID in
     Redox)
         CMD="redox-pkg"
         ;;
-    ArchLinux|ManjaroLinux)
+    ArchLinux|ManjaroLinux|UBLinux)
         CMD="pacman"
         ;;
     Fedora|CentOS|OracleLinux|RockyLinux|AlmaLinux|RHEL|RELS|Scientific|GosLinux|Amzn|RedOS|MSVSphere)
@@ -2078,6 +2079,9 @@ pkgtype()
         arch|manjaro)
             echo "pkg.tar.xz" && return
             ;;
+        ublinux)
+            echo "pkg.tar.zst" && return
+            ;;
     esac
 
 # TODO: try use generic names
@@ -2086,6 +2090,7 @@ pkgtype()
         sunos) echo "pkg.gz" ;;
         slackware|mopslinux) echo "tgz" ;;
         archlinux|manjaro) echo "pkg.tar.xz" ;;
+        ublinux) echo "pkg.tar.zst" ;;
         gentoo) echo "tbz2" ;;
         windows) echo "exe" ;;
         android) echo "apk" ;;
@@ -2236,7 +2241,7 @@ if distro os-release ; then
     VENDOR_ID="$ID"
     DISTRIB_CODENAME="$VERSION_CODENAME"
     case "$VENDOR_ID" in
-        ubuntu|reld|rhel|astra|manjaro|redos|msvsphere|alteros|rockylinux|almalinux)
+        ubuntu|reld|rhel|astra|manjaro|ublinux|redos|msvsphere|alteros|rockylinux|almalinux)
             ;;
         *)
             if [ -n "$ID_LIKE" ] ; then
