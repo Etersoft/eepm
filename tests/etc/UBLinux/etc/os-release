@@ -1,0 +1,16 @@
+NAME="UBLinux"
+VERSION="2405 Desktop Enterprise"
+VERSION_ID=2405
+VERSION_CODENAME=ublinux_de
+PRETTY_NAME="UBLinux 2405 Desktop Enterprise (x86_64)"
+ID=ublinux
+ID_LIKE=archlinux
+ANSI_COLOR="0;36"
+CPE_NAME="cpe:/o:ublinux:ublinux:2405"
+HOME_URL="https://www.ublinux.ru/"
+DOCUMENTATION_URL="https://wiki.ublinux.ru/"
+SUPPORT_URL="https://bbs.ublinux.ru/"
+BUG_REPORT_URL="https://bugs.ublinux.ru/"
+VARIANT="Desktop Enterprise"
+VARIANT_ID="desktop"
+LOGO=ublinux
