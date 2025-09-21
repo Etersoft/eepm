@@ -168,6 +168,9 @@ case "$1" in
         __list_all_app
         return
         ;;
+    "")
+        fatal "Missed params. run with --help to get help."
+        ;;
 esac
 
     local tmpdir
