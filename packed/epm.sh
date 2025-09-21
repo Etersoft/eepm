@@ -34,7 +34,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.34"
+export EPMVERSION="3.64.35"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -5849,6 +5849,10 @@ elif [ -f "$EFI/refind_linux.conf" ]; then
     entry_file="$EFI/refind_linux.conf"
     options="Boot with standard options"
     bootloader="refind"
+elif [ -f "$EFI/limine.conf" ]; then
+    entry_file="$EFI/limine.conf"
+    options="kernel_cmdline:"
+    bootloader="limine"
 fi
 
 epm_kernel_update()
@@ -5917,6 +5921,12 @@ esac
 kernel_options_list () {
     if [ "$bootloader" = "refind" ] ; then
         grep "^\"$options\"" "$entry_file" | sed 's/^\"'"$options"'" //' | sed 's/\s*$//' | tr ' ' '\n'
+    elif [ "$bootloader" = "limine" ]; then
+        echo "=== All kernel command lines in Limine config ==="
+        grep "^[[:space:]]*$options" "$entry_file" | while read -r line; do
+            echo "$line" | sed "s/^[[:space:]]*${options}[[:space:]]*//" | tr ' ' '\n'
+            echo "---"
+        done
     else
         grep "^$options" "$entry_file" | sed 's/^"'$options'" //' | sed 's/\s*$//' | tr ' ' '\n'
     fi
@@ -5929,8 +5939,10 @@ kernel_options_add () {
         else
             echo "The string '$search_string' is not present in $entry_file"
             echo "Updating $entry_file"
-            if [ $bootloader = "systemd" ]; then
+            if [ "$bootloader" = "systemd" ]; then
                 sed -i "/^$options/ s~\$~ $search_string~" "$entry_file"
+            elif [ "$bootloader" = "limine" ]; then
+                sed -i "/^[[:space:]]*$options/ s~\$~ $search_string~" "$entry_file"
             else
                 sed -i "s|\(^$options[\"']\)\(.*\)\([\"']\)|\1\2 $search_string\3|" "$entry_file"
             fi
@@ -5942,8 +5954,12 @@ kernel_options_add () {
 kernel_options_remove() {
     for remove_string in "$@"; do
         if grep -qF "$remove_string" "$entry_file"; then
-            sed -i "s~ $remove_string~~" "$entry_file"
             echo "Removed '$remove_string' from the kernel parameters in $entry_file"
+            if [ "$bootloader" = "limine" ]; then
+                sed -i "/^[[:space:]]*$options/ s~ $remove_string~~g" "$entry_file"
+            else
+                sed -i "s~ $remove_string~~g" "$entry_file"
+            fi
         else
             echo "The string '$remove_string' is not present in $entry_file"
         fi
@@ -6636,6 +6652,7 @@ __epm_pack_run_handler()
     local tarname="$2"
     local packversion="$3"
     local url="$4"
+    shift 4
     returntarname=''
 
     local repackcode="$EPM_PACK_SCRIPTS_DIR/$packname.sh"
@@ -6650,7 +6667,7 @@ __epm_pack_run_handler()
     [ -n "$debug" ] && bashopt='-x'
     #info "Running $($script --description 2>/dev/null) ..."
     # TODO: add url info here
-    ( unset BASH_ENV ; unset EPMCURDIR ; export PATH=$SCPATH ; export HOME=$(pwd) ; docmd $CMDSHELL $bashopt $repackcode "$tarname" "$filefortarname" "$packversion" "$url") || fatal
+    ( unset BASH_ENV ; unset EPMCURDIR ; export PATH=$SCPATH ; export HOME=$(pwd) ; docmd $CMDSHELL $bashopt $repackcode "$tarname" "$filefortarname" "$packversion" "$url" "$@") || fatal
     returntarname="$(cat "$filefortarname")" || fatal 'pack script $repackcode didn'\''t set tarname'
 
     local i
@@ -6764,12 +6781,15 @@ epm_pack()
 
 case "$1" in
     -h|--help)                     # HELPCMD: help
-        epm_epm_install_help
+        epm_pack_help
         return
         ;;
     --list)                        # HELPCMD: list all available receipts
         __list_all_app
         return
+        ;;
+    "")
+        fatal "Missed params. run with --help to get help."
         ;;
 esac
 
@@ -6781,6 +6801,7 @@ esac
     local tarname="$2"
     local packversion="$3"
     local url=''
+    shift 3
 
     [ -n "$packname" ] || __epm_pack_list
 
@@ -6805,7 +6826,7 @@ esac
     fi
 
     cd $tmpdir || fatal
-    __epm_pack "$packname" "$tarname" "$packversion" "$url"
+    __epm_pack "$packname" "$tarname" "$packversion" "$url" "$@"
 
 }
 
@@ -9188,7 +9209,7 @@ epm_release_downgrade()
         docmd epm install dnf
         #docmd epm install epel-release yum-utils
         sudocmd dnf --refresh upgrade
-        #sudocmd dnf clean all
+        sudocmd dnf clean all
         assure_exists dnf-plugin-system-upgrade
         sudocmd dnf upgrade --refresh
         local RELEASEVER="$1"
@@ -9773,13 +9794,13 @@ epm_release_upgrade()
         return
         ;;
      "OpenMandrivaLx")
-        #sudocmd dnf clean all
+        sudocmd dnf clean all
         sudocmd dnf distro-sync --allowerasing
         return
         ;;
     "ROSA")
         sudocmd dnf --refresh upgrade || fatal
-        #sudocmd dnf clean all
+        sudocmd dnf clean all
         DV=$(echo "$DISTRVERSION" | sed -e "s|\..*||")
         [ "$DV" = "2021" ] && DV=12
         local RELEASEVER="$1"
@@ -9854,7 +9875,7 @@ epm_release_upgrade()
 
         if [ "$DISTRNAME" = "RockyLinux" ] ; then
             sudocmd dnf --refresh upgrade || fatal
-            #sudocmd dnf clean all
+            sudocmd dnf clean all
             info "Check https://www.centlinux.com/2022/07/upgrade-your-servers-from-rocky-linux-8-to-9.html"
             info "For upgrading your yum repositories from Rocky Linux 8 to 9 ..."
             epm install "https://download.rockylinux.org/pub/rocky/9/BaseOS/x86_64/os/Packages/r/rocky-gpg-keys*.rpm" || fatal
@@ -9877,7 +9898,7 @@ epm_release_upgrade()
         info "Check https://fedoraproject.org/wiki/DNF_system_upgrade for an additional info"
         #docmd epm install epel-release yum-utils
         sudocmd dnf --refresh upgrade || fatal
-        #sudocmd dnf clean all
+        sudocmd dnf clean all
         assure_exists dnf-plugin-system-upgrade
         sudocmd dnf upgrade --refresh
         local RELEASEVER="$1"
@@ -13332,7 +13353,7 @@ case $PMTYPE in
 esac
 
 LC_ALL=C docmd $CMD $string
-epm play $short --list-all | sed -e 's|^ *||g' -e 's|[[:space:]]\+| |g' -e "s|\$| (use \'epm play\' to install it)|"
+epm play $short --quiet --list-all | sed -e 's|^ *||g' -e 's|[[:space:]]\+| |g' -e "s|\$| (use \'epm play\' to install it)|"
 }
 
 
@@ -15374,6 +15395,7 @@ pkgvendor()
     [ "$DISTRIB_ID" = "OpenSUSE" ] && echo "suse" && return
     [ "$DISTRIB_ID" = "openSUSETumbleweed" ] && echo "suse" && return
     [ "$DISTRIB_ID" = "openSUSELeap" ] && echo "suse" && return
+    [ "$DISTRIB_ID" = "UBLinux" ] && echo "ublinux" && return
     if [ -n "$VENDOR_ID" ] ; then
         echo "$VENDOR_ID"
         return
@@ -15394,7 +15416,7 @@ case $VENDOR_ID in
     alt)
         echo "apt-rpm" && return
         ;;
-    arch|manjaro)
+    arch|manjaro|ublinux)
         echo "pacman" && return
         ;;
     debian)
@@ -15438,7 +15460,7 @@ case $DISTRIB_ID in
     Redox)
         CMD="redox-pkg"
         ;;
-    ArchLinux|ManjaroLinux)
+    ArchLinux|ManjaroLinux|UBLinux)
         CMD="pacman"
         ;;
     Fedora|CentOS|OracleLinux|RockyLinux|AlmaLinux|RHEL|RELS|Scientific|GosLinux|Amzn|RedOS|MSVSphere)
@@ -15520,6 +15542,9 @@ pkgtype()
         arch|manjaro)
             echo "pkg.tar.xz" && return
             ;;
+        ublinux)
+            echo "pkg.tar.zst" && return
+            ;;
     esac
 
 # TODO: try use generic names
@@ -15528,6 +15553,7 @@ pkgtype()
         sunos) echo "pkg.gz" ;;
         slackware|mopslinux) echo "tgz" ;;
         archlinux|manjaro) echo "pkg.tar.xz" ;;
+        ublinux) echo "pkg.tar.zst" ;;
         gentoo) echo "tbz2" ;;
         windows) echo "exe" ;;
         android) echo "apk" ;;
@@ -15540,6 +15566,8 @@ pkgtype()
         pisilinux) echo "pisi" ;;
         *)
             case $(pkgmanager) in
+                pacman)
+                    echo "pkg.tar.zst" ;;
                 *-dpkg)
                     echo "deb" ;;
                 *-rpm)
@@ -15678,7 +15706,7 @@ if distro os-release ; then
     VENDOR_ID="$ID"
     DISTRIB_CODENAME="$VERSION_CODENAME"
     case "$VENDOR_ID" in
-        ubuntu|reld|rhel|astra|manjaro|redos|msvsphere|alteros|rockylinux|almalinux)
+        ubuntu|reld|rhel|astra|manjaro|ublinux|redos|msvsphere|alteros|rockylinux|almalinux)
             ;;
         *)
             if [ -n "$ID_LIKE" ] ; then
