@@ -160,7 +160,7 @@ epm_pack()
 
 case "$1" in
     -h|--help)                     # HELPCMD: help
-        epm_epm_install_help
+        epm_pack_help
         return
         ;;
     --list)                        # HELPCMD: list all available receipts
