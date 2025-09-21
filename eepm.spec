@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.34
+Version: 3.64.35
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -141,6 +141,19 @@ make -C po
 %endif
 
 %changelog
+* Sun Sep 21 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.35-alt1
+- epm play: added rats-search (Rats on The Boat) (etebug #18547)
+- epm play trueconf: fixed install on P11 (eterbug #18545)
+- epm play: added google earth (eterbug #18538)
+- epm play torrserver: added forget chmod
+- epm search: don't output info line in a search results (eterbug #18537)
+- epm play alivecolors: allow general install for rpm/deb
+- epm-kernel_update: added limine support
+- epm play persepolis: fix download
+- epm play: add spravki-bk (#480)
+- epm play yandex-browser: update codecs using vendor script (eterbug #18556) (#478)
+- add UBLinux support (#479)
+
 * Wed Aug 27 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.34-alt1
 - distr_info: fix version for LinuxMint
 - epm play: add pdfsam-basic (eterbug #18459)
