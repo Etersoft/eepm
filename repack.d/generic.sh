@@ -73,6 +73,10 @@ for i in / /etc /etc/init.d /etc/systemd /bin /opt /usr /usr/bin /usr/lib /usr/l
         $SPEC
 done
 
+# Arch clean
+for i in /.BUILDINFO /.MTREE /.PKGINFO ; do
+    remove_file $i
+done
 
 flag_python3=''
 
