@@ -24,6 +24,7 @@ if eget $IPFS_ICONS_URL && erc telegram-icons.tar ; then
     iconpath=telegram-icons
 else
     iconpath=https://github.com/telegramdesktop/tdesktop/raw/master/Telegram/Resources/art
+    trayiconpath=https://github.com/telegramdesktop/tdesktop/raw/master/Telegram/Resources/icons
 fi
 
 desktopname=org.telegram.desktop
@@ -34,9 +35,15 @@ for i in 16 32 48 64 128 256 512 ; do
     install_file $iconpath/icon$i.png /usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png
 done
 
-for i in org.telegram.desktop-attention-symbolic.svg org.telegram.desktop-mute-symbolic.svg org.telegram.desktop-symbolic.svg ; do
-    install_file $iconpath/$i /usr/share/icons/hicolor/symbolic/apps/$i
-done
+if [ -n "$trayiconpath" ] ; then
+    install_file $trayiconpath/tray_monochrome.svg /usr/share/icons/hicolor/symbolic/apps/org.telegram.desktop-symbolic.svg
+    install_file $trayiconpath/tray_monochrome_attention.svg /usr/share/icons/hicolor/symbolic/apps/org.telegram.desktop-attention-symbolic.svg
+    install_file $trayiconpath/tray_monochrome_mute.svg /usr/share/icons/hicolor/symbolic/apps/org.telegram.desktop-mute-symbolic.svg
+else
+    for i in org.telegram.desktop-attention-symbolic.svg org.telegram.desktop-mute-symbolic.svg org.telegram.desktop-symbolic.svg ; do
+        install_file $iconpath/$i /usr/share/icons/hicolor/symbolic/apps/$i
+    done
+fi
 
 cat <<EOF | create_file /usr/share/applications/$desktopname.desktop
 [Desktop Entry]
