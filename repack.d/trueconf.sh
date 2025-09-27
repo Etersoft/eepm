@@ -29,6 +29,10 @@ if [ -e .$PRODUCTDIR/qt5/libexec/QtWebEngineProcess ]; then
     chmod a+x .$PRODUCTDIR/qt5/libexec/QtWebEngineProcess
 fi
 
+# HACK: Command not found lshw
+ln -vsf /usr/sbin/lshw usr/bin/lshw
+pack_file /usr/bin/lshw
+
 
 # TODO: report the bug:
 # libhwloc.so.5 => not found (we have only libhwloc.so.15)
