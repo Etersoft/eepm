@@ -96,6 +96,9 @@ __assure_exists_rpmbuild()
 __epm_repack_to_rpm()
 {
     local pkg="$1"
+    local repack_script="$2"
+    local packversion="$3"
+    local packrelease="$4"
 
     # Note: install epm-repack for static (package based) dependencies
     assure_exists cpio
@@ -187,6 +190,9 @@ __epm_repack_to_rpm()
             __apply_fix_code "generic-default" $buildroot $spec $pkgname $abspkg
         fi
         __apply_fix_code "generic-post"        $buildroot $spec $pkgname $abspkg
+        if [ -n "$repack_script" ]; then
+            __apply_fix_code "$repack_script" $buildroot $spec $pkgname $abspkg
+        fi
         cd - >/dev/null
 
         # reassign package name (could be renamed in fix scripts)
@@ -196,6 +202,13 @@ __epm_repack_to_rpm()
             if ! estrlist contains "$pkgname" "$EEPM_INTERNAL_PKGNAME" ; then
                 fatal 'Some bug: the name of the repacking package ($pkgname) differs with the package name ($EEPM_INTERNAL_PKGNAME) from play.d script.'
             fi
+        fi
+
+        if [ -n "$packversion" ]; then
+            sed -i "s|^Version: .*|Version: $packversion|" "$spec"
+        fi
+        if [ -n "$packrelease" ]; then
+            sed -i "s|^Release: .*|Release: $packrelease|" "$spec"
         fi
 
         TARGETARCH=$(epm print info -a | sed -e 's|^x86$|i586|')
