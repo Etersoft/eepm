@@ -4,6 +4,7 @@
 BUILDROOT="$1"
 SPEC="$2"
 PRODUCTDIR=/opt/kingsoft/wps-office
+FONTDIR=/usr/share/fonts/wps-office
 
 . $(dirname $0)/common.sh
 
@@ -63,5 +64,18 @@ for f in wps et wpp wpspdf; do
     [ -f "$bin_file" ] || fatal "Missing $bin_file"
     sed -i '2i . /opt/kingsoft/wps-office/office6/setenv.sh' "$bin_file"
 done
+
+# Installs Symbol, Wingdings, and MT Extra fonts to fix WPS Office formula display warning
+if [ ! -d "$FONTDIR" ] || ! find "$FONTDIR" -maxdepth 1 -type f -iname '*.ttf' | grep -q .; then
+    echo "Installing WPS Office required fonts..."
+    eget -O wps-fonts.zip https://github.com/CatSema/ttf-wps-fonts/archive/refs/heads/master.zip
+    unzip -q wps-fonts.zip
+    mkdir -p "$FONTDIR"
+    find ttf-wps-fonts-master -maxdepth 1 -type f -iname '*.ttf' -exec mv {} "$FONTDIR" \;
+    chmod 0644 "$FONTDIR"/*.ttf 2>/dev/null || true
+    fc-cache -fs
+    rm -rf wps-fonts.zip ttf-wps-fonts-master
+    echo "Font installation completed."
+fi
 
 add_libs_requires
