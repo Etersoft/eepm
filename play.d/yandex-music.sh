@@ -1,20 +1,21 @@
 #!/bin/sh
 
-PKGNAME=yandex-music
-SUPPORTEDARCHES="x86_64 aarch64 armhf"
+PKGNAME=yandexmusic
+SUPPORTEDARCHES="x86_64"
 VERSION="$2"
-DESCRIPTION="Native Yandex Music client for Linux. Made with OSX/Windows beta client repacking"
-URL="https://github.com/cucumber-sp/yandex-music-linux/releases"
+DESCRIPTION="Native Yandex Music client for Linux"
+URL="https://music.yandex.ru/download"
 
 . $(dirname $0)/common.sh
 
-arch="$(epm print info --debian-arch)"
-case "$arch" in
-    armv7l)
-        arch=armhf
-        ;;
-esac
 
-PKGURL=$(eget --list --latest https://github.com/cucumber-sp/yandex-music-linux/releases "yandex-music_${VERSION}_${arch}.deb")
+DOWNLOAD_JSON="https://music-desktop-application.s3.yandex.net/stable/download.json"
+JSON="$(eget -O- "$DOWNLOAD_JSON")"
 
-install_pkgurl
+if [ "$VERSION" = "*" ] ; then
+    VERSION=$(echo $JSON | grep -oP '(?<=Yandex_Music_amd64_)[0-9.]+(?=\.deb)')
+fi
+
+PKGURL="https://music-desktop-application.s3.yandex.net/stable/Yandex_Music_amd64_${VERSION}.deb"
+
+install_pack_pkgurl "$VERSION"
