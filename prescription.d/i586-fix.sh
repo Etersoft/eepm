@@ -67,7 +67,7 @@ case "$vendor" in
     "alt")
         get_list_alt
         ;;
-    "fedora"|"centos"|"redos"|"rhel")
+    "fedora"|"centos"|"redos"|"alteros"|"msvsphere"|"rockylinux"|"almalinux"|"rhel")
         get_list_fedora
         ;;
     *)
