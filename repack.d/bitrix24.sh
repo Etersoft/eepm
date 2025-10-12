@@ -24,6 +24,7 @@ add_bin_link_command $PRODUCT-web $PRODUCTCUR-web
 #ignore_lib_requires libQt5*
 #ignore_lib_requires libQt6*
 ignore_lib_requires libQt5Core.so.5 libQt5Gui.so.5 libQt5Widgets.so.5
-ignore_lib_requires libQt6Core.so.6 libQt6Gui.so.6  libQt6Widgets.so.6
+ignore_lib_requires libQt6Core.so.6 libQt6Gui.so.6 libQt6Widgets.so.6
+ignore_lib_requires libopenh264.so.8
 
 add_libs_requires
