@@ -564,13 +564,13 @@ epm_release_upgrade()
         return
         ;;
      "OpenMandrivaLx")
-        sudocmd dnf clean all
+        #sudocmd dnf clean all
         sudocmd dnf distro-sync --allowerasing
         return
         ;;
     "ROSA")
         sudocmd dnf --refresh upgrade || fatal
-        sudocmd dnf clean all
+        #sudocmd dnf clean all
         DV=$(echo "$DISTRVERSION" | sed -e "s|\..*||")
         [ "$DV" = "2021" ] && DV=12
         local RELEASEVER="$1"
@@ -645,7 +645,7 @@ epm_release_upgrade()
 
         if [ "$DISTRNAME" = "RockyLinux" ] ; then
             sudocmd dnf --refresh upgrade || fatal
-            sudocmd dnf clean all
+            #sudocmd dnf clean all
             info "Check https://www.centlinux.com/2022/07/upgrade-your-servers-from-rocky-linux-8-to-9.html"
             info "For upgrading your yum repositories from Rocky Linux 8 to 9 ..."
             epm install "https://download.rockylinux.org/pub/rocky/9/BaseOS/x86_64/os/Packages/r/rocky-gpg-keys*.rpm" || fatal
@@ -668,7 +668,7 @@ epm_release_upgrade()
         info "Check https://fedoraproject.org/wiki/DNF_system_upgrade for an additional info"
         #docmd epm install epel-release yum-utils
         sudocmd dnf --refresh upgrade || fatal
-        sudocmd dnf clean all
+        #sudocmd dnf clean all
         assure_exists dnf-plugin-system-upgrade
         sudocmd dnf upgrade --refresh
         local RELEASEVER="$1"

@@ -124,7 +124,7 @@ epm_release_downgrade()
         docmd epm install dnf
         #docmd epm install epel-release yum-utils
         sudocmd dnf --refresh upgrade
-        sudocmd dnf clean all
+        #sudocmd dnf clean all
         assure_exists dnf-plugin-system-upgrade
         sudocmd dnf upgrade --refresh
         local RELEASEVER="$1"
