@@ -180,6 +180,7 @@ pack_dir()
 {
     local file="$1"
     [ -n "$file" ] || return
+    # FIXME assisant
     grep -q "^%dir[[:space:]]$file/*$" $SPEC && return
     grep -q "^%dir[[:space:]]\"$file/*\"$" $SPEC && return
     has_space "$file" && file="\"$file\""

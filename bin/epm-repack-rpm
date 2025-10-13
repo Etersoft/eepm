@@ -92,7 +92,7 @@ __assure_exists_rpmbuild()
     esac
 }
 
-# will fill repacked_pkg var
+# will fills repacked_pkg var
 __epm_repack_to_rpm()
 {
     local pkg="$1"
