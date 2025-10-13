@@ -171,6 +171,14 @@ __epm_repack_single()
     case $PKGFORMAT in
         rpm)
             load_helper epm-repack-rpm
+            if [ "$BASEDISTRNAME" = "alt" ] ; then
+                if epm status --original "$pkg" ; then
+                    fatal_warning "Repacking package $pkg from ALT repository is dangerous and forbidden (see https://bugzilla.altlinux.org/56355)."
+                fi
+                if epm status --repacked "$pkg" ; then
+                    fatal_warning "Repacking already repacked package $pkg is uselessly."
+                fi
+            fi
             __epm_repack_to_rpm "$pkg" || return
             ;;
         deb)
