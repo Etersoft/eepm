@@ -417,6 +417,12 @@ warning()
     echog "$*" >&2
 }
 
+fatal_warning()
+{
+    [ -n "$force" ] || fatal "$@"
+    warning "$@"
+}
+
 info()
 {
     [ -n "$quiet" ] && return
