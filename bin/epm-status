@@ -207,7 +207,8 @@ epm_status_original()
             return 0
             ;;
         *)
-            fatal 'Unsupported $DISTRNAME'
+            warning 'Status checking is not supported yet for $DISTRNAME'
+            return 1
             ;;
     esac
     return 1
