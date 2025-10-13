@@ -20,10 +20,20 @@ add_bin_exec_command $PRODUCTCUR-web $PRODUCTDIR/$PRODUCTCUR-web
 add_bin_link_command $PRODUCT $PRODUCTCUR
 add_bin_link_command $PRODUCT-web $PRODUCTCUR-web
 
-# FIXME
-#ignore_lib_requires libQt5*
-#ignore_lib_requires libQt6*
+# TODO:
+# libqt5_shim.so
+#ignore_lib_requires "libQt5*.so.5"
 ignore_lib_requires libQt5Core.so.5 libQt5Gui.so.5 libQt5Widgets.so.5
+
+# TODO:
+# libqt6_shim.so
+#ignore_lib_requires "libQt6*.so.6"
 ignore_lib_requires libQt6Core.so.6 libQt6Gui.so.6  libQt6Widgets.so.6
+
+if [ -f ./$PRODUCTDIR/ffmpeg ] ; then
+   # use external ffmpeg
+   add_unirequires ffmpeg
+   remove_file $PRODUCTDIR/ffmpeg
+fi
 
 add_libs_requires
