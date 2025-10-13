@@ -8,6 +8,6 @@ URL="https://www.jetbrains.com/rust/"
 
 . $(dirname $0)/common-jetbrains.sh
 
-PKGURL="$(get_jetbrains_pkgurl RR rust)"
+PKGURL="$(get_jetbrains_pkgurl RR rustrover)"
 
 install_pkgurl
