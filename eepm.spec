@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.35
+Version: 3.64.36
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -141,6 +141,26 @@ make -C po
 %endif
 
 %changelog
+* Tue Oct 14 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.36-alt1
+- epm repack: clean arch build info files (#482)
+- epm play codium: direct download by version
+- epm prescription i586-fix: update for all RHEL compatible distro
+- epm play: added RenameMyTVSeries (eterbug #18588) (#486)
+- epm play yandex-music: replace repacked client to official client (eterbug #18600) (#489)
+- epm play: add GitHub Desktop (#490)
+- epm play telegram: update icons path (eterbug #17865) (#483)
+- po: update russian translation
+- epm status --original: return false for unsupported distro
+- epm repack: forbid repack for original and already repacked packages (ALT bug 56355)
+- epm play: added stub for DaVinci Resolve (#487)
+- epm play popcorn-time: fix PKGURL (eterbug #17865) (#485)
+- epm play: added ascon-kompas3d (eterbug #18603) (#491)
+- epm play elyprismlauncher: skip version for install (fix issue #493)
+- epm repack bitrix24: use external ffmpeg
+- epm plau: updated RustRover download path (#494)
+- epm play trueconf: always install latest version
+- epm play: add grdcontrol (eterbug #18608) (#495)
+
 * Sun Sep 21 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.35-alt1
 - epm play: added rats-search (Rats on The Boat) (etebug #18547)
 - epm play trueconf: fixed install on P11 (eterbug #18545)
