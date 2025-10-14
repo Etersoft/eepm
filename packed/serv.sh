@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.35"
+EPMVERSION="3.64.36"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -433,6 +433,12 @@ warning()
     echog -n "WARNING: " >&2
     restore_color >&2
     echog "$*" >&2
+}
+
+fatal_warning()
+{
+    [ -n "$force" ] || fatal "$@"
+    warning "$@"
 }
 
 info()

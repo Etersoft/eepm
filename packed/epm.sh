@@ -34,7 +34,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.35"
+export EPMVERSION="3.64.36"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -436,6 +436,12 @@ warning()
     echog -n "WARNING: " >&2
     restore_color >&2
     echog "$*" >&2
+}
+
+fatal_warning()
+{
+    [ -n "$force" ] || fatal "$@"
+    warning "$@"
 }
 
 info()
@@ -9209,7 +9215,7 @@ epm_release_downgrade()
         docmd epm install dnf
         #docmd epm install epel-release yum-utils
         sudocmd dnf --refresh upgrade
-        sudocmd dnf clean all
+        #sudocmd dnf clean all
         assure_exists dnf-plugin-system-upgrade
         sudocmd dnf upgrade --refresh
         local RELEASEVER="$1"
@@ -9794,13 +9800,13 @@ epm_release_upgrade()
         return
         ;;
      "OpenMandrivaLx")
-        sudocmd dnf clean all
+        #sudocmd dnf clean all
         sudocmd dnf distro-sync --allowerasing
         return
         ;;
     "ROSA")
         sudocmd dnf --refresh upgrade || fatal
-        sudocmd dnf clean all
+        #sudocmd dnf clean all
         DV=$(echo "$DISTRVERSION" | sed -e "s|\..*||")
         [ "$DV" = "2021" ] && DV=12
         local RELEASEVER="$1"
@@ -9875,7 +9881,7 @@ epm_release_upgrade()
 
         if [ "$DISTRNAME" = "RockyLinux" ] ; then
             sudocmd dnf --refresh upgrade || fatal
-            sudocmd dnf clean all
+            #sudocmd dnf clean all
             info "Check https://www.centlinux.com/2022/07/upgrade-your-servers-from-rocky-linux-8-to-9.html"
             info "For upgrading your yum repositories from Rocky Linux 8 to 9 ..."
             epm install "https://download.rockylinux.org/pub/rocky/9/BaseOS/x86_64/os/Packages/r/rocky-gpg-keys*.rpm" || fatal
@@ -9898,7 +9904,7 @@ epm_release_upgrade()
         info "Check https://fedoraproject.org/wiki/DNF_system_upgrade for an additional info"
         #docmd epm install epel-release yum-utils
         sudocmd dnf --refresh upgrade || fatal
-        sudocmd dnf clean all
+        #sudocmd dnf clean all
         assure_exists dnf-plugin-system-upgrade
         sudocmd dnf upgrade --refresh
         local RELEASEVER="$1"
@@ -10711,6 +10717,14 @@ __epm_repack_single()
     local pkg="$1"
     case $PKGFORMAT in
         rpm)
+            if [ "$BASEDISTRNAME" = "alt" ] ; then
+                if epm status --original "$pkg" ; then
+                    fatal_warning "Repacking package $pkg from ALT repository is dangerous and forbidden (see https://bugzilla.altlinux.org/56355)."
+                fi
+                if epm status --repacked "$pkg" ; then
+                    fatal_warning "Repacking already repacked package $pkg is uselessly."
+                fi
+            fi
             __epm_repack_to_rpm "$pkg" || return
             ;;
         deb)
@@ -14457,7 +14471,8 @@ epm_status_original()
             return 0
             ;;
         *)
-            fatal 'Unsupported $DISTRNAME'
+            warning 'Status checking is not supported yet for $DISTRNAME'
+            return 1
             ;;
     esac
     return 1
