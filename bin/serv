@@ -66,10 +66,6 @@ load_helper epm-sh-functions
 
 INITDIR=/etc/init.d
 
-PATH=$PATH:/sbin:/usr/sbin
-
-set_sudo
-
 check_tty
 
 #############################
@@ -293,6 +289,10 @@ fi
 if [ -z "$serv_cmd" ] ; then
     serv_cmd=common
 fi
+
+PATH=$PATH:/sbin:/usr/sbin
+
+set_sudo
 
 # Run helper for command
 load_helper serv-$serv_cmd
