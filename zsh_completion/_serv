@@ -1,0 +1,100 @@
+#compdef serv
+
+# shot options (arguments)
+SERV_OPTS_SHORT=(
+  '-h'    # show help
+  '-v'    # print version
+)
+
+# long options (arguments)
+SERV_OPTS_LONG=(
+  '--help:show help'
+  '--version:print version'
+  '--verbose:verbose mode'
+  '--short:short mode'
+  '--show-command-only:show command only, do not any action'
+  '--quiet:quiet mode (do not print commands before exec)'
+  '--auto:non interactive mode'
+)
+
+# commands that do not require a service name
+SERV_CMDS_NO_SVC=(
+  'list:list running services'
+  'list-all:list all available services'
+  'list-startup:list all services to run on startup'
+  'list-failed:list services failed on startup'
+  '--failed:list services failed on startup'
+  'usage:print out usage of the service'
+  'help:show help'
+)
+
+# commands that require a service
+SERV_CMDS_SERVICE=(
+  'status:show service status'
+  'restart:restart service'
+  'reload:reload service'
+  'start:start service'
+  'stop:stop service'
+  'on:add service to run on startup and start it now'
+  'off:remove service to run on startup and stop it now'
+  'enable:add service to run on startup (see '\''on'\'' also)'
+  'disable:remove service to run on startup (see '\''off'\'' also)'
+  'log:print log for the service (-f - follow, -r - reverse order)'
+  'journal:print log for the service (-f - follow, -r - reverse order)'
+  'cat:print out service file for the service'
+  'exists:check if the service is installed on the system'
+  'edit:edit service file overload (use --full to edit full file)'
+  'test:test a config file of the service'
+  '-t:test a config file of the service'
+  'print:print some info'
+  'try-restart:Restart service if running'
+  'condrestart:Restart service if running'
+)
+
+_complete_opts () {
+  local opts
+
+  opts=("${SERV_OPTS_SHORT[@]}" "${SERV_OPTS_LONG[@]}")
+  _describe 'option' opts
+}
+
+
+_complete_services() {
+  local -a services nosvc nosvc_disp
+  
+  # nosvc=(${SERV_CMDS_NO_SVC%%:*})
+  # nosvc_disp=(${SERV_CMDS_NO_SVC#*:})
+
+  # compadd -J nosvc -X 'commands (no service required)' -d nosvc_disp -- $nosvc
+  _describe 'nosvc' SERV_CMDS_NO_SVC
+
+  services=(${(f)"$(serv list-all 2>/dev/null | awk 'NR>1 && !/unit files listed/ {print $1}')"})
+
+  compadd -J services -X '---services---' -- $services
+
+}
+
+
+_complete_commands () {
+  local commands
+
+  commands=("${SERV_CMDS_SERVICE[@]}")
+  _describe 'command' commands
+}
+
+_serv() {
+  local cur
+  
+  cur=${words[CURRENT]}
+
+  case "$cur:$CURRENT" in
+    (-*:*|--*:*) _complete_opts ;;       # 1) arguments
+    (*:2)      _complete_services ;;     # 2) complete services (position 2)
+    (*:3)      _complete_commands ;;     # 3) complete commands (position 3)
+    (*)        return 0 ;;
+  esac
+
+}
+
+compdef _serv serv
+
