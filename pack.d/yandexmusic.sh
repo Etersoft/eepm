@@ -19,8 +19,15 @@ mv -v "opt/Яндекс Музыка" opt/yandex-music || fatal
 # disable autoupdate
 rm -v opt/yandex-music/resources/app-update.yml
 
-# fix desktop file
-subst 's|^Exec=.*|Exec=yandexmusic %U|' usr/share/applications/yandexmusic.desktop
+mkdir -p usr/bin
+cat <<EOF >usr/bin/yandex-music
+#!/bin/sh
+# workaround for https://github.com/electron/electron/issues/46538
+/opt/yandex-music/yandexmusic --gtk-version=3
+EOF
+chmod 755 usr/bin/yandex-music
+
+subst 's|^Exec=.*|Exec=yandex-music %U|' usr/share/applications/yandexmusic.desktop
 
 erc pack $PKGNAME opt usr
 
