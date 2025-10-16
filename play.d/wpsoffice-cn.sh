@@ -1,20 +1,22 @@
 #!/bin/sh
 
-PKGNAME=wpsoffice
+PKGNAME=wps-office
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="WPS Office for Linux from the official site (Chinese version)"
 URL="https://www.wps.cn/product/wpslinux"
-TIPS="Run epm play wpsoffice=<version> to install some specific version"
 
 . $(dirname $0)/common.sh
 
-if [ "$VERSION" = "*" ] ; then
-    #VERSION=$(eget -O- https://archive2.kylinos.cn/DEB/KYLIN_DEB/pool/main/deb/wpsoffice/ | grep -oP '[^/]+_\K[\d.]+(?=_amd64\.deb)' | sort -V | tail -n1)
-    VERSION="$(eget -O- https://www.wps.cn/product/wpslinux | grep '"banner_txt"' | sed -e 's|.*banner_txt">||' -e "s|</p>||")"
-    [ -n "$VERSION" ] || fatal "Can't get version"
-fi
+warn_version_is_not_supported
 
-PKGURL="https://archive2.kylinos.cn/DEB/KYLIN_DEB/pool/main/deb/wpsoffice/wpsoffice_${VERSION}_amd64.deb"
+CHN_DEB_URL=$(eget -O- 'https://linux.wps.cn' | grep -Po "(?<=['\"])http.+?_amd64.deb(?=['\"])" | sort -u)
+
+# fix URL: https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=wps-office-cn
+uri="$(printf '%s\n' "$CHN_DEB_URL" | sed 's#https://wps-linux-personal.wpscdn.cn##')"
+secrityKey='7f8faaaa468174dc1c9cd62e5f218a5b'
+timestamp10=$(date '+%s')
+md5hash=$(printf '%s%s%s' "$secrityKey" "$uri" "$timestamp10" | md5sum | cut -d' ' -f1)
+PKGURL="$CHN_DEB_URL?t=${timestamp10}&k=${md5hash}"
 
 install_pkgurl
