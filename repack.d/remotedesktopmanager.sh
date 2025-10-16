@@ -7,8 +7,14 @@ SPEC="$2"
 . $(dirname $0)/common-chromium-browser.sh
 
 PRODUCT=remotedesktopmanager
-PRODUCTDIR=/usr/lib/devolutions/RemoteDesktopManager
+PRODUCTDIR=/opt/$PRODUCT
+PRODUCTCUR=RemoteDesktopManager
 
-add_findreq_skiplist "$PRODUCTDIR/runtimes/*"
+subst "s|/usr/lib/devolutions/RemoteDesktopManager/RemoteDesktopManager|$PRODUCTDIR/$PRODUCTCUR|" $BUILDROOT/usr/bin/$PRODUCT
 
-set_autoreq 'yes'
+move_to_opt /usr/lib/devolutions/RemoteDesktopManager
+
+# add_findreq_skiplist "$PRODUCTDIR/runtimes/*"
+
+# set_autoreq 'yes'
+add_libs_requires
