@@ -199,8 +199,7 @@ __subst_with_repo_url()
 
 __change_repo()
 {
-    local SHORT="$1"
-    local REPLTO="$2"
+    local REPLTO="$1"
     local NN
     epm --quiet repo list | grep -v "file:/" | while read nn ; do
         NN="$(__subst_with_repo_url "$nn" "$REPLTO")"
@@ -214,31 +213,31 @@ __epm_repochange_alt()
 {
     case "$1" in
         "--list")
-            echo "Possible targets: etersoft eterfund.org yandex basealt altlinux.org"
+            echo "Possible targets: etersoft datacenter.by truenetwork msu eterfund.org yandex basealt altlinux.org"
             ;;
         "etersoft")
-            __change_repo etersoft "//download.etersoft.ru/pub ALTLinux"
+            __change_repo "//download.etersoft.ru/pub ALTLinux"
             ;;
-        "datacenter")
-            __change_repo etersoft "//mirror.datacenter.by/pub ALTLinux"
+        "datacenter.by")
+            __change_repo "//mirror.datacenter.by/pub ALTLinux"
             ;;
         "truenetwork")
-            __change_repo etersoft "//mirror.truenetwork.ru altlinux"
+            __change_repo "//mirror.truenetwork.ru altlinux"
             ;;
         "msu")
-            __change_repo etersoft "//mirror.cs.msu.ru alt"
+            __change_repo "//mirror.cs.msu.ru alt"
             ;;
         "eterfund.org")
-            __change_repo eterfund.org "//mirror.eterfund.org/download.etersoft.ru/pub ALTLinux"
+            __change_repo "//mirror.eterfund.org/download.etersoft.ru/pub ALTLinux"
             ;;
         "yandex")
-            __change_repo mirror.yandex "//mirror.yandex.ru altlinux"
+            __change_repo "//mirror.yandex.ru altlinux"
             ;;
         "basealt")
-            __change_repo ftp.basealt "//ftp.basealt.ru/pub/distributions ALTLinux"
+            __change_repo "//ftp.basealt.ru/pub/distributions ALTLinux"
             ;;
         "altlinux.org")
-            __change_repo ftp.altlinux "//ftp.altlinux.org/pub/distributions ALTLinux"
+            __change_repo "//ftp.altlinux.org/pub/distributions ALTLinux"
             ;;
         *)
             fatal 'Unsupported change key $1'
