@@ -82,6 +82,8 @@ epm_mark_hold()
 
 case $BASEDISTRNAME in
     "alt")
+# TODO: use apt-mark if exists
+# https://bugzilla.altlinux.org/show_bug.cgi?id=34036#c54
         __alt_mark_hold "$@"
         exit
         ;;
