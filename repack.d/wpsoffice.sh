@@ -41,6 +41,12 @@ remove_file $PRODUCTDIR/office6/librpcetapi.so
 # WPS Office provide libuof.so()(64bit) itself
 ignore_lib_requires "libuof.so"
 
+# Optional distribution-specific libraries
+# libmysqlclient.so.18 - required by libFontWatermark.so for database connectivity in font watermarking features
+# libpeony.so.3 - required by libpeony-wpsprint-menu-plugin.so for Peony file manager print menu integration
+ignore_lib_requires "libmysqlclient.so.18"
+ignore_lib_requires "libpeony.so.3"
+
 # Fix wps deprecated python2 command
 # https://aur.archlinux.org/cgit/aur.git/tree/fix-wps-python-parse.patch?h=wps-office-cn
 subst 's/python -c '\''import sys, urllib; print urllib.unquote(sys.argv\[1\])'\''/python3 -c '\''import sys, urllib.parse; print(urllib.parse.unquote(sys.argv[1]))'\''/' $BUILDROOT/usr/bin/wps
@@ -49,19 +55,59 @@ subst 's/python -c '\''import sys, urllib; print urllib.unquote(sys.argv\[1\])'\
 remove_file $PRODUCTDIR/office6/mui/zh_CN/resource/help/etrainbow/images/Ribbon/custom_%20sequence.gif
 #remove_dir $PRODUCTDIR/office6/mui/zh_CN/resource/help/etrainbow/images
 
-# Fixes the problem of incorrect text display in WPS Office in non-GTK environments (KDE, Lxde, etc.)
-cat <<EOF | create_file "$PRODUCTDIR/office6/setenv.sh"
+# Fix desktop file categories
+fix_desktop_categories() {
+    local file_pattern="$1"
+    local categories="$2"
+    local desktop_file="$BUILDROOT/usr/share/applications/$file_pattern"
+
+    [ -f "$desktop_file" ] || return
+    sed -i "s/^Categories=.*/Categories=$categories/" "$desktop_file"
+}
+
+# Apply category fixes to desktop files
+fix_desktop_categories "wps-office-et.desktop" "Office;Spreadsheet;"
+fix_desktop_categories "wps-office-wps.desktop" "Office;WordProcessor;"
+fix_desktop_categories "wps-office-wpp.desktop" "Office;Presentation;"
+fix_desktop_categories "wps-office-pdf.desktop" "Office;Viewer;"
+fix_desktop_categories "wps-office-prometheus.desktop" "Office;"
+
+# Fix double-click file opening issue
+# This script configures WPS Office to handle file associations properly
+# Required for compatibility with file managers and desktop environments
+cat <<'EOF' | create_file "$PRODUCTDIR/office6/init-wps-config.sh"
 #!/bin/bash
 
-if echo "\${XDG_CURRENT_DESKTOP:-}" | grep -qi 'kde'; then
-    export XDG_CURRENT_DESKTOP=GNOME
+CONFIG_DIR="$HOME/.config/Kingsoft"
+CONFIG_FILE="$CONFIG_DIR/Office.conf"
+
+# Add WPS Office configuration parameter if it doesn't exist
+add_config_parameter() {
+    local param_name="$1"
+    
+    if ! grep -q "wpsoffice\\\\Application%20Settings\\\\${param_name}=" "$CONFIG_FILE"; then
+        echo "wpsoffice\\Application%20Settings\\${param_name}=prome_fushion" >> "$CONFIG_FILE"
+    fi
+}
+
+# Initialize configuration
+mkdir -p "$CONFIG_DIR"
+
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo "[6.0]" > "$CONFIG_FILE"
 fi
+
+# Configure component modes for file association support
+add_config_parameter "AppComponentMode"
+add_config_parameter "AppComponentModeInstall"
 EOF
+
+chmod +x "$BUILDROOT$PRODUCTDIR/office6/init-wps-config.sh"
 
 for f in wps et wpp wpspdf; do
     bin_file="$BUILDROOT/usr/bin/$f"
     [ -f "$bin_file" ] || fatal "Missing $bin_file"
-    sed -i '2i . /opt/kingsoft/wps-office/office6/setenv.sh' "$bin_file"
+    sed -i '2i . /opt/kingsoft/wps-office/office6/init-wps-config.sh' "$bin_file"
 done
 
 add_libs_requires
