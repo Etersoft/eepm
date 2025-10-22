@@ -114,6 +114,7 @@ confirm_action()
     if [ -z "$full_upgrade_no_kernel_update" ] ; then
         [ -n "$quiet" ] || echo
         docmd epm $dryrun update-kernel || fatal "updating of the kernel is failed."
+        #docmd epm $dryrun remove-old-kernel || fatal "removing old kernel is failed."
     fi
 
     # disable epm play --update for non ALT Systems

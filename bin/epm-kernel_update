@@ -92,7 +92,6 @@ esac
         fi
         assure_exists update-kernel update-kernel 0.9.9
         sudocmd update-kernel $dryrun $(subst_option non_interactive -y) $force $interactive $reinstall $verbose "$@" || return
-        #docmd epm remove-old-kernels "$@" || fatal
         return ;;
     esac
 
