@@ -31,17 +31,17 @@ esac
 
 case "$(epm print info -p)" in
   rpm)
-      pkgtype=rpm
+      pkgtype=x86_64.rpm
       ;;
   *)
-      pkgtype=deb
+      pkgtype=amd64.deb
       ;;
 esac
 
 if [ "$VERSION" != "*" ] ; then
-    PKGURL="https://storage.rudesktop.ru/download/$PKGNAME-$VERSION-amd64.$pkgtype"
+    PKGURL="https://storage.rudesktop.ru/download/$PKGNAME-$VERSION-$pkgtype"
 else
-    PKGURL="$(eget --list --latest https://rudesktop.ru/downloads/ "$PKGNAME-*-amd64.$pkgtype")"
+    PKGURL="$(eget --list --latest https://rudesktop.ru/downloads/ "$PKGNAME-*-$pkgtype")"
 fi
 
 install_pkgurl || exit
