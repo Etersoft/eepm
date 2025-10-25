@@ -33,10 +33,10 @@ esac
 
 case $(epm print info -e) in
     AstraLinuxSE/*)
-        mask="astra/r7-organizer_pro_${VERSION}_astralinux-signed_amd64.deb"
+        mask="astra/r7-organizer-pro_${VERSION}-astralinux-signed_amd64.deb"
         ;;
     ALTLinux/*)
-        mask="alt/r7organizer_pro-${VERSION}_altlinux.x86_64.rpm"
+        mask="alt/r7-organizer-pro-${VERSION}-altlinux.x86_64.rpm"
         #override_pkgname "r7organizer"
         ;;
 esac
