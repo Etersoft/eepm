@@ -104,6 +104,30 @@ echon()
 }
 
 
+# Escape all Bash instructions, like abc|xyz -> "abc|xyz" and AT&T -> "AT&T"
+__docmd_visual_escape_filter()
+{
+    local INPUT
+    [ -n "$1" ] && INPUT="$1" || read INPUT
+
+    [ -z "$INPUT" ] && echo "''" && return
+
+    case "$INPUT" in
+        *[!0-9A-Za-z_.-]*)
+            # Escape args containing any characters other than the "safe" ones: letters, digits, underscores etc.
+            echon "$INPUT" \
+            | sed \
+                -e 's/\\/\\\\/g'     \
+                -e "s/'/'\"'\"'/g"   \
+                -e "s/\(.\+\)/'\1'/g"
+            ;;
+        *)
+            # Common arguments should be printed as-is.
+            echon "$INPUT "
+            ;;
+    esac
+}
+
 # Print command line and run command line
 showcmd()
 {
@@ -129,7 +153,8 @@ echocmd()
 # Print command line and run command line
 docmd()
 {
-    showcmd "$*$EXTRA_SHOWDOCMD"
+    # Cannot use `xargs` here because it doesn't know anything about current Shell functions.
+    showcmd "$(for i in "$@"; do __docmd_visual_escape_filter "$i"; done | sed -e 's/ $//1')$EXTRA_SHOWDOCMD"
     "$@"
 }
 
