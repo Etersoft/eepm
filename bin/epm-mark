@@ -363,7 +363,7 @@ epm_mark()
         epm_mark_showmanual "$@"
         ;;
     *)
-        fatal 'Unknown command $ epm repo $CMD'
+        fatal 'Unknown command $ epm mark $CMD'
         ;;
 esac
 
