@@ -245,6 +245,49 @@ apt_repo_after()
     $SUDO rm /etc/apt/apt.conf.d/eepm-apt-noninteractive.conf 2>/dev/null
 }
 
+# Process arguments in TASK or TASK:package format
+prepare_task_packages()
+{
+    # Sets global vars:
+    #   installlist  — final list of packages to install
+    #   unique_tasks — unique task names from args
+    #
+    # Local vars:
+    #   seen_tasks, task_packages, task, pkg
+
+    installlist=""
+    unique_tasks=""
+    local seen_tasks=""
+    local task_packages=""
+
+    for arg in "$@"; do
+        # Parse argument into task and package
+        case "$arg" in
+            *:*)
+                local task=$(printf "%s" "$arg" | sed 's/:.*//')
+                local pkg=$(printf "%s" "$arg" | sed 's/.*://')
+                ;;
+            *)
+                local task="$arg"
+                local pkg=""
+                ;;
+        esac
+
+        # Fetch task packages once per unique task
+        if ! echo " $seen_tasks " | grep -q " $task "; then
+            unique_tasks="$unique_tasks $task"
+            task_packages=$(get_task_packages "$task")
+            seen_tasks="$seen_tasks $task"
+        fi
+
+        # Add specific package or all task packages to install list
+        if [ -n "$pkg" ]; then
+            installlist="$installlist $pkg"
+        else
+            installlist="$installlist $task_packages"
+        fi
+    done
+}
 
 # copied from epm_upgrade_alt_tasks()
 epm_install_alt_tasks()
@@ -254,7 +297,7 @@ epm_install_alt_tasks()
     load_helper epm-removerepo
     load_helper epm-Install
 
-    local installlist="$(get_task_packages "$@")"
+    prepare_task_packages "$@"
 
     [ -n "$verbose" ] && info "Packages from task(s): $installlist"
 
@@ -280,11 +323,11 @@ epm_install_alt_tasks()
 
     local res
     try_change_alt_repo
-    epm_addrepo "$@"
+    epm_addrepo $unique_tasks
     __epm_update
     (pkg_names="$installlist" epm_install)
     res=$?
-    epm_removerepo "$@"
+    epm_removerepo $unique_tasks
     end_change_alt_repo
     return $res
 }
