@@ -17,6 +17,14 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+tasknumberprefix() {
+    local potential
+    for potential in "$@"; do
+        [[ "$potential" =~ ^[0-9]+(:[^:]+)?$ ]] && return 0
+    done
+    return 1
+}
+
 tasknumber()
 {
     local num="$(echo "$1" | sed -e "s| *#*||g")"
