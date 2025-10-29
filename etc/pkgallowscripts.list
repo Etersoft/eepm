@@ -11,3 +11,7 @@ lsb-cprocsp-*
 cprocsp-*
 eepm-*
 nomachine-*
+sbis3plugin
+sbis-libstdc++12
+sbis3plugin-additions
+saby-minimal-core
