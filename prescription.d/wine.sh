@@ -69,6 +69,9 @@ fi
 
 fi
 
+# zenity or kdialog
+epm installed kdialog || epm assure zenity || epm assure kdialog
+
 
 if [ "$arch" = "x86" ] ; then
     if [ "$MAIN" = "wine-etersoft" ] ; then
