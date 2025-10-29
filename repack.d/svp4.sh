@@ -34,6 +34,6 @@ EOF
 
 add_requires mpv libqt5-concurrent
 add_unirequires libPythonQt.so.0 "python3(vapoursynth)" libmediainfo.so.0
-ignore_lib_requires libPythonQt.so.1
+ignore_lib_requires libPythonQt.so.1 libPythonQt.so.3 libnvinfer.so.10
 add_libs_requires
 add_bin_link_command $PRODUCT $PRODUCTDIR/SVPManager
