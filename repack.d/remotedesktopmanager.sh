@@ -10,6 +10,8 @@ PRODUCT=remotedesktopmanager
 PRODUCTDIR=/opt/$PRODUCT
 PRODUCTCUR=RemoteDesktopManager
 
+move_file /bin/$PRODUCT /usr/bin/$PRODUCT
+
 subst "s|/usr/lib/devolutions/RemoteDesktopManager/RemoteDesktopManager|$PRODUCTDIR/$PRODUCTCUR|" $BUILDROOT/usr/bin/$PRODUCT
 
 move_to_opt /usr/lib/devolutions/RemoteDesktopManager
