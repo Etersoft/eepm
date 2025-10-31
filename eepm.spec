@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.36
+Version: 3.64.37
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -141,6 +141,34 @@ make -C po
 %endif
 
 %changelog
+* Fri Oct 31 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.37-alt1
+- epm play netbeans: fix downloading
+- serv: initialize sudo just before command run
+- serv: add zsh autocompletion (eterbug #18610) (#497)
+- epm play: add remotedesktopmanager (eterbug #18617) (#500)
+- epm repofix: cleanup repo change list
+- epm play yandex-browser-codecs: download codecs for browser version (eterbug #18556)
+- epm play: add devtoys (eterbug #18616)
+- epm play: yandex-music: fix start on GNOME (eterbug #18600)
+- epm play wps-office-cn: use official site for download (eterbug #18614)
+- epm play: add resilio-sync (eterbug #18634)
+- epm play: add --list-updates (eterbug #18624)
+- epm play: add podman-desktop (eterbug #18636)
+- eepm.conf: add entry about EPM_BACKEND
+- epm-install: improve backends list, fix dnf5 support
+- epm play aksusbd: update to 10.14
+- epm full-upgrade: place remove-old-kernel after update-kernel
+- epm play: add gosuslugi-plugin (eterbug #18643)
+- epm play rudesktop: add arch in pkgtype (eterbug #17865)
+- epm play r7-office-organizer-pro: fix pkg mask (eterbug #17865)
+- epm play kyodialog: use russian site to download driver (eterbug #17865)
+- epm play freeplane: fix download (eterbug #17865)
+- epm play angie: add p11 into supported list (eterbug #17865)
+- epm play: add cloudflare-warp (eterbug #18648)
+- epm prescription wine: install zenity or kdialog for winetricks
+- epm play: add sbis-plugin (eterbug #18649)
+- epm play svp4: fix install (eterbug #17865)
+
 * Tue Oct 14 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.36-alt1
 - epm repack: clean arch build info files (#482)
 - epm play codium: direct download by version
