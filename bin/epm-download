@@ -212,6 +212,10 @@ __epm_download_alt()
         shift
     fi
 
+    if [ -z "$@" ] ; then
+        fatal "Missed package name"
+    fi
+
     load_helper epm-sh-altlinux
 
     # TODO: enable if install --download-only will works
@@ -244,7 +248,7 @@ __epm_download_alt()
         for i in $(sudocmd apt-get install -y --print-uris --reinstall "$pkg" | cut -f1 -d " " | grep ".rpm'$" | sed -e "s|^'||" -e "s|'$||") ; do
             echo "$(basename "$i")" | grep -q "^$pkg" || continue
             [ -n "$print_url" ] && echo "$i" && continue
-            eget "$i"
+            docmd eget "$i"
         done
     done
     return
