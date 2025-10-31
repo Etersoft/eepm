@@ -34,7 +34,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.36"
+export EPMVERSION="3.64.37"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -3748,6 +3748,10 @@ __epm_download_alt()
         shift
     fi
 
+    if [ -z "$@" ] ; then
+        fatal "Missed package name"
+    fi
+
 
     # TODO: enable if install --download-only will works
     if tasknumber "$@" >/dev/null ; then
@@ -3775,7 +3779,7 @@ __epm_download_alt()
         for i in $(sudocmd apt-get install -y --print-uris --reinstall "$pkg" | cut -f1 -d " " | grep ".rpm'$" | sed -e "s|^'||" -e "s|'$||") ; do
             echo "$(basename "$i")" | grep -q "^$pkg" || continue
             [ -n "$print_url" ] && echo "$i" && continue
-            eget "$i"
+            docmd eget "$i"
         done
     done
     return
@@ -4276,6 +4280,7 @@ confirm_action()
     if [ -z "$full_upgrade_no_kernel_update" ] ; then
         [ -n "$quiet" ] || echo
         docmd epm $dryrun update-kernel || fatal "updating of the kernel is failed."
+        #docmd epm $dryrun remove-old-kernel || fatal "removing old kernel is failed."
     fi
 
     # disable epm play --update for non ALT Systems
@@ -4685,7 +4690,7 @@ process_package_arguments() {
     local package_groups
     declare -A package_groups
     # ONLY supported backend in short form?
-    VALID_BACKENDS="apt-rpm apt-dpkg aptitude-dpkg deepsolver-rpm urpm-rpm packagekit pkgsrc pkgng redox-pkg emerge pacman aura yum-rpm dnf-rpm snappy zypper-rpm mpkg eopkg conary npackd slackpkg homebrew opkg nix apk tce guix termux-pkg aptcyg xbps appget winget"
+    VALID_BACKENDS="apt-rpm apt-dpkg apm stplr aptitude-dpkg deepsolver-rpm urpm-rpm packagekit pkgsrc pkgng redox-pkg emerge pacman aura yum-rpm dnf-rpm snappy zypper-rpm mpkg eopkg conary npackd slackpkg homebrew opkg nix apk tce guix termux-pkg aptcyg xbps appget winget"
     for arg in "$@"; do
         pmtype=$PMTYPE
         name="$arg"
@@ -4695,6 +4700,10 @@ process_package_arguments() {
                 # FIXME
                 if echo "$arg" | grep -q "^[a-z][a-z][a-z]*:" && echo "$VALID_BACKENDS" | grep -qw "$tpmtype"; then
                     pmtype=$tpmtype
+                    # copied from distr_info
+                    if [ "$pmtype" = "dnf-rpm" ] && a= dnf --version | grep -qi "dnf5" ; then
+                        pmtype="dnf5-rpm"
+                    fi
                     name=$(echo "$arg" | cut -d: -f2)
                 fi
                 ;;
@@ -5907,7 +5916,6 @@ esac
         fi
         assure_exists update-kernel update-kernel 0.9.9
         sudocmd update-kernel $dryrun $(subst_option non_interactive -y) $force $interactive $reinstall $verbose "$@" || return
-        #docmd epm remove-old-kernels "$@" || fatal
         return ;;
     esac
 
@@ -6594,7 +6602,7 @@ epm_mark()
         epm_mark_showmanual "$@"
         ;;
     *)
-        fatal 'Unknown command $ epm repo $CMD'
+        fatal 'Unknown command $ epm mark $CMD'
         ;;
 esac
 
@@ -7359,6 +7367,82 @@ __epm_play_install_one()
         __epm_play_run "$prescription" --run "$@" || fatal "There was some error during run $prescription script."
     fi
 }
+__get_latest_package_version()
+{
+    local pkg="$1"
+    local ver
+
+    [ -n "$pkg" ] || return 1
+
+    ver="$(epm tool eget -q -O- "https://eepm.ru/app-versions/$pkg" 2>/dev/null)"
+
+    if [ -n "$ver" ] ; then
+        echo "$ver"
+        return 0
+    fi
+
+    return 1
+}
+
+__list_available_updates()
+{
+
+    local installed_table pkg app installed latest cmp header_printed updates_found line
+
+    installed_table="$(__get_installed_table)"
+
+    [ -n "$installed_table" ] || return 0
+
+    updates_found=0
+
+    while IFS= read -r line ; do
+
+        [ -n "$line" ] || continue
+        set -- $line
+        pkg="$1"
+        app="$2"
+
+        [ -n "$pkg" ] || continue
+        [ -n "$app" ] || continue
+
+        installed="$(epm print version for package "$pkg" 2>/dev/null | head -n1)"
+
+        [ -n "$installed" ] || continue
+
+        latest="$(__get_latest_package_version "$pkg")"
+
+        [ -n "$latest" ] || continue
+
+        cmp="$(epm print compare package version "$latest" "$installed" 2>/dev/null)"
+
+        [ "$cmp" = "1" ] || continue
+
+        updates_found=1
+
+        if [ -z "$quiet" ] && [ -z "$short" ] && [ -z "$header_printed" ] ; then
+            echo "Applications with available updates:"
+            header_printed=1
+        fi
+
+        if [ -n "$short" ] ; then
+            echo "$app"
+            continue
+        fi
+
+        if [ -n "$quiet" ] ; then
+            printf "%s %s %s\n" "$app" "$installed" "$latest"
+        else
+            printf "  %-25s %s -> %s\n" "$app" "$installed" "$latest"
+        fi
+
+    done <<EOF
+    $installed_table
+EOF
+
+    if [ "$updates_found" -eq 0 ] && [ -z "$short" ] && [ -z "$quiet" ] ; then
+        echo "All installed applications are up to date."
+    fi
+}
 
 
 __epm_play_install()
@@ -7562,6 +7646,10 @@ case "$1" in
         exit
         ;;
 
+    --list-updates)
+        __list_available_updates
+        exit
+        ;;
     --latest)
         shift
         export latest="true"
@@ -11707,8 +11795,7 @@ __subst_with_repo_url()
 
 __change_repo()
 {
-    local SHORT="$1"
-    local REPLTO="$2"
+    local REPLTO="$1"
     local NN
     epm --quiet repo list | grep -v "file:/" | while read nn ; do
         NN="$(__subst_with_repo_url "$nn" "$REPLTO")"
@@ -11722,31 +11809,31 @@ __epm_repochange_alt()
 {
     case "$1" in
         "--list")
-            echo "Possible targets: etersoft eterfund.org yandex basealt altlinux.org"
+            echo "Possible targets: etersoft datacenter.by truenetwork msu eterfund.org yandex basealt altlinux.org"
             ;;
         "etersoft")
-            __change_repo etersoft "//download.etersoft.ru/pub ALTLinux"
+            __change_repo "//download.etersoft.ru/pub ALTLinux"
             ;;
-        "datacenter")
-            __change_repo etersoft "//mirror.datacenter.by/pub ALTLinux"
+        "datacenter.by")
+            __change_repo "//mirror.datacenter.by/pub ALTLinux"
             ;;
         "truenetwork")
-            __change_repo etersoft "//mirror.truenetwork.ru altlinux"
+            __change_repo "//mirror.truenetwork.ru altlinux"
             ;;
         "msu")
-            __change_repo etersoft "//mirror.cs.msu.ru alt"
+            __change_repo "//mirror.cs.msu.ru alt"
             ;;
         "eterfund.org")
-            __change_repo eterfund.org "//mirror.eterfund.org/download.etersoft.ru/pub ALTLinux"
+            __change_repo "//mirror.eterfund.org/download.etersoft.ru/pub ALTLinux"
             ;;
         "yandex")
-            __change_repo mirror.yandex "//mirror.yandex.ru altlinux"
+            __change_repo "//mirror.yandex.ru altlinux"
             ;;
         "basealt")
-            __change_repo ftp.basealt "//ftp.basealt.ru/pub/distributions ALTLinux"
+            __change_repo "//ftp.basealt.ru/pub/distributions ALTLinux"
             ;;
         "altlinux.org")
-            __change_repo ftp.altlinux "//ftp.altlinux.org/pub/distributions ALTLinux"
+            __change_repo "//ftp.altlinux.org/pub/distributions ALTLinux"
             ;;
         *)
             fatal 'Unsupported change key $1'

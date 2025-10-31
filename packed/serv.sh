@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.36"
+EPMVERSION="3.64.37"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -3083,10 +3083,6 @@ serv_main()
 
 INITDIR=/etc/init.d
 
-PATH=$PATH:/sbin:/usr/sbin
-
-set_sudo
-
 check_tty
 
 #############################
@@ -3310,6 +3306,10 @@ fi
 if [ -z "$serv_cmd" ] ; then
     serv_cmd=common
 fi
+
+PATH=$PATH:/sbin:/usr/sbin
+
+set_sudo
 
 # Run helper for command
 serv_$serv_cmd $service_name $params
