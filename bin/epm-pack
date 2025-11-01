@@ -34,6 +34,15 @@ __epm_pack_run_handler()
     shift 4
     returntarname=''
 
+    if is_command sha256sum ; then
+        message "sha256sum:"
+        for i in $tarname ; do
+            message "    $(sha256sum $i) $(basename $i)"
+        done
+    else
+        message "sha256sum is missed, can't print sha256 for packages..."
+    fi
+
     local repackcode="$EPM_PACK_SCRIPTS_DIR/$packname.sh"
     [ -s "$repackcode" ] || return
     [ -f "$repackcode.rpmnew" ] && warning 'There is .rpmnew file(s) in $EPM_PACK_SCRIPTS_DIR dir. The pack script can be outdated.'
