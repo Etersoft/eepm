@@ -98,6 +98,7 @@ make -C po
 %files -f %name.lang
 %doc README.md TODO LICENSE
 %dir %_sysconfdir/eepm/
+%dir %_sysconfdir/eepm/conf.d/
 %dir %_sysconfdir/eepm/pack.d/
 %dir %_sysconfdir/eepm/repack.d/
 %dir %_sysconfdir/eepm/prescription.d/

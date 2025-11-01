@@ -168,7 +168,9 @@ epm_cachedir=/var/cache/eepm
 eget_ipfs_db=$epm_vardir/eget-ipfs-db.txt
 
 # load system wide config
-[ -f $CONFIGDIR/eepm.conf ] && . $CONFIGDIR/eepm.conf
+for i in $CONFIGDIR/eepm.conf $CONFIGDIR/conf.d/*.conf ; do
+    [ -f $CONFIGDIR/$i ] && . $CONFIGDIR/$i
+done
 
 
 case $PROGNAME in

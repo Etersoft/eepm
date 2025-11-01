@@ -31,6 +31,7 @@ install_common:
 	cp -a etc/eepm.conf $(DESTDIR)$(sysconfdir)/eepm/
 	cp -a etc/serv.conf $(DESTDIR)$(sysconfdir)/eepm/
 	cp -a etc/*.list $(DESTDIR)$(sysconfdir)/eepm/
+	mkdir -p $(DESTDIR)$(sysconfdir)/eepm/conf.d/
 
 	mkdir -p $(DESTDIR)$(mandir)/man1
 	cp -a `ls -1 man/*` $(DESTDIR)$(mandir)/man1/
