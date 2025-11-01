@@ -207,6 +207,16 @@ __epm_repack()
 {
     local pkg
     repacked_pkgs=''
+
+    if is_command sha256sum ; then
+        message "sha256sum:"
+        for i in $pkg_files ; do
+            message "    $(sha256sum $i) $(basename $i)"
+        done
+    else
+        message "sha256sum is missed, can't print sha256 for packages..."
+    fi
+
     for pkg in $* ; do
         __epm_repack_single "$pkg" || fatal 'Error with $pkg repacking.'
         [ -n "$repacked_pkgs" ] && repacked_pkgs="$repacked_pkgs $repacked_pkg" || repacked_pkgs="$repacked_pkg"
@@ -234,7 +244,6 @@ epm_repack()
 
     [ -n "$pkg_names" ] && warning 'Can'\''t find $pkg_names files'
     [ -z "$pkg_files" ] && info "Empty repack list was skipped" && return 22
-
     if __epm_repack $pkg_files && [ -n "$repacked_pkgs" ] ; then
         if [ -n "$install" ] ; then
             epm install $repacked_pkgs
