@@ -96,6 +96,8 @@ __assure_exists_rpmbuild()
 __epm_repack_to_rpm()
 {
     local pkg="$1"
+    local packversion="$2"
+    local packrelease="$3"
 
     # Note: install epm-repack for static (package based) dependencies
     assure_exists cpio
@@ -191,6 +193,13 @@ __epm_repack_to_rpm()
 
         # reassign package name (could be renamed in fix scripts)
         pkgname="$(grep "^Name: " $spec | sed -e "s|Name: ||g" | head -n1)"
+
+        if [ -n "$packversion" ]; then
+            sed -i "s|^Version: .*|Version: $packversion|" "$spec"
+        fi
+        if [ -n "$packrelease" ]; then
+            sed -i "s|^Release: .*|Release: $packrelease|" "$spec"
+        fi
 
         if [ -n "$EEPM_INTERNAL_PKGNAME" ] ; then
             if ! estrlist contains "$pkgname" "$EEPM_INTERNAL_PKGNAME" ; then
