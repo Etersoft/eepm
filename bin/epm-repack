@@ -168,6 +168,8 @@ __prepare_source_package()
 __epm_repack_single()
 {
     local pkg="$1"
+    local packversion="$2"
+    local packrelease="$3"
     case $PKGFORMAT in
         rpm)
             load_helper epm-repack-rpm
@@ -179,14 +181,14 @@ __epm_repack_single()
                     fatal_warning "Repacking already repacked package $pkg is uselessly."
                 fi
             fi
-            __epm_repack_to_rpm "$pkg" || return
+            __epm_repack_to_rpm "$pkg" "$packversion" "$packrelease" || return
             ;;
         deb)
             if __epm_have_repack_rule "$pkg" ; then
                 # we have repack rules only for rpm, so use rpm step in any case
                 load_helper epm-repack-rpm
                 load_helper epm-repack-deb
-                __epm_repack_to_rpm "$pkg" || return
+                __epm_repack_to_rpm "$pkg" "$packversion" "$packrelease" || return
                 [ -n "$repacked_pkg" ] || return
                 __epm_repack_to_deb $repacked_pkg || return
             else
@@ -207,6 +209,8 @@ __epm_repack()
 {
     local pkg
     repacked_pkgs=''
+    local packversion="${EPM_REPACK_VERSION:-}"
+    local packrelease="${EPM_REPACK_RELEASE:-}"
 
     if is_command sha256sum ; then
         message "sha256sum:"
@@ -218,7 +222,7 @@ __epm_repack()
     fi
 
     for pkg in $* ; do
-        __epm_repack_single "$pkg" || fatal 'Error with $pkg repacking.'
+        __epm_repack_single "$pkg" "$packversion" "$packrelease" || fatal 'Error with $pkg repacking.'
         [ -n "$repacked_pkgs" ] && repacked_pkgs="$repacked_pkgs $repacked_pkg" || repacked_pkgs="$repacked_pkg"
     done
 }
