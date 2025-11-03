@@ -35,4 +35,6 @@ cat <<EOF
 Note: run
 # serv grdcontrol on
 to start Guardant Control Center permanently
+
+Open http://localhost:3189 via a browser.
 EOF
