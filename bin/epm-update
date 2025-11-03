@@ -52,9 +52,11 @@ __save_available_packages()
     [ -d /etc/bash_completion.d ] || return 0
 
     # HACK: too much time (5 minutes) on deb systems in a docker
-    [ $PMTYPE = "apt-dpkg" ] && return 0
+    # [ $PMTYPE = "apt-dpkg" ] && return 0
 
     info "Retrieving list of all available packages (for autocompletion) ..."
+    # can ask sudo later
+    set_sudo
     load_helper epm-list_available
     short=--short update=update epm_list_available | sort | sudorun tee $epm_vardir/available-packages >/dev/null
 }
