@@ -55,8 +55,16 @@ epm_list_available()
 
 
 case $PMTYPE in
-    apt-*)
+    apt-dpkg)
         warmup_dpkgbase
+        ;;
+    apt-rpm)
+        warmup_rpmbase
+        ;;
+esac
+
+case $PMTYPE in
+    apt-*)
         # TODO: use apt list
         if [ -n "$short" ] ; then
             docmd apt-cache search . | sed -e "s| .*||g"
