@@ -10,8 +10,15 @@ TIPS="Run 'epm play telegram=beta' to install beta version of the Telegram clien
 
 . $(dirname $0)/common.sh
 
-if [ "$VERSION" = "*" ] && ! is_glibc_enough 2.32 ; then
-    VERSION="4.9.5"
+# override checked version or determine latest version
+if [ -n "$CHECKED_VERSION" ] || [ "$VERSION" = "*" ] ; then
+    if ! is_glibc_enough 2.32 ; then
+        VERSION="4.9.5"
+    fi
+
+    if ! is_glibc_enough 2.28 ; then
+        VERSION="4.5.1"
+    fi
 fi
 
 if [ "$VERSION" = "*" ] ; then
@@ -22,9 +29,6 @@ if [ "$VERSION" = "*" ] ; then
     # can't use get_github_tag (not every tag has binary release)
     PKGURL=$(get_github_url "https://github.com/telegramdesktop/tdesktop/" "tsetup.$VERSION.tar.xz" $prerelease)
 
-    if ! is_glibc_enough 2.28 ; then
-        fatal "glibc is too old, upgrade your system."
-    fi
 else
     PKGBASEURL="https://github.com/telegramdesktop/tdesktop/releases/download/v$VERSION"
     [ "$PKGNAME" = "$BASEPKGNAME-beta" ] && VERSION="$VERSION.beta"

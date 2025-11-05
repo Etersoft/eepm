@@ -542,6 +542,7 @@ is_repacked_packages $REPOPKGNAME || exit 0
 if [ -z "$VERSION" ] && [ -z "$force" ] && [ -z "$latest" ] ; then
     # by default use latest known version to install
     VERSION="$(get_latest_version $PKGNAME)"
+    CHECKED_VERSION="$VERSION"
 fi
 
 # default version value (can be overrided with arg $2 or by update)
