@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.37
+Version: 3.64.38
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -142,6 +142,22 @@ make -C po
 %endif
 
 %changelog
+* Fri Nov 07 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.38-alt1
+- epm: load configs from /etc/eepm/conf.d/*.conf too
+- epm pack/repack: add sha256sum output for input files
+- epm play mincraft-launcher: add libcurl4-openssl to fix start
+- epm play remotedesktopmanager: fix app start
+- epm play: add karing
+- epm repack: added ability to choise version and release (eterbug #18445)
+- epm play: added ramus (eterbug #18659)
+- epm play librewolf: use direct link
+- epm play: use telegram 4.5.1 for glibc 2.28 or lower
+- epm play: add satvision
+- epm play: add onescript-engine
+- epm-repack-rpm: make symlink to tmp dir instead of copying
+- epm-status: hide error on missed package
+- epm pack: add unreal-engine
+
 * Fri Oct 31 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.37-alt1
 - epm play netbeans: fix downloading
 - serv: initialize sudo just before command run
