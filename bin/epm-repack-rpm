@@ -26,7 +26,19 @@ has_repack_script()
 # args: pkgname buildroot spec
 __apply_fix_code()
 {
-    local repackcode="$EPM_REPACK_SCRIPTS_DIR/$1.sh"
+    local script_name="$1"
+    local repackcode
+
+    # Check if it's an absolute/relative path
+    if [ -s "$script_name" ]; then
+        repackcode="$script_name"
+    elif [ -s "$script_name.sh" ]; then
+        repackcode="$script_name.sh"
+    else
+        # Look in EPM_REPACK_SCRIPTS_DIR
+        repackcode="$EPM_REPACK_SCRIPTS_DIR/$script_name.sh"
+    fi
+
     [ -s "$repackcode" ] || return 0
     [ -f "$repackcode.rpmnew" ] && warning 'There is .rpmnew file(s) in $EPM_REPACK_SCRIPTS_DIR dir. The pack script can be outdated.'
 
@@ -96,8 +108,9 @@ __assure_exists_rpmbuild()
 __epm_repack_to_rpm()
 {
     local pkg="$1"
-    local packversion="$2"
-    local packrelease="$3"
+    local repack_script="$2"
+    local packversion="$3"
+    local packrelease="$4"
 
     # Note: install epm-repack for static (package based) dependencies
     assure_exists cpio
@@ -189,6 +202,10 @@ __epm_repack_to_rpm()
             __apply_fix_code "generic-default" $buildroot $spec $pkgname $abspkg
         fi
         __apply_fix_code "generic-post"        $buildroot $spec $pkgname $abspkg
+
+        if [ -n "$repack_script" ]; then
+            __apply_fix_code "$repack_script" $buildroot $spec $pkgname $abspkg
+        fi
         cd - >/dev/null
 
         # reassign package name (could be renamed in fix scripts)

@@ -25,10 +25,26 @@ load_helper epm-status
 
 __epm_have_repack_rule()
 {
+    local pkg="$1"
+    local repack_script="${EPM_REPACK_SCRIPT:-}"
+
+    # If explicit repack script is specified
+    if [ -n "$repack_script" ]; then
+        # Check if it's an absolute/relative path to existing file
+        if [ -s "$repack_script" ]; then
+            return 0
+        fi
+        # Check in EPM_REPACK_SCRIPTS_DIR
+        if [ -s "$EPM_REPACK_SCRIPTS_DIR/$repack_script.sh" ]; then
+            return 0
+        fi
+        fatal "Repack script $repack_script not found (checked as path and in $EPM_REPACK_SCRIPTS_DIR)"
+    fi
+
+    # Check for automatic repack rule
     # FIXME: use real way (for any archive)
-    local pkgname="$(epm print name for package "$1" 2>/dev/null)"
-    local repackcode="$EPM_REPACK_SCRIPTS_DIR/$pkgname.sh"
-    [ -s "$repackcode" ]
+    local pkgname="$(epm print name for package "$pkg" 2>/dev/null)"
+    [ -s "$EPM_REPACK_SCRIPTS_DIR/$pkgname.sh" ]
 }
 
 __epm_check_repack_rule()
@@ -168,8 +184,9 @@ __prepare_source_package()
 __epm_repack_single()
 {
     local pkg="$1"
-    local packversion="$2"
-    local packrelease="$3"
+    local packversion="${EPM_REPACK_VERSION:-}"
+    local packrelease="${EPM_REPACK_RELEASE:-}"
+
     case $PKGFORMAT in
         rpm)
             load_helper epm-repack-rpm
@@ -181,14 +198,14 @@ __epm_repack_single()
                     fatal_warning "Repacking already repacked package $pkg is uselessly."
                 fi
             fi
-            __epm_repack_to_rpm "$pkg" "$packversion" "$packrelease" || return
+            __epm_repack_to_rpm "$pkg" "${EPM_REPACK_SCRIPT:-}" "$packversion" "$packrelease" || return
             ;;
         deb)
             if __epm_have_repack_rule "$pkg" ; then
                 # we have repack rules only for rpm, so use rpm step in any case
                 load_helper epm-repack-rpm
                 load_helper epm-repack-deb
-                __epm_repack_to_rpm "$pkg" "$packversion" "$packrelease" || return
+                __epm_repack_to_rpm "$pkg" "${EPM_REPACK_SCRIPT:-}" "$packversion" "$packrelease" || return
                 [ -n "$repacked_pkg" ] || return
                 __epm_repack_to_deb $repacked_pkg || return
             else
@@ -209,6 +226,7 @@ __epm_repack()
 {
     local pkg
     repacked_pkgs=''
+    local repack_script="${EPM_REPACK_SCRIPT:-}"
     local packversion="${EPM_REPACK_VERSION:-}"
     local packrelease="${EPM_REPACK_RELEASE:-}"
 
@@ -222,7 +240,7 @@ __epm_repack()
     fi
 
     for pkg in $* ; do
-        __epm_repack_single "$pkg" "$packversion" "$packrelease" || fatal 'Error with $pkg repacking.'
+        __epm_repack_single "$pkg" "$repack_script" "$packversion" "$packrelease" || fatal 'Error with $pkg repacking.'
         [ -n "$repacked_pkgs" ] && repacked_pkgs="$repacked_pkgs $repacked_pkg" || repacked_pkgs="$repacked_pkg"
     done
 }
