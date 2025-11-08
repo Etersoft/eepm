@@ -4,6 +4,6 @@
     "installed": false,
     "dependencies": ["gnome-shell", "gdm"],
     "description": "Window management and application launching for GNOME",
-    "metapackages": ["test"]
+    "metapackages": ["gnome-shell"]
 }
   

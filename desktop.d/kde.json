@@ -1,8 +1,8 @@
 {
     "name": "kde",
-    "version": "25.01.0",
+    "version": "6.4.5",
     "installed": false,
-    "dependencies": [ "kde", "lightdm", "lightdm-kde-greeter", "plasma-discover", "power-profiles-daemon", "qt6-wayland", "wayland-utils", "vulkan-tools"],
-    "description": "Hyprland is a dynamic tiling Wayland compositor that doesn't sacrifice on it's looks",
+    "dependencies": [ "plasma-desktop", "lightdm", "lightdm-kde-greeter", "plasma-discover", "power-profiles-daemon", "qt6-wayland", "wayland-utils", "vulkan-tools"],
+    "description": "KDE Plasma is a powerful desktop environment with support for X11 and Wayland",
     "metapackages": [ "kde" ]
 }
