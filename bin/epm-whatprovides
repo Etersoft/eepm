@@ -22,9 +22,9 @@ load_helper epm-print
 epm_whatprovides()
 {
     local CMD
-    [ -n "$pkg_files" ] && fatal "whatprovides does not handle files"
-    [ -n "$pkg_names" ] || fatal "whatprovides: package name is missed"
-    local pkg=$(print_name $pkg_names)
+    [ -n "$pkg_url" ] && fatal "whatprovides does not handle URLs"
+    [ -n "$pkg_files$pkg_names" ] || fatal "whatprovides: package name is missed"
+    local pkg=$(print_name $pkg_files $pkg_names)
 
 # by package name
 case $PMTYPE in
