@@ -14,6 +14,13 @@ set_alt_alternatives()
     local priority="$1"
     # needed alternatives
     subst '1iProvides: webclient' $SPEC
+# FIXME: it have to be generated via /usr/lib/rpm/alternatives.prov ?
+# TODO for eepm-rpm-build (ordinal rpm-build works fine with it):
+# error: line 1: Versioned file name not permitted: Provides: /usr/bin/x-www-browser = 65
+#    subst "1iProvides: /usr/bin/xbrowser = $priority" $SPEC
+#    subst "1iProvides: /usr/bin/x-www-browser = $priority" $SPEC
+    subst "1iProvides: /usr/bin/xbrowser" $SPEC
+    subst "1iProvides: /usr/bin/x-www-browser" $SPEC
 
     subst "s|%files|%files\n/etc/alternatives/packages.d/$PRODUCT|" $SPEC
     mkdir -p $BUILDROOT/etc/alternatives/packages.d/
