@@ -210,7 +210,8 @@ __epm_repack_single()
             __epm_repack_to_rpm "$pkg" "$packversion" "$packrelease" || return
             ;;
         deb)
-            if __epm_have_repack_rule "$pkg" ; then
+            # repack via rpm if source is not deb or we have rpm rule for the package
+            if __epm_have_repack_rule "$pkg" || ! rhas "$pkg" "\.deb$" ; then
                 # we have repack rules only for rpm, so use rpm step in any case
                 load_helper epm-repack-rpm
                 load_helper epm-repack-deb
