@@ -44,10 +44,10 @@ __epm_repack_to_deb()
 
         alpkg=$(basename $pkg)
         # don't use abs package path: copy package to temp dir and use there
-        cp $verbose $pkg $TDIR/$alpkg
+        cp -l $verbose $abspkg $TDIR/$alpkg 2>/dev/null || cp -s $verbose $abspkg $TDIR/$alpkg 2>/dev/null || cp $verbose $abspkg $TDIR/$alpkg || fatal
 
         cd $TDIR || fatal
-        __prepare_source_package "$pkg"
+        __prepare_source_package "$(pwd)/$alpkg"
 
         showcmd_store_output fakeroot alien -d -k $verbose $scripts "$alpkg"
         local DEBCONVERTED=$(grep "deb generated" $RC_STDOUT | sed -e "s| generated||g")
