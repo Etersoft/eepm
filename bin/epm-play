@@ -54,7 +54,12 @@ __is_app_installed()
 
 __get_app_package()
 {
-    grep -oP "^PKGNAME=[\"']*\K[^\"']+" "$psdir/$1.sh" && return
+    if [ "$PKGFORMAT" = "deb" ] ; then
+        local pkgname
+        pkgname="$(grep -oP "^PKGNAME=[\"']*\K[^\"']+" "$psdir/$1.sh")" && echo "$pkgname" | tr "[:upper:]" "[:lower:]" && return
+    else
+        grep -oP "^PKGNAME=[\"']*\K[^\"']+" "$psdir/$1.sh" && return
+    fi
     # fallback if PKGNAME is not set directly
     __run_script "$1" --package-name "$2" "$3" 2>/dev/null
 }
@@ -88,6 +93,15 @@ __list_all_packages()
     done
 }
 
+__print_targeted_packages()
+{
+    if [ "$PKGFORMAT" = "deb" ] ; then
+        tr "[:upper:]" "[:lower:]" <"$1"
+        return
+    fi
+    cat "$1"
+}
+
 # TODO: wrong, missed some packages (f.i., kubo
 __list_app_packages_table()
 {
@@ -109,7 +123,7 @@ __list_app_packages_table()
     grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\<$arch\>)" $psdir/*.sh | xargs grep -oP "^PKGNAME=[\"']*\K[^\"']+"  | sed -e "s|.*/\(.*\).sh:|\1 |" | grep -v -E "(^$IGNOREi586|^common|#.*$)" | LC_ALL=C sort -k1,1 >$tmplist1
     # tmplist - app
     # tmplist1 - app package
-    LC_ALL=C join -j 1 -a 1 $tmplist $tmplist1 | while read -r app package ; do
+    __print_targeted_packages $tmplist1 | LC_ALL=C join -j 1 -a 1 $tmplist - | while read -r app package ; do
         [ -n "$package" ] || package="$(__get_resolved_app_package $app $pkglist </dev/null)"
         [ -n "$package" ] || continue # fatal "Missed package for $app"
         echo "$package $app"
