@@ -131,8 +131,8 @@ epm_status_supported() {
 epm_status_validate()
 {
     local pkg="$1"
-    local rpmversion="$(epm print field Version for "$pkg" 2>/dev/null)"
-    [ -n "$rpmversion" ]
+    local version="$(epm print field Version for "$pkg" 2>/dev/null)"
+    [ -n "$version" ]
 }
 
 epm_status_original()
@@ -219,7 +219,7 @@ epm_status_repacked()
     local pkg="$1"
 
     # dpkg package missing packager field
-    local repacked="$(epm print field Description for "$1" 2>/dev/null | grep -qi "alien")"
+    local repacked="$(epm print field Description for "$1" 2>/dev/null | grep -i "alien")"
     local packager="$(epm print field Packager for "$1" 2>/dev/null)"
 
     #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
@@ -253,7 +253,7 @@ epm_status_thirdparty()
 
     #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
     distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
-    repacked="$(epm print field Description for "$1" 2>/dev/null | grep -qi "alien")"
+    #repacked="$(epm print field Description for "$1" 2>/dev/null | grep -qi "alien")"
     maintainer="$(epm print field Maintainer for "$pkg" 2>/dev/null)"
 
     case $BASEDISTRNAME in
@@ -295,7 +295,7 @@ epm_status_thirdparty()
             # On UncomOS maintainer Ubuntu and Debian * team
             echo "$maintainer" | grep -q "Debian" && return 1
             echo "$maintainer" | grep -q "Ubuntu" && return 1
-            [ ! -z "$repacked" ] && return 1
+            epm_status_repacked $pkg && return 1
             return 0
             ;;
         *)
