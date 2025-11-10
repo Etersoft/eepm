@@ -449,6 +449,7 @@ check_for_product_update()
 }
 
 
+
 case "$1" in
     "--description")
         is_supported_arch "$2" || exit 0
@@ -464,6 +465,11 @@ esac
 # set PKGNAME to $BASEPKGNAME-$VERSION if $VERSION is found in PRODUCTALT
 [ -n "$PRODUCTALT" ] && check_alternative_pkgname
 [ -n "$PKGNAME" ] || fatal "Can't get PKGNAME"
+
+pkgtype="$(epm print info -p)"
+# deb targets always in low case
+[ "$pkgtype" = "deb" ] && PKGNAME="$(echo $PKGNAME | tr "[A-Z]" "[a-z]")"
+
 
 case "$1" in
     "--package-name")
