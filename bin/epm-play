@@ -146,10 +146,25 @@ __list_app_packages_table_old()
     done
 }
 
-__get_all_alt_repacked_packages()
+__get_all_rpm_repacked_packages()
 {
     FORMAT="%{Name} %{Version} %{Packager}\n"
     a= rpmquery --queryformat "$FORMAT" -a | grep "EPM <support@e"
+}
+
+__filter_by_repacked_rpm_packages()
+{
+    local i
+    local tapt="$1"
+    local pkglist="$2"
+
+    LC_ALL=C join -11 -21 $tapt $pkglist | uniq
+
+    # rpm on Fedora/CentOS no more print missed packages to stderr
+    # get supported packages list and print lines with it
+    #for i in $(epm query --short $(cat $tapt | cut -f1 -d" ") 2>/dev/null) ; do
+    #    grep "^$i " $tapt
+    #done
 }
 
 __filter_by_installed_packages()
@@ -158,24 +173,12 @@ __filter_by_installed_packages()
     local tapt="$1"
     local pkglist="$2"
 
-    # hack for rpm based
-    if [ "$PKGFORMAT" = "rpm" ] ; then
-        LC_ALL=C join -11 -21 $tapt $pkglist | uniq
-        return
-    fi
-
     # get intersect between full package list and available packages table
     LC_ALL=C join -11 -21 $tapt $pkglist | uniq | while read -r package app ; do
         if epm status --repacked "$package" </dev/null || epm status --thirdparty "$package" </dev/null  ; then
             echo "$package $app"
         fi
     done
-
-    # rpm on Fedora/CentOS no more print missed packages to stderr
-    # get supported packages list and print lines with it
-    #for i in $(epm query --short $(cat $tapt | cut -f1 -d" ") 2>/dev/null) ; do
-    #    grep "^$i " $tapt
-    #done
 }
 
 __get_installed_table()
@@ -190,13 +193,17 @@ __get_installed_table()
     remove_on_exit $pkglist
 
     if [ "$PKGFORMAT" = "rpm" ] ; then
-        __get_all_alt_repacked_packages | LC_ALL=C sort -u >$pkglist
+        # fast hack to get all repacked packages
+        # it misses all thirdparty packages installed as is
+        __get_all_rpm_repacked_packages | LC_ALL=C sort -u >$pkglist
+        __list_app_packages_table $pkglist | LC_ALL=C sort -u >$tapt
+        __filter_by_repacked_rpm_packages $tapt $pkglist
     else
         epm --short packages | LC_ALL=C sort -u >$pkglist
+        __list_app_packages_table $pkglist | LC_ALL=C sort -u >$tapt
+        __filter_by_installed_packages $tapt $pkglist
     fi
 
-    __list_app_packages_table $pkglist | LC_ALL=C sort -u >$tapt
-    __filter_by_installed_packages $tapt $pkglist
     rm -f $tapt
     rm -f $pkglist
 }
