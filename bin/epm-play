@@ -166,7 +166,7 @@ __filter_by_installed_packages()
 
     # get intersect between full package list and available packages table
     LC_ALL=C join -11 -21 $tapt $pkglist | uniq | while read -r package app ; do
-        if epm status --repacked "$package" </dev/null ; then
+        if epm status --repacked "$package" </dev/null || epm status --thirdparty "$package" </dev/null  ; then
             echo "$package $app"
         fi
     done
