@@ -44,7 +44,7 @@ __epm_repack_to_deb()
 
         alpkg=$(basename $pkg)
         # don't use abs package path: copy package to temp dir and use there
-        cp -l $verbose $abspkg $TDIR/$alpkg 2>/dev/null || cp -s $verbose $abspkg $TDIR/$alpkg 2>/dev/null || cp $verbose $abspkg $TDIR/$alpkg || fatal
+        __epm_repack_copy $abspkg $TDIR/$alpkg
 
         cd $TDIR || fatal
         __prepare_source_package "$(pwd)/$alpkg"

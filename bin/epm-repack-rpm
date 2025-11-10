@@ -137,7 +137,7 @@ __epm_repack_to_rpm()
 
         alpkg=$(basename $pkg)
         # don't use abs package path: copy package to temp dir and use there
-        cp -l $verbose $abspkg $tmpbuilddir/../$alpkg 2>/dev/null || cp -s $verbose $abspkg $tmpbuilddir/../$alpkg 2>/dev/null || cp $verbose $abspkg $tmpbuilddir/../$alpkg || fatal
+        __epm_repack_copy $abspkg $tmpbuilddir/../$alpkg
         [ -r "$pkg.eepm.yaml" ] && cp $verbose $pkg.eepm.yaml $tmpbuilddir/../$alpkg.eepm.yaml
 
         cd $tmpbuilddir/../ || fatal

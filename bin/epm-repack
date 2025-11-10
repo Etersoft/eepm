@@ -53,6 +53,32 @@ __epm_check_if_needed_repack()
     warning 'There is repack rule for $pkgname package. It is better install this package via epm install --repack or epm play.'
 }
 
+# make light and independent copy to target
+# note: target file can be read only
+# args: abs_source target
+__epm_repack_copy()
+{
+    local abspkg="$1"
+    local target="$2"
+
+    # if source file is not writable, try CoW or fallback to ordinal copy
+    #if [ ! -w "$abspkg" ] ; then
+    #    cp --reflink=auto $verbose $abspkg $target 2>/dev/null && return
+    #    return
+    #fi
+
+    # firstly try CoW
+    cp --reflink=always $verbose $abspkg $target 2>/dev/null && return
+    # next try create hardlink
+    cp -l $verbose $abspkg $target 2>/dev/null && return
+    # next try create symlink
+    cp -s $verbose $abspkg $target 2>/dev/null && return
+    # just make copy as fallback
+    cp $verbose $abspkg $target && return
+    fatal "Can't copy $abspkg to $target"
+}
+
+
 # arg: rpm or deb
 # fills split_replaced_pkgs with packages of that type
 __epm_split_by_pkg_type()
