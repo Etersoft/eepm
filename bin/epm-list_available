@@ -72,6 +72,10 @@ case $PMTYPE in
             docmd apt-cache search .
         fi
         ;;
+    apm)
+        # TODO: --format json?
+        CMD="apm system list --limit 100000"
+        ;;
     dnf-*)
         warmup_rpmbase
         if [ -n "$short" ] ; then

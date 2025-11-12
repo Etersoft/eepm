@@ -28,6 +28,10 @@ case $PMTYPE in
     apt-rpm|apt-dpkg)
         CMD="apt-cache search --"
         ;;
+    apm)
+        docmd apm system search -- $string
+        return
+        ;;
     aptitude-dpkg)
         CMD="aptitude search --"
         ;;

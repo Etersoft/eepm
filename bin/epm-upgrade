@@ -141,6 +141,9 @@ epm_upgrade()
         local APTOPTIONS="$dryrun $(subst_option non_interactive -y) $(subst_option debug "-V -o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
         CMD="apt-get $APTOPTIONS $noremove $force_yes dist-upgrade"
         ;;
+    apm)
+        CMD="apm system upgrade"
+        ;;
     aptitude-dpkg)
         CMD="aptitude dist-upgrade"
         ;;

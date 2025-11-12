@@ -56,6 +56,9 @@ case $PMTYPE in
         is_installed $pkg_names && docmd dpkg -p $pkg_names && return
         docmd apt-cache show $pkg_names
         ;;
+    apm)
+        docmd apm system info $pkg_names
+        ;;
     aptitude-dpkg)
         if [ -n "$pkg_files" ] ; then
             docmd dpkg -I $pkg_files
