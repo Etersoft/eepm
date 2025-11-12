@@ -121,6 +121,9 @@ case $PMTYPE in
         # apt-get update retrieve Contents file too
         #sudocmd apt-file update
         ;;
+    apm)
+        sudocmd apm system update
+        ;;
     packagekit)
         docmd pkcon refresh
         ;;
