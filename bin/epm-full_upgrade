@@ -150,6 +150,15 @@ confirm_action()
     fi
 
 
+    if is_command stplr ; then
+        confirm_action "Upgrade installed stplr packages? [Y/n]" || full_upgrade_no_stplr=1
+        if [ -z "$full_upgrade_no_stplr" ] ; then
+            [ -n "$quiet" ] || echo
+            docmd stplr upgrade
+        fi
+    fi
+
+
     confirm_action "Do epm clean? [Y/n]" || full_upgrade_no_clean=1
     if [ -z "$full_upgrade_no_clean" ] ; then
         [ -n "$quiet" ] || echo
