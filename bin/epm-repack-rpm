@@ -17,16 +17,25 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-has_repack_script()
+
+# args: pkgname/repackscript buildroot spec
+get_repack_script()
 {
-    local repackcode="$EPM_REPACK_SCRIPTS_DIR/$1.sh"
-    [ -s "$repackcode" ]
+    local repackcode="$1"
+    is_abs_path "$repackcode" || repackcode="$EPM_REPACK_SCRIPTS_DIR/$1.sh"
+    echo "$repackcode"
 }
 
-# args: pkgname buildroot spec
+# args: pkgname/repackscript buildroot spec
+has_repack_script()
+{
+    [ -s "$(get_repack_script "$1")" ]
+}
+
+# args: pkgname/repackscript buildroot spec
 __apply_fix_code()
 {
-    local repackcode="$EPM_REPACK_SCRIPTS_DIR/$1.sh"
+    local repackcode="$(get_repack_script "$1")"
     [ -s "$repackcode" ] || return 0
     [ -f "$repackcode.rpmnew" ] && warning 'There is .rpmnew file(s) in $EPM_REPACK_SCRIPTS_DIR dir. The pack script can be outdated.'
 
@@ -182,10 +191,13 @@ __epm_repack_to_rpm()
         # run generic scripts and repack script for the pkg
         cd $buildroot || fatal
 
+        local repackscript="$pkgname"
+        [ -n "$EPM_REPACK_SCRIPT" ] && repackscript="$EPM_REPACK_SCRIPT"
+
         __apply_fix_code "generic"             $buildroot $spec $pkgname $abspkg $SUBGENERIC
         __apply_fix_code "generic-$SUBGENERIC" $buildroot $spec $pkgname $abspkg
-        __apply_fix_code $pkgname              $buildroot $spec $pkgname $abspkg
-        if ! has_repack_script $pkgname ; then
+        __apply_fix_code $repackscript         $buildroot $spec $pkgname $abspkg
+        if ! has_repack_script $repackscript ; then
             __apply_fix_code "generic-default" $buildroot $spec $pkgname $abspkg
         fi
         __apply_fix_code "generic-post"        $buildroot $spec $pkgname $abspkg
