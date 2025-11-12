@@ -8,6 +8,8 @@ URL="https://github.com/popcorn-official/popcorn-desktop"
 
 . $(dirname $0)/common.sh
 
+is_soname_present libssl.so.3 || fatal "This package needs OpenSSL 3."
+
 warn_version_is_not_supported
 
 PKGURL=$(eget --list https://popcorntime.app/download "*.deb")

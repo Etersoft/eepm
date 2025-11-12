@@ -14,5 +14,4 @@ fix_desktop_file "Categories=" "Categories=Network;Video;"
 # workaround for Nvidia
 fix_desktop_file "Exec=popcorntime-tauri" "Exec=WEBKIT_DISABLE_DMABUF_RENDERER=1 GDK_BACKEND=x11 popcorntime-tauri"
 
-
 add_libs_requires
