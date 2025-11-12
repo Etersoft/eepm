@@ -205,6 +205,9 @@ epm_upgrade()
     eopkg)
         CMD="eopkg upgrade"
         ;;
+    stplr)
+        CMD="stplr upgrade"
+        ;;
     pisi)
         CMD="pisi upgrade"
         ;;

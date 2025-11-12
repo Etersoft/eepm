@@ -140,6 +140,9 @@ case $PMTYPE in
     eopkg)
         docmd eopkg info $pkg_files $pkg_names
         ;;
+    stplr)
+        docmd stplr info $pkg_names
+        ;;
     pisi)
         docmd pisi info $pkg_files $pkg_names
         ;;

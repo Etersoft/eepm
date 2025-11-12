@@ -189,6 +189,9 @@ epm_install_names()
         eopkg)
             sudocmd eopkg $(subst_option nodeps --ignore-dependency) install $@
             return ;;
+        stplr)
+            sudocmd stplr install $@
+            return ;;
         pisi)
             sudocmd pisi $(subst_option nodeps --ignore-dependency) install $@
             return ;;
@@ -308,6 +311,9 @@ epm_ni_install_names()
             return ;;
         pisi)
             sudocmd pisi --yes-all install $@
+            return ;;
+        stplr)
+            sudocmd stplr install -y $@
             return ;;
         nix)
             sudocmd nix-env --install $@

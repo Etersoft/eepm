@@ -145,6 +145,9 @@ epm_remove_names()
         eopkg)
             sudocmd eopkg $(subst_option nodeps --ignore-dependency) remove $@
             return ;;
+        stplr)
+            sudocmd stplr remove $@
+            return ;;
         pisi)
             sudocmd pisi $(subst_option nodeps --ignore-dependency) remove $@
             return ;;
@@ -241,6 +244,9 @@ epm_remove_nonint()
             return ;;
         eopkg)
             sudocmd eopkg $(subst_option nodeps --ignore-dependency) --yes-all remove $@
+            return ;;
+        stplr)
+            sudocmd stplr remove -y $@
             return ;;
         pisi)
             sudocmd pisi $(subst_option nodeps --ignore-dependency) --yes-all remove $@

@@ -172,6 +172,9 @@ case $PMTYPE in
     eopkg)
         sudocmd eopkg update-repo
         ;;
+    stplr)
+        sudocmd stplr refresh
+        ;;
     pisi)
         sudocmd pisi update-repo
         ;;

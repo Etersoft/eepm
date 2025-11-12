@@ -59,6 +59,9 @@ case $PMTYPE in
     eopkg)
         CMD="eopkg search --"
         ;;
+    stplr)
+        CMD="stplr search --"
+        ;;
     pisi)
         CMD="pisi search --"
         ;;

@@ -183,6 +183,9 @@ case $PMTYPE in
     eopkg)
         CMD="eopkg list-installed"
         ;;
+    stplr)
+        CMD="stplr list --installed"
+        ;;
     pisi)
         CMD="pisi list-installed"
         ;;

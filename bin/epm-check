@@ -85,6 +85,9 @@ case $PMTYPE in
     pkgng)
         sudocmd pkg check -d -a
         ;;
+    stplr)
+        sudocmd stplr fix
+        ;;
     homebrew)
         docmd brew doctor
         ;;

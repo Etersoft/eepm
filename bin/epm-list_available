@@ -117,6 +117,9 @@ case $PMTYPE in
     eopkg)
         CMD="eopkg list-available"
         ;;
+    stplr)
+        CMD="stplr list"
+        ;;
     pisi)
         CMD="pisi list-available"
         ;;
