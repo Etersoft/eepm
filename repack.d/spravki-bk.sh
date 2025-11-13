@@ -7,16 +7,10 @@ PRODUCTDIR=/opt/$PRODUCT
 
 . $(dirname $0)/common.sh
 
-# Fix problematic directory with CR character in name
-cd "$BUILDROOT$PRODUCTDIR/resources/bin/" || exit 1
-if [ -d "%sbk-cleaner-path%"$'\r' ]; then
-    mv "%sbk-cleaner-path%"$'\r' "%sbk-cleaner-path%"
-fi
+# Remove problematic directory with CR character in name
+remove_dir "$PRODUCTDIR/resources/bin/%sbk-cleaner-path%"$'\r'
 
-# Replace paths with \r in SPEC file
-sed -i 's|%sbk-cleaner-path%\r|%sbk-cleaner-path%|g' "$SPEC"
-
-# Remove incorrect desktop file and install proper icon
+# Install proper icon
 remove_file /usr/share/applications/sbk.desktop
 install_file $PRODUCTDIR/resources/bin/ClientApp/build/logo.svg /usr/share/icons/hicolor/scalable/apps/$PRODUCT.svg
 
@@ -25,6 +19,9 @@ add_bin_link_command $PRODUCT $PRODUCTDIR/sbk
 
 # Set correct permissions for chrome-sandbox (SUID bit required)
 fix_chrome_sandbox $PRODUCTDIR/chrome-sandbox
+
+# Remove incorrect desktop file
+remove_file /usr/share/applications/sbk.desktop
 
 # Create proper desktop file
 cat <<EOF | create_file /usr/share/applications/$PRODUCT.desktop
@@ -43,6 +40,7 @@ EOF
 add_unirequires libgdiplus.so.0
 
 # Create symbolic link for libgdiplus.so.0 in product directory
-ln -sf /usr/lib64/libgdiplus.so.0 $PRODUCTDIR/resources/bin/libgdiplus.so
+ln -sf /usr/lib64/libgdiplus.so.0 ./$PRODUCTDIR/resources/bin/libgdiplus.so
+pack_file $PRODUCTDIR/resources/bin/libgdiplus.so
 
 add_libs_requires
