@@ -7,14 +7,8 @@ PRODUCTDIR=/opt/$PRODUCT
 
 . $(dirname $0)/common.sh
 
-# Fix problematic directory with CR character in name
-cd "$BUILDROOT$PRODUCTDIR/resources/bin/" || exit 1
-if [ -d "%sbk-cleaner-path%"$'\r' ]; then
-    mv "%sbk-cleaner-path%"$'\r' "%sbk-cleaner-path%"
-fi
-
-# Replace paths with \r in SPEC file
-sed -i 's|%sbk-cleaner-path%\r|%sbk-cleaner-path%|g' "$SPEC"
+# Remove problematic directory with CR character in name
+remove_dir "$PRODUCTDIR/resources/bin/%sbk-cleaner-path%"$'\r'
 
 # Remove incorrect desktop file and install proper icon
 remove_file /usr/share/applications/sbk.desktop
