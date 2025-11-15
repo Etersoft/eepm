@@ -57,6 +57,9 @@ case $PMTYPE in
         docmd apt-cache show $pkg_names
         ;;
     apm-rpm)
+        if [ -n "$direct" ] ; then
+            __epm_info_rpm_low && return
+        fi
         docmd apm system info $pkg_names
         ;;
     aptitude-dpkg)
