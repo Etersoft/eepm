@@ -66,22 +66,30 @@ __separate_sudocmd()
     return 0
 }
 
+VALID_BACKENDS="apt-rpm apt-dpkg apm-rpm stplr aptitude-dpkg deepsolver-rpm urpm-rpm packagekit pkgsrc pkgng redox-pkg emerge pacman aura yum-rpm dnf-rpm snappy zypper-rpm mpkg eopkg conary npackd slackpkg homebrew opkg nix apk tce guix termux-pkg aptcyg xbps appget winget"
+__get_tpmtype() {
+    local arg="$1"
+    local tpmtype="$(echo "$arg" | cut -d: -f1)"
+
+    # need first three chars
+    echo "$arg" | grep -q "^[a-z][a-z][a-z-]*:" || return
+
+    echo "$VALID_BACKENDS" | tr ' ' '\n' | grep -w "^$tpmtype"
+}
+
 process_package_arguments() {
     local pmtype
     local name
     local arg
     local package_groups
     declare -A package_groups
-    # ONLY supported backend in short form?
-    VALID_BACKENDS="apt-rpm apt-dpkg apm stplr aptitude-dpkg deepsolver-rpm urpm-rpm packagekit pkgsrc pkgng redox-pkg emerge pacman aura yum-rpm dnf-rpm snappy zypper-rpm mpkg eopkg conary npackd slackpkg homebrew opkg nix apk tce guix termux-pkg aptcyg xbps appget winget"
     for arg in "$@"; do
         pmtype=$PMTYPE
         name="$arg"
-        tpmtype=$(echo "$arg" | cut -d: -f1)
         case "$arg" in
             *:*)
-                # FIXME
-                if echo "$arg" | grep -q "^[a-z][a-z][a-z]*:" && echo "$VALID_BACKENDS" | grep -qw "$tpmtype"; then
+                local tpmtype="$(__get_tpmtype "$arg")"
+                if [ -n "$tpmtype" ] ; then
                     pmtype=$tpmtype
                     # copied from distr_info
                     if [ "$pmtype" = "dnf-rpm" ] && a= dnf --version | grep -qi "dnf5" ; then
