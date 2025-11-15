@@ -139,6 +139,12 @@ pkgmanager()
 {
 local CMD
 
+case $DISTRO_NAME in
+    "ALT Atomic")
+        echo "apm-rpm" && return
+        ;;
+esac
+
 case $VENDOR_ID in
     alt)
         echo "apt-rpm" && return
@@ -1103,6 +1109,8 @@ print_eepm_env()
 cat <<EOF
 # -d | --base-distro-name
 DISTRNAME="$(echo $DISTRIB_ID)"
+# --distro-name
+FULLDISTRNAME="$(echo "$DISTRO_NAME")"
 # -v | --base-version
 DISTRVERSION="$(echo "$DISTRIB_RELEASE")"
 # distro dependent arch

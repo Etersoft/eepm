@@ -28,7 +28,7 @@ case $PMTYPE in
     apt-rpm|apt-dpkg)
         CMD="apt-cache search --"
         ;;
-    apm)
+    apm-rpm)
         docmd apm system search -- $string
         return
         ;;

@@ -121,7 +121,7 @@ case $PMTYPE in
         # apt-get update retrieve Contents file too
         #sudocmd apt-file update
         ;;
-    apm)
+    apm-rpm)
         sudocmd apm system update
         ;;
     packagekit)

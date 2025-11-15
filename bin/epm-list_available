@@ -72,7 +72,7 @@ case $PMTYPE in
             docmd apt-cache search .
         fi
         ;;
-    apm)
+    apm-rpm)
         # TODO: --format json?
         CMD="apm system list --limit 100000"
         ;;

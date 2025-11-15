@@ -149,7 +149,7 @@ epm_install_names()
             echo "$*" | grep -q "^kernel-"  && VIRTAPTOPTIONS=''
             sudocmd apt-get $VIRTAPTOPTIONS $APTOPTIONS $noremove install $@ && save_installed_packages $@
             return ;;
-        apm)
+        apm-rpm)
             sudocmd apm system install $@
             return ;;
         aptitude-dpkg)
