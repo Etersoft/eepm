@@ -27,9 +27,17 @@ __epm_check_container_issue_43533()
     echo '%_netsharedpath /sys:/proc' | sudocmd tee /etc/rpm/macros.d/container
 }
 
+__epm_rpm_rebuilddb()
+{
+        sudocmd rm -vf /var/lib/rpm/__db*
+        sudocmd rpm $(subst_option verbose -vv) --rebuilddb
+}
 
 epm_check()
 {
+
+is_root || fatal "Run me under root user."
+
 update_repo_if_needed
 local APTOPTIONS="$(subst_option non_interactive -y)"
 local DNFOPTIONS="$(subst_option non_interactive -y) $(subst_option verbose --verbose) "
@@ -43,8 +51,9 @@ case $PMTYPE in
     apt-rpm)
         #sudocmd apt-get check || exit
         #sudocmd apt-get update || exit
+        __epm_rpm_rebuilddb
         sudocmd apt-get -f $APTOPTIONS install || return
-        info "You can use epm dedup also"
+        info "You can also use epm dedup"
         ;;
     apt-dpkg)
         #sudocmd apt-get check || exit
@@ -59,6 +68,8 @@ case $PMTYPE in
         #sudocmd apt-get autoremove
         ;;
     yum-rpm)
+        __epm_rpm_rebuilddb
+
         docmd yum check $DNFOPTIONS
         docmd package-cleanup --problems
 
@@ -68,15 +79,19 @@ case $PMTYPE in
         docmd rpm -Va --nofiles --nodigest
         ;;
     dnf-rpm|dnf5-rpm)
+        __epm_rpm_rebuilddb
+
         sudocmd dnf check $DNFOPTIONS
         ;;
     emerge)
         sudocmd revdep-rebuild
         ;;
     #urpm-rpm)
+    #    __epm_rpm_rebuilddb
     #    sudocmd urpme --auto-orphans
     #    ;;
     zypper-rpm)
+        __epm_rpm_rebuilddb
         sudocmd zypper $(subst_option non_interactive --non-interactive) verify
         ;;
     conary)
@@ -96,6 +111,9 @@ case $PMTYPE in
         ;;
     apk)
         sudocmd apk fix
+        ;;
+    *-rpm)
+        __epm_rpm_rebuilddb
         ;;
     *)
         fatal 'Have no suitable command for $PMTYPE'
