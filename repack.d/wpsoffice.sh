@@ -75,7 +75,7 @@ fix_desktop_categories "wps-office-prometheus.desktop" "Office;"
 # Fix double-click file opening issue
 # This script configures WPS Office to handle file associations properly
 # Required for compatibility with file managers and desktop environments
-cat <<'EOF' | create_file "$PRODUCTDIR/office6/init-wps-config.sh"
+cat <<'EOF' | create_exec_file "$PRODUCTDIR/office6/init-wps-config.sh"
 #!/bin/bash
 
 CONFIG_DIR="$HOME/.config/Kingsoft"
@@ -90,10 +90,9 @@ add_config_parameter() {
     fi
 }
 
-# Initialize configuration
-mkdir -p "$CONFIG_DIR"
-
 if [ ! -f "$CONFIG_FILE" ]; then
+    # Initialize configuration
+    mkdir -p "$CONFIG_DIR"
     echo "[6.0]" > "$CONFIG_FILE"
 fi
 
@@ -101,8 +100,6 @@ fi
 add_config_parameter "AppComponentMode"
 add_config_parameter "AppComponentModeInstall"
 EOF
-
-chmod +x "$BUILDROOT$PRODUCTDIR/office6/init-wps-config.sh"
 
 for f in wps et wpp wpspdf; do
     bin_file="$BUILDROOT/usr/bin/$f"
