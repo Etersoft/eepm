@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.39
+Version: 3.64.40
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -156,6 +156,10 @@ EOF
 %endif
 
 %changelog
+* Mon Nov 17 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.40-alt1
+- epm play trueconf: fix version for downloading
+- spec: don't pack rpmbbasefix on non alt systems
+
 * Mon Nov 17 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.39-alt1
 - epm whatprovides: allow work with path
 - epm repack.d/common-chromium-browser.sh: add provides /usr/bin/x-www-browser for browsers
