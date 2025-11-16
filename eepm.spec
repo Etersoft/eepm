@@ -25,6 +25,8 @@ Provides: epm = %EVR
 # FIXHERE: Replace with target platform package manager
 Requires: apt rpm
 
+Conflicts: rpmbasefix
+
 %endif
 
 %if_disabled sepplay
@@ -94,6 +96,11 @@ make -C po
 %make_install -C po install DESTDIR=%buildroot \
 	datadir=%_datadir
 %find_lang %name
+cat >%buildroot/%_bindir/rpmbasefix <<EOF
+#!/bin/sh -x
+exec epm --verbose fix
+EOF
+chmod 0755 %buildroot/%_bindir/rpmbasefix
 
 %files -f %name.lang
 %doc README.md TODO LICENSE
@@ -115,6 +122,9 @@ make -C po
 %_bindir/serv
 %_bindir/distr_info
 %_bindir/esu
+%if "%_vendor" == "alt"
+%_bindir/rpmbasefix
+%endif
 %dir /var/lib/eepm/
 %dir /var/cache/eepm/
 %_man1dir/*
