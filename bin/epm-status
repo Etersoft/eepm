@@ -160,6 +160,10 @@ epm_status_original()
 
             # FIXME: how to check if the package is from ALT repo (verified)?
             echo "$release" | grep -q "^alt" || return 1
+
+            local packager="$(epm print field Packager for "$pkg" 2>/dev/null )"
+            # altlinux.ru, altlinux.org, altlinux.com, altlinux dot
+            echo "$packager" | grep -q "altlinux" || return 1
             return 0
             ;;
         RedOS)
@@ -258,14 +262,16 @@ epm_status_thirdparty()
 
     case $BASEDISTRNAME in
         alt)
-            ## FIXME: some repo packages have wrong Packager
-            #local packager="$(epm print field Packager for "$1" 2>/dev/null)"
-            #echo "$packager" && grep -q "altlinux" && return 0
-            #echo "$packager" && grep -q "basealt" && return 0
             epm_status_validate $pkg || return 1
 
-            echo "$distribution" | grep -q "^ALT" && return 1
             echo "$distribution" | grep -q "^EEPM" && return 1
+
+            echo "$distribution" | grep -q "^ALT" || return 0
+
+            local packager="$(epm print field Packager for "$pkg" 2>/dev/null )"
+            # altlinux.ru, altlinux.org, altlinux.com, altlinux dot
+            echo "$packager" | grep -q "altlinux" && return 1
+            #echo "$packager" && grep -q "basealt" && return 1
             return 0
             ;;
         redos)
