@@ -60,7 +60,7 @@ serv_list_all()
             fi
             ;;
         *)
-            fatal "Have no suitable command for $SERVICETYPE"
+            fatal "Have no suitable command for $SERVICETYPE in serv_list_all()"
             ;;
     esac
 }

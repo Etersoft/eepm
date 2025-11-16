@@ -44,7 +44,7 @@ serv_common()
             sudocmd sv $SERVICE "$@"
             ;;
         *)
-            fatal "Have no suitable command for $SERVICETYPE"
+            fatal "Have no suitable command for $SERVICETYPE in serv_common()"
             ;;
     esac
 }

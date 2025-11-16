@@ -55,7 +55,7 @@ serv_enable()
             sudocmd ln -s /etc/sv/$SERVICE /var/service/
             ;;
         *)
-            fatal "Have no suitable command for $SERVICETYPE"
+            fatal "Have no suitable command for $SERVICETYPE in serv_enable()"
             ;;
     esac
 }

@@ -706,7 +706,7 @@ epm_release_upgrade()
         sudocmd guix pull --verbose
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_release_upgrade()'
         ;;
     esac
 

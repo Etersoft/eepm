@@ -44,7 +44,7 @@ serv_start()
             sudocmd rc-service start "$SERVICE"
             ;;
         *)
-            fatal "Have no suitable command for $SERVICETYPE"
+            fatal "Have no suitable command for $SERVICETYPE in serv_start()"
             ;;
     esac
 }

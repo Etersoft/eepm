@@ -116,7 +116,7 @@ case $PMTYPE in
         __epm_rpm_rebuilddb
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_check()'
         ;;
 esac
 

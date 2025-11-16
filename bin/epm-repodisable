@@ -69,7 +69,7 @@ case $PMTYPE in
         docmd eoget disable-repo "$@"
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_repodisable()'
         ;;
 esac
 

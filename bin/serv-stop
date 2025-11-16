@@ -44,7 +44,7 @@ serv_stop()
             sudocmd rc-service stop "$SERVICE"
             ;;
         *)
-            fatal "Have no suitable command for $SERVICETYPE"
+            fatal "Have no suitable command for $SERVICETYPE in serv_stop()"
             ;;
     esac
 }

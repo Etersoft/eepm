@@ -585,7 +585,7 @@ case $PMTYPE in
         info "You need manually add repo to /etc/slackpkg/mirrors"
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_addrepo()'
         ;;
 esac
 

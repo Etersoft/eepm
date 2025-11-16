@@ -104,7 +104,7 @@ epm_requires_files()
                 __epm_elf_requires $fl
                 ;;
             *)
-                warning "Have no suitable command for handle file $fl with .$PKGTYPE"
+                warning "Have no suitable command for handle file $fl with .$PKGTYPE in epm_requires()"
                 ;;
         esac
     done
@@ -228,7 +228,7 @@ case $PMTYPE in
         return
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_requires()'
         ;;
 esac
 

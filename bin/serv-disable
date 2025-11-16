@@ -48,7 +48,7 @@ serv_disable()
             sudocmd rm -fv /var/service/$SERVICE
             ;;
         *)
-            fatal "Have no suitable command for $SERVICETYPE"
+            fatal "Have no suitable command for $SERVICETYPE in serv_disable()"
             ;;
     esac
 }

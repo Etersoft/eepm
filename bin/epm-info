@@ -162,7 +162,7 @@ case $PMTYPE in
         docmd pkg show $pkg_names
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_info()'
         ;;
 esac
 }

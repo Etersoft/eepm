@@ -325,7 +325,7 @@ epm_download()
         docmd brew fetch $*
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_download()'
         ;;
     esac
 }

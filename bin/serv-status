@@ -44,7 +44,7 @@ is_service_running()
             sudorun sv status "$SERVICE" >/dev/null 2>/dev/null
             ;;
         *)
-            fatal "Have no suitable command for $SERVICETYPE"
+            fatal "Have no suitable command for $SERVICETYPE in is_service_running()"
             ;;
     esac
 }
@@ -74,7 +74,7 @@ is_service_autostart()
             test -L "/var/service/$SERVICE"
             ;;
         *)
-            fatal "Have no suitable command for $SERVICETYPE"
+            fatal "Have no suitable command for $SERVICETYPE in is_service_autostart()"
             ;;
     esac
 }
@@ -104,7 +104,7 @@ serv_status()
             sudocmd sv status "$SERVICE"
             ;;
         *)
-            fatal "Have no suitable command for $SERVICETYPE"
+            fatal "Have no suitable command for $SERVICETYPE in serv_status()"
             ;;
     esac
 }

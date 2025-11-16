@@ -245,7 +245,7 @@ epm_upgrade()
         CMD="pkg upgrade"
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_upgrade()'
         ;;
     esac
 

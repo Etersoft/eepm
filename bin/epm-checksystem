@@ -64,7 +64,7 @@ case $BASEDISTRNAME in
         epm_checksystem_$DISTRNAME
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_checksystem()'
         ;;
 esac
 

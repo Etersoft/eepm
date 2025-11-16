@@ -89,7 +89,7 @@ case $PMTYPE in
         __save_alt_repo_lists
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_reposave()'
         ;;
 esac
 
@@ -106,7 +106,7 @@ case $PMTYPE in
         __restore_alt_repo_lists
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_reporestore()'
         ;;
 esac
 
@@ -126,7 +126,7 @@ case $PMTYPE in
         sudocmd winget source reset
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_reporeset()'
         ;;
 esac
 
@@ -151,7 +151,7 @@ case $PMTYPE in
         fi
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_repostatus()'
         ;;
 esac
 }

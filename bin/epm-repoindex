@@ -160,7 +160,7 @@ case $PMTYPE in
         docmd eoget index "$@"
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_repoindex()'
         ;;
 esac
 

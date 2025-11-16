@@ -107,7 +107,7 @@ case $PMTYPE in
         info "Manually: edit /etc/pacman.conf modifying IgnorePkg array"
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_mark_hold()'
         ;;
 esac
 
@@ -184,7 +184,7 @@ case $PMTYPE in
         cat /etc/pacman.conf
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_mark_showhold()'
         ;;
 esac
 
@@ -233,7 +233,7 @@ case $PMTYPE in
             sudocmd emerge --oneshot "$@"
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_mark_auto()'
         ;;
 esac
 
@@ -289,7 +289,7 @@ case $PMTYPE in
         sudocmd dnf repoquery --unneeded
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_mark_showauto()'
         ;;
 esac
 
@@ -313,7 +313,7 @@ case $PMTYPE in
         sudocmd dnf repoquery --userinstalled
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_mark_showmanual'
         ;;
 esac
 
@@ -363,7 +363,7 @@ epm_mark()
         epm_mark_showmanual "$@"
         ;;
     *)
-        fatal 'Unknown command $ epm mark $CMD'
+        fatal 'Unknown command $ epm mark $CMD in epm_mark()'
         ;;
 esac
 

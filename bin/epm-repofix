@@ -282,7 +282,7 @@ case $PMTYPE in
 #    yum-rpm|dnf-rpm)
 #        ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_repofix()'
         ;;
 esac
 

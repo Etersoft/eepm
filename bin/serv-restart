@@ -46,7 +46,7 @@ serv_restart()
             sudocmd rc-service restart "$SERVICE"
             ;;
         *)
-            fatal "Have no suitable command for $SERVICETYPE"
+            fatal "Have no suitable command for $SERVICETYPE in serv_restart()"
             ;;
     esac
 }
