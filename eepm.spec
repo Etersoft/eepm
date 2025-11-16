@@ -100,7 +100,11 @@ cat >%buildroot/%_bindir/rpmbasefix <<EOF
 #!/bin/sh -x
 exec epm --verbose fix
 EOF
-chmod 0755 %buildroot/%_bindir/rpmbasefix
+%if "%_vendor" == "alt"
+    chmod 0755 %buildroot/%_bindir/rpmbasefix
+%else
+    rm -v %buildroot%_bindir/rpmbasefix
+%endif
 
 %files -f %name.lang
 %doc README.md TODO LICENSE
