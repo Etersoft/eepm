@@ -271,8 +271,10 @@ epm_download()
 
     case "$BASEDISTRNAME" in
         "alt")
-            __epm_download_alt $*
-            return
+            if [ "$PMTYPE" = "apt-rpm" ] ; then
+                __epm_download_alt $*
+                return
+            fi
             ;;
     esac
 
