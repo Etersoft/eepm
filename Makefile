@@ -41,6 +41,7 @@ install_common:
 	install -m 0644 bash_completion/eepm $(DESTDIR)$(sysconfdir)/bash_completion.d/eepm
 
 	mkdir -p $(DESTDIR)$(datadir)/zsh/Completion/Linux/
+	install -m 0644 zsh_completion/_serv $(DESTDIR)$(datadir)/zsh/Completion/Linux/
 	install -m 0644 zsh_completion/_eepm $(DESTDIR)$(datadir)/zsh/Completion/Linux/
 
 	mkdir -p $(DESTDIR)$(datadir)/fish/vendor_completions.d/

@@ -142,6 +142,7 @@ EOF
 %endif
 %_sysconfdir/bash_completion.d/serv
 %_sysconfdir/bash_completion.d/eepm
+%_datadir/zsh/Completion/Linux/_serv
 %_datadir/zsh/Completion/Linux/_eepm
 %_datadir/fish/vendor_completions.d/*pm*.fish
 
