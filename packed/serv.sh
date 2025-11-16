@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.38"
+EPMVERSION="3.64.39"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -493,7 +493,7 @@ set_sudo()
     # start error section
     SUDO_TESTED="1"
 
-    if is_command doas && a='' doas -C /etc/doas.conf > /dev/null 2>&1 ; then
+    if is_command doas && ! is_command sudo > /dev/null 2>&1 ; then
         SUDO="doas"
         SUDO_TESTED="0"
         return "$SUDO_TESTED"
@@ -768,6 +768,19 @@ disabled_eget()
     $EGET "$@"
 }
 
+get_json_value()
+{
+    local field="$1"
+    echo "$field" | grep -q -E "^\[" || field='["'$field'"]'
+    epm tool json -b | grep -m1 -F "$field" | sed -e 's|.*[[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
+}
+
+get_json_values()
+{
+    local field="$1"
+    echo "$field" | grep -q -E "^\[" || field="\[$(echo "$field" | sed 's/[^ ]*/"&"/g' | sed 's/ /,/g'),[0-9]*\]"
+    epm tool json -b | grep "^$field" | sed -e 's|.*[[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
+}
 
 __epm_assure_7zip()
 {
@@ -1182,7 +1195,7 @@ serv_common()
             sudocmd sv $SERVICE "$@"
             ;;
         *)
-            fatal "Have no suitable command for $SERVICETYPE"
+            fatal "Have no suitable command for $SERVICETYPE in serv_common()"
             ;;
     esac
 }
@@ -1217,7 +1230,7 @@ serv_disable()
             sudocmd rm -fv /var/service/$SERVICE
             ;;
         *)
-            fatal "Have no suitable command for $SERVICETYPE"
+            fatal "Have no suitable command for $SERVICETYPE in serv_disable()"
             ;;
     esac
 }
@@ -1276,7 +1289,7 @@ serv_enable()
             sudocmd ln -s /etc/sv/$SERVICE /var/service/
             ;;
         *)
-            fatal "Have no suitable command for $SERVICETYPE"
+            fatal "Have no suitable command for $SERVICETYPE in serv_enable()"
             ;;
     esac
 }
@@ -1382,7 +1395,7 @@ serv_list_all()
             fi
             ;;
         *)
-            fatal "Have no suitable command for $SERVICETYPE"
+            fatal "Have no suitable command for $SERVICETYPE in serv_list_all()"
             ;;
     esac
 }
@@ -1563,7 +1576,7 @@ serv_restart()
             sudocmd rc-service restart "$SERVICE"
             ;;
         *)
-            fatal "Have no suitable command for $SERVICETYPE"
+            fatal "Have no suitable command for $SERVICETYPE in serv_restart()"
             ;;
     esac
 }
@@ -1596,7 +1609,7 @@ serv_start()
             sudocmd rc-service start "$SERVICE"
             ;;
         *)
-            fatal "Have no suitable command for $SERVICETYPE"
+            fatal "Have no suitable command for $SERVICETYPE in serv_start()"
             ;;
     esac
 }
@@ -1629,7 +1642,7 @@ is_service_running()
             sudorun sv status "$SERVICE" >/dev/null 2>/dev/null
             ;;
         *)
-            fatal "Have no suitable command for $SERVICETYPE"
+            fatal "Have no suitable command for $SERVICETYPE in is_service_running()"
             ;;
     esac
 }
@@ -1658,7 +1671,7 @@ is_service_autostart()
             test -L "/var/service/$SERVICE"
             ;;
         *)
-            fatal "Have no suitable command for $SERVICETYPE"
+            fatal "Have no suitable command for $SERVICETYPE in is_service_autostart()"
             ;;
     esac
 }
@@ -1688,7 +1701,7 @@ serv_status()
             sudocmd sv status "$SERVICE"
             ;;
         *)
-            fatal "Have no suitable command for $SERVICETYPE"
+            fatal "Have no suitable command for $SERVICETYPE in serv_status()"
             ;;
     esac
 }
@@ -1721,7 +1734,7 @@ serv_stop()
             sudocmd rc-service stop "$SERVICE"
             ;;
         *)
-            fatal "Have no suitable command for $SERVICETYPE"
+            fatal "Have no suitable command for $SERVICETYPE in serv_stop()"
             ;;
     esac
 }
@@ -1804,7 +1817,7 @@ serv_usage()
             sudocmd systemctl $SERVICE 2>&1
             ;;
         *)
-            fatal "Have no suitable command for $SERVICETYPE"
+            fatal "Have no suitable command for $SERVICETYPE in serv_usage()"
             ;;
     esac
 
@@ -1954,6 +1967,12 @@ pkgvendor()
 pkgmanager()
 {
 local CMD
+
+case $DISTRO_NAME in
+    "ALT Atomic")
+        echo "apm-rpm" && return
+        ;;
+esac
 
 case $VENDOR_ID in
     alt)
@@ -2919,6 +2938,8 @@ print_eepm_env()
 cat <<EOF
 # -d | --base-distro-name
 DISTRNAME="$(echo $DISTRIB_ID)"
+# --distro-name
+FULLDISTRNAME="$(echo "$DISTRO_NAME")"
 # -v | --base-version
 DISTRVERSION="$(echo "$DISTRIB_RELEASE")"
 # distro dependent arch

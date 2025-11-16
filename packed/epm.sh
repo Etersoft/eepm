@@ -34,7 +34,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.38"
+export EPMVERSION="3.64.39"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -496,7 +496,7 @@ set_sudo()
     # start error section
     SUDO_TESTED="1"
 
-    if is_command doas && a='' doas -C /etc/doas.conf > /dev/null 2>&1 ; then
+    if is_command doas && ! is_command sudo > /dev/null 2>&1 ; then
         SUDO="doas"
         SUDO_TESTED="0"
         return "$SUDO_TESTED"
@@ -771,6 +771,19 @@ disabled_eget()
     $EGET "$@"
 }
 
+get_json_value()
+{
+    local field="$1"
+    echo "$field" | grep -q -E "^\[" || field='["'$field'"]'
+    epm tool json -b | grep -m1 -F "$field" | sed -e 's|.*[[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
+}
+
+get_json_values()
+{
+    local field="$1"
+    echo "$field" | grep -q -E "^\[" || field="\[$(echo "$field" | sed 's/[^ ]*/"&"/g' | sed 's/ /,/g'),[0-9]*\]"
+    epm tool json -b | grep "^$field" | sed -e 's|.*[[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
+}
 
 __epm_assure_7zip()
 {
@@ -1675,6 +1688,9 @@ case $PMTYPE in
         # Only for alone packages:
         #sudocmd repo-add $pkg_filenames
         ;;
+    stplr)
+        sudocmd stplr repo add "$repo"
+        ;;
     pisi)
         sudocmd pisi add-repo "$repo"
         ;;
@@ -1694,7 +1710,7 @@ case $PMTYPE in
         info "You need manually add repo to /etc/slackpkg/mirrors"
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_addrepo()'
         ;;
 esac
 
@@ -1812,7 +1828,7 @@ case $PMTYPE in
         sudocmd apk audit
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_audit()'
         ;;
 esac
 
@@ -1954,7 +1970,7 @@ case $PMTYPE in
         fi
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_autoorphans()'
         ;;
 esac
 
@@ -2307,7 +2323,7 @@ case $PMTYPE in
         fi
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_autoremove()'
         ;;
 esac
 
@@ -2335,7 +2351,7 @@ __epm_changelog_files()
             docmd_foreach "rpm -q -p --changelog" $@
             ;;
         *)
-            fatal 'Have no suitable command for $1'
+            fatal 'Have no suitable command for $1 in epm_changelog()'
             ;;
     esac
 }
@@ -2345,7 +2361,7 @@ __epm_changelog_local_names()
     [ -z "$*" ] && return
 
     case $PMTYPE in
-        apt-rpm|yum-rpm|dnf-rpm|dnf5-rpm|urpm-rpm|zypper-rpm)
+        *-rpm)
             docmd_foreach "rpm -q --changelog" $@
             ;;
         apt-dpkg|aptitude-dpkg)
@@ -2359,7 +2375,7 @@ __epm_changelog_local_names()
             docmd pacman -Qc $1
             ;;
         *)
-            fatal 'Have no suitable command for $PMTYPE'
+            fatal 'Have no suitable command for $PMTYPE in epm_changelog()'
             ;;
     esac
 }
@@ -2390,7 +2406,7 @@ __epm_changelog_unlocal_names()
             docmd equery changes -f "$1"
             ;;
         *)
-            fatal 'Have no suitable command for $PMTYPE. Try install the package firstly.'
+            fatal 'Have no suitable command for $PMTYPE in epm_changelog(). Try install the package firstly.'
             ;;
     esac
 
@@ -2425,9 +2441,17 @@ __epm_check_container_issue_43533()
     echo '%_netsharedpath /sys:/proc' | sudocmd tee /etc/rpm/macros.d/container
 }
 
+__epm_rpm_rebuilddb()
+{
+        sudocmd rm -vf /var/lib/rpm/__db*
+        sudocmd rpm $(subst_option verbose -vv) --rebuilddb
+}
 
 epm_check()
 {
+
+is_root || fatal "Run me under root user."
+
 update_repo_if_needed
 local APTOPTIONS="$(subst_option non_interactive -y)"
 local DNFOPTIONS="$(subst_option non_interactive -y) $(subst_option verbose --verbose) "
@@ -2441,8 +2465,9 @@ case $PMTYPE in
     apt-rpm)
         #sudocmd apt-get check || exit
         #sudocmd apt-get update || exit
+        __epm_rpm_rebuilddb
         sudocmd apt-get -f $APTOPTIONS install || return
-        info "You can use epm dedup also"
+        info "You can also use epm dedup"
         ;;
     apt-dpkg)
         #sudocmd apt-get check || exit
@@ -2457,6 +2482,8 @@ case $PMTYPE in
         #sudocmd apt-get autoremove
         ;;
     yum-rpm)
+        __epm_rpm_rebuilddb
+
         docmd yum check $DNFOPTIONS
         docmd package-cleanup --problems
 
@@ -2466,15 +2493,19 @@ case $PMTYPE in
         docmd rpm -Va --nofiles --nodigest
         ;;
     dnf-rpm|dnf5-rpm)
+        __epm_rpm_rebuilddb
+
         sudocmd dnf check $DNFOPTIONS
         ;;
     emerge)
         sudocmd revdep-rebuild
         ;;
     #urpm-rpm)
+    #    __epm_rpm_rebuilddb
     #    sudocmd urpme --auto-orphans
     #    ;;
     zypper-rpm)
+        __epm_rpm_rebuilddb
         sudocmd zypper $(subst_option non_interactive --non-interactive) verify
         ;;
     conary)
@@ -2482,6 +2513,9 @@ case $PMTYPE in
         ;;
     pkgng)
         sudocmd pkg check -d -a
+        ;;
+    stplr)
+        sudocmd stplr fix
         ;;
     homebrew)
         docmd brew doctor
@@ -2492,8 +2526,11 @@ case $PMTYPE in
     apk)
         sudocmd apk fix
         ;;
+    *-rpm)
+        __epm_rpm_rebuilddb
+        ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_check()'
         ;;
 esac
 
@@ -2592,7 +2629,7 @@ case $PMTYPE in
         sudocmd pisi check $@
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_checkpkg()'
         ;;
 esac
 
@@ -2679,7 +2716,7 @@ case $BASEDISTRNAME in
         epm_checksystem_$DISTRNAME
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_checksystem()'
         ;;
 esac
 
@@ -2929,7 +2966,7 @@ case $PMTYPE in
         sudocmd pkg clean
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_clean()'
         ;;
 esac
     info "Note: Also you can try (with CAUTION) '# epm autoremove' and '# epm autoorphans' commands to remove obsoleted and unused packages."
@@ -2952,7 +2989,7 @@ epm_conflicts_files()
         #    a= docmd dpkg -I $pkg_files | grep "^ *Depends:" | sed "s|^ *Depends:||g"
         #    ;;
         *)
-            fatal 'Have no suitable command for $PMTYPE'
+            fatal 'Have no suitable command for $PMTYPE in epm_conflicts()'
             ;;
     esac
 }
@@ -3007,7 +3044,7 @@ case $PMTYPE in
     #    CMD="equery depgraph"
     #    ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_conflicts()'
         ;;
 esac
 
@@ -3208,7 +3245,7 @@ case "$BASEDISTRNAME" in
         fi
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_dedup()'
         ;;
 esac
 
@@ -3544,7 +3581,7 @@ epm_downgrade()
         sudocmd urpm-reposync -v
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_downgrade()'
         ;;
     esac
 }
@@ -3802,8 +3839,10 @@ epm_download()
 
     case "$BASEDISTRNAME" in
         "alt")
-            __epm_download_alt $*
-            return
+            if [ "$PMTYPE" = "apt-rpm" ] ; then
+                __epm_download_alt $*
+                return
+            fi
             ;;
     esac
 
@@ -3844,6 +3883,9 @@ epm_download()
     eopkg)
         docmd eopkg fetch $*
         ;;
+    stplr)
+        sudocmd stplr build --package "$*"
+        ;;
     pisi)
         docmd pisi fetch $*
         ;;
@@ -3851,7 +3893,7 @@ epm_download()
         docmd brew fetch $*
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_download()'
         ;;
     esac
 }
@@ -4316,6 +4358,15 @@ confirm_action()
     fi
 
 
+    if is_command stplr ; then
+        confirm_action "Upgrade installed stplr packages? [Y/n]" || full_upgrade_no_stplr=1
+        if [ -z "$full_upgrade_no_stplr" ] ; then
+            [ -n "$quiet" ] || echo
+            docmd stplr upgrade
+        fi
+    fi
+
+
     confirm_action "Do epm clean? [Y/n]" || full_upgrade_no_clean=1
     if [ -z "$full_upgrade_no_clean" ] ; then
         [ -n "$quiet" ] || echo
@@ -4326,7 +4377,7 @@ confirm_action()
 # File bin/epm-history:
 
 EHOG='\(apt-get\|rpm\)'
-JCHAN='-t apt-get -t rpm'
+JCHAN='-t apt-get -t rpm -t apm'
 
 __alt_epm_history_journal()
 {
@@ -4419,7 +4470,7 @@ Examples:
 epm_history()
 {
 
-if [ $PMTYPE = "apt-rpm" ] ; then
+if [ $PMTYPE = "apt-rpm" ] || [ $PMTYPE = "apm-rpm" ] ; then
     case "$1" in
         "-h"|"--help"|"help")      # HELPCMD: help
             epm_history_help
@@ -4479,7 +4530,7 @@ case $PMTYPE in
         docmd cat /var/log/portage
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_history()'
         ;;
 esac
 
@@ -4524,6 +4575,12 @@ case $PMTYPE in
         [ -z "$pkg_names" ] && return
         is_installed $pkg_names && docmd dpkg -p $pkg_names && return
         docmd apt-cache show $pkg_names
+        ;;
+    apm-rpm)
+        if [ -n "$direct" ] ; then
+            __epm_info_rpm_low && return
+        fi
+        docmd apm system info $full $pkg_names
         ;;
     aptitude-dpkg)
         if [ -n "$pkg_files" ] ; then
@@ -4609,6 +4666,9 @@ case $PMTYPE in
     eopkg)
         docmd eopkg info $pkg_files $pkg_names
         ;;
+    stplr)
+        docmd stplr info $pkg_names
+        ;;
     pisi)
         docmd pisi info $pkg_files $pkg_names
         ;;
@@ -4622,7 +4682,7 @@ case $PMTYPE in
         docmd pkg show $pkg_names
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_info()'
         ;;
 esac
 }
@@ -4683,22 +4743,30 @@ __separate_sudocmd()
     return 0
 }
 
+VALID_BACKENDS="apt-rpm apt-dpkg apm-rpm stplr aptitude-dpkg deepsolver-rpm urpm-rpm packagekit pkgsrc pkgng redox-pkg emerge pacman aura yum-rpm dnf-rpm snappy zypper-rpm mpkg eopkg conary npackd slackpkg homebrew opkg nix apk tce guix termux-pkg aptcyg xbps appget winget"
+__get_tpmtype() {
+    local arg="$1"
+    local tpmtype="$(echo "$arg" | cut -d: -f1)"
+
+    # need first three chars
+    echo "$arg" | grep -q "^[a-z][a-z][a-z-]*:" || return
+
+    echo "$VALID_BACKENDS" | tr ' ' '\n' | grep -w "^$tpmtype"
+}
+
 process_package_arguments() {
     local pmtype
     local name
     local arg
     local package_groups
     declare -A package_groups
-    # ONLY supported backend in short form?
-    VALID_BACKENDS="apt-rpm apt-dpkg apm stplr aptitude-dpkg deepsolver-rpm urpm-rpm packagekit pkgsrc pkgng redox-pkg emerge pacman aura yum-rpm dnf-rpm snappy zypper-rpm mpkg eopkg conary npackd slackpkg homebrew opkg nix apk tce guix termux-pkg aptcyg xbps appget winget"
     for arg in "$@"; do
         pmtype=$PMTYPE
         name="$arg"
-        tpmtype=$(echo "$arg" | cut -d: -f1)
         case "$arg" in
             *:*)
-                # FIXME
-                if echo "$arg" | grep -q "^[a-z][a-z][a-z]*:" && echo "$VALID_BACKENDS" | grep -qw "$tpmtype"; then
+                local tpmtype="$(__get_tpmtype "$arg")"
+                if [ -n "$tpmtype" ] ; then
                     pmtype=$tpmtype
                     # copied from distr_info
                     if [ "$pmtype" = "dnf-rpm" ] && a= dnf --version | grep -qi "dnf5" ; then
@@ -4756,6 +4824,9 @@ epm_install_names()
             echo "$*" | grep -q "^kernel-"  && VIRTAPTOPTIONS=''
             sudocmd apt-get $VIRTAPTOPTIONS $APTOPTIONS $noremove install $@ && save_installed_packages $@
             return ;;
+        apm-rpm)
+            sudocmd apm system install $@
+            return ;;
         aptitude-dpkg)
             sudocmd aptitude install $@
             return ;;
@@ -4803,6 +4874,9 @@ epm_install_names()
             return ;;
         eopkg)
             sudocmd eopkg $(subst_option nodeps --ignore-dependency) install $@
+            return ;;
+        stplr)
+            sudocmd stplr install $@
             return ;;
         pisi)
             sudocmd pisi $(subst_option nodeps --ignore-dependency) install $@
@@ -4873,6 +4947,9 @@ epm_ni_install_names()
         apt-dpkg)
             sudocmd env ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive apt-get -y $noremove --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
             return ;;
+        apm-rpm)
+            sudocmd apm system install $@
+            return ;;
         aptitude-dpkg)
             sudocmd env ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive aptitude -y install $@
             return ;;
@@ -4922,6 +4999,9 @@ epm_ni_install_names()
             return ;;
         pisi)
             sudocmd pisi --yes-all install $@
+            return ;;
+        stplr)
+            sudocmd stplr install -y $@
             return ;;
         nix)
             sudocmd nix-env --install $@
@@ -5100,11 +5180,11 @@ epm_install_files()
 epm_install()
 {
     if [ "$BASEDISTRNAME" = "alt" ] ; then
-        if tasknumber "$pkg_names" >/dev/null ; then
+        if tasknumberprefix $pkg_names; then
             if [ -n "$interactive" ] ; then
                 confirm_info "You are about to install $pkg_names task(s) from https://git.altlinux.org."
             fi
-            epm_install_alt_tasks "$pkg_names"
+            epm_install_alt_tasks $pkg_names
             return
         fi
         if echo "$pkg_urls" | grep -q -E "https://packages.altlinux.org/ru/tasks/[0-9]+/*$" || \
@@ -5439,11 +5519,53 @@ apt_repo_after()
     $SUDO rm /etc/apt/apt.conf.d/eepm-apt-noninteractive.conf 2>/dev/null
 }
 
+prepare_task_packages()
+{
+    # Sets global vars:
+    #   installlist  — final list of packages to install
+    #   unique_tasks — unique task names from args
+    #
+    # Local vars:
+    #   seen_tasks, task_packages, task, pkg
+
+    installlist=""
+    unique_tasks=""
+    local seen_tasks=""
+    local task_packages=""
+
+    for arg in "$@"; do
+        # Parse argument into task and package
+        case "$arg" in
+            *:*)
+                local task=$(printf "%s" "$arg" | sed 's/:.*//')
+                local pkg=$(printf "%s" "$arg" | sed 's/.*://')
+                ;;
+            *)
+                local task="$arg"
+                local pkg=""
+                ;;
+        esac
+
+        # Fetch task packages once per unique task
+        if ! echo " $seen_tasks " | grep -q " $task "; then
+            unique_tasks="$unique_tasks $task"
+            task_packages=$(get_task_packages "$task")
+            seen_tasks="$seen_tasks $task"
+        fi
+
+        # Add specific package or all task packages to install list
+        if [ -n "$pkg" ]; then
+            installlist="$installlist $pkg"
+        else
+            installlist="$installlist $task_packages"
+        fi
+    done
+}
 
 epm_install_alt_tasks()
 {
 
-    local installlist="$(get_task_packages "$@")"
+    prepare_task_packages "$@"
 
     [ -n "$verbose" ] && info "Packages from task(s): $installlist"
 
@@ -5469,11 +5591,11 @@ epm_install_alt_tasks()
 
     local res
     try_change_alt_repo
-    epm_addrepo "$@"
+    epm_addrepo $unique_tasks
     __epm_update
     (pkg_names="$installlist" epm_install)
     res=$?
-    epm_removerepo "$@"
+    epm_removerepo $unique_tasks
     end_change_alt_repo
     return $res
 }
@@ -5729,6 +5851,9 @@ epm_print_install_names_command()
             # this command  not for complex use. ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive
             echo "apt-get -y --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true $APTOPTIONS install $*"
             return ;;
+        apm-rpm)
+            echo "apm system install $*"
+            return ;;
         aptitude-dpkg)
             echo "aptitude -y install $*"
             return ;;
@@ -5927,7 +6052,7 @@ esac
         message "Skipping: kernel package will update during dist-upgrade"
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_kernel_update()'
         ;;
     esac
 }
@@ -6114,6 +6239,10 @@ case $PMTYPE in
             docmd apt-cache search .
         fi
         ;;
+    apm-rpm)
+        # TODO: --format json?
+        CMD="apm system list --limit 100000"
+        ;;
     dnf-*)
         warmup_rpmbase
         if [ -n "$short" ] ; then
@@ -6158,6 +6287,9 @@ case $PMTYPE in
         ;;
     eopkg)
         CMD="eopkg list-available"
+        ;;
+    stplr)
+        CMD="stplr list"
         ;;
     pisi)
         CMD="pisi list-available"
@@ -6357,7 +6489,7 @@ case $PMTYPE in
         info "Manually: edit /etc/pacman.conf modifying IgnorePkg array"
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_mark_hold()'
         ;;
 esac
 
@@ -6433,7 +6565,7 @@ case $PMTYPE in
         cat /etc/pacman.conf
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_mark_showhold()'
         ;;
 esac
 
@@ -6480,7 +6612,7 @@ case $PMTYPE in
             sudocmd emerge --oneshot "$@"
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_mark_auto()'
         ;;
 esac
 
@@ -6536,7 +6668,7 @@ case $PMTYPE in
         sudocmd dnf repoquery --unneeded
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_mark_showauto()'
         ;;
 esac
 
@@ -6560,7 +6692,7 @@ case $PMTYPE in
         sudocmd dnf repoquery --userinstalled
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_mark_showmanual'
         ;;
 esac
 
@@ -6610,7 +6742,7 @@ epm_mark()
         epm_mark_showmanual "$@"
         ;;
     *)
-        fatal 'Unknown command $ epm mark $CMD'
+        fatal 'Unknown command $ epm mark $CMD in epm_mark()'
         ;;
 esac
 
@@ -6657,7 +6789,7 @@ case $PMTYPE in
         a= rpm --rebuilddb
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_optimize()'
         ;;
 esac
 
@@ -7016,6 +7148,9 @@ case $PMTYPE in
     eopkg)
         CMD="eopkg list-installed"
         ;;
+    stplr)
+        CMD="stplr list --installed"
+        ;;
     pisi)
         CMD="pisi list-installed"
         ;;
@@ -7133,7 +7268,12 @@ __is_app_installed()
 
 __get_app_package()
 {
-    grep -oP "^PKGNAME=[\"']*\K[^\"']+" "$psdir/$1.sh" && return
+    if [ "$PKGFORMAT" = "deb" ] ; then
+        local pkgname
+        pkgname="$(grep -oP "^PKGNAME=[\"']*\K[^\"']+" "$psdir/$1.sh")" && echo "$pkgname" | tr "[:upper:]" "[:lower:]" && return
+    else
+        grep -oP "^PKGNAME=[\"']*\K[^\"']+" "$psdir/$1.sh" && return
+    fi
     # fallback if PKGNAME is not set directly
     __run_script "$1" --package-name "$2" "$3" 2>/dev/null
 }
@@ -7166,6 +7306,15 @@ __list_all_packages()
     done
 }
 
+__print_targeted_packages()
+{
+    if [ "$PKGFORMAT" = "deb" ] ; then
+        tr "[:upper:]" "[:lower:]" <"$1"
+        return
+    fi
+    cat "$1"
+}
+
 __list_app_packages_table()
 {
     local pkglist="$1"
@@ -7186,7 +7335,7 @@ __list_app_packages_table()
     grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\<$arch\>)" $psdir/*.sh | xargs grep -oP "^PKGNAME=[\"']*\K[^\"']+"  | sed -e "s|.*/\(.*\).sh:|\1 |" | grep -v -E "(^$IGNOREi586|^common|#.*$)" | LC_ALL=C sort -k1,1 >$tmplist1
     # tmplist - app
     # tmplist1 - app package
-    LC_ALL=C join -j 1 -a 1 $tmplist $tmplist1 | while read -r app package ; do
+    __print_targeted_packages $tmplist1 | LC_ALL=C join -j 1 -a 1 $tmplist - | while read -r app package ; do
         [ -n "$package" ] || package="$(__get_resolved_app_package $app $pkglist </dev/null)"
         [ -n "$package" ] || continue # fatal "Missed package for $app"
         echo "$package $app"
@@ -7208,10 +7357,25 @@ __list_app_packages_table_old()
     done
 }
 
-__get_all_alt_repacked_packages()
+__get_all_rpm_repacked_packages()
 {
     FORMAT="%{Name} %{Version} %{Packager}\n"
     a= rpmquery --queryformat "$FORMAT" -a | grep "EPM <support@e"
+}
+
+__filter_by_repacked_rpm_packages()
+{
+    local i
+    local tapt="$1"
+    local pkglist="$2"
+
+    LC_ALL=C join -11 -21 $tapt $pkglist | uniq
+
+    # rpm on Fedora/CentOS no more print missed packages to stderr
+    # get supported packages list and print lines with it
+    #for i in $(epm query --short $(cat $tapt | cut -f1 -d" ") 2>/dev/null) ; do
+    #    grep "^$i " $tapt
+    #done
 }
 
 __filter_by_installed_packages()
@@ -7220,24 +7384,12 @@ __filter_by_installed_packages()
     local tapt="$1"
     local pkglist="$2"
 
-    # hack for rpm based
-    if [ "$PKGFORMAT" = "rpm" ] ; then
-        LC_ALL=C join -11 -21 $tapt $pkglist | uniq
-        return
-    fi
-
     # get intersect between full package list and available packages table
     LC_ALL=C join -11 -21 $tapt $pkglist | uniq | while read -r package app ; do
-        if epm status --repacked "$package" </dev/null ; then
+        if epm status --repacked "$package" </dev/null || epm status --thirdparty "$package" </dev/null  ; then
             echo "$package $app"
         fi
     done
-
-    # rpm on Fedora/CentOS no more print missed packages to stderr
-    # get supported packages list and print lines with it
-    #for i in $(epm query --short $(cat $tapt | cut -f1 -d" ") 2>/dev/null) ; do
-    #    grep "^$i " $tapt
-    #done
 }
 
 __get_installed_table()
@@ -7252,13 +7404,17 @@ __get_installed_table()
     remove_on_exit $pkglist
 
     if [ "$PKGFORMAT" = "rpm" ] ; then
-        __get_all_alt_repacked_packages | LC_ALL=C sort -u >$pkglist
+        # fast hack to get all repacked packages
+        # it misses all thirdparty packages installed as is
+        __get_all_rpm_repacked_packages | LC_ALL=C sort -u >$pkglist
+        __list_app_packages_table $pkglist | LC_ALL=C sort -u >$tapt
+        __filter_by_repacked_rpm_packages $tapt $pkglist
     else
         epm --short packages | LC_ALL=C sort -u >$pkglist
+        __list_app_packages_table $pkglist | LC_ALL=C sort -u >$tapt
+        __filter_by_installed_packages $tapt $pkglist
     fi
 
-    __list_app_packages_table $pkglist | LC_ALL=C sort -u >$tapt
-    __filter_by_installed_packages $tapt $pkglist
     rm -f $tapt
     rm -f $pkglist
 }
@@ -7864,7 +8020,7 @@ case $PMTYPE in
         docmd apk policy $pkg_names
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_policy()'
         ;;
 esac
 
@@ -8461,7 +8617,7 @@ epm_provides_files()
             docmd dpkg -I $pkg_files | grep "^ *Provides:" | sed "s|^ *Provides:||g"
             ;;
         *)
-            fatal 'Have no suitable command for $PMTYPE'
+            fatal 'Have no suitable command for $PMTYPE in epm_provides()'
             ;;
     esac
 }
@@ -8489,6 +8645,17 @@ case $PMTYPE in
             return
         fi
         ;;
+    apm-rpm)
+        # FIXME: need fix for a few names case
+        # TODO: separate this function to two section
+        if is_installed $pkg_names ; then
+            CMD="rpm -q --provides"
+        else
+            docmd apm system info --full --format=json $pkg_names | get_json_values "data packageInfo provides"
+            return
+        fi
+        ;;
+
     urpm-rpm)
         if is_installed $pkg_names ; then
             CMD="rpm -q --provides"
@@ -8537,7 +8704,7 @@ case $PMTYPE in
         fi
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_provides()'
         ;;
 esac
 
@@ -8679,7 +8846,7 @@ __epm_get_hilevel_nameform()
     [ -n "$*" ] || return
 
     case $PMTYPE in
-        apt-rpm)
+        apt-rpm|apm-rpm)
             # use # as delimeter for apt
             local pkg
             pkg=$(a='' rpm -q --queryformat "%{NAME}=%{SERIAL}:%{VERSION}-%{RELEASE}\n" -- $1)
@@ -9353,7 +9520,7 @@ epm_release_downgrade()
         sudocmd guix pull --verbose
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_release_downgrade()'
         ;;
     esac
 
@@ -10036,7 +10203,7 @@ epm_release_upgrade()
         sudocmd guix pull --verbose
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_release_upgrade()'
         ;;
     esac
 
@@ -10119,6 +10286,9 @@ epm_remove_names()
         apt-dpkg)
             sudocmd apt-get remove --purge $APTOPTIONS $@
             return ;;
+        apm-rpm)
+            sudocmd apm system remove $@
+            return ;;
         aptitude-dpkg)
             sudocmd aptitude purge $@
             return ;;
@@ -10164,6 +10334,9 @@ epm_remove_names()
             return ;;
         eopkg)
             sudocmd eopkg $(subst_option nodeps --ignore-dependency) remove $@
+            return ;;
+        stplr)
+            sudocmd stplr remove $@
             return ;;
         pisi)
             sudocmd pisi $(subst_option nodeps --ignore-dependency) remove $@
@@ -10212,7 +10385,7 @@ epm_remove_names()
             sudocmd opkg $(subst_option force -force-depends) remove $@
             return ;;
         *)
-            fatal 'Have no suitable command for $PMTYPE'
+            fatal 'Have no suitable command for $PMTYPE in epm_remove_names()'
             ;;
     esac
 }
@@ -10260,6 +10433,9 @@ epm_remove_nonint()
             return ;;
         eopkg)
             sudocmd eopkg $(subst_option nodeps --ignore-dependency) --yes-all remove $@
+            return ;;
+        stplr)
+            sudocmd stplr remove -y $@
             return ;;
         pisi)
             sudocmd pisi $(subst_option nodeps --ignore-dependency) --yes-all remove $@
@@ -10320,7 +10496,7 @@ epm_print_remove_command()
             echo "$PMTYPE uninstall -s $*"
             ;;
         *)
-            fatal 'Have no suitable appropriate remove command for $PMTYPE'
+            fatal 'Have no suitable appropriate remove command for $PMTYPE in epm_remove_nonint()'
             ;;
     esac
 }
@@ -10470,7 +10646,7 @@ epm_remove_old_kernels()
 
     case $PMTYPE in
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_remove_old_kernels()'
         ;;
     esac
 }
@@ -10655,6 +10831,9 @@ case $PMTYPE in
     eopkg)
         sudocmd eopkg remove-repo "$@"
         ;;
+    stplr)
+        sudocmd stplr repo remove "$@"
+        ;;
     pisi)
         sudocmd pisi remove-repo "$@"
         ;;
@@ -10662,7 +10841,7 @@ case $PMTYPE in
         info "You need remove repo from /etc/slackpkg/mirrors"
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_removerepo()'
         ;;
 esac
 
@@ -10702,6 +10881,29 @@ __epm_check_if_needed_repack()
     local pkgname="$(epm print name for package "$1")"
     warning 'There is repack rule for $pkgname package. It is better install this package via epm install --repack or epm play.'
 }
+
+__epm_repack_copy()
+{
+    local abspkg="$1"
+    local target="$2"
+
+    # if source file is not writable, try CoW or fallback to ordinal copy
+    #if [ ! -w "$abspkg" ] ; then
+    #    cp --reflink=auto $verbose $abspkg $target 2>/dev/null && return
+    #    return
+    #fi
+
+    # firstly try CoW
+    cp --reflink=always $verbose $abspkg $target 2>/dev/null && return
+    # next try create hardlink
+    cp -l $verbose $abspkg $target 2>/dev/null && return
+    # next try create symlink
+    cp -s $verbose $abspkg $target 2>/dev/null && return
+    # just make copy as fallback
+    cp $verbose $abspkg $target && return
+    fatal "Can't copy $abspkg to $target"
+}
+
 
 __epm_split_by_pkg_type()
 {
@@ -10744,8 +10946,8 @@ __check_packrule()
 {
     local pkg="$1"
     local alf="$CONFIGDIR/packrules.list"
-    [ -s "$pkg" ] || return 1
     [ -s "$alf" ] || return 1
+    [ -n "$pkg" ] || return 1
 
     local tmpalf=$(__convert_packrule_to_regexp "$alf")
     remove_on_exit $tmpalf
@@ -10824,7 +11026,8 @@ __epm_repack_single()
             __epm_repack_to_rpm "$pkg" "$packversion" "$packrelease" || return
             ;;
         deb)
-            if __epm_have_repack_rule "$pkg" ; then
+            # repack via rpm if source is not deb or we have rpm rule for the package
+            if __epm_have_repack_rule "$pkg" || ! rhas "$pkg" "\.deb$" ; then
                 # we have repack rules only for rpm, so use rpm step in any case
                 __epm_repack_to_rpm "$pkg" "$packversion" "$packrelease" || return
                 [ -n "$repacked_pkg" ] || return
@@ -10929,10 +11132,10 @@ __epm_repack_to_deb()
 
         alpkg=$(basename $pkg)
         # don't use abs package path: copy package to temp dir and use there
-        cp $verbose $pkg $TDIR/$alpkg
+        __epm_repack_copy $abspkg $TDIR/$alpkg
 
         cd $TDIR || fatal
-        __prepare_source_package "$pkg"
+        __prepare_source_package "$(pwd)/$alpkg"
 
         showcmd_store_output fakeroot alien -d -k $verbose $scripts "$alpkg"
         local DEBCONVERTED=$(grep "deb generated" $RC_STDOUT | sed -e "s| generated||g")
@@ -10951,15 +11154,22 @@ __epm_repack_to_deb()
 
 # File bin/epm-repack-rpm:
 
+
+get_repack_script()
+{
+    local repackcode="$1"
+    is_abs_path "$repackcode" || repackcode="$EPM_REPACK_SCRIPTS_DIR/$1.sh"
+    echo "$repackcode"
+}
+
 has_repack_script()
 {
-    local repackcode="$EPM_REPACK_SCRIPTS_DIR/$1.sh"
-    [ -s "$repackcode" ]
+    [ -s "$(get_repack_script "$1")" ]
 }
 
 __apply_fix_code()
 {
-    local repackcode="$EPM_REPACK_SCRIPTS_DIR/$1.sh"
+    local repackcode="$(get_repack_script "$1")"
     [ -s "$repackcode" ] || return 0
     [ -f "$repackcode.rpmnew" ] && warning 'There is .rpmnew file(s) in $EPM_REPACK_SCRIPTS_DIR dir. The pack script can be outdated.'
 
@@ -11067,7 +11277,7 @@ __epm_repack_to_rpm()
 
         alpkg=$(basename $pkg)
         # don't use abs package path: copy package to temp dir and use there
-        cp -l $verbose $abspkg $tmpbuilddir/../$alpkg 2>/dev/null || cp -s $verbose $abspkg $tmpbuilddir/../$alpkg 2>/dev/null || cp $verbose $abspkg $tmpbuilddir/../$alpkg || fatal
+        __epm_repack_copy $abspkg $tmpbuilddir/../$alpkg
         [ -r "$pkg.eepm.yaml" ] && cp $verbose $pkg.eepm.yaml $tmpbuilddir/../$alpkg.eepm.yaml
 
         cd $tmpbuilddir/../ || fatal
@@ -11112,10 +11322,13 @@ __epm_repack_to_rpm()
         # run generic scripts and repack script for the pkg
         cd $buildroot || fatal
 
+        local repackscript="$pkgname"
+        [ -n "$EPM_REPACK_SCRIPT" ] && repackscript="$EPM_REPACK_SCRIPT"
+
         __apply_fix_code "generic"             $buildroot $spec $pkgname $abspkg $SUBGENERIC
         __apply_fix_code "generic-$SUBGENERIC" $buildroot $spec $pkgname $abspkg
-        __apply_fix_code $pkgname              $buildroot $spec $pkgname $abspkg
-        if ! has_repack_script $pkgname ; then
+        __apply_fix_code $repackscript         $buildroot $spec $pkgname $abspkg
+        if ! has_repack_script $repackscript ; then
             __apply_fix_code "generic-default" $buildroot $spec $pkgname $abspkg
         fi
         __apply_fix_code "generic-post"        $buildroot $spec $pkgname $abspkg
@@ -11555,7 +11768,7 @@ epm_repodisable()
 {
 
 case $PMTYPE in
-    apt-rpm)
+    apt-rpm|apm-rpm)
         assure_root
         __epm_repodisable_alt "$@"
         ;;
@@ -11579,7 +11792,7 @@ case $PMTYPE in
         docmd eoget disable-repo "$@"
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_repodisable()'
         ;;
 esac
 
@@ -11613,7 +11826,7 @@ epm_repoenable()
 {
 
 case $PMTYPE in
-    apt-rpm)
+    apt-rpm|apm-rpm)
         assure_root
         __epm_repoenable_alt "$@"
         ;;
@@ -11637,7 +11850,7 @@ case $PMTYPE in
         docmd pisi enable-repo "$@"
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_repoenable()'
         ;;
 esac
 
@@ -11902,7 +12115,7 @@ esac
 
 case $PMTYPE in
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_repofix()'
         ;;
 esac
 
@@ -12030,7 +12243,7 @@ epm_repoindex()
 {
 
 case $PMTYPE in
-    apt-rpm)
+    apt-rpm|apm-rpm)
         __epm_repoindex_alt "$@"
         ;;
     apt-dpkg|aptitude-dpkg)
@@ -12056,7 +12269,7 @@ case $PMTYPE in
         docmd eoget index "$@"
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_repoindex()'
         ;;
 esac
 
@@ -12189,10 +12402,10 @@ print_apt_sources_list()
 epm_repolist()
 {
 
-[ -z "$*" ] || [ "$PMTYPE" = "apt-rpm" ] || [ "$PMTYPE" = "apt-dpkg" ]  || fatal "No arguments are allowed here"
+[ -z "$*" ] || [ "$PMTYPE" = "apt-rpm" ] || [ "$PMTYPE" = "apm-rpm" ] || [ "$PMTYPE" = "apt-dpkg" ] || fatal "No arguments are allowed here"
 
 case $PMTYPE in
-    apt-rpm)
+    apt-rpm|apm-rpm)
         if tasknumber "$1" >/dev/null ; then
             # FIXME: unexpectedly, a list of packages instead of repositories.
             get_task_packages "$@"
@@ -12253,7 +12466,7 @@ case $PMTYPE in
         docmd grep -v -- "^#\|^$" /etc/slackpkg/mirrors
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_repolist()'
         ;;
 esac
 
@@ -12344,11 +12557,11 @@ epm_repo_pkgadd()
 {
 
 case $PMTYPE in
-    apt-rpm)
+    apt-rpm|apm-rpm)
         __epm_repo_pkgadd_alt "$@"
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_repo_pkgadd()'
         ;;
 esac
 
@@ -12359,11 +12572,11 @@ epm_repo_pkgupdate()
 {
 
 case $PMTYPE in
-    apt-rpm)
+    apt-rpm|apm-rpm)
         __epm_repo_pkgupdate_alt "$@"
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_repo_pkgupdate()'
         ;;
 esac
 
@@ -12374,11 +12587,11 @@ epm_repo_pkgdel()
 {
 
 case $PMTYPE in
-    apt-rpm)
+    apt-rpm|apm-rpm)
         __epm_repo_pkgdel_alt "$@"
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_repo_pkgdel()'
         ;;
 esac
 
@@ -12459,7 +12672,7 @@ case $PMTYPE in
         __save_alt_repo_lists
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_reposave()'
         ;;
 esac
 
@@ -12476,7 +12689,7 @@ case $PMTYPE in
         __restore_alt_repo_lists
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_reporestore()'
         ;;
 esac
 
@@ -12496,7 +12709,7 @@ case $PMTYPE in
         sudocmd winget source reset
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_reporeset()'
         ;;
 esac
 
@@ -12520,7 +12733,7 @@ case $PMTYPE in
         fi
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_repostatus()'
         ;;
 esac
 }
@@ -12612,7 +12825,7 @@ epm_requires_files()
                 __epm_elf_requires $fl
                 ;;
             *)
-                warning "Have no suitable command for handle file $fl with .$PKGTYPE"
+                warning "Have no suitable command for handle file $fl with .$PKGTYPE in epm_requires()"
                 ;;
         esac
     done
@@ -12643,6 +12856,22 @@ case $PMTYPE in
                 fi
                 return
             fi
+        fi
+        ;;
+    apm-rpm)
+        # FIXME: need fix for a few names case
+        # FIXME: too low level of requires name (libSOME.so)
+        if is_installed $pkg_names ; then
+            assure_exists rpm >/dev/null
+            __epm_alt_rpm_requires $pkg_names
+            return
+        else
+            if [ -n "$short" ] ; then
+                docmd apm system info --full --format=json $pkg_names | get_json_values "data packageInfo depends" | __epm_filter_out_base_alt_reqs | sed -e "s| .*||"
+            else
+                docmd apm system info --full --format=json $pkg_names | get_json_values "data packageInfo depends" | __epm_filter_out_base_alt_reqs
+            fi
+            return
         fi
         ;;
     packagekit)
@@ -12719,7 +12948,7 @@ case $PMTYPE in
         return
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_requires()'
         ;;
 esac
 
@@ -13380,6 +13609,10 @@ case $PMTYPE in
     apt-rpm|apt-dpkg)
         CMD="apt-cache search --"
         ;;
+    apm-rpm)
+        docmd apm system search -- $string
+        return
+        ;;
     aptitude-dpkg)
         CMD="aptitude search --"
         ;;
@@ -13410,6 +13643,9 @@ case $PMTYPE in
         ;;
     eopkg)
         CMD="eopkg search --"
+        ;;
+    stplr)
+        CMD="stplr search --"
         ;;
     pisi)
         CMD="pisi search --"
@@ -13701,6 +13937,14 @@ docmd $CMD $pkg_filenames
 }
 
 # File bin/epm-sh-altlinux:
+
+tasknumberprefix() {
+    local potential
+    for potential in "$@"; do
+        [[ "$potential" =~ ^[0-9]+(:[^:]+)?$ ]] && return 0
+    done
+    return 1
+}
 
 tasknumber()
 {
@@ -14392,7 +14636,7 @@ epm_stats()
             CMD="apk stats"
             ;;
         *)
-            fatal 'Have no suitable command for $PMTYPE'
+            fatal 'Have no suitable command for $PMTYPE in epm_stats()'
             ;;
         esac
 
@@ -14510,8 +14754,8 @@ epm_status_supported() {
 epm_status_validate()
 {
     local pkg="$1"
-    local rpmversion="$(epm print field Version for "$pkg" 2>/dev/null)"
-    [ -n "$rpmversion" ]
+    local version="$(epm print field Version for "$pkg" 2>/dev/null)"
+    [ -n "$version" ]
 }
 
 epm_status_original()
@@ -14539,6 +14783,10 @@ epm_status_original()
 
             # FIXME: how to check if the package is from ALT repo (verified)?
             echo "$release" | grep -q "^alt" || return 1
+
+            local packager="$(epm print field Packager for "$pkg" 2>/dev/null )"
+            # altlinux.ru, altlinux.org, altlinux.com, altlinux dot
+            echo "$packager" | grep -q "altlinux" || return 1
             return 0
             ;;
         RedOS)
@@ -14598,7 +14846,7 @@ epm_status_repacked()
     local pkg="$1"
 
     # dpkg package missing packager field
-    local repacked="$(epm print field Description for "$1" 2>/dev/null | grep -qi "alien")"
+    local repacked="$(epm print field Description for "$1" 2>/dev/null | grep -i "alien")"
     local packager="$(epm print field Packager for "$1" 2>/dev/null)"
 
     #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
@@ -14632,19 +14880,21 @@ epm_status_thirdparty()
 
     #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
     distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
-    repacked="$(epm print field Description for "$1" 2>/dev/null | grep -qi "alien")"
+    #repacked="$(epm print field Description for "$1" 2>/dev/null | grep -qi "alien")"
     maintainer="$(epm print field Maintainer for "$pkg" 2>/dev/null)"
 
     case $BASEDISTRNAME in
         alt)
-            ## FIXME: some repo packages have wrong Packager
-            #local packager="$(epm print field Packager for "$1" 2>/dev/null)"
-            #echo "$packager" && grep -q "altlinux" && return 0
-            #echo "$packager" && grep -q "basealt" && return 0
             epm_status_validate $pkg || return 1
 
-            echo "$distribution" | grep -q "^ALT" && return 1
             echo "$distribution" | grep -q "^EEPM" && return 1
+
+            echo "$distribution" | grep -q "^ALT" || return 0
+
+            local packager="$(epm print field Packager for "$pkg" 2>/dev/null )"
+            # altlinux.ru, altlinux.org, altlinux.com, altlinux dot
+            echo "$packager" | grep -q "altlinux" && return 1
+            #echo "$packager" && grep -q "basealt" && return 1
             return 0
             ;;
         redos)
@@ -14674,7 +14924,7 @@ epm_status_thirdparty()
             # On UncomOS maintainer Ubuntu and Debian * team
             echo "$maintainer" | grep -q "Debian" && return 1
             echo "$maintainer" | grep -q "Ubuntu" && return 1
-            [ ! -z "$repacked" ] && return 1
+            epm_status_repacked $pkg && return 1
             return 0
             ;;
         *)
@@ -14925,6 +15175,9 @@ case $PMTYPE in
         # apt-get update retrieve Contents file too
         #sudocmd apt-file update
         ;;
+    apm-rpm)
+        sudocmd apm system update
+        ;;
     packagekit)
         docmd pkcon refresh
         ;;
@@ -14975,6 +15228,9 @@ case $PMTYPE in
         ;;
     eopkg)
         sudocmd eopkg update-repo
+        ;;
+    stplr)
+        sudocmd stplr refresh
         ;;
     pisi)
         sudocmd pisi update-repo
@@ -15148,6 +15404,9 @@ epm_upgrade()
         local APTOPTIONS="$dryrun $(subst_option non_interactive -y) $(subst_option debug "-V -o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
         CMD="apt-get $APTOPTIONS $noremove $force_yes dist-upgrade"
         ;;
+    apm-rpm)
+        CMD="apm system upgrade"
+        ;;
     aptitude-dpkg)
         CMD="aptitude dist-upgrade"
         ;;
@@ -15212,6 +15471,9 @@ epm_upgrade()
     eopkg)
         CMD="eopkg upgrade"
         ;;
+    stplr)
+        CMD="stplr upgrade"
+        ;;
     pisi)
         CMD="pisi upgrade"
         ;;
@@ -15246,7 +15508,7 @@ epm_upgrade()
         CMD="pkg upgrade"
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_upgrade()'
         ;;
     esac
 
@@ -15351,7 +15613,7 @@ case $PMTYPE in
         CMD="xbps-query -X"
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_whatdepends()'
         ;;
 esac
 
@@ -15365,9 +15627,9 @@ docmd $CMD $pkg
 epm_whatprovides()
 {
     local CMD
-    [ -n "$pkg_files" ] && fatal "whatprovides does not handle files"
-    [ -n "$pkg_names" ] || fatal "whatprovides: package name is missed"
-    local pkg=$(print_name $pkg_names)
+    [ -n "$pkg_url" ] && fatal "whatprovides does not handle URLs"
+    [ -n "$pkg_files$pkg_names" ] || fatal "whatprovides: package name is missed"
+    local pkg=$(print_name $pkg_files $pkg_names)
 
 case $PMTYPE in
     conary)
@@ -15393,7 +15655,7 @@ case $PMTYPE in
         CMD="opkg whatprovides"
         ;;
     *)
-        fatal 'Have no suitable command for $PMTYPE'
+        fatal 'Have no suitable command for $PMTYPE in epm_whatprovides()'
         ;;
 esac
 
@@ -15543,6 +15805,12 @@ pkgvendor()
 pkgmanager()
 {
 local CMD
+
+case $DISTRO_NAME in
+    "ALT Atomic")
+        echo "apm-rpm" && return
+        ;;
+esac
 
 case $VENDOR_ID in
     alt)
@@ -16508,6 +16776,8 @@ print_eepm_env()
 cat <<EOF
 # -d | --base-distro-name
 DISTRNAME="$(echo $DISTRIB_ID)"
+# --distro-name
+FULLDISTRNAME="$(echo "$DISTRO_NAME")"
 # -v | --base-version
 DISTRVERSION="$(echo "$DISTRIB_RELEASE")"
 # distro dependent arch
@@ -19835,7 +20105,7 @@ check_command()
         ;;
 
 # HELPCMD: PART: Repository control:
-    update|update-repo|ur)    # HELPCMD: update remote package repository databases
+    update|refresh|update-repo|ur)    # HELPCMD: update remote package repository databases
         epm_cmd=update
         direct_args=1
         ;;
