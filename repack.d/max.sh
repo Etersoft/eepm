@@ -10,10 +10,14 @@ PRODUCTDIR=/opt/$PRODUCT
 
 . $(dirname $0)/common.sh
 
+# conflicts with MAX from AppImage
+add_conflicts MAX
+
 fix_chrome_sandbox
 
 fix_desktop_file $PRODUCTDIR/$PRODUCT $PRODUCTCUR
 
+add_bin_link_command
 add_bin_link_command $PRODUCTCUR $PRODUCTDIR/$PRODUCT
 
 remove_file $PRODUCTDIR/resources/app-update.yml
