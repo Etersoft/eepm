@@ -18,7 +18,7 @@
 #
 
 EHOG='\(apt-get\|rpm\)'
-JCHAN='-t apt-get -t rpm'
+JCHAN='-t apt-get -t rpm -t apm'
 
 __alt_epm_history_journal()
 {
@@ -112,7 +112,7 @@ Examples:
 epm_history()
 {
 
-if [ $PMTYPE = "apt-rpm" ] ; then
+if [ $PMTYPE = "apt-rpm" ] || [ $PMTYPE = "apm-rpm" ] ; then
     case "$1" in
         "-h"|"--help"|"help")      # HELPCMD: help
             epm_history_help

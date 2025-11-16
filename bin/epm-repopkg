@@ -101,7 +101,7 @@ epm_repo_pkgadd()
 {
 
 case $PMTYPE in
-    apt-rpm)
+    apt-rpm|apm-rpm)
         __epm_repo_pkgadd_alt "$@"
         ;;
     *)
@@ -116,7 +116,7 @@ epm_repo_pkgupdate()
 {
 
 case $PMTYPE in
-    apt-rpm)
+    apt-rpm|apm-rpm)
         __epm_repo_pkgupdate_alt "$@"
         ;;
     *)
@@ -131,7 +131,7 @@ epm_repo_pkgdel()
 {
 
 case $PMTYPE in
-    apt-rpm)
+    apt-rpm|apm-rpm)
         __epm_repo_pkgdel_alt "$@"
         ;;
     *)

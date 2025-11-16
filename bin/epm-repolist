@@ -140,10 +140,10 @@ epm_repolist()
 {
 
 # TODO
-[ -z "$*" ] || [ "$PMTYPE" = "apt-rpm" ] || [ "$PMTYPE" = "apt-dpkg" ]  || fatal "No arguments are allowed here"
+[ -z "$*" ] || [ "$PMTYPE" = "apt-rpm" ] || [ "$PMTYPE" = "apm-rpm" ] || [ "$PMTYPE" = "apt-dpkg" ] || fatal "No arguments are allowed here"
 
 case $PMTYPE in
-    apt-rpm)
+    apt-rpm|apm-rpm)
         if tasknumber "$1" >/dev/null ; then
             # FIXME: unexpectedly, a list of packages instead of repositories.
             get_task_packages "$@"

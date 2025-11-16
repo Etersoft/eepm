@@ -45,7 +45,7 @@ epm_repoenable()
 {
 
 case $PMTYPE in
-    apt-rpm)
+    apt-rpm|apm-rpm)
         assure_root
         __epm_repoenable_alt "$@"
         ;;

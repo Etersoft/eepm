@@ -71,6 +71,17 @@ case $PMTYPE in
             return
         fi
         ;;
+    apm-rpm)
+        # FIXME: need fix for a few names case
+        # TODO: separate this function to two section
+        if is_installed $pkg_names ; then
+            CMD="rpm -q --provides"
+        else
+            docmd apm system info --full --format=json $pkg_names | get_json_values "data packageInfo provides"
+            return
+        fi
+        ;;
+
     urpm-rpm)
         if is_installed $pkg_names ; then
             CMD="rpm -q --provides"

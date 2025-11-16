@@ -135,7 +135,7 @@ __epm_get_hilevel_nameform()
     [ -n "$*" ] || return
 
     case $PMTYPE in
-        apt-rpm)
+        apt-rpm|apm-rpm)
             # use # as delimeter for apt
             local pkg
             pkg=$(a='' rpm -q --queryformat "%{NAME}=%{SERIAL}:%{VERSION}-%{RELEASE}\n" -- $1)

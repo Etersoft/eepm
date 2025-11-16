@@ -138,6 +138,22 @@ case $PMTYPE in
             fi
         fi
         ;;
+    apm-rpm)
+        # FIXME: need fix for a few names case
+        # FIXME: too low level of requires name (libSOME.so)
+        if is_installed $pkg_names ; then
+            assure_exists rpm >/dev/null
+            __epm_alt_rpm_requires $pkg_names
+            return
+        else
+            if [ -n "$short" ] ; then
+                docmd apm system info --full --format=json $pkg_names | get_json_values "data packageInfo depends" | __epm_filter_out_base_alt_reqs | sed -e "s| .*||"
+            else
+                docmd apm system info --full --format=json $pkg_names | get_json_values "data packageInfo depends" | __epm_filter_out_base_alt_reqs
+            fi
+            return
+        fi
+        ;;
     packagekit)
         CMD="pkcon required-by"
         ;;

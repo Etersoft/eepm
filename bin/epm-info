@@ -60,7 +60,7 @@ case $PMTYPE in
         if [ -n "$direct" ] ; then
             __epm_info_rpm_low && return
         fi
-        docmd apm system info $pkg_names
+        docmd apm system info $full $pkg_names
         ;;
     aptitude-dpkg)
         if [ -n "$pkg_files" ] ; then

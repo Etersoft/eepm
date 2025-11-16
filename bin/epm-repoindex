@@ -134,7 +134,7 @@ epm_repoindex()
 {
 
 case $PMTYPE in
-    apt-rpm)
+    apt-rpm|apm-rpm)
         __epm_repoindex_alt "$@"
         ;;
     apt-dpkg|aptitude-dpkg)

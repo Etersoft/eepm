@@ -51,7 +51,7 @@ __epm_changelog_local_names()
     [ -z "$*" ] && return
 
     case $PMTYPE in
-        apt-rpm|yum-rpm|dnf-rpm|dnf5-rpm|urpm-rpm|zypper-rpm)
+        *-rpm)
             docmd_foreach "rpm -q --changelog" $@
             ;;
         apt-dpkg|aptitude-dpkg)
