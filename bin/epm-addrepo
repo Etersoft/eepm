@@ -563,6 +563,9 @@ case $PMTYPE in
         # Only for alone packages:
         #sudocmd repo-add $pkg_filenames
         ;;
+    stplr)
+        sudocmd stplr repo add "$repo"
+        ;;
     pisi)
         sudocmd pisi add-repo "$repo"
         ;;

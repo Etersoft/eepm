@@ -198,6 +198,9 @@ case $PMTYPE in
     eopkg)
         sudocmd eopkg remove-repo "$@"
         ;;
+    stplr)
+        sudocmd stplr repo remove "$@"
+        ;;
     pisi)
         sudocmd pisi remove-repo "$@"
         ;;
