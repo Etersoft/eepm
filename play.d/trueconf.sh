@@ -9,6 +9,7 @@ URL="https://trueconf.ru"
 . $(dirname $0)/common.sh
 
 warn_version_is_not_supported
+VERSION="[0-9]*"
 
 epmopt=''
 distrversion=$(epm print info -v)
