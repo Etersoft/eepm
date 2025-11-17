@@ -15,6 +15,10 @@ add_requires python3 pbzip2 bzip2 gdb libnuma libkrb5 libsss_nss_idmap cyrus-sas
 
 # ALT's su does not support -p last 20 years
 subst "s|su -p |su |" $BUILDROOT/opt/mssql/lib/mssql-conf/invokesqlservr.sh
+subst 's|whitelistArg="-p"|whitelistArg=""|' $BUILDROOT/opt/mssql/lib/mssql-conf/invokesqlservr.sh
+# -p workaround for RHEL use unsupported -w, see https://bugzilla.altlinux.org/show_bug.cgi?id=51381#c1
+# subst "s|if.*Red Hat Enterprise Linux.*|if true ; then|" $BUILDROOT/opt/mssql/lib/mssql-conf/invokesqlservr.sh
+
 
 # fix typo
 subst "s|Руѝѝкий|Русский|" $BUILDROOT/opt/mssql/lib/mssql-conf/mssqlconfhelper.py
