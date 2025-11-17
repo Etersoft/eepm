@@ -354,7 +354,7 @@ EOF
 - epm play: fix status on error
 - epm play aksusbd: add service restart after upgrade
 - epm play anydesk: update to support newest versions
-- epm play: update msqsql server install for new distros
+- epm play: update mssql server install for new distros
 - epm print: allow use field/arch/version/release/name for foreign package
 - epm play: add warp-terminal
 - epm play: add teams-for-linux
