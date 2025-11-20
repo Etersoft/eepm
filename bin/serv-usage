@@ -38,7 +38,7 @@ serv_usage()
             sudorun service $SERVICE 2>&1
             ;;
         systemd)
-            sudocmd systemctl $SERVICE 2>&1
+            run_systemctl "$SERVICE" 2>&1
             ;;
         *)
             fatal "Have no suitable command for $SERVICETYPE in serv_usage()"

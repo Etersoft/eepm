@@ -149,6 +149,10 @@ serv_cmd=
 service_name=
 params=
 withoutservicename=
+systemctl_scope=
+SYSTEMCTL="systemctl"
+SYSTEMCTL_ARGS=
+SYSTEMCTL_RUNNER=sudocmd
 
 # load system wide config
 [ -f /etc/eepm/serv.conf ] && . /etc/eepm/serv.conf
@@ -261,6 +265,9 @@ check_option()
     --auto)               # HELPOPT: non interactive mode
         non_interactive=1
         ;;
+    --user)               # HELPOPT: manage user services via systemctl --user
+        systemctl_scope=user
+        ;;
     *)
         return 1
         ;;
@@ -268,12 +275,28 @@ check_option()
     return 0
 }
 
+run_systemctl()
+{
+        $SYSTEMCTL_RUNNER $SYSTEMCTL $SYSTEMCTL_ARGS "$@"
+}
+
+
 for opt in "$@" ; do
     check_command $opt && continue
     check_option $opt && continue
     [ -z "$service_name" ] && service_name=$opt && continue
     params="$params $opt"
 done
+
+if [ "$systemctl_scope" = "user" ]; then
+    if [ "$SERVICETYPE" != "systemd" ]; then
+        fatal "--user option is supported only with systemd backend"
+    fi
+
+    SYSTEMCTL_ARGS="--user"
+    SYSTEMCTL_RUNNER=docmd
+    
+fi
 
 echover "service: $service_name"
 echover "command: $serv_cmd"

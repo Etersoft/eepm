@@ -39,7 +39,7 @@ serv_disable()
             sudocmd update-rc.d $1 remove
             ;;
         systemd)
-            sudocmd systemctl disable $1
+            run_systemctl disable $1
             ;;
         openrc)
             sudocmd rc-update del $1 default

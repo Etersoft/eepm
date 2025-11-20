@@ -37,7 +37,7 @@ serv_reload()
             sudocmd $INITDIR/$SERVICE reload "$@"
             ;;
         systemd)
-            sudocmd systemctl reload $SERVICE "$@"
+            run_systemctl reload $SERVICE "$@"
             ;;
         *)
             info "Fallback to restart..."

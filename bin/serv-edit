@@ -24,7 +24,7 @@ serv_edit()
 
     case $SERVICETYPE in
         systemd)
-            sudocmd systemctl edit "$@" "$SERVICE"
+            run_systemctl edit "$@" "$SERVICE"
             ;;
         *)
             fatal "Have no suitable for $DISTRNAME command for $SERVICETYPE"

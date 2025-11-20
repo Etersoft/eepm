@@ -27,7 +27,7 @@ serv_try_restart()
 
     case $SERVICETYPE in
         systemd)
-            sudocmd systemctl try-restart $SERVICE "$@"
+            run_systemctl try-restart $SERVICE "$@"
             ;;
         *)
             info "Fallback to restart..."

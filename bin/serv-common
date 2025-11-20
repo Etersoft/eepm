@@ -37,7 +37,7 @@ serv_common()
             if [ -x $INITDIR/$SERVICE ] ; then
                 sudocmd $INITDIR/$SERVICE "$@"
             else
-                sudocmd systemctl "$@" $SERVICE
+                run_systemctl "$@" $SERVICE
             fi
             ;;
         runit)

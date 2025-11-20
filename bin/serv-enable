@@ -44,7 +44,7 @@ serv_enable()
             sudocmd update-rc.d $1 defaults
             ;;
         systemd)
-            sudocmd systemctl enable $1
+            run_systemctl enable $1
             ;;
         openrc)
             sudocmd rc-update add $1 default
