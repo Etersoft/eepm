@@ -35,7 +35,7 @@ serv_start()
             sudocmd $INITDIR/$SERVICE start "$@"
             ;;
         systemd)
-            sudocmd systemctl start "$SERVICE" "$@"
+            run_systemctl start "$SERVICE" "$@"
             ;;
         runit)
             sudocmd sv up "$SERVICE"

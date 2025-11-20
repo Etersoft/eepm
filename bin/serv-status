@@ -98,7 +98,7 @@ serv_status()
             sudocmd $INITDIR/$SERVICE status "$@"
             ;;
         systemd)
-            docmd systemctl -l status $SERVICE "$@"
+            run_systemctl -l status $SERVICE "$@"
             ;;
         runit)
             sudocmd sv status "$SERVICE"

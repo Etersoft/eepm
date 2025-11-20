@@ -25,7 +25,7 @@ serv_exists()
     case $SERVICETYPE in
         systemd)
             # too direct way: test -s /lib/systemd/system/dm.service
-            docmd systemctl cat "$SERVICE" "$@" >/dev/null 2>/dev/null
+            run_systemctl cat "$SERVICE" "$@" >/dev/null 2>/dev/null
             ;;
         *)
             case $BASEDISTRNAME in

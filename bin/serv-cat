@@ -24,7 +24,7 @@ serv_cat()
 
     case $SERVICETYPE in
         systemd)
-            docmd systemctl cat "$SERVICE" "$@"
+            run_systemctl cat "$SERVICE" "$@"
             ;;
         *)
             case $BASEDISTRNAME in

@@ -37,7 +37,7 @@ serv_restart()
             sudocmd $INITDIR/$SERVICE restart "$@"
             ;;
         systemd)
-            sudocmd systemctl restart $SERVICE "$@"
+            run_systemctl restart $SERVICE "$@"
             ;;
         runit)
             sudocmd sv restart "$SERVICE"

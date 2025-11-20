@@ -47,9 +47,9 @@ serv_list_all()
             ;;
         systemd)
             if [ -n "$short" ] ; then
-                docmd systemctl list-unit-files --type=service "$@" | sed -e 's|\.service.*||' | grep -v 'unit files listed' | grep -v '^$'
+                run_systemctl list-unit-files --type=service "$@" | sed -e 's|\.service.*||' | grep -v 'unit files listed' | grep -v '^$'
             else
-                docmd systemctl list-unit-files --type=service "$@"
+                run_systemctl list-unit-files --type=service "$@"
             fi
             ;;
         openrc)

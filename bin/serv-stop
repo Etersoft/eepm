@@ -35,7 +35,7 @@ serv_stop()
             sudocmd $INITDIR/$SERVICE stop "$@"
             ;;
         systemd)
-            sudocmd systemctl stop $SERVICE "$@"
+            run_systemctl stop $SERVICE "$@"
             ;;
         runit)
             sudocmd sv down "$SERVICE"
