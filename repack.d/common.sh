@@ -643,7 +643,7 @@ get_desktop_value()
 
 # copied from epm play common
 
-s_pkg_enough()
+is_pkg_enough()
 {
     local PKG="$1"
     local needed="$2"
