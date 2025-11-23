@@ -13,8 +13,13 @@ fix_desktop_file $PRODUCTDIR/fdm fdm
 fix_desktop_file $PRODUCTDIR/icon.png $PRODUCT.png
 
 # remove unused sql dependencies (but keep libqsqlite)
+# FB
+remove_file "$PRODUCTDIR/plugins/sqldrivers/libqsqlibase.so"
 remove_file "$PRODUCTDIR/plugins/sqldrivers/libqsqlmimer.so"
+# MySQL
 remove_file "$PRODUCTDIR/plugins/sqldrivers/libqsqlmysql.so"
+# Oracle
+remove_file "$PRODUCTDIR/plugins/sqldrivers/libqsqloci.so"
 remove_file "$PRODUCTDIR/plugins/sqldrivers/libqsqlodbc.so"
 remove_file "$PRODUCTDIR/plugins/sqldrivers/libqsqlpsql.so"
 
