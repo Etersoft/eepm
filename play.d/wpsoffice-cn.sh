@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME=wps-office
+PKGNAME=wps-office-cn
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="WPS Office for Linux from the official site (Chinese version)"
@@ -19,4 +19,5 @@ timestamp10=$(date '+%s')
 md5hash=$(printf '%s%s%s' "$secrityKey" "$uri" "$timestamp10" | md5sum | cut -d' ' -f1)
 PKGURL="$CHN_DEB_URL?t=${timestamp10}&k=${md5hash}"
 
+export EPM_REPACK_SCRIPT="$PKGNAME"
 install_pkgurl

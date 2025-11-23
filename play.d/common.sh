@@ -112,6 +112,7 @@ warn_version_is_not_supported()
     VERSION="*"
 }
 
+# set awaited pkgname to check with
 override_pkgname()
 {
     PKGNAME="$1"

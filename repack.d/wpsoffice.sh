@@ -4,11 +4,15 @@
 BUILDROOT="$1"
 SPEC="$2"
 PRODUCTDIR=/opt/kingsoft/wps-office
+PKGNAME=$(basename $0 .sh)
 
 . $(dirname $0)/common.sh
 
 #REQUIRES="fonts-ttf-liberation, fonts-ttf-dejavu"
-#subst "s|^\(Name: .*\)$|# Converted from original package requires\nRequires:$REQUIRES\n\1|g" $SPEC
+if [ "$PKGNAME" = "wps-office-cn" ] ; then
+    subst "s|^\(Name: .*\)$|Name: $PKGNAME|" $SPEC
+    add_conflicts wps-office
+fi
 
 remove_dir /etc/cron.d
 remove_dir /etc/logrotate.d
