@@ -10,7 +10,7 @@ URL="https://www.realvnc.com/en/connect/download/vnc/"
 
 # vendor packages has shorted version, so drop latest version part (buildid)
 if [ "$VERSION" != "*" ] ; then
-    VERSION="$(echo "$VERSION" | sed -e 's|\.[0-9][0-9][0-9].*||')"
+    VERSION="$(echo "$VERSION" | cut -d'.' -f1-3)"
 fi
 
 pkgtype="$(epm print info -p)"
@@ -28,5 +28,11 @@ case $pkgtype-$arch in
         ;;
 esac
 
-PKGURL=$(eget --list --latest https://www.realvnc.com/en/connect/download/vnc/ "$mask")
+# https://downloads.realvnc.com/download/file/vnc.files/VNC-Server-7.15.0-Linux-x64.deb
+if [ "$VERSION" = "*" ] ; then 
+    PKGURL=$(eget --list --latest https://www.realvnc.com/en/connect/download/vnc/ "$mask")
+else
+    PKGURL="https://downloads.realvnc.com/download/file/vnc.files/$mask"
+fi
+
 install_pkgurl

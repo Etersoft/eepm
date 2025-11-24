@@ -10,7 +10,7 @@ URL="https://www.realvnc.com/en/connect/download/vnc/"
 
 # vendor packages has shorted version, so drop latest version part (buildid)
 if [ "$VERSION" != "*" ] ; then
-    VERSION="$(echo "$VERSION" | sed -e 's|\.[0-9][0-9][0-9].*||')"
+    VERSION="$(echo "$VERSION" | cut -d'.' -f1-3)"
 fi
 
 pkgtype="$(epm print info -p)"
@@ -36,6 +36,10 @@ esac
 
 # https://downloads.realvnc.com/download/file/viewer.files/VNC-Viewer-7.10.0-Linux-x64.deb
 # https://downloads.realvnc.com/download/file/viewer.files/VNC-Viewer-7.10.0-Linux-x64.rpm
-PKGURL=$(eget --list --latest https://www.realvnc.com/en/connect/download/viewer/ "$PKG")
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(eget --list --latest https://www.realvnc.com/en/connect/download/viewer/ "$PKG")
+else
+    PKGURL="https://downloads.realvnc.com/download/file/viewer.files/$PKG"
+fi
 
 install_pkgurl
