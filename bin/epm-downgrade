@@ -27,22 +27,22 @@ __epm_add_alt_apt_downgrade_preferences()
 # classic repo
 Package: *
 Pin: release c=classic
-Pin-Priority: 1001
+Pin-Priority: 1011
 
 # overload with addon repo
 Package: *
 Pin: release c=addon
-Pin-Priority: 1101
+Pin-Priority: 1111
 
 # main repo
 Package: *
 Pin: release c=main
-Pin-Priority: 1201
+Pin-Priority: 1211
 
 # overload with test (task) repo
 Package: *
 Pin: release c=task
-Pin-Priority: 1301
+Pin-Priority: 1311
 EOF
 }
 
