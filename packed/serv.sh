@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.40"
+EPMVERSION="3.64.41"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1151,7 +1151,7 @@ serv_cat()
 
     case $SERVICETYPE in
         systemd)
-            docmd systemctl cat "$SERVICE" "$@"
+            run_systemctl cat "$SERVICE" "$@"
             ;;
         *)
             case $BASEDISTRNAME in
@@ -1188,7 +1188,7 @@ serv_common()
             if [ -x $INITDIR/$SERVICE ] ; then
                 sudocmd $INITDIR/$SERVICE "$@"
             else
-                sudocmd systemctl "$@" $SERVICE
+                run_systemctl "$@" $SERVICE
             fi
             ;;
         runit)
@@ -1221,7 +1221,7 @@ serv_disable()
             sudocmd update-rc.d $1 remove
             ;;
         systemd)
-            sudocmd systemctl disable $1
+            run_systemctl disable $1
             ;;
         openrc)
             sudocmd rc-update del $1 default
@@ -1244,7 +1244,7 @@ serv_edit()
 
     case $SERVICETYPE in
         systemd)
-            sudocmd systemctl edit "$@" "$SERVICE"
+            run_systemctl edit "$@" "$SERVICE"
             ;;
         *)
             fatal "Have no suitable for $DISTRNAME command for $SERVICETYPE"
@@ -1278,7 +1278,7 @@ serv_enable()
             sudocmd update-rc.d $1 defaults
             ;;
         systemd)
-            sudocmd systemctl enable $1
+            run_systemctl enable $1
             ;;
         openrc)
             sudocmd rc-update add $1 default
@@ -1304,7 +1304,7 @@ serv_exists()
     case $SERVICETYPE in
         systemd)
             # too direct way: test -s /lib/systemd/system/dm.service
-            docmd systemctl cat "$SERVICE" "$@" >/dev/null 2>/dev/null
+            run_systemctl cat "$SERVICE" "$@" >/dev/null 2>/dev/null
             ;;
         *)
             case $BASEDISTRNAME in
@@ -1333,9 +1333,9 @@ serv_list()
             ;;
         systemd)
             if [ -n "$short" ] ; then
-                docmd systemctl list-units --type=service "$@" | grep '\.service' | sed -e 's|\.service.*||' -e 's|^ *||'
+                run_systemctl list-units --type=service "$@" | grep '\.service' | sed -e 's|\.service.*||' -e 's|^ *||'
             else
-                docmd systemctl list-units --type=service "$@"
+                run_systemctl list-units --type=service "$@"
             fi
             ;;
         openrc)
@@ -1382,9 +1382,9 @@ serv_list_all()
             ;;
         systemd)
             if [ -n "$short" ] ; then
-                docmd systemctl list-unit-files --type=service "$@" | sed -e 's|\.service.*||' | grep -v 'unit files listed' | grep -v '^$'
+                run_systemctl list-unit-files --type=service "$@" | sed -e 's|\.service.*||' | grep -v 'unit files listed' | grep -v '^$'
             else
-                docmd systemctl list-unit-files --type=service "$@"
+                run_systemctl list-unit-files --type=service "$@"
             fi
             ;;
         openrc)
@@ -1406,7 +1406,7 @@ serv_list_failed()
 {
     case $SERVICETYPE in
         systemd)
-            sudocmd systemctl --failed
+            run_systemctl --failed
             ;;
         *)
             for i in $(short=1 serv_list_startup) ; do
@@ -1538,7 +1538,7 @@ serv_reload()
             sudocmd $INITDIR/$SERVICE reload "$@"
             ;;
         systemd)
-            sudocmd systemctl reload $SERVICE "$@"
+            run_systemctl reload $SERVICE "$@"
             ;;
         *)
             info "Fallback to restart..."
@@ -1567,7 +1567,7 @@ serv_restart()
             sudocmd $INITDIR/$SERVICE restart "$@"
             ;;
         systemd)
-            sudocmd systemctl restart $SERVICE "$@"
+            run_systemctl restart $SERVICE "$@"
             ;;
         runit)
             sudocmd sv restart "$SERVICE"
@@ -1600,7 +1600,7 @@ serv_start()
             sudocmd $INITDIR/$SERVICE start "$@"
             ;;
         systemd)
-            sudocmd systemctl start "$SERVICE" "$@"
+            run_systemctl start "$SERVICE" "$@"
             ;;
         runit)
             sudocmd sv up "$SERVICE"
@@ -1695,7 +1695,7 @@ serv_status()
             sudocmd $INITDIR/$SERVICE status "$@"
             ;;
         systemd)
-            docmd systemctl -l status $SERVICE "$@"
+            run_systemctl -l status $SERVICE "$@"
             ;;
         runit)
             sudocmd sv status "$SERVICE"
@@ -1725,7 +1725,7 @@ serv_stop()
             sudocmd $INITDIR/$SERVICE stop "$@"
             ;;
         systemd)
-            sudocmd systemctl stop $SERVICE "$@"
+            run_systemctl stop $SERVICE "$@"
             ;;
         runit)
             sudocmd sv down "$SERVICE"
@@ -1782,7 +1782,7 @@ serv_try_restart()
 
     case $SERVICETYPE in
         systemd)
-            sudocmd systemctl try-restart $SERVICE "$@"
+            run_systemctl try-restart $SERVICE "$@"
             ;;
         *)
             info "Fallback to restart..."
@@ -1814,7 +1814,7 @@ serv_usage()
             sudorun service $SERVICE 2>&1
             ;;
         systemd)
-            sudocmd systemctl $SERVICE 2>&1
+            run_systemctl "$SERVICE" 2>&1
             ;;
         *)
             fatal "Have no suitable command for $SERVICETYPE in serv_usage()"
@@ -3187,6 +3187,10 @@ serv_cmd=
 service_name=
 params=
 withoutservicename=
+systemctl_scope=
+SYSTEMCTL="systemctl"
+SYSTEMCTL_ARGS=
+SYSTEMCTL_RUNNER=sudocmd
 
 # load system wide config
 [ -f /etc/eepm/serv.conf ] && . /etc/eepm/serv.conf
@@ -3299,6 +3303,9 @@ check_option()
     --auto)               # HELPOPT: non interactive mode
         non_interactive=1
         ;;
+    --user)               # HELPOPT: manage user services via systemctl --user
+        systemctl_scope=user
+        ;;
     *)
         return 1
         ;;
@@ -3306,12 +3313,28 @@ check_option()
     return 0
 }
 
+run_systemctl()
+{
+        $SYSTEMCTL_RUNNER $SYSTEMCTL $SYSTEMCTL_ARGS "$@"
+}
+
+
 for opt in "$@" ; do
     check_command $opt && continue
     check_option $opt && continue
     [ -z "$service_name" ] && service_name=$opt && continue
     params="$params $opt"
 done
+
+if [ "$systemctl_scope" = "user" ]; then
+    if [ "$SERVICETYPE" != "systemd" ]; then
+        fatal "--user option is supported only with systemd backend"
+    fi
+
+    SYSTEMCTL_ARGS="--user"
+    SYSTEMCTL_RUNNER=docmd
+    
+fi
 
 echover "service: $service_name"
 echover "command: $serv_cmd"
