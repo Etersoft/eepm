@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.40
+Version: 3.64.41
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -157,6 +157,19 @@ EOF
 %endif
 
 %changelog
+* Mon Nov 24 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.41-alt1
+- epm play: add ferdium
+- epm repack yandexmusic: add conflict to yandex-music
+- epm: install and pack zsh completion for serv
+- epm repack mssql-server.sh: fix su -p using
+- eget: drop extra spaces before and after URL
+- epm play: add manuskript
+- epm play kyodialog: update URL, add support for install by URL
+- epm repack freedownloadmanager: fix requires
+- epm play wpsoffice-cn: use wps-office-cn package name
+- serv: add --user param (eterbug #18650)
+- epm play: add cadoodle
+
 * Mon Nov 17 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.40-alt1
 - epm play trueconf: fix version for downloading
 - spec: don't pack rpmbbasefix on non alt systems
