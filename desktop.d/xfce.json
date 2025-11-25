@@ -1,0 +1,8 @@
+{
+    "name": "Xfce",
+    "version": "4.20",
+    "installed": false,
+    "dependencies": [ "xfce4-common" ],
+    "description": "Xfce is a lightweight desktop environment",
+    "metapackages": [ "xfce4-default" ]
+}
