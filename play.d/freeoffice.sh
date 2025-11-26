@@ -9,7 +9,13 @@ URL="https://www.freeoffice.com/ru/download/applications"
 
 . $(dirname $0)/common.sh
 
+# TODO: rpm and deb
+YEAR=2024
 
-PKGURL="$(eget --list --latest https://www.freeoffice.com/ru/download/applications "softmaker-freeoffice-202*-$VERSION-amd64.tgz")"
+if [ "$VERSION" = "*" ] ; then
+    PKGURL="$(eget --list --latest https://www.freeoffice.com/ru/download/applications "softmaker-freeoffice-$YEAR-$VERSION-amd64.tgz")"
+else
+    PKGURL="https://www.softmaker.net/down/softmaker-freeoffice-$YEAR-$VERSION-amd64.tgz"
+fi
 
 install_pack_pkgurl
