@@ -536,13 +536,19 @@ add_libs_requires()
 }
 
 # TODO: improve for other arch
-is_soname_present()
+get_path_by_soname()
 {
     local libdir
     for libdir in /usr/lib/x86_64-linux-gnu /usr/lib64 /lib64 ; do
-        [ -r $libdir/$1 ] && return 0
+        [ -r $libdir/$1 ] && echo "$libdir/$1" && return
     done
     return 1
+}
+
+
+is_soname_present()
+{
+    get_path_by_soname "$1" >/dev/null
 }
 
 # TODO: remove
