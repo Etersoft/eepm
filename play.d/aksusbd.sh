@@ -19,7 +19,7 @@ install_pack_pkgurl || exit
 # TODO: move to the package?
 serv aksusbd try-restart
 
-serv --quiet aksusbd status >/dev/null && return
+serv --quiet aksusbd status >/dev/null && exit
 
 echo
 echo "Note: run
