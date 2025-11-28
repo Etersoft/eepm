@@ -29,6 +29,7 @@ remove_dir /opt/cascadeur/qml/QtQml/RemoteObjects
 remove_dir /opt/cascadeur/qml/QtQuick/LocalStorage
 remove_dir /opt/cascadeur/qml/QtQuick/XmlListModel
 
+# fIXME: https://bugzilla.altlinux.org/35320
 ignore_lib_requires 'libbz2.so.1.0' 'libgdbm.so.6'
 
 # used in some python lib-dyn modules
