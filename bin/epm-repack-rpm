@@ -18,7 +18,7 @@
 #
 
 
-# args: pkgname/repackscript buildroot spec
+# args: pkgname/repackscript
 get_repack_script()
 {
     local repackcode="$1"
@@ -26,7 +26,7 @@ get_repack_script()
     echo "$repackcode"
 }
 
-# args: pkgname/repackscript buildroot spec
+# args: pkgname/repackscript
 has_repack_script()
 {
     [ -s "$(get_repack_script "$1")" ]
