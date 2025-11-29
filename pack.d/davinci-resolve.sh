@@ -9,6 +9,14 @@ PRODUCT=davinci-resolve
 # DaVinci_Resolve_18.6.5_Linux.run
 BASENAME=$(basename $1 .run)
 VERSION=$(echo $BASENAME | sed -e 's|DaVinci_Resolve_||' -e 's|_Linux||')
+
+if echo "$VERSION" | grep -q "Studio"; then
+    # Extract the actual version number after "Studio_"
+    ACTUAL_VERSION=$(echo "$VERSION" | sed -e 's|Studio_||')
+    PRODUCT="davinci-resolve-Studio"
+    VERSION="$ACTUAL_VERSION"
+fi
+
 mkdir -p opt/davinci-resolve
 
 $1 --appimage-extract &> /dev/null
@@ -22,10 +30,12 @@ install -Dm0644 opt/davinci-resolve/share/default_cm_config.bin -t opt/$PRODUCT/
 install -Dm0644 opt/davinci-resolve/share/*.desktop -t usr/share/applications
 install -Dm0644 opt/davinci-resolve/share/DaVinciResolve.directory -t usr/share/desktop-directories
 install -Dm0644 opt/davinci-resolve/share/DaVinciResolve.menu -t etc/xdg/menus
-install -Dm0644 opt/davinci-resolve/graphics/DV_Resolve.png -t usr/share/icons/hicolor/64x64/apps
-install -Dm0644 opt/davinci-resolve/graphics/DV_ResolveProj.png -t usr/share/icons/hicolor/64x64/apps
-install -Dm0644 opt/davinci-resolve/share/resolve.xml -t usr/share/mime/packages
 
+# MIME XML files
+install -Dm0644 opt/davinci-resolve/share/resolve.xml -t usr/share/mime/packages
+install -Dm0644 opt/davinci-resolve/share/blackmagicraw.xml -t usr/share/mime/packages
+
+# Udev rules
 install -Dm0644 opt/davinci-resolve/share/etc/udev/rules.d/99-BlackmagicDevices.rules -t usr/lib/udev/rules.d
 install -Dm0644 opt/davinci-resolve/share/etc/udev/rules.d/99-ResolveKeyboardHID.rules -t usr/lib/udev/rules.d
 # install -Dm0644 opt/davinci-resolve/share/etc/udev/rules.d/99-DavinciPanel.rules -t usr/lib/udev/rules.d
