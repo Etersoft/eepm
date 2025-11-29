@@ -23,6 +23,23 @@ load_helper epm-repack
 
 [ -n "$EPM_PACK_SCRIPTS_DIR" ] || EPM_PACK_SCRIPTS_DIR="$CONFIGDIR/pack.d"
 
+
+# args: packname/packscript
+get_pack_script()
+{
+    local packscript="$1"
+    is_abs_path "$packscript" || packscript="$EPM_PACK_SCRIPTS_DIR/$1.sh"
+    echo "$packscript"
+}
+
+has_pack_script()
+{
+    local packscript="$(get_pack_script "$1")"
+    [ -f "$packscript.rpmnew" ] && warning 'There is .rpmnew file ${packscript}.rpmnew. The pack script can be outdated.'
+    [ -s "$packscript" ]
+}
+
+
 # <packname> <abstarname> [packversion]
 # fills returntarname with returned tar name or empty
 __epm_pack_run_handler()
@@ -43,9 +60,8 @@ __epm_pack_run_handler()
         message "sha256sum is missed, can't print sha256 for packages..."
     fi
 
-    local repackcode="$EPM_PACK_SCRIPTS_DIR/$packname.sh"
-    [ -s "$repackcode" ] || return
-    [ -f "$repackcode.rpmnew" ] && warning 'There is .rpmnew file(s) in $EPM_PACK_SCRIPTS_DIR dir. The pack script can be outdated.'
+    local packscript="$(get_pack_script "$packname")"
+    has_pack_script "$packscript" || return
 
     # a file to keep filename of generated tarball
     filefortarname="$(pwd)/filefortarname"
@@ -55,8 +71,8 @@ __epm_pack_run_handler()
     [ -n "$debug" ] && bashopt='-x'
     #info "Running $($script --description 2>/dev/null) ..."
     # TODO: add url info here
-    ( unset BASH_ENV ; unset EPMCURDIR ; export PATH=$SCPATH ; export HOME=$(pwd) ; docmd $CMDSHELL $bashopt $repackcode "$tarname" "$filefortarname" "$packversion" "$url" "$@") || fatal
-    returntarname="$(cat "$filefortarname")" || fatal 'pack script $repackcode didn'\''t set tarname'
+    ( unset BASH_ENV ; unset EPMCURDIR ; export PATH=$SCPATH ; export HOME=$(pwd) ; docmd $CMDSHELL $bashopt $packscript "$tarname" "$filefortarname" "$packversion" "$url" "$@") || fatal
+    returntarname="$(cat "$filefortarname")" || fatal 'pack script $packscript didn'\''t set tarname'
 
     local i
     for i in $returntarname ; do
