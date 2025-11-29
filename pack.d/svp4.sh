@@ -11,10 +11,10 @@ VERSION="$(basename "$TAR" .tar.bz2 | grep -oP '\d+\.\d+(\.\d+)?')"
 
 # mkdir -p installer
 # echo "Finding 7z archives in installer..."
-# LANG=C grep --only-matching --byte-offset --binary --text $'7z\xBC\xAF\x27\x1C' "svp4-linux-64.run" |
+# LANG=C grep --only-matching --byte-offset --binary --text $'7z\xBC\xAF\x27\x1C' "svp4-linux.run" |
 #     cut -f1 -d: |
 #     while read ofs; do
-#         dd if="svp4-linux-64.run" bs=1M iflag=skip_bytes status=none skip="${ofs}" of="installer/bin-${ofs}.7z"
+#         dd if="svp4-linux.run" bs=1M iflag=skip_bytes status=none skip="${ofs}" of="installer/bin-${ofs}.7z"
 #     done
 #
 # echo "Extracting 7z archives from installer..."
@@ -22,11 +22,13 @@ VERSION="$(basename "$TAR" .tar.bz2 | grep -oP '\d+\.\d+(\.\d+)?')"
 #     7z -bd -bb0 -y x -o"extracted/" "${f}" || true
 # done
 
+epm install --skip-installed xvfb-run || exit
+
 mkdir -p opt/svp4
 erc $TAR
 
 chmod +x svp4-linux.run
-./svp4-linux.run --installDefault --targetDir "$(pwd)/opt/svp4"
+xvfb-run ./svp4-linux.run --installDefault --targetDir "$(pwd)/opt/svp4"
 
 # Drop bundled pythonqt for avoid dependency on python 3.8
 rm opt/svp4/extensions/libPythonQt.so
