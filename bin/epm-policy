@@ -23,8 +23,6 @@ load_helper epm-sh-warmup
 epm_policy()
 {
 
-[ -n "$pkg_names" ] || fatal "Info: package name is missed"
-
 warmup_bases
 
 # get package name for hi level package management command (with version if supported and if possible)
@@ -34,7 +32,13 @@ case $PMTYPE in
     apt-*)
         # FIXME: returns TRUE ever on missed package
         docmd apt-cache policy $pkg_names
+        return
         ;;
+esac
+
+[ -n "$pkg_names" ] || fatal "Info: package name is missed"
+
+case $PMTYPE in
     dnf-*|dnf5-*)
         docmd dnf info $pkg_names
         ;;
