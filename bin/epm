@@ -215,6 +215,7 @@ case $PROGNAME in
         ;;
     epmqp)                     # HELPSHORT: alias for epm qp (epm query package)
         epm_cmd=query_package
+        direct_args=1
         ;;
     epmql)                     # HELPSHORT: alias for epm filelist
         epm_cmd=filelist
@@ -259,6 +260,7 @@ check_command()
         ;;
     -qp|qp|grep|query_package)     # HELPCMD: search in the list of installed packages
         epm_cmd=query_package
+        direct_args=1
         ;;
     -qf|qf|-S|wp|which|belongs)     # HELPCMD: query package(s) owning file
         epm_cmd=query_file
