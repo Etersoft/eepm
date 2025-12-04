@@ -391,6 +391,10 @@ check_command()
         epm_cmd=stats
         direct_args=1
         ;;
+    commit)                                     # HELPCMD: commit all installed packages as new system image
+        epm_cmd=commit
+        direct_args=1
+        ;;
 
 # HELPCMD: PART: Other commands:
     clean|delete-cache|dc)                    # HELPCMD: clean local package cache
