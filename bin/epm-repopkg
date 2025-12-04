@@ -43,7 +43,9 @@ __epm_repo_pkgadd_alt()
         [ "$arch" = "i686" ] && arch="i586"
         [ "$arch" = "i386" ] && arch="i586"
         [ -d $REPO_DIR/$arch/RPMS.$REPO_NAME ] || fatal
-        epm checkpkg "$1" || fatal
+        #epm checkpkg "$1" || fatal
+        # skip, can't check non repo packages correctly
+        epm checkpkg "$1"
         cp -v "$1" $REPO_DIR/$arch/RPMS.$REPO_NAME || fatal
         shift
     done
