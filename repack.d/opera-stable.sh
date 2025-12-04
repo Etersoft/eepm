@@ -6,7 +6,10 @@ SPEC="$2"
 PRODUCT=opera
 PRODUCTCUR0=$(basename $0 .sh)
 PRODUCTCUR=$(basename $0 .sh)
-[ "$PRODUCTCUR" = "$PRODUCT-stable" ] && PRODUCTCUR=$PRODUCT
+# for compatibility
+if ! readlink usr/bin/opera | grep -q "opera-stable" ; then
+    [ "$PRODUCTCUR" = "$PRODUCT-stable" ] && PRODUCTCUR=$PRODUCT
+fi
 PRODUCTDIR=/opt/$PRODUCTCUR
 
 . $(dirname $0)/common-chromium-browser.sh
