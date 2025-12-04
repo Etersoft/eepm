@@ -70,7 +70,7 @@ epm_install_files_alt()
     fi
 
     # install packages via apm on ALT Atomic
-    if true || [ "$PMTYPE" = "apm-rpm" ] ; then
+    if [ "$PMTYPE" = "apm-rpm" ] ; then
         epm_install_files_alt_via_repo $files
         return
     fi
