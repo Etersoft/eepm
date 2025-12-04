@@ -68,7 +68,7 @@ epm_install_files_alt()
 
     # try install via apt if we could't install package file via rpm (we guess we need install requirements firsly)
 
-    if [ -z "$noscripts" ] ; then
+    if [ -z "$direct" ] && [ -z "$noscripts" ] ; then
         epm_install_names $files
         return
     fi
