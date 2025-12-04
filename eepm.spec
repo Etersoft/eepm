@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.41
+Version: 3.64.42
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -157,6 +157,29 @@ EOF
 %endif
 
 %changelog
+* Thu Dec 04 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.42-alt1
+- epm play realvnc-server, realvnc-viewer: allow direct downloading
+- epm desktop: add xfce.json
+- epm-downgrade: make gap in priority number
+- epm repack android-studio: add libbsd.so.0 requires
+- epm play freeoffice: direct downloading by version
+- epm play weboots: fix downloading
+- epm repack cascadeur: add note about libbz2.so.1.0
+- epm play: add bcompare
+- epm pack: add support for full path to pack script
+- epm-policy: allow print source list if run without args
+- epm repack davinci-resolve: add MIME type support and desktop integration, launch fix
+- epm play: added ahk_x11 (eterbug #18723)
+- epm query-package: pass args directly
+- epm repack opera-stable: fix for new dir name
+- epm print: add filesize verb, add get_filesize function
+- epm install: add --direct support to install package with rpm only
+- epm install: add workaround for 2Gb files (on ALT), add fatal for 4Gb rpm packages
+- epm repopkg: skip pkg checking
+- epm-install: install packages files via local repo and apm on ALT Atomic
+- epm repack wps-office: rename wpsoffice.sh to wps-office.sh and add chinese version
+- epm play svp4: added xvfb-run for installer work (eterbug #17865)
+
 * Mon Nov 24 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.41-alt1
 - epm play: add ferdium
 - epm repack yandexmusic: add conflict to yandex-music
