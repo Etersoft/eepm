@@ -81,7 +81,7 @@ end_change_alt_repo()
 epm_reposave()
 {
 case $PMTYPE in
-    apt-*)
+    apt-*|apm-*)
         if ! is_root ; then
             sudoepm repo save
             return
@@ -98,7 +98,7 @@ esac
 epm_reporestore()
 {
 case $PMTYPE in
-    apt-*)
+    apt-*|apm-*)
         if ! is_root ; then
             sudoepm repo restore
             return
@@ -136,7 +136,7 @@ esac
 epm_repostatus()
 {
 case $PMTYPE in
-    apt-*)
+    apt-*|apm-*)
         load_helper epm-check_updated_repo
         if [ -n "$short" ] ; then
             local days
