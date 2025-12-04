@@ -31,6 +31,26 @@ __fo_pfn()
     grep -v "^$" | grep -- "$pkg_filenames"
 }
 
+
+# Input:
+#  libfmt9 [9.1.0-alt1:p10+379224.200.27.1@1750674308] (9.1.0-alt2:p10+401046.100.1.1@1764089681 p10:1764793974/ALT Linux p10)
+#  wine32-etersoft.32bit [1:10.18.1-eter0.p10.1@1762500293] (1:10.18.2-eter0.p10.1@1764326951 Unknown:Unknown/Unknown) []
+#  sbcl [2.5.10-alt1:sisyphus+399726.100.1.1@1762811687] (2.5.11-alt1:sisyphus+401547.100.1.1@1764645604 Sisyphus:1764802759/ALT Linux Sisyphus)
+
+# Output:
+#  libfmt9: 9.1.0-alt1 -> 9.1.0-alt2
+#  wine32-etersoft.32bit: 1:10.18.1-eter0.p10.1 -> 1:10.18.2-eter0.p10.1
+#  sbcl: 2.5.10-alt1 -> 2.5.11-alt1
+
+# pkg: old -> new
+__parse_upgradable()
+{
+
+    [ -n "$verbose" ] && cat && return
+    sed -rn 's/^([^ ]*) \[([^@]*)@[^]]*] \(([^ @]*)[ @].*/\1: \2 -> \3/p' | sed 's/:[a-zA-Z][^ ]*//g'
+}
+
+
 epm_list_upgradable()
 {
 
@@ -40,7 +60,7 @@ case $PMTYPE in
         if [ -n "$short" ] ; then
             docmd epm upgrade --dry-run | grep "^Inst " | sed -e "s|^Inst ||" -e "s| .*||g"
         else
-            docmd epm upgrade --dry-run | grep "^Inst " | sed -e "s|^Inst ||"
+            docmd epm upgrade --dry-run | grep "^Inst " | sed -e "s|^Inst ||" | __parse_upgradable
         fi
         ;;
     apt-dpkg)
