@@ -724,6 +724,16 @@ regexp_subst()
     sed -i -r -e "$expression" "$@"
 }
 
+get_filesize()
+{
+    if stat -f%z "$1" >/dev/null 2>&1; then
+        stat -f%z "$1"
+    else
+        # coreutils
+        stat -c%s "$1"
+    fi
+}
+
 # TODO: why we can't use epm directly?
 try_assure_exists()
 {

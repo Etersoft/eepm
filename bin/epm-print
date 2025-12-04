@@ -513,6 +513,9 @@ epm_print()
         "constructname")
             construct_name "$@"
             ;;
+        "filesize")
+            get_filesize "$@"
+            ;;
         "info")
             export EPMVERSION
             $DISTRVENDOR "$@"
