@@ -515,6 +515,13 @@ epm_addrepo()
 {
 local repo="$*"
 
+case $PMTYPE in
+    stplr)
+        sudocmd stplr repo add "$@"
+        return
+        ;;
+esac
+
 case $BASEDISTRNAME in
     "alt")
         __epm_addrepo_altlinux "$@"
@@ -562,9 +569,6 @@ case $PMTYPE in
         info "You need manually add repo to /etc/pacman.conf"
         # Only for alone packages:
         #sudocmd repo-add $pkg_filenames
-        ;;
-    stplr)
-        sudocmd stplr repo add "$repo"
         ;;
     pisi)
         sudocmd pisi add-repo "$repo"
