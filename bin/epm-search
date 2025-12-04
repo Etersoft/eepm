@@ -137,7 +137,12 @@ case $PMTYPE in
 esac
 
 LC_ALL=C docmd $CMD $string
-epm play $short --quiet --list-all | sed -e 's|^ *||g' -e 's|[[:space:]]\+| |g' -e "s|\$| (use \'epm play\' to install it)|"
+
+# ignore non system package managers
+if [ "$PMTYPE" != "stplr" ] ; then
+    epm play $short --quiet --list-all | sed -e 's|^ *||g' -e 's|[[:space:]]\+| |g' -e "s|\$| (use \'epm play\' to install it)|"
+fi
+
 }
 
 
