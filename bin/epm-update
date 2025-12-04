@@ -89,6 +89,13 @@ __epm_update()
 local ret=0
 warmup_hibase
 
+case $PMTYPE in
+    apm-rpm)
+        sudocmd apm system update
+        return
+        ;;
+esac
+
 case $BASEDISTRNAME in
     "alt")
         # TODO: hack against cd to cwd in apt-get on ALT
