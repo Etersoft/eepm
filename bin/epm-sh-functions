@@ -734,6 +734,21 @@ get_filesize()
     fi
 }
 
+is_file_greater_2gb() {
+    local size
+    size=$(get_filesize "$1") || return
+    local limit=2147483648
+    [ $size -ge $limit ]
+}
+
+is_file_greater_4gb() {
+    local size
+    size=$(get_filesize "$1") || return
+    local limit=4294967296
+    [ $size -ge $limit ]
+}
+
+
 # TODO: why we can't use epm directly?
 try_assure_exists()
 {
