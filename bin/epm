@@ -640,7 +640,7 @@ check_filenames()
             has_space "$opt" && warning 'There are space(s) in URL $opt, it is not supported. Skipped' && continue
             [ -n "$pkg_urls" ] && pkg_urls="$pkg_urls $opt" || pkg_urls="$opt"
         # hack, TODO: reasons
-        elif rhas "$opt" "[/]" && ! rhas "$opt" "[()]" ; then
+        elif is_abs_path "$opt" && ! rhas "$opt" "[()]" ; then
             has_space "$opt" && warning 'There are space(s) in filename $opt, it is not supported. Skipped' && continue
             [ -n "$pkg_files" ] && pkg_files="$pkg_files $opt" || pkg_files="$opt"
         else
