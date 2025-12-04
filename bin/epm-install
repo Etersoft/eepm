@@ -151,7 +151,9 @@ epm_install_names()
             return ;;
         apm-rpm)
             sudocmd apm system install $@
-            return ;;
+            local res=$?
+            [ "$res" = 0 ] && [ "$FULLDISTRNAME" = "ALT Atomic" ] && info "Use 'epm commit' to apply the changes to the system image"
+            return $res ;;
         aptitude-dpkg)
             sudocmd aptitude install $@
             return ;;
