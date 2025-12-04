@@ -66,6 +66,17 @@ epm_install_files_alt()
     # separate second output
     info
 
+    # Workround for https://bugzilla.altlinux.org/56327
+    # TODO: check apt version
+    if is_file_greater_2gb $files ; then
+        direct="--direct"
+    fi
+
+    # TODO: check rpm version
+    if is_file_greater_4gb $files ; then
+        fatal "Only RPM 6 can install packages larger than 4 GB"
+    fi
+
     # try install via apt if we could't install package file via rpm (we guess we need install requirements firsly)
 
     if [ -z "$direct" ] && [ -z "$noscripts" ] ; then
