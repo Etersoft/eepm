@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.41"
+EPMVERSION="3.64.42"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -255,7 +255,8 @@ rihas()
 startwith()
 {
     # rhas "$1" "^$2"
-    [[ "$1" = ${2}* ]]
+    [ "${1:0:${#2}}" = "$2" ]
+    #[[ "$1" = ${2}* ]]
 }
 
 is_abs_path()
@@ -726,6 +727,31 @@ regexp_subst()
     shift
     sed -i -r -e "$expression" "$@"
 }
+
+get_filesize()
+{
+    if stat -f%z "$1" >/dev/null 2>&1; then
+        stat -f%z "$1"
+    else
+        # coreutils
+        stat -c%s "$1"
+    fi
+}
+
+is_file_greater_2gb() {
+    local size
+    size=$(get_filesize "$1") || return
+    local limit=2147483648
+    [ $size -ge $limit ]
+}
+
+is_file_greater_4gb() {
+    local size
+    size=$(get_filesize "$1") || return
+    local limit=4294967296
+    [ $size -ge $limit ]
+}
+
 
 try_assure_exists()
 {

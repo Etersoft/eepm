@@ -34,7 +34,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.41"
+export EPMVERSION="3.64.42"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -258,7 +258,8 @@ rihas()
 startwith()
 {
     # rhas "$1" "^$2"
-    [[ "$1" = ${2}* ]]
+    [ "${1:0:${#2}}" = "$2" ]
+    #[[ "$1" = ${2}* ]]
 }
 
 is_abs_path()
@@ -729,6 +730,31 @@ regexp_subst()
     shift
     sed -i -r -e "$expression" "$@"
 }
+
+get_filesize()
+{
+    if stat -f%z "$1" >/dev/null 2>&1; then
+        stat -f%z "$1"
+    else
+        # coreutils
+        stat -c%s "$1"
+    fi
+}
+
+is_file_greater_2gb() {
+    local size
+    size=$(get_filesize "$1") || return
+    local limit=2147483648
+    [ $size -ge $limit ]
+}
+
+is_file_greater_4gb() {
+    local size
+    size=$(get_filesize "$1") || return
+    local limit=4294967296
+    [ $size -ge $limit ]
+}
+
 
 try_assure_exists()
 {
@@ -3456,19 +3482,19 @@ __epm_add_alt_apt_downgrade_preferences()
     cat <<EOF | sudocmd tee /etc/apt/preferences
 Package: *
 Pin: release c=classic
-Pin-Priority: 1001
+Pin-Priority: 1011
 
 Package: *
 Pin: release c=addon
-Pin-Priority: 1101
+Pin-Priority: 1111
 
 Package: *
 Pin: release c=main
-Pin-Priority: 1201
+Pin-Priority: 1211
 
 Package: *
 Pin: release c=task
-Pin-Priority: 1301
+Pin-Priority: 1311
 EOF
 }
 
@@ -5297,6 +5323,35 @@ epm_Install()
 
 # File bin/epm-install-alt:
 
+epm_install_files_alt_via_repo()
+{
+    local files="$*"
+    [ -n "$files" ] || return
+
+    local repodir="$epm_vardir/local-repo"
+
+    # create repo and put packages to it
+    [ -d "$repodir" ] || sudocmd epm repo create $repodir
+    sudocmd epm repo pkgadd $repodir $files
+    sudocmd epm repo index $repodir
+
+    #docmd epm repo save
+
+    docmd epm repo add $repodir
+    docmd epm update
+
+    # install with name=version
+    # TODO: improve
+    st=''
+    for i in $files ; do
+        st="$st $(epm print name for package $i)=$(epm print version for package $i)"
+    done
+    docmd epm install $st
+
+    # the repo will used in epm image s supply
+    #docmd epm repo restore
+}
+
 epm_install_files_alt()
 {
     local files="$*"
@@ -5317,6 +5372,12 @@ epm_install_files_alt()
     if [ -n "$save_only" ] ; then
         echo
         cp -v $files "$EPMCURDIR"
+        return
+    fi
+
+    # install packages via apm on ALT Atomic
+    if true || [ "$PMTYPE" = "apm-rpm" ] ; then
+        epm_install_files_alt_via_repo $files
         return
     fi
 
@@ -5345,9 +5406,20 @@ epm_install_files_alt()
     # separate second output
     info
 
+    # Workround for https://bugzilla.altlinux.org/56327
+    # TODO: check apt version
+    if is_file_greater_2gb $files ; then
+        direct="--direct"
+    fi
+
+    # TODO: check rpm version
+    if is_file_greater_4gb $files ; then
+        fatal "Only RPM 6 can install packages larger than 4 GB"
+    fi
+
     # try install via apt if we could't install package file via rpm (we guess we need install requirements firsly)
 
-    if [ -z "$noscripts" ] ; then
+    if [ -z "$direct" ] && [ -z "$noscripts" ] ; then
         epm_install_names $files
         return
     fi
@@ -6800,6 +6872,22 @@ esac
 
 [ -n "$EPM_PACK_SCRIPTS_DIR" ] || EPM_PACK_SCRIPTS_DIR="$CONFIGDIR/pack.d"
 
+
+get_pack_script()
+{
+    local packscript="$1"
+    is_abs_path "$packscript" || packscript="$EPM_PACK_SCRIPTS_DIR/$1.sh"
+    echo "$packscript"
+}
+
+has_pack_script()
+{
+    local packscript="$(get_pack_script "$1")"
+    [ -f "$packscript.rpmnew" ] && warning 'There is .rpmnew file ${packscript}.rpmnew. The pack script can be outdated.'
+    [ -s "$packscript" ]
+}
+
+
 __epm_pack_run_handler()
 {
     local packname="$1"
@@ -6818,9 +6906,8 @@ __epm_pack_run_handler()
         message "sha256sum is missed, can't print sha256 for packages..."
     fi
 
-    local repackcode="$EPM_PACK_SCRIPTS_DIR/$packname.sh"
-    [ -s "$repackcode" ] || return
-    [ -f "$repackcode.rpmnew" ] && warning 'There is .rpmnew file(s) in $EPM_PACK_SCRIPTS_DIR dir. The pack script can be outdated.'
+    local packscript="$(get_pack_script "$packname")"
+    has_pack_script "$packscript" || return
 
     # a file to keep filename of generated tarball
     filefortarname="$(pwd)/filefortarname"
@@ -6830,8 +6917,8 @@ __epm_pack_run_handler()
     [ -n "$debug" ] && bashopt='-x'
     #info "Running $($script --description 2>/dev/null) ..."
     # TODO: add url info here
-    ( unset BASH_ENV ; unset EPMCURDIR ; export PATH=$SCPATH ; export HOME=$(pwd) ; docmd $CMDSHELL $bashopt $repackcode "$tarname" "$filefortarname" "$packversion" "$url" "$@") || fatal
-    returntarname="$(cat "$filefortarname")" || fatal 'pack script $repackcode didn'\''t set tarname'
+    ( unset BASH_ENV ; unset EPMCURDIR ; export PATH=$SCPATH ; export HOME=$(pwd) ; docmd $CMDSHELL $bashopt $packscript "$tarname" "$filefortarname" "$packversion" "$url" "$@") || fatal
+    returntarname="$(cat "$filefortarname")" || fatal 'pack script $packscript didn'\''t set tarname'
 
     local i
     for i in $returntarname ; do
@@ -7497,7 +7584,7 @@ __epm_play_update()
                 continue
             fi
         prescription="$i"
-        if ! __check_play_script $prescription ; then
+        if ! has_play_script $prescription ; then
             warning "Can't find executable play script for $prescription. Try epm play --remove $prescription if you don't need it anymore."
             RES=1
             continue
@@ -7513,19 +7600,13 @@ __epm_play_install_one()
     local prescription="$1"
     shift
 
-    if __epm_is_shell_script "$prescription"  ; then
-        # direct run play script
-        __epm_play_run_script "$prescription" --run "$@" || fatal "There was some error during install the application."
-        return
-    fi
-
-    if __check_play_script "$prescription" ; then
+    if has_play_script "$prescription" ; then
         #__is_app_installed "$prescription" && info "$$prescription is already installed (use --remove to remove)" && exit 1
         __epm_play_run "$prescription" --run "$@" && __save_installed_app "$prescription" || fatal "There was some error during install the application."
     else
-        opsdir=$psdir
+        local opsdir=$psdir
         psdir=$prsdir
-        __check_play_script "$prescription" || fatal "We have no idea how to play $prescription (checked in $opsdir and $prsdir)"
+        has_play_script "$prescription" || fatal "We have no idea how to play $prescription (checked in $opsdir and $prsdir)"
         __epm_play_run "$prescription" --run "$@" || fatal "There was some error during run $prescription script."
     fi
 }
@@ -7832,16 +7913,32 @@ __epm_play_install $(echo "$*" | sed -e 's|=| = |g')
 # File bin/epm-play-common:
 
 
+get_play_script()
+{
+    local playscript="$1"
+    is_abs_path "$playscript" || playscript="$psdir/$1.sh"
+    echo "$playscript"
+}
+
+
+has_play_script()
+{
+    local script="$(get_play_script "$1")"
+    shift
+    [ -f "$script.rpmnew" ] && warning 'There is .rpmnew file ${script}.rpmnew. The play script can be outdated.'
+    [ -s "$script" ]
+}
+
+
 __run_script()
 {
-    local script="$psdir/$1.sh"
-    [ -s "$script" ] || return
-    [ -f "$script.rpmnew" ] && warning 'There is .rpmnew file(s) in $psdir dir. The play script can be outdated.'
+    local script="$(get_play_script "$1")"
+    shift
+    has_play_script "$script" || return
 
     local bashopt=''
     [ -n "$debug" ] && bashopt='-x'
 
-    shift
     [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
     ( unset EPMCURDIR ; export PATH=$SCPATH ; $CMDSHELL $bashopt $script "$@" )
     return
@@ -7858,18 +7955,10 @@ __get_app_description()
     fi
 }
 
-__check_play_script()
+
+__epm_play_run()
 {
-    local script="$psdir/$1.sh"
-    shift
-
-    [ -s "$script" ]
-}
-
-
-__epm_play_run_script()
-{
-    local script="$1"
+    local script="$(get_play_script "$1")"
     shift
 
     local addopt
@@ -7882,36 +7971,18 @@ __epm_play_run_script()
     ( export EPM_OPTIONS="$EPM_OPTIONS $addopt" export PATH=$SCPATH ; docmd $CMDSHELL $bashopt $script "$@" )
 }
 
-__epm_play_run()
-{
-    local script="$psdir/$1.sh"
-    shift
-    __epm_play_run_script "$script" "$@"
-}
-
-__epm_is_shell_script()
-{
-    local script="$1"
-    [ -x "$script" ] && rhas "$script" "\.sh$" && head -n1 "$script" | grep -q "^#!/"
-}
-
 
 __epm_play_remove()
 {
     local prescription
     for prescription in $* ; do
-        # run shell script directly
-        if __epm_is_shell_script "$prescription"  ; then
-            __epm_play_run_script $prescription --remove
-            continue
-        fi
         # run play script
-        if __check_play_script "$prescription" ; then
+        if has_play_script "$prescription" ; then
             __epm_play_run $prescription --remove
             __remove_installed_app "$prescription"
         else
             psdir=$prsdir
-            __check_play_script "$prescription" || fatal 'We have no idea how to remove $prescription (checked in $psdir and $prsdir)'
+            has_play_script "$prescription" || fatal 'We have no idea how to remove $prescription (checked in $psdir and $prsdir)'
             __epm_play_run "$prescription" --remove || fatal "There was some error during run the script."
         fi
     done
@@ -7996,8 +8067,6 @@ __epm_play_list()
 epm_policy()
 {
 
-[ -n "$pkg_names" ] || fatal "Info: package name is missed"
-
 warmup_bases
 
 pkg_names=$(__epm_get_hilevel_name $pkg_names)
@@ -8006,7 +8075,13 @@ case $PMTYPE in
     apt-*)
         # FIXME: returns TRUE ever on missed package
         docmd apt-cache policy $pkg_names
+        return
         ;;
+esac
+
+[ -n "$pkg_names" ] || fatal "Info: package name is missed"
+
+case $PMTYPE in
     dnf-*|dnf5-*)
         docmd dnf info $pkg_names
         ;;
@@ -8076,7 +8151,7 @@ done
 prescription="$1"
 shift
 
-__check_play_script "$prescription" || fatal 'We have no idea how to play $prescription (checked in $psdir)'
+has_play_script "$prescription" || fatal 'We have no idea how to play $prescription (checked in $psdir)'
 __epm_play_run "$prescription" --run "$@" || fatal "There was some error during run the script."
 
 }
@@ -8552,6 +8627,9 @@ epm_print()
             ;;
         "constructname")
             construct_name "$@"
+            ;;
+        "filesize")
+            get_filesize "$@"
             ;;
         "info")
             export EPMVERSION
@@ -9270,7 +9348,7 @@ __epm_query_package()
 
 epm_query_package()
 {
-    [ -n "$pkg_filenames" ] || fatal "Please, use search with some argument or run epmqa for get all packages."
+    [ -n "$quoted_args" ] || fatal "Please, use search with some argument or run epmqa for get all packages."
     # FIXME: do it better
     local MGS
     MGS=$(eval __epm_search_make_grep $quoted_args)
@@ -12499,7 +12577,9 @@ __epm_repo_pkgadd_alt()
         [ "$arch" = "i686" ] && arch="i586"
         [ "$arch" = "i386" ] && arch="i586"
         [ -d $REPO_DIR/$arch/RPMS.$REPO_NAME ] || fatal
-        epm checkpkg "$1" || fatal
+        #epm checkpkg "$1" || fatal
+        # skip, can't check non repo packages correctly
+        epm checkpkg "$1"
         cp -v "$1" $REPO_DIR/$arch/RPMS.$REPO_NAME || fatal
         shift
     done
@@ -12664,7 +12744,7 @@ end_change_alt_repo()
 epm_reposave()
 {
 case $PMTYPE in
-    apt-*)
+    apt-*|apm-*)
         if ! is_root ; then
             sudoepm repo save
             return
@@ -12681,7 +12761,7 @@ esac
 epm_reporestore()
 {
 case $PMTYPE in
-    apt-*)
+    apt-*|apm-*)
         if ! is_root ; then
             sudoepm repo restore
             return
@@ -12719,7 +12799,7 @@ esac
 epm_repostatus()
 {
 case $PMTYPE in
-    apt-*)
+    apt-*|apm-*)
         if [ -n "$short" ] ; then
             local days
             days="$(__epm_check_apt_db_days)" && return 0
@@ -15142,6 +15222,13 @@ __epm_update()
 
 local ret=0
 warmup_hibase
+
+case $PMTYPE in
+    apm-rpm)
+        sudocmd apm system update
+        return
+        ;;
+esac
 
 case $BASEDISTRNAME in
     "alt")
@@ -19987,6 +20074,7 @@ case $PROGNAME in
         ;;
     epmqp)                     # HELPSHORT: alias for epm qp (epm query package)
         epm_cmd=query_package
+        direct_args=1
         ;;
     epmql)                     # HELPSHORT: alias for epm filelist
         epm_cmd=filelist
@@ -20031,6 +20119,7 @@ check_command()
         ;;
     -qp|qp|grep|query_package)     # HELPCMD: search in the list of installed packages
         epm_cmd=query_package
+        direct_args=1
         ;;
     -qf|qf|-S|wp|which|belongs)     # HELPCMD: query package(s) owning file
         epm_cmd=query_file
@@ -20448,7 +20537,7 @@ if [ -n "$quiet" ] ; then
 fi
 
 # fill
-export EPM_OPTIONS="$nodeps $force $full $verbose $debug $quiet $interactive $non_interactive $save_only $download_only $force_overwrite $manual_requires"
+export EPM_OPTIONS="$nodeps $force $full $verbose $debug $quiet $interactive $non_interactive $save_only $download_only $force_overwrite $manual_requires $noscripts $scripts"
 
 # if input is not console and run script from file, get pkgs from stdin too
 if [ ! -n "$inscript" ] && [ -p /dev/stdin ] && [ "$EPMMODE" != "pipe" ] ; then
