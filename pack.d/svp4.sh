@@ -22,7 +22,7 @@ VERSION="$(basename "$TAR" .tar.bz2 | grep -oP '\d+\.\d+(\.\d+)?')"
 #     7z -bd -bb0 -y x -o"extracted/" "${f}" || true
 # done
 
-epm install --skip-installed xvfb-run || exit
+epm assure /usr/bin/xvfb-run || exit
 
 mkdir -p opt/svp4
 erc $TAR
