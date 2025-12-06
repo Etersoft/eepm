@@ -103,9 +103,25 @@ epm_reposwitch()
     local TO="$1"
     [ -n "$TO" ] || fatal "run repo switch with arg (p9, p10, Sisyphus)"
     [ "$TO" = "sisyphus" ] && TO="Sisyphus"
+
+    case "$TO" in
+        --help)
+            info "Run with --list to get all possible targets"
+            return
+            ;;
+        --list)
+            info "Possible repo switch targets: p8 p9 p10 p11 c8 c9 c10f1 c10f2 Sisyphus"
+            return
+            ;;
+        -*)
+            fatal 'Unknown option $TO'
+            ;;
+    esac
+
     if [ "$TO" = "Sisyphus" ] ; then
         __replace_alt_version_in_repo "$__alt_branch_reg/branch/" "$TO/"
     else
+        echo "$TO" | grep -q -E "${__alt_branch_reg}" || fatal 'Unsupported target form $TO. Use --list to get all targets.'
         __replace_alt_version_in_repo "Sisyphus/" "$TO/branch/"
         __replace_alt_version_in_repo "$__alt_branch_reg/branch/" "$TO/branch/"
     fi
@@ -248,6 +264,7 @@ __epm_repochange_alt()
 
 epm_repochange()
 {
+    [ "$1" = "--help" ] && info "Use --list to get all possible targets" && return
     [ "$1" = "--list" ] || epm_repofix
     case $BASEDISTRNAME in
         "alt")
