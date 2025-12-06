@@ -44,6 +44,9 @@ mv $DEBNAME $ROOTDIR/$PKGNAME.deb
 
 cd $ROOTDIR
 
+# erc unpack supports deb unpacking only via patool
+epm assure patool || fatal
+
 # needed because the control file have issues
 erc unpack $PKGNAME.deb || fatal
 # avoid cd to deb
