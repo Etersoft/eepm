@@ -212,7 +212,7 @@ __epm_download_alt()
         shift
     fi
 
-    if [ -z "$@" ] ; then
+    if [ -z "$*" ] ; then
         fatal "Missed package name"
     fi
 
