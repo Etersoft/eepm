@@ -169,6 +169,16 @@ __epm_addrepo_altlinux_url()
         return
     fi
 
+    # Initial hack for https://altlinux.space/ and forgejo rpm repo
+    # https://docs.altlinux.space/alt-repo/
+    # apt-repo add rpm https://altlinux.space/api/packages/rirusha/alt/group/libapi-base.repo _arch_ classic
+    arch=$DISTRARCH
+    REPO_NAME="classic"
+    if eget --check-url $url/$arch/base/pkglist.$REPO_NAME ; then
+        docmd epm repo add "rpm $url $arch $REPO_NAME"
+        return
+    fi
+
     # URL to {i586,x86_64,noarch}/RPMS.addon
     local res=''
     for arch in $(get_archlist) ; do
