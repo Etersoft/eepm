@@ -72,6 +72,7 @@ epm_install_files_alt()
     # install packages via apm on ALT Atomic
     #if [ "$PMTYPE" = "apm-rpm" ] ; then
     if [ "$FULLDISTRNAME" = "ALT Atomic" ] ; then
+        [ -n "$nodeps" ] || fatal "Option --nodeps is not supported in apm"
         epm_install_files_alt_via_repo $files
         return
     fi
