@@ -83,6 +83,14 @@ confirm_action()
     esac
 }
 
+    atomic=
+    [ "$FULLDISTRNAME" = "ALT Atomic" ] && atomic=1
+    if [ -n "$atomic" ] ; then
+        full_upgrade_no_update=1
+        full_upgrade_no_upgrade=1
+        full_upgrade_no_kernel_update=1
+    fi
+
     confirm_action "Update repository info? [Y/n]" || full_upgrade_no_update=1
     if [ -z "$full_upgrade_no_update" ] ; then
         [ -n "$quiet" ] || echo
@@ -155,6 +163,15 @@ confirm_action()
         if [ -z "$full_upgrade_no_stplr" ] ; then
             [ -n "$quiet" ] || echo
             docmd stplr upgrade
+        fi
+    fi
+
+
+    if [ "$FULLDISTRNAME" = "ALT Atomic" ] ; then
+        confirm_action "Update system image? [Y/n]" || full_upgrade_no_atomic_image_update=1
+        if [ -z "$full_upgrade_no_atomic_image_update" ] ; then
+            [ -n "$quiet" ] || echo
+            sudocmd apm system image update
         fi
     fi
 
