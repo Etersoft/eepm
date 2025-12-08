@@ -53,6 +53,7 @@ filter_out_installed_packages()
         #        sed -e 's|\.\+$||g' -e 's|^.*[Nn]o packages found matching \(.*\)|\1|g'
         #    ;;
         *)
+            local i
             # shellcheck disable=SC2013
             for i in $(cat) ; do
                 is_installed $i || echo $i
@@ -61,9 +62,30 @@ filter_out_installed_packages()
     esac | sed -e "s|rpm-build-altlinux-compat[^ ]*||g" | filter_strip_spaces
 }
 
+
+filter_out_prefixed_installed_packages()
+{
+    [ -z "$skip_installed" ] && cat && return
+
+    local i
+    # shellcheck disable=SC2013
+    for i in $(cat) ; do
+        local di="$(echo "${i##*[:/]}")"
+        is_installed $di || echo $i
+    done | sed -e "s|rpm-build-altlinux-compat[^ ]*||g" | filter_strip_spaces
+}
+
+
 get_only_installed_packages()
 {
     local installlist="$*"
+
+    if echo "$installlist" | grep -q '[a-z][a-z0-9]*/' ; then
+        # slow, but keep names
+        estrlist exclude "$(echo "$installlist" | (skip_installed='yes' filter_out_prefixed_installed_packages))" "$installlist"
+        return
+    fi
+
     estrlist exclude "$(echo "$installlist" | (skip_installed='yes' filter_out_installed_packages))" "$installlist"
 }
 
