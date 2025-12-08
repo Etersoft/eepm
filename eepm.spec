@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.42
+Version: 3.64.43
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -157,6 +157,34 @@ EOF
 %endif
 
 %changelog
+* Tue Dec 09 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.43-alt1
+- epm list --upgradable: clear output
+- epm install: fix always use local repo mode
+- epm install: use local repo on ALT Atomic only
+- epm: add commit command
+- epm install: add info about epm commit
+- epm: allow slash in pkg names
+- epm repo add: fix stplr
+- epm search: add epm play output only for native package sources
+- epm download: fix typo
+- epm pack katusha-m247-sc: add patool install
+- epm repo switch: add --help, --list
+- epm repo add: add support for altlinux.space (foregejo rpm) repo
+- epm full-upgrade: add ALT Atomic support
+- epm install: fatal when --nodeps with apm
+- epm-install: add repo/pkgname, archive/YYYY-MM-DD/pkgname
+- epm full upgrade: use epm install archive/date/package
+- epm downgrade: add support for archive/YYYY-MM-DD and archive/YYYY-MM-DD/package
+- epm-reposave: try_change_alt_repo(): fatal if save is failed
+- epm repack rudesktop: cleanup and fix run of the service
+- epm repo add: add check if url is accessible
+- epm-clean: skip for apm package manager
+- epm release-upgrade: stop using on ALT Atomic
+- epm status: check for disttag on alt to check if original
+- epm ei: don't check for distr version
+- epm update: reenable checking latest eepm version in Korinf if allowed
+- epm full-upgrade: update eepm from Korinf firstly if allowed
+
 * Thu Dec 04 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.42-alt1
 - epm play realvnc-server, realvnc-viewer: allow direct downloading
 - epm desktop: add xfce.json
