@@ -34,7 +34,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.42"
+export EPMVERSION="3.64.43"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1321,9 +1321,20 @@ __epm_addrepo_altlinux_url()
         return
     fi
 
+    # Initial hack for https://altlinux.space/ and forgejo rpm repo
+    # https://docs.altlinux.space/alt-repo/
+    # apt-repo add rpm https://altlinux.space/api/packages/rirusha/alt/group/libapi-base.repo _arch_ classic
+    arch=$DISTRARCH
+    REPO_NAME="classic"
+    if eget --check-url $url/$arch/base/pkglist.$REPO_NAME ; then
+        docmd epm repo add "rpm $url $arch $REPO_NAME"
+        return
+    fi
+
     # URL to {i586,x86_64,noarch}/RPMS.addon
     local res=''
     for arch in $(get_archlist) ; do
+        eget --check-url $url/$arch/base/ || continue
         local rd="$(eget --list $url/$arch/RPMS.*)"
         [ -n "$rd" ] || continue
         local REPO_NAME="$(echo "$rd" | sed -e 's|/*$||' -e 's|.*\.||')"
@@ -1666,6 +1677,13 @@ epm_addrepo()
 {
 local repo="$*"
 
+case $PMTYPE in
+    stplr)
+        sudocmd stplr repo add "$@"
+        return
+        ;;
+esac
+
 case $BASEDISTRNAME in
     "alt")
         __epm_addrepo_altlinux "$@"
@@ -1713,9 +1731,6 @@ case $PMTYPE in
         info "You need manually add repo to /etc/pacman.conf"
         # Only for alone packages:
         #sudocmd repo-add $pkg_filenames
-        ;;
-    stplr)
-        sudocmd stplr repo add "$repo"
         ;;
     pisi)
         sudocmd pisi add-repo "$repo"
@@ -2949,6 +2964,9 @@ case $PMTYPE in
         sudocmd aptitude clean
         [ -n "$direct" ] && __remove_deb_apt_cache_file || info "Use epm clean --direct to remove all downloaded indexes."
         ;;
+    apm-rpm)
+        info "Skipping epm clean for apm package manager."
+        ;;
     yum-rpm)
         sudocmd yum clean all
         #sudocmd yum makecache
@@ -2996,6 +3014,23 @@ case $PMTYPE in
         ;;
 esac
     info "Note: Also you can try (with CAUTION) '# epm autoremove' and '# epm autoorphans' commands to remove obsoleted and unused packages."
+
+}
+
+# File bin/epm-commit:
+
+
+epm_commit()
+{
+
+case $PMTYPE in
+    apm-rpm)
+        sudocmd apm system image apply
+        ;;
+    *)
+        fatal 'Have no suitable command for $PMTYPE in epm_commit()'
+        ;;
+esac
 
 }
 
@@ -3523,6 +3558,21 @@ __epm_remove_apt_downgrade_preferences()
     sudocmd rm -f /etc/apt/preferences
 }
 
+__epm_downgrade_to_alt_archive()
+{
+    local date="$(echo "$1" | cut -d- -f2)"
+    shift
+    __epm_add_alt_apt_downgrade_preferences || return
+    try_change_alt_repo
+    docmd epm repo set archive "$date" || return
+    __epm_update
+    epm_upgrade "$@"
+    docmd epm repo restore
+    end_change_alt_repo
+    __epm_remove_apt_downgrade_preferences
+    return
+}
+
 epm_downgrade()
 {
     arg="$1"
@@ -3541,16 +3591,29 @@ epm_downgrade()
 
     case $BASEDISTRNAME in
     alt)
-        if [ "$arg" = "archive" ] ; then
-            __epm_add_alt_apt_downgrade_preferences || return
-            docmd epm repo save
-            docmd epm repo set archive "$2"
-            shift 2
-            epm_Upgrade "$2"
-            docmd epm repo restore
-            __epm_remove_apt_downgrade_preferences
-            return
-        fi
+        case "$arg" in
+            # archive/date/package (simular to install arg)
+            archive/*/*)
+                shift
+                local pkg="$(echo "$arg" | cut -d- -f3)"
+                arg="$(echo "$arg" | cut -d- -f1-2)"
+                __epm_downgrade_to_alt_archive "$arg" "$pkg"
+                return
+            ;;
+            # archive/date, no packages
+            archive/*)
+                shift
+                __epm_downgrade_to_alt_archive "$arg" "$@"
+                return
+            ;;
+            # compatibility: archive date [packages]
+            archive)
+                arg="archive/$2"
+                shift 2
+                __epm_downgrade_to_alt_archive "$arg" "$@"
+                return
+            ;;
+        esac
         # pass pkg_filenames too
         if [ -n "$pkg_names" ] ; then
             __epm_add_alt_apt_downgrade_preferences || return
@@ -3811,7 +3874,7 @@ __epm_download_alt()
         shift
     fi
 
-    if [ -z "$@" ] ; then
+    if [ -z "$*" ] ; then
         fatal "Missed package name"
     fi
 
@@ -3970,7 +4033,7 @@ __epm_korinf_install() {
 __epm_korinf_install_eepm()
 {
 
-    if [ "$BASEDISTRNAME" = "alt" ] && [ "$DISTRVERSION" != "Sisyphus" ] && [ "$EPMMODE" = "package" ] ; then
+    if [ "$BASEDISTRNAME" = "alt" ] && [ "$EPMMODE" = "package" ] ; then
         if epm status --original eepm ; then
             warning 'Using external (Korinf) repo is forbidden for stable ALT branch $DISTRVERSION.'
             info "Check https://bugzilla.altlinux.org/44314 for reasons."
@@ -4317,21 +4380,36 @@ confirm_action()
     esac
 }
 
+    atomic=
+    [ "$FULLDISTRNAME" = "ALT Atomic" ] && atomic=1
+    if [ -n "$atomic" ] ; then
+        full_upgrade_no_update=1
+        full_upgrade_no_upgrade=1
+        full_upgrade_no_kernel_update=1
+    fi
+
     confirm_action "Update repository info? [Y/n]" || full_upgrade_no_update=1
     if [ -z "$full_upgrade_no_update" ] ; then
         [ -n "$quiet" ] || echo
         docmd epm update || fatal "repository updating is failed."
     fi
 
-    if [ "$BASEDISTRNAME" = "alt" ] ; then
-        confirm_action "Do upgrade epm? [Y/n]" || full_upgrade_no_epm_update_check=1
-        if [ -z "$full_upgrade_no_epm_update_check" ] ; then
-            [ -n "$quiet" ] || echo "Checking for new eepm package..."
+    confirm_action "Do upgrade epm? [Y/n]" || full_upgrade_no_epm_update_check=1
+    if [ -z "$full_upgrade_no_epm_update_check" ] ; then
+        if [ "$BASEDISTRNAME" = "alt" ] && epm status --original eepm ; then
+            [ -n "$quiet" ] || info "Checking for new eepm package in the repo..."
             epm_version_before=$(epmq eepm &>/dev/null)
             docmd epm $dryrun install eepm &>/dev/null
             epm_version_after=$(epmq eepm &>/dev/null)
             if [ "$epm_version_before" != "$epm_version_after" ] ; then
                 info "An update for epm has been found, restarting epm full-upgrade..."
+                exec $PROGDIR/$PROGNAME full-upgrade "$@"
+                exit 0
+            fi
+        else
+            if __check_for_epm_version ; then
+                docmd epm ei
+                info "An update for epm has been installed, restarting epm full-upgrade..."
                 exec $PROGDIR/$PROGNAME full-upgrade "$@"
                 exit 0
             fi
@@ -4389,6 +4467,15 @@ confirm_action()
         if [ -z "$full_upgrade_no_stplr" ] ; then
             [ -n "$quiet" ] || echo
             docmd stplr upgrade
+        fi
+    fi
+
+
+    if [ "$FULLDISTRNAME" = "ALT Atomic" ] ; then
+        confirm_action "Update system image? [Y/n]" || full_upgrade_no_atomic_image_update=1
+        if [ -z "$full_upgrade_no_atomic_image_update" ] ; then
+            [ -n "$quiet" ] || echo
+            sudocmd apm system image update
         fi
     fi
 
@@ -4733,7 +4820,6 @@ return $RETVAL
 # File bin/epm-install:
 
 
-
 __use_zypper_no_gpg_checks()
 {
     a='' zypper install --help 2>&1 | grep -q -- "--no-gpg-checks" && echo "--no-gpg-checks"
@@ -4780,6 +4866,20 @@ __get_tpmtype() {
     echo "$VALID_BACKENDS" | tr ' ' '\n' | grep -w "^$tpmtype"
 }
 
+VALID_BRANCH="p8 p9 p10 p11 Sisyphus c10f2"
+__set_repo_name() {
+    local arg="$1"
+    local trepo="$(echo "$arg" | cut -d/ -f1)"
+
+    [ "$trepo" = "sisyphus" ] && trepo="Sisyphus"
+    [ "$trepo" = "SS" ] && trepo="Sisyphus"
+    [ "$trepo" = "archive" ] && repo="archive $(echo "$arg" | cut -d/ -f2)" && name=$(echo "$arg" | cut -d/ -f3) && return
+
+    trepo="$(echo "$VALID_BRANCH" | tr ' ' '\n' | grep -w "^$trepo")"
+    [ -n "$trepo" ] && repo="$trepo" && name=$(echo "$arg" | cut -d/ -f2)
+}
+
+
 process_package_arguments() {
     local pmtype
     local name
@@ -4810,6 +4910,39 @@ process_package_arguments() {
     done
 }
 
+
+process_repo_arguments() {
+    local repo
+    local name
+    local arg
+    local repo_groups
+    declare -A repo_groups
+    for arg in "$@"; do
+        repo=""
+        name="$arg"
+        case "$arg" in
+            */*)
+                __set_repo_name "$arg"
+                ;;
+        esac
+        repo_groups["$repo"]+="$name "
+    done
+
+    for repo in "${!repo_groups[@]}"; do
+        if [ -z "$repo" ] ; then
+            epm_install_names ${repo_groups[$repo]}
+        else
+            try_change_alt_repo
+            docmd epm --auto repo set $repo
+            __epm_update
+            (PPARGS=1 epm_install_names ${repo_groups[$repo]})
+            docmd epm repo restore
+            end_change_alt_repo
+        fi
+    done
+}
+
+
 epm_install_names()
 {
     [ -z "$1" ] && return
@@ -4817,6 +4950,12 @@ epm_install_names()
     # check some like nix: prefix, PPARGS for stop possible recursion. TODO
     if echo "$*" | grep -q '[a-z][a-z][a-z]*:' && [ -z "$PPARGS" ] ; then
         process_package_arguments "$@"
+        return
+    fi
+
+    # check some like repo/package, PPARGS for stop possible recursion. TODO
+    if echo "$*" | grep -q '[a-z][a-z0-9]*/' && [ -z "$PPARGS" ] ; then
+        process_repo_arguments "$@"
         return
     fi
 
@@ -4852,7 +4991,9 @@ epm_install_names()
             return ;;
         apm-rpm)
             sudocmd apm system install $@
-            return ;;
+            local res=$?
+            [ "$res" = 0 ] && [ "$FULLDISTRNAME" = "ALT Atomic" ] && info "Use 'epm commit' to apply the changes to the system image"
+            return $res ;;
         aptitude-dpkg)
             sudocmd aptitude install $@
             return ;;
@@ -5376,7 +5517,9 @@ epm_install_files_alt()
     fi
 
     # install packages via apm on ALT Atomic
-    if true || [ "$PMTYPE" = "apm-rpm" ] ; then
+    #if [ "$PMTYPE" = "apm-rpm" ] ; then
+    if [ "$FULLDISTRNAME" = "ALT Atomic" ] ; then
+        [ -n "$nodeps" ] || fatal "Option --nodeps is not supported in apm"
         epm_install_files_alt_via_repo $files
         return
     fi
@@ -6420,6 +6563,17 @@ __fo_pfn()
     grep -v "^$" | grep -- "$pkg_filenames"
 }
 
+
+
+
+__parse_upgradable()
+{
+
+    [ -n "$verbose" ] && cat && return
+    sed -rn 's/^([^ ]*) \[([^@]*)@[^]]*] \(([^ @]*)[ @].*/\1: \2 -> \3/p' | sed 's/:[a-zA-Z][^ ]*//g'
+}
+
+
 epm_list_upgradable()
 {
 
@@ -6429,7 +6583,7 @@ case $PMTYPE in
         if [ -n "$short" ] ; then
             docmd epm upgrade --dry-run | grep "^Inst " | sed -e "s|^Inst ||" -e "s| .*||g"
         else
-            docmd epm upgrade --dry-run | grep "^Inst " | sed -e "s|^Inst ||"
+            docmd epm upgrade --dry-run | grep "^Inst " | sed -e "s|^Inst ||" | __parse_upgradable
         fi
         ;;
     apt-dpkg)
@@ -9672,13 +9826,7 @@ __p11_upgrade_fix()
     docmd epm remove libcrypto10 libssl10
 
     # libcrypto1.1 workaround
-    docmd epm repo save
-    docmd epm repo rm all
-    docmd epm repo add archive sisyphus 2024/05/22
-    docmd epm update
-    docmd epm install libcrypto1.1
-    #docmd epm repo rm all
-    docmd epm repo restore
+    #docmd epm install sisyphus 2024/05/22/libcrypto1.1
 }
 
 __sisyphus_downgrade_fix()
@@ -10094,6 +10242,7 @@ epm_release_upgrade()
 
     case $BASEDISTRNAME in
     "alt")
+        [ "$FULLDISTRNAME" = "ALT Atomic" ] && fatal "Use epm upgrade for update to the new image."
         __epm_ru_update || fatal
 
         # TODO: remove this hack (or move it to distro_info)
@@ -12020,9 +12169,25 @@ epm_reposwitch()
     local TO="$1"
     [ -n "$TO" ] || fatal "run repo switch with arg (p9, p10, Sisyphus)"
     [ "$TO" = "sisyphus" ] && TO="Sisyphus"
+
+    case "$TO" in
+        --help)
+            info "Run with --list to get all possible targets"
+            return
+            ;;
+        --list)
+            info "Possible repo switch targets: p8 p9 p10 p11 c8 c9 c10f1 c10f2 Sisyphus"
+            return
+            ;;
+        -*)
+            fatal 'Unknown option $TO'
+            ;;
+    esac
+
     if [ "$TO" = "Sisyphus" ] ; then
         __replace_alt_version_in_repo "$__alt_branch_reg/branch/" "$TO/"
     else
+        echo "$TO" | grep -q -E "${__alt_branch_reg}" || fatal 'Unsupported target form $TO. Use --list to get all targets.'
         __replace_alt_version_in_repo "Sisyphus/" "$TO/branch/"
         __replace_alt_version_in_repo "$__alt_branch_reg/branch/" "$TO/branch/"
     fi
@@ -12163,6 +12328,7 @@ __epm_repochange_alt()
 
 epm_repochange()
 {
+    [ "$1" = "--help" ] && info "Use --list to get all possible targets" && return
     [ "$1" = "--list" ] || epm_repofix
     case $BASEDISTRNAME in
         "alt")
@@ -12730,7 +12896,7 @@ __on_error_restore_alt_repo_lists()
 
 try_change_alt_repo()
 {
-    epm repo save
+    epm repo save || fatal
     trap __on_error_restore_alt_repo_lists EXIT
 }
 
@@ -13798,7 +13964,11 @@ case $PMTYPE in
 esac
 
 LC_ALL=C docmd $CMD $string
-epm play $short --quiet --list-all | sed -e 's|^ *||g' -e 's|[[:space:]]\+| |g' -e "s|\$| (use \'epm play\' to install it)|"
+
+if [ "$PMTYPE" != "stplr" ] ; then
+    epm play $short --quiet --list-all | sed -e 's|^ *||g' -e 's|[[:space:]]\+| |g' -e "s|\$| (use \'epm play\' to install it)|"
+fi
+
 }
 
 
@@ -14262,6 +14432,7 @@ filter_out_installed_packages()
         #        sed -e 's|\.\+$||g' -e 's|^.*[Nn]o packages found matching \(.*\)|\1|g'
         #    ;;
         *)
+            local i
             # shellcheck disable=SC2013
             for i in $(cat) ; do
                 is_installed $i || echo $i
@@ -14270,9 +14441,30 @@ filter_out_installed_packages()
     esac | sed -e "s|rpm-build-altlinux-compat[^ ]*||g" | filter_strip_spaces
 }
 
+
+filter_out_prefixed_installed_packages()
+{
+    [ -z "$skip_installed" ] && cat && return
+
+    local i
+    # shellcheck disable=SC2013
+    for i in $(cat) ; do
+        local di="$(echo "${i##*[:/]}")"
+        is_installed $di || echo $i
+    done | sed -e "s|rpm-build-altlinux-compat[^ ]*||g" | filter_strip_spaces
+}
+
+
 get_only_installed_packages()
 {
     local installlist="$*"
+
+    if echo "$installlist" | grep -q '[a-z][a-z0-9]*/' ; then
+        # slow, but keep names
+        estrlist exclude "$(echo "$installlist" | (skip_installed='yes' filter_out_prefixed_installed_packages))" "$installlist"
+        return
+    fi
+
     estrlist exclude "$(echo "$installlist" | (skip_installed='yes' filter_out_installed_packages))" "$installlist"
 }
 
@@ -14867,6 +15059,9 @@ epm_status_original()
             local packager="$(epm print field Packager for "$pkg" 2>/dev/null )"
             # altlinux.ru, altlinux.org, altlinux.com, altlinux dot
             echo "$packager" | grep -q "altlinux" || return 1
+            # otherwise any package from hasher is original
+            local disttag="$(epm print field disttag for "$pkg" 2>/dev/null )"
+            [ "$disttag" = "(none)" ] && return 1
             return 0
             ;;
         RedOS)
@@ -15170,13 +15365,20 @@ get_latest_version()
 
 __check_for_epm_version()
 {
-    # skip update checking for eepm from repo (ALT bug #44314)
-    [ "$BASEDISTRNAME" = "alt" ] &&  [ "$DISTRVERSION" != "Sisyphus" ] && epm status --original eepm && return
-
+    [ -n "$quiet" ] || info 'Checking for latest EPM version in Korinf repository... '
     local latest="$(get_latest_version eepm)"
-    #[ -z "$latest" ] && return
+    [ -z "$latest" ] && return 1
     local res="$(epm print compare "$EPMVERSION" "$latest")"
-    [ "$res" = "-1" ] && info 'Latest EPM version in Korinf repository is $latest. You have version $EPMVERSION running.' && info "You can update eepm with \$ epm ei command."
+    [ "$res" = "-1" ] && return 0
+    return 1
+}
+
+__notify_about_epm_version()
+{
+    # skip update checking for eepm from repo (ALT bug #44314)
+    epm status --original eepm && return 1
+
+    __check_for_epm_version && info 'Latest EPM version is $latest. You have version $EPMVERSION running.' && info "You can update eepm with \$ epm ei command."
 }
 
 __save_available_packages()
@@ -15364,6 +15566,8 @@ epm_update()
     #    epm upgrade "$@"
     #    return
     #fi
+
+    [ -n "$quiet" ] || __notify_about_epm_version
 
     __epm_update "$@" || return
 
@@ -20250,6 +20454,10 @@ check_command()
         epm_cmd=stats
         direct_args=1
         ;;
+    commit)                                     # HELPCMD: commit all installed packages as new system image
+        epm_cmd=commit
+        direct_args=1
+        ;;
 
 # HELPCMD: PART: Other commands:
     clean|delete-cache|dc)                    # HELPCMD: clean local package cache
@@ -20495,7 +20703,7 @@ check_filenames()
             has_space "$opt" && warning 'There are space(s) in URL $opt, it is not supported. Skipped' && continue
             [ -n "$pkg_urls" ] && pkg_urls="$pkg_urls $opt" || pkg_urls="$opt"
         # hack, TODO: reasons
-        elif rhas "$opt" "[/]" && ! rhas "$opt" "[()]" ; then
+        elif is_abs_path "$opt" && ! rhas "$opt" "[()]" ; then
             has_space "$opt" && warning 'There are space(s) in filename $opt, it is not supported. Skipped' && continue
             [ -n "$pkg_files" ] && pkg_files="$pkg_files $opt" || pkg_files="$opt"
         else
