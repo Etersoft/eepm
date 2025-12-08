@@ -55,6 +55,9 @@ case $PMTYPE in
         sudocmd aptitude clean
         [ -n "$direct" ] && __remove_deb_apt_cache_file || info "Use epm clean --direct to remove all downloaded indexes."
         ;;
+    apm-rpm)
+        info "Skipping epm clean for apm package manager."
+        ;;
     yum-rpm)
         sudocmd yum clean all
         #sudocmd yum makecache
