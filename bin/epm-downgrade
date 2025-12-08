@@ -72,6 +72,25 @@ __epm_remove_apt_downgrade_preferences()
     sudocmd rm -f /etc/apt/preferences
 }
 
+# archive/date [package1] [package2]
+__epm_downgrade_to_alt_archive()
+{
+    local date="$(echo "$1" | cut -d- -f2)"
+    shift
+    __epm_add_alt_apt_downgrade_preferences || return
+    load_helper epm-reposave
+    try_change_alt_repo
+    docmd epm repo set archive "$date" || return
+    load_helper epm-update
+    load_helper epm-upgrade
+    __epm_update
+    epm_upgrade "$@"
+    docmd epm repo restore
+    end_change_alt_repo
+    __epm_remove_apt_downgrade_preferences
+    return
+}
+
 epm_downgrade()
 {
     arg="$1"
@@ -91,17 +110,29 @@ epm_downgrade()
 
     case $BASEDISTRNAME in
     alt)
-        if [ "$arg" = "archive" ] ; then
-            __epm_add_alt_apt_downgrade_preferences || return
-            docmd epm repo save
-            docmd epm repo set archive "$2"
-            load_helper epm-Upgrade
-            shift 2
-            epm_Upgrade "$2"
-            docmd epm repo restore
-            __epm_remove_apt_downgrade_preferences
-            return
-        fi
+        case "$arg" in
+            # archive/date/package (simular to install arg)
+            archive/*/*)
+                shift
+                local pkg="$(echo "$arg" | cut -d- -f3)"
+                arg="$(echo "$arg" | cut -d- -f1-2)"
+                __epm_downgrade_to_alt_archive "$arg" "$pkg"
+                return
+            ;;
+            # archive/date, no packages
+            archive/*)
+                shift
+                __epm_downgrade_to_alt_archive "$arg" "$@"
+                return
+            ;;
+            # compatibility: archive date [packages]
+            archive)
+                arg="archive/$2"
+                shift 2
+                __epm_downgrade_to_alt_archive "$arg" "$@"
+                return
+            ;;
+        esac
         # pass pkg_filenames too
         if [ -n "$pkg_names" ] ; then
             __epm_add_alt_apt_downgrade_preferences || return
