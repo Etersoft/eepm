@@ -67,7 +67,7 @@ __on_error_restore_alt_repo_lists()
 
 try_change_alt_repo()
 {
-    epm repo save
+    epm repo save || fatal
     trap __on_error_restore_alt_repo_lists EXIT
 }
 
