@@ -144,11 +144,13 @@ process_repo_arguments() {
             epm_install_names ${repo_groups[$repo]}
         else
             load_helper epm-update
-            docmd epm repo save
+            load_helper epm-reposave
+            try_change_alt_repo
             docmd epm --auto repo set $repo
             __epm_update
             (PPARGS=1 epm_install_names ${repo_groups[$repo]})
             docmd epm repo restore
+            end_change_alt_repo
         fi
     done
 }
