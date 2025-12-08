@@ -164,6 +164,9 @@ epm_status_original()
             local packager="$(epm print field Packager for "$pkg" 2>/dev/null )"
             # altlinux.ru, altlinux.org, altlinux.com, altlinux dot
             echo "$packager" | grep -q "altlinux" || return 1
+            # otherwise any package from hasher is original
+            local disttag="$(epm print field disttag for "$pkg" 2>/dev/null )"
+            [ "$disttag" = "(none)" ] && return 1
             return 0
             ;;
         RedOS)
