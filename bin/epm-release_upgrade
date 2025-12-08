@@ -513,6 +513,7 @@ epm_release_upgrade()
 
     case $BASEDISTRNAME in
     "alt")
+        [ "$FULLDISTRNAME" = "ALT Atomic" ] && fatal "Use epm upgrade for update to the new image."
         __epm_ru_update || fatal
 
         # TODO: remove this hack (or move it to distro_info)
