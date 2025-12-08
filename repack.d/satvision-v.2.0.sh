@@ -22,7 +22,7 @@ Categories=Network;
 EOF
 
 epm assure /usr/bin/convert
-convert .$PRODUCTDIR/main.ico .$PRODUCTDIR/main.png
+a= convert .$PRODUCTDIR/main.ico .$PRODUCTDIR/main.png
 
 install_file .$PRODUCTDIR/main.png /usr/share/pixmaps/$PRODUCT.png
 
