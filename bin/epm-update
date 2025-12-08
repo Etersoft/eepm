@@ -34,13 +34,20 @@ get_latest_version()
 
 __check_for_epm_version()
 {
-    # skip update checking for eepm from repo (ALT bug #44314)
-    [ "$BASEDISTRNAME" = "alt" ] &&  [ "$DISTRVERSION" != "Sisyphus" ] && epm status --original eepm && return
-
+    [ -n "$quiet" ] || info 'Checking for latest EPM version in Korinf repository... '
     local latest="$(get_latest_version eepm)"
-    #[ -z "$latest" ] && return
+    [ -z "$latest" ] && return 1
     local res="$(epm print compare "$EPMVERSION" "$latest")"
-    [ "$res" = "-1" ] && info 'Latest EPM version in Korinf repository is $latest. You have version $EPMVERSION running.' && info "You can update eepm with \$ epm ei command."
+    [ "$res" = "-1" ] && return 0
+    return 1
+}
+
+__notify_about_epm_version()
+{
+    # skip update checking for eepm from repo (ALT bug #44314)
+    epm status --original eepm && return 1
+
+    __check_for_epm_version && info 'Latest EPM version is $latest. You have version $EPMVERSION running.' && info "You can update eepm with \$ epm ei command."
 }
 
 __save_available_packages()
@@ -230,6 +237,8 @@ epm_update()
     #    epm upgrade "$@"
     #    return
     #fi
+
+    [ -n "$quiet" ] || __notify_about_epm_version
 
     __epm_update "$@" || return
 
