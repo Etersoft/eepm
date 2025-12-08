@@ -14,31 +14,34 @@ ORIGINPACKAGE="$4"
 # ??
 # echo "root ALL=(ALL) NOPASSWD:SETENV:/usr/bin/rudesktop" > /etc/sudoers.d/rudesktop
 
-install_file usr/share/rudesktop-client/files/rudesktop.service /etc/systemd/system/rudesktop.service
-install_file usr/share/rudesktop-client/files/rudesktop.desktop /usr/share/applications/rudesktop.desktop
-
 #xdg-mime default rudesktop.desktop x-scheme-handler/rudesktop || true
-
-install_file usr/lib64/libsciter-gtk.so /usr/share/rudesktop-client/files/libsciter-gtk.so
-install_file usr/bin/rudesktop /usr/share/rudesktop-client/files/rudesktop
-
-remove_file /usr/lib64/libsciter-gtk.so
-remove_file /usr/bin/rudesktop
 
 move_to_opt /usr/share/rudesktop-client/files
 
+install_file usr/lib64/libsciter-gtk.so $PRODUCTDIR/libsciter-gtk.so
+remove_file /usr/lib64/libsciter-gtk.so
+
+install_file usr/bin/rudesktop $PRODUCTDIR/rudesktop
+chmod a+x $BUILDROOT/opt/rudesktop/rudesktop
+remove_file /usr/bin/rudesktop
+
+install_file $PRODUCTDIR/rudesktop.service /etc/systemd/system/rudesktop.service
+remove_file $PRODUCTDIR/rudesktop.service
+install_file $PRODUCTDIR/rudesktop.desktop /usr/share/applications/rudesktop.desktop
+remove_file $PRODUCTDIR/rudesktop.desktop
+install_file $PRODUCTDIR/rudesktop-user.service /usr/lib/systemd/user/rudesktop-user.service
+remove_file $PRODUCTDIR/rudesktop-user.service
+
 cat <<EOF | create_exec_file /usr/bin/rudesktop
 #!/bin/sh
-cd /opt/rudesktop
+cd $PRODUCTDIR
 if [ "\$LD_LIBRARY_PATH" ]; then
 	export LD_LIBRARY_PATH=".:\$LD_LIBRARY_PATH"
 else
 	export LD_LIBRARY_PATH="."
 fi
-./rudesktop
+./rudesktop "\$@"
 EOF
-
-chmod a+x $BUILDROOT/opt/rudesktop/rudesktop
 
 subst "s|^Summary:.*|Summary: A remote control software.|" $SPEC
 
