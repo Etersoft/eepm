@@ -182,6 +182,7 @@ __epm_addrepo_altlinux_url()
     # URL to {i586,x86_64,noarch}/RPMS.addon
     local res=''
     for arch in $(get_archlist) ; do
+        eget --check-url $url/$arch/base/ || continue
         local rd="$(eget --list $url/$arch/RPMS.*)"
         [ -n "$rd" ] || continue
         local REPO_NAME="$(echo "$rd" | sed -e 's|/*$||' -e 's|.*\.||')"
