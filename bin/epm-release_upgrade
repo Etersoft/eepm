@@ -86,13 +86,7 @@ __p11_upgrade_fix()
     docmd epm remove libcrypto10 libssl10
 
     # libcrypto1.1 workaround
-    docmd epm repo save
-    docmd epm repo rm all
-    docmd epm repo add archive sisyphus 2024/05/22
-    docmd epm update
-    docmd epm install libcrypto1.1
-    #docmd epm repo rm all
-    docmd epm repo restore
+    #docmd epm install sisyphus 2024/05/22/libcrypto1.1
 }
 
 __sisyphus_downgrade_fix()
