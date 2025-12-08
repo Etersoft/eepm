@@ -27,7 +27,6 @@ load_helper epm-check_updated_repo
 load_helper epm-sh-warmup
 load_helper epm-installed
 
-
 # for zypper before SUSE/11.0
 __use_zypper_no_gpg_checks()
 {
@@ -77,6 +76,21 @@ __get_tpmtype() {
     echo "$VALID_BACKENDS" | tr ' ' '\n' | grep -w "^$tpmtype"
 }
 
+# TODO: get list
+VALID_BRANCH="p8 p9 p10 p11 Sisyphus c10f2"
+__set_repo_name() {
+    local arg="$1"
+    local trepo="$(echo "$arg" | cut -d/ -f1)"
+
+    [ "$trepo" = "sisyphus" ] && trepo="Sisyphus"
+    [ "$trepo" = "SS" ] && trepo="Sisyphus"
+    [ "$trepo" = "archive" ] && repo="archive $(echo "$arg" | cut -d/ -f2)" && name=$(echo "$arg" | cut -d/ -f3) && return
+
+    trepo="$(echo "$VALID_BRANCH" | tr ' ' '\n' | grep -w "^$trepo")"
+    [ -n "$trepo" ] && repo="$trepo" && name=$(echo "$arg" | cut -d/ -f2)
+}
+
+
 process_package_arguments() {
     local pmtype
     local name
@@ -107,6 +121,39 @@ process_package_arguments() {
     done
 }
 
+
+process_repo_arguments() {
+    local repo
+    local name
+    local arg
+    local repo_groups
+    declare -A repo_groups
+    for arg in "$@"; do
+        repo=""
+        name="$arg"
+        case "$arg" in
+            */*)
+                __set_repo_name "$arg"
+                ;;
+        esac
+        repo_groups["$repo"]+="$name "
+    done
+
+    for repo in "${!repo_groups[@]}"; do
+        if [ -z "$repo" ] ; then
+            epm_install_names ${repo_groups[$repo]}
+        else
+            load_helper epm-update
+            docmd epm repo save
+            docmd epm --auto repo set $repo
+            __epm_update
+            (PPARGS=1 epm_install_names ${repo_groups[$repo]})
+            docmd epm repo restore
+        fi
+    done
+}
+
+
 # copied from etersoft-build-utils/share/eterbuild/functions/rpmpkg
 epm_install_names()
 {
@@ -115,6 +162,12 @@ epm_install_names()
     # check some like nix: prefix, PPARGS for stop possible recursion. TODO
     if echo "$*" | grep -q '[a-z][a-z][a-z]*:' && [ -z "$PPARGS" ] ; then
         process_package_arguments "$@"
+        return
+    fi
+
+    # check some like repo/package, PPARGS for stop possible recursion. TODO
+    if echo "$*" | grep -q '[a-z][a-z0-9]*/' && [ -z "$PPARGS" ] ; then
+        process_repo_arguments "$@"
         return
     fi
 
