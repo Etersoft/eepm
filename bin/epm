@@ -22,8 +22,10 @@ PROGNAME="$(basename "$0")"
 [ -n "$EPMCURDIR" ] || export EPMCURDIR="$(pwd)"
 CMDENV="/usr/bin/env"
 [ -x "$CMDENV" ] && CMDSHELL="/usr/bin/env bash" || CMDSHELL="$SHELL"
-# TODO: pwd for ./epm and which for epm
-[ "$PROGDIR" = "." ] && PROGDIR="$EPMCURDIR"
+# is_command is not yet available
+if type realpath >/dev/null 2>/dev/null ; then
+    PROGDIR="$(realpath $PROGDIR)"
+fi
 if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
     PROGDIR=""
     PROGNAME=""
