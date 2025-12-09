@@ -204,6 +204,13 @@ __epm_print_url_alt_check()
     rm -f $tm
 }
 
+# install/dist-upgrade [packages]
+__epm_alt_get_package_url()
+{
+    #sudocmd apt-get install -y --print-uris --reinstall "$pkg" | cut -f1 -d " " | grep ".rpm'$" | sed -e "s|^'||" -e "s|'$||"
+    sudocmd apt-get -y --print-uris "$@" | grep -E -o -e "(ht|f)tp://[^\']+"
+}
+
 __epm_download_alt()
 {
     local pkg
@@ -243,13 +250,24 @@ __epm_download_alt()
     info "Cleaning apt cache for correct result ..."
     epm --quiet clean
 
+# FIXME: broken with simular names (check "files" "file")
+startwith_inlist()
+{
+    local str="$1"
+    local i
+    for i in "$@" ; do
+        startwith "$str" "$i" && return
+    done
+    return 1
+}
+
     # old systems ignore reinstall ?
-    for pkg in "$@" ; do
-        for i in $(sudocmd apt-get install -y --print-uris --reinstall "$pkg" | cut -f1 -d " " | grep ".rpm'$" | sed -e "s|^'||" -e "s|'$||") ; do
-            echo "$(basename "$i")" | grep -q "^$pkg" || continue
-            [ -n "$print_url" ] && echo "$i" && continue
-            docmd eget "$i"
-        done
+    local url
+    for url in $(__epm_alt_get_package_url install --reinstall "$@") ; do
+        startwith_inlist "$(basename "$url")" "$@" || continue
+        [ -n "$print_url" ] && echo "$url" && continue
+        # TODO: download together
+        docmd eget "$url"
     done
     return
 
