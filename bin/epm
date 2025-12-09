@@ -596,6 +596,9 @@ check_option()
         print_url="--url"
         ;;
     --parallel)            # HELPOPT: simultaneous downloading of packages
+        if [ -z "$eget_backend" ] ; then
+            is_command aria2 && eget_backend=aria2 && echo "Use installed aria2 to parallel package downloading." || info "It is better to install aria2 for parallel downloading."
+        fi
         parallel="--parallel"
         ;;
     -y|--auto|--assumeyes|--non-interactive|--disable-interactivity)  # HELPOPT: non interactive mode
