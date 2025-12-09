@@ -410,6 +410,7 @@ __switch_alt_to_distro()
             __switch_repo_to $TO
             end_change_alt_repo
             __do_upgrade
+            docmd epm install altlinux-release-$TO altlinux-release-$FROM-
             docmd epm install rpm apt $(get_fix_release_pkg "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
             __check_system "$TO"
             # will update to kernel 6.6
