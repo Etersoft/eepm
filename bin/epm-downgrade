@@ -53,6 +53,7 @@ Pin: release c=task
 Pin-Priority: 1311
 EOF
     [ -n "$verbose" ] && print_apt_preferences
+    return 0
 }
 
 # See https://wiki.debian.org/ru/AptPreferences
@@ -75,6 +76,7 @@ Pin: release a=unstable
 Pin-Priority: 800
 EOF
     [ -n "$verbose" ] && print_apt_preferences
+    return 0
 }
 
 __epm_remove_apt_downgrade_preferences()
@@ -85,7 +87,7 @@ __epm_remove_apt_downgrade_preferences()
 # archive/date [package1] [package2]
 __epm_downgrade_to_alt_archive()
 {
-    local date="$(echo "$1" | cut -d- -f2)"
+    local date="$(echo "$1" | cut -d/ -f2)"
     shift
     __epm_add_alt_apt_downgrade_preferences || return
     load_helper epm-reposave
@@ -124,8 +126,8 @@ epm_downgrade()
             # archive/date/package (simular to install arg)
             archive/*/*)
                 shift
-                local pkg="$(echo "$arg" | cut -d- -f3)"
-                arg="$(echo "$arg" | cut -d- -f1-2)"
+                local pkg="$(echo "$arg" | cut -d/ -f3)"
+                arg="$(echo "$arg" | cut -d/ -f1-2)"
                 __epm_downgrade_to_alt_archive "$arg" "$pkg"
                 return
             ;;
