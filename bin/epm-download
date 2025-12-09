@@ -208,20 +208,23 @@ __epm_print_url_alt_check()
 __epm_alt_get_package_url()
 {
     #sudocmd apt-get install -y --print-uris --reinstall "$pkg" | cut -f1 -d " " | grep ".rpm'$" | sed -e "s|^'||" -e "s|'$||"
-    sudocmd apt-get -y --print-uris "$@" | grep -E -o -e "(ht|f)tp://[^\']+"
+    sudocmd apt-get -y --force-yes --print-uris "$@" | grep -E -o -e "(ht|f)tp://[^\']+"
 }
 
 
 # args: install/dist-upgrade [packages]
 __epm_alt_download_to_cache()
 {
-    local url
-    for url in $(__epm_alt_get_package_url "$@") ; do
-        [ -n "$print_url" ] && echo "$url" && continue
-        # TODO: download together
-        # TODO: drop privilegies
-        sudocmd_eget --output-dir /var/cache/apt/archives/ "$url"
-    done
+    if [ -n "$print_url" ] ; then
+        __epm_alt_get_package_url "$@"
+        return
+    fi
+
+    local urls="$(__epm_alt_get_package_url "$@")" || fatal "Can't get URL"
+    [ -z "$urls" ] && return #fatal "Can't get URL"
+
+    # TODO: drop privilegies
+    sudocmd_eget --output-dir /var/cache/apt/archives --continue $urls
 }
 
 __epm_download_alt()
