@@ -139,6 +139,12 @@ epm_upgrade()
     case $PMTYPE in
     apt-rpm|apt-dpkg)
         local APTOPTIONS="$dryrun $(subst_option non_interactive -y) $(subst_option debug "-V -o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
+        if [ -n "$parallel" ] && [ "$BASEDISTRNAME" = "alt" ] ; then
+            load_helper epm-download
+            info "Downloading packages to the cache... "
+            __epm_alt_download_to_cache $APTOPTIONS dist-upgrade
+        fi
+
         CMD="apt-get $APTOPTIONS $noremove $force_yes dist-upgrade"
         ;;
     apm-rpm)

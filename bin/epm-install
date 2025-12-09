@@ -202,6 +202,11 @@ epm_install_names()
             VIRTAPTOPTIONS="-o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true"
             # not for kernel packages
             echo "$*" | grep -q "^kernel-"  && VIRTAPTOPTIONS=''
+            if [ -n "$parallel" ] ; then
+                load_helper epm-download
+                info "Downloading packages to the cache... "
+                __epm_alt_download_to_cache $VIRTAPTOPTIONS $APTOPTIONS $noremove install $@
+            fi
             sudocmd apt-get $VIRTAPTOPTIONS $APTOPTIONS $noremove install $@ && save_installed_packages $@
             return ;;
         apm-rpm)

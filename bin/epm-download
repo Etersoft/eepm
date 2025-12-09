@@ -211,6 +211,19 @@ __epm_alt_get_package_url()
     sudocmd apt-get -y --print-uris "$@" | grep -E -o -e "(ht|f)tp://[^\']+"
 }
 
+
+# args: install/dist-upgrade [packages]
+__epm_alt_download_to_cache()
+{
+    local url
+    for url in $(__epm_alt_get_package_url "$@") ; do
+        [ -n "$print_url" ] && echo "$url" && continue
+        # TODO: download together
+        # TODO: drop privilegies
+        sudocmd_eget --output-dir /var/cache/apt/archives/ "$url"
+    done
+}
+
 __epm_download_alt()
 {
     local pkg

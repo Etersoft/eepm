@@ -144,6 +144,7 @@ sort=
 non_interactive=$EPM_AUTO
 download=
 download_only=
+parallel=
 print_url=
 interactive=
 force_yes=
@@ -593,6 +594,9 @@ check_option()
         ;;
     --url)                 # HELPOPT: print only URL instead of download package
         print_url="--url"
+        ;;
+    --parallel)            # HELPOPT: simultaneous downloading of packages
+        parallel="--parallel"
         ;;
     -y|--auto|--assumeyes|--non-interactive|--disable-interactivity)  # HELPOPT: non interactive mode
         non_interactive="--auto"
