@@ -316,6 +316,7 @@ WGETQ='' #-q
 CURLQ='' #-s
 AXELQ='' #-q
 ARIA2Q=''
+AXELQ=''
 # TODO: 
 WGETNAMEOPTIONS='--content-disposition'
 CURLFILENAMEOPTIONS='--remote-name --remote-time --remote-header-name'
@@ -328,6 +329,7 @@ CURLOUTPUTDIR=''
 WGETOUTPUTDIR=''
 USEOUTPUTDIR=''
 ARIA2OUTPUTDIR=''
+AXELOUTPUTDIR=''
 WGETNODIRECTORIES=''
 WGETCONTINUE=''
 CURLCONTINUE=''
@@ -363,6 +365,7 @@ set_quiet()
     CURLQ='-s'
     AXELQ='-q'
     ARIA2Q=''
+    AXELQ='--quiet'
     quiet=1
 }
 
@@ -372,6 +375,7 @@ unset_quiet()
     CURLQ=''
     AXELQ=''
     ARIA2Q=''
+    AXELQ=''
     quiet=''
 }
 
@@ -422,7 +426,7 @@ Supported URLs:
   ftp:// http:// https:// file:/ ipfs://
 
 Supported backends (set like EGET_BACKEND=curl)
-  wget curl (todo: aria2c)
+  wget, curl and partially aria2c, axel
 
 Also you can set EGET_OPTIONS variable with needed options
 
@@ -491,6 +495,7 @@ while [ -n "$1" ] ; do
             CURLOUTPUTDIR="--create-dirs --output-dir $1"
             WGETOUTPUTDIR="-P $1"
             ARIA2OUTPUTDIR="-d $1"
+            AXELOUTPUTDIR="-o $1"
             USEOUTPUTDIR="$1"
             ;;
         -U|-A|--user-agent)
@@ -559,6 +564,7 @@ while [ -n "$1" ] ; do
             WGETCONTINUE="$1"
             CURLCONTINUE="-C -"
             ARIA2CONTINUE="--continue=true"
+            AXELCONTINUE=""
             ;;
         -T|--timeout)
             if [ -z "$argvalue" ];then
@@ -567,6 +573,7 @@ while [ -n "$1" ] ; do
             fi
             WGETTIMEOUT="--timeout $argvalue"
             CURLMAXTIME="--max-time $argvalue"
+            AXELTIMEOUT="--timeout=$argvalue"
             ;;
         --read-timeout)
             if [ -z "$argvalue" ];then
@@ -574,8 +581,11 @@ while [ -n "$1" ] ; do
                 argvalue="$1"
             fi
             WGETREADTIMEOUT="--read-timeout $argvalue"
-            if [ -z "$CURLMAXTIME" ];then
+            if [ -z "$CURLMAXTIME" ] ; then
                 CURLMAXTIME="--max-time $argvalue"
+            fi
+            if [ -z "$AXELTIMEOUT" ] ; then
+                AXELTIMEOUT="--timeout=$argvalue"
             fi
             ;;
         --retry-connrefused)
@@ -943,6 +953,7 @@ fi
 WGET="$(print_command_path wget)"
 CURL="$(print_command_path curl)"
 ARIA2="$(print_command_path aria2)"
+AXEL="$(print_command_path axel)"
 
 ORIG_EGET_BACKEND="$EGET_BACKEND"
 
@@ -978,7 +989,14 @@ case "$orig_EGET_BACKEND" in
         [ -x "$ARIA2" ] || fatal "There are no $orig_EGET_BACKEND in the system but you forced using it via EGET_BACKEND. Install it with $ epm install aria2"
         ;;
     aria2)
-        [ -n "$ARIA2" ] || fatal "There are no curl in the system but you forced using it via EGET_BACKEND. Install it with $ epm install aria2"
+        [ -n "$ARIA2" ] || fatal "There are no aria2 in the system but you forced using it via EGET_BACKEND. Install it with $ epm install aria2"
+        ;;
+    */axel)
+        AXEL="$orig_EGET_BACKEND"
+        [ -x "$AXEL" ] || fatal "There are no $orig_EGET_BACKEND in the system but you forced using it via EGET_BACKEND. Install it with $ epm install axel"
+        ;;
+    axel)
+        [ -n "$AXEL" ] || fatal "There are no axel in the system but you forced using it via EGET_BACKEND. Install it with $ epm install axel"
         ;;
     '')
         [ -n "$WGET" ] && EGET_BACKEND="wget"
@@ -1302,13 +1320,74 @@ url_get_response()
     echo "$answer"
 }
 
+elif [ "$EGET_BACKEND" = "axel" ] ; then
+__axel()
+{
+    if [ -n "$AXELUSERAGENT" ] ; then
+        docmd $AXEL $FORCEIPV $AXELQ $AXELOUTPUTDIR $AXELCONTINUE $AXELTIMEOUT $AXELHEADER $AXELNOSSLCHECK $AXELUSERAGENT "$(eval echo "$AXELUSERAGENT")" "$@"
+    else
+        docmd $AXEL $FORCEIPV $AXELQ $AXELOUTPUTDIR $AXELCONTINUE $AXELTIMEOUT $AXELHEADER $AXELNOSSLCHECK $AXELUSERAGENT "$@"
+    fi
+}
+
+# put remote content to stdout
+url_scat()
+{
+    # TODO
+    fatal "Improve me (via temp. file?)"
+    local URL="$1"
+    download_with_mirroring __axel -o - "$URL" && return
+    unset_quiet
+    download_with_mirroring __axel -o - "$URL"
+}
+
+# download to default name of to $2
+url_sget()
+{
+    local URL="$1"
+    if [ "$2" = "/dev/stdout" ] || [ "$2" = "-" ] ; then
+       scat "$URL"
+       return
+    elif [ -n "$2" ] ; then
+       download_with_mirroring __axel --alternate -o "$2" "$URL"
+       return
+    fi
+    download_with_mirroring __axel --alternate "$URL"
+}
+
+url_pget()
+{
+    #[ -n "$USEOUTPUTDIR" ] || fatal "USEOUTPUTDIR is not set"
+    # download_with_mirroring __axel "$@"
+    local URL
+    for URL in "$@" ; do
+        download_with_mirroring __axel --alternate "$URL"
+    done
+}
+
+
+# left wget here
+url_get_response()
+{
+    local URL="$1"
+    local answer
+    answer="$(quiet=1 __wget --timeout 20 --tries 1 --spider -S "$URL" 2>&1)"
+    # HTTP/1.1 405 Method Not Allowed
+    # HTTP/1.1 404 Not Found
+    if echo "$answer" | grep -q "^ *HTTP/[12.]* 40[45]" ; then
+        (quiet=1 __wget -O/dev/null --header="Range: bytes=0-0" -S "$URL" 2>&1)
+        return
+    fi
+    echo "$answer"
+}
+
 else
     fatal "Unknown EGET_BACKEND '$EGET_BACKEND', logical error."
 fi
 
 
 # Common code for both wget and curl and aria2 (http related)
-if [ "$EGET_BACKEND" = "wget" ] || [ "$EGET_BACKEND" = "curl" ] || [ "$EGET_BACKEND" = "aria2" ] ; then
+if [ "$EGET_BACKEND" = "wget" ] || [ "$EGET_BACKEND" = "curl" ] || [ "$EGET_BACKEND" = "aria2" ] || [ "$EGET_BACKEND" = "axel" ] ; then
 
 url_get_headers()
 {
