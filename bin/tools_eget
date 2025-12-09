@@ -450,6 +450,7 @@ __eget_parse_options()
 {
 local argument
 local argvalue
+local count="$#"
 while [ -n "$1" ] ; do
     argument="$(echo "$1" | cut -d= -f1)"
     argvalue="$(echo "$1" | cut -s -d= -f2)"
@@ -612,16 +613,17 @@ while [ -n "$1" ] ; do
             fatal "Unknown option '$1', check eget --help."
             ;;
         *)
-            return $#
+            return $(($count-$#))
             ;;
     esac
     shift
 done
-return $#
+return $(($count-$#))
 }
 
 __eget_parse_options "$@"
-shift $(($#-$?))
+# no more than 255 options
+shift $?
 __eget_parse_options $EGET_OPTIONS
 
 #############################3
