@@ -1073,6 +1073,7 @@ __epm_remove_tmp_files()
 
     if [ -n "$to_clean_tmp_dirs" ] ; then
         echo "$to_clean_tmp_dirs" | while read p ; do
+            [ -n "$p" ] || continue
             [ -n "$verbose" ] && echo "rm -rf '$p'"
             rm -rf "$p" 2>/dev/null
         done
@@ -1080,7 +1081,15 @@ __epm_remove_tmp_files()
 
     if [ -n "$to_clean_tmp_files" ] ; then
         echo "$to_clean_tmp_files" | while read p ; do
+            [ -n "$p" ] || continue
             rm $verbose -f "$p" 2>/dev/null
+        done
+    fi
+
+    if [ -n "$to_sudo_clean_tmp_files" ] ; then
+        echo "$to_sudo_clean_tmp_files" | while read p ; do
+            [ -n "$p" ] || continue
+            sudo rm $verbose -f "$p" 2>/dev/null
         done
     fi
 
@@ -1102,6 +1111,19 @@ $1"
             to_clean_tmp_files="$to_clean_tmp_files
 $1"
         fi
+        shift
+    done
+}
+
+sudo_remove_on_exit()
+{
+    # set trap if needed
+    remove_on_exit
+
+    while [ -n "$1" ] ; do
+            # don't check, it can be non accessible
+            to_sudo_clean_tmp_files="$to_sudo_clean_tmp_files
+$1"
         shift
     done
 }

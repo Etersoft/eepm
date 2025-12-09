@@ -30,7 +30,7 @@ __epm_add_alt_apt_downgrade_preferences()
 {
     set_sudo
     [ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists, check it and remove."
-    remove_on_exit /etc/apt/preferences
+    sudo_remove_on_exit /etc/apt/preferences
     cat <<EOF | sudocmd tee /etc/apt/preferences >/dev/null
 # classic repo
 Package: *
@@ -60,7 +60,7 @@ __epm_add_deb_apt_downgrade_preferences()
 {
     set_sudo
     [ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists, check it and remove"
-    remove_on_exit /etc/apt/preferences
+    sudo_remove_on_exit /etc/apt/preferences
     cat <<EOF | sudorun tee /etc/apt/preferences >/dev/null
 Package: *
 Pin: release a=stable
