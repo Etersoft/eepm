@@ -326,6 +326,7 @@ CURLTRUSTSERVERNAMES=''
 
 CURLOUTPUTDIR=''
 WGETOUTPUTDIR=''
+USEOUTPUTDIR=''
 WGETNODIRECTORIES=''
 WGETCONTINUE=''
 CURLCONTINUE=''
@@ -484,6 +485,7 @@ while [ -n "$1" ] ; do
             shift
             CURLOUTPUTDIR="--create-dirs --output-dir $1"
             WGETOUTPUTDIR="-P $1"
+            USEOUTPUTDIR="$1"
             ;;
         -U|-A|--user-agent)
             user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
@@ -996,6 +998,15 @@ url_sget()
     cp -av "$(path_from_url "$URL")" .
 }
 
+url_pget()
+{
+    #[ -n "$USEOUTPUTDIR" ] || fatal "USEOUTPUTDIR is not set"
+    local URL
+    for URL in "$@" ; do
+        cp -av "$(path_from_url "$URL")" $USEOUTPUTDIR
+    done
+}
+
 url_check_accessible()
 {
     local URL="$1"
@@ -1026,6 +1037,7 @@ url_scat()
     local URL="$1"
     ipfs_cat "$(cid_from_url "$URL")"
 }
+
 # download to default name of to $2
 url_sget()
 {
@@ -1045,6 +1057,19 @@ url_sget()
     fi
 
     ipfs_get "$(cid_from_url "$URL")"
+}
+
+url_pget()
+{
+    #[ -n "$USEOUTPUTDIR" ] || fatal "USEOUTPUTDIR is not set"
+    local URL
+    for URL in "$@" ; do
+        local fn="$(url_print_filename_from_url "$URL")"
+        if [ -z "$fn" ] ; then
+           fn="$(basename $URL)"
+        fi
+        ipfs_get "$(cid_from_url "$URL")" "$USEOUTPUTDIR/$fn"
+    done
 }
 
 url_check_accessible()
@@ -1104,6 +1129,7 @@ url_scat()
     unset_quiet
     download_with_mirroring __wget "$URL" -O-
 }
+
 # download to default name of to $2
 url_sget()
 {
@@ -1120,6 +1146,12 @@ url_sget()
 # -nc
 # TODO: overwrite always
     download_with_mirroring __wget "$URL" $WGETNAMEOPTIONS
+}
+
+url_pget()
+{
+    #[ -n "$USEOUTPUTDIR" ] || fatal "USEOUTPUTDIR is not set"
+    download_with_mirroring __wget $WGETNAMEOPTIONS "$@"
 }
 
 url_get_response()
@@ -1155,6 +1187,7 @@ url_scat()
     unset_quiet
     download_with_mirroring __curl "$URL" --output -
 }
+
 # download to default name of to $2
 url_sget()
 {
@@ -1175,6 +1208,15 @@ url_sget()
     fi
     
     download_with_mirroring __curl "$URL" $CURLFILENAMEOPTIONS
+}
+
+url_pget()
+{
+    #[ -n "$USEOUTPUTDIR" ] || fatal "USEOUTPUTDIR is not set"
+    local URL
+    for URL in "$@" ; do
+        download_with_mirroring __curl $CURLFILENAMEOPTIONS "$URL"
+    done
 }
 
 url_get_response()
@@ -1482,6 +1524,11 @@ sget()
     url_sget "$@"
 }
 
+pget()
+{
+    url_pget "$@"
+}
+
 check_url_is_accessible()
 {
     url_check_accessible "$@"
@@ -1653,8 +1700,15 @@ if [ -z "$NOGLOB" ] && echo "$URL" | grep -q -P "[*\[\]]" ; then
     fatal "Error: there are globbing symbol (*[]) in $URL. It is allowed only for mask part"
 fi
 
-is_url "$MASK" && fatal "eget supports only one URL as argument"
-[ -n "$3" ] && fatal "too many args: extra '$3'. May be you need use quotes for arg with wildcards."
+if is_url "$MASK" ; then
+    #[ -z "$USEOUTPUTDIR" ] && fatal "eget supports only one URL as argument by default, use --output-dir to download in parallel"
+    USEOUTPUTDIR="."
+    CURLOUTPUTDIR="--create-dirs --output-dir $USEOUTPUTDIR"
+    pget "$@"
+    exit
+else
+    [ -n "$3" ] && fatal "too many args: extra '$3'. May be you need use quotes for arg with wildcards."
+fi
 
 # TODO: curl?
 # If ftp protocol, just download
