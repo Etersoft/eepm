@@ -22,10 +22,10 @@ URL="https://rudesktop.ru/"
 
 case "$(epm print info -s)" in
   alt)
-      PKGNAME=rudesktop-alt
+      package=rudesktop-alt
       ;;
   *)
-      PKGNAME=rudesktop
+      package=rudesktop
       ;;
 esac
 
@@ -39,9 +39,9 @@ case "$(epm print info -p)" in
 esac
 
 if [ "$VERSION" != "*" ] ; then
-    PKGURL="https://storage.rudesktop.ru/download/$PKGNAME-$VERSION-$pkgtype"
+    PKGURL="https://storage.rudesktop.ru/download/$package-$VERSION-$pkgtype"
 else
-    PKGURL="$(eget --list --latest https://rudesktop.ru/downloads/ "$PKGNAME-*-$pkgtype")"
+    PKGURL="$(eget --list --latest https://rudesktop.ru/downloads/ "$package-*-$pkgtype")"
 fi
 
 install_pkgurl || exit
