@@ -544,7 +544,7 @@ while [ -n "$1" ] ; do
             WGETNODIRECTORIES="$1"
             ;;
         --no-glob)
-            NOGLOB="$1"
+            NOGLOB="--no-glob"
             ;;
         -c|--continue)
             WGETCONTINUE="$1"
