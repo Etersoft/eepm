@@ -794,6 +794,16 @@ eget()
     $EGET "$@"
 }
 
+# FIXME:
+sudocmd_eget()
+{
+    # use internal eget only if exists
+    if [ -s $SHAREDIR/tools_eget ] ; then
+        ( sudocmd EGET_BACKEND="$eget_backend" $CMDSHELL "$SHAREDIR"/tools_eget "$@" )
+        return
+    fi
+}
+
 # copied from parse_json_value from play.d/common.sh
 get_json_value()
 {
