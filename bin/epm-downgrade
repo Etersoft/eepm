@@ -20,13 +20,18 @@
 load_helper epm-check_updated_repo
 
 
+print_apt_preferences()
+{
+    info "Running with /etc/apt/preferences:"
+    cat /etc/apt/preferences
+}
+
 __epm_add_alt_apt_downgrade_preferences()
 {
     set_sudo
     [ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists, check it and remove."
     remove_on_exit /etc/apt/preferences
-    info "Running with /etc/apt/preferences:"
-    cat <<EOF | sudocmd tee /etc/apt/preferences
+    cat <<EOF | sudocmd tee /etc/apt/preferences >/dev/null
 # classic repo
 Package: *
 Pin: release c=classic
@@ -47,6 +52,7 @@ Package: *
 Pin: release c=task
 Pin-Priority: 1311
 EOF
+    [ -n "$verbose" ] && print_apt_preferences
 }
 
 # See https://wiki.debian.org/ru/AptPreferences
@@ -55,8 +61,7 @@ __epm_add_deb_apt_downgrade_preferences()
     set_sudo
     [ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists, check it and remove"
     remove_on_exit /etc/apt/preferences
-    info "Running with /etc/apt/preferences:"
-    cat <<EOF | sudorun tee /etc/apt/preferences
+    cat <<EOF | sudorun tee /etc/apt/preferences >/dev/null
 Package: *
 Pin: release a=stable
 Pin-Priority: 1001
@@ -69,6 +74,7 @@ Package: *
 Pin: release a=unstable
 Pin-Priority: 800
 EOF
+    [ -n "$verbose" ] && print_apt_preferences
 }
 
 __epm_remove_apt_downgrade_preferences()
