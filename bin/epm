@@ -597,7 +597,9 @@ check_option()
         ;;
     --parallel)            # HELPOPT: simultaneous downloading of packages
         if [ -z "$eget_backend" ] ; then
-            is_command aria2 && eget_backend=aria2 && echo "Use installed aria2 to parallel package downloading." || info "It is better to install aria2 for parallel downloading."
+            is_command aria2 && eget_backend=aria2 && echo "Use installed aria2 to parallel package downloading."
+            is_command axel && eget_backend=axel && echo "Use installed axel to parallel package downloading."
+            [ -n "$eget_backend" ] || info "It is better to install aria2 for parallel downloading."
         fi
         parallel="--parallel"
         ;;
