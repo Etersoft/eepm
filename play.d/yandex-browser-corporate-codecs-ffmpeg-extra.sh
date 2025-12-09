@@ -1,1 +1,0 @@
-yandex-browser-stable-codecs-ffmpeg-extra.sh
