@@ -315,7 +315,7 @@ AXELCOMPRESSED=''
 WGETQ='' #-q
 CURLQ='' #-s
 AXELQ='' #-q
-# TODO: aria2c
+ARIA2Q=''
 # TODO: 
 WGETNAMEOPTIONS='--content-disposition'
 CURLFILENAMEOPTIONS='--remote-name --remote-time --remote-header-name'
@@ -327,9 +327,11 @@ CURLTRUSTSERVERNAMES=''
 CURLOUTPUTDIR=''
 WGETOUTPUTDIR=''
 USEOUTPUTDIR=''
+ARIA2OUTPUTDIR=''
 WGETNODIRECTORIES=''
 WGETCONTINUE=''
 CURLCONTINUE=''
+ARIA2CONTINUE=''
 WGETTIMEOUT=''
 CURLMAXTIME=''
 WGETREADTIMEOUT=''
@@ -360,6 +362,7 @@ set_quiet()
     WGETQ='-q'
     CURLQ='-s'
     AXELQ='-q'
+    ARIA2Q=''
     quiet=1
 }
 
@@ -368,6 +371,7 @@ unset_quiet()
     WGETQ=''
     CURLQ=''
     AXELQ=''
+    ARIA2Q=''
     quiet=''
 }
 
@@ -485,10 +489,11 @@ while [ -n "$1" ] ; do
             shift
             CURLOUTPUTDIR="--create-dirs --output-dir $1"
             WGETOUTPUTDIR="-P $1"
+            ARIA2OUTPUTDIR="-d $1"
             USEOUTPUTDIR="$1"
             ;;
         -U|-A|--user-agent)
-            user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
+            user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36" #"
             WGETUSERAGENT="-U '$user_agent'"
             CURLUSERAGENT="-A '$user_agent'"
             AXELUSERAGENT="--user-agent='$user_agent'"
@@ -552,6 +557,7 @@ while [ -n "$1" ] ; do
         -c|--continue)
             WGETCONTINUE="$1"
             CURLCONTINUE="-C -"
+            ARIA2CONTINUE="--continue=true"
             ;;
         -T|--timeout)
             if [ -z "$argvalue" ];then
@@ -934,6 +940,7 @@ fi
 
 WGET="$(print_command_path wget)"
 CURL="$(print_command_path curl)"
+ARIA2="$(print_command_path aria2)"
 
 ORIG_EGET_BACKEND="$EGET_BACKEND"
 
@@ -964,6 +971,13 @@ case "$orig_EGET_BACKEND" in
     curl)
         [ -n "$CURL" ] || fatal "There are no curl in the system but you forced using it via EGET_BACKEND. Install it with $ epm install curl"
         ;;
+    */aria2)
+        ARIA2="$orig_EGET_BACKEND"
+        [ -x "$ARIA2" ] || fatal "There are no $orig_EGET_BACKEND in the system but you forced using it via EGET_BACKEND. Install it with $ epm install aria2"
+        ;;
+    aria2)
+        [ -n "$ARIA2" ] || fatal "There are no curl in the system but you forced using it via EGET_BACKEND. Install it with $ epm install aria2"
+        ;;
     '')
         [ -n "$WGET" ] && EGET_BACKEND="wget"
         [ -z "$EGET_BACKEND" ] && [ -n "$CURL" ] && EGET_BACKEND="curl"
@@ -984,6 +998,7 @@ url_scat()
     local URL="$1"
     cat "$(path_from_url "$URL")"
 }
+
 # download to default name of to $2
 url_sget()
 {
@@ -1233,13 +1248,65 @@ url_get_response()
     echo "$answer"
 }
 
+elif [ "$EGET_BACKEND" = "aria2" ] ; then
+__aria2()
+{
+    docmd $ARIA2 $ARIA2Q $ARIA2OUTPUTDIR $ARIA2CONTINUE "$@"
+}
+
+# put remote content to stdout
+url_scat()
+{
+    local URL="$1"
+    download_with_mirroring __aria2 -x1 -s1 --allow-piece-length-change=false -o - "$URL" && return
+    unset_quiet
+    download_with_mirroring __aria2 -x1 -s1 --allow-piece-length-change=false -o - "$URL"
+}
+
+# download to default name of to $2
+url_sget()
+{
+    local URL="$1"
+    if [ "$2" = "/dev/stdout" ] || [ "$2" = "-" ] ; then
+       scat "$URL"
+       return
+    elif [ -n "$2" ] ; then
+       download_with_mirroring __aria2 -x1 -s1 --allow-piece-length-change=false -o "$2" "$URL"
+       return
+    fi
+# TODO: overwrite always
+    download_with_mirroring __aria2 "$URL"
+}
+
+url_pget()
+{
+    #[ -n "$USEOUTPUTDIR" ] || fatal "USEOUTPUTDIR is not set"
+    echo "$@" | xargs -n1 | download_with_mirroring __aria2 -i-
+}
+
+
+# left wget here
+url_get_response()
+{
+    local URL="$1"
+    local answer
+    answer="$(quiet=1 __wget --timeout 20 --tries 1 --spider -S "$URL" 2>&1)"
+    # HTTP/1.1 405 Method Not Allowed
+    # HTTP/1.1 404 Not Found
+    if echo "$answer" | grep -q "^ *HTTP/[12.]* 40[45]" ; then
+        (quiet=1 __wget -O/dev/null --header="Range: bytes=0-0" -S "$URL" 2>&1)
+        return
+    fi
+    echo "$answer"
+}
+
 else
     fatal "Unknown EGET_BACKEND '$EGET_BACKEND', logical error."
 fi
 
 
-# Common code for both wget and curl (http related)
-if [ "$EGET_BACKEND" = "wget" ] || [ "$EGET_BACKEND" = "curl" ] ; then
+# Common code for both wget and curl and aria2 (http related)
+if [ "$EGET_BACKEND" = "wget" ] || [ "$EGET_BACKEND" = "curl" ] || [ "$EGET_BACKEND" = "aria2" ] ; then
 
 url_get_headers()
 {
