@@ -19,10 +19,13 @@
 
 load_helper epm-check_updated_repo
 
+
 __epm_add_alt_apt_downgrade_preferences()
 {
     set_sudo
-    [ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists"
+    [ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists, check it and remove."
+    remove_on_exit /etc/apt/preferences
+    info "Running with /etc/apt/preferences:"
     cat <<EOF | sudocmd tee /etc/apt/preferences
 # classic repo
 Package: *
@@ -50,7 +53,8 @@ EOF
 __epm_add_deb_apt_downgrade_preferences()
 {
     set_sudo
-    [ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists"
+    [ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists, check it and remove"
+    remove_on_exit /etc/apt/preferences
     info "Running with /etc/apt/preferences:"
     cat <<EOF | sudorun tee /etc/apt/preferences
 Package: *
