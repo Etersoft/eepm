@@ -4,6 +4,5 @@
     "installed": false,
     "dependencies": [ "budgie-desktop", "gnome-console", "fonts-ttf-fira-code-nerd" ],
     "description": "Budgie Desktop is a familiar, modern desktop environment",
-    "metapackages": [ ]
+    "metapackages": [ "budgie-desktop" ]
 }
-  

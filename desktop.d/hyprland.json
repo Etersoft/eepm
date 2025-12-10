@@ -6,4 +6,3 @@
     "description": "Hyprland is a dynamic tiling Wayland compositor that doesn't sacrifice on it's looks",
     "metapackages": [ "hyprland" ]
 }
-  

@@ -6,4 +6,3 @@
     "description": "Window management and application launching for GNOME",
     "metapackages": ["gnome-shell"]
 }
-  

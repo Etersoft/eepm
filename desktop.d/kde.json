@@ -1,5 +1,5 @@
 {
-    "name": "kde",
+    "name": "KDE Plasma",
     "version": "6.4.5",
     "installed": false,
     "dependencies": [ "plasma-desktop", "lightdm", "lightdm-kde-greeter", "plasma-discover", "power-profiles-daemon", "qt6-wayland", "wayland-utils", "vulkan-tools"],

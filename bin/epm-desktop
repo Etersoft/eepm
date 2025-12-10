@@ -1,7 +1,8 @@
 #!/bin/sh
 # shellcheck disable=SC3043,SC2086
-# Copyright (C) 2024  Etersoft
+# Copyright (C) 2024-2025  Etersoft
 # Copyright (C) 2024  Ivan Mazhukin <vanomj@etersoft.ru>
+# Copyright (C) 2025  Vitaly Lipatov <lav@etersoft.ru>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -15,13 +16,16 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-json=0
 
+load_helper epm-query
+
+
+# args: de [options]
 run_script()
 {
     local script="$CONFIGDIR/desktop.d/$1.sh"
     [ -s "$script" ] || return
-    [ -f "$script.rpmnew" ] && warning 'There is .rpmnew file(s) in $psdir dir. The desktop script`s can be outdated.'
+    [ -f "$script.rpmnew" ] && warning 'There is .rpmnew file(s) in $psdir dir. The desktop script can be outdated.'
 
     shift
     [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
@@ -29,182 +33,267 @@ run_script()
     return
 }
 
-is_de_exist() {
-    local json_file="$(realpath $CONFIGDIR/desktop.d/$1.json)"
-    local de_name=$1
+# args: de
+get_json()
+{
+    local de_name="$1"
+    realpath $CONFIGDIR/desktop.d/$de_name.json
+}
 
-    if [ -f "$json_file" ]; then
-        return 0 
-    else
-        message "Error: Manifest for '$de_name' not found."
-        exit 1  
-    fi
+# args: de
+check_if_de_exists()
+{
+    local de_name="$1"
+
+    [ -n "$de_name" ] || fatal "Missed DE name."
+
+    local json="$(get_json $de_name)"
+
+    [ -s "$json" ] && return
+
+    fatal 'Error: Manifest for $de_name is not found.'
 }
 
 
-is_installed() {
-    local dependencies=$1
-    epm installed $dependencies > /dev/null 2>&1
-    return
-}
-
-
-get_value() {
-    local json_file="$(realpath $CONFIGDIR/desktop.d/$1.json)"
+# args: de key
+get_value()
+{
+    local de_name="$1"
     local key="$2"
 
-    if [ "$key" = "description" ]; then
-        epm --quiet tool json -b < "$json_file" | grep "\[\"$key\"" | xargs | sed 's/[",]//g' | cut -f2- -d ' '
-    else
-        epm --quiet tool json -b < "$json_file" | grep "\[\"$key\"" | awk '{print $2}' | sed 's/[",]//g' | xargs
-    fi
+    local json="$(get_json $de_name)"
+
+    get_json_value "$key" < "$json"
 }
 
-get_repo_version() {
+
+# args: de key
+get_values()
+{
+    local de_name="$1"
+    local key="$2"
+
+    local json="$(get_json $de_name)"
+
+    get_json_values "$key" < "$json" | xargs
+}
+
+
+# arg: pkgname
+__get_api_url()
+{
+    local package_name="$1"
+    echo "https://rdb.altlinux.org/api/package/package_info?name=$package_name&arch=$DISTRARCH&source=false&branch=$DISTRVERSION&full=false"
+}
+
+# de
+get_main_package()
+{
+    local de_name="$1"
+    # check by the first package in the dependencies list
+    local package="$(get_values "$de_name" "dependencies" | cut -d' ' -f1)"
+    [ -n "$package" ] || fatal 'Cannot get package name for $de_name'
+    echo "$package"
+}
+
+get_repo_version()
+{
     local de_name=$1
-    local package_name=$(get_value "$de_name" "dependencies" | awk '{print $1}')
-    local latest_version
 
-    latest_version=$(eget --quiet -O- "https://rdb.altlinux.org/api/package/package_info?name=$package_name&arch=x86_64&source=false&branch=sisyphus&full=false" \
-        | epm --quiet tool json -b 2> /dev/null | grep '"packages",0,"version"]' | awk '{print $2}' | tr -d '"')
+    local package=$(get_main_package "$de_name")
 
-    if [ -n "$latest_version" ]; then
+    info "Trying get info of package $package from remote ALT DB ..."
+    local latest_version="$(eget --quiet --timeout 10 -O- $(__get_api_url $package) | get_json_value '["packages",0,"version"]')"
+
+    if [ -n "$latest_version" ] ; then
         echo "$latest_version"
-    else
-        latest_version=$(epm --quiet info $package_name 2>/dev/null | grep 'Version' | grep -E '[0-9]+.[0-9]+(.[0-9]+)?' | awk '{print $NF}' | sed 's/-.*//') 
-
-        if [ -n "$latest_version" ]; then
-            echo "$latest_version"
-        else
-            get_value "$de_name" "version"
-        fi
+        return
     fi
+
+    warning '$package package is missed in the repo, use version from the local metadata'
+
+    epm print version for package "$package" 2>/dev/null && return
+
+    # fallback
+    get_value "$de_name" "version"
 }
 
-install_de_meta() {
-    local metapackages=$(get_value "$de_name" "metapackages")
 
-    [ -n "$metapackages" ] && epm install --manual-requires $metapackages
-    return
+# args: de
+is_de_installed()
+{
+    local de_name="$1"
+
+    is_installed $(get_main_package $de_name)
 }
 
-install_de() {
-    local de_name=$1
 
-    dependencies=$(get_value "$de_name" "dependencies")
+install_de_meta()
+{
+    local metapackages="$(get_values "$de_name" "metapackages")"
 
-    if is_installed "$dependencies"; then
+    # silent skip missed metapackages
+    [ -n "$metapackages" ] || return 0
+
+    # we really want mark all installed packages as manually installed?
+    epm install --manual-requires $metapackages
+}
+
+
+install_de()
+{
+    local de_name="$1"
+
+    if [ -z "$force" ] && is_de_installed $de_name ; then
         message "$de_name is already installed."
-        return 0
-    fi
-
-    message "Installing $de_name with dependencies: $dependencies"
-    
-    if ! install_de_meta $metapackages; then
-        message "Failed to install $de_name." && return 1
-    fi
-    
-    if epm install $dependencies; then
-        run_script "$de_name-postin" $de_name 
-        message "$de_name successfully installed."
-    else
-        fatal "Failed to install $de_name."
         return 1
     fi
 
+    local dependencies="$(get_values "$de_name" "dependencies")"
+
+    message "Installing $de_name with dependencies: $dependencies"
+
+    if ! install_de_meta ; then
+        fatal "Failed to install metapackage(s) for $de_name."
+    fi
+
+    if ! epm install $dependencies ; then
+        fatal "Failed to install $de_name."
+    fi
+
+    run_script "$de_name-postin" $de_name
+    message "$de_name successfully installed."
+
 }
 
-remove_de() {
-    local de_name=$1
 
-    dependencies=$(get_value "$de_name" "dependencies")
+remove_de()
+{
+    local de_name="$1"
 
-    if ! is_installed "$dependencies"; then
+    if [ -z "$force" ] && ! is_de_installed "$de_name" ; then
         message "$de_name is not installed."
         return 0
     fi
 
+    local dependencies="$(get_values "$de_name" "dependencies")"
+
     message "Removing $de_name with dependencies: $dependencies"
 
-    if epm remove $dependencies; then
-        run_script "$de_name-postun" $de_name
-        message "$de_name successfully removed."
-    else
+    # We hope that metapackages will removed by dependency
+    if ! epm remove $dependencies ; then
         fatal "Failed to remove $de_name."
-        return 1
     fi
+
+    run_script "$de_name-postun" $de_name
+    message "$de_name successfully removed."
 }
 
-get_de_info() {
-    local de_name=$1
-    message "   Information for $de_name:
+
+get_de_info()
+{
+    local de_name="$1"
+    local json_flag="$2"
+
+    info "Trying get info from remote ALT DB ..."
+    version="$(get_repo_version $de_name)"
+    installed="$(is_de_installed $de_name && echo 'true' || echo 'false')"
+
+    if [ -n "$json_flag" ]; then
+        local json="$(get_json $de_name)"
+
+        cat "$json" | sed -E 's/"version":.*"/"version": "'$version'"/g' | sed 's/"installed":.*/"installed": '$installed'/g'
+        return
+    fi
+
+    message "Information for $de_name:
     Name: $(get_value $de_name name)
-    Version: $(get_repo_version $de_name)
-    Installed: $(is_installed $de_name && echo 'true'|| echo 'false' )
+    Version: $version
+    Installed: $installed
     Description: $(get_value $de_name description)"
 }
 
-list_des() {
-    if [ "$json" -eq 1 ]; then
-        echo '['
-        first=1
-        for de in $CONFIGDIR/desktop.d/*.json; do
-            if [ $first -eq 1 ]; then
-                first=0
-            else
-                echo ','
-            fi
 
-            de_name=$(basename $de .json)
-            ver=$(get_repo_version $de_name)
-            installed=$(is_installed $de_name && echo 'true' || echo 'false')
-
-            cat "$de" | sed -E "s/\"version\": \"[0-9]+.[0-9]+(.[0-9]+)?\"/\"version\": \"$ver\"/g" | sed "s/\"installed\": false/\"installed\": ${installed}/g"
-        
+list_des()
+{
+    local json_flag="$1"
+    if [ -z "$json_flag" ]; then
+        for de in $CONFIGDIR/desktop.d/*.json ; do
+            basename "$de" .json || fatal
         done
-        echo ']'
-    else
-        for de in $CONFIGDIR/desktop.d/*.json; do
-            basename "$de" .json
-        done
+        return
     fi
+
+    echo '['
+    local first=1
+    for de in $CONFIGDIR/desktop.d/*.json ; do
+        if [ $first = 1 ] ; then
+            first=0
+        else
+            echo ','
+        fi
+
+        de_name="$(basename $de .json)" || fatal
+        get_de_info "$de_name" "$json_flag"
+
+    done
+    echo ']'
 }
 
-show_help() {
-    message 'Usage: epm desktop [command]
-Commands:
-    install [de_name]    Install a desktop environment
-    remove [de_name]     Remove a desktop environment
-    info [de_name]       Get information about a desktop environment
-    list                 List all available desktop environments'
+epm_desktop_help()
+{
+    message 'Usage: epm desktop <command> [--json] [option]'
+            get_help HELPCMD $SHAREDIR/epm-desktop
+    message '
+Examples:
+  epm desktop install kde
+'
 }
 
-epm_desktop() {
 
-    case "$2" in
+epm_desktop()
+{
+
+    local cmd="$1"
+    shift
+
+    local json_flag=''
+
+    case "$1" in
         --json)
-            json=1
+            json_flag=1
+            shift
             ;;
     esac
 
-    case "$1" in
-        install)
-            is_de_exist "$2"
-            install_de "$2"
+    case "$cmd" in
+        "-h"|"--help"|"help")         # HELPCMD: help
+            epm_desktop_help
+            return
             ;;
-        remove)
-            is_de_exist "$2"
-            remove_de "$2"
+        install)                      # HELPCMD: <de_name>   Install a desktop environment
+            check_if_de_exists "$1"
+            install_de "$1"
             ;;
-        info)
-            is_de_exist "$2"
-            get_de_info "$2"
+        remove)                       # HELPCMD: <de_name>   Remove a desktop environment
+            check_if_de_exists "$1"
+            remove_de "$1"
             ;;
-        list)
-            list_des
+        info)                         # HELPCMD: <de_name>   Get information about a desktop environment
+            check_if_de_exists "$1"
+            get_de_info "$1" $json_flag
+            ;;
+        list)                         # HELPCMD:             List all available desktop environments'
+            list_des $json_flag
+            ;;
+        installed)
+            is_de_installed "$1"
+            ;;
+        version)
+            get_repo_version "$1"
             ;;
         *)
-            show_help
+            fatal 'Unknown option $cmd. Run with --help to get help'
             ;;
     esac
 }
