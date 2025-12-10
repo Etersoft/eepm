@@ -262,6 +262,13 @@ Options:
     --ipfs <app>          - use IPFS for downloading
     --product-alternatives- list alternatives (use like epm play app=beta)
 
+Extra options:
+    --installed-version   - print installed version for the app
+    --package-name        - print package name for the app
+    --info                - print info about the app
+    --list-installed-packages - print list of all packages installed via epm play
+    --list-all-packages   - print list of all packages available via epm play
+
 Examples:
     epm play --remove opera
     epm play yandex-browser = beta
