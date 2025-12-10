@@ -103,6 +103,13 @@ case $PMTYPE in
     snap)
         docmd snap find .
         ;;
+    pacman)
+        if [ -n "$short" ] ; then
+            docmd pacman -Slq
+        else
+            docmd pacman -Sl
+        fi
+        ;;
     appget)
         docmd appget search .
         ;;

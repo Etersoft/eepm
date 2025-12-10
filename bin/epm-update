@@ -173,6 +173,7 @@ case $PMTYPE in
         ;;
     pacman)
         sudocmd pacman -S -y
+        sudocmd pacman -F -y
         ;;
     aura)
         sudocmd aura -A -y

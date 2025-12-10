@@ -81,6 +81,14 @@ __epm_filelist_remote()
             assure_exists yum-utils
             docmd repoquery -q -l "$@"
             ;;
+        pacman)
+            docmd pacman -Flq "$@"
+            return
+            ;;
+        yay)
+            docmd yay -Slq aur
+            return
+            ;;
         dnf-rpm|dnf5-rpm)
             assure_exists dnf-plugins-core
             docmd dnf repoquery -l "$@"
@@ -110,6 +118,10 @@ __epm_filelist_file()
         eopkg)
             assure_exists eopkg
             CMD="eopkg --files info"
+            ;;
+        pacman)
+            assure_exists tar
+            CMD="tar -tf"
             ;;
         pisi)
             assure_exists pisi
@@ -152,8 +164,9 @@ __epm_filelist_name()
             CMD="conary query --ls"
             ;;
         pacman)
-            docmd pacman -Ql $@ | sed -e "s|.* ||g"
-            return
+            CMD="pacman -Qlq"
+            #docmd pacman -Ql $@ | sed -e "s|.* ||g"
+            #return
             ;;
         emerge)
             assure_exists equery

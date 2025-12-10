@@ -79,6 +79,20 @@ case $PMTYPE in
             docmd dnf check-update
         fi
         ;;
+    pacman)
+        if [ -n "$short" ] ; then
+            docmd pacman -Quq
+        else
+            docmd pacman -Qu
+        fi
+        ;;
+    yay)
+        if [ -n "$short" ] ; then
+            docmd yay -Quaq
+        else
+            docmd pacman -Qua
+        fi
+        ;;
     zypper)
         docmd zypper list-updates --all
         ;;

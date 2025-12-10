@@ -92,7 +92,7 @@ case $PMTYPE in
         CMD="zypper search --file-list"
         ;;
     pacman)
-        CMD="pacman -Qo"
+        CMD="pkgfile -v"
         ;;
     slackpkg)
         CMD="/usr/sbin/slackpkg file-search"

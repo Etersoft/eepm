@@ -65,7 +65,7 @@ __separate_sudocmd()
     return 0
 }
 
-VALID_BACKENDS="apt-rpm apt-dpkg apm-rpm stplr aptitude-dpkg deepsolver-rpm urpm-rpm packagekit pkgsrc pkgng redox-pkg emerge pacman aura yum-rpm dnf-rpm snappy zypper-rpm mpkg eopkg conary npackd slackpkg homebrew opkg nix apk tce guix termux-pkg aptcyg xbps appget winget"
+VALID_BACKENDS="apt-rpm apt-dpkg apm-rpm stplr aptitude-dpkg deepsolver-rpm urpm-rpm packagekit pkgsrc pkgng redox-pkg emerge pacman yay aura yum-rpm dnf-rpm snappy zypper-rpm mpkg eopkg conary npackd slackpkg homebrew opkg nix apk tce guix termux-pkg aptcyg xbps appget winget"
 __get_tpmtype() {
     local arg="$1"
     local tpmtype="$(echo "$arg" | cut -d: -f1)"
@@ -241,6 +241,9 @@ epm_install_names()
         pacman)
             sudocmd pacman -S $nodeps $@
             return ;;
+        yay)
+            docmd yay $nodeps $@
+            return ;;
         aura)
             sudocmd aura -A $force $nodeps $@
             return ;;
@@ -368,6 +371,9 @@ epm_ni_install_names()
             return ;;
         pacman)
             sudocmd pacman -S --noconfirm $nodeps $@
+            return ;;
+        yay)
+            docmd yay --noconfirm $nodeps $@
             return ;;
         aura)
             sudocmd aura -A $force $nodeps $@
