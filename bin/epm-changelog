@@ -91,13 +91,18 @@ __epm_changelog_unlocal_names()
         apt-rpm)
             __epm_changelog_apt "$1"
             ;;
-        #yum-rpm)
-        #    sudocmd yum clean all
-        #    ;;
         apt-dpkg)
             #assure_exist apt
             #docmd apt changelog "$1"
             docmd apt-get changelog "$1"
+            ;;
+        yum-rpm)
+            assure_exist yum-plugin-changelog
+            docmd yum changelog "$1"
+            ;;
+        dnf-rpm|dnf5-rpm)
+            #assure_exist yum-changelog
+            docmd dnf changelog "$1"
             ;;
         urpm-rpm)
             docmd urpmq --changelog "$1"
