@@ -27,6 +27,19 @@ __epm_changelog_apt()
     done
 }
 
+__epm_changelog_dpkg()
+{
+    local i
+    tmpdir="$(mktemp -d)" || fatal
+    remove_on_exit "$tmpdir"
+
+    for i in $@ ; do
+        docmd dpkg-deb -x $i $tmpdir/extract || fatal
+        docmd zcat $tmpdir/extract/usr/share/doc/*/changelog*.gz
+        rm -rf $tmpdir/extract
+    done
+}
+
 __epm_changelog_files()
 {
     [ -z "$*" ] && return
@@ -37,9 +50,9 @@ __epm_changelog_files()
             assure_exists rpm
             docmd_foreach "rpm -q -p --changelog" $@
             ;;
-#        deb)
-#            
-#            ;;
+        deb)
+            __epm_changelog_dpkg "$@"
+            ;;
         *)
             fatal 'Have no suitable command for $1 in epm_changelog()'
             ;;
@@ -78,13 +91,14 @@ __epm_changelog_unlocal_names()
         apt-rpm)
             __epm_changelog_apt "$1"
             ;;
-        #apt-dpkg)
-        #    # FIXME: only first pkg
-        #    docmd zcat /usr/share/doc/$1/changelog.Debian.gz | less
-        #    ;;
         #yum-rpm)
         #    sudocmd yum clean all
         #    ;;
+        apt-dpkg)
+            #assure_exist apt
+            #docmd apt changelog "$1"
+            docmd apt-get changelog "$1"
+            ;;
         urpm-rpm)
             docmd urpmq --changelog "$1"
             ;;
