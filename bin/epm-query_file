@@ -42,7 +42,9 @@ __do_query_real_file()
         TOFILE="$(__abs_filename "$1")"
     else
         TOFILE="$(print_command_path "$1" || echo "$1")"
-        if [ "$TOFILE" != "$1" ] ; then
+        if [ "$TOFILE" = "$1" ] ; then
+            fatal 'File '$TOFILE' is missing in '$PATH
+        else
             # work against usrmerge
             local t="$(realpath "$(dirname "$TOFILE")")/$(basename "$TOFILE")" #"
             if [ "$TOFILE" != "$t" ] ; then
@@ -182,13 +184,13 @@ __do_short_query()
 epm_query_file()
 {
     # file can exists or not
-    [ -n "$pkg_filenames" ] || fatal "Run query without file names"
+    [ -n "$*" ] || fatal "Run query without file names"
 
 
     #load_helper epm-search_file
 
     res=0
-    for pkg in $pkg_filenames ; do
+    for pkg in "$@" ; do
         __do_query_real_file "$pkg" || res=$?
     done
 

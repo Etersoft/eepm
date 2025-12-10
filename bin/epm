@@ -267,6 +267,7 @@ check_command()
         ;;
     -qf|qf|-S|wp|which|belongs)     # HELPCMD: query package(s) owning file
         epm_cmd=query_file
+        direct_args=1
         ;;
 
 # HELPCMD: PART: Useful commands:
