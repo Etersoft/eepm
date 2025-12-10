@@ -65,9 +65,11 @@ epm_repo()
         if_valid_reponame "$1" || fatal "No valid repository is specified."
         [ -n "$quiet" ] || epm repo list
         confirm_info 'You are about to set repo ' "$*" "(all repos will be removed)."
-        #epm repo save
+        load_helper epm-reposave
+        try_change_alt_repo
         epm repo rm all
-        epm addrepo "$@"
+        epm addrepo "$@" || fatal 'Cannot add repo "'$@'", restoring...'
+        end_change_alt_repo
         ;;
     switch)                           # HELPCMD: switch repo to <repo>: rewrite URLs to the repo (but use epm release-upgrade [Sisyphus|p10] for upgrade to a next branch)
         load_helper epm-repofix
