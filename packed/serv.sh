@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.43"
+EPMVERSION="3.64.44"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -794,18 +794,27 @@ disabled_eget()
     $EGET "$@"
 }
 
+sudocmd_eget()
+{
+    # use internal eget only if exists
+    if [ -s $SHAREDIR/tools_eget ] ; then
+        ( sudocmd EGET_BACKEND="$eget_backend" $CMDSHELL "$SHAREDIR"/tools_eget "$@" )
+        return
+    fi
+}
+
 get_json_value()
 {
     local field="$1"
     echo "$field" | grep -q -E "^\[" || field='["'$field'"]'
-    epm tool json -b | grep -m1 -F "$field" | sed -e 's|.*[[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
+    epm --quiet tool json -b | grep -m1 -F "$field" | sed -e 's|.*\][[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
 }
 
 get_json_values()
 {
     local field="$1"
     echo "$field" | grep -q -E "^\[" || field="\[$(echo "$field" | sed 's/[^ ]*/"&"/g' | sed 's/ /,/g'),[0-9]*\]"
-    epm tool json -b | grep "^$field" | sed -e 's|.*[[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
+    epm --quiet tool json -b | grep "^$field" | sed -e 's|.*\][[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
 }
 
 __epm_assure_7zip()
@@ -1051,6 +1060,7 @@ __epm_remove_tmp_files()
 
     if [ -n "$to_clean_tmp_dirs" ] ; then
         echo "$to_clean_tmp_dirs" | while read p ; do
+            [ -n "$p" ] || continue
             [ -n "$verbose" ] && echo "rm -rf '$p'"
             rm -rf "$p" 2>/dev/null
         done
@@ -1058,7 +1068,15 @@ __epm_remove_tmp_files()
 
     if [ -n "$to_clean_tmp_files" ] ; then
         echo "$to_clean_tmp_files" | while read p ; do
+            [ -n "$p" ] || continue
             rm $verbose -f "$p" 2>/dev/null
+        done
+    fi
+
+    if [ -n "$to_sudo_clean_tmp_files" ] ; then
+        echo "$to_sudo_clean_tmp_files" | while read p ; do
+            [ -n "$p" ] || continue
+            sudo rm $verbose -f "$p" 2>/dev/null
         done
     fi
 
@@ -1080,6 +1098,19 @@ $1"
             to_clean_tmp_files="$to_clean_tmp_files
 $1"
         fi
+        shift
+    done
+}
+
+sudo_remove_on_exit()
+{
+    # set trap if needed
+    remove_on_exit
+
+    while [ -n "$1" ] ; do
+            # don't check, it can be non accessible
+            to_sudo_clean_tmp_files="$to_sudo_clean_tmp_files
+$1"
         shift
     done
 }

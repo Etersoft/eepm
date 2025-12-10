@@ -22,8 +22,10 @@ PROGNAME="$(basename "$0")"
 [ -n "$EPMCURDIR" ] || export EPMCURDIR="$(pwd)"
 CMDENV="/usr/bin/env"
 [ -x "$CMDENV" ] && CMDSHELL="/usr/bin/env bash" || CMDSHELL="$SHELL"
-# TODO: pwd for ./epm and which for epm
-[ "$PROGDIR" = "." ] && PROGDIR="$EPMCURDIR"
+# is_command is not yet available
+if type realpath >/dev/null 2>/dev/null ; then
+    PROGDIR="$(realpath $PROGDIR)"
+fi
 if [ "$0" = "/dev/stdin" ] || [ "$0" = "sh" ] ; then
     PROGDIR=""
     PROGNAME=""
@@ -34,7 +36,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.43"
+export EPMVERSION="3.64.44"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -797,18 +799,27 @@ disabled_eget()
     $EGET "$@"
 }
 
+sudocmd_eget()
+{
+    # use internal eget only if exists
+    if [ -s $SHAREDIR/tools_eget ] ; then
+        ( sudocmd EGET_BACKEND="$eget_backend" $CMDSHELL "$SHAREDIR"/tools_eget "$@" )
+        return
+    fi
+}
+
 get_json_value()
 {
     local field="$1"
     echo "$field" | grep -q -E "^\[" || field='["'$field'"]'
-    epm tool json -b | grep -m1 -F "$field" | sed -e 's|.*[[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
+    epm --quiet tool json -b | grep -m1 -F "$field" | sed -e 's|.*\][[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
 }
 
 get_json_values()
 {
     local field="$1"
     echo "$field" | grep -q -E "^\[" || field="\[$(echo "$field" | sed 's/[^ ]*/"&"/g' | sed 's/ /,/g'),[0-9]*\]"
-    epm tool json -b | grep "^$field" | sed -e 's|.*[[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
+    epm --quiet tool json -b | grep "^$field" | sed -e 's|.*\][[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
 }
 
 __epm_assure_7zip()
@@ -1054,6 +1065,7 @@ __epm_remove_tmp_files()
 
     if [ -n "$to_clean_tmp_dirs" ] ; then
         echo "$to_clean_tmp_dirs" | while read p ; do
+            [ -n "$p" ] || continue
             [ -n "$verbose" ] && echo "rm -rf '$p'"
             rm -rf "$p" 2>/dev/null
         done
@@ -1061,7 +1073,15 @@ __epm_remove_tmp_files()
 
     if [ -n "$to_clean_tmp_files" ] ; then
         echo "$to_clean_tmp_files" | while read p ; do
+            [ -n "$p" ] || continue
             rm $verbose -f "$p" 2>/dev/null
+        done
+    fi
+
+    if [ -n "$to_sudo_clean_tmp_files" ] ; then
+        echo "$to_sudo_clean_tmp_files" | while read p ; do
+            [ -n "$p" ] || continue
+            sudo rm $verbose -f "$p" 2>/dev/null
         done
     fi
 
@@ -1083,6 +1103,19 @@ $1"
             to_clean_tmp_files="$to_clean_tmp_files
 $1"
         fi
+        shift
+    done
+}
+
+sudo_remove_on_exit()
+{
+    # set trap if needed
+    remove_on_exit
+
+    while [ -n "$1" ] ; do
+            # don't check, it can be non accessible
+            to_sudo_clean_tmp_files="$to_sudo_clean_tmp_files
+$1"
         shift
     done
 }
@@ -1502,6 +1535,16 @@ __epm_addrepo_altlinux()
             __epm_addrepo_add_alt_repo "$branch" "http://mirror.eterfund.org/pub Etersoft/Sisyphus/Deferred" "classic"
             return 0
             ;;
+        deferred-devel)
+            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersoft Sisyphus Deferred supported only for ALT Sisyphus based systems."
+            __epm_addrepo_add_alt_repo "$branch" "https://download.etersoft.ru/pub/ Etersoft/Sisyphus/Deferred_DEVEL" "classic"
+            return 0
+            ;;
+        deferred-beta)
+            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersoft Sisyphus Deferred supported only for ALT Sisyphus based systems."
+            __epm_addrepo_add_alt_repo "$branch" "https://download.etersoft.ru/pub/ Etersoft/Sisyphus/Deferred_BETA" "classic"
+            return 0
+            ;; 
         archive)
             if [ "$2" = "sisyphus" ] ; then
                 branch="$2"
@@ -1512,6 +1555,10 @@ __epm_addrepo_altlinux()
             __epm_addrepo_add_alt_repo "$branch" "$ALTLINUXPUBURL archive/$branch/date/$datestr" "classic"
 
             return 0
+            ;;
+        deffered)
+            warning "Did you mean 'deferred'?"
+            return 1
             ;;
     esac
 
@@ -3313,13 +3360,14 @@ esac
 }
 
 # File bin/epm-desktop:
-json=0
+
+
 
 run_script()
 {
     local script="$CONFIGDIR/desktop.d/$1.sh"
     [ -s "$script" ] || return
-    [ -f "$script.rpmnew" ] && warning 'There is .rpmnew file(s) in $psdir dir. The desktop script`s can be outdated.'
+    [ -f "$script.rpmnew" ] && warning 'There is .rpmnew file(s) in $psdir dir. The desktop script can be outdated.'
 
     shift
     [ "$PROGDIR" = "/usr/bin" ] && SCPATH="$PATH" || SCPATH="$PROGDIR:$PATH"
@@ -3327,182 +3375,260 @@ run_script()
     return
 }
 
-is_de_exist() {
-    local json_file="$(realpath $CONFIGDIR/desktop.d/$1.json)"
-    local de_name=$1
+get_json()
+{
+    local de_name="$1"
+    realpath $CONFIGDIR/desktop.d/$de_name.json
+}
 
-    if [ -f "$json_file" ]; then
-        return 0 
-    else
-        message "Error: Manifest for '$de_name' not found."
-        exit 1  
-    fi
+check_if_de_exists()
+{
+    local de_name="$1"
+
+    [ -n "$de_name" ] || fatal "Missed DE name."
+
+    local json="$(get_json $de_name)"
+
+    [ -s "$json" ] && return
+
+    fatal 'Error: Manifest for $de_name is not found.'
 }
 
 
-is_installed() {
-    local dependencies=$1
-    epm installed $dependencies > /dev/null 2>&1
-    return
-}
-
-
-get_value() {
-    local json_file="$(realpath $CONFIGDIR/desktop.d/$1.json)"
+get_value()
+{
+    local de_name="$1"
     local key="$2"
 
-    if [ "$key" = "description" ]; then
-        epm --quiet tool json -b < "$json_file" | grep "\[\"$key\"" | xargs | sed 's/[",]//g' | cut -f2- -d ' '
-    else
-        epm --quiet tool json -b < "$json_file" | grep "\[\"$key\"" | awk '{print $2}' | sed 's/[",]//g' | xargs
-    fi
+    local json="$(get_json $de_name)"
+
+    get_json_value "$key" < "$json"
 }
 
-get_repo_version() {
+
+get_values()
+{
+    local de_name="$1"
+    local key="$2"
+
+    local json="$(get_json $de_name)"
+
+    get_json_values "$key" < "$json" | xargs
+}
+
+
+__get_api_url()
+{
+    local package_name="$1"
+    echo "https://rdb.altlinux.org/api/package/package_info?name=$package_name&arch=$DISTRARCH&source=false&branch=$DISTRVERSION&full=false"
+}
+
+get_main_package()
+{
+    local de_name="$1"
+    # check by the first package in the dependencies list
+    local package="$(get_values "$de_name" "dependencies" | cut -d' ' -f1)"
+    [ -n "$package" ] || fatal 'Cannot get package name for $de_name'
+    echo "$package"
+}
+
+get_repo_version()
+{
     local de_name=$1
-    local package_name=$(get_value "$de_name" "dependencies" | awk '{print $1}')
-    local latest_version
 
-    latest_version=$(eget --quiet -O- "https://rdb.altlinux.org/api/package/package_info?name=$package_name&arch=x86_64&source=false&branch=sisyphus&full=false" \
-        | epm --quiet tool json -b 2> /dev/null | grep '"packages",0,"version"]' | awk '{print $2}' | tr -d '"')
+    local package=$(get_main_package "$de_name")
 
-    if [ -n "$latest_version" ]; then
+    info "Trying get info of package $package from remote ALT DB ..."
+    local latest_version="$(eget --quiet --timeout 10 -O- $(__get_api_url $package) | get_json_value '["packages",0,"version"]')"
+
+    if [ -n "$latest_version" ] ; then
         echo "$latest_version"
-    else
-        latest_version=$(epm --quiet info $package_name 2>/dev/null | grep 'Version' | grep -E '[0-9]+.[0-9]+(.[0-9]+)?' | awk '{print $NF}' | sed 's/-.*//') 
-
-        if [ -n "$latest_version" ]; then
-            echo "$latest_version"
-        else
-            get_value "$de_name" "version"
-        fi
+        return
     fi
+
+    warning '$package package is missed in the repo, use version from the local metadata'
+
+    epm print version for package "$package" 2>/dev/null && return
+
+    # fallback
+    get_value "$de_name" "version"
 }
 
-install_de_meta() {
-    local metapackages=$(get_value "$de_name" "metapackages")
 
-    [ -n "$metapackages" ] && epm install --manual-requires $metapackages
-    return
+is_de_installed()
+{
+    local de_name="$1"
+
+    is_installed $(get_main_package $de_name)
 }
 
-install_de() {
-    local de_name=$1
 
-    dependencies=$(get_value "$de_name" "dependencies")
+install_de_meta()
+{
+    local metapackages="$(get_values "$de_name" "metapackages")"
 
-    if is_installed "$dependencies"; then
+    # silent skip missed metapackages
+    [ -n "$metapackages" ] || return 0
+
+    # we really want mark all installed packages as manually installed?
+    epm install --manual-requires $metapackages
+}
+
+
+install_de()
+{
+    local de_name="$1"
+
+    if [ -z "$force" ] && is_de_installed $de_name ; then
         message "$de_name is already installed."
-        return 0
-    fi
-
-    message "Installing $de_name with dependencies: $dependencies"
-    
-    if ! install_de_meta $metapackages; then
-        message "Failed to install $de_name." && return 1
-    fi
-    
-    if epm install $dependencies; then
-        run_script "$de_name-postin" $de_name 
-        message "$de_name successfully installed."
-    else
-        fatal "Failed to install $de_name."
         return 1
     fi
 
+    local dependencies="$(get_values "$de_name" "dependencies")"
+
+    message "Installing $de_name with dependencies: $dependencies"
+
+    if ! install_de_meta ; then
+        fatal "Failed to install metapackage(s) for $de_name."
+    fi
+
+    if ! epm install $dependencies ; then
+        fatal "Failed to install $de_name."
+    fi
+
+    run_script "$de_name-postin" $de_name
+    message "$de_name successfully installed."
+
 }
 
-remove_de() {
-    local de_name=$1
 
-    dependencies=$(get_value "$de_name" "dependencies")
+remove_de()
+{
+    local de_name="$1"
 
-    if ! is_installed "$dependencies"; then
+    if [ -z "$force" ] && ! is_de_installed "$de_name" ; then
         message "$de_name is not installed."
         return 0
     fi
 
+    local dependencies="$(get_values "$de_name" "dependencies")"
+
     message "Removing $de_name with dependencies: $dependencies"
 
-    if epm remove $dependencies; then
-        run_script "$de_name-postun" $de_name
-        message "$de_name successfully removed."
-    else
+    # We hope that metapackages will removed by dependency
+    if ! epm remove $dependencies ; then
         fatal "Failed to remove $de_name."
-        return 1
     fi
+
+    run_script "$de_name-postun" $de_name
+    message "$de_name successfully removed."
 }
 
-get_de_info() {
-    local de_name=$1
-    message "   Information for $de_name:
+
+get_de_info()
+{
+    local de_name="$1"
+    local json_flag="$2"
+
+    info "Trying get info from remote ALT DB ..."
+    version="$(get_repo_version $de_name)"
+    installed="$(is_de_installed $de_name && echo 'true' || echo 'false')"
+
+    if [ -n "$json_flag" ]; then
+        local json="$(get_json $de_name)"
+
+        cat "$json" | sed -E 's/"version":.*"/"version": "'$version'"/g' | sed 's/"installed":.*/"installed": '$installed'/g'
+        return
+    fi
+
+    message "Information for $de_name:
     Name: $(get_value $de_name name)
-    Version: $(get_repo_version $de_name)
-    Installed: $(is_installed $de_name && echo 'true'|| echo 'false' )
+    Version: $version
+    Installed: $installed
     Description: $(get_value $de_name description)"
 }
 
-list_des() {
-    if [ "$json" -eq 1 ]; then
-        echo '['
-        first=1
-        for de in $CONFIGDIR/desktop.d/*.json; do
-            if [ $first -eq 1 ]; then
-                first=0
-            else
-                echo ','
-            fi
 
-            de_name=$(basename $de .json)
-            ver=$(get_repo_version $de_name)
-            installed=$(is_installed $de_name && echo 'true' || echo 'false')
-
-            cat "$de" | sed -E "s/\"version\": \"[0-9]+.[0-9]+(.[0-9]+)?\"/\"version\": \"$ver\"/g" | sed "s/\"installed\": false/\"installed\": ${installed}/g"
-        
+list_des()
+{
+    local json_flag="$1"
+    if [ -z "$json_flag" ]; then
+        for de in $CONFIGDIR/desktop.d/*.json ; do
+            basename "$de" .json || fatal
         done
-        echo ']'
-    else
-        for de in $CONFIGDIR/desktop.d/*.json; do
-            basename "$de" .json
-        done
+        return
     fi
+
+    echo '['
+    local first=1
+    for de in $CONFIGDIR/desktop.d/*.json ; do
+        if [ $first = 1 ] ; then
+            first=0
+        else
+            echo ','
+        fi
+
+        de_name="$(basename $de .json)" || fatal
+        get_de_info "$de_name" "$json_flag"
+
+    done
+    echo ']'
 }
 
-show_help() {
-    message 'Usage: epm desktop [command]
-Commands:
-    install [de_name]    Install a desktop environment
-    remove [de_name]     Remove a desktop environment
-    info [de_name]       Get information about a desktop environment
-    list                 List all available desktop environments'
+epm_desktop_help()
+{
+    message 'Usage: epm desktop <command> [--json] [option]'
+            get_help HELPCMD $SHAREDIR/epm-desktop
+    message '
+Examples:
+  epm desktop install kde
+'
 }
 
-epm_desktop() {
 
-    case "$2" in
+epm_desktop()
+{
+
+    local cmd="$1"
+    shift
+
+    local json_flag=''
+
+    case "$1" in
         --json)
-            json=1
+            json_flag=1
+            shift
             ;;
     esac
 
-    case "$1" in
-        install)
-            is_de_exist "$2"
-            install_de "$2"
+    case "$cmd" in
+        "-h"|"--help"|"help")         # HELPCMD: help
+            epm_desktop_help
+            return
             ;;
-        remove)
-            is_de_exist "$2"
-            remove_de "$2"
+        install)                      # HELPCMD: <de_name>   Install a desktop environment
+            check_if_de_exists "$1"
+            install_de "$1"
             ;;
-        info)
-            is_de_exist "$2"
-            get_de_info "$2"
+        remove)                       # HELPCMD: <de_name>   Remove a desktop environment
+            check_if_de_exists "$1"
+            remove_de "$1"
             ;;
-        list)
-            list_des
+        info)                         # HELPCMD: <de_name>   Get information about a desktop environment
+            check_if_de_exists "$1"
+            get_de_info "$1" $json_flag
+            ;;
+        list)                         # HELPCMD:             List all available desktop environments'
+            list_des $json_flag
+            ;;
+        installed)
+            is_de_installed "$1"
+            ;;
+        version)
+            get_repo_version "$1"
             ;;
         *)
-            show_help
+            fatal 'Unknown option $cmd. Run with --help to get help'
             ;;
     esac
 }
@@ -3510,11 +3636,19 @@ epm_desktop() {
 # File bin/epm-downgrade:
 
 
+
+print_apt_preferences()
+{
+    info "Running with /etc/apt/preferences:"
+    cat /etc/apt/preferences
+}
+
 __epm_add_alt_apt_downgrade_preferences()
 {
     set_sudo
-    [ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists"
-    cat <<EOF | sudocmd tee /etc/apt/preferences
+    [ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists, check it and remove."
+    sudo_remove_on_exit /etc/apt/preferences
+    cat <<EOF | sudocmd tee /etc/apt/preferences >/dev/null
 Package: *
 Pin: release c=classic
 Pin-Priority: 1011
@@ -3531,14 +3665,16 @@ Package: *
 Pin: release c=task
 Pin-Priority: 1311
 EOF
+    [ -n "$verbose" ] && print_apt_preferences
+    return 0
 }
 
 __epm_add_deb_apt_downgrade_preferences()
 {
     set_sudo
-    [ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists"
-    info "Running with /etc/apt/preferences:"
-    cat <<EOF | sudorun tee /etc/apt/preferences
+    [ -r /etc/apt/preferences ] && fatal "/etc/apt/preferences already exists, check it and remove"
+    sudo_remove_on_exit /etc/apt/preferences
+    cat <<EOF | sudorun tee /etc/apt/preferences >/dev/null
 Package: *
 Pin: release a=stable
 Pin-Priority: 1001
@@ -3551,6 +3687,8 @@ Package: *
 Pin: release a=unstable
 Pin-Priority: 800
 EOF
+    [ -n "$verbose" ] && print_apt_preferences
+    return 0
 }
 
 __epm_remove_apt_downgrade_preferences()
@@ -3560,7 +3698,7 @@ __epm_remove_apt_downgrade_preferences()
 
 __epm_downgrade_to_alt_archive()
 {
-    local date="$(echo "$1" | cut -d- -f2)"
+    local date="$(echo "$1" | cut -d/ -f2)"
     shift
     __epm_add_alt_apt_downgrade_preferences || return
     try_change_alt_repo
@@ -3595,8 +3733,8 @@ epm_downgrade()
             # archive/date/package (simular to install arg)
             archive/*/*)
                 shift
-                local pkg="$(echo "$arg" | cut -d- -f3)"
-                arg="$(echo "$arg" | cut -d- -f1-2)"
+                local pkg="$(echo "$arg" | cut -d/ -f3)"
+                arg="$(echo "$arg" | cut -d/ -f1-2)"
                 __epm_downgrade_to_alt_archive "$arg" "$pkg"
                 return
             ;;
@@ -3866,6 +4004,27 @@ __epm_print_url_alt_check()
     rm -f $tm
 }
 
+__epm_alt_get_package_url()
+{
+    #sudocmd apt-get install -y --print-uris --reinstall "$pkg" | cut -f1 -d " " | grep ".rpm'$" | sed -e "s|^'||" -e "s|'$||"
+    sudocmd apt-get -y --force-yes --print-uris "$@" | grep -E -o -e "(ht|f)tp://[^\']+"
+}
+
+
+__epm_alt_download_to_cache()
+{
+    if [ -n "$print_url" ] ; then
+        __epm_alt_get_package_url "$@"
+        return
+    fi
+
+    local urls="$(__epm_alt_get_package_url "$@")" || fatal "Can't get URL"
+    [ -z "$urls" ] && return #fatal "Can't get URL"
+
+    # TODO: drop privilegies
+    sudocmd_eget --output-dir /var/cache/apt/archives --continue $urls
+}
+
 __epm_download_alt()
 {
     local pkg
@@ -3900,13 +4059,23 @@ __epm_download_alt()
     info "Cleaning apt cache for correct result ..."
     epm --quiet clean
 
+startwith_inlist()
+{
+    local str="$1"
+    local i
+    for i in "$@" ; do
+        startwith "$str" "$i" && return
+    done
+    return 1
+}
+
     # old systems ignore reinstall ?
-    for pkg in "$@" ; do
-        for i in $(sudocmd apt-get install -y --print-uris --reinstall "$pkg" | cut -f1 -d " " | grep ".rpm'$" | sed -e "s|^'||" -e "s|'$||") ; do
-            echo "$(basename "$i")" | grep -q "^$pkg" || continue
-            [ -n "$print_url" ] && echo "$i" && continue
-            docmd eget "$i"
-        done
+    local url
+    for url in $(__epm_alt_get_package_url install --reinstall "$@") ; do
+        startwith_inlist "$(basename "$url")" "$@" || continue
+        [ -n "$print_url" ] && echo "$url" && continue
+        # TODO: download together
+        docmd eget "$url"
     done
     return
 
@@ -4918,7 +5087,7 @@ process_repo_arguments() {
     local repo_groups
     declare -A repo_groups
     for arg in "$@"; do
-        repo=""
+        repo="."
         name="$arg"
         case "$arg" in
             */*)
@@ -4929,7 +5098,7 @@ process_repo_arguments() {
     done
 
     for repo in "${!repo_groups[@]}"; do
-        if [ -z "$repo" ] ; then
+        if [ "$repo" = '.' ] ; then
             epm_install_names ${repo_groups[$repo]}
         else
             try_change_alt_repo
@@ -4948,13 +5117,13 @@ epm_install_names()
     [ -z "$1" ] && return
 
     # check some like nix: prefix, PPARGS for stop possible recursion. TODO
-    if echo "$*" | grep -q '[a-z][a-z][a-z]*:' && [ -z "$PPARGS" ] ; then
+    if echo "$*" | grep -q -E '(^| )[a-z][a-z][a-z]*:' && [ -z "$PPARGS" ] ; then
         process_package_arguments "$@"
         return
     fi
 
     # check some like repo/package, PPARGS for stop possible recursion. TODO
-    if echo "$*" | grep -q '[a-z][a-z0-9]*/' && [ -z "$PPARGS" ] ; then
+    if echo "$*" | grep -q -E '(^| )[a-zA-Z][a-zA-Z0-9]*/' && [ -z "$PPARGS" ] ; then
         process_repo_arguments "$@"
         return
     fi
@@ -4987,6 +5156,10 @@ epm_install_names()
             VIRTAPTOPTIONS="-o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true"
             # not for kernel packages
             echo "$*" | grep -q "^kernel-"  && VIRTAPTOPTIONS=''
+            if [ -n "$parallel" ] ; then
+                info "Downloading packages to the cache... "
+                __epm_alt_download_to_cache $VIRTAPTOPTIONS $APTOPTIONS $noremove install $@
+            fi
             sudocmd apt-get $VIRTAPTOPTIONS $APTOPTIONS $noremove install $@ && save_installed_packages $@
             return ;;
         apm-rpm)
@@ -9337,7 +9510,9 @@ __do_query_real_file()
         TOFILE="$(__abs_filename "$1")"
     else
         TOFILE="$(print_command_path "$1" || echo "$1")"
-        if [ "$TOFILE" != "$1" ] ; then
+        if [ "$TOFILE" = "$1" ] ; then
+            fatal 'File '$TOFILE' is missing in '$PATH
+        else
             # work against usrmerge
             local t="$(realpath "$(dirname "$TOFILE")")/$(basename "$TOFILE")" #"
             if [ "$TOFILE" != "$t" ] ; then
@@ -9477,13 +9652,13 @@ __do_short_query()
 epm_query_file()
 {
     # file can exists or not
-    [ -n "$pkg_filenames" ] || fatal "Run query without file names"
+    [ -n "$*" ] || fatal "Run query without file names"
 
 
     #load_helper epm-search_file
 
     res=0
-    for pkg in $pkg_filenames ; do
+    for pkg in "$@" ; do
         __do_query_real_file "$pkg" || res=$?
     done
 
@@ -10139,6 +10314,7 @@ __switch_alt_to_distro()
             __switch_repo_to $TO
             end_change_alt_repo
             __do_upgrade
+            docmd epm install altlinux-release-$TO altlinux-release-$FROM-
             docmd epm install rpm apt $(get_fix_release_pkg "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
             __check_system "$TO"
             # will update to kernel 6.6
@@ -10471,7 +10647,7 @@ epm_remove_low()
             return $RES ;;
         *-dpkg|-dpkg)
             # shellcheck disable=SC2046
-            sudocmd dpkg -P $(subst_option nodeps --force-all) $(print_name "$@")
+            sudocmd dpkg --purge $(subst_option nodeps --force-all) $(subst_option force --force-remove-reinstreq)  $(print_name "$@")
             return ;;
         pkgsrc)
             sudocmd pkg_delete -r $@
@@ -11648,9 +11824,10 @@ epm_repo()
         if_valid_reponame "$1" || fatal "No valid repository is specified."
         [ -n "$quiet" ] || epm repo list
         confirm_info 'You are about to set repo ' "$*" "(all repos will be removed)."
-        #epm repo save
+        try_change_alt_repo
         epm repo rm all
-        epm addrepo "$@"
+        epm addrepo "$@" || fatal 'Cannot add repo "'$@'", restoring...'
+        end_change_alt_repo
         ;;
     switch)                           # HELPCMD: switch repo to <repo>: rewrite URLs to the repo (but use epm release-upgrade [Sisyphus|p10] for upgrade to a next branch)
         epm_reposwitch "$@"
@@ -12172,11 +12349,12 @@ epm_reposwitch()
 
     case "$TO" in
         --help)
-            info "Run with --list to get all possible targets"
+            message "Run with --list to get all possible targets"
             return
             ;;
         --list)
-            info "Possible repo switch targets: p8 p9 p10 p11 c8 c9 c10f1 c10f2 Sisyphus"
+            [ -z "$quiet" ] && message "Possible repo switch targets:"
+            echo "p8 p9 p10 p11 c8 c9 c10f1 c10f2 Sisyphus"
             return
             ;;
         -*)
@@ -12293,7 +12471,8 @@ __epm_repochange_alt()
 {
     case "$1" in
         "--list")
-            echo "Possible targets: etersoft datacenter.by truenetwork msu eterfund.org yandex basealt altlinux.org"
+            [ -z "$quiet" ] && message "Possible targets:"
+            echo "etersoft datacenter.by truenetwork msu eterfund.org yandex basealt altlinux.org"
             ;;
         "etersoft")
             __change_repo "//download.etersoft.ru/pub ALTLinux"
@@ -12328,7 +12507,7 @@ __epm_repochange_alt()
 
 epm_repochange()
 {
-    [ "$1" = "--help" ] && info "Use --list to get all possible targets" && return
+    [ "$1" = "--help" ] && message "Use --list to get all possible targets" && return
     [ "$1" = "--list" ] || epm_repofix
     case $BASEDISTRNAME in
         "alt")
@@ -14315,7 +14494,7 @@ get_url_to_etersoft_mirror()
 
 __add_to_contents_index_list()
 {
-    [ -n "$verbose" ] && echo " $1 -> $2"
+    [ -n "$verbose" ] && info "Put $1 -> $2"
     [ -s "$2" ] || return
     echo "$2" >>$ALT_CONTENTS_INDEX_LIST
 }
@@ -14358,8 +14537,7 @@ update_alt_contents_index()
         (quiet=1 epm_repolist) | \
         grep -v " task$" | \
         grep -E "rpm.*(ftp://|http://|https://|rsync://|file:/)" | \
-        sed -e "s@^rpm.*\(ftp://\|http://\|https://\)@rsync://@g" | \
-        sed -e "s@^rpm.*\(file:\)@@g"
+        sed -e "s@.*rpm.*file:/@/@" -e "s@^.*\]@@" -e "s@^rpm *@@"
     )
 
     for line in "${URL_LIST[@]}"; do
@@ -14370,27 +14548,40 @@ update_alt_contents_index()
         [ "$component" = "debuginfo" ] && continue
         URL="$URL1/$URL2"
 
+        [ -n "$verbose" ] && info "Checking $URL ..."
         if is_abs_path "$URL" ; then
             # first check for local mirror
             local LOCALPATH="$(echo "$URL/base")"
             local LOCALPATHGZIP="$(echo "$LOCALPATH" | sed -e "s|/ALTLinux/|/ALTLinux/contents_index/|")"
             __add_better_to_contents_index_list "$URL" "$LOCALPATHGZIP/contents_index.gz" "$LOCALPATH/contents_index"
+            continue
         else
-            local LOCALPATH="$(get_local_alt_mirror_path "$URL")"
-            local REMOTEURL="$(get_url_to_etersoft_mirror "$URL")"
+            RSYNCURL="$(echo "$URL" | sed -e "s@\(ftp://\|http://\|https://\)@rsync://@g")" #"
 
+            local LOCALPATH="$(get_local_alt_mirror_path "$URL")"
+            local REMOTEURL="$(get_url_to_etersoft_mirror "$RSYNCURL")"
+            [ -n "$verbose" ] && info "    Local: $LOCALPATH  Remote: $REMOTEURL"
             if [ -n "$REMOTEURL" ] ; then
+                # we never had x86_64-i586 content_index, see https://bugzilla.altlinux.org/52908
+                rhas "$REMOTEURL" "x86_64-i586" && continue
                 rsync_alt_contents_index "$REMOTEURL/base/contents_index.gz" "$LOCALPATH/contents_index.gz" && \
                 __add_to_contents_index_list "$REMOTEURL" "$LOCALPATH/contents_index.gz" && continue
                 [ -n "$verbose" ] && info "Note: Can't retrieve $REMOTEURL/base/contents_index.gz, fallback to $URL/base/contents_index"
             fi
+
             # we don't know if remote server has rsync
             # fix rsync URL firstly
             #local RSYNCURL="$(echo "$URL" | sed -e "s|rsync://\(ftp.basealt.ru\|basealt.org\|altlinux.ru\)/pub/distributions/ALTLinux|rsync://\1/ALTLinux|")" #"
             #rsync_alt_contents_index $RSYNCURL/base/contents_index $LOCALPATH/contents_index -z && __add_to_contents_index_list "$RSYNCURL" "$LOCALPATH/contents_index" && continue
-            #mkdir -p "$LOCALPATH"
-            #eget -O $LOCALPATH/contents_index $URL/base/contents_index && __add_to_contents_index_list "$RSYNCURL" "$LOCALPATH/contents_index" && continue
 
+            # Download directly
+            # TODO: add gzipped during archiving
+            mkdir -p "$LOCALPATH"
+            if eget --check-url $URL/base/contents_index.gz ; then
+                eget -O $LOCALPATH/contents_index.gz $URL/base/contents_index.gz && __add_to_contents_index_list "$URL" "$LOCALPATH/contents_index.gz" && continue
+            else
+                eget -O $LOCALPATH/contents_index $URL/base/contents_index && __add_to_contents_index_list "$URL" "$LOCALPATH/contents_index" && continue
+            fi
             #__add_better_to_contents_index_list "(cached)" "$LOCALPATH/contents_index.gz" "$LOCALPATH/contents_index"
         fi
     done
@@ -15417,6 +15608,17 @@ esac
 
 }
 
+__epm_list_content_index()
+{
+case $BASEDISTRNAME in
+    "alt")
+        cat $ALT_CONTENTS_INDEX_LIST
+        return
+        ;;
+esac
+
+}
+
 __epm_update()
 {
 
@@ -15552,6 +15754,19 @@ esac
 
 epm_update()
 {
+    if [ "$1" = "--help" ] ; then
+        message "Usage: epm update [options]
+    Options:
+        --content-index       Update content index only
+        --check-apt-db-days   Check APT DB update status
+"
+        return
+    fi
+
+    if [ "$1" = "--list-content-index" ] ; then
+        __epm_list_content_index
+        return
+    fi
     if [ "$1" = "--content-index" ] ; then
         __epm_update_content_index
         return
@@ -15693,6 +15908,11 @@ epm_upgrade()
     case $PMTYPE in
     apt-rpm|apt-dpkg)
         local APTOPTIONS="$dryrun $(subst_option non_interactive -y) $(subst_option debug "-V -o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
+        if [ -n "$parallel" ] && [ "$BASEDISTRNAME" = "alt" ] ; then
+            info "Downloading packages to the cache... "
+            __epm_alt_download_to_cache $APTOPTIONS dist-upgrade
+        fi
+
         CMD="apt-get $APTOPTIONS $noremove $force_yes dist-upgrade"
         ;;
     apm-rpm)
@@ -17547,7 +17767,8 @@ AXELCOMPRESSED=''
 WGETQ='' #-q
 CURLQ='' #-s
 AXELQ='' #-q
-# TODO: aria2c
+ARIA2Q=''
+AXELQ=''
 # TODO: 
 WGETNAMEOPTIONS='--content-disposition'
 CURLFILENAMEOPTIONS='--remote-name --remote-time --remote-header-name'
@@ -17558,9 +17779,13 @@ CURLTRUSTSERVERNAMES=''
 
 CURLOUTPUTDIR=''
 WGETOUTPUTDIR=''
+USEOUTPUTDIR=''
+ARIA2OUTPUTDIR=''
+AXELOUTPUTDIR=''
 WGETNODIRECTORIES=''
 WGETCONTINUE=''
 CURLCONTINUE=''
+ARIA2CONTINUE=''
 WGETTIMEOUT=''
 CURLMAXTIME=''
 WGETREADTIMEOUT=''
@@ -17591,6 +17816,8 @@ set_quiet()
     WGETQ='-q'
     CURLQ='-s'
     AXELQ='-q'
+    ARIA2Q=''
+    AXELQ='--quiet'
     quiet=1
 }
 
@@ -17598,6 +17825,8 @@ unset_quiet()
 {
     WGETQ=''
     CURLQ=''
+    AXELQ=''
+    ARIA2Q=''
     AXELQ=''
     quiet=''
 }
@@ -17649,7 +17878,7 @@ Supported URLs:
   ftp:// http:// https:// file:/ ipfs://
 
 Supported backends (set like EGET_BACKEND=curl)
-  wget curl (todo: aria2c)
+  wget, curl and partially aria2c, axel
 
 Also you can set EGET_OPTIONS variable with needed options
 
@@ -17666,6 +17895,7 @@ Examples:
 EOF
 }
 
+
 if [ -z "$1" ] ; then
     echo "eget - wget like downloader wrapper with wildcard support, uses wget or curl as backend" >&2
     echo "Run $0 --help to get help" >&2
@@ -17676,6 +17906,7 @@ __eget_parse_options()
 {
 local argument
 local argvalue
+local count="$#"
 while [ -n "$1" ] ; do
     argument="$(echo "$1" | cut -d= -f1)"
     argvalue="$(echo "$1" | cut -s -d= -f2)"
@@ -17715,9 +17946,12 @@ while [ -n "$1" ] ; do
             shift
             CURLOUTPUTDIR="--create-dirs --output-dir $1"
             WGETOUTPUTDIR="-P $1"
+            ARIA2OUTPUTDIR="-d $1"
+            AXELOUTPUTDIR="-o $1"
+            USEOUTPUTDIR="$1"
             ;;
         -U|-A|--user-agent)
-            user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
+            user_agent="Mozilla/5.0 (X11; Linux $arch) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36" #"
             WGETUSERAGENT="-U '$user_agent'"
             CURLUSERAGENT="-A '$user_agent'"
             AXELUSERAGENT="--user-agent='$user_agent'"
@@ -17776,11 +18010,13 @@ while [ -n "$1" ] ; do
             WGETNODIRECTORIES="$1"
             ;;
         --no-glob)
-            NOGLOB="$1"
+            NOGLOB="--no-glob"
             ;;
         -c|--continue)
             WGETCONTINUE="$1"
             CURLCONTINUE="-C -"
+            ARIA2CONTINUE="--continue=true"
+            AXELCONTINUE=""
             ;;
         -T|--timeout)
             if [ -z "$argvalue" ];then
@@ -17789,6 +18025,7 @@ while [ -n "$1" ] ; do
             fi
             WGETTIMEOUT="--timeout $argvalue"
             CURLMAXTIME="--max-time $argvalue"
+            AXELTIMEOUT="--timeout=$argvalue"
             ;;
         --read-timeout)
             if [ -z "$argvalue" ];then
@@ -17796,8 +18033,11 @@ while [ -n "$1" ] ; do
                 argvalue="$1"
             fi
             WGETREADTIMEOUT="--read-timeout $argvalue"
-            if [ -z "$CURLMAXTIME" ];then
+            if [ -z "$CURLMAXTIME" ] ; then
                 CURLMAXTIME="--max-time $argvalue"
+            fi
+            if [ -z "$AXELTIMEOUT" ] ; then
+                AXELTIMEOUT="--timeout=$argvalue"
             fi
             ;;
         --retry-connrefused)
@@ -17835,16 +18075,17 @@ while [ -n "$1" ] ; do
             fatal "Unknown option '$1', check eget --help."
             ;;
         *)
-            return $#
+            return $(($count-$#))
             ;;
     esac
     shift
 done
-return $#
+return $(($count-$#))
 }
 
 __eget_parse_options "$@"
-shift $(($#-$?))
+# no more than 255 options
+shift $?
 __eget_parse_options $EGET_OPTIONS
 
 #############################3
@@ -18163,6 +18404,8 @@ fi
 
 WGET="$(print_command_path wget)"
 CURL="$(print_command_path curl)"
+ARIA2="$(print_command_path aria2)"
+AXEL="$(print_command_path axel)"
 
 ORIG_EGET_BACKEND="$EGET_BACKEND"
 
@@ -18193,6 +18436,20 @@ case "$orig_EGET_BACKEND" in
     curl)
         [ -n "$CURL" ] || fatal "There are no curl in the system but you forced using it via EGET_BACKEND. Install it with $ epm install curl"
         ;;
+    */aria2)
+        ARIA2="$orig_EGET_BACKEND"
+        [ -x "$ARIA2" ] || fatal "There are no $orig_EGET_BACKEND in the system but you forced using it via EGET_BACKEND. Install it with $ epm install aria2"
+        ;;
+    aria2)
+        [ -n "$ARIA2" ] || fatal "There are no aria2 in the system but you forced using it via EGET_BACKEND. Install it with $ epm install aria2"
+        ;;
+    */axel)
+        AXEL="$orig_EGET_BACKEND"
+        [ -x "$AXEL" ] || fatal "There are no $orig_EGET_BACKEND in the system but you forced using it via EGET_BACKEND. Install it with $ epm install axel"
+        ;;
+    axel)
+        [ -n "$AXEL" ] || fatal "There are no axel in the system but you forced using it via EGET_BACKEND. Install it with $ epm install axel"
+        ;;
     '')
         [ -n "$WGET" ] && EGET_BACKEND="wget"
         [ -z "$EGET_BACKEND" ] && [ -n "$CURL" ] && EGET_BACKEND="curl"
@@ -18213,6 +18470,7 @@ url_scat()
     local URL="$1"
     cat "$(path_from_url "$URL")"
 }
+
 # download to default name of to $2
 url_sget()
 {
@@ -18225,6 +18483,15 @@ url_sget()
        return
     fi
     cp -av "$(path_from_url "$URL")" .
+}
+
+url_pget()
+{
+    #[ -n "$USEOUTPUTDIR" ] || fatal "USEOUTPUTDIR is not set"
+    local URL
+    for URL in "$@" ; do
+        cp -av "$(path_from_url "$URL")" $USEOUTPUTDIR
+    done
 }
 
 url_check_accessible()
@@ -18257,6 +18524,7 @@ url_scat()
     local URL="$1"
     ipfs_cat "$(cid_from_url "$URL")"
 }
+
 # download to default name of to $2
 url_sget()
 {
@@ -18276,6 +18544,19 @@ url_sget()
     fi
 
     ipfs_get "$(cid_from_url "$URL")"
+}
+
+url_pget()
+{
+    #[ -n "$USEOUTPUTDIR" ] || fatal "USEOUTPUTDIR is not set"
+    local URL
+    for URL in "$@" ; do
+        local fn="$(url_print_filename_from_url "$URL")"
+        if [ -z "$fn" ] ; then
+           fn="$(basename $URL)"
+        fi
+        ipfs_get "$(cid_from_url "$URL")" "$USEOUTPUTDIR/$fn"
+    done
 }
 
 url_check_accessible()
@@ -18321,9 +18602,9 @@ elif [ "$EGET_BACKEND" = "wget" ] ; then
 __wget()
 {
     if [ -n "$WGETUSERAGENT" ] ; then
-        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETHEADER $WGETNOSSLCHECK $WGETNODIRECTORIES $WGETCONTINUE $WGETTIMEOUT $WGETREADTIMEOUT $WGETRETRYCONNREFUSED $WGETTRIES $WGETLOADCOOKIES $WGETRUSTSERVERNAMES "$(eval echo "$WGETUSERAGENT")" "$@"
+        docmd $WGET $FORCEIPV $WGETQ $NOGLOB $WGETCOMPRESSED $WGETHEADER $WGETOUTPUTDIR $WGETNOSSLCHECK $WGETNODIRECTORIES $WGETCONTINUE $WGETTIMEOUT $WGETREADTIMEOUT $WGETRETRYCONNREFUSED $WGETTRIES $WGETLOADCOOKIES $WGETRUSTSERVERNAMES "$(eval echo "$WGETUSERAGENT")" "$@"
     else
-        docmd $WGET $FORCEIPV $WGETQ $WGETCOMPRESSED $WGETHEADER $WGETNOSSLCHECK $WGETNODIRECTORIES $WGETCONTINUE $WGETTIMEOUT $WGETREADTIMEOUT $WGETRETRYCONNREFUSED $WGETTRIES $WGETLOADCOOKIES $WGETRUSTSERVERNAMES "$@"
+        docmd $WGET $FORCEIPV $WGETQ $NOGLOB $WGETCOMPRESSED $WGETHEADER $WGETOUTPUTDIR $WGETNOSSLCHECK $WGETNODIRECTORIES $WGETCONTINUE $WGETTIMEOUT $WGETREADTIMEOUT $WGETRETRYCONNREFUSED $WGETTRIES $WGETLOADCOOKIES $WGETRUSTSERVERNAMES "$@"
     fi
 }
 
@@ -18335,6 +18616,7 @@ url_scat()
     unset_quiet
     download_with_mirroring __wget "$URL" -O-
 }
+
 # download to default name of to $2
 url_sget()
 {
@@ -18351,6 +18633,12 @@ url_sget()
 # -nc
 # TODO: overwrite always
     download_with_mirroring __wget "$URL" $WGETNAMEOPTIONS
+}
+
+url_pget()
+{
+    #[ -n "$USEOUTPUTDIR" ] || fatal "USEOUTPUTDIR is not set"
+    download_with_mirroring __wget $WGETNAMEOPTIONS "$@"
 }
 
 url_get_response()
@@ -18375,7 +18663,7 @@ __curl()
     if [ -n "$CURLUSERAGENT" ] ; then
         docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER $CURLOUTPUTDIR $CURLNOSSLCHECK $CURLCONTINUE $CURLMAXTIME $CURLRETRYCONNREFUSED $CURLRETRY $CURLCOOKIE $CURLTRUSTSERVERNAMES "$(eval echo "$CURLUSERAGENT")" "$@"
     else
-        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER $CURLNOSSLCHECK $CURLCONTINUE $CURLMAXTIME $CURLRETRYCONNREFUSED $CURLRETRY $CURLCOOKIE $CURLTRUSTSERVERNAMES "$@"
+        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER $CURLOUTPUTDIR $CURLNOSSLCHECK $CURLCONTINUE $CURLMAXTIME $CURLRETRYCONNREFUSED $CURLRETRY $CURLCOOKIE $CURLTRUSTSERVERNAMES "$@"
     fi
 }
 # put remote content to stdout
@@ -18386,6 +18674,7 @@ url_scat()
     unset_quiet
     download_with_mirroring __curl "$URL" --output -
 }
+
 # download to default name of to $2
 url_sget()
 {
@@ -18408,6 +18697,15 @@ url_sget()
     download_with_mirroring __curl "$URL" $CURLFILENAMEOPTIONS
 }
 
+url_pget()
+{
+    #[ -n "$USEOUTPUTDIR" ] || fatal "USEOUTPUTDIR is not set"
+    local URL
+    for URL in "$@" ; do
+        download_with_mirroring __curl $CURLFILENAMEOPTIONS "$URL"
+    done
+}
+
 url_get_response()
 {
     local URL="$1"
@@ -18422,13 +18720,126 @@ url_get_response()
     echo "$answer"
 }
 
+elif [ "$EGET_BACKEND" = "aria2" ] ; then
+__aria2()
+{
+    docmd $ARIA2 $ARIA2Q $ARIA2OUTPUTDIR $ARIA2CONTINUE "$@"
+}
+
+# put remote content to stdout
+url_scat()
+{
+    local URL="$1"
+    download_with_mirroring __aria2 -x1 -s1 --allow-piece-length-change=false -o - "$URL" && return
+    unset_quiet
+    download_with_mirroring __aria2 -x1 -s1 --allow-piece-length-change=false -o - "$URL"
+}
+
+# download to default name of to $2
+url_sget()
+{
+    local URL="$1"
+    if [ "$2" = "/dev/stdout" ] || [ "$2" = "-" ] ; then
+       scat "$URL"
+       return
+    elif [ -n "$2" ] ; then
+       download_with_mirroring __aria2 -x1 -s1 --allow-piece-length-change=false -o "$2" "$URL"
+       return
+    fi
+# TODO: overwrite always
+    download_with_mirroring __aria2 "$URL"
+}
+
+url_pget()
+{
+    #[ -n "$USEOUTPUTDIR" ] || fatal "USEOUTPUTDIR is not set"
+    echo "$@" | xargs -n1 | download_with_mirroring __aria2 -i-
+}
+
+
+# left wget here
+url_get_response()
+{
+    local URL="$1"
+    local answer
+    answer="$(quiet=1 __wget --timeout 20 --tries 1 --spider -S "$URL" 2>&1)"
+    # HTTP/1.1 405 Method Not Allowed
+    # HTTP/1.1 404 Not Found
+    if echo "$answer" | grep -q "^ *HTTP/[12.]* 40[45]" ; then
+        (quiet=1 __wget -O/dev/null --header="Range: bytes=0-0" -S "$URL" 2>&1)
+        return
+    fi
+    echo "$answer"
+}
+
+elif [ "$EGET_BACKEND" = "axel" ] ; then
+__axel()
+{
+    if [ -n "$AXELUSERAGENT" ] ; then
+        docmd $AXEL $FORCEIPV $AXELQ $AXELOUTPUTDIR $AXELCONTINUE $AXELTIMEOUT $AXELHEADER $AXELNOSSLCHECK $AXELUSERAGENT "$(eval echo "$AXELUSERAGENT")" "$@"
+    else
+        docmd $AXEL $FORCEIPV $AXELQ $AXELOUTPUTDIR $AXELCONTINUE $AXELTIMEOUT $AXELHEADER $AXELNOSSLCHECK $AXELUSERAGENT "$@"
+    fi
+}
+
+# put remote content to stdout
+url_scat()
+{
+    # TODO
+    fatal "Improve me (via temp. file?)"
+    local URL="$1"
+    download_with_mirroring __axel -o - "$URL" && return
+    unset_quiet
+    download_with_mirroring __axel -o - "$URL"
+}
+
+# download to default name of to $2
+url_sget()
+{
+    local URL="$1"
+    if [ "$2" = "/dev/stdout" ] || [ "$2" = "-" ] ; then
+       scat "$URL"
+       return
+    elif [ -n "$2" ] ; then
+       download_with_mirroring __axel --alternate -o "$2" "$URL"
+       return
+    fi
+    download_with_mirroring __axel --alternate "$URL"
+}
+
+url_pget()
+{
+    #[ -n "$USEOUTPUTDIR" ] || fatal "USEOUTPUTDIR is not set"
+    # download_with_mirroring __axel "$@"
+    local URL
+    for URL in "$@" ; do
+        download_with_mirroring __axel --alternate "$URL"
+    done
+}
+
+
+# left wget here
+url_get_response()
+{
+    local URL="$1"
+    local answer
+    answer="$(quiet=1 __wget --timeout 20 --tries 1 --spider -S "$URL" 2>&1)"
+    # HTTP/1.1 405 Method Not Allowed
+    # HTTP/1.1 404 Not Found
+    if echo "$answer" | grep -q "^ *HTTP/[12.]* 40[45]" ; then
+        (quiet=1 __wget -O/dev/null --header="Range: bytes=0-0" -S "$URL" 2>&1)
+        return
+    fi
+    echo "$answer"
+}
+
 else
     fatal "Unknown EGET_BACKEND '$EGET_BACKEND', logical error."
 fi
 
 
-# Common code for both wget and curl (http related)
-if [ "$EGET_BACKEND" = "wget" ] || [ "$EGET_BACKEND" = "curl" ] ; then
+# Common code for both wget and curl and aria2 (http related)
+if [ "$EGET_BACKEND" = "wget" ] || [ "$EGET_BACKEND" = "curl" ] || [ "$EGET_BACKEND" = "aria2" ] || [ "$EGET_BACKEND" = "axel" ] ; then
 
 url_get_headers()
 {
@@ -18526,6 +18937,7 @@ url_get_filename()
 }
 
 fi
+
 
 if [ -n "$ipfs_mode" ] && [ -n "$EGET_IPFS_DB" ] &&  ! is_ipfsurl "$1"  ; then
 
@@ -18712,6 +19124,11 @@ sget()
     url_sget "$@"
 }
 
+pget()
+{
+    url_pget "$@"
+}
+
 check_url_is_accessible()
 {
     url_check_accessible "$@"
@@ -18883,8 +19300,15 @@ if [ -z "$NOGLOB" ] && echo "$URL" | grep -q -P "[*\[\]]" ; then
     fatal "Error: there are globbing symbol (*[]) in $URL. It is allowed only for mask part"
 fi
 
-is_url "$MASK" && fatal "eget supports only one URL as argument"
-[ -n "$3" ] && fatal "too many args: extra '$3'. May be you need use quotes for arg with wildcards."
+if is_url "$MASK" ; then
+    #[ -z "$USEOUTPUTDIR" ] && fatal "eget supports only one URL as argument by default, use --output-dir to download in parallel"
+    USEOUTPUTDIR="."
+    CURLOUTPUTDIR="--create-dirs --output-dir $USEOUTPUTDIR"
+    pget "$@"
+    return
+else
+    [ -n "$3" ] && fatal "too many args: extra '$3'. May be you need use quotes for arg with wildcards."
+fi
 
 # TODO: curl?
 # If ftp protocol, just download
@@ -20207,6 +20631,7 @@ sort=
 non_interactive=$EPM_AUTO
 download=
 download_only=
+parallel=
 print_url=
 interactive=
 force_yes=
@@ -20327,6 +20752,7 @@ check_command()
         ;;
     -qf|qf|-S|wp|which|belongs)     # HELPCMD: query package(s) owning file
         epm_cmd=query_file
+        direct_args=1
         ;;
 
 # HELPCMD: PART: Useful commands:
@@ -20657,6 +21083,9 @@ check_option()
     --url)                 # HELPOPT: print only URL instead of download package
         print_url="--url"
         ;;
+    --parallel)            # HELPOPT: simultaneous downloading of packages
+        parallel="--parallel"
+        ;;
     -y|--auto|--assumeyes|--non-interactive|--disable-interactivity)  # HELPOPT: non interactive mode
         non_interactive="--auto"
         interactive=""
@@ -20745,7 +21174,7 @@ if [ -n "$quiet" ] ; then
 fi
 
 # fill
-export EPM_OPTIONS="$nodeps $force $full $verbose $debug $quiet $interactive $non_interactive $save_only $download_only $force_overwrite $manual_requires $noscripts $scripts"
+export EPM_OPTIONS="$nodeps $force $full $verbose $debug $quiet $interactive $non_interactive $parallel $save_only $download_only $force_overwrite $manual_requires $noscripts $scripts"
 
 # if input is not console and run script from file, get pkgs from stdin too
 if [ ! -n "$inscript" ] && [ -p /dev/stdin ] && [ "$EPMMODE" != "pipe" ] ; then
@@ -20803,6 +21232,16 @@ fi
 case $epm_cmd in
     update|upgrade|Upgrade|install|reinstall|Install|remove|autoremove|kernel_update|release_upgrade|release_downgrade|check)
         set_eatmydata
+        ;;
+esac
+
+case $epm_cmd in
+    upgrade|Upgrade|install|reinstall|Install|release_upgrade|release_downgrade)
+        if [ -z "$eget_backend" ] ; then
+            is_command aria2 && eget_backend=aria2 && echo "Use installed aria2 to parallel package downloading."
+            [ -z "$eget_backend" ] && is_command axel && eget_backend=axel && echo "Use installed axel to parallel package downloading."
+            [ -n "$eget_backend" ] || info "It is better to install aria2 for parallel downloading."
+        fi
         ;;
 esac
 
