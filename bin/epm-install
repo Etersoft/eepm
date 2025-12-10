@@ -129,7 +129,7 @@ process_repo_arguments() {
     local repo_groups
     declare -A repo_groups
     for arg in "$@"; do
-        repo=""
+        repo="."
         name="$arg"
         case "$arg" in
             */*)
@@ -140,7 +140,7 @@ process_repo_arguments() {
     done
 
     for repo in "${!repo_groups[@]}"; do
-        if [ -z "$repo" ] ; then
+        if [ "$repo" = '.' ] ; then
             epm_install_names ${repo_groups[$repo]}
         else
             load_helper epm-update
@@ -162,13 +162,13 @@ epm_install_names()
     [ -z "$1" ] && return
 
     # check some like nix: prefix, PPARGS for stop possible recursion. TODO
-    if echo "$*" | grep -q '[a-z][a-z][a-z]*:' && [ -z "$PPARGS" ] ; then
+    if echo "$*" | grep -q -E '(^| )[a-z][a-z][a-z]*:' && [ -z "$PPARGS" ] ; then
         process_package_arguments "$@"
         return
     fi
 
     # check some like repo/package, PPARGS for stop possible recursion. TODO
-    if echo "$*" | grep -q '[a-z][a-z0-9]*/' && [ -z "$PPARGS" ] ; then
+    if echo "$*" | grep -q -E '(^| )[a-zA-Z][a-zA-Z0-9]*/' && [ -z "$PPARGS" ] ; then
         process_repo_arguments "$@"
         return
     fi
