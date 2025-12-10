@@ -170,7 +170,7 @@ __eepm_complete_repolist() {
     if [[ $cur == */* ]]; then
         _filedir
     elif [[ $(epm print info -s) == 'alt' ]]; then
-        COMPREPLY="basealt altsp yandex autoimports autoports altlinuxclub deferred deferred.org etersoft korinf archive URL"
+        COMPREPLY="basealt altsp yandex autoimports autoports altlinuxclub deferred deferred.org deferred-beta deferred-devel etersoft korinf archive"
         COMPREPLY=( $( compgen -W '${COMPREPLY[@]}' -- "$cur" ) )
     fi
 }

@@ -471,7 +471,8 @@ _epm_complete_repolist() {
     'etersoft:Etersoft repository'
     'korinf:Korinf repository'
     'archive:Archive repository'
-    'URL:Specify a URL for the repository'
+    'deferred-devel:Deferred devel repository'
+    'deferred-beta:Deferred beta repository'
   )
 
   if [[ ${words[CURRENT]} == */* ]]; then
