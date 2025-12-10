@@ -8,14 +8,12 @@ URL="https://music.yandex.ru/download"
 
 . $(dirname $0)/common.sh
 
-
 DOWNLOAD_JSON="https://music-desktop-application.s3.yandex.net/stable/download.json"
-JSON="$(eget -O- "$DOWNLOAD_JSON")"
 
 if [ "$VERSION" = "*" ] ; then
-    VERSION=$(echo $JSON | grep -oP '(?<=Yandex_Music_amd64_)[0-9.]+(?=\.deb)')
+    PKGURL="$(eget -O- "$DOWNLOAD_JSON" | epm tool json -b | get_json_value "linux")"
+else
+    PKGURL="https://music-desktop-application.s3.yandex.net/stable/Yandex_Music_amd64_${VERSION}.deb"
 fi
 
-PKGURL="https://music-desktop-application.s3.yandex.net/stable/Yandex_Music_amd64_${VERSION}.deb"
-
-install_pack_pkgurl "$VERSION"
+install_pkgurl
