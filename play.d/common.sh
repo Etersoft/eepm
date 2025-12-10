@@ -376,7 +376,7 @@ is_repacked_package()
 
     epm status --installed $pkg || return 0
 
-    epm status --supported || return 1
+    epm status --supported $pkg || return 1
 
     [ -n "$force" ] && return 0
 
