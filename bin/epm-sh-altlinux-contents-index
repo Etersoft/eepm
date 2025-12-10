@@ -88,7 +88,7 @@ get_url_to_etersoft_mirror()
 # "comment" "file"
 __add_to_contents_index_list()
 {
-    [ -n "$verbose" ] && echo " $1 -> $2"
+    [ -n "$verbose" ] && info "Put $1 -> $2"
     [ -s "$2" ] || return
     echo "$2" >>$ALT_CONTENTS_INDEX_LIST
 }
@@ -135,8 +135,7 @@ update_alt_contents_index()
         (quiet=1 epm_repolist) | \
         grep -v " task$" | \
         grep -E "rpm.*(ftp://|http://|https://|rsync://|file:/)" | \
-        sed -e "s@^rpm.*\(ftp://\|http://\|https://\)@rsync://@g" | \
-        sed -e "s@^rpm.*\(file:\)@@g"
+        sed -e "s@.*rpm.*file:/@/@" -e "s@^.*\]@@" -e "s@^rpm *@@"
     )
 
     for line in "${URL_LIST[@]}"; do
@@ -147,27 +146,40 @@ update_alt_contents_index()
         [ "$component" = "debuginfo" ] && continue
         URL="$URL1/$URL2"
 
+        [ -n "$verbose" ] && info "Checking $URL ..."
         if is_abs_path "$URL" ; then
             # first check for local mirror
             local LOCALPATH="$(echo "$URL/base")"
             local LOCALPATHGZIP="$(echo "$LOCALPATH" | sed -e "s|/ALTLinux/|/ALTLinux/contents_index/|")"
             __add_better_to_contents_index_list "$URL" "$LOCALPATHGZIP/contents_index.gz" "$LOCALPATH/contents_index"
+            continue
         else
-            local LOCALPATH="$(get_local_alt_mirror_path "$URL")"
-            local REMOTEURL="$(get_url_to_etersoft_mirror "$URL")"
+            RSYNCURL="$(echo "$URL" | sed -e "s@\(ftp://\|http://\|https://\)@rsync://@g")" #"
 
+            local LOCALPATH="$(get_local_alt_mirror_path "$URL")"
+            local REMOTEURL="$(get_url_to_etersoft_mirror "$RSYNCURL")"
+            [ -n "$verbose" ] && info "    Local: $LOCALPATH  Remote: $REMOTEURL"
             if [ -n "$REMOTEURL" ] ; then
+                # we never had x86_64-i586 content_index, see https://bugzilla.altlinux.org/52908
+                rhas "$REMOTEURL" "x86_64-i586" && continue
                 rsync_alt_contents_index "$REMOTEURL/base/contents_index.gz" "$LOCALPATH/contents_index.gz" && \
                 __add_to_contents_index_list "$REMOTEURL" "$LOCALPATH/contents_index.gz" && continue
                 [ -n "$verbose" ] && info "Note: Can't retrieve $REMOTEURL/base/contents_index.gz, fallback to $URL/base/contents_index"
             fi
+
             # we don't know if remote server has rsync
             # fix rsync URL firstly
             #local RSYNCURL="$(echo "$URL" | sed -e "s|rsync://\(ftp.basealt.ru\|basealt.org\|altlinux.ru\)/pub/distributions/ALTLinux|rsync://\1/ALTLinux|")" #"
             #rsync_alt_contents_index $RSYNCURL/base/contents_index $LOCALPATH/contents_index -z && __add_to_contents_index_list "$RSYNCURL" "$LOCALPATH/contents_index" && continue
-            #mkdir -p "$LOCALPATH"
-            #eget -O $LOCALPATH/contents_index $URL/base/contents_index && __add_to_contents_index_list "$RSYNCURL" "$LOCALPATH/contents_index" && continue
 
+            # Download directly
+            # TODO: add gzipped during archiving
+            mkdir -p "$LOCALPATH"
+            if eget --check-url $URL/base/contents_index.gz ; then
+                eget -O $LOCALPATH/contents_index.gz $URL/base/contents_index.gz && __add_to_contents_index_list "$URL" "$LOCALPATH/contents_index.gz" && continue
+            else
+                eget -O $LOCALPATH/contents_index $URL/base/contents_index && __add_to_contents_index_list "$URL" "$LOCALPATH/contents_index" && continue
+            fi
             #__add_better_to_contents_index_list "(cached)" "$LOCALPATH/contents_index.gz" "$LOCALPATH/contents_index"
         fi
     done
