@@ -101,6 +101,37 @@ __assure_exists_rpmbuild()
     esac
 }
 
+
+__epm_check_repacked_package_req()
+{
+    local name="$1"
+    local grep_flag="$2"
+    local alf="$CONFIGDIR/reqstoplist.list"
+    [ -s "$alf" ] || return 1
+    [ -n "$name" ] || return 1
+    local tmpalf=$(__convert_pkgallowscripts_to_regexp "$alf")
+    remove_on_exit $tmpalf
+    [ -n "$verbose" ] && echo "reqstop rules: $(cat $tmpalf)"
+    ! echo "$name" | grep $grep_flag -f $tmpalf
+    local res=$?
+    rm $tmpalf
+    return $res
+}
+
+
+epm_check_repacked_rpm()
+{
+    local pkg="$1"
+    local req="$(epm req "$pkg")"
+    [ -n "$force" ] && return
+    [ -z "$quiet" ] && info 'Checking for forbidden requires of $pkg package ...'
+    __epm_check_repacked_package_req "$req" -q && return
+    warning 'There are forbidden requires in $pkg package:'
+    __epm_check_repacked_package_req "$req"
+    fatal "Unnecessary dependencies appear due to incorrect packaging. Check the repack rule."
+}
+
+
 # will fills repacked_pkg var
 __epm_repack_to_rpm()
 {
@@ -235,8 +266,11 @@ __epm_repack_to_rpm()
             remove_on_exit "$repacked_rpm"
             repacked_pkg="$repacked_rpm"
         else
-            warning 'Can'\''t find converted rpm for source binary package $pkg (got $repacked_rpm)'
+            fatal 'Can'\''t find converted rpm for source binary package $pkg (got $repacked_rpm)'
         fi
+
+        epm_check_repacked_rpm "$repacked_pkg"
+
         cd "$EPMCURDIR" >/dev/null
 
     true

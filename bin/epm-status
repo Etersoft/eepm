@@ -20,6 +20,13 @@
 load_helper epm-query
 
 
+#glob_to_regexp() {
+#    sed -e 's/[.[\*^$()+?{|]/\\&/g' \
+#        -e 's/\\\*/.*/g' \
+#        -e 's/\\\?/.?/g' \
+#        -e 's|^|^|' -e 's|$|$|'
+#}
+
 __convert_pkgallowscripts_to_regexp()
 {
     local tmpalf
@@ -27,6 +34,7 @@ __convert_pkgallowscripts_to_regexp()
     # copied from eget's filter_glob
     # check man glob
     # remove commentы and translate glob to regexp
+    # TODO: Replaced only * and ?, not escaped . + | ( ) [ ] { } ^ $
     grep -v "^[[:space:]]*#" "$1" | grep -v "^[[:space:]]*$" | sed -e "s|\*|.*|g" -e "s|?|.|g" -e "s|^|^|" -e "s|$|\$|" >$tmpalf
     echo "$tmpalf"
 }
