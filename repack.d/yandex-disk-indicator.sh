@@ -6,13 +6,11 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
-add_conflicts yandex-disk-indicator
-add_provides "yandex-disk-indicator = %version"
-
 add_libs_requires
 
 add_unirequires "typelib(AyatanaAppIndicator3)"
 
-if ! epm qa | grep 'yandex-disk' | grep -v 'indicator' ; then
+# TODO: remove this hack
+if ! epm installed 'yandex-disk' ; then
     epm play yandex-disk
 fi
