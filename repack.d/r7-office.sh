@@ -8,30 +8,8 @@ PRODUCTDIR=/opt/r7-office
 
 . $(dirname $0)/common.sh
 
-fatal "TODO: as for now, repack for $PRODUCT is not supported yet."
-#REQUIRES="fonts-ttf-liberation, fonts-ttf-dejavu"
-#subst "s|^\(Name: .*\)$|# Converted from original package requires\nRequires:$REQUIRES\n\1|g" $SPEC
+fix_desktop_file /usr/bin/r7-office-desktopeditors
+fix_desktop_file /usr/bin/r7-office-imageviewer
+fix_desktop_file /usr/bin/r7-office-videoplayer
 
-# ignore embedded libs
-#for i in $BUILDROOT$PRODUCTDIR/desktopeditors/lib* ; do
-#    di=$(basename $i)
-#    filter_from_requires $di
-#done
-
-filter_from_requires ".*libQt5"
-
-if epm assure patchelf ; then
-for i in $BUILDROOT$PRODUCTDIR/{desktopeditors,mediaviewer}/{libQt5Core.so.*,libicui18n.so,libicui18n.so.*,libicuuc.so,libicuuc.so.*} ; do
-    a= patchelf --set-rpath '$ORIGIN/' $i || continue
-done
-
-for i in $BUILDROOT$PRODUCTDIR/desktopeditors/{converter,platforms,platforminputcontexts}/lib*.so ; do
-    a= patchelf --set-rpath '$ORIGIN/:$ORIGIN/../' $i || continue
-done
-fi
-
-set_autoreq 'yes'
-
-#epm install --skip-installed bzlib fontconfig libalsa libcairo libcups libdrm libfreetype zlib libXv glib2 libatk libcairo-gobject libEGL libgdk-pixbuf libgio libGL libgst-plugins1.0 libgstreamer1.0 libgtk+2 libgtk+3 libpango libpulseaudio libsqlite3 libX11 libxcb libxcb-render-util libXcomposite libXext libXfixes libxkbcommon libxkbcommon-x11 libXrender
-
-
+add_libs_requires

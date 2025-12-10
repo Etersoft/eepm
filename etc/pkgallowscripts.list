@@ -2,7 +2,6 @@
 # Packages with this names epm will install with scripts by default
 
 myoffice-*
-r7-office
 lsb-cprocsp-*
 cprocsp-*
 eepm-*
