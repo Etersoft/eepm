@@ -29,6 +29,7 @@ case "$(epm print info -s)" in
       if ! is_glibc_enough 2.32 ; then
           # need old glibc
           VERSION=7.3.3
+          info "glibc version below 11.0, we'll stick with the old version $VERSION"
       fi
       ;;
 esac

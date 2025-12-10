@@ -21,6 +21,8 @@ case $vendor in
             VERSION="3.4.2"
         else
             VERSION="3.3.0"
+            info "glibc version below 2.35, we'll stick with the old version $VERSION"
+
         fi
         PKGURL="https://hub.unity3d.com/linux/repos/deb/pool/main/u/unity/unityhub_$arch/unityhub-amd64-$VERSION.deb"
         install_pkgurl

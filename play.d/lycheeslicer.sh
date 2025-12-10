@@ -15,7 +15,7 @@ case "$(epm print info -s)" in
         ;;
 esac
 
-is_stdcpp_enough "11.0" || VERSION="4.1.0"
+is_stdcpp_enough "11.0" || VERSION="4.1.0" && info "libstdc++ version below 11.0, we'll stick with the old version $VERSION"
 
 if [ "$VERSION" = "*" ]; then
     VERSION=$(eget -O- https://mango3d.io/download-lychee-slicer | grep -o "Lychee Slicer [0-9].[0-9].[0-9]" | awk '{print $3}')

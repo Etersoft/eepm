@@ -14,10 +14,12 @@ TIPS="Run 'epm play telegram=beta' to install beta version of the Telegram clien
 if [ -n "$CHECKED_VERSION" ] || [ "$VERSION" = "*" ] ; then
     if ! is_glibc_enough 2.32 ; then
         VERSION="4.9.5"
+        info "glibc version below 2.32, we'll stick with the old version $VERSION"
     fi
 
     if ! is_glibc_enough 2.28 ; then
         VERSION="4.5.1"
+        info "glibc version below 2.28, we'll stick with the old version $VERSION"
     fi
 fi
 

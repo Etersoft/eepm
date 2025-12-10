@@ -13,6 +13,11 @@ fatal()
     exit 1
 }
 
+info()
+{
+    echo "$*"
+}
+
 [ -n "$BIGTMPDIR" ] || [ -d "/var/tmp" ] && BIGTMPDIR="/var/tmp" || BIGTMPDIR="/tmp"
 
 cd_to_temp_dir()
