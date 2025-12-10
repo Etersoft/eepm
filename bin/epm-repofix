@@ -106,11 +106,12 @@ epm_reposwitch()
 
     case "$TO" in
         --help)
-            info "Run with --list to get all possible targets"
+            message "Run with --list to get all possible targets"
             return
             ;;
         --list)
-            info "Possible repo switch targets: p8 p9 p10 p11 c8 c9 c10f1 c10f2 Sisyphus"
+            [ -z "$quiet" ] && message "Possible repo switch targets:"
+            echo "p8 p9 p10 p11 c8 c9 c10f1 c10f2 Sisyphus"
             return
             ;;
         -*)
@@ -229,7 +230,8 @@ __epm_repochange_alt()
 {
     case "$1" in
         "--list")
-            echo "Possible targets: etersoft datacenter.by truenetwork msu eterfund.org yandex basealt altlinux.org"
+            [ -z "$quiet" ] && message "Possible targets:"
+            echo "etersoft datacenter.by truenetwork msu eterfund.org yandex basealt altlinux.org"
             ;;
         "etersoft")
             __change_repo "//download.etersoft.ru/pub ALTLinux"
@@ -264,7 +266,7 @@ __epm_repochange_alt()
 
 epm_repochange()
 {
-    [ "$1" = "--help" ] && info "Use --list to get all possible targets" && return
+    [ "$1" = "--help" ] && message "Use --list to get all possible targets" && return
     [ "$1" = "--list" ] || epm_repofix
     case $BASEDISTRNAME in
         "alt")
