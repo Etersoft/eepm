@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.43
+Version: 3.64.44
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -157,6 +157,28 @@ EOF
 %endif
 
 %changelog
+* Wed Dec 10 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.44-alt1
+- epm download: rewrite alt part
+- epm: add --parallel option for install/upgrade/downgrade
+- epm download: implement downloading via multiple file downloading
+- epm --parallel: use aria2 by default if it is installed
+- epm: improve eget backend detection
+- epm downgrade: always remove /etc/apt/preferences on error
+- epm play rudesktop: fix service name
+- epm release-upgrade: fix for c10f2/c10f3
+- epm play: add bconf100
+- epm qf: don't parse args, fatal if the command is not found in PATH
+- epm install: fix parse error, don't check url and pathes
+- epm desktop: full refactoring
+- epm remove: add --force support for dpkg
+- epm play r7-office-organizer: enable repack
+- epm play r7-office-organizer-pro: enable repack
+- epm play r7-office: enable repack
+- epm-sh-altlinux-contents-index: add direct contents_index downloading support
+- epm repo set: restore repo if failed
+- epm play winbox: replace url (eterbug #17865)
+- epm repo: add ximper deferred DEVEL & BETA (eterbug #18734)
+
 * Tue Dec 09 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.43-alt1
 - epm list --upgradable: clear output
 - epm install: fix always use local repo mode
