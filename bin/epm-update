@@ -223,6 +223,15 @@ esac
 
 epm_update()
 {
+    if [ "$1" = "--help" ] ; then
+        message "Usage: epm update [options]
+    Options:
+        --content-index       Update content index only
+        --check-apt-db-days   Check APT DB update status
+"
+        return
+    fi
+
     if [ "$1" = "--content-index" ] ; then
         __epm_update_content_index
         return
