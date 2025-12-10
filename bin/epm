@@ -599,11 +599,6 @@ check_option()
         print_url="--url"
         ;;
     --parallel)            # HELPOPT: simultaneous downloading of packages
-        if [ -z "$eget_backend" ] ; then
-            is_command aria2 && eget_backend=aria2 && echo "Use installed aria2 to parallel package downloading."
-            is_command axel && eget_backend=axel && echo "Use installed axel to parallel package downloading."
-            [ -n "$eget_backend" ] || info "It is better to install aria2 for parallel downloading."
-        fi
         parallel="--parallel"
         ;;
     -y|--auto|--assumeyes|--non-interactive|--disable-interactivity)  # HELPOPT: non interactive mode
@@ -694,7 +689,7 @@ if [ -n "$quiet" ] ; then
 fi
 
 # fill
-export EPM_OPTIONS="$nodeps $force $full $verbose $debug $quiet $interactive $non_interactive $save_only $download_only $force_overwrite $manual_requires $noscripts $scripts"
+export EPM_OPTIONS="$nodeps $force $full $verbose $debug $quiet $interactive $non_interactive $parallel $save_only $download_only $force_overwrite $manual_requires $noscripts $scripts"
 
 # if input is not console and run script from file, get pkgs from stdin too
 if [ ! -n "$inscript" ] && [ -p /dev/stdin ] && [ "$EPMMODE" != "pipe" ] ; then
@@ -752,6 +747,16 @@ fi
 case $epm_cmd in
     update|upgrade|Upgrade|install|reinstall|Install|remove|autoremove|kernel_update|release_upgrade|release_downgrade|check)
         set_eatmydata
+        ;;
+esac
+
+case $epm_cmd in
+    upgrade|Upgrade|install|reinstall|Install|release_upgrade|release_downgrade)
+        if [ -z "$eget_backend" ] ; then
+            is_command aria2 && eget_backend=aria2 && echo "Use installed aria2 to parallel package downloading."
+            [ -z "$eget_backend" ] && is_command axel && eget_backend=axel && echo "Use installed axel to parallel package downloading."
+            [ -n "$eget_backend" ] || info "It is better to install aria2 for parallel downloading."
+        fi
         ;;
 esac
 
