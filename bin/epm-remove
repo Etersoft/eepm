@@ -57,7 +57,7 @@ epm_remove_low()
             return $RES ;;
         *-dpkg|-dpkg)
             # shellcheck disable=SC2046
-            sudocmd dpkg -P $(subst_option nodeps --force-all) $(print_name "$@")
+            sudocmd dpkg --purge $(subst_option nodeps --force-all) $(subst_option force --force-remove-reinstreq)  $(print_name "$@")
             return ;;
         pkgsrc)
             sudocmd pkg_delete -r $@
