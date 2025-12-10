@@ -351,6 +351,16 @@ __epm_addrepo_altlinux()
             __epm_addrepo_add_alt_repo "$branch" "http://mirror.eterfund.org/pub Etersoft/Sisyphus/Deferred" "classic"
             return 0
             ;;
+        deferred-devel)
+            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersoft Sisyphus Deferred supported only for ALT Sisyphus based systems."
+            __epm_addrepo_add_alt_repo "$branch" "https://download.etersoft.ru/pub/ Etersoft/Sisyphus/Deferred_DEVEL" "classic"
+            return 0
+            ;;
+        deferred-beta)
+            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersoft Sisyphus Deferred supported only for ALT Sisyphus based systems."
+            __epm_addrepo_add_alt_repo "$branch" "https://download.etersoft.ru/pub/ Etersoft/Sisyphus/Deferred_BETA" "classic"
+            return 0
+            ;; 
         archive)
             if [ "$2" = "sisyphus" ] ; then
                 branch="$2"
@@ -361,6 +371,10 @@ __epm_addrepo_altlinux()
             __epm_addrepo_add_alt_repo "$branch" "$ALTLINUXPUBURL archive/$branch/date/$datestr" "classic"
 
             return 0
+            ;;
+        deffered)
+            warning "Did you mean 'deferred'?"
+            return 1
             ;;
     esac
 
