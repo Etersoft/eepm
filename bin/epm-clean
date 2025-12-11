@@ -23,6 +23,13 @@ __remove_alt_apt_cache_file()
     sudocmd rm -vf /var/cache/apt/partial/*
     sudocmd rm -vf /var/lib/apt/lists/*pkglist*
     sudocmd rm -vf /var/lib/apt/lists/*release*
+
+    load_helper epm-sh-altlinux-contents-index
+    clean_alt_contents_index
+
+    sudocmd rm -vf $epm_vardir/available-packages
+
+    sudocmd rm -vf $eget_ipfs_db
     return 0
 }
 

@@ -111,6 +111,12 @@ check_alt_contents_index()
     [ -f "$ALT_CONTENTS_INDEX_LIST" ]
 }
 
+clean_alt_contents_index()
+{
+    sudocmd rm -vf "$ALT_CONTENTS_INDEX_LIST"
+    sudocmd rm -rvf "$epm_cachedir/contents_index/"
+}
+
 # TODO: use special user for this files?
 init_alt_contents_index()
 {
