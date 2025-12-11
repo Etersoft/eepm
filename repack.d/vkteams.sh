@@ -27,6 +27,9 @@ remove_file $PRODUCTDIR/plugins/multimedia/libffmpegmediaplugin.so
 remove_file $PRODUCTDIR/lib/libswresample.so.5.1.100
 remove_file $PRODUCTDIR/lib/libswscale.so.8.1.100
 
+# linked with libtinfo.so.5 (we have compatibility only on ALT)
+remove_file $PRODUCTDIR/lib/libGLsoft.so.1
+
 add_bin_link_command
 
 add_libs_requires
