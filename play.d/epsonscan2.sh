@@ -14,10 +14,10 @@ pkgtype=$(epm print info -p)
 arch="$(epm print info -a)"
 case "$pkgtype-$arch" in
     rpm-x86_64)
-        PKGURL="https://download3.ebz.epson.net/dsc/f/03/00/16/14/40/9cb99579f9fa7facf54f77f0ce6fe5600677f30a/epsonscan2-bundle-6.7.70.0.x86_64.rpm.tar.gz"
+        PKGURL="$(get_json_value "https://download-center.epson.com/api/v1/modules/?device_id=DS-770&os=RPM&region=RU&language=en" '["items",1,"url"]')"
         ;;
     *-x86_64)
-        PKGURL="https://download3.ebz.epson.net/dsc/f/03/00/16/14/38/7b1780ace96e2c6033bbb667c7f3ed281e4e9f38/epsonscan2-bundle-6.7.70.0.x86_64.deb.tar.gz"
+        PKGURL="$(get_json_value "https://download-center.epson.com/api/v1/modules/?device_id=DS-770&os=DEBX64&region=RU&language=en" '["items",1,"url"]')"
         ;;
     *)
         fatal "$arch arch is not supported"

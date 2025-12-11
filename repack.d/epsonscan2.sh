@@ -9,5 +9,7 @@ add_unirequires udev
 
 fix_desktop_file /usr/bin/epsonscan2
 
-add_libs_requires
+#  Application depends on external Qt5 libraries
+add_unirequires 'libQt5Core.so.5' 'libQt5Gui.so.5' 'libQt5Widgets.so.5'
 
+add_libs_requires
