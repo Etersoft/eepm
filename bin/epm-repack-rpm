@@ -123,8 +123,14 @@ epm_check_repacked_rpm()
 {
     local pkg="$1"
     [ -n "$force" ] && return
-    local req="$(epm req "$pkg")"
+
     [ -z "$quiet" ] && info 'Checking for forbidden requires of $pkg package ...'
+    local req="$(epm --quiet requires "$pkg")"
+
+    # don't check requires marked as epm-forced-req in Provides:
+    local forcedreq="$(epm --quiet provides "$pkg" | sed -n 's/^epm-forced-req(\(.*\))$/\1/p')"
+    req="$(estrlist exclude "$forcedreq" "$req" | xargs -n 1000 echo)"
+
     __epm_check_repacked_package_req "$req" -q && return
     warning 'There are forbidden requires in $pkg package:'
     __epm_check_repacked_package_req "$req"

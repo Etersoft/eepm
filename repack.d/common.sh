@@ -405,6 +405,15 @@ add_provides()
     __add_tag_after_d "Provides: $*"
 }
 
+# for checking in epm-repack-rpm
+add_forced_requires()
+{
+    local i
+    for i in "$@" ; do
+        add_provides "epm-forced-req($i)"
+    done
+}
+
 
 # libstdc++.so.6 -> libstdc++.so.6()(64bit)
 add_unirequires()
@@ -414,27 +423,29 @@ add_unirequires()
     # cache arch
     [ -z "$EPMARCH" ] && EPMARCH="$(epm print info -b)"
 
+    local reqs=''
     # FIXME: use package arch, not system arch
     if [ "$EPMARCH" = "64" ] ; then
-        local req reqs
-        reqs=''
         while IFS= read -r file ; do
             if file "$file" | grep -q "ELF 32-bit" ; then
                 X32_ARCH="true"
                 break
             fi
         done < <(find "$BUILDROOT" -type f -executable)
+        local req
         for req in $* ; do
             reqs="$reqs $req"
             if [ "$X32_ARCH" != "true" ] ; then
                 echo "$req" | grep "^lib.*\.so" | grep -q -v -F "(64bit)" && reqs="$reqs"'()(64bit)'
             fi
         done
-        subst "1iRequires:$reqs" $SPEC
     else
-        echo "$*" | grep -F "(64bit)" && fatal "Unsupported (64bit) on $(epm print info -a) arch."
-        subst "1iRequires: $*" $SPEC
+        reqs="$*"
+        echo "$reqs" | grep -F "(64bit)" && fatal "Unsupported (64bit) on $(epm print info -a) arch."
     fi
+    # don't quote here
+    add_directrequires $reqs
+    add_forced_requires $reqs
 }
 
 install_requires()
