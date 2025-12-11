@@ -169,7 +169,7 @@ if [ -r "$PKG.eepm.yaml" ] ; then
     [ -n "$upstream_url" ] && upstream_file="$upstream_url"
     [ -n "$description" ] && subst "s|^\((Converted from a\) \(.*\) \(package.*\)|$description\n(Repacked from $upstream_file with EPM $(epm --short --version))\n\1 \2 \3|" $SPEC
 else
-    warning "$PKG.eepm.yaml is missed"
+    [ -n "$verbose" ] && warning "$PKG.eepm.yaml is missed"
     exya="$(echo $(dirname $PKG.eepm.yaml)/*.eepm.yaml)"
     [ -f "$exya" ] && warning "$PKG.eepm.yaml is missed, but $exya is exists"
     subst "s|^\((Converted from a\) \(.*\) \(package.*\)|(Repacked from binary \2 package with EPM $(epm --short --version))\n\1 \2 \3|" $SPEC

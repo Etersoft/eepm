@@ -104,7 +104,7 @@ get_json_value()
 
 estrlist()
 {
-    epm tool estrlist "$@"
+    epm --quiet tool estrlist "$@"
 }
 
 
