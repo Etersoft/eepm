@@ -58,15 +58,16 @@ rsync_alt_contents_index()
 
     if ! __rsync_check "$URL" ; then
         warning '$URL is not accessible via rsync, skipping contents index update...'
-        return
+        return 1
     fi
 
+    # FIXME: permissions
     mkdir -p "$(dirname "$TD")"
 
     [ -n "$USER" ] && sudorun chown -R $USER "$TD"
 
     if [ -z "$quiet" ] ; then
-        docmd rsync --partial --inplace $3 -a "$URL" "$TD"
+        docmd rsync --partial --inplace $verbose $3 -a "$URL" "$TD"
     else
         a= rsync --partial --inplace $3 -a "$URL" "$TD"
     fi
@@ -81,8 +82,8 @@ get_url_to_etersoft_mirror()
     local REPOPATH
     local ETERSOFT_MIRROR="rsync://download.etersoft.ru/pub"
     local ALTREPO=$(get_alt_repo_path "$1")
-    echo "$ALTREPO" | grep -q "^ALTLinux" || return
-    echo "$ETERSOFT_MIRROR/$(get_alt_repo_path "$1" | sed -e "s|^ALTLinux/|ALTLinux/contents_index/|")"
+    echo "$ALTREPO" | grep -q "^ALTLinux" || echo "$ALTREPO" | grep -q "^altlinux" || return
+    echo "$ETERSOFT_MIRROR/$(get_alt_repo_path "$1" | sed -E 's@^(ALTLinux|altlinux)/@ALTLinux/contents_index/@')"
 }
 
 # "comment" "file"
@@ -113,6 +114,7 @@ check_alt_contents_index()
 # TODO: use special user for this files?
 init_alt_contents_index()
 {
+    info "Creating local cache for contents_index ..."
     sudocmd mkdir -p "$(dirname $ALT_CONTENTS_INDEX_LIST)"
     sudocmd chmod a+rw "$(dirname $ALT_CONTENTS_INDEX_LIST)"
     sudocmd truncate -s0 $ALT_CONTENTS_INDEX_LIST
@@ -127,8 +129,7 @@ update_alt_contents_index()
     check_alt_contents_index || return
 
     truncate -s0 "$ALT_CONTENTS_INDEX_LIST"
-    # TODO: fix for Etersoft/LINUX@Etersoft
-    # TODO: fix for rsync
+
     info "Retrieving contents_index ..."
 
     mapfile -t URL_LIST < <(
@@ -153,35 +154,45 @@ update_alt_contents_index()
             local LOCALPATHGZIP="$(echo "$LOCALPATH" | sed -e "s|/ALTLinux/|/ALTLinux/contents_index/|")"
             __add_better_to_contents_index_list "$URL" "$LOCALPATHGZIP/contents_index.gz" "$LOCALPATH/contents_index"
             continue
-        else
-            RSYNCURL="$(echo "$URL" | sed -e "s@\(ftp://\|http://\|https://\)@rsync://@g")" #"
-
-            local LOCALPATH="$(get_local_alt_mirror_path "$URL")"
-            local REMOTEURL="$(get_url_to_etersoft_mirror "$RSYNCURL")"
-            [ -n "$verbose" ] && info "    Local: $LOCALPATH  Remote: $REMOTEURL"
-            if [ -n "$REMOTEURL" ] ; then
-                # we never had x86_64-i586 content_index, see https://bugzilla.altlinux.org/52908
-                rhas "$REMOTEURL" "x86_64-i586" && continue
-                rsync_alt_contents_index "$REMOTEURL/base/contents_index.gz" "$LOCALPATH/contents_index.gz" && \
-                __add_to_contents_index_list "$REMOTEURL" "$LOCALPATH/contents_index.gz" && continue
-                [ -n "$verbose" ] && info "Note: Can't retrieve $REMOTEURL/base/contents_index.gz, fallback to $URL/base/contents_index"
-            fi
-
-            # we don't know if remote server has rsync
-            # fix rsync URL firstly
-            #local RSYNCURL="$(echo "$URL" | sed -e "s|rsync://\(ftp.basealt.ru\|basealt.org\|altlinux.ru\)/pub/distributions/ALTLinux|rsync://\1/ALTLinux|")" #"
-            #rsync_alt_contents_index $RSYNCURL/base/contents_index $LOCALPATH/contents_index -z && __add_to_contents_index_list "$RSYNCURL" "$LOCALPATH/contents_index" && continue
-
-            # Download directly
-            # TODO: add gzipped during archiving
-            mkdir -p "$LOCALPATH"
-            if eget --check-url $URL/base/contents_index.gz ; then
-                eget -O $LOCALPATH/contents_index.gz $URL/base/contents_index.gz && __add_to_contents_index_list "$URL" "$LOCALPATH/contents_index.gz" && continue
-            else
-                eget -O $LOCALPATH/contents_index $URL/base/contents_index && __add_to_contents_index_list "$URL" "$LOCALPATH/contents_index" && continue
-            fi
-            #__add_better_to_contents_index_list "(cached)" "$LOCALPATH/contents_index.gz" "$LOCALPATH/contents_index"
         fi
+
+        local LOCALPATH="$(get_local_alt_mirror_path "$URL")"
+        local RSYNCURL="$(echo "$URL" | sed -e "s@\(ftp://\|http://\|https://\)@rsync://@g")" #"
+        local MIRRORURL="$(get_url_to_etersoft_mirror "$RSYNCURL")"
+
+        mkdir -p "$LOCALPATH"
+
+        # we never had x86_64-i586 content_index, see https://bugzilla.altlinux.org/52908
+        rhas "$URL" "x86_64-i586" && continue
+
+        # 1. check contents_index.gz via rsync from RSYNCURL
+        [ -n "$verbose" ] && info "1.    Local: $LOCALPATH  Remote: $RSYNCURL"
+        if [ -n "$RSYNCURL" ] ; then
+            rsync_alt_contents_index "$RSYNCURL/base/contents_index.gz" "$LOCALPATH/contents_index.gz" && \
+            __add_to_contents_index_list "$RSYNCURL" "$LOCALPATH/contents_index.gz" && continue
+        fi
+
+        # 2. check contents_index.gz via rsync from REMOTEURL
+        [ -n "$verbose" ] && info "2.    Local: $LOCALPATH  Remote: $MIRRORURL"
+        if [ -n "$MIRRORURL" ] ; then
+            [ -n "$verbose" ] && info "Note: Can't retrieve $RSYNCURL/base/contents_index.gz, fallback to $MIRRORURL/base/contents_index.gz"
+            rsync_alt_contents_index "$MIRRORURL/base/contents_index.gz" "$LOCALPATH/contents_index.gz" && \
+            __add_to_contents_index_list "$MIRRORURL" "$LOCALPATH/contents_index.gz" && continue
+        fi
+
+
+        # TODO: add timestamping to eget and use it
+        # 3. check contents_index via eget from RSYNCURL
+        [ -n "$verbose" ] && info "Note: Can't retrieve $MIRRORURL/base/contents_index.gz, fallback to $URL/base/contents_index"
+        if eget --check-url $URL/base/contents_index.gz ; then
+            [ -n "$USER" ] && sudorun chown -R $USER $LOCALPATH/contents_index.gz
+            eget --compressed -O $LOCALPATH/contents_index.gz $URL/base/contents_index.gz && __add_to_contents_index_list "$URL" "$LOCALPATH/contents_index.gz" && continue
+        fi
+
+        # 4. check contents_index via eget from REMOTEURL
+        [ -n "$USER" ] && sudorun chown -R $USER $LOCALPATH/contents_index
+        eget --compressed -O $LOCALPATH/contents_index $URL/base/contents_index && __add_to_contents_index_list "$URL" "$LOCALPATH/contents_index" && continue
+
     done
 }
 
