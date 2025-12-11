@@ -32,7 +32,8 @@ get_alt_repo_path()
     local BN2=$(basename $DN2) # p8/ALTLinux
     local BN3=$(basename $DN3) # ALTLinux/
 
-    [ "$BN1" = "branch" ] && echo "$BN3/$BN2/$BN1/$BN0" || echo "$BN2/$BN1/$BN0"
+    [ "$BN1" = "branch" ] && echo "$BN3/$BN2/$BN1/$BN0" && return
+    [ "$BN1" = "Sisyphus" ] && echo "$BN2/$BN1/$BN0"
 }
 
 # convert "http://download.etersoft.ru/pub/ALTLinux/p8/branch x86_64" to /tmp/epm/ALTLinux/p8/branch/x86_64
@@ -64,13 +65,26 @@ rsync_alt_contents_index()
     # FIXME: permissions
     mkdir -p "$(dirname "$TD")"
 
-    [ -n "$USER" ] && sudorun chown -R $USER "$TD"
+    [ -n "$USER" ] && [ -f "$TD" ] && sudorun chown -R $USER "$TD"
 
     if [ -z "$quiet" ] ; then
         docmd rsync --partial --inplace $verbose $3 -a "$URL" "$TD"
     else
         a= rsync --partial --inplace $3 -a "$URL" "$TD"
     fi
+    res=$?
+    [ -f "$TD" ] && sudorun chmod a+rw "$TD"
+    return $res
+}
+
+# URL TARGETDIR OPTIONS
+eget_alt_contents_index()
+{
+    local URL="$1"
+    local TD="$2"
+    local res
+    [ -n "$USER" ] && [ -f $TD ] && sudorun chown -R $USER $TD
+    eget --compressed -O $TD $URL
     res=$?
     [ -f "$TD" ] && sudorun chmod a+rw "$TD"
     return $res
@@ -83,7 +97,7 @@ get_url_to_etersoft_mirror()
     local ETERSOFT_MIRROR="rsync://download.etersoft.ru/pub"
     local ALTREPO=$(get_alt_repo_path "$1")
     echo "$ALTREPO" | grep -q "^ALTLinux" || echo "$ALTREPO" | grep -q "^altlinux" || return
-    echo "$ETERSOFT_MIRROR/$(get_alt_repo_path "$1" | sed -E 's@^(ALTLinux|altlinux)/@ALTLinux/contents_index/@')"
+    echo "$ETERSOFT_MIRROR/$(echo "$ALTREPO" | sed -E 's@^(ALTLinux|altlinux)/@ALTLinux/contents_index/@')"
 }
 
 # "comment" "file"
@@ -163,7 +177,9 @@ update_alt_contents_index()
         fi
 
         local LOCALPATH="$(get_local_alt_mirror_path "$URL")"
+        # original url, converted to rsync://
         local RSYNCURL="$(echo "$URL" | sed -e "s@\(ftp://\|http://\|https://\)@rsync://@g")" #"
+        # mirrored url for contents_index.gz
         local MIRRORURL="$(get_url_to_etersoft_mirror "$RSYNCURL")"
 
         mkdir -p "$LOCALPATH"
@@ -173,17 +189,23 @@ update_alt_contents_index()
 
         # 1. check contents_index.gz via rsync from RSYNCURL
         [ -n "$verbose" ] && info "1.    Local: $LOCALPATH  Remote: $RSYNCURL"
-        if [ -n "$RSYNCURL" ] ; then
-            rsync_alt_contents_index "$RSYNCURL/base/contents_index.gz" "$LOCALPATH/contents_index.gz" && \
-            __add_to_contents_index_list "$RSYNCURL" "$LOCALPATH/contents_index.gz" && continue
+
+        # don't access via rsync to uknown repos
+        if false && [ -n "$RSYNCURL" ] ; then
+            if rsync_alt_contents_index "$RSYNCURL/base/contents_index.gz" "$LOCALPATH/contents_index.gz" ; then
+                __add_to_contents_index_list "$RSYNCURL" "$LOCALPATH/contents_index.gz"
+                continue
+            fi
         fi
 
         # 2. check contents_index.gz via rsync from REMOTEURL
         [ -n "$verbose" ] && info "2.    Local: $LOCALPATH  Remote: $MIRRORURL"
         if [ -n "$MIRRORURL" ] ; then
             [ -n "$verbose" ] && info "Note: Can't retrieve $RSYNCURL/base/contents_index.gz, fallback to $MIRRORURL/base/contents_index.gz"
-            rsync_alt_contents_index "$MIRRORURL/base/contents_index.gz" "$LOCALPATH/contents_index.gz" && \
-            __add_to_contents_index_list "$MIRRORURL" "$LOCALPATH/contents_index.gz" && continue
+            if rsync_alt_contents_index "$MIRRORURL/base/contents_index.gz" "$LOCALPATH/contents_index.gz" ; then
+                __add_to_contents_index_list "$MIRRORURL" "$LOCALPATH/contents_index.gz"
+                continue
+            fi
         fi
 
 
@@ -191,13 +213,21 @@ update_alt_contents_index()
         # 3. check contents_index via eget from RSYNCURL
         [ -n "$verbose" ] && info "Note: Can't retrieve $MIRRORURL/base/contents_index.gz, fallback to $URL/base/contents_index"
         if eget --check-url $URL/base/contents_index.gz ; then
-            [ -n "$USER" ] && sudorun chown -R $USER $LOCALPATH/contents_index.gz
-            eget --compressed -O $LOCALPATH/contents_index.gz $URL/base/contents_index.gz && __add_to_contents_index_list "$URL" "$LOCALPATH/contents_index.gz" && continue
+            if eget_alt_contents_index $URL/base/contents_index.gz $LOCALPATH/contents_index.gz ; then
+                __add_to_contents_index_list "$URL" "$LOCALPATH/contents_index.gz"
+                continue
+            fi
         fi
 
         # 4. check contents_index via eget from REMOTEURL
-        [ -n "$USER" ] && sudorun chown -R $USER $LOCALPATH/contents_index
-        eget --compressed -O $LOCALPATH/contents_index $URL/base/contents_index && __add_to_contents_index_list "$URL" "$LOCALPATH/contents_index" && continue
+        if eget --check-url $URL/base/contents_index ; then
+            if eget_alt_contents_index $URL/base/contents_index $LOCALPATH/contents_index ; then
+                __add_to_contents_index_list "$URL" "$LOCALPATH/contents_index"
+                continue
+            fi
+        fi
+
+        #warning "Can't download contents_index from $URL/base"
 
     done
 }
