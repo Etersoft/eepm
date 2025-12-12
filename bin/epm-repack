@@ -239,14 +239,7 @@ __epm_repack()
     local packversion="${EPM_REPACK_VERSION:-}"
     local packrelease="${EPM_REPACK_RELEASE:-}"
 
-    if is_command sha256sum ; then
-        message "sha256sum:"
-        for i in $pkg_files ; do
-            message "    $(sha256sum $i) $(basename $i)"
-        done
-    else
-        message "sha256sum is missed, can't print sha256 for packages..."
-    fi
+    print_sha256sum $pkg_files
 
     for pkg in $* ; do
         __epm_repack_single "$pkg" "$packversion" "$packrelease" || fatal 'Error with $pkg repacking.'

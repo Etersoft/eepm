@@ -804,6 +804,22 @@ sudocmd_eget()
     fi
 }
 
+print_sha256sum()
+{
+    local files="$*"
+    local i
+    if ! is_command sha256sum ; then
+        info "sha256sum is missed, can't print sha256 for packages..."
+        return
+    fi
+
+    echo "sha256sum:"
+    for i in $files ; do
+            echo "    $(sha256sum $i | awk '{print $1}') $(basename $i) $(du -h $i | cut -f1)"
+    done
+}
+
+
 # copied from parse_json_value from play.d/common.sh
 get_json_value()
 {
