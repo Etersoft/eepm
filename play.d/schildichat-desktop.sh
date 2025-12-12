@@ -8,28 +8,21 @@ URL="https://schildi.chat/"
 
 . $(dirname $0)/common.sh
 
+# Version support is temporarily disabled due to the use of unusual version suffix
+warn_version_is_not_supported
+
 pkgtype="$(epm print info -p)"
 
 case $pkgtype in
-    # rpm)
-    #     mask="${PKGNAME}-${VERSION}.x86_64.rpm"
-    #     ;;
-    deb)
-        mask="${PKGNAME}-${VERSION}_amd64.deb"
+    rpm)
+        mask="${PKGNAME}-${VERSION}.x86_64.rpm"
         ;;
-    *)
-        mask="SchildiChat-${VERSION}.AppImage"
+    deb|*)
+        mask="${PKGNAME}_${VERSION}_amd64.deb"
         ;;
 esac
 
-if [ "$VERSION" = "*" ] ; then
-    PKGURL=$(get_github_url "https://github.com/SchildiChat/schildichat-desktop/" "$mask")
-else
-    PKGURL="https://github.com/SchildiChat/schildichat-desktop/releases/download/v$VERSION/$mask"
-fi
+PKGURL=$(get_github_url "https://github.com/SchildiChat/schildichat-desktop/" "$mask")
 
-if [ $mask = "SchildiChat-${VERSION}.AppImage" ]; then
-    install_pack_pkgurl
-else
-    install_pkgurl
-fi
+install_pkgurl
+
