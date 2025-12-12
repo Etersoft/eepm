@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME=ideaIU
+PKGNAME=idea
 SUPPORTEDARCHES="x86_64 aarch64"
 VERSION="$2"
 DESCRIPTION="IntelliJ IDEA Ultimate - The Leading Java and Kotlin IDE from the official site"

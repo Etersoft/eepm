@@ -15,13 +15,13 @@ case "$(epm print info -p)" in
       PKGURL="https://ncloud.dssl.ru/s/SF7LcjPXa6oLbAN/download/t1client-standalone-13209.rpm"
       ;;
   *)
-      PKGURL="https://ncloud.dssl.ru/s/F8sqrXwmpnb8Bj5/download/t1client-standalone-4.5.28.0-1238402-Release.deb"
+      PKGURL="https://ncloud.dssl.ru/s/QEo4jzTD39KYTze/download/t1client-standalone-4.7.5.0-1269280-Release.deb"
       ;;
 esac
 
 case "$(epm print info -s)" in
   alt)
-      PKGURL="https://ncloud.dssl.ru/s/F8sqrXwmpnb8Bj5/download/t1client-standalone-4.5.28.0-1238402-Release.deb"
+      PKGURL="https://ncloud.dssl.ru/s/QEo4jzTD39KYTze/download/t1client-standalone-4.7.5.0-1269280-Release.deb"
       ;;
 esac
 

@@ -22,21 +22,22 @@ fi
 # hack: assure there are 1 in any way
 rel=1
 
+# https://repo.librewolf.net/pool/librewolf-132.0-1-linux-x86_64-deb.deb
+PKGURL="https://repo.librewolf.net/pool/librewolf-$VERSION-$rel-linux-$arch-deb.deb"
+if ! eget --check-url "$PKGURL" ; then
+    rel=2
+    PKGURL="https://repo.librewolf.net/pool/librewolf-$VERSION-$rel-linux-$arch-deb.deb"
+fi
+
 pkgtype=$(epm print info -p)
 case $pkgtype in
     rpm)
         # https://repo.librewolf.net/pool/librewolf-132.0-1-linux-x86_64-rpm.rpm
-        PKGURL="https://repo.librewolf.net/pool/librewolf-$VERSION-$rel-linux-$arch-rpm.rpm"
-        ;;
-    *)
-        # https://repo.librewolf.net/pool/librewolf-132.0-1-linux-x86_64-deb.deb
-        PKGURL="https://repo.librewolf.net/pool/librewolf-$VERSION-$rel-linux-$arch-deb.deb"
+        # use deb package for old glibc
+        if is_glibc_enough 2.35 ; then
+            PKGURL="https://repo.librewolf.net/pool/librewolf-$VERSION-$rel-linux-$arch-rpm.rpm"
+        fi
         ;;
 esac
-
-if ! is_glibc_enough 2.35 ; then
-    # use deb package for old glibc
-    PKGURL="https://repo.librewolf.net/pool/librewolf-$VERSION-$rel-linux-$arch-deb.deb"
-fi
 
 install_pkgurl

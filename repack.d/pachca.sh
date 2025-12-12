@@ -4,13 +4,14 @@
 BUILDROOT="$1"
 SPEC="$2"
 
+PRODUCT=Pachca
+
 . $(dirname $0)/common-chromium-browser.sh
 
-move_to_opt /usr/lib/pachca
-rm usr/bin/pachca
 add_bin_link_command
+add_bin_link_command pachca $PRODUCT
 
-remove_dir /usr/share/lintian
+fix_desktop_file /opt/Pachca/Pachca
 
 add_electron_deps
 fix_chrome_sandbox

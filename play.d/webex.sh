@@ -10,7 +10,19 @@ URL="https://www.webex.com/"
 
 warn_version_is_not_supported
 
-PKGURL="https://binaries.webex.com/WebexDesktop-Ubuntu-Official-Package/Webex.deb"
+pkgtype="$(epm print info -p)"
+
+case "$pkgtype" in
+    rpm)
+        PKGURL="https://binaries.webex.com/WebexDesktop-CentOS-Official-Package/Webex.rpm"
+        ;;
+    deb)
+        PKGURL="https://binaries.webex.com/WebexDesktop-Ubuntu-Official-Package/Webex.deb"
+        ;;
+    *)
+        PKGURL="https://binaries.webex.com/WebexDesktop-Ubuntu-Official-Package/Webex.deb"
+        ;;
+esac
 
 install_pkgurl
 

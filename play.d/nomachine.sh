@@ -36,16 +36,19 @@ esac
 if [ "$VERSION" = "*" ] ; then
     #VERSION="$(eget -O- https://downloads.nomachine.com/download/?id=4 | grep -A1 "Version:" | tail -n1 | sed -e 's|.*<p>\([0-9.]*\)_1</p>.*|\1|')"
     # it is hard to get the page with version
-    VERSION=9.0.188
+    VERSION=9.2.18
     [ -n "$VERSION" ] || fatal "Can't get version"
 fi
+
+# 9.2.18 -> 9.2
 base=$(echo "$VERSION" | sed -e 's|\.[0-9]*$||')
 
-# hack for 9.x
-VERSION="${VERSION}_11"
+# FIXME: hack for 9.2
+VERSION="${VERSION}_3"
 
 #mask="$(epm print constructname $PKGNAME "$VERSION*" $arch $pkgtype)"
-PKGURL="https://download.nomachine.com/download/$base/Linux/nomachine_${VERSION}_$arch.$pkgtype"
+# https://web9001.nomachine.com/download/9.2/Linux/nomachine_9.2.18_3_x86_64.rpm
+PKGURL="https://web9001.nomachine.com/download/$base/Linux/nomachine_${VERSION}_$arch.$pkgtype"
 
 install_pkgurl
 

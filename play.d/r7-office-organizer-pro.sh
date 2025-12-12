@@ -26,7 +26,7 @@ case $(epm print info -e) in
         ;;
 #    ALTLinux/*)
 #        mask="alt/r7-organizer-pro-${VERSION}-altlinux.x86_64.rpm"
-        ;;
+#        ;;
 esac
 
 if [ "$VERSION" = "*" ] ; then

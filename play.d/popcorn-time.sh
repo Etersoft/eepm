@@ -8,7 +8,7 @@ URL="https://github.com/popcorn-official/popcorn-desktop"
 
 . $(dirname $0)/common.sh
 
-is_soname_present libssl.so.3 || fatal "This package needs OpenSSL 3."
+is_openssl_enough 3 || fatal "There is no needed OpenSSL 3 in the system."
 
 warn_version_is_not_supported
 

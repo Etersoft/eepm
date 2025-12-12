@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME=madcad
+PKGNAME=uimadcad
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION='uimadcad is a GUI (Graphical User Interface) meant to ease the use of pymadcad'
@@ -38,4 +38,4 @@ if [ ! $(epm print info -e) = 'ALTLinux/Sisyphus' ]; then
     echo "Note: You need also to install pymadcad from pip:
 # pip3 install pymadcad
 "
-fi 
+fi

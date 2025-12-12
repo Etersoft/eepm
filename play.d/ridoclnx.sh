@@ -4,7 +4,7 @@ PKGNAME=ridoclnx
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="RiDocLNX - scanner software for Linux"
-URL="https://ridoclnx.com/"
+URL="https://riman.ru/ridoclnx"
 
 . $(dirname $0)/common.sh
 
@@ -20,13 +20,16 @@ case $(epm print info -e) in
     RedOS/8*)
         mask="ridoclnx-${VERSION}REDOS8.x86_64.rpm"
         ;;
+    MSVSphere/*)
+        mask="ridoclnx-${VERSION}REDOS8.x86_64.rpm"
+        ;;
     RedOS/7*)
         mask="ridoclnx-${VERSION}REDOS7.x86_64.rpm"
         ;;
     ALTLinux/p11|ALTLinux/Sisyphus)
         mask="ridoclnx-${VERSION}P11ALT.x86_64.rpm"
         ;; 
-    ALTLinux/p10|CentOS/*)
+    ALTLinux/*|CentOS/*)
         mask="ridoclnx-${VERSION}ALT.x86_64.rpm"
         ;;
     Ubuntu/*)
@@ -41,6 +44,6 @@ case $(epm print info -e) in
 esac
 
 
-PKGURL=$(eget --list --latest "https://ridoclnx.com/download-ridoclnx-ru" "$mask")
+PKGURL=$(eget --list --latest "https://riman.ru/download_ridoclnx_ru" "$mask")
 
 install_pkgurl

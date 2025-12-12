@@ -10,7 +10,7 @@ PKGNAME=$(basename $0 .sh)
 
 #REQUIRES="fonts-ttf-liberation, fonts-ttf-dejavu"
 if [ "$PKGNAME" = "wps-office-cn" ] ; then
-    subst "s|^\(Name: .*\)$|Name: $PKGNAME|" $SPEC
+    subst "s|^\(Name:.*\)$|Name: $PKGNAME|" $SPEC
     add_conflicts wps-office
 fi
 

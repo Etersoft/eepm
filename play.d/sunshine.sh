@@ -14,6 +14,8 @@ is_openssl_enough 3 || fatal "There is no needed OpenSSL 3 in the system."
 
 arch=$(epm print info -a)
 
+# TODO: common way to install from Fedora copr
+# FIXME: Anubis doesn't allow download
 BUILD_ID=$(eget --list https://copr.fedorainfracloud.org/coprs/lizardbyte/stable/package/Sunshine/ | grep -o 'build/[0-9]\+' | cut -d/ -f2 | sort -n | tail -n1)
 
 PKGURL=$(eget --list --latest https://download.copr.fedorainfracloud.org/results/lizardbyte/stable/fedora-41-$arch/0$BUILD_ID-Sunshine/ "Sunshine-*.$arch.rpm")
