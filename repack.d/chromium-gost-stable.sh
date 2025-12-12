@@ -10,8 +10,8 @@ PRODUCTDIR=/opt/$PRODUCT
 
 . $(dirname $0)/common-chromium-browser.sh
 
-# can be in the repo
-add_conflicts chromium-gost
+# can be in the repo (ALT p10, c10f2)
+add_conflicts chromium-gost < 125.0.6422.112
 
 set_alt_alternatives 62
 
