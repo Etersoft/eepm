@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME=Ferdium-linux
+PKGNAME=ferdium
 SUPPORTEDARCHES="x86_64 aarch64"
 VERSION="$2"
 DESCRIPTION="Ferdium helps you organize how you use your favourite apps"
@@ -13,9 +13,9 @@ URL="https://ferdium.org/"
 pkgtype="$(epm print info -p)"
 arch="$(epm print info --distro-arch)"
 
-file="${PKGNAME}-${VERSION}-$arch.$pkgtype"
+file="Ferdium-linux-${VERSION}-$arch.$pkgtype"
 
 PKGURL=$(eget --list --latest https://github.com/ferdium/ferdium-app/releases "$file")
 
-install_pack_pkgurl
+install_pkgurl
 
