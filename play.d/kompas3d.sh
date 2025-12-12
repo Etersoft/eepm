@@ -1,11 +1,11 @@
 #!/bin/sh
 
-PKGNAME=ascon-kompas3d
+PKGNAME=ascon-kompas3d-v24
 SKIPREPACK=1
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
-DESCRIPTION="Kompas 3D beta from the official site"
-URL="https://repo.ascon.ru/beta"
+DESCRIPTION="KOMPAS-3D v24 from the official site"
+URL="https://ascon.ru/news/2025/12/11/askon-vypustil-kompas-3d-dlya-otechestvennyh-os-na-linux/"
 REPOURL="https://repo.ascon.ru/stable"
 
 . $(dirname $0)/common.sh
@@ -38,4 +38,6 @@ esac
 
 
 epm update
-epm install ascon-kompas3d-v24
+epm install $PKGNAME || exit
+# TODO: don\t use repo
+epm repo remove "ascon"
