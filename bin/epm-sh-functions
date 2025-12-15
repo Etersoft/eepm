@@ -769,6 +769,40 @@ assure_exists()
 }
 
 
+# Assure that an Arch Linux package exists, installing it if necessary
+# Args: command name
+assure_exist_arch()
+{
+    local cmd="$1"
+
+    if ! is_command "$cmd"; then
+        info "$cmd utility not found, attempting to install it..."
+        docmd epm install "$cmd" || {
+        info "Attempting to build $cmd from AUR using makepkg..."
+
+        if ! epm installed base-devel >/dev/null 2>&1; then
+            info "Installing base-devel for building packages..."
+            docmd epm install base-devel
+        fi
+
+        local tmpdir
+        tmpdir="$(mktemp -d)" || fatal "Could not create temporary directory"
+        remove_on_exit "$tmpdir"
+
+        # Clone the AUR package
+        docmd git clone --branch "$cmd" --single-branch https://github.com/archlinux/aur.git "$tmpdir/$cmd"
+
+        cd "$tmpdir/$cmd"
+
+        # Build and install using makepkg
+        docmd makepkg -si --noconfirm
+
+        info "$cmd successfully built and installed from AUR"
+    }
+    fi
+}
+
+
 assure_exists_erc()
 {
     load_helper epm-assure
