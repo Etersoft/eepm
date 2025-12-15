@@ -227,6 +227,10 @@ __epm_repack_single()
                 __epm_repack_to_deb "$pkg" || return
             fi
             ;;
+        pkg.tar.xz)
+            load_helper epm-repack-arch
+            __epm_repack_to_arch "$pkg" || return
+            ;;
         *)
             fatal '$PKGFORMAT is not supported for repack yet'
             ;;

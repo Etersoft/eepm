@@ -1,0 +1,80 @@
+#!/bin/sh
+#
+# Copyright (C) 2017-2018, 2020  Etersoft
+# Copyright (C) 2017-2018, 2020  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+# Update debtap database if needed
+__epm_update_debtap_db()
+{
+    local needs_update=0
+
+    if ! ls /var/cache/pkgfile 2> /dev/null | grep -E '*.files?(.[[:digit:]]{3})' > /dev/null 2>&1; then
+        needs_update=1
+    fi
+
+    if [[ ! $(ls /var/cache/debtap/*-packages-files 2> /dev/null) ]]; then
+        needs_update=1
+    fi
+
+    if [ $needs_update -eq 1 ]; then
+        info "Updating debtap database (cache files are missing)..."
+        sudocmd debtap -u || warning "Could not update debtap database"
+    fi
+}
+
+# fills repacked_pkg
+__epm_repack_to_arch()
+{
+    local pkg="$1"
+
+    assure_exist_arch debtap
+
+    repacked_pkg=''
+
+    local TDIR
+    TDIR="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
+    remove_on_exit $TDIR
+
+    umask 022
+
+    abspkg="$(realpath "$pkg")"
+    info 'Repacking $abspkg to local Arch format (inside $TDIR) ...'
+
+    alpkg=$(basename $pkg)
+    # don't use abs package path: copy package to temp dir and use there
+    __epm_repack_copy $abspkg $TDIR/$alpkg
+
+    cd $TDIR || fatal
+
+    __epm_update_debtap_db
+
+    info "Generating package using debtap..."
+    docmd debtap -Q $verbose $TDIR/$alpkg
+
+    # Find the generated package file
+    local repacked_arch="$(realpath $TDIR/*.pkg.tar.* 2>/dev/null)"
+    if [ -s "$repacked_arch" ] ; then
+        remove_on_exit "$repacked_arch"
+        repacked_pkg="$repacked_arch"
+    else
+        warning 'Can'\''t find converted arch package for source binary package $pkg (got $repacked_arch)'
+    fi
+
+    cd "$EPMCURDIR" >/dev/null
+
+    return 0
+}
