@@ -208,6 +208,10 @@ update_alt_contents_index()
             fi
         fi
 
+        if rhas "$URL" "archive/" ; then
+            info "Skipping contents_index for archive from $URL"
+            continue
+        fi
 
         # TODO: add timestamping to eget and use it
         # 3. check contents_index via eget from RSYNCURL
