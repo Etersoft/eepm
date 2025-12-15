@@ -198,15 +198,18 @@ epm_install_names()
     case $PMTYPE in
         apt-rpm|apt-dpkg)
             APTOPTIONS="$APTOPTIONS -o APT::Sandbox::User=root $(subst_option debug "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
+
             # https://bugzilla.altlinux.org/44670
             VIRTAPTOPTIONS="-o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true"
             # not for kernel packages
             echo "$*" | grep -q "^kernel-"  && VIRTAPTOPTIONS=''
+
             if [ -n "$parallel" ] ; then
                 load_helper epm-download
                 info "Downloading packages to the cache... "
                 __epm_alt_download_to_cache $VIRTAPTOPTIONS $APTOPTIONS $noremove install $@
             fi
+
             sudocmd apt-get $VIRTAPTOPTIONS $APTOPTIONS $noremove install $@ && save_installed_packages $@
             return ;;
         apm-rpm)
