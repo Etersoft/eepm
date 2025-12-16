@@ -79,6 +79,7 @@ __epm_pack_run_handler()
 __epm_pack()
 {
     local packname="$1"
+    local packversion="$3"
     local URL="$4"
 
     # fills returntarname with packed tar
@@ -110,6 +111,8 @@ __epm_pack()
 
     local pkgnames
     if [ -n "$dorepack" ]  ; then
+        # TODO: where .eepm.yaml?
+        [ -n "$EPM_REPACK_VERSION" ] || EPM_REPACK_VERSION="$packversion"
         __epm_repack $returntarname
         [ -n "$repacked_pkgs" ] || fatal "Can't repack $returntarname"
         # remove packed file if we have repacked one

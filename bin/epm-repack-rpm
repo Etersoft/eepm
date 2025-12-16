@@ -188,7 +188,7 @@ __epm_repack_to_rpm()
 
         cd $tmpbuilddir/../ || fatal
         # fill alpkg and SUBGENERIC
-        __prepare_source_package "$(pwd)/$alpkg"
+        __prepare_source_package "$(pwd)/$alpkg" "$packversion"
         # override abspkg
         abspkg="$(realpath $alpkg)"
         cd $tmpbuilddir/ || fatal

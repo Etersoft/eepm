@@ -143,6 +143,7 @@ __prepare_source_package()
     local pkg="$1"
 
     alpkg=$(basename $pkg)
+    pkgversion="$2"
 
     # TODO: use func for get name from deb pkg
     # TODO: epm print name from deb package
@@ -167,13 +168,13 @@ __prepare_source_package()
         __epm_pack_run_handler ${__PACKRULE} "$pkg"
     elif rihas "$alpkg" "\.AppImage$" ; then
         # big hack with $pkg_urls_downloaded (it can be a list, not a single url)
-        __epm_pack_run_handler generic-appimage "$pkg" "" "$pkg_urls_downloaded"
+        __epm_pack_run_handler generic-appimage "$pkg" "$pkgversion" "$pkg_urls_downloaded"
         SUBGENERIC='appimage'
     elif rhas "$alpkg" "\.snap$" ; then
-        __epm_pack_run_handler generic-snap "$pkg"
+        __epm_pack_run_handler generic-snap "$pkg" "$pkgversion"
         SUBGENERIC='snap'
     else
-        __epm_pack_run_handler generic-tar "$pkg"
+        __epm_pack_run_handler generic-tar "$pkg" "$pkgversion"
         SUBGENERIC='tar'
     fi
 
