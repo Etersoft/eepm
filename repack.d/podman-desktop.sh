@@ -18,7 +18,7 @@ StartupWMClass=Podman Desktop
 Categories=Utility;
 EOF
 
-epm tool eget -O - https://raw.githubusercontent.com/podman-desktop/podman-desktop/refs/heads/main/buildResources/icon.svg | create_file /usr/share/icons/hicolor/scalable/apps/$PRODUCT.svg
+install_file https://raw.githubusercontent.com/podman-desktop/podman-desktop/refs/heads/main/buildResources/icon.svg /usr/share/icons/hicolor/scalable/apps/$PRODUCT.svg
 
 add_bin_link_command
 

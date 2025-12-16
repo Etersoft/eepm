@@ -11,7 +11,7 @@ PRODUCTDIR=/opt/$PRODUCT
 subst "s|^License: unknown$|License: T-RSL|" $SPEC
 subst "s|^Summary:.*|Summary: Management software for Trezor hardware cryptocurrency wallets|" $SPEC
 
-epm tool eget -O - https://data.trezor.io/udev/51-trezor.rules | create_file /etc/udev/rules.d/51-trezor.rules
+install_file https://data.trezor.io/udev/51-trezor.rules /etc/udev/rules.d/51-trezor.rules
 
 ignore_lib_requires liblog.so libm.so libdl.so libc.so libc++_shared.so libc.musl-x86_64.so.1
 
