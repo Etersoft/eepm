@@ -187,14 +187,27 @@ pack_dir()
     subst "s|%files|%files\n%dir $file|" $SPEC
 }
 
+__is_dir()
+{
+    case "$1" in
+        */) return 0 ;;
+    esac
+    return 1
+}
+
 # Usage: <local file> </abs/path/to/file>
 install_file()
 {
     local src="$1"
     local dest="$2"
 
-    mkdir -p "$BUILDROOT/$(dirname "$dest")" || return
-    [ -L "$BUILDROOT$dest" ] && rm -v "$BUILDROOT$dest"
+    if __is_dir "$dest" || [ -d "$BUILDROOT/$dest" ] ; then
+        mkdir -p "$BUILDROOT/$dest" || return
+        dest="$(basename "$src")"
+    else
+        mkdir -p "$BUILDROOT/$(dirname "$dest")" || return
+        [ -L "$BUILDROOT$dest" ] && rm -v "$BUILDROOT$dest"
+    fi
 
     if is_url "$src" ; then
         epm tool eget -O "$BUILDROOT$dest" "$src" || fatal "Can't download $src to install to $dest"
