@@ -175,7 +175,7 @@ __epm_repack_to_rpm()
         export HOME
         __create_rpmmacros
 
-        tmpbuilddir=$HOME/$(basename $pkg).tmpdir
+        tmpbuilddir=$HOME/tmp-$(basename $pkg).tmpdir
         mkdir $tmpbuilddir
         abspkg="$(realpath $pkg)"
         info
