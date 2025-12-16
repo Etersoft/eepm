@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.44
+Version: 3.64.45
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -157,6 +157,26 @@ EOF
 %endif
 
 %changelog
+* Tue Dec 16 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.45-alt1
+- epm: improve pacman and yay support
+- epm: print comment about parallel when run with --parallel only
+- epm repack: add check for extra deps with reqstoplist.list
+- epm play/repack synology-drive: update
+- epm repack r7-office: remove extra deps on libQt5*
+- epm changelog: improve support for deb systems
+- epm changelog: add support for remove packages for yum/dnf
+- epm-sh-altlinux-contents-index: rewrite downloading
+- epm clean --direct: remove also all caches and downloaded lists
+- epm play vkteams: fix requires
+- epm play kompas3d: switch to stable
+- epm play manuskript: fix repack (eterbug #17865)
+- epm play epsonscan2: fix download; fix repack (eterbug #17865)
+- epm play everdo: upstream switched from deb to AppImage
+- epm play: fix install errors for many apps
+- epm play: add wifiman (eterbug #18732)
+- epm repack chromium-gost-stable: try remove conflict with a chromium package provided chromium-gost
+- epm play schildichat-desktop: fix download (eterbug #17865)
+
 * Wed Dec 10 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.44-alt1
 - epm download: rewrite alt part
 - epm: add --parallel option for install/upgrade/downgrade
