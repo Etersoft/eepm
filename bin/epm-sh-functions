@@ -804,18 +804,35 @@ sudocmd_eget()
     fi
 }
 
+calc_sha256sum()
+{
+    sha256sum "$1" | awk '{print $1}'
+}
+
 print_sha256sum()
 {
-    local files="$*"
-    local i
     if ! is_command sha256sum ; then
         info "sha256sum is missed, can't print sha256 for packages..."
         return
     fi
 
+    local checksum=''
+    if [ "$1" = "--checksum" ] ; then
+        checksum="$2"
+        shift 2
+        pcs="$(calc_sha256sum "$1")"
+        [ "$checksum" = "$pcs" ] || fatal "Checksum verification failed. Awaited checksum: $checksum, package checksum: $pcs"
+    fi
+
+    local files="$*"
+    local i
+
+    local ch_ok=''
+    [ -n "$checksum" ] && ch_ok='OK'
+
     echo "sha256sum:"
     for i in $files ; do
-            echo "    $(sha256sum $i | awk '{print $1}') $(basename $i) $(du -h $i | cut -f1)"
+            echo "    $(calc_sha256sum $i) $ch_ok $(basename $i) $(du -Lh $i | cut -f1)"
     done
 }
 
