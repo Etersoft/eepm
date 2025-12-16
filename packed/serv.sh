@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.44"
+EPMVERSION="3.64.45"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -802,6 +802,22 @@ sudocmd_eget()
         return
     fi
 }
+
+print_sha256sum()
+{
+    local files="$*"
+    local i
+    if ! is_command sha256sum ; then
+        info "sha256sum is missed, can't print sha256 for packages..."
+        return
+    fi
+
+    echo "sha256sum:"
+    for i in $files ; do
+            echo "    $(sha256sum $i | awk '{print $1}') $(basename $i) $(du -h $i | cut -f1)"
+    done
+}
+
 
 get_json_value()
 {

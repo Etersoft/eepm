@@ -36,7 +36,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.44"
+export EPMVERSION="3.64.45"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -807,6 +807,22 @@ sudocmd_eget()
         return
     fi
 }
+
+print_sha256sum()
+{
+    local files="$*"
+    local i
+    if ! is_command sha256sum ; then
+        info "sha256sum is missed, can't print sha256 for packages..."
+        return
+    fi
+
+    echo "sha256sum:"
+    for i in $files ; do
+            echo "    $(sha256sum $i | awk '{print $1}') $(basename $i) $(du -h $i | cut -f1)"
+    done
+}
+
 
 get_json_value()
 {
@@ -2428,6 +2444,19 @@ __epm_changelog_apt()
     done
 }
 
+__epm_changelog_dpkg()
+{
+    local i
+    tmpdir="$(mktemp -d)" || fatal
+    remove_on_exit "$tmpdir"
+
+    for i in $@ ; do
+        docmd dpkg-deb -x $i $tmpdir/extract || fatal
+        docmd zcat $tmpdir/extract/usr/share/doc/*/changelog*.gz
+        rm -rf $tmpdir/extract
+    done
+}
+
 __epm_changelog_files()
 {
     [ -z "$*" ] && return
@@ -2437,6 +2466,9 @@ __epm_changelog_files()
         rpm)
             assure_exists rpm
             docmd_foreach "rpm -q -p --changelog" $@
+            ;;
+        deb)
+            __epm_changelog_dpkg "$@"
             ;;
         *)
             fatal 'Have no suitable command for $1 in epm_changelog()'
@@ -2476,13 +2508,19 @@ __epm_changelog_unlocal_names()
         apt-rpm)
             __epm_changelog_apt "$1"
             ;;
-        #apt-dpkg)
-        #    # FIXME: only first pkg
-        #    docmd zcat /usr/share/doc/$1/changelog.Debian.gz | less
-        #    ;;
-        #yum-rpm)
-        #    sudocmd yum clean all
-        #    ;;
+        apt-dpkg)
+            #assure_exist apt
+            #docmd apt changelog "$1"
+            docmd apt-get changelog "$1"
+            ;;
+        yum-rpm)
+            assure_exist yum-plugin-changelog
+            docmd yum changelog "$1"
+            ;;
+        dnf-rpm|dnf5-rpm)
+            #assure_exist yum-changelog
+            docmd dnf changelog "$1"
+            ;;
         urpm-rpm)
             docmd urpmq --changelog "$1"
             ;;
@@ -2979,6 +3017,12 @@ __remove_alt_apt_cache_file()
     sudocmd rm -vf /var/cache/apt/partial/*
     sudocmd rm -vf /var/lib/apt/lists/*pkglist*
     sudocmd rm -vf /var/lib/apt/lists/*release*
+
+    clean_alt_contents_index
+
+    sudocmd rm -vf $epm_vardir/available-packages
+
+    sudocmd rm -vf $eget_ipfs_db
     return 0
 }
 
@@ -4172,6 +4216,7 @@ __epm_korinf_site_mask() {
     local URL="$EPM_KORINF_REPO_URL/$archprefix$DISTRNAME/$DISTRVERSION"
     if ! eget --check-url "$URL" ; then
         tURL="$EPM_KORINF_REPO_URL/$archprefix$BASEDISTRNAME/$DISTRREPONAME"
+        info "Can't access to $URL, trying get by base distro name ..."
         docmd eget --check-url "$tURL" && URL="$tURL"
     fi
     eget --list --latest "$URL/$MASK*.$PKGFORMAT"
@@ -4202,7 +4247,8 @@ __epm_korinf_install() {
 __epm_korinf_install_eepm()
 {
 
-    if [ "$BASEDISTRNAME" = "alt" ] && [ "$EPMMODE" = "package" ] ; then
+    if [ "$BASEDISTRNAME" = "alt" ] && [ "$DISTRVERSION" != "Sisyphus" ] && [ "$EPMMODE" = "package" ] ; then
+        info "Checking eepm package status ..."
         if epm status --original eepm ; then
             warning 'Using external (Korinf) repo is forbidden for stable ALT branch $DISTRVERSION.'
             info "Check https://bugzilla.altlinux.org/44314 for reasons."
@@ -4221,11 +4267,12 @@ __epm_korinf_install_eepm()
         [ -n "$interactive" ] || non_interactive="--auto"
     fi
 
+    # TODO: installing via task
     # as now, can't install one package from task
     if false && [ "$BASEDISTRNAME" = "alt" ] && [ -z "$direct" ] ; then
         local task="$(docmd eget -O- https://eepm.ru/vendor/alt/task)"
         if [ -n "$task" ] ; then
-            docmd epm install $task
+            docmd epm install $task:eepm
             return
         else
             info "Can't get actual task for ALT, fallback to Korinf"
@@ -4233,7 +4280,7 @@ __epm_korinf_install_eepm()
     fi
 
     pkg_list="eepm"
-    # don't lose eepm-* if installed
+    # preserve already installed eepm-*
     for i in repack play ; do
        is_installed eepm-$i && pkg_list="$pkg_list eepm-$i"
     done
@@ -4253,8 +4300,8 @@ Default Korinf repository: $EPM_KORINF_REPO_URL
 Examples:
   epm ei [epm|eepm]                 - install latest eepm (default action)
   epm ei <package1> [<package2>...] - install package(s) from default Korinf repo
-  epm http://someurl.ru <package>   - install package(s) from a repo defined by URL
-  epm --list <package mask>         - list available packages by mask
+  epm ei http://someurl.ru <package>- install package(s) from a repo defined by URL
+  epm ei --list <package mask>      - list available packages by mask
 '
 }
 
@@ -4344,6 +4391,14 @@ __epm_filelist_remote()
             assure_exists yum-utils
             docmd repoquery -q -l "$@"
             ;;
+        pacman)
+            docmd pacman -Flq "$@"
+            return
+            ;;
+        yay)
+            docmd yay -Slq aur
+            return
+            ;;
         dnf-rpm|dnf5-rpm)
             assure_exists dnf-plugins-core
             docmd dnf repoquery -l "$@"
@@ -4373,6 +4428,10 @@ __epm_filelist_file()
         eopkg)
             assure_exists eopkg
             CMD="eopkg --files info"
+            ;;
+        pacman)
+            assure_exists tar
+            CMD="tar -tf"
             ;;
         pisi)
             assure_exists pisi
@@ -4415,8 +4474,9 @@ __epm_filelist_name()
             CMD="conary query --ls"
             ;;
         pacman)
-            docmd pacman -Ql $@ | sed -e "s|.* ||g"
-            return
+            CMD="pacman -Qlq"
+            #docmd pacman -Ql $@ | sed -e "s|.* ||g"
+            #return
             ;;
         emerge)
             assure_exists equery
@@ -5024,7 +5084,7 @@ __separate_sudocmd()
     return 0
 }
 
-VALID_BACKENDS="apt-rpm apt-dpkg apm-rpm stplr aptitude-dpkg deepsolver-rpm urpm-rpm packagekit pkgsrc pkgng redox-pkg emerge pacman aura yum-rpm dnf-rpm snappy zypper-rpm mpkg eopkg conary npackd slackpkg homebrew opkg nix apk tce guix termux-pkg aptcyg xbps appget winget"
+VALID_BACKENDS="apt-rpm apt-dpkg apm-rpm stplr aptitude-dpkg deepsolver-rpm urpm-rpm packagekit pkgsrc pkgng redox-pkg emerge pacman yay aura yum-rpm dnf-rpm snappy zypper-rpm mpkg eopkg conary npackd slackpkg homebrew opkg nix apk tce guix termux-pkg aptcyg xbps appget winget"
 __get_tpmtype() {
     local arg="$1"
     local tpmtype="$(echo "$arg" | cut -d: -f1)"
@@ -5152,14 +5212,17 @@ epm_install_names()
     case $PMTYPE in
         apt-rpm|apt-dpkg)
             APTOPTIONS="$APTOPTIONS -o APT::Sandbox::User=root $(subst_option debug "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
+
             # https://bugzilla.altlinux.org/44670
             VIRTAPTOPTIONS="-o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true"
             # not for kernel packages
             echo "$*" | grep -q "^kernel-"  && VIRTAPTOPTIONS=''
+
             if [ -n "$parallel" ] ; then
                 info "Downloading packages to the cache... "
                 __epm_alt_download_to_cache $VIRTAPTOPTIONS $APTOPTIONS $noremove install $@
             fi
+
             sudocmd apt-get $VIRTAPTOPTIONS $APTOPTIONS $noremove install $@ && save_installed_packages $@
             return ;;
         apm-rpm)
@@ -5193,6 +5256,9 @@ epm_install_names()
             return ;;
         pacman)
             sudocmd pacman -S $nodeps $@
+            return ;;
+        yay)
+            docmd yay $nodeps $@
             return ;;
         aura)
             sudocmd aura -A $force $nodeps $@
@@ -5320,6 +5386,9 @@ epm_ni_install_names()
             return ;;
         pacman)
             sudocmd pacman -S --noconfirm $nodeps $@
+            return ;;
+        yay)
+            docmd yay --noconfirm $nodeps $@
             return ;;
         aura)
             sudocmd aura -A $force $nodeps $@
@@ -6658,6 +6727,13 @@ case $PMTYPE in
     snap)
         docmd snap find .
         ;;
+    pacman)
+        if [ -n "$short" ] ; then
+            docmd pacman -Slq
+        else
+            docmd pacman -Sl
+        fi
+        ;;
     appget)
         docmd appget search .
         ;;
@@ -6773,6 +6849,20 @@ case $PMTYPE in
             docmd dnf check-update | sed -e "s| .*||g"
         else
             docmd dnf check-update
+        fi
+        ;;
+    pacman)
+        if [ -n "$short" ] ; then
+            docmd pacman -Quq
+        else
+            docmd pacman -Qu
+        fi
+        ;;
+    yay)
+        if [ -n "$short" ] ; then
+            docmd yay -Quaq
+        else
+            docmd pacman -Qua
         fi
         ;;
     zypper)
@@ -7224,14 +7314,7 @@ __epm_pack_run_handler()
     shift 4
     returntarname=''
 
-    if is_command sha256sum ; then
-        message "sha256sum:"
-        for i in $tarname ; do
-            message "    $(sha256sum $i) $(basename $i)"
-        done
-    else
-        message "sha256sum is missed, can't print sha256 for packages..."
-    fi
+    print_sha256sum $tarname
 
     local packscript="$(get_pack_script "$packname")"
     has_pack_script "$packscript" || return
@@ -7886,6 +7969,13 @@ Options:
     --installed <app>     - check if the app is installed
     --ipfs <app>          - use IPFS for downloading
     --product-alternatives- list alternatives (use like epm play app=beta)
+
+Extra options:
+    --installed-version   - print installed version for the app
+    --package-name        - print package name for the app
+    --info                - print info about the app
+    --list-installed-packages - print list of all packages installed via epm play
+    --list-all-packages   - print list of all packages available via epm play
 
 Examples:
     epm play --remove opera
@@ -11454,14 +11544,7 @@ __epm_repack()
     local packversion="${EPM_REPACK_VERSION:-}"
     local packrelease="${EPM_REPACK_RELEASE:-}"
 
-    if is_command sha256sum ; then
-        message "sha256sum:"
-        for i in $pkg_files ; do
-            message "    $(sha256sum $i) $(basename $i)"
-        done
-    else
-        message "sha256sum is missed, can't print sha256 for packages..."
-    fi
+    print_sha256sum $pkg_files
 
     for pkg in $* ; do
         __epm_repack_single "$pkg" "$packversion" "$packrelease" || fatal 'Error with $pkg repacking.'
@@ -11636,6 +11719,43 @@ __assure_exists_rpmbuild()
     esac
 }
 
+
+__epm_check_repacked_package_req()
+{
+    local name="$1"
+    local grep_flag="$2"
+    local alf="$CONFIGDIR/reqstoplist.list"
+    [ -s "$alf" ] || return 0
+    [ -n "$name" ] || return 0
+    local tmpalf=$(__convert_pkgallowscripts_to_regexp "$alf")
+    remove_on_exit $tmpalf
+    [ -n "$verbose" ] && echo "reqstop rules: $(cat $tmpalf)"
+    ! echo "$name" | grep $grep_flag -f $tmpalf
+    local res=$?
+    rm $tmpalf
+    return $res
+}
+
+
+epm_check_repacked_rpm()
+{
+    local pkg="$1"
+    [ -n "$force" ] && return
+
+    [ -z "$quiet" ] && info 'Checking for forbidden requires of $pkg package ...'
+    local req="$(epm --quiet requires "$pkg")"
+
+    # don't check requires marked as epm-forced-req in Provides:
+    local forcedreq="$(epm --quiet provides "$pkg" | sed -n 's/^epm-forced-req(\(.*\))$/\1/p')"
+    req="$(estrlist exclude "$forcedreq" "$req" | xargs -n 1000 echo)"
+
+    __epm_check_repacked_package_req "$req" -q && return
+    warning 'There are forbidden requires in $pkg package:'
+    __epm_check_repacked_package_req "$req"
+    fatal "Unnecessary dependencies appear due to incorrect packaging. Check the repack rule."
+}
+
+
 __epm_repack_to_rpm()
 {
     local pkg="$1"
@@ -11769,8 +11889,11 @@ __epm_repack_to_rpm()
             remove_on_exit "$repacked_rpm"
             repacked_pkg="$repacked_rpm"
         else
-            warning 'Can'\''t find converted rpm for source binary package $pkg (got $repacked_rpm)'
+            fatal 'Can'\''t find converted rpm for source binary package $pkg (got $repacked_rpm)'
         fi
+
+        epm_check_repacked_rpm "$repacked_pkg"
+
         cd "$EPMCURDIR" >/dev/null
 
     true
@@ -14335,7 +14458,7 @@ case $PMTYPE in
         CMD="zypper search --file-list"
         ;;
     pacman)
-        CMD="pacman -Qo"
+        CMD="pkgfile -v"
         ;;
     slackpkg)
         CMD="/usr/sbin/slackpkg file-search"
@@ -14442,7 +14565,8 @@ get_alt_repo_path()
     local BN2=$(basename $DN2) # p8/ALTLinux
     local BN3=$(basename $DN3) # ALTLinux/
 
-    [ "$BN1" = "branch" ] && echo "$BN3/$BN2/$BN1/$BN0" || echo "$BN2/$BN1/$BN0"
+    [ "$BN1" = "branch" ] && echo "$BN3/$BN2/$BN1/$BN0" && return
+    [ "$BN1" = "Sisyphus" ] && echo "$BN2/$BN1/$BN0"
 }
 
 get_local_alt_mirror_path()
@@ -14466,18 +14590,31 @@ rsync_alt_contents_index()
 
     if ! __rsync_check "$URL" ; then
         warning '$URL is not accessible via rsync, skipping contents index update...'
-        return
+        return 1
     fi
 
+    # FIXME: permissions
     mkdir -p "$(dirname "$TD")"
 
-    [ -n "$USER" ] && sudorun chown -R $USER "$TD"
+    [ -n "$USER" ] && [ -f "$TD" ] && sudorun chown -R $USER "$TD"
 
     if [ -z "$quiet" ] ; then
-        docmd rsync --partial --inplace $3 -a "$URL" "$TD"
+        docmd rsync --partial --inplace $verbose $3 -a "$URL" "$TD"
     else
         a= rsync --partial --inplace $3 -a "$URL" "$TD"
     fi
+    res=$?
+    [ -f "$TD" ] && sudorun chmod a+rw "$TD"
+    return $res
+}
+
+eget_alt_contents_index()
+{
+    local URL="$1"
+    local TD="$2"
+    local res
+    [ -n "$USER" ] && [ -f $TD ] && sudorun chown -R $USER $TD
+    eget --compressed -O $TD $URL
     res=$?
     [ -f "$TD" ] && sudorun chmod a+rw "$TD"
     return $res
@@ -14488,8 +14625,8 @@ get_url_to_etersoft_mirror()
     local REPOPATH
     local ETERSOFT_MIRROR="rsync://download.etersoft.ru/pub"
     local ALTREPO=$(get_alt_repo_path "$1")
-    echo "$ALTREPO" | grep -q "^ALTLinux" || return
-    echo "$ETERSOFT_MIRROR/$(get_alt_repo_path "$1" | sed -e "s|^ALTLinux/|ALTLinux/contents_index/|")"
+    echo "$ALTREPO" | grep -q "^ALTLinux" || echo "$ALTREPO" | grep -q "^altlinux" || return
+    echo "$ETERSOFT_MIRROR/$(echo "$ALTREPO" | sed -E 's@^(ALTLinux|altlinux)/@ALTLinux/contents_index/@')"
 }
 
 __add_to_contents_index_list()
@@ -14515,8 +14652,15 @@ check_alt_contents_index()
     [ -f "$ALT_CONTENTS_INDEX_LIST" ]
 }
 
+clean_alt_contents_index()
+{
+    sudocmd rm -vf "$ALT_CONTENTS_INDEX_LIST"
+    sudocmd rm -rvf "$epm_cachedir/contents_index/"
+}
+
 init_alt_contents_index()
 {
+    info "Creating local cache for contents_index ..."
     sudocmd mkdir -p "$(dirname $ALT_CONTENTS_INDEX_LIST)"
     sudocmd chmod a+rw "$(dirname $ALT_CONTENTS_INDEX_LIST)"
     sudocmd truncate -s0 $ALT_CONTENTS_INDEX_LIST
@@ -14529,8 +14673,7 @@ update_alt_contents_index()
     check_alt_contents_index || return
 
     truncate -s0 "$ALT_CONTENTS_INDEX_LIST"
-    # TODO: fix for Etersoft/LINUX@Etersoft
-    # TODO: fix for rsync
+
     info "Retrieving contents_index ..."
 
     mapfile -t URL_LIST < <(
@@ -14555,35 +14698,65 @@ update_alt_contents_index()
             local LOCALPATHGZIP="$(echo "$LOCALPATH" | sed -e "s|/ALTLinux/|/ALTLinux/contents_index/|")"
             __add_better_to_contents_index_list "$URL" "$LOCALPATHGZIP/contents_index.gz" "$LOCALPATH/contents_index"
             continue
-        else
-            RSYNCURL="$(echo "$URL" | sed -e "s@\(ftp://\|http://\|https://\)@rsync://@g")" #"
-
-            local LOCALPATH="$(get_local_alt_mirror_path "$URL")"
-            local REMOTEURL="$(get_url_to_etersoft_mirror "$RSYNCURL")"
-            [ -n "$verbose" ] && info "    Local: $LOCALPATH  Remote: $REMOTEURL"
-            if [ -n "$REMOTEURL" ] ; then
-                # we never had x86_64-i586 content_index, see https://bugzilla.altlinux.org/52908
-                rhas "$REMOTEURL" "x86_64-i586" && continue
-                rsync_alt_contents_index "$REMOTEURL/base/contents_index.gz" "$LOCALPATH/contents_index.gz" && \
-                __add_to_contents_index_list "$REMOTEURL" "$LOCALPATH/contents_index.gz" && continue
-                [ -n "$verbose" ] && info "Note: Can't retrieve $REMOTEURL/base/contents_index.gz, fallback to $URL/base/contents_index"
-            fi
-
-            # we don't know if remote server has rsync
-            # fix rsync URL firstly
-            #local RSYNCURL="$(echo "$URL" | sed -e "s|rsync://\(ftp.basealt.ru\|basealt.org\|altlinux.ru\)/pub/distributions/ALTLinux|rsync://\1/ALTLinux|")" #"
-            #rsync_alt_contents_index $RSYNCURL/base/contents_index $LOCALPATH/contents_index -z && __add_to_contents_index_list "$RSYNCURL" "$LOCALPATH/contents_index" && continue
-
-            # Download directly
-            # TODO: add gzipped during archiving
-            mkdir -p "$LOCALPATH"
-            if eget --check-url $URL/base/contents_index.gz ; then
-                eget -O $LOCALPATH/contents_index.gz $URL/base/contents_index.gz && __add_to_contents_index_list "$URL" "$LOCALPATH/contents_index.gz" && continue
-            else
-                eget -O $LOCALPATH/contents_index $URL/base/contents_index && __add_to_contents_index_list "$URL" "$LOCALPATH/contents_index" && continue
-            fi
-            #__add_better_to_contents_index_list "(cached)" "$LOCALPATH/contents_index.gz" "$LOCALPATH/contents_index"
         fi
+
+        local LOCALPATH="$(get_local_alt_mirror_path "$URL")"
+        # original url, converted to rsync://
+        local RSYNCURL="$(echo "$URL" | sed -e "s@\(ftp://\|http://\|https://\)@rsync://@g")" #"
+        # mirrored url for contents_index.gz
+        local MIRRORURL="$(get_url_to_etersoft_mirror "$RSYNCURL")"
+
+        mkdir -p "$LOCALPATH"
+
+        # we never had x86_64-i586 content_index, see https://bugzilla.altlinux.org/52908
+        rhas "$URL" "x86_64-i586" && continue
+
+        # 1. check contents_index.gz via rsync from RSYNCURL
+        [ -n "$verbose" ] && info "1.    Local: $LOCALPATH  Remote: $RSYNCURL"
+
+        # don't access via rsync to uknown repos
+        if false && [ -n "$RSYNCURL" ] ; then
+            if rsync_alt_contents_index "$RSYNCURL/base/contents_index.gz" "$LOCALPATH/contents_index.gz" ; then
+                __add_to_contents_index_list "$RSYNCURL" "$LOCALPATH/contents_index.gz"
+                continue
+            fi
+        fi
+
+        # 2. check contents_index.gz via rsync from REMOTEURL
+        [ -n "$verbose" ] && info "2.    Local: $LOCALPATH  Remote: $MIRRORURL"
+        if [ -n "$MIRRORURL" ] ; then
+            [ -n "$verbose" ] && info "Note: Can't retrieve $RSYNCURL/base/contents_index.gz, fallback to $MIRRORURL/base/contents_index.gz"
+            if rsync_alt_contents_index "$MIRRORURL/base/contents_index.gz" "$LOCALPATH/contents_index.gz" ; then
+                __add_to_contents_index_list "$MIRRORURL" "$LOCALPATH/contents_index.gz"
+                continue
+            fi
+        fi
+
+        if rhas "$URL" "archive/" ; then
+            info "Skipping contents_index for archive from $URL"
+            continue
+        fi
+
+        # TODO: add timestamping to eget and use it
+        # 3. check contents_index via eget from RSYNCURL
+        [ -n "$verbose" ] && info "Note: Can't retrieve $MIRRORURL/base/contents_index.gz, fallback to $URL/base/contents_index"
+        if eget --check-url $URL/base/contents_index.gz ; then
+            if eget_alt_contents_index $URL/base/contents_index.gz $LOCALPATH/contents_index.gz ; then
+                __add_to_contents_index_list "$URL" "$LOCALPATH/contents_index.gz"
+                continue
+            fi
+        fi
+
+        # 4. check contents_index via eget from REMOTEURL
+        if eget --check-url $URL/base/contents_index ; then
+            if eget_alt_contents_index $URL/base/contents_index $LOCALPATH/contents_index ; then
+                __add_to_contents_index_list "$URL" "$LOCALPATH/contents_index"
+                continue
+            fi
+        fi
+
+        #warning "Can't download contents_index from $URL/base"
+
     done
 }
 
@@ -15110,6 +15283,7 @@ epm_stats()
 
 
 
+
 __convert_pkgallowscripts_to_regexp()
 {
     local tmpalf
@@ -15117,6 +15291,7 @@ __convert_pkgallowscripts_to_regexp()
     # copied from eget's filter_glob
     # check man glob
     # remove commentы and translate glob to regexp
+    # TODO: Replaced only * and ?, not escaped . + | ( ) [ ] { } ^ $
     grep -v "^[[:space:]]*#" "$1" | grep -v "^[[:space:]]*$" | sed -e "s|\*|.*|g" -e "s|?|.|g" -e "s|^|^|" -e "s|$|\$|" >$tmpalf
     echo "$tmpalf"
 }
@@ -15692,6 +15867,7 @@ case $PMTYPE in
         ;;
     pacman)
         sudocmd pacman -S -y
+        sudocmd pacman -F -y
         ;;
     aura)
         sudocmd aura -A -y
@@ -21237,7 +21413,7 @@ esac
 
 case $epm_cmd in
     upgrade|Upgrade|install|reinstall|Install|release_upgrade|release_downgrade)
-        if [ -z "$eget_backend" ] ; then
+        if [ -n "$parallel" ] && [ -z "$eget_backend" ] ; then
             is_command aria2 && eget_backend=aria2 && echo "Use installed aria2 to parallel package downloading."
             [ -z "$eget_backend" ] && is_command axel && eget_backend=axel && echo "Use installed axel to parallel package downloading."
             [ -n "$eget_backend" ] || info "It is better to install aria2 for parallel downloading."
