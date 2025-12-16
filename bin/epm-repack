@@ -67,10 +67,13 @@ __epm_repack_copy()
     #    return
     #fi
 
-    # firstly try CoW
-    cp --reflink=always $verbose $abspkg $target 2>/dev/null && return
-    # next try create hardlink
-    cp -l $verbose $abspkg $target 2>/dev/null && return
+    # If we can make symlink, we don't need CoW and hardlink
+    ## firstly try CoW
+    #cp --reflink=always $verbose $abspkg $target 2>/dev/null && return
+    # after failed CoW remained empty file
+    #rm $target
+    ## next try create hardlink
+    #cp -l $verbose $abspkg $target 2>/dev/null && return
     # next try create symlink
     cp -s $verbose $abspkg $target 2>/dev/null && return
     # just make copy as fallback
