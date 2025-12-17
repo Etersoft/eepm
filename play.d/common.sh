@@ -15,7 +15,7 @@ fatal()
 
 info()
 {
-    echo "$*"
+    echo "$*" >&2
 }
 
 [ -n "$BIGTMPDIR" ] || [ -d "/var/tmp" ] && BIGTMPDIR="/var/tmp" || BIGTMPDIR="/tmp"
