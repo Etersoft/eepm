@@ -21,10 +21,12 @@ load_helper epm-sh-warmup
 
 __epm_packages_help()
 {
-    message "package management list"
-            get_help HELPCMD $SHAREDIR/epm-packages
+    message "Print installed packages"
+    message "Options:"
+    get_help HELPOPTIONS $SHAREDIR/epm-packages
     message '
 Examples:
+  epm qa --short
   epm packages --sort
   epm packages --sort=size
   epm packages --last
@@ -94,17 +96,20 @@ epm_packages()
     local CMD
 
     case "$1" in
-        -h|--help|help)  # HELPCMD: help
+        -h|--help|help)  # HELPOPTIONS: help
             __epm_packages_help
             return
             ;;
-        --sort=size|--sort)   # HELPCMD: list package(s) by size, most
+        --sort=size|--sort)   # HELPOPTIONS: list package(s) by size, most
             __epm_packages_sort
             return
             ;;
-        --last|--sort=time)   # HELPCMD: list package(s) by install time, most
+        --last|--sort=time)   # HELPOPTIONS: list package(s) by install time, most
             __epm_packages_last
             return
+            ;;
+        --short)              # HELPOPTIONS: print out short package names
+            # for help entry only
             ;;
         "")
             ;;
