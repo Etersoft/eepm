@@ -79,6 +79,7 @@ epm()
 {
     #if [ "$1" = "tool" ] ; then
     #    __showcmd_shifted 1 "$@"
+    [ "$1" = "--quiet" ] && shift && $EPM --quiet "$@" && return
     if [ "$1" != "print" ] && [ "$1" != "tool" ] && [ "$1" != "status" ] ; then
         showcmd "$(basename $EPM) $*"
     fi
@@ -167,7 +168,7 @@ parse_json_value()
 {
     local field="$1"
     echo "$field" | grep -q -E "^\[" || field='["'$field'"]'
-    epm tool json -b | grep -m1 -F "$field" | sed -e 's|.*[[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
+    epm --quiet tool json -b | grep -m1 -F "$field" | sed -e 's|.*[[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
 }
 
 # URL/file ["version"]
