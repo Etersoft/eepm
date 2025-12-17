@@ -24,11 +24,11 @@ os="linux"
 platform="${os}-${arch}"
 
 #GCS_BUCKET="https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases"
-GCS_BUCKET="$(fetch_url -O- https://claude.ai/install.sh | grep "^GCS_BUCKET=" | sed -e 's|^GCS_BUCKET=||' -e 's|^"||' -e 's|"$||')"
+GCS_BUCKET="$(fetch_url https://claude.ai/install.sh | grep "^GCS_BUCKET=" | sed -e 's|^GCS_BUCKET=||' -e 's|^"||' -e 's|"$||')"
 [ -n "$GCS_BUCKET" ] || fatal "Can't download https://claude.ai/install.sh"
 
 if [ "$VERSION" = "*" ] ; then
-    VERSION="$(fetch_url -O- "$GCS_BUCKET/stable")" || fatal "Can't get version from $GCS_BUCKET/stable"
+    VERSION="$(fetch_url "$GCS_BUCKET/stable")" || fatal "Can't get version from $GCS_BUCKET/stable"
     [ -n "$VERSION" ] || fatal "Got empty version from $GCS_BUCKET/stable"
 fi
 
