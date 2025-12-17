@@ -1161,6 +1161,8 @@ url_scat()
 {
     local URL="$1"
     download_with_mirroring __wget "$URL" -O- && return
+    local RES=$?
+    [ -n "$quiet" ] || return $RES
     unset_quiet
     download_with_mirroring __wget "$URL" -O-
 }
@@ -1219,6 +1221,8 @@ url_scat()
 {
     local URL="$1"
     download_with_mirroring __curl "$URL" --output - && return
+    local RES=$?
+    [ -n "$quiet" ] || return $RES
     unset_quiet
     download_with_mirroring __curl "$URL" --output -
 }
@@ -1279,6 +1283,8 @@ url_scat()
 {
     local URL="$1"
     download_with_mirroring __aria2 -x1 -s1 --allow-piece-length-change=false -o - "$URL" && return
+    local RES=$?
+    [ -n "$quiet" ] || return $RES
     unset_quiet
     download_with_mirroring __aria2 -x1 -s1 --allow-piece-length-change=false -o - "$URL"
 }
@@ -1337,6 +1343,8 @@ url_scat()
     fatal "Improve me (via temp. file?)"
     local URL="$1"
     download_with_mirroring __axel -o - "$URL" && return
+    local RES=$?
+    [ -n "$quiet" ] || return $RES
     unset_quiet
     download_with_mirroring __axel -o - "$URL"
 }
