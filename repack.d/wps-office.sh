@@ -12,6 +12,11 @@ PKGNAME=$(basename $0 .sh)
 if [ "$PKGNAME" = "wps-office-cn" ] ; then
     subst "s|^\(Name:.*\)$|Name: $PKGNAME|" $SPEC
     add_conflicts wps-office
+    add_conflicts wpsoffice
+    add_conflicts wpsoffice-cn
+else
+    add_conflicts wps-office-cn
+    add_conflicts wpsoffice-cn
 fi
 
 remove_dir /etc/cron.d
