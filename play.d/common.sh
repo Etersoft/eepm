@@ -91,6 +91,14 @@ eget()
     epm tool eget "$@"
 }
 
+fetch_url()
+{
+    local URL
+    [ "$1" = "-O-" ] && URL="$2" || URL="$1"
+    info "Fetching $URL ..."
+    $EPM --quiet tool eget -q "$@"
+}
+
 
 is_supported_arch()
 {
@@ -167,7 +175,7 @@ get_json_value()
 {
     if is_url "$1" ; then
         local toutput
-        toutput="$(eget -q -O- "$1")" || return
+        toutput="$(fetch_url -O- "$1")" || return
         echo "$toutput" | parse_json_value "$2"
     else
         [ -s "$1" ] || fatal "File $1 is missed, can't get json"
