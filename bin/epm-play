@@ -327,7 +327,7 @@ __get_latest_package_version()
 
     [ -n "$pkg" ] || return 1
 
-    ver="$(epm tool eget -q -O- "https://eepm.ru/app-versions/$pkg" 2>/dev/null)"
+    ver="$(fetch_url "https://eepm.ru/app-versions/$pkg")"
 
     if [ -n "$ver" ] ; then
         echo "$ver"

@@ -794,6 +794,12 @@ eget()
     $EGET "$@"
 }
 
+fetch_url()
+{
+    info "Fetching $1 ..."
+    eget -q -O- "$1"
+}
+
 # FIXME:
 sudocmd_eget()
 {

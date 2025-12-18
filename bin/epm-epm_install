@@ -87,7 +87,7 @@ __epm_korinf_install_eepm()
     # TODO: installing via task
     # as now, can't install one package from task
     if false && [ "$BASEDISTRNAME" = "alt" ] && [ -z "$direct" ] ; then
-        local task="$(docmd eget -O- https://eepm.ru/vendor/alt/task)"
+        local task="$(fetch_url https://eepm.ru/vendor/alt/task)"
         if [ -n "$task" ] ; then
             docmd epm install $task:eepm
             return

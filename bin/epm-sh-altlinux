@@ -50,8 +50,7 @@ get_task_packages_list()
     local tn="$1"
     local res
 
-    showcmd "eget -q -O- $ALTTASKURL/$tn/plan/add-bin"
-    res="$(eget -q -O- $ALTTASKURL/$tn/plan/add-bin)" || return
+    res="$(fetch_url $ALTTASKURL/$tn/plan/add-bin)" || return
     echo "$res" | cut -f1-3 | grep -E "(noarch|$DISTRARCH)$" | cut -f1
 }
 
@@ -60,8 +59,7 @@ get_task_arepo_packages_list()
     local tn="$1"
     local res
 
-    showcmd "eget -q -O- $ALTTASKURL/$tn/plan/arepo-add-x86_64-i586"
-    res="$(eget -q -O- $ALTTASKURL/$tn/plan/arepo-add-x86_64-i586)" || return
+    res="$(fetch_url $ALTTASKURL/$tn/plan/arepo-add-x86_64-i586)" || return
     echo "$res" | cut -f1
 }
 
