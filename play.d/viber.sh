@@ -10,6 +10,7 @@ URL="https://viber.com"
 
 warn_version_is_not_supported
 
-PKGURL="https://download.cdn.viber.com/desktop/Linux/viber.AppImage"
+#PKGURL="https://download.cdn.viber.com/desktop/Linux/viber.AppImage"
+PKGURL="https://download.cdn.viber.com/desktop/Linux/viber.rpm"
 
 install_pkgurl
