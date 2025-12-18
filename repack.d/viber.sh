@@ -11,6 +11,8 @@ PRODUCTDIR=/opt/viber
 
 # handle AppImage
 if [ -f ".$PRODUCTDIR/.DirIcon" ] ; then
+    # remove bundled libEGL_mesa which requires unavailable libglapi.so.0
+    remove_file $PRODUCTDIR/usr/lib/libEGL_mesa.so.0
     ignore_lib_requires libQt6LabsSettings.so.6 libQt6LabsSharedImage.so.6 libQt6LabsWavefrontMesh.so.6 libQt6WebEngineQuickDelegatesQml.so.6 libQt6LabsQmlModels.so.6
     add_libs_requires
     exit
