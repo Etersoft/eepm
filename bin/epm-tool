@@ -59,6 +59,23 @@ epm_tool()
             estrlist "$@"
             ;;
         "json")                      # HELPCMD: json operations
+            if [ "$1" = "--help" ] || [ "$1" = "-h" ] ; then
+                echo "epm tool json - JSON parsing tool"
+                echo
+                echo "Usage:"
+                echo "  epm tool json [options]              - parse JSON from stdin"
+                echo "  epm tool json --get-json-value URL field  - get field value from JSON URL"
+                echo
+                echo "Options:"
+                echo "  -b       Brief output (leaf only + prune empty)"
+                echo "  -l       Leaf only"
+                echo "  -p       Prune empty"
+                echo
+                echo "Examples:"
+                echo "  echo '{\"version\":\"1.0\"}' | epm tool json -b"
+                echo "  epm tool json --get-json-value https://api.example.com/info.json version"
+                return
+            fi
             # epm tool json --get-json-value URL field
             if [ "$1" = "--get-json-value" ] ; then
                 local url="$2"
