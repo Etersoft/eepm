@@ -172,14 +172,7 @@ parse_json_value()
 # URL/file ["version"]
 get_json_value()
 {
-    if is_url "$1" ; then
-        local toutput
-        toutput="$(fetch_url "$1")" || return
-        echo "$toutput" | parse_json_value "$2"
-    else
-        [ -s "$1" ] || fatal "File $1 is missed, can't get json"
-        parse_json_value "$2" < "$1"
-    fi
+    epm tool json --get-json-value "$1" "$2"
 }
 
 snap_get_pkgurl()
