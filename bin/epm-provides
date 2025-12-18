@@ -77,7 +77,7 @@ case $PMTYPE in
         if is_installed $pkg_names ; then
             CMD="rpm -q --provides"
         else
-            docmd apm system info --full --format=json $pkg_names | get_json_values "data packageInfo provides"
+            docmd apm system info --full --format=json $pkg_names | parse_json_values "data packageInfo provides"
             return
         fi
         ;;

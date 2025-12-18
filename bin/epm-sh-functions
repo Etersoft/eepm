@@ -842,21 +842,46 @@ print_sha256sum()
     done
 }
 
-
-# copied from parse_json_value from play.d/common.sh
-get_json_value()
+parse_json_value()
 {
     local field="$1"
     echo "$field" | grep -q -E "^\[" || field='["'$field'"]'
     epm --quiet tool json -b | grep -m1 -F "$field" | sed -e 's|.*\][[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
 }
 
-get_json_values()
+# URL/file ["version"]
+get_json_value()
+{
+    if is_url "$1" ; then
+        local toutput
+        toutput="$(fetch_url "$1")" || return
+        echo "$toutput" | parse_json_value "$2"
+    else
+        [ -s "$1" ] || fatal "File $1 is missed, can't get json"
+        parse_json_value "$2" < "$1"
+    fi
+}
+
+parse_json_values()
 {
     local field="$1"
     echo "$field" | grep -q -E "^\[" || field="\[$(echo "$field" | sed 's/[^ ]*/"&"/g' | sed 's/ /,/g'),[0-9]*\]"
     epm --quiet tool json -b | grep "^$field" | sed -e 's|.*\][[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
 }
+
+# URL/file ["version"]
+get_json_values()
+{
+    if is_url "$1" ; then
+        local toutput
+        toutput="$(fetch_url "$1")" || return
+        echo "$toutput" | parse_json_values "$2"
+    else
+        [ -s "$1" ] || fatal "File $1 is missed, can't get json"
+        parse_json_values "$2" < "$1"
+    fi
+}
+
 
 __epm_assure_7zip()
 {

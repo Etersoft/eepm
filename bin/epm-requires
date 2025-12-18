@@ -147,9 +147,9 @@ case $PMTYPE in
             return
         else
             if [ -n "$short" ] ; then
-                docmd apm system info --full --format=json $pkg_names | get_json_values "data packageInfo depends" | __epm_filter_out_base_alt_reqs | sed -e "s| .*||"
+                docmd apm system info --full --format=json $pkg_names | parse_json_values "data packageInfo depends" | __epm_filter_out_base_alt_reqs | sed -e "s| .*||"
             else
-                docmd apm system info --full --format=json $pkg_names | get_json_values "data packageInfo depends" | __epm_filter_out_base_alt_reqs
+                docmd apm system info --full --format=json $pkg_names | parse_json_values "data packageInfo depends" | __epm_filter_out_base_alt_reqs
             fi
             return
         fi

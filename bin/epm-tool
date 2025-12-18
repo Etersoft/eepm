@@ -65,8 +65,7 @@ epm_tool()
                 local field="$3"
                 [ -n "$url" ] || fatal "Use: epm tool json --get-json-value URL field"
                 [ -n "$field" ] || fatal "Use: epm tool json --get-json-value URL field"
-                echo "$field" | grep -q -E "^\[" || field='["'$field'"]'
-                eget -q -O- "$url" | $CMDSHELL $SHAREDIR/tools_json -b | grep -m1 -F "$field" | sed -e 's|.*[[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
+                get_json_value "$url" "$field"
                 return
             fi
             showcmd json "$@"
