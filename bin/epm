@@ -367,6 +367,10 @@ check_command()
         epm_cmd=check
         direct_args=1
         ;;
+    db)                       # HELPCMD: package database operations (see epm db --help)
+        epm_cmd=db
+        direct_args=1
+        ;;
     dedup)                    # HELPCMD: remove unallowed duplicated pkgs (after upgrade crash)
         epm_cmd=dedup
         direct_args=1
