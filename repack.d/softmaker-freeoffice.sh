@@ -311,4 +311,3 @@ done
 install_file $PRODUCTDIR/mime/$PRODUCT$VERSION_YEAR.xml /usr/share/mime/application/$PRODUCT$VERSION_YEAR.xml
 install_file $PRODUCTDIR/mime/$PRODUCT$VERSION_YEAR.mime /usr/share/mime-info/$PRODUCT$VERSION_YEAR.mime
 
-add_libs_requires

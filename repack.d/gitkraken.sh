@@ -24,4 +24,3 @@ add_requires libXScrnSaver
 
 add_electron_deps
 ignore_lib_requires libc.so
-add_libs_requires

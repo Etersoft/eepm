@@ -24,4 +24,3 @@ Categories=AudioVideo;
 StartupWMClass=moe.tsuna.tsukimi
 EOF
 
-add_libs_requires

@@ -7,4 +7,3 @@ SPEC="$2"
 
 is_soname_present libssl.so.3 || fatal "This package needs OpenSSL 3."
 
-add_libs_requires

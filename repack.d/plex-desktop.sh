@@ -8,4 +8,3 @@ SPEC="$2"
 
 add_bin_link_command $PRODUCT $PRODUCTDIR/Plex.sh
 
-add_libs_requires

@@ -42,4 +42,3 @@ add_unirequires libgdiplus.so.0
 ln -sf /usr/lib64/libgdiplus.so.0 ./$PRODUCTDIR/resources/bin/libgdiplus.so
 pack_file $PRODUCTDIR/resources/bin/libgdiplus.so
 
-add_libs_requires

@@ -20,4 +20,3 @@ fix_desktop_file "/opt/lithium_ecad-.*/lithium-ecad.png"
 
 install_file $PRODUCTDIR/lithium-ecad.png /usr/share/pixmaps/$PRODUCT.png
 
-add_libs_requires

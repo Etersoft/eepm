@@ -16,4 +16,3 @@ add_conflicts ayugram-desktop
 add_bin_link_command $PRODUCT $PRODUCTDIR/$PRODUCT
 add_bin_link_command $PRODUCTCUR $PRODUCT
 
-add_libs_requires

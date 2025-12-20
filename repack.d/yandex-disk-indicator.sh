@@ -6,7 +6,6 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
-add_libs_requires
 
 add_unirequires "typelib(AyatanaAppIndicator3)"
 

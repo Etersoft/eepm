@@ -10,4 +10,3 @@ PRODUCTDIR=/opt/$PRODUCT
 
 move_file /usr/share/pixmaps/PolyMC-Linux.svg /usr/share/icons/hicolor/scalable/apps/org.polymc.PolyMC.svg
 
-add_libs_requires

@@ -179,4 +179,3 @@ sed -i '/^Environment=/ s/$/ XAUTHORITY=\/home\/%i\/.Xauthority/' $BUILDROOT/lib
 
 pack_file /usr/bin/crd
 
-add_libs_requires

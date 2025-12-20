@@ -11,4 +11,3 @@ PRODUCTDIR=/opt/$PRODUCT
 move_file /usr/share/pixmaps/ElyPrismLauncher-Linux.svg /usr/share/icons/hicolor/scalable/apps/org.prismlauncher.PrismLauncher.svg
 add_conflicts PrismLauncher-Linux prismlauncher
 
-add_libs_requires

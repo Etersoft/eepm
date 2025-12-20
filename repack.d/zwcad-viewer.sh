@@ -9,4 +9,3 @@ SPEC="$2"
 remove_file $PRODUCTDIR/libQt5QuickTest.*
 remove_file $PRODUCTDIR/libQt5Declarative.*
 
-add_libs_requires

@@ -19,4 +19,3 @@ echo "$PRODUCTDIR/$PRODUCT" | create_file /usr/share/64Gram/externalupdater.d/te
 # TODO: tg.protocol
 # https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=telegram-desktop-bin
 
-add_libs_requires

@@ -8,4 +8,3 @@ SPEC="$2"
 
 move_to_opt /usr/share/jellyfin-web
 
-add_libs_requires

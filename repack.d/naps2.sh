@@ -13,4 +13,3 @@ fix_desktop_file
 
 ignore_lib_requires libmscordaccore.so
 
-add_libs_requires

@@ -10,4 +10,3 @@ SPEC="$2"
 
 add_requires libssl-devel
 
-add_libs_requires

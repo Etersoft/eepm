@@ -13,4 +13,3 @@ remove_file /opt/deepseek-desktop/icon.png
 
 add_bin_link_command $PRODUCT
 
-add_libs_requires

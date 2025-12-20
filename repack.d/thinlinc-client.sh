@@ -14,4 +14,3 @@ add_bin_exec_command $PRODUCTCUR $PRODUCT
 
 fix_desktop_file "/opt/thinlinc/bin/tlclient-openconf"
 
-add_libs_requires

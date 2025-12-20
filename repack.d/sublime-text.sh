@@ -20,4 +20,3 @@ add_bin_link_command $PRODUCTCUR $PRODUCT
 install_file .$PRODUCTDIR/sublime_text.desktop /usr/share/applications/$PRODUCT.desktop
 fix_desktop_file /opt/sublime_text/sublime_text $PRODUCT
 
-add_libs_requires

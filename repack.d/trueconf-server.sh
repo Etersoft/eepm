@@ -15,4 +15,3 @@ SPEC="$2"
 #subst '1i%filter_from_requires /^liblber-2.4.so.2(OPENLDAP_.*/d' $SPEC
 #subst '1i%filter_from_requires /^libldap_r-2.4.so.2(OPENLDAP_.*/d' $SPEC
 
-add_libs_requires

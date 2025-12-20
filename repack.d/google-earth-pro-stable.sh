@@ -16,4 +16,3 @@ move_file /opt/google/earth/pro/google-earth-pro.desktop /usr/share/applications
 
 move_file /opt/google/earth/pro/product_logo_256.png /usr/share/pixmaps/google-earth-pro.png
 
-add_libs_requires

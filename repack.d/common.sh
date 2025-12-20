@@ -513,7 +513,7 @@ __get_library_provides()
         basename "$libso"
     done
 
-    echo "$EEPM_IGNORE_LIB_REQUIRES" | xargs -n1 echo
+    [ -f "$BUILDROOT/.eepm_ignore_lib_requires" ] && cat "$BUILDROOT/.eepm_ignore_lib_requires"
 }
 
 # fast hack to get all extra soname list
@@ -522,6 +522,9 @@ get_libs_requires()
     local libreqlist=$(mktemp)
     local libpreslist=$(mktemp)
     local fdir="$BUILDROOT/$1"
+
+    # load ignored libs from file
+    [ -f "$BUILDROOT/.eepm_ignore_lib_requires" ] && EEPM_IGNORE_LIB_REQUIRES="$(cat "$BUILDROOT/.eepm_ignore_lib_requires" | tr '\n' ' ')"
 
     __get_binary_requires "$fdir" | LANG=C sort -u >$libreqlist
     estrlist reg_wordexclude "$EEPM_IGNORE_LIB_REQUIRES" "$(cat $libreqlist | tr '\n' ' ')" >$libreqlist
@@ -548,8 +551,16 @@ get_libs_requires()
     rm -f $libreqlist $libpreslist
 }
 
+# cancel adding libs requires
+stop_libs_requires()
+{
+    touch "$BUILDROOT/.eepm_stop_libs_requires"
+}
+
 add_libs_requires()
 {
+    [ -f "$BUILDROOT/.eepm_stop_libs_requires" ] && return 0
+
     local ll
     [ -n "$nodeps" ] && info "Skipping any requires detection ..." && return
     info "Scanning for required libs soname ..."
@@ -596,7 +607,7 @@ ignore_lib_requires()
    #    return
    #fi
 
-   EEPM_IGNORE_LIB_REQUIRES="$EEPM_IGNORE_LIB_REQUIRES $@"
+   echo "$@" | xargs -n1 >> "$BUILDROOT/.eepm_ignore_lib_requires"
 }
 
 ignore_library_path()

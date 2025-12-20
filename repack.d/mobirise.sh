@@ -17,4 +17,3 @@ fix_chrome_sandbox
 
 # use both
 add_electron_deps
-add_libs_requires

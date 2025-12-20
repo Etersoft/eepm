@@ -9,4 +9,3 @@ SPEC="$2"
 subst "s|User=headscale|User=root|" $BUILDROOT/usr/lib/systemd/system/headscale.service
 subst "s|Group=headscale|Group=root|" $BUILDROOT/usr/lib/systemd/system/headscale.service
 
-add_libs_requires

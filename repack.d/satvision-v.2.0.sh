@@ -28,4 +28,3 @@ install_file .$PRODUCTDIR/main.png /usr/share/pixmaps/$PRODUCT.png
 
 add_bin_link_command $PRODUCT "$PRODUCTDIR/Satvision V.2.0"
 
-add_libs_requires

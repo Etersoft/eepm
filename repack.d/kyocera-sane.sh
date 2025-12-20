@@ -45,4 +45,3 @@ remove_dir /usr/local
 #      ln -s /usr/local/kyocera/scanner/libcrypto.so.1.1 /usr/lib64/libcrypto.so.1.1
 #fi
 
-add_libs_requires

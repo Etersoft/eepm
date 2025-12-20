@@ -14,4 +14,3 @@ subst "s|^Summary:.*|Summary: Binary plugin for HPs hplip printer driver library
 VERSION=$(grep "^Version:" $SPEC | sed -e "s|Version: ||")
 add_requires "hplip >= $VERSION"
 
-add_libs_requires

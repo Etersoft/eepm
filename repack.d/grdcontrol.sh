@@ -12,4 +12,3 @@ install_file /opt/guardant/grdcontrol/95-grdnt.rules /etc/udev/rules.d/95-grdnt.
 add_bin_link_command license_wizard /opt/guardant/grdcontrol/license_wizard
 
 
-add_libs_requires

@@ -15,4 +15,3 @@ install_file https://data.trezor.io/udev/51-trezor.rules /etc/udev/rules.d/51-tr
 
 ignore_lib_requires liblog.so libm.so libdl.so libc.so libc++_shared.so libc.musl-x86_64.so.1
 
-add_libs_requires

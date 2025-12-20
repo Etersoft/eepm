@@ -11,4 +11,3 @@ PRODUCTDIR=/opt/$PRODUCT
 add_bin_exec_command 
 add_bin_exec_command FurMark_GUI $PRODUCTDIR/FurMark_GUI 
 
-add_libs_requires

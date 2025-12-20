@@ -54,4 +54,3 @@ Exec=heaven
 Terminal=false
 EOF
 
-add_libs_requires

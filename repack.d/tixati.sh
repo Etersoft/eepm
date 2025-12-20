@@ -13,4 +13,3 @@ move_to_opt /usr/bin
 
 add_bin_exec_command
 
-add_libs_requires

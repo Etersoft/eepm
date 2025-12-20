@@ -18,5 +18,4 @@ add_bin_exec_command tailscaled
 remove_dir /var/cache
 remove_dir /usr/lib/.build-id
 
-add_libs_requires
 

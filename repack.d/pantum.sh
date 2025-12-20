@@ -30,4 +30,3 @@ remove_dir /usr/lib/x86_64-linux-gnu
 # duplicates main files
 remove_dir /usr/local
 
-add_libs_requires

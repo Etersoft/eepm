@@ -19,4 +19,3 @@ esac
 
 subst 's|/usr/lib/s4a/|/opt/S4A/|' usr/bin/s4a
 
-add_libs_requires

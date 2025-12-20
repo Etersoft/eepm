@@ -17,4 +17,3 @@ move_to_opt /usr/share/localsend_app
 add_bin_link_command $PRODUCTCUR
 add_bin_link_command $PRODUCT $PRODUCTCUR
 
-add_libs_requires

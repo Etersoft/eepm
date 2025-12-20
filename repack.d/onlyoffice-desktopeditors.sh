@@ -47,4 +47,3 @@ subst "s|%files|%files\n$escaped_paths|" "$SPEC"
 
 fix_desktop_file /usr/bin/onlyoffice-desktopeditors
 
-add_libs_requires

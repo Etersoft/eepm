@@ -16,4 +16,3 @@ fix_desktop_file /usr/share/ridoclnx/ridoclnx.ico
 fix_desktop_file /usr/share/ridoclnx/ridoclnx
 fix_desktop_file /usr/share/ridoclnx/ $PRODUCTDIR
 
-add_libs_requires

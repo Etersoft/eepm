@@ -25,4 +25,3 @@ pack_file /etc/hasplm/nethasp.ini
 
 remove_dir /var/hasplm/init
 
-add_libs_requires

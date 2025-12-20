@@ -16,7 +16,6 @@ add_requires "libcurl-gnutls.so.4(64bit)"
 
 ignore_lib_requires "libnx_clusterdb_engine.so"
 
-add_libs_requires
 
 mkdir -p var/lib/ipera
 pack_dir /var/lib/ipera

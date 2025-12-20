@@ -13,7 +13,6 @@ subst 's| > /dev/null 2>&1||' opt/pt/packettracer
 
 #add_requires sudo dialog xdg-utils
 
-add_libs_requires
 
 if [ -d usr/share/applications ] ; then
     fix_desktop_file

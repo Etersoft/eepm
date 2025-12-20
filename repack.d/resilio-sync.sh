@@ -18,4 +18,3 @@ cat <<EOF | create_file /usr/lib/tmpfiles.d/resilio-sync.conf
     z /etc/rslsync.conf 0600 rslsync rslsync
 EOF
 
-add_libs_requires

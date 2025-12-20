@@ -30,4 +30,3 @@ done
 
 ignore_lib_requires libcurl-gnutls.so.4 libayatana-appindicator3.so.1
 add_unirequires "libcurl-gnutls.so.4(64bit) libayatana-appindicator3.so.1()(64bit)"
-add_libs_requires

@@ -27,4 +27,3 @@ add_bin_link_command r7organizer $PRODUCT
 
 # TODO: set as default application: x-scheme-handler/r7-organizer=r7-organizer.desktop to /usr/share/applications/mimeapps.list
 
-add_libs_requires

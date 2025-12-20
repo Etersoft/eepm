@@ -18,4 +18,3 @@ fix_desktop_file "$PRODUCTDIR/icon/bf_icon_128.png" "$PRODUCT"
 # Set executable permissions for executable files and libraries
 find $BUILDROOT/$PRODUCTDIR -type f \( -name "*.so" -o -name "betaflight-configurator" -o -name "chrome_crashpad_handler" \) -exec chmod a+x {} \;
 
-add_libs_requires

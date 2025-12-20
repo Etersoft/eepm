@@ -45,4 +45,3 @@ EOF
 
 subst "s|^Summary:.*|Summary: A remote control software.|" $SPEC
 
-add_libs_requires

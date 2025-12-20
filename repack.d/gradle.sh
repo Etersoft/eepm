@@ -8,7 +8,6 @@ SPEC="$2"
 
 move_to_opt "/$PRODUCT-*"
 
-add_libs_requires
 
 add_bin_exec_command $PRODUCT $PRODUCTDIR/bin/$PRODUCT
 

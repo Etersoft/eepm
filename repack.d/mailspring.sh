@@ -17,6 +17,5 @@ rm -v usr/bin/$PRODUCT
 add_bin_link_command
 
 #add_electron_deps
-add_libs_requires
 
 fix_chrome_sandbox

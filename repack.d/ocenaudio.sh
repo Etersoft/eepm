@@ -27,5 +27,4 @@ case "$(epm print info -e)" in
         add_unirequires libQt6Concurrent.so.6 libQt6Core.so.6 libQt6Gui.so.6 libQt6Network.so.6 libQt6Widgets.so.6
 esac
 
-add_libs_requires
 

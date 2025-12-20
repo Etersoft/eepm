@@ -52,4 +52,3 @@ remove_file $PRODUCTDIR/platforms/libqwayland-egl.so
 remove_file $PRODUCTDIR/platforms/libqwayland-xcomposite-glx.so
 remove_file $PRODUCTDIR/platforms/libqwayland-xcomposite-egl.so
 
-add_libs_requires

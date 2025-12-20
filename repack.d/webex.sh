@@ -22,4 +22,3 @@ install_file .$PRODUCTDIR/bin/accessories/70-dsea.rules /etc/udev/rules.d/70-dse
 # linked with libtbb.so.2, but it is missed in the package's requirements
 # it is used in such main libs as libinference_engine.so, so just build libtbb.so.2 for target system
 
-add_libs_requires

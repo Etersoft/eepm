@@ -21,4 +21,3 @@ add_bin_link_command $PRODUCT $PRODUCTCUR
 remove_file /opt/cadoodle/lib/runtime/lib/libavplugin-*.so
 remove_file /opt/cadoodle/lib/runtime/lib/libavplugin-ffmpeg-*.so
 
-add_libs_requires

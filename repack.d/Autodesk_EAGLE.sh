@@ -47,4 +47,3 @@ install_file /opt/eagle/bin/eagle-logo.png /usr/share/pixmaps/$PRODUCT.png
 remove_file /opt/eagle/lib/libxcb-dri2.so.0
 remove_file /opt/eagle/lib/libxcb-dri3.so.0
 
-add_libs_requires

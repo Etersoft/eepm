@@ -23,4 +23,3 @@ Name[en]=Snap4Arduino
 GenericName[en]=Use Snap! to control Arduino boards. Arduino goes lambda!
 EOF
 
-add_libs_requires

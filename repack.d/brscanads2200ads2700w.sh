@@ -3,4 +3,3 @@
 BUILDROOT="$1"
 SPEC="$2"
 
-add_libs_requires

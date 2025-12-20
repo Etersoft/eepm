@@ -116,4 +116,3 @@ for f in wps et wpp wpspdf; do
     sed -i '2i . /opt/kingsoft/wps-office/office6/init-wps-config.sh' "$bin_file"
 done
 
-add_libs_requires

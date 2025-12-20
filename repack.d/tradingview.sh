@@ -13,4 +13,3 @@ subst 's|"$@"|--no-sandbox "$@"|' usr/bin/$PRODUCT
 
 #fix_chrome_sandbox
 
-add_libs_requires

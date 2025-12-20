@@ -12,4 +12,3 @@ install_file $PRODUCTDIR/lib/simplex.png /usr/share/icons/hicolor/512x512/apps/s
 
 ignore_lib_requires 'libglapi.so.0()(64bit)'
 
-add_libs_requires

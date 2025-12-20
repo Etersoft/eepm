@@ -14,5 +14,4 @@ add_bin_link_command $PRODUCTCUR $PRODUCT
 
 fix_desktop_file
 
-add_libs_requires
 

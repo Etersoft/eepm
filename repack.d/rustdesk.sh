@@ -16,7 +16,6 @@ if [ "$VERSION" = "1.1.8" ] || [ "$VERSION" = "1.1.9" ] ; then
 echo "Note: use 1.1.x compatibility script"
 echo "Categories=GNOME;GTK;Network;RemoteAccess;" >> usr/share/applications/$PRODUCT.desktop
 
-add_libs_requires
 
 [ "$(epm print info -s)" = "alt" ] || exit 0
 
@@ -46,4 +45,3 @@ subst "s|^Categories.*|Categories=GNOME;GTK;Network;RemoteAccess;|" usr/share/ap
 add_bin_link_command
 
 add_unirequires curl
-add_libs_requires

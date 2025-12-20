@@ -32,4 +32,3 @@ EOF
 pack_file /etc/tmpfiles.d/$PRODUCT.conf
 
 
-add_libs_requires

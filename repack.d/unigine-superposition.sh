@@ -64,4 +64,3 @@ Terminal=false
 Categories=Launcher;Benchmark;
 EOF
 
-add_libs_requires

@@ -47,4 +47,3 @@ Exec=valley
 Terminal=false
 EOF
 
-add_libs_requires

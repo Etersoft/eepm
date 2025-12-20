@@ -6,7 +6,6 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
-add_libs_requires
 
 [ "$(epm print info -s)" = "alt" ] || exit 0
 

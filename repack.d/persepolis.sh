@@ -8,4 +8,3 @@ SPEC="$2"
 
 add_requires 'python3(sqlite3)' 'python3(requests)' 'python3(PyQt5)' '/usr/bin/aria2c'
 
-add_libs_requires

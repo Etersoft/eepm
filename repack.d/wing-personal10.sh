@@ -14,7 +14,6 @@ subst "s|/usr/lib/$PRODUCT|$PRODUCTDIR|" $BUILDROOT$PRODUCTDIR/$PRODUCTCUR
 rm -v ./usr/bin/$PRODUCT
 add_bin_link_command $PRODUCT $PRODUCTDIR/$PRODUCTCUR
 
-add_libs_requires
 
 for size in 16 32 48 64 128
 do

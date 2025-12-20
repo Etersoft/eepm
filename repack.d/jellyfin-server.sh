@@ -57,6 +57,5 @@ EOF
 
 add_requires dotnet-sdk-8.0
 
-add_libs_requires
 
 add_bin_exec_command jellyfin $PRODUCTDIR/jellyfin

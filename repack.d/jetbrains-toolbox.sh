@@ -27,4 +27,3 @@ add_bin_exec_command $PRODUCT $PRODUCTDIR/$PRODUCT
 
 add_requires java-openjdk
 
-add_libs_requires

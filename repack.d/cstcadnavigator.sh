@@ -21,4 +21,3 @@ cat <<EOF >>./usr/share/applications/$PRODUCT.desktop
 MimeType=image/vnd.dwg;model/stl;image/cgm;image/svg+xml;
 EOF
 
-add_libs_requires

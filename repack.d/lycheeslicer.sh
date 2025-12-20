@@ -15,4 +15,3 @@ fix_chrome_sandbox
 
 fix_desktop_file
 
-add_libs_requires

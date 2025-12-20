@@ -21,4 +21,3 @@ fi
 exec "$PRODUCTDIR/wifiman-desktop" "\$@"
 EOF
 
-add_libs_requires

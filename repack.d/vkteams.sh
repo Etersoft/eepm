@@ -32,4 +32,3 @@ remove_file $PRODUCTDIR/lib/libGLsoft.so.1
 
 add_bin_link_command
 
-add_libs_requires

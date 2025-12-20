@@ -23,7 +23,6 @@ PRODUCTCUR=$PRODUCT$MAJORVERSION
 # embedded
 filter_from_requires "python3(PyPDF3)"
 
-add_libs_requires
 
 # remove embedded PyPDF3
 remove_dir /usr/share/kyocera$MAJORVERSION/Python

@@ -33,4 +33,3 @@ for i in $BUILDROOT/opt/mssql/lib/libunwind-x86_64.so.8 ; do
 done
 fi
 
-add_libs_requires

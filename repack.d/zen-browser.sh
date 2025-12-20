@@ -13,6 +13,5 @@ remove_file $PRODUCTDIR/update-settings.ini
 remove_file $PRODUCTDIR/updater
 remove_file $PRODUCTDIR/updater.ini
 
-add_libs_requires
 
 set_alt_alternatives 65

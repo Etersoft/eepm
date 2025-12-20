@@ -17,4 +17,3 @@ fix_desktop_file SERVO_SRC_PATH/target/release/servo
 
 add_bin_link_command
 
-add_libs_requires

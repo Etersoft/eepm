@@ -11,4 +11,3 @@ install_file /opt/devtoys/devtoys/Icon-Windows-Linux-Preview.png /usr/share/icon
 fix_desktop_file /usr/bin/DevToys devtoys
 fix_desktop_file /opt/devtoys/devtoys/Icon-Windows-Linux-Preview.png devtoys
 
-add_libs_requires

@@ -40,4 +40,3 @@ ignore_lib_requires 'libtinfo.so.*'
 
 ignore_library_path /opt/cascadeur/plugins/multimedia
 
-add_libs_requires

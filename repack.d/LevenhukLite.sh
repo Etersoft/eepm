@@ -8,4 +8,3 @@ SPEC="$2"
 
 fix_desktop_file
 add_bin_exec_command
-add_libs_requires

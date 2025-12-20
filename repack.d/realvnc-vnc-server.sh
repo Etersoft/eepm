@@ -8,4 +8,3 @@ SPEC="$2"
 
 add_conflicts tigervnc
 
-add_libs_requires

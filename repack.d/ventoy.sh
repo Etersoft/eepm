@@ -40,4 +40,3 @@ rm -v tool/ventoy_lib.sh.orig
 
 
 
-add_libs_requires

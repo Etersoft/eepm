@@ -16,7 +16,6 @@ fi
 
 ignore_lib_requires libstdc++-libc6.2-2.so.3 libstdc++.so.5
 
-add_libs_requires
 
 add_bin_exec_command davinci-resolve "$PRODUCTDIR/bin/resolve"
 add_bin_exec_command blackmagicrawplayer "$PRODUCTDIR/BlackmagicRAWPlayer/BlackmagicRAWPlayer"

@@ -29,4 +29,3 @@ install_file ipfs://QmUvB4BvoUsQDxMUH9rZ3PMaZgYoBishLyGBwxdDQ1uHcU /usr/share/pi
 add_bin_exec_command
 #add_bin_link_command $PRODUCTCUR $PRODUCT
 
-add_libs_requires

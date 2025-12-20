@@ -12,4 +12,3 @@ ignore_lib_requires libnode.so.72
 
 add_requires '/usr/bin/node'
 
-add_libs_requires

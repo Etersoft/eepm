@@ -13,4 +13,3 @@ pack_dir /var/lib/$PRODUCT
 remove_file $PRODUCTDIR/update
 
 add_electron_deps
-add_libs_requires

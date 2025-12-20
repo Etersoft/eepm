@@ -52,4 +52,3 @@ pack_dir $PRODUCTDIR/plugins/
 #pack_dir $PRODUCTDIR/plugins/webp
 #pack_dir $PRODUCTDIR/plugins/webp/lib
 
-add_libs_requires

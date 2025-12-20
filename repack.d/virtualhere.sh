@@ -22,4 +22,3 @@ EOF
 mkdir -p $BUILDROOT/etc/$PRODUCT/
 pack_dir /etc/$PRODUCT
 
-add_libs_requires

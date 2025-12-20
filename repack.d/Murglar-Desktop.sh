@@ -9,4 +9,3 @@ SPEC="$2"
 add_unirequires libappindicator3.so.1
 add_unirequires vlc-mini
 
-add_libs_requires

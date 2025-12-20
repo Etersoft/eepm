@@ -25,4 +25,3 @@ fix_desktop_file "/opt/weasis/bin/Dicomizer"
 fix_desktop_file "/opt/weasis/lib/Weasis"
 fix_desktop_file "/opt/weasis/lib/Dicomizer"
 
-add_libs_requires

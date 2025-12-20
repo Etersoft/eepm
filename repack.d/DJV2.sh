@@ -26,4 +26,3 @@ remove_file $PRODUCTDIR/etc/Color/spi-vfx/make_vfx_ocio.py
 
 filter_from_requires libav libswresample libswscale
 
-add_libs_requires

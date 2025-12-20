@@ -10,7 +10,6 @@ PRODUCT=librewolf
 move_to_opt
 fix_desktop_file "/usr/share/$PRODUCT/$PRODUCT"
 
-add_libs_requires
 
 rm usr/bin/librewolf
 add_bin_link_command

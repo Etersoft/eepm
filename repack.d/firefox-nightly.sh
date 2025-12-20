@@ -43,4 +43,3 @@ copy_icons_to_share()
 
 copy_icons_to_share
 
-add_libs_requires

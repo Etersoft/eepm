@@ -8,6 +8,8 @@ PKG="$4"
 
 . $(dirname $0)/common.sh
 
+# add libs requires (after all ignore_lib_requires calls)
+add_libs_requires
 
 # drop forbidded paths
 # https://bugzilla.altlinux.org/show_bug.cgi?id=38842

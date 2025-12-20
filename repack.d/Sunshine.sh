@@ -57,4 +57,3 @@ a='' patchelf --replace-needed "libminiupnpc.so.$MINIUPNPC_FEDORA_VERSION" "libm
 
 a='' patchelf --replace-needed "libappindicator3.so.1" "libayatana-appindicator3.so.1" "usr/bin/sunshine"
 
-add_libs_requires

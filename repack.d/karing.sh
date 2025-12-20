@@ -23,4 +23,3 @@ EOF
 
 fix_desktop_file "Categories=Applications/Internet;" "Categories=Network;Internet;"
 
-add_libs_requires

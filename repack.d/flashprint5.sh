@@ -8,4 +8,3 @@ SPEC="$2"
 
 move_file /usr/lib/libOCCTWrapper.so.1 /usr/lib64/libOCCTWrapper.so.1
 
-add_libs_requires

@@ -36,4 +36,3 @@ EOF
 fi
 
 
-add_libs_requires

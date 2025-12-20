@@ -55,6 +55,5 @@ pack_dir $PRODUCTDIR/plugins/
 #pack_dir $PRODUCTDIR/plugins/webp/lib
 
 ignore_library_path $PRODUCTDIR/plugins/android/resources
-add_libs_requires
 
 add_unirequires libbsd.so.0

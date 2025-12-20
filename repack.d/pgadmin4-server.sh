@@ -11,4 +11,3 @@ move_to_opt /usr/pgadmin4
 
 add_requires python3 libkrb5.so.3 libpq.so.5
 
-add_libs_requires

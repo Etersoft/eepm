@@ -12,4 +12,3 @@ ignore_lib_requires libc.so.1 libjawt.so libpthread.1
 # need openjdk to run
 add_unirequires /usr/bin/javac
 
-add_libs_requires

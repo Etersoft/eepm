@@ -10,4 +10,3 @@ PRODUCTDIR=/opt/$PRODUCT
 
 move_file /usr/share/pixmaps/PrismLauncher-Linux.svg /usr/share/icons/hicolor/scalable/apps/org.prismlauncher.PrismLauncher.svg
 
-add_libs_requires

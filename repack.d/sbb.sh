@@ -10,4 +10,3 @@ SPEC="$2"
 ignore_lib_requires "libcurl-gnutls.so.4"
 add_requires "libcurl-gnutls.so.4(64bit)"
 
-add_libs_requires

@@ -8,5 +8,4 @@ SPEC="$2"
 
 ignore_lib_requires 'libpython3.11.so.1.0'
 add_chromium_deps
-add_libs_requires
 fix_chrome_sandbox

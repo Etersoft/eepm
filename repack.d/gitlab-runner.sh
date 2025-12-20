@@ -20,4 +20,3 @@ PRODUCT=gitlab-runner
 
 add_requires curl git tar
 
-add_libs_requires

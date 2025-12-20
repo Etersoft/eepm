@@ -23,4 +23,3 @@ remove_file "$PRODUCTDIR/plugins/sqldrivers/libqsqloci.so"
 remove_file "$PRODUCTDIR/plugins/sqldrivers/libqsqlodbc.so"
 remove_file "$PRODUCTDIR/plugins/sqldrivers/libqsqlpsql.so"
 
-add_libs_requires

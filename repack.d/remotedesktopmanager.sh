@@ -19,4 +19,3 @@ move_to_opt /usr/lib/devolutions/RemoteDesktopManager
 # add_findreq_skiplist "$PRODUCTDIR/runtimes/*"
 
 # set_autoreq 'yes'
-add_libs_requires

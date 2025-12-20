@@ -23,4 +23,3 @@ remove_dir /opt/teamviewer/tv_bin/xdg-utils
 
 remove_file /opt/teamviewer/tv_bin/script/teamviewerd.sysv
 
-add_libs_requires

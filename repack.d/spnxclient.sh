@@ -18,7 +18,6 @@ else
     subst "s|/usr/lib/i386-linux-gnu/libpcsclite.so|/usr/lib/libpcsclite.so|" $BUILDROOT/usr/bin/spnxclient
 fi
 
-add_libs_requires
 
 # https://sigur.com/download/
 echo "WARNING! Just see these crazy pre/post install scripts in the original deb package."

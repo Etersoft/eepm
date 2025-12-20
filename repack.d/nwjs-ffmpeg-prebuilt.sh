@@ -9,4 +9,3 @@ SPEC="$2"
 add_conflicts ffmpeg-plugin-browser
 add_provides ffmpeg-plugin-browser
 
-add_libs_requires

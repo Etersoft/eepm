@@ -39,5 +39,4 @@ add_bin_link_command $PRODUCT /opt/$PRODUCT/bin/rlinux
 
 fix_desktop_file /usr/local/R-Linux/bin/rlinux $PRODUCT
 add_requires polkit
-add_libs_requires
 

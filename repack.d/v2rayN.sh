@@ -22,4 +22,3 @@ EOF
 
 install_file $PRODUCTDIR/$PRODUCT.png /usr/share/pixmaps/$PRODUCT.png
 
-add_libs_requires

@@ -15,5 +15,4 @@ done
 add_conflicts go-ipfs
 add_provides go-ipfs
 
-add_libs_requires
 

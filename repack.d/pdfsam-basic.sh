@@ -8,4 +8,3 @@ SPEC="$2"
 
 chmod +x $BUILDROOT/opt/pdfsam-basic/runtime/bin/java
 
-add_libs_requires

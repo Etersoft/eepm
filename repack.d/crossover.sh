@@ -36,4 +36,3 @@ if [ "$(epm print info -s)" = "alt" ]; then
     add_requires 'i586-gst-plugins-bad1.0' 'gst-plugins-bad1.0' 'gst-plugins-base1.0' 'i586-gst-plugins-base1.0' 'gst-plugins-good1.0' 'i586-gst-plugins-good1.0' 'gst-plugins-ugly1.0' 'i586-gst-plugins-ugly1.0'
 fi
 
-add_libs_requires

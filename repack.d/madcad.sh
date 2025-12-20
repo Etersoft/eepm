@@ -9,4 +9,3 @@ add_bin_exec_command
 
 add_requires "python3(madcad)" "python3(glcontext)"
 
-add_libs_requires

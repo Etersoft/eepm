@@ -24,4 +24,3 @@ fi
 # as in original package
 add_unirequires /usr/bin/pdftotext
 
-add_libs_requires

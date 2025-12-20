@@ -10,4 +10,3 @@ PRODUCTDIR=/opt/$PRODUCT
 
 add_bin_link_command $PRODUCT $PRODUCTDIR/bin/$PRODUCT
 
-add_libs_requires

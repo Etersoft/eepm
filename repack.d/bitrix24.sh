@@ -36,4 +36,3 @@ if [ -f ./$PRODUCTDIR/ffmpeg ] ; then
    remove_file $PRODUCTDIR/ffmpeg
 fi
 
-add_libs_requires

@@ -23,4 +23,3 @@ add_bin_exec_command $PRODUCTCUR $PRODUCTDIR/$PRODUCTCUR.sh
 
 fix_desktop_file /usr/lib/pentablet/PenTablet.sh $PRODUCTCUR
 
-add_libs_requires

@@ -82,4 +82,3 @@ pack_dir $PRODUCTDIR/bin/
 pack_dir $PRODUCTDIR/lib/
 pack_dir $PRODUCTDIR/plugins/
 
-add_libs_requires

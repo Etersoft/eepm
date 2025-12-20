@@ -22,4 +22,3 @@ fix_desktop_file /usr/share/manuskript/icons/Manuskript/icon-512px.png $PRODUCT
 
 add_unirequires 'python3(PyQt5)' 'libQt5Svg.so.5'
 
-add_libs_requires

@@ -15,4 +15,3 @@ ignore_lib_requires libgstreamer-0.10.so.0 libgstapp-0.10.so.0 libgstbase-0.10.s
 ignore_lib_requires libgstpbutils-1.0.so.0 libgstreamer-1.0.so.0 libgstvideo-1.0.so.0 libgssapi_krb5.so.2 libgstapp-1.0.so.0 libgstbase-1.0.so.0
 ignore_lib_requires libc++.so.1 libc++abi.so.1
 
-add_libs_requires

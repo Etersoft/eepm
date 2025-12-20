@@ -38,4 +38,3 @@ EOF
 i=256
 install_file ipfs://QmbYM3wS2qXtWbUg9mASMPoJmgfL6smny1m3J4PfuiDtJR /usr/share/icons/hicolor/${i}x${i}/apps/$PRODUCT.png
 
-add_libs_requires

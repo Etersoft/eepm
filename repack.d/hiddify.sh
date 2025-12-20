@@ -12,4 +12,3 @@ sed -i -e 's/^\(Version: [^+]*\)+.*/\1/' $SPEC
 move_to_opt
 add_bin_link_command
 
-add_libs_requires

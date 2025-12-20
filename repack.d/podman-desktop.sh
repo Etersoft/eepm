@@ -24,5 +24,4 @@ add_bin_link_command
 
 add_electron_deps
 
-add_libs_requires
 add_requires '/usr/bin/podman'

@@ -35,4 +35,3 @@ remove_file $PRODUCTDIR/mediaviewer/platforms/libqwayland-generic.so
 remove_file $PRODUCTDIR/mediaviewer/platforms/libqwayland-xcomposite-egl.so
 remove_file $PRODUCTDIR/mediaviewer/platforms/libqwayland-xcomposite-glx.so
 
-add_libs_requires

@@ -14,4 +14,3 @@ EOF
 
 add_electron_deps
 
-add_libs_requires

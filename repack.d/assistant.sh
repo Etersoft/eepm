@@ -18,4 +18,3 @@ fix_desktop_file /opt/assistant/share/icons/assistant.png $PRODUCT
 
 add_bin_link_command $PRODUCT $PRODUCTDIR/scripts/assistant.sh
 
-add_libs_requires

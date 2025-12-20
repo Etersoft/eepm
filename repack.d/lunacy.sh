@@ -20,5 +20,4 @@ fix_desktop_file $PRODUCTDIR/Assets/LunacyLogo.png $PRODUCT
 install_file $PRODUCTDIR/Assets/LunacyLogo.png /usr/share/pixmaps/$PRODUCT.png
 install_file ipfs://QmfZZUmUcShfXeNCbKxXXiX4Ds74Tj9yGPskBkwSnPWssn /usr/share/mime/packages/$PRODUCT.xml
 
-add_libs_requires
 

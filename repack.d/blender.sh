@@ -13,4 +13,3 @@ add_bin_link_command blender-thumbnailer $PRODUCTDIR/blender-thumbnailer
 
 ignore_lib_requires libamdhip64.so.6 libze_loader.so.1
 
-add_libs_requires

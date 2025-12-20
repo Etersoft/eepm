@@ -50,4 +50,3 @@ cat <<EOF | create_file /opt/pfusp/etc/simple-scan.conf
 PAPER_SIZE=0
 EOF
 
-add_libs_requires

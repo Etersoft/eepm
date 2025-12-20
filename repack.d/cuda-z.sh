@@ -18,4 +18,3 @@ add_bin_link_command
 # libc6:i386 libstdc++6:i386 zlib1g:i386 libx11-6:i386 libxext6:i386 libxrender1:i386
 # https://blog.redscorp.net/?p=94
 
-add_libs_requires

@@ -16,4 +16,3 @@ add_bin_link_command far2l $PRODUCT
 add_conflicts far2l
 fix_desktop_file usr/bin/far2l far2l
 
-add_libs_requires

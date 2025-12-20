@@ -12,4 +12,3 @@ remove_dir "/opt/iitrust/gosuslugi_plugin/lib/pkgconfig"
 remove_file "/opt/iitrust/gosuslugi_plugin/lib/libxcb-image.so.0*"
 remove_file "/opt/iitrust/gosuslugi_plugin/lib/lib*.a"
 remove_file "/opt/iitrust/gosuslugi_plugin/lib/lib*.la"
-add_libs_requires 

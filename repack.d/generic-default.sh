@@ -10,9 +10,9 @@ PKG="$4"
 
 . $(dirname $0)/common.sh
 
-# detect requires by libs (skip Full AppImage bundle)
-if [ ! -f "$BUILDROOT$PRODUCTDIR/.bundle.yml" ] ; then
-    add_libs_requires
+# skip libs requires for Full AppImage bundle
+if [ -f "$BUILDROOT$PRODUCTDIR/.bundle.yml" ] ; then
+    stop_libs_requires
 fi
 
 pd="$(echo $BUILDROOT/*)"

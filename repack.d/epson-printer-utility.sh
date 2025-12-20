@@ -26,5 +26,4 @@ remove_dir /usr/lib/epson-backend/scripts
 
 fix_desktop_file /opt/epson-printer-utility/bin/epson-printer-utility
 
-add_libs_requires
 

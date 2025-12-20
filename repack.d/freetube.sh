@@ -16,4 +16,3 @@ fix_chrome_sandbox
 
 ignore_lib_requires 'libffmpeg.so()(64bit)'
 
-add_libs_requires
