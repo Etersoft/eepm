@@ -19,15 +19,8 @@
 
 epm_db_help()
 {
-    message '
-epm db - package database operations
-Usage: epm db [command]
-
-Commands:
-  check       check the package database for errors
-  fix         fix the package database (runs check and repair)
-  locked      check if the package database is locked
-'
+    message "epm db - package database operations"
+            get_help HELPCMD $SHAREDIR/epm-db
 }
 
 __epm_check_lock()
@@ -86,14 +79,14 @@ epm_db()
     shift
 
     case "$cmd" in
-        -h|--help|help|"")
+        -h|--help|help|"")           # HELPCMD: print this help
             epm_db_help
             ;;
-        check|fix)
+        fix)                         # HELPCMD: fix the package database
             load_helper epm-check
             epm_check "$@"
             ;;
-        locked|--locked)
+        locked)                      # HELPCMD: check if the package database is locked
             epm_db_locked
             ;;
         *)
