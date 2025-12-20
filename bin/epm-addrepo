@@ -231,8 +231,8 @@ __add_line_to_file()
     local sc="sudocmd"
     [ -n "$verbose" ] || sc="sudorun"
     set_sudo
-    # add empty line if needed
-    [ -z "$(tail -n1 "$file")" ] || echo "" | $sc tee -a "$file" >/dev/null
+    # ensure file ends with newline (check last byte)
+    [ -n "$(tail -c1 "$file")" ] && echo "" | $sc tee -a "$file" >/dev/null
     echo "$line" | $sc tee -a "$file" >/dev/null
 }
 
@@ -406,7 +406,7 @@ __epm_addrepo_altlinux()
     fi
 
     # when add correct sources.list string
-    if echo "$repo" | grep "^rpm " ; then
+    if echo "$repo" | grep -q "^rpm " ; then
         __epm_addrepo_to_file /etc/apt/sources.list "$repo"
         return
     fi
