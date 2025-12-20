@@ -38,5 +38,5 @@ rm -v tool/VentoyWorker.sh.orig
 rm -v tool/distro_gui_type.json.orig
 rm -v tool/ventoy_lib.sh.orig
 
-
-
+# Qt5 dependencies (system Qt, not bundled)
+add_unirequires libQt5Core.so.5 libQt5Gui.so.5 libQt5Widgets.so.5
