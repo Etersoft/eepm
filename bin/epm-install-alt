@@ -310,14 +310,27 @@ prepare_task_packages()
 
     for arg in "$@"; do
         # Parse argument into task and package
+        # Supported formats: 123456, 123456/pkg, task/123456, task/123456/pkg
+        local task=""
+        local pkg=""
         case "$arg" in
-            *:*)
-                local task=$(printf "%s" "$arg" | sed 's/:.*//')
-                local pkg=$(printf "%s" "$arg" | sed 's/.*://')
+            task/*/*)
+                # task/123456/pkg
+                task=$(printf "%s" "$arg" | cut -d/ -f2)
+                pkg=$(printf "%s" "$arg" | cut -d/ -f3)
+                ;;
+            task/*)
+                # task/123456
+                task=$(printf "%s" "$arg" | cut -d/ -f2)
+                ;;
+            */*)
+                # 123456/pkg
+                task=$(printf "%s" "$arg" | cut -d/ -f1)
+                pkg=$(printf "%s" "$arg" | cut -d/ -f2)
                 ;;
             *)
-                local task="$arg"
-                local pkg=""
+                # 123456
+                task="$arg"
                 ;;
         esac
 

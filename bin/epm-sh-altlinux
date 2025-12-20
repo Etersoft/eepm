@@ -20,7 +20,10 @@
 tasknumberprefix() {
     local potential
     for potential in "$@"; do
-        [[ "$potential" =~ ^[0-9]+(:[^:]+)?$ ]] && return 0
+        # 123456 or 123456/pkg or task/123456 or task/123456/pkg
+        [[ "$potential" =~ ^[0-9]+$ ]] && return 0
+        [[ "$potential" =~ ^[0-9]+/[^/]+$ ]] && return 0
+        [[ "$potential" =~ ^task/[0-9]+(/[^/]+)?$ ]] && return 0
     done
     return 1
 }
