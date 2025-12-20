@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(rpm -qlp:*)",
+      "Bash(/srv/lav/Projects/git/eepm/bin/epm repack:*)",
+      "Bash(curl:*)",
+      "Bash(./bin/epm tool json:*)",
+      "Bash(git tag:*)",
+      "Bash(ssh:*)",
+      "Bash(grep:*)",
+      "Bash(xargs:*)",
+      "Bash(while read pkg)",
+      "Bash(do if [ -f repack.d/$pkg.sh ])",
+      "Bash(then if grep -q add_libs_requires repack.d/$pkg.sh)",
+      "Bash(then echo $pkg fi fi done)",
+      "WebFetch(domain:bugzilla.altlinux.org)",
+      "WebFetch(domain:www.pantum.ru)",
+      "WebFetch(domain:gitlab.com)",
+      "WebSearch",
+      "Bash(gita ls:*)",
+      "Bash(./sync-to-epm-sisyphus.sh:*)"
+    ]
+  }
+}

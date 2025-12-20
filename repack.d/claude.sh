@@ -11,4 +11,3 @@ PRODUCTDIR=/opt/claude.ai
 
 add_bin_link_command
 
-add_libs_requires

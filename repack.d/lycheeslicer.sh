@@ -13,4 +13,3 @@ add_bin_link_command
 fix_desktop_file
 
 add_electron_deps
-
