@@ -31,4 +31,5 @@ f	/var/lock/vkcallsrelease.pid	0666	root	root	-	-
 EOF
 pack_file /etc/tmpfiles.d/$PRODUCT.conf
 
-
+# Qt5 dependencies (system Qt, not bundled)
+add_unirequires libQt5Core.so.5 libQt5DBus.so.5 libQt5Gui.so.5 libQt5Multimedia.so.5 libQt5Network.so.5 libQt5Svg.so.5 libQt5WebChannel.so.5 libQt5WebEngineWidgets.so.5 libQt5Widgets.so.5
