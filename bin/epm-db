@@ -26,7 +26,58 @@ Usage: epm db [command]
 Commands:
   check       check the package database for errors
   fix         fix the package database (runs check and repair)
+  locked      check if the package database is locked
 '
+}
+
+__epm_check_lock()
+{
+    local lock_file="$1"
+    [ -f "$lock_file" ] || return 1
+    fuser -s "$lock_file" 2>/dev/null
+}
+
+__epm_check_apt_lock()
+{
+    # ALT Linux apt lock
+    __epm_check_lock /var/lib/apt/lists/lock && return 0
+    # Debian/Ubuntu dpkg lock
+    __epm_check_lock /var/lib/dpkg/lock-frontend && return 0
+    return 1
+}
+
+__epm_check_rpm_lock()
+{
+    __epm_check_lock /var/lib/rpm/.rpm.lock
+}
+
+epm_db_locked()
+{
+    local locked=
+    case $PMTYPE in
+        apt-*)
+            if __epm_check_apt_lock ; then
+                info "apt database is locked"
+                locked=1
+            fi
+            ;;
+    esac
+
+    case $PMTYPE in
+        *-rpm|*-dnf)
+            if __epm_check_rpm_lock ; then
+                info "rpm database is locked"
+                locked=1
+            fi
+            ;;
+    esac
+
+    if [ -n "$locked" ] ; then
+        return 0
+    fi
+
+    info "Package database is not locked"
+    return 1
 }
 
 epm_db()
@@ -41,6 +92,9 @@ epm_db()
         check|fix)
             load_helper epm-check
             epm_check "$@"
+            ;;
+        locked|--locked)
+            epm_db_locked
             ;;
         *)
             fatal "Unknown command '$cmd'. Use epm db --help for help."
