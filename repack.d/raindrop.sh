@@ -10,4 +10,6 @@ add_bin_exec_command
 
 subst 's|"$@"|--no-sandbox "$@"|' usr/bin/$PRODUCT
 
+add_electron_deps
+
 add_libs_requires

@@ -17,8 +17,7 @@ install_file $PRODUCTDIR/resources/bin/ClientApp/build/logo.svg /usr/share/icons
 # Create binary link for command line execution
 add_bin_link_command $PRODUCT $PRODUCTDIR/sbk
 
-# Set correct permissions for chrome-sandbox (SUID bit required)
-fix_chrome_sandbox $PRODUCTDIR/chrome-sandbox
+add_electron_deps
 
 # Remove incorrect desktop file
 remove_file /usr/share/applications/sbk.desktop

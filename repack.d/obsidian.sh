@@ -14,8 +14,6 @@ cleanup
 
 add_bin_exec_command
 
-add_chromium_deps
-
-fix_chrome_sandbox
+add_electron_deps
 
 fix_desktop_file

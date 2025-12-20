@@ -12,6 +12,5 @@ mkdir -p var/lib/$PRODUCT
 pack_dir /var/lib/$PRODUCT
 remove_file $PRODUCTDIR/update
 
-add_chromium_deps
+add_electron_deps
 add_libs_requires
-fix_chrome_sandbox

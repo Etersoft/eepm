@@ -11,9 +11,6 @@ add_conflicts yandex-music
 
 move_to_opt "/opt/Яндекс Музыка"
 
-# disable autoupdate
-remove_file -v $PRODUCTDIR/resources/app-update.yml
-
 cat <<EOF | create_exec_file /usr/bin/$PRODUCT
 #!/bin/sh
 # workaround for https://github.com/electron/electron/issues/46538

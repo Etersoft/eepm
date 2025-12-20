@@ -12,4 +12,6 @@ cat <<EOF >$BUILDROOT/usr/bin/$PRODUCT
 exec $PRODUCTDIR/$PRODUCT --disable-gpu --no-sandbox "\$@"
 EOF
 
+add_electron_deps
+
 add_libs_requires

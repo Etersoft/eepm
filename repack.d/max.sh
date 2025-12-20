@@ -20,8 +20,6 @@ fix_desktop_file $PRODUCTDIR/$PRODUCT $PRODUCTCUR
 add_bin_link_command
 add_bin_link_command $PRODUCTCUR $PRODUCTDIR/$PRODUCT
 
-remove_file $PRODUCTDIR/resources/app-update.yml
-
 add_electron_deps
 
 add_libs_requires

@@ -22,7 +22,7 @@ install_file https://raw.githubusercontent.com/podman-desktop/podman-desktop/ref
 
 add_bin_link_command
 
-add_chromium_deps
+add_electron_deps
 
 add_libs_requires
 add_requires '/usr/bin/podman'

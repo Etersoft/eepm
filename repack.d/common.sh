@@ -467,6 +467,11 @@ install_requires()
 
 add_electron_deps()
 {
+    # disable autoupdate (electron-updater)
+    remove_file $PRODUCTDIR/resources/app-update.yml
+
+    fix_chrome_sandbox
+
     add_unirequires "file grep sed which xdg-utils xprop"
     add_unirequires "libpthread.so.0 libstdc++.so.6"
     add_unirequires "libX11.so.6 libXcomposite.so.1 libXdamage.so.1 libXext.so.6 libXfixes.so.3 libXrandr.so.2 libxcb.so.1 libxkbcommon.so.0"

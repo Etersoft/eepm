@@ -12,11 +12,9 @@ PRODUCTDIR=/opt/$PRODUCTCUR
 
 cleanup
 
-add_chromium_deps
+add_electron_deps
 
 set_alt_alternatives 65
-
-fix_chrome_sandbox
 
 add_bin_exec_command $PRODUCT $PRODUCTDIR/$PRODUCT 
 

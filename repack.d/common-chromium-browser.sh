@@ -66,6 +66,8 @@ cleanup()
 # TODO: remove in favour of add_libs_requires
 add_chromium_deps()
 {
+    fix_chrome_sandbox
+
     add_unirequires "file grep sed which xdg-utils"
     add_unirequires "libpthread.so.0 libstdc++.so.6"
     add_unirequires "libatk-bridge-2.0.so.0 libglib-2.0.so.0 libgmodule-2.0.so.0 libgobject-2.0.so.0 libgthread-2.0.so.0 libatk-1.0.so.0 libatspi.so.0"

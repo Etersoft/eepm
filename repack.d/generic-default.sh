@@ -51,9 +51,13 @@ for desktopfile in $BUILDROOT/usr/share/applications/*.desktop ; do
     fi
 done
 
-# TODO: add product dir detection
-if [ -f "$BUILDROOT$PRODUCTDIR/v8_context_snapshot.bin" ] ; then
-    echo "electron based application detected, adding requires for it ..."
-    add_electron_deps
-    fix_chrome_sandbox
+# detect Chromium/Electron-based application
+if [ -n "$(find "$BUILDROOT$PRODUCTDIR" -name 'v8_context_snapshot.bin' -print -quit 2>/dev/null)" ] ; then
+    # Electron apps have resources/ dir, browsers don't
+    if [ -d "$BUILDROOT$PRODUCTDIR/resources" ] ; then
+        echo "Electron-based application detected, adding requires for it ..."
+        add_electron_deps
+    else
+        fix_chrome_sandbox
+    fi
 fi
