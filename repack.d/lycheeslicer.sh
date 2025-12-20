@@ -6,12 +6,11 @@ SPEC="$2"
 PRODUCT=lycheeslicer
 PRODUCTDIR=/opt/LycheeSlicer
 
-. $(dirname $0)/common-chromium-browser.sh
+. $(dirname $0)/common.sh
 
 add_bin_link_command
-#add_bin_link_command $PRODUCTCUR $PRODUCT
-
-fix_chrome_sandbox
 
 fix_desktop_file
+
+add_electron_deps
 

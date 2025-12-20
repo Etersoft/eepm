@@ -12,7 +12,7 @@ remove_dir /usr/share/doc
 
 add_bin_exec_command $PRODUCT
 
-fix_chrome_sandbox
-
 ignore_lib_requires 'libffmpeg.so()(64bit)'
+
+add_electron_deps
 

@@ -14,7 +14,7 @@ add_bin_exec_command $PRODUCT
 # fix bug in upstream
 subst 's|/usr/lib/rstudio/bin/rstudio|$PRODUCTDIR/$PRODUCT|' $BUILDROOT$PRODUCTDIR/resources/app/bin/rstudio-backtrace.sh
 
-fix_chrome_sandbox
-
 ignore_lib_requires libffmpeg.so
+
+add_electron_deps
 
