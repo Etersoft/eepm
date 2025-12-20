@@ -15,4 +15,3 @@ add_bin_exec_command $PRODUCT
 ignore_lib_requires 'libffmpeg.so()(64bit)'
 
 add_electron_deps
-

@@ -17,4 +17,3 @@ subst 's|/usr/lib/rstudio/bin/rstudio|$PRODUCTDIR/$PRODUCT|' $BUILDROOT$PRODUCTD
 ignore_lib_requires libffmpeg.so
 
 add_electron_deps
-
