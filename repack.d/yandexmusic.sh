@@ -23,7 +23,6 @@ add_bin_link_command yandex-music $PRODUCT
 subst "s|^Exec=.*|Exec=$PRODUCT %U|" usr/share/applications/yandexmusic.desktop
 
 
-fix_chrome_sandbox
 
 add_electron_deps
 

@@ -5,7 +5,6 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
-fix_chrome_sandbox
 
 cat <<EOF | create_file /usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]

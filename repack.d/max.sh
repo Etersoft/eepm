@@ -13,7 +13,6 @@ PRODUCTDIR=/opt/$PRODUCT
 # conflicts with MAX from AppImage
 add_conflicts MAX
 
-fix_chrome_sandbox
 
 fix_desktop_file $PRODUCTDIR/$PRODUCT $PRODUCTCUR
 

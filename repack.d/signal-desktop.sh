@@ -14,7 +14,6 @@ subst "s|.*/etc/apt.*||" $SPEC
 subst '/linux-arm64/d' $SPEC
 rm -rf $BUILDROOT/opt/Signal/resources/app.asar.unpacked/node_modules/ffi-napi/node_modules/ref-napi/prebuilds/linux-arm64
 
-fix_chrome_sandbox
 
 add_bin_link_command
 

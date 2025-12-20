@@ -14,6 +14,5 @@ add_electron_deps
 add_bin_link_command
 add_bin_link_command $PRODUCTCUR $PRODUCT
 
-fix_chrome_sandbox
 
 fix_desktop_file

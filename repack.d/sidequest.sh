@@ -9,6 +9,5 @@ SPEC="$2"
 
 add_bin_link_command
 
-fix_chrome_sandbox
 
 add_electron_deps

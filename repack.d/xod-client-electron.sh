@@ -18,6 +18,5 @@ add_bin_link_command "xod-client" $PRODUCT
 subst 's|"$@"|--no-sandbox "$@"|' usr/bin/$PRODUCT
 
 fix_desktop_file "/opt/XOD IDE/xod-client-electron"
-fix_chrome_sandbox
 
 add_electron_deps

@@ -14,4 +14,3 @@ fix_desktop_file
 
 add_electron_deps
 
-fix_chrome_sandbox

@@ -12,7 +12,6 @@ PRODUCT=slack
 move_to_opt "/usr/lib/$PRODUCT"
 remove_file "/usr/bin/slack"
 
-fix_chrome_sandbox
 
 add_electron_deps
 

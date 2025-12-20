@@ -12,7 +12,6 @@ add_bin_link_command $PRODUCTCUR $PRODUCTDIR/TeamSpeak
 add_bin_link_command $PRODUCT $PRODUCTCUR
 
 add_electron_deps
-fix_chrome_sandbox
 
 cat <<EOF | create_file /usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]

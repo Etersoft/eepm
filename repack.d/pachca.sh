@@ -14,4 +14,3 @@ add_bin_link_command pachca $PRODUCT
 fix_desktop_file /opt/Pachca/Pachca
 
 add_electron_deps
-fix_chrome_sandbox

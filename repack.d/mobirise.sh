@@ -13,7 +13,6 @@ add_bin_link_command
 
 fix_desktop_file
 
-fix_chrome_sandbox
 
 # use both
 add_electron_deps

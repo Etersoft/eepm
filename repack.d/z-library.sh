@@ -14,6 +14,5 @@ add_bin_link_command
 
 fix_desktop_file /opt/Z-Library/z-library
 
-fix_chrome_sandbox
 
 add_electron_deps

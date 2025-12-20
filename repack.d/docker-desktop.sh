@@ -8,7 +8,6 @@ SPEC="$2"
 
 add_electron_deps
 
-fix_chrome_sandbox
 
 # conflicts with docker-buildx
 remove_file /usr/lib/docker/cli-plugins/docker-buildx

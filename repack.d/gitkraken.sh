@@ -12,7 +12,6 @@ move_to_opt
 
 add_bin_link_command
 
-fix_chrome_sandbox
 
 fix_desktop_file /usr/share/gitkraken/gitkraken
 fix_desktop_file /usr/bin/gitkraken

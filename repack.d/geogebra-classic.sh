@@ -15,6 +15,5 @@ subst "s|/usr/share/$PRODUCT|$PRODUCTDIR|" $BUILDROOT/usr/bin/$PRODUCT
 
 cleanup
 
-fix_chrome_sandbox
 
 add_electron_deps

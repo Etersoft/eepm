@@ -22,4 +22,3 @@ add_bin_link_command $PRODUCTCUR $PRODUCT
 
 add_electron_deps
 
-fix_chrome_sandbox

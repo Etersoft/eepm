@@ -16,7 +16,6 @@ rm ./usr/bin/$PRODUCT
 add_bin_link_command $PRODUCT
 add_bin_link_command $PRODUCTCUR $PRODUCT
 
-fix_chrome_sandbox
 
 add_electron_deps
 

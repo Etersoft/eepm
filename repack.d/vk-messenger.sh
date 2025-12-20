@@ -9,7 +9,6 @@ PRODUCTDIR=/opt/$PRODUCT
 
 . $(dirname $0)/common-chromium-browser.sh
 
-fix_chrome_sandbox
 
 add_electron_deps
 

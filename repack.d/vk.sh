@@ -11,7 +11,6 @@ PRODUCTDIR=/opt/$PRODUCT
 
 move_to_opt
 
-fix_chrome_sandbox
 
 add_electron_deps
 

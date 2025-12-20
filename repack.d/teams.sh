@@ -23,7 +23,6 @@ mkdir -p $BUILDROOT/$LIBDIR
 mv -v $BUILDROOT/usr/share/teams/ $BUILDROOT/$LIBDIR/
 subst "s|/usr/share/teams|$LIBDIR/$PRODUCT|" $SPEC
 
-fix_chrome_sandbox
 
 add_electron_deps
 
