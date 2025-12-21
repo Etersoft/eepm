@@ -439,7 +439,7 @@ case $cmd in
         for i in "$@" ; do
             [ "$i" = "$lastarg" ] && continue
             target="$(build_target_name "$i" "$lastarg")"
-            [ "$(realpath "$1")" = "$(realpath "$target")" ] && warning "Output file is the same as input" && exit
+            [ "$(realpath "$i")" = "$(realpath "$target")" ] && warning "Output file is the same as input" && exit
             [ -e "$target" ] && [ -n "$force" ] && docmd rm -f "$target"
             repack_archive "$i" "$target" || exit
         done
