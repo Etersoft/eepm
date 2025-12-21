@@ -330,6 +330,10 @@ case "$1" in
     --use-7z)             # HELPOPT: force use 7z as backend
         use_7z=1
         ;;
+    -a|-e|-x|-u|-l|-t|-b)
+        # these are commands, not options
+        break
+        ;;
     -*)
         fatal "Unknown option '$1'"
         ;;
