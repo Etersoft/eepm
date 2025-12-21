@@ -16,10 +16,16 @@ case "$arch" in
         arch="x64" ;;
 esac
 
-# GitHub release tag only contains the msixbundle; the .deb isn't in the release assets and prereleases are disallowed.
-# Download the .deb from the official website instead.
+# GitHub tags use 4-component versions (v2.0.8.0)
+# Add trailing .0 if version has only 3 components
+case "$VERSION" in
+    *.*.*.*) ;;
+    *.*.*) VERSION="$VERSION.0" ;;
+esac
+
 if [ "$VERSION" = "*" ] ; then
-    PKGURL=$(eget --list --latest "https://devtoys.app/download" "devtoys_linux_$arch.deb")
+    # All 2.x versions are marked as prerelease on GitHub
+    PKGURL=$(get_github_url "DevToys-app/DevToys" "devtoys_linux_$arch.deb" prerelease)
 else
     PKGURL="https://github.com/DevToys-app/DevToys/releases/download/v$VERSION/devtoys_linux_$arch.deb"
 fi
