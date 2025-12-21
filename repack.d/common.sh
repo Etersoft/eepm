@@ -115,6 +115,7 @@ move_file()
     pack_file "$to"
     # try remove dir if empty
     is_dir_empty "$(dirname "$BUILDROOT$from")" && remove_dir "$(dirname "$BUILDROOT$from")"
+    true
 }
 
 # Remove dir (recursively) from the file system and from spec
