@@ -302,7 +302,7 @@ verbose=--verbose
 use_7z=
 use_patool=
 
-if [ -z "$" ] ; then
+if [ -z "$*" ] ; then
     echo "Etersoft archive manager version @VERSION@" >&2
     echo "Run $0 --help to get help" >&2
     exit 1
