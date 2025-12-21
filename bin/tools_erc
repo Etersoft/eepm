@@ -293,8 +293,6 @@ progname="${0##*/}"
 Usage="Usage: $progname [options] [<command>] [params]..."
 Descr="erc - universal archive manager"
 
-progname="${0##*/}"
-
 
 force=
 target=
