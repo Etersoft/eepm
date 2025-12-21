@@ -139,7 +139,7 @@ extract_archive()
 			;;
 		tar.bz2|tbz2)
 			is_command bunzip2 || fatal "Could not find bzip2 package. Please install bzip2 package and retry."
-			extract_command "tar -xjf" "$arc"
+			extract_command "tar -xhjf" "$arc"
 			;;
 		tar)
 			extract_command "tar -xhf" "$arc"
