@@ -250,6 +250,24 @@ get_github_url()
 
 }
 
+# Get asset checksum from GitHub latest release
+# Usage: get_github_asset_checksum repo asset_name
+# Returns: sha256 checksum (without sha256: prefix)
+get_github_asset_checksum()
+{
+    local repo="$1"
+    local asset_name="$2"
+    local json digest
+
+    json=$(fetch_url "https://api.github.com/repos/$repo/releases/latest") || return 1
+    # Find the asset by name and extract its digest
+    digest=$(echo "$json" | awk -v name="$asset_name" '
+        /"name":/ { found = ($0 ~ "\"" name "\"") }
+        found && /"digest":/ { gsub(/.*sha256:|".*/, ""); print; exit }
+    ')
+    echo "$digest"
+}
+
 get_github_tag()
 {
     local url="$1"
