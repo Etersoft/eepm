@@ -73,6 +73,28 @@ DESCRIPTION="App description"
 
 Scripts for converting packages between formats (rpm↔deb) with distro-specific fixes.
 
+**Execution order:**
+1. `generic.sh` - always runs first
+2. `generic-$SUBGENERIC.sh` (appimage/snap/tar) - based on package type
+3. Specific script (e.g., `firefox.sh`) - if exists
+4. `generic-default.sh` - only if no specific script exists
+5. `generic-post.sh` - always runs last
+
+**Key functions in `common.sh`:**
+- `add_electron_deps` - for Electron apps (includes `fix_chrome_sandbox`, removes `app-update.yml`)
+- `add_chromium_deps` - for Chromium browsers (includes `fix_chrome_sandbox`)
+- `add_libs_requires` - scans binaries and adds library dependencies
+- `ignore_lib_requires` - excludes libraries from dependencies (call before `add_libs_requires`)
+- `fix_chrome_sandbox` - sets SUID bit on chrome-sandbox
+
+**Detecting app type:**
+- Electron apps: have `resources/` dir and `v8_context_snapshot.bin`
+- Chromium browsers: have `v8_context_snapshot.bin` without `resources/`
+
+**Common includes:**
+- `common.sh` - main repack functions
+- `common-chromium-browser.sh` - for Chromium-based browsers (sources `common.sh`)
+
 ### Pack Scripts (`pack.d/`)
 
 Scripts for creating packages from tarballs/binaries. Work in temp directory, return tarball via `return_tar`.
@@ -101,3 +123,51 @@ Meta-package recipes that install groups of related packages.
 ## Shell Compatibility
 
 All scripts must be POSIX-compatible (avoid bashisms). Use `#!/bin/sh` for most scripts. The `check_code.sh` script verifies this with `checkbashisms`.
+
+## Working with Claude Code
+
+- Temporary files should be downloaded to `/tmp`, not to the project directory
+- We always repack packages to get rid of maintainer scripts. Check what useful things are in the original package scripts
+- Test server: `ssh epm@epm-sisyphus` - has installed packages for testing, check `/opt/` for package structure
+- Sync code to test server: `./sync-to-epm-sisyphus.sh` - copies to `~/eepm-bot/` (not touching system `~/eepm/`)
+- Run tests on server: `ssh epm@epm-sisyphus '~/bin/run-test-update.sh [package...]'`
+  - Without arguments: tests all packages
+  - With arguments: tests specific packages (e.g., `bitwarden obsidian`)
+  - Error logs saved to `~/epm-errors/` on epm-sisyphus
+
+## IPFS Database
+
+eget (download utility) can use IPFS for caching downloaded files. The database maps URLs to IPFS CIDs and filenames.
+
+**Database locations:**
+- Source: `epm@epm-update:/var/lib/eepm/eget-ipfs-db.txt`
+- Published: `/var/ftp/pub/download/eepm/releases/3.64/app-versions/eget-ipfs-db.txt` (local FTP)
+- Test server: `epm@epm-sisyphus:/var/lib/eepm/eget-ipfs-db.txt`
+
+**Database format:**
+```
+URL CID FILENAME
+https://example.com/file.rpm QmXxx... file.rpm
+```
+
+**Known issue:** When downloading fails or Content-Disposition is missing, eget may save UUID (from GitHub CDN redirect URL) instead of filename. This causes patool to fail with "unknown archive format". Pattern to find corrupted entries:
+```bash
+grep -E " [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" eget-ipfs-db.txt
+```
+
+**Cleanup procedure:**
+```bash
+# Remove entries with UUID as filename
+grep -vE " [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" db.txt > db-clean.txt
+
+# Update source DB
+scp epm@epm-update:/var/lib/eepm/eget-ipfs-db.txt /tmp/
+# ... clean ...
+scp /tmp/eget-ipfs-db.txt epm@epm-update:/var/lib/eepm/
+
+# Publish to FTP
+cp /tmp/eget-ipfs-db.txt /var/ftp/pub/download/eepm/releases/3.64/app-versions/
+```
+
+**Protection in eget:** `is_strange_url()` function detects URLs with `?` query strings (like GitHub CDN) and preserves the original URL instead of the redirect target.
+- В epm мы добавляем приложения, которые не могут быть собраны из исходников в репозиторий. Это либо сложные проекты, либо проприетарные бинарники.
