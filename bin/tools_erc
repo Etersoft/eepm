@@ -391,7 +391,10 @@ case $cmd in
         fi
         [ -z "$target" ] && target="$1" && shift
 
-        [ -e "$target" ] && [ -n "$force" ] && docmd rm -f "$target"
+        if [ -e "$target" ] ; then
+            [ -n "$force" ] || fatal "Target $target already exists. Use -f to overwrite."
+            docmd rm -f "$target"
+        fi
         create_archive "$target" "$@"
         ;;
     e|x|-e|-x|u|-u|extract|unpack)          # HELPCMD: extract files from archive
