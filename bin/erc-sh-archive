@@ -93,7 +93,9 @@ list_formats()
 	if have_patool ; then
 		a='' patool formats | grep ".* files:" | sed "s/ .*//g"
 	else
-		echo "tar zip 7z 7Z tar.7z tar.7Z"
+		for i in tar zip 7z 7Z tar.7z tar.7Z ; do
+			echo "$i"
+		done
 		list_subformats
 	fi
 	# TODO: do not use patool formats in such case?
