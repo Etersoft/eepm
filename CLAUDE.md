@@ -129,7 +129,7 @@ All scripts must be POSIX-compatible (avoid bashisms). Use `#!/bin/sh` for most 
 - Temporary files should be downloaded to `/tmp`, not to the project directory
 - We always repack packages to get rid of maintainer scripts. Check what useful things are in the original package scripts
 - Test server: `ssh epm@epm-sisyphus` - has installed packages for testing, check `/opt/` for package structure
-- Sync code to test server: `./sync-to-epm-sisyphus.sh` - copies to `~/eepm-bot/` (not touching system `~/eepm/`)
+- Sync code to test server: `./tests/sync-to-epm-sisyphus.sh` - copies to `~/eepm-bot/` (not touching system `~/eepm/`)
 - Run tests on server: `ssh epm@epm-sisyphus '~/bin/run-test-update.sh [package...]'`
   - Without arguments: tests all packages
   - With arguments: tests specific packages (e.g., `bitwarden obsidian`)
