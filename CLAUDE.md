@@ -170,4 +170,10 @@ cp /tmp/eget-ipfs-db.txt /var/ftp/pub/download/eepm/releases/3.64/app-versions/
 ```
 
 **Protection in eget:** `is_strange_url()` function detects URLs with `?` query strings (like GitHub CDN) and preserves the original URL instead of the redirect target.
-- В epm мы добавляем приложения, которые не могут быть собраны из исходников в репозиторий. Это либо сложные проекты, либо проприетарные бинарники.
+
+## User Support
+
+When analyzing user issues:
+- **Always ask for epm version** (`epm --version` or `epm -V`) - many issues are caused by outdated epm versions
+- User error messages often don't include version info, making it hard to diagnose
+- epm play adds apps that can't be built from sources in repos (complex projects or proprietary binaries)
