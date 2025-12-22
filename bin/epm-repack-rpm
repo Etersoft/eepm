@@ -250,7 +250,7 @@ __epm_repack_to_rpm()
             sed -i "s|^Release: .*|Release: $packrelease|" "$spec"
         fi
 
-        if [ -n "$EEPM_INTERNAL_PKGNAME" ] ; then
+        if [ -n "$EEPM_INTERNAL_PKGNAME" ] && [ -z "$force" ]; then
             if ! estrlist contains "$pkgname" "$EEPM_INTERNAL_PKGNAME" ; then
                 fatal 'Some bug: the name of the repacking package ($pkgname) differs with the package name ($EEPM_INTERNAL_PKGNAME) from play.d script.'
             fi
