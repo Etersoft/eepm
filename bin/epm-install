@@ -141,7 +141,7 @@ process_repo_arguments() {
 
     for repo in "${!repo_groups[@]}"; do
         if [ "$repo" = '.' ] ; then
-            epm_install_names ${repo_groups[$repo]}
+            (PPARGS=1 epm_install_names ${repo_groups[$repo]})
         else
             load_helper epm-update
             load_helper epm-reposave
