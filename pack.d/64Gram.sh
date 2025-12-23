@@ -10,7 +10,7 @@ erc $TAR || fatal
 
 # use version from tarball
 # (TODO: get basename via erc
-PKGNAME="$(basename $TAR .zip | sed -e "s|_linux||" )"
+PKGNAME="$(basename $TAR .zip | sed -e "s|_linux||" -e "s|_\([0-9]\)|-\1|")"
 
 f=$FPRODUCT
 [ -f "$(echo */$FPRODUCT)" ] && f="$(echo */$FPRODUCT)"
