@@ -32,6 +32,9 @@ remove_dir $PRODUCTDIR/package/cloudstation/lib/plugins/qmltooling/
 # support install on p10 or KDE based
 ignore_lib_requires libnautilus-extension.so.4
 
+# support install on p11 or KDE based
+ignore_lib_requires libnautilus-extension.so.1
+
 move_file /usr/lib/nautilus/extensions-4/libnautilus-drive-extension-4.so /usr/lib64/nautilus/extensions-4/libnautilus-drive-extension-4.so
 # don't support legacy
 remove_file /usr/lib/nautilus/extensions-3.0/libnautilus-drive-extension.so
