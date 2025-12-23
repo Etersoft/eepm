@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.45
+Version: 3.64.46
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -157,6 +157,47 @@ EOF
 %endif
 
 %changelog
+* Tue Dec 23 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.46-alt1
+- epm pack: add support for pack tarball without version with default pack rule
+- epm repack.d/: use install_file instead of eget
+- epm play: add servo
+- epm play: add kodak-i11xx
+- epm repack.d/common.sh install_file(): add support for dir/ as destination
+- epm-repack: always use symlink for copy file to tmp dir
+- epm play: add avision scanner driver
+- epm-repack-rpm: don't mix tmpdir
+- eget:add EGET_WGET_OPTIONS, EGET_CURL_OPTIONS, EGET_ARIA2_OPTIONS EGET_AXEL_OPTIONS
+- etc/reqstoplist.list: forbid using system libQt6 library
+- epm-sh-functions: print_sha256sum(): implement checksum checking
+- epm pack: check checksum if applicable
+- epm play: add claude-code
+- epm play: add ocenaudio (eterbug #18748)
+- epm play: add claude-desktop
+- epm play wps-office: improve conflicts
+- epm play.d/common.sh: make info() print to stderr
+- epm tool json --get-json-value: add helper to fetch JSON value from URL
+- epm play sunshine: use API instead of HTML page (fix Anubis block)
+- epm play: fix viber
+- epm repack: added pkg.tar repack support (eterbug #18743)
+- epm repack: centralize fix_chrome_sandbox and app-update.yml removal in add_electron_deps/add_chromium_deps
+- epm repack: move add_libs_requires to generic-post.sh, add stop_libs_requires
+- epm repack: remove redundant fix_chrome_sandbox calls
+- epm repack: use add_electron_deps for Electron apps
+- epm repack vk-calls: add Qt5 dependencies
+- epm: add dryrun to EPM_OPTIONS for propagation to subcommands
+- epm repack nekoray/ventoy/whatsie: add Qt5 dependencies
+- epm repo add: fix empty lines and silent grep
+- epm db: add new command for database operations (check/fix)
+- epm db locked: add command to check package database lock status
+- epm install: add 123456/pkg and task/123456/pkg formats for installing packages from tasks
+- epm play: fix devtoys
+- epm pack 64Gram: fix tarball name parsing
+- epm-repack-rpm: skip package name check with --force
+- pack.d/Telegram: fix version separator in package name
+- epm play: add claude-code-webui
+- epm play: add metasploit-framework
+- epm install: fix infinite recursion with unrecognized repo/package format
+
 * Tue Dec 16 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.45-alt1
 - epm: improve pacman and yay support
 - epm: print comment about parallel when run with --parallel only
