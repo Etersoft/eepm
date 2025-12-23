@@ -43,9 +43,9 @@ epm --auto upgrade
 
 epmqf bash
 
-epm ql eepm | head
+epm ql eepm | head || :
 
-epm cl erc | head
+epm cl erc | head || :
 
 epm checkpkg eepm
 
