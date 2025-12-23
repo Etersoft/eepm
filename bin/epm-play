@@ -264,6 +264,7 @@ Options:
 
 Extra options:
     --installed-version   - print installed version for the app
+    --available-version   - print available version for the app
     --package-name        - print package name for the app
     --info                - print info about the app
     --list-installed-packages - print list of all packages installed via epm play
@@ -562,7 +563,7 @@ case "$1" in
         ;;
 
     # internal options
-    --installed-version|--package-name|--product-alternatives|--info)
+    --installed-version|--available-version|--package-name|--product-alternatives|--info)
         __run_script "$2" "$1" "$3"
         exit
         ;;

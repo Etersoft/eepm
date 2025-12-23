@@ -533,6 +533,10 @@ case "$1" in
         epm print version for package $PKGNAME | head -n1
         exit
         ;;
+    "--available-version")
+        get_latest_version $PKGNAME
+        exit
+        ;;
     "--update")
         pkgtext="package"
         pkgistext="package is"
