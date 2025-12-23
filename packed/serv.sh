@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.45"
+EPMVERSION="3.64.46"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -771,6 +771,38 @@ assure_exists()
 }
 
 
+assure_exist_arch()
+{
+    local cmd="$1"
+
+    if ! is_command "$cmd"; then
+        info "$cmd utility not found, attempting to install it..."
+        docmd epm install "$cmd" || {
+        info "Attempting to build $cmd from AUR using makepkg..."
+
+        if ! epm installed base-devel >/dev/null 2>&1; then
+            info "Installing base-devel for building packages..."
+            docmd epm install base-devel
+        fi
+
+        local tmpdir
+        tmpdir="$(mktemp -d)" || fatal "Could not create temporary directory"
+        remove_on_exit "$tmpdir"
+
+        # Clone the AUR package
+        docmd git clone --branch "$cmd" --single-branch https://github.com/archlinux/aur.git "$tmpdir/$cmd"
+
+        cd "$tmpdir/$cmd"
+
+        # Build and install using makepkg
+        docmd makepkg -si --noconfirm
+
+        info "$cmd successfully built and installed from AUR"
+    }
+    fi
+}
+
+
 assure_exists_erc()
 {
     local package="erc"
@@ -794,6 +826,12 @@ disabled_eget()
     $EGET "$@"
 }
 
+fetch_url()
+{
+    info "Fetching $1 ..."
+    eget -q -O- "$1"
+}
+
 sudocmd_eget()
 {
     # use internal eget only if exists
@@ -803,35 +841,76 @@ sudocmd_eget()
     fi
 }
 
+calc_sha256sum()
+{
+    sha256sum "$1" | awk '{print $1}'
+}
+
 print_sha256sum()
 {
-    local files="$*"
-    local i
     if ! is_command sha256sum ; then
         info "sha256sum is missed, can't print sha256 for packages..."
         return
     fi
 
+    local checksum=''
+    if [ "$1" = "--checksum" ] ; then
+        checksum="$2"
+        shift 2
+        pcs="$(calc_sha256sum "$1")"
+        [ "$checksum" = "$pcs" ] || fatal "Checksum verification failed. Awaited checksum: $checksum, package checksum: $pcs"
+    fi
+
+    local files="$*"
+    local i
+
+    local ch_ok=''
+    [ -n "$checksum" ] && ch_ok='OK'
+
     echo "sha256sum:"
     for i in $files ; do
-            echo "    $(sha256sum $i | awk '{print $1}') $(basename $i) $(du -h $i | cut -f1)"
+            echo "    $(calc_sha256sum $i) $ch_ok $(basename $i) $(du -Lh $i | cut -f1)"
     done
 }
 
-
-get_json_value()
+parse_json_value()
 {
     local field="$1"
     echo "$field" | grep -q -E "^\[" || field='["'$field'"]'
     epm --quiet tool json -b | grep -m1 -F "$field" | sed -e 's|.*\][[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
 }
 
-get_json_values()
+get_json_value()
+{
+    if is_url "$1" ; then
+        local toutput
+        toutput="$(fetch_url "$1")" || return
+        echo "$toutput" | parse_json_value "$2"
+    else
+        [ -s "$1" ] || fatal "File $1 is missed, can't get json"
+        parse_json_value "$2" < "$1"
+    fi
+}
+
+parse_json_values()
 {
     local field="$1"
     echo "$field" | grep -q -E "^\[" || field="\[$(echo "$field" | sed 's/[^ ]*/"&"/g' | sed 's/ /,/g'),[0-9]*\]"
     epm --quiet tool json -b | grep "^$field" | sed -e 's|.*\][[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
 }
+
+get_json_values()
+{
+    if is_url "$1" ; then
+        local toutput
+        toutput="$(fetch_url "$1")" || return
+        echo "$toutput" | parse_json_values "$2"
+    else
+        [ -s "$1" ] || fatal "File $1 is missed, can't get json"
+        parse_json_values "$2" < "$1"
+    fi
+}
+
 
 __epm_assure_7zip()
 {

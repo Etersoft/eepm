@@ -36,7 +36,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.45"
+export EPMVERSION="3.64.46"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -776,6 +776,38 @@ assure_exists()
 }
 
 
+assure_exist_arch()
+{
+    local cmd="$1"
+
+    if ! is_command "$cmd"; then
+        info "$cmd utility not found, attempting to install it..."
+        docmd epm install "$cmd" || {
+        info "Attempting to build $cmd from AUR using makepkg..."
+
+        if ! epm installed base-devel >/dev/null 2>&1; then
+            info "Installing base-devel for building packages..."
+            docmd epm install base-devel
+        fi
+
+        local tmpdir
+        tmpdir="$(mktemp -d)" || fatal "Could not create temporary directory"
+        remove_on_exit "$tmpdir"
+
+        # Clone the AUR package
+        docmd git clone --branch "$cmd" --single-branch https://github.com/archlinux/aur.git "$tmpdir/$cmd"
+
+        cd "$tmpdir/$cmd"
+
+        # Build and install using makepkg
+        docmd makepkg -si --noconfirm
+
+        info "$cmd successfully built and installed from AUR"
+    }
+    fi
+}
+
+
 assure_exists_erc()
 {
     local package="erc"
@@ -799,6 +831,12 @@ disabled_eget()
     $EGET "$@"
 }
 
+fetch_url()
+{
+    info "Fetching $1 ..."
+    eget -q -O- "$1"
+}
+
 sudocmd_eget()
 {
     # use internal eget only if exists
@@ -808,35 +846,76 @@ sudocmd_eget()
     fi
 }
 
+calc_sha256sum()
+{
+    sha256sum "$1" | awk '{print $1}'
+}
+
 print_sha256sum()
 {
-    local files="$*"
-    local i
     if ! is_command sha256sum ; then
         info "sha256sum is missed, can't print sha256 for packages..."
         return
     fi
 
+    local checksum=''
+    if [ "$1" = "--checksum" ] ; then
+        checksum="$2"
+        shift 2
+        pcs="$(calc_sha256sum "$1")"
+        [ "$checksum" = "$pcs" ] || fatal "Checksum verification failed. Awaited checksum: $checksum, package checksum: $pcs"
+    fi
+
+    local files="$*"
+    local i
+
+    local ch_ok=''
+    [ -n "$checksum" ] && ch_ok='OK'
+
     echo "sha256sum:"
     for i in $files ; do
-            echo "    $(sha256sum $i | awk '{print $1}') $(basename $i) $(du -h $i | cut -f1)"
+            echo "    $(calc_sha256sum $i) $ch_ok $(basename $i) $(du -Lh $i | cut -f1)"
     done
 }
 
-
-get_json_value()
+parse_json_value()
 {
     local field="$1"
     echo "$field" | grep -q -E "^\[" || field='["'$field'"]'
     epm --quiet tool json -b | grep -m1 -F "$field" | sed -e 's|.*\][[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
 }
 
-get_json_values()
+get_json_value()
+{
+    if is_url "$1" ; then
+        local toutput
+        toutput="$(fetch_url "$1")" || return
+        echo "$toutput" | parse_json_value "$2"
+    else
+        [ -s "$1" ] || fatal "File $1 is missed, can't get json"
+        parse_json_value "$2" < "$1"
+    fi
+}
+
+parse_json_values()
 {
     local field="$1"
     echo "$field" | grep -q -E "^\[" || field="\[$(echo "$field" | sed 's/[^ ]*/"&"/g' | sed 's/ /,/g'),[0-9]*\]"
     epm --quiet tool json -b | grep "^$field" | sed -e 's|.*\][[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
 }
+
+get_json_values()
+{
+    if is_url "$1" ; then
+        local toutput
+        toutput="$(fetch_url "$1")" || return
+        echo "$toutput" | parse_json_values "$2"
+    else
+        [ -s "$1" ] || fatal "File $1 is missed, can't get json"
+        parse_json_values "$2" < "$1"
+    fi
+}
+
 
 __epm_assure_7zip()
 {
@@ -1432,8 +1511,8 @@ __add_line_to_file()
     local sc="sudocmd"
     [ -n "$verbose" ] || sc="sudorun"
     set_sudo
-    # add empty line if needed
-    [ -z "$(tail -n1 "$file")" ] || echo "" | $sc tee -a "$file" >/dev/null
+    # ensure file ends with newline (check last byte)
+    [ -n "$(tail -c1 "$file")" ] && echo "" | $sc tee -a "$file" >/dev/null
     echo "$line" | $sc tee -a "$file" >/dev/null
 }
 
@@ -1606,7 +1685,7 @@ __epm_addrepo_altlinux()
     fi
 
     # when add correct sources.list string
-    if echo "$repo" | grep "^rpm " ; then
+    if echo "$repo" | grep -q "^rpm " ; then
         __epm_addrepo_to_file /etc/apt/sources.list "$repo"
         return
     fi
@@ -3352,6 +3431,85 @@ epm_create_fake()
   fi
 }
 
+# File bin/epm-db:
+
+epm_db_help()
+{
+    message "epm db - package database operations"
+            get_help HELPCMD $SHAREDIR/epm-db
+}
+
+__epm_check_lock()
+{
+    local lock_file="$1"
+    [ -f "$lock_file" ] || return 1
+    fuser -s "$lock_file" 2>/dev/null
+}
+
+__epm_check_apt_lock()
+{
+    # ALT Linux apt lock
+    __epm_check_lock /var/lib/apt/lists/lock && return 0
+    # Debian/Ubuntu dpkg lock
+    __epm_check_lock /var/lib/dpkg/lock-frontend && return 0
+    return 1
+}
+
+__epm_check_rpm_lock()
+{
+    __epm_check_lock /var/lib/rpm/.rpm.lock
+}
+
+epm_db_locked()
+{
+    local locked=
+    case $PMTYPE in
+        apt-*)
+            if __epm_check_apt_lock ; then
+                info "apt database is locked"
+                locked=1
+            fi
+            ;;
+    esac
+
+    case $PMTYPE in
+        *-rpm|*-dnf)
+            if __epm_check_rpm_lock ; then
+                info "rpm database is locked"
+                locked=1
+            fi
+            ;;
+    esac
+
+    if [ -n "$locked" ] ; then
+        return 0
+    fi
+
+    info "Package database is not locked"
+    return 1
+}
+
+epm_db()
+{
+    local cmd="$1"
+    shift
+
+    case "$cmd" in
+        -h|--help|help|"")           # HELPCMD: print this help
+            epm_db_help
+            ;;
+        fix)                         # HELPCMD: fix the package database
+            epm_check "$@"
+            ;;
+        locked)                      # HELPCMD: check if the package database is locked
+            epm_db_locked
+            ;;
+        *)
+            fatal "Unknown command '$cmd'. Use epm db --help for help."
+            ;;
+    esac
+}
+
 # File bin/epm-dedup:
 
 try_fix_apt_rpm_dupls()
@@ -3444,9 +3602,7 @@ get_value()
     local de_name="$1"
     local key="$2"
 
-    local json="$(get_json $de_name)"
-
-    get_json_value "$key" < "$json"
+    get_json $de_name | parse_json_value "$key"
 }
 
 
@@ -3455,9 +3611,7 @@ get_values()
     local de_name="$1"
     local key="$2"
 
-    local json="$(get_json $de_name)"
-
-    get_json_values "$key" < "$json" | xargs
+    get_json $de_name | parse_json_values "$key" | xargs
 }
 
 
@@ -3482,8 +3636,7 @@ get_repo_version()
 
     local package=$(get_main_package "$de_name")
 
-    info "Trying get info of package $package from remote ALT DB ..."
-    local latest_version="$(eget --quiet --timeout 10 -O- $(__get_api_url $package) | get_json_value '["packages",0,"version"]')"
+    local latest_version="$(get_json_value "$(__get_api_url $package)" '["packages",0,"version"]')"
 
     if [ -n "$latest_version" ] ; then
         echo "$latest_version"
@@ -4270,7 +4423,7 @@ __epm_korinf_install_eepm()
     # TODO: installing via task
     # as now, can't install one package from task
     if false && [ "$BASEDISTRNAME" = "alt" ] && [ -z "$direct" ] ; then
-        local task="$(docmd eget -O- https://eepm.ru/vendor/alt/task)"
+        local task="$(fetch_url https://eepm.ru/vendor/alt/task)"
         if [ -n "$task" ] ; then
             docmd epm install $task:eepm
             return
@@ -5159,7 +5312,7 @@ process_repo_arguments() {
 
     for repo in "${!repo_groups[@]}"; do
         if [ "$repo" = '.' ] ; then
-            epm_install_names ${repo_groups[$repo]}
+            (PPARGS=1 epm_install_names ${repo_groups[$repo]})
         else
             try_change_alt_repo
             docmd epm --auto repo set $repo
@@ -5992,14 +6145,27 @@ prepare_task_packages()
 
     for arg in "$@"; do
         # Parse argument into task and package
+        # Supported formats: 123456, 123456/pkg, task/123456, task/123456/pkg
+        local task=""
+        local pkg=""
         case "$arg" in
-            *:*)
-                local task=$(printf "%s" "$arg" | sed 's/:.*//')
-                local pkg=$(printf "%s" "$arg" | sed 's/.*://')
+            task/*/*)
+                # task/123456/pkg
+                task=$(printf "%s" "$arg" | cut -d/ -f2)
+                pkg=$(printf "%s" "$arg" | cut -d/ -f3)
+                ;;
+            task/*)
+                # task/123456
+                task=$(printf "%s" "$arg" | cut -d/ -f2)
+                ;;
+            */*)
+                # 123456/pkg
+                task=$(printf "%s" "$arg" | cut -d/ -f1)
+                pkg=$(printf "%s" "$arg" | cut -d/ -f2)
                 ;;
             *)
-                local task="$arg"
-                local pkg=""
+                # 123456
+                task="$arg"
                 ;;
         esac
 
@@ -7311,10 +7477,15 @@ __epm_pack_run_handler()
     local tarname="$2"
     local packversion="$3"
     local url="$4"
-    shift 4
+    local checksum="$5"
+    shift 5
     returntarname=''
 
-    print_sha256sum $tarname
+    if [ -n "$checksum" ] ; then
+        print_sha256sum --checksum "$checksum" $tarname
+    else
+        print_sha256sum "$checksum" $tarname
+    fi
 
     local packscript="$(get_pack_script "$packname")"
     has_pack_script "$packscript" || return
@@ -7341,7 +7512,9 @@ __epm_pack_run_handler()
 __epm_pack()
 {
     local packname="$1"
+    local packversion="$3"
     local URL="$4"
+    local checksum="$5"
 
     # fills returntarname with packed tar
     __epm_pack_run_handler "$@" || fatal 'Can'\''t find pack script for packname $packname'
@@ -7372,6 +7545,8 @@ __epm_pack()
 
     local pkgnames
     if [ -n "$dorepack" ]  ; then
+        # TODO: where .eepm.yaml?
+        [ -n "$EPM_REPACK_VERSION" ] || EPM_REPACK_VERSION="$packversion"
         __epm_repack $returntarname
         [ -n "$repacked_pkgs" ] || fatal "Can't repack $returntarname"
         # remove packed file if we have repacked one
@@ -7451,8 +7626,9 @@ esac
     local packname="$1"
     local tarname="$2"
     local packversion="$3"
+    local checksum="$4"
     local url=''
-    shift 3
+    shift 4
 
     if is_url "$tarname"; then
         url="$tarname"
@@ -7475,7 +7651,7 @@ esac
     fi
 
     cd $tmpdir || fatal
-    __epm_pack "$packname" "$tarname" "$packversion" "$url" "$@"
+    __epm_pack "$packname" "$tarname" "$packversion" "$url" "$checksum" "$@"
 
 }
 
@@ -7484,10 +7660,12 @@ esac
 
 __epm_packages_help()
 {
-    message "package management list"
-            get_help HELPCMD $SHAREDIR/epm-packages
+    message "Print installed packages"
+    message "Options:"
+    get_help HELPOPTIONS $SHAREDIR/epm-packages
     message '
 Examples:
+  epm qa --short
   epm packages --sort
   epm packages --sort=size
   epm packages --last
@@ -7556,17 +7734,20 @@ epm_packages()
     local CMD
 
     case "$1" in
-        -h|--help|help)  # HELPCMD: help
+        -h|--help|help)  # HELPOPTIONS: help
             __epm_packages_help
             return
             ;;
-        --sort=size|--sort)   # HELPCMD: list package(s) by size, most
+        --sort=size|--sort)   # HELPOPTIONS: list package(s) by size, most
             __epm_packages_sort
             return
             ;;
-        --last|--sort=time)   # HELPCMD: list package(s) by install time, most
+        --last|--sort=time)   # HELPOPTIONS: list package(s) by install time, most
             __epm_packages_last
             return
+            ;;
+        --short)              # HELPOPTIONS: print out short package names
+            # for help entry only
             ;;
         "")
             ;;
@@ -8034,7 +8215,7 @@ __get_latest_package_version()
 
     [ -n "$pkg" ] || return 1
 
-    ver="$(epm tool eget -q -O- "https://eepm.ru/app-versions/$pkg" 2>/dev/null)"
+    ver="$(fetch_url "https://eepm.ru/app-versions/$pkg")"
 
     if [ -n "$ver" ] ; then
         echo "$ver"
@@ -9146,7 +9327,7 @@ case $PMTYPE in
         if is_installed $pkg_names ; then
             CMD="rpm -q --provides"
         else
-            docmd apm system info --full --format=json $pkg_names | get_json_values "data packageInfo provides"
+            docmd apm system info --full --format=json $pkg_names | parse_json_values "data packageInfo provides"
             return
         fi
         ;;
@@ -11386,10 +11567,13 @@ __epm_repack_copy()
     #    return
     #fi
 
-    # firstly try CoW
-    cp --reflink=always $verbose $abspkg $target 2>/dev/null && return
-    # next try create hardlink
-    cp -l $verbose $abspkg $target 2>/dev/null && return
+    # If we can make symlink, we don't need CoW and hardlink
+    ## firstly try CoW
+    #cp --reflink=always $verbose $abspkg $target 2>/dev/null && return
+    # after failed CoW remained empty file
+    #rm $target
+    ## next try create hardlink
+    #cp -l $verbose $abspkg $target 2>/dev/null && return
     # next try create symlink
     cp -s $verbose $abspkg $target 2>/dev/null && return
     # just make copy as fallback
@@ -11455,6 +11639,7 @@ __prepare_source_package()
     local pkg="$1"
 
     alpkg=$(basename $pkg)
+    pkgversion="$2"
 
     # TODO: use func for get name from deb pkg
     # TODO: epm print name from deb package
@@ -11478,13 +11663,13 @@ __prepare_source_package()
         __epm_pack_run_handler ${__PACKRULE} "$pkg"
     elif rihas "$alpkg" "\.AppImage$" ; then
         # big hack with $pkg_urls_downloaded (it can be a list, not a single url)
-        __epm_pack_run_handler generic-appimage "$pkg" "" "$pkg_urls_downloaded"
+        __epm_pack_run_handler generic-appimage "$pkg" "$pkgversion" "$pkg_urls_downloaded"
         SUBGENERIC='appimage'
     elif rhas "$alpkg" "\.snap$" ; then
-        __epm_pack_run_handler generic-snap "$pkg"
+        __epm_pack_run_handler generic-snap "$pkg" "$pkgversion"
         SUBGENERIC='snap'
     else
-        __epm_pack_run_handler generic-tar "$pkg"
+        __epm_pack_run_handler generic-tar "$pkg" "$pkgversion"
         SUBGENERIC='tar'
     fi
 
@@ -11528,6 +11713,9 @@ __epm_repack_single()
             else
                 __epm_repack_to_deb "$pkg" || return
             fi
+            ;;
+        pkg.tar.xz)
+            __epm_repack_to_arch "$pkg" || return
             ;;
         *)
             fatal '$PKGFORMAT is not supported for repack yet'
@@ -11588,6 +11776,68 @@ epm_repack()
         fi
     fi
 
+}
+
+# File bin/epm-repack-arch:
+
+__epm_update_debtap_db()
+{
+    local needs_update=0
+
+    if ! ls /var/cache/pkgfile 2> /dev/null | grep -E '*.files?(.[[:digit:]]{3})' > /dev/null 2>&1; then
+        needs_update=1
+    fi
+
+    if [[ ! $(ls /var/cache/debtap/*-packages-files 2> /dev/null) ]]; then
+        needs_update=1
+    fi
+
+    if [ $needs_update -eq 1 ]; then
+        info "Updating debtap database (cache files are missing)..."
+        sudocmd debtap -u || warning "Could not update debtap database"
+    fi
+}
+
+__epm_repack_to_arch()
+{
+    local pkg="$1"
+
+    assure_exist_arch debtap
+
+    repacked_pkg=''
+
+    local TDIR
+    TDIR="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
+    remove_on_exit $TDIR
+
+    umask 022
+
+    abspkg="$(realpath "$pkg")"
+    info 'Repacking $abspkg to local Arch format (inside $TDIR) ...'
+
+    alpkg=$(basename $pkg)
+    # don't use abs package path: copy package to temp dir and use there
+    __epm_repack_copy $abspkg $TDIR/$alpkg
+
+    cd $TDIR || fatal
+
+    __epm_update_debtap_db
+
+    info "Generating package using debtap..."
+    docmd debtap -Q $verbose $TDIR/$alpkg
+
+    # Find the generated package file
+    local repacked_arch="$(realpath $TDIR/*.pkg.tar.* 2>/dev/null)"
+    if [ -s "$repacked_arch" ] ; then
+        remove_on_exit "$repacked_arch"
+        repacked_pkg="$repacked_arch"
+    else
+        warning 'Can'\''t find converted arch package for source binary package $pkg (got $repacked_arch)'
+    fi
+
+    cd "$EPMCURDIR" >/dev/null
+
+    return 0
 }
 
 # File bin/epm-repack-deb:
@@ -11792,7 +12042,7 @@ __epm_repack_to_rpm()
         export HOME
         __create_rpmmacros
 
-        tmpbuilddir=$HOME/$(basename $pkg).tmpdir
+        tmpbuilddir=$HOME/tmp-$(basename $pkg).tmpdir
         mkdir $tmpbuilddir
         abspkg="$(realpath $pkg)"
         info
@@ -11805,7 +12055,7 @@ __epm_repack_to_rpm()
 
         cd $tmpbuilddir/../ || fatal
         # fill alpkg and SUBGENERIC
-        __prepare_source_package "$(pwd)/$alpkg"
+        __prepare_source_package "$(pwd)/$alpkg" "$packversion"
         # override abspkg
         abspkg="$(realpath $alpkg)"
         cd $tmpbuilddir/ || fatal
@@ -11867,7 +12117,7 @@ __epm_repack_to_rpm()
             sed -i "s|^Release: .*|Release: $packrelease|" "$spec"
         fi
 
-        if [ -n "$EEPM_INTERNAL_PKGNAME" ] ; then
+        if [ -n "$EEPM_INTERNAL_PKGNAME" ] && [ -z "$force" ]; then
             if ! estrlist contains "$pkgname" "$EEPM_INTERNAL_PKGNAME" ; then
                 fatal 'Some bug: the name of the repacking package ($pkgname) differs with the package name ($EEPM_INTERNAL_PKGNAME) from play.d script.'
             fi
@@ -13415,9 +13665,9 @@ case $PMTYPE in
             return
         else
             if [ -n "$short" ] ; then
-                docmd apm system info --full --format=json $pkg_names | get_json_values "data packageInfo depends" | __epm_filter_out_base_alt_reqs | sed -e "s| .*||"
+                docmd apm system info --full --format=json $pkg_names | parse_json_values "data packageInfo depends" | __epm_filter_out_base_alt_reqs | sed -e "s| .*||"
             else
-                docmd apm system info --full --format=json $pkg_names | get_json_values "data packageInfo depends" | __epm_filter_out_base_alt_reqs
+                docmd apm system info --full --format=json $pkg_names | parse_json_values "data packageInfo depends" | __epm_filter_out_base_alt_reqs
             fi
             return
         fi
@@ -14493,7 +14743,10 @@ docmd $CMD $pkg_filenames
 tasknumberprefix() {
     local potential
     for potential in "$@"; do
-        [[ "$potential" =~ ^[0-9]+(:[^:]+)?$ ]] && return 0
+        # 123456 or 123456/pkg or task/123456 or task/123456/pkg
+        [[ "$potential" =~ ^[0-9]+$ ]] && return 0
+        [[ "$potential" =~ ^[0-9]+/[^/]+$ ]] && return 0
+        [[ "$potential" =~ ^task/[0-9]+(/[^/]+)?$ ]] && return 0
     done
     return 1
 }
@@ -14523,8 +14776,7 @@ get_task_packages_list()
     local tn="$1"
     local res
 
-    showcmd "eget -q -O- $ALTTASKURL/$tn/plan/add-bin"
-    res="$(eget -q -O- $ALTTASKURL/$tn/plan/add-bin)" || return
+    res="$(fetch_url $ALTTASKURL/$tn/plan/add-bin)" || return
     echo "$res" | cut -f1-3 | grep -E "(noarch|$DISTRARCH)$" | cut -f1
 }
 
@@ -14533,8 +14785,7 @@ get_task_arepo_packages_list()
     local tn="$1"
     local res
 
-    showcmd "eget -q -O- $ALTTASKURL/$tn/plan/arepo-add-x86_64-i586"
-    res="$(eget -q -O- $ALTTASKURL/$tn/plan/arepo-add-x86_64-i586)" || return
+    res="$(fetch_url $ALTTASKURL/$tn/plan/arepo-add-x86_64-i586)" || return
     echo "$res" | cut -f1
 }
 
@@ -15700,6 +15951,32 @@ epm_tool()
             estrlist "$@"
             ;;
         "json")                      # HELPCMD: json operations
+            if [ "$1" = "--help" ] || [ "$1" = "-h" ] ; then
+                echo "epm tool json - JSON parsing tool"
+                echo
+                echo "Usage:"
+                echo "  epm tool json [options]              - parse JSON from stdin"
+                echo "  epm tool json --get-json-value URL field  - get field value from JSON URL"
+                echo
+                echo "Options:"
+                echo "  -b       Brief output (leaf only + prune empty)"
+                echo "  -l       Leaf only"
+                echo "  -p       Prune empty"
+                echo
+                echo "Examples:"
+                echo "  echo '{\"version\":\"1.0\"}' | epm tool json -b"
+                echo "  epm tool json --get-json-value https://api.example.com/info.json version"
+                return
+            fi
+            # epm tool json --get-json-value URL field
+            if [ "$1" = "--get-json-value" ] ; then
+                local url="$2"
+                local field="$3"
+                [ -n "$url" ] || fatal "Use: epm tool json --get-json-value URL field"
+                [ -n "$field" ] || fatal "Use: epm tool json --get-json-value URL field"
+                get_json_value "$url" "$field"
+                return
+            fi
             showcmd json "$@"
             $CMDSHELL internal_tools_json "$@"
             ;;
@@ -15725,7 +16002,7 @@ get_latest_version()
     URL="https://eepm.ru/app-versions"
     #update_url_if_need_mirrored
     local var
-    var="$(epm tool eget -q -O- "$URL/$1")" || return
+    var="$(fetch_url "$URL/$1")" || return
     echo "$var" | head -n1 | cut -d" " -f1
 }
 
@@ -18778,9 +19055,9 @@ elif [ "$EGET_BACKEND" = "wget" ] ; then
 __wget()
 {
     if [ -n "$WGETUSERAGENT" ] ; then
-        docmd $WGET $FORCEIPV $WGETQ $NOGLOB $WGETCOMPRESSED $WGETHEADER $WGETOUTPUTDIR $WGETNOSSLCHECK $WGETNODIRECTORIES $WGETCONTINUE $WGETTIMEOUT $WGETREADTIMEOUT $WGETRETRYCONNREFUSED $WGETTRIES $WGETLOADCOOKIES $WGETRUSTSERVERNAMES "$(eval echo "$WGETUSERAGENT")" "$@"
+        docmd $WGET $FORCEIPV $WGETQ $NOGLOB $WGETCOMPRESSED $WGETHEADER $WGETOUTPUTDIR $WGETNOSSLCHECK $WGETNODIRECTORIES $WGETCONTINUE $WGETTIMEOUT $WGETREADTIMEOUT $WGETRETRYCONNREFUSED $WGETTRIES $WGETLOADCOOKIES $WGETRUSTSERVERNAMES "$(eval echo "$WGETUSERAGENT")" $EGET_WGET_OPTIONS "$@"
     else
-        docmd $WGET $FORCEIPV $WGETQ $NOGLOB $WGETCOMPRESSED $WGETHEADER $WGETOUTPUTDIR $WGETNOSSLCHECK $WGETNODIRECTORIES $WGETCONTINUE $WGETTIMEOUT $WGETREADTIMEOUT $WGETRETRYCONNREFUSED $WGETTRIES $WGETLOADCOOKIES $WGETRUSTSERVERNAMES "$@"
+        docmd $WGET $FORCEIPV $WGETQ $NOGLOB $WGETCOMPRESSED $WGETHEADER $WGETOUTPUTDIR $WGETNOSSLCHECK $WGETNODIRECTORIES $WGETCONTINUE $WGETTIMEOUT $WGETREADTIMEOUT $WGETRETRYCONNREFUSED $WGETTRIES $WGETLOADCOOKIES $WGETRUSTSERVERNAMES $EGET_WGET_OPTIONS "$@"
     fi
 }
 
@@ -18789,6 +19066,8 @@ url_scat()
 {
     local URL="$1"
     download_with_mirroring __wget "$URL" -O- && return
+    local RES=$?
+    [ -n "$quiet" ] || return $RES
     unset_quiet
     download_with_mirroring __wget "$URL" -O-
 }
@@ -18837,9 +19116,9 @@ elif [ "$EGET_BACKEND" = "curl" ] ; then
 __curl()
 {
     if [ -n "$CURLUSERAGENT" ] ; then
-        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER $CURLOUTPUTDIR $CURLNOSSLCHECK $CURLCONTINUE $CURLMAXTIME $CURLRETRYCONNREFUSED $CURLRETRY $CURLCOOKIE $CURLTRUSTSERVERNAMES "$(eval echo "$CURLUSERAGENT")" "$@"
+        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER $CURLOUTPUTDIR $CURLNOSSLCHECK $CURLCONTINUE $CURLMAXTIME $CURLRETRYCONNREFUSED $CURLRETRY $CURLCOOKIE $CURLTRUSTSERVERNAMES "$(eval echo "$CURLUSERAGENT")" $EGET_CURL_OPTIONS "$@"
     else
-        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER $CURLOUTPUTDIR $CURLNOSSLCHECK $CURLCONTINUE $CURLMAXTIME $CURLRETRYCONNREFUSED $CURLRETRY $CURLCOOKIE $CURLTRUSTSERVERNAMES "$@"
+        docmd $CURL $FORCEIPV --fail -L $CURLQ $CURLCOMPRESSED $CURLHEADER $CURLOUTPUTDIR $CURLNOSSLCHECK $CURLCONTINUE $CURLMAXTIME $CURLRETRYCONNREFUSED $CURLRETRY $CURLCOOKIE $CURLTRUSTSERVERNAMES $EGET_CURL_OPTIONS "$@"
     fi
 }
 # put remote content to stdout
@@ -18847,6 +19126,8 @@ url_scat()
 {
     local URL="$1"
     download_with_mirroring __curl "$URL" --output - && return
+    local RES=$?
+    [ -n "$quiet" ] || return $RES
     unset_quiet
     download_with_mirroring __curl "$URL" --output -
 }
@@ -18899,7 +19180,7 @@ url_get_response()
 elif [ "$EGET_BACKEND" = "aria2" ] ; then
 __aria2()
 {
-    docmd $ARIA2 $ARIA2Q $ARIA2OUTPUTDIR $ARIA2CONTINUE "$@"
+    docmd $ARIA2 $ARIA2Q $ARIA2OUTPUTDIR $ARIA2CONTINUE $EGET_ARIA2_OPTIONS "$@"
 }
 
 # put remote content to stdout
@@ -18907,6 +19188,8 @@ url_scat()
 {
     local URL="$1"
     download_with_mirroring __aria2 -x1 -s1 --allow-piece-length-change=false -o - "$URL" && return
+    local RES=$?
+    [ -n "$quiet" ] || return $RES
     unset_quiet
     download_with_mirroring __aria2 -x1 -s1 --allow-piece-length-change=false -o - "$URL"
 }
@@ -18952,9 +19235,9 @@ elif [ "$EGET_BACKEND" = "axel" ] ; then
 __axel()
 {
     if [ -n "$AXELUSERAGENT" ] ; then
-        docmd $AXEL $FORCEIPV $AXELQ $AXELOUTPUTDIR $AXELCONTINUE $AXELTIMEOUT $AXELHEADER $AXELNOSSLCHECK $AXELUSERAGENT "$(eval echo "$AXELUSERAGENT")" "$@"
+        docmd $AXEL $FORCEIPV $AXELQ $AXELOUTPUTDIR $AXELCONTINUE $AXELTIMEOUT $AXELHEADER $AXELNOSSLCHECK $AXELUSERAGENT "$(eval echo "$AXELUSERAGENT")" $EGET_AXEL_OPTIONS "$@"
     else
-        docmd $AXEL $FORCEIPV $AXELQ $AXELOUTPUTDIR $AXELCONTINUE $AXELTIMEOUT $AXELHEADER $AXELNOSSLCHECK $AXELUSERAGENT "$@"
+        docmd $AXEL $FORCEIPV $AXELQ $AXELOUTPUTDIR $AXELCONTINUE $AXELTIMEOUT $AXELHEADER $AXELNOSSLCHECK $AXELUSERAGENT $EGET_AXEL_OPTIONS "$@"
     fi
 }
 
@@ -18965,6 +19248,8 @@ url_scat()
     fatal "Improve me (via temp. file?)"
     local URL="$1"
     download_with_mirroring __axel -o - "$URL" && return
+    local RES=$?
+    [ -n "$quiet" ] || return $RES
     unset_quiet
     download_with_mirroring __axel -o - "$URL"
 }
@@ -19089,27 +19374,40 @@ url_get_filename()
 
     ! is_httpurl "$URL" && basename "$URL" && return
 
+    local filename
+
     # See https://www.cpcwood.com/blog/5-aws-s3-utf-8-content-disposition
     # https://www.rfc-editor.org/rfc/rfc6266
     local cd="$(url_get_header "$URL" "Content-Disposition")"
     if echo "$cd" | grep -qi "filename\*= *UTF-8" ; then
         #Content-Disposition: attachment; filename="unityhub-amd64-3.3.0.deb"; filename*=UTF-8''"unityhub-amd64-3.3.0.deb"
         #Content-Disposition: attachment; filename*=UTF-8''t1client-standalone-4.5.28.0-1238402-Release.deb; filename="t1client-standalone-4.5.28.0-1238402-Release.deb"
-        echo "$cd" | sed -e "s|.*filename\*= *UTF-8''||i" -e 's|^"||' -e 's|";$||' -e 's|"$||' -e 's|; filename=.*||'
-        return
+        filename="$(echo "$cd" | sed -e "s|.*filename\*= *UTF-8''||i" -e 's|^"||' -e 's|";$||' -e 's|"$||' -e 's|; filename=.*||')"
+        [ "$filename" != "unspecified" ] && echo "$filename" && return
     fi
     if echo "$cd" | grep -qi "filename=" ; then
         #Content-Disposition: attachment; filename=postman-linux-x64.tar.gz
         #content-disposition: attachment; filename="code-1.77.1-1680651749.el7.x86_64.rpm"
-        echo "$cd" | sed -e 's|.*filename= *||i' -e 's|^"||' -e 's|";.*||' -e 's|"$||'
-        return
+        filename="$(echo "$cd" | sed -e 's|.*filename= *||i' -e 's|^"||' -e 's|";.*||' -e 's|"$||')"
+        [ "$filename" != "unspecified" ] && echo "$filename" && return
     fi
 
     local loc="$(url_get_raw_real_url "$URL")"
     if is_strange_url "$loc" ; then
         loc="$(echo "$loc" | sed -e "s|\?.*||")"
     fi
-    basename "$loc"
+
+    # hack for redirect to the main page
+    if dirname "$loc" | grep -q "^http" ; then
+        loc=""
+    fi
+
+    local loc="$URL"
+    if is_strange_url "$loc" ; then
+        loc="$(echo "$loc" | sed -e "s|\?.*||")"
+    fi
+
+    [ -n "$loc" ] && basename "$loc"
 }
 
 fi
@@ -19671,7 +19969,7 @@ extract_archive()
 			;;
 		tar.bz2|tbz2)
 			is_command bunzip2 || fatal "Could not find bzip2 package. Please install bzip2 package and retry."
-			extract_command "tar -xjf" "$arc"
+			extract_command "tar -xhjf" "$arc"
 			;;
 		tar)
 			extract_command "tar -xhf" "$arc"
@@ -19825,8 +20123,6 @@ progname="${0##*/}"
 Usage="Usage: $progname [options] [<command>] [params]..."
 Descr="erc - universal archive manager"
 
-progname="${0##*/}"
-
 
 force=
 target=
@@ -19834,7 +20130,7 @@ verbose=--verbose
 use_7z=
 use_patool=
 
-if [ -z "$" ] ; then
+if [ -z "$*" ] ; then
     echo "Etersoft archive manager version @VERSION@" >&2
     echo "Run $0 --help to get help" >&2
     exit 1
@@ -19861,6 +20157,10 @@ case "$1" in
         ;;
     --use-7z)             # HELPOPT: force use 7z as backend
         use_7z=1
+        ;;
+    -a|-e|-x|-u|-l|-t|-b)
+        # these are commands, not options
+        break
         ;;
     -*)
         fatal "Unknown option '$1'"
@@ -19921,7 +20221,10 @@ case $cmd in
         fi
         [ -z "$target" ] && target="$1" && shift
 
-        [ -e "$target" ] && [ -n "$force" ] && docmd rm -f "$target"
+        if [ -e "$target" ] ; then
+            [ -n "$force" ] || fatal "Target $target already exists. Use -f to overwrite."
+            docmd rm -f "$target"
+        fi
         create_archive "$target" "$@"
         ;;
     e|x|-e|-x|u|-u|extract|unpack)          # HELPCMD: extract files from archive
@@ -19967,7 +20270,7 @@ case $cmd in
         for i in "$@" ; do
             [ "$i" = "$lastarg" ] && continue
             target="$(build_target_name "$i" "$lastarg")"
-            [ "$(realpath "$1")" = "$(realpath "$target")" ] && warning "Output file is the same as input" && return
+            [ "$(realpath "$i")" = "$(realpath "$target")" ] && warning "Output file is the same as input" && return
             [ -e "$target" ] && [ -n "$force" ] && docmd rm -f "$target"
             repack_archive "$i" "$target" || return
         done
@@ -21028,6 +21331,10 @@ check_command()
         epm_cmd=check
         direct_args=1
         ;;
+    db)                       # HELPCMD: package database operations (see epm db --help)
+        epm_cmd=db
+        direct_args=1
+        ;;
     dedup)                    # HELPCMD: remove unallowed duplicated pkgs (after upgrade crash)
         epm_cmd=dedup
         direct_args=1
@@ -21350,7 +21657,7 @@ if [ -n "$quiet" ] ; then
 fi
 
 # fill
-export EPM_OPTIONS="$nodeps $force $full $verbose $debug $quiet $interactive $non_interactive $parallel $save_only $download_only $force_overwrite $manual_requires $noscripts $scripts"
+export EPM_OPTIONS="$nodeps $force $full $verbose $debug $quiet $interactive $non_interactive $parallel $save_only $download_only $force_overwrite $manual_requires $noscripts $scripts $dryrun"
 
 # if input is not console and run script from file, get pkgs from stdin too
 if [ ! -n "$inscript" ] && [ -p /dev/stdin ] && [ "$EPMMODE" != "pipe" ] ; then
