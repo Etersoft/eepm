@@ -41,8 +41,23 @@ epm_provides_files()
             # FIXME: will we provide ourself?
             docmd dpkg -I $pkg_files | grep "^ *Provides:" | sed "s|^ *Provides:||g"
             ;;
+        ELF)
+            # for libraries: SONAME, for executables: file path
+            local soname
+            soname="$(LC_ALL=C a="" readelf -d "$pkg_files" 2>/dev/null | grep "(SONAME)" | sed -e 's|.*\[\(.*\)\]|\1|')"
+            if [ -n "$soname" ] ; then
+                if file -L "$pkg_files" | grep -q " ELF 64-bit " ; then
+                    echo "$soname()(64bit)"
+                else
+                    echo "$soname"
+                fi
+            else
+                # executable - provide file path
+                readlink -f "$pkg_files"
+            fi
+            ;;
         *)
-            fatal 'Have no suitable command for $PMTYPE in epm_provides()'
+            fatal 'Have no suitable command for $PKGTYPE in epm_provides_files()'
             ;;
     esac
 }
@@ -161,5 +176,5 @@ epm_provides()
 
     epm_provides_files $pkg_files
     # shellcheck disable=SC2046
-    epm_provides_names $(print_name $pkg_names)
+    [ -z "$pkg_names" ] || epm_provides_names $(print_name $pkg_names)
 }
