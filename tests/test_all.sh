@@ -19,10 +19,30 @@ restore_epm()
 set -e -x
 set -o pipefail
 
+# Section 1: Basic info commands (never break the system)
+epm --version
 epm print info
+epm --help | head || [ $? -eq 141 ]
 
+# Section 2: Read-only repository queries
+epm repo list
+epm search bash | head || [ $? -eq 141 ]
+epm info bash
+epm show bash
+epm policy bash
+epm provides /bin/bash
+epm requires bash | head || [ $? -eq 141 ]
+
+# Section 3: Queries on installed packages
+epmqf bash
+epm ql eepm | head || [ $? -eq 141 ]
+epm cl erc | head || [ $? -eq 141 ]
+epm checkpkg eepm
+
+# Section 4: Update cache (may fail on network issues)
 epm update
 
+# Section 5: Package modifications
 epm --auto upgrade $EPMPKGFILE
 
 epm --auto downgrade $EPMPKGFILE
@@ -40,14 +60,6 @@ epm --auto autoremove --direct
 epm --auto autoorphans
 
 epm --auto upgrade
-
-epmqf bash
-
-epm ql eepm | head || :
-
-epm cl erc | head || :
-
-epm checkpkg eepm
 
 epm --auto upgrade eepm
 restore_epm || :
