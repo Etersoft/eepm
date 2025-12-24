@@ -33,6 +33,7 @@ Examples:
 
 epm_full_upgrade()
 {
+    local orig_args="$*"
 
     while [ -n "$1" ] ; do
         case "$1" in
@@ -106,15 +107,15 @@ confirm_action()
             epm_version_after=$(epmq eepm &>/dev/null)
             if [ "$epm_version_before" != "$epm_version_after" ] ; then
                 info "An update for epm has been found, restarting epm full-upgrade..."
-                exec $PROGDIR/$PROGNAME full-upgrade "$@"
+                exec $PROGDIR/$PROGNAME full-upgrade $orig_args
                 exit 0
             fi
         else
             load_helper epm-update
             if __check_for_epm_version ; then
-                docmd epm ei
+                docmd epm ei || fatal "Failed to update epm"
                 info "An update for epm has been installed, restarting epm full-upgrade..."
-                exec $PROGDIR/$PROGNAME full-upgrade "$@"
+                exec $PROGDIR/$PROGNAME full-upgrade $orig_args
                 exit 0
             fi
         fi
