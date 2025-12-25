@@ -9,7 +9,7 @@ URL="https://mikrotik.com/download"
 . $(dirname $0)/common.sh
 
 if [ "$VERSION" = "*" ] ; then
-    PKGURL=$(eget --list https://mikrotik.com/download/winbox "WinBox_Linux.zip")
+    PKGURL=$(eget --list --latest https://mikrotik.com/download/winbox "WinBox_Linux.zip")
 else
     PKGURL="https://download.mikrotik.com/routeros/winbox/$VERSION/WinBox_Linux.zip"
 fi
