@@ -36,7 +36,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.46"
+export EPMVERSION="3.64.47"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -882,7 +882,7 @@ parse_json_value()
 {
     local field="$1"
     echo "$field" | grep -q -E "^\[" || field='["'$field'"]'
-    epm --quiet tool json -b | grep -m1 -F "$field" | sed -e 's|.*\][[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
+    epm --inscript --quiet tool json -b | grep -m1 -F "$field" | sed -e 's|.*\][[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
 }
 
 get_json_value()
@@ -901,7 +901,7 @@ parse_json_values()
 {
     local field="$1"
     echo "$field" | grep -q -E "^\[" || field="\[$(echo "$field" | sed 's/[^ ]*/"&"/g' | sed 's/ /,/g'),[0-9]*\]"
-    epm --quiet tool json -b | grep "^$field" | sed -e 's|.*\][[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
+    epm --inscript --quiet tool json -b | grep "^$field" | sed -e 's|.*\][[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
 }
 
 get_json_values()
@@ -4712,6 +4712,7 @@ Examples:
 
 epm_full_upgrade()
 {
+    local orig_args="$*"
 
     while [ -n "$1" ] ; do
         case "$1" in
@@ -4785,14 +4786,14 @@ confirm_action()
             epm_version_after=$(epmq eepm &>/dev/null)
             if [ "$epm_version_before" != "$epm_version_after" ] ; then
                 info "An update for epm has been found, restarting epm full-upgrade..."
-                exec $PROGDIR/$PROGNAME full-upgrade "$@"
+                exec $PROGDIR/$PROGNAME full-upgrade $orig_args
                 exit 0
             fi
         else
             if __check_for_epm_version ; then
-                docmd epm ei
+                docmd epm ei || fatal "Failed to update epm"
                 info "An update for epm has been installed, restarting epm full-upgrade..."
-                exec $PROGDIR/$PROGNAME full-upgrade "$@"
+                exec $PROGDIR/$PROGNAME full-upgrade $orig_args
                 exit 0
             fi
         fi
@@ -8153,6 +8154,7 @@ Options:
 
 Extra options:
     --installed-version   - print installed version for the app
+    --available-version   - print available version for the app
     --package-name        - print package name for the app
     --info                - print info about the app
     --list-installed-packages - print list of all packages installed via epm play
@@ -8448,7 +8450,7 @@ case "$1" in
         ;;
 
     # internal options
-    --installed-version|--package-name|--product-alternatives|--info)
+    --installed-version|--available-version|--package-name|--product-alternatives|--info)
         __run_script "$2" "$1" "$3"
         exit
         ;;
@@ -9292,8 +9294,23 @@ epm_provides_files()
             # FIXME: will we provide ourself?
             docmd dpkg -I $pkg_files | grep "^ *Provides:" | sed "s|^ *Provides:||g"
             ;;
+        ELF)
+            # for libraries: SONAME, for executables: file path
+            local soname
+            soname="$(LC_ALL=C a="" readelf -d "$pkg_files" 2>/dev/null | grep "(SONAME)" | sed -e 's|.*\[\(.*\)\]|\1|')"
+            if [ -n "$soname" ] ; then
+                if file -L "$pkg_files" | grep -q " ELF 64-bit " ; then
+                    echo "$soname()(64bit)"
+                else
+                    echo "$soname"
+                fi
+            else
+                # executable - provide file path
+                readlink -f "$pkg_files"
+            fi
+            ;;
         *)
-            fatal 'Have no suitable command for $PMTYPE in epm_provides()'
+            fatal 'Have no suitable command for $PKGTYPE in epm_provides_files()'
             ;;
     esac
 }
@@ -9407,7 +9424,7 @@ epm_provides()
 
     epm_provides_files $pkg_files
     # shellcheck disable=SC2046
-    epm_provides_names $(print_name $pkg_names)
+    [ -z "$pkg_names" ] || epm_provides_names $(print_name $pkg_names)
 }
 
 # File bin/epm-query:

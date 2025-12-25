@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.46"
+EPMVERSION="3.64.47"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -877,7 +877,7 @@ parse_json_value()
 {
     local field="$1"
     echo "$field" | grep -q -E "^\[" || field='["'$field'"]'
-    epm --quiet tool json -b | grep -m1 -F "$field" | sed -e 's|.*\][[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
+    epm --inscript --quiet tool json -b | grep -m1 -F "$field" | sed -e 's|.*\][[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
 }
 
 get_json_value()
@@ -896,7 +896,7 @@ parse_json_values()
 {
     local field="$1"
     echo "$field" | grep -q -E "^\[" || field="\[$(echo "$field" | sed 's/[^ ]*/"&"/g' | sed 's/ /,/g'),[0-9]*\]"
-    epm --quiet tool json -b | grep "^$field" | sed -e 's|.*\][[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
+    epm --inscript --quiet tool json -b | grep "^$field" | sed -e 's|.*\][[:space:]]||' | sed -e 's|"\(.*\)"|\1|g'
 }
 
 get_json_values()
