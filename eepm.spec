@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.46
+Version: 3.64.47
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -157,6 +157,22 @@ EOF
 %endif
 
 %changelog
+* Thu Dec 25 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.47-alt1
+- epm repack: move add_libs_requires to generic-post.sh, add stop_libs_requires
+- epm repack: add metasploit-framework
+- repack.d: add claude-code-webui
+- epm repack synology-drive: ignore require libnautilus-extension.so.1
+- epm play: add --available-version option
+- play.d/code.sh: add OpenSSL 3 and WebKit2GTK 4.1 checks for version 1.107+
+- repack.d/generic-post.sh: remove temp .eepm_ignore_lib_requires file
+- epm provides: add support for libraries and binaries
+- play.d: add separate yandex-browser-corporate script
+- epm full-upgrade: fix arguments lost after epm self-update restart
+- play.d/weasis: use native rpm package on rpm-based systems
+- parse_json_value: add --inscript to prevent stdin consumption
+- play yandex-browser codecs: check browser is installed before detecting version
+- play code: fallback to 1.106.3 if OpenSSL 3 or WebKit 4.1 not available
+
 * Tue Dec 23 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.46-alt1
 - epm pack: add support for pack tarball without version with default pack rule
 - epm repack.d/: use install_file instead of eget
