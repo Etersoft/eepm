@@ -5,4 +5,5 @@ BUILDROOT="$1"
 SPEC="$2"
 . $(dirname $0)/common.sh
 
-add_requires yandex-browser-stable
+BROWSER_PKG="${PRODUCT%-codecs-ffmpeg-extra}"
+add_requires "$BROWSER_PKG"

@@ -22,4 +22,4 @@ fi
 
 install_pkgurl
 
-epm play yandex-browser-stable-codecs-ffmpeg-extra
+epm play $PKGNAME-codecs-ffmpeg-extra

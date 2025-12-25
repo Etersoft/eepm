@@ -30,4 +30,4 @@ VERSION=$(grep -ao "Chrome/[0-9.]*" "$BROWSER_BIN" | head -n1 | cut -d/ -f2 | cu
 FFMPEG_PATH="$(echo "$JSON" | parse_json_value "[\"$VERSION\",\"path\"]")"
 PKGURL="$(echo "$JSON" | parse_json_value "[\"$VERSION\",\"url\"]")"
 
-install_pack_pkgurl "$VERSION" "$FFMPEG_PATH"
+install_pack_pkgurl "$VERSION" "" "$FFMPEG_PATH"
