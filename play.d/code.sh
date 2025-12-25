@@ -9,10 +9,15 @@ URL="https://code.visualstudio.com/"
 
 . $(dirname $0)/common.sh
 
-# version 1.107+ requires OpenSSL 3 and WebKit2GTK 4.1
-if [ "$VERSION" = "*" ] || [ "$(epm print compare version "$VERSION" 1.107)" != "-1" ] ; then
-    is_openssl_enough 3 || fatal "There is no needed OpenSSL 3 in the system."
-    is_soname_present libwebkit2gtk-4.1.so.0 || fatal "There is no libwebkit2gtk-4.1 in the system."
+# override only checked version and latest version
+if [ -n "$CHECKED_VERSION" ] || [ "$VERSION" = "*" ] ; then
+    if ! is_openssl_enough 3 ; then
+        VERSION="1.106.3"
+        info "There is no needed OpenSSL 3 in the system,  we'll stick with the old version $VERSION"
+    elif ! is_soname_present libwebkit2gtk-4.1.so.0 ; then
+        VERSION="1.106.3"
+        info "There is no libwebkit2gtk-4.1 in the system, we'll stick with the old version $VERSION"
+    fi
 fi
 
 arch="$(epm print info -a)"
