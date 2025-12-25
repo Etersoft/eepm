@@ -68,6 +68,13 @@ add_chromium_deps()
 {
     fix_chrome_sandbox
 
+    # Qt shim libraries (libqt5_shim.so, libqt6_shim.so) are optional for native file dialogs.
+    # Browsers work fine with GTK dialogs when Qt is not available.
+    # Only ignore Qt requires when shim libs are detected in the package.
+    # TODO: implement ignoring requires for explicitly specified libraries
+    [ -f "$BUILDROOT$PRODUCTDIR/libqt5_shim.so" ] && ignore_lib_requires 'libQt5.*'
+    [ -f "$BUILDROOT$PRODUCTDIR/libqt6_shim.so" ] && ignore_lib_requires 'libQt6.*'
+
     add_unirequires "file grep sed which xdg-utils"
     add_unirequires "libpthread.so.0 libstdc++.so.6"
     add_unirequires "libatk-bridge-2.0.so.0 libglib-2.0.so.0 libgmodule-2.0.so.0 libgobject-2.0.so.0 libgthread-2.0.so.0 libatk-1.0.so.0 libatspi.so.0"
