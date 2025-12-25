@@ -10,14 +10,21 @@ URL="https://browser-resources.s3.yandex.net/linux/codecs_snap.json"
 CODECS_JSON="https://browser-resources.s3.yandex.net/linux/codecs_snap.json"
 JSON="$(eget -O- "$CODECS_JSON")"
 
+BROWSER_PKG="${PKGNAME%-codecs-ffmpeg-extra}"
+
 case "$PKGNAME" in
     *beta*)
-        VERSION=$(grep -ao "Chrome/[0-9.]*" /opt/yandex/browser-beta/yandex_browser | head -n1 | cut -d/ -f2 | cut -d. -f1)
+        BROWSER_BIN=/opt/yandex/browser-beta/yandex_browser
         ;;
     *)
-        VERSION=$(grep -ao "Chrome/[0-9.]*" /opt/yandex/browser/yandex_browser | head -n1 | cut -d/ -f2 | cut -d. -f1)
+        BROWSER_BIN=/opt/yandex/browser/yandex_browser
         ;;
 esac
+
+[ -x "$BROWSER_BIN" ] || fatal "$BROWSER_PKG is not installed. Install it first with: epm play $BROWSER_PKG"
+
+VERSION=$(grep -ao "Chrome/[0-9.]*" "$BROWSER_BIN" | head -n1 | cut -d/ -f2 | cut -d. -f1)
+[ -n "$VERSION" ] || fatal "Can't detect browser Chrome version from $BROWSER_BIN"
 
 
 FFMPEG_PATH="$(echo "$JSON" | parse_json_value "[\"$VERSION\",\"path\"]")"
