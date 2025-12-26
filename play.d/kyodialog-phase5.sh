@@ -1,7 +1,6 @@
 #!/bin/sh
 
-# FIXME: the same package name as in kyodialog; we will get the wrong version, but it doesn't matter sine we don't use the version
-PKGNAME=kyodialog
+PKGNAME=kyodialog-phase5
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="KYOCERA Printing Package Phase5 (Linux Universal Driver)"
