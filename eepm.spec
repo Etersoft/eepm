@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.47
+Version: 3.64.48
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -157,6 +157,15 @@ EOF
 %endif
 
 %changelog
+* Fri Dec 26 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.48-alt1
+- repack.d: ignore optional Qt shim libs in Chromium browsers
+- repack.d: fix add_conflicts quoting in chromium-gost-stable
+- play/repack: fix yandex-browser codecs for corporate and beta
+- epm repack freeplane: ignore libjawt.so in freeplane
+- epm play r7-office-organizer-pro: fix package mask, add ALT Linux support
+- epm play winbox: use --latest to get single URL
+- epm play kyodialog-phase5: fix PKGNAME
+
 * Thu Dec 25 2025 Vitaly Lipatov <lav@altlinux.ru> 3.64.47-alt1
 - epm repack: move add_libs_requires to generic-post.sh, add stop_libs_requires
 - epm repack: add metasploit-framework
