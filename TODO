@@ -1,119 +1,146 @@
-На сайт: eepm.ru
+# TODO List
 
-как устанавливать
-https://losst.ru/ustanovka-wps-office-v-ubuntu-20-04
+## Новые функции
 
+### Поддержка внешних команд
+Сделать плагинную систему для расширения функциональности epm внешними командами.
 
-Сделать поддержку внешних команд?
+### Локальный кэш для epm play
+Каталог для локального хранения пакетов (по аналогии с ecryptmgr).
+Установка без повторного скачивания - полезно для проприетарного ПО (1С и др.).
 
-Пробовать локальный кэш — каталог, откуда брать пакеты для epm play, а не скачивать. Что-то подобное на ecryptmgr. Установка 1С и другого проприетарного.
+### epm hs - поиск с историей
+Поиск пакетов с отображением истории версий и changelog.
+Интеграция с API packages.altlinux.org:
+- http://packages.altlinux.org/api_doc/
+- https://github.com/biow0lf/prometheus-cli
 
-Не воспроизводится:
-epmqp --short wine
-(--short удаляет всё, что больше wine (не может правильно оторвать версию)
-
-journalctl --vacuum-size=100M
-
-yum versionlock - сравнить/обобщить
-https://itfb.com.ua/kak-zablokirovat-obnovlenie-odnogo-iz-paketov-ili-ispolzuem-yum-versionlock/
-
-apt-mark (для работы autoremove and autoorphans) - помечать то, что удалять не следует
-
-apt-mark hold unhold showhold auto manual showauto showmanual
-https://manpages.ubuntu.com/manpages/bionic/man8/apt-mark.8.html
-
-на p8, если в sources.list спереди стоит пробел
-" rpm http://"
-то имеем
-
-Там вообще apt-repo с багой
-
-# epm -sf /etc/fstab
-Locate contents index file(s) ...
- # apt-repo list
- # eget -O /tmp/eepm/http:/10.10.19.99/altrepos/contents_index rpm/http://10.10.19.99/altrepos//base/contents_index
- 
-Запрос к базе?
-epm hs поиск с историей какой версией и changelog
-
-https://wiki.archlinux.org/index.php/Pacman/Tips_and_tricks_(Русский)
-
-аналог epm purge: запоминаем список файлов, удаляем пакеты и по возможности всё, от чего зависит (рекурсивно).
-
---interactive
-
-встроить вычисление зависимость сюда rpmreqs
-
-хочется видеть прямые зависимости, обратные, и рекурсивно.
-выводить в цивилизованном виде (в прямом только с --direct)
-
-epmqp uuid на x86_64/Ubuntu не различает архитектуру
-
-get system checking
-https://github.com/gwicke/mediawiki-containers
-
-list перехватывается:
-
-# serv openvpn
- #  service openvpn
-Usage: openvpn {start|stop|reload|restart|reopen|condstop|condrestart|condreload|status|list|help}
-[root@priv etc]# serv openvpn list
- #  chkconfig --list
- #  anyservice --quiet list
- 
-
-TODO: yaourt (pacman frontend), need we?
-https://archlinux.fr/man/yaourt.8.html
-
-/etc/eepm.conf конфиг
-
-[18:21:12] <danil> Вот так можно:
-RED='\033[0;31m' ; NC='\033[0m' b="b" ; echo -e "aba" | sed -e "s|${b}|\\${RED}${b}\\${NC}|g" | xargs -0 printf
-[18:23:40] <danil> > Ты знаешь способы?
-
-colorise_word(){ //aba b
- RED='\033[0;31m'
- NC='\033[0m' b="b"
- echo -e "$1" | sed -e "s|${2}|\\${RED}${2}\\${NC}|g" | xargs -0 printf
-}
-[18:24:18] <lav> Ну в общем-то да... Ещё можно попробовать готовый
-
-
-yum list extras – имена тех пакетов, которые наличествуют в системе, но которыми в репозиториях и не пахло, то есть установленные “в лоб”, например, через
-
---dump-options for write simple bash completition
-
-yum remove $(package-cleanup --orphans
-
-https://github.com/biow0lf/prometheus-cli
-
+Пример использования:
+```
 $ ruby prometheus-cli.rb srpm openbox
 Branch: Sisyphus
-
 Name: openbox
 Version: 3.5.0
 Release: alt5
+```
 
-http://packages.altlinux.org/api_doc/
+### --dump-options
+Вывод списка опций для автодополнения bash/zsh/fish.
+
+### journalctl --vacuum-size
+Интеграция очистки журналов в epm clean.
+
+### docmdmore
+Команда для pipe в less с сохранением кода возврата.
+Проблема: `command | less` теряет exit code исходной команды.
+
+### colorise_word
+Функция для подсветки конкретных слов в выводе:
+```sh
+colorise_word(){ # colorise_word "text" "word"
+    RED='\033[0;31m'
+    NC='\033[0m'
+    echo -e "$1" | sed -e "s|${2}|\\${RED}${2}\\${NC}|g" | xargs -0 printf
+}
+```
+
+### yum list extras
+Показ пакетов, установленных вручную (не из репозиториев).
+Аналог epm autoorphans для yum/dnf.
 
 
-См. описание алгоритма установки с URL
+## Улучшения существующих команд
 
-dotty - через ссылки на реальные названия (epm req верхнего уровня)
+### epm req - визуализация зависимостей
+- Встроить вычисление зависимостей (rpmreqs)
+- Показывать прямые и обратные зависимости
+- Рекурсивный режим
+- Вывод в виде dotty-графа
+- В прямом режиме показывать только с --direct
 
-менеджер пакетов из NetBSD — pkgsrc (команды для поиска нужных пакетов – pkgin update; pkgin avail; pkgin search).
+### epm install/remove
+Установка и удаление должны использовать укороченные имена пакетов
+(которые правильно воспримет верхний уровень менеджера пакетов).
 
-Использование | less теряет код возврата команды. Нужно сделать nobash решение, которое сохранит статус
-Команда
-docmdmore
+### epm -sf (search file)
+Исправить обработку путей с пробелами в /etc/apt/sources.list:
+```
+" rpm http://"  # лишний пробел в начале
+```
+Связано с багой в apt-repo на p8.
 
-Установка (для отсутствующих файлов пакетов) и удаление (в любом случае) должны производиться с укороченными именами (которые воспримет верхний уровень)
+Пример некорректной работы:
+```
+# epm -sf /etc/fstab
+Locate contents index file(s) ...
+# apt-repo list
+# eget -O /tmp/eepm/http:/10.10.19.99/altrepos/contents_index \
+  rpm/http://10.10.19.99/altrepos//base/contents_index
+```
 
-Дописать таблицу на вики на основании реализованных команд.
 
-Было предложение вывернуть:
-Не case по каждой системе, а в каталоге по каждой системе разместить файлы, выполняющие нужные действия.
+## Баги
+
+### epmqp --short wine
+--short некорректно удаляет версию у пакетов, содержащих слово wine.
+Не может правильно оторвать версию от имени.
+Статус: не воспроизводится стабильно.
+
+### epmqp uuid на x86_64/Ubuntu
+Не различает архитектуру пакетов (x86_64 vs i686).
+
+### serv с параметром list
+Конфликт с внутренней командой list у некоторых сервисов:
+
+```
+# serv openvpn
+#  service openvpn
+Usage: openvpn {start|stop|reload|restart|reopen|condstop|condrestart|condreload|status|list|help}
+
+# serv openvpn list
+#  chkconfig --list
+#  anyservice --quiet list
+```
+
+Команда list перехватывается serv вместо передачи в сервис.
+
+
+## Интеграции
+
+### pkgsrc (NetBSD)
+Добавить поддержку менеджера пакетов из NetBSD.
+Команды: pkgin update, pkgin avail, pkgin search
+
+### yaourt (pacman frontend)
+Рассмотреть необходимость поддержки.
+Документация: https://archlinux.fr/man/yaourt.8.html
+Ссылка: https://wiki.archlinux.org/index.php/Pacman/Tips_and_tricks_(Русский)
+
+### mediawiki-containers
+System checking: https://github.com/gwicke/mediawiki-containers
+
+
+## Рефакторинг
+
+### Реорганизация структуры
+Вместо больших case по каждой системе использовать файлы в каталогах:
+```
 apt-rpm/install
 apt-rpm/remove
+dnf-rpm/install
+dnf-rpm/remove
+...
+```
 
-serv должен уметь показывать порядок загрузки?
+
+## Документация
+
+### Сайт eepm.ru
+Добавить раздел "Как устанавливать":
+- https://losst.ru/ustanovka-wps-office-v-ubuntu-20-04
+
+### Wiki
+Дописать таблицу команд на основании реализованных функций.
+
+### serv
+Добавить отображение порядка загрузки сервисов.
