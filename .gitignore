@@ -2,5 +2,4 @@
 .gigaide
 .idea
 tests/test.spec
-po/*.mo
-po/*/LC_MESSAGES/
+.claude/
