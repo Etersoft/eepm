@@ -23,7 +23,7 @@ local: $(LANGUAGES:%=%.mo)
 $(PROJECT).pot: $(SCRIPTLIST) Makefile extract-help.sh
 	xgettext --keyword=info --keyword=fatal --keyword=warning \
 	         --keyword=debug --keyword=message --keyword=confirm_action \
-	         --keyword=confirm_info --keyword=eval_gettext \
+	         --keyword=confirm_info --keyword=eval_gettext --keyword=echog \
 	         -o $@.tmp --language=Shell --from-code=utf-8 $(SCRIPTLIST)
 	./extract-help.sh > help.pot.tmp
 	msgcat $@.tmp help.pot.tmp -o $@
