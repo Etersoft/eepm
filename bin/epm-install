@@ -587,7 +587,7 @@ epm_install()
     fi
 
     if [ -n "$interactive" ] && [ -n "$pkg_names$pkg_files$pkg_urls" ] ; then
-        local pkgs="$pkg_names $pkg_files $pkg_urls"
+        local pkgs="$(echo $pkg_names $pkg_files $pkg_urls)"
         confirm_info 'You are about to install $pkgs package(s).'
         # TODO: for some packages with dependencies apt will ask later again
     fi

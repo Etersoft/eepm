@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-09 21:01+0300\n"
+"POT-Creation-Date: 2026-01-10 03:49+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -81,7 +81,7 @@ msgid ""
 "altlinux.org/Usrmerge."
 msgstr ""
 
-#: ../bin/epm-upgrade:62 ../bin/epm-install-alt:381
+#: ../bin/epm-upgrade:62 ../bin/epm-install-alt:359
 msgid "There is no installed packages for upgrade from task"
 msgstr ""
 
@@ -130,6 +130,11 @@ msgstr ""
 msgid "Can't use sudo epm call from the piped script"
 msgstr ""
 
+#: ../bin/epm-sh-functions:382 ../bin/epm-sh-functions:406
+#: ../bin/epm-sh-functions:416
+msgid "-n"
+msgstr ""
+
 #: ../bin/epm-sh-functions:449
 msgid ""
 "There is missed /usr/sbin path in PATH. Probably you have used 'su' without "
@@ -152,76 +157,90 @@ msgid ""
 "operations."
 msgstr ""
 
-#: ../bin/epm-sh-functions:592
+#: ../bin/epm-sh-functions:578
+#, sh-format
+msgid "Are you sure? [y/N]"
+msgstr ""
+
+#: ../bin/epm-sh-functions:596
 msgid "Exiting"
 msgstr ""
 
-#: ../bin/epm-sh-functions:606
+#: ../bin/epm-sh-functions:610
 msgid "run me only under root"
 msgstr ""
 
-#: ../bin/epm-sh-functions:612
+#: ../bin/epm-sh-functions:616
 msgid "/bin/su is missed. Try install su package (http://altlinux.org/su)."
 msgstr ""
 
-#: ../bin/epm-sh-functions:626
+#: ../bin/epm-sh-functions:630
 msgid ""
 "sudo command is missed. Try install sudo package (http://altlinux.org/sudo)."
 msgstr ""
 
-#: ../bin/epm-sh-functions:791
+#: ../bin/epm-sh-functions:795
 msgid "Installing base-devel for building packages..."
 msgstr ""
 
-#: ../bin/epm-sh-functions:796
+#: ../bin/epm-sh-functions:800
 msgid "Could not create temporary directory"
 msgstr ""
 
-#: ../bin/epm-sh-functions:817
+#: ../bin/epm-sh-functions:821
 msgid "erc is not available to install."
 msgstr ""
 
-#: ../bin/epm-sh-functions:828
+#: ../bin/epm-sh-functions:832
 msgid "Internal error: missed tools_eget"
 msgstr ""
 
-#: ../bin/epm-sh-functions:834
+#: ../bin/epm-sh-functions:838
 msgid "Missed command eget from installed package eget"
 msgstr ""
 
-#: ../bin/epm-sh-functions:970
+#: ../bin/epm-sh-functions:974
 msgid "Internal error: missed tools_erc"
 msgstr ""
 
-#: ../bin/epm-sh-functions:976
+#: ../bin/epm-sh-functions:980
 msgid "Missed command erc from installed package erc"
 msgstr ""
 
-#: ../bin/epm-sh-functions:989
+#: ../bin/epm-sh-functions:993
 msgid "Internal error: missed tools_ercat"
 msgstr ""
 
-#: ../bin/epm-sh-functions:994
+#: ../bin/epm-sh-functions:998
 msgid "Missed command ercat from installed package erc"
 msgstr ""
 
-#: ../bin/epm-sh-functions:1004
+#: ../bin/epm-sh-functions:1008
 msgid "missed tools_estrlist"
 msgstr ""
 
-#: ../bin/epm-sh-functions:1085 ../bin/epm-sh-functions:1093
+#: ../bin/epm-sh-functions:1110 ../bin/epm-sh-functions:1123
 msgid "--"
 msgstr ""
 
-#: ../bin/epm-sh-functions:1203
+#: ../bin/epm-sh-functions:1233
 msgid "Removing tmp files on exit ..."
 msgstr ""
 
-#: ../bin/epm-sh-functions:1373
+#: ../bin/epm-sh-functions:1390
+#, sh-format
+msgid "Select package"
+msgstr ""
+
+#: ../bin/epm-sh-functions:1400 ../bin/epm-play-common:158
+msgid "Perhaps you meant:"
+msgstr ""
+
+#: ../bin/epm-sh-functions:1423
 msgid "Can't find grep command (coreutils package is missed?)"
 msgstr ""
 
-#: ../bin/epm-sh-functions:1374
+#: ../bin/epm-sh-functions:1424
 msgid "Can't find sed command (sed package is missed?)"
 msgstr ""
 
@@ -231,45 +250,48 @@ msgid ""
 "There is .rpmnew file ${packscript}.rpmnew. The pack script can be outdated."
 msgstr ""
 
-#: ../bin/epm-pack:73
+#: ../bin/epm-pack:74
 #, sh-format
 msgid "pack script $packscript didn't set tarname"
 msgstr ""
 
-#: ../bin/epm-pack:77
+#: ../bin/epm-pack:78
 #, sh-format
 msgid "pack script for $packname returned a non-existent file $i"
 msgstr ""
 
-#: ../bin/epm-pack:92
+#: ../bin/epm-pack:93
 #, sh-format
 msgid "Can't find pack script for packname $packname"
 msgstr ""
 
-#: ../bin/epm-pack:160
+#: ../bin/epm-pack:161
 msgid ""
-"\n"
 "epm pack - create rpm package from files\n"
-"Usage: epm pack [options] <packname> <tar|url|dir> [version]\n"
-"Options:\n"
-"    <packname>            - receipt\n"
-"    <dir>                 - create tarball from the dir before\n"
-"    <url>                 - download tar from url\n"
-"    [version]             - force version for unversioned sources\n"
-"    --install             - install after pack result\n"
-"    --repack              - force repack ever if returned package can be "
-"installed without repack\n"
-"    --download-only       - save pack result and exit\n"
-"    --save-only           - save repacked packages and exit (this is default "
-"behaviour)\n"
-"    --list                - list all available receipts\n"
+"Usage: epm pack [options] <packname> <tar|url|dir> [version]"
 msgstr ""
 
-#: ../bin/epm-pack:190
+#: ../bin/epm-pack:164 ../bin/epm-repolist:27 ../bin/epm-create_fake:74
+#: ../bin/epm-info:27 ../bin/epm-packages:25 ../bin/epm-status:331
+#: ../bin/epm:101 ../bin/epm-prescription:26
+msgid "Options:"
+msgstr ""
+
+#: ../bin/epm-pack:166
+msgid ""
+"\n"
+"Arguments:\n"
+"    <packname>            - pack script name\n"
+"    <dir>                 - create tarball from the dir\n"
+"    <url>                 - download tar from url\n"
+"    [version]             - force version for unversioned sources\n"
+msgstr ""
+
+#: ../bin/epm-pack:197
 msgid "Missed pack rule. run with --help to get help."
 msgstr ""
 
-#: ../bin/epm-pack:214
+#: ../bin/epm-pack:221
 #, sh-format
 msgid "Can't download $tarname"
 msgstr ""
@@ -404,6 +426,15 @@ msgstr ""
 msgid "Drop vendor signs"
 msgstr ""
 
+#: ../bin/epm-release_upgrade:317 ../bin/epm-release_upgrade:327
+#: ../bin/epm-release_upgrade:338 ../bin/epm-release_upgrade:348
+#: ../bin/epm-release_upgrade:363 ../bin/epm-release_upgrade:380
+#: ../bin/epm-release_upgrade:393 ../bin/epm-release_upgrade:407
+#: ../bin/epm-release_upgrade:469
+#, sh-format
+msgid "Upgrade $DISTRNAME from $FROM to $TO ..."
+msgstr ""
+
 #: ../bin/epm-release_upgrade:320 ../bin/epm-release_upgrade:330
 #: ../bin/epm-release_upgrade:341 ../bin/epm-release_upgrade:351
 #: ../bin/epm-release_upgrade:372 ../bin/epm-release_upgrade:386
@@ -428,6 +459,12 @@ msgstr ""
 
 #: ../bin/epm-release_upgrade:375
 msgid "Run epm release-upgrade again for update to p10"
+msgstr ""
+
+#: ../bin/epm-release_upgrade:420 ../bin/epm-release_upgrade:434
+#: ../bin/epm-release_upgrade:448 ../bin/epm-release_upgrade:458
+#, sh-format
+msgid "Downgrade $DISTRNAME from $FROM to $TO ..."
 msgstr ""
 
 #: ../bin/epm-release_upgrade:428 ../bin/epm-release_upgrade:442
@@ -666,22 +703,28 @@ msgstr ""
 msgid "Simulate result: There are PROBLEMS with install some package(s)"
 msgstr ""
 
-#: ../bin/epm-repolist:117 ../bin/epm-search:264 ../bin/epm-mark:29
+#: ../bin/epm-repolist:24
+msgid ""
+"epm repo list - list package repositories\n"
+"Usage: epm repo list [options] [pattern]"
+msgstr ""
+
+#: ../bin/epm-repolist:140 ../bin/epm-search:264 ../bin/epm-mark:29
 msgid "Only glob symbols * and ? are supported. Don't use regexp here!"
 msgstr ""
 
-#: ../bin/epm-repolist:143 ../bin/epm-autoorphans:28 ../bin/epm-autoremove:281
+#: ../bin/epm-repolist:177 ../bin/epm-autoorphans:28 ../bin/epm-autoremove:281
 #: ../bin/epm-optimize:35 ../bin/epm-audit:23 ../bin/epm-clean:49
 #: ../bin/epm-history:144
 msgid "No arguments are allowed here"
 msgstr ""
 
-#: ../bin/epm-repolist:162 ../bin/epm-repolist:166 ../bin/epm-repoenable:57
+#: ../bin/epm-repolist:191 ../bin/epm-repolist:195 ../bin/epm-repoenable:57
 #: ../bin/epm-repodisable:57
 msgid "Use --verbose if you need detail information."
 msgstr ""
 
-#: ../bin/epm-repolist:207
+#: ../bin/epm-repolist:236
 #, sh-format
 msgid "Have no suitable command for $PMTYPE in epm_repolist()"
 msgstr ""
@@ -777,22 +820,16 @@ msgstr ""
 
 #: ../bin/epm-list:22
 msgid ""
-"\n"
 "epm list - list packages\n"
-"Usage: epm list [options] [package]\n"
-"\n"
-"Options:\n"
-"  --available           list only available packages\n"
-"  --installed           list only installed packages\n"
-"  --upgradable          list only upgradable packages\n"
+"Usage: epm list [options] [package]|[TASK]\n"
 msgstr ""
 
-#: ../bin/epm-list:75
+#: ../bin/epm-list:78
 #, sh-format
 msgid "Unknown option $option, use epm list --help to get info"
 msgstr ""
 
-#: ../bin/epm-list:80 ../bin/epm-status:403
+#: ../bin/epm-list:83 ../bin/epm-status:401
 msgid "Run with appropriate option"
 msgstr ""
 
@@ -1066,18 +1103,12 @@ msgstr ""
 
 #: ../bin/epm-create_fake:71
 msgid ""
-"\n"
-"\n"
-"epm create-fake - create package with fake provides and requires. Use follow "
-"params:\n"
-"    --install                - auto install fake package\n"
-"    --version=*              - set package version (by default version is "
-"0)\n"
-"    --release=*              - set package release (by default release is "
-"0)\n"
-"    --requires=*             - set package requires\n"
-"    --provides=*             - set package provides (by default package "
-"provide only it self)\n"
+"epm create-fake - create package with fake provides and requires\n"
+"Usage: epm create-fake [options] <package-name>"
+msgstr ""
+
+#: ../bin/epm-create_fake:76
+msgid ""
 "\n"
 "Examples:\n"
 "    # epm create-fake --install python-somepackage\n"
@@ -1085,10 +1116,9 @@ msgid ""
 "python-somepackage\n"
 "    # epm create-fake --install --requires=python3 --requires=python3-module "
 "python-somepackage\n"
-"\n"
 msgstr ""
 
-#: ../bin/epm-create_fake:127
+#: ../bin/epm-create_fake:123
 msgid "Error: You have to specify PACKAGE_NAME"
 msgstr ""
 
@@ -1206,16 +1236,16 @@ msgstr ""
 msgid "Can't load SRC_URI from $EBUILD"
 msgstr ""
 
-#: ../bin/epm-install:183
+#: ../bin/epm-install:189
 msgid "Use 'epm commit' to apply the changes to the system image"
 msgstr ""
 
-#: ../bin/epm-install:276
+#: ../bin/epm-install:282
 msgid ""
 "We still have no idea how to use package repository, ever if it is F-Droid."
 msgstr ""
 
-#: ../bin/epm-install:285
+#: ../bin/epm-install:291
 msgid ""
 "When you ask Nix to install a package, it will first try to get it in pre-"
 "compiled form from a binary cache. By default, Nix will use the binary cache "
@@ -1224,28 +1254,44 @@ msgid ""
 "package from source."
 msgstr ""
 
-#: ../bin/epm-install:292
+#: ../bin/epm-install:298
 #, sh-format
 msgid "Have no suitable install command for $PMTYPE"
 msgstr ""
 
-#: ../bin/epm-install:399 ../bin/epm-install-print-command:85
+#: ../bin/epm-install:421 ../bin/epm-install-print-command:85
 #: ../bin/epm-install-print-command:146
 #, sh-format
 msgid "Have no suitable appropriate install command for $PMTYPE"
 msgstr ""
 
-#: ../bin/epm-install:606
+#: ../bin/epm-install:581
+#, sh-format
+msgid ""
+"You are about to install $pkg_names task(s) from https://git.altlinux.org."
+msgstr ""
+
+#: ../bin/epm-install:594
+#, sh-format
+msgid "You are about to install task $task from $taskurl."
+msgstr ""
+
+#: ../bin/epm-install:615
+#, sh-format
+msgid "You are about to install $pkgs package(s)."
+msgstr ""
+
+#: ../bin/epm-install:630
 msgid "Empty install list was skipped"
 msgstr ""
 
-#: ../bin/epm-install:619
+#: ../bin/epm-install:643
 msgid ""
 "Empty install list was skipped (filtered out, all requested packages is "
 "already installed)"
 msgstr ""
 
-#: ../bin/epm-install:640
+#: ../bin/epm-install:664
 msgid "Empty install files list was skipped"
 msgstr ""
 
@@ -1399,11 +1445,12 @@ msgstr ""
 msgid "No valid repository is specified."
 msgstr ""
 
-#: ../bin/epm-repo:67
-msgid "You are about to set repo "
+#: ../bin/epm-repo:68
+#, sh-format
+msgid "You are about to set repo $repo (all repos will be removed)."
 msgstr ""
 
-#: ../bin/epm-repo:154
+#: ../bin/epm-repo:155
 msgid "Unknown command $ epm repo $CMD"
 msgstr ""
 
@@ -1486,38 +1533,32 @@ msgid ""
 "There is .rpmnew file ${script}.rpmnew. The play script can be outdated."
 msgstr ""
 
-#: ../bin/epm-play-common:92
+#: ../bin/epm-play-common:93
 #, sh-format
 msgid ""
 "We have no idea how to remove $prescription (checked in $psdir and $prsdir)"
 msgstr ""
 
-#: ../bin/epm-play-common:93 ../bin/epm-prescription:70
+#: ../bin/epm-play-common:94 ../bin/epm-prescription:76
 msgid "There was some error during run the script."
+msgstr ""
+
+#: ../bin/epm-play-common:148
+#, sh-format
+msgid "Select app"
 msgstr ""
 
 #: ../bin/epm-info:24
 msgid ""
-"\n"
 "epm info - print package information\n"
-"Usage: epm info [options] <package>\n"
-"\n"
-"Options:\n"
-"  -h, --help        show this help\n"
-"  --requires        print package requires (dependencies)\n"
-"  --provides        print package provides\n"
-"  --conflicts       print package conflicts\n"
-"  --obsoletes       print packages obsoleted by this package\n"
-"  --recommends      print recommended packages\n"
-"  --suggests        print suggested packages\n"
-"  --changelog       print package changelog\n"
-"  --whatdepends     print packages that depend on this\n"
-"  --whatprovides    print packages that provide the target\n"
-"\n"
-"Without options prints general package information.\n"
+"Usage: epm info [options] <package>"
 msgstr ""
 
-#: ../bin/epm-info:187
+#: ../bin/epm-info:30
+msgid "Without options prints general package information."
+msgstr ""
+
+#: ../bin/epm-info:176
 #, sh-format
 msgid "Have no suitable command for $PMTYPE in epm_info()"
 msgstr ""
@@ -1529,48 +1570,48 @@ msgid ""
 "be outdated."
 msgstr ""
 
-#: ../bin/epm-repack-rpm:46
+#: ../bin/epm-repack-rpm:47
 #, sh-format
 msgid "There is an error from $repackcode script"
 msgstr ""
 
-#: ../bin/epm-repack-rpm:70 ../bin/epm-repack-rpm:84
+#: ../bin/epm-repack-rpm:71 ../bin/epm-repack-rpm:85
 msgid "will use eepm-rpmbuild for rpm packing"
 msgstr ""
 
-#: ../bin/epm-repack-rpm:127
+#: ../bin/epm-repack-rpm:128
 #, sh-format
 msgid "Checking for forbidden requires of $pkg package ..."
 msgstr ""
 
-#: ../bin/epm-repack-rpm:135
+#: ../bin/epm-repack-rpm:136
 #, sh-format
 msgid "There are forbidden requires in $pkg package:"
 msgstr ""
 
-#: ../bin/epm-repack-rpm:137
+#: ../bin/epm-repack-rpm:138
 msgid ""
 "Unnecessary dependencies appear due to incorrect packaging. Check the repack "
 "rule."
 msgstr ""
 
-#: ../bin/epm-repack-rpm:182
+#: ../bin/epm-repack-rpm:183
 #, sh-format
 msgid "Repacking $abspkg to local rpm format (inside $tmpbuilddir) ..."
 msgstr ""
 
-#: ../bin/epm-repack-rpm:213
+#: ../bin/epm-repack-rpm:214
 msgid "can't find subdir in"
 msgstr ""
 
-#: ../bin/epm-repack-rpm:255
+#: ../bin/epm-repack-rpm:256
 #, sh-format
 msgid ""
 "Some bug: the name of the repacking package ($pkgname) differs with the "
 "package name ($EEPM_INTERNAL_PKGNAME) from play.d script."
 msgstr ""
 
-#: ../bin/epm-repack-rpm:259 ../pack.d/aksusbd.sh:25 ../pack.d/aksusbd.sh:47
+#: ../bin/epm-repack-rpm:260 ../pack.d/aksusbd.sh:25 ../pack.d/aksusbd.sh:47
 #: ../pack.d/cnrdrvcups-ufr2-uk.sh:14 ../pack.d/cnijfilter2.sh:14
 #: ../pack.d/hplip-plugin.sh:23 ../pack.d/pantum.sh:30
 #: ../play.d/claude-code.sh:11 ../play.d/virtualhere.sh:13
@@ -1605,7 +1646,7 @@ msgstr ""
 msgid "-a"
 msgstr ""
 
-#: ../bin/epm-repack-rpm:275
+#: ../bin/epm-repack-rpm:276
 #, sh-format
 msgid ""
 "Can't find converted rpm for source binary package $pkg (got $repacked_rpm)"
@@ -1613,10 +1654,6 @@ msgstr ""
 
 #: ../bin/epm-packages:24
 msgid "Print installed packages"
-msgstr ""
-
-#: ../bin/epm-packages:25 ../bin/epm:101
-msgid "Options:"
 msgstr ""
 
 #: ../bin/epm-packages:27
@@ -1681,27 +1718,27 @@ msgstr ""
 msgid "There was some error during install the application."
 msgstr ""
 
-#: ../bin/epm-play:506
+#: ../bin/epm-play:512
 msgid "Can't update IPFS DB"
 msgstr ""
 
-#: ../bin/epm-play:519
+#: ../bin/epm-play:525
 msgid "epm play is not supported in single file mode"
 msgstr ""
 
-#: ../bin/epm-play:548
+#: ../bin/epm-play:554
 msgid "run --remove with 'all' or a project name"
 msgstr ""
 
-#: ../bin/epm-play:554 ../bin/epm-play:577
+#: ../bin/epm-play:560 ../bin/epm-play:583
 msgid "Retrieving list of installed apps ..."
 msgstr ""
 
-#: ../bin/epm-play:571
+#: ../bin/epm-play:577
 msgid "run --update with 'all' or a project name"
 msgstr ""
 
-#: ../bin/epm-play:630
+#: ../bin/epm-play:636
 msgid "Search pattern is required"
 msgstr ""
 
@@ -1709,61 +1746,61 @@ msgstr ""
 msgid "empty repo name"
 msgstr ""
 
-#: ../bin/epm-removerepo:79
+#: ../bin/epm-removerepo:81
 msgid ""
 "No such repo or task. Use epm repo remove <regexp|autoimports|archive|tasks|"
 "TASKNUMBER>"
 msgstr ""
 
-#: ../bin/epm-removerepo:93
+#: ../bin/epm-removerepo:95
 msgid "removing autoimports repo"
 msgstr ""
 
-#: ../bin/epm-removerepo:94 ../bin/epm-addrepo:289
+#: ../bin/epm-removerepo:96 ../bin/epm-addrepo:289
 msgid "Empty DISTRVERSION"
 msgstr ""
 
-#: ../bin/epm-removerepo:99
+#: ../bin/epm-removerepo:101
 msgid "removing archive repos"
 msgstr ""
 
-#: ../bin/epm-removerepo:103
+#: ../bin/epm-removerepo:105
 msgid "removing korinf repo"
 msgstr ""
 
-#: ../bin/epm-removerepo:107
+#: ../bin/epm-removerepo:109
 msgid "removing cdroms entries"
 msgstr ""
 
-#: ../bin/epm-removerepo:111
+#: ../bin/epm-removerepo:113
 msgid "removing tasks' repos"
 msgstr ""
 
-#: ../bin/epm-removerepo:119
+#: ../bin/epm-removerepo:121
 msgid "removing all repos"
 msgstr ""
 
-#: ../bin/epm-removerepo:123
+#: ../bin/epm-removerepo:125
 msgid "epm removerepo: no options are supported"
 msgstr ""
 
-#: ../bin/epm-removerepo:159 ../bin/epm-addrepo:530
+#: ../bin/epm-removerepo:161 ../bin/epm-addrepo:530
 msgid "Check file /etc/apt/sources.list if needed"
 msgstr ""
 
-#: ../bin/epm-removerepo:162
+#: ../bin/epm-removerepo:164
 msgid "You need remove repo from /etc/apt/sources.list"
 msgstr ""
 
-#: ../bin/epm-removerepo:190
+#: ../bin/epm-removerepo:192
 msgid "You need remove repo from /etc/pacman.conf"
 msgstr ""
 
-#: ../bin/epm-removerepo:208
+#: ../bin/epm-removerepo:210
 msgid "You need remove repo from /etc/slackpkg/mirrors"
 msgstr ""
 
-#: ../bin/epm-removerepo:211
+#: ../bin/epm-removerepo:213
 #, sh-format
 msgid "Have no suitable command for $PMTYPE in epm_removerepo()"
 msgstr ""
@@ -1932,35 +1969,37 @@ msgid ""
 "    epm print constructname <name> <version> [arch] [pkgtype] [delimiter1] "
 "[delimiter2]  print distro dependend package filename from args name version "
 "arch pkgtype\n"
+"    epm print epm-config                                 print current epm "
+"configuration\n"
 msgstr ""
 
-#: ../bin/epm-print:399
+#: ../bin/epm-print:400
 msgid "Use epm print --help to get help."
 msgstr ""
 
-#: ../bin/epm-print:405 ../bin/epm-print:415 ../bin/epm-print:425
-#: ../bin/epm-print:435 ../bin/epm-print:449 ../bin/epm-print:459
-#: ../bin/epm-print:468 ../bin/epm-print:474 ../bin/epm-print:479
-#: ../bin/epm-print:484 ../bin/epm-print:499 ../bin/epm-print:509
-#: ../bin/epm-print:510
+#: ../bin/epm-print:406 ../bin/epm-print:416 ../bin/epm-print:426
+#: ../bin/epm-print:436 ../bin/epm-print:450 ../bin/epm-print:460
+#: ../bin/epm-print:469 ../bin/epm-print:475 ../bin/epm-print:480
+#: ../bin/epm-print:485 ../bin/epm-print:500 ../bin/epm-print:510
+#: ../bin/epm-print:511
 msgid "Arg is missed"
 msgstr ""
 
-#: ../bin/epm-print:467 ../bin/epm-print:473 ../bin/epm-print:478
-#: ../bin/epm-print:483
+#: ../bin/epm-print:468 ../bin/epm-print:474 ../bin/epm-print:479
+#: ../bin/epm-print:484
 #, sh-format
 msgid "print $WHAT works only for filename(s)"
 msgstr ""
 
-#: ../bin/epm-print:493
+#: ../bin/epm-print:494
 msgid "DIR arg is missed"
 msgstr ""
 
-#: ../bin/epm-print:494
+#: ../bin/epm-print:495
 msgid "source package filename is missed"
 msgstr ""
 
-#: ../bin/epm-print:524
+#: ../bin/epm-print:535
 msgid "Unknown command $ epm print $WHAT. Use epm print help for get help."
 msgstr ""
 
@@ -2305,15 +2344,15 @@ msgstr ""
 msgid "mark is the interface for marking packages"
 msgstr ""
 
-#: ../bin/epm-mark:326
+#: ../bin/epm-mark:327
 msgid ""
 "\n"
 "Examples:\n"
 "  epm mark hold mc\n"
-"  epm manual mc\n"
+"  epm mark manual mc\n"
 msgstr ""
 
-#: ../bin/epm-mark:366
+#: ../bin/epm-mark:367
 msgid "Unknown command $ epm mark $CMD in epm_mark()"
 msgstr ""
 
@@ -2359,32 +2398,16 @@ msgstr ""
 
 #: ../bin/epm-status:328
 msgid ""
-"\n"
-"\n"
 "epm status - check status of the package and return result via exit code\n"
-"Usage: epm status [options] <package> [version]\n"
-"\n"
-"Options:\n"
-"  --installed [version] check if <package> is installed (if version is "
-"specified, not older than the version)\n"
-"  --installable         check if <package> can be installed from the repo\n"
-"  --original            check if <package> is from distro repo\n"
-"  --certified           check if <package> is certified that it can be "
-"installed without repacking\n"
-"  --thirdparty          check if <package> from a third-party source (didn't "
-"packed for this distro)\n"
-"  --repacked            check if <package> was repacked with epm repack\n"
-"  --validate            check if <package> is accessible (we can get a "
-"fields from it)\n"
-"  --supported           check if distribution is supported by epm status\n"
+"Usage: epm status [options] <package> [version]"
 msgstr ""
 
-#: ../bin/epm-status:395
+#: ../bin/epm-status:393
 #, sh-format
 msgid "Unknown option $option, use epm status --help to get info"
 msgstr ""
 
-#: ../bin/epm-status:398
+#: ../bin/epm-status:396
 #, sh-format
 msgid "No option before $option, use epm status --help to get info"
 msgstr ""
@@ -2521,38 +2544,38 @@ msgstr ""
 msgid "epm - EPM package manager"
 msgstr ""
 
-#: ../bin/epm:625
+#: ../bin/epm:628
 msgid ""
 "--no-check-certificate is a wget option. It is recommended never use it at "
 "all. Check the date or upgrade your system."
 msgstr ""
 
-#: ../bin/epm:650 ../bin/epm:660
+#: ../bin/epm:653 ../bin/epm:663
 #, sh-format
 msgid "There are space(s) in filename $opt, it is not supported. Skipped"
 msgstr ""
 
-#: ../bin/epm:653
+#: ../bin/epm:656
 #, sh-format
 msgid "There are space(s) in directory path $opt, it is not supported. Skipped"
 msgstr ""
 
-#: ../bin/epm:656
+#: ../bin/epm:659
 #, sh-format
 msgid "There are space(s) in URL $opt, it is not supported. Skipped"
 msgstr ""
 
-#: ../bin/epm:663
+#: ../bin/epm:666
 #, sh-format
 msgid "There are space(s) in package name $opt, it is not supported. Skipped."
 msgstr ""
 
-#: ../bin/epm:664
+#: ../bin/epm:667
 #, sh-format
 msgid "There are forbidden symbols in package name $opt. Skipped."
 msgstr ""
 
-#: ../bin/epm:726
+#: ../bin/epm:731
 msgid ""
 "\n"
 "\n"
@@ -2572,17 +2595,17 @@ msgid ""
 " epm cl <package name>      - print changelog for the package\n"
 msgstr ""
 
-#: ../bin/epm:745
+#: ../bin/epm:750
 #, sh-format
 msgid "Unrecognized command in $args arg(s)"
 msgstr ""
 
-#: ../bin/epm:747
+#: ../bin/epm:752
 #, sh-format
 msgid "That program needs be running with some command"
 msgstr ""
 
-#: ../bin/epm:767
+#: ../bin/epm:772
 msgid "It is better to install aria2 for parallel downloading."
 msgstr ""
 
@@ -2720,22 +2743,22 @@ msgid "is_installed: package name is missed"
 msgstr ""
 
 #: ../bin/epm-prescription:24
-msgid ""
-"\n"
-"Options:\n"
-"    <receipt>      - run <receipt>\n"
-"    --list-all     - list all available receipts\n"
+msgid "Usage: epm prescription [options] [receipt]"
 msgstr ""
 
-#: ../bin/epm-prescription:37
+#: ../bin/epm-prescription:29
+msgid "Commands:"
+msgstr ""
+
+#: ../bin/epm-prescription:39
 msgid "Run with a name of a prescription to run:"
 msgstr ""
 
-#: ../bin/epm-prescription:51
+#: ../bin/epm-prescription:55
 msgid "run --remove with receipt name"
 msgstr ""
 
-#: ../bin/epm-prescription:69
+#: ../bin/epm-prescription:75
 #, sh-format
 msgid "We have no idea how to play $prescription (checked in $psdir)"
 msgstr ""
@@ -3376,6 +3399,10 @@ msgid "audits installed packages against known vulnerabilities"
 msgstr ""
 
 #: help-string
+msgid "auto install fake package"
+msgstr ""
+
+#: help-string
 msgid ""
 "auto remove unneeded package(s) Supports args for ALT: [--direct [libs|"
 "python|perl|libs-devel]]"
@@ -3383,6 +3410,38 @@ msgstr ""
 
 #: help-string
 msgid "be silent"
+msgstr ""
+
+#: help-string
+msgid "check if distribution is supported by epm status"
+msgstr ""
+
+#: help-string
+msgid "check if package can be installed from the repo"
+msgstr ""
+
+#: help-string
+msgid "check if package is accessible (we can get fields from it)"
+msgstr ""
+
+#: help-string
+msgid "check if package is certified for install without repacking"
+msgstr ""
+
+#: help-string
+msgid "check if package is from a third-party source"
+msgstr ""
+
+#: help-string
+msgid "check if package is from distro repo"
+msgstr ""
+
+#: help-string
+msgid "check if package is installed (not older than version if specified)"
+msgstr ""
+
+#: help-string
+msgid "check if package was repacked with epm repack"
 msgstr ""
 
 #: help-string
@@ -3550,6 +3609,10 @@ msgid "force overwrite one package's file with another's file"
 msgstr ""
 
 #: help-string
+msgid "force repack even if package can be installed without it"
+msgstr ""
+
+#: help-string
 msgid ""
 "force update package base, then run downgrade [all] packages to the repo "
 "state"
@@ -3598,6 +3661,10 @@ msgid "index repo (update indexes): [--init] [path] [name]"
 msgstr ""
 
 #: help-string
+msgid "install after pack result"
+msgstr ""
+
+#: help-string
 msgid "install package(s) from Korinf (eepm by default)"
 msgstr ""
 
@@ -3636,7 +3703,11 @@ msgid "List all available desktop environments"
 msgstr ""
 
 #: help-string
-msgid "list all available receipts"
+msgid "list all available pack scripts"
+msgstr ""
+
+#: help-string
+msgid "list all available prescriptions"
 msgstr ""
 
 #: help-string
@@ -3661,7 +3732,27 @@ msgid "List installed desktop environments"
 msgstr ""
 
 #: help-string
+msgid "list only available packages"
+msgstr ""
+
+#: help-string
+msgid "list only installed packages"
+msgstr ""
+
+#: help-string
 msgid "list only packages"
+msgstr ""
+
+#: help-string
+msgid "list only upgradable packages"
+msgstr ""
+
+#: help-string
+msgid "list packages from ALT task (e.g., 404628 or task/404628)"
+msgstr ""
+
+#: help-string
+msgid "list packages that have GUI (.desktop files)"
 msgstr ""
 
 #: help-string
@@ -3734,10 +3825,6 @@ msgstr ""
 
 #: help-string
 msgid "(or empty) print all history entries"
-msgstr ""
-
-#: help-string
-msgid "other aliases for epm command"
 msgstr ""
 
 #: help-string
@@ -3840,6 +3927,10 @@ msgid "print out usage of the service"
 msgstr ""
 
 #: help-string
+msgid "print package changelog"
+msgstr ""
+
+#: help-string
 msgid "print package conflicts"
 msgstr ""
 
@@ -3860,11 +3951,31 @@ msgid "print package requires"
 msgstr ""
 
 #: help-string
+msgid "print package requires (dependencies)"
+msgstr ""
+
+#: help-string
 msgid "print packages dependences on that"
 msgstr ""
 
 #: help-string
+msgid "print packages obsoleted by this package"
+msgstr ""
+
+#: help-string
 msgid "print packages provides that target"
+msgstr ""
+
+#: help-string
+msgid "print packages that depend on this"
+msgstr ""
+
+#: help-string
+msgid "print packages that provide the target"
+msgstr ""
+
+#: help-string
+msgid "print recommended packages"
 msgstr ""
 
 #: help-string
@@ -3877,6 +3988,10 @@ msgstr ""
 
 #: help-string
 msgid "print some info"
+msgstr ""
+
+#: help-string
+msgid "print suggested packages"
 msgstr ""
 
 #: help-string
@@ -3935,6 +4050,10 @@ msgstr ""
 
 #: help-string
 msgid "remove (delete) package(s) from the database and the system"
+msgstr ""
+
+#: help-string
+msgid "remove installed prescription"
 msgstr ""
 
 #: help-string
@@ -4013,6 +4132,18 @@ msgid ""
 msgstr ""
 
 #: help-string
+msgid "run the prescription"
+msgstr ""
+
+#: help-string
+msgid "save pack result and exit"
+msgstr ""
+
+#: help-string
+msgid "save repacked packages and exit (default)"
+msgstr ""
+
+#: help-string
 msgid "save sources lists to a temp place"
 msgstr ""
 
@@ -4038,11 +4169,31 @@ msgid "search in which package a file is included"
 msgstr ""
 
 #: help-string
+msgid "set package provides"
+msgstr ""
+
+#: help-string
+msgid "set package release (default: 0)"
+msgstr ""
+
+#: help-string
+msgid "set package requires"
+msgstr ""
+
+#: help-string
+msgid "set package version (default: 0)"
+msgstr ""
+
+#: help-string
 msgid "short mode"
 msgstr ""
 
 #: help-string
 msgid "short output (just 'package' instead 'package-version-release')"
+msgstr ""
+
+#: help-string
+msgid "show all repos (including disabled/commented)"
 msgstr ""
 
 #: help-string
@@ -4069,6 +4220,10 @@ msgstr ""
 
 #: help-string
 msgid "show statistics about repositories and installations"
+msgstr ""
+
+#: help-string
+msgid "show this help"
 msgstr ""
 
 #: help-string
@@ -4173,6 +4328,10 @@ msgstr ""
 
 #: help-string
 msgid "use IPFS for epm play"
+msgstr ""
+
+#: help-string
+msgid "use pattern as raw regex (no glob conversion)"
 msgstr ""
 
 #: help-string
