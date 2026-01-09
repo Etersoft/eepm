@@ -2,28 +2,39 @@ MSGFMT = msgfmt -v
 MSGMERGE = msgmerge
 MSGMERGE_UPDATE = msgmerge --update
 MSGINIT = msginit
-MSGCONV = msgconv
-MSGFILTER = msgfilter
-
-SCRIPTLIST = $(shell for i in bin pack.d play.d repack.d ; do find ../$$i -type f ; done)
 
 PROJECT = eepm
-LANGUAGE = ru
+LANGUAGES = ru
 
-all: $(PROJECT).mo
-	
+SCRIPTLIST = $(shell find ../bin ../pack.d ../play.d ../repack.d -type f 2>/dev/null)
 
-$(PROJECT).mo: $(PROJECT).po
+all: $(LANGUAGES:%=%.mo)
+
+%.mo: %.po
 	$(MSGFMT) -c -o t-$@ $< && mv t-$@ $@
 
-$(PROJECT).pot: $(SCRIPTLIST) Makefile
-	echo $(SCRIPTLIST) | xargs xgettext --keyword=info --keyword=fatal --keyword=warning --keyword=debug --keyword=message --keyword=confirm_action --keyword=confirm_info -o $@ --language Shell --from-code=utf-8 $^
+$(PROJECT).pot: $(SCRIPTLIST) Makefile extract-help.sh
+	xgettext --keyword=info --keyword=fatal --keyword=warning \
+	         --keyword=debug --keyword=message --keyword=confirm_action \
+	         --keyword=confirm_info --keyword=eval_gettext \
+	         -o $@.tmp --language=Shell --from-code=utf-8 $(SCRIPTLIST)
+	./extract-help.sh > help.pot.tmp
+	msgcat $@.tmp help.pot.tmp -o $@
+	rm -f $@.tmp help.pot.tmp
 
-$(PROJECT).po: $(PROJECT).pot
-	$(MSGMERGE_UPDATE) $@ $<
+update-po: $(PROJECT).pot
+	@for lang in $(LANGUAGES); do \
+	    if [ -f $$lang.po ]; then \
+	        $(MSGMERGE_UPDATE) $$lang.po $<; \
+	    else \
+	        $(MSGINIT) -i $< -o $$lang.po -l $$lang --no-translator; \
+	    fi; \
+	done
 
-install: $(PROJECT).mo
-	install -D $< $(DESTDIR)$(datadir)/locale/$(LANGUAGE)/LC_MESSAGES/$<
+install: $(LANGUAGES:%=%.mo)
+	@for lang in $(LANGUAGES); do \
+	    install -D $$lang.mo $(DESTDIR)$(datadir)/locale/$$lang/LC_MESSAGES/$(PROJECT).mo; \
+	done
 
 clean:
-	rm -f $(PROJECT).mo
+	rm -f *.mo

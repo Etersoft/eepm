@@ -1170,13 +1170,17 @@ get_help()
     cat "$F" | grep -- "# $1" | while read -r n ; do
         if echo "$n" | grep -q "# $1: PART: " ; then
             echo
-            echo "$n" | sed -e "s|# $1: PART: ||"
+            local part
+            part=$(echo "$n" | sed -e "s|.*# $1: PART: ||")
+            gettext -- "$part"
+            echo
             continue
         fi
         echo "$n" | grep -q "^ *#" && continue
-        opt=`echo $n | sed -e "s|) # $1:.*||g" -e 's|"||g' -e 's@^|@@'`
-        desc=`echo $n | sed -e "s|.*) # $1:||g"`
-        printf "    %-20s %s\n" "$opt" "$desc"
+        local opt desc
+        opt=$(echo "$n" | sed -e 's|).*# '"$1"':.*||' -e 's|"||g' -e 's|^[[:space:]]*||')
+        desc=$(echo "$n" | sed -e 's|.*# '"$1"': *||')
+        printf "    %-20s %s\n" "$opt" "$(gettext -- "$desc")"
     done
 }
 
