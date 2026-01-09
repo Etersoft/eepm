@@ -1180,7 +1180,10 @@ get_help()
         local opt desc
         opt=$(echo "$n" | sed -e 's|).*# '"$1"':.*||' -e 's|"||g' -e 's|^[[:space:]]*||')
         desc=$(echo "$n" | sed -e 's|.*# '"$1"': *||')
-        printf "    %-20s %s\n" "$opt" "$(gettext -- "$desc")"
+        set_boldcolor $GREEN
+        printf "    %-20s" "$opt"
+        restore_color
+        printf " %s\n" "$(gettext -- "$desc")"
     done
 }
 
