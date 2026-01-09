@@ -219,5 +219,5 @@ __epm_play_search()
 
     __get_fast_int_list_app $arch | grep -i "$pattern" | while IFS=$'\x1E' read -r app desc; do
         printf "  %-25s - %s\n" "$app" "$desc"
-    done
+    done | grep -i --color "$pattern"
 }
