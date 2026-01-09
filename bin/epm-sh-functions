@@ -1155,6 +1155,23 @@ get_package_type()
 }
 
 
+# print colored option/command string (color each part, but not |)
+# args: color, string
+print_colored_opt()
+{
+    local color="$1"
+    local opt="$2"
+    local part
+    local first=1
+    echo "$opt" | tr '|' '\n' | while read -r part ; do
+        [ -z "$first" ] && printf "|"
+        first=
+        set_boldcolor $color
+        printf "%s" "$part"
+        restore_color
+    done
+}
+
 # print options description from HELPCMD/HELPOPT lines in the code
 # args: section_name, [file with code]
 get_help()
@@ -1166,6 +1183,9 @@ get_help()
     if [ -n "$2" ] ; then
         is_dirpath "$2" && F="$2" || F="$(dirname $0)/$2"
     fi
+
+    local helpcolor=$GREEN
+    echo "$1" | grep -q "CMD" && helpcolor=$YELLOW
 
     cat "$F" | grep -- "# $1" | while read -r n ; do
         if echo "$n" | grep -q "# $1: PART: " ; then
@@ -1180,10 +1200,12 @@ get_help()
         local opt desc
         opt=$(echo "$n" | sed -e 's|).*# '"$1"':.*||' -e 's|"||g' -e 's|^[[:space:]]*||')
         desc=$(echo "$n" | sed -e 's|.*# '"$1"': *||')
-        set_boldcolor $GREEN
-        printf "    %-20s" "$opt"
-        restore_color
-        printf " %s\n" "$(gettext -- "$desc")"
+        printf "    "
+        print_colored_opt $helpcolor "$opt"
+        # pad to 20 chars
+        local pad=$((20 - ${#opt}))
+        [ "$pad" -lt 1 ] && pad=1
+        printf "%*s%s\n" "$pad" "" "$(gettext -- "$desc")"
     done
 }
 
