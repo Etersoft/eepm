@@ -10,6 +10,13 @@ SCRIPTLIST = $(shell find ../bin ../pack.d ../play.d ../repack.d -type f 2>/dev/
 
 all: $(LANGUAGES:%=%.mo)
 
+# for local testing: creates locale directory structure
+local: $(LANGUAGES:%=%.mo)
+	@for lang in $(LANGUAGES); do \
+	    mkdir -p $$lang/LC_MESSAGES; \
+	    cp $$lang.mo $$lang/LC_MESSAGES/$(PROJECT).mo; \
+	done
+
 %.mo: %.po
 	$(MSGFMT) -c -o t-$@ $< && mv t-$@ $@
 
@@ -38,3 +45,4 @@ install: $(LANGUAGES:%=%.mo)
 
 clean:
 	rm -f *.mo
+	rm -rf $(LANGUAGES:%=%/LC_MESSAGES)
