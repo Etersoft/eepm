@@ -1186,6 +1186,7 @@ get_help()
 
     local helpcolor=$GREEN
     echo "$1" | grep -q "CMD" && helpcolor=$YELLOW
+    echo "$1" | grep -q "SHORT" && helpcolor=$CYAN
 
     cat "$F" | grep -- "# $1" | while read -r n ; do
         if echo "$n" | grep -q "# $1: PART: " ; then
