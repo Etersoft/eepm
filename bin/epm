@@ -210,6 +210,7 @@ case $PROGNAME in
         ;;
     epme)                      # HELPSHORT: alias for epm remove
         epm_cmd=remove
+        allow_wildcard=1
         ;;
     epmcl)                     # HELPSHORT: alias for epm changelog
         epm_cmd=changelog
@@ -288,6 +289,7 @@ check_command()
         ;;
     -e|-P|rm|del|remove|delete|uninstall|erase|purge|e)  # HELPCMD: remove (delete) package(s) from the database and the system
         epm_cmd=remove
+        allow_wildcard=1
         ;;
     -s|search|s|find|sr)                # HELPCMD: search in remote package repositories
         epm_cmd=search
