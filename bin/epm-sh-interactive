@@ -1,0 +1,80 @@
+#!/bin/sh
+#
+# Copyright (C) 2025  Etersoft
+# Copyright (C) 2025  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+# Interactive selection from list of packages using fzf or numbered menu
+# Args: list of packages (one per line on stdin)
+# Returns: selected package(s) on stdout
+__epm_interactive_select_packages()
+{
+    local packages
+    packages="$(cat)"
+    local count
+    count="$(echo "$packages" | wc -l)"
+
+    [ -z "$packages" ] && return 1
+    [ "$count" -eq 1 ] && echo "$packages" && return 0
+
+    info "Found $count packages matching pattern. Select packages to install:"
+
+    if is_command fzf && [ -c /dev/tty ] ; then
+        # Use fzf for interactive selection
+        # fzf reads list from stdin (pipe) and uses /dev/tty for interactive input automatically
+        local selected
+        selected=$(echo "$packages" | \
+            fzf --multi \
+                --prompt="$(eval_gettext "Select package(s) (Tab=select, Enter=confirm)"): " \
+                --header="$(eval_gettext "Ctrl-A=all, Esc=cancel")" \
+                --bind='ctrl-a:select-all' \
+                --height=15 \
+                --reverse)
+        if [ -n "$selected" ] ; then
+            echo "$selected"
+            return 0
+        fi
+        return 1
+    fi
+
+    # Fallback: numbered menu
+    echo "$packages" | nl -w3 -s') ' >&2
+    echo "" >&2
+    printf "%s" "$(eval_gettext "Enter number(s) separated by space, 'a' for all, 'q' to quit"): " >&2
+    local choice
+    read_tty choice || return 1
+
+    case "$choice" in
+        q|Q|"")
+            return 1
+            ;;
+        a|A)
+            echo "$packages"
+            return 0
+            ;;
+        *)
+            local selected=""
+            for num in $choice ; do
+                local pkg
+                pkg=$(echo "$packages" | sed -n "${num}p")
+                [ -n "$pkg" ] && selected="$selected$pkg
+"
+            done
+            [ -n "$selected" ] && echo "$selected" | head -n -1
+            return 0
+            ;;
+    esac
+}
