@@ -93,6 +93,19 @@ __epm_suggest_similar_packages_by_list()
     echo $selected_all
 }
 
+# Output all packages from cache for epm search
+# Returns: packages in format "name - description", or error if no cache
+__epm_search_from_cache()
+{
+    local cache="$epm_vardir/available-packages"
+
+    # no cache - return error for fallback
+    [ -s "$cache" ] || return 1
+
+    # output cache, convert tab to " - " for standard format
+    sed 's/\t/ - /' "$cache"
+}
+
 __aptcyg_print_full()
 {
     #showcmd apt-cyg show

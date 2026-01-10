@@ -20,11 +20,27 @@
 load_helper epm-check_updated_repo
 load_helper epm-sh-warmup
 load_helper epm-sh-backend
+load_helper epm-list_available
 
 __epm_search_output()
 {
 local CMD
 local string="$*"
+
+# Try cache first for supported package managers
+case $PMTYPE in
+    apt-rpm|apt-dpkg|dnf-rpm|dnf5-rpm|yum-rpm|zypper-rpm|pacman)
+        if __epm_search_from_cache ; then
+            # Also search in epm play
+            if [ -z "$no_epm_play_search" ] ; then
+                epm play $short --quiet --list-all | sed -e 's|^ *||g' -e 's|[[:space:]]\+| |g' -e "s|\$| (use \'epm play\' to install it)|"
+            fi
+            return
+        fi
+        ;;
+esac
+
+# Fallback to native search commands
 case $PMTYPE in
     apt-rpm|apt-dpkg)
         CMD="apt-cache search --"
