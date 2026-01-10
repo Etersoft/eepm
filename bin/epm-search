@@ -207,6 +207,16 @@ __epm_expand_wildcards()
                 continue
             fi
 
+            # Filter out installed packages before showing interactive menu
+            if [ -n "$skip_installed" ] ; then
+                load_helper epm-sh-install
+                matched="$(echo "$matched" | filter_out_installed_packages)"
+                if [ -z "$matched" ] ; then
+                    info "All packages matching '$pkg' are already installed"
+                    continue
+                fi
+            fi
+
             local match_count
             match_count="$(echo "$matched" | wc -l)"
 

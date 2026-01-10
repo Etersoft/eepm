@@ -28,9 +28,12 @@ __epm_interactive_select_packages()
     count="$(echo "$packages" | wc -l)"
 
     [ -z "$packages" ] && return 1
-    [ "$count" -eq 1 ] && echo "$packages" && return 0
 
-    info "Found $count packages matching pattern. Select packages to install:"
+    # --suggest-interactive: auto-select single package
+    # --interactive: always show menu
+    [ "$count" -eq 1 ] && [ -z "$interactive" ] && echo "$packages" && return 0
+
+    info "Found $count package(s) matching pattern. Select packages to install:"
 
     if is_command fzf && [ -c /dev/tty ] ; then
         # Use fzf for interactive selection
