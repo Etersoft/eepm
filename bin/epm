@@ -668,6 +668,9 @@ check_option()
         non_interactive=""
         inscript=1  # don't read packages from stdin in interactive mode
         ;;
+    --suggest-interactive)  # HELPOPT: interactive mode for package suggestions (fzf selection)
+        suggest_interactive="--suggest-interactive"
+        ;;
     --force-yes)           # HELPOPT: force yes in a danger cases (f.i., during release upgrade)
         force_yes="--force-yes"
         ;;
