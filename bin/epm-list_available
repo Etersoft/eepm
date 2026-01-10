@@ -115,14 +115,20 @@ epm_list_available()
         return
     fi
 
-    # use cache we got during epm update
-    # TODO: update from this place if obsoleted
-    if [ -n "$short" ] && [ -z "$update" ] ; then
-        if [ -s $epm_vardir/available-packages ] ; then
-            cut -f1 $epm_vardir/available-packages
-            return
-        elif [ -n "$direct" ] ; then
-            # don't go in long retrieving if --direct is used
+    # use cache (create if missing)
+    if [ -z "$update" ] ; then
+        # create cache if missing
+        if [ ! -s "$epm_vardir/available-packages" ] ; then
+            [ -n "$direct" ] && return
+            __save_available_packages
+        fi
+        # use cache
+        if [ -s "$epm_vardir/available-packages" ] ; then
+            if [ -n "$short" ] ; then
+                cut -f1 "$epm_vardir/available-packages"
+            else
+                sed 's/\t/ - /' "$epm_vardir/available-packages"
+            fi
             return
         fi
     fi
