@@ -224,7 +224,7 @@ __epm_expand_wildcards()
                 # Interactive mode: let user select from matches (via config or --interactive flag)
                 load_helper epm-sh-interactive
                 local selected
-                selected="$(echo "$matched" | __epm_interactive_select_packages)"
+                selected="$(echo "$matched" | __epm_interactive_select_packages install)"
                 if [ -n "$selected" ] ; then
                     result="$result $(echo "$selected" | tr '\n' ' ')"
                 fi
@@ -280,7 +280,7 @@ __epm_expand_wildcards_installed()
                 # Interactive mode: let user select from matches (via config or --interactive flag)
                 load_helper epm-sh-interactive
                 local selected
-                selected="$(echo "$matched" | __epm_interactive_select_packages)"
+                selected="$(echo "$matched" | __epm_interactive_select_packages remove)"
                 if [ -n "$selected" ] ; then
                     result="$result $(echo "$selected" | tr '\n' ' ')"
                 fi
