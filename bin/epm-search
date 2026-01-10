@@ -279,8 +279,8 @@ __epm_expand_wildcards()
             local match_count
             match_count="$(echo "$matched" | wc -l)"
 
-            if [ -n "$interactive" ] && [ -c /dev/tty ] ; then
-                # Interactive mode: let user select from matches
+            if [ -n "$suggest_interactive$interactive" ] && [ -c /dev/tty ] ; then
+                # Interactive mode: let user select from matches (via config or --interactive flag)
                 load_helper epm-sh-interactive
                 local selected
                 selected="$(echo "$matched" | __epm_interactive_select_packages)"
