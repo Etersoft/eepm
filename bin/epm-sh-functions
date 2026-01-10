@@ -1477,57 +1477,7 @@ subst()
 }
 fi
 
-# Suggest similar packages using fzf fuzzy search
-# Args: package_name
-# Returns: selected package name (if interactive) or empty
-__epm_suggest_similar_packages()
-{
-    local pkg="$1"
-    local cache="$epm_vardir/available-packages"
-    local count="${suggest_count:-7}"
 
-    # need cache file
-    [ -s "$cache" ] || return 1
-
-    # need fzf for fuzzy search
-    is_command fzf || return 1
-
-    local similar
-    similar="$(fzf -f "$pkg" < "$cache" 2>/dev/null | grep -v "^${pkg}$" | head -$count)"
-    [ -z "$similar" ] && return 1
-
-    # Interactive selection if enabled (via config or --interactive flag)
-    if [ -n "$suggest_interactive$interactive" ] && inputisatty ; then
-        local selected
-        selected="$(echo "$similar" | fzf --prompt="$(eval_gettext "Select package"): " --height=10 --reverse)"
-        if [ -n "$selected" ] ; then
-            echo "$selected"
-            return 0
-        fi
-        return 1
-    fi
-
-    # Non-interactive: just show suggestions (to stderr)
-    echo "" >&2
-    echog "Perhaps you meant:" >&2
-    echo "$similar" | sed 's/^/  /' >&2
-    return 1
-}
-
-# Suggest similar packages for a list of packages
-# Args: package_names...
-# Returns: selected packages (if interactive) or empty
-__epm_suggest_similar_packages_by_list()
-{
-    local pkg
-    local selected_all=""
-    for pkg in "$@" ; do
-        local selected
-        selected="$(__epm_suggest_similar_packages "$pkg")"
-        [ -n "$selected" ] && selected_all="$selected_all $selected"
-    done
-    echo $selected_all
-}
 
 check_core_commands()
 {

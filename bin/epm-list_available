@@ -19,6 +19,80 @@
 
 load_helper epm-sh-warmup
 
+# Cache file: $epm_vardir/available-packages
+# Format: package\tdescription
+
+# Save available packages to cache (called from epm update)
+__save_available_packages()
+{
+    [ -d "$epm_vardir" ] || return 0
+
+    # TODO: ignore in docker
+    # update list only if the system supports bash completion
+    [ -d /etc/bash_completion.d ] || return 0
+
+    # HACK: too much time (5 minutes) on deb systems in a docker
+    # [ $PMTYPE = "apt-dpkg" ] && return 0
+
+    info "Retrieving list of all available packages (for autocompletion) ..."
+    # can ask sudo later
+    set_sudo
+    # format: package\tdescription
+    update=update epm_list_available | sed 's/ - /\t/' | sort | sudorun tee $epm_vardir/available-packages >/dev/null
+}
+
+# Suggest similar packages using fzf fuzzy search
+# Args: package_name
+# Returns: selected package name (if interactive) or empty
+__epm_suggest_similar_packages()
+{
+    local pkg="$1"
+    local cache="$epm_vardir/available-packages"
+    local count="${suggest_count:-7}"
+
+    # need cache file
+    [ -s "$cache" ] || return 1
+
+    # need fzf for fuzzy search
+    is_command fzf || return 1
+
+    local similar
+    similar="$(fzf -f "$pkg" < "$cache" 2>/dev/null | head -$count)"
+    [ -z "$similar" ] && return 1
+
+    # Interactive selection if enabled (via config or --interactive flag)
+    if [ -n "$suggest_interactive$interactive" ] && inputisatty ; then
+        local selected
+        selected="$(echo "$similar" | fzf --prompt="$(eval_gettext "Select package"): " --height=10 --reverse)"
+        if [ -n "$selected" ] ; then
+            echo "$selected" | cut -f1
+            return 0
+        fi
+        return 1
+    fi
+
+    # Non-interactive: just show suggestions (to stderr)
+    echo "" >&2
+    echog "Perhaps you meant:" >&2
+    echo "$similar" | sed 's/^/  /' >&2
+    return 1
+}
+
+# Suggest similar packages for a list of packages
+# Args: package_names...
+# Returns: selected packages (if interactive) or empty
+__epm_suggest_similar_packages_by_list()
+{
+    local pkg
+    local selected_all=""
+    for pkg in "$@" ; do
+        local selected
+        selected="$(__epm_suggest_similar_packages "$pkg")"
+        [ -n "$selected" ] && selected_all="$selected_all $selected"
+    done
+    echo $selected_all
+}
+
 __aptcyg_print_full()
 {
     #showcmd apt-cyg show
@@ -45,13 +119,14 @@ epm_list_available()
     # TODO: update from this place if obsoleted
     if [ -n "$short" ] && [ -z "$update" ] ; then
         if [ -s $epm_vardir/available-packages ] ; then
-            cat $epm_vardir/available-packages
+            cut -f1 $epm_vardir/available-packages
             return
         elif [ -n "$direct" ] ; then
             # don't go in long retrieving if --direct is used
             return
         fi
     fi
+
 
 
 case $PMTYPE in

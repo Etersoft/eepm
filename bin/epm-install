@@ -26,6 +26,7 @@ load_helper epm-requires
 load_helper epm-check_updated_repo
 load_helper epm-sh-warmup
 load_helper epm-installed
+load_helper epm-list_available
 
 # Check if at least one package from the list is not found in repos
 # Returns 0 if at least one package is not found (suggest is appropriate)
