@@ -159,6 +159,117 @@ __clean_from_glob()
     sed -e "s/[?*].*//" -e "s/[?\^.*]/ /g"
 }
 
+# Expand wildcard package pattern to matching packages from repositories
+# Args: package_pattern (e.g., "lib*-devel")
+# Returns: list of matching package names (one per line)
+__epm_expand_wildcard_pattern()
+{
+    local pattern="$1"
+    local regexp
+    regexp="^$(__convert_glob__to_regexp "$pattern")$"
+
+    showcmd "epm search --short '$pattern'"
+    # __epm_search_internal returns "name description", extract only names and filter by exact pattern
+    no_epm_play_search=1 __epm_search_internal "$pattern" 2>/dev/null | sed -e "s| .*||g" | grep -E "$regexp"
+}
+
+# Expand all wildcard patterns in package list
+# Args: package names (may include wildcards)
+# Returns: expanded package names (wildcards replaced with matching packages)
+__epm_expand_wildcards()
+{
+    local result=""
+    local pkg
+
+    for pkg in "$@" ; do
+        if is_wildcard "$pkg" ; then
+            local matched
+            matched="$(__epm_expand_wildcard_pattern "$pkg")"
+
+            if [ -z "$matched" ] ; then
+                warning "No packages found matching pattern '$pkg'"
+                continue
+            fi
+
+            local match_count
+            match_count="$(echo "$matched" | wc -l)"
+
+            if [ -n "$suggest_interactive$interactive" ] && [ -c /dev/tty ] ; then
+                # Interactive mode: let user select from matches (via config or --interactive flag)
+                load_helper epm-sh-interactive
+                local selected
+                selected="$(echo "$matched" | __epm_interactive_select_packages)"
+                if [ -n "$selected" ] ; then
+                    result="$result $(echo "$selected" | tr '\n' ' ')"
+                fi
+            else
+                # Non-interactive: install all matches
+                info "Pattern '$pkg' matched $match_count package(s)"
+                result="$result $(echo "$matched" | tr '\n' ' ')"
+            fi
+        else
+            result="$result $pkg"
+        fi
+    done
+
+    echo "$result" | sed 's/^ //'
+}
+
+# Expand wildcard package pattern to matching INSTALLED packages
+# Args: package_pattern (e.g., "lib*-devel")
+# Returns: list of matching installed package names (one per line)
+__epm_expand_wildcard_pattern_installed()
+{
+    local pattern="$1"
+    local regexp
+    regexp="^$(__convert_glob__to_regexp "$pattern")$"
+
+    load_helper epm-packages
+    showcmd "epm packages --short | grep -E '$pattern'"
+    short=--short epm_packages 2>/dev/null | grep -E "$regexp"
+}
+
+# Expand all wildcard patterns in package list (for INSTALLED packages)
+# Args: package names (may include wildcards)
+# Returns: expanded package names (wildcards replaced with matching installed packages)
+__epm_expand_wildcards_installed()
+{
+    local result=""
+    local pkg
+
+    for pkg in "$@" ; do
+        if is_wildcard "$pkg" ; then
+            local matched
+            matched="$(__epm_expand_wildcard_pattern_installed "$pkg")"
+
+            if [ -z "$matched" ] ; then
+                warning "No installed packages found matching pattern '$pkg'"
+                continue
+            fi
+
+            local match_count
+            match_count="$(echo "$matched" | wc -l)"
+
+            if [ -n "$suggest_interactive$interactive" ] && [ -c /dev/tty ] ; then
+                # Interactive mode: let user select from matches (via config or --interactive flag)
+                load_helper epm-sh-interactive
+                local selected
+                selected="$(echo "$matched" | __epm_interactive_select_packages)"
+                if [ -n "$selected" ] ; then
+                    result="$result $(echo "$selected" | tr '\n' ' ')"
+                fi
+            else
+                # Non-interactive: remove all matches
+                info "Pattern '$pkg' matched $match_count installed package(s)"
+                result="$result $(echo "$matched" | tr '\n' ' ')"
+            fi
+        else
+            result="$result $pkg"
+        fi
+    done
+
+    echo "$result" | sed 's/^ //'
+}
 
 # produce grep sequence
 __epm_search_make_grep()
@@ -242,62 +353,6 @@ __epm_search_internal()
     warmup_bases
 
     __epm_search_output $(get_firstarg $@) | grep "$*"
-}
-
-# Expand wildcard package pattern to matching packages from repositories
-# Args: package_pattern (e.g., "lib*-devel")
-# Returns: list of matching package names (one per line)
-__epm_expand_wildcard_pattern()
-{
-    local pattern="$1"
-    local regexp
-    regexp="^$(__convert_glob__to_regexp "$pattern")$"
-
-    showcmd "epm search --short '$pattern'"
-    # __epm_search_internal returns "name description", extract only names and filter by exact pattern
-    no_epm_play_search=1 __epm_search_internal "$pattern" 2>/dev/null | sed -e "s| .*||g" | grep -E "$regexp"
-}
-
-# Expand all wildcard patterns in package list
-# Args: package names (may include wildcards)
-# Returns: expanded package names (wildcards replaced with matching packages)
-__epm_expand_wildcards()
-{
-    local result=""
-    local pkg
-
-    for pkg in "$@" ; do
-        if is_wildcard "$pkg" ; then
-            local matched
-            matched="$(__epm_expand_wildcard_pattern "$pkg")"
-
-            if [ -z "$matched" ] ; then
-                warning "No packages found matching pattern '$pkg'"
-                continue
-            fi
-
-            local match_count
-            match_count="$(echo "$matched" | wc -l)"
-
-            if [ -n "$suggest_interactive$interactive" ] && [ -c /dev/tty ] ; then
-                # Interactive mode: let user select from matches (via config or --interactive flag)
-                load_helper epm-sh-interactive
-                local selected
-                selected="$(echo "$matched" | __epm_interactive_select_packages)"
-                if [ -n "$selected" ] ; then
-                    result="$result $(echo "$selected" | tr '\n' ' ')"
-                fi
-            else
-                # Non-interactive: install all matches
-                info "Pattern '$pkg' matched $match_count package(s)"
-                result="$result $(echo "$matched" | tr '\n' ' ')"
-            fi
-        else
-            result="$result $pkg"
-        fi
-    done
-
-    echo "$result" | sed 's/^ //'
 }
 
 # copied from korinf/tools/run-script/scripts/search
