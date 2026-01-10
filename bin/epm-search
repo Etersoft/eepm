@@ -140,7 +140,7 @@ esac
 LC_ALL=C docmd $CMD $string
 
 # ignore non system package managers
-if [ "$PMTYPE" != "stplr" ] ; then
+if [ "$PMTYPE" != "stplr" ] && [ -z "$no_epm_play_search" ] ; then
     epm play $short --quiet --list-all | sed -e 's|^ *||g' -e 's|[[:space:]]\+| |g' -e "s|\$| (use \'epm play\' to install it)|"
 fi
 
@@ -242,6 +242,62 @@ __epm_search_internal()
     warmup_bases
 
     __epm_search_output $(get_firstarg $@) | grep "$*"
+}
+
+# Expand wildcard package pattern to matching packages from repositories
+# Args: package_pattern (e.g., "lib*-devel")
+# Returns: list of matching package names (one per line)
+__epm_expand_wildcard_pattern()
+{
+    local pattern="$1"
+    local regexp
+    regexp="^$(__convert_glob__to_regexp "$pattern")$"
+
+    showcmd "epm search --short '$pattern'"
+    # __epm_search_internal returns "name description", extract only names and filter by exact pattern
+    no_epm_play_search=1 __epm_search_internal "$pattern" 2>/dev/null | sed -e "s| .*||g" | grep -E "$regexp"
+}
+
+# Expand all wildcard patterns in package list
+# Args: package names (may include wildcards)
+# Returns: expanded package names (wildcards replaced with matching packages)
+__epm_expand_wildcards()
+{
+    local result=""
+    local pkg
+
+    for pkg in "$@" ; do
+        if is_wildcard "$pkg" ; then
+            local matched
+            matched="$(__epm_expand_wildcard_pattern "$pkg")"
+
+            if [ -z "$matched" ] ; then
+                warning "No packages found matching pattern '$pkg'"
+                continue
+            fi
+
+            local match_count
+            match_count="$(echo "$matched" | wc -l)"
+
+            if [ -n "$interactive" ] && [ -c /dev/tty ] ; then
+                # Interactive mode: let user select from matches
+                load_helper epm-sh-interactive
+                local selected
+                selected="$(echo "$matched" | __epm_interactive_select_packages)"
+                if [ -n "$selected" ] ; then
+                    result="$result $(echo "$selected" | tr '\n' ' ')"
+                fi
+            else
+                # Non-interactive: install all matches
+                info "Pattern '$pkg' matched $match_count package(s)"
+                result="$result $(echo "$matched" | tr '\n' ' ')"
+            fi
+        else
+            result="$result $pkg"
+        fi
+    done
+
+    echo "$result" | sed 's/^ //'
 }
 
 # copied from korinf/tools/run-script/scripts/search
