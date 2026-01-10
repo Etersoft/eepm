@@ -58,6 +58,11 @@ __epm_info_by_pkgtype()
     esac
 }
 
+__epm_info_installed()
+{
+    is_installed $pkg_names
+}
+
 __epm_info_by_pmtype()
 {
 case $PMTYPE in
@@ -214,6 +219,10 @@ epm_info()
     case "$pkg_options" in
         -h|--help)            # HELPOPT: show this help
             epm_info_help
+            return
+            ;;
+        --installed)          # HELPOPT: print info for installed packages only
+            __epm_info_installed
             return
             ;;
         --requires)           # HELPOPT: print package requires (dependencies)
