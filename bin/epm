@@ -157,6 +157,7 @@ download_only=
 parallel=
 print_url=
 interactive=
+allow_wildcard=
 force_yes=
 skip_installed=
 skip_missed=
@@ -201,6 +202,7 @@ done
 case $PROGNAME in
     epmi)                      # HELPSHORT: alias for epm install
         epm_cmd=install
+        allow_wildcard=1
         ;;
     epmI)                      # HELPSHORT: alias for epm Install
         epm_cmd=install
@@ -282,6 +284,7 @@ check_command()
     case $1 in
     -i|install|add|i|it)         # HELPCMD: install package(s) from remote repositories or from local file
         epm_cmd=install
+        allow_wildcard=1
         ;;
     -e|-P|rm|del|remove|delete|uninstall|erase|purge|e)  # HELPCMD: remove (delete) package(s) from the database and the system
         epm_cmd=remove
@@ -661,6 +664,7 @@ check_option()
     --interactive)  # HELPOPT: interactive mode (ask before any operation)
         interactive="--interactive"
         non_interactive=""
+        inscript=1  # don't read packages from stdin in interactive mode
         ;;
     --force-yes)           # HELPOPT: force yes in a danger cases (f.i., during release upgrade)
         force_yes="--force-yes"
@@ -716,7 +720,8 @@ check_filenames()
             [ -n "$pkg_files" ] && pkg_files="$pkg_files $opt" || pkg_files="$opt"
         else
             has_space "$opt" && warning 'There are space(s) in package name $opt, it is not supported. Skipped.' && continue
-            rhas "$opt" "[*]" && warning 'There are forbidden symbols in package name $opt. Skipped.' && continue
+            # Wildcard symbols are forbidden by default, but allowed for some commands (install)
+            [ -z "$allow_wildcard" ] && is_wildcard "$opt" && warning 'There are forbidden symbols in package name $opt. Skipped.' && continue
             [ -n "$pkg_names" ] && pkg_names="$pkg_names $opt" || pkg_names="$opt"
         fi
         [ -n "$quoted_args" ] && quoted_args="$quoted_args \"$opt\"" || quoted_args="\"$opt\""
