@@ -32,7 +32,7 @@ local string="$*"
 # Try cache first for supported package managers
 case $PMTYPE in
     apt-rpm|apt-dpkg|dnf-rpm|dnf5-rpm|yum-rpm|zypper-rpm|pacman)
-        if __epm_available_read_cache ; then
+        if __epm_available_read_cache | __epm_format_available ; then
             return
         fi
         ;;
