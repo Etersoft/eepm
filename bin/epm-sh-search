@@ -115,6 +115,84 @@ __epm_build_grep_filter()
     fi
 }
 
+# Produce grep filter sequence for multiple search patterns
+# Args: patterns (use ~pattern for exclusion)
+# Uses: $short, $regexp, $PMTYPE
+__epm_search_make_grep()
+{
+    local i
+    [ -z "$*" ] && return
+
+    local list=
+    local listN=
+    for i in $@ ; do
+        case "$i" in
+            ~*)
+                # will clean from ~ later
+                listN="$listN $i"
+                ;;
+            *)
+                list="$list $i"
+                ;;
+        esac
+    done
+
+    listN=$(strip_spaces $listN | sed -e "s/ /|/g" | sed -e "s/~//g")
+
+    # convert glob to regexp (skip if --regexp mode - user provides regexp directly)
+    if [ -z "$regexp" ] ; then
+        case $PMTYPE in
+            apt-*)
+                ;;
+            *)
+                list=$(echo "$list" | sed -e "s/[?\^.]/ /g")
+                listN=$(echo "$listN" | sed -e "s/[?\^.]/ /g")
+                ;;
+        esac
+        list=$(__convert_glob__to_regexp "$list")
+        listN=$(__convert_glob__to_regexp "$listN")
+    fi
+
+    if [ -n "$short" ] ; then
+        echon " | sed -e \"s| .*||g\""
+    fi
+
+    [ -n "$listN" ] && echon " | grep -E -i -v -- \"$listN\""
+
+    # filter by all words (AND logic)
+    for i in $list ; do
+        echon " | grep -E -i -- \"$i\""
+    done
+}
+
+# Get color pattern for search highlighting
+# Args: patterns (use ~pattern for exclusion)
+# Returns: pattern string joined with | for grep/awk colorization
+__epm_get_color_pattern()
+{
+    local i
+    [ -z "$*" ] && return
+
+    local list=""
+    for i in "$@" ; do
+        case "$i" in
+            ~*) ;;  # skip exclusions
+            *) list="$list $i" ;;
+        esac
+    done
+
+    list=$(echo "$list" | sed 's/^ *//')
+    [ -z "$list" ] && return
+
+    # convert glob to regexp if needed
+    if [ -z "$regexp" ] ; then
+        list=$(__convert_glob__to_regexp "$list")
+    fi
+
+    # join with |
+    echo "$list" | sed 's/ /|/g'
+}
+
 # Colorize search output: package names and search pattern
 # Input format: "package-name - description" or "package-name"
 # Uses: __epm_color_pattern - regex pattern to highlight

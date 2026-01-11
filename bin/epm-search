@@ -307,98 +307,27 @@ __epm_expand_wildcards_installed()
     echo "$result" | sed 's/^ //'
 }
 
-# produce grep sequence
-__epm_search_make_grep()
-{
-    local i
-    [ -z "$*" ] && return
-
-    local list=
-    local listN=
-    for i in $@ ; do
-        case "$i" in
-            ~*)
-                # will clean from ~ later (and have the bug here with empty arg if run with one ~ only)
-                listN="$listN $i"
-                ;;
-            *)
-                list="$list $i"
-                ;;
-        esac
-    done
-
-    #list=$(strip_spaces $list | sed -e "s/ /|/g")
-    listN=$(strip_spaces $listN | sed -e "s/ /|/g" | sed -e "s/~//g")
-
-    # convert glob to regexp (skip if --regexp mode - user provides regexp directly)
-    if [ -z "$regexp" ] ; then
-        case $PMTYPE in
-            apt-*)
-                ;;
-            *)
-                list=$(echo "$list" | sed -e "s/[?\^.]/ /g")
-                listN=$(echo "$listN" | sed -e "s/[?\^.]/ /g")
-                ;;
-        esac
-        list=$(__convert_glob__to_regexp "$list")
-        listN=$(__convert_glob__to_regexp "$listN")
-    fi
-
-    if [ -n "$short" ] ; then
-        echon " | sed -e \"s| .*||g\""
-    fi
-
-    [ -n "$listN" ] && echon " | grep -E -i -v -- \"$listN\""
-
-    # FIXME: The World has not idea how to do grep both string
-    # http://stackoverflow.com/questions/10110051/grep-with-two-strings-logical-and-in-regex?rq=1
-
-    # filter by all words
-    for i in $list ; do
-        echon " | grep -E -i -- \"$i\""
-    done
-}
-
-# Get color pattern for search highlighting
-__epm_get_color_pattern()
-{
-    local i
-    [ -z "$*" ] && return
-
-    local list=""
-    for i in "$@" ; do
-        case "$i" in
-            ~*) ;;  # skip exclusions
-            *) list="$list $i" ;;
-        esac
-    done
-
-    list=$(echo "$list" | sed 's/^ *//')
-    [ -z "$list" ] && return
-
-    # convert glob to regexp if needed
-    if [ -z "$regexp" ] ; then
-        list=$(__convert_glob__to_regexp "$list")
-    fi
-
-    # join with |
-    echo "$list" | sed 's/ /|/g'
-}
-
-# we need internal implementation because regular epm_search uses quotes_args
+# internal search implementation (without epm play)
 __epm_search_internal()
 {
-    [ -n "$1" ] || fatal "Search: search argument(s) is missed"
+    # warn about regex-like patterns when not using --regexp
+    [ -z "$regexp" ] && echo "$*" | grep -q "\.[*?]" && warning "Only glob symbols * ? [] are supported. Use --regexp for regular expressions."
 
-    # it is useful for first time running
-    update_repo_if_needed soft
+    local MGS
+    MGS=$(__epm_search_make_grep "$@")
+    EXTRA_SHOWDOCMD="$MGS"
 
-    warmup_bases
+    # use longest word for PM search (more precise results)
+    local search_word
+    search_word=$(__epm_get_longest_word "$@")
+    [ -z "$search_word" ] && search_word=$(echo "$1" | __clean_from_glob)
 
-    __epm_search_output $(get_firstarg $@) | grep "$*"
+    # get pattern for colorizing
+    __epm_color_pattern=$(__epm_get_color_pattern "$@")
+
+    # run search with colorization
+    eval "__epm_search_output \"\$search_word\" $MGS" | __epm_colorize_search_output
 }
-
-# copied from korinf/tools/run-script/scripts/search
 
 epm_search()
 {
@@ -415,27 +344,15 @@ epm_search()
 
     warmup_bases
 
-    # warn about regex-like patterns when not using --regexp
-    [ -z "$regexp" ] && echo "$*" | grep -q "\.[*?]" && warning "Only glob symbols * ? [] are supported. Use --regexp for regular expressions."
+    # run main search
+    eval "__epm_search_internal $quoted_args"
 
-    # FIXME: do it better
-    local MGS
-    MGS=$(eval __epm_search_make_grep $quoted_args)
-    EXTRA_SHOWDOCMD="$MGS"
-    # use longest word for PM search (more precise results)
-    local search_word
-    search_word=$(eval __epm_get_longest_word $quoted_args)
-    [ -z "$search_word" ] && search_word=$(eval get_firstarg $quoted_args | __clean_from_glob)
-    # get pattern for colorizing (before pipeline, not in subshell)
-    __epm_color_pattern=$(eval __epm_get_color_pattern $quoted_args)
-    # run search with colorization
-    eval "__epm_search_output \"$search_word\" $MGS" | __epm_colorize_search_output
-    # search in epm play separately, add hint to each line
-    if [ -z "$no_epm_play_search" ] && [ -n "$search_word" ] ; then
+    # search in epm play separately
+    if [ -z "$no_epm_play_search" ] ; then
         local hint="(use 'epm play' to install it)"
         if [ -n "$USETTY" ] ; then
             hint="$(printf '\033[32m')$hint$(printf '\033[0m')"
         fi
-        epm play --search "$search_word" | sed -e "s/  */ /g" -e "s/\$/ $hint/"
+        eval "epm play --search $quoted_args" | sed -e "s/  */ /g" -e "s/\$/ $hint/"
     fi
 }
