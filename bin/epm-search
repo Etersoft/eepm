@@ -20,6 +20,7 @@
 load_helper epm-check_updated_repo
 load_helper epm-sh-warmup
 load_helper epm-sh-backend
+load_helper epm-sh-search
 load_helper epm-list_available
 
 __epm_search_output()
@@ -338,18 +339,19 @@ __epm_search_make_grep()
     #list=$(strip_spaces $list | sed -e "s/ /|/g")
     listN=$(strip_spaces $listN | sed -e "s/ /|/g" | sed -e "s/~//g")
 
-    # TODO: only apt supports regexps?
-    case $PMTYPE in
-        apt-*)
-            ;;
-        *)
+    # convert glob to regexp (skip if --regexp mode - user provides regexp directly)
+    if [ -z "$regexp" ] ; then
+        case $PMTYPE in
+            apt-*)
+                ;;
+            *)
                 list=$(echo "$list" | sed -e "s/[?\^.]/ /g")
                 listN=$(echo "$listN" | sed -e "s/[?\^.]/ /g")
-            ;;
-    esac
-
-    list=$(__convert_glob__to_regexp "$list")
-    listN=$(__convert_glob__to_regexp "$listN")
+                ;;
+        esac
+        list=$(__convert_glob__to_regexp "$list")
+        listN=$(__convert_glob__to_regexp "$listN")
+    fi
 
     if [ -n "$short" ] ; then
         echon " | sed -e \"s| .*||g\""
@@ -416,12 +418,16 @@ epm_search()
 
     warmup_bases
 
-    echo "$*" | grep -q "\.[*?]" && warning "Only glob symbols * and ? are supported. Don't use regexp here!"
+    # warn about regex-like patterns when not using --regexp
+    [ -z "$regexp" ] && echo "$*" | grep -q "\.[*?]" && warning "Only glob symbols * ? [] are supported. Use --regexp for regular expressions."
 
     # FIXME: do it better
     local MGS
     MGS=$(eval __epm_search_make_grep $quoted_args)
     EXTRA_SHOWDOCMD="$MGS"
-    # TODO: use search args for more optimal output
-    eval "__epm_search_output \"$(eval get_firstarg $quoted_args | __clean_from_glob)\" $MGS"
+    # use longest word for PM search (more precise results)
+    local search_word
+    search_word=$(eval __epm_get_longest_word $quoted_args)
+    [ -z "$search_word" ] && search_word=$(eval get_firstarg $quoted_args | __clean_from_glob)
+    eval "__epm_search_output \"$search_word\" $MGS | __epm_colorize_pkg_names"
 }
