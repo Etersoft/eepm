@@ -319,6 +319,7 @@ __epm_expand_wildcards()
                 local selected
                 selected="$(echo "$matched_verbose" | __epm_interactive_select_packages install)"
                 if [ -n "$selected" ] ; then
+                    interactive_selected=1
                     # Extract only package names from selection
                     result="$result $(echo "$selected" | sed -e 's| .*||g' | tr '\n' ' ')"
                 fi
@@ -376,6 +377,7 @@ __epm_expand_wildcards_installed()
                 local selected
                 selected="$(echo "$matched" | __epm_interactive_select_packages remove)"
                 if [ -n "$selected" ] ; then
+                    interactive_selected=1
                     result="$result $(echo "$selected" | tr '\n' ' ')"
                 fi
             else
