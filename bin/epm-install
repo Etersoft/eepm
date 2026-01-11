@@ -554,6 +554,8 @@ __epm_install_handle_wildcards()
     load_helper epm-search
     local expanded_names
     expanded_names="$(__epm_expand_wildcards $pkg_names)"
+    # exit code 10 means interactive selection was used
+    [ $? -eq 10 ] && interactive_selected=1
     if [ -z "$expanded_names" ] ; then
         info "No packages to install after wildcard expansion"
         return 1

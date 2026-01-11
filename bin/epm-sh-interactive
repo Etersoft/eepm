@@ -50,7 +50,6 @@ __epm_interactive_select_packages()
                 --height=15 \
                 --reverse)
         if [ -n "$selected" ] ; then
-            interactive_selected=1
             echo "$selected"
             return 0
         fi
@@ -69,7 +68,6 @@ __epm_interactive_select_packages()
             return 1
             ;;
         a|A)
-            interactive_selected=1
             echo "$packages"
             return 0
             ;;
@@ -82,7 +80,6 @@ __epm_interactive_select_packages()
 "
             done
             if [ -n "$selected" ] ; then
-                interactive_selected=1
                 echo "$selected" | head -n -1
             fi
             return 0

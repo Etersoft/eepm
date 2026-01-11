@@ -272,10 +272,12 @@ __epm_expand_wildcard_pattern()
 # Expand all wildcard patterns in package list
 # Args: package names (may include wildcards)
 # Returns: expanded package names (wildcards replaced with matching packages)
+# Exit codes: 0 = success, 1 = error, 10 = interactive selection was used
 __epm_expand_wildcards()
 {
     local result=""
     local pkg
+    local had_interactive_selection=""
 
     for pkg in "$@" ; do
         if is_wildcard "$pkg" ; then
@@ -319,7 +321,7 @@ __epm_expand_wildcards()
                 local selected
                 selected="$(echo "$matched_verbose" | __epm_interactive_select_packages install)"
                 if [ -n "$selected" ] ; then
-                    interactive_selected=1
+                    had_interactive_selection=1
                     # Extract only package names from selection
                     result="$result $(echo "$selected" | sed -e 's| .*||g' | tr '\n' ' ')"
                 fi
@@ -334,6 +336,8 @@ __epm_expand_wildcards()
     done
 
     echo "$result" | sed 's/^ //'
+    [ -n "$had_interactive_selection" ] && return 10
+    return 0
 }
 
 # Expand wildcard package pattern to matching INSTALLED packages
@@ -353,10 +357,12 @@ __epm_expand_wildcard_pattern_installed()
 # Expand all wildcard patterns in package list (for INSTALLED packages)
 # Args: package names (may include wildcards)
 # Returns: expanded package names (wildcards replaced with matching installed packages)
+# Exit codes: 0 = success, 1 = error, 10 = interactive selection was used
 __epm_expand_wildcards_installed()
 {
     local result=""
     local pkg
+    local had_interactive_selection=""
 
     for pkg in "$@" ; do
         if is_wildcard "$pkg" ; then
@@ -377,7 +383,7 @@ __epm_expand_wildcards_installed()
                 local selected
                 selected="$(echo "$matched" | __epm_interactive_select_packages remove)"
                 if [ -n "$selected" ] ; then
-                    interactive_selected=1
+                    had_interactive_selection=1
                     result="$result $(echo "$selected" | tr '\n' ' ')"
                 fi
             else
@@ -391,4 +397,6 @@ __epm_expand_wildcards_installed()
     done
 
     echo "$result" | sed 's/^ //'
+    [ -n "$had_interactive_selection" ] && return 10
+    return 0
 }
