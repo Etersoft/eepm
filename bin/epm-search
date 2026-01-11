@@ -32,10 +32,6 @@ local string="$*"
 case $PMTYPE in
     apt-rpm|apt-dpkg|dnf-rpm|dnf5-rpm|yum-rpm|zypper-rpm|pacman)
         if __epm_search_from_cache ; then
-            # Also search in epm play (--quiet disables coloring)
-            if [ -z "$no_epm_play_search" ] && [ -n "$__epm_play_search_arg" ] ; then
-                epm play --quiet --search "$__epm_play_search_arg" | sed 's/$/ __EPM_PLAY_HINT__/'
-            fi
             return
         fi
         ;;
@@ -155,11 +151,6 @@ case $PMTYPE in
 esac
 
 LC_ALL=C docmd $CMD $string
-
-# ignore non system package managers
-if [ "$PMTYPE" != "stplr" ] && [ -z "$no_epm_play_search" ] && [ -n "$__epm_play_search_arg" ] ; then
-    epm play --quiet --search "$__epm_play_search_arg" | sed 's/$/ __EPM_PLAY_HINT__/'
-fi
 
 }
 
@@ -437,7 +428,14 @@ epm_search()
     [ -z "$search_word" ] && search_word=$(eval get_firstarg $quoted_args | __clean_from_glob)
     # get pattern for colorizing (before pipeline, not in subshell)
     __epm_color_pattern=$(eval __epm_get_color_pattern $quoted_args)
-    # save first arg for epm play --search
-    __epm_play_search_arg=$(eval get_firstarg $quoted_args)
-    eval "__epm_search_output \"$search_word\" $MGS | __epm_colorize_search_output"
+    # run search with colorization
+    eval "__epm_search_output \"$search_word\" $MGS" | __epm_colorize_search_output
+    # search in epm play separately, add hint to each line
+    if [ -z "$no_epm_play_search" ] && [ -n "$search_word" ] ; then
+        local hint="(use 'epm play' to install it)"
+        if [ -n "$USETTY" ] ; then
+            hint="$(printf '\033[32m')$hint$(printf '\033[0m')"
+        fi
+        epm play --search "$search_word" | sed -e "s/  */ /g" -e "s/\$/ $hint/"
+    fi
 }
