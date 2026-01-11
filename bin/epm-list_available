@@ -101,7 +101,6 @@ __fo_pfn()
 
 epm_list_available()
 {
-
     if [ -n "$1" ] ; then
         # list --available with args is the same as search
         load_helper epm-search
@@ -109,17 +108,12 @@ epm_list_available()
         return
     fi
 
-    # use cache (create if missing)
-    if [ -z "$update" ] ; then
-        # create cache if missing
-        if ! __epm_available_cache_exists ; then
-            [ -n "$direct" ] && return
-            __epm_available_save_cache
-        fi
-        # use cache
+    # use cache by default (--direct bypasses cache)
+    if [ -z "$direct" ] ; then
         if __epm_available_read_cache ; then
             return
         fi
+        warning "No package cache. Run 'epm update' to create it."
     fi
 
 

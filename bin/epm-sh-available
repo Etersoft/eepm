@@ -64,5 +64,5 @@ __epm_available_save_cache()
     # can ask sudo later
     set_sudo
     # format: package=version\tdescription
-    update=update epm_list_available | sed 's/ - /\t/' | sort | sudorun tee "$epm_vardir/available-packages" >/dev/null
+    (direct=1 ; epm_list_available) | sed 's/ - /\t/' | sort | sudorun tee "$epm_vardir/available-packages" >/dev/null
 }
