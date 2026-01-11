@@ -114,6 +114,116 @@ __fo_pfn()
     grep -v "^$" | grep -- "$pkg_filenames"
 }
 
+# Internal function to get available packages in TSV format
+# Returns: TSV format where supported, native format otherwise
+__epm_list_available_internal()
+{
+    local CMD
+
+    case $PMTYPE in
+        apt-dpkg)
+            warmup_dpkgbase
+            ;;
+        apt-rpm)
+            warmup_rpmbase
+            ;;
+    esac
+
+    case $PMTYPE in
+        apt-rpm)
+            # use pkglist-query if available (much faster, returns TSV)
+            if is_command pkglist-query ; then
+                __alt_list_available_pkglist_query
+                return
+            fi
+            docmd apt-cache search .
+            ;;
+        apt-dpkg)
+            docmd apt-cache search .
+            ;;
+        apm-rpm)
+            # TODO: --format json?
+            CMD="apm system list --limit 100000"
+            ;;
+        dnf-*)
+            warmup_rpmbase
+            docmd dnf list --available
+            ;;
+        yum-*)
+            warmup_rpmbase
+            docmd yum list available
+            ;;
+        packagekit)
+            # see for filter list: pkcon get-filters
+            docmd pkcon get-packages -p | sed -e "s| (.*||g" -e "s|.* ||"
+            ;;
+        snappy)
+            docmd snappy find .
+            ;;
+        snap)
+            docmd snap find .
+            ;;
+        pacman)
+            docmd pacman -Sl
+            ;;
+        appget)
+            docmd appget search .
+            ;;
+        winget)
+            docmd winget search .
+            ;;
+        emerge)
+            docmd eix --world
+            ;;
+        termux-pkg)
+            docmd pkg list-all
+            ;;
+        npackd)
+            CMD="npackdcl list"
+            ;;
+        eopkg)
+            CMD="eopkg list-available"
+            ;;
+        stplr)
+            CMD="stplr list"
+            ;;
+        pisi)
+            CMD="pisi list-available"
+            ;;
+        choco)
+            CMD="choco search ."
+            ;;
+        slackpkg)
+            CMD="slackpkg search ."
+            ;;
+        homebrew)
+            docmd brew search .
+            ;;
+        opkg)
+            CMD="opkg list-available"
+            ;;
+        apk)
+            CMD="apk list --available"
+            ;;
+        nix)
+            CMD="nix-env -qaP"
+            ;;
+        xbps)
+            CMD="xbps-query -l -R"
+            showcmd $CMD
+            $CMD | sed -e "s|^ii ||g" -e "s| .*||g" | __fo_pfn
+            return
+            ;;
+        *)
+            fatal 'Have no suitable query command for $PMTYPE'
+            ;;
+    esac
+
+    if [ -n "$CMD" ] ; then
+        docmd $CMD | __fo_pfn
+    fi
+}
+
 epm_list_available()
 {
     if [ -n "$1" ] ; then
@@ -132,133 +242,6 @@ epm_list_available()
         warning "No package cache. Run 'epm update' to create it."
     fi
 
-
-
-case $PMTYPE in
-    apt-dpkg)
-        warmup_dpkgbase
-        ;;
-    apt-rpm)
-        warmup_rpmbase
-        ;;
-esac
-
-case $PMTYPE in
-    apt-rpm)
-        # use pkglist-query if available (much faster)
-        if is_command pkglist-query ; then
-            __alt_list_available_pkglist_query | __epm_format_available
-        elif [ -n "$short" ] ; then
-            docmd apt-cache search . | sed -e "s| .*||g"
-        else
-            docmd apt-cache search .
-        fi
-        ;;
-    apt-dpkg)
-        if [ -n "$short" ] ; then
-            docmd apt-cache search . | sed -e "s| .*||g"
-        else
-            docmd apt-cache search .
-        fi
-        ;;
-    apm-rpm)
-        # TODO: --format json?
-        CMD="apm system list --limit 100000"
-        ;;
-    dnf-*)
-        warmup_rpmbase
-        if [ -n "$short" ] ; then
-            docmd dnf list --available | sed -e "s| .*||g"
-        else
-            docmd dnf list --available
-        fi
-        ;;
-    yum-*)
-        warmup_rpmbase
-        if [ -n "$short" ] ; then
-            docmd yum list available | sed -e "s| .*||g"
-        else
-            docmd yum list available
-        fi
-        ;;
-    packagekit)
-        # see for filter list: pkcon get-filters
-        # TODO: implement --short
-        docmd pkcon get-packages -p | sed -e "s| (.*||g" -e "s|.* ||"
-        ;;
-    snappy)
-        docmd snappy find .
-        ;;
-    snap)
-        docmd snap find .
-        ;;
-    pacman)
-        if [ -n "$short" ] ; then
-            docmd pacman -Slq
-        else
-            docmd pacman -Sl
-        fi
-        ;;
-    appget)
-        docmd appget search .
-        ;;
-    winget)
-        docmd winget search .
-        ;;
-    emerge)
-        docmd eix --world
-        ;;
-    termux-pkg)
-        docmd pkg list-all
-        ;;
-    npackd)
-        CMD="npackdcl list"
-        ;;
-    eopkg)
-        CMD="eopkg list-available"
-        ;;
-    stplr)
-        CMD="stplr list"
-        ;;
-    pisi)
-        CMD="pisi list-available"
-        ;;
-    choco)
-        CMD="choco search ."
-        ;;
-    slackpkg)
-        CMD="slackpkg search ."
-        ;;
-    homebrew)
-        docmd brew search .
-        ;;
-    opkg)
-        CMD="opkg list-available"
-        ;;
-    apk)
-        CMD="apk list --available"
-        ;;
-    nix)
-        CMD="nix-env -qaP"
-        ;;
-    xbps)
-        CMD="xbps-query -l -R"
-        showcmd $CMD
-        if [ -n "$short" ] ; then
-            $CMD | sed -e "s|^ii ||g" -e "s| .*||g" -e "s|\(.*\)-.*|\1|g" | __fo_pfn
-        else
-            $CMD | sed -e "s|^ii ||g" -e "s| .*||g" | __fo_pfn
-        fi
-        return 0
-        ;;
-    *)
-        fatal 'Have no suitable query command for $PMTYPE'
-        ;;
-esac
-
-if [ -n "$CMD" ] ; then
-    docmd $CMD | __fo_pfn
-fi
-# FIXME: we print empty lines, but will lost error status
-
+    # get fresh data and format
+    __epm_list_available_internal | __epm_format_available
 }

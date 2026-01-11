@@ -55,6 +55,6 @@ __epm_available_save_cache()
     info "Retrieving list of all available packages (for autocompletion) ..."
     # can ask sudo later
     set_sudo
-    # get TSV format directly, sort and save
-    (direct=1 ; tsv=1 ; epm_list_available) | sort | sudorun tee "$epm_vardir/available-packages" >/dev/null
+    # get TSV format directly from internal function, sort and save
+    __epm_list_available_internal | sort | sudorun tee "$epm_vardir/available-packages" >/dev/null
 }
