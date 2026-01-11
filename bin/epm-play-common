@@ -218,6 +218,6 @@ __epm_play_search()
     local RIFS=$'\x1E'
 
     __get_fast_int_list_app $arch | grep -i "$pattern" | while IFS=$'\x1E' read -r app desc; do
-        printf "  %-25s - %s\n" "$app" "$desc"
-    done | grep -i --color "$pattern"
+        printf "%-25s - %s\n" "$app" "$desc"
+    done | grep -i $EGREPCOLOR "$pattern" | __epm_colorize_pkg_names
 }
