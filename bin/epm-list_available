@@ -279,7 +279,7 @@ __epm_list_available_tsv()
         apt-dpkg)
             warmup_dpkgbase
             ;;
-        apt-rpm)
+        apt-rpm|dnf-*|dnf5-*|yum-*)
             warmup_rpmbase
             ;;
     esac
@@ -296,12 +296,10 @@ __epm_list_available_tsv()
         apt-dpkg)
             apt-cache search . | __epm_convert_apt_to_tsv
             ;;
-        dnf-*)
-            warmup_rpmbase
+        dnf-*|dnf5-*)
             dnf list --available 2>/dev/null | tail -n +2 | __epm_convert_dnf_to_tsv
             ;;
         yum-*)
-            warmup_rpmbase
             yum list available 2>/dev/null | tail -n +2 | __epm_convert_dnf_to_tsv
             ;;
         pacman)
