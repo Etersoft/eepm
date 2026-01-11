@@ -177,16 +177,20 @@ __clean_from_glob()
 
 # Expand wildcard package pattern to matching packages from repositories
 # Args: package_pattern (e.g., "lib*-devel")
-# Returns: list of matching package names (one per line)
+# Returns: list of matching packages (with descriptions, or names only if $short is set)
 __epm_expand_wildcard_pattern()
 {
     local pattern="$1"
     local regexp
-    regexp="^$(__convert_glob__to_regexp "$pattern")$"
+    regexp="^$(__convert_glob__to_regexp "$pattern")( |\$)"
 
-    showcmd "epm search --short '$pattern'"
-    # __epm_search_internal returns "name description", extract only names and filter by exact pattern
-    no_epm_play_search=1 __epm_search_internal "$pattern" 2>/dev/null | sed -e "s| .*||g" | grep -E "$regexp"
+    if [ -n "$short" ] ; then
+        showcmd "epm search --short '$pattern'"
+        no_epm_play_search=1 __epm_search_internal "$pattern" 2>/dev/null | sed -e "s| .*||g" | grep -E "^$(__convert_glob__to_regexp "$pattern")$"
+    else
+        showcmd "epm search '$pattern'"
+        no_epm_play_search=1 __epm_search_internal "$pattern" 2>/dev/null | grep -E "$regexp"
+    fi
 }
 
 # Expand all wildcard patterns in package list
@@ -199,8 +203,9 @@ __epm_expand_wildcards()
 
     for pkg in "$@" ; do
         if is_wildcard "$pkg" ; then
+            # Get short names for filtering
             local matched
-            matched="$(__epm_expand_wildcard_pattern "$pkg")"
+            matched="$(short=1 __epm_expand_wildcard_pattern "$pkg")"
 
             if [ -z "$matched" ] ; then
                 warning "No packages found matching pattern '$pkg'"
@@ -222,16 +227,29 @@ __epm_expand_wildcards()
 
             if [ -n "$suggest_interactive$interactive" ] && [ -c /dev/tty ] ; then
                 # Interactive mode: let user select from matches (via config or --interactive flag)
+                # Get packages with descriptions for better selection
+                local matched_verbose
+                matched_verbose="$(short='' __epm_expand_wildcard_pattern "$pkg")"
+                # Filter installed if needed (by name)
+                if [ -n "$skip_installed" ] ; then
+                    local names_only
+                    names_only="$(echo "$matched" | tr '\n' ' ')"
+                    matched_verbose="$(echo "$matched_verbose" | while read -r line ; do
+                        local name="${line%% *}"
+                        echo " $names_only " | grep -q " $name " && echo "$line"
+                    done)"
+                fi
                 load_helper epm-sh-interactive
                 local selected
-                selected="$(echo "$matched" | __epm_interactive_select_packages install)"
+                selected="$(echo "$matched_verbose" | __epm_interactive_select_packages install)"
                 if [ -n "$selected" ] ; then
-                    result="$result $(echo "$selected" | tr '\n' ' ')"
+                    # Extract only package names from selection
+                    result="$result $(echo "$selected" | sed -e 's| .*||g' | tr '\n' ' ')"
                 fi
             else
                 # Non-interactive: install all matches
                 info "Pattern '$pkg' matched $match_count package(s)"
-                result="$result $(echo "$matched" | tr '\n' ' ')"
+                result="$result $(echo "$matched" | sed -e 's| .*||g' | tr '\n' ' ')"
             fi
         else
             result="$result $pkg"
@@ -251,7 +269,7 @@ __epm_expand_wildcard_pattern_installed()
     regexp="^$(__convert_glob__to_regexp "$pattern")$"
 
     load_helper epm-packages
-    showcmd "epm packages --short | grep -E '$pattern'"
+    showcmd "epm packages --short | grep -E '$regexp'"
     short=--short epm_packages 2>/dev/null | grep -E "$regexp"
 }
 
