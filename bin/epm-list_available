@@ -142,9 +142,9 @@ __fo_pfn()
     grep -v "^$" | grep -- "$pkg_filenames"
 }
 
-# Internal function to get available packages in TSV format
+# Get available packages in TSV format
 # Returns: TSV format: package<tab>version<tab>description
-__epm_list_available_internal()
+__epm_list_available_tsv()
 {
     local CMD
 
@@ -270,5 +270,5 @@ epm_list_available()
     fi
 
     # get fresh data and format
-    __epm_list_available_internal | __epm_format_available
+    __epm_list_available_tsv | __epm_format_available
 }
