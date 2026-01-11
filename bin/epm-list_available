@@ -41,12 +41,26 @@ __epm_convert_apt_to_tsv()
 }
 
 
-# Convert pacman -Sl output to TSV
-# Input: repo package version [installed]
-# Output: package<tab>version<tab>
+# Convert pacman -Ss output to TSV
+# Input: two-line format:
+#   repo/package version [status]
+#       description
+# Output: package<tab>version<tab>description
 __epm_convert_pacman_to_tsv()
 {
-    awk '{ print $2 "\t" $3 "\t" }'
+    awk '
+    /^[a-z]/ {
+        # repo/package version line
+        split($1, a, "/")
+        pkg = a[2]
+        ver = $2
+    }
+    /^    / {
+        # description line (4 spaces indent)
+        desc = $0
+        gsub(/^    /, "", desc)
+        print pkg "\t" ver "\t" desc
+    }'
 }
 
 # Convert apk list output to TSV
@@ -296,7 +310,8 @@ __epm_list_available_tsv()
 '
             ;;
         pacman)
-            docmd pacman -Sl | __epm_convert_pacman_to_tsv
+            # use -Ss '' to get descriptions (two-line format)
+            docmd pacman -Ss '' | __epm_convert_pacman_to_tsv
             ;;
         snap)
             docmd snap find . | __epm_convert_snap_to_tsv
