@@ -115,29 +115,77 @@ __epm_build_grep_filter()
     fi
 }
 
-# Colorize package names in search output
+# Colorize search output: package names, search pattern, and epm play hint
 # Input format: "package-name - description" or "package-name"
-# Package names are colored with CYAN
-__epm_colorize_pkg_names()
+# Uses: __epm_color_pattern - regex pattern to highlight (set by __epm_search_make_grep)
+# Package names: CYAN, search pattern: RED (bold), "epm play" hint: GREEN
+__epm_colorize_search_output()
 {
+    local hint="(use 'epm play' to install it)"
+
     if [ -z "$USETTY" ] ; then
-        cat
+        # no color - just replace marker with plain hint
+        sed "s| __EPM_PLAY_HINT__| $hint|"
         return
     fi
 
+    local pattern="${__epm_color_pattern:-}"
+    local colored_hint="$(printf '\033[32m')$hint$(printf '\033[0m')"
+
     # Use awk for reliable ANSI color handling
-    awk -v cyan="$(printf '\033[36m')" -v reset="$(printf '\033[0m')" '
+    awk -v cyan="$(printf '\033[36m')" -v green="$(printf '\033[32m')" \
+        -v red="$(printf '\033[1;31m')" -v reset="$(printf '\033[0m')" \
+        -v pattern="$pattern" -v colored_hint="$colored_hint" -v hint="$hint" '
     {
-        if (match($0, /^[^ ]+ - /)) {
-            # format: "package - description"
-            pkg = substr($0, 1, index($0, " - ") - 1)
-            rest = substr($0, index($0, " - "))
-            print cyan pkg reset rest
-        } else if (match($0, /^[^ ]+$/)) {
-            # format: "package" only
-            print cyan $0 reset
-        } else {
-            print
+        line = $0
+
+        # remove marker temporarily (will add colored hint at the end)
+        has_hint = 0
+        if (index(line, " __EPM_PLAY_HINT__") > 0) {
+            has_hint = 1
+            gsub(/ __EPM_PLAY_HINT__/, "", line)
         }
+
+        if (match(line, /^[^ ]+ - /)) {
+            # format: "package - description"
+            sep = index(line, " - ")
+            pkg = substr(line, 1, sep - 1)
+            rest = substr(line, sep)
+
+            # colorize pattern in package name (return to cyan after red)
+            if (pattern != "") {
+                IGNORECASE = 1
+                gsub("(" pattern ")", red "&" cyan, pkg)
+            }
+
+            # colorize pattern in description (return to reset after red)
+            if (pattern != "") {
+                gsub("(" pattern ")", red "&" reset, rest)
+            }
+
+            output = cyan pkg reset rest
+        } else if (match(line, /^[^ ]+$/)) {
+            # format: "package" only
+            pkg = line
+            if (pattern != "") {
+                IGNORECASE = 1
+                gsub("(" pattern ")", red "&" cyan, pkg)
+            }
+            output = cyan pkg reset
+        } else {
+            # other format - just colorize pattern
+            if (pattern != "") {
+                IGNORECASE = 1
+                gsub("(" pattern ")", red "&" reset, line)
+            }
+            output = line
+        }
+
+        # add colored hint at the very end
+        if (has_hint) {
+            output = output " " colored_hint
+        }
+
+        print output
     }'
 }

@@ -32,9 +32,9 @@ local string="$*"
 case $PMTYPE in
     apt-rpm|apt-dpkg|dnf-rpm|dnf5-rpm|yum-rpm|zypper-rpm|pacman)
         if __epm_search_from_cache ; then
-            # Also search in epm play
-            if [ -z "$no_epm_play_search" ] ; then
-                epm play $short --quiet --list-all | sed -e 's|^ *||g' -e 's|[[:space:]]\+| |g' -e "s|\$| (use \'epm play\' to install it)|"
+            # Also search in epm play (--quiet disables coloring)
+            if [ -z "$no_epm_play_search" ] && [ -n "$__epm_play_search_arg" ] ; then
+                epm play --quiet --search "$__epm_play_search_arg" | sed 's/$/ __EPM_PLAY_HINT__/'
             fi
             return
         fi
@@ -157,8 +157,8 @@ esac
 LC_ALL=C docmd $CMD $string
 
 # ignore non system package managers
-if [ "$PMTYPE" != "stplr" ] && [ -z "$no_epm_play_search" ] ; then
-    epm play $short --quiet --list-all | sed -e 's|^ *||g' -e 's|[[:space:]]\+| |g' -e "s|\$| (use \'epm play\' to install it)|"
+if [ "$PMTYPE" != "stplr" ] && [ -z "$no_epm_play_search" ] && [ -n "$__epm_play_search_arg" ] ; then
+    epm play --quiet --search "$__epm_play_search_arg" | sed 's/$/ __EPM_PLAY_HINT__/'
 fi
 
 }
@@ -362,30 +362,36 @@ __epm_search_make_grep()
     # FIXME: The World has not idea how to do grep both string
     # http://stackoverflow.com/questions/10110051/grep-with-two-strings-logical-and-in-regex?rq=1
 
-    # Need only if we have more than one word (with one word we will grep for colorify)
-    if [ "$(echo "$list" | wc -w)" -gt 1 ] ; then
-        for i in $list ; do
-            # FIXME -n on MacOS?
-            echon " | grep -E -i -- \"$i\""
-        done
-    fi
+    # filter by all words
+    for i in $list ; do
+        echon " | grep -E -i -- \"$i\""
+    done
+}
 
-    # FIXME: move from it
-    #isatty || return
+# Get color pattern for search highlighting
+__epm_get_color_pattern()
+{
+    local i
+    [ -z "$*" ] && return
 
-    # TODO: sorts word by length from large to short
-
-    local COLO=""
-    # rule for colorife
-    for i in $list $listN; do
-        [ -n "$COLO" ] && COLO="$COLO|"
-        COLO="$COLO$i"
+    local list=""
+    for i in "$@" ; do
+        case "$i" in
+            ~*) ;;  # skip exclusions
+            *) list="$list $i" ;;
+        esac
     done
 
-    # TODO: use some colorifer instead grep (check grep adove too)
-    if [ -n "$list" ] ; then
-        echon " | grep -E -i $EGREPCOLOR -- \"($COLO)\""
+    list=$(echo "$list" | sed 's/^ *//')
+    [ -z "$list" ] && return
+
+    # convert glob to regexp if needed
+    if [ -z "$regexp" ] ; then
+        list=$(__convert_glob__to_regexp "$list")
     fi
+
+    # join with |
+    echo "$list" | sed 's/ /|/g'
 }
 
 # we need internal implementation because regular epm_search uses quotes_args
@@ -429,5 +435,9 @@ epm_search()
     local search_word
     search_word=$(eval __epm_get_longest_word $quoted_args)
     [ -z "$search_word" ] && search_word=$(eval get_firstarg $quoted_args | __clean_from_glob)
-    eval "__epm_search_output \"$search_word\" $MGS | __epm_colorize_pkg_names"
+    # get pattern for colorizing (before pipeline, not in subshell)
+    __epm_color_pattern=$(eval __epm_get_color_pattern $quoted_args)
+    # save first arg for epm play --search
+    __epm_play_search_arg=$(eval get_firstarg $quoted_args)
+    eval "__epm_search_output \"$search_word\" $MGS | __epm_colorize_search_output"
 }

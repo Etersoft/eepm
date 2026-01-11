@@ -795,7 +795,7 @@ case "$1" in
     --search)
         shift
         [ -n "$1" ] || fatal "Search pattern is required"
-        __epm_play_search "$1"
+        __epm_play_search "$1" "$quiet"
         exit
         ;;
 
