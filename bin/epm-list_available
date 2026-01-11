@@ -32,6 +32,34 @@ __alt_list_available_pkglist_query()
     pkglist-query '%{NAME}\t%{VERSION}\t%{SUMMARY}\n' $pkglists
 }
 
+# Convert apt-cache search output to TSV
+# Input: package - description
+# Output: package<tab><tab>description (no version available)
+__epm_convert_apt_to_tsv()
+{
+    sed 's/ - /\t\t/'
+}
+
+# Convert dnf/yum list output to TSV
+# Input: package.arch version repo
+# Output: package<tab>version<tab>
+__epm_convert_dnf_to_tsv()
+{
+    awk '{
+        pkg = $1
+        sub(/\.[^.]+$/, "", pkg)  # remove .arch
+        print pkg "\t" $2 "\t"
+    }'
+}
+
+# Convert pacman -Sl output to TSV
+# Input: repo package version [installed]
+# Output: package<tab>version<tab>
+__epm_convert_pacman_to_tsv()
+{
+    awk '{ print $2 "\t" $3 "\t" }'
+}
+
 # Format TSV input to requested output format
 # Input: package<tab>version<tab>description
 # Uses: $short - output only package names
@@ -115,7 +143,7 @@ __fo_pfn()
 }
 
 # Internal function to get available packages in TSV format
-# Returns: TSV format where supported, native format otherwise
+# Returns: TSV format: package<tab>version<tab>description
 __epm_list_available_internal()
 {
     local CMD
@@ -131,30 +159,32 @@ __epm_list_available_internal()
 
     case $PMTYPE in
         apt-rpm)
-            # use pkglist-query if available (much faster, returns TSV)
+            # use pkglist-query if available (much faster, native TSV)
             if is_command pkglist-query ; then
                 __alt_list_available_pkglist_query
                 return
             fi
-            docmd apt-cache search .
+            apt-cache search . | __epm_convert_apt_to_tsv
             ;;
         apt-dpkg)
-            docmd apt-cache search .
-            ;;
-        apm-rpm)
-            # TODO: --format json?
-            CMD="apm system list --limit 100000"
+            apt-cache search . | __epm_convert_apt_to_tsv
             ;;
         dnf-*)
             warmup_rpmbase
-            docmd dnf list --available
+            dnf list --available 2>/dev/null | tail -n +2 | __epm_convert_dnf_to_tsv
             ;;
         yum-*)
             warmup_rpmbase
-            docmd yum list available
+            yum list available 2>/dev/null | tail -n +2 | __epm_convert_dnf_to_tsv
+            ;;
+        pacman)
+            pacman -Sl | __epm_convert_pacman_to_tsv
+            ;;
+        # TODO: add TSV converters for other package managers
+        apm-rpm)
+            CMD="apm system list --limit 100000"
             ;;
         packagekit)
-            # see for filter list: pkcon get-filters
             docmd pkcon get-packages -p | sed -e "s| (.*||g" -e "s|.* ||"
             ;;
         snappy)
@@ -162,9 +192,6 @@ __epm_list_available_internal()
             ;;
         snap)
             docmd snap find .
-            ;;
-        pacman)
-            docmd pacman -Sl
             ;;
         appget)
             docmd appget search .
