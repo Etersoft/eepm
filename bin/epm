@@ -621,6 +621,9 @@ check_option()
     --debian)             # HELPOPT: filter requires to non-library package names (for requires)
         debian="--debian"
         ;;
+    --tsv)                 # HELPOPT: TSV output format (for list --available)
+        tsv="--tsv"
+        ;;
     --regexp)              # HELPOPT: treat search pattern as regular expression (for grep filter only)
         regexp="--regexp"
         ;;

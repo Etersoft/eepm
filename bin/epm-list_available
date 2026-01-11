@@ -21,19 +21,34 @@ load_helper epm-sh-warmup
 load_helper epm-sh-available
 
 # Use pkglist-query on ALT Linux (much faster than apt-cache)
-# Returns: package=version - description (or just names if $short is set)
+# Returns: TSV format: package<tab>version<tab>description
 __alt_list_available_pkglist_query()
 {
     local pkglists
     pkglists=$(ls /var/lib/apt/lists/*pkglist.* 2>/dev/null | grep -v debuginfo)
     [ -z "$pkglists" ] && return 1
 
+    showcmd "pkglist-query ..."
+    pkglist-query '%{NAME}\t%{VERSION}\t%{SUMMARY}\n' $pkglists
+}
+
+# Format TSV input to requested output format
+# Input: package<tab>version<tab>description
+# Uses: $short - output only package names
+# Uses: $tsv - output as TSV (pass through)
+__epm_format_available()
+{
     if [ -n "$short" ] ; then
-        showcmd "pkglist-query '%{NAME}' ..."
-        pkglist-query '%{NAME}\n' $pkglists
+        cut -f1
+    elif [ -n "$tsv" ] ; then
+        cat
     else
-        showcmd "pkglist-query '%{NAME}=%{VERSION} - %{SUMMARY}' ..."
-        pkglist-query '%{NAME}=%{VERSION} - %{SUMMARY}\n' $pkglists
+        # human-readable: package=version - description
+        awk -F'\t' '{
+            if ($2) printf "%s=%s", $1, $2; else printf "%s", $1
+            if ($3) printf " - %s", $3
+            printf "\n"
+        }'
     fi
 }
 
@@ -110,7 +125,8 @@ epm_list_available()
 
     # use cache by default (--direct bypasses cache)
     if [ -z "$direct" ] ; then
-        if __epm_available_read_cache ; then
+        if __epm_available_cache_exists ; then
+            __epm_available_read_cache | __epm_format_available
             return
         fi
         warning "No package cache. Run 'epm update' to create it."
@@ -131,7 +147,7 @@ case $PMTYPE in
     apt-rpm)
         # use pkglist-query if available (much faster)
         if is_command pkglist-query ; then
-            __alt_list_available_pkglist_query
+            __alt_list_available_pkglist_query | __epm_format_available
         elif [ -n "$short" ] ; then
             docmd apt-cache search . | sed -e "s| .*||g"
         else
