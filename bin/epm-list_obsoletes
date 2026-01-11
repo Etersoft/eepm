@@ -1,0 +1,69 @@
+#!/bin/sh
+#
+# Copyright (C) 2025  Etersoft
+# Copyright (C) 2025  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+load_helper epm-sh-warmup
+
+epm_list_obsoletes()
+{
+
+case $PMTYPE in
+    apt-rpm)
+        warmup_rpmbase
+        # List installed packages that are obsoleted by packages in repositories
+        # apt-cache show provides Obsoletes field
+        info "Checking for obsoleted packages..."
+        load_helper epm-packages
+        local installed
+        installed=$(short=1 epm_packages)
+        for pkg in $installed ; do
+            # Check if any available package obsoletes this one
+            if LC_ALL=C apt-cache showpkg "$pkg" 2>/dev/null | grep -q "^Reverse Provides:" ; then
+                # This is a simplified check; full implementation would parse Obsoletes
+                continue
+            fi
+        done
+        # TODO: implement proper Obsoletes checking for apt-rpm
+        warning "Obsoletes checking is not fully implemented for apt-rpm yet"
+        ;;
+    apt-dpkg)
+        warmup_dpkgbase
+        warning "Obsoletes checking is not implemented for apt-dpkg yet"
+        ;;
+    dnf-*|yum-*)
+        warmup_rpmbase
+        if [ -n "$short" ] ; then
+            docmd dnf list obsoletes 2>/dev/null | tail -n +2 | sed -e "s|\..*||g"
+        else
+            docmd dnf list obsoletes
+        fi
+        ;;
+    pacman)
+        # Pacman doesn't have a direct obsoletes concept
+        warning "Obsoletes concept is not applicable for pacman"
+        ;;
+    zypper)
+        # List packages that would be removed by distribution upgrade
+        docmd zypper packages --unneeded
+        ;;
+    *)
+        fatal 'Have no suitable query command for $PMTYPE'
+        ;;
+esac
+
+}

@@ -1,0 +1,86 @@
+#!/bin/sh
+#
+# Copyright (C) 2025  Etersoft
+# Copyright (C) 2025  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+load_helper epm-sh-warmup
+
+__epm_list_extras_compare()
+{
+    load_helper epm-packages
+    load_helper epm-list_available
+
+    # List installed packages that are not available in any repository
+    # installed packages listed once, available packages listed twice (via sed p)
+    # uniq -u shows only unique lines (installed but not available)
+    {
+        (short=1 epm_packages) | sort -u
+        (direct='' short=1 epm_list_available) | sort -u | sed 'p'
+    } | sort | uniq -u
+}
+
+epm_list_extras()
+{
+
+if [ -n "$direct" ] ; then
+    __epm_list_extras_compare
+    return
+fi
+
+case $PMTYPE in
+    apt-rpm)
+        warmup_rpmbase
+        # use apt-scripts if available (faster and more accurate)
+        if [ -r /usr/share/apt/scripts/list-extras.lua ] ; then
+            docmd apt-cache list-extras
+        else
+            info "Install apt-scripts for faster results"
+            __epm_list_extras_compare
+        fi
+        ;;
+    apt-dpkg)
+        warmup_dpkgbase
+        # apt 2.0+ supports ?obsolete pattern
+        docmd apt list '?obsolete'
+        ;;
+    dnf-*|yum-*)
+        warmup_rpmbase
+        if [ -n "$short" ] ; then
+            docmd dnf list extras 2>/dev/null | tail -n +2 | sed -e "s|\..*||g"
+        else
+            docmd dnf list extras
+        fi
+        ;;
+    pacman)
+        # Foreign packages (installed but not in sync databases)
+        if [ -n "$short" ] ; then
+            docmd pacman -Qmq
+        else
+            docmd pacman -Qm
+        fi
+        ;;
+    zypper-rpm)
+        # List orphaned packages (no repository)
+        docmd zypper packages --orphaned
+        ;;
+    *)
+        # Universal fallback: compare installed vs available
+        __epm_list_extras_compare
+        ;;
+esac
+
+}

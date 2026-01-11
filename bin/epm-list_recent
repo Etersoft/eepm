@@ -1,0 +1,72 @@
+#!/bin/sh
+#
+# Copyright (C) 2025  Etersoft
+# Copyright (C) 2025  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+load_helper epm-sh-warmup
+
+epm_list_recent()
+{
+
+case $PMTYPE in
+    apt-rpm)
+        warmup_rpmbase
+        # List packages recently added to repositories
+        # Version format: version@timestamp, extract timestamp and sort
+        info "Listing recently added packages..."
+        # Extract Package and Version lines, parse timestamp from Version@timestamp format
+        a= apt-cache dumpavail | awk '
+            /^Package:/ { pkg = $2 }
+            /^Version:/ {
+                if (match($2, /@([0-9]+)$/, arr)) {
+                    print arr[1], pkg
+                }
+            }
+        ' | sort -rn | head -100 | awk '{print $2}'
+        ;;
+    apt-dpkg)
+        warmup_dpkgbase
+        # Debian doesn't have build date in package metadata typically
+        warning "Recent packages listing is not well supported for apt-dpkg"
+        ;;
+    dnf-*|yum-*)
+        warmup_rpmbase
+        if [ -n "$short" ] ; then
+            docmd dnf list recent 2>/dev/null | tail -n +2 | sed -e "s|\..*||g"
+        else
+            docmd dnf list recent
+        fi
+        ;;
+    pacman)
+        # List recently updated packages in sync database
+        info "Listing recently updated packages..."
+        if [ -n "$short" ] ; then
+            docmd pacman -Sl | sort -k3 -rn | head -100 | awk '{print $2}'
+        else
+            docmd pacman -Sl | sort -k3 -rn | head -100
+        fi
+        ;;
+    zypper)
+        # Show recently added packages
+        docmd zypper packages --sort-by-repo
+        ;;
+    *)
+        fatal 'Have no suitable query command for $PMTYPE'
+        ;;
+esac
+
+}

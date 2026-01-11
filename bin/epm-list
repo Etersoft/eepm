@@ -54,9 +54,24 @@ epm_list()
             epm_list_installed "$@"
             return
             ;;
-        --upgradable)             # HELPOPT: list only upgradable packages
+        --upgradable|--upgrades)  # HELPOPT: list only upgradable packages
             load_helper epm-list_upgradable
             epm_list_upgradable "$@"
+            return
+            ;;
+        --extras)                 # HELPOPT: list installed packages not available in repositories
+            load_helper epm-list_extras
+            epm_list_extras "$@"
+            return
+            ;;
+        --obsoletes)              # HELPOPT: list installed packages obsoleted by packages in repositories
+            load_helper epm-list_obsoletes
+            epm_list_obsoletes "$@"
+            return
+            ;;
+        --recent)                 # HELPOPT: list packages recently added to repositories
+            load_helper epm-list_recent
+            epm_list_recent "$@"
             return
             ;;
         --programs)               # HELPOPT: list packages that have GUI (.desktop files)
