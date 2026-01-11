@@ -39,8 +39,7 @@ epm_list_installed()
 case $PMTYPE in
     *-dpkg)
         warmup_dpkgbase
-        docmd dpkg-query -W --showformat="\${db:Status-Abbrev}\${Package}-\${Version}:\${Architecture} - \${Description}\n" "$@" | grep "^.i" | sed -e "s|^.. ||g" | cut -d'
-' -f1 | __fo_pfn "$@"
+        docmd dpkg-query -W --showformat="\${db:Status-Abbrev}\${Package}-\${Version}:\${Architecture} - \${binary:Summary}\n" "$@" | grep "^.i" | sed -e "s|^.. ||g" | __fo_pfn "$@"
         return ;;
     *-rpm)
         warmup_rpmbase
@@ -72,7 +71,7 @@ case $PMTYPE in
         docmd pkg info 2>/dev/null | sed -e "s| | - |" | __fo_pfn "$@"
         return ;;
     pacman)
-        docmd pacman -Qi "$@" 2>/dev/null | awk '/^Name/{name=$3} /^Version/{ver=$3} /^Description/{$1=$2=""; desc=$0} /^$/{print name"-"ver" -"desc}' | __fo_pfn "$@"
+        LC_ALL=C docmd pacman -Qi "$@" 2>/dev/null | awk '/^Name/{name=$3} /^Version/{ver=$3} /^Description/{$1=$2=""; desc=$0} /^$/{print name"-"ver" -"desc}' | __fo_pfn "$@"
         return
         ;;
     npackd)
