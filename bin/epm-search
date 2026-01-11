@@ -21,6 +21,7 @@ load_helper epm-check_updated_repo
 load_helper epm-sh-warmup
 load_helper epm-sh-backend
 load_helper epm-sh-search
+load_helper epm-sh-available
 load_helper epm-list_available
 
 __epm_search_output()
@@ -31,7 +32,7 @@ local string="$*"
 # Try cache first for supported package managers
 case $PMTYPE in
     apt-rpm|apt-dpkg|dnf-rpm|dnf5-rpm|yum-rpm|zypper-rpm|pacman)
-        if __epm_search_from_cache ; then
+        if __epm_available_read_cache ; then
             return
         fi
         ;;

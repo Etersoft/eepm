@@ -21,6 +21,7 @@
 
 load_helper epm-sh-warmup
 load_helper epm-check_updated_repo
+load_helper epm-sh-available
 load_helper epm-list_available
 
 # Analyze apt-get update errors and provide recommendations
@@ -316,7 +317,7 @@ epm_update()
 
     __epm_touch_pkg
 
-    __save_available_packages
+    __epm_available_save_cache
 
     __epm_update_content_index
 

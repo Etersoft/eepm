@@ -1,0 +1,68 @@
+#!/bin/sh
+#
+# Copyright (C) 2023-2025  Etersoft
+# Copyright (C) 2023-2025  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+# Functions for working with available packages cache
+# Cache format: package=version<tab>description
+
+# Get path to cache file
+__epm_available_cache_file()
+{
+    echo "$epm_vardir/available-packages"
+}
+
+# Check if cache file exists and is not empty
+__epm_available_cache_exists()
+{
+    [ -s "$epm_vardir/available-packages" ]
+}
+
+# Read from cache
+# Uses: $short - if set, output only package names
+# Returns: packages in format "name=version - description" or just names
+__epm_available_read_cache()
+{
+    __epm_available_cache_exists || return 1
+
+    if [ -n "$short" ] ; then
+        # extract package name only (without =version)
+        cut -f1 "$epm_vardir/available-packages" | cut -d= -f1
+    else
+        # convert tab to " - " for standard format
+        sed 's/\t/ - /' "$epm_vardir/available-packages"
+    fi
+}
+
+# Save available packages to cache (called from epm update)
+__epm_available_save_cache()
+{
+    [ -d "$epm_vardir" ] || return 0
+
+    # TODO: ignore in docker
+    # update list only if the system supports bash completion
+    [ -d /etc/bash_completion.d ] || return 0
+
+    # HACK: too much time (5 minutes) on deb systems in a docker
+    # [ $PMTYPE = "apt-dpkg" ] && return 0
+
+    info "Retrieving list of all available packages (for autocompletion) ..."
+    # can ask sudo later
+    set_sudo
+    # format: package=version\tdescription
+    update=update epm_list_available | sed 's/ - /\t/' | sort | sudorun tee "$epm_vardir/available-packages" >/dev/null
+}

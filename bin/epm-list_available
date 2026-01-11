@@ -18,9 +18,7 @@
 #
 
 load_helper epm-sh-warmup
-
-# Cache file: $epm_vardir/available-packages
-# Format: package\tdescription
+load_helper epm-sh-available
 
 # Use pkglist-query on ALT Linux (much faster than apt-cache)
 # Returns: package=version - description (or just names if $short is set)
@@ -39,24 +37,6 @@ __alt_list_available_pkglist_query()
     fi
 }
 
-# Save available packages to cache (called from epm update)
-__save_available_packages()
-{
-    [ -d "$epm_vardir" ] || return 0
-
-    # TODO: ignore in docker
-    # update list only if the system supports bash completion
-    [ -d /etc/bash_completion.d ] || return 0
-
-    # HACK: too much time (5 minutes) on deb systems in a docker
-    # [ $PMTYPE = "apt-dpkg" ] && return 0
-
-    info "Retrieving list of all available packages (for autocompletion) ..."
-    # can ask sudo later
-    set_sudo
-    # format: package\tdescription
-    update=update epm_list_available | sed 's/ - /\t/' | sort | sudorun tee $epm_vardir/available-packages >/dev/null
-}
 
 # Suggest similar packages using fzf fuzzy search
 # Args: package_name
@@ -78,8 +58,8 @@ __epm_suggest_similar_packages()
         local selected
         selected="$(echo "$similar" | fzf --prompt="$(eval_gettext "Select package"): " --height=10 --reverse)"
         if [ -n "$selected" ] ; then
-            # extract package name (before version dash or space)
-            echo "$selected" | sed -e 's/ - .*//' -e 's/-[0-9].*//'
+            # extract package name (before = or space)
+            echo "$selected" | sed -e 's/[= ].*//'
             return 0
         fi
         return 1
@@ -107,19 +87,6 @@ __epm_suggest_similar_packages_by_list()
     echo $selected_all
 }
 
-# Output all packages from cache for epm search
-# Returns: packages in format "name - description", or error if no cache
-__epm_search_from_cache()
-{
-    local cache="$epm_vardir/available-packages"
-
-    # no cache - return error for fallback
-    [ -s "$cache" ] || return 1
-
-    # output cache, convert tab to " - " for standard format
-    sed 's/\t/ - /' "$cache"
-}
-
 __aptcyg_print_full()
 {
     #showcmd apt-cyg show
@@ -145,18 +112,12 @@ epm_list_available()
     # use cache (create if missing)
     if [ -z "$update" ] ; then
         # create cache if missing
-        if [ ! -s "$epm_vardir/available-packages" ] ; then
+        if ! __epm_available_cache_exists ; then
             [ -n "$direct" ] && return
-            __save_available_packages
+            __epm_available_save_cache
         fi
         # use cache
-        if [ -s "$epm_vardir/available-packages" ] ; then
-            if [ -n "$short" ] ; then
-                # extract package name only (without =version)
-                cut -f1 "$epm_vardir/available-packages" | cut -d= -f1
-            else
-                sed 's/\t/ - /' "$epm_vardir/available-packages"
-            fi
+        if __epm_available_read_cache ; then
             return
         fi
     fi
