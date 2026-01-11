@@ -221,7 +221,11 @@ __epm_play_search()
     MGS=$(__epm_search_make_grep "$@")
     __epm_color_pattern=$(__epm_get_color_pattern "$@")
 
-    if [ -n "$no_color" ] ; then
+    if [ -n "$short" ] ; then
+        eval "__get_fast_int_list_app \$arch $MGS" | while IFS=$'\x1E' read -r app desc; do
+            echo "$app"
+        done
+    elif [ -n "$no_color" ] ; then
         eval "__get_fast_int_list_app \$arch $MGS" | while IFS=$'\x1E' read -r app desc; do
             printf "%-25s - %s\n" "$app" "$desc"
         done
