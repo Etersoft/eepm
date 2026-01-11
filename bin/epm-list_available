@@ -22,6 +22,23 @@ load_helper epm-sh-warmup
 # Cache file: $epm_vardir/available-packages
 # Format: package\tdescription
 
+# Use pkglist-query on ALT Linux (much faster than apt-cache)
+# Returns: package-version - description (or just names if $short is set)
+__alt_list_available_pkglist_query()
+{
+    local pkglists
+    pkglists=$(ls /var/lib/apt/lists/*pkglist.* 2>/dev/null | grep -v debuginfo)
+    [ -z "$pkglists" ] && return 1
+
+    if [ -n "$short" ] ; then
+        showcmd "pkglist-query '%{NAME}' ..."
+        pkglist-query '%{NAME}\n' $pkglists
+    else
+        showcmd "pkglist-query '%{NAME}-%{VERSION} - %{SUMMARY}' ..."
+        pkglist-query '%{NAME}-%{VERSION} - %{SUMMARY}\n' $pkglists
+    fi
+}
+
 # Save available packages to cache (called from epm update)
 __save_available_packages()
 {
@@ -158,8 +175,17 @@ case $PMTYPE in
 esac
 
 case $PMTYPE in
-    apt-*)
-        # TODO: use apt list
+    apt-rpm)
+        # use pkglist-query if available (much faster)
+        if is_command pkglist-query ; then
+            __alt_list_available_pkglist_query
+        elif [ -n "$short" ] ; then
+            docmd apt-cache search . | sed -e "s| .*||g"
+        else
+            docmd apt-cache search .
+        fi
+        ;;
+    apt-dpkg)
         if [ -n "$short" ] ; then
             docmd apt-cache search . | sed -e "s| .*||g"
         else
