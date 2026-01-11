@@ -210,9 +210,11 @@ epm_search()
     # search in epm play separately
     if [ -z "$no_epm_play_search" ] ; then
         local hint="(use 'epm play' to install it)"
-        if [ -n "$USETTY" ] ; then
+        local play_color=""
+        if isatty ; then
             hint="$(printf '\033[32m')$hint$(printf '\033[0m')"
+            play_color="--color=always"
         fi
-        eval "epm play --search $quoted_args" | sed -e "s/  */ /g" -e "s/\$/ $hint/"
+        eval "epm play $play_color --search $quoted_args" | sed -e "s/  */ /g" -e "s/\$/ $hint/"
     fi
 }

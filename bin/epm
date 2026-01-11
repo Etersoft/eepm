@@ -590,6 +590,9 @@ check_option()
     --quiet|--silent)     # HELPOPT: quiet mode (do not print commands before exec)
         quiet="--quiet"
         ;;
+    --color=always)       # HELPOPT: force colored output
+        force_color=1
+        ;;
     --nodeps)             # HELPOPT: skip dependency check (during install/simulate and so on)
         nodeps="--nodeps"
         ;;
