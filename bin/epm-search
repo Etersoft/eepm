@@ -217,6 +217,6 @@ epm_search()
             hint="$(printf '\033[32m')$hint$(printf '\033[0m')"
             play_color="--color=always"
         fi
-        eval "epm play $play_color --search $quoted_args" | sed -e "s/  */ /g" -e "s/\$/ $hint/"
+        eval "epm play $short $play_color --search $quoted_args" | sed -e "s/  */ /g" -e "s/\$/ $hint/"
     fi
 }
