@@ -70,6 +70,27 @@ With eepm you can do all package management jobs with the same set of commands o
 Eepm can be used manually, in shell scripts or other programs.
 
 Please use epm --help to get detail command explain.
+.SH SEARCH PATTERNS
+Search patterns support glob syntax:
+.TP
+.B *
+Match any characters
+.TP
+.B ?
+Match single character
+.TP
+.B [abc]
+Match any character in brackets
+.TP
+.B [a-z]
+Match character range
+.TP
+.B ~pattern
+Exclude packages matching pattern
+.PP
+Use
+.B --regexp
+option to treat patterns as regular expressions.
 .SH OPTIONS
 .TP
 .I -h 
