@@ -618,6 +618,9 @@ check_option()
     --debian)             # HELPOPT: filter requires to non-library package names (for requires)
         debian="--debian"
         ;;
+    --regexp)              # HELPOPT: treat search pattern as regular expression (for grep filter only)
+        regexp="--regexp"
+        ;;
     --direct)              # HELPOPT: direct install package file from ftp (not via hilevel repository manager)
         direct="--direct"
         ;;
