@@ -60,6 +60,133 @@ __epm_convert_pacman_to_tsv()
     awk '{ print $2 "\t" $3 "\t" }'
 }
 
+# Convert apk list output to TSV
+# Input: package-version {repo} (arch) [status] or package-version description
+# Output: package<tab>version<tab>description
+__epm_convert_apk_to_tsv()
+{
+    awk '{
+        # package-version {repo}
+        split($1, a, "-")
+        pkg = a[1]
+        ver = a[2]
+        for (i=3; i<=length(a); i++) ver = ver "-" a[i]
+        # description is after arch in ()
+        desc = ""
+        for (i=4; i<=NF; i++) desc = desc " " $i
+        gsub(/^ /, "", desc)
+        print pkg "\t" ver "\t" desc
+    }'
+}
+
+# Convert opkg list output to TSV
+# Input: package - version - description
+# Output: package<tab>version<tab>description
+__epm_convert_opkg_to_tsv()
+{
+    awk -F' - ' '{ print $1 "\t" $2 "\t" $3 }'
+}
+
+# Convert snap find output to TSV
+# Input: Name Version Publisher Notes Summary (header line, then data)
+# Output: package<tab>version<tab>description
+__epm_convert_snap_to_tsv()
+{
+    tail -n +2 | awk '{
+        pkg = $1
+        ver = $2
+        desc = ""
+        for (i=5; i<=NF; i++) desc = desc " " $i
+        gsub(/^ /, "", desc)
+        print pkg "\t" ver "\t" desc
+    }'
+}
+
+# Convert nix-env -qaP output to TSV
+# Input: attribute package-version description...
+# Output: package<tab>version<tab>description
+__epm_convert_nix_to_tsv()
+{
+    awk '{
+        # $1 is attribute path, $2 is package-version
+        n = split($2, a, "-")
+        pkg = a[1]
+        for (i=2; i<n; i++) pkg = pkg "-" a[i]
+        ver = a[n]
+        desc = ""
+        for (i=3; i<=NF; i++) desc = desc " " $i
+        gsub(/^ /, "", desc)
+        print pkg "\t" ver "\t" desc
+    }'
+}
+
+# Convert eopkg list-available output to TSV
+# Input: package - description, version
+# Output: package<tab>version<tab>description
+__epm_convert_eopkg_to_tsv()
+{
+    awk -F' - ' '{
+        pkg = $1
+        rest = $2
+        # version is after last comma
+        n = split(rest, a, ", ")
+        ver = a[n]
+        desc = a[1]
+        for (i=2; i<n; i++) desc = desc ", " a[i]
+        print pkg "\t" ver "\t" desc
+    }'
+}
+
+# Convert xbps-query -Rs output to TSV
+# Input: [*] package-version description
+# Output: package<tab>version<tab>description
+__epm_convert_xbps_to_tsv()
+{
+    awk '{
+        # skip [*] or [-] prefix
+        idx = 1
+        if ($1 ~ /^\[/) idx = 2
+        # package-version
+        n = split($idx, a, "-")
+        pkg = a[1]
+        for (i=2; i<n; i++) pkg = pkg "-" a[i]
+        ver = a[n]
+        desc = ""
+        for (i=idx+1; i<=NF; i++) desc = desc " " $i
+        gsub(/^ /, "", desc)
+        print pkg "\t" ver "\t" desc
+    }'
+}
+
+# Convert choco search output to TSV
+# Input: package version [Approved]
+# Output: package<tab>version<tab>
+__epm_convert_choco_to_tsv()
+{
+    grep -v "^Chocolatey" | awk '{ print $1 "\t" $2 "\t" }'
+}
+
+# Convert brew search output to TSV (names only)
+# Input: package
+# Output: package<tab><tab>
+__epm_convert_brew_to_tsv()
+{
+    awk '{ print $1 "\t\t" }'
+}
+
+# Convert termux pkg list-all output to TSV
+# Input: package/repo version arch [status]
+# Output: package<tab>version<tab>
+__epm_convert_termux_to_tsv()
+{
+    awk -F'/' '{
+        pkg = $1
+        split($2, a, " ")
+        ver = a[1]
+        print pkg "\t" ver "\t"
+    }'
+}
+
 # Format TSV input to requested output format
 # Input: package<tab>version<tab>description
 # Uses: $short - output only package names
@@ -178,9 +305,36 @@ __epm_list_available_tsv()
             yum list available 2>/dev/null | tail -n +2 | __epm_convert_dnf_to_tsv
             ;;
         pacman)
-            pacman -Sl | __epm_convert_pacman_to_tsv
+            docmd pacman -Sl | __epm_convert_pacman_to_tsv
             ;;
-        # TODO: add TSV converters for other package managers
+        snap)
+            docmd snap find . | __epm_convert_snap_to_tsv
+            ;;
+        apk)
+            docmd apk list --available | __epm_convert_apk_to_tsv
+            ;;
+        opkg)
+            docmd opkg list-available | __epm_convert_opkg_to_tsv
+            ;;
+        eopkg)
+            docmd eopkg list-available | __epm_convert_eopkg_to_tsv
+            ;;
+        nix)
+            docmd nix-env -qaP | __epm_convert_nix_to_tsv
+            ;;
+        xbps)
+            docmd xbps-query -Rs '*' | __epm_convert_xbps_to_tsv
+            ;;
+        choco)
+            docmd choco search . | __epm_convert_choco_to_tsv
+            ;;
+        homebrew)
+            docmd brew search . | __epm_convert_brew_to_tsv
+            ;;
+        termux-pkg)
+            docmd pkg list-all | __epm_convert_termux_to_tsv
+            ;;
+        # TODO: need format investigation
         apm-rpm)
             CMD="apm system list --limit 100000"
             ;;
@@ -189,9 +343,6 @@ __epm_list_available_tsv()
             ;;
         snappy)
             docmd snappy find .
-            ;;
-        snap)
-            docmd snap find .
             ;;
         appget)
             docmd appget search .
@@ -202,14 +353,8 @@ __epm_list_available_tsv()
         emerge)
             docmd eix --world
             ;;
-        termux-pkg)
-            docmd pkg list-all
-            ;;
         npackd)
             CMD="npackdcl list"
-            ;;
-        eopkg)
-            CMD="eopkg list-available"
             ;;
         stplr)
             CMD="stplr list"
@@ -217,29 +362,8 @@ __epm_list_available_tsv()
         pisi)
             CMD="pisi list-available"
             ;;
-        choco)
-            CMD="choco search ."
-            ;;
         slackpkg)
             CMD="slackpkg search ."
-            ;;
-        homebrew)
-            docmd brew search .
-            ;;
-        opkg)
-            CMD="opkg list-available"
-            ;;
-        apk)
-            CMD="apk list --available"
-            ;;
-        nix)
-            CMD="nix-env -qaP"
-            ;;
-        xbps)
-            CMD="xbps-query -l -R"
-            showcmd $CMD
-            $CMD | sed -e "s|^ii ||g" -e "s| .*||g" | __fo_pfn
-            return
             ;;
         *)
             fatal 'Have no suitable query command for $PMTYPE'
