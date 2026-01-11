@@ -1,0 +1,143 @@
+#!/bin/sh
+#
+# Copyright (C) 2012-2025  Etersoft
+# Copyright (C) 2012-2025  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+# Common search functions for epm search and epm play --search
+
+# Get the longest word from arguments (for searching via package manager)
+# PM search works better with longer words
+__epm_get_longest_word()
+{
+    local longest=""
+    local word
+    for word in "$@" ; do
+        # skip exclusion patterns
+        case "$word" in
+            ~*) continue ;;
+        esac
+        # clean glob characters for PM search
+        word=$(echo "$word" | sed -e "s/[?*\[\]]//g")
+        [ -z "$word" ] && continue
+        if [ ${#word} -gt ${#longest} ] ; then
+            longest="$word"
+        fi
+    done
+    echo "$longest"
+}
+
+# Convert glob pattern to regexp, preserving [] for character classes
+# Supports: * ? [abc] [a-z] [!abc]
+__epm_glob_to_regexp()
+{
+    local pattern="$1"
+    # escape regex special chars except [] * ?
+    # then convert glob to regexp
+    echo "$pattern" | sed \
+        -e 's|[\\.^$|(){}+]|\\&|g' \
+        -e 's|\*|.*|g' \
+        -e 's|?|.|g' \
+        -e 's|\[!|\[^|g'
+}
+
+# Build grep filter pipeline for search results
+# Args: patterns (use ~pattern for exclusion)
+# Uses: $short, $regexp, $EGREPCOLOR
+__epm_build_grep_filter()
+{
+    local i
+    [ -z "$*" ] && return
+
+    local list=""
+    local listN=""
+
+    # separate include and exclude patterns
+    for i in "$@" ; do
+        case "$i" in
+            ~*)
+                listN="$listN ${i#\~}"
+                ;;
+            *)
+                list="$list $i"
+                ;;
+        esac
+    done
+
+    list=$(echo "$list" | sed 's/^ *//' | sed 's/ *$//')
+    listN=$(echo "$listN" | sed 's/^ *//' | sed 's/ *$//' | sed 's/ /|/g')
+
+    # convert to regexp (unless --regexp mode)
+    if [ -z "$regexp" ] ; then
+        list=$(__epm_glob_to_regexp "$list")
+        listN=$(__epm_glob_to_regexp "$listN")
+    fi
+
+    # short mode: strip description
+    if [ -n "$short" ] ; then
+        echon " | sed -e 's| .*||g'"
+    fi
+
+    # exclusion filter
+    [ -n "$listN" ] && echon " | grep -E -i -v -- \"$listN\""
+
+    # inclusion filters (one per word if multiple)
+    local word_count
+    word_count=$(echo "$list" | wc -w)
+    if [ "$word_count" -gt 1 ] ; then
+        for i in $list ; do
+            echon " | grep -E -i -- \"$i\""
+        done
+    fi
+
+    # colorize matches
+    local COLO=""
+    for i in $list $listN ; do
+        [ -n "$COLO" ] && COLO="$COLO|"
+        COLO="$COLO$i"
+    done
+
+    if [ -n "$list" ] ; then
+        echon " | grep -E -i $EGREPCOLOR -- \"($COLO)\""
+    fi
+}
+
+# Colorize package names in search output
+# Input format: "package-name - description" or "package-name"
+# Package names are colored with CYAN
+__epm_colorize_pkg_names()
+{
+    if [ -z "$USETTY" ] ; then
+        cat
+        return
+    fi
+
+    # Use awk for reliable ANSI color handling
+    awk -v cyan="$(printf '\033[36m')" -v reset="$(printf '\033[0m')" '
+    {
+        if (match($0, /^[^ ]+ - /)) {
+            # format: "package - description"
+            pkg = substr($0, 1, index($0, " - ") - 1)
+            rest = substr($0, index($0, " - "))
+            print cyan pkg reset rest
+        } else if (match($0, /^[^ ]+$/)) {
+            # format: "package" only
+            print cyan $0 reset
+        } else {
+            print
+        }
+    }'
+}
