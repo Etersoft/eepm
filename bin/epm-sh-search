@@ -199,7 +199,7 @@ __epm_get_color_pattern()
 # Package names: CYAN, search pattern: RED (bold)
 __epm_colorize_search_output()
 {
-    if [ -z "$USETTY" ] ; then
+    if ! isatty ; then
         cat
         return
     fi
