@@ -64,17 +64,13 @@ __save_available_packages()
 __epm_suggest_similar_packages()
 {
     local pkg="$1"
-    local cache="$epm_vardir/available-packages"
     local count="${suggest_count:-7}"
-
-    # need cache file
-    [ -s "$cache" ] || return 1
 
     # need fzf for fuzzy search
     is_command fzf || return 1
 
     local similar
-    similar="$(fzf -f "$pkg" < "$cache" 2>/dev/null | head -$count)"
+    similar="$(epm_list_available | fzf -f "$pkg" 2>/dev/null | head -$count)"
     [ -z "$similar" ] && return 1
 
     # Interactive selection if enabled (via config or --interactive flag)
@@ -82,7 +78,8 @@ __epm_suggest_similar_packages()
         local selected
         selected="$(echo "$similar" | fzf --prompt="$(eval_gettext "Select package"): " --height=10 --reverse)"
         if [ -n "$selected" ] ; then
-            echo "$selected" | cut -f1
+            # extract package name (before version dash or space)
+            echo "$selected" | sed -e 's/ - .*//' -e 's/-[0-9].*//'
             return 0
         fi
         return 1
