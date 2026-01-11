@@ -322,13 +322,13 @@ __epm_expand_wildcards()
                 selected="$(echo "$matched_verbose" | __epm_interactive_select_packages install)"
                 if [ -n "$selected" ] ; then
                     had_interactive_selection=1
-                    # Extract only package names from selection
-                    result="$result $(echo "$selected" | sed -e 's| .*||g' | tr '\n' ' ')"
+                    # Extract only package names from selection (strip =version and description)
+                    result="$result $(echo "$selected" | sed -e 's|[= ].*||' | tr '\n' ' ')"
                 fi
             else
                 # Non-interactive: install all matches
                 info "Pattern '$pkg' matched $match_count package(s)"
-                result="$result $(echo "$matched" | sed -e 's| .*||g' | tr '\n' ' ')"
+                result="$result $(echo "$matched" | sed -e 's|[= ].*||' | tr '\n' ' ')"
             fi
         else
             result="$result $pkg"

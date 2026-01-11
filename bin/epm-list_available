@@ -23,7 +23,7 @@ load_helper epm-sh-warmup
 # Format: package\tdescription
 
 # Use pkglist-query on ALT Linux (much faster than apt-cache)
-# Returns: package-version - description (or just names if $short is set)
+# Returns: package=version - description (or just names if $short is set)
 __alt_list_available_pkglist_query()
 {
     local pkglists
@@ -34,8 +34,8 @@ __alt_list_available_pkglist_query()
         showcmd "pkglist-query '%{NAME}' ..."
         pkglist-query '%{NAME}\n' $pkglists
     else
-        showcmd "pkglist-query '%{NAME}-%{VERSION} - %{SUMMARY}' ..."
-        pkglist-query '%{NAME}-%{VERSION} - %{SUMMARY}\n' $pkglists
+        showcmd "pkglist-query '%{NAME}=%{VERSION} - %{SUMMARY}' ..."
+        pkglist-query '%{NAME}=%{VERSION} - %{SUMMARY}\n' $pkglists
     fi
 }
 
@@ -152,7 +152,8 @@ epm_list_available()
         # use cache
         if [ -s "$epm_vardir/available-packages" ] ; then
             if [ -n "$short" ] ; then
-                cut -f1 "$epm_vardir/available-packages"
+                # extract package name only (without =version)
+                cut -f1 "$epm_vardir/available-packages" | cut -d= -f1
             else
                 sed 's/\t/ - /' "$epm_vardir/available-packages"
             fi
