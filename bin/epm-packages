@@ -18,6 +18,7 @@
 #
 
 load_helper epm-sh-warmup
+load_helper epm-sh-search
 
 __epm_packages_help()
 {
@@ -285,6 +286,6 @@ epm_packages()
             fatal 'Unknown option $opt. Use epm packages --help to get help.'
     esac
 
-    # main output: TSV -> filter -> format
-    __epm_packages_tsv | __epm_filter_by_pattern "$@" | __epm_format_output
+    # main output: TSV -> filter -> format -> colorize
+    __epm_packages_tsv | __epm_filter_by_pattern "$@" | __epm_format_output | __epm_colorize_search_output
 }
