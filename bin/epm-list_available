@@ -29,8 +29,8 @@ __alt_list_available_pkglist_query()
     pkglists=$(ls /var/lib/apt/lists/*pkglist.* 2>/dev/null | grep -v debuginfo)
     [ -z "$pkglists" ] && return 1
 
-    showcmd "pkglist-query ..."
-    pkglist-query '%{NAME}\t%{VERSION}\t%{SUMMARY}\n' $pkglists
+    showcmd pkglist-query '%{NAME}\\t%{VERSION}\\t%{SUMMARY}\\n' '/var/lib/apt/lists/*pkglist.*'
+    LANG=C pkglist-query '%{NAME}\t%{VERSION}\t%{SUMMARY}\n' $pkglists
 }
 
 # Convert apt-cache search output to TSV
