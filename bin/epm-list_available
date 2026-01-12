@@ -19,6 +19,7 @@
 
 load_helper epm-sh-warmup
 load_helper epm-sh-available
+load_helper epm-sh-search
 
 # Use pkglist-query on ALT Linux (much faster than apt-cache)
 # Returns: TSV format: package<tab>version<tab>description
@@ -367,12 +368,12 @@ epm_list_available()
     # use cache by default (--direct bypasses cache)
     if [ -z "$direct" ] ; then
         if __epm_available_cache_exists ; then
-            __epm_available_read_cache | __epm_format_output
+            __epm_available_read_cache | __epm_format_output | __epm_colorize_search_output
             return
         fi
         warning "No package cache. Run 'epm update' to create it."
     fi
 
     # get fresh data and format
-    __epm_list_available_tsv | __epm_format_output
+    __epm_list_available_tsv | __epm_format_output | __epm_colorize_search_output
 }
