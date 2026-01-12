@@ -125,7 +125,7 @@ __epm_search_make_grep()
 
     local list=
     local listN=
-    for i in $@ ; do
+    for i in "$@" ; do
         case "$i" in
             ~*)
                 # will clean from ~ later
