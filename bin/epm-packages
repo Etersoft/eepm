@@ -82,19 +82,183 @@ __aptcyg_print_full()
 {
     #showcmd apt-cyg show
     local VERSION=$(a= apt-cyg show "$1" | grep -m1 "^version: " | sed -e "s|^version: ||g")
-    echo "$1-$VERSION"
+    echo "$1	$VERSION	"
 }
 
-__fo_pfn()
-{
-    grep -v "^$" | grep -- "$*"
-}
-
-# TODO: we have a problem with error status here
-epm_packages()
+# Get installed packages in TSV format
+# Returns: TSV format: package<tab>version<tab>description
+__epm_packages_tsv()
 {
     local CMD
 
+    case $PMTYPE in
+        *-dpkg)
+            warmup_dpkgbase
+            # note: use literal tabs in format string
+            docmd dpkg-query -W --showformat='${db:Status-Abbrev}${Package}	${Version}	${binary:Summary}\n' | grep "^.i" | sed -e "s|^.. ||g"
+            ;;
+        *-rpm)
+            warmup_rpmbase
+            # note: use literal tabs in format string
+            docmd rpm -qa --queryformat '%{name}	%{version}-%{release}	%{summary}\n'
+            ;;
+        snap)
+            # snap list: Name Version Rev Tracking Publisher Notes
+            docmd snap list 2>/dev/null | tail -n +2 | awk '{print $1"\t"$2"\t"}'
+            ;;
+        flatpak)
+            docmd flatpak list --app --columns=application,version,name 2>/dev/null | awk -F'\t' '{print $1"\t"$2"\t"$3}'
+            ;;
+        pacman)
+            # pacman -Q outputs: name version
+            docmd pacman -Q 2>/dev/null | awk '{print $1"\t"$2"\t"}'
+            ;;
+        pkgng)
+            docmd pkg info 2>/dev/null | awk '{
+                # name-version comment
+                n = split($1, a, "-")
+                pkg = a[1]
+                for (i=2; i<n; i++) pkg = pkg "-" a[i]
+                ver = a[n]
+                $1 = ""
+                gsub(/^ /, "", $0)
+                print pkg"\t"ver"\t"$0
+            }'
+            ;;
+        eopkg)
+            # name - description, version
+            docmd eopkg list-installed 2>/dev/null | awk -F' - ' '{
+                pkg = $1
+                rest = $2
+                n = split(rest, a, ", ")
+                ver = a[n]
+                desc = a[1]
+                for (i=2; i<n; i++) desc = desc ", " a[i]
+                print pkg"\t"ver"\t"desc
+            }'
+            ;;
+        pisi)
+            docmd pisi list-installed 2>/dev/null | awk -F' - ' '{
+                pkg = $1
+                rest = $2
+                n = split(rest, a, ", ")
+                ver = a[n]
+                desc = a[1]
+                for (i=2; i<n; i++) desc = desc ", " a[i]
+                print pkg"\t"ver"\t"desc
+            }'
+            ;;
+        opkg)
+            # name - version - description
+            docmd opkg list-installed 2>/dev/null | awk -F' - ' '{print $1"\t"$2"\t"$3}'
+            ;;
+        apk)
+            # name-version description
+            docmd apk list --installed 2>/dev/null | awk '{
+                n = split($1, a, "-")
+                pkg = a[1]
+                for (i=2; i<n; i++) pkg = pkg "-" a[i]
+                ver = a[n]
+                $1 = ""
+                gsub(/^ /, "", $0)
+                gsub(/ \[installed\]/, "", $0)
+                print pkg"\t"ver"\t"$0
+            }'
+            ;;
+        nix)
+            docmd nix-env -q --description 2>/dev/null | awk '{
+                n = split($1, a, "-")
+                pkg = a[1]
+                for (i=2; i<n; i++) pkg = pkg "-" a[i]
+                ver = a[n]
+                $1 = ""
+                gsub(/^ +/, "", $0)
+                print pkg"\t"ver"\t"$0
+            }'
+            ;;
+        termux-pkg)
+            # name/repo version arch [status]
+            docmd pkg list-installed 2>/dev/null | awk -F'/' '{
+                pkg = $1
+                split($2, a, " ")
+                ver = a[1]
+                print pkg"\t"ver"\t"
+            }'
+            ;;
+        xbps)
+            # ii name-version description
+            docmd xbps-query -l 2>/dev/null | awk '{
+                sub(/^ii /, "")
+                n = split($1, a, "-")
+                pkg = a[1]
+                for (i=2; i<n; i++) pkg = pkg "-" a[i]
+                ver = a[n]
+                $1 = ""
+                gsub(/^ +/, "", $0)
+                print pkg"\t"ver"\t"$0
+            }'
+            ;;
+        android)
+            docmd pm list packages | sed -e "s|^package:||g" | awk '{print $1"\t\t"}'
+            ;;
+        homebrew)
+            docmd brew list | xargs -n1 | awk '{print $1"\t\t"}'
+            ;;
+        # fallback: use CMD variable
+        packagekit)
+            CMD="pkcon get-packages --filter installed"
+            ;;
+        snappy)
+            CMD="snappy info"
+            ;;
+        emerge)
+            CMD="qlist -I -C"
+            ;;
+        pkgsrc)
+            CMD="pkg_info"
+            ;;
+        npackd)
+            CMD="npackdcl list --status=installed"
+            ;;
+        conary)
+            CMD="conary query"
+            ;;
+        stplr)
+            CMD="stplr list --installed"
+            ;;
+        choco)
+            CMD="choco list"
+            ;;
+        slackpkg)
+            CMD="ls -1 /var/log/packages/"
+            ;;
+        tce)
+            CMD="ls -1 /usr/local/tce.installed"
+            ;;
+        guix)
+            CMD="guix package -I"
+            ;;
+        appget)
+            CMD="appget list"
+            ;;
+        winget)
+            CMD="winget list"
+            ;;
+        aptcyg)
+            for i in $(a= apt-cyg list) ; do
+                __aptcyg_print_full $i
+            done
+            ;;
+        *)
+            fatal 'Have no suitable query command for $PMTYPE'
+            ;;
+    esac
+
+    [ -n "$CMD" ] && docmd $CMD
+}
+
+epm_packages()
+{
     case "$1" in
         -h|--help|help)  # HELPOPTIONS: help
             __epm_packages_help
@@ -111,6 +275,9 @@ epm_packages()
         --short)              # HELPOPTIONS: print out short package names
             # for help entry only
             ;;
+        --tsv)                # HELPOPTIONS: print in TSV format (name<tab>version<tab>description)
+            # for help entry only
+            ;;
         "")
             ;;
         *)
@@ -118,182 +285,6 @@ epm_packages()
             fatal 'Unknown option $opt. Use epm packages --help to get help.'
     esac
 
-case $PMTYPE in
-    *-dpkg)
-        warmup_dpkgbase
-        if [ -n "$short" ] ; then
-            docmd dpkg-query -W --showformat="\${db:Status-Abbrev}\${Package}\n" "$@" | grep "^.i" | sed -e "s|^.. ||g" | __fo_pfn "$@"
-        else
-            docmd dpkg-query -W --showformat="\${db:Status-Abbrev}\${Package}-\${Version}:\${Architecture} - \${binary:Summary}\n" "$@" | grep "^.i" | sed -e "s|^.. ||g" | __fo_pfn "$@"
-        fi
-        return ;;
-    *-rpm)
-        warmup_rpmbase
-        if [ -n "$short" ] ; then
-            docmd rpm -qa --queryformat "%{name}\n" "$@" | __fo_pfn "$@"
-        else
-            docmd rpm -qa --queryformat "%{name}-%{version}-%{release} - %{summary}\n" "$@" | __fo_pfn "$@"
-        fi
-        return ;;
-    packagekit)
-        docmd pkcon get-packages --filter installed
-        ;;
-    snappy)
-        CMD="snappy info"
-        ;;
-    snap)
-        if [ -n "$short" ] ; then
-            docmd snap list 2>/dev/null | tail -n +2 | awk '{print $1}' | __fo_pfn "$@"
-        else
-            docmd snap list 2>/dev/null | tail -n +2 | awk '{print $1"-"$2" - "$4}' | __fo_pfn "$@"
-        fi
-        return
-        ;;
-    flatpak)
-        if [ -n "$short" ] ; then
-            docmd flatpak list --app --columns=application 2>/dev/null | __fo_pfn "$@"
-        else
-            docmd flatpak list --app --columns=application,version,name 2>/dev/null | awk -F'\t' '{print $1"-"$2" - "$3}' | __fo_pfn "$@"
-        fi
-        return
-        ;;
-    emerge)
-        CMD="qlist -I -C"
-        # print with colors for console output
-        isatty && CMD="qlist -I"
-        ;;
-    pkgsrc)
-        docmd pkg_info | sed -e "s| .*||g" | __fo_pfn "$@"
-        return ;;
-    pkgng)
-        if [ -n "$short" ] ; then
-            docmd pkg info 2>/dev/null | sed -e "s| .*||g" -e "s|-[0-9].*||g" | __fo_pfn "$@"
-        else
-            docmd pkg info 2>/dev/null | sed -e "s| | - |" | __fo_pfn "$@"
-        fi
-        return ;;
-    pacman)
-        if [ -n "$short" ] ; then
-            docmd pacman -Q "$@" 2>/dev/null | sed -e "s| .*||g" | __fo_pfn "$@"
-        else
-            LC_ALL=C docmd pacman -Qi "$@" 2>/dev/null | awk '/^Name/{name=$3} /^Version/{ver=$3} /^Description/{$1=$2=""; desc=$0} /^$/{print name"-"ver" -"desc}' | __fo_pfn "$@"
-        fi
-        return
-        ;;
-    npackd)
-        CMD="npackdcl list --status=installed"
-        # TODO: use search if pkg_filenames is not empty
-        ;;
-    conary)
-        CMD="conary query"
-        ;;
-    eopkg)
-        if [ -n "$short" ] ; then
-            docmd eopkg list-installed 2>/dev/null | sed -e "s| .*||g" | __fo_pfn "$@"
-        else
-            docmd eopkg list-installed 2>/dev/null | __fo_pfn "$@"
-        fi
-        return
-        ;;
-    stplr)
-        CMD="stplr list --installed"
-        ;;
-    pisi)
-        if [ -n "$short" ] ; then
-            docmd pisi list-installed 2>/dev/null | sed -e "s| .*||g" | __fo_pfn "$@"
-        else
-            docmd pisi list-installed 2>/dev/null | __fo_pfn "$@"
-        fi
-        return
-        ;;
-    choco)
-        CMD="choco list"
-        ;;
-    slackpkg)
-        CMD="ls -1 /var/log/packages/"
-        if [ -n "$short" ] ; then
-            # FIXME: does not work for libjpeg-v8a
-            # TODO: remove last 3 elements (if arch is second from the last?)
-            # FIXME this hack
-            docmd ls -1 /var/log/packages/ | sed -e "s|-[0-9].*||g" | sed -e "s|libjpeg-v8a.*|libjpeg|g" | __fo_pfn "$@"
-            return
-        fi
-        ;;
-    homebrew)
-        docmd brew list | xargs -n1 echo
-        ;;
-    opkg)
-        if [ -n "$short" ] ; then
-            docmd opkg list-installed 2>/dev/null | awk '{print $1}' | __fo_pfn "$@"
-        else
-            docmd opkg list-installed 2>/dev/null | __fo_pfn "$@"
-        fi
-        return
-        ;;
-    apk)
-        if [ -n "$short" ] ; then
-            docmd apk list --installed 2>/dev/null | sed -e "s|-[0-9].*||g" | __fo_pfn "$@"
-        else
-            docmd apk list --installed 2>/dev/null | sed -e "s| \[installed\]||g" | __fo_pfn "$@"
-        fi
-        return
-        ;;
-    nix)
-        if [ -n "$short" ] ; then
-            docmd nix-env -q 2>/dev/null | sed -e "s|-[0-9].*||g" | __fo_pfn "$@"
-        else
-            docmd nix-env -q --description 2>/dev/null | sed -e "s|  *| - |" | __fo_pfn "$@"
-        fi
-        return
-        ;;
-    tce)
-        CMD="ls -1 /usr/local/tce.installed"
-        ;;
-    guix)
-        CMD="guix package -I"
-        ;;
-    appget)
-        CMD="appget list"
-        ;;
-    winget)
-        CMD="winget list"
-        ;;
-    termux-pkg)
-        if [ -n "$short" ] ; then
-            docmd pkg list-installed 2>/dev/null | sed -e "s|/.*||g" | __fo_pfn "$@"
-        else
-            docmd pkg list-installed 2>/dev/null | sed -e "s|/[^ ]* | - |" | __fo_pfn "$@"
-        fi
-        return
-        ;;
-    xbps)
-        if [ -n "$short" ] ; then
-            docmd xbps-query -l 2>/dev/null | sed -e "s|^ii ||g" -e "s| .*||g" -e "s|\(.*\)-.*|\1|g" | __fo_pfn "$@"
-        else
-            docmd xbps-query -l 2>/dev/null | sed -e "s|^ii ||g" -e "s| \+| - |" | __fo_pfn "$@"
-        fi
-        return 0
-        ;;
-    android)
-        docmd pm list packages | sed -e "s|^package:||g" | __fo_pfn "$@"
-        return
-        ;;
-    aptcyg)
-        if [ -z "$short" ] ; then
-            # TODO: fix this slow way
-            for i in $(docmd apt-cyg list "$@") ; do
-                __aptcyg_print_full $i
-            done
-            return
-        fi
-        CMD="apt-cyg list"
-        ;;
-    *)
-        fatal 'Have no suitable query command for $PMTYPE'
-        ;;
-esac
-
-docmd $CMD | __fo_pfn "$@"
-# FIXME: we print empty lines, but will lost error status
-
+    # main output: TSV -> filter -> format
+    __epm_packages_tsv | __epm_filter_by_pattern "$@" | __epm_format_output
 }
