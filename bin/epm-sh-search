@@ -354,6 +354,19 @@ __epm_expand_wildcard_pattern_installed()
     short=--short epm_packages 2>/dev/null | grep -E "$regexp"
 }
 
+# Expand wildcard package pattern to matching INSTALLED packages (with version and description)
+# Args: package_pattern (e.g., "lib*-devel")
+# Returns: list of matching installed packages in format: package=version - description
+__epm_expand_wildcard_pattern_installed_verbose()
+{
+    local pattern="$1"
+    local regexp
+    regexp="^$(__convert_glob__to_regexp "$pattern")="
+
+    load_helper epm-packages
+    epm_packages 2>/dev/null | grep -E "$regexp"
+}
+
 # Expand all wildcard patterns in package list (for INSTALLED packages)
 # Args: package names (may include wildcards)
 # Returns: expanded package names (wildcards replaced with matching installed packages)
@@ -379,12 +392,16 @@ __epm_expand_wildcards_installed()
 
             if [ -n "$suggest_interactive$interactive" ] && [ -c /dev/tty ] ; then
                 # Interactive mode: let user select from matches (via config or --interactive flag)
+                # Get packages with versions and descriptions for better selection
+                local matched_verbose
+                matched_verbose="$(__epm_expand_wildcard_pattern_installed_verbose "$pkg")"
                 load_helper epm-sh-interactive
                 local selected
-                selected="$(echo "$matched" | __epm_interactive_select_packages remove)"
+                selected="$(echo "$matched_verbose" | __epm_interactive_select_packages remove)"
                 if [ -n "$selected" ] ; then
                     had_interactive_selection=1
-                    result="$result $(echo "$selected" | tr '\n' ' ')"
+                    # Extract only package names from selection (strip =version and description)
+                    result="$result $(echo "$selected" | sed -e 's|[= ].*||' | tr '\n' ' ')"
                 fi
             else
                 # Non-interactive: remove all matches
