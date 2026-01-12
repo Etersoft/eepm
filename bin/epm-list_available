@@ -190,25 +190,6 @@ __epm_convert_termux_to_tsv()
     }'
 }
 
-# Format TSV input to requested output format
-# Input: package<tab>version<tab>description
-# Uses: $short - output only package names
-# Uses: $tsv - output as TSV (pass through)
-__epm_format_available()
-{
-    if [ -n "$short" ] ; then
-        cut -f1
-    elif [ -n "$tsv" ] ; then
-        cat
-    else
-        # human-readable: package=version - description
-        awk -F'\t' '{
-            if ($2) printf "%s=%s", $1, $2; else printf "%s", $1
-            if ($3) printf " - %s", $3
-            printf "\n"
-        }'
-    fi
-}
 
 
 # Suggest similar packages using fzf fuzzy search
@@ -386,12 +367,12 @@ epm_list_available()
     # use cache by default (--direct bypasses cache)
     if [ -z "$direct" ] ; then
         if __epm_available_cache_exists ; then
-            __epm_available_read_cache | __epm_format_available
+            __epm_available_read_cache | __epm_format_output
             return
         fi
         warning "No package cache. Run 'epm update' to create it."
     fi
 
     # get fresh data and format
-    __epm_list_available_tsv | __epm_format_available
+    __epm_list_available_tsv | __epm_format_output
 }
