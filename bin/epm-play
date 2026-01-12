@@ -795,7 +795,7 @@ case "$1" in
     --search)
         shift
         [ -n "$1" ] || fatal "Search pattern is required"
-        __epm_play_search "$quiet" "$@"
+        __epm_play_search "$@"
         exit
         ;;
 
@@ -816,6 +816,10 @@ case "$1" in
     --print-url)
         shift
         export EPM_OPTIONS="$EPM_OPTIONS --print-url"
+        ;;
+    --color=always|--color)
+        shift
+        force_color=1
         ;;
     -*)
         opt="$1"

@@ -213,8 +213,6 @@ __epm_play_list()
 
 __epm_play_search()
 {
-    local no_color="$1"
-    shift
     local arch="$SYSTEMARCH"
 
     local MGS
@@ -222,19 +220,9 @@ __epm_play_search()
     __epm_color_pattern=$(__epm_get_color_pattern "$@")
 
     if [ -n "$short" ] ; then
-        if [ -n "$no_color" ] ; then
-            eval "__get_fast_int_list_app \$arch $MGS" | while IFS=$'\x1E' read -r app desc; do
-                echo "$app"
-            done
-        else
-            eval "__get_fast_int_list_app \$arch $MGS" | while IFS=$'\x1E' read -r app desc; do
-                echo "$app"
-            done | __epm_colorize_search_output
-        fi
-    elif [ -n "$no_color" ] ; then
         eval "__get_fast_int_list_app \$arch $MGS" | while IFS=$'\x1E' read -r app desc; do
-            printf "%-25s - %s\n" "$app" "$desc"
-        done
+            echo "$app"
+        done | __epm_colorize_search_output
     else
         eval "__get_fast_int_list_app \$arch $MGS" | while IFS=$'\x1E' read -r app desc; do
             printf "%-25s - %s\n" "$app" "$desc"
