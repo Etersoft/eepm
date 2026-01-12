@@ -166,6 +166,8 @@ download_only=
 parallel=
 print_url=
 interactive=
+suggest_interactive=
+no_suggest_interactive=
 allow_wildcard=
 force_yes=
 skip_installed=
@@ -208,6 +210,11 @@ done
 [ -n "$https_proxy" ] && export https_proxy
 [ -n "$ftp_proxy" ] && export ftp_proxy
 [ -n "$no_proxy" ] && export no_proxy
+
+# enable suggest-interactive by default if TTY available and not explicitly disabled
+if [ -z "$no_suggest_interactive" ] && inputisatty ; then
+    suggest_interactive="--suggest-interactive"
+fi
 
 case $PROGNAME in
     epmi)                      # HELPSHORT: alias for epm install
@@ -709,8 +716,13 @@ check_option()
         non_interactive=""
         inscript=1  # don't read packages from stdin in interactive mode
         ;;
-    --suggest-interactive)  # HELPOPT: interactive mode for package suggestions (fzf selection)
+    --suggest-interactive)  # HELPOPT: interactive mode for package suggestions (fzf selection, default when TTY)
         suggest_interactive="--suggest-interactive"
+        no_suggest_interactive=""
+        ;;
+    --no-suggest-interactive)  # HELPOPT: disable interactive suggestions
+        suggest_interactive=""
+        no_suggest_interactive="--no-suggest-interactive"
         ;;
     --force-yes)           # HELPOPT: force yes in a danger cases (f.i., during release upgrade)
         force_yes="--force-yes"
