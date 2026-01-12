@@ -405,6 +405,7 @@ sudoepm()
 
 echog()
 {
+	set -f
 	if [ "$1" = "-n" ] ; then
 		shift
 		[ -n "$1" ] && eval_gettext "$*"
@@ -412,6 +413,7 @@ echog()
 		[ -n "$1" ] && eval_gettext "$*"
 		echo
 	fi
+	set +f
 }
 
 message()

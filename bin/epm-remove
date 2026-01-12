@@ -328,9 +328,12 @@ __epm_remove_handle_wildcards()
     # Expand all names (handles both wildcard and regular names)
     load_helper epm-search
     local expanded_names
+    set -f  # disable glob expansion
     expanded_names="$(__epm_expand_wildcards_installed $pkg_names)"
+    local rc=$?
+    set +f
     # exit code 10 means interactive selection was used
-    [ $? -eq 10 ] && interactive_selected=1
+    [ $rc -eq 10 ] && interactive_selected=1
     if [ -z "$expanded_names" ] ; then
         info "No packages to remove after wildcard expansion"
         return 1
