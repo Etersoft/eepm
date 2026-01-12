@@ -199,7 +199,8 @@ __epm_get_color_pattern()
 # Package names: CYAN, search pattern: RED (bold)
 __epm_colorize_search_output()
 {
-    if [ -z "$force_color" ] && ! isatty ; then
+    # No colors in TSV mode or when not a terminal
+    if [ -n "$tsv" ] || { [ -z "$force_color" ] && ! isatty ; } ; then
         cat
         return
     fi
