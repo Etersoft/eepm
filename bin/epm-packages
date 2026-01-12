@@ -111,8 +111,12 @@ __epm_packages_tsv()
             docmd flatpak list --app --columns=application,version,name 2>/dev/null | awk -F'\t' '{print $1"\t"$2"\t"$3}'
             ;;
         pacman)
-            # pacman -Q outputs: name version
-            docmd pacman -Q 2>/dev/null | awk '{print $1"\t"$2"\t"}'
+            # pacman -Qi outputs multi-line format with Name, Version, Description fields
+            LC_ALL=C docmd pacman -Qi 2>/dev/null | awk '
+                /^Name/{name=$3}
+                /^Version/{ver=$3}
+                /^Description/{$1=$2=""; desc=$0; gsub(/^ +/, "", desc)}
+                /^$/{print name"\t"ver"\t"desc}'
             ;;
         pkgng)
             docmd pkg info 2>/dev/null | awk '{
