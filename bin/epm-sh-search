@@ -194,7 +194,7 @@ __epm_get_color_pattern()
 }
 
 # Colorize search output: package names and search pattern
-# Input format: "package-name - description" or "package-name"
+# Input format: "[spaces]package-name - description" or "package-name"
 # Uses: __epm_color_pattern - regex pattern to highlight
 # Package names: CYAN, search pattern: RED (bold)
 __epm_colorize_search_output()
@@ -214,8 +214,13 @@ __epm_colorize_search_output()
     {
         line = $0
 
-        if (match(line, /^[^ ]+ +- /)) {
-            # format: "package - description" (may have padding spaces)
+        if (match(line, /^ *[^ ]+ +- /)) {
+            # format: "[spaces]package - description" (may have leading/padding spaces)
+            # extract leading spaces
+            match(line, /^ */)
+            prefix = substr(line, 1, RLENGTH)
+            line = substr(line, RLENGTH + 1)
+
             sep = index(line, " - ")
             pkg = substr(line, 1, sep - 1)
             gsub(/ +$/, "", pkg)  # trim trailing spaces from package name
@@ -232,7 +237,7 @@ __epm_colorize_search_output()
                 gsub("(" pattern ")", red "&" reset, rest)
             }
 
-            print cyan pkg reset rest
+            print prefix cyan pkg reset rest
         } else if (match(line, /^[^ ]+$/)) {
             # format: "package" only
             pkg = line

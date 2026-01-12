@@ -277,14 +277,13 @@ __epm_play_list_installed()
             [ -n "$desc" ] || continue
             echo "$i"
         done
-        exit
+        return
     fi
-    [ -n "$quiet" ] || echo "Installed applications:"
+    info "Installed applications:"
     for i in $(__list_installed_app) ; do
         # skip hidden apps
         local desc="$(__get_app_description $i $arch)"
         [ -n "$desc" ] || continue
-        [ -n "$quiet" ] || echo -n "  "
         printf "%-25s - %s\n" "$i" "$desc"
     done
 }
@@ -675,8 +674,8 @@ local psdir="$(realpath $CONFIGDIR/play.d)"
 local prsdir="$(realpath $CONFIGDIR/prescription.d)"
 
 if [ -z "$1" ] ; then
-    [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $DISTRARCH):"
-    __epm_play_list $psdir
+    [ -n "$short" ] || info "Available applications (for current arch $DISTRARCH):"
+    __epm_play_list $psdir | __epm_colorize_search_output
     exit
 fi
 
@@ -772,19 +771,19 @@ case "$1" in
         exit
         ;;
     --list|--list-installed)
-        __epm_play_list_installed
+        __epm_play_list_installed | __epm_colorize_search_output
         exit
         ;;
 
     --full-list-all)
-        [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $DISTRARCH):"
-        __epm_play_list $psdir extra
+        [ -n "$short" ] || info "Available applications (for current arch $DISTRARCH):"
+        __epm_play_list $psdir extra | __epm_colorize_search_output
         exit
         ;;
 
     --list-all)
-        [ -n "$short" ] || [ -n "$quiet" ] || echo "Available applications (for current arch $DISTRARCH):"
-        __epm_play_list $psdir
+        [ -n "$short" ] || info "Available applications (for current arch $DISTRARCH):"
+        __epm_play_list $psdir | __epm_colorize_search_output
         [ -n "$quiet" ] || [ -n "$*" ] && exit
         echo
         #echo "Run epm play --help for help"
@@ -800,8 +799,8 @@ case "$1" in
         ;;
 
     --list-scripts)
-        [ -n "$short" ] || [ -n "$quiet" ] || echo "Run with a name of a play script to run:"
-        __epm_play_list $prsdir
+        [ -n "$short" ] || info "Run with a name of a play script to run:"
+        __epm_play_list $prsdir | __epm_colorize_search_output
         exit
         ;;
 
