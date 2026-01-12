@@ -30,6 +30,9 @@ epm_list()
 {
     local option="$1"
 
+    # load colorization support
+    load_helper epm-sh-search
+
     if [ -z "$1" ] ; then
         # locally installed packages by default
         load_helper epm-list_installed
@@ -56,27 +59,27 @@ epm_list()
             ;;
         --upgradable|--upgrades)  # HELPOPT: list only upgradable packages
             load_helper epm-list_upgradable
-            epm_list_upgradable "$@"
+            epm_list_upgradable "$@" | __epm_colorize_search_output
             return
             ;;
         --extras)                 # HELPOPT: list installed packages not available in repositories
             load_helper epm-list_extras
-            epm_list_extras "$@"
+            epm_list_extras "$@" | __epm_colorize_search_output
             return
             ;;
         --obsoletes)              # HELPOPT: list installed packages obsoleted by packages in repositories
             load_helper epm-list_obsoletes
-            epm_list_obsoletes "$@"
+            epm_list_obsoletes "$@" | __epm_colorize_search_output
             return
             ;;
         --recent)                 # HELPOPT: list packages recently added to repositories
             load_helper epm-list_recent
-            epm_list_recent "$@"
+            epm_list_recent "$@" | __epm_colorize_search_output
             return
             ;;
         --programs)               # HELPOPT: list packages that have GUI (.desktop files)
             load_helper epm-programs
-            epm_programs "$@"
+            epm_programs "$@" | __epm_colorize_search_output
             return
             ;;
         TASK)                     # HELPCMD: list packages from ALT task (e.g., 404628 or task/404628)
@@ -87,7 +90,7 @@ epm_list()
             if is_taskarg "$option" ; then
                 local task="$(get_tasknumber_from_arg "$option")"
                 [ -n "$task" ] || fatal "Can't extract task number from '$option'"
-                get_task_packages "$task"
+                get_task_packages "$task" | __epm_colorize_search_output
                 return
             fi
             fatal 'Unknown option $option, use epm list --help to get info'
