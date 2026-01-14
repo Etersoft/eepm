@@ -53,7 +53,8 @@ __epm_glob_to_regexp()
     echo "$pattern" | sed \
         -e 's|[.{}+]|\\&|g' \
         -e 's|\*|.*|g' \
-        -e 's|?|.|g'
+        -e 's|?|.|g' \
+        -e 's|\[!|\[^|g'
 }
 
 # Produce grep filter sequence for multiple search patterns
