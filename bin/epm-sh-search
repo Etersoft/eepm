@@ -188,6 +188,24 @@ __epm_colorize_search_output()
                 gsub("(" pattern ")", red "&" cyan, pkg)
             }
             print cyan pkg reset
+        } else if (match(line, /^[^:]+: /)) {
+            # format: "package: /path/to/file" (epm sf output)
+            sep = index(line, ": ")
+            pkg = substr(line, 1, sep - 1)
+            rest = substr(line, sep)
+
+            # colorize pattern in package name (return to cyan after red)
+            if (pattern != "") {
+                IGNORECASE = 1
+                gsub("(" pattern ")", red "&" cyan, pkg)
+            }
+
+            # colorize pattern in file path (return to reset after red)
+            if (pattern != "") {
+                gsub("(" pattern ")", red "&" reset, rest)
+            }
+
+            print cyan pkg reset rest
         } else {
             # other format - just colorize pattern
             if (pattern != "") {
