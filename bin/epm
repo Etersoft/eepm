@@ -230,6 +230,7 @@ case $PROGNAME in
         ;;
     epmsf)                     # HELPSHORT: alias for epm search-file (epm sf)
         epm_cmd=search_file
+        direct_args=1
         ;;
     epmwd)                     # HELPSHORT: alias for epm wd
         epm_cmd=whatdepends
@@ -324,6 +325,7 @@ check_command()
         ;;
     -sf|sf|filesearch|search-file)        # HELPCMD: search in which package a file is included
         epm_cmd=search_file
+        direct_args=1
         ;;
     -ql|ql|filelist|get-files)          # HELPCMD: print package file list
         epm_cmd=filelist
