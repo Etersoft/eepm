@@ -212,16 +212,14 @@ epm_search()
     # search in epm play separately
     if [ -z "$no_epm_play_search" ] ; then
         local hint="(use 'epm play' to install it)"
-        local play_color=""
         local play_tsv=""
         if [ -n "$tsv" ] ; then
             play_tsv="--tsv"
             hint=""
         elif isatty ; then
             hint="$(printf '\033[32m')$hint$(printf '\033[0m')"
-            play_color="--color=always"
         fi
-        showcmd epm play $short $play_tsv $play_color --search "$@"
-        eval "epm play $short $play_tsv $play_color --search $quoted_args" | sed -e "s/  */ /g" -e "s/\$/ $hint/"
+        showcmd epm play $short $play_tsv --search "$@"
+        eval "epm play $short $play_tsv --search $quoted_args" | sed -e "s/  */ /g" -e "s/\$/ $hint/"
     fi
 }
