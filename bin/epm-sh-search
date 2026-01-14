@@ -50,69 +50,7 @@ __epm_glob_to_regexp()
     echo "$pattern" | sed \
         -e 's|[.{}+]|\\&|g' \
         -e 's|\*|.*|g' \
-        -e 's|?|.|g' \
-        -e 's|\[!|\[^|g'
-}
-
-# Build grep filter pipeline for search results
-# Args: patterns (use ~pattern for exclusion)
-# Uses: $short, $regexp, $EGREPCOLOR
-__epm_build_grep_filter()
-{
-    local i
-    [ -z "$*" ] && return
-
-    local list=""
-    local listN=""
-
-    # separate include and exclude patterns
-    for i in "$@" ; do
-        case "$i" in
-            ~*)
-                listN="$listN ${i#\~}"
-                ;;
-            *)
-                list="$list $i"
-                ;;
-        esac
-    done
-
-    list=$(echo "$list" | sed 's/^ *//' | sed 's/ *$//')
-    listN=$(echo "$listN" | sed 's/^ *//' | sed 's/ *$//' | sed 's/ /|/g')
-
-    # convert to regexp (unless --regexp mode)
-    if [ -z "$regexp" ] ; then
-        list=$(__epm_glob_to_regexp "$list")
-        listN=$(__epm_glob_to_regexp "$listN")
-    fi
-
-    # short mode: strip description
-    if [ -n "$short" ] ; then
-        echon " | sed -e 's| .*||g'"
-    fi
-
-    # exclusion filter
-    [ -n "$listN" ] && echon " | grep -E -i -v -- \"$listN\""
-
-    # inclusion filters (one per word if multiple)
-    local word_count
-    word_count=$(echo "$list" | wc -w)
-    if [ "$word_count" -gt 1 ] ; then
-        for i in $list ; do
-            echon " | grep -E -i -- \"$i\""
-        done
-    fi
-
-    # colorize matches
-    local COLO=""
-    for i in $list $listN ; do
-        [ -n "$COLO" ] && COLO="$COLO|"
-        COLO="$COLO$i"
-    done
-
-    if [ -n "$list" ] ; then
-        echon " | grep -E -i $EGREPCOLOR -- \"($COLO)\""
-    fi
+        -e 's|?|.|g'
 }
 
 # Produce grep filter sequence for multiple search patterns
@@ -145,12 +83,12 @@ __epm_search_make_grep()
             apt-*)
                 ;;
             *)
-                list=$(echo "$list" | sed -e "s/[?\^.]/ /g")
-                listN=$(echo "$listN" | sed -e "s/[?\^.]/ /g")
+                list=$(echo "$list" | sed -e "s/[?\^.\$]/ /g")
+                listN=$(echo "$listN" | sed -e "s/[?\^.\$]/ /g")
                 ;;
         esac
-        list=$(__convert_glob__to_regexp "$list")
-        listN=$(__convert_glob__to_regexp "$listN")
+        list=$(__epm_glob_to_regexp "$list")
+        listN=$(__epm_glob_to_regexp "$listN")
     fi
 
     if [ -n "$short" ] ; then
@@ -186,7 +124,7 @@ __epm_get_color_pattern()
 
     # convert glob to regexp if needed
     if [ -z "$regexp" ] ; then
-        list=$(__convert_glob__to_regexp "$list")
+        list=$(__epm_glob_to_regexp "$list")
     fi
 
     # join with |
