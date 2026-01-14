@@ -17,13 +17,18 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-# TODO: see epm-search (colorify for all distro)
-
 # args: index_lists word grep_string
 __alt_search_file_output()
 {
     # grep only on left part (filename), then revert order and grep with color
-    ercat $quiet $1 | grep -h -- ".*$2.*[[:space:]]" | sed -e "s|\(.*\)\t\(.*\)|\2: \1|g" $3
+    # use grep -E for extended regex support (OR patterns, character classes)
+    if [ -n "$tsv" ] ; then
+        # TSV format: package\tfile
+        ercat $quiet $1 | grep -E -h -- ".*$2.*[[:space:]]" | sed -e "s|\(.*\)\t\(.*\)|\2\t\1|g" $3
+    else
+        # Default format: package: file (with colors)
+        ercat $quiet $1 | grep -E -h -- ".*$2.*[[:space:]]" | sed -e "s|\(.*\)\t\(.*\)|\2: \1|g" $3 | __epm_colorize_search_output
+    fi
 }
 
 __alt_local_content_search()
@@ -47,17 +52,18 @@ __alt_local_content_search()
     local MGS
     MGS=$(eval __epm_search_make_grep $quoted_args)
     showcmd "$ cat contents_index $MGS"
+    __epm_color_pattern=$(eval __epm_get_color_pattern $quoted_args)
     eval "__alt_search_file_output \"$CI\" \"$(eval get_firstarg $quoted_args)\" $MGS"
 }
 
 epm_search_file()
 {
     local CMD
-    [ -n "$pkg_filenames" ] || fatal "Search file: file name is missed"
+    [ -n "$*" ] || fatal "File name or search pattern is not specified"
 
 case $BASEDISTRNAME in
     "alt")
-        __alt_local_content_search $pkg_filenames
+        __alt_local_content_search "$@"
         return ;;
 esac
 
@@ -70,7 +76,7 @@ case $PMTYPE in
             load_helper epm-check_updated_repo
             update_repo_if_needed
         fi
-        docmd apt-file search $pkg_filenames
+        docmd apt-file search "$@"
         return ;;
     packagekit)
         CMD="pkcon search file"
@@ -110,7 +116,7 @@ case $PMTYPE in
         CMD="xbps-query -Ro"
         ;;
     aptcyg)
-        docmd apt-cyg searchall $(echo " $pkg_filenames" | sed -e "s| /| |g")
+        docmd apt-cyg searchall $(echo " $*" | sed -e "s| /| |g")
         return
         ;;
     *)
@@ -118,6 +124,6 @@ case $PMTYPE in
         ;;
 esac
 
-docmd $CMD $pkg_filenames
+docmd $CMD "$@"
 
 }
