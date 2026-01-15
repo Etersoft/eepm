@@ -49,10 +49,9 @@ __alt_local_content_search()
 
     info "Searching for" "$1... "
 
-    # FIXME: do it better
     local MGS
     MGS=$(eval __epm_search_make_grep $quoted_args)
-    showcmd "$ cat contents_index $MGS"
+    showcmd "ercat contents_index $MGS"
     __epm_color_pattern=$(eval __epm_get_color_pattern $quoted_args)
     eval "__alt_search_file_output \"$CI\" \"$(eval get_firstarg $quoted_args)\" $MGS" | __epm_colorize_search_output
 }
