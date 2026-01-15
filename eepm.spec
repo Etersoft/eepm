@@ -93,6 +93,10 @@ Requires: pigz
 Requires: fzf
 # fast download utility with parallel connections (epm play, eget)
 Requires: aria2
+%if "%_vendor" == "alt"
+# for epm status --signed package signature verification
+Requires: alt-rpmkeys-utils
+%endif
 
 AutoProv:no
 AutoReq:no
@@ -103,6 +107,7 @@ for better EPM performance and user experience:
 - pigz: parallel gzip for faster content index search (3x speedup)
 - fzf: fuzzy finder for interactive package selection
 - aria2: fast download utility with parallel connections
+- alt-rpmkeys-utils (ALT Linux): cryptographic package signature verification
 
 %prep
 %setup

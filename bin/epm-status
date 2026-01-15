@@ -204,7 +204,10 @@ epm_status_original()
             echo "$packager" | grep -q "altlinux" || return 1
             # otherwise any package from hasher is original
             local disttag="$(epm print field disttag for "$pkg" 2>/dev/null )"
-            [ "$disttag" = "(none)" ] && return 1
+            if [ "$disttag" = "(none)" ] ; then
+                # fallback for old packages without disttag: check signature against ALT keys
+                epm_status_signed "$pkg" || return 1
+            fi
             return 0
             ;;
         RedOS)
@@ -413,6 +416,10 @@ epm_status()
             ;;
         --original)           # HELPOPT: check if package is from distro repo
             epm_status_original "$@"
+            return
+            ;;
+        --signed)             # HELPOPT: check if package is signed with a trusted distro key
+            epm_status_signed "$@"
             return
             ;;
         --certified)          # HELPOPT: check if package is certified for install without repacking
