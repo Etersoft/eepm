@@ -1716,7 +1716,26 @@ url_check_accessible()
 url_check_available()
 {
     local URL="$1"
-    url_get_response "$URL" | grep "HTTP/[0-9]\.[0-9] [0-9]" | tail -n1 | grep -q -w "200"
+    # Попробовать получить ответ с помощью HEAD-запроса
+    local response
+    response="$(url_get_response "$URL" 2>/dev/null)" || return 1
+
+    # Проверить, содержит ли ответ HTTP статус
+    if echo "$response" | grep -q "HTTP/[0-9]\.[0-9] [0-9]"; then
+        # Если есть HTTP статус, проверить на 2xx коды (успешные)
+        echo "$response" | grep "HTTP/[0-9]\.[0-9] [0-9]" | tail -n1 | grep -q -E "20[0-9]|2[1-9][0-9]|30[0-9]|3[1-9][0-9]"
+    else
+        # Если нет HTTP статуса в ответе, попробовать другой метод
+        # Использовать флаг --head для curl или --spider для wget напрямую
+        if [ "$EGET_BACKEND" = "curl" ]; then
+            curl --head --fail -s -o /dev/null --max-time 20 --retry 0 "$URL" 2>/dev/null
+        elif [ "$EGET_BACKEND" = "wget" ]; then
+            wget --method=HEAD --spider --quiet --timeout=20 --tries=1 "$URL" 2>/dev/null
+        else
+            # Для других бэкендов использовать оригинальную проверку
+            url_get_response "$URL" | grep "HTTP/[0-9]\.[0-9] [0-9]" | tail -n1 | grep -q -w "200"
+        fi
+    fi
 }
 
 url_get_header()
