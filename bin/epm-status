@@ -427,7 +427,7 @@ epm_status()
             epm_status_repacked "$@"
             return
             ;;
-        --validate)           # HELPOPT: check if package is accessible (we can get fields from it)
+        --valid)              # HELPOPT: check if package is accessible (we can get fields from it)
             epm_status_validate "$@"
             return
             ;;
