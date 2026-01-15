@@ -20,14 +20,14 @@
 # args: index_lists word grep_string
 __alt_search_file_output()
 {
-    # grep only on left part (filename), then revert order and grep with color
+    # grep only on left part (filename), then revert order
     # use grep -E for extended regex support (OR patterns, character classes)
     if [ -n "$tsv" ] ; then
         # TSV format: package\tfile
         ercat $quiet $1 | grep -E -h -- ".*$2.*[[:space:]]" | sed -e "s|\(.*\)\t\(.*\)|\2\t\1|g" $3
     else
-        # Default format: package: file (with colors)
-        ercat $quiet $1 | grep -E -h -- ".*$2.*[[:space:]]" | sed -e "s|\(.*\)\t\(.*\)|\2: \1|g" $3 | __epm_colorize_search_output
+        # Default format: package: file
+        ercat $quiet $1 | grep -E -h -- ".*$2.*[[:space:]]" | sed -e "s|\(.*\)\t\(.*\)|\2: \1|g" $3
     fi
 }
 
@@ -54,7 +54,7 @@ __alt_local_content_search()
     MGS=$(eval __epm_search_make_grep $quoted_args)
     showcmd "$ cat contents_index $MGS"
     __epm_color_pattern=$(eval __epm_get_color_pattern $quoted_args)
-    eval "__alt_search_file_output \"$CI\" \"$(eval get_firstarg $quoted_args)\" $MGS"
+    eval "__alt_search_file_output \"$CI\" \"$(eval get_firstarg $quoted_args)\" $MGS" | __epm_colorize_search_output
 }
 
 epm_search_file()
