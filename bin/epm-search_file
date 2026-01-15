@@ -17,6 +17,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+load_helper epm-sh-search
+
 # args: index_lists word grep_string
 __alt_search_file_output()
 {
@@ -35,7 +37,6 @@ __alt_local_content_search()
 {
     load_helper epm-sh-altlinux
     load_helper epm-sh-altlinux-contents-index
-    load_helper epm-sh-search
     load_helper epm-check_updated_repo
 
     check_alt_contents_index || init_alt_contents_index
@@ -47,83 +48,105 @@ __alt_local_content_search()
 
     local CI="$(ls $(cat $ALT_CONTENTS_INDEX_LIST) 2>/dev/null)"
 
-    info "Searching for" "$1... "
+    # use longest word for search (more precise results)
+    local search_word
+    search_word=$(eval __epm_get_longest_word $quoted_args)
+    [ -z "$search_word" ] && search_word="$1"
+
+    info "Searching for $search_word... "
 
     local MGS
     MGS=$(eval __epm_search_make_grep $quoted_args)
     showcmd "ercat contents_index $MGS"
     __epm_color_pattern=$(eval __epm_get_color_pattern $quoted_args)
-    eval "__alt_search_file_output \"$CI\" \"$(eval get_firstarg $quoted_args)\" $MGS" | __epm_colorize_search_output
+    eval "__alt_search_file_output \"$CI\" \"$search_word\" $MGS" | __epm_colorize_search_output
+}
+
+__epm_search_file_output()
+{
+    local CMD
+    local string="$1"
+
+    case $PMTYPE in
+        apt-dpkg|aptitude-dpkg)
+            if ! is_command apt-file ; then
+                assure_exists apt-file
+                sudocmd apt-file update
+            else
+                load_helper epm-check_updated_repo
+                update_repo_if_needed
+            fi
+            LC_ALL=C docmd apt-file search -- "$string"
+            ;;
+        packagekit)
+            CMD="pkcon search file"
+            ;;
+        yum-rpm)
+            # TODO
+            info "Search by full packages list is not implemented yet"
+            CMD="yum provides"
+            ;;
+        dnf-rpm|dnf5-rpm)
+            # TODO
+            info "Search by full packages list is not implemented yet"
+            CMD="dnf provides"
+            ;;
+        urpm-rpm)
+            CMD="urpmf"
+            ;;
+        zypper-rpm)
+            CMD="zypper search --file-list"
+            ;;
+        pacman)
+            CMD="pkgfile -v"
+            ;;
+        slackpkg)
+            CMD="/usr/sbin/slackpkg file-search"
+            ;;
+        opkg)
+            CMD="opkg -A search"
+            ;;
+        eopkg)
+            CMD="eopkg search-file"
+            ;;
+        pisi)
+            CMD="pisi search-file"
+            ;;
+        xbps)
+            CMD="xbps-query -Ro"
+            ;;
+        aptcyg)
+            LC_ALL=C docmd apt-cyg searchall $(echo " $string" | sed -e "s| /| |g")
+            return
+            ;;
+        *)
+            fatal 'Have no suitable search file command for $PMTYPE'
+            ;;
+    esac
+
+    [ -n "$CMD" ] && LC_ALL=C docmd $CMD "$string"
 }
 
 epm_search_file()
 {
-    local CMD
     [ -n "$*" ] || fatal "File name or search pattern is not specified"
 
-case $BASEDISTRNAME in
-    "alt")
-        __alt_local_content_search "$@"
-        return ;;
-esac
+    case $BASEDISTRNAME in
+        "alt")
+            __alt_local_content_search "$@"
+            return ;;
+    esac
 
-case $PMTYPE in
-    apt-dpkg|aptitude-dpkg)
-        if ! is_command apt-file ; then
-            assure_exists apt-file
-            sudocmd apt-file update
-        else
-            load_helper epm-check_updated_repo
-            update_repo_if_needed
-        fi
-        docmd apt-file search "$@"
-        return ;;
-    packagekit)
-        CMD="pkcon search file"
-        ;;
-    yum-rpm)
-        # TODO
-        info "Search by full packages list is not implemented yet"
-        CMD="yum provides"
-        ;;
-    dnf-rpm|dnf5-rpm)
-        # TODO
-        info "Search by full packages list is not implemented yet"
-        CMD="dnf provides"
-        ;;
-    urpm-rpm)
-        CMD="urpmf"
-        ;;
-    zypper-rpm)
-        CMD="zypper search --file-list"
-        ;;
-    pacman)
-        CMD="pkgfile -v"
-        ;;
-    slackpkg)
-        CMD="/usr/sbin/slackpkg file-search"
-        ;;
-    opkg)
-        CMD="opkg -A search"
-        ;;
-    eopkg)
-        CMD="eopkg search-file"
-        ;;
-    pisi)
-        CMD="pisi search-file"
-        ;;
-    xbps)
-        CMD="xbps-query -Ro"
-        ;;
-    aptcyg)
-        docmd apt-cyg searchall $(echo " $*" | sed -e "s| /| |g")
-        return
-        ;;
-    *)
-        fatal 'Have no suitable search file command for $PMTYPE'
-        ;;
-esac
+    # use longest word for PM search (more precise results)
+    local search_word
+    search_word=$(__epm_get_longest_word "$@")
+    [ -z "$search_word" ] && search_word="$1"
 
-docmd $CMD "$@"
+    local MGS
+    MGS=$(__epm_search_make_grep "$@")
+    EXTRA_SHOWDOCMD="$MGS"
 
+    __epm_color_pattern=$(__epm_get_color_pattern "$@")
+
+    eval "__epm_search_file_output \"\$search_word\" $MGS" | __epm_colorize_search_output
 }
