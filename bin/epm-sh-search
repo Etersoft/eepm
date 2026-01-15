@@ -24,18 +24,21 @@
 __epm_get_longest_word()
 {
     local longest=""
+    local arg
     local word
-    for word in "$@" ; do
+    for arg in "$@" ; do
         # skip exclusion patterns
-        case "$word" in
+        case "$arg" in
             ~*) continue ;;
         esac
-        # clean glob characters for PM search
-        word=$(echo "$word" | sed -e "s/[?*\[\]]//g")
-        [ -z "$word" ] && continue
-        if [ ${#word} -gt ${#longest} ] ; then
-            longest="$word"
-        fi
+        # clean pattern chars (replace with space to split OR patterns like (a|b))
+        # then find longest word among all
+        for word in $(echo "$arg" | sed -e 's/[][?*()|\^]/ /g') ; do
+            [ -z "$word" ] && continue
+            if [ ${#word} -gt ${#longest} ] ; then
+                longest="$word"
+            fi
+        done
     done
     echo "$longest"
 }
