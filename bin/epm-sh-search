@@ -250,14 +250,18 @@ __epm_expand_wildcards()
 
     for pkg in "$@" ; do
         if is_wildcard "$pkg" ; then
-            # Get short names for filtering
-            local matched
-            matched="$(short=1 __epm_expand_wildcard_pattern "$pkg")"
+            # Get packages with descriptions (single search)
+            local matched_verbose
+            matched_verbose="$(short='' __epm_expand_wildcard_pattern "$pkg")"
 
-            if [ -z "$matched" ] ; then
+            if [ -z "$matched_verbose" ] ; then
                 warning "No packages found matching pattern '$pkg'"
                 continue
             fi
+
+            # Extract short names from full results
+            local matched
+            matched="$(echo "$matched_verbose" | sed -e 's| .*||g')"
 
             # Filter out installed packages before showing interactive menu
             if [ -n "$skip_installed" ] ; then
@@ -274,9 +278,6 @@ __epm_expand_wildcards()
 
             if [ -n "$suggest_interactive$interactive" ] && [ -c /dev/tty ] ; then
                 # Interactive mode: let user select from matches (via config or --interactive flag)
-                # Get packages with descriptions for better selection
-                local matched_verbose
-                matched_verbose="$(short='' __epm_expand_wildcard_pattern "$pkg")"
                 # Filter installed if needed (by name)
                 if [ -n "$skip_installed" ] ; then
                     local names_only
