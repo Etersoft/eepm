@@ -24,6 +24,7 @@ load_helper epm-print
 load_helper epm-requires
 load_helper epm-sh-warmup
 load_helper epm-sh-install
+load_helper epm-sh-interactive
 
 RPMISNOTINSTALLED=202
 
@@ -412,8 +413,20 @@ epm_remove()
     epm_remove_low $pkg_names && return
     local STATUS=$?
 
-    # if rpm says packages are not installed, check if they are virtual
-    # don't escalate to hi level package manager for truly missing packages
+    # Check if packages are not installed and suggest similar
+    local installed_pkgs
+    installed_pkgs="$(get_only_installed_packages $pkg_names)"
+    if [ -z "$installed_pkgs" ] ; then
+        local selected
+        selected="$(__epm_suggest_similar_installed_packages_by_list $pkg_names)"
+        if [ -n "$selected" ] ; then
+            info "Removing selected: $selected"
+            epm_remove_names $selected
+            return $?
+        fi
+        return $STATUS
+    fi
+
     # see https://github.com/Etersoft/eepm/issues/236
     if [ "$STATUS" = "$RPMISNOTINSTALLED" ] ; then
         if [ -z "$(get_only_installed_packages $pkg_names)" ] ; then
