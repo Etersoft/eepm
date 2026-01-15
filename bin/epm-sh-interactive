@@ -86,3 +86,107 @@ __epm_interactive_select_packages()
             ;;
     esac
 }
+
+# Suggest similar packages using fzf fuzzy search
+# Args: package_name
+# Returns: selected package name (if interactive) or empty
+__epm_suggest_similar_packages()
+{
+    local pkg="$1"
+    local count="${suggest_count:-7}"
+
+    # need fzf for fuzzy search
+    is_command fzf || return 1
+
+    local similar
+    similar="$(epm list --available | fzf -f "$pkg" 2>/dev/null | head -$count)"
+    [ -z "$similar" ] && return 1
+
+    # Interactive selection if enabled (via config or --interactive flag)
+    if [ -n "$suggest_interactive$interactive" ] && inputisatty ; then
+        local selected
+        selected="$(echo "$similar" | fzf \
+            --prompt="$(eval_gettext "Select package (Enter=confirm, Esc=cancel)"): " \
+            --header="$(eval_gettext "Similar packages:")" \
+            --height=10 --reverse)"
+        if [ -n "$selected" ] ; then
+            # extract package name (before = or space)
+            echo "$selected" | sed -e 's/[= ].*//'
+            return 0
+        fi
+        return 1
+    fi
+
+    # Non-interactive: just show suggestions (to stderr)
+    echo "" >&2
+    echog "Perhaps you meant:" >&2
+    echo "$similar" | sed 's/^/  /' >&2
+    return 1
+}
+
+# Suggest similar packages for a list of packages
+# Args: package_names...
+# Returns: selected packages (if interactive) or empty
+__epm_suggest_similar_packages_by_list()
+{
+    local pkg
+    local selected_all=""
+    for pkg in "$@" ; do
+        local selected
+        selected="$(__epm_suggest_similar_packages "$pkg")"
+        [ -n "$selected" ] && selected_all="$selected_all $selected"
+    done
+    echo $selected_all
+}
+
+# Suggest similar installed packages using fzf fuzzy search
+# Args: package_name
+# Returns: selected package name (if interactive) or empty
+__epm_suggest_similar_installed_packages()
+{
+    local pkg="$1"
+    local count="${suggest_count:-7}"
+
+    # need fzf for fuzzy search
+    is_command fzf || return 1
+
+    local similar
+    similar="$(epm list --installed | fzf -f "$pkg" 2>/dev/null | head -$count)"
+    [ -z "$similar" ] && return 1
+
+    # Interactive selection if enabled (via config or --interactive flag)
+    if [ -n "$suggest_interactive$interactive" ] && inputisatty ; then
+        local selected
+        selected="$(echo "$similar" | fzf \
+            --prompt="$(eval_gettext "Select package (Enter=confirm, Esc=cancel)"): " \
+            --header="$(eval_gettext "Similar installed packages:")" \
+            --height=10 --reverse)"
+        if [ -n "$selected" ] ; then
+            # extract package name (before = or space)
+            echo "$selected" | sed -e 's/[= ].*//'
+            return 0
+        fi
+        return 1
+    fi
+
+    # Non-interactive: just show suggestions (to stderr)
+    echo "" >&2
+    echog "Perhaps you meant:" >&2
+    echo "$similar" | sed 's/^/  /' >&2
+    return 1
+}
+
+# Suggest similar installed packages for a list of packages
+# Args: package_names...
+# Returns: selected packages (if interactive) or empty
+__epm_suggest_similar_installed_packages_by_list()
+{
+    local pkg
+    local selected_all=""
+    for pkg in "$@" ; do
+        local selected
+        selected="$(__epm_suggest_similar_installed_packages "$pkg")"
+        [ -n "$selected" ] && selected_all="$selected_all $selected"
+    done
+    echo $selected_all
+}
