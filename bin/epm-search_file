@@ -127,8 +127,21 @@ __epm_search_file_output()
     [ -n "$CMD" ] && LC_ALL=C docmd $CMD "$string"
 }
 
+epm_search_file_help()
+{
+    echog 'epm sf (search-file) - search packages by file pattern'
+    echog 'Usage: epm sf <pattern> [pattern2...]'
+    print_wildcard_help
+}
+
 epm_search_file()
 {
+    case "$1" in
+        -h|--help)
+            epm_search_file_help
+            return
+            ;;
+    esac
     [ -n "$*" ] || fatal "File name or search pattern is not specified"
 
     case $BASEDISTRNAME in

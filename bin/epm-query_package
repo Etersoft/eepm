@@ -20,6 +20,13 @@
 load_helper epm-packages
 load_helper epm-search
 
+epm_query_package_help()
+{
+    echog 'epm qp - query installed packages by pattern'
+    echog 'Usage: epm qp <pattern> [pattern2...]'
+    print_wildcard_help
+}
+
 __epm_query_package()
 {
     (pkg_filenames="$*" quoted_args="$*" quiet=1 epm_query_package)
@@ -27,6 +34,12 @@ __epm_query_package()
 
 epm_query_package()
 {
+    case "$1" in
+        -h|--help)
+            epm_query_package_help
+            return
+            ;;
+    esac
     [ -n "$quoted_args" ] || fatal "Please, use search with some argument or run epmqa for get all packages."
     local MGS
     MGS=$(eval __epm_search_make_grep $quoted_args)

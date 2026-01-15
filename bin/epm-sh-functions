@@ -136,6 +136,19 @@ make_osc8_link()
     fi
 }
 
+# Print wildcard/pattern help for search commands
+print_wildcard_help()
+{
+    echo ''
+    echog 'Pattern matching:'
+    echog '  *           - matches any characters'
+    echog '  ?           - matches single character'
+    echog '  [abc]       - matches any character in brackets'
+    echog '  (aa|bb|cc)  - matches any of alternatives'
+    echog '  ~pattern    - exclude packages matching pattern'
+    echog '  patt1 patt2 - all patterns must match (AND logic)'
+}
+
 echover()
 {
     [ -z "$verbose" ] && return

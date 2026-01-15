@@ -220,6 +220,12 @@ case $PROGNAME in
         direct_args=1
         ;;
     epmps)                     # HELPSHORT: alias for epm play --search
+        if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
+            echog 'epmps - search available applications (alias for epm play --search)'
+            echog 'Usage: epmps <pattern> [pattern2...]'
+            print_wildcard_help
+            exit
+        fi
         epm_cmd=play
         quoted_args="--search"
         direct_args=1

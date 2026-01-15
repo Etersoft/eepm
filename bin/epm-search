@@ -191,8 +191,21 @@ __epm_search_internal()
     eval "__epm_search_output \"\$search_word\" $MGS" | __epm_colorize_search_output
 }
 
+epm_search_help()
+{
+    echog 'epm search - search packages in repository'
+    echog 'Usage: epm search <pattern> [pattern2...]'
+    print_wildcard_help
+}
+
 epm_search()
 {
+    case "$1" in
+        -h|--help)
+            epm_search_help
+            return
+            ;;
+    esac
     [ -n "$1" ] || fatal "Search: search argument(s) is missed"
 
     # check backend:package syntax (snap:pkg, nix:pkg)
