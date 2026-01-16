@@ -70,6 +70,19 @@ Also you can use
 
 For example, run `epm play edge` to install Microsoft Edge browser in your system.
 
+## Local Repository Installation
+
+You can enable local repository mode for package installation. This is useful for:
+* ALT Atomic systems (used automatically)
+* Systems with complex dependencies
+* Offline package management
+
+To enable, either:
+* Set `use_local_repo=1` in `/etc/eepm.conf`
+* Use environment variable `EPM_USE_LOCAL_REPO=1`
+
+See [Local Repository Documentation](docs/local-repo.md) for details.
+
 ## Install on any system
 
 Just run under root user:
