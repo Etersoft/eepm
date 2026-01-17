@@ -17,6 +17,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+load_helper epm-sh-interactive
 
 # args: appname/appscript
 get_play_script()
@@ -133,7 +134,7 @@ __epm_play_suggest_similar_apps()
     local RIFS=$'\x1E'
 
     # need fzf for fuzzy search
-    is_command fzf || return 1
+    __epm_check_fzf || return 1
 
     local list
     list="$(__get_fast_int_list_app $arch | sed -e "s|$RIFS| - |")"

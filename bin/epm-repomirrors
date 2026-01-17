@@ -17,6 +17,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+load_helper epm-sh-interactive
+
 # Check if current repos use Deferred
 __is_deferred_repo()
 {
@@ -248,6 +250,7 @@ __select_mirror_fzf()
             echo "$selected" | awk '{print $1}'
         fi
     else
+        __epm_check_fzf
         # Fallback: numbered menu
         echo "$results" | nl -w2 -s') ' >&2
         echo "" >&2
@@ -353,6 +356,9 @@ __epm_repomirrors_speedtest()
             fi
         fi
     else
+        if [ -z "$non_interactive" ] ; then
+            __epm_check_fzf
+        fi
         # No fzf or non-interactive: show sorted results
         echo "$results"
     fi

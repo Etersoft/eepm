@@ -17,6 +17,15 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+# Check if fzf is available, suggest installing if not
+__epm_check_fzf()
+{
+    if ! is_command fzf ; then
+        info 'Install fzf package for interactive selection and suggestions.'
+        return 1
+    fi
+}
+
 # Interactive selection from list of packages using fzf or numbered menu
 # Args: action (install/remove), list of packages (one per line on stdin)
 # Returns: selected package(s) on stdout
@@ -55,6 +64,8 @@ __epm_interactive_select_packages()
         fi
         return 1
     fi
+
+    __epm_check_fzf
 
     # Fallback: numbered menu
     echo "$packages" | nl -w3 -s') ' >&2
@@ -98,7 +109,7 @@ __epm_suggest_similar()
     local count="${suggest_count:-7}"
 
     # need fzf for fuzzy search
-    is_command fzf || return 1
+    __epm_check_fzf || return 1
 
     local similar
     similar="$(epm list $list_option | fzf -f "$pkg" 2>/dev/null | head -$count)"
