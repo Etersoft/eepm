@@ -98,6 +98,9 @@ epm_tool()
         "epm-completion")            # HELPCMD: shell completion data generator
             $CMDSHELL $SHAREDIR/tools_epm-completion "$@"
             ;;
+        "epm-command-not-found")     # HELPCMD: command-not-found helper
+            $CMDSHELL $SHAREDIR/tools_epm-command-not-found "$@"
+            ;;
         *)
             fatal 'Unknown command $ epm tool $WHAT. Use epm print help for get help.'
             ;;
