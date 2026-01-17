@@ -48,6 +48,14 @@ install_common:
 	cp -a completions/fish/*pm*.fish $(DESTDIR)$(datadir)/fish/vendor_completions.d/
 	chmod 0644 $(DESTDIR)$(datadir)/fish/vendor_completions.d/*pm*.fish
 
+	# command-not-found hooks
+	mkdir -p $(DESTDIR)$(sysconfdir)/profile.d/
+	install -m 0644 etc/profile.d/epm-command-not-found.sh $(DESTDIR)$(sysconfdir)/profile.d/
+	mkdir -p $(DESTDIR)$(sysconfdir)/zsh/
+	install -m 0644 etc/zsh/epm-command-not-found.zsh $(DESTDIR)$(sysconfdir)/zsh/
+	mkdir -p $(DESTDIR)$(sysconfdir)/fish/conf.d/
+	install -m 0644 etc/fish/conf.d/epm-command-not-found.fish $(DESTDIR)$(sysconfdir)/fish/conf.d/
+
 	# shebang.req.files
 	chmod a+x $(DESTDIR)$(pkgdatadir)/serv-*
 	chmod a+x $(DESTDIR)$(pkgdatadir)/epm-*
