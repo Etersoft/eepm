@@ -1,4 +1,14 @@
-#compdef _epm epm eepm epmi epme epmp epmqf epmI epms epmsf epmu epmq epmql epmqa epmqi epmcl epmrl epmwd epmqp 
+#compdef _epm epm eepm epmi epme epmp epmqf epmI epms epmsf epmu epmq epmql epmqa epmqi epmcl epmrl epmwd epmqp
+
+# Helper: get commands in zsh format (command:description)
+_epm_get_commands() {
+  epm tool epm-completion commands 2>/dev/null | awk -F'\t' '{print $1":"$2}'
+}
+
+# Helper: get options in zsh format ('option[description]')
+_epm_get_options() {
+  epm tool epm-completion options 2>/dev/null | awk -F'\t' '{print "\"" $1 "[" $2 "]\""}'
+}
 
 _epm() {
   typeset -A opt_args
@@ -7,261 +17,16 @@ _epm() {
 
   EEPM_SUBCOMMANDS_ARGS=(epmi epme epmp epmqf epmI epms epmsf epmu epmq epmql epmqa epmqi epmcl epmrl epmwd epmqp)
 
-  EEPM_SHORT_ARGS=(
-    '-e[remove packages]'
-    '-P[remove packages]'
-    '-s[search package by name]'
-    '-qp[search in the list of installed packages]'
-    '-qf[query package(s) owning file]'
-    '-S[query package(s) owning file]'
-    '-q[check presence of package(s) and print this name]'
-    '-ql[print package file list]'
-    '-V[check package file integrity (checksum)]'
-    '-sf[search for the name in all files of all packages]'
-    '-cl[show changelog for package]'
-    '-qa[print list of all installed packages]'
-    '-qi[print package detail info]'
-    '-i[install packages]'
+  # Dynamic options from epm tool epm-completion
+  local -a EEPM_FULL_ARGS
+  EEPM_FULL_ARGS=(${(f)"$(epm tool epm-completion options 2>/dev/null | awk -F'\t' '$1 ~ /^--/ {gsub(/\047/, "`", $2); print $1"["$2"]"}')"})
 
-  )
+  local -a EEPM_SHORT_ARGS
+  EEPM_SHORT_ARGS=(${(f)"$(epm tool epm-completion options 2>/dev/null | awk -F'\t' '$1 ~ /^-[^-]/ {gsub(/\047/, "`", $2); print $1"["$2"]"}')"})
 
-  EEPM_SHORT_ARGS_SKIP_COMP=(
-    '-h[show help]'
-    '-y[non interactive mode]'
-    '-v[print version]' 
-  )
-
-  EEPM_FULL_ARGS=(
-    '--help[show help]'
-
-    '--version[print version]'
-    '--verbose[verbose mode]'
-    '--debug[more debug output mode]'
-    '--skip-installed[skip already installed packages during install]'
-    '--skip-missed[skip not installed packages during remove]'
-    '--show-command-only[show command only, do not any action ]'
-    '--quiet[quiet mode (do not print commands before exec)]'
-    '--silent[quiet mode (do not print commands before exec)]'
-    '--nodeps[skip dependency check (during install/simulate and so on)]'
-    '--force[force install/remove package (f.i., override)]'
-    '--noremove[exit if any packages are to be removed during upgrade]'
-    '--no-remove[exit if any packages are to be removed during upgrade]'
-    '--no-stdin[don`t read from stdin for epm args]'
-    '--inscript[don`t read from stdin for epm args]'
-    '--dry-run[print only (autoremove/autoorphans/remove only)]'
-    '--simulate[print only (autoremove/autoorphans/remove only)]'
-    '--just-print[print only (autoremove/autoorphans/remove only)]'
-    '--no-act[print only (autoremove/autoorphans/remove only)]'
-    '--short[short output (just "package" instead "package-version-release")]'
-    '--direct[direct install package file from ftp]'
-    '--repack[repack rpm package(s) before install]'
-    '--norepack[don`t repack rpm package(s) if it is by default before install]'
-    '--install[install packed rpm package(s)]'
-    '--scripts[include scripts in repacked rpm package(s)]'
-    '--noscripts[disable scripts in install packages]'
-    '--save-only[save the package/tarball after all transformations]'
-    '--put-to-repo=[put the package after all transformations to the repo]'
-    '--download-only[download only the package/tarball]'
-    '--url[print only URL instead of download package]'
-    '--sort[sort]'
-    '--auto[non interactive mode]'
-    '--assumeyes[non interactive mode]'
-    '--non-interactive[non interactive mode]'
-    '--disable-interactivity[non interactive mode]'
-    '--interactive[interactive mode]'
-    '--force-yes[force yes in a danger cases]'
-    '--add-repo[add repo]'
-    '--orphans[show orphans]'
-)
-
-  local commands; commands=(
-    # install comp
-    'play:install the application'
-    'add:install packages'
-    'install:install packages'
-    'i:install packages'
-    'it:install packages' 
-    'reinstall:reinstall package(s) from remote repositories or from local file'
-    'Install:perform update package repo info and install package(s) via install command'
-    # remove comp
-    'remove:remove packages'
-    'uninstall:remove packages'
-    'rm:remove packages'
-    'del:remove packages'
-    'delete:remove packages'
-    'erase:remove packages'
-    'purge:remove packages'
-    'e:remove packages'
-    # search comp
-    'search:search package by name'
-    's:search package by name'
-    'find:search package by name'
-    'sr:search package by name'
-    # upgrade comp
-    'full-upgrade:do full upgrade'
-    'update:update remote package repository databases'
-    'Upgrade:upgrade all installed packages (Upgrade = update + upgrade)'
-    # qp comp
-    'qp:search in the list of installed packages'
-    'grep:search in the list of installed packages'
-    'query_package:search in the list of installed packages'
-    # qf comp
-    'qf:query package(s) owning file'
-    'wp:query package(s) owning file'
-    'which:query package(s) owning file'
-    'belongs:query package(s) owning file'
-    # package comp  
-    'q:check presence of package(s) and print this name'
-    'query:check presence of package(s) and print this name' 
-    'installed:check presence of package(s)'
-    'status:get status of package(s)'
-    'provides:print package provides'
-    'prov:print package provides'
-    'list:print list of packages'
-    'list-available:print list of all available packages'
-    'programs:print list of installed packages with GUI program(s)'
-    # sf comp
-    'search-file:search for the name in all files of all packages'
-    'filesearch:search for the name in all files of all packages'
-    'sf:search for the name in all files of all packages'
-    # ql comp 
-    'ql:print package file list'
-    'filelist:print package file list'
-    'get-files:print package file list'
-    # cl comp
-    'cl:show changelog for package'
-    'changelog:show changelog for package'
-    # qi comp
-    'qi:print package detail info'
-    'info:print package detail info'
-    'show:print package detail info' 
-    # req comp
-    'requires:print package requires'
-    'deplist:print package requires'
-    'depends:print package requires'
-    'req:print package requires'
-    'depends-on:print package requires'
-    # wd comp
-    'whatdepends:print packages dependences on that'
-    'rdepends:print packages dependences on that'
-    'whatrequires:print packages dependences on that'
-    'wd:print packages dependences on that'
-    'required-by:print packages dependences on that'
-    'whatprovides:print packages provides that target'
-    'conflicts:print package conflicts'
-    # qa comp
-    'qa:print list of all installed packages'
-
-    'ls:print list of all installed packages'
-    'packages:print list of all installed packages'
-    'list-installed:print list of all installed packages'
-    'li:print list of all installed packages'
-    # policy comp
-    'policy:print detailed information about the priority selection of package'
-    'resolve:print detailed information about the priority selection of package'
-    # others
-    'help:print help'
-
-    # repo ctl comp
-    'update:update remote package repository databases'
-    'update-repo:update remote package repository databases'
-    'ur:update remote package repository databases'
-
-    'addrepo:add package repo'
-    'ar:add package repo'
-
-    'repolist:print repo list'
-    'sl:print repo list'
-    'rl:print repo list'
-    'listrepo:print repo list'
-    'repo-list:print repo list'
-    'list-repo:print repo list'
-    'lr:print repo list'
-
-    'repofix:<mirror>: fix paths in sources lists'
-
-    'removerepo:remove package repo'
-    'remove-repo:remove package repo'
-    'rr:remove package repo'
-
-    'repo:manipulate with repository list'
-
-    'check:check local package base integrity and fix it'
-    'fix:check local package base integrity and fix it'
-    'verify:check local package base integrity and fix it'
-
-    'dedup:remove unallowed duplicated pkgs'
-    'release-upgrade:upgrade/switch whole system to the release in arg'
-    'upgrade-release:upgrade/switch whole system to the release in arg'
-    'upgrade-system:upgrade/switch whole system to the release in arg'
-    'release-switch:upgrade/switch whole system to the release in arg'
-
-    'release-downgrade:downgrade whole system to the release in arg'
-    'downgrade-release:downgrade whole system to the release in arg'
-    'downgrade-system:downgrade whole system to the release in arg'
-
-    'kernel-update:update system kernel to the last repo version'
-    'kernel-upgrade:update system kernel to the last repo version'
-    'update-kernel:update system kernel to the last repo version'
-    'upgrade-kernel:update system kernel to the last repo version'
-
-    'remove-old-kernels:remove old system kernels'
-    'remove-old-kernel:remove old system kernels'
-
-    'stats:show statistics about repositories and installations'
-
-    # other com comp
-    'clean:clean local package cache'
-    'delete-cache:clean local package cache'
-    'dc:clean local package cache'
-
-    'restore:install (restore) packages need for the project'
-
-    'autoremove:auto remove unneeded package(s)'
-    'package-cleanup:auto remove unneeded package(s)'
-    'mark:mark package as manually or automatically installed or hold/unhold it'
-    'history:show a log of actions taken by the software management'
-
-    'autoorphans:remove all packages not from the repository'
-    'remove-orphans:remove all packages not from the repository'
-
-    'upgrade:performs upgrades of package software distributions'
-    'up:performs upgrades of package software distributions'
-    'dist-upgrade:performs upgrades of package software distributions'
-
-    'Upgrade:force update package base, then run upgrade'
-    'Downgrade:force update package base, then run downgrade [all] packages to the repo state'
-
-    'downgrade:downgrade [all] packages to the repo state'
-    'distro-sync:downgrade [all] packages to the repo state'
-
-    'download:download package(s) file to the current dir'
-    'fetch:download package(s) file to the current dir'
-    'fc:download package(s) file to the current dir'
-
-    'simulate:simulate install with check requires'
-    'audit:audits installed packages against known vulnerabilities'
-
-    'site:open package`s site in a browser'
-    'url:open package`s site in a browser'
-
-    'ei:install package(s) from Korinf (eepm by default)'
-    'ik:install package(s) from Korinf (eepm by default)'
-    'epminstall:install package(s) from Korinf (eepm by default)'
-    'epm-install:install package(s) from Korinf (eepm by default)'
-    'selfinstall:install package(s) from Korinf (eepm by default)'
-
-    'print:print various info, run epm print help for details'
-    'tool:run embedded tool (see epm tool --help)'
-    'repack:repack rpm to local compatibility'
-    'pack:pack tarball or dir to a rpm package'
-
-    'prescription:run prescription (a script to achieving the goal), run without args to get list'
-    'recipe:run prescription (a script to achieving the goal), run without args to get list'   
-
-    'checkpkg:check package file integrity (checksum)'
-    'integrity:check package file integrity (checksum)'  
-  )
+  # Dynamic commands from epm tool epm-completion
+  local -a commands
+  commands=(${(f)"$(epm tool epm-completion commands 2>/dev/null | awk -F'\t' '{print $1":"$2}')"})
 #TODO fix long args
   local cmd
   for word in "${words[@]}"; do
@@ -274,7 +39,7 @@ _epm() {
   if [[ ! " ${EEPM_SUBCOMMANDS_ARGS[@]} " =~ " $cmd " ]]; then
     _arguments -C \
         "${EEPM_SHORT_ARGS[@]}" \
-        "${EEPM_SHORT_ARGS_SKIP_COMP[@]}" \
+        "" \
         "${EEPM_FULL_ARGS[@]}" \
         '*::arg:->args' \
       && ret=0
@@ -378,7 +143,7 @@ _epm_list_available_prescription()
   _describe -t list_available_prescription 'list available prescription' list_available_prescription
 
   if [[ ${words[CURRENT]} == -* ]]; then
-    _arguments -C "${EEPM_SHORT_ARGS[@]}" "${EEPM_SHORT_ARGS_SKIP_COMP[@]}" "${EEPM_FULL_ARGS[@]}"
+    _arguments -C "${EEPM_SHORT_ARGS[@]}" "" "${EEPM_FULL_ARGS[@]}"
   fi
 }
 
@@ -721,7 +486,7 @@ _epm_available_packages() {
   fi
 
   if [[ "$cur" == -* ]]; then
-    _arguments -C "${EEPM_SHORT_ARGS[@]}" "${EEPM_SHORT_ARGS_SKIP_COMP[@]}" "${EEPM_FULL_ARGS[@]}"
+    _arguments -C "${EEPM_SHORT_ARGS[@]}" "" "${EEPM_FULL_ARGS[@]}"
   fi
 }
 
@@ -733,7 +498,7 @@ _epm_installed_packages() {
   _describe -t installed-packages 'installed package' installed_packages 
 
   if [[ ${words[CURRENT]} == -* ]]; then
-    _arguments -C "${EEPM_SHORT_ARGS[@]}" "${EEPM_SHORT_ARGS_SKIP_COMP[@]}" "${EEPM_FULL_ARGS[@]}"
+    _arguments -C "${EEPM_SHORT_ARGS[@]}" "" "${EEPM_FULL_ARGS[@]}"
   fi
 }
 
