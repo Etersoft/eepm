@@ -29,16 +29,13 @@ Conflicts: rpmbasefix
 
 %endif
 
-%if_disabled sepplay
-Conflicts: eepm-play < %EVR
-Provides: eepm-play = %EVR
-%endif
-
 AutoProv:no
 AutoReq:no
 
 # TODO: drop gzip (used in some pack.d/repack.d/play.d)
 Requires: coreutils diffutils findutils file gawk grep gzip less sed bash termutils
+Requires: eepm-repack = %EVR
+Requires: eepm-play = %EVR
 
 %description
 Etersoft EPM is the package manager for any platform
@@ -50,7 +47,7 @@ with various distros.
 See detailed description here: http://wiki.etersoft.ru/EPM
 
 %package repack
-Summary: Etersoft EPM package manager (repack requirements)
+Summary: Etersoft EPM package manager (repack and pack commands)
 Group: System/Configuration/Packaging
 Requires: %name = %EVR
 Requires: alien cpio dpkg patchelf 7-zip
@@ -61,8 +58,9 @@ Requires: /usr/bin/rpmbuild
 %endif
 
 %description repack
-This package has requirements needed for using epm repack on ALT
-(repack rpm packages and repack/install deb packages).
+This package contains epm repack and epm pack commands for repacking
+and creating packages. Includes necessary requirements for using
+epm repack on ALT (repack rpm packages and repack/install deb packages).
 
 See https://bugzilla.altlinux.org/show_bug.cgi?id=34308 for
 a discussion about extra requirements.
@@ -136,18 +134,16 @@ EOF
 %doc README.md TODO LICENSE
 %dir %_sysconfdir/eepm/
 %dir %_sysconfdir/eepm/conf.d/
-%dir %_sysconfdir/eepm/pack.d/
-%dir %_sysconfdir/eepm/repack.d/
 %dir %_sysconfdir/eepm/prescription.d/
 %dir %_sysconfdir/eepm/desktop.d/
 %config(noreplace) %_sysconfdir/eepm/eepm.conf
 %config(noreplace) %_sysconfdir/eepm/serv.conf
-%config(noreplace) %_sysconfdir/eepm/*.list
-%config(noreplace) %_sysconfdir/eepm/repack.d/*
-%config(noreplace) %_sysconfdir/eepm/pack.d/*
+%config(noreplace) %_sysconfdir/eepm/mirrors-alt.list
+%config(noreplace) %_sysconfdir/eepm/pkgallowscripts.list
+%config(noreplace) %_sysconfdir/eepm/vendorallowscripts.list
 %config(noreplace) %_sysconfdir/eepm/prescription.d/*
 %config(noreplace) %_sysconfdir/eepm/desktop.d/*
-%_bindir/epm*
+%_bindir/epm
 %_bindir/eepm
 %_bindir/serv
 %_bindir/distr_info
@@ -159,13 +155,12 @@ EOF
 %dir /var/cache/eepm/
 %_man1dir/*
 %_datadir/%name/
-%if_enabled sepplay
+%exclude %_datadir/%name/epm-create_fake
+%exclude %_datadir/%name/epm-pack
+%exclude %_datadir/%name/epm-repack*
+%exclude %_datadir/%name/epm-play*
 %exclude %_bindir/epmp
-%exclude %_datadir/%name/epm-play
-%else
-%dir %_sysconfdir/eepm/play.d/
-%config(noreplace) %_sysconfdir/eepm/play.d/*
-%endif
+%exclude %_bindir/epmps
 %_sysconfdir/bash_completion.d/serv
 %_sysconfdir/bash_completion.d/eepm
 %_datadir/zsh/Completion/Linux/_serv
@@ -173,14 +168,23 @@ EOF
 %_datadir/fish/vendor_completions.d/*pm*.fish
 
 %files repack
+%dir %_sysconfdir/eepm/pack.d/
+%dir %_sysconfdir/eepm/repack.d/
+%config(noreplace) %_sysconfdir/eepm/pack.d/*
+%config(noreplace) %_sysconfdir/eepm/repack.d/*
+%config(noreplace) %_sysconfdir/eepm/packrules.list
+%config(noreplace) %_sysconfdir/eepm/repackstoplist.list
+%config(noreplace) %_sysconfdir/eepm/reqstoplist.list
+%_datadir/%name/epm-create_fake
+%_datadir/%name/epm-pack
+%_datadir/%name/epm-repack*
 
-%if_enabled sepplay
 %files play
-%_bindir/epmp
-%_datadir/%name/epm-play
 %dir %_sysconfdir/eepm/play.d/
 %config(noreplace) %_sysconfdir/eepm/play.d/*
-%endif
+%_bindir/epmp
+%_bindir/epmps
+%_datadir/%name/epm-play*
 
 %files full
 # metapackage, no files
