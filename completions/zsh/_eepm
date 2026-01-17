@@ -502,4 +502,5 @@ _epm_installed_packages() {
   fi
 }
 
-compdef _epm epm eepm epmi epme epmp epmqf epmI epms epmsf epmu epmq epmql epmqa epmqi epmcl epmrl epmwd epmqp 
+# Register completion for epm and all aliases
+compdef _epm epm eepm $(epm tool epm-completion aliases 2>/dev/null | cut -f1 | tr '\n' ' ')
