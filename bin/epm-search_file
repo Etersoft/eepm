@@ -130,7 +130,11 @@ __epm_search_file_output()
 epm_search_file_help()
 {
     echog 'epm sf (search-file) - search packages by file pattern'
-    echog 'Usage: epm sf <pattern> [pattern2...]'
+    echog 'Usage: epm sf [options] <pattern> [pattern2...]'
+    echog 'Options:'
+    echog '  --fuzzy[=N]  use fuzzy search via fzf (default N=10 results)'
+    echog '  --short      output package names only'
+    echog '  --tsv        output in TSV format (package<TAB>file)'
     print_wildcard_help
 }
 

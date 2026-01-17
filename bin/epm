@@ -187,6 +187,7 @@ exclude=
 force_overwrite=
 norecommends=
 regexp=
+fuzzy=
 
 epm_vardir=/var/lib/eepm
 epm_cachedir=/var/cache/eepm
@@ -643,6 +644,12 @@ check_option()
         ;;
     --regexp)              # HELPOPT: treat search pattern as regular expression (for grep filter only)
         regexp="--regexp"
+        ;;
+    --fuzzy)               # HELPOPT: use fuzzy search via fzf (for search, sf, play --search)
+        fuzzy=10
+        ;;
+    --fuzzy=*)             # HELPOPT: use fuzzy search with max N results (--fuzzy=20)
+        fuzzy="$(echo "$1" | sed -e 's|--fuzzy=||')"
         ;;
     --direct)              # HELPOPT: direct install package file from ftp (not via hilevel repository manager)
         direct="--direct"

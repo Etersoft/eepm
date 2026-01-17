@@ -58,7 +58,7 @@ __epm_glob_to_regexp()
 
 # Produce grep filter sequence for multiple search patterns
 # Args: patterns (use ~pattern for exclusion)
-# Uses: $short, $regexp, $PMTYPE
+# Uses: $short, $regexp, $fuzzy, $PMTYPE
 __epm_search_make_grep()
 {
     local i
@@ -79,6 +79,27 @@ __epm_search_make_grep()
     done
 
     listN=$(strip_spaces $listN | sed -e "s/ /|/g" | sed -e "s/~//g")
+
+    # Fuzzy search mode - use fzf --filter instead of grep
+    if [ -n "$fuzzy" ] ; then
+        local fzf_pattern
+        fzf_pattern=$(strip_spaces $list)
+
+        if [ -n "$short" ] ; then
+            echon " | sed -e \"s| .*||g\""
+        fi
+
+        [ -n "$listN" ] && echon " | grep -E -i -v -- \"$listN\""
+
+        if is_command fzf ; then
+            echon " | fzf --filter=\"$fzf_pattern\" 2>/dev/null | head -$fuzzy"
+        else
+            warning "fzf is not installed for fuzzy search. Install: epm install fzf"
+            # fallback to grep
+            echon " | grep -i -- \"$fzf_pattern\" | head -$fuzzy"
+        fi
+        return
+    fi
 
     # convert glob to regexp (skip if --regexp mode - user provides regexp directly)
     if [ -z "$regexp" ] ; then

@@ -194,7 +194,11 @@ __epm_search_internal()
 epm_search_help()
 {
     echog 'epm search - search packages in repository'
-    echog 'Usage: epm search <pattern> [pattern2...]'
+    echog 'Usage: epm search [options] <pattern> [pattern2...]'
+    echog 'Options:'
+    echog '  --fuzzy[=N]  use fuzzy search via fzf (default N=10 results)'
+    echog '  --regexp     treat pattern as regular expression'
+    echog '  --short      output package names only'
     print_wildcard_help
 }
 
