@@ -37,15 +37,15 @@ install_common:
 	cp -a `ls -1 man/*` $(DESTDIR)$(mandir)/man1/
 
 	mkdir -p $(DESTDIR)$(sysconfdir)/bash_completion.d/
-	install -m 0644 bash_completion/serv $(DESTDIR)$(sysconfdir)/bash_completion.d/serv
-	install -m 0644 bash_completion/eepm $(DESTDIR)$(sysconfdir)/bash_completion.d/eepm
+	install -m 0644 completions/bash/serv $(DESTDIR)$(sysconfdir)/bash_completion.d/serv
+	install -m 0644 completions/bash/eepm $(DESTDIR)$(sysconfdir)/bash_completion.d/eepm
 
 	mkdir -p $(DESTDIR)$(datadir)/zsh/Completion/Linux/
-	install -m 0644 zsh_completion/_serv $(DESTDIR)$(datadir)/zsh/Completion/Linux/
-	install -m 0644 zsh_completion/_eepm $(DESTDIR)$(datadir)/zsh/Completion/Linux/
+	install -m 0644 completions/zsh/_serv $(DESTDIR)$(datadir)/zsh/Completion/Linux/
+	install -m 0644 completions/zsh/_eepm $(DESTDIR)$(datadir)/zsh/Completion/Linux/
 
 	mkdir -p $(DESTDIR)$(datadir)/fish/vendor_completions.d/
-	cp -a fish_completion/*pm*.fish $(DESTDIR)$(datadir)/fish/vendor_completions.d/
+	cp -a completions/fish/*pm*.fish $(DESTDIR)$(datadir)/fish/vendor_completions.d/
 	chmod 0644 $(DESTDIR)$(datadir)/fish/vendor_completions.d/*pm*.fish
 
 	# shebang.req.files
