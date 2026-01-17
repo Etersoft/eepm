@@ -107,6 +107,24 @@ for better EPM performance and user experience:
 - aria2: fast download utility with parallel connections
 - alt-rpmkeys-utils (ALT Linux): cryptographic package signature verification
 
+%package command-not-found
+Summary: EPM command-not-found handler
+Group: System/Configuration/Packaging
+Requires: %name = %EVR
+
+AutoProv:no
+AutoReq:no
+
+%description command-not-found
+This package provides command-not-found hook for bash, zsh and fish shells.
+When you type an unknown command, it suggests how to install the package
+that provides this command using epm.
+
+Features:
+- Suggests packages from repository (via epm sf)
+- Suggests applications from epm play
+- Handles Russian keyboard layout (suggests English equivalent)
+
 %prep
 %setup
 
@@ -166,6 +184,13 @@ EOF
 %_datadir/zsh/Completion/Linux/_serv
 %_datadir/zsh/Completion/Linux/_eepm
 %_datadir/fish/vendor_completions.d/*pm*.fish
+%exclude %_datadir/%name/tools_epm-command-not-found
+
+%files command-not-found
+%_datadir/%name/tools_epm-command-not-found
+%_sysconfdir/profile.d/epm-command-not-found.sh
+%_sysconfdir/zsh/epm-command-not-found.zsh
+%_sysconfdir/fish/conf.d/epm-command-not-found.fish
 
 %files repack
 %dir %_sysconfdir/eepm/pack.d/
