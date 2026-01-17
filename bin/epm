@@ -61,9 +61,18 @@ load_helper()
     local CMD="$SHAREDIR/$1"
     # do not use fatal() here, it can be initial state
     if [ ! -r "$CMD" ] ; then
-        message 'FATAL: Have no $CMD helper file'
-        [ "$1" = "epm-play" ] && message 'Install eepm-play package to use epm play command.'
-        exit 1
+        case "$1" in
+            epm-play)
+                fatal 'Install eepm-play package: epm play needs it'
+                ;;
+            epm-repack|epm-pack)
+                fatal 'Install eepm-repack package: epm repack/pack need it'
+                ;;
+            *)
+                message 'FATAL: Have no $CMD helper file'
+                exit 1
+                ;;
+        esac
     fi
     eval "$shieldname=1"
     # shellcheck disable=SC1090
