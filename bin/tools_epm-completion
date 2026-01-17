@@ -1,0 +1,179 @@
+#!/bin/sh
+#
+# Copyright (C) 2025  Etersoft
+# Copyright (C) 2025  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+# epm tool epm-completion - shell completion data generator
+# Output format: TSV (command<TAB>description)
+
+PROGDIR="$(dirname "$0")"
+SHAREDIR="$PROGDIR"
+[ "$PROGDIR" = "." ] && PROGDIR="$(pwd)"
+
+# Parse HELPCMD/HELPOPT comments from epm script
+# Format: command|alias)  # HELPCMD: description
+# Output: command<TAB>description
+parse_help_comments()
+{
+    local section="$1"
+    local file="$2"
+    grep "# $section:" "$file" | grep -v "# $section: PART:" | grep -v "^ *#" | \
+    while IFS= read -r line ; do
+        # Extract command part (before )) and description (after HELPCMD:)
+        cmd_part=$(echo "$line" | sed 's|).*||' | sed 's|^[[:space:]]*||' | sed 's|"||g')
+        desc=$(echo "$line" | sed 's|.*# '"$section"': *||')
+        # Get the main command name (skip short options like -i, prefer longer names)
+        cmd=""
+        # Split by | and find first non-short-option
+        for c in $(echo "$cmd_part" | tr '|' ' ') ; do
+            case "$c" in
+                -*)
+                    # skip short options, but remember if no other found
+                    [ -z "$cmd" ] && cmd="$c"
+                    ;;
+                *)
+                    cmd="$c"
+                    break
+                    ;;
+            esac
+        done
+        [ -n "$cmd" ] && printf '%s\t%s\n' "$cmd" "$desc"
+    done
+}
+
+# Get list of commands with descriptions
+get_commands()
+{
+    parse_help_comments HELPCMD "$SHAREDIR/epm"
+}
+
+# Get list of options with descriptions
+get_options()
+{
+    parse_help_comments HELPOPT "$SHAREDIR/epm"
+}
+
+# Get list of command aliases (alias<TAB>canonical_command)
+get_aliases()
+{
+    cat <<'EOF'
+epmi	install
+epmI	Install
+epme	remove
+epmq	query
+epmqa	packages
+epmqf	query_file
+epmqp	query_package
+epmqi	info
+epmql	filelist
+epmqcl	changelog
+epmu	update
+epmU	Upgrade
+epms	search
+epmsf	search_file
+epmcl	changelog
+epmp	play
+epmrp	prescription
+EOF
+}
+
+# Parse subcommand help output (for commands like repo, mark)
+# Input: epm <cmd> --help output
+# Output: subcommand<TAB>description (TSV)
+parse_subcommand_help()
+{
+    # Parse lines like:
+    #     subcommand      description
+    #     |subcommand     description
+    # Skip example lines, headers, empty lines
+    grep -v '^ *epm ' | grep -v '^$' | grep -v '^[A-Z]' | grep -v '^Usage:' | grep -v 'Examples:' | \
+    sed -n 's/^[[:space:]]*|*\([a-z_][a-z0-9_|-]*\)[[:space:]]\{2,\}\([^<].*\)/\1	\2/p' | \
+    sed -e 's/|.*//' -e 's/	 /	/' | \
+    awk -F'\t' 'NF==2 && $2!=""'
+}
+
+# Parse options help output (for commands like play, kernel-update)
+# Input: epm <cmd> --help output
+# Output: option<TAB>description (TSV)
+parse_options_help()
+{
+    # Parse lines with various formats:
+    #     --option <arg>    - description
+    #     --option          - description
+    #     --option          description (without -)
+    sed -n 's/^[[:space:]]*\(--[a-z_-]*\)[[:space:]][^a-z]*\([a-z].*\)/\1	\2/p' | \
+    sed 's/- //' | \
+    awk -F'\t' 'NF==2 && $2!="" && length($2)>2'
+}
+
+# Get subcommand options
+get_subcommand_options()
+{
+    local cmd="$1"
+    case "$cmd" in
+        # Commands with subcommands (word-style)
+        repo|mark|db)
+            "$SHAREDIR/epm" "$cmd" --help 2>/dev/null | parse_subcommand_help
+            ;;
+        # Commands with --options style
+        play|kernel-update|status|list|info|autoremove|history)
+            "$SHAREDIR/epm" "$cmd" --help 2>/dev/null | parse_options_help
+            ;;
+        *)
+            # Unknown subcommand, return empty
+            return 1
+            ;;
+    esac
+}
+
+show_help()
+{
+    cat <<'EOF'
+epm tool epm-completion - generate completion data for shells
+
+Usage: epm tool epm-completion <what>
+
+Arguments:
+    commands        list all epm commands (TSV: command<TAB>description)
+    options         list all epm options (TSV: option<TAB>description)
+    aliases         list command aliases (TSV: alias<TAB>command)
+    <subcommand>    list subcommand options (repo, mark, play, etc.)
+
+Examples:
+    epm tool epm-completion commands
+    epm tool epm-completion options
+    epm tool epm-completion repo
+EOF
+}
+
+case "$1" in
+    -h|--help|help|"")
+        show_help
+        ;;
+    commands)
+        get_commands
+        ;;
+    options)
+        get_options
+        ;;
+    aliases)
+        get_aliases
+        ;;
+    *)
+        get_subcommand_options "$1" || exit 1
+        ;;
+esac

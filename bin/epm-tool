@@ -95,6 +95,9 @@ epm_tool()
         "which")                    # HELPCMD: which like command (no output to stderr, can works without which package)
             print_command_path "$@"
             ;;
+        "epm-completion")            # HELPCMD: shell completion data generator
+            $CMDSHELL $SHAREDIR/tools_epm-completion "$@"
+            ;;
         *)
             fatal 'Unknown command $ epm tool $WHAT. Use epm print help for get help.'
             ;;
