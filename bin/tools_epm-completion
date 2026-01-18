@@ -35,10 +35,13 @@ parse_help_comments()
     while IFS= read -r line ; do
         # Extract command part (before )) and description (after HELPCMD:)
         cmd_part=$(echo "$line" | sed 's|).*||' | sed 's|^[[:space:]]*||' | sed 's|"||g')
-        local full_desc=$(echo "$line" | sed 's|.*# '"$section"': *||')
+        local full_desc
+        full_desc=$(echo "$line" | sed 's|.*# '"$section"': *||')
         # Extract argtype from COMPLETE:xxx marker and clean description
-        local argtype=$(echo "$full_desc" | sed -n 's|.*COMPLETE:\([a-z_]*\).*|\1|p')
-        local desc=$(echo "$full_desc" | sed 's| *COMPLETE:[a-z_]*||')
+        local argtype
+        argtype=$(echo "$full_desc" | sed -n 's|.*COMPLETE:\([a-z_]*\).*|\1|p')
+        local desc
+        desc=$(echo "$full_desc" | sed 's| *COMPLETE:[a-z_]*||')
         # Get the main command name (skip short options like -i, prefer longer names)
         cmd=""
         # Split by | and find first non-short-option
