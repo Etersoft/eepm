@@ -52,6 +52,71 @@ load_helper epm-sh-functions  # Load shared functions
 load_helper epm-install       # Load specific command
 ```
 
+### Help System and Completion Markers
+
+Commands and options are documented using special comments that are parsed by `get_help()` function.
+
+**Comment types:**
+
+| Marker | Purpose | Example |
+|--------|---------|---------|
+| `HELPCMD` | Command description | `install\|i) # HELPCMD: install package(s)` |
+| `HELPOPT` | Option description | `--verbose) # HELPOPT: verbose mode` |
+| `HELPSHORT` | Short alias description | Used in main epm script |
+
+**Usage in help functions:**
+
+```bash
+epm_mycommand_help()
+{
+    message 'epm mycommand - description
+Usage: epm mycommand [options] <args>
+'
+    get_help HELPOPT $SHAREDIR/epm-mycommand
+    get_help HELPCMD $SHAREDIR/epm-mycommand  # if has subcommands
+}
+```
+
+**Option parsing pattern (like in epm-list):**
+
+```bash
+epm_mycommand()
+{
+    local option="$1"
+    case "$option" in
+        -h|--help)           # HELPOPT: show this help
+            epm_mycommand_help
+            return
+            ;;
+        --installed)         # HELPOPT: search installed packages
+            shift
+            # handle --installed
+            ;;
+    esac
+    # default behavior
+}
+```
+
+**Completion type markers (COMPLETE:):**
+
+For shell completion, commands can specify argument type using `COMPLETE:type` marker:
+
+```bash
+install|i)  # HELPCMD: install package(s) COMPLETE:package
+remove|rm)  # HELPCMD: remove package(s) COMPLETE:package_installed
+play)       # HELPCMD: install app COMPLETE:playapp
+```
+
+Available completion types:
+- `package` - available packages from repository
+- `package_installed` - installed packages
+- `playapp` - epm play applications
+- `prescription` - epm prescription scripts
+- `repo` - repository names
+- `file` - file paths
+
+These markers are parsed by `epm tool epm-completion` for shell completion scripts.
+
 ### Play Scripts (`play.d/`)
 
 Scripts for installing applications from official sources (not repositories). Each script:
