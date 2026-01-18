@@ -9,7 +9,8 @@ function __eepm_list_commands
 end
 
 function __eepm_list_installed_packages
-    epm list --installed --quiet --short --direct
+    set -l cur (commandline -ct)
+    epm qp --quiet --short "^$cur"
 end
 
 function __eepm_list_available_packages

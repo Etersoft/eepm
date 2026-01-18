@@ -492,12 +492,15 @@ _epm_available_packages() {
 
 
 _epm_installed_packages() {
-  local installed_packages 
-  installed_packages=( $(epm list --installed --quiet --short --direct) )
-  
-  _describe -t installed-packages 'installed package' installed_packages 
+  local cur=${words[CURRENT]}
+  local installed_packages
+  installed_packages=( ${(f)"$(epm qp --quiet --short "^$cur")"} )
 
-  if [[ ${words[CURRENT]} == -* ]]; then
+  if (( ${#installed_packages[@]} > 0 )); then
+    _describe -t installed-packages 'installed package' installed_packages
+  fi
+
+  if [[ "$cur" == -* ]]; then
     _arguments -C "${EEPM_SHORT_ARGS[@]}" "" "${EEPM_FULL_ARGS[@]}"
   fi
 }

@@ -29,8 +29,10 @@ __eepm_list_commands()
 
 __eepm_list_installed_packages()
 {
-    COMPREPLY=( $( epm list --installed --quiet --short --direct ) )
-    COMPREPLY=( $( compgen -W '${COMPREPLY[@]}' -- "$cur" ) )
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local results
+    results=$(epm qp --quiet --short "^$cur")
+    COMPREPLY=( $(compgen -W "$results" -- "$cur") )
 }
 
 __eepm_list_available_packages() {
