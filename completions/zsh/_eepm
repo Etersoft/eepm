@@ -1,12 +1,12 @@
 #compdef _epm epm eepm epmi epme epmp epmqf epmI epms epmsf epmu epmq epmql epmqa epmqi epmcl epmrl epmwd epmqp
 
 # Helper: get commands in zsh format (command:description)
-_epm_get_commands() {
+__eepm_get_commands() {
   epm tool epm-completion commands 2>/dev/null | awk -F'\t' '{print $1":"$2}'
 }
 
 # Helper: get options in zsh format ('option[description]')
-_epm_get_options() {
+__eepm_get_options() {
   epm tool epm-completion options 2>/dev/null | awk -F'\t' '{print "\"" $1 "[" $2 "]\""}'
 }
 
@@ -56,62 +56,62 @@ _epm() {
     args)
       case "$cmd" in
         play|epmp)
-          _epm_play_packages && ret=0
+          __eepm_play_packages && ret=0
           ;;
         install|Install|reinstall|add|i|it|-i|installed|epmi|epmI|epms|epmcl|epmwd)
-          _epm_available_packages && ret=0
+          __eepm_available_packages && ret=0
           ;;
         full-upgrade)
-          _epm_complete_full-upgrade && ret=0
+          __eepm_complete_full-upgrade && ret=0
           ;;
         changelog|cl|-cl|search|s|find|sr|-s|-ql|ql|get-files|filelist|requires|deplist|depends|req|depends-on|whatdepends|rdepends|whatrequires|wd|required-by|provides|prov|whatprovides|conflicts|policy|resolve)
-          _epm_available_packages && ret=0
+          __eepm_available_packages && ret=0
           ;;
         remove|rm|del|delete|uninstall|erase|purge|e|-e|-P|site|url|epme)
-          _epm_installed_packages && ret=0
+          __eepm_installed_packages && ret=0
           ;;
         qf|wp|which|belongs|-qf|-S|epmqf)
-          _epm_complete_qf && ret=0
+          __eepm_complete_qf && ret=0
           ;;
         epmql|epmq|epmqi|epmqp|query|q|-q|info|qp|grep|query_package|-qp|show|qi|-qi)
-          _epm_available_packages && ret=0 
-          _epm_installed_packages && ret=0
+          __eepm_available_packages && ret=0 
+          __eepm_installed_packages && ret=0
           ;;
         status)
-          _epm_complete_status && ret=0
+          __eepm_complete_status && ret=0
           ;;
         list)
-          _epm_complete_list && ret=0
+          __eepm_complete_list && ret=0
           ;;
         addrepo|ar|repofix|removerepo|remove-repo|rr)
-          _epm_complete_repolist && ret=0
+          __eepm_complete_repolist && ret=0
           ;;
         repo)
-          _epm_complete_repo && ret=0
+          __eepm_complete_repo && ret=0
           ;;
         kernel-update|kernel-upgrade|update-kernel|upgrade-kernel)
-          _epm_complete_kernel_update && ret=0
+          __eepm_complete_kernel_update && ret=0
           ;;
         autoremove|package-cleanup)
-          _epm_complete_autoremove && ret=0
+          __eepm_complete_autoremove && ret=0
           ;;
         mark)
-          _epm_complete_mark && ret=0
+          __eepm_complete_mark && ret=0
           ;;
         history)
-          _epm_complete_history && ret=0
+          __eepm_complete_history && ret=0
           ;;
         download|fetch|fc|simulate)
-          _epm_available_packages && ret=0
+          __eepm_available_packages && ret=0
           ;;
         prescription|recipe)
-          _epm_list_available_prescription && ret=0
+          __eepm_list_available_prescription && ret=0
           ;;
         pack)
-          _epm_complete_pack && ret=0
+          __eepm_complete_pack && ret=0
           ;;
         repack)
-          _epm_complete_repack && ret=0
+          __eepm_complete_repack && ret=0
           ;;
         *)
           ret=0
@@ -123,7 +123,7 @@ _epm() {
   return $ret
 }
 
-_epm_complete_full-upgrade(){
+__eepm_complete_full-upgrade(){
   _arguments \
     '-h[help]' \
     '--help[help]' \
@@ -136,7 +136,7 @@ _epm_complete_full-upgrade(){
     '--no-clean[no clean after upgrade]' 
 }
 
-_epm_list_available_prescription()
+__eepm_list_available_prescription()
 { 
   local list_available_prescription
   list_available_prescription=( $( epm prescription --list-all --quiet --short) )
@@ -147,11 +147,11 @@ _epm_list_available_prescription()
   fi
 }
 
-_epm_complete_repack() { 
+__eepm_complete_repack() { 
   _files
 }
 
-_epm_complete_kernel_update() {
+__eepm_complete_kernel_update() {
   #TODO more info
   local types=('std-def' 'std-kvm' 'un-def' 'ovz-el7' 'rt')
 
@@ -192,7 +192,7 @@ _epm_complete_kernel_update() {
 }
 
 
-_epm_complete_history() {
+__eepm_complete_history() {
   local options=(
       '-h[show help]'
       '--help[show help]'
@@ -205,7 +205,7 @@ _epm_complete_history() {
 }
 
 
-_epm_complete_status() { 
+__eepm_complete_status() { 
  local options=(
     '--installed[check if <package> is installed (if version is specified, not older than the version)]'
     '--installable[check if <package> can be installed from the repo]'
@@ -219,11 +219,11 @@ _epm_complete_status() {
   if [[ ${words[CURRENT]} == -* || (${words[CURRENT]} == '' && ${words[CURRENT-1]} == 'status') ]]; then
     _arguments -C "${options[@]}"
   elif [[ ${#words[@]} -eq 3 ]]; then
-    _epm_available_packages
+    __eepm_available_packages
   fi
 }
 
-_epm_complete_repolist() {
+__eepm_complete_repolist() {
   local options=(
     'basealt:BaseALT repository'
     'altsp:ALTSP repository'
@@ -247,7 +247,7 @@ _epm_complete_repolist() {
   fi
 }
 
-_epm_complete_list() {
+__eepm_complete_list() {
   local options=(
     '--available[Show available packages]'
     '--installed[Show installed packages]'
@@ -260,7 +260,7 @@ _epm_complete_list() {
 }
 
 
-_epm_complete_pack() {
+__eepm_complete_pack() {
   local options=(
     '--install[Install the package]'
     '--repack[Repack the package]'
@@ -279,7 +279,7 @@ _epm_complete_pack() {
   fi
 }
 
-_epm_complete_mark() {
+__eepm_complete_mark() {
   local subcommands=(
     'hold:mark the given package(s) as held back'
     'unhold:unset the given package(s) as held back'
@@ -312,7 +312,7 @@ _epm_complete_mark() {
   elif [[ -n $special ]]; then
     case $special in
       hold|unhold|auto|remove|manual|install)
-        _epm_installed_packages
+        __eepm_installed_packages
         ;;
       *)
         return 0
@@ -324,7 +324,7 @@ _epm_complete_mark() {
   fi
 }
 
-_epm_complete_repo() {
+__eepm_complete_repo() {
   local subcommands=(
     'help:help'
     'list:list enabled repositories (-a|--all for list disabled repositories too)'
@@ -372,16 +372,16 @@ _epm_complete_repo() {
   else
     case $special in
       change|set|add|Add)
-        _epm_complete_repolist
+        __eepm_complete_repolist
         ;;
       rm|del|remove)
-        _epm_complete_repolist
+        __eepm_complete_repolist
         ;;
       switch)
-        _epm_complete_repolist
+        __eepm_complete_repolist
         ;;
       enable|disable)
-        _epm_complete_repolist
+        __eepm_complete_repolist
         ;;
       create|index)
         _files
@@ -396,7 +396,7 @@ _epm_complete_repo() {
   fi
 }
 
-_epm_complete_autoremove() {
+__eepm_complete_autoremove() {
   local subcommands=(
     'libs:remove libraries'
     'libs-devel:remove development libraries'
@@ -441,14 +441,14 @@ _epm_complete_autoremove() {
 
 # TODO need help with it
 # do system commands complete
-_epm_complete_qf() {
+__eepm_complete_qf() {
   local current_word="${words[CURRENT]}"
   if [[ "$current_word" == */* ]]; then
     _files
   fi
 }
 
-_epm_play_packages() {
+__eepm_play_packages() {
   local play_packages 
 
   if [[ ${words[CURRENT]} == -* ]]; then
@@ -470,7 +470,7 @@ _epm_play_packages() {
   fi
 }
 
-_epm_available_packages() {
+__eepm_available_packages() {
   local cur=${words[CURRENT]}
   if [[ "$cur" == ./* || "$cur" == ../* || "$cur" == /* ]]; then
     _files
@@ -491,7 +491,7 @@ _epm_available_packages() {
 }
 
 
-_epm_installed_packages() {
+__eepm_installed_packages() {
   local cur=${words[CURRENT]}
   local installed_packages
   installed_packages=( ${(f)"$(epm qp --quiet --short "^$cur")"} )
