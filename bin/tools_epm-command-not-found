@@ -88,11 +88,9 @@ search_play_fuzzy()
 search_package()
 {
     local cmd="$1"
-    # Search for /usr/bin/cmd or /bin/cmd
-    local pkg
-    pkg=$("$SHAREDIR/epm" sf "/usr/bin/$cmd" 2>/dev/null | head -1)
-    [ -z "$pkg" ] && pkg=$("$SHAREDIR/epm" sf "/bin/$cmd" 2>/dev/null | head -1)
-    echo "$pkg"
+    # Search in /bin, /sbin, /usr/bin, /usr/sbin
+    # --tsv output format: "package\t/path/to/file"
+    "$SHAREDIR/epm" sf --tsv --regexp "/(s?bin|usr/s?bin)/$cmd\$" 2>/dev/null | head -1 | cut -f1
 }
 
 show_help()
