@@ -205,8 +205,8 @@ epm_status_original()
             # otherwise any package from hasher is original
             local disttag="$(epm print field disttag for "$pkg" 2>/dev/null )"
             if [ "$disttag" = "(none)" ] ; then
-                # fallback for old packages without disttag: check signature against ALT keys
-                epm_status_signed "$pkg" || return 1
+                # fallback for old packages without disttag: check if signed
+                __epm_status_have_sign "$pkg" || return 1
             fi
             return 0
             ;;
