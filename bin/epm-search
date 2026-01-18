@@ -193,25 +193,15 @@ __epm_search_internal()
 
 epm_search_help()
 {
-    echog 'epm search - search packages in repository'
-    echog 'Usage: epm search [options] <pattern> [pattern2...]'
-    echog 'Options:'
-    echog '  --fuzzy[=N]  use fuzzy search via fzf (default N=10 results)'
-    echog '  --regexp     treat pattern as regular expression'
-    echog '  --short      output package names only'
+    message 'epm search - search packages
+Usage: epm search [options] <pattern> [pattern2...]
+'
+    get_help HELPOPT $SHAREDIR/epm-search
     print_wildcard_help
 }
 
-epm_search()
+__epm_search_run_available()
 {
-    case "$1" in
-        -h|--help)
-            epm_search_help
-            return
-            ;;
-    esac
-    [ -n "$1" ] || fatal "Search: search argument(s) is missed"
-
     # check backend:package syntax (snap:pkg, nix:pkg)
     if __has_backend_syntax "$@" ; then
         __process_backend_arguments __epm_search_internal "$@"
@@ -239,4 +229,29 @@ epm_search()
         showcmd epm play $short $play_tsv --search "$@"
         eval "epm play $short $play_tsv --search $quoted_args" | sed -e "s/  */ /g" -e "s/\$/ $hint/"
     fi
+}
+
+epm_search()
+{
+    local option="$1"
+
+    case "$option" in
+        -h|--help)                    # HELPOPT: show this help
+            epm_search_help
+            return
+            ;;
+        --installed)                  # HELPOPT: search in installed packages (like epm qp)
+            shift
+            [ -n "$1" ] || fatal "Search: search argument(s) is missed"
+            load_helper epm-query_package
+            pkg_filenames="$*" quoted_args="$*" epm_query_package
+            return
+            ;;
+        --available)                  # HELPOPT: search in available packages (default)
+            shift
+            ;;
+    esac
+
+    [ -n "$1" ] || fatal "Search: search argument(s) is missed"
+    __epm_search_run_available "$@"
 }
