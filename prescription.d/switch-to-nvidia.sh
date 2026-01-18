@@ -80,7 +80,7 @@ EOF
 
     epm install --skip-installed nvidia-settings nvidia-vaapi-driver ocl-nvidia libcuda vulkan-tools libnvidia-encode libnvidia-ngx libnvidia-opencl libvulkan1 nvidia-modprobe \
         nvidia-xconfig libvulkan1 libcudadebugger libnvcuvid libnvidia-api \
-        libnvidia-fbc libnvidia-ml libnvidia-nvvm libnvidia-ptxjitcompiler libnvoptix nvidia-smi libxnvctrl0
+        libnvidia-fbc libnvidia-ml libnvidia-nvvm libnvidia-ptxjitcompiler libnvoptix nvidia-smi libxnvctrl0 libnvidia-ngx
 
     epm prescription i586-fix
 fi
