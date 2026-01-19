@@ -26,8 +26,8 @@ __apt_delete_repo_line()
 {
     local repo="$1"
 
-    local sc="sudocmd"
-    [ -z "$quiet" ] || sc="sudorun"
+    local sc="sudorun"
+    [ -n "$verbose" ] && sc="sudocmd"
 
     # touch file only when it is needed
     grep -q -F "$repo" "$APT_SOURCES_LIST" || return
@@ -52,7 +52,7 @@ __epm_removerepo_apt()
     __apt_delete_repo_line "$repo"
 
     # sources.list.d: comment lines instead of deleting
-    epm repo disable "^$repo" 2>/dev/null
+    docmd epm repo disable "^$repo" 2>/dev/null
 
     return 0
 }
