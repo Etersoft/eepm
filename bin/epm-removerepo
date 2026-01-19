@@ -98,6 +98,7 @@ __epm_removerepo_alt()
         for arg in $repo ; do
             is_taskarg "$arg" || continue
             tn=$(get_tasknumber_from_arg "$arg")
+            showcmd epm repo remove $tn
             __epm_removerepo_alt_grepremove " repo/$tn/" "/tasks/$tn " "/$tn[ /]build/repo"
         done
         return
