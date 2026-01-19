@@ -642,7 +642,7 @@ check_option()
     --tsv)                 # HELPOPT: TSV output format (for list --available)
         tsv="--tsv"
         ;;
-    --regexp)              # HELPOPT: treat search pattern as regular expression (for grep filter only)
+    --regex|--regexp)      # HELPOPT: treat search pattern as regular expression (for grep filter only)
         regexp="--regexp"
         ;;
     --fuzzy)               # HELPOPT: use fuzzy search via fzf (for search, sf, play --search)
