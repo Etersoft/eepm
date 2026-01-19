@@ -42,6 +42,15 @@ fi
 
 [ "$CNF_ENABLED" = "0" ] && exit 127
 
+# Gettext support
+export TEXTDOMAIN='eepm'
+export TEXTDOMAINDIR='/usr/share/locale'
+if [ -x /usr/bin/gettext.sh ] ; then
+    . /usr/bin/gettext.sh
+else
+    eval_gettext() { echo "$@" ; }
+fi
+
 # Convert Russian keyboard layout to English
 # Based on standard QWERTY/ЙЦУКЕН layout mapping
 convert_ru_to_en()
@@ -130,7 +139,7 @@ main()
         converted_cmd=$(convert_ru_to_en "$cmd")
         if command -v "$converted_cmd" >/dev/null 2>&1 ; then
             echo ""
-            echo "Возможно, вы имели в виду: $converted_cmd"
+            eval_gettext "Perhaps you meant: \$converted_cmd"; echo
             echo ""
             found=1
         fi
@@ -145,7 +154,7 @@ main()
         play_match=$(search_play "$search_target")
         if [ -n "$play_match" ] ; then
             echo ""
-            echo "Приложение '$search_target' доступно через epm play:"
+            eval_gettext "Application '\$search_target' is available via epm play:"; echo
             echo "  epm play $search_target"
             echo ""
             found=1
@@ -155,7 +164,7 @@ main()
             fuzzy_matches=$(search_play_fuzzy "$search_target")
             if [ -n "$fuzzy_matches" ] ; then
                 echo ""
-                echo "Похожие приложения доступны через epm play:"
+                eval_gettext "Similar applications are available via epm play:"; echo
                 echo "$fuzzy_matches" | while read -r app ; do
                     echo "  epm play $app"
                 done
@@ -174,7 +183,7 @@ main()
         pkg=$(search_package "$search_cmd")
         if [ -n "$pkg" ] ; then
             echo ""
-            echo "Программа '$search_cmd' может быть установлена:"
+            eval_gettext "Program '\$search_cmd' can be installed:"; echo
             echo "  epm install $pkg"
             echo ""
             found=1
