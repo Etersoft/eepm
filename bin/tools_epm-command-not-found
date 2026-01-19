@@ -78,6 +78,23 @@ has_cyrillic()
     echo "$1" | grep -q '[а-яА-ЯёЁ]'
 }
 
+# Check if command exists in sbin directories not in PATH
+check_sbin_not_in_path()
+{
+    local cmd="$1"
+    local dir
+    for dir in /sbin /usr/sbin ; do
+        case ":$PATH:" in
+            *":$dir:"*) continue ;;
+        esac
+        if [ -x "$dir/$cmd" ] ; then
+            echo "$dir/$cmd"
+            return 0
+        fi
+    done
+    return 1
+}
+
 # Search for command in epm play applications (exact match)
 search_play()
 {
@@ -145,23 +162,34 @@ main()
         fi
     fi
 
+    local search_cmd="$cmd"
+    [ -n "$converted_cmd" ] && search_cmd="$converted_cmd"
+
+    # Check if command exists in sbin but not in PATH
+    local sbin_path
+    sbin_path=$(check_sbin_not_in_path "$search_cmd")
+    if [ -n "$sbin_path" ] ; then
+        echo ""
+        eval_gettext "Command '\$search_cmd' found: \$sbin_path"; echo
+        eval_gettext "This directory is not in PATH. Run as root or use full path."; echo
+        echo ""
+        return 0
+    fi
+
     # Search in epm play
     if [ "$CNF_SEARCH_PLAY" = "1" ] ; then
         local play_match
-        local search_target="$cmd"
-        [ -n "$converted_cmd" ] && search_target="$converted_cmd"
-
-        play_match=$(search_play "$search_target")
+        play_match=$(search_play "$search_cmd")
         if [ -n "$play_match" ] ; then
             echo ""
-            eval_gettext "Application '\$search_target' is available via epm play:"; echo
-            echo "  epm play $search_target"
+            eval_gettext "Application '\$search_cmd' is available via epm play:"; echo
+            echo "  epm play $search_cmd"
             echo ""
             found=1
         else
             # Try fuzzy search if no exact match
             local fuzzy_matches
-            fuzzy_matches=$(search_play_fuzzy "$search_target")
+            fuzzy_matches=$(search_play_fuzzy "$search_cmd")
             if [ -n "$fuzzy_matches" ] ; then
                 echo ""
                 eval_gettext "Similar applications are available via epm play:"; echo
@@ -176,9 +204,6 @@ main()
 
     # Search in repository
     if [ "$CNF_SEARCH_REPO" = "1" ] ; then
-        local search_cmd="$cmd"
-        [ -n "$converted_cmd" ] && search_cmd="$converted_cmd"
-
         local pkg
         pkg=$(search_package "$search_cmd")
         if [ -n "$pkg" ] ; then
