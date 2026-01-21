@@ -9,7 +9,8 @@ PMTYPE=apt-rpm
 
 . ../bin/epm-sh-altlinux
 . ../bin/epm-sh-functions
-. ../bin/epm-install
+. ../bin/epm-sh-filter
+. ../bin/epm-sh-install
 
 #installlist=$(../bin/epm --short qp glusterfs6)
 installlist="libglusterfs6
@@ -23,7 +24,29 @@ libglusterfs6-api
 glusterfs6-thin-arbiter
 python3-module-glusterfs6
 glusterfs6-server"
-echo "installed: $installlist"
-echo "non installed:"
+
+echo "=== Test filter_out_installed_packages ==="
+echo "input: $installlist"
+echo "non installed (filter_out_installed_packages):"
 echo "$installlist" | (skip_installed='yes' filter_out_installed_packages)
-#echo "$installlist" | __fast_hack_for_filter_out_installed_rpm
+
+echo ""
+echo "=== Test __filter_pkglist_installed ==="
+testlist="bash coreutils nonexistent-pkg-12345"
+echo "input: $testlist"
+echo "installed:"
+echo "$testlist" | __filter_pkglist_installed
+
+echo ""
+echo "=== Test __filter_pkglist_not_installed ==="
+echo "input: $testlist"
+echo "not installed:"
+echo "$testlist" | __filter_pkglist_not_installed
+
+echo ""
+echo "=== Test epm filter CLI ==="
+echo "input: $testlist"
+echo "epm filter --installed:"
+../bin/epm filter --installed $testlist
+echo "epm filter --not-installed:"
+../bin/epm filter --not-installed $testlist
