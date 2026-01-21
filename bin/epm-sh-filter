@@ -1,0 +1,155 @@
+#!/bin/sh
+#
+# Copyright (C) 2012-2025  Etersoft
+# Copyright (C) 2012-2025  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+# Low-level package list filtering functions (stdin -> stdout)
+
+# Returns only installed packages from input list (rpm-based, optimized)
+__filter_pkglist_installed_rpm()
+{
+    local input
+    input="$(cat)"
+    [ -z "$input" ] && return
+    # Get installed package names in one call, then intersect with input
+    echo "$input" | xargs rpmquery --qf='%{NAME}\n' 2>/dev/null | grep -vxF 'package (none) is not installed' | LC_ALL=C sort -u
+}
+
+# Returns only not installed packages from input list (rpm-based, optimized)
+__filter_pkglist_not_installed_rpm()
+{
+    LC_ALL=C xargs -n1 rpm -q 2>&1 | grep 'is not installed' |
+        sed -e 's|^.*package \(.*\) is not installed.*|\1|g' |
+        LC_ALL=C xargs -n1 rpm -q --whatprovides 2>&1 | grep 'no package provides' |
+        sed -e 's|^.*no package provides \(.*\)|\1|g'
+}
+
+# Returns only installed packages from input list (dpkg-based, optimized)
+__filter_pkglist_installed_dpkg()
+{
+    local input
+    input="$(cat)"
+    [ -z "$input" ] && return
+    # dpkg-query returns only installed packages, output format: package
+    # shellcheck disable=SC2016
+    echo "$input" | xargs dpkg-query -W -f='${Package}\n' 2>/dev/null | LC_ALL=C sort -u
+}
+
+# Returns only not installed packages from input list (dpkg-based, optimized)
+__filter_pkglist_not_installed_dpkg()
+{
+    local input
+    input="$(cat)"
+    [ -z "$input" ] && return
+    local installed
+    # shellcheck disable=SC2016
+    installed="$(echo "$input" | xargs dpkg-query -W -f='${Package}\n' 2>/dev/null | LC_ALL=C sort -u)"
+    # Return packages that are NOT in the installed list
+    if [ -z "$installed" ] ; then
+        echo "$input" | xargs -n1
+    else
+        echo "$input" | xargs -n1 | grep -vxF "$installed"
+    fi
+}
+
+# Returns only installed packages from input list (pacman-based, optimized)
+__filter_pkglist_installed_pacman()
+{
+    local input
+    input="$(cat)"
+    [ -z "$input" ] && return
+    # pacman -Q outputs "pkgname version", we need only pkgname
+    echo "$input" | xargs pacman -Q 2>/dev/null | cut -d' ' -f1 | LC_ALL=C sort -u
+}
+
+# Returns only not installed packages from input list (pacman-based, optimized)
+__filter_pkglist_not_installed_pacman()
+{
+    local input
+    input="$(cat)"
+    [ -z "$input" ] && return
+    local installed
+    installed="$(echo "$input" | xargs pacman -Q 2>/dev/null | cut -d' ' -f1 | LC_ALL=C sort -u)"
+    # Return packages that are NOT in the installed list
+    if [ -z "$installed" ] ; then
+        echo "$input" | xargs -n1
+    else
+        echo "$input" | xargs -n1 | grep -vxF "$installed"
+    fi
+}
+
+# Fallback: filter installed using is_installed (one by one)
+__filter_pkglist_installed_fallback()
+{
+    load_helper epm-query
+    local pkg
+    while read -r pkg ; do
+        [ -n "$pkg" ] || continue
+        is_installed "$pkg" && echo "$pkg"
+    done
+}
+
+# Fallback: filter not installed using is_installed (one by one)
+__filter_pkglist_not_installed_fallback()
+{
+    load_helper epm-query
+    local pkg
+    while read -r pkg ; do
+        [ -n "$pkg" ] || continue
+        is_installed "$pkg" || echo "$pkg"
+    done
+}
+
+# Main dispatcher: returns only installed packages from input list
+# Reads package names from stdin (space or newline separated), writes to stdout
+__filter_pkglist_installed()
+{
+    case $PMTYPE in
+        *-rpm)
+            __filter_pkglist_installed_rpm
+            ;;
+        *-dpkg)
+            __filter_pkglist_installed_dpkg
+            ;;
+        pacman)
+            __filter_pkglist_installed_pacman
+            ;;
+        *)
+            __filter_pkglist_installed_fallback
+            ;;
+    esac
+}
+
+# Main dispatcher: returns only not installed packages from input list
+# Reads package names from stdin (space or newline separated), writes to stdout
+__filter_pkglist_not_installed()
+{
+    case $PMTYPE in
+        *-rpm)
+            __filter_pkglist_not_installed_rpm
+            ;;
+        *-dpkg)
+            __filter_pkglist_not_installed_dpkg
+            ;;
+        pacman)
+            __filter_pkglist_not_installed_pacman
+            ;;
+        *)
+            __filter_pkglist_not_installed_fallback
+            ;;
+    esac
+}

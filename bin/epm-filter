@@ -1,0 +1,93 @@
+#!/bin/sh
+#
+# Copyright (C) 2012-2025  Etersoft
+# Copyright (C) 2012-2025  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+load_helper epm-sh-filter
+
+epm_filter_help()
+{
+    message 'epm filter - filter package list by install status
+Usage: epm filter [options] [package(s)]
+
+If packages are not specified, reads from stdin.
+
+Options:
+'
+    get_help HELPOPT $SHAREDIR/epm-filter
+    message '
+Examples:
+    echo "bash coreutils nonexistent-pkg" | epm filter --installed
+    echo "bash coreutils nonexistent-pkg" | epm filter --not-installed
+    epm filter --installed bash coreutils nonexistent-pkg
+'
+}
+
+epm_filter()
+{
+    local option
+    local filter_type=""
+    local packages=""
+
+    while [ -n "$1" ] ; do
+        option="$1"
+        case "$option" in
+            -h|--help)           # HELPOPT: show this help
+                epm_filter_help
+                return
+                ;;
+            --installed)         # HELPOPT: filter only installed packages
+                filter_type="installed"
+                ;;
+            --not-installed)     # HELPOPT: filter only not installed packages
+                filter_type="not_installed"
+                ;;
+            -*)
+                fatal "Unknown option: $option"
+                ;;
+            *)
+                [ -n "$packages" ] && packages="$packages $option" || packages="$option"
+                ;;
+        esac
+        shift
+    done
+
+    if [ -z "$filter_type" ] ; then
+        fatal "Specify --installed or --not-installed option"
+    fi
+
+    # Read packages from stdin if not provided as arguments
+    if [ -z "$packages" ] ; then
+        case "$filter_type" in
+            installed)
+                __filter_pkglist_installed
+                ;;
+            not_installed)
+                __filter_pkglist_not_installed
+                ;;
+        esac
+    else
+        case "$filter_type" in
+            installed)
+                echo "$packages" | __filter_pkglist_installed
+                ;;
+            not_installed)
+                echo "$packages" | __filter_pkglist_not_installed
+                ;;
+        esac
+    fi
+}
