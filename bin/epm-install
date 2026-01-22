@@ -28,6 +28,7 @@ load_helper epm-sh-warmup
 load_helper epm-installed
 load_helper epm-list_available
 load_helper epm-sh-interactive
+load_helper epm-override
 
 # Check if at least one package from the list is not found in repos
 # Returns 0 if at least one package is not found (suggest is appropriate)
@@ -669,7 +670,11 @@ epm_install()
             ;;
     esac
 
-    [ -z "$files" ] && debug "Empty install files list was skipped" && return 0
+    if [ -z "$files" ] ; then
+        debug "Empty install files list was skipped"
+        __epm_override_after_install "$names" ""
+        return 0
+    fi
 
     if [ -n "$download_only" ] ; then
         # save files to the current dir before install and repack
@@ -685,4 +690,7 @@ epm_install()
     fi
 
     epm_install_files $files
+    local ret=$?
+    [ $ret = 0 ] && __epm_override_after_install "$names" "$files"
+    return $ret
 }

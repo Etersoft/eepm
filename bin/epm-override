@@ -1,0 +1,305 @@
+#!/bin/sh
+#
+# Copyright (C) 2026  Etersoft
+# Copyright (C) 2026  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+STATOVERRIDE_FILE=/var/lib/eepm/statoverride
+
+__epm_override_check_args()
+{
+    local group="$1"
+    local path="$2"
+
+    [ -n "$group" ] || { warning 'group is missing' ; return 1 ; }
+    [ -n "$path" ] || { warning 'path is missing' ; return 1 ; }
+
+    # check group exists
+    if ! getent group "$group" >/dev/null 2>&1 ; then
+        warning 'group $group does not exist. Create it first: groupadd $group'
+        return 1
+    fi
+
+    # check path is absolute
+    if ! echo "$path" | grep -q '^/' ; then
+        warning 'path $path must be absolute'
+        return 1
+    fi
+
+    # check file exists
+    if [ ! -e "$path" ] ; then
+        warning 'file $path does not exist'
+        return 1
+    fi
+
+    # check file is regular and executable
+    if [ ! -f "$path" ] || [ ! -x "$path" ] ; then
+        warning '$path is not an executable file'
+        return 1
+    fi
+
+    # check permissions are 755/750 or 4755/4750 (setuid)
+    local mode
+    mode=$(stat -c '%a' "$path" 2>/dev/null)
+    case "$mode" in
+        755|750|4755|4750)
+            ;;
+        *)
+            warning '$path has mode $mode, expected 755 or 4755. This command is for restricting regular binaries only.'
+            return 1
+            ;;
+    esac
+
+    return 0
+}
+
+__epm_override_apply_path()
+{
+    local group="$1"
+    local path="$2"
+
+    [ -e "$path" ] || return 0
+
+    # get current mode and preserve setuid bit
+    local mode newmode
+    mode=$(stat -c '%a' "$path" 2>/dev/null)
+    case "$mode" in
+        4755|4750) newmode=4750 ;;
+        *)         newmode=750 ;;
+    esac
+
+    sudocmd chown "root:$group" "$path" || return
+    sudocmd chmod "$newmode" "$path"
+}
+
+# check if override database exists and is not empty
+__epm_have_overrides()
+{
+    case $PMTYPE in
+        apt-dpkg|aptitude-dpkg)
+            # dpkg handles it automatically
+            return 1
+            ;;
+    esac
+    [ -s "$STATOVERRIDE_FILE" ]
+}
+
+# apply overrides for files from the package
+__epm_override_apply_package()
+{
+    local pkg="$1"
+    local filelist
+
+    filelist="$(epm filelist "$pkg" 2>/dev/null)" || return 0
+
+    local group opath
+    while read -r group opath ; do
+        [ -n "$opath" ] || continue
+        # check if this path belongs to the package
+        if echo "$filelist" | grep -qx "$opath" ; then
+            info 'Applying override for $opath (root:$group)'
+            __epm_override_apply_path "$group" "$opath"
+        fi
+    done < "$STATOVERRIDE_FILE"
+}
+
+# apply overrides after package installation (called from epm_install)
+__epm_override_after_install()
+{
+    local names="$1"
+    local files="$2"
+
+    __epm_have_overrides || return 0
+
+    local pkg
+    # process package names
+    for pkg in $names ; do
+        __epm_override_apply_package "$pkg"
+    done
+
+    # process package files
+    local file
+    for file in $files ; do
+        pkg="$(epm query --short "$file" 2>/dev/null)"
+        [ -n "$pkg" ] && __epm_override_apply_package "$pkg"
+    done
+}
+
+__epm_override_add_internal()
+{
+    local group="$1"
+    local path="$2"
+
+    # create directory if needed
+    sudocmd mkdir -p "$(dirname "$STATOVERRIDE_FILE")" || return
+
+    # remove existing entry for this path
+    if [ -f "$STATOVERRIDE_FILE" ] ; then
+        sudocmd sed -i "\|^[^ ]* ${path}$|d" "$STATOVERRIDE_FILE"
+    fi
+
+    # add new entry
+    echo "$group $path" | sudorun tee -a "$STATOVERRIDE_FILE" >/dev/null
+
+    # apply immediately if file exists
+    __epm_override_apply_path "$group" "$path"
+}
+
+epm_override_add()
+{
+    local group="$1"
+    local path="$2"
+
+    __epm_override_check_args "$group" "$path" || return 1
+
+    # get current mode and calculate new mode preserving setuid
+    local mode newmode
+    mode=$(stat -c '%a' "$path" 2>/dev/null)
+    case "$mode" in
+        4755|4750) newmode=4750 ;;
+        *)         newmode=750 ;;
+    esac
+
+    case $PMTYPE in
+        apt-dpkg|aptitude-dpkg)
+            sudocmd dpkg-statoverride --update --add root "$group" "$newmode" "$path"
+            ;;
+        *)
+            __epm_override_add_internal "$group" "$path"
+            ;;
+    esac
+}
+
+epm_override_remove()
+{
+    local path="$1"
+
+    [ -n "$path" ] || fatal 'path is missing'
+
+    case $PMTYPE in
+        apt-dpkg|aptitude-dpkg)
+            sudocmd dpkg-statoverride --remove "$path"
+            ;;
+        *)
+            [ -f "$STATOVERRIDE_FILE" ] || { warning 'no overrides configured' ; return 1 ; }
+            if ! grep -q " ${path}$" "$STATOVERRIDE_FILE" ; then
+                warning 'no override for $path'
+                return 1
+            fi
+            sudocmd sed -i "\| ${path}$|d" "$STATOVERRIDE_FILE"
+            info 'Override for $path removed. Run epm reinstall <package> to restore original permissions.'
+            ;;
+    esac
+}
+
+epm_override_list()
+{
+    case $PMTYPE in
+        apt-dpkg|aptitude-dpkg)
+            docmd dpkg-statoverride --list "$@"
+            ;;
+        *)
+            if [ ! -s "$STATOVERRIDE_FILE" ] ; then
+                info 'No overrides configured'
+                return 0
+            fi
+            if [ -n "$1" ] ; then
+                grep " $1$" "$STATOVERRIDE_FILE" || info 'No override for $1'
+            else
+                cat "$STATOVERRIDE_FILE"
+            fi
+            ;;
+    esac
+}
+
+epm_override_apply()
+{
+    local path="$1"
+
+    case $PMTYPE in
+        apt-dpkg|aptitude-dpkg)
+            info 'dpkg applies overrides automatically during package installation'
+            return 0
+            ;;
+    esac
+
+    [ -s "$STATOVERRIDE_FILE" ] || { info 'No overrides configured' ; return 0 ; }
+
+    local group fpath
+    while read -r group fpath ; do
+        [ -n "$fpath" ] || continue
+        # if path specified, apply only for it
+        if [ -n "$path" ] ; then
+            [ "$fpath" = "$path" ] || continue
+        fi
+        if [ -e "$fpath" ] ; then
+            info 'Applying override for $fpath (root:$group)'
+            __epm_override_apply_path "$group" "$fpath"
+        else
+            warning '$fpath does not exist, skipping'
+        fi
+    done < "$STATOVERRIDE_FILE"
+}
+
+epm_override_help()
+{
+    message 'epm override - restrict application execution to a group
+
+This command restricts binary execution to users of a specific group
+by changing ownership to root:<group> and permissions to 750.
+Overrides are preserved across package updates.
+
+On Debian/Ubuntu systems, uses native dpkg-statoverride.
+On other systems, uses /var/lib/eepm/statoverride database.
+'
+    get_help HELPOPT $SHAREDIR/epm-override
+    get_help HELPCMD $SHAREDIR/epm-override
+    message '
+Examples:
+  groupadd wireshark
+  usermod -aG wireshark user1
+  epm override add wireshark /usr/bin/dumpcap
+
+  epm override list
+  epm override remove /usr/bin/dumpcap
+'
+}
+
+epm_override()
+{
+    local CMD="$1"
+    [ -n "$CMD" ] && shift
+    case "$CMD" in
+    ""|"-h"|"--help"|help)       # HELPOPT: print this help
+        epm_override_help
+        ;;
+    add)                         # HELPCMD: add override: add <group> <path>
+        epm_override_add "$@"
+        ;;
+    remove|rm|delete|del)        # HELPCMD: remove override for path
+        epm_override_remove "$@"
+        ;;
+    list|ls)                     # HELPCMD: list overrides (optionally for specific path)
+        epm_override_list "$@"
+        ;;
+    apply)                       # HELPCMD: apply all overrides (or for specific path)
+        epm_override_apply "$@"
+        ;;
+    *)
+        fatal 'Unknown command epm override $CMD. Run epm override help for usage.'
+        ;;
+    esac
+}
