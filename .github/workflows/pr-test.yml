@@ -1,0 +1,91 @@
+name: PR tests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  detect:
+    name: detect changed components
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.detect.outputs.matrix }}
+      count: ${{ steps.detect.outputs.count }}
+      components: ${{ steps.detect.outputs.components }}
+      apps: ${{ steps.detect.outputs.apps }}
+      changed_files: ${{ steps.detect.outputs.changed_files }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect components to test
+        id: detect
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: ./.github/ci/detect-components.sh
+
+  component:
+    name: ${{ matrix.component }} @ ${{ matrix.system }}
+    runs-on: ubuntu-latest
+    needs: detect
+    if: needs.detect.outputs.count != '0'
+
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix: ${{ fromJSON(needs.detect.outputs.matrix) }}
+
+    container:
+      image: ${{ matrix.system }}
+
+    steps:
+      - name: Bootstrap
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          os_id="unknown"
+          if [ -r /etc/os-release ]; then
+            . /etc/os-release
+            os_id="${ID:-unknown}"
+          fi
+          echo "bootstrap: os_id=$os_id"
+
+          case "$os_id" in
+            altlinux|alt)
+              apt-get update
+              apt-get install -y git-core glibc-pthread wget file 
+              ;;
+            debian|ubuntu)
+              apt-get update
+              apt-get install -y git ca-certificates wget file coreutils
+              ;;
+            fedora)
+              dnf install -y git wget file 
+              ;;
+          esac
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run component tests
+        shell: bash
+        env:
+          COMPONENT: ${{ matrix.component }}
+          APPS_TEXT: ${{ needs.detect.outputs.apps }}
+          CHANGED_FILES_TEXT: ${{ needs.detect.outputs.changed_files }}
+        run: ./.github/ci/run-component-tests.sh
