@@ -8,11 +8,14 @@ URL="https://www.getmailspring.com/"
 
 . $(dirname $0)/common.sh
 
-
-# https://github.com/Foundry376/Mailspring/releases/download/1.13.3/mailspring-1.13.3-amd64.deb
-arch=amd64
-pkgtype=deb
-
-PKGURL=$(get_github_url https://github.com/Foundry376/Mailspring/ "$PKGNAME.*$VERSION.*$arch.$pkgtype")
+pkgtype="$(epm print info -p)"
+case "$pkgtype" in
+    rpm)
+        PKGURL=$(get_github_url https://github.com/Foundry376/Mailspring/ "$PKGNAME.*$VERSION.*$arch.$pkgtype")
+        ;;
+    *)
+        PKGURL=$(get_github_url https://github.com/Foundry376/Mailspring/ "$PKGNAME.*$VERSION.*$arch.deb")
+        ;;
+esac
 
 install_pkgurl
