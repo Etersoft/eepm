@@ -18,12 +18,11 @@ rpm)
 esac
 
 if [ "$VERSION" = "*" ]; then
-	PKGURL=$(get_github_url "https://github.com/KaringX/karing/" "karing_*_linux_amd64.$pkgtype")
-else
-	PKGURL="https://github.com/KaringX/karing/releases/download/v${VERSION}/karing_${VERSION}_linux_amd64.$pkgtype"
+	VERSION="$(get_github_tag "https://github.com/KaringX/karing/")"
 fi
+PKGURL="https://github.com/KaringX/karing/releases/download/v${VERSION}/karing_${VERSION}_linux_amd64.$pkgtype"
 
-install_pkgurl
+install_pack_pkgurl $VERSION
 
 cat <<EOF
 
