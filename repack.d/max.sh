@@ -4,20 +4,13 @@
 BUILDROOT="$1"
 SPEC="$2"
 
-PRODUCT=MAX
-PRODUCTCUR=max
-PRODUCTDIR=/opt/$PRODUCT
-
 . $(dirname $0)/common.sh
 
 # conflicts with MAX from AppImage
 add_conflicts MAX
 
+move_to_opt
 
-fix_desktop_file $PRODUCTDIR/$PRODUCT $PRODUCTCUR
+fix_desktop_file /usr/share/max/bin/max
 
-add_bin_link_command
-add_bin_link_command $PRODUCTCUR $PRODUCTDIR/$PRODUCT
-
-add_electron_deps
-
+add_bin_link_command $PRODUCT /opt/$PRODUCT/bin/$PRODUCT
