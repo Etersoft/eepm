@@ -309,11 +309,11 @@ __epm_expand_wildcards_impl()
                 # Interactive mode: let user select from matches (via config or --interactive flag)
                 # Filter installed if needed (by name) - only for install
                 if [ "$action" = "install" ] && [ -n "$skip_installed" ] ; then
-                    local names_only
-                    names_only="$(echo "$matched" | tr '\n' ' ')"
+                    local matched_names
+                    matched_names="$(echo "$matched" | tr '\n' ' ')"
                     matched_verbose="$(echo "$matched_verbose" | while read -r line ; do
                         local name="${line%% *}"
-                        echo " $names_only " | grep -q " $name " && echo "$line"
+                        echo " $matched_names " | grep -q " $name " && echo "$line"
                     done)"
                 fi
                 load_helper epm-sh-interactive
