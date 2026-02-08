@@ -33,7 +33,11 @@ local string="$*"
 case $PMTYPE in
     apt-rpm|apt-dpkg|dnf-rpm|dnf5-rpm|yum-rpm|zypper-rpm|pacman)
         if __epm_available_cache_exists ; then
-            __epm_available_read_cache | __epm_format_output
+            if [ -n "$names_only" ] ; then
+                __epm_available_read_cache | grep -i "^[^\t]*$string" | __epm_format_output
+            else
+                __epm_available_read_cache | __epm_format_output
+            fi
             return
         fi
         ;;
@@ -42,7 +46,11 @@ esac
 # Fallback to native search commands
 case $PMTYPE in
     apt-rpm|apt-dpkg)
-        CMD="apt-cache search --"
+        if [ -n "$names_only" ] ; then
+            CMD="apt-cache search --names-only --"
+        else
+            CMD="apt-cache search --"
+        fi
         ;;
     apm-rpm)
         docmd apm system search -- $string
@@ -92,7 +100,11 @@ case $PMTYPE in
         CMD="dnf search"
         ;;
     zypper-rpm)
-        CMD="zypper search -d --"
+        if [ -n "$names_only" ] ; then
+            CMD="zypper search --"
+        else
+            CMD="zypper search -d --"
+        fi
         ;;
     mpkg)
         CMD="mpkg search"
@@ -226,8 +238,8 @@ __epm_search_run_available()
         elif isatty ; then
             hint="$(printf '\033[32m')$hint$(printf '\033[0m')"
         fi
-        showcmd epm play $short $play_tsv --search "$@"
-        eval "epm play $short $play_tsv --search $quoted_args" | sed -e "s/  */ /g" -e "s/\$/ $hint/"
+        showcmd epm play $short $play_tsv --search $names_only "$@"
+        eval "epm play $short $play_tsv --search $names_only $quoted_args" | sed -e "s/  */ /g" -e "s/\$/ $hint/"
     fi
 }
 
@@ -247,11 +259,23 @@ epm_search()
             pkg_filenames="$*" quoted_args="$*" epm_query_package
             return
             ;;
+        --names-only)                 # HELPOPT: search only by package name (not description)
+            shift
+            names_only="--names-only"
+            ;;
         --available)                  # HELPOPT: search in available packages (default)
             shift
             ;;
     esac
 
     [ -n "$1" ] || fatal "Search: search argument(s) is missed"
+
+    # rebuild quoted_args after option consuming
+    quoted_args=""
+    local arg
+    for arg in "$@" ; do
+        [ -n "$quoted_args" ] && quoted_args="$quoted_args \"$arg\"" || quoted_args="\"$arg\""
+    done
+
     __epm_search_run_available "$@"
 }

@@ -127,6 +127,24 @@ __epm_search_make_grep()
                 ;;
         esac
     done
+
+    # names-only post-filter: keep only lines where package name matches all patterns
+    if [ -n "$names_only" ] && [ -z "$short" ] ; then
+        for i in "$@" ; do
+            case "$i" in
+                ~*) continue ;;
+            esac
+            pattern="$i"
+            if [ -z "$regexp" ] ; then
+                case $PMTYPE in
+                    apt-*) ;;
+                    *) pattern=$(echo "$pattern" | sed -e "s/[?\^.\$]/ /g") ;;
+                esac
+                pattern=$(__epm_glob_to_regexp "$pattern")
+            fi
+            echon " | awk -F'[=\t]' -v pat=\"$pattern\" 'tolower(\$1) ~ tolower(pat)'"
+        done
+    fi
 }
 
 # Get color pattern for search highlighting
