@@ -301,7 +301,7 @@ Options:
     --print-url <app>     - print download URL for the app (do not install)
     --list                - list all installed apps
     --list-all            - list all available apps
-    --search <pattern>    - search available apps (use --fuzzy[=N] for fuzzy search)
+    --search <pattern>    - search available apps (use --names-only or --fuzzy[=N] for fuzzy search)
     --list-updates        - list installed apps that have available updates
     --list-scripts        - list all available scripts
     --short (with --list) - list names only
@@ -793,6 +793,10 @@ case "$1" in
 
     --search)
         shift
+        if [ "$1" = "--names-only" ] ; then
+            names_only="--names-only"
+            shift
+        fi
         [ -n "$1" ] || fatal "Search pattern is required"
         __epm_play_search "$@"
         exit

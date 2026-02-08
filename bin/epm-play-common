@@ -223,11 +223,11 @@ __epm_play_search()
     __epm_color_pattern=$(__epm_get_color_pattern "$@")
 
     if [ -n "$short" ] ; then
-        eval "__get_fast_int_list_app \$arch $MGS" | while IFS=$'\x1E' read -r app desc; do
+        eval "__get_fast_int_list_app \$arch | tr '\036' '\t' $MGS" | while IFS='	' read -r app desc; do
             echo "$app"
         done | __epm_colorize_search_output
     else
-        eval "__get_fast_int_list_app \$arch $MGS" | while IFS=$'\x1E' read -r app desc; do
+        eval "__get_fast_int_list_app \$arch | tr '\036' '\t' $MGS" | while IFS='	' read -r app desc; do
             printf "%-25s - %s\n" "$app" "$desc"
         done | __epm_colorize_search_output
     fi
