@@ -130,6 +130,60 @@ test_status_options() {
     done
 }
 
+# Test: argument types in commands output (third column)
+test_argument_types() {
+    output=$($EPM tool epm-completion commands 2>/dev/null)
+
+    # Check that install has 'package' type
+    if echo "$output" | grep -q "^install	.*	package$"; then
+        pass "install has argtype 'package'"
+    else
+        fail "install missing argtype 'package'"
+    fi
+
+    # Check that rm has 'package_installed' type
+    if echo "$output" | grep -q "^rm	.*	package_installed$"; then
+        pass "rm has argtype 'package_installed'"
+    else
+        fail "rm missing argtype 'package_installed'"
+    fi
+
+    # Check that play has 'playapp' type
+    if echo "$output" | grep -q "^play	.*	playapp$"; then
+        pass "play has argtype 'playapp'"
+    else
+        fail "play missing argtype 'playapp'"
+    fi
+
+    # Check that repo has 'repo' type
+    if echo "$output" | grep -q "^repo	.*	repo$"; then
+        pass "repo has argtype 'repo'"
+    else
+        fail "repo missing argtype 'repo'"
+    fi
+
+    # Check that repack has 'file' type
+    if echo "$output" | grep -q "^repack	.*	file$"; then
+        pass "repack has argtype 'file'"
+    else
+        fail "repack missing argtype 'file'"
+    fi
+
+    # Check that prescription has 'prescription' type
+    if echo "$output" | grep -q "^prescription	.*	prescription$"; then
+        pass "prescription has argtype 'prescription'"
+    else
+        fail "prescription missing argtype 'prescription'"
+    fi
+
+    # Check that search has no argtype (no third column)
+    if echo "$output" | grep "^search	" | grep -qv "	.*	"; then
+        pass "search has no argtype"
+    else
+        fail "search should not have argtype"
+    fi
+}
+
 # Run all tests
 echo "=== Testing epm tool epm-completion ==="
 echo
@@ -141,6 +195,7 @@ test_repo_subcommand
 test_mark_subcommand
 test_play_options
 test_status_options
+test_argument_types
 
 echo
 echo "=== Results: $PASSED passed, $FAILED failed ==="
