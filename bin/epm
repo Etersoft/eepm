@@ -300,11 +300,11 @@ check_command()
 
 # HELPCMD: PART: Base commands:
     case $1 in
-    -i|install|add|i|it)         # HELPCMD: install package(s) from remote repositories or from local file
+    -i|install|add|i|it)         # HELPCMD: install package(s) from remote repositories or from local file COMPLETE:package
         epm_cmd=install
         allow_wildcard=1
         ;;
-    -e|-P|rm|del|remove|delete|uninstall|erase|purge|e)  # HELPCMD: remove (delete) package(s) from the database and the system
+    -e|-P|rm|del|remove|delete|uninstall|erase|purge|e)  # HELPCMD: remove (delete) package(s) from the database and the system COMPLETE:package_installed
         epm_cmd=remove
         allow_wildcard=1
         ;;
@@ -322,20 +322,20 @@ check_command()
         ;;
 
 # HELPCMD: PART: Useful commands:
-    reinstall)                # HELPCMD: reinstall package(s) from remote repositories or from local file
+    reinstall)                # HELPCMD: reinstall package(s) from remote repositories or from local file COMPLETE:package
         epm_cmd=reinstall
         ;;
-    Install)                  # HELPCMD: perform update package repo info and install package(s) via install command
+    Install)                  # HELPCMD: perform update package repo info and install package(s) via install command COMPLETE:package
         epm_cmd=install
         update_repo="--update"
         ;;
-    -q|q|query)               # HELPCMD: check presence of package(s) and print this name (also --short is supported)
+    -q|q|query)               # HELPCMD: check presence of package(s) and print this name (also --short is supported) COMPLETE:package_installed
         epm_cmd=query
         ;;
-    installed)                # HELPCMD: check presence of package(s) (like -q with --quiet)
+    installed)                # HELPCMD: check presence of package(s) (like -q with --quiet) COMPLETE:package_installed
         epm_cmd=installed
         ;;
-    status)                   # HELPCMD: get status of package(s) (see epm status --help)
+    status)                   # HELPCMD: get status of package(s) (see epm status --help) COMPLETE:package_installed
         epm_cmd=status
         direct_args=1
         ;;
@@ -343,22 +343,22 @@ check_command()
         epm_cmd=search_file
         direct_args=1
         ;;
-    -ql|ql|filelist|get-files)          # HELPCMD: print package file list
+    -ql|ql|filelist|get-files)          # HELPCMD: print package file list COMPLETE:package_installed
         epm_cmd=filelist
         ;;
-    -cl|cl|changelog)         # HELPCMD: show changelog for package
+    -cl|cl|changelog)         # HELPCMD: show changelog for package COMPLETE:package_installed
         epm_cmd=changelog
         ;;
-    -qi|qi|info|show)         # HELPCMD: print package detail info (see epm info --help)
+    -qi|qi|info|show)         # HELPCMD: print package detail info (see epm info --help) COMPLETE:package_installed
         epm_cmd=info
         ;;
-    requires|deplist|depends|req|depends-on)     # HELPCMD: print package requires
+    requires|deplist|depends|req|depends-on)     # HELPCMD: print package requires COMPLETE:package_installed
         epm_cmd=requires
         ;;
-    provides|prov)            # HELPCMD: print package provides
+    provides|prov)            # HELPCMD: print package provides COMPLETE:package_installed
         epm_cmd=provides
         ;;
-    whatdepends|rdepends|whatrequires|wd|required-by)   # HELPCMD: print packages dependences on that
+    whatdepends|rdepends|whatrequires|wd|required-by)   # HELPCMD: print packages dependences on that COMPLETE:package_installed
         epm_cmd=whatdepends
         ;;
     whatprovides)             # HELPCMD: print packages provides that target
@@ -412,7 +412,7 @@ check_command()
         epm_cmd=removerepo
         direct_args=1
         ;;
-    repo)                     # HELPCMD: manipulate with repository list (see epm repo --help)
+    repo)                     # HELPCMD: manipulate with repository list (see epm repo --help) COMPLETE:repo
         epm_cmd=repo
         direct_args=1
         ;;
@@ -495,11 +495,11 @@ check_command()
     downgrade|distro-sync)    # HELPCMD: downgrade [all] packages to the repo state
         epm_cmd=downgrade
         ;;
-    download|fetch|fc)        # HELPCMD: download package(s) file to the current dir
+    download|fetch|fc)        # HELPCMD: download package(s) file to the current dir COMPLETE:package
         epm_cmd=download
         ;;
 # TODO: replace with install --simulate
-    simulate)                 # HELPCMD: simulate install with check requires
+    simulate)                 # HELPCMD: simulate install with check requires COMPLETE:package
         epm_cmd=simulate
         ;;
     audit)                    # HELPCMD: audits installed packages against known vulnerabilities
@@ -525,10 +525,10 @@ check_command()
         epm_cmd=tool
         direct_args=1
         ;;
-    repack)                   # HELPCMD: repack rpm to local compatibility
+    repack)                   # HELPCMD: repack rpm to local compatibility COMPLETE:file
         epm_cmd=repack
         ;;
-    pack)                     # HELPCMD: pack tarball or dir to a rpm package
+    pack)                     # HELPCMD: pack tarball or dir to a rpm package COMPLETE:file
         epm_cmd=pack
         direct_args=1
         ;;
@@ -536,11 +536,11 @@ check_command()
         epm_cmd=moo
         direct_args=1
         ;;
-    prescription|recipe)      # HELPCMD: run prescription (a script to achieving the goal), run without args to get list
+    prescription|recipe)      # HELPCMD: run prescription (a script to achieving the goal), run without args to get list COMPLETE:prescription
         epm_cmd=prescription
         direct_args=1
         ;;
-    play)                     # HELPCMD: install the application from the official site (run without args to get list)
+    play)                     # HELPCMD: install the application from the official site (run without args to get list) COMPLETE:playapp
         epm_cmd=play
         direct_args=1
         ;;
@@ -553,7 +553,7 @@ check_command()
         direct_args=1
         ;;
 
-    checkpkg|integrity)       # HELPCMD: check package file integrity (checksum)
+    checkpkg|integrity)       # HELPCMD: check package file integrity (checksum) COMPLETE:package_installed
         epm_cmd=checkpkg
         ;;
     -h|--help|help)           # HELPOPT: print this help

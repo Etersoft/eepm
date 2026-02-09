@@ -18,15 +18,15 @@
 #
 
 # epm tool epm-completion - shell completion data generator
-# Output format: TSV (command<TAB>description)
+# Output format: TSV (command<TAB>description[<TAB>argtype])
 
 PROGDIR="$(dirname "$0")"
 SHAREDIR="$PROGDIR"
 [ "$PROGDIR" = "." ] && PROGDIR="$(pwd)"
 
 # Parse HELPCMD/HELPOPT comments from epm script
-# Format: command|alias)  # HELPCMD: description
-# Output: command<TAB>description
+# Format: command|alias)  # HELPCMD: description [COMPLETE:argtype]
+# Output: command<TAB>description[<TAB>argtype]
 parse_help_comments()
 {
     local section="$1"
@@ -35,7 +35,10 @@ parse_help_comments()
     while IFS= read -r line ; do
         # Extract command part (before )) and description (after HELPCMD:)
         cmd_part=$(echo "$line" | sed 's|).*||' | sed 's|^[[:space:]]*||' | sed 's|"||g')
-        desc=$(echo "$line" | sed 's|.*# '"$section"': *||')
+        local full_desc=$(echo "$line" | sed 's|.*# '"$section"': *||')
+        # Extract argtype from COMPLETE:xxx marker and clean description
+        local argtype=$(echo "$full_desc" | sed -n 's|.*COMPLETE:\([a-z_]*\).*|\1|p')
+        local desc=$(echo "$full_desc" | sed 's| *COMPLETE:[a-z_]*||')
         # Get the main command name (skip short options like -i, prefer longer names)
         cmd=""
         # Split by | and find first non-short-option
@@ -51,11 +54,17 @@ parse_help_comments()
                     ;;
             esac
         done
-        [ -n "$cmd" ] && printf '%s\t%s\n' "$cmd" "$desc"
+        if [ -n "$cmd" ] ; then
+            if [ -n "$argtype" ] ; then
+                printf '%s\t%s\t%s\n' "$cmd" "$desc" "$argtype"
+            else
+                printf '%s\t%s\n' "$cmd" "$desc"
+            fi
+        fi
     done
 }
 
-# Get list of commands with descriptions
+# Get list of commands with descriptions and argument types
 get_commands()
 {
     parse_help_comments HELPCMD "$SHAREDIR/epm"
@@ -148,10 +157,18 @@ epm tool epm-completion - generate completion data for shells
 Usage: epm tool epm-completion <what>
 
 Arguments:
-    commands        list all epm commands (TSV: command<TAB>description)
+    commands        list all epm commands (TSV: command<TAB>description[<TAB>argtype])
     options         list all epm options (TSV: option<TAB>description)
     aliases         list command aliases (TSV: alias<TAB>command)
     <subcommand>    list subcommand options (repo, mark, play, etc.)
+
+Argument types (for completion):
+    package           available packages
+    package_installed installed packages
+    playapp           epm play applications
+    prescription      epm prescription scripts
+    repo              repository names
+    file              file paths
 
 Examples:
     epm tool epm-completion commands
