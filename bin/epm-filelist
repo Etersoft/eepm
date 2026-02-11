@@ -42,7 +42,7 @@ __alt_local_content_filelist()
 
     {
         [ -n "$USETTY" ] && info 'Search in $CI for $pkg...'
-        ercat $CI | grep -h -P -- ".*\t$pkg$" | sed -e "s|\(.*\)\t\(.*\)|\1|g"
+        ercat $quiet $CI | grep -h -P -- ".*\t$pkg$" | sed -e "s|\(.*\)\t\(.*\)|\1|g"
     } | $OUTCMD
 }
 
