@@ -285,6 +285,7 @@ startwith_inlist()
     local urls=""
     [ -n "$pkg_noninstalled" ] && urls="$(__epm_alt_get_package_url install $pkg_noninstalled)"
     [ -n "$pkg_installed" ] && urls="$urls $(__epm_alt_get_package_url install --reinstall $pkg_installed)"
+    [ -z "$urls" ] && return 1
     local url
     for url in $urls ; do
         startwith_inlist "$(basename "$url")" "$@" || continue
