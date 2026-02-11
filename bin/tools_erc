@@ -132,18 +132,17 @@ extract_special_archive()
 {
 	local arc="$1"
 	local type="$2"
-	local rarc="$(realpath -s "$arc")"
 	local subdir="${extract_dir:-$(get_archive_name "$arc")}"
 
 	case "$type" in
 		exe|dll)
-			extract_7z_to_subdir "$rarc" "$subdir"
+			extract_7z_to_subdir "$arc" "$subdir"
 			;;
 		AppImage|appimage)
-			extract_appimage "$rarc" "$subdir"
+			extract_appimage "$arc" "$subdir"
 			;;
 		squashfs|snap)
-			extract_squashfs_image "$rarc" "$subdir"
+			extract_squashfs_image "$arc" "$subdir"
 			;;
 		*)
 			return 1
@@ -213,6 +212,8 @@ extract_archive()
 	local type="$(get_archive_type "$arc")"
 	[ -n "$type" ] || fatal "Can't recognize type of $arc."
 
+	arc="$(realpath -s "$arc")"
+
 	extract_special_archive "$arc" "$type"
 
 	if have_patool ; then
@@ -224,22 +225,18 @@ extract_archive()
 		return
 	fi
 
-	arc="$(realpath -s "$arc")"
-
 	if [ -n "$extract_dir" ] ; then
 		cd "$extract_dir" || fatal
-	else
-		tdir="$(mktemp -d "$(pwd)/UXXXXXXXX")" && cd "$tdir" || fatal
+		extract_by_type "$arc" "$type" "$@"
+		return
 	fi
 
+	tdir=$(mktemp -d $(pwd)/UXXXXXXXX) && cd "$tdir" || fatal
 	extract_by_type "$arc" "$type" "$@"
-	local res=$?
-
-	# extract_dir: no tarbomb wrapping needed
-	[ -n "$extract_dir" ] && return $res
-
 	cd - >/dev/null
+
 	move_from_tdir "$tdir" "$(get_archive_name "$arc")"
+
 	return $res
 }
 
@@ -489,8 +486,6 @@ case $cmd in
         ;;
     e|x|-e|-x|u|-u|extract|unpack)          # HELPCMD: extract files from archive
         if [ -n "$extract_dir" ] ; then
-            # resolve archive path before changing directory
-            set -- "$(realpath -s "$1")" "${@:2}"
             mkdir -p "$extract_dir" || fatal "Can't create directory '$extract_dir'"
             extract_dir="$(realpath -s "$extract_dir")"
         fi
