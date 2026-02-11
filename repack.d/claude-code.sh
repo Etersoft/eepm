@@ -20,6 +20,7 @@ cat <<EOF | create_exec_file /usr/bin/$PRODUCT
 export CLAUDE_CODE_DISABLE_AUTO_UPDATE=1
 export DISABLE_AUTOUPDATER=1
 export CLAUDE_NO_DIAGNOSTICS=1
+[ -n "\$TMPDIR" ] && export CLAUDE_CODE_TMPDIR="\$TMPDIR"
 exec $PRODUCTDIR/$PRODUCT "\$@"
 EOF
 
