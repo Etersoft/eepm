@@ -187,6 +187,24 @@ extract_by_type()
 	esac
 }
 
+move_from_tdir()
+{
+	local tdir="$1"
+	local subdir="$2"
+
+	shopt -s nullglob
+	local items=("$tdir"/*)
+	shopt -u nullglob
+
+	# if only one item in the subdir, move it directly
+	if [ ${#items[@]} -eq 1 ] && [ -e "${items[0]}" ] ; then
+		mv -- "${items[0]}" .
+		rmdir "$tdir"
+	else
+		mv -- "$tdir" "$subdir"
+	fi
+}
+
 extract_archive()
 {
 	local arc="$1"
@@ -221,17 +239,7 @@ extract_archive()
 	[ -n "$extract_dir" ] && return $res
 
 	cd - >/dev/null
-	# if only one item in the subdir, move it directly
-	local TSUBDIR="$(get_archive_name "$arc")"
-	shopt -s nullglob
-	local items=("$tdir"/*)
-	shopt -u nullglob
-	if [ ${#items[@]} -eq 1 ] && [ -e "${items[0]}" ] ; then
-		mv -- "${items[0]}" .
-		rmdir "$tdir"
-	else
-		mv -- "$tdir" "$TSUBDIR"
-	fi
+	move_from_tdir "$tdir" "$(get_archive_name "$arc")"
 	return $res
 }
 
