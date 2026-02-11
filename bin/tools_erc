@@ -133,7 +133,7 @@ extract_special_archive()
 	local arc="$1"
 	local type="$2"
 	local rarc="$(realpath -s "$arc")"
-	local subdir="$(basename "$(get_archive_name "$arc")")"
+	local subdir="${extract_dir:-$(basename "$(get_archive_name "$arc")")}"
 
 	case "$type" in
 		exe|dll)
@@ -163,14 +163,21 @@ extract_archive()
 	extract_special_archive "$arc" "$type"
 
 	if have_patool ; then
-		docmd patool $verbose extract "$arc" "$@"
+		if [ -n "$extract_dir" ] ; then
+			docmd patool $verbose extract --outdir "$extract_dir" "$arc"
+		else
+			docmd patool $verbose extract "$arc" "$@"
+		fi
 		return
 	fi
 
 	arc="$(realpath -s "$arc")"
-	tdir="$(mktemp -d "$(pwd)/UXXXXXXXX")" && cd "$tdir" || fatal
 
-	local TSUBDIR="$(basename "$arc" .$type | sed -e 's|^tar\.||')"
+	if [ -n "$extract_dir" ] ; then
+		cd "$extract_dir" || fatal
+	else
+		tdir="$(mktemp -d "$(pwd)/UXXXXXXXX")" && cd "$tdir" || fatal
+	fi
 
 	# TODO: check if there is only one file?
 	# use subdir if there is no subdir in archive
@@ -202,8 +209,12 @@ extract_archive()
 
 	local res=$?
 
+	# extract_dir: no tarbomb wrapping needed
+	[ -n "$extract_dir" ] && return $res
+
 	cd - >/dev/null
 	# if only one item in the subdir, move it directly
+	local TSUBDIR="$(basename "$arc" .$type | sed -e 's|^tar\.||')"
 	shopt -s nullglob
 	local items=("$tdir"/*)
 	shopt -u nullglob
@@ -327,6 +338,7 @@ $(get_help HELPOPT)
     # unerc archive.zip - unpack
     # erc [repack] archive1.zip... archive2.rar $HAVE_7Z: - repack all to $HAVE_7Z
     # erc -f [repack] archive.zip archive.$HAVE_7Z - force repack zip to $HAVE_7Z (override target in anyway)
+    # erc -C dir archive.zip - extract archive directly to dir
     # erc file/dir zip: - pack file to zip
 "
 }
@@ -346,6 +358,7 @@ Descr="erc - universal archive manager"
 
 force=
 target=
+extract_dir=
 verbose=--verbose
 use_7z=
 use_patool=
@@ -377,6 +390,17 @@ case "$1" in
         ;;
     --use-7z)             # HELPOPT: force use 7z as backend
         use_7z=1
+        ;;
+    -C)                   # HELPOPT: extract to specified directory
+        shift
+        extract_dir="$1"
+        ;;
+    --directory|--extract-to|--destination|--outdir)
+        shift
+        extract_dir="$1"
+        ;;
+    --directory=*|--extract-to=*|--destination=*|--outdir=*)
+        extract_dir="${1#*=}"
         ;;
     -a|-e|-x|-u|-l|-t|-b)
         # these are commands, not options
@@ -448,6 +472,12 @@ case $cmd in
         create_archive "$target" "$@"
         ;;
     e|x|-e|-x|u|-u|extract|unpack)          # HELPCMD: extract files from archive
+        if [ -n "$extract_dir" ] ; then
+            # resolve archive path before changing directory
+            set -- "$(realpath -s "$1")" "${@:2}"
+            mkdir -p "$extract_dir" || fatal "Can't create directory '$extract_dir'"
+            extract_dir="$(realpath -s "$extract_dir")"
+        fi
         extract_archive "$@"
         ;;
 # TODO: implement deletion
