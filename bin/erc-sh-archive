@@ -131,7 +131,7 @@ get_archive_name()
 	local ext
 	ext=$(get_archive_ext "$1")
 	if [ -n "$ext" ] ; then
-		echo $(dirname "$1")/$(basename "$1" .$ext)
+		basename "$1" .$ext
 	else
 		echo "$1"
 		return 1

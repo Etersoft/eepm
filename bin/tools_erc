@@ -38,7 +38,7 @@ check_tty
 # 1.zip tar:  -> 1.tar
 build_target_name()
 {
-	is_target_format $2 && echo $(get_archive_name "$1").${2/:/} && return
+	is_target_format $2 && echo $(dirname "$1")/$(get_archive_name "$1").${2/:/} && return
 	echo "$1"
         return 1
 }
@@ -133,7 +133,7 @@ extract_special_archive()
 	local arc="$1"
 	local type="$2"
 	local rarc="$(realpath -s "$arc")"
-	local subdir="${extract_dir:-$(basename "$(get_archive_name "$arc")")}"
+	local subdir="${extract_dir:-$(get_archive_name "$arc")}"
 
 	case "$type" in
 		exe|dll)
@@ -214,7 +214,7 @@ extract_archive()
 
 	cd - >/dev/null
 	# if only one item in the subdir, move it directly
-	local TSUBDIR="$(basename "$arc" .$type | sed -e 's|^tar\.||')"
+	local TSUBDIR="$(get_archive_name "$arc")"
 	shopt -s nullglob
 	local items=("$tdir"/*)
 	shopt -u nullglob
@@ -494,8 +494,7 @@ case $cmd in
         get_archive_type "$1" || fatal "Can't recognize $1 as archive"
         ;;
     basename)             # HELPCMD: print the predicted directory name for the archive
-        nm="$(get_archive_name "$1")" || fatal "Can't recognize $1 as archive"
-        basename "$nm"
+        get_archive_name "$1" || fatal "Can't recognize $1 as archive"
         ;;
     diff)                 # HELPCMD: compare two archive
         # check 2 arg
