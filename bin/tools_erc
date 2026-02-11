@@ -152,32 +152,11 @@ extract_special_archive()
 	exit
 }
 
-extract_archive()
+extract_by_type()
 {
 	local arc="$1"
-	shift
-
-	local type="$(get_archive_type "$arc")"
-	[ -n "$type" ] || fatal "Can't recognize type of $arc."
-
-	extract_special_archive "$arc" "$type"
-
-	if have_patool ; then
-		if [ -n "$extract_dir" ] ; then
-			docmd patool $verbose extract --outdir "$extract_dir" "$arc"
-		else
-			docmd patool $verbose extract "$arc" "$@"
-		fi
-		return
-	fi
-
-	arc="$(realpath -s "$arc")"
-
-	if [ -n "$extract_dir" ] ; then
-		cd "$extract_dir" || fatal
-	else
-		tdir="$(mktemp -d "$(pwd)/UXXXXXXXX")" && cd "$tdir" || fatal
-	fi
+	local type="$2"
+	shift 2
 
 	# TODO: check if there is only one file?
 	# use subdir if there is no subdir in archive
@@ -206,7 +185,36 @@ extract_archive()
 			#fatal "Not yet supported extracting of $type archives"
 			;;
 	esac
+}
 
+extract_archive()
+{
+	local arc="$1"
+	shift
+
+	local type="$(get_archive_type "$arc")"
+	[ -n "$type" ] || fatal "Can't recognize type of $arc."
+
+	extract_special_archive "$arc" "$type"
+
+	if have_patool ; then
+		if [ -n "$extract_dir" ] ; then
+			docmd patool $verbose extract --outdir "$extract_dir" "$arc"
+		else
+			docmd patool $verbose extract "$arc" "$@"
+		fi
+		return
+	fi
+
+	arc="$(realpath -s "$arc")"
+
+	if [ -n "$extract_dir" ] ; then
+		cd "$extract_dir" || fatal
+	else
+		tdir="$(mktemp -d "$(pwd)/UXXXXXXXX")" && cd "$tdir" || fatal
+	fi
+
+	extract_by_type "$arc" "$type" "$@"
 	local res=$?
 
 	# extract_dir: no tarbomb wrapping needed
