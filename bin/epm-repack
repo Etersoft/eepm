@@ -301,7 +301,9 @@ epm_repack()
             return
         fi
 
-        cp $repacked_pkgs "$EPMCURDIR"
+        for i in $repacked_pkgs ; do
+            [ "$i" -ef "$EPMCURDIR/$(basename "$i")" ] || cp $i "$EPMCURDIR"
+        done
         if [ -z "$quiet" ] ; then
             echo
             message "Adapted packages:"
