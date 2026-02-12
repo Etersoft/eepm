@@ -166,7 +166,7 @@ confirm_action()
         confirm_action "Upgrade installed stplr packages? [Y/n]" || full_upgrade_no_stplr=1
         if [ -z "$full_upgrade_no_stplr" ] ; then
             [ -n "$quiet" ] || echo
-            docmd stplr upgrade
+            sudocmd stplr upgrade
         fi
     fi
 
