@@ -366,9 +366,9 @@ __speedtest_single()
         # pv shows progress to stderr (-s for total size if known)
         local pv_opts="-f"
         [ -n "$total_size" ] && pv_opts="$pv_opts -s $total_size"
-        timeout "$timeout" eget -q -O - "$URL" 2>/dev/null | pv $pv_opts > "$tmpfile" || true
+        eget -q -T "$timeout" -O - "$URL" 2>/dev/null | pv $pv_opts > "$tmpfile" || true
     else
-        timeout "$timeout" eget -q --force -O "$tmpfile" "$URL" 2>/dev/null || true
+        eget -q --force -T "$timeout" -O "$tmpfile" "$URL" 2>/dev/null || true
     fi
     end_time=$(date +%s.%N)
     size=$(wc -c < "$tmpfile")
