@@ -20,7 +20,50 @@
 # APT sources paths with test isolation support (EPM_APT_SOURCES_ROOT)
 APT_SOURCES_LIST="${EPM_APT_SOURCES_ROOT%/}/etc/apt/sources.list"
 APT_SOURCES_LIST_D="${EPM_APT_SOURCES_ROOT%/}/etc/apt/sources.list.d"
-APT_ALL_SOURCES_LIST="$APT_SOURCES_LIST_D/*.list $APT_SOURCES_LIST"
+APT_ALL_SOURCES_LIST="$APT_SOURCES_LIST_D/*.list $APT_SOURCES_LIST_D/*.sources $APT_SOURCES_LIST"
+
+# Convert deb822 .sources file to one-line deb format
+__convert_deb822_to_oneline()
+{
+    local types="" uris="" suites="" components="" enabled=""
+    while IFS= read -r line ; do
+        case "$line" in
+            Enabled:*) enabled="${line#Enabled: }" ;;
+            Types:*) types="${line#Types: }" ;;
+            URIs:*) uris="${line#URIs: }" ;;
+            Suites:*) suites="${line#Suites: }" ;;
+            Components:*) components="${line#Components: }" ;;
+            ""|"#"*)
+                if [ -n "$types" ] && [ -n "$uris" ] && [ -n "$suites" ] ; then
+                    local prefix=""
+                    [ "$enabled" = "no" ] && prefix="# "
+                    local t u s
+                    for t in $types ; do
+                        for u in $uris ; do
+                            for s in $suites ; do
+                                echo "${prefix}${t} ${u} ${s} ${components}"
+                            done
+                        done
+                    done
+                fi
+                types="" ; uris="" ; suites="" ; components="" ; enabled=""
+                ;;
+        esac
+    done < "$1"
+    # flush last block
+    if [ -n "$types" ] && [ -n "$uris" ] && [ -n "$suites" ] ; then
+        local prefix=""
+        [ "$enabled" = "no" ] && prefix="# "
+        local t u s
+        for t in $types ; do
+            for u in $uris ; do
+                for s in $suites ; do
+                    echo "${prefix}${t} ${u} ${s} ${components}"
+                done
+            done
+        done
+    fi
+}
 
 # Filter stdin by patterns (AND logic, case insensitive)
 # Supports glob (* ?) and exclusion (~pattern)

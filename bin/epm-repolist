@@ -36,7 +36,11 @@ __cat_apt_sources_list()
     local pattern="$1"
     local file="$2"
     test -r "$file" || return
-    grep -- "$pattern" "$file" | grep -v -- "^ *\$"
+    if echo "$file" | grep -q '\.sources$' ; then
+        __convert_deb822_to_oneline "$file" | grep -- "$pattern" | grep -v -- "^ *\$"
+    else
+        grep -- "$pattern" "$file" | grep -v -- "^ *\$"
+    fi
 }
 
 __print_apt_sources_list()
