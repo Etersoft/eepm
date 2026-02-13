@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME=xray
+PKGNAME=xray-core
 SUPPORTEDARCHES="x86_64 aarch64 armhf"
 VERSION="$2"
 DESCRIPTION="Xray-core - a platform for building proxies to bypass network restrictions (VLESS, VMess, Trojan, Shadowsocks)"
