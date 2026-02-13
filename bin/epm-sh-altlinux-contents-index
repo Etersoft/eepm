@@ -109,6 +109,9 @@ __add_to_contents_index_list()
     local file="$2"
     [ -n "$verbose" ] && info 'Put $comment -> $file'
     [ -s "$file" ] || return
+    if rhas "$file" "\." && ! erc test "$file" 2>/dev/null ; then
+        warning "Broken contents_index: $file" ; rm -f "$file" ; return 1
+    fi
     echo "$file" >>$ALT_CONTENTS_INDEX_LIST
 }
 
