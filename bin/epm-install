@@ -557,6 +557,11 @@ epm_install()
         fi
     fi
 
+    if [ -n "$update_repo" ] ; then
+        load_helper epm-update
+        epm_update || { [ -n "$force" ] || return ; }
+    fi
+
     if [ -n "$manual_requires" ] ; then
         local pkg_names="$pkg_names $(docmd epm requires --short $pkg_names)"
     fi

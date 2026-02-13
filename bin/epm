@@ -157,6 +157,7 @@ interactive=
 force_yes=
 skip_installed=
 skip_missed=
+update_repo=
 show_command_only=
 manual_requires=
 epm_cmd=
@@ -616,6 +617,9 @@ check_option()
         ;;
     --put-to-repo=*)          # HELPOPT: put the package after all transformations to the repo (--put-to-repo=/path/to/repo)
         put_to_repo="$(echo "$1" | sed -e 's|--put-to-repo=||')"
+        ;;
+    --update)              # HELPOPT: run update before install/upgrade
+        update_repo="--update"
         ;;
     --download-only)       # HELPOPT: download only the package/tarball (before any transformation)
         download_only="--download-only"
