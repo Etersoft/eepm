@@ -193,7 +193,8 @@ case $PROGNAME in
         epm_cmd=install
         ;;
     epmI)                      # HELPSHORT: alias for epm Install
-        epm_cmd=Install
+        epm_cmd=install
+        update_repo="--update"
         ;;
     epme)                      # HELPSHORT: alias for epm remove
         epm_cmd=remove
@@ -293,7 +294,8 @@ check_command()
         epm_cmd=reinstall
         ;;
     Install)                  # HELPCMD: perform update package repo info and install package(s) via install command
-        epm_cmd=Install
+        epm_cmd=install
+        update_repo="--update"
         ;;
     -q|q|query)               # HELPCMD: check presence of package(s) and print this name (also --short is supported)
         epm_cmd=query
@@ -781,13 +783,13 @@ fi
 
 # Use eatmydata for write specific operations
 case $epm_cmd in
-    update|upgrade|Upgrade|install|reinstall|Install|remove|autoremove|kernel_update|release_upgrade|release_downgrade|check)
+    update|upgrade|Upgrade|install|reinstall|remove|autoremove|kernel_update|release_upgrade|release_downgrade|check)
         set_eatmydata
         ;;
 esac
 
 case $epm_cmd in
-    upgrade|Upgrade|install|reinstall|Install|release_upgrade|release_downgrade)
+    upgrade|Upgrade|install|reinstall|release_upgrade|release_downgrade)
         if [ -n "$parallel" ] && [ -z "$eget_backend" ] ; then
             is_command aria2 && eget_backend=aria2 && echo "Use installed aria2 to parallel package downloading."
             [ -z "$eget_backend" ] && is_command axel && eget_backend=axel && echo "Use installed axel to parallel package downloading."

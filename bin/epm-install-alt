@@ -371,7 +371,8 @@ epm_install_alt_tasks()
     load_helper epm-addrepo
     load_helper epm-reposave
     load_helper epm-removerepo
-    load_helper epm-Install
+    load_helper epm-update
+    load_helper epm-install
 
     prepare_task_packages "$@"
 

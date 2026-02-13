@@ -246,7 +246,8 @@ __epm_download_alt()
         load_helper epm-addrepo
         load_helper epm-reposave
         load_helper epm-removerepo
-        load_helper epm-Install
+        load_helper epm-update
+        load_helper epm-install
 
         local installlist="$(get_task_packages $*)"
         installlist="$(estrlist reg_exclude ".*-devel .*-devel-static .*-checkinstall .*-debuginfo" "$installlist")"
