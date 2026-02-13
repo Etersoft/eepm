@@ -648,16 +648,17 @@ epm_release_upgrade()
         if [ "$DISTRNAME" = "RockyLinux" ] ; then
             sudocmd dnf --refresh upgrade || fatal
             #sudocmd dnf clean all
-            info "Check https://www.centlinux.com/2022/07/upgrade-your-servers-from-rocky-linux-8-to-9.html"
-            info "For upgrading your yum repositories from Rocky Linux 8 to 9 ..."
-            epm install "https://download.rockylinux.org/pub/rocky/9/BaseOS/x86_64/os/Packages/r/rocky-gpg-keys*.rpm" || fatal
-            epm install "https://download.rockylinux.org/pub/rocky/9/BaseOS/x86_64/os/Packages/r/rocky-repos*.rpm" "https://download.rockylinux.org/pub/rocky/9/BaseOS/x86_64/os/Packages/r/rocky-release*.rpm" || fatal
 
-            # hack (TODO)
             DV=$(echo "$DISTRVERSION" | sed -e "s|\..*||")
             local RELEASEVER="$1"
             [ -n "$RELEASEVER" ] || RELEASEVER=$(($DV + 1))
             confirm_info 'Upgrade to $DISTRNAME/$RELEASEVER'
+
+            local ROCKY_URL="https://download.rockylinux.org/pub/rocky/$RELEASEVER/BaseOS/x86_64/os/Packages/r"
+            info 'Upgrading Rocky Linux repositories from $DV to $RELEASEVER ...'
+            epm install "$ROCKY_URL/rocky-gpg-keys*.rpm" || fatal
+            sudocmd rpm --import "/etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-$RELEASEVER"
+            epm install "$ROCKY_URL/rocky-repos*.rpm" "$ROCKY_URL/rocky-release*.rpm" || fatal
 
             sudocmd dnf distro-sync -y --releasever=$RELEASEVER --allowerasing --setopt=deltarpm=false
             sudocmd rpm --rebuilddb
