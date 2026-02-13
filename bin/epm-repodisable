@@ -50,7 +50,17 @@ case $PMTYPE in
         __epm_repodisable_alt "$@"
         ;;
     apt-dpkg|aptitude-dpkg)
-        print_apt_sources_list
+        local files
+        files="$(__find_deb822_files_by_pattern "$1")"
+        if [ -n "$files" ] ; then
+            assure_root
+            echo "$files" | while read f ; do
+                info "Disabling $f ..."
+                __deb822_disable "$f"
+            done
+        else
+            __epm_repodisable_alt "$@"
+        fi
         ;;
     yum-rpm)
         docmd yum repolist $verbose

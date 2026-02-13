@@ -54,7 +54,17 @@ case $PMTYPE in
         __epm_repoenable_alt "$@"
         ;;
     apt-dpkg|aptitude-dpkg)
-        print_apt_sources_list
+        local files
+        files="$(__find_deb822_files_by_pattern "$1")"
+        if [ -n "$files" ] ; then
+            assure_root
+            echo "$files" | while read f ; do
+                info "Enabling $f ..."
+                __deb822_enable "$f"
+            done
+        else
+            __epm_repoenable_alt "$@"
+        fi
         ;;
     yum-rpm)
         docmd yum repolist $verbose

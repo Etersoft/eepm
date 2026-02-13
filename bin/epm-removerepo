@@ -168,10 +168,19 @@ esac;
 
 case $PMTYPE in
     apt-dpkg)
-        assure_exists apt-add-repository software-properties-common
-        # FIXME: it is possible there is troubles to pass the args
-        sudocmd apt-add-repository --remove "$*"
-        info "Check file /etc/apt/sources.list if needed"
+        local files
+        files="$(__find_deb822_files_by_pattern "$1")"
+        if [ -n "$files" ] ; then
+            assure_root
+            echo "$files" | while read f ; do
+                __deb822_remove "$f"
+            done
+        else
+            assure_exists apt-add-repository software-properties-common
+            # FIXME: it is possible there is troubles to pass the args
+            sudocmd apt-add-repository --remove "$*"
+            info "Check file /etc/apt/sources.list if needed"
+        fi
         ;;
     aptitude-dpkg)
         info "You need remove repo from /etc/apt/sources.list"

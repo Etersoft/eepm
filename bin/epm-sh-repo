@@ -65,6 +65,41 @@ __convert_deb822_to_oneline()
     fi
 }
 
+# Find .sources files matching pattern (by converted one-line content)
+__find_deb822_files_by_pattern()
+{
+    local pattern="$1"
+    local i
+    for i in $APT_SOURCES_LIST_D/*.sources ; do
+        test -r "$i" || continue
+        __convert_deb822_to_oneline "$i" | grep -q -i -- "$pattern" && echo "$i"
+    done
+}
+
+# Disable repos in a deb822 .sources file (set Enabled: no)
+__deb822_disable()
+{
+    local file="$1"
+    if grep -q "^Enabled:" "$file" ; then
+        sudocmd sed -i -e 's/^Enabled:.*/Enabled: no/' "$file"
+    else
+        sudocmd sed -i -e '/^Types:/i Enabled: no' "$file"
+    fi
+}
+
+# Enable repos in a deb822 .sources file (remove Enabled: no)
+__deb822_enable()
+{
+    local file="$1"
+    sudocmd sed -i -e '/^Enabled:[[:space:]]*no/d' "$file"
+}
+
+# Remove a deb822 .sources file
+__deb822_remove()
+{
+    sudocmd rm -v "$1"
+}
+
 # Filter stdin by patterns (AND logic, case insensitive)
 # Supports glob (* ?) and exclusion (~pattern)
 # Usage: echo "$lines" | __filter_repos_list pattern1 pattern2 ~exclude
