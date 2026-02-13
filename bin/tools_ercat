@@ -186,5 +186,5 @@ for f in "$@" ; do
         continue
     fi
     TYPE=$(get_archive_ext "$f") || TYPE=$(detect_by_content "$f") || { warning "Skipping unrecognized $f" ; continue ; }
-    unpack_type "$TYPE" "$f"
+    ( unpack_type "$TYPE" "$f" ) || warning "Failed to unpack $f, skipping..."
 done
