@@ -124,8 +124,7 @@ case $PMTYPE in
         if [ -n "$short" ] ; then
             docmd dpkg-query -W --showformat="\${db:Status-Abbrev}\${Package}\n" "$@" | grep "^.i" | sed -e "s|^.. ||g" | __fo_pfn "$@"
         else
-            docmd dpkg-query -W --showformat="\${db:Status-Abbrev}\${Package}-\${Version}:\${Architecture} - \${Description}\n" "$@" | grep "^.i" | sed -e "s|^.. ||g" | cut -d'
-' -f1 | __fo_pfn "$@"
+            docmd dpkg-query -W --showformat="\${db:Status-Abbrev}\${Package}-\${Version}:\${Architecture}\n" "$@" | grep "^.i" | sed -e "s|^.. ||g" | __fo_pfn "$@"
         fi
         return ;;
     *-rpm)
@@ -133,7 +132,7 @@ case $PMTYPE in
         if [ -n "$short" ] ; then
             docmd rpm -qa --queryformat "%{name}\n" "$@" | __fo_pfn "$@"
         else
-            docmd rpm -qa --queryformat "%{name}-%{version}-%{release} - %{summary}\n" "$@" | __fo_pfn "$@"
+            docmd rpm -qa --queryformat "%{name}-%{version}-%{release}\n" "$@" | __fo_pfn "$@"
         fi
         return ;;
     packagekit)
@@ -146,7 +145,7 @@ case $PMTYPE in
         if [ -n "$short" ] ; then
             docmd snap list 2>/dev/null | tail -n +2 | awk '{print $1}' | __fo_pfn "$@"
         else
-            docmd snap list 2>/dev/null | tail -n +2 | awk '{print $1"-"$2" - "$4}' | __fo_pfn "$@"
+            docmd snap list 2>/dev/null | tail -n +2 | awk '{print $1"-"$2}' | __fo_pfn "$@"
         fi
         return
         ;;
@@ -154,7 +153,7 @@ case $PMTYPE in
         if [ -n "$short" ] ; then
             docmd flatpak list --app --columns=application 2>/dev/null | __fo_pfn "$@"
         else
-            docmd flatpak list --app --columns=application,version,name 2>/dev/null | awk -F'\t' '{print $1"-"$2" - "$3}' | __fo_pfn "$@"
+            docmd flatpak list --app --columns=application,version 2>/dev/null | awk -F'\t' '{print $1"-"$2}' | __fo_pfn "$@"
         fi
         return
         ;;
@@ -170,14 +169,14 @@ case $PMTYPE in
         if [ -n "$short" ] ; then
             docmd pkg info 2>/dev/null | sed -e "s| .*||g" -e "s|-[0-9].*||g" | __fo_pfn "$@"
         else
-            docmd pkg info 2>/dev/null | sed -e "s| | - |" | __fo_pfn "$@"
+            docmd pkg info 2>/dev/null | sed -e "s| .*||g" | __fo_pfn "$@"
         fi
         return ;;
     pacman)
         if [ -n "$short" ] ; then
             docmd pacman -Q "$@" 2>/dev/null | sed -e "s| .*||g" | __fo_pfn "$@"
         else
-            docmd pacman -Qi "$@" 2>/dev/null | awk '/^Name/{name=$3} /^Version/{ver=$3} /^Description/{$1=$2=""; desc=$0} /^$/{print name"-"ver" -"desc}' | __fo_pfn "$@"
+            docmd pacman -Q "$@" 2>/dev/null | awk '{print $1"-"$2}' | __fo_pfn "$@"
         fi
         return
         ;;
@@ -243,7 +242,7 @@ case $PMTYPE in
         if [ -n "$short" ] ; then
             docmd nix-env -q 2>/dev/null | sed -e "s|-[0-9].*||g" | __fo_pfn "$@"
         else
-            docmd nix-env -q --description 2>/dev/null | sed -e "s|  *| - |" | __fo_pfn "$@"
+            docmd nix-env -q 2>/dev/null | __fo_pfn "$@"
         fi
         return
         ;;
@@ -263,7 +262,7 @@ case $PMTYPE in
         if [ -n "$short" ] ; then
             docmd pkg list-installed 2>/dev/null | sed -e "s|/.*||g" | __fo_pfn "$@"
         else
-            docmd pkg list-installed 2>/dev/null | sed -e "s|/[^ ]* | - |" | __fo_pfn "$@"
+            docmd pkg list-installed 2>/dev/null | awk '{split($1,a,"/"); print a[1]"-"$2}' | __fo_pfn "$@"
         fi
         return
         ;;
@@ -271,7 +270,7 @@ case $PMTYPE in
         if [ -n "$short" ] ; then
             docmd xbps-query -l 2>/dev/null | sed -e "s|^ii ||g" -e "s| .*||g" -e "s|\(.*\)-.*|\1|g" | __fo_pfn "$@"
         else
-            docmd xbps-query -l 2>/dev/null | sed -e "s|^ii ||g" -e "s| \+| - |" | __fo_pfn "$@"
+            docmd xbps-query -l 2>/dev/null | sed -e "s|^ii ||g" -e "s| .*||g" | __fo_pfn "$@"
         fi
         return 0
         ;;

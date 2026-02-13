@@ -32,8 +32,8 @@ epm_list()
 
     if [ -z "$1" ] ; then
         # locally installed packages by default
-        load_helper epm-packages
-        epm_packages "$@"
+        load_helper epm-list_installed
+        epm_list_installed "$@"
         return
     fi
 
@@ -50,8 +50,8 @@ epm_list()
             return
             ;;
         --installed)              # HELPOPT: list only installed packages
-            load_helper epm-packages
-            epm_packages "$@"
+            load_helper epm-list_installed
+            epm_list_installed "$@"
             return
             ;;
         --upgradable)             # HELPOPT: list only upgradable packages

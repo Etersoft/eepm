@@ -1,0 +1,156 @@
+#!/bin/sh
+#
+# Copyright (C) 2012, 2016, 2017, 2020, 2025  Etersoft
+# Copyright (C) 2012, 2016, 2017, 2020, 2025  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+load_helper epm-sh-warmup
+
+__aptcyg_print_full()
+{
+    #showcmd apt-cyg show
+    local VERSION=$(a= apt-cyg show "$1" | grep -m1 "^version: " | sed -e "s|^version: ||g")
+    echo "$1-$VERSION"
+}
+
+__fo_pfn()
+{
+    grep -v "^$" | grep -- "$*"
+}
+
+# list installed packages with descriptions (for epm list)
+epm_list_installed()
+{
+    local CMD
+
+case $PMTYPE in
+    *-dpkg)
+        warmup_dpkgbase
+        docmd dpkg-query -W --showformat="\${db:Status-Abbrev}\${Package}-\${Version}:\${Architecture} - \${Description}\n" "$@" | grep "^.i" | sed -e "s|^.. ||g" | cut -d'
+' -f1 | __fo_pfn "$@"
+        return ;;
+    *-rpm)
+        warmup_rpmbase
+        docmd rpm -qa --queryformat "%{name}-%{version}-%{release} - %{summary}\n" "$@" | __fo_pfn "$@"
+        return ;;
+    packagekit)
+        docmd pkcon get-packages --filter installed
+        ;;
+    snappy)
+        CMD="snappy info"
+        ;;
+    snap)
+        docmd snap list 2>/dev/null | tail -n +2 | awk '{print $1"-"$2" - "$4}' | __fo_pfn "$@"
+        return
+        ;;
+    flatpak)
+        docmd flatpak list --app --columns=application,version,name 2>/dev/null | awk -F'\t' '{print $1"-"$2" - "$3}' | __fo_pfn "$@"
+        return
+        ;;
+    emerge)
+        CMD="qlist -I -C"
+        # print with colors for console output
+        isatty && CMD="qlist -I"
+        ;;
+    pkgsrc)
+        docmd pkg_info | sed -e "s| .*||g" | __fo_pfn "$@"
+        return ;;
+    pkgng)
+        docmd pkg info 2>/dev/null | sed -e "s| | - |" | __fo_pfn "$@"
+        return ;;
+    pacman)
+        docmd pacman -Qi "$@" 2>/dev/null | awk '/^Name/{name=$3} /^Version/{ver=$3} /^Description/{$1=$2=""; desc=$0} /^$/{print name"-"ver" -"desc}' | __fo_pfn "$@"
+        return
+        ;;
+    npackd)
+        CMD="npackdcl list --status=installed"
+        # TODO: use search if pkg_filenames is not empty
+        ;;
+    conary)
+        CMD="conary query"
+        ;;
+    eopkg)
+        docmd eopkg list-installed 2>/dev/null | __fo_pfn "$@"
+        return
+        ;;
+    stplr)
+        CMD="stplr list --installed"
+        ;;
+    pisi)
+        docmd pisi list-installed 2>/dev/null | __fo_pfn "$@"
+        return
+        ;;
+    choco)
+        CMD="choco list"
+        ;;
+    slackpkg)
+        CMD="ls -1 /var/log/packages/"
+        ;;
+    homebrew)
+        docmd brew list | xargs -n1 echo
+        ;;
+    opkg)
+        docmd opkg list-installed 2>/dev/null | __fo_pfn "$@"
+        return
+        ;;
+    apk)
+        docmd apk list --installed 2>/dev/null | sed -e "s| \[installed\]||g" | __fo_pfn "$@"
+        return
+        ;;
+    nix)
+        docmd nix-env -q --description 2>/dev/null | sed -e "s|  *| - |" | __fo_pfn "$@"
+        return
+        ;;
+    tce)
+        CMD="ls -1 /usr/local/tce.installed"
+        ;;
+    guix)
+        CMD="guix package -I"
+        ;;
+    appget)
+        CMD="appget list"
+        ;;
+    winget)
+        CMD="winget list"
+        ;;
+    termux-pkg)
+        docmd pkg list-installed 2>/dev/null | sed -e "s|/[^ ]* | - |" | __fo_pfn "$@"
+        return
+        ;;
+    xbps)
+        docmd xbps-query -l 2>/dev/null | sed -e "s|^ii ||g" -e "s| \+| - |" | __fo_pfn "$@"
+        return 0
+        ;;
+    android)
+        docmd pm list packages | sed -e "s|^package:||g" | __fo_pfn "$@"
+        return
+        ;;
+    aptcyg)
+        # TODO: fix this slow way
+        for i in $(docmd apt-cyg list "$@") ; do
+            __aptcyg_print_full $i
+        done
+        return
+        ;;
+    *)
+        fatal 'Have no suitable query command for $PMTYPE'
+        ;;
+esac
+
+docmd $CMD | __fo_pfn "$@"
+# FIXME: we print empty lines, but will lost error status
+
+}
