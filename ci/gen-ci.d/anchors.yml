@@ -28,11 +28,24 @@
 .test_debian_ipfs: &test_debian_ipfs
   before_script:
     - ./bin/epm update
-    - ./bin/epm install -y bash wget ca-certificates coreutils file
+    - ./bin/epm install -y bash wget ca-certificates coreutils file xz-utils
     - mkdir -p /var/lib/eepm
     - cp ipfs/eget-ipfs-db.txt /var/lib/eepm/eget-ipfs-db.txt
 
 .test_debian_latest: &test_debian_latest
+  before_script:
+    - ./bin/epm update
+    - ./bin/epm install -y bash wget ca-certificates coreutils file xz-utils
+    - mkdir -p /var/lib/eepm
+
+.test_fedora_ipfs: &test_fedora_ipfs
+  before_script:
+    - ./bin/epm update
+    - ./bin/epm install -y bash wget ca-certificates coreutils file
+    - mkdir -p /var/lib/eepm
+    - cp ipfs/eget-ipfs-db.txt /var/lib/eepm/eget-ipfs-db.txt
+
+.test_fedora_latest: &test_fedora_latest
   before_script:
     - ./bin/epm update
     - ./bin/epm install -y bash wget ca-certificates coreutils file

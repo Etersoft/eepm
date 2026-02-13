@@ -10,7 +10,8 @@
   ветку `ci-generated`. Для пресетов `FULL_TEST` и `GET_VERSION` используются
   отдельные ветки: `ci-generated-full-test` и `ci-generated-get-version`.
 - Сгенерированный пайплайн выполняет:
-  - download_test: `ci/prepare_ipfs.sh`
+  - download_test: `ci/prepare_ipfs.sh` в одном контейнере `alt:p11`
+    последовательно для всех приложений
   - publish_download_logs: `ci/push-ipfs-db.sh`
   - test: `ci/run_one_ci.sh`
   - summary: `ci/push-results-ci.sh`
@@ -28,9 +29,14 @@
 
 Переменные планировщика (GitLab UI -> CI/CD -> Schedules -> Variables)
 - Пресеты:
-  - `FULL_TEST`: полный прогон по IPFS на `alt:sisyphus` и `debian:bookworm`,
-    включает `CI_DOWNLOAD`, `CI_USE_IPFS` и `CI_IPFS_UPDATE`, тестирует все
-    приложения.
+  - `FULL_TEST`: раздельный полный прогон.
+    - Скачивание и обновление `eget-ipfs-db.txt` выполняются в `download_test`
+      на `alt:p11` (один контейнер).
+    - Тесты запускаются на `alt:sisyphus`, `debian:bookworm` и
+      `fedora:latest` только с
+      `--ipfs` (без `CI_IPFS_UPDATE` в тестовых job), тестируются все
+      приложения.
+    - Включает `CI_DOWNLOAD` и `CI_USE_IPFS`.
   - `GET_VERSION`: сбор версий на `alt:p11`, включает `CI_USE_IPFS` и
     `CI_IPFS_UPDATE`, тестирует все приложения.
 - `CI_APPS`: список приложений для теста, разделенный пробелами.
@@ -38,7 +44,7 @@
   - Если пусто или не задано, берутся все приложения из `epm play --short`.
   - Если задан `FULL_TEST` или `GET_VERSION`, `CI_APPS` игнорируется.
 - `CI_SYSTEMS`: список docker-образов для теста, разделенный пробелами.
-  - Пример: `CI_SYSTEMS=alt:sisyphus debian:bookworm`
+  - Пример: `CI_SYSTEMS=alt:sisyphus debian:bookworm fedora:latest`
   - Если пусто или не задано, по умолчанию `alt:sisyphus debian:bookworm`.
   - Если задан `FULL_TEST` или `GET_VERSION`, `CI_SYSTEMS` игнорируется.
 
@@ -62,8 +68,12 @@
 
 Переменные IPFS
 - `CI_DOWNLOAD`: включает стадии загрузки и публикации IPFS базы.
+- В стадии `download_test` перед каждым запуском `ci/prepare_ipfs.sh`
+  используется фиксированная задержка `90` секунд.
 - `CI_USE_IPFS`: включает флаг `--ipfs` для `epm play`.
 - `CI_IPFS_UPDATE`: включает обновление IPFS базы во время теста.
+  - Для `FULL_TEST` эта переменная игнорируется, чтобы разделить этапы:
+    скачивание только в `download_test`, тесты только через `--ipfs`.
   - При включенном `CI_IPFS_UPDATE` и отсутствии `ipfs` устанавливается `kubo`.
   - Для обновления базы используется внешний IPFS API:
     `/ip4/91.232.225.49/tcp/5001`.

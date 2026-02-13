@@ -1,10 +1,7 @@
 download_jobs()
 {
-  for app in $apps; do
-    local safe_app="${app//[^a-zA-Z0-9_]/_}"
-
-    cat <<EOF
-download_${safe_app}_p11:
+  cat <<'EOF'
+download_all_p11:
   stage: download_test
   allow_failure: true
   image: alt:p11
@@ -16,7 +13,17 @@ download_${safe_app}_p11:
     - ./bin/epm -y install wget glibc-pthread file patool
     - ./bin/epm play --auto --ipfs kubo
   script:
-    - bash ./ci/prepare_ipfs.sh ${app}
+    - mkdir -p ipfs/logs ipfs/errors
+    - echo "NOTE detailed download output is hidden see artifacts ipfs/logs and ipfs/errors"
+EOF
+  for app in $apps; do
+    cat <<EOF
+    - echo "Sleep 90s before download ${app}"
+    - sleep 90
+    - if ! bash ./ci/prepare_ipfs.sh ${app} >/dev/null 2>&1; then echo "WARN download failed ${app}, see ipfs/errors/${app}-download.log"; else echo "OK download ${app}"; fi
+EOF
+  done
+  cat <<'EOF'
   artifacts:
     when: always
     expire_in: 7 days
@@ -24,7 +31,6 @@ download_${safe_app}_p11:
       - ipfs
 
 EOF
-  done
 }
 
 publish_job()
@@ -37,21 +43,15 @@ publish_download_logs:
     - access
   when: always
   dependencies:
-EOF
-  for app in $apps; do
-    local safe_app="${app//[^a-zA-Z0-9_]/_}"
-    cat <<EOF
-    - download_${safe_app}_p11
-EOF
-  done
-  cat <<'EOF'
+    - download_all_p11
   before_script:
     - ./bin/epm -y repo set etersoft
     - ./bin/epm update
     - ./bin/epm -y install git rsync
   script:
     - echo "Publishing logs and IPFS DB"
-    - ls -R ipfs
+    - echo "IPFS files $(find ipfs -type f | wc -l)"
+    - du -sh ipfs || true
     - bash ./ci/push-ipfs-db.sh
   artifacts:
     when: always

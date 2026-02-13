@@ -65,7 +65,7 @@ tests()
       fi
 
       cat <<EOF
-test_${safe_app}_${safe_system}:
+${safe_app}_${safe_system}_test:
   <<: [*${template_anchor}, *${anchor}]
   image: ${system}
 EOF

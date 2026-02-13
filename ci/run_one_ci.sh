@@ -31,10 +31,22 @@ cd "$REPO_ROOT/bin"
 
 # IPFS
 PLAY_OPTS="--latest"
+SPLIT_DOWNLOAD_MODE=0
+IPFS_UPDATE_ENABLED=0
+
+if [ -n "${CI_USE_IPFS:-}" ] && [ -f "$PROJECT_DIR/ipfs/eget-ipfs-db.txt" ]; then
+  PLAY_OPTS=""
+  SPLIT_DOWNLOAD_MODE=1
+fi
+
+if [ -n "${CI_USE_IPFS:-}" ] && [ -n "${CI_IPFS_UPDATE:-}" ] && [ "$SPLIT_DOWNLOAD_MODE" -eq 0 ]; then
+  IPFS_UPDATE_ENABLED=1
+fi
+
 if [ -n "${CI_USE_IPFS:-}" ]; then
   PLAY_OPTS="$PLAY_OPTS --ipfs"
 
-  if [ -n "${CI_IPFS_UPDATE:-}" ]; then
+  if [ "$IPFS_UPDATE_ENABLED" -eq 1 ]; then
     export EGET_IPFS_FORCE_LOAD=1
     export EGET_IPFS_API=/ip4/91.232.225.49/tcp/5001
 
@@ -51,7 +63,7 @@ fi
 IPFS_DB_CAPTURE=0
 EGET_DB_PATH="/var/lib/eepm/eget-ipfs-db.txt"
 PRE_DB_SNAPSHOT=""
-if [ -n "${CI_USE_IPFS:-}" ] && [ -n "${CI_IPFS_UPDATE:-}" ]; then
+if [ "$IPFS_UPDATE_ENABLED" -eq 1 ]; then
   IPFS_DB_CAPTURE=1
   mkdir -p "$IPFS_PARTS_DIR"
   if [ -f "$EGET_DB_PATH" ]; then

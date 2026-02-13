@@ -24,10 +24,10 @@ RESULTS_DIR="experiments"
 RESULTS_LABEL="custom"
 
 if [ -n "$FULL_TEST" ]; then
-  systems="alt:sisyphus debian:bookworm"
+  systems="alt:sisyphus debian:bookworm fedora:latest"
   USE_DOWNLOAD=1
   USE_IPFS=1
-  USE_IPFS_UPDATE=1
+  USE_IPFS_UPDATE=0
   CI_APPS=""
   RESULTS_DIR="epm-results"
   RESULTS_LABEL="full-test"
@@ -67,7 +67,7 @@ if [ -n "${CI_USE_IPFS:-}" ] || [ "$USE_DOWNLOAD" -eq 1 ]; then
   USE_IPFS=1
 fi
 
-if [ -n "${CI_IPFS_UPDATE:-}" ]; then
+if [ -n "${CI_IPFS_UPDATE:-}" ] && [ -z "$FULL_TEST" ]; then
   USE_IPFS_UPDATE=1
   USE_IPFS=1
 fi
