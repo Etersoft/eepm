@@ -105,6 +105,23 @@ __epm_downgrade_to_alt_archive()
 
 epm_downgrade()
 {
+    if [ -n "$exclude" ] ; then
+        load_helper epm-mark
+        __epm_exclude_apply
+    fi
+
+    __epm_downgrade_do "$@"
+    local _ret=$?
+
+    if [ -n "$exclude" ] ; then
+        __epm_exclude_restore
+    fi
+
+    return $_ret
+}
+
+__epm_downgrade_do()
+{
     arg="$1"
     local CMD
 

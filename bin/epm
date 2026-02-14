@@ -170,6 +170,7 @@ pkg_options=
 quoted_args=
 direct_args=
 ipfs=
+exclude=
 force_overwrite=
 
 epm_vardir=/var/lib/eepm
@@ -631,6 +632,10 @@ check_option()
         ;;
     --parallel)            # HELPOPT: simultaneous downloading of packages
         parallel="--parallel"
+        ;;
+    --exclude=*)           # HELPOPT: exclude package(s) from upgrade/downgrade (comma separated)
+        _excl="$(echo "$1" | sed -e 's|--exclude=||' -e 's|,| |g')"
+        exclude="$exclude $_excl"
         ;;
     -y|--auto|--assumeyes|--non-interactive|--disable-interactivity)  # HELPOPT: non interactive mode
         non_interactive="--auto"

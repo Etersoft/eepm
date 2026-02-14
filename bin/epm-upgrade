@@ -77,6 +77,23 @@ epm_upgrade_alt_tasks()
 
 epm_upgrade()
 {
+    if [ -n "$exclude" ] ; then
+        load_helper epm-mark
+        __epm_exclude_apply
+    fi
+
+    __epm_upgrade_do "$@"
+    local _ret=$?
+
+    if [ -n "$exclude" ] ; then
+        __epm_exclude_restore
+    fi
+
+    return $_ret
+}
+
+__epm_upgrade_do()
+{
     local CMD
 
     # it is useful for first time running
