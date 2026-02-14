@@ -136,6 +136,7 @@ __process_repo_arguments() {
             __epm_update
             (PPARGS=1 $func ${repo_groups[$repo]})
             docmd epm repo restore
+            __epm_update
             end_change_alt_repo
         fi
     done
