@@ -8,23 +8,23 @@ RETURNTARNAME="$2"
 erc unpack "$TAR" || fatal
 
 mkdir -p opt/$PRODUCT
-mv qms_lib opt/$PRODUCT/qms_lib
-chmod 755 opt/$PRODUCT/qms_lib
+mv qms_lib opt/$PRODUCT/qms-speedtest
+chmod 755 opt/$PRODUCT/qms-speedtest
 
-VERSION=$(opt/$PRODUCT/qms_lib --version 2>&1 | grep -oP '[0-9]+\.[0-9.]+' | head -1)
+VERSION=$(opt/$PRODUCT/qms-speedtest --version 2>&1 | grep -oP '[0-9]+\.[0-9.]+' | head -1)
 [ -n "$VERSION" ] || VERSION="1.0"
 
 PKGNAME=$PRODUCT-$VERSION
 
 mkdir -p usr/bin
-ln -s /opt/$PRODUCT/qms_lib usr/bin/qms_lib
+ln -s /opt/$PRODUCT/qms-speedtest usr/bin/qms-speedtest
 
 cat <<EOF >$PKGNAME.tar.eepm.yaml
 name: $PRODUCT
 group: Networking/Other
 license: Proprietary
 url: https://www.qms.ru/applications/linux
-summary: QMS Lib - internet connection speed and quality testing tool
+summary: QMS speedtest - internet connection speed and quality testing tool
 description: Command-line tool for testing internet connection speed and quality from qms.ru.
 EOF
 

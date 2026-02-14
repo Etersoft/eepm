@@ -1,9 +1,9 @@
 #!/bin/sh
 
-PKGNAME=qms-lib
+PKGNAME=qms-speedtest
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
-DESCRIPTION="QMS Lib - internet connection speed and quality testing tool"
+DESCRIPTION="QMS speedtest - internet connection speed and quality testing tool"
 URL="https://www.qms.ru/applications/linux"
 
 . $(dirname $0)/common.sh
