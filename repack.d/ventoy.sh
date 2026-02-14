@@ -21,22 +21,14 @@ Comment=Ventoy2Disk GUI
 StartupWMClass=Ventoy2Disk.gtk3
 EOF
 
-epm tool eget -O opt/ventoy/sanitize.patch https://aur.archlinux.org/cgit/aur.git/plain/sanitize.patch?h=ventoy-bin
-epm tool eget -O opt/ventoy/desktop_session.patch https://aur.archlinux.org/cgit/aur.git/plain/desktop_session.patch?h=ventoy-bin
+epm tool eget -O- https://aur.archlinux.org/cgit/aur.git/plain/sanitize.patch?h=ventoy-bin > opt/ventoy/sanitize.patch
 
 epm assure /usr/bin/patch
 
 cd opt/ventoy
 
-patch  -p0 < "sanitize.patch"
-patch -Np1 -i "desktop_session.patch"
-
+patch -Np1 -i "sanitize.patch"
 rm -v sanitize.patch
-rm -v desktop_session.patch
-rm -v VentoyWeb.sh.orig
-rm -v tool/VentoyWorker.sh.orig
-rm -v tool/distro_gui_type.json.orig
-rm -v tool/ventoy_lib.sh.orig
 
 # Qt5 dependencies (system Qt, not bundled)
 add_unirequires libQt5Core.so.5 libQt5Gui.so.5 libQt5Widgets.so.5
