@@ -354,6 +354,46 @@ esac
 
 }
 
+__epm_exclude_apply()
+{
+    [ -n "$exclude" ] || return 0
+    __epm_exclude_holdlist=""
+    local i
+    for i in $exclude ; do
+        if epm_mark_checkhold "$i" ; then
+            info "Package $i is already on hold, skipping"
+        else
+            info "Putting package $i on hold ..."
+            ( epm_mark_hold "$i" )
+            __epm_exclude_holdlist="$__epm_exclude_holdlist $i"
+        fi
+    done
+    __epm_exclude_holdlist="$(strip_spaces "$__epm_exclude_holdlist")"
+    [ -n "$__epm_exclude_holdlist" ] || return 0
+    # chain EXIT trap: save previous handler
+    __epm_exclude_prev_handler="$(trap -p EXIT | sed -n "s/^trap -- '\(.*\)' EXIT$/\1/p")"
+    trap '__epm_exclude_restore; '"$__epm_exclude_prev_handler" EXIT
+    trap '__epm_exclude_restore; exit 1' INT TERM
+}
+
+__epm_exclude_restore()
+{
+    [ -n "$__epm_exclude_holdlist" ] || return 0
+    local i
+    for i in $__epm_exclude_holdlist ; do
+        info "Removing hold from package $i ..."
+        ( epm_mark_unhold "$i" )
+    done
+    __epm_exclude_holdlist=""
+    # restore previous trap
+    trap - INT TERM
+    if [ -n "$__epm_exclude_prev_handler" ] ; then
+        trap "$__epm_exclude_prev_handler" EXIT
+    else
+        trap - EXIT
+    fi
+}
+
 epm_mark_help()
 {
     message "mark is the interface for marking packages"
