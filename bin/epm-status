@@ -221,6 +221,18 @@ epm_status_original()
             echo "$release" | grep -qi "debian" || return 1
             return 0
             ;;
+        AstraLinux*)
+            epm_status_validate $pkg || return 1
+            epm_status_repacked $pkg && return 1
+
+            local maintainer="$(epm print field Maintainer for "$pkg" 2>/dev/null)"
+            echo "$release" | grep -qi "astra" && return 0
+            echo "$maintainer" | grep -q "astralinux" && return 0
+            echo "$maintainer" | grep -q "rusbitech" && return 0
+            echo "$maintainer" | grep -q "Debian" && return 0
+            echo "$maintainer" | grep -q "@debian.org" && return 0
+            return 1
+            ;;
         *)
             warning 'Status checking is not supported yet for $DISTRNAME'
             return 1
@@ -312,6 +324,18 @@ epm_status_thirdparty()
             # On UncomOS maintainer Ubuntu and Debian * team
             echo "$maintainer" | grep -q "Debian" && return 1
             echo "$maintainer" | grep -q "Ubuntu" && return 1
+            epm_status_repacked $pkg && return 1
+            return 0
+            ;;
+        astra)
+            epm_status_validate $pkg || return 1
+
+            local release="$(epm print release from package "$pkg" 2>/dev/null)"
+            echo "$release" | grep -qi "astra" && return 1
+            echo "$maintainer" | grep -q "Debian" && return 1
+            echo "$maintainer" | grep -q "@debian.org" && return 1
+            echo "$maintainer" | grep -q "astralinux" && return 1
+            echo "$maintainer" | grep -q "rusbitech" && return 1
             epm_status_repacked $pkg && return 1
             return 0
             ;;
