@@ -27,7 +27,7 @@ case "$(epm print info -e)" in
     epm install --repack https://packages.microsoft.com/ubuntu/18.04/mssql-server-2019/pool/main/m/mssql-server/mssql-server_1*_amd64.deb
     ;;
   AstraLinuxSE/1.8)
-    epm install https://packages.microsoft.com/debian/12/mssql-server-2019/pool/main/m/mssql-server/mssql-server_1*_amd64.deb
+    epm install https://packages.microsoft.com/ubuntu/20.04/mssql-server-2019/pool/main/m/mssql-server/mssql-server_1*_amd64.deb
     ;;
   ALTLinux/p10|ALTLinux/c10f2)
     epm install --repack https://packages.microsoft.com/rhel/8/mssql-server-2019/Packages/m/mssql-server-[0-9]*.x86_64.rpm || fatal
