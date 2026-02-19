@@ -472,7 +472,10 @@ is_repacked_package()
 
     epm status --installed $pkg || return 0
 
-    epm status --supported $pkg || return 1
+    if ! epm status --supported $pkg ; then
+       echo "Status checking is not supported for $(epm print info -e). Skipping installed package check (use --force to override)."
+       return 1
+    fi
 
     [ -n "$force" ] && return 0
 
