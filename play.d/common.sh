@@ -274,9 +274,14 @@ __convert_glob__to_regexp()
 
 get_github_release_info() {
     local url="$1"
+    local flag="$2"
     local user_and_repo=${url#https://github.com/}
 
-    fetch_url "https://api.github.com/repos/${user_and_repo%/}/releases"
+    if [ "$flag" = "latest" ] ; then
+        fetch_url "https://api.github.com/repos/${user_and_repo%/}/releases/latest"
+    else
+        fetch_url "https://api.github.com/repos/${user_and_repo%/}/releases"
+    fi
 }
 
 get_github_url()
@@ -291,8 +296,11 @@ get_github_url()
     if [ "$3" == "prerelease" ] ; then
         get_github_release_info "$url" | grep 'browser_download_url' | grep -iEo 'https.*download.*' | grep -E "$wc" | head -n1 | sed -e 's|"$||'
     else
-        get_github_release_info "$url" \
-        | awk '{
+        local result
+        result="$(get_github_release_info "$url" "latest" | grep 'browser_download_url' | grep -iEo 'https.*download.*' | grep -E "$wc" | head -n1 | sed -e 's|"$||')"
+        if [ -z "$result" ] ; then
+            result="$(get_github_release_info "$url" \
+            | awk '{
     if ($0 ~ /"prerelease": false/) {
         prerelease = 0;
     } else if ($0 ~ /"prerelease": true/) {
@@ -302,7 +310,9 @@ get_github_url()
         match($0, /"browser_download_url": "(https[^"]*)"/, arr);
         print arr[1];
     }
-}' | grep -E "$wc" | head -n1 | sed -e 's|"$||'
+}' | grep -E "$wc" | head -n1 | sed -e 's|"$||')"
+        fi
+        echo "$result"
     fi
 
 }
