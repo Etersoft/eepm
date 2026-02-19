@@ -198,12 +198,15 @@ __setup_tmp_apt_dir
 check_dir_exists "tmpdir created" "$__EPM_APT_TMPDIR"
 check_dir_exists "lists/partial created" "$__EPM_APT_TMPDIR/lists/partial"
 check_dir_exists "sourceparts created" "$__EPM_APT_TMPDIR/sourceparts"
-check_contains "REPO_OPTIONS has sourcelist" "Dir::Etc::sourcelist=" "$__EPM_APT_REPO_OPTIONS"
-check_contains "REPO_OPTIONS has sourceparts" "Dir::Etc::sourceparts=" "$__EPM_APT_REPO_OPTIONS"
-check_contains "REPO_OPTIONS has lists dir" "Dir::State::lists=" "$__EPM_APT_REPO_OPTIONS"
-check_contains "REPO_OPTIONS has pkgcache" "Dir::Cache::pkgcache=" "$__EPM_APT_REPO_OPTIONS"
-check_contains "REPO_OPTIONS has srcpkgcache" "Dir::Cache::srcpkgcache=" "$__EPM_APT_REPO_OPTIONS"
-check_contains "REPO_OPTIONS points to tmpdir" "$__EPM_APT_TMPDIR" "$__EPM_APT_REPO_OPTIONS"
+check_file_exists "apt.conf created" "$__EPM_APT_TMPDIR/apt.conf"
+apt_conf="$(cat "$__EPM_APT_TMPDIR/apt.conf")"
+check_contains "apt.conf has sourcelist" "Dir::Etc::sourcelist" "$apt_conf"
+check_contains "apt.conf has sourceparts" "Dir::Etc::sourceparts" "$apt_conf"
+check_contains "apt.conf has lists dir" "Dir::State::lists" "$apt_conf"
+check_contains "apt.conf has pkgcache" "Dir::Cache::pkgcache" "$apt_conf"
+check_contains "apt.conf has srcpkgcache" "Dir::Cache::srcpkgcache" "$apt_conf"
+check_contains "apt.conf points to tmpdir" "$__EPM_APT_TMPDIR" "$apt_conf"
+check "REPO_OPTIONS uses -c" "-c $__EPM_APT_TMPDIR/apt.conf" "$__EPM_APT_REPO_OPTIONS"
 
 # Write sources.list and verify it works
 __generate_alt_sourceslist p10 > "$__EPM_APT_TMPDIR/sources.list"
@@ -303,8 +306,9 @@ check_file_exists "archive sources.list in tmpdir" "$__EPM_APT_TMPDIR/sources.li
 content="$(cat "$__EPM_APT_TMPDIR/sources.list")"
 check_contains "combined: has archive URL" "archive/p10/date/2023/01/15" "$content"
 check "combined: 3 repo lines" "3" "$(count_lines "$content")"
-# Verify REPO_OPTIONS points to this tmpdir's sources.list
-check_contains "combined: REPO_OPTIONS uses tmpdir" "$__EPM_APT_TMPDIR/sources.list" "$__EPM_APT_REPO_OPTIONS"
+# Verify apt.conf and REPO_OPTIONS point to this tmpdir
+check_file_exists "combined: apt.conf exists" "$__EPM_APT_TMPDIR/apt.conf"
+check "combined: REPO_OPTIONS is -c apt.conf" "-c $__EPM_APT_TMPDIR/apt.conf" "$__EPM_APT_REPO_OPTIONS"
 
 rm -rf "$__EPM_APT_TMPDIR"
 
