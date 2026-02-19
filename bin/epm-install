@@ -104,6 +104,13 @@ epm_install_names()
         APTOPTIONS="$APTOPTIONS -o Dpkg::Options::=--force-overwrite"
     fi
 
+    if [ -n "$norecommends" ] ; then
+        APTOPTIONS="$APTOPTIONS -o APT::Install-Recommends=false"
+        YUMOPTIONS="$YUMOPTIONS --setopt=install_weak_deps=0"
+        URPMOPTIONS="$URPMOPTIONS --no-suggests"
+        ZYPPEROPTIONS="$ZYPPEROPTIONS --no-recommends"
+    fi
+
     case $PMTYPE in
         apt-rpm|apt-dpkg)
             APTOPTIONS="$APTOPTIONS -o APT::Sandbox::User=root $(subst_option debug "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
@@ -179,7 +186,7 @@ epm_install_names()
             sudocmd yum $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
             return ;;
         dnf-rpm|dnf5-rpm)
-            sudocmd dnf install $(echo "$*" | exp_with_arch_suffix)
+            sudocmd dnf install $YUMOPTIONS $(echo "$*" | exp_with_arch_suffix)
             return ;;
         snappy)
             sudocmd snappy install $@
@@ -258,6 +265,13 @@ epm_install_names()
 epm_ni_install_names()
 {
     [ -z "$1" ] && return
+
+    if [ -n "$norecommends" ] ; then
+        APTOPTIONS="$APTOPTIONS -o APT::Install-Recommends=false"
+        YUMOPTIONS="$YUMOPTIONS --setopt=install_weak_deps=0"
+        URPMOPTIONS="$URPMOPTIONS --no-suggests"
+        ZYPPEROPTIONS="$ZYPPEROPTIONS --no-recommends"
+    fi
 
     case $PMTYPE in
         apt-rpm)

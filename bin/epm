@@ -172,6 +172,7 @@ direct_args=
 ipfs=
 exclude=
 force_overwrite=
+norecommends=
 
 epm_vardir=/var/lib/eepm
 epm_cachedir=/var/cache/eepm
@@ -654,6 +655,9 @@ check_option()
     --force-overwrite)      # HELPOPT: force overwrite one package's file with another's file
         force_overwrite="--force-overwrite"
         ;;
+    --norecommends|--no-recommends)  # HELPOPT: skip recommended packages during install
+        norecommends="--norecommends"
+        ;;
     --manual-requires)       # HELPOPT: includes all package dependencies in the install/uninstall list
         manual_requires="--manual-requires"
         ;;
@@ -732,7 +736,7 @@ if [ -n "$quiet" ] ; then
 fi
 
 # fill
-export EPM_OPTIONS="$nodeps $force $full $verbose $debug $quiet $interactive $non_interactive $parallel $save_only $download_only $force_overwrite $manual_requires $noscripts $scripts $dryrun"
+export EPM_OPTIONS="$nodeps $force $full $verbose $debug $quiet $interactive $non_interactive $parallel $save_only $download_only $force_overwrite $manual_requires $noscripts $scripts $dryrun $norecommends"
 
 # if input is not console and run script from file, get pkgs from stdin too
 if [ -z "$direct_args" ] && [ ! -n "$inscript" ] && [ -p /dev/stdin ] && [ "$EPMMODE" != "pipe" ] ; then
