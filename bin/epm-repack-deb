@@ -37,6 +37,11 @@ __epm_repack_to_deb()
 
     umask 022
 
+    # alien uses $EMAIL for Maintainer email (not DEBEMAIL)
+    # and always takes the name from system GECOS (can't override without patching alien)
+    # TODO: fix Maintainer name in the generated deb (replace GECOS with "EPM")
+    export EMAIL="support@eepm.ru"
+
     if echo "$pkg" | grep -q "\.deb" ; then
         warning "Repack deb to deb is not supported yet."
     fi
