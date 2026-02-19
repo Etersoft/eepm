@@ -180,7 +180,8 @@ __epm_repack_if_needed()
     local f
     for f in "$@" ; do
         [ "$(get_package_type "$f")" = "$PKGFORMAT" ] && continue
-        docmd exec epm repack --install "$@"
+        docmd epm repack --install "$@"
+        exit
     done
     return 1
 }
