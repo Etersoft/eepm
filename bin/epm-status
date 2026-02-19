@@ -126,7 +126,7 @@ epm_status_supported() {
     local distro
     distro=$(epm print info -s)
     case "$distro" in
-        alt|redos|rosa*|mos|fedora|debian|ubuntu)
+        alt|redos|rosa*|mos|astra|fedora|debian|ubuntu)
             return 0
             ;;
         *)
