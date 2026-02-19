@@ -6,8 +6,9 @@ RETURNTARNAME="$2"
 
 . $(dirname $0)/common.sh
 
-# ungoogled-chromium_113.0.5672.127-1.1_linux.tar.xz
-PKGNAME="$(basename "$TAR" | sed -e 's|-[0-9].*||' -e 's|_|-|' )"
+# ungoogled-chromium-145.0.7632.75-1-x86_64_linux.tar.xz
+VERSION="$(basename "$TAR" | sed -e "s|.*${PRODUCT}[-_]||" -e 's|^\([0-9.]*\).*|\1|')"
+PKGNAME="$PRODUCT-$VERSION"
 
 mkdir opt/
 erc $TAR
@@ -19,7 +20,7 @@ cat <<EOF >$PKGNAME.tar.eepm.yaml
 name: $PRODUCT
 group: Networking/WWW
 license: BSD-3-Clause license
-url: https://www.sublimetext.com
+url: https://github.com/ungoogled-software/ungoogled-chromium-portablelinux
 summary: Google Chromium, sans integration with Google
 description: Google Chromium, sans integration with Google.
 EOF
