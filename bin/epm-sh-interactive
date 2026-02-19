@@ -112,7 +112,7 @@ __epm_suggest_similar()
     __epm_check_fzf || return 1
 
     local similar
-    similar="$(epm list $list_option | fzf -f "$pkg" 2>/dev/null | head -$count)"
+    similar="$(epm list $list_option | fzf -f "$pkg" 2>/dev/null | grep -v "^${pkg}$" | head -$count)"
     [ -z "$similar" ] && return 1
 
     # Interactive selection if enabled (via config or --interactive flag)
