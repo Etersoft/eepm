@@ -143,6 +143,36 @@ epm_status_validate()
     [ -n "$version" ]
 }
 
+__epm_status_have_sign()
+{
+    local pkg="$1"
+    local sig="$(epm print field sigpgp for "$pkg" 2>/dev/null)"
+    [ "$sig" != "(none)" ] && return 0
+    # check DSA signature (old packages signed with DSA key)
+    sig="$(epm print field siggpg for "$pkg" 2>/dev/null)"
+    [ "$sig" != "(none)" ]
+}
+
+epm_status_signed()
+{
+    local pkg="$1"
+    case $DISTRNAME in
+        ALTLinux)
+            # use alt-rpmkeys-checksig for cryptographic signature verification
+            assure_exists alt-rpmkeys-checksig alt-rpmkeys-utils || return 1
+            if [ -n "$quiet" ] ; then
+                alt-rpmkeys-checksig "$pkg" >/dev/null 2>&1
+            else
+                docmd alt-rpmkeys-checksig "$pkg"
+            fi
+            ;;
+        *)
+            # TODO: implement for other distros
+            return 1
+            ;;
+    esac
+}
+
 epm_status_original()
 {
     local pkg="$1"
