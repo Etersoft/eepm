@@ -11,12 +11,12 @@ URL="https://dbeaver.io/"
 pkgtype=$(epm print info -p)
 case $pkgtype in
     rpm)
-        PKGURL="https://dbeaver.io/files/$VERSION/dbeaver-ce-$VERSION-stable.x86_64.rpm"
-        [ "$VERSION" = "*" ] && PKGURL="https://dbeaver.io/files/dbeaver-ce-latest-stable.x86_64.rpm"
+        PKGURL="https://dbeaver.io/files/$VERSION/dbeaver-ce-$VERSION-linux-x86_64.rpm"
+        [ "$VERSION" = "*" ] && PKGURL="https://dbeaver.io/files/dbeaver-ce-latest-linux-x86_64.rpm"
         ;;
     *)
-        PKGURL="https://dbeaver.io/files/dbeaver-ce_latest_amd64.deb"
-        [ "$VERSION" = "*" ] && PKGURL="https://dbeaver.io/files/$VERSION/dbeaver-ce_$VERSION_amd64.deb"
+        PKGURL="https://dbeaver.io/files/$VERSION/dbeaver-ce-$VERSION-linux-x86_64.deb"
+        [ "$VERSION" = "*" ] && PKGURL="https://dbeaver.io/files/dbeaver-ce-latest-linux-x86_64.deb"
         ;;
 esac
 
