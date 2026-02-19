@@ -10,7 +10,11 @@ URL="https://mattermost.com/"
 
 arch="$(epm print info --debian-arch)"
 
-PKGURL=$(get_github_url "https://github.com/mattermost/desktop/" "$(epm print constructname $PKGNAME "$VERSION*" $arch "deb")")
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(get_github_url "https://github.com/mattermost/desktop/" "$(epm print constructname $PKGNAME "$VERSION*" $arch "deb")")
+else
+    PKGURL="https://github.com/mattermost/desktop/releases/download/v${VERSION}/$(epm print constructname $PKGNAME "${VERSION}-${RELEASE}" $arch "deb")"
+fi
 
 install_pkgurl
 
