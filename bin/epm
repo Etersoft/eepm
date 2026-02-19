@@ -623,6 +623,7 @@ check_option()
         put_to_repo="$(echo "$1" | sed -e 's|--put-to-repo=||')"
         ;;
     --update)              # HELPOPT: run update before install/upgrade
+        [ -n "$direct_args" ] && return 1
         update_repo="--update"
         ;;
     --download-only)       # HELPOPT: download only the package/tarball (before any transformation)
