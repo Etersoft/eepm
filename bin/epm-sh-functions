@@ -1129,6 +1129,10 @@ get_package_type()
             echo "AppImage"
             return
             ;;
+        *.pkg.tar.*)
+            echo "pkg.tar.$(echo "$1" | sed -e 's|.*\.pkg\.tar\.||')"
+            return
+            ;;
         *)
             if [ -r "$1" ] && file -L "$1" | grep -q " ELF " ; then
                 echo "ELF"
