@@ -171,7 +171,7 @@ extract_command() {
     if is_command tar; then
         docmd $cmd "$archive"
     else
-        docmd $HAVE_7Z x -so "$archive" | docmd $HAVE_7Z x -y -si -ttar
+        docmd $HAVE_7Z x -so "$archive" | extract_tar_stdin
     fi
 }
 
