@@ -79,6 +79,7 @@ zst
 zstd
 exe
 dll
+run
 AppImage
 appimage
 squashfs

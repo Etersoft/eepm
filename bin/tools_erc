@@ -94,6 +94,40 @@ extract_squashfs_image()
 	fi
 }
 
+# Extract makeself self-extracting archives (.run)
+extract_makeself()
+{
+	local arc="$1"
+	local subdir="$2"
+
+	# Extract header line count
+	# New makeself (2.4+): skip="715" variable
+	# Old makeself: head -n 588 (literal number)
+	local lines
+	lines=$(sed -n 's/^skip="\{0,1\}\([0-9]\{1,\}\)"\{0,1\}/\1/p' "$arc" | head -1)
+	if [ -z "$lines" ] ; then
+		lines=$(grep -am1 -oP '(?<=head -n )\d+' "$arc")
+	fi
+	[ -n "$lines" ] || fatal "Can't find header line count in makeself archive $arc"
+
+	# Calculate byte offset of payload
+	local offset
+	offset=$(head -n "$lines" "$arc" | wc -c | tr -d " ")
+
+	# Detect compression method for info message
+	local compress
+	compress=$(sed -n 's/^.*Compression: \(.*\)/\1/p' "$arc" | head -1)
+	if [ -z "$compress" ] ; then
+		compress=$(sed -n "s/^COMPRESS=//p" "$arc" | head -1 | tr -d "'\"")
+	fi
+	echo "Extracting makeself archive (compression: ${compress:-gzip}, header: $lines lines, offset: $offset bytes)" >&2
+
+	mkdir -p "$subdir" && cd "$subdir" || fatal
+
+	# Extract payload, auto-detect compression via ercat, untar
+	dd if="$arc" ibs="$offset" skip=1 obs=1024 conv=sync 2>/dev/null | "$PROGDIR/ercat" | extract_tar_stdin
+}
+
 # Extract AppImage archives
 extract_appimage()
 {
@@ -137,6 +171,9 @@ extract_special_archive()
 	case "$type" in
 		exe|dll)
 			extract_7z_to_subdir "$arc" "$subdir"
+			;;
+		run)
+			extract_makeself "$arc" "$subdir"
 			;;
 		AppImage|appimage)
 			extract_appimage "$arc" "$subdir"
