@@ -18,7 +18,8 @@ if echo "$TAR" | grep -q "plugin_run\.zip$" ; then
 fi
 
 # https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=hplip-plugin
-sh $TAR --target . --noexec --nox11 || exit
+erc unpack $TAR || exit
+cd "$(erc basename $TAR)" || exit
 
 case "$(epm print info -a)" in
     x86_64)
