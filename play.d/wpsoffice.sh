@@ -13,6 +13,7 @@ TIPS="Run epm play wpsoffice=<version> to install some specific version"
 if [ "$VERSION" = "*" ] ; then
     VERSION="$(eget -O- https://www.wps.com/whatsnew/linux/ | grep -oP "\W(\d+\.\d+\.\d+\.\d+)\W" | grep -oP "\d+\.\d+\.\d+\.\d+" | head -n1)" #"
     VERSION="${VERSION}.XA"
+    RELEASE="1"
 fi
 
 mversion=$(echo "$VERSION" | sed -e 's|\.XA$||' -e 's|.*\.||')
