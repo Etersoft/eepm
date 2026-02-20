@@ -6,8 +6,10 @@ RETURNTARNAME="$2"
 
 . $(dirname $0)/common.sh
 
-mkdir -p opt/$PRODUCT && cd opt/$PRODUCT || fatal
-sh $TAR --tar xvf || exit
+erc unpack $TAR || exit
+mkdir -p opt
+mv "$(erc basename $TAR)" opt/$PRODUCT
+cd opt/$PRODUCT || fatal
 chmod a+rX -R *
 
 # Remove bundled libraries (embedded Qt needs libevent-2.1.so.7
