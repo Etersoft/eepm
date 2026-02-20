@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME="GitHubDesktop-linux"
+PKGNAME="GitHubDesktop"
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="GitHub Desktop is an open-source Electron-based GitHub app"
