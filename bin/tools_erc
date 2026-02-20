@@ -17,17 +17,17 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-PROGDIR=$(dirname $0)
+PROGDIR=$(dirname "$0")
 [ "$PROGDIR" = "." ] && PROGDIR=$(pwd)
 
 # will replaced to /usr/share/erc during install
-SHAREDIR=$(dirname $0)
+SHAREDIR=$(dirname "$0")
 
 load_helper()
 {
     local CMD="$SHAREDIR/$1"
     [ -r "$CMD" ] || fatal "Have no $CMD helper file"
-    . $CMD
+    . "$CMD"
 }
 
 load_helper erc-sh-functions
@@ -335,7 +335,7 @@ __repack_via_tmp()
 	dfile="$(realpath -s "$2")"
 	ddir="$(dirname "$dfile")"
 	tdir="$(mktemp -d "$ddir/UXXXXXXXX")" && cd "$tdir" || fatal
-	trap "rm -fr $tdir" EXIT
+	trap 'rm -fr "$tdir"' EXIT
 	extract_archive "$sfile" || fatal
 	create_archive "$dfile" "."
 	#cd - >/dev/null
@@ -470,7 +470,7 @@ set_backend
 
 cmd="$1"
 
-eval lastarg=\${$#}
+lastarg="${@: -1}"
 
 # Just printout help if run without args
 if [ -z "$cmd" ] ; then
