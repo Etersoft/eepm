@@ -222,9 +222,14 @@ __epm_repack_single()
                 # we have repack rules only for rpm, so use rpm step in any case
                 load_helper epm-repack-rpm
                 load_helper epm-repack-deb
+                # save original deb depends before deb→rpm conversion
+                local orig_deb_depends=""
+                if [ "$(get_package_type "$pkg")" = "deb" ] ; then
+                    orig_deb_depends="$(epm requires "$pkg" 2>/dev/null)"
+                fi
                 __epm_repack_to_rpm "$pkg" "$packversion" "$packrelease" || return
                 [ -n "$repacked_pkg" ] || return
-                __epm_repack_to_deb $repacked_pkg || return
+                __epm_repack_to_deb $repacked_pkg "$orig_deb_depends"
             else
                 load_helper epm-repack-deb
                 __epm_repack_to_deb "$pkg" || return

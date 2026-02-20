@@ -19,9 +19,11 @@
 
 
 # fills repacked_pkg
+# args: pkg [orig_deb_depends]
 __epm_repack_to_deb()
 {
     local pkg="$1"
+    local orig_deb_depends="$2"
 
     assure_exists alien
     assure_exists fakeroot
@@ -49,15 +51,35 @@ __epm_repack_to_deb()
         cd $TDIR || fatal
         __prepare_source_package "$(pwd)/$alpkg"
 
-        showcmd_store_output fakeroot alien -d -k $verbose $scripts "$alpkg"
-        local DEBCONVERTED=$(grep "deb generated" $RC_STDOUT | sed -e "s| generated||g")
+        # generate debian/ dir without building
+        docmd alien --single -k $verbose $scripts "$alpkg"
+
+        # find the generated source directory
+        local debsrcdir
+        debsrcdir="$(ls -1d */ 2>/dev/null | head -n1)"
+        if [ -z "$debsrcdir" ] ; then
+            warning 'Can'\''t find alien generated directory for $pkg'
+            cd - >/dev/null
+            return 1
+        fi
+
+        # inject original deb depends into debian/control
+        if [ -n "$orig_deb_depends" ] ; then
+            info "Injecting Depends: $orig_deb_depends"
+            sed -i -e "s|\${shlibs:Depends}|$orig_deb_depends|" "$debsrcdir"debian/control
+        fi
+
+        # build the deb
+        ( cd "$debsrcdir" && a= fakeroot debian/rules binary )
+
+        local DEBCONVERTED
+        DEBCONVERTED="$(ls -1 *.deb 2>/dev/null | head -n1)"
         if [ -n "$DEBCONVERTED" ] ; then
             repacked_pkg="$repacked_pkg $(realpath $DEBCONVERTED)"
             remove_on_exit "$(realpath $DEBCONVERTED)"
         else
             warning 'Can'\''t find converted deb for source binary package $pkg'
         fi
-        clean_store_output
         cd - >/dev/null
 
     return 0
