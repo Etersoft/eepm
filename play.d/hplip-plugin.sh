@@ -20,8 +20,12 @@ export EGET_OPTIONS="--user-agent"
 if [ "$(epm print compare "$VERSION" 3.25.2)" != "-1" ] ; then
     PKGURL="$(eget --list https://developers.hp.com/hp-linux-imaging-and-printing/plugins "hplip-$VERSION-plugin.run")"
 else
-    # https://www.openprinting.org/download/printdriver/auxfiles/HP/plugins/hplip-$VERSION-plugin.run
     PKGURL="https://developers.hp.com/sites/default/files/hplip-$VERSION-plugin.run"
+fi
+
+# fallback to openprinting.org mirror if HP site is not accessible
+if [ -z "$PKGURL" ] || ! eget --check-url "$PKGURL" ; then
+    PKGURL="https://www.openprinting.org/download/printdriver/auxfiles/HP/plugins/hplip-$VERSION-plugin.run"
 fi
 
 install_pack_pkgurl
