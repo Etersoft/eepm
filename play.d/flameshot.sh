@@ -11,6 +11,7 @@ URL="https://github.com/flameshot-org/flameshot"
 
 if [ "$VERSION" = "*" ] ; then
     VERSION="$(get_github_tag https://github.com/flameshot-org/flameshot)"
+    RELEASE="1"
 fi
 
 pkgtype=$(epm print info -p)
