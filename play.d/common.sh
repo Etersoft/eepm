@@ -353,7 +353,7 @@ get_github_tag()
     for item in $(seq 0 100) ; do
         local val
         val=$(jv $item "tag_name")
-        [ -n "$val" ] || return
+        [ -n "$val" ] || break
         echo "Checking for [$item,$val] ..." >&2
         #[0,"draft"]     false
         #[0,"prerelease"]        true
@@ -363,8 +363,10 @@ get_github_tag()
         break
     done
 
-    echo "$val" | grep -oP '[0-9]+(\.[0-9]+)*(-[0-9]+)?' | head -n1
-    return
+    local version
+    version="$(echo "$val" | grep -oP '[0-9]+(\.[0-9]+)*(-[0-9]+)?' | head -n1)"
+    [ -n "$version" ] || fatal "Can't get tag from GitHub. Check network or use epm play <app>=<version>"
+    echo "$version"
 }
 
 print_product_alt()
