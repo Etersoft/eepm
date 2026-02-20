@@ -2,8 +2,10 @@
 
 PKGNAME=mssql-server
 SUPPORTEDARCHES="x86_64"
-DESCRIPTION="MS SQL Server 2019 from the official site"
+VERSION="$2"
+DESCRIPTION="MS SQL Server from the official site"
 URL="https://packages.microsoft.com/"
+TIPS="Run 'epm play mssql-server=2022' to install other year (2017, 2019, 2022, 2025, preview)."
 
 if [ "$1" = "--remove" ] ; then
     epm remove $PKGNAME
@@ -14,6 +16,20 @@ fi
 
 . $(dirname $0)/common.sh
 
+# Default year is 2019 (tracked in app-versions)
+MSSQL_YEAR=2019
+
+case "$VERSION" in
+    2017|2019|2022|2025|preview)
+        MSSQL_YEAR="$VERSION"
+        VERSION="*"
+        ;;
+    ""|"*")
+        ;;
+    *)
+        warn_version_is_not_supported
+        ;;
+esac
 
 serv mssql-server stop
 
@@ -24,19 +40,19 @@ case "$(epm print info -e)" in
   AstraLinuxSE/1.7)
     # libc++1 is available in Astra repos, no need for external Debian repo
     epm install libc++1
-    epm install --repack https://packages.microsoft.com/ubuntu/18.04/mssql-server-2019/pool/main/m/mssql-server/mssql-server_1*_amd64.deb
+    epm install https://packages.microsoft.com/ubuntu/20.04/mssql-server-$MSSQL_YEAR/pool/main/m/mssql-server/mssql-server_1*_amd64.deb
     ;;
   AstraLinuxSE/1.8)
-    epm install https://packages.microsoft.com/ubuntu/20.04/mssql-server-2019/pool/main/m/mssql-server/mssql-server_1*_amd64.deb
+    epm install https://packages.microsoft.com/ubuntu/20.04/mssql-server-$MSSQL_YEAR/pool/main/m/mssql-server/mssql-server_1*_amd64.deb
     ;;
   ALTLinux/p10|ALTLinux/c10f2)
-    epm install --repack https://packages.microsoft.com/rhel/8/mssql-server-2019/Packages/m/mssql-server-[0-9]*.x86_64.rpm || fatal
+    epm install --repack https://packages.microsoft.com/rhel/8/mssql-server-$MSSQL_YEAR/Packages/m/mssql-server-[0-9]*.x86_64.rpm || fatal
     ;;
   ALTLinux*)
-    epm install --repack https://packages.microsoft.com/rhel/9/mssql-server-2022/Packages/m/mssql-server-[0-9]*.x86_64.rpm || fatal
+    epm install --repack https://packages.microsoft.com/rhel/9/mssql-server-$MSSQL_YEAR/Packages/m/mssql-server-[0-9]*.x86_64.rpm || fatal
     ;;
   Ubuntu*)
-    epm install https://packages.microsoft.com/$dname/$dversion/mssql-server-2022/pool/main/m/mssql-server/mssql-server_1*_amd64.deb
+    epm install https://packages.microsoft.com/$dname/$dversion/mssql-server-$MSSQL_YEAR/pool/main/m/mssql-server/mssql-server_1*_amd64.deb
     ;;
   *)
     fatal "$(epm print info -d) is not supported yet."
