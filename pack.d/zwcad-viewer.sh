@@ -8,16 +8,19 @@ VERSION="$3"
 
 # ZWCAD_Viewer_Beta.tar.gz
 BASENAME=$(basename $1 .tar.gz)
-mkdir -p opt/ZWCADViewer
-mkdir -p usr/
-mkdir -p etc/xdg/menus/applications-merged
 
 erc unpack $TAR || fatal
 
 RUN_NAME=$(echo ZWCAD*.run)
 
 # unpacking .run archive
-sh $RUN_NAME --target temp/zwcad-viewer
+erc unpack $RUN_NAME || fatal
+cd "$(erc basename $RUN_NAME)" || fatal
+
+mkdir -p opt/ZWCADViewer
+mkdir -p usr/
+mkdir -p etc/xdg/menus/applications-merged
+
 mv ZWCADViewer opt/zwcad-viewer
 
 # move file in right directories
