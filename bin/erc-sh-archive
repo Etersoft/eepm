@@ -155,6 +155,15 @@ get_archive_type()
 	return 1
 }
 
+# Extract tar from stdin
+extract_tar_stdin() {
+    if is_command tar ; then
+        docmd tar -xhf -
+    else
+        docmd $HAVE_7Z x -y -si -ttar
+    fi
+}
+
 extract_command() {
     local cmd="$1"
     local archive="$2"
