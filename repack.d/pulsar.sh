@@ -15,7 +15,7 @@ add_unirequires coreutils findutils grep sed /usr/bin/git /usr/bin/node /usr/bin
 
 install_file $PRODUCTDIR/resources/pulsar.sh /usr/bin/$PRODUCT
 chmod a+x $BUILDROOT/usr/bin/$PRODUCT
-add_bin_link_command ppm $PRODUCTDIR/resources/app/ppm/bin/apm
+add_bin_link_command ppm $PRODUCTDIR/resources/app/ppm/bin/ppm
 
 # replace embedded xdg-open
 for EMBDIR in $PRODUCTDIR/resources/app/ppm/node_modules/open/xdg-open ; do
