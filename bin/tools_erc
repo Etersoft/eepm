@@ -94,11 +94,10 @@ extract_squashfs_image()
 	fi
 }
 
-# Extract makeself self-extracting archives (.run)
-extract_makeself()
+# Extract makeself payload as tar stream to stdout
+extract_makeself_tar()
 {
 	local arc="$1"
-	local subdir="$2"
 
 	# Extract header line count
 	# New makeself (2.4+): skip="715" variable
@@ -122,10 +121,17 @@ extract_makeself()
 	fi
 	echo "Extracting makeself archive (compression: ${compress:-gzip}, header: $lines lines, offset: $offset bytes)" >&2
 
-	mkdir -p "$subdir" && cd "$subdir" || fatal
+	# Extract payload, auto-detect compression via ercat
+	dd if="$arc" ibs="$offset" skip=1 obs=1024 conv=sync 2>/dev/null | "$PROGDIR/ercat"
+}
 
-	# Extract payload, auto-detect compression via ercat, untar
-	dd if="$arc" ibs="$offset" skip=1 obs=1024 conv=sync 2>/dev/null | "$PROGDIR/ercat" | extract_tar_stdin
+# Extract makeself self-extracting archives (.run)
+extract_makeself()
+{
+	local arc="$1"
+	local subdir="$2"
+	mkdir -p "$subdir" && cd "$subdir" || fatal
+	extract_makeself_tar "$arc" | extract_tar_stdin
 }
 
 # Extract AppImage archives
@@ -342,8 +348,27 @@ __repack_via_tmp()
 	#rm -fr "$tdir"
 }
 
+# Repack special archive types that are not supported by patool
+repack_special_archive()
+{
+	local ftype="$(get_archive_type "$1")"
+	case "$ftype" in
+		run)
+			# makeself payload is already tar, just decompress
+			extract_makeself_tar "$1" > "$2"
+			exit
+			;;
+		exe|dll|AppImage|appimage|squashfs|snap)
+			__repack_via_tmp "$1" "$2"
+			exit
+			;;
+	esac
+}
+
 repack_archive()
 {
+	repack_special_archive "$1" "$2"
+
 	if have_patool ; then
 		docmd patool $verbose repack "$1" "$2"
 		return
