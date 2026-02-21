@@ -111,6 +111,26 @@ __notify_about_epm_version()
     __check_for_epm_version --notify
 }
 
+__epm_update_command_packages_cache()
+{
+    [ "$BASEDISTRNAME" = "alt" ] || return 0
+
+    load_helper epm-sh-altlinux-contents-index
+    check_alt_contents_index || return 0
+
+    local CI="$(cat $ALT_CONTENTS_INDEX_LIST 2>/dev/null)"
+    [ -n "$CI" ] || return 0
+
+    info "Building command-to-package cache ..."
+    # contents_index format: filepath\tpackage
+    # filter bin/sbin paths, extract command name and package
+    ercat $quiet $CI | \
+        grep -E "^/(s?bin|usr/s?bin)/[^/]+	" | \
+        sed -e 's|.*/\([^/]*\)\t\(.*\)|\1\t\2|' | \
+        LC_ALL=C sort -u | \
+        sudorun tee "$epm_vardir/command-packages" >/dev/null
+}
+
 __epm_update_content_index()
 {
 case $BASEDISTRNAME in
@@ -320,6 +340,8 @@ epm_update()
     __epm_available_save_cache
 
     __epm_update_content_index
+
+    __epm_update_command_packages_cache
 
     return 0
 }
