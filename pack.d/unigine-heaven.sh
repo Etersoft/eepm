@@ -10,7 +10,7 @@ OPKGNAME="Unigine_Heaven"
 
 BASENAME="$(basename $TAR .run | tr "[A-Z_]" "[a-z-]")"
 
-erc convert $TAR $BASENAME.tar || fatal
+erc repack $TAR $BASENAME.tar || fatal
 
 cat <<EOF >$BASENAME.tar.eepm.yaml
 name: $PRODUCT
