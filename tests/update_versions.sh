@@ -13,7 +13,8 @@ EDIR=$LOGDIR/epm-errors
 LDIR=$LOGDIR/epm-logs
 RDIR=$LOGDIR/epm-requires
 FDIR=$LOGDIR/epm-filelist
-mkdir -p $TDIR/ $EDIR/ $LDIR/ $RDIR/ $FDIR/
+LOCKDIR=$LOGDIR/epm-locks
+mkdir -p $TDIR/ $EDIR/ $LDIR/ $RDIR/ $FDIR/ $LOCKDIR/
 
 rm -f $EDIR/errors.txt
 
@@ -27,11 +28,20 @@ install_app()
     local alt="$2"
     [ -n "$alt" ] && applog="$applog=$alt" && alt=" = $alt"
 
+    # skip if another instance is already building this app
+    local lockfile="$LOCKDIR/$app.lock"
+    exec 9>"$lockfile"
+    if ! flock -n 9 ; then
+        echo "epm play $playopt $app $alt ...SKIPPED (locked)"
+        exec 9>&-
+        return 0
+    fi
+
     echo -n "epm play $playopt $app $alt ..."
     timeout 1h $EPM play $playopt --verbose --auto $app $alt >$EDIR/$applog 2>&1
     local RES=$?
     [ "$RES" = 0 ] && echo "OK" || echo "FAILED"
-    [ "$RES" = 0 ] || return $RES
+    [ "$RES" = 0 ] || { exec 9>&- ; return $RES ; }
 
     mv -f $EDIR/$applog $LDIR/$applog
 
@@ -46,6 +56,8 @@ install_app()
     [ -s $TDIR/$pkgname ] || echo "empty file $TDIR/$pkgname" >>$EDIR/errors.txt
     $EPM req $pkgname >$RDIR/$applog
     $EPM ql $pkgname >$FDIR/$applog
+
+    exec 9>&-
 }
 
 install_app_alt()
