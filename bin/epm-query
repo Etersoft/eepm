@@ -348,10 +348,13 @@ __epm_query_shortname()
 # keep here, all modules and epm-query use is_installed from epm-query
 # see epm-installed
 
-# check if pkg is installed
+# check if pkg is installed (also checks virtual packages via provides)
 is_installed()
 {
-    (quiet=1 __epm_query_name "$@") >/dev/null 2>/dev/null
+    (quiet=1 __epm_query_name "$@") >/dev/null 2>/dev/null && return 0
+    # check if it is a virtual package with installed provider
+    load_helper epm-whatprovides
+    (quiet=1 __epm_whatprovides_installed "$@") >/dev/null 2>/dev/null
 }
 
 filter_pkgnames_to_short()
