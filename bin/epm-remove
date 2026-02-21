@@ -381,6 +381,9 @@ epm_remove()
         pkg_names="$(get_only_installed_packages $pkg_names)"
     fi
 
+    # resolve virtual package names to real installed package names
+    pkg_names="$(resolve_virtual_packages $pkg_names)"
+
     epm_remove_low $pkg_names && return
     local STATUS=$?
 
