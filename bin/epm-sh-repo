@@ -17,6 +17,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+load_helper epm-sh-search
+
 # APT sources paths with test isolation support (EPM_APT_SOURCES_ROOT)
 APT_SOURCES_LIST="${EPM_APT_SOURCES_ROOT%/}/etc/apt/sources.list"
 APT_SOURCES_LIST_D="${EPM_APT_SOURCES_ROOT%/}/etc/apt/sources.list.d"
@@ -128,8 +130,8 @@ __filter_repos_list()
     done
 
     # convert glob to regexp
-    list=$(__convert_glob__to_regexp "$list")
-    listN=$(__convert_glob__to_regexp "$listN")
+    list=$(__epm_glob_to_regexp "$list")
+    listN=$(__epm_glob_to_regexp "$listN")
 
     listN=$(strip_spaces $listN | sed -e 's/ /|/g')
 

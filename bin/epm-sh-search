@@ -40,15 +40,15 @@ __epm_get_longest_word()
     echo "$longest"
 }
 
-# Convert glob pattern to regexp, preserving [] for character classes
-# Supports: * ? [abc] [a-z] [!abc]
+# Convert glob pattern to regexp
+# Supports: * ? ^ $ (|) [abc] [!abc] \[ \]
 __epm_glob_to_regexp()
 {
     local pattern="$1"
-    # escape regex special chars except [] * ?
-    # then convert glob to regexp
+    # escape: . { } +
+    # keep \ ^ $ ( ) | [ ] for extended patterns and escaping
     echo "$pattern" | sed \
-        -e 's|[\\.^$|(){}+]|\\&|g' \
+        -e 's|[.{}+]|\\&|g' \
         -e 's|\*|.*|g' \
         -e 's|?|.|g' \
         -e 's|\[!|\[^|g'
