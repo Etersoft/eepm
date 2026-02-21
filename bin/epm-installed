@@ -33,5 +33,15 @@ separate_installed()
 epm_installed()
 {
     [ -n "$pkg_names" ] || fatal "is_installed: package name is missed"
+    case "$pkg_options" in
+        --virtual)          # HELPOPT: check if virtual package has an installed provider
+            is_installed_virtual "$pkg_names"
+            return
+            ;;
+        --real)             # HELPOPT: check if real (non-virtual) package is installed
+            is_installed_real "$pkg_names"
+            return
+            ;;
+    esac
     is_installed "$pkg_names"
 }

@@ -19,6 +19,7 @@
 
 load_helper epm-packages
 load_helper epm-print
+load_helper epm-whatprovides
 
 # pkg suffix
 __print_with_arch_suffix()
@@ -351,15 +352,21 @@ __epm_query_shortname()
 # check if pkg is installed (also checks virtual packages via provides)
 is_installed()
 {
-    (quiet=1 __epm_query_name "$@") >/dev/null 2>/dev/null && return 0
-    is_installed_virtual "$@"
+    is_installed_real "$@" && return 0
+    (quiet=1 __epm_whatprovides_installed "$@") >/dev/null 2>/dev/null
 }
 
-# check if a virtual package has an installed provider
+# check if a virtual package has an installed provider (but not a real package itself)
 is_installed_virtual()
 {
-    load_helper epm-whatprovides
+    is_installed_real "$@" && return 1
     (quiet=1 __epm_whatprovides_installed "$@") >/dev/null 2>/dev/null
+}
+
+# check if real (non-virtual) package is installed
+is_installed_real()
+{
+    (quiet=1 __epm_query_name "$@") >/dev/null 2>/dev/null
 }
 
 filter_pkgnames_to_short()
