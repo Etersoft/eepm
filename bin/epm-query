@@ -369,6 +369,26 @@ is_installed_real()
     (quiet=1 __epm_query_name "$@") >/dev/null 2>/dev/null
 }
 
+# resolve virtual package names to real installed package names (single provider only)
+resolve_virtual_packages()
+{
+    local i
+    for i in "$@" ; do
+        if ! is_installed_virtual "$i" ; then
+            echo "$i"
+            continue
+        fi
+        local providers
+        providers="$(short=1 __epm_whatprovides_installed "$i" 2>/dev/null)"
+        if [ "$(echo "$providers" | wc -l)" = "1" ] ; then
+            info 'Resolved virtual package $i to $providers'
+            echo "$providers"
+        else
+            echo "$i"
+        fi
+    done
+}
+
 filter_pkgnames_to_short()
 {
     local names="$(cat)"
