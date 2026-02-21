@@ -122,7 +122,7 @@ extract_makeself_tar()
 	echo "Extracting makeself archive (compression: ${compress:-gzip}, header: $lines lines, offset: $offset bytes)" >&2
 
 	# Extract payload, auto-detect compression via ercat
-	dd if="$arc" ibs="$offset" skip=1 obs=1024 conv=sync 2>/dev/null | "$PROGDIR/ercat"
+	dd if="$arc" ibs="$offset" skip=1 obs=1024 conv=sync 2>/dev/null | "$PROGDIR/tools_ercat"
 }
 
 # Extract makeself self-extracting archives (.run)
