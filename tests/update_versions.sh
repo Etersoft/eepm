@@ -28,7 +28,7 @@ install_app()
     [ -n "$alt" ] && applog="$applog=$alt" && alt=" = $alt"
 
     echo -n "epm play $playopt $app $alt ..."
-    $EPM play $playopt --verbose --auto $app $alt >$EDIR/$applog 2>&1
+    timeout 1h $EPM play $playopt --verbose --auto $app $alt >$EDIR/$applog 2>&1
     local RES=$?
     [ "$RES" = 0 ] && echo "OK" || echo "FAILED"
     [ "$RES" = 0 ] || return $RES
