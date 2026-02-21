@@ -23,7 +23,8 @@ load_helper epm-sh-repo
 epm_repolist_help()
 {
     message 'epm repo list - list package repositories
-Usage: epm repo list [options] [pattern]'
+Usage: epm repo list [options] [pattern]
+       epm repo list task NUMBER [NUMBER ...]'
     echo ''
     echog 'Options:'
     get_help HELPOPT $SHAREDIR/epm-repolist
@@ -162,6 +163,15 @@ while [ -n "$1" ] ; do
     esac
     shift
 done
+
+# Handle "task NUMBER" argument
+if [ "$1" = "task" ] ; then
+    shift
+    [ -n "$1" ] || fatal "Task number is required"
+    load_helper epm-sh-backend
+    __generate_task_sourceslist "$@"
+    return
+fi
 
 # TODO
 [ -z "$*" ] || [ "$PMTYPE" = "apt-rpm" ] || [ "$PMTYPE" = "apm-rpm" ] || [ "$PMTYPE" = "apt-dpkg" ] || fatal "No arguments are allowed here"
