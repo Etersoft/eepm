@@ -2360,7 +2360,7 @@ get_urls()
     if echo "$content" | grep -q '<' ; then
         # HTML format (wget FTP, HTTP): parse href attributes
         echo "$content" | sed -e 's|<|<\n|g' -e 's|data-file=|href=|g' -e "s|href=http|href=\"http|g" -e "s|>|\">|g" -e "s|'|\"|g" | \
-             grep -i -o -E 'href="(.+)"' | sed -e 's|&amp;|\&|' | cut -d'"' -f2 | sed -e 's|^ *||g' -e 's| *$||g'
+             grep -i -o -E 'href="(.+)"' | sed -e 's|&amp;|\&|' | cut -d'"' -f2 | sed -e 's|^ *||g' -e 's| *$||g' | grep -v '^\.\.\?/\?$'
     else
         # ls -l format (curl FTP): extract last field (filename)
         echo "$content" | awk '{print $NF}'
