@@ -352,7 +352,12 @@ __epm_query_shortname()
 is_installed()
 {
     (quiet=1 __epm_query_name "$@") >/dev/null 2>/dev/null && return 0
-    # check if it is a virtual package with installed provider
+    is_installed_virtual "$@"
+}
+
+# check if a virtual package has an installed provider
+is_installed_virtual()
+{
     load_helper epm-whatprovides
     (quiet=1 __epm_whatprovides_installed "$@") >/dev/null 2>/dev/null
 }
