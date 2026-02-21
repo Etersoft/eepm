@@ -110,10 +110,27 @@ search_play_fuzzy()
     "$SHAREDIR/epm" --fuzzy=$CNF_MAX_SUGGESTIONS play --short --search "$cmd" 2>/dev/null
 }
 
-# Search for package providing command via epm sf
+COMMAND_CACHE="/var/lib/eepm/command-packages"
+
+# Search for package providing command
+# Uses cached command-to-package lookup if available, falls back to epm sf
 search_package()
 {
     local cmd="$1"
+
+    # Try cached lookup first (built by epm update)
+    if [ -s "$COMMAND_CACHE" ] ; then
+        if command -v look >/dev/null 2>&1 ; then
+            # Binary search O(log n), ~2ms
+            look -t "	" "$cmd	" "$COMMAND_CACHE" | head -1 | cut -f2
+        else
+            # Linear search on ~800KB file, still fast
+            grep -m1 "^${cmd}	" "$COMMAND_CACHE" | cut -f2
+        fi
+        return
+    fi
+
+    # Fallback: full search via epm sf
     # Search in /bin, /sbin, /usr/bin, /usr/sbin
     # --tsv output format: "package\t/path/to/file"
     "$SHAREDIR/epm" sf --tsv --regexp "/(s?bin|usr/s?bin)/$cmd\$" 2>/dev/null | head -1 | cut -f1
