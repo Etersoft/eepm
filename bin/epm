@@ -173,6 +173,7 @@ ipfs=
 exclude=
 force_overwrite=
 norecommends=
+regexp=
 
 epm_vardir=/var/lib/eepm
 epm_cachedir=/var/cache/eepm
@@ -658,6 +659,9 @@ check_option()
         ;;
     --norecommends|--no-recommends)  # HELPOPT: skip recommended packages during install
         norecommends="--norecommends"
+        ;;
+    --regex|--regexp)        # HELPOPT: treat search pattern as regular expression (for grep filter only)
+        regexp="--regexp"
         ;;
     --manual-requires)       # HELPOPT: includes all package dependencies in the install/uninstall list
         manual_requires="--manual-requires"
