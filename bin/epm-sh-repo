@@ -107,7 +107,7 @@ __deb822_remove()
 # Usage: echo "$lines" | __filter_repos_list pattern1 pattern2 ~exclude
 __filter_repos_list()
 {
-    local i
+    local i pattern
     [ -z "$*" ] && cat && return
 
     # Check if this is a full repo line (rpm or deb) - use literal matching for the entire string
@@ -116,34 +116,25 @@ __filter_repos_list()
         return
     fi
 
-    local list=""
-    local listN=""
-    for i in "$@" ; do
-        case "$i" in
-            ~*)
-                listN="$listN ${i#\~}"
-                ;;
-            *)
-                list="$list $i"
-                ;;
-        esac
-    done
-
-    # convert glob to regexp
-    list=$(__epm_glob_to_regexp "$list")
-    listN=$(__epm_glob_to_regexp "$listN")
-
-    listN=$(strip_spaces $listN | sed -e 's/ /|/g')
-
     local result
     result="$(cat)"
 
-    # exclude patterns
-    [ -n "$listN" ] && result="$(echo "$result" | grep -E -i -v -- "$listN")"
-
-    # include patterns (AND)
-    for i in $list ; do
-        result="$(echo "$result" | grep -E -i -- "$i")"
+    # process each argument preserving spaces in patterns
+    for i in "$@" ; do
+        case "$i" in
+            ~*)
+                # exclusion pattern
+                pattern="${i#\~}"
+                [ -z "$regexp" ] && pattern=$(__epm_glob_to_regexp "$pattern")
+                result="$(echo "$result" | grep -E -i -v -- "$pattern")"
+                ;;
+            *)
+                # inclusion pattern (AND logic)
+                pattern="$i"
+                [ -z "$regexp" ] && pattern=$(__epm_glob_to_regexp "$pattern")
+                result="$(echo "$result" | grep -E -i -- "$pattern")"
+                ;;
+        esac
     done
 
     [ -n "$result" ] && echo "$result"
