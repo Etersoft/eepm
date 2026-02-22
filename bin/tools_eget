@@ -935,7 +935,7 @@ put_cid_and_url()
 
     is_fileurl "$URL" && return
 
-    local ac="$(get_url_by_cid)"
+    local ac="$(get_url_by_cid "$CID")"
     if [ "$ac" = "$URL" ] ; then
         info "CID $CID is already exist as the same URL $URL in IPFS DB, skipping"
         return
@@ -954,6 +954,7 @@ get_filename_by_cid()
 get_url_by_cid()
 {
     local CID="$1"
+    [ -z "$CID" ] && fatal "get_url_by_cid: CID is empty"
     [ -z "$EGET_IPFS_DB" ] && echo "$CID" && return
     __eget_ipfs_db_tac | grep -F " $CID " | head -n1 | cut -f1 -d" "
 }
