@@ -8,7 +8,7 @@ URL="https://www.guardant.ru/support/users/download/1223/"
 
 . $(dirname $0)/common.sh
 
-[ "$VERSION" = "*" ] && VERSION="$(basename $(eget --list --latest https://download.guardant.ru/LM/Linux/ '*/'))"
+[ "$VERSION" = "*" ] && VERSION="$(basename "$(eget --list --latest https://download.guardant.ru/LM/Linux/ '*/')")"
 [ -n "$VERSION" ] || fatal "Can't get version."
 
 shortarch=x64

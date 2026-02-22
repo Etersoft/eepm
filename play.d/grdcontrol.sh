@@ -8,7 +8,7 @@ URL="https://www.guardant.ru/support/users/control-center/"
 
 . $(dirname $0)/common.sh
 
-[ "$VERSION" = "*" ] && VERSION="$(basename $(eget --list --latest https://download.guardant.ru/Guardant_Control_Center/ '*/'))"
+[ "$VERSION" = "*" ] && VERSION="$(basename "$(eget --list --latest https://download.guardant.ru/Guardant_Control_Center/ '*/')")"
 [ -n "$VERSION" ] || fatal "Can't get version."
 
 pkgtype="$(epm print info -p)"
