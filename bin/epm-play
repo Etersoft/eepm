@@ -678,8 +678,13 @@ case "$1" in
         local list
         if [ "$1" = "all" ] ; then
             shift
-            info "Retrieving list of installed apps ..."
-            list="$(__list_installed_app)"
+            info "Checking for available updates ..."
+            list="$(short=1 __list_available_updates)"
+            if [ -z "$list" ] ; then
+                info "All installed applications are up to date."
+                exit
+            fi
+            info "Apps to update: $(echo $list | wc -w)"
         else
             list="$*"
         fi
