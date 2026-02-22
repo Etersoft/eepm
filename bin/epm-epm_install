@@ -102,7 +102,7 @@ __epm_korinf_install_eepm()
 
     pkg_list="eepm"
     # preserve already installed eepm-*
-    for i in repack play ; do
+    for i in repack play full command-not-found ; do
        is_installed eepm-$i && pkg_list="$pkg_list eepm-$i"
     done
 
