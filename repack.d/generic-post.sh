@@ -15,6 +15,7 @@ add_libs_requires
 
 # remove temp files
 rm -f "$BUILDROOT/.eepm_ignore_lib_requires"
+rm -f "$BUILDROOT/.eepm_ignore_lib_path"
 rm -f "$BUILDROOT/.eepm_stop_libs_requires"
 
 # remove forbidden paths owned by the filesystem package to avoid conflicts

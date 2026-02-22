@@ -547,7 +547,10 @@ __get_binary_requires()
     local fdir="$1"
     local d
     local findex
-    
+
+    # load ignored paths from file (persisted across script invocations)
+    [ -f "$BUILDROOT/.eepm_ignore_lib_path" ] && EEPM_IGNORE_LIB_PATH="$EEPM_IGNORE_LIB_PATH $(cat "$BUILDROOT/.eepm_ignore_lib_path" | tr '\n' ' ')"
+
     # prepare case for ignored path
     for d in $EEPM_IGNORE_LIB_PATH ; do
        info "  Skipping $d ..."
@@ -673,6 +676,7 @@ ignore_lib_requires()
 ignore_library_path()
 {
    EEPM_IGNORE_LIB_PATH="$EEPM_IGNORE_LIB_PATH $@"
+   echo "$@" | xargs -n1 >> "$BUILDROOT/.eepm_ignore_lib_path"
 }
 
 
