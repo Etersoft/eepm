@@ -19,15 +19,11 @@ cat <<EOF | create_exec_file /usr/bin/$PRODUCT
 #!/bin/sh
 CONFIG_DIR="\$HOME"/.config/discord
 SETTINGS_FILE="\$CONFIG_DIR"/settings.json
-DISCORD_CONFIG_FILE="\$HOME/.config/eepm/discord"
+DISCORD_CONFIG_FILE="/etc/opt/$PRODUCT/discord.conf"
 EXTRA_PARAMS=""
 
-if [ ! -f "\$DISCORD_CONFIG_FILE" ]; then
-    DISCORD_CONFIG_FILE="/etc/eepm/config/discord"
-fi
-
 if [ -f "\$DISCORD_CONFIG_FILE" ]; then
-    EXTRA_PARAMS=$(cat "\$DISCORD_CONFIG_FILE")
+    EXTRA_PARAMS=\$(cat "\$DISCORD_CONFIG_FILE")
 fi
 
 if [ ! -f "\$SETTINGS_FILE" ]; then
