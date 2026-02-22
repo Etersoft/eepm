@@ -231,9 +231,13 @@ __add_line_to_file()
     local line="$2"
     local sc="sudocmd"
     [ -n "$verbose" ] || sc="sudorun"
-    set_sudo
+    if [ -w "$file" ] || [ ! -e "$file" ] && [ -w "$(dirname "$file")" ] ; then
+        sc="command"
+    else
+        set_sudo
+    fi
     # ensure file ends with newline (check last byte)
-    [ -n "$(tail -c1 "$file")" ] && echo "" | $sc tee -a "$file" >/dev/null
+    [ -s "$file" ] && [ -n "$(tail -c1 "$file")" ] && echo "" | $sc tee -a "$file" >/dev/null
     echo "$line" | $sc tee -a "$file" >/dev/null
 }
 
