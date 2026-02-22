@@ -40,7 +40,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.52"
+export EPMVERSION="3.64.53"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1667,9 +1667,13 @@ __add_line_to_file()
     local line="$2"
     local sc="sudocmd"
     [ -n "$verbose" ] || sc="sudorun"
-    set_sudo
+    if [ -w "$file" ] || [ ! -e "$file" ] && [ -w "$(dirname "$file")" ] ; then
+        sc="command"
+    else
+        set_sudo
+    fi
     # ensure file ends with newline (check last byte)
-    [ -n "$(tail -c1 "$file")" ] && echo "" | $sc tee -a "$file" >/dev/null
+    [ -s "$file" ] && [ -n "$(tail -c1 "$file")" ] && echo "" | $sc tee -a "$file" >/dev/null
     echo "$line" | $sc tee -a "$file" >/dev/null
 }
 
@@ -3314,6 +3318,7 @@ __remove_alt_apt_cache_file()
     sudocmd rm -vf $epm_vardir/available-packages
 
     sudocmd rm -vf $eget_ipfs_db
+    sudocmd rm -vf $epm_vardir/eget-ipfs-db-remote.txt
     return 0
 }
 
@@ -4672,9 +4677,13 @@ __epm_korinf_install() {
     local pkg_urls=''
     for pkgurl in $* ; do
         pkg="$(__epm_korinf_site_mask "$pkgurl")"
-        [ -n "$pkg" ] || fatal "Can't get package url by $pkgurl"
+        if [ -z "$pkg" ] ; then
+            warning "Can't get package url for $pkgurl, skipping"
+            continue
+        fi
         [ -n "$pkg_urls" ] && pkg_urls="$pkg_urls $pkg" || pkg_urls="$pkg"
     done
+    [ -n "$pkg_urls" ] || fatal "No packages found in $EPM_KORINF_REPO_URL"
     # due Error: Can't use epm call from the piped script
     #epm install $(__epm_korinf_site_mask "$PACKAGE")
     pkg_names='' pkg_files='' epm_install
@@ -6951,10 +6960,21 @@ separate_installed()
     done
 }
 
+epm_installed_help()
+{
+    message 'epm installed - check presence of package(s)
+Usage: epm installed [options] <package>
+'
+    get_help HELPOPT $SHAREDIR/epm-installed
+}
+
 epm_installed()
 {
-    [ -n "$pkg_names" ] || fatal "is_installed: package name is missed"
     case "$pkg_options" in
+        -h|--help)          # HELPOPT: show this help
+            epm_installed_help
+            return
+            ;;
         --virtual)          # HELPOPT: check if virtual package has an installed provider
             is_installed_virtual "$pkg_names"
             return
@@ -6964,6 +6984,7 @@ epm_installed()
             return
             ;;
     esac
+    [ -n "$pkg_names" ] || fatal "is_installed: package name is missed"
     is_installed "$pkg_names"
 }
 
@@ -9070,6 +9091,7 @@ Options:
     --list                - list all installed apps
     --list-all            - list all available apps
     --search <pattern>    - search available apps by name or description
+    --list-updates        - list installed apps that have available updates
     --list-scripts        - list all available scripts
     --short (with --list) - list names only
     --installed <app>     - check if the app is installed
@@ -9151,53 +9173,127 @@ __epm_play_install_one()
         __epm_play_run "$prescription" --run "$@" || fatal "There was some error during run $prescription script."
     fi
 }
-__get_latest_package_version()
+
+__download_versions_list()
 {
-    local pkg="$1"
-    local ver
+    local target="$1"
+    local epmver="$(epm --short --version)"
+    # use baseversion (strip last .N)
+    epmver=$(echo "$epmver" | sed -e 's|\.[0-9]*$||')
 
-    [ -n "$pkg" ] || return 1
+    local URL
+    for URL in "https://eepm.ru/releases/$epmver/app-versions" "https://eepm.ru/app-versions" ; do
+        eget -q -O "$target" "$URL/epm-play-list-full.txt" && return
+    done
+    return 1
+}
 
-    ver="$(fetch_url "https://eepm.ru/app-versions/$pkg")"
+__get_installed_table_with_versions()
+{
+    local tapt
+    tapt="$(mktemp)" || fatal
+    remove_on_exit $tapt
 
-    if [ -n "$ver" ] ; then
-        echo "$ver"
-        return 0
+    local pkglist
+    pkglist="$(mktemp)" || fatal
+    remove_on_exit $pkglist
+
+    if [ "$PKGFORMAT" = "rpm" ] ; then
+        # pkglist: pkg version EPM <support@...>
+        __get_all_rpm_repacked_packages | LC_ALL=C sort -u >$pkglist
+        __list_app_packages_table $pkglist | LC_ALL=C sort -u >$tapt
+        # join gives: pkg app version EPM <support@...>
+        LC_ALL=C join -11 -21 $tapt $pkglist | uniq | awk '{print $1, $2, $3}'
+    else
+        local verlist
+        verlist="$(mktemp)" || fatal
+        remove_on_exit $verlist
+
+        local instpkgs
+        instpkgs="$(mktemp)" || fatal
+        remove_on_exit $instpkgs
+
+        epm --short packages | LC_ALL=C sort -u >$pkglist
+        __list_app_packages_table $pkglist | LC_ALL=C sort -u >$tapt
+        __filter_by_installed_packages $tapt $pkglist | LC_ALL=C sort -k1,1 >$instpkgs
+
+        # get versions for all installed packages
+        dpkg-query -W -f='${Package} ${Version}\n' 2>/dev/null | LC_ALL=C sort -k1,1 >$verlist
+
+        # join to add versions: pkg app version
+        LC_ALL=C join -11 -21 $instpkgs $verlist | awk '{print $1, $2, $3}'
     fi
 
-    return 1
+    rm -f $tapt $pkglist
+}
+
+__compare_versions()
+{
+    local latest="$1"
+    local installed="$2"
+
+    case "$PKGFORMAT" in
+        rpm)
+            if is_command rpmevrcmp ; then
+                a= rpmevrcmp "$latest" "$installed"
+            else
+                a= rpm --eval "%{lua:print(rpm.vercmp('$latest', '$installed'))}"
+            fi
+            ;;
+        deb)
+            a= dpkg --compare-versions "$latest" gt "$installed" && echo "1" && return
+            echo "0"
+            ;;
+        *)
+            epm print compare version "$latest" "$installed" 2>/dev/null
+            ;;
+    esac
 }
 
 __list_available_updates()
 {
+    local installed_file latest_file joined_file
+    installed_file="$(mktemp)" || fatal
+    remove_on_exit $installed_file
+    latest_file="$(mktemp -u)" || fatal
+    remove_on_exit $latest_file
+    joined_file="$(mktemp)" || fatal
+    remove_on_exit $joined_file
 
-    local installed_table pkg app installed latest cmp header_printed updates_found line
+    # Step 1: get installed packages with versions: pkg app installed_version
+    __get_installed_table_with_versions | LC_ALL=C sort -k1,1 >$installed_file
 
-    installed_table="$(__get_installed_table)"
+    [ -s "$installed_file" ] || return 0
 
-    [ -n "$installed_table" ] || return 0
+    # Step 2: download bulk versions list: pkg latest_version [release]
+    __download_versions_list "$latest_file" || { warning "Can't download versions list" ; return 1 ; }
+    [ -s "$latest_file" ] || { warning "Empty versions list" ; return 1 ; }
 
-    updates_found=0
+    # for deb, lowercase the package name field for case-insensitive join
+    if [ "$PKGFORMAT" = "deb" ] ; then
+        awk '{$1=tolower($1); print}' "$latest_file" | LC_ALL=C sort -k1,1 -o "$latest_file"
+    else
+        LC_ALL=C sort -k1,1 "$latest_file" -o "$latest_file"
+    fi
 
-    while IFS= read -r line ; do
+    # Step 3: join on package name
+    # installed_file: pkg app installed_version
+    # latest_file: pkg latest_version [release]
+    # result: pkg app installed_version latest_version [release]
+    LC_ALL=C join -11 -21 "$installed_file" "$latest_file" >"$joined_file"
 
-        [ -n "$line" ] || continue
-        set -- $line
-        pkg="$1"
-        app="$2"
+    # Step 4: compare versions and output updates
+    local updates_found=0
+    local header_printed
+    local pkg app installed latest
 
+    while read -r pkg app installed latest _ ; do
         [ -n "$pkg" ] || continue
-        [ -n "$app" ] || continue
-
-        installed="$(epm print version for package "$pkg" 2>/dev/null | head -n1)"
-
         [ -n "$installed" ] || continue
-
-        latest="$(__get_latest_package_version "$pkg")"
-
         [ -n "$latest" ] || continue
 
-        cmp="$(epm print compare package version "$latest" "$installed" 2>/dev/null)"
+        local cmp
+        cmp="$(__compare_versions "$latest" "$installed")"
 
         [ "$cmp" = "1" ] || continue
 
@@ -9219,13 +9315,13 @@ __list_available_updates()
             printf "  %-25s %s -> %s\n" "$app" "$installed" "$latest"
         fi
 
-    done <<EOF
-    $installed_table
-EOF
+    done < "$joined_file"
 
-    if [ "$updates_found" -eq 0 ] && [ -z "$short" ] && [ -z "$quiet" ] ; then
+    if [ "$updates_found" = "0" ] && [ -z "$short" ] && [ -z "$quiet" ] ; then
         echo "All installed applications are up to date."
     fi
+
+    rm -f "$installed_file" "$latest_file" "$joined_file"
 }
 
 
@@ -9294,10 +9390,9 @@ __epm_play_install()
    return $RES
 }
 
-__epm_play_download_epm_file()
+__epm_play_download_ipfs_db()
 {
     local target="$1"
-    local file="$2"
     # use short version (3.4.5)
     local epmver="$(epm --short --version)"
     # use baseversion
@@ -9305,37 +9400,50 @@ __epm_play_download_epm_file()
 
     local URL
     for URL in "https://eepm.ru/releases/$epmver/app-versions" "https://eepm.ru/app-versions" ; do
-        info "Updating local IPFS DB in $eget_ipfs_db file from $URL/eget-ipfs-db.txt"
-        docmd eget -q -O "$target" "$URL/$file" && return
+        info "Updating cached IPFS DB in $target from $URL/eget-ipfs-db.txt"
+        docmd eget --timestamping -q -O "$target" "$URL/eget-ipfs-db.txt" && return
     done
 }
 
 
 __epm_play_initialize_ipfs()
 {
-    if [ ! -d "$(dirname "$eget_ipfs_db")" ] ; then
-        warning "ipfs db dir $eget_ipfs_db does not exist, skipping IPFS mode"
+    if [ ! -d "$epm_vardir" ] ; then
+        warning "ipfs db dir $epm_vardir does not exist, skipping IPFS mode"
         return 1
     fi
 
-    if [ ! -r "$eget_ipfs_db" ] ; then
-        sudorun touch "$eget_ipfs_db" >&2
-        sudorun chmod -v a+rw "$eget_ipfs_db" >&2
+    local eget_ipfs_db_local=$eget_ipfs_db
+    local eget_ipfs_db_remote=$epm_vardir/eget-ipfs-db-remote.txt
+
+    # ensure local writable db exists
+    if [ ! -r "$eget_ipfs_db_local" ] ; then
+        sudorun touch "$eget_ipfs_db_local" >&2
+        sudorun chmod -v a+rw "$eget_ipfs_db_local" >&2
     fi
 
-    # download and merge with local db
-    local t
-    t=$(mktemp -u) || fatal
-    remove_on_exit $t
-    __epm_play_download_epm_file "$t" "eget-ipfs-db.txt" || warning "Can't update IPFS DB"
-    if [ -s "$t" ] && [ -z "$EPM_IPFS_DB_UPDATE_SKIPPING" ] ; then
-        echo >>$t
-        cat $eget_ipfs_db >>$t
-        sort -u < $t | grep -v "^$" > $eget_ipfs_db
+    # ensure remote cached db is writable
+    if [ ! -w "$eget_ipfs_db_remote" ] ; then
+        sudorun touch "$eget_ipfs_db_remote" >&2
+        sudorun chmod -v a+rw "$eget_ipfs_db_remote" >&2
     fi
 
-    # the only one thing is needed to enable IPFS in eget
-    export EGET_IPFS_DB="$eget_ipfs_db"
+    # download remote db with timestamping (skip if not changed)
+    __epm_play_download_ipfs_db "$eget_ipfs_db_remote" || warning "Can't update IPFS DB"
+
+    # one-time migration: remove entries already in remote from the local db
+    if [ -s "$eget_ipfs_db_remote" ] && [ -s "$eget_ipfs_db_local" ] ; then
+        local cleaned
+        cleaned=$(grep -vxFf "$eget_ipfs_db_remote" "$eget_ipfs_db_local")
+        if [ -n "$cleaned" ] ; then
+            echo "$cleaned" > "$eget_ipfs_db_local"
+        else
+            : > "$eget_ipfs_db_local"
+        fi
+    fi
+
+    # eget reads from all files, writes new entries to the last one
+    export EGET_IPFS_DB="$eget_ipfs_db_remote $eget_ipfs_db_local"
 }
 
 epm_play()
@@ -9397,8 +9505,13 @@ case "$1" in
         local list
         if [ "$1" = "all" ] ; then
             shift
-            info "Retrieving list of installed apps ..."
-            list="$(__list_installed_app)"
+            info "Checking for available updates ..."
+            list="$(short=1 __list_available_updates)"
+            if [ -z "$list" ] ; then
+                info "All installed applications are up to date."
+                exit
+            fi
+            info "Apps to update: $(echo $list | wc -w)"
         else
             list="$*"
         fi
@@ -9461,7 +9574,7 @@ case "$1" in
         exit
         ;;
 
-    --list-updates)
+    --list-updates|--list-upgradable)
         __list_available_updates
         exit
         ;;
@@ -10792,10 +10905,14 @@ __epm_query_shortname()
 
 
 
+is_installed_real()
+{
+    (quiet=1 __epm_query_name "$@") >/dev/null 2>/dev/null
+}
+
 is_installed()
 {
-    is_installed_real "$@" && return 0
-    (quiet=1 __epm_whatprovides_installed "$@") >/dev/null 2>/dev/null
+    is_installed_real "$@"
 }
 
 is_installed_virtual()
@@ -10804,10 +10921,6 @@ is_installed_virtual()
     (quiet=1 __epm_whatprovides_installed "$@") >/dev/null 2>/dev/null
 }
 
-is_installed_real()
-{
-    (quiet=1 __epm_query_name "$@") >/dev/null 2>/dev/null
-}
 
 resolve_virtual_packages()
 {
@@ -14365,8 +14478,7 @@ epm_repocreate()
 epm_repolist_help()
 {
     message 'epm repo list - list package repositories
-Usage: epm repo list [options] [pattern]
-       epm repo list task NUMBER [NUMBER ...]'
+Usage: epm repo list [options] [pattern]'
     echo ''
     echog 'Options:'
     get_help HELPOPT $SHAREDIR/epm-repolist
@@ -14502,13 +14614,6 @@ while [ -n "$1" ] ; do
     esac
     shift
 done
-
-if [ "$1" = "task" ] ; then
-    shift
-    [ -n "$1" ] || fatal "Task number is required"
-    __generate_task_sourceslist "$@"
-    return
-fi
 
 [ -z "$*" ] || [ "$PMTYPE" = "apt-rpm" ] || [ "$PMTYPE" = "apm-rpm" ] || [ "$PMTYPE" = "apt-dpkg" ] || fatal "No arguments are allowed here"
 
