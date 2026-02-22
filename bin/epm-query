@@ -349,11 +349,15 @@ __epm_query_shortname()
 # keep here, all modules and epm-query use is_installed from epm-query
 # see epm-installed
 
-# check if pkg is installed (also checks virtual packages via provides)
+# check if real (non-virtual) package is installed
+is_installed_real()
+{
+    (quiet=1 __epm_query_name "$@") >/dev/null 2>/dev/null
+}
+
 is_installed()
 {
-    is_installed_real "$@" && return 0
-    (quiet=1 __epm_whatprovides_installed "$@") >/dev/null 2>/dev/null
+    is_installed_real "$@"
 }
 
 # check if a virtual package has an installed provider (but not a real package itself)
@@ -363,11 +367,6 @@ is_installed_virtual()
     (quiet=1 __epm_whatprovides_installed "$@") >/dev/null 2>/dev/null
 }
 
-# check if real (non-virtual) package is installed
-is_installed_real()
-{
-    (quiet=1 __epm_query_name "$@") >/dev/null 2>/dev/null
-}
 
 # resolve virtual package names to real installed package names (single provider only)
 resolve_virtual_packages()
