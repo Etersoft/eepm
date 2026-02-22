@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.51"
+EPMVERSION="3.64.52"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1105,6 +1105,10 @@ get_package_type()
             ;;
         *.AppImage|*.appimage)
             echo "AppImage"
+            return
+            ;;
+        *.pkg.tar.*)
+            echo "pkg.tar.$(echo "$1" | sed -e 's|.*\.pkg\.tar\.||')"
             return
             ;;
         *)

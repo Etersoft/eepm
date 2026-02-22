@@ -40,7 +40,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.51"
+export EPMVERSION="3.64.52"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1114,6 +1114,10 @@ get_package_type()
             ;;
         *.AppImage|*.appimage)
             echo "AppImage"
+            return
+            ;;
+        *.pkg.tar.*)
+            echo "pkg.tar.$(echo "$1" | sed -e 's|.*\.pkg\.tar\.||')"
             return
             ;;
         *)
@@ -4373,7 +4377,7 @@ __download_pkg_urls()
         __check_if_wildcard_downloading "$url" && latest=''
 
         # download packages
-        if docmd eget $latest "$url" ; then
+        if docmd eget --tries 3 $latest "$url" ; then
             local i
             for i in * ; do
                 [ "$i" = "*" ] && warning 'Incorrect true status from eget. No saved files from download $url, ignoring' && continue
@@ -5864,6 +5868,13 @@ epm_install_names()
         APTOPTIONS="$APTOPTIONS -o Dpkg::Options::=--force-overwrite"
     fi
 
+    if [ -n "$norecommends" ] ; then
+        APTOPTIONS="$APTOPTIONS -o APT::Install-Recommends=false"
+        YUMOPTIONS="$YUMOPTIONS --setopt=install_weak_deps=0"
+        URPMOPTIONS="$URPMOPTIONS --no-suggests"
+        ZYPPEROPTIONS="$ZYPPEROPTIONS --no-recommends"
+    fi
+
     case $PMTYPE in
         apt-rpm|apt-dpkg)
             APTOPTIONS="$APTOPTIONS -o APT::Sandbox::User=root $(subst_option debug "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
@@ -5937,7 +5948,7 @@ epm_install_names()
             sudocmd yum $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
             return ;;
         dnf-rpm|dnf5-rpm)
-            sudocmd dnf install $(echo "$*" | exp_with_arch_suffix)
+            sudocmd dnf install $YUMOPTIONS $(echo "$*" | exp_with_arch_suffix)
             return ;;
         snappy)
             sudocmd snappy install $@
@@ -6015,6 +6026,13 @@ epm_install_names()
 epm_ni_install_names()
 {
     [ -z "$1" ] && return
+
+    if [ -n "$norecommends" ] ; then
+        APTOPTIONS="$APTOPTIONS -o APT::Install-Recommends=false"
+        YUMOPTIONS="$YUMOPTIONS --setopt=install_weak_deps=0"
+        URPMOPTIONS="$URPMOPTIONS --no-suggests"
+        ZYPPEROPTIONS="$ZYPPEROPTIONS --no-recommends"
+    fi
 
     case $PMTYPE in
         apt-rpm)
@@ -6936,6 +6954,16 @@ separate_installed()
 epm_installed()
 {
     [ -n "$pkg_names" ] || fatal "is_installed: package name is missed"
+    case "$pkg_options" in
+        --virtual)          # HELPOPT: check if virtual package has an installed provider
+            is_installed_virtual "$pkg_names"
+            return
+            ;;
+        --real)             # HELPOPT: check if real (non-virtual) package is installed
+            is_installed_real "$pkg_names"
+            return
+            ;;
+    esac
     is_installed "$pkg_names"
 }
 
@@ -7091,6 +7119,14 @@ epm_print_install_names_command()
     # check for pkg_files to support print out command without pkg names in args
     #[ -z "$1" ] && [ -n "$pkg_files" ] && return
     [ -z "$1" ] && return
+
+    if [ -n "$norecommends" ] ; then
+        APTOPTIONS="$APTOPTIONS -o APT::Install-Recommends=false"
+        YUMOPTIONS="$YUMOPTIONS --setopt=install_weak_deps=0"
+        URPMOPTIONS="$URPMOPTIONS --no-suggests"
+        ZYPPEROPTIONS="$ZYPPEROPTIONS --no-recommends"
+    fi
+
     case $PMTYPE in
         apt-rpm)
             echo "apt-get -y --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true $APTOPTIONS install $*"
@@ -7109,7 +7145,7 @@ epm_print_install_names_command()
             echo "yum -y $YUMOPTIONS install $*"
             return ;;
         dnf-rpm|dnf5-rpm)
-            echo "dnf install -y $YUMOPTIONS --allowerasing  $*"
+            echo "dnf install -y $YUMOPTIONS --allowerasing $*"
             return ;;
         urpm-rpm)
             echo "urpmi --auto $URPMOPTIONS $*"
@@ -10758,7 +10794,38 @@ __epm_query_shortname()
 
 is_installed()
 {
+    is_installed_real "$@" && return 0
+    (quiet=1 __epm_whatprovides_installed "$@") >/dev/null 2>/dev/null
+}
+
+is_installed_virtual()
+{
+    is_installed_real "$@" && return 1
+    (quiet=1 __epm_whatprovides_installed "$@") >/dev/null 2>/dev/null
+}
+
+is_installed_real()
+{
     (quiet=1 __epm_query_name "$@") >/dev/null 2>/dev/null
+}
+
+resolve_virtual_packages()
+{
+    local i
+    for i in "$@" ; do
+        if ! is_installed_virtual "$i" ; then
+            echo "$i"
+            continue
+        fi
+        local providers
+        providers="$(short=1 __epm_whatprovides_installed "$i" 2>/dev/null)"
+        if [ "$(echo "$providers" | wc -l)" = "1" ] ; then
+            info 'Resolved virtual package $i to $providers'
+            echo "$providers"
+        else
+            echo "$i"
+        fi
+    done
 }
 
 filter_pkgnames_to_short()
@@ -11953,9 +12020,6 @@ epm_remove_low()
             cd /tmp || fatal
             __epm_check_vendor $@
             set_sudo
-            sudocmd rpm -ev $noscripts $nodeps $@
-            return
-            # we don't need RPMISNOTINSTALLED as for now
             store_output sudocmd rpm -ev $noscripts $nodeps $@
             # rpm returns number of packages if failed on removing
             __check_rpm_e_result $RC_STDOUT $?
@@ -12289,11 +12353,21 @@ epm_remove()
         pkg_names="$(get_only_installed_packages $pkg_names)"
     fi
 
+    # resolve virtual package names to real installed package names
+    pkg_names="$(resolve_virtual_packages $pkg_names)"
+
     epm_remove_low $pkg_names && return
     local STATUS=$?
 
-    # || [ "$STATUS" = "$RPMISNOTINSTALLED" ]
+    # if rpm says packages are not installed, check if they are virtual
+    # don't escalate to hi level package manager for truly missing packages
     # see https://github.com/Etersoft/eepm/issues/236
+    if [ "$STATUS" = "$RPMISNOTINSTALLED" ] ; then
+        if [ -z "$(get_only_installed_packages $pkg_names)" ] ; then
+            return $STATUS
+        fi
+    fi
+
     if [ -n "$direct" ] || [ -n "$nodeps" ] ; then
         [ -n "$force" ] || return $STATUS
     fi
@@ -12807,9 +12881,14 @@ __epm_repack_single()
             # repack via rpm if source is not deb or we have rpm rule for the package
             if __epm_have_repack_rule "$pkg" || ! rhas "$pkg" "\.deb$" ; then
                 # we have repack rules only for rpm, so use rpm step in any case
+                # save original deb depends before deb→rpm conversion
+                local orig_deb_depends=""
+                if [ "$(get_package_type "$pkg")" = "deb" ] ; then
+                    orig_deb_depends="$(epm requires "$pkg" 2>/dev/null)"
+                fi
                 __epm_repack_to_rpm "$pkg" "$packversion" "$packrelease" || return
                 [ -n "$repacked_pkg" ] || return
-                __epm_repack_to_deb $repacked_pkg || return
+                __epm_repack_to_deb $repacked_pkg "$orig_deb_depends"
             else
                 __epm_repack_to_deb "$pkg" || return
             fi
@@ -12964,6 +13043,7 @@ __epm_repack_to_arch()
 __epm_repack_to_deb()
 {
     local pkg="$1"
+    local orig_deb_depends="$2"
 
     assure_exists alien
     assure_exists fakeroot
@@ -12976,6 +13056,11 @@ __epm_repack_to_deb()
     remove_on_exit $TDIR
 
     umask 022
+
+    # alien uses $EMAIL for Maintainer email (not DEBEMAIL)
+    # and always takes the name from system GECOS (can't override without patching alien)
+    # TODO: fix Maintainer name in the generated deb (replace GECOS with "EPM")
+    export EMAIL="support@eepm.ru"
 
     if echo "$pkg" | grep -q "\.deb" ; then
         warning "Repack deb to deb is not supported yet."
@@ -12991,15 +13076,35 @@ __epm_repack_to_deb()
         cd $TDIR || fatal
         __prepare_source_package "$(pwd)/$alpkg"
 
-        showcmd_store_output fakeroot alien -d -k $verbose $scripts "$alpkg"
-        local DEBCONVERTED=$(grep "deb generated" $RC_STDOUT | sed -e "s| generated||g")
+        # generate debian/ dir without building
+        docmd alien --single -k $verbose $scripts "$alpkg"
+
+        # find the generated source directory
+        local debsrcdir
+        debsrcdir="$(ls -1d */ 2>/dev/null | head -n1)"
+        if [ -z "$debsrcdir" ] ; then
+            warning 'Can'\''t find alien generated directory for $pkg'
+            cd - >/dev/null
+            return 1
+        fi
+
+        # inject original deb depends into debian/control
+        if [ -n "$orig_deb_depends" ] ; then
+            info "Injecting Depends: $orig_deb_depends"
+            sed -i -e "s|\${shlibs:Depends}|$orig_deb_depends|" "$debsrcdir"debian/control
+        fi
+
+        # build the deb
+        ( cd "$debsrcdir" && a= fakeroot debian/rules binary )
+
+        local DEBCONVERTED
+        DEBCONVERTED="$(ls -1 *.deb 2>/dev/null | head -n1)"
         if [ -n "$DEBCONVERTED" ] ; then
             repacked_pkg="$repacked_pkg $(realpath $DEBCONVERTED)"
             remove_on_exit "$(realpath $DEBCONVERTED)"
         else
             warning 'Can'\''t find converted deb for source binary package $pkg'
         fi
-        clean_store_output
         cd - >/dev/null
 
     return 0
@@ -13288,6 +13393,10 @@ Examples:
   epm repo add autoimports - add autoimports (from Fedora) repo
   epm repo change yandex   - change only base url part to mirror.yandex.ru server (use epm repo change --list to get possible targets)
   epm repo list            - list current repos
+
+Environment:
+  EPM_APT_SOURCES_LIST     - use specified file instead of /etc/apt/sources.list (skip sources.list.d)
+  EPM_APT_SOURCES_ROOT     - use specified root directory for /etc/apt/sources.list and sources.list.d
 '
 }
 
@@ -13386,10 +13495,10 @@ epm_repo()
     index)                            # HELPCMD: index repo (update indexes): [--init] [path] [name]
         epm_repoindex "$@"
         ;;
-    pkgadd)                           # HELPCMD: add to <dir> applied <package-filename1> [<package-filename2>...]
+    pkgadd)                           # HELPCMD: add to <dir> applied <package-filename|task> [...]
         epm_repo_pkgadd "$@"
         ;;
-    pkgupdate)                        # HELPCMD: replace in <dir> with new <package-filename1> [<package-filename2>...]
+    pkgupdate)                        # HELPCMD: replace in <dir> with new <package-filename|task> [...]
         epm_repo_pkgupdate "$@"
         ;;
     pkgdel)                           # HELPCMD: del from <dir> <package1> [<package2>...]
@@ -14256,7 +14365,8 @@ epm_repocreate()
 epm_repolist_help()
 {
     message 'epm repo list - list package repositories
-Usage: epm repo list [options] [pattern]'
+Usage: epm repo list [options] [pattern]
+       epm repo list task NUMBER [NUMBER ...]'
     echo ''
     echog 'Options:'
     get_help HELPOPT $SHAREDIR/epm-repolist
@@ -14392,6 +14502,13 @@ while [ -n "$1" ] ; do
     esac
     shift
 done
+
+if [ "$1" = "task" ] ; then
+    shift
+    [ -n "$1" ] || fatal "Task number is required"
+    __generate_task_sourceslist "$@"
+    return
+fi
 
 [ -z "$*" ] || [ "$PMTYPE" = "apt-rpm" ] || [ "$PMTYPE" = "apm-rpm" ] || [ "$PMTYPE" = "apt-dpkg" ] || fatal "No arguments are allowed here"
 
@@ -14854,12 +14971,61 @@ __epm_repo_pkgupdate_alt()
 
 
 
+__download_task_rpms()
+{
+    local tmpdir="$1"
+    shift
+
+    local arg task pkg_filter
+    for arg in "$@" ; do
+        task="$(get_tasknumber_from_arg "$arg")"
+        pkg_filter="$(get_pkgname_from_taskarg "$arg")"
+        [ -n "$task" ] || continue
+
+        get_task_status "$task" || continue
+
+        local plan
+        plan="$(fetch_url $ALTTASKURL/$task/plan/add-bin)" || continue
+
+        echo "$plan" | grep -E "	($DISTRARCH|noarch)	" | while IFS='	' read -r pname pver parch pfile ppath prest ; do
+            [ -n "$pkg_filter" ] && [ "$pname" != "$pkg_filter" ] && continue
+            docmd eget -O "$tmpdir/$pfile" "$ALTTASKURL/$task/$ppath" || warning "Failed to download $pfile"
+        done
+    done
+}
+
+__epm_repo_pkgadd_from_task()
+{
+    local dir="$1"
+    shift
+
+    local tmpdir
+    tmpdir="$(mktemp -d)" || fatal "Cannot create temp directory"
+    __download_task_rpms "$tmpdir" "$@"
+    # check if any RPMs were downloaded
+    set +f
+    local rpms
+    rpms=$(echo "$tmpdir"/*.rpm)
+    if [ "$rpms" = "$tmpdir/*.rpm" ] ; then
+        rm -rf "$tmpdir"
+        fatal "No packages downloaded from task(s)"
+    fi
+    __epm_repo_pkgadd_alt "$dir" $tmpdir/*.rpm
+    rm -rf "$tmpdir"
+}
+
 epm_repo_pkgadd()
 {
 
 case $PMTYPE in
     apt-rpm|apm-rpm)
-        __epm_repo_pkgadd_alt "$@"
+        local dir="$1"
+        shift
+        if is_taskarg "$@" ; then
+            __epm_repo_pkgadd_from_task "$dir" "$@"
+        else
+            __epm_repo_pkgadd_alt "$dir" "$@"
+        fi
         ;;
     *)
         fatal 'Have no suitable command for $PMTYPE in epm_repo_pkgadd()'
@@ -14869,12 +15035,38 @@ esac
 }
 
 
+__epm_repo_pkgupdate_from_task()
+{
+    local dir="$1"
+    shift
+
+    local tmpdir
+    tmpdir="$(mktemp -d)" || fatal "Cannot create temp directory"
+    __download_task_rpms "$tmpdir" "$@"
+    # check if any RPMs were downloaded
+    set +f
+    local rpms
+    rpms=$(echo "$tmpdir"/*.rpm)
+    if [ "$rpms" = "$tmpdir/*.rpm" ] ; then
+        rm -rf "$tmpdir"
+        fatal "No packages downloaded from task(s)"
+    fi
+    __epm_repo_pkgupdate_alt "$dir" $tmpdir/*.rpm
+    rm -rf "$tmpdir"
+}
+
 epm_repo_pkgupdate()
 {
 
 case $PMTYPE in
     apt-rpm|apm-rpm)
-        __epm_repo_pkgupdate_alt "$@"
+        local dir="$1"
+        shift
+        if is_taskarg "$@" ; then
+            __epm_repo_pkgupdate_from_task "$dir" "$@"
+        else
+            __epm_repo_pkgupdate_alt "$dir" "$@"
+        fi
         ;;
     *)
         fatal 'Have no suitable command for $PMTYPE in epm_repo_pkgupdate()'
@@ -16795,7 +16987,9 @@ __process_repo_arguments() {
 __fast_hack_for_filter_out_installed_rpm()
 {
     LC_ALL=C xargs -n1 rpm -q 2>&1 | grep 'is not installed' |
-        sed -e 's|^.*package \(.*\) is not installed.*|\1|g'
+        sed -e 's|^.*package \(.*\) is not installed.*|\1|g' |
+        LC_ALL=C xargs -n1 rpm -q --whatprovides 2>&1 | grep 'no package provides' |
+        sed -e 's|^.*no package provides \(.*\)|\1|g'
 }
 
 filter_out_installed_packages()
@@ -16907,11 +17101,11 @@ __epm_check_vendor()
         bi="$(basename $i)"
         if ! epm_status_validate "$i" ; then
             # it is missed package probably (package remove case)
-            if is_installed "$i" ; then
+            if is_installed_real "$i" ; then
                 warning 'Can'\''t get any info for $i package. Scripts are DISABLED for package $bi. Use --scripts if you need run scripts from such packages.'
                 noscripts="--noscripts"
             fi
-            # don't set --noscripts for non existent packages (will run scripts when remove by provides, see https://github.com/Etersoft/eepm/issues/236)
+            # don't set --noscripts for virtual or non existent packages (will run scripts when remove by provides, see https://github.com/Etersoft/eepm/issues/236)
             continue
         fi
 
@@ -16946,7 +17140,8 @@ __epm_repack_if_needed()
     local f
     for f in "$@" ; do
         [ "$(get_package_type "$f")" = "$PKGFORMAT" ] && continue
-        docmd exec epm repack --install "$@"
+        docmd epm repack --install "$@"
+        exit
     done
     return 1
 }
@@ -16954,9 +17149,16 @@ __epm_repack_if_needed()
 
 # File bin/epm-sh-repo:
 
-APT_SOURCES_LIST="${EPM_APT_SOURCES_ROOT%/}/etc/apt/sources.list"
-APT_SOURCES_LIST_D="${EPM_APT_SOURCES_ROOT%/}/etc/apt/sources.list.d"
-APT_ALL_SOURCES_LIST="$APT_SOURCES_LIST_D/*.list $APT_SOURCES_LIST_D/*.sources $APT_SOURCES_LIST"
+
+if [ -n "$EPM_APT_SOURCES_LIST" ] ; then
+    APT_SOURCES_LIST="$EPM_APT_SOURCES_LIST"
+    APT_SOURCES_LIST_D=''
+    APT_ALL_SOURCES_LIST="$EPM_APT_SOURCES_LIST"
+else
+    APT_SOURCES_LIST="${EPM_APT_SOURCES_ROOT%/}/etc/apt/sources.list"
+    APT_SOURCES_LIST_D="${EPM_APT_SOURCES_ROOT%/}/etc/apt/sources.list.d"
+    APT_ALL_SOURCES_LIST="$APT_SOURCES_LIST_D/*.list $APT_SOURCES_LIST_D/*.sources $APT_SOURCES_LIST"
+fi
 
 __convert_deb822_to_oneline()
 {
@@ -17033,7 +17235,7 @@ __deb822_remove()
 
 __filter_repos_list()
 {
-    local i
+    local i pattern
     [ -z "$*" ] && cat && return
 
     # Check if this is a full repo line (rpm or deb) - use literal matching for the entire string
@@ -17042,8 +17244,73 @@ __filter_repos_list()
         return
     fi
 
+    local result
+    result="$(cat)"
+
+    # process each argument preserving spaces in patterns
+    for i in "$@" ; do
+        case "$i" in
+            ~*)
+                # exclusion pattern
+                pattern="${i#\~}"
+                [ -z "$regexp" ] && pattern=$(__epm_glob_to_regexp "$pattern")
+                result="$(echo "$result" | grep -E -i -v -- "$pattern")"
+                ;;
+            *)
+                # inclusion pattern (AND logic)
+                pattern="$i"
+                [ -z "$regexp" ] && pattern=$(__epm_glob_to_regexp "$pattern")
+                result="$(echo "$result" | grep -E -i -- "$pattern")"
+                ;;
+        esac
+    done
+
+    [ -n "$result" ] && echo "$result"
+}
+
+# File bin/epm-sh-search:
+
+
+__epm_get_longest_word()
+{
+    local longest=""
+    local word
+    for word in "$@" ; do
+        # skip exclusion patterns
+        case "$word" in
+            ~*) continue ;;
+        esac
+        # clean glob characters for PM search
+        word=$(echo "$word" | sed -e "s/[?*\[\]]//g")
+        [ -z "$word" ] && continue
+        if [ ${#word} -gt ${#longest} ] ; then
+            longest="$word"
+        fi
+    done
+    echo "$longest"
+}
+
+__epm_glob_to_regexp()
+{
+    local pattern="$1"
+    # escape: . { } +
+    # keep \ ^ $ ( ) | [ ] for extended patterns and escaping
+    echo "$pattern" | sed \
+        -e 's|[.{}+]|\\&|g' \
+        -e 's|\*|.*|g' \
+        -e 's|?|.|g' \
+        -e 's|\[!|\[^|g'
+}
+
+__epm_build_grep_filter()
+{
+    local i
+    [ -z "$*" ] && return
+
     local list=""
     local listN=""
+
+    # separate include and exclude patterns
     for i in "$@" ; do
         case "$i" in
             ~*)
@@ -17055,24 +17322,66 @@ __filter_repos_list()
         esac
     done
 
-    # convert glob to regexp
-    list=$(__convert_glob__to_regexp "$list")
-    listN=$(__convert_glob__to_regexp "$listN")
+    list=$(echo "$list" | sed 's/^ *//' | sed 's/ *$//')
+    listN=$(echo "$listN" | sed 's/^ *//' | sed 's/ *$//' | sed 's/ /|/g')
 
-    listN=$(strip_spaces $listN | sed -e 's/ /|/g')
+    # convert to regexp (unless --regexp mode)
+    if [ -z "$regexp" ] ; then
+        list=$(__epm_glob_to_regexp "$list")
+        listN=$(__epm_glob_to_regexp "$listN")
+    fi
 
-    local result
-    result="$(cat)"
+    # short mode: strip description
+    if [ -n "$short" ] ; then
+        echon " | sed -e 's| .*||g'"
+    fi
 
-    # exclude patterns
-    [ -n "$listN" ] && result="$(echo "$result" | grep -E -i -v -- "$listN")"
+    # exclusion filter
+    [ -n "$listN" ] && echon " | grep -E -i -v -- \"$listN\""
 
-    # include patterns (AND)
-    for i in $list ; do
-        result="$(echo "$result" | grep -E -i -- "$i")"
+    # inclusion filters (one per word if multiple)
+    local word_count
+    word_count=$(echo "$list" | wc -w)
+    if [ "$word_count" -gt 1 ] ; then
+        for i in $list ; do
+            echon " | grep -E -i -- \"$i\""
+        done
+    fi
+
+    # colorize matches
+    local COLO=""
+    for i in $list $listN ; do
+        [ -n "$COLO" ] && COLO="$COLO|"
+        COLO="$COLO$i"
     done
 
-    [ -n "$result" ] && echo "$result"
+    if [ -n "$list" ] ; then
+        echon " | grep -E -i $EGREPCOLOR -- \"($COLO)\""
+    fi
+}
+
+__epm_colorize_pkg_names()
+{
+    if [ -z "$USETTY" ] ; then
+        cat
+        return
+    fi
+
+    # Use awk for reliable ANSI color handling
+    awk -v cyan="$(printf '\033[36m')" -v reset="$(printf '\033[0m')" '
+    {
+        if (match($0, /^[^ ]+ - /)) {
+            # format: "package - description"
+            pkg = substr($0, 1, index($0, " - ") - 1)
+            rest = substr($0, index($0, " - "))
+            print cyan pkg reset rest
+        } else if (match($0, /^[^ ]+$/)) {
+            # format: "package" only
+            print cyan $0 reset
+        } else {
+            print
+        }
+    }'
 }
 
 # File bin/epm-sh-warmup:
@@ -17544,7 +17853,7 @@ epm_status_supported() {
     local distro
     distro=$(epm print info -s)
     case "$distro" in
-        alt|redos|rosa*|mos|fedora|debian|ubuntu)
+        alt|redos|rosa*|mos|astra|fedora|debian|ubuntu)
             return 0
             ;;
         *)
@@ -17558,6 +17867,36 @@ epm_status_validate()
     local pkg="$1"
     local version="$(epm print field Version for "$pkg" 2>/dev/null)"
     [ -n "$version" ]
+}
+
+__epm_status_have_sign()
+{
+    local pkg="$1"
+    local sig="$(epm print field sigpgp for "$pkg" 2>/dev/null)"
+    [ "$sig" != "(none)" ] && return 0
+    # check DSA signature (old packages signed with DSA key)
+    sig="$(epm print field siggpg for "$pkg" 2>/dev/null)"
+    [ "$sig" != "(none)" ]
+}
+
+epm_status_signed()
+{
+    local pkg="$1"
+    case $DISTRNAME in
+        ALTLinux)
+            # use alt-rpmkeys-checksig for cryptographic signature verification
+            assure_exists alt-rpmkeys-checksig alt-rpmkeys-utils || return 1
+            if [ -n "$quiet" ] ; then
+                alt-rpmkeys-checksig "$pkg" >/dev/null 2>&1
+            else
+                docmd alt-rpmkeys-checksig "$pkg"
+            fi
+            ;;
+        *)
+            # TODO: implement for other distros
+            return 1
+            ;;
+    esac
 }
 
 epm_status_original()
@@ -17637,6 +17976,18 @@ epm_status_original()
 
             echo "$release" | grep -qi "debian" || return 1
             return 0
+            ;;
+        AstraLinux*)
+            epm_status_validate $pkg || return 1
+            epm_status_repacked $pkg && return 1
+
+            local maintainer="$(epm print field Maintainer for "$pkg" 2>/dev/null)"
+            echo "$release" | grep -qi "astra" && return 0
+            echo "$maintainer" | grep -q "astralinux" && return 0
+            echo "$maintainer" | grep -q "rusbitech" && return 0
+            echo "$maintainer" | grep -q "Debian" && return 0
+            echo "$maintainer" | grep -q "@debian.org" && return 0
+            return 1
             ;;
         *)
             warning 'Status checking is not supported yet for $DISTRNAME'
@@ -17729,6 +18080,18 @@ epm_status_thirdparty()
             # On UncomOS maintainer Ubuntu and Debian * team
             echo "$maintainer" | grep -q "Debian" && return 1
             echo "$maintainer" | grep -q "Ubuntu" && return 1
+            epm_status_repacked $pkg && return 1
+            return 0
+            ;;
+        astra)
+            epm_status_validate $pkg || return 1
+
+            local release="$(epm print release from package "$pkg" 2>/dev/null)"
+            echo "$release" | grep -qi "astra" && return 1
+            echo "$maintainer" | grep -q "Debian" && return 1
+            echo "$maintainer" | grep -q "@debian.org" && return 1
+            echo "$maintainer" | grep -q "astralinux" && return 1
+            echo "$maintainer" | grep -q "rusbitech" && return 1
             epm_status_repacked $pkg && return 1
             return 0
             ;;
@@ -20328,9 +20691,9 @@ __speedtest_single()
         # pv shows progress to stderr (-s for total size if known)
         local pv_opts="-f"
         [ -n "$total_size" ] && pv_opts="$pv_opts -s $total_size"
-        timeout "$timeout" eget -q -O - "$URL" 2>/dev/null | pv $pv_opts > "$tmpfile" || true
+        eget -q -T "$timeout" -O - "$URL" 2>/dev/null | pv $pv_opts > "$tmpfile" || true
     else
-        timeout "$timeout" eget -q --force -O "$tmpfile" "$URL" 2>/dev/null || true
+        eget -q --force -T "$timeout" -O "$tmpfile" "$URL" 2>/dev/null || true
     fi
     end_time=$(date +%s.%N)
     size=$(wc -c < "$tmpfile")
@@ -20466,12 +20829,15 @@ Options:
     --retry-connrefused       - consider “connection refused” a transient error and try again
     -t|--tries                - set number of tries to number. Specify 0 or ‘inf’ for infinite retrying
     --load-cookies file       - load cookies from file before the first HTTP retrieval
+
+EGET specific options:
     --latest                  - print only latest version of a file
     --second-latest           - print only second to latest version of a file
     --allow-mirrors           - try mirrors from EGET_MIRRORS if url is not accessible
     --trust-server-names      - use the name specified by the redirection
-
     --list|--list-only        - print only URLs
+
+Commands:
     --check-url URL           - check if the URL exists (returns HTTP 200 OK)
     --check-site URL          - check if the site is accessible (returns HTTP 200 OK or 404 Not found)
     --get-response URL        - get response with all headers (ever if HEAD is not acceptable)
@@ -20479,6 +20845,8 @@ Options:
     --get-filesize URL        - print file size in bytes (via Content-Length)
     --get-real-url URL        - print URL after all redirects
     --get-ipfs-cid URL        - print CID for URL (after all redirects)
+    --speedtest URL           - measure download speed for the URL
+    --tsv                     - output --speedtest results in TSV format
 
 Supported URLs:
   ftp:// http:// https:// file:/ ipfs:// rsync:// [user@]host:/path
@@ -22317,7 +22685,7 @@ get_urls()
     if echo "$content" | grep -q '<' ; then
         # HTML format (wget FTP, HTTP): parse href attributes
         echo "$content" | sed -e 's|<|<\n|g' -e 's|data-file=|href=|g' -e "s|href=http|href=\"http|g" -e "s|>|\">|g" -e "s|'|\"|g" | \
-             grep -i -o -E 'href="(.+)"' | sed -e 's|&amp;|\&|' | cut -d'"' -f2 | sed -e 's|^ *||g' -e 's| *$||g'
+             grep -i -o -E 'href="(.+)"' | sed -e 's|&amp;|\&|' | cut -d'"' -f2 | sed -e 's|^ *||g' -e 's| *$||g' | grep -v '^\.\.\?/\?$'
     else
         # ls -l format (curl FTP): extract last field (filename)
         echo "$content" | awk '{print $NF}'
@@ -22514,17 +22882,17 @@ internal_tools_erc()
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-PROGDIR=$(dirname $0)
+PROGDIR=$(dirname "$0")
 [ "$PROGDIR" = "." ] && PROGDIR=$(pwd)
 
 # will replaced to /usr/share/erc during install
-SHAREDIR=$(dirname $0)
+SHAREDIR=$(dirname "$0")
 
 load_helper()
 {
     local CMD="$SHAREDIR/$1"
     [ -r "$CMD" ] || fatal "Have no $CMD helper file"
-    . $CMD
+    . "$CMD"
 }
 
 load_helper erc-sh-functions
@@ -22535,7 +22903,7 @@ check_tty
 # 1.zip tar:  -> 1.tar
 build_target_name()
 {
-	is_target_format $2 && echo $(get_archive_name "$1").${2/:/} && return
+	is_target_format $2 && echo $(dirname "$1")/$(get_archive_name "$1").${2/:/} && return
 	echo "$1"
         return 1
 }
@@ -22591,6 +22959,46 @@ extract_squashfs_image()
 	fi
 }
 
+# Extract makeself payload as tar stream to stdout
+extract_makeself_tar()
+{
+	local arc="$1"
+
+	# Extract header line count
+	# New makeself (2.4+): skip="715" variable
+	# Old makeself: head -n 588 (literal number)
+	local lines
+	lines=$(sed -n 's/^skip="\{0,1\}\([0-9]\{1,\}\)"\{0,1\}/\1/p' "$arc" | head -1)
+	if [ -z "$lines" ] ; then
+		lines=$(grep -am1 -oP '(?<=head -n )\d+' "$arc")
+	fi
+	[ -n "$lines" ] || fatal "Can't find header line count in makeself archive $arc"
+
+	# Calculate byte offset of payload
+	local offset
+	offset=$(head -n "$lines" "$arc" | wc -c | tr -d " ")
+
+	# Detect compression method for info message
+	local compress
+	compress=$(sed -n 's/^.*Compression: \(.*\)/\1/p' "$arc" | head -1)
+	if [ -z "$compress" ] ; then
+		compress=$(sed -n "s/^COMPRESS=//p" "$arc" | head -1 | tr -d "'\"")
+	fi
+	echo "Extracting makeself archive (compression: ${compress:-gzip}, header: $lines lines, offset: $offset bytes)" >&2
+
+	# Extract payload, auto-detect compression via ercat
+	dd if="$arc" ibs="$offset" skip=1 obs=1024 conv=sync 2>/dev/null | "$PROGDIR/tools_ercat"
+}
+
+# Extract makeself self-extracting archives (.run)
+extract_makeself()
+{
+	local arc="$1"
+	local subdir="$2"
+	mkdir -p "$subdir" && cd "$subdir" || fatal
+	extract_makeself_tar "$arc" | extract_tar_stdin
+}
+
 # Extract AppImage archives
 extract_appimage()
 {
@@ -22629,18 +23037,20 @@ extract_special_archive()
 {
 	local arc="$1"
 	local type="$2"
-	local rarc="$(realpath -s "$arc")"
-	local subdir="$(basename "$(get_archive_name "$arc")")"
+	local subdir="${extract_dir:-$(get_archive_name "$arc")}"
 
 	case "$type" in
 		exe|dll)
-			extract_7z_to_subdir "$rarc" "$subdir"
+			extract_7z_to_subdir "$arc" "$subdir"
+			;;
+		run)
+			extract_makeself "$arc" "$subdir"
 			;;
 		AppImage|appimage)
-			extract_appimage "$rarc" "$subdir"
+			extract_appimage "$arc" "$subdir"
 			;;
 		squashfs|snap)
-			extract_squashfs_image "$rarc" "$subdir"
+			extract_squashfs_image "$arc" "$subdir"
 			;;
 		*)
 			return 1
@@ -22649,25 +23059,11 @@ extract_special_archive()
 	exit
 }
 
-extract_archive()
+extract_by_type()
 {
 	local arc="$1"
-	shift
-
-	local type="$(get_archive_type "$arc")"
-	[ -n "$type" ] || fatal "Can't recognize type of $arc."
-
-	extract_special_archive "$arc" "$type"
-
-	if have_patool ; then
-		docmd patool $verbose extract "$arc" "$@"
-		return
-	fi
-
-	arc="$(realpath -s "$arc")"
-	tdir="$(mktemp -d "$(pwd)/UXXXXXXXX")" && cd "$tdir" || fatal
-
-	local TSUBDIR="$(basename "$arc" .$type | sed -e 's|^tar\.||')"
+	local type="$2"
+	shift 2
 
 	# TODO: check if there is only one file?
 	# use subdir if there is no subdir in archive
@@ -22696,17 +23092,59 @@ extract_archive()
 			#fatal "Not yet supported extracting of $type archives"
 			;;
 	esac
+}
 
-	local res=$?
+move_from_tdir()
+{
+	local tdir="$1"
+	local subdir="$2"
 
-	cd - >/dev/null
-	# if only one dir in the subdir
-	if [ -e "$(echo $tdir/*)" ] ; then
-		mv "$tdir"/* .
+	shopt -s nullglob
+	local items=("$tdir"/*)
+	shopt -u nullglob
+
+	# if only one item in the subdir, move it directly
+	if [ ${#items[@]} -eq 1 ] && [ -e "${items[0]}" ] ; then
+		mv -- "${items[0]}" .
 		rmdir "$tdir"
 	else
-		mv "$tdir" "$TSUBDIR"
+		mv -- "$tdir" "$subdir"
 	fi
+}
+
+extract_archive()
+{
+	local arc="$1"
+	shift
+
+	local type="$(get_archive_type "$arc")"
+	[ -n "$type" ] || fatal "Can't recognize type of $arc."
+
+	arc="$(realpath -s "$arc")"
+
+	extract_special_archive "$arc" "$type"
+
+	if have_patool ; then
+		if [ -n "$extract_dir" ] ; then
+			docmd patool $verbose extract --outdir "$extract_dir" "$arc"
+		else
+			docmd patool $verbose extract "$arc" "$@"
+		fi
+		return
+	fi
+
+	if [ -n "$extract_dir" ] ; then
+		cd "$extract_dir" || fatal
+		extract_by_type "$arc" "$type" "$@"
+		return
+	fi
+
+	tdir=$(mktemp -d $(pwd)/UXXXXXXXX) && cd "$tdir" || fatal
+	extract_by_type "$arc" "$type" "$@"
+	cd - >/dev/null
+
+	move_from_tdir "$tdir" "$(get_archive_name "$arc")"
+
 	return $res
 }
 
@@ -22768,15 +23206,34 @@ __repack_via_tmp()
 	dfile="$(realpath -s "$2")"
 	ddir="$(dirname "$dfile")"
 	tdir="$(mktemp -d "$ddir/UXXXXXXXX")" && cd "$tdir" || fatal
-	trap "rm -fr $tdir" EXIT
+	trap 'rm -fr "$tdir"' EXIT
 	extract_archive "$sfile" || fatal
 	create_archive "$dfile" "."
 	#cd - >/dev/null
 	#rm -fr "$tdir"
 }
 
+# Repack special archive types that are not supported by patool
+repack_special_archive()
+{
+	local ftype="$(get_archive_type "$1")"
+	case "$ftype" in
+		run)
+			# makeself payload is already tar, just decompress
+			extract_makeself_tar "$1" > "$2"
+			exit
+			;;
+		exe|dll|AppImage|appimage|squashfs|snap)
+			__repack_via_tmp "$1" "$2"
+			exit
+			;;
+	esac
+}
+
 repack_archive()
 {
+	repack_special_archive "$1" "$2"
+
 	if have_patool ; then
 		docmd patool $verbose repack "$1" "$2"
 		return
@@ -22821,6 +23278,7 @@ $(get_help HELPOPT)
     # unerc archive.zip - unpack
     # erc [repack] archive1.zip... archive2.rar $HAVE_7Z: - repack all to $HAVE_7Z
     # erc -f [repack] archive.zip archive.$HAVE_7Z - force repack zip to $HAVE_7Z (override target in anyway)
+    # erc -C dir archive.zip - extract archive directly to dir
     # erc file/dir zip: - pack file to zip
 "
 }
@@ -22840,6 +23298,7 @@ Descr="erc - universal archive manager"
 
 force=
 target=
+extract_dir=
 verbose=--verbose
 use_7z=
 use_patool=
@@ -22872,6 +23331,17 @@ case "$1" in
     --use-7z)             # HELPOPT: force use 7z as backend
         use_7z=1
         ;;
+    -C)                   # HELPOPT: extract to specified directory
+        shift
+        extract_dir="$1"
+        ;;
+    --directory|--extract-to|--destination|--outdir)
+        shift
+        extract_dir="$1"
+        ;;
+    --directory=*|--extract-to=*|--destination=*|--outdir=*)
+        extract_dir="${1#*=}"
+        ;;
     -a|-e|-x|-u|-l|-t|-b)
         # these are commands, not options
         break
@@ -22890,7 +23360,7 @@ set_backend
 
 cmd="$1"
 
-eval lastarg=\${$#}
+lastarg="${@: -1}"
 
 # Just printout help if run without args
 if [ -z "$cmd" ] ; then
@@ -22942,6 +23412,10 @@ case $cmd in
         create_archive "$target" "$@"
         ;;
     e|x|-e|-x|u|-u|extract|unpack)          # HELPCMD: extract files from archive
+        if [ -n "$extract_dir" ] ; then
+            mkdir -p "$extract_dir" || fatal "Can't create directory '$extract_dir'"
+            extract_dir="$(realpath -s "$extract_dir")"
+        fi
         extract_archive "$@"
         ;;
 # TODO: implement deletion
@@ -22958,8 +23432,7 @@ case $cmd in
         get_archive_type "$1" || fatal "Can't recognize $1 as archive"
         ;;
     basename)             # HELPCMD: print the predicted directory name for the archive
-        nm="$(get_archive_name "$1")" || fatal "Can't recognize $1 as archive"
-        basename "$nm"
+        get_archive_name "$1" || fatal "Can't recognize $1 as archive"
         ;;
     diff)                 # HELPCMD: compare two archive
         # check 2 arg
@@ -23198,14 +23671,16 @@ case $cmd in
         ;;
 esac
 
+rc=0
 for f in "$@" ; do
     if [ "$f" = "-" ] ; then
         process_stdin || fatal
         continue
     fi
-    TYPE=$(get_archive_ext "$f") || TYPE=$(detect_by_content "$f") || { warning "Skipping unrecognized $f" ; continue ; }
-    unpack_type "$TYPE" "$f"
+    TYPE=$(get_archive_ext "$f") || TYPE=$(detect_by_content "$f") || { warning "Skipping unrecognized $f" ; rc=1 ; continue ; }
+    ( unpack_type "$TYPE" "$f" ) || { warning "Failed to unpack $f, skipping..." ; rc=1 ; }
 done
+ return $rc
 }
 ################# end of incorporated bin/tools_ercat #################
 
@@ -23942,6 +24417,8 @@ direct_args=
 ipfs=
 exclude=
 force_overwrite=
+norecommends=
+regexp=
 
 epm_vardir=/var/lib/eepm
 epm_cachedir=/var/cache/eepm
@@ -24392,6 +24869,7 @@ check_option()
         put_to_repo="$(echo "$1" | sed -e 's|--put-to-repo=||')"
         ;;
     --update)              # HELPOPT: run update before install/upgrade
+        [ -n "$direct_args" ] && return 1
         update_repo="--update"
         ;;
     --download-only)       # HELPOPT: download only the package/tarball (before any transformation)
@@ -24423,6 +24901,12 @@ check_option()
         ;;
     --force-overwrite)      # HELPOPT: force overwrite one package's file with another's file
         force_overwrite="--force-overwrite"
+        ;;
+    --norecommends|--no-recommends)  # HELPOPT: skip recommended packages during install
+        norecommends="--norecommends"
+        ;;
+    --regex|--regexp)        # HELPOPT: treat search pattern as regular expression (for grep filter only)
+        regexp="--regexp"
         ;;
     --manual-requires)       # HELPOPT: includes all package dependencies in the install/uninstall list
         manual_requires="--manual-requires"
@@ -24502,7 +24986,7 @@ if [ -n "$quiet" ] ; then
 fi
 
 # fill
-export EPM_OPTIONS="$nodeps $force $full $verbose $debug $quiet $interactive $non_interactive $parallel $save_only $download_only $force_overwrite $manual_requires $noscripts $scripts $dryrun"
+export EPM_OPTIONS="$nodeps $force $full $verbose $debug $quiet $interactive $non_interactive $parallel $save_only $download_only $force_overwrite $manual_requires $noscripts $scripts $dryrun $norecommends"
 
 # if input is not console and run script from file, get pkgs from stdin too
 if [ -z "$direct_args" ] && [ ! -n "$inscript" ] && [ -p /dev/stdin ] && [ "$EPMMODE" != "pipe" ] ; then
