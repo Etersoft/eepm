@@ -44,6 +44,14 @@ echo "not installed:"
 echo "$testlist" | __filter_pkglist_not_installed
 
 echo ""
+echo "=== Test __filter_pkglist_not_installed with virtual packages ==="
+# textutils is not a real package but is provided by coreutils
+testlist_virtual="bash textutils nonexistent-pkg-12345"
+echo "input: $testlist_virtual"
+echo "not installed (should only show nonexistent-pkg-12345, not textutils):"
+echo "$testlist_virtual" | __filter_pkglist_not_installed
+
+echo ""
 echo "=== Test epm filter CLI ==="
 echo "input: $testlist"
 echo "epm filter --installed:"
