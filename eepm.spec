@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.51
+Version: 3.64.52
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -181,6 +181,73 @@ EOF
 # metapackage, no files
 
 %changelog
+* Sun Feb 22 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.52-alt1
+- epm play: show message instead of silent exit on unsupported distro
+- repack.d/portproton.sh: dropped libd3d from requires
+- epm-status: add Astra Linux support
+- epm-repack-deb: preserve original deb dependencies during deb -> rpm -> deb repackaging
+- epm play.d/refind.sh: set RELEASE=1 when resolving VERSION to fix globbing error
+- epm repack.d/webdavmailrucloud.sh: fix create_bin_exec_command renamed to create_exec_file
+- epm repack.d/pulsar.sh: fix apm renamed to ppm in new version
+- epm pack.d/generic-snap.sh: make usr/share optional for CLI-only snaps
+- epm pack.d/teamspeak3-server.sh: add missing pack script for server
+- epm play.d/flameshot.sh: set RELEASE=1 when resolving VERSION to fix glob in URL
+- epm play.d/sublime-merge.sh: set RELEASE=1 when resolving VERSION to fix glob in URL
+- epm play.d/wpsoffice.sh: set RELEASE=1 when resolving VERSION to fix glob in URL
+- epm play ungoogled-chromium: update to new release filename format, add aarch64 support
+- epm install: add --norecommends option to skip recommended packages
+- epm play --update all: fix --update being consumed by the main option parser
+- epm repack: fix deb maintainer by setting EMAIL for alien
+- epm play mssql-server: fix URL for AstraLinuxSE/1.8
+- epm-status: check DSA signature (siggpg) in addition to RSA (sigpgp)
+- epm-sh-functions: get_package_type(): add pkg.tar.* support
+- epm-sh-install: __epm_repack_if_needed(): don't exec external epm
+- epm play.d/common.sh: use /releases/latest API in get_github_url
+- epm play mattermost-desktop: use direct URL for known version
+- epm play mssql-server: support year selection (2017, 2019, 2022, 2025, preview)
+- pack.d/generic-appimage.sh: strip -linux, -stable, -x64 suffixes and fix version regex
+- epm play github-desktop: fix PKGNAME to match actual package name
+- epm play.d/common.sh: get_github_tag(): fatal on empty version instead of silent return
+- epm play hplip-plugin: add openprinting.org fallback when HP site is not accessible
+- epm play dbeaver: fix download URLs for new naming scheme
+- erc: add -C/--directory/--extract-to/--destination/--outdir to extract to specified directory
+- ercat: skip broken files instead of aborting when processing multiple files
+- erc: add makeself (.run) archive extraction support
+- epm repo list: support extended patterns (|) [abc] \[\]
+- epm: add --regexp option for raw regex patterns
+- epm-sh-repo: fix __filter_repos_list to preserve spaces in patterns
+- epm: is_installed: check virtual packages via whatprovides
+- epm: filter_out_installed: treat virtual packages as installed in rpm check
+- epm remove: don't escalate to apt if package is truly not installed
+- epm installed: add --virtual and --real options, add is_installed_real helper
+- epm remove: resolve virtual packages before low level remove
+- eget: get_urls: filter out ../ and ./ entries from HTML directory listings
+- epm play: added vidbee (eterbug #18908)
+- epm play: added readest (eterbug #18910)
+- epm play: added alt-sendme (eterbug #18909)
+- epm play: added opencode-desktop (eterbug #18907)
+- epm play: added cli-proxy-api-plus (eterbug #18903)
+- epm play fresh-editor: use constructname, add RELEASE, remove duplicate fresh.sh (fix #569)
+- epm play openide: add EAP edition support via epm play openide=eap (fix #458)
+- erc: add makeself repack support via extract_makeself_tar
+- ercat: return error code on failed files like cat does
+- epm pack.d/hplip-plugin.sh: use erc unpack instead of sh --noexec
+- epm pack.d/teamspeak3.sh: use erc unpack instead of sh --tar
+- epm pack.d/zwcad-viewer.sh: use erc unpack for .run extraction
+- epm pack.d/unigine-*: use erc convert instead of convert_makeself_to_tar()
+- epm pack.d/unigine-*: fix erc command name (repack, not convert)
+- tools_erc: fix ercat path (tools_ercat in eepm context)
+- epm play: add cloak-client (censorship circumvention tool)
+- epm play: add cloak-server (censorship circumvention tool)
+- epm repo list: add "task NUMBER" to show sources.list for girar tasks
+- epm repo: add EPM_APT_SOURCES_LIST variable support
+- epm repo pkgadd/pkgupdate: add girar task support
+- epm play grdcontrol, guardant: quote basename argument to prevent crash on empty input
+- epm play bitwig-studio: download with proper .deb filename
+- epm repack.d/common.sh: persist ignore_library_path to file across script invocations
+- epm play android-studio: use pack script for correct package naming and version detection
+- epm-download: use 3 download tries by default
+
 * Thu Feb 19 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.51-alt1
 - epsonscan2: fix JSON item index after API response changed
 - epm checkpkg: fallback to digest-only check for packages from other distros
