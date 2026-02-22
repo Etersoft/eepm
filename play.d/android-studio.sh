@@ -9,10 +9,9 @@ URL="https://developer.android.com/studio"
 . $(dirname $0)/common.sh
 
 if [ "$VERSION" = "*" ] ; then
-    PKGURL="$(eget --list --latest "https://developer.android.com/studio" "$PKGNAME-$VERSION-linux.tar.gz")"
+    PKGURL="$(eget --list --latest "https://developer.android.com/studio" "$PKGNAME-*-linux.tar.gz")"
 else
     PKGURL="https://redirector.gvt1.com/edgedl/android/studio/ide-zips/$VERSION/$PKGNAME-$VERSION-linux.tar.gz"
 fi
 
-install_pkgurl
-
+install_pack_pkgurl
