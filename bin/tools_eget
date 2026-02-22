@@ -890,12 +890,38 @@ select_ipfs_mode()
 
 
 # Functions for work with eget ipfs db
+
+# tac all IPFS DB files (last file first, so most recent entries come first)
+__eget_ipfs_db_tac()
+{
+	local f files=""
+	local IFS=': '
+	for f in $EGET_IPFS_DB ; do
+		[ -r "$f" ] && files="$f $files"
+	done
+	IFS=' '
+	for f in $files ; do
+		tac "$f"
+	done
+}
+
+# get last IPFS DB file (for writing)
+__eget_ipfs_db_last()
+{
+	local f last
+	local IFS=': '
+	for f in $EGET_IPFS_DB ; do
+		[ -n "$f" ] && last="$f"
+	done
+	echo "$last"
+}
+
 get_cid_by_url()
 {
     local URL="$1"
-    [ -r "$EGET_IPFS_DB" ] || return
+    [ -n "$EGET_IPFS_DB" ] || return
     is_fileurl "$URL" && return 1
-    tac "$EGET_IPFS_DB" | grep -F "$URL Qm" | cut -f2 -d" " | grep -E "Qm[[:alnum:]]{44}" | head -n1
+    __eget_ipfs_db_tac | grep -F "$URL Qm" | cut -f2 -d" " | grep -E "Qm[[:alnum:]]{44}" | head -n1
 }
 
 put_cid_and_url()
@@ -903,7 +929,9 @@ put_cid_and_url()
     local URL="$1"
     local CID="$2"
     local FN="$3"
-    [ -w "$EGET_IPFS_DB" ] || return
+    local DBFILE
+    DBFILE="$(__eget_ipfs_db_last)"
+    [ -w "$DBFILE" ] || return
 
     is_fileurl "$URL" && return
 
@@ -912,22 +940,22 @@ put_cid_and_url()
         info "CID $CID is already exist as the same URL $URL in IPFS DB, skipping"
         return
     fi
-    echo "$URL $CID $FN" >> "$EGET_IPFS_DB"
-    info "Placed in $EGET_IPFS_DB: $URL $CID $FN"
+    echo "$URL $CID $FN" >> "$DBFILE"
+    info "Placed in $DBFILE: $URL $CID $FN"
 }
 
 get_filename_by_cid()
 {
     local CID="$1"
     [ -z "$EGET_IPFS_DB" ] && basename "$CID" && return
-    tac "$EGET_IPFS_DB" | grep -F " $CID " | head -n1 | cut -f3 -d" "
+    __eget_ipfs_db_tac | grep -F " $CID " | head -n1 | cut -f3 -d" "
 }
 
 get_url_by_cid()
 {
     local CID="$1"
     [ -z "$EGET_IPFS_DB" ] && echo "$CID" && return
-    tac "$EGET_IPFS_DB" | grep -F " $CID " | head -n1 | cut -f1 -d" "
+    __eget_ipfs_db_tac | grep -F " $CID " | head -n1 | cut -f1 -d" "
 }
 
 ###################
@@ -945,10 +973,11 @@ fi
 
 
 if [ -n "$ipfs_mode" ] && [ -n "$EGET_IPFS_DB" ] ; then
-    ddb="$(dirname "$EGET_IPFS_DB")"
+    DBFILE="$(__eget_ipfs_db_last)"
+    ddb="$(dirname "$DBFILE")"
     if [ -d "$ddb" ] ; then
         info "Using eget IPFS db $EGET_IPFS_DB"
-        [ -r "$EGET_IPFS_DB" ] || touch "$EGET_IPFS_DB"
+        [ -r "$DBFILE" ] || touch "$DBFILE"
     else
         EGET_IPFS_DB=''
     fi
