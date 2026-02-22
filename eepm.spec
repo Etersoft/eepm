@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.52
+Version: 3.64.53
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -181,6 +181,19 @@ EOF
 # metapackage, no files
 
 %changelog
+* Mon Feb 23 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.53-alt1
+- epm repack.d/claude-code*: move env variables to /etc/opt/ config
+- epm repack discord: move config path to /etc/opt/discord/
+- epm play --list-updates: use bulk version file instead of per-package HTTP requests
+- epm play --update all: pre-filter apps using bulk version check
+- epm play: split IPFS DB into remote (cached) + local (writable)
+- epm repo add: fix tail error and skip sudo for user-writable files
+- epm repo list: remove 'task NUMBER' subcommand (use epm repo add --dry-run)
+- epm ei: skip unavailable packages in Korinf instead of fatal error
+- epm installed: add --help support
+- epm-query: is_installed: revert virtual package resolution
+- epm play: add shikiwatch launcher script
+
 * Sun Feb 22 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.52-alt1
 - epm play: show message instead of silent exit on unsupported distro
 - repack.d/portproton.sh: dropped libd3d from requires
