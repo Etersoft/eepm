@@ -99,12 +99,61 @@ __epm_repo_pkgupdate_alt()
 
 
 
+__download_task_rpms()
+{
+    local tmpdir="$1"
+    shift
+
+    local arg task pkg_filter
+    for arg in "$@" ; do
+        task="$(get_tasknumber_from_arg "$arg")"
+        pkg_filter="$(get_pkgname_from_taskarg "$arg")"
+        [ -n "$task" ] || continue
+
+        get_task_status "$task" || continue
+
+        local plan
+        plan="$(fetch_url $ALTTASKURL/$task/plan/add-bin)" || continue
+
+        echo "$plan" | grep -E "	($DISTRARCH|noarch)	" | while IFS='	' read -r pname pver parch pfile ppath prest ; do
+            [ -n "$pkg_filter" ] && [ "$pname" != "$pkg_filter" ] && continue
+            docmd eget -O "$tmpdir/$pfile" "$ALTTASKURL/$task/$ppath" || warning "Failed to download $pfile"
+        done
+    done
+}
+
+__epm_repo_pkgadd_from_task()
+{
+    local dir="$1"
+    shift
+
+    local tmpdir
+    tmpdir="$(mktemp -d)" || fatal "Cannot create temp directory"
+    __download_task_rpms "$tmpdir" "$@"
+    # check if any RPMs were downloaded
+    set +f
+    local rpms
+    rpms=$(echo "$tmpdir"/*.rpm)
+    if [ "$rpms" = "$tmpdir/*.rpm" ] ; then
+        rm -rf "$tmpdir"
+        fatal "No packages downloaded from task(s)"
+    fi
+    __epm_repo_pkgadd_alt "$dir" $tmpdir/*.rpm
+    rm -rf "$tmpdir"
+}
+
 epm_repo_pkgadd()
 {
 
 case $PMTYPE in
     apt-rpm|apm-rpm)
-        __epm_repo_pkgadd_alt "$@"
+        local dir="$1"
+        shift
+        if is_taskarg "$@" ; then
+            __epm_repo_pkgadd_from_task "$dir" "$@"
+        else
+            __epm_repo_pkgadd_alt "$dir" "$@"
+        fi
         ;;
     *)
         fatal 'Have no suitable command for $PMTYPE in epm_repo_pkgadd()'
@@ -114,12 +163,38 @@ esac
 }
 
 
+__epm_repo_pkgupdate_from_task()
+{
+    local dir="$1"
+    shift
+
+    local tmpdir
+    tmpdir="$(mktemp -d)" || fatal "Cannot create temp directory"
+    __download_task_rpms "$tmpdir" "$@"
+    # check if any RPMs were downloaded
+    set +f
+    local rpms
+    rpms=$(echo "$tmpdir"/*.rpm)
+    if [ "$rpms" = "$tmpdir/*.rpm" ] ; then
+        rm -rf "$tmpdir"
+        fatal "No packages downloaded from task(s)"
+    fi
+    __epm_repo_pkgupdate_alt "$dir" $tmpdir/*.rpm
+    rm -rf "$tmpdir"
+}
+
 epm_repo_pkgupdate()
 {
 
 case $PMTYPE in
     apt-rpm|apm-rpm)
-        __epm_repo_pkgupdate_alt "$@"
+        local dir="$1"
+        shift
+        if is_taskarg "$@" ; then
+            __epm_repo_pkgupdate_from_task "$dir" "$@"
+        else
+            __epm_repo_pkgupdate_alt "$dir" "$@"
+        fi
         ;;
     *)
         fatal 'Have no suitable command for $PMTYPE in epm_repo_pkgupdate()'

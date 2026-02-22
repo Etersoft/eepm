@@ -158,11 +158,11 @@ epm_repo()
         load_helper epm-repoindex
         epm_repoindex "$@"
         ;;
-    pkgadd)                           # HELPCMD: add to <dir> applied <package-filename1> [<package-filename2>...]
+    pkgadd)                           # HELPCMD: add to <dir> applied <package-filename|task> [...]
         load_helper epm-repopkg
         epm_repo_pkgadd "$@"
         ;;
-    pkgupdate)                        # HELPCMD: replace in <dir> with new <package-filename1> [<package-filename2>...]
+    pkgupdate)                        # HELPCMD: replace in <dir> with new <package-filename|task> [...]
         load_helper epm-repopkg
         epm_repo_pkgupdate "$@"
         ;;
