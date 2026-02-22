@@ -8,9 +8,21 @@ PRODUCTDIR=/opt/$PRODUCT
 
 . $(dirname $0)/common.sh
 
+CONFIGDIR=/etc/opt/$PRODUCT
+
+cat <<EOF | create_file $CONFIGDIR/env.conf
+# Claude Code WebUI environment configuration
+CLAUDE_CODE_DISABLE_AUTO_UPDATE=1
+CLAUDE_NO_DIAGNOSTICS=1
+EOF
+
 cat <<EOF | create_exec_file /usr/bin/$PRODUCT
 #!/bin/sh
-export CLAUDE_CODE_DISABLE_AUTO_UPDATE=1
-export CLAUDE_NO_DIAGNOSTICS=1
+CLAUDE_CONFIG="$CONFIGDIR/env.conf"
+if [ -f "\$CLAUDE_CONFIG" ]; then
+    set -a
+    . "\$CLAUDE_CONFIG"
+    set +a
+fi
 exec $PRODUCTDIR/$PRODUCT "\$@"
 EOF
