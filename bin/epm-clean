@@ -30,6 +30,7 @@ __remove_alt_apt_cache_file()
     sudocmd rm -vf $epm_vardir/available-packages
 
     sudocmd rm -vf $eget_ipfs_db
+    sudocmd rm -vf $epm_vardir/eget-ipfs-db-remote.txt
     return 0
 }
 

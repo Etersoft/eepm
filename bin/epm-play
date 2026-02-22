@@ -574,10 +574,9 @@ __epm_play_install()
    return $RES
 }
 
-__epm_play_download_epm_file()
+__epm_play_download_ipfs_db()
 {
     local target="$1"
-    local file="$2"
     # use short version (3.4.5)
     local epmver="$(epm --short --version)"
     # use baseversion
@@ -585,37 +584,50 @@ __epm_play_download_epm_file()
 
     local URL
     for URL in "https://eepm.ru/releases/$epmver/app-versions" "https://eepm.ru/app-versions" ; do
-        info "Updating local IPFS DB in $eget_ipfs_db file from $URL/eget-ipfs-db.txt"
-        docmd eget -q -O "$target" "$URL/$file" && return
+        info "Updating cached IPFS DB in $target from $URL/eget-ipfs-db.txt"
+        docmd eget --timestamping -q -O "$target" "$URL/eget-ipfs-db.txt" && return
     done
 }
 
 
 __epm_play_initialize_ipfs()
 {
-    if [ ! -d "$(dirname "$eget_ipfs_db")" ] ; then
-        warning "ipfs db dir $eget_ipfs_db does not exist, skipping IPFS mode"
+    if [ ! -d "$epm_vardir" ] ; then
+        warning "ipfs db dir $epm_vardir does not exist, skipping IPFS mode"
         return 1
     fi
 
-    if [ ! -r "$eget_ipfs_db" ] ; then
-        sudorun touch "$eget_ipfs_db" >&2
-        sudorun chmod -v a+rw "$eget_ipfs_db" >&2
+    local eget_ipfs_db_local=$eget_ipfs_db
+    local eget_ipfs_db_remote=$epm_vardir/eget-ipfs-db-remote.txt
+
+    # ensure local writable db exists
+    if [ ! -r "$eget_ipfs_db_local" ] ; then
+        sudorun touch "$eget_ipfs_db_local" >&2
+        sudorun chmod -v a+rw "$eget_ipfs_db_local" >&2
     fi
 
-    # download and merge with local db
-    local t
-    t=$(mktemp -u) || fatal
-    remove_on_exit $t
-    __epm_play_download_epm_file "$t" "eget-ipfs-db.txt" || warning "Can't update IPFS DB"
-    if [ -s "$t" ] && [ -z "$EPM_IPFS_DB_UPDATE_SKIPPING" ] ; then
-        echo >>$t
-        cat $eget_ipfs_db >>$t
-        sort -u < $t | grep -v "^$" > $eget_ipfs_db
+    # ensure remote cached db is writable
+    if [ ! -w "$eget_ipfs_db_remote" ] ; then
+        sudorun touch "$eget_ipfs_db_remote" >&2
+        sudorun chmod -v a+rw "$eget_ipfs_db_remote" >&2
     fi
 
-    # the only one thing is needed to enable IPFS in eget
-    export EGET_IPFS_DB="$eget_ipfs_db"
+    # download remote db with timestamping (skip if not changed)
+    __epm_play_download_ipfs_db "$eget_ipfs_db_remote" || warning "Can't update IPFS DB"
+
+    # one-time migration: remove entries already in remote from the local db
+    if [ -s "$eget_ipfs_db_remote" ] && [ -s "$eget_ipfs_db_local" ] ; then
+        local cleaned
+        cleaned=$(grep -vxFf "$eget_ipfs_db_remote" "$eget_ipfs_db_local")
+        if [ -n "$cleaned" ] ; then
+            echo "$cleaned" > "$eget_ipfs_db_local"
+        else
+            : > "$eget_ipfs_db_local"
+        fi
+    fi
+
+    # eget reads from all files, writes new entries to the last one
+    export EGET_IPFS_DB="$eget_ipfs_db_remote $eget_ipfs_db_local"
 }
 
 epm_play()
