@@ -30,10 +30,21 @@ separate_installed()
     done
 }
 
+epm_installed_help()
+{
+    message 'epm installed - check presence of package(s)
+Usage: epm installed [options] <package>
+'
+    get_help HELPOPT $SHAREDIR/epm-installed
+}
+
 epm_installed()
 {
-    [ -n "$pkg_names" ] || fatal "is_installed: package name is missed"
     case "$pkg_options" in
+        -h|--help)          # HELPOPT: show this help
+            epm_installed_help
+            return
+            ;;
         --virtual)          # HELPOPT: check if virtual package has an installed provider
             is_installed_virtual "$pkg_names"
             return
@@ -43,5 +54,6 @@ epm_installed()
             return
             ;;
     esac
+    [ -n "$pkg_names" ] || fatal "is_installed: package name is missed"
     is_installed "$pkg_names"
 }
