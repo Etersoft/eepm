@@ -34,6 +34,10 @@ Examples:
   epm repo add autoimports - add autoimports (from Fedora) repo
   epm repo change yandex   - change only base url part to mirror.yandex.ru server (use epm repo change --list to get possible targets)
   epm repo list            - list current repos
+
+Environment:
+  EPM_APT_SOURCES_LIST     - use specified file instead of /etc/apt/sources.list (skip sources.list.d)
+  EPM_APT_SOURCES_ROOT     - use specified root directory for /etc/apt/sources.list and sources.list.d
 '
 }
 

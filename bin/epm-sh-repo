@@ -20,9 +20,15 @@
 load_helper epm-sh-search
 
 # APT sources paths with test isolation support (EPM_APT_SOURCES_ROOT)
-APT_SOURCES_LIST="${EPM_APT_SOURCES_ROOT%/}/etc/apt/sources.list"
-APT_SOURCES_LIST_D="${EPM_APT_SOURCES_ROOT%/}/etc/apt/sources.list.d"
-APT_ALL_SOURCES_LIST="$APT_SOURCES_LIST_D/*.list $APT_SOURCES_LIST_D/*.sources $APT_SOURCES_LIST"
+if [ -n "$EPM_APT_SOURCES_LIST" ] ; then
+    APT_SOURCES_LIST="$EPM_APT_SOURCES_LIST"
+    APT_SOURCES_LIST_D=''
+    APT_ALL_SOURCES_LIST="$EPM_APT_SOURCES_LIST"
+else
+    APT_SOURCES_LIST="${EPM_APT_SOURCES_ROOT%/}/etc/apt/sources.list"
+    APT_SOURCES_LIST_D="${EPM_APT_SOURCES_ROOT%/}/etc/apt/sources.list.d"
+    APT_ALL_SOURCES_LIST="$APT_SOURCES_LIST_D/*.list $APT_SOURCES_LIST_D/*.sources $APT_SOURCES_LIST"
+fi
 
 # Convert deb822 .sources file to one-line deb format
 __convert_deb822_to_oneline()
