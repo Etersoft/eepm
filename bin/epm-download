@@ -100,7 +100,7 @@ __download_pkg_urls()
         __check_if_wildcard_downloading "$url" && latest=''
 
         # download packages
-        if docmd eget $latest "$url" ; then
+        if docmd eget --tries 3 $latest "$url" ; then
             local i
             for i in * ; do
                 [ "$i" = "*" ] && warning 'Incorrect true status from eget. No saved files from download $url, ignoring' && continue
