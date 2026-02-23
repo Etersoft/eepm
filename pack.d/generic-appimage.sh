@@ -75,6 +75,9 @@ EOF
 chmod og-w -R $BASEDIR
 chmod a+rX -R $BASEDIR
 
+# fix ELF executables permissions (7z doesn't preserve permissions from squashfs)
+find $BASEDIR -type f -perm 0644 -exec file -N {} + | grep 'ELF.*executable' | cut -d: -f1 | xargs -r chmod -v a+x
+
 erc pack $PKGNAME $BASEDIR
 
 return_tar $PKGNAME
