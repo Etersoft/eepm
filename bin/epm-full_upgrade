@@ -144,7 +144,7 @@ confirm_action()
     fi
 
 
-    if is_command flatpak ; then
+    if is_command flatpak && [ -n "$(flatpak list 2>/dev/null)" ] ; then
         confirm_action "Upgrade installed flatpak packages? [Y/n]" || full_upgrade_no_flatpak=1
         if [ -z "$full_upgrade_no_flatpak" ] ; then
             [ -n "$quiet" ] || echo
