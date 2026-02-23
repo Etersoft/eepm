@@ -1431,7 +1431,12 @@ url_sget()
        scat "$URL"
        return
     elif [ -n "$2" ] ; then
-       download_with_mirroring __wget_download "$URL" -O "$2"
+       if [ -n "$TIMESTAMPING" ] ; then
+           # wget's -N is incompatible with -O, use manual timestamping
+           __timestamping_download "$URL" "$2" "TIMESTAMPING='' download_with_mirroring __wget_download \"$URL\" -O \"$2\""
+       else
+           download_with_mirroring __wget_download "$URL" -O "$2"
+       fi
        return
     fi
 # TODO: поддержка rsync для известных хостов?
