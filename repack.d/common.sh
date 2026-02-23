@@ -710,6 +710,16 @@ set_autoprov()
     fi
 }
 
+# Replace release suffix (after epm1.repacked.) in spec
+# Usage: set_release_suffix NEW_SUFFIX
+# epm1.repacked.1 -> epm1.repacked.NEW_SUFFIX
+set_release_suffix()
+{
+    local suffix="$1"
+    [ -n "$suffix" ] || return
+    subst "s|^Release: epm[0-9]*\.repacked\.[^[:space:]]*|Release: epm1.repacked.$suffix|" $SPEC
+}
+
 # https://bugzilla.altlinux.org/42189
 fix_cpio_bug_links()
 {
