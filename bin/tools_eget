@@ -350,6 +350,19 @@ __calc_avg_filtered()
     }'
 }
 
+# Get current time in nanoseconds (integer) for precise timing
+# Falls back to seconds if %N is not supported (BusyBox)
+__get_time_ns()
+{
+    local t
+    t=$(date +%s%N 2>/dev/null)
+    # If %N not supported, date outputs literal 'N' — fall back to seconds
+    case "$t" in
+        *N*) echo "$(date +%s)000000000" ;;
+        *) echo "$t" ;;
+    esac
+}
+
 # Single speedtest measurement with timeout (returns speed in MB/s)
 # Downloads to temp file using eget, counts bytes with pv or wc -c
 # Args: URL [timeout] [total_size]
@@ -361,7 +374,7 @@ __speedtest_single()
     local tmpfile start_time end_time size
 
     tmpfile=$(mktemp)
-    start_time=$(date +%s.%N)
+    start_time=$(__get_time_ns)
     if [ -n "$verbose" ] && which pv >/dev/null 2>&1 ; then
         # pv shows progress to stderr (-s for total size if known)
         local pv_opts="-f"
@@ -370,14 +383,14 @@ __speedtest_single()
     else
         eget -q --force -T "$timeout" -O "$tmpfile" "$URL" 2>/dev/null || true
     fi
-    end_time=$(date +%s.%N)
+    end_time=$(__get_time_ns)
     size=$(wc -c < "$tmpfile")
     rm -f "$tmpfile"
 
-    # Calculate speed: size / time in MB/s
+    # Calculate speed: size / time_ns in MB/s
     echo "$size $start_time $end_time" | awk '{
-        time = $3 - $2
-        if (time > 0) printf "%.2f", ($1 / time) / 1024 / 1024
+        time_ns = $3 - $2
+        if (time_ns > 0) printf "%.2f", ($1 / (time_ns / 1000000000)) / 1024 / 1024
         else print "0"
     }'
 }
