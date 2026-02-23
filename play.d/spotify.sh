@@ -8,6 +8,10 @@ URL="https://spotify.com"
 
 . $(dirname $0)/common.sh
 
-PKGURL="https://repository.spotify.com/pool/non-free/s/spotify-client/$(epm print constructname $PKGNAME "$VERSION*" amd64 deb)"
+if [ "$VERSION" = "*" ] ; then
+    PKGURL="https://repository-origin.spotify.com/pool/non-free/s/spotify-client/$(epm print constructname $PKGNAME "*" amd64 deb)"
+else
+    PKGURL="https://repository-origin.spotify.com/pool/non-free/s/spotify-client/$(epm print constructname $PKGNAME "$VERSION" amd64 deb)"
+fi
 
 install_pkgurl
