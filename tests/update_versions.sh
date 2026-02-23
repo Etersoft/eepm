@@ -86,8 +86,21 @@ if [ -n "$1" ] ; then
 fi
 
 distr="$($EPM print info -s)"
-# install/update all
-$EPM play $playopt --list-all --short | while read app ; do
+# install/update all, prioritizing apps with missing or oldest logs
+sort_apps_by_log_age()
+{
+    local app logfile
+    while read app ; do
+        logfile="$LDIR/$app"
+        if [ ! -f "$logfile" ] ; then
+            echo "0 $app"
+        else
+            echo "$(stat -c %Y "$logfile") $app"
+        fi
+    done | sort -n | sed 's/^[^ ]* //'
+}
+
+$EPM play $playopt --list-all --short | sort_apps_by_log_age | while read app ; do
     # hack for broken gitlab-runner
     [ "$distr" != "alt" ] && [ "$app" = "gitlab-runner" ] && continue
     install_app_alt $app </dev/null
