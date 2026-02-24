@@ -10,6 +10,6 @@ URL="https://www.kyoceradocumentsolutions.eu/en/support/downloads.name-L2V1L2VuL
 
 warn_version_is_not_supported
 
-PKGURL="https://www.kyoceradocumentsolutions.de/content/download-center/de/drivers/all/SANE_Driver_zip.download.zip"
+PKGURL="https://www.kyoceradocumentsolutions.eu/content/dam/download-center-cf/eu/drivers/all/SANE_Driver_zip.download.zip"
 
 install_pack_pkgurl
