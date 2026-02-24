@@ -38,11 +38,13 @@ install_app()
     fi
 
     echo -n "epm play $playopt $app $alt ..."
+    echo "$app$alt" > $LOGDIR/epm-current
     timeout 1h $EPM play $playopt --verbose --auto $app $alt >$EDIR/$applog 2>&1
     local RES=$?
     [ "$RES" = 0 ] && echo "OK" || echo "FAILED"
-    [ "$RES" = 0 ] || { exec 9>&- ; return $RES ; }
+    [ "$RES" = 0 ] || { rm -f $LOGDIR/epm-current ; exec 9>&- ; return $RES ; }
 
+    rm -f $LOGDIR/epm-current
     mv -f $EDIR/$applog $LDIR/$applog
 
     local pkgname="$($EPM play --package-name $app $alt)"
@@ -101,14 +103,16 @@ distr="$($EPM print info -s)"
 # install/update all, prioritizing apps with missing or oldest logs
 sort_apps_by_log_age()
 {
-    local app logfile
+    local app logtime errtime ts
     while read app ; do
-        logfile="$LDIR/$app"
-        if [ ! -f "$logfile" ] ; then
-            echo "0 $app"
-        else
-            echo "$(stat -c %Y "$logfile") $app"
-        fi
+        logtime=0
+        errtime=0
+        [ -f "$LDIR/$app" ] && logtime=$(stat -c %Y "$LDIR/$app")
+        [ -f "$EDIR/$app" ] && errtime=$(stat -c %Y "$EDIR/$app")
+        # use the most recent of success/error log
+        ts=$logtime
+        [ "$errtime" -gt "$ts" ] && ts=$errtime
+        echo "$ts $app"
     done | sort -n | sed 's/^[^ ]* //'
 }
 
