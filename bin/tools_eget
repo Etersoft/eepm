@@ -328,6 +328,7 @@ __calc_avg_filtered()
     # Calculate mean and standard deviation, filter outliers, return average
     echo "$values" | awk '{
         n = NF
+        if (n == 0) { print "0"; exit }
         sum = 0
         for (i = 1; i <= n; i++) sum += $i
         avg = sum / n
