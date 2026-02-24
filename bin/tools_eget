@@ -1546,7 +1546,7 @@ url_sget()
        scat "$1"
        return
     elif [ -n "$2" ] ; then
-       if [ -n "$TIMESTAMPING" ] && [ -f "$2" ] ; then
+       if [ -n "$TIMESTAMPING" ] && [ -s "$2" ] ; then
            __curl_check_timestamp "$URL"
            download_with_mirroring __curl_download "$URL" -z "$2" --output "$2"
        else
@@ -1557,7 +1557,7 @@ url_sget()
 
     local FILENAME="$(url_get_filename "$URL")"
     if [ -n "$FILENAME" ] ; then
-        if [ -n "$TIMESTAMPING" ] && [ -f "$FILENAME" ] ; then
+        if [ -n "$TIMESTAMPING" ] && [ -s "$FILENAME" ] ; then
             __curl_check_timestamp "$URL"
             download_with_mirroring __curl_download "$URL" -z "$FILENAME" $CURLNAMEOPTIONS --output "$FILENAME"
         else
@@ -1569,7 +1569,7 @@ url_sget()
     if [ -n "$TIMESTAMPING" ] ; then
         # Need to get filename first to use -z
         FILENAME="$(basename "$URL")"
-        if [ -f "$FILENAME" ] ; then
+        if [ -s "$FILENAME" ] ; then
             __curl_check_timestamp "$URL"
             download_with_mirroring __curl_download "$URL" -z "$FILENAME" $CURLFILENAMEOPTIONS
         else
