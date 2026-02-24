@@ -599,6 +599,9 @@ check_option()
     --short)              # HELPOPT: short output (just 'package' instead 'package-version-release')
         short="--short"
         ;;
+    --debian)             # HELPOPT: filter requires to non-library package names (for requires)
+        debian="--debian"
+        ;;
     --direct)              # HELPOPT: direct install package file from ftp (not via hilevel repository manager)
         direct="--direct"
         ;;

@@ -25,6 +25,12 @@ __epm_filter_out_base_alt_reqs()
     grep -E -v "(^rpmlib\(|^/bin/sh|^/bin/bash|^rtld\(GNU_HASH\)|ld-linux)" | grep -E -v " or " | sed -e 's/\(\.so[.0-9]*\)([^)]\+)/\1()/g' | sort -u
 }
 
+# filter to get only package-name requires suitable for Debian Depends
+__epm_filter_debian_reqs()
+{
+    grep -v '^lib' | grep -v '^rpmlib(' | grep -v '^/' | sed -e 's| .*||' | sort -u | tr '\n' ', ' | sed -e 's/,$//' -e 's/^,//'
+}
+
 __epm_alt_rpm_requires()
 {
     if [ -n "$short" ] ; then
@@ -247,7 +253,11 @@ epm_requires()
 
     [ -n "$pkg_filenames" ] || fatal "Requires: package name is missed"
 
-    epm_requires_files $pkg_files
-    # shellcheck disable=SC2046
-    epm_requires_names $(print_name $pkg_names)
+    if [ -n "$debian" ] ; then
+        ( epm_requires_files $pkg_files ; epm_requires_names $(print_name $pkg_names) ) | __epm_filter_debian_reqs
+    else
+        epm_requires_files $pkg_files
+        # shellcheck disable=SC2046
+        epm_requires_names $(print_name $pkg_names)
+    fi
 }
