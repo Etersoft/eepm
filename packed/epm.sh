@@ -40,7 +40,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.53"
+export EPMVERSION="3.64.54"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -4726,7 +4726,7 @@ __epm_korinf_install_eepm()
 
     pkg_list="eepm"
     # preserve already installed eepm-*
-    for i in repack play ; do
+    for i in repack play full command-not-found ; do
        is_installed eepm-$i && pkg_list="$pkg_list eepm-$i"
     done
 
@@ -5115,7 +5115,7 @@ confirm_action()
     fi
 
 
-    if is_command flatpak ; then
+    if is_command flatpak && [ -n "$(flatpak list 2>/dev/null)" ] ; then
         confirm_action "Upgrade installed flatpak packages? [Y/n]" || full_upgrade_no_flatpak=1
         if [ -z "$full_upgrade_no_flatpak" ] ; then
             [ -n "$quiet" ] || echo
@@ -9414,13 +9414,20 @@ __epm_play_initialize_ipfs()
     fi
 
     local eget_ipfs_db_local=$eget_ipfs_db
-    local eget_ipfs_db_remote=$epm_vardir/eget-ipfs-db-remote.txt
 
     # ensure local writable db exists
     if [ ! -r "$eget_ipfs_db_local" ] ; then
         sudorun touch "$eget_ipfs_db_local" >&2
         sudorun chmod -v a+rw "$eget_ipfs_db_local" >&2
     fi
+
+    if [ -n "$EPM_IPFS_DB_UPDATE_SKIPPING" ] ; then
+        # skip remote db download (for the source server that generates the db)
+        export EGET_IPFS_DB="$eget_ipfs_db_local"
+        return
+    fi
+
+    local eget_ipfs_db_remote=$epm_vardir/eget-ipfs-db-remote.txt
 
     # ensure remote cached db is writable
     if [ ! -w "$eget_ipfs_db_remote" ] ; then
@@ -12603,6 +12610,8 @@ __epm_removerepo_apt()
 
     # sources.list.d: comment lines instead of deleting
     epm repo disable "^$repo" 2>/dev/null
+
+    return 0
 }
 
 
@@ -12994,14 +13003,18 @@ __epm_repack_single()
             # repack via rpm if source is not deb or we have rpm rule for the package
             if __epm_have_repack_rule "$pkg" || ! rhas "$pkg" "\.deb$" ; then
                 # we have repack rules only for rpm, so use rpm step in any case
-                # save original deb depends before deb→rpm conversion
+                # save original depends before deb→rpm conversion
                 local orig_deb_depends=""
-                if [ "$(get_package_type "$pkg")" = "deb" ] ; then
+                local orig_pkg_type="$(get_package_type "$pkg")"
+                if [ "$orig_pkg_type" = "deb" ] ; then
                     orig_deb_depends="$(epm requires "$pkg" 2>/dev/null)"
+                elif [ "$orig_pkg_type" = "rpm" ] ; then
+                    # extract non-library package-name Requires from RPM
+                    orig_deb_depends="$(epm requires --debian "$pkg" 2>/dev/null)"
                 fi
                 __epm_repack_to_rpm "$pkg" "$packversion" "$packrelease" || return
                 [ -n "$repacked_pkg" ] || return
-                __epm_repack_to_deb $repacked_pkg "$orig_deb_depends"
+                __epm_repack_to_deb $repacked_pkg "$orig_deb_depends" "$orig_pkg_type"
             else
                 __epm_repack_to_deb "$pkg" || return
             fi
@@ -13157,6 +13170,7 @@ __epm_repack_to_deb()
 {
     local pkg="$1"
     local orig_deb_depends="$2"
+    local orig_pkg_type="$3"
 
     assure_exists alien
     assure_exists fakeroot
@@ -13201,10 +13215,16 @@ __epm_repack_to_deb()
             return 1
         fi
 
-        # inject original deb depends into debian/control
+        # inject original depends into debian/control
         if [ -n "$orig_deb_depends" ] ; then
             info "Injecting Depends: $orig_deb_depends"
-            sed -i -e "s|\${shlibs:Depends}|$orig_deb_depends|" "$debsrcdir"debian/control
+            if [ "$orig_pkg_type" = "rpm" ] ; then
+                # RPM source: add non-lib requires alongside shlibs
+                sed -i -e "s|\${shlibs:Depends}|\${shlibs:Depends}, $orig_deb_depends|" "$debsrcdir"debian/control
+            else
+                # DEB source: replace shlibs placeholder with original depends
+                sed -i -e "s|\${shlibs:Depends}|$orig_deb_depends|" "$debsrcdir"debian/control
+            fi
         fi
 
         # build the deb
@@ -15344,6 +15364,11 @@ __epm_filter_out_base_alt_reqs()
     grep -E -v "(^rpmlib\(|^/bin/sh|^/bin/bash|^rtld\(GNU_HASH\)|ld-linux)" | grep -E -v " or " | sed -e 's/\(\.so[.0-9]*\)([^)]\+)/\1()/g' | sort -u
 }
 
+__epm_filter_debian_reqs()
+{
+    grep -v '^lib' | grep -v '^rpmlib(' | grep -v '^/' | sed -e 's| .*||' | sort -u | tr '\n' ', ' | sed -e 's/,$//' -e 's/^,//'
+}
+
 __epm_alt_rpm_requires()
 {
     if [ -n "$short" ] ; then
@@ -15564,9 +15589,13 @@ epm_requires()
 
     [ -n "$pkg_filenames" ] || fatal "Requires: package name is missed"
 
-    epm_requires_files $pkg_files
-    # shellcheck disable=SC2046
-    epm_requires_names $(print_name $pkg_names)
+    if [ -n "$debian" ] ; then
+        ( epm_requires_files $pkg_files ; epm_requires_names $(print_name $pkg_names) ) | __epm_filter_debian_reqs
+    else
+        epm_requires_files $pkg_files
+        # shellcheck disable=SC2046
+        epm_requires_names $(print_name $pkg_names)
+    fi
 }
 
 # File bin/epm-restore:
@@ -20758,6 +20787,7 @@ __calc_avg_filtered()
     # Calculate mean and standard deviation, filter outliers, return average
     echo "$values" | awk '{
         n = NF
+        if (n == 0) { print "0"; exit }
         sum = 0
         for (i = 1; i <= n; i++) sum += $i
         avg = sum / n
@@ -20780,6 +20810,19 @@ __calc_avg_filtered()
     }'
 }
 
+# Get current time in nanoseconds (integer) for precise timing
+# Falls back to seconds if %N is not supported (BusyBox)
+__get_time_ns()
+{
+    local t
+    t=$(date +%s%N 2>/dev/null)
+    # If %N not supported, date outputs literal 'N' — fall back to seconds
+    case "$t" in
+        *N*) echo "$(date +%s)000000000" ;;
+        *) echo "$t" ;;
+    esac
+}
+
 # Single speedtest measurement with timeout (returns speed in MB/s)
 # Downloads to temp file using eget, counts bytes with pv or wc -c
 # Args: URL [timeout] [total_size]
@@ -20791,7 +20834,7 @@ __speedtest_single()
     local tmpfile start_time end_time size
 
     tmpfile=$(mktemp)
-    start_time=$(date +%s.%N)
+    start_time=$(__get_time_ns)
     if [ -n "$verbose" ] && which pv >/dev/null 2>&1 ; then
         # pv shows progress to stderr (-s for total size if known)
         local pv_opts="-f"
@@ -20800,14 +20843,14 @@ __speedtest_single()
     else
         eget -q --force -T "$timeout" -O "$tmpfile" "$URL" 2>/dev/null || true
     fi
-    end_time=$(date +%s.%N)
+    end_time=$(__get_time_ns)
     size=$(wc -c < "$tmpfile")
     rm -f "$tmpfile"
 
-    # Calculate speed: size / time in MB/s
+    # Calculate speed: size / time_ns in MB/s
     echo "$size $start_time $end_time" | awk '{
-        time = $3 - $2
-        if (time > 0) printf "%.2f", ($1 / time) / 1024 / 1024
+        time_ns = $3 - $2
+        if (time_ns > 0) printf "%.2f", ($1 / (time_ns / 1000000000)) / 1024 / 1024
         else print "0"
     }'
 }
@@ -21306,12 +21349,38 @@ select_ipfs_mode()
 
 
 # Functions for work with eget ipfs db
+
+# tac all IPFS DB files (last file first, so most recent entries come first)
+__eget_ipfs_db_tac()
+{
+	local f files=""
+	local IFS=': '
+	for f in $EGET_IPFS_DB ; do
+		[ -r "$f" ] && files="$f $files"
+	done
+	IFS=' '
+	for f in $files ; do
+		tac "$f"
+	done
+}
+
+# get last IPFS DB file (for writing)
+__eget_ipfs_db_last()
+{
+	local f last
+	local IFS=': '
+	for f in $EGET_IPFS_DB ; do
+		[ -n "$f" ] && last="$f"
+	done
+	echo "$last"
+}
+
 get_cid_by_url()
 {
     local URL="$1"
-    [ -r "$EGET_IPFS_DB" ] || return
+    [ -n "$EGET_IPFS_DB" ] || return
     is_fileurl "$URL" && return 1
-    tac "$EGET_IPFS_DB" | grep -F "$URL Qm" | cut -f2 -d" " | grep -E "Qm[[:alnum:]]{44}" | head -n1
+    __eget_ipfs_db_tac | grep -F "$URL Qm" | cut -f2 -d" " | grep -E "Qm[[:alnum:]]{44}" | head -n1
 }
 
 put_cid_and_url()
@@ -21319,31 +21388,34 @@ put_cid_and_url()
     local URL="$1"
     local CID="$2"
     local FN="$3"
-    [ -w "$EGET_IPFS_DB" ] || return
+    local DBFILE
+    DBFILE="$(__eget_ipfs_db_last)"
+    [ -w "$DBFILE" ] || return
 
     is_fileurl "$URL" && return
 
-    local ac="$(get_url_by_cid)"
+    local ac="$(get_url_by_cid "$CID")"
     if [ "$ac" = "$URL" ] ; then
         info "CID $CID is already exist as the same URL $URL in IPFS DB, skipping"
         return
     fi
-    echo "$URL $CID $FN" >> "$EGET_IPFS_DB"
-    info "Placed in $EGET_IPFS_DB: $URL $CID $FN"
+    echo "$URL $CID $FN" >> "$DBFILE"
+    info "Placed in $DBFILE: $URL $CID $FN"
 }
 
 get_filename_by_cid()
 {
     local CID="$1"
     [ -z "$EGET_IPFS_DB" ] && basename "$CID" && return
-    tac "$EGET_IPFS_DB" | grep -F " $CID " | head -n1 | cut -f3 -d" "
+    __eget_ipfs_db_tac | grep -F " $CID " | head -n1 | cut -f3 -d" "
 }
 
 get_url_by_cid()
 {
     local CID="$1"
+    [ -z "$CID" ] && fatal "get_url_by_cid: CID is empty"
     [ -z "$EGET_IPFS_DB" ] && echo "$CID" && return
-    tac "$EGET_IPFS_DB" | grep -F " $CID " | head -n1 | cut -f1 -d" "
+    __eget_ipfs_db_tac | grep -F " $CID " | head -n1 | cut -f1 -d" "
 }
 
 ###################
@@ -21361,10 +21433,11 @@ fi
 
 
 if [ -n "$ipfs_mode" ] && [ -n "$EGET_IPFS_DB" ] ; then
-    ddb="$(dirname "$EGET_IPFS_DB")"
+    DBFILE="$(__eget_ipfs_db_last)"
+    ddb="$(dirname "$DBFILE")"
     if [ -d "$ddb" ] ; then
         info "Using eget IPFS db $EGET_IPFS_DB"
-        [ -r "$EGET_IPFS_DB" ] || touch "$EGET_IPFS_DB"
+        [ -r "$DBFILE" ] || touch "$DBFILE"
     else
         EGET_IPFS_DB=''
     fi
@@ -21625,8 +21698,11 @@ __timestamping_download()
     local TARGETFILE="$2"
     local DOWNLOAD_CMD="$3"  # will be "__aria2 ..." or "__axel ..."
 
-    # If file doesn't exist, just download
-    [ ! -f "$TARGETFILE" ] && eval "$DOWNLOAD_CMD" && return
+    # If file doesn't exist or is empty, just download
+    if [ ! -s "$TARGETFILE" ] ; then
+        eval "$DOWNLOAD_CMD"
+        return
+    fi
 
     # Get Last-Modified header
     local remote_modified="$(url_get_header "$URL" "Last-Modified")"
@@ -21817,7 +21893,12 @@ url_sget()
        scat "$URL"
        return
     elif [ -n "$2" ] ; then
-       download_with_mirroring __wget_download "$URL" -O "$2"
+       if [ -n "$TIMESTAMPING" ] ; then
+           # wget's -N is incompatible with -O, use manual timestamping
+           __timestamping_download "$URL" "$2" "TIMESTAMPING='' download_with_mirroring __wget_download \"$URL\" -O \"$2\""
+       else
+           download_with_mirroring __wget_download "$URL" -O "$2"
+       fi
        return
     fi
 # TODO: поддержка rsync для известных хостов?
@@ -21924,7 +22005,7 @@ url_sget()
        scat "$1"
        return
     elif [ -n "$2" ] ; then
-       if [ -n "$TIMESTAMPING" ] && [ -f "$2" ] ; then
+       if [ -n "$TIMESTAMPING" ] && [ -s "$2" ] ; then
            __curl_check_timestamp "$URL"
            download_with_mirroring __curl_download "$URL" -z "$2" --output "$2"
        else
@@ -21935,7 +22016,7 @@ url_sget()
 
     local FILENAME="$(url_get_filename "$URL")"
     if [ -n "$FILENAME" ] ; then
-        if [ -n "$TIMESTAMPING" ] && [ -f "$FILENAME" ] ; then
+        if [ -n "$TIMESTAMPING" ] && [ -s "$FILENAME" ] ; then
             __curl_check_timestamp "$URL"
             download_with_mirroring __curl_download "$URL" -z "$FILENAME" $CURLNAMEOPTIONS --output "$FILENAME"
         else
@@ -21947,7 +22028,7 @@ url_sget()
     if [ -n "$TIMESTAMPING" ] ; then
         # Need to get filename first to use -z
         FILENAME="$(basename "$URL")"
-        if [ -f "$FILENAME" ] ; then
+        if [ -s "$FILENAME" ] ; then
             __curl_check_timestamp "$URL"
             download_with_mirroring __curl_download "$URL" -z "$FILENAME" $CURLFILENAMEOPTIONS
         else
@@ -22989,6 +23070,7 @@ internal_tools_erc()
 
 PROGDIR=$(dirname "$0")
 [ "$PROGDIR" = "." ] && PROGDIR=$(pwd)
+ERCAT="$PROGDIR/$(basename "$0" | sed 's|erc$|ercat|')"
 
 # will replaced to /usr/share/erc during install
 SHAREDIR=$(dirname "$0")
@@ -23092,7 +23174,7 @@ extract_makeself_tar()
 	echo "Extracting makeself archive (compression: ${compress:-gzip}, header: $lines lines, offset: $offset bytes)" >&2
 
 	# Extract payload, auto-detect compression via ercat
-	dd if="$arc" ibs="$offset" skip=1 obs=1024 conv=sync 2>/dev/null | "$PROGDIR/tools_ercat"
+	dd if="$arc" ibs="$offset" skip=1 obs=1024 conv=sync 2>/dev/null | "$ERCAT"
 }
 
 # Extract makeself self-extracting archives (.run)
@@ -24948,6 +25030,9 @@ check_option()
         ;;
     --short)              # HELPOPT: short output (just 'package' instead 'package-version-release')
         short="--short"
+        ;;
+    --debian)             # HELPOPT: filter requires to non-library package names (for requires)
+        debian="--debian"
         ;;
     --direct)              # HELPOPT: direct install package file from ftp (not via hilevel repository manager)
         direct="--direct"
