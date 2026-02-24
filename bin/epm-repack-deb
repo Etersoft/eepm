@@ -19,11 +19,12 @@
 
 
 # fills repacked_pkg
-# args: pkg [orig_deb_depends]
+# args: pkg [orig_deb_depends] [orig_pkg_type]
 __epm_repack_to_deb()
 {
     local pkg="$1"
     local orig_deb_depends="$2"
+    local orig_pkg_type="$3"
 
     assure_exists alien
     assure_exists fakeroot
@@ -68,10 +69,16 @@ __epm_repack_to_deb()
             return 1
         fi
 
-        # inject original deb depends into debian/control
+        # inject original depends into debian/control
         if [ -n "$orig_deb_depends" ] ; then
             info "Injecting Depends: $orig_deb_depends"
-            sed -i -e "s|\${shlibs:Depends}|$orig_deb_depends|" "$debsrcdir"debian/control
+            if [ "$orig_pkg_type" = "rpm" ] ; then
+                # RPM source: add non-lib requires alongside shlibs
+                sed -i -e "s|\${shlibs:Depends}|\${shlibs:Depends}, $orig_deb_depends|" "$debsrcdir"debian/control
+            else
+                # DEB source: replace shlibs placeholder with original depends
+                sed -i -e "s|\${shlibs:Depends}|$orig_deb_depends|" "$debsrcdir"debian/control
+            fi
         fi
 
         # build the deb
