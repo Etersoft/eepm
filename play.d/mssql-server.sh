@@ -40,10 +40,10 @@ case "$(epm print info -e)" in
   AstraLinuxSE/1.7)
     # libc++1 is available in Astra repos, no need for external Debian repo
     epm install libc++1
-    epm install https://packages.microsoft.com/ubuntu/20.04/mssql-server-$MSSQL_YEAR/pool/main/m/mssql-server/mssql-server_1*_amd64.deb
+    epm install --repack https://packages.microsoft.com/ubuntu/18.04/mssql-server-$MSSQL_YEAR/pool/main/m/mssql-server/mssql-server_1*_amd64.deb
     ;;
   AstraLinuxSE/1.8)
-    epm install https://packages.microsoft.com/ubuntu/20.04/mssql-server-$MSSQL_YEAR/pool/main/m/mssql-server/mssql-server_1*_amd64.deb
+    epm install --repack https://packages.microsoft.com/ubuntu/20.04/mssql-server-$MSSQL_YEAR/pool/main/m/mssql-server/mssql-server_1*_amd64.deb
     ;;
   ALTLinux/p10|ALTLinux/c10f2)
     epm install --repack https://packages.microsoft.com/rhel/8/mssql-server-$MSSQL_YEAR/Packages/m/mssql-server-[0-9]*.x86_64.rpm || fatal
