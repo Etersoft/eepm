@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.53
+Version: 3.64.54
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -181,6 +181,27 @@ EOF
 # metapackage, no files
 
 %changelog
+* Tue Feb 24 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.54-alt1
+- erc-sh-archive: prefer 7zz (official 7-Zip) over deprecated p7zip
+- eget: use nanosecond integer timing in speedtest
+- epm repack.d/common.sh: add set_release_suffix() function
+- epm play spotify: switch to repository-origin.spotify.com and use direct URL when version is known
+- epm repack hiddify: fix CURL_OPENSSL_4 version mismatch with libcurl4-openssl wrapper
+- epm full-upgrade: skip flatpak update when no flatpak packages installed
+- epm play kyocera-sane: fix download URL (de -> eu domain)
+- epm ei: include eepm-full and eepm-command-not-found in self-update
+- epm requires: add --debian option to filter non-library package-name deps
+- epm repack: pass non-library RPM Requires to DEB when repacking rpm to deb
+- epm play mssql-server: fix Astra 1.7 (use ubuntu/18.04, add --repack for Astra)
+- pack.d/generic-appimage.sh: fix ELF executables permissions after 7z extraction
+- epm repo remove: fix false error when repo is only in sources.list
+- eget: support multiple files in EGET_IPFS_DB
+- eget: fix missing $CID argument in put_cid_and_url
+- eget: fix -N/--timestamping with -O for wget backend
+- epm play: restore EPM_IPFS_DB_UPDATE_SKIPPING support
+- eget: skip timestamping for empty (0-byte) files in __timestamping_download
+- eget: skip timestamping for empty files in curl backend
+
 * Mon Feb 23 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.53-alt1
 - epm repack.d/claude-code*: move env variables to /etc/opt/ config
 - epm repack discord: move config path to /etc/opt/discord/
