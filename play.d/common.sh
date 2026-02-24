@@ -561,7 +561,7 @@ is_installed_by_play()
 check_for_product_update()
 {
     # get installed version (VERSION-RELEASE format)
-    local fullpkgver="$(get_installed_full_version $PKGNAME)"
+    local fullpkgver="$(get_installed_full_version "$(__lowpkgname "$PKGNAME")")"
 
     # load latest version and release from app-versions
     load_latest_version $PKGNAME
@@ -615,18 +615,17 @@ esac
 [ -n "$PRODUCTALT" ] && check_alternative_pkgname
 [ -n "$PKGNAME" ] || fatal "Can't get PKGNAME"
 
-# deb targets always in low case
-[ "$PKGFORMAT" = "deb" ] && PKGNAME="$(echo $PKGNAME | tr "[A-Z]" "[a-z]")"
-
+# lowercase package name for deb package manager commands (alien lowercases when converting rpm to deb)
+__lowpkgname() { [ "$PKGFORMAT" = "deb" ] && echo "$1" | tr "A-Z" "a-z" || echo "$1" ; }
 
 case "$1" in
     "--package-name")
         #[ -n "$DESCRIPTION" ] || exit 0
-        echo "$PKGNAME"
+        __lowpkgname "$PKGNAME"
         exit
         ;;
     "--installed")
-        is_installed_by_play $PKGNAME
+        is_installed_by_play "$(__lowpkgname "$PKGNAME")"
         exit
         ;;
 esac
@@ -638,7 +637,7 @@ check_tty
 case "$1" in
     "--remove")
         #is_repacked_packages || exit 0
-        epm remove $PKGNAME
+        epm remove "$(__lowpkgname "$PKGNAME")"
         exit
         ;;
     "--info")
@@ -651,7 +650,7 @@ case "$1" in
         exit
         ;;
     "--installed-version")
-        get_installed_full_version $PKGNAME
+        get_installed_full_version "$(__lowpkgname "$PKGNAME")"
         exit
         ;;
     "--available-version")
@@ -664,12 +663,12 @@ case "$1" in
         pkgistext="package is"
         epm tool estrlist has_space "$PKGNAME" 2>/dev/null && pkgtext="packages" && pkgistext="packages are"
 
-        if ! epm installed $PKGNAME ; then
+        if ! epm installed "$(__lowpkgname "$PKGNAME")" ; then
             echo "Skipping update of $PKGNAME ($pkgistext not installed)"
             exit
         fi
 
-        if epm mark checkhold $PKGNAME ; then
+        if epm mark checkhold "$(__lowpkgname "$PKGNAME")" ; then
             echo "Skipping update of $PKGNAME ($pkgistext on hold, see '# epm mark showhold')"
             exit
         fi
