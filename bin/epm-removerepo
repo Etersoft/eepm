@@ -53,6 +53,8 @@ __epm_removerepo_apt()
 
     # sources.list.d: comment lines instead of deleting
     epm repo disable "^$repo" 2>/dev/null
+
+    return 0
 }
 
 
