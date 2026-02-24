@@ -598,13 +598,20 @@ __epm_play_initialize_ipfs()
     fi
 
     local eget_ipfs_db_local=$eget_ipfs_db
-    local eget_ipfs_db_remote=$epm_vardir/eget-ipfs-db-remote.txt
 
     # ensure local writable db exists
     if [ ! -r "$eget_ipfs_db_local" ] ; then
         sudorun touch "$eget_ipfs_db_local" >&2
         sudorun chmod -v a+rw "$eget_ipfs_db_local" >&2
     fi
+
+    if [ -n "$EPM_IPFS_DB_UPDATE_SKIPPING" ] ; then
+        # skip remote db download (for the source server that generates the db)
+        export EGET_IPFS_DB="$eget_ipfs_db_local"
+        return
+    fi
+
+    local eget_ipfs_db_remote=$epm_vardir/eget-ipfs-db-remote.txt
 
     # ensure remote cached db is writable
     if [ ! -w "$eget_ipfs_db_remote" ] ; then
