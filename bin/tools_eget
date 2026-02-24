@@ -1239,8 +1239,11 @@ __timestamping_download()
     local TARGETFILE="$2"
     local DOWNLOAD_CMD="$3"  # will be "__aria2 ..." or "__axel ..."
 
-    # If file doesn't exist, just download
-    [ ! -f "$TARGETFILE" ] && eval "$DOWNLOAD_CMD" && return
+    # If file doesn't exist or is empty, just download
+    if [ ! -s "$TARGETFILE" ] ; then
+        eval "$DOWNLOAD_CMD"
+        return
+    fi
 
     # Get Last-Modified header
     local remote_modified="$(url_get_header "$URL" "Last-Modified")"
