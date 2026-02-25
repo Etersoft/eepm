@@ -313,14 +313,14 @@ epm_ni_install_names()
             sudocmd yum -y $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
             return ;;
         dnf-rpm|dnf5-rpm)
-            sudocmd dnf install -y --allowerasing $YUMOPTIONS $(echo "$*" | exp_with_arch_suffix)
+            sudocmd dnf install -y $(subst_option noremove '' --allowerasing) $YUMOPTIONS $(echo "$*" | exp_with_arch_suffix)
             return ;;
         urpm-rpm)
             sudocmd urpmi --auto $URPMOPTIONS $@
             return ;;
         zypper-rpm)
             # FIXME: returns true ever no package found, need check for "no found", "Nothing to do."
-            yes | sudocmd zypper --non-interactive $ZYPPEROPTIONS install $@
+            yes | sudocmd zypper --non-interactive $ZYPPEROPTIONS install $(subst_option noremove --no-force-resolution) $@
             return ;;
         packagekit)
             docmd pkcon install --noninteractive $@
