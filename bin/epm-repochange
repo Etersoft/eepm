@@ -1,0 +1,99 @@
+#!/bin/sh
+#
+# Copyright (C) 2015-2016, 2020, 2021  Etersoft
+# Copyright (C) 2015-2016, 2020, 2021  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+load_helper epm-repomirrors
+
+# Convert mirror URL to sed pattern for matching
+# https://download.etersoft.ru/pub/ALTLinux -> //download.etersoft.ru/pub/* ALTLinux
+__url_to_sed_pattern()
+{
+    echo "$1" | sed -e 's|^https:||' -e 's|/\([^/]*\)$|/* \1|'
+}
+
+# Substitute known mirror URL with new one
+# Uses mirror database from epm-repomirrors
+__subst_with_repo_url()
+{
+    __load_alt_mirror_db
+    local input="$1"
+    local new_pattern="$2"
+
+    local name url pattern
+    while read -r name url ; do
+        [ -z "$name" ] && continue
+        pattern=$(__url_to_sed_pattern "$url")
+        input=$(echo "$input" | sed -e "s|$pattern|$new_pattern|")
+    done <<EOF
+$__ALT_MIRROR_DB
+EOF
+    echo "$input"
+}
+
+
+__change_repo()
+{
+    local REPLTO="$1"
+    local NN
+    epm --quiet repo list | grep -v "file:/" | while read nn ; do
+        NN="$(__subst_with_repo_url "$nn" "$REPLTO")"
+        [ "$NN" = "$nn" ] && continue
+        epm addrepo "$NN" && epm removerepo "$nn" || return 1
+    done
+}
+
+
+__epm_repochange_alt()
+{
+    local current_mirror mirror
+    current_mirror=$(__get_current_mirror)
+    mirror="$1"
+
+    case "$mirror" in
+        "--list")
+            __list_mirrors "$current_mirror" "$short"
+            ;;
+        *)
+            local pattern
+            pattern="$(__alt_mirror_change_pattern "$mirror")"
+            if [ -n "$pattern" ] ; then
+                __change_repo "$pattern"
+            else
+                fatal 'Unsupported mirror: $mirror. Use --list to see available mirrors.'
+            fi
+            ;;
+    esac
+}
+
+
+epm_repochange()
+{
+    [ "$1" = "--help" ] && message "Use --list to get all possible targets" && return
+    if [ "$1" != "--list" ] ; then
+        load_helper epm-repofix
+        epm_repofix
+    fi
+    case $BASEDISTRNAME in
+        "alt")
+            __epm_repochange_alt "$@"
+            ;;
+         *)
+            fatal 'Repo change Unsupported for $BASEDISTRNAME'
+            ;;
+    esac
+}
