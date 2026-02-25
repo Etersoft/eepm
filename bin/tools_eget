@@ -1278,6 +1278,21 @@ __timestamping_download()
     fi
 }
 
+# get HTTP response headers (wget-based, used by wget/aria2/axel backends)
+__wget_url_get_response()
+{
+	local URL="$1"
+	local answer
+	answer="$(quiet=1 __wget --timeout 20 --tries 1 --spider -S "$URL" 2>&1)"
+	# HTTP/1.1 405 Method Not Allowed
+	# HTTP/1.1 404 Not Found
+	if echo "$answer" | grep -q "^ *HTTP/[12.]* 40[45]" ; then
+		(quiet=1 __wget -O/dev/null --header="Range: bytes=0-0" -S "$URL" 2>&1)
+		return
+	fi
+	echo "$answer"
+}
+
 if [ "$EGET_BACKEND" = "file" ] ; then
 
 # put remote content to stdout
@@ -1468,16 +1483,7 @@ sget_with_mirrors()
 
 url_get_response()
 {
-    local URL="$1"
-    local answer
-    answer="$(quiet=1 __wget --timeout 20 --tries 1 --spider -S "$URL" 2>&1)"
-    # HTTP/1.1 405 Method Not Allowed
-    # HTTP/1.1 404 Not Found
-    if echo "$answer" | grep -q "^ *HTTP/[12.]* 40[45]" ; then
-        (quiet=1 __wget -O/dev/null --header="Range: bytes=0-0" -S "$URL" 2>&1)
-        return
-    fi
-    echo "$answer"
+	__wget_url_get_response "$@"
 }
 
 elif [ "$EGET_BACKEND" = "curl" ] ; then
@@ -1687,19 +1693,10 @@ sget_with_mirrors()
     echo "$tab_urls" | __aria2_download -i-
 }
 
-# use __wget for headers (aria2/axel don't support this natively)
+# use __wget for headers (aria2 doesn't support this natively)
 url_get_response()
 {
-    local URL="$1"
-    local answer
-    answer="$(quiet=1 __wget --timeout 20 --tries 1 --spider -S "$URL" 2>&1)"
-    # HTTP/1.1 405 Method Not Allowed
-    # HTTP/1.1 404 Not Found
-    if echo "$answer" | grep -q "^ *HTTP/[12.]* 40[45]" ; then
-        (quiet=1 __wget -O/dev/null --header="Range: bytes=0-0" -S "$URL" 2>&1)
-        return
-    fi
-    echo "$answer"
+	__wget_url_get_response "$@"
 }
 
 elif [ "$EGET_BACKEND" = "axel" ] ; then
@@ -1800,19 +1797,10 @@ sget_with_mirrors()
     [ -n "$USEOUTPUTDIR" ] && cd "$oldpwd"
 }
 
-# use __wget for headers (aria2/axel don't support this natively)
+# use __wget for headers (axel doesn't support this natively)
 url_get_response()
 {
-    local URL="$1"
-    local answer
-    answer="$(quiet=1 __wget --timeout 20 --tries 1 --spider -S "$URL" 2>&1)"
-    # HTTP/1.1 405 Method Not Allowed
-    # HTTP/1.1 404 Not Found
-    if echo "$answer" | grep -q "^ *HTTP/[12.]* 40[45]" ; then
-        (quiet=1 __wget -O/dev/null --header="Range: bytes=0-0" -S "$URL" 2>&1)
-        return
-    fi
-    echo "$answer"
+	__wget_url_get_response "$@"
 }
 
 elif [ "$EGET_BACKEND" = "rsync" ] ; then
