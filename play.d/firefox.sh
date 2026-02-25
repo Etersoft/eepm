@@ -9,6 +9,8 @@ URL="https://www.mozilla.org/en-US/firefox"
 
 if [ "$VERSION" = "*" ] ; then
 	VERSION="$(eget -O- https://www.mozilla.org/en-US/firefox/releases/ | grep -P '>[0-9]+\.[0-9]+\.*[0-9]*<' | grep -oP '\K[0-9]+\.[0-9]+[.0-9]*' | sort -V | tail -n1)"
+	# releases page shows 148.0.0 but FTP uses 148.0 (strip trailing .0)
+	VERSION="$(echo "$VERSION" | sed 's/\.0$//')"
 fi
 
 arch=$(epm print info -a)
