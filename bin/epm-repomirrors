@@ -250,38 +250,39 @@ __select_mirror_fzf()
 
 epm_repomirrors()
 {
-    local opt_speedtest=""
-    local opt_list=""
-    local opt_auto=""
+    local CMD="$1"
+    [ -n "$CMD" ] && shift
+    case $CMD in
+    -h|--help|help)                       # HELPCMD: show this help
+        echo "Usage: epm repo mirrors [command]"
+        echo "List and test ALT Linux mirrors"
+        echo ""
+        echo "Commands:"
+        get_help HELPCMD "$SHAREDIR/epm-repomirrors"
+        return
+        ;;
+    ""|list)                              # HELPCMD: list available mirrors with URLs (use --short for names only)
+        __epm_repomirrors_check_alt
+        local current_mirror
+        current_mirror=$(__get_current_mirror)
+        __list_mirrors "$current_mirror" "$short"
+        ;;
+    speedtest)                            # HELPCMD: test download speed and show interactive selection
+        __epm_repomirrors_check_alt
+        __epm_repomirrors_speedtest
+        ;;
+    auto)                                 # HELPCMD: test speed and automatically switch to fastest mirror
+        __epm_repomirrors_check_alt
+        __epm_repomirrors_speedtest --auto
+        ;;
+    *)
+        fatal "Unknown command $ epm repo mirrors $CMD"
+        ;;
+    esac
+}
 
-    while [ -n "$1" ] ; do
-        case "$1" in
-            -h|--help)                    # HELPCMD: show this help
-                echo "Usage: epm repo mirrors [OPTIONS]"
-                echo "List and test ALT Linux mirrors"
-                echo ""
-                echo "Options:"
-                get_help HELPCMD "$SHAREDIR/epm-repomirrors"
-                return
-                ;;
-            --list)                       # HELPCMD: list available mirrors with URLs (--short for names only)
-                opt_list=1
-                ;;
-            --speedtest)                  # HELPCMD: test download speed and show interactive selection
-                opt_speedtest=1
-                ;;
-            --auto)                       # HELPCMD: test speed and automatically switch to fastest mirror
-                opt_auto=1
-                opt_speedtest=1
-                ;;
-            *)
-                opt="$1"
-                fatal 'Unknown option: $opt'
-                ;;
-        esac
-        shift
-    done
-
+__epm_repomirrors_check_alt()
+{
     case $BASEDISTRNAME in
         "alt")
             ;;
@@ -289,21 +290,15 @@ epm_repomirrors()
             fatal "epm repo mirrors is only supported for ALT Linux"
             ;;
     esac
+}
+
+__epm_repomirrors_speedtest()
+{
+    local opt_auto=""
+    [ "$1" = "--auto" ] && opt_auto=1
 
     local current_mirror
     current_mirror=$(__get_current_mirror)
-
-    # No options - show help
-    if [ -z "$opt_list" ] && [ -z "$opt_speedtest" ] ; then
-        epm_repomirrors --help
-        return
-    fi
-
-    # --list: show available mirrors
-    if [ -n "$opt_list" ] && [ -z "$opt_speedtest" ] ; then
-        __list_mirrors "$current_mirror" "$short"
-        return
-    fi
 
     # Speed test mode (uses eget --speedtest)
     [ -z "$tsv" ] && info "Testing mirrors speed (3 measurements × 5 sec per mirror)..."

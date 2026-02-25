@@ -144,7 +144,7 @@ epm_repo()
         load_helper epm-repofix
         epm_repofix "$@"
         ;;
-    mirrors)                          # HELPCMD: list and test ALT Linux mirrors (--speedtest to test speed)
+    mirrors)                          # HELPCMD: list and test ALT Linux mirrors (run with --help for subcommands)
         load_helper epm-repomirrors
         epm_repomirrors "$@"
         ;;
