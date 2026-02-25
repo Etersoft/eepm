@@ -284,6 +284,13 @@ get_github_release_info() {
     fi
 }
 
+# Extract browser_download_url values from GitHub release JSON via epm tool json.
+# Handles both single-line and multi-line JSON correctly.
+__get_github_download_urls()
+{
+    epm --inscript --quiet tool json -b | grep '"browser_download_url"' | sed -e 's|.*[[:space:]]||' -e 's|"||g'
+}
+
 get_github_url()
 {
     local url="$1"
@@ -294,23 +301,13 @@ get_github_url()
     wc="$(__convert_glob__to_regexp "$asset_name")"
 
     if [ "$3" == "prerelease" ] ; then
-        get_github_release_info "$url" | grep 'browser_download_url' | grep -iEo 'https.*download.*' | grep -E "$wc" | head -n1 | sed -e 's|"$||'
+        get_github_release_info "$url" | __get_github_download_urls | grep -E "$wc" | head -n1
     else
         local result
-        result="$(get_github_release_info "$url" "latest" | grep 'browser_download_url' | grep -iEo 'https.*download.*' | grep -E "$wc" | head -n1 | sed -e 's|"$||')"
+        result="$(get_github_release_info "$url" "latest" | __get_github_download_urls | grep -E "$wc" | head -n1)"
         if [ -z "$result" ] ; then
             result="$(get_github_release_info "$url" \
-            | awk '{
-    if ($0 ~ /"prerelease": false/) {
-        prerelease = 0;
-    } else if ($0 ~ /"prerelease": true/) {
-        prerelease = 1;
-    }
-    if (!prerelease && $0 ~ /"browser_download_url":/) {
-        match($0, /"browser_download_url": "(https[^"]*)"/, arr);
-        print arr[1];
-    }
-}' | grep -E "$wc" | head -n1 | sed -e 's|"$||')"
+            | __get_github_download_urls | grep -E "$wc" | head -n1)"
         fi
         echo "$result"
     fi
