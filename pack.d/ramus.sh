@@ -15,13 +15,13 @@ mv  $PRODUCT* opt/$PRODUCT
 VERSION=$(echo "$URL" | grep -oE '[0-9]+(\.[0-9]+){1,2}')
 [ -n "$VERSION" ] || fatal "Can't get package version"
 
-epmi java-11-openjdk-devel gradle
+epmi java-17-openjdk-devel gradle
 
 # Could not resolve all files for configuration ':gui-framework-core:compileClasspath'.
 sed -i "s|^.*implementation 'org\.dockingframes:docking-frames-common:1\.1\.2-SNAPSHOT'|    implementation 'org.dockingframes:docking-frames-common:1.1.1'|" opt/$PRODUCT/gui-framework-core/build.gradle
 
 cd opt/$PRODUCT
-export JAVA_HOME=/usr/lib/jvm/java-11-openjdk
+export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
 export PATH=$JAVA_HOME/bin:$PATH
 gradle build || fatal
 gradle copyFiles || fatal
