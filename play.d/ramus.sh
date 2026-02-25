@@ -9,7 +9,7 @@ URL="https://github.com/Vitaliy-Yakovchuk/ramus"
 
 warn_version_is_not_supported
 
-# Hardcode VERSION: newer versions not tested
+# Hardcode VERSION for fix work with java 11
 VERSION="2.0.2"
 
 PKGURL="https://github.com/Vitaliy-Yakovchuk/ramus/archive/refs/tags/v$VERSION.tar.gz"

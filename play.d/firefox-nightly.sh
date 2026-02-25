@@ -14,7 +14,9 @@ arch=$(epm print info -a)
 
 PKGURL="https://ftp.mozilla.org/pub/firefox/nightly/latest-mozilla-central/firefox-$VERSION.en-US.linux-$arch.deb"
 
-# FIXME: need we fix workaround in epm install ?
-[ "$VERSION" = "*" ] && PKGURL="$(eget --list --latest $PKGURL)"
+# eget --list returns doubled path for this FTP (absolute hrefs), extract filename
+if [ "$VERSION" = "*" ] ; then
+    PKGURL="$URL$(eget --list --latest "$PKGURL" | sed 's|.*/||')"
+fi
 
 install_pkgurl
