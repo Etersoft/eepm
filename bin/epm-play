@@ -45,10 +45,23 @@ __remove_installed_app()
 }
 
 
+__is_repo_play_app_installed()
+{
+    local app="$1"
+    local list_file="$CONFIGDIR/repo-play-apps.list"
+    [ -s "$list_file" ] || return 1
+    grep -q "^$app$" "$list_file" || return 1
+    # App is in the repo list — check if its package is actually installed
+    local pkg
+    pkg="$(__run_script "$app" --package-name </dev/null 2>/dev/null)"
+    [ -n "$pkg" ] && epm status --installed "$pkg" </dev/null
+}
+
 __is_app_installed()
 {
-    __run_script "$1" --installed "$2"
-    return
+    __run_script "$1" --installed "$2" && return 0
+    # Fallback: check if app is repo-installed (listed in repo-play-apps.list)
+    __is_repo_play_app_installed "$1"
 }
 
 
@@ -222,10 +235,27 @@ __get_installed_table()
     rm -f $pkglist
 }
 
+__get_repo_installed_apps()
+{
+    local found_apps="$1"
+    local list_file="$CONFIGDIR/repo-play-apps.list"
+    [ -s "$list_file" ] || return
+    local app
+    while read -r app ; do
+        [ -n "$app" ] || continue
+        [ "${app#\#}" != "$app" ] && continue
+        echo "$found_apps" | grep -q "^$app$" && continue
+        __is_repo_play_app_installed "$app" </dev/null 2>/dev/null && echo "$app"
+    done <"$list_file"
+}
+
 __list_installed_app()
 {
     # get all installed packages and convert it to a apps list
-    __get_installed_table | cut -f2 -d" "
+    local apps
+    apps="$(__get_installed_table | cut -f2 -d" ")"
+    [ -n "$apps" ] && echo "$apps"
+    __get_repo_installed_apps "$apps"
 }
 
 __list_installed_packages()

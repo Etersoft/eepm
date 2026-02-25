@@ -1,0 +1,6 @@
+# Apps that are installed from repository but should be recognized by epm play --installed
+# One app name per line (must match play.d script name)
+steam
+portproton
+chromium-gost
+pencil
