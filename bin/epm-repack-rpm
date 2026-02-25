@@ -258,6 +258,11 @@ __epm_repack_to_rpm()
         fi
 
         TARGETARCH=$(epm print info -a | sed -e 's|^x86$|i586|')
+        # alien does not preserve BuildArch: noarch in generated spec,
+        # so check the original package and restore it
+        if rhas "$alpkg" "\.noarch\." && ! grep -q "^BuildArch:.*noarch" "$spec" ; then
+            sed -i "s|^Group:.*|&\nBuildArch: noarch|" "$spec"
+        fi
 
         showcmd $RPMBUILD --buildroot $buildroot --target $TARGETARCH -bb $spec
         if [ -n "$verbose" ] ; then
