@@ -1287,7 +1287,7 @@ __wget_url_get_response()
 	# HTTP/1.1 405 Method Not Allowed
 	# HTTP/1.1 404 Not Found
 	if echo "$answer" | grep -q "^ *HTTP/[12.]* 40[45]" ; then
-		(quiet=1 __wget -O/dev/null --header="Range: bytes=0-0" -S "$URL" 2>&1)
+		(quiet=1 __wget --timeout 20 --tries 1 -O/dev/null --header="Range: bytes=0-0" -S "$URL" 2>&1)
 		return
 	fi
 	echo "$answer"
