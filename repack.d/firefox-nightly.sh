@@ -34,9 +34,9 @@ copy_icons_to_share()
     fi
 
     for i in 16 32 48 64 128 ; do
-        sicon=$BUILDROOT$PRODUCTDIR/browser/chrome/icons/default/default$i.png
-        [ -r $sicon ] || continue
-        install_file $sicon $/usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png
+        sicon=$PRODUCTDIR/browser/chrome/icons/default/default$i.png
+        [ -r "$BUILDROOT$sicon" ] || continue
+        install_file $sicon /usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png
     done
 
 }

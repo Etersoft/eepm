@@ -151,13 +151,16 @@ move_dir()
 remove_dir()
 {
     local file="$1"
-    [ -n "$file" ] || return
-    [ -d "$BUILDROOT$file/" ] || return
+    [ -n "$file" ] || return 0
+    [ -d "$BUILDROOT$file/" ] || return 0
 
     # canonicalize
     file="$(echo "$file" | sed -e 's|/*$||')"
 
     echo "Removing $file dir ..."
+    # ensure traversability first (mode 600 dirs can't be entered)
+    chmod u+rwx "$BUILDROOT$file" 2>/dev/null
+    chmod -R u+rwX "$BUILDROOT$file/" 2>/dev/null
     rm -r "$BUILDROOT$file/"
     # %dir "/icons/"
     subst "s|^%dir $file/*$||" $SPEC
