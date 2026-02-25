@@ -8,7 +8,7 @@ URL="https://github.com/QwenLM/qwen-code"
 
 . $(dirname $0)/common.sh
 
-# drop v0.10.2-nightly.20260217.a0a0a70b and v0.10.2-preview.0
-PKGURL=$(get_github_release_info  $URL |  grep 'browser_download_url' | grep -iEo 'https.*download.*' | grep -vi nightly | grep -vi preview | grep -E "cli.js" | head -n1 | sed -e 's|"$||')
+# drop nightly/preview: some are not marked prerelease on GitHub (their bug)
+PKGURL=$(get_github_release_info $URL | __get_github_download_urls | grep -vi nightly | grep -vi preview | grep -E "cli.js" | head -n1)
 
 install_pack_pkgurl
