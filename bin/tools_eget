@@ -1289,7 +1289,15 @@ __timestamping_download()
 # and lowercase header names without leading spaces
 __wget2_filter_response()
 {
-	sed -n -e 's/^:status: \([0-9]*\)/  HTTP\/2 \1/p' -e '/^[a-z].*: /p'
+	sed -n -e 's/^:status: \([0-9]*\)/HTTP\/2 \1/p' -e '/^[a-z].*: /p'
+}
+
+# Extract HTTP headers from wget1 -S output and normalize:
+# strip leading spaces, convert header names to lowercase
+__wget1_filter_response()
+{
+	sed -n -e 's/^ *\(HTTP\/[12.]*\)/\1/p' -e 's/^  \([A-Za-z].*: \)/\1/p' | \
+	sed -e 's/^\([A-Za-z-]*:\)/\L\1/'
 }
 
 # get HTTP response headers (wget-based, used by wget/aria2/axel backends)
@@ -1302,7 +1310,7 @@ __wget_url_get_response()
 		# wget2 --spider -S does not output headers, use -O /dev/null -S
 		# wget2 -q suppresses -S output (unlike wget1), so don't use quiet=1
 		answer="$(__wget --timeout 20 --tries 1 -O /dev/null -S "$URL" 2>&1 | __wget2_filter_response)"
-		if echo "$answer" | grep -q "^ *HTTP/[12.]* 40[45]" ; then
+		if echo "$answer" | grep -q "^HTTP/[12.]* 40[45]" ; then
 			__wget --timeout 20 --tries 1 -O /dev/null --header="Range: bytes=0-0" -S "$URL" 2>&1 | __wget2_filter_response
 			return
 		fi
@@ -1310,11 +1318,11 @@ __wget_url_get_response()
 		return
 	fi
 
-	answer="$(quiet=1 __wget --timeout 20 --tries 1 --spider -S "$URL" 2>&1)"
+	answer="$(quiet=1 __wget --timeout 20 --tries 1 --spider -S "$URL" 2>&1 | __wget1_filter_response)"
 	# HTTP/1.1 405 Method Not Allowed
 	# HTTP/1.1 404 Not Found
-	if echo "$answer" | grep -q "^ *HTTP/[12.]* 40[45]" ; then
-		(quiet=1 __wget --timeout 20 --tries 1 -O/dev/null --header="Range: bytes=0-0" -S "$URL" 2>&1)
+	if echo "$answer" | grep -q "^HTTP/[12.]* 40[45]" ; then
+		quiet=1 __wget --timeout 20 --tries 1 -O/dev/null --header="Range: bytes=0-0" -S "$URL" 2>&1 | __wget1_filter_response
 		return
 	fi
 	echo "$answer"
@@ -1641,11 +1649,11 @@ url_get_response()
     local URL="$1"
     local answer
     # Don't use -C - for header requests
-    answer="$(quiet=1 __curl --max-time 20 --retry 0 -LI "$URL" 2>&1)"
+    answer="$(quiet=1 __curl --max-time 20 --retry 0 -LI "$URL" 2>&1 | sed -e 's/\r$//' -e 's/ $//')"
     # HTTP/1.1 405 Method Not Allowed
     # HTTP/1.1 404 Not Found
-    if echo "$answer" | grep -q "^ *HTTP/[12.]* 40[45]" ; then
-        (quiet=1 __curl --max-time 20 --retry 0 -L -i -r0-0 "$URL" 2>&1)
+    if echo "$answer" | grep -q "^HTTP/[12.]* 40[45]" ; then
+        quiet=1 __curl --max-time 20 --retry 0 -L -i -r0-0 "$URL" 2>&1 | sed -e 's/\r$//' -e 's/ $//'
         return
     fi
     echo "$answer"
@@ -1934,7 +1942,7 @@ if [ "$EGET_BACKEND" = "wget" ] || [ "$EGET_BACKEND" = "curl" ] || [ "$EGET_BACK
 url_get_headers()
 {
     local URL="$1"
-    url_get_response "$URL" | grep -i "^ *[[:alpha:]].*: " | sed -e 's|^ *||' -e 's|\r$||'
+    url_get_response "$URL" | grep -i "^[[:alpha:]].*: "
 }
 
 url_check_accessible()
@@ -1953,12 +1961,12 @@ url_get_header()
 {
     local URL="$1"
     local HEADER="$2"
-    url_get_headers "$URL" | grep -i "^ *$HEADER: " | sed -e "s|^ *$HEADER: ||i"
+    url_get_headers "$URL" | grep -i "^$HEADER: " | sed -e "s|^$HEADER: ||i"
 }
 
 url_get_size()
 {
-    url_get_header "$1" "Content-Length" | tr -d '\r'
+    url_get_header "$1" "content-length"
 }
 
 url_get_raw_real_url()
