@@ -1,7 +1,7 @@
 #!/bin/sh
 
 PKGNAME=rustdesk
-SUPPORTEDARCHES="x86_64"
+SUPPORTEDARCHES="x86_64 aarch64"
 VERSION="$2"
 DESCRIPTION="RustDesk — Display and control your PC and Android devices"
 URL="https://github.com/rustdesk/rustdesk/"
