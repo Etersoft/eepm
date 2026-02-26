@@ -962,6 +962,8 @@ get_url_by_cid()
 
 ###################
 
+# Save original backend before IPFS autodetection may call eget() recursively
+ORIG_EGET_BACKEND="$EGET_BACKEND"
 
 ipfs_mode="$EGET_IPFS"
 
@@ -1118,8 +1120,6 @@ fi
 ###############################
 
 
-
-ORIG_EGET_BACKEND="$EGET_BACKEND"
 
 # override backend by URL type
 if is_fileurl "$1" ; then
