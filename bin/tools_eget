@@ -490,7 +490,17 @@ eget_help()
 cat <<EOF
 
 eget - wget like downloader wrapper with wildcard support in filename part of URL
-Usage: eget [options] http://somesite.ru/dir/na*.log
+
+Usage modes:
+  eget [options] URL                      - download a single file by direct URL
+  eget [options] URL URL2 URL3            - download multiple files
+  eget [options] "http://site/dir/*.rpm"  - wildcard in URL: the URL is split into
+                                  directory + mask, the directory listing page is fetched
+                                  and files matching the mask are downloaded
+  eget [options] http://site/page "*.rpm" - page search: eget fetches any page HTML,
+                                  extracts all links (<a href=...>) and downloads those
+                                  matching the mask (works on any page with links, not
+                                  just directory listings, e.g. release pages)
 
 Options:
     -q|--quiet                - quiet mode
