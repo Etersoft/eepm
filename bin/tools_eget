@@ -1200,6 +1200,12 @@ case "$orig_EGET_BACKEND" in
         ;;
 esac
 
+# Detect wget2 (incompatible --spider -S output format for header operations)
+if [ -n "$WGET" ] ; then
+    if $WGET --version 2>&1 | head -1 | grep -q "^GNU Wget2" ; then
+        WGET2=1
+    fi
+fi
 
 # Wrapper for wget command with all configured options
 # Defined globally so it can be used by aria2/axel backends for header operations
@@ -1278,11 +1284,32 @@ __timestamping_download()
     fi
 }
 
+# Transform wget2 -S output to standard HTTP header format
+# wget2 uses ":status: NNN" instead of "HTTP/1.1 NNN Status"
+# and lowercase header names without leading spaces
+__wget2_filter_response()
+{
+	sed -n -e 's/^:status: \([0-9]*\)/  HTTP\/2 \1/p' -e '/^[a-z].*: /p'
+}
+
 # get HTTP response headers (wget-based, used by wget/aria2/axel backends)
 __wget_url_get_response()
 {
 	local URL="$1"
 	local answer
+
+	if [ -n "$WGET2" ] ; then
+		# wget2 --spider -S does not output headers, use -O /dev/null -S
+		# wget2 -q suppresses -S output (unlike wget1), so don't use quiet=1
+		answer="$(__wget --timeout 20 --tries 1 -O /dev/null -S "$URL" 2>&1 | __wget2_filter_response)"
+		if echo "$answer" | grep -q "^ *HTTP/[12.]* 40[45]" ; then
+			__wget --timeout 20 --tries 1 -O /dev/null --header="Range: bytes=0-0" -S "$URL" 2>&1 | __wget2_filter_response
+			return
+		fi
+		echo "$answer"
+		return
+	fi
+
 	answer="$(quiet=1 __wget --timeout 20 --tries 1 --spider -S "$URL" 2>&1)"
 	# HTTP/1.1 405 Method Not Allowed
 	# HTTP/1.1 404 Not Found
