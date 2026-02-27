@@ -1492,26 +1492,6 @@ subst()
 }
 fi
 
-# Format TSV input to requested output format
-# Input: package<tab>version<tab>description
-# Uses: $short - output only package names
-# Uses: $tsv - output as TSV (pass through)
-__epm_format_output()
-{
-    if [ -n "$short" ] ; then
-        cut -f1
-    elif [ -n "$tsv" ] ; then
-        cat
-    else
-        # human-readable: package=version - description
-        awk -F'\t' '{
-            if ($2) printf "%s=%s", $1, $2; else printf "%s", $1
-            if ($3) printf " - %s", $3
-            printf "\n"
-        }'
-    fi
-}
-
 # Filter output by pattern (remove empty lines, grep by pattern)
 # Args: pattern (optional)
 __epm_filter_by_pattern()

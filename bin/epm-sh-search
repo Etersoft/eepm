@@ -180,6 +180,26 @@ __epm_get_color_pattern()
 # Input format: "[spaces]package-name - description" or "package-name"
 # Uses: __epm_color_pattern - regex pattern to highlight
 # Package names: CYAN, search pattern: RED (bold)
+# Format TSV input to requested output format
+# Input: package<tab>version<tab>description
+# Uses: $short - output only package names
+# Uses: $tsv - output as TSV (pass through)
+__epm_format_output()
+{
+    if [ -n "$short" ] ; then
+        cut -f1
+    elif [ -n "$tsv" ] ; then
+        cat
+    else
+        # human-readable: package=version - description
+        awk -F'\t' '{
+            if ($2) printf "%s=%s", $1, $2; else printf "%s", $1
+            if ($3) printf " - %s", $3
+            printf "\n"
+        }'
+    fi
+}
+
 __epm_colorize_search_output()
 {
     # No colors in TSV mode or when not a terminal
