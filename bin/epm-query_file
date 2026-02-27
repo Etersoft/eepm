@@ -38,8 +38,8 @@ __do_query_real_file()
     local TOFILE
     local file="$1"
 
-    # get canonical path
-    if [ -e "$file" ] ; then
+    # get canonical path (-L for broken symlinks where -e fails)
+    if [ -e "$file" ] || [ -L "$file" ] ; then
         TOFILE="$(__abs_filename "$file")"
     else
         TOFILE="$(print_command_path "$file" || echo "$file")"
@@ -73,8 +73,11 @@ __do_query_real_file()
         LINKTO=$(readlink -- "$TOFILE")
         info " > $TOFILE is link to $LINKTO"
         LINKTO=$(readlink -f -- "$TOFILE")
-        __do_query_real_file "$LINKTO"
-        return
+        if [ -e "$LINKTO" ] ; then
+            __do_query_real_file "$LINKTO"
+            return
+        fi
+        return $RES
     else
         return $RES
     fi
