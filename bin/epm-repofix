@@ -120,6 +120,8 @@ epm_reposwitch()
             ;;
     esac
 
+    assure_root
+
     if [ "$TO" = "Sisyphus" ] ; then
         __replace_alt_version_in_repo "$__alt_branch_reg/branch/" "$TO/"
     else
