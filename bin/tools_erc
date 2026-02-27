@@ -65,10 +65,9 @@ create_archive()
 			docmd tar cvf "$arc" "$@"
 			;;
 		*)
-			# TODO: fix symlinks support
 			# https://bugzilla.altlinux.org/49852
 			# FIXME: creating .tar.* (.tar.gz) is not supported
-			docmd $HAVE_7Z a -l "$arc" "$@"
+			docmd $HAVE_7Z a -snl "$arc" "$@"
 			#fatal "Not yet supported creating of $type archives"
 			;;
 	esac
