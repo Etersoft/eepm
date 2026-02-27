@@ -51,6 +51,7 @@ set_backend()
 		is_command $HAVE_7Z || fatal "Could not find any patool or 7-zip backend. Please install p7zip package and retry."
 	fi
 	[ -z "$force" ] || HAVE_7Z="$HAVE_7Z -y"
+	[ -z "$quiet" ] || HAVE_7Z="$HAVE_7Z -bb0 -bd -bso0"
 }
 
 

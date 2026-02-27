@@ -436,6 +436,7 @@ force=
 target=
 extract_dir=
 verbose=--verbose
+quiet=
 use_7z=
 use_patool=
 
@@ -457,6 +458,7 @@ case "$1" in
         ;;
     -q|--quiet)           # HELPOPT: be silent
         verbose=
+        quiet=1
         ;;
     -f|--force)           # HELPOPT: override target
         force=-f
