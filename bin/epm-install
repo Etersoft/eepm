@@ -85,6 +85,16 @@ epm_install_names()
 {
     [ -z "$1" ] && return
 
+    # resolve file paths (like /usr/bin/git) to package names
+    # skip for ALT: apt-rpm can install by file path natively
+    if [ "$BASEDISTRNAME" != "alt" ] && __epm_if_command_path "$1" ; then
+        load_helper epm-search_file
+        local pkg
+        pkg="$(tsv=--tsv epm_search_file "$1" 2>/dev/null | head -1 | cut -f1)"
+        [ -n "$pkg" ] || fatal "Can not find package for $1"
+        set -- $pkg
+    fi
+
     # check backend:package syntax (snap:pkg, nix:pkg)
     if __has_backend_syntax "$@" ; then
         __process_backend_arguments epm_install_names "$@"
@@ -446,7 +456,6 @@ epm_install_files()
     local files="$*"
     [ -z "$files" ] && return
 
-    # TODO: enable support only for systems with support for it
     # on some systems install target can be a real path
     # use hi-level for install by command path (f.i. epm install /usr/bin/git)
     if __epm_if_command_path $files ; then
