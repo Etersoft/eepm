@@ -120,6 +120,10 @@ case $BASEDISTRNAME in
         sudoepm repo set $DISTRVERSION
         return
         ;;
+    astra)
+        sudoepm repo set astra
+        return
+        ;;
 esac
 
 case $PMTYPE in
