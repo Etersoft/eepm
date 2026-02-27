@@ -77,36 +77,42 @@ __print_file_header()
 # repo_filter_patterns is set by print_apt_sources_list
 __print_apt_sources_list_verbose()
 {
-    local i content
+    local i content found=''
     for i in "$@" ; do
         content="$(__cat_apt_sources_list "^[^#]*$PKGFORMAT" "$i" | __filter_repos_list $repo_filter_patterns)"
         [ -n "$content" ] || continue
+        found=1
         __print_file_header "$i"
         echo "$content" | sed -e 's|^|    |'
     done
+    [ -n "$found" ]
 }
 
 __print_apt_sources_list_verbose_full()
 {
-    local i content
+    local i content found=''
     for i in "$@" ; do
         content="$(__cat_apt_sources_list "^[[:space:]]*#*[[:space:]]*$PKGFORMAT" "$i" | __filter_repos_list $repo_filter_patterns)"
         [ -n "$content" ] || continue
+        found=1
         __print_file_header "$i"
         # highlight commented lines
         echo "$content" | sed -e 's|^|    |' -e "s|^\(    #.*\)|$(set_color $WHITE)\1$(restore_color)|"
     done
+    [ -n "$found" ]
 }
 
 __print_apt_sources_list_verbose_disabled()
 {
-    local i content
+    local i content found=''
     for i in "$@" ; do
         content="$(__cat_apt_sources_list "^[[:space:]]*#[[:space:]]*$PKGFORMAT" "$i" | __filter_repos_list $repo_filter_patterns)"
         [ -n "$content" ] || continue
+        found=1
         __print_file_header "$i"
         echo "$content" | sed -e 's|^|    |'
     done
+    [ -n "$found" ]
 }
 
 print_apt_sources_list()
