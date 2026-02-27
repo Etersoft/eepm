@@ -447,6 +447,16 @@ __epm_addrepo_astra()
 
     local reponame="$(epm print info --repo-name)"
 
+    # allow version shortcuts: epm repo set 1.7 / epm repo set 1.8
+    case "$distrname" in
+        1.7|1.8)
+            reponame="${distrname}_x86-64"
+            distrname="astra"
+            ;;
+        astra)
+            ;;
+    esac
+
     # keywords
     # https://wiki.astralinux.ru/pages/viewpage.action?pageId=3276859
     case "$distrname-$reponame" in
