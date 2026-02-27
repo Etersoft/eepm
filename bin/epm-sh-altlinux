@@ -28,6 +28,17 @@ is_taskarg() {
     return 1
 }
 
+
+is_taskurl()
+{
+    local pkg_urls="$1"
+    [ -n "$pkg_urls" ] || return
+
+    echo "$pkg_urls" | grep -q -E "https://packages.altlinux.org/ru/tasks/[0-9]+/*$" || \
+    echo "$pkg_urls" | grep -q -E "https://git.altlinux.org/tasks/[0-9]+/*$" || \
+    echo "$pkg_urls" | grep -q -E "https://git.altlinux.org/tasks/archive/done/_[0-9]+/[0-9]+/*$"
+}
+
 # Extract task number from various formats: 123456, #123456, 123456/pkg, task/123456, task/123456/pkg
 get_tasknumber_from_arg()
 {

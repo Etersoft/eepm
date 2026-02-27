@@ -559,9 +559,8 @@ epm_install()
             epm_install_alt_tasks $pkg_names
             return
         fi
-        if echo "$pkg_urls" | grep -q -E "https://packages.altlinux.org/ru/tasks/[0-9]+/*$" || \
-           echo "$pkg_urls" | grep -q -E "https://git.altlinux.org/tasks/[0-9]+/*$" || \
-           echo "$pkg_urls" | grep -q -E "https://git.altlinux.org/tasks/archive/done/_[0-9]+/[0-9]+/*$" ; then
+        # only one url really
+        if is_taskurl "$pkg_urls" ; then
             load_helper epm-install-alt
             local task="$(basename "$pkg_urls")"
             local taskurl="$(dirname "$pkg_urls")"
