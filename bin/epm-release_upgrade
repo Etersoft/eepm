@@ -559,6 +559,13 @@ epm_release_upgrade()
     esac
 
     case $DISTRNAME in
+    "AstraLinuxSE")
+        info "Upgrading Astra Linux SE $DISTRVERSION ..."
+        info "See also https://wiki.astralinux.ru/pages/viewpage.action?pageId=333809857"
+        assure_exists astra-console-upgrade
+        sudocmd astra-console-upgrade force
+        return
+        ;;
     "Mageia")
         epm repo remove all
         sudocmd urpmi.addmedia --distrib --mirrorlist 'http://mirrors.mageia.org/api/mageia.8.$DISTRARCH.list'
