@@ -47,7 +47,7 @@ __print_apt_sources_list()
 {
     local i
     for i in "$@" ; do
-        __cat_apt_sources_list "^[^#]*rpm" "$i"
+        __cat_apt_sources_list "^[^#]*$PKGFORMAT" "$i"
     done
 }
 
@@ -55,7 +55,7 @@ __print_apt_sources_list_full()
 {
     local i
     for i in "$@" ; do
-        __cat_apt_sources_list "^[[:space:]]*#*[[:space:]]*rpm" "$i"
+        __cat_apt_sources_list "^[[:space:]]*#*[[:space:]]*$PKGFORMAT" "$i"
     done
 }
 
@@ -63,7 +63,7 @@ __print_apt_sources_list_disabled()
 {
     local i
     for i in "$@" ; do
-        __cat_apt_sources_list "^[[:space:]]*#[[:space:]]*rpm" "$i"
+        __cat_apt_sources_list "^[[:space:]]*#[[:space:]]*$PKGFORMAT" "$i"
     done
 }
 
@@ -79,7 +79,7 @@ __print_apt_sources_list_verbose()
 {
     local i content
     for i in "$@" ; do
-        content="$(__cat_apt_sources_list "^[^#]*rpm" "$i" | __filter_repos_list $repo_filter_patterns)"
+        content="$(__cat_apt_sources_list "^[^#]*$PKGFORMAT" "$i" | __filter_repos_list $repo_filter_patterns)"
         [ -n "$content" ] || continue
         __print_file_header "$i"
         echo "$content" | sed -e 's|^|    |'
@@ -90,7 +90,7 @@ __print_apt_sources_list_verbose_full()
 {
     local i content
     for i in "$@" ; do
-        content="$(__cat_apt_sources_list "^[[:space:]]*#*[[:space:]]*rpm" "$i" | __filter_repos_list $repo_filter_patterns)"
+        content="$(__cat_apt_sources_list "^[[:space:]]*#*[[:space:]]*$PKGFORMAT" "$i" | __filter_repos_list $repo_filter_patterns)"
         [ -n "$content" ] || continue
         __print_file_header "$i"
         # highlight commented lines
@@ -102,7 +102,7 @@ __print_apt_sources_list_verbose_disabled()
 {
     local i content
     for i in "$@" ; do
-        content="$(__cat_apt_sources_list "^[[:space:]]*#[[:space:]]*rpm" "$i" | __filter_repos_list $repo_filter_patterns)"
+        content="$(__cat_apt_sources_list "^[[:space:]]*#[[:space:]]*$PKGFORMAT" "$i" | __filter_repos_list $repo_filter_patterns)"
         [ -n "$content" ] || continue
         __print_file_header "$i"
         echo "$content" | sed -e 's|^|    |'
