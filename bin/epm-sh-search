@@ -180,6 +180,37 @@ __epm_get_color_pattern()
 # Input format: "[spaces]package-name - description" or "package-name"
 # Uses: __epm_color_pattern - regex pattern to highlight
 # Package names: CYAN, search pattern: RED (bold)
+__epm_search_file_to_tsv()
+{
+    case $PMTYPE in
+        apt-*)
+            # git: /usr/bin/git -> git\t/usr/bin/git
+            sed -e 's|: |\t|'
+            ;;
+        dnf-rpm|dnf5-rpm|yum-rpm)
+            # Multi-line: "pkg-ver.arch : Desc" + "Filename    : /path"
+            # -> pkg\t/path
+            awk '
+                /^[^ ].*\.[^ ]+[[:space:]]*:/ {
+                    pkg = $1
+                    sub(/-[^-]*-[^-]*$/, "", pkg)
+                }
+                /^Filename[[:space:]]*:/ {
+                    print pkg "\t" $NF
+                }
+            '
+            ;;
+        pacman)
+            # extra/git 2.53.0-1\t/usr/bin/git -> git\t/usr/bin/git
+            sed -e 's|^[^/]*/||' -e 's| [^\t]*\t|\t|'
+            ;;
+        *)
+            # fallback: pass through as-is
+            cat
+            ;;
+    esac
+}
+
 # Format TSV input to requested output format
 # Input: package<tab>version<tab>description
 # Uses: $short - output only package names

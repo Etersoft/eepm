@@ -165,5 +165,9 @@ epm_search_file()
 
     __epm_color_pattern=$(__epm_get_color_pattern "$@")
 
-    eval "__epm_search_file_output \"\$search_word\" $MGS" | __epm_colorize_search_output
+    if [ -n "$tsv" ] ; then
+        eval "__epm_search_file_output \"\$search_word\" | __epm_search_file_to_tsv $MGS"
+    else
+        eval "__epm_search_file_output \"\$search_word\" $MGS" | __epm_colorize_search_output
+    fi
 }
