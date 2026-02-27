@@ -79,7 +79,7 @@ extract_7z_to_subdir()
 	local arc="$1"
 	local subdir="$2"
 	mkdir -p "$subdir" && cd "$subdir" || fatal
-	docmd $HAVE_7Z x "$arc"
+	docmd $HAVE_7Z x -y "$arc"
 }
 
 # Extract squashfs-based archives (squashfs, snap)
