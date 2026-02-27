@@ -180,9 +180,16 @@ case $BASEDISTRNAME in
         return
         ;;
     "astra")
-        echo "Use workaround for AstraLinux"
-        # aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
-        __epm_removerepo_apt "$@"
+        # handle "all" and pattern-based removal
+        case "$1" in
+            all)
+                info "removing all repos"
+                __epm_removerepo_alt_grepremove "all"
+                ;;
+            *)
+                __epm_removerepo_apt "$@"
+                ;;
+        esac
         return
         ;;
 esac;
