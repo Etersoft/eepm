@@ -3,6 +3,7 @@
 PKGNAME=vagrant
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
+RELEASE="$3"
 DESCRIPTION="Build and distribute virtualized development environments"
 URL="https://vagrantup.com"
 
@@ -17,10 +18,10 @@ fi
 
 case "$(epm print info -p)" in
     rpm)
-        PKGURL="$BASEURL/${VERSION}/vagrant-${VERSION}-1.x86_64.rpm"
+        PKGURL="$BASEURL/${VERSION}/vagrant-${VERSION}-${RELEASE}.x86_64.rpm"
         ;;
     *)
-        PKGURL="$BASEURL/${VERSION}/vagrant_${VERSION}-1_amd64.deb"
+        PKGURL="$BASEURL/${VERSION}/vagrant_${VERSION}-${RELEASE}_amd64.deb"
         ;;
 esac
 
