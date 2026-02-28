@@ -165,7 +165,7 @@ summary="$(grep "^Summary: " $SPEC | sed -e "s|Summary: ||g" | head -n1)"
 set_rpm_field "Distribution" "EEPM"
 
 if [ -r "$PKG.eepm.yaml" ] ; then
-    yaml_load_vars "$PKG.eepm.yaml" name summary description upstream_file upstream_url url appname arch group license version
+    yaml_load_vars "$PKG.eepm.yaml" name summary description upstream_file upstream_url url appname arch group license version requires
     # for tarballs fix permissions
     chmod $verbose -R a+rX *
     [ -n "$name" ] && [ "$name" != "$PRODUCT" ] && warning "name $name in $PKG.eepm.yaml is not equal to PRODUCT $PRODUCT"
@@ -177,6 +177,7 @@ if [ -r "$PKG.eepm.yaml" ] ; then
     [ -n "$upstream_file" ] || upstream_file="binary package $PRODUCT"
     [ -n "$upstream_url" ] && upstream_file="$upstream_url"
     [ -n "$description" ] && subst "s|^\((Converted from a\) \(.*\) \(package.*\)|$description\n(Repacked from $upstream_file with EPM $(epm --short --version))\n\1 \2 \3|" $SPEC
+    [ -n "$requires" ] && add_requires $requires
 else
     [ -n "$verbose" ] && warning "$PKG.eepm.yaml is missed"
     exya="$(echo $(dirname $PKG.eepm.yaml)/*.eepm.yaml)"
