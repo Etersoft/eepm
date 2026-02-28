@@ -276,7 +276,7 @@ epm_status_repacked()
     local pkg="$1"
 
     # dpkg package missing packager field
-    local repacked="$(epm print field Description for "$1" 2>/dev/null | grep -i "alien")"
+    local repacked="$(epm print field Description for "$1" 2>/dev/null | grep -i "with EPM")"
     local packager="$(epm print field Packager for "$1" 2>/dev/null)"
 
     #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
