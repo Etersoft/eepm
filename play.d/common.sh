@@ -406,6 +406,7 @@ is_glibc_enough()
     local needed="$1"
     local PKG="glibc-core"
     epm status --installed $PKG || PKG="glibc"
+    epm status --installed $PKG || PKG="libc6"
 
     is_pkg_enough $PKG $needed
 }
