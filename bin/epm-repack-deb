@@ -60,9 +60,10 @@ __epm_repack_to_deb()
         # generate debian/ dir without building
         docmd alien --single -k $verbose $scripts "$alpkg"
 
-        # find the generated source directory
+        # find the generated source directory (must contain debian/)
         local debsrcdir
-        debsrcdir="$(ls -1d */ 2>/dev/null | head -n1)"
+        debsrcdir="$(ls -1d */debian 2>/dev/null | sed 's|/debian$||' | head -n1)"
+        [ -n "$debsrcdir" ] && debsrcdir="$debsrcdir/"
         if [ -z "$debsrcdir" ] ; then
             warning 'Can'\''t find alien generated directory for $pkg'
             cd - >/dev/null
@@ -96,4 +97,3 @@ __epm_repack_to_deb()
 
     return 0
 }
-
