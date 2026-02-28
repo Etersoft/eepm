@@ -8,13 +8,14 @@ URL="https://developer.hashicorp.com/packer"
 
 . $(dirname $0)/common.sh
 
+BASEURL="https://hashicorp-releases.yandexcloud.net/packer"
 arch="$(epm print info --debian-arch)"
 
 if [ "$VERSION" = "*" ] ; then
-    VERSION=$(eget -O- "https://releases.hashicorp.com/packer/" 2>/dev/null | grep -o 'packer/[0-9][0-9.]*' | head -1 | sed 's|packer/||')
+    VERSION=$(eget -O- "$BASEURL/" 2>/dev/null | grep -o 'packer/[0-9][0-9.]*' | head -1 | sed 's|packer/||')
     [ -n "$VERSION" ] || fatal "Can't get latest version"
 fi
 
-PKGURL="https://hashicorp-releases.yandexcloud.net/packer/${VERSION}/packer_${VERSION}_linux_${arch}.zip"
+PKGURL="$BASEURL/${VERSION}/packer_${VERSION}_linux_${arch}.zip"
 
 install_pack_pkgurl
