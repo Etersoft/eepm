@@ -23,6 +23,36 @@ load_helper epm-status
 
 [ -n "$EPM_REPACK_SCRIPTS_DIR" ] || EPM_REPACK_SCRIPTS_DIR="$CONFIGDIR/repack.d"
 
+# Run alien with dependency checks, fakeroot and verbose handling
+# Usage: __run_alien [--fakeroot] <pkg> [alien-args...]
+__run_alien()
+{
+    # Note: install epm-repack for static (package based) dependencies
+    assure_exists cpio
+    assure_exists alien
+    assure_exists fakeroot
+    assure_exists rpm
+
+    local use_fakeroot=''
+    if [ "$1" = "--fakeroot" ] ; then
+        ! is_root && is_command fakeroot && use_fakeroot='fakeroot'
+        shift
+    fi
+
+    local alpkg="$1"
+    shift
+
+    local alien_verbose="$verbose"
+    [ -n "$debug" ] && alien_verbose="--veryverbose"
+
+    if [ -n "$verbose" ] || [ -n "$debug" ] ; then
+        docmd $use_fakeroot alien $alien_verbose "$@" "$alpkg"
+    else
+        showcmd $use_fakeroot alien "$@" "$alpkg"
+        $use_fakeroot alien "$@" "$alpkg" >/dev/null
+    fi
+}
+
 __epm_have_repack_rule()
 {
     # FIXME: use real way (for any archive)

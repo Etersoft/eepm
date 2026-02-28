@@ -146,11 +146,6 @@ __epm_repack_to_rpm()
     local packversion="$2"
     local packrelease="$3"
 
-    # Note: install epm-repack for static (package based) dependencies
-    assure_exists cpio
-    assure_exists alien
-    assure_exists fakeroot
-
     # will set RPMBUILD
     __assure_exists_rpmbuild
 
@@ -194,18 +189,7 @@ __epm_repack_to_rpm()
         abspkg="$(realpath $alpkg)"
         cd $tmpbuilddir/ || fatal
 
-        local fakeroot
-        fakeroot=''
-        ! is_root && is_command fakeroot && fakeroot='fakeroot'
-
-        if [ -n "$verbose" ] || [ -n "$debug" ] ; then
-            verbose1="$verbose"
-            [ -n "$debug" ] && verbose1="--veryverbose"
-            docmd $fakeroot alien --generate --to-rpm --keep-version $verbose1 $scripts "../$alpkg" || fatal
-        else
-            showcmd $fakeroot alien --generate --to-rpm --keep-version $scripts "../$alpkg"
-            a='' $fakeroot alien --generate --to-rpm --keep-version $scripts "../$alpkg" >/dev/null || fatal
-        fi
+        __run_alien --fakeroot "../$alpkg" --generate --to-rpm --keep-version $scripts || fatal
 
         # remove all empty dirs (hack against broken dpkg with LF in the end of line) (hack for linux_pantum.deb)
         rmdir * 2>/dev/null
