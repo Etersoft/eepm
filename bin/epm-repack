@@ -24,6 +24,9 @@ load_helper epm-status
 [ -n "$EPM_REPACK_SCRIPTS_DIR" ] || EPM_REPACK_SCRIPTS_DIR="$CONFIGDIR/repack.d"
 
 # Run alien with dependency checks, fakeroot and verbose handling
+# Includes cpio < 2.15 workaround for --make-directories bug:
+# https://bugs.debian.org/946267
+# https://git.savannah.gnu.org/cgit/cpio.git/commit/?id=376d663340a
 # Usage: __run_alien [--fakeroot] <pkg> [alien-args...]
 __run_alien()
 {
@@ -41,6 +44,26 @@ __run_alien()
 
     local alpkg="$1"
     shift
+
+    # cpio < 2.15: --make-directories doesn't create parent dirs for symlinks
+    # workaround: inject a cpio wrapper that pre-creates dirs from RPM file list
+    local cpio_ver
+    cpio_ver="$(cpio --version 2>&1 | head -n1 | sed 's/.* //')"
+    if [ -n "$cpio_ver" ] && [ "$(epm print compare version "$cpio_ver" "2.15")" = "-1" ] ; then
+        local wrapdir
+        wrapdir="$(mktemp -d)"
+        remove_on_exit "$wrapdir"
+        export __ALN_PKG="$(realpath "$alpkg")"
+        cat > "$wrapdir/cpio" <<'CPIOWRAPPER'
+#!/bin/sh
+rpm -qpl "$__ALN_PKG" 2>/dev/null | while IFS= read -r f; do
+    mkdir -p ".$(dirname "$f")" 2>/dev/null
+done
+exec /usr/bin/cpio "$@"
+CPIOWRAPPER
+        chmod +x "$wrapdir/cpio"
+        PATH="$wrapdir:$PATH"
+    fi
 
     local alien_verbose="$verbose"
     [ -n "$debug" ] && alien_verbose="--veryverbose"
