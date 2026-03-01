@@ -390,9 +390,9 @@ __epm_addrepo_altlinux()
             ;;
     esac
 
-    if is_taskarg $repo ; then
+    if is_taskarg "$@" ; then
         local arg tn
-        for arg in $repo ; do
+        for arg in "$@" ; do
             is_taskarg "$arg" || continue
             tn=$(get_tasknumber_from_arg "$arg")
             epm repo add "https://git.altlinux.org/tasks/$tn/build/repo"
