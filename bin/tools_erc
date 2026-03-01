@@ -153,7 +153,13 @@ extract_appimage()
 	fi
 
 	# Fallback to 7z
+	# Note: 7zz 26+ replaces symlinks containing ".." with empty files
+	# and returns exit code 2. Install squashfs-tools for full extraction.
 	extract_7z_to_subdir "$arc" "$subdir"
+	local ret=$?
+	if [ "$ret" -ne 0 ] ; then
+		fatal "7z could not fully extract AppImage (some symlinks are missing). Install squashfs-tools for better results."
+	fi
 
 	# Fallback to --appimage-extract (disabled by default)
 	#if [ -x "$arc" ] || chmod +x "$arc" ; then
