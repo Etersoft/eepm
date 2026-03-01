@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.54
+Version: 3.64.55
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -181,6 +181,53 @@ EOF
 # metapackage, no files
 
 %changelog
+* Mon Mar 02 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.55-alt1
+- epm repack: preserve BuildArch noarch in alien-generated spec
+- epm repo mirrors: switch from --options to subcommands CLI style
+- epm repo pkgdel: fix glob removing unrelated packages with similar name prefix
+- play.d/common.sh: fix PKGNAME lowercasing breaking pack.d lookup on deb systems
+- epm play.d/common.sh: is_glibc_enough: add libc6 fallback for Debian-based systems
+- epm play: recognize repo-installed apps in --installed and --list-installed
+- epm install: forbid package removal in non-interactive mode by default
+- epm: pass --no-remove option via EPM_OPTIONS
+- epm install: respect --no-remove for dnf and zypper in non-interactive mode
+- epm repack: add requires field support from .eepm.yaml
+- epm status: check for EPM marker instead of alien in --repacked
+- play.d/common.sh: fix get_github_url returning raw JSON on single-line API responses
+- epm play qwen-code: use __get_github_download_urls instead of fragile grep
+- epm play firefox: strip trailing .0 from version (FTP uses 148.0, not 148.0.0)
+- epm play ramus: use gradle wrapper instead of system Gradle 9
+- epm play rustdesk: add aarch64 support
+- epm repo switch: add assure_root before modifying sources lists
+- epm play: add bambustudio (3D slicer by Bambu Lab)
+- epm-sh-altlinux-contents-index: use erc --quiet for archive test
+- erc: make --quiet suppress 7z output
+- erc: fix symlink support in 7z create (-l -> -snl)
+- erc: fix duplicate -y flag with 7zz
+- epm release-upgrade: add Astra Linux SE support via astra-console-upgrade
+- epm repolist: fix for apt-dpkg systems (use $PKGFORMAT instead of hardcoded rpm)
+- epm addrepo: support version shortcuts (1.7, 1.8) for Astra Linux
+- epm repolist: return non-zero exit code when no repos match filter in verbose mode
+- epm repo reset: add Astra Linux support
+- epm removerepo: fix 'repo rm all' on Astra Linux
+- epm query_file: fix query for broken symlinks
+- epm play: add packer (HashiCorp machine image tool)
+- epm play: add vagrant (virtualized development environments)
+- epm play: add fvm (Flutter Version Management)
+- epm play: add chitubox-basic (SLA/DLP/LCD slicer for 3D printing)
+- epm play chitubox-basic: add pack script, fix version handling
+- epm repack aksusbd: add aarch64, armhf, x86 support
+- epm repack.d/common.sh: fix remove_dir failing on dirs with mode 600
+- epm repack-deb: fix debian dir detection after alien
+- epm repack: workaround cpio < 2.15 bug breaking alien unpack of symlink-only dirs
+- epm play mssql-server: select rhel repo version based on mssql year
+- epm addrepo: fix glob expansion of [branch] in apt source lines breaking task detection
+- erc: fail on incomplete AppImage extraction via 7z, suggest squashfs-tools
+- epm play cloudflare-warp: rewrite with multi-distro and aarch64 support
+- epm play: added Kodik (eterbug #18914)
+- epm play: added blockbench (eterbug #18921)
+- epm play: added marktext (eterbug #18922)
+
 * Tue Feb 24 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.54-alt1
 - erc-sh-archive: prefer 7zz (official 7-Zip) over deprecated p7zip
 - eget: use nanosecond integer timing in speedtest
