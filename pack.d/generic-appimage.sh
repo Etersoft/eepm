@@ -43,6 +43,10 @@ if [ -z "$VERSION" ] ; then
     VERSION="$(echo "$PRODUCT" | grep -o -P "[-_.](v?[0-9]+(?:\.[0-9]+)*(?:-(?:alpha|beta|rc|b|a|pre|dev|nightly)[0-9]*)?)" | head -n1 | sed -e 's|^[-_.]||' -e 's|^v||')"
     [ -n "$VERSION" ] && PRODUCT="$(echo "$PRODUCT" | sed -e "s|[-_.]$VERSION.*||")"
     [ -n "$VERSION" ] && VERSION="$(echo "$VERSION" | sed -e 's|^v||')"
+else
+    # VERSION is already known, but PRODUCT may still contain it — strip version from PRODUCT
+    local_ver="$(echo "$PRODUCT" | grep -o -P "[-_.](v?[0-9]+(?:\.[0-9]+)*)" | head -n1 | sed -e 's|^[-_.]||' -e 's|^v||')"
+    [ -n "$local_ver" ] && PRODUCT="$(echo "$PRODUCT" | sed -e "s|[-_.]$local_ver.*||")"
 fi
 [ -L "$BASEDIR" ] && [ -d "AppDir" ] && BASEDIR="AppDir"
 
