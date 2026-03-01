@@ -167,24 +167,8 @@ summary="$(grep "^Summary: " $SPEC | sed -e "s|Summary: ||g" | head -n1)"
 [ -n "$summary" ] || set_rpm_field "Summary" "$PRODUCT (fixme: was empty Summary after alien)"
 set_rpm_field "Distribution" "EEPM"
 
-if [ -r "$PKG.eepm.yaml" ] ; then
-    yaml_load_vars "$PKG.eepm.yaml" name summary description upstream_file upstream_url url appname arch group license version requires
-    # for tarballs fix permissions
-    chmod $verbose -R a+rX *
-    [ -n "$name" ] && [ "$name" != "$PRODUCT" ] && warning "name $name in $PKG.eepm.yaml is not equal to PRODUCT $PRODUCT"
-    [ -n "$version" ] && set_rpm_field "Version" "$version"
-    set_rpm_field "Group" "$group"
-    set_rpm_field "License" "$license"
-    set_rpm_field "URL" "$url"
-    set_rpm_field "Summary" "$summary"
-    [ -n "$upstream_file" ] || upstream_file="binary package $PRODUCT"
-    [ -n "$upstream_url" ] && upstream_file="$upstream_url"
-    [ -n "$description" ] && subst "s|^\((Converted from a\) \(.*\) \(package.*\)|$description\n(Repacked from $upstream_file with EPM $(epm --short --version))\n\1 \2 \3|" $SPEC
-    [ -n "$requires" ] && add_requires $requires
-else
-    [ -n "$verbose" ] && warning "$PKG.eepm.yaml is missed"
-    exya="$(echo $(dirname $PKG.eepm.yaml)/*.eepm.yaml)"
-    [ -f "$exya" ] && warning "$PKG.eepm.yaml is missed, but $exya is exists"
+# for deb/rpm (alien path): update description with repack info
+if [ -z "$SUBGENERIC" ] ; then
     subst "s|^\((Converted from a\) \(.*\) \(package.*\)|(Repacked from binary \2 package with EPM $(epm --short --version))\n\1 \2 \3|" $SPEC
 fi
 

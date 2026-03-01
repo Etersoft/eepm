@@ -20,21 +20,6 @@ warning()
     echo "WARNING: $*" >&2
 }
 
-# Load YAML fields into shell variables safely (prevents command injection)
-# Usage: yaml_load_vars file.yaml field1 field2 field3 ...
-yaml_load_vars()
-{
-    local file="$1"
-    shift
-    local data field value
-    data="$(epm tool yaml "$file" 2>/dev/null)"
-    for field in "$@" ; do
-        value="$(printf '%s\n' "$data" | grep "^${field}=" | head -n1 | sed "s/^[^=]*=\"\(.*\)\"$/\1/")"
-        # Use single quotes to prevent command execution in values
-        eval "$field='$(printf '%s' "$value" | sed "s/'/'\\\\''/g")'"
-    done
-}
-
 # compatibility layer
 
 # check if <arg> is a real command
