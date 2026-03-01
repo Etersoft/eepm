@@ -40,7 +40,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.54"
+export EPMVERSION="3.64.55"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1823,9 +1823,9 @@ __epm_addrepo_altlinux()
             ;;
     esac
 
-    if is_taskarg $repo ; then
+    if is_taskarg "$@" ; then
         local arg tn
-        for arg in $repo ; do
+        for arg in "$@" ; do
             is_taskarg "$arg" || continue
             tn=$(get_tasknumber_from_arg "$arg")
             epm repo add "https://git.altlinux.org/tasks/$tn/build/repo"
@@ -1879,6 +1879,16 @@ __epm_addrepo_astra()
     fi
 
     local reponame="$(epm print info --repo-name)"
+
+    # allow version shortcuts: epm repo set 1.7 / epm repo set 1.8
+    case "$distrname" in
+        1.7|1.8)
+            reponame="${distrname}_x86-64"
+            distrname="astra"
+            ;;
+        astra)
+            ;;
+    esac
 
     # keywords
     # https://wiki.astralinux.ru/pages/viewpage.action?pageId=3276859
@@ -6036,6 +6046,9 @@ epm_ni_install_names()
 {
     [ -z "$1" ] && return
 
+    # forbid package removal by default in non-interactive mode
+    [ -z "$noremove" ] && [ -z "$force" ] && noremove="--no-remove"
+
     if [ -n "$norecommends" ] ; then
         APTOPTIONS="$APTOPTIONS -o APT::Install-Recommends=false"
         YUMOPTIONS="$YUMOPTIONS --setopt=install_weak_deps=0"
@@ -6080,14 +6093,14 @@ epm_ni_install_names()
             sudocmd yum -y $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
             return ;;
         dnf-rpm|dnf5-rpm)
-            sudocmd dnf install -y --allowerasing $YUMOPTIONS $(echo "$*" | exp_with_arch_suffix)
+            sudocmd dnf install -y $(subst_option noremove '' --allowerasing) $YUMOPTIONS $(echo "$*" | exp_with_arch_suffix)
             return ;;
         urpm-rpm)
             sudocmd urpmi --auto $URPMOPTIONS $@
             return ;;
         zypper-rpm)
             # FIXME: returns true ever no package found, need check for "no found", "Nothing to do."
-            yes | sudocmd zypper --non-interactive $ZYPPEROPTIONS install $@
+            yes | sudocmd zypper --non-interactive $ZYPPEROPTIONS install $(subst_option noremove --no-force-resolution) $@
             return ;;
         packagekit)
             docmd pkcon install --noninteractive $@
@@ -6317,9 +6330,8 @@ epm_install()
             epm_install_alt_tasks $pkg_names
             return
         fi
-        if echo "$pkg_urls" | grep -q -E "https://packages.altlinux.org/ru/tasks/[0-9]+/*$" || \
-           echo "$pkg_urls" | grep -q -E "https://git.altlinux.org/tasks/[0-9]+/*$" || \
-           echo "$pkg_urls" | grep -q -E "https://git.altlinux.org/tasks/archive/done/_[0-9]+/[0-9]+/*$" ; then
+        # only one url really
+        if is_taskurl "$pkg_urls" ; then
             local task="$(basename "$pkg_urls")"
             local taskurl="$(dirname "$pkg_urls")"
             pkg_urls=""
@@ -8867,10 +8879,23 @@ __remove_installed_app()
 }
 
 
+__is_repo_play_app_installed()
+{
+    local app="$1"
+    local list_file="$CONFIGDIR/repo-play-apps.list"
+    [ -s "$list_file" ] || return 1
+    grep -q "^$app$" "$list_file" || return 1
+    # App is in the repo list — check if its package is actually installed
+    local pkg
+    pkg="$(__run_script "$app" --package-name </dev/null 2>/dev/null)"
+    [ -n "$pkg" ] && epm status --installed "$pkg" </dev/null
+}
+
 __is_app_installed()
 {
-    __run_script "$1" --installed "$2"
-    return
+    __run_script "$1" --installed "$2" && return 0
+    # Fallback: check if app is repo-installed (listed in repo-play-apps.list)
+    __is_repo_play_app_installed "$1"
 }
 
 
@@ -9041,10 +9066,27 @@ __get_installed_table()
     rm -f $pkglist
 }
 
+__get_repo_installed_apps()
+{
+    local found_apps="$1"
+    local list_file="$CONFIGDIR/repo-play-apps.list"
+    [ -s "$list_file" ] || return
+    local app
+    while read -r app ; do
+        [ -n "$app" ] || continue
+        [ "${app#\#}" != "$app" ] && continue
+        echo "$found_apps" | grep -q "^$app$" && continue
+        __is_repo_play_app_installed "$app" </dev/null 2>/dev/null && echo "$app"
+    done <"$list_file"
+}
+
 __list_installed_app()
 {
     # get all installed packages and convert it to a apps list
-    __get_installed_table | cut -f2 -d" "
+    local apps
+    apps="$(__get_installed_table | cut -f2 -d" ")"
+    [ -n "$apps" ] && echo "$apps"
+    __get_repo_installed_apps "$apps"
 }
 
 __list_installed_packages()
@@ -11003,8 +11045,8 @@ __do_query_real_file()
     local TOFILE
     local file="$1"
 
-    # get canonical path
-    if [ -e "$file" ] ; then
+    # get canonical path (-L for broken symlinks where -e fails)
+    if [ -e "$file" ] || [ -L "$file" ] ; then
         TOFILE="$(__abs_filename "$file")"
     else
         TOFILE="$(print_command_path "$file" || echo "$file")"
@@ -11038,8 +11080,11 @@ __do_query_real_file()
         LINKTO=$(readlink -- "$TOFILE")
         info " > $TOFILE is link to $LINKTO"
         LINKTO=$(readlink -f -- "$TOFILE")
-        __do_query_real_file "$LINKTO"
-        return
+        if [ -e "$LINKTO" ] ; then
+            __do_query_real_file "$LINKTO"
+            return
+        fi
+        return $RES
     else
         return $RES
     fi
@@ -11961,6 +12006,13 @@ epm_release_upgrade()
     esac
 
     case $DISTRNAME in
+    "AstraLinuxSE")
+        info "Upgrading Astra Linux SE $DISTRVERSION ..."
+        info "See also https://wiki.astralinux.ru/pages/viewpage.action?pageId=333809857"
+        assure_exists astra-console-upgrade
+        sudocmd astra-console-upgrade force
+        return
+        ;;
     "Mageia")
         epm repo remove all
         sudocmd urpmi.addmedia --distrib --mirrorlist 'http://mirrors.mageia.org/api/mageia.8.$DISTRARCH.list'
@@ -12735,9 +12787,16 @@ case $BASEDISTRNAME in
         return
         ;;
     "astra")
-        echo "Use workaround for AstraLinux"
-        # aptsources.distro.NoDistroTemplateException: Error: could not find a distribution template for AstraLinuxCE/orel
-        __epm_removerepo_apt "$@"
+        # handle "all" and pattern-based removal
+        case "$1" in
+            all)
+                info "removing all repos"
+                __epm_removerepo_alt_grepremove "all"
+                ;;
+            *)
+                __epm_removerepo_apt "$@"
+                ;;
+        esac
         return
         ;;
 esac;
@@ -12818,6 +12877,53 @@ esac
 
 
 [ -n "$EPM_REPACK_SCRIPTS_DIR" ] || EPM_REPACK_SCRIPTS_DIR="$CONFIGDIR/repack.d"
+
+__run_alien()
+{
+    # Note: install epm-repack for static (package based) dependencies
+    assure_exists cpio
+    assure_exists alien
+    assure_exists fakeroot
+    assure_exists rpm
+
+    local use_fakeroot=''
+    if [ "$1" = "--fakeroot" ] ; then
+        ! is_root && is_command fakeroot && use_fakeroot='fakeroot'
+        shift
+    fi
+
+    local alpkg="$1"
+    shift
+
+    # cpio < 2.15: --make-directories doesn't create parent dirs for symlinks
+    # workaround: inject a cpio wrapper that pre-creates dirs from RPM file list
+    local cpio_ver
+    cpio_ver="$(cpio --version 2>&1 | head -n1 | sed 's/.* //')"
+    if [ -n "$cpio_ver" ] && [ "$(epm print compare version "$cpio_ver" "2.15")" = "-1" ] ; then
+        local wrapdir
+        wrapdir="$(mktemp -d)"
+        remove_on_exit "$wrapdir"
+        export __ALN_PKG="$(realpath "$alpkg")"
+        cat > "$wrapdir/cpio" <<'CPIOWRAPPER'
+rpm -qpl "$__ALN_PKG" 2>/dev/null | while IFS= read -r f; do
+    mkdir -p ".$(dirname "$f")" 2>/dev/null
+done
+exec /usr/bin/cpio "$@"
+CPIOWRAPPER
+        chmod +x "$wrapdir/cpio"
+        PATH="$wrapdir:$PATH"
+    fi
+
+    local alien_verbose="$verbose"
+    [ -n "$debug" ] && alien_verbose="--veryverbose"
+
+    if [ -n "$verbose" ] || [ -n "$debug" ] ; then
+        docmd $use_fakeroot alien $alien_verbose "$@" "$alpkg"
+    else
+        showcmd $use_fakeroot alien "$@" "$alpkg"
+        $use_fakeroot alien "$@" "$alpkg" >/dev/null
+    fi
+}
 
 __epm_have_repack_rule()
 {
@@ -13172,10 +13278,6 @@ __epm_repack_to_deb()
     local orig_deb_depends="$2"
     local orig_pkg_type="$3"
 
-    assure_exists alien
-    assure_exists fakeroot
-    assure_exists rpm
-
     repacked_pkg=''
 
     local TDIR
@@ -13204,11 +13306,12 @@ __epm_repack_to_deb()
         __prepare_source_package "$(pwd)/$alpkg"
 
         # generate debian/ dir without building
-        docmd alien --single -k $verbose $scripts "$alpkg"
+        __run_alien "$alpkg" --single -k $scripts
 
-        # find the generated source directory
+        # find the generated source directory (must contain debian/)
         local debsrcdir
-        debsrcdir="$(ls -1d */ 2>/dev/null | head -n1)"
+        debsrcdir="$(ls -1d */debian 2>/dev/null | sed 's|/debian$||' | head -n1)"
+        [ -n "$debsrcdir" ] && debsrcdir="$debsrcdir/"
         if [ -z "$debsrcdir" ] ; then
             warning 'Can'\''t find alien generated directory for $pkg'
             cd - >/dev/null
@@ -13242,7 +13345,6 @@ __epm_repack_to_deb()
 
     return 0
 }
-
 
 # File bin/epm-repack-rpm:
 
@@ -13369,11 +13471,6 @@ __epm_repack_to_rpm()
     local packversion="$2"
     local packrelease="$3"
 
-    # Note: install epm-repack for static (package based) dependencies
-    assure_exists cpio
-    assure_exists alien
-    assure_exists fakeroot
-
     # will set RPMBUILD
     __assure_exists_rpmbuild
 
@@ -13417,18 +13514,7 @@ __epm_repack_to_rpm()
         abspkg="$(realpath $alpkg)"
         cd $tmpbuilddir/ || fatal
 
-        local fakeroot
-        fakeroot=''
-        ! is_root && is_command fakeroot && fakeroot='fakeroot'
-
-        if [ -n "$verbose" ] || [ -n "$debug" ] ; then
-            verbose1="$verbose"
-            [ -n "$debug" ] && verbose1="--veryverbose"
-            docmd $fakeroot alien --generate --to-rpm --keep-version $verbose1 $scripts "../$alpkg" || fatal
-        else
-            showcmd $fakeroot alien --generate --to-rpm --keep-version $scripts "../$alpkg"
-            a='' $fakeroot alien --generate --to-rpm --keep-version $scripts "../$alpkg" >/dev/null || fatal
-        fi
+        __run_alien --fakeroot "../$alpkg" --generate --to-rpm --keep-version $scripts || fatal
 
         # remove all empty dirs (hack against broken dpkg with LF in the end of line) (hack for linux_pantum.deb)
         rmdir * 2>/dev/null
@@ -13481,6 +13567,11 @@ __epm_repack_to_rpm()
         fi
 
         TARGETARCH=$(epm print info -a | sed -e 's|^x86$|i586|')
+        # alien does not preserve BuildArch: noarch in generated spec,
+        # so check the original package and restore it
+        if rhas "$alpkg" "\.noarch\." && ! grep -q "^BuildArch:.*noarch" "$spec" ; then
+            sed -i "s|^Group:.*|&\nBuildArch: noarch|" "$spec"
+        fi
 
         showcmd $RPMBUILD --buildroot $buildroot --target $TARGETARCH -bb $spec
         if [ -n "$verbose" ] ; then
@@ -13618,7 +13709,7 @@ epm_repo()
     fix)                              # HELPCMD: fix paths in sources lists (ALT Linux only)
         epm_repofix "$@"
         ;;
-    mirrors)                          # HELPCMD: list and test ALT Linux mirrors (--speedtest to test speed)
+    mirrors)                          # HELPCMD: list and test ALT Linux mirrors (run with --help for subcommands)
         epm_repomirrors "$@"
         ;;
 
@@ -13893,6 +13984,83 @@ esac
 
 
 
+# File bin/epm-repochange:
+
+
+__url_to_sed_pattern()
+{
+    echo "$1" | sed -e 's|^https:||' -e 's|/\([^/]*\)$|/* \1|'
+}
+
+__subst_with_repo_url()
+{
+    __load_alt_mirror_db
+    local input="$1"
+    local new_pattern="$2"
+
+    local name url pattern
+    while read -r name url ; do
+        [ -z "$name" ] && continue
+        pattern=$(__url_to_sed_pattern "$url")
+        input=$(echo "$input" | sed -e "s|$pattern|$new_pattern|")
+    done <<EOF
+$__ALT_MIRROR_DB
+EOF
+    echo "$input"
+}
+
+
+__change_repo()
+{
+    local REPLTO="$1"
+    local NN
+    epm --quiet repo list | grep -v "file:/" | while read nn ; do
+        NN="$(__subst_with_repo_url "$nn" "$REPLTO")"
+        [ "$NN" = "$nn" ] && continue
+        epm addrepo "$NN" && epm removerepo "$nn" || return 1
+    done
+}
+
+
+__epm_repochange_alt()
+{
+    local current_mirror mirror
+    current_mirror=$(__get_current_mirror)
+    mirror="$1"
+
+    case "$mirror" in
+        "--list")
+            __list_mirrors "$current_mirror" "$short"
+            ;;
+        *)
+            local pattern
+            pattern="$(__alt_mirror_change_pattern "$mirror")"
+            if [ -n "$pattern" ] ; then
+                __change_repo "$pattern"
+            else
+                fatal 'Unsupported mirror: $mirror. Use --list to see available mirrors.'
+            fi
+            ;;
+    esac
+}
+
+
+epm_repochange()
+{
+    [ "$1" = "--help" ] && message "Use --list to get all possible targets" && return
+    if [ "$1" != "--list" ] ; then
+        epm_repofix
+    fi
+    case $BASEDISTRNAME in
+        "alt")
+            __epm_repochange_alt "$@"
+            ;;
+         *)
+            fatal 'Repo change Unsupported for $BASEDISTRNAME'
+            ;;
+    esac
+}
+
 # File bin/epm-repodisable:
 
 
@@ -14135,6 +14303,8 @@ epm_reposwitch()
             ;;
     esac
 
+    assure_root
+
     if [ "$TO" = "Sisyphus" ] ; then
         __replace_alt_version_in_repo "$__alt_branch_reg/branch/" "$TO/"
     else
@@ -14210,81 +14380,6 @@ __fix_alt_sources_list()
         __try_fix_apt_source_list $i etersoft "Etersoft\/$DISTRVERSION\/branch"
     done
 }
-
-
-__url_to_sed_pattern()
-{
-    echo "$1" | sed -e 's|^https:||' -e 's|/\([^/]*\)$|/* \1|'
-}
-
-__subst_with_repo_url()
-{
-    __load_alt_mirror_db
-    local input="$1"
-    local new_pattern="$2"
-
-    local name url pattern
-    while read -r name url ; do
-        [ -z "$name" ] && continue
-        pattern=$(__url_to_sed_pattern "$url")
-        input=$(echo "$input" | sed -e "s|$pattern|$new_pattern|")
-    done <<EOF
-$__ALT_MIRROR_DB
-EOF
-    echo "$input"
-}
-
-
-__change_repo()
-{
-    local REPLTO="$1"
-    local NN
-    epm --quiet repo list | grep -v "file:/" | while read nn ; do
-        NN="$(__subst_with_repo_url "$nn" "$REPLTO")"
-        [ "$NN" = "$nn" ] && continue
-        epm addrepo "$NN" && epm removerepo "$nn" || return 1
-    done
-}
-
-
-__epm_repochange_alt()
-{
-
-    local current_mirror mirror
-    current_mirror=$(__get_current_mirror)
-    mirror="$1"
-
-    case "$mirror" in
-        "--list")
-            __list_mirrors "$current_mirror" "$short"
-            ;;
-        *)
-            local pattern
-            pattern="$(__alt_mirror_change_pattern "$mirror")"
-            if [ -n "$pattern" ] ; then
-                __change_repo "$pattern"
-            else
-                fatal 'Unsupported mirror: $mirror. Use --list to see available mirrors.'
-            fi
-            ;;
-    esac
-}
-
-
-epm_repochange()
-{
-    [ "$1" = "--help" ] && message "Use --list to get all possible targets" && return
-    [ "$1" = "--list" ] || epm_repofix
-    case $BASEDISTRNAME in
-        "alt")
-            __epm_repochange_alt "$@"
-            ;;
-         *)
-            fatal 'Repo change Unsupported for $BASEDISTRNAME'
-            ;;
-    esac
-}
-
 
 epm_repofix()
 {
@@ -14520,7 +14615,7 @@ __print_apt_sources_list()
 {
     local i
     for i in "$@" ; do
-        __cat_apt_sources_list "^[^#]*rpm" "$i"
+        __cat_apt_sources_list "^[^#]*$PKGFORMAT" "$i"
     done
 }
 
@@ -14528,7 +14623,7 @@ __print_apt_sources_list_full()
 {
     local i
     for i in "$@" ; do
-        __cat_apt_sources_list "^[[:space:]]*#*[[:space:]]*rpm" "$i"
+        __cat_apt_sources_list "^[[:space:]]*#*[[:space:]]*$PKGFORMAT" "$i"
     done
 }
 
@@ -14536,7 +14631,7 @@ __print_apt_sources_list_disabled()
 {
     local i
     for i in "$@" ; do
-        __cat_apt_sources_list "^[[:space:]]*#[[:space:]]*rpm" "$i"
+        __cat_apt_sources_list "^[[:space:]]*#[[:space:]]*$PKGFORMAT" "$i"
     done
 }
 
@@ -14549,36 +14644,42 @@ __print_file_header()
 
 __print_apt_sources_list_verbose()
 {
-    local i content
+    local i content found=''
     for i in "$@" ; do
-        content="$(__cat_apt_sources_list "^[^#]*rpm" "$i" | __filter_repos_list $repo_filter_patterns)"
+        content="$(__cat_apt_sources_list "^[^#]*$PKGFORMAT" "$i" | __filter_repos_list $repo_filter_patterns)"
         [ -n "$content" ] || continue
+        found=1
         __print_file_header "$i"
         echo "$content" | sed -e 's|^|    |'
     done
+    [ -n "$found" ]
 }
 
 __print_apt_sources_list_verbose_full()
 {
-    local i content
+    local i content found=''
     for i in "$@" ; do
-        content="$(__cat_apt_sources_list "^[[:space:]]*#*[[:space:]]*rpm" "$i" | __filter_repos_list $repo_filter_patterns)"
+        content="$(__cat_apt_sources_list "^[[:space:]]*#*[[:space:]]*$PKGFORMAT" "$i" | __filter_repos_list $repo_filter_patterns)"
         [ -n "$content" ] || continue
+        found=1
         __print_file_header "$i"
         # highlight commented lines
         echo "$content" | sed -e 's|^|    |' -e "s|^\(    #.*\)|$(set_color $WHITE)\1$(restore_color)|"
     done
+    [ -n "$found" ]
 }
 
 __print_apt_sources_list_verbose_disabled()
 {
-    local i content
+    local i content found=''
     for i in "$@" ; do
-        content="$(__cat_apt_sources_list "^[[:space:]]*#[[:space:]]*rpm" "$i" | __filter_repos_list $repo_filter_patterns)"
+        content="$(__cat_apt_sources_list "^[[:space:]]*#[[:space:]]*$PKGFORMAT" "$i" | __filter_repos_list $repo_filter_patterns)"
         [ -n "$content" ] || continue
+        found=1
         __print_file_header "$i"
         echo "$content" | sed -e 's|^|    |'
     done
+    [ -n "$found" ]
 }
 
 print_apt_sources_list()
@@ -14913,38 +15014,39 @@ __select_mirror_fzf()
 
 epm_repomirrors()
 {
-    local opt_speedtest=""
-    local opt_list=""
-    local opt_auto=""
+    local CMD="$1"
+    [ -n "$CMD" ] && shift
+    case $CMD in
+    -h|--help|help)                       # HELPCMD: show this help
+        echo "Usage: epm repo mirrors [command]"
+        echo "List and test ALT Linux mirrors"
+        echo ""
+        echo "Commands:"
+        get_help HELPCMD "$SHAREDIR/epm-repomirrors"
+        return
+        ;;
+    ""|list)                              # HELPCMD: list available mirrors with URLs (use --short for names only)
+        __epm_repomirrors_check_alt
+        local current_mirror
+        current_mirror=$(__get_current_mirror)
+        __list_mirrors "$current_mirror" "$short"
+        ;;
+    speedtest)                            # HELPCMD: test download speed and show interactive selection
+        __epm_repomirrors_check_alt
+        __epm_repomirrors_speedtest
+        ;;
+    auto)                                 # HELPCMD: test speed and automatically switch to fastest mirror
+        __epm_repomirrors_check_alt
+        __epm_repomirrors_speedtest --auto
+        ;;
+    *)
+        fatal "Unknown command $ epm repo mirrors $CMD"
+        ;;
+    esac
+}
 
-    while [ -n "$1" ] ; do
-        case "$1" in
-            -h|--help)                    # HELPCMD: show this help
-                echo "Usage: epm repo mirrors [OPTIONS]"
-                echo "List and test ALT Linux mirrors"
-                echo ""
-                echo "Options:"
-                get_help HELPCMD "$SHAREDIR/epm-repomirrors"
-                return
-                ;;
-            --list)                       # HELPCMD: list available mirrors with URLs (--short for names only)
-                opt_list=1
-                ;;
-            --speedtest)                  # HELPCMD: test download speed and show interactive selection
-                opt_speedtest=1
-                ;;
-            --auto)                       # HELPCMD: test speed and automatically switch to fastest mirror
-                opt_auto=1
-                opt_speedtest=1
-                ;;
-            *)
-                opt="$1"
-                fatal 'Unknown option: $opt'
-                ;;
-        esac
-        shift
-    done
-
+__epm_repomirrors_check_alt()
+{
     case $BASEDISTRNAME in
         "alt")
             ;;
@@ -14952,21 +15054,15 @@ epm_repomirrors()
             fatal "epm repo mirrors is only supported for ALT Linux"
             ;;
     esac
+}
+
+__epm_repomirrors_speedtest()
+{
+    local opt_auto=""
+    [ "$1" = "--auto" ] && opt_auto=1
 
     local current_mirror
     current_mirror=$(__get_current_mirror)
-
-    # No options - show help
-    if [ -z "$opt_list" ] && [ -z "$opt_speedtest" ] ; then
-        epm_repomirrors --help
-        return
-    fi
-
-    # --list: show available mirrors
-    if [ -n "$opt_list" ] && [ -z "$opt_speedtest" ] ; then
-        __list_mirrors "$current_mirror" "$short"
-        return
-    fi
 
     # Speed test mode (uses eget --speedtest)
     [ -z "$tsv" ] && info "Testing mirrors speed (3 measurements × 5 sec per mirror)..."
@@ -15073,8 +15169,9 @@ __epm_repo_pkgdel_alt()
             local rd="$REPO_DIR/$arch/RPMS.$REPO_NAME"
             [ -d $REPO_DIR/$arch/RPMS.$REPO_NAME ] || continue
             for i in $rd/$1* ; do
+                [ -e "$i" ] || continue
                 [ "$1" = "$(epm print name for package $i)" ] || continue
-                rm -v $rd/$1*
+                rm -v "$i"
             done
         done
         shift
@@ -15318,6 +15415,10 @@ epm_reporeset()
 case $BASEDISTRNAME in
     alt)
         sudoepm repo set $DISTRVERSION
+        return
+        ;;
+    astra)
+        sudoepm repo set astra
         return
         ;;
 esac
@@ -16585,6 +16686,17 @@ is_taskarg() {
     return 1
 }
 
+
+is_taskurl()
+{
+    local pkg_urls="$1"
+    [ -n "$pkg_urls" ] || return
+
+    echo "$pkg_urls" | grep -q -E "https://packages.altlinux.org/ru/tasks/[0-9]+/*$" || \
+    echo "$pkg_urls" | grep -q -E "https://git.altlinux.org/tasks/[0-9]+/*$" || \
+    echo "$pkg_urls" | grep -q -E "https://git.altlinux.org/tasks/archive/done/_[0-9]+/[0-9]+/*$"
+}
+
 get_tasknumber_from_arg()
 {
     local arg="$1"
@@ -16758,7 +16870,7 @@ __add_to_contents_index_list()
     local file="$2"
     [ -n "$verbose" ] && info 'Put $comment -> $file'
     [ -s "$file" ] || return
-    if rhas "$file" "\." && ! erc test "$file" 2>/dev/null ; then
+    if rhas "$file" "\." && ! erc --quiet test "$file" >/dev/null 2>/dev/null ; then
         warning "Broken contents_index: $file" ; rm -f "$file" ; return 1
     fi
     echo "$file" >>$ALT_CONTENTS_INDEX_LIST
@@ -18136,7 +18248,7 @@ epm_status_repacked()
     local pkg="$1"
 
     # dpkg package missing packager field
-    local repacked="$(epm print field Description for "$1" 2>/dev/null | grep -i "alien")"
+    local repacked="$(epm print field Description for "$1" 2>/dev/null | grep -i "with EPM")"
     local packager="$(epm print field Packager for "$1" 2>/dev/null)"
 
     #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
@@ -23116,10 +23228,9 @@ create_archive()
 			docmd tar cvf "$arc" "$@"
 			;;
 		*)
-			# TODO: fix symlinks support
 			# https://bugzilla.altlinux.org/49852
 			# FIXME: creating .tar.* (.tar.gz) is not supported
-			docmd $HAVE_7Z a -l "$arc" "$@"
+			docmd $HAVE_7Z a -snl "$arc" "$@"
 			#fatal "Not yet supported creating of $type archives"
 			;;
 	esac
@@ -23131,7 +23242,7 @@ extract_7z_to_subdir()
 	local arc="$1"
 	local subdir="$2"
 	mkdir -p "$subdir" && cd "$subdir" || fatal
-	docmd $HAVE_7Z x "$arc"
+	docmd $HAVE_7Z x -y "$arc"
 }
 
 # Extract squashfs-based archives (squashfs, snap)
@@ -23205,7 +23316,13 @@ extract_appimage()
 	fi
 
 	# Fallback to 7z
+	# Note: 7zz 26+ replaces symlinks containing ".." with empty files
+	# and returns exit code 2. Install squashfs-tools for full extraction.
 	extract_7z_to_subdir "$arc" "$subdir"
+	local ret=$?
+	if [ "$ret" -ne 0 ] ; then
+		fatal "7z could not fully extract AppImage (some symlinks are missing). Install squashfs-tools for better results."
+	fi
 
 	# Fallback to --appimage-extract (disabled by default)
 	#if [ -x "$arc" ] || chmod +x "$arc" ; then
@@ -23487,6 +23604,7 @@ force=
 target=
 extract_dir=
 verbose=--verbose
+quiet=
 use_7z=
 use_patool=
 
@@ -23508,6 +23626,7 @@ case "$1" in
         ;;
     -q|--quiet)           # HELPOPT: be silent
         verbose=
+        quiet=1
         ;;
     -f|--force)           # HELPOPT: override target
         force=-f
@@ -25176,7 +25295,7 @@ if [ -n "$quiet" ] ; then
 fi
 
 # fill
-export EPM_OPTIONS="$nodeps $force $full $verbose $debug $quiet $interactive $non_interactive $parallel $save_only $download_only $force_overwrite $manual_requires $noscripts $scripts $dryrun $norecommends"
+export EPM_OPTIONS="$nodeps $force $full $verbose $debug $quiet $interactive $non_interactive $parallel $save_only $download_only $force_overwrite $manual_requires $noscripts $scripts $dryrun $norecommends $noremove"
 
 # if input is not console and run script from file, get pkgs from stdin too
 if [ -z "$direct_args" ] && [ ! -n "$inscript" ] && [ -p /dev/stdin ] && [ "$EPMMODE" != "pipe" ] ; then
