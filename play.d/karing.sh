@@ -20,6 +20,8 @@ esac
 if [ "$VERSION" = "*" ]; then
 	PKGURL=$(get_github_url "https://github.com/KaringX/karing/" "karing_*_linux_amd64.$pkgtype")
 else
+	# GitHub uses dots as version separator (1.2.14.1701), app-versions may use plus (1.2.14+1701)
+	VERSION="$(echo "$VERSION" | tr '+' '.')"
 	PKGURL="https://github.com/KaringX/karing/releases/download/v${VERSION}/karing_${VERSION}_linux_amd64.$pkgtype"
 fi
 
