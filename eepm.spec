@@ -53,7 +53,7 @@ See detailed description here: http://wiki.etersoft.ru/EPM
 Summary: Etersoft EPM package manager (repack requirements)
 Group: System/Configuration/Packaging
 Requires: %name = %EVR
-Requires: alien cpio dpkg patchelf p7zip
+Requires: alien cpio dpkg patchelf 7-zip
 %if "%_vendor" == "alt"
 Requires: eepm-rpm-build
 %else
