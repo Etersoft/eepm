@@ -47,11 +47,14 @@ fi
 #   alpkg=$newalpkg
 #   fi
 
-# TODO: how to add to tarball?
-cat <<EOF >$PKGNAME.eepm.yaml
+# don't overwrite yaml created by pack.d script
+if [ ! -r "$PKGNAME.eepm.yaml" ] ; then
+    # TODO: how to add to tarball?
+    cat <<EOF >$PKGNAME.eepm.yaml
 name: $PRODUCT
 version: $VERSION
 upstream_file: $alpkg
 EOF
+fi
 
 return_tar $PKGNAME
