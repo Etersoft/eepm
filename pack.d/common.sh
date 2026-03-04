@@ -16,6 +16,8 @@ yaml_load_vars()
     data="$(epm tool yaml "$file" 2>/dev/null)"
     for field in "$@" ; do
         value="$(printf '%s\n' "$data" | grep "^${field}=" | head -n1 | sed "s/^[^=]*=\"\(.*\)\"$/\1/")"
+        # skip if key is not present in yaml (preserve existing value)
+        [ -n "$value" ] || continue
         # Use single quotes to prevent command execution in values
         eval "$field='$(printf '%s' "$value" | sed "s/'/'\\\\''/g")'"
     done
