@@ -37,7 +37,7 @@ erc pack $PKGNAME.tar opt usr || fatal
 
 cat <<EOF >$PKGNAME.tar.eepm.yaml
 name: $PRODUCT
-group: Sound/Players
+group: Sound
 license: Proprietary
 url: https://www.reaper.fm/
 summary: REAPER digital audio production application
