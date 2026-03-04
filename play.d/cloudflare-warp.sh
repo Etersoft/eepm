@@ -12,6 +12,10 @@ warn_version_is_not_supported
 
 pkgtype="$(epm print info -p)"
 
+# Cloudflare RPM is built for Fedora with incompatible sonames
+# (e.g. libpcap.so.1 instead of libpcap.so.0.8 on ALT)
+[ "$(epm print info -s)" = "alt" ] && pkgtype=deb
+
 case "$pkgtype" in
     rpm)
         arch="$(epm print info --distro-arch)"
