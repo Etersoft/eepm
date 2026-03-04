@@ -156,7 +156,7 @@ __generate_alt_sourceslist()
 # Create a temporary APT directory for isolated repo operations
 __setup_tmp_apt_dir()
 {
-    __EPM_APT_TMPDIR="$(mktemp -d)" || fatal
+    __EPM_APT_TMPDIR="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
     remove_on_exit "$__EPM_APT_TMPDIR"
     mkdir -p "$__EPM_APT_TMPDIR/lists/partial" "$__EPM_APT_TMPDIR/sourceparts"
     cat > "$__EPM_APT_TMPDIR/apt.conf" <<EOF
