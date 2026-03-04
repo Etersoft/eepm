@@ -35,4 +35,13 @@ PKGNAME=$PRODUCT-$VERSION
 
 erc pack $PKGNAME.tar opt usr || fatal
 
+cat <<EOF >$PKGNAME.tar.eepm.yaml
+name: $PRODUCT
+group: Sound/Players
+license: Proprietary
+url: https://www.reaper.fm/
+summary: REAPER digital audio production application
+description: REAPER is a complete digital audio production application for computers, offering a full multitrack audio and MIDI recording, editing, processing, mixing and mastering toolset.
+EOF
+
 return_tar $PKGNAME.tar

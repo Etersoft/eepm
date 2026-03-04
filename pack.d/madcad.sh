@@ -28,4 +28,13 @@ PKGNAME=$PRODUCT-$VERSION
 
 erc pack $PKGNAME.tar opt usr || fatal
 
+cat <<EOF >$PKGNAME.tar.eepm.yaml
+name: $PRODUCT
+group: Engineering
+license: LGPL-3.0
+url: https://madcad.netlify.app/
+summary: MadCAD 3D CAD modeling tool
+description: MadCAD is a 3D CAD modeling tool.
+EOF
+
 return_tar $PKGNAME.tar

@@ -62,4 +62,13 @@ PKGNAME=$PRODUCT-$VERSION
 
 erc pack $PKGNAME.tar usr opt etc || fatal
 
+cat <<EOF >$PKGNAME.tar.eepm.yaml
+name: $PRODUCT
+group: System/Configuration/Printing
+license: Proprietary
+url: https://www.xerox.com/
+summary: Xerox SPL printer and scanner driver
+description: Xerox SPL printer and scanner driver for Linux.
+EOF
+
 return_tar $PKGNAME.tar

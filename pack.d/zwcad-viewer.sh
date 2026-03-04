@@ -58,4 +58,13 @@ PKGNAME=$PRODUCT-$VERSION
 
 erc pack $PKGNAME.tar opt/$PRODUCT usr etc || fatal
 
+cat <<EOF >$PKGNAME.tar.eepm.yaml
+name: $PRODUCT
+group: Engineering
+license: Proprietary
+url: https://www.zwsoft.com/
+summary: ZWCAD Viewer for viewing DWG/DXF files
+description: ZWCAD Viewer is a free viewer for DWG and DXF files.
+EOF
+
 return_tar $PKGNAME.tar

@@ -22,4 +22,13 @@ PKGNAME=$PRODUCT-$VERSION
 
 erc pack $PKGNAME.tar opt usr || fatal
 
+cat <<EOF >$PKGNAME.tar.eepm.yaml
+name: $PRODUCT
+group: Development/Tools
+license: Apache-2.0
+url: https://radicle.xyz/
+summary: Radicle HTTP daemon for web access to Radicle repositories
+description: Radicle HTTP daemon for web access to Radicle repositories.
+EOF
+
 return_tar $PKGNAME.tar

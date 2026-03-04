@@ -22,4 +22,13 @@ PKGNAME=$PRODUCT-$VERSION
 
 erc pack $PKGNAME.tar opt usr || fatal
 
+cat <<EOF >$PKGNAME.tar.eepm.yaml
+name: $PRODUCT
+group: Development/Tools
+license: Apache-2.0
+url: https://radicle.xyz/
+summary: Radicle is a sovereign code forge built on Git
+description: Radicle is a sovereign code forge built on Git.
+EOF
+
 return_tar $PKGNAME.tar

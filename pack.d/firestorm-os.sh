@@ -33,4 +33,13 @@ PKGNAME=$PRODUCT-$VERSION
 
 erc pack $PKGNAME.tar opt usr || fatal
 
+cat <<EOF >$PKGNAME.tar.eepm.yaml
+name: $PRODUCT
+group: Games/Other
+license: LGPL-2.1
+url: https://www.firestormviewer.org/
+summary: Firestorm OpenSimulator viewer
+description: Firestorm is an alternative viewer for OpenSimulator virtual worlds.
+EOF
+
 return_tar $PKGNAME.tar
