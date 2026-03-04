@@ -104,9 +104,11 @@ fi
 
 distr="$($EPM print info -s)"
 # install/update all, prioritizing apps with missing or oldest logs
+# skip apps already tested today (log or error from today's date)
 sort_apps_by_log_age()
 {
-    local app logtime errtime ts
+    local app logtime errtime ts today
+    today=$(date +%Y%m%d)
     while read app ; do
         logtime=0
         errtime=0
@@ -115,6 +117,10 @@ sort_apps_by_log_age()
         # use the most recent of success/error log
         ts=$logtime
         [ "$errtime" -gt "$ts" ] && ts=$errtime
+        # skip if already tested today
+        if [ "$ts" -gt 0 ] && [ "$(date -d @$ts +%Y%m%d)" = "$today" ] ; then
+            continue
+        fi
         echo "$ts $app"
     done | sort -n | sed 's/^[^ ]* //'
 }
