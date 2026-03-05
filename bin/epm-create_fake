@@ -21,55 +21,11 @@ load_helper epm-assure
 load_helper epm-repack-rpm
 
 
-__create_spec() {
-
-echo "%{!?fake_name: %global fake_name $NAME}" >> "$1"
-echo "%{!?fake_version: %global fake_version $VERSION}" >> "$1"
-echo "%{!?fake_release: %global fake_release $RELEASE}" >> "$1"
-if [ -n "$REQUIRES" ]; then
-  echo "%{!?fake_requires: %global fake_requires $REQUIRES}" >> "$1"
-fi
-if [ -n "$PROVIDES" ]; then
-  echo "%{!?fake_provides: %global fake_provides $PROVIDES}" >> "$1"
-fi
-
-  cat <<EOF >> "$1"
-%define _rpmdir $PWD
-
-Name: fake-%{fake_name}
-
-Version: %{fake_version}
-Release: %{fake_release}
-License: CC0
-Group: Other
-
-Summary: Faked provides package
-
-%if "%{?fake_provides}" != ""
-Provides: %{fake_provides}
-%endif
-Provides: %{fake_name}
-%if "%{?fake_requires}" != ""
-Requires: %{fake_requires}
-%endif
-BuildArch: noarch
-
-%description
-This package is empty. It has been created to put fake entry in rpmdb.
-
-%files
-#intentionaly empty
-
-%changelog
-#intentionaly empty
-EOF
-}
-
-
 __epm_create_fake_help()
 {
     message 'epm create-fake - create package with fake provides and requires
-Usage: epm create-fake [options] <package-name>'
+Usage: epm create-fake [options] <package-name>
+       epm create-fake [options] <file.yaml>'
     echo ''
     echog 'Options:'
     get_help HELPOPT $SHAREDIR/epm-create_fake
@@ -78,79 +34,130 @@ Examples:
     # epm create-fake --install python-somepackage
     # epm create-fake --install --provides="python3dist(somepackage)" python-somepackage
     # epm create-fake --install --requires=python3 --requires=python3-module python-somepackage
+    # epm create-fake --name=libfoo --provides="libfoo.so.1()(64bit)" libfoo
+    # epm create-fake --install mypackage.yaml
 '
 }
 
 epm_create_fake()
 {
+    local VERSION=0
+    local RELEASE=0
+    local REQUIRES=""
+    local PROVIDES=""
+    local FAKENAME=""
+    local NAME=""
 
-  VERSION=0
-  RELEASE=0
-  REQUIRES=""
+    for i in "$@"; do
+        case $i in
+            -h|--help)          # HELPOPT: show this help
+                __epm_create_fake_help
+                return
+                ;;
+            --install)          # HELPOPT: auto install fake package
+                ;;
+            --name=*)           # HELPOPT: set exact package name (without fake- prefix)
+                FAKENAME="${i#*=}"
+                ;;
+            --version=*)        # HELPOPT: set package version (default: 0)
+                VERSION="${i#*=}"
+                ;;
+            --release=*)        # HELPOPT: set package release (default: 0)
+                RELEASE="${i#*=}"
+                ;;
+            --requires=*)       # HELPOPT: set package requires (repeat for multiple)
+                REQUIRES="$REQUIRES ${i#*=}"
+                ;;
+            --provides=*)       # HELPOPT: set package provides (repeat for multiple)
+                PROVIDES="$PROVIDES ${i#*=}"
+                ;;
+            *)
+                [ -z "$NAME" ] && NAME="$i"
+                ;;
+        esac
+    done
 
-  for i in "$@"; do
-    case $i in
-      -h|--help)          # HELPOPT: show this help
-      __epm_create_fake_help
-      return
-      ;;
-      --install)          # HELPOPT: auto install fake package
-      ;;
-      --version=*)        # HELPOPT: set package version (default: 0)
-      VERSION="${i#*=}"
-      shift
-      ;;
-      --release=*)        # HELPOPT: set package release (default: 0)
-      RELEASE="${i#*=}"
-      shift
-      ;;
-      --requires=*)       # HELPOPT: set package requires
-      REQUIRES+=" ${i#*=}"
-      shift
-      ;;
-      --provides=*)       # HELPOPT: set package provides
-      PROVIDES+=" ${i#*=}"
-      shift
-      ;;
-      *)
-      ;;
-    esac
-  done
-
-  NAME=$1
-
-  if [ -z "$NAME" ]; then
-    fatal "Error: You have to specify PACKAGE_NAME"
-  fi
+    if [ -z "$NAME" ] ; then
+        fatal 'Error: You have to specify PACKAGE_NAME or a yaml file'
+    fi
 
     # will set RPMBUILD
-  __assure_exists_rpmbuild
+    __assure_exists_rpmbuild
 
-  HOME="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
-  unset BASH_ENV
-  remove_on_exit $HOME
-  export HOME
-  __create_rpmmacros
+    HOME="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
+    unset BASH_ENV
+    remove_on_exit $HOME
+    export HOME
+    __create_rpmmacros
 
-  tmpbuilddir=$HOME/$(basename $NAME).tmpdir
-  mkdir $tmpbuilddir
+    local tmpbuilddir=$HOME/create-fake.tmpdir
+    mkdir $tmpbuilddir
 
-  cd $tmpbuilddir/ || fatal
+    local yamlfile=""
+    local pkgname=""
 
-  SPECFILE=${PWD}/${NAME}.spec
-  __create_spec "$SPECFILE"
+    # handle yaml file input
+    if echo "$NAME" | grep -q '\.yaml$' ; then
+        yamlfile="$(realpath "$NAME")"
+        [ -r "$yamlfile" ] || fatal 'Can'\''t read yaml file: $NAME'
+        # read name and version from yaml
+        local name="" version=""
+        yaml_load_vars "$yamlfile" name version
+        pkgname="$name"
+        VERSION="$version"
+    else
+        # generate yaml from CLI args
+        if [ -n "$FAKENAME" ] ; then
+            pkgname="$FAKENAME"
+        else
+            pkgname="fake-$NAME"
+            # auto-add original name to provides (like the old Provides: %{fake_name})
+            PROVIDES="$NAME $PROVIDES"
+        fi
 
-  showcmd $RPMBUILD -bb $SPECFILE
-  if [ -n "$verbose" ] ; then
-      a='' $RPMBUILD  -bb $SPECFILE || fatal
-  else
-      a='' $RPMBUILD -bb $SPECFILE >/dev/null || fatal
-  fi
+        yamlfile="$tmpbuilddir/eepm.yaml"
+        cat > "$yamlfile" <<EOF
+name: $pkgname
+version: $VERSION
+release: $RELEASE
+summary: Faked provides package
+license: CC0
+group: Other
+buildarch: noarch
+description: This package is empty. It has been created to put fake entry in rpmdb.
+EOF
+        # echo without quotes trims and normalizes whitespace
+        [ -n "$(echo $REQUIRES)" ] && echo "requires: $(echo $REQUIRES)" >> "$yamlfile"
+        [ -n "$(echo $PROVIDES)" ] && echo "provides: $(echo $PROVIDES)" >> "$yamlfile"
+    fi
 
-   repacked_rpm="$(realpath "$tmpbuilddir/noarch/*.rpm")"
-   remove_on_exit "$repacked_rpm"
+    info 'Generated YAML for fake package:'
+    cat "$yamlfile"
 
-  if [ -n "$install" ] ; then
-    epm install "$repacked_rpm"
-  fi
+    cd $tmpbuilddir/ || fatal
+
+    __generate_spec_by_yaml "$yamlfile" "$tmpbuilddir"
+
+    local buildroot="$tmpbuilddir/$pkgname-$VERSION"
+    local spec="$tmpbuilddir/$pkgname.spec"
+    mkdir -p "$buildroot"
+
+    showcmd $RPMBUILD --buildroot $buildroot -bb $spec
+    if [ -n "$verbose" ] ; then
+        a='' $RPMBUILD --buildroot $buildroot -bb $spec || fatal
+    else
+        a='' $RPMBUILD --buildroot $buildroot -bb $spec >/dev/null || fatal
+    fi
+
+    local repacked_rpm="$(realpath $tmpbuilddir/../*.rpm)"
+    remove_on_exit "$repacked_rpm"
+
+    if [ -n "$install" ] ; then
+        epm install "$repacked_rpm"
+    else
+        cp $verbose "$repacked_rpm" "$EPMCURDIR/" || fatal
+        local rpmname
+        rpmname="$(basename "$repacked_rpm")"
+        info 'Fake package saved: $rpmname'
+    fi
 }

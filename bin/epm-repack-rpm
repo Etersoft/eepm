@@ -17,6 +17,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+load_helper epm-sh-create-rpm
+
 
 # args: pkgname/repackscript
 get_repack_script()
@@ -139,6 +141,8 @@ epm_check_repacked_rpm()
 }
 
 
+
+
 # will fills repacked_pkg var
 __epm_repack_to_rpm()
 {
@@ -189,26 +193,38 @@ __epm_repack_to_rpm()
         abspkg="$(realpath $alpkg)"
         cd $tmpbuilddir/ || fatal
 
-        __run_alien --fakeroot "../$alpkg" --generate --to-rpm --keep-version $scripts || fatal
+        local buildroot spec pkgname
 
-        # remove all empty dirs (hack against broken dpkg with LF in the end of line) (hack for linux_pantum.deb)
-        rmdir * 2>/dev/null
+        if [ -n "$SUBGENERIC" ] && [ -z "$EPM_USE_ALIEN" ] ; then
+            # for tar/appimage/snap: generate spec directly without alien
+            __fill_yaml_from_tarball "../$alpkg.eepm.yaml" "../$alpkg"
+            __generate_spec_by_yaml "../$alpkg.eepm.yaml" "$tmpbuilddir"
+            __unpack_files_from_tarball "../$alpkg.eepm.yaml" "../$alpkg" "$tmpbuilddir"
+            local name version
+            __set_name_version_by_yaml "../$alpkg.eepm.yaml"
+            pkgname="$name"
+            spec="$tmpbuilddir/$name.spec"
+            buildroot="$tmpbuilddir/$name-$version"
+        else
+            # for deb/rpm: use alien
+            __run_alien --fakeroot "../$alpkg" --generate --to-rpm --keep-version $scripts || fatal
 
-        local subdir="$(echo *)"
-        [ -d "$subdir" ] || fatal "can't find subdir in" $(pwd)
+            # remove all empty dirs (hack against broken dpkg with LF in the end of line) (hack for linux_pantum.deb)
+            rmdir * 2>/dev/null
 
-        local buildroot="$tmpbuilddir/$subdir"
+            local subdir="$(echo *)"
+            [ -d "$subdir" ] || fatal "can't find subdir in" $(pwd)
 
-        # for tarballs fix permissions (ideally fix in pack.d/generic-tar.sh, but there is tar repacking only)
-        [ "$SUBGENERIC" = "tar" ] && chmod $verbose -R a+rX $buildroot/*
+            buildroot="$tmpbuilddir/$subdir"
 
-        # detect spec and move to prev dir
-        local spec="$(echo $buildroot/*.spec)"
-        [ -s "$spec" ] || fatal "Can't find spec $spec"
-        mv $spec $tmpbuilddir || fatal
-        spec="$tmpbuilddir/$(basename "$spec")"
+            # detect spec and move to tmpbuilddir
+            spec="$(echo $buildroot/*.spec)"
+            [ -s "$spec" ] || fatal "Can't find spec $spec"
+            mv $spec $tmpbuilddir || fatal
+            spec="$tmpbuilddir/$(basename "$spec")"
 
-        local pkgname="$(grep "^Name: " $spec | sed -e "s|Name: ||g" | head -n1)"
+            pkgname="$(grep "^Name: " $spec | sed -e "s|Name: ||g" | head -n1)"
+        fi
 
         # run generic scripts and repack script for the pkg
         cd $buildroot || fatal

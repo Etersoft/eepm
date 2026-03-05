@@ -1,0 +1,184 @@
+#!/bin/sh
+#
+# Copyright (C) 2017-2018, 2020, 2024-2025  Etersoft
+# Copyright (C) 2017-2018, 2020, 2024-2025  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+
+# Parse package name and version from tarball filename
+# Sets variables: name, version
+# args: tarball
+__set_name_version_by_tarball()
+{
+    local tarname
+    tarname="$(basename "$1" .tar)"
+    name="$(echo "$tarname" | sed -E 's/-[0-9][^-]*$//')"
+    version="$(echo "$tarname" | sed -E 's/^.*-([0-9])/\1/')"
+    if [ "$name" = "$tarname" ] || [ -z "$version" ] ; then
+        name="$tarname"
+        version="0"
+    fi
+}
+
+
+# Add field to yaml file if not already present
+# args: yaml_file field value
+__set_yaml_field_if_empty()
+{
+    local yaml_file="$1"
+    local field="$2"
+    local value="$3"
+    grep -q "^${field}:" "$yaml_file" && return
+    echo "${field}: ${value}" >> "$yaml_file"
+}
+
+
+# Fill yaml with defaults from tarball filename
+# Creates yaml file if it doesn't exist
+# args: yaml_file tarball
+__fill_yaml_from_tarball()
+{
+    local yaml_file="$1"
+    local tarball="$2"
+
+    [ -e "$yaml_file" ] || touch "$yaml_file"
+
+    local name version
+    __set_name_version_by_tarball "$tarball"
+
+    __set_yaml_field_if_empty "$yaml_file" "name" "$name"
+    __set_yaml_field_if_empty "$yaml_file" "version" "$version"
+    __set_yaml_field_if_empty "$yaml_file" "release" "1"
+    __set_yaml_field_if_empty "$yaml_file" "license" "unknown"
+    __set_yaml_field_if_empty "$yaml_file" "group" "Converted/unknown"
+}
+
+
+# Load name and version from yaml into caller's variables
+# Sets variables: name, version
+# args: yaml_file
+__set_name_version_by_yaml()
+{
+    yaml_load_vars "$1" name version
+}
+
+
+# Generate RPM spec from yaml metadata
+# Writes spec to tmpbuilddir/name.spec
+# %files section is empty; use __unpack_files_from_tarball to populate it
+# args: yaml_file tmpbuilddir
+__generate_spec_by_yaml()
+{
+    local yaml_file="$1"
+    local tmpbuilddir="$2"
+
+    local name version release summary license group
+    local description url upstream_file upstream_url
+    local requires provides buildarch
+
+    yaml_load_vars "$yaml_file" name version release summary description upstream_file upstream_url url group license requires provides buildarch
+
+    [ -n "$summary" ] || summary="$name"
+
+    # description
+    local spec_description
+    if [ -n "$description" ] ; then
+        if [ -n "$upstream_file" ] || [ -n "$upstream_url" ] ; then
+            [ -n "$upstream_url" ] && upstream_file="$upstream_url"
+            [ -n "$upstream_file" ] || upstream_file="binary package $name"
+            spec_description="$description
+(Repacked from $upstream_file with EPM $(epm --short --version))"
+        else
+            spec_description="$description"
+        fi
+    else
+        spec_description="$summary"
+    fi
+
+    # write spec
+    local specfile="$tmpbuilddir/$name.spec"
+    cat > "$specfile" <<EOF
+Name: $name
+Version: $version
+Release: $release
+Summary: $summary
+License: $license
+Group: $group
+EOF
+    [ -n "$url" ] && echo "URL: $url" >> "$specfile"
+    [ -n "$buildarch" ] && echo "BuildArch: $buildarch" >> "$specfile"
+    local r
+    for r in $requires ; do
+        echo "Requires: $r" >> "$specfile"
+    done
+    for r in $provides ; do
+        echo "Provides: $r" >> "$specfile"
+    done
+    cat >> "$specfile" <<EOF
+
+%define _rpmdir ../
+%define _rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm
+%define _unpackaged_files_terminate_build 0
+
+%description
+$spec_description
+
+%files
+EOF
+}
+
+
+# Unpack tarball into buildroot and append %files list to spec
+# Reads name-version from yaml for buildroot path
+# args: yaml_file tarball tmpbuilddir
+__unpack_files_from_tarball()
+{
+    local yaml_file="$1"
+    local tarball="$2"
+    local tmpbuilddir="$3"
+
+    local name version
+    yaml_load_vars "$yaml_file" name version
+
+    local buildroot="$tmpbuilddir/$name-$version"
+    mkdir -p "$buildroot"
+
+    # extract tarball (resolve path before cd)
+    local abstarball
+    abstarball="$(realpath "$tarball")"
+    ( cd "$buildroot" && a='' erc unpack "$abstarball" ) || fatal "Can't extract $tarball"
+
+    # fix permissions for tarball contents
+    chmod $verbose -R a+rX "$buildroot"
+
+    # erc/patool may create a wrapper subdirectory — flatten it
+    local innerdir
+    innerdir="$(echo "$buildroot"/*/)"
+    if [ -d "$innerdir" ] && [ "$(ls "$buildroot")" = "$(basename "$innerdir")" ] ; then
+        mv "$innerdir"* "$innerdir".* "$buildroot/" 2>/dev/null
+        rmdir "$innerdir"
+    fi
+
+    # append %files list to spec
+    local specfile="$tmpbuilddir/$name.spec"
+    ( cd "$buildroot" && find . -mindepth 1 | sed 's|^\./|/|' | LANG=C sort | while read -r f ; do
+        if [ -d "$buildroot$f" ] && [ ! -L "$buildroot$f" ] ; then
+            echo "%dir \"$f\""
+        else
+            echo "\"$f\""
+        fi
+    done ) >> "$specfile"
+}
