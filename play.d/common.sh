@@ -675,7 +675,8 @@ case "$1" in
         # pass to run play code
         ;;
     "--run")
-        # just pass to run play code
+        [ -z "$force" ] && check_for_product_update
+        # pass to run play code
         ;;
     *)
         fatal "Unknown command '$1'. Use this script only via epm play."
