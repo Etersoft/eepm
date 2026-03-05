@@ -147,7 +147,7 @@ __list_app_packages_table()
     [ "$arch" = "x86_64" ] && IGNOREi586='NoNo' || IGNOREi586='i586-'
 
     __get_fast_short_list_app $arch | LC_ALL=C sort -k1,1 >$tmplist
-    grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\<$arch\>)" $psdir/*.sh | xargs grep -oP "^PKGNAME=[\"']*\K[^\"']+"  | sed -e "s|.*/\(.*\).sh:|\1 |" | grep -v -E "(^$IGNOREi586|^common|#.*$)" | LC_ALL=C sort -k1,1 >$tmplist1
+    find $psdir -maxdepth 1 -name '*.sh' ! -type l | xargs grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\<$arch\>)" | xargs grep -oP "^PKGNAME=[\"']*\K[^\"']+"  | sed -e "s|.*/\(.*\).sh:|\1 |" | grep -v -E "(^$IGNOREi586|^common|#.*$)" | LC_ALL=C sort -k1,1 >$tmplist1
     # tmplist - app
     # tmplist1 - app package
     __print_targeted_packages $tmplist1 | LC_ALL=C join -j 1 -a 1 $tmplist - | while read -r app package ; do
