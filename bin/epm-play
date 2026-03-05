@@ -336,7 +336,7 @@ __epm_play_update()
     RES=0
     for i in $* ; do
         echo
-        echo "$i"
+        info 'Updating $i ...'
             if ! __is_app_installed "$i" ; then
                 continue
             fi
