@@ -216,6 +216,8 @@ __use_tmp_apt_for_tasks()
 {
     load_helper epm-update
     __setup_tmp_apt_dir
+    # hardlink existing system apt lists to avoid re-downloading
+    cp -la /var/lib/apt/lists/*.* "$__EPM_APT_TMPDIR/lists/" 2>/dev/null
     { __get_system_sourceslist ; __generate_task_sourceslist "$@" ; } > "$__EPM_APT_TMPDIR/sources.list"
     # tolerate partial failures (some system repos may have broken GPG keys etc.)
     __epm_update || warning "Some repos failed to update, but continuing anyway"
