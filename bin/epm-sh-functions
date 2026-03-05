@@ -449,7 +449,7 @@ fixme()
 # Print debug message
 debug()
 {
-    [ -n "$debug" ] || return
+    [ -z "$debug" ] && return
 
     set_color $YELLOW >&2
     echog -n "WARNING: " >&2
