@@ -53,13 +53,20 @@ __run_alien()
         local wrapdir
         wrapdir="$(mktemp -d)"
         remove_on_exit "$wrapdir"
-        export __ALN_PKG="$(realpath "$alpkg")"
-        cat > "$wrapdir/cpio" <<'CPIOWRAPPER'
+        local real_cpio
+        real_cpio="$(print_command_path cpio)"
+        local abs_alpkg
+        abs_alpkg="$(realpath "$alpkg")"
+        cat > "$wrapdir/cpio" <<CPIOWRAPPER
 #!/bin/sh
-rpm -qpl "$__ALN_PKG" 2>/dev/null | while IFS= read -r f; do
-    mkdir -p ".$(dirname "$f")" 2>/dev/null
-done
-exec /usr/bin/cpio "$@"
+case "\$*" in
+    *--extract*)
+        rpm -qpl "$abs_alpkg" 2>/dev/null | while IFS= read -r f; do
+            mkdir -p ".\$(dirname "\$f")" 2>/dev/null
+        done
+        ;;
+esac
+exec $real_cpio "\$@"
 CPIOWRAPPER
         chmod +x "$wrapdir/cpio"
         PATH="$wrapdir:$PATH"
