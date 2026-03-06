@@ -105,7 +105,10 @@ fi
 for i in $BUILDROOT/usr/bin/* ; do
     [ -L "$i" ] && continue
     [ -f "$i" ] || continue
-    [ -x "$i" ] || fatal "file ${i#$BUILDROOT} is not executable"
+    if ! [ -x "$i" ] ; then
+        warning "file ${i#$BUILDROOT} is not executable, fixing"
+        chmod a+x "$i"
+    fi
     grep -Eq '^#!/usr/bin/python|^#!/usr/bin/env python' $i && flag_python3=1
     subst 's|^#!/usr/bin/python$|#!/usr/bin/python3|' $i
     subst 's|^#!/usr/bin/env python$|#!/usr/bin/env python3|' $i
