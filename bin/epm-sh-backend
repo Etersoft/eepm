@@ -56,7 +56,7 @@ __get_repo_name() {
     # ALT Linux branches
     [ "$trepo" = "sisyphus" ] && trepo="Sisyphus"
     [ "$trepo" = "SS" ] && trepo="Sisyphus"
-    [ "$trepo" = "archive" ] && repo="archive $(echo "$arg" | cut -d/ -f2)" && name=$(echo "$arg" | cut -d/ -f3) && return
+    [ "$trepo" = "archive" ] && repo="archive/$(echo "$arg" | cut -d/ -f2)" && name=$(echo "$arg" | cut -d/ -f3) && return
 
     # Fedora Copr: copr/owner/project/package
     if [ "$trepo" = "copr" ] ; then
@@ -253,6 +253,12 @@ __process_repo_arguments() {
             # Fedora Copr: enable repo, then install
             epm repo add "$repo"
             epm update
+            (PPARGS=1 $func ${repo_groups[$repo]})
+        elif startwith "$repo" "archive/" ; then
+            # ALT Linux archive: archive/DATE/package -> use current branch + date
+            local datestr="${repo#archive/}"
+            datestr="$(echo "$datestr" | sed 's|-|/|g')"
+            __use_tmp_apt_for_branch archive "$DISTRVERSION" "$datestr" || return 1
             (PPARGS=1 $func ${repo_groups[$repo]})
         else
             # ALT Linux: use temporary APT directory instead of modifying system repos
