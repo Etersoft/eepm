@@ -3,16 +3,14 @@
 PKGNAME=rstudio
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
+RELEASE="$3"
 DESCRIPTION='RStudio from the official site'
 URL="https://posit.co/"
 
 . $(dirname $0)/common.sh
 
-warn_version_is_not_supported
-
 arch=x86_64
 pkgtype="$(epm print info -p)"
-distr="$(epm print info -s)"
 
 case $(epm print info -e) in
     Ubuntu/20.*|Debian/11)
@@ -57,7 +55,15 @@ case $(epm print info -e) in
         ;;
 esac
 
-PKGMASK="$(epm print constructname $PKGNAME "$VERSION" $arch $pkgtype "-" "-")"
-PKGURL="$(eget --list --latest https://posit.co/download/rstudio-desktop/ "$PKGMASK" | grep "$PKGFILTER")"
+# RStudio uses VERSION-BUILD in filenames (e.g. 2026.01.1-403)
+# app-versions gives 2026.01.1+403, replace + with -
+VERSION="$(echo "$VERSION" | sed 's|+|-|')"
+PKGMASK="$PKGNAME-${VERSION}-${arch}.${pkgtype}"
+
+if [ "$VERSION" != "*" ] ; then
+    PKGURL="https://download1.rstudio.org/electron/$PKGFILTER/$arch/$PKGMASK"
+else
+    PKGURL=$(eget --list --latest https://posit.co/download/rstudio-desktop/ "$PKGMASK" | grep "$PKGFILTER")
+fi
 
 install_pkgurl
