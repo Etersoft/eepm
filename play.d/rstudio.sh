@@ -9,49 +9,27 @@ URL="https://posit.co/"
 
 . $(dirname $0)/common.sh
 
-arch=x86_64
 pkgtype="$(epm print info -p)"
 
+# ALTLinux: use deb package (better compatibility)
 case $(epm print info -e) in
-    Ubuntu/20.*|Debian/11)
-        PKGFILTER="focal"
-        arch=amd64
-        ;;
-    Ubuntu/22.*|Ubuntu/23*|Debian/12)
-        PKGFILTER="jammy"
-        arch=amd64
-        ;;
-    AstraLinux*|Debian/*|Ubuntu/*)
-        PKGFILTER="bionic"
-        arch=amd64
-        ;;
-    RedOS/7*|AlterOS/*|Fedora/19)
-        PKGFILTER="centos7"
-        ;;
-    ROSA/*)
-        PKGFILTER="rhel8"
-        ;;
-    CentOS/*|Fedora/34|Fedora/35|RHEL/8)
-        PKGFILTER="rhel8"
-        ;;
-    Fedora/*|RHEL/9)
-        PKGFILTER="rhel9"
-        ;;
-    OpenSUSE/*)
-        PKGFILTER="opensuse15"
-        ;;
-    ALTLinux/p10|p9|c10*)
-        PKGFILTER="focal"
-        arch="amd64"
-        pkgtype="deb"
-        ;;
     ALTLinux/*)
-        PKGFILTER="jammy"
-        arch="amd64"
         pkgtype="deb"
+        ;;
+esac
+
+# RStudio provides only two builds: deb (jammy) and rpm (rhel9)
+case $pkgtype in
+    deb)
+        PKGFILTER="jammy"
+        arch=amd64
+        ;;
+    rpm)
+        PKGFILTER="rhel9"
+        arch=x86_64
         ;;
     *)
-        fatal "Unsupported distro $(epm print info -e). Ask application vendor for a support."
+        fatal "Unsupported package type $pkgtype. RStudio provides only deb and rpm packages."
         ;;
 esac
 
