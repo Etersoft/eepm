@@ -83,6 +83,12 @@ get_pkgname_from_taskarg()
 
 ALTTASKURL="http://git.altlinux.org/tasks"
 
+get_task_state()
+{
+    local tn="$1"
+    fetch_url "$ALTTASKURL/$tn/task/state" 2>/dev/null
+}
+
 get_task_status()
 {
     local tn="$1"
@@ -120,7 +126,16 @@ get_task_packages()
     for arg in "$@" ; do
         is_taskarg "$arg" || continue
         tn=$(get_tasknumber_from_arg "$arg")
-        get_task_status "$tn" || continue
+        if ! get_task_status "$tn" ; then
+            local state
+            state="$(get_task_state "$tn")"
+            if [ -n "$state" ] ; then
+                warning 'Task $tn state is $state, packages are not yet available.'
+            else
+                warning 'Task $tn not found.'
+            fi
+            continue
+        fi
         get_task_packages_list "$tn"
         [ "$DISTRARCH" = "x86_64" ] || continue
         get_task_arepo_status "$tn" || continue
