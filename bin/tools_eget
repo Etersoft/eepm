@@ -550,6 +550,7 @@ Examples:
   $ eget http://ftp.somesite.ru/package-*.x64.tar
   $ eget http://ftp.somesite.ru/package *.tar
   $ eget https://github.com/owner/project package*.ext
+  $ eget https://disk.yandex.ru/d/HASH
   $ eget -O myname ipfs://QmVRUjnsnxHWkjq91KreCpUk4D9oZEbMwNQ3rzdjwND5dR
   $ eget --list http://ftp.somesite.ru/package-*.tar
   $ eget --check-url http://ftp.somesite.ru/test
@@ -2483,6 +2484,62 @@ if is_github_url "$1" && [ -n "$2" ] ; then
         sget "$fn" "$TARGETFILE" || ERROR=1
         [ -n "$TARGETFILE" ] && [ "$ERROR" = "0" ] && break
     done
+    exit
+fi
+
+# separate part for Yandex.Disk downloads
+is_yadisk_url()
+{
+    case "$1" in
+        https://disk.yandex.ru/d/*|https://yadi.sk/d/*) return 0 ;;
+    esac
+    return 1
+}
+
+# Get direct download URL from Yandex.Disk public link
+get_yadisk_download_url()
+{
+    local PUBLIC_URL="$1"
+    local API_URL="https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=$PUBLIC_URL"
+    local RESPONSE
+    RESPONSE="$(scat "$API_URL")" || fatal "Can't get download URL from Yandex.Disk API"
+    # extract href from JSON: {"href": "https://..."}
+    echo "$RESPONSE" | sed -e 's/.*"href" *: *"//;s/".*//'
+}
+
+# Get filename from Yandex.Disk public link metadata
+get_yadisk_filename()
+{
+    local PUBLIC_URL="$1"
+    local API_URL="https://cloud-api.yandex.net/v1/disk/public/resources?public_key=$PUBLIC_URL"
+    local RESPONSE
+    RESPONSE="$(scat "$API_URL")" || return 1
+    # extract name from JSON: {"name": "filename.ext", ...}
+    echo "$RESPONSE" | sed -e 's/.*"name" *: *"//;s/".*//'
+}
+
+if is_yadisk_url "$1" ; then
+    [ -n "$2" ] && fatal "too many args when Yandex.Disk URL used: extra '$2' arg"
+
+    if [ -n "$GETFILENAME" ] ; then
+        get_yadisk_filename "$1"
+        exit
+    fi
+
+    DOWNLOAD_URL="$(get_yadisk_download_url "$1")"
+    [ -n "$DOWNLOAD_URL" ] || fatal "Can't get download URL for $1"
+
+    if [ -n "$LISTONLY" ] ; then
+        echo "$DOWNLOAD_URL"
+        exit
+    fi
+
+    if [ -z "$TARGETFILE" ] ; then
+        TARGETFILE="$(get_yadisk_filename "$1")"
+    fi
+
+    MADEURL="$DOWNLOAD_URL"
+    sget "$DOWNLOAD_URL" "$TARGETFILE"
     exit
 fi
 
