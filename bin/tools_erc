@@ -185,6 +185,12 @@ extract_special_archive()
 		subdir="${extract_dir:-$(get_archive_name "$arc")}"
 	fi
 
+	local flat_tdir
+	if [ -n "$flat" ] ; then
+		flat_tdir=$(mktemp -d "${subdir}/UXXXXXXXX")
+		subdir="$flat_tdir"
+	fi
+
 	case "$type" in
 		exe|dll)
 			extract_7z_to_subdir "$arc" "$subdir"
@@ -202,6 +208,12 @@ extract_special_archive()
 			return 1
 			;;
 	esac
+
+	if [ -n "$flat_tdir" ] ; then
+		find "$flat_tdir" -type f -exec mv -t "${extract_dir:-.}" -- {} +
+		rm -rf "$flat_tdir"
+	fi
+
 	exit
 }
 
