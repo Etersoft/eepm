@@ -178,7 +178,12 @@ extract_special_archive()
 {
 	local arc="$1"
 	local type="$2"
-	local subdir="${extract_dir:-$(get_archive_name "$arc")}"
+	local subdir
+	if [ -n "$here" ] ; then
+		subdir="${extract_dir:-.}"
+	else
+		subdir="${extract_dir:-$(get_archive_name "$arc")}"
+	fi
 
 	case "$type" in
 		exe|dll)
@@ -271,12 +276,15 @@ extract_archive()
 
 	extract_special_archive "$arc" "$type"
 
-	# -C: extract directly to target directory
-	if [ -n "$extract_dir" ] ; then
+	# --here or -C: extract directly to target directory
+	local target_dir="${extract_dir}"
+	[ -n "$here" ] && [ -z "$target_dir" ] && target_dir="."
+
+	if [ -n "$target_dir" ] ; then
 		if have_patool ; then
-			docmd patool $verbose extract --outdir "$extract_dir" "$arc"
+			docmd patool $verbose extract --outdir "$target_dir" "$arc"
 		else
-			cd "$extract_dir" || fatal
+			cd "$target_dir" || fatal
 			extract_by_type "$arc" "$type" "$@"
 		fi
 		return
@@ -454,6 +462,7 @@ verbose=--verbose
 quiet=
 use_7z=
 use_patool=
+here=
 
 if [ -z "$*" ] ; then
     echo "Etersoft archive manager version @VERSION@" >&2
@@ -483,6 +492,9 @@ case "$1" in
         ;;
     --use-7z)             # HELPOPT: force use 7z as backend
         use_7z=1
+        ;;
+    --here|--no-subdir)   # HELPOPT: extract to current directory without creating a subdirectory
+        here=1
         ;;
     -C)                   # HELPOPT: extract to specified directory
         shift
