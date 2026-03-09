@@ -8,5 +8,5 @@ PRODUCTDIR=/opt/$PRODUCT
 
 . $(dirname $0)/common.sh
 
-move_file /usr/share/pixmaps/PrismLauncher-Linux.svg /usr/share/icons/hicolor/scalable/apps/org.prismlauncher.PrismLauncher.svg
+add_obsoletes PrismLauncher-Linux
 
