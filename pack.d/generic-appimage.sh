@@ -50,9 +50,11 @@ else
 fi
 [ -L "$BASEDIR" ] && [ -d "AppDir" ] && BASEDIR="AppDir"
 
+
+DESKTOPFILE="$(echo $BASEDIR/*.desktop | head -n1)"
+
 # try get version from X-AppImage-Version
 if [ -z "$VERSION" ] ; then
-    DESKTOPFILE="$(echo $BASEDIR/*.desktop | head -n1)"
     str="$(grep '^X-AppImage-Version=[0-9]' $DESKTOPFILE)"
     if [ -n "$str" ] ; then
         VERSION="$(echo $str | sed -e 's|.*X-AppImage-Version=||')"
@@ -69,12 +71,31 @@ fi
 
 PKGNAME=$PRODUCT-$VERSION.tar
 
+# get first occurrence of XML tag value from file
+get_xml_tag() {
+    grep "<$1>" "$2" | head -1 | sed "s|.*<$1>||;s|</${1%% *}>.*||"
+}
+
+if [ -f "$DESKTOPFILE" ] ; then
+    yaml_summary="$(grep '^Comment=' "$DESKTOPFILE" | head -1 | sed 's/^Comment=//')"
+fi
+
+APPDATAFILE="$(find $BASEDIR -maxdepth 5 \( -name '*.appdata.xml' -o -name '*.metainfo.xml' \) -type f 2>/dev/null | head -1)"
+if [ -f "$APPDATAFILE" ] ; then
+    [ -n "$yaml_summary" ] && yaml_summary="$(get_xml_tag 'summary' "$APPDATAFILE")"
+    yaml_license="$(get_xml_tag 'project_license' "$APPDATAFILE")"
+    yaml_url="$(get_xml_tag 'url type="homepage"' "$APPDATAFILE")"
+fi
+
 cat <<EOF >$PKGNAME.eepm.yaml
 name: $PRODUCT
 version: $VERSION
 upstream_file: $alpkg
 generic_repack: appimage
 EOF
+[ -n "$yaml_summary" ] && echo "summary: $yaml_summary" >> $PKGNAME.eepm.yaml
+[ -n "$yaml_license" ] && echo "license: $yaml_license" >> $PKGNAME.eepm.yaml
+[ -n "$yaml_url" ] && echo "url: $yaml_url" >> $PKGNAME.eepm.yaml
 
 chmod og-w -R $BASEDIR
 chmod a+rX -R $BASEDIR
