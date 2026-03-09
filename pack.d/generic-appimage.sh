@@ -34,6 +34,7 @@ PRODUCT="${PRODUCT/-aarch64/}"
 PRODUCT="${PRODUCT/-arm64/}"
 PRODUCT="${PRODUCT/-x64/}"
 PRODUCT="${PRODUCT/-linux64/}"
+PRODUCT="${PRODUCT/-Linux/}"
 PRODUCT="${PRODUCT/-linux/}"
 PRODUCT="${PRODUCT/-stable/}"
 
