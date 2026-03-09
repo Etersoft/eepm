@@ -98,7 +98,9 @@ while [ -n "$1" ] ; do
 done
 
 if [ -n "$1" ] ; then
-    install_app_alt "$1"
+    for app in "$@" ; do
+        install_app_alt "$app"
+    done
     exit
 fi
 
