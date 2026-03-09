@@ -74,12 +74,27 @@ create_archive()
 }
 
 # Extract archive with 7z into subdir
+__7z_snld_flag=""
+__7z_snld_checked=""
+
+# Get -snld flag if supported (7z 25.01+ rejects symlinks with ../ by default)
+get_7z_snld()
+{
+	if [ -z "$__7z_snld_checked" ] ; then
+		__7z_snld_checked=1
+		local ver
+		ver=$($HAVE_7Z 2>&1 | sed -n 's/.*[Zz]ip.*[[:space:]]\([0-9]*\)\.\([0-9]*\).*/\1\2/p' | head -1)
+		[ "${ver:-0}" -ge 2501 ] && __7z_snld_flag="-snld"
+	fi
+	echo $__7z_snld_flag
+}
+
 extract_7z_to_subdir()
 {
 	local arc="$1"
 	local subdir="$2"
 	mkdir -p "$subdir" && cd "$subdir" || fatal
-	docmd $HAVE_7Z x -y "$arc"
+	docmd $HAVE_7Z x -y $(get_7z_snld) "$arc"
 }
 
 # Extract squashfs-based archives (squashfs, snap)
