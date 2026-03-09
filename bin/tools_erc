@@ -182,6 +182,7 @@ extract_special_archive()
 {
 	local arc="$1"
 	local type="$2"
+	local orig_dir="$PWD"
 	local subdir
 	if [ -n "$here" ] || [ -n "$flat" ] ; then
 		subdir="${extract_dir:-.}"
@@ -191,7 +192,7 @@ extract_special_archive()
 
 	local flat_tdir
 	if [ -n "$flat" ] ; then
-		flat_tdir=$(mktemp -d "${subdir}/UXXXXXXXX")
+		flat_tdir=$(mktemp -d "$(realpath "$subdir")/UXXXXXXXX")
 		subdir="$flat_tdir"
 	fi
 
@@ -214,7 +215,8 @@ extract_special_archive()
 	esac
 
 	if [ -n "$flat_tdir" ] ; then
-		find "$flat_tdir" -type f -exec mv -t "${extract_dir:-.}" -- {} +
+		local target_dir="${extract_dir:-$orig_dir}"
+		find "$flat_tdir" -type f -exec mv -t "$target_dir" -- {} +
 		rm -rf "$flat_tdir"
 	fi
 
