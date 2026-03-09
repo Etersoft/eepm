@@ -439,15 +439,23 @@ $(get_help HELPCMD)
  Options:
 $(get_help HELPOPT)
 
+ Extraction rules:
+    Single file in archive     -> extracted to current directory
+    Multiple files or directory -> extracted to BASENAME/ subdirectory
+    Use --here to skip creating subdirectory, --flat to strip all paths
+
  Examples:
     # erc dir - pack dir to dirname.zip
     # erc a archive.zip file(s)... - pack files to archive.zip
     # erc [x] archive.zip - unpack
     # unerc archive.zip - unpack
-    # erc [repack] archive1.zip... archive2.rar $HAVE_7Z: - repack all to $HAVE_7Z
-    # erc -f [repack] archive.zip archive.$HAVE_7Z - force repack zip to $HAVE_7Z (override target in anyway)
+    # erc [repack] archive1.zip... archive2.rar 7z: - repack all to 7z
+    # erc -f [repack] archive.zip archive.7z - force repack zip to 7z (override target in anyway)
     # erc -C dir archive.zip - extract archive directly to dir
+    # erc --here archive.zip - extract as-is without creating subdirectory
+    # erc --flat archive.zip - extract all files stripping directory structure
     # erc file/dir zip: - pack file to zip
+    # erc basename archive.tar.gz - print predicted directory name (archive)
 "
 }
 
