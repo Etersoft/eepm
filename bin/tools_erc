@@ -474,7 +474,9 @@ $(get_help HELPOPT)
 
  Extraction rules:
     Single file in archive     -> extracted to current directory
-    Multiple files or directory -> extracted to BASENAME/ subdirectory
+    Single directory in archive -> renamed to BASENAME/
+    System dir (opt, usr, etc) -> wrapped in BASENAME/ (not renamed)
+    Multiple files or dirs     -> extracted to BASENAME/ subdirectory
     Use --here to skip creating subdirectory, --flat to strip all paths
 
  Examples:
