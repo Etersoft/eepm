@@ -7,8 +7,8 @@ PKG="$4"
 
 . $(dirname $0)/common.sh
 
-# Ignore FreeBSD sonames from embedded binaries
-ignore_lib_requires libc.so libc.so.7 libdl.so libm.so libstdc++.so libfuse.so.2
+# Ignore FreeBSD sonames and Fedora-specific libs from embedded binaries
+ignore_lib_requires libc.so libc.so.7 libdl.so libm.so libstdc++.so libfuse.so.2 libcrypt.so.2
 
 # Remove Ruby on Rails plugin templates with %namespaced_name% dirs
 # (% in names conflicts with RPM macro syntax)

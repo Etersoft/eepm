@@ -9,8 +9,11 @@ PRODUCTDIR=/opt/trueconf/client
 
 . $(dirname $0)/common.sh
 
-# follow original requires
-reqs="$(epm requires "$ORIGINPACKAGE")"
+# bundled Qt5 modules not available in all branches
+ignore_lib_requires libQt5Bodymovin.so.5 libQt5VirtualKeyboard.so.5 libQt5WaylandCompositor.so.5
+
+# follow original requires, excluding the bundled ones
+reqs="$(epm requires "$ORIGINPACKAGE" | grep -v 'libQt5Bodymovin\|libQt5VirtualKeyboard\|libQt5WaylandCompositor')"
 [ -n "$reqs" ] && add_requires $reqs pulseaudio-daemon
 
 # for old trueconf (before 8.4.0.1957)
