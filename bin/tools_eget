@@ -2373,6 +2373,10 @@ make_fileurl()
 {
     local url="$1"
     local fn="$2"
+    local abs_path=''
+
+    # detect absolute path before stripping leading slashes
+    is_abs_path "$fn" && abs_path=1
 
     fn="$(echo "$fn" | sed -e 's|^./||' -e 's|^/*||')"
 
@@ -2382,7 +2386,7 @@ make_fileurl()
     elif is_rsyncurl "$url" || is_sshurl "$url" ; then
         # rsync/ssh URLs: just ensure trailing slash
         url="$(echo "$url" | sed 's|/*$|/|')"
-    elif is_abs_path "$fn" ; then
+    elif [ -n "$abs_path" ] ; then
         # if there is file path from the root of the site
         url="$(get_host_only "$url")"
     elif ! have_end_slash_or_php_parametr "$url" ; then
