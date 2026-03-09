@@ -8,6 +8,8 @@ URL="https://www.realvnc.com/en/connect/download/vnc/"
 
 . $(dirname $0)/common.sh
 
+[ "$VERSION" = "*" ] && VERSION="7.15.1"
+
 # vendor packages has shorted version, so drop latest version part (buildid)
 if [ "$VERSION" != "*" ] ; then
     VERSION="$(echo "$VERSION" | cut -d'.' -f1-3)"
