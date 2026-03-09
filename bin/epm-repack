@@ -318,6 +318,7 @@ __epm_repack()
     repacked_pkgs=''
     local packversion="${EPM_REPACK_VERSION:-}"
     local packrelease="${EPM_REPACK_RELEASE:-}"
+    [ -n "$pkg_urls_downloaded" ] || pkg_urls_downloaded="${EPM_REPACK_URL:-}"
 
     print_sha256sum $pkg_files
 

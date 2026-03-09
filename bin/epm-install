@@ -602,6 +602,11 @@ epm_install()
     fi
 
     if [ -n "$pkg_urls" ] ; then
+        if [ -n "$repack" ] ; then
+            # pass URLs directly to repack (it will download and keep pkg_urls_downloaded)
+            epm repack --install $pkg_urls $pkg_files
+            return
+        fi
         load_helper epm-download
         # it will put downloaded by pkg_urls packages to pkg_files and reconstruct pkg_filenames
         __handle_pkg_urls_to_install
