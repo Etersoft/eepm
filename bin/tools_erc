@@ -87,7 +87,7 @@ extract_squashfs_image()
 {
 	local arc="$1"
 	local subdir="$2"
-	if is_command unsquashfs ; then
+	if [ -z "$ERC_USE_7Z_SQUASHFS" ] && is_command unsquashfs ; then
 		docmd unsquashfs -d "$subdir" "$arc"
 	else
 		extract_7z_to_subdir "$arc" "$subdir"
