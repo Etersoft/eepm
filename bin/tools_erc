@@ -179,7 +179,7 @@ extract_special_archive()
 	local arc="$1"
 	local type="$2"
 	local subdir
-	if [ -n "$here" ] ; then
+	if [ -n "$here" ] || [ -n "$flat" ] ; then
 		subdir="${extract_dir:-.}"
 	else
 		subdir="${extract_dir:-$(get_archive_name "$arc")}"
@@ -280,7 +280,7 @@ extract_archive()
 	local target_dir="${extract_dir}"
 	[ -n "$here" ] && [ -z "$target_dir" ] && target_dir="."
 
-	if [ -n "$target_dir" ] ; then
+	if [ -n "$target_dir" ] && [ -z "$flat" ] ; then
 		if have_patool ; then
 			docmd patool $verbose extract --outdir "$target_dir" "$arc"
 		else
@@ -302,7 +302,16 @@ extract_archive()
 		cd - >/dev/null
 	fi
 
-	[ "$res" -eq 0 ] && move_from_tdir "$tdir" "$(get_archive_name "$arc")"
+	if [ "$res" -eq 0 ] ; then
+		if [ -n "$flat" ] ; then
+			# --flat: move all files to target, stripping directory structure
+			local dest="${target_dir:-.}"
+			find "$tdir" -type f -exec mv -t "$dest" -- {} +
+			rm -rf "$tdir"
+		else
+			move_from_tdir "$tdir" "$(get_archive_name "$arc")"
+		fi
+	fi
 
 	return $res
 }
@@ -463,6 +472,7 @@ quiet=
 use_7z=
 use_patool=
 here=
+flat=
 
 if [ -z "$*" ] ; then
     echo "Etersoft archive manager version @VERSION@" >&2
@@ -495,6 +505,9 @@ case "$1" in
         ;;
     --here|--no-subdir)   # HELPOPT: extract to current directory without creating a subdirectory
         here=1
+        ;;
+    -j|--flat|--junk-paths)  # HELPOPT: extract all files without directory structure
+        flat=1
         ;;
     -C)                   # HELPOPT: extract to specified directory
         shift
