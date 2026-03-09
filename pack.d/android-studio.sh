@@ -15,10 +15,7 @@ fi
 
 PKGNAME=$PRODUCT-$VERSION
 
-erc "$TAR" || fatal
-mv android-studio "$PKGNAME" 2>/dev/null
-
-erc pack $PKGNAME.tar "$PKGNAME" || fatal
+erc repack "$TAR" $PKGNAME.tar || fatal
 
 cat <<EOF >$PKGNAME.tar.eepm.yaml
 name: $PRODUCT
