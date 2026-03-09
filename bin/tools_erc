@@ -140,11 +140,15 @@ extract_appimage()
 	local arc="$1"
 	local subdir="$2"
 
-	# Try unsquashfs with offset from --appimage-offset
+	# Try unsquashfs with offset
 	if is_command unsquashfs ; then
 		local offset
 		chmod +x "$arc" 2>/dev/null
 		offset="$("$arc" --appimage-offset 2>/dev/null)"
+		# Fallback: find squashfs magic (for cross-arch AppImages)
+		if [ -z "$offset" ] ; then
+			offset=$(LC_ALL=C grep -aboP 'hsqs' "$arc" 2>/dev/null | head -1 | cut -d: -f1)
+		fi
 		if [ -n "$offset" ] ; then
 			if docmd unsquashfs -o "$offset" -d "$subdir" "$arc" ; then
 				return 0
