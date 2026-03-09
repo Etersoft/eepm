@@ -9,7 +9,7 @@ URL="https://vagrantup.com"
 
 . $(dirname $0)/common.sh
 
-BASEURL="https://hashicorp-releases.yandexcloud.net/vagrant"
+BASEURL="https://releases.hashicorp.com/vagrant"
 
 if [ "$VERSION" = "*" ] ; then
     VERSION=$(eget -O- "$BASEURL/" 2>/dev/null | grep -o 'vagrant/[0-9][0-9.]*' | head -1 | sed 's|vagrant/||')
