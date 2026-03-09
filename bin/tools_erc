@@ -271,26 +271,30 @@ extract_archive()
 
 	extract_special_archive "$arc" "$type"
 
-	if have_patool ; then
-		if [ -n "$extract_dir" ] ; then
+	# -C: extract directly to target directory
+	if [ -n "$extract_dir" ] ; then
+		if have_patool ; then
 			docmd patool $verbose extract --outdir "$extract_dir" "$arc"
 		else
-			docmd patool $verbose extract "$arc" "$@"
+			cd "$extract_dir" || fatal
+			extract_by_type "$arc" "$type" "$@"
 		fi
 		return
 	fi
 
-	if [ -n "$extract_dir" ] ; then
-		cd "$extract_dir" || fatal
+	tdir=$(mktemp -d $(pwd)/UXXXXXXXX)
+	local res
+	if have_patool ; then
+		docmd patool $verbose extract --outdir "$tdir" "$arc" "$@"
+		res=$?
+	else
+		cd "$tdir" || fatal
 		extract_by_type "$arc" "$type" "$@"
-		return
+		res=$?
+		cd - >/dev/null
 	fi
 
-	tdir=$(mktemp -d $(pwd)/UXXXXXXXX) && cd "$tdir" || fatal
-	extract_by_type "$arc" "$type" "$@"
-	cd - >/dev/null
-
-	move_from_tdir "$tdir" "$(get_archive_name "$arc")"
+	[ "$res" -eq 0 ] && move_from_tdir "$tdir" "$(get_archive_name "$arc")"
 
 	return $res
 }
