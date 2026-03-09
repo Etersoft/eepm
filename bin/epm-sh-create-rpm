@@ -156,21 +156,13 @@ __unpack_files_from_tarball()
     local buildroot="$tmpbuilddir/$name-$version"
     mkdir -p "$buildroot"
 
-    # extract tarball (resolve path before cd)
+    # extract tarball directly to buildroot (resolve path first)
     local abstarball
     abstarball="$(realpath "$tarball")"
-    ( cd "$buildroot" && a='' erc unpack "$abstarball" ) || fatal "Can't extract $tarball"
+    a='' erc -C "$buildroot" unpack "$abstarball" || fatal "Can't extract $tarball"
 
     # fix permissions for tarball contents
     chmod $verbose -R a+rX "$buildroot"
-
-    # erc/patool may create a wrapper subdirectory — flatten it
-    local innerdir
-    innerdir="$(echo "$buildroot"/*/)"
-    if [ -d "$innerdir" ] && [ "$(ls "$buildroot")" = "$(basename "$innerdir")" ] ; then
-        mv "$innerdir"* "$innerdir".* "$buildroot/" 2>/dev/null
-        rmdir "$innerdir"
-    fi
 
     # append %files list to spec
     local specfile="$tmpbuilddir/$name.spec"
