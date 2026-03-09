@@ -246,7 +246,13 @@ move_from_tdir()
 
 	# if only one item in the subdir, move it directly
 	if [ ${#items[@]} -eq 1 ] && [ -e "${items[0]}" ] ; then
-		mv -- "${items[0]}" .
+		if [ -d "${items[0]}" ] ; then
+			# rename directory to match archive basename
+			mv -- "${items[0]}" "$subdir"
+		else
+			# single file goes to current directory
+			mv -- "${items[0]}" .
+		fi
 		rmdir "$tdir"
 	else
 		mv -- "$tdir" "$subdir"
