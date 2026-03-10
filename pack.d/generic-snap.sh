@@ -13,7 +13,7 @@ fi
 alpkg=$(basename $TAR)
 BASEDIR=$(basename $TAR .snap)
 
-erc unpack $TAR || fatal
+erc --here -C $BASEDIR unpack $TAR || fatal
 
 # name: plex-desktop
 # version: 1.69.1

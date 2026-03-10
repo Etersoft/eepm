@@ -22,11 +22,11 @@ alpkg=$(basename $TAR)
 
 PRODUCT="$(basename $alpkg .AppImage)"
 
-# unpack AppImage
-erc unpack $TAR || fatal
-
 # BASEDIR is the unpacked directory (full name without extension)
 BASEDIR="$PRODUCT"
+
+# unpack AppImage into BASEDIR
+erc --here -C $BASEDIR unpack $TAR || fatal
 
 # strip architecture, OS and build type suffix from PRODUCT name
 PRODUCT="${PRODUCT/-x86_64/}"
@@ -49,7 +49,6 @@ else
     local_ver="$(echo "$PRODUCT" | grep -o -P "[-_.](v?[0-9]+(?:\.[0-9]+)*)" | head -n1 | sed -e 's|^[-_.]||' -e 's|^v||')"
     [ -n "$local_ver" ] && PRODUCT="$(echo "$PRODUCT" | sed -e "s|[-_.]$local_ver.*||")"
 fi
-[ -L "$BASEDIR" ] && [ -d "AppDir" ] && BASEDIR="AppDir"
 
 
 DESKTOPFILE="$(echo $BASEDIR/*.desktop | head -n1)"
