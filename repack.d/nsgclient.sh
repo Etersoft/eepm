@@ -7,6 +7,9 @@ PRODUCTDIR=/opt/Citrix/NSGClient
 
 . $(dirname $0)/common.sh
 
+ignore_lib_requires libappindicator
+
+add_libs_requires
 
 add_bin_exec_command $PRODUCT $PRODUCTDIR/bin/NSGClient
 
