@@ -12,12 +12,9 @@ URL="$4"
 
 PKGNAME=$PRODUCT-$VERSION
 
-mkdir opt/
 mkdir -p usr/bin
 mkdir -p usr/share/pixmaps
-erc $TAR || fatal
-
-mv -v Throne opt/$PRODUCT
+erc -C opt/$PRODUCT $TAR || fatal
 
 mv -v opt/$PRODUCT/$PRODUCT.png usr/share/pixmaps/
 
@@ -49,14 +46,14 @@ if [ ! -d \$datadir ]; then
 
   if [ -d \$nekoray_datadir ]; then
     # Migrate appdata from nekoray
-    cp -a \$nekoray_datadir $datadir
+    cp -a \$nekoray_datadir \$datadir
   else
     mkdir -p \$datadir
   fi
 fi
 
 # Remove broken (since 1.0.2-beta.1) links to geo assets
-if [ -L \$datadir/geoip.db ] || [ -L $datadir/geosite.db ]; then
+if [ -L \$datadir/geoip.db ] || [ -L \$datadir/geosite.db ]; then
   rm -f \$datadir/geo{ip,site}.db
 fi
 
