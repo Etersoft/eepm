@@ -11,12 +11,9 @@ BASENAME=$(basename $TAR .vbox-extpack)
 VERSION=$(echo $BASENAME | sed -e 's|.*-||')
 BASENAME=$(echo $BASENAME | sed -e 's|-[^-]*$||')
 ln -s $TAR $BASENAME.tgz
-erc unpack $BASENAME.tgz || fatal
+erc -C usr/lib64/virtualbox/ExtensionPacks/$BASENAME unpack $BASENAME.tgz || fatal
 
-rm -rv $BASENAME/{darwin.amd64,solaris.amd64,win.amd64}
-
-mkdir -p usr/lib64/virtualbox/ExtensionPacks/
-mv $BASENAME usr/lib64/virtualbox/ExtensionPacks/
+rm -rv usr/lib64/virtualbox/ExtensionPacks/$BASENAME/{darwin.amd64,solaris.amd64,win.amd64}
 
 PKGNAME=$PRODUCT-$VERSION
 erc pack $PKGNAME.tar usr/lib64/virtualbox/ExtensionPacks/$BASENAME || fatal

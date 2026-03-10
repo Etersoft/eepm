@@ -12,7 +12,7 @@ URL="$4"
 
 PKGNAME=$PRODUCT-$VERSION
 
-erc unpack "$TAR" || fatal
+erc --here unpack "$TAR" || fatal
 
 install -D -m755 $PRODUCT usr/bin/$PRODUCT || fatal
 

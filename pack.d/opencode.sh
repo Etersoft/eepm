@@ -10,10 +10,7 @@ URL="$4"
 [ -n "$VERSION" ] || VERSION="$(echo "$URL" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?' | head -n1)"
 [ -n "$VERSION" ] || fatal "Can't get package version"
 
-erc unpack "$TAR" || fatal
-
-mkdir -p usr/bin
-mv -v opencode usr/bin/
+erc -C usr/bin unpack "$TAR" || fatal
 
 PKGNAME=$PRODUCT-$VERSION
 

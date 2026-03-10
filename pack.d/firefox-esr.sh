@@ -8,9 +8,7 @@ VERSION="$3"
 
 PKGNAME=$PRODUCT-$VERSION
 
-mkdir -p opt/
-erc unpack $TAR || fatal
-mv firefox* opt/$PRODUCT
+erc -C opt/$PRODUCT unpack $TAR || fatal
 chmod 0755 opt/$PRODUCT/glxtest
 
 cat <<EOF >$PKGNAME.tar.eepm.yaml

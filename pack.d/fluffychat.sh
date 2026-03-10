@@ -11,9 +11,7 @@ VERSION=$(echo "$URL" | grep -oP 'v\K[0-9]+\.[0-9]+\.[0-9]+')
 [ -n "$VERSION" ] || fatal "Can't get package version"
 PKGNAME=$PRODUCT-$VERSION
 
-mkdir -p opt/
-erc unpack $TAR || fatal
-mv "$(erc basename $TAR)" opt/$PRODUCT
+erc -C opt/$PRODUCT unpack $TAR || fatal
 chmod 0755 opt/$PRODUCT/$PRODUCT
 
 iconname=chat.fluffy.$PRODUCT

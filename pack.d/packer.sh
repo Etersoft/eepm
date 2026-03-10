@@ -12,10 +12,8 @@ URL="$4"
 
 PKGNAME=$PRODUCT-$VERSION
 
-erc unpack "$TAR" || fatal
-cd "$(erc basename "$TAR")" 2>/dev/null
-
-install -D -m755 $PRODUCT usr/bin/$PRODUCT || fatal
+erc --flat -C usr/bin unpack "$TAR" || fatal
+chmod 755 usr/bin/$PRODUCT || fatal
 
 erc pack $PKGNAME.tar usr/bin || fatal
 

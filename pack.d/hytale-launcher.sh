@@ -7,12 +7,9 @@ VERSION="$3"
 
 . $(dirname $0)/common.sh
 
-mkdir -p opt/$PRODUCT
 mkdir -p usr/
 
-erc unpack $TAR || fatal
-
-mv $PRODUCT opt/$PRODUCT
+erc -C opt/$PRODUCT unpack $TAR || fatal
 
 install_file https://aur.archlinux.org/cgit/aur.git/plain/com.hypixel.HytaleLauncher.png?h=hytale-launcher-bin /usr/share/pixmaps/$PRODUCT.png
 

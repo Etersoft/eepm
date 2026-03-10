@@ -8,7 +8,7 @@ RETURNTARNAME="$2"
 # Xerox_B215_Linux_PrintDriver_Utilities.tar.gz
 BASENAME=$(basename $TAR .tar.gz)
 
-erc unpack $TAR || fatal
+erc --here unpack $TAR || fatal
 cd *
 
 mkdir usr

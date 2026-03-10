@@ -9,7 +9,7 @@ RETURNTARNAME="$2"
 PKGNAME="$(basename $TAR .tar.gz)"
 VERSION="$(echo $PKGNAME | sed -e 's/jetbrains-toolbox-//')"
 
-erc $TAR || fatal
+erc --here $TAR || fatal
 cd $PKGNAME* || fatal
 
 # create svg icon

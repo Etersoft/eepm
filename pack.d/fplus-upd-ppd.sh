@@ -7,14 +7,14 @@ RETURNTARNAME="$2"
 
 # Lexmark-UPD-PPD-Files-1.0-05252022.x86_64.rpm
 
-erc unpack $TAR || fatal
+erc --here unpack $TAR || fatal
 
-cd Драйвер*/print
+cd print
 
 BASENAME=$(basename Generic-UPD-PPD*.x86_64.rpm .rpm)
 VERSION=$(echo $BASENAME | sed -e 's|Generic-UPD-PPD-Files-||' | sed -e 's|.x86_64||')
 
-erc unpack $BASENAME.rpm || fatal
+erc --here unpack $BASENAME.rpm || fatal
 
 # Install PPDs
 PPD_ROOT="usr/share/cups/model"

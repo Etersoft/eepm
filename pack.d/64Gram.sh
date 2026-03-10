@@ -6,7 +6,7 @@ FPRODUCT="Telegram"
 
 . $(dirname $0)/common.sh
 
-erc $TAR || fatal
+erc --here $TAR || fatal
 
 # use version from tarball
 # (TODO: get basename via erc

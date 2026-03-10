@@ -6,10 +6,9 @@ URL="$4"
 
 . $(dirname $0)/common.sh
 
-erc unpack $TAR || fatal
+erc -C opt/$PRODUCT unpack $TAR || fatal
 
-mkdir -p usr/share/man/man1 etc/bash_completion.d usr/share/zsh/site-functions usr/share/fish/vendor_completions.d opt
-mv brew* opt/$PRODUCT
+mkdir -p usr/share/man/man1 etc/bash_completion.d usr/share/zsh/site-functions usr/share/fish/vendor_completions.d
 
 VERSION=$(echo "$URL" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
 [ -n "$VERSION" ] || fatal "Can't get package version"

@@ -5,11 +5,7 @@ RETURNTARNAME="$2"
 
 . $(dirname $0)/common.sh
 
-erc unpack $TAR || fatal
-
-mkdir -p opt
-mv Phoenix-FirestormOS-Releasex64-* $PRODUCT
-mv $PRODUCT opt/
+erc -C opt/$PRODUCT unpack $TAR || fatal
 
 VERSION=$(echo "$TAR" | grep -oP '(?<=Releasex64-)\d+-\d+-\d+-\d+' | tr '-' '.')
 [ -n "$VERSION" ] || fatal "Can't get package version"

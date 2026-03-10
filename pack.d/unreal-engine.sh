@@ -9,10 +9,7 @@ PRODUCT=unreal-engine
 BASENAME=$(basename $TAR .zip)
 VERSION=$(echo $BASENAME | sed -e 's|Linux_Unreal_Engine_||' )
 
-mkdir -p opt
-erc $TAR || fatal
-
-mv -v $BASENAME opt/unreal-engine || fatal
+erc -C opt/unreal-engine $TAR || fatal
 
 # Application & MIME icons
 #for res in 16 24 32 48 64 256; do

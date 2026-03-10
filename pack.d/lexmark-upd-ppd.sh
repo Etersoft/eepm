@@ -9,7 +9,7 @@ RETURNTARNAME="$2"
 BASENAME=$(basename $TAR .rpm)
 VERSION=$(echo $BASENAME | sed -e 's|Lexmark-UPD-PPD-Files-||' | sed -e 's|.x86_64||')
 
-erc unpack $TAR || fatal
+erc --here unpack $TAR || fatal
 
 # Install PPDs
 # PPD_ROOT="usr/share/ppd"

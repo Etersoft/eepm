@@ -9,9 +9,9 @@ URL="$4"
 
 PKGNAME=$PRODUCT-$VERSION
 
-erc unpack "$TAR" || fatal
+erc --here unpack "$TAR" || fatal
 
-SRCDIR="$(basename "$TAR" .zip)"
+SRCDIR="$(erc basename "$TAR")"
 SPELLCHECK_DIR="$SRCDIR/spellcheck"
 
 DEST="opt/kingsoft/wps-office/office6/dicts/spellcheck"

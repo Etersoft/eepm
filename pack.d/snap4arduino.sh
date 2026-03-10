@@ -10,9 +10,7 @@ PRODUCT="snap4arduino"
 # Snap4Arduino_desktop-gnu-64_9.1.1
 PKG="$(basename "$TAR" .gz | sed -e "s|Snap4Arduino_desktop-gnu-[36][24]\_|$PRODUCT-|")"
 
-mkdir opt/
-erc $TAR
-mv -v Snap4Arduino* opt/$PRODUCT
+erc -C opt/$PRODUCT $TAR || fatal
 
 erc a $PKG opt
 

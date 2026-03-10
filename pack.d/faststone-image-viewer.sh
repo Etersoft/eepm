@@ -8,10 +8,7 @@ VERSION="$3"
 
 PKGNAME=$PRODUCT-$VERSION.tar
 
-erc unpack $TAR || fatal
-mkdir -p opt/eepm-wine/$PRODUCT/
-
-mv FSViewer*/*  opt/eepm-wine/$PRODUCT/
+erc -C opt/eepm-wine/$PRODUCT unpack $TAR || fatal
 
 cat <<EOF >opt/eepm-wine/$PRODUCT/run.sh
 #!/bin/sh

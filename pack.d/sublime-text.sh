@@ -8,9 +8,7 @@ RETURNTARNAME="$2"
 
 PKGNAME="$(basename "$TAR" | sed -e "s|sublime_text_build_|$PRODUCT-|" -e 's|_.*||' )"
 
-mkdir opt/
-erc $TAR
-mv -v sublime* opt/$PRODUCT
+erc -C opt/$PRODUCT $TAR || fatal
 
 erc a $PKGNAME.tar opt
 

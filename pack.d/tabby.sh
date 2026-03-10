@@ -11,10 +11,7 @@ URL="$4"
 VERSION="$(echo "$URL" | sed -n 's|.*/v\([0-9.]*\)/.*|\1|p')"
 PKGNAME="$PRODUCT-$VERSION"
 
-mkdir -p opt/$PRODUCT
-erc unpack $TAR
-mv tabby_*/tabby opt/$PRODUCT/
-mv tabby_*/llama-server opt/$PRODUCT/
+erc -C opt/$PRODUCT unpack $TAR || fatal
 
 erc pack $PKGNAME.tar opt
 

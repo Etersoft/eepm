@@ -7,7 +7,7 @@ URL="$4"
 
 . $(dirname $0)/common.sh
 
-erc $TAR || fatal
+erc --here $TAR || fatal
 
 [ -n libffmpeg.so ] || fatal
 chmod 0644 libffmpeg.so

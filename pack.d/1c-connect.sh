@@ -7,9 +7,7 @@ RETURNTARNAME="$2"
 
 echo "$TAR" | grep -q "1C-Connect-Linux-x64.tar.gz" || fatal "Use only for 1C-Connect-Linux-x64.tar.gz."
 
-mkdir opt
-erc unpack $TAR || fatal
-mv 1C-Connect-Linux-x64* opt/$PRODUCT
+erc -C opt/$PRODUCT unpack $TAR || fatal
 
 echo "true" > ./opt/$PRODUCT/app/bin/updater
 

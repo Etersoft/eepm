@@ -12,11 +12,9 @@ YEAR=$(echo "$URL" | grep -oP 'softmaker-freeoffice-\K[0-9]{4}')
 
 PKGNAME=$PRODUCT-$VERSION
 
-mkdir -p opt/softmaker-freeoffice
 mkdir -p usr/bin
-erc $TAR || fatal
-erc $(basename $TAR .tgz)/freeoffice$YEAR.tar.lzma || fatal
-mv freeoffice$YEAR/* opt/$PRODUCT
+erc --here $TAR || fatal
+erc -C opt/$PRODUCT freeoffice$YEAR.tar.lzma || fatal
 
 cat <<EOF > usr/bin/planmaker
 #!/bin/sh

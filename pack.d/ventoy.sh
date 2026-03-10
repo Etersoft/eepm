@@ -14,7 +14,7 @@ PKGNAME=$PRODUCT-$VERSION
 mkdir -p opt/ventoy
 mkdir -p usr/bin
 mkdir -p usr/share/pixmaps
-erc $TAR || fatal
+erc --here $TAR || fatal
 
 cat <<EOF > usr/bin/ventoy-extend-persistent
 #!/bin/sh

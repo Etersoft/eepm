@@ -15,12 +15,12 @@ untar_payload()
 ROOTDIR=$(pwd)
 
 # Linux-драйвер-сканирования-Катюша-M247.zip
-erc unpack $TAR || fatal 
+erc --here unpack $TAR || fatal 
 mv Linux*/Katusha_Scanner_M247_ubuntu64_*.tar.gz .
 rmdir Linux*
 
 # Katusha_Scanner_M247_ubuntu64_V110.tar.gz
-erc unpack Katusha_Scanner_M247_ubuntu64_*.tar.gz || fatal
+erc --here unpack Katusha_Scanner_M247_ubuntu64_*.tar.gz || fatal
 rm Katusha_Scanner_M247_ubuntu64_*.tar.gz
 
 cd * # Katusha_Scanner_M247_ubuntu64_V110
@@ -48,7 +48,7 @@ cd $ROOTDIR
 epm assure patool || fatal
 
 # needed because the control file have issues
-erc unpack $PKGNAME.deb || fatal
+erc --here unpack $PKGNAME.deb || fatal
 # avoid cd to deb
 rm katusha*.deb
 cd katusha*

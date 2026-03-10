@@ -10,7 +10,7 @@ FFMPEG_PATH="$5"
 YANDEX_PATH="opt/yandex/browser-beta"
 BASEDIR=$(basename $TAR .snap)
 
-erc unpack $TAR || fatal
+erc --here unpack $TAR || fatal
 
 [ -n "$FFMPEG_PATH" ] || fatal "Missing FFMPEG_PATH"
 chmod 0644 "$BASEDIR/$FFMPEG_PATH"

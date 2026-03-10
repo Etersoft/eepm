@@ -5,7 +5,7 @@ RETURNTARNAME="$2"
 
 . $(dirname $0)/common.sh
 
-erc $TAR || fatal
+erc --here $TAR || fatal
 
 PRODUCTFOLDER="$(basename $TAR .tar.xz)"
 VERSION=$(echo $PRODUCTFOLDER  | sed -e 's|RenameMyTVSeries-||' | sed -e 's|-GTK-Linux-x64-static-ffmpeg||')

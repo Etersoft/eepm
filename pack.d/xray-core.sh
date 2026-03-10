@@ -8,8 +8,7 @@ VERSION="$3"
 
 PKGNAME=$PRODUCT-$VERSION
 
-erc $TAR || fatal
-cd Xray-linux-* || fatal
+erc --here $TAR || fatal
 
 install -Dm755 xray usr/bin/xray
 

@@ -13,9 +13,7 @@ VERSION=$(echo "$URL" | grep -oP 'v\K[0-9]+\.[0-9]+\.[0-9]+')
 PKGNAME="$(basename $TAR .tar.gz | sed -e "s|-x86_64-linux-gnu||")"
 PKGNAME=$PRODUCT-$VERSION
 
-mkdir -p opt/
-erc unpack $TAR || fatal
-mv $PRODUCT* opt/$PRODUCT
+erc -C opt/$PRODUCT unpack $TAR || fatal
 
 erc pack $PKGNAME.tar opt || fatal
 

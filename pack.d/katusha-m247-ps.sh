@@ -7,12 +7,12 @@ RETURNTARNAME="$2"
 
 ROOTDIR=$(pwd)
 # Linux-драйвер-печати-Катюша-M247.zip
-erc unpack $TAR || fatal 
+erc --here unpack $TAR || fatal
 mv Linux*/*Katusha_M247_x86_64_DEB.tar.gz .
 rmdir Linux*
 
 # 2021-02-23-Katusha_M247_x86_64_DEB.tar.gz
-erc unpack *Katusha_M247_x86_64_DEB.tar.gz || fatal
+erc --here unpack *Katusha_M247_x86_64_DEB.tar.gz || fatal
 rm *Katusha_M247_x86_64_DEB.tar.gz 
 cd * # 2021-02-22-Katusha_M247_x86_64_DEB
 

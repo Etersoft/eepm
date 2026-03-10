@@ -5,10 +5,7 @@ RETURNTARNAME="$2"
 
 . $(dirname $0)/common.sh
 
-erc unpack "$TAR" || fatal
-
-mkdir -p opt
-mv steamcmd_linux opt/$PRODUCT
+erc -C opt/$PRODUCT unpack "$TAR" || fatal
 
 # create wrapper script
 mkdir -p usr/bin

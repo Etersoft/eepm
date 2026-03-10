@@ -5,12 +5,7 @@ RETURNTARNAME="$2"
 
 . $(dirname $0)/common.sh
 
-
-# postman-linux-x64.tar.gz
-BASENAME=$(basename $TAR .tar.gz)
-
-ln -s $TAR $BASENAME.tar.gz
-erc unpack $BASENAME.tar.gz || fatal
+erc --here unpack $TAR || fatal
 
 mkdir -p opt
 mv Postman/app opt/postman

@@ -6,14 +6,12 @@ RETURNTARNAME="$2"
 . $(dirname $0)/common.sh
 
 if echo "$TAR" | grep -q SANE_Driver_zip.download.zip ; then
-    erc $TAR || fatal
+    erc --here $TAR || fatal
 elif echo "$TAR" | grep -q SANE_Driver.zip ; then
-    erc $TAR || fatal
+    erc --here $TAR || fatal
 else
     fatal "Have no idea how to handle $(basename $TAR)"
 fi
-
-cd SANE_Driver* || fatal
 
 case "$(epm print info -p)" in
     rpm)

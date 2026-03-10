@@ -9,7 +9,7 @@ VERSION="$3"
 BASENAME=$(basename $TAR .tar.gz)
 VERSION=$(echo $BASENAME | sed -e 's|^uimadcad_||' | sed -e 's|_x86_64||')
 
-erc unpack $TAR || fatal
+erc --here unpack $TAR || fatal
 
 cd linux*
 

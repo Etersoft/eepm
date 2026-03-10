@@ -5,10 +5,7 @@ RETURNTARNAME="$2"
 
 . $(dirname $0)/common.sh
 
-erc unpack $TAR || fatal
-
-mkdir -p opt/
-mv teamspeak3-server_linux_amd64 opt/$PRODUCT
+erc -C opt/$PRODUCT unpack $TAR || fatal
 
 VERSION="$(echo $TAR | sed -e 's|.*amd64-||' -e 's|\.tar\.bz2||')"
 PKGNAME=$PRODUCT-$VERSION

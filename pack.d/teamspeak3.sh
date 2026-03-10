@@ -6,9 +6,7 @@ RETURNTARNAME="$2"
 
 . $(dirname $0)/common.sh
 
-erc unpack $TAR || exit
-mkdir -p opt
-mv "$(erc basename $TAR)" opt/$PRODUCT
+erc -C opt/$PRODUCT unpack $TAR || exit
 cd opt/$PRODUCT || fatal
 chmod a+rX -R *
 

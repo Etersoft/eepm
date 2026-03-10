@@ -6,15 +6,13 @@ RETURNTARNAME="$2"
 . $(dirname $0)/common.sh
 
 if echo "$TAR" | grep -q "WebDAVCloudMailRu-.*.zip" ; then
-    erc "$TAR" || fatal
+    true
 else
     fatal "We support only WebDAVCloudMailRu....zip"
 fi
 
-rm -v "$TAR"
 VERSION="$(echo "$TAR" | sed -e 's|.*WebDAVCloudMailRu-||' -e 's|-.*||')"
-mkdir opt
-mv WebDAVCloudMailRu* opt/WebDAVCloudMailRu || fatal
+erc -C opt/WebDAVCloudMailRu "$TAR" || fatal
 
 PKG=webdavmailrucloud-$VERSION.tar
 erc pack $PKG opt/WebDAVCloudMailRu

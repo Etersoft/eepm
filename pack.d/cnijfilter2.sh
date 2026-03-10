@@ -9,7 +9,7 @@ if ! echo "$TAR" | grep -q "cnijfilter2" ; then
     fatal "No idea how to handle $TAR"
 fi
 
-erc unpack $TAR && cd cni* || fatal
+erc --here unpack $TAR && cd cni* || fatal
 
 arch="$(epm print info -a)"
 

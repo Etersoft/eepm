@@ -14,7 +14,7 @@ PKGNAME=$PRODUCT-$VERSION
 
 mkdir -p usr/bin
 mkdir -p usr/share/doc/$PRODUCT
-erc unpack $TAR || fatal
+erc --here unpack $TAR || fatal
 
 BASENAME=$(basename $1 .tar.gz)
 ARCH=$(echo "$BASENAME" | sed -E 's/^.*_linux_//')

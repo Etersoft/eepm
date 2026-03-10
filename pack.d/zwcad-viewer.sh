@@ -6,57 +6,72 @@ VERSION="$3"
 
 . $(dirname $0)/common.sh
 
-# ZWCAD_Viewer_Beta.tar.gz
-BASENAME=$(basename $1 .tar.gz)
-
-erc unpack $TAR || fatal
+erc --here unpack $TAR || fatal
 
 RUN_NAME=$(echo ZWCAD*.run)
 
-# unpacking .run archive
-erc unpack $RUN_NAME || fatal
-cd "$(erc basename $RUN_NAME)" || fatal
+# unpacking .run archive (erc can't handle makeself .run correctly)
+chmod +x $RUN_NAME
+./$RUN_NAME --noexec --target zwcad-contents || fatal
 
-mkdir -p opt/ZWCADViewer
-mkdir -p usr/
-mkdir -p etc/xdg/menus/applications-merged
+# move app files to opt
+mkdir -p opt/$PRODUCT
+mv zwcad-contents/* opt/$PRODUCT/
 
-mv ZWCADViewer opt/zwcad-viewer
-
-# move file in right directories
-mv .local/share/ usr/
-mv .config/menus/applications-merged/xdg-desktop-menu-dummy.menu etc/xdg/menus/applications-merged/
-
-# fix startup file
-mv "opt/zwcad-viewer/ZWCADRUN.sh" opt/zwcad-viewer/$PRODUCT
-subst 's|$HOME/ZWCADViewer|/opt/zwcad-viewer|' opt/zwcad-viewer/$PRODUCT
-
-# FIXME: remove unneeded .sh files
+# fix startup script
+mv opt/$PRODUCT/ZWCADRUN.sh opt/$PRODUCT/$PRODUCT
+subst 's|$HOME/ZWCADViewer|/opt/zwcad-viewer|' opt/$PRODUCT/$PRODUCT
+chmod 755 opt/$PRODUCT/$PRODUCT
 
 # remove linked with missed libs
-#    libgstinterfaces-0.10.so.0 => not found
-#    libgstvideo-0.10.so.0 => not found
-#    libgstapp-0.10.so.0 => not found
-#    libgstbase-0.10.so.0 => not found
-#    libgstreamer-0.10.so.0 => not found
-rm -v opt/zwcad-viewer/libqgsttools_p.so.*
+rm -fv opt/$PRODUCT/libqgsttools_p.so.*
+
+# remove install/uninstall scripts and xdg helpers
+rm -f opt/$PRODUCT/ZWCADINSTALL.sh opt/$PRODUCT/ZWCADINSTALL.sh~
+rm -f opt/$PRODUCT/ZWCADSETUP.sh
+rm -f opt/$PRODUCT/Uninst.sh opt/$PRODUCT/Uninst.sh~
+rm -rf opt/$PRODUCT/xdg
 
 # setup icon
 mkdir -p usr/share/icons/hicolor/512x512/apps
-mv opt/zwcad-viewer/ZWCAD.png usr/share/icons/hicolor/512x512/apps/
+mv opt/$PRODUCT/ZWCAD.png usr/share/icons/hicolor/512x512/apps/
 
-# delete unneeded files
-find usr/share/mime -type f ! -wholename 'usr/share/mime/application/dwg.xml' ! -wholename 'usr/share/mime/application/dxf.xml' \
-! -wholename 'usr/share/mime/packages/ZWCAD-mimetypes.xml' ! -wholename 'usr/share/mime/image/x-dwg.xml' -exec rm {} +
-rm usr/share/applications/defaults.list
+# create desktop file
+mkdir -p usr/share/applications
+cat <<EOF > usr/share/applications/$PRODUCT.desktop
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Name=ZWCAD Viewer
+GenericName=CAD Software
+Comment=Read DWG and DXF files.
+Exec=/opt/$PRODUCT/$PRODUCT %F
+Terminal=false
+Type=Application
+Icon=ZWCAD.png
+Categories=Application;Graphics;VectorGraphics;Engineering;Construction;2DGraphics;
+MimeType=application/dxf;application/dwg
+EOF
 
-# fix desktop file
-sed -i 's/^Icon=.*/Icon=ZWCAD.png/' usr/share/applications/Ribbonsoft-ZWCADViewer.desktop
-sed -i 's/^Exec=.*/Exec=zwcad-viewer %F/' usr/share/applications/Ribbonsoft-ZWCADViewer.desktop
+# create mime type definitions
+mkdir -p usr/share/mime/packages
+cat <<EOF > usr/share/mime/packages/zwcad-mimetypes.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/dxf">
+    <comment xml:lang="en">CAD Drawing</comment>
+    <glob pattern="*.dxf"/>
+  </mime-type>
+  <mime-type type="application/dwg">
+    <comment xml:lang="en">CAD Drawing</comment>
+    <glob pattern="*.dwg"/>
+  </mime-type>
+</mime-info>
+EOF
 
 PKGNAME=$PRODUCT-$VERSION
 
-erc pack $PKGNAME.tar opt/$PRODUCT usr etc || fatal
+erc pack $PKGNAME.tar opt/$PRODUCT usr || fatal
 
 cat <<EOF >$PKGNAME.tar.eepm.yaml
 name: $PRODUCT

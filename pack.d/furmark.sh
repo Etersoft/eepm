@@ -9,10 +9,7 @@ RETURNTARNAME="$2"
 BASENAME=$(basename $TAR .7z)
 VERSION=$(echo $BASENAME | sed -e 's|FurMark_||' | sed -e 's|_linux64||')
 
-erc unpack $TAR || fatal
-
-mkdir -p opt/furmark
-mv FurMark_linux64/* opt/furmark
+erc -C opt/furmark unpack $TAR || fatal
 
 # create desktop file
 cat <<EOF | create_file /usr/share/applications/$PRODUCT.desktop

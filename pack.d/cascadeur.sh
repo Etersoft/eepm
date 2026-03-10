@@ -9,13 +9,10 @@ VERSION="$3"
 PKGNAME=$PRODUCT-$VERSION
 
 if echo "$TAR" | grep -q "cascadeur-linux.tgz" ; then
-    erc "$TAR" || fatal
+    erc -C opt/$PRODUCT "$TAR" || fatal
 else
     fatal "We support only cascadeur-linux.tgz"
 fi
-
-mkdir opt
-mv cascadeur* opt/$PRODUCT || fatal
 
 # from https://www.producthunt.com/posts/cascadeur
 # https://ph-files.imgix.net/e07b5249-d804-4b4e-9458-fa037d30a14b.png?auto=compress&codec=mozjpeg&cs=strip&auto=format&w=72&h=72&fit=crop&bg=0fff&dpr=1

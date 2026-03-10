@@ -5,7 +5,7 @@ RETURNTARNAME="$2"
 
 . $(dirname $0)/common.sh
 
-erc unpack $TAR && cd kubo || fatal
+erc --here unpack $TAR && cd kubo || fatal
 install -m755 -D ipfs usr/bin/ipfs
 rm -v ipfs install.sh README.md
 mkdir -p usr/share/doc/$PRODUCT

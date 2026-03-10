@@ -15,9 +15,7 @@ if [ -z "$VERSION" ] ; then
     [ -n "$VERSION" ] || fatal "Can't get version from URL $URL"
 fi
 
-erc $TAR || fatal
-mkdir -p opt
-mv teamspeak-client* opt/TeamSpeak
+erc -C opt/TeamSpeak $TAR || fatal
 
 PKGNAME=$PRODUCT-$VERSION
 

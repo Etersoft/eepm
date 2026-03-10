@@ -9,8 +9,8 @@ VERSION=$3
 # radicle-x86_64-unknown-linux-musl.tar.gz
 BASENAME=$(basename $TAR .tar.gz)
 
-erc unpack $TAR || fatal
-cd *
+erc --here unpack $TAR || fatal
+cd * || fatal
 
 mkdir -p usr/share/man/man1
 mkdir -p opt/$PRODUCT

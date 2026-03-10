@@ -6,10 +6,8 @@ VERSION="$3"
 . $(dirname $0)/common.sh
 
 # xeoma_linux64.tgz
-erc unpack $TAR || fatal
-
-mkdir -p opt/xeoma
-mv xeoma.app* opt/xeoma/xeoma
+erc -C opt/xeoma unpack $TAR || fatal
+mv opt/xeoma/xeoma.app* opt/xeoma/xeoma
 
 install_file ipfs://QmaVnzNmFjR3BmA5b4jzjwo4MNBRkN7UoewiKotDULbCH5 /usr/share/icons/hicolor/512x512/apps/$PRODUCT.png
 

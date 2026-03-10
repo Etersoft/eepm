@@ -9,9 +9,8 @@ if ! echo "$TAR" | grep -q "LinuxSoftware_i11xx.*deb.tar.gz" ; then
     fatal "Unknow file $TAR"
 fi
 
-erc $TAR || fatal
+erc --here $TAR || fatal
 
-#rm $TAR
 cd LinuxSoftware* || fatal
 
 PKG="kodak_i11xx-*.amd64.deb"

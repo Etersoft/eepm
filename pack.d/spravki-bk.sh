@@ -6,7 +6,7 @@ RETURNTARNAME="$2"
 . $(dirname $0)/common.sh
 
 # Extract the archive
-erc "$TAR" || fatal
+erc --here "$TAR" || fatal
 
 # Find the deb file in extracted content
 PKG=$(find . -name "*.deb" -type f | head -1)

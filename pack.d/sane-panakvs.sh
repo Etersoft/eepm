@@ -5,7 +5,7 @@ RETURNTARNAME="$2"
 
 . $(dirname $0)/common.sh
 
-erc unpack $TAR && cd libsane* || fatal
+erc --here unpack $TAR && cd libsane* || fatal
 
 mkdir -vp usr/share/doc/$PRODUCT
 mv -v Version.html usr/share/doc/$PRODUCT

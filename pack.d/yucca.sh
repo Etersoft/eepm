@@ -8,7 +8,7 @@ VERSION="$3"
 
 
 # yucca_0.10.1_linux_amd64.tar.gz
-erc unpack $TAR || fatal
+erc --here unpack $TAR || fatal
 cd yucca*
 
 mkdir -p opt/yucca/data

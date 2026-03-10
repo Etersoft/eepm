@@ -12,9 +12,7 @@ URL="$4"
 
 PKGNAME=$PRODUCT-$VERSION
 
-mkdir -p opt
-erc unpack "$TAR" || fatal
-mv Radarr opt/$PRODUCT
+erc -C opt/$PRODUCT unpack "$TAR" || fatal
 
 erc pack $PKGNAME.tar opt || fatal
 

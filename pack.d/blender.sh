@@ -9,9 +9,7 @@ RETURNTARNAME="$2"
 # blender-$pkgver-linux-x64
 PKGNAME="$(basename $TAR | sed -e "s|-linux.*||")"
 
-mkdir -p opt/
-erc unpack $TAR
-mv $PRODUCT* opt/$PRODUCT
+erc -C opt/$PRODUCT unpack $TAR || fatal
 
 mv_as()
 {

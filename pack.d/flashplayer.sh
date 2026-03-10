@@ -8,7 +8,7 @@ VERSION="$3"
 
 PKGNAME=$PRODUCT-$VERSION
 
-erc unpack $TAR
+erc --here unpack $TAR || fatal
 cd * || fatal
 
 mkdir -p usr/bin/

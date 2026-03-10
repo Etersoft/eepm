@@ -5,7 +5,7 @@ RETURNTARNAME="$2"
 
 . $(dirname $0)/common.sh
 
-erc unpack "$TAR" || fatal
+erc --here unpack "$TAR" || fatal
 cd smartgit || fatal
 
 # Get version from version file or directory name

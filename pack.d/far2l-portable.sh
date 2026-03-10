@@ -6,7 +6,7 @@ RETURNTARNAME="$2"
 
 . $(dirname $0)/common.sh
 
-erc $TAR || fatal
+erc --here $TAR || fatal
 pkg="$(ls | grep -e "far2l_[0-9].*x86_64.*.AppImage")"
 PKGNAME="${pkg/far2l/far2l-portable}"
 mv $pkg $PKGNAME

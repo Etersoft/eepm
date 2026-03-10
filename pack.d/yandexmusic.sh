@@ -8,7 +8,7 @@ VERSION="$3"
 
 PKGNAME=$PRODUCT-$VERSION.tar
 
-erc unpack $TAR || fatal
+erc --here unpack $TAR || fatal
 cd *
 
 # drop dirname with spaces

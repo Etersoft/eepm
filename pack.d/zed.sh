@@ -12,11 +12,9 @@ VERSION=$(echo "$URL" | grep -oP 'v\K[0-9]+\.[0-9]+\.[0-9]+')
 
 PKGNAME=$PRODUCT-$VERSION
 
-mkdir -p opt/$PRODUCT
 mkdir -p usr/
 
-erc unpack $TAR || fatal
-mv zed.app/* opt/$PRODUCT/
+erc -C opt/$PRODUCT unpack $TAR || fatal
 
 chmod 755 opt/$PRODUCT/libexec/zed-editor
 

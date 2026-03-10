@@ -7,10 +7,7 @@ WORKDIR="$(pwd)"
 
 . $(dirname $0)/common.sh
 
-erc unpack $TAR || fatal
-
-mkdir -p  opt
-mv  $PRODUCT* opt/$PRODUCT
+erc -C opt/$PRODUCT unpack $TAR || fatal
 
 VERSION=$(echo "$URL" | grep -oE '[0-9]+(\.[0-9]+){1,2}')
 [ -n "$VERSION" ] || fatal "Can't get package version"

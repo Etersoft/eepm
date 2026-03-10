@@ -10,12 +10,10 @@ URL="$4"
 [ -n "$VERSION" ] || VERSION="$(echo "$URL" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?' | head -n1)"
 [ -n "$VERSION" ] || fatal "Can't get package version"
 
-erc unpack "$TAR" || fatal
-
-BIN="$(find . -maxdepth 1 -type f | head -n1)"
-[ -n "$BIN" ] || fatal "Can't find Codex binary in archive"
-
-install -D -m755 "$BIN" usr/bin/codex || fatal
+mkdir -p usr/bin
+erc --here unpack "$TAR" || fatal
+mv codex-* usr/bin/codex || fatal
+chmod 755 usr/bin/codex
 
 PKGNAME=$PRODUCT-$VERSION
 

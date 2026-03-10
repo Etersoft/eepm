@@ -6,10 +6,7 @@ URL="$4"
 
 . $(dirname $0)/common.sh
 
-erc unpack $TAR || fatal
-
-mkdir -p opt
-mv Loss* opt/$PRODUCT
+erc -C opt/$PRODUCT unpack $TAR || fatal
 
 VERSION=$(echo "$URL" | grep -oP 'v\K[0-9]+\.[0-9]+\.[0-9]+')
 [ -n "$VERSION" ] || fatal "Can't get package version"

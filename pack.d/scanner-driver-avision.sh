@@ -9,9 +9,7 @@ if ! echo "$TAR" | grep -q "scanner-driver-avision.*.tar.gz.*" ; then
     fatal "Unknown file $TAR"
 fi
 
-erc $TAR || fatal
-
-#rm $TAR
+erc --here $TAR || fatal
 
 cd scanner-driver-avision* || fatal
 

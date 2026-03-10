@@ -9,7 +9,7 @@ RETURNTARNAME="$2"
 BASENAME=$(basename $TAR .tar.gz)
 VERSION=$(echo "$BASENAME" | sed -e 's|^yandex-disk-indicator-||')
 
-erc unpack $TAR || fatal
+erc --here unpack $TAR || fatal
 
 cd * || fatal
 

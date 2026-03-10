@@ -7,11 +7,7 @@ RETURNTARNAME="$2"
 . $(dirname $0)/common.sh
 
 # ArmorPaint_10alpha_linux64.zip
-erc unpack $TAR || fatal
-
-mkdir -p opt/$PRODUCT
-
-cp -a ArmorPaint*/* opt/$PRODUCT/
+erc -C opt/$PRODUCT unpack $TAR || fatal
 
 VERSION=$(basename $TAR | sed -e 's/_linux64.*//' -e 's/.*_//')
 PKGNAME=$PRODUCT-$VERSION

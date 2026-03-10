@@ -9,9 +9,7 @@ RETURNTARNAME="$2"
 # meridius-3.1.0.tar.gz
 PKGNAME="$(basename "$TAR" .tar.gz)"
 
-mkdir opt/
-erc $TAR
-mv -v $PRODUCT* opt/$PRODUCT
+erc -C opt/$PRODUCT $TAR || fatal
 
 erc a $PKGNAME.tar opt
 

@@ -11,8 +11,7 @@ ARCH=$(echo "$BASENAME" | sed -E 's/^.*_linux-//')
 mkdir -p opt
 mkdir -p usr/share/applications/
 
-erc unpack $TAR || fatal
-mv -v Zotero_linux-$ARCH opt/$PRODUCT
+erc -C opt/$PRODUCT unpack $TAR || fatal
 
 for size in 32 64 128; do
   mkdir -p "usr/share/icons/hicolor/${size}x${size}/apps"

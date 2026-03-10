@@ -7,11 +7,7 @@ URL="$4"
 
 . $(dirname $0)/common.sh
 
-mkdir -p opt/$PRODUCT
-
-erc $TAR || fatal
-
-mv WinBox_Linux/* opt/$PRODUCT
+erc -C opt/$PRODUCT $TAR || fatal
 
 [ -n "$VERSION" ] || VERSION=$(echo "$URL" | awk -F'/' '{print $6}')
 [ -n "$VERSION" ] || fatal "Can't get package version"

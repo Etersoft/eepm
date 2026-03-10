@@ -10,9 +10,7 @@ RETURNTARNAME="$2"
 VERSION="$(basename "$TAR" | sed -e "s|.*${PRODUCT}[-_]||" -e 's|^\([0-9.]*\).*|\1|')"
 PKGNAME="$PRODUCT-$VERSION"
 
-mkdir opt/
-erc $TAR
-mv -v $PRODUCT* opt/$PRODUCT
+erc -C opt/$PRODUCT $TAR || fatal
 
 erc a $PKGNAME.tar opt
 

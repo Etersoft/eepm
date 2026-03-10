@@ -8,7 +8,7 @@ RETURNTARNAME="$2"
 BASENAME=$(basename "$1" | sed -e 's|\.zip$||')
 VERSION=$(echo "$BASENAME" | sed -n 's/.*_\([0-9]\+\)_\([0-9]\+\)_\([0-9]\+\)_\([0-9]\+\).*/\1.\2.\3.\4/p')
 
-erc unpack "$FILENAME" || fatal
+erc --here unpack "$FILENAME" || fatal
 cd $BASENAME
 
 __remove_libstdc(){
@@ -29,14 +29,14 @@ for file in $packages_list; do
 
     case $file in
         1c-enterprise-*-server-*)
-            erc unpack "$file" || fatal
+            erc --here unpack "$file" || fatal
             __remove_libstdc
             erc pack 1c-enterprise-server-$VERSION.tar opt || fatal
             rm $file
             ;;
        
         1c-enterprise-*-thin-client-*)
-            erc unpack "$file" || fatal
+            erc --here unpack "$file" || fatal
 
             mv 1c-enterprise-*-thin-client-*/opt opt
             mv 1c-enterprise-*-thin-client-*/usr usr
@@ -49,7 +49,7 @@ for file in $packages_list; do
             ;;
 
         1c-enterprise-*-client-*)
-            erc unpack "$file" || fatal
+            erc --here unpack "$file" || fatal
             
             mv 1c-enterprise-*-client-*/opt opt
             mv 1c-enterprise-*-client-*/usr usr
