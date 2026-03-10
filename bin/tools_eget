@@ -1988,21 +1988,21 @@ url_get_raw_real_url()
     # don't check location if we have made form of the URL
     [ -n "$MADEURL" ] && [ "$MADEURL" = "$URL" ] && echo "$URL" && return
 
-    local loc
-    for loc in $(url_get_header "$URL" "Location" | tac | sed -e 's| .*||') ; do
+    local loc base="$URL"
+    # follow redirect chain in order, updating base URL at each step
+    for loc in $(url_get_header "$URL" "Location" | sed -e 's| .*||') ; do
         # add protocol if missed
         if is_protocol_relative_url "$loc" ; then
-            loc="$(echo "$URL" | sed -e 's|//.*||')$loc"
+            loc="$(echo "$base" | sed -e 's|//.*||')$loc"
         fi
-        # hack for construct full url from related Location
+        # construct full url from relative Location using current base host
         if is_abs_path "$loc" ; then
-            loc="$(concatenate_url_and_filename "$(get_host_only "$URL")" "$loc")" #"
+            loc="$(concatenate_url_and_filename "$(get_host_only "$base")" "$loc")" #"
         fi
-        echo "$loc"
-        return
+        base="$loc"
     done
 
-    echo "$URL"
+    echo "$base"
 }
 
 url_get_real_url()
