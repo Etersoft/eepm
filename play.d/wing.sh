@@ -14,10 +14,10 @@ URL="https://wingware.com/"
 BASEURL="https://wingware.com/pub/wing-personal"
 
 if [ "$VERSION" = "*" ] ; then
-    DIRVERSION="$(eget --list --latest "$BASEURL/10.*" | xargs basename)"
+    DIRVERSION="$(eget --list --latest "$BASEURL/10.*" | xargs -r basename)"
+    [ -n "$DIRVERSION" ] || fatal "Can't get version from $BASEURL"
     VERSION="$(echo $DIRVERSION | sed -e 's|\.[0-9]$||')"
 else
-    # TODO: get full version from site
     DIRVERSION=$VERSION.0
 fi
 
