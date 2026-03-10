@@ -157,9 +157,10 @@ __unpack_files_from_tarball()
     mkdir -p "$buildroot"
 
     # extract tarball directly to buildroot (resolve path first)
+    # use --here to preserve internal directory structure (don't flatten single dirs)
     local abstarball
     abstarball="$(realpath "$tarball")"
-    a='' erc -C "$buildroot" unpack "$abstarball" || fatal "Can't extract $tarball"
+    a='' erc --here -C "$buildroot" unpack "$abstarball" || fatal "Can't extract $tarball"
 
     # fix permissions for tarball contents
     chmod $verbose -R a+rX "$buildroot"
