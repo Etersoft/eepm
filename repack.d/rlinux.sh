@@ -35,6 +35,9 @@ EOF
 chmod a+x $BUILDROOT/$PRODUCTDIR/bin/rlinux
 
 subst "s|/usr/local/R-Linux|$PRODUCTDIR|g" "opt/$PRODUCT/bin/rlinux"
+# fix unquoted variable checks ([ -x $XHOST ] is true when XHOST is empty)
+subst 's|if \[ -x $XHOST \]|if [ -x "$XHOST" ]|' "opt/$PRODUCT/bin/rlinux"
+subst 's|if \[ -x $GSETTINGS \]|if [ -x "$GSETTINGS" ]|' "opt/$PRODUCT/bin/rlinux"
 add_bin_link_command $PRODUCT /opt/$PRODUCT/bin/rlinux
 
 fix_desktop_file /usr/local/R-Linux/bin/rlinux $PRODUCT
