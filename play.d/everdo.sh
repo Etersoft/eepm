@@ -16,7 +16,11 @@ warn_version_is_not_supported
 # no more .deb
 #PKGURL=$(eget --list --latest "https://everdo.net/getting-started/?d=deb" "$PKGNAME*.deb")
 
-PKGURL=$(eget --list --latest "https://everdo.net/getting-started/?d=appimage" "$PKGNAME*.AppImage")
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(eget --list --latest "https://everdo.net/getting-started/?d=appimage" "$PKGNAME*.AppImage")
+else
+    PKGURL="https://downloads.everdo.net/electron/Everdo-$VERSION.AppImage"
+fi
 
 install_pkgurl
 
