@@ -6,5 +6,9 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
+ignore_lib_requires libimagepro
+
+add_libs_requires
+
 fix_desktop_file
 add_bin_exec_command

@@ -10,27 +10,19 @@ VERSION="$3"
 
 VERSION=$(basename $TAR | sed -e 's/lvh_software_levenhuklite_//' | tr '_' '.')
 
-erc unpack $TAR || fatal
+erc --here unpack $TAR || fatal
 cd *
 
-erc unpack LevenhukLite.x64.tar.bz2 || fatal
+erc --here unpack LevenhukLite.x64.tar.bz2 || fatal
 sed -n -e '1,/^exit 0$/!p' LevenhukLite.x64.sh > LevenhukLite.tgz
 
-erc unpack LevenhukLite.tgz || fatal
-cd LevenhukLite
+erc -C opt/$PRODUCT unpack LevenhukLite.tgz || fatal
 
-mkdir -p opt/$PRODUCT
-mkdir -p usr/share/icons/hicolor/128x128/apps/
-mkdir -p usr/lib/udev/rules.d/
-mkdir -p usr/share/applications
-
-cp -a i18n opt/$PRODUCT/
-install -m0755 LevenhukLite opt/$PRODUCT/
-install -m0755 liblevenhukcam.so opt/$PRODUCT/
-install -m0755 liblevenhuknam.so opt/$PRODUCT/
-install -Dpm0644 LevenhukLite.png usr/share/icons/hicolor/128x128/apps/
-install -Dm0644 99-levenhukcam.rules usr/lib/udev/rules.d/
-install -Dpm0644 LevenhukLite.desktop usr/share/applications
+# move system integration files out of opt
+install -Dpm0644 opt/$PRODUCT/LevenhukLite.png usr/share/icons/hicolor/128x128/apps/LevenhukLite.png
+install -Dm0644 opt/$PRODUCT/99-levenhukcam.rules usr/lib/udev/rules.d/99-levenhukcam.rules
+install -Dpm0644 opt/$PRODUCT/LevenhukLite.desktop usr/share/applications/LevenhukLite.desktop
+rm -f opt/$PRODUCT/LevenhukLite.png opt/$PRODUCT/99-levenhukcam.rules opt/$PRODUCT/LevenhukLite.desktop opt/$PRODUCT/uninstall.sh
 
 PKGNAME=$PRODUCT-$VERSION
 erc pack $PKGNAME.tar opt usr || fatal
