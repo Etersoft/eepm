@@ -12,7 +12,7 @@ PRODUCTDIR=/opt/unigine-heaven
 mkdir -p $BUILDROOT$PRODUCTDIR/
 for i in bin data documentation ; do
     mv $BUILDROOT/$i $BUILDROOT$PRODUCTDIR/$i
-    subst "s|\"/$i/|\"$PRODUCTDIR/$i/|" $SPEC
+    subst "s|\"/$i|\"$PRODUCTDIR/$i|" $SPEC
 done
 remove_file /heaven
 

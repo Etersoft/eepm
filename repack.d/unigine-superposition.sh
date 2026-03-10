@@ -13,7 +13,7 @@ PRODUCTDIR=/opt/unigine-superposition
 mkdir -p $BUILDROOT$PRODUCTDIR/
 for i in bin data docs ; do
     mv $BUILDROOT/$i $BUILDROOT$PRODUCTDIR/$i
-    subst "s|\"/$i/|\"$PRODUCTDIR/$i/|" $SPEC
+    subst "s|\"/$i|\"$PRODUCTDIR/$i|" $SPEC
 done
 
 cd $BUILDROOT/$PRODUCTDIR || fatal
