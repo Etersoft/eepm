@@ -306,9 +306,9 @@ move_to_target_dir()
 	local tdir="$1"
 	local target="$2"
 
-	shopt -s nullglob
+	shopt -s nullglob dotglob
 	local items=("$tdir"/*)
-	shopt -u nullglob
+	shopt -u nullglob dotglob
 
 	if [ ${#items[@]} -eq 1 ] && [ -d "${items[0]}" ] ; then
 		if is_system_dir "$(basename "${items[0]}")" ; then
@@ -333,9 +333,9 @@ move_from_tdir()
 	local tdir="$1"
 	local subdir="$2"
 
-	shopt -s nullglob
+	shopt -s nullglob dotglob
 	local items=("$tdir"/*)
-	shopt -u nullglob
+	shopt -u nullglob dotglob
 
 	if [ ${#items[@]} -eq 1 ] && [ -e "${items[0]}" ] ; then
 		if [ -d "${items[0]}" ] ; then
