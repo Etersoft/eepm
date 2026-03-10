@@ -14,7 +14,7 @@ fi
 
 if [ "$VERSION" = "*" ] ; then
     VERSION=$(eget -q -O- https://www.ocbase.com/download | grep -oP '"versionStr":"\K[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -n1)
-    PKGURL="https://dl.ocbase.com/linux/per/stable/OCCT"
+    PKGURL="https://www.ocbase.com/download/edition:Personal/os:Linux"
 else
     PKGURL="https://www.ocbase.com/download/edition:Personal/os:Linux/version:$VERSION"
 fi
