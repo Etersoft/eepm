@@ -41,6 +41,9 @@ remove_file /usr/lib/nautilus/extensions-3.0/libnautilus-drive-extension.so
 
 remove_dir /usr/lib
 
+# fix broken env syntax: env "VAR=val" should be env VAR="val"
+subst 's|env "LD_LIBRARY_PATH=\$LIB_PATH"|env LD_LIBRARY_PATH="$LIB_PATH"|' $BUILDROOT/usr/bin/synology-drive
+
 # old nautilus
 remove_file $PRODUCTDIR/package/cloudstation/icon-overlay/15/lib/plugin-cb.so || :
 
