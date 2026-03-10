@@ -249,7 +249,7 @@ __prepare_source_package()
 
     alpkg=$(basename $returntarname)
     # FIXME: looks like a hack with current dir
-    if [ "$(pwd)" != "$(dirname "$returntarname")" ] ; then
+    if ! [ "$returntarname" -ef "$alpkg" ] ; then
         cp $verbose $returntarname $alpkg
         [ -r "$returntarname.eepm.yaml" ] && cp $verbose $returntarname.eepm.yaml $alpkg.eepm.yaml
     fi
