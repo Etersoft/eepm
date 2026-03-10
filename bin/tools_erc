@@ -199,10 +199,15 @@ extract_special_archive()
 	local type="$2"
 	local orig_dir="$PWD"
 	local subdir
+	local use_tdir=""
 	if [ -n "$here" ] || [ -n "$flat" ] ; then
 		subdir="${extract_dir:-.}"
+	elif [ -n "$extract_dir" ] ; then
+		subdir=$(mktemp -d "$(dirname "$extract_dir")/UXXXXXXXX")
+		use_tdir=1
 	else
-		subdir="${extract_dir:-$(get_archive_name "$arc")}"
+		subdir=$(mktemp -d "$(pwd)/UXXXXXXXX")
+		use_tdir=1
 	fi
 
 	local flat_tdir
@@ -228,11 +233,23 @@ extract_special_archive()
 			return 1
 			;;
 	esac
+	cd "$orig_dir"
 
 	if [ -n "$flat_tdir" ] ; then
 		local target_dir="${extract_dir:-$orig_dir}"
 		find "$flat_tdir" -type f -exec mv -t "$target_dir" -- {} +
 		rm -rf "$flat_tdir"
+	elif [ -n "$use_tdir" ] ; then
+		if [ -n "$extract_dir" ] ; then
+			move_to_target_dir "$subdir" "$extract_dir"
+		else
+			local target_name="$(get_archive_name "$arc")"
+			if [ -d "$target_name" ] ; then
+				move_to_target_dir "$subdir" "$target_name"
+			else
+				move_from_tdir "$subdir" "$target_name"
+			fi
+		fi
 	fi
 
 	exit
@@ -273,6 +290,44 @@ extract_by_type()
 	esac
 }
 
+is_system_dir()
+{
+	case "$1" in
+		opt|usr|etc|var|bin|sbin|lib|lib64|home|root|srv|tmp|run|mnt|media|boot|dev|proc|sys)
+			return 0 ;;
+	esac
+	return 1
+}
+
+# Move extracted contents from temp dir to existing target directory (-C)
+# Single non-system directory is unwrapped (contents moved directly into target)
+move_to_target_dir()
+{
+	local tdir="$1"
+	local target="$2"
+
+	shopt -s nullglob
+	local items=("$tdir"/*)
+	shopt -u nullglob
+
+	if [ ${#items[@]} -eq 1 ] && [ -d "${items[0]}" ] ; then
+		if is_system_dir "$(basename "${items[0]}")" ; then
+			mv -- "${items[0]}" "$target/"
+		else
+			# single directory: move its contents into target
+			shopt -s dotglob
+			mv -- "${items[0]}"/* "$target/"
+			shopt -u dotglob
+			rmdir -- "${items[0]}"
+		fi
+	else
+		mv -- "${items[@]}" "$target/"
+	fi
+	rmdir "$tdir"
+}
+
+# Move extracted contents from temp dir to current directory (normal extraction)
+# Single directory is renamed to subdir, single file goes to current dir
 move_from_tdir()
 {
 	local tdir="$1"
@@ -282,13 +337,15 @@ move_from_tdir()
 	local items=("$tdir"/*)
 	shopt -u nullglob
 
-	# if only one item in the subdir, move it directly
 	if [ ${#items[@]} -eq 1 ] && [ -e "${items[0]}" ] ; then
 		if [ -d "${items[0]}" ] ; then
-			# rename directory to match archive basename
-			mv -- "${items[0]}" "$subdir"
+			if is_system_dir "$(basename "${items[0]}")" ; then
+				mkdir -p "$subdir"
+				mv -- "${items[0]}" "$subdir/"
+			else
+				mv -- "${items[0]}" "$subdir"
+			fi
 		else
-			# single file goes to current directory
 			mv -- "${items[0]}" .
 		fi
 		rmdir "$tdir"
@@ -309,11 +366,11 @@ extract_archive()
 
 	extract_special_archive "$arc" "$type"
 
-	# --here or -C: extract directly to target directory
+	# --here: extract directly to target directory without subdir logic
 	local target_dir="${extract_dir}"
 	[ -n "$here" ] && [ -z "$target_dir" ] && target_dir="."
 
-	if [ -n "$target_dir" ] && [ -z "$flat" ] ; then
+	if [ -n "$here" ] && [ -n "$target_dir" ] && [ -z "$flat" ] ; then
 		if have_patool ; then
 			docmd patool $verbose extract --outdir "$target_dir" "$arc"
 		else
@@ -321,6 +378,27 @@ extract_archive()
 			extract_by_type "$arc" "$type" "$@"
 		fi
 		return
+	fi
+
+	# -C: extract to temp dir, apply subdir logic, move to target
+	if [ -n "$extract_dir" ] && [ -z "$here" ] && [ -z "$flat" ] ; then
+		tdir=$(mktemp -d "$(dirname "$extract_dir")/UXXXXXXXX")
+		local res
+		if have_patool ; then
+			docmd patool $verbose extract --outdir "$tdir" "$arc" "$@"
+			res=$?
+		else
+			cd "$tdir" || fatal
+			extract_by_type "$arc" "$type" "$@"
+			res=$?
+			cd - >/dev/null
+		fi
+		if [ "$res" -eq 0 ] ; then
+			move_to_target_dir "$tdir" "$extract_dir"
+		else
+			rm -rf "$tdir"
+		fi
+		return $res
 	fi
 
 	tdir=$(mktemp -d $(pwd)/UXXXXXXXX)
@@ -342,7 +420,12 @@ extract_archive()
 			find "$tdir" -type f -exec mv -t "$dest" -- {} +
 			rm -rf "$tdir"
 		else
-			move_from_tdir "$tdir" "$(get_archive_name "$arc")"
+			local target_name="$(get_archive_name "$arc")"
+			if [ -d "$target_name" ] ; then
+				move_to_target_dir "$tdir" "$target_name"
+			else
+				move_from_tdir "$tdir" "$target_name"
+			fi
 		fi
 	fi
 
