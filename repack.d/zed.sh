@@ -10,6 +10,8 @@ PRODUCTDIR=/opt/$PRODUCT
 
 add_bin_link_command $PRODUCT $PRODUCTDIR/bin/$PRODUCT
 
-# fix wmclass
-move_file /usr/share/applications/zed.desktop /usr/share/applications/dev.zed.Zed.desktop
+# fix wmclass (upstream already uses dev.zed.Zed.desktop since ~0.226)
+if [ -f "$BUILDROOT/usr/share/applications/zed.desktop" ] ; then
+    move_file /usr/share/applications/zed.desktop /usr/share/applications/dev.zed.Zed.desktop
+fi
 
