@@ -202,7 +202,7 @@ filter_glob()
 {
 	[ -z "$1" ] && cat && return
 	# translate glob to regexp
-	grep "$(echo "$1" | sed -e 's|\.|\\.|g' -e 's|\*|.*|g' -e 's|\?|.|g' )$"
+	grep "$(echo "$1" | sed -e 's|\.|\\.|g' -e 's|\*|.*|g' )$"
 }
 
 filter_order()
@@ -489,7 +489,7 @@ eget_help()
 {
 cat <<EOF
 
-eget - wget like downloader wrapper with wildcard support in filename part of URL
+eget - wget like downloader wrapper with wildcard (*) support in filename part of URL
 
 Usage modes:
   eget [options] URL                      - download a single file by direct URL
@@ -572,7 +572,7 @@ EOF
 
 
 if [ -z "$1" ] ; then
-    echo "eget - wget like downloader wrapper with wildcard support, uses wget or curl as backend" >&2
+    echo "eget - wget like downloader wrapper with wildcard (*) support, uses wget or curl as backend" >&2
     echo "Run $0 --help to get help" >&2
     exit 1
 fi
@@ -2625,19 +2625,12 @@ fi
 
 is_wildcard()
 {
-    case "$1" in *[*?]*|*\[*|*\]*) return 0 ;; esac
+    case "$1" in *[*]*|*\[*|*\]*) return 0 ;; esac
     return 1
 }
 
-is_query_string()
-{
-    case "$1" in *\?*=*) return 0 ;; esac
-    return 1
-}
-
-# https://www.freeoffice.com/download.php?filename=freeoffice-2021-1062.x86_64.rpm
-if [ -z "$NOGLOB" ] && is_wildcard "$URL" && ! is_query_string "$URL" ; then
-    fatal "Error: there are globbing symbol (*[]) in $URL. It is allowed only for mask part"
+if [ -z "$NOGLOB" ] && is_wildcard "$URL" ; then
+    fatal "Error: there are globbing symbols (*[]) in $URL. It is allowed only for mask part"
 fi
 
 if is_url "$MASK" ; then
@@ -2665,7 +2658,7 @@ if [ -n "$LISTONLY" ] ; then
 fi
 
 # If there is no wildcard symbol like asterisk, just download
-if [ -z "$SEPMASK" ] && ! is_wildcard "$MASK" || is_query_string "$MASK" ; then
+if [ -z "$SEPMASK" ] && ! is_wildcard "$MASK" ; then
     sget "$1" "$TARGETFILE"
     exit
 fi
