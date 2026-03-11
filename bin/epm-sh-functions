@@ -1239,13 +1239,21 @@ set_pm_type()
 # override package manager detection result
 if [ -n "$EPM_BACKEND" ] ; then
     PMTYPE="$EPM_BACKEND"
-    return
 fi
 # obsoleted
 if [ -n "$FORCEPM" ] ; then
     PMTYPE="$FORCEPM"
-    return
 fi
+
+# set DNFCMD based on PMTYPE
+case "$PMTYPE" in
+    dnf5-rpm)
+        DNFCMD="dnf5"
+        ;;
+    dnf-rpm)
+        DNFCMD="dnf"
+        ;;
+esac
 
 }
 
