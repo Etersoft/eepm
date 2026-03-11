@@ -72,6 +72,14 @@ __get_repo_name() {
     if [ "$(echo "$arg" | cut -d/ -f1)" = "aur" ] && [ "$PMTYPE" = "pacman" ] ; then
         repo="aur"
         name=$(echo "$arg" | cut -d/ -f2)
+        return
+    fi
+
+    # Named repo in sources.list.d
+    local orig_repo="$(echo "$arg" | cut -d/ -f1)"
+    if __find_named_repo_file "$orig_repo" >/dev/null 2>&1 ; then
+        repo="named:$orig_repo"
+        name=$(echo "$arg" | cut -d/ -f2)
     fi
 }
 
@@ -218,8 +226,49 @@ __use_tmp_apt_for_tasks()
     __setup_tmp_apt_dir
     # hardlink existing system apt lists to avoid re-downloading
     cp -la /var/lib/apt/lists/*.* "$__EPM_APT_TMPDIR/lists/" 2>/dev/null
-    { __get_system_sourceslist ; __generate_task_sourceslist "$@" ; } > "$__EPM_APT_TMPDIR/sources.list"
+    { __get_system_sourceslist ; echo ; __generate_task_sourceslist "$@" ; } > "$__EPM_APT_TMPDIR/sources.list"
     # tolerate partial failures (some system repos may have broken GPG keys etc.)
+    __epm_update || warning "Some repos failed to update, but continuing anyway"
+}
+
+# Find sources.list.d file for named repo
+# Returns file path or fails
+__find_named_repo_file()
+{
+    local name="$1"
+
+    load_helper epm-sh-repo
+
+    [ -n "$APT_SOURCES_LIST_D" ] || return 1
+
+    local file="$APT_SOURCES_LIST_D/$name.list"
+    [ -s "$file" ] && echo "$file" && return
+
+    return 1
+}
+
+# Get enabled repo lines from a named repo file
+# Uncomments disabled lines (strips leading "# ")
+__get_named_repo_lines()
+{
+    local file="$1"
+    # output active lines as-is
+    grep "^\(rpm\|deb\)" "$file" 2>/dev/null
+    # uncomment disabled lines
+    grep "^#[[:space:]]*\(rpm\|deb\)" "$file" 2>/dev/null | sed 's/^#[[:space:]]*//'
+}
+
+# Setup temp APT with system repos + named repo and run update
+# arg: repo name
+__use_tmp_apt_with_named_repo()
+{
+    local name="$1"
+    local file
+    file="$(__find_named_repo_file "$name")" || fatal "Can't find repo '$name' in sources.list.d"
+    load_helper epm-update
+    __setup_tmp_apt_dir
+    cp -la /var/lib/apt/lists/*.* "$__EPM_APT_TMPDIR/lists/" 2>/dev/null
+    { __get_system_sourceslist ; echo ; __get_named_repo_lines "$file" ; } > "$__EPM_APT_TMPDIR/sources.list"
     __epm_update || warning "Some repos failed to update, but continuing anyway"
 }
 
@@ -259,6 +308,11 @@ __process_repo_arguments() {
             local datestr="${repo#archive/}"
             datestr="$(echo "$datestr" | sed 's|-|/|g')"
             __use_tmp_apt_for_branch archive "$DISTRVERSION" "$datestr" || return 1
+            (PPARGS=1 $func ${repo_groups[$repo]})
+        elif startwith "$repo" "named:" ; then
+            # Named repo from sources.list.d
+            local reponame="${repo#named:}"
+            __use_tmp_apt_with_named_repo "$reponame" || return 1
             (PPARGS=1 $func ${repo_groups[$repo]})
         else
             # ALT Linux: use temporary APT directory instead of modifying system repos
