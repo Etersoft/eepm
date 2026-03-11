@@ -8,14 +8,13 @@ FFMPEG_PATH="$5"
 . $(dirname $0)/common.sh
 
 YANDEX_PATH="opt/yandex/browser"
-BASEDIR=$(basename $TAR .snap)
 
 erc --here unpack $TAR || fatal
 
 [ -n "$FFMPEG_PATH" ] || fatal "Missing FFMPEG_PATH"
-chmod 0644 "$BASEDIR/$FFMPEG_PATH"
+chmod 0644 "$FFMPEG_PATH"
 mkdir -p "$YANDEX_PATH"
-cp "$BASEDIR/$FFMPEG_PATH" "$YANDEX_PATH/"
+cp "$FFMPEG_PATH" "$YANDEX_PATH/"
 
 PKGNAME=$PRODUCT-$VERSION.tar
 
