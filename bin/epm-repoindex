@@ -174,9 +174,13 @@ case $PMTYPE in
         docmd createrepo -v --update "$@"
         ;;
     dnf5-rpm)
-        epm install --skip-installed createrepo_c || fatal
         docmd mkdir -pv "$@"
-        docmd createrepo_c -v --update "$@"
+        if is_command dnf5 ; then
+            docmd $DNFCMD repo create --update "$@"
+        else
+            epm install --skip-installed createrepo_c || fatal
+            docmd createrepo_c -v --update "$@"
+        fi
         ;;
     eoget)
         docmd eoget index "$@"
