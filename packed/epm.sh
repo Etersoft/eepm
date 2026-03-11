@@ -40,7 +40,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.55"
+export EPMVERSION="3.64.56"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -473,7 +473,7 @@ fixme()
 
 debug()
 {
-    [ -n "$debug" ] || return
+    [ -z "$debug" ] && return
 
     set_color $YELLOW >&2
     echog -n "WARNING: " >&2
@@ -1455,6 +1455,21 @@ else
 		eval "echo -n \"$@\""
 	}
 fi
+
+yaml_load_vars()
+{
+    local file="$1"
+    shift
+    local data field value
+    data="$(epm tool yaml "$file" 2>/dev/null)"
+    for field in "$@" ; do
+        value="$(printf '%s\n' "$data" | grep "^${field}=" | head -n1 | sed "s/^[^=]*=\"\(.*\)\"$/\1/")"
+        # skip if key is not present in yaml (preserve existing value)
+        [ -n "$value" ] || continue
+        # Use single quotes to prevent command execution in values
+        eval "$field='$(printf '%s' "$value" | sed "s/'/'\\\\''/g")'"
+    done
+}
 
 # File bin/epm-addrepo:
 
@@ -3522,53 +3537,11 @@ epm_conflicts()
 
 
 
-__create_spec() {
-
-echo "%{!?fake_name: %global fake_name $NAME}" >> "$1"
-echo "%{!?fake_version: %global fake_version $VERSION}" >> "$1"
-echo "%{!?fake_release: %global fake_release $RELEASE}" >> "$1"
-if [ -n "$REQUIRES" ]; then
-  echo "%{!?fake_requires: %global fake_requires $REQUIRES}" >> "$1"
-fi
-if [ -n "$PROVIDES" ]; then
-  echo "%{!?fake_provides: %global fake_provides $PROVIDES}" >> "$1"
-fi
-
-  cat <<EOF >> "$1"
-%define _rpmdir $PWD
-
-Name: fake-%{fake_name}
-
-Version: %{fake_version}
-Release: %{fake_release}
-License: CC0
-Group: Other
-
-Summary: Faked provides package
-
-%if "%{?fake_provides}" != ""
-Provides: %{fake_provides}
-%endif
-Provides: %{fake_name}
-%if "%{?fake_requires}" != ""
-Requires: %{fake_requires}
-%endif
-BuildArch: noarch
-
-%description
-This package is empty. It has been created to put fake entry in rpmdb.
-
-%files
-
-%changelog
-EOF
-}
-
-
 __epm_create_fake_help()
 {
     message 'epm create-fake - create package with fake provides and requires
-Usage: epm create-fake [options] <package-name>'
+Usage: epm create-fake [options] <package-name>
+       epm create-fake [options] <file.yaml>'
     echo ''
     echog 'Options:'
     get_help HELPOPT $SHAREDIR/epm-create_fake
@@ -3577,81 +3550,132 @@ Examples:
     # epm create-fake --install python-somepackage
     # epm create-fake --install --provides="python3dist(somepackage)" python-somepackage
     # epm create-fake --install --requires=python3 --requires=python3-module python-somepackage
+    # epm create-fake --name=libfoo --provides="libfoo.so.1()(64bit)" libfoo
+    # epm create-fake --install mypackage.yaml
 '
 }
 
 epm_create_fake()
 {
+    local VERSION=0
+    local RELEASE=0
+    local REQUIRES=""
+    local PROVIDES=""
+    local FAKENAME=""
+    local NAME=""
 
-  VERSION=0
-  RELEASE=0
-  REQUIRES=""
+    for i in "$@"; do
+        case $i in
+            -h|--help)          # HELPOPT: show this help
+                __epm_create_fake_help
+                return
+                ;;
+            --install)          # HELPOPT: auto install fake package
+                ;;
+            --name=*)           # HELPOPT: set exact package name (without fake- prefix)
+                FAKENAME="${i#*=}"
+                ;;
+            --version=*)        # HELPOPT: set package version (default: 0)
+                VERSION="${i#*=}"
+                ;;
+            --release=*)        # HELPOPT: set package release (default: 0)
+                RELEASE="${i#*=}"
+                ;;
+            --requires=*)       # HELPOPT: set package requires (repeat for multiple)
+                REQUIRES="$REQUIRES ${i#*=}"
+                ;;
+            --provides=*)       # HELPOPT: set package provides (repeat for multiple)
+                PROVIDES="$PROVIDES ${i#*=}"
+                ;;
+            *)
+                [ -z "$NAME" ] && NAME="$i"
+                ;;
+        esac
+    done
 
-  for i in "$@"; do
-    case $i in
-      -h|--help)          # HELPOPT: show this help
-      __epm_create_fake_help
-      return
-      ;;
-      --install)          # HELPOPT: auto install fake package
-      ;;
-      --version=*)        # HELPOPT: set package version (default: 0)
-      VERSION="${i#*=}"
-      shift
-      ;;
-      --release=*)        # HELPOPT: set package release (default: 0)
-      RELEASE="${i#*=}"
-      shift
-      ;;
-      --requires=*)       # HELPOPT: set package requires
-      REQUIRES+=" ${i#*=}"
-      shift
-      ;;
-      --provides=*)       # HELPOPT: set package provides
-      PROVIDES+=" ${i#*=}"
-      shift
-      ;;
-      *)
-      ;;
-    esac
-  done
-
-  NAME=$1
-
-  if [ -z "$NAME" ]; then
-    fatal "Error: You have to specify PACKAGE_NAME"
-  fi
+    if [ -z "$NAME" ] ; then
+        fatal 'Error: You have to specify PACKAGE_NAME or a yaml file'
+    fi
 
     # will set RPMBUILD
-  __assure_exists_rpmbuild
+    __assure_exists_rpmbuild
 
-  HOME="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
-  unset BASH_ENV
-  remove_on_exit $HOME
-  export HOME
-  __create_rpmmacros
+    HOME="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
+    unset BASH_ENV
+    remove_on_exit $HOME
+    export HOME
+    __create_rpmmacros
 
-  tmpbuilddir=$HOME/$(basename $NAME).tmpdir
-  mkdir $tmpbuilddir
+    local tmpbuilddir=$HOME/create-fake.tmpdir
+    mkdir $tmpbuilddir
 
-  cd $tmpbuilddir/ || fatal
+    local yamlfile=""
+    local pkgname=""
 
-  SPECFILE=${PWD}/${NAME}.spec
-  __create_spec "$SPECFILE"
+    # handle yaml file input
+    if echo "$NAME" | grep -q '\.yaml$' ; then
+        yamlfile="$(realpath "$NAME")"
+        [ -r "$yamlfile" ] || fatal 'Can'\''t read yaml file: $NAME'
+        # read name and version from yaml
+        local name="" version=""
+        yaml_load_vars "$yamlfile" name version
+        pkgname="$name"
+        VERSION="$version"
+    else
+        # generate yaml from CLI args
+        if [ -n "$FAKENAME" ] ; then
+            pkgname="$FAKENAME"
+        else
+            pkgname="fake-$NAME"
+            # auto-add original name to provides (like the old Provides: %{fake_name})
+            PROVIDES="$NAME $PROVIDES"
+        fi
 
-  showcmd $RPMBUILD -bb $SPECFILE
-  if [ -n "$verbose" ] ; then
-      a='' $RPMBUILD  -bb $SPECFILE || fatal
-  else
-      a='' $RPMBUILD -bb $SPECFILE >/dev/null || fatal
-  fi
+        yamlfile="$tmpbuilddir/eepm.yaml"
+        cat > "$yamlfile" <<EOF
+name: $pkgname
+version: $VERSION
+release: $RELEASE
+summary: Faked provides package
+license: CC0
+group: Other
+buildarch: noarch
+description: This package is empty. It has been created to put fake entry in rpmdb.
+EOF
+        # echo without quotes trims and normalizes whitespace
+        [ -n "$(echo $REQUIRES)" ] && echo "requires: $(echo $REQUIRES)" >> "$yamlfile"
+        [ -n "$(echo $PROVIDES)" ] && echo "provides: $(echo $PROVIDES)" >> "$yamlfile"
+    fi
 
-   repacked_rpm="$(realpath "$tmpbuilddir/noarch/*.rpm")"
-   remove_on_exit "$repacked_rpm"
+    info 'Generated YAML for fake package:'
+    cat "$yamlfile"
 
-  if [ -n "$install" ] ; then
-    epm install "$repacked_rpm"
-  fi
+    cd $tmpbuilddir/ || fatal
+
+    __generate_spec_by_yaml "$yamlfile" "$tmpbuilddir"
+
+    local buildroot="$tmpbuilddir/$pkgname-$VERSION"
+    local spec="$tmpbuilddir/$pkgname.spec"
+    mkdir -p "$buildroot"
+
+    showcmd $RPMBUILD --buildroot $buildroot -bb $spec
+    if [ -n "$verbose" ] ; then
+        a='' $RPMBUILD --buildroot $buildroot -bb $spec || fatal
+    else
+        a='' $RPMBUILD --buildroot $buildroot -bb $spec >/dev/null || fatal
+    fi
+
+    local repacked_rpm="$(realpath $tmpbuilddir/../*.rpm)"
+    remove_on_exit "$repacked_rpm"
+
+    if [ -n "$install" ] ; then
+        epm install "$repacked_rpm"
+    else
+        cp $verbose "$repacked_rpm" "$EPMCURDIR/" || fatal
+        local rpmname
+        rpmname="$(basename "$repacked_rpm")"
+        info 'Fake package saved: $rpmname'
+    fi
 }
 
 # File bin/epm-db:
@@ -6370,6 +6394,11 @@ epm_install()
     fi
 
     if [ -n "$pkg_urls" ] ; then
+        if [ -n "$repack" ] ; then
+            # pass URLs directly to repack (it will download and keep pkg_urls_downloaded)
+            epm repack --install $pkg_urls $pkg_files
+            return
+        fi
         # it will put downloaded by pkg_urls packages to pkg_files and reconstruct pkg_filenames
         __handle_pkg_urls_to_install
     fi
@@ -6794,7 +6823,7 @@ epm_install_alt_tasks()
     [ -n "$verbose" ] && info "Packages to install: $installlist"
 
     if [ -z "$installlist" ] ; then
-        warning 'There is no installed packages for upgrade from task' "$*"
+        warning 'No packages available for install from task(s)' "$*"
         return 22
     fi
 
@@ -8979,7 +9008,7 @@ __list_app_packages_table()
     [ "$arch" = "x86_64" ] && IGNOREi586='NoNo' || IGNOREi586='i586-'
 
     __get_fast_short_list_app $arch | LC_ALL=C sort -k1,1 >$tmplist
-    grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\<$arch\>)" $psdir/*.sh | xargs grep -oP "^PKGNAME=[\"']*\K[^\"']+"  | sed -e "s|.*/\(.*\).sh:|\1 |" | grep -v -E "(^$IGNOREi586|^common|#.*$)" | LC_ALL=C sort -k1,1 >$tmplist1
+    find $psdir -maxdepth 1 -name '*.sh' ! -type l | xargs grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\<$arch\>)" | xargs grep -oP "^PKGNAME=[\"']*\K[^\"']+"  | sed -e "s|.*/\(.*\).sh:|\1 |" | grep -v -E "(^$IGNOREi586|^common|#.*$)" | LC_ALL=C sort -k1,1 >$tmplist1
     # tmplist - app
     # tmplist1 - app package
     __print_targeted_packages $tmplist1 | LC_ALL=C join -j 1 -a 1 $tmplist - | while read -r app package ; do
@@ -9167,7 +9196,7 @@ __epm_play_update()
     RES=0
     for i in $* ; do
         echo
-        echo "$i"
+        info 'Updating $i ...'
             if ! __is_app_installed "$i" ; then
                 continue
             fi
@@ -9740,7 +9769,8 @@ __get_fast_short_list_app()
     [ -n "$arch" ] || fatal
     local IGNOREi586
     [ "$arch" = "x86_64" ] && IGNOREi586='NoNo' || IGNOREi586='i586-'
-    grep -L -E "^DESCRIPTION=(''|\"\")" $psdir/*.sh | xargs grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\<$arch\>)" | xargs basename -s .sh | grep -v -E "(^$IGNOREi586|^common)"
+    # filter out symlinks (used as aliases) to avoid duplicates in listings
+    find $psdir -maxdepth 1 -name '*.sh' ! -type l | xargs grep -L -E "^DESCRIPTION=(''|\"\")" | xargs grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\<$arch\>)" | xargs basename -s .sh | grep -v -E "(^$IGNOREi586|^common)"
 }
 
 __get_fast_int_list_app()
@@ -9750,7 +9780,7 @@ __get_fast_int_list_app()
     local IGNOREi586
     local RIFS=$'\x1E'
     [ "$arch" = "x86_64" ] && IGNOREi586='NoNo' || IGNOREi586='i586-'
-    grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\<$arch\>)" $psdir/*.sh | xargs grep -oP "^DESCRIPTION=[\"']*\K[^\"']+"  | sed -e "s|.*/\(.*\).sh:|\1$RIFS|" | grep -v -E "(^$IGNOREi586|^common|#.*$)"
+    find $psdir -maxdepth 1 -name '*.sh' ! -type l | xargs grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\<$arch\>)" | xargs grep -oP "^DESCRIPTION=[\"']*\K[^\"']+"  | sed -e "s|.*/\(.*\).sh:|\1$RIFS|" | grep -v -E "(^$IGNOREi586|^common|#.*$)"
 }
 
 __epm_play_suggest_similar_apps()
@@ -12903,12 +12933,19 @@ __run_alien()
         local wrapdir
         wrapdir="$(mktemp -d)"
         remove_on_exit "$wrapdir"
-        export __ALN_PKG="$(realpath "$alpkg")"
-        cat > "$wrapdir/cpio" <<'CPIOWRAPPER'
-rpm -qpl "$__ALN_PKG" 2>/dev/null | while IFS= read -r f; do
-    mkdir -p ".$(dirname "$f")" 2>/dev/null
-done
-exec /usr/bin/cpio "$@"
+        local real_cpio
+        real_cpio="$(print_command_path cpio)"
+        local abs_alpkg
+        abs_alpkg="$(realpath "$alpkg")"
+        cat > "$wrapdir/cpio" <<CPIOWRAPPER
+case "\$*" in
+    *--extract*)
+        rpm -qpl "$abs_alpkg" 2>/dev/null | while IFS= read -r f; do
+            mkdir -p ".\$(dirname "\$f")" 2>/dev/null
+        done
+        ;;
+esac
+exec $real_cpio "\$@"
 CPIOWRAPPER
         chmod +x "$wrapdir/cpio"
         PATH="$wrapdir:$PATH"
@@ -13080,7 +13117,7 @@ __prepare_source_package()
 
     alpkg=$(basename $returntarname)
     # FIXME: looks like a hack with current dir
-    if [ "$(pwd)" != "$(dirname "$returntarname")" ] ; then
+    if ! [ "$returntarname" -ef "$alpkg" ] ; then
         cp $verbose $returntarname $alpkg
         [ -r "$returntarname.eepm.yaml" ] && cp $verbose $returntarname.eepm.yaml $alpkg.eepm.yaml
     fi
@@ -13142,6 +13179,7 @@ __epm_repack()
     repacked_pkgs=''
     local packversion="${EPM_REPACK_VERSION:-}"
     local packrelease="${EPM_REPACK_RELEASE:-}"
+    [ -n "$pkg_urls_downloaded" ] || pkg_urls_downloaded="${EPM_REPACK_URL:-}"
 
     print_sha256sum $pkg_files
 
@@ -13349,6 +13387,7 @@ __epm_repack_to_deb()
 # File bin/epm-repack-rpm:
 
 
+
 get_repack_script()
 {
     local repackcode="$1"
@@ -13465,6 +13504,8 @@ epm_check_repacked_rpm()
 }
 
 
+
+
 __epm_repack_to_rpm()
 {
     local pkg="$1"
@@ -13514,26 +13555,38 @@ __epm_repack_to_rpm()
         abspkg="$(realpath $alpkg)"
         cd $tmpbuilddir/ || fatal
 
-        __run_alien --fakeroot "../$alpkg" --generate --to-rpm --keep-version $scripts || fatal
+        local buildroot spec pkgname
 
-        # remove all empty dirs (hack against broken dpkg with LF in the end of line) (hack for linux_pantum.deb)
-        rmdir * 2>/dev/null
+        if [ -n "$SUBGENERIC" ] && [ -z "$EPM_USE_ALIEN" ] ; then
+            # for tar/appimage/snap: generate spec directly without alien
+            __fill_yaml_from_tarball "../$alpkg.eepm.yaml" "../$alpkg"
+            __generate_spec_by_yaml "../$alpkg.eepm.yaml" "$tmpbuilddir"
+            __unpack_files_from_tarball "../$alpkg.eepm.yaml" "../$alpkg" "$tmpbuilddir"
+            local name version
+            __set_name_version_by_yaml "../$alpkg.eepm.yaml"
+            pkgname="$name"
+            spec="$tmpbuilddir/$name.spec"
+            buildroot="$tmpbuilddir/$name-$version"
+        else
+            # for deb/rpm: use alien
+            __run_alien --fakeroot "../$alpkg" --generate --to-rpm --keep-version $scripts || fatal
 
-        local subdir="$(echo *)"
-        [ -d "$subdir" ] || fatal "can't find subdir in" $(pwd)
+            # remove all empty dirs (hack against broken dpkg with LF in the end of line) (hack for linux_pantum.deb)
+            rmdir * 2>/dev/null
 
-        local buildroot="$tmpbuilddir/$subdir"
+            local subdir="$(echo *)"
+            [ -d "$subdir" ] || fatal "can't find subdir in" $(pwd)
 
-        # for tarballs fix permissions (ideally fix in pack.d/generic-tar.sh, but there is tar repacking only)
-        [ "$SUBGENERIC" = "tar" ] && chmod $verbose -R a+rX $buildroot/*
+            buildroot="$tmpbuilddir/$subdir"
 
-        # detect spec and move to prev dir
-        local spec="$(echo $buildroot/*.spec)"
-        [ -s "$spec" ] || fatal "Can't find spec $spec"
-        mv $spec $tmpbuilddir || fatal
-        spec="$tmpbuilddir/$(basename "$spec")"
+            # detect spec and move to tmpbuilddir
+            spec="$(echo $buildroot/*.spec)"
+            [ -s "$spec" ] || fatal "Can't find spec $spec"
+            mv $spec $tmpbuilddir || fatal
+            spec="$tmpbuilddir/$(basename "$spec")"
 
-        local pkgname="$(grep "^Name: " $spec | sed -e "s|Name: ||g" | head -n1)"
+            pkgname="$(grep "^Name: " $spec | sed -e "s|Name: ||g" | head -n1)"
+        fi
 
         # run generic scripts and repack script for the pkg
         cd $buildroot || fatal
@@ -16739,6 +16792,12 @@ get_pkgname_from_taskarg()
 
 ALTTASKURL="http://git.altlinux.org/tasks"
 
+get_task_state()
+{
+    local tn="$1"
+    fetch_url "$ALTTASKURL/$tn/task/state" 2>/dev/null
+}
+
 get_task_status()
 {
     local tn="$1"
@@ -16776,7 +16835,16 @@ get_task_packages()
     for arg in "$@" ; do
         is_taskarg "$arg" || continue
         tn=$(get_tasknumber_from_arg "$arg")
-        get_task_status "$tn" || continue
+        if ! get_task_status "$tn" ; then
+            local state
+            state="$(get_task_state "$tn")"
+            if [ -n "$state" ] ; then
+                warning 'Task $tn state is $state, packages are not yet available.'
+            else
+                warning 'Task $tn not found.'
+            fi
+            continue
+        fi
         get_task_packages_list "$tn"
         [ "$DISTRARCH" = "x86_64" ] || continue
         get_task_arepo_status "$tn" || continue
@@ -16849,6 +16917,7 @@ eget_alt_contents_index()
     local TD="$2"
     local res
     [ -n "$USER" ] && [ -f $TD ] && sudorun chown -R $USER $TD
+    [ -z "$quiet" ] && info "    $URL -> $TD"
     eget --timestamping --compressed -O $TD $URL
     res=$?
     [ -f "$TD" ] && sudorun chmod a+rw "$TD"
@@ -17039,7 +17108,7 @@ __get_repo_name() {
     # ALT Linux branches
     [ "$trepo" = "sisyphus" ] && trepo="Sisyphus"
     [ "$trepo" = "SS" ] && trepo="Sisyphus"
-    [ "$trepo" = "archive" ] && repo="archive $(echo "$arg" | cut -d/ -f2)" && name=$(echo "$arg" | cut -d/ -f3) && return
+    [ "$trepo" = "archive" ] && repo="archive/$(echo "$arg" | cut -d/ -f2)" && name=$(echo "$arg" | cut -d/ -f3) && return
 
     # Fedora Copr: copr/owner/project/package
     if [ "$trepo" = "copr" ] ; then
@@ -17133,7 +17202,7 @@ __generate_alt_sourceslist()
 
 __setup_tmp_apt_dir()
 {
-    __EPM_APT_TMPDIR="$(mktemp -d)" || fatal
+    __EPM_APT_TMPDIR="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
     remove_on_exit "$__EPM_APT_TMPDIR"
     mkdir -p "$__EPM_APT_TMPDIR/lists/partial" "$__EPM_APT_TMPDIR/sourceparts"
     cat > "$__EPM_APT_TMPDIR/apt.conf" <<EOF
@@ -17184,6 +17253,8 @@ __use_tmp_apt_for_branch()
 __use_tmp_apt_for_tasks()
 {
     __setup_tmp_apt_dir
+    # hardlink existing system apt lists to avoid re-downloading
+    cp -la /var/lib/apt/lists/*.* "$__EPM_APT_TMPDIR/lists/" 2>/dev/null
     { __get_system_sourceslist ; __generate_task_sourceslist "$@" ; } > "$__EPM_APT_TMPDIR/sources.list"
     # tolerate partial failures (some system repos may have broken GPG keys etc.)
     __epm_update || warning "Some repos failed to update, but continuing anyway"
@@ -17219,12 +17290,161 @@ __process_repo_arguments() {
             epm repo add "$repo"
             epm update
             (PPARGS=1 $func ${repo_groups[$repo]})
+        elif startwith "$repo" "archive/" ; then
+            # ALT Linux archive: archive/DATE/package -> use current branch + date
+            local datestr="${repo#archive/}"
+            datestr="$(echo "$datestr" | sed 's|-|/|g')"
+            __use_tmp_apt_for_branch archive "$DISTRVERSION" "$datestr" || return 1
+            (PPARGS=1 $func ${repo_groups[$repo]})
         else
             # ALT Linux: use temporary APT directory instead of modifying system repos
             __use_tmp_apt_for_branch "$repo" || return 1
             (PPARGS=1 $func ${repo_groups[$repo]})
         fi
     done
+}
+
+# File bin/epm-sh-create-rpm:
+
+
+__set_name_version_by_tarball()
+{
+    local tarname
+    tarname="$(basename "$1" .tar)"
+    name="$(echo "$tarname" | sed -E 's/-[0-9][^-]*$//')"
+    version="$(echo "$tarname" | sed -E 's/^.*-([0-9])/\1/')"
+    if [ "$name" = "$tarname" ] || [ -z "$version" ] ; then
+        name="$tarname"
+        version="0"
+    fi
+}
+
+
+__set_yaml_field_if_empty()
+{
+    local yaml_file="$1"
+    local field="$2"
+    local value="$3"
+    grep -q "^${field}:" "$yaml_file" && return
+    echo "${field}: ${value}" >> "$yaml_file"
+}
+
+
+__fill_yaml_from_tarball()
+{
+    local yaml_file="$1"
+    local tarball="$2"
+
+    [ -e "$yaml_file" ] || touch "$yaml_file"
+
+    local name version
+    __set_name_version_by_tarball "$tarball"
+
+    __set_yaml_field_if_empty "$yaml_file" "name" "$name"
+    __set_yaml_field_if_empty "$yaml_file" "version" "$version"
+    __set_yaml_field_if_empty "$yaml_file" "release" "1"
+    __set_yaml_field_if_empty "$yaml_file" "license" "unknown"
+    __set_yaml_field_if_empty "$yaml_file" "group" "Converted/unknown"
+}
+
+
+__set_name_version_by_yaml()
+{
+    yaml_load_vars "$1" name version
+}
+
+
+__generate_spec_by_yaml()
+{
+    local yaml_file="$1"
+    local tmpbuilddir="$2"
+
+    local name version release summary license group
+    local description url upstream_file upstream_url
+    local requires provides buildarch
+
+    yaml_load_vars "$yaml_file" name version release summary description upstream_file upstream_url url group license requires provides buildarch
+
+    [ -n "$summary" ] || summary="$name"
+
+    # description
+    local spec_description
+    if [ -n "$description" ] ; then
+        if [ -n "$upstream_file" ] || [ -n "$upstream_url" ] ; then
+            [ -n "$upstream_url" ] && upstream_file="$upstream_url"
+            [ -n "$upstream_file" ] || upstream_file="binary package $name"
+            spec_description="$description
+(Repacked from $upstream_file with EPM $(epm --short --version))"
+        else
+            spec_description="$description"
+        fi
+    else
+        spec_description="$summary"
+    fi
+
+    # write spec
+    local specfile="$tmpbuilddir/$name.spec"
+    cat > "$specfile" <<EOF
+Name: $name
+Version: $version
+Release: $release
+Summary: $summary
+License: $license
+Group: $group
+EOF
+    [ -n "$url" ] && echo "URL: $url" >> "$specfile"
+    [ -n "$buildarch" ] && echo "BuildArch: $buildarch" >> "$specfile"
+    local r
+    for r in $requires ; do
+        echo "Requires: $r" >> "$specfile"
+    done
+    for r in $provides ; do
+        echo "Provides: $r" >> "$specfile"
+    done
+    cat >> "$specfile" <<EOF
+
+%define _rpmdir ../
+%define _rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm
+%define _unpackaged_files_terminate_build 0
+
+%description
+$spec_description
+
+%files
+EOF
+}
+
+
+__unpack_files_from_tarball()
+{
+    local yaml_file="$1"
+    local tarball="$2"
+    local tmpbuilddir="$3"
+
+    local name version
+    yaml_load_vars "$yaml_file" name version
+
+    local buildroot="$tmpbuilddir/$name-$version"
+    mkdir -p "$buildroot"
+
+    # extract tarball directly to buildroot (resolve path first)
+    # use --here to preserve internal directory structure (don't flatten single dirs)
+    local abstarball
+    abstarball="$(realpath "$tarball")"
+    a='' erc --here -C "$buildroot" unpack "$abstarball" || fatal "Can't extract $tarball"
+
+    # fix permissions for tarball contents
+    chmod $verbose -R a+rX "$buildroot"
+
+    # append %files list to spec
+    local specfile="$tmpbuilddir/$name.spec"
+    ( cd "$buildroot" && find . -mindepth 1 | sed 's|^\./|/|' | LANG=C sort | while read -r f ; do
+        if [ -d "$buildroot$f" ] && [ ! -L "$buildroot$f" ] ; then
+            echo "%dir \"$f\""
+        else
+            echo "\"$f\""
+        fi
+    done ) >> "$specfile"
 }
 
 # File bin/epm-sh-install:
@@ -20773,7 +20993,7 @@ filter_glob()
 {
 	[ -z "$1" ] && cat && return
 	# translate glob to regexp
-	grep "$(echo "$1" | sed -e 's|\.|\\.|g' -e 's|\*|.*|g' -e 's|\?|.|g' )$"
+	grep "$(echo "$1" | sed -e 's|\.|\\.|g' -e 's|\*|.*|g' )$"
 }
 
 filter_order()
@@ -21060,8 +21280,18 @@ eget_help()
 {
 cat <<EOF
 
-eget - wget like downloader wrapper with wildcard support in filename part of URL
-Usage: eget [options] http://somesite.ru/dir/na*.log
+eget - wget like downloader wrapper with wildcard (*) support in filename part of URL
+
+Usage modes:
+  eget [options] URL                      - download a single file by direct URL
+  eget [options] URL URL2 URL3            - download multiple files
+  eget [options] "http://site/dir/*.rpm"  - wildcard in URL: the URL is split into
+                                  directory + mask, the directory listing page is fetched
+                                  and files matching the mask are downloaded
+  eget [options] http://site/page "*.rpm" - page search: eget fetches any page HTML,
+                                  extracts all links (<a href=...>) and downloads those
+                                  matching the mask (works on any page with links, not
+                                  just directory listings, e.g. release pages)
 
 Options:
     -q|--quiet                - quiet mode
@@ -21121,6 +21351,7 @@ Examples:
   $ eget http://ftp.somesite.ru/package-*.x64.tar
   $ eget http://ftp.somesite.ru/package *.tar
   $ eget https://github.com/owner/project package*.ext
+  $ eget https://disk.yandex.ru/d/HASH
   $ eget -O myname ipfs://QmVRUjnsnxHWkjq91KreCpUk4D9oZEbMwNQ3rzdjwND5dR
   $ eget --list http://ftp.somesite.ru/package-*.tar
   $ eget --check-url http://ftp.somesite.ru/test
@@ -21132,7 +21363,7 @@ EOF
 
 
 if [ -z "$1" ] ; then
-    echo "eget - wget like downloader wrapper with wildcard support, uses wget or curl as backend" >&2
+    echo "eget - wget like downloader wrapper with wildcard (*) support, uses wget or curl as backend" >&2
     echo "Run $0 --help to get help" >&2
     exit 1
 fi
@@ -21532,6 +21763,8 @@ get_url_by_cid()
 
 ###################
 
+# Save original backend before IPFS autodetection may call eget() recursively
+ORIG_EGET_BACKEND="$EGET_BACKEND"
 
 ipfs_mode="$EGET_IPFS"
 
@@ -21689,8 +21922,6 @@ fi
 
 
 
-ORIG_EGET_BACKEND="$EGET_BACKEND"
-
 # override backend by URL type
 if is_fileurl "$1" ; then
     EGET_BACKEND="file"
@@ -21770,6 +22001,12 @@ case "$orig_EGET_BACKEND" in
         ;;
 esac
 
+# Detect wget2 (incompatible --spider -S output format for header operations)
+if [ -n "$WGET" ] ; then
+    if $WGET --version 2>&1 | head -1 | grep -q "^GNU Wget2" ; then
+        WGET2=1
+    fi
+fi
 
 # Wrapper for wget command with all configured options
 # Defined globally so it can be used by aria2/axel backends for header operations
@@ -21846,6 +22083,50 @@ __timestamping_download()
     else
         info "Local file is up to date, skipping download"
     fi
+}
+
+# Transform wget2 -S output to standard HTTP header format
+# wget2 uses ":status: NNN" instead of "HTTP/1.1 NNN Status"
+# and lowercase header names without leading spaces
+__wget2_filter_response()
+{
+	sed -n -e 's/^:status: \([0-9]*\)/HTTP\/2 \1/p' -e '/^[a-z].*: /p'
+}
+
+# Extract HTTP headers from wget1 -S output and normalize:
+# strip leading spaces, convert header names to lowercase
+__wget1_filter_response()
+{
+	sed -n -e 's/^ *\(HTTP\/[12.]*\)/\1/p' -e 's/^  \([A-Za-z].*: \)/\1/p' | \
+	sed -e 's/^\([A-Za-z-]*:\)/\L\1/'
+}
+
+# get HTTP response headers (wget-based, used by wget/aria2/axel backends)
+__wget_url_get_response()
+{
+	local URL="$1"
+	local answer
+
+	if [ -n "$WGET2" ] ; then
+		# wget2 --spider -S does not output headers, use -O /dev/null -S
+		# wget2 -q suppresses -S output (unlike wget1), so don't use quiet=1
+		answer="$(__wget --timeout 20 --tries 1 -O /dev/null -S "$URL" 2>&1 | __wget2_filter_response)"
+		if echo "$answer" | grep -q "^HTTP/[12.]* 40[45]" ; then
+			__wget --timeout 20 --tries 1 -O /dev/null --header="Range: bytes=0-0" -S "$URL" 2>&1 | __wget2_filter_response
+			return
+		fi
+		echo "$answer"
+		return
+	fi
+
+	answer="$(quiet=1 __wget --timeout 20 --tries 1 --spider -S "$URL" 2>&1 | __wget1_filter_response)"
+	# HTTP/1.1 405 Method Not Allowed
+	# HTTP/1.1 404 Not Found
+	if echo "$answer" | grep -q "^HTTP/[12.]* 40[45]" ; then
+		quiet=1 __wget --timeout 20 --tries 1 -O/dev/null --header="Range: bytes=0-0" -S "$URL" 2>&1 | __wget1_filter_response
+		return
+	fi
+	echo "$answer"
 }
 
 if [ "$EGET_BACKEND" = "file" ] ; then
@@ -22038,16 +22319,7 @@ sget_with_mirrors()
 
 url_get_response()
 {
-    local URL="$1"
-    local answer
-    answer="$(quiet=1 __wget --timeout 20 --tries 1 --spider -S "$URL" 2>&1)"
-    # HTTP/1.1 405 Method Not Allowed
-    # HTTP/1.1 404 Not Found
-    if echo "$answer" | grep -q "^ *HTTP/[12.]* 40[45]" ; then
-        (quiet=1 __wget -O/dev/null --header="Range: bytes=0-0" -S "$URL" 2>&1)
-        return
-    fi
-    echo "$answer"
+	__wget_url_get_response "$@"
 }
 
 elif [ "$EGET_BACKEND" = "curl" ] ; then
@@ -22178,11 +22450,11 @@ url_get_response()
     local URL="$1"
     local answer
     # Don't use -C - for header requests
-    answer="$(quiet=1 __curl --max-time 20 --retry 0 -LI "$URL" 2>&1)"
+    answer="$(quiet=1 __curl --max-time 20 --retry 0 -LI "$URL" 2>&1 | sed -e 's/\r$//' -e 's/ $//')"
     # HTTP/1.1 405 Method Not Allowed
     # HTTP/1.1 404 Not Found
-    if echo "$answer" | grep -q "^ *HTTP/[12.]* 40[45]" ; then
-        (quiet=1 __curl --max-time 20 --retry 0 -L -i -r0-0 "$URL" 2>&1)
+    if echo "$answer" | grep -q "^HTTP/[12.]* 40[45]" ; then
+        quiet=1 __curl --max-time 20 --retry 0 -L -i -r0-0 "$URL" 2>&1 | sed -e 's/\r$//' -e 's/ $//'
         return
     fi
     echo "$answer"
@@ -22257,19 +22529,10 @@ sget_with_mirrors()
     echo "$tab_urls" | __aria2_download -i-
 }
 
-# use __wget for headers (aria2/axel don't support this natively)
+# use __wget for headers (aria2 doesn't support this natively)
 url_get_response()
 {
-    local URL="$1"
-    local answer
-    answer="$(quiet=1 __wget --timeout 20 --tries 1 --spider -S "$URL" 2>&1)"
-    # HTTP/1.1 405 Method Not Allowed
-    # HTTP/1.1 404 Not Found
-    if echo "$answer" | grep -q "^ *HTTP/[12.]* 40[45]" ; then
-        (quiet=1 __wget -O/dev/null --header="Range: bytes=0-0" -S "$URL" 2>&1)
-        return
-    fi
-    echo "$answer"
+	__wget_url_get_response "$@"
 }
 
 elif [ "$EGET_BACKEND" = "axel" ] ; then
@@ -22370,19 +22633,10 @@ sget_with_mirrors()
     [ -n "$USEOUTPUTDIR" ] && cd "$oldpwd"
 }
 
-# use __wget for headers (aria2/axel don't support this natively)
+# use __wget for headers (axel doesn't support this natively)
 url_get_response()
 {
-    local URL="$1"
-    local answer
-    answer="$(quiet=1 __wget --timeout 20 --tries 1 --spider -S "$URL" 2>&1)"
-    # HTTP/1.1 405 Method Not Allowed
-    # HTTP/1.1 404 Not Found
-    if echo "$answer" | grep -q "^ *HTTP/[12.]* 40[45]" ; then
-        (quiet=1 __wget -O/dev/null --header="Range: bytes=0-0" -S "$URL" 2>&1)
-        return
-    fi
-    echo "$answer"
+	__wget_url_get_response "$@"
 }
 
 elif [ "$EGET_BACKEND" = "rsync" ] ; then
@@ -22489,7 +22743,7 @@ if [ "$EGET_BACKEND" = "wget" ] || [ "$EGET_BACKEND" = "curl" ] || [ "$EGET_BACK
 url_get_headers()
 {
     local URL="$1"
-    url_get_response "$URL" | grep -i "^ *[[:alpha:]].*: " | sed -e 's|^ *||' -e 's|\r$||'
+    url_get_response "$URL" | grep -i "^[[:alpha:]].*: "
 }
 
 url_check_accessible()
@@ -22508,12 +22762,12 @@ url_get_header()
 {
     local URL="$1"
     local HEADER="$2"
-    url_get_headers "$URL" | grep -i "^ *$HEADER: " | sed -e "s|^ *$HEADER: ||i"
+    url_get_headers "$URL" | grep -i "^$HEADER: " | sed -e "s|^$HEADER: ||i"
 }
 
 url_get_size()
 {
-    url_get_header "$1" "Content-Length" | tr -d '\r'
+    url_get_header "$1" "content-length"
 }
 
 url_get_raw_real_url()
@@ -22943,6 +23197,10 @@ make_fileurl()
 {
     local url="$1"
     local fn="$2"
+    local abs_path=''
+
+    # detect absolute path before stripping leading slashes
+    is_abs_path "$fn" && abs_path=1
 
     fn="$(echo "$fn" | sed -e 's|^./||' -e 's|^/*||')"
 
@@ -22952,7 +23210,7 @@ make_fileurl()
     elif is_rsyncurl "$url" || is_sshurl "$url" ; then
         # rsync/ssh URLs: just ensure trailing slash
         url="$(echo "$url" | sed 's|/*$|/|')"
-    elif is_abs_path "$fn" ; then
+    elif [ -n "$abs_path" ] ; then
         # if there is file path from the root of the site
         url="$(get_host_only "$url")"
     elif ! have_end_slash_or_php_parametr "$url" ; then
@@ -23057,6 +23315,62 @@ if is_github_url "$1" && [ -n "$2" ] ; then
     return
 fi
 
+# separate part for Yandex.Disk downloads
+is_yadisk_url()
+{
+    case "$1" in
+        https://disk.yandex.ru/d/*|https://yadi.sk/d/*) return 0 ;;
+    esac
+    return 1
+}
+
+# Get direct download URL from Yandex.Disk public link
+get_yadisk_download_url()
+{
+    local PUBLIC_URL="$1"
+    local API_URL="https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=$PUBLIC_URL"
+    local RESPONSE
+    RESPONSE="$(scat "$API_URL")" || fatal "Can't get download URL from Yandex.Disk API"
+    # extract href from JSON: {"href": "https://..."}
+    echo "$RESPONSE" | sed -e 's/.*"href" *: *"//;s/".*//'
+}
+
+# Get filename from Yandex.Disk public link metadata
+get_yadisk_filename()
+{
+    local PUBLIC_URL="$1"
+    local API_URL="https://cloud-api.yandex.net/v1/disk/public/resources?public_key=$PUBLIC_URL"
+    local RESPONSE
+    RESPONSE="$(scat "$API_URL")" || return 1
+    # extract name from JSON: {"name": "filename.ext", ...}
+    echo "$RESPONSE" | sed -e 's/.*"name" *: *"//;s/".*//'
+}
+
+if is_yadisk_url "$1" ; then
+    [ -n "$2" ] && fatal "too many args when Yandex.Disk URL used: extra '$2' arg"
+
+    if [ -n "$GETFILENAME" ] ; then
+        get_yadisk_filename "$1"
+        return
+    fi
+
+    DOWNLOAD_URL="$(get_yadisk_download_url "$1")"
+    [ -n "$DOWNLOAD_URL" ] || fatal "Can't get download URL for $1"
+
+    if [ -n "$LISTONLY" ] ; then
+        echo "$DOWNLOAD_URL"
+        return
+    fi
+
+    if [ -z "$TARGETFILE" ] ; then
+        TARGETFILE="$(get_yadisk_filename "$1")"
+    fi
+
+    MADEURL="$DOWNLOAD_URL"
+    sget "$DOWNLOAD_URL" "$TARGETFILE"
+    return
+fi
+
 if is_ipfsurl "$1" ; then
     [ -n "$2" ] && fatal "too many args when ipfs://Qm... used: extra '$2' arg"
     sget "$1" "$TARGETFILE"
@@ -23102,19 +23416,12 @@ fi
 
 is_wildcard()
 {
-    case "$1" in *[*?]*|*\[*|*\]*) return 0 ;; esac
+    case "$1" in *[*]*|*\[*|*\]*) return 0 ;; esac
     return 1
 }
 
-is_query_string()
-{
-    case "$1" in *\?*=*) return 0 ;; esac
-    return 1
-}
-
-# https://www.freeoffice.com/download.php?filename=freeoffice-2021-1062.x86_64.rpm
-if [ -z "$NOGLOB" ] && is_wildcard "$URL" && ! is_query_string "$URL" ; then
-    fatal "Error: there are globbing symbol (*[]) in $URL. It is allowed only for mask part"
+if [ -z "$NOGLOB" ] && is_wildcard "$URL" ; then
+    fatal "Error: there are globbing symbols (*[]) in $URL. It is allowed only for mask part"
 fi
 
 if is_url "$MASK" ; then
@@ -23142,7 +23449,7 @@ if [ -n "$LISTONLY" ] ; then
 fi
 
 # If there is no wildcard symbol like asterisk, just download
-if [ -z "$SEPMASK" ] && ! is_wildcard "$MASK" || is_query_string "$MASK" ; then
+if [ -z "$SEPMASK" ] && ! is_wildcard "$MASK" ; then
     sget "$1" "$TARGETFILE"
     return
 fi
@@ -23237,12 +23544,27 @@ create_archive()
 }
 
 # Extract archive with 7z into subdir
+__7z_snld_flag=""
+__7z_snld_checked=""
+
+# Get -snld flag if supported (7z 25.01+ rejects symlinks with ../ by default)
+get_7z_snld()
+{
+	if [ -z "$__7z_snld_checked" ] ; then
+		__7z_snld_checked=1
+		local ver
+		ver=$($HAVE_7Z 2>&1 | sed -n 's/.*[Zz]ip.*[[:space:]]\([0-9]*\)\.\([0-9]*\).*/\1\2/p' | head -1)
+		[ "${ver:-0}" -ge 2501 ] && __7z_snld_flag="-snld"
+	fi
+	echo $__7z_snld_flag
+}
+
 extract_7z_to_subdir()
 {
 	local arc="$1"
 	local subdir="$2"
 	mkdir -p "$subdir" && cd "$subdir" || fatal
-	docmd $HAVE_7Z x -y "$arc"
+	docmd $HAVE_7Z x -y $(get_7z_snld) "$arc"
 }
 
 # Extract squashfs-based archives (squashfs, snap)
@@ -23250,7 +23572,7 @@ extract_squashfs_image()
 {
 	local arc="$1"
 	local subdir="$2"
-	if is_command unsquashfs ; then
+	if [ -z "$ERC_USE_7Z_SQUASHFS" ] && is_command unsquashfs ; then
 		docmd unsquashfs -d "$subdir" "$arc"
 	else
 		extract_7z_to_subdir "$arc" "$subdir"
@@ -23303,11 +23625,15 @@ extract_appimage()
 	local arc="$1"
 	local subdir="$2"
 
-	# Try unsquashfs with offset from --appimage-offset
+	# Try unsquashfs with offset
 	if is_command unsquashfs ; then
 		local offset
 		chmod +x "$arc" 2>/dev/null
 		offset="$("$arc" --appimage-offset 2>/dev/null)"
+		# Fallback: find squashfs magic (for cross-arch AppImages)
+		if [ -z "$offset" ] ; then
+			offset=$(LC_ALL=C grep -aboP 'hsqs' "$arc" 2>/dev/null | head -1 | cut -d: -f1)
+		fi
 		if [ -n "$offset" ] ; then
 			if docmd unsquashfs -o "$offset" -d "$subdir" "$arc" ; then
 				return 0
@@ -23341,7 +23667,24 @@ extract_special_archive()
 {
 	local arc="$1"
 	local type="$2"
-	local subdir="${extract_dir:-$(get_archive_name "$arc")}"
+	local orig_dir="$PWD"
+	local subdir
+	local use_tdir=""
+	if [ -n "$here" ] || [ -n "$flat" ] ; then
+		subdir="${extract_dir:-.}"
+	elif [ -n "$extract_dir" ] ; then
+		subdir=$(mktemp -d "$(dirname "$extract_dir")/UXXXXXXXX")
+		use_tdir=1
+	else
+		subdir=$(mktemp -d "$(pwd)/UXXXXXXXX")
+		use_tdir=1
+	fi
+
+	local flat_tdir
+	if [ -n "$flat" ] ; then
+		flat_tdir=$(mktemp -d "$(realpath "$subdir")/UXXXXXXXX")
+		subdir="$flat_tdir"
+	fi
 
 	case "$type" in
 		exe|dll)
@@ -23357,9 +23700,29 @@ extract_special_archive()
 			extract_squashfs_image "$arc" "$subdir"
 			;;
 		*)
+			[ -n "$use_tdir" ] && rmdir "$subdir"
 			return 1
 			;;
 	esac
+	cd "$orig_dir"
+
+	if [ -n "$flat_tdir" ] ; then
+		local target_dir="${extract_dir:-$orig_dir}"
+		find "$flat_tdir" -type f -exec mv -t "$target_dir" -- {} +
+		rm -rf "$flat_tdir"
+	elif [ -n "$use_tdir" ] ; then
+		if [ -n "$extract_dir" ] ; then
+			move_to_target_dir "$subdir" "$extract_dir"
+		else
+			local target_name="$(get_archive_name "$arc")"
+			if [ -d "$target_name" ] ; then
+				move_to_target_dir "$subdir" "$target_name"
+			else
+				move_from_tdir "$subdir" "$target_name"
+			fi
+		fi
+	fi
+
 	exit
 }
 
@@ -23398,18 +23761,64 @@ extract_by_type()
 	esac
 }
 
+is_system_dir()
+{
+	case "$1" in
+		opt|usr|etc|var|bin|sbin|lib|lib64|home|root|srv|tmp|run|mnt|media|boot|dev|proc|sys)
+			return 0 ;;
+	esac
+	return 1
+}
+
+# Move extracted contents from temp dir to existing target directory (-C)
+# Single non-system directory is unwrapped (contents moved directly into target)
+move_to_target_dir()
+{
+	local tdir="$1"
+	local target="$2"
+
+	shopt -s nullglob dotglob
+	local items=("$tdir"/*)
+	shopt -u nullglob dotglob
+
+	if [ ${#items[@]} -eq 1 ] && [ -d "${items[0]}" ] ; then
+		if is_system_dir "$(basename "${items[0]}")" ; then
+			mv -- "${items[0]}" "$target/"
+		else
+			# single directory: move its contents into target
+			shopt -s dotglob
+			mv -- "${items[0]}"/* "$target/"
+			shopt -u dotglob
+			rmdir -- "${items[0]}"
+		fi
+	else
+		mv -- "${items[@]}" "$target/"
+	fi
+	rmdir "$tdir"
+}
+
+# Move extracted contents from temp dir to current directory (normal extraction)
+# Single directory is renamed to subdir, single file goes to current dir
 move_from_tdir()
 {
 	local tdir="$1"
 	local subdir="$2"
 
-	shopt -s nullglob
+	shopt -s nullglob dotglob
 	local items=("$tdir"/*)
-	shopt -u nullglob
+	shopt -u nullglob dotglob
 
-	# if only one item in the subdir, move it directly
 	if [ ${#items[@]} -eq 1 ] && [ -e "${items[0]}" ] ; then
-		mv -- "${items[0]}" .
+		if [ -d "${items[0]}" ] ; then
+			if is_system_dir "$(basename "${items[0]}")" ; then
+				mkdir -p "$subdir"
+				mv -- "${items[0]}" "$subdir/"
+			else
+				mv -- "${items[0]}" "$subdir"
+			fi
+		else
+			mv -- "${items[0]}" .
+		fi
 		rmdir "$tdir"
 	else
 		mv -- "$tdir" "$subdir"
@@ -23428,26 +23837,68 @@ extract_archive()
 
 	extract_special_archive "$arc" "$type"
 
-	if have_patool ; then
-		if [ -n "$extract_dir" ] ; then
-			docmd patool $verbose extract --outdir "$extract_dir" "$arc"
+	# --here: extract directly to target directory without subdir logic
+	local target_dir="${extract_dir}"
+	[ -n "$here" ] && [ -z "$target_dir" ] && target_dir="."
+
+	if [ -n "$here" ] && [ -n "$target_dir" ] && [ -z "$flat" ] ; then
+		if have_patool ; then
+			docmd patool $verbose extract --outdir "$target_dir" "$arc"
 		else
-			docmd patool $verbose extract "$arc" "$@"
+			cd "$target_dir" || fatal
+			extract_by_type "$arc" "$type" "$@"
 		fi
 		return
 	fi
 
-	if [ -n "$extract_dir" ] ; then
-		cd "$extract_dir" || fatal
-		extract_by_type "$arc" "$type" "$@"
-		return
+	# -C: extract to temp dir, apply subdir logic, move to target
+	if [ -n "$extract_dir" ] && [ -z "$here" ] && [ -z "$flat" ] ; then
+		tdir=$(mktemp -d "$(dirname "$extract_dir")/UXXXXXXXX")
+		local res
+		if have_patool ; then
+			docmd patool $verbose extract --outdir "$tdir" "$arc" "$@"
+			res=$?
+		else
+			cd "$tdir" || fatal
+			extract_by_type "$arc" "$type" "$@"
+			res=$?
+			cd - >/dev/null
+		fi
+		if [ "$res" -eq 0 ] ; then
+			move_to_target_dir "$tdir" "$extract_dir"
+		else
+			rm -rf "$tdir"
+		fi
+		return $res
 	fi
 
-	tdir=$(mktemp -d $(pwd)/UXXXXXXXX) && cd "$tdir" || fatal
-	extract_by_type "$arc" "$type" "$@"
-	cd - >/dev/null
+	tdir=$(mktemp -d $(pwd)/UXXXXXXXX)
+	local res
+	if have_patool ; then
+		docmd patool $verbose extract --outdir "$tdir" "$arc" "$@"
+		res=$?
+	else
+		cd "$tdir" || fatal
+		extract_by_type "$arc" "$type" "$@"
+		res=$?
+		cd - >/dev/null
+	fi
 
-	move_from_tdir "$tdir" "$(get_archive_name "$arc")"
+	if [ "$res" -eq 0 ] ; then
+		if [ -n "$flat" ] ; then
+			# --flat: move all files to target, stripping directory structure
+			local dest="${target_dir:-.}"
+			find "$tdir" -type f -exec mv -t "$dest" -- {} +
+			rm -rf "$tdir"
+		else
+			local target_name="$(get_archive_name "$arc")"
+			if [ -d "$target_name" ] ; then
+				move_to_target_dir "$tdir" "$target_name"
+			else
+				move_from_tdir "$tdir" "$target_name"
+			fi
+		fi
+	fi
 
 	return $res
 }
@@ -23575,15 +24026,25 @@ $(get_help HELPCMD)
  Options:
 $(get_help HELPOPT)
 
+ Extraction rules:
+    Single file in archive     -> extracted to current directory
+    Single directory in archive -> renamed to BASENAME/
+    System dir (opt, usr, etc) -> wrapped in BASENAME/ (not renamed)
+    Multiple files or dirs     -> extracted to BASENAME/ subdirectory
+    Use --here to skip creating subdirectory, --flat to strip all paths
+
  Examples:
     # erc dir - pack dir to dirname.zip
     # erc a archive.zip file(s)... - pack files to archive.zip
     # erc [x] archive.zip - unpack
     # unerc archive.zip - unpack
-    # erc [repack] archive1.zip... archive2.rar $HAVE_7Z: - repack all to $HAVE_7Z
-    # erc -f [repack] archive.zip archive.$HAVE_7Z - force repack zip to $HAVE_7Z (override target in anyway)
+    # erc [repack] archive1.zip... archive2.rar 7z: - repack all to 7z
+    # erc -f [repack] archive.zip archive.7z - force repack zip to 7z (override target in anyway)
     # erc -C dir archive.zip - extract archive directly to dir
+    # erc --here archive.zip - extract as-is without creating subdirectory
+    # erc --flat archive.zip - extract all files stripping directory structure
     # erc file/dir zip: - pack file to zip
+    # erc basename archive.tar.gz - print predicted directory name (archive)
 "
 }
 
@@ -23607,6 +24068,8 @@ verbose=--verbose
 quiet=
 use_7z=
 use_patool=
+here=
+flat=
 
 if [ -z "$*" ] ; then
     echo "Etersoft archive manager version @VERSION@" >&2
@@ -23636,6 +24099,12 @@ case "$1" in
         ;;
     --use-7z)             # HELPOPT: force use 7z as backend
         use_7z=1
+        ;;
+    --here|--no-subdir)   # HELPOPT: extract to current directory without creating a subdirectory
+        here=1
+        ;;
+    -j|--flat|--junk-paths)  # HELPOPT: extract all files without directory structure
+        flat=1
         ;;
     -C)                   # HELPOPT: extract to specified directory
         shift

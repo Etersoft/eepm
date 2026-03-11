@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.55"
+EPMVERSION="3.64.56"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -464,7 +464,7 @@ fixme()
 
 debug()
 {
-    [ -n "$debug" ] || return
+    [ -z "$debug" ] && return
 
     set_color $YELLOW >&2
     echog -n "WARNING: " >&2
@@ -1446,6 +1446,21 @@ else
 		eval "echo -n \"$@\""
 	}
 fi
+
+yaml_load_vars()
+{
+    local file="$1"
+    shift
+    local data field value
+    data="$(epm tool yaml "$file" 2>/dev/null)"
+    for field in "$@" ; do
+        value="$(printf '%s\n' "$data" | grep "^${field}=" | head -n1 | sed "s/^[^=]*=\"\(.*\)\"$/\1/")"
+        # skip if key is not present in yaml (preserve existing value)
+        [ -n "$value" ] || continue
+        # Use single quotes to prevent command execution in values
+        eval "$field='$(printf '%s' "$value" | sed "s/'/'\\\\''/g")'"
+    done
+}
 
 # File bin/serv-cat:
 
