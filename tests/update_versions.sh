@@ -79,20 +79,20 @@ install_app_alt()
     done
 }
 
-if [ "$1" = "--ipfs" ] ; then
-    playopt="$1"
+while [ -n "$1" ] ; do
+    case "$1" in
+        --ipfs|--force)
+            playopt="$playopt $1"
+            ;;
+        --slow)
+            slow="60"
+            ;;
+        *)
+            break
+            ;;
+    esac
     shift
-fi
-
-if [ "$1" = "--force" ] ; then
-    playopt="$playopt $1"
-    shift
-fi
-
-if [ "$1" = "--slow" ] ; then
-    slow="60"
-    shift
-fi
+done
 
 if [ -n "$1" ] ; then
     install_app_alt "$1"
