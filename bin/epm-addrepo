@@ -251,10 +251,8 @@ __epm_addrepo_to_file()
     shift
     local repo="$*"
 
-    if [ -z "$force" ] ; then
-        # skip if repo is already in the list
-        epm --quiet repo list "$repo" >/dev/null && return
-    fi
+    # always skip if repo is already in the list (even with --force)
+    epm --quiet repo list "$repo" >/dev/null && return
 
     if [ -n "$dryrun" ] ; then
         echo "$repo"
