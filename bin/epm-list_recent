@@ -46,9 +46,9 @@ case $PMTYPE in
     dnf-*|yum-*)
         warmup_rpmbase
         if [ -n "$short" ] ; then
-            docmd dnf list recent 2>/dev/null | tail -n +2 | sed -e "s|\..*||g"
+            docmd $DNFCMD list recent 2>/dev/null | tail -n +2 | sed -e "s|\..*||g"
         else
-            docmd dnf list recent
+            docmd $DNFCMD list recent
         fi
         ;;
     pacman)

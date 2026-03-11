@@ -43,13 +43,13 @@ __epm_addrepo_rhel()
         powertools)
             # https://serverfault.com/questions/997896/how-to-enable-powertools-repository-in-centos-8
             assure_exists dnf-plugins-core
-            sudocmd dnf config-manager --set-enabled powertools
+            sudocmd $DNFCMD config-manager --set-enabled powertools
             return 1
             ;;
         crb)
             # https://wiki.rockylinux.org/rocky/repo/
             assure_exists dnf-plugins-core
-            sudocmd dnf config-manager --set-enabled crb
+            sudocmd $DNFCMD config-manager --set-enabled crb
             return 1
             ;;
     esac
@@ -687,10 +687,10 @@ case "$1" in
         case $PMTYPE in
             dnf-rpm)
                 assure_exists dnf-plugins-core
-                sudocmd dnf copr enable -y "$owner_project"
+                sudocmd $DNFCMD copr enable -y "$owner_project"
                 ;;
             dnf5-rpm)
-                sudocmd dnf copr enable -y "$owner_project"
+                sudocmd $DNFCMD copr enable -y "$owner_project"
                 ;;
             yum-rpm)
                 assure_exists yum-plugin-copr
@@ -741,11 +741,11 @@ case $PMTYPE in
         ;;
     dnf-rpm)
         __epm_addrepo_rhel "$repo" || return
-        sudocmd dnf config-manager --add-repo "$repo"
+        sudocmd $DNFCMD config-manager --add-repo "$repo"
         ;;
     dnf5-rpm)
         __epm_addrepo_rhel "$repo" || return
-        sudocmd dnf config-manager addrepo --from-repofile "$repo"
+        sudocmd $DNFCMD config-manager addrepo --from-repofile "$repo"
         ;;
     urpm-rpm)
         sudocmd urpmi.addmedia "$@"

@@ -181,7 +181,7 @@ case $PMTYPE in
         if is_installed $pkg_names ; then
             CMD="rpm -q --requires"
         else
-            CMD="dnf repoquery --requires"
+            CMD="$DNFCMD repoquery --requires"
         fi
         ;;
     pacman)

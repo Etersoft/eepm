@@ -40,7 +40,7 @@ esac
 
 case $PMTYPE in
     dnf-*|dnf5-*)
-        docmd dnf info $pkg_names
+        docmd $DNFCMD info $pkg_names
         ;;
     yum-*)
         fatal "policy command is not implemented for yum"

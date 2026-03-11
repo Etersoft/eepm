@@ -123,19 +123,19 @@ epm_release_downgrade()
         info "Check https://fedoraproject.org/wiki/DNF_system_upgrade for an additional info"
         docmd epm install dnf
         #docmd epm install epel-release yum-utils
-        sudocmd dnf --refresh upgrade
-        #sudocmd dnf clean all
+        sudocmd $DNFCMD --refresh upgrade
+        #sudocmd $DNFCMD clean all
         assure_exists dnf-plugin-system-upgrade
-        sudocmd dnf upgrade --refresh
+        sudocmd $DNFCMD upgrade --refresh
         local RELEASEVER="$1"
         [ -n "$RELEASEVER" ] || RELEASEVER=$(($DISTRVERSION + 1))
         #[ -n "$RELEASEVER" ] || fatal "Run me with new version"
         confirm_info 'Upgrade to $DISTRNAME/$RELEASEVER'
-        sudocmd dnf system-upgrade download --refresh --releasever=$RELEASEVER
+        sudocmd $DNFCMD system-upgrade download --refresh --releasever=$RELEASEVER
         # TODO: from docs:
         # dnf system-upgrade reboot
         # FIXME: download all packages again
-        sudocmd dnf distro-sync --releasever=$RELEASEVER
+        sudocmd $DNFCMD distro-sync --releasever=$RELEASEVER
         info "Run epm autoorphans to remove orphaned packages"
         ;;
     urpm-rpm)

@@ -618,19 +618,19 @@ epm_release_upgrade()
         return
         ;;
      "OpenMandrivaLx")
-        #sudocmd dnf clean all
-        sudocmd dnf distro-sync --allowerasing
+        #sudocmd $DNFCMD clean all
+        sudocmd $DNFCMD distro-sync --allowerasing
         return
         ;;
     "ROSA")
-        sudocmd dnf $(subst_option non_interactive -y) --refresh upgrade || fatal
-        #sudocmd dnf clean all
+        sudocmd $DNFCMD $(subst_option non_interactive -y) --refresh upgrade || fatal
+        #sudocmd $DNFCMD clean all
         DV=$(echo "$DISTRVERSION" | sed -e "s|\..*||")
         [ "$DV" = "2021" ] && DV=12
         local RELEASEVER="$1"
         [ -n "$RELEASEVER" ] || RELEASEVER=$(($DV + 1))
         confirm_info 'Upgrade to $DISTRNAME/$RELEASEVER'
-        sudocmd dnf distro-sync -y --releasever=$RELEASEVER --allowerasing
+        sudocmd $DNFCMD distro-sync -y --releasever=$RELEASEVER --allowerasing
         sudocmd rpm --rebuilddb
         epm upgrade
         return
@@ -691,15 +691,15 @@ epm_release_upgrade()
                     -e 's!^#?baseurl=http://(mirror|vault).centos.org/\$contentdir/\$releasever/!baseurl=https://dl.rockylinux.org/vault/centos/8.5.2111/!i' \
                         /etc/yum.repos.d/CentOS-*.repo
             docmd epm install centos-release-stream
-            sudocmd dnf swap centos-{linux,stream}-repos
-            sudocmd dnf distro-sync
+            sudocmd $DNFCMD swap centos-{linux,stream}-repos
+            sudocmd $DNFCMD distro-sync
             info "You can run '# epm autoorphans' to remove orphaned packages"
             exit
         fi
 
         if [ "$DISTRNAME" = "RockyLinux" ] ; then
-            sudocmd dnf $(subst_option non_interactive -y) --refresh upgrade || fatal
-            #sudocmd dnf clean all
+            sudocmd $DNFCMD $(subst_option non_interactive -y) --refresh upgrade || fatal
+            #sudocmd $DNFCMD clean all
 
             DV=$(echo "$DISTRVERSION" | sed -e "s|\..*||")
             local RELEASEVER="$1"
@@ -712,29 +712,29 @@ epm_release_upgrade()
             sudocmd rpm --import "/etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-$RELEASEVER"
 
             epm install --nodeps "$ROCKY_URL/rocky-repos*.rpm" "$ROCKY_URL/rocky-release*.rpm" || fatal
-            sudocmd dnf distro-sync -y --releasever=$RELEASEVER --allowerasing --setopt=deltarpm=false
+            sudocmd $DNFCMD distro-sync -y --releasever=$RELEASEVER --allowerasing --setopt=deltarpm=false
             sudocmd rpm --rebuilddb
             epm upgrade
             info "You can run '# epm autoorphans' to remove orphaned packages"
-            info "Use # dnf module reset <module> to resolve 'nothing provides module' error"
+            info "Use # $DNFCMD module reset <module> to resolve 'nothing provides module' error"
             exit
         fi
 
         info "Check https://fedoraproject.org/wiki/DNF_system_upgrade for an additional info"
         #docmd epm install epel-release yum-utils
-        sudocmd dnf $(subst_option non_interactive -y) --refresh upgrade || fatal
-        #sudocmd dnf clean all
+        sudocmd $DNFCMD $(subst_option non_interactive -y) --refresh upgrade || fatal
+        #sudocmd $DNFCMD clean all
         assure_exists dnf-plugin-system-upgrade
-        sudocmd dnf $(subst_option non_interactive -y) upgrade --refresh
+        sudocmd $DNFCMD $(subst_option non_interactive -y) upgrade --refresh
         local RELEASEVER="$1"
         [ -n "$RELEASEVER" ] || RELEASEVER=$(($DISTRVERSION + 1))
         #[ -n "$RELEASEVER" ] || fatal "Run me with new version"
         confirm_info 'Upgrade to $DISTRNAME/$RELEASEVER'
-        sudocmd dnf system-upgrade download --refresh --releasever=$RELEASEVER
+        sudocmd $DNFCMD system-upgrade download --refresh --releasever=$RELEASEVER
         # TODO: from docs:
         # dnf system-upgrade reboot
         # FIXME: download all packages again
-        sudocmd dnf distro-sync --releasever=$RELEASEVER
+        sudocmd $DNFCMD distro-sync --releasever=$RELEASEVER
         info "You can run '# epm autoorphans' to remove orphaned packages"
         ;;
     zypper-rpm)

@@ -48,9 +48,9 @@ case $PMTYPE in
     dnf-*|yum-*)
         warmup_rpmbase
         if [ -n "$short" ] ; then
-            docmd dnf list obsoletes 2>/dev/null | tail -n +2 | sed -e "s|\..*||g"
+            docmd $DNFCMD list obsoletes 2>/dev/null | tail -n +2 | sed -e "s|\..*||g"
         else
-            docmd dnf list obsoletes
+            docmd $DNFCMD list obsoletes
         fi
         ;;
     pacman)

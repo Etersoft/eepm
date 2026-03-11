@@ -68,9 +68,9 @@ case $PMTYPE in
     dnf-*|yum-*)
         warmup_rpmbase
         if [ -n "$short" ] ; then
-            docmd dnf check-update | sed -e "s| .*||g"
+            docmd $DNFCMD check-update | sed -e "s| .*||g"
         else
-            docmd dnf check-update
+            docmd $DNFCMD check-update
         fi
         ;;
     pacman)

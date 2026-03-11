@@ -122,7 +122,7 @@ case $PMTYPE in
         if is_installed $pkg_names ; then
             CMD="rpm -q --provides"
         else
-            CMD="dnf repoquery --provides"
+            CMD="$DNFCMD repoquery --provides"
         fi
         ;;
     emerge)

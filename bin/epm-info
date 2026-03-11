@@ -105,7 +105,7 @@ case $PMTYPE in
                 docmd urpmq -i $pkg_names
                 ;;
             dnf-rpm|dnf5-rpm)
-                docmd dnf info $pkg_names
+                docmd $DNFCMD info $pkg_names
                 ;;
             zypper-rpm)
                 docmd zypper info $pkg_names

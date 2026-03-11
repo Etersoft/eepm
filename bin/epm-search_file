@@ -89,7 +89,7 @@ __epm_search_file_output()
         dnf-rpm|dnf5-rpm)
             # TODO
             info "Search by full packages list is not implemented yet"
-            CMD="dnf provides"
+            CMD="$DNFCMD provides"
             ;;
         urpm-rpm)
             CMD="urpmf"

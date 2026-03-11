@@ -162,7 +162,7 @@ case "$1" in
         local owner_project="$(echo "$1" | sed 's|^copr/||')"
         case $PMTYPE in
             dnf-rpm|dnf5-rpm)
-                sudocmd dnf copr disable "$owner_project"
+                sudocmd $DNFCMD copr disable "$owner_project"
                 ;;
             yum-rpm)
                 sudocmd yum copr disable "$owner_project"
@@ -221,11 +221,11 @@ case $PMTYPE in
         sudocmd yum-config-manager --disable "$@"
         ;;
     dnf-rpm)
-        repo_file_name=$(env LC_ALL=C dnf repoinfo "$@" 2>/dev/null | sed -n 's/^Repo-filename\s*:\s*//p')
+        repo_file_name=$(env LC_ALL=C $DNFCMD repoinfo "$@" 2>/dev/null | sed -n 's/^Repo-filename\s*:\s*//p')
         sudocmd rm "$repo_file_name"
         ;;
     dnf5-rpm)
-        repo_file_name=$(env LC_ALL=C dnf repoinfo "$@" 2>/dev/null | sed -n 's/^Config file\s*:\s*//p')
+        repo_file_name=$(env LC_ALL=C $DNFCMD repoinfo "$@" 2>/dev/null | sed -n 's/^Config file\s*:\s*//p')
         sudocmd rm "$repo_file_name"
         ;;
     urpm-rpm)

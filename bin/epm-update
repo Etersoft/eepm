@@ -230,10 +230,10 @@ case $PMTYPE in
         sudocmd yum makecache
         ;;
     dnf-rpm)
-        sudocmd dnf makecache
+        sudocmd $DNFCMD makecache
         ;;
     dnf5-rpm)
-        sudocmd dnf5 makecache
+        sudocmd $DNFCMD makecache
         ;;
     urpm-rpm)
         sudocmd urpmi.update -a

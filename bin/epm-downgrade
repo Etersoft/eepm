@@ -212,9 +212,9 @@ __epm_downgrade_do()
         ;;
     dnf-rpm|dnf5-rpm)
         if [ -n "$pkg_filenames" ] ; then
-            sudocmd dnf downgrade $pkg_filenames
+            sudocmd $DNFCMD downgrade $pkg_filenames
         else
-            sudocmd dnf distro-sync
+            sudocmd $DNFCMD distro-sync
         fi
         ;;
     urpm-rpm)

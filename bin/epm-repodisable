@@ -67,10 +67,10 @@ case $PMTYPE in
         [ -n "$verbose" ] || info "Use --verbose if you need detail information."
         ;;
     dnf-rpm)
-        sudocmd dnf config-manager --enable $verbose "$@"
+        sudocmd $DNFCMD config-manager --enable $verbose "$@"
         ;;
     dnf5-rpm)
-        sudocmd dnf config-manager setopt "$@.enabled=0"
+        sudocmd $DNFCMD config-manager setopt "$@.enabled=0"
         ;;
     pisi)
         docmd pisi disable-repo "$@"

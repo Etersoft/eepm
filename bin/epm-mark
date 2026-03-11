@@ -109,7 +109,7 @@ case $PMTYPE in
         ;;
     dnf-rpm|dnf5-rpm)
         __dnf_assure_versionlock
-        sudocmd dnf versionlock add "$@"
+        sudocmd $DNFCMD versionlock add "$@"
         ;;
     zypper-rpm)
         sudocmd zypper al "$@"
@@ -149,7 +149,7 @@ case $PMTYPE in
         ;;
     dnf-rpm|dnf5-rpm)
         __dnf_assure_versionlock
-        sudocmd dnf versionlock delete "$@"
+        sudocmd $DNFCMD versionlock delete "$@"
         ;;
     zypper-rpm)
         sudocmd zypper rl "$@"
@@ -188,9 +188,9 @@ case $PMTYPE in
         __dnf_assure_versionlock
         if [ -n "$short" ] ; then
             load_helper epm-query
-            docmd dnf versionlock list "$@" | sed -e 's|\.\*$||' | grep -v " " | filter_pkgnames_to_short
+            docmd $DNFCMD versionlock list "$@" | sed -e 's|\.\*$||' | grep -v " " | filter_pkgnames_to_short
         else
-            docmd dnf versionlock list "$@"
+            docmd $DNFCMD versionlock list "$@"
         fi
         ;;
     zypper-rpm)
@@ -218,7 +218,7 @@ case $PMTYPE in
         __dnf_is_supported_versionlock || return 1
         __dnf_assure_versionlock
         load_helper epm-query
-        docmd dnf versionlock list | grep "^$1" | sed -e 's|\.\*$||' | grep -v " " | filter_pkgnames_to_short | grep -q "^$1$"
+        docmd $DNFCMD versionlock list | grep "^$1" | sed -e 's|\.\*$||' | grep -v " " | filter_pkgnames_to_short | grep -q "^$1$"
         return
         ;;
 esac
@@ -248,10 +248,10 @@ case $PMTYPE in
         sudocmd apt-mark auto "$@"
         ;;
     dnf-rpm)
-        sudocmd dnf mark remove "$@"
+        sudocmd $DNFCMD mark remove "$@"
         ;;
     dnf5-rpm)
-        sudocmd dnf mark dependency "$@"
+        sudocmd $DNFCMD mark dependency "$@"
         ;;
     pacman)
             sudocmd pacman -D --asdeps "$@"
@@ -287,10 +287,10 @@ case $PMTYPE in
         sudocmd apt-mark manual "$@"
         ;;
     dnf-rpm)
-        sudocmd dnf mark install "$@"
+        sudocmd $DNFCMD mark install "$@"
         ;;
     dnf5-rpm)
-        sudocmd dnf mark user "$@"
+        sudocmd $DNFCMD mark user "$@"
         ;;
     pacman)
             sudocmd pacman -D --asexplicit "$@"
@@ -321,7 +321,7 @@ case $PMTYPE in
         sudocmd apt-mark showauto "$@"
         ;;
     dnf-rpm|dnf5-rpm)
-        sudocmd dnf repoquery --unneeded
+        sudocmd $DNFCMD repoquery --unneeded
         ;;
     *)
         fatal 'Have no suitable command for $PMTYPE in epm_mark_showauto()'
@@ -345,7 +345,7 @@ case $PMTYPE in
         sudocmd apt-mark showmanual "$@"
         ;;
     dnf-rpm|dnf5-rpm)
-        sudocmd dnf repoquery --userinstalled
+        sudocmd $DNFCMD repoquery --userinstalled
         ;;
     *)
         fatal 'Have no suitable command for $PMTYPE in epm_mark_showmanual'

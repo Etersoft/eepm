@@ -185,7 +185,7 @@ __epm_upgrade_do()
         ;;
     dnf-rpm|dnf5-rpm)
         local OPTIONS="$(subst_option non_interactive -y)"
-        CMD="dnf $OPTIONS upgrade $*"
+        CMD="$DNFCMD $OPTIONS upgrade $*"
         ;;
     snappy)
         CMD="snappy update"

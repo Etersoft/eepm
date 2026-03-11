@@ -97,7 +97,7 @@ case $PMTYPE in
         CMD="yum search"
         ;;
     dnf-rpm|dnf5-rpm)
-        CMD="dnf search"
+        CMD="$DNFCMD search"
         ;;
     zypper-rpm)
         if [ -n "$names_only" ] ; then

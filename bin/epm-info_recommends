@@ -66,7 +66,7 @@ epm_info_recommends_names()
             if is_installed $pkg_names ; then
                 docmd rpm -q --recommends $pkg_names
             else
-                docmd dnf repoquery --recommends $pkg_names
+                docmd $DNFCMD repoquery --recommends $pkg_names
             fi
             ;;
         yum-rpm)

@@ -60,9 +60,9 @@ case $PMTYPE in
     dnf-*|yum-*)
         warmup_rpmbase
         if [ -n "$short" ] ; then
-            docmd dnf list extras 2>/dev/null | tail -n +2 | sed -e "s|\..*||g"
+            docmd $DNFCMD list extras 2>/dev/null | tail -n +2 | sed -e "s|\..*||g"
         else
-            docmd dnf list extras
+            docmd $DNFCMD list extras
         fi
         ;;
     pacman)

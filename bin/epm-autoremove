@@ -308,7 +308,7 @@ case $PMTYPE in
         if [ -n "$dryrun" ] ; then
             fatal "--dry-run is not supported yet"
         fi
-        sudocmd dnf autoremove
+        sudocmd $DNFCMD autoremove
         ;;
     # see autoorhans
     #urpm-rpm)
