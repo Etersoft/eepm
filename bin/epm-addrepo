@@ -218,8 +218,9 @@ epm repo add - add branch repo. Use follow params:
 
 Examples:
     # epm repo add yandex
-    # epm repo add "rpm http://somesite/pub/product x86_64 addon
+    # epm repo add "rpm http://somesite/pub/product x86_64 addon"
     # epm repo add /var/ftp/pub/altlinux/p10
+    # epm repo add --name myrepo "rpm https://example.com x86_64 main"
 
 '
     return
@@ -560,9 +561,125 @@ __epm_addrepo_deb()
 
 }
 
+epm_addrepo_help()
+{
+    message 'epm addrepo - add package repository
+Usage: epm addrepo [options] <repo>
+
+Options:'
+    get_help HELPOPT $SHAREDIR/epm-addrepo
+    message '
+Examples:
+  epm repo add yandex
+  epm repo add "rpm http://somesite/pub/product x86_64 addon"
+  epm repo add --name akvis "rpm https://akvis-alt.sfo2.cdn.digitaloceanspaces.com x86_64 akvis"
+  epm repo add --disabled --name angie "rpm [angie] https://download.angie.software/angie/altlinux/11/ x86_64 main"
+
+With --name, the repo is stored in sources.list.d/<name>.list.
+With --disabled, the repo line is commented out.
+Use repo/package install syntax to install from named repos:
+  epm install akvis/alivecolors
+  epm install angie/angie
+'
+}
+
+# Extract repo name from repo string for use as filename
+# Priority: --name parameter, [name] in repo string, last component
+__get_repo_filename()
+{
+    local repo="$*"
+
+    # Try to extract [name] from repo string: "rpm [name] URL arch comp"
+    local bracket_name="$(echo "$repo" | sed -n 's/.*\[\([^]]*\)\].*/\1/p')"
+    if [ -n "$bracket_name" ] ; then
+        echo "$bracket_name"
+        return
+    fi
+
+    # Use last component: "rpm URL arch component" -> "component"
+    local last="$(echo "$repo" | sed -e 's/[[:space:]]*$//' | awk '{print $NF}')"
+    # For deb repos: "deb URL suite component" -> last word
+    if [ -n "$last" ] && [ "$last" != "rpm" ] && [ "$last" != "deb" ] ; then
+        echo "$last"
+        return
+    fi
+
+    # Fallback: extract domain from URL
+    echo "$repo" | grep -o 'https\?://[^/[:space:]]*' | head -1 | sed -e 's|.*://||' -e 's|\..*||'
+}
+
 epm_addrepo()
 {
+local disabled=
+local repo_name=
+
+# Parse options
+while true ; do
+    case "$1" in
+        -h|--help)           # HELPOPT: print this help
+            epm_addrepo_help
+            return
+            ;;
+        --disabled)          # HELPOPT: add repo as disabled (commented out) in sources.list.d
+            disabled=1
+            shift
+            ;;
+        --name)              # HELPOPT: save repo to sources.list.d/<name>.list (enables repo/package install syntax)
+            shift
+            repo_name="$1"
+            shift
+            ;;
+        --name=*)            # HELPOPT: save repo to sources.list.d/<name>.list (--name=reponame)
+            repo_name="$(echo "$1" | sed -e 's|--name=||')"
+            shift
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
 local repo="$*"
+
+# Handle --name: write repo to sources.list.d/<name>.list
+if [ -n "$repo_name" ] ; then
+    if [ -z "$repo" ] ; then
+        fatal '--name requires a repo string'
+    fi
+
+    case $PMTYPE in
+        apt-rpm|apt-dpkg)
+            ;;
+        *)
+            fatal '--name is only supported for apt-based systems'
+            ;;
+    esac
+
+    local file="$APT_SOURCES_LIST_D/$repo_name.list"
+    local line="$repo"
+    [ -n "$disabled" ] && line="# $repo"
+
+    # check for duplicate (both enabled and disabled forms)
+    if [ -s "$file" ] && grep -q -F "$repo" "$file" ; then
+        info "Repo '$repo_name' already contains this source"
+        return
+    fi
+
+    # also check if repo already exists in other sources (including disabled)
+    if epm --quiet repo list --all "$repo" >/dev/null 2>&1 ; then
+        info "Repo is already in the sources list"
+        return
+    fi
+
+    if [ -n "$dryrun" ] ; then
+        echo "$line -> $file"
+        return
+    fi
+
+    __add_line_to_file "$file" "$line"
+    [ -n "$disabled" ] && info "Added disabled repo to $file" || info "Added repo to $file"
+    return
+fi
 
 # Handle copr/owner/project syntax for Fedora/RHEL
 case "$1" in
