@@ -103,7 +103,7 @@ __epm_changelog_unlocal_names()
             ;;
         dnf-rpm|dnf5-rpm)
             #assure_exist yum-changelog
-            docmd dnf changelog "$1"
+            docmd $DNFCMD changelog "$1"
             ;;
         urpm-rpm)
             docmd urpmq --changelog "$1"

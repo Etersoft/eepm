@@ -197,7 +197,7 @@ case $PMTYPE in
         [ -n "$verbose" ] || info "Use --verbose if you need detail information."
         ;;
     dnf-rpm|dnf5-rpm)
-        docmd dnf repolist $verbose
+        docmd $DNFCMD repolist $verbose
         [ -n "$verbose" ] || info "Use --verbose if you need detail information."
         ;;
     urpm-rpm)

@@ -79,9 +79,9 @@ case $PMTYPE in
     dnf-*)
         warmup_rpmbase
         if [ -n "$short" ] ; then
-            docmd dnf list --available | sed -e "s| .*||g"
+            docmd $DNFCMD list --available | sed -e "s| .*||g"
         else
-            docmd dnf list --available
+            docmd $DNFCMD list --available
         fi
         ;;
     yum-*)

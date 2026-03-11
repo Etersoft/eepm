@@ -281,8 +281,8 @@ print_srcpkgname()
             return
             ;;
         dnf-rpm|dnf5-rpm)
-            showcmd dnf repoquery --qf '%{SOURCERPM}' "$@"
-            a= dnf repoquery --qf '%{SOURCERPM}' "$@"
+            showcmd $DNFCMD repoquery --qf '%{SOURCERPM}' "$@"
+            a= $DNFCMD repoquery --qf '%{SOURCERPM}' "$@"
             return
             ;;
     esac

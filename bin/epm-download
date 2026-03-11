@@ -329,7 +329,7 @@ epm_download()
         docmd apt-get download $*
         ;;
     dnf-rpm|dnf5-rpm)
-        sudocmd dnf download $print_url $*
+        sudocmd $DNFCMD download $print_url $*
         ;;
     aptcyg)
         sudocmd apt-cyg download $*
@@ -343,7 +343,7 @@ epm_download()
         sudocmd yumdownloader $*
         ;;
     dnf-rpm|dnf5-rpm)
-        sudocmd dnf download $*
+        sudocmd $DNFCMD download $*
         ;;
     urpm-rpm)
         sudocmd urpmi --no-install $URPMOPTIONS $@

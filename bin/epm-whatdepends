@@ -75,7 +75,7 @@ case $PMTYPE in
         ;;
     dnf-rpm|dnf5-rpm)
         # check command: dnf repoquery --whatrequires
-        CMD="dnf repoquery --whatrequires"
+        CMD="$DNFCMD repoquery --whatrequires"
         ;;
     emerge)
         assure_exists equery

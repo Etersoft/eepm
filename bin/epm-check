@@ -81,7 +81,7 @@ case $PMTYPE in
     dnf-rpm|dnf5-rpm)
         __epm_rpm_rebuilddb
 
-        sudocmd dnf check $DNFOPTIONS
+        sudocmd $DNFCMD check $DNFOPTIONS
         ;;
     emerge)
         sudocmd revdep-rebuild

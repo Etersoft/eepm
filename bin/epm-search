@@ -74,7 +74,7 @@ case $PMTYPE in
         CMD="yum search"
         ;;
     dnf-rpm|dnf5-rpm)
-        CMD="dnf search"
+        CMD="$DNFCMD search"
         ;;
     zypper-rpm)
         CMD="zypper search -d --"

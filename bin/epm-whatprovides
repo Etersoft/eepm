@@ -106,7 +106,7 @@ case $PMTYPE in
         CMD="urpmq --whatprovides"
         ;;
     dnf-rpm|dnf5-rpm)
-        CMD="dnf repoquery --whatprovides"
+        CMD="$DNFCMD repoquery --whatprovides"
         ;;
     zypper-rpm)
         CMD="zypper what-provides"
