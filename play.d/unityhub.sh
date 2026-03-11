@@ -47,7 +47,9 @@ case $(epm print info -p) in
         epm repo addkey "https://hub.unity3d.com/linux/keys/public"
         # TODO
         #epm repo add "deb [signedby=/usr/share/keyrings/Unity_Technologies_ApS.gpg] https://hub.unity3d.com/linux/repos/deb stable main"
-        epm repo add "deb https://hub.unity3d.com/linux/repos/deb stable main"
+        epm repo add --disabled --name unityhub "deb https://hub.unity3d.com/linux/repos/deb stable main"
+        epm install unityhub/$PKGNAME
+        exit
         ;;
 esac
 

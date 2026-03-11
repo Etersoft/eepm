@@ -16,23 +16,25 @@ case $(epm print info -e) in
     Debian/*)
         epm install --skip-installed ca-certificates lsb-release
         epm repo addkey openvpn "$GPGKEY"
-        epm repo add "deb https://build.openvpn.net/debian/openvpn/stable $reponame main"
+        epm repo add --disabled --name openvpn "deb https://build.openvpn.net/debian/openvpn/stable $reponame main"
+        epm install openvpn/$PKGNAME || exit
         ;;
     Ubuntu/*)
         epm install --skip-installed ca-certificates lsb-release
         epm repo addkey openvpn "$GPGKEY"
-        epm repo add "deb https://build.openvpn.net/debian/openvpn/stable $reponame main"
+        epm repo add --disabled --name openvpn "deb https://build.openvpn.net/debian/openvpn/stable $reponame main"
+        epm install openvpn/$PKGNAME || exit
         ;;
     Fedora/*|CentOS/*|RHEL/*|RockyLinux/*|AlmaLinux/*)
         epm repo add copr/@OpenVPN/openvpn-release-2.6
+        epm update
+        epm install $PKGNAME || exit
         ;;
     *)
         # For ALT Linux and other distros, install from the standard repo
+        epm install $PKGNAME || exit
         ;;
 esac
-
-epm update
-epm install $PKGNAME || exit
 
 cat <<EOF
 

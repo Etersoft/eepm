@@ -15,11 +15,11 @@ warn_version_is_not_supported
 case $(epm print info -e) in
     ALTLinux/p10|ALTLinux/c10f*)
         epm repo addkey "$REPOURL/alt/ascon.gpg"
-        epm repo add "rpm [ascon] $REPOURL/alt/ p10/x86_64 main"
+        epm repo add --disabled --name ascon "rpm [ascon] $REPOURL/alt/ p10/x86_64 main"
         ;;
     ALTLinux/p11|ALTLinux/Sisyphus)
         epm repo addkey "$REPOURL/alt/ascon.gpg"
-        epm repo add "rpm [ascon] $REPOURL/alt/ p11/x86_64 main"
+        epm repo add --disabled --name ascon "rpm [ascon] $REPOURL/alt/ p11/x86_64 main"
         ;;
     RedOS/8.0)
         epm repo addkey ascon "$REPOURL/rpm/redos/8.0/" "$REPOURL/rpm/ascon.gpg" "Ascon"
@@ -29,15 +29,19 @@ case $(epm print info -e) in
         # echo "deb [signed-by=/etc/apt/trusted.gpg.d/ascon.gpg] https://repo.ascon.ru/beta/deb $(lsb_release -cs) main" > /etc/apt/sources.list.d/ascon-beta.list
         epm install lsb-release
         epm repo addkey "$REPOURL/deb/ascon.gpg"
-        epm repo add "deb [signed-by=/etc/apt/trusted.gpg.d/ascon.gpg] $REPOURL/deb $(lsb_release -cs) main"
+        epm repo add --disabled --name ascon "deb [signed-by=/etc/apt/trusted.gpg.d/ascon.gpg] $REPOURL/deb $(lsb_release -cs) main"
         ;;
     *)
         fatal "Unsupported distro $(epm print info -e). Ask application vendor for a support."
         ;;
 esac
 
-
-epm update
-epm install $PKGNAME || exit
-# TODO: don\t use repo
-epm repo remove "ascon"
+case $(epm print info -g) in
+    apt-rpm|apt-dpkg)
+        epm install ascon/$PKGNAME || exit
+        ;;
+    *)
+        epm update
+        epm install $PKGNAME || exit
+        ;;
+esac

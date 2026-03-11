@@ -70,19 +70,21 @@ case $vendor in
         epm installed lsb-cprocsp-capilite-64 || fatal "lsb-cprocsp-capilite-64 is not installed. Use 'ecryptomgr install cryptopro' to install it."
         epm installed cprocsp-pki-cades-64 || fatal "cprocsp-pki-cades-64 is not installed. Use 'ecryptomgr install cades' to install it."
         epm repo addkey "$REPOURL/lab50.gpg"
-        epm repo add "rpm [lab50] $REPOURL/okular/alt $distrib/x86_64 okulargost"
+        epm repo add --disabled --name lab50 "rpm [lab50] $REPOURL/okular/alt $distrib/x86_64 okulargost"
+        epm install lab50/$PKGNAME $additional_packages
+        exit
         ;;
 esac
 
 case $pkgsystem in
     apt-dpkg)
         epm repo addkey "$REPOURL/lab50.gpg"
-        epm repo add "deb $REPOURL/okular $distrib main non-free"
+        epm repo add --disabled --name lab50 "deb $REPOURL/okular $distrib main non-free"
+        epm install lab50/$PKGNAME $additional_packages
         ;;
     dnf-rpm)
         epm repo add "$REPOURL/okular/$distrib/okularcsp.repo"
+        epm update
+        epm install $PKGNAME $additional_packages
         ;;
 esac
-
-epm update
-epm install $PKGNAME $additional_packages
