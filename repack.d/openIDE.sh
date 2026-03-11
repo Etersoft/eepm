@@ -12,8 +12,6 @@ subst "s|^Group:.*|Group: Development/Tools|" $SPEC
 subst "s|^URL:.*|URL: https://openide.ru/|" $SPEC
 subst "s|^Summary:.*|Summary: openIDE - Free IDE based on IntelliJ IDEA Community Edition|" $SPEC
 
-move_to_opt "/$PRODUCTCUR-*"
-
 add_bin_link_command $PRODUCT $PRODUCTDIR/bin/$PRODUCT.sh
 add_bin_link_command $PRODUCTCUR $PRODUCT
 

@@ -42,4 +42,4 @@ fi
 # https://download.openide.ru/253.28294.334.1/openIDE-253.28294.334.1-eap-aarch64.tar.gz
 PKGURL="https://download.openide.ru/$VERSION/openIDE-$VERSION${eap}${arch}.tar.gz"
 
-install_pkgurl
+install_pack_pkgurl
