@@ -264,6 +264,11 @@ __epm_repack_to_rpm()
             sed -i "s|^Group:.*|&\nBuildArch: noarch|" "$spec"
         fi
 
+        # check that buildroot has actual files (not just empty directories)
+        if [ -z "$(find $buildroot -not -type d -print -quit 2>/dev/null)" ] ; then
+            fatal 'Buildroot $buildroot contains only empty directories. Package content was lost during repack.'
+        fi
+
         showcmd $RPMBUILD --buildroot $buildroot --target $TARGETARCH -bb $spec
         if [ -n "$verbose" ] ; then
             a='' $RPMBUILD --buildroot $buildroot --target $TARGETARCH -bb $spec || fatal
@@ -284,7 +289,7 @@ __epm_repack_to_rpm()
         # check forbidden requires only if specific repack script exists
         has_repack_script $repackscript && epm_check_repacked_rpm "$repacked_pkg"
 
-        cd "$EPMCURDIR" >/dev/null
+        cd "$EPMCURDIR" || fatal "Can't return to the working directory '$EPMCURDIR'"
 
     true
 }
