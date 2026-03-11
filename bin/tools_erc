@@ -230,6 +230,7 @@ extract_special_archive()
 			extract_squashfs_image "$arc" "$subdir"
 			;;
 		*)
+			[ -n "$use_tdir" ] && rmdir "$subdir"
 			return 1
 			;;
 	esac
