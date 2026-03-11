@@ -40,7 +40,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.56"
+export EPMVERSION="3.64.57"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1669,8 +1669,9 @@ epm repo add - add branch repo. Use follow params:
 
 Examples:
     # epm repo add yandex
-    # epm repo add "rpm http://somesite/pub/product x86_64 addon
+    # epm repo add "rpm http://somesite/pub/product x86_64 addon"
     # epm repo add /var/ftp/pub/altlinux/p10
+    # epm repo add --name myrepo "rpm https://example.com x86_64 main"
 
 '
     return
@@ -1699,10 +1700,8 @@ __epm_addrepo_to_file()
     shift
     local repo="$*"
 
-    if [ -z "$force" ] ; then
-        # skip if repo is already in the list
-        epm --quiet repo list "$repo" >/dev/null && return
-    fi
+    # always skip if repo is already in the list (even with --force)
+    epm --quiet repo list "$repo" >/dev/null && return
 
     if [ -n "$dryrun" ] ; then
         echo "$repo"
@@ -2010,9 +2009,121 @@ __epm_addrepo_deb()
 
 }
 
+epm_addrepo_help()
+{
+    message 'epm addrepo - add package repository
+Usage: epm addrepo [options] <repo>
+
+Options:'
+    get_help HELPOPT $SHAREDIR/epm-addrepo
+    message '
+Examples:
+  epm repo add yandex
+  epm repo add "rpm http://somesite/pub/product x86_64 addon"
+  epm repo add --name akvis "rpm https://akvis-alt.sfo2.cdn.digitaloceanspaces.com x86_64 akvis"
+  epm repo add --disabled --name angie "rpm [angie] https://download.angie.software/angie/altlinux/11/ x86_64 main"
+
+With --name, the repo is stored in sources.list.d/<name>.list.
+With --disabled, the repo line is commented out.
+Use repo/package install syntax to install from named repos:
+  epm install akvis/alivecolors
+  epm install angie/angie
+'
+}
+
+__get_repo_filename()
+{
+    local repo="$*"
+
+    # Try to extract [name] from repo string: "rpm [name] URL arch comp"
+    local bracket_name="$(echo "$repo" | sed -n 's/.*\[\([^]]*\)\].*/\1/p')"
+    if [ -n "$bracket_name" ] ; then
+        echo "$bracket_name"
+        return
+    fi
+
+    # Use last component: "rpm URL arch component" -> "component"
+    local last="$(echo "$repo" | sed -e 's/[[:space:]]*$//' | awk '{print $NF}')"
+    # For deb repos: "deb URL suite component" -> last word
+    if [ -n "$last" ] && [ "$last" != "rpm" ] && [ "$last" != "deb" ] ; then
+        echo "$last"
+        return
+    fi
+
+    # Fallback: extract domain from URL
+    echo "$repo" | grep -o 'https\?://[^/[:space:]]*' | head -1 | sed -e 's|.*://||' -e 's|\..*||'
+}
+
 epm_addrepo()
 {
+local disabled=
+local repo_name=
+
+while true ; do
+    case "$1" in
+        -h|--help)           # HELPOPT: print this help
+            epm_addrepo_help
+            return
+            ;;
+        --disabled)          # HELPOPT: add repo as disabled (commented out) in sources.list.d
+            disabled=1
+            shift
+            ;;
+        --name)              # HELPOPT: save repo to sources.list.d/<name>.list (enables repo/package install syntax)
+            shift
+            repo_name="$1"
+            shift
+            ;;
+        --name=*)            # HELPOPT: save repo to sources.list.d/<name>.list (--name=reponame)
+            repo_name="$(echo "$1" | sed -e 's|--name=||')"
+            shift
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
 local repo="$*"
+
+if [ -n "$repo_name" ] ; then
+    if [ -z "$repo" ] ; then
+        fatal '--name requires a repo string'
+    fi
+
+    case $PMTYPE in
+        apt-rpm|apt-dpkg)
+            ;;
+        *)
+            fatal '--name is only supported for apt-based systems'
+            ;;
+    esac
+
+    local file="$APT_SOURCES_LIST_D/$repo_name.list"
+    local line="$repo"
+    [ -n "$disabled" ] && line="# $repo"
+
+    # check for duplicate (both enabled and disabled forms)
+    if [ -s "$file" ] && grep -q -F "$repo" "$file" ; then
+        info "Repo '$repo_name' already contains this source"
+        return
+    fi
+
+    # also check if repo already exists in other sources (including disabled)
+    if epm --quiet repo list --all "$repo" >/dev/null 2>&1 ; then
+        info "Repo is already in the sources list"
+        return
+    fi
+
+    if [ -n "$dryrun" ] ; then
+        echo "$line -> $file"
+        return
+    fi
+
+    __add_line_to_file "$file" "$line"
+    [ -n "$disabled" ] && info "Added disabled repo to $file" || info "Added repo to $file"
+    return
+fi
 
 case "$1" in
     copr/*)
@@ -7306,6 +7417,108 @@ epm_install_files_rpm()
     epm_install_names $files
     return
 
+}
+
+# File bin/epm-ipfs:
+
+IPFS_DHASH_PEER_ID="12D3KooWLDKZGAgD5v4gvgtXbCwxPV9aeRnhQyigSMW9gfKdY4xC"
+IPFS_DHASH_ADDRS='["/ip4/91.232.225.49/tcp/4001", "/ip4/91.232.225.49/udp/4001/quic-v1", "/ip6/2a03:5a00:c:20::49/tcp/4001", "/ip6/2a03:5a00:c:20::49/udp/4001/quic-v1"]'
+
+IPFS_USER="ipfs"
+IPFS_HOME="/var/lib/ipfs"
+IPFS_SERVICE="ipfs"
+
+epm_ipfs_help()
+{
+    message "epm ipfs - manage IPFS node for epm
+Usage: epm ipfs [start|stop|status|help]
+"
+    get_help HELPCMD $SHAREDIR/epm-ipfs
+}
+
+__epm_ipfs_check_installed()
+{
+    if ! is_command ipfs ; then
+        info 'IPFS (kubo) is not installed. Installing...'
+        epm install kubo || epm play kubo || fatal 'Failed to install kubo'
+    fi
+}
+
+__epm_ipfs_init_repo()
+{
+    if [ ! -d "$IPFS_HOME/.ipfs" ] ; then
+        info "Initializing IPFS repository in $IPFS_HOME ..."
+        sudocmd mkdir -p "$IPFS_HOME"
+        sudocmd chown "$IPFS_USER:$IPFS_USER" "$IPFS_HOME"
+        sudocmd su - "$IPFS_USER" -s /bin/sh -c "IPFS_PATH=$IPFS_HOME/.ipfs ipfs init" || fatal 'Failed to initialize IPFS repository'
+    fi
+}
+
+__epm_ipfs_configure_peering()
+{
+    local current_peers
+    current_peers="$(su - "$IPFS_USER" -s /bin/sh -c "IPFS_PATH=$IPFS_HOME/.ipfs ipfs config Peering.Peers" 2>/dev/null)" || return 1
+
+    if echo "$current_peers" | grep -q "$IPFS_DHASH_PEER_ID" ; then
+        info 'Peering with dhash.ru is already configured'
+        return 0
+    fi
+
+    info 'Configuring peering with dhash.ru ...'
+    sudocmd su - "$IPFS_USER" -s /bin/sh -c "IPFS_PATH=$IPFS_HOME/.ipfs ipfs config --json Peering.Peers '[{\"ID\": \"$IPFS_DHASH_PEER_ID\", \"Addrs\": $IPFS_DHASH_ADDRS}]'" || return 1
+}
+
+__epm_ipfs_start()
+{
+    __epm_ipfs_check_installed
+    __epm_ipfs_init_repo
+    __epm_ipfs_configure_peering
+    sudocmd serv "$IPFS_SERVICE" on
+}
+
+__epm_ipfs_stop()
+{
+    sudocmd serv "$IPFS_SERVICE" off
+}
+
+__epm_ipfs_status()
+{
+    if ! is_command ipfs ; then
+        info 'IPFS (kubo) is not installed'
+        return 1
+    fi
+
+    docmd serv "$IPFS_SERVICE" status
+    echo
+    if ipfs swarm peers 2>/dev/null | grep -q "$IPFS_DHASH_PEER_ID" ; then
+        info 'Peering with dhash.ru: connected'
+    else
+        info 'Peering with dhash.ru: not connected'
+    fi
+}
+
+epm_ipfs()
+{
+    local cmd="$1"
+    shift
+
+    case "$cmd" in
+        start|on)                    # HELPCMD: install kubo if needed, configure peering and start IPFS service
+            __epm_ipfs_start
+            ;;
+        stop|off)                    # HELPCMD: stop IPFS service
+            __epm_ipfs_stop
+            ;;
+        status)                      # HELPCMD: show IPFS service status and peering info
+            __epm_ipfs_status
+            ;;
+        -h|--help|help|"")
+            epm_ipfs_help
+            ;;
+        *)
+            fatal "Unknown command '$cmd'. Run 'epm ipfs help' for usage."
+            ;;
+    esac
 }
 
 # File bin/epm-kernel_update:
@@ -13626,6 +13839,11 @@ __epm_repack_to_rpm()
             sed -i "s|^Group:.*|&\nBuildArch: noarch|" "$spec"
         fi
 
+        # check that buildroot has actual files (not just empty directories)
+        if [ -z "$(find $buildroot -not -type d -print -quit 2>/dev/null)" ] ; then
+            fatal 'Buildroot $buildroot contains only empty directories. Package content was lost during repack.'
+        fi
+
         showcmd $RPMBUILD --buildroot $buildroot --target $TARGETARCH -bb $spec
         if [ -n "$verbose" ] ; then
             a='' $RPMBUILD --buildroot $buildroot --target $TARGETARCH -bb $spec || fatal
@@ -13646,7 +13864,7 @@ __epm_repack_to_rpm()
         # check forbidden requires only if specific repack script exists
         has_repack_script $repackscript && epm_check_repacked_rpm "$repacked_pkg"
 
-        cd "$EPMCURDIR" >/dev/null
+        cd "$EPMCURDIR" || fatal "Can't return to the working directory '$EPMCURDIR'"
 
     true
 }
@@ -13749,7 +13967,7 @@ epm_repo()
     status)                           # HELPCMD: print repo status
         epm_repostatus "$@"
         ;;
-    add)                              # HELPCMD: add package repo (etersoft, autoimports, archive 2017/01/31); run with param to get list
+    add)                              # HELPCMD: add package repo (etersoft, autoimports, --disabled); run with param to get list
         epm_addrepo "$@"
         ;;
     Add)                              # HELPCMD: like add, but do update after add
@@ -17124,6 +17342,14 @@ __get_repo_name() {
     if [ "$(echo "$arg" | cut -d/ -f1)" = "aur" ] && [ "$PMTYPE" = "pacman" ] ; then
         repo="aur"
         name=$(echo "$arg" | cut -d/ -f2)
+        return
+    fi
+
+    # Named repo in sources.list.d
+    local orig_repo="$(echo "$arg" | cut -d/ -f1)"
+    if __find_named_repo_file "$orig_repo" >/dev/null 2>&1 ; then
+        repo="named:$orig_repo"
+        name=$(echo "$arg" | cut -d/ -f2)
     fi
 }
 
@@ -17255,8 +17481,41 @@ __use_tmp_apt_for_tasks()
     __setup_tmp_apt_dir
     # hardlink existing system apt lists to avoid re-downloading
     cp -la /var/lib/apt/lists/*.* "$__EPM_APT_TMPDIR/lists/" 2>/dev/null
-    { __get_system_sourceslist ; __generate_task_sourceslist "$@" ; } > "$__EPM_APT_TMPDIR/sources.list"
+    { __get_system_sourceslist ; echo ; __generate_task_sourceslist "$@" ; } > "$__EPM_APT_TMPDIR/sources.list"
     # tolerate partial failures (some system repos may have broken GPG keys etc.)
+    __epm_update || warning "Some repos failed to update, but continuing anyway"
+}
+
+__find_named_repo_file()
+{
+    local name="$1"
+
+
+    [ -n "$APT_SOURCES_LIST_D" ] || return 1
+
+    local file="$APT_SOURCES_LIST_D/$name.list"
+    [ -s "$file" ] && echo "$file" && return
+
+    return 1
+}
+
+__get_named_repo_lines()
+{
+    local file="$1"
+    # output active lines as-is
+    grep "^\(rpm\|deb\)" "$file" 2>/dev/null
+    # uncomment disabled lines
+    grep "^#[[:space:]]*\(rpm\|deb\)" "$file" 2>/dev/null | sed 's/^#[[:space:]]*//'
+}
+
+__use_tmp_apt_with_named_repo()
+{
+    local name="$1"
+    local file
+    file="$(__find_named_repo_file "$name")" || fatal "Can't find repo '$name' in sources.list.d"
+    __setup_tmp_apt_dir
+    cp -la /var/lib/apt/lists/*.* "$__EPM_APT_TMPDIR/lists/" 2>/dev/null
+    { __get_system_sourceslist ; echo ; __get_named_repo_lines "$file" ; } > "$__EPM_APT_TMPDIR/sources.list"
     __epm_update || warning "Some repos failed to update, but continuing anyway"
 }
 
@@ -17295,6 +17554,11 @@ __process_repo_arguments() {
             local datestr="${repo#archive/}"
             datestr="$(echo "$datestr" | sed 's|-|/|g')"
             __use_tmp_apt_for_branch archive "$DISTRVERSION" "$datestr" || return 1
+            (PPARGS=1 $func ${repo_groups[$repo]})
+        elif startwith "$repo" "named:" ; then
+            # Named repo from sources.list.d
+            local reponame="${repo#named:}"
+            __use_tmp_apt_with_named_repo "$reponame" || return 1
             (PPARGS=1 $func ${repo_groups[$repo]})
         else
             # ALT Linux: use temporary APT directory instead of modifying system repos
@@ -18916,7 +19180,7 @@ case $PMTYPE in
         return $ret
         ;;
     apt-dpkg)
-        sudocmd apt-get update || return
+        sudocmd apt-get $__EPM_APT_REPO_OPTIONS update || return
         # apt-get update retrieve Contents file too
         #sudocmd apt-file update
         ;;
@@ -25386,7 +25650,7 @@ check_command()
         epm_cmd=update
         direct_args=1
         ;;
-    addrepo|ar|--add-repo)    # HELPCMD: add package repo (etersoft, autoimports, archive 2017/01/31); run with param to get list
+    addrepo|ar|--add-repo)    # HELPCMD: add package repo (etersoft, autoimports, --disabled); run with param to get list
         epm_cmd=addrepo
         direct_args=1
         ;;
