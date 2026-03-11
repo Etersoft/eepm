@@ -16,8 +16,6 @@ subst "s|^License: unknown$|License: LGPLv2|" $SPEC
 subst "s|^URL:.*|URL: https://liteide.org/en/|" $SPEC
 subst "s|^Summary:.*|Summary: LiteIDE is a simple, open source, cross-platform Go IDE|" $SPEC
 
-move_to_opt /liteide
-
 for i in gocode gomodifytags gotools liteide ; do
     add_bin_link_command $i $PRODUCTDIR/bin/$i
 done
