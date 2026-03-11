@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.56
+Version: 3.64.57
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -181,6 +181,21 @@ EOF
 # metapackage, no files
 
 %changelog
+* Thu Mar 12 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.57-alt1
+- pack.d/yandex-browser-*-codecs-ffmpeg-extra: fix path after erc --here migration
+- epm repack: fatal on empty buildroot and missing working directory
+- tests/update_versions.sh: use flexible option parsing loop
+- make-press-release.sh: read changelog from release tag instead of working tree
+- pack.d/*arr: add launcher script, systemd service and user configs
+- epm play: add bitdesk
+- epm play: add virtualbox to repo-play-apps list
+- epm play: add more repo-installed apps to repo-play-apps list
+- epm play: add alivecolors to repo-play-apps list
+- epm addrepo: always check for duplicate repos even with --force
+- epm addrepo: add --disabled and --name options
+- epm install: support repo/package syntax for named repos in sources.list.d
+- epm update: use $__EPM_APT_REPO_OPTIONS for apt-dpkg
+
 * Wed Mar 11 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.56-alt1
 - epm play karing: fix download URL (replace + with . in version)
 - epm play qwen code: upstream fixes releases
