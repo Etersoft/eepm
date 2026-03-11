@@ -19,4 +19,4 @@ if ! eget --check-site "$PKGURL" ; then
     PKGURL="$IPFSURL"
 fi
 
-install_pkgurl
+install_pack_pkgurl

@@ -9,15 +9,6 @@ PRODUCTDIR=/opt/$PRODUCT
 
 . $(dirname $0)/common.sh
 
-subst "s|^License: unknown$|License: Freeware|" $SPEC
-subst "s|^Summary:.*|Summary: EAGLE is electronic design automation (EDA) software that lets printed circuit board (PCB)|" $SPEC
-
-# move package to /opt
-ROOTDIR=$(basename $(find $BUILDROOT -mindepth 1 -maxdepth 1 -type d))
-mkdir $BUILDROOT/opt
-mv $BUILDROOT/$ROOTDIR $BUILDROOT/opt/$PRODUCT
-subst "s|\"/$ROOTDIR/|\"/opt/$PRODUCT/|" $SPEC
-
 add_bin_link_command
 
 cat <<EOF | create_file /usr/share/applications/$PRODUCT.desktop
