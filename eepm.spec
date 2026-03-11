@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.55
+Version: 3.64.56
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -181,6 +181,70 @@ EOF
 # metapackage, no files
 
 %changelog
+* Wed Mar 11 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.56-alt1
+- epm play karing: fix download URL (replace + with . in version)
+- epm play qwen code: upstream fixes releases
+- epm-sh-backend: hardlink system apt lists to speed up task install
+- epm play: add stl-thumb (3D model thumbnail generator)
+- epm repack.d/generic.sh: fix non-executable files in /usr/bin/ instead of fatal
+- epm-sh-backend: fix archive/DATE/package install (use current branch)
+- epm pack: strip version from PRODUCT when VERSION is already known
+- epm play: add f3d (fast and minimalist 3D viewer with raytracing)
+- epm: yaml_load_vars: don't overwrite variables when key is missing in yaml
+- epm pack.d: add eepm.yaml metadata for tarball-based packages
+- epm pack.d/generic-tar.sh: don't overwrite existing eepm.yaml
+- epm play reaper: fix RPM group to valid value
+- epm install: use BIGTMPDIR for temporary apt indices
+- epm play cloudflare-warp: use DEB package on ALT Linux
+- epm play: show 'Updating <app> ...' instead of bare app name
+- epm play: check for product update during install, not just --update
+- epm repack: fix cpio wrapper for systems where cpio is in /bin
+- epm play telemt: fix PKGURL for new release format
+- epm play cstcadnavigator: fix doubled /download/ in URL
+- epm play: skip symlink aliases in app listings
+- epm play: add google-chrome alias for chrome
+- epm-sh-altlinux-contents-index: show URL when downloading via eget
+- epm play rstudio: fix version format and add direct URL for specific versions
+- epm play: add ytdownloader (video/audio downloader)
+- epm play rstudio: simplify distro detection to deb/rpm package type
+- epm play: add lidarr (music library manager)
+- epm play: add sonarr (TV series manager)
+- epm play: add radarr (movie library manager)
+- epm play: add prowlarr (indexer manager)
+- epm play: add bazarr (subtitle manager)
+- epm-sh-altlinux: add task state diagnostics when packages are unavailable
+- pack.d/generic-appimage.sh: extract metadata from .desktop and appdata/metainfo into eepm.yaml
+- pack.d/generic-appimage.sh, repack.d: strip -Linux suffix from AppImage product names
+- repack.d: add Obsoletes for renamed *-Linux packages, remove obsolete move_file for svg
+- epm install: pass URLs directly to repack to preserve download URL for pack scripts
+- epm play neovide: use get_github_url, add direct download URL branch
+- epm repack metasploit-framework, trueconf: fix missing library dependencies
+- epm play readest: add RELEASE support and direct download URL
+- epm play realvnc-viewer, realvnc-server: add fallback version for scraping-free install
+- epm play chitubox-basic: fix version
+- epm play raindrop: remove, Linux is no longer supported by vendor
+- pack.d/android-studio: use erc repack instead of extract+pack
+- epm play vagrant: switch from broken yandexcloud mirror to releases.hashicorp.com
+- epm play freeoffice: fix scraping URL, use installation page with direct links
+- eget: add Yandex.Disk public link download support
+- epm play satvision: switch to Yandex Disk, split into client and server
+- epm play Throne: fix unescaped variables in heredoc and add /usr/bin/Throne symlink
+- epm play occt: use www.ocbase.com URL to avoid cross-domain redirect issue
+- epm play svp4: use unshare -rn to block network during install, drop xvfb-run dependency
+- epm play LevenhukLite: extract archive to /opt, add missing libimagepro.so
+- epm repack nsgclient: ignore bundled libappindicator and add libs requires
+- epm repack webdavmailrucloud: switch to dotnet-8.0 with --roll-forward Major
+- epm repack rlinux: fix unquoted variable checks for xhost and gsettings
+- epm repack synology-drive: fix broken env syntax in launch script
+- epm play wing: add -r to xargs and error check for version detection
+- epm play everdo: add direct download URL for specific version
+- repack.d/unigine-*: fix spec path substitution pattern
+- epm repack zed: check for zed.desktop before renaming (already fixed upstream)
+- epm play eagle: move /opt layout to pack.d script
+- epm play liteide: move /opt layout to pack.d script
+- epm play openide: move /opt layout to pack.d script
+- epm repack: read eepm.yaml metadata directly in spec generator instead of generic.sh
+
 * Mon Mar 02 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.55-alt1
 - epm repack: preserve BuildArch noarch in alien-generated spec
 - epm repo mirrors: switch from --options to subcommands CLI style
