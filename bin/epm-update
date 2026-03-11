@@ -206,7 +206,7 @@ case $PMTYPE in
         return $ret
         ;;
     apt-dpkg)
-        sudocmd apt-get update || return
+        sudocmd apt-get $__EPM_APT_REPO_OPTIONS update || return
         # apt-get update retrieve Contents file too
         #sudocmd apt-file update
         ;;
