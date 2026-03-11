@@ -20,10 +20,9 @@ esac
 
 case $(epm print info -s) in
     alt)
-        epm repo add "rpm https://akvis-alt.sfo2.cdn.digitaloceanspaces.com x86_64 akvis"
-        epm repo add "rpm https://akvis-alt.sfo2.cdn.digitaloceanspaces.com noarch akvis"
-        epm update
-        epm install $PKGNAME
+        epm repo add --disabled --name akvis "rpm https://akvis-alt.sfo2.cdn.digitaloceanspaces.com x86_64 akvis"
+        epm repo add --disabled --name akvis "rpm https://akvis-alt.sfo2.cdn.digitaloceanspaces.com noarch akvis"
+        epm install akvis/$PKGNAME
         echo "Run alivecolors:"
         echo "$ LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu alivecolors"
         exit
@@ -58,9 +57,8 @@ case $(epm print info -g) in
         #sudo mkdir -p /usr/share/keyrings
         #eget -O - https://akvis.com/akvis.gpg | sudo tee /usr/share/keyrings/akvis.gpg >/dev/null
         #epm repo add 'deb [arch-=i386 signed-by=/usr/share/keyrings/akvis.gpg] https://akvis-deb.sfo2.cdn.digitaloceanspaces.com akvis non-free'
-        epm repo add 'deb [arch-=i386] https://akvis-deb.sfo2.cdn.digitaloceanspaces.com akvis non-free'
-        epm update
-        epm install $PKGNAME
+        epm repo add --disabled --name akvis 'deb [arch-=i386] https://akvis-deb.sfo2.cdn.digitaloceanspaces.com akvis non-free'
+        epm install akvis/$PKGNAME
         exit
         ;;
     *)
