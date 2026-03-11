@@ -1,18 +1,37 @@
 #!/bin/sh
 # Generate a Telegram press release from the latest eepm changelog entry
-# Usage: ./make-press-release.sh [specfile]
+# Usage: ./make-press-release.sh [tag]
+# Example: ./make-press-release.sh 3.64.55-alt1
 
-SPECNAME="${1:-eepm.spec}"
-SCRIPTDIR="$(dirname "$0")"
-SPECFILE="$SCRIPTDIR/$SPECNAME"
+SPECNAME="eepm.spec"
 
-if [ ! -f "$SPECFILE" ] ; then
-    echo "Error: spec file '$SPECFILE' not found" >&2
+if [ -n "$1" ] ; then
+    TAG="$1"
+else
+    # find the latest release tag
+    TAG="$(git tag -l '*-alt*' --sort=-version:refname | head -1)"
+fi
+
+if [ -z "$TAG" ] ; then
+    echo "Error: no release tag found" >&2
     exit 1
 fi
 
-# Extract the latest changelog block (from %changelog to the next empty line before the next * entry)
-changelog_block=$(sed -n '/^%changelog$/,/^$/{/^%changelog$/d;p}' "$SPECFILE" | sed '/^$/q')
+if ! git rev-parse "$TAG" >/dev/null 2>&1 ; then
+    echo "Error: tag '$TAG' not found" >&2
+    exit 1
+fi
+
+echo "Using tag: $TAG" >&2
+
+# Extract the latest changelog block from spec at the tag commit
+specdata="$(git show "$TAG:$SPECNAME" 2>/dev/null)"
+if [ -z "$specdata" ] ; then
+    echo "Error: $SPECNAME not found at tag '$TAG'" >&2
+    exit 1
+fi
+
+changelog_block=$(echo "$specdata" | sed -n '/^%changelog$/,/^$/{/^%changelog$/d;p}' | sed '/^$/q')
 
 if [ -z "$changelog_block" ] ; then
     echo "Error: no changelog entries found in $SPECFILE" >&2
