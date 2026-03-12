@@ -1252,7 +1252,6 @@ __wget()
     # Default: --tries 1 (single attempt), can be overridden
     set -- --tries "${TRIES_VALUE:-1}" "$@"
     [ "$retryconnrefused" ] && set -- --retry-connrefused "$@"
-    [ "$READTIMEOUT_VALUE" ] && set -- --read-timeout "$READTIMEOUT_VALUE" "$@"
     [ "$TIMEOUT_VALUE" ] && set -- --timeout "$TIMEOUT_VALUE" "$@"
     [ "$nodirectories" ] && set -- -nd "$@"
     [ "$nosslcheck" ] && set -- --no-check-certificate "$@"
@@ -1262,7 +1261,11 @@ __wget()
     [ "$showprogress" ] && set -- --show-progress "$@"
     [ "$quiet" ] && set -- -q "$@"
     [ "$FORCEIPV" ] && set -- "$FORCEIPV" "$@"
-    docmd $WGET $EGET_WGET_OPTIONS "$@"
+    if [ "$READTIMEOUT_VALUE" ] ; then
+        docmd timeout "${READTIMEOUT_VALUE}s" $WGET $EGET_WGET_OPTIONS "$@"
+    else
+        docmd $WGET $EGET_WGET_OPTIONS "$@"
+    fi
 }
 
 # wget wrapper for downloads (adds -c/-N flags)
@@ -1700,7 +1703,11 @@ __aria2()
     [ "$USEOUTPUTDIR" ] && set -- -d "$USEOUTPUTDIR" "$@"
     [ "$showprogress" ] && set -- --show-console-readout=true "$@"
     # aria2 has no direct quiet flag, but --show-console-readout=false reduces output
-    docmd $ARIA2 $EGET_ARIA2_OPTIONS "$@"
+    if [ "$READTIMEOUT_VALUE" ] ; then
+        docmd timeout "${READTIMEOUT_VALUE}s" $ARIA2 $EGET_ARIA2_OPTIONS "$@"
+    else
+        docmd $ARIA2 $EGET_ARIA2_OPTIONS "$@"
+    fi
 }
 
 # aria2 wrapper for downloads (adds --continue)
@@ -1781,7 +1788,11 @@ __axel()
     [ "$quiet" ] && [ -z "$showprogress" ] && set -- --quiet "$@"
     [ "$FORCEIPV" ] && set -- "$FORCEIPV" "$@"
     # Note: axel doesn't support output directory, only output file (-o)
-    docmd $AXEL $EGET_AXEL_OPTIONS "$@"
+    if [ "$READTIMEOUT_VALUE" ] ; then
+        docmd timeout "${READTIMEOUT_VALUE}s" $AXEL $EGET_AXEL_OPTIONS "$@"
+    else
+        docmd $AXEL $EGET_AXEL_OPTIONS "$@"
+    fi
 }
 
 # axel wrapper for downloads
