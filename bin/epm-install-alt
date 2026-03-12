@@ -37,7 +37,7 @@ epm_install_files_alt_via_repo()
 
     #docmd epm repo save
 
-    docmd epm repo add $repodir
+    docmd epm repo add --name "local-repo" $repodir
     docmd epm update
 
     # install with name=version
