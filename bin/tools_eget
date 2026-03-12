@@ -373,6 +373,9 @@ __speedtest_single()
     local timeout="${2:-3}"
     local total_size="$3"
     local tmpfile start_time end_time size
+    local maxsize_opt=""
+
+    [ "$MAXSIZE_VALUE" ] && maxsize_opt="--max-size $MAXSIZE_VALUE"
 
     tmpfile=$(mktemp)
     start_time=$(__get_time_ns)
@@ -380,9 +383,9 @@ __speedtest_single()
         # pv shows progress to stderr (-s for total size if known)
         local pv_opts="-f"
         [ -n "$total_size" ] && pv_opts="$pv_opts -s $total_size"
-        eget -q -T "$timeout" -O - "$URL" 2>/dev/null | pv $pv_opts > "$tmpfile" || true
+        eget -q --read-timeout "$timeout" $maxsize_opt -O - "$URL" 2>/dev/null | pv $pv_opts > "$tmpfile" || true
     else
-        eget -q --force -T "$timeout" -O "$tmpfile" "$URL" 2>/dev/null || true
+        eget -q --force --read-timeout "$timeout" $maxsize_opt -O "$tmpfile" "$URL" 2>/dev/null || true
     fi
     end_time=$(__get_time_ns)
     size=$(wc -c < "$tmpfile")
@@ -442,6 +445,7 @@ USERAGENT=''
 HEADER_VALUE=''
 TIMEOUT_VALUE=''
 READTIMEOUT_VALUE=''
+MAXSIZE_VALUE=''
 TRIES_VALUE=''
 COOKIES_FILE=''
 USEOUTPUTDIR=''
@@ -523,8 +527,9 @@ Options:
     --force|--allow-overwrite - force overwrite existing file
     -N|--timestamping         - only download if remote file is newer than local
     -i|--input-file FILE      - read URLs from FILE, one per line; each line can contain multiple mirror URLs (use - for stdin)
-    -T|--timeout=N            - set  the network timeout to N seconds
-    --read-timeout=N          - set the read (and write) timeout to N seconds
+    -T|--timeout=N            - set the connection timeout to N seconds
+    --read-timeout|--max-time=N - set the read/total timeout to N seconds
+    --max-size=N              - limit download size to N bytes (Range header or curl --max-filesize)
     --retry-connrefused       - consider “connection refused” a transient error and try again
     -t|--tries                - set number of tries to number. Specify 0 or ‘inf’ for infinite retrying
     --load-cookies file       - load cookies from file before the first HTTP retrieval
@@ -546,6 +551,7 @@ Commands:
     --get-ipfs-cid URL        - print CID for URL (after all redirects)
     --speedtest URL           - measure download speed for the URL
     --tsv                     - output --speedtest results in TSV format
+    -n|--measurements N       - number of measurements for --speedtest (default: 3)
 
 Supported URLs:
   ftp:// http:// https:// file:/ ipfs:// rsync:// [user@]host:/path
@@ -671,6 +677,15 @@ while [ -n "$1" ] ; do
         --speedtest)
             SPEEDTEST="$1"
             ;;
+        -n|--measurements)
+            if [ -z "$argvalue" ];then
+                shift
+                argvalue="$1"
+            fi
+            [ -z "$argvalue" ] && fatal "Error: --measurements requires an argument"
+            ! is_numeric "$argvalue" && fatal "Error: --measurements requires a numeric value, got '$argvalue'"
+            SPEEDTEST_COUNT="$argvalue"
+            ;;
         --tsv)
             TSV="$1"
             ;;
@@ -725,7 +740,7 @@ while [ -n "$1" ] ; do
             ! is_numeric "$argvalue" && fatal "Error: --timeout requires a numeric value, got '$argvalue'"
             TIMEOUT_VALUE="$argvalue"
             ;;
-        --read-timeout)
+        --read-timeout|--max-time)
             if [ -z "$argvalue" ];then
                 shift
                 argvalue="$1"
@@ -733,6 +748,15 @@ while [ -n "$1" ] ; do
             [ -z "$argvalue" ] && fatal "Error: --read-timeout requires an argument"
             ! is_numeric "$argvalue" && fatal "Error: --read-timeout requires a numeric value, got '$argvalue'"
             READTIMEOUT_VALUE="$argvalue"
+            ;;
+        --max-size)
+            if [ -z "$argvalue" ];then
+                shift
+                argvalue="$1"
+            fi
+            [ -z "$argvalue" ] && fatal "Error: --max-size requires an argument"
+            ! is_numeric "$argvalue" && fatal "Error: --max-size requires a numeric value (bytes), got '$argvalue'"
+            MAXSIZE_VALUE="$argvalue"
             ;;
         --retry-connrefused)
             retryconnrefused=1
@@ -1246,6 +1270,7 @@ __wget_download()
 {
     [ -n "$CONTINUE" ] && set -- -c "$@"
     [ -n "$TIMESTAMPING" ] && set -- -N "$@"
+    [ "$MAXSIZE_VALUE" ] && set -- --header="Range: bytes=0-$(($MAXSIZE_VALUE - 1))" "$@"
     __wget "$@"
 }
 
@@ -1547,9 +1572,8 @@ __curl()
         esac
     fi
     [ "$retryconnrefused" ] && set -- --retry-connrefused "$@"
-    # curl uses READTIMEOUT_VALUE as fallback for --max-time if TIMEOUT_VALUE not set
-    [ -z "$TIMEOUT_VALUE" ] && [ "$READTIMEOUT_VALUE" ] && set -- --max-time "$READTIMEOUT_VALUE" "$@"
-    [ "$TIMEOUT_VALUE" ] && set -- --max-time "$TIMEOUT_VALUE" "$@"
+    [ "$READTIMEOUT_VALUE" ] && set -- --max-time "$READTIMEOUT_VALUE" "$@"
+    [ "$TIMEOUT_VALUE" ] && set -- --connect-timeout "$TIMEOUT_VALUE" "$@"
     [ "$nosslcheck" ] && set -- -k "$@"
     [ "$HEADER_VALUE" ] && set -- --header "$HEADER_VALUE" "$@"
     [ "$compressed" ] && set -- --compressed "$@"
@@ -1564,6 +1588,7 @@ __curl()
 __curl_download()
 {
     [ -n "$CONTINUE" ] && set -- -C - "$@"
+    [ "$MAXSIZE_VALUE" ] && set -- --header "Range: bytes=0-$(($MAXSIZE_VALUE - 1))" "$@"
     __curl "$@"
 }
 # put remote content to stdout
@@ -1682,6 +1707,7 @@ __aria2()
 __aria2_download()
 {
     [ -n "$CONTINUE" ] && set -- --continue=true "$@"
+    [ "$MAXSIZE_VALUE" ] && set -- --header="Range: bytes=0-$(($MAXSIZE_VALUE - 1))" "$@"
     __aria2 "$@"
 }
 
@@ -1762,6 +1788,7 @@ __axel()
 # Note: axel auto-continues if state file (.st) exists, no explicit flag needed
 __axel_download()
 {
+    [ "$MAXSIZE_VALUE" ] && set -- --header="Range: bytes=0-$(($MAXSIZE_VALUE - 1))" "$@"
     __axel "$@"
 }
 
@@ -1919,7 +1946,8 @@ fi
 url_speedtest()
 {
     local URL="$1"
-    local timeout="${TIMEOUT_VALUE:-3}"
+    local timeout="${READTIMEOUT_VALUE:-3}"
+    local count="${SPEEDTEST_COUNT:-3}"
     local total_size
     local measurements=""
     local i speed
@@ -1927,8 +1955,10 @@ url_speedtest()
     # Get file size for progress display
     total_size=$(url_get_size "$URL")
 
-    for i in 1 2 3 ; do
-        [ -n "$verbose" ] && echo "Measurement $i/3..." >&2
+    i=0
+    while [ "$i" -lt "$count" ] ; do
+        i=$(($i + 1))
+        [ -n "$verbose" ] && echo "Measurement $i/$count..." >&2
         speed=$(__speedtest_single "$URL" "$timeout" "$total_size")
         measurements="$measurements $speed"
         [ -n "$verbose" ] && echo "  Speed: ${speed} MB/s" >&2
