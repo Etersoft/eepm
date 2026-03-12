@@ -714,8 +714,10 @@ esac
 
 case $BASEDISTRNAME in
     "alt")
-        __epm_addrepo_altlinux "$@"
-        return
+        if [ "$PMTYPE" = "apt-rpm" ] ; then
+            __epm_addrepo_altlinux "$@"
+            return
+        fi
         ;;
     "astra")
         __epm_addrepo_astra "$@"

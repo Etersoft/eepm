@@ -177,8 +177,10 @@ esac
 
 case $BASEDISTRNAME in
     "alt")
-        __epm_removerepo_alt "$@"
-        return
+        if [ "$PMTYPE" = "apt-rpm" ] ; then
+            __epm_removerepo_alt "$@"
+            return
+        fi
         ;;
     "astra")
         # handle "all" and pattern-based removal
