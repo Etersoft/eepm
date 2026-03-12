@@ -119,13 +119,16 @@ __list_mirrors()
         elif [ -n "$tsv" ] ; then
             printf "%s\t%s\t%s\n" "$name" "$url" "$is_current"
         else
-            # full mode: name, marker, url
+            # full mode: name, marker, url, ip
+            local domain ip
+            domain=$(__url_to_domain "$url")
+            ip=$(a= host "$domain" 2>/dev/null | sed -n 's/.* has address //p' | head -1)
             if [ "$is_current" = 1 ] ; then
                 set_boldcolor $GREEN
-                printf "%-15s *  %s\n" "$name" "$url"
+                printf "%-15s *  %-65s %s\n" "$name" "$url" "$ip"
                 restore_color
             else
-                printf "%-15s    %s\n" "$name" "$url"
+                printf "%-15s    %-65s %s\n" "$name" "$url" "$ip"
             fi
         fi
     done <<EOF
@@ -141,7 +144,7 @@ __measure_speed()
 {
     local url="$1"
     local speed
-    # eget does 3 measurements with 5 sec timeout, filters outliers, outputs MB/s
+    # eget does 3 measurements with 5 sec timeout, outputs MB/s
     speed=$(eget --timeout 5 --speedtest --tsv "$url" 2>/dev/null | cut -f2)
     [ -n "$speed" ] && echo "$speed" || echo "0"
 }
