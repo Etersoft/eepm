@@ -9,7 +9,7 @@ URL="https://www.bitwig.com"
 . $(dirname $0)/common.sh
 
 if [ "$VERSION" = "*" ]; then
-    VERSION=$(eget -O- https://www.bitwig.com/download/ | grep -o "Bitwig Studio [0-9].[0-9].[0-9]" | grep -o "[0-9].[0-9].[0-9]")
+    VERSION=$(eget -O- https://www.bitwig.com/download/ | grep -o "Bitwig Studio [0-9][0-9.]*" | head -1 | grep -o "[0-9][0-9.]*")
 fi
 
 cd_to_temp_dir
