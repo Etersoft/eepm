@@ -20,16 +20,20 @@
 # Functions for working with available packages cache
 # Cache format: package<tab>version<tab>description (TSV)
 
-# Get path to cache file
+# Get path to cache file (per-backend, with fallback to old name)
 __epm_available_cache_file()
 {
-    echo "$epm_vardir/available-packages"
+    if [ -s "$epm_vardir/available-packages-$PMTYPE" ] || [ ! -s "$epm_vardir/available-packages" ] ; then
+        echo "$epm_vardir/available-packages-$PMTYPE"
+    else
+        echo "$epm_vardir/available-packages"
+    fi
 }
 
 # Check if cache file exists and is not empty
 __epm_available_cache_exists()
 {
-    [ -s "$epm_vardir/available-packages" ]
+    [ -s "$(__epm_available_cache_file)" ]
 }
 
 # Read raw TSV from cache
@@ -37,7 +41,7 @@ __epm_available_cache_exists()
 __epm_available_read_cache()
 {
     __epm_available_cache_exists || return 1
-    cat "$epm_vardir/available-packages"
+    cat "$(__epm_available_cache_file)"
 }
 
 # Save available packages to cache (called from epm update)
@@ -56,5 +60,5 @@ __epm_available_save_cache()
     # can ask sudo later
     set_sudo
     # get TSV format, sort and save
-    __epm_list_available_tsv | sort | sudorun tee "$epm_vardir/available-packages" >/dev/null
+    __epm_list_available_tsv | sort | sudorun tee "$(__epm_available_cache_file)" >/dev/null
 }
