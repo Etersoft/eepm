@@ -169,14 +169,32 @@ case $PMTYPE in
         docmd verifytree
         ;;
     dnf-rpm)
+        local init=''
+        if [ "$1" = "--init" ] ; then
+            init="1"
+            shift
+        fi
         epm install --skip-installed createrepo || fatal
         docmd mkdir -pv "$@"
-        docmd createrepo -v --update "$@"
+        if [ -n "$init" ] ; then
+            docmd createrepo -v "$@"
+        else
+            docmd createrepo -v --update "$@"
+        fi
         ;;
     dnf5-rpm)
+        local init=''
+        if [ "$1" = "--init" ] ; then
+            init="1"
+            shift
+        fi
         epm install --skip-installed createrepo_c || fatal
         docmd mkdir -pv "$@"
-        docmd createrepo_c -v --update "$@"
+        if [ -n "$init" ] ; then
+            docmd createrepo_c -v "$@"
+        else
+            docmd createrepo_c -v --update "$@"
+        fi
         ;;
     eoget)
         docmd eoget index "$@"
