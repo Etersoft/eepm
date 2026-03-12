@@ -76,7 +76,7 @@ case $PMTYPE in
         # TODO: --format json?
         CMD="apm system list --limit 100000"
         ;;
-    dnf-*)
+    dnf-*|dnf5-*)
         warmup_rpmbase
         if [ -n "$short" ] ; then
             docmd $DNFCMD list --available | sed -e "s| .*||g"
