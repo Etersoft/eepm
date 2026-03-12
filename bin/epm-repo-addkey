@@ -274,7 +274,7 @@ case $PMTYPE in
     apt-dpkg)
         __epm_addkey_deb "$@"
         ;;
-    dnf-*|yum-*)
+    dnf-*|dnf5-*|yum-*)
         __epm_addkey_dnf "$@"
         ;;
 esac

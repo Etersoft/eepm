@@ -45,7 +45,7 @@ case $PMTYPE in
         warmup_dpkgbase
         warning "Obsoletes checking is not implemented for apt-dpkg yet"
         ;;
-    dnf-*|yum-*)
+    dnf-*|dnf5-*|yum-*)
         warmup_rpmbase
         if [ -n "$short" ] ; then
             docmd $DNFCMD list obsoletes 2>/dev/null | tail -n +2 | sed -e "s|\..*||g"

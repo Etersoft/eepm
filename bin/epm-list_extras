@@ -57,7 +57,7 @@ case $PMTYPE in
         # apt 2.0+ supports ?obsolete pattern
         docmd apt list '?obsolete'
         ;;
-    dnf-*|yum-*)
+    dnf-*|dnf5-*|yum-*)
         warmup_rpmbase
         if [ -n "$short" ] ; then
             docmd $DNFCMD list extras 2>/dev/null | tail -n +2 | sed -e "s|\..*||g"

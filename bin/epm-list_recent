@@ -43,7 +43,7 @@ case $PMTYPE in
         # Debian doesn't have build date in package metadata typically
         warning "Recent packages listing is not well supported for apt-dpkg"
         ;;
-    dnf-*|yum-*)
+    dnf-*|dnf5-*|yum-*)
         warmup_rpmbase
         if [ -n "$short" ] ; then
             docmd $DNFCMD list recent 2>/dev/null | tail -n +2 | sed -e "s|\..*||g"

@@ -65,7 +65,7 @@ case $PMTYPE in
             docmd apt list --upgradable
         fi
         ;;
-    dnf-*|yum-*)
+    dnf-*|dnf5-*|yum-*)
         warmup_rpmbase
         if [ -n "$short" ] ; then
             docmd $DNFCMD check-update | sed -e "s| .*||g"
