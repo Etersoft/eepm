@@ -17,7 +17,6 @@ else
 fi
 
 rm $TAR
-cd KyoceraLinuxPackages-* || fatal
 case "$(epm print info -p)" in
     rpm)
         cd Fedora/Global/kyodialog_x86_64 || fatal
