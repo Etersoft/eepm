@@ -1,7 +1,7 @@
 # ALT Linux mirror list
 # Format: name URL
 yandex https://mirror.yandex.ru/altlinux
-basealt https://ftp.basealt.ru/pub/distributions/ALTLinux
+basealt https://download.basealt.ru/pub/distributions/ALTLinux
 altlinux.org https://ftp.altlinux.org/pub/distributions/ALTLinux
 etersoft https://download.etersoft.ru/pub/ALTLinux
 eterfund.org https://mirror.eterfund.org/download.etersoft.ru/pub/ALTLinux
@@ -9,5 +9,6 @@ datacenter.by https://mirror.datacenter.by/pub/ALTLinux
 truenetwork https://mirror.truenetwork.ru/altlinux
 msu https://mirror.cs.msu.ru/alt
 # Legacy mirrors (for backward compatibility, not shown in --list)
+ftp.basealt https://ftp.basealt.ru/pub/distributions/ALTLinux
 altsp.su https://update.altsp.su/pub/distributions/ALTLinux
 ftp.etersoft.ru https://ftp.etersoft.ru/pub/ALTLinux
