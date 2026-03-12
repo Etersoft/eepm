@@ -1245,6 +1245,13 @@ if [ -n "$FORCEPM" ] ; then
     PMTYPE="$FORCEPM"
 fi
 
+# normalize short backend names
+case "$PMTYPE" in
+    dnf5)
+        PMTYPE="dnf5-rpm"
+        ;;
+esac
+
 # set DNFCMD based on PMTYPE
 case "$PMTYPE" in
     dnf5-rpm)

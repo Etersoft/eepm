@@ -17,7 +17,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-VALID_BACKENDS="apt-rpm apt-dpkg apm-rpm stplr aptitude-dpkg deepsolver-rpm urpm-rpm packagekit pkgsrc pkgng redox-pkg emerge pacman yay aura yum-rpm dnf-rpm snappy zypper-rpm mpkg eopkg conary npackd slackpkg homebrew opkg nix apk tce guix termux-pkg aptcyg xbps appget winget"
+VALID_BACKENDS="apt-rpm apt-dpkg apm-rpm stplr aptitude-dpkg deepsolver-rpm urpm-rpm packagekit pkgsrc pkgng redox-pkg emerge pacman yay aura yum-rpm dnf-rpm dnf5-rpm snappy zypper-rpm mpkg eopkg conary npackd slackpkg homebrew opkg nix apk tce guix termux-pkg aptcyg xbps appget winget"
 
 # Check if args contain backend:package syntax (snap:pkg, nix:pkg)
 __has_backend_syntax()
