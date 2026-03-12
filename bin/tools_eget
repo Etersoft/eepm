@@ -551,7 +551,7 @@ Commands:
     --get-ipfs-cid URL        - print CID for URL (after all redirects)
     --speedtest URL           - measure download speed for the URL
     --tsv                     - output --speedtest results in TSV format
-    -n|--measurements N       - number of measurements for --speedtest (default: 3)
+    --measurements N       - number of measurements for --speedtest (default: 3)
 
 Supported URLs:
   ftp:// http:// https:// file:/ ipfs:// rsync:// [user@]host:/path
@@ -677,7 +677,7 @@ while [ -n "$1" ] ; do
         --speedtest)
             SPEEDTEST="$1"
             ;;
-        -n|--measurements)
+        --measurements)
             if [ -z "$argvalue" ];then
                 shift
                 argvalue="$1"
