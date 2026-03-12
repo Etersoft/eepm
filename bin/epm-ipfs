@@ -1,0 +1,118 @@
+#!/bin/sh
+#
+# Copyright (C) 2026  Etersoft
+# Copyright (C) 2026  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+IPFS_DHASH_PEER_ID="12D3KooWLDKZGAgD5v4gvgtXbCwxPV9aeRnhQyigSMW9gfKdY4xC"
+IPFS_DHASH_ADDRS='["/ip4/91.232.225.49/tcp/4001", "/ip4/91.232.225.49/udp/4001/quic-v1", "/ip6/2a03:5a00:c:20::49/tcp/4001", "/ip6/2a03:5a00:c:20::49/udp/4001/quic-v1"]'
+
+IPFS_USER="ipfs"
+IPFS_HOME="/var/lib/ipfs"
+IPFS_SERVICE="ipfs"
+
+epm_ipfs_help()
+{
+    message "epm ipfs - manage IPFS node for epm
+Usage: epm ipfs [start|stop|status|help]
+"
+    get_help HELPCMD $SHAREDIR/epm-ipfs
+}
+
+__epm_ipfs_check_installed()
+{
+    if ! is_command ipfs ; then
+        info 'IPFS (kubo) is not installed. Installing...'
+        epm play kubo || fatal 'Failed to install kubo'
+    fi
+}
+
+__epm_ipfs_init_repo()
+{
+    if [ ! -d "$IPFS_HOME/.ipfs" ] ; then
+        info "Initializing IPFS repository in $IPFS_HOME ..."
+        sudocmd mkdir -p "$IPFS_HOME"
+        sudocmd chown "$IPFS_USER:$IPFS_USER" "$IPFS_HOME"
+        sudocmd su - "$IPFS_USER" -s /bin/sh -c "IPFS_PATH=$IPFS_HOME/.ipfs ipfs init" || fatal 'Failed to initialize IPFS repository'
+    fi
+}
+
+__epm_ipfs_configure_peering()
+{
+    local current_peers
+    current_peers="$(su - "$IPFS_USER" -s /bin/sh -c "IPFS_PATH=$IPFS_HOME/.ipfs ipfs config Peering.Peers" 2>/dev/null)" || return 1
+
+    if echo "$current_peers" | grep -q "$IPFS_DHASH_PEER_ID" ; then
+        info 'Peering with dhash.ru is already configured'
+        return 0
+    fi
+
+    info 'Configuring peering with dhash.ru ...'
+    sudocmd su - "$IPFS_USER" -s /bin/sh -c "IPFS_PATH=$IPFS_HOME/.ipfs ipfs config --json Peering.Peers '[{\"ID\": \"$IPFS_DHASH_PEER_ID\", \"Addrs\": $IPFS_DHASH_ADDRS}]'" || return 1
+}
+
+__epm_ipfs_start()
+{
+    __epm_ipfs_check_installed
+    __epm_ipfs_init_repo
+    __epm_ipfs_configure_peering
+    sudocmd serv "$IPFS_SERVICE" on
+}
+
+__epm_ipfs_stop()
+{
+    sudocmd serv "$IPFS_SERVICE" off
+}
+
+__epm_ipfs_status()
+{
+    if ! is_command ipfs ; then
+        info 'IPFS (kubo) is not installed'
+        return 1
+    fi
+
+    docmd serv "$IPFS_SERVICE" status
+    echo
+    if ipfs swarm peers 2>/dev/null | grep -q "$IPFS_DHASH_PEER_ID" ; then
+        info 'Peering with dhash.ru: connected'
+    else
+        info 'Peering with dhash.ru: not connected'
+    fi
+}
+
+epm_ipfs()
+{
+    local cmd="$1"
+    shift
+
+    case "$cmd" in
+        start|on)                    # HELPCMD: install kubo if needed, configure peering and start IPFS service
+            __epm_ipfs_start
+            ;;
+        stop|off)                    # HELPCMD: stop IPFS service
+            __epm_ipfs_stop
+            ;;
+        status)                      # HELPCMD: show IPFS service status and peering info
+            __epm_ipfs_status
+            ;;
+        -h|--help|help|"")
+            epm_ipfs_help
+            ;;
+        *)
+            fatal "Unknown command '$cmd'. Run 'epm ipfs help' for usage."
+            ;;
+    esac
+}
