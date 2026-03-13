@@ -184,6 +184,10 @@ for i in $CONFIGDIR/eepm.conf $CONFIGDIR/conf.d/*.conf ; do
     [ -f "$i" ] && . "$i"
 done
 
+# export eget settings if set in config
+[ -n "$eget_backend" ] && export EGET_BACKEND="$eget_backend"
+[ -n "$eget_options" ] && export EGET_OPTIONS="$eget_options"
+
 # export proxy settings if set in config
 # Note: apt may require /etc/apt/apt.conf.d/ config, see https://bugzilla.altlinux.org/38543
 [ -n "$http_proxy" ] && export http_proxy
