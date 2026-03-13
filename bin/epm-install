@@ -27,6 +27,18 @@ load_helper epm-check_updated_repo
 load_helper epm-sh-warmup
 load_helper epm-installed
 
+# Check if at least one package from the list is not found in repos
+# Returns 0 if at least one package is not found (suggest is appropriate)
+# Returns 1 if all packages exist (broken deps, suggest is not appropriate)
+__epm_check_packages_not_found()
+{
+    local pkg
+    for pkg in "$@" ; do
+        epm status --available "$pkg" </dev/null >/dev/null 2>&1 || return 0
+    done
+    return 1
+}
+
 # for zypper before SUSE/11.0
 __use_zypper_no_gpg_checks()
 {
@@ -131,12 +143,15 @@ epm_install_names()
             if [ "$res" = 0 ] ; then
                 save_installed_packages $@
             elif [ "$res" = 100 ] ; then
-                local selected
-                selected="$(__epm_suggest_similar_packages_by_list $@)"
-                if [ -n "$selected" ] ; then
-                    info "Installing selected: $selected"
-                    epm_install_names $selected
-                    return $?
+                # only suggest alternatives if packages are not found (not broken deps)
+                if __epm_check_packages_not_found $@ ; then
+                    local selected
+                    selected="$(__epm_suggest_similar_packages_by_list $@)"
+                    if [ -n "$selected" ] ; then
+                        info "Installing selected: $selected"
+                        epm_install_names $selected
+                        return $?
+                    fi
                 fi
             fi
             return $res ;;
@@ -279,30 +294,10 @@ epm_ni_install_names()
     case $PMTYPE in
         apt-rpm)
             sudocmd apt-get $__EPM_APT_REPO_OPTIONS -y $noremove --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
-            local res=$?
-            if [ "$res" = 100 ] ; then
-                local selected
-                selected="$(__epm_suggest_similar_packages_by_list $@)"
-                if [ -n "$selected" ] ; then
-                    info "Installing selected: $selected"
-                    epm_ni_install_names $selected
-                    return $?
-                fi
-            fi
-            return $res ;;
+            return ;;
         apt-dpkg)
             sudocmd env ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive apt-get -y $noremove --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
-            local res=$?
-            if [ "$res" = 100 ] ; then
-                local selected
-                selected="$(__epm_suggest_similar_packages_by_list $@)"
-                if [ -n "$selected" ] ; then
-                    info "Installing selected: $selected"
-                    epm_ni_install_names $selected
-                    return $?
-                fi
-            fi
-            return $res ;;
+            return ;;
         apm-rpm)
             sudocmd apm system install $@
             return ;;
