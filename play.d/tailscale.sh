@@ -8,8 +8,10 @@ URL="https://tailscale.com/"
 
 . $(dirname $0)/common.sh
 
-warn_version_is_not_supported
+if [ "$VERSION" = "*" ] ; then
+    VERSION=$(get_github_tag tailscale/tailscale)
+fi
 
-PKGURL=$(eget --list --latest "https://dl.fedoraproject.org/pub/fedora/linux/releases/42/Everything/x86_64/os/Packages/t/" "tailscale*.rpm")
+PKGURL="https://pkgs.tailscale.com/stable/fedora/x86_64/tailscale_${VERSION}_x86_64.rpm"
 
 install_pkgurl

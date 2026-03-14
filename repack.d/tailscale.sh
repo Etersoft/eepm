@@ -12,7 +12,7 @@ PRODUCTDIR=/opt/$PRODUCT
 move_to_opt /usr/bin
 
 add_bin_exec_command
-add_bin_exec_command tailscaled
+[ -f "$BUILDROOT$PRODUCTDIR/tailscaled" ] && add_bin_exec_command tailscaled
 
 #cleanup
 remove_dir /var/cache
