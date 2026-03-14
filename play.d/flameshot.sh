@@ -18,7 +18,7 @@ pkgtype=$(epm print info -p)
 
 case "$pkgtype" in
     rpm)
-        asset="flameshot-${VERSION}-${RELEASE}.fc41.x86_64.rpm"
+        PKGURL=$(get_github_url flameshot-org/flameshot "flameshot-${VERSION}-*.x86_64.rpm")
         ;;
     *)
         debvariant="ubuntu-22.04"
@@ -28,9 +28,8 @@ case "$pkgtype" in
                 ;;
         esac
         asset="flameshot-${VERSION}-${RELEASE}.${debvariant}.amd64.deb"
+        PKGURL="https://github.com/flameshot-org/flameshot/releases/download/v$VERSION/$asset"
         ;;
 esac
-
-PKGURL="https://github.com/flameshot-org/flameshot/releases/download/v$VERSION/$asset"
 
 install_pkgurl

@@ -10,6 +10,7 @@ URL="https://www.bitwig.com"
 
 if [ "$VERSION" = "*" ]; then
     VERSION=$(eget -O- https://www.bitwig.com/download/ | grep -o "Bitwig Studio [0-9][0-9.]*" | head -1 | grep -o "[0-9][0-9.]*")
+    [ -n "$VERSION" ] || fatal "Can't get version"
 fi
 
 cd_to_temp_dir

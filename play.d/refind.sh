@@ -14,6 +14,7 @@ if [ "$VERSION" = "*" ] ; then
     VERSION=$(eget -O- https://sourceforge.net/projects/refind/best_release.json | sed -e 's|.*refind-bin-\([^"]*\)\.zip.*|\1|')
     RELEASE="1"
 fi
+[ "$RELEASE" = "*" ] && RELEASE="1"
 
 pkgtype="$(epm print info -p)"
 
