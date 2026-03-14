@@ -74,20 +74,20 @@ ARCH=$(uname -m)
 # Clean binaries
 case "$ARCH" in
   x86_64)
-    rm -v ventoy-$VERSION/VentoyGUI.aarch64
-    rm -v ventoy-$VERSION/VentoyGUI.i386
-    rm -v ventoy-$VERSION/VentoyGUI.mips64el
-    rm -rv ventoy-$VERSION/tool/mips64el
-    rm -rv ventoy-$VERSION/tool/i386
-    rm -rv ventoy-$VERSION/tool/aarch64
+    rm -fv ventoy-$VERSION/VentoyGUI.aarch64
+    rm -fv ventoy-$VERSION/VentoyGUI.i386
+    rm -fv ventoy-$VERSION/VentoyGUI.mips64el
+    rm -rfv ventoy-$VERSION/tool/mips64el
+    rm -rfv ventoy-$VERSION/tool/i386
+    rm -rfv ventoy-$VERSION/tool/aarch64
     ;;
   aarch64)
-    rm -v ventoy-$VERSION/VentoyGUI.x86_64
-    rm -v ventoy-$VERSION/VentoyGUI.i386
-    rm -v ventoy-$VERSION/VentoyGUI.mips64el
-    rm -rv ventoy-$VERSION/tool/mips64el
-    rm -rv ventoy-$VERSION/tool/i386
-    rm -rv ventoy-$VERSION/tool/x86_64
+    rm -fv ventoy-$VERSION/VentoyGUI.x86_64
+    rm -fv ventoy-$VERSION/VentoyGUI.i386
+    rm -fv ventoy-$VERSION/VentoyGUI.mips64el
+    rm -rfv ventoy-$VERSION/tool/mips64el
+    rm -rfv ventoy-$VERSION/tool/i386
+    rm -rfv ventoy-$VERSION/tool/x86_64
     ;;
 esac
 
