@@ -556,43 +556,49 @@ is_installed_by_play()
     return 1
 }
 
+# check if installed version is up to date, exit if no update needed
+# --latest: skip version check, update from upstream
+# --force: skip "already installed" check
 check_for_product_update()
 {
-    # get installed version (VERSION-RELEASE format)
     local fullpkgver="$(get_installed_full_version "$(__lowpkgname "$PKGNAME")")"
 
-    # load latest version and release from app-versions
-    load_latest_version $PKGNAME
-    latestpkgver="$VERSION"
-    local fulllatestver="$(build_full_version "$VERSION" "$RELEASE")"
-
-    # ignore update if package is not installed
+    # not installed yet, proceed with install
     [ -n "$fullpkgver" ] || return
 
-    if [ -z "$latestpkgver" ] ; then
+    # --latest: update from upstream, don't check app-versions
+    if [ -n "$latest" ] ; then
+        [ -n "$force" ] && return
+        # still compare with upstream version (will be fetched by play script)
+        echo "Updating $PKGNAME from $fullpkgver to latest upstream version ..."
+        return
+    fi
+
+    load_latest_version $PKGNAME
+    local fulllatestver="$(build_full_version "$VERSION" "$RELEASE")"
+
+    if [ -z "$VERSION" ] ; then
         echo "Can't get info about latest version of $PKGNAME, so skip updating installed version $fullpkgver."
         exit
     fi
-    # fulllatestver <= fullpkgver
-    if [ -z "$force" ] || [ -z "$latest" ] ; then
-        if [ "$(epm print compare package version $fulllatestver $fullpkgver)" != "1" ] ; then
-            if [ "$fulllatestver" = "$fullpkgver" ] ; then
-                echo "Latest available version of $PKGNAME $fulllatestver is already installed."
-            else
-                echo "Latest available version of $PKGNAME: $fulllatestver, but you have a newer version installed: $fullpkgver."
-            fi
-            exit
-        fi
+
+    # --force: reinstall even if same version
+    if [ -n "$force" ] ; then
+        echo "Updating $PKGNAME from $fullpkgver to $fulllatestver version (forced) ..."
+        return
     fi
 
-    #echo "Updating $PKGNAME from $fullpkgver to the latest available version (equal to $fulllatestver or newer) ..."
-    if [ -n "$force" ] || [ -z "$latest" ] ; then
-        echo "Updating $PKGNAME from $fullpkgver to latest available version ..."
-    else
-        echo "Updating $PKGNAME from $fullpkgver to $fulllatestver version ..."
-        VERSION="$latestpkgver"
-        # RELEASE already set by load_latest_version
+    # fulllatestver <= fullpkgver: no update needed
+    if [ "$(epm print compare package version $fulllatestver $fullpkgver)" != "1" ] ; then
+        if [ "$fulllatestver" = "$fullpkgver" ] ; then
+            echo "Latest available version of $PKGNAME $fulllatestver is already installed."
+        else
+            echo "Latest available version of $PKGNAME: $fulllatestver, but you have a newer version installed: $fullpkgver."
+        fi
+        exit
     fi
+
+    echo "Updating $PKGNAME from $fullpkgver to $fulllatestver version ..."
 }
 
 
@@ -675,7 +681,7 @@ case "$1" in
         # pass to run play code
         ;;
     "--run")
-        [ -z "$force" ] && check_for_product_update
+        [ -n "$force" ] || [ -n "$latest" ] || check_for_product_update
         # pass to run play code
         ;;
     *)

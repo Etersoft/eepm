@@ -716,6 +716,14 @@ case "$1" in
 
     --update|--upgrade)
         shift
+        # handle --latest/--force after --update
+        while true ; do
+            case "$1" in
+                --latest) shift ; export latest="true" ;;
+                --force)  shift ; force=1 ;;
+                *) break ;;
+            esac
+        done
         local CMDUPDATE="--update"
         # check --force on common.sh side
         #[ -n "$force" ] && CMDUPDATE="--run"
