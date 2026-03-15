@@ -69,7 +69,7 @@ epm_release_downgrade()
         __epm_ru_update || fatal
 
         # try to detect current release by repo
-        if [ "$DISTRVERSION" = "Sisyphus" ] || [ -z "$DISTRVERSION" ] ; then
+        if [ "$DISTRVERSION" = "Sisyphus" ] || [ "$DISTRVERSION" = "Deferred" ] || [ -z "$DISTRVERSION" ] ; then
             local dv
             dv="$(__detect_alt_release_by_repo)"
             if [ -n "$dv" ] && [ "$dv" != "$DISTRVERSION" ] ; then

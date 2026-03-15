@@ -110,6 +110,16 @@ __detect_alt_release_by_repo()
         return
     fi
 
+    # check Deferred first (its URLs also contain Sisyphus/)
+    local BRD=$(cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list \
+        | grep -v "^#" \
+        | grep "Etersoft/Sisyphus/Deferred/" \
+        | head -1 )
+    if [ -n "$BRD" ] ; then
+        echo "Deferred"
+        return
+    fi
+
     local BRD=$(cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list \
         | grep -v "^#" \
         | grep "Sisyphus/" \
@@ -142,11 +152,17 @@ get_fix_release_pkg()
 
     local TO="$1"
 
-    if [ "$TO" = "Sisyphus" ] ; then
-        TO="sisyphus"
-        echo "apt-conf-$TO"
-        # apt-conf-sisyphus and apt-conf-branch conflicts
+    if [ "$TO" = "Deferred" ] ; then
+        echo "apt-conf-deferred"
+        # apt-conf-deferred conflicts with apt-conf-branch and apt-conf-sisyphus
         epm installed apt-conf-branch && echo "apt-conf-branch-"
+        epm installed apt-conf-sisyphus && echo "apt-conf-sisyphus-"
+
+    elif [ "$TO" = "Sisyphus" ] ; then
+        echo "apt-conf-sisyphus"
+        # apt-conf-sisyphus conflicts with apt-conf-branch and apt-conf-deferred
+        epm installed apt-conf-branch && echo "apt-conf-branch-"
+        epm installed apt-conf-deferred && echo "apt-conf-deferred-"
         #for i in apt apt-rsync libapt libpackagekit-glib librpm7 packagekit rpm synaptic realmd libldap2 ; do
         #    epm installed $i && echo "$i"
         #done
@@ -210,7 +226,7 @@ __check_system()
         docmd epm --skip-installed install systemd || fatal
     fi
 
-    if [ "$TO" != "Sisyphus" ] ; then
+    if [ "$TO" != "Sisyphus" ] && [ "$TO" != "Deferred" ] ; then
         # skip if /etc/altlinux-release is owned by a branding package
         local release_pkg="$(__get_conflict_release_pkg)"
         if [ -n "$release_pkg" ] && rhas "$release_pkg" "^branding-" ; then
@@ -460,8 +476,11 @@ __switch_alt_to_distro()
             __check_system "$TO"
             docmd epm upgrade || fatal
             ;;
-        "Sisyphus p8"|"Sisyphus p9"|"Sisyphus p10"|"Sisyphus p11"|"Sisyphus c8"|"Sisyphus c8.1"|"Sisyphus c9f2"|"Sisyphus c10f1"|"Sisyphus c10f2"|"Sisyphus c10f3")
+        "Sisyphus p8"|"Sisyphus p9"|"Sisyphus p10"|"Sisyphus p11"|"Sisyphus c8"|"Sisyphus c8.1"|"Sisyphus c9f2"|"Sisyphus c10f1"|"Sisyphus c10f2"|"Sisyphus c10f3"|\
+        "Deferred p8"|"Deferred p9"|"Deferred p10"|"Deferred p11"|"Deferred c8"|"Deferred c8.1"|"Deferred c9f2"|"Deferred c10f1"|"Deferred c10f2"|"Deferred c10f3")
             confirm_info 'Downgrade $DISTRNAME from $FROM to $TO ...'
+            # remove Deferred repo before switching
+            epm --quiet repo remove "Etersoft/Sisyphus/Deferred"
             docmd epm install $(get_fix_release_pkg "$FROM")
             if [ $TO = "p11" ]; then __sisyphus_downgrade_fix; fi
             __switch_repo_to $TO
@@ -471,12 +490,13 @@ __switch_alt_to_distro()
             __check_system "$TO"
             docmd epm upgrade || fatal
             ;;
-        "p8 Sisyphus"|"p9 Sisyphus"|"p10 Sisyphus"|"p11 Sisyphus"|"Sisyphus Sisyphus")
+        "p8 Sisyphus"|"p9 Sisyphus"|"p10 Sisyphus"|"p11 Sisyphus"|"Sisyphus Sisyphus"|\
+        "p8 Deferred"|"p9 Deferred"|"p10 Deferred"|"p11 Deferred"|"Deferred Deferred"|"Sisyphus Deferred"|"Deferred Sisyphus")
             confirm_info 'Upgrade $DISTRNAME from $FROM to $TO ...'
             docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
             docmd epm upgrade || fatal
             # TODO: epm_reposwitch??
-            __replace_alt_version_in_repo "$FROM/branch/" "$TO/"
+            __replace_alt_version_in_repo "$FROM/branch/" "Sisyphus/"
             __switch_repo_to $TO
             [ -s /etc/rpm/macros.d/p10 ] && rm -fv /etc/rpm/macros.d/p10
             [ -s /etc/rpm/macros.d/p11 ] && rm -fv /etc/rpm/macros.d/p11
@@ -499,7 +519,7 @@ __switch_alt_to_distro()
                 warning 'Unknown distro version. Have no idea how to switch from $DISTRNAME $FROM to $DISTRNAME $TO.'
             fi
             end_change_alt_repo
-            info "Try run f.i. '# epm release-upgrade p10' or '# epm release-downgrade p9' or '# epm release-upgrade Sisyphus'"
+            info "Try run f.i. '# epm release-upgrade p10' or '# epm release-downgrade p9' or '# epm release-upgrade Deferred' or '# epm release-upgrade Sisyphus'"
             info "Also possible you need install altlinux-release-p? package for correct distro version detecting"
             return 1
     esac
@@ -525,7 +545,7 @@ epm_release_upgrade()
 
         # TODO: remove this hack (or move it to distro_info)
         # try to detect current release by repo
-        if [ "$DISTRVERSION" = "Sisyphus" ] || [ -z "$DISTRVERSION" ] ; then
+        if [ "$DISTRVERSION" = "Sisyphus" ] || [ "$DISTRVERSION" = "Deferred" ] || [ -z "$DISTRVERSION" ] ; then
             local dv
             dv="$(__detect_alt_release_by_repo)"
             if [ -n "$dv" ] && [ "$dv" != "$DISTRVERSION" ] ; then
@@ -545,6 +565,7 @@ epm_release_upgrade()
         fi
 
         [ "$TARGET" = "Sisyphus" ] && info "Check also https://www.altlinux.org/Update/Sisyphus"
+        [ "$TARGET" = "Deferred" ] && info "Check also https://www.altlinux.org/Update/Sisyphus"
 
         [ -n "$TARGET" ] || TARGET="$(get_next_release $DISTRVERSION)"
 
