@@ -257,8 +257,8 @@ build_full_version()
 get_installed_full_version()
 {
     local pkg="$1"
-    local ver="$(epm print version for package $pkg | head -n1)"
-    local rel="$(epm print release for package $pkg | head -n1)"
+    local ver="$(epm print version for package $pkg 2>/dev/null | head -n1)"
+    local rel="$(epm print release for package $pkg 2>/dev/null | head -n1)"
     local rel_suffix="$(get_release_suffix "$rel")"
     build_full_version "$ver" "$rel_suffix"
 }
@@ -480,7 +480,7 @@ is_repacked_package()
     [ -n "$pkg" ] || pkg="$PKGNAME"
     [ -n "$pkg" ] || return 0 #fatal "is_repacked_package() is called without package name"
 
-    epm status --installed $pkg || return 0
+    epm status --installed $pkg >/dev/null 2>&1 || return 0
 
     if ! epm status --supported $pkg ; then
        echo "Status checking is not supported for $(epm print info -e). Skipping installed package check (use --force to override)."
@@ -532,8 +532,8 @@ is_installed_by_play()
     [ -n "$pkg" ] || return 1
 
     # Check exact package first
-    if epm status --installed $pkg ; then
-        epm status --repacked $pkg && return 0
+    if epm status --installed $pkg >/dev/null 2>&1 ; then
+        epm status --repacked $pkg >/dev/null 2>&1 && return 0
     fi
 
     # If BASEPKGNAME and PRODUCTALT are set, check only valid alternatives
@@ -543,12 +543,12 @@ is_installed_by_play()
     for i in $PRODUCTALT ; do
         if [ "$i" = "''" ] ; then
             # Check base package without suffix
-            if epm status --installed "$BASEPKGNAME" ; then
-                epm status --repacked "$BASEPKGNAME" && return 0
+            if epm status --installed "$BASEPKGNAME" >/dev/null 2>&1 ; then
+                epm status --repacked "$BASEPKGNAME" >/dev/null 2>&1 && return 0
             fi
         else
-            if epm status --installed "$BASEPKGNAME-$i" ; then
-                epm status --repacked "$BASEPKGNAME-$i" && return 0
+            if epm status --installed "$BASEPKGNAME-$i" >/dev/null 2>&1 ; then
+                epm status --repacked "$BASEPKGNAME-$i" >/dev/null 2>&1 && return 0
             fi
         fi
     done
