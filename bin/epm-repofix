@@ -102,8 +102,19 @@ __alt_branch_reg='[tcp][1-3]?[0-9][.f]?[0-9]?'
 epm_reposwitch()
 {
     local TO="$1"
-    [ -n "$TO" ] || fatal "run repo switch with arg (p9, p10, Sisyphus)"
+    [ -n "$TO" ] || fatal "run repo switch with arg (p9, p10, Sisyphus, Deferred)"
     [ "$TO" = "sisyphus" ] && TO="Sisyphus"
+    [ "$TO" = "deferred" ] && TO="Deferred"
+
+    # Deferred is based on Sisyphus, replaces Sisyphus URLs with Deferred
+    if [ "$TO" = "Deferred" ] ; then
+        # first normalize branch repos to Sisyphus
+        __replace_alt_version_in_repo "$__alt_branch_reg/branch/" "Sisyphus/"
+        # replace Sisyphus with Deferred path
+        __replace_text_in_alt_repo "/^ *#/! s!ALTLinux/Sisyphus/!Etersoft/Sisyphus/Deferred/!g"
+        __alt_repofix "Sisyphus"
+        return
+    fi
 
     case "$TO" in
         --help)
@@ -112,7 +123,7 @@ epm_reposwitch()
             ;;
         --list)
             [ -z "$quiet" ] && message "Possible repo switch targets:"
-            echo "p8 p9 p10 p11 c8 c9 c10f1 c10f2 Sisyphus"
+            echo "p8 p9 p10 p11 c8 c9 c10f1 c10f2 Deferred Sisyphus"
             return
             ;;
         -*)
@@ -121,6 +132,9 @@ epm_reposwitch()
     esac
 
     assure_root
+
+    # restore Deferred URLs back to Sisyphus before switching
+    __replace_text_in_alt_repo "/^ *#/! s!Etersoft/Sisyphus/Deferred/!ALTLinux/Sisyphus/!g"
 
     if [ "$TO" = "Sisyphus" ] ; then
         __replace_alt_version_in_repo "$__alt_branch_reg/branch/" "$TO/"
