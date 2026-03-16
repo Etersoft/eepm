@@ -1439,7 +1439,7 @@ __epm_suggest_similar_packages()
     is_command fzf || return 1
 
     local similar
-    similar="$(fzf -f "$pkg" < "$cache" 2>/dev/null | head -$count)"
+    similar="$(fzf -f "$pkg" < "$cache" 2>/dev/null | grep -v "^${pkg}$" | head -$count)"
     [ -z "$similar" ] && return 1
 
     # Interactive selection if enabled (via config or --interactive flag)
