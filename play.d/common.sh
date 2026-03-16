@@ -138,6 +138,16 @@ override_pkgname()
     export EEPM_INTERNAL_PKGNAME="$PKGNAME"
 }
 
+__suggest_ipfs_on_error()
+{
+    if [ -z "$ipfs" ] ; then
+        local playname="$(basename $0 .sh)"
+        info
+        info 'Tip: try $ epm play --ipfs '$playname' to install from IPFS cache.'
+    fi
+    exit 1
+}
+
 # epm install $PKGURL
 install_pkgurl()
 {
@@ -154,7 +164,7 @@ install_pkgurl()
         exit 0
     fi
 
-    epm install $repack $PKGURL "$@" || exit
+    epm install $repack $PKGURL "$@" || __suggest_ipfs_on_error
 }
 
 # epm pack --install $PKGNAME "$PKGURL"
@@ -173,7 +183,7 @@ install_pack_pkgurl()
         exit 0
     fi
 
-    epm pack $repack --install $PKGNAME "$PKGURL" "$@"
+    epm pack $repack --install $PKGNAME "$PKGURL" "$@" || __suggest_ipfs_on_error
 }
 
 # ["version"]
