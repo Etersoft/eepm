@@ -13,7 +13,7 @@ if ! is_glibc_enough 2.34 ; then
 fi
 
 if [ "$VERSION" = "*" ] ; then
-    VERSION=$(eget -q -O- https://www.ocbase.com/download | grep -oP '"versionStr":"\K[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -n1)
+    VERSION=$(eget -q -O- https://www.ocbase.com/download | grep -oP '"versionStr":"\K[0-9]+\.[0-9]+\.[0-9]+(?=")' | sort -uV | tail -n1)
     PKGURL="https://www.ocbase.com/download/edition:Personal/os:Linux"
 else
     PKGURL="https://www.ocbase.com/download/edition:Personal/os:Linux/version:$VERSION"
