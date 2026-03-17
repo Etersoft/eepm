@@ -13,7 +13,7 @@ if ! is_glibc_enough 2.34 ; then
 fi
 
 if [ "$VERSION" = "*" ] ; then
-    VERSION=$(eget -O- https://lenzaos.com/ | grep -oP 'Lenza-\K[0-9]+\.[0-9]+\.[0-9]+(?=\.AppImage)')
+    VERSION=$(eget -O- https://software.lenzaos.com/app-chats/latest-linux.yml | awk -F': ' '/^version:/{print $2; exit}' | tr -d '\r')
 fi
 
 PKGURL="https://software.lenzaos.com/app-chats/$PKGNAME-$VERSION.AppImage"
