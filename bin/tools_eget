@@ -1373,13 +1373,13 @@ url_pget()
 url_check_accessible()
 {
     local URL="$1"
-    test -f "$(path_from_url "$URL")"
+    test -e "$(path_from_url "$URL")"
 }
 
 url_check_available()
 {
     local URL="$1"
-    test -f "$(path_from_url "$URL")"
+    test -e "$(path_from_url "$URL")"
 }
 
 url_get_filename()
