@@ -294,8 +294,8 @@ is_rsyncurl()
 # SSH/rsync URL: user@host:/path or host:/path (but not scheme://)
 is_sshurl()
 {
-    # Exclude scheme:// first, then match host:path
-    case "$1" in *://*) return 1 ;; *:*) return 0 ;; esac
+    # Exclude scheme:// and scheme:/ first, then match host:path
+    case "$1" in *://*) return 1 ;; *:/*) return 1 ;; *:*) return 0 ;; esac
     return 1
 }
 
