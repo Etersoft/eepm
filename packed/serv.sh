@@ -439,7 +439,8 @@ __promo_message()
     local PROMOMESSAGE="$EPMPROMOMESSAGE"
     if [ -z "$PROMOMESSAGE" ] ; then
         local tg_link=$(make_osc8_link "https://t.me/useepm")
-        PROMOMESSAGE=" (you can discuss this problem (epm $EPMVERSION on $DISTRNAME/$DISTRVERSION) in Telegram: $tg_link)"
+        local max_link=$(make_osc8_link "https://max.eepm.ru")
+        PROMOMESSAGE=" (you can discuss this problem (epm $EPMVERSION on $DISTRNAME/$DISTRVERSION) in Telegram: $tg_link, MAX: $max_link)"
     fi
     echo "$PROMOMESSAGE"
 }
