@@ -448,7 +448,8 @@ __promo_message()
     local PROMOMESSAGE="$EPMPROMOMESSAGE"
     if [ -z "$PROMOMESSAGE" ] ; then
         local tg_link=$(make_osc8_link "https://t.me/useepm")
-        PROMOMESSAGE=" (you can discuss this problem (epm $EPMVERSION on $DISTRNAME/$DISTRVERSION) in Telegram: $tg_link)"
+        local max_link=$(make_osc8_link "https://max.eepm.ru")
+        PROMOMESSAGE=" (you can discuss this problem (epm $EPMVERSION on $DISTRNAME/$DISTRVERSION) in Telegram: $tg_link, MAX: $max_link)"
     fi
     echo "$PROMOMESSAGE"
 }
@@ -25404,8 +25405,9 @@ phelp()
 print_version()
 {
         local tg_link=$(make_osc8_link "https://t.me/useepm")
+        local max_link=$(make_osc8_link "https://max.eepm.ru")
         local wiki_link=$(make_osc8_link "https://wiki.etersoft.ru/Epm")
-        message 'EPM package manager version $EPMVERSION  Telegram: $tg_link  $wiki_link
+        message 'EPM package manager version $EPMVERSION  Telegram: $tg_link  MAX: $max_link  $wiki_link
                  Running on $DISTRNAME/$DISTRVERSION ($PMTYPE package manager uses $PKGFORMAT package format)
                  Copyright (c) Etersoft 2012-2025
                  This program may be freely redistributed under the terms of the GNU AGPLv3.'
