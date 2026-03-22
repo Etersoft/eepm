@@ -2016,7 +2016,8 @@ msgstr ""
 #: ../bin/epm:117
 #, sh-format
 msgid ""
-"EPM package manager version $EPMVERSION  Telegram: https://t.me/useepm  "
+"EPM package manager version $EPMVERSION  Telegram: https://t.me/useepm  MAX: "
+"https://max.eepm.ru  "
 "https://wiki.etersoft.ru/Epm\n"
 "                 Running on $DISTRNAME/$DISTRVERSION ($PMTYPE package "
 "manager uses $PKGFORMAT package format)\n"

@@ -5,26 +5,34 @@
 Really, EPM is a wrapper for any package manager used in your operating system.
 
 Run
+
 ```
 $ epm --help
 ```
+
 to see list of all supported commands.
 
 The main goal of the project is to provide the same package management interface
 on all platforms.
 
 You can use
+
 ```
 # epmi NAME
 ```
+
 or
+
 ```
 # epm -i NAME
 ```
+
 or
+
 ```
 # epm install NAME
 ```
+
 to install a package. It is just an alias for one command: install the package.
 EPM will run `urpmi` on Mandriva, `apt install` on Ubuntu, `yum install` on Fedora,
 or `apt-get install` on ALT Linux.
@@ -40,10 +48,12 @@ EPM has support for repository management: repo list, repo add, repo remove, upd
 Also EPM contains `serv` command to control system services in system independed manner.
 
 Pay attention to the following useful commands:
-* `epmqf <command name>` - query package(s) owning file
-* `epmqp <word>` - search in the list of installed packages
+
+- `epmqf <command name>` - query package(s) owning file
+- `epmqp <word>` - search in the list of installed packages
 
 `epmqf` can be helpful to get package name for any file or command in the system:
+
 ```
 $ epmqf epmqf
 Note: epmqf is placed as /usr/bin/epmqf
@@ -63,6 +73,7 @@ For example, run `epm play edge` to install Microsoft Edge browser in your syste
 ## Install on any system
 
 Just run under root user:
+
 ```
 # curl -sL https://eepm.ru/epm.sh | bash /dev/stdin ei
 ```
@@ -73,9 +84,9 @@ or using wget:
 # wget -O- https://eepm.ru/epm.sh | bash /dev/stdin ei
 ```
 
-
 If you have no `curl` or `wget` on your system, just download file `https://eepm.ru/epm.sh`
 and run it in the download directory via bash:
+
 ```
 # bash epm.sh ei
 ```
@@ -86,27 +97,30 @@ Also you can install eepm package manually:
 ## How to add new distro support
 
 For developers only:
+
 1. Fix detection with `distro_info`
 2. Add distro support in `set_pm_type` function
-3. Implement every command in epm-* files
+3. Implement every command in epm-\* files
 4. Ensure that `epm packages` and `epm --short packages` works correctly
-(`epm package 'awk'` have to print packages with `awk` substring in their names)
+   (`epm package 'awk'` have to print packages with `awk` substring in their names)
 
 ## Informational resources
-* https://wiki.archlinux.org/title/Pacman/Rosetta
+
+- https://wiki.archlinux.org/title/Pacman/Rosetta
 
 See detailed description in Russian at
 https://wiki.eepm.ru/
 
 Please visit our Telegram group
 https://t.me/useepm
+MAX (fallback): https://max.eepm.ru
 
 Please e-mail if you have any questions:
 `lav@etersoft.ru`
 
 ## Simular projects
 
-* https://github.com/leamas/lpf
-* https://ihucos.github.io/zpkg/ - With zpkg you can install programs from other distributions into your system
-* https://github.com/volitank/nala
-* http://labix.org/smart
+- https://github.com/leamas/lpf
+- https://ihucos.github.io/zpkg/ - With zpkg you can install programs from other distributions into your system
+- https://github.com/volitank/nala
+- http://labix.org/smart
