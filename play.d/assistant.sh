@@ -14,36 +14,22 @@ warn_version_is_not_supported
 arch="$(epm print info -a)"
 pkg="$(epm print info -p)"
 
-# some locale depend troubles (ALT with bash 4 needs LANG=ru_RU.UTF-8, Ubuntu with bash 5 needs LANG=C.UTF-8)
-#DLURL="https://мойассистент.рф/скачать"
-DLURL="https://xn--80akicokc0aablc.xn--p1ai/%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C"
-
-# parse vendor site
-tmpfile=$(mktemp)
-trap 'rm -f "$tmpfile"' EXIT
-eget -q -O- "$DLURL" | grep -A200 "Ассистент для LINUX" >$tmpfile
-
-url_by_text()
-{
-    local text="$1"
-    local pkg="$(cat $tmpfile | grep -B1 "$text" | head -n1 | grep "/Download/" | sed -e 's|.*href="||' -e 's|".*||')"
-    [ -n "$pkg" ] || fatal "Can't get Download href for $text"
-    #echo "https://мойассистент.рф$pkg"
-    echo "https://xn--80akicokc0aablc.xn--p1ai$pkg"
-}
+# Vendor site is SPA, download links are only available via API
+# Platform 2 = Linux; item IDs: 1376=RPM, 1375=DEB, 1382=RPM ARM, 1383=DEB ARM
+DLBASE="https://lk2.xn--80akicokc0aablc.xn--p1ai/WebApi/Platforms/Download"
 
 case $arch-$pkg in
     x86_64-rpm)
-        PKGURL="$(url_by_text "Скачать RPM пакет")"
+        PKGURL="$DLBASE/1376"
         ;;
     x86_64-deb)
-        PKGURL="$(url_by_text "Скачать DEB пакет")"
+        PKGURL="$DLBASE/1375"
         ;;
     aarch64-rpm)
-        PKGURL="$(url_by_text "Скачать RPM пакет для ARM устройств")"
+        PKGURL="$DLBASE/1382"
         ;;
     aarch64-deb)
-        PKGURL="$(url_by_text "Скачать DEB пакет для ARM устройств")"
+        PKGURL="$DLBASE/1383"
         ;;
     *)
         fatal "$(epm print info -e) is not supported (arch $arch, package type is $pkg)"
