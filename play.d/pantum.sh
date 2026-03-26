@@ -20,6 +20,9 @@ warn_version_is_not_supported
 # 1.1.123
 PKGURL="https://www.pantum.ru/wp-content/uploads/2024/06/Pantum-Ubuntu-Driver-V1_1_123.zip"
 
+# 1.1.167 (requires User-Agent, doesn't work with wget directly)
+#PKGURL="https://drivers.pantum.com/userfiles/files/download/drive/2013/Pantum%20Linux%20Driver%20V1_1_167.zip"
+
 #case $(epm print info -p) in
 #    *)
 #        PKGURL="https://drivers.pantum.ru/userfiles/files/download/drive/4020/linux%E5%85%B6%E4%BB%96%E7%B3%BB%E7%BB%9F%EF%BC%88ru%EF%BC%89/pantum-1_1_101-1_el8_x86_64.zip"
