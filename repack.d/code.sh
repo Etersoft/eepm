@@ -12,6 +12,10 @@ PRODUCTDIR=/opt/$PRODUCT
 
 move_to_opt
 
+# libmsalruntime.so in microsoft-authentication extension links against libwebkit2gtk-4.1
+# which is not available on older distros (c10f2, etc.)
+ignore_lib_requires libwebkit2gtk-4.1.so.0
+
 add_electron_deps
 
 fix_desktop_file /usr/share/code/code
