@@ -8,7 +8,11 @@ RETURNTARNAME="$2"
 # epm replaces spaces with - in downloaded files
 if echo "$TAR" | grep -q "Pantum[ -]Ubuntu[ -]Driver[- ]V.*.zip" ; then
     erc --here "$TAR" || fatal
+elif echo "$TAR" | grep -q "Pantum[ -]Linux[ -]Driver[- ]V.*.zip" ; then
+    erc --here "$TAR" || fatal
 elif echo "$TAR" | grep -q "Pantum%20Ubuntu%20Driver%20V.*.zip" ; then
+    erc --here "$TAR" || fatal
+elif echo "$TAR" | grep -q "Pantum%20Linux%20Driver%20V.*.zip" ; then
     erc --here "$TAR" || fatal
 elif echo "$TAR" | grep -q "linux_pantum.7z" ; then
     erc --here "$TAR" || fatal
