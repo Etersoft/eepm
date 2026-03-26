@@ -18,8 +18,8 @@ if echo "$TAR" | grep -q "plugin_run\.zip$" ; then
 fi
 
 # https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=hplip-plugin
+# makeself archive extracts files into current directory (no subdirectory)
 erc --here unpack $TAR || exit
-cd "$(erc basename $TAR)" || exit
 
 case "$(epm print info -a)" in
     x86_64)
