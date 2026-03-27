@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.57"
+EPMVERSION="3.64.58"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1214,12 +1214,25 @@ set_pm_type()
 
 if [ -n "$EPM_BACKEND" ] ; then
     PMTYPE="$EPM_BACKEND"
-    return
 fi
 if [ -n "$FORCEPM" ] ; then
     PMTYPE="$FORCEPM"
-    return
 fi
+
+case "$PMTYPE" in
+    dnf5)
+        PMTYPE="dnf5-rpm"
+        ;;
+esac
+
+case "$PMTYPE" in
+    dnf5-rpm)
+        DNFCMD="dnf5"
+        ;;
+    dnf-rpm)
+        DNFCMD="dnf"
+        ;;
+esac
 
 }
 
@@ -1391,7 +1404,7 @@ __epm_suggest_similar_packages()
     is_command fzf || return 1
 
     local similar
-    similar="$(fzf -f "$pkg" < "$cache" 2>/dev/null | head -$count)"
+    similar="$(fzf -f "$pkg" < "$cache" 2>/dev/null | grep -v "^${pkg}$" | head -$count)"
     [ -z "$similar" ] && return 1
 
     # Interactive selection if enabled (via config or --interactive flag)
