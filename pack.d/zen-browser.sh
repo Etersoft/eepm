@@ -14,6 +14,6 @@ VERSION=$(echo "$URL" | grep -oP 'download/\K[0-9]+\.[0-9a-e]+')
 # rename package
 PKGNAME="$PRODUCT-$VERSION.AppImage"
 
-mv -v $TAR $PKGNAME
+cp $TAR $PKGNAME || fatal
 
 return_tar $PKGNAME
