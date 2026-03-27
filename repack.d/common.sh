@@ -556,7 +556,7 @@ __get_library_provides()
 {
     local fdir="$1"
 
-    epm assure objdump binutils || fatal "Can't install needed binutils package"
+    epm assure objdump binutils >&2 || fatal "Can't install needed binutils package"
 
     info "  Getting internal provides ..."
     for libso in $(find "$fdir" -name "lib*.so*") ; do

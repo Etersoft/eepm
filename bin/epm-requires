@@ -43,7 +43,7 @@ __epm_alt_rpm_requires()
 
 get_linked_shared_libs()
 {
-    assure_exists readelf binutils
+    assure_exists readelf binutils >&2
     #is_command readelf || fatal "Can't get required shared library: readelf is missed. Try install binutils package."
     #ldd "$exe" | sed -e 's|[[:space:]]*||' | grep "^lib.*[[:space:]]=>[[:space:]]\(/usr/lib\|/lib\)" | sed -e 's|[[:space:]].*||'
     LC_ALL=C a="" readelf -d "$1" | grep "(NEEDED)" | grep "Shared library:" | sed -e 's|.*Shared library: \[||' -e 's|\]$||' | grep "^lib"
