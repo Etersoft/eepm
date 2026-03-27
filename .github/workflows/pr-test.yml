@@ -66,14 +66,14 @@ jobs:
           case "$os_id" in
             altlinux|alt)
               apt-get update
-              apt-get install -y git-core glibc-pthread wget file 
+              apt-get install -y git-core glibc-pthread wget file binutils
               ;;
             debian|ubuntu)
               apt-get update
-              apt-get install -y git ca-certificates wget file coreutils
+              apt-get install -y git ca-certificates wget file coreutils binutils squashfs-tools
               ;;
             fedora)
-              dnf install -y git wget file 
+              dnf install -y git wget file binutils squashfs-tools
               ;;
           esac
 
