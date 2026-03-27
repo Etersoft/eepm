@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.57
+Version: 3.64.58
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -181,6 +181,64 @@ EOF
 # metapackage, no files
 
 %changelog
+* Fri Mar 27 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.58-alt1
+- epm: exclude exact match from package suggestions
+- epm play.d/common.sh: fix --latest and --force flags in version check
+- epm play.d/common.sh: suppress 'not installed' messages in status checks
+- epm play.d/common.sh: suggest --ipfs on download failure
+- eget: fix is_sshurl falsely matching file:/path URLs
+- eget: fix --check-url for file: directories
+- epm play occt: exclude beta versions from version scraping
+- erc: add -no-xattrs to unsquashfs to avoid exit code 2 on xattr failures
+- epm repack.d/furmark.sh: remove broken empty add_bin_exec_command call
+- epm pack.d/lexmark-upd-ppd.sh: remove empty opt/ dir from package
+- epm pack.d/ventoy.sh: use rm -f to ignore missing arch-specific files
+- epm play bitwig-studio: fix version scraping for two-component versions
+- epm repack bitwig-studio: ignore 32-bit deps from BitwigPluginHost-X86-SSE41
+- epm play kyodialog: fix pack.d for archive without top-level directory
+- epm play: add telega (Telega messenger)
+- epm play: add nextcloud-client (Nextcloud desktop sync client)
+- epm play: add cursor-agent (Cursor Agent CLI)
+- epm play tailscale: switch to official tailscale RPM repo epm repack tailscale: skip tailscaled wrapper if binary not present
+- epm play assistant: switch to vendor API for download URLs
+- epm play spo-anketa: update to version 1.0.2
+- epm play: add freefilesync (folder comparison and synchronization)
+- epm play: add kilocode (AI-powered coding CLI tool)
+- epm play freeoffice: fix scraping URL
+- epm play flameshot: use get_github_url for dynamic RPM asset detection
+- epm play bitwig-studio: add version check after scraping epm play refind: default RELEASE to 1 when not specified
+- eget: fix cross-domain redirect host in url_get_raw_real_url
+- epm info: fix exit code for non-existent packages in apt-rpm
+- epm install: skip package suggestions on broken deps (only suggest when package not found)
+- epm play: remove openvpn from repo-play-apps.list
+- epm repo mirrors: use download.basealt.ru as main basealt mirror, move ftp.basealt.ru to legacy
+- epm repo mirrors: show IP address in mirror list
+- epm upgrade: use PMTYPE check for apt-specific parallel download
+- epm: export eget_backend and eget_options from config to EGET_BACKEND/EGET_OPTIONS
+- eget: rework timeout options, add --max-size and --measurements
+- eget: remove -n short alias for --measurements
+- eget: use timeout(1) for --read-timeout with wget/aria2/axel
+- epm removerepo: show command when removing task repo
+- epm removerepo: show sed command only with --verbose
+- epm packages: fix dpkg output truncated to single line
+- epm pack.d: add lowercase symlinks for deb systems where PKGNAME is lowercased
+- epm-sh-functions: add DNFCMD variable for correct dnf5 command invocation
+- epm repoindex: use dnf5 repo create for dnf5 backend with createrepo_c fallback
+- epm-sh-functions: normalize dnf5 backend name to dnf5-rpm
+- epm repoindex: always use createrepo_c for dnf5 backend
+- epm addrepo/removerepo: check PMTYPE instead of BASEDISTRNAME for ALT dnf5 support
+- epm repoindex: handle --init flag for dnf-rpm/dnf5-rpm backends
+- epm ipfs: add command to manage IPFS node (start, stop, status)
+- epm install: use --name for local-repo to save in sources.list.d
+- epm release-upgrade: add Deferred branch support
+- epm-sh-backend: use symlinks for apt lists cache in tmp apt dir
+- epm: add max fallback contact links
+- epm repack.d: ignore false libwebkit2gtk-4.1 dependency from bundled libmsalruntime.so
+- epm play: add freecad (3D parametric modeler via AppImage)
+- epm play pantum: add new download URL, support Linux Driver naming in pack.d
+- epm play hplip-plugin: fix extraction of makeself archive (no subdirectory with --here)
+- epm.spec: Require 7-zip instead p7zip for eepm-repack
+
 * Thu Mar 12 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.57-alt1
 - pack.d/yandex-browser-*-codecs-ffmpeg-extra: fix path after erc --here migration
 - epm repack: fatal on empty buildroot and missing working directory
