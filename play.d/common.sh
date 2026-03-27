@@ -584,6 +584,12 @@ check_for_product_update()
         return
     fi
 
+    # user specified explicit version (e.g., epm play app=1.2.3): skip app-versions check
+    if [ -n "$VERSION" ] && [ "$VERSION" != "*" ] ; then
+        echo "Installing $PKGNAME version $VERSION (explicit version requested) ..."
+        return
+    fi
+
     load_latest_version $PKGNAME
     local fulllatestver="$(build_full_version "$VERSION" "$RELEASE")"
 
