@@ -61,6 +61,13 @@ __epm_pack_run_handler()
     local packscript="$(get_pack_script "$packname")"
     has_pack_script "$packscript" || return
 
+    # copy source file to pack working directory so pack scripts can freely rename it
+    if [ -f "$tarname" ] && [ "$(dirname "$tarname")" != "$(pwd)" ] ; then
+        load_helper epm-repack
+        __epm_repack_copy "$tarname" "$(pwd)/$(basename "$tarname")"
+        tarname="$(pwd)/$(basename "$tarname")"
+    fi
+
     # a file to keep filename of generated tarball
     filefortarname="$(pwd)/filefortarname"
 
