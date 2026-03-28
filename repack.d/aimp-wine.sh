@@ -4,7 +4,7 @@ BUILDROOT="$1"
 
 SPEC="$2"
 
-PRODUCT=aimp
+PRODUCT=aimp-wine
 PRODUCTDIR=/opt/$PRODUCT
 
 . $(dirname $0)/common.sh

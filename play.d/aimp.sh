@@ -3,25 +3,21 @@
 PKGNAME=aimp
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
-DESCRIPTION="AIMP (Wine based audio player) from the official site"
-URL="https://www.aimp.ru/?do=download&os=linux"
+DESCRIPTION="AIMP native audio player (beta) from the official site"
+URL="https://aimp.ru/?do=download&os=desktop"
 
 . $(dirname $0)/common.sh
 
-pkgtype="$(epm print info -p)"
-
-if ! is_command wine ; then
-    epm play wine || fatal
-fi
-
 warn_version_is_not_supported
+
+pkgtype="$(epm print info -p)"
 
 case $pkgtype in
     deb)
-        PKGURL="https://www.aimp.ru/?do=download.file&id=26"
+        PKGURL="https://aimp.ru/?do=download.file&id=30"
         ;;
     *)
-        PKGURL="https://www.aimp.ru/?do=download.file&id=32"
+        PKGURL="https://aimp.ru/?do=download.file&id=29"
         ;;
 esac
 
