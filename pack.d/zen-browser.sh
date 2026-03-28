@@ -16,4 +16,11 @@ PKGNAME="$PRODUCT-$VERSION.AppImage"
 
 mv $TAR $PKGNAME || fatal
 
+cat <<EOF >$PKGNAME.eepm.yaml
+name: $PRODUCT
+version: $VERSION
+upstream_file: $(basename $TAR)
+generic_repack: appimage
+EOF
+
 return_tar $PKGNAME

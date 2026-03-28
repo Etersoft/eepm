@@ -4,7 +4,12 @@
 BUILDROOT="$1"
 SPEC="$2"
 
+PRODUCT=zen-browser
+
 . $(dirname $0)/common-chromium-browser.sh
+
+# rename from "zen" (generic-appimage parses short name from AppImage filename)
+subst "s|^Name:.*|Name: $PRODUCT|" $SPEC
 
 # previous package name
 add_conflicts zen
