@@ -12,6 +12,6 @@ if [ "$VERSION" = "*" ] ; then
     VERSION=$(get_github_tag "$URL")
 fi
 
-PKGURL="https://github.com/telemt/telemt/releases/download/$VERSION/$PKGNAME-x86_64-linux-gnu.tar.gz"
+PKGURL="https://github.com/telemt/telemt/releases/download/$VERSION/$PKGNAME-x86_64-linux-musl.tar.gz"
 
 install_pack_pkgurl $VERSION

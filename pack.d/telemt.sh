@@ -7,7 +7,8 @@ VERSION="$3"
 . $(dirname $0)/common.sh
 
 mkdir -p opt/$PRODUCT
-cp "$TAR" opt/$PRODUCT/$PRODUCT
+erc --here unpack "$TAR" || fatal
+cp "$(erc basename "$TAR")/$PRODUCT" opt/$PRODUCT/$PRODUCT 2>/dev/null || cp "$PRODUCT" opt/$PRODUCT/$PRODUCT || fatal "Can't find $PRODUCT binary in archive"
 chmod 755 opt/$PRODUCT/$PRODUCT
 
 [ -n "$VERSION" ] || VERSION="1.0"
@@ -28,9 +29,41 @@ seed = ""
 [server]
 port = 8443
 
+[[upstreams]]
+dc = 1
+host = "149.154.175.50"
+port = 443
+
+[[upstreams]]
+dc = 2
+host = "149.154.167.51"
+port = 443
+
+[[upstreams]]
+dc = 3
+host = "149.154.175.100"
+port = 443
+
 [[users]]
 name = "user1"
 secret = ""
+EOF
+
+mkdir -p usr/lib/systemd/system
+cat <<EOF >usr/lib/systemd/system/$PRODUCT.service
+[Unit]
+Description=Telemt MTProxy Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/opt/$PRODUCT/$PRODUCT /etc/$PRODUCT.toml
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
 EOF
 
 cat <<EOF >$PKGNAME.tar.eepm.yaml
