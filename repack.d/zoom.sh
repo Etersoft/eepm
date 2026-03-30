@@ -30,3 +30,8 @@ remove_file /opt/zoom/Qt/qml/QtQuick/LocalStorage/libqmllocalstorageplugin.so
 remove_file /opt/zoom/Qt/qml/QtQuick/XmlListModel/libqmlxmllistmodelplugin.so
 remove_file /opt/zoom/Qt/qml/QtQml/RemoteObjects/libqtqmlremoteobjects.so
 
+# Qt QML plugins and some Qt/lib libs link against Qt6 libs not bundled by zoom
+# ignore qml plugins and specific libs to avoid pulling system Qt6 as dependency
+ignore_library_path /opt/zoom/Qt/qml
+ignore_lib_requires libQt6Sql.so.6
+
