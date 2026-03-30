@@ -37,6 +37,9 @@ install_app()
         return 0
     fi
 
+    # remove before reinstall so --force is not needed (reqstoplist works without --force)
+    $EPM play --remove --auto $app $alt >/dev/null 2>&1
+
     echo -n "epm play $playopt $app $alt ..."
     echo "$app$alt" > $LOGDIR/epm-current
     timeout 1h $EPM play $playopt --verbose --auto $app $alt >$EDIR/$applog 2>&1
@@ -81,7 +84,7 @@ install_app_alt()
 
 while [ -n "$1" ] ; do
     case "$1" in
-        --ipfs|--force)
+        --ipfs)
             playopt="$playopt $1"
             ;;
         --slow)
