@@ -5,6 +5,9 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
+# libtiff.so.5 needed only by Qt TIFF imageformats plugin, not critical
+ignore_lib_requires libtiff.so.5
+
 add_bin_exec_command fdm $PRODUCTDIR/fdm
 
 install_file $PRODUCTDIR/icon.png /usr/share/icons/hicolor/256x256/apps/$PRODUCT.png
