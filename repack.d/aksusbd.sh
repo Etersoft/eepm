@@ -36,6 +36,7 @@ case "$arch" in
     aarch64)
         install_file /var/hasplm/init/hasplmd_arm64.service /etc/systemd/system/hasplmd.service
         subst "s|hasplmd_arm64|hasplmd|g" $BUILDROOT/etc/systemd/system/hasplmd.service
+        remove_file /etc/systemd/system/hasplmd_arm64.service
 
         chmod -v u+w $BUILDROOT/usr/sbin/*
 
@@ -44,6 +45,7 @@ case "$arch" in
     armhf)
         install_file /var/hasplm/init/hasplmd_armhf.service /etc/systemd/system/hasplmd.service
         subst "s|hasplmd_armhf|hasplmd|g" $BUILDROOT/etc/systemd/system/hasplmd.service
+        remove_file /etc/systemd/system/hasplmd_armhf.service
 
         chmod -v u+w $BUILDROOT/usr/sbin/*
 
