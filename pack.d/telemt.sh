@@ -8,7 +8,7 @@ VERSION="$3"
 
 mkdir -p opt/$PRODUCT
 erc --here unpack "$TAR" || fatal
-cp "$(erc basename "$TAR")/$PRODUCT" opt/$PRODUCT/$PRODUCT 2>/dev/null || cp "$PRODUCT" opt/$PRODUCT/$PRODUCT || fatal "Can't find $PRODUCT binary in archive"
+cp $PRODUCT opt/$PRODUCT/$PRODUCT || fatal "Can't find $PRODUCT binary in archive"
 chmod 755 opt/$PRODUCT/$PRODUCT
 
 [ -n "$VERSION" ] || VERSION="1.0"
