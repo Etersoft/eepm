@@ -434,7 +434,8 @@ __epm_if_command_path()
 __epm_get_replacepkgs()
 {
     [ -n "$2" ] && echo '--replacepkgs' && return
-    # don't use --replacepkgs when install only one file
+    # always use --replacepkgs with --force to avoid duplicates (rpm bug with same NEVR)
+    [ -n "$force" ] && echo '--replacepkgs' && return
 }
 
 epm_install_files()
