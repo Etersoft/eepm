@@ -79,7 +79,7 @@ for DESKTOPFILE in $BUILDROOT/usr/share/applications/*.desktop ; do
         if [ -z "$ICON" ] || [ "$ICON" = "icon" ] || [ "$ICON" = "icon.png" ] ; then
             newicon="$PRODUCT"
             mv "$BUILDROOT/usr/share/pixmaps/icon.png" "$BUILDROOT/usr/share/pixmaps/$newicon.png"
-            subst "s|icon\.png|$newicon.png|" $SPEC
+            subst "s|/usr/share/pixmaps/icon\.png|/usr/share/pixmaps/$newicon.png|" $SPEC
             subst "s|^Icon=.*|Icon=$newicon|" "$DESKTOPFILE"
             ICON="$newicon"
         fi
