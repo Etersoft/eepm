@@ -7,5 +7,4 @@ SPEC="$2"
 . $(dirname $0)/common.sh
 
 # original deb depends on libchromaprint-tools, on ALT it's fpcalc
-filter_from_requires libchromaprint-tools
-add_unirequires fpcalc
+subst "s|libchromaprint-tools|fpcalc|" $SPEC
