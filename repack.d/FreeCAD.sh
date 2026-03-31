@@ -10,7 +10,7 @@ SPEC="$2"
 # ignore all Qt6 dependencies — they are either bundled or optional
 ignore_lib_requires 'libQt6.*'
 
-# AppImage bundles system icons that conflict with gtk3-demo
-for i in $BUILDROOT$PRODUCTDIR/usr/share/icons/hicolor/*/apps/gtk3-widget-factory.png ; do
+# AppImage bundles system gtk3 icons that conflict with gtk3-demo package
+for i in $BUILDROOT/usr/share/icons/hicolor/*/apps/gtk3-*.png ; do
     [ -f "$i" ] && remove_file "${i#$BUILDROOT}"
 done
