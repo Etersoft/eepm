@@ -11,8 +11,6 @@ fi
 
 erc --here $TAR || fatal
 
-cd LinuxSoftware* || fatal
-
 PKG="kodak_i11xx-*.amd64.deb"
 
 return_tar $PKG
