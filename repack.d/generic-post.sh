@@ -73,6 +73,18 @@ for DESKTOPFILE in $BUILDROOT/usr/share/applications/*.desktop ; do
 
     desktopfile="$(basename "$DESKTOPFILE" .desktop)"
     ICON="$(get_desktop_value "$DESKTOPFILE" "Icon")"
+
+    # rename generic icon.png to product name to avoid conflicts between packages
+    if [ "$ICON" = "icon" ] || [ "$ICON" = "icon.png" ] ; then
+        newicon="$PRODUCT"
+        if [ -f "$BUILDROOT/usr/share/pixmaps/icon.png" ] ; then
+            mv "$BUILDROOT/usr/share/pixmaps/icon.png" "$BUILDROOT/usr/share/pixmaps/$newicon.png"
+            subst "s|/usr/share/pixmaps/icon\.png|/usr/share/pixmaps/$newicon.png|" $SPEC
+            subst "s|^Icon=.*|Icon=$newicon|" "$DESKTOPFILE"
+            ICON="$newicon"
+        fi
+    fi
+
     if [ "$ICON" != "$desktopfile" ] ; then
         warning "Icon '$ICON' from desktop file $DESKTOPFILE is not the same as desktop file name."
     fi
