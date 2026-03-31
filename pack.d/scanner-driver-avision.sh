@@ -11,8 +11,6 @@ fi
 
 erc --here $TAR || fatal
 
-cd scanner-driver-avision* || fatal
-
 PKG="scanner-driver-avision-*.x86_64.rpm"
 
 return_tar $PKG
