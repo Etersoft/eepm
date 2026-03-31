@@ -10,6 +10,9 @@ PRODUCTSUBDIR="JetBrains Rider"
 
 . $(dirname $0)/common.sh
 
+# .NET SDK bundles musl-compiled cross-platform binaries
+ignore_lib_requires 'libc.musl-.*'
+
 subst "s|^Group:.*|Group: Development/Tools|" $SPEC
 #subst "s|^License: unknown$|License: GPLv2|" $SPEC
 subst "s|^URL:.*|URL: https://www.jetbrains.com/rider/|" $SPEC
