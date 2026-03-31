@@ -6,6 +6,11 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
-# PySide6 QtGraphs/QtGraphsWidgets not available on older distros
-ignore_lib_requires libQt6Graphs.so.6
-ignore_lib_requires libQt6GraphsWidgets.so.6
+# FreeCAD bundles its own Qt6/PySide6 but some libs link to unbundled Qt6 modules
+# ignore all Qt6 dependencies — they are either bundled or optional
+ignore_lib_requires 'libQt6.*'
+
+# AppImage bundles system icons that conflict with gtk3-demo
+for i in $BUILDROOT$PRODUCTDIR/usr/share/icons/hicolor/*/apps/gtk3-widget-factory.png ; do
+    [ -f "$i" ] && remove_file "${i#$BUILDROOT}"
+done
