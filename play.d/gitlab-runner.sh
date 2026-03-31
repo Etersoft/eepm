@@ -27,7 +27,8 @@ case "$arch" in
 esac
 
 # https://docs.gitlab.com/runner/install/linux-manually.html
-# https://gitlab-runner-downloads.s3.amazonaws.com/latest/index.html
-PKGURL="https://gitlab-runner-downloads.s3.amazonaws.com/latest/$pkg/gitlab-runner_${arch}.$pkg"
+# /latest/ is geo-blocked, use versioned URL
+[ "$VERSION" = "*" ] && VERSION="17.9.0"
+PKGURL="https://gitlab-runner-downloads.s3.amazonaws.com/v${VERSION}/$pkg/gitlab-runner_${arch}.$pkg"
 
 install_pkgurl
