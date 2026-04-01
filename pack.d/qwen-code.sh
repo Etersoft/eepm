@@ -12,10 +12,15 @@ URL="$4"
 
 mkdir -p usr/bin
 mkdir -p etc/qwen-code
+mkdir -p opt/qwen-code
 
-mv -v $TAR usr/bin/qwen
+erc --here unpack $TAR || fatal
 
-chmod 755 usr/bin/qwen
+cp -a "package/." "opt/qwen-code/"
+
+chmod 755 "opt/qwen-code/cli.js"
+
+ln -s "/opt/qwen-code/cli.js" "usr/bin/qwen"
 
 PKGNAME=$PRODUCT-$VERSION
 
@@ -28,7 +33,7 @@ cat <<EOF > etc/qwen-code/system-defaults.json
 }
 EOF
 
-erc pack $PKGNAME.tar usr etc || fatal
+erc pack $PKGNAME.tar usr opt etc || fatal
 
 cat <<EOF >$PKGNAME.tar.eepm.yaml
 name: $PRODUCT

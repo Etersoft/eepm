@@ -8,6 +8,10 @@ URL="https://github.com/QwenLM/qwen-code"
 
 . $(dirname $0)/common.sh
 
-PKGURL=$(get_github_url $URL "cli.js")
+if [ "$VERSION" = "*" ] ; then
+    VERSION=$(get_github_tag https://github.com/QwenLM/qwen-code)
+fi
+
+PKGURL="https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-${VERSION}.tgz"
 
 install_pack_pkgurl
