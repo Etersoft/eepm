@@ -3,6 +3,7 @@
 PKGNAME=librewolf
 SUPPORTEDARCHES="x86_64 aarch64"
 VERSION="$2"
+RELEASE="$3"
 DESCRIPTION="LibreWolf - a custom version of Firefox, focused on privacy, security and freedom"
 URL="https://librewolf.net/"
 
@@ -19,15 +20,18 @@ if [ "$VERSION" = "*" ] ; then
     VERSION="$(eget --list --latest https://repo.librewolf.net/pool/ | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?')"
 fi
 
-# hack: assure there are 1 in any way
-rel=1
+# use RELEASE from app-versions, fallback to probing
+rel="$RELEASE"
+if [ -z "$rel" ] || [ "$rel" = "*" ] ; then
+    rel=1
+    PKGURL="https://repo.librewolf.net/pool/librewolf-$VERSION-$rel-linux-$arch-deb.deb"
+    if ! eget --check-url "$PKGURL" ; then
+        rel=2
+    fi
+fi
 
 # https://repo.librewolf.net/pool/librewolf-132.0-1-linux-x86_64-deb.deb
 PKGURL="https://repo.librewolf.net/pool/librewolf-$VERSION-$rel-linux-$arch-deb.deb"
-if ! eget --check-url "$PKGURL" ; then
-    rel=2
-    PKGURL="https://repo.librewolf.net/pool/librewolf-$VERSION-$rel-linux-$arch-deb.deb"
-fi
 
 pkgtype=$(epm print info -p)
 case $pkgtype in
