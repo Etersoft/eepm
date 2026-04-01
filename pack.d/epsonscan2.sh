@@ -10,6 +10,7 @@ if ! echo "$TAR" | grep -q "epsonscan2-bundle-.*.tar.gz" ; then
 fi
 
 erc --here unpack $TAR || fatal
+cd "$(erc basename $TAR)" || fatal
 
 # TODO:
 # cp $base/DefaultSettings.SF2 $HOME/.epsonscan2
