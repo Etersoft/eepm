@@ -3,7 +3,7 @@
 PKGNAME=vk
 SUPPORTEDARCHES="x86_64 x86"
 VERSION="$2"
-DESCRIPTION="VK Messenger from the official site"
+DESCRIPTION="VK Messenger (legacy) from the official site"
 URL="https://vk.com/vkme"
 
 . $(dirname $0)/common.sh
