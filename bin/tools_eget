@@ -559,8 +559,14 @@ Supported URLs:
 Supported backends (set like EGET_BACKEND=curl)
   wget, curl and partially aria2c, axel, rsync
 
-Also you can set EGET_OPTIONS variable with needed options
-Set EGET_MIRRORS to override default mirrors for --allow-mirrors (default: eterfund mirrors)
+Environment variables:
+  EGET_BACKEND              - force specific backend (wget, curl, aria2c, axel)
+  EGET_OPTIONS              - extra options applied after command line args
+  EGET_MIRRORS              - override default mirrors for --allow-mirrors
+  EGET_WGET_OPTIONS         - extra options passed to wget
+  EGET_CURL_OPTIONS         - extra options passed to curl
+  EGET_ARIA2_OPTIONS        - extra options passed to aria2c
+  EGET_AXEL_OPTIONS         - extra options passed to axel
 
 Examples:
   $ eget http://ftp.somesite.ru/package-*.x64.tar
