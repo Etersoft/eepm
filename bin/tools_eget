@@ -1691,7 +1691,7 @@ url_get_response()
     # HTTP/1.1 405 Method Not Allowed
     # HTTP/1.1 404 Not Found
     if echo "$answer" | grep -q "^HTTP/[12.]* 40[45]" ; then
-        quiet=1 __curl --max-time 20 --retry 0 -L -i -r0-0 "$URL" 2>&1 | sed -e 's/\r$//' -e 's/ $//'
+        quiet=1 __curl --max-time 20 --retry 0 -L -D - -o /dev/null -r0-0 "$URL" 2>&1 | sed -e 's/\r$//' -e 's/ $//'
         return
     fi
     echo "$answer"
