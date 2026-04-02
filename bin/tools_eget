@@ -2031,8 +2031,15 @@ url_get_raw_real_url()
     [ -n "$MADEURL" ] && [ "$MADEURL" = "$URL" ] && echo "$URL" && return
 
     local loc base="$URL"
+    local redirect_count=0
+    local max_redirects=10
     # follow redirect chain in order, updating base URL at each step
     for loc in $(url_get_header "$URL" "Location" | sed -e 's| .*||') ; do
+        redirect_count=$(($redirect_count + 1))
+        if [ "$redirect_count" -gt "$max_redirects" ] ; then
+            echo "Warning: too many redirects (>$max_redirects) for $URL" >&2
+            break
+        fi
         # add protocol if missed
         if is_protocol_relative_url "$loc" ; then
             loc="$(echo "$base" | sed -e 's|//.*||')$loc"
