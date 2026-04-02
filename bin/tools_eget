@@ -2070,18 +2070,21 @@ url_get_filename()
     local filename
 
     # See https://www.cpcwood.com/blog/5-aws-s3-utf-8-content-disposition
-    # https://www.rfc-editor.org/rfc/rfc6266
+    # Per RFC 6266 Section 4.3, strip path components from filename
+    # (servers may send Windows-style paths with backslashes)
     local cd="$(url_get_header "$URL" "Content-Disposition")"
     if echo "$cd" | grep -qi "filename\*= *UTF-8" ; then
         #Content-Disposition: attachment; filename="unityhub-amd64-3.3.0.deb"; filename*=UTF-8''"unityhub-amd64-3.3.0.deb"
         #Content-Disposition: attachment; filename*=UTF-8''t1client-standalone-4.5.28.0-1238402-Release.deb; filename="t1client-standalone-4.5.28.0-1238402-Release.deb"
         filename="$(echo "$cd" | sed -e "s|.*filename\*= *UTF-8''||i" -e 's|^"||' -e 's|";$||' -e 's|"$||' -e 's|; filename=.*||')"
+        filename="$(echo "$filename" | sed -e 's|.*[/\\]||' -e 's|.*%5[cC]||' -e 's|.*%2[fF]||')"
         [ "$filename" != "unspecified" ] && echo "$filename" && return
     fi
     if echo "$cd" | grep -qi "filename=" ; then
         #Content-Disposition: attachment; filename=postman-linux-x64.tar.gz
         #content-disposition: attachment; filename="code-1.77.1-1680651749.el7.x86_64.rpm"
         filename="$(echo "$cd" | sed -e 's|.*filename= *||i' -e 's|^"||' -e 's|";.*||' -e 's|"$||')"
+        filename="$(echo "$filename" | sed -e 's|.*[/\\]||')"
         [ "$filename" != "unspecified" ] && echo "$filename" && return
     fi
 
@@ -2356,7 +2359,13 @@ sget()
         fi
     fi
 
-    url_sget "$@"
+    # Use normalized filename from Content-Disposition via -O
+    # (wget/curl may save with raw path separators otherwise, see RFC 6266 Section 4.3)
+    if [ -n "$TARGET_FROM_URL" ] ; then
+        url_sget "$URL" "$TARGET"
+    else
+        url_sget "$@"
+    fi
 }
 
 # Filter stdin: strip whitespace, skip empty lines and comments
