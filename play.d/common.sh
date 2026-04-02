@@ -305,6 +305,17 @@ get_github_url()
 {
     local url="$1"
     local asset_name="$2"
+    local user_and_repo=${url#https://github.com/}
+    user_and_repo=${user_and_repo%/}
+
+    # If asset_name has no globs, try direct URL without API call
+    if ! echo "$asset_name" | grep -q '[*?]' ; then
+        local direct
+        for tag in "$VERSION" "v$VERSION" ; do
+            direct="https://github.com/$user_and_repo/releases/download/$tag/$asset_name"
+            eget --check-url "$direct" 2>/dev/null && echo "$direct" && return
+        done
+    fi
 
     # See tdesktop.*.tar.gz
     #echo "$asset_name" | grep -q "\.[*?]" && fatal "Only glob symbols * and ? are supported. Don't use regexp! Input string: $asset_name"
