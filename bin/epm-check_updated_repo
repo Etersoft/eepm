@@ -119,6 +119,9 @@ update_repo_if_needed()
 {
     local days
 
+    # skip if already updated via temporary apt config
+    [ -n "$__EPM_APT_TMPDIR" ] && return
+
     # for apt only
     case $PMTYPE in
         apt-*)
