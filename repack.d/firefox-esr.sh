@@ -19,7 +19,7 @@ Exec=$PRODUCT %f
 Icon=$PRODUCT
 Terminal=false
 StartupNotify=true
-Categories=Networking;WWW
+Categories=Network;WebBrowser;
 EOF
 
 iconpath=$PRODUCTDIR/browser/chrome/icons/default/
