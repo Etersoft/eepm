@@ -121,10 +121,11 @@ print_version()
 {
         local tg_link=$(make_osc8_link "https://t.me/useepm")
         local max_link=$(make_osc8_link "https://max.eepm.ru")
+        local matrix_link=$(make_osc8_link "https://matrix.eepm.ru")
         local wiki_link=$(make_osc8_link "https://wiki.etersoft.ru/Epm")
-        message 'EPM package manager version $EPMVERSION  Telegram: $tg_link  MAX: $max_link  $wiki_link
+        message 'EPM package manager version $EPMVERSION  Telegram: $tg_link  MAX: $max_link  Matrix: $matrix_link  $wiki_link
                  Running on $DISTRNAME/$DISTRVERSION ($PMTYPE package manager uses $PKGFORMAT package format)
-                 Copyright (c) Etersoft 2012-2025
+                 Copyright (c) Etersoft 2012-2026
                  This program may be freely redistributed under the terms of the GNU AGPLv3.'
 }
 
