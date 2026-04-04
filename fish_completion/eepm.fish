@@ -9,7 +9,7 @@ function __eepm_list_commands
 end
 
 function __eepm_list_installed_packages
-    epm list --installed --quiet --short --direct
+    epm list --installed --quiet --short --direct 2>/dev/null | sed 's/ .*//' | sed 's/-[0-9].*//'
 end
 
 function __eepm_list_available_packages
