@@ -217,6 +217,16 @@ pack_file()
     subst "s|%files|%files\n$file|" $SPEC
 }
 
+# Mark file as %config(noreplace) in spec so user changes survive package update
+# Usage: mark_config_noreplace <path>
+mark_config_noreplace()
+{
+    local file="$1"
+    [ -n "$file" ] || return
+    subst "s|\"$file\"|%config(noreplace) \"$file\"|" $SPEC
+    subst "s|^$file$|%config(noreplace) $file|" $SPEC
+}
+
 # Add dir (only dir) to spec (if missed)
 # Usage: pack_dir <path_to_dir>
 pack_dir()

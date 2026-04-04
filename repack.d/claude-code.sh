@@ -23,6 +23,7 @@ CLAUDE_CODE_DISABLE_AUTO_UPDATE=1
 DISABLE_AUTOUPDATER=1
 CLAUDE_NO_DIAGNOSTICS=1
 EOF
+mark_config_noreplace $CONFIGDIR/env.conf
 
 cat <<EOF | create_exec_file /usr/bin/$PRODUCT
 #!/bin/sh
