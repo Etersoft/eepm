@@ -466,6 +466,12 @@ add_conflicts()
     __add_tag_after_d "Conflicts: $*"
 }
 
+add_obsoletes()
+{
+    [ -n "$1" ] || return
+    __add_tag_after_d "Obsoletes: $*"
+}
+
 add_provides()
 {
     [ -n "$1" ] || return
