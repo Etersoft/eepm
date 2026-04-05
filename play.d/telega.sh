@@ -3,7 +3,7 @@
 PKGNAME=Telega
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
-DESCRIPTION="Telega messenger from the official site"
+DESCRIPTION="Telega messenger (WARNING: your account data may not be safe)"
 URL="https://telega.me"
 
 . $(dirname $0)/common.sh
