@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.58
+Version: 3.64.59
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -181,6 +181,54 @@ EOF
 # metapackage, no files
 
 %changelog
+* Mon Apr 06 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.59-alt1
+- epm play: add keyray (keyboard layout auto-switcher)
+- epm play.d/common.sh: fix installing explicit version (epm play app=X.Y.Z)
+- epm repack.d/common.sh: redirect assure_exists output to stderr to prevent apt output leaking into requires
+- epm play: rename aimp to aimp-wine, add native aimp v6 beta
+- epm play zen-browser: fix package name (zen -> zen-browser) via repack.d
+- epm repack freedownloadmanager: ignore non-critical libtiff.so.5 dependency
+- epm repack aksusbd: remove original arch-specific service files on aarch64/armhf
+- epm install: use --replacepkgs with --force to prevent rpm duplicates
+- epm repack zoom: ignore unbundled Qt6 QML plugins and libQt6Sql dependency
+- epm pack.d: remove broken cd after erc --here (flashplayer, kodak, renamemytvseries)
+- epm repack.d: rename generic icon.png to product name to avoid conflicts
+- epm play gitlab-runner: use versioned S3 URL instead of geo-blocked /latest/
+- epm play: add FreeCAD repack (ignore Qt6Graphs), fix scanner-driver-avision pack.d
+- epm play rider: fix PKGNAME to match actual package name JetBrains.Rider
+- epm repack: fix Rider (ignore musl deps, add JetBrains.Rider symlink), FreeCAD (ignore all Qt6)
+- epm repack FreeCAD: fix gtk3 icon path and use broader glob
+- epm repack: fix deepseek-desktop icon, limit generic-post icon rename to pixmaps only
+- epm repack: fix pdfsam-basic (ignore bundled ffmpeg), lidarr (remap chromaprint dep)
+- epm repack lidarr: use subst instead of filter_from_requires for chromaprint
+- epm play epsonscan2: use download3.ebz.epson.net, fix pack.d cd after erc --here
+- epm play netbeans: switch to GitHub releases (old site is dead)
+- epm play vk: mark as legacy to distinguish from vk-messenger
+- epm play librewolf: use RELEASE from app-versions instead of probing
+- epm play.d/common.sh: get_github_url: try direct URL before API call when no globs
+- epm: add Matrix link, update copyright to 2026
+- epm play: add yandex-messenger (Wine, Windows exe from official site)
+- epm play: add saby (Saby/SBIS desktop application)
+- epm repack.d: fix desktop Categories for firefox, firefox-esr, waterfox (Networking;WWW -> Network;WebBrowser)
+- epm downgrade: skip redundant update_repo_if_needed when tmp apt config is active
+- epm play min: add direct URL for specific version to avoid GitHub API
+- epm play telemt: switch to musl, fix binary extraction, add upstreams and systemd unit
+- epm play telemt: simplify binary extraction with --here
+- eget: strip path components from Content-Disposition filename (RFC 6266)
+- eget: fix curl url_get_response mixing headers with binary body
+- eget: fix wget2 url_get_response to use --save-headers instead of -S
+- eget: add redirect depth limit to url_get_raw_real_url
+- epm release_upgrade: lowercase $TO for altlinux-release package name
+- epm play: add portmaster2 (Portmaster v2 with predownloaded components)
+- epm repack: add mark_config_noreplace(), use for claude-code env.conf
+- epm play: add ntfy (push notification service)
+- epm play ayugram: switch to rsg245 Arch binary builds (v6.3.10)
+- epm play telega: add interception warning to description
+- epm-download: use *.* glob to skip extensionless side-effect files like wget-log
+- epm repack portmaster: move data/logs from /opt to /var/lib/portmaster
+- epm play qwen-code: added vendor directory for fix tree-sitter.wasm (eterbug #18998)
+- epm play: added VK Play (eterbug #19004)
+
 * Fri Mar 27 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.58-alt1
 - epm: exclude exact match from package suggestions
 - epm play.d/common.sh: fix --latest and --force flags in version check
