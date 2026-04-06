@@ -40,7 +40,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.58"
+export EPMVERSION="3.64.59"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -449,7 +449,8 @@ __promo_message()
     if [ -z "$PROMOMESSAGE" ] ; then
         local tg_link=$(make_osc8_link "https://t.me/useepm")
         local max_link=$(make_osc8_link "https://max.eepm.ru")
-        PROMOMESSAGE=" (you can discuss this problem (epm $EPMVERSION on $DISTRNAME/$DISTRVERSION) in Telegram: $tg_link, MAX: $max_link)"
+        local matrix_link=$(make_osc8_link "https://matrix.eepm.ru")
+        PROMOMESSAGE=" (you can discuss this problem (epm $EPMVERSION on $DISTRNAME/$DISTRVERSION) in Telegram: $tg_link, MAX: $max_link, Matrix: $matrix_link)"
     fi
     echo "$PROMOMESSAGE"
 }
@@ -3402,6 +3403,9 @@ update_repo_if_needed()
 {
     local days
 
+    # skip if already updated via temporary apt config
+    [ -n "$__EPM_APT_TMPDIR" ] && return
+
     # for apt only
     case $PMTYPE in
         apt-*)
@@ -4544,8 +4548,8 @@ __download_pkg_urls()
         # download packages
         if docmd eget --tries 3 $latest "$url" ; then
             local i
-            for i in * ; do
-                [ "$i" = "*" ] && warning 'Incorrect true status from eget. No saved files from download $url, ignoring' && continue
+            for i in *.* ; do
+                [ "$i" = "*.*" ] && warning 'Incorrect true status from eget. No saved files from download $url, ignoring' && continue
                 [ -s "$tmppkg/$i" ] || continue
                 chmod $verbose a+r "$tmppkg/$i"
                 local si="$(echo "$i" | sed -e 's| |-|g')"
@@ -6436,7 +6440,8 @@ __epm_if_command_path()
 __epm_get_replacepkgs()
 {
     [ -n "$2" ] && echo '--replacepkgs' && return
-    # don't use --replacepkgs when install only one file
+    # always use --replacepkgs with --force to avoid duplicates (rpm bug with same NEVR)
+    [ -n "$force" ] && echo '--replacepkgs' && return
 }
 
 epm_install_files()
@@ -9182,6 +9187,12 @@ __epm_pack_run_handler()
 
     local packscript="$(get_pack_script "$packname")"
     has_pack_script "$packscript" || return
+
+    # copy source file to pack working directory so pack scripts can freely rename it
+    if [ -f "$tarname" ] && [ "$(dirname "$tarname")" != "$(pwd)" ] ; then
+        __epm_repack_copy "$tarname" "$(pwd)/$(basename "$tarname")"
+        tarname="$(pwd)/$(basename "$tarname")"
+    fi
 
     # a file to keep filename of generated tarball
     filefortarname="$(pwd)/filefortarname"
@@ -12422,13 +12433,16 @@ get_fix_release_pkg()
         epm installed apt-conf-branch && echo "apt-conf-branch" && epm installed apt-conf-sisyphus && echo "apt-conf-sisyphus-"
     fi
 
+    # package names are lowercase (altlinux-release-sisyphus, not altlinux-release-Sisyphus)
+    local to_lower="$(echo "$TO" | tr '[:upper:]' '[:lower:]')"
+
     if [ "$FORCE" = "--force" ] ; then
         # assure we have set needed release
-        TOINSTALL="altlinux-release-$TO"
+        TOINSTALL="altlinux-release-$to_lower"
     else
         # just assure we have /etc/altlinux-release and switched from sisyphus
         if [ ! -s /etc/altlinux-release ] || epm qf /etc/altlinux-release | grep -q sisyphus ; then
-            TOINSTALL="altlinux-release-$TO"
+            TOINSTALL="altlinux-release-$to_lower"
         fi
     fi
 
@@ -12437,7 +12451,6 @@ get_fix_release_pkg()
     #    echo "$AR-"
     #fi
 
-    # TODO: add bug?
     # workaround against obsoleted altlinux-release-sisyphus package from 2008 year
     [ "$TOINSTALL" = "altlinux-release-sisyphus" ] && TOINSTALL="branding-alt-sisyphus-release"
 
@@ -16363,7 +16376,7 @@ __epm_alt_rpm_requires()
 
 get_linked_shared_libs()
 {
-    assure_exists readelf binutils
+    assure_exists readelf binutils >&2
     #is_command readelf || fatal "Can't get required shared library: readelf is missed. Try install binutils package."
     #ldd "$exe" | sed -e 's|[[:space:]]*||' | grep "^lib.*[[:space:]]=>[[:space:]]\(/usr/lib\|/lib\)" | sed -e 's|[[:space:]].*||'
     LC_ALL=C a="" readelf -d "$1" | grep "(NEEDED)" | grep "Shared library:" | sed -e 's|.*Shared library: \[||' -e 's|\]$||' | grep "^lib"
@@ -22535,8 +22548,14 @@ Supported URLs:
 Supported backends (set like EGET_BACKEND=curl)
   wget, curl and partially aria2c, axel, rsync
 
-Also you can set EGET_OPTIONS variable with needed options
-Set EGET_MIRRORS to override default mirrors for --allow-mirrors (default: eterfund mirrors)
+Environment variables:
+  EGET_BACKEND              - force specific backend (wget, curl, aria2c, axel)
+  EGET_OPTIONS              - extra options applied after command line args
+  EGET_MIRRORS              - override default mirrors for --allow-mirrors
+  EGET_WGET_OPTIONS         - extra options passed to wget
+  EGET_CURL_OPTIONS         - extra options passed to curl
+  EGET_ARIA2_OPTIONS        - extra options passed to aria2c
+  EGET_AXEL_OPTIONS         - extra options passed to axel
 
 Examples:
   $ eget http://ftp.somesite.ru/package-*.x64.tar
@@ -23303,7 +23322,7 @@ __timestamping_download()
 # and lowercase header names without leading spaces
 __wget2_filter_response()
 {
-	sed -n -e 's/^:status: \([0-9]*\)/HTTP\/2 \1/p' -e '/^[a-z].*: /p'
+	sed -n -e 's/^:status: \([0-9]*\)/HTTP\/2 \1/p' -e '/^HTTP\//p' -e '/^[a-z].*: /p'
 }
 
 # Extract HTTP headers from wget1 -S output and normalize:
@@ -23321,11 +23340,12 @@ __wget_url_get_response()
 	local answer
 
 	if [ -n "$WGET2" ] ; then
-		# wget2 --spider -S does not output headers, use -O /dev/null -S
+		# wget2 -S is broken for HTTP/1.1 (shows only a few headers),
+		# use --save-headers to stdout and filter header lines with grep
 		# wget2 -q suppresses -S output (unlike wget1), so don't use quiet=1
-		answer="$(__wget --timeout 20 --tries 1 -O /dev/null -S "$URL" 2>&1 | __wget2_filter_response)"
+		answer="$(__wget --timeout 20 --tries 1 --save-headers -O - "$URL" 2>/dev/null | tr -d '\0' | __wget2_filter_response)"
 		if echo "$answer" | grep -q "^HTTP/[12.]* 40[45]" ; then
-			__wget --timeout 20 --tries 1 -O /dev/null --header="Range: bytes=0-0" -S "$URL" 2>&1 | __wget2_filter_response
+			__wget --timeout 20 --tries 1 --save-headers --header="Range: bytes=0-0" -O - "$URL" 2>/dev/null | tr -d '\0' | __wget2_filter_response
 			return
 		fi
 		echo "$answer"
@@ -23667,7 +23687,7 @@ url_get_response()
     # HTTP/1.1 405 Method Not Allowed
     # HTTP/1.1 404 Not Found
     if echo "$answer" | grep -q "^HTTP/[12.]* 40[45]" ; then
-        quiet=1 __curl --max-time 20 --retry 0 -L -i -r0-0 "$URL" 2>&1 | sed -e 's/\r$//' -e 's/ $//'
+        quiet=1 __curl --max-time 20 --retry 0 -L -D - -o /dev/null -r0-0 "$URL" 2>&1 | sed -e 's/\r$//' -e 's/ $//'
         return
     fi
     echo "$answer"
@@ -24006,8 +24026,15 @@ url_get_raw_real_url()
     [ -n "$MADEURL" ] && [ "$MADEURL" = "$URL" ] && echo "$URL" && return
 
     local loc base="$URL"
+    local redirect_count=0
+    local max_redirects=10
     # follow redirect chain in order, updating base URL at each step
     for loc in $(url_get_header "$URL" "Location" | sed -e 's| .*||') ; do
+        redirect_count=$(($redirect_count + 1))
+        if [ "$redirect_count" -gt "$max_redirects" ] ; then
+            echo "Warning: too many redirects (>$max_redirects) for $URL" >&2
+            break
+        fi
         # add protocol if missed
         if is_protocol_relative_url "$loc" ; then
             loc="$(echo "$base" | sed -e 's|//.*||')$loc"
@@ -24046,18 +24073,21 @@ url_get_filename()
     local filename
 
     # See https://www.cpcwood.com/blog/5-aws-s3-utf-8-content-disposition
-    # https://www.rfc-editor.org/rfc/rfc6266
+    # Per RFC 6266 Section 4.3, strip path components from filename
+    # (servers may send Windows-style paths with backslashes)
     local cd="$(url_get_header "$URL" "Content-Disposition")"
     if echo "$cd" | grep -qi "filename\*= *UTF-8" ; then
         #Content-Disposition: attachment; filename="unityhub-amd64-3.3.0.deb"; filename*=UTF-8''"unityhub-amd64-3.3.0.deb"
         #Content-Disposition: attachment; filename*=UTF-8''t1client-standalone-4.5.28.0-1238402-Release.deb; filename="t1client-standalone-4.5.28.0-1238402-Release.deb"
         filename="$(echo "$cd" | sed -e "s|.*filename\*= *UTF-8''||i" -e 's|^"||' -e 's|";$||' -e 's|"$||' -e 's|; filename=.*||')"
+        filename="$(echo "$filename" | sed -e 's|.*[/\\]||' -e 's|.*%5[cC]||' -e 's|.*%2[fF]||')"
         [ "$filename" != "unspecified" ] && echo "$filename" && return
     fi
     if echo "$cd" | grep -qi "filename=" ; then
         #Content-Disposition: attachment; filename=postman-linux-x64.tar.gz
         #content-disposition: attachment; filename="code-1.77.1-1680651749.el7.x86_64.rpm"
         filename="$(echo "$cd" | sed -e 's|.*filename= *||i' -e 's|^"||' -e 's|";.*||' -e 's|"$||')"
+        filename="$(echo "$filename" | sed -e 's|.*[/\\]||')"
         [ "$filename" != "unspecified" ] && echo "$filename" && return
     fi
 
@@ -24332,7 +24362,13 @@ sget()
         fi
     fi
 
-    url_sget "$@"
+    # Use normalized filename from Content-Disposition via -O
+    # (wget/curl may save with raw path separators otherwise, see RFC 6266 Section 4.3)
+    if [ -n "$TARGET_FROM_URL" ] ; then
+        url_sget "$URL" "$TARGET"
+    else
+        url_sget "$@"
+    fi
 }
 
 # Filter stdin: strip whitespace, skip empty lines and comments
@@ -26367,10 +26403,11 @@ print_version()
 {
         local tg_link=$(make_osc8_link "https://t.me/useepm")
         local max_link=$(make_osc8_link "https://max.eepm.ru")
+        local matrix_link=$(make_osc8_link "https://matrix.eepm.ru")
         local wiki_link=$(make_osc8_link "https://wiki.etersoft.ru/Epm")
-        message 'EPM package manager version $EPMVERSION  Telegram: $tg_link  MAX: $max_link  $wiki_link
+        message 'EPM package manager version $EPMVERSION  Telegram: $tg_link  MAX: $max_link  Matrix: $matrix_link  $wiki_link
                  Running on $DISTRNAME/$DISTRVERSION ($PMTYPE package manager uses $PKGFORMAT package format)
-                 Copyright (c) Etersoft 2012-2025
+                 Copyright (c) Etersoft 2012-2026
                  This program may be freely redistributed under the terms of the GNU AGPLv3.'
 }
 

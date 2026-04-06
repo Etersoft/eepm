@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.58"
+EPMVERSION="3.64.59"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -440,7 +440,8 @@ __promo_message()
     if [ -z "$PROMOMESSAGE" ] ; then
         local tg_link=$(make_osc8_link "https://t.me/useepm")
         local max_link=$(make_osc8_link "https://max.eepm.ru")
-        PROMOMESSAGE=" (you can discuss this problem (epm $EPMVERSION on $DISTRNAME/$DISTRVERSION) in Telegram: $tg_link, MAX: $max_link)"
+        local matrix_link=$(make_osc8_link "https://matrix.eepm.ru")
+        PROMOMESSAGE=" (you can discuss this problem (epm $EPMVERSION on $DISTRNAME/$DISTRVERSION) in Telegram: $tg_link, MAX: $max_link, Matrix: $matrix_link)"
     fi
     echo "$PROMOMESSAGE"
 }
