@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME=Autodesk_EAGLE
+PKGNAME=eagle
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="EAGLE (EDA software) from the official site"

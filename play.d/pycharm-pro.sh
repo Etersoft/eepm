@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME=pycharm-professional
+PKGNAME=pycharm
 SUPPORTEDARCHES="x86_64 aarch64"
 VERSION="$2"
 DESCRIPTION="PyCharm Professional — The Python IDE for Professional Developers (Trial)"

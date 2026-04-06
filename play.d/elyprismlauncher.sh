@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME=ElyPrismLauncher-Linux
+PKGNAME=ElyPrismLauncher
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION='Fork of Prism Launcher adds integrated support for Ely.by accounts (MSA accounts can still be used)'

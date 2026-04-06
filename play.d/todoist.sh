@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME=Todoist-linux
+PKGNAME=Todoist
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION='Todoist client application from the official site'

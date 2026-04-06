@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME=PrismLauncher-Linux
+PKGNAME=PrismLauncher
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION='Minecraft launcher with the ability to manage multiple instances'
