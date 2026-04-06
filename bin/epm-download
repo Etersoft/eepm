@@ -102,8 +102,8 @@ __download_pkg_urls()
         # download packages
         if docmd eget --tries 3 $latest "$url" ; then
             local i
-            for i in *.* ; do
-                [ "$i" = "*.*" ] && warning 'Incorrect true status from eget. No saved files from download $url, ignoring' && continue
+            for i in * ; do
+                [ "$i" = "*" ] && warning 'Incorrect true status from eget. No saved files from download $url, ignoring' && continue
                 [ -s "$tmppkg/$i" ] || continue
                 chmod $verbose a+r "$tmppkg/$i"
                 local si="$(echo "$i" | sed -e 's| |-|g')"
