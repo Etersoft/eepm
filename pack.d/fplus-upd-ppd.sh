@@ -38,4 +38,9 @@ PKGNAME=$PRODUCT-$VERSION
 
 erc pack $PKGNAME.tar usr || fatal
 
+cat <<EOF >$PKGNAME.tar.eepm.yaml
+name: $PRODUCT
+version: $VERSION
+EOF
+
 return_tar $PKGNAME.tar
