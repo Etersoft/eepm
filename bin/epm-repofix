@@ -113,6 +113,8 @@ epm_reposwitch()
         # replace Sisyphus with Deferred path
         __replace_text_in_alt_repo "/^ *#/! s!ALTLinux/Sisyphus/!Etersoft/Sisyphus/Deferred/!g"
         __alt_repofix "Sisyphus"
+        rm -fv /etc/rpm/macros.d/{p10,p11}
+        echo "%_priority_distbranch sisyphus" >/etc/rpm/macros.d/priority_distbranch
         return
     fi
 
@@ -148,11 +150,11 @@ epm_reposwitch()
 
     # TODO: improve for c10f1?
     case $TO in
-        "p10"|"p11"|"Sisyphus")
-            rm -fv /etc/rpm/macros.d/{p10,p11} 
+        "p10"|"p11"|"Sisyphus"|"Deferred")
+            rm -fv /etc/rpm/macros.d/{p10,p11}
 
-            [ "$TO" = "Sisyphus" ] && TO="sisyphus"
-            
+            [ "$TO" = "Sisyphus" ] || [ "$TO" = "Deferred" ] && TO="sisyphus"
+
             echo "%_priority_distbranch $TO" >/etc/rpm/macros.d/priority_distbranch
             ;;
         *)

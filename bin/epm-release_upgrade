@@ -153,10 +153,9 @@ get_fix_release_pkg()
     local TO="$1"
 
     if [ "$TO" = "Deferred" ] ; then
-        echo "apt-conf-deferred"
-        # apt-conf-deferred conflicts with apt-conf-branch and apt-conf-sisyphus
+        # Deferred is a Sisyphus snapshot, use apt-conf-sisyphus (apt-conf-deferred does not exist)
+        echo "apt-conf-sisyphus"
         epm installed apt-conf-branch && echo "apt-conf-branch-"
-        epm installed apt-conf-sisyphus && echo "apt-conf-sisyphus-"
 
     elif [ "$TO" = "Sisyphus" ] ; then
         echo "apt-conf-sisyphus"
@@ -190,7 +189,11 @@ get_fix_release_pkg()
     #fi
 
     # workaround against obsoleted altlinux-release-sisyphus package from 2008 year
-    [ "$TOINSTALL" = "altlinux-release-sisyphus" ] && TOINSTALL="branding-alt-sisyphus-release"
+    # branding-alt-sisyphus-release requires alt-os-release
+    if [ "$TOINSTALL" = "altlinux-release-sisyphus" ] || [ "$TOINSTALL" = "altlinux-release-deferred" ] ; then
+        TOINSTALL="branding-alt-sisyphus-release"
+        echo "alt-os-release"
+    fi
 
     if epm installed etersoft-gpgkeys ; then
         # TODO: we don't support LINUX@Etersoft for now
@@ -492,8 +495,25 @@ __switch_alt_to_distro()
             __check_system "$TO"
             docmd epm upgrade || fatal
             ;;
+        "p11 Deferred")
+            info 'Upgrade all packages to current $FROM repository'
+            __do_upgrade
+            confirm_info 'Upgrade $DISTRNAME from $FROM to $TO ...'
+            docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+            __p11_upgrade_fix
+            __switch_repo_to $TO
+            [ -s /etc/rpm/macros.d/p10 ] && rm -fv /etc/rpm/macros.d/p10
+            [ -s /etc/rpm/macros.d/p11 ] && rm -fv /etc/rpm/macros.d/p11
+            end_change_alt_repo
+            __do_upgrade
+            # apt-conf-sisyphus may overwrite sources.list during upgrade, restore Deferred URLs
+            __switch_repo_to $TO
+            docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal
+            __check_system "$TO"
+            docmd epm update-kernel || fatal
+            ;;
         "p8 Sisyphus"|"p9 Sisyphus"|"p10 Sisyphus"|"p11 Sisyphus"|"Sisyphus Sisyphus"|\
-        "p8 Deferred"|"p9 Deferred"|"p10 Deferred"|"p11 Deferred"|"Deferred Deferred"|"Sisyphus Deferred"|"Deferred Sisyphus")
+        "p8 Deferred"|"p9 Deferred"|"p10 Deferred"|"Deferred Deferred"|"Sisyphus Deferred"|"Deferred Sisyphus")
             confirm_info 'Upgrade $DISTRNAME from $FROM to $TO ...'
             docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
             docmd epm upgrade || fatal
