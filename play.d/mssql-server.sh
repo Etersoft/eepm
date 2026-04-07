@@ -16,8 +16,8 @@ fi
 
 . $(dirname $0)/common.sh
 
-# Default year is 2019 (tracked in app-versions)
-MSSQL_YEAR=2019
+# Default year is 2022 (tracked in app-versions)
+MSSQL_YEAR=2022
 
 case "$VERSION" in
     2017|2019|2022|2025|preview)
@@ -58,6 +58,8 @@ dversion="$(epm print info -v)"
 
 case "$(epm print info -e)" in
   AstraLinuxSE/1.7)
+    # only 2017 and 2019 are available for Ubuntu 18.04
+    [ "$MSSQL_YEAR" = "2022" ] && MSSQL_YEAR=2019
     # libc++1 is available in Astra repos, no need for external Debian repo
     epm install libc++1
     epm install --repack https://packages.microsoft.com/ubuntu/18.04/mssql-server-$MSSQL_YEAR/pool/main/m/mssql-server/mssql-server_1*_amd64.deb
