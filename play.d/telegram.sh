@@ -30,7 +30,9 @@ if [ "$VERSION" = "*" ] ; then
     PKGURL=$(get_github_url "https://github.com/telegramdesktop/tdesktop/" "tsetup.$VERSION.tar.xz" $prerelease)
 
 else
-    PKGBASEURL="https://github.com/telegramdesktop/tdesktop/releases/download/v$VERSION"
+    # beta releases use tag v1.2.3 (not v1.2.3.beta) but filename tsetup.1.2.3.beta.tar.xz
+    TAGVER="$(echo "$VERSION" | sed 's/\.beta$//')"
+    PKGBASEURL="https://github.com/telegramdesktop/tdesktop/releases/download/v$TAGVER"
     [ "$PKGNAME" = "$BASEPKGNAME-beta" ] && ! echo "$VERSION" | grep -q '\.beta$' && VERSION="$VERSION.beta"
     # version can be 1.2.3.beta or 1.2.3
     PKGURL="$PKGBASEURL/tsetup.$VERSION.tar.xz"
