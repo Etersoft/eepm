@@ -11,7 +11,7 @@ VERSION=$(echo $BASENAME | sed -e 's|^linuxbrowser||' -e 's|-obs.*||')
 
 erc --here unpack $TAR || fatal
 
-cd * || fatal
+cd obs-linuxbrowser || fatal
 
 mkdir -p usr/lib64/obs-plugins/
 mkdir -p usr/share/obs/obs-plugins/obs-linuxbrowser/
