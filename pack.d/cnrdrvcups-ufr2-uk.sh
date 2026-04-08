@@ -9,7 +9,8 @@ if ! echo "$TAR" | grep -q "linux-UFRII-drv" ; then
     fatal "No idea how to handle $TAR"
 fi
 
-erc --here unpack $TAR && cd linux-* || fatal
+erc --here unpack $TAR || fatal
+cd "$(ls -d linux-*/)" || fatal
 
 case "$(epm print info -a)" in
     x86_64)
