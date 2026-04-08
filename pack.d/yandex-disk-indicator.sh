@@ -11,7 +11,7 @@ VERSION=$(echo "$BASENAME" | sed -e 's|^yandex-disk-indicator-||')
 
 erc --here unpack $TAR || fatal
 
-cd * || fatal
+cd "$(erc basename "$TAR")" || fatal
 
 export TARGET="usr"
 mkdir "usr"
