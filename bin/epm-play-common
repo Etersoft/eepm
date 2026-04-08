@@ -109,7 +109,7 @@ __get_fast_short_list_app()
     local IGNOREi586
     [ "$arch" = "x86_64" ] && IGNOREi586='NoNo' || IGNOREi586='i586-'
     # filter out symlinks (used as aliases) to avoid duplicates in listings
-    find $psdir -maxdepth 1 -name '*.sh' ! -type l | xargs grep -L -E "^DESCRIPTION=(''|\"\")" | xargs grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\<$arch\>)" | xargs basename -s .sh | grep -v -E "(^$IGNOREi586|^common)"
+    find $psdir -maxdepth 1 -name '*.sh' ! -type l | xargs grep -L -E "^DESCRIPTION=(''|\"\")" | xargs grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\<$arch\>)" | xargs basename -s .sh | grep -v -E "(^$IGNOREi586|^common)" | LC_ALL=C sort
 }
 
 __get_fast_int_list_app()
@@ -119,7 +119,7 @@ __get_fast_int_list_app()
     local IGNOREi586
     local RIFS=$'\x1E'
     [ "$arch" = "x86_64" ] && IGNOREi586='NoNo' || IGNOREi586='i586-'
-    find $psdir -maxdepth 1 -name '*.sh' ! -type l | xargs grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\<$arch\>)" | xargs grep -oP "^DESCRIPTION=[\"']*\K[^\"']+"  | sed -e "s|.*/\(.*\).sh:|\1$RIFS|" | grep -v -E "(^$IGNOREi586|^common|#.*$)"
+    find $psdir -maxdepth 1 -name '*.sh' ! -type l | xargs grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\<$arch\>)" | xargs grep -oP "^DESCRIPTION=[\"']*\K[^\"']+"  | sed -e "s|.*/\(.*\).sh:|\1$RIFS|" | grep -v -E "(^$IGNOREi586|^common|#.*$)" | LC_ALL=C sort
 }
 
 # Suggest similar apps using fzf fuzzy search
