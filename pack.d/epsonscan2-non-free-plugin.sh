@@ -9,7 +9,9 @@ if ! echo "$TAR" | grep -q "epsonscan2-bundle-.*.tar.gz" ; then
     fatal "No idea how to handle $TAR"
 fi
 
-erc --here unpack $TAR && cd epsonscan2-bundle-* || fatal
+TARDIR="$(erc basename "$TAR")"
+erc --here unpack "$TAR" || fatal
+cd "$TARDIR" || fatal
 
 # TODO:
 # cp $base/DefaultSettings.SF2 $HOME/.epsonscan2
