@@ -10,8 +10,9 @@ VERSION="$3"
 
 VERSION=$(basename $TAR | sed -e 's/lvh_software_levenhuklite_//' | tr '_' '.')
 
+TARDIR="$(erc basename "$TAR")"
 erc --here unpack $TAR || fatal
-cd *
+cd "$TARDIR" || fatal
 
 erc --here unpack LevenhukLite.x64.tar.bz2 || fatal
 sed -n -e '1,/^exit 0$/!p' LevenhukLite.x64.sh > LevenhukLite.tgz
