@@ -23,13 +23,13 @@ rmdir Linux*
 erc --here unpack Katusha_Scanner_M247_ubuntu64_*.tar.gz || fatal
 rm Katusha_Scanner_M247_ubuntu64_*.tar.gz
 
-cd * # Katusha_Scanner_M247_ubuntu64_V110
+cd "$(erc basename Katusha_Scanner_M247_ubuntu64_*.tar.gz)" || fatal
 
 # needed to extract deb package
 untar_payload LinuxInstaller_x86_64.sh
 
 # sane-1.0-27.x86-64
-cd sane*
+cd "$(ls -d sane*/)" || fatal
 
 # check if sane-1.0-27.x86-64.deb exist
 DEBNAME="$(echo sane*.deb)"
@@ -50,8 +50,8 @@ epm assure patool || fatal
 # needed because the control file have issues
 erc --here unpack $PKGNAME.deb || fatal
 # avoid cd to deb
-rm katusha*.deb
-cd katusha*
+rm $PKGNAME.deb
+cd "$(ls -d katusha*/)" || fatal
 
 SANELIB=usr/lib/sane
 if [ "$(epm print info -b)" = "64" ] ; then
@@ -66,11 +66,12 @@ if [ -d usr/lib/x86_64-linux-gnu/sane ] && [ "$SANELIB" != "usr/lib/x86_64-linux
 fi
 rm -r usr/lib/x86_64-linux-gnu
 
-pushd "$SANELIB"
-ln -s libsane-katusham247.so.1.0.27 libsane-katusham247.so
-ln -s libsane-katusham247.so.1.0.27 libsane-katusham247.so.1
-rm libsane-katusham247.la
-popd
+(
+    cd "$SANELIB" || fatal
+    ln -s libsane-katusham247.so.1.0.27 libsane-katusham247.so
+    ln -s libsane-katusham247.so.1.0.27 libsane-katusham247.so.1
+    rm libsane-katusham247.la
+)
 
 mkdir -p etc/sane.d/dll.d
 echo "katusham247" > etc/sane.d/dll.d/katusham247
