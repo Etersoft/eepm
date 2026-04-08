@@ -17,6 +17,12 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+# Check if current repos use Deferred
+__is_deferred_repo()
+{
+    epm --quiet repo list 2>/dev/null | grep -q "Etersoft/Sisyphus/Deferred/"
+}
+
 # Load ALT Linux mirror database from config file
 # Format: name URL (space-separated)
 # Sets __ALT_MIRROR_DB (all mirrors) and __ALT_MIRROR_DB_VISIBLE (without legacy)
@@ -24,6 +30,10 @@ __load_alt_mirror_db()
 {
     [ -n "$__ALT_MIRROR_DB" ] && return
     local mirror_file="$CONFIGDIR/mirrors-alt.list"
+    if __is_deferred_repo ; then
+        mirror_file="$CONFIGDIR/mirrors-deferred.list"
+        __MIRROR_TEST_PATH="Etersoft/Sisyphus/Deferred/x86_64/base/pkglist.classic.xz"
+    fi
     if [ -f "$mirror_file" ] ; then
         __ALT_MIRROR_DB="$(grep -v '^#' "$mirror_file" | grep -v '^$')"
         # visible mirrors: everything before "# Legacy" line

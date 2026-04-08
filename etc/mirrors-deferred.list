@@ -1,0 +1,6 @@
+# Deferred mirror list (Etersoft Sisyphus snapshot)
+# Format: name URL
+etersoft https://download.etersoft.ru/pub
+eterfund.org https://mirror.eterfund.org/download.etersoft.ru/pub
+# Legacy
+updates.etersoft.ru https://updates.etersoft.ru/pub
