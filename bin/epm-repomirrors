@@ -33,11 +33,11 @@ __load_alt_mirror_db()
     fi
 }
 
-# Convert URL to change pattern for epm repo change
-# https://mirror.yandex.ru/altlinux -> //mirror.yandex.ru altlinux
+# Convert URL to change replacement (with \1 backreference for separator)
+# https://mirror.yandex.ru/altlinux -> //mirror.yandex.ru\1altlinux
 __url_to_change_pattern()
 {
-    echo "$1" | sed -e 's|^https:||' -e 's|/\([^/]*\)$| \1|'
+    echo "$1" | sed -e 's|^https:||' -e 's|/\([^/]*\)$|\\1\1|'
 }
 
 # Test file path for speed test (relative to full_url)

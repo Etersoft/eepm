@@ -338,6 +338,12 @@ sed_escape()
     echo "$*" | sed -e 's|[][()$*.^|/]|\\&|g'
 }
 
+# Like sed_escape but treat / and space as equivalent ([/ ]+)
+sed_escape_relaxed()
+{
+    echo "$*" | sed -e 's|[][()$*.^|]|\\&|g' -e 's|[/ ]\+|[/ ][/ ]*|g'
+}
+
 
 # param true false
 subst_option()

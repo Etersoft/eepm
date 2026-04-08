@@ -19,11 +19,11 @@
 
 load_helper epm-repomirrors
 
-# Convert mirror URL to sed pattern for matching
-# https://download.etersoft.ru/pub/ALTLinux -> //download.etersoft.ru/pub/* ALTLinux
+# Convert mirror URL to sed pattern for matching (captures separator)
+# https://download.etersoft.ru/pub/ALTLinux -> //download.etersoft.ru/pub\([/ ]\)ALTLinux
 __url_to_sed_pattern()
 {
-    echo "$1" | sed -e 's|^https:||' -e 's|/\([^/]*\)$|/* \1|'
+    echo "$1" | sed -e 's|^https:||' -e 's|/\([^/]*\)$|\\([/ ]\\)\1|'
 }
 
 # Substitute known mirror URL with new one

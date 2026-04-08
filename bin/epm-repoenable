@@ -28,8 +28,8 @@ __epm_repoenable_alt()
     # ^rpm means full string
     if rhas "$1" "\^rpm" ; then
         rl="$(echo "$1" | sed -e 's|\^||')"
-        # check if this exact line exists as a comment
-        if ! grep -q -E "^[[:space:]]*#[[:space:]]*$(sed_escape "$rl")" $APT_ALL_SOURCES_LIST 2>/dev/null ; then
+        # check if this line exists as a comment (tolerant to / vs space in paths)
+        if ! grep -q -E "^[[:space:]]*#[[:space:]]*$(sed_escape_relaxed "$rl")" $APT_ALL_SOURCES_LIST 2>/dev/null ; then
             return 1
         fi
     else
@@ -41,7 +41,7 @@ __epm_repoenable_alt()
     [ -z "$apt_lists" ] && return 0
     echo "$rl" | while read rp ; do
         [ -n "$dryrun" ] && message 'will uncomment $rp' && continue
-        sed -i -e "s|^[[:space:]]*#[[:space:]]*\($(sed_escape "$rp")\)|\1|" $apt_lists
+        sed -i -e "s|^[[:space:]]*#[[:space:]]*\($(sed_escape_relaxed "$rp")\)|\1|" $apt_lists
     done
 }
 
