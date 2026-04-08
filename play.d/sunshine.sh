@@ -16,9 +16,9 @@ arch=$(epm print info -a)
 
 # Use GitHub releases (Fedora 41 packages work for ALT via repack)
 if [ "$VERSION" != "*" ] ; then
-    PKGURL="https://github.com/LizardByte/Sunshine/releases/download/v${VERSION}/Sunshine-${VERSION}-${RELEASE}.fc41.$arch.rpm"
+    PKGURL="https://github.com/LizardByte/Sunshine/releases/download/v${VERSION}/Sunshine-${VERSION}-${RELEASE}.$arch.rpm"
 else
-    PKGURL=$(eget --list --latest https://github.com/LizardByte/Sunshine/releases "Sunshine-*-${RELEASE}.fc41.$arch.rpm")
+    PKGURL=$(eget --list --latest https://github.com/LizardByte/Sunshine/releases "Sunshine-*-*.fc41.$arch.rpm")
 fi
 
 install_pkgurl
