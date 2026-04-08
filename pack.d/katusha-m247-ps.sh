@@ -13,8 +13,8 @@ rmdir Linux*
 
 # 2021-02-23-Katusha_M247_x86_64_DEB.tar.gz
 erc --here unpack *Katusha_M247_x86_64_DEB.tar.gz || fatal
-rm *Katusha_M247_x86_64_DEB.tar.gz 
-cd * # 2021-02-22-Katusha_M247_x86_64_DEB
+rm *Katusha_M247_x86_64_DEB.tar.gz
+cd */ # 2021-02-22-Katusha_M247_DEB
 
 # katusha-m247-ps_1.2.1_amd64.deb
 PKGNAME=katusha-m247-ps_*_amd64.deb
