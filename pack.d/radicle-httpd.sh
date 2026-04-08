@@ -10,7 +10,7 @@ VERSION=$3
 BASENAME=$(basename $TAR .tar.gz)
 
 erc --here unpack $TAR || fatal
-cd * || fatal
+cd "$(erc basename "$TAR")" || fatal
 
 mkdir -p usr/share/man/man1
 mkdir -p opt/$PRODUCT
