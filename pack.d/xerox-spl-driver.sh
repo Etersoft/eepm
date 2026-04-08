@@ -9,7 +9,7 @@ RETURNTARNAME="$2"
 BASENAME=$(basename $TAR .tar.gz)
 
 erc --here unpack $TAR || fatal
-cd *
+cd uld || fatal
 
 mkdir usr
 mkdir opt
@@ -34,10 +34,7 @@ fi
 
 install -Dm0644 "x86_64/libsane-smfp.so.1.0.1" "$SANELIB/libsane-smfp.so.1.0.1"
 
-pushd "$SANELIB"
-ln -s libsane-smfp.so.1.0.1 libsane-smfp.so.1
-ln -s libsane-smfp.so.1.0.1 libsane-smfp.so
-popd
+( cd "$SANELIB" && ln -s libsane-smfp.so.1.0.1 libsane-smfp.so.1 && ln -s libsane-smfp.so.1.0.1 libsane-smfp.so )
 
 install -Dm0644 "noarch/etc/smfp.conf" "etc/sane.d/smfp.conf"
 install -dm0755 "etc/sane.d/dll.d"
