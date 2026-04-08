@@ -31,7 +31,7 @@ if [ "$VERSION" = "*" ] ; then
 
 else
     PKGBASEURL="https://github.com/telegramdesktop/tdesktop/releases/download/v$VERSION"
-    [ "$PKGNAME" = "$BASEPKGNAME-beta" ] && VERSION="$VERSION.beta"
+    [ "$PKGNAME" = "$BASEPKGNAME-beta" ] && ! echo "$VERSION" | grep -q '\.beta$' && VERSION="$VERSION.beta"
     # version can be 1.2.3.beta or 1.2.3
     PKGURL="$PKGBASEURL/tsetup.$VERSION.tar.xz"
 fi
