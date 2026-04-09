@@ -12,7 +12,7 @@ URL="$4"
 
 mkdir -p usr/bin
 erc --here unpack "$TAR" || fatal
-mv codex-* usr/bin/codex || fatal
+mv "$(basename "$TAR" .tar.gz)" usr/bin/codex || fatal
 chmod 755 usr/bin/codex
 
 PKGNAME=$PRODUCT-$VERSION
