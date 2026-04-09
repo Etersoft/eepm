@@ -199,7 +199,7 @@ __generate_task_sourceslist()
         local url="https://git.altlinux.org/tasks/$tn/build/repo"
         url="$(eget --get-real-url "$url")" || { warning "Can't access task $tn repo" ; continue ; }
         local arch
-        for arch in noarch $DISTRARCH $([ "$DISTRARCH" = "x86_64" ] && echo "x86_64-i586") ; do
+        for arch in noarch $DISTRARCH $([ "$DISTRARCH" = "x86_64" ] && echo "i586 x86_64-i586") ; do
             eget --check-url "$url/$arch/base/" 2>/dev/null || continue
             local rd="$(eget --list "$url/$arch/RPMS.*" 2>/dev/null)"
             [ -n "$rd" ] || continue

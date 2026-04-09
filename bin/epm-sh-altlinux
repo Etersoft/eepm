@@ -107,7 +107,13 @@ get_task_packages_list()
     local res
 
     res="$(fetch_url $ALTTASKURL/$tn/plan/add-bin)" || return
-    echo "$res" | cut -f1-3 | grep -E "(noarch|$DISTRARCH)$" | cut -f1
+    echo "$res" | cut -f1-3 | grep -E "(noarch|$DISTRARCH|i586)$" | while read -r name ver arch; do
+        if [ "$arch" = "i586" ] ; then
+            echo "$name.32bit"
+        else
+            echo "$name"
+        fi
+    done
 }
 
 get_task_arepo_packages_list()
@@ -137,8 +143,5 @@ get_task_packages()
             continue
         fi
         get_task_packages_list "$tn"
-        [ "$DISTRARCH" = "x86_64" ] || continue
-        get_task_arepo_status "$tn" || continue
-        get_task_arepo_packages_list "$tn"
     done
 }

@@ -386,16 +386,16 @@ epm_install_alt_tasks()
     [ -n "$verbose" ] && info "Packages from task(s): $installlist"
 
     if [ -n "$full" ] ; then
-        installlist="$(estrlist reg_exclude ".*-checkinstall .*-debuginfo" "$installlist")"
+        installlist="$(estrlist reg_exclude ".*-checkinstall .*-debuginfo.*" "$installlist")"
     else
         # hack: drop -devel packages to avoid package provided by multiple packages
-        installlist="$(estrlist reg_exclude ".*-devel .*-devel-static .*-checkinstall .*-debuginfo" "$installlist")"
+        installlist="$(estrlist reg_exclude ".*-devel .*-devel-static .*-checkinstall .*-debuginfo.*" "$installlist")"
     fi
 
     # TODO: need we this option?
     #if [ -z "$force" ] ; then
     #    # skip i586- on install
-    installlist="$(estrlist reg_exclude "i586-.*" "$installlist")"
+    #installlist="$(estrlist reg_exclude "i586-.*" "$installlist")"
     #fi
 
     [ -n "$verbose" ] && info "Packages to install: $installlist"
