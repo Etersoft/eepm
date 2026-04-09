@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME=AniLibrix-linux
+PKGNAME=AniLibrix
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="Anilibria desktop anime cinema for any of your computers"
