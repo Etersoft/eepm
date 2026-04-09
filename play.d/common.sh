@@ -432,9 +432,8 @@ is_glibc_enough()
 is_openssl_enough()
 {
     local needed="$1"
-    local PKG="openssl"
 
-    is_pkg_enough $PKG $needed
+    is_soname_present "libssl.so.$needed"
 }
 
 get_path_by_soname()
