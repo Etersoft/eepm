@@ -21,6 +21,13 @@ if ! is_soname_present libbz2.so.1.0 ; then
     add_unirequires libbz2.so.1
 fi
 
+# bcompare >= 5.2.1 uses Qt6
+VERSION=$(grep "^Version:" $SPEC | sed -e "s|Version: ||")
+if [ "$(epm print compare version "$VERSION" "5.2.1")" != "-1" ] ; then
+    # Application depends on external Qt6 libraries
+    add_unirequires libQt6Core.so.6 libQt6Gui.so.6 libQt6PrintSupport.so.6 libQt6Widgets.so.6
+fi
+
 # as in original package
 add_unirequires /usr/bin/pdftotext
 
