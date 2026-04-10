@@ -33,6 +33,12 @@ if [ -f "\$CLAUDE_CONFIG" ]; then
     . "\$CLAUDE_CONFIG"
     set +a
 fi
+CLAUDE_USER_CONFIG="\$HOME/.claude/env.conf"
+if [ -f "\$CLAUDE_USER_CONFIG" ]; then
+    set -a
+    . "\$CLAUDE_USER_CONFIG"
+    set +a
+fi
 [ -n "\$TMPDIR" ] && export CLAUDE_CODE_TMPDIR="\$TMPDIR"
 exec $PRODUCTDIR/$PRODUCT "\$@"
 EOF
