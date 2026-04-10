@@ -17,8 +17,7 @@ else
 fi
 rm $TAR
 
-cd KyoceraLinux-Phase5* || fatal
-# use deb globally, because rpm doesn't have the correct version
+# tar.gz extracts without subdirectory
 cd Debian/Global/kyodialog_amd64 || fatal
 PKG="kyodialog_*_amd64.deb"
 

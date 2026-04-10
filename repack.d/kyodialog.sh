@@ -10,6 +10,8 @@ case "$VERSION" in
     # set MAJORVERSION to "5" to ensure the correct version is used in the path
     5* )
         MAJORVERSION="5"
+        # rename to kyodialog-phase5 to distinguish from Phase 9
+        subst "s|^Name:.*|Name: kyodialog-phase5|" $SPEC
         ;;
     9*)
         MAJORVERSION=$VERSION
