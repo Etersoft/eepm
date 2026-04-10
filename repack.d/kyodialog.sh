@@ -40,10 +40,7 @@ pack_dir /usr/share/ppd/kyocera
 #remove_dir $fromppd
 #pack_file /usr/share/ppd/kyocera
 
-# ALTERNATE_PPD_DIRECTORY=/usr/share/cups/model/kyocera
-mkdir -p $BUILDROOT/usr/share/cups/model/
-ln -s /usr/share/ppd/kyocera $BUILDROOT/usr/share/cups/model/kyocera
-pack_file /usr/share/cups/model/kyocera
+# cups-driverd scans both /usr/share/cups/model and /usr/share/ppd, no symlink needed
 
 cat <<EOF |create_file /usr/share/applications/$PRODUCTCUR.desktop
 [Desktop Entry]
