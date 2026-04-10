@@ -10,18 +10,18 @@ URL="$4"
 [ -n "$VERSION" ] || VERSION="$(echo "$URL" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?' | head -n1)"
 [ -n "$VERSION" ] || fatal "Can't get package version"
 
+# replace the last '-' with '~' so __set_name_version_by_tarball parses the version correctly
+VERSION="$(echo "$VERSION" | sed 's/-\([^-]*\)$/~\1/')"
+
 PKGNAME=$PRODUCT-$VERSION
 
 mkdir -p usr/bin
 mkdir -p usr/share/doc/$PRODUCT
 erc --here unpack $TAR || fatal
 
-BASENAME=$(basename $1 .tar.gz)
-ARCH=$(echo "$BASENAME" | sed -E 's/^.*_linux_//')
+mv -v $PRODUCT usr/bin/$PRODUCT
 
-mv -v CLIProxyAPIPlus_${VERSION}_linux_${ARCH}/$PRODUCT usr/bin/$PRODUCT
-
-mv -v CLIProxyAPIPlus_${VERSION}_linux_${ARCH}/config.example.yaml usr/share/doc/$PRODUCT/config.example.yaml
+mv -v config.example.yaml usr/share/doc/$PRODUCT/config.example.yaml
 
 chmod 755 usr/bin/$PRODUCT
 
