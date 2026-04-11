@@ -134,7 +134,7 @@ return_tar()
     rm -f $RETURNTARNAME
     for i in $* ; do
         #__handle_tarname $i
-        realpath $i >>$RETURNTARNAME || fatal "Can't save tar name $i to file $RETURNTARNAME"
+        realpath -s $i >>$RETURNTARNAME || fatal "Can't save tar name $i to file $RETURNTARNAME"
     done
     exit 0
 }
