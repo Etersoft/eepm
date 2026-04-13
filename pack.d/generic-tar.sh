@@ -11,7 +11,7 @@ alpkg=$(basename $TAR)
 
 # FIXME: this heruistic need be improved
 if [ -n "$VERSION" ] ; then
-    PRODUCT="$(echo "$alpkg" | sed -e "s|[-_.].*||")"
+    PRODUCT="$(echo "$alpkg" | sed -e "s|[-_.]${VERSION}.*||")"
 else
     VERSION="$(echo "$alpkg" | grep -o -P '[-_.][0-9][0-9]*([.]*[0-9][0-9a-z]*)*' | head -n1 | sed -e 's|^[-_.]||')" #"
     [ -n "$VERSION" ] || fatal "Can't get version from $TAR. We have almost no chance it will supported in alien."
