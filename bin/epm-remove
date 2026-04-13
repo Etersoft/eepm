@@ -214,13 +214,13 @@ epm_remove_nonint()
 
     case $PMTYPE in
         apt-dpkg)
-            sudocmd apt-get -y --force-yes remove --purge $@
+            sudocmd apt-get -y remove --purge $@
             return ;;
         aptitude-dpkg)
             sudocmd aptitude -y purge $@
             return ;;
         apt-rpm)
-            sudocmd apt-get -y --force-yes remove $@
+            sudocmd apt-get -y remove $@
             return ;;
         packagekit)
             docmd pkcon remove --noninteractive $@
