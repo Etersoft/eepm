@@ -163,7 +163,10 @@ __epm_upgrade_do()
             __epm_alt_download_to_cache $APTOPTIONS dist-upgrade
         fi
 
-        CMD="apt-get $__EPM_APT_REPO_OPTIONS $APTOPTIONS $noremove $force_yes dist-upgrade"
+        # --force-yes is deprecated in Debian apt, use --allow-* instead
+        local apt_force_yes="$force_yes"
+        [ "$PMTYPE" = "apt-dpkg" ] && [ "$apt_force_yes" = "--force-yes" ] && apt_force_yes="--allow-unauthenticated --allow-downgrades --allow-change-held-packages"
+        CMD="apt-get $__EPM_APT_REPO_OPTIONS $APTOPTIONS $noremove $apt_force_yes dist-upgrade"
         ;;
     apm-rpm)
         CMD="apm system upgrade"

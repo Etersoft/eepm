@@ -190,7 +190,10 @@ __epm_downgrade_do()
     #apt-rpm)
     #    ;;
     apt-dpkg)
-        local APTOPTIONS="$(subst_option non_interactive -y) $force_yes"
+        # --force-yes is deprecated in Debian apt, use --allow-* instead
+        local apt_force_yes="$force_yes"
+        [ "$apt_force_yes" = "--force-yes" ] && apt_force_yes="--allow-unauthenticated --allow-downgrades --allow-change-held-packages"
+        local APTOPTIONS="$(subst_option non_interactive -y) $apt_force_yes"
         __epm_add_deb_apt_downgrade_preferences || return
         if [ -n "$pkg_filenames" ] ; then
             sudocmd apt-get $APTOPTIONS install $pkg_filenames
