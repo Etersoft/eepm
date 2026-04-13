@@ -6,28 +6,28 @@ VERSION=$3
 
 . $(dirname $0)/common.sh
 
-__get_deb_from_sh() {
+__extract_payload_from_sh() {
     payload_offset=$(grep --text --line-number '^PAYLOAD:$' "$1" | cut -d: -f1)
     tail -n +$((payload_offset + 1)) "$1" | tar -xC "."
 }
 
 case "$TAR" in
     *.zip)
-        # Gosplugin_Linux-Debian_Installer.deb.zip contains Gosplugin_Linux-Debian_Installer.deb.sh
+        # extract .sh installer from zip
         unzip -j "$TAR" '*.sh' || fatal
-        INSTALLER=$(ls Gosplugin_Linux-Debian_Installer.deb.sh 2>/dev/null) || fatal 'installer not found in zip'
-        __get_deb_from_sh "$INSTALLER"
+        INSTALLER=$(ls Gosplugin_*_Installer.*.sh 2>/dev/null | head -1) || fatal 'installer not found in zip'
+        __extract_payload_from_sh "$INSTALLER"
         rm -f "$INSTALLER"
         ;;
     *.sh)
-        # Gosplugin_Linux-Debian_Installer.deb.sh
-        __get_deb_from_sh "$TAR"
+        __extract_payload_from_sh "$TAR"
         ;;
     *)
         fatal "unknown archive format: $TAR"
         ;;
 esac
 
-BASENAME=$(basename gosuslugi-plugin*)
+PKG=$(ls gosuslugi-plugin*.rpm gosuslugi-plugin*.deb 2>/dev/null | head -1)
+[ -n "$PKG" ] || fatal 'gosuslugi-plugin package not found after extraction'
 
-return_tar "$BASENAME"
+return_tar "$PKG"
