@@ -12,9 +12,11 @@ case "$VERSION" in
         MAJORVERSION="5"
         # rename to kyodialog-phase5 to distinguish from Phase 9
         subst "s|^Name:.*|Name: kyodialog-phase5|" $SPEC
+        add_conflicts kyodialog
         ;;
     9*)
         MAJORVERSION=$VERSION
+        add_conflicts kyodialog-phase5
 esac
 
 PRODUCT=kyodialog
