@@ -225,7 +225,13 @@ __prepare_source_package()
         return
     fi
 
-    # convert tarballs to tar (for alien)
+    # skip packing if tar already prepared by pack.d (has yaml metadata)
+    if rhas "$alpkg" "\.tar$" && [ -r "$pkg.eepm.yaml" ] ; then
+        returntarname="$pkg"
+        return
+    fi
+
+    # convert tarballs/AppImage/snap to tar
     load_helper epm-pack
 
     # they will fill $returntarname
