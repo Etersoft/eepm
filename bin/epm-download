@@ -207,7 +207,7 @@ __epm_print_url_alt_check()
 __epm_alt_get_package_url()
 {
     #sudocmd apt-get install -y --print-uris --reinstall "$pkg" | cut -f1 -d " " | grep ".rpm'$" | sed -e "s|^'||" -e "s|'$||"
-    sudocmd apt-get $__EPM_APT_REPO_OPTIONS -y --force-yes --print-uris "$@" | grep -E -o -e "(https?|ftp)://[^']+"
+    sudocmd apt-get $__EPM_APT_REPO_OPTIONS -y --print-uris "$@" | grep -E -o -e "(https?|ftp)://[^']+"
 }
 
 
