@@ -27,8 +27,8 @@ else
     fatal "We support only Pantum Ubuntu Driver V.*.zip"
 fi
 
-# drop dirname with spaces
-mv Pantum* PantumDriver || fatal
+# rename driver directory to remove spaces (breaks return_tar paths)
+mv "Pantum "*/  PantumDriver 2>/dev/null || mv Pantum_*/  PantumDriver 2>/dev/null || fatal "Can't find Pantum driver directory"
 cd PantumDriver/Resources || fatal
 
 case "$(epm print info -a)" in
