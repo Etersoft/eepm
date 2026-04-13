@@ -23,7 +23,7 @@ rmdir Linux*
 erc --here unpack Katusha_Scanner_M247_ubuntu64_*.tar.gz || fatal
 rm Katusha_Scanner_M247_ubuntu64_*.tar.gz
 
-cd "$(erc basename Katusha_Scanner_M247_ubuntu64_*.tar.gz)" || fatal
+cd Katusha_Scanner_M247_ubuntu64_*/ || fatal
 
 # needed to extract deb package
 untar_payload LinuxInstaller_x86_64.sh
