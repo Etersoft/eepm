@@ -106,7 +106,7 @@ epm_print_install_names_command()
             return ;;
         apt-dpkg)
             # this command  not for complex use. ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive
-            echo "apt-get -y --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true $APTOPTIONS install $*"
+            echo "apt-get -y --allow-unauthenticated --allow-downgrades --allow-change-held-packages $APTOPTIONS install $*"
             return ;;
         apm-rpm)
             echo "apm system install $*"
