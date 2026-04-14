@@ -42,7 +42,7 @@ install_app()
 
     echo -n "epm play $playopt $app $alt ..."
     echo "$app$alt" > $LOGDIR/epm-current
-    timeout 1h $EPM play $playopt --verbose --auto $app $alt >$EDIR/$applog 2>&1
+    timeout 1h $EPM --allow-remove play $playopt --verbose --auto $app $alt >$EDIR/$applog 2>&1
     local RES=$?
     [ "$RES" = 0 ] && echo "OK" || echo "FAILED"
     [ "$RES" = 0 ] || { rm -f $LOGDIR/epm-current ; exec 9>&- ; return $RES ; }
