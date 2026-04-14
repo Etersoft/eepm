@@ -226,8 +226,9 @@ __prepare_source_package()
     fi
 
     # skip packing if tar already prepared by pack.d (has yaml metadata)
-    if rhas "$alpkg" "\.tar$" && [ -r "$pkg.eepm.yaml" ] ; then
+    if rhas "$alpkg" "\.(tar|tar\.gz|tar\.bz2|tar\.xz|tgz)$" && [ -r "$pkg.eepm.yaml" ] ; then
         returntarname="$pkg"
+        SUBGENERIC='tar'
         return
     fi
 
