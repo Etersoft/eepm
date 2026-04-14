@@ -15,5 +15,5 @@ install_file /opt/servo/resources/org.servo.Servo.desktop /usr/share/application
 
 fix_desktop_file SERVO_SRC_PATH/target/release/servo
 
-add_bin_link_command
+add_bin_link_command $PRODUCT $PRODUCTDIR/servoshell
 
