@@ -8,6 +8,8 @@ URL="https://www.cursor.com/cli"
 
 . $(dirname $0)/common.sh
 
+warn_version_is_not_supported
+
 arch="$(epm print info -a)"
 case "$arch" in
     x86_64)
