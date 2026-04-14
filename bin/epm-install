@@ -282,7 +282,7 @@ epm_ni_install_names()
     [ -z "$1" ] && return
 
     # forbid package removal by default in non-interactive mode
-    [ -z "$noremove" ] && [ -z "$force" ] && noremove="--no-remove"
+    [ -z "$noremove" ] && [ -z "$force" ] && [ -z "$allow_remove" ] && noremove="--no-remove"
 
     if [ -n "$norecommends" ] ; then
         APTOPTIONS="$APTOPTIONS -o APT::Install-Recommends=false"

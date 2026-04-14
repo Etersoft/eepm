@@ -138,6 +138,7 @@ verbose=$EPM_VERBOSE
 quiet=
 nodeps=
 noremove=
+allow_remove=
 dryrun=
 force=
 full=
@@ -596,6 +597,10 @@ check_option()
     --noremove|--no-remove)  # HELPOPT: exit if any packages are to be removed during upgrade
         noremove="--no-remove"
         ;;
+    --allow-remove|--allow-erasing) # HELPOPT: allow removing conflicting packages during install
+        noremove=""
+        allow_remove="--allow-remove"
+        ;;
     --no-stdin|--inscript)  # HELPOPT: don't read from stdin for epm args
         inscript=1
         ;;
@@ -750,7 +755,7 @@ if [ -n "$quiet" ] ; then
 fi
 
 # fill
-export EPM_OPTIONS="$nodeps $force $full $verbose $debug $quiet $interactive $non_interactive $parallel $save_only $download_only $force_overwrite $manual_requires $noscripts $scripts $dryrun $norecommends $noremove"
+export EPM_OPTIONS="$nodeps $force $full $verbose $debug $quiet $interactive $non_interactive $parallel $save_only $download_only $force_overwrite $manual_requires $noscripts $scripts $dryrun $norecommends $noremove $allow_remove"
 
 # if input is not console and run script from file, get pkgs from stdin too
 if [ -z "$direct_args" ] && [ ! -n "$inscript" ] && [ -p /dev/stdin ] && [ "$EPMMODE" != "pipe" ] ; then
