@@ -8,7 +8,7 @@ URL="https://gitbutler.com/"
 
 . $(dirname $0)/common.sh
 
-if [ "$VERSION" = "*" ] ; then
+if [ "$VERSION" = "*" ] || ! echo "$VERSION" | grep -q '~' ; then
     # Get version and build number from AUR PKGBUILD
     pkgbuild=$(eget -q -O- "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=gitbutler-bin")
     ver=$(echo "$pkgbuild" | grep -oP '^pkgver=\K.*')
@@ -20,7 +20,6 @@ fi
 # VERSION format: 0.19.7~2956
 ver=$(echo "$VERSION" | cut -d~ -f1)
 build=$(echo "$VERSION" | cut -d~ -f2)
-[ "$build" != "$ver" ] || fatal "Build number is required in VERSION (e.g. 0.19.7~2956)"
 
 PKGURL="https://releases.gitbutler.com/releases/release/${ver}-${build}/linux/x86_64/GitButler_${ver}_amd64.deb"
 

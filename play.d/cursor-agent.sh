@@ -25,6 +25,8 @@ if [ "$VERSION" = "*" ] ; then
     [ -n "$VERSION" ] || fatal "Can't get latest version"
 fi
 
-PKGURL="https://downloads.cursor.com/lab/$VERSION/linux/$arch/agent-cli-package.tar.gz"
+# URL uses - but rpm version stores ~ instead
+URLVERSION="$(echo "$VERSION" | tr '~' '-')"
+PKGURL="https://downloads.cursor.com/lab/$URLVERSION/linux/$arch/agent-cli-package.tar.gz"
 
 install_pack_pkgurl
