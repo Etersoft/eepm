@@ -16,17 +16,20 @@ warn_version_is_not_supported
 
 URL="https://repo.yandex.ru/yandex-browser"
 
+FULLVERSION="$(build_full_version "$VERSION" "$RELEASE")"
+[ -n "$FULLVERSION" ] || FULLVERSION="$VERSION*"
+
 if [ "$(epm print info -p)" = "rpm" ] ; then
     # https://repo.yandex.ru/yandex-browser/rpm/stable/x86_64/yandex-browser-stable-23.1.1.1114-1.x86_64.rpm
-    PKGURL="$URL/rpm/$BRANCH/x86_64/$(epm print constructname $PKGNAME "$VERSION*" x86_64 rpm)"
+    PKGURL="$URL/rpm/$BRANCH/x86_64/$(epm print constructname $PKGNAME "$FULLVERSION" x86_64 rpm)"
 else
     # https://repo.yandex.ru/yandex-browser/deb/pool/main/y/yandex-browser-beta/yandex-browser-beta_23.5.4.682-1_amd64.deb
-    PKGURL="$URL/deb/pool/main/y/$PKGNAME/$(epm print constructname $PKGNAME "$VERSION*" amd64 deb)"
+    PKGURL="$URL/deb/pool/main/y/$PKGNAME/$(epm print constructname $PKGNAME "$FULLVERSION" amd64 deb)"
 fi
 
 if [ "$(epm print info -s)" = "redos" ] ; then
     BRANCH="stable"
-    PKGURL="$URL/rpm/redos/x86_64/$(epm print constructname $PKGNAME "$VERSION*" x86_64 rpm)"
+    PKGURL="$URL/rpm/redos/x86_64/$(epm print constructname $PKGNAME "$FULLVERSION" x86_64 rpm)"
 fi
 
 install_pkgurl
