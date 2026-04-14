@@ -11,16 +11,19 @@ URL="https://gitbutler.com/"
 if [ "$VERSION" = "*" ] ; then
     # Get version and build number from AUR PKGBUILD
     pkgbuild=$(eget -q -O- "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=gitbutler-bin")
-    VERSION=$(echo "$pkgbuild" | grep -oP '^pkgver=\K.*')
-    BUILD=$(echo "$pkgbuild" | grep -oP '^_pkgvernum=\K.*')
-    [ -n "$VERSION" ] && [ -n "$BUILD" ] || fatal "Can't get version"
-    VERSION="$VERSION-$BUILD"
+    ver=$(echo "$pkgbuild" | grep -oP '^pkgver=\K.*')
+    build=$(echo "$pkgbuild" | grep -oP '^_pkgvernum=\K.*')
+    [ -n "$ver" ] && [ -n "$build" ] || fatal "Can't get version"
+    VERSION="${ver}~${build}"
 fi
 
-# VERSION format: 0.18.3-2698
-ver=$(echo "$VERSION" | cut -d- -f1)
-build=$(echo "$VERSION" | cut -d- -f2)
+# VERSION format: 0.19.7~2956
+ver=$(echo "$VERSION" | cut -d~ -f1)
+build=$(echo "$VERSION" | cut -d~ -f2)
+[ "$build" != "$ver" ] || fatal "Build number is required in VERSION (e.g. 0.19.7~2956)"
 
-PKGURL="https://releases.gitbutler.com/releases/release/$VERSION/linux/x86_64/GitButler_${ver}_amd64.deb"
+PKGURL="https://releases.gitbutler.com/releases/release/${ver}-${build}/linux/x86_64/GitButler_${ver}_amd64.deb"
 
+# pass full version with build number to repack
+export EPM_REPACK_VERSION="$VERSION"
 install_pkgurl
