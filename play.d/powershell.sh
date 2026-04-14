@@ -9,7 +9,11 @@ URL="https://github.com/PowerShell/PowerShell"
 
 . $(dirname $0)/common.sh
 
-[ "$VERSION" = "*" ] && VERSION="[0-9]*" || VERSION="${VERSION}-${RELEASE}"
+if [ "$VERSION" = "*" ] ; then
+    VERSION="[0-9]*"
+elif [ -n "$RELEASE" ] ; then
+    VERSION="${VERSION}-${RELEASE}"
+fi
 
 reponame=$(epm print info --repo-name)
 vendor=$(epm print info -s)
@@ -23,7 +27,12 @@ case $(epm print info -e) in
         ;;
     *)
         BASEURL="https://github.com/PowerShell/PowerShell/releases"
-        file="powershell-$VERSION.rh.x86_64.rpm"
+        # RELEASE from app-versions already contains .rh suffix
+        if echo "$VERSION" | grep -q "\.rh$" ; then
+            file="powershell-$VERSION.x86_64.rpm"
+        else
+            file="powershell-$VERSION.rh.x86_64.rpm"
+        fi
         ;;
 esac
 
