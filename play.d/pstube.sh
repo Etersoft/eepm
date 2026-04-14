@@ -28,6 +28,6 @@ arch=x86_64
 # https://github.com/prateekmedia/pstube/releases/download/2.6.0/pstube-linux-2.6.0-x86_64.rpm
 # https://github.com/prateekmedia/pstube/releases/download/2.6.0/pstube-linux-2.6.0-x86_64.deb
 # https://github.com/prateekmedia/pstube/releases/download/3.0.0-beta/pstube-3.0.0-beta-linux-x86_64.rpm
-PKGURL=$(eget --list --latest https://github.com/prateekmedia/pstube/releases "$PKGNAME-$VERSION-$arch.$pkgtype")
+PKGURL=$(eget --list --latest https://github.com/prateekmedia/pstube/releases "$PKGNAME-$VERSION-linux-$arch.$pkgtype")
 
 install_pkgurl
