@@ -8,6 +8,9 @@ URL="https://cuda-z.sourceforge.net/"
 
 . $(dirname $0)/common.sh
 
+# sourceforge has only latest version, and VERSION can't be specified
+VERSION="*"
+
 arch="$(epm print info -a)"
 case "$arch" in
     x86_64)

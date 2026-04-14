@@ -11,6 +11,8 @@ URL="https://github.com/RocketChat/Rocket.Chat.Electron"
 arch=amd64
 pkgtype=deb
 
-PKGURL=$(eget --list --latest https://github.com/RocketChat/Rocket.Chat.Electron/releases/ "$PKGNAME*$VERSION*$arch.$pkgtype")
+# VERSION from app-versions may contain ~ instead of - (rpm convention)
+URLVERSION="$(echo "$VERSION" | tr '~' '-')"
+PKGURL=$(eget --list --latest https://github.com/RocketChat/Rocket.Chat.Electron/releases/ "$PKGNAME*$URLVERSION*$arch.$pkgtype")
 
 install_pkgurl

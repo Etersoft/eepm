@@ -18,6 +18,8 @@ case "$pkgtype" in
         ;;
 esac
 
+# strip rpm-specific suffix from version (e.g. 3.1.3+9 -> 3.1.3)
+VERSION="$(echo "$VERSION" | sed 's|+.*||')"
 [ "$VERSION" = "*" ] && VERSION="[0-9]*"
 
 if ! is_glibc_enough 2.34 ; then
