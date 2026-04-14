@@ -16,9 +16,10 @@ warn_version_is_not_supported
 # no more .deb
 #PKGURL=$(eget --list --latest "https://everdo.net/getting-started/?d=deb" "$PKGNAME*.deb")
 
-if [ "$VERSION" = "*" ] ; then
-    PKGURL=$(eget --list --latest "https://everdo.net/getting-started/?d=appimage" "$PKGNAME*.AppImage")
+if [ "$VERSION" != "*" ] ; then
+    PKGURL="https://downloads.everdo.net/electron/Everdo-$VERSION.AppImage"
 else
+    [ "$VERSION" = "*" ] && VERSION="1.9.0"
     PKGURL="https://downloads.everdo.net/electron/Everdo-$VERSION.AppImage"
 fi
 
