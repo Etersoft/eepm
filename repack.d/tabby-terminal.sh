@@ -9,8 +9,6 @@ PRODUCTDIR=/opt/Tabby
 
 . $(dirname $0)/common.sh
 
-
-
 add_bin_link_command
 
 fix_desktop_file

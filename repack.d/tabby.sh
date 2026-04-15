@@ -6,5 +6,5 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
-add_bin_link_command tabby $PRODUCTDIR/tabby
+add_bin_link_command tabby-ml $PRODUCTDIR/tabby
 #add_bin_link_command llama-server $PRODUCTDIR/llama-server
