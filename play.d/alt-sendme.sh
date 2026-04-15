@@ -22,6 +22,7 @@ case $pkgtype in
 esac
 
 
-PKGURL=$(get_github_url https://github.com/tonyantony300/alt-sendme "AltSendme-$VERSION.$arch.$pkgformat")
+FULLVERSION="$(build_full_version "$VERSION" "$RELEASE")"
+PKGURL=$(get_github_url https://github.com/tonyantony300/alt-sendme "AltSendme-$FULLVERSION.$arch.$pkgformat")
 
 install_pkgurl
