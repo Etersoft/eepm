@@ -7,22 +7,25 @@ SPEC="$2"
 VERSION=$(grep "^Version:" $SPEC | sed -e "s|Version: ||")
 
 case "$VERSION" in
-    # set MAJORVERSION to "5" to ensure the correct version is used in the path
-    5* )
-        MAJORVERSION="5"
-        # rename to kyodialog-phase5 to distinguish from Phase 9
-        subst "s|^Name:.*|Name: kyodialog-phase5|" $SPEC
-        add_conflicts kyodialog
-        ;;
-    9*)
-        MAJORVERSION=$VERSION
-        add_conflicts kyodialog-phase5
+    5* ) MAJORVERSION="5" ;;
+    9*)  MAJORVERSION=$VERSION ;;
 esac
 
 PRODUCT=kyodialog
 PRODUCTCUR=$PRODUCT$MAJORVERSION
 
 . $(dirname $0)/common.sh
+
+case "$VERSION" in
+    5* )
+        # rename to kyodialog-phase5 to distinguish from Phase 9
+        subst "s|^Name:.*|Name: kyodialog-phase5|" $SPEC
+        add_conflicts kyodialog
+        ;;
+    9*)
+        add_conflicts kyodialog-phase5
+        ;;
+esac
 
 # embedded
 filter_from_requires "python3(PyPDF3)"
