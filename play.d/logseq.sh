@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME=Logseq
+PKGNAME=logseq
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION='Logseq - a platform for knowledge management and collaboration. From the official site'
