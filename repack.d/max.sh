@@ -6,6 +6,9 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
+# bundled Qt6, serial port module not bundled (optional)
+ignore_lib_requires 'libQt6SerialPort.so.*'
+
 # conflicts with MAX from AppImage
 add_conflicts MAX
 

@@ -8,6 +8,9 @@ PRODUCTCUR=wing-personal
 
 . $(dirname $0)/common.sh
 
+# bundled Qt6, network module not bundled (optional)
+ignore_lib_requires 'libQt6Network.so.*'
+
 move_to_opt
 subst "s|/usr/lib/$PRODUCT|$PRODUCTDIR|" $BUILDROOT$PRODUCTDIR/$PRODUCTCUR
 

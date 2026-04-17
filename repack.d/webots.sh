@@ -6,6 +6,9 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
+# bundled Qt6, Wayland shell integration not bundled (optional)
+ignore_lib_requires 'libQt6WlShellIntegration.so.*'
+
 move_to_opt "/usr/local/webots"
 
 remove_file /usr/local/bin/webots

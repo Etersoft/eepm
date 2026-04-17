@@ -38,5 +38,8 @@ ignore_lib_requires 'libpanelw.so.*'
 ignore_lib_requires 'libreadline.so.*'
 ignore_lib_requires 'libtinfo.so.*'
 
+# bundled Qt6, but these QML plugins reference missing Qt modules
+ignore_lib_requires 'libQt6LabsSettings.so.*' 'libQt6QmlXmlListModel.so.*'
+
 ignore_library_path /opt/cascadeur/plugins/multimedia
 

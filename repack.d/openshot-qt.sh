@@ -8,3 +8,5 @@ SPEC="$2"
 
 # AppImage bundles its own libFLAC (so.8), ignore the outdated soname requirement
 ignore_lib_requires 'libFLAC.so.8'
+# bundled Qt5, EGL and Wayland plugins not bundled (optional, X11 only)
+ignore_lib_requires 'libQt5EglFSDeviceIntegration.so.*' 'libQt5WaylandClient.so.*'

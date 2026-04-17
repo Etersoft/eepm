@@ -16,3 +16,6 @@ libxml2.so.2 libxslt.so.1 libz.so.1"
 
 . $(dirname $0)/common.sh
 
+# bundled Qt5, these modules not bundled (optional platform plugins)
+ignore_lib_requires 'libQt5EglFSDeviceIntegration.so.*' 'libQt5MultimediaGstTools.so.*' 'libQt5MultimediaWidgets.so.*' 'libQt5Pdf.so.*' 'libQt5QuickParticles.so.*' 'libQt5QuickTest.so.*' 'libQt5Test.so.*' 'libQt5WebSockets.so.*'
+

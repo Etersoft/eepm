@@ -12,6 +12,8 @@ add_bin_link_command $PRODUCT $PRODUCTDIR/launcher.sh
 # missed with other soname
 #ln -s /usr/lib64/libjasper.so.* bin/libjasper.so.1
 #pack_file $PRODUCTDIR/bin/libjasper.so.1
+# bundled Qt5, QML and Wayland modules not bundled (optional)
+ignore_lib_requires 'libQt5Qml.so.*' 'libQt5Quick.so.*' 'libQt5WaylandClient.so.*'
 ignore_lib_requires libjasper.so.1 libhunspell-1.6.so.0
 
 install_file $PRODUCTDIR/lithium-ecad.desktop /usr/share/applications/$PRODUCT.desktop
