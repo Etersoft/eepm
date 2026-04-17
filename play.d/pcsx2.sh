@@ -11,6 +11,10 @@ URL="https://github.com/PCSX2/pcsx2/releases"
 # https://github.com/PCSX2/pcsx2/releases/download/v1.7.4767/pcsx2-v1.7.4767-linux-appimage-x64-Qt.AppImage
 file="pcsx2-v${VERSION}-linux-appimage-x64-Qt.AppImage"
 
-PKGURL=$(eget --list --latest https://github.com/PCSX2/pcsx2/releases "$file")
+if [ "$VERSION" = "*" ] ; then
+    PKGURL=$(eget --list --latest https://github.com/PCSX2/pcsx2/releases "$file")
+else
+    PKGURL="https://github.com/PCSX2/pcsx2/releases/download/v${VERSION}/$file"
+fi
 
 install_pack_pkgurl
