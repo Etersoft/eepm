@@ -12,6 +12,10 @@ move_to_opt "/usr/lib64/beyondcompare"
 
 subst "s|/usr/lib64/beyondcompare|$PRODUCTDIR|" usr/bin/$PRODUCT
 
+# uses system Qt6 (not bundled)
+add_libs_requires
+add_unirequires libQt6Core.so.6 libQt6DBus.so.6 libQt6Gui.so.6 libQt6PrintSupport.so.6 libQt6Widgets.so.6
+
 if ! is_soname_present libbz2.so.1.0 ; then
     # fIXME: https://bugzilla.altlinux.org/35320
     ignore_lib_requires 'libbz2.so.1.0'

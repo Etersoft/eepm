@@ -5,7 +5,9 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
+# uses system Qt5 (not bundled)
 add_libs_requires
+add_unirequires libQt5Core.so.5 libQt5Gui.so.5 libQt5Widgets.so.5
 add_unirequires udev
 
 # utility

@@ -9,3 +9,4 @@ SPEC="$2"
 # generic-snap.sh removes bundled Qt from gnome-platform/,
 # so we need to add dependencies on system Qt
 add_libs_requires
+add_unirequires libQt6Core.so.6 libQt6DBus.so.6 libQt6Gui.so.6 libQt6Network.so.6 libQt6Positioning.so.6 libQt6WebEngineCore.so.6 libQt6WebEngineWidgets.so.6 libQt6Widgets.so.6
