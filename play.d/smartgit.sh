@@ -9,10 +9,13 @@ URL="https://www.syntevo.com/smartgit/"
 . $(dirname $0)/common.sh
 
 if [ "$VERSION" = "*" ] ; then
-    VERSION=$(eget -q -O- https://www.smartgit.dev/download/ | grep -oP 'smartgit-\K[0-9_]+(?=-linux-amd64\.tar\.gz)' | head -1)
-    [ -n "$VERSION" ] || fatal "Can't get version"
+    URLVERSION=$(eget -q -O- https://www.smartgit.dev/download/ | grep -oP 'smartgit-\K[0-9_]+(?=-linux-amd64\.tar\.gz)' | head -1)
+    [ -n "$URLVERSION" ] || fatal "Can't get version"
+    VERSION="$(echo "$URLVERSION" | tr '_' '.')"
+else
+    URLVERSION="$(echo "$VERSION" | tr '.' '_')"
 fi
 
-PKGURL="https://download.smartgit.dev/smartgit/smartgit-$VERSION-linux-amd64.tar.gz"
+PKGURL="https://download.smartgit.dev/smartgit/smartgit-$URLVERSION-linux-amd64.tar.gz"
 
 install_pack_pkgurl
