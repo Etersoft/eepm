@@ -21,7 +21,7 @@ esac
 if [ "$VERSION" = "*" ] ; then
     PKGURL="$(get_github_url "https://github.com/olivierkes/manuskript" "$file")"
 else
-    PKGURL="https://github.com/olivierkes/manuskript/releases/download/$version/$file"
+    PKGURL="https://github.com/olivierkes/manuskript/releases/download/$VERSION/$file"
 fi
 
 install_pkgurl
