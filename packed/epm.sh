@@ -40,7 +40,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.59"
+export EPMVERSION="3.64.60"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -368,6 +368,11 @@ lastword()
 sed_escape()
 {
     echo "$*" | sed -e 's|[][()$*.^|/]|\\&|g'
+}
+
+sed_escape_relaxed()
+{
+    echo "$*" | sed -e 's|[][()$*.^|]|\\&|g' -e 's|[/ ]\+|[/ ][/ ]*|g'
 }
 
 
@@ -4420,7 +4425,10 @@ __epm_downgrade_do()
     #apt-rpm)
     #    ;;
     apt-dpkg)
-        local APTOPTIONS="$(subst_option non_interactive -y) $force_yes"
+        # --force-yes is deprecated in Debian apt, use --allow-* instead
+        local apt_force_yes="$force_yes"
+        [ "$apt_force_yes" = "--force-yes" ] && apt_force_yes="--allow-unauthenticated --allow-downgrades --allow-change-held-packages"
+        local APTOPTIONS="$(subst_option non_interactive -y) $apt_force_yes"
         __epm_add_deb_apt_downgrade_preferences || return
         if [ -n "$pkg_filenames" ] ; then
             sudocmd apt-get $APTOPTIONS install $pkg_filenames
@@ -4548,8 +4556,8 @@ __download_pkg_urls()
         # download packages
         if docmd eget --tries 3 $latest "$url" ; then
             local i
-            for i in *.* ; do
-                [ "$i" = "*.*" ] && warning 'Incorrect true status from eget. No saved files from download $url, ignoring' && continue
+            for i in * ; do
+                [ "$i" = "*" ] && warning 'Incorrect true status from eget. No saved files from download $url, ignoring' && continue
                 [ -s "$tmppkg/$i" ] || continue
                 chmod $verbose a+r "$tmppkg/$i"
                 local si="$(echo "$i" | sed -e 's| |-|g')"
@@ -4647,7 +4655,7 @@ __epm_print_url_alt_check()
 __epm_alt_get_package_url()
 {
     #sudocmd apt-get install -y --print-uris --reinstall "$pkg" | cut -f1 -d " " | grep ".rpm'$" | sed -e "s|^'||" -e "s|'$||"
-    sudocmd apt-get $__EPM_APT_REPO_OPTIONS -y --force-yes --print-uris "$@" | grep -E -o -e "(https?|ftp)://[^']+"
+    sudocmd apt-get $__EPM_APT_REPO_OPTIONS -y --print-uris "$@" | grep -E -o -e "(https?|ftp)://[^']+"
 }
 
 
@@ -6291,7 +6299,7 @@ epm_ni_install_names()
     [ -z "$1" ] && return
 
     # forbid package removal by default in non-interactive mode
-    [ -z "$noremove" ] && [ -z "$force" ] && noremove="--no-remove"
+    [ -z "$noremove" ] && [ -z "$force" ] && [ -z "$allow_remove" ] && noremove="--no-remove"
 
     if [ -n "$norecommends" ] ; then
         APTOPTIONS="$APTOPTIONS -o APT::Install-Recommends=false"
@@ -6305,7 +6313,7 @@ epm_ni_install_names()
             sudocmd apt-get $__EPM_APT_REPO_OPTIONS -y $noremove --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
             return ;;
         apt-dpkg)
-            sudocmd env ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive apt-get -y $noremove --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
+            sudocmd env ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive apt-get -y $noremove --allow-unauthenticated --allow-downgrades --allow-change-held-packages -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
             return ;;
         apm-rpm)
             sudocmd apm system install $@
@@ -7396,7 +7404,7 @@ epm_print_install_names_command()
             return ;;
         apt-dpkg)
             # this command  not for complex use. ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive
-            echo "apt-get -y --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true $APTOPTIONS install $*"
+            echo "apt-get -y --allow-unauthenticated --allow-downgrades --allow-change-held-packages $APTOPTIONS install $*"
             return ;;
         apm-rpm)
             echo "apm system install $*"
@@ -10545,7 +10553,7 @@ __get_fast_short_list_app()
     local IGNOREi586
     [ "$arch" = "x86_64" ] && IGNOREi586='NoNo' || IGNOREi586='i586-'
     # filter out symlinks (used as aliases) to avoid duplicates in listings
-    find $psdir -maxdepth 1 -name '*.sh' ! -type l | xargs grep -L -E "^DESCRIPTION=(''|\"\")" | xargs grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\<$arch\>)" | xargs basename -s .sh | grep -v -E "(^$IGNOREi586|^common)"
+    find $psdir -maxdepth 1 -name '*.sh' ! -type l | xargs grep -L -E "^DESCRIPTION=(''|\"\")" | xargs grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\<$arch\>)" | xargs basename -s .sh | grep -v -E "(^$IGNOREi586|^common)" | LC_ALL=C sort
 }
 
 __get_fast_int_list_app()
@@ -10555,7 +10563,7 @@ __get_fast_int_list_app()
     local IGNOREi586
     local RIFS=$'\x1E'
     [ "$arch" = "x86_64" ] && IGNOREi586='NoNo' || IGNOREi586='i586-'
-    find $psdir -maxdepth 1 -name '*.sh' ! -type l | xargs grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\<$arch\>)" | xargs grep -oP "^DESCRIPTION=[\"']*\K[^\"']+"  | sed -e "s|.*/\(.*\).sh:|\1$RIFS|" | grep -v -E "(^$IGNOREi586|^common|#.*$)"
+    find $psdir -maxdepth 1 -name '*.sh' ! -type l | xargs grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\<$arch\>)" | xargs grep -oP "^DESCRIPTION=[\"']*\K[^\"']+"  | sed -e "s|.*/\(.*\).sh:|\1$RIFS|" | grep -v -E "(^$IGNOREi586|^common|#.*$)" | LC_ALL=C sort
 }
 
 __epm_play_suggest_similar_apps()
@@ -12415,10 +12423,9 @@ get_fix_release_pkg()
     local TO="$1"
 
     if [ "$TO" = "Deferred" ] ; then
-        echo "apt-conf-deferred"
-        # apt-conf-deferred conflicts with apt-conf-branch and apt-conf-sisyphus
+        # Deferred is a Sisyphus snapshot, use apt-conf-sisyphus (apt-conf-deferred does not exist)
+        echo "apt-conf-sisyphus"
         epm installed apt-conf-branch && echo "apt-conf-branch-"
-        epm installed apt-conf-sisyphus && echo "apt-conf-sisyphus-"
 
     elif [ "$TO" = "Sisyphus" ] ; then
         echo "apt-conf-sisyphus"
@@ -12452,7 +12459,11 @@ get_fix_release_pkg()
     #fi
 
     # workaround against obsoleted altlinux-release-sisyphus package from 2008 year
-    [ "$TOINSTALL" = "altlinux-release-sisyphus" ] && TOINSTALL="branding-alt-sisyphus-release"
+    # branding-alt-sisyphus-release requires alt-os-release
+    if [ "$TOINSTALL" = "altlinux-release-sisyphus" ] || [ "$TOINSTALL" = "altlinux-release-deferred" ] ; then
+        TOINSTALL="branding-alt-sisyphus-release"
+        echo "alt-os-release"
+    fi
 
     if epm installed etersoft-gpgkeys ; then
         # TODO: we don't support LINUX@Etersoft for now
@@ -12744,8 +12755,25 @@ __switch_alt_to_distro()
             __check_system "$TO"
             docmd epm upgrade || fatal
             ;;
+        "p11 Deferred")
+            info 'Upgrade all packages to current $FROM repository'
+            __do_upgrade
+            confirm_info 'Upgrade $DISTRNAME from $FROM to $TO ...'
+            docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+            __p11_upgrade_fix
+            __switch_repo_to $TO
+            [ -s /etc/rpm/macros.d/p10 ] && rm -fv /etc/rpm/macros.d/p10
+            [ -s /etc/rpm/macros.d/p11 ] && rm -fv /etc/rpm/macros.d/p11
+            end_change_alt_repo
+            __do_upgrade
+            # apt-conf-sisyphus may overwrite sources.list during upgrade, restore Deferred URLs
+            __switch_repo_to $TO
+            docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal
+            __check_system "$TO"
+            docmd epm update-kernel || fatal
+            ;;
         "p8 Sisyphus"|"p9 Sisyphus"|"p10 Sisyphus"|"p11 Sisyphus"|"Sisyphus Sisyphus"|\
-        "p8 Deferred"|"p9 Deferred"|"p10 Deferred"|"p11 Deferred"|"Deferred Deferred"|"Sisyphus Deferred"|"Deferred Sisyphus")
+        "p8 Deferred"|"p9 Deferred"|"p10 Deferred"|"Deferred Deferred"|"Sisyphus Deferred"|"Deferred Sisyphus")
             confirm_info 'Upgrade $DISTRNAME from $FROM to $TO ...'
             docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
             docmd epm upgrade || fatal
@@ -13187,13 +13215,13 @@ epm_remove_nonint()
 
     case $PMTYPE in
         apt-dpkg)
-            sudocmd apt-get -y --force-yes remove --purge $@
+            sudocmd apt-get -y remove --purge $@
             return ;;
         aptitude-dpkg)
             sudocmd aptitude -y purge $@
             return ;;
         apt-rpm)
-            sudocmd apt-get -y --force-yes remove $@
+            sudocmd apt-get -y remove $@
             return ;;
         packagekit)
             docmd pkcon remove --noninteractive $@
@@ -13895,7 +13923,14 @@ __prepare_source_package()
         return
     fi
 
-    # convert tarballs to tar (for alien)
+    # skip packing if tar already prepared by pack.d (has yaml metadata)
+    if rhas "$alpkg" "\.(tar|tar\.gz|tar\.bz2|tar\.xz|tgz)$" && [ -r "$pkg.eepm.yaml" ] ; then
+        returntarname="$pkg"
+        SUBGENERIC='tar'
+        return
+    fi
+
+    # convert tarballs/AppImage/snap to tar
 
     # they will fill $returntarname
 
@@ -14848,7 +14883,7 @@ esac
 
 __url_to_sed_pattern()
 {
-    echo "$1" | sed -e 's|^https:||' -e 's|/\([^/]*\)$|/* \1|'
+    echo "$1" | sed -e 's|^https:||' -e 's|/\([^/]*\)$|\\([/ ]\\)\1|'
 }
 
 __subst_with_repo_url()
@@ -14999,8 +15034,8 @@ __epm_repoenable_alt()
     # ^rpm means full string
     if rhas "$1" "\^rpm" ; then
         rl="$(echo "$1" | sed -e 's|\^||')"
-        # check if this exact line exists as a comment
-        if ! grep -q -E "^[[:space:]]*#[[:space:]]*$(sed_escape "$rl")" $APT_ALL_SOURCES_LIST 2>/dev/null ; then
+        # check if this line exists as a comment (tolerant to / vs space in paths)
+        if ! grep -q -E "^[[:space:]]*#[[:space:]]*$(sed_escape_relaxed "$rl")" $APT_ALL_SOURCES_LIST 2>/dev/null ; then
             return 1
         fi
     else
@@ -15012,7 +15047,7 @@ __epm_repoenable_alt()
     [ -z "$apt_lists" ] && return 0
     echo "$rl" | while read rp ; do
         [ -n "$dryrun" ] && message 'will uncomment $rp' && continue
-        sed -i -e "s|^[[:space:]]*#[[:space:]]*\($(sed_escape "$rp")\)|\1|" $apt_lists
+        sed -i -e "s|^[[:space:]]*#[[:space:]]*\($(sed_escape_relaxed "$rp")\)|\1|" $apt_lists
     done
 }
 
@@ -15155,6 +15190,8 @@ epm_reposwitch()
         # replace Sisyphus with Deferred path
         __replace_text_in_alt_repo "/^ *#/! s!ALTLinux/Sisyphus/!Etersoft/Sisyphus/Deferred/!g"
         __alt_repofix "Sisyphus"
+        rm -fv /etc/rpm/macros.d/{p10,p11}
+        echo "%_priority_distbranch sisyphus" >/etc/rpm/macros.d/priority_distbranch
         return
     fi
 
@@ -15190,11 +15227,11 @@ epm_reposwitch()
 
     # TODO: improve for c10f1?
     case $TO in
-        "p10"|"p11"|"Sisyphus")
-            rm -fv /etc/rpm/macros.d/{p10,p11} 
+        "p10"|"p11"|"Sisyphus"|"Deferred")
+            rm -fv /etc/rpm/macros.d/{p10,p11}
 
-            [ "$TO" = "Sisyphus" ] && TO="sisyphus"
-            
+            [ "$TO" = "Sisyphus" ] || [ "$TO" = "Deferred" ] && TO="sisyphus"
+
             echo "%_priority_distbranch $TO" >/etc/rpm/macros.d/priority_distbranch
             ;;
         *)
@@ -15709,7 +15746,7 @@ __load_alt_mirror_db()
 
 __url_to_change_pattern()
 {
-    echo "$1" | sed -e 's|^https:||' -e 's|/\([^/]*\)$| \1|'
+    echo "$1" | sed -e 's|^https:||' -e 's|/\([^/]*\)$|\\1\1|'
 }
 
 __MIRROR_TEST_PATH="Sisyphus/x86_64/base/pkglist.classic.xz"
@@ -20385,7 +20422,10 @@ __epm_upgrade_do()
             __epm_alt_download_to_cache $APTOPTIONS dist-upgrade
         fi
 
-        CMD="apt-get $__EPM_APT_REPO_OPTIONS $APTOPTIONS $noremove $force_yes dist-upgrade"
+        # --force-yes is deprecated in Debian apt, use --allow-* instead
+        local apt_force_yes="$force_yes"
+        [ "$PMTYPE" = "apt-dpkg" ] && [ "$apt_force_yes" = "--force-yes" ] && apt_force_yes="--allow-unauthenticated --allow-downgrades --allow-change-held-packages"
+        CMD="apt-get $__EPM_APT_REPO_OPTIONS $APTOPTIONS $noremove $apt_force_yes dist-upgrade"
         ;;
     apm-rpm)
         CMD="apm system upgrade"
@@ -26420,6 +26460,7 @@ verbose=$EPM_VERBOSE
 quiet=
 nodeps=
 noremove=
+allow_remove=
 dryrun=
 force=
 full=
@@ -26878,6 +26919,10 @@ check_option()
     --noremove|--no-remove)  # HELPOPT: exit if any packages are to be removed during upgrade
         noremove="--no-remove"
         ;;
+    --allow-remove|--allow-erasing) # HELPOPT: allow removing conflicting packages during install
+        noremove=""
+        allow_remove="--allow-remove"
+        ;;
     --no-stdin|--inscript)  # HELPOPT: don't read from stdin for epm args
         inscript=1
         ;;
@@ -27032,7 +27077,7 @@ if [ -n "$quiet" ] ; then
 fi
 
 # fill
-export EPM_OPTIONS="$nodeps $force $full $verbose $debug $quiet $interactive $non_interactive $parallel $save_only $download_only $force_overwrite $manual_requires $noscripts $scripts $dryrun $norecommends $noremove"
+export EPM_OPTIONS="$nodeps $force $full $verbose $debug $quiet $interactive $non_interactive $parallel $save_only $download_only $force_overwrite $manual_requires $noscripts $scripts $dryrun $norecommends $noremove $allow_remove"
 
 # if input is not console and run script from file, get pkgs from stdin too
 if [ -z "$direct_args" ] && [ ! -n "$inscript" ] && [ -p /dev/stdin ] && [ "$EPMMODE" != "pipe" ] ; then

@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.59"
+EPMVERSION="3.64.60"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -359,6 +359,11 @@ lastword()
 sed_escape()
 {
     echo "$*" | sed -e 's|[][()$*.^|/]|\\&|g'
+}
+
+sed_escape_relaxed()
+{
+    echo "$*" | sed -e 's|[][()$*.^|]|\\&|g' -e 's|[/ ]\+|[/ ][/ ]*|g'
 }
 
 
