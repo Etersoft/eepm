@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.59
+Version: 3.64.60
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -181,6 +181,108 @@ EOF
 # metapackage, no files
 
 %changelog
+* Mon Apr 20 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.60-alt1
+- epm play: fix PKGNAME to match repacked package names (remove -linux suffix, etc.)
+- epm play: fix name differs for fplus-upd-ppd, lexmark-upd-ppd, notepad-next
+- epm play: add direct URLs for rocketchat, pstube, powershell to avoid API calls
+- epm play eagle: rename pack.d to match new PKGNAME
+- epm play mssql-server: switch default from 2019 to 2022 (fix OpenLDAP soname on ALT p11+)
+- epm release-upgrade: add dedicated p11 -> Deferred upgrade path
+- epm play logseq: fix PKGNAME to match repacked package name
+- epm repo change: fix URL pattern matching for all mirror formats
+- epm play: sort --list output alphabetically
+- epm play radicle: fix cd in pack.d script
+- epm play radicle-httpd: fix cd in pack.d script
+- epm play sane-panakvs: fix cd in pack.d script
+- epm play xerox-spl-driver: fix cd in pack.d script, replace pushd/popd with subshell
+- epm play yandex-disk-indicator: fix cd in pack.d script
+- epm play cups-drivers-katusham247: fix cd in pack.d script
+- epm play cnijfilter2: fix cd in pack.d script
+- epm play cnrdrvcups-ufr2: fix cd in pack.d script
+- epm play epsonscan2-non-free-plugin: fix cd in pack.d script
+- epm play jetbrains-toolbox: fix cd in pack.d script
+- epm play levenhuklite: fix cd in pack.d script
+- epm play obs-linuxbrowser: fix cd in pack.d script
+- epm play jetbrains-toolbox: fix tar name and yaml in pack.d script
+- epm play sane-katusham247: fix cd globs and bashisms in pack.d script
+- epm play aimp: add repack.d with Conflicts between wine and native versions
+- epm repack epson-printer-utility: add add_libs_requires for system Qt5
+- epm repack whatsie: switch from hardcoded Qt5 to add_libs_requires (snap moved to Qt6)
+- epm repack bellsoft-java11-full: ignore unavailable ffmpeg library versions
+- epm repack plex-desktop: ignore bundled libedit, libwrap and libapparmor
+- epm play sunshine: fix double fc41 in rpm URL pattern
+- epm play telegram=beta: fix double .beta suffix in URL when version from app-versions already ends with .beta
+- epm play firefox-nightly: always scrape latest URL instead of using stale app-versions version
+- epm play android-studio: fix URL for new codename-based filename (panda3 style)
+- epm play android-studio: fall back to latest version when requested version is no longer available
+- epm play telegram=beta: fix release tag URL - beta releases use v1.2.3 tag not v1.2.3.beta
+- epm play: add openshot (video editor)
+- epm play gosplugin: update to 1.3.42, switch to zip installer
+- epm desktop hyprland: add hyprland-guiutils to dependencies
+- epm repack claude-code: load user env.conf from ~/.claude/
+- epm play kyodialog-phase5: fix download URL (download-center -> dam/download-center-cf)
+- epm play kyodialog-phase5: fix download URL, pack.d and rename package in repack
+- epm play: add kyocera-fs-gdi (FS-1020/1025/1040/1060/1120/1125 GDI driver)
+- epm repack kyodialog: remove unnecessary symlink to /usr/share/cups/model
+- epm pack.d/common.sh: use realpath -s in return_tar to not resolve symlinks
+- epm play warp-terminal: restore original AppImage script (realpath -s fix makes it work)
+- epm play: add via (QMK/VIA keyboard configurator)
+- epm play gosplugin: use native RPM for ALT/RedOS instead of deb repack
+- epm remove: drop unnecessary --force-yes from apt-get remove
+- epm download: drop unnecessary --force-yes from apt-get --print-uris
+- epm install: replace deprecated --force-yes with --allow-* for apt-dpkg
+- epm upgrade/downgrade: replace deprecated --force-yes with --allow-* for apt-dpkg
+- epm pack.d/generic-tar.sh: fix PRODUCT extraction for names with dashes (e.g. claude-code)
+- epm repack: skip generic-tar for tar files already prepared by pack.d
+- epm play sane-katusham247: fix cd after erc --here unpack in pack.d
+- epm play pantum: rename driver directory to remove spaces
+- epm repack kyodialog: add Conflicts between Phase 5 and Phase 9
+- epm repack fplus-upd-ppd/lexmark-upd-ppd: add mutual Conflicts
+- epm play common.sh: warn_version_is_not_supported always resets VERSION (fixes --ipfs with vendors that remove old versions)
+- epm: add --allow-remove/--allow-erasing option to allow removing conflicting packages
+- tests: use --allow-remove in update_versions.sh to handle conflicting packages
+- epm repack: extend yaml tar skip to .tar.gz/.tar.bz2/.tar.xz/.tgz, set SUBGENERIC
+- epm repack servo: fix binary name (servoshell, not servo)
+- epm play git-butler: use VERSION~BUILD format for download URL and repack version
+- epm play common.sh: restore ipfs branch in warn_version_is_not_supported
+- epm play yandex-browser: use RELEASE for exact URL (fixes IPFS cache lookup)
+- epm play git-butler: use VERSION~BUILD format, fallback to AUR if build number missing
+- epm play powershell: fix double .rh suffix when RELEASE from app-versions already contains it
+- epm play pstube: fix filename pattern (added -linux- component)
+- epm play synology-chat: use major version for directory search (fix ~ in version)
+- epm play everdo: use direct download URL (getting-started page is gone)
+- epm play: fix version format issues in pstube, rocketchat, cuda-z
+- epm play alt-sendme: use RELEASE in download URL
+- epm play cli-proxy-api-plus: add warn_version_is_not_supported
+- epm repack kyodialog: move add_conflicts after common.sh sourcing
+- epm play yandex-browser-corporate: use RELEASE for exact URL (fixes IPFS cache lookup)
+- epm repack servo: handle both servo and servoshell binary names
+- epm repack tabby: rename binary to tabby-ml to avoid conflict with tabby-terminal
+- epm play manuskript: fix $version typo to $VERSION
+- epm play bcompare: use RELEASE for build number in URL
+- epm play freeplane: strip ~upstream from VERSION before URL construction
+- epm play smartgit: convert dots to underscores for download URL
+- epm play tailscale: use warn_version_is_not_supported, old versions not kept
+- epm pack reaper: fix glob to match extracted dir, not tar.xz in cwd
+- epm play pcsx2, protonup-qt, wasistlos: use direct GitHub URL when VERSION is known
+- epm play kubo: store rc suffix in RELEASE, direct URL with fallback to scraping
+- epm play schildichat-desktop: convert _ to - in version for URL, add direct GitHub URL
+- epm play ridoclnx: fix URL mask to include build number between VERSION and distro suffix
+- epm play metasploit-framework: build direct URL from VERSION+RELEASE, fallback to scraping
+- epm repack.d: add add_unirequires for system Qt deps (reqstoplist bypass)
+- epm repack.d: ignore specific leaked Qt sonames for bundled Qt packages
+- epm play: add adbmanager (GUI tool for managing Android devices via ADB)
+- epm play logseq: revert PKGNAME back to lowercase (matches RPM name from pack.d)
+- epm play: add ttf-wps-fonts (symbol fonts required by wps-office)
+- epm play lenza: fix version check and desktop file (eterbug #18977)
+- epm play: added native claude-code-desktop (eterbug #18971)
+- epm: is_openssl_enough: check libssl3.so instead of package openssl (eterbug #17865)
+- epm play: added kilo (eterbug #19023)
+- epm play: added abacus cli (eterbug #19029)
+- epm play: added codex-app (eterbug #19031)
+- epm play cli-proxy-api-plus: fix mv files & version (eterbug #17865)
+- epm play bcompare: add qt6 unirequires (eterbug #17865)
+
 * Mon Apr 06 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.59-alt1
 - epm play: add keyray (keyboard layout auto-switcher)
 - epm play.d/common.sh: fix installing explicit version (epm play app=X.Y.Z)
