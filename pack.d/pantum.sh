@@ -27,8 +27,20 @@ else
     fatal "We support only Pantum Ubuntu Driver V.*.zip"
 fi
 
-# drop dirname with spaces
-mv Pantum* PantumDriver || fatal
+# normalize upstream directory name (archive may also contain the source .zip)
+DRIVERDIR=
+for d in * ; do
+    [ -d "$d/Resources" ] || continue
+    DRIVERDIR="$d"
+    break
+done
+
+[ -n "$DRIVERDIR" ] || fatal "Can't find unpacked Pantum driver directory"
+
+if [ "$DRIVERDIR" != "PantumDriver" ] ; then
+    mv "$DRIVERDIR" PantumDriver || fatal
+fi
+
 cd PantumDriver/Resources || fatal
 
 case "$(epm print info -a)" in
