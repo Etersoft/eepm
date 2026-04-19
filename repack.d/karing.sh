@@ -11,6 +11,12 @@ PRODUCTDIR=/opt/$PRODUCT
 
 move_to_opt /usr/share/karing
 
+# crashpad helper must be executable at runtime
+[ -f "$BUILDROOT$PRODUCTDIR/lib/crashpad_handler" ] && chmod 0755 "$BUILDROOT$PRODUCTDIR/lib/crashpad_handler"
+
+# karing bundles its own JRE under /opt/karing, so host libjvm should not be required.
+ignore_lib_requires "libjvm.so()(64bit)" "libjli.so()(64bit)" "libjava.so()(64bit)"
+
 # Add dependency on libcurl4-openssl
 add_requires "libcurl4-openssl"
 
@@ -22,4 +28,3 @@ exec "$PRODUCTDIR/karing" "\$@"
 EOF
 
 fix_desktop_file "Categories=Applications/Internet;" "Categories=Network;Internet;"
-
