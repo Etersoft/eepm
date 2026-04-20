@@ -31,19 +31,17 @@ os="linux"
 
 platform="${os}-${arch}"
 
-#GCS_BUCKET="https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases"
-GCS_BUCKET="$(fetch_url https://claude.ai/install.sh | grep "^GCS_BUCKET=" | sed -e 's|^GCS_BUCKET=||' -e 's|^"||' -e 's|"$||')"
-[ -n "$GCS_BUCKET" ] || fatal "Can't download https://claude.ai/install.sh"
+DOWNLOAD_BASE_URL="https://downloads.claude.ai/claude-code-releases"
 
 if [ "$VERSION" = "*" ] ; then
-    VERSION="$(fetch_url "$GCS_BUCKET/$CHANNEL")" || fatal "Can't get version from $GCS_BUCKET/$CHANNEL"
-    [ -n "$VERSION" ] || fatal "Got empty version from $GCS_BUCKET/$CHANNEL"
+    VERSION="$(fetch_url "$DOWNLOAD_BASE_URL/$CHANNEL")" || fatal "Can't get version from $DOWNLOAD_BASE_URL/$CHANNEL"
+    [ -n "$VERSION" ] || fatal "Got empty version from $DOWNLOAD_BASE_URL/$CHANNEL"
 fi
 
 # ["platforms","linux-x64","checksum"]
-checksum="$(get_json_value "$GCS_BUCKET/$VERSION/manifest.json" '["platforms","'$platform'","checksum"]')" || fatal "Can't get checksum"
+checksum="$(get_json_value "$DOWNLOAD_BASE_URL/$VERSION/manifest.json" '["platforms","'$platform'","checksum"]')" || fatal "Can't get checksum"
 
-PKGURL="$GCS_BUCKET/$VERSION/$platform/claude"
+PKGURL="$DOWNLOAD_BASE_URL/$VERSION/$platform/claude"
 
 # TODO: compare checksum
 
