@@ -84,7 +84,7 @@ install_app_alt()
 
 while [ -n "$1" ] ; do
     case "$1" in
-        --ipfs)
+        --ipfs|--latest)
             playopt="$playopt $1"
             ;;
         --slow)
