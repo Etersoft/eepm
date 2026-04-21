@@ -586,10 +586,8 @@ check_for_product_update()
     # not installed yet, proceed with install
     [ -n "$fullpkgver" ] || return
 
-    # --latest: update from upstream, don't check app-versions
-    if [ -n "$latest" ] ; then
-        [ -n "$force" ] && return
-        # still compare with upstream version (will be fetched by play script)
+    # --latest or --force: update from upstream, don't check app-versions
+    if [ -n "$latest" ] || [ -n "$force" ] ; then
         echo "Updating $PKGNAME from $fullpkgver to latest upstream version ..."
         return
     fi
@@ -703,7 +701,7 @@ case "$1" in
             exit
         fi
 
-        check_for_product_update
+        [ -n "$force" ] || [ -n "$latest" ] || check_for_product_update
         # pass to run play code
         ;;
     "--run")
