@@ -12,4 +12,8 @@ warn_version_is_not_supported
 
 PKGURL="https://express.ms/download/deb"
 
+# follow redirect to get the real filename (eget would save as "deb" otherwise)
+realurl="$(eget --get-real-url "$PKGURL" 2>/dev/null)"
+[ -n "$realurl" ] && PKGURL="$realurl"
+
 install_pkgurl
