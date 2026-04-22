@@ -14,4 +14,8 @@ DL_VER="$(eget -O- "https://www.geeks3d.com/furmark/downloads/" | grep -o '/dl/s
 
 PKGURL="https://www.geeks3d.com/dl/get/$DL_VER"
 
+# follow redirect to get the real filename (eget would save as numeric id otherwise)
+realurl="$(eget --get-real-url "$PKGURL" 2>/dev/null)"
+[ -n "$realurl" ] && PKGURL="$realurl"
+
 install_pack_pkgurl
