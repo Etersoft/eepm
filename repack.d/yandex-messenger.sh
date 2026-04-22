@@ -8,6 +8,8 @@ PRODUCT=yandex-messenger
 
 . $(dirname $0)/common.sh
 
+add_conflicts chats
+
 add_requires '/usr/bin/wine'
 
 add_bin_link_command $PRODUCT $PRODUCTDIR/run.sh

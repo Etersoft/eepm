@@ -8,6 +8,8 @@ PRODUCT=sunshine
 
 . $(dirname $0)/common.sh
 
+add_conflicts sunshine
+
 # Sunshine needs access to uinput to create mouse and gamepad events.
 cat <<EOF | create_file /usr/lib/udev/rules.d/60-sunshine.rules
 KERNEL=="uinput", SUBSYSTEM=="misc", OPTIONS+="static_node=uinput", TAG+="uaccess

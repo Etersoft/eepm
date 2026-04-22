@@ -9,6 +9,8 @@ PRODUCTDIR=/opt/VinteoDesktop
 
 . $(dirname $0)/common-chromium-browser.sh
 
+add_conflicts vinteo.desktop
+
 add_bin_link_command
 
 fix_desktop_file

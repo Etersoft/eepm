@@ -6,6 +6,4 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
-add_conflicts GitHubDesktop
-
-add_bin_link_command github-desktop github-desktop-linux
+add_conflicts GitHubDesktop-linux
