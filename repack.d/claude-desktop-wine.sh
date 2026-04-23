@@ -5,7 +5,9 @@ BUILDROOT="$1"
 SPEC="$2"
 
 PRODUCT=claude-desktop
-PRODUCTDIR=/opt/eepm-wine/$PRODUCT
+# pack.d/claude-desktop-wine.sh lays files out under claude-desktop-wine/ (the package name),
+# keep PRODUCT as the user-visible name but point PRODUCTDIR to the actual location
+PRODUCTDIR=/opt/eepm-wine/claude-desktop-wine
 
 . $(dirname $0)/common.sh
 
