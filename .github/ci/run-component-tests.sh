@@ -26,54 +26,53 @@ run_play() {
   ./.github/ci/run-tests.sh
 }
 
-run_core() {
-  echo "Core checks"
-  
+run_smoke() {
+  echo "Smoke: shell syntax"
   while IFS= read -r f; do
-    [[ "$f" == bin/* || "$f" == etc/* ]] || continue
-    check_shell_syntax "$f"
+    case "$f" in
+      bin/*|etc/*) check_shell_syntax "$f" ;;
+      tests/*.sh)  check_shell_syntax "$f" ;;
+    esac
   done <<< "$CHANGED_FILES_TEXT"
 
+  echo "Smoke: epm entrypoint"
   bin/epm --version
   bin/epm --help >/dev/null
   bin/epm play --help >/dev/null
+
+  echo "Smoke: unit tests and popular epm commands"
+  sh .github/ci/ci-smoke-test.sh
 }
 
-run_tests_component() {
-  echo "Tests checks"
-  while IFS= read -r f; do
-    [[ "$f" == tests/* ]] || continue
-    [[ "$f" == *.sh ]] || continue
-    check_shell_syntax "$f"
-  done <<< "$CHANGED_FILES_TEXT"
-}
+validate_components_map() {
+  local map=".github/ci/components.map"
+  local lineno=0 comp paths systems line rc=0
 
-run_test_script_with_markers() {
-  local script="$1"
-  local out
-  out="$(mktemp)"
+  [[ -r "$map" ]] || { echo "components.map is not readable: $map"; return 1; }
 
-  (cd tests && sh "$script") >"$out" 2>&1 || {
-    cat "$out"
-    rm -f "$out"
-    return 1
-  }
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    lineno=$((lineno + 1))
+    [[ -z "${line// }" ]] && continue
+    [[ "${line#"${line%%[![:space:]]*}"}" == \#* ]] && continue
 
-  cat "$out"
-  if grep -Eq 'FATAL|FAILED|not equal' "$out"; then
-    echo "Detected failure markers in tests/$script output."
-    rm -f "$out"
-    return 1
-  fi
+    local pipes="${line//[^|]}"
+    if (( ${#pipes} != 2 )); then
+      echo "components.map:$lineno: expected 2 '|' separators, got ${#pipes}: $line"
+      rc=1; continue
+    fi
 
-  rm -f "$out"
-  return 0
-}
+    IFS='|' read -r comp paths systems <<< "$line"
+    comp="${comp## }"; comp="${comp%% }"
+    paths="${paths## }"; paths="${paths%% }"
+    systems="${systems## }"; systems="${systems%% }"
 
-run_tests_smoke() {
-  echo "Tests smoke"
-  run_test_script_with_markers test_glob.sh
-  run_test_script_with_markers test_versions.sh
+    if [[ -z "$comp" || -z "$paths" || -z "$systems" ]]; then
+      echo "components.map:$lineno: empty field(s): comp='$comp' paths='$paths' systems='$systems'"
+      rc=1
+    fi
+  done < "$map"
+
+  return "$rc"
 }
 
 run_ci() {
@@ -82,21 +81,19 @@ run_ci() {
   check_shell_syntax .github/ci/detect-components.sh
   check_shell_syntax .github/ci/run-tests.sh
   check_shell_syntax .github/ci/run-component-tests.sh
+  check_shell_syntax .github/ci/ci-smoke-test.sh
   check_shell_syntax ci/run_one_ci.sh
+
+  echo "components.map format"
+  validate_components_map
 }
 
 case "$COMPONENT" in
   play)
     run_play
     ;;
-  core)
-    run_core
-    ;;
-  tests)
-    run_tests_component
-    ;;
-  tests-smoke)
-    run_tests_smoke
+  smoke)
+    run_smoke
     ;;
   ci)
     run_ci
