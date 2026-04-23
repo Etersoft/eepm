@@ -11,6 +11,9 @@ PRODUCTDIR=/opt/eepm-wine/claude-desktop-wine
 
 . $(dirname $0)/common.sh
 
+# both wine and native claude-desktop provide /usr/bin/claude-desktop
+add_conflicts claude-desktop
+
 add_requires '/usr/bin/wine'
 
 add_bin_link_command $PRODUCT $PRODUCTDIR/run.sh
