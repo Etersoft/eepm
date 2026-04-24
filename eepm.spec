@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.60
+Version: 3.64.61
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -181,6 +181,15 @@ EOF
 # metapackage, no files
 
 %changelog
+* Fri Apr 24 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.61-alt1
+- epm play claude-code: hardcode DOWNLOAD_BASE_URL instead of scraping install.sh
+- epm-download: drop wget-log side-effect files before scanning
+- epm play common.sh: --force skips app-versions check like --latest
+- epm repack karing: fix crashpad permissions and jvm requires
+- epm repack.d: add Conflicts between renamed package variants
+- epm repack claude-desktop-wine: fix PRODUCTDIR path mismatch with pack.d
+- epm repack claude-desktop/claude-desktop-wine: mutual Conflicts
+
 * Mon Apr 20 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.60-alt1
 - epm play: fix PKGNAME to match repacked package names (remove -linux suffix, etc.)
 - epm play: fix name differs for fplus-upd-ppd, lexmark-upd-ppd, notepad-next
