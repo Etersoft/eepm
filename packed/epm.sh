@@ -40,7 +40,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.60"
+export EPMVERSION="3.64.61"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -4555,6 +4555,8 @@ __download_pkg_urls()
 
         # download packages
         if docmd eget --tries 3 $latest "$url" ; then
+            # drop wget side-effect log files (wget creates wget-log, wget-log.1, ... on SIGHUP)
+            rm -fv wget-log wget-log.* 2>/dev/null
             local i
             for i in * ; do
                 [ "$i" = "*" ] && warning 'Incorrect true status from eget. No saved files from download $url, ignoring' && continue
