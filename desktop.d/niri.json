@@ -1,0 +1,7 @@
+{
+    "name": "Niri",
+    "version": "25.11",
+    "installed": false,
+    "dependencies": [ "niri", "xwayland-satellite", "waybar", "fuzzel", "mako", "alacritty", "swaylock", "swaybg", "xdg-desktop-portal-gtk", "xdg-desktop-portal-gnome", "gnome-keyring", "polkit-gnome" ],
+    "description": "Niri is a scrollable-tiling Wayland compositor"
+}
