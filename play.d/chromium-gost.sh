@@ -14,6 +14,6 @@ URL="https://github.com/deemru/chromium-gost/"
 arch=amd64
 pkgtype=deb
 
-PKGURL="$(eget --list --latest https://github.com/deemru/chromium-gost/releases "chromium-gost-$VERSION-linux-$arch.$pkgtype")"
+PKGURL="$(get_github_url "https://github.com/deemru/chromium-gost/" "chromium-gost-$VERSION-linux-$arch.$pkgtype")"
 
 install_pkgurl
