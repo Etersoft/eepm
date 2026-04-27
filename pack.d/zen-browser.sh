@@ -7,8 +7,8 @@ URL="$4"
 
 . $(dirname $0)/common.sh
 
-# https://github.com/zen-browser/desktop/releases/download/1.10b/zen-x86_64.AppImage
-VERSION=$(echo "$URL" | grep -oP 'download/\K[0-9]+\.[0-9a-e]+')
+# https://github.com/zen-browser/desktop/releases/download/1.19.9b/zen-x86_64.AppImage
+VERSION=$(echo "$URL" | grep -oP 'download/\K[^/]+')
 [ -n "$VERSION" ] || fatal "Can't get package version"
 
 # rename package
