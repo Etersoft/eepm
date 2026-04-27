@@ -11,6 +11,6 @@ URL="https://github.com/jgraph/drawio-desktop/releases"
 arch=amd64
 pkgtype=deb
 
-PKGURL=$(eget --list --latest https://github.com/jgraph/drawio-desktop/releases "drawio-$arch-$VERSION.$pkgtype")
+PKGURL=$(get_github_url "https://github.com/jgraph/drawio-desktop/" "drawio-$arch-$VERSION.$pkgtype")
 
 install_pkgurl

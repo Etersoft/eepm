@@ -8,6 +8,6 @@ URL="https://github.com/pavloniym/anilibrix"
 
 . $(dirname $0)/common.sh
 
-PKGURL=$(eget --list --latest https://github.com/pavloniym/anilibrix/releases "AniLibrix-linux-x86_64-$VERSION.AppImage")
+PKGURL=$(get_github_url "https://github.com/pavloniym/anilibrix/" "AniLibrix-linux-x86_64-$VERSION.AppImage")
 
 install_pkgurl

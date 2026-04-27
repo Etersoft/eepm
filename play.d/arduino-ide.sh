@@ -8,7 +8,7 @@ URL="https://www.arduino.cc/en/software"
 
 . $(dirname $0)/common.sh
 
-PKGURL=$(eget --list --latest https://github.com/arduino/arduino-ide/releases "${PKGNAME}_${VERSION}_Linux_64bit.AppImage")
+PKGURL=$(get_github_url "https://github.com/arduino/arduino-ide/" "${PKGNAME}_${VERSION}_Linux_64bit.AppImage")
 
 install_pkgurl
 

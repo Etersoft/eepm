@@ -8,7 +8,7 @@ URL="https://murglar.app"
 
 . $(dirname $0)/common.sh
 
-PKGURL=$(eget --list --latest https://github.com/badmannersteam/murglar-downloads/releases "Murglar-Desktop-$VERSION-linux-x64.appimage")
+PKGURL=$(get_github_url "https://github.com/badmannersteam/murglar-downloads/" "Murglar-Desktop-$VERSION-linux-x64.appimage")
 
 install_pkgurl
 

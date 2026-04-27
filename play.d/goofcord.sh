@@ -12,6 +12,6 @@ arch="$(epm print info --debian-arch)"
 
 pkgtype=deb
 
-PKGURL=$(eget --list --latest https://github.com/Milkshiift/GoofCord/releases "GoofCord-$VERSION-linux-$arch.$pkgtype")
+PKGURL=$(get_github_url "https://github.com/Milkshiift/GoofCord/" "GoofCord-$VERSION-linux-$arch.$pkgtype")
 
 install_pkgurl
