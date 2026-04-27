@@ -8,6 +8,7 @@ URL="https://github.com/Boria138/codex-app-linux"
 
 . $(dirname $0)/common.sh
 
+is_openssl_enough 3 || fatal "There is no needed OpenSSL 3 in the system."
 
 arch=x86_64
 if [ "$VERSION" = "*" ] ; then

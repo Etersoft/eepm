@@ -9,6 +9,8 @@ URL="https://github.com/openai/codex"
 
 . $(dirname $0)/common.sh
 
+is_openssl_enough 3 || fatal "There is no needed OpenSSL 3 in the system."
+
 arch="$(epm print info -a)"
 arch="$arch-unknown-linux-gnu"
 
