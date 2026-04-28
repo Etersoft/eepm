@@ -8,6 +8,8 @@ URL="https://master-pdf-editor.ru/"
 
 . $(dirname $0)/common.sh
 
+export EPM_REPACK_SCRIPT="$PKGNAME"
+
 PKG=''
 # Strict supported list
 case $(epm print info -e) in
