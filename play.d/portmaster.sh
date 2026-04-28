@@ -8,6 +8,8 @@ URL="https://safing.io/"
 
 . $(dirname $0)/common.sh
 
+warning 'Portmaster v1 is no longer maintained upstream. Consider using $ epm play portmaster2 to install v2.'
+
 warn_version_is_not_supported
 
 pkgtype="$(epm print info -p)"

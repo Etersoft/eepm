@@ -28,6 +28,7 @@ subst "s|PIDFile=/opt/safing/portmaster|PIDFile=$DATADIR|" $BUILDROOT/lib/system
 
 # download components at repack time
 echo "Downloading components ..."
+mkdir -p $BUILDROOT$DATADIR
 .$PRODUCTDIR/portmaster-start --data $BUILDROOT$DATADIR update || fatal
 
 p="$(basename $(dirname $BUILDROOT$DATADIR/updates/linux_amd64/app/portmaster-app_v*/chrome-sandbox))"
