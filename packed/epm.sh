@@ -40,7 +40,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.61"
+export EPMVERSION="3.64.62"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1015,7 +1015,8 @@ __epm_assure_7zip()
     if is_command 7z || is_command 7za || is_command 7zr || is_command 7zz ; then
         :
     else
-        epm install 7-zip || epm install p7zip
+        # most distros provide 7zip package, including alt p11 and newer, but p10 and older not.
+        epm install 7zip || epm install 7-zip || epm install p7zip
     fi
 }
 
@@ -24138,8 +24139,8 @@ url_get_filename()
         loc="$(echo "$loc" | sed -e "s|\?.*||")"
     fi
 
-    # hack for redirect to the main page
-    if is_httpurl "$loc" ; then
+    # hack for redirect to the main page (root URL with no filename)
+    if echo "$loc" | grep -qE '^https?://[^/]+/?$' ; then
         loc=""
     fi
 
