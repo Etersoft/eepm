@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.61
+Version: 3.64.62
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -181,6 +181,21 @@ EOF
 # metapackage, no files
 
 %changelog
+* Wed Apr 29 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.62-alt1
+- epm pack zen-browser: fix version parsing for multi-segment versions like 1.19.9b
+- epm play chromium-gost: use get_github_url to avoid GitHub API call when version is known
+- epm play.d: use get_github_url to avoid GitHub API call when version is known
+- epm desktop: add niri (scrollable-tiling Wayland compositor)
+- epm play/repack portmaster: warn about v1 deprecation and fix data dir creation
+- eget: only clear filename for root URL redirects, not all http URLs
+- epm play codex/codex-app: check OpenSSL 3 availability before install
+- epm repack.d: add Conflicts for teamspeak vs teamspeak5 and kilo vs kilocode
+- epm play lenza: fix pkgurl (eterbug #17865)
+- epm repack: prefer 7zip package name (eterbug #18828)
+- epm play: added pi (eterbug #19040)
+- epm play anydesk: fix PKGURL; use browser user agent (eterbug #17865)
+- epm play master-pdf-editor: fix package name (eterbug #17865)
+
 * Fri Apr 24 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.61-alt1
 - epm play claude-code: hardcode DOWNLOAD_BASE_URL instead of scraping install.sh
 - epm-download: drop wget-log side-effect files before scanning
