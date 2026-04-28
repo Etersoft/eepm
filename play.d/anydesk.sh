@@ -5,7 +5,7 @@ SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 RELEASE="$3"
 DESCRIPTION="AnyDesk from the official site"
-URL="https://download.anydesk.com/linux/"
+URL="https://anydesk.com/en/downloads/linux"
 
 . $(dirname $0)/common.sh
 
@@ -20,10 +20,13 @@ URL="https://download.anydesk.com/linux/"
 PKGMASK="$(epm print constructname $PKGNAME "$VERSION" '' '' '_')"
 
 if [ "$VERSION" = "*" ] ; then
-    PKGURL="$(eget --list --latest "https://download.anydesk.com/linux/$PKGMASK")"
+    PKGURL="$(eget -A --list --latest "https://anydesk.com/en/downloads/linux" "$PKGMASK")"
 else
     PKGURL="https://download.anydesk.com/linux/$PKGMASK"
 fi
+
+# Site requires browser User-Agent
+export EGET_OPTIONS="-U"
 
 install_pkgurl || exit
 
