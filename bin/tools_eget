@@ -2107,8 +2107,8 @@ url_get_filename()
         loc="$(echo "$loc" | sed -e "s|\?.*||")"
     fi
 
-    # hack for redirect to the main page
-    if is_httpurl "$loc" ; then
+    # hack for redirect to the main page (root URL with no filename)
+    if echo "$loc" | grep -qE '^https?://[^/]+/?$' ; then
         loc=""
     fi
 
