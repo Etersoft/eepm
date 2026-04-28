@@ -13,9 +13,9 @@ if ! is_glibc_enough 2.34 ; then
 fi
 
 if [ "$VERSION" = "*" ] ; then
-    VERSION=$(eget -O- https://software.lenzaos.com/app-chats/latest-linux.yml | awk -F': ' '/^version:/{print $2; exit}' | tr -d '\r')
+    VERSION=$(eget -O- https://storage.lenzaos.com/other/app/linux/latest-linux.yml | awk -F': ' '/^version:/{print $2; exit}' | tr -d '\r')
 fi
 
-PKGURL="https://software.lenzaos.com/app-chats/$PKGNAME-$VERSION.AppImage"
+PKGURL="https://storage.lenzaos.com/other/app/linux/$PKGNAME-$VERSION.AppImage"
 
 install_pkgurl
