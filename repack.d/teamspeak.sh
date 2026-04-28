@@ -8,6 +8,8 @@ PRODUCTDIR=/opt/$PRODUCTCUR
 
 . $(dirname $0)/common.sh
 
+add_conflicts teamspeak5
+
 add_bin_link_command $PRODUCTCUR $PRODUCTDIR/TeamSpeak
 add_bin_link_command $PRODUCT $PRODUCTCUR
 
