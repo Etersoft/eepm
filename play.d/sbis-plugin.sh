@@ -3,7 +3,8 @@
 PKGNAME="sbis3plugin sbis-libstdc++12 sbis3plugin-additions saby-minimal-core"
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
-DESCRIPTION="Desktop plugin for convenient work in the browser"
+#DESCRIPTION="Desktop plugin for convenient work in the browser"
+DESRIPTION=''
 URL="https://saby.ru/help/plugin/sbis3plugin"
 
 . $(dirname $0)/common.sh
