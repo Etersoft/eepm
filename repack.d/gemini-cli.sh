@@ -6,5 +6,11 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
-add_requires '/usr/bin/node'
-
+case "$(epm print info -p)" in
+    deb)
+        add_directrequires nodejs
+        ;;
+    *)
+        add_directrequires '/usr/bin/node'
+        ;;
+esac
