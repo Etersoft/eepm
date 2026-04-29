@@ -8,6 +8,10 @@ URL="https://github.com/google-gemini/gemini-cli"
 
 . $(dirname $0)/common.sh
 
-PKGURL=$(get_github_url $URL "gemini.js")
+if [ "$VERSION" = "*" ] || [ "$VERSION" = "0" ] ; then
+    VERSION=$(get_github_tag "$URL")
+fi
+
+PKGURL="https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-${VERSION}.tgz"
 
 install_pack_pkgurl

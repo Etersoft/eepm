@@ -12,8 +12,18 @@ URL="$4"
 
 mkdir -p usr/bin
 mkdir -p etc/gemini-cli
+mkdir -p opt/gemini-cli
 
-mv -v $TAR usr/bin/gemini
+erc --here unpack $TAR || fatal
+
+cp -a "package/." "opt/gemini-cli/"
+
+chmod 755 "opt/gemini-cli/bundle/gemini.js"
+
+cat <<'EOF' > usr/bin/gemini
+#!/bin/sh
+exec node /opt/gemini-cli/bundle/gemini.js "$@"
+EOF
 
 chmod 755 usr/bin/gemini
 
@@ -28,7 +38,7 @@ cat <<EOF > etc/gemini-cli/system-defaults.json
 }
 EOF
 
-erc pack $PKGNAME.tar usr etc || fatal
+erc pack $PKGNAME.tar usr opt etc || fatal
 
 cat <<EOF >$PKGNAME.tar.eepm.yaml
 name: $PRODUCT
