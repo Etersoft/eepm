@@ -32,16 +32,6 @@ PKGURL="https://www.pantum.ru/wp-content/uploads/2024/06/Pantum-Ubuntu-Driver-V1
 #        ;;
 #esac
 
-case $(epm print info -e) in
-    AstraLinuxSE/1.7*)
-        PKGURL="https://disk.astralinux.ru/s/EdEx4wNdtDpZaww/download/Pantum_Ubuntu_Driver_V1.1.5.tar.gz"
-        ;;
-#    Ubuntu/*)
-#        # 1.1.106
-#        PKGURL="https://drivers.pantum.ru/userfiles/files/download/drive/2013/0619/Pantum%20Ubuntu%20Driver%20V1_1_106(1).zip"
-#        ;;
-esac
-
 install_pack_pkgurl
 
 #PKGURL="https://drivers.pantum.ru/userfiles/files/download/%E9%A9%B1%E5%8A%A8%E6%96%87%E4%BB%B6/%E6%A0%87%E7%AD%BE%E6%9C%BA/Linux/linux_pantum.7z"
