@@ -18,13 +18,16 @@ vendor=$(epm print info -s)
 case $vendor in
     alt)
         if is_glibc_enough 2.35 ; then
-            VERSION="3.4.2"
+            if [ "$VERSION" = "*" ] ; then
+                VERSION="$(get_deb_repo_latest_version "https://hub.unity3d.com/linux/repos/deb/dists/stable/main/binary-amd64/Packages.gz" unityhub)"
+                [ -n "$VERSION" ] || fatal "Can't get latest unityhub version from Unity deb repo"
+            fi
+            PKGURL="https://hub.unity3d.com/linux/repos/deb/pool/main/u/unity/unityhub_$arch/UnityHubSetup-$VERSION-amd64.deb"
         else
-            VERSION="3.3.0"
+            [ "$VERSION" = "*" ] && VERSION="3.3.0"
             info "glibc version below 2.35, we'll stick with the old version $VERSION"
-
+            PKGURL="https://hub.unity3d.com/linux/repos/deb/pool/main/u/unity/unityhub_$arch/unityhub-amd64-$VERSION.deb"
         fi
-        PKGURL="https://hub.unity3d.com/linux/repos/deb/pool/main/u/unity/unityhub_$arch/unityhub-amd64-$VERSION.deb"
         install_pkgurl
         exit
         ;;
