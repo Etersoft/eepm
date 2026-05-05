@@ -105,6 +105,18 @@ fetch_url()
     $EPM --quiet tool eget -q -O- "$1" || return 1
 }
 
+# Get latest version of a package from deb repository Packages.gz index.
+# Usage: get_deb_repo_latest_version <packages_gz_url> <pkgname>
+get_deb_repo_latest_version()
+{
+    local packages_url="$1"
+    local pkgname="$2"
+    eget -O- "$packages_url" | gzip -d \
+        | grep -A1 -x "Package: $pkgname" \
+        | sed -n 's/^Version: \(.*\)/\1/p' \
+        | sort -V | tail -n 1
+}
+
 
 is_supported_arch()
 {
