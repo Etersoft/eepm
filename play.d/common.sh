@@ -102,7 +102,7 @@ eget()
 fetch_url()
 {
     info "Fetching $1 ..."
-    $EPM --quiet tool eget -q -O- "$1"
+    $EPM --quiet tool eget -q -O- "$1" || return 1
 }
 
 
@@ -286,12 +286,21 @@ get_github_release_info() {
     local url="$1"
     local flag="$2"
     local user_and_repo=${url#https://github.com/}
+    user_and_repo="${user_and_repo%/}"
+    local api_url result
 
     if [ "$flag" = "latest" ] ; then
-        fetch_url "https://api.github.com/repos/${user_and_repo%/}/releases/latest"
+        api_url="https://api.github.com/repos/$user_and_repo/releases/latest"
     else
-        fetch_url "https://api.github.com/repos/${user_and_repo%/}/releases"
+        api_url="https://api.github.com/repos/$user_and_repo/releases"
     fi
+
+    result="$(fetch_url "$api_url")" || return 1
+    [ -n "$result" ] || return 1
+    if echo "$result" | head -c 200 | grep -q '"message":[[:space:]]*"Not Found"' ; then
+        return 1
+    fi
+    echo "$result"
 }
 
 # Extract browser_download_url values from GitHub release JSON via epm tool json.
@@ -321,18 +330,21 @@ get_github_url()
     #echo "$asset_name" | grep -q "\.[*?]" && fatal "Only glob symbols * and ? are supported. Don't use regexp! Input string: $asset_name"
     wc="$(__convert_glob__to_regexp "$asset_name")"
 
-    if [ "$3" == "prerelease" ] ; then
-        get_github_release_info "$url" | __get_github_download_urls | grep -E "$wc" | head -n1
+    local info result=''
+    if [ "$3" = "prerelease" ] ; then
+        info="$(get_github_release_info "$url")" || \
+            fatal "GitHub repository $user_and_repo not found or unreachable"
+        result="$(echo "$info" | __get_github_download_urls | grep -E "$wc" | head -n1)"
     else
-        local result
-        result="$(get_github_release_info "$url" "latest" | __get_github_download_urls | grep -E "$wc" | head -n1)"
+        info="$(get_github_release_info "$url" "latest")" && \
+            result="$(echo "$info" | __get_github_download_urls | grep -E "$wc" | head -n1)"
         if [ -z "$result" ] ; then
-            result="$(get_github_release_info "$url" \
-            | __get_github_download_urls | grep -E "$wc" | head -n1)"
+            info="$(get_github_release_info "$url")" || \
+                fatal "GitHub repository $user_and_repo not found or unreachable"
+            result="$(echo "$info" | __get_github_download_urls | grep -E "$wc" | head -n1)"
         fi
-        echo "$result"
     fi
-
+    echo "$result"
 }
 
 # Get asset checksum from GitHub latest release
