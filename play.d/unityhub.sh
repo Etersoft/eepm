@@ -22,11 +22,15 @@ case $vendor in
                 VERSION="$(get_deb_repo_latest_version "https://hub.unity3d.com/linux/repos/deb/dists/stable/main/binary-amd64/Packages.gz" unityhub)"
                 [ -n "$VERSION" ] || fatal "Can't get latest unityhub version from Unity deb repo"
             fi
-            PKGURL="https://hub.unity3d.com/linux/repos/deb/pool/main/u/unity/unityhub_$arch/UnityHubSetup-$VERSION-amd64.deb"
         else
             [ "$VERSION" = "*" ] && VERSION="3.3.0"
             info "glibc version below 2.35, we'll stick with the old version $VERSION"
+        fi
+        # Unity changed the deb naming scheme starting at 3.15.3
+        if is_version_older "$VERSION" 3.15.3 ; then
             PKGURL="https://hub.unity3d.com/linux/repos/deb/pool/main/u/unity/unityhub_$arch/unityhub-amd64-$VERSION.deb"
+        else
+            PKGURL="https://hub.unity3d.com/linux/repos/deb/pool/main/u/unity/unityhub_$arch/UnityHubSetup-$VERSION-amd64.deb"
         fi
         install_pkgurl
         exit
