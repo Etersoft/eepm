@@ -10,6 +10,11 @@ URL="https://www.gosuslugi.ru/"
 
 warn_version_is_not_supported
 
-PKGURL="https://ds-plugin.gosuslugi.ru/plugin/upload/assets/distrib/IFCPlugin-x86_64.rpm"
+pkgtype=$(epm print info -p)
+case "$pkgtype" in
+    rpm|deb) ;;
+    *) fatal "Package type $pkgtype is not supported by IFCPlugin upstream" ;;
+esac
+PKGURL="https://ds-plugin.gosuslugi.ru/plugin/upload/assets/distrib/IFCPlugin-x86_64.$pkgtype"
 
 install_pkgurl
