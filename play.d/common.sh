@@ -117,6 +117,12 @@ get_deb_repo_latest_version()
         | sort -V | tail -n 1
 }
 
+# Returns 0 if version $1 is older (lower) than $2.
+is_version_older()
+{
+    [ "$(epm --inscript print compare version "$1" "$2")" = "-1" ]
+}
+
 
 is_supported_arch()
 {
