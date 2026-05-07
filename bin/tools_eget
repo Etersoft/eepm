@@ -2103,8 +2103,10 @@ url_get_filename()
     fi
 
     local loc="$(url_get_raw_real_url "$URL")"
+    # signed CDN redirects (e.g. GitHub release assets) put a UUID in the path
+    # and the real filename in a query parameter — fall back to original URL
     if is_strange_url "$loc" ; then
-        loc="$(echo "$loc" | sed -e "s|\?.*||")"
+        loc="$URL"
     fi
 
     # hack for redirect to the main page (root URL with no filename)
