@@ -2,6 +2,8 @@
 
 PKGNAME=open-code
 SUPPORTEDARCHES="x86_64"
+PKGNAME=opencode-desktop
+SUPPORTEDARCHES="x86_64 aarch64"
 VERSION="$2"
 DESCRIPTION="OpenCode desktop client"
 URL="https://opencode.ai"
@@ -25,4 +27,5 @@ esac
 
 PKGURL=$(get_github_url https://github.com/anomalyco/opencode "opencode-desktop-linux-$arch.$pkgformat")
 
+export EPM_REPACK_SCRIPT=opencode-desktop
 install_pkgurl
