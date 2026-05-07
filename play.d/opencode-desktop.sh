@@ -1,7 +1,7 @@
 #!/bin/sh
 
 PKGNAME=open-code
-SUPPORTEDARCHES="x86_64 aarch64"
+SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="OpenCode desktop client"
 URL="https://opencode.ai"
