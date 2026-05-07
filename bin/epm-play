@@ -395,7 +395,7 @@ __download_versions_list()
 
     local URL
     for URL in "https://eepm.ru/releases/$epmver/app-versions" "https://eepm.ru/app-versions" ; do
-        eget -q -O "$target" "$URL/epm-play-list-full.txt" && return
+        eget -q --force -O "$target" "$URL/epm-play-list-full.txt" && return
     done
     return 1
 }
