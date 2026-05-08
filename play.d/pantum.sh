@@ -18,10 +18,14 @@ warn_version_is_not_supported
 # PKGURL="https://www.pantum.ru/wp-content/uploads/2024/06/pantum-ubuntu-driver-v1_1_106.zip"
 
 # 1.1.123
-PKGURL="https://www.pantum.ru/wp-content/uploads/2024/06/Pantum-Ubuntu-Driver-V1_1_123.zip"
+#PKGURL="https://www.pantum.ru/wp-content/uploads/2024/06/Pantum-Ubuntu-Driver-V1_1_123.zip"
 
 # 1.1.167 (requires User-Agent, doesn't work with wget directly)
 #PKGURL="https://drivers.pantum.com/userfiles/files/download/drive/2013/Pantum%20Linux%20Driver%20V1_1_167.zip"
+
+# 1.1.175
+# Despite the file name, the archive contains drivers for 300+ printer models.
+PKGURL="https://www.pantum.ru/wp-content/uploads/2026/02/pantum-cm2800-series-ubuntu-driver-v1_1_175-1.zip"
 
 #case $(epm print info -p) in
 #    *)

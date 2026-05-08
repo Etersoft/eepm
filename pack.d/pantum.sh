@@ -6,9 +6,9 @@ RETURNTARNAME="$2"
 . $(dirname $0)/common.sh
 
 # epm replaces spaces with - in downloaded files
-if echo "$TAR" | grep -q "Pantum[ -]Ubuntu[ -]Driver[- ]V.*.zip" ; then
+if echo "$TAR" | grep -qi "pantum.*ubuntu.*driver.*\.zip" ; then
     erc --here "$TAR" || fatal
-elif echo "$TAR" | grep -q "Pantum[ -]Linux[ -]Driver[- ]V.*.zip" ; then
+elif echo "$TAR" | grep -qi "pantum.*linux.*driver.*\.zip" ; then
     erc --here "$TAR" || fatal
 elif echo "$TAR" | grep -q "Pantum%20Ubuntu%20Driver%20V.*.zip" ; then
     erc --here "$TAR" || fatal
@@ -28,7 +28,11 @@ else
 fi
 
 # rename driver directory to remove spaces (breaks return_tar paths)
-mv "Pantum "*/  PantumDriver 2>/dev/null || mv Pantum_*/  PantumDriver 2>/dev/null || fatal "Can't find Pantum driver directory"
+mv "Pantum "*/"Pantum "*/ PantumDriver 2>/dev/null \
+    || mv Pantum_*/Pantum_*/ PantumDriver 2>/dev/null \
+    || mv "Pantum "*/ PantumDriver 2>/dev/null \
+    || mv Pantum_*/ PantumDriver 2>/dev/null \
+    || fatal "Can't find Pantum driver directory"
 cd PantumDriver/Resources || fatal
 
 case "$(epm print info -a)" in
