@@ -41,7 +41,7 @@ PKGMASK="$PKGNAME-${VERSION}-${arch}.${pkgtype}"
 if [ "$VERSION" != "*" ] ; then
     PKGURL="https://download1.rstudio.org/electron/$PKGFILTER/$arch/$PKGMASK"
 else
-    PKGURL=$(eget --list --latest https://posit.co/download/rstudio-desktop/ "$PKGMASK" | grep "$PKGFILTER")
+    PKGURL="https://rstudio.org/download/latest/stable/desktop/$PKGFILTER/rstudio-latest-$arch.$pkgtype"
 fi
 
 install_pkgurl
