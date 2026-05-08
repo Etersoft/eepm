@@ -5,7 +5,7 @@ BUILDROOT="$1"
 SPEC="$2"
 
 PRODUCT=pycharm
-PRODUCTCUR=pycharm-community
+PRODUCTCUR=pycharm
 PRODUCTDIR=/opt/$PRODUCTCUR
 
 . $(dirname $0)/common.sh
@@ -15,7 +15,12 @@ subst "s|^Group:.*|Group: Development/Python|" $SPEC
 subst "s|^URL:.*|URL: https://www.jetbrains.com/pycharm|" $SPEC
 subst "s|^Summary:.*|Summary: The Python IDE for Professional Developers|" $SPEC
 
-move_to_opt "/pycharm-community-*"
+add_obsoletes pycharm-community
+add_provides pycharm-community
+add_obsoletes pycharm-pro
+add_provides pycharm-pro
+
+move_to_opt "/pycharm-*"
 add_bin_link_command $PRODUCT $PRODUCTDIR/bin/$PRODUCT
 
 # TODO:
@@ -25,13 +30,13 @@ cat <<EOF | create_file /usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]
 Version=1.0
 Type=Application
-Name=PyCharm Community Edition
+Name=PyCharm
 Comment=Python IDE for Professional Developers
 Exec=pycharm %f
 Icon=pycharm
 Terminal=false
 StartupNotify=true
-StartupWMClass=jetbrains-pycharm-ce
+StartupWMClass=jetbrains-pycharm
 Categories=Development;IDE;Python;
 EOF
 
@@ -50,19 +55,25 @@ for i in darwin-aarch64 darwin-x86-64 linux-aarch64 linux-x86-64 win32-x86-64 ; 
     remove_dir $PRODUCTDIR/plugins/cwm-plugin/quiche-native/$i/
 done
 
-for i in attach_amd64.dll attach_linux_x86.so attach_linux_amd64.so attach_x86.dll attach_x86.dylib attach_x86_64.dylib ; do
-    [ "$i" = "attach_linux_amd64.so" ] && continue
-    remove_dir $PRODUCTDIR/plugins/python-ce/helpers/pydev/pydevd_attach_to_process/
+for p in python-ce python ; do
+    [ -d "$BUILDROOT$PRODUCTDIR/plugins/$p/helpers/pydev" ] || continue
+    for i in attach_amd64.dll attach_linux_x86.so attach_linux_amd64.so attach_x86.dll attach_x86.dylib attach_x86_64.dylib ; do
+        [ "$i" = "attach_linux_amd64.so" ] && continue
+        remove_dir $PRODUCTDIR/plugins/$p/helpers/pydev/pydevd_attach_to_process/
+    done
 done
 
 cd $BUILDROOT/ || exit
 
-for i in $PRODUCTDIR/plugins/python-ce/helpers/pydev/_pydevd_bundle/pydevd_cython_{darwin,win32}* ; do
-    remove_file $i
-done
+for p in python-ce python ; do
+    [ -d "$BUILDROOT$PRODUCTDIR/plugins/$p/helpers/pydev" ] || continue
+    for i in $PRODUCTDIR/plugins/$p/helpers/pydev/_pydevd_bundle/pydevd_cython_{darwin,win32}* ; do
+        remove_file $i
+    done
 
-for i in $PRODUCTDIR/plugins/python-ce/helpers/pydev/_pydevd_frame_eval/*-{win32.pyd,win_amd64.pyd,darwin.so} ; do
-    remove_file $i
+    for i in $PRODUCTDIR/plugins/$p/helpers/pydev/_pydevd_frame_eval/*-{win32.pyd,win_amd64.pyd,darwin.so} ; do
+        remove_file $i
+    done
 done
 
 subst 's|%dir "'$PRODUCTDIR'/"||' $SPEC
@@ -74,4 +85,3 @@ pack_dir $PRODUCTDIR/
 pack_dir $PRODUCTDIR/bin/
 pack_dir $PRODUCTDIR/lib/
 pack_dir $PRODUCTDIR/plugins/
-

@@ -5,20 +5,22 @@ BUILDROOT="$1"
 SPEC="$2"
 
 PRODUCT=idea
-PRODUCTCUR=idea-IU
+PRODUCTCUR=idea
 
 . $(dirname $0)/common.sh
 
-add_conflicts ideaIU
+add_obsoletes ideaIC
+add_provides ideaIC
+add_obsoletes ideaIU
+add_provides ideaIU
 
 subst "s|^Group:.*|Group: Development/Tools|" $SPEC
 #subst "s|^License: unknown$|License: GPLv2|" $SPEC
 subst "s|^URL:.*|URL: https://www.jetbrains.com/idea/|" $SPEC
 subst "s|^Summary:.*|Summary: IntelliJ IDEA – the Leading Java and Kotlin IDE|" $SPEC
 
-move_to_opt "/$PRODUCTCUR-*"
-add_bin_link_command $PRODUCT $PRODUCTDIR/bin/$PRODUCT.sh
-add_bin_link_command $PRODUCTCUR $PRODUCT
+move_to_opt "/idea-*"
+add_bin_link_command $PRODUCT $PRODUCTDIR/bin/$PRODUCT
 
 cat <<EOF | create_file /usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]
