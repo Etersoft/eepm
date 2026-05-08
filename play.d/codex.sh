@@ -12,7 +12,7 @@ URL="https://github.com/openai/codex"
 is_openssl_enough 3 || fatal "There is no needed OpenSSL 3 in the system."
 
 arch="$(epm print info -a)"
-arch="$arch-unknown-linux-gnu"
+arch="$arch-unknown-linux-musl"
 
 if [ "$PKGNAME" = "$BASEPKGNAME-preview" ] ; then
     prerelease="prerelease"
