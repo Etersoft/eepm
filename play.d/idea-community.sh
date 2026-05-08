@@ -10,4 +10,5 @@ URL="https://www.jetbrains.com/idea/"
 
 PKGURL="$(get_jetbrains_pkgurl IIC idea)"
 
+export EPM_REPACK_SCRIPT=ideaIC
 install_pkgurl

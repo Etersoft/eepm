@@ -11,12 +11,13 @@ PRODUCTCUR=idea-IC
 
 add_conflicts ideaIU
 
+subst "s|^Name:.*|Name: ideaIC|" $SPEC
 subst "s|^Group:.*|Group: Development/Tools|" $SPEC
 #subst "s|^License: unknown$|License: GPLv2|" $SPEC
 subst "s|^URL:.*|URL: https://www.jetbrains.com/idea/|" $SPEC
 subst "s|^Summary:.*|Summary: IntelliJ IDEA Community Edition – the Leading Java and Kotlin IDE|" $SPEC
 
-move_to_opt "/$PRODUCTCUR-*"
+move_to_opt "/$PRODUCTCUR-*" "/idea-IU-*"
 add_bin_link_command $PRODUCT $PRODUCTDIR/bin/$PRODUCT.sh
 add_bin_link_command $PRODUCTCUR $PRODUCT
 
