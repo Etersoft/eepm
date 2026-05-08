@@ -39,5 +39,6 @@ fix_desktop_file /usr/bin/$PRODUCTCUR
 epm assure patchelf || exit
 for i in $BUILDROOT$PRODUCTDIR/libmip_*.so ; do
     [ -s "$i" ] || continue
-    [ "$(a= patchelf --print-interpreter $i)" = "/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2" ] && a= patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 $i
+    interpreter="$(a= patchelf --print-interpreter "$i" 2>/dev/null)" || continue
+    [ "$interpreter" = "/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2" ] && a= patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 "$i"
 done
