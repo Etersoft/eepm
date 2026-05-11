@@ -112,8 +112,8 @@ EOF
             done
             return $res ;;
         opkg)
-            docmd --noaction install $filenames
-            return $res ;;
+            docmd opkg --noaction install $filenames
+            return $? ;;
         pacman)
             set_sudo
             store_output sudocmd pacman -v -S $filenames <<EOF
