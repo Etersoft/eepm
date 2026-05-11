@@ -593,10 +593,10 @@ withtimeout()
         $TO "$@"
         return
     fi
-    fatal "Possible indefinite wait due timeout command is missed"
-    # fallback: drop time arg and run without timeout
-    #shift
-    #"$@"
+    # fallback: no timeout cmd (e.g. busybox built without applet) — drop time arg and run without timeout
+    warning "timeout command is missed, running without timeout"
+    shift
+    "$@"
 }
 
 set_eatmydata()
