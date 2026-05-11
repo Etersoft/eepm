@@ -51,6 +51,9 @@ case $PMTYPE in
     apk)
         docmd apk policy $pkg_names
         ;;
+    opkg)
+        docmd opkg info $pkg_names
+        ;;
     *)
         fatal 'Have no suitable command for $PMTYPE in epm_policy()'
         ;;
