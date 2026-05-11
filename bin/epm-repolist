@@ -228,6 +228,9 @@ case $PMTYPE in
     slackpkg)
         docmd grep -v -- "^#\|^$" /etc/slackpkg/mirrors
         ;;
+    opkg)
+        docmd grep -h -v -- "^#\|^$" /etc/opkg/distfeeds.conf /etc/opkg/customfeeds.conf 2>/dev/null
+        ;;
     *)
         fatal 'Have no suitable command for $PMTYPE in epm_repolist()'
         ;;
