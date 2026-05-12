@@ -1241,9 +1241,12 @@ case "$orig_EGET_BACKEND" in
 esac
 
 # Detect wget2 (incompatible --spider -S output format for header operations)
+# Detect busybox wget (no --version support, lacks --tries and most long options)
 if [ -n "$WGET" ] ; then
     if $WGET --version 2>&1 | head -1 | grep -q "^GNU Wget2" ; then
         WGET2=1
+    elif ! $WGET --version >/dev/null 2>&1 ; then
+        BUSYBOX_WGET=1
     fi
 fi
 
@@ -1256,7 +1259,8 @@ __wget()
     [ "$trustservernames" ] && set -- --trust-server-names "$@"
     [ "$COOKIES_FILE" ] && set -- --load-cookies "$COOKIES_FILE" "$@"
     # Default: --tries 1 (single attempt), can be overridden
-    set -- --tries "${TRIES_VALUE:-1}" "$@"
+    # busybox wget doesn't support --tries
+    [ -z "$BUSYBOX_WGET" ] && set -- --tries "${TRIES_VALUE:-1}" "$@"
     [ "$retryconnrefused" ] && set -- --retry-connrefused "$@"
     [ "$TIMEOUT_VALUE" ] && set -- --timeout "$TIMEOUT_VALUE" "$@"
     [ "$nodirectories" ] && set -- -nd "$@"
