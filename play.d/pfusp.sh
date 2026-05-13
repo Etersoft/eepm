@@ -15,4 +15,5 @@ VERSION=2.2.2
 # check URL to upgrade the version
 PKGURL="https://origin.pfultd.com/downloads/IMAGE/driver/ubuntu/222/pfusp-ubuntu_2.2.2_amd64.deb"
 
-install_pkgurl
+# repack always, even for deb system (broken preinst script)
+install_pkgurl --repack
