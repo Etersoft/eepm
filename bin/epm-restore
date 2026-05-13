@@ -57,6 +57,32 @@ fill_sign()
 }
 
 
+# Whether the current PMTYPE actually enforces version constraints passed to "install".
+# apt-rpm/apt-dpkg/apk parse and respect "name>=version" / "name==version".
+# dnf/yum CLI does NOT honor range operators (ansible/ansible#78295) and rejects the glued
+# "name>=version" form; only exact "name-version" matches, which is a different semantics.
+# For everything that doesn't enforce, restore drops version constraints from the install args.
+__epm_pmtype_enforces_install_version()
+{
+    case $PMTYPE in
+        apt-rpm|apm-rpm|apt-dpkg|aptitude-dpkg|apk) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# Convert dry-run rpm-notation "name >= version" lines into epm install args.
+# On version-enforcing PMTYPEs: glue spaces ("name >= version" -> "name>=version") — rpm names
+# and versions never contain whitespace, so this is safe.
+# Elsewhere: drop the constraint and keep only the package name.
+__epm_restore_glue_version()
+{
+    if __epm_pmtype_enforces_install_version ; then
+        sed -e 's| ||g'
+    else
+        cut -d' ' -f 1
+    fi
+}
+
 # macro pkg caseline
 __epm_pi_sign_to_rpm()
 {
@@ -161,7 +187,7 @@ __epm_restore_pip()
         return
     else
         info 'Install requirements from $req_file ...'
-        ilist="$(cat $req_file | __epm_restore_convert_to_rpm_notation | cut -d' ' -f 1 | sed -e "s|^|python3-module-|")"
+        ilist="$(cat $req_file | __epm_restore_convert_to_rpm_notation | __epm_restore_glue_version | sed -e "s|^|python3-module-|")"
     fi
 
     ilist="$(estrlist list $ilist)"
@@ -221,7 +247,7 @@ __epm_restore_pyproject()
         return
     else
         info "Install requirements from $req_file ..."
-        ilist="$(__epm_restore_print_pyproject "$req_file" | cut -d' ' -f 1 | sed -e "s|^|python3-module-|")"
+        ilist="$(__epm_restore_print_pyproject "$req_file" | __epm_restore_glue_version | sed -e "s|^|python3-module-|")"
     fi
 
     ilist="$(estrlist list $ilist)"
@@ -280,7 +306,7 @@ $l"
             __epm_restore_print_comment "$req_file" "" " $(__epm_get_array_name "$section")"
             __epm_lineprint_python_array "$ar" | __epm_restore_convert_to_rpm_notation ">=" | sed -e "s|^|$reqmacro |"
         else
-            ilist="$ilist $(__epm_lineprint_python_array "$ar" | __epm_restore_convert_to_rpm_notation ">=" | cut -d' ' -f 1 | sed -e "s|^|python3-module-|")"
+            ilist="$ilist $(__epm_lineprint_python_array "$ar" | __epm_restore_convert_to_rpm_notation ">=" | __epm_restore_glue_version | sed -e "s|^|python3-module-|")"
         fi
         section=''
         ar=''
@@ -324,6 +350,12 @@ __epm_print_npm_list()
             continue
         else
             local pi="node-$name"
+            # npm versions: ^X.Y.Z (caret), ~X.Y.Z (tilde), X.Y.Z → use >=X.Y.Z (strip ^/~).
+            # Skip on PMTYPEs that don't enforce range constraints (dnf/yum).
+            if __epm_pmtype_enforces_install_version && echo "$ver" | grep -qE "^[\^~]?[0-9]" ; then
+                local cleanver="$(echo "$ver" | sed -e 's|^[\^~]||')"
+                pi="$pi>=$cleanver"
+            fi
             #echo "    $l -> $name -> $pi"
         fi
         [ -n "$name" ] || continue
@@ -357,6 +389,9 @@ __epm_print_perl_list()
             continue
         else
             local pi="$name"
+            if [ "$ver" != "0" ] && __epm_pmtype_enforces_install_version ; then
+                pi="$pi>=$ver"
+            fi
             #echo "    $l -> $name -> $pi"
         fi
         [ -n "$name" ] || continue
@@ -389,6 +424,9 @@ __epm_print_perl_list_shyaml()
             continue
         else
             local pi="perl($name)"
+            if [ "$ver" != "0" ] && __epm_pmtype_enforces_install_version ; then
+                pi="$pi>=$ver"
+            fi
             #echo "    $l -> $name -> $pi"
         fi
         [ -n "$name" ] || continue
@@ -405,7 +443,11 @@ __epm_print_nupkg_list()
         if [ -n "$dryrun" ] ; then
             echo "BuildRequires: nupkg($name) >= $req"
         else
-            echo "nupkg($name)"
+            if [ -n "$req" ] && __epm_pmtype_enforces_install_version ; then
+                echo "nupkg($name)>=$req"
+            else
+                echo "nupkg($name)"
+            fi
         fi
     done
 }
@@ -442,6 +484,9 @@ __epm_print_meson_list()
             continue
         else
             local pi="pkgconfig($name)"
+            if [ -n "$sign" ] && [ -n "$ver" ] && __epm_pmtype_enforces_install_version ; then
+                pi="$pi$sign$ver"
+            fi
         fi
         [ -n "$name" ] || continue
         ilist="$ilist $pi"
