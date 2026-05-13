@@ -1,12 +1,14 @@
 #!/bin/sh
 
-PKGNAME=v2rayN
+PKGNAME=v2rayn
 SUPPORTEDARCHES="x86_64 arm64"
 VERSION="$2"
 DESCRIPTION="A GUI client for Windows, Linux and macOS, support Xray core and sing-box-core and others"
 URL="https://github.com/2dust/v2rayN"
 
 . $(dirname $0)/common.sh
+
+export EPM_REPACK_SCRIPT=v2rayN
 
 arch="$(epm print info -a)"
 case "$arch" in
