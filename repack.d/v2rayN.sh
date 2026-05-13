@@ -9,6 +9,9 @@ PRODUCTDIR=/opt/$PRODUCT
 
 add_bin_link_command
 
+# .NET runtime may probe for lttng tracing support even where the exact soname is unavailable.
+ignore_lib_requires liblttng-ust.so.0
+
 cat <<EOF | create_file /usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]
 Name=v2rayN
@@ -21,4 +24,3 @@ Categories=Network;Internet;Utility;
 EOF
 
 install_file $PRODUCTDIR/$PRODUCT.png /usr/share/pixmaps/$PRODUCT.png
-
