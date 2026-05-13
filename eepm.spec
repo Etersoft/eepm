@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.62
+Version: 3.64.63
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -181,6 +181,51 @@ EOF
 # metapackage, no files
 
 %changelog
+* Thu May 14 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.63-alt1
+- epm pack torrserver: dereference symlink and quote heredoc to fix install
+- epm play: disable obsoleted sbis-plugin
+- epm play: add pantum-r (drivers for new Pantum series)
+- epm play pantum: drop obsolete AstraLinuxSE/1.7 branch (V1.1.5 from 2019)
+- epm play.d/common.sh: detect GitHub API errors instead of silently failing
+- epm play warp-terminal: don't use deb to get version on ALT (eterbug #17865)
+- epm pack cnijfilter2: fix PKG path (eterbug #17865)
+- epm play gemini-cli: fix download & install (eterbug #17865)
+- epm play resilio-sync: fix PKGURL (eterbug #17865)
+- epm play.d/common.sh: add get_deb_repo_latest_version helper
+- epm play unityhub: scrape latest version, fix new URL pattern
+- epm play.d/common.sh: add is_version_older helper
+- epm play unityhub: pick URL pattern by version for stale app-versions compatibility
+- epm play: add ifcplugin (Gosuslugi browser plugin) (eterbug #18752)
+- epm play ifcplugin: support deb-based distros too
+- epm repack ifcplugin: add Chromium native messaging host symlink
+- eget: fall back to original URL for signed CDN redirects with UUID paths
+- epm play: add syncthing (continuous file sync from official tarball)
+- epm play opencode-desktop: drop aarch64 (upstream has no aarch64 desktop builds)
+- epm play --update: use eget --force to overwrite partial download on retry
+- epm play: add kimi-cli (Kimi AI coding agent from Moonshot AI)
+- epm repack discord: bake real binary into package via updater_bootstrap (no first-launch download)
+- epm play saby: install without --scripts, replace postinstall via repack
+- epm play sbis-plugin: fix DESRIPTION typo (was not filtered from --list-all)
+- distr_info: add OpenWrt to pkgvendor (returns openwrt for ipk pkgtype)
+- epm-sh-functions: withtimeout: fall back to running without timeout when missing (e.g. busybox without applet)
+- epm simulate: opkg: add missing opkg command prefix
+- epm policy: add opkg support via opkg info
+- epm repo list: add opkg support (read distfeeds.conf and customfeeds.conf)
+- eget: detect busybox wget and skip unsupported --tries option
+- epm restore: preserve version constraints when installing
+- epm play: added jdownloader2 (eterbug #19064)
+- epm play: added equibop (eterbug #19081)
+- epm play: added terax (eterbug #19082)
+- epm play pureref: don't force curl anymore (eterbug #17865)
+- epm play rstudio: fix PKGURL (eterbug #17865)
+- epm play codex: fix download (eterbug #17865)
+- epm repack edge: ignore libmip without interpreter (eterbug #17865)
+- epm play pycharm, idea: use unified pgkname (eterbug #17865)
+- epm play v2rayn: use new PKGNAME & fix install (eterbug #17865)
+- epm play nomachine: fix download (eterbug #17865)
+- epm play pfusp: always repack upstream package (eterbug #17865)
+- epm play: added megatools (eterbug #19069)
+
 * Wed Apr 29 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.62-alt1
 - epm pack zen-browser: fix version parsing for multi-segment versions like 1.19.9b
 - epm play chromium-gost: use get_github_url to avoid GitHub API call when version is known
