@@ -40,7 +40,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.62"
+export EPMVERSION="3.64.63"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -611,10 +611,10 @@ withtimeout()
         $TO "$@"
         return
     fi
-    fatal "Possible indefinite wait due timeout command is missed"
-    # fallback: drop time arg and run without timeout
-    #shift
-    #"$@"
+    # fallback: no timeout cmd (e.g. busybox built without applet) — drop time arg and run without timeout
+    warning "timeout command is missed, running without timeout"
+    shift
+    "$@"
 }
 
 set_eatmydata()
@@ -10032,7 +10032,7 @@ __download_versions_list()
 
     local URL
     for URL in "https://eepm.ru/releases/$epmver/app-versions" "https://eepm.ru/app-versions" ; do
-        eget -q -O "$target" "$URL/epm-play-list-full.txt" && return
+        eget -q --force -O "$target" "$URL/epm-play-list-full.txt" && return
     done
     return 1
 }
@@ -10698,6 +10698,9 @@ case $PMTYPE in
         ;;
     apk)
         docmd apk policy $pkg_names
+        ;;
+    opkg)
+        docmd opkg info $pkg_names
         ;;
     *)
         fatal 'Have no suitable command for $PMTYPE in epm_policy()'
@@ -15725,6 +15728,9 @@ case $PMTYPE in
     slackpkg)
         docmd grep -v -- "^#\|^$" /etc/slackpkg/mirrors
         ;;
+    opkg)
+        docmd grep -h -v -- "^#\|^$" /etc/opkg/distfeeds.conf /etc/opkg/customfeeds.conf 2>/dev/null
+        ;;
     *)
         fatal 'Have no suitable command for $PMTYPE in epm_repolist()'
         ;;
@@ -16668,6 +16674,23 @@ fill_sign()
 }
 
 
+__epm_pmtype_enforces_install_version()
+{
+    case $PMTYPE in
+        apt-rpm|apm-rpm|apt-dpkg|aptitude-dpkg|apk) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+__epm_restore_glue_version()
+{
+    if __epm_pmtype_enforces_install_version ; then
+        sed -e 's| ||g'
+    else
+        cut -d' ' -f 1
+    fi
+}
+
 __epm_pi_sign_to_rpm()
 {
     local t="$1"
@@ -16769,7 +16792,7 @@ __epm_restore_pip()
         return
     else
         info 'Install requirements from $req_file ...'
-        ilist="$(cat $req_file | __epm_restore_convert_to_rpm_notation | cut -d' ' -f 1 | sed -e "s|^|python3-module-|")"
+        ilist="$(cat $req_file | __epm_restore_convert_to_rpm_notation | __epm_restore_glue_version | sed -e "s|^|python3-module-|")"
     fi
 
     ilist="$(estrlist list $ilist)"
@@ -16827,7 +16850,7 @@ __epm_restore_pyproject()
         return
     else
         info "Install requirements from $req_file ..."
-        ilist="$(__epm_restore_print_pyproject "$req_file" | cut -d' ' -f 1 | sed -e "s|^|python3-module-|")"
+        ilist="$(__epm_restore_print_pyproject "$req_file" | __epm_restore_glue_version | sed -e "s|^|python3-module-|")"
     fi
 
     ilist="$(estrlist list $ilist)"
@@ -16886,7 +16909,7 @@ $l"
             __epm_restore_print_comment "$req_file" "" " $(__epm_get_array_name "$section")"
             __epm_lineprint_python_array "$ar" | __epm_restore_convert_to_rpm_notation ">=" | sed -e "s|^|$reqmacro |"
         else
-            ilist="$ilist $(__epm_lineprint_python_array "$ar" | __epm_restore_convert_to_rpm_notation ">=" | cut -d' ' -f 1 | sed -e "s|^|python3-module-|")"
+            ilist="$ilist $(__epm_lineprint_python_array "$ar" | __epm_restore_convert_to_rpm_notation ">=" | __epm_restore_glue_version | sed -e "s|^|python3-module-|")"
         fi
         section=''
         ar=''
@@ -16927,6 +16950,12 @@ __epm_print_npm_list()
             continue
         else
             local pi="node-$name"
+            # npm versions: ^X.Y.Z (caret), ~X.Y.Z (tilde), X.Y.Z → use >=X.Y.Z (strip ^/~).
+            # Skip on PMTYPEs that don't enforce range constraints (dnf/yum).
+            if __epm_pmtype_enforces_install_version && echo "$ver" | grep -qE "^[\^~]?[0-9]" ; then
+                local cleanver="$(echo "$ver" | sed -e 's|^[\^~]||')"
+                pi="$pi>=$cleanver"
+            fi
             #echo "    $l -> $name -> $pi"
         fi
         [ -n "$name" ] || continue
@@ -16960,6 +16989,9 @@ __epm_print_perl_list()
             continue
         else
             local pi="$name"
+            if [ "$ver" != "0" ] && __epm_pmtype_enforces_install_version ; then
+                pi="$pi>=$ver"
+            fi
             #echo "    $l -> $name -> $pi"
         fi
         [ -n "$name" ] || continue
@@ -16992,6 +17024,9 @@ __epm_print_perl_list_shyaml()
             continue
         else
             local pi="perl($name)"
+            if [ "$ver" != "0" ] && __epm_pmtype_enforces_install_version ; then
+                pi="$pi>=$ver"
+            fi
             #echo "    $l -> $name -> $pi"
         fi
         [ -n "$name" ] || continue
@@ -17008,7 +17043,11 @@ __epm_print_nupkg_list()
         if [ -n "$dryrun" ] ; then
             echo "BuildRequires: nupkg($name) >= $req"
         else
-            echo "nupkg($name)"
+            if [ -n "$req" ] && __epm_pmtype_enforces_install_version ; then
+                echo "nupkg($name)>=$req"
+            else
+                echo "nupkg($name)"
+            fi
         fi
     done
 }
@@ -17045,6 +17084,9 @@ __epm_print_meson_list()
             continue
         else
             local pi="pkgconfig($name)"
+            if [ -n "$sign" ] && [ -n "$ver" ] && __epm_pmtype_enforces_install_version ; then
+                pi="$pi$sign$ver"
+            fi
         fi
         [ -n "$name" ] || continue
         ilist="$ilist $pi"
@@ -19254,8 +19296,8 @@ EOF
             done
             return $res ;;
         opkg)
-            docmd --noaction install $filenames
-            return $res ;;
+            docmd opkg --noaction install $filenames
+            return $? ;;
         pacman)
             set_sudo
             store_output sudocmd pacman -v -S $filenames <<EOF
@@ -20878,6 +20920,7 @@ pkgvendor()
     [ "$DISTRIB_ID" = "openSUSETumbleweed" ] && echo "suse" && return
     [ "$DISTRIB_ID" = "openSUSELeap" ] && echo "suse" && return
     [ "$DISTRIB_ID" = "UBLinux" ] && echo "ublinux" && return
+    [ "$DISTRIB_ID" = "OpenWrt" ] && echo "openwrt" && return
     if [ -n "$VENDOR_ID" ] ; then
         echo "$VENDOR_ID"
         return
@@ -23273,9 +23316,12 @@ case "$orig_EGET_BACKEND" in
 esac
 
 # Detect wget2 (incompatible --spider -S output format for header operations)
+# Detect busybox wget (no --version support, lacks --tries and most long options)
 if [ -n "$WGET" ] ; then
     if $WGET --version 2>&1 | head -1 | grep -q "^GNU Wget2" ; then
         WGET2=1
+    elif ! $WGET --version >/dev/null 2>&1 ; then
+        BUSYBOX_WGET=1
     fi
 fi
 
@@ -23288,7 +23334,8 @@ __wget()
     [ "$trustservernames" ] && set -- --trust-server-names "$@"
     [ "$COOKIES_FILE" ] && set -- --load-cookies "$COOKIES_FILE" "$@"
     # Default: --tries 1 (single attempt), can be overridden
-    set -- --tries "${TRIES_VALUE:-1}" "$@"
+    # busybox wget doesn't support --tries
+    [ -z "$BUSYBOX_WGET" ] && set -- --tries "${TRIES_VALUE:-1}" "$@"
     [ "$retryconnrefused" ] && set -- --retry-connrefused "$@"
     [ "$TIMEOUT_VALUE" ] && set -- --timeout "$TIMEOUT_VALUE" "$@"
     [ "$nodirectories" ] && set -- -nd "$@"
@@ -24135,8 +24182,10 @@ url_get_filename()
     fi
 
     local loc="$(url_get_raw_real_url "$URL")"
+    # signed CDN redirects (e.g. GitHub release assets) put a UUID in the path
+    # and the real filename in a query parameter — fall back to original URL
     if is_strange_url "$loc" ; then
-        loc="$(echo "$loc" | sed -e "s|\?.*||")"
+        loc="$URL"
     fi
 
     # hack for redirect to the main page (root URL with no filename)

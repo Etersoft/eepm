@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.62"
+EPMVERSION="3.64.63"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -602,10 +602,10 @@ withtimeout()
         $TO "$@"
         return
     fi
-    fatal "Possible indefinite wait due timeout command is missed"
-    # fallback: drop time arg and run without timeout
-    #shift
-    #"$@"
+    # fallback: no timeout cmd (e.g. busybox built without applet) — drop time arg and run without timeout
+    warning "timeout command is missed, running without timeout"
+    shift
+    "$@"
 }
 
 set_eatmydata()
@@ -2306,6 +2306,7 @@ pkgvendor()
     [ "$DISTRIB_ID" = "openSUSETumbleweed" ] && echo "suse" && return
     [ "$DISTRIB_ID" = "openSUSELeap" ] && echo "suse" && return
     [ "$DISTRIB_ID" = "UBLinux" ] && echo "ublinux" && return
+    [ "$DISTRIB_ID" = "OpenWrt" ] && echo "openwrt" && return
     if [ -n "$VENDOR_ID" ] ; then
         echo "$VENDOR_ID"
         return
