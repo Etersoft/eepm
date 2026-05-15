@@ -10,11 +10,19 @@ URL="https://gossluzhba.gov.ru/spo/"
 
 warn_version_is_not_supported
 
-# Download URL for Linux version from gossluzhba.gov.ru
-# Version 1.0.2 from 25.02.2026
-PKGURL="https://files.gossluzhba.gov.ru/49309a89-3c66-408c-805a-2d42b28e89c9/download/94f919b3-eccc-4bc1-a838-4913bb92b1cc"
+# Native packages from gossluzhba.gov.ru
+# Version 1.3.1 from 29.04.2026
+pkgtype="$(epm print info -p)"
 
-# Checksum for version 1.0.2 (2026-02-25) - update when new version is released
-PKGSUM="sha256:b2d4ff805429020a5640b8ee574e1dd6289704cded5729b942ddb1ee87ab97d2"
+case $pkgtype in
+    deb)
+        # SPO_AstraLinux_1_3_1.deb
+        PKGURL="https://files.gossluzhba.gov.ru/49309a89-3c66-408c-805a-2d42b28e89c9/download/3b381967-ea64-4a14-ad63-1689089ea4f9"
+        ;;
+    *)
+        # SPO_RedOS_AltLinux_1_3_1.rpm
+        PKGURL="https://files.gossluzhba.gov.ru/49309a89-3c66-408c-805a-2d42b28e89c9/download/049b2d5e-b1aa-4f79-913d-f9f562b4fe8e"
+        ;;
+esac
 
-install_pack_pkgurl "" "$PKGSUM"
+install_pkgurl
