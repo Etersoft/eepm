@@ -609,14 +609,18 @@ is_installed_by_play()
 # check if installed version is up to date, exit if no update needed
 # --latest: skip version check, update from upstream
 # --force: skip "already installed" check
+# uses outer $1 (script action: --run / --update) to differentiate behavior.
 check_for_product_update()
 {
+    # action — set by the caller from outer $1 (--run / --update); default safe to "run"
+    local action="${1:---run}"
+
     local fullpkgver="$(get_installed_full_version "$(__lowpkgname "$PKGNAME")")"
 
     # not installed yet, proceed with install
     [ -n "$fullpkgver" ] || return
 
-    # --latest or --force: update from upstream, don't check app-versions
+    # --latest or --force: skip version check, caller will reinstall from upstream
     if [ -n "$latest" ] || [ -n "$force" ] ; then
         echo "Updating $PKGNAME from $fullpkgver to latest upstream version ..."
         return
@@ -632,13 +636,14 @@ check_for_product_update()
     local fulllatestver="$(build_full_version "$VERSION" "$RELEASE")"
 
     if [ -z "$VERSION" ] ; then
-        echo "Can't get info about latest version of $PKGNAME, so skip updating installed version $fullpkgver."
-        exit
-    fi
-
-    # --force: reinstall even if same version
-    if [ -n "$force" ] ; then
-        echo "Updating $PKGNAME from $fullpkgver to $fulllatestver version (forced) ..."
+        # vendor doesn't publish version info — can't determine if update is needed.
+        # For --update (auto-update): skip silently, don't reinstall.
+        # For --run (user explicitly invoked): proceed with reinstall — user likely wants to repair install.
+        if [ "$action" = "--update" ] ; then
+            echo "Can't get info about latest version of $PKGNAME, so skip updating installed version $fullpkgver."
+            exit
+        fi
+        echo "Can't get info about latest version of $PKGNAME (vendor doesn't publish app-versions). Reinstalling $fullpkgver ..."
         return
     fi
 
@@ -732,11 +737,11 @@ case "$1" in
             exit
         fi
 
-        [ -n "$force" ] || [ -n "$latest" ] || check_for_product_update
+        check_for_product_update "$1"
         # pass to run play code
         ;;
     "--run")
-        [ -n "$force" ] || [ -n "$latest" ] || check_for_product_update
+        check_for_product_update "$1"
         # pass to run play code
         ;;
     *)
