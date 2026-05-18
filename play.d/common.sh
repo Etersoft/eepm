@@ -695,7 +695,8 @@ check_tty
 case "$1" in
     "--remove")
         #is_repacked_packages || exit 0
-        epm remove "$(__lowpkgname "$PKGNAME")"
+        # PKGNAME may contain several space-separated package names — pass them as separate args
+        epm remove $(__lowpkgname "$PKGNAME")
         exit
         ;;
     "--info")
