@@ -132,7 +132,66 @@ Mutable runtime данные (логи, настройки, маркеры) до
   `components-registrator installNmh` регистрирует Native Messaging Host
   (создаёт JSON-манифесты в `/etc/opt/<browser>/native-messaging-hosts/`).
   Проверять отдельно.
-- SabyCenter как systemd-сервис — после установки не запускается автоматически.
-  Для запуска через системный `SabyCenter.service` нужно вручную выполнить
-  `sbis-daemon-setup.sh ... install` или запускать SabyCenter из меню
-  (как обычное приложение).
+
+## SabyCenter.service — ставим свой unit, sbis-daemon-setup.sh не используем
+
+`sbis-daemon-setup.sh` (615 строк bash с `eval`) делает ровно две полезные вещи:
+1. Пишет `/usr/lib/systemd/system/<DAEMON_NAME>.service`
+2. Делает `systemctl daemon-reload` + опционально `systemctl enable`
+
+Всё остальное — валидация опций, nginx-интеграция (никому не нужна для SabyCenter
+без FCGI), eval-обёртка. Полный список опций неочевиден пользователю.
+
+Чтобы не заставлять пользователя запускать сложный скрипт с угадыванием
+параметров — `repack.d/sabycenter.sh` сам генерирует `/usr/lib/systemd/system/SabyCenter.service`
+с зашитыми правильными `ExecStart`/`ExecStop`. Отличия от vendor-юнита:
+- `chmod 0755 /var/run/sbis` вместо `chmod 777` (vendor: `chmod 777`)
+- Нет `--output_file` (vendor пишет лог в `/usr/share/Tensor/Saby Center/logs/`,
+  что нарушает FHS; пусть пишет в дефолт)
+
+`play.d/saby.sh` после установки делает `serv SabyCenter on` (`on` = enable + start).
+
+## `--repack` обязателен в play.d/saby.sh
+
+`epm install URL.rpm` (или `.deb`) для native-формата НЕ вызывает `repack.d/*.sh`.
+Repack делается только если:
+1. Передаётся пакет чужого формата (deb на rpm-системе или наоборот) → авторепак
+2. Явно указано `--repack`
+
+Поэтому `play.d/saby.sh` **обязательно** передаёт `--repack` в `epm install`:
+без него файлы остаются в `/opt/Tensor/Saby/temp_saby/`, лаунчер `$SABYDIR/saby`
+отсутствует, и vendor maintainer scripts тоже не запускаются (без `--scripts`) —
+получается частично сломанная установка.
+
+После установки `play.d/saby.sh` делает sanity-check: если `$SABYDIR/temp_saby/`
+существует — печатает warning о том, что repack не сработал.
+
+## Зависимость /usr/bin/certutil
+
+`saby.rpm` объявляет hard requires на `/usr/bin/certutil`. Утилита есть в:
+- `nss-utils` (ALT, Fedora, RedOS, CentOS)
+- `libnss3-tools` (Debian, Ubuntu)
+
+`play.d/saby.sh` ставит соответствующий пакет ДО основного `epm install`, иначе
+получаем `Неудовлетворенные зависимости: /usr/bin/certutil нужен для saby-...`.
+
+## Поведение `--remove` для multi-package PKGNAME
+
+`PKGNAME="saby sabycenter nmh-transport"` (3 пакета через пробел). В `common.sh`
+`--remove` вызывает `epm remove $(__lowpkgname "$PKGNAME")` БЕЗ кавычек, иначе
+вся строка передаётся как один аргумент, и `epm remove` отвергает её
+с "В имени пакета X есть пробелы".
+
+## Поведение `check_for_product_update` без app-versions
+
+`eepm.ru/releases/3.64/app-versions/saby` возвращает 404 — vendor не публикует
+версии (`warn_version_is_not_supported`). Если установлен один из пакетов
+(sabycenter или nmh-transport) после неполного uninstall через меню Saby
+(штатное удаление НЕ удаляет sabycenter/nmh-transport), `check_for_product_update`
+без знания latest version раньше выходил с "Can't get info...".
+
+Теперь функция различает контекст:
+- `--update` (auto-update): пропускает (поведение прежнее)
+- `--run` (явный `epm play saby`): переустанавливает текущую версию
+
+Это лечит сценарий "после штатного uninstall через меню Saby остались хвосты".
