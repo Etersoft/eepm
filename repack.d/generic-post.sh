@@ -17,6 +17,8 @@ add_libs_requires
 rm -f "$BUILDROOT/.eepm_ignore_lib_requires"
 rm -f "$BUILDROOT/.eepm_ignore_lib_path"
 rm -f "$BUILDROOT/.eepm_stop_libs_requires"
+rm -f "$BUILDROOT/.eepm_filter_python_requires"
+rm -f "$BUILDROOT/.eepm_stop_python_requires"
 
 # remove forbidden paths owned by the filesystem package to avoid conflicts
 # https://bugzilla.altlinux.org/show_bug.cgi?id=38842
