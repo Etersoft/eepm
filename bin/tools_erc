@@ -402,7 +402,7 @@ extract_archive()
 		return $res
 	fi
 
-	tdir=$(mktemp -d $(pwd)/UXXXXXXXX)
+	tdir=$(mktemp -d "$(pwd)/UXXXXXXXX")
 	local res
 	if have_patool ; then
 		docmd patool $verbose extract --outdir "$tdir" "$arc" "$@"
