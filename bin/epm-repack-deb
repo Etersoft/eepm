@@ -20,6 +20,11 @@
 
 # fills repacked_pkg
 # args: pkg [orig_deb_depends] [orig_pkg_type]
+__need_skip_dh_strip_nondeterminism()
+{
+    [ -f "$(dirname "$1")/.eepm_skip_deb_dh_strip_nondeterminism" ]
+}
+
 __epm_repack_to_deb()
 {
     local pkg="$1"
@@ -64,6 +69,16 @@ __epm_repack_to_deb()
             warning 'Can'\''t find alien generated directory for $pkg'
             cd - >/dev/null
             return 1
+        fi
+
+        # Some repack scripts need to keep bundled archives byte-identical.
+        # The opt-in marker is written by skip_deb_dh_strip_nondeterminism().
+        if __need_skip_dh_strip_nondeterminism "$abspkg" ; then
+            cat >>"$debsrcdir"debian/rules <<'EOF'
+
+override_dh_strip_nondeterminism:
+	@echo "Skipping dh_strip_nondeterminism for this repack"
+EOF
         fi
 
         # inject original depends into debian/control
