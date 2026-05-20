@@ -683,6 +683,13 @@ ignore_library_path()
    echo "$@" | xargs -n1 >> "$BUILDROOT/.eepm_ignore_lib_path"
 }
 
+skip_deb_dh_strip_nondeterminism()
+{
+   # epm-repack-deb reads this sidecar marker when converting the generated rpm to deb.
+   # Keep the marker outside BUILDROOT so it does not get packaged.
+   touch "$(dirname "$(dirname "$SPEC")")/.eepm_skip_deb_dh_strip_nondeterminism"
+}
+
 
 add_findreq_skiplist()
 {

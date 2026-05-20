@@ -35,7 +35,24 @@ EOF
 install_file $PRODUCTDIR/bin/$PRODUCT.png /usr/share/pixmaps/$PRODUCT.png
 install_file $PRODUCTDIR/bin/$PRODUCT.svg /usr/share/pixmaps/$PRODUCT.svg
 
-exit
+# The bundled Radler/.NET stack ships musl runtimes for non-target Linux
+# variants. They are not needed on our glibc targets and introduce impossible
+# cross-arch soname dependencies.
+for d in "$BUILDROOT"$PRODUCTDIR/plugins/clion-radler/DotFiles/runtimes/linux-musl-* ; do
+    [ -d "$d" ] || continue
+    remove_dir "${d#"$BUILDROOT"}"
+done
+
+# Keep optional debugger/remote-dev pieces installed even when they pull
+# legacy or distro-specific sonames. This preserves more JetBrains features at
+# runtime for users who have compatible libs or install them manually.
+ignore_lib_requires liblttng-ust.so.0
+ignore_lib_requires libcrypto.so.1.1 libssl.so.1.1 libnsl.so.1
+
+# Debian's dh_strip_nondeterminism rewrites JetBrains bundled archives during
+# alien conversion and makes CLion repacking impractically slow.
+skip_deb_dh_strip_nondeterminism
+
 # kind of hack
 subst 's|%dir "'$PRODUCTDIR'/"||' $SPEC
 subst 's|%dir "'$PRODUCTDIR'/bin/"||' $SPEC
