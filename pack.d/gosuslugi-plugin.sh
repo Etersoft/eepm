@@ -14,7 +14,7 @@ __extract_payload_from_sh() {
 case "$TAR" in
     *.zip)
         # extract .sh installer from zip
-        unzip -j "$TAR" '*.sh' || fatal
+        erc --flat "$TAR" || fatal
         INSTALLER=$(ls Gosplugin_*_Installer.*.sh 2>/dev/null | head -1) || fatal 'installer not found in zip'
         __extract_payload_from_sh "$INSTALLER"
         rm -f "$INSTALLER"
