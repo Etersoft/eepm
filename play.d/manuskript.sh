@@ -24,5 +24,12 @@ else
     PKGURL="https://github.com/olivierkes/manuskript/releases/download/$VERSION/$file"
 fi
 
-install_pkgurl
-
+case "$(epm print info -s)" in
+    debian)
+        # Debian 13 has no QtWebKit package, patch the upstream deb dependency in pack.d before install.
+        install_pack_pkgurl
+        ;;
+    *)
+        install_pkgurl
+        ;;
+esac

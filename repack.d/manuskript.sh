@@ -20,5 +20,12 @@ subst "s|/usr/share/manuskript/|$PRODUCTDIR/|" usr/bin/manuskript
 fix_desktop_file /usr/bin/manuskript
 fix_desktop_file /usr/share/manuskript/icons/Manuskript/icon-512px.png $PRODUCT
 
-add_unirequires 'python3(PyQt5)' 'libQt5Svg.so.5'
-
+case "$(epm print info -s)" in
+    fedora)
+        # Fedora does not resolve the generic PyQt5 requires here, use real package names.
+        add_directrequires python3-qt5 python3-qt5-webengine qt5-qtsvg
+        ;;
+    *)
+        add_unirequires 'python3(PyQt5)' 'libQt5Svg.so.5'
+        ;;
+esac
