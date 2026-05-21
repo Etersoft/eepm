@@ -7,7 +7,15 @@ URL="$4"
 
 . $(dirname $0)/common.sh
 
-VERSION=$(echo "$URL" | grep -oP 'v\K[0-9]+\.[0-9]+\.[0-9]+')
+TAG="$(echo "$URL" | sed -n 's|.*/download/\([^/]*\)/.*|\1|p')"
+case "$TAG" in
+    v[0-9]*)
+        VERSION="$(echo "$TAG" | sed -e 's|^v||')"
+        ;;
+    rc[0-9]*)
+        VERSION="$(echo "$TAG" | sed -n 's|^rc\([0-9][0-9.]*\)-\([0-9][0-9]*\)$|\1~rc\2|p')"
+        ;;
+esac
 [ -n "$VERSION" ] || fatal "Can't get package version"
 PKGNAME=$PRODUCT-$VERSION
 
@@ -35,6 +43,7 @@ erc pack $PKGNAME.tar opt usr
 
 cat <<EOF >$PKGNAME.tar.eepm.yaml
 name: $PRODUCT
+version: $VERSION
 group: Networking/Instant messaging
 license: AGPLv3
 url: https://github.com/krille-chan/fluffychat
