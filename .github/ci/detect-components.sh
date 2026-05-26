@@ -64,33 +64,106 @@ component_changed() {
   return 1
 }
 
-collect_play_apps() {
-  local changed_apps play_list app
-  changed_apps="$(
-    echo "$CHANGED_FILES" \
-      | grep -E '^(play\.d/|pack\.d/|repack\.d/)' \
-      | sed 's|.*/||' \
-      | sed 's/\..*$//' \
-      | tr '[:upper:]' '[:lower:]' \
-      | sort -u
-  )"
+extract_static_play_names() {
+  local file="$1"
 
-  if [[ -z "$changed_apps" ]]; then
+  [[ -f "$file" ]] || return 0
+
+  awk '
+    /^[[:space:]]*#/ { next }
+    {
+      line = $0
+      sub(/^[[:space:]]*/, "", line)
+      if (line !~ /^(PKGNAME|BASEPKGNAME|REPOPKGNAME|PRODUCT)=/) {
+        next
+      }
+
+      sub(/^[^=]*=/, "", line)
+      sub(/[[:space:]]+#.*$/, "", line)
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", line)
+
+      if (line ~ /^"[^"]*"$/ || line ~ /^\047[^\047]*\047$/) {
+        line = substr(line, 2, length(line) - 2)
+      }
+
+      if (line ~ /^[[:alnum:]_.+-]+$/) {
+        print tolower(line)
+      }
+    }
+  ' "$file"
+}
+
+normalize_name() {
+  tr '[:upper:]' '[:lower:]'
+}
+
+is_play_app() {
+  local app="$1"
+
+  grep -Fxq "$app" <<< "$PLAY_LIST"
+}
+
+find_play_app_by_alias() {
+  local candidate="$1"
+  local play_script app alias
+
+  if is_play_app "$candidate"; then
+    echo "$candidate"
     return 0
   fi
 
-  play_list="$(bin/epm play --short | tr '[:upper:]' '[:lower:]' | sort -u)"
-  
-  while IFS= read -r app; do
-    [[ -z "$app" ]] && continue
-   
-    if grep -Fxq "$app" <<< "$play_list"; then
+  for play_script in play.d/*.sh; do
+    [[ -f "$play_script" ]] || continue
+    app="$(basename "$play_script" .sh | normalize_name)"
+
+    is_play_app "$app" || continue
+
+    while IFS= read -r alias; do
+      if [[ "$alias" == "$candidate" ]]; then
+        echo "$app"
+        return 0
+      fi
+    done < <(extract_static_play_names "$play_script")
+  done
+
+  return 1
+}
+
+resolve_play_app() {
+  local file="$1"
+  local candidate app
+
+  while IFS= read -r candidate; do
+    [[ -z "$candidate" ]] && continue
+
+    if app="$(find_play_app_by_alias "$candidate")"; then
+      echo "$app"
+      return 0
+    fi
+  done < <(
+    {
+      basename "$file" .sh | normalize_name
+      extract_static_play_names "$file"
+    } | sort -u
+  )
+
+  return 1
+}
+
+collect_play_apps() {
+  local file app
+
+  while IFS= read -r file; do
+    [[ -z "$file" ]] && continue
+    [[ "$file" =~ ^(play\.d/|pack\.d/|repack\.d/) ]] || continue
+
+    if app="$(resolve_play_app "$file")"; then
       echo "$app"
     else
-      echo "Skip '$app' (not in epm play --short list)"
+      echo "Skip '$file' (can't resolve to epm play app)" >&2
     fi
 
-  done <<< "$changed_apps"
+  done <<< "$CHANGED_FILES" | sort -u
 }
 
 
@@ -133,6 +206,7 @@ fi
 entries=()
 components=()
 play_apps=''
+PLAY_LIST="$(bin/epm play --short | normalize_name | sort -u)"
 
 while IFS='|' read -r component path_list systems; do
   component="$(trim "${component:-}")"
@@ -148,7 +222,7 @@ while IFS='|' read -r component path_list systems; do
   fi
 
   if [[ "$component" == "play" ]]; then
-    play_apps="$(collect_play_apps | grep -v "^Skip '" || true)"
+    play_apps="$(collect_play_apps)"
     echo "Apps from changed scripts:"
     echo "${play_apps:-<none>}"
    
@@ -160,7 +234,7 @@ while IFS='|' read -r component path_list systems; do
 
   components+=("$component")
   IFS=',' read -r -a system_list <<< "$systems"
-  
+
   for system in "${system_list[@]}"; do
     system="$(trim "$system")"
     [[ -z "$system" ]] && continue
