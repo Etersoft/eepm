@@ -24,6 +24,26 @@ have_patool()
 	[ -n "$use_patool" ] || is_command patool
 }
 
+# Resolve HAVE_7Z to an actually installed 7-zip binary. Returns 1 if none found.
+resolve_7z()
+{
+	is_command $HAVE_7Z && return 0
+	# p7zip (deprecated, does not preserve permissions)
+	is_command 7z && { HAVE_7Z='7z' ; return 0 ; }
+	# reduced p7-zip
+	is_command 7zr && { HAVE_7Z='7zr' ; return 0 ; }
+	# 7-zip Standalone/Alternative
+	is_command 7za && { HAVE_7Z='7za' ; return 0 ; }
+	return 1
+}
+
+# Ensure a 7-zip backend is available. Used by operations patool can't handle
+# (exe/dll/squashfs/...): with patool backend HAVE_7Z is not validated upfront.
+assure_7z()
+{
+	[ -n "$HAVE_7Z" ] || fatal "Could not find 7-zip backend, required for this archive type. Please install p7zip package and retry."
+}
+
 set_backend()
 {
 	# prefer 7zz (official 7-Zip) over 7z (p7zip, deprecated since 2021)
@@ -34,24 +54,16 @@ set_backend()
 
 	[ -n "$use_patool" ] && [ -n "$use_7z" ] && fatal "Don't use --use-7z and --use-patool simulateously."
 
+	# Resolve HAVE_7Z to a real binary (empty if none). Needed even with patool
+	# backend, since some types are handled only by 7z (see assure_7z).
+	resolve_7z || HAVE_7Z=''
+
 	if [ -n "$use_7z" ] || ! have_patool ; then
 		# TODO: try install patool and p7zip
-		if ! is_command $HAVE_7Z ; then
-			# p7zip (deprecated, does not preserve permissions)
-			is_command 7z && HAVE_7Z='7z'
-		fi
-		if ! is_command $HAVE_7Z ; then
-			# reduced p7-zip
-			is_command 7zr && HAVE_7Z='7zr'
-		fi
-		if ! is_command $HAVE_7Z ; then
-			# 7-zip Standalone/Alternative
-			is_command 7za && HAVE_7Z='7za'
-		fi
-		is_command $HAVE_7Z || fatal "Could not find any patool or 7-zip backend. Please install p7zip package and retry."
+		[ -n "$HAVE_7Z" ] || fatal "Could not find any patool or 7-zip backend. Please install p7zip package and retry."
 	fi
 	# note: -y is passed explicitly in extract commands, not here
-	[ -z "$quiet" ] || HAVE_7Z="$HAVE_7Z -bb0 -bd -bso0"
+	[ -n "$quiet" ] && [ -n "$HAVE_7Z" ] && HAVE_7Z="$HAVE_7Z -bb0 -bd -bso0"
 }
 
 

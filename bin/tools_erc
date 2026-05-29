@@ -93,6 +93,7 @@ extract_7z_to_subdir()
 {
 	local arc="$1"
 	local subdir="$2"
+	assure_7z
 	mkdir -p "$subdir" && cd "$subdir" || fatal
 	docmd $HAVE_7Z x -y $(get_7z_snld) "$arc"
 }
@@ -440,6 +441,7 @@ list_archive()
 
 	# TODO: move to patool
 	if [ "$(get_archive_type "$arc" 2>/dev/null)" = "exe" ] ; then
+		assure_7z
 		docmd $HAVE_7Z l "$arc" || fatal
 		return
 	fi
@@ -466,6 +468,7 @@ test_archive()
 
 	# TODO: move to patool
 	if [ "$(get_archive_type "$arc" 2>/dev/null)" = "exe" ] ; then
+		assure_7z
 		docmd $HAVE_7Z t "$arc" || fatal
 		return
 	fi
