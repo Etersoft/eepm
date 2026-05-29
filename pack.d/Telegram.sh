@@ -50,13 +50,14 @@ cat <<EOF | create_file /usr/share/applications/$desktopname.desktop
 Version=1.0
 Name=Telegram Desktop
 Comment=Official desktop version of Telegram messaging app
-Exec=$PRODUCT -- %u
+Exec=telegram-desktop -- %u
 Icon=$iconname
 Type=Application
 Categories=Chat;Network;InstantMessaging;Qt;
 MimeType=x-scheme-handler/tg;
 Keywords=tg;chat;im;messaging;messenger;sms;tdesktop;
 X-GNOME-UsesNotifications=true
+StartupWMClass=TelegramDesktop
 EOF
 
 erc pack $PKGNAME.tar opt/$TPRODUCT usr
