@@ -14,7 +14,7 @@
   before_script:
     - ./bin/epm -y repo set etersoft
     - ./bin/epm update
-    - ./bin/epm -y install wget glibc-pthread file
+    - ./bin/epm -y install wget glibc-pthread file squashfs-tools fontconfig
     - mkdir -p /var/lib/eepm
     - cp ipfs/eget-ipfs-db.txt /var/lib/eepm/eget-ipfs-db.txt
 
@@ -22,7 +22,7 @@
   before_script:
     - ./bin/epm -y repo set etersoft
     - ./bin/epm update
-    - ./bin/epm -y install wget glibc-pthread file
+    - ./bin/epm -y install wget glibc-pthread file squashfs-tools fontconfig
     - mkdir -p /var/lib/eepm
 
 .test_debian_ipfs: &test_debian_ipfs
