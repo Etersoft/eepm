@@ -10,7 +10,7 @@ download_all_p11:
   before_script:
     - ./bin/epm -y repo set etersoft
     - ./bin/epm update
-    - ./bin/epm -y install wget glibc-pthread file patool
+    - ./bin/epm -y install wget glibc-pthread file patool squashfs-tools fontconfig
     - ./bin/epm play --auto --ipfs kubo
   script:
     - mkdir -p ipfs/logs ipfs/errors
