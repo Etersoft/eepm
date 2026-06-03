@@ -8,7 +8,7 @@ EPM_VERSION=$("$CI_PROJECT_DIR/bin/epm" --version --short | cut -d. -f1,2)
 echo "EPM version: $EPM_VERSION"
 
 # repo vars
-IPFS_REPO_URL="https://gitlab.eterfund.ru/etersoft/epm-play-ci-results.git"
+IPFS_REPO_URL="https://gitlab.eterfund.ru/EPM/epm-play-ci-results.git"
 WORKDIR="ipfs-results"
 
 # check
@@ -55,7 +55,7 @@ git commit -m "IPFS DB update (pipeline $CI_PIPELINE_ID)" || {
 }
 
 # push to version branch
-git remote set-url origin "https://builder-robot:${CI_PUSH_TOKEN}@gitlab.eterfund.ru/etersoft/epm-play-ci-results.git"
+git remote set-url origin "https://builder-robot:${CI_PUSH_TOKEN}@gitlab.eterfund.ru/EPM/epm-play-ci-results.git"
 git push origin "${EPM_VERSION}" 2>/dev/null
 
 echo "=== IPFS DB and download log's published ==="
