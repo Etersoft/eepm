@@ -30,6 +30,7 @@ erc --here -C $BASEDIR unpack $TAR || fatal
 
 # strip architecture, OS and build type suffix from PRODUCT name
 PRODUCT="${PRODUCT/-x86_64/}"
+PRODUCT="${PRODUCT/-x86-64/}"
 PRODUCT="${PRODUCT/-aarch64/}"
 PRODUCT="${PRODUCT/-arm64/}"
 PRODUCT="${PRODUCT/-x64/}"
