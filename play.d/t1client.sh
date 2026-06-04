@@ -10,19 +10,9 @@ URL="https://confluence.trassir.com/pages/viewpage.action?pageId=36865118"
 
 warn_version_is_not_supported
 
-case "$(epm print info -p)" in
-  rpm)
-      PKGURL="https://ncloud.dssl.ru/s/SF7LcjPXa6oLbAN/download/t1client-standalone-13209.rpm"
-      ;;
-  *)
-      PKGURL="https://ncloud.dssl.ru/s/QEo4jzTD39KYTze/download/t1client-standalone-4.7.5.0-1269280-Release.deb"
-      ;;
-esac
-
-case "$(epm print info -s)" in
-  alt)
-      PKGURL="https://ncloud.dssl.ru/s/QEo4jzTD39KYTze/download/t1client-standalone-4.7.5.0-1269280-Release.deb"
-      ;;
-esac
+# The upstream rpm advertises a large obsolete runtime stack as external
+# dependencies on rpm-based systems. The deb bundle repacks more cleanly after
+# trimming legacy helper trees in repack.d, so use it on every target.
+PKGURL="https://ncloud.dssl.ru/public.php/dav/files/WQqtPwda5KNyHzK"
 
 install_pkgurl
