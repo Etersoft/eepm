@@ -4,11 +4,13 @@ PKGNAME=glds
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="Guardant License Server from the official site"
-URL="https://www.guardant.ru/support/users/download/1223/"
+URL="https://www.guardant.ru/support/users/server/"
 
 . $(dirname $0)/common.sh
 
-[ "$VERSION" = "*" ] && VERSION="$(basename "$(eget --list --latest https://download.guardant.ru/LM/Linux/ '*/')")"
+base_url="https://ftp.guardant.ru/LM/Linux"
+
+[ "$VERSION" = "*" ] && VERSION="$(basename "$(eget --list --latest "$base_url/" '*/')")"
 [ -n "$VERSION" ] || fatal "Can't get version."
 
 shortarch=x64
@@ -28,7 +30,8 @@ case "$pkgtype" in
         ;;
 esac
 
-PKGURL="$(eget --list --latest https://download.guardant.ru/LM/Linux/$VERSION/$shortarch/ "$file")"
+PKGURL="$(eget --list --latest "$base_url/$VERSION/" "$file")"
+[ -n "$PKGURL" ] || PKGURL="$(eget --list --latest "$base_url/$VERSION/$shortarch/" "$file")"
 
 install_pack_pkgurl "$VERSION" || exit
 
