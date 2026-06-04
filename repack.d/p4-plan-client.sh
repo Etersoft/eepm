@@ -3,13 +3,15 @@
 BUILDROOT="$1"
 SPEC="$2"
 
-PRODUCT=hansoft
-PRODUCTCUR=Hansoft
+PRODUCT=p4-plan-client
+PRODUCTCUR=HelixPlan
+PRODUCTDIR=/opt/HelixPlan
 
 . $(dirname $0)/common.sh
 
+subst "s|^Name:.*|Name: p4-plan-client|" "$SPEC"
+
 add_bin_link_command $PRODUCT $PRODUCTDIR/$PRODUCTCUR
-add_bin_link_command $PRODUCTCUR $PRODUCT
 
 cat <<EOF |create_file /usr/share/applications/$PRODUCT.desktop
 [Desktop Entry]
@@ -18,7 +20,8 @@ Categories=Development;Office;
 Exec=$PRODUCT -Url %u
 Icon=$PRODUCT
 MimeType=x-scheme-handler/hansoft;
-Name=Hansoft Client
+Name=P4 Plan Client
+Comment=P4 Plan client
 Terminal=false
 Type=Application
 Version=1.0
@@ -34,7 +37,7 @@ Name=Log out & exit all
 X-Hansoft-TaskType=Command
 EOF
 
-# copied from ~.local/share/icons/se.hansoft.Exe-PMClient_7B6AC2CBB8795205B8E6DC09CB75B5E6.png
-i=256
-install_file ipfs://QmbYM3wS2qXtWbUg9mASMPoJmgfL6smny1m3J4PfuiDtJR /usr/share/icons/hicolor/${i}x${i}/apps/$PRODUCT.png
-
+# Upstream .deb does not ship a standalone icon file, so use the current
+# official product favicon published in Perforce docs.
+i=512
+install_file https://help.perforce.com/hansoft/current/Skins/Favicons/favicon-p4-plan.png /usr/share/icons/hicolor/${i}x${i}/apps/$PRODUCT.png
