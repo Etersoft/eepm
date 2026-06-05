@@ -1,0 +1,121 @@
+#!/bin/sh
+#
+# Copyright (C) 2026  Etersoft
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+epm_play_update_tray()
+{
+    local autostart_mode=""
+    local remove_autostart_mode=""
+    local help_mode=""
+
+    while [ -n "$1" ] ; do
+        case "$1" in
+            -h|--help)
+                help_mode="1"
+                shift
+                ;;
+            -a|--autostart)
+                autostart_mode="1"
+                shift
+                ;;
+            -r|--remove-autostart)
+                remove_autostart_mode="1"
+                shift
+                ;;
+            *)
+                echo "Unknown option: $1" >&2
+                echo "Run 'epm play-update-tray --help' for help." >&2
+                return 1
+                ;;
+        esac
+    done
+
+    if [ -n "$help_mode" ] ; then
+        message '
+Usage: epm play-update-tray [options]
+
+System tray applet for checking and applying epm play updates.
+
+Options:
+  -a, --autostart         Configure the applet to run automatically on login
+  -r, --remove-autostart  Remove the autostart configuration
+  -h, --help              Show this help message
+'
+        return 0
+    fi
+
+    local autostart_dir="$HOME/.config/autostart"
+    local desktop_file="$autostart_dir/epm-play-update-tray.desktop"
+
+    if [ -n "$autostart_mode" ] ; then
+        mkdir -p "$autostart_dir"
+        cat <<EOF >"$desktop_file"
+[Desktop Entry]
+Type=Application
+Name=EPM Update Tray
+Comment=System tray applet for epm play updates
+Exec=epm play-update-tray
+Icon=system-software-update
+Terminal=false
+Categories=System;Monitor;
+EOF
+        echo "Autostart configured: $desktop_file"
+        return 0
+    fi
+
+    if [ -n "$remove_autostart_mode" ] ; then
+        if [ -f "$desktop_file" ] ; then
+            rm -f "$desktop_file"
+            echo "Autostart configuration removed."
+        else
+            echo "No autostart configuration found."
+        fi
+        return 0
+    fi
+
+    if ! python3 -c "import PySide6" 2>/dev/null && \
+       ! python3 -c "import PyQt6" 2>/dev/null ; then
+        echo "Error: PySide6 or PyQt6 is required to run the tray applet." >&2
+        if [ -t 0 ] ; then
+            printf "Would you like to install python3-module-pyside6 now? [y/N]: "
+            read -r answer
+            case "$answer" in
+                [yY]|[yY][eE][sS])
+                    epm install python3-module-pyside6 || return 1
+                    ;;
+                *)
+                    echo "Please install python3-module-pyside6 manually." >&2
+                    return 1
+                    ;;
+            esac
+        else
+            echo "Please install python3-module-pyside6 to run the tray applet." >&2
+            return 1
+        fi
+    fi
+
+    export EPM_BIN
+    if [ -x "$PROGDIR/epm" ] ; then
+        EPM_BIN="$PROGDIR/epm"
+    else
+        EPM_BIN="epm"
+    fi
+
+    local tray_script="$SHAREDIR/epm-play_update_tray.py"
+    [ -r "$tray_script" ] || tray_script="$PROGDIR/epm-play_update_tray.py"
+    python3 "$tray_script"
+}

@@ -521,6 +521,10 @@ check_command()
         epm_cmd=play
         direct_args=1
         ;;
+    play-update-tray)         # HELPCMD: system tray applet for epm play updates
+        epm_cmd=play_update_tray
+        direct_args=1
+        ;;
     create-fake)             # HELPCMD: create fake rpm
         epm_cmd=create_fake
         direct_args=1
