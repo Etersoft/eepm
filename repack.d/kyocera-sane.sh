@@ -6,8 +6,16 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
-# TODO: broken
-# 40-scanner-permissions.rules
+# The vendor's 40-scanner-permissions.rules sets MODE:="0666" on EVERY USB device,
+# making all USB devices world-writable. Drop it (it ships under both /etc and /lib
+# depending on deb/rpm source) and replace it with a rule scoped to Kyocera devices
+# that grants access to the active local user (uaccess) and the scanner group.
+remove_file /etc/udev/rules.d/40-scanner-permissions.rules
+remove_file /lib/udev/rules.d/40-scanner-permissions.rules
+cat <<EOF | create_file /lib/udev/rules.d/40-scanner-permissions.rules
+# Kyocera SANE scanner USB permissions
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTRS{idVendor}=="0482", GROUP="scanner", MODE="0664", TAG+="uaccess", ENV{libsane_matched}="yes"
+EOF
 
 cat <<EOF | create_file /etc/sane.d/dll.d/kyocera
 # dll.conf snippet for kyocera
