@@ -38,17 +38,22 @@ PRODUCT="${PRODUCT/-linux64/}"
 PRODUCT="${PRODUCT/-Linux/}"
 PRODUCT="${PRODUCT/-linux/}"
 PRODUCT="${PRODUCT/-stable/}"
+# same suffixes with underscore separator (e.g. ElegooSlicer_Linux_V1.5.0.7)
+PRODUCT="${PRODUCT/_x86_64/}"
+PRODUCT="${PRODUCT/_Linux/}"
+PRODUCT="${PRODUCT/_linux/}"
 
 # try separate VERSION from PRODUCT
 if [ -z "$VERSION" ] ; then
-    # match version with optional pre-release suffix like -b1, -rc1, -beta
-    VERSION="$(echo "$PRODUCT" | grep -o -P "[-_.](v?[0-9]+(?:\.[0-9]+)*(?:-(?:alpha|beta|rc|b|a|pre|dev|nightly)[0-9]*)?)" | head -n1 | sed -e 's|^[-_.]||' -e 's|^v||')"
-    [ -n "$VERSION" ] && PRODUCT="$(echo "$PRODUCT" | sed -e "s|[-_.]$VERSION.*||")"
-    [ -n "$VERSION" ] && VERSION="$(echo "$VERSION" | sed -e 's|^v||')"
+    # match version with optional v/V prefix and pre-release suffix like -b1, -rc1, -beta
+    vermatch="$(echo "$PRODUCT" | grep -o -P "[-_.][vV]?[0-9]+(?:\.[0-9]+)*(?:-(?:alpha|beta|rc|b|a|pre|dev|nightly)[0-9]*)?" | head -n1)"
+    # strip the whole matched part (separator and v prefix included) from PRODUCT
+    [ -n "$vermatch" ] && PRODUCT="$(echo "$PRODUCT" | sed -e "s|$vermatch.*||")"
+    [ -n "$vermatch" ] && VERSION="$(echo "$vermatch" | sed -e 's|^[-_.]||' -e 's|^[vV]||')"
 else
     # VERSION is already known, but PRODUCT may still contain it — strip version from PRODUCT
-    local_ver="$(echo "$PRODUCT" | grep -o -P "[-_.](v?[0-9]+(?:\.[0-9]+)*)" | head -n1 | sed -e 's|^[-_.]||' -e 's|^v||')"
-    [ -n "$local_ver" ] && PRODUCT="$(echo "$PRODUCT" | sed -e "s|[-_.]$local_ver.*||")"
+    vermatch="$(echo "$PRODUCT" | grep -o -P "[-_.][vV]?[0-9]+(?:\.[0-9]+)*" | head -n1)"
+    [ -n "$vermatch" ] && PRODUCT="$(echo "$PRODUCT" | sed -e "s|$vermatch.*||")"
 fi
 
 
