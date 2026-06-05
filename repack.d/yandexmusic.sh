@@ -22,6 +22,10 @@ add_bin_link_command yandex-music $PRODUCT
 
 subst "s|^Exec=.*|Exec=$PRODUCT %U|" usr/share/applications/yandexmusic.desktop
 
+# the original .desktop has only Categories=Audio; which is not a main XDG menu category,
+# so the entry does not appear in the menu. Add the AudioVideo main category.
+subst "s|^Categories=.*|Categories=AudioVideo;Audio;|" usr/share/applications/yandexmusic.desktop
+
 
 
 add_electron_deps
