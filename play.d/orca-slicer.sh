@@ -11,5 +11,5 @@ URL="https://github.com/SoftFever/OrcaSlicer"
 [ "$VERSION" = "*" ] && VERSION="[0-9]*[0-9]"
 PKGURL="$(get_github_url "https://github.com/SoftFever/OrcaSlicer/" "OrcaSlicer_Linux_V${VERSION}.AppImage")"
 
-install_pack_pkgurl
+install_pkgurl
 
