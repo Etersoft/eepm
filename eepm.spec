@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.63
+Version: 3.64.64
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -181,6 +181,47 @@ EOF
 # metapackage, no files
 
 %changelog
+* Sat Jun 06 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.64-alt1
+- epm play opencode-desktop: use distinct package name to prevent confusion (eterbug #17865)
+- epm play xppen: scrape vendor page for the latest .deb instead of hardcoded id
+- epm play: add operagx (Opera GX gaming browser)
+- epm play spo-anketa: switch to native rpm/deb 1.3.1
+- epm repack: add opera-gx-stable (mirror of opera-stable)
+- epm play: added flclashx (eterbug #19089)
+- epm play discord: keep bootstrap (eterbug #19092)
+- epm play.d/common.sh: --remove: pass multi-package PKGNAME as separate args
+- epm play.d/common.sh: check_for_product_update: pass action context, handle missing app-versions
+- epm play saby: install nss-utils, force --repack, ship SabyCenter.service systemd unit
+- epm pack Telegram: fix Exec= to telegram-desktop, add StartupWMClass
+- erc: check for 7z backend availability before using it for unsupported types
+- epm play: add minimax-agent (unofficial native Linux client)
+- epm repo mirrors: add Deferred mirror list
+- epm pack gosplugin: don't require unzip (eterbug #17865)
+- epm play forticlient-vpn: update version (eterbug #17865)
+- epm pack fluffychat: get version from URL (etetbug #17865)
+- epm pack generic-appimage: strip -x86-64 arch suffix from product name
+- epm play: add kulibin (digital educational environment AppImage)
+- epm play: add github-store (open-source app store for GitHub releases)
+- epm repack github-store: add /usr/bin launcher and install desktop file
+- epm repack yandexmusic: add AudioVideo main category so the launcher shows in menu
+- epm repack kyocera-sane: replace insecure 40-scanner-permissions.rules
+- epm pack generic-appimage: strip _Linux suffix and recognize V-prefixed version
+- epm repack ElegooSlicer: provide libbz2.so.1.0 compat for ALT
+- epm play: add elegooslicer (OrcaSlicer fork for Elegoo printers)
+- epm play orca-slicer: switch to install_pkgurl, drop redundant pack.d script
+- epm play: added floorp (eterbug #19131)
+- erc: fall back to 7z for tar.* when native (de)compressor is missing
+- epm play codex-app: fix work on Wayland
+- epm play: drop EOL gemini-cli (eterbug #19128)
+- epm play: added antigravity-cli (eterbug #19128)
+- epm play guardant: fix PGKURL (eterbug #17865)
+- epm repack tsukimi: update icon URL (eterbug #17865)
+- epm play manuskript: fix install (eterbug #17865)
+- epm play pantum: update universal driver archive
+- epm repack clion: fix requires (eterbug #17865)
+- epm repack cloudflare-warp: fix install (eterbug #17865)
+- epm repack netbeans: fix requires (eterbug #17865)
+
 * Thu May 14 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.63-alt1
 - epm pack torrserver: dereference symlink and quote heredoc to fix install
 - epm play: disable obsoleted sbis-plugin
