@@ -267,20 +267,40 @@ extract_by_type()
 	# use subdir if there is no subdir in archive
 	case "$type" in
 		tar.gz|tgz)
-			is_command gzip || fatal "Could not find gzip package. Please install gzip package and retry."
-			extract_command "tar -xhzf" "$arc"
+			if is_command gzip ; then
+				extract_command "tar -xhzf" "$arc"
+			elif [ -n "$HAVE_7Z" ] ; then
+				extract_7z_stream "$arc"
+			else
+				fatal "Could not find gzip package. Please install gzip package and retry."
+			fi
 			;;
 		tar.xz|txz|tar.lzma)
-			is_command xz || fatal "Could not find xz package. Please install xz package and retry."
-			extract_command "tar -xhJf" "$arc"
+			if is_command xz ; then
+				extract_command "tar -xhJf" "$arc"
+			elif [ -n "$HAVE_7Z" ] ; then
+				extract_7z_stream "$arc"
+			else
+				fatal "Could not find xz package. Please install xz package and retry."
+			fi
 			;;
 		tar.zst)
-			is_command zstd || fatal "Could not find zstd package. Please install zstd package and retry."
-			extract_command "tar -I zstd -xhf" "$arc"
+			if is_command zstd ; then
+				extract_command "tar -I zstd -xhf" "$arc"
+			elif [ -n "$HAVE_7Z" ] ; then
+				extract_7z_stream "$arc"
+			else
+				fatal "Could not find zstd package. Please install zstd package and retry."
+			fi
 			;;
 		tar.bz2|tbz2)
-			is_command bunzip2 || fatal "Could not find bzip2 package. Please install bzip2 package and retry."
-			extract_command "tar -xhjf" "$arc"
+			if is_command bunzip2 ; then
+				extract_command "tar -xhjf" "$arc"
+			elif [ -n "$HAVE_7Z" ] ; then
+				extract_7z_stream "$arc"
+			else
+				fatal "Could not find bzip2 package. Please install bzip2 package and retry."
+			fi
 			;;
 		tar)
 			extract_command "tar -xhf" "$arc"

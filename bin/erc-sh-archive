@@ -179,6 +179,13 @@ extract_tar_stdin() {
     fi
 }
 
+# Decompress a tar.* archive with 7z and pipe the tar into tar/7z.
+# Used as a fallback when the native (de)compressor is not installed.
+extract_7z_stream() {
+    local archive="$1"
+    docmd $HAVE_7Z x -so "$archive" | extract_tar_stdin
+}
+
 extract_command() {
     local cmd="$1"
     local archive="$2"
@@ -186,7 +193,7 @@ extract_command() {
     if is_command tar; then
         docmd $cmd "$archive"
     else
-        docmd $HAVE_7Z x -so "$archive" | extract_tar_stdin
+        extract_7z_stream "$archive"
     fi
 }
 
