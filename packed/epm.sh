@@ -40,7 +40,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.63"
+export EPMVERSION="3.64.64"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -14152,6 +14152,11 @@ __epm_repack_to_arch()
 # File bin/epm-repack-deb:
 
 
+__need_skip_dh_strip_nondeterminism()
+{
+    [ -f "$(dirname "$1")/.eepm_skip_deb_dh_strip_nondeterminism" ]
+}
+
 __epm_repack_to_deb()
 {
     local pkg="$1"
@@ -14196,6 +14201,16 @@ __epm_repack_to_deb()
             warning 'Can'\''t find alien generated directory for $pkg'
             cd - >/dev/null
             return 1
+        fi
+
+        # Some repack scripts need to keep bundled archives byte-identical.
+        # The opt-in marker is written by skip_deb_dh_strip_nondeterminism().
+        if __need_skip_dh_strip_nondeterminism "$abspkg" ; then
+            cat >>"$debsrcdir"debian/rules <<'EOF'
+
+override_dh_strip_nondeterminism:
+	@echo "Skipping dh_strip_nondeterminism for this repack"
+EOF
         fi
 
         # inject original depends into debian/control
@@ -15740,10 +15755,19 @@ esac
 
 # File bin/epm-repomirrors:
 
+__is_deferred_repo()
+{
+    epm --quiet repo list 2>/dev/null | grep -q "Etersoft/Sisyphus/Deferred/"
+}
+
 __load_alt_mirror_db()
 {
     [ -n "$__ALT_MIRROR_DB" ] && return
     local mirror_file="$CONFIGDIR/mirrors-alt.list"
+    if __is_deferred_repo ; then
+        mirror_file="$CONFIGDIR/mirrors-deferred.list"
+        __MIRROR_TEST_PATH="Etersoft/Sisyphus/Deferred/x86_64/base/pkglist.classic.xz"
+    fi
     if [ -f "$mirror_file" ] ; then
         __ALT_MIRROR_DB="$(grep -v '^#' "$mirror_file" | grep -v '^$')"
         # visible mirrors: everything before "# Legacy" line
@@ -24917,6 +24941,7 @@ extract_7z_to_subdir()
 {
 	local arc="$1"
 	local subdir="$2"
+	assure_7z
 	mkdir -p "$subdir" && cd "$subdir" || fatal
 	docmd $HAVE_7Z x -y $(get_7z_snld) "$arc"
 }
@@ -25090,20 +25115,40 @@ extract_by_type()
 	# use subdir if there is no subdir in archive
 	case "$type" in
 		tar.gz|tgz)
-			is_command gzip || fatal "Could not find gzip package. Please install gzip package and retry."
-			extract_command "tar -xhzf" "$arc"
+			if is_command gzip ; then
+				extract_command "tar -xhzf" "$arc"
+			elif [ -n "$HAVE_7Z" ] ; then
+				extract_7z_stream "$arc"
+			else
+				fatal "Could not find gzip package. Please install gzip package and retry."
+			fi
 			;;
 		tar.xz|txz|tar.lzma)
-			is_command xz || fatal "Could not find xz package. Please install xz package and retry."
-			extract_command "tar -xhJf" "$arc"
+			if is_command xz ; then
+				extract_command "tar -xhJf" "$arc"
+			elif [ -n "$HAVE_7Z" ] ; then
+				extract_7z_stream "$arc"
+			else
+				fatal "Could not find xz package. Please install xz package and retry."
+			fi
 			;;
 		tar.zst)
-			is_command zstd || fatal "Could not find zstd package. Please install zstd package and retry."
-			extract_command "tar -I zstd -xhf" "$arc"
+			if is_command zstd ; then
+				extract_command "tar -I zstd -xhf" "$arc"
+			elif [ -n "$HAVE_7Z" ] ; then
+				extract_7z_stream "$arc"
+			else
+				fatal "Could not find zstd package. Please install zstd package and retry."
+			fi
 			;;
 		tar.bz2|tbz2)
-			is_command bunzip2 || fatal "Could not find bzip2 package. Please install bzip2 package and retry."
-			extract_command "tar -xhjf" "$arc"
+			if is_command bunzip2 ; then
+				extract_command "tar -xhjf" "$arc"
+			elif [ -n "$HAVE_7Z" ] ; then
+				extract_7z_stream "$arc"
+			else
+				fatal "Could not find bzip2 package. Please install bzip2 package and retry."
+			fi
 			;;
 		tar)
 			extract_command "tar -xhf" "$arc"
@@ -25226,7 +25271,7 @@ extract_archive()
 		return $res
 	fi
 
-	tdir=$(mktemp -d $(pwd)/UXXXXXXXX)
+	tdir=$(mktemp -d "$(pwd)/UXXXXXXXX")
 	local res
 	if have_patool ; then
 		docmd patool $verbose extract --outdir "$tdir" "$arc" "$@"
@@ -25264,6 +25309,7 @@ list_archive()
 
 	# TODO: move to patool
 	if [ "$(get_archive_type "$arc" 2>/dev/null)" = "exe" ] ; then
+		assure_7z
 		docmd $HAVE_7Z l "$arc" || fatal
 		return
 	fi
@@ -25290,6 +25336,7 @@ test_archive()
 
 	# TODO: move to patool
 	if [ "$(get_archive_type "$arc" 2>/dev/null)" = "exe" ] ; then
+		assure_7z
 		docmd $HAVE_7Z t "$arc" || fatal
 		return
 	fi
