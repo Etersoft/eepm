@@ -22,6 +22,7 @@ for i in glibc-nss glibc-gconv-modules \
          libgamemodeauto0 \
          vkBasalt \
          mangohud \
+         libfreetype \
          $(epmqp --short libnss | grep "^libnss-" | grep -v "libnss-fallback") \
          $(epmqp --short xorg-dri | grep "^xorg-dri-")
 do
