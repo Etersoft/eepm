@@ -417,6 +417,86 @@ get_github_tag()
     echo "$version"
 }
 
+# GitLab analogue of get_github_release_info: fetch releases JSON via GitLab API.
+get_gitlab_release_info()
+{
+    local url="$1"
+    local flag="$2"
+    local path=${url#https://gitlab.com/}
+    path="${path%/}"
+    # url-encode the project path (group/subgroup/project -> group%2Fsubgroup%2Fproject)
+    local enc_path
+    enc_path="$(echo "$path" | sed -e 's|/|%2F|g')"
+
+    local api_url result
+    if [ "$flag" = "latest" ] ; then
+        api_url="https://gitlab.com/api/v4/projects/$enc_path/releases?per_page=1"
+    else
+        api_url="https://gitlab.com/api/v4/projects/$enc_path/releases?per_page=100"
+    fi
+
+    result="$(fetch_url "$api_url")" || return 1
+    [ -n "$result" ] || return 1
+    echo "$result"
+}
+
+__get_gitlab_download_urls()
+{
+    epm --inscript --quiet tool json -b | grep '"direct_asset_url"' | sed -e 's|.*[[:space:]]||' -e 's|"||g'
+}
+
+# get_gitlab_url <https://gitlab.com/group/project> <asset_name_or_glob>
+get_gitlab_url()
+{
+    local url="$1"
+    local asset_name="$2"
+    local project=${url%/}
+
+    # If asset_name has no globs, try the direct release download URL without API call
+    if ! echo "$asset_name" | grep -q '[*?]' ; then
+        local tag direct
+        for tag in "v$VERSION" "$VERSION" ; do
+            direct="$project/-/releases/$tag/downloads/$asset_name"
+            eget --check-url "$direct" 2>/dev/null && echo "$direct" && return
+        done
+    fi
+
+    local wc info result=''
+    wc="$(__convert_glob__to_regexp "$asset_name")"
+    info="$(get_gitlab_release_info "$url" "latest")" && \
+        result="$(echo "$info" | __get_gitlab_download_urls | grep -E "$wc" | head -n1)"
+    echo "$result"
+}
+
+# get_gitlab_tag <https://gitlab.com/group/project> [version_filter_regexp]
+# Returns the latest release version. With a filter, returns the latest release
+# whose version matches it (e.g. to skip pre-releases by a project convention).
+get_gitlab_tag()
+{
+    local url="$1"
+    local filter="$2"
+    local info item val version
+
+    if [ -n "$filter" ] ; then
+        info="$(get_gitlab_release_info "$url")" || \
+            fatal "Can't get release info from GitLab for $url"
+    else
+        info="$(get_gitlab_release_info "$url" "latest")" || \
+            fatal "Can't get release info from GitLab for $url"
+    fi
+
+    for item in $(seq 0 100) ; do
+        val="$(echo "$info" | parse_json_value "[$item,\"tag_name\"]")"
+        [ -n "$val" ] || break
+        version="$(echo "$val" | grep -oP '[0-9]+(\.[0-9]+)*(-[0-9]+)?' | head -n1)"
+        [ -n "$version" ] || continue
+        [ -n "$filter" ] && { echo "$version" | grep -qE "$filter" || continue ; }
+        echo "$version"
+        return
+    done
+    fatal "Can't get tag from GitLab. Check network or use epm play <app>=<version>"
+}
+
 print_product_alt()
 {
     [ -n "$1" ] || return
