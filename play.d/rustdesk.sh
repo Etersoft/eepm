@@ -11,23 +11,19 @@ URL="https://github.com/rustdesk/rustdesk/"
 arch=$(epm print info -a)
 pkgtype=deb
 
+# get the latest stable tag via the API. eget --latest/--second-latest matched
+# assets, but the nightly prerelease also ships rustdesk-<ver>-<arch>.deb files
+# (1.4.7 and 1.4.6), so it wrongly picked the nightly 1.4.6 deb.
+[ "$VERSION" = "*" ] && VERSION="$(get_github_tag "$URL")"
+
 if [ "$VERSION" = "1.1.9" ] ; then
-    #rustdesk-1.1.9-raspberry-armhf.deb
     #rustdesk-1.1.9.deb
-    #[ "$VERSION" = "*" ] && VERSION="[0-9].[0-9].[0-9]"
-    #[ "$arch" = "armhf" ] && VERSION="$VERSION-raspberry-armhf"
-    MASK="$PKGNAME-$VERSION.$pkgtype"
+    asset="$PKGNAME-$VERSION.$pkgtype"
 else
-    MASK="$PKGNAME-$VERSION-$arch.$pkgtype"
+    asset="$PKGNAME-$VERSION-$arch.$pkgtype"
 fi
 
-PKGURL=$(eget --list --latest https://github.com/rustdesk/rustdesk/releases "$MASK")
-
-# 
-if [ "$VERSION" = "*" ] && echo "$PKGURL" | grep -q "nightly" ; then
-    echo "Skipping nightly $PKGURL ..."
-    PKGURL=$(eget --list --second-latest https://github.com/rustdesk/rustdesk/releases "$MASK")
-fi
+PKGURL="$(get_github_url "$URL" "$asset")"
 
 install_pkgurl || exit
 
