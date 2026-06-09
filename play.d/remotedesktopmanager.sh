@@ -13,7 +13,8 @@ debarch="$(epm print info --debian-arch)"
 rpmarch="$(epm print info -a)"
 
 if [ "$VERSION" = "*" ] ; then
-    VERSION=$(eget -O- https://devolutions.net/remote-desktop-manager/release-notes/linux/ | grep -oP -m 1 '(?<=Version )\d+\.\d+\.\d+\.\d+' )
+    VERSION=$(fetch_url https://devolutions.net/remote-desktop-manager/release-notes/linux/ | sed -n 's|.*data-rn-version="\([0-9.]*\)".*|\1|p' | head -n 1)
+    [ -n "$VERSION" ] || fatal "Can't get latest version"
 fi
 
 case "$pkgtype" in
@@ -28,4 +29,3 @@ esac
 PKGURL="https://cdn.devolutions.net/download/Linux/RDM/${VERSION}/${file}"
 
 install_pkgurl
-
