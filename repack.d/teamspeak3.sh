@@ -28,7 +28,13 @@ pack_file /usr/share/applications/$PRODUCT.desktop
 
 install_file "ipfs://QmX2qYLUXLpGc18U3MmDL1mg1EydWdGUpPGaFCZ2tWbH6x" /usr/share/pixmaps/$PRODUCT.png
 
-# hack, todo: update libevent in p10
+# The WebP Qt image plugin is optional and only pulls an obsolete libwebp.so.6
+# soname. Drop it instead of downloading foreign libraries in pack.d.
+remove_file $PRODUCTDIR/imageformats/libqwebp.so
+
+# Older systems can have another libevent 2.1 soname. Patch it only when
+# libevent is already installed in the build environment; otherwise leave
+# libevent-2.1.so.7 as a package dependency.
 get_libevent()
 {
     local libdir
@@ -38,9 +44,7 @@ get_libevent()
 }
 
 libevent="$(get_libevent)"
-[ -n "$libevent" ] || fatal "libevent is missed, install it before"
-
-if [ "$libevent" != "libevent-2.1.so.7" ] && epm assure patchelf ; then
+if [ -n "$libevent" ] && [ "$libevent" != "libevent-2.1.so.7" ] && epm assure patchelf ; then
     a= patchelf --replace-needed libevent-2.1.so.7 $libevent .$PRODUCTDIR/libQt5WebEngineCore.so.5
     # Fix libquazip1-qt5.so name
     #patchelf --replace-needed libquazip.so libquazip1-qt5.so.1.0.0 .$PRODUCTDIR/ts3client_linux_amd64
@@ -51,4 +55,3 @@ remove_file $PRODUCTDIR/platforms/libqwayland-generic.so
 remove_file $PRODUCTDIR/platforms/libqwayland-egl.so
 remove_file $PRODUCTDIR/platforms/libqwayland-xcomposite-glx.so
 remove_file $PRODUCTDIR/platforms/libqwayland-xcomposite-egl.so
-
