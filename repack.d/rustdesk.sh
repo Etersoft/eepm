@@ -45,3 +45,7 @@ subst "s|^Categories.*|Categories=GNOME;GTK;Network;RemoteAccess;|" usr/share/ap
 add_bin_link_command
 
 add_unirequires curl
+
+# since 1.4.6 librustdesk.so dlopens libxdo (libxdo.so.4 / libxdo.so.3) instead of
+# linking it, so it is missed by autodeps, and input does not work without it
+add_requires 'libxdo.so.3()(64bit)'
