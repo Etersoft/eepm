@@ -20,4 +20,5 @@ md5hash=$(printf '%s%s%s' "$secrityKey" "$uri" "$timestamp10" | md5sum | cut -d'
 PKGURL="$CHN_DEB_URL?t=${timestamp10}&k=${md5hash}"
 
 export EPM_REPACK_SCRIPT="$PKGNAME"
-install_pkgurl
+# repack always, even for deb system (remove bundled/broken libraries and fix desktop integration)
+install_pkgurl --repack

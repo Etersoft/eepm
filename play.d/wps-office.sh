@@ -6,7 +6,7 @@ VERSION="$2"
 RELEASE="$3"
 DESCRIPTION="WPS Office for Linux from the official site"
 URL="https://www.wps.cn/product/wpslinux"
-TIPS="Run epm play wpsoffice=<version> to install some specific version"
+TIPS="Run epm play wps-office=<version> to install some specific version"
 
 . $(dirname $0)/common.sh
 
@@ -28,4 +28,5 @@ case $pkgtype in
         ;;
 esac
 
-install_pkgurl
+# repack always, even for deb system (remove bundled/broken libraries and fix desktop integration)
+install_pkgurl --repack
