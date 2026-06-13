@@ -3,7 +3,7 @@
 PKGNAME=goland
 SUPPORTEDARCHES="x86_64 aarch64"
 VERSION="$2"
-DESCRIPTION="GoLand CE — IDE for Go developers"
+DESCRIPTION="JetBrains GoLand CE — IDE for Go developers"
 URL="https://www.jetbrains.com/go/"
 
 . $(dirname $0)/common-jetbrains.sh

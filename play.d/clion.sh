@@ -3,7 +3,7 @@
 PKGNAME=CLion
 SUPPORTEDARCHES="x86_64 aarch64"
 VERSION="$2"
-DESCRIPTION="CLion - A cross-platform IDE for C and C++ from the official site"
+DESCRIPTION="JetBrains CLion - A cross-platform IDE for C and C++ from the official site"
 URL="https://www.jetbrains.com/clion/"
 
 . $(dirname $0)/common-jetbrains.sh

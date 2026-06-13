@@ -3,7 +3,7 @@
 PKGNAME=idea
 SUPPORTEDARCHES="x86_64 aarch64"
 VERSION="$2"
-DESCRIPTION="IntelliJ IDEA - The Leading Java and Kotlin IDE from the official site"
+DESCRIPTION="JetBrains IntelliJ IDEA - The Leading Java and Kotlin IDE from the official site"
 URL="https://www.jetbrains.com/idea/"
 
 . $(dirname $0)/common-jetbrains.sh
