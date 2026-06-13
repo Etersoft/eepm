@@ -3,7 +3,7 @@
 PKGNAME=RustRover
 SUPPORTEDARCHES="x86_64 aarch64"
 VERSION="$2"
-DESCRIPTION="RustRover — IDE for Rust developers"
+DESCRIPTION="JetBrains RustRover — IDE for Rust developers"
 URL="https://www.jetbrains.com/rust/"
 
 . $(dirname $0)/common-jetbrains.sh

@@ -3,7 +3,7 @@
 PKGNAME=pycharm
 SUPPORTEDARCHES="x86_64 aarch64"
 VERSION="$2"
-DESCRIPTION="PyCharm — The Python IDE for Professional Developers"
+DESCRIPTION="JetBrains PyCharm — The Python IDE for Professional Developers"
 URL="https://www.jetbrains.com/ru-ru/pycharm/"
 
 . $(dirname $0)/common-jetbrains.sh
