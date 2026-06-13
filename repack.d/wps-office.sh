@@ -52,6 +52,14 @@ remove_file $PRODUCTDIR/office6/librpcetapi.so
 ignore_lib_requires "libuof.so"
 
 # Optional distribution-specific libraries
+# libtiff.so.5 - required only by the bundled Qt TIFF imageformats plugin;
+# Fedora 43 no longer provides this SONAME and WPS works without TIFF plugin support.
+case $(epm print info -d) in
+    Fedora)
+        ignore_lib_requires 'libtiff.so.5*'
+        ;;
+esac
+
 # libmysqlclient.so.18 - required by libFontWatermark.so for database connectivity in font watermarking features
 # libpeony.so.3 - required by libpeony-wpsprint-menu-plugin.so for Peony file manager print menu integration
 ignore_lib_requires "libmysqlclient.so.18"
@@ -116,4 +124,3 @@ for f in wps et wpp wpspdf; do
     [ -f "$bin_file" ] || fatal "Missing $bin_file"
     sed -i '2i . /opt/kingsoft/wps-office/office6/init-wps-config.sh' "$bin_file"
 done
-
