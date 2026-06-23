@@ -13,7 +13,7 @@ warn_version_is_not_supported
 # the .deb installer is shared across all XP-Pen tablets,
 # scrape any product page for its current data-id/data-pid pair
 ids=$(eget -O- "https://www.xp-pen.com/download/deco-01-v2.html" 2>/dev/null | awk '
-    /name_text">XPPenLinux.*\.deb/ { found=1 }
+    /XPPenLinux[^<]*\.deb/ { found=1 }
     found && /data-ext="deb"/ {
         match($0, /data-id="[0-9]+"/);  id=substr($0,  RSTART+9,  RLENGTH-10)
         match($0, /data-pid="[0-9]+"/); pid=substr($0, RSTART+10, RLENGTH-11)
