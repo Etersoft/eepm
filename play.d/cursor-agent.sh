@@ -20,13 +20,19 @@ case "$arch" in
         ;;
 esac
 
+install_script="$(fetch_url https://cursor.com/install)" || fatal "Can't fetch Cursor installer"
+
 if [ "$VERSION" = "*" ] ; then
-    VERSION="$(fetch_url https://cursor.com/install | grep -oE '[0-9]{4}\.[0-9]{2}\.[0-9]+-[a-f0-9]+' | head -1)"
-    [ -n "$VERSION" ] || fatal "Can't get latest version"
+    # Upstream now publishes a full build id like
+    # 2026.06.24-00-45-58-9f61de7 and composes DOWNLOAD_URL from OS/ARCH
+    # variables inside the installer script, so extract the build id first.
+    VERSION="$(printf '%s\n' "$install_script" | grep -oE '[0-9]{4}\.[0-9]{2}\.[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{2}-[a-f0-9]+' | head -n1)"
+    [ -n "$VERSION" ] || fatal "Can't get latest version from Cursor installer"
+    PKGURL="https://downloads.cursor.com/lab/$VERSION/linux/$arch/agent-cli-package.tar.gz"
+else
+    PKGURL="https://downloads.cursor.com/lab/$VERSION/linux/$arch/agent-cli-package.tar.gz"
 fi
 
-# URL uses - but rpm version stores ~ instead
-URLVERSION="$(echo "$VERSION" | tr '~' '-')"
-PKGURL="https://downloads.cursor.com/lab/$URLVERSION/linux/$arch/agent-cli-package.tar.gz"
+[ -n "$PKGURL" ] || fatal "Can't get package URL from Cursor installer"
 
 install_pack_pkgurl
