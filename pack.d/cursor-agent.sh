@@ -7,8 +7,13 @@ URL="$4"
 
 . $(dirname $0)/common.sh
 
+[ -n "$VERSION" ] || VERSION="$(echo "$URL" | grep -oE '[0-9]{4}\.[0-9]{2}\.[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{2}-[a-f0-9]+' | head -n1)"
 [ -n "$VERSION" ] || VERSION="$(echo "$URL" | grep -oE '[0-9]{4}\.[0-9]{2}\.[0-9]+-[a-f0-9]+' | head -n1)"
 [ -n "$VERSION" ] || fatal "Can't get package version"
+
+# Upstream uses a build id with multiple '-' separators. Keep the full build id,
+# but normalize it for rpm/deb version fields.
+VERSION="$(echo "$VERSION" | tr '-' '.')"
 
 PRODUCTDIR=opt/$PRODUCT
 
