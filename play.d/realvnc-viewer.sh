@@ -1,47 +1,34 @@
 #!/bin/sh
 
 PKGNAME=realvnc-vnc-viewer
-SUPPORTEDARCHES="x86_64 armhf aarch64"
+SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="Real VNC Viewer from the official site"
-URL="https://www.realvnc.com/en/connect/download/vnc/"
+URL="https://www.realvnc.com/en/connect/download/viewer/"
 
 . $(dirname $0)/common.sh
 
-[ "$VERSION" = "*" ] && VERSION="7.15.1"
-
-# vendor packages has shorted version, so drop latest version part (buildid)
-if [ "$VERSION" != "*" ] ; then
-    VERSION="$(echo "$VERSION" | cut -d'.' -f1-3)"
-fi
+warn_version_is_not_supported
 
 pkgtype="$(epm print info -p)"
-arch="$(epm print info -a)"
 
-case $pkgtype-$arch in
-    rpm-x86_64)
-        PKG="VNC-Viewer-$VERSION-Linux-x64.rpm"
-        ;;
-    *-x86_64)
-        PKG="VNC-Viewer-$VERSION-Linux-x64.deb"
-        ;;
-    *-aarch64)
-        PKG="VNC-Viewer-$VERSION-Linux-ARM64.deb"
-        ;;
-    *-armhf)
-        PKG="VNC-Viewer-$VERSION-Linux-ARM.deb"
-        ;;
+
+case $pkgtype in
+    rpm)
+        mask='RealVNC-Connect-Viewer-[0-9.]*-Linux-x64\.rpm' ;;
     *)
-        fatal "Unsupported arch"
-        ;;
+        mask='RealVNC-Connect-Viewer-[0-9.]*-Linux-x64\.deb' ;;
 esac
 
-# https://downloads.realvnc.com/download/file/viewer.files/VNC-Viewer-7.10.0-Linux-x64.deb
-# https://downloads.realvnc.com/download/file/viewer.files/VNC-Viewer-7.10.0-Linux-x64.rpm
-if [ "$VERSION" = "*" ] ; then
-    PKGURL=$(eget --list --latest https://www.realvnc.com/en/connect/download/viewer/ "$PKG")
-else
-    PKGURL="https://downloads.realvnc.com/download/file/viewer.files/$PKG"
-fi
+# RealVNC no longer keeps classic Linux viewer packages under viewer.files and
+# now publishes current Linux builds on the download page as
+# RealVNC-Connect-Viewer-* files. Old pinned versions are not reliable there,
+# so always resolve the latest vendor-published x64 package from the page.
+ 
+PKGFILE="$(fetch_url "$URL" | grep -Eo "$mask" | sort -Vu | tail -n1)"
+
+[ -n "$PKGFILE" ] || fatal "Can't get package file name from $URL."
+
+PKGURL="https://downloads.realvnc.com/download/file/realvnc-connect-viewer/$PKGFILE"
 
 install_pkgurl
