@@ -11,22 +11,22 @@ URL="https://anydesk.com/en/downloads/linux"
 
 # current links:
 
+# the repo keeps only the current version, older ones are not available
+warn_version_is_not_supported
+
 [ "$VERSION" = "*" ] || VERSION="${VERSION}-${RELEASE}"
 
-# use el8 build for all systems
-#PKGMASK="$(epm print constructname $PKGNAME "$VERSION.el8")"
-# no more el8 build
-# https://download.anydesk.com/linux/anydesk_7.0.0-1_x86_64.rpm
+# anydesk.com/download.anydesk.com are behind Cloudflare (403/429 for wget),
+# use the plain nginx RPM repo instead
+# https://rpm.anydesk.com/centos/7/x86_64/Packages/anydesk_8.0.3-1_x86_64.rpm
+REPOURL="https://rpm.anydesk.com/centos/7/x86_64/Packages"
 PKGMASK="$(epm print constructname $PKGNAME "$VERSION" '' '' '_')"
 
 if [ "$VERSION" = "*" ] ; then
-    PKGURL="$(eget -A --list --latest "https://anydesk.com/en/downloads/linux" "$PKGMASK")"
+    PKGURL="$(eget -A --list --latest "$REPOURL/" "$PKGMASK")"
 else
-    PKGURL="https://download.anydesk.com/linux/$PKGMASK"
+    PKGURL="$REPOURL/$PKGMASK"
 fi
-
-# Site requires browser User-Agent
-export EGET_OPTIONS="-U"
 
 install_pkgurl || exit
 
