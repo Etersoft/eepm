@@ -40,7 +40,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.64"
+export EPMVERSION="3.64.65"
 
 # package, single (file), pipe, git
 EPMMODE="package"
