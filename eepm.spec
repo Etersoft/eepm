@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.64
+Version: 3.64.65
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -181,6 +181,39 @@ EOF
 # metapackage, no files
 
 %changelog
+* Thu Jun 25 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.65-alt1
+- epm play.d/common.sh: add get_gitlab_url and get_gitlab_tag helpers
+- epm play: add lilypond (music engraving program)
+- epm play rustdesk: use get_github_url to avoid nightly prerelease
+- epm play: add mimo-code (MiMo Code AI coding agent by Xiaomi)
+- epm play spo-anketa: update to 1.3.2
+- epm play rustdesk: require libxdo.so.3 explicitly
+- epm play: add kimi-code (Kimi Code CLI by Moonshot AI)
+- epm play: add cups-pdf (virtual PDF printer for CUPS from EPEL)
+- epm play anydesk: switch to rpm.anydesk.com repo (anydesk.com blocks wget via Cloudflare)
+- epm play: rename windsurf to devin-desktop (eterbug #17865)
+- epm play teams-for-linux: add repack due libc issue (eterbug #17865)
+- epm play: mention JetBrains in IDE descriptions
+- epm play xppen: fix download (eterbug #17865)
+- epm play cursor-agent: fix download (eterbug #17865)
+- epm play realvnc-viewer: fix download & install (eterbug #17865)
+- epm play: add opentabletdrive (eterbug #19165)
+- epm play dmde: add package scripts
+- epm play: add waywallen
+- epm play nextcloud-talk: add package scripts
+- epm prescription i586-fix: added freetype
+- epm play: replace ElyPrismLauncher with PineconeMC
+- epm play t1client: fix install (eterbug #17865)
+- epm play hansoft-client: rename for p4-plan-client & fix download(eterbug #17865)
+- epm play: added faugus-launcher (eterbug #19097)
+- epm play: added PortProtonQt (eterbug #19097)
+- epm repack: added python packages support (eterbug #19097)
+- epm play: added minigalaxy (eterbug #19097)
+- epm play remotedesktopmanager: fix download && fedora install (eterbug #17865)
+- epm play tailscale: fix download (eterbug #17865)
+- epm play wps-office: rename scripts for consistent sorting
+- epm play teamspeak3: fix install (eterbug #17865)
+
 * Sat Jun 06 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.64-alt1
 - epm play opencode-desktop: use distinct package name to prevent confusion (eterbug #17865)
 - epm play xppen: scrape vendor page for the latest .deb instead of hardcoded id
