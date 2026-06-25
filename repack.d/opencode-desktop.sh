@@ -16,10 +16,10 @@ subst "s|^License:.*|License: MIT|" "$SPEC"
 
 # Fix empty Categories
 fix_desktop_file "Categories=" "Categories=Development;IDE;"
-fix_desktop_file "/opt/OpenCode/@opencode-aidesktop" "opencode-desktop"
+fix_desktop_file "/opt/OpenCode/ai.opencode.desktop" "opencode-desktop"
 fix_desktop_file '"opencode-desktop"' "opencode-desktop"
 
-add_bin_exec_command opencode-desktop "/opt/OpenCode/@opencode-aidesktop"
+add_bin_exec_command opencode-desktop "/opt/OpenCode/ai.opencode.desktop"
 
 add_electron_deps
 
