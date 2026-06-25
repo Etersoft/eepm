@@ -10,6 +10,9 @@ PKG="$4"
 
 . $(dirname $0)/common.sh
 
+# warn early if any binary is UPX-packed (defeats the soname autodetection below)
+warn_upx_binaries
+
 # add libs requires (after all ignore_lib_requires calls)
 add_libs_requires
 

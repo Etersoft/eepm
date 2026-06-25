@@ -624,6 +624,24 @@ stop_libs_requires()
     touch "$BUILDROOT/.eepm_stop_libs_requires"
 }
 
+# warn about UPX-packed binaries: their linked libraries are hidden inside the
+# compressed image, so soname autodetection silently misses all dependencies
+warn_upx_binaries()
+{
+    local f found=''
+    while IFS= read -r f ; do
+        # UPX-packed files carry this banner string in the stub
+        if LANG=C grep -qa 'This file is packed with the UPX' "$f" 2>/dev/null ; then
+            warning "UPX-packed binary: ${f#$BUILDROOT}"
+            found=1
+        fi
+    done <<EOF
+$(find "$BUILDROOT" -type f -executable)
+EOF
+    [ -n "$found" ] || return 0
+    warning "UPX compression hides linked libraries: dependency autodetection will miss them. Add Requires manually (or unpack the binary with: upx -d)."
+}
+
 add_libs_requires()
 {
     [ -f "$BUILDROOT/.eepm_stop_libs_requires" ] && return 0
