@@ -1,7 +1,5 @@
 #!/bin/sh
 
-PKGNAME=open-code
-SUPPORTEDARCHES="x86_64"
 PKGNAME=opencode-desktop
 SUPPORTEDARCHES="x86_64 aarch64"
 VERSION="$2"
