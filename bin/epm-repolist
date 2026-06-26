@@ -19,6 +19,7 @@
 
 load_helper epm-sh-altlinux
 load_helper epm-sh-repo
+load_helper epm-sh-backend
 
 epm_repolist_help()
 {
@@ -169,10 +170,19 @@ while [ -n "$1" ] ; do
     shift
 done
 
+# check backend:package syntax (snap:, nix:, stplr:)
+if __has_backend_syntax "$@" ; then
+    __process_backend_arguments epm_repolist "$@"
+    return
+fi
+
 # TODO
 [ -z "$*" ] || [ "$PMTYPE" = "apt-rpm" ] || [ "$PMTYPE" = "apm-rpm" ] || [ "$PMTYPE" = "apt-dpkg" ] || fatal "No arguments are allowed here"
 
 case $PMTYPE in
+    stplr)
+        docmd stplr repo list "$@"
+        ;;
     apt-rpm|apm-rpm)
         print_apt_sources_list "$@"
         ;;
