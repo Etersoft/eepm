@@ -39,6 +39,7 @@ docmd rpmpub /var/ftp/pub/Korinf/sources
 
 docmd ssh builder@builder /srv/builder/Projects/korinf/bin-common/eepm.sh x86_64/ALTLinux/Sisyphus || exit
 
-docmd epm repo pkgupdate /var/ftp/pub/Etersoft/XimperLinux/Current/Additives /var/ftp/pub/Korinf/x86_64/ALTLinux/Sisyphus/eepm-*.rpm
-#docmd epm repo index /var/ftp/pub/Etersoft/XimperLinux/Current/Additives 
-/home/lav/Projects/XimperLinux/repo-scripts/additives-genbasedir-sign.sh /var/ftp/pub/Etersoft/XimperLinux/Current/Additives
+# publication to the Additives repo is disabled
+#docmd epm repo pkgupdate /var/ftp/pub/Etersoft/XimperLinux/Current/Additives /var/ftp/pub/Korinf/x86_64/ALTLinux/Sisyphus/eepm-*.rpm
+#docmd epm repo index /var/ftp/pub/Etersoft/XimperLinux/Current/Additives
+#/home/lav/Projects/XimperLinux/repo-scripts/additives-genbasedir-sign.sh /var/ftp/pub/Etersoft/XimperLinux/Current/Additives
