@@ -18,7 +18,8 @@ done
 
 add_electron_deps
 
-add_unirequires coreutils findutils grep sed /usr/bin/git /usr/bin/node /usr/bin/npm /usr/bin/npx util-linux which xprop python3
+# grep sed which xprop are already added by add_electron_deps
+add_unirequires coreutils findutils /usr/bin/git /usr/bin/node /usr/bin/npm /usr/bin/npx util-linux python3
 
 move_to_opt
 subst "s|\$USR_DIRECTORY/share/atom|/opt/atom|" $BUILDROOT/usr/bin/$PRODUCTCUR
