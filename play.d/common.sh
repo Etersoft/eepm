@@ -117,6 +117,24 @@ get_deb_repo_latest_version()
         | sort -V | tail -n 1
 }
 
+# Get the package file base name (Filename without dir and .deb) of the latest
+# version of a package from a deb repository Packages.gz index. Useful when the
+# download filename carries a build number that is not present in Version.
+# Usage: get_deb_repo_latest_filename <packages_gz_url> <pkgname>
+get_deb_repo_latest_filename()
+{
+    local packages_url="$1"
+    local pkgname="$2"
+    eget -O- "$packages_url" | gzip -d \
+        | awk -v p="$pkgname" '
+            $1=="Package:"  { pkg=$2 }
+            $1=="Version:"  && pkg==p { ver=$2 }
+            $1=="Filename:" && pkg==p { print ver"\t"$2; pkg="" }
+        ' \
+        | sort -V | tail -n1 | cut -f2 \
+        | awk -F/ '{print $NF}' | sed 's/\.deb$//'
+}
+
 # Returns 0 if version $1 is older (lower) than $2.
 is_version_older()
 {
