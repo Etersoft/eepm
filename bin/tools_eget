@@ -257,6 +257,14 @@ is_strange_url()
     return 1
 }
 
+# A downloaded package/binary is never HTML. If we got an HTML page the server
+# most likely redirected to a landing/error page - reject it and do not cache.
+is_html_file()
+{
+    LANG=C head -c 1024 "$1" 2>/dev/null \
+        | grep -qiE '<!doctype html|<html[ >]|<head[ >]'
+}
+
 is_ipfs_hash()
 {
     # CIDv0: starts with Qm, 46 chars, alphanumeric only
@@ -2288,6 +2296,10 @@ sget()
 
     # download file and add to IPFS
     url_sget "$REALURL" "$TARGET" || return
+
+    if is_html_file "$TARGET" ; then
+        fatal "Downloaded '$TARGET' is an HTML page, not a file (server redirected to a landing/error page?). Not adding to IPFS."
+    fi
 
     # don't do ipfs put when gateway is using
     [ "$ipfs_mode" = "gateway" ] && return
