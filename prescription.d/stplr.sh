@@ -5,9 +5,7 @@ DESCRIPTION="Set up Stapler (stplr) with the community aides repository"
 
 . $(dirname $0)/common.sh
 
-assure_root
-
-# install the Stapler universal build system
+# install the Stapler universal build system (epm elevates by itself)
 epm install stplr || fatal "Can't install stplr"
 
 # Add the community 'aides' recipe repository, but only when stplr has no
@@ -16,6 +14,10 @@ epm install stplr || fatal "Can't install stplr"
 if epm repolist stplr: 2>/dev/null | grep -qE 'https?://' ; then
     info 'Stapler already has repositories configured, leaving them as is'
 else
-    stplr repo add aides https://altlinux.space/aides-community/aides.git
-    stplr refresh
+    # the prescription itself runs unprivileged (it is called from epm play),
+    # so elevate the stplr commands that write to /etc/stplr ourselves
+    SUDO=''
+    is_root || SUDO=sudo
+    docmd $SUDO stplr repo add aides https://altlinux.space/aides-community/aides.git
+    docmd $SUDO stplr refresh
 fi
