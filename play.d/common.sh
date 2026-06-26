@@ -99,6 +99,11 @@ eget()
     epm tool eget "$@"
 }
 
+ercat()
+{
+    epm tool ercat "$@"
+}
+
 fetch_url()
 {
     info "Fetching $1 ..."
@@ -125,7 +130,7 @@ get_deb_repo_latest_filename()
 {
     local packages_url="$1"
     local pkgname="$2"
-    eget -O- "$packages_url" | gzip -d \
+    fetch_url "$packages_url" | ercat - \
         | awk -v p="$pkgname" '
             $1=="Package:"  { pkg=$2 }
             $1=="Version:"  && pkg==p { ver=$2 }
@@ -133,6 +138,22 @@ get_deb_repo_latest_filename()
         ' \
         | sort -V | tail -n1 | cut -f2 \
         | awk -F/ '{print $NF}' | sed 's/\.deb$//'
+}
+
+# Get the latest <location href> matching a mask from a yum/dnf repository's
+# repodata (useful when the bucket forbids directory listing). The mask is a
+# regex on the rpm file name as it appears in primary.xml's <location href="">.
+# Usage: get_rpm_repo_latest_file <repo_base_url> <filename_mask>
+get_rpm_repo_latest_file()
+{
+    local base="$1"
+    local mask="$2"
+    local primary
+    primary="$(fetch_url "$base/repodata/repomd.xml" \
+        | sed -n 's|.*href="\([^"]*primary\.xml\.gz\)".*|\1|p' | head -n1)"
+    [ -n "$primary" ] || return
+    fetch_url "$base/$primary" | ercat - \
+        | sed -n "s|.*<location href=\"\($mask\)\".*|\1|p" | sort -V | tail -n1
 }
 
 # Returns 0 if version $1 is older (lower) than $2.
