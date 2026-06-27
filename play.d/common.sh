@@ -515,6 +515,71 @@ get_gitlab_tag()
     fatal "Can't get tag from GitLab. Check network or use epm play <app>=<version>"
 }
 
+# Gitea analogue of get_github_release_info: fetch releases JSON via Gitea API.
+get_gitea_release_info()
+{
+    local url="$1"
+    local project_url=${url%/}
+    local host path api_url result
+
+    host="$(echo "$project_url" | sed -e 's|^https://||' -e 's|/.*||')"
+    path="${project_url#https://$host/}"
+
+    api_url="https://$host/api/v1/repos/$path/releases/latest"
+
+    result="$(fetch_url "$api_url")" || return 1
+    [ -n "$result" ] || return 1
+    echo "$result"
+}
+
+__get_gitea_download_urls()
+{
+    epm --inscript --quiet tool json -b | grep '"browser_download_url"' | sed -e 's|.*[[:space:]]||' -e 's|"||g'
+}
+
+# get_gitea_url <https://gitea.example.org/group/project> <asset_name_or_glob>
+get_gitea_url()
+{
+    local url="$1"
+    local asset_name="$2"
+    local project=${url%/}
+
+    # If asset_name has no globs, try the direct release download URL without API call
+    if ! echo "$asset_name" | grep -q '[*?]' ; then
+        local tag direct
+        for tag in "v$VERSION" "$VERSION" ; do
+            direct="$project/releases/download/$tag/$asset_name"
+            eget --check-url "$direct" 2>/dev/null && echo "$direct" && return
+        done
+    fi
+
+    local wc info result=''
+    wc="$(__convert_glob__to_regexp "$asset_name")"
+    info="$(get_gitea_release_info "$url")" && \
+        result="$(echo "$info" | __get_gitea_download_urls | grep -E "$wc" | head -n1)"
+    echo "$result"
+}
+
+# get_gitea_tag <https://gitea.example.org/group/project> [version_filter_regexp]
+get_gitea_tag()
+{
+    local url="$1"
+    local filter="$2"
+    local info val version
+
+    info="$(get_gitea_release_info "$url")" || \
+        fatal "Can't get release info from Gitea for $url"
+
+    val="$(echo "$info" | parse_json_value "[\"tag_name\"]")"
+    version="$(echo "$val" | grep -oP '[0-9]+(\.[0-9]+)*(-[0-9]+)?' | head -n1)"
+    if [ -n "$version" ] && [ -n "$filter" ] ; then
+        echo "$version" | grep -qE "$filter" || version=''
+    fi
+    [ -n "$version" ] && echo "$version" && return
+
+    fatal "Can't get tag from Gitea. Check network or use epm play <app>=<version>"
+}
+
 print_product_alt()
 {
     [ -n "$1" ] || return
