@@ -21,6 +21,9 @@ case "$distr" in
         distr=redhat
         if [ "$repo" = "p9" ] || [ "$repo" = "c9f2" ] ; then
             repo=el6
+        elif is_openssl_enough 3 ; then
+            # p11+ and Sisyphus ship openssl3, so take the el9 build
+            repo=el9
         else
             repo=el8
         fi
