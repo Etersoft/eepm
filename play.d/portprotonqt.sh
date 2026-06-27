@@ -8,10 +8,6 @@ URL="https://git.linux-gaming.ru/Linux-Gaming/PortProtonQt"
 
 . $(dirname $0)/common.sh
 
-if [ "$VERSION" = "*" ] ; then
-   VERSION=$(curl -Ls https://git.linux-gaming.ru/Linux-Gaming/PortProtonQt/raw/branch/main/CHANGELOG.md | awk '/^## \[[0-9]/{sub(/^## \[/,"");sub(/\].*/,"");print;exit}')
-fi
-
-PKGURL="$(eget --list --latest "https://git.linux-gaming.ru/Linux-Gaming/PortProtonQt/releases/tag/v${VERSION}" "${PKGNAME}-${VERSION}-*.x86_64.rpm")"
+PKGURL="$(get_gitea_url "$URL" "${PKGNAME}-${VERSION}-*.x86_64.rpm")"
 
 install_pkgurl
