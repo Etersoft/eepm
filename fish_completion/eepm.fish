@@ -1,6 +1,6 @@
 function __eepm_complete_repos
     if epm print info -s | grep -q alt
-        echo basealt altsp yandex autoimports autoports altlinuxclub deferred deferred.org etersoft korinf archive URL
+        echo basealt altsp yandex autoimports autoports altlinuxclub deferred deferred.org etersoft korinf archive
     end
 end
 
@@ -47,7 +47,7 @@ end
 
 function __eepm_complete_repos
     if epm print info -s | grep -q alt
-        printf '%s\n' basealt altsp yandex autoimports autoports altlinuxclub deferred deferred.org etersoft korinf archive URL
+        printf '%s\n' basealt altsp yandex autoimports autoports altlinuxclub deferred deferred.org etersoft korinf archive
     end
 end
 complete -c epm -c eepm -c upm -f -n '__fish_seen_subcommand_from addrepo ar removerepo rr' -xa '(__eepm_complete_repos)'
