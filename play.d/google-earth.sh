@@ -15,7 +15,7 @@ case "$(epm print info -p)" in
       PKGURL="https://dl.google.com/dl/earth/client/current/google-earth-pro-stable-current.x86_64.rpm"
       ;;
   *)
-      PKGURL="https://dl.google.com/dl/earth/client/current/google-earth-pro-stable-current.x86_64.deb"
+      PKGURL="https://dl.google.com/dl/earth/client/current/google-earth-pro-stable_current_amd64.deb"
       ;;
 esac
 
