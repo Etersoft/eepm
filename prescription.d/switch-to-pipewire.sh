@@ -46,11 +46,13 @@ fi
 
 epm update
 
-epm install pipewire pipewire-utils pipewire-libs
+epm install pipewire pipewire-utils pipewire-libs wireplumber
 # TODO: user??
 a= systemctl $args disable pulseaudio.service pulseaudio.socket
 a= systemctl $args enable pipewire pipewire-pulse
-a= systemctl $args enable pipewire-media-session.service
+# wireplumber is the modern session manager (replaced pipewire-media-session);
+# without an enabled session manager PipeWire does no audio routing and sound stays broken
+a= systemctl $args enable wireplumber
 a= systemctl $args mask pulseaudio
 #systemctl reboot
 
