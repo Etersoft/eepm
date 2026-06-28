@@ -10,20 +10,16 @@ URL="https://docs.docker.com/desktop/install/ubuntu/"
 
 warn_version_is_not_supported
 
+# the vendor serves only the latest build at a versionless URL (no old versions)
 pkgtype=$(epm print info -p)
 case $pkgtype in
     rpm)
-        PKGURL="https://desktop.docker.com/linux/main/amd64/139021/docker-desktop-4.28.0-x86_64.rpm"
+        PKGURL="https://desktop.docker.com/linux/main/amd64/docker-desktop-x86_64.rpm"
         ;;
     *)
-        PKGURL="https://desktop.docker.com/linux/main/amd64/139021/docker-desktop-4.28.0-amd64.deb"
+        PKGURL="https://desktop.docker.com/linux/main/amd64/docker-desktop-amd64.deb"
         ;;
 esac
-
-# TODO: rpm and deb packages has diffent binaries
-#if [ "$(epm print info -s)" = "alt" ] ; then
-#    PKGURL="https://desktop.docker.com/linux/main/amd64/139021/docker-desktop-4.28.0-amd64.deb"
-#fi
 
 install_pkgurl
 
