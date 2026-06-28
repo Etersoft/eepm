@@ -160,14 +160,14 @@ update_alt_contents_index()
 
     info "Retrieving contents_index ..."
 
-    mapfile -t URL_LIST < <(
-        (quiet=1 epm_repolist) | \
+    local URL_LIST_FILE
+    URL_LIST_FILE="$(mktemp)" || return
+    (quiet=1 epm_repolist) | \
         grep -v " task$" | \
         grep -E "rpm.*(ftp://|http://|https://|rsync://|file:/)" | \
-        sed -e "s@.*rpm.*file:/@/@" -e "s@^.*\]@@" -e "s@^rpm *@@"
-    )
+        sed -e "s@.*rpm.*file:/@/@" -e "s@^.*\]@@" -e "s@^rpm *@@" > "$URL_LIST_FILE"
 
-    for line in "${URL_LIST[@]}"; do
+    while read -r line; do
         URL1=$(echo "$line" | awk '{print $1}')
         URL2=$(echo "$line" | awk '{print $2}')
         component=$(echo "$line" | awk '{print $3}')
@@ -241,6 +241,7 @@ update_alt_contents_index()
 
         #warning "Can't download contents_index from $URL/base"
 
-    done
+    done < "$URL_LIST_FILE"
+    rm -f "$URL_LIST_FILE"
 }
 
