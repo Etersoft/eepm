@@ -65,7 +65,10 @@ case "$(epm print info -e)" in
     epm install --repack https://packages.microsoft.com/ubuntu/18.04/mssql-server-$MSSQL_YEAR/pool/main/m/mssql-server/mssql-server_1*_amd64.deb
     ;;
   AstraLinuxSE/1.8)
-    epm install --repack https://packages.microsoft.com/ubuntu/20.04/mssql-server-$MSSQL_YEAR/pool/main/m/mssql-server/mssql-server_1*_amd64.deb
+    # use the 22.04 build: it links liblber-2.5/libldap-2.5 (present in Astra 1.8),
+    # the 20.04 build needs old liblber-2.4/libldap_r-2.4 missing there.
+    # https://bugs.etersoft.ru/show_bug.cgi?id=18917
+    epm install --repack https://packages.microsoft.com/ubuntu/22.04/mssql-server-$MSSQL_YEAR/pool/main/m/mssql-server/mssql-server_1*_amd64.deb
     ;;
   ALTLinux/p10|ALTLinux/c10f2)
     epm install --repack https://packages.microsoft.com/rhel/8/mssql-server-$MSSQL_YEAR/Packages/m/mssql-server-[0-9]*.x86_64.rpm || fatal
