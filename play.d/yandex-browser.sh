@@ -35,3 +35,9 @@ fi
 install_pkgurl
 
 epm play $PKGNAME-codecs-ffmpeg-extra
+
+# Yandex Browser plays some media (e.g. RuTube below 480p) via GStreamer, not only
+# the bundled ffmpeg; the distro package depends on the GStreamer codecs, so pull
+# them in here too. https://bugzilla.altlinux.org/57450
+# (do not fail the install if some codec is unavailable).
+epm prescription gstreamer || warning "Failed to install GStreamer codecs (some media may not play)"
