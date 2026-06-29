@@ -273,9 +273,11 @@ __check_system()
 __epm_ru_update()
 {
     docmd epm update && return
-    # TODO: there can be errors due obsoleted alt-gpgkeys
-    epm update 2>&1 | grep "E: Unknown vendor ID" || return
-    info "Drop vendor signs"
+    # update failed after the branch switch: the target branch may be signed with a
+    # different vendor key than the source branch sign pins (e.g. [p11] sign vs the
+    # Sisyphus key), or alt-gpgkeys is obsolete. Drop the vendor signs and retry
+    # (covers both "Unknown vendor ID" and signature-mismatch errors).
+    info "Drop vendor signs and retry update"
     __alt_replace_sign_name ""
     docmd epm update
 }
