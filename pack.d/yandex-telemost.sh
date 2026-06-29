@@ -13,14 +13,21 @@ mkdir -p opt/eepm-wine/$PRODUCT/
 cat <<EOF >opt/eepm-wine/$PRODUCT/run.sh
 #!/bin/sh
 INSTALLER="/opt/eepm-wine/yandex-telemost/TelemostSetup.exe"
-WINE_PROG_PATH=\$(wine cmd /c echo %appdata% | tr -d '\r')
-NORMAL_PATH=\$(winepath -u "\$WINE_PROG_PATH\Yandex\YandexTelemost")
-INSTALLED_VER=\$(ls "\$NORMAL_PATH")
 
-RUNFILE="\$NORMAL_PATH/\$INSTALLED_VER/YandexTelemost.exe"
-URUNFILE="\$(winepath -u "\$RUNFILE")"
-if [ ! -f "\$URUNFILE" ] ; then
-    exec wine "\$INSTALLER"
+# Yandex Telemost installs under %localappdata% (not %appdata%) into a
+# per-version subdir; search both (Local first) for the installed exe so we
+# don't relaunch the installer on every run
+RUNFILE=
+for var in %localappdata% %appdata% ; do
+    base=\$(winepath -u "\$(wine cmd /c echo \$var | tr -d '\r')" 2>/dev/null) || continue
+    RUNFILE=\$(find "\$base" -name YandexTelemost.exe 2>/dev/null | head -1)
+    [ -n "\$RUNFILE" ] && break
+done
+
+if [ -z "\$RUNFILE" ] || [ ! -f "\$RUNFILE" ] ; then
+    # not installed yet: run the installer with winemenubuilder disabled so it
+    # does not create a duplicate menu shortcut (we ship our own .desktop)
+    exec env WINEDLLOVERRIDES="winemenubuilder.exe=" wine "\$INSTALLER"
 fi
 exec wine "\$RUNFILE" "\$@"
 EOF
