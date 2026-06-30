@@ -98,6 +98,7 @@ AppImage
 appimage
 squashfs
 snap
+flatpak
 EOF
 }
 

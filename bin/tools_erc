@@ -192,6 +192,51 @@ extract_appimage()
 	#fi
 }
 
+# Import a flatpak bundle into a temporary OSTree repo.
+# Sets FLATPAK_REPO_DIR (caller must rm -rf it) and FLATPAK_REF.
+flatpak_prepare_repo()
+{
+	local flatpak_file="$1"
+	local operation="$2"
+
+	is_command ostree || fatal "ostree is required to $operation flatpak files"
+
+	FLATPAK_REPO_DIR=$(mktemp -d "$(pwd)/UXXXXXXXX")
+	docmd ostree init --repo="$FLATPAK_REPO_DIR" --mode=archive
+
+	# a flatpak bundle is an ostree static delta, so import it with ostree alone
+	docmd ostree static-delta apply-offline --repo="$FLATPAK_REPO_DIR" "$flatpak_file" \
+		|| { rm -rf "$FLATPAK_REPO_DIR" ; fatal "failed to import flatpak bundle $flatpak_file" ; }
+
+	# apply-offline imports the objects but creates no ref; take the commit checksum
+	FLATPAK_REF=$(find "$FLATPAK_REPO_DIR/objects" -name '*.commit' | head -n1 \
+		| sed 's|.*/objects/||; s|/||; s|\.commit$||')
+	[ -n "$FLATPAK_REF" ] || { rm -rf "$FLATPAK_REPO_DIR" ; fatal "could not get commit from flatpak repository" ; }
+}
+
+# Extract flatpak bundle via a temporary OSTree repo
+extract_flatpak()
+{
+	local arc="$1"
+	local subdir="$2"
+
+	flatpak_prepare_repo "$arc" "extract"
+
+	local checkout_root
+	checkout_root=$(mktemp -d "$(pwd)/UXXXXXXXX")
+	docmd ostree checkout --repo="$FLATPAK_REPO_DIR" --user-mode "$FLATPAK_REF" "$checkout_root/payload"
+
+	mkdir -p "$subdir"
+	# the app payload lives in files/; fall back to the whole tree otherwise
+	if [ -d "$checkout_root/payload/files" ] ; then
+		docmd cp -a "$checkout_root/payload/files/." "$subdir/"
+	else
+		docmd cp -a "$checkout_root/payload/." "$subdir/"
+	fi
+
+	rm -rf "$checkout_root" "$FLATPAK_REPO_DIR"
+}
+
 # TODO: move to patool
 # Extract special archive types that are not supported by patool
 extract_special_archive()
@@ -229,6 +274,9 @@ extract_special_archive()
 			;;
 		squashfs|snap)
 			extract_squashfs_image "$arc" "$subdir"
+			;;
+		flatpak)
+			extract_flatpak "$arc" "$subdir"
 			;;
 		*)
 			[ -n "$use_tdir" ] && rmdir "$subdir"
@@ -466,6 +514,13 @@ list_archive()
 		return
 	fi
 
+	if [ "$(get_archive_type "$arc" 2>/dev/null)" = "flatpak" ] ; then
+		flatpak_prepare_repo "$(realpath -s "$arc")" "list"
+		docmd ostree ls --repo="$FLATPAK_REPO_DIR" -R "$FLATPAK_REF"
+		rm -rf "$FLATPAK_REPO_DIR"
+		return
+	fi
+
 	if have_patool ; then
 		docmd patool $verbose list "$arc" "$@"
 		return
@@ -490,6 +545,13 @@ test_archive()
 	if [ "$(get_archive_type "$arc" 2>/dev/null)" = "exe" ] ; then
 		assure_7z
 		docmd $HAVE_7Z t "$arc" || fatal
+		return
+	fi
+
+	if [ "$(get_archive_type "$arc" 2>/dev/null)" = "flatpak" ] ; then
+		flatpak_prepare_repo "$(realpath -s "$arc")" "test"
+		rm -rf "$FLATPAK_REPO_DIR"
+		echo "Flatpak file is valid"
 		return
 	fi
 
