@@ -24,7 +24,35 @@ serv_edit()
 
     case $SERVICETYPE in
         systemd)
-            run_systemctl edit "$@" "$SERVICE"
+            # editing only a drop-in is pointless for a unit that already lives in
+            # /etc/systemd/system, so edit the full file there (unless args given)
+            if [ -z "$*" ] ; then
+                case "$($SYSTEMCTL show -p FragmentPath "$SERVICE" 2>/dev/null | sed -e 's|.*=||')" in
+                    /etc/systemd/system/*)
+                        set -- --full
+                        ;;
+                esac
+            fi
+
+            # remember if the service is running, to apply the change afterwards
+            local wasactive=''
+            $SYSTEMCTL is-active --quiet "$SERVICE" 2>/dev/null && wasactive=1
+
+            # systemctl edit is interactive and uses $SYSTEMD_EDITOR/$EDITOR/$VISUAL;
+            # sudo resets the environment, so preserve those across it
+            local sudoenv=''
+            case "$SUDO" in
+                sudo*) sudoenv='--preserve-env=SYSTEMD_EDITOR,EDITOR,VISUAL' ;;
+            esac
+
+            # systemctl edit reloads the systemd manager (daemon-reload) by itself
+            docmd $SUDO $sudoenv $SYSTEMCTL edit "$@" "$SERVICE" || return
+
+            # the new unit settings take effect only after a restart
+            if [ -n "$wasactive" ] ; then
+                info "Restarting $SERVICE to apply the changes ..."
+                run_systemctl restart "$SERVICE"
+            fi
             ;;
         *)
             fatal "Have no suitable for $DISTRNAME command for $SERVICETYPE"
