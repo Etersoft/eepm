@@ -32,4 +32,9 @@ done
 # python(abi) = <minor>).
 [ -n "$pyabi" ] && add_requires "python(abi) = $pyabi"
 
-add_requires libkrb5.so.3 libpq.so.5
+# psycopg (64-bit) inside the venv dlopens libpq/libkrb5 at runtime, but the venv .so
+# is not scanned by auto-req, so these must be declared manually. Use add_unirequires so
+# the ()(64bit) ELF-class marker is added: a bare "libpq.so.5" on ALT is provided by the
+# i586 *.32bit compat package, so the real 64-bit libpq5 never gets pulled in and the
+# server backend fails to start (desktop then hangs on the splash screen).
+add_unirequires "libkrb5.so.3 libpq.so.5"
