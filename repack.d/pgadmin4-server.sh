@@ -32,6 +32,17 @@ done
 # python(abi) = <minor>).
 [ -n "$pyabi" ] && add_requires "python(abi) = $pyabi"
 
+# Upstream builds the venv with --system-site-packages (include-system-site-packages =
+# true). On the origin distro pgAdmin then pulls a few optional deps (oauth2client,
+# pyOpenSSL) from the system python; on other distros those system packages are
+# ABI-incompatible with the bundled cryptography and crash pgAdmin at startup
+# (AttributeError: module 'lib' has no attribute 'GEN_EMAIL' from a mismatched system
+# pyOpenSSL). Make the venv hermetic: it already bundles everything it needs, and the
+# optional imports are guarded by try/except ImportError, so with the system leak gone
+# they degrade gracefully (google-auth, also bundled, stays as the auth backend).
+cfg="$BUILDROOT$PRODUCTDIR/venv/pyvenv.cfg"
+[ -f "$cfg" ] && subst 's/^include-system-site-packages *=.*/include-system-site-packages = false/' "$cfg"
+
 # psycopg (64-bit) inside the venv dlopens libpq/libkrb5 at runtime, but the venv .so
 # is not scanned by auto-req, so these must be declared manually. Use add_unirequires so
 # the ()(64bit) ELF-class marker is added: a bare "libpq.so.5" on ALT is provided by the
