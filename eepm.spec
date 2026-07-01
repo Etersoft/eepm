@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.65
+Version: 3.64.66
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -181,6 +181,56 @@ EOF
 # metapackage, no files
 
 %changelog
+* Wed Jul 01 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.66-alt1
+- epm repack.d: warn about UPX-packed binaries that hide their library deps
+- epm play: add voicekey (voice typing by hotkey)
+- epm play: add apple-emoji-linux (Apple Color Emoji font)
+- epm play: add brscan4 (Brother SANE scanner driver)
+- epm play: add brother-dcp-t310 (Brother DCP-T310 printer driver)
+- epm prescription: add flatpak-fix-openh264 (OpenH264 codec for Flatpak)
+- epm play.d/common.sh: add get_deb_repo_latest_filename helper
+- epm play max: install EL9 rpm with build number kept in version (eterbug #18860)
+- epm repolist: support backend syntax (epm repolist stplr:)
+- epm prescription: add stplr (install Stapler and add aides repo if none)
+- epm play: add aseprite (build locally via stplr from the aides recipe)
+- epm prescription stplr: run unprivileged, elevate stplr commands with sudo when not root
+- epm play opencode-desktop: drop leftover open-code PKGNAME lines
+- epm repack opencode-desktop: fix bin_exec (eterbug #17865)
+- epm play r7-office-organizer: fix download (eterbug #17865)
+- release_commit.sh: disable publication to the Additives repo
+- eget: reject downloaded HTML page before adding to IPFS
+- epm play.d/common.sh: add get_rpm_repo_latest_file helper, use fetch_url/ercat
+- epm play tailscale: use get_rpm_repo_latest_file helper
+- epm play: add wazuh-agent (host security monitoring from the official repo)
+- epm repack atom: drop deps already added by add_electron_deps
+- epm play aksusbd: add 10.32 as latest default, keep 10.21/10.14
+- epm play: add Sigil (multi-platform EPUB ebook editor)
+- epm play zerotier-one: use el9 build on openssl3 systems (p11+/Sisyphus)
+- epm play google-earth: fix deb package URL (underscores/amd64)
+- epm play: add wiimplay (WiiM Play UPnP control point)
+- epm-sh-altlinux-contents-index: avoid bashisms (mapfile, process substitution) for bash3/POSIX
+- epm play: add Gitea helpers and use them (eterbug #19169)
+- epm play portprotonqt: pin fc42 dist and use RELEASE for a glob-free IPFS-able URL
+- epm prescription switch-to-pipewire: install and enable wireplumber session manager (no sound without it)
+- epm play docker-desktop: update to latest (versionless URL), fix repack for 4.79 layout, drop docker-compose file conflict, require qemu-system-x86
+- epm play: add trae (Trae AI IDE)
+- fish completion: drop stray URL from repo change/add candidates
+- epm play: add libreoffice (official TDF build packed as a single rpm)
+- epm play pgadmin4: fix install (match build to system python, repack venv site-packages)
+- epm repack ipera-client: add libatomic.so.1 require (bundled libopenal needs it)
+- epm play far2l-portable: require glibc >= 2.34, suggest native far2l otherwise
+- epm play dbeaver: resolve release asset name via get_github_url (handle old -stable vs new -linux naming)
+- epm play yandex-browser: install gstreamer codecs via new prescription (ALT #57450)
+- epm play mssql-server: use ubuntu 22.04 build on Astra 1.8 (liblber/libldap 2.5)
+- epm release-upgrade: drop vendor signs and retry on any update failure (not only Unknown vendor ID, ALT #51240)
+- epm play: add brother-mfc-l2700dn (Brother MFC-L2700DN printer driver)
+- epm play: add samsung-printer (Samsung Unified Linux Driver from SULDR)
+- epm play yandex-telemost: look in localappdata and disable winemenubuilder
+- epm play spo-anketa: read current download URL from the site, update to 1.3.3
+- epm play qsp-classic: drop eepm RELEASE from the download URL (fixes 404 on 5.9.5)
+- erc: add flatpak bundle support (extract, list, test)
+- epm play: add vostok-browser (C01-03 Vostok, Firefox-based, repacked from flatpak via ostree)
+
 * Thu Jun 25 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.65-alt1
 - epm play.d/common.sh: add get_gitlab_url and get_gitlab_tag helpers
 - epm play: add lilypond (music engraving program)
