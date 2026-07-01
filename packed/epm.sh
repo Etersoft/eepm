@@ -40,7 +40,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.65"
+export EPMVERSION="3.64.66"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -12542,9 +12542,11 @@ __check_system()
 __epm_ru_update()
 {
     docmd epm update && return
-    # TODO: there can be errors due obsoleted alt-gpgkeys
-    epm update 2>&1 | grep "E: Unknown vendor ID" || return
-    info "Drop vendor signs"
+    # update failed after the branch switch: the target branch may be signed with a
+    # different vendor key than the source branch sign pins (e.g. [p11] sign vs the
+    # Sisyphus key), or alt-gpgkeys is obsolete. Drop the vendor signs and retry
+    # (covers both "Unknown vendor ID" and signature-mismatch errors).
+    info "Drop vendor signs and retry update"
     __alt_replace_sign_name ""
     docmd epm update
 }
@@ -15685,9 +15687,17 @@ while [ -n "$1" ] ; do
     shift
 done
 
+if __has_backend_syntax "$@" ; then
+    __process_backend_arguments epm_repolist "$@"
+    return
+fi
+
 [ -z "$*" ] || [ "$PMTYPE" = "apt-rpm" ] || [ "$PMTYPE" = "apm-rpm" ] || [ "$PMTYPE" = "apt-dpkg" ] || fatal "No arguments are allowed here"
 
 case $PMTYPE in
+    stplr)
+        docmd stplr repo list "$@"
+        ;;
     apt-rpm|apm-rpm)
         print_apt_sources_list "$@"
         ;;
@@ -17932,14 +17942,14 @@ update_alt_contents_index()
 
     info "Retrieving contents_index ..."
 
-    mapfile -t URL_LIST < <(
-        (quiet=1 epm_repolist) | \
+    local URL_LIST_FILE
+    URL_LIST_FILE="$(mktemp)" || return
+    (quiet=1 epm_repolist) | \
         grep -v " task$" | \
         grep -E "rpm.*(ftp://|http://|https://|rsync://|file:/)" | \
-        sed -e "s@.*rpm.*file:/@/@" -e "s@^.*\]@@" -e "s@^rpm *@@"
-    )
+        sed -e "s@.*rpm.*file:/@/@" -e "s@^.*\]@@" -e "s@^rpm *@@" > "$URL_LIST_FILE"
 
-    for line in "${URL_LIST[@]}"; do
+    while read -r line; do
         URL1=$(echo "$line" | awk '{print $1}')
         URL2=$(echo "$line" | awk '{print $2}')
         component=$(echo "$line" | awk '{print $3}')
@@ -18013,7 +18023,8 @@ update_alt_contents_index()
 
         #warning "Can't download contents_index from $URL/base"
 
-    done
+    done < "$URL_LIST_FILE"
+    rm -f "$URL_LIST_FILE"
 }
 
 
@@ -22356,6 +22367,14 @@ is_strange_url()
     return 1
 }
 
+# A downloaded package/binary is never HTML. If we got an HTML page the server
+# most likely redirected to a landing/error page - reject it and do not cache.
+is_html_file()
+{
+    LANG=C head -c 1024 "$1" 2>/dev/null \
+        | grep -qiE '<!doctype html|<html[ >]|<head[ >]'
+}
+
 is_ipfs_hash()
 {
     # CIDv0: starts with Qm, 46 chars, alphanumeric only
@@ -24388,6 +24407,10 @@ sget()
     # download file and add to IPFS
     url_sget "$REALURL" "$TARGET" || return
 
+    if is_html_file "$TARGET" ; then
+        fatal "Downloaded '$TARGET' is an HTML page, not a file (server redirected to a landing/error page?). Not adding to IPFS."
+    fi
+
     # don't do ipfs put when gateway is using
     [ "$ipfs_mode" = "gateway" ] && return
 
@@ -25040,6 +25063,51 @@ extract_appimage()
 	#fi
 }
 
+# Import a flatpak bundle into a temporary OSTree repo.
+# Sets FLATPAK_REPO_DIR (caller must rm -rf it) and FLATPAK_REF.
+flatpak_prepare_repo()
+{
+	local flatpak_file="$1"
+	local operation="$2"
+
+	is_command ostree || fatal "ostree is required to $operation flatpak files"
+
+	FLATPAK_REPO_DIR=$(mktemp -d "$(pwd)/UXXXXXXXX")
+	docmd ostree init --repo="$FLATPAK_REPO_DIR" --mode=archive
+
+	# a flatpak bundle is an ostree static delta, so import it with ostree alone
+	docmd ostree static-delta apply-offline --repo="$FLATPAK_REPO_DIR" "$flatpak_file" \
+		|| { rm -rf "$FLATPAK_REPO_DIR" ; fatal "failed to import flatpak bundle $flatpak_file" ; }
+
+	# apply-offline imports the objects but creates no ref; take the commit checksum
+	FLATPAK_REF=$(find "$FLATPAK_REPO_DIR/objects" -name '*.commit' | head -n1 \
+		| sed 's|.*/objects/||; s|/||; s|\.commit$||')
+	[ -n "$FLATPAK_REF" ] || { rm -rf "$FLATPAK_REPO_DIR" ; fatal "could not get commit from flatpak repository" ; }
+}
+
+# Extract flatpak bundle via a temporary OSTree repo
+extract_flatpak()
+{
+	local arc="$1"
+	local subdir="$2"
+
+	flatpak_prepare_repo "$arc" "extract"
+
+	local checkout_root
+	checkout_root=$(mktemp -d "$(pwd)/UXXXXXXXX")
+	docmd ostree checkout --repo="$FLATPAK_REPO_DIR" --user-mode "$FLATPAK_REF" "$checkout_root/payload"
+
+	mkdir -p "$subdir"
+	# the app payload lives in files/; fall back to the whole tree otherwise
+	if [ -d "$checkout_root/payload/files" ] ; then
+		docmd cp -a "$checkout_root/payload/files/." "$subdir/"
+	else
+		docmd cp -a "$checkout_root/payload/." "$subdir/"
+	fi
+
+	rm -rf "$checkout_root" "$FLATPAK_REPO_DIR"
+}
+
 # TODO: move to patool
 # Extract special archive types that are not supported by patool
 extract_special_archive()
@@ -25077,6 +25145,9 @@ extract_special_archive()
 			;;
 		squashfs|snap)
 			extract_squashfs_image "$arc" "$subdir"
+			;;
+		flatpak)
+			extract_flatpak "$arc" "$subdir"
 			;;
 		*)
 			[ -n "$use_tdir" ] && rmdir "$subdir"
@@ -25314,6 +25385,13 @@ list_archive()
 		return
 	fi
 
+	if [ "$(get_archive_type "$arc" 2>/dev/null)" = "flatpak" ] ; then
+		flatpak_prepare_repo "$(realpath -s "$arc")" "list"
+		docmd ostree ls --repo="$FLATPAK_REPO_DIR" -R "$FLATPAK_REF"
+		rm -rf "$FLATPAK_REPO_DIR"
+		return
+	fi
+
 	if have_patool ; then
 		docmd patool $verbose list "$arc" "$@"
 		return
@@ -25338,6 +25416,13 @@ test_archive()
 	if [ "$(get_archive_type "$arc" 2>/dev/null)" = "exe" ] ; then
 		assure_7z
 		docmd $HAVE_7Z t "$arc" || fatal
+		return
+	fi
+
+	if [ "$(get_archive_type "$arc" 2>/dev/null)" = "flatpak" ] ; then
+		flatpak_prepare_repo "$(realpath -s "$arc")" "test"
+		rm -rf "$FLATPAK_REPO_DIR"
+		echo "Flatpak file is valid"
 		return
 	fi
 
