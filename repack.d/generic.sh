@@ -117,7 +117,10 @@ done
 # check for .py scripts
 find $BUILDROOT -name "*.py" | grep -q "\.py$" && flag_python3=1
 # can't use subst in find's exec (subst can be as function only)
-find $BUILDROOT -name "*.py" -exec sed -i -e '1{/python3/n};1i#!/usr/bin/python3' {} \;
+# 1s: drop a leading UTF-8 BOM first, otherwise the inserted shebang pushes the BOM
+# to line 2, and Python 3.12+ rejects a non-leading BOM (invalid U+FEFF), breaking
+# bundled library modules that ship with a BOM (e.g. azure-mgmt-rdbms in pgadmin4)
+find $BUILDROOT -name "*.py" -exec sed -i -e '1s/^\xef\xbb\xbf//' -e '1{/python3/n};1i#!/usr/bin/python3' {} \;
 
 if [ -n "$flag_python3" ] ; then
     if [ "$(epm print info -s)" = "alt" ] && [ -z "$EPM_RPMBUILD" ] ; then
