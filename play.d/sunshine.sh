@@ -14,6 +14,12 @@ is_openssl_enough 3 || fatal "There is no needed OpenSSL 3 in the system."
 
 arch=$(epm print info -a)
 
+# Newer Sunshine (>= 2026) is built against Fedora 45 and links libicuuc.so.78,
+# which ALT (ICU <= 74) does not ship. Provide it first.
+if ! ldconfig -p 2>/dev/null | grep -q 'libicuuc.so.78 ' ; then
+    epm play libicu78 || fatal "Can't install libicu78 (needed for libicuuc.so.78)"
+fi
+
 # Use GitHub releases (Fedora packages work for ALT via repack)
 if [ "$VERSION" != "*" ] ; then
     PKGURL="https://github.com/LizardByte/Sunshine/releases/download/v${VERSION}/Sunshine-${VERSION}-${RELEASE}.$arch.rpm"
