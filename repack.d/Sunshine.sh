@@ -10,52 +10,52 @@ PRODUCT=sunshine
 
 add_conflicts sunshine
 
-# Sunshine needs access to uinput to create mouse and gamepad events.
-cat <<EOF | create_file /usr/lib/udev/rules.d/60-sunshine.rules
-KERNEL=="uinput", SUBSYSTEM=="misc", OPTIONS+="static_node=uinput", TAG+="uaccess
-EOF
-
-# Autostart service
-cat <<EOF | create_file /usr/lib/systemd/user/sunshine.service
-[Unit]
-Description=Self-hosted game stream host for Moonlight
-StartLimitIntervalSec=500
-StartLimitBurst=5
-PartOf=graphical-session.target
-Wants=xdg-desktop-autostart.target
-After=xdg-desktop-autostart.target
-
-[Service]
-ExecStart=/usr/bin/sunshine
-Restart=on-failure
-RestartSec=5s
-
-[Install]
-WantedBy=xdg-desktop-autostart.target
-EOF
-
 epm assure patchelf
 epm assure ldd glibc-utils
+epm assure rpm2cpio cpio
 
-BOOST_NAME=$(epm search boost | head -n1 | awk '{print $1}')
-BOOST_REPO_VERSION=$(LC_ALL=C epm info $BOOST_NAME | grep -oP '^Version\s*:\s*\K[^\s]+' | sed 's/^[0-9]*://g' | cut -d '-' -f 1)
-BOOST_FEDORA_VERSION=$(a='' ldd usr/bin/sunshine | grep -oP 'libboost_[^ ]+\.so\.\K[0-9]+\.[0-9]+\.[0-9]+' | sort -u)
-BOOST_LIBS=$(a='' ldd usr/bin/sunshine | grep -oP 'libboost_[^ ]+\.so' | sort -u | sed 's/libboost_//; s/\.so//')
+RPM_ARCH=$(epm print info -a)
+FEDORA_RELEASE=$(basename "$4" | sed -n 's/.*\.fc\([0-9][0-9]*\)\..*/\1/p')
+[ -n "$FEDORA_RELEASE" ] || fatal "Can't get Fedora release from $4"
 
-MINIUPNPC_FEDORA_VERSION=$(a='' ldd usr/bin/sunshine | grep -oP 'libminiupnpc\.so\.\K[0-9]+')
-MINIUPNPC_REPO_VERSION=$(LC_ALL=C epm search miniupnpc |  grep -Eo 'libminiupnpc[0-9]+' | grep -Eo '[0-9]+' | sort -V | tail -n1)
+SUNSHINE_LIBDIR=/usr/share/sunshine/lib
 
-if [ -z $MINIUPNPC_REPO_VERSION ] ; then
-    MINIUPNPC_REPO_VERSION=$(LC_ALL=C epm ql miniupnpc | grep -o 'libminiupnpc\.so\.[0-9]\+' | sed 's/.*\.so\.//' | sort -V | tail -n1)
-fi
+ICU_MAJOR=$(ldd "usr/bin/sunshine" | awk -F'.so.' '/libicu/{split($2,a," "); print a[1]; exit}')
+[ -n "$ICU_MAJOR" ] || fatal "Can't detect ICU major version from sunshine binary"
 
-# Replace fedora libboost to system libboost
-for lib in ${BOOST_LIBS}; do
-    a='' patchelf --replace-needed "libboost_${lib}.so.${BOOST_FEDORA_VERSION}" "libboost_${lib}.so.${BOOST_REPO_VERSION}" "usr/bin/sunshine"
+KOJI="https://kojipkgs.fedoraproject.org/packages/icu"
+ICU_VER=$(epm tool eget --list "$KOJI/" | grep -oE "${ICU_MAJOR}\.[0-9]+/$" | sort -V | tail -1 | sed 's|/$||')
+[ -n "$ICU_VER" ] || fatal "Can't find ICU $ICU_MAJOR.x on koji"
+ICU_REL=$(epm tool eget --list "$KOJI/$ICU_VER/" | grep -oE "[0-9]*\.fc${FEDORA_RELEASE}/" | sort -V | tail -1 | sed 's|/$||')
+[ -n "$ICU_REL" ] || fatal "Can't find ICU $ICU_VER for fc$FEDORA_RELEASE"
+
+tmpdir=$(mktemp -d) || fatal
+trap 'rm -rf "$tmpdir"' EXIT HUP INT TERM
+
+epm tool eget -O "$tmpdir/libicu.rpm" "$KOJI/$ICU_VER/$ICU_REL/$RPM_ARCH/libicu-$ICU_VER-$ICU_REL.$RPM_ARCH.rpm" || fatal
+mkdir -p "$tmpdir/fedora-icu"
+( cd "$tmpdir/fedora-icu" && rpm2cpio "$tmpdir/libicu.rpm" | cpio -idm --quiet "./usr/lib64/libicudata.so.$ICU_MAJOR*" "./usr/lib64/libicuuc.so.$ICU_MAJOR*" 2>/dev/null ) || fatal "Can't extract libicu RPM"
+
+mkdir -p "$BUILDROOT$SUNSHINE_LIBDIR" || fatal
+pack_dir "$SUNSHINE_LIBDIR"
+find "$tmpdir/fedora-icu" \( -type f -o -type l \) -name 'libicu*.so*' | sort -V | while read -r lib ; do
+    dest="$SUNSHINE_LIBDIR/$(basename "$lib")"
+    cp -a "$lib" "$BUILDROOT$dest" || fatal
+    pack_file "$dest"
+    [ -L "$BUILDROOT$dest" ] || chmod 0755 "$BUILDROOT$dest"
 done
 
-# Replace fedora libminiupnpc to system libminiupnpc
-a='' patchelf --replace-needed "libminiupnpc.so.$MINIUPNPC_FEDORA_VERSION" "libminiupnpc.so.$MINIUPNPC_REPO_VERSION"  "usr/bin/sunshine"
+find "$BUILDROOT$SUNSHINE_LIBDIR" -type f -name 'libicu*.so*' | while read -r lib ; do
+    a='' patchelf --set-rpath '$ORIGIN' "$lib" || fatal
+done
 
+a='' patchelf --set-rpath '$ORIGIN/../share/sunshine/lib' "usr/bin/sunshine"
 a='' patchelf --replace-needed "libappindicator3.so.1" "libayatana-appindicator3.so.1" "usr/bin/sunshine"
 
+fix_desktop_file "^Exec=.*" "Exec=sunshine"
+
+# The binary has libminiupnpc in NEEDED, but does not import any symbols from it.
+# Loading Fedora's libminiupnpc on ALT can crash at process start, so drop this unused entry.
+patchelf --print-needed "usr/bin/sunshine" | grep '^libminiupnpc\.so\.' | while read -r lib ; do
+    a='' patchelf --remove-needed "$lib" "usr/bin/sunshine" || fatal
+done
