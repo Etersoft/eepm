@@ -265,61 +265,6 @@ snap_get_pkgurl()
     eget -O- -H Snap-Device-Series:16 https://api.snapcraft.io/v2/snaps/info/$SNAPNAME | epm --inscript tool json -b | grep -A 8 "$ARCH" | grep '\["channel-map",[0-9],"download","url"\]' | head -n1 | sed 's/.*"\(https:\/\/.*\)".*/\1/'
 }
 
-# Checkout a flatpak app from a flatpak remote repository via ostree.
-# Usage: get_flatpak_app_dir <flatpakrepo_url> <app_id> [branch] [arch]
-#   flatpakrepo_url - URL of the .flatpakrepo file
-#   app_id          - Flatpak application ID (e.g. com.nvidia.geforcenow)
-#   branch          - branch name (default: master)
-#   arch            - flatpak architecture name (default: uname -m)
-# Prints path to the checked out app files directory.
-# Requires: ostree
-get_flatpak_app_dir()
-{
-    local flatpakrepo_url="$1"
-    local app_id="$2"
-    local branch="${3:-master}"
-    local arch="${4:-$(uname -m)}"
-
-    local flatpakrepo_content
-    flatpakrepo_content=$(fetch_url "$flatpakrepo_url") || fatal "Can't fetch $flatpakrepo_url"
-    local repo_url
-    repo_url=$(echo "$flatpakrepo_content" | sed -n 's/^Url=//p')
-    [ -n "$repo_url" ] || fatal "Can't parse Url from $flatpakrepo_url"
-
-    is_command ostree || fatal "ostree is required to checkout flatpak apps"
-
-    local tdir
-    tdir=$(mktemp -d --tmpdir="$BIGTMPDIR") || fatal
-    trap 'rm -rf "$tdir"' EXIT
-
-    local ostree_repo="$tdir/repo"
-    local remote_name="eepm"
-    local flatpak_ref="app/$app_id/$arch/$branch"
-
-    ostree init --repo="$ostree_repo" --mode=archive 1>&2 || fatal "Can't init ostree repo"
-    ostree remote add --repo="$ostree_repo" --no-gpg-verify "$remote_name" "$repo_url" 1>&2 || fatal "Can't add ostree remote $repo_url"
-
-    info "Downloading $flatpak_ref from $repo_url ..."
-    ostree pull --repo="$ostree_repo" "$remote_name" "$flatpak_ref" 1>&2 || fatal "Can't pull $flatpak_ref from $repo_url"
-
-    local commit
-    commit=$(ostree rev-parse --repo="$ostree_repo" "$flatpak_ref") || fatal "Can't resolve $flatpak_ref"
-    [ -n "$commit" ] || fatal "Can't resolve $flatpak_ref"
-
-    local checkout_root="$tdir/checkout"
-    local app_dir="$tdir/$app_id"
-    ostree checkout --repo="$ostree_repo" --user-mode "$commit" "$checkout_root" 1>&2 || fatal "Can't checkout $flatpak_ref"
-
-    mkdir -p "$app_dir" || fatal
-    if [ -d "$checkout_root/files" ] ; then
-        cp -a "$checkout_root/files/." "$app_dir/" || fatal "Can't copy flatpak app files"
-    else
-        cp -a "$checkout_root/." "$app_dir/" || fatal "Can't copy flatpak app files"
-    fi
-    rm -rf "$checkout_root"
-    echo "$app_dir"
-}
-
 snap_get_version()
 {
     local SNAPNAME="$1"

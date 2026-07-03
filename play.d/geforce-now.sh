@@ -10,8 +10,12 @@ URL="https://www.nvidia.com/en-us/geforce-now/"
 
 warn_version_is_not_supported
 
+# ostree is used by pack.d to checkout the app from NVIDIA's flatpak repository
 epm assure ostree || fatal
 
-PKGURL=$(get_flatpak_app_dir "https://international.download.nvidia.com/GFNLinux/flatpak/geforcenow.flatpakrepo" "com.nvidia.geforcenow" "master" "x86_64")
+# The app is published in a flatpak *repository* (not a single bundle), so there
+# is no archive to download here: pack.d parses this .flatpakrepo file and pulls
+# the app via ostree. epm play only fetches the repo descriptor.
+PKGURL="https://international.download.nvidia.com/GFNLinux/flatpak/geforcenow.flatpakrepo"
 
 install_pack_pkgurl
