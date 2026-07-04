@@ -561,11 +561,13 @@ __get_binary_requires()
        findex="$findex -type d -path $BUILDROOT$d -prune -o"
     done
 
+    # *.musl.node: Node native addons built for musl carry NEEDED libc.so (musl
+    # SONAME), unsatisfiable on glibc; never loaded anyway (Node uses *.glibc.node).
     info "  Getting executable requires ..."
-    epm req --short $(find "$fdir" $findex -type f -executable) </dev/null 2>/dev/null
+    epm req --short $(find "$fdir" $findex -type f -executable ! -name "*.musl.node") </dev/null 2>/dev/null
 
     info "  Getting libs requires ..."
-    epm req --short $(find "$fdir" $findex -type f -name "lib*.so*") </dev/null 2>/dev/null
+    epm req --short $(find "$fdir" $findex -type f -name "lib*.so*" ! -name "*.musl.node") </dev/null 2>/dev/null
 }
 
 __get_library_provides()
