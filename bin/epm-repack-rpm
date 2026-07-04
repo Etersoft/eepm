@@ -115,7 +115,9 @@ __epm_check_repacked_package_req()
     local tmpalf=$(__convert_pkgallowscripts_to_regexp "$alf")
     remove_on_exit $tmpalf
     [ -n "$verbose" ] && echo "reqstop rules: $(cat $tmpalf)"
-    ! echo "$name" | grep $grep_flag -f $tmpalf
+    # feed requires one per line: patterns are anchored (^...$), so a forbidden
+    # require must be matched as a whole token, not as part of a space-joined line
+    ! echo "$name" | tr ' ' '\n' | grep $grep_flag -f $tmpalf
     local res=$?
     rm $tmpalf
     return $res

@@ -1,2 +1,5 @@
 libQt5*
 libQt6*
+# musl libc SONAME (bare libc.so, without .6) — unsatisfiable on glibc ALT,
+# signals a bundled musl binary that won't run anyway
+libc.so()*
