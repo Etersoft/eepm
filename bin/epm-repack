@@ -232,7 +232,7 @@ __prepare_source_package()
         return
     fi
 
-    # convert tarballs/AppImage/snap to tar
+    # convert tarballs/AppImage/snap/flatpak to tar
     load_helper epm-pack
 
     # they will fill $returntarname
@@ -246,6 +246,9 @@ __prepare_source_package()
     elif rhas "$alpkg" "\.snap$" ; then
         __epm_pack_run_handler generic-snap "$pkg" "$pkgversion"
         SUBGENERIC='snap'
+    elif rhas "$alpkg" "\.flatpak$" ; then
+        __epm_pack_run_handler generic-flatpak "$pkg" "$pkgversion" "$pkg_urls_downloaded"
+        SUBGENERIC='flatpak'
     else
         __epm_pack_run_handler generic-tar "$pkg" "$pkgversion"
         SUBGENERIC='tar'
