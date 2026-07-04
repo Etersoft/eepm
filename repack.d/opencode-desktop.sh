@@ -23,4 +23,5 @@ add_bin_exec_command opencode-desktop "/opt/OpenCode/ai.opencode.desktop"
 
 add_electron_deps
 
-ignore_lib_requires libc.so
+# *.musl.node are excluded from the dep scan globally in common.sh
+# (__get_binary_requires), so no manual ignore is needed here.
