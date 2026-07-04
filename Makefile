@@ -1,7 +1,7 @@
 all:
 	echo "We don't need any build"
 
-installd_list = pack.d repack.d prescription.d play.d desktop.d
+installd_list = pack.d repack.d prescription.d play.d desktop.d desktop-manager.d
 cmd_list = epm serv esu
 
 .PHONY: all clean install check install_common $(installd_list) $(cmd_list)
@@ -74,7 +74,7 @@ $(cmd_list):
 $(installd_list):
 	mkdir -p $(DESTDIR)$(sysconfdir)/eepm/$@/
 	cp $@/* $(DESTDIR)$(sysconfdir)/eepm/$@/
-	chmod 0755 $(DESTDIR)$(sysconfdir)/eepm/$@/*.sh
+	chmod 0755 $(DESTDIR)$(sysconfdir)/eepm/$@/*.sh 2>/dev/null || :
 
 
 check:

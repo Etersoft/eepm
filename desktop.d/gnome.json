@@ -2,7 +2,8 @@
     "name": "GNOME",
     "version": "46.4",
     "installed": false,
-    "dependencies": ["gnome-shell", "gdm"],
+    "dependencies": ["gnome-shell"],
+    "preferred_dm": ["gdm", "lightdm"],
     "description": "Window management and application launching for GNOME",
     "metapackages": ["gnome3-default"],
     "metapackage_variants": {

@@ -1,0 +1,8 @@
+{
+    "name": "LightDM",
+    "version": "1.32.0",
+    "installed": false,
+    "dependencies": [ "lightdm", "lightdm-gtk-greeter" ],
+    "service": "lightdm",
+    "description": "Lightweight cross-desktop display manager"
+}

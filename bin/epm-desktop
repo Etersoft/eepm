@@ -18,6 +18,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 load_helper epm-query
+load_helper epm-desktop-manager
 
 
 # args: de [options]
@@ -191,6 +192,12 @@ install_de()
     run_script "$de_name-postin" $de_name
     message "$de_name successfully installed."
 
+    # install a preferred display manager if none is installed yet
+    local preferred_dm="$(get_values "$de_name" "preferred_dm")"
+    if [ -n "$preferred_dm" ] ; then
+        ensure_dm $preferred_dm
+    fi
+
 }
 
 
@@ -287,6 +294,7 @@ epm_desktop_help()
 Examples:
   epm desktop install kde
   epm desktop install kde=small
+  epm desktop manager install lightdm
 '
 }
 
@@ -335,6 +343,9 @@ epm_desktop()
             ;;
         list-installed)               # HELPCMD:             List installed desktop environments
             list_installed_des
+            ;;
+        manager)                      # HELPCMD: <command>   Manage display managers (install, remove, list, ...)
+            epm_desktop_manager "$@"
             ;;
         installed)
             is_de_installed "$1"

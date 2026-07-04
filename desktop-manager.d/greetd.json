@@ -1,0 +1,8 @@
+{
+    "name": "greetd",
+    "version": "0.10.3",
+    "installed": false,
+    "dependencies": [ "greetd", "greetd-tuigreet" ],
+    "service": "greetd",
+    "description": "Minimal greetd display manager for Wayland compositors"
+}

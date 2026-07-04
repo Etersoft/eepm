@@ -3,5 +3,6 @@
     "version": "1.0.0",
     "installed": false,
     "dependencies": [ "cosmic-session" ],
+    "preferred_dm": [ "greetd", "sddm" ],
     "description": "COSMIC desktop environment"
 }

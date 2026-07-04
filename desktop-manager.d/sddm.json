@@ -1,0 +1,8 @@
+{
+    "name": "SDDM",
+    "version": "0.21.0",
+    "installed": false,
+    "dependencies": [ "sddm" ],
+    "service": "sddm",
+    "description": "QML-based display manager (used by KDE Plasma)"
+}

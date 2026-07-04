@@ -154,6 +154,7 @@ EOF
 %dir %_sysconfdir/eepm/conf.d/
 %dir %_sysconfdir/eepm/prescription.d/
 %dir %_sysconfdir/eepm/desktop.d/
+%dir %_sysconfdir/eepm/desktop-manager.d/
 %config(noreplace) %_sysconfdir/eepm/eepm.conf
 %config(noreplace) %_sysconfdir/eepm/serv.conf
 %config(noreplace) %_sysconfdir/eepm/mirrors-alt.list
@@ -161,6 +162,7 @@ EOF
 %config(noreplace) %_sysconfdir/eepm/vendorallowscripts.list
 %config(noreplace) %_sysconfdir/eepm/prescription.d/*
 %config(noreplace) %_sysconfdir/eepm/desktop.d/*
+%config(noreplace) %_sysconfdir/eepm/desktop-manager.d/*
 %_bindir/epm
 %_bindir/eepm
 %_bindir/serv
