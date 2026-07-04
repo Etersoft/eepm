@@ -2,7 +2,8 @@
     "name": "KDE Plasma",
     "version": "6.4.5",
     "installed": false,
-    "dependencies": [ "plasma-desktop", "lightdm", "lightdm-kde-greeter", "plasma-discover", "power-profiles-daemon", "qt6-wayland", "wayland-utils", "vulkan-tools"],
+    "dependencies": [ "plasma-desktop", "plasma-discover", "power-profiles-daemon", "qt6-wayland", "wayland-utils", "vulkan-tools"],
+    "preferred_dm": [ "sddm", "lightdm" ],
     "description": "KDE Plasma is a powerful desktop environment with support for X11 and Wayland",
     "metapackages": ["kde"],
     "metapackage_variants": {

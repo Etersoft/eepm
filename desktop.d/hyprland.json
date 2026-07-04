@@ -3,5 +3,6 @@
     "version": "0.42.0",
     "installed": false,
     "dependencies": [ "hyprland", "hyprland-guiutils", "kitty", "waybar", "wlogout", "fonts-ttf-fira-code-nerd", "hyprpaper", "hyprshot", "wofi", "pwvucontrol", "cliphist", "polkit-gnome"],
+    "preferred_dm": [ "greetd", "sddm" ],
     "description": "Hyprland is a dynamic tiling Wayland compositor that doesn't sacrifice on it's looks"
 }

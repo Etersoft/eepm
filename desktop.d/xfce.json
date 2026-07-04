@@ -3,6 +3,7 @@
     "version": "4.20",
     "installed": false,
     "dependencies": [ "xfce4-common" ],
+    "preferred_dm": [ "lightdm" ],
     "description": "Xfce is a lightweight desktop environment",
     "metapackages": ["xfce4-default"],
     "metapackage_variants": {

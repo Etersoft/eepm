@@ -1,0 +1,8 @@
+{
+    "name": "GDM",
+    "version": "50.1",
+    "installed": false,
+    "dependencies": [ "gdm" ],
+    "service": "gdm",
+    "description": "GNOME Display Manager"
+}

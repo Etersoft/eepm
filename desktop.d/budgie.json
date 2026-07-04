@@ -3,5 +3,6 @@
     "version": "10.9.2",
     "installed": false,
     "dependencies": [ "budgie-desktop", "gnome-console", "fonts-ttf-fira-code-nerd" ],
+    "preferred_dm": [ "lightdm", "gdm" ],
     "description": "Budgie Desktop is a familiar, modern desktop environment"
 }

@@ -1,0 +1,318 @@
+#!/bin/sh
+# shellcheck disable=SC3043,SC2086
+# Copyright (C) 2025  Etersoft
+# Copyright (C) 2025  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# Display manager management for "epm desktop manager ...".
+# Names are suffixed with _dm to avoid clashes with the generic
+# get_json/get_value/get_values/get_main_package helpers in epm-desktop
+# (this file is loaded by epm-desktop via load_helper).
+
+load_helper epm-query
+
+# Known display manager packages (used to detect whether any DM is installed).
+# ALT has no virtual "Provides: display-manager", so we check these names.
+# Note: the package is "lxde-lxdm" (it provides the "lxdm" service).
+KNOWN_DMS="lightdm sddm gdm greetd lxde-lxdm xdm ly slim"
+
+
+# args: dm
+get_dm_json()
+{
+    local dm_name="$1"
+    realpath $CONFIGDIR/desktop-manager.d/$dm_name.json
+}
+
+# args: dm key
+get_dm_value()
+{
+    local dm_name="$1"
+    local key="$2"
+
+    get_json_value "$(get_dm_json $dm_name)" "$key"
+}
+
+
+# args: dm key
+get_dm_values()
+{
+    local dm_name="$1"
+    local key="$2"
+
+    get_json_values "$(get_dm_json $dm_name)" "$key" | xargs
+}
+
+
+# args: dm
+check_dm_exists()
+{
+    local dm_name="$1"
+
+    [ -n "$dm_name" ] || fatal "Missed DM name."
+
+    local json="$(get_dm_json $dm_name)"
+
+    [ -s "$json" ] && return
+
+    fatal 'Manifest for $dm_name is not found.'
+}
+
+
+# args: dm
+# the main package is the first one in the dependencies list
+get_dm_main_package()
+{
+    local dm_name="$1"
+    local package="$(get_dm_values "$dm_name" "dependencies" | cut -d' ' -f1)"
+    [ -n "$package" ] || fatal 'Cannot get package name for $dm_name'
+    echo "$package"
+}
+
+
+# args: dm
+# systemd unit name; defaults to the dm name if "service" is not set
+get_dm_service()
+{
+    local dm_name="$1"
+    local service="$(get_dm_value "$dm_name" "service")"
+    [ -n "$service" ] || service="$dm_name"
+    echo "$service"
+}
+
+
+# args: dm
+is_dm_installed()
+{
+    local dm_name="$1"
+
+    is_installed $(get_dm_main_package $dm_name)
+}
+
+
+# Returns 0 if any known display manager is installed.
+any_dm_installed()
+{
+    local dm
+    for dm in $KNOWN_DMS ; do
+        is_installed "$dm" && return 0
+    done
+    return 1
+}
+
+
+# args: dm
+install_dm()
+{
+    local dm_name="$1"
+    check_dm_exists "$dm_name"
+
+    if [ -z "$force" ] && is_dm_installed "$dm_name" ; then
+        message "$dm_name is already installed."
+        return 0
+    fi
+
+    local dependencies="$(get_dm_values "$dm_name" "dependencies")"
+    local service="$(get_dm_service "$dm_name")"
+
+    message "Installing $dm_name with dependencies: $dependencies"
+
+    if ! docmd epm install $dependencies ; then
+        fatal "Failed to install $dm_name."
+    fi
+
+    # Enable the DM so it becomes the active display-manager.service
+    # (each DM unit ships Alias=display-manager.service).
+    if serv "$service" exists 2>/dev/null ; then
+        docmd serv enable "$service"
+    else
+        warning "Service '$service' for $dm_name is not found, skip enabling."
+    fi
+
+    message "$dm_name successfully installed."
+}
+
+
+# args: dm
+remove_dm()
+{
+    local dm_name="$1"
+    check_dm_exists "$dm_name"
+
+    if [ -z "$force" ] && ! is_dm_installed "$dm_name" ; then
+        message "$dm_name is not installed."
+        return 0
+    fi
+
+    local dependencies="$(get_dm_values "$dm_name" "dependencies")"
+
+    message "Removing $dm_name with dependencies: $dependencies"
+
+    if ! docmd epm remove $dependencies ; then
+        fatal "Failed to remove $dm_name."
+    fi
+
+    message "$dm_name successfully removed."
+}
+
+
+# args: <dm1> [dm2 ...]
+# Used by epm desktop install: if no display manager is installed at all,
+# install the first candidate that has a manifest in desktop-manager.d/.
+ensure_dm()
+{
+    [ $# -ge 1 ] || return 0
+
+    if any_dm_installed ; then
+        message "A display manager is already installed; skip preferred DM setup."
+        return 0
+    fi
+
+    local dm
+    for dm in "$@" ; do
+        if [ -s "$CONFIGDIR/desktop-manager.d/$dm.json" ] ; then
+            message "No display manager found; installing preferred '$dm'."
+            install_dm "$dm"
+            return $?
+        fi
+    done
+
+    warning "No supported display manager manifest found among candidates: $*"
+    return 0
+}
+
+
+# args: dm [json_flag]
+get_dm_info()
+{
+    local dm_name="$1"
+    local json_flag="$2"
+
+    local installed="$(is_dm_installed "$dm_name" && echo 'true' || echo 'false')"
+
+    if [ -n "$json_flag" ]; then
+        local json="$(get_dm_json $dm_name)"
+        # "installed" is never the last key in the manifest, keep the trailing comma
+        cat "$json" | sed 's/"installed":.*/"installed": '$installed',/g'
+        return
+    fi
+
+    message "Information for $dm_name:
+    Name: $(get_dm_value $dm_name name)
+    Version: $(get_dm_value $dm_name version)
+    Installed: $installed
+    Service: $(get_dm_service $dm_name)
+    Description: $(get_dm_value $dm_name description)"
+}
+
+
+list_dms()
+{
+    local json_flag="$1"
+    if [ -z "$json_flag" ]; then
+        for dm in $CONFIGDIR/desktop-manager.d/*.json ; do
+            basename "$dm" .json || fatal
+        done
+        return
+    fi
+
+    echo '['
+    local first=1
+    for dm in $CONFIGDIR/desktop-manager.d/*.json ; do
+        if [ $first = 1 ] ; then
+            first=0
+        else
+            echo ','
+        fi
+
+        dm_name="$(basename $dm .json)" || fatal
+        get_dm_info "$dm_name" "$json_flag"
+
+    done
+    echo ']'
+}
+
+
+list_installed_dms()
+{
+    local dm dm_name
+    for dm in $CONFIGDIR/desktop-manager.d/*.json ; do
+        dm_name="$(basename "$dm" .json)" || fatal
+        is_dm_installed "$dm_name" && echo "$dm_name"
+    done
+}
+
+
+epm_desktop_manager_help()
+{
+    message 'Usage: epm desktop manager <command> [--json] [option]'
+            get_help HELPCMD $SHAREDIR/epm-desktop-manager
+    message '
+Examples:
+  epm desktop manager install lightdm
+  epm desktop manager info greetd
+'
+}
+
+
+epm_desktop_manager()
+{
+
+    local cmd="$1"
+    shift
+
+    local json_flag=''
+
+    case "$1" in
+        --json)
+            json_flag=1
+            shift
+            ;;
+    esac
+
+    case "$cmd" in
+        "-h"|"--help"|"help")        # HELPCMD: help
+            epm_desktop_manager_help
+            return
+            ;;
+        install)                     # HELPCMD: <dm_name>   Install a display manager
+            check_dm_exists "$1"
+            install_dm "$1"
+            ;;
+        remove)                      # HELPCMD: <dm_name>   Remove a display manager
+            check_dm_exists "$1"
+            remove_dm "$1"
+            ;;
+        info)                        # HELPCMD: <dm_name>   Get information about a display manager
+            check_dm_exists "$1"
+            get_dm_info "$1" $json_flag
+            ;;
+        list)                        # HELPCMD:             List all available display managers
+            list_dms $json_flag
+            ;;
+        list-installed)              # HELPCMD:             List installed display managers
+            list_installed_dms
+            ;;
+        installed)
+            is_dm_installed "$1"
+            ;;
+        any-installed)
+            any_dm_installed
+            ;;
+        *)
+            fatal 'Unknown option $cmd. Run with --help to get help'
+            ;;
+    esac
+}
