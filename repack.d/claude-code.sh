@@ -28,13 +28,13 @@ mark_config_noreplace $CONFIGDIR/env.conf
 cat <<EOF | create_exec_file /usr/bin/$PRODUCT
 #!/bin/sh
 CLAUDE_CONFIG="$CONFIGDIR/env.conf"
-if [ -f "\$CLAUDE_CONFIG" ]; then
+if [ -r "\$CLAUDE_CONFIG" ]; then
     set -a
     . "\$CLAUDE_CONFIG"
     set +a
 fi
 CLAUDE_USER_CONFIG="\$HOME/.claude/env.conf"
-if [ -f "\$CLAUDE_USER_CONFIG" ]; then
+if [ -r "\$CLAUDE_USER_CONFIG" ]; then
     set -a
     . "\$CLAUDE_USER_CONFIG"
     set +a
