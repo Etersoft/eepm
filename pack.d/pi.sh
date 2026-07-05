@@ -32,6 +32,10 @@ license: MIT
 url: https://github.com/badlogic/pi-mono
 summary: pi coding agent
 description: Pi is a minimal terminal coding harness. Adapt pi to your workflows, not the other way around, without having to fork and modify pi internals.
+# ALT ships the same upstream as pi-coding-agent; take over /usr/bin/pi cleanly
+provides: pi-coding-agent
+conflicts: pi-coding-agent
+obsoletes: pi-coding-agent
 EOF
 
 return_tar $PKGNAME.tar
