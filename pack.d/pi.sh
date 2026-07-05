@@ -29,7 +29,7 @@ cat <<EOF >$PKGNAME.tar.eepm.yaml
 name: $PRODUCT
 group: Development/Tools
 license: MIT
-url: https://github.com/badlogic/pi-mono
+url: https://github.com/earendil-works/pi
 summary: pi coding agent
 description: Pi is a minimal terminal coding harness. Adapt pi to your workflows, not the other way around, without having to fork and modify pi internals.
 # ALT ships the same upstream as pi-coding-agent; take over /usr/bin/pi cleanly
