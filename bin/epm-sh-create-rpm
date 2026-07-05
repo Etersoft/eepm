@@ -87,9 +87,9 @@ __generate_spec_by_yaml()
 
     local name version release summary license group
     local description url upstream_file upstream_url
-    local requires provides buildarch
+    local requires provides conflicts obsoletes buildarch
 
-    yaml_load_vars "$yaml_file" name version release summary description upstream_file upstream_url url group license requires provides buildarch
+    yaml_load_vars "$yaml_file" name version release summary description upstream_file upstream_url url group license requires provides conflicts obsoletes buildarch
 
     [ -n "$summary" ] || summary="$name"
 
@@ -126,6 +126,12 @@ EOF
     done
     for r in $provides ; do
         echo "Provides: $r" >> "$specfile"
+    done
+    for r in $conflicts ; do
+        echo "Conflicts: $r" >> "$specfile"
+    done
+    for r in $obsoletes ; do
+        echo "Obsoletes: $r" >> "$specfile"
     done
     cat >> "$specfile" <<EOF
 
