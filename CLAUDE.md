@@ -11,17 +11,40 @@ Main commands:
 - `serv` - service management wrapper (systemd, sysvinit)
 - `distr_info` - distribution detection utility
 
+## Project Structure
+
+- `bin/` — core shell entry points (`epm`, `serv`, `distr_info`) plus command helpers (`epm-*`, `serv-*`, `tools_*`)
+- `play.d/` — "epm play" install scripts for apps from official sources
+- `repack.d/` — scripts for converting packages between formats (rpm↔deb) with distro-specific fixes
+- `pack.d/` — scripts for creating packages from upstream tarballs/binaries
+- `prescription.d/` — meta-package recipes that install groups of related packages
+- `desktop.d/` — desktop integration data
+- `etc/` — default configuration and allow/stop lists (see `etc/eepm.conf`)
+- `tests/` — shell test scripts and Bats suites (helpers in `tests/*/helpers.bash`)
+- `docs/` and `man/` — documentation
+
 ## Development Setup
 
-No build step required - this is a shell script project. Run directly from checkout:
+No build step required — this is a shell script project. Run directly from checkout:
 ```bash
 ./bin/epm --help
 ./bin/epm play --list
 ```
 
+Packaging install target:
+```bash
+make install DESTDIR=/tmp/pkgroot
+```
+
 ## Testing
 
-Run individual test scripts from the `tests/` directory:
+Bats tests (preferred for new tests):
+```bash
+./tests/run_bats.sh                                 # all Bats tests
+./tests/run_bats.sh tests/search/test_search.bats   # specific suite
+```
+
+Individual shell test scripts:
 ```bash
 ./tests/test_distr_info.sh
 ./tests/test_versions.sh
@@ -30,9 +53,11 @@ Run individual test scripts from the `tests/` directory:
 
 Code quality checks:
 ```bash
-./check_code.sh              # Run shellcheck and checkbashisms on all scripts
-./check_code.sh bin/epm-install  # Check specific file
+./check_code.sh                 # shellcheck and checkbashisms on all scripts
+./check_code.sh bin/epm-install # specific file
 ```
+
+No formal coverage target; add or update tests when behavior changes.
 
 ## Architecture
 
@@ -160,6 +185,8 @@ Scripts for converting packages between formats (rpm↔deb) with distro-specific
 - `common.sh` - main repack functions
 - `common-chromium-browser.sh` - for Chromium-based browsers (sources `common.sh`)
 
+**PRODUCT vs PKGNAME:** In repack scripts, `PRODUCT` is the internal app name (e.g., `/opt/$PRODUCT`, `/usr/bin/$PRODUCT`) and may differ from the package name. Use the repack script's third argument (package `Name:`) when you need the actual `PKGNAME`.
+
 **Tips:**
 - Use single quotes for messages (gettext translation support)
 - Download archive once with `epm play --download-only appname` for inspection
@@ -243,6 +270,28 @@ Exception: commits for tests, documentation, CI, and Claude Code related files m
 ## Shell Compatibility
 
 All scripts must be POSIX-compatible (avoid bashisms). Use `#!/bin/sh` for most scripts. The `check_code.sh` script verifies this with `checkbashisms`.
+
+## Coding Style
+
+- Follow existing naming: command implementations `bin/epm-*`, service commands `bin/serv-*`, helpers `bin/tools_*`
+- New app scripts: `play.d/<app>.sh`, `repack.d/<app>.sh`, or `pack.d/<app>.sh`
+- Use consistent shell formatting and single quotes for user-facing messages where possible
+- Default configuration lives in `etc/eepm.conf`; local repo details are in `docs/local-repo.md`
+
+## Publish Cycle (claude → devel → pub.github)
+
+Standard cycle to move work from the development branch (`claude`) into the release branch (`devel`) and publish:
+
+1. On `claude`, identify NEW commits to cherry-pick (not all of `devel..claude`)
+2. `git tag -f backup/devel-before-cherrypick devel`
+3. `git checkout devel` → cherry-pick the range
+4. `gpush` (NOT `git push`) — pushes to `pub.github`
+5. **Pause** — wait for user to accept PRs on GitHub
+6. `gpull pub.github` — fetch merged PRs
+7. `git tag -f backup/claude-before-rebase claude`
+8. `git checkout claude` → `git rebase devel`
+
+Always create `backup/...` tags before history rewrites. `devel` is published to multiple remotes (git.alt, git.eter, lav, pub.github, pub.gitlab); `gpush` targets `pub.github` only.
 
 ## Working with Claude Code
 
