@@ -1109,7 +1109,8 @@ is_package_file()
 get_package_type()
 {
     local i
-    case $1 in
+    local _bn="$(basename "$1")"
+    case $_bn in
         *.deb)
             echo "deb"
             return
@@ -1139,7 +1140,7 @@ get_package_type()
             return
             ;;
         *.pkg.tar.*)
-            echo "pkg.tar.$(echo "$1" | sed -e 's|.*\.pkg\.tar\.||')"
+            echo "pkg.tar.$(echo "$_bn" | sed -e 's|.*\.pkg\.tar\.||')"
             return
             ;;
         *)
@@ -1148,7 +1149,7 @@ get_package_type()
                 return
             fi
             # print extension by default
-            basename "$1" | sed -e 's|.*\.||'
+            echo "$_bn" | sed -e 's|.*\.||'
             return 1
             ;;
     esac
