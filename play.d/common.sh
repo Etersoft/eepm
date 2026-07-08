@@ -377,7 +377,8 @@ get_github_url()
     # If asset_name has no globs, try direct URL without API call
     if ! echo "$asset_name" | grep -q '[*?]' ; then
         local direct
-        for tag in "$VERSION" "v$VERSION" ; do
+        for tag in "$VERSION-$RELEASE" "$VERSION" "v$VERSION" ; do
+            [ -n "$tag" ] || continue
             direct="https://github.com/$user_and_repo/releases/download/$tag/$asset_name"
             eget --check-url "$direct" 2>/dev/null && echo "$direct" && return
         done
