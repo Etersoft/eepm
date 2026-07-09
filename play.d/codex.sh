@@ -19,10 +19,10 @@ if [ "$PKGNAME" = "$BASEPKGNAME-preview" ] ; then
 fi
 
 if [ "$VERSION" = "*" ] ; then
-    PKGURL=$(get_github_url "$URL" "codex-$arch.tar.gz" $prerelease)
+    PKGURL=$(get_github_url "$URL" "codex-package-$arch.tar.gz" $prerelease)
 else
     tag="rust-v$VERSION"
-    PKGURL="https://github.com/openai/codex/releases/download/$tag/codex-$arch.tar.gz"
+    PKGURL="https://github.com/openai/codex/releases/download/$tag/codex-package-$arch.tar.gz"
 fi
 
 install_pack_pkgurl
