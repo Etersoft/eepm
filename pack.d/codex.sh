@@ -10,14 +10,26 @@ URL="$4"
 [ -n "$VERSION" ] || VERSION="$(echo "$URL" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?' | head -n1)"
 [ -n "$VERSION" ] || fatal "Can't get package version"
 
-mkdir -p usr/bin
 erc --here unpack "$TAR" || fatal
-mv "$(basename "$TAR" .tar.gz)" usr/bin/codex || fatal
-chmod 755 usr/bin/codex
+
+# Install everything under /opt/codex
+mkdir -p opt/codex/bin opt/codex
+
+mv bin/codex opt/codex/bin/codex || fatal
+mv bin/codex-code-mode-host opt/codex/bin/codex-code-mode-host || fatal
+chmod 755 opt/codex/bin/codex opt/codex/bin/codex-code-mode-host
+
+mv codex-path opt/codex/path || fatal
+mv codex-resources opt/codex/resources || fatal
+
+# Symlinks for PATH
+mkdir -p usr/bin
+ln -s /opt/codex/bin/codex usr/bin/codex
+ln -s /opt/codex/bin/codex-code-mode-host usr/bin/codex-code-mode-host
 
 PKGNAME=$PRODUCT-$VERSION
 
-erc pack $PKGNAME.tar usr/bin || fatal
+erc pack $PKGNAME.tar opt usr/bin || fatal
 
 cat <<EOF >$PKGNAME.tar.eepm.yaml
 name: $PRODUCT
