@@ -29,6 +29,12 @@ mkdir -p "$PLAY_DIR" "$ERR_DIR" "$LOG_DIR" "$REQ_DIR" "$FILES_DIR"
 
 cd "$REPO_ROOT/bin"
 
+LOG_FILE="$LOG_DIR/$APP.log"
+
+has_failure_markers() {
+  grep -Eq '(^|[[:space:]])ERROR: |^FATAL: |There was some error during (install|run)|^X .+: FAIL$|^make: \*\*\* .* Error [0-9]+|^dh_[^:]+: error: |^dpkg-[^:]+: error: |^WARNING: Can'\''t find converted (deb|rpm)' "$LOG_FILE"
+}
+
 # IPFS
 PLAY_OPTS="--latest"
 SPLIT_DOWNLOAD_MODE=0
@@ -75,9 +81,14 @@ fi
 echo "Installing $APP"
 
 set +e
-./epm play $PLAY_OPTS --auto "$APP" 2>&1 | tee "$LOG_DIR/$APP.log"
+./epm play $PLAY_OPTS --auto "$APP" 2>&1 | tee "$LOG_FILE"
 rc=${PIPESTATUS[0]}
 set -e
+
+if [ "$rc" -eq 0 ] && has_failure_markers; then
+  echo "Detected failure marker in $LOG_FILE"
+  rc=1
+fi
 
 # result
 if [ "$rc" -eq 0 ]; then
@@ -93,7 +104,7 @@ if [ "$rc" -eq 0 ]; then
   ./epm ql "$package_name" >"$FILES_DIR/$package_name" 2>&1 || true
 else
   echo "X $APP: FAIL"
-  mv -vf "$LOG_DIR/$APP.log" "$ERR_DIR/$APP.log"
+  mv -vf "$LOG_FILE" "$ERR_DIR/$APP.log"
 fi
 
 # Save updated IPFS DB and per-app delta for summary merge.
