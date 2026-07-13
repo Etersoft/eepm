@@ -32,7 +32,19 @@ __eepm_list_installed_packages()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local results
     results=$(epm qp --quiet --short "^$cur")
+    if [[ -z "$results" ]]; then
+        results=$(epm qa --quiet --short | grep -i "^$cur")
+    fi
     COMPREPLY=( $(compgen -W "$results" -- "$cur") )
+}
+
+__eepm_list_installed_or_available_packages()
+{
+    __eepm_list_installed_packages
+
+    if [[ ${#COMPREPLY[@]} -eq 0 ]]; then
+        __eepm_list_available_packages
+    fi
 }
 
 __eepm_list_available_packages() {
@@ -262,6 +274,7 @@ __eepm_complete_autoremove() {
 __eepm_complete_commands() {
     local commands_pattern
     commands_pattern=$(__eepm_get_commands_pattern)
+    commands_pattern="${commands_pattern:+$commands_pattern|}add|i|it|-i|installed|cl|-cl|-ql|req|deplist|depends-on|rdepends|whatrequires|wd|required-by|prov|rm|del|delete|uninstall|erase|purge|e|-e|-P|url|wp|which|belongs|-qf|-S|ar|removerepo|remove-repo|rr|kernel-upgrade|update-kernel|upgrade-kernel|fetch|fc|recipe"
 
     local special i
     for ((i = 1; i < ${#COMP_WORDS[@]} - 1; i++)); do
@@ -281,20 +294,31 @@ __eepm_complete_commands() {
                 __eepm_complete_full-upgrade
                 return 0 
                 ;;
-            query|q|-q|info|qp|grep|query_package|-qp|show|qi|-qi)
-                __eepm_list_available_packages
+            query|q|-q|qp|grep|query_package|-qp)
                 __eepm_list_installed_packages
-                return 0 
-                ;;
-            changelog|cl|-cl)
-                __eepm_list_available_packages
                 return 0
                 ;;
-            search|s|find|sr|-s|-ql|ql|get-files|filelist)
+            info|show|qi|-qi)
+                __eepm_list_installed_or_available_packages
+                return 0
+                ;;
+            changelog|cl|-cl|requires|deplist|depends|req|depends-on|provides|prov)
+                __eepm_list_installed_or_available_packages
+                return 0
+                ;;
+            search|s|find|sr|-s)
                 __eepm_list_available_packages
                 return 0 
                 ;;
-            requires|deplist|depends|req|depends-on|whatdepends|rdepends|whatrequires|wd|required-by|provides|prov|whatprovides|conflicts|policy|resolve)
+            -ql|ql|get-files|filelist)
+                __eepm_list_installed_or_available_packages
+                return 0
+                ;;
+            whatdepends|rdepends|whatrequires|wd|required-by)
+                __eepm_list_installed_or_available_packages
+                return 0
+                ;;
+            whatprovides|conflicts|policy|resolve)
                 __eepm_list_available_packages
                 return 0 
                 ;;
@@ -382,12 +406,15 @@ __eepm()
         epm|eepm)
             __eepm_complete_commands 
             ;;
-        epmi|epmcl|epmwd|epms)
+        epmi|epmI|epms)
             __eepm_list_available_packages 
             return 0
             ;;
-        epmql|epmq|epmqi|epmqp)
-            __eepm_list_available_packages 
+        epmcl|epmwd|epmql|epmqi)
+            __eepm_list_installed_or_available_packages
+            return 0
+            ;;
+        epmq|epmqp)
             __eepm_list_installed_packages
             return 0
             ;;
@@ -395,12 +422,16 @@ __eepm()
             __eepm_list_installed_packages 
             return 0
             ;;
-        epmp)
+        epmp|epmps)
             __eepm_list_available_packages_play 
             return 0
             ;;
-        epmqf)
+        epmqf|epmsf)
             __eepm_complete_qf 
+            return 0
+            ;;
+        epmrl)
+            __eepm_complete_repolist
             return 0
             ;;
         *)
@@ -431,4 +462,4 @@ __eepm()
 
 
 # . "/usr/share/bash-completion/bash_completion"
-complete -F __eepm epm eepm epmi epme epmp epmcl epmqf epmI epms epmsf epmwd epmq epmqi epmqa epmqp epmql epmrl epmu
+complete -F __eepm epm eepm epmi epme epmp epmps epmcl epmqf epmI epms epmsf epmwd epmq epmqi epmqa epmqp epmql epmrl epmu
