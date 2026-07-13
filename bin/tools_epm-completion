@@ -24,6 +24,9 @@ PROGDIR="$(dirname "$0")"
 SHAREDIR="$PROGDIR"
 [ "$PROGDIR" = "." ] && PROGDIR="$(pwd)"
 
+EPM_SCRIPT="$SHAREDIR/epm"
+[ -r "$EPM_SCRIPT" ] || EPM_SCRIPT="$(command -v epm 2>/dev/null)"
+
 # Parse HELPCMD/HELPOPT comments from epm script
 # Format: command|alias)  # HELPCMD: description [COMPLETE:argtype]
 # Output: command<TAB>description[<TAB>argtype]
@@ -70,13 +73,13 @@ parse_help_comments()
 # Get list of commands with descriptions and argument types
 get_commands()
 {
-    parse_help_comments HELPCMD "$SHAREDIR/epm"
+    parse_help_comments HELPCMD "$EPM_SCRIPT"
 }
 
 # Get list of options with descriptions
 get_options()
 {
-    parse_help_comments HELPOPT "$SHAREDIR/epm"
+    parse_help_comments HELPOPT "$EPM_SCRIPT"
 }
 
 # Get repository prefixes usable in repo/package install syntax
@@ -115,7 +118,10 @@ epms	search
 epmsf	search_file
 epmcl	changelog
 epmp	play
+epmps	play
 epmrp	prescription
+epmrl	repolist
+epmwd	whatdepends
 EOF
 }
 
@@ -155,11 +161,11 @@ get_subcommand_options()
     case "$cmd" in
         # Commands with subcommands (word-style)
         repo|mark|db)
-            "$SHAREDIR/epm" "$cmd" --help 2>/dev/null | parse_subcommand_help
+            "$EPM_SCRIPT" "$cmd" --help 2>/dev/null | parse_subcommand_help
             ;;
         # Commands with --options style
         play|kernel-update|status|list|info|autoremove|history)
-            "$SHAREDIR/epm" "$cmd" --help 2>/dev/null | parse_options_help
+            "$EPM_SCRIPT" "$cmd" --help 2>/dev/null | parse_options_help
             ;;
         *)
             # Unknown subcommand, return empty

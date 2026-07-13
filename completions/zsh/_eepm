@@ -1,4 +1,4 @@
-#compdef _epm epm eepm epmi epme epmp epmqf epmI epms epmsf epmu epmq epmql epmqa epmqi epmcl epmrl epmwd epmqp
+#compdef _epm epm eepm epmi epme epmp epmps epmqf epmI epms epmsf epmu epmq epmql epmqa epmqi epmcl epmrl epmwd epmqp
 
 # Helper: get commands in zsh format (command:description)
 __eepm_get_commands() {
@@ -10,71 +10,101 @@ __eepm_get_options() {
   epm tool epm-completion options 2>/dev/null | awk -F'\t' '{print "\"" $1 "[" $2 "]\""}'
 }
 
+__eepm_load_completion_cache() {
+  [[ -n "${__eepm_completion_cache_loaded:-}" ]] && return
+
+  typeset -ga EEPM_FULL_ARGS
+  typeset -ga EEPM_SHORT_ARGS
+  typeset -ga __eepm_commands
+  typeset -ga __eepm_command_names
+
+  EEPM_FULL_ARGS=(${(f)"$(epm tool epm-completion options 2>/dev/null | awk -F'\t' '$1 ~ /^--/ {gsub(/\047/, "`", $2); print $1"["$2"]"}')"})
+  EEPM_SHORT_ARGS=(${(f)"$(epm tool epm-completion options 2>/dev/null | awk -F'\t' '$1 ~ /^-[^-]/ {gsub(/\047/, "`", $2); print $1"["$2"]"}')"})
+  __eepm_commands=(${(f)"$(epm tool epm-completion commands 2>/dev/null | awk -F'\t' '{print $1":"$2}')"})
+  __eepm_command_names=(
+    ${__eepm_commands%%:*}
+    ${(f)"$(epm tool epm-completion aliases 2>/dev/null | cut -f1)"}
+    add i it -i installed
+    cl -cl
+    -ql
+    req deplist depends-on
+    rdepends whatrequires wd required-by
+    prov
+    rm del delete uninstall erase purge e -e -P
+    url
+    wp which belongs -qf -S
+    ar removerepo remove-repo rr
+    kernel-upgrade update-kernel upgrade-kernel
+    fetch fc
+    recipe
+  )
+  __eepm_completion_cache_loaded=1
+}
+
 _epm() {
   typeset -A opt_args
   local context state line curcontext="$curcontext"
   local ret=1
 
-  EEPM_SUBCOMMANDS_ARGS=(epmi epme epmp epmqf epmI epms epmsf epmu epmq epmql epmqa epmqi epmcl epmrl epmwd epmqp)
+  __eepm_load_completion_cache
 
-  # Dynamic options from epm tool epm-completion
-  local -a EEPM_FULL_ARGS
-  EEPM_FULL_ARGS=(${(f)"$(epm tool epm-completion options 2>/dev/null | awk -F'\t' '$1 ~ /^--/ {gsub(/\047/, "`", $2); print $1"["$2"]"}')"})
-
-  local -a EEPM_SHORT_ARGS
-  EEPM_SHORT_ARGS=(${(f)"$(epm tool epm-completion options 2>/dev/null | awk -F'\t' '$1 ~ /^-[^-]/ {gsub(/\047/, "`", $2); print $1"["$2"]"}')"})
-
-  # Dynamic commands from epm tool epm-completion
-  local -a commands
-  commands=(${(f)"$(epm tool epm-completion commands 2>/dev/null | awk -F'\t' '{print $1":"$2}')"})
-#TODO fix long args
   local cmd
   for word in "${words[@]}"; do
-    if [[ " ${commands[@]%%:*} " =~ " ${word} " ]] || [[ " ${EEPM_SHORT_ARGS[@]%%'['*} " =~ " $word " ]] || [[ " ${EEPM_SUBCOMMANDS_ARGS[@]} " =~ " $word " ]]; then
+    if [[ " ${__eepm_command_names[@]} " =~ " ${word} " ]]; then
       cmd="${word}"
       break
     fi
   done
 
-  if [[ ! " ${EEPM_SUBCOMMANDS_ARGS[@]} " =~ " $cmd " ]]; then
+  if [[ -n "$cmd" && ! "${words[CURRENT]}" == -* ]]; then
+    _arguments -C '*:arg:->args'
+  else
     _arguments -C \
         "${EEPM_SHORT_ARGS[@]}" \
-        "" \
         "${EEPM_FULL_ARGS[@]}" \
         '*::arg:->args' \
       && ret=0
-  else
-     _arguments -C '*:arg:->args'
   fi
-  
+
   if [[ -z "$cmd" ]]; then
-    _describe -t commands 'command' commands && ret=0
+    _describe -t commands 'command' __eepm_commands && ret=0
     return $ret
   fi
 
-   case "$state" in
+  case "$state" in
     args)
       case "$cmd" in
-        play|epmp)
+        play|epmp|epmps)
           __eepm_play_packages && ret=0
           ;;
-        install|Install|reinstall|add|i|it|-i|installed|epmi|epmI|epms|epmcl|epmwd)
+        install|Install|reinstall|add|i|it|-i|installed|epmi|epmI|epms)
           __eepm_available_packages && ret=0
           ;;
         full-upgrade)
           __eepm_complete_full-upgrade && ret=0
           ;;
-        changelog|cl|-cl|search|s|find|sr|-s|-ql|ql|get-files|filelist|requires|deplist|depends|req|depends-on|whatdepends|rdepends|whatrequires|wd|required-by|provides|prov|whatprovides|conflicts|policy|resolve)
+        search|s|find|sr|-s|whatprovides|conflicts|policy|resolve)
           __eepm_available_packages && ret=0
+          ;;
+        changelog|cl|-cl|epmcl|requires|deplist|depends|req|depends-on|provides|prov)
+          __eepm_installed_or_available_packages && ret=0
+          ;;
+        info|qi|-qi|show|epmqi)
+          __eepm_installed_or_available_packages && ret=0
+          ;;
+        whatdepends|rdepends|whatrequires|wd|required-by|epmwd)
+          __eepm_installed_or_available_packages && ret=0
+          ;;
+        epmql|-ql|ql|get-files|filelist)
+          __eepm_installed_or_available_packages && ret=0
           ;;
         remove|rm|del|delete|uninstall|erase|purge|e|-e|-P|site|url|epme)
           __eepm_installed_packages && ret=0
           ;;
-        qf|wp|which|belongs|-qf|-S|epmqf)
+        qf|wp|which|belongs|-qf|-S|epmqf|epmsf)
           __eepm_complete_qf && ret=0
           ;;
-        epmql|epmq|epmqi|epmqp|query|q|-q|info|qp|grep|query_package|-qp|show|qi|-qi)
-          __eepm_available_packages && ret=0 
+        query|q|-q|qp|grep|query_package|-qp|epmq|epmqp)
           __eepm_installed_packages && ret=0
           ;;
         status)
@@ -83,7 +113,7 @@ _epm() {
         list)
           __eepm_complete_list && ret=0
           ;;
-        addrepo|ar|repofix|removerepo|remove-repo|rr)
+        addrepo|ar|repofix|removerepo|remove-repo|rr|repolist|epmrl)
           __eepm_complete_repolist && ret=0
           ;;
         repo)
@@ -143,7 +173,7 @@ __eepm_list_available_prescription()
   _describe -t list_available_prescription 'list available prescription' list_available_prescription
 
   if [[ ${words[CURRENT]} == -* ]]; then
-    _arguments -C "${EEPM_SHORT_ARGS[@]}" "" "${EEPM_FULL_ARGS[@]}"
+    _arguments -C "${EEPM_SHORT_ARGS[@]}" "${EEPM_FULL_ARGS[@]}"
   fi
 }
 
@@ -495,7 +525,7 @@ __eepm_available_packages() {
   fi
 
   if [[ "$cur" == -* ]]; then
-    _arguments -C "${EEPM_SHORT_ARGS[@]}" "" "${EEPM_FULL_ARGS[@]}"
+    _arguments -C "${EEPM_SHORT_ARGS[@]}" "${EEPM_FULL_ARGS[@]}"
   fi
 }
 
@@ -504,13 +534,37 @@ __eepm_installed_packages() {
   local cur=${words[CURRENT]}
   local installed_packages
   installed_packages=( ${(f)"$(epm qp --quiet --short "^$cur")"} )
+  if (( ${#installed_packages[@]} == 0 )); then
+    installed_packages=( ${(f)"$(epm qa --quiet --short | grep -i "^$cur")"} )
+  fi
 
   if (( ${#installed_packages[@]} > 0 )); then
     _describe -t installed-packages 'installed package' installed_packages
   fi
 
   if [[ "$cur" == -* ]]; then
-    _arguments -C "${EEPM_SHORT_ARGS[@]}" "" "${EEPM_FULL_ARGS[@]}"
+    _arguments -C "${EEPM_SHORT_ARGS[@]}" "${EEPM_FULL_ARGS[@]}"
+  fi
+}
+
+__eepm_installed_or_available_packages() {
+  local cur=${words[CURRENT]}
+  local installed_packages
+
+  if [[ "$cur" == -* ]]; then
+    _arguments -C "${EEPM_SHORT_ARGS[@]}" "${EEPM_FULL_ARGS[@]}"
+    return
+  fi
+
+  installed_packages=( ${(f)"$(epm qp --quiet --short "^$cur")"} )
+  if (( ${#installed_packages[@]} == 0 )); then
+    installed_packages=( ${(f)"$(epm qa --quiet --short | grep -i "^$cur")"} )
+  fi
+
+  if (( ${#installed_packages[@]} > 0 )); then
+    _describe -t installed-packages 'installed package' installed_packages
+  else
+    __eepm_available_packages
   fi
 }
 
