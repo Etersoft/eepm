@@ -19,7 +19,7 @@ erc pack $PKGNAME.tar usr/bin || fatal
 cat <<EOF >$PKGNAME.tar.eepm.yaml
 name: $PRODUCT
 group: Development/Tools
-license: Apache-2.0
+license: MIT
 url: https://github.com/coddy-project/coddy-agent
 summary: Coddy Agent - a coding agent harness in one Go binary
 description: A coding agent harness for software work. ReAct loop, filesystem and shell tools, MCP, project rules, skills, browser UI, scheduler, and long-term memory.
