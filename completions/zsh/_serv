@@ -15,6 +15,7 @@ SERV_OPTS_LONG=(
   '--show-command-only:show command only, do not any action'
   '--quiet:quiet mode (do not print commands before exec)'
   '--auto:non interactive mode'
+  '--user:manage user services via systemctl --user'
 )
 
 # commands that do not require a service name
@@ -61,6 +62,7 @@ _complete_opts () {
 
 _complete_services() {
   local -a services nosvc nosvc_disp
+  local -a serv_args
   
   # nosvc=(${SERV_CMDS_NO_SVC%%:*})
   # nosvc_disp=(${SERV_CMDS_NO_SVC#*:})
@@ -68,7 +70,8 @@ _complete_services() {
   # compadd -J nosvc -X 'commands (no service required)' -d nosvc_disp -- $nosvc
   _describe 'nosvc' SERV_CMDS_NO_SVC
 
-  services=(${(f)"$(serv list-all 2>/dev/null | awk 'NR>1 && !/unit files listed/ {print $1}')"})
+  [[ " ${words[@]} " =~ " --user " ]] && serv_args=(--user)
+  services=(${(f)"$(serv "${serv_args[@]}" list-all 2>/dev/null | awk 'NR>1 && !/unit files listed/ {print $1}')"})
 
   compadd -J services -X '---services---' -- $services
 
@@ -84,17 +87,23 @@ _complete_commands () {
 
 _serv() {
   local cur
+  local -a args
   
   cur=${words[CURRENT]}
 
-  case "$cur:$CURRENT" in
-    (-*:*|--*:*) _complete_opts ;;       # 1) arguments
-    (*:2)      _complete_services ;;     # 2) complete services (position 2)
-    (*:3)      _complete_commands ;;     # 3) complete commands (position 3)
-    (*)        return 0 ;;
+  if [[ "$cur" == -* ]]; then
+    _complete_opts
+    return
+  fi
+
+  args=(${words[2,CURRENT-1]:#-*})
+
+  case "${#args[@]}" in
+    (0) _complete_services ;;
+    (1) _complete_commands ;;
+    (*) return 0 ;;
   esac
 
 }
 
 compdef _serv serv
-
