@@ -290,6 +290,31 @@ check_daemon_reload()
         fi
 }
 
+systemctl_needs_sudo()
+{
+        local cmd=
+        local arg
+
+        for arg in "$@" ; do
+                case "$arg" in
+                        -*)
+                                ;;
+                        *)
+                                cmd="$arg"
+                                break
+                                ;;
+                esac
+        done
+
+        case "$cmd" in
+                ""|cat|get-default|help|is-active|is-enabled|is-failed|is-system-running|list-*|show|status)
+                        return 1
+                        ;;
+        esac
+
+        return 0
+}
+
 run_systemctl()
 {
         local cmd="$1"
@@ -300,7 +325,11 @@ run_systemctl()
                         check_daemon_reload "$service"
                         ;;
         esac
-        $SYSTEMCTL_RUNNER $SYSTEMCTL $SYSTEMCTL_ARGS "$@"
+        if systemctl_needs_sudo "$@" ; then
+                $SYSTEMCTL_RUNNER $SYSTEMCTL $SYSTEMCTL_ARGS "$@"
+        else
+                docmd $SYSTEMCTL $SYSTEMCTL_ARGS "$@"
+        fi
 }
 
 
@@ -337,8 +366,6 @@ if [ -z "$serv_cmd" ] ; then
 fi
 
 PATH=$PATH:/sbin:/usr/sbin
-
-set_sudo
 
 # Run helper for command
 load_helper serv-$serv_cmd
