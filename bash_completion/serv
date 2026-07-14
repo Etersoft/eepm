@@ -5,13 +5,38 @@
 #
 _service_list()
 {
-    COMPREPLY=( $( serv list-all 2>/dev/null ; echo "list list-all list-startup" ) )
+    local serv_opts=()
+    local i
+
+    for ((i=1; i<COMP_CWORD; i++)); do
+        [[ ${COMP_WORDS[i]} == "--user" ]] && serv_opts=(--user)
+    done
+
+    COMPREPLY=( $( serv "${serv_opts[@]}" list-all 2>/dev/null | awk 'NR>1 && !/unit files listed/ {print $1}' ; echo "list list-all list-startup" ) )
     COMPREPLY=( $( compgen -W '${COMPREPLY[@]}' -- "$cur" ) )
 }
 
 _service_usage_list()
 {
-    local USLIST=$(serv ${prev##*/} usage 2>/dev/null | sed -e "y/|/ /" -ne "s/^.*\(u\|U\|msg_u\)sage.*{\(.*\)}.*$/\2/p")
+    local service=
+    local serv_opts=()
+    local i
+
+    for ((i=1; i<COMP_CWORD; i++)); do
+        case ${COMP_WORDS[i]} in
+            --user)
+                serv_opts=(--user)
+                ;;
+            -*)
+                ;;
+            *)
+                service=${COMP_WORDS[i]}
+                break
+                ;;
+        esac
+    done
+
+    local USLIST=$(serv "${serv_opts[@]}" "${service##*/}" usage 2>/dev/null | sed -e "y/|/ /" -ne "s/^.*\(u\|U\|msg_u\)sage.*{\(.*\)}.*$/\2/p")
     COMPREPLY=( $( compgen -W '$USLIST' -- "$cur" ) )
 }
 
@@ -19,6 +44,7 @@ _service_usage_list()
 _serv()
 {
     local cur prev
+    local i arg_count=0
 
     COMPREPLY=()
     _get_comp_words_by_ref cur prev
@@ -27,10 +53,15 @@ _serv()
     # the standalone command, rather than the init script
     [[ ${COMP_WORDS[0]} != "serv" ]] && return 0
 
-    # don't complete past 2nd token
-    [ $COMP_CWORD -gt 2 ] && return 0
+    for ((i=1; i<COMP_CWORD; i++)); do
+        [[ ${COMP_WORDS[i]} == -* ]] && continue
+        ((arg_count++))
+    done
 
-    if [[ $COMP_CWORD -eq 1 && $prev == "serv" ]]; then
+    # don't complete past service and command tokens
+    [ $arg_count -gt 1 ] && return 0
+
+    if [[ $arg_count -eq 0 ]]; then
         _service_list
     else
         _service_usage_list
