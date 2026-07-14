@@ -41,6 +41,7 @@ serv_edit()
             # systemctl edit is interactive and uses $SYSTEMD_EDITOR/$EDITOR/$VISUAL;
             # sudo resets the environment, so preserve those across it
             local sudoenv=''
+            [ "$SYSTEMCTL_RUNNER" = "docmd" ] || set_sudo
             case "$SUDO" in
                 sudo*) sudoenv='--preserve-env=SYSTEMD_EDITOR,EDITOR,VISUAL' ;;
             esac
