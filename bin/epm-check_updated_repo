@@ -51,7 +51,8 @@ __epm_check_apt_db_days()
     # set ts to newest file ctime
     # shellcheck disable=SC2044
     for i in $(find $LISTS -name "*_$pkg*" 2>/dev/null); do
-        t=$(stat -c%Z "$i")
+        # skip entries that cannot be stat'ed (e.g. a stale eepm-fake_pkglist.)
+        t=$(stat -c%Z "$i" 2>/dev/null) || continue
         [ "$t" -gt "$ts" ] && ts=$t
     done
 
