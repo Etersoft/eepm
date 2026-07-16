@@ -805,6 +805,14 @@ check_for_product_update()
     # not installed yet, proceed with install
     [ -n "$fullpkgver" ] || return
 
+    # if PKGNAME lists several packages, make sure ALL of them are installed;
+    # otherwise a part is missing and we must (re)install instead of skipping
+    # (get_installed_full_version returns a version if any package is installed)
+    # https://bugs.etersoft.ru/show_bug.cgi?id=19203
+    if epm tool estrlist has_space "$PKGNAME" 2>/dev/null ; then
+        epm installed $(__lowpkgname "$PKGNAME") || return
+    fi
+
     # --latest or --force: skip version check, caller will reinstall from upstream
     if [ -n "$latest" ] || [ -n "$force" ] ; then
         echo "Updating $PKGNAME from $fullpkgver to latest upstream version ..."
