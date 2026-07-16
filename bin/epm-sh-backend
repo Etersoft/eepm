@@ -116,7 +116,42 @@ __process_backend_arguments() {
     done
 }
 
+# Print the set of known ALT mirror hosts (lowercased domains), one per line,
+# extracted from mirrors-alt.list. Used to whitelist reuse of the user's mirror.
+__get_alt_mirror_hosts()
+{
+    local f="$CONFIGDIR/mirrors-alt.list"
+    [ -r "$f" ] || return 1
+    # second field is the URL; strip the scheme and path, keep the host
+    awk '{print $2}' "$f" | sed -nE 's|^[a-z]+://([^/]+).*|\1|p' | tr "[:upper:]" "[:lower:]"
+}
+
 # Generate sources.list content for a given ALT branch
+# Detect the ALT mirror base URL from the enabled repos in the system sources.list,
+# so branch/task installs reuse the user's configured mirror (e.g. download.etersoft.ru)
+# instead of the default ftp.basealt.ru. The mirror is reused ONLY if its host is one of
+# the known ALT mirrors (listed in mirrors-alt.list); unknown hosts fall back to the
+# default. Optional $1 = repo (sisyphus, p10, ...) to prefer a line for the same branch.
+# Prints base URL; returns non-zero if no known mirror is configured.
+__get_alt_mirror_baseurl()
+{
+    local repolo src alt_lines baseurl host
+    repolo="$(echo "${1:-}" | tr "[:upper:]" "[:lower:]")"
+    src="$(__get_system_sourceslist)"
+    # enabled ALT repo lines, preferring the ones for the requested branch
+    if [ -n "$repolo" ] ; then
+        alt_lines="$(echo "$src" | grep -E '^[[:space:]]*rpm.* ALTLinux/' | grep -iE "ALTLinux/$repolo/")"
+    fi
+    [ -n "$alt_lines" ] || alt_lines="$(echo "$src" | grep -E '^[[:space:]]*rpm.* ALTLinux/')"
+    # the mirror base URL is the http(s) field right before ALTLinux/
+    baseurl="$(echo "$alt_lines" | sed -nE 's|.*[[:space:]](https?://[^[:space:]]*)[[:space:]]+ALTLinux/.*|\1|p' | head -1)"
+    [ -n "$baseurl" ] || return 1
+    # reuse the mirror only if its host is one of the known ALT mirrors
+    host="$(echo "$baseurl" | sed -nE 's|^https?://([^/]+).*|\1|p' | tr "[:upper:]" "[:lower:]")"
+    [ -n "$host" ] && __get_alt_mirror_hosts 2>/dev/null | grep -Fxq "$host" || return 1
+    echo "$baseurl"
+}
+
 # Usage:
 #   __generate_alt_sourceslist <branch>                    - for branch (p10, Sisyphus, c10f2, ...)
 #   __generate_alt_sourceslist archive <branch> <datestr>  - for archive repo
@@ -135,7 +170,8 @@ __generate_alt_sourceslist()
     else
         local repo="$1"
         repolo="$(echo "$repo" | tr "[:upper:]" "[:lower:]")"
-        baseurl="http://ftp.basealt.ru/pub/distributions"
+        baseurl="$(__get_alt_mirror_baseurl "$repo" 2>/dev/null)"
+        [ -n "$baseurl" ] || baseurl="http://ftp.basealt.ru/pub/distributions"
         [ "$repolo" = "sisyphus" ] && repopart="Sisyphus" || repopart="$repo/branch"
         repopart="ALTLinux/$repopart"
     fi
