@@ -74,6 +74,20 @@ test_aliases() {
     done
 }
 
+# Test: repos output (repo/package install prefixes)
+test_repos() {
+    output=$($EPM tool epm-completion repos 2>/dev/null)
+
+    # Check for essential repo prefixes (with trailing slash)
+    for repo in "sisyphus/" "p10/" "p11/"; do
+        if echo "$output" | grep -q "^$repo\$"; then
+            pass "repos contains '$repo'"
+        else
+            fail "repos missing '$repo'"
+        fi
+    done
+}
+
 # Test: repo subcommand options
 test_repo_subcommand() {
     output=$($EPM tool epm-completion repo 2>/dev/null)
@@ -191,6 +205,7 @@ echo
 test_commands
 test_options
 test_aliases
+test_repos
 test_repo_subcommand
 test_mark_subcommand
 test_play_options

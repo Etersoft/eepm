@@ -79,6 +79,22 @@ get_options()
     parse_help_comments HELPOPT "$SHAREDIR/epm"
 }
 
+# Get repository prefixes usable in repo/package install syntax
+# (epm install sisyphus/pkg, p10/pkg). Trailing slash so the shell
+# completes the prefix and then switches to package completion.
+# Note: named repos from sources.list.d are resolved dynamically by epm
+# and are not listed here; only the well-known ALT branches.
+get_repos()
+{
+    cat <<'EOF'
+sisyphus/
+p11/
+p10/
+p9/
+p8/
+EOF
+}
+
 # Get list of command aliases (alias<TAB>canonical_command)
 get_aliases()
 {
@@ -163,6 +179,7 @@ Arguments:
     commands        list all epm commands (TSV: command<TAB>description[<TAB>argtype])
     options         list all epm options (TSV: option<TAB>description)
     aliases         list command aliases (TSV: alias<TAB>command)
+    repos           list repository prefixes for repo/package syntax (sisyphus/, p10/, ...)
     <subcommand>    list subcommand options (repo, mark, play, etc.)
 
 Argument types (for completion):
@@ -176,6 +193,7 @@ Argument types (for completion):
 Examples:
     epm tool epm-completion commands
     epm tool epm-completion options
+    epm tool epm-completion repos
     epm tool epm-completion repo
 EOF
 }
@@ -192,6 +210,9 @@ case "$1" in
         ;;
     aliases)
         get_aliases
+        ;;
+    repos)
+        get_repos
         ;;
     *)
         get_subcommand_options "$1" || exit 1

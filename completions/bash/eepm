@@ -36,7 +36,7 @@ __eepm_list_installed_packages()
 }
 
 __eepm_list_available_packages() {
-    
+
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local repo_results
 
@@ -44,9 +44,20 @@ __eepm_list_available_packages() {
         _filedir
         return
     fi
-    
-    repo_results=$(epm list --available --quiet --short --direct | grep "^$cur" )
-    COMPREPLY=( $(compgen -W "$repo_results" -- "$cur") )
+
+    # repo/package syntax (sisyphus/pkg, p10/pkg): complete the package part,
+    # keep the repo prefix typed by the user
+    if [[ "$cur" == */* ]]; then
+        local prefix="${cur%/*}"
+        local pkg="${cur##*/}"
+        repo_results=$(epm list --available --quiet --short --direct | grep "^$pkg" | sed "s|^|$prefix/|")
+        COMPREPLY=( $(compgen -W "$repo_results" -- "$cur") )
+        return
+    fi
+
+    # plain package name; also offer repo prefixes (sisyphus/, p10/, ...)
+    repo_results=$(epm list --available --quiet --short --direct | grep "^$cur")
+    COMPREPLY=( $(compgen -W "$repo_results $(epm tool epm-completion repos 2>/dev/null)" -- "$cur") )
 
     if [[ -z "$COMPREPLY" ]]; then
         _filedir

@@ -477,7 +477,16 @@ __eepm_available_packages() {
     return
   fi
 
-  repo_results=( ${(f)"$(epm list --available --quiet --short --direct | grep "^$cur")"} )
+  if [[ "$cur" == */* ]]; then
+    # repo/package syntax (sisyphus/pkg, p10/pkg): complete package part, keep repo prefix
+    local prefix="${cur%/*}"
+    local pkg="${cur##*/}"
+    repo_results=( ${(f)"$(epm list --available --quiet --short --direct | grep "^$pkg" | sed "s|^|$prefix/|")"} )
+  else
+    # plain packages + repo prefixes (sisyphus/, p10/, ...)
+    repo_results=( ${(f)"$(epm list --available --quiet --short --direct | grep "^$cur")"} )
+    repo_results+=( ${(f)"$(epm tool epm-completion repos 2>/dev/null)"} )
+  fi
 
   if (( ${#repo_results[@]} > 0 )); then
     _describe -t available-packages 'available package' repo_results
