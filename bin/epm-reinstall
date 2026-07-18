@@ -25,10 +25,22 @@ epm_reinstall_names()
 {
     [ -n "$1" ] || return
 
+    # check backend:package syntax (snap:pkg, nix:pkg)
+    if __has_backend_syntax "$@" ; then
+        __process_backend_arguments epm_reinstall_names "$@"
+        return
+    fi
+
+    # check repo/package syntax (p10/pkg, sisyphus/pkg)
+    if __has_repo_syntax "$@" ; then
+        __process_repo_arguments epm_reinstall_names "$@"
+        return
+    fi
+
     case $PMTYPE in
         apt-rpm|apt-dpkg)
             local APTOPTIONS="$(subst_option non_interactive -y)"
-            sudocmd apt-get --reinstall $APTOPTIONS install $@
+            sudocmd apt-get $__EPM_APT_REPO_OPTIONS --reinstall $APTOPTIONS install $@
             return ;;
         aptitude-dpkg)
             sudocmd aptitude reinstall $@
