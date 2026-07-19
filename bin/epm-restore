@@ -626,6 +626,118 @@ __epm_restore_perl_shyaml()
     docmd epm install $ilist
 }
 
+# Print cpanfile "requires" as "<phase>\t<Module>\t<spec>" lines (tab-separated).
+# recommends/suggests and the perl core requirement are skipped here.
+# cpanfile is a Perl DSL (with ternary version specs and on/feature blocks), so it
+# cannot be parsed with regexps — Module::CPANfile evals it safely.
+__epm_print_cpanfile_specs()
+{
+    # $1 = cpanfile
+    a= /usr/bin/perl -MModule::CPANfile -e '
+        my $f = shift;
+        my $prereqs = Module::CPANfile->load($f)->prereqs;
+        for my $phase (qw(runtime build configure test develop)) {
+            my $req = eval { $prereqs->requirements_for($phase, "requires") };
+            next unless $req;
+            my $h = $req->as_string_hash;          # { Mod => ">= 1.85" | "4.00" | "0" }
+            for my $mod (sort keys %$h) {
+                next if $mod eq "perl";
+                print "$phase\t$mod\t$h->{$mod}\n";
+            }
+        }
+    ' "$1"
+}
+
+# Translate a cpanfile version spec (CPAN::Meta::Requirements string) into an rpm
+# Requires constraint, or print nothing for "any version".
+# Several constraints are joined by ", ". rpm Requires cannot express "!=" and cannot
+# hold more than one operator per line, so drop "!=" and keep the first surviving
+# constraint (the lower bound). Bare versions ("1.85") and "==" mean ">=".
+__epm_cpanfile_spec_to_rpm()
+{
+    local spec="$1"
+    [ -n "$spec" ] || return
+    [ "$spec" = "0" ] && return
+
+    local part saved ver
+    local OLDIFS="$IFS"
+    IFS=','
+    for part in $spec ; do
+        IFS="$OLDIFS"
+        part="${part# }"; part="${part% }"
+        [ -n "$part" ] || continue
+        case "$part" in "!="*) continue ;; esac
+        [ -n "$saved" ] && continue
+        case "$part" in
+            ">="*|">"*|"<="*|"<"*) saved="$part" ;;
+            "=="*) ver="${part#??}"; ver="${ver# }"; saved=">= $ver" ;;
+            "="*)  ver="${part#?}";  ver="${ver# }"; saved=">= $ver" ;;
+            *)     saved=">= $part" ;;
+        esac
+    done
+    IFS="$OLDIFS"
+    [ -n "$saved" ] || return
+    echo "$saved"
+}
+
+# Read "<phase>\t<Module>\t<spec>" lines (already sorted runtime-first).
+# runtime requires -> Requires:, the rest (build/configure/test/develop) -> BuildRequires:.
+# In dry-run mode prints spec lines; otherwise accumulates install args into $ilist.
+__epm_print_cpanfile_list()
+{
+    local req_file="$1"
+    local phase mod spec name vspec macro pi
+    while IFS="$(printf '\t')" read phase mod spec ; do
+        case "$phase" in
+            runtime) macro="Requires:" ;;
+            *)       macro="BuildRequires:" ;;
+        esac
+        name="perl($(printf '%s' "$mod" | sed -e 's|::|/|g').pm)"
+        vspec="$(__epm_cpanfile_spec_to_rpm "$spec")"
+        if [ -n "$dryrun" ] ; then
+            echo "$macro $name${vspec:+ $vspec}"
+        else
+            pi="$name"
+            if [ -n "$vspec" ] && __epm_pmtype_enforces_install_version ; then
+                pi="$name$(printf '%s' "$vspec" | tr -d ' ')"
+            fi
+            ilist="$ilist $pi"
+        fi
+    done < $req_file
+
+    [ -n "$dryrun" ] || echo "$ilist"
+}
+
+__epm_restore_cpanfile()
+{
+    local req_file="$1"
+
+    # Module::CPANfile (ALT package perl-Module-CPANfile) is the canonical cpanfile parser
+    if ! a= /usr/bin/perl -MModule::CPANfile -e 'exit 0' 2>/dev/null ; then
+        info "Installing perl-Module-CPANfile to parse cpanfile ..."
+        docmd epm install perl-Module-CPANfile || fatal "Can't install perl-Module-CPANfile"
+    fi
+
+    local lt
+    lt=$(mktemp) || fatal
+    remove_on_exit $lt
+    __epm_print_cpanfile_specs "$req_file" >$lt
+
+    if [ -n "$dryrun" ] ; then
+        echo
+        __epm_restore_print_comment "$req_file"
+        __epm_print_cpanfile_list $lt
+        rm -f $lt
+        return
+    fi
+
+    info "Install requirements from $req_file ..."
+    ilist="$(__epm_print_cpanfile_list $lt)"
+    rm -f $lt
+    ilist="$(estrlist list $ilist)"
+    docmd epm install $ilist
+}
+
 __epm_restore_by()
 {
     local req_file="$1"
@@ -670,7 +782,14 @@ __epm_restore_by()
 #            [ -s "$req_file" ] && __epm_restore_perl "$req_file"
 #            ;;
         Makefile.PL)
+            # cpanfile is the canonical modern source (Makefile.PL is often generated
+            # from it); if both are present, prefer cpanfile to avoid a second, less
+            # precise dependency block.
+            [ -s "$(dirname "$req_file")/cpanfile" ] && return
             [ -s "$req_file" ] && __epm_restore_perl "$req_file"
+            ;;
+        cpanfile)
+            [ -s "$req_file" ] && __epm_restore_cpanfile "$req_file"
             ;;
         *.sln|*.csproj)
             local PROJ="$(echo $req_file)"
@@ -704,7 +823,7 @@ epm_restore()
     # if run with empty args
     for i in requirements.txt requirements/default.txt requirements_dev.txt requirements-dev.txt requirements/dev.txt dev-requirements.txt \
              requirements-test.txt requirements_test.txt requirements/test.txt test-requirements.txt requirements/coverage.txt \
-             Gemfile requires.txt package.json setup.py python_dependencies.py Makefile.PL meson.build pyproject.toml \
+             Gemfile requires.txt package.json setup.py python_dependencies.py cpanfile Makefile.PL meson.build pyproject.toml \
              *.sln *.csproj ; do
         __epm_restore_by $i
     done
