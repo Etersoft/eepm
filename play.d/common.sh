@@ -819,6 +819,27 @@ check_for_product_update()
         return
     fi
 
+    # Apps whose version is pinned to another installed package (e.g.
+    # virtualbox-extpack must match the installed virtualbox) may define a
+    # get_target_version() function returning the version they will install.
+    # Compare the installed package against it instead of app-versions, so a
+    # matching install is not re-done on every --update.
+    if type get_target_version >/dev/null 2>&1 ; then
+        local target_version
+        target_version="$(get_target_version)"
+        if [ -n "$target_version" ] ; then
+            local instver
+            instver="$(epm print version for package "$(__lowpkgname "$PKGNAME")" 2>/dev/null | head -n1)"
+            if [ "$instver" = "$target_version" ] ; then
+                echo "$PKGNAME $instver already matches the target version $target_version."
+                exit
+            fi
+            echo "Updating $PKGNAME from $fullpkgver to $target_version ..."
+            VERSION="$target_version"
+            return
+        fi
+    fi
+
     # user specified explicit version (e.g., epm play app=1.2.3): skip app-versions check
     if [ -n "$VERSION" ] && [ "$VERSION" != "*" ] ; then
         echo "Installing $PKGNAME version $VERSION (explicit version requested) ..."
