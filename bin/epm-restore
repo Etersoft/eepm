@@ -83,6 +83,24 @@ __epm_restore_glue_version()
     fi
 }
 
+# Emit one dependency line in the current mode.
+# In dry-run: print "<macro> <name> [<vspec>]" (spec notation, version always shown).
+# In install: print the install arg — "<name><vspec-glued>" when the current PMTYPE
+# enforces range constraints, else just "<name>". (stdout carries the install args;
+# callers capture them with $().)
+# $1 = rpm macro ("Requires:" / "BuildRequires:" / ""), $2 = name, $3 = vspec (">= 1.5") or empty.
+__epm_restore_emit()
+{
+    local macro="$1" name="$2" vspec="$3"
+    if [ -n "$dryrun" ] ; then
+        echo "$macro $name${vspec:+ $vspec}"
+    elif [ -n "$vspec" ] && __epm_pmtype_enforces_install_version ; then
+        echo "$name$(printf '%s' "$vspec" | tr -d ' ')"
+    else
+        echo "$name"
+    fi
+}
+
 # macro pkg caseline
 __epm_pi_sign_to_rpm()
 {
@@ -324,45 +342,21 @@ __epm_print_npm_list()
 {
     local reqmacro="$1"
     local req_file="$2"
-    local l
+    local l name ver vspec cleanver
     while read l ; do
         # "tap": "^14.10.7"
         echo "$l" | grep -q '"\(.*\)": "\(.*\)"' || continue
-        local name="$(echo "$l" | sed -e 's|.*"\(.*\)": ".*|\1|')"
+        name="$(echo "$l" | sed -e 's|.*"\(.*\)": ".*|\1|')"
         [ -z "$name" ] && continue
-        local ver="$(echo "$l" | sed -e 's|.*"\(.*\)": "\(.*\)".*|\2|')" #'
-        [ -z "$name" ] && continue
-
-        if [ -n "$dryrun" ] ; then
-            local pi=''
-            local sign
-            if echo "$ver" | grep -q "^\^" ; then
-                sign=">="
-            else
-                sign="="
-            fi
-            ll=$(echo "$ver" | sed -e 's|^[^~]||')
-            pi="$pi$reqmacro node-$name $sign $ll"
-#         [ -n "$pi" ] && pi="$pi
-#"
-#           [ -n "$pi" ] || pi="$pi$reqmacro: node-$t"
-            echo "$pi"
-            continue
-        else
-            local pi="node-$name"
-            # npm versions: ^X.Y.Z (caret), ~X.Y.Z (tilde), X.Y.Z → use >=X.Y.Z (strip ^/~).
-            # Skip on PMTYPEs that don't enforce range constraints (dnf/yum).
-            if __epm_pmtype_enforces_install_version && echo "$ver" | grep -qE "^[\^~]?[0-9]" ; then
-                local cleanver="$(echo "$ver" | sed -e 's|^[\^~]||')"
-                pi="$pi>=$cleanver"
-            fi
-            #echo "    $l -> $name -> $pi"
+        ver="$(echo "$l" | sed -e 's|.*"\(.*\)": "\(.*\)".*|\2|')" #'
+        # npm versions: ^X.Y.Z (caret), ~X.Y.Z (tilde), bare X.Y.Z → lower bound ">= X.Y.Z".
+        vspec=''
+        if echo "$ver" | grep -qE "^[\^~]?[0-9]" ; then
+            cleanver="$(echo "$ver" | sed -e 's|^[\^~]||')"
+            vspec=">= $cleanver"
         fi
-        [ -n "$name" ] || continue
-        ilist="$ilist $pi"
+        __epm_restore_emit "$reqmacro" "node-$name" "$vspec"
     done < $req_file
-
-    [ -n "$dryrun" ] || echo "$ilist"
 }
 
 
@@ -370,85 +364,29 @@ __epm_print_perl_list()
 {
     local reqmacro="$1"
     local req_file="$2"
-    local l
+    local l name ver vspec
     for l in $(cat) ; do
         # perl(Class::ErrorHandler)>=0
         echo "$l" | grep -q '^perl(' || continue
-        local name="$(echo "$l" | sed -e 's|>=.*||' -e 's|::|/|g' -e 's|)|.pm)|')"
+        name="$(echo "$l" | sed -e 's|>=.*||' -e 's|::|/|g' -e 's|)|.pm)|')"
+        [ -z "$name" ] && continue
         [ "$name" = "perl(perl.pm)" ] && continue
-        [ -z "$name" ] && continue
-        local ver="$(echo "$l" | sed -e 's|.*>=||')"
-        [ -z "$name" ] && continue
-
-        if [ -n "$dryrun" ] ; then
-            local pi=''
-            local sign=''
-            [ "$ver" = "0" ] || sign=" >= $ver"
-            pi="$pi$reqmacro $name$sign"
-            echo "$pi"
-            continue
-        else
-            local pi="$name"
-            if [ "$ver" != "0" ] && __epm_pmtype_enforces_install_version ; then
-                pi="$pi>=$ver"
-            fi
-            #echo "    $l -> $name -> $pi"
-        fi
-        [ -n "$name" ] || continue
-        ilist="$ilist $pi"
+        ver="$(echo "$l" | sed -e 's|.*>=||')"
+        vspec=''
+        [ "$ver" = "0" ] || vspec=">= $ver"
+        __epm_restore_emit "$reqmacro" "$name" "$vspec"
     done < $req_file
-
-    [ -n "$dryrun" ] || echo "$ilist"
-}
-
-__epm_print_perl_list_shyaml()
-{
-    local reqmacro="$1"
-    local req_file="$2"
-    local l
-    while read l ; do
-        # Convert::ASN1: 0.10
-        echo "$l" | grep -q '^ *\(.*\): \(.*\)' || continue
-        local name="$(echo "$l" | sed -e 's| *\(.*\): \(.*\)|\1|' -e 's|::|/|g')".pm
-        [ "$name" = "perl.pm" ] && continue
-        [ -z "$name" ] && continue
-        local ver="$(echo "$l" | sed -e 's| *\(.*\): \(.*\)|\2|')"
-        [ -z "$name" ] && continue
-
-        if [ -n "$dryrun" ] ; then
-            local pi=''
-            local sign=''
-            [ "$ver" = "0" ] || sign=" >= $ver"
-            pi="$pi$reqmacro perl($name)$sign"
-            echo "$pi"
-            continue
-        else
-            local pi="perl($name)"
-            if [ "$ver" != "0" ] && __epm_pmtype_enforces_install_version ; then
-                pi="$pi>=$ver"
-            fi
-            #echo "    $l -> $name -> $pi"
-        fi
-        [ -n "$name" ] || continue
-        ilist="$ilist $pi"
-    done < $req_file
-
-    [ -n "$dryrun" ] || echo "$ilist"
 }
 
 
 __epm_print_nupkg_list()
 {
-    a= dotnet list $1 package | grep "^   > " | while read n name req other; do
-        if [ -n "$dryrun" ] ; then
-            echo "BuildRequires: nupkg($name) >= $req"
-        else
-            if [ -n "$req" ] && __epm_pmtype_enforces_install_version ; then
-                echo "nupkg($name)>=$req"
-            else
-                echo "nupkg($name)"
-            fi
-        fi
+    local req_file="$1"
+    local n name req other vspec
+    a= dotnet list "$req_file" package | grep "^   > " | while read n name req other ; do
+        vspec=''
+        [ -n "$req" ] && vspec=">= $req"
+        __epm_restore_emit "BuildRequires:" "nupkg($name)" "$vspec"
     done
 }
 
@@ -471,28 +409,15 @@ __epm_print_meson_list()
 {
     local reqmacro="$1"
     local req_file="$2"
-    local l
+    local name sign ver other vspec
     while read name sign ver other ; do
         # gtk4-wayland
         # gtk4 >= 4.6
         [ -n "$other" ] && continue
-        if [ -n "$dryrun" ] ; then
-            local pi=''
-            pi="$reqmacro pkgconfig($name)"
-            [ -n "$sign" ] && pi="$pi $sign $ver"
-            echo "$pi"
-            continue
-        else
-            local pi="pkgconfig($name)"
-            if [ -n "$sign" ] && [ -n "$ver" ] && __epm_pmtype_enforces_install_version ; then
-                pi="$pi$sign$ver"
-            fi
-        fi
-        [ -n "$name" ] || continue
-        ilist="$ilist $pi"
+        vspec=''
+        [ -n "$sign" ] && [ -n "$ver" ] && vspec="$sign $ver"
+        __epm_restore_emit "$reqmacro" "pkgconfig($name)" "$vspec"
     done < $req_file
-
-    [ -n "$dryrun" ] || echo "$ilist"
 }
 
 __epm_restore_meson()
@@ -589,43 +514,6 @@ __epm_restore_perl()
     docmd epm install $ilist
 }
 
-# disabled
-__epm_restore_perl_shyaml()
-{
-    local req_file="$1"
-
-    assure_exists shyaml
-
-    if [ -n "$dryrun" ] ; then
-        local lt
-        lt=$(mktemp) || fatal
-        remove_on_exit $lt
-        a= shyaml get-value requires <$req_file >$lt
-        # all requirements will autodetected during packing, put it to the buildreq
-        echo
-        __epm_restore_print_comment "$req_file"
-        __epm_print_perl_list "BuildRequires:" $lt
-
-        echo
-        __epm_restore_print_comment "$req_file" " build_requires"
-        a= shyaml get-value build_requires <$req_file >$lt
-        __epm_print_perl_list "BuildRequires:" $lt
-        rm -f $lt
-        return
-    fi
-
-    info "Install requirements from $req_file ..."
-    local lt
-    lt=$(mktemp) || fatal
-    remove_on_exit $lt
-    a= shyaml get-value requires <$req_file >$lt
-    ilist="$(__epm_print_perl_list "" $lt)"
-    a= shyaml get-value build_requires <$req_file >$lt
-    ilist="$ilist $(__epm_print_perl_list "" $lt)"
-    rm -f $lt
-    docmd epm install $ilist
-}
-
 # Print cpanfile "requires" as "<phase>\t<Module>\t<spec>" lines (tab-separated).
 # recommends/suggests and the perl core requirement are skipped here.
 # cpanfile is a Perl DSL (with ternary version specs and on/feature blocks), so it
@@ -682,11 +570,11 @@ __epm_cpanfile_spec_to_rpm()
 
 # Read "<phase>\t<Module>\t<spec>" lines (already sorted runtime-first).
 # runtime requires -> Requires:, the rest (build/configure/test/develop) -> BuildRequires:.
-# In dry-run mode prints spec lines; otherwise accumulates install args into $ilist.
+# Emits each dependency via __epm_restore_emit (spec line in dry-run, install arg otherwise).
 __epm_print_cpanfile_list()
 {
     local req_file="$1"
-    local phase mod spec name vspec macro pi
+    local phase mod spec name vspec macro
     while IFS="$(printf '\t')" read phase mod spec ; do
         case "$phase" in
             runtime) macro="Requires:" ;;
@@ -694,18 +582,8 @@ __epm_print_cpanfile_list()
         esac
         name="perl($(printf '%s' "$mod" | sed -e 's|::|/|g').pm)"
         vspec="$(__epm_cpanfile_spec_to_rpm "$spec")"
-        if [ -n "$dryrun" ] ; then
-            echo "$macro $name${vspec:+ $vspec}"
-        else
-            pi="$name"
-            if [ -n "$vspec" ] && __epm_pmtype_enforces_install_version ; then
-                pi="$name$(printf '%s' "$vspec" | tr -d ' ')"
-            fi
-            ilist="$ilist $pi"
-        fi
+        __epm_restore_emit "$macro" "$name" "$vspec"
     done < $req_file
-
-    [ -n "$dryrun" ] || echo "$ilist"
 }
 
 __epm_restore_cpanfile()
