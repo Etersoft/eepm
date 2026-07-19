@@ -681,24 +681,31 @@ __epm_restore_by()
 
 epm_restore()
 {
-    req_file="$pkg_filenames"
-    if [ -n "$pkg_urls" ] && echo "$pkg_urls" | grep -qE "^https?://" ; then
-        req_file="$(basename "$pkg_urls")"
-        #assure eget
-        [ -r "$req_file" ] && fatal "File $req_file is already exists in $(pwd)"
-        info "Downloading '$req_file' from '$pkg_urls' ..."
-        eget "$pkg_urls"
-        [ -s "$req_file" ] || fatal "Can't download $req_file from '$pkg_urls'"
-    fi
-
-    if [ -n "$req_file" ] ; then
-        __epm_restore_by $req_file
+    # Requirement files or URLs given explicitly on the command line.
+    if [ $# -gt 0 ] ; then
+        local arg fn
+        for arg in "$@" ; do
+            if is_url "$arg" ; then
+                fn="$(basename "$arg")"
+                #assure eget
+                [ -r "$fn" ] && fatal "File $fn is already exists in $(pwd)"
+                info "Downloading '$fn' from '$arg' ..."
+                eget "$arg"
+                [ -s "$fn" ] || fatal "Can't download $fn from '$arg'"
+                __epm_restore_by "$fn"
+            elif [ -s "$arg" ] ; then
+                __epm_restore_by "$arg"
+            else
+                fatal "Can't read requirements file '$arg'"
+            fi
+        done
         return
     fi
 
 # TODO: nowhere works: python3 setup.py --requires
 
-    # if run with empty args
+    # if run with empty args — auto-search known requirement files
+    local i
     for i in requirements.txt requirements/default.txt requirements_dev.txt requirements-dev.txt requirements/dev.txt dev-requirements.txt \
              requirements-test.txt requirements_test.txt requirements/test.txt test-requirements.txt requirements/coverage.txt \
              Gemfile requires.txt package.json setup.py python_dependencies.py cpanfile Makefile.PL meson.build pyproject.toml \
@@ -706,4 +713,7 @@ epm_restore()
         __epm_restore_by $i
     done
 
+    # auto-search is best-effort; ignore the status of the last glob probe
+    # (otherwise 'epm restore --dry-run' with no matching *.sln/*.csproj exits 1)
+    return 0
 }
