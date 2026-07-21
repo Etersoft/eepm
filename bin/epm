@@ -551,6 +551,10 @@ check_command()
         epm_cmd=moo
         direct_args=1
         ;;
+    hedgehog)
+        epm_cmd=hedgehog
+        direct_args=1
+        ;;
     prescription|recipe)      # HELPCMD: run prescription (a script to achieving the goal), run without args to get list COMPLETE:prescription
         epm_cmd=prescription
         direct_args=1
