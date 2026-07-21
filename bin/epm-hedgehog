@@ -1,0 +1,41 @@
+#!/bin/sh
+#
+# Copyright (C) 2026  Etersoft
+# Copyright (C) 2026  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+# epm hedgehog — an easter egg, a hedgehog companion to epm moo.
+# The hedgehog steps out of the fog ("Ёжик в тумане") to deliver packages.
+
+epm_hedgehog()
+{
+	local figlet docmd
+	epm assure figlet && figlet="figlet"
+
+	[ -n "$verbose" ] && docmd="docmd"
+	[ -n "$figlet" ] && $docmd $figlet "EPM"
+
+	cat <<'EOF'
+       ..::::::::.
+      :::::::::::::
+     /. `:::::::::::
+    o__,_::::::::::'
+   ~                  ~
+EOF
+
+	echo
+	echo 'Ёжик вышел из тумана. Пакеты доставлены.'
+}
