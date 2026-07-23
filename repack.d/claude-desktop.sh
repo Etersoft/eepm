@@ -11,7 +11,10 @@ add_conflicts claude-desktop-wine
 
 move_to_opt /usr/lib/claude-desktop
 
-subst 's|/usr/lib/claude-desktop|/opt/claude-desktop|g' $BUILDROOT/usr/bin/$PRODUCT
+# /usr/bin/claude-desktop is a symlink into the app dir; re-point it at /opt
+# after the move (subst can't rewrite a symlink target)
+rm -f "$BUILDROOT/usr/bin/$PRODUCT"
+add_bin_link_command $PRODUCT "$PRODUCTDIR/$PRODUCT"
 
 fix_desktop_file /usr/bin/$PRODUCT $PRODUCT
 
