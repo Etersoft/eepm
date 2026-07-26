@@ -92,6 +92,38 @@ epm_upgrade()
     return $_ret
 }
 
+# download packages that would be upgraded, without installing them
+__epm_upgrade_download_only()
+{
+    # named packages/files/urls: download to the current dir (as install --download-only does)
+    if [ -n "$pkg_names$pkg_files$pkg_urls" ] ; then
+        load_helper epm-install
+        (pkg_names="$pkg_names" pkg_files="$pkg_files" pkg_urls="$pkg_urls" epm_install)
+        return $?
+    fi
+
+    # bare: download all upgradable packages via the native backend flag (into the package cache)
+    info "Downloading packages for upgrade ..."
+    case $PMTYPE in
+        apt-rpm|apt-dpkg)
+            sudocmd apt-get $__EPM_APT_REPO_OPTIONS $(subst_option non_interactive -y) -d dist-upgrade
+            ;;
+        dnf-rpm|dnf5-rpm)
+            sudocmd $DNFCMD $(subst_option non_interactive -y) upgrade --downloadonly
+            ;;
+        yum-rpm)
+            sudocmd yum $(subst_option non_interactive -y) upgrade --downloadonly
+            ;;
+        pacman)
+            sudocmd pacman -Suw $(subst_option non_interactive --noconfirm) $force
+            ;;
+        *)
+            warning 'Download only for "upgrade all" is not implemented for $PMTYPE, specify package names'
+            return 1
+            ;;
+    esac
+}
+
 __epm_upgrade_do()
 {
     local CMD
@@ -108,7 +140,7 @@ __epm_upgrade_do()
             return
         fi
 
-        if [ -z "$*" ] ; then
+        if [ -z "$*" ] && [ -z "$download_only" ] ; then
             load_helper epm-check
             __epm_check_container_issue_43533
 
@@ -128,6 +160,11 @@ __epm_upgrade_do()
         info "Downloading packages assigned to upgrade ..."
         load_helper epm-download
         __handle_pkg_urls_to_install
+    fi
+
+    if [ -n "$download_only" ] ; then
+        __epm_upgrade_download_only "$@"
+        return
     fi
 
     info "Running command for upgrade packages"
