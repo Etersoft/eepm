@@ -194,6 +194,7 @@ __epm_downgrade_do()
         local apt_force_yes="$force_yes"
         [ "$apt_force_yes" = "--force-yes" ] && apt_force_yes="--allow-unauthenticated --allow-downgrades --allow-change-held-packages"
         local APTOPTIONS="$(subst_option non_interactive -y) $apt_force_yes"
+        [ -n "$download_only" ] && APTOPTIONS="$APTOPTIONS -d"
         __epm_add_deb_apt_downgrade_preferences || return
         if [ -n "$pkg_filenames" ] ; then
             sudocmd apt-get $APTOPTIONS install $pkg_filenames
@@ -205,16 +206,16 @@ __epm_downgrade_do()
     yum-rpm)
         # can do update repobase automagically
         if [ -n "$pkg_filenames" ] ; then
-            sudocmd yum downgrade $pkg_filenames
+            sudocmd yum downgrade $(subst_option download_only --downloadonly) $pkg_filenames
         else
-            sudocmd yum distro-sync
+            sudocmd yum distro-sync $(subst_option download_only --downloadonly)
         fi
         ;;
     dnf-rpm|dnf5-rpm)
         if [ -n "$pkg_filenames" ] ; then
-            sudocmd dnf downgrade $pkg_filenames
+            sudocmd dnf downgrade $(subst_option download_only --downloadonly) $pkg_filenames
         else
-            sudocmd dnf distro-sync
+            sudocmd dnf distro-sync $(subst_option download_only --downloadonly)
         fi
         ;;
     urpm-rpm)
