@@ -155,10 +155,20 @@ extract_appimage()
 {
 	local arc="$1"
 	local subdir="$2"
+	local offset
+
+	offset=$(LC_ALL=C grep -aboP 'DWARFS(?=[\x00-\x1f]{2})' "$arc" 2>/dev/null \
+		| head -1 | cut -d: -f1)
+	if [ -n "$offset" ] ; then
+		is_command dwarfsextract \
+			|| fatal "dwarfsextract is required to extract DwarFS AppImage files"
+		mkdir -p "$subdir" || fatal "Could not create extraction directory $subdir"
+		docmd dwarfsextract -i "$arc" -o "$subdir" -O "$offset"
+		return
+	fi
 
 	# Try unsquashfs with offset
 	if is_command unsquashfs ; then
-		local offset
 		chmod +x "$arc" 2>/dev/null
 		offset="$("$arc" --appimage-offset 2>/dev/null)"
 		# Fallback: find squashfs magic (for cross-arch AppImages)
