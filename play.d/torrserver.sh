@@ -13,6 +13,13 @@ if [ "$VERSION" = "*" ] ; then
 	VERSION="$(get_github_tag https://github.com/YouROK/TorrServer)"
 fi
 
-PKGURL="https://github.com/YouROK/TorrServer/releases/download/MatriX.$VERSION/TorrServer-linux-$arch"
+PKGURL="https://github.com/YouROK/TorrServer/releases/download/MatriX.$VERSION/TorrServer-gst-linux-$arch"
 
 install_pack_pkgurl $VERSION
+
+cat <<EOF
+
+Note: run
+# serv torrserver on
+to enable torrserver system service (daemon)
+EOF
