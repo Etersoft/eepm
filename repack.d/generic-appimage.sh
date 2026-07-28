@@ -72,6 +72,7 @@ if [ -r "$DESKTOPFILE" ] ; then
     [ "$ICONNAME" = "icon" ] && ICONNAME="$PRODUCT"
 
     EXEC="$(cat $BUILDROOT/usr/share/applications/$DESKTOPFILE | grep "^Exec=" | head -n1 | sed -e 's|Exec=||' -e 's| .*||')"
+    EXEC="$(basename "$EXEC")"
 
     if [ -n "$EXEC" ] && [ "$PRODUCT" != "$EXEC" ] ; then
         PRODUCTCUR="$EXEC"
