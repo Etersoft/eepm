@@ -23,7 +23,9 @@ erc -C opt/$PRODUCT unpack $TAR || fatal
 chmod 0755 opt/$PRODUCT/$PRODUCT
 
 iconname=chat.fluffy.$PRODUCT
-install_file opt/$PRODUCT/data/flutter_assets/assets/favicon.png /usr/share/pixmaps/$iconname.png
+iconfile=opt/$PRODUCT/data/flutter_assets/assets/favicon.png
+[ -f "$iconfile" ] || iconfile=opt/$PRODUCT/data/flutter_assets/assets/logo/mini/logo_mini.png
+install_file "$iconfile" /usr/share/pixmaps/$iconname.png
 
 cat <<EOF | create_file /usr/share/applications/$iconname.desktop
 [Desktop Entry]
