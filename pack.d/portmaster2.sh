@@ -11,6 +11,7 @@ BINDIR=opt/portmaster2
 DATADIR=var/lib/portmaster
 
 # extract original installer deb (contains only portmaster-start bootstrap)
+epm assure patool || fatal "Can't assure patool (needed to unpack deb)"
 erc --here unpack $TAR || fatal
 
 # fetch manifests
