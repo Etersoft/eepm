@@ -9,14 +9,10 @@ URL="https://www.teamspeak.com/"
 . $(dirname $0)/common.sh
 
 if [ "$VERSION" = "*" ] ; then
-    PKGURL="$(fetch_url https://teamspeak.com/en/downloads/ \
-        | grep -oE 'https://files\.teamspeak-services\.com/pre_releases/client/[0-9.]+-beta[0-9.]+/teamspeak-client\.tar\.gz' \
-        | head -n1)"
+    PKGURL="$(eget --list https://teamspeak.com/en/downloads/ teamspeak-client.tar.gz)"
 else
     VERSION=${VERSION/.beta/-beta}
     PKGURL="https://files.teamspeak-services.com/pre_releases/client/$VERSION/teamspeak-client.tar.gz"
 fi
-
-[ -n "$PKGURL" ] || fatal "Can't get TeamSpeak client package URL from $URL"
 
 install_pack_pkgurl
