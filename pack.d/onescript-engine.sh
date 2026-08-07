@@ -7,6 +7,7 @@ URL="$4"
 . $(dirname $0)/common.sh
 
 VERSION=$(echo "$URL" | grep -oP 'OneScript-\K[0-9]+\.[0-9]+\.[0-9]+')
+[ -n "$VERSION" ] || VERSION=$(basename "$TAR" | grep -oP 'OneScript-\K[0-9]+\.[0-9]+\.[0-9]+')
 [ -n "$VERSION" ] || fatal "Can't get package version"
 
 PKGNAME=$PRODUCT-$VERSION
