@@ -10,8 +10,8 @@ PRODUCTDIR=/opt/$PRODUCTCUR
 
 add_conflicts teamspeak5
 
-add_bin_link_command $PRODUCTCUR $PRODUCTDIR/TeamSpeak
-add_bin_link_command $PRODUCT $PRODUCTCUR
+add_bin_link_command $PRODUCTCUR $PRODUCTDIR/$PRODUCTCUR
+add_bin_link_command $PRODUCT $PRODUCTDIR/$PRODUCTCUR
 
 add_electron_deps
 
