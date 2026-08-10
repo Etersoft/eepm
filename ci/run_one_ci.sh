@@ -32,7 +32,9 @@ cd "$REPO_ROOT/bin"
 LOG_FILE="$LOG_DIR/$APP.log"
 
 has_failure_markers() {
-  grep -Eq '(^|[[:space:]])ERROR: |^FATAL: |There was some error during (install|run)|^X .+: FAIL$|^make: \*\*\* .* Error [0-9]+|^dh_[^:]+: error: |^dpkg-[^:]+: error: |^WARNING: Can'\''t find converted (deb|rpm)' "$LOG_FILE"
+  # dpkg-shlibdeps reports missing private bundled libraries in successful repacks.
+  grep -Ev '^(dpkg-shlibdeps: error: cannot find library |dpkg-shlibdeps: error: cannot continue due to the errors listed above$|dh_shlibdeps: error: )' "$LOG_FILE" | \
+    grep -Eq '(^|[[:space:]])ERROR: |^FATAL: |There was some error during (install|run)|^X .+: FAIL$|^make: \*\*\* .* Error [0-9]+|^dh_[^:]+: error: |^dpkg-[^:]+: error: |^WARNING: Can'\''t find converted (deb|rpm)'
 }
 
 # IPFS
