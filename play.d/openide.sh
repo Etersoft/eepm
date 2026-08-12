@@ -23,6 +23,9 @@ esac
 if [ "$BRANCH" = "eap" ] ; then
     eap="-eap"
     download_page="https://openide.ru/download-eap/"
+    download_payload="https://openide.ru/download-eap/_payload.json"
+    eap_pkgurl_field=linux_tar_gz
+    [ "$arch" = "-aarch64" ] && eap_pkgurl_field=linux_aarch64_tar_gz
     # tarball always extracts as openIDE-VERSION/, so repack creates openIDE package
     override_pkgname "$BASEPKGNAME"
 else
@@ -31,6 +34,16 @@ else
 fi
 
 if [ "$VERSION" = "*" ]; then
+    if [ "$BRANCH" = "eap" ] ; then
+        # Nuxt payload stores field values as indexes in the root array.
+        pkgurl_index="$(get_json_value "$download_payload" '[5,"'$eap_pkgurl_field'"]')"
+        [ -n "$pkgurl_index" ] || fatal "Can't get openIDE EAP package URL index from $download_payload"
+        PKGURL="$(get_json_value "$download_payload" "[$pkgurl_index]")"
+        [ -n "$PKGURL" ] || fatal "Can't get openIDE EAP package URL from $download_payload"
+        install_pack_pkgurl
+        exit
+    fi
+
     VERSION="$(eget -q -O- "$download_page" | grep "Сборка:" | sed -e "s|.*Сборка:</span>[[:space:]]||" -e "s|</p>.*||")"
     if [ -z "$VERSION" ] ; then
         VERSION="$(eget -q -O- https://download.openide.ru/ | grep -o "openIDE-[0-9.]*${eap}\.tar\.gz" | grep -o "[0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]*" | sort -V | tail -n1)"
