@@ -9,17 +9,11 @@ URL="https://github.com/nroduit/Weasis"
 
 . $(dirname $0)/common.sh
 
-arch="$(epm print info -a)"
-case "$(epm print info -p)-$arch" in
-    rpm-x86_64)
-        file="weasis-${VERSION}-${RELEASE}.$arch.rpm"
-        ;;
-    *)
-        arch="$(epm print info --debian-arch)"
-        file="weasis_${VERSION}-${RELEASE}_$arch.deb"
-        ;;
-esac
+# Do not use upstream rpm: alien fails to unpack it while repacking.
+arch="$(epm print info --debian-arch)"
+file="weasis_${VERSION}-${RELEASE}_$arch.deb"
 
 PKGURL=$(eget --list --latest https://github.com/nroduit/Weasis/releases "$file")
 
-install_pkgurl
+# Upstream deb postinstall calls xdg-desktop-menu and fails in headless installs.
+install_pkgurl --repack
