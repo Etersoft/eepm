@@ -8,50 +8,60 @@ URL="https://unity.com/"
 
 . $(dirname $0)/common.sh
 
-arch=amd64
-reponame=$(epm print info --repo-name)
-vendor=$(epm print info -s)
-#version=$(epm print info --base-version)
+arch="$(epm print info -a)"
+pkgtype=$(epm print info -p)
 
 # https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=unityhub
 
-case $vendor in
-    alt)
-        if is_glibc_enough 2.35 ; then
-            if [ "$VERSION" = "*" ] ; then
-                VERSION="$(get_deb_repo_latest_version "https://hub.unity3d.com/linux/repos/deb/dists/stable/main/binary-amd64/Packages.gz" unityhub)"
-                [ -n "$VERSION" ] || fatal "Can't get latest unityhub version from Unity deb repo"
-            fi
-        else
-            [ "$VERSION" = "*" ] && VERSION="3.3.0"
-            info "glibc version below 2.35, we'll stick with the old version $VERSION"
-        fi
-        # Unity changed the deb naming scheme starting at 3.15.3
-        if is_version_older "$VERSION" 3.15.3 ; then
-            PKGURL="https://hub.unity3d.com/linux/repos/deb/pool/main/u/unity/unityhub_$arch/unityhub-amd64-$VERSION.deb"
-        else
-            PKGURL="https://hub.unity3d.com/linux/repos/deb/pool/main/u/unity/unityhub_$arch/UnityHubSetup-$VERSION-amd64.deb"
-        fi
-        install_pkgurl
-        exit
+case "$arch" in
+    x86_64)
+        debarch=amd64
+        rpmarch=x86_64
         ;;
 esac
 
-echo "Adding vendor repo ..."
+DEBREPOURL="https://hub.unity3d.com/linux/repos/deb"
+DEBPACKAGESURL="$DEBREPOURL/dists/stable/main/binary-$debarch/Packages.gz"
+RPMREPOURL="https://hub.unity3d.com/linux/repos/rpm/stable"
 
-case $(epm print info -p) in
+# Direct package URLs are used because minimal deb containers cannot import the
+# vendor repo key reliably (no gpg/apt-key).
+case "$pkgtype" in
     rpm)
-        epm repo addkey unityhub "https://hub.unity3d.com/linux/repos/rpm/stable" "https://hub.unity3d.com/linux/repos/rpm/stable/repodata/repomd.xml.key" "Unity Hub"
+        repo="$RPMREPOURL"
+        pkgarch=$rpmarch
+        packagedir=unityhub_$pkgarch
+        latestmask="$packagedir/unityhub-[0-9][0-9.]*-[0-9]\\.$pkgarch\\.rpm"
+        filebase="unityhub-$VERSION-1.$pkgarch"
         ;;
-    deb)
-        epm repo addkey "https://hub.unity3d.com/linux/keys/public"
-        # TODO
-        #epm repo add "deb [signedby=/usr/share/keyrings/Unity_Technologies_ApS.gpg] https://hub.unity3d.com/linux/repos/deb stable main"
-        epm repo add --disabled --name unityhub "deb https://hub.unity3d.com/linux/repos/deb stable main"
-        epm install unityhub/$PKGNAME
-        exit
+    *)
+        pkgtype=deb
+        repo="$DEBREPOURL"
+        pkgarch=$debarch
+        packagedir=pool/main/u/unity/unityhub_$pkgarch
+        filebase="unityhub_${VERSION}_$pkgarch"
         ;;
 esac
 
-epm update
-epm install $PKGNAME
+if [ "$VERSION" = "*" ] ; then
+    case "$pkgtype" in
+        rpm)
+            filename="$(get_rpm_repo_latest_file "$repo" "$latestmask")"
+            ;;
+        deb)
+            filebase="$(get_deb_repo_latest_filename "$DEBPACKAGESURL" unityhub)"
+            [ -n "$filebase" ] && filename="$packagedir/$filebase.$pkgtype"
+            ;;
+    esac
+    [ -n "$filename" ] || fatal "Can't get latest unityhub $pkgtype filename from $repo"
+else
+    is_version_older "$VERSION" 3.20.0 && filebase="UnityHubSetup-$VERSION-$pkgarch"
+
+    [ "$pkgtype" = "deb" ] && is_version_older "$VERSION" 3.15.3 && filebase="unityhub-$pkgarch-$VERSION"
+
+    filename="$packagedir/$filebase.$pkgtype"
+fi
+
+PKGURL="$repo/$filename"
+
+install_pkgurl
