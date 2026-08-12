@@ -27,3 +27,42 @@ remove_dir /usr/lib/arm-linux-gnueabihf
 
 # duplicates main files
 remove_dir /usr/local
+
+# Upstream deb carries temporary extracted libcupsimage files under /opt.
+remove_dir "/opt/$PRODUCT/temp"
+
+# Uses system Qt5 for the scanner GUI.
+ignore_lib_requires libQt5Core.so.5 libQt5Gui.so.5 libQt5Network.so.5 libQt5PrintSupport.so.5 libQt5Widgets.so.5
+add_unirequires libQt5Core.so.5 libQt5Gui.so.5 libQt5Network.so.5 libQt5PrintSupport.so.5 libQt5Widgets.so.5
+
+# Upstream links against obsolete libjbig.so.0; distros ship libjbig.so.2.1.
+case "$(epm print info -s)" in
+    alt)
+        epm assure libjbig2.1 || fatal
+        jbig_req=libjbig2.1
+        ;;
+    fedora)
+        epm assure jbigkit-libs || fatal
+        jbig_req=libjbig.so.2.1
+        ;;
+    *)
+        epm assure libjbig.so.2.1 || fatal
+        jbig_req=libjbig.so.2.1
+        ;;
+esac
+
+is_soname_present libjbig.so.2.1 || fatal "Can't find libjbig.so.2.1"
+epm assure patchelf || fatal
+
+# Patch upstream ELF files instead of shipping global /usr/lib64/libjbig.so.0,
+# which can conflict later if a distro adds a proper provider for this SONAME.
+files="$(mktemp)" || fatal
+find "$BUILDROOT" -type f > "$files" || fatal
+while read -r f ; do
+    patchelf --print-needed "$f" 2>/dev/null | grep -q '^libjbig\.so\.0$' || continue
+    patchelf --replace-needed libjbig.so.0 libjbig.so.2.1 "$f" || fatal
+done < "$files"
+rm -f "$files"
+
+ignore_lib_requires libjbig.so.0
+add_unirequires "$jbig_req"
