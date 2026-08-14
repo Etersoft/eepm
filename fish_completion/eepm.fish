@@ -9,7 +9,7 @@ function __eepm_list_commands
 end
 
 function __eepm_list_installed_packages
-    epm list --installed --quiet --short --direct
+    epm list --installed --quiet --short --direct | string replace -r ' - ' \t
 end
 
 function __eepm_list_available_packages
