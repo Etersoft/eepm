@@ -1,16 +1,23 @@
 #!/bin/sh
 
-PKGNAME=ascon-kompas3d-v24
+BASEPKGNAME=ascon-kompas3d
+PRODUCTALT="v25 v24"
 SKIPREPACK=1
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
-DESCRIPTION="KOMPAS-3D v24 from the official site"
+DESCRIPTION="KOMPAS-3D from the official site"
 URL="https://ascon.ru/news/2025/12/11/askon-vypustil-kompas-3d-dlya-otechestvennyh-os-na-linux/"
 REPOURL="https://repo.ascon.ru/stable"
 
 . $(dirname $0)/common.sh
 
-warn_version_is_not_supported
+# Migrate legacy Ascon entries from sources.list to a named disabled repository.
+# EPM can temporarily enable only the latter for ascon/<package> installs.
+case $(epm print info -g) in
+    apt-rpm)
+        epm --quiet repo remove "$REPOURL"
+        ;;
+esac
 
 case $(epm print info -e) in
     ALTLinux/p10|ALTLinux/c10f*)
@@ -37,7 +44,12 @@ case $(epm print info -e) in
 esac
 
 case $(epm print info -g) in
-    apt-rpm|apt-dpkg)
+    apt-rpm)
+        # Ascon RPMs omit post-install dependencies on fc-cache and CP1251 maps.
+        epm install --skip-installed fontconfig glibc-locales || exit
+        epm install ascon/$PKGNAME || exit
+        ;;
+    apt-dpkg)
         epm install ascon/$PKGNAME || exit
         ;;
     *)
