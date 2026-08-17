@@ -345,10 +345,12 @@ apt_repo_after()
 prepare_task_packages()
 {
     # Sets global vars:
-    #   installlist  — final list of packages to install
-    #   unique_tasks — unique task names from args
+    #   installlist             — final list of packages to install
+    #   requested_task_packages — packages explicitly requested from a task
+    #   unique_tasks            — unique task names from args
 
     installlist=""
+    requested_task_packages=""
     unique_tasks=""
     local seen_tasks=""
     local task_packages=""
@@ -370,6 +372,7 @@ prepare_task_packages()
         # Add specific package or all task packages to install list
         if [ -n "$pkg" ]; then
             installlist="$installlist $pkg"
+            requested_task_packages="$requested_task_packages $pkg"
         else
             installlist="$installlist $task_packages"
         fi
@@ -390,6 +393,9 @@ epm_install_alt_tasks()
     else
         # hack: drop -devel packages to avoid package provided by multiple packages
         installlist="$(estrlist reg_exclude ".*-devel .*-devel-static .*-checkinstall .*-debuginfo" "$installlist")"
+        # Keep packages explicitly requested as task/PACKAGE.  In particular,
+        # a task may be used to install a -devel subpackage.
+        installlist="$(estrlist union "$installlist $requested_task_packages")"
     fi
 
     # TODO: need we this option?
