@@ -523,6 +523,11 @@ case "$DISTRIB_ID" in
         if echo "$DISTRIB_RELEASE" | grep -q "^0" ; then
             DISTRIB_RELEASE="Sisyphus"
             DISTRIB_CODENAME="$DISTRIB_RELEASE"
+        # Ximper Linux is based on ALT Sisyphus regardless of its product
+        # version (for example, VERSION_ID=1.0 must not become p1).
+        elif [ "$DISTRO_NAME" = "Etersoft Ximper" ] ; then
+            DISTRIB_RELEASE="Sisyphus"
+            DISTRIB_CODENAME="$DISTRIB_RELEASE"
         elif echo "$DISTRIB_RELEASE" | grep -q "^[0-9]" && echo "$DISTRIB_RELEASE" | grep -q -v "[0-9][0-9][0-9]"  ; then
             DISTRIB_CODENAME="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
             # TODO: change p10 to 10
