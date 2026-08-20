@@ -34,7 +34,7 @@ __epm_check_packages_not_found()
 {
     local pkg
     for pkg in "$@" ; do
-        epm status --available "$pkg" </dev/null >/dev/null 2>&1 || return 0
+        epm status --valid "$pkg" </dev/null >/dev/null 2>&1 || return 0
     done
     return 1
 }
