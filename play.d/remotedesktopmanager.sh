@@ -13,7 +13,7 @@ debarch="$(epm print info --debian-arch)"
 rpmarch="$(epm print info -a)"
 
 if [ "$VERSION" = "*" ] ; then
-    VERSION=$(fetch_url https://devolutions.net/remote-desktop-manager/release-notes/linux/ | sed -n 's|.*data-rn-version="\([0-9.]*\)".*|\1|p' | head -n 1)
+    VERSION=$(fetch_url https://devolutions.net/remote-desktop-manager/release-notes/linux/ | grep -o 'data-rn-version="[0-9.]*"' | head -n 1 | sed 's|.*="||;s|"||')
     [ -n "$VERSION" ] || fatal "Can't get latest version"
 fi
 
