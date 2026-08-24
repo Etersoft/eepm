@@ -10,7 +10,7 @@ add_bin_link_command $PRODUCT $PRODUCTDIR/$PRODUCT
 
 add_requires "/usr/bin/clapper"
 
-install_file https://raw.githubusercontent.com/tsukinaha/tsukimi/refs/heads/main/resources/icons/moe.tsuna.tsukimi.svg /usr/share/icons/hicolor/scalable/apps/$PRODUCT.svg
+install_file https://raw.githubusercontent.com/tsukinaha/tsukimi/refs/heads/main/crates/tsukimi/resources/icons/moe.tsuna.tsukimi.svg /usr/share/icons/hicolor/scalable/apps/$PRODUCT.svg
 install_file $PRODUCTDIR/moe.tsuna.tsukimi.gschema.xml /usr/share/glib-2.0/schemas/moe.tsuna.tsukimi.gschema.xml
 
 # create desktop file
