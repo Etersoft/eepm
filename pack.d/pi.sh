@@ -17,7 +17,7 @@ erc --here unpack "$TAR" || fatal
 
 mv pi/* opt/pi-linux
 
-chmod 755 "/opt/pi-linux/pi"
+chmod 755 "opt/pi-linux/pi" || fatal
 
 ln -s "/opt/pi-linux/pi" "usr/bin/pi"
 
