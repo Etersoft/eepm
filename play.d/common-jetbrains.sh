@@ -18,9 +18,8 @@ get_jetbrains_url()
             ;;
     esac
 
-    # Note, replacing download with download-cdn due HTTP 451
-    get_json_value "https://data.services.jetbrains.com/products/releases?code=$CODE&latest=true&type=release" '["'$CODE'",0,"downloads","'$OS'","link"]' | \
-        sed -e "s|download.jetbrains.com|download-cdn.jetbrains.com|"
+    # Use the official download link: it redirects to a signed CDN URL.
+    get_json_value "https://data.services.jetbrains.com/products/releases?code=$CODE&latest=true&type=release" '["'$CODE'",0,"downloads","'$OS'","link"]'
 }
 
 # PS python
@@ -31,6 +30,6 @@ get_jetbrains_pkgurl()
     if [ "$VERSION" = "*" ] ; then
         get_jetbrains_url $CODE
     else
-        echo "https://download-cdn.jetbrains.com/$PART/$PKGNAME-$VERSION.tar.gz"
+        echo "https://download.jetbrains.com/$PART/$PKGNAME-$VERSION.tar.gz"
     fi
 }
