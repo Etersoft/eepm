@@ -35,7 +35,7 @@ p="$(basename $(dirname $BUILDROOT$DATADIR/updates/linux_amd64/app/portmaster-ap
 fix_chrome_sandbox $DATADIR/updates/linux_amd64/app/$p/chrome-sandbox
 
 # block runtime auto-updates: replace portmaster-start with wrapper
-mv $BUILDROOT$PRODUCTDIR/portmaster-start $BUILDROOT$PRODUCTDIR/portmaster-start.real
+move_file $PRODUCTDIR/portmaster-start $PRODUCTDIR/portmaster-start.real
 cat <<'WRAPPER' | create_exec_file $PRODUCTDIR/portmaster-start
 #!/bin/sh
 case "$1" in
