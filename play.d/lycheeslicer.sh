@@ -15,10 +15,11 @@ case "$(epm print info -s)" in
         ;;
 esac
 
-is_stdcpp_enough "11.0" || VERSION="4.1.0" && info "libstdc++ version below 11.0, we'll stick with the old version $VERSION"
+is_stdcpp_enough "11.0" || { VERSION="4.1.0" ; info "libstdc++ version below 11.0, we'll stick with the old version $VERSION" ; }
 
 if [ "$VERSION" = "*" ]; then
-    VERSION=$(eget -O- https://mango3d.io/download-lychee-slicer | grep -o "Lychee Slicer [0-9].[0-9].[0-9]" | awk '{print $3}')
+    VERSION="$(eget -O- https://lychee.co/download-lychee-slicer | grep -oE 'version[^0-9]{1,20}[0-9]+[.][0-9]+[.][0-9]+' | head -n1 | grep -oE '[0-9]+[.][0-9]+[.][0-9]+')"
+    [ -n "$VERSION" ] || fatal "Can't get latest $PKGNAME version"
 fi
 
 PKGURL="https://mango-lychee.nyc3.cdn.digitaloceanspaces.com/LycheeSlicer-$VERSION.deb"
