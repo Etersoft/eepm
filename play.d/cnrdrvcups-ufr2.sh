@@ -11,6 +11,6 @@ URL="https://www.canon.ru/support/business-product-support/office_driver_guide/"
 warn_version_is_not_supported
 
 # https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=cnrdrvcups-lb
-PKGURL="https://gdlp01.c-wss.com/gds/0/0100009240/36/linux-UFRII-drv-v600-m17n-06.tar.gz"
+PKGURL="https://pdisp01.c-wss.com/gdl/WWUFORedirectTarget.do?id=MDEwMDAwOTI0MDQy&cmp=ACB&lang=EN"
 
 install_pack_pkgurl
