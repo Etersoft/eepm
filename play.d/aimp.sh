@@ -14,6 +14,7 @@ pkgtype="$(epm print info -p)"
 
 case $pkgtype in
     deb)
+        epm assure xdg-utils || fatal
         PKGURL="https://aimp.ru/?do=download.file&id=30"
         ;;
     *)
