@@ -8,14 +8,15 @@ URL="https://devin.ai"
 
 . $(dirname $0)/common.sh
 
+warn_version_is_not_supported
+
 # Upstream renamed Windsurf to Devin Desktop in v3.0.12:
 # https://docs.devin.ai/desktop/changelog
-RELEASES_URL="https://docs.devin.ai/desktop/changelog"
+API_URL="https://windsurf-stable.codeium.com/api/update/linux-x64-deb/stable/latest"
 
-if [ "$VERSION" = "*" ] ; then
-    PKGURL=$(fetch_url "$RELEASES_URL" | grep -oP 'https://windsurf-stable\.codeiumdata\.com/linux-x64-deb/stable/[^"]+/Devin-linux-x64-[^"]+\.deb' | head -1)
-else
-    PKGURL=$(fetch_url "$RELEASES_URL" | grep -oP "https://windsurf-stable\.codeiumdata\.com/linux-x64-deb/stable/[^/]+/Devin-linux-x64-$VERSION\.deb" | head -1)
-fi
+info="$(fetch_url "$API_URL")" || fatal "Can't get latest package info from $API_URL"
+
+PKGURL="$(echo "$info" | parse_json_value url)"
+[ -n "$PKGURL" ] || fatal "Can't get package URL from $API_URL"
 
 install_pkgurl
