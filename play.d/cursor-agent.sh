@@ -23,10 +23,7 @@ esac
 install_script="$(fetch_url https://cursor.com/install)" || fatal "Can't fetch Cursor installer"
 
 if [ "$VERSION" = "*" ] ; then
-    # Upstream now publishes a full build id like
-    # 2026.06.24-00-45-58-9f61de7 and composes DOWNLOAD_URL from OS/ARCH
-    # variables inside the installer script, so extract the build id first.
-    VERSION="$(printf '%s\n' "$install_script" | grep -oE '[0-9]{4}\.[0-9]{2}\.[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{2}-[a-f0-9]+' | head -n1)"
+    VERSION="$(printf '%s\n' "$install_script" | sed -n 's|.*downloads.cursor.com/lab/\([^/][^/]*\)/.*|\1|p' | head -n1)"
     [ -n "$VERSION" ] || fatal "Can't get latest version from Cursor installer"
     PKGURL="https://downloads.cursor.com/lab/$VERSION/linux/$arch/agent-cli-package.tar.gz"
 else
