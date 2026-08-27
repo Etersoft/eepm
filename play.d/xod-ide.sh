@@ -13,15 +13,17 @@ warn_version_is_not_supported
 pkgtype=$(epm print info -p)
 case $pkgtype in
     rpm)
-        # https://www.googleapis.com/download/storage/v1/b/releases.xod.io/o/v0.38.0%2Fxod-client-electron-0.38.0.x86_64.rpm?generation=1615553616000093&alt=media
+        # https://storage.googleapis.com/releases.xod.io/v0.38.0/xod-client-electron-0.38.0.x86_64.rpm?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;...
         mask="xod-client-electron*.x86_64.rpm*"
         ;;
     *)
-        # https://www.googleapis.com/download/storage/v1/b/releases.xod.io/o/v0.38.0%2Fxod-client-electron_0.38.0_amd64.deb?generation=1615553616049782&alt=media
+        # https://storage.googleapis.com/releases.xod.io/v0.38.0/xod-client-electron_0.38.0_amd64.deb?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;...
         mask="xod-client-electron_*_amd64.deb*"
         ;;
 esac
 
-PKGURL=$(eget --list --latest https://xod.io/ "$mask")
+PKGURL=$(eget --list --latest "$URL" "$mask")
+# Signed query parameters from xod.io are HTML-escaped and expire; the object itself is public.
+PKGURL="${PKGURL%%\?*}"
 
 install_pkgurl
