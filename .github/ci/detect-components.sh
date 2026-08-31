@@ -64,17 +64,19 @@ component_changed() {
   return 1
 }
 
-extract_static_play_names() {
+extract_static_values() {
   local file="$1"
+  local var_pattern="$2"
+  local value_pattern="$3"
 
   [[ -f "$file" ]] || return 0
 
-  awk '
+  awk -v var_pattern="$var_pattern" -v value_pattern="$value_pattern" '
     /^[[:space:]]*#/ { next }
     {
       line = $0
       sub(/^[[:space:]]*/, "", line)
-      if (line !~ /^(PKGNAME|BASEPKGNAME|REPOPKGNAME|PRODUCT)=/) {
+      if (line !~ "^(" var_pattern ")=") {
         next
       }
 
@@ -86,11 +88,23 @@ extract_static_play_names() {
         line = substr(line, 2, length(line) - 2)
       }
 
-      if (line ~ /^[[:alnum:]_.+-]+$/) {
+      if (line ~ value_pattern) {
         print tolower(line)
       }
     }
   ' "$file"
+}
+
+extract_static_play_names() {
+  local file="$1"
+
+  extract_static_values "$file" "PKGNAME|BASEPKGNAME|REPOPKGNAME|PRODUCT" "^[[:alnum:]_.+-]+$"
+}
+
+extract_static_product_alternatives() {
+  local file="$1"
+
+  extract_static_values "$file" "PRODUCTALT" "^([[:alnum:]_.+-]+|\047\047|[[:space:]])+$"
 }
 
 normalize_name() {
@@ -144,10 +158,30 @@ resolve_play_app() {
     {
       basename "$file" .sh | normalize_name
       extract_static_play_names "$file"
-    } | sort -u
+    } | awk 'NF && !seen[$0]++'
   )
 
   return 1
+}
+
+expand_play_app_targets() {
+  local app="$1"
+  local play_script="play.d/$app.sh"
+  local alternatives alt
+  local -a editions
+
+  alternatives="$(extract_static_product_alternatives "$play_script")"
+
+  # The bare app name selects the first PRODUCTALT entry.
+  echo "$app"
+
+  read -r -a editions <<< "$alternatives"
+  [[ "${#editions[@]}" -gt 1 ]] || return 0
+
+  for alt in "${editions[@]:1}"; do
+    [[ "$alt" == "''" ]] && continue
+    echo "$app=$alt"
+  done
 }
 
 collect_play_apps() {
@@ -158,12 +192,42 @@ collect_play_apps() {
     [[ "$file" =~ ^(play\.d/|pack\.d/|repack\.d/) ]] || continue
 
     if app="$(resolve_play_app "$file")"; then
-      echo "$app"
+      expand_play_app_targets "$app"
     else
       echo "Skip '$file' (can't resolve to epm play app)" >&2
     fi
 
   done <<< "$CHANGED_FILES" | sort -u
+}
+
+report_multiple_editions() {
+  local apps_text="$1"
+  local target app message
+  local -A edition_counts=()
+  local -A edition_targets=()
+
+  while IFS= read -r target; do
+    [[ -z "$target" ]] && continue
+    app="${target%%=*}"
+    edition_counts["$app"]=$(( ${edition_counts["$app"]:-0} + 1 ))
+
+    if [[ -n "${edition_targets["$app"]:-}" ]]; then
+      edition_targets["$app"]+=", $target"
+    else
+      edition_targets["$app"]="$target"
+    fi
+  done <<< "$apps_text"
+
+  while IFS= read -r app; do
+    [[ "${edition_counts["$app"]}" -gt 1 ]] || continue
+    message="$app: multiple editions detected; running tests for all editions: ${edition_targets["$app"]}"
+    echo "$message"
+    echo "::notice title=Multiple editions detected::$message"
+
+    if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+      printf -- '- %s\n' "$message" >> "$GITHUB_STEP_SUMMARY"
+    fi
+  done < <(printf '%s\n' "${!edition_counts[@]}" | sort)
 }
 
 
@@ -230,16 +294,30 @@ while IFS='|' read -r component path_list systems; do
       echo "No apps to test after filtering."
       continue
     fi
+
+    report_multiple_editions "$play_apps"
   fi
 
   components+=("$component")
   IFS=',' read -r -a system_list <<< "$systems"
 
-  for system in "${system_list[@]}"; do
-    system="$(trim "$system")"
-    [[ -z "$system" ]] && continue
-    entries+=("{\"component\":\"$component\",\"system\":\"$system\"}")
-  done
+  if [[ "$component" == "play" ]]; then
+    while IFS= read -r app; do
+      [[ -z "$app" ]] && continue
+
+      for system in "${system_list[@]}"; do
+        system="$(trim "$system")"
+        [[ -z "$system" ]] && continue
+        entries+=("{\"component\":\"$component\",\"system\":\"$system\",\"target\":\"$app\",\"app\":\"$app\"}")
+      done
+    done <<< "$play_apps"
+  else
+    for system in "${system_list[@]}"; do
+      system="$(trim "$system")"
+      [[ -z "$system" ]] && continue
+      entries+=("{\"component\":\"$component\",\"system\":\"$system\",\"target\":\"$component\",\"app\":\"\"}")
+    done
+  fi
 
 done < "$MAP_FILE"
 

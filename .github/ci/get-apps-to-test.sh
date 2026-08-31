@@ -33,17 +33,19 @@ CHANGED_FILES="$(git diff --name-only "$BASE" "$HEAD")"
 echo "Changed files:"
 echo "$CHANGED_FILES"
 
-extract_static_play_names() {
+extract_static_values() {
   local file="$1"
+  local var_pattern="$2"
+  local value_pattern="$3"
 
   [[ -f "$file" ]] || return 0
 
-  awk '
+  awk -v var_pattern="$var_pattern" -v value_pattern="$value_pattern" '
     /^[[:space:]]*#/ { next }
     {
       line = $0
       sub(/^[[:space:]]*/, "", line)
-      if (line !~ /^(PKGNAME|BASEPKGNAME|REPOPKGNAME|PRODUCT)=/) {
+      if (line !~ "^(" var_pattern ")=") {
         next
       }
 
@@ -55,11 +57,23 @@ extract_static_play_names() {
         line = substr(line, 2, length(line) - 2)
       }
 
-      if (line ~ /^[[:alnum:]_.+-]+$/) {
+      if (line ~ value_pattern) {
         print tolower(line)
       }
     }
   ' "$file"
+}
+
+extract_static_play_names() {
+  local file="$1"
+
+  extract_static_values "$file" "PKGNAME|BASEPKGNAME|REPOPKGNAME|PRODUCT" "^[[:alnum:]_.+-]+$"
+}
+
+extract_static_product_alternatives() {
+  local file="$1"
+
+  extract_static_values "$file" "PRODUCTALT" "^([[:alnum:]_.+-]+|\047\047|[[:space:]])+$"
 }
 
 normalize_name() {
@@ -113,10 +127,30 @@ resolve_play_app() {
     {
       basename "$file" .sh | normalize_name
       extract_static_play_names "$file"
-    } | sort -u
+    } | awk 'NF && !seen[$0]++'
   )
 
   return 1
+}
+
+expand_play_app_targets() {
+  local app="$1"
+  local play_script="play.d/$app.sh"
+  local alternatives alt
+  local -a editions
+
+  alternatives="$(extract_static_product_alternatives "$play_script")"
+
+  # The bare app name selects the first PRODUCTALT entry.
+  echo "$app"
+
+  read -r -a editions <<< "$alternatives"
+  [[ "${#editions[@]}" -gt 1 ]] || return 0
+
+  for alt in "${editions[@]:1}"; do
+    [[ "$alt" == "''" ]] && continue
+    echo "$app=$alt"
+  done
 }
 
 # Test if play.d/ pack.d/ repack.d/ has any changes
@@ -134,7 +168,7 @@ mapfile -t APPS < <(
     [[ "$file" =~ ^(play\.d/|pack\.d/|repack\.d/) ]] || continue
 
     if app="$(resolve_play_app "$file")"; then
-      echo "$app"
+      expand_play_app_targets "$app"
     else
       echo "Skip '$file' (can't resolve to epm play app)" >&2
     fi
