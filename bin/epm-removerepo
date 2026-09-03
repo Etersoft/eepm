@@ -64,9 +64,9 @@ __epm_grep_repo_list()
         epm --quiet repo list
         return
     fi
-    # use --regex for raw regex patterns
+    # use --regexp for raw regex patterns
     while [ -n "$1" ] ; do
-        epm --quiet repo list --regex "$1"
+        epm --quiet --regexp repo list "$1"
         shift
     done
 }
