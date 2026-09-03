@@ -61,7 +61,7 @@ _epm_do_simulate()
 
     case $PMTYPE in
         apt-rpm|apt-dpkg)
-            CMD="apt-get --simulate install"
+            CMD="apt-get $__EPM_APT_REPO_OPTIONS --simulate install"
             ;;
         aptitude-dpkg)
             CMD="aptitude -s install"
@@ -168,4 +168,3 @@ epm_simulate()
     fi
     return $RES
 }
-
