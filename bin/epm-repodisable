@@ -24,12 +24,18 @@ load_helper epm-sh-repo
 __epm_repodisable_alt()
 {
     assure_root
+    case "$1" in
+        --regex|--regexp)
+            regexp="--regexp"
+            shift
+            ;;
+    esac
     local rl
     # ^rpm means full string
     if rhas "$1" "\^rpm" ; then
         rl="$(echo "$1" | sed -e 's|\^||')"
     else
-        rl="$(epm --quiet repo list "$@")"
+        rl="$(epm --quiet $regexp repo list "$@")"
         [ -z "$rl" ] && warning 'Can'\''t find $* entries in the repos (see epm repolist output)' && return 1
     fi
     local apt_lists
