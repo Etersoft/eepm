@@ -116,7 +116,7 @@ epm_install_names()
 
     if [ -n "$dryrun" ] ; then
         load_helper epm-simulate
-        epm simulate "$@"
+        pkg_filenames="$*" epm_simulate
         return
     fi
 
