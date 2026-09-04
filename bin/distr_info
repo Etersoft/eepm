@@ -519,23 +519,29 @@ case "$DISTRIB_ID" in
             DISTRIB_RELEASE="$(echo "$VERSION" | sed 's| branch||')"
         fi
         DISTRIB_CODENAME="$DISTRIB_RELEASE"
-        # FIXME: fast hack for fallback: 10.1 -> p10 for /etc/os-release
-        if echo "$DISTRIB_RELEASE" | grep -q "^0" ; then
-            DISTRIB_RELEASE="Sisyphus"
-            DISTRIB_CODENAME="$DISTRIB_RELEASE"
         # Ximper Linux is based on ALT Sisyphus regardless of its product
         # version (for example, VERSION_ID=1.0 must not become p1).
-        elif [ "$DISTRO_NAME" = "Etersoft Ximper" ] ; then
+        if [ "$DISTRO_NAME" = "Etersoft Ximper" ] ; then
+            DISTRIB_RELEASE="Sisyphus"
+            DISTRIB_CODENAME="$DISTRIB_RELEASE"
+        # ALT_BRANCH_ID identifies the package repository branch and is more
+        # precise than deriving it from the product version (10.2.1 -> p10).
+        elif [ -n "$ALT_BRANCH_ID" ] ; then
+            if [ "$ALT_BRANCH_ID" = "sisyphus" ] ; then
+                DISTRIB_RELEASE="Sisyphus"
+                DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
+            else
+                DISTRIB_RELEASE="$ALT_BRANCH_ID"
+            fi
+            DISTRIB_CODENAME="$DISTRIB_RELEASE"
+        # FIXME: fast hack for fallback: 10.1 -> p10 for old /etc/os-release
+        elif echo "$DISTRIB_RELEASE" | grep -q "^0" ; then
             DISTRIB_RELEASE="Sisyphus"
             DISTRIB_CODENAME="$DISTRIB_RELEASE"
         elif echo "$DISTRIB_RELEASE" | grep -q "^[0-9]" && echo "$DISTRIB_RELEASE" | grep -q -v "[0-9][0-9][0-9]"  ; then
             DISTRIB_CODENAME="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
             # TODO: change p10 to 10
             DISTRIB_RELEASE="$DISTRIB_CODENAME"
-        elif [ "$ALT_BRANCH_ID" = "sisyphus" ] ; then
-            DISTRIB_RELEASE="Sisyphus"
-            DISTRIB_CODENAME="$DISTRIB_RELEASE"
-            DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
         fi
         ;;
     "ALTServer")
