@@ -152,12 +152,8 @@ get_fix_release_pkg()
 
     local TO="$1"
 
-    if [ "$TO" = "Deferred" ] ; then
-        # Deferred is a Sisyphus snapshot, use apt-conf-sisyphus (apt-conf-deferred does not exist)
-        echo "apt-conf-sisyphus"
-        epm installed apt-conf-branch && echo "apt-conf-branch-"
-
-    elif [ "$TO" = "Sisyphus" ] ; then
+    if [ "$TO" = "Sisyphus" ] || [ "$TO" = "Deferred" ] ; then
+        # Deferred uses the Sisyphus configuration and release packages.
         echo "apt-conf-sisyphus"
         # apt-conf-sisyphus conflicts with apt-conf-branch and apt-conf-deferred
         epm installed apt-conf-branch && echo "apt-conf-branch-"
@@ -486,8 +482,6 @@ __switch_alt_to_distro()
         "Sisyphus p8"|"Sisyphus p9"|"Sisyphus p10"|"Sisyphus p11"|"Sisyphus c8"|"Sisyphus c8.1"|"Sisyphus c9f2"|"Sisyphus c10f1"|"Sisyphus c10f2"|"Sisyphus c10f3"|\
         "Deferred p8"|"Deferred p9"|"Deferred p10"|"Deferred p11"|"Deferred c8"|"Deferred c8.1"|"Deferred c9f2"|"Deferred c10f1"|"Deferred c10f2"|"Deferred c10f3")
             confirm_info 'Downgrade $DISTRNAME from $FROM to $TO ...'
-            # remove Deferred repo before switching
-            epm --quiet repo remove "Etersoft/Sisyphus/Deferred"
             docmd epm install $(get_fix_release_pkg "$FROM")
             if [ $TO = "p11" ]; then __sisyphus_downgrade_fix; fi
             __switch_repo_to $TO
@@ -511,6 +505,7 @@ __switch_alt_to_distro()
             # apt-conf-sisyphus may overwrite sources.list during upgrade, restore Deferred URLs
             __switch_repo_to $TO
             docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal
+            __switch_repo_to "$TO"
             __check_system "$TO"
             docmd epm update-kernel || fatal
             ;;
@@ -527,11 +522,13 @@ __switch_alt_to_distro()
             __epm_ru_update || fatal
             docmd epm fix || fatal
             docmd epm install $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
+            [ "$TO" != "Deferred" ] || __switch_repo_to "$TO"
             #local ADDPKG
             #ADDPKG=$(epm -q --short make-initrd sssd-ad 2>/dev/null)
             #docmd epm install librpm7 librpm rpm apt $ADDPKG $(get_fix_release_pkg --force "$TO") ConsoleKit2- || fatal "Check an error and run again"
             end_change_alt_repo
             docmd epm $force_yes $non_interactive upgrade || fatal "Check the error and run '# epm release-upgrade' again or just '# epm upgrade'"
+            [ "$TO" != "Deferred" ] || __switch_repo_to "$TO"
             docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
             __check_system "$TO"
             docmd epm update-kernel || fatal
@@ -587,6 +584,11 @@ epm_release_upgrade()
         elif [ -n "$1" ] ; then
             TARGET="$1"
         fi
+
+        case "$TARGET" in
+            deferred) TARGET="Deferred" ;;
+            sisyphus) TARGET="Sisyphus" ;;
+        esac
 
         [ "$TARGET" = "Sisyphus" ] && info "Check also https://www.altlinux.org/Update/Sisyphus"
         [ "$TARGET" = "Deferred" ] && info "Check also https://www.altlinux.org/Update/Sisyphus"
