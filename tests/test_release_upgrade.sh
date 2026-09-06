@@ -101,9 +101,10 @@ if __detect_alt_release_by_repo >/dev/null; then fatal 'Mixed repositories must 
 SIMULATE_OVERWRITE=''
 docmd() { echo "$*" >> "$TESTDIR/steps"; }
 __switch_repo_to() { echo "switch $*" >> "$TESTDIR/steps"; }
-for transition in 'p11 Deferred' 'p10 Deferred' 'Deferred Deferred' 'Sisyphus Deferred' 'p10 p11' 'p9 p10' 'c10f1 c10f2' ; do
+for transition in 'p11 Deferred' 'p10 Deferred' 'Deferred Deferred' 'Sisyphus Deferred' 'p10 p11' 'p9 p10' 'c10f1 c10f2' 'p8 Sisyphus' 'p9 Sisyphus' 'p10 Sisyphus' 'p11 Sisyphus' 'Deferred Sisyphus' 'Sisyphus Sisyphus' ; do
     read -r source target <<< "$transition"
     case "$target" in
+        Sisyphus) write_repo Sisyphus ;;
         Deferred) echo 'rpm [alt] https://download.etersoft.ru/pub Etersoft/Sisyphus/Deferred/x86_64 classic' > "$APT_ALL_SOURCES_LIST" ;;
         *) write_repo "$target/branch" ;;
     esac
@@ -119,11 +120,29 @@ __switch_alt_to_distro p11 Deferred || fatal 'Fresh upgrade failed'
 [ "$(head -n1 "$TESTDIR/steps")" = 'epm upgrade' ] || fatal 'Fresh upgrade preparation was skipped'
 grep -q '^switch Deferred$' "$TESTDIR/steps"
 
+# A fresh Sisyphus transition still upgrades from the source repository first.
+for source in p8 p9 p10 p11 Deferred ; do
+    if [ "$source" = Deferred ] ; then
+        echo 'rpm [alt] https://download.etersoft.ru/pub Etersoft/Sisyphus/Deferred/x86_64 classic' > "$APT_ALL_SOURCES_LIST"
+    else
+        write_repo "$source/branch"
+    fi
+    : > "$TESTDIR/steps"
+    __switch_alt_to_distro "$source" Sisyphus || fatal 'Fresh Sisyphus upgrade failed'
+    sed '/^switch Sisyphus$/q' "$TESTDIR/steps" | grep -qx 'epm upgrade' || fatal 'Source upgrade was skipped'
+    grep -qx 'switch Sisyphus' "$TESTDIR/steps"
+done
+
 # Verify the public command dispatch accepts the lowercase spelling.
 assure_safe_run() { :; }
 __alt_repofix() { :; }
-__switch_alt_to_distro() { [ "$1 $2" = 'p11 Deferred' ] || fatal 'Wrong upgrade target'; }
+__switch_alt_to_distro() { [ "$1 $2" = "p11 $expected_target" ] || fatal 'Wrong upgrade target'; }
 BASEDISTRNAME=alt
 DISTRVERSION=p11
-epm_release_upgrade deferred >/dev/null || fatal "Dispatch failed"
-echo 'All release-upgrade Deferred tests passed.'
+for expected_target in Deferred Sisyphus ; do
+    DISTRVERSION=p11
+    write_repo p11/branch
+    target_arg="$(echo "$expected_target" | tr '[:upper:]' '[:lower:]')"
+    epm_release_upgrade "$target_arg" >/dev/null || fatal "Dispatch failed"
+done
+echo 'All release-upgrade Deferred and Sisyphus tests passed.'
