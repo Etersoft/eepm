@@ -78,9 +78,13 @@ __wcount()
 
 __p11_upgrade_fix()
 {
-    if ! docmd epm installed apt-conf-branch ; then 
-        info "Need to install default apt-conf-branch package to avoid missing $TO repo"
-        docmd epm install apt-conf-branch || fatal
+    # Only stable branches need apt-conf-branch. Deferred and Sisyphus use
+    # apt-conf-sisyphus, which must not be replaced with the conflicting package.
+    if [ "$TO" != "Deferred" ] && [ "$TO" != "Sisyphus" ] ; then
+        if ! docmd epm installed apt-conf-branch ; then
+            info "Need to install default apt-conf-branch package to avoid missing $TO repo"
+            docmd epm install apt-conf-branch || fatal
+        fi
     fi
     # файл /etc/openssl/openssl.cnf из устанавливаемого пакета openssl-config-3.2.0-alt1.noarch конфликтует с файлом из пакета libcrypto10-1.0.2u-alt1.p9.2.x86_64
     docmd epm remove libcrypto10 libssl10
