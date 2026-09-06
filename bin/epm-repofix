@@ -106,18 +106,6 @@ epm_reposwitch()
     [ "$TO" = "sisyphus" ] && TO="Sisyphus"
     [ "$TO" = "deferred" ] && TO="Deferred"
 
-    # Deferred is based on Sisyphus, replaces Sisyphus URLs with Deferred
-    if [ "$TO" = "Deferred" ] ; then
-        # first normalize branch repos to Sisyphus
-        __replace_alt_version_in_repo "$__alt_branch_reg/branch/" "Sisyphus/"
-        # replace Sisyphus with Deferred path
-        __replace_text_in_alt_repo "/^ *#/! s!ALTLinux/Sisyphus/!Etersoft/Sisyphus/Deferred/!g"
-        __alt_repofix "Sisyphus"
-        rm -fv /etc/rpm/macros.d/{p10,p11}
-        echo "%_priority_distbranch sisyphus" >/etc/rpm/macros.d/priority_distbranch
-        return
-    fi
-
     case "$TO" in
         --help)
             message "Run with --list to get all possible targets"
@@ -134,6 +122,20 @@ epm_reposwitch()
     esac
 
     assure_root
+
+    # Deferred is based on Sisyphus, replaces Sisyphus URLs with Deferred
+    if [ "$TO" = "Deferred" ] ; then
+        # Deferred is available on Etersoft mirrors, not on arbitrary ALT mirrors.
+        epm --quiet repo change etersoft || fatal "Can't switch to the Etersoft mirror"
+        # first normalize branch repos to Sisyphus
+        __replace_alt_version_in_repo "$__alt_branch_reg/branch/" "Sisyphus/"
+        # replace Sisyphus with Deferred path
+        __replace_text_in_alt_repo "/^ *#/! s![/ ]ALTLinux[/ ]Sisyphus/! Etersoft/Sisyphus/Deferred/!g"
+        __alt_repofix "Sisyphus"
+        rm -fv /etc/rpm/macros.d/{p10,p11}
+        echo "%_priority_distbranch sisyphus" >/etc/rpm/macros.d/priority_distbranch
+        return
+    fi
 
     # restore Deferred URLs back to Sisyphus before switching
     __replace_text_in_alt_repo "/^ *#/! s!Etersoft/Sisyphus/Deferred/!ALTLinux/Sisyphus/!g"
