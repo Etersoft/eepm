@@ -83,6 +83,42 @@ for branch in p8 p9 p10 p11 Sisyphus Deferred ; do
     __switch_alt_to_distro "$branch" Deferred >/dev/null || fatal "Upgrade failed"
     assert_deferred
 done
+# Detect current repositories independently of the installed release package.
+for branch in p10 p11 c10f2 ; do
+    write_repo "$branch/branch"
+    [ "$(__detect_alt_release_by_repo)" = "$branch" ]
+done
+write_repo Sisyphus
+[ "$(__detect_alt_release_by_repo)" = Sisyphus ]
+echo 'rpm [alt] https://download.etersoft.ru/pub Etersoft/Sisyphus/Deferred/noarch classic' > "$APT_ALL_SOURCES_LIST"
+echo '  # rpm [p11] https://mirror.yandex.ru/altlinux p11/branch/x86_64 classic' >> "$APT_ALL_SOURCES_LIST"
+[ "$(__detect_alt_release_by_repo)" = Deferred ]
+echo 'rpm [p11] https://mirror.yandex.ru/altlinux p11/branch/x86_64 classic' >> "$APT_ALL_SOURCES_LIST"
+if __detect_alt_release_by_repo >/dev/null; then fatal 'Mixed repositories must not identify a single release'; fi
+
+# A resumed upgrade must reach the target switch before any package transaction.
+# Keep the original FROM to simulate stale branding and an explicitly supplied source.
+SIMULATE_OVERWRITE=''
+docmd() { echo "$*" >> "$TESTDIR/steps"; }
+__switch_repo_to() { echo "switch $*" >> "$TESTDIR/steps"; }
+for transition in 'p11 Deferred' 'p10 Deferred' 'Deferred Deferred' 'Sisyphus Deferred' 'p10 p11' 'p9 p10' 'c10f1 c10f2' ; do
+    read -r source target <<< "$transition"
+    case "$target" in
+        Deferred) echo 'rpm [alt] https://download.etersoft.ru/pub Etersoft/Sisyphus/Deferred/x86_64 classic' > "$APT_ALL_SOURCES_LIST" ;;
+        *) write_repo "$target/branch" ;;
+    esac
+    : > "$TESTDIR/steps"
+    __switch_alt_to_distro "$source" "$target" || fatal 'Resume failed'
+    [ "$(head -n1 "$TESTDIR/steps")" = "switch $target" ] || fatal "Old repository preparation ran for $transition"
+    grep -q '^epm .*upgrade$' "$TESTDIR/steps" || fatal 'Target upgrade was skipped'
+done
+# A fresh transition still prepares the old repository before switching.
+write_repo p11/branch
+: > "$TESTDIR/steps"
+__switch_alt_to_distro p11 Deferred || fatal 'Fresh upgrade failed'
+[ "$(head -n1 "$TESTDIR/steps")" = 'epm upgrade' ] || fatal 'Fresh upgrade preparation was skipped'
+grep -q '^switch Deferred$' "$TESTDIR/steps"
+
 # Verify the public command dispatch accepts the lowercase spelling.
 assure_safe_run() { :; }
 __alt_repofix() { :; }

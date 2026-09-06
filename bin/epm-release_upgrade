@@ -100,31 +100,13 @@ __sisyphus_downgrade_fix()
 # TODO: remove it or move to distro_info
 __detect_alt_release_by_repo()
 {
-    local BRD=$(cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list \
-        | grep -v "^#" \
-        | grep -E "[tpc][1-3]?[5-9][f.]?[0-9]?/branch/" \
-        | sed -e "s|.*\([tpc][1-3]\?[5-9][f.]\?[0-9]\?\)/branch.*|\1|g" \
-        | sort -u )
-    if [ "$(__wcount $BRD)" = "1" ] ; then
-        echo "$BRD"
-        return
-    fi
-
-    # check Deferred first (its URLs also contain Sisyphus/)
-    local BRD=$(cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list \
-        | grep -v "^#" \
-        | grep "Etersoft/Sisyphus/Deferred/" \
-        | head -1 )
-    if [ -n "$BRD" ] ; then
-        echo "Deferred"
-        return
-    fi
-
-    local BRD=$(cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list \
-        | grep -v "^#" \
-        | grep "Sisyphus/" \
-        | sed -e "s|.*\(Sisyphus\).*|\1|g" \
-        | sort -u )
+    local BRD
+    BRD="$(epm --quiet repo list | sed -n -E '
+        /^[[:space:]]*#/d
+        /Etersoft\/Sisyphus\/Deferred\// { s/.*//; s/^/Deferred/; p; d; }
+        /[/ ]Sisyphus\// { s/.*//; s/^/Sisyphus/; p; d; }
+        s!.*[/ ]([tpc][0-9]+([f.][0-9]+)?)/branch/.*!\1!p
+    ' | sort -u)"
     if [ "$(__wcount $BRD)" = "1" ] ; then
         echo "$BRD"
         return
@@ -335,12 +317,20 @@ __switch_alt_to_distro()
     local FROM="$1"
     info
 
+    local repo_already_switched=""
+    if [ "$(__detect_alt_release_by_repo)" = "$TO" ] ; then
+        repo_already_switched=1
+        info 'Repositories already point to $TO; skipping preparation from $FROM.'
+    fi
+
     try_change_alt_repo
 
     case "$*" in
         "p6"|"p6 p7"|"t6 p7"|"c6 c7")
             confirm_info 'Upgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+            if [ -z "$repo_already_switched" ] ; then
+                docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+            fi
             __switch_repo_to $TO
             docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
             end_change_alt_repo
@@ -350,7 +340,9 @@ __switch_alt_to_distro()
             ;;
         "p7"|"p7 p8"|"t7 p8"|"c7 c8")
             confirm_info 'Upgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+            if [ -z "$repo_already_switched" ] ; then
+                docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+            fi
             __switch_repo_to $TO
             docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
             end_change_alt_repo
@@ -361,7 +353,9 @@ __switch_alt_to_distro()
             ;;
         "c8"|"c8.1"|"c8.2"|"c8 c8.1"|"c8.1 c8.2"|"c8 c8.2")
             confirm_info 'Upgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+            if [ -z "$repo_already_switched" ] ; then
+                docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+            fi
             __switch_repo_to $TO
             docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
             end_change_alt_repo
@@ -371,7 +365,9 @@ __switch_alt_to_distro()
             ;;
         "p8 c8"|"p8 c8.1"|"p8 c8.2")
             confirm_info 'Upgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+            if [ -z "$repo_already_switched" ] ; then
+                docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+            fi
             __switch_repo_to $TO
             docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
             if epm installed libcrypt ; then
@@ -386,10 +382,12 @@ __switch_alt_to_distro()
             ;;
         "p8"|"p8 p9"|"t8 p9"|"c8 c9"|"c8 p9"|"c8.1 p9"|"c8.2 p9"|"p9 p9"|"p9 c9f2")
             confirm_info 'Upgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
-            info "Workaround for https://bugzilla.altlinux.org/show_bug.cgi?id=35492 ..."
-            if epm installed gdb >/dev/null ; then
-                docmd epm remove gdb || fatal
+            if [ -z "$repo_already_switched" ] ; then
+                docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+                info "Workaround for https://bugzilla.altlinux.org/show_bug.cgi?id=35492 ..."
+                if epm installed gdb >/dev/null ; then
+                    docmd epm remove gdb || fatal
+                fi
             fi
             __switch_repo_to $TO
             end_change_alt_repo
@@ -400,11 +398,13 @@ __switch_alt_to_distro()
             info "Run epm release-upgrade again for update to p10"
             ;;
         "p9"|"p9 p10"|"p10 p10")
-            info "Upgrade all packages to current $FROM repository"
-            __do_upgrade
             confirm_info 'Upgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
-            if [ $TO = "p11" ]; then __p11_upgrade_fix; fi
+            if [ -z "$repo_already_switched" ] ; then
+                info "Upgrade all packages to current $FROM repository"
+                __do_upgrade
+                docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+                if [ $TO = "p11" ]; then __p11_upgrade_fix; fi
+            fi
             __switch_repo_to $TO
             end_change_alt_repo
             __do_upgrade
@@ -413,11 +413,13 @@ __switch_alt_to_distro()
             docmd epm update-kernel -t std-def || fatal
             ;;
         "p10 p11")
-            info "Upgrade all packages to current $FROM repository"
-            __do_upgrade
             confirm_info 'Upgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
-            __p11_upgrade_fix
+            if [ -z "$repo_already_switched" ] ; then
+                info "Upgrade all packages to current $FROM repository"
+                __do_upgrade
+                docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+                __p11_upgrade_fix
+            fi
             __switch_repo_to $TO
             end_change_alt_repo
             __do_upgrade
@@ -427,11 +429,13 @@ __switch_alt_to_distro()
             docmd epm update-kernel -t 6.12 || fatal
             ;;
         "c10f1 c10f2"|"c10f2 c10f3")
-            info "Upgrade all packages to current $FROM repository"
-            __do_upgrade
             confirm_info 'Upgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
-            #__p11_upgrade_fix
+            if [ -z "$repo_already_switched" ] ; then
+                info "Upgrade all packages to current $FROM repository"
+                __do_upgrade
+                docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+                #__p11_upgrade_fix
+            fi
             __switch_repo_to $TO
             end_change_alt_repo
             __do_upgrade
@@ -443,7 +447,9 @@ __switch_alt_to_distro()
             ;;
         "p9 p8"|"c8.1 c8"|"c8.1 p8"|"p8 p8")
             confirm_info 'Downgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install $(get_fix_release_pkg "$FROM")
+            if [ -z "$repo_already_switched" ] ; then
+                docmd epm install $(get_fix_release_pkg "$FROM")
+            fi
             __switch_repo_to $TO
             docmd epm downgrade rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
             if epm installed libcrypt >/dev/null ; then
@@ -457,7 +463,9 @@ __switch_alt_to_distro()
             ;;
         "p9 c8"|"p9 c8.1"|"p9 c8.2")
             confirm_info 'Downgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install $(get_fix_release_pkg "$FROM")
+            if [ -z "$repo_already_switched" ] ; then
+                docmd epm install $(get_fix_release_pkg "$FROM")
+            fi
             __switch_repo_to $TO
             docmd epm downgrade rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
             #if epm installed libcrypt >/dev/null ; then
@@ -471,7 +479,9 @@ __switch_alt_to_distro()
             ;;
         "p10 p9"|"p11 p9")
             confirm_info 'Downgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install $(get_fix_release_pkg "$FROM")
+            if [ -z "$repo_already_switched" ] ; then
+                docmd epm install $(get_fix_release_pkg "$FROM")
+            fi
             __switch_repo_to $TO
             docmd epm downgrade rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
             docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
@@ -482,8 +492,10 @@ __switch_alt_to_distro()
         "Sisyphus p8"|"Sisyphus p9"|"Sisyphus p10"|"Sisyphus p11"|"Sisyphus c8"|"Sisyphus c8.1"|"Sisyphus c9f2"|"Sisyphus c10f1"|"Sisyphus c10f2"|"Sisyphus c10f3"|\
         "Deferred p8"|"Deferred p9"|"Deferred p10"|"Deferred p11"|"Deferred c8"|"Deferred c8.1"|"Deferred c9f2"|"Deferred c10f1"|"Deferred c10f2"|"Deferred c10f3")
             confirm_info 'Downgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install $(get_fix_release_pkg "$FROM")
-            if [ $TO = "p11" ]; then __sisyphus_downgrade_fix; fi
+            if [ -z "$repo_already_switched" ] ; then
+                docmd epm install $(get_fix_release_pkg "$FROM")
+                if [ $TO = "p11" ]; then __sisyphus_downgrade_fix; fi
+            fi
             __switch_repo_to $TO
             docmd epm downgrade rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
             docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
@@ -492,11 +504,13 @@ __switch_alt_to_distro()
             docmd epm upgrade || fatal
             ;;
         "p11 Deferred")
-            info 'Upgrade all packages to current $FROM repository'
-            __do_upgrade
             confirm_info 'Upgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
-            __p11_upgrade_fix
+            if [ -z "$repo_already_switched" ] ; then
+                info 'Upgrade all packages to current $FROM repository'
+                __do_upgrade
+                docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+                __p11_upgrade_fix
+            fi
             __switch_repo_to $TO
             [ -s /etc/rpm/macros.d/p10 ] && rm -fv /etc/rpm/macros.d/p10
             [ -s /etc/rpm/macros.d/p11 ] && rm -fv /etc/rpm/macros.d/p11
@@ -512,10 +526,12 @@ __switch_alt_to_distro()
         "p8 Sisyphus"|"p9 Sisyphus"|"p10 Sisyphus"|"p11 Sisyphus"|"Sisyphus Sisyphus"|\
         "p8 Deferred"|"p9 Deferred"|"p10 Deferred"|"Deferred Deferred"|"Sisyphus Deferred"|"Deferred Sisyphus")
             confirm_info 'Upgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
-            docmd epm upgrade || fatal
-            # TODO: epm_reposwitch??
-            __replace_alt_version_in_repo "$FROM/branch/" "Sisyphus/"
+            if [ -z "$repo_already_switched" ] ; then
+                docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+                docmd epm upgrade || fatal
+                # TODO: epm_reposwitch??
+                __replace_alt_version_in_repo "$FROM/branch/" "Sisyphus/"
+            fi
             __switch_repo_to $TO
             [ -s /etc/rpm/macros.d/p10 ] && rm -fv /etc/rpm/macros.d/p10
             [ -s /etc/rpm/macros.d/p11 ] && rm -fv /etc/rpm/macros.d/p11
