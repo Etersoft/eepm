@@ -70,6 +70,26 @@ for package in apt-conf-sisyphus apt-conf-branch- apt-conf-deferred- branding-al
     echo "$packages" | grep -qx "$package"
 done
 ! echo "$packages" | grep -qx 'altlinux-release-deferred'
+# Reproduce an already installed apt-conf-sisyphus during preparation:
+# rolling targets must never try to replace it with apt-conf-branch.
+(
+    docmd()
+    {
+        echo "$*" >> "$TESTDIR/preparation"
+        [ "$*" != 'epm installed apt-conf-branch' ]
+    }
+    for TO in Deferred Sisyphus p11 ; do
+        : > "$TESTDIR/preparation"
+        __p11_upgrade_fix || fatal 'Preparation failed'
+        if [ "$TO" = p11 ] ; then
+            grep -qx 'epm install apt-conf-branch' "$TESTDIR/preparation" || fatal 'Missing stable branch configuration'
+        elif grep -q 'apt-conf-branch' "$TESTDIR/preparation" ; then
+            fatal "Attempted to replace Sisyphus configuration for $TO"
+        fi
+        grep -qx 'epm remove libcrypto10 libssl10' "$TESTDIR/preparation" || fatal 'OpenSSL workaround was skipped'
+    done
+)
+
 # Run the real upgrade orchestration; package commands never reach the host.
 docmd() { "$@"; }
 try_change_alt_repo() { :; }
