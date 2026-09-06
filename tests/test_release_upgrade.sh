@@ -17,7 +17,7 @@ regexp_subst() { sed -E -i "$1" "$2"; }
 . "$SHAREDIR/epm-repomirrors"
 . "$SHAREDIR/epm-repochange"
 # Redirect all hardcoded RPM macro paths, including those in the upgrade flow.
-for helper in epm-repofix ; do
+for helper in epm-repofix epm-release_upgrade ; do
     sed "s|/etc/rpm/macros.d|$TESTDIR/macros.d|g" "$SHAREDIR/$helper" > "$TESTDIR/$helper"
     . "$TESTDIR/$helper"
 done
@@ -64,4 +64,30 @@ for branch in p10/branch p11/branch Sisyphus ; do
     grep -q 'ALTLinux/p11/branch/x86_64' "$APT_ALL_SOURCES_LIST"
 done
 done
-echo 'All Deferred repository switching tests passed.'
+REPO_SEPARATOR=" "
+packages="$(get_fix_release_pkg --force Deferred)"
+for package in apt-conf-sisyphus apt-conf-branch- apt-conf-deferred- branding-alt-sisyphus-release alt-os-release ; do
+    echo "$packages" | grep -qx "$package"
+done
+! echo "$packages" | grep -qx 'altlinux-release-deferred'
+# Run the real upgrade orchestration; package commands never reach the host.
+docmd() { "$@"; }
+try_change_alt_repo() { :; }
+end_change_alt_repo() { :; }
+__p11_upgrade_fix() { :; }
+__check_system() { :; }
+SIMULATE_OVERWRITE=yes
+EXPECT_DEFERRED=yes
+for branch in p8 p9 p10 p11 Sisyphus Deferred ; do
+    write_repo Sisyphus
+    __switch_alt_to_distro "$branch" Deferred >/dev/null || fatal "Upgrade failed"
+    assert_deferred
+done
+# Verify the public command dispatch accepts the lowercase spelling.
+assure_safe_run() { :; }
+__alt_repofix() { :; }
+__switch_alt_to_distro() { [ "$1 $2" = 'p11 Deferred' ] || fatal 'Wrong upgrade target'; }
+BASEDISTRNAME=alt
+DISTRVERSION=p11
+epm_release_upgrade deferred >/dev/null || fatal "Dispatch failed"
+echo 'All release-upgrade Deferred tests passed.'
