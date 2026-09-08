@@ -11,6 +11,10 @@ PRODUCT=waywallen
 install_file $PRODUCTDIR/org.waywallen.waywallen.svg /usr/share/icons/hicolor/scalable/apps/org.waywallen.waywallen.svg
 fix_desktop_file "Categories=Graphics;Qt;" "Categories=Settings;DesktopSettings;Qt;"
 
+# AppImage bundles most Qt6 libraries, but these QML runtime libraries are
+# resolved from the system and are blocked by the generic Qt reqstoplist.
+add_unirequires libQt6QuickDialogs2QuickImpl.so.6 libQt6QuickDialogs2.so.6 libQt6QuickParticles.so.6 libQt6QuickShapesDesignHelpers.so.6
+
 cat <<EOF | create_file /usr/lib/systemd/user/waywallen.service
 [Unit]
 Description=Waywallen wallpaper daemon
